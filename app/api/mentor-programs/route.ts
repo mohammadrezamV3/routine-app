@@ -10,7 +10,7 @@ import { activateDueForUser } from "@/lib/mentorSchedule";
 import { publishToUsers } from "@/lib/realtime";
 
 const STATUSES: MentorProgramStatus[] = ["DRAFT", "PENDING", "ACCEPTED", "REJECTED", "ACTIVE", "COMPLETED", "CANCELLED"];
-// سقفِ پیش‌نویس‌های هم‌زمانِ یک منتور — جلوی پرکردنِ دیتابیس با برنامه‌ی خالی
+// سقف پیش‌نویس‌های هم‌زمان یک منتور — جلوی پرکردن دیتابیس با برنامه‌ی خالی
 const MAX_DRAFTS_PER_MENTOR = 200;
 
 // GET /api/mentor-programs?role=mentor|student&status=&mentorshipId=
@@ -35,14 +35,14 @@ export async function GET(req: NextRequest) {
   };
   const load = () => prisma.mentorProgram.findMany({ where, include: PROGRAM_WITH_USERS_INCLUDE, orderBy: { updatedAt: "desc" }, take: 200 });
 
-  // برنامه‌های پذیرفته‌شده‌ای که روزِ شروعشون رسیده همین‌جا فعال می‌شن (+ اعلان به هر دو طرف)
+  // برنامه‌های پذیرفته‌شده‌ای که روز شروعشون رسیده همین‌جا فعال می‌شن (+ اعلان به هر دو طرف)
   await activateDueForUser(me);
   const programs = await load();
 
   return NextResponse.json({ programs: await buildProgramRows(programs, me) });
 }
 
-// POST /api/mentor-programs → ساختِ پیش‌نویس (DRAFT) برای یک شاگردِ فعال.
+// POST /api/mentor-programs → ساخت پیش‌نویس (DRAFT) برای یک شاگرد فعال.
 export async function POST(req: Request) {
   const g = await requireMentorsUser();
   if (!g.ok) return g.response;
@@ -79,10 +79,10 @@ export async function POST(req: Request) {
     select: { id: true },
   });
   touchMentorActivity(me);
-  // پیش‌نویس فقط مالِ منتوره — بقیه‌ی دستگاه‌های خودش
+  // پیش‌نویس فقط مال منتوره — بقیه‌ی دستگاه‌های خودش
   void publishToUsers([me], { type: "mentor.program", data: { id: created.id } });
 
-  // ساخته‌شده از قالب؟ فقط آمارِ استفاده‌ی قالبِ *خودِ* همین منتور بالا می‌رود
+  // ساخته‌شده از قالب؟ فقط آمار استفاده‌ی قالب *خود* همین منتور بالا می‌رود
   if (typeof b.templateId === "string" && b.templateId.length > 0 && b.templateId.length <= 64) {
     await prisma.mentorProgramTemplate
       .updateMany({ where: { id: b.templateId, profileId: mp.profile.id }, data: { usedCount: { increment: 1 }, lastUsedAt: new Date() } })

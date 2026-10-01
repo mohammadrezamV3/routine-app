@@ -26,7 +26,7 @@ function GoalRow({
   g, liveScore, onDelete, deleting,
 }: { g: WeeklyGoalDto; liveScore: number | null; onDelete?: () => void; deleting?: boolean }) {
   const meta = STATUS_META[g.status];
-  // امتیازِ فعلی: وقتی هفته تموم شده achievedScore، وگرنه امتیازِ زنده‌ی همون دامنه
+  // امتیاز فعلی: وقتی هفته تموم شده achievedScore، وگرنه امتیاز زنده‌ی همون دامنه
   const current = g.achievedScore ?? liveScore;
   const pct = g.target && current !== null ? Math.min(100, (current / g.target) * 100) : 0;
   return (
@@ -66,7 +66,7 @@ function GoalRow({
   );
 }
 
-// اهدافِ هفته — «این هفته» همون‌هایی‌ان که هفته‌ی قبل تعیین شدن؛ هدفِ جدید
+// اهداف هفته — «این هفته» همون‌هایی‌ان که هفته‌ی قبل تعیین شدن؛ هدف جدید
 // همیشه برای *هفته‌ی بعد* ثبت می‌شه و فقط از هفته‌ی جاری (offset=0).
 export function WeeklyAnalysisGoals({
   offset,
@@ -97,7 +97,7 @@ export function WeeklyAnalysisGoals({
   const rootRef = useRef<HTMLDivElement>(null);
   const titleRef = useRef<HTMLInputElement>(null);
 
-  // پیشنهادِ مربی («+ هدف») فرم رو پر می‌کنه و کاربر رو به همین کارت می‌بره
+  // پیشنهاد مربی («+ هدف») فرم رو پر می‌کنه و کاربر رو به همین کارت می‌بره
   useEffect(() => {
     if (!draft) return;
     setDomain(draft.domain ?? "");

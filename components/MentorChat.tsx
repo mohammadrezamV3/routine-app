@@ -32,7 +32,7 @@ import { M_DUR, mT } from "./MentorMotion";
 
 const POLL_MS = 5000;
 const MAX_LEN = 2000;
-/** پیام‌های پشتِ‌هم از یک فرستنده با فاصله‌ی کمتر از این یک گروه‌اند (دُمِ حباب فقط روی آخری) */
+/** پیام‌های پشت‌هم از یک فرستنده با فاصله‌ی کمتر از این یک گروه‌اند (دم حباب فقط روی آخری) */
 const GROUP_GAP_MS = 5 * 60 * 1000;
 const META_ICON = { size: 13, strokeWidth: 1.75 } as const;
 const MENU_ICON = { size: 15, strokeWidth: 1.75, "aria-hidden": true } as const;
@@ -43,16 +43,16 @@ type Pending = {
   createdAt: string;
   state: "sending" | "failed";
   error?: string;
-  /** متنِ رمزشده‌ی آماده — تلاشِ دوباره *همان* بسته را می‌فرستد تا سرور با clientId تکرار را تشخیص دهد */
+  /** متن رمزشده‌ی آماده — تلاش دوباره *همان* بسته را می‌فرستد تا سرور با clientId تکرار را تشخیص دهد */
   payload?: EncryptedMessage;
-  /** کلیدِ فرانکینگِ همان بسته — برای گزارشِ گفت‌وگو (پیام‌های خودم هم پیوست‌پذیرند) */
+  /** کلید فرانکینگ همان بسته — برای گزارش گفت‌وگو (پیام‌های خودم هم پیوست‌پذیرند) */
   frankingKey?: string;
 };
 
 type ReportTarget = { id: string; franking?: { text: string; frankingKey: string } };
 type Anchor = { top: number; bottom: number; left: number; right: number };
 
-/** پنلی که سرِ گفت‌وگو (منوی سه‌نقطه) باز می‌کند */
+/** پنلی که سر گفت‌وگو (منوی سه‌نقطه) باز می‌کند */
 export type ChatSheet = "report" | "e2ee" | null;
 
 function sortByTime(a: { createdAt: string; id?: string }, b: { createdAt: string; id?: string }) {
@@ -89,16 +89,16 @@ function useCoarsePointer() {
 }
 
 /**
- * گفت‌وگوی منتور ↔ شاگرد با رمزگذاریِ سرتاسری (docs/mentor-e2ee.md) — فقط بدنه‌ی
- * صفحه‌ی گفت‌وگو (رشته‌ی پیام‌ها + نوارِ نوشتن). سرِ صفحه (بازگشت، نام، منو)
+ * گفت‌وگوی منتور ↔ شاگرد با رمزگذاری سرتاسری (docs/mentor-e2ee.md) — فقط بدنه‌ی
+ * صفحه‌ی گفت‌وگو (رشته‌ی پیام‌ها + نوار نوشتن). سر صفحه (بازگشت، نام، منو)
  * در MentorChatScreen است؛ پنل‌هایی که از منو باز می‌شوند با `sheet` می‌آیند.
  *
- *  • تا کلیدِ هویت روی این دستگاه آماده نباشد، MentorE2EEGate جایش را می‌گیرد
- *    (تنها نقطه‌ی استفاده از گیت در بخشِ گفت‌وگو).
- *  • پیام روی همین دستگاه رمز می‌شود؛ سرور فقط متنِ رمزشده می‌بیند.
- *  • polling هر ~۸ ثانیه وقتی تب دیده می‌شود؛ خودِ GET پیام‌های دریافتی را «خوانده» می‌کند.
- *  • ارسالِ خوش‌بینانه با تلاشِ دوباره‌ی همان بسته (clientId ثابت → بدونِ پیامِ تکراری).
- *  • گزارشِ یک پیام یا کلِ گفت‌وگو: متن + کلیدِ فرانکینگِ هر پیام به سرور می‌رود.
+ *  • تا کلید هویت روی این دستگاه آماده نباشد، MentorE2EEGate جایش را می‌گیرد
+ *    (تنها نقطه‌ی استفاده از گیت در بخش گفت‌وگو).
+ *  • پیام روی همین دستگاه رمز می‌شود؛ سرور فقط متن رمزشده می‌بیند.
+ *  • polling هر ~۸ ثانیه وقتی تب دیده می‌شود؛ خود GET پیام‌های دریافتی را «خوانده» می‌کند.
+ *  • ارسال خوش‌بینانه با تلاش دوباره‌ی همان بسته (clientId ثابت → بدون پیام تکراری).
+ *  • گزارش یک پیام یا کل گفت‌وگو: متن + کلید فرانکینگ هر پیام به سرور می‌رود.
  */
 export function MentorChat({
   mentorshipId, peerName, sheet = null, onSheetClose, onReady,
@@ -107,7 +107,7 @@ export function MentorChat({
   peerName?: string;
   sheet?: ChatSheet;
   onSheetClose?: () => void;
-  /** true وقتی رشته‌ی پیام‌ها آماده است (گزارشِ گفت‌وگو فقط آن موقع ممکن است) */
+  /** true وقتی رشته‌ی پیام‌ها آماده است (گزارش گفت‌وگو فقط آن موقع ممکن است) */
   onReady?: (ready: boolean) => void;
 }) {
   return (
@@ -173,7 +173,7 @@ function ChatBody({
   const preserveFrom = useRef<number | null>(null);
   const inflight = useRef(false);
   const legacyBusy = useRef(false);
-  /** پیام‌هایی که در بارِ اول بودند (بی‌انیمیشن)؛ پیام‌های بعدی نرم وارد می‌شوند */
+  /** پیام‌هایی که در بار اول بودند (بی‌انیمیشن)؛ پیام‌های بعدی نرم وارد می‌شوند */
   const settled = useRef<Set<string> | null>(null);
   const lastCount = useRef(0);
   const smoothNext = useRef(false);
@@ -191,7 +191,7 @@ function ChatBody({
 
   const loadKeys = useCallback(async () => {
     const k = await fetchConversationKeys(mentorshipId);
-    // اگر کلیدِ خودم روی سرور با کلیدِ این دستگاه نمی‌خواند (بازنشانی روی دستگاهِ دیگر)
+    // اگر کلید خودم روی سرور با کلید این دستگاه نمی‌خواند (بازنشانی روی دستگاه دیگر)
     const mine = (k.keys[identity.userId] || []).find((r) => r.current);
     if (!mine || mine.version !== identity.version || mine.publicKey !== identity.publicKey) {
       await refreshIdentity();
@@ -249,7 +249,7 @@ function ChatBody({
     const tick = () => {
       if (document.visibilityState !== "visible") return;
       fetchLatest();
-      // تا وقتی طرفِ مقابل کلید ندارد، کلیدها هم با هر دور تازه می‌شوند
+      // تا وقتی طرف مقابل کلید ندارد، کلیدها هم با هر دور تازه می‌شوند
       if (!peerReady) loadKeys().catch(() => {});
     };
     const t = setInterval(tick, POLL_MS);
@@ -257,7 +257,7 @@ function ChatBody({
     return () => { clearInterval(t); document.removeEventListener("visibilitychange", tick); };
   }, [fetchLatest, loadKeys, peerReady]);
 
-  // رمزگشاییِ پیام‌های تازه (و دوباره، وقتی کلیدهای طرفِ مقابل عوض شد)
+  // رمزگشایی پیام‌های تازه (و دوباره، وقتی کلیدهای طرف مقابل عوض شد)
   useEffect(() => {
     if (!cipher || !messages) return;
     let cancelled = false;
@@ -279,7 +279,7 @@ function ChatBody({
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [cipher, messages]);
 
-  // کدِ امنیتی و تشخیصِ تغییرِ کلیدِ طرفِ مقابل (TOFU)
+  // کد امنیتی و تشخیص تغییر کلید طرف مقابل (TOFU)
   useEffect(() => {
     if (!cipher) return;
     let cancelled = false;
@@ -288,7 +288,7 @@ function ChatBody({
     return () => { cancelled = true; };
   }, [cipher]);
 
-  // بازرمزگذاریِ پیام‌های قدیمیِ متن‌ساده، بی‌صدا در پس‌زمینه
+  // بازرمزگذاری پیام‌های قدیمی متن‌ساده، بی‌صدا در پس‌زمینه
   useEffect(() => {
     if (!cipher || !peerReady || !messages || legacyBusy.current) return;
     const legacy = messages.filter((m) => m.legacyBody != null).slice(0, 50);
@@ -313,14 +313,14 @@ function ChatBody({
           }
         }
       } catch {
-        // دورِ بعد دوباره
+        // دور بعد دوباره
       } finally {
         legacyBusy.current = false;
       }
     })();
   }, [cipher, peerReady, messages, mentorshipId, merge]);
 
-  // ── اسکرول: ماندن در پایین، حفظِ جا هنگامِ بارِ قدیمی‌ترها، شمارِ پیام‌های تازه‌ی پایین ──
+  // ── اسکرول: ماندن در پایین، حفظ جا هنگام بار قدیمی‌ترها، شمار پیام‌های تازه‌ی پایین ──
   const total = (messages?.length ?? 0) + pending.length;
   useLayoutEffect(() => {
     const el = threadRef.current;
@@ -341,7 +341,7 @@ function ChatBody({
     }
   }, [total, opened]);
 
-  // ارتفاعِ نوارِ پایین (نوشتن/اطلاعیه) → فاصله‌ی ته رشته، تا آخرین پیام زیرش نرود
+  // ارتفاع نوار پایین (نوشتن/اطلاعیه) → فاصله‌ی ته رشته، تا آخرین پیام زیرش نرود
   useEffect(() => {
     const dock = dockRef.current;
     const thread = threadRef.current;
@@ -414,7 +414,7 @@ function ChatBody({
       });
       if (!res.ok) {
         const data = await res.clone().json().catch(() => null);
-        // کلیدِ یکی از دو طرف عوض شده: کلیدها را تازه کن و یک بار با کلیدِ درست دوباره رمز کن
+        // کلید یکی از دو طرف عوض شده: کلیدها را تازه کن و یک بار با کلید درست دوباره رمز کن
         if (res.status === 409 && (data?.code === "KEY_CHANGED" || data?.code === "PEER_NO_KEY") && !retriedKeys) {
           const k = await loadKeys();
           if (k && data?.code === "KEY_CHANGED") {
@@ -430,7 +430,7 @@ function ChatBody({
       }
       const data: { message: ChatMessage } = await res.json();
       if (data?.message) {
-        // متنِ پیامِ خودم را همین‌جا داریم؛ بدونِ رمزگشاییِ دوباره نمایش داده می‌شود
+        // متن پیام خودم را همین‌جا داریم؛ بدون رمزگشایی دوباره نمایش داده می‌شود
         settled.current?.add(data.message.id);
         setOpened((prev) => ({ ...prev, [data.message.id]: { kind: "text", text: p.text, frankingKey: frankingKey ?? "", committed: true } }));
         merge([data.message]);
@@ -459,7 +459,7 @@ function ChatBody({
     setDraft("");
     setRepliesOpen(false);
     deliver(p);
-    // روی موبایل کیبورد باز می‌ماند (مثلِ پیام‌رسان‌ها)
+    // روی موبایل کیبورد باز می‌ماند (مثل پیام‌رسان‌ها)
     inputRef.current?.focus();
   }
 
@@ -479,7 +479,7 @@ function ChatBody({
       setCopied(true);
       setTimeout(() => setCopied(false), 1600);
     } catch {
-      // مرورگر اجازه نداد؛ متن همچنان قابلِ انتخاب است
+      // مرورگر اجازه نداد؛ متن همچنان قابل انتخاب است
     }
   }
 
@@ -491,7 +491,7 @@ function ChatBody({
     setMenu({ anchor: { top: r.top, bottom: r.bottom, left: r.left, right: r.right }, actions, align: mine ? "start" : "end" });
   }
 
-  // ── ردیف‌های نمایش: روز + گروه‌بندیِ پشتِ‌همِ یک فرستنده ──
+  // ── ردیف‌های نمایش: روز + گروه‌بندی پشت‌هم یک فرستنده ──
   const rows = useMemo<Row[]>(() => {
     const items: { key: string; mine: boolean; createdAt: string; m?: ChatMessage; p?: Pending }[] = [
       ...(messages ?? []).map((m) => ({ key: m.id, mine: m.mine, createdAt: m.createdAt, m })),
@@ -517,7 +517,7 @@ function ChatBody({
     return out;
   }, [messages, pending]);
 
-  // نامزدهای «گزارش گفت‌وگو»: پیام‌های خوانا با کلیدِ فرانکینگ (یا قدیمی)، ۵۰تای آخر
+  // نامزدهای «گزارش گفت‌وگو»: پیام‌های خوانا با کلید فرانکینگ (یا قدیمی)، ۵۰تای آخر
   const reportCandidates = useMemo<ConversationReportCandidate[]>(() => {
     const out: ConversationReportCandidate[] = [];
     for (const m of messages ?? []) {
@@ -580,7 +580,7 @@ function ChatBody({
 
           {rows.map((r, idx) => {
             if (r.kind === "day") {
-              // روزِ پیامِ خوش‌آمد بالای خودش آمده؛ جداکننده‌ی تکراری نمی‌خواهیم
+              // روز پیام خوش‌آمد بالای خودش آمده؛ جداکننده‌ی تکراری نمی‌خواهیم
               if (idx === 0 && welcome && !hasMore && r.key === `d-${welcomeDay}`) return null;
               return <div key={r.key} className="mc-day"><span>{r.label}</span></div>;
             }
@@ -754,7 +754,7 @@ function ChatBody({
                 enterKeyHint={coarse ? "enter" : "send"}
                 onChange={(e) => setDraft(e.target.value)}
                 onKeyDown={(e) => {
-                  // دسکتاپ: Enter ارسال، Shift+Enter خطِ تازه. موبایل: Enter خطِ تازه، ارسال با دکمه.
+                  // دسکتاپ: Enter ارسال، Shift+Enter خط تازه. موبایل: Enter خط تازه، ارسال با دکمه.
                   if (e.key === "Enter" && !e.shiftKey && !coarse && !e.nativeEvent.isComposing) { e.preventDefault(); send(); }
                 }}
               />
@@ -793,7 +793,7 @@ function ChatBody({
   );
 }
 
-/** فهرستِ پاسخ‌های آماده‌ی منتور، بالای نوارِ نوشتن */
+/** فهرست پاسخ‌های آماده‌ی منتور، بالای نوار نوشتن */
 let repliesCache: SavedReply[] | null = null;
 function ChatReplies({ onPick }: { onPick: (text: string) => void }) {
   const [list, setList] = useState<SavedReply[] | null>(repliesCache);

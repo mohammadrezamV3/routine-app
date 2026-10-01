@@ -8,8 +8,8 @@ import { responseTimeLabel } from "@/lib/mentorAvailability";
 const ic = (Icon: typeof Clock, size: number) => <Icon size={size} strokeWidth={MI_STROKE} aria-hidden />;
 
 /**
- * دسترس‌پذیریِ منتور روی پروفایلِ عمومی: عدمِ حضور (تا روزِ بازگشت + پیام)
- * و زمانِ معمولِ پاسخ. وقتی هیچ‌کدام تعریف نشده چیزی رندر نمی‌شود.
+ * دسترس‌پذیری منتور روی پروفایل عمومی: عدم حضور (تا روز بازگشت + پیام)
+ * و زمان معمول پاسخ. وقتی هیچ‌کدام تعریف نشده چیزی رندر نمی‌شود.
  */
 export function MentorAvailabilityLine({
   awayUntil, awayMessage, responseTimeHours,

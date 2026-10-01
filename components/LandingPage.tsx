@@ -16,8 +16,8 @@ import {
   LandingFinalCTA,
 } from "@/components/LandingSections";
 
-// لندینگِ کاربرِ واردنشده — طراحیِ از نو: هیرو با ماکتِ زنده‌ی اپ، معرفیِ
-// تعاملیِ ماژول‌ها، و بخش‌های اعتمادسازی تا CTAِ پایانی. هیرو و ویترین
+// لندینگ کاربر واردنشده — طراحی از نو: هیرو با ماکت زنده‌ی اپ، معرفی
+// تعاملی ماژول‌ها، و بخش‌های اعتمادسازی تا CTA پایانی. هیرو و ویترین
 // idهای sec-landing-hero / sec-landing-features رو خودشون دارن.
 function Sec({ id, children }: { id: string; children: React.ReactNode }) {
   return <section id={id} style={{ paddingTop: 32 }}>{children}</section>;

@@ -104,17 +104,17 @@ export function cityTime(date: Date, tz: string): string {
 
 // ── دایره‌ی ۲۴ساعته ──────────────────────────────────────────────────────
 //
-// برای رسمِ کمانِ هر جلسه روی ساعتِ ۲۴ساعته باید ساعتِ باز/بستِ **محلیِ آن
-// شهر** را به یک لحظه‌ی واقعی تبدیل کنیم و بعد به وقتِ محلیِ خودِ کاربر
+// برای رسم کمان هر جلسه روی ساعت ۲۴ساعته باید ساعت باز/بست **محلی آن
+// شهر** را به یک لحظه‌ی واقعی تبدیل کنیم و بعد به وقت محلی خود کاربر
 // ببریم. دو تبدیل جدا لازم است چون هر دو سر DST دارند: ممکن است لندن
 // ساعتش را جابه‌جا کرده باشد ولی تهران نه.
 
 /**
- * لحظه‌ای که ساعتِ محلیِ `tz` برابرِ `targetLocalMinutes` است، نزدیک‌ترین
+ * لحظه‌ای که ساعت محلی `tz` برابر `targetLocalMinutes` است، نزدیک‌ترین
  * رخداد به `ref`.
  *
- * یک پاسِ اصلاح دارد چون در روزهای تغییرِ ساعت، افستِ لحظه‌ی مرجع با افستِ
- * لحظه‌ی هدف یکی نیست و تخمینِ اول تا یک ساعت خطا می‌کند.
+ * یک پاس اصلاح دارد چون در روزهای تغییر ساعت، افست لحظه‌ی مرجع با افست
+ * لحظه‌ی هدف یکی نیست و تخمین اول تا یک ساعت خطا می‌کند.
  */
 export function localMinutesToInstant(ref: Date, tz: string, targetLocalMinutes: number): Date {
   const wrap = (d: number) => (d > 720 ? d - 1440 : d < -720 ? d + 1440 : d);
@@ -125,7 +125,7 @@ export function localMinutesToInstant(ref: Date, tz: string, targetLocalMinutes:
   return candidate;
 }
 
-/** دقیقه از نیم‌شب، به وقتِ محلیِ خودِ کاربر */
+/** دقیقه از نیم‌شب، به وقت محلی خود کاربر */
 export function viewerMinutes(d: Date): number {
   return d.getHours() * 60 + d.getMinutes() + d.getSeconds() / 60;
 }
@@ -134,14 +134,14 @@ export type SessionArc = {
   key: SessionKey;
   label: string;
   flag: string;
-  /** شروع و طولِ کمان، بر حسبِ دقیقه در شبانه‌روزِ محلیِ کاربر */
+  /** شروع و طول کمان، بر حسب دقیقه در شبانه‌روز محلی کاربر */
   startMin: number;
   durationMin: number;
   open: boolean;
-  /** لحظه‌های واقعیِ باز و بست — برای شمارشِ معکوس */
+  /** لحظه‌های واقعی باز و بست — برای شمارش معکوس */
   openAt: Date;
   closeAt: Date;
-  /** ساعتِ باز/بست به وقتِ محلیِ کاربر، برای نمایشِ متنی */
+  /** ساعت باز/بست به وقت محلی کاربر، برای نمایش متنی */
   openLabel: string;
   closeLabel: string;
 };
@@ -149,12 +149,12 @@ export type SessionArc = {
 const hhmm = (d: Date) =>
   `${String(d.getHours()).padStart(2, "0")}:${String(d.getMinutes()).padStart(2, "0")}`;
 
-/** کمانِ هر چهار جلسه برای شبانه‌روزِ جاری، به وقتِ محلیِ کاربر */
+/** کمان هر چهار جلسه برای شبانه‌روز جاری، به وقت محلی کاربر */
 export function sessionArcs(now: Date = new Date()): SessionArc[] {
   return FOREX_SESSIONS.map((s) => {
     const open = localMinutesToInstant(now, s.tz, s.openMin);
     const close = localMinutesToInstant(open, s.tz, s.closeMin);
-    // اگر بستن قبل از بازشدن افتاد یعنی به روزِ بعد می‌رود
+    // اگر بستن قبل از بازشدن افتاد یعنی به روز بعد می‌رود
     const durationMin = Math.round(
       (close.getTime() - open.getTime()) / 60_000 + (close <= open ? 1440 : 0)
     );
@@ -175,7 +175,7 @@ export function sessionArcs(now: Date = new Date()): SessionArc[] {
 }
 
 /**
- * بازشدنِ بعدیِ یک جلسه — تعطیلیِ آخرِ هفته را رد می‌کند.
+ * بازشدن بعدی یک جلسه — تعطیلی آخر هفته را رد می‌کند.
  * تا ۸ روز جلو می‌رود؛ اگر چیزی پیدا نشد null می‌دهد (نباید پیش بیاید).
  */
 export function nextSessionOpen(
@@ -188,7 +188,7 @@ export function nextSessionOpen(
     const ref = new Date(now.getTime() + day * 86_400_000);
     const candidate = localMinutesToInstant(ref, def.tz, def.openMin);
     if (candidate.getTime() <= now.getTime()) continue;
-    // فقط اگر بازار و خودِ آن شهر آن لحظه واقعاً کاری‌اند
+    // فقط اگر بازار و خود آن شهر آن لحظه واقعا کاری‌اند
     const { weekday } = wallClockIn(candidate, def.tz);
     if (weekday === 0 || weekday === 6) continue;
     if (!isForexOpen(candidate)) continue;
@@ -197,7 +197,7 @@ export function nextSessionOpen(
   return null;
 }
 
-/** نزدیک‌ترین جلسه‌ای که بعداً باز می‌شود */
+/** نزدیک‌ترین جلسه‌ای که بعدا باز می‌شود */
 export function upcomingSession(now: Date = new Date()): { key: SessionKey; at: Date } | null {
   let best: { key: SessionKey; at: Date } | null = null;
   for (const s of FOREX_SESSIONS) {
@@ -209,8 +209,8 @@ export function upcomingSession(now: Date = new Date()): { key: SessionKey; at: 
 }
 
 /**
- * کمانِ یک جلسه از روی تعریفِ خامش — برای صفحه‌ی ساعت که یک جلسه‌ی
- * نمایشیِ اضافه (فرانکفورت) هم دارد و در `FOREX_SESSIONS` نیست.
+ * کمان یک جلسه از روی تعریف خامش — برای صفحه‌ی ساعت که یک جلسه‌ی
+ * نمایشی اضافه (فرانکفورت) هم دارد و در `FOREX_SESSIONS` نیست.
  */
 export function arcForDef(
   def: { tz: string; openMin: number; closeMin: number },
@@ -223,8 +223,8 @@ export function arcForDef(
   );
   const closeAt = new Date(openAt.getTime() + durationMin * 60_000);
 
-  // باز بودن با همان قاعده‌ی جلسه‌های ژورنال: هم بازارِ فارکس باز باشد، هم
-  // خودِ آن شهر روزِ کاری باشد، هم داخلِ بازه‌ی ساعتش باشیم.
+  // باز بودن با همان قاعده‌ی جلسه‌های ژورنال: هم بازار فارکس باز باشد، هم
+  // خود آن شهر روز کاری باشد، هم داخل بازه‌ی ساعتش باشیم.
   const { weekday, minutes } = wallClockIn(now, def.tz);
   const inHours = minutes >= def.openMin && minutes < def.closeMin;
   const open = isForexOpen(now) && weekday !== 0 && weekday !== 6 && inHours;
@@ -233,7 +233,7 @@ export function arcForDef(
            openLabel: hhmm(openAt), closeLabel: hhmm(closeAt) };
 }
 
-/** بازشدنِ بعدیِ یک تعریفِ جلسه — تعطیلیِ آخرِ هفته را رد می‌کند */
+/** بازشدن بعدی یک تعریف جلسه — تعطیلی آخر هفته را رد می‌کند */
 export function nextOpenForDef(
   def: { tz: string; openMin: number },
   now: Date = new Date()

@@ -1,10 +1,10 @@
 "use client";
 
-// پالتِ فرمان (⌘K / Ctrl+K / «/») — دسترسیِ سریع به همه‌ی صفحه‌ها و کارها از
-// داشبورد، بدونِ گشتن در منو. فقط ناوبری است (هیچ نوشتنی مستقیم انجام
-// نمی‌ده)، پس هیچ گیتِ امنیتی‌ای رو دور نمی‌زنه: مقصدها خودشون ModuleGate/
-// FeatureGate و روت‌های API گیت‌شده دارن. آیتم‌های پولیِ بی‌دسترسی فقط قفل
-// نشون داده می‌شن؛ آیتم‌های فلگِ خاموش اصلا نمیان (هم‌رفتار با NavDrawer).
+// پالت فرمان (⌘K / Ctrl+K / «/») — دسترسی سریع به همه‌ی صفحه‌ها و کارها از
+// داشبورد، بدون گشتن در منو. فقط ناوبری است (هیچ نوشتنی مستقیم انجام
+// نمی‌ده)، پس هیچ گیت امنیتی‌ای رو دور نمی‌زنه: مقصدها خودشون ModuleGate/
+// FeatureGate و روت‌های API گیت‌شده دارن. آیتم‌های پولی بی‌دسترسی فقط قفل
+// نشون داده می‌شن؛ آیتم‌های فلگ خاموش اصلا نمیان (هم‌رفتار با NavDrawer).
 
 import { useEffect, useMemo, useRef, useState } from "react";
 import { createPortal } from "react-dom";
@@ -23,22 +23,22 @@ export type CommandItem = {
   hint?: string;
   href: string;
   icon: DashIconName;
-  group: "کارِ سریع" | "صفحه‌ها" | "ترید" | "حساب";
+  group: "کار سریع" | "صفحه‌ها" | "ترید" | "حساب";
   keywords?: string;
   module?: string;
   feature?: FeatureKey;
   adminOnly?: boolean;
-  /** داخلِ داشبورد به‌جای ناوبری، پاپ‌آپِ همون بخش همین‌جا باز می‌شه */
+  /** داخل داشبورد به‌جای ناوبری، پاپ‌آپ همون بخش همین‌جا باز می‌شه */
   action?: DashAction;
 };
 
 export const COMMANDS: CommandItem[] = [
-  // کارهای سریع — مستقیم به فرم/تبِ مربوط
-  { id: "a-program", group: "کارِ سریع", label: "افزودن برنامه به روتین", hint: "روتین", href: "/weekly?add=1", icon: "plus", keywords: "برنامه جدید تسک کار add", action: "program" },
-  { id: "a-workout", group: "کارِ سریع", label: "شروعِ تمرینِ امروز", hint: "بدنسازی", href: "/exercise?tab=exercise", icon: "dumbbell", keywords: "ورزش باشگاه workout gym", module: "EXERCISE" },
-  { id: "a-food", group: "کارِ سریع", label: "ثبتِ غذا", hint: "کالری‌شمار", href: "/exercise?tab=calorie", icon: "apple", keywords: "کالری غذا وعده food", module: "CALORIE", action: "food" },
-  { id: "a-trade", group: "کارِ سریع", label: "ثبتِ معامله", hint: "ژورنال", href: "/trade/journal", icon: "journal", keywords: "ترید معامله پوزیشن trade", module: "TRADE", action: "trade" },
-  { id: "a-roadmap", group: "کارِ سریع", label: "ساختِ رودمپِ یادگیری با AI", hint: "رودمپ", href: "/roadmaps/new", icon: "spark", keywords: "یادگیری هوش مصنوعی roadmap", feature: "roadmaps" },
+  // کارهای سریع — مستقیم به فرم/تب مربوط
+  { id: "a-program", group: "کار سریع", label: "افزودن برنامه به روتین", hint: "روتین", href: "/weekly?add=1", icon: "plus", keywords: "برنامه جدید تسک کار add", action: "program" },
+  { id: "a-workout", group: "کار سریع", label: "شروع تمرین امروز", hint: "بدنسازی", href: "/exercise?tab=exercise", icon: "dumbbell", keywords: "ورزش باشگاه workout gym", module: "EXERCISE" },
+  { id: "a-food", group: "کار سریع", label: "ثبت غذا", hint: "کالری‌شمار", href: "/exercise?tab=calorie", icon: "apple", keywords: "کالری غذا وعده food", module: "CALORIE", action: "food" },
+  { id: "a-trade", group: "کار سریع", label: "ثبت معامله", hint: "ژورنال", href: "/trade/journal", icon: "journal", keywords: "ترید معامله پوزیشن trade", module: "TRADE", action: "trade" },
+  { id: "a-roadmap", group: "کار سریع", label: "ساخت رودمپ یادگیری با AI", hint: "رودمپ", href: "/roadmaps/new", icon: "spark", keywords: "یادگیری هوش مصنوعی roadmap", feature: "roadmaps" },
 
   { id: "p-weekly", group: "صفحه‌ها", label: "روتین و برنامه‌ی هفتگی", href: "/weekly", icon: "routine", keywords: "روتین هفتگی تقویم weekly" },
   { id: "p-streak", group: "صفحه‌ها", label: "استریک و اچیومنت‌ها", href: "/streak", icon: "flame", keywords: "استریک اچیومنت نشان رکورد streak achievement طلایی" },
@@ -46,23 +46,23 @@ export const COMMANDS: CommandItem[] = [
   { id: "p-exercise", group: "صفحه‌ها", label: "برنامه‌ی تمرینی", href: "/exercise?tab=exercise", icon: "dumbbell", keywords: "بدنسازی ورزش", module: "EXERCISE" },
   { id: "p-calorie", group: "صفحه‌ها", label: "کالری‌شمار", href: "/exercise?tab=calorie", icon: "apple", keywords: "رژیم تغذیه ماکرو", module: "CALORIE" },
   { id: "p-roadmaps", group: "صفحه‌ها", label: "رودمپ‌ها", href: "/roadmaps", icon: "roadmap", keywords: "یادگیری مسیر", feature: "roadmaps" },
-  { id: "p-mentors", group: "صفحه‌ها", label: "پیدا کردنِ مربی", href: "/mentors", icon: "mentors", keywords: "منتور مربی استاد", feature: "mentors" },
+  { id: "p-mentors", group: "صفحه‌ها", label: "پیدا کردن مربی", href: "/mentors", icon: "mentors", keywords: "منتور مربی استاد", feature: "mentors" },
   { id: "p-mentorship", group: "صفحه‌ها", label: "مربی‌های من", href: "/mentorship", icon: "chat", keywords: "منتور گفتگو پیام", feature: "mentors" },
-  { id: "p-analysis", group: "صفحه‌ها", label: "آنالیزِ هفتگی", href: "/analysis/weekly", icon: "analysis", keywords: "گزارش تحلیل هوش مصنوعی", module: "AI_INSIGHT", feature: "weeklyAnalysis" },
+  { id: "p-analysis", group: "صفحه‌ها", label: "آنالیز هفتگی", href: "/analysis/weekly", icon: "analysis", keywords: "گزارش تحلیل هوش مصنوعی", module: "AI_INSIGHT", feature: "weeklyAnalysis" },
 
-  { id: "t-hub", group: "ترید", label: "هابِ ترید", href: "/trade", icon: "candles", keywords: "ترید فارکس", module: "TRADE" },
+  { id: "t-hub", group: "ترید", label: "هاب ترید", href: "/trade", icon: "candles", keywords: "ترید فارکس", module: "TRADE" },
   { id: "t-chart", group: "ترید", label: "چارت", href: "/trade/chart", icon: "chart", keywords: "تریدینگ ویو نمودار", module: "TRADE" },
   { id: "t-journal", group: "ترید", label: "حساب‌های معاملاتی", href: "/trade/journal", icon: "journal", keywords: "ژورنال حساب", module: "TRADE" },
   { id: "t-check", group: "ترید", label: "چک‌لیست‌ها", href: "/trade/checklists", icon: "checklist", keywords: "چک لیست شرط ورود", module: "TRADE" },
-  { id: "t-cal", group: "ترید", label: "تقویمِ اقتصادی", href: "/trade/calendar", icon: "calendarBolt", keywords: "اخبار خبر رویداد news", module: "TRADE" },
-  { id: "t-clock", group: "ترید", label: "ساعتِ فارکس", href: "/trade/clock", icon: "globeClock", keywords: "سشن جلسه لندن نیویورک", module: "TRADE" },
+  { id: "t-cal", group: "ترید", label: "تقویم اقتصادی", href: "/trade/calendar", icon: "calendarBolt", keywords: "اخبار خبر رویداد news", module: "TRADE" },
+  { id: "t-clock", group: "ترید", label: "ساعت فارکس", href: "/trade/clock", icon: "globeClock", keywords: "سشن جلسه لندن نیویورک", module: "TRADE" },
   { id: "t-notes", group: "ترید", label: "یادداشت‌های ترید", href: "/trade/notes", icon: "notes", keywords: "نوت تحلیل", module: "TRADE" },
-  { id: "t-mt", group: "ترید", label: "اتصالِ متاتریدر", href: "/trade/metatrader", icon: "link", keywords: "متاتریدر mt4 mt5 اکسپرت", module: "TRADE" },
+  { id: "t-mt", group: "ترید", label: "اتصال متاتریدر", href: "/trade/metatrader", icon: "link", keywords: "متاتریدر mt4 mt5 اکسپرت", module: "TRADE" },
 
-  { id: "c-account", group: "حساب", label: "پنلِ کاربری", href: "/account", icon: "user", keywords: "پروفایل تنظیمات حساب" },
+  { id: "c-account", group: "حساب", label: "پنل کاربری", href: "/account", icon: "user", keywords: "پروفایل تنظیمات حساب" },
   { id: "c-sub", group: "حساب", label: "اشتراک و پلن‌ها", href: "/subscription", icon: "card", keywords: "خرید پلن اشتراک پرداخت" },
-  { id: "c-notif", group: "حساب", label: "تنظیماتِ اعلان‌ها", href: "/account/notifications", icon: "bell", keywords: "نوتیفیکیشن یادآوری" },
-  { id: "c-admin", group: "حساب", label: "پنلِ ادمین", href: "/admin", icon: "shield", keywords: "مدیریت ادمین admin", adminOnly: true },
+  { id: "c-notif", group: "حساب", label: "تنظیمات اعلان‌ها", href: "/account/notifications", icon: "bell", keywords: "نوتیفیکیشن یادآوری" },
+  { id: "c-admin", group: "حساب", label: "پنل ادمین", href: "/admin", icon: "shield", keywords: "مدیریت ادمین admin", adminOnly: true },
 ];
 
 export function DashboardCommand({
@@ -111,7 +111,7 @@ export function DashboardCommand({
   useEffect(() => {
     if (!open) return;
     setQ("");
-    // فوکوس بعد از فریمِ اول تا انیمیشنِ ورود نپره
+    // فوکوس بعد از فریم اول تا انیمیشن ورود نپره
     const t = requestAnimationFrame(() => inputRef.current?.focus());
     return () => cancelAnimationFrame(t);
   }, [open]);
@@ -121,8 +121,8 @@ export function DashboardCommand({
 
   function go(c: CommandItem) {
     onClose();
-    // «ثبت»ها پاپ‌آپِ خودِ همون بخش رو همین‌جا باز می‌کنن (DashboardActions)؛
-    // آیتمِ قفل (ماژولِ پولیِ بی‌دسترسی) لینک می‌مونه تا مقصد گیت رو نشون بده.
+    // «ثبت»ها پاپ‌آپ خود همون بخش رو همین‌جا باز می‌کنن (DashboardActions)؛
+    // آیتم قفل (ماژول پولی بی‌دسترسی) لینک می‌مونه تا مقصد گیت رو نشون بده.
     const locked = !!c.module && modules !== null && !modules.has(c.module);
     if (c.action && run && !locked) { run(c.action); return; }
     router.push(c.href);
@@ -165,7 +165,7 @@ export function DashboardCommand({
                 ref={inputRef}
                 value={q}
                 onChange={(e) => setQ(e.target.value)}
-                placeholder="کجا بریم؟ اسمِ صفحه یا کار رو بنویس…"
+                placeholder="کجا بریم؟ اسم صفحه یا کار رو بنویس…"
                 aria-label="جست‌وجو"
                 aria-controls="db-cmd-list"
                 aria-activedescendant={results[active] ? `db-cmd-${results[active].id}` : undefined}
@@ -216,7 +216,7 @@ export function DashboardCommand({
   );
 }
 
-/** میان‌برِ کیبورد: Ctrl/⌘+K همه‌جا، «/» وقتی داخلِ فیلد تایپ نمی‌کنی */
+/** میان‌بر کیبورد: Ctrl/⌘+K همه‌جا، «/» وقتی داخل فیلد تایپ نمی‌کنی */
 export function useCommandHotkey(setOpen: (fn: (v: boolean) => boolean) => void) {
   useEffect(() => {
     function onKey(e: KeyboardEvent) {

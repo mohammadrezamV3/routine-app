@@ -12,7 +12,7 @@ import { takePreloaded } from "@/lib/preload";
 export function ExercisePanel() {
   const { status } = useSession();
   const [plan, setPlan] = useState<ExercisePlan | null | undefined>(undefined);
-  // طبقِ درخواستِ صریح، اولین ورود دیگر مستقیم داخلِ ویزاردِ ساختِ برنامه
+  // طبق درخواست صریح، اولین ورود دیگر مستقیم داخل ویزارد ساخت برنامه
   // نمی‌افتد — کاربر اول صفحه‌ی خالی را می‌بیند و خودش تصمیم می‌گیرد.
   const [wizardOpen, setWizardOpen] = useState(false);
 

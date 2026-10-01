@@ -10,7 +10,7 @@ import { useLiveRefresh } from "@/lib/liveSync";
 import { isoLocal } from "@/lib/jalali";
 import { clockOf, durationLabel, sleepMinutes, type SleepRecord } from "@/lib/sleep";
 
-// کارتِ کوچکِ بالای /weekly: خوابِ دیشب (روزِ بیدارشدنِ امروز) یا دعوت به ثبت.
+// کارت کوچک بالای /weekly: خواب دیشب (روز بیدارشدن امروز) یا دعوت به ثبت.
 export function SleepMiniCard() {
   const [rec, setRec] = useState<SleepRecord | null>(null);
   const [ready, setReady] = useState(false);
@@ -25,7 +25,7 @@ export function SleepMiniCard() {
 
   useEffect(() => {
     load();
-    // تبِ باز از دیشب: با برگشتن، «امروز» ِ تازه خونده می‌شه
+    // تب باز از دیشب: با برگشتن، «امروز»  تازه خونده می‌شه
     const onVis = () => { if (document.visibilityState === "visible") load(); };
     document.addEventListener("visibilitychange", onVis);
     return () => document.removeEventListener("visibilitychange", onVis);
@@ -46,7 +46,7 @@ export function SleepMiniCard() {
             </>
           ) : (
             <>
-              <b>ثبتِ خوابِ دیشب</b>
+              <b>ثبت خواب دیشب</b>
               <span>خوابت را ثبت کن تا آمارش را ببینی</span>
             </>
           )}

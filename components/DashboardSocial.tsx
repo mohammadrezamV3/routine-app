@@ -1,7 +1,7 @@
 "use client";
 
-// ردیفِ پایینِ بنتو: مربی‌ها، رودمپ‌ها و صندوقِ اعلان‌ها/اطلاعیه‌ها.
-// متنِ پیام‌های منتور هیچ‌وقت این‌جا نیست (رمزگذاریِ سرتاسری) — فقط شمارش.
+// ردیف پایین بنتو: مربی‌ها، رودمپ‌ها و صندوق اعلان‌ها/اطلاعیه‌ها.
+// متن پیام‌های منتور هیچ‌وقت این‌جا نیست (رمزگذاری سرتاسری) — فقط شمارش.
 
 import Link from "next/link";
 import { motion } from "framer-motion";
@@ -17,19 +17,19 @@ export function DashboardMentors({ m, loading }: { m: DashMentors | null; loadin
       {loading ? (
         <Skel w="100%" h={90} r={12} />
       ) : !m ? null : m.activeAsStudent + m.activeAsMentor + m.pendingIncoming === 0 && !m.isMentor ? (
-        <EmptyState icon="mentors" text="با یه مربی، برنامه‌ت رو حرفه‌ای‌تر پیش ببر." href="/mentors" cta="پیدا کردنِ مربی" />
+        <EmptyState icon="mentors" text="با یه مربی، برنامه‌ت رو حرفه‌ای‌تر پیش ببر." href="/mentors" cta="پیدا کردن مربی" />
       ) : (
         <div className="db-mentor-body">
           <Link href="/mentorship" prefetch className={`db-unread${m.unread ? " has" : ""}`}>
             <span className="db-unread-icon"><DashIcon name="chat" className="dbi-live" /></span>
             <span className="db-unread-text">
-              <b>{m.unread ? <CountUp value={m.unread} /> : "بدونِ"}</b> پیامِ خوانده‌نشده
+              <b>{m.unread ? <CountUp value={m.unread} /> : "بدون"}</b> پیام خوانده‌نشده
             </span>
           </Link>
           <div className="db-mini-stats">
-            <Link href="/mentorship" prefetch><b>{faNum(m.activeAsStudent)}</b><span>مربیِ فعال</span></Link>
+            <Link href="/mentorship" prefetch><b>{faNum(m.activeAsStudent)}</b><span>مربی فعال</span></Link>
             {m.isMentor && <Link href="/mentor" prefetch><b>{faNum(m.activeAsMentor)}</b><span>شاگرد</span></Link>}
-            <Link href={m.isMentor ? "/mentor" : "/mentorship"} prefetch className={m.pendingIncoming ? "is-alert" : ""}><b>{faNum(m.pendingIncoming)}</b><span>درخواستِ منتظر</span></Link>
+            <Link href={m.isMentor ? "/mentor" : "/mentorship"} prefetch className={m.pendingIncoming ? "is-alert" : ""}><b>{faNum(m.pendingIncoming)}</b><span>درخواست منتظر</span></Link>
           </div>
         </div>
       )}
@@ -44,7 +44,7 @@ export function DashboardRoadmaps({ r, loading }: { r: { items: DashRoadmap[]; t
       {loading ? (
         <Skel w="100%" h={90} r={12} />
       ) : !r ? null : r.items.length === 0 ? (
-        <EmptyState icon="spark" text="هر مهارتی رو بگو، هوش مصنوعی قدم‌به‌قدم مسیرش رو می‌سازه." href="/roadmaps/new" cta="ساختِ رودمپ" />
+        <EmptyState icon="spark" text="هر مهارتی رو بگو، هوش مصنوعی قدم‌به‌قدم مسیرش رو می‌سازه." href="/roadmaps/new" cta="ساخت رودمپ" />
       ) : (
         <ul className="db-road-list">
           {r.items.map((it, i) => (
@@ -83,7 +83,7 @@ export function DashboardInbox({ data, loading }: { data: DashboardData | null; 
       {loading ? (
         <Skel w="100%" h={90} r={12} />
       ) : ann.length === 0 && notes.length === 0 ? (
-        <EmptyState icon="bell" text="همه‌چیز آرومه — اعلانِ تازه‌ای نداری." />
+        <EmptyState icon="bell" text="همه‌چیز آرومه — اعلان تازه‌ای نداری." />
       ) : (
         <ul className="db-inbox-list">
           {ann.map((a) => (

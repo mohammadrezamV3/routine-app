@@ -44,8 +44,8 @@ const STATUS_LABEL: Record<Exclude<SearchStatus, "none">, string> = {
 // کارت «دوستان» — واقعا به /api/friends وصله. جستجوی زنده (بدون دکمه‌ی
 // ارسال جدا) برای افزودن دوست جدید؛ درخواست‌های واردشده هم دیگه توی
 // اطلاعیه‌ها/یادآوری‌ها نیستن، همین‌جا (پاپ‌آپ دوستان) قابل قبول/ردن.
-// کشِ آخرین لیستِ دوستان (حافظه + localStorage) تا کارت همون اول با داده
-// رندر بشه و «در حال بارگذاری» نبینه؛ داده‌ی تازه پشتِ صحنه جایگزین می‌شه.
+// کش آخرین لیست دوستان (حافظه + localStorage) تا کارت همون اول با داده
+// رندر بشه و «در حال بارگذاری» نبینه؛ داده‌ی تازه پشت صحنه جایگزین می‌شه.
 const FRIENDS_CACHE_KEY = "friends-cache-v1";
 const memFriendsCache = new Map<string, Friend[]>();
 function readFriendsCache(key: string): Friend[] | null {
@@ -83,9 +83,9 @@ export function DashFriendsCard({ delay, module, unitLabel = "برنامه" }: {
   const [searching, setSearching] = useState(false);
   const [confirmDeleteFriend, setConfirmDeleteFriend] = useState<Friend | null>(null);
   const [deletingFriend, setDeletingFriend] = useState(false);
-  // پاپ‌آپ پروفایل — با کلیک روی اسمِ هر دوست باز می‌شود. canStar=false برای
-  // نتایجِ جست‌وجو (که هنوز دوست نشده‌اند) — دکمه‌ی استار آن‌جا معنا ندارد
-  // قبل از دوست‌شدن (بلاک همیشه ممکن است، طبقِ خودِ FriendProfileModal).
+  // پاپ‌آپ پروفایل — با کلیک روی اسم هر دوست باز می‌شود. canStar=false برای
+  // نتایج جست‌وجو (که هنوز دوست نشده‌اند) — دکمه‌ی استار آن‌جا معنا ندارد
+  // قبل از دوست‌شدن (بلاک همیشه ممکن است، طبق خود FriendProfileModal).
   const [viewingProfile, setViewingProfile] = useState<{ id: string; canStar: boolean } | null>(null);
   const debounceRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const searchInputRef = useRef<HTMLInputElement>(null);
@@ -96,7 +96,7 @@ export function DashFriendsCard({ delay, module, unitLabel = "برنامه" }: {
     const cached = readFriendsCache(cacheKey);
     if (cached) setFriends((prev) => prev ?? cached);
   }, [cacheKey]);
-  // هر لیستِ تازه از سرور کش می‌شه.
+  // هر لیست تازه از سرور کش می‌شه.
   useEffect(() => {
     if (friends && !authRequired) writeFriendsCache(cacheKey, friends);
   }, [friends, authRequired, cacheKey]);
@@ -238,7 +238,7 @@ export function DashFriendsCard({ delay, module, unitLabel = "برنامه" }: {
         ) : (
           list.map((f) => (
             <div key={f.friendshipId} className="flex items-center justify-between gap-3">
-              {/* کل باکسِ آواتار+اسم کلیک‌پذیره (نه فقط اسم) — قبلا فقط اسم
+              {/* کل باکس آواتار+اسم کلیک‌پذیره (نه فقط اسم) — قبلا فقط اسم
                   دکمه بود و کلیک روی عکس/فاصله‌ی خالی هیچ کاری نمی‌کرد. */}
               <button
                 type="button"
@@ -325,9 +325,9 @@ export function DashFriendsCard({ delay, module, unitLabel = "برنامه" }: {
                                 key={u.id}
                                 className="flex items-center justify-between gap-2 rounded-2xl border border-dash-border bg-white/[0.02] px-3 py-2.5"
                               >
-                                {/* ترتیبِ DOM عمدی‌ست: در RTL فرزندِ اول سمتِ راست
+                                {/* ترتیب DOM عمدی‌ست: در RTL فرزند اول سمت راست
                                     می‌نشیند، پس پروفایل (آواتار + اسم) اول می‌آید و
-                                    دکمه‌ی «افزودن» به لبه‌ی چپ می‌رود — قبلاً برعکس بود. */}
+                                    دکمه‌ی «افزودن» به لبه‌ی چپ می‌رود — قبلا برعکس بود. */}
                                 <button
                                   type="button"
                                   onClick={() => setViewingProfile({ id: u.id, canStar: u.status === "friends" })}

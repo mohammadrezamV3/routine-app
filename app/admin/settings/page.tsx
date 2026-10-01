@@ -15,12 +15,12 @@ type TrialDraft = Record<TrialAiFeature, string>;
 const toDraft = (l: TrialAiLimits) => Object.fromEntries(TRIAL_AI_FEATURES.map((f) => [f, String(l[f])])) as TrialDraft;
 type AuditRow = { id: string; action: string; targetType: string | null; targetId: string | null; createdAt: string; actor: { name: string | null; lastName: string | null; username: string | null } | null };
 
-const MAX_RATE = 100_000_000; // هم‌راستا با سقفِ PATCH /api/admin/settings
+const MAX_RATE = 100_000_000; // هم‌راستا با سقف PATCH /api/admin/settings
 
 export default function AdminSettingsPage() {
   const toast = useAdminToast();
   const { can } = useAdminAccess();
-  // لاگ فعالیت دسترسیِ جدای «audit» می‌خواد؛ ادمینی که فقط «settings» داره
+  // لاگ فعالیت دسترسی جدای «audit» می‌خواد؛ ادمینی که فقط «settings» داره
   // قبلا ۴۰۳ می‌گرفت و این کارت برای همیشه «در حال بارگذاری» می‌موند.
   const canAudit = can("audit");
   const [settings, setSettings] = useState<SettingsResp | null>(null);
@@ -159,9 +159,9 @@ export default function AdminSettingsPage() {
   return (
     <section>
       <div className="admin-chart-card">
-        <div className="admin-chart-head"><span className="admin-chart-title">ایندکسِ فوریِ سایت (IndexNow)</span></div>
+        <div className="admin-chart-head"><span className="admin-chart-title">ایندکس فوری سایت (IndexNow)</span></div>
         <div className="admin-section-hint admin-settings-hint">
-          همه‌ی آدرس‌های sitemap رو به Bing/Yandex اطلاع می‌ده تا زودتر از کراولِ دوره‌ای ایندکس بشن —
+          همه‌ی آدرس‌های sitemap رو به Bing/Yandex اطلاع می‌ده تا زودتر از کراول دوره‌ای ایندکس بشن —
           نیاز به تنظیم <code className="mono">INDEXNOW_KEY</code> در env داره.
         </div>
         <div className="admin-settings-actions">

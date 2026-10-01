@@ -27,9 +27,9 @@ import { TradeFactsPicker } from "@/components/TradeFactsPicker";
 
 // تنظیمات بخش «ترید» — مثل RoutineSettings، مستقیم داخل صفحه‌ی تنظیمات.
 //
-// طبقِ درخواستِ صریح، ترید *یک* بخش است: یک تیتر، یک قاب، و بالای هر
-// گزینه فقط اسمِ خودش. قبلا هر گزینه یک کارتِ مستقل با تیتر و آیکونِ
-// خودش بود و صفحه‌ی تنظیمات شبیه هشت کارتِ پشت‌سرهم می‌شد.
+// طبق درخواست صریح، ترید *یک* بخش است: یک تیتر، یک قاب، و بالای هر
+// گزینه فقط اسم خودش. قبلا هر گزینه یک کارت مستقل با تیتر و آیکون
+// خودش بود و صفحه‌ی تنظیمات شبیه هشت کارت پشت‌سرهم می‌شد.
 export function TradeSettings() {
   const [tickerSymbols, setTickerSymbols] = useState<string[]>([]);
   const [marketPickerOpen, setMarketPickerOpen] = useState(false);
@@ -98,8 +98,8 @@ export function TradeSettings() {
     });
   }
 
-  // سقفِ هشت‌تایی همین‌جا نگه داشته می‌شود (نه فقط در UI): تاگل بیشتر از سقف
-  // اصلا اعمال نمی‌شود، پس حتی اگر دو تب هم‌زمان باز باشند مقدارِ ذخیره‌شده
+  // سقف هشت‌تایی همین‌جا نگه داشته می‌شود (نه فقط در UI): تاگل بیشتر از سقف
+  // اصلا اعمال نمی‌شود، پس حتی اگر دو تب هم‌زمان باز باشند مقدار ذخیره‌شده
   // از سقف رد نمی‌شود.
   function toggleVisibleFact(key: TradeFactKey) {
     setVisibleFacts((prev) => {
@@ -138,9 +138,9 @@ export function TradeSettings() {
         </button>
       </AccountOption>
 
-      <AccountOption label="آمارهای کلِ حساب‌ها">
+      <AccountOption label="آمارهای کل حساب‌ها">
         <div className="item-line" style={{ marginBottom: 10 }}>
-          {visibleTotals.length} از {TRADE_TOTALS_STAT_ORDER.length} آمار برای بالای صفحه‌ی حساب‌ها انتخاب شده — سه‌تای اول سرخط، بقیه پشتِ «جزئیات بیشتر»
+          {visibleTotals.length} از {TRADE_TOTALS_STAT_ORDER.length} آمار برای بالای صفحه‌ی حساب‌ها انتخاب شده — سه‌تای اول سرخط، بقیه پشت «جزئیات بیشتر»
         </div>
         <button className="account-outline-btn" onClick={() => setTotalsPickerOpen(true)}>
           تغییر
@@ -232,7 +232,7 @@ export function TradeSettings() {
 
       {totalsPickerOpen && (
         <TradeStatsPicker<TradeTotalsStatKey>
-          title="آمارهای کلِ حساب‌ها"
+          title="آمارهای کل حساب‌ها"
           note="کدوم آمارها بالای صفحه‌ی حساب‌ها نشون داده بشن رو انتخاب کن. سه‌تای اول سرخط می‌شن."
           order={TRADE_TOTALS_STAT_ORDER}
           labels={TRADE_TOTALS_STAT_LABELS}

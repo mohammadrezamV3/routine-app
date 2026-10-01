@@ -26,7 +26,7 @@ export async function GET(req: NextRequest) {
 }
 
 // POST /api/exercise/log { planId, date, completed, completedItems? }
-//   یا فقط { planId, date, started: true } — ثبتِ «شروع تمرین» بدونِ دست‌زدن به completed
+//   یا فقط { planId, date, started: true } — ثبت «شروع تمرین» بدون دست‌زدن به completed
 async function handlePOST(req: NextRequest) {
   const guard = await requireModule(ModuleKey.EXERCISE);
   if (!guard.ok) return guard.response;
@@ -44,7 +44,7 @@ async function handlePOST(req: NextRequest) {
   }
 
   // فقط «شروع تمرین»: اولین لحظه‌ی شروع نگه داشته می‌شه و completed/آیتم‌ها
-  // دست نمی‌خورن (دوباره‌شروع‌کردنِ روزی که تمام شده نباید تمامش رو پاک کنه).
+  // دست نمی‌خورن (دوباره‌شروع‌کردن روزی که تمام شده نباید تمامش رو پاک کنه).
   if (parsed.body?.started === true && completed === undefined) {
     const now = new Date();
     await prisma.exerciseLog.upsert({
@@ -70,5 +70,5 @@ async function handlePOST(req: NextRequest) {
   return NextResponse.json({ ok: true });
 }
 
-// بعد از هر نوشتنِ موفق، بقیه‌ی دستگاه‌ها/تب‌های همین کاربر با WebSocket خبردار می‌شن (lib/realtime.ts)
+// بعد از هر نوشتن موفق، بقیه‌ی دستگاه‌ها/تب‌های همین کاربر با WebSocket خبردار می‌شن (lib/realtime.ts)
 export const POST = withLiveSync(["exercise"], handlePOST);

@@ -5,8 +5,8 @@ import { buildWeeklyReport } from "@/lib/mentorReports";
 
 const MAX_OFFSET = 12;
 
-// GET /api/mentor/reports?offset=0 → خلاصه‌ی ۷ روزه‌ی هر شاگردِ فعال
-// (offset=۱ یعنی هفته‌ی قبل، تا ۱۲ هفته). منتورِ معلق به داده‌ی اجرای شاگرد دسترسی ندارد.
+// GET /api/mentor/reports?offset=0 → خلاصه‌ی ۷ روزه‌ی هر شاگرد فعال
+// (offset=۱ یعنی هفته‌ی قبل، تا ۱۲ هفته). منتور معلق به داده‌ی اجرای شاگرد دسترسی ندارد.
 export async function GET(req: NextRequest) {
   const g = await requireMentorTools();
   if (!g.ok) return g.response;

@@ -2,12 +2,12 @@ import { describe, it, expect } from "vitest";
 import { MAX_MEDIA_DATA_URL_LENGTH, checkMediaDataUrl, mediaKey } from "@/lib/exerciseMedia";
 import { EXERCISE_CATALOG } from "@/lib/exerciseCatalog";
 
-// عکسِ حرکات از فرمِ ادمین می‌آید و مستقیم داخلِ یک ستونِ String می‌نشیند و
-// بعد در مرورگرِ کاربر رندر می‌شود — پس همین لایه باید جلوی محتوای
-// اسکریپت‌پذیر و فایلِ بی‌سقف را بگیرد.
+// عکس حرکات از فرم ادمین می‌آید و مستقیم داخل یک ستون String می‌نشیند و
+// بعد در مرورگر کاربر رندر می‌شود — پس همین لایه باید جلوی محتوای
+// اسکریپت‌پذیر و فایل بی‌سقف را بگیرد.
 
 describe("checkMediaDataUrl", () => {
-  it("فرمت‌های عکسِ مجاز را می‌پذیرد", () => {
+  it("فرمت‌های عکس مجاز را می‌پذیرد", () => {
     for (const mime of ["jpeg", "png", "webp"]) {
       expect(checkMediaDataUrl(`data:image/${mime};base64,AAAA`)).toEqual({ ok: true });
     }
@@ -26,7 +26,7 @@ describe("checkMediaDataUrl", () => {
     expect(checkMediaDataUrl(123).ok).toBe(false);
   });
 
-  it("عکسِ بزرگ‌تر از سقف ۴۱۳ می‌گیرد، نه ۴۰۰", () => {
+  it("عکس بزرگ‌تر از سقف ۴۱۳ می‌گیرد، نه ۴۰۰", () => {
     const big = "data:image/jpeg;base64," + "A".repeat(MAX_MEDIA_DATA_URL_LENGTH);
     const r = checkMediaDataUrl(big);
     expect(r).toMatchObject({ ok: false, status: 413 });
@@ -40,10 +40,10 @@ describe("mediaKey", () => {
     expect(mediaKey("  زیربغل  ")).toBe(mediaKey("زیربغل"));
   });
 
-  it("برای هر حرکتِ کاتالوگ کلیدی یکتا می‌سازد", () => {
+  it("برای هر حرکت کاتالوگ کلیدی یکتا می‌سازد", () => {
     const keys = EXERCISE_CATALOG.map((e) => mediaKey(e.name));
-    // کلیدِ تکراری یعنی دو حرکتِ متفاوت یک عکس می‌گیرند — ستونِ unique هم
-    // همان لحظه ثبتِ دومی را رد می‌کند.
+    // کلید تکراری یعنی دو حرکت متفاوت یک عکس می‌گیرند — ستون unique هم
+    // همان لحظه ثبت دومی را رد می‌کند.
     expect(new Set(keys).size).toBe(keys.length);
   });
 });

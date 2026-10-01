@@ -13,12 +13,12 @@ import { publishToUsers } from "@/lib/realtime";
 
 type Ctx = { params: { id: string } };
 const NOTE_MAX = 1000;
-const TOO_LARGE_MSG = "روتینِ شاگرد جای این همه آیتم رو نداره؛ آیتم‌ها یا روزهای برنامه رو کمتر کن";
+const TOO_LARGE_MSG = "روتین شاگرد جای این همه آیتم رو نداره؛ آیتم‌ها یا روزهای برنامه رو کمتر کن";
 
 // POST /api/mentor-programs/:id/transition { action, note? }
-// تنها راهِ تغییرِ وضعیتِ برنامه. تصمیمِ «مجازه یا نه» فقط با canTransition و
-// نوشتن با updateMany({ id, status: from }) — دو کلیکِ هم‌زمان نمی‌تونن از یک
-// حالت دو انتقالِ متفاوت بسازن (دومی ۴۰۹ می‌گیره).
+// تنها راه تغییر وضعیت برنامه. تصمیم «مجازه یا نه» فقط با canTransition و
+// نوشتن با updateMany({ id, status: from }) — دو کلیک هم‌زمان نمی‌تونن از یک
+// حالت دو انتقال متفاوت بسازن (دومی ۴۰۹ می‌گیره).
 export async function POST(req: Request, { params }: Ctx) {
   const g = await requireMentorsUser();
   if (!g.ok) return g.response;
@@ -49,17 +49,17 @@ export async function POST(req: Request, { params }: Ctx) {
   if ((action === "send" || action === "accept" || action === "activate") && p.mentorship.status !== "ACTIVE") {
     return conflict("رابطه با این مربی/شاگرد دیگه فعال نیست");
   }
-  // همکاریِ متوقف‌شده: برنامه‌ی تازه نه ارسال می‌شود نه فعال
+  // همکاری متوقف‌شده: برنامه‌ی تازه نه ارسال می‌شود نه فعال
   if ((action === "send" || action === "activate") && p.mentorship.pausedAt) {
     return conflict("همکاری با این شاگرد متوقف است؛ اول آن را ادامه بده");
   }
   if ((action === "accept" || action === "activate") && (await isMentorSuspended(p.mentorId))) {
-    return forbidden("فعالیتِ این مربی موقتا متوقف شده");
+    return forbidden("فعالیت این مربی موقتا متوقف شده");
   }
   if (action === "send") {
     const mp = await getActiveMentorProfile(me);
     if (!mp.ok) return mp.response;
-    // هر ارسال یک اعلان/پوش برای شاگرد می‌سازه — سقف تا نشه با ساخت‌وارسالِ پشت‌سرهم اسپم کرد
+    // هر ارسال یک اعلان/پوش برای شاگرد می‌سازه — سقف تا نشه با ساخت‌وارسال پشت‌سرهم اسپم کرد
     if (!(await checkRateLimit(`mentor-program-send:${me}`, 20, 60 * 60 * 1000))) {
       return NextResponse.json({ error: "تعداد ارسال برنامه زیاد بوده؛ کمی بعد دوباره تلاش کن" }, { status: 429 });
     }
@@ -92,7 +92,7 @@ export async function POST(req: Request, { params }: Ctx) {
     let data: Prisma.MentorProgramUpdateManyMutationInput;
     switch (action) {
       case "send":
-        // ارسالِ دوباره بعد از «درخواست تغییر» نسخه رو بالا می‌بره تا شاگرد بدونه این نسخه‌ی تازه‌ست
+        // ارسال دوباره بعد از «درخواست تغییر» نسخه رو بالا می‌بره تا شاگرد بدونه این نسخه‌ی تازه‌ست
         data = { status: to, sentAt: now, changeRequestNote: null, rejectReason: null, respondedAt: null, ...(p.sentAt ? { version: { increment: 1 } } : {}) };
         break;
       case "reject":
@@ -115,11 +115,11 @@ export async function POST(req: Request, { params }: Ctx) {
   }
 
   if (actor === "MENTOR") touchMentorActivity(me);
-  // هر دو طرف؛ فعال/تموم‌شدن آینه‌ی روتینِ شاگرد رو هم عوض می‌کنه (liveSync
-  // رویدادِ mentor.program رو به customOccurrences هم ترجمه می‌کنه)
+  // هر دو طرف؛ فعال/تموم‌شدن آینه‌ی روتین شاگرد رو هم عوض می‌کنه (liveSync
+  // رویداد mentor.program رو به customOccurrences هم ترجمه می‌کنه)
   void publishToUsers([p.mentorId, p.studentId], { type: "mentor.program", data: { id: p.id } });
 
-  // اعلان به طرفِ مقابل
+  // اعلان به طرف مقابل
   const url = `/mentor-programs/${p.id}`;
   const mentorName = displayName(p.mentor);
   const studentName = displayName(p.student);
@@ -132,7 +132,7 @@ export async function POST(req: Request, { params }: Ctx) {
       url,
     });
   } else if (action === "accept") {
-    // شروعِ آینده = زمان‌بندی‌شده؛ در همان روز خودکار فعال می‌شود (lib/mentorSchedule.ts)
+    // شروع آینده = زمان‌بندی‌شده؛ در همان روز خودکار فعال می‌شود (lib/mentorSchedule.ts)
     const scheduledFor = p.startDate && isoDate(p.startDate) > (await todayIsoForUser(p.studentId)) ? fmtDate(isoDate(p.startDate)) : null;
     await notifyUser(p.mentorId, {
       type: "program.accepted",

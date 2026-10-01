@@ -15,28 +15,28 @@ import {
   type ProgressState,
 } from "@/lib/mentorProgressCore";
 
-// پیشرفتِ خودکارِ برنامه‌ی منتور — سمتِ سرور.
+// پیشرفت خودکار برنامه‌ی منتور — سمت سرور.
 //
-// شاگرد دیگه «انجام شد/نشد» رو دستی گزارش نمی‌ده؛ وضعیتِ هر آیتم در هر روز از
+// شاگرد دیگه «انجام شد/نشد» رو دستی گزارش نمی‌ده؛ وضعیت هر آیتم در هر روز از
 // تیک‌های خودش در «روتین من» (DailyEntry) مشتق می‌شه (lib/mentorProgressCore.ts).
 //
-// چرا «همگام‌سازی هنگامِ خواندن» و نه «هوک روی نوشتنِ تیک»:
-//   - «انجام‌نشده» با گذشتِ زمان پیش میاد، نه با یک نوشتن — هوکِ نوشتن هرگز
-//     روزِ ازدست‌رفته رو ثبت نمی‌کرد.
-//   - تیک از چند مسیر نوشته می‌شه (DayModal، داشبورد، همگام‌سازیِ آفلاین)؛ هوک
-//     روی یکی‌شون یعنی جا انداختنِ بقیه. خواندن همیشه از خودِ DailyEntry‌ـه.
+// چرا «همگام‌سازی هنگام خواندن» و نه «هوک روی نوشتن تیک»:
+//   - «انجام‌نشده» با گذشت زمان پیش میاد، نه با یک نوشتن — هوک نوشتن هرگز
+//     روز ازدست‌رفته رو ثبت نمی‌کرد.
+//   - تیک از چند مسیر نوشته می‌شه (DayModal، داشبورد، همگام‌سازی آفلاین)؛ هوک
+//     روی یکی‌شون یعنی جا انداختن بقیه. خواندن همیشه از خود DailyEntry‌ـه.
 //   - ردیف‌های مشتق‌شده (source = "AUTO") در همون MentorProgramLog می‌مونن تا
-//     آمارِ گروهی (داشبورد، «نیازمند توجه»، نرخ پایبندی) و بازخوردِ منتور روی
-//     یک اجرا (logId) بدونِ تغییر کار کنن.
+//     آمار گروهی (داشبورد، «نیازمند توجه»، نرخ پایبندی) و بازخورد منتور روی
+//     یک اجرا (logId) بدون تغییر کار کنن.
 //
-// idempotent و بدونِ شمارشِ دوباره: هر آیتم/روز یک ردیف (یکتای itemId+date)،
+// idempotent و بدون شمارش دوباره: هر آیتم/روز یک ردیف (یکتای itemId+date)،
 // ساخت با skipDuplicates، به‌روزرسانی/حذف فقط روی ردیف‌های AUTO و فقط وقتی
-// مقدار فرق کرده. ردیف‌های MANUALِ قدیمی دست نمی‌خورن و جای ردیفِ AUTO رو می‌گیرن.
+// مقدار فرق کرده. ردیف‌های MANUAL قدیمی دست نمی‌خورن و جای ردیف AUTO رو می‌گیرن.
 //
 // هزینه: برنامه‌ی فعال حداکثر هر SYNC_TTL_MS یک بار (مگر force)؛ بعد از اولین
-// همگام‌سازی فقط RESYNC_DAYS روزِ آخر دوباره حساب می‌شه (تیک‌زدنِ دیرهنگامِ
+// همگام‌سازی فقط RESYNC_DAYS روز آخر دوباره حساب می‌شه (تیک‌زدن دیرهنگام
 // روزهای اخیر) و روزهای قدیمی‌تر منجمد می‌مونن. برنامه‌ی بسته‌شده یک بار
-// (هنگامِ بستن، قبل از حذفِ آینه) نهایی می‌شه و دیگه حساب نمی‌شه.
+// (هنگام بستن، قبل از حذف آینه) نهایی می‌شه و دیگه حساب نمی‌شه.
 
 const SYNC_TTL_MS = 60_000;
 const RESYNC_DAYS = 14;
@@ -72,7 +72,7 @@ function closedAt(p: Pick<SyncProgram, "status" | "completedAt" | "cancelledAt">
   return p.completedAt ?? p.cancelledAt ?? null;
 }
 
-/** بازه‌ی برنامه به تقویمِ محلیِ شاگرد؛ null برای برنامه‌ای که هرگز فعال نشده */
+/** بازه‌ی برنامه به تقویم محلی شاگرد؛ null برای برنامه‌ای که هرگز فعال نشده */
 export function windowFor(p: Pick<SyncProgram, "status" | "startDate" | "endDate" | "activatedAt" | "completedAt" | "cancelledAt">, tz: string | null, now = new Date()) {
   if (!p.activatedAt) return null;
   const closed = closedAt(p);
@@ -115,8 +115,8 @@ async function loadTicks(userId: string, from: string, to: string): Promise<Map<
 function needsSync(p: SyncProgram, now: Date, force: boolean): boolean {
   const closed = closedAt(p);
   if (closed) {
-    // برنامه‌ی بسته منجمد است: فقط اگه بعد از بستن هنوز نهایی نشده (null = برنامه‌ی قدیمیِ دستی → هرگز؛
-    // نهایی‌کردنِ صریح با finalize). force روی برنامه‌ی بسته اثری ندارد.
+    // برنامه‌ی بسته منجمد است: فقط اگه بعد از بستن هنوز نهایی نشده (null = برنامه‌ی قدیمی دستی → هرگز؛
+    // نهایی‌کردن صریح با finalize). force روی برنامه‌ی بسته اثری ندارد.
     return !!p.progressSyncedAt && p.progressSyncedAt < closed;
   }
   if (force || !p.progressSyncedAt) return true;
@@ -124,9 +124,9 @@ function needsSync(p: SyncProgram, now: Date, force: boolean): boolean {
 }
 
 /**
- * لاگ‌های AUTOِ برنامه‌ها رو با تیک‌های روتینِ شاگرد هم‌سو می‌کنه.
- * force: بدونِ توجه به TTL (نمای جزئیاتِ برنامه، لحظه‌ی بستنِ برنامه، دیتای آزمایشی).
- * finalize: برای برنامه‌ی بسته‌ای که هنوز هرگز همگام نشده هم اجرا شود (فقط هنگامِ بستن).
+ * لاگ‌های AUTO برنامه‌ها رو با تیک‌های روتین شاگرد هم‌سو می‌کنه.
+ * force: بدون توجه به TTL (نمای جزئیات برنامه، لحظه‌ی بستن برنامه، دیتای آزمایشی).
+ * finalize: برای برنامه‌ی بسته‌ای که هنوز هرگز همگام نشده هم اجرا شود (فقط هنگام بستن).
  */
 export async function syncProgramProgress(programIds: string[], opts: { force?: boolean; finalize?: boolean } = {}): Promise<void> {
   const ids = Array.from(new Set(programIds)).slice(0, MAX_PROGRAMS_PER_SYNC);
@@ -148,7 +148,7 @@ export async function syncProgramProgress(programIds: string[], opts: { force?: 
     const plans = progs.flatMap((p) => {
       const w = windowFor(p, tz, now);
       if (!w) return [];
-      // اولین بار کلِ بازه؛ بعد از آن فقط روزهای اخیر (از شنبه‌ی همان هفته تا پیوستگیِ جابه‌جایی‌ها حفظ شود)
+      // اولین بار کل بازه؛ بعد از آن فقط روزهای اخیر (از شنبه‌ی همان هفته تا پیوستگی جابه‌جایی‌ها حفظ شود)
       let deriveFrom = w.from;
       if (p.progressSyncedAt) {
         const lastSyncDay = isoAddDays(dayInTz(p.progressSyncedAt, tz), -1);
@@ -188,7 +188,7 @@ export async function syncProgramProgress(programIds: string[], opts: { force?: 
         if (d < deriveFrom) continue;
         const key = `${r.itemId}|${d}`;
         const want = desired.get(key);
-        desired.delete(key); // ردیفِ موجود (AUTO یا MANUAL) جای ساختِ دوباره نیست
+        desired.delete(key); // ردیف موجود (AUTO یا MANUAL) جای ساخت دوباره نیست
         if (r.source !== "AUTO") continue;
         if (!want) toDelete.push(r.id);
         else if (want.status !== r.status || want.doneOn !== (r.doneOn ? iso(r.doneOn) : null)) toUpdate.push({ id: r.id, status: want.status, doneOn: want.doneOn });
@@ -228,12 +228,12 @@ export type ProgressCell = {
   logId: string | null;
   doneOn: string | null;
   setsDone: number | null;
-  /** یادداشتِ شاگرد روی ثبتِ دستیِ قدیمی */
+  /** یادداشت شاگرد روی ثبت دستی قدیمی */
   note: string | null;
 };
 export type ProgressDay = { date: string; cells: ProgressCell[]; note: string | null };
 export type ProgressView = {
-  /** true = شاگرد نمایشِ پیشرفت را برای این منتور بسته (یا دسترسی بسته است)؛ cells خالی */
+  /** true = شاگرد نمایش پیشرفت را برای این منتور بسته (یا دسترسی بسته است)؛ cells خالی */
   hidden: boolean;
   from: string;
   to: string | null;
@@ -244,8 +244,8 @@ export type ProgressView = {
 type ViewProgram = SyncProgram & { mentorId: string };
 
 /**
- * وضعیتِ هر آیتم در روزهای [fromIso, toIso] (حداکثر ۴۲ روز) برای نمایش.
- * ردیف‌های MentorProgramLog (AUTO/MANUAL) منبع‌اند؛ روزهای باز «پیشِ رو».
+ * وضعیت هر آیتم در روزهای [fromIso, toIso] (حداکثر ۴۲ روز) برای نمایش.
+ * ردیف‌های MentorProgramLog (AUTO/MANUAL) منبع‌اند؛ روزهای باز «پیش رو».
  * برای برنامه‌ی هرگز-فعال‌نشده null.
  */
 export async function loadProgressView(
@@ -308,8 +308,8 @@ export async function loadProgressView(
 }
 
 /**
- * idِ برنامه‌هایی که viewer منتورِ آن‌هاست و شاگرد «نمایش پیشرفت» را برایش
- * بسته — همان پرچمی که نمای روتینِ شاگرد (lib/mentorPrivacy.ts) رعایت می‌کند.
+ * id برنامه‌هایی که viewer منتور آن‌هاست و شاگرد «نمایش پیشرفت» را برایش
+ * بسته — همان پرچمی که نمای روتین شاگرد (lib/mentorPrivacy.ts) رعایت می‌کند.
  */
 export async function progressHiddenPrograms(programs: { id: string; mentorId: string; mentorshipId: string }[], viewerId: string): Promise<Set<string>> {
   const mine = programs.filter((p) => p.mentorId === viewerId);

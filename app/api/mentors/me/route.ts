@@ -12,15 +12,15 @@ const BIO_MAX = 2000;
 const SPECIALTY_MAX = 40;
 const MAX_SPECIALTIES = 10;
 
-// GET /api/mentors/me → پروفایلِ منتوریِ خودم (یا null اگه هنوز منتور نشدم)
+// GET /api/mentors/me → پروفایل منتوری خودم (یا null اگه هنوز منتور نشدم)
 export async function GET() {
   const g = await requireMentorsUser();
   if (!g.ok) return g.response;
   return NextResponse.json({ profile: await loadMentorSelf(g.userId) });
 }
 
-// PUT /api/mentors/me → ساخت (بارِ اول) یا ویرایشِ پروفایل.
-// وضعیتِ احراز/تعلیق/امتیاز عمداً از بدنه خونده نمی‌شه — فقط ادمین یا
+// PUT /api/mentors/me → ساخت (بار اول) یا ویرایش پروفایل.
+// وضعیت احراز/تعلیق/امتیاز عمدا از بدنه خونده نمی‌شه — فقط ادمین یا
 // سیستم (بازمحاسبه‌ی نظرات) اون‌ها رو می‌نویسه.
 export async function PUT(req: Request) {
   const g = await requireMentorsUser();
@@ -85,8 +85,8 @@ export async function PUT(req: Request) {
     select: { id: true, categories: true, bio: true, published: true, mentorTermsVersion: true },
   });
 
-  // پذیرشِ شرایطِ منتوری (lib/mentorTerms.ts): ساختِ پروفایل و هر ذخیره‌ی بعدی فقط با
-  // نسخه‌ی جاری. استثنا: کنار کشیدن (فقط عدمِ انتشار/توقفِ پذیرشِ شاگرد) همیشه آزاد است
+  // پذیرش شرایط منتوری (lib/mentorTerms.ts): ساخت پروفایل و هر ذخیره‌ی بعدی فقط با
+  // نسخه‌ی جاری. استثنا: کنار کشیدن (فقط عدم انتشار/توقف پذیرش شاگرد) همیشه آزاد است
   // تا منتوری که نسخه‌ی تازه را نمی‌پذیرد بتواند بی‌دردسر فعالیتش را متوقف کند.
   const onlyWithdrawing =
     !!existing &&
@@ -101,12 +101,12 @@ export async function PUT(req: Request) {
     }
   }
 
-  // انتشار فقط با حداقل یک دسته و بیوگرافی — روی وضعیتِ *نهایی* (بعد از همین تغییر) سنجیده می‌شه
+  // انتشار فقط با حداقل یک دسته و بیوگرافی — روی وضعیت *نهایی* (بعد از همین تغییر) سنجیده می‌شه
   const finalCategories = data.categories ?? existing?.categories ?? [];
   const finalBio = data.bio !== undefined ? data.bio : existing?.bio ?? null;
   const finalPublished = data.published ?? existing?.published ?? false;
-  // نقشِ روتین فقط کنارِ دسته‌ی ROUTINE معنا داره — بدونِ اون پاک می‌شه تا
-  // متنِ قدیمی بعدا بی‌صدا دوباره روی کارت ظاهر نشه
+  // نقش روتین فقط کنار دسته‌ی ROUTINE معنا داره — بدون اون پاک می‌شه تا
+  // متن قدیمی بعدا بی‌صدا دوباره روی کارت ظاهر نشه
   if (!finalCategories.includes("ROUTINE")) data.routineRole = null;
   if (finalPublished && (finalCategories.length === 0 || !finalBio)) {
     return badRequest("برای انتشار پروفایل، حداقل یک دسته و بیوگرافی لازمه");
@@ -117,8 +117,8 @@ export async function PUT(req: Request) {
       const profile = existing
         ? await tx.mentorProfile.update({ where: { userId }, data, select: { id: true } })
         : await tx.mentorProfile.create({ data: { userId, ...data }, select: { id: true } });
-      // برای هر دسته‌ی انتخابی یک ردیفِ مدرک (NOT_PROVIDED)؛ ردیف‌های قبلی (و
-      // وضعیتِ احرازشون) دست نمی‌خورن، حتی اگه دسته موقتا برداشته شده باشه.
+      // برای هر دسته‌ی انتخابی یک ردیف مدرک (NOT_PROVIDED)؛ ردیف‌های قبلی (و
+      // وضعیت احرازشون) دست نمی‌خورن، حتی اگه دسته موقتا برداشته شده باشه.
       if (finalCategories.length > 0) {
         await tx.mentorCredential.createMany({
           data: finalCategories.map((category) => ({ profileId: profile.id, category })),
@@ -127,7 +127,7 @@ export async function PUT(req: Request) {
       }
     });
   } catch (e) {
-    // دو درخواستِ هم‌زمانِ «ساختِ اولین پروفایل» — دومی به‌جای ۵۰۰، ۴۰۹ می‌گیره
+    // دو درخواست هم‌زمان «ساخت اولین پروفایل» — دومی به‌جای ۵۰۰، ۴۰۹ می‌گیره
     if (isUniqueViolation(e)) return conflict("پروفایل هم‌زمان در حال ساخته‌شدنه؛ دوباره تلاش کن");
     throw e;
   }

@@ -7,16 +7,16 @@ import { computePlanProgress, normalizePlan, sanitizeStepProgress, taskKey } fro
 import { withLiveSync } from "@/lib/realtime";
 
 /**
- * تیک‌زدن/برداشتنِ یک مرحله (`{n, done}`) یا یک کارِ داخلِ مرحله
- * (`{n, task, done}` — task اندیسِ صفرمبنای کار است).
+ * تیک‌زدن/برداشتن یک مرحله (`{n, done}`) یا یک کار داخل مرحله
+ * (`{n, task, done}` — task اندیس صفرمبنای کار است).
  *
  * درصد را همیشه سرور حساب می‌کند و هر درصدی که کلاینت بفرستد نادیده گرفته
- * می‌شود؛ کلیدِ مرحله‌ای که وجود ندارد هم دور ریخته می‌شود.
+ * می‌شود؛ کلید مرحله‌ای که وجود ندارد هم دور ریخته می‌شود.
  */
 async function handlePATCH(req: NextRequest, { params }: { params: { id: string } }) {
   const guard = await requireFeature("roadmaps");
   if (!guard.ok) return guard.response;
-  // رودمپ ماژولِ پولیه — وقتی فلگ برای همه روشن شد، دسترسیِ ماژول هم لازمه
+  // رودمپ ماژول پولیه — وقتی فلگ برای همه روشن شد، دسترسی ماژول هم لازمه
   { const mod = await requireModule(ModuleKey.ROADMAP); if (!mod.ok) return mod.response; }
 
   const body = await req.json().catch(() => null);
@@ -39,8 +39,8 @@ async function handlePATCH(req: NextRequest, { params }: { params: { id: string 
   const plan = normalizePlan({ stages: row.steps });
   const current = sanitizeStepProgress(plan.stages, row.progress);
 
-  // کلیدِ ناموجود (مرحله/کاری که نیست) این‌جا اضافه می‌شود و sanitize
-  // پایین دورش می‌ریزد — پس نیازی به چکِ جدا نیست.
+  // کلید ناموجود (مرحله/کاری که نیست) این‌جا اضافه می‌شود و sanitize
+  // پایین دورش می‌ریزد — پس نیازی به چک جدا نیست.
   const key = task === undefined ? String(n) : taskKey(n, task);
   const next = { ...current };
   if (done) next[key] = true;
@@ -58,5 +58,5 @@ async function handlePATCH(req: NextRequest, { params }: { params: { id: string 
   });
 }
 
-// بعد از هر نوشتنِ موفق، بقیه‌ی دستگاه‌ها/تب‌های همین کاربر با WebSocket خبردار می‌شن (lib/realtime.ts)
+// بعد از هر نوشتن موفق، بقیه‌ی دستگاه‌ها/تب‌های همین کاربر با WebSocket خبردار می‌شن (lib/realtime.ts)
 export const PATCH = withLiveSync(["roadmaps"], handlePATCH);

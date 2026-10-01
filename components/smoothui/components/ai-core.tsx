@@ -7,9 +7,9 @@ import {
 } from "framer-motion";
 import { useCallback, useEffect, useRef, useState } from "react";
 
-// منبع: SmoothUI (ai-core). تنها تغییرِ عمدی نسبت به نسخه‌ی اصلی، عوض‌شدنِ
-// `motion/react` با `framer-motion` است — همان کتابخانه با نامِ بسته‌ی
-// نصب‌شده در این پروژه — و چند اصلاحِ کوچکِ سازگاری با TS/ES2017 که در
+// منبع: SmoothUI (ai-core). تنها تغییر عمدی نسبت به نسخه‌ی اصلی، عوض‌شدن
+// `motion/react` با `framer-motion` است — همان کتابخانه با نام بسته‌ی
+// نصب‌شده در این پروژه — و چند اصلاح کوچک سازگاری با TS/ES2017 که در
 // جای خودشان کامنت شده‌اند.
 
 /**
@@ -251,8 +251,8 @@ export type UseAudioAmplitudeOptions = {
   /** FFT size handed to the analyser node. Must be a power of two. */
   fftSize?: number;
   /**
-   * محدودیت‌های ترکِ صدا. اضافه‌ی این پروژه به نسخه‌ی اصلی: وقتی از همین
-   * جریان برای *ضبط* هم استفاده می‌شود، مونو و نرخِ نمونه‌ی پایین حجمِ
+   * محدودیت‌های ترک صدا. اضافه‌ی این پروژه به نسخه‌ی اصلی: وقتی از همین
+   * جریان برای *ضبط* هم استفاده می‌شود، مونو و نرخ نمونه‌ی پایین حجم
    * فایل را چند برابر کم می‌کند و برای گفتار هیچ کیفیتی از دست نمی‌رود.
    */
   constraints?: MediaTrackConstraints;
@@ -264,7 +264,7 @@ export type UseAudioAmplitudeResult = {
   status: AudioAmplitudeStatus;
   start: () => Promise<void>;
   stop: () => void;
-  /** جریانِ زنده‌ی میکروفون — تا ضبط‌کننده بتواند از همان استفاده کند. */
+  /** جریان زنده‌ی میکروفون — تا ضبط‌کننده بتواند از همان استفاده کند. */
   stream: () => MediaStream | null;
 };
 
@@ -369,7 +369,7 @@ export const useAudioAmplitude = (
 
     analyser.getFloatTimeDomainData(buffer);
 
-    // حلقه‌ی ایندکسی (نه for..of) چون هدفِ کامپایل ES2017 است و پیمایشِ
+    // حلقه‌ی ایندکسی (نه for..of) چون هدف کامپایل ES2017 است و پیمایش
     // TypedArray آن‌جا به downlevelIteration نیاز دارد.
     let sumOfSquares = 0;
     for (let i = 0; i < buffer.length; i++) {

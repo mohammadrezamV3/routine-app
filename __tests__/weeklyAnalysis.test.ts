@@ -7,10 +7,10 @@ import { predictWeek } from "@/lib/weeklyAnalysis/prediction";
 import { routineWeeks, tasksWeeks, nutritionDayScore, sleepDurationScore, tradeDisciplineScore, type TradeRow } from "@/lib/weeklyAnalysis/domains";
 import type { DayCell } from "@/lib/weeklyAnalysis/types";
 
-// موتورِ آنالیز هفتگی — فقط توابعِ خالص (بدون دیتابیس).
+// موتور آنالیز هفتگی — فقط توابع خالص (بدون دیتابیس).
 
 describe("week range", () => {
-  it("هفته شنبه تا جمعه‌ست و نیمه‌شبِ UTC برمی‌گردونه", () => {
+  it("هفته شنبه تا جمعه‌ست و نیمه‌شب UTC برمی‌گردونه", () => {
     // 2026-09-25 جمعه‌ست
     const r = getWeekRange("Asia/Tehran", 0, new Date("2026-09-25T10:00:00Z"));
     expect(r.weekStartIso).toBe("2026-09-19");
@@ -20,7 +20,7 @@ describe("week range", () => {
     expect(daysOfWeek(r.weekStart).map((d) => d.toISOString().slice(0, 10))).toEqual(daysOfWeekIso("2026-09-19"));
   });
 
-  it("مرزِ روز با timezone کاربر حساب می‌شه نه UTC", () => {
+  it("مرز روز با timezone کاربر حساب می‌شه نه UTC", () => {
     // 20:45Z جمعه = 00:15 شنبه در تهران → هفته‌ی جدید
     const ref = new Date("2026-09-25T20:45:00Z");
     expect(getWeekRange("Asia/Tehran", 0, ref).weekStartIso).toBe("2026-09-26");
@@ -28,12 +28,12 @@ describe("week range", () => {
     expect(getWeekRange("Asia/Tehran", -1, ref).weekStartIso).toBe("2026-09-19");
   });
 
-  it("شبِ تغییرِ ساعت (DST) نیویورک رو درست رد می‌کنه", () => {
+  it("شب تغییر ساعت (DST) نیویورک رو درست رد می‌کنه", () => {
     // 2026-03-08 شروع DST در آمریکا. 03:30Z دوشنبه ۹ مارس = یکشنبه ۸ مارس 23:30 EDT
     const r = getWeekRange("America/New_York", 0, new Date("2026-03-09T03:30:00Z"));
     expect(r.weekStartIso).toBe("2026-03-07");
     expect(r.weekEndIso).toBe("2026-03-13");
-    // روزها همیشه دقیقا ۲۴ ساعت از هم فاصله دارن (تاریخِ تقویمی، نه ساعت محلی)
+    // روزها همیشه دقیقا ۲۴ ساعت از هم فاصله دارن (تاریخ تقویمی، نه ساعت محلی)
     const days = daysOfWeek(r.weekStart);
     expect(days[1].getTime() - days[0].getTime()).toBe(86_400_000);
   });
@@ -51,7 +51,7 @@ describe("week range", () => {
     expect(isCurrentWeek("UTC", "2026-09-12", ref)).toBe(false);
   });
 
-  it("برچسبِ جلالی", () => {
+  it("برچسب جلالی", () => {
     // ۲۲ مهر ۱۴۰۵ = 2026-10-14 → شنبه 2026-10-10 = ۱۸ مهر
     expect(weekLabelFa("2026-10-10")).toBe("18 تا 24 مهر");
     // 2026-09-19 = ۲۸ شهریور → دو ماه
@@ -114,17 +114,17 @@ function cells(scores: (number | null)[], future = 0): DayCell[] {
 
 describe("insights", () => {
   it("correlation به حداقل ۲ روز در هر گروه نیاز داره", () => {
-    // فقط یک روزِ «خواب بد»
+    // فقط یک روز «خواب بد»
     expect(correlate([90, 80, 85, 40, null, null, null], [90, 85, 88, 30, null, null, null])).toBeNull();
     const c = correlate([90, 80, 40, 30, null, null, null], [90, 80, 50, 60, null, null, null]);
     expect(c).toEqual({ diff: 30, goodN: 2, badN: 2 });
   });
 
-  it("اختلافِ کمتر از ۱۰ امتیاز گفته نمی‌شه", () => {
+  it("اختلاف کمتر از ۱۰ امتیاز گفته نمی‌شه", () => {
     expect(correlate([90, 80, 40, 30], [70, 70, 65, 66])).toBeNull();
   });
 
-  it("جفتِ آینه‌ای فقط یک‌بار میاد و متن عدد واقعی داره", () => {
+  it("جفت آینه‌ای فقط یک‌بار میاد و متن عدد واقعی داره", () => {
     const domains = [
       { domain: "sleep" as const, score: 60, prevScore: null, delta: null, daily: [90, 85, 40, 30, 88, null, null] },
       { domain: "routine" as const, score: 60, prevScore: null, delta: null, daily: [90, 80, 50, 40, 85, null, null] },
@@ -152,7 +152,7 @@ describe("insights", () => {
     expect(new Set(ins.map((i) => i.id)).size).toBe(ins.length);
   });
 
-  it("داده‌ی کم = بینشِ ساختگی نداره", () => {
+  it("داده‌ی کم = بینش ساختگی نداره", () => {
     const ins = buildInsights({
       domains: [{ domain: "sleep", score: 70, prevScore: null, delta: null, daily: [70, null, null, null, null, null, null] }],
       days: cells([70, null, null, null, null, null, null]),
@@ -197,7 +197,7 @@ describe("prediction", () => {
     expect(predictWeek({ ...base, daysElapsed: 1, dayScores: [70, null, null, null, null, null, null] })).toBeNull();
   });
 
-  it("با baseline ترکیب می‌شه و بازه اطرافِ عدده", () => {
+  it("با baseline ترکیب می‌شه و بازه اطراف عدده", () => {
     const p = predictWeek({ ...base, daysElapsed: 3, dayScores: [70, 70, 70, null, null, null, null] })!;
     expect(p.projectedScore).toBeLessThan(70);
     expect(p.projectedScore).toBeGreaterThan(60);
@@ -211,7 +211,7 @@ describe("domain helpers", () => {
   const env = { timezone: "UTC", todayIso: "2026-09-21" };
   const weeks = [{ weekStartIso: "2026-09-19", days: daysOfWeekIso("2026-09-19") }];
 
-  it("روتین: روزِ آینده null، امروزِ بی‌تیک null", () => {
+  it("روتین: روز آینده null، امروز بی‌تیک null", () => {
     const [w] = routineWeeks(
       [
         { date: new Date("2026-09-19T00:00:00Z"), completedItems: { a: true, b: true } },
@@ -226,7 +226,7 @@ describe("domain helpers", () => {
     expect(w.meta.perfectDays).toBe(1);
   });
 
-  it("کارها: عقب‌افتاده و انجامِ دیرهنگام", () => {
+  it("کارها: عقب‌افتاده و انجام دیرهنگام", () => {
     const [w] = tasksWeeks(
       [
         { dueDate: new Date("2026-09-19T10:00:00Z"), completedAt: new Date("2026-09-19T12:00:00Z") },
@@ -240,7 +240,7 @@ describe("domain helpers", () => {
     expect(w.meta.overdue).toBe(1);
   });
 
-  it("امتیازِ خواب/تغذیه/انضباط ترید", () => {
+  it("امتیاز خواب/تغذیه/انضباط ترید", () => {
     expect(sleepDurationScore(8, null)).toBe(100);
     expect(sleepDurationScore(6, null)).toBe(65);
     expect(nutritionDayScore(2000, 2000)).toBe(100);

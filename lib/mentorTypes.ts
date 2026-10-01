@@ -1,7 +1,7 @@
-// تایپ‌های سمتِ کلاینتِ اکوسیستم منتور — آینه‌ی دقیقِ شکلِ پاسخ‌های
-// docs/mentors.md. هیچ import سروری/Prisma این‌جا نیست تا هر کامپوننتِ
+// تایپ‌های سمت کلاینت اکوسیستم منتور — آینه‌ی دقیق شکل پاسخ‌های
+// docs/mentors.md. هیچ import سروری/Prisma این‌جا نیست تا هر کامپوننت
 // کلاینتی (سمت شاگرد و سمت منتور) بتواند مستقیم از همین فایل بخواند.
-// تاریخ‌ها همه رشته‌ی ISO‌اند (JSON)؛ ستون‌های @db.Date هم به‌شکلِ
+// تاریخ‌ها همه رشته‌ی ISO‌اند (JSON)؛ ستون‌های @db.Date هم به‌شکل
 // "YYYY-MM-DDT00:00:00.000Z" می‌رسند — برای مقایسه‌ی روز از dayKey استفاده کن.
 
 export type VerificationStatus = "NOT_PROVIDED" | "PENDING" | "VERIFIED" | "REJECTED";
@@ -17,14 +17,14 @@ export type ReportTargetType = "USER" | "REVIEW" | "MESSAGE" | "PROGRAM";
 /** سابقه‌ی گفت‌وگو در پنل کاربری — GET /api/mentorships/chat-history */
 export type ChatHistoryResponse = { conversations: import("@/lib/mentorChatHistory").ChatHistoryRow[] };
 
-/** اطلاعاتِ عمومیِ کاربر — هرگز ایمیل/شماره */
+/** اطلاعات عمومی کاربر — هرگز ایمیل/شماره */
 export type PublicUser = {
   id: string;
   name: string | null;
   lastName: string | null;
   username: string | null;
   avatarUrl: string | null;
-  /** نامِ طلایی — کسی که همه‌ی اچیومنت‌ها رو باز کرده */
+  /** نام طلایی — کسی که همه‌ی اچیومنت‌ها رو باز کرده */
   golden?: boolean;
 };
 
@@ -37,7 +37,7 @@ export type MentorCard = {
   golden?: boolean;
   headline: string | null;
   categories: string[];
-  /** نقشِ منتور در حوزه‌ی روتین (مثلا «استاد ریاضی») — null وقتی ROUTINE جزوِ categories نیست یا پر نشده */
+  /** نقش منتور در حوزه‌ی روتین (مثلا «استاد ریاضی») — null وقتی ROUTINE جزو categories نیست یا پر نشده */
   routineRole: string | null;
   identityVerified: boolean;
   certifications: Certification[];
@@ -48,10 +48,10 @@ export type MentorCard = {
   acceptingStudents: boolean;
   /** OPEN | CLOSED (پذیرش خاموش) | FULL (ظرفیت تکمیل) | AWAY (در دسترس نیست و درخواست متوقف) */
   availability: AvailabilityState;
-  /** YYYY-MM-DD روزِ بازگشت؛ فقط وقتی منتور در حالِ عدمِ حضور است */
+  /** YYYY-MM-DD روز بازگشت؛ فقط وقتی منتور در حال عدم حضور است */
   awayUntil: string | null;
   responseTimeHours: number | null;
-  /** زمانِ ساختِ پروفایلِ منتوری (ISO) */
+  /** زمان ساخت پروفایل منتوری (ISO) */
   memberSince: string;
 };
 
@@ -60,13 +60,13 @@ export type MentorDetail = MentorCard & {
   specialties: string[];
   completedPrograms: number;
   lastActiveAt: string | null;
-  /** پیامِ عدمِ حضور — فقط وقتی awayUntil پر است */
+  /** پیام عدم حضور — فقط وقتی awayUntil پر است */
   awayMessage?: string | null;
-  /** سؤال‌هایی که شاگرد هنگامِ درخواست جواب می‌دهد؛ POST /api/mentorships با { intakeAnswers: string[] } به همین ترتیب */
+  /** سؤال‌هایی که شاگرد هنگام درخواست جواب می‌دهد؛ POST /api/mentorships با { intakeAnswers: string[] } به همین ترتیب */
   intakeQuestions?: string[];
 };
 
-// ───────────── دسترس‌پذیری و مدیریتِ شاگرد (پنلِ منتور) ─────────────
+// ───────────── دسترس‌پذیری و مدیریت شاگرد (پنل منتور) ─────────────
 
 export type AvailabilityState = "OPEN" | "CLOSED" | "FULL" | "AWAY";
 export type IntakeAnswer = { question: string; answer: string };
@@ -90,14 +90,14 @@ export type MentorSettingsResponse = {
 
 export type StudentLabel = { id: string; name: string };
 
-/** GET /api/mentor/students — یک ردیف به‌ازای هر شاگردِ فعال */
+/** GET /api/mentor/students — یک ردیف به‌ازای هر شاگرد فعال */
 export type StudentIndexRow = {
   mentorshipId: string;
   student: PublicUser;
   startedAt: string | null;
   categories: string[];
   labelIds: string[];
-  /** نرخِ انجامِ ۷ روزِ اخیر (۰ تا ۱۰۰)؛ null وقتی ثبتی نیست */
+  /** نرخ انجام ۷ روز اخیر (۰ تا ۱۰۰)؛ null وقتی ثبتی نیست */
   adherence: number | null;
   lastActivityAt: string | null;
   activePrograms: number;
@@ -108,7 +108,7 @@ export type StudentIndexResponse = { students: StudentIndexRow[]; labels: Studen
 
 export type StudentNote = { id: string; body: string; createdAt: string; updatedAt: string };
 
-/** GET /api/mentor/students/[studentId]/manage — داده‌ی مدیریتیِ خصوصیِ منتور برای یک شاگرد */
+/** GET /api/mentor/students/[studentId]/manage — داده‌ی مدیریتی خصوصی منتور برای یک شاگرد */
 export type StudentManageResponse = {
   mentorshipId: string;
   labels: StudentLabel[];
@@ -130,9 +130,9 @@ export type Review = {
 export type MyMentorship = { id: string; status: MentorshipStatus; initiatedBy: MentorshipInitiator };
 
 export type MentorsListResponse = { mentors: MentorCard[]; hasMore: boolean };
-/** GET /api/mentors/saved — ذخیره‌شده‌ها (تازه‌ترین اول)؛ max = سقفِ ذخیره */
+/** GET /api/mentors/saved — ذخیره‌شده‌ها (تازه‌ترین اول)؛ max = سقف ذخیره */
 export type SavedMentorsResponse = { mentors: MentorCard[]; max: number };
-/** GET /api/mentors/popular — mentors: «منتورهای محبوب» (شایستگی)؛ newcomers: «منتورهای تازه» (جایگاهِ جدا) */
+/** GET /api/mentors/popular — mentors: «منتورهای محبوب» (شایستگی)؛ newcomers: «منتورهای تازه» (جایگاه جدا) */
 export type MentorsPopularResponse = { mentors: MentorCard[]; newcomers?: MentorCard[] };
 export type MentorProfileResponse = {
   mentor: MentorDetail;
@@ -142,13 +142,13 @@ export type MentorProfileResponse = {
   myReview: Review | null;
   /** این منتور در «ذخیره‌شده‌ها»ی بیننده است (PUT/DELETE /api/mentors/:id/saved) */
   saved?: boolean;
-  /** وضعیتِ بیننده در صفِ انتظارِ این منتور (null = در صف نیست) */
+  /** وضعیت بیننده در صف انتظار این منتور (null = در صف نیست) */
   waitlist?: MyWaitlist | null;
-  /** تعدادِ کلِ منتظرها */
+  /** تعداد کل منتظرها */
   waitlistCount?: number;
 };
 
-// ───────────────────────── صفِ انتظار (lib/mentorWaitlist.ts) ─────────────────────────
+// ───────────────────────── صف انتظار (lib/mentorWaitlist.ts) ─────────────────────────
 
 /** GET/POST /api/mentors/:id/waitlist → { waitlist: MyWaitlist | null } */
 export type MyWaitlist = {
@@ -187,7 +187,7 @@ export type MentorSelf = {
   bio: string | null;
   specialties: string[];
   categories: string[];
-  /** مقدارِ ذخیره‌شده؛ PUT /api/mentors/me با { routineRole: string | null } — سقف ۶۰ حرف، بدونِ ROUTINE پاک می‌شه */
+  /** مقدار ذخیره‌شده؛ PUT /api/mentors/me با { routineRole: string | null } — سقف ۶۰ حرف، بدون ROUTINE پاک می‌شه */
   routineRole: string | null;
   published: boolean;
   acceptingStudents: boolean;
@@ -199,7 +199,7 @@ export type MentorSelf = {
   ratingCount: number;
   credentials: MentorCredential[];
   documents: MentorDocumentMeta[];
-  // تنظیماتِ دسترس‌پذیری (همان MentorSettings)
+  // تنظیمات دسترس‌پذیری (همان MentorSettings)
   maxActiveStudents?: number | null;
   awayUntil?: string | null;
   awayMessage?: string | null;
@@ -227,7 +227,7 @@ export type MentorshipRow = {
   categories: string[];
   /** جواب‌های شاگرد به سؤال‌های پذیرش */
   intakeAnswers?: IntakeAnswer[];
-  /** توقفِ موقت از طرفِ منتور (فقط ACTIVE) */
+  /** توقف موقت از طرف منتور (فقط ACTIVE) */
   pausedAt?: string | null;
   pauseReason?: string | null;
   /** فقط ENDED */
@@ -235,7 +235,7 @@ export type MentorshipRow = {
   endedBy?: MentorshipInitiator | null;
   /** منتور تا این روز در دسترس نیست */
   mentorAway?: { until: string; message: string | null } | null;
-  /** پیامِ خوش‌آمدِ منتور — فقط برای شاگرد، دو هفته‌ی اولِ رابطه */
+  /** پیام خوش‌آمد منتور — فقط برای شاگرد، دو هفته‌ی اول رابطه */
   welcomeMessage?: string | null;
 };
 export type MentorshipsResponse = { mentorships: MentorshipRow[] };
@@ -277,7 +277,7 @@ export type ProgramRow = {
   mentorshipId: string;
   counterpart: PublicUser;
   progress: ProgramProgress;
-  /** یادداشتِ منتور روی برنامه (فهرست‌ها؛ در جزئیات هم هست) */
+  /** یادداشت منتور روی برنامه (فهرست‌ها؛ در جزئیات هم هست) */
   note?: string | null;
 };
 export type ProgramsResponse = { programs: ProgramRow[] };
@@ -287,7 +287,7 @@ export type Program = ProgramRow & {
   mentorId?: string;
   studentId?: string;
   description: string | null;
-  /** یادداشتِ منتور روی برنامه (سقف ۱۰۰۰ حرف) — POST/PUT /api/mentor-programs با { note } */
+  /** یادداشت منتور روی برنامه (سقف ۱۰۰۰ حرف) — POST/PUT /api/mentor-programs با { note } */
   note: string | null;
   changeRequestNote: string | null;
   rejectReason: string | null;
@@ -335,7 +335,7 @@ export type Log = {
   note: string | null;
   createdAt?: string;
   updatedAt?: string;
-  /** "AUTO" = از تیک‌های روتینِ شاگرد؛ "MANUAL" = ثبتِ دستیِ قدیمی */
+  /** "AUTO" = از تیک‌های روتین شاگرد؛ "MANUAL" = ثبت دستی قدیمی */
   source?: "AUTO" | "MANUAL";
   doneOn?: string | null;
 };
@@ -356,14 +356,14 @@ export type ProgramDetailResponse = {
   items: Item[];
   logs: Log[];
   feedback: Feedback[];
-  /** پیشرفتِ خودکار برای بازه‌ی from..to (پیش‌فرض هفته‌ی جاری)؛ null = برنامه هنوز فعال نشده */
+  /** پیشرفت خودکار برای بازه‌ی from..to (پیش‌فرض هفته‌ی جاری)؛ null = برنامه هنوز فعال نشده */
   progressView?: ProgressView | null;
 };
 
-// ───────────── پیشرفتِ خودکار (lib/mentorProgress.ts) ─────────────
-// شاگرد وضعیت را دستی ثبت نمی‌کند؛ هر آیتم/روز از تیک‌های روتینِ خودش خوانده می‌شود.
+// ───────────── پیشرفت خودکار (lib/mentorProgress.ts) ─────────────
+// شاگرد وضعیت را دستی ثبت نمی‌کند؛ هر آیتم/روز از تیک‌های روتین خودش خوانده می‌شود.
 
-/** untracked = برنامه‌ی قدیمیِ پیش از پیشرفتِ خودکار که برای آن روز ثبتی ندارد */
+/** untracked = برنامه‌ی قدیمی پیش از پیشرفت خودکار که برای آن روز ثبتی ندارد */
 export type ProgressState = "done" | "partial" | "missed" | "upcoming" | "untracked";
 export type ProgressCell = {
   itemId: string;
@@ -374,20 +374,20 @@ export type ProgressCell = {
   setsDone: number | null;
   note: string | null;
 };
-export type ProgressDay = { date: string; cells: ProgressCell[]; /** یادداشتِ شاگرد برای مربی روی این روز */ note: string | null };
+export type ProgressDay = { date: string; cells: ProgressCell[]; /** یادداشت شاگرد برای مربی روی این روز */ note: string | null };
 export type ProgressView = {
   /** شاگرد «نمایش پیشرفت» را بسته؛ cells خالی‌اند ولی یادداشت‌های روز می‌مانند */
   hidden: boolean;
   from: string;
   to: string | null;
-  /** «امروز»ِ شاگرد (یا روزِ بسته‌شدنِ برنامه) */
+  /** «امروز» شاگرد (یا روز بسته‌شدن برنامه) */
   today: string;
   days: ProgressDay[];
 };
-/** POST /api/mentor-programs/:id/logs { date, note } → یادداشتِ روز (note خالی = حذف). ثبتِ status رد می‌شود (۴۱۰). */
+/** POST /api/mentor-programs/:id/logs { date, note } → یادداشت روز (note خالی = حذف). ثبت status رد می‌شود (۴۱۰). */
 export type DayNoteResponse = { note: { date: string; body: string } | null };
 
-// گفت‌وگو رمزگذاریِ سرتاسری دارد (docs/mentor-e2ee.md): سرور فقط enc برمی‌گرداند؛
+// گفت‌وگو رمزگذاری سرتاسری دارد (docs/mentor-e2ee.md): سرور فقط enc برمی‌گرداند؛
 // legacyBody فقط برای پیام‌های پیش از رمزگذاری (تا بازرمزگذاری یا ۳۰ روز).
 export type ChatMessage = {
   id: string;
@@ -406,7 +406,7 @@ export type MessagesResponse = {
   canSend: boolean;
   mentorId: string;
   studentId: string;
-  /** پیامِ خوش‌آمد از تنظیماتِ منتور (رمزگذاریِ سرتاسری ندارد و جدا نمایش داده می‌شود) */
+  /** پیام خوش‌آمد از تنظیمات منتور (رمزگذاری سرتاسری ندارد و جدا نمایش داده می‌شود) */
   welcome: { body: string; at: string } | null;
   /** «پاک کردن سابقه» برای همین کاربر؛ پیام‌های تا این زمان برنمی‌گردند */
   clearedAt?: string | null;
@@ -436,12 +436,12 @@ export type MentorDashboard = {
 
 export type ApiError = { error: string };
 
-/** "YYYY-MM-DD" از یک رشته‌ی ISO یا تاریخِ @db.Date */
+/** "YYYY-MM-DD" از یک رشته‌ی ISO یا تاریخ @db.Date */
 export function dayKey(iso: string | null | undefined): string | null {
   return iso ? iso.slice(0, 10) : null;
 }
 
-/** نامِ نمایشیِ یک کاربرِ عمومی */
+/** نام نمایشی یک کاربر عمومی */
 export function publicUserName(u: Pick<PublicUser, "name" | "lastName" | "username"> | null | undefined): string {
   if (!u) return "کاربر";
   const full = [u.name, u.lastName].filter(Boolean).join(" ").trim();

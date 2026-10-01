@@ -13,8 +13,8 @@ import type { StudentLabel } from "@/lib/mentorTypes";
 const ic = (Icon: typeof Tag, size: number) => <Icon size={size} strokeWidth={MI_STROKE} aria-hidden />;
 
 /**
- * برچسب‌های خصوصیِ منتور برای دسته‌بندیِ شاگردها (ساخت، تغییرِ نام، حذف).
- * هر اقدام فوراً ذخیره می‌شود؛ شاگرد هیچ‌وقت برچسب‌ها را نمی‌بیند.
+ * برچسب‌های خصوصی منتور برای دسته‌بندی شاگردها (ساخت، تغییر نام، حذف).
+ * هر اقدام فورا ذخیره می‌شود؛ شاگرد هیچ‌وقت برچسب‌ها را نمی‌بیند.
  */
 export function MentorLabelManager({ initial }: { initial: StudentLabel[] }) {
   const [labels, setLabels] = useState<StudentLabel[]>(initial);
@@ -108,7 +108,7 @@ export function MentorLabelManager({ initial }: { initial: StudentLabel[] }) {
             <div className="mentor-inline-add">
               <input
                 id="ml-new" type="text" className="wsearch-newform-name trade-glass-field" maxLength={LABEL_NAME_MAX + 10}
-                value={name} placeholder="مثلاً کنکور 1406"
+                value={name} placeholder="مثلا کنکور 1406"
                 onChange={(e) => { setName(e.target.value); setError(null); }}
               />
               <button type="submit" className="account-outline-btn mentor-btn" disabled={!name.trim() || !!busy}>

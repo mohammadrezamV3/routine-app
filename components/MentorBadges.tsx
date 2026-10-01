@@ -9,7 +9,7 @@ import { MENTOR_CATEGORY_META, isMentorCategory } from "@/lib/mentorCategories";
 import { faNum } from "@/lib/jalali";
 import { M_DUR, mT } from "./MentorMotion";
 
-/** برچسبِ فارسیِ یک دسته (کلیدِ ناشناخته همان‌طور نمایش داده می‌شود) */
+/** برچسب فارسی یک دسته (کلید ناشناخته همان‌طور نمایش داده می‌شود) */
 export function categoryLabel(key: string): string {
   return isMentorCategory(key) ? MENTOR_CATEGORY_META[key].label : key;
 }
@@ -24,7 +24,7 @@ function withEzafe(s: string): string {
 }
 
 /**
- * جمله‌ی توضیحِ نشانِ مدرک — دقیقاً می‌گوید چه چیزی تایید شده.
+ * جمله‌ی توضیح نشان مدرک — دقیقا می‌گوید چه چیزی تایید شده.
  * «مدرک مربیگری بدنسازی این منتور توسط ادمین‌های آریون بررسی و تایید شده است»
  */
 export function certificateSentence(categories: string[]): string {
@@ -34,12 +34,12 @@ export function certificateSentence(categories: string[]): string {
 }
 
 /**
- * نشانِ مدرک کنارِ نام: مدالِ طلاییِ کوچک (فقط وقتی مدرکِ تاییدشده‌ای هست).
- * احرازِ هویت برای همه‌ی منتورها اجباری است، پس نشانِ «هویت» وجود ندارد.
- * لمس/کلیک یا هاور (ماوس) یک پاپ‌آوِرِ کوچک باز می‌کند که دقیقاً توضیح می‌دهد
+ * نشان مدرک کنار نام: مدال طلایی کوچک (فقط وقتی مدرک تاییدشده‌ای هست).
+ * احراز هویت برای همه‌ی منتورها اجباری است، پس نشان «هویت» وجود ندارد.
+ * لمس/کلیک یا هاور (ماوس) یک پاپ‌آور کوچک باز می‌کند که دقیقا توضیح می‌دهد
  * چه تایید شده. دسترس‌پذیر: دکمه‌ی واقعی با aria-expanded/aria-controls،
- * Escape فوکوس را به دکمه برمی‌گرداند، لمسِ بیرون و اسکرول می‌بندد.
- * پاپ‌آوِر به body پورتال می‌شود تا قابِ کارت (overflow) بریده‌اش نکند.
+ * Escape فوکوس را به دکمه برمی‌گرداند، لمس بیرون و اسکرول می‌بندد.
+ * پاپ‌آور به body پورتال می‌شود تا قاب کارت (overflow) بریده‌اش نکند.
  */
 export function CertificateMark({
   certifications,
@@ -50,7 +50,7 @@ export function CertificateMark({
 }) {
   const verified = certifications.filter((c) => c.verified).map((c) => c.category);
   const [open, setOpen] = useState(false);
-  // باز شده با کلیک/لمس (سنجاق) یا فقط با هاورِ ماوس
+  // باز شده با کلیک/لمس (سنجاق) یا فقط با هاور ماوس
   const pinned = useRef(false);
   const hoverTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
   const btnRef = useRef<HTMLButtonElement>(null);
@@ -73,7 +73,7 @@ export function CertificateMark({
     const center = r.left + r.width / 2;
     const left = Math.max(12, Math.min(window.innerWidth - 12 - W, center - W / 2));
     const below = r.bottom + 120 < window.innerHeight;
-    // بالا: با bottom جای‌گذاری می‌شود (transformِ framer جای translateY را می‌گیرد)
+    // بالا: با bottom جای‌گذاری می‌شود (transform framer جای translateY را می‌گیرد)
     setPos({ y: below ? r.bottom + 8 : window.innerHeight - r.top + 8, left, below });
   }, []);
 
@@ -163,17 +163,17 @@ export function CertificateMark({
   );
 }
 
-/** چیپِ یک دسته (بدون آیکون، رنگ متن) */
+/** چیپ یک دسته (بدون آیکون، رنگ متن) */
 export function CategoryChip({ category }: { category: string }) {
   return <span className="mentor-chip is-cat"><span>{categoryLabel(category)}</span></span>;
 }
 
-/** برچسبِ کوچکِ حوزه/تخصص روی کارت و پروفایل (فشرده‌تر از چیپِ وضعیت) */
+/** برچسب کوچک حوزه/تخصص روی کارت و پروفایل (فشرده‌تر از چیپ وضعیت) */
 export function MentorTag({ children }: { children: React.ReactNode }) {
   return <span className="mentor-tag">{children}</span>;
 }
 
-/** امتیازِ فشرده در یک خط: ستاره + عدد + (تعداد) — برای کارت و سرِ پروفایل */
+/** امتیاز فشرده در یک خط: ستاره + عدد + (تعداد) — برای کارت و سر پروفایل */
 export function RatingInline({ value, count, withWord = false }: { value: number; count: number; withWord?: boolean }) {
   const v = Number.isFinite(value) ? Math.max(0, Math.min(5, value)) : 0;
   const none = count === 0 || v === 0;
@@ -193,7 +193,7 @@ export function RatingInline({ value, count, withWord = false }: { value: number
   );
 }
 
-/** امتیاز به‌شکلِ پنج ستاره (نیم‌ستاره به نزدیک‌ترین ستاره‌ی کامل گرد می‌شود) + عدد */
+/** امتیاز به‌شکل پنج ستاره (نیم‌ستاره به نزدیک‌ترین ستاره‌ی کامل گرد می‌شود) + عدد */
 export function RatingStars({ value, count }: { value: number; count?: number }) {
   const v = Number.isFinite(value) ? Math.max(0, Math.min(5, value)) : 0;
   const filled = Math.round(v);

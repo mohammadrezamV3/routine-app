@@ -19,9 +19,9 @@ import type { TemplateResponse, TemplateRow, TemplatesResponse } from "@/lib/men
 
 // پارامترها از window.location خوانده می‌شوند (نه useSearchParams) تا
 // Suspense لازم نباشد؛ هم‌الگوی بقیه‌ی صفحه‌های اپ.
-//   mentorshipId — شاگرد (بدونِ آن، اول شاگرد انتخاب می‌شود)
+//   mentorshipId — شاگرد (بدون آن، اول شاگرد انتخاب می‌شود)
 //   templateId   — شروع از این قالب
-//   fromProgramId — شروع از کپیِ این برنامه
+//   fromProgramId — شروع از کپی این برنامه
 function readParams() {
   if (typeof window === "undefined") return { mentorshipId: "", templateId: "", fromProgramId: "" };
   const q = new URLSearchParams(window.location.search);
@@ -152,7 +152,7 @@ export default function NewMentorProgramPage() {
   );
 }
 
-/** انتخابِ شاگرد وقتی صفحه بدونِ mentorshipId باز شده (مثلاً «ساخت برنامه» از صفحه‌ی قالب‌ها) */
+/** انتخاب شاگرد وقتی صفحه بدون mentorshipId باز شده (مثلا «ساخت برنامه» از صفحه‌ی قالب‌ها) */
 function StudentPicker({ rows, missing, onPick }: { rows: MentorshipRow[]; missing: boolean; onPick: (id: string) => void }) {
   return (
     <MentorSection title="شاگرد" icon={ic(Users, MI.section)} count={rows.length ? fa(rows.length) : undefined} flush>
@@ -183,7 +183,7 @@ function StudentPicker({ rows, missing, onPick }: { rows: MentorshipRow[]; missi
   );
 }
 
-/** ردیفِ «بر پایه‌ی …» پس از انتخابِ مبدا، با امکانِ تغییر */
+/** ردیف «بر پایه‌ی …» پس از انتخاب مبدا، با امکان تغییر */
 function LoadedRow({ loaded, onClear }: { loaded: Loaded; onClear: () => void }) {
   const p = loaded.prefill;
   return (
@@ -218,7 +218,7 @@ function TemplateSource({
     if (!r.ok) { setPickError(r.error); return; }
     const t = r.data.template;
     if (!allowedTypes.includes(t.type)) { setPickError("نوع این قالب خارج از حوزه‌ی همکاری با این شاگرد است"); return; }
-    // قالب تاریخ ندارد؛ اگر طولِ بازه دارد، از امروز شروع می‌شود و منتور می‌تواند عوضش کند
+    // قالب تاریخ ندارد؛ اگر طول بازه دارد، از امروز شروع می‌شود و منتور می‌تواند عوضش کند
     const range = t.durationDays != null ? shiftedRange(t.durationDays, isoLocal(new Date())) : { startDate: null, endDate: null };
     onLoaded({
       key: `t:${t.id}`,
@@ -240,7 +240,7 @@ function TemplateSource({
       if (preselect && r.data.templates.some((t) => t.id === preselect)) pick(preselect);
     })();
     return () => { alive = false; };
-    // فقط بارِ اول؛ انتخابِ بعدی با کلیک است
+    // فقط بار اول؛ انتخاب بعدی با کلیک است
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
@@ -295,7 +295,7 @@ function CopySource({
     if (!allowedTypes.includes(p.type)) { setPickError("نوع این برنامه خارج از حوزه‌ی همکاری با این شاگرد است"); return; }
     const today = isoLocal(new Date());
     const duration = rangeDuration(p.startDate, p.endDate);
-    // همان شاگرد = دوره‌ی بعد (روزِ بعد از پایانِ مبدا)؛ شاگردِ دیگر = از امروز
+    // همان شاگرد = دوره‌ی بعد (روز بعد از پایان مبدا)؛ شاگرد دیگر = از امروز
     const sameStudent = p.counterpart?.id === row.counterpart.id;
     const range = duration != null ? shiftedRange(duration, sameStudent ? nextPeriodStart(p.endDate, today) : today) : { startDate: null, endDate: null };
     onLoaded({

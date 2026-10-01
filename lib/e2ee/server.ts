@@ -1,21 +1,21 @@
-// فقط سمتِ سرور (node:crypto + prisma) — هرگز از کامپوننتِ کلاینت import نشود.
+// فقط سمت سرور (node:crypto + prisma) — هرگز از کامپوننت کلاینت import نشود.
 import nodeCrypto from "crypto";
 import { prisma } from "@/lib/prisma";
 import { b64ByteLength } from "./encoding";
 import { COMMITMENT_BYTES, GCM_TAG_BYTES, IV_BYTES, MAX_ACTIVE_KEYS, WRAP_BYTES, type EncryptedMessageV2, type KeyWrap } from "./core";
 
-// کمک‌های سمتِ سرورِ رمزگذاری. سرور هیچ کلیدِ خصوصیِ کاربری ندارد؛ این فایل فقط:
-//   ۱) برچسبِ سرور روی تعهدِ فرانکینگ (HMAC با رازِ سرور) می‌سازد/تایید می‌کند،
-//   ۲) رمزگذاریِ «در حالِ سکون» (at-rest) برای داده‌ای که سرور *باید* پردازش کند
-//      یا ادمین *باید* ببیند (متنِ پیامِ گزارش‌شده) انجام می‌دهد،
-//   ۳) ورودیِ رمزشده را اعتبارسنجیِ شکلی می‌کند.
+// کمک‌های سمت سرور رمزگذاری. سرور هیچ کلید خصوصی کاربری ندارد؛ این فایل فقط:
+//   ۱) برچسب سرور روی تعهد فرانکینگ (HMAC با راز سرور) می‌سازد/تایید می‌کند،
+//   ۲) رمزگذاری «در حال سکون» (at-rest) برای داده‌ای که سرور *باید* پردازش کند
+//      یا ادمین *باید* ببیند (متن پیام گزارش‌شده) انجام می‌دهد،
+//   ۳) ورودی رمزشده را اعتبارسنجی شکلی می‌کند.
 
 // ───────────────────────── رازها ─────────────────────────
 //
-// قالبِ env: «kid:base64(32 بایت)» و برای چرخش چندتا با کاما — اولی فعال است،
-// بقیه فقط برای خواندنِ داده‌ی قدیمی. نبودِ env → کلید از NEXTAUTH_SECRET با
+// قالب env: «kid:base64(32 بایت)» و برای چرخش چندتا با کاما — اولی فعال است،
+// بقیه فقط برای خواندن داده‌ی قدیمی. نبود env → کلید از NEXTAUTH_SECRET با
 // HKDF مشتق می‌شود (kid = "n0") تا هیچ‌چیز نشکند؛ ولی در production باید
-// کلیدِ مستقل تنظیم شود (docs/mentor-e2ee.md).
+// کلید مستقل تنظیم شود (docs/mentor-e2ee.md).
 
 type Keyring = { active: { kid: string; key: Buffer }; all: Map<string, Buffer> };
 const rings = new Map<string, Keyring>();
@@ -64,7 +64,7 @@ function lpBuf(...parts: (string | number)[]): Buffer {
   return Buffer.concat(chunks);
 }
 
-// ───────────────────────── برچسبِ سرور روی تعهد ─────────────────────────
+// ───────────────────────── برچسب سرور روی تعهد ─────────────────────────
 
 export type FrankingContext = { mentorshipId: string; senderId: string; clientId: string; commitment: string; createdAt: Date };
 
@@ -73,9 +73,9 @@ function tagInput(c: FrankingContext): Buffer {
 }
 
 /**
- * برچسبِ سرور: HMAC(رازِ سرور، تعهد + فرستنده‌ی احرازشده + زمان). یعنی «سرور
+ * برچسب سرور: HMAC(راز سرور، تعهد + فرستنده‌ی احرازشده + زمان). یعنی «سرور
  * این تعهد را در این لحظه از این فرستنده گرفت». با آن، حتی کسی که به دیتابیس
- * دسترسیِ نوشتن دارد نمی‌تواند پیامِ قابلِ گزارشِ جعلی به نامِ دیگری بسازد.
+ * دسترسی نوشتن دارد نمی‌تواند پیام قابل گزارش جعلی به نام دیگری بسازد.
  */
 export function serverFrankingTag(c: FrankingContext): string {
   const { kid, key } = keyring("MENTOR_FRANKING_SECRET").active;
@@ -93,11 +93,11 @@ export function verifyServerFrankingTag(tag: string | null | undefined, c: Frank
   return got.length === expected.length && nodeCrypto.timingSafeEqual(got, expected);
 }
 
-// ───────────────────────── رمزگذاریِ در حالِ سکون ─────────────────────────
+// ───────────────────────── رمزگذاری در حال سکون ─────────────────────────
 //
-// قالبِ ذخیره: «enc1:<kid>:<iv b64>:<ct+tag b64>». AAD = زمینه‌ی فیلد (مثلا
-// ["MentorReport.reportedText", reportId]) تا مقدارِ رمزشده به ردیف/ستونِ
-// دیگری منتقل نشود. مقدارِ بدونِ پیشوند = دادهِ قدیمیِ پیش از رمزگذاری
+// قالب ذخیره: «enc1:<kid>:<iv b64>:<ct+tag b64>». AAD = زمینه‌ی فیلد (مثلا
+// ["MentorReport.reportedText", reportId]) تا مقدار رمزشده به ردیف/ستون
+// دیگری منتقل نشود. مقدار بدون پیشوند = داده قدیمی پیش از رمزگذاری
 // (فقط خوانده می‌شود).
 
 const AT_REST_PREFIX = "enc1:";
@@ -115,7 +115,7 @@ export function isSealedAtRest(v: string | null | undefined): boolean {
   return typeof v === "string" && v.startsWith(AT_REST_PREFIX);
 }
 
-/** باز کردن؛ مقدارِ قدیمیِ بی‌پیشوند همان‌طور برمی‌گردد. دست‌کاری/کلیدِ ناموجود → null */
+/** باز کردن؛ مقدار قدیمی بی‌پیشوند همان‌طور برمی‌گردد. دست‌کاری/کلید ناموجود → null */
 export function openAtRest(v: string | null | undefined, aad: (string | number)[]): string | null {
   if (v == null) return null;
   if (!v.startsWith(AT_REST_PREFIX)) return v;
@@ -135,9 +135,9 @@ export function openAtRest(v: string | null | undefined, aad: (string | number)[
   }
 }
 
-// ───────────────────────── اعتبارسنجیِ ورودیِ رمزشده ─────────────────────────
+// ───────────────────────── اعتبارسنجی ورودی رمزشده ─────────────────────────
 
-/** سقفِ متنِ رمزشده: ۲۰۰۰ نویسه × ۴ بایت + JSON + padding، به base64 */
+/** سقف متن رمزشده: ۲۰۰۰ نویسه × ۴ بایت + JSON + padding، به base64 */
 export const CIPHERTEXT_B64_MAX = 12_000;
 const CLIENT_ID_RE = /^[A-Za-z0-9_-]{16,40}$/;
 
@@ -147,8 +147,8 @@ const USER_ID_RE = /^[A-Za-z0-9_-]{1,64}$/;
 const isVersion = (v: unknown): v is number => Number.isInteger(v) && (v as number) >= 1 && (v as number) <= 1e6;
 
 /**
- * فقط scheme 2 (چنددستگاهی) برای پیامِ تازه پذیرفته می‌شود. شکلِ هر بسته‌بندی چک
- * می‌شود؛ این‌که بسته‌بندی‌ها دقیقا کلیدهای فعالِ دو طرف را پوشش دهند را
+ * فقط scheme 2 (چنددستگاهی) برای پیام تازه پذیرفته می‌شود. شکل هر بسته‌بندی چک
+ * می‌شود؛ این‌که بسته‌بندی‌ها دقیقا کلیدهای فعال دو طرف را پوشش دهند را
  * checkWrapTargets (همین فایل) با دیتابیس می‌سنجد.
  */
 export function parseEncryptedMessage(v: unknown): { ok: true; data: EncryptedInput } | { ok: false; error: string } {
@@ -174,7 +174,7 @@ export function parseEncryptedMessage(v: unknown): { ok: true; data: EncryptedIn
   };
 }
 
-/** فهرستِ بسته‌بندی‌ها: شکلِ هرکدام + بی‌تکرار بودنِ (u, k). allowVia فقط برای انتقالِ سابقه */
+/** فهرست بسته‌بندی‌ها: شکل هرکدام + بی‌تکرار بودن (u, k). allowVia فقط برای انتقال سابقه */
 export function parseWraps(v: unknown, max: number, allowVia: boolean): KeyWrap[] | null {
   if (!Array.isArray(v) || v.length === 0 || v.length > max) return null;
   const seen = new Set<string>();
@@ -192,18 +192,18 @@ export function parseWraps(v: unknown, max: number, allowVia: boolean): KeyWrap[
   return out;
 }
 
-// ───────────────────────── دفترچه‌ی کلیدِ عمومی ─────────────────────────
+// ───────────────────────── دفترچه‌ی کلید عمومی ─────────────────────────
 
 export type PublicKeyRow = { version: number; publicKey: string; current: boolean; kind: "SYNCED" | "DEVICE"; createdAt: Date };
 export type ActiveKey = { version: number; publicKey: string; kind: "SYNCED" | "DEVICE" };
 
-/** یکی از کلیدهای فعالِ کاربر (SYNCED ترجیح دارد) — فقط برای «کلید دارد یا نه» */
+/** یکی از کلیدهای فعال کاربر (SYNCED ترجیح دارد) — فقط برای «کلید دارد یا نه» */
 export async function currentE2EKey(userId: string): Promise<ActiveKey | null> {
   const rows = await activeKeysFor([userId]);
   return rows[userId][0] ?? null;
 }
 
-/** همه‌ی کلیدهای فعالِ چند کاربر؛ SYNCED اول، بعد به ترتیبِ نسخه */
+/** همه‌ی کلیدهای فعال چند کاربر؛ SYNCED اول، بعد به ترتیب نسخه */
 export async function activeKeysFor(userIds: string[]): Promise<Record<string, ActiveKey[]>> {
   const rows = await prisma.userE2EKey.findMany({
     where: { userId: { in: userIds }, retiredAt: null },
@@ -219,9 +219,9 @@ export async function activeKeysFor(userIds: string[]): Promise<Record<string, A
 export type WrapCheck = "ok" | "NO_KEY" | "PEER_NO_KEY" | "KEY_CHANGED";
 
 /**
- * بسته‌بندی‌های یک پیام باید *دقیقا* کلیدهای فعالِ همه‌ی participants را پوشش دهند
- * (نه کمتر: دستگاهی جا نماند؛ نه بیشتر: کلیدِ ناشناس/بازنشسته) و from یکی از کلیدهای
- * فعالِ fromUserId باشد. ناهمخوانی = KEY_CHANGED تا کلاینت کلیدها را تازه کند.
+ * بسته‌بندی‌های یک پیام باید *دقیقا* کلیدهای فعال همه‌ی participants را پوشش دهند
+ * (نه کمتر: دستگاهی جا نماند؛ نه بیشتر: کلید ناشناس/بازنشسته) و from یکی از کلیدهای
+ * فعال fromUserId باشد. ناهمخوانی = KEY_CHANGED تا کلاینت کلیدها را تازه کند.
  */
 export async function checkWrapTargets(input: Pick<EncryptedInput, "from" | "wraps">, fromUserId: string, participants: string[]): Promise<WrapCheck> {
   const active = await activeKeysFor(participants);
@@ -234,7 +234,7 @@ export async function checkWrapTargets(input: Pick<EncryptedInput, "from" | "wra
   return "ok";
 }
 
-/** همه‌ی نسخه‌های کلیدِ عمومیِ چند کاربر — نسخه‌ی قدیمیِ طرفِ مقابل برای خواندنِ پیام‌های قبل از بازنشانی‌اش لازم است */
+/** همه‌ی نسخه‌های کلید عمومی چند کاربر — نسخه‌ی قدیمی طرف مقابل برای خواندن پیام‌های قبل از بازنشانی‌اش لازم است */
 export async function publicKeysFor(userIds: string[]): Promise<Record<string, PublicKeyRow[]>> {
   const rows = await prisma.userE2EKey.findMany({
     where: { userId: { in: userIds } },

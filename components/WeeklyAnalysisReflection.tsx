@@ -21,8 +21,8 @@ type SaveState = "idle" | "dirty" | "saving" | "saved" | "error";
 
 type Draft = { wentWell: string; improve: string; mood: number | null };
 
-// بازتابِ هفته — ذخیره‌ی خودکار با تاخیر (بدونِ دکمه‌ی ذخیره). کامپوننت با
-// key=weekStart رندر می‌شه، پس با عوض‌شدنِ هفته استیتش از نو ساخته می‌شه.
+// بازتاب هفته — ذخیره‌ی خودکار با تاخیر (بدون دکمه‌ی ذخیره). کامپوننت با
+// key=weekStart رندر می‌شه، پس با عوض‌شدن هفته استیتش از نو ساخته می‌شه.
 export function WeeklyAnalysisReflection({
   offset,
   reflection,
@@ -74,7 +74,7 @@ export function WeeklyAnalysisReflection({
     setState("dirty");
   }
 
-  // اگه کاربر قبل از تموم‌شدنِ تاخیر از صفحه/هفته رفت، آخرین نسخه گم نشه
+  // اگه کاربر قبل از تموم‌شدن تاخیر از صفحه/هفته رفت، آخرین نسخه گم نشه
   useEffect(() => {
     return () => {
       if (timer.current) clearTimeout(timer.current);

@@ -3,13 +3,13 @@ import http from "node:http";
 import { EventEmitter } from "node:events";
 import type { AddressInfo } from "node:net";
 
-// لایه‌ی realtime (WebSocketِ `/ws`):
-//  • بخشِ خالص (lib/realtimeProtocol.ts): ساختِ payload و سقفِ ۸KB، تمیزکاریِ
-//    رویداد، Origin/کوکی، و «به کسِ دیگه نرسه» (selectRecipients).
-//  • lib/realtime.ts: withLiveSync فقط روی پاسخِ ۲xx و با userIdِ واقعیِ JWT
+// لایه‌ی realtime (WebSocket `/ws`):
+//  • بخش خالص (lib/realtimeProtocol.ts): ساخت payload و سقف ۸KB، تمیزکاری
+//    رویداد، Origin/کوکی، و «به کس دیگه نرسه» (selectRecipients).
+//  • lib/realtime.ts: withLiveSync فقط روی پاسخ ۲xx و با userId واقعی JWT
 //    pg_notify می‌زنه (Prisma ماک).
-//  • lib/realtimeServer.ts: سرورِ واقعیِ http + کلاینتِ واقعیِ ws؛ فقط pg و
-//    Prisma ماک‌ان — رد شدنِ بی‌کوکی/Originِ بد/کاربرِ مسدود، و fan-out.
+//  • lib/realtimeServer.ts: سرور واقعی http + کلاینت واقعی ws؛ فقط pg و
+//    Prisma ماک‌ان — رد شدن بی‌کوکی/Origin بد/کاربر مسدود، و fan-out.
 
 const SECRET = "test-secret-for-realtime-0123456789";
 process.env.NEXTAUTH_SECRET = SECRET;
@@ -32,7 +32,7 @@ vi.mock("@/lib/deviceSessions", () => ({
   isSessionLive: async (sid: string) => liveSessions.has(sid),
 }));
 
-// کلاینتِ جعلیِ pg: LISTEN رو ثبت می‌کنه و تست خودش `notification` می‌فرسته
+// کلاینت جعلی pg: LISTEN رو ثبت می‌کنه و تست خودش `notification` می‌فرسته
 const fakePg: { clients: FakeClient[] } = { clients: [] };
 class FakeClient extends EventEmitter {
   queries: string[] = [];
@@ -44,7 +44,7 @@ class FakeClient extends EventEmitter {
 }
 vi.mock("pg", () => ({ Client: FakeClient, default: { Client: FakeClient } }));
 
-// ── بخشِ خالص ─────────────────────────────────────────────────────────
+// ── بخش خالص ─────────────────────────────────────────────────────────
 describe("realtimeProtocol — payload", () => {
   it("payload فقط متادیتا دارد و فیلدهای ناشناخته/محتوای بلند حذف می‌شوند", async () => {
     const { buildNotifyPayloads } = await import("@/lib/realtimeProtocol");
@@ -58,7 +58,7 @@ describe("realtimeProtocol — payload", () => {
     expect(p).not.toContain("secret");
   });
 
-  it("نوعِ ناشناخته یا بدونِ گیرنده‌ی معتبر → هیچ NOTIFYی ساخته نمی‌شود", async () => {
+  it("نوع ناشناخته یا بدون گیرنده‌ی معتبر → هیچ NOTIFYی ساخته نمی‌شود", async () => {
     const { buildNotifyPayloads } = await import("@/lib/realtimeProtocol");
     expect(buildNotifyPayloads(["u1"], { type: "evil" } as any)).toEqual([]);
     expect(buildNotifyPayloads(["bad id!", ""], { type: "notification.new" })).toEqual([]);
@@ -91,7 +91,7 @@ describe("realtimeProtocol — payload", () => {
     expect(sanitizeEvent({ type: "data.changed", src: "bad src!" })!.src).toBeUndefined();
   });
 
-  it("parseNotifyPayload هرچیزِ بدشکل را رد می‌کند", async () => {
+  it("parseNotifyPayload هرچیز بدشکل را رد می‌کند", async () => {
     const { parseNotifyPayload } = await import("@/lib/realtimeProtocol");
     expect(parseNotifyPayload("not json")).toBeNull();
     expect(parseNotifyPayload(JSON.stringify({ u: "u1", e: { type: "notification.new" } }))).toBeNull();
@@ -103,7 +103,7 @@ describe("realtimeProtocol — payload", () => {
     });
   });
 
-  it("fan-out فقط به سوکت‌های کاربرانِ مقصد می‌رسد", async () => {
+  it("fan-out فقط به سوکت‌های کاربران مقصد می‌رسد", async () => {
     const { selectRecipients } = await import("@/lib/realtimeProtocol");
     const byUser = new Map<string, Set<string>>([
       ["alice", new Set(["a1", "a2"])],
@@ -132,7 +132,7 @@ describe("realtimeProtocol — Origin، کوکی و مسیر", () => {
     expect(isOriginAllowed("file:///x", "arionapp.ir", allowed)).toBe(false);
   });
 
-  it("توکنِ نشست، هم کامل هم تکه‌شده (.0/.1)، با هر دو نامِ کوکی پیدا می‌شود", async () => {
+  it("توکن نشست، هم کامل هم تکه‌شده (.0/.1)، با هر دو نام کوکی پیدا می‌شود", async () => {
     const { parseCookieHeader, pickSessionTokens } = await import("@/lib/realtimeProtocol");
     expect(pickSessionTokens(parseCookieHeader("a=1; next-auth.session-token=abc"))).toEqual(["abc"]);
     expect(pickSessionTokens(parseCookieHeader("__Secure-next-auth.session-token.0=ab; __Secure-next-auth.session-token.1=cd"))).toEqual(["abcd"]);
@@ -140,7 +140,7 @@ describe("realtimeProtocol — Origin، کوکی و مسیر", () => {
     expect(pickSessionTokens(parseCookieHeader(undefined))).toEqual([]);
   });
 
-  it("فقط /ws گرفته می‌شود — HMRِ نکست و بقیه دست‌نخورده", async () => {
+  it("فقط /ws گرفته می‌شود — HMR نکست و بقیه دست‌نخورده", async () => {
     const { isRealtimePath } = await import("@/lib/realtimeProtocol");
     expect(isRealtimePath("/ws")).toBe(true);
     expect(isRealtimePath("/ws?x=1")).toBe(true);
@@ -175,7 +175,7 @@ describe("realtime — انتشار", () => {
     expect(notifiedPayloads()[0].u).toEqual(["u1", "u2"]);
   });
 
-  it("شکستِ انتشار هیچ‌وقت throw نمی‌کند", async () => {
+  it("شکست انتشار هیچ‌وقت throw نمی‌کند", async () => {
     const { publishToUser } = await import("@/lib/realtime");
     executeRaw.mockRejectedValueOnce(new Error("db down"));
     const warn = vi.spyOn(console, "warn").mockImplementation(() => {});
@@ -183,7 +183,7 @@ describe("realtime — انتشار", () => {
     warn.mockRestore();
   });
 
-  it("withLiveSync: فقط پاسخِ ۲xx، با userIdِ JWT و شناسه‌ی تب", async () => {
+  it("withLiveSync: فقط پاسخ ۲xx، با userId JWT و شناسه‌ی تب", async () => {
     const { withLiveSync } = await import("@/lib/realtime");
     const cookie = await sessionCookie({ userId: "user_a", sid: "s1" });
     const ok = withLiveSync(["trade"], async () => new Response("{}", { status: 200 }));
@@ -199,7 +199,7 @@ describe("realtime — انتشار", () => {
     expect(notifiedPayloads()[0]).toEqual({ u: ["user_a"], e: { type: "data.changed", keys: ["trade"], src: "tab42" } });
   });
 
-  it("withLiveSync: کلیدِ پویا از params (settings/[key])", async () => {
+  it("withLiveSync: کلید پویا از params (settings/[key])", async () => {
     const { withLiveSync } = await import("@/lib/realtime");
     const cookie = await sessionCookie({ userId: "user_b" });
     const h = withLiveSync((_req: Request, ctx: { params: { key: string } }) => [ctx.params.key], async () => new Response(null, { status: 204 }));
@@ -208,14 +208,14 @@ describe("realtime — انتشار", () => {
     expect(notifiedPayloads()[0].e.keys).toEqual(["wakeSleepTimes"]);
   });
 
-  it("کوکیِ امضاشده با رمزِ دیگر هیچ userIdی نمی‌دهد", async () => {
+  it("کوکی امضاشده با رمز دیگر هیچ userIdی نمی‌دهد", async () => {
     const { userIdFromCookieHeader } = await import("@/lib/realtime");
     expect(await userIdFromCookieHeader(await sessionCookie({ userId: "x" }, "another-secret-another-secret-00"))).toBeNull();
     expect(await userIdFromCookieHeader(await sessionCookie({ userId: "x" }))).toBe("x");
   });
 });
 
-// ── lib/realtimeServer.ts (سرورِ واقعی روی http) ───────────────────────
+// ── lib/realtimeServer.ts (سرور واقعی روی http) ───────────────────────
 describe("realtimeServer — upgrade، احراز هویت و fan-out", () => {
   let server: http.Server;
   let port = 0;
@@ -227,7 +227,7 @@ describe("realtimeServer — upgrade، احراز هویت و fan-out", () => {
     const { startRealtimeServer } = await import("@/lib/realtimeServer");
     startRealtimeServer();
     server = http.createServer((_req, res) => res.end("ok"));
-    // شبیه‌سازیِ هندلرِ upgradeِ خودِ نکست (HMR) — باید دست‌نخورده برسد
+    // شبیه‌سازی هندلر upgrade خود نکست (HMR) — باید دست‌نخورده برسد
     server.on("upgrade", (req, socket) => {
       nextUpgrades.push(req.url || "");
       socket.destroy();
@@ -264,36 +264,36 @@ describe("realtimeServer — upgrade، احراز هویت و fan-out", () => {
     return c;
   }
 
-  it("LISTEN روی arion_rt با URLِ بدونِ پارامترهای مخصوصِ Prisma", async () => {
+  it("LISTEN روی arion_rt با URL بدون پارامترهای مخصوص Prisma", async () => {
     await vi.waitFor(() => expect(listener().queries).toContain("LISTEN arion_rt"));
     const cs = listener().opts.connectionString as string;
     expect(cs).not.toContain("schema=");
     expect(cs).not.toContain("connection_limit");
   });
 
-  it("بدونِ کوکی → 401", async () => {
+  it("بدون کوکی → 401", async () => {
     const r = await open({});
     expect(r.status).toBe(401);
   });
 
-  it("Originِ بیگانه → 403 (حتی با کوکیِ معتبر)", async () => {
+  it("Origin بیگانه → 403 (حتی با کوکی معتبر)", async () => {
     const r = await open({ cookie: await sessionCookie({ userId: "alice" }), origin: "https://evil.example" });
     expect(r.status).toBe(403);
   });
 
-  it("کاربرِ مسدود/حذف‌شده یا نشستِ ابطال‌شده → 401", async () => {
+  it("کاربر مسدود/حذف‌شده یا نشست ابطال‌شده → 401", async () => {
     expect((await open({ cookie: await sessionCookie({ userId: "blocked" }) })).status).toBe(401);
     expect((await open({ cookie: await sessionCookie({ userId: "deleted" }) })).status).toBe(401);
     expect((await open({ cookie: await sessionCookie({ userId: "ghost" }) })).status).toBe(401);
     expect((await open({ cookie: await sessionCookie({ userId: "alice", sid: "revoked-sid" }) })).status).toBe(401);
   });
 
-  it("upgradeِ مسیرهای دیگر (HMR) به هندلرِ خودِ سرور می‌رسد", async () => {
+  it("upgrade مسیرهای دیگر (HMR) به هندلر خود سرور می‌رسد", async () => {
     await open({ path: "/_next/webpack-hmr" });
     expect(nextUpgrades).toContain("/_next/webpack-hmr");
   });
 
-  it("رویدادِ NOTIFY فقط به سوکت‌های کاربرِ مقصد (همه‌ی دستگاه‌هایش) می‌رسد", async () => {
+  it("رویداد NOTIFY فقط به سوکت‌های کاربر مقصد (همه‌ی دستگاه‌هایش) می‌رسد", async () => {
     const a1 = await open({ cookie: await sessionCookie({ userId: "alice", sid: "live-sid" }) });
     const a2 = await open({ cookie: await sessionCookie({ userId: "alice" }) });
     const b = await open({ cookie: await sessionCookie({ userId: "bob" }) });
@@ -315,7 +315,7 @@ describe("realtimeServer — upgrade، احراز هویت و fan-out", () => {
     for (const c of [a1, a2, b]) c.ws?.close();
   });
 
-  it("پیامِ بزرگ‌تر از maxPayload از سمتِ کلاینت اتصال را می‌بندد", async () => {
+  it("پیام بزرگ‌تر از maxPayload از سمت کلاینت اتصال را می‌بندد", async () => {
     const c = await open({ cookie: await sessionCookie({ userId: "bob" }) });
     const closed = new Promise<number>((r) => c.ws!.on("close", (code) => r(code)));
     c.ws!.send("x".repeat(5000));

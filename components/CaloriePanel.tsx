@@ -68,16 +68,16 @@ export function CaloriePanel() {
   const { status } = useSession();
   const dashboardPrefs = useDashboardPrefs();
   const [target, setTarget] = useState<Target | null | undefined>(undefined);
-  // شبکه‌ی ایمنی: اگه هر دلیلی (فچ گیرکرده، پاسخِ کندِ سرور، ...) بعد از
-  // چند ثانیه هنوز روی «در حال بارگذاری» مانده بودیم، به‌جای اسپینرِ ابدی
-  // (دقیقاً گزارشِ کاربر: «کالری‌شمار بالا نمیاد») یک پیامِ خطا با دکمه‌ی
-  // تلاشِ دوباره نشان بده.
+  // شبکه‌ی ایمنی: اگه هر دلیلی (فچ گیرکرده، پاسخ کند سرور، ...) بعد از
+  // چند ثانیه هنوز روی «در حال بارگذاری» مانده بودیم، به‌جای اسپینر ابدی
+  // (دقیقا گزارش کاربر: «کالری‌شمار بالا نمیاد») یک پیام خطا با دکمه‌ی
+  // تلاش دوباره نشان بده.
   const [loadStuck, setLoadStuck] = useState(false);
   const [needsAge, setNeedsAge] = useState(false);
 
   // انتخاب روز — طبق طرح کاربر، بالای صفحه یه نوار روزهاست که مشخص می‌کنه
-  // داری کدوم روز رو می‌بینی/واردش می‌کنی (DashDateSelector، نوارِ آزادِ
-  // قابل‌کشیدن؛ روزِ دورِ انتخاب‌شده از تقویم رو خودش باز و وسط‌چین می‌کنه).
+  // داری کدوم روز رو می‌بینی/واردش می‌کنی (DashDateSelector، نوار آزاد
+  // قابل‌کشیدن؛ روز دور انتخاب‌شده از تقویم رو خودش باز و وسط‌چین می‌کنه).
   const [selectedIso, setSelectedIso] = useState(todayIso);
   const [recenterKey, setRecenterKey] = useState(0);
   const isSelectedToday = selectedIso === todayIso;
@@ -123,10 +123,10 @@ export function CaloriePanel() {
     });
   }, [status]);
 
-  // بدون چکِ res.ok، یک ۵۰۰ که بدنه‌اش JSON نیست باعث می‌شد res.json()
-  // throw کند، هیچ‌جا catch نشود، و target تا ابد روی حالتِ اولیه‌ی
-  // undefined بماند — یعنی از دیدِ کاربر «کالری‌شمار بالا نمی‌آید»
-  // (اسکلتونِ «در حال بارگذاری…» بی‌نهایت). الگوی ExercisePanel.tsx.
+  // بدون چک res.ok، یک ۵۰۰ که بدنه‌اش JSON نیست باعث می‌شد res.json()
+  // throw کند، هیچ‌جا catch نشود، و target تا ابد روی حالت اولیه‌ی
+  // undefined بماند — یعنی از دید کاربر «کالری‌شمار بالا نمی‌آید»
+  // (اسکلتون «در حال بارگذاری…» بی‌نهایت). الگوی ExercisePanel.tsx.
   async function loadTarget() {
     try {
       const res = await fetch("/api/calorie/target");
@@ -204,7 +204,7 @@ export function CaloriePanel() {
   }
 
   async function removeEntry(id: string) {
-    // optimistic: همون لحظه از لیست (و از جمعِ امروز/تاریخچه) حذف می‌شه؛
+    // optimistic: همون لحظه از لیست (و از جمع امروز/تاریخچه) حذف می‌شه؛
     // اگه سرور رد کرد برمی‌گرده و پیام خطا نشون داده می‌شه.
     const prevEntries = entries;
     const prevHistory = historyEntries;
@@ -218,7 +218,7 @@ export function CaloriePanel() {
     }
   }
 
-  // زنده: افزودن/حذف/اسکن از هرجا (مودال، تبِ دیگه، سرور) یا برگشت به تب
+  // زنده: افزودن/حذف/اسکن از هرجا (مودال، تب دیگه، سرور) یا برگشت به تب
   useLiveRefresh("calorie", () => { loadTarget(); refreshAfterChange(); }, { enabled: status === "authenticated" });
 
   // بعد افزودن/حذف/اسکن، هم لیست روز انتخاب‌شده هم تاریخچه‌ی ۳۰روزه باید

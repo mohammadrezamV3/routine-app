@@ -3,22 +3,22 @@ import { addDaysIso } from "@/lib/mentorServer";
 import { sealAtRest } from "@/lib/e2ee/server";
 import { intakeAad } from "@/lib/mentorManageServer";
 
-// بخشِ «دسترس‌پذیری و مدیریتِ شاگرد» در داده‌ی آزمایشی (lib/demoData.ts) —
-// جدا نگه داشته شده تا با حذفِ این گزینه‌ها فقط همین فایل و یک فراخوانی برود.
+// بخش «دسترس‌پذیری و مدیریت شاگرد» در داده‌ی آزمایشی (lib/demoData.ts) —
+// جدا نگه داشته شده تا با حذف این گزینه‌ها فقط همین فایل و یک فراخوانی برود.
 //
-// همه‌چیز روی کاربرهای آزمایشی یا رابطه‌های آن‌هاست و با حذفِ آن‌ها cascade
-// می‌شود؛ تنها استثنا برچسب‌هایی است که روی پروفایلِ منتوریِ *موجودِ* Owner
-// ساخته می‌شوند — idشان برگردانده می‌شود تا در AppSetting ثبت و موقعِ
-// پاک‌سازی حذف شوند. تنظیماتِ پروفایلِ موجودِ Owner (ظرفیت، عدم حضور، …) دست نمی‌خورد.
+// همه‌چیز روی کاربرهای آزمایشی یا رابطه‌های آن‌هاست و با حذف آن‌ها cascade
+// می‌شود؛ تنها استثنا برچسب‌هایی است که روی پروفایل منتوری *موجود* Owner
+// ساخته می‌شوند — idشان برگردانده می‌شود تا در AppSetting ثبت و موقع
+// پاک‌سازی حذف شوند. تنظیمات پروفایل موجود Owner (ظرفیت، عدم حضور، …) دست نمی‌خورد.
 
 type Tx = Prisma.TransactionClient;
 
 export type ManageDemoCtx = {
   tx: Tx;
-  /** کلیدِ کاربرِ آزمایشی (sara، ali، …) → userId */
+  /** کلید کاربر آزمایشی (sara، ali، …) → userId */
   id: (key: string) => string;
   ownerId: string;
-  /** پروفایلی که همین ابزار برای Owner ساخته؛ null یعنی پروفایلِ Owner از قبل بوده */
+  /** پروفایلی که همین ابزار برای Owner ساخته؛ null یعنی پروفایل Owner از قبل بوده */
   ownerProfileCreated: boolean;
   today: string;
   now: Date;
@@ -32,7 +32,7 @@ async function rel(tx: Tx, mentorId: string, studentId: string) {
 }
 
 async function answers(tx: Tx, mentorshipId: string, qa: [string, string][]) {
-  // جواب رمزشده در حالِ سکون، مثلِ مسیرِ واقعی (writeIntakeAnswers — docs/mentor-e2ee.md)
+  // جواب رمزشده در حال سکون، مثل مسیر واقعی (writeIntakeAnswers — docs/mentor-e2ee.md)
   await tx.mentorIntakeAnswer.createMany({ data: qa.map(([question, answer], order) => ({ mentorshipId, order, question, answer: sealAtRest(answer, intakeAad(mentorshipId, order)) })) });
 }
 
@@ -40,14 +40,14 @@ const SARA_QUESTIONS = ["پایه و رشته‌ات چیست؟", "در هفته
 const OWNER_QUESTIONS = ["هدفت از این همکاری چیست؟", "در روز چند ساعت وقت آزاد داری؟"];
 
 /**
- * تنظیمات و داده‌ی مدیریتی را روی دیتاستِ ساخته‌شده اعمال می‌کند.
- * خروجی: idِ برچسب‌هایی که روی پروفایلِ از قبل موجودِ Owner ساخته شد و تعدادِ رابطه‌های افزوده.
+ * تنظیمات و داده‌ی مدیریتی را روی دیتاست ساخته‌شده اعمال می‌کند.
+ * خروجی: id برچسب‌هایی که روی پروفایل از قبل موجود Owner ساخته شد و تعداد رابطه‌های افزوده.
  */
 export async function seedManageDemo(c: ManageDemoCtx): Promise<{ ownerLabelIds: string[]; addedMentorships: number }> {
   const { tx, id, ownerId, today, now } = c;
 
-  // ── تنظیماتِ منتورهای آزمایشی ──
-  // سارا: ظرفیتِ ۴ (با شاگردهای فعلی «۳ از ۴»)، سؤال‌های پذیرش، زمانِ پاسخ، پیامِ خوش‌آمد
+  // ── تنظیمات منتورهای آزمایشی ──
+  // سارا: ظرفیت ۴ (با شاگردهای فعلی «۳ از ۴»)، سؤال‌های پذیرش، زمان پاسخ، پیام خوش‌آمد
   await tx.mentorProfile.update({
     where: { userId: id("sara") },
     data: {
@@ -57,7 +57,7 @@ export async function seedManageDemo(c: ManageDemoCtx): Promise<{ ownerLabelIds:
       welcomeMessage: "خوش آمدی. اول در بخش دسترسی‌ها برنامه‌ی درسی فعلی‌ات را با من به اشتراک بگذار تا برنامه‌ی هفته‌ی اول را بنویسم.",
     },
   });
-  // امیر: در دسترس نیست (درخواست‌ها باز) + زمانِ پاسخِ ۱۲ ساعت
+  // امیر: در دسترس نیست (درخواست‌ها باز) + زمان پاسخ ۱۲ ساعت
   await tx.mentorProfile.update({
     where: { userId: id("amir") },
     data: {
@@ -73,7 +73,7 @@ export async function seedManageDemo(c: ManageDemoCtx): Promise<{ ownerLabelIds:
     where: { userId: id("negar") },
     data: { awayUntil: day(today, 12), awayMessage: "تا پایان آزمون‌های آزمایشی مهر شاگرد جدید نمی‌پذیرم.", awayPausesRequests: true, responseTimeHours: 48 },
   });
-  // مهدی: ظرفیتِ ۱ و یک شاگردِ فعال → «ظرفیت تکمیل»
+  // مهدی: ظرفیت ۱ و یک شاگرد فعال → «ظرفیت تکمیل»
   await tx.mentorProfile.update({ where: { userId: id("mahdi") }, data: { maxActiveStudents: 1, responseTimeHours: 72 } });
   await tx.mentorship.create({
     data: {
@@ -81,7 +81,7 @@ export async function seedManageDemo(c: ManageDemoCtx): Promise<{ ownerLabelIds:
       startedAt: ago(now, 6), createdAt: ago(now, 7),
     },
   });
-  // Owner به‌عنوانِ شاگرد: رابطه‌ی پایان‌یافته با دلیل
+  // Owner به‌عنوان شاگرد: رابطه‌ی پایان‌یافته با دلیل
   await tx.mentorship.create({
     data: {
       mentorId: id("mahdi"), studentId: ownerId, status: "ENDED", initiatedBy: "STUDENT", categories: ["FITNESS"],
@@ -107,13 +107,13 @@ export async function seedManageDemo(c: ManageDemoCtx): Promise<{ ownerLabelIds:
     ]);
   }
 
-  // ── پایانِ رابطه با دلیل (هر دو جهت) ──
+  // ── پایان رابطه با دلیل (هر دو جهت) ──
   const saraFatemeh = await rel(tx, id("sara"), id("fatemeh"));
   if (saraFatemeh) await tx.mentorship.update({ where: { id: saraFatemeh.id }, data: { endReason: "امتحان نهایی تمام شد و هدف دوره به نتیجه رسید.", endedBy: "MENTOR" } });
   const maryamZahra = await rel(tx, id("maryam"), id("zahra"));
-  if (maryamZahra) await tx.mentorship.update({ where: { id: maryamZahra.id }, data: { endReason: "ترم تمام شد و فعلاً برنامه‌ی ورزشی نمی‌خواهم.", endedBy: "STUDENT" } });
+  if (maryamZahra) await tx.mentorship.update({ where: { id: maryamZahra.id }, data: { endReason: "ترم تمام شد و فعلا برنامه‌ی ورزشی نمی‌خواهم.", endedBy: "STUDENT" } });
 
-  // ── Owner به‌عنوانِ منتور ──
+  // ── Owner به‌عنوان منتور ──
   if (c.ownerProfileCreated) {
     await tx.mentorProfile.update({
       where: { userId: ownerId },
@@ -145,8 +145,8 @@ export async function seedManageDemo(c: ManageDemoCtx): Promise<{ ownerLabelIds:
       [OWNER_QUESTIONS[0], "برای کنکور تجربی برنامه‌ی مطالعه‌ی منظم می‌خواهم."],
       [OWNER_QUESTIONS[1], "حدود پنج ساعت."],
     ]);
-    // یادداشتِ خصوصی سرتاسری (فقط برای کلیدِ خودِ Owner) است و سرور کلیدِ خصوصیِ Owner را ندارد؛
-    // پس این‌ها متنِ ساده‌ی «قدیمی» ساخته می‌شوند و کلاینتِ Owner در اولین بازشدن بازرمزشان می‌کند.
+    // یادداشت خصوصی سرتاسری (فقط برای کلید خود Owner) است و سرور کلید خصوصی Owner را ندارد؛
+    // پس این‌ها متن ساده‌ی «قدیمی» ساخته می‌شوند و کلاینت Owner در اولین بازشدن بازرمزشان می‌کند.
     await tx.mentorStudentNote.createMany({
       data: [
         { mentorshipId: ownerFatemeh.id, mentorId: ownerId, body: "شیمی نقطه‌ضعف اصلی است؛ در برنامه‌ی بعد تست شیمی را به چهار روز برسان.", createdAt: ago(now, 6), updatedAt: ago(now, 6) },
@@ -161,7 +161,7 @@ export async function seedManageDemo(c: ManageDemoCtx): Promise<{ ownerLabelIds:
       data: { mentorshipId: ownerPouya.id, mentorId: ownerId, body: "صبح‌ها سر کار است؛ هر برنامه‌ای بعد از ساعت 17 باشد.", createdAt: ago(now, 3), updatedAt: ago(now, 3) },
     });
   }
-  // توقفِ موقت با دلیل
+  // توقف موقت با دلیل
   const ownerElham = await rel(tx, ownerId, id("elham"));
   if (ownerElham) {
     await tx.mentorship.update({
@@ -177,7 +177,7 @@ export async function seedManageDemo(c: ManageDemoCtx): Promise<{ ownerLabelIds:
   return { ownerLabelIds, addedMentorships: 2 };
 }
 
-/** برچسب‌هایی که روی پروفایلِ از قبل موجودِ Owner ساخته شده بود */
+/** برچسب‌هایی که روی پروفایل از قبل موجود Owner ساخته شده بود */
 export async function clearManageDemo(db: Pick<Tx, "mentorStudentLabel" | "mentorship">, ownerId: string, labelIds: string[]): Promise<void> {
   if (labelIds.length === 0) return;
   const tagged = await db.mentorship.findMany({ where: { mentorId: ownerId, mentorLabelIds: { hasSome: labelIds } }, select: { id: true, mentorLabelIds: true } });

@@ -31,7 +31,7 @@ export const SETTING_KEYS = {
   dashboardPrefs: "dashboardPrefs",
   notifPrefs: "notifPrefs",
   dismissedStaticNotifs: "dismissedStaticNotifs",
-  // idِ اطلاعیه‌های سراسریِ خوانده‌شده (Announcement) — پنلِ زنگوله
+  // id اطلاعیه‌های سراسری خوانده‌شده (Announcement) — پنل زنگوله
   readAnnouncements: "readAnnouncements",
   bodyMetrics: "bodyMetrics",
   tradeTickerSymbols: "tradeTickerSymbols",
@@ -44,11 +44,11 @@ export const SETTING_KEYS = {
   tradeChartSymbol: "tradeChartSymbol",
   tradeChartInterval: "tradeChartInterval",
   tradeChatRulesAccepted: "tradeChatRulesAccepted",
-  // رفتارِ برنامه‌ی تمرینی با روزِ جامانده («رد شدن»/«ماندن») + نشانگرِ پیشرفت — lib/exerciseProgression.ts
+  // رفتار برنامه‌ی تمرینی با روز جامانده («رد شدن»/«ماندن») + نشانگر پیشرفت — lib/exerciseProgression.ts
   exerciseMissedDay: "exerciseMissedDay",
 } as const;
 
-/** شمارنده‌ی سرور-مدیریتِ استفاده از دستیارِ روتین (سهمیه‌ی رایگان) */
+/** شمارنده‌ی سرور-مدیریت استفاده از دستیار روتین (سهمیه‌ی رایگان) */
 export const ROUTINE_ASSISTANT_USES_KEY = "routineAssistantUses";
 
 export type SettingKey = (typeof SETTING_KEYS)[keyof typeof SETTING_KEYS];
@@ -66,8 +66,8 @@ export const SERVER_MANAGED_SETTING_KEYS = new Set<string>([
   // رد هشدارهای خبری فرستاده‌شده — اگر کاربر می‌توانست بنویسدش، می‌شد با
   // پرکردنش هشدارها را برای همیشه خاموش کرد (همان اشکالی که pushSentLog داشت).
   "tradeNewsAlertLog",
-  // شمارنده‌ی استفاده از «مدیرِ برنامه» برای کاربرِ بدونِ اشتراک. اگر کاربر
-  // می‌توانست بنویسدش، سهمیه‌ی پیام‌های رایگان با یک درخواستِ ساده صفر می‌شد.
+  // شمارنده‌ی استفاده از «مدیر برنامه» برای کاربر بدون اشتراک. اگر کاربر
+  // می‌توانست بنویسدش، سهمیه‌ی پیام‌های رایگان با یک درخواست ساده صفر می‌شد.
   ROUTINE_ASSISTANT_USES_KEY,
 ]);
 

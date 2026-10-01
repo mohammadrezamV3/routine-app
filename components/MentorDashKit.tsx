@@ -18,7 +18,7 @@ import { faNum } from "@/lib/jalali";
 
 export type ApiResult<T> = { ok: true; data: T; status: number } | { ok: false; error: string; status: number };
 
-/** پیامِ خطای عمومی بر اساسِ کدِ وضعیت — وقتی سرور `error` نفرستاده باشه */
+/** پیام خطای عمومی بر اساس کد وضعیت — وقتی سرور `error` نفرستاده باشه */
 export function statusMessage(status: number): string {
   if (status === 0) return "ارتباط با سرور برقرار نشد؛ اتصال اینترنت را بررسی کن";
   if (status === 401) return "نشستت تمام شده است؛ دوباره وارد شو";
@@ -64,18 +64,18 @@ export function formatBytes(n: number): string {
 }
 
 /**
- * پوسته‌ی همه‌ی صفحه‌های /mentor: بازگشت + عنوان + گیت‌ها. ظرفِ عرض
- * (account-shell، که فرم‌های AuthField ظاهرشان را از آن می‌گیرند) و نوارِ
- * ناوبریِ پنل در app/mentor/layout.tsx هستند. تا وقتی نشست در حال بارگذاری
+ * پوسته‌ی همه‌ی صفحه‌های /mentor: بازگشت + عنوان + گیت‌ها. ظرف عرض
+ * (account-shell، که فرم‌های AuthField ظاهرشان را از آن می‌گیرند) و نوار
+ * ناوبری پنل در app/mentor/layout.tsx هستند. تا وقتی نشست در حال بارگذاری
  * است اسکلت نشان داده می‌شود (نه پیام اشتباه «وارد شوید»).
- * محتوا داخلِ یک ظرفِ واحد (MentorPage) می‌نشیند؛ `surface={false}` برای
+ * محتوا داخل یک ظرف واحد (MentorPage) می‌نشیند؛ `surface={false}` برای
  * صفحه‌ای که خودش چند ظرف لازم دارد. `hint` دیگر رندر نمی‌شود.
  */
 export function MentorDashShell({
   title, back, titleAction, surface = true, children,
 }: {
   title: string;
-  /** @deprecated زیرعنوانِ صفحه حذف شد؛ نادیده گرفته می‌شود */
+  /** @deprecated زیرعنوان صفحه حذف شد؛ نادیده گرفته می‌شود */
   hint?: string;
   back?: { href: string; label: string } | null;
   titleAction?: React.ReactNode;
@@ -107,14 +107,14 @@ export function MentorDashError({ message, onRetry, action }: { message: string;
   return <MentorErrorState message={message} onRetry={onRetry} action={action} />;
 }
 
-/** پیام خالیِ داخل یک بخش (بدون قاب اضافه) — همان MentorEmpty */
+/** پیام خالی داخل یک بخش (بدون قاب اضافه) — همان MentorEmpty */
 export function MentorDashEmpty({ children }: { children: React.ReactNode }) {
   return <MentorEmpty>{children}</MentorEmpty>;
 }
 
 /**
  * اطلاعیه‌ی درون‌صفحه — همان MentorNotice (یک ردیف فشرده، بی‌بک‌گراند).
- * برای وضعیت صرفاً اطلاعاتی (مثل «در صف بررسی») از MentorChip استفاده کنید.
+ * برای وضعیت صرفا اطلاعاتی (مثل «در صف بررسی») از MentorChip استفاده کنید.
  */
 export function MentorDashNotice({
   tone = "info", icon, title, children, action,
@@ -128,7 +128,7 @@ export function MentorDashNotice({
   return <MentorNotice tone={tone} icon={icon} title={title} action={action}>{children}</MentorNotice>;
 }
 
-/** نوارِ پیشرفتِ باریک — همون `.rp-bar` رودمپ‌ها */
+/** نوار پیشرفت باریک — همون `.rp-bar` رودمپ‌ها */
 export function MentorDashBar({ rate }: { rate: number | null | undefined }) {
   const pct = Math.round(normRate(rate) * 100);
   return (

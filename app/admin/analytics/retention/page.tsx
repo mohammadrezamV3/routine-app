@@ -17,7 +17,7 @@ const MODULES = [
 
 type Resp = { retention: { d1: number | null; d7: number | null; d30: number | null; cohortSize: number } };
 
-// نرخ (نه تغییر) — بدون علامتِ «+» که formatPercent برای رشد می‌ذاره
+// نرخ (نه تغییر) — بدون علامت «+» که formatPercent برای رشد می‌ذاره
 const formatRate = (n: number | null) => (n == null ? "—" : `${n}%`);
 
 export default function AdminRetentionPage() {

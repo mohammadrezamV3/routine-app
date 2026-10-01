@@ -6,7 +6,7 @@ import { formatNumber } from "@/lib/adminFormat";
 type Slice = { label: string; value: number; color: string };
 
 export function DonutChart({ data, size = 130 }: { data: Slice[]; size?: number }) {
-  // مقدارِ منفی/NaN یه قطاعِ منفی می‌ساخت و بقیه‌ی قطاع‌ها رو جابه‌جا می‌کرد
+  // مقدار منفی/NaN یه قطاع منفی می‌ساخت و بقیه‌ی قطاع‌ها رو جابه‌جا می‌کرد
   const slices = data.map((d) => ({ ...d, value: Number.isFinite(d.value) && d.value > 0 ? d.value : 0 }));
   const total = slices.reduce((s, d) => s + d.value, 0);
   if (total <= 0) return <EmptyState />;

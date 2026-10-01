@@ -54,10 +54,10 @@ export function ExerciseCatalogModal({ onClose }: { onClose: () => void }) {
   const [selected, setSelected] = useState<ExerciseCatalogEntry | null>(null);
   const [photo, setPhoto] = useState<string | null>(null);
 
-  // عکسِ حرکات را ادمین دستی اضافه می‌کند، پس همه‌ی حرکات عکس ندارند و
-  // مجموعِ عکس‌ها هم چند مگابایت است. اول فقط *فهرستِ کلیدها* (چند کیلوبایت)
-  // می‌آید؛ بعد فقط عکسِ حرکتی که کاربر بازش می‌کند دانلود می‌شود — و همان
-  // یک‌بار، چون در cache می‌ماند. حرکتی که کلیدش در فهرست نیست اصلاً درخواستی
+  // عکس حرکات را ادمین دستی اضافه می‌کند، پس همه‌ی حرکات عکس ندارند و
+  // مجموع عکس‌ها هم چند مگابایت است. اول فقط *فهرست کلیدها* (چند کیلوبایت)
+  // می‌آید؛ بعد فقط عکس حرکتی که کاربر بازش می‌کند دانلود می‌شود — و همان
+  // یک‌بار، چون در cache می‌ماند. حرکتی که کلیدش در فهرست نیست اصلا درخواستی
   // نمی‌سازد و مستقیم placeholder می‌گیرد.
   const [mediaKeys, setMediaKeys] = useState<Set<string> | null>(null);
   const photoCache = useRef<Map<string, string>>(new Map());
@@ -199,14 +199,14 @@ export function ExerciseCatalogModal({ onClose }: { onClose: () => void }) {
                 <div className="exercise-pictogram-stage">
                   {photo ? (
                     <div className="exercise-photo">
-                      {/* عکسِ ادمین یک data URL است، نه فایلِ استاتیک؛ next/image
+                      {/* عکس ادمین یک data URL است، نه فایل استاتیک؛ next/image
                           روی data URL چیزی بهینه نمی‌کند و فقط محدودیت اضافه می‌کند. */}
                       {/* eslint-disable-next-line @next/next/no-img-element */}
                       <img src={photo} alt={selected.name} />
                     </div>
                   ) : (
-                    // جای خالیِ عکس — دقیقا هم‌اندازه‌ی .exercise-photo تا با
-                    // اضافه‌شدنِ عکس از پنل ادمین چیدمانِ کارت جابه‌جا نشود.
+                    // جای خالی عکس — دقیقا هم‌اندازه‌ی .exercise-photo تا با
+                    // اضافه‌شدن عکس از پنل ادمین چیدمان کارت جابه‌جا نشود.
                     <div className="exercise-photo-placeholder exercise-photo-slot" role="img" aria-label="عکس این حرکت هنوز اضافه نشده">
                       <ImageOff size={32} />
                     </div>

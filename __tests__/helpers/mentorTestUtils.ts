@@ -4,12 +4,12 @@ import { SETTING_KEYS } from "@/lib/userSettingKeys";
 import { todayIsoInTz, addDaysIso } from "@/lib/mentorServer";
 import { MENTOR_TERMS_VERSION } from "@/lib/mentorTerms";
 
-// کمک‌تابع‌های مشترکِ تست‌های اکوسیستم منتور.
+// کمک‌تابع‌های مشترک تست‌های اکوسیستم منتور.
 //
-// نشست: هر فایلِ تست "next-auth" را mock می‌کند تا getServerSession از
+// نشست: هر فایل تست "next-auth" را mock می‌کند تا getServerSession از
 // globalThis.__mentorSessionUser بخواند — بنابراین گیت‌های *واقعی*
 // (requireFeature → فلگ‌ها، مسدودی، requireAdmin از دیتابیس) اجرا می‌شوند.
-// نمونه‌ی mock (باید در خودِ فایلِ تست باشد چون vi.mock hoist می‌شود):
+// نمونه‌ی mock (باید در خود فایل تست باشد چون vi.mock hoist می‌شود):
 //
 //   vi.mock("next-auth", async (orig) => ({
 //     ...(await orig<any>()),
@@ -31,7 +31,7 @@ function rand(): string {
   return Math.random().toString(36).slice(2, 8);
 }
 
-/** یک پیشوندِ یکتا برای هر فایل/اجرا — تا جست‌وجوی q فقط کاربرانِ همین تست را پیدا کند */
+/** یک پیشوند یکتا برای هر فایل/اجرا — تا جست‌وجوی q فقط کاربران همین تست را پیدا کند */
 export function uniqueTag(): string {
   return `t${Date.now().toString(36).slice(-5)}${rand()}`.slice(0, 12);
 }
@@ -83,7 +83,7 @@ export async function j(res: Response): Promise<any> {
   }
 }
 
-/** «امروز»ِ سرور برای کاربری با تایم‌زونِ پیش‌فرض (Asia/Tehran) — همون محاسبه‌ی lib/mentorServer.ts */
+/** «امروز» سرور برای کاربری با تایم‌زون پیش‌فرض (Asia/Tehran) — همون محاسبه‌ی lib/mentorServer.ts */
 export function today(): string {
   return todayIsoInTz("Asia/Tehran");
 }
@@ -121,7 +121,7 @@ export async function setDailyEntry(userId: string, iso: string, completedItems:
   });
 }
 
-// ───────────── بایت‌های حداقلیِ فایل با magic bytesِ درست ─────────────
+// ───────────── بایت‌های حداقلی فایل با magic bytes درست ─────────────
 
 export function pngBytes(size = 64): Uint8Array {
   const b = new Uint8Array(Math.max(size, 16));
@@ -167,7 +167,7 @@ export function fileForm(bytes: Uint8Array, name: string, kind: string, category
   return fd;
 }
 
-/** بدنه‌ی ساده‌ی ساختِ برنامه */
+/** بدنه‌ی ساده‌ی ساخت برنامه */
 export function programBody(mentorshipId: string, over: Record<string, unknown> = {}) {
   return {
     mentorshipId,
@@ -178,8 +178,8 @@ export function programBody(mentorshipId: string, over: Record<string, unknown> 
   };
 }
 
-// ───────────── جریان‌های پرتکرار از طریقِ خودِ روت‌ها ─────────────
-// (import این روت‌ها بعد از vi.mockِ hoistشده‌ی فایلِ تست ارزیابی می‌شود)
+// ───────────── جریان‌های پرتکرار از طریق خود روت‌ها ─────────────
+// (import این روت‌ها بعد از vi.mock hoistشده‌ی فایل تست ارزیابی می‌شود)
 import { PUT as putMentorMe } from "@/app/api/mentors/me/route";
 import { POST as postMentorship } from "@/app/api/mentorships/route";
 import { PATCH as patchMentorship } from "@/app/api/mentorships/[id]/route";
@@ -192,16 +192,16 @@ export async function makeMentorProfile(
   body: Record<string, unknown> = { headline: "مربی", bio: "بیو", categories: ["ROUTINE", "FITNESS"], published: true }
 ): Promise<any> {
   as(userId);
-  // پذیرشِ شرایطِ منتوری در ساختِ پروفایل الزامی است (lib/mentorTerms.ts)؛ تست‌های خودِ پذیرش: mentorTerms.test.ts
+  // پذیرش شرایط منتوری در ساخت پروفایل الزامی است (lib/mentorTerms.ts)؛ تست‌های خود پذیرش: mentorTerms.test.ts
   const res = await putMentorMe(req("PUT", "/api/mentors/me", { acceptMentorTerms: MENTOR_TERMS_VERSION, ...body }));
   if (res.status !== 200) throw new Error(`makeMentorProfile ${res.status} ${JSON.stringify(await j(res))}`);
   return (await j(res)).profile;
 }
 
 /**
- * کاربر + پروفایلِ منتوریِ منتشرشده با هویتِ تاییدشده — احرازِ هویت برای منتور
- * اجباری است (DISCOVERABLE_PROFILE_WHERE)؛ تایید در واقع کارِ ادمین است و این‌جا
- * مستقیم نوشته می‌شود. `identity: false` پروفایلِ تاییدنشده می‌سازد.
+ * کاربر + پروفایل منتوری منتشرشده با هویت تاییدشده — احراز هویت برای منتور
+ * اجباری است (DISCOVERABLE_PROFILE_WHERE)؛ تایید در واقع کار ادمین است و این‌جا
+ * مستقیم نوشته می‌شود. `identity: false` پروفایل تاییدنشده می‌سازد.
  */
 export async function makeMentor(
   opts: Parameters<typeof makeUser>[0] = {},
@@ -224,7 +224,7 @@ export async function mentorshipAction(userId: string, id: string, action: strin
   return patchMentorship(req("PATCH", `/api/mentorships/${id}`, { action, ...(action === "accept" ? { acceptMentorTerms: MENTOR_TERMS_VERSION } : {}) }), { params: { id } });
 }
 
-/** درخواست + قبول → idِ رابطه‌ی ACTIVE */
+/** درخواست + قبول → id رابطه‌ی ACTIVE */
 export async function connect(studentId: string, mentorId: string): Promise<string> {
   const r = await requestMentorship(studentId, mentorId);
   if (r.status !== 200) throw new Error(`request ${r.status} ${JSON.stringify(await j(r))}`);

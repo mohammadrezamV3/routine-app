@@ -7,9 +7,9 @@ import { formatNumber } from "@/lib/adminFormat";
 
 const H = 200, PAD_X = 8, PAD_T = 10, PAD_B = 24;
 
-// نمودار میله‌ای خام SVG. عرضِ viewBox = عرضِ واقعیِ ظرف (نه کشیدنِ یک
-// viewBox ثابت) تا متنِ محور تغییرشکل نده. hover روی دسکتاپ و لمس روی
-// موبایل هر دو مقدار رو نشون می‌دن؛ ردیفِ مقدار همیشه جا داره تا پرش نداشته باشه.
+// نمودار میله‌ای خام SVG. عرض viewBox = عرض واقعی ظرف (نه کشیدن یک
+// viewBox ثابت) تا متن محور تغییرشکل نده. hover روی دسکتاپ و لمس روی
+// موبایل هر دو مقدار رو نشون می‌دن؛ ردیف مقدار همیشه جا داره تا پرش نداشته باشه.
 export function BarChart({ data, color = "var(--adm-accent)", formatValue }: { data: { bucket: string; value: number }[]; color?: string; formatValue?: (v: number) => string }) {
   const [hoverIdx, setHoverIdx] = useState<number | null>(null);
   const { ref, width: W } = useChartWidth();

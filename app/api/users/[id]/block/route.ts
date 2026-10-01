@@ -3,9 +3,9 @@ import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
 
-// POST/DELETE /api/users/:id/block — بلاک/آنبلاکِ کاربر-به-کاربر. کاربرِ
+// POST/DELETE /api/users/:id/block — بلاک/آنبلاک کاربر-به-کاربر. کاربر
 // بلاک‌شده دیگر در جست‌وجوی دوستان دیده نمی‌شود (/api/friends/search).
-// مستقل از دوستیِ Friendship — بلاک‌کردن دوستیِ موجود را پاک نمی‌کند (اگر
+// مستقل از دوستی Friendship — بلاک‌کردن دوستی موجود را پاک نمی‌کند (اگر
 // کاربر بخواهد کامل قطع کند، از «حذف دوست» جدا استفاده می‌کند).
 export async function POST(_req: NextRequest, { params }: { params: { id: string } }) {
   const session = await getServerSession(authOptions);

@@ -11,7 +11,7 @@ import { formatNumber } from "@/lib/adminFormat";
 
 type Resp = { churn: { canceledInRange: number; expiredInRange: number; churnRatePercent: number | null; atRiskCount: number; series: { bucket: string; canceled: number }[] } };
 
-// نرخ (نه تغییر) — بدون علامتِ «+» که formatPercent برای رشد می‌ذاره
+// نرخ (نه تغییر) — بدون علامت «+» که formatPercent برای رشد می‌ذاره
 const formatRate = (n: number | null) => (n == null ? "—" : `${n}%`);
 
 function ChurnInner() {

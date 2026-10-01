@@ -4,7 +4,7 @@ import { requireAdmin } from "@/lib/requireAdmin";
 import { adminErrorResponse, loadTarget } from "@/lib/adminUsers";
 
 // GET /api/admin/mentors/:profileId — پروفایل + مدارک (فقط متا، هرگز بایت) +
-// تاریخچه‌ی احراز + آمار + گزارش‌های بازِ علیهِ همین کاربر.
+// تاریخچه‌ی احراز + آمار + گزارش‌های باز علیه همین کاربر.
 export async function GET(_req: NextRequest, { params }: { params: { profileId: string } }) {
   const g = await requireAdmin("mentors");
   if (!g.ok) return g.response;
@@ -36,7 +36,7 @@ export async function GET(_req: NextRequest, { params }: { params: { profileId: 
     },
   });
   if (!profile) return NextResponse.json({ error: "مربی پیدا نشد" }, { status: 404 });
-  // ادمینِ محدود جزئیات/تاریخچه‌ی احرازِ Owner (یا ادمینِ دیگه بدونِ admins.manage) رو نمی‌بینه
+  // ادمین محدود جزئیات/تاریخچه‌ی احراز Owner (یا ادمین دیگه بدون admins.manage) رو نمی‌بینه
   try {
     await loadTarget(g, profile.userId);
   } catch (e) {

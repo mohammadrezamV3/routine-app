@@ -60,14 +60,14 @@ export default function RoadmapDetailPage() {
   }, [params.id]);
 
   useEffect(() => { load(); }, [load]);
-  // زنده: پیشرفت/ساختِ همین مسیر از تبِ دیگه یا برگشت به تب. نوشتن‌های همین
-  // صفحه نادیده گرفته می‌شن — تیک‌ها خودشون optimisticن و پژواکِ هر تیک وسطِ
-  // چند تیکِ پشت‌سرهم فقط پرش می‌ساخت.
+  // زنده: پیشرفت/ساخت همین مسیر از تب دیگه یا برگشت به تب. نوشتن‌های همین
+  // صفحه نادیده گرفته می‌شن — تیک‌ها خودشون optimisticن و پژواک هر تیک وسط
+  // چند تیک پشت‌سرهم فقط پرش می‌ساخت.
   useLiveRefresh("roadmaps", load, { remoteOnly: true });
 
   /**
-   * تیک فوراً روی صفحه می‌نشیند و بعد ذخیره می‌شود — نه برعکس؛ اگر ذخیره
-   * شکست بخورد، جوابِ سرور حالتِ واقعی را برمی‌گرداند.
+   * تیک فورا روی صفحه می‌نشیند و بعد ذخیره می‌شود — نه برعکس؛ اگر ذخیره
+   * شکست بخورد، جواب سرور حالت واقعی را برمی‌گرداند.
    */
   async function saveProgress(key: string, body: { n: number; task?: number; done: boolean }) {
     if (!data) return;
@@ -101,8 +101,8 @@ export default function RoadmapDetailPage() {
   async function regenerate(target: "guide" | "stage", n?: number) {
     if (!data || busy) return;
     const stage = n ? data.plan.stages.find((s) => s.n === n) : undefined;
-    // ساختِ دوباره‌ی مرحله‌ای که جزئیات دارد، تیکِ کارهایش را هم می‌برد.
-    if (stage?.detailed && !window.confirm("جزئیاتِ این مرحله دوباره ساخته شود؟ تیکِ کارهایش پاک می‌شود.")) return;
+    // ساخت دوباره‌ی مرحله‌ای که جزئیات دارد، تیک کارهایش را هم می‌برد.
+    if (stage?.detailed && !window.confirm("جزئیات این مرحله دوباره ساخته شود؟ تیک کارهایش پاک می‌شود.")) return;
 
     const tag = target === "guide" ? "guide" : `stage-${n}`;
     setBusy(tag);
@@ -133,11 +133,11 @@ export default function RoadmapDetailPage() {
     }
   }
 
-  // مرحله‌هایی که موقعِ ساختِ اولیه به بودجه‌ی زمانی نرسیدن (حالا که جزئیاتِ
+  // مرحله‌هایی که موقع ساخت اولیه به بودجه‌ی زمانی نرسیدن (حالا که جزئیات
   // هر مرحله خیلی ریزتر و طولانی‌تره، این طبیعیه) یکی‌یکی و خودکار کامل می‌شن —
   // کاربر لازم نیست برای هرکدوم دکمه بزنه. با اولین خطا متوقف می‌شه تا حلقه نشه.
   const [autoFillStopped, setAutoFillStopped] = useState(false);
-  // ساختِ پس‌زمینه هنوز در جریان است → هر ۵ ثانیه تازه کن تا مرحله‌های آماده‌شده
+  // ساخت پس‌زمینه هنوز در جریان است → هر ۵ ثانیه تازه کن تا مرحله‌های آماده‌شده
   // بیایند؛ و تا وقتی سرور خودش دارد می‌سازد، این صفحه هیچ مرحله‌ای را جدا نمی‌سازد.
   const serverBuilding = data?.build?.status === "building";
   useEffect(() => {
@@ -207,7 +207,7 @@ export default function RoadmapDetailPage() {
 
       <header className="trade-surface rp-hero">
         <div className="rp-hero-top">
-          <span className="rp-eyebrow">مسیرِ یادگیری · {roadmap.topic}</span>
+          <span className="rp-eyebrow">مسیر یادگیری · {roadmap.topic}</span>
           <button type="button" className="trade-icon-btn danger" aria-label="حذف مسیر" onClick={openDeleteConfirm}>
             <Trash2 size={16} />
           </button>
@@ -232,15 +232,15 @@ export default function RoadmapDetailPage() {
         )}
 
         <div className="rp-stats">
-          {plan.totalDuration && <Stat icon={<Clock size={14} />} label="مدتِ کل" value={plan.totalDuration} />}
+          {plan.totalDuration && <Stat icon={<Clock size={14} />} label="مدت کل" value={plan.totalDuration} />}
           <Stat icon={<Layers size={14} />} label="مرحله" value={faNum(plan.stages.length)} />
-          {levelLabel(plan.meta.level) && <Stat icon={<Gauge size={14} />} label="سطحِ شروع" value={levelLabel(plan.meta.level)!} />}
+          {levelLabel(plan.meta.level) && <Stat icon={<Gauge size={14} />} label="سطح شروع" value={levelLabel(plan.meta.level)!} />}
           {hoursLabel(plan.meta.weeklyHours) && <Stat icon={<Timer size={14} />} label="در هفته" value={hoursLabel(plan.meta.weeklyHours)!} />}
         </div>
 
         {nextStage && (
           <button type="button" className="rp-next" onClick={() => openStage(nextStage.n)}>
-            <span className="rp-next-label">قدمِ بعدی</span>
+            <span className="rp-next-label">قدم بعدی</span>
             <span className="rp-next-title">مرحله‌ی {faNum(nextStage.n)} — {nextStage.title}</span>
             <ChevronLeft size={16} />
           </button>
@@ -249,7 +249,7 @@ export default function RoadmapDetailPage() {
 
       {confirmDelete && (
         <MentorConfirmDialog
-          message={`مسیرِ «${plan.title}» و همه‌ی پیشرفتش حذف شود؟ این کار برگشت‌پذیر نیست.`}
+          message={`مسیر «${plan.title}» و همه‌ی پیشرفتش حذف شود؟ این کار برگشت‌پذیر نیست.`}
           confirmLabel="حذف مسیر"
           busy={deleting}
           error={deleteError}
@@ -260,7 +260,7 @@ export default function RoadmapDetailPage() {
 
       {!!pending && (
         <div className="rp-notice">
-          جزئیاتِ {faNum(pending)} مرحله در ساختِ اول نرسید — مرحله را باز کن و «ساختِ جزئیات» را بزن.
+          جزئیات {faNum(pending)} مرحله در ساخت اول نرسید — مرحله را باز کن و «ساخت جزئیات» را بزن.
         </div>
       )}
       {error && <div className="trade-form-error">{error}</div>}
@@ -317,10 +317,10 @@ export default function RoadmapDetailPage() {
             )
           ) : (
             <div className="rp-pending-box">
-              <p>متنِ راهنمای این مسیر هنوز ساخته نشده.</p>
+              <p>متن راهنمای این مسیر هنوز ساخته نشده.</p>
               <button type="button" className="trade-primary-btn" onClick={() => regenerate("guide")} disabled={!!busy}>
                 {busy === "guide" ? <Loader2 size={14} className="trade-spin" /> : <Sparkles size={14} />}
-                {busy === "guide" ? "در حال ساخت…" : "ساختِ راهنما"}
+                {busy === "guide" ? "در حال ساخت…" : "ساخت راهنما"}
               </button>
             </div>
           )}
@@ -335,7 +335,7 @@ export default function RoadmapDetailPage() {
             </OverviewCard>
           )}
           {!!plan.meta.outcomes.length && (
-            <OverviewCard icon={<Target size={15} />} title="آخرِ مسیر چه کارهایی ازت برمیاد">
+            <OverviewCard icon={<Target size={15} />} title="آخر مسیر چه کارهایی ازت برمیاد">
               <ul className="rp-done">
                 {plan.meta.outcomes.map((o, i) => <li key={i}><Target size={13} /><span>{o}</span></li>)}
               </ul>
@@ -349,7 +349,7 @@ export default function RoadmapDetailPage() {
             </OverviewCard>
           )}
           {!!plan.tools.length && (
-            <OverviewCard icon={<Wrench size={15} />} title="ابزارهای کلِ مسیر">
+            <OverviewCard icon={<Wrench size={15} />} title="ابزارهای کل مسیر">
               <ul className="rp-tools">
                 {plan.tools.map((t, i) => (
                   <li key={i}>
@@ -413,9 +413,9 @@ function OverviewCard({ icon, title, children }: { icon: React.ReactNode; title:
 type GuideBlock = { kind: "h" | "p" | "li"; text: string };
 
 /**
- * متنِ راهنما را به بلوک‌های قابلِ رندر می‌شکند. عمداً پارسرِ مارک‌داونِ
- * کامل نیست: مدل فقط تیتر (##)، بند و آیتمِ فهرست می‌دهد و هر سه به‌صورتِ
- * متنِ ساده رندر می‌شوند — هیچ HTMLی از خروجیِ مدل اجرا نمی‌شود.
+ * متن راهنما را به بلوک‌های قابل رندر می‌شکند. عمدا پارسر مارک‌داون
+ * کامل نیست: مدل فقط تیتر (##)، بند و آیتم فهرست می‌دهد و هر سه به‌صورت
+ * متن ساده رندر می‌شوند — هیچ HTMLی از خروجی مدل اجرا نمی‌شود.
  */
 function parseGuide(guide: string): GuideBlock[] {
   const out: GuideBlock[] = [];

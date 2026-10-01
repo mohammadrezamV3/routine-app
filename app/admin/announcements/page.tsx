@@ -15,7 +15,7 @@ type Row = {
 };
 type Resp = { announcements: Row[] };
 
-// مقدارِ input[type=datetime-local] به وقتِ محلیِ مرورگر
+// مقدار input[type=datetime-local] به وقت محلی مرورگر
 function toLocalInput(iso: string | null): string {
   if (!iso) return "";
   const d = new Date(iso);
@@ -69,8 +69,8 @@ export default function AdminAnnouncementsPage() {
     const b = body.trim();
     if (!t) { setError("عنوان لازمه"); return; }
     if (!b) { setError("متن اطلاعیه لازمه"); return; }
-    // انقضا فقط وقتی فرستاده می‌شه که عوض شده — وگرنه ویرایشِ اطلاعیه‌ی
-    // منقضی‌شده به‌خاطرِ «تاریخ باید در آینده باشد» رد می‌شد.
+    // انقضا فقط وقتی فرستاده می‌شه که عوض شده — وگرنه ویرایش اطلاعیه‌ی
+    // منقضی‌شده به‌خاطر «تاریخ باید در آینده باشد» رد می‌شد.
     const expiryChanged = !editing || expiresAt !== toLocalInput(editing.expiresAt);
     if (expiryChanged && expiresAt) {
       const ms = new Date(expiresAt).getTime();

@@ -1,7 +1,7 @@
 import { describe, it, expect } from "vitest";
 import { isDue, planMedicationReminders, planRoutineReminders, planExerciseReminder, zonedToUtcMs } from "@/lib/reminderPlan";
 
-// شنبه ۲۰۲۶-۰۹-۲۶ (jsDay=6) به وقتِ تهران (UTC+3:30، بدونِ DST)
+// شنبه ۲۰۲۶-۰۹-۲۶ (jsDay=6) به وقت تهران (UTC+3:30، بدون DST)
 const TZ = "Asia/Tehran";
 const at = (iso: string, hhmm: string) => {
   const [h, m] = hhmm.split(":").map(Number);

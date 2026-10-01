@@ -33,8 +33,8 @@ export default function AdminSupportTicketPage() {
   const [confirmClose, setConfirmClose] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const threadRef = useRef<HTMLDivElement>(null);
-  // state برای جلوگیری از دوبار ارسال کافی نیست — دو Enterِ پشتِ‌سرِهم قبل
-  // از رندرِ بعدی هر دو `sending=false` رو می‌بینن.
+  // state برای جلوگیری از دوبار ارسال کافی نیست — دو Enter پشت‌سرهم قبل
+  // از رندر بعدی هر دو `sending=false` رو می‌بینن.
   const sendingRef = useRef(false);
 
   const load = useCallback(async () => {
@@ -46,14 +46,14 @@ export default function AdminSupportTicketPage() {
       setTicket(data.ticket);
       setLoadState("ok");
     } catch {
-      // اگه قبلا تیکت لود شده بود، خطای رفرشِ بعدی نباید کلِ صفحه رو خالی کنه.
+      // اگه قبلا تیکت لود شده بود، خطای رفرش بعدی نباید کل صفحه رو خالی کنه.
       setLoadState((s) => (s === "ok" ? s : "error"));
     }
   }, [params.id]);
 
   useEffect(() => { load(); }, [load]);
 
-  // خودِ تِرد اسکرول می‌خوره (نه کلِ صفحه با scrollIntoView) تا با هر پیامِ
+  // خود ترد اسکرول می‌خوره (نه کل صفحه با scrollIntoView) تا با هر پیام
   // جدید، هدر و دکمه‌ها از دید خارج نشن.
   useLayoutEffect(() => {
     const el = threadRef.current;
@@ -145,8 +145,8 @@ export default function AdminSupportTicketPage() {
 
       <div className="support-thread admin-support-thread thin-scroll" ref={threadRef}>
         {ticket.messages.length === 0 && <div className="admin-empty">پیامی در این تیکت نیست</div>}
-        {/* قراردادِ .support-msg: توی پنلِ ادمین «mine» = پیامِ ادمین (راست/اکسنت)،
-            «admin» = طرفِ مقابل یعنی کاربر. */}
+        {/* قرارداد .support-msg: توی پنل ادمین «mine» = پیام ادمین (راست/اکسنت)،
+            «admin» = طرف مقابل یعنی کاربر. */}
         {ticket.messages.map((m) => (
           <div key={m.id} className={`support-msg${m.fromAdmin ? " mine" : " admin"}`}>
             {m.body}
@@ -163,8 +163,8 @@ export default function AdminSupportTicketPage() {
           value={reply}
           onChange={(e) => setReply(e.target.value)}
           onKeyDown={(e) => {
-            // Enter = ارسال، Shift+Enter = خطِ جدید. حینِ ترکیبِ IME (کیبوردِ
-            // موبایل/فارسی) Enter مالِ خودِ ترکیبه، نه ارسال.
+            // Enter = ارسال، Shift+Enter = خط جدید. حین ترکیب IME (کیبورد
+            // موبایل/فارسی) Enter مال خود ترکیبه، نه ارسال.
             if (e.key === "Enter" && !e.shiftKey && !e.nativeEvent.isComposing) { e.preventDefault(); send(); }
           }}
           maxLength={MAX_REPLY}

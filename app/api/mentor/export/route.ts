@@ -6,9 +6,9 @@ import { addDaysIso, isoDate, todayIsoForUser } from "@/lib/mentorServer";
 import { requireMentorTools, validId } from "@/lib/mentorToolsGuard";
 import { EXPORT_MAX_DAYS, buildProgressCsv } from "@/lib/mentorReports";
 
-// GET /api/mentor/export?studentId=&from=YYYY-MM-DD&to=YYYY-MM-DD → CSVِ پیشرفتِ یک شاگرد.
-// پیش‌فرض ۳۰ روزِ اخیر؛ حداکثر ۱۲۰ روز. فقط رابطه‌ی ACTIVEِ همین منتور
-// (شاگردِ دیگر یا رابطه‌ی بسته → ۴۰۴) و روتینِ شاگرد فقط تا حدِ تنظیماتِ حریمِ خصوصی.
+// GET /api/mentor/export?studentId=&from=YYYY-MM-DD&to=YYYY-MM-DD → CSV پیشرفت یک شاگرد.
+// پیش‌فرض ۳۰ روز اخیر؛ حداکثر ۱۲۰ روز. فقط رابطه‌ی ACTIVE همین منتور
+// (شاگرد دیگر یا رابطه‌ی بسته → ۴۰۴) و روتین شاگرد فقط تا حد تنظیمات حریم خصوصی.
 export async function GET(req: NextRequest) {
   const g = await requireMentorTools();
   if (!g.ok) return g.response;

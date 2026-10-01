@@ -5,8 +5,8 @@ import { readJsonBody } from "@/lib/validate";
 import { LABELS_MAX } from "@/lib/mentorAvailability";
 import { readLabels } from "@/lib/mentorManageServer";
 
-// PUT /api/mentor/students/:studentId/labels { labelIds } → جایگزینیِ برچسب‌های این شاگرد.
-// فقط برچسب‌های خودِ همین منتور پذیرفته می‌شود.
+// PUT /api/mentor/students/:studentId/labels { labelIds } → جایگزینی برچسب‌های این شاگرد.
+// فقط برچسب‌های خود همین منتور پذیرفته می‌شود.
 export async function PUT(req: Request, { params }: { params: { studentId: string } }) {
   const g = await requireMentorsUser();
   if (!g.ok) return g.response;

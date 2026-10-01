@@ -21,7 +21,7 @@ type FieldErrors = {
   password?: string; agreed?: string; otp?: string;
 };
 
-// طبقِ درخواستِ صریح، نام و نام‌خانوادگی دو فیلدِ جدان (قبلا یک باکسِ واحد
+// طبق درخواست صریح، نام و نام‌خانوادگی دو فیلد جدان (قبلا یک باکس واحد
 // بود که از روی فاصله جدا می‌شد — و برای اسم‌های چندبخشی یا کسی که فقط
 // اسمش را می‌نوشت اشتباه جدا می‌کرد). سرور از قبل هم name/lastName جدا
 // می‌خواست، پس چیزی سمت API عوض نشد.
@@ -63,7 +63,7 @@ export default function SignupPage() {
   const otpRef = useRef<HTMLDivElement>(null);
   const agreedRef = useRef<HTMLDivElement>(null);
 
-  // شل و تب‌ها در app/auth/layout.tsx (AuthFrame) پایدارن؛ این صفحه فقط خودِ فرم رو می‌سازه
+  // شل و تب‌ها در app/auth/layout.tsx (AuthFrame) پایدارن؛ این صفحه فقط خود فرم رو می‌سازه
   useAuthFieldsStagger(formRef);
 
   const [tier, setTier] = useState<Awaited<ReturnType<typeof passwordTier>> | null>(null);
@@ -210,15 +210,15 @@ export default function SignupPage() {
       router.push("/auth/login");
       return;
     }
-    // به خروجیِ signIn تنها اکتفا نکن — نشستِ واقعی را از سرور تایید کن.
-    // (چرا: همان بازنویسیِ پاسخ با پروکسی که در صفحه‌ی ورود توضیح داده شده.)
+    // به خروجی signIn تنها اکتفا نکن — نشست واقعی را از سرور تایید کن.
+    // (چرا: همان بازنویسی پاسخ با پروکسی که در صفحه‌ی ورود توضیح داده شده.)
     const session = await getSession();
     setLoading(false);
-    // کلیدِ رمزگذاریِ سرتاسریِ منتور از همان ابتدا، بی‌صدا (lib/e2ee/client.ts؛ رمز فقط روی دستگاه)
+    // کلید رمزگذاری سرتاسری منتور از همان ابتدا، بی‌صدا (lib/e2ee/client.ts؛ رمز فقط روی دستگاه)
     const newUserId = (session?.user as any)?.id;
     if (newUserId) void import("@/lib/e2ee/client").then((m) => m.primeE2EEFromPassword(newUserId, password)).catch(() => {});
-    // تنها جایی که پیشنهادِ نصبِ PWA مجاز است: بلافاصله بعد از ثبت‌نام.
-    // (PwaProvider فقط با دیدنِ همین کلید بنر را نشان می‌دهد و بعدش
+    // تنها جایی که پیشنهاد نصب PWA مجاز است: بلافاصله بعد از ثبت‌نام.
+    // (PwaProvider فقط با دیدن همین کلید بنر را نشان می‌دهد و بعدش
     // برای همیشه خاموش می‌شود — نگاه کن به components/PwaProvider.tsx.)
     try {
       localStorage.setItem(PWA_OFFER_KEY, "1");

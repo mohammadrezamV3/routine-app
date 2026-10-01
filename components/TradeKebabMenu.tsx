@@ -63,10 +63,10 @@ export function TradeKebabMenu({ actions, label = "گزینه‌ها" }: { actio
         <MoreVertical size={16} />
       </button>
 
-      {/* دقیقاً هم‌الگویِ منوی سه‌نقطه‌ی «برنامه‌های امروز»ِ روتین من
+      {/* دقیقا هم‌الگوی منوی سه‌نقطه‌ی «برنامه‌های امروز» روتین من
           (DashTaskRow) — همون کلاس‌های Tailwind مستقیم روی هر ردیف، نه
-          کلاسِ قدیمیِ .wsearch-fab-option/.trade-account-menu که ظاهرشون
-          با مرجع فرق داشت و طبقِ گزارشِ کاربر انگار «یه دکمه‌ی بزرگ» بود. */}
+          کلاس قدیمی .wsearch-fab-option/.trade-account-menu که ظاهرشون
+          با مرجع فرق داشت و طبق گزارش کاربر انگار «یه دکمه‌ی بزرگ» بود. */}
       {open && pos && createPortal(
         <div
           ref={menuRef}

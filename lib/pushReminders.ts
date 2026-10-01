@@ -11,15 +11,15 @@ import {
 } from "@/lib/reminderPlan";
 import type { Medication } from "@/lib/medicationSchedule";
 
-// ارسالِ یادآوری‌ها با Web Push از سمتِ سرور — هم زمان‌بندِ داخلی
-// (lib/pushScheduler.ts، هر ۳۰ ثانیه) صداش می‌زنه، هم روت‌های کرانِ قدیمی
+// ارسال یادآوری‌ها با Web Push از سمت سرور — هم زمان‌بند داخلی
+// (lib/pushScheduler.ts، هر ۳۰ ثانیه) صداش می‌زنه، هم روت‌های کران قدیمی
 // (/api/push/send-reminders، /api/cron/economic-alerts) برای سازگاری.
 //
-// ضدتکرار: قبل از هر ارسال یک ردیف در PushReminderLog با کلیدِ یکتای
+// ضدتکرار: قبل از هر ارسال یک ردیف در PushReminderLog با کلید یکتای
 // (userId, key) «ادعا» می‌شه. این INSERT اتمیکه، پس حتی اگه چند worker یا
-// زمان‌بند + کرانِ بیرونی هم‌زمان اجرا بشن، فقط یکی می‌فرسته؛ و بعد از
-// ری‌استارت هم تکرار نمی‌شه. اگه ارسال به هیچ دستگاهی نرسید (خطای موقتِ
-// شبکه)، ادعا پس گرفته می‌شه تا تیکِ بعدی — تا وقتی هنوز قبل از شروعه —
+// زمان‌بند + کران بیرونی هم‌زمان اجرا بشن، فقط یکی می‌فرسته؛ و بعد از
+// ری‌استارت هم تکرار نمی‌شه. اگه ارسال به هیچ دستگاهی نرسید (خطای موقت
+// شبکه)، ادعا پس گرفته می‌شه تا تیک بعدی — تا وقتی هنوز قبل از شروعه —
 // دوباره امتحان کنه.
 
 const SETTING_KEYS_NEEDED = ["notifPrefs", "removedOccurrences", "customOccurrences", "medications", "dashboardPrefs"];
@@ -31,7 +31,7 @@ function isUniqueViolation(err: any): boolean {
   return err?.code === "P2002";
 }
 
-/** ادعا + ارسال + (در صورتِ شکستِ کامل) پس‌گرفتنِ ادعا */
+/** ادعا + ارسال + (در صورت شکست کامل) پس‌گرفتن ادعا */
 async function claimAndSend(userId: string, key: string, deadline: number, payload: Omit<PushPayload, "tag" | "deadline">, stats: SendStats) {
   if (Date.now() >= deadline) { stats.skipped++; return; }
   let claimId: string;
@@ -59,7 +59,7 @@ function asArray<T>(v: unknown): T[] {
   return Array.isArray(v) ? (v as T[]) : [];
 }
 
-/** یادآوری‌های برنامه/دارو/تمرین برای همه‌ی کاربرهای دارای دستگاهِ سابسکرایب‌شده */
+/** یادآوری‌های برنامه/دارو/تمرین برای همه‌ی کاربرهای دارای دستگاه سابسکرایب‌شده */
 export async function runDueReminders(now: Date = new Date()): Promise<{ ok: true; checked: number } & SendStats | { ok: true; skipped: string }> {
   if (!isPushConfigured()) return { ok: true, skipped: "کلیدهای VAPID ست نشده — نوتیفیکیشن ارسال نمی‌شود" };
   const nowMs = now.getTime();
@@ -71,7 +71,7 @@ export async function runDueReminders(now: Date = new Date()): Promise<{ ok: tru
 
   for (let i = 0; i < allIds.length; i += USER_CHUNK) {
     const ids = allIds.slice(i, i + USER_CHUNK);
-    // همه‌ی تنظیماتِ این دسته از کاربرها با دو کوئری، نه چند کوئری به‌ازای هر کاربر
+    // همه‌ی تنظیمات این دسته از کاربرها با دو کوئری، نه چند کوئری به‌ازای هر کاربر
     const [users, settingRows] = await Promise.all([
       prisma.user.findMany({ where: { id: { in: ids } }, select: { id: true, timezone: true } }),
       prisma.userSetting.findMany({ where: { userId: { in: ids }, key: { in: SETTING_KEYS_NEEDED } }, select: { userId: true, key: true, value: true } }),
@@ -98,7 +98,7 @@ export async function runDueReminders(now: Date = new Date()): Promise<{ ok: tru
         });
         for (const r of planned) if (isDue(r, nowMs)) due.push({ userId: u.id, r });
       }
-      // مثلِ نسخه‌ی کلاینت: خاموش‌کردنِ کارتِ دارو از تنظیماتِ داشبورد، اعلان‌هاش رو هم قطع می‌کنه
+      // مثل نسخه‌ی کلاینت: خاموش‌کردن کارت دارو از تنظیمات داشبورد، اعلان‌هاش رو هم قطع می‌کنه
       const dash = s.get("dashboardPrefs") as { showMedications?: boolean } | undefined;
       if (dash?.showMedications !== false) {
         const meds = asArray<Medication>(s.get("medications"));
@@ -137,14 +137,14 @@ export async function runDueReminders(now: Date = new Date()): Promise<{ ok: tru
           if (!plan) continue;
           const dayName = FA_WEEKDAY[new Date(`${r.dateIso}T00:00:00Z`).getUTCDay()];
           const todayPlan = asArray<{ day: string; focus: string }>(plan.planData).find((d) => d?.day === dayName);
-          if (!todayPlan) continue; // امروز روزِ استراحته
+          if (!todayPlan) continue; // امروز روز استراحته
           const log = await prisma.exerciseLog.findFirst({ where: { planId: plan.id, userId, date: new Date(r.dateIso) }, select: { completed: true } });
           if (log?.completed) continue;
           body = `برنامه‌ی ورزشی امروز (${todayPlan.focus}) هنوز ثبت نشده.`;
         }
         await claimAndSend(userId, r.key, r.deadline, { title: r.title, body, url: r.url }, stats);
       } catch (err: any) {
-        // شکستِ یک کاربر نباید بقیه رو از این تیک بندازه
+        // شکست یک کاربر نباید بقیه رو از این تیک بندازه
         stats.failed++;
         console.error(`[push] reminder ${r.key} failed: ${err?.message || err}`);
       }
@@ -157,8 +157,8 @@ export async function runDueReminders(now: Date = new Date()): Promise<{ ok: tru
 const MAX_LOOKAHEAD_MINUTES = 60; // بزرگ‌ترین گزینه‌ی minutesBefore
 
 /**
- * هشدار پیش از اخبارِ مهمِ اقتصادی — همون منطقِ قبلیِ /api/cron/economic-alerts،
- * با ضدتکرارِ اتمیکِ PushReminderLog و همون قانونِ «بعد از انتشار دیگه نه».
+ * هشدار پیش از اخبار مهم اقتصادی — همون منطق قبلی /api/cron/economic-alerts،
+ * با ضدتکرار اتمیک PushReminderLog و همون قانون «بعد از انتشار دیگه نه».
  */
 export async function runEconomicAlerts(now: Date = new Date()): Promise<Record<string, unknown>> {
   if (!isPushConfigured()) return { ok: true, skipped: "کلیدهای VAPID ست نشده — نوتیفیکیشن ارسال نمی‌شود" };
@@ -194,7 +194,7 @@ export async function runEconomicAlerts(now: Date = new Date()): Promise<Record<
     if (!prefs.enabled && !prefs.watchedEventKeys.length) continue;
     checked++;
     for (const e of events) {
-      // ستونِ Alertِ جدول: رویدادِ ستاره‌خورده مستقل از قاعده‌ی کلی هشدار می‌گیره
+      // ستون Alert جدول: رویداد ستاره‌خورده مستقل از قاعده‌ی کلی هشدار می‌گیره
       const watched = prefs.watchedEventKeys.includes(newsEventWatchKey(e.currency, e.title));
       if (!watched) {
         if (!prefs.enabled) continue;
@@ -220,7 +220,7 @@ export async function runEconomicAlerts(now: Date = new Date()): Promise<Record<
   return { ok: true, events: events.length, checked, ...stats };
 }
 
-/** ردهای ضدتکرارِ خیلی قدیمی (deadline بیش از دو روز گذشته) — دیگه هیچ‌وقت لازم نمی‌شن */
+/** ردهای ضدتکرار خیلی قدیمی (deadline بیش از دو روز گذشته) — دیگه هیچ‌وقت لازم نمی‌شن */
 export async function pruneReminderLog(now: Date = new Date()): Promise<number> {
   const res = await prisma.pushReminderLog.deleteMany({ where: { deadline: { lt: new Date(now.getTime() - 2 * 86_400_000) } } });
   return res.count;

@@ -50,8 +50,8 @@ async function messageIds(userId: string, msId: string): Promise<string[]> {
 
 // ───────────────────────── پاک کردن سابقه ─────────────────────────
 
-describe("سابقه‌ی گفت‌وگو: پاک کردن فقط برای خودِ کاربر", () => {
-  it("پیام‌های پیش از پاک‌کردن برای من برنمی‌گردند، برای طرفِ مقابل دست‌نخورده‌اند؛ پیامِ تازه دیده می‌شود", async () => {
+describe("سابقه‌ی گفت‌وگو: پاک کردن فقط برای خود کاربر", () => {
+  it("پیام‌های پیش از پاک‌کردن برای من برنمی‌گردند، برای طرف مقابل دست‌نخورده‌اند؛ پیام تازه دیده می‌شود", async () => {
     const { m, s, ms } = await setup();
     const a = await send(m, ms, "یک");
     const b = await send(s, ms, "دو");
@@ -69,13 +69,13 @@ describe("سابقه‌ی گفت‌وگو: پاک کردن فقط برای خو�
     const c = await send(m, ms, "سه");
     expect(await messageIds(s, ms)).toEqual([c.id]);
 
-    // صفحه‌بندیِ قدیمی‌تر هم از مرزِ پاک‌شده عبور نمی‌کند
+    // صفحه‌بندی قدیمی‌تر هم از مرز پاک‌شده عبور نمی‌کند
     as(s);
     const older = await j(await getMessages(req("GET", `/api/mentorships/${ms}/messages?before=${encodeURIComponent(new Date().toISOString())}`) as any, P(ms)));
     expect(older.messages.map((x: { id: string }) => x.id)).toEqual([c.id]);
   });
 
-  it("پیام‌های خوانده‌نشده‌ی پاک‌شده دیگر در شمارنده نیستند؛ فهرستِ سابقه تعداد و زمانِ پاک‌کردن را می‌دهد", async () => {
+  it("پیام‌های خوانده‌نشده‌ی پاک‌شده دیگر در شمارنده نیستند؛ فهرست سابقه تعداد و زمان پاک‌کردن را می‌دهد", async () => {
     const { m, s, ms } = await setup();
     await send(m, ms, "خوانده نشده ۱");
     await send(m, ms, "خوانده نشده ۲");
@@ -118,7 +118,7 @@ describe("سابقه‌ی گفت‌وگو: پاک کردن فقط برای خو�
     expect(rel.mentorClearedBefore).toBeNull();
   });
 
-  it("IDOR: پاک کردنِ گفت‌وگوی دیگران ۴۰۴ و بی‌اثر است؛ بدونِ نشست ۴۰۱", async () => {
+  it("IDOR: پاک کردن گفت‌وگوی دیگران ۴۰۴ و بی‌اثر است؛ بدون نشست ۴۰۱", async () => {
     const { m, s, ms } = await setup();
     await send(m, ms, "محرمانه");
     const stranger = await makeUser();
@@ -128,7 +128,7 @@ describe("سابقه‌ی گفت‌وگو: پاک کردن فقط برای خو�
     expect(rel.studentClearedBefore).toBeNull();
     expect(rel.mentorClearedBefore).toBeNull();
     expect((await prisma.mentorMessage.findMany({ where: { mentorshipId: ms } })).every((x) => x.readAt === null)).toBe(true);
-    // فهرستِ غریبه این گفت‌وگو را ندارد
+    // فهرست غریبه این گفت‌وگو را ندارد
     const list = await j(await listHistory());
     expect(list.conversations.some((c: any) => c.id === ms)).toBe(false);
     as(null);
@@ -136,7 +136,7 @@ describe("سابقه‌ی گفت‌وگو: پاک کردن فقط برای خو�
     void s;
   });
 
-  it("پاک کردن توسطِ منتور ستونِ خودِ منتور را می‌زند", async () => {
+  it("پاک کردن توسط منتور ستون خود منتور را می‌زند", async () => {
     const { m, s, ms } = await setup();
     await send(s, ms, "سلام");
     as(m);
@@ -149,10 +149,10 @@ describe("سابقه‌ی گفت‌وگو: پاک کردن فقط برای خو�
   });
 });
 
-// ───────────────────────── گزارشِ گفت‌وگو ─────────────────────────
+// ───────────────────────── گزارش گفت‌وگو ─────────────────────────
 
-describe("گزارشِ گفت‌وگو: هر پیام جداگانه با فرانکینگ تایید می‌شود", () => {
-  it("پیامِ جعلی لای پیام‌های واقعی → کلِ گزارش رد؛ گزارشِ درست فقط پیام‌های انتخاب‌شده را به ادمین می‌دهد", async () => {
+describe("گزارش گفت‌وگو: هر پیام جداگانه با فرانکینگ تایید می‌شود", () => {
+  it("پیام جعلی لای پیام‌های واقعی → کل گزارش رد؛ گزارش درست فقط پیام‌های انتخاب‌شده را به ادمین می‌دهد", async () => {
     const { m, s, ms } = await setup();
     const x1 = await send(m, ms, "پیام آزارنده‌ی اول");
     const x2 = await send(s, ms, "جواب شاگرد");
@@ -162,22 +162,22 @@ describe("گزارشِ گفت‌وگو: هر پیام جداگانه با فرا
     const report = (body: Record<string, unknown>) => { as(s); return reportConversation(req("POST", "/x", body), P(ms)); };
     const item = (x: { id: string; text: string; frankingKey: string }, text = x.text) => ({ id: x.id, text, frankingKey: x.frankingKey });
 
-    // متنِ جعلی برای یکی از پیام‌ها
+    // متن جعلی برای یکی از پیام‌ها
     let res = await report({ reason: "آزار", messages: [item(x1), item(x2), item(x3, "متنی که منتور هرگز نفرستاد")] });
     expect(res.status).toBe(400);
     expect((await j(res)).messageId).toBe(x3.id);
-    // کلیدِ فرانکینگِ پیامِ دیگر
+    // کلید فرانکینگ پیام دیگر
     res = await report({ reason: "آزار", messages: [{ id: x1.id, text: x1.text, frankingKey: x3.frankingKey }] });
     expect(res.status).toBe(400);
-    // بدونِ مدرک
+    // بدون مدرک
     res = await report({ reason: "آزار", messages: [{ id: x1.id }] });
     expect(res.status).toBe(400);
-    // دست‌کاریِ برچسبِ سرور
+    // دست‌کاری برچسب سرور
     const orig = await prisma.mentorMessage.findUniqueOrThrow({ where: { id: x1.id }, select: { serverTag: true } });
     await prisma.mentorMessage.update({ where: { id: x1.id }, data: { serverTag: "n0:AAAA" } });
     expect((await report({ reason: "آزار", messages: [item(x1)] })).status).toBe(400);
     await prisma.mentorMessage.update({ where: { id: x1.id }, data: { serverTag: orig.serverTag } });
-    // فقط پیام‌های خودم (بدونِ پیامی از طرفِ مقابل)
+    // فقط پیام‌های خودم (بدون پیامی از طرف مقابل)
     expect((await report({ reason: "آزار", messages: [item(x2)] })).status).toBe(400);
     // خالی و بیش از سقف
     expect((await report({ reason: "آزار", messages: [] })).status).toBe(400);
@@ -190,12 +190,12 @@ describe("گزارشِ گفت‌وگو: هر پیام جداگانه با فرا
     expect(res.status).toBe(200);
     const rep = await prisma.mentorReport.findFirstOrThrow({ where: { reporterId: s }, include: { messages: { orderBy: { position: "asc" } } } });
     expect(rep).toMatchObject({ targetType: "CONVERSATION", targetId: ms, targetUserId: m, reportVerified: true });
-    // به ترتیبِ زمان، متن رمزشده در حالِ سکون
+    // به ترتیب زمان، متن رمزشده در حال سکون
     expect(rep.messages.map((x) => x.messageId)).toEqual([x1.id, x2.id, x3.id]);
     expect(rep.messages.every((x) => x.verified && x.text.startsWith("enc1:"))).toBe(true);
     expect(JSON.stringify(rep)).not.toContain("آزارنده");
 
-    // تکرارِ گزارشِ همان گفت‌وگو
+    // تکرار گزارش همان گفت‌وگو
     expect((await report({ reason: "آزار", messages: [item(x1)] })).status).toBe(409);
 
     const admin = await makeUser({ adminPermissions: ["mentors"] });
@@ -208,7 +208,7 @@ describe("گزارشِ گفت‌وگو: هر پیام جداگانه با فرا
     expect(JSON.stringify(list)).not.toContain(hidden.text);
   });
 
-  it("IDOR: غریبه نمی‌تواند گفت‌وگوی دیگران را گزارش کند؛ پیامِ گفت‌وگوی دیگر پذیرفته نمی‌شود", async () => {
+  it("IDOR: غریبه نمی‌تواند گفت‌وگوی دیگران را گزارش کند؛ پیام گفت‌وگوی دیگر پذیرفته نمی‌شود", async () => {
     const { m, s, ms } = await setup();
     const x = await send(m, ms, "پیام");
     const o = await setup();
@@ -218,7 +218,7 @@ describe("گزارشِ گفت‌وگو: هر پیام جداگانه با فرا
     as(stranger);
     expect((await reportConversation(req("POST", "/x", { reason: "آزار", messages: [{ id: x.id, text: x.text, frankingKey: x.frankingKey }] }), P(ms))).status).toBe(404);
 
-    // پیامِ رابطه‌ی دیگر (حتی با مدرکِ درست) در گزارشِ این گفت‌وگو پیدا نمی‌شود
+    // پیام رابطه‌ی دیگر (حتی با مدرک درست) در گزارش این گفت‌وگو پیدا نمی‌شود
     as(s);
     const res = await reportConversation(req("POST", "/x", { reason: "آزار", messages: [{ id: y.id, text: y.text, frankingKey: y.frankingKey }] }), P(ms));
     expect(res.status).toBe(400);
@@ -236,10 +236,10 @@ describe("گزارشِ گفت‌وگو: هر پیام جداگانه با فرا
   });
 });
 
-// ───────────────────────── پذیرشِ دعوت و شرایطِ منتورها ─────────────────────────
+// ───────────────────────── پذیرش دعوت و شرایط منتورها ─────────────────────────
 
-describe("پذیرشِ دعوتِ منتور توسطِ شاگرد: شرایطِ منتورها لازم است", () => {
-  it("بدونِ پذیرش ۴۰۰ با کدِ MENTOR_TERMS_REQUIRED؛ با نسخه‌ی جاری فعال می‌شود و پذیرش روی کاربر و رابطه ثبت می‌شود", async () => {
+describe("پذیرش دعوت منتور توسط شاگرد: شرایط منتورها لازم است", () => {
+  it("بدون پذیرش ۴۰۰ با کد MENTOR_TERMS_REQUIRED؛ با نسخه‌ی جاری فعال می‌شود و پذیرش روی کاربر و رابطه ثبت می‌شود", async () => {
     const { MENTOR_TERMS_VERSION } = await import("@/lib/mentorTerms");
     const { POST: postMentorship } = await import("@/app/api/mentorships/route");
     const { PATCH: patchMentorship } = await import("@/app/api/mentorships/[id]/route");

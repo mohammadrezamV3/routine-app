@@ -17,8 +17,8 @@ import { GoldenName } from "@/components/GoldenName";
 const ic = (Icon: typeof Hourglass, size: number) => <Icon size={size} strokeWidth={MI_STROKE} aria-hidden />;
 
 /**
- * صفِ انتظارِ مربی (GET /api/mentor/waitlist) — زیرِ فهرستِ شاگردها. نوبت‌دارها
- * اول، بعد به ترتیبِ ورود. فقط اسم و زمان؛ جواب‌های پذیرش با درخواستِ عادی می‌رسند.
+ * صف انتظار مربی (GET /api/mentor/waitlist) — زیر فهرست شاگردها. نوبت‌دارها
+ * اول، بعد به ترتیب ورود. فقط اسم و زمان؛ جواب‌های پذیرش با درخواست عادی می‌رسند.
  * وقتی صف خالی است چیزی نشان نمی‌دهد.
  */
 export function MentorWaitlistSection() {
@@ -92,7 +92,7 @@ export function MentorWaitlistSection() {
       {remove && (
         <MentorConfirmDialog
           message={`${publicUserName(remove.user)} از صف خارج بشه؟`}
-          hint={remove.status === "OFFERED" ? "نوبتش به نفر بعدی صف می‌رسه." : "بهش خبر می‌دیم که فعلاً جایی براش نیست."}
+          hint={remove.status === "OFFERED" ? "نوبتش به نفر بعدی صف می‌رسه." : "بهش خبر می‌دیم که فعلا جایی براش نیست."}
           confirmLabel="خارج کردن"
           busy={busy}
           error={error}

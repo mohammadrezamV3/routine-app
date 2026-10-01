@@ -86,7 +86,7 @@ export default function MentorStudentPage() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<{ message: string; status: number } | null>(null);
   const abortRef = useRef<AbortController | null>(null);
-  // برچسب، یادداشت، جواب‌های پذیرش و توقف — داده‌ی خصوصیِ منتور
+  // برچسب، یادداشت، جواب‌های پذیرش و توقف — داده‌ی خصوصی منتور
   const manage = useStudentManage(studentId);
 
   const load = useCallback(async (off: number) => {
@@ -105,7 +105,7 @@ export default function MentorStudentPage() {
   }, [studentId]);
 
   useEffect(() => { load(offset); }, [load, offset]);
-  // زنده: لاگ/پیشرفتِ تازه‌ی شاگرد (WebSocket/برگشت به تب) — هفته‌ی فعلی دوباره
+  // زنده: لاگ/پیشرفت تازه‌ی شاگرد (WebSocket/برگشت به تب) — هفته‌ی فعلی دوباره
   const offsetRef = useRef(offset);
   offsetRef.current = offset;
   useLiveRefresh("mentor", () => { load(offsetRef.current); });
@@ -217,7 +217,7 @@ export default function MentorStudentPage() {
                         <span className="mentor-progress-value">{pct(p.progress.rate)}</span>
                       </div>
                     )}
-                    {/* ابزارِ برنامه (قالب/کپی) فقط برای برنامه‌ی ارسال‌شده — agent C */}
+                    {/* ابزار برنامه (قالب/کپی) فقط برای برنامه‌ی ارسال‌شده — agent C */}
                     {p.status !== "DRAFT" && (
                       <div className="mentor-program-tools">
                         <MentorProgramTools programId={p.id} title={p.title} studentId={studentId} />

@@ -8,7 +8,7 @@ export default defineConfig({
   test: {
     environment: "node",
     include: ["__tests__/**/*.test.ts"],
-    // رازهای پیش‌فرضِ تست (رمزگذاریِ پیام‌های منتور) — __tests__/setup/env.ts
+    // رازهای پیش‌فرض تست (رمزگذاری پیام‌های منتور) — __tests__/setup/env.ts
     setupFiles: ["__tests__/setup/env.ts"],
     testTimeout: 15000,
   },

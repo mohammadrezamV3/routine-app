@@ -8,9 +8,9 @@ import { PAUSE_REASON_MAX, validateOptionalText } from "@/lib/mentorAvailability
 
 type Ctx = { params: { studentId: string } };
 
-// توقفِ موقتِ همکاری با یک شاگرد: رابطه ACTIVE می‌ماند (گفت‌وگو، دسترسی‌ها و
+// توقف موقت همکاری با یک شاگرد: رابطه ACTIVE می‌ماند (گفت‌وگو، دسترسی‌ها و
 // برنامه‌های فعلی دست نمی‌خورند) ولی به شاگرد اعلام می‌شود که همکاری متوقف
-// است و دلیلش چیست؛ در پنلِ منتور هم از هشدارهای پایبندی کنار گذاشته می‌شود.
+// است و دلیلش چیست؛ در پنل منتور هم از هشدارهای پایبندی کنار گذاشته می‌شود.
 
 // POST /api/mentor/students/:studentId/pause { reason? } → توقف
 export async function POST(req: Request, { params }: Ctx) {
@@ -34,7 +34,7 @@ export async function POST(req: Request, { params }: Ctx) {
   await notifyUser(m.studentId, {
     type: "mentor.paused",
     title: "توقف موقت همکاری",
-    body: r.data ? `${displayName(mentor)} همکاری را موقتاً متوقف کرد؛ دلیل: ${r.data}` : `${displayName(mentor)} همکاری را موقتاً متوقف کرد.`,
+    body: r.data ? `${displayName(mentor)} همکاری را موقتا متوقف کرد؛ دلیل: ${r.data}` : `${displayName(mentor)} همکاری را موقتا متوقف کرد.`,
     url: `/mentorship/${m.id}`,
   });
   return NextResponse.json({ pausedAt: now, pauseReason: r.data });

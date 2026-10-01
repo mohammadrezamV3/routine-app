@@ -8,9 +8,9 @@ import { KDF_SALT_BYTES, PASSWORD_KDF_ITERATIONS } from "@/lib/e2ee/core";
 
 // GET /api/e2ee/keys/kdf → { userId, salt, iterations }
 //
-// پارامترهای KEKِ مشتق از رمزِ عبور — درست بعد از ورود، روی دستگاه. خودِ رمز این‌جا
-// نمی‌آید (فقط به /api/auth/callback که به‌هرحال می‌رفت). نمک تصادفی و اختصاصیِ هر
-// کاربر است و بارِ اول ساخته می‌شود. فقط حسابِ رمزدار؛ به فلگِ منتور وابسته نیست تا
+// پارامترهای KEK مشتق از رمز عبور — درست بعد از ورود، روی دستگاه. خود رمز این‌جا
+// نمی‌آید (فقط به /api/auth/callback که به‌هرحال می‌رفت). نمک تصادفی و اختصاصی هر
+// کاربر است و بار اول ساخته می‌شود. فقط حساب رمزدار؛ به فلگ منتور وابسته نیست تا
 // KEK از همان ورود آماده باشد.
 export async function GET() {
   const session = await getServerSession(authOptions);
@@ -25,7 +25,7 @@ export async function GET() {
   if (!kdf) {
     kdf = await prisma.userE2EKdf
       .create({ data: { userId, salt: crypto.randomBytes(KDF_SALT_BYTES).toString("base64"), iterations: PASSWORD_KDF_ITERATIONS } })
-      .catch(async () => prisma.userE2EKdf.findUniqueOrThrow({ where: { userId } })); // دو ورودِ هم‌زمان → همان نمک
+      .catch(async () => prisma.userE2EKdf.findUniqueOrThrow({ where: { userId } })); // دو ورود هم‌زمان → همان نمک
   }
   return NextResponse.json({ userId, salt: kdf.salt, iterations: kdf.iterations });
 }

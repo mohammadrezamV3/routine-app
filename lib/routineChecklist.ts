@@ -1,11 +1,11 @@
-// برنامه‌ی «لیستی» در «روتین من»: یک برنامه می‌تونه چند آیتمِ زیرمجموعه داشته
-// باشه (مثلا «خرید»: نون، شیر، میوه). منطقِ خالص و تنها جای تصمیم برای همه‌ی
-// جاهایی که تیک می‌زنن (/weekly، داشبورد، DayModal) — تعریفِ جدا نساز.
+// برنامه‌ی «لیستی» در «روتین من»: یک برنامه می‌تونه چند آیتم زیرمجموعه داشته
+// باشه (مثلا «خرید»: نون، شیر، میوه). منطق خالص و تنها جای تصمیم برای همه‌ی
+// جاهایی که تیک می‌زنن (/weekly، داشبورد، DayModal) — تعریف جدا نساز.
 //
-// ذخیره: هر آیتم کلیدِ خودش رو توی همون DailyRecord.tasks داره
-// (`${occId}~${itemId}`) و کلیدِ خودِ برنامه (`occId`) همیشه = «همه‌ی آیتم‌ها
+// ذخیره: هر آیتم کلید خودش رو توی همون DailyRecord.tasks داره
+// (`${occId}~${itemId}`) و کلید خود برنامه (`occId`) همیشه = «همه‌ی آیتم‌ها
 // تیک خوردن». یعنی درصد، استریک، اچیومنت‌ها، منتور و هرچیزی که فقط
-// tasks[occId] رو می‌خونه بدونِ هیچ تغییری درست کار می‌کنه.
+// tasks[occId] رو می‌خونه بدون هیچ تغییری درست کار می‌کنه.
 
 export type ChecklistItem = { id: string; name: string };
 export type TaskMap = Record<string, boolean>;
@@ -21,7 +21,7 @@ export function newItemId(): string {
   return "i" + Date.now().toString(36) + Math.random().toString(36).slice(2, 6);
 }
 
-/** آیتم‌های معتبرِ یک برنامه (خالی/نامعتبر → []) */
+/** آیتم‌های معتبر یک برنامه (خالی/نامعتبر → []) */
 export function checklistOf(occ: object | null | undefined): ChecklistItem[] {
   const raw = (occ as { items?: unknown } | null | undefined)?.items;
   if (!Array.isArray(raw)) return [];
@@ -35,7 +35,7 @@ export function checklistProgress(tasks: TaskMap | undefined, occId: string, ite
   return { done: items.filter((i) => t[itemKey(occId, i.id)]).length, total: items.length };
 }
 
-/** آیا کلِ برنامه انجام شده؟ (برای برنامه‌ی لیستی = همه‌ی آیتم‌ها) */
+/** آیا کل برنامه انجام شده؟ (برای برنامه‌ی لیستی = همه‌ی آیتم‌ها) */
 export function isOccDone(tasks: TaskMap | undefined, occId: string, items: ChecklistItem[]): boolean {
   const t = tasks ?? {};
   if (!items.length) return !!t[occId];
@@ -43,11 +43,11 @@ export function isOccDone(tasks: TaskMap | undefined, occId: string, items: Chec
 }
 
 /**
- * تیکِ یک برنامه یا یکی از آیتم‌هاش — خروجی نقشه‌ی تازه‌ی tasks (immutable).
- *  • بدونِ itemId روی برنامه‌ی لیستی (زدنِ عنوان): اگه همه انجام شده بود همه
+ * تیک یک برنامه یا یکی از آیتم‌هاش — خروجی نقشه‌ی تازه‌ی tasks (immutable).
+ *  • بدون itemId روی برنامه‌ی لیستی (زدن عنوان): اگه همه انجام شده بود همه
  *    برداشته می‌شن، وگرنه همه تیک می‌خورن.
- *  • با itemId: فقط همون آیتم عوض می‌شه و کلیدِ برنامه = «همه انجام شدن؟».
- *  • برنامه‌ی عادی (بدونِ آیتم): همون رفتارِ قبلی.
+ *  • با itemId: فقط همون آیتم عوض می‌شه و کلید برنامه = «همه انجام شدن؟».
+ *  • برنامه‌ی عادی (بدون آیتم): همون رفتار قبلی.
  */
 export function toggleTask(tasks: TaskMap | undefined, occId: string, items: ChecklistItem[], itemId?: string): TaskMap {
   const next: TaskMap = { ...(tasks ?? {}) };

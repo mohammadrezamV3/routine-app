@@ -106,10 +106,10 @@ async function isLoggedIn(): Promise<boolean> {
 const getCache = new Map<string, { at: number; data: any }>();
 const inFlightGets = new Map<string, Promise<any>>();
 
-// سقفِ زمانیِ خواندن + تکرارِ خطای گذرا. قبلا درخواستی که جواب نمی‌گرفت (سرور وسطِ
-// ری‌استارت/دیپلوی، شبکه‌ی موبایلِ قطع‌ووصل) تا ابد در inFlightGets می‌موند و چون
-// دیدوپ می‌شد، تازه‌سازی‌های بعدی (focus/online/polling) هم پشتِ همون گیر می‌کردن —
-// صفحه تا ریلودِ دستی روی «در حال بارگذاری» می‌موند. ۴xx و ۵۰۰ تکرار نمی‌شن (قطعی‌ان).
+// سقف زمانی خواندن + تکرار خطای گذرا. قبلا درخواستی که جواب نمی‌گرفت (سرور وسط
+// ری‌استارت/دیپلوی، شبکه‌ی موبایل قطع‌ووصل) تا ابد در inFlightGets می‌موند و چون
+// دیدوپ می‌شد، تازه‌سازی‌های بعدی (focus/online/polling) هم پشت همون گیر می‌کردن —
+// صفحه تا ریلود دستی روی «در حال بارگذاری» می‌موند. ۴xx و ۵۰۰ تکرار نمی‌شن (قطعی‌ان).
 const READ_TIMEOUT_MS = 10_000;
 const READ_RETRY_DELAYS_MS = [1_500, 4_000];
 
@@ -195,16 +195,16 @@ export function invalidateStorageCache() {
 // ─────────────────────────────────────────────────────────────────────────
 // لایه‌ی زنده (lib/liveSync.ts) — optimistic + هم‌گامی بین تب‌ها
 //
-// نوشتن‌ها دیگه منتظرِ شبکه نمی‌مونن: مقدارِ تازه همون لحظه توی یه «روکش»
+// نوشتن‌ها دیگه منتظر شبکه نمی‌مونن: مقدار تازه همون لحظه توی یه «روکش»
 // (pendingDaily/pendingSettings) می‌شینه و دامنه‌اش publish می‌شه، پس هر
 // کامپوننتی که همون داده رو نشون می‌ده (حلقه‌ی پیشرفت، استریک، تقویم
-// تاریخچه، …) همون لحظه از نو می‌خونه و مقدارِ تازه رو می‌بینه. تا وقتی
-// درخواست در راهه، هر خواندنی (حتی از کش یا bootstrap یا یه فچِ قدیمی‌تر
+// تاریخچه، …) همون لحظه از نو می‌خونه و مقدار تازه رو می‌بینه. تا وقتی
+// درخواست در راهه، هر خواندنی (حتی از کش یا bootstrap یا یه فچ قدیمی‌تر
 // که دیرتر رسیده) از روکش جواب می‌گیره. اگه سرور رد کرد، روکش برداشته و
-// کش دور ریخته می‌شه، دوباره publish می‌شه (یعنی UI به حالتِ واقعیِ سرور
-// برمی‌گرده) و پیامِ خطا نشون داده می‌شه. موفق بود → به بقیه‌ی تب‌ها خبر.
+// کش دور ریخته می‌شه، دوباره publish می‌شه (یعنی UI به حالت واقعی سرور
+// برمی‌گرده) و پیام خطا نشون داده می‌شه. موفق بود → به بقیه‌ی تب‌ها خبر.
 //
-// نوشتن‌های پشتِ‌سرهمِ یک کلید سریال می‌شن تا ترتیبشون روی سرور به‌هم نخوره.
+// نوشتن‌های پشت‌سرهم یک کلید سریال می‌شن تا ترتیبشون روی سرور به‌هم نخوره.
 // ─────────────────────────────────────────────────────────────────────────
 
 const pendingDaily = new Map<string, DailyRecord>();
@@ -239,9 +239,9 @@ function patchRanges(dateKey: string, rec: DailyRecord) {
   }
 }
 
-// تغییری از *بیرون* (تب دیگه، سرور/WebSocket، برگشت به تب): کشِ خواندنیِ
-// همون کلیدها دور ریخته می‌شه تا خواندنِ بعدی تازه از سرور بیاد. روکشِ
-// نوشتن‌های در راه دست نمی‌خوره — اون‌ها هنوز تازه‌ترین حالتِ همین کاربرن.
+// تغییری از *بیرون* (تب دیگه، سرور/WebSocket، برگشت به تب): کش خواندنی
+// همون کلیدها دور ریخته می‌شه تا خواندن بعدی تازه از سرور بیاد. روکش
+// نوشتن‌های در راه دست نمی‌خوره — اون‌ها هنوز تازه‌ترین حالت همین کاربرن.
 if (typeof window !== "undefined") {
   registerInvalidator((keys) => {
     if (keys.includes(ALL)) {
@@ -339,8 +339,8 @@ function clearRangeCache() {
 }
 
 /** یک کلید رو از پاسخ bootstrap حذف می‌کنه تا دیگه از اون‌جا خونده نشه */
-// (قبلا کلید رو از خودِ payload پاک می‌کرد؛ ولی getSetting برای کلیدهای
-// bootstrap نبودنِ کلید رو «مقداری ذخیره نشده» تعبیر می‌کنه و fallback
+// (قبلا کلید رو از خود payload پاک می‌کرد؛ ولی getSetting برای کلیدهای
+// bootstrap نبودن کلید رو «مقداری ذخیره نشده» تعبیر می‌کنه و fallback
 // برمی‌گردوند — یعنی بعد از اولین نوشتن، مثلا لیست برنامه‌ها خالی خونده
 // می‌شد. حالا فقط علامت می‌خوره که دیگه مرجع نیست و از کش/API خونده بشه.)
 function forgetBootstrapSetting(key: string) {
@@ -404,7 +404,7 @@ export async function setDaily(dateKey: string, data: DailyRecord): Promise<void
         broadcast(topic);
         return;
       }
-      // rollback — فقط اگه نوشتنِ تازه‌تری جاش ننشسته
+      // rollback — فقط اگه نوشتن تازه‌تری جاش ننشسته
       if (!latest) return;
       pendingDaily.delete(dateKey);
       dropCache((url) => url.startsWith("/api/tasks/daily"));
@@ -420,7 +420,7 @@ export async function setDaily(dateKey: string, data: DailyRecord): Promise<void
   } catch {
     reportLiveError("حافظه‌ی مرورگر پر است — تغییر ذخیره نشد");
   }
-  // بقیه‌ی تب‌ها رویداد `storage` خودِ مرورگر رو می‌گیرن
+  // بقیه‌ی تب‌ها رویداد `storage` خود مرورگر رو می‌گیرن
   publishLocal(topic);
 }
 
@@ -455,9 +455,9 @@ export async function getDailyRange(fromIso: string, toIso: string): Promise<Rec
 }
 
 /**
- * همون getDailyRange، ولی شکستِ شبکه/سرور رو به‌صورتِ null برمی‌گردونه (نه {}) —
+ * همون getDailyRange، ولی شکست شبکه/سرور رو به‌صورت null برمی‌گردونه (نه {}) —
  * برای جایی که «داده نیومد» باید از «هیچ روزی تیک نخورده» جدا باشه (نقشه‌ی
- * ثباتِ سالانه: {} یعنی همه‌ی روزها ۰٪ِ قرمز، که گمراه‌کننده‌ست).
+ * ثبات سالانه: {} یعنی همه‌ی روزها ۰٪ قرمز، که گمراه‌کننده‌ست).
  */
 export async function getDailyRangeStrict(fromIso: string, toIso: string): Promise<Record<string, DailyRecord> | null> {
   if (await isLoggedIn()) {
@@ -467,7 +467,7 @@ export async function getDailyRangeStrict(fromIso: string, toIso: string): Promi
     if (data === null) data = await fetchRange(fromIso, toIso).data;
     if (data === null) return null;
     const out = sliceRange(data, fromIso, toIso);
-    // نوشتن‌های در راه (optimistic) روی جوابِ سرور/کش می‌شینن
+    // نوشتن‌های در راه (optimistic) روی جواب سرور/کش می‌شینن
     pendingDaily.forEach((rec, k) => { if (k >= fromIso && k <= toIso) out[k] = rec; });
     return out;
   }
@@ -522,11 +522,11 @@ export async function getSetting<T>(key: string, fallback: T): Promise<T> {
 
 /**
  * نسخه‌ی «موفقیت واقعی» — setSetting معمولی هر خطایی (شبکه، ۴۰۰، ۵۰۰) رو
- * silently می‌بلعد (طراحی عمدی برایِ تنظیماتِ کم‌اهمیتی مثلِ تم/فیلترها که
- * شکستِ بی‌صدا بهتر از قطع‌کردنِ کاربره)، ولی برای چیزی مثلِ داروها که
- * واقعاً داده‌ی کاربره، این بی‌صدایی یعنی «ثبت شد» نشان داده می‌شه درحالی‌که
- * چیزی ذخیره نشده. این تابع همون مسیر رو می‌ره ولی res.ok و پیامِ خطای
- * سرور رو واقعاً برمی‌گردونه.
+ * silently می‌بلعد (طراحی عمدی برای تنظیمات کم‌اهمیتی مثل تم/فیلترها که
+ * شکست بی‌صدا بهتر از قطع‌کردن کاربره)، ولی برای چیزی مثل داروها که
+ * واقعا داده‌ی کاربره، این بی‌صدایی یعنی «ثبت شد» نشان داده می‌شه درحالی‌که
+ * چیزی ذخیره نشده. این تابع همون مسیر رو می‌ره ولی res.ok و پیام خطای
+ * سرور رو واقعا برمی‌گردونه.
  */
 export async function setSettingChecked<T>(key: string, value: T): Promise<{ ok: true } | { ok: false; error: string }> {
   return writeSetting(key, value, false);
@@ -537,10 +537,10 @@ export async function setSetting<T>(key: string, value: T): Promise<void> {
 }
 
 /**
- * مسیرِ مشترکِ نوشتنِ تنظیمات. optimistic: مقدار همون لحظه خونده/دیده می‌شه؛
+ * مسیر مشترک نوشتن تنظیمات. optimistic: مقدار همون لحظه خونده/دیده می‌شه؛
  * اگه سرور رد کرد برمی‌گرده. `toastOnError`: setSetting معمولی خطا رو به
  * صدازننده برنمی‌گردونه، پس پیامش سراسری نشون داده می‌شه؛ setSettingChecked
- * خطا رو برمی‌گردونه و خودِ صدازننده نشونش می‌ده.
+ * خطا رو برمی‌گردونه و خود صدازننده نشونش می‌ده.
  */
 async function writeSetting<T>(key: string, value: T, toastOnError: boolean): Promise<{ ok: true } | { ok: false; error: string }> {
   if (await isLoggedIn()) {
@@ -592,12 +592,12 @@ async function writeSetting<T>(key: string, value: T, toastOnError: boolean): Pr
 }
 
 /**
- * وقتی *سرور* یک تنظیم را عوض کرده (نه این کلاینت) — مثلا دستیارِ روتین که
- * برنامه‌ها را سمتِ سرور می‌نویسد — مقدارِ تازه را مستقیم توی کش می‌نشاند.
+ * وقتی *سرور* یک تنظیم را عوض کرده (نه این کلاینت) — مثلا دستیار روتین که
+ * برنامه‌ها را سمت سرور می‌نویسد — مقدار تازه را مستقیم توی کش می‌نشاند.
  *
- * بدونِ این، خواندنِ بعدی تا انقضای TTL (یا تا وقتی پاسخِ bootstrap مرجع
- * است) مقدارِ *قدیمی* را می‌داد و کاربر تغییری که همین الان اعمال شده را
- * نمی‌دید — یعنی «انجام شد» می‌گفتیم و صفحه هنوز حالتِ قبل را نشان می‌داد.
+ * بدون این، خواندن بعدی تا انقضای TTL (یا تا وقتی پاسخ bootstrap مرجع
+ * است) مقدار *قدیمی* را می‌داد و کاربر تغییری که همین الان اعمال شده را
+ * نمی‌دید — یعنی «انجام شد» می‌گفتیم و صفحه هنوز حالت قبل را نشان می‌داد.
  */
 export function primeSettingCache<T>(key: string, value: T): void {
   primeCache(settingsUrl(key), { value });
@@ -636,17 +636,17 @@ export type CustomOccurrence = {
   notify?: boolean; // false یعنی صریحا خاموش‌شده؛ نبودش (undefined) یعنی روشن
   /**
    * اگر این برنامه از یک رودمپ ساخته شده باشد، شناسه‌ی همان رودمپ. با همین
-   * فیلد، کلیک روی برنامه در «روتین من» به‌جای کارتِ معمولی، مستقیم صفحه‌ی
+   * فیلد، کلیک روی برنامه در «روتین من» به‌جای کارت معمولی، مستقیم صفحه‌ی
    * جلسه‌های همان مسیر را باز می‌کند.
    */
   roadmapId?: string;
-  /** آینه‌ی یک برنامه‌ی ROUTINEِ منتور (lib/mentorProgramMirror.ts) — فقط سرور می‌سازه/حذفش می‌کنه */
+  /** آینه‌ی یک برنامه‌ی ROUTINE منتور (lib/mentorProgramMirror.ts) — فقط سرور می‌سازه/حذفش می‌کنه */
   mentorProgramId?: string;
-  /** آیتمِ همان برنامه‌ی منتور؛ ویرایش/جابه‌جایی باید نگهش دارد تا تیک به پیشرفتِ خودکارِ همان آیتم برسد */
+  /** آیتم همان برنامه‌ی منتور؛ ویرایش/جابه‌جایی باید نگهش دارد تا تیک به پیشرفت خودکار همان آیتم برسد */
   mentorItemId?: string;
   /**
    * برنامه‌ی «لیستی»: آیتم‌های زیرمجموعه که تک‌تک تیک می‌خورن (lib/routineChecklist.ts).
-   * تیکِ هر آیتم کلیدِ `${id}~${itemId}` در DailyRecord.tasks داره و کلیدِ خودِ
+   * تیک هر آیتم کلید `${id}~${itemId}` در DailyRecord.tasks داره و کلید خود
    * برنامه همیشه = «همه‌ی آیتم‌ها انجام شدن».
    */
   items?: { id: string; name: string }[];
@@ -668,7 +668,7 @@ export async function setThemeSetting(value: "dark" | "light"): Promise<void> {
   // اولین HTML سرور درست باشه، نه این‌که با یه تاخیر (بعد از resolve شدن
   // getThemeSetting سمت کلاینت) یهو از تاریک به روشن (یا برعکس) عوض بشه.
   if (typeof document !== "undefined") {
-    // روی https فلگِ Secure هم می‌گیرد تا روی یک درخواستِ اتفاقیِ http لو
+    // روی https فلگ Secure هم می‌گیرد تا روی یک درخواست اتفاقی http لو
     // نرود — این کوکی حساس نیست، ولی بی‌دلیل هم نباید cleartext برود.
     const secure = typeof location !== "undefined" && location.protocol === "https:" ? "; secure" : "";
     document.cookie = `theme=${value}; path=/; max-age=31536000; samesite=lax${secure}`;
@@ -689,9 +689,9 @@ export async function toggleOutingDate(iso: string): Promise<string[]> {
 }
 
 // ---------- خواب (lib/sleep.ts) ----------
-// همون قراردادِ بقیه: مهمان → localStorage، کاربرِ واردشده → /api/sleep.
-// نوشتن بعد از پایانِ دوره‌ی رایگانِ «روتین من» ۴۰۳ می‌گیره — خطا بالا پرتاب
-// می‌شه تا UI پیامِ خرید رو نشون بده (نه اینکه بی‌صدا بلعیده بشه).
+// همون قرارداد بقیه: مهمان → localStorage، کاربر واردشده → /api/sleep.
+// نوشتن بعد از پایان دوره‌ی رایگان «روتین من» ۴۰۳ می‌گیره — خطا بالا پرتاب
+// می‌شه تا UI پیام خرید رو نشون بده (نه اینکه بی‌صدا بلعیده بشه).
 
 export class SleepSaveError extends Error {
   constructor(message: string, public status: number) { super(message); }

@@ -42,8 +42,8 @@ export function DayModal({
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [iso]);
 
-  // لایه‌ی زنده: تیکِ همین روز از جای دیگه (تب دیگه/سرور) یا برگشتِ یک
-  // نوشتنِ ناموفق (rollback) همون لحظه این‌جا هم دیده بشه.
+  // لایه‌ی زنده: تیک همین روز از جای دیگه (تب دیگه/سرور) یا برگشت یک
+  // نوشتن ناموفق (rollback) همون لحظه این‌جا هم دیده بشه.
   useLiveRefresh(["daily:" + iso, "outingDates"], (changed) => {
     const all = changed.includes("*");
     if (all || changed.some((c) => keyMatches("daily:" + iso, c))) getDaily(iso).then(setDailyState);
@@ -54,9 +54,9 @@ export function DayModal({
 
   const isFuture = iso > todayKey;
   const isPast = iso < todayKey;
-  // تیک‌زدنِ کارها روی روزِ گذشته/امروز باز است — ولی نه روزِ آینده: طبقِ
-  // درخواستِ صریحِ کاربر، وانمود به انجام‌شدنِ کاری که هنوز نرسیده مجاز
-  // نیست. ثبتِ «ساعت بیداری» هم برای روزِ آینده معنا ندارد و بسته می‌ماند.
+  // تیک‌زدن کارها روی روز گذشته/امروز باز است — ولی نه روز آینده: طبق
+  // درخواست صریح کاربر، وانمود به انجام‌شدن کاری که هنوز نرسیده مجاز
+  // نیست. ثبت «ساعت بیداری» هم برای روز آینده معنا ندارد و بسته می‌ماند.
   const jd = toJalali(date.getFullYear(), date.getMonth() + 1, date.getDate());
 
   async function toggleTask(id: string, itemId?: string) {
@@ -106,7 +106,7 @@ export function DayModal({
             tasks.map((t) => {
               const items = checklistOf(scheduleOpts?.customOccurrences?.find((c) => c.id === t.id));
               const checked = isOccDone(daily.tasks, t.id, items);
-              // همون قاعده‌ی ✕ لیستِ «برنامه‌های امروز»: روزِ گذشته، یا امروز
+              // همون قاعده‌ی ✕ لیست «برنامه‌های امروز»: روز گذشته، یا امروز
               // و ساعتش رد شده، و تیک نخورده.
               const missed = !checked && isDayOver(iso, new Date());
               return (
@@ -138,7 +138,7 @@ export function DayModal({
                       const on = !!daily.tasks[itemKey(t.id, it.id)];
                       return (
                         <li key={it.id} className={on ? "is-done" : ""}>
-                          <TickButton checked={on} size={20} disabled={isFuture || isPast} onToggle={() => toggleTask(t.id, it.id)} label={`${on ? "برداشتنِ تیکِ" : "تیک‌زدنِ"} ${it.name}`} />
+                          <TickButton checked={on} size={20} disabled={isFuture || isPast} onToggle={() => toggleTask(t.id, it.id)} label={`${on ? "برداشتن تیک" : "تیک‌زدن"} ${it.name}`} />
                           <span>{it.name}</span>
                         </li>
                       );

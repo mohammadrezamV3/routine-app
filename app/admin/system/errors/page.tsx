@@ -59,7 +59,7 @@ export default function AdminSystemErrorsPage() {
         <div>
           <div className="admin-page-kicker">خطاها و لاگ‌ها</div>
           <div className="admin-section-hint">
-            {data ? `${formatNumber(data.total)} رخداد` : "…"} — هر ردیف یک رخدادِ مجزاست؛ برای دیدنِ جزئیات روی ردیف بزن
+            {data ? `${formatNumber(data.total)} رخداد` : "…"} — هر ردیف یک رخداد مجزاست؛ برای دیدن جزئیات روی ردیف بزن
           </div>
         </div>
         <div className="admin-head-actions">
@@ -126,7 +126,7 @@ export default function AdminSystemErrorsPage() {
           <AdminPagination page={page} totalPages={totalPages} onChange={(p) => { setPage(p); setExpanded(null); }} />
 
           <div className="admin-section-hint is-after">
-            این جدول یک لاگِ append-only است (نه گروه‌بندی‌شده). اطلاعات حساس (رمز/توکن/کلید API) هیچ‌وقت داخل این پیام‌ها ذخیره نمی‌شه.
+            این جدول یک لاگ append-only است (نه گروه‌بندی‌شده). اطلاعات حساس (رمز/توکن/کلید API) هیچ‌وقت داخل این پیام‌ها ذخیره نمی‌شه.
           </div>
         </>
       )}

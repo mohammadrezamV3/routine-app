@@ -36,8 +36,8 @@ export function TradeNotesPanel({
   const [query, setQuery] = useState("");
   const [filterTags, setFilterTags] = useState<string[]>([]);
   const [calSystem, setCalSystem] = useState<CalSystem>("jalali");
-  // کلیک روی کارت فقط نمایشِ متن می‌ده (viewing) — ویرایشِ واقعی
-  // (editing) فقط از زیرِ منوی سه‌نقطه باز می‌شه، طبقِ درخواستِ صریح.
+  // کلیک روی کارت فقط نمایش متن می‌ده (viewing) — ویرایش واقعی
+  // (editing) فقط از زیر منوی سه‌نقطه باز می‌شه، طبق درخواست صریح.
   const [viewing, setViewing] = useState<Note | null>(null);
   const [editing, setEditing] = useState<Note | null>(null);
   const { pendingKey, error: actionError, run } = useAsyncAction();
@@ -91,8 +91,8 @@ export function TradeNotesPanel({
     <div>
       {actionError && <div className="trade-form-error">{actionError}</div>}
 
-      {/* طبقِ درخواستِ صریح: جست‌وجو دیگر باکسِ جدا از لیستِ یادداشت‌ها نیست —
-          هر دو داخلِ یک باکسِ واحد، هم‌الگویِ چک‌لیست. */}
+      {/* طبق درخواست صریح: جست‌وجو دیگر باکس جدا از لیست یادداشت‌ها نیست —
+          هر دو داخل یک باکس واحد، هم‌الگوی چک‌لیست. */}
       <div className="trade-surface trade-page-box trade-note-box">
         <div className="trade-note-search-row">
           <div className="trade-search trade-note-search">
@@ -112,7 +112,7 @@ export function TradeNotesPanel({
                     style={active ? ({ "--tag-c": t.color } as CSSProperties) : undefined}
                     onClick={() => setFilterTags((p) => (p.includes(t.id) ? p.filter((x) => x !== t.id) : [...p, t.id]))}
                   >
-                    {/* توپِ برچسب سمتِ چپِ نامش (در RTL یعنی بعد از متن) */}
+                    {/* توپ برچسب سمت چپ نامش (در RTL یعنی بعد از متن) */}
                     {t.name}
                     <span className="trade-tag-dot" style={{ background: t.color }} />
                   </button>
@@ -142,7 +142,7 @@ export function TradeNotesPanel({
               onClick={() => setViewing(n)}
             >
               {/* فقط عنوان — متن یادداشت دیگر توی فهرست پیش‌نمایش نمی‌شود
-                  (درخواست صریح)؛ با کلیک روی کارت باز می‌شود. سه‌نقطه سمت راستِ
+                  (درخواست صریح)؛ با کلیک روی کارت باز می‌شود. سه‌نقطه سمت راست
                   عنوان است و حذف/سنجاق را می‌دهد. */}
               <div className="trade-note-head">
                 <div className="trade-note-kebab" onClick={(e) => e.stopPropagation()}>
@@ -161,7 +161,7 @@ export function TradeNotesPanel({
                   />
                 </div>
                 <span className="trade-note-title">{n.title}</span>
-                {/* توپِ رنگی سمتِ چپِ عنوان، نه گوشه‌ی مطلقِ کارت */}
+                {/* توپ رنگی سمت چپ عنوان، نه گوشه‌ی مطلق کارت */}
                 <span className="trade-account-dot" style={{ background: n.color }} />
                 {n.pinned && <Pin size={12} className="trade-note-pinned-mark" />}
               </div>
@@ -198,8 +198,8 @@ export function TradeNotesPanel({
   );
 }
 
-// نمایشِ فقط‌خواندنیِ یادداشت — کلیک روی کارت این را باز می‌کند، نه ویرایش
-// را (درخواستِ صریح). ویرایشِ واقعی فقط از زیرِ منوی سه‌نقطه در دسترس است.
+// نمایش فقط‌خواندنی یادداشت — کلیک روی کارت این را باز می‌کند، نه ویرایش
+// را (درخواست صریح). ویرایش واقعی فقط از زیر منوی سه‌نقطه در دسترس است.
 function NoteViewer({
   note, onClose,
 }: {

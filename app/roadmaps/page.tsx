@@ -29,8 +29,8 @@ type RoadmapCard = {
   build: BuildInfo;
 };
 
-// چند موضوعِ نمونه برای حالتِ خالی — یک کلیک ویزارد را با همان موضوع باز
-// می‌کند، تا کاربری که نمی‌داند چه بنویسد جلوی یک فیلدِ خالی نماند.
+// چند موضوع نمونه برای حالت خالی — یک کلیک ویزارد را با همان موضوع باز
+// می‌کند، تا کاربری که نمی‌داند چه بنویسد جلوی یک فیلد خالی نماند.
 const SUGGESTIONS = ["برنامه‌نویسی وب", "امنیت شبکه", "تحلیل داده با پایتون", "طراحی UI/UX", "زبان انگلیسی", "ادیت ویدیو"];
 
 export default function RoadmapsHub() {
@@ -52,11 +52,11 @@ export default function RoadmapsHub() {
   }, [status]);
 
   useEffect(() => { load(); }, [load]);
-  // زنده: ساخت/حذف/پیشرفتِ رودمپ از هرجا (صفحه‌ی مسیر، تبِ دیگه) یا برگشت به تب
+  // زنده: ساخت/حذف/پیشرفت رودمپ از هرجا (صفحه‌ی مسیر، تب دیگه) یا برگشت به تب
   useLiveRefresh("roadmaps", load);
 
-  // تا وقتی رودمپی در حالِ ساخت است، لیست هر ۴ ثانیه تازه می‌شود تا پیشرفت
-  // روی کارتش زنده دیده شود؛ بعد از آماده‌شدنِ همه، polling قطع می‌شود.
+  // تا وقتی رودمپی در حال ساخت است، لیست هر ۴ ثانیه تازه می‌شود تا پیشرفت
+  // روی کارتش زنده دیده شود؛ بعد از آماده‌شدن همه، polling قطع می‌شود.
   const anyBuilding = roadmaps.some((r) => r.build?.status === "building");
   useEffect(() => {
     if (!anyBuilding) return;
@@ -92,7 +92,7 @@ export default function RoadmapsHub() {
         <h1>رودمپ‌ها</h1>
         {status === "authenticated" && (
           <button type="button" className="trade-title-add-btn" onClick={() => setWizard({ topic: "" })}>
-            + مسیرِ جدید
+            + مسیر جدید
           </button>
         )}
       </div>
@@ -106,8 +106,8 @@ export default function RoadmapsHub() {
               <span className="rp-empty-icon"><Map size={26} /></span>
               <h2>اولین مسیرت رو بساز</h2>
               <p>
-                بگو چی می‌خوای یاد بگیری و برای چی. یه مسیرِ مرحله‌به‌مرحله می‌گیری که هر مرحله‌ش سرفصل‌های ریز،
-                کارهای عملی، پروژه، ابزار، منبع و معیارِ تموم‌شدن داره.
+                بگو چی می‌خوای یاد بگیری و برای چی. یه مسیر مرحله‌به‌مرحله می‌گیری که هر مرحله‌ش سرفصل‌های ریز،
+                کارهای عملی، پروژه، ابزار، منبع و معیار تموم‌شدن داره.
               </p>
               <div className="rp-empty-chips">
                 {SUGGESTIONS.map((s) => (
@@ -117,7 +117,7 @@ export default function RoadmapsHub() {
                 ))}
               </div>
               <button type="button" className="trade-primary-btn rp-empty-cta" onClick={() => setWizard({ topic: "" })}>
-                <Plus size={15} /> ساختِ مسیر
+                <Plus size={15} /> ساخت مسیر
               </button>
             </div>
           ) : (
@@ -169,7 +169,7 @@ export default function RoadmapsHub() {
 
       {deleteTarget && (
         <MentorConfirmDialog
-          message={`مسیرِ «${deleteTarget.title}» و همه‌ی پیشرفتش حذف شود؟ این کار برگشت‌پذیر نیست.`}
+          message={`مسیر «${deleteTarget.title}» و همه‌ی پیشرفتش حذف شود؟ این کار برگشت‌پذیر نیست.`}
           confirmLabel="حذف مسیر"
           busy={deleting}
           error={deleteError}

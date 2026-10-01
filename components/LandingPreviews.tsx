@@ -22,12 +22,12 @@ import {
   MockMentorCard, MockMentorChat, MockRoadmapCard, MockRoadmapStage, MockStreakTiers, MockTaskList,
 } from "@/components/LandingMockups";
 
-// ─── پیش‌نمایش‌های ویترین — هرکدام یک برش از صفحه‌ی واقعیِ همان بخش ────────
-// (نه UIِ ساختگی). هرجا کامپوننتِ اپ فقط نمایشی است، خودش رندر می‌شود
+// ─── پیش‌نمایش‌های ویترین — هرکدام یک برش از صفحه‌ی واقعی همان بخش ────────
+// (نه UI ساختگی). هرجا کامپوننت اپ فقط نمایشی است، خودش رندر می‌شود
 // (WeeklyAnalysisHero/Insights، CalorieMacrosCard، ForexSessionsDial،
-// SegmentedTabs، AIMessage/SiriOrb، StreakFlame، …)؛ بقیه آینه‌ی مارک‌آپِ
-// LandingMockups. فقط پیش‌نمایشِ «روتین» در SSR رندر می‌شود؛ بقیه فقط بعد از
-// انتخابِ تب روی کلاینت سوار می‌شوند.
+// SegmentedTabs، AIMessage/SiriOrb، StreakFlame، …)؛ بقیه آینه‌ی مارک‌آپ
+// LandingMockups. فقط پیش‌نمایش «روتین» در SSR رندر می‌شود؛ بقیه فقط بعد از
+// انتخاب تب روی کلاینت سوار می‌شوند.
 
 export type PreviewProps = { live: boolean };
 
@@ -58,13 +58,13 @@ export function PreviewRoutine() {
       <MockMedicationCard meds={[
         { name: "امگا 3", every: "هر 12 ساعت", times: "09:00 · 21:00", left: "18 روز مونده" },
       ]} />
-      {/* اعلانِ پوشِ واقعی (lib/reminderPlan.ts) */}
+      {/* اعلان پوش واقعی (lib/reminderPlan.ts) */}
       <div className="lsc-push">
         {/* eslint-disable-next-line @next/next/no-img-element */}
         <img src="/images/logo-icon-dark-theme.png" alt="" width={28} height={28} className="lsc-push-ic" />
         <div className="min-w-0">
           <b>یادآوری دارو</b>
-          <span>نوبتِ «امگا 3» ساعت 21:00 — 15 دقیقه‌ی دیگه.</span>
+          <span>نوبت «امگا 3» ساعت 21:00 — 15 دقیقه‌ی دیگه.</span>
         </div>
       </div>
     </Pv>
@@ -78,7 +78,7 @@ export function PreviewStreak() {
       <MockCard>
         <div className="mb-3 flex items-center justify-between text-[13px] font-bold">
           <span>سطح‌های استریک</span>
-          <span className="text-[11px] font-semibold text-dash-muted">روزهای کاملِ پشت‌سرهم</span>
+          <span className="text-[11px] font-semibold text-dash-muted">روزهای کامل پشت‌سرهم</span>
         </div>
         <MockStreakTiers />
       </MockCard>
@@ -87,7 +87,7 @@ export function PreviewStreak() {
   );
 }
 
-/* ─── آنالیز هفتگی: خودِ WeeklyAnalysisHero و WeeklyAnalysisInsights ─── */
+/* ─── آنالیز هفتگی: خود WeeklyAnalysisHero و WeeklyAnalysisInsights ─── */
 const ANALYSIS = {
   isCurrentWeek: true,
   daysElapsed: 5,
@@ -113,7 +113,7 @@ export function PreviewAnalysis() {
   );
 }
 
-/* ─── نومو: پنلِ RoutineAiFab با خودِ AIMessage و SiriOrb ─── */
+/* ─── نومو: پنل RoutineAiFab با خود AIMessage و SiriOrb ─── */
 export function PreviewNumo({ live }: PreviewProps) {
   const orb = (s: string) => (live ? <SiriOrb size={s} /> : <span className="lh-orb-still" style={{ width: s, height: s }} />);
   return (
@@ -127,8 +127,8 @@ export function PreviewNumo({ live }: PreviewProps) {
             <p>شنبه‌ها و سه‌شنبه‌ها ساعت 6 صبح پیاده‌روی</p>
           </AIMessage>
           <AIMessage from="assistant" avatar={orb("24px")} className="routine-ai-row-bot tone-ok">
-            <p>«پیاده‌روی» شنبه ساعتِ 06:00 اضافه شد.</p>
-            <p className="mt-1">«پیاده‌روی» سه‌شنبه ساعتِ 06:00 اضافه شد.</p>
+            <p>«پیاده‌روی» شنبه ساعت 06:00 اضافه شد.</p>
+            <p className="mt-1">«پیاده‌روی» سه‌شنبه ساعت 06:00 اضافه شد.</p>
           </AIMessage>
         </div>
         <div className="routine-ai-composer">
@@ -140,7 +140,7 @@ export function PreviewNumo({ live }: PreviewProps) {
   );
 }
 
-/* ─── بدنسازی: ExerciseTaskList در حالِ «شروع تمرین» ─── */
+/* ─── بدنسازی: ExerciseTaskList در حال «شروع تمرین» ─── */
 const MOVES = [
   { n: "پرس سینه هالتر", s: 4, r: 10, done: true },
   { n: "پرس شیب‌دار دمبل", s: 3, r: 12, done: true },
@@ -152,7 +152,7 @@ export function PreviewFitness() {
   return (
     <Pv>
       <MockCard>
-        <div className="mb-2 text-[12.5px] font-bold">روزِ تمرینِ جامانده</div>
+        <div className="mb-2 text-[12.5px] font-bold">روز تمرین جامانده</div>
         <SegmentedTabs
           options={[{ value: "skip" as const, label: "رد شدن" }, { value: "stay" as const, label: "ماندن" }]}
           active={mode}
@@ -253,9 +253,9 @@ export function PreviewCalorie() {
           ))}
         </div>
       </MockCard>
-      {/* هدفِ روزانه — از lib/calorieCalc.ts (قد، وزن، سن، روزهای تمرین، هدف) */}
+      {/* هدف روزانه — از lib/calorieCalc.ts (قد، وزن، سن، روزهای تمرین، هدف) */}
       <div className="lsc-goal-panel">
-        <div className="modal-head"><div className="modal-title">هدفِ روزانه‌ی تو</div></div>
+        <div className="modal-head"><div className="modal-title">هدف روزانه‌ی تو</div></div>
         <div className="flex flex-col gap-3">
           <div className="grid grid-cols-4 gap-2">
             {[["کالری", 2100], ["پروتئین (گرم)", 140], ["کربوهیدرات (گرم)", 220], ["چربی (گرم)", 70]].map(([l, v]) => (
@@ -265,7 +265,7 @@ export function PreviewCalorie() {
               </div>
             ))}
           </div>
-          <div className="text-[10.5px] text-dash-muted">بر اساسِ قد، وزن، سن، روزهای تمرین در هفته و هدفت (کاهش، حفظ یا افزایش وزن).</div>
+          <div className="text-[10.5px] text-dash-muted">بر اساس قد، وزن، سن، روزهای تمرین در هفته و هدفت (کاهش، حفظ یا افزایش وزن).</div>
         </div>
       </div>
       <CalorieMacrosCard entries={entries} target={{ proteinTargetG: 140, carbsTargetG: 220, fatTargetG: 70 }} />
@@ -323,7 +323,7 @@ export function PreviewTrade() {
   );
 }
 
-/* ─── تقویم اقتصادی + ساعت فارکس: خودِ ForexSessionsDial با ساعتِ واقعی ─── */
+/* ─── تقویم اقتصادی + ساعت فارکس: خود ForexSessionsDial با ساعت واقعی ─── */
 function durationLabel(target: Date, now: Date): string {
   const mins = Math.max(0, Math.round((target.getTime() - now.getTime()) / 60_000));
   return `${fa(Math.floor(mins / 60))}:${fa(String(mins % 60).padStart(2, "0"))}`;
@@ -403,10 +403,10 @@ export function PreviewRoadmap() {
       <MockRoadmapCard
         topic="گیتار"
         title="گیتار آکوستیک از صفر تا اولین آهنگ"
-        desc="از گرفتن درستِ گیتار و آکوردهای پایه تا ریتم و نواختنِ یک آهنگ کامل."
+        desc="از گرفتن درست گیتار و آکوردهای پایه تا ریتم و نواختن یک آهنگ کامل."
         duration="10 هفته"
         stages={5}
-        level="صفرِ مطلق"
+        level="صفر مطلق"
         pct={40}
       />
       <ol className="lsc-stages">
@@ -414,8 +414,8 @@ export function PreviewRoadmap() {
         <MockRoadmapStage
           n={2} title="ریتم و الگوهای ضرب" duration="2 هفته" tasksDone={1} tasks={3}
           openTasks={[
-            { title: "الگوی ضربِ پایین-بالا با مترونوم روی 70", checked: true },
-            { title: "تعویضِ روانِ آکوردهای G، C و D" },
+            { title: "الگوی ضرب پایین-بالا با مترونوم روی 70", checked: true },
+            { title: "تعویض روان آکوردهای G، C و D" },
           ]}
         />
         <MockRoadmapStage n={3} title="اولین آهنگ کامل" duration="3 هفته" tasksDone={0} tasks={4} />
@@ -438,14 +438,14 @@ export function PreviewMentor() {
           peer="علی کاظمی"
           msgs={[
             { text: "این هفته چهار جلسه کامل بود، عالیه. از فردا وزنه‌ی پرس رو 2.5 کیلو ببر بالا.", time: "18:42" },
-            { mine: true, text: "حتماً! دوشنبه جا موند، جبرانش کنم؟", time: "18:45" },
+            { mine: true, text: "حتما! دوشنبه جا موند، جبرانش کنم؟", time: "18:45" },
           ]}
         />
       </MockCard>
       <MockCard>
         <div className="flex items-center justify-between text-[12.5px] font-bold">
-          <span>پیشرفتِ این هفته</span>
-          <span className="text-[11px] font-semibold text-dash-muted">از تیک‌های روتینِ شاگرد</span>
+          <span>پیشرفت این هفته</span>
+          <span className="text-[11px] font-semibold text-dash-muted">از تیک‌های روتین شاگرد</span>
         </div>
         <div className="lsc-week">
           {WEEK.map((w) => (

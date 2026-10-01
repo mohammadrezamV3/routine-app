@@ -63,10 +63,10 @@ export function TradeFormModal({
   tags: TradeTag[];
   calSystem: CalSystem;
   presetChecklistId?: string | null;
-  /** تیک‌های از پیش‌زده‌شده — وقتی فرم از صفحه‌ی اختصاصیِ یک چک‌لیست باز
-   * می‌شود (کاربر قبلاً روی همان صفحه تیک زده)، نه از صفر. */
+  /** تیک‌های از پیش‌زده‌شده — وقتی فرم از صفحه‌ی اختصاصی یک چک‌لیست باز
+   * می‌شود (کاربر قبلا روی همان صفحه تیک زده)، نه از صفر. */
   presetCheckedState?: Record<string, boolean>;
-  /** نمادِ از پیش پرشده — وقتی فرم از صفحه‌ی چارت باز می‌شود */
+  /** نماد از پیش پرشده — وقتی فرم از صفحه‌ی چارت باز می‌شود */
   presetSymbol?: string | null;
   onTagCreated: (t: TradeTag) => void;
   onClose: () => void;

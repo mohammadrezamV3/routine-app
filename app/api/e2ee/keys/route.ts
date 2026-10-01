@@ -8,10 +8,10 @@ import { KDF_SALT_BYTES, isKeyBackupShape, isPublicKeyShape } from "@/lib/e2ee/c
 import { b64ByteLength } from "@/lib/e2ee/encoding";
 import { E2E_KEY_SELECT, keyChangedResponse, myKeyState, nextVersionOk } from "@/lib/e2ee/keyServer";
 
-// کلیدهای رمزگذاریِ سرتاسریِ کاربرِ فعلی (docs/mentor-e2ee.md). سرور فقط کلیدهای
-// عمومی و پشتیبانِ *رمزشده* (با کلیدِ مشتق از رمزِ عبور، روی دستگاه) را نگه می‌دارد.
+// کلیدهای رمزگذاری سرتاسری کاربر فعلی (docs/mentor-e2ee.md). سرور فقط کلیدهای
+// عمومی و پشتیبان *رمزشده* (با کلید مشتق از رمز عبور، روی دستگاه) را نگه می‌دارد.
 
-// GET /api/e2ee/keys[?touch=<نسخه‌ی کلیدِ این دستگاه>] →
+// GET /api/e2ee/keys[?touch=<نسخه‌ی کلید این دستگاه>] →
 //   { userId, hasPassword, kdf, keys: [{ version, kind, publicKey, active, hasBackup, backupKind, deviceLabel, createdAt, lastSeenAt, hasMessages }], link }
 export async function GET(req: NextRequest) {
   const g = await requireMentorsUser();
@@ -21,9 +21,9 @@ export async function GET(req: NextRequest) {
 }
 
 // POST /api/e2ee/keys { publicKey, backup, version, replaceVersion }
-//   ساختِ کلیدِ SYNCED (بسته‌بندی‌شده با KEKِ رمزِ عبور). replaceVersion = 0 → بارِ اول؛
-//   = نسخه‌ی SYNCEDِ فعال → جایگزینی (پس از بازیابیِ رمز: کلیدِ قبلی بازنشسته و پشتیبانش پاک).
-//   version باید «بزرگ‌ترین نسخه + ۱» باشد (کلاینت همین را در AADِ پشتیبان گذاشته).
+//   ساخت کلید SYNCED (بسته‌بندی‌شده با KEK رمز عبور). replaceVersion = 0 → بار اول؛
+//   = نسخه‌ی SYNCED فعال → جایگزینی (پس از بازیابی رمز: کلید قبلی بازنشسته و پشتیبانش پاک).
+//   version باید «بزرگ‌ترین نسخه + ۱» باشد (کلاینت همین را در AAD پشتیبان گذاشته).
 export async function POST(req: Request) {
   const g = await requireMentorsUser();
   if (!g.ok) return g.response;
@@ -39,8 +39,8 @@ export async function POST(req: Request) {
   if (!(await checkRateLimit(`e2ee-key-create:${me}`, 10, 60 * 60 * 1000))) {
     return NextResponse.json({ error: "تعداد تلاش‌ها زیاد بوده؛ کمی بعد دوباره تلاش کن" }, { status: 429 });
   }
-  // پشتیبان باید با نمکِ فعلیِ همین حساب ساخته شده باشد؛ فقط در جایگزینی (بازیابیِ رمز)
-  // نمکِ تازه همراهِ کلید می‌آید و اتمی ثبت می‌شود (KEKِ کهنه‌ی دستگاه‌های دیگر باطل)
+  // پشتیبان باید با نمک فعلی همین حساب ساخته شده باشد؛ فقط در جایگزینی (بازیابی رمز)
+  // نمک تازه همراه کلید می‌آید و اتمی ثبت می‌شود (KEK کهنه‌ی دستگاه‌های دیگر باطل)
   const newKdf = b.kdf as { salt?: unknown; iterations?: unknown } | undefined;
   if (newKdf !== undefined) {
     if (b.replaceVersion === 0 || !newKdf || typeof newKdf.salt !== "string" || b64ByteLength(newKdf.salt) !== KDF_SALT_BYTES) return badRequest("نمک نامعتبر است");

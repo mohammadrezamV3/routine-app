@@ -8,7 +8,7 @@ import { withLiveSync } from "@/lib/realtime";
 import { ModuleKey } from "@prisma/client";
 import { requireModule } from "@/lib/moduleAccess";
 
-// کلیدهایی که خودِ «روتین من»ن — نوشتنشون بعد از ۱۴ روز آزمایشی پلن می‌خواد.
+// کلیدهایی که خود «روتین من»ن — نوشتنشون بعد از ۱۴ روز آزمایشی پلن می‌خواد.
 const ROUTINE_KEYS = new Set(["customOccurrences", "removedOccurrences", "wakeSleepTimes"]);
 
 // این روت یک فروشگاه کلید/مقدار عمومی نیست — فقط کلیدهای شناخته‌شده‌ی
@@ -61,5 +61,5 @@ async function handlePOST(req: NextRequest, { params }: { params: { key: string 
   return NextResponse.json({ ok: true });
 }
 
-// بعد از هر نوشتنِ موفق، بقیه‌ی دستگاه‌ها/تب‌های همین کاربر با WebSocket خبردار می‌شن (lib/realtime.ts)
+// بعد از هر نوشتن موفق، بقیه‌ی دستگاه‌ها/تب‌های همین کاربر با WebSocket خبردار می‌شن (lib/realtime.ts)
 export const POST = withLiveSync((_req, { params }) => [params.key], handlePOST);

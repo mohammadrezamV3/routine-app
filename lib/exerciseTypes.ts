@@ -7,8 +7,8 @@ export type ExercisePlan = {
   level: ExerciseLevel | "custom";
   heightCm: number | null;
   weightKg: number | null;
-  // طبقِ درخواستِ صریح، هدف دیگر یکی از چند گزینه‌ی ثابت نیست — متنِ آزادِ
-  // خودِ کاربر است.
+  // طبق درخواست صریح، هدف دیگر یکی از چند گزینه‌ی ثابت نیست — متن آزاد
+  // خود کاربر است.
   goal: string | null;
   gymDays: string[] | null;
   trainingMonth: number | null;

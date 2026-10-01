@@ -7,10 +7,10 @@ import { CLOCK_SESSIONS } from "@/lib/forexClockSessions";
 import { ForexSessionsDial } from "./ForexSessionsDial";
 import { FlagCircle } from "./FlagCircle";
 
-// ساعتِ بازارِ فارکس. کلِ منطقِ ساعت/DST از همان `lib/forexSessions.ts`
-// می‌آید که برچسبِ جلسه‌ی هر معامله در ژورنال هم از آن ساخته می‌شود — پس
+// ساعت بازار فارکس. کل منطق ساعت/DST از همان `lib/forexSessions.ts`
+// می‌آید که برچسب جلسه‌ی هر معامله در ژورنال هم از آن ساخته می‌شود — پس
 // «چیزی که ساعت نشان می‌دهد» با «چیزی که به معامله برچسب می‌خورد» فرق
-// نمی‌کند. تیکِ هر ثانیه فقط رندر را تازه می‌کند؛ هیچ درخواستی نمی‌رود.
+// نمی‌کند. تیک هر ثانیه فقط رندر را تازه می‌کند؛ هیچ درخواستی نمی‌رود.
 
 function durationLabel(target: Date, now: Date): string {
   const mins = Math.max(0, Math.round((target.getTime() - now.getTime()) / 60_000));
@@ -29,8 +29,8 @@ function jalaliLabel(d: Date): string {
 export function ForexClockPanel() {
   const [now, setNow] = useState<Date | null>(null);
 
-  // مقدارِ اولیه عمداً بعد از mount ست می‌شود: ساعتِ سرور و مرورگر یکی
-  // نیستند و رندرِ سمتِ سرور با ساعتِ سرور، هیدریت را mismatch می‌کند.
+  // مقدار اولیه عمدا بعد از mount ست می‌شود: ساعت سرور و مرورگر یکی
+  // نیستند و رندر سمت سرور با ساعت سرور، هیدریت را mismatch می‌کند.
   useEffect(() => {
     setNow(new Date());
     const t = setInterval(() => setNow(new Date()), 1000);
@@ -45,14 +45,14 @@ export function ForexClockPanel() {
     `${String(now.getMinutes()).padStart(2, "0")}:` +
     `${String(now.getSeconds()).padStart(2, "0")}`;
 
-  // بازها اول، و داخلِ هر گروه آنکه زودتر بسته/باز می‌شود بالاتر — همان
+  // بازها اول، و داخل هر گروه آنکه زودتر بسته/باز می‌شود بالاتر — همان
   // ترتیبی که مرجع دارد و همان چیزی که تریدر لازم دارد.
   const rows = CLOCK_SESSIONS.map((s) => {
     const arc = arcForDef(s, now);
     const open = arc.open && marketOpen;
-    // چه وسطِ هفته و چه آخرِ هفته، همیشه یک زمانِ واقعی نشان می‌دهیم:
-    // `nextOpenForDef` خودش شنبه/یکشنبه و بسته‌بودنِ بازار را رد می‌کند،
-    // پس در تعطیلات هم عددِ درست (مثلاً ۵۰:۱۵ تا دوشنبه) درمی‌آید.
+    // چه وسط هفته و چه آخر هفته، همیشه یک زمان واقعی نشان می‌دهیم:
+    // `nextOpenForDef` خودش شنبه/یکشنبه و بسته‌بودن بازار را رد می‌کند،
+    // پس در تعطیلات هم عدد درست (مثلا ۵۰:۱۵ تا دوشنبه) درمی‌آید.
     const target = open ? arc.closeAt : nextOpenForDef(s, now);
     return { s, arc, open, target };
   }).sort((a, b) => {

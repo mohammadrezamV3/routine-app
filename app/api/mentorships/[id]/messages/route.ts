@@ -12,10 +12,10 @@ import { publishToUsers } from "@/lib/realtime";
 type Ctx = { params: { id: string } };
 const PAGE_SIZE = 50;
 
-// گفت‌وگوی منتور با رمزگذاریِ سرتاسری (docs/mentor-e2ee.md): سرور فقط متنِ
-// رمزشده، IV، نسخه‌ی کلیدها و تعهدِ فرانکینگ را نگه می‌دارد و برمی‌گرداند.
+// گفت‌وگوی منتور با رمزگذاری سرتاسری (docs/mentor-e2ee.md): سرور فقط متن
+// رمزشده، IV، نسخه‌ی کلیدها و تعهد فرانکینگ را نگه می‌دارد و برمی‌گرداند.
 
-// GET /api/mentorships/:id/messages?before=<ISO> → ۵۰ پیامِ قبل از before (صعودی).
+// GET /api/mentorships/:id/messages?before=<ISO> → ۵۰ پیام قبل از before (صعودی).
 // رابطه‌ی ENDED فقط‌خواندنیه؛ PENDING/REJECTED/BLOCKED چتی ندارن.
 export async function GET(req: NextRequest, { params }: Ctx) {
   const g = await requireMentorsUser();
@@ -48,14 +48,14 @@ export async function GET(req: NextRequest, { params }: Ctx) {
   const hasMore = rows.length > PAGE_SIZE;
   const page = rows.slice(0, PAGE_SIZE).reverse();
 
-  // پیام‌های طرفِ مقابل با باز شدنِ گفت‌وگو خوانده‌شده حساب می‌شن
+  // پیام‌های طرف مقابل با باز شدن گفت‌وگو خوانده‌شده حساب می‌شن
   const marked = await prisma.mentorMessage.updateMany({ where: { mentorshipId: m.id, senderId: { not: me }, readAt: null }, data: { readAt: new Date() } });
-  // رسیدِ خوانده‌شدن: تیکِ دوتاییِ فرستنده همون لحظه عوض می‌شه
+  // رسید خوانده‌شدن: تیک دوتایی فرستنده همون لحظه عوض می‌شه
   if (marked.count > 0) {
     void publishToUsers([m.mentorId === me ? m.studentId : m.mentorId], { type: "mentor.message", data: { mentorshipId: m.id, read: true } });
   }
 
-  // پیامِ خوش‌آمد از تنظیماتِ منتور — جزوِ گفت‌وگوی رمزشده نیست و جدا برچسب می‌خورد
+  // پیام خوش‌آمد از تنظیمات منتور — جزو گفت‌وگوی رمزشده نیست و جدا برچسب می‌خورد
   let welcome: { body: string; at: Date } | null = null;
   if (!before && m.startedAt && !cleared) {
     const p = await prisma.mentorProfile.findUnique({ where: { userId: m.mentorId }, select: { welcomeMessage: true } });
@@ -75,7 +75,7 @@ export async function GET(req: NextRequest, { params }: Ctx) {
 }
 
 // POST /api/mentorships/:id/messages { clientId, ciphertext, iv, senderKeyVersion, recipientKeyVersion, commitment }
-// فقط رابطه‌ی ACTIVE. متنِ ساده (body) رد می‌شود.
+// فقط رابطه‌ی ACTIVE. متن ساده (body) رد می‌شود.
 export async function POST(req: Request, { params }: Ctx) {
   const g = await requireMentorsUser();
   if (!g.ok) return g.response;
@@ -84,7 +84,7 @@ export async function POST(req: Request, { params }: Ctx) {
   const m = await getMentorshipForUser(params.id, me);
   if (!m) return notFound();
   if (m.status !== "ACTIVE") return conflict("این رابطه فعال نیست؛ امکان ارسال پیام نداری");
-  if (await isMentorSuspended(m.mentorId)) return forbidden("فعالیتِ این مربی موقتا متوقف شده");
+  if (await isMentorSuspended(m.mentorId)) return forbidden("فعالیت این مربی موقتا متوقف شده");
 
   if (!(await checkRateLimit(`mentor-msg:${me}`, 30, 60 * 1000))) {
     return NextResponse.json({ error: "پیام‌ها خیلی پشت‌سرهم بود؛ چند لحظه صبر کن" }, { status: 429 });
@@ -103,8 +103,8 @@ export async function POST(req: Request, { params }: Ctx) {
   try {
     msg = await prisma.mentorMessage.create({ data: encryptedMessageData(m, me, input.data, new Date()), select: MESSAGE_SELECT });
   } catch (e) {
-    // clientIdِ تکراری در همین گفت‌وگو: ارسالِ دوباره‌ی *همان* پیام (شبکه قطع شده
-    // بود) بی‌اثر و موفق است؛ هر چیزِ دیگر (replay/دست‌کاری) رد می‌شود.
+    // clientId تکراری در همین گفت‌وگو: ارسال دوباره‌ی *همان* پیام (شبکه قطع شده
+    // بود) بی‌اثر و موفق است؛ هر چیز دیگر (replay/دست‌کاری) رد می‌شود.
     if (!isUniqueViolation(e)) throw e;
     const prev = await prisma.mentorMessage.findUnique({
       where: { mentorshipId_clientId: { mentorshipId: m.id, clientId: input.data.clientId } },

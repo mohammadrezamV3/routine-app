@@ -15,7 +15,7 @@ export function generateStaticParams() {
 
 export function generateMetadata({ params }: { params: { slug: string } }): Metadata {
   const post = getPost(params.slug);
-  // اسلاگِ ناموجود در ادامه به notFound می‌رسد؛ این‌جا فقط باید metadata
+  // اسلاگ ناموجود در ادامه به notFound می‌رسد؛ این‌جا فقط باید metadata
   // معتبر (و noindex) برگردد تا صفحه‌ی ۴۰۴ ایندکس نشود.
   if (!post) return { title: { absolute: "صفحه پیدا نشد" }, robots: { index: false, follow: false } };
   return pageMetadata({

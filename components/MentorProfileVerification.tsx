@@ -13,7 +13,7 @@ import { MENTOR_CATEGORY_META, VERIFICATION_LABELS, isMentorCategory } from "@/l
 import type { MentorDocumentMeta, MentorSelf, VerificationStatus } from "@/lib/mentorTypes";
 
 // همان محدودیت‌های lib/mentorUpload.ts (تصمیم نهایی با سرور و magic bytes است؛
-// این‌جا فقط پیش‌بررسی تا فایلِ آشکارا نامعتبر آپلود نشود).
+// این‌جا فقط پیش‌بررسی تا فایل آشکارا نامعتبر آپلود نشود).
 const MAX_BYTES = 5 * 1024 * 1024;
 const ALLOWED_MIME = ["image/jpeg", "image/png", "image/webp", "application/pdf"];
 const ALLOWED_EXT = /\.(jpe?g|png|webp|pdf)$/i;

@@ -11,7 +11,7 @@ const MAX_TEXT_LEN = 500;
 const MAX_OFFSET_BACK = -52;
 
 // PUT /api/analysis/weekly/reflection { offset, wentWell, improve, mood } —
-// upsert؛ متنِ ریفلکشن هیچ‌وقت به مدلِ AI فرستاده نمی‌شه (lib/weeklyAnalysis/ai.ts).
+// upsert؛ متن ریفلکشن هیچ‌وقت به مدل AI فرستاده نمی‌شه (lib/weeklyAnalysis/ai.ts).
 export async function PUT(req: NextRequest) {
   try {
     const guard = await requireModule(ModuleKey.AI_INSIGHT);
@@ -44,7 +44,7 @@ export async function PUT(req: NextRequest) {
     if (body?.mood !== undefined && body?.mood !== null) {
       const n = Number(body.mood);
       if (!Number.isInteger(n) || n < 1 || n > 5) {
-        return NextResponse.json({ error: "mood باید عددی بینِ 1 تا 5 باشد" }, { status: 400 });
+        return NextResponse.json({ error: "mood باید عددی بین 1 تا 5 باشد" }, { status: 400 });
       }
       mood = n;
     }

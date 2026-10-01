@@ -3,12 +3,12 @@ import { SITE_URL } from "./seo";
 /**
  * IndexNow — پروتکل رایگان ایندکس فوری (Bing/Yandex؛ Bing نتایجش را به
  * Copilot/ChatGPT search هم می‌دهد). با یک POST به api.indexnow.org،
- * لیست URLها را «همین الان عوض شده» اعلام می‌کنیم به‌جای منتظرِ کراولِ
- * دوره‌ایِ خودشان ماندن.
+ * لیست URLها را «همین الان عوض شده» اعلام می‌کنیم به‌جای منتظر کراول
+ * دوره‌ای خودشان ماندن.
  *
  * کلید باید هم در env (`INDEXNOW_KEY`) باشد هم در مسیر
  * `/indexnow-key.txt` قابل‌دسترسی — سرویس قبل از قبول‌کردن submit، خودش
- * این فایل را می‌خواند تا مطمئن شود دامنه واقعا مالِ همین کلید است.
+ * این فایل را می‌خواند تا مطمئن شود دامنه واقعا مال همین کلید است.
  */
 
 export function indexNowKey(): string | null {
@@ -39,6 +39,6 @@ export async function submitUrlsToIndexNow(urls: string[]): Promise<IndexNowResu
   });
 
   // ۲۰۰/۲۰۲ یعنی پذیرفته شد؛ IndexNow خودش گزارش «ایندکس شد یا نه» پس
-  // نمی‌دهد، فقط تاییدِ دریافت درخواست را می‌دهد.
+  // نمی‌دهد، فقط تایید دریافت درخواست را می‌دهد.
   return { ok: res.ok, status: res.status, submitted: res.ok ? urls.length : 0 };
 }

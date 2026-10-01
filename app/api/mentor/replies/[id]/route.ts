@@ -7,7 +7,7 @@ import { toReplyRow, validateReply } from "@/lib/mentorReplies";
 
 type Ctx = { params: { id: string } };
 
-// PATCH /api/mentor/replies/:id { title?, body? } — فقط پاسخِ خودِ منتور
+// PATCH /api/mentor/replies/:id { title?, body? } — فقط پاسخ خود منتور
 export async function PATCH(req: Request, { params }: Ctx) {
   const g = await requireMentorTools({ write: true });
   if (!g.ok) return g.response;

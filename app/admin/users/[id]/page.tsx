@@ -38,7 +38,7 @@ type Detail = {
   activeSessions: number;
 };
 
-// کپی کلاینتیِ MODULE_LABELS_FA (lib/modules.ts) — اون فایل از @prisma/client
+// کپی کلاینتی MODULE_LABELS_FA (lib/modules.ts) — اون فایل از @prisma/client
 // import داره و نباید وارد باندل کلاینت بشه. با enum ModuleKey هماهنگ بمونه.
 const MODULE_LABELS_FA: Record<string, string> = {
   ROUTINE: "روتین روزانه", SLEEP: "خواب", TASKS: "کارهای روزمره", EXERCISE: "برنامه تمرینی",
@@ -49,10 +49,10 @@ const ALL_MODULES = Object.keys(MODULE_LABELS_FA);
 
 type Tab = "overview" | "profile" | "access" | "admin" | "billing" | "chat" | "security" | "history";
 
-// ISOِ UTC → YYYY-MM-DDِ *محلی* برای <input type="date">. قبلا
-// iso.slice(0,10) بود که تاریخِ UTC رو برمی‌گردوند؛ چون ذخیره با
-// «۲۳:۵۹:۵۹ به وقتِ محلی» انجام می‌شه، توی منطقه‌های زمانیِ منفی (مثلا
-// آمریکا) تاریخِ نمایش‌داده‌شده یک روز جلوتر از تاریخِ انتخاب‌شده بود.
+// ISO UTC → YYYY-MM-DD *محلی* برای <input type="date">. قبلا
+// iso.slice(0,10) بود که تاریخ UTC رو برمی‌گردوند؛ چون ذخیره با
+// «۲۳:۵۹:۵۹ به وقت محلی» انجام می‌شه، توی منطقه‌های زمانی منفی (مثلا
+// آمریکا) تاریخ نمایش‌داده‌شده یک روز جلوتر از تاریخ انتخاب‌شده بود.
 function toLocalInput(iso: string | null) {
   if (!iso) return "";
   const d = new Date(iso);
@@ -61,7 +61,7 @@ function toLocalInput(iso: string | null) {
   return `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}`;
 }
 
-// پایانِ روزِ انتخاب‌شده به وقتِ محلیِ ادمین → ISOِ UTC
+// پایان روز انتخاب‌شده به وقت محلی ادمین → ISO UTC
 function fromLocalInput(v: string): string | null {
   if (!/^\d{4}-\d{2}-\d{2}$/.test(v)) return null;
   const d = new Date(`${v}T23:59:59`);
@@ -102,7 +102,7 @@ export default function AdminUserDetailPage() {
   useEffect(load, [load]);
 
   function goBack() {
-    // از لیست اومده باشه، back فیلتر/صفحه‌ی لیست رو نگه می‌داره؛ لینکِ مستقیم → لیست
+    // از لیست اومده باشه، back فیلتر/صفحه‌ی لیست رو نگه می‌داره؛ لینک مستقیم → لیست
     if (typeof window !== "undefined" && window.history.length > 1) router.back();
     else router.push("/admin/users");
   }
@@ -143,8 +143,8 @@ export default function AdminUserDetailPage() {
     }
   }
 
-  // کلیدِ هر تب ویرایشی از داده‌ی سرور — بعد از ذخیره/بارگذاریِ دوباره، فرم
-  // با مقدارِ واقعیِ سرور (مثلا دسترسی‌هایی که سرور نگه داشت) از نو ساخته می‌شه
+  // کلید هر تب ویرایشی از داده‌ی سرور — بعد از ذخیره/بارگذاری دوباره، فرم
+  // با مقدار واقعی سرور (مثلا دسترسی‌هایی که سرور نگه داشت) از نو ساخته می‌شه
   const profileKey = JSON.stringify([u.name, u.lastName, u.username, u.email, u.phone, u.bio]);
   const accessKey = JSON.stringify(u.moduleAccess.map((m) => [m.module, m.active, m.expiresAt]));
   const roleKey = JSON.stringify([u.isSuperAdmin, u.adminPermissions]);
@@ -415,7 +415,7 @@ function AdminRoleTab({ data, isSelf, onSaved }: { data: Detail; isSelf: boolean
   const [perms, setPerms] = useState<AdminPermission[]>(sanitizePermissions(u.adminPermissions));
   const [superAdmin, setSuperAdmin] = useState(u.isSuperAdmin);
   const [busy, setBusy] = useState(false);
-  // Owner فقط با Owner؛ حسابِ حذف‌شده نقش نمی‌گیره؛ ادمینِ محدود دسترسی‌های
+  // Owner فقط با Owner؛ حساب حذف‌شده نقش نمی‌گیره؛ ادمین محدود دسترسی‌های
   // خودش رو عوض نمی‌کنه (همه سمت سرور هم رد می‌شن — lib/adminUsers.ts)
   const lockReason = u.isSuperAdmin && !meSuper ? "نقش Owner فقط توسط Owner قابل تغییره."
     : u.deletedAt ? "این حساب حذف شده؛ اول بازگردانیش کن."

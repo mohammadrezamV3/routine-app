@@ -6,13 +6,13 @@ import { withLiveSync } from "@/lib/realtime";
 
 // PATCH /api/trade/checklists/[id]/items  { itemId, checked } | { resetAll: true }
 //
-// وضعیتِ «تیک‌زده» یک آیتم — جدا از PATCHِ اصلیِ چک‌لیست (که برای ویرایشِ
+// وضعیت «تیک‌زده» یک آیتم — جدا از PATCH اصلی چک‌لیست (که برای ویرایش
 // متن/ترتیب، همه‌ی آیتم‌ها را حذف و دوباره می‌سازد و این تیک‌ها را هم پاک
 // می‌کرد). این‌جا فقط همان یک ردیف را update می‌کند، پس تیک‌زدن هیچ‌وقت
 // چک‌لیست را دوباره نمی‌سازد و برعکس.
 //
-// resetAll برای شروعِ یک اجرای تازه (بعدِ ثبتِ معامله) است — چک‌لیستِ همان
-// روزِ قبل نباید از قبل تیک‌خورده به‌نظر برسد.
+// resetAll برای شروع یک اجرای تازه (بعد ثبت معامله) است — چک‌لیست همان
+// روز قبل نباید از قبل تیک‌خورده به‌نظر برسد.
 async function handlePATCH(req: NextRequest, { params }: { params: { id: string } }) {
   const guard = await requireModule(ModuleKey.TRADE);
   if (!guard.ok) return guard.response;
@@ -47,5 +47,5 @@ async function handlePATCH(req: NextRequest, { params }: { params: { id: string 
   return NextResponse.json({ ok: true });
 }
 
-// بعد از هر نوشتنِ موفق، بقیه‌ی دستگاه‌ها/تب‌های همین کاربر با WebSocket خبردار می‌شن (lib/realtime.ts)
+// بعد از هر نوشتن موفق، بقیه‌ی دستگاه‌ها/تب‌های همین کاربر با WebSocket خبردار می‌شن (lib/realtime.ts)
 export const PATCH = withLiveSync(["trade"], handlePATCH);

@@ -7,7 +7,7 @@ import { PUBLIC_USER_SELECT } from "@/lib/mentorServer";
 import { advanceWaitlist } from "@/lib/mentorWaitlistServer";
 
 // DELETE /api/mentor/waitlist/:entryId → منتور یک نفر را از صفش بیرون می‌برد.
-// where همیشه {id, mentorId: من} (ضد IDOR)؛ «وجود ندارد» و «مالِ تو نیست» هر دو ۴۰۴.
+// where همیشه {id, mentorId: من} (ضد IDOR)؛ «وجود ندارد» و «مال تو نیست» هر دو ۴۰۴.
 export async function DELETE(_req: Request, { params }: { params: { entryId: string } }) {
   const g = await requireMentorsUser();
   if (!g.ok) return g.response;
@@ -31,7 +31,7 @@ export async function DELETE(_req: Request, { params }: { params: { entryId: str
   await notifyUser(entry.userId, {
     type: "mentor.waitlist.removed",
     title: "از صف خارج شدی",
-    body: `${displayName(mentor)} فعلاً نمی‌تونه شاگرد جدید از صفش بپذیره.`,
+    body: `${displayName(mentor)} فعلا نمی‌تونه شاگرد جدید از صفش بپذیره.`,
     url: "/mentors",
   });
   if (entry.status === "OFFERED") await advanceWaitlist(me, now);

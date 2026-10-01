@@ -3,9 +3,9 @@ import { prisma } from "@/lib/prisma";
 import { requireMentorsUser, getActiveMentorshipAsMentor, notFound } from "@/lib/mentorGuard";
 import { liveLabelIds, readIntakeAnswers, readLabels, readStudentNotes } from "@/lib/mentorManageServer";
 
-// GET /api/mentor/students/:studentId/manage → داده‌ی خصوصیِ منتور برای مدیریتِ
-// یک شاگردِ فعال: برچسب‌ها، یادداشت‌ها، جواب‌های پذیرش و وضعیتِ توقف.
-// هیچ‌کدام از این‌ها هرگز به شاگرد برنمی‌گردد (جز جواب‌های خودش و وضعیتِ توقف
+// GET /api/mentor/students/:studentId/manage → داده‌ی خصوصی منتور برای مدیریت
+// یک شاگرد فعال: برچسب‌ها، یادداشت‌ها، جواب‌های پذیرش و وضعیت توقف.
+// هیچ‌کدام از این‌ها هرگز به شاگرد برنمی‌گردد (جز جواب‌های خودش و وضعیت توقف
 // که از /api/mentorships می‌بیند).
 export async function GET(_req: Request, { params }: { params: { studentId: string } }) {
   const g = await requireMentorsUser();

@@ -5,7 +5,7 @@ import { readJsonBody } from "@/lib/validate";
 import { requireMentorTools } from "@/lib/mentorToolsGuard";
 import { MAX_REPLIES_PER_MENTOR, toReplyRow, validateReply } from "@/lib/mentorReplies";
 
-// GET /api/mentor/replies → پاسخ‌های آماده‌ی خودِ منتور (قدیمی‌ترین اول، ترتیبِ ثابت برای انتخاب)
+// GET /api/mentor/replies → پاسخ‌های آماده‌ی خود منتور (قدیمی‌ترین اول، ترتیب ثابت برای انتخاب)
 export async function GET() {
   const g = await requireMentorTools();
   if (!g.ok) return g.response;

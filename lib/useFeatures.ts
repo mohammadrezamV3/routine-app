@@ -3,8 +3,8 @@
 import { useEffect, useState } from "react";
 import { FeatureKey } from "@/lib/featureFlags";
 
-// وضعیتِ قابلیت‌ها برای کاربرِ فعلی — یک fetch مشترک برای همه‌ی کامپوننت‌ها
-// (کش در سطحِ ماژول با TTL کوتاه). تا وقتی جواب نیومده null برمی‌گرده تا
+// وضعیت قابلیت‌ها برای کاربر فعلی — یک fetch مشترک برای همه‌ی کامپوننت‌ها
+// (کش در سطح ماژول با TTL کوتاه). تا وقتی جواب نیومده null برمی‌گرده تا
 // چیزی که ممکنه خاموش باشه چشمک نزنه.
 type Map = Record<FeatureKey, boolean>;
 let cached: { at: number; value: Map } | null = null;
@@ -26,7 +26,7 @@ function load(): Promise<Map | null> {
 export function invalidateFeatures() { cached = null; }
 
 // هوک‌های mountشده (منو، داشبورد) باید نتیجه‌ی تازه‌سازی رو ببینن — وگرنه بعد از
-// ورودِ کلاینتی (بدونِ ریلود) منو همون فلگ‌های حالتِ مهمان رو نگه می‌داشت.
+// ورود کلاینتی (بدون ریلود) منو همون فلگ‌های حالت مهمان رو نگه می‌داشت.
 const listeners = new Set<(m: Map) => void>();
 
 /** کش رو دور می‌ریزه، دوباره می‌گیره و به همه‌ی هوک‌های باز خبر می‌ده (بعد از ورود) */

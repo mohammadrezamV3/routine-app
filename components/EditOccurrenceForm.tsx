@@ -47,12 +47,12 @@ export function EditOccurrenceForm({
   ]);
   const [importance, setImportance] = useState<Importance>(occ.importance ?? "low");
   const [tag, setTag] = useState(occ.tag ?? "");
-  // آیتم‌های برنامه‌ی لیستی — از خودِ occurrence ِ ذخیره‌شده (ویرایش نباید پاکشون کنه)
+  // آیتم‌های برنامه‌ی لیستی — از خود occurrence  ذخیره‌شده (ویرایش نباید پاکشون کنه)
   const origItems = checklistOf(scheduleOpts.customOccurrences.find((c) => c.id === occ.id));
   const [isList, setIsList] = useState(origItems.length > 0);
   const [items, setItems] = useState<ChecklistItem[]>(origItems);
   const [status, setStatus] = useState<"idle" | "loading" | "success" | "error">("idle");
-  // پیامِ خطا داخلِ همین فرم، نه بنرِ بالای صفحه (درخواستِ صریحِ کاربر).
+  // پیام خطا داخل همین فرم، نه بنر بالای صفحه (درخواست صریح کاربر).
   const [formError, setFormError] = useState<string | null>(null);
   const [rowErrors, setRowErrors] = useState<Record<number, { start?: boolean; end?: boolean; days?: boolean; order?: boolean }>>({});
   const formRef = useRef<HTMLDivElement>(null);
@@ -109,7 +109,7 @@ export function EditOccurrenceForm({
       const endMin = timeStartMinutes(endFa);
 
       for (const jsDay of r.jsDays) {
-        // هیچ قفلی روی «این ساعت امروز گذشته» نیست — درخواستِ صریحِ کاربر.
+        // هیچ قفلی روی «این ساعت امروز گذشته» نیست — درخواست صریح کاربر.
         // occ.id excluded تا خود همون occurrence‌ای که داریم ویرایشش می‌کنیم
         // با خودش تداخل حساب نشه.
         let conflict = findScheduleConflict(jsDay, startMin, endMin, now, scheduleOpts, occ.id);
@@ -137,7 +137,7 @@ export function EditOccurrenceForm({
     setFormError(null);
     setStatus("loading");
 
-    // بدون لودینگِ مصنوعی — همین که واقعاً ذخیره شد باید همه‌جای اپ دیده بشه.
+    // بدون لودینگ مصنوعی — همین که واقعا ذخیره شد باید همه‌جای اپ دیده بشه.
     let nextRemoved = scheduleOpts.removedOccurrences;
     let nextCustom = scheduleOpts.customOccurrences;
     if (occ.custom) {
@@ -148,8 +148,8 @@ export function EditOccurrenceForm({
     }
 
     const trimmedTag = tag.trim();
-    // دوره/تک‌روزه بودنِ برنامه با ویرایش از دست نمی‌رود: قبلا ویرایش
-    // همیشه startDate=امروز و بدونِ endDate می‌ساخت، یعنی یک برنامه‌ی «فقط
+    // دوره/تک‌روزه بودن برنامه با ویرایش از دست نمی‌رود: قبلا ویرایش
+    // همیشه startDate=امروز و بدون endDate می‌ساخت، یعنی یک برنامه‌ی «فقط
     // همین پنجشنبه» بعد از ویرایش هر هفته تکرار می‌شد.
     const orig = scheduleOpts.customOccurrences.find((c) => c.id === occ.id);
     const today = isoLocal(now);
@@ -176,7 +176,7 @@ export function EditOccurrenceForm({
       ...(trimmedTag ? { tag: trimmedTag } : {}),
       ...(cleanItems.length ? { items: cleanItems } : {}),
       // آینه‌ی برنامه‌ی منتور باید بعد از ویرایش هم آینه بمونه — وگرنه به «برنامه‌ی
-      // خودِ شاگرد» تبدیل می‌شه و ممکنه برای منتورِ دیگه‌ای قابل‌اشتراک بشه
+      // خود شاگرد» تبدیل می‌شه و ممکنه برای منتور دیگه‌ای قابل‌اشتراک بشه
       ...(orig?.mentorProgramId ? { mentorProgramId: orig.mentorProgramId } : {}),
       ...(orig?.mentorProgramId && orig.mentorItemId ? { mentorItemId: orig.mentorItemId } : {}),
     }));

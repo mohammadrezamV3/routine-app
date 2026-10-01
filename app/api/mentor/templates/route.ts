@@ -6,7 +6,7 @@ import { isoDate } from "@/lib/mentorServer";
 import { requireMentorTools, validId } from "@/lib/mentorToolsGuard";
 import { MAX_TEMPLATES_PER_MENTOR, templateDataFromBody, toTemplateRow, validateTemplateName } from "@/lib/mentorTemplates";
 
-// GET /api/mentor/templates → قالب‌های برنامه‌ی خودِ منتور (بدونِ آیتم‌ها)
+// GET /api/mentor/templates → قالب‌های برنامه‌ی خود منتور (بدون آیتم‌ها)
 export async function GET() {
   const g = await requireMentorTools();
   if (!g.ok) return g.response;
@@ -19,9 +19,9 @@ export async function GET() {
 }
 
 // POST /api/mentor/templates
-//   { name, programId }            → کپیِ محتوای یکی از برنامه‌های خودِ منتور (هر وضعیتی)
-//   { name, program: {type,…} }    → از محتوای ویرایشگر (همان بدنه‌ی POSTِ برنامه)
-// تاریخ‌ها ذخیره نمی‌شوند؛ فقط طولِ بازه (durationDays).
+//   { name, programId }            → کپی محتوای یکی از برنامه‌های خود منتور (هر وضعیتی)
+//   { name, program: {type,…} }    → از محتوای ویرایشگر (همان بدنه‌ی POST برنامه)
+// تاریخ‌ها ذخیره نمی‌شوند؛ فقط طول بازه (durationDays).
 export async function POST(req: Request) {
   const g = await requireMentorTools({ write: true });
   if (!g.ok) return g.response;

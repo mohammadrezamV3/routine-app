@@ -13,7 +13,7 @@ const ALLOWED_MEDIA_TYPES = new Set(["image/jpeg", "image/png", "image/webp"]);
 // جلوی سوءاستفاده/هزینه‌ی غیرمنتظره با پی‌لودهای غول‌پیکر رو می‌گیره.
 const MAX_BASE64_LEN = 8 * 1024 * 1024;
 
-// AI ممکنه تا AI_TOTAL_BUDGET_MS طول بکشه — بدون این export، هاستِ
+// AI ممکنه تا AI_TOTAL_BUDGET_MS طول بکشه — بدون این export، هاست
 // سرورلس ممکنه زودتر از اون قطعش کنه.
 export const maxDuration = 60;
 
@@ -48,7 +48,7 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ error: "سقف اسکن غذا در این ساعت پر شده — بعدا امتحان کن" }, { status: 429 });
   }
 
-  // سهمیه‌ی AI (سقفِ کلِ دوره‌ی آزمایشی برای حسابِ تازه — lib/trial.ts)
+  // سهمیه‌ی AI (سقف کل دوره‌ی آزمایشی برای حساب تازه — lib/trial.ts)
   const quota = await checkAndConsumeAiQuota(userId, guard.isSuperAdmin, AiFeatureKey.FOOD_SCAN);
   if (!quota.ok) return NextResponse.json({ error: quota.error, code: quota.code }, { status: 429 });
 

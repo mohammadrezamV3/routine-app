@@ -1,7 +1,7 @@
 import { createHash } from "crypto";
 
-// اعتبارسنجیِ فایلِ مدارکِ منتور (هویت/مدرک) — سمت سرور و از روی *محتوا*.
-// نوعِ اعلام‌شده توسطِ کلاینت (Content-Type/پسوند) قابل‌اعتماد نیست؛ فقط
+// اعتبارسنجی فایل مدارک منتور (هویت/مدرک) — سمت سرور و از روی *محتوا*.
+// نوع اعلام‌شده توسط کلاینت (Content-Type/پسوند) قابل‌اعتماد نیست؛ فقط
 // magic bytes تصمیم می‌گیره. هر چیزی غیر از JPEG/PNG/WebP/PDF (مثلا اجرایی،
 // HTML، SVG که می‌تونه اسکریپت داشته باشه) رد می‌شه.
 
@@ -18,7 +18,7 @@ export function sniffDocumentMime(buf: Uint8Array): DocumentMime | null {
   return null;
 }
 
-/** اسمِ فایل فقط برای نمایش — بدونِ مسیر، کاراکترِ کنترلی یا طولِ بی‌حد */
+/** اسم فایل فقط برای نمایش — بدون مسیر، کاراکتر کنترلی یا طول بی‌حد */
 export function sanitizeFileName(name: unknown, mime: DocumentMime): string {
   const ext = mime === "application/pdf" ? "pdf" : mime.split("/")[1].replace("jpeg", "jpg");
   const base = typeof name === "string" ? name.split(/[\\/]/).pop() || "" : "";

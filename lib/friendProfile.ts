@@ -1,6 +1,6 @@
-// پروفایلِ کاملِ یک دوست — پاپ‌آپی که با کلیک روی اسمِ دوست باز می‌شود.
-// این‌جا زندگی می‌کند (نه داخل route.ts) تا هم روتِ پروفایل هم بوت‌استرپ/
-// جاهای دیگر بتوانند صدایش بزنند بدون تکرارِ منطق.
+// پروفایل کامل یک دوست — پاپ‌آپی که با کلیک روی اسم دوست باز می‌شود.
+// این‌جا زندگی می‌کند (نه داخل route.ts) تا هم روت پروفایل هم بوت‌استرپ/
+// جاهای دیگر بتوانند صدایش بزنند بدون تکرار منطق.
 import { prisma } from "@/lib/prisma";
 import { countRowProgress } from "@/lib/roadmapPlan";
 import { routineStatsForUsers } from "@/lib/friendStats";
@@ -13,7 +13,7 @@ export type FriendProfile = {
   golden: boolean;
   bannerUrl: string | null;
   bio: string | null;
-  /** فقط وقتی خودِ کاربر از تنظیمات › حریم خصوصی «sharePhone» را روشن کرده — وگرنه همیشه null. */
+  /** فقط وقتی خود کاربر از تنظیمات › حریم خصوصی «sharePhone» را روشن کرده — وگرنه همیشه null. */
   phone: string | null;
   streak: number;
   bestStreak: number;
@@ -25,9 +25,9 @@ export type FriendProfile = {
 };
 
 /**
- * تعدادِ مسیرهایی که کاربر تمام کرده — یعنی همه‌ی مرحله‌هایش در progress
+ * تعداد مسیرهایی که کاربر تمام کرده — یعنی همه‌ی مرحله‌هایش در progress
  * علامت خورده. steps یک آرایه‌ی JSON است (نه یک عدد ذخیره‌شده)، پس این‌جا
- * باید واقعاً هر مسیر را بخوانیم و بشماریم، نه یک کوئریِ COUNT ساده.
+ * باید واقعا هر مسیر را بخوانیم و بشماریم، نه یک کوئری COUNT ساده.
  */
 async function countCompletedRoadmaps(userId: string): Promise<number> {
   const roadmaps = await prisma.roadmap.findMany({
@@ -51,8 +51,8 @@ export async function getFriendProfile(viewerId: string, targetUserId: string): 
     prisma.friendStar.count({ where: { receiverId: targetUserId } }),
     prisma.friendStar.findUnique({ where: { giverId_receiverId: { giverId: viewerId, receiverId: targetUserId } } }),
     countCompletedRoadmaps(targetUserId),
-    // «برنامه‌ی تمام‌شده» — برنامه‌ی تمرینیِ غیرفعال یعنی کاربر از آن گذشته
-    // (جایگزینش کرده)؛ فیلد صریحِ completed روی ExercisePlan وجود ندارد.
+    // «برنامه‌ی تمام‌شده» — برنامه‌ی تمرینی غیرفعال یعنی کاربر از آن گذشته
+    // (جایگزینش کرده)؛ فیلد صریح completed روی ExercisePlan وجود ندارد.
     prisma.exercisePlan.count({ where: { userId: targetUserId, isActive: false } }),
     prisma.subscription.findFirst({
       where: { userId: targetUserId, status: "ACTIVE", currentPeriodEnd: { gte: new Date() } },
@@ -66,8 +66,8 @@ export async function getFriendProfile(viewerId: string, targetUserId: string): 
 
   const liveStreak = liveStats.get(targetUserId)?.streak ?? 0;
   const bestStreak = Math.max(user.bestStreak, liveStreak);
-  // آپدیتِ lazy — فقط وقتی رکورد جدیدی زده شده. fire-and-forget: خواندنِ
-  // پروفایل نباید منتظرِ نوشتن بماند.
+  // آپدیت lazy — فقط وقتی رکورد جدیدی زده شده. fire-and-forget: خواندن
+  // پروفایل نباید منتظر نوشتن بماند.
   if (bestStreak > user.bestStreak) {
     prisma.user.update({ where: { id: targetUserId }, data: { bestStreak } }).catch(() => {});
   }

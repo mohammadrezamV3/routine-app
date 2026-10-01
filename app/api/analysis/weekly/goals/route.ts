@@ -15,8 +15,8 @@ function isValidDomain(v: unknown): v is AnalysisDomain {
   return typeof v === "string" && (ANALYSIS_DOMAINS as string[]).includes(v);
 }
 
-// POST /api/analysis/weekly/goals { domain, title, target } — همیشه برایِ
-// هفته‌ی *بعدِ* هفته‌ی جاریِ واقعی ساخته می‌شه (نه بر اساسِ offsetِ ورودی —
+// POST /api/analysis/weekly/goals { domain, title, target } — همیشه برای
+// هفته‌ی *بعد* هفته‌ی جاری واقعی ساخته می‌شه (نه بر اساس offset ورودی —
 // اهداف فقط رو به جلو معنا دارن).
 export async function POST(req: NextRequest) {
   try {
@@ -33,7 +33,7 @@ export async function POST(req: NextRequest) {
 
     const titleRaw = typeof body?.title === "string" ? body.title.trim() : "";
     if (!titleRaw) {
-      return NextResponse.json({ error: "عنوانِ هدف الزامی است" }, { status: 400 });
+      return NextResponse.json({ error: "عنوان هدف الزامی است" }, { status: 400 });
     }
     const title = clampText(titleRaw, MAX_TITLE_LEN);
 
@@ -49,7 +49,7 @@ export async function POST(req: NextRequest) {
     if (body?.target !== undefined && body?.target !== null) {
       const n = Number(body.target);
       if (!Number.isInteger(n) || n < 0 || n > 100) {
-        return NextResponse.json({ error: "target باید عددی بینِ 0 تا 100 باشد" }, { status: 400 });
+        return NextResponse.json({ error: "target باید عددی بین 0 تا 100 باشد" }, { status: 400 });
       }
       target = n;
     }
@@ -85,7 +85,7 @@ export async function POST(req: NextRequest) {
 }
 
 // DELETE /api/analysis/weekly/goals?id=... — where:{id,userId} تا کاربری
-// نتونه هدفِ کاربرِ دیگه رو با حدس‌زدنِ id پاک کنه (IDOR).
+// نتونه هدف کاربر دیگه رو با حدس‌زدن id پاک کنه (IDOR).
 export async function DELETE(req: NextRequest) {
   try {
     const guard = await requireModule(ModuleKey.AI_INSIGHT);

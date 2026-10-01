@@ -6,9 +6,9 @@ import { formatDateTime, formatNumber } from "@/lib/adminFormat";
 import { MENTOR_CATEGORY_META, isMentorCategory } from "@/lib/mentorCategories";
 import type { MeritBreakdown, MeritComponentKey, IneligibleReason } from "@/lib/mentorRanking";
 
-// بخشِ «رتبه‌بندی» در جزئیاتِ منتورِ پنلِ ادمین — توضیحِ عددیِ امتیازِ شایستگی
+// بخش «رتبه‌بندی» در جزئیات منتور پنل ادمین — توضیح عددی امتیاز شایستگی
 // (lib/mentorRanking.ts). هر ستون یک دامنه (کلی + هر حوزه‌ی منتور). مستقل از بقیه‌ی
-// صفحه: دادهٔ خودش رو از /api/admin/mentors/:id/ranking می‌گیره.
+// صفحه: داده خودش رو از /api/admin/mentors/:id/ranking می‌گیره.
 
 type Row = {
   scope: string;

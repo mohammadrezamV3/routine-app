@@ -141,7 +141,7 @@ export type WeeklyAnalysis = {
 // ---- API ----
 // GET    /api/analysis/weekly?offset=0            → { analysis: WeeklyAnalysis }   (بدون فراخوانی AI، سریع)
 // POST   /api/analysis/weekly/ai   { offset }      → { ai: AiCoach }               (ساخت/بازسازی مربی AI، rate-limited)
-// POST   /api/analysis/weekly/goals { domain, title, target } → { goal }         (برای هفته‌ی بعدِ هفته‌ی جاری؛ حداکثر ۳)
+// POST   /api/analysis/weekly/goals { domain, title, target } → { goal }         (برای هفته‌ی بعد هفته‌ی جاری؛ حداکثر ۳)
 // DELETE /api/analysis/weekly/goals?id=            → { ok }
 // PUT    /api/analysis/weekly/reflection { offset, wentWell, improve, mood } → { reflection }
 // خطاها همیشه JSON: { error: string } با status مناسب. گیت: requireModule("AI_INSIGHT").

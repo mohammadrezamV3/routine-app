@@ -13,7 +13,7 @@ const VALID_LEVELS: ExerciseLevel[] = ["beginner", "intermediate", "advanced"];
 const MAX_DESCRIPTION_LEN = 500;
 const MAX_GOAL_LEN = 200;
 
-// AI ممکنه تا AI_TOTAL_BUDGET_MS طول بکشه — بدون این export، هاستِ
+// AI ممکنه تا AI_TOTAL_BUDGET_MS طول بکشه — بدون این export، هاست
 // سرورلس ممکنه زودتر از اون قطعش کنه.
 export const maxDuration = 60;
 
@@ -128,8 +128,8 @@ async function handlePOST(req: NextRequest) {
     // نه اینکه کل onboarding رو خراب کنیم. ولی خطای واقعی رو لاگ می‌کنیم چون
     // قبلا اینجا کاملا بی‌صدا قورت داده می‌شد — روی سرور واقعی هیچ‌جوره
     // نمی‌شد فهمید مشکل env نتنظیم‌شده‌ست یا خطای شبکه یا چیز دیگه.
-    // هدف دیگه یکی از چهار گزینه‌ی ثابت نیست (متنِ آزاد است)، پس برای
-    // انتخابِ قالبِ ایستا باید حدس زده بشه — guessFallbackGoal.
+    // هدف دیگه یکی از چهار گزینه‌ی ثابت نیست (متن آزاد است)، پس برای
+    // انتخاب قالب ایستا باید حدس زده بشه — guessFallbackGoal.
     console.error("[exercise/plan] AI generation failed, falling back to static template:", err);
     planData = getExercisePlan(guessFallbackGoal(cleanGoal), level, !!hasPhysicalLimitation, uniqueDays);
   }
@@ -158,5 +158,5 @@ async function handlePOST(req: NextRequest) {
   return NextResponse.json({ ok: true, feasible: true, plan, generatedByAi });
 }
 
-// بعد از هر نوشتنِ موفق، بقیه‌ی دستگاه‌ها/تب‌های همین کاربر با WebSocket خبردار می‌شن (lib/realtime.ts)
+// بعد از هر نوشتن موفق، بقیه‌ی دستگاه‌ها/تب‌های همین کاربر با WebSocket خبردار می‌شن (lib/realtime.ts)
 export const POST = withLiveSync(["exercise"], handlePOST);

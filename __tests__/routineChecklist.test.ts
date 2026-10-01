@@ -4,11 +4,11 @@ import { toggleTask, isOccDone, checklistProgress, checklistOf, itemKey } from "
 const items = [{ id: "a", name: "نان" }, { id: "b", name: "شیر" }, { id: "c", name: "میوه" }];
 
 describe("routineChecklist", () => {
-  it("برنامه‌ی عادی همون تاگلِ قبلیه", () => {
+  it("برنامه‌ی عادی همون تاگل قبلیه", () => {
     expect(toggleTask({}, "o1", [])).toEqual({ o1: true });
     expect(toggleTask({ o1: true }, "o1", [])).toEqual({ o1: false });
   });
-  it("تیکِ آیتم‌ها یکی‌یکی؛ برنامه فقط وقتی همه تیک خوردن کامله", () => {
+  it("تیک آیتم‌ها یکی‌یکی؛ برنامه فقط وقتی همه تیک خوردن کامله", () => {
     let t = toggleTask({}, "o", items, "a");
     expect(t[itemKey("o", "a")]).toBe(true);
     expect(t.o).toBe(false);
@@ -19,7 +19,7 @@ describe("routineChecklist", () => {
     t = toggleTask(t, "o", items, "b");
     expect(t.o).toBe(false);
   });
-  it("زدنِ عنوان: ناقص → همه تیک؛ کامل → همه برداشته", () => {
+  it("زدن عنوان: ناقص → همه تیک؛ کامل → همه برداشته", () => {
     let t = toggleTask({ [itemKey("o", "a")]: true }, "o", items);
     expect(isOccDone(t, "o", items)).toBe(true);
     expect(t.o).toBe(true);
@@ -27,7 +27,7 @@ describe("routineChecklist", () => {
     expect(checklistProgress(t, "o", items).done).toBe(0);
     expect(t.o).toBe(false);
   });
-  it("آیتمِ ناشناخته نادیده گرفته می‌شه؛ آیتم‌های نامعتبر فیلتر می‌شن", () => {
+  it("آیتم ناشناخته نادیده گرفته می‌شه؛ آیتم‌های نامعتبر فیلتر می‌شن", () => {
     expect(toggleTask({}, "o", items, "zz")).toEqual({});
     expect(checklistOf({ items: [{ id: "x", name: " " }, { id: 3 }, { id: "y", name: "ok" }] })).toEqual([{ id: "y", name: "ok" }]);
     expect(checklistOf({})).toEqual([]);

@@ -4,7 +4,7 @@ import { authOptions } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
 import { checkRateLimit } from "@/lib/rateLimit";
 
-/** IANA timezone معتبر یا null — ورودیِ کلاینته، پس هم طول هم خودِ Intl چکش می‌کنن */
+/** IANA timezone معتبر یا null — ورودی کلاینته، پس هم طول هم خود Intl چکش می‌کنن */
 function validTimezone(tz: unknown): string | null {
   if (typeof tz !== "string" || !tz || tz.length > 64 || !/^[A-Za-z0-9_+\-/]+$/.test(tz)) return null;
   try {
@@ -40,16 +40,16 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ error: "اطلاعات سابسکریپشن نامعتبر است" }, { status: 400 });
   }
 
-  // زمان‌بندِ سرور یادآوری‌ها رو به وقتِ User.timezone حساب می‌کنه؛ همون
-  // ساعتی که کاربر برنامه‌ش رو باهاش می‌بینه (ساعتِ دستگاهش) باید همین باشه،
-  // وگرنه برای کاربرِ خارج از تهران یادآوری ساعت‌ها جابه‌جا می‌رسید.
+  // زمان‌بند سرور یادآوری‌ها رو به وقت User.timezone حساب می‌کنه؛ همون
+  // ساعتی که کاربر برنامه‌ش رو باهاش می‌بینه (ساعت دستگاهش) باید همین باشه،
+  // وگرنه برای کاربر خارج از تهران یادآوری ساعت‌ها جابه‌جا می‌رسید.
   const timezone = validTimezone(body?.timezone);
   if (timezone) {
     await prisma.user.updateMany({ where: { id: userId, NOT: { timezone } }, data: { timezone } }).catch(() => {});
   }
 
-  // سرویس‌ورکر روی pushsubscriptionchange endpointِ قبلی رو هم می‌فرسته —
-  // فقط اگه مالِ همین کاربر باشه پاک می‌شه (IDOR نه).
+  // سرویس‌ورکر روی pushsubscriptionchange endpoint قبلی رو هم می‌فرسته —
+  // فقط اگه مال همین کاربر باشه پاک می‌شه (IDOR نه).
   const previousEndpoint = body?.previousEndpoint;
   if (typeof previousEndpoint === "string" && previousEndpoint !== endpoint) {
     await prisma.pushSubscription.deleteMany({ where: { endpoint: previousEndpoint, userId } }).catch(() => {});

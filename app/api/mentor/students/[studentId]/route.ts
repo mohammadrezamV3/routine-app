@@ -16,14 +16,14 @@ import {
   todayIsoForUser,
 } from "@/lib/mentorServer";
 
-// سقفِ بازه ۳۱ روزه (from تا to شاملِ هر دو سر) — نمای منتور گزارشِ کوتاه‌مدته، نه آرشیوِ کامل
+// سقف بازه ۳۱ روزه (from تا to شامل هر دو سر) — نمای منتور گزارش کوتاه‌مدته، نه آرشیو کامل
 const MAX_RANGE_DAYS = 30;
 const FEEDBACK_LIMIT = 10;
 
 /**
- * خلاصه‌ی بدنسازیِ شاگرد — فقط اگه شاگرد module:EXERCISE رو برای *همین* منتور
- * باز کرده باشه. روزهای باشگاه تابعِ showSchedule و اجراها تابعِ showProgressـن؛
- * محتوای خودِ برنامه‌ی تمرینی (planData) هیچ‌وقت برنمی‌گرده.
+ * خلاصه‌ی بدنسازی شاگرد — فقط اگه شاگرد module:EXERCISE رو برای *همین* منتور
+ * باز کرده باشه. روزهای باشگاه تابع showSchedule و اجراها تابع showProgressـن؛
+ * محتوای خود برنامه‌ی تمرینی (planData) هیچ‌وقت برنمی‌گرده.
  */
 async function exerciseSummary(studentId: string, p: PrivacySettings, dates: string[]) {
   const plan = await prisma.exercisePlan.findFirst({
@@ -64,8 +64,8 @@ async function exerciseSummary(studentId: string, p: PrivacySettings, dates: str
 }
 
 /**
- * خلاصه‌ی کالریِ شاگرد — هدفِ روزانه و (با showProgress) جمعِ کالریِ هر روز.
- * اسمِ غذاها/وعده‌ها هرگز برنمی‌گرده؛ فقط عدد.
+ * خلاصه‌ی کالری شاگرد — هدف روزانه و (با showProgress) جمع کالری هر روز.
+ * اسم غذاها/وعده‌ها هرگز برنمی‌گرده؛ فقط عدد.
  */
 async function calorieSummary(studentId: string, p: PrivacySettings, dates: string[]) {
   const target = await prisma.calorieTarget.findFirst({
@@ -84,7 +84,7 @@ async function calorieSummary(studentId: string, p: PrivacySettings, dates: stri
     const days = rows
       .map((r) => ({ date: isoDate(r.date), kcal: Math.round(r._sum.customCalories ?? 0) }))
       .sort((a, b) => a.date.localeCompare(b.date));
-    // همون تعریفِ «روزِ موفق» در بخشِ دوستان: ثبت‌شده و نه بیشتر از هدف
+    // همون تعریف «روز موفق» در بخش دوستان: ثبت‌شده و نه بیشتر از هدف
     const successDays = target ? days.filter((d) => d.kcal > 0 && d.kcal <= target.dailyTargetKcal).length : 0;
     progress = { successDays, days };
   }
@@ -98,9 +98,9 @@ async function calorieSummary(studentId: string, p: PrivacySettings, dates: stri
   };
 }
 
-// GET /api/mentor/students/:studentId?from=&to= → نمای منتور از یک شاگردِ فعال.
-// هر داده‌ای از شاگرد فقط از خروجیِ lib/mentorPrivacy.ts (با تنظیماتِ *همین*
-// رابطه) یا برنامه‌هایی که خودِ همین منتور ساخته. رابطه‌ی غیرِ ACTIVE → ۴۰۴.
+// GET /api/mentor/students/:studentId?from=&to= → نمای منتور از یک شاگرد فعال.
+// هر داده‌ای از شاگرد فقط از خروجی lib/mentorPrivacy.ts (با تنظیمات *همین*
+// رابطه) یا برنامه‌هایی که خود همین منتور ساخته. رابطه‌ی غیر ACTIVE → ۴۰۴.
 export async function GET(req: NextRequest, { params }: { params: { studentId: string } }) {
   const g = await requireMentorsUser();
   if (!g.ok) return g.response;

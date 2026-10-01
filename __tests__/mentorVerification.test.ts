@@ -34,7 +34,7 @@ import {
   htmlBytes,
 } from "./helpers/mentorTestUtils";
 
-// این فایل روی مدرکِ بدنسازی تمرکز داره — منتورِ پیش‌فرضِ fixture دو حوزه داره
+// این فایل روی مدرک بدنسازی تمرکز داره — منتور پیش‌فرض fixture دو حوزه داره
 const FITNESS_ONLY = { headline: "مربی", bio: "بیو", categories: ["FITNESS"], published: true };
 
 afterAll(async () => {
@@ -56,8 +56,8 @@ async function makeAdmin(perms: string[] = ["mentors"]) {
   return makeUser({ adminPermissions: perms });
 }
 
-describe("آپلودِ مدرک", () => {
-  it("ناشناس ۴۰۱؛ بدونِ پروفایلِ منتوری ۴۰۳", async () => {
+describe("آپلود مدرک", () => {
+  it("ناشناس ۴۰۱؛ بدون پروفایل منتوری ۴۰۳", async () => {
     expect((await upload(null, fileForm(pngBytes(), "id.png", "IDENTITY"))).status).toBe(401);
     const u = await makeUser();
     expect((await upload(u, fileForm(pngBytes(), "id.png", "IDENTITY"))).status).toBe(403);
@@ -90,7 +90,7 @@ describe("آپلودِ مدرک", () => {
     expect(JSON.stringify(me.profile.documents)).not.toContain("\"data\"");
   });
 
-  it("HTML یا اجرایی (MZ) با اسمِ .png → ۴۱۵ و چیزی ذخیره نمی‌شود", async () => {
+  it("HTML یا اجرایی (MZ) با اسم .png → ۴۱۵ و چیزی ذخیره نمی‌شود", async () => {
     const m = await makeMentor({}, FITNESS_ONLY, { identity: false });
     expect((await upload(m, fileForm(htmlBytes(), "x.png", "IDENTITY", undefined, "image/png"))).status).toBe(415);
     expect((await upload(m, fileForm(exeBytes(), "x.png", "IDENTITY", undefined, "image/png"))).status).toBe(415);
@@ -99,13 +99,13 @@ describe("آپلودِ مدرک", () => {
     expect(prof.identityStatus).toBe("NOT_PROVIDED");
   });
 
-  it("فایلِ بزرگ‌تر از ۵MB در فرم → ۴۱۳", async () => {
+  it("فایل بزرگ‌تر از ۵MB در فرم → ۴۱۳", async () => {
     const m = await makeMentor({}, FITNESS_ONLY, { identity: false });
     const big = pngBytes(5 * 1024 * 1024 + 1);
     expect((await upload(m, fileForm(big, "big.png", "IDENTITY"))).status).toBe(413);
   });
 
-  it("بدنه‌ی استریم‌شده‌ی بزرگ بدونِ content-length → ۴۱۳ (سقف حینِ خواندن)", async () => {
+  it("بدنه‌ی استریم‌شده‌ی بزرگ بدون content-length → ۴۱۳ (سقف حین خواندن)", async () => {
     const m = await makeMentor({}, FITNESS_ONLY, { identity: false });
     as(m);
     const chunk = new Uint8Array(1024 * 1024);
@@ -126,11 +126,11 @@ describe("آپلودِ مدرک", () => {
     expect(r.headers.get("content-length")).toBeNull();
     const res = await uploadDoc(r);
     expect(res.status).toBe(413);
-    // خواندن قبل از تمام‌شدنِ استریم قطع شد
+    // خواندن قبل از تمام‌شدن استریم قطع شد
     expect(sent).toBeLessThan(8);
   });
 
-  it("content-lengthِ اعلام‌شده‌ی بزرگ → ۴۱۳ بدونِ خواندن", async () => {
+  it("content-length اعلام‌شده‌ی بزرگ → ۴۱۳ بدون خواندن", async () => {
     const m = await makeMentor({}, FITNESS_ONLY, { identity: false });
     as(m);
     const r = new NextRequest("http://localhost/api/mentors/me/documents", {
@@ -141,7 +141,7 @@ describe("آپلودِ مدرک", () => {
     expect((await uploadDoc(r)).status).toBe(413);
   });
 
-  it("مدرکِ دسته‌ای که در پروفایل نیست → ۴۰۰؛ kind نامعتبر ۴۰۰؛ بدونِ فایل ۴۰۰", async () => {
+  it("مدرک دسته‌ای که در پروفایل نیست → ۴۰۰؛ kind نامعتبر ۴۰۰؛ بدون فایل ۴۰۰", async () => {
     const m = await makeMentor({}, FITNESS_ONLY, { identity: false }); // فقط FITNESS
     expect((await upload(m, fileForm(pngBytes(), "c.png", "CERTIFICATE", "NUTRITION"))).status).toBe(400);
     expect((await upload(m, fileForm(pngBytes(), "c.png", "CERTIFICATE", "HACKING"))).status).toBe(400);
@@ -152,8 +152,8 @@ describe("آپلودِ مدرک", () => {
   });
 });
 
-describe("بررسیِ ادمین", () => {
-  it("تایید → VERIFIED + event + اعلان + نشانِ تایید روی کارت؛ مدرک هم", async () => {
+describe("بررسی ادمین", () => {
+  it("تایید → VERIFIED + event + اعلان + نشان تایید روی کارت؛ مدرک هم", async () => {
     const m = await makeMentor({}, FITNESS_ONLY, { identity: false });
     const admin = await makeAdmin();
     await upload(m, fileForm(jpegBytes(), "id.jpg", "IDENTITY"));
@@ -162,7 +162,7 @@ describe("بررسیِ ادمین", () => {
 
     const viewer = await makeUser();
     as(viewer);
-    // احرازِ هویت اجباری است: پیش از تایید، پروفایلِ عمومی برای غریبه وجود ندارد
+    // احراز هویت اجباری است: پیش از تایید، پروفایل عمومی برای غریبه وجود ندارد
     expect((await mentorPage(req("GET", "/x"), { params: { mentorId: m } })).status).toBe(404);
     let card: any;
 
@@ -170,7 +170,7 @@ describe("بررسیِ ادمین", () => {
     expect(r.status).toBe(200);
     expect(await j(r)).toMatchObject({ ok: true, fromStatus: "PENDING", status: "VERIFIED" });
     expect((await adminVerify(admin, prof.id, { kind: "CERTIFICATE", category: "FITNESS", status: "VERIFIED" })).status).toBe(200);
-    // تکرارِ همان وضعیت → ۴۰۰
+    // تکرار همان وضعیت → ۴۰۰
     expect((await adminVerify(admin, prof.id, { kind: "IDENTITY", status: "VERIFIED" })).status).toBe(400);
 
     expect((await profileOf(m)).identityStatus).toBe("VERIFIED");
@@ -184,17 +184,17 @@ describe("بررسیِ ادمین", () => {
     expect(card.identityVerified).toBe(true);
     expect(card.certifications).toEqual([{ category: "FITNESS", verified: true }]);
 
-    // مدرکِ تاییدشده قابلِ حذف نیست
+    // مدرک تاییدشده قابل حذف نیست
     const docId = (await prisma.mentorDocument.findFirst({ where: { profileId: prof.id, kind: "IDENTITY" } }))!.id;
     as(m);
     expect((await deleteDoc(req("DELETE", "/x"), { params: { docId } })).status).toBe(409);
 
-    // ارسالِ مدرکِ تازه بعد از VERIFIED → دوباره PENDING
+    // ارسال مدرک تازه بعد از VERIFIED → دوباره PENDING
     await upload(m, fileForm(pngBytes(), "id2.png", "IDENTITY"));
     expect((await profileOf(m)).identityStatus).toBe("PENDING");
   });
 
-  it("رد بدونِ دلیل ۴۰۰؛ با دلیل → دلیل در /api/mentors/me دیده می‌شود", async () => {
+  it("رد بدون دلیل ۴۰۰؛ با دلیل → دلیل در /api/mentors/me دیده می‌شود", async () => {
     const m = await makeMentor({}, FITNESS_ONLY, { identity: false });
     const admin = await makeAdmin();
     await upload(m, fileForm(pngBytes(), "id.png", "IDENTITY"));
@@ -214,14 +214,14 @@ describe("بررسیِ ادمین", () => {
     expect(me.credentials).toEqual([{ category: "FITNESS", status: "REJECTED", rejectReason: "مدرک معتبر نیست" }]);
   });
 
-  it("پروفایلِ ناموجود ۴۰۴", async () => {
+  it("پروفایل ناموجود ۴۰۴", async () => {
     const admin = await makeAdmin();
     expect((await adminVerify(admin, "nope", { kind: "IDENTITY", status: "VERIFIED" })).status).toBe(404);
   });
 });
 
-describe("دانلودِ مدرک", () => {
-  it("صاحب: هدرهای امن و بایت‌های درست؛ دیگران: روتِ صاحب ۴۰۴، روتِ ادمین ۴۰۱/۴۰۳", async () => {
+describe("دانلود مدرک", () => {
+  it("صاحب: هدرهای امن و بایت‌های درست؛ دیگران: روت صاحب ۴۰۴، روت ادمین ۴۰۱/۴۰۳", async () => {
     const m = await makeMentor({}, FITNESS_ONLY, { identity: false });
     const bytes = pngBytes(128);
     const doc = (await j(await upload(m, fileForm(bytes, "کارت ملی.png", "IDENTITY")))).document;
@@ -239,17 +239,17 @@ describe("دانلودِ مدرک", () => {
     as(other);
     expect((await ownerDoc(req("GET", "/x"), { params: { docId: doc.id } })).status).toBe(404);
     expect((await deleteDoc(req("DELETE", "/x"), { params: { docId: doc.id } })).status).toBe(404);
-    // کاربرِ عادی روی روتِ ادمین
+    // کاربر عادی روی روت ادمین
     expect((await adminDoc(req("GET", "/x") as any, { params: { docId: doc.id } })).status).toBe(401);
     as(null);
     expect((await ownerDoc(req("GET", "/x"), { params: { docId: doc.id } })).status).toBe(401);
     expect((await adminDoc(req("GET", "/x") as any, { params: { docId: doc.id } })).status).toBe(401);
-    // ادمینِ بدونِ دسترسیِ mentors
+    // ادمین بدون دسترسی mentors
     const support = await makeAdmin(["support"]);
     as(support);
     expect((await adminDoc(req("GET", "/x") as any, { params: { docId: doc.id } })).status).toBe(403);
 
-    // ادمینِ mentors: دریافت + AuditLog + هدرهای امن
+    // ادمین mentors: دریافت + AuditLog + هدرهای امن
     const admin = await makeAdmin();
     as(admin);
     const ar = await adminDoc(req("GET", "/x") as any, { params: { docId: doc.id } });
@@ -260,7 +260,7 @@ describe("دانلودِ مدرک", () => {
     expect(await prisma.auditLog.count({ where: { actorUserId: admin, action: "mentor.document_view", targetId: m } })).toBe(1);
   });
 
-  it("صاحب مدرکِ PENDING را حذف می‌کند → وضعیت NOT_PROVIDED", async () => {
+  it("صاحب مدرک PENDING را حذف می‌کند → وضعیت NOT_PROVIDED", async () => {
     const m = await makeMentor({}, FITNESS_ONLY, { identity: false });
     const doc = (await j(await upload(m, fileForm(pngBytes(), "id.png", "IDENTITY")))).document;
     as(m);
@@ -294,7 +294,7 @@ describe("PUT /api/mentors/me — mass assignment", () => {
     expect(p.ratingCount).toBe(0);
     expect(await prisma.mentorProfile.count({ where: { userId: victim } })).toBe(0);
 
-    // منتورِ تعلیق‌شده نمی‌تواند با PUT تعلیق را بردارد
+    // منتور تعلیق‌شده نمی‌تواند با PUT تعلیق را بردارد
     await prisma.mentorProfile.update({ where: { userId: m }, data: { suspendedAt: new Date(), suspendedReason: "x" } });
     as(m);
     await putMe(req("PUT", "/api/mentors/me", { suspendedAt: null, suspendedReason: null, bio: "b2" }));
@@ -304,7 +304,7 @@ describe("PUT /api/mentors/me — mass assignment", () => {
     expect(p2.bio).toBe("b2");
   });
 
-  it("انتشار بدونِ bio یا دسته ۴۰۰؛ دسته‌ی نامعتبر حذف می‌شود؛ ساختِ اولیه credential می‌سازد", async () => {
+  it("انتشار بدون bio یا دسته ۴۰۰؛ دسته‌ی نامعتبر حذف می‌شود؛ ساخت اولیه credential می‌سازد", async () => {
     const u = await makeUser();
     as(u);
     expect((await putMe(req("PUT", "/x", { acceptMentorTerms: MENTOR_TERMS_VERSION, published: true, categories: ["FITNESS"] }))).status).toBe(400);
@@ -317,7 +317,7 @@ describe("PUT /api/mentors/me — mass assignment", () => {
     expect((await j(await getMe())).profile.userId).toBe(u);
   });
 
-  it("routineRole: فقط با دسته‌ی ROUTINE ذخیره می‌شود؛ بلند ۴۰۰؛ برداشتنِ ROUTINE پاکش می‌کند", async () => {
+  it("routineRole: فقط با دسته‌ی ROUTINE ذخیره می‌شود؛ بلند ۴۰۰؛ برداشتن ROUTINE پاکش می‌کند", async () => {
     const u = await makeUser();
     as(u);
     let r = await putMe(req("PUT", "/x", { acceptMentorTerms: MENTOR_TERMS_VERSION, bio: "b", categories: ["ROUTINE"], routineRole: "  استاد   ریاضی " }));

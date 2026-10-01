@@ -66,8 +66,8 @@ export default function AdminDiscountCodesPage() {
           code: code.trim().toUpperCase(),
           percentOff: Number(percentOff),
           planKey: planKey || null,
-          // مقدار datetime-local وقتِ محلیِ مرورگره؛ اگه خام فرستاده بشه سرور
-          // (UTC) اون رو به‌وقتِ خودش می‌خونه و انقضا ۳:۳۰ جابه‌جا می‌شه.
+          // مقدار datetime-local وقت محلی مرورگره؛ اگه خام فرستاده بشه سرور
+          // (UTC) اون رو به‌وقت خودش می‌خونه و انقضا ۳:۳۰ جابه‌جا می‌شه.
           expiresAt: expiresAt ? new Date(expiresAt).toISOString() : null,
           maxUsesPerUser: maxUsesPerUser ? Number(maxUsesPerUser) : null,
         },

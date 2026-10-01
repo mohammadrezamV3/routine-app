@@ -2,8 +2,8 @@
 
 import { AgentAvatar } from "./AgentAvatar";
 
-// آواتارِ کاربر در اکوسیستم منتور — عینا همان الگوی DashFriendsCard: عکسِ
-// واقعی اگر هست، وگرنه همان آواتارِ پیکسلیِ پیش‌فرضِ اپ (AgentAvatar).
+// آواتار کاربر در اکوسیستم منتور — عینا همان الگوی DashFriendsCard: عکس
+// واقعی اگر هست، وگرنه همان آواتار پیکسلی پیش‌فرض اپ (AgentAvatar).
 export function MentorUserAvatar({
   name,
   avatarUrl,

@@ -75,7 +75,7 @@ export const metadata: Metadata = {
   // next.config.js (نه اینجا) noindex می‌شن، چون خیلیاشون کامپوننت
   // کلاینتی‌ان و نمی‌تونن این metadata رو override کنن.
   robots: { index: true, follow: true },
-  // فیدِ RSS بلاگ سراسری اعلام می‌شه (نه فقط توی /blog) تا فیدخوان‌ها/
+  // فید RSS بلاگ سراسری اعلام می‌شه (نه فقط توی /blog) تا فیدخوان‌ها/
   // خزنده‌ها از هر صفحه‌ای پیداش کنن — <link rel="alternate" type=
   // "application/rss+xml"> توی <head> میاد.
   alternates: { types: { "application/rss+xml": `${SITE_URL}/blog/feed.xml` } },
@@ -89,8 +89,8 @@ export const metadata: Metadata = {
     "برنامه بدنسازی هوشمند", "کالری‌شمار فارسی", "ژورنال ترید", "ژورنال معاملاتی فارسی",
     "رودمپ یادگیری هوش مصنوعی", "اتصال متاتریدر", "تقویم اقتصادی فارکس",
   ],
-  // images این‌جا هم عمدا حذف شده — همون دلیلِ توضیحِ زیرِ twitter؛
-  // app/opengraph-image.tsx تصویرِ ریشه رو خودکار تزریق می‌کنه.
+  // images این‌جا هم عمدا حذف شده — همون دلیل توضیح زیر twitter؛
+  // app/opengraph-image.tsx تصویر ریشه رو خودکار تزریق می‌کنه.
   openGraph: {
     ...OG_BASE,
     images: undefined,
@@ -99,10 +99,10 @@ export const metadata: Metadata = {
     description: BRAND_DESC,
   },
   // images عمدا این‌جا هاردکد نیست: نکست به‌صورت خودکار opengraph-image.tsx
-  // خودِ هر مسیر رو (یا در نبودش، همین app/opengraph-image.tsx ریشه رو)
-  // به‌عنوان تصویرِ توییتر/OG تزریق می‌کنه — ولی *فقط* اگه اینجا صراحتا
+  // خود هر مسیر رو (یا در نبودش، همین app/opengraph-image.tsx ریشه رو)
+  // به‌عنوان تصویر توییتر/OG تزریق می‌کنه — ولی *فقط* اگه اینجا صراحتا
   // images ست نشده باشه. قبلا همین یک خط باعث می‌شد هر صفحه‌ای که خودش
-  // twitter تعریف نمی‌کرد (faq، about، …) به‌جای تصویرِ اختصاصی‌اش همیشه
+  // twitter تعریف نمی‌کرد (faq، about، …) به‌جای تصویر اختصاصی‌اش همیشه
   // /og.png عمومی رو نشون بده.
   twitter: {
     card: "summary_large_image",
@@ -125,7 +125,7 @@ export const metadata: Metadata = {
 // داده‌ی ساختگی (نه rating نه review). عمدا توی root layout (نه یه
 // صفحه‌ی خاص) چون توصیف خود سایته، نه محتوای یک صفحه. توابعش از
 // lib/seo.ts می‌آیند تا صفحه‌ی اصلی (که همین SoftwareApplication رو
-// دوباره استفاده می‌کنه) با این گراف یکی بمونه، نه یک کپیِ واگرا.
+// دوباره استفاده می‌کنه) با این گراف یکی بمونه، نه یک کپی واگرا.
 const JSON_LD_GRAPH = [
   organizationJsonLd(),
   websiteJsonLd(),
@@ -142,16 +142,16 @@ export const viewport: Viewport = {
   maximumScale: 1,
   userScalable: false,
   viewportFit: "cover",
-  // بدونِ این، رفتارِ پیش‌فرضِ کروم/اندروید (resizes-visual) یعنی وقتی
-  // کیبوردِ صفحه‌نمایش باز می‌شه فقط visual viewport کوچیک می‌شه، نه layout
-  // viewport — و چون واحدهای CSS (vh, dvh, و مرجعِ position:fixed) همه رویِ
-  // layout viewport حساب می‌شن، نه visual، مودال‌هایی مثلِ «مدیرِ برنامه»
+  // بدون این، رفتار پیش‌فرض کروم/اندروید (resizes-visual) یعنی وقتی
+  // کیبورد صفحه‌نمایش باز می‌شه فقط visual viewport کوچیک می‌شه، نه layout
+  // viewport — و چون واحدهای CSS (vh, dvh, و مرجع position:fixed) همه روی
+  // layout viewport حساب می‌شن، نه visual، مودال‌هایی مثل «مدیر برنامه»
   // که وسط‌چین و max-height:...dvh هستن هیچ‌وقت نمی‌فهمن کیبورد بازه —
-  // نتیجه‌ش یه شکافِ خالیِ بزرگ بینِ کادرِ نوشتن و کیبورده (باگِ واقعیِ
+  // نتیجه‌ش یه شکاف خالی بزرگ بین کادر نوشتن و کیبورده (باگ واقعی
   // گزارش‌شده). resizes-content یعنی layout viewport هم واقعا با کیبورد
-  // کوچیک بشه، پس dvh و وسط‌چینیِ fixed هر دو خودشون رو درست حساب می‌کنن.
-  // مرورگرهایی که این دایرکتیو رو نمی‌شناسن (سافاریِ قدیمی‌تر) بی‌صدا
-  // نادیده‌ش می‌گیرن — بدونِ ریگرسیون.
+  // کوچیک بشه، پس dvh و وسط‌چینی fixed هر دو خودشون رو درست حساب می‌کنن.
+  // مرورگرهایی که این دایرکتیو رو نمی‌شناسن (سافاری قدیمی‌تر) بی‌صدا
+  // نادیده‌ش می‌گیرن — بدون ریگرسیون.
   interactiveWidget: "resizes-content",
   // themeColor عمدا این‌جا نیست — کاملا توی lib/themeColor.ts توضیح داده
   // شده: وقتی نکست مالک این تگ بود، بعد هیدریت نسخه‌ی خودش رو دوباره تزریق
@@ -180,23 +180,23 @@ async function resolveInitialTheme(userId: string | undefined): Promise<{ theme:
 
 export default async function RootLayout({ children }: { children: React.ReactNode }) {
   const session = await getServerSession(authOptions);
-  // تم از همون اولین بایتِ HTML درسته، نه بعد از اجرای اسکریپتِ inline.
+  // تم از همون اولین بایت HTML درسته، نه بعد از اجرای اسکریپت inline.
   // قبلا سرور همیشه data-theme="dark" می‌فرستاد و اسکریپت بعدا (روی کوکی)
   // عوضش می‌کرد؛ ولی اگه مرورگر قبل از اون اسکریپت حتی یک بار استایل رو
-  // حساب کرده بود (پارسرِ استریمینگ، یا هر پینتِ زودرس روی اندروید)، body با
-  // تمِ تاریک رسم می‌شد و `transition:background .3s` روی body اون رو در
-  // چند فریم به کرمی «فید» می‌کرد — همون «هر بار اول یه بک‌گراندِ دیگه
-  // می‌بینم». اندازه‌گیری‌شده: در تمِ روشن ۳ فریمِ اولِ اسکرین‌کست تیره
+  // حساب کرده بود (پارسر استریمینگ، یا هر پینت زودرس روی اندروید)، body با
+  // تم تاریک رسم می‌شد و `transition:background .3s` روی body اون رو در
+  // چند فریم به کرمی «فید» می‌کرد — همون «هر بار اول یه بک‌گراند دیگه
+  // می‌بینم». اندازه‌گیری‌شده: در تم روشن ۳ فریم اول اسکرین‌کست تیره
   // (#0E1011) بودن. layout از قبل dynamic است (InlineBootstrap و سشن
-  // کوکی می‌خونن)، پس خوندنِ این کوکی هزینه‌ی رندرِ اضافه‌ای نداره.
+  // کوکی می‌خونن)، پس خوندن این کوکی هزینه‌ی رندر اضافه‌ای نداره.
   //
-  // برای کاربرِ لاگین‌کرده، تمِ *حساب* (UserSetting "theme") مرجع است نه
-  // کوکیِ این دستگاه: کوکی می‌تواند با حساب ناهماهنگ باشد (تم روی دستگاهِ
-  // دیگری عوض شده، کوکی پاک/منقضی شده، اپِ نصب‌شده) و در آن حالت صفحه اول با
-  // تمِ کوکی رسم می‌شد و بعد از رسیدنِ تمِ حساب (ThemeProvider) با فیدِ
-  // `transition:background` به تمِ دیگر می‌رفت — اندازه‌گیری‌شده روی کاربرِ
-  // آزمایشی با کوکیِ dark و تمِ حسابِ light. یک findUnique روی کلیدِ یکتای
-  // (userId, key)؛ فقط برای کاربرِ لاگین‌کرده.
+  // برای کاربر لاگین‌کرده، تم *حساب* (UserSetting "theme") مرجع است نه
+  // کوکی این دستگاه: کوکی می‌تواند با حساب ناهماهنگ باشد (تم روی دستگاه
+  // دیگری عوض شده، کوکی پاک/منقضی شده، اپ نصب‌شده) و در آن حالت صفحه اول با
+  // تم کوکی رسم می‌شد و بعد از رسیدن تم حساب (ThemeProvider) با فید
+  // `transition:background` به تم دیگر می‌رفت — اندازه‌گیری‌شده روی کاربر
+  // آزمایشی با کوکی dark و تم حساب light. یک findUnique روی کلید یکتای
+  // (userId, key)؛ فقط برای کاربر لاگین‌کرده.
   const { theme, fromAccount } = await resolveInitialTheme((session?.user as { id?: string } | undefined)?.id);
   return (
     // data-theme روی html هم هست (نه فقط body): پس‌زمینه‌ی خود <html> همونیه
@@ -207,15 +207,15 @@ export default async function RootLayout({ children }: { children: React.ReactNo
       lang="fa"
       dir="rtl"
       data-theme={theme}
-      // «account» = تم از حساب آمده و اسکریپتِ inline نباید با کوکی بازنویسی‌اش
+      // «account» = تم از حساب آمده و اسکریپت inline نباید با کوکی بازنویسی‌اش
       // کند (برعکس: کوکی را با آن هم‌گام می‌کند) — lib/themeColor.ts
       data-theme-src={fromAccount ? "account" : undefined}
       suppressHydrationWarning
       className={`${vazir.variable} ${latin.variable}`}
     >
       <head>
-        {/* نوارِ وضعیتِ اندروید از همون اولین پینت هم‌رنگِ تم — نه بعد از
-            اجرای اسکریپت. مالکِ این تگ هنوز خودِ اپه (نه metadataِ نکست؛
+        {/* نوار وضعیت اندروید از همون اولین پینت هم‌رنگ تم — نه بعد از
+            اجرای اسکریپت. مالک این تگ هنوز خود اپه (نه metadata نکست؛
             دلیلش lib/themeColor.ts)، پس دوباره‌تزریق نمی‌شه و
             syncThemeColorMeta همین یکی رو آپدیت می‌کنه. */}
         <meta name="theme-color" content={THEME_COLORS[theme]} />
@@ -223,7 +223,7 @@ export default async function RootLayout({ children }: { children: React.ReactNo
       {/* suppressHydrationWarning لازمه چون اسکریپت بالا ممکنه data-theme رو
           قبل از این‌که React هیدریت کنه عوض کرده باشه — یعنی یه mismatch
           «قابل‌انتظار و بی‌خطر» با همون چیزی که سرور رندر کرده (مثلا وقتی
-          ThemeProvider بعدا تمِ ذخیره‌شده‌ی حساب رو اعمال می‌کنه) */}
+          ThemeProvider بعدا تم ذخیره‌شده‌ی حساب رو اعمال می‌کنه) */}
       <body data-theme={theme} suppressHydrationWarning>
         <script
           type="application/ld+json"
@@ -233,7 +233,7 @@ export default async function RootLayout({ children }: { children: React.ReactNo
         {/* تشخیص دستگاه ضعیف — باید قبل از اولین پینت اجرا شود، وگرنه
             همان دستگاه اول نسخه‌ی سنگین را رندر می‌کند. */}
         <script dangerouslySetInnerHTML={{ __html: PERF_INIT_SCRIPT }} />
-        {/* بازخوردِ کلیک/لمس روی هر باکسِ قابل‌کلیک — چه با موس چه با دست */}
+        {/* بازخورد کلیک/لمس روی هر باکس قابل‌کلیک — چه با موس چه با دست */}
         <script dangerouslySetInnerHTML={{ __html: TAP_FEEDBACK_INIT_SCRIPT }} />
         {/* باید *قبل* از PRELOAD_SCRIPT بیاید — آن اسکریپت همین تگ را
             می‌خواند تا بفهمد لازم است داده را از شبکه بگیرد یا نه. */}
@@ -243,19 +243,19 @@ export default async function RootLayout({ children }: { children: React.ReactNo
         <script dangerouslySetInnerHTML={{ __html: PRELOAD_SCRIPT }} />
         <SvgFilters />
         <BackgroundCanvasLoader />
-        {/* خروجِ نرمِ همه‌ی پاپ‌آپ‌ها — lib/popupExit.ts */}
+        {/* خروج نرم همه‌ی پاپ‌آپ‌ها — lib/popupExit.ts */}
         <PopupExitAnimator />
         <AuthSessionProvider session={session}>
           <ThemeProvider initialTheme={theme}>
             <MotionTuner>
               <NavDrawer />
               <NotificationEngine />
-              {/* WebSocketِ `/ws` برای کاربرِ لاگین‌کرده — تغییرات همون لحظه روی همه‌ی دستگاه‌ها */}
+              {/* WebSocket `/ws` برای کاربر لاگین‌کرده — تغییرات همون لحظه روی همه‌ی دستگاه‌ها */}
               <RealtimeProvider />
-              {/* ثبتِ سرویس‌ورکر (کشِ app shell) + پیشنهادِ نصبِ اپ */}
+              {/* ثبت سرویس‌ورکر (کش app shell) + پیشنهاد نصب اپ */}
               <PwaProvider />
-              {/* Suspense: RouteProgress از useSearchParams استفاده می‌کنه و بدونِ مرز، رندرِ
-                  استاتیکِ همه‌ی صفحه‌ها رو به کلاینت می‌کشوند */}
+              {/* Suspense: RouteProgress از useSearchParams استفاده می‌کنه و بدون مرز، رندر
+                  استاتیک همه‌ی صفحه‌ها رو به کلاینت می‌کشوند */}
               <Suspense fallback={null}><RouteProgress /></Suspense>
               <div className="wrap">{children}</div>
             </MotionTuner>

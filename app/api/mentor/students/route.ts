@@ -14,10 +14,10 @@ import { liveLabelIds, readLabels } from "@/lib/mentorManageServer";
 
 const MAX_STUDENTS = 500;
 
-// GET /api/mentor/students → فهرستِ شاگردهای فعالِ منتور برای صفحه‌ی «شاگردها»:
-// برچسب‌ها، پایبندیِ ۷ روزه، آخرین فعالیت، تاریخِ شروع، توقف. همه‌ی عددها فقط
-// از برنامه‌ها و پیام‌های *همین منتور* ساخته می‌شوند؛ منتورِ تعلیق‌شده
-// (مثل /api/mentor/students/[id]) پایبندی و فعالیتِ شاگرد را نمی‌بیند.
+// GET /api/mentor/students → فهرست شاگردهای فعال منتور برای صفحه‌ی «شاگردها»:
+// برچسب‌ها، پایبندی ۷ روزه، آخرین فعالیت، تاریخ شروع، توقف. همه‌ی عددها فقط
+// از برنامه‌ها و پیام‌های *همین منتور* ساخته می‌شوند؛ منتور تعلیق‌شده
+// (مثل /api/mentor/students/[id]) پایبندی و فعالیت شاگرد را نمی‌بیند.
 export async function GET() {
   const g = await requireMentorsUser();
   if (!g.ok) return g.response;

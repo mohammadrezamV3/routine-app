@@ -6,11 +6,11 @@ import { createPortal } from "react-dom";
 import { LockBodyScroll } from "./LockBodyScroll";
 import { Spinner } from "./Spinner";
 
-// پاپ‌آپِ تاییدِ اقدامِ مخرب (پایان/مسدودی/لغو/حذف) — همان مارک‌آپِ تاییدِ
-// «بلاک» در FriendProfileModal، فقط عمومی‌شده. خطا داخلِ خودِ پاپ‌آپ دیده
+// پاپ‌آپ تایید اقدام مخرب (پایان/مسدودی/لغو/حذف) — همان مارک‌آپ تایید
+// «بلاک» در FriendProfileModal، فقط عمومی‌شده. خطا داخل خود پاپ‌آپ دیده
 // می‌شود تا کاربر بداند اقدام انجام نشده.
-// متن: `message` یک سؤالِ مشخص است («رابطه با سارا پایان یابد؟»)، `hint`
-// پیامدِ آن در یک جمله، و `confirmLabel` فعلِ همان اقدام («پایان رابطه»)، نه «بله».
+// متن: `message` یک سؤال مشخص است («رابطه با سارا پایان یابد؟»)، `hint`
+// پیامد آن در یک جمله، و `confirmLabel` فعل همان اقدام («پایان رابطه»)، نه «بله».
 export function MentorConfirmDialog({
   message,
   hint,
@@ -23,7 +23,7 @@ export function MentorConfirmDialog({
   children,
 }: {
   message: string;
-  /** پیامدِ اقدام در یک جمله، زیرِ سؤال */
+  /** پیامد اقدام در یک جمله، زیر سؤال */
   hint?: string;
   confirmLabel: string;
   busy?: boolean;
@@ -33,8 +33,8 @@ export function MentorConfirmDialog({
   onCancel: () => void;
   children?: React.ReactNode;
 }) {
-  // Escape = انصراف (مگر وسطِ انجامِ اقدام)؛ فوکوس اول روی «انصراف» که Enterِ
-  // اتفاقی اقدامِ مخرب رو انجام نده.
+  // Escape = انصراف (مگر وسط انجام اقدام)؛ فوکوس اول روی «انصراف» که Enter
+  // اتفاقی اقدام مخرب رو انجام نده.
   const cancelRef = useRef<HTMLButtonElement>(null);
   const stateRef = useRef({ busy, onCancel });
   stateRef.current = { busy, onCancel };

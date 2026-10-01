@@ -1,8 +1,8 @@
 "use client";
 
-// ویرایشگرِ آیتم‌های برنامه‌ی لیستی (lib/routineChecklist.ts) — داخلِ فرمِ
-// افزودن/ویرایشِ برنامه. هر آیتم یک اسم داره؛ Enter روی فیلدِ پایین آیتمِ تازه
-// اضافه می‌کنه. همون کلاس‌های فیلد/دکمه‌ی خودِ فرم.
+// ویرایشگر آیتم‌های برنامه‌ی لیستی (lib/routineChecklist.ts) — داخل فرم
+// افزودن/ویرایش برنامه. هر آیتم یک اسم داره؛ Enter روی فیلد پایین آیتم تازه
+// اضافه می‌کنه. همون کلاس‌های فیلد/دکمه‌ی خود فرم.
 
 import { useState } from "react";
 import { Minus } from "lucide-react";
@@ -29,10 +29,10 @@ export function RoutineChecklistEditor({ items, onChange, error }: { items: Chec
             className="wsearch-newform-name"
             value={it.name}
             maxLength={80}
-            aria-label={`آیتمِ ${i + 1}`}
+            aria-label={`آیتم ${i + 1}`}
             onChange={(e) => onChange(items.map((x) => (x.id === it.id ? { ...x, name: e.target.value } : x)))}
           />
-          <button type="button" className="wsearch-newrow-remove-text" onClick={() => onChange(items.filter((x) => x.id !== it.id))} aria-label={`حذفِ ${it.name}`}>
+          <button type="button" className="wsearch-newrow-remove-text" onClick={() => onChange(items.filter((x) => x.id !== it.id))} aria-label={`حذف ${it.name}`}>
             <Minus size={12} />
             حذف
           </button>
@@ -44,10 +44,10 @@ export function RoutineChecklistEditor({ items, onChange, error }: { items: Chec
           <input
             type="text"
             className="wsearch-newform-name"
-            placeholder={items.length ? "آیتمِ بعدی…" : "مثلا: نان، شیر، میوه…"}
+            placeholder={items.length ? "آیتم بعدی…" : "مثلا: نان، شیر، میوه…"}
             value={draft}
             maxLength={80}
-            // Enter آیتم اضافه می‌کنه (نه پرش به فیلدِ بعدیِ فرم)
+            // Enter آیتم اضافه می‌کنه (نه پرش به فیلد بعدی فرم)
             onKeyDown={(e) => { if (e.key === "Enter") { e.preventDefault(); e.stopPropagation(); add(); } }}
             onChange={(e) => setDraft(e.target.value)}
           />

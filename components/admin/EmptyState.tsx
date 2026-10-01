@@ -9,12 +9,12 @@ export function EmptyState({ message = "داده‌ای برای نمایش وج
   );
 }
 
-// حالتِ بارگذاری — همون .is-loading سراسریِ اپ (دایره‌ی چرخان)
+// حالت بارگذاری — همون .is-loading سراسری اپ (دایره‌ی چرخان)
 export function LoadingState({ message = "در حال بارگذاری…" }: { message?: string }) {
   return <div className="admin-empty is-loading" role="status">{message}</div>;
 }
 
-// حالتِ خطا با دکمه‌ی «تلاش دوباره» — به‌جای لودینگِ بی‌پایان وقتی API خطا داد
+// حالت خطا با دکمه‌ی «تلاش دوباره» — به‌جای لودینگ بی‌پایان وقتی API خطا داد
 export function ErrorState({ message = "خطا در دریافت اطلاعات", onRetry }: { message?: string; onRetry?: () => void }) {
   return (
     <div className="admin-empty admin-empty-error" role="alert">

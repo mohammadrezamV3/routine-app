@@ -8,13 +8,13 @@ import {
 import type { AnalysisDomain, Insight } from "@/lib/weeklyAnalysis/types";
 import { J_MONTHS, toJalali } from "@/lib/jalali";
 
-// کمک‌ابزارهای مشترکِ همه‌ی کامپوننت‌های «آنالیز هفتگی» — یک جا تا آیکون/
-// رنگ/لینکِ هر دامنه بینِ کارت‌ها، نقشه‌ی حرارتی، نمودار و تصویرِ اشتراک
+// کمک‌ابزارهای مشترک همه‌ی کامپوننت‌های «آنالیز هفتگی» — یک جا تا آیکون/
+// رنگ/لینک هر دامنه بین کارت‌ها، نقشه‌ی حرارتی، نمودار و تصویر اشتراک
 // هیچ‌وقت از هم واگرا نشن.
 
-// دقیقا همون کلاس‌های DashCard (رادیوس/بوردر/سطحِ کارت‌های داشبورد) — برای
-// جاهایی که کارت خودش باید motion.div با layout یا کلیک‌پذیر باشه و خودِ
-// DashCard این propها رو نمی‌گیره. سطحِ جدیدی ساخته نمی‌شه.
+// دقیقا همون کلاس‌های DashCard (رادیوس/بوردر/سطح کارت‌های داشبورد) — برای
+// جاهایی که کارت خودش باید motion.div با layout یا کلیک‌پذیر باشه و خود
+// DashCard این propها رو نمی‌گیره. سطح جدیدی ساخته نمی‌شه.
 export const WA_CARD_CLASS = "rounded-dash border border-dash-border bg-dash-card p-3.5 backdrop-blur-xl sm:p-5";
 
 export const DOMAIN_ICONS: Record<AnalysisDomain, LucideIcon> = {
@@ -27,7 +27,7 @@ export const DOMAIN_ICONS: Record<AnalysisDomain, LucideIcon> = {
   learning: GraduationCap,
 };
 
-// مقصدِ «برو ثبت کن» برای هر دامنه — همون روت‌های واقعیِ NavDrawer
+// مقصد «برو ثبت کن» برای هر دامنه — همون روت‌های واقعی NavDrawer
 export const DOMAIN_HREFS: Record<AnalysisDomain, string> = {
   routine: "/weekly",
   sleep: "/weekly",
@@ -38,7 +38,7 @@ export const DOMAIN_HREFS: Record<AnalysisDomain, string> = {
   learning: "/roadmaps",
 };
 
-// خوب/بد با همون قراردادِ جهانیِ سود/زیان (بیرونِ پالتِ تم) — توی تمِ روشن
+// خوب/بد با همون قرارداد جهانی سود/زیان (بیرون پالت تم) — توی تم روشن
 // هم سبز و قرمز می‌مونن و معنی‌شون رو از دست نمی‌دن.
 export function toneColor(tone: Insight["tone"] | undefined): string {
   if (tone === "good") return "var(--pnl-win)";
@@ -46,7 +46,7 @@ export function toneColor(tone: Insight["tone"] | undefined): string {
   return "var(--muted)";
 }
 
-// شدتِ رنگِ یک امتیاز (۰..۱۰۰) — مقیاسِ شفافیتِ accent، از کم‌رنگ تا پر.
+// شدت رنگ یک امتیاز (۰..۱۰۰) — مقیاس شفافیت accent، از کم‌رنگ تا پر.
 export function scoreAlpha(score: number): number {
   const s = Math.min(100, Math.max(0, score));
   return 0.14 + (s / 100) * 0.86;
@@ -56,7 +56,7 @@ export function scoreFill(score: number): string {
   return `rgba(var(--accent-rgb),${scoreAlpha(score).toFixed(2)})`;
 }
 
-// «۲ مهر» با ارقام لاتین (قراردادِ اپ) از روی کلیدِ YYYY-MM-DD
+// «۲ مهر» با ارقام لاتین (قرارداد اپ) از روی کلید YYYY-MM-DD
 export function jalaliShort(iso: string): string {
   const [gy, gm, gd] = iso.slice(0, 10).split("-").map(Number);
   if (!gy || !gm || !gd) return iso;
@@ -64,7 +64,7 @@ export function jalaliShort(iso: string): string {
   return `${jd} ${J_MONTHS[jm - 1]}`;
 }
 
-// حرفِ اولِ نامِ روز («سه‌شنبه» → «س») — برای ستون‌های باریکِ نمودارها
+// حرف اول نام روز («سه‌شنبه» → «س») — برای ستون‌های باریک نمودارها
 export function weekdayLetter(weekday: string): string {
   return weekday.trim().charAt(0);
 }
@@ -75,7 +75,7 @@ export const CONFIDENCE_LABELS: Record<"low" | "medium" | "high", string> = {
   high: "بالا",
 };
 
-// نمایشِ تغییر نسبت به هفته‌ی قبل: ▲ سبز / ▼ قرمز / بدون تغییر خاکستری.
+// نمایش تغییر نسبت به هفته‌ی قبل: ▲ سبز / ▼ قرمز / بدون تغییر خاکستری.
 // null یعنی «هفته‌ی قبل داده نداشت» — نه صفر، پس اصلا عددی نشون نمی‌دیم.
 export function DeltaBadge({ delta, className, suffix }: { delta: number | null; className?: string; suffix?: string }) {
   if (delta === null) return <span className={`wa-delta neutral ${className ?? ""}`}>—</span>;
@@ -91,7 +91,7 @@ export function DeltaBadge({ delta, className, suffix }: { delta: number | null;
   );
 }
 
-// عددی که از صفر تا مقدار نهایی می‌شمره — با حرکتِ کاهش‌یافته‌ی سیستم،
+// عددی که از صفر تا مقدار نهایی می‌شمره — با حرکت کاهش‌یافته‌ی سیستم،
 // بلافاصله مقدار نهایی.
 export function useCountUp(target: number | null, duration = 1.1): number | null {
   const reduce = useReducedMotion();
@@ -109,7 +109,7 @@ export function useCountUp(target: number | null, duration = 1.1): number | null
   return value;
 }
 
-// درخواستِ JSON با خطای یکدست — API همیشه { error } برمی‌گردونه
+// درخواست JSON با خطای یکدست — API همیشه { error } برمی‌گردونه
 export async function waFetch<T>(url: string, init?: RequestInit): Promise<T> {
   let res: Response;
   try {

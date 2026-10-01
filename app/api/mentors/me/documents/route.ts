@@ -4,13 +4,13 @@ import { requireMentorsUser, badRequest, forbidden, conflict } from "@/lib/mento
 import { validateDocument, MAX_DOCUMENT_BYTES } from "@/lib/mentorUpload";
 import { checkRateLimit } from "@/lib/rateLimit";
 
-// سقفِ تعدادِ مدارکِ یک پروفایل — فایل‌ها داخلِ دیتابیسن (Bytes)، پس بدونِ
-// سقف یک حساب می‌تونست با آپلودِ پشت‌سرهم دیتابیس رو پر کنه.
+// سقف تعداد مدارک یک پروفایل — فایل‌ها داخل دیتابیسن (Bytes)، پس بدون
+// سقف یک حساب می‌تونست با آپلود پشت‌سرهم دیتابیس رو پر کنه.
 const MAX_DOCUMENTS_PER_PROFILE = 20;
 
 // POST /api/mentors/me/documents (multipart: file, kind, category?)
-// ارسالِ مدرک → وضعیتِ مربوط PENDING + ردیفِ تاریخچه. حتی اگه قبلا VERIFIED
-// بوده، مدرکِ تازه دوباره باید بررسی بشه (وگرنه می‌شد بعد از تایید، فایل رو عوض کرد).
+// ارسال مدرک → وضعیت مربوط PENDING + ردیف تاریخچه. حتی اگه قبلا VERIFIED
+// بوده، مدرک تازه دوباره باید بررسی بشه (وگرنه می‌شد بعد از تایید، فایل رو عوض کرد).
 export async function POST(req: Request) {
   const g = await requireMentorsUser();
   if (!g.ok) return g.response;
@@ -20,9 +20,9 @@ export async function POST(req: Request) {
     return NextResponse.json({ error: "تعداد ارسال مدرک زیاد بوده؛ کمی بعد دوباره تلاش کن" }, { status: 429 });
   }
 
-  // سقفِ حجم *حین* خوندن: Content-Length قابل‌جعله و درخواستِ chunked اصلا نداره،
-  // پس بدنه با شمارنده‌ی بایت استریم می‌شه و به‌محضِ عبور از سقف قطع می‌شه —
-  // req.formData() مستقیم کلِ بدنه رو بی‌حد توی حافظه می‌کشید.
+  // سقف حجم *حین* خوندن: Content-Length قابل‌جعله و درخواست chunked اصلا نداره،
+  // پس بدنه با شمارنده‌ی بایت استریم می‌شه و به‌محض عبور از سقف قطع می‌شه —
+  // req.formData() مستقیم کل بدنه رو بی‌حد توی حافظه می‌کشید.
   const MAX_BODY = MAX_DOCUMENT_BYTES + 64 * 1024;
   const declared = Number(req.headers.get("content-length") || 0);
   if (declared > MAX_BODY) return NextResponse.json({ error: "حجم فایل حداکثر 5 مگابایت است" }, { status: 413 });

@@ -61,16 +61,16 @@ import { activeModulesOf, getAccount } from "@/lib/accountCache";
 const now = new Date();
 const todayKey = isoLocal(now);
 
-// طبقِ درخواستِ صریح، برنامه‌های «امروز» — حتی اگر ساعتشان گذشته باشد —
+// طبق درخواست صریح، برنامه‌های «امروز» — حتی اگر ساعتشان گذشته باشد —
 // همیشه قابل «انتقال» و «حذف» بمانند؛ فقط روزهای واقعا گذشته (دیروز و
 // قبل‌تر) قفل می‌شوند. ویرایش هم همیشه مجاز بوده و هست.
 function isTaskPast(iso: string): boolean {
   return iso < todayKey;
 }
 
-// روزِ واقعا گذشته — برای قفلِ «شروع»ِ تمرین. ضربدرِ «وقتش گذشته»ی برنامه‌ها
-// دیگه از این نمیاد: طبقِ درخواستِ صریح، برنامه‌ی امروزی که ساعتش رد شده و
-// تیک نخورده فقط بعد از پایانِ روز ✕ می‌گیره (isDayOver در lib/schedule.ts) —
+// روز واقعا گذشته — برای قفل «شروع» تمرین. ضربدر «وقتش گذشته»ی برنامه‌ها
+// دیگه از این نمیاد: طبق درخواست صریح، برنامه‌ی امروزی که ساعتش رد شده و
+// تیک نخورده فقط بعد از پایان روز ✕ می‌گیره (isDayOver در lib/schedule.ts) —
 // ولی همچنان قابل تیک‌زدنه، ✕ فقط وضعیته نه قفل.
 function isDayPast(iso: string): boolean {
   return iso < todayKey;
@@ -89,7 +89,7 @@ function isTaskNotStarted(iso: string, time: string): boolean {
 type Occ = { dayName: string; jsDay: number; time: string; id: string; custom?: boolean; importance?: Importance; tag?: string };
 
 // «روتین من» بعد از ۱۴ روز آزمایشی پلن می‌خواد — ModuleGate فقط UI ـه، نوشتن‌ها
-// سمتِ سرور هم با requireModule(ROUTINE) بسته‌ان (tasks/daily، settings).
+// سمت سرور هم با requireModule(ROUTINE) بسته‌ان (tasks/daily، settings).
 export default function WeeklyPage() {
   return (
     <ModuleGate module="ROUTINE">
@@ -108,7 +108,7 @@ function WeeklyPageInner() {
   const [cardName, setCardName] = useState<string | null>(null);
 
   /**
-   * برنامه‌هایی که از یک رودمپ ساخته شده‌اند به‌جای کارتِ معمولی، مستقیم
+   * برنامه‌هایی که از یک رودمپ ساخته شده‌اند به‌جای کارت معمولی، مستقیم
    * صفحه‌ی همان مسیر را باز می‌کنند — آن‌جاست که جلسه‌ها، قدم‌ها و منابع
    * هستند. برای بقیه‌ی برنامه‌ها رفتار مثل قبل است.
    */
@@ -121,7 +121,7 @@ function WeeklyPageInner() {
     setCardName(name);
   }
   const [addProgramOpen, setAddProgramOpen] = useState(false);
-  // «برنامه‌ی جدید» از داشبورد/پالتِ فرمان با ‎/weekly?add=1‎ میاد: فرمِ افزودن
+  // «برنامه‌ی جدید» از داشبورد/پالت فرمان با ‎/weekly?add=1‎ میاد: فرم افزودن
   // مستقیم باز می‌شه و پارامتر از آدرس پاک می‌شه (رفرش دوباره بازش نکنه).
   useEffect(() => {
     const sp = new URLSearchParams(window.location.search);
@@ -137,7 +137,7 @@ function WeeklyPageInner() {
   const [needsOnboarding, setNeedsOnboarding] = useState(false);
 
   // بخش داشبورد (ادغام‌شده با صفحه اصلی) — انتخاب تاریخ/هفته، برنامه‌های
-  // همون روز، و فیلترها. «برنامه هفتگی» پایینِ صفحه (WeekPlanGrid) همیشه
+  // همون روز، و فیلترها. «برنامه هفتگی» پایین صفحه (WeekPlanGrid) همیشه
   // هفته‌ی جاری (شنبه..جمعه) رو نشون می‌ده، مستقل از این انتخاب.
   const [weekOffset, setWeekOffset] = useState(0);
   const [selectedIso, setSelectedIso] = useState(() => isoLocal(now));
@@ -154,17 +154,17 @@ function WeeklyPageInner() {
   // «برنامه هفتگی» (که خود isPast زمان‌محوره، نه انجام‌شده‌بودن واقعی).
   const [weekDaily, setWeekDaily] = useState<Record<string, DailyRecord>>({});
   // روزهایی که کاربر برنامه‌ی تمرینی برایشان دارد (از GET
-  // /api/exercise/schedule) — طبقِ درخواستِ صریح، اگر امروز جزوِ این روزها
-  // باشد، یک ردیفِ «برنامه تمرینی امروز» بدونِ ساعت به «برنامه‌های امروز»
+  // /api/exercise/schedule) — طبق درخواست صریح، اگر امروز جزو این روزها
+  // باشد، یک ردیف «برنامه تمرینی امروز» بدون ساعت به «برنامه‌های امروز»
   // اضافه می‌شود. null یعنی هنوز نمی‌دانیم/پلنی نیست — هیچ ردیفی اضافه نمی‌شود.
   const [gymDays, setGymDays] = useState<string[] | null>(null);
-  // پلنِ فعالِ بدنسازی + وضعیتِ *واقعیِ* تمامِ تمرینِ روزِ انتخاب‌شده (از
-  // /api/exercise/log — همون منبعی که ExerciseDashboard می‌خونه). زدنِ «شروع»
-  // فقط یعنی رفتن سمتِ تمرین، نه تمام‌کردنش؛ «انجام دادی» فقط با completed.
+  // پلن فعال بدنسازی + وضعیت *واقعی* تمام تمرین روز انتخاب‌شده (از
+  // /api/exercise/log — همون منبعی که ExerciseDashboard می‌خونه). زدن «شروع»
+  // فقط یعنی رفتن سمت تمرین، نه تمام‌کردنش؛ «انجام دادی» فقط با completed.
   const [exercisePlanId, setExercisePlanId] = useState<string | null>(null);
   const [exerciseDone, setExerciseDone] = useState<Record<string, boolean>>({});
-  // ساعتِ زنده — «وقتش گذشته» باید با گذشتِ زمان خودش ظاهر بشه، نه فقط با
-  // ریلود (now بالای فایل فقط لحظه‌ی لودِ ماژوله).
+  // ساعت زنده — «وقتش گذشته» باید با گذشت زمان خودش ظاهر بشه، نه فقط با
+  // ریلود (now بالای فایل فقط لحظه‌ی لود ماژوله).
   const [clock, setClock] = useState(() => new Date());
   useEffect(() => {
     const t = setInterval(() => setClock(new Date()), 30_000);
@@ -173,8 +173,8 @@ function WeeklyPageInner() {
   useEffect(() => {
     if (status !== "authenticated") return;
     let alive = true;
-    // بدونِ ماژولِ بدنسازی این روت ۴۰۳ می‌ده (و خطای کنسول) — اول دسترسی رو از
-    // همون کشِ /api/account چک می‌کنیم و اصلا درخواست نمی‌زنیم
+    // بدون ماژول بدنسازی این روت ۴۰۳ می‌ده (و خطای کنسول) — اول دسترسی رو از
+    // همون کش /api/account چک می‌کنیم و اصلا درخواست نمی‌زنیم
     getAccount()
       .then((acc) => {
         const allowed = !!acc?.user && activeModulesOf(acc).has("EXERCISE");
@@ -203,8 +203,8 @@ function WeeklyPageInner() {
     return () => { alive = false; };
   }, [exercisePlanId, selectedIso, exerciseLogKey]);
 
-  // دسکتاپ (lg+) همون چیدمانِ قدیمیِ سه‌ستونه رو می‌گیره (یادآوری/دارو
-  // ستونِ وسط، دوستان/آمار ستونِ چپ)؛ باکس‌های DashQuickPanels فقط برای
+  // دسکتاپ (lg+) همون چیدمان قدیمی سه‌ستونه رو می‌گیره (یادآوری/دارو
+  // ستون وسط، دوستان/آمار ستون چپ)؛ باکس‌های DashQuickPanels فقط برای
   // موبایل/تبلت. با matchMedia فقط یکی رندر می‌شه تا فچ‌ها دوبار نشن.
   const [isDesktop, setIsDesktop] = useState(false);
   useEffect(() => {
@@ -246,8 +246,8 @@ function WeeklyPageInner() {
   }, [selectedIso]);
 
   // لایه‌ی زنده (lib/liveSync.ts): هر تغییری در تیک‌ها یا برنامه‌ها — از همین
-  // صفحه، یه مودالِ دیگه، تبِ دیگه، سرور یا برگشت به تب — همون لحظه حلقه‌ی
-  // پیشرفت، لیستِ امروز و تایم‌لاین رو از داده‌ی تازه دوباره حساب می‌کنه.
+  // صفحه، یه مودال دیگه، تب دیگه، سرور یا برگشت به تب — همون لحظه حلقه‌ی
+  // پیشرفت، لیست امروز و تایم‌لاین رو از داده‌ی تازه دوباره حساب می‌کنه.
   const selectedIsoRef = useRef(selectedIso);
   selectedIsoRef.current = selectedIso;
   useLiveRefresh(["daily", "customOccurrences", "removedOccurrences", "wakeSleepTimes"], (changed) => {
@@ -333,8 +333,8 @@ function WeeklyPageInner() {
       .filter((t) => importanceFilter === "all" || (t.importance ?? "low") === importanceFilter)
       .filter((t) => programFilter === null || programFilter.has(t.name));
 
-    // برنامه‌ی تمرینی — بدونِ ساعتِ مشخص، طبقِ درخواستِ صریح. اسمِ روزِ
-    // انتخاب‌شده باید دقیقاً همان لیبلِ فارسی‌ای باشد که در gymDays ذخیره
+    // برنامه‌ی تمرینی — بدون ساعت مشخص، طبق درخواست صریح. اسم روز
+    // انتخاب‌شده باید دقیقا همان لیبل فارسی‌ای باشد که در gymDays ذخیره
     // شده (هم‌منبع با FA_WEEKDAY/WEEK_ORDER، نه یک رشته‌ی جدا).
     const dayName = WEEK_ORDER.find((o) => o.jsDay === selectedDate.getDay())?.name;
     if (dayName && gymDays?.includes(dayName)) {
@@ -357,19 +357,19 @@ function WeeklyPageInner() {
     return list;
   }, [selectedDate, selectedIso, opts, customOcc, selectedDaily, importanceFilter, programFilter, gymDays, exerciseDone, clock]);
 
-  // «برنامه هفتگی» پایینِ صفحه — دقیقا همون گریدِ هفت‌روزه‌ی برنامه‌ی هفتگیِ
-  // بخشِ ورزش (WeekPlanGrid)، با برنامه‌های واقعیِ هر روزِ هفته‌ی جاری. وضعیتِ
-  // هر برنامه از تیک‌های واقعیِ همون روز (weekDaily) میاد و فقط با آیکونِ
-  // جای شماره نشون داده می‌شه — طبقِ درخواستِ صریح، متنِ «انجام دادی»/«وقتش
-  // گذشته» زیرِ آیتم‌ها دیگه نمیاد.
+  // «برنامه هفتگی» پایین صفحه — دقیقا همون گرید هفت‌روزه‌ی برنامه‌ی هفتگی
+  // بخش ورزش (WeekPlanGrid)، با برنامه‌های واقعی هر روز هفته‌ی جاری. وضعیت
+  // هر برنامه از تیک‌های واقعی همون روز (weekDaily) میاد و فقط با آیکون
+  // جای شماره نشون داده می‌شه — طبق درخواست صریح، متن «انجام دادی»/«وقتش
+  // گذشته» زیر آیتم‌ها دیگه نمیاد.
   const weekGridDays: WeekPlanGridDay[] = useMemo(() => {
     const start = startOfWeek(now);
     return Array.from({ length: 7 }, (_, i) => {
       const d = new Date(start);
       d.setDate(start.getDate() + i);
       const dIso = isoLocal(d);
-      // طبقِ درخواستِ صریح: جلوی هر برنامه ساعتش (یا «بدون ساعت») و بدونِ
-      // تیک/ضربدر — وضعیتِ انجام فقط توی لیستِ برنامه‌های روز نشون داده می‌شه.
+      // طبق درخواست صریح: جلوی هر برنامه ساعتش (یا «بدون ساعت») و بدون
+      // تیک/ضربدر — وضعیت انجام فقط توی لیست برنامه‌های روز نشون داده می‌شه.
       const items = tasksForDate(d, opts).map((t) => ({
         id: t.id,
         label: t.name,
@@ -385,22 +385,22 @@ function WeeklyPageInner() {
     });
   }, [opts, weekDaily, clock]);
 
-  // شروعِ تمرین: هم همین‌جا (روتین من) تیک می‌خورد هم کاربر به صفحه‌ی
-  // بدنسازی می‌رود تا واقعاً برنامه را ببیند. تپ‌استرایک/دابل‌کلیکِ خودِ
-  // دکمه سمتِ DashTaskRow گارد شده (starting)؛ اینجا هم به‌جای toggle
-  // (که ممکن است دوباره خاموشش کند) صریحاً true می‌نویسیم.
+  // شروع تمرین: هم همین‌جا (روتین من) تیک می‌خورد هم کاربر به صفحه‌ی
+  // بدنسازی می‌رود تا واقعا برنامه را ببیند. تپ‌استرایک/دابل‌کلیک خود
+  // دکمه سمت DashTaskRow گارد شده (starting)؛ اینجا هم به‌جای toggle
+  // (که ممکن است دوباره خاموشش کند) صریحا true می‌نویسیم.
   async function startExercise(id: string) {
-    // طبقِ درخواستِ صریح: برنامه‌ی تمرینیِ روزهای واقعا گذشته دیگر قابلِ
-    // «شروع» نیست (خودِ دکمه هم توی DashTaskRow برای dayPast غیرفعال است؛
-    // این‌جا هم گارد می‌شود که مستقیم صدازدنِ تابع هم بی‌اثر بماند).
+    // طبق درخواست صریح: برنامه‌ی تمرینی روزهای واقعا گذشته دیگر قابل
+    // «شروع» نیست (خود دکمه هم توی DashTaskRow برای dayPast غیرفعال است؛
+    // این‌جا هم گارد می‌شود که مستقیم صدازدن تابع هم بی‌اثر بماند).
     if (isDayPast(selectedIso)) return;
     const current = selectedDaily ?? { tasks: {}, wake: null };
     if (current.tasks[id]) { router.push("/exercise?tab=exercise"); return; }
     const next: DailyRecord = { ...current, tasks: { ...current.tasks, [id]: true } };
     setSelectedDaily(next);
     setWeekDaily((prev) => ({ ...prev, [selectedIso]: next }));
-    // حلقه‌ی روتین نباید منتظر رفت‌وبرگشتِ شبکه بمونه — همین‌جا، همون لحظه،
-    // از رویِ داده‌ی محلی حساب می‌شه؛ درخواست‌های زیر فقط برای هم‌خوانیِ نهایی‌ان.
+    // حلقه‌ی روتین نباید منتظر رفت‌وبرگشت شبکه بمونه — همین‌جا، همون لحظه،
+    // از روی داده‌ی محلی حساب می‌شه؛ درخواست‌های زیر فقط برای هم‌خوانی نهایی‌ان.
     if (selectedIso === todayKey) setTodayStats(computeDayStats(now, opts, next));
     setStatsRefreshKey((k) => k + 1);
     await setDaily(selectedIso, next);
@@ -408,28 +408,28 @@ function WeeklyPageInner() {
     router.push("/exercise?tab=exercise");
   }
 
-  // انتخاب یه روز دلخواه (مثلا از تقویم تاریخچه) — نوارِ روزها
-  // (DashDateSelector/useDayStrip) خودش بازه رو دورِ همین روز باز و وسط‌چینش می‌کنه.
+  // انتخاب یه روز دلخواه (مثلا از تقویم تاریخچه) — نوار روزها
+  // (DashDateSelector/useDayStrip) خودش بازه رو دور همین روز باز و وسط‌چینش می‌کنه.
   function pickDate(iso: string) {
     setSelectedIso(iso);
   }
 
   async function toggleDashTask(id: string, itemId?: string) {
-    // روزِ گذشته برای جبرانِ عقب‌افتاده قابلِ تیک‌زدنه، و برنامه‌ای که هنوز
-    // ساعتش نرسیده هم اگر زودتر انجامش داده — ولی روزِ *آینده* نه: طبقِ
-    // درخواستِ صریحِ کاربر، تیک‌زدنِ برنامه‌ی روزی که هنوز نرسیده یعنی
-    // وانمود به انجام‌شدنِ کاری که اصلاً شروع نشده، پس این‌جا بلاک می‌شود.
+    // روز گذشته برای جبران عقب‌افتاده قابل تیک‌زدنه، و برنامه‌ای که هنوز
+    // ساعتش نرسیده هم اگر زودتر انجامش داده — ولی روز *آینده* نه: طبق
+    // درخواست صریح کاربر، تیک‌زدن برنامه‌ی روزی که هنوز نرسیده یعنی
+    // وانمود به انجام‌شدن کاری که اصلا شروع نشده، پس این‌جا بلاک می‌شود.
     const task = dashTasks.find((t) => t.id === id);
-    // برنامه‌ی روزهای گذشته دیگه قابلِ تغییر نیست (درخواستِ صریح).
+    // برنامه‌ی روزهای گذشته دیگه قابل تغییر نیست (درخواست صریح).
     if (task?.isFuture || isDayPast(selectedIso)) return;
     const current = selectedDaily ?? { tasks: {}, wake: null };
-    // برنامه‌ی لیستی: آیتم یا «همه با هم»؛ کلیدِ برنامه = همه‌ی آیتم‌ها انجام شدن (lib/routineChecklist.ts)
+    // برنامه‌ی لیستی: آیتم یا «همه با هم»؛ کلید برنامه = همه‌ی آیتم‌ها انجام شدن (lib/routineChecklist.ts)
     const items = checklistOf(customOcc.find((c) => c.id === id));
     const next: DailyRecord = { ...current, tasks: toggleTask(current.tasks, id, items, itemId) };
     setSelectedDaily(next);
     setWeekDaily((prev) => ({ ...prev, [selectedIso]: next }));
-    // همین‌جا از رویِ داده‌ی محلی حساب می‌شه، بدونِ صبر برایِ شبکه — درخواستِ
-    // زیر فقط برایِ هم‌خوانیِ نهایی با سرور می‌مونه، دیگه چیزی رو در جا نگه نمی‌داره.
+    // همین‌جا از روی داده‌ی محلی حساب می‌شه، بدون صبر برای شبکه — درخواست
+    // زیر فقط برای هم‌خوانی نهایی با سرور می‌مونه، دیگه چیزی رو در جا نگه نمی‌داره.
     if (selectedIso === todayKey) setTodayStats(computeDayStats(now, opts, next));
     setStatsRefreshKey((k) => k + 1);
     await setDaily(selectedIso, next);
@@ -449,15 +449,15 @@ function WeeklyPageInner() {
   // ویرایش/حذف از منوی سه‌نقطه‌ی «برنامه‌های امروز» — روی همون occurrence ی
   // که برای selectedIso نمایش داده شده، نه لزوما «امروز واقعی».
   //
-  // باگِ واقعیِ «انتقال به روز دیگر کار نمی‌کند»: اینجا custom همیشه true
-  // فرستاده می‌شد، صرف‌نظر از اینکه برنامه واقعاً یک occurrence سفارشی
-  // بود یا یکی از برنامه‌های پیش‌فرضِ داخلی. MoveOccurrenceModal دقیقاً
-  // بر همین فیلد تصمیم می‌گیرد که رکوردِ قبلی را از کجا حذف کند (نگاه کن
-  // به occ.custom در lib همان کامپوننت): اگر custom اشتباهاً true باشد
-  // ولی occurrence اصلاً توی customOccurrences نباشد، حذفِ رکوردِ قبلی
-  // هیچ اثری نمی‌کند — نتیجه این بود که برنامه‌ی تازه توی روزِ مقصد
-  // اضافه می‌شد ولی نسخه‌ی قبلی هم سرِ جایش می‌ماند (به چشمِ کاربر یعنی
-  // «کاری نکرد»، چون نتیجه دقیقاً چیزی نبود که انتظار داشت).
+  // باگ واقعی «انتقال به روز دیگر کار نمی‌کند»: اینجا custom همیشه true
+  // فرستاده می‌شد، صرف‌نظر از اینکه برنامه واقعا یک occurrence سفارشی
+  // بود یا یکی از برنامه‌های پیش‌فرض داخلی. MoveOccurrenceModal دقیقا
+  // بر همین فیلد تصمیم می‌گیرد که رکورد قبلی را از کجا حذف کند (نگاه کن
+  // به occ.custom در lib همان کامپوننت): اگر custom اشتباها true باشد
+  // ولی occurrence اصلا توی customOccurrences نباشد، حذف رکورد قبلی
+  // هیچ اثری نمی‌کند — نتیجه این بود که برنامه‌ی تازه توی روز مقصد
+  // اضافه می‌شد ولی نسخه‌ی قبلی هم سر جایش می‌ماند (به چشم کاربر یعنی
+  // «کاری نکرد»، چون نتیجه دقیقا چیزی نبود که انتظار داشت).
   function editTaskFromDash(id: string) {
     const task = dashTasks.find((t) => t.id === id);
     if (!task) return;
@@ -476,17 +476,17 @@ function WeeklyPageInner() {
     setMoveTarget({ name: task.name, occ: { dayName, jsDay, time: task.time, id: task.id, custom: isCustom, importance: task.importance, tag: task.tag } });
   }
 
-  // حذف فقط همین یک occurrence (یک روزِ هفته‌ی خاص) — چون هر روزِ یک
+  // حذف فقط همین یک occurrence (یک روز هفته‌ی خاص) — چون هر روز یک
   // برنامه‌ی تکرارشونده رکورد id جداگانه‌ی خودش را دارد، این پیش‌فرض از
   // قبل هم «فقط این روز» عمل می‌کرد.
   //
-  // طبقِ درخواستِ صریح: حذف یعنی «از همین روزی که رویش زده شده به بعد»،
-  // نه پاک‌کردنِ کاملِ رکورد — چون رکورد کاملا پاک‌کردن یعنی گذشته‌ی همین
+  // طبق درخواست صریح: حذف یعنی «از همین روزی که رویش زده شده به بعد»،
+  // نه پاک‌کردن کامل رکورد — چون رکورد کاملا پاک‌کردن یعنی گذشته‌ی همین
   // occurrence هم دیگر توی «برنامه هفتگی»/تاریخچه دیده نشود (تاریخچه از
-  // روی همین آرایه‌ی زنده محاسبه می‌شود، نه یک اسنپ‌شاتِ جدا). به‌جایش
-  // endDate روی «یک روز قبل از روزِ انتخاب‌شده» ست می‌شود؛ tasksForDate
+  // روی همین آرایه‌ی زنده محاسبه می‌شود، نه یک اسنپ‌شات جدا). به‌جایش
+  // endDate روی «یک روز قبل از روز انتخاب‌شده» ست می‌شود؛ tasksForDate
   // (lib/schedule.ts) از آن به بعد دیگر این occurrence را برنمی‌گرداند،
-  // ولی برای هر روزِ *قبل*‌ از این تاریخ دقیقا مثل قبل باقی می‌ماند.
+  // ولی برای هر روز *قبل*‌ از این تاریخ دقیقا مثل قبل باقی می‌ماند.
   async function deleteTaskCompletely(id: string) {
     const task = dashTasks.find((t) => t.id === id);
     if (task?.isPast) return;
@@ -494,7 +494,7 @@ function WeeklyPageInner() {
     await setCustomOccurrences(
       customOcc.flatMap((c) => {
         if (c.id !== id) return [c];
-        // اگه خودِ occurrence از تاریخِ برشِ جدید دیرتر شروع شده (یعنی هیچ‌وقت
+        // اگه خود occurrence از تاریخ برش جدید دیرتر شروع شده (یعنی هیچ‌وقت
         // واقعا در گذشته اتفاق نیفتاده)، دیگه چیزی برای نگه‌داشتن نیست —
         // کاملا حذفش کن تا آرایه بی‌جهت بزرگ نشه.
         if (c.startDate && c.startDate > cutoff) return [];
@@ -504,9 +504,9 @@ function WeeklyPageInner() {
     refresh();
   }
 
-  // حذفِ همه‌ی تکرارها — همه‌ی occurrenceهایی که هم‌نامِ همین برنامه‌اند
-  // (روی هر روزی که باشند)، طبقِ درخواستِ صریح («یا فقط یکشنبه یا فقط
-  // چهارشنبه یا کلا هر دو»). همون منطقِ «از این روز به بعد» بالا، برای
+  // حذف همه‌ی تکرارها — همه‌ی occurrenceهایی که هم‌نام همین برنامه‌اند
+  // (روی هر روزی که باشند)، طبق درخواست صریح («یا فقط یکشنبه یا فقط
+  // چهارشنبه یا کلا هر دو»). همون منطق «از این روز به بعد» بالا، برای
   // همه‌ی روزهای هفته‌ای که این برنامه رویشان تکرار می‌شود.
   async function deleteAllTaskOccurrences(id: string) {
     const task = dashTasks.find((t) => t.id === id);
@@ -560,10 +560,10 @@ function WeeklyPageInner() {
           </div>
 
           {/* دسکتاپ: دو ستون کنار هم — راست (پهن‌تر) برنامه‌های امروز از بالا
-              تا پایین، چپ ردیفِ آیکونِ یادآوری/یادآوری‌دارو/آمار هفتگی/دوستان
-              (DashQuickPanels) با محتوای کارتِ انتخاب‌شده زیرش. موبایل/تبلت
+              تا پایین، چپ ردیف آیکون یادآوری/یادآوری‌دارو/آمار هفتگی/دوستان
+              (DashQuickPanels) با محتوای کارت انتخاب‌شده زیرش. موبایل/تبلت
               همچنان یک ستون عمودی (flex-col) می‌مونه. */}
-          {/* وقتی هر چهار کارتِ ردیفِ آیکون از تنظیمات خاموش باشن، گرید باید
+          {/* وقتی هر چهار کارت ردیف آیکون از تنظیمات خاموش باشن، گرید باید
               تک‌ستونه بشه — وگرنه یک ستون خالی ۱fr کنار صفحه باز می‌موند. */}
           <div
             className={
@@ -571,7 +571,7 @@ function WeeklyPageInner() {
                 ? hasMiddleColumn
                   ? "flex flex-col gap-4 sm:gap-6 lg:grid lg:grid-cols-[2.5fr_0.8fr_1fr] lg:items-stretch lg:gap-6"
                   : "flex flex-col gap-4 sm:gap-6 lg:grid lg:grid-cols-[2.5fr_1fr] lg:items-stretch lg:gap-6"
-                : // ردیفِ دکمه‌ها همیشه هست (خواب خاموش‌شدنی نیست)
+                : // ردیف دکمه‌ها همیشه هست (خواب خاموش‌شدنی نیست)
                   "flex flex-col gap-4 sm:gap-6 lg:grid lg:grid-cols-[2.5fr_1fr] lg:items-stretch lg:gap-6"
             }
           >
@@ -590,7 +590,7 @@ function WeeklyPageInner() {
                 onMoveTask={moveTaskFromDash}
                 onStartExercise={startExercise}
                 delay={0.05}
-                // دسکتاپ: دو ردیف ارتفاع می‌گیره (کنارِ ستون‌ها + کارتِ خوابِ زیرشون) تا بلندتر بشه
+                // دسکتاپ: دو ردیف ارتفاع می‌گیره (کنار ستون‌ها + کارت خواب زیرشون) تا بلندتر بشه
                 className="lg:row-span-2"
               />
             )}
@@ -604,7 +604,7 @@ function WeeklyPageInner() {
                   </div>
                 )}
                 <DashSidebar statsRefreshKey={statsRefreshKey} />
-                {/* خواب زیرِ ستون‌های سمتِ چپ، هم‌عرضِ هر دوشون */}
+                {/* خواب زیر ستون‌های سمت چپ، هم‌عرض هر دوشون */}
                 <div className={hasMiddleColumn ? "lg:col-span-2" : ""}>
                   <SleepMiniCard />
                 </div>
@@ -618,7 +618,7 @@ function WeeklyPageInner() {
         </div>
       </section>
 
-      {/* div نه section: قانونِ سراسریِ section{border-top} زیرِ «برنامه هفتگی» خط می‌کشید. */}
+      {/* div نه section: قانون سراسری section{border-top} زیر «برنامه هفتگی» خط می‌کشید. */}
       <div className="dash-breakout">
         {cardName && (
           <ProgramCard
@@ -697,8 +697,8 @@ function WeeklyPageInner() {
             </div>
           </>
         )}
-        {/* دایره‌ی «مدیرِ برنامه» — گوشه‌ی چپ‌پایینِ همین صفحه. عمدا آخرین
-            فرزندِ section است تا روی بقیه بنشیند بدون این‌که به z-index
+        {/* دایره‌ی «مدیر برنامه» — گوشه‌ی چپ‌پایین همین صفحه. عمدا آخرین
+            فرزند section است تا روی بقیه بنشیند بدون این‌که به z-index
             دستی نیاز داشته باشد. */}
         {assistantOn && <RoutineAiFab onChanged={refresh} />}
       </div>

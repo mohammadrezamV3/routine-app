@@ -25,11 +25,11 @@ function formatMsgTime(iso: string): string {
   return `${faNum(jd)} ${J_MONTHS[jm - 1]}، ${hh}:${mm}`;
 }
 
-// طبقِ درخواستِ صریح: نوارِ نوشتنِ پیامِ پشتیبانی دقیقا مثلِ «مدیربرنامه»ست —
-// همان قرصِ ورودی + همان دکمه‌ی سه‌حالته (میکروفون → ضبط → ارسال)، حتی
-// همان کلاس‌های CSS (routine-ai-*) تا دو جای اپ دو ظاهرِ متفاوت نداشته
-// باشند. ویس این‌جا هم مثلِ آن‌جا فقط به متن تبدیل می‌شود (نه یک پیوستِ
-// صوتیِ جدا که مدلِ داده‌ی تیکت اصلا پشتیبانی نمی‌کند) و همان لحظه فرستاده
+// طبق درخواست صریح: نوار نوشتن پیام پشتیبانی دقیقا مثل «مدیربرنامه»ست —
+// همان قرص ورودی + همان دکمه‌ی سه‌حالته (میکروفون → ضبط → ارسال)، حتی
+// همان کلاس‌های CSS (routine-ai-*) تا دو جای اپ دو ظاهر متفاوت نداشته
+// باشند. ویس این‌جا هم مثل آن‌جا فقط به متن تبدیل می‌شود (نه یک پیوست
+// صوتی جدا که مدل داده‌ی تیکت اصلا پشتیبانی نمی‌کند) و همان لحظه فرستاده
 // می‌شود.
 export default function SupportTicketPage() {
   const params = useParams<{ id: string }>();
@@ -55,8 +55,8 @@ export default function SupportTicketPage() {
     threadEndRef.current?.scrollIntoView({ block: "end" });
   }, [ticket?.messages.length]);
 
-  // میکروفون که پنل بسته/کامپوننت آنمانت شد باید آزاد شود — چراغِ ضبطِ
-  // مرورگر نباید بدونِ دلیل روشن بماند.
+  // میکروفون که پنل بسته/کامپوننت آنمانت شد باید آزاد شود — چراغ ضبط
+  // مرورگر نباید بدون دلیل روشن بماند.
   useEffect(() => {
     return () => {
       streamRef.current?.getTracks().forEach((t) => t.stop());
@@ -98,11 +98,11 @@ export default function SupportTicketPage() {
         fd.append("audio", blob, "voice.webm");
         const res = await fetch("/api/support/tickets/voice", { method: "POST", body: fd });
         const data = await res.json().catch(() => null);
-        if (!res.ok || !data?.text) { setError(data?.error || "تبدیلِ ویس انجام نشد."); return; }
+        if (!res.ok || !data?.text) { setError(data?.error || "تبدیل ویس انجام نشد."); return; }
         setSending(false);
         await send(data.text);
       } catch {
-        setError("تبدیلِ ویس انجام نشد. اینترنتت را چک کن.");
+        setError("تبدیل ویس انجام نشد. اینترنتت را چک کن.");
       } finally {
         setSending(false);
       }

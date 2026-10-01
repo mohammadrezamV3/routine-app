@@ -1,10 +1,10 @@
 import { toJalali, J_MONTHS, FA_WEEKDAY } from "@/lib/jalali";
 
-// تنها منبعِ «هفته» توی آنالیز هفتگی — شنبه تا جمعه، به وقت محلی کاربر.
+// تنها منبع «هفته» توی آنالیز هفتگی — شنبه تا جمعه، به وقت محلی کاربر.
 //
-// عمدا هیچ‌جا از getter های محلیِ Date (getDate/getDay/...) استفاده نمی‌شه:
-// سرور معمولا UTC اجراست ولی تضمینی نیست، و getter محلی یعنی نتیجه به TZِ
-// پروسه گره می‌خوره. همه‌چیز این‌جا «تاریخ تقویمی» به شکلِ نیمه‌شبِ UTC‌ه —
+// عمدا هیچ‌جا از getter های محلی Date (getDate/getDay/...) استفاده نمی‌شه:
+// سرور معمولا UTC اجراست ولی تضمینی نیست، و getter محلی یعنی نتیجه به TZ
+// پروسه گره می‌خوره. همه‌چیز این‌جا «تاریخ تقویمی» به شکل نیمه‌شب UTC‌ه —
 // دقیقا همون چیزی که Prisma برای ستون‌های @db.Date برمی‌گردونه/می‌گیره
 // (نگاه کن به parseIsoDate توی lib/validate.ts).
 
@@ -47,19 +47,19 @@ function localParts(tz: string, d: Date) {
   return { y: get("year"), m: get("month"), d: get("day"), h: get("hour") % 24, min: get("minute") };
 }
 
-/** تاریخِ تقویمیِ یک لحظه (timestamp) به وقت محلی کاربر، به شکل YYYY-MM-DD. */
+/** تاریخ تقویمی یک لحظه (timestamp) به وقت محلی کاربر، به شکل YYYY-MM-DD. */
 export function localIso(tz: string, d: Date): string {
   const p = localParts(tz, d);
   return `${p.y}-${String(p.m).padStart(2, "0")}-${String(p.d).padStart(2, "0")}`;
 }
 
-/** دقیقه از نیمه‌شبِ محلی (0..1439) — برای نظمِ ساعتِ خواب/بیداری. */
+/** دقیقه از نیمه‌شب محلی (0..1439) — برای نظم ساعت خواب/بیداری. */
 export function localMinuteOfDay(tz: string, d: Date): number {
   const p = localParts(tz, d);
   return p.h * 60 + p.min;
 }
 
-/** Date نیمه‌شبِ UTC (مثل خروجیِ @db.Date) → YYYY-MM-DD */
+/** Date نیمه‌شب UTC (مثل خروجی @db.Date) → YYYY-MM-DD */
 export function utcIso(d: Date): string {
   return d.toISOString().slice(0, 10);
 }
@@ -72,7 +72,7 @@ export function addDaysIso(iso: string, n: number): string {
   return utcIso(new Date(isoToUtcDate(iso).getTime() + n * DAY_MS));
 }
 
-/** JS getDay() همون تاریخِ تقویمی (0=یکشنبه … 6=شنبه) */
+/** JS getDay() همون تاریخ تقویمی (0=یکشنبه … 6=شنبه) */
 export function isoWeekday(iso: string): number {
   return isoToUtcDate(iso).getUTCDay();
 }
@@ -88,8 +88,8 @@ export function todayIso(timezone: string, refDate: Date = new Date()): string {
 export type WeekRange = { weekStart: Date; weekEnd: Date; weekStartIso: string; weekEndIso: string };
 
 /**
- * بازه‌ی هفته (شنبه..جمعه) به وقت محلیِ کاربر. offset=0 هفته‌ی جاری، -1 قبلی.
- * weekStart/weekEnd نیمه‌شبِ UTCِ همون تاریخ‌های تقویمی‌ان — مستقیم برای
+ * بازه‌ی هفته (شنبه..جمعه) به وقت محلی کاربر. offset=0 هفته‌ی جاری، -1 قبلی.
+ * weekStart/weekEnd نیمه‌شب UTC همون تاریخ‌های تقویمی‌ان — مستقیم برای
  * where روی ستون‌های @db.Date قابل استفاده‌ن (weekEnd شامل‌شونده‌ست).
  */
 export function getWeekRange(timezone: string, offset: number, refDate: Date = new Date()): WeekRange {
@@ -101,22 +101,22 @@ export function getWeekRange(timezone: string, offset: number, refDate: Date = n
   return { weekStart, weekEnd, weekStartIso: utcIso(weekStart), weekEndIso: utcIso(weekEnd) };
 }
 
-/** ۷ تاریخِ شنبه..جمعه (نیمه‌شبِ UTC). */
+/** ۷ تاریخ شنبه..جمعه (نیمه‌شب UTC). */
 export function daysOfWeek(weekStart: Date): Date[] {
   return Array.from({ length: 7 }, (_, i) => new Date(weekStart.getTime() + i * DAY_MS));
 }
 
-/** همون daysOfWeek ولی به شکل رشته‌ی ISO — بیشترِ منطقِ دامنه‌ها با این کار می‌کنه. */
+/** همون daysOfWeek ولی به شکل رشته‌ی ISO — بیشتر منطق دامنه‌ها با این کار می‌کنه. */
 export function daysOfWeekIso(weekStartIso: string): string[] {
   return Array.from({ length: 7 }, (_, i) => addDaysIso(weekStartIso, i));
 }
 
-// ارقام در کلِ سایت انگلیسی‌اند
+// ارقام در کل سایت انگلیسی‌اند
 function faDigits(n: number): string {
   return String(n);
 }
 
-/** برچسبِ جلالیِ هفته: «۱ تا ۷ مهر» یا اگه دو ماه رو بگیره «۲۹ شهریور تا ۴ مهر». */
+/** برچسب جلالی هفته: «۱ تا ۷ مهر» یا اگه دو ماه رو بگیره «۲۹ شهریور تا ۴ مهر». */
 export function weekLabelFa(weekStartIso: string): string {
   const s = isoToUtcDate(weekStartIso);
   const e = new Date(s.getTime() + 6 * DAY_MS);

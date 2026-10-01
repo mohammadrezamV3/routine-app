@@ -23,9 +23,9 @@ export default function AccountIndexPage() {
   const [data, setData] = useState<IndexUser | null>(null);
   const [avatarUrl, setAvatarUrl] = useState<string | null>(null);
 
-  // طبقِ درخواستِ صریح: روی دسکتاپ سایدبار (app/account/layout.tsx) از قبل
-  // همینِ فهرستِ بخش‌ها را نشان می‌دهد، پس تکرارش این‌جا (توی ستونِ محتوا)
-  // یک باکسِ اضافه‌ی بی‌فایده بود — «سمتِ چپیِ» گزارش‌شده. روی دسکتاپ، پیشِ‌فرض
+  // طبق درخواست صریح: روی دسکتاپ سایدبار (app/account/layout.tsx) از قبل
+  // همین فهرست بخش‌ها را نشان می‌دهد، پس تکرارش این‌جا (توی ستون محتوا)
+  // یک باکس اضافه‌ی بی‌فایده بود — «سمت چپی» گزارش‌شده. روی دسکتاپ، پیش‌فرض
   // مستقیم می‌رود روی «پروفایل»؛ موبایل (که سایدبار ندارد) دست‌نخورده می‌ماند.
   useEffect(() => {
     if (window.matchMedia("(min-width: 1024px)").matches) {
@@ -41,7 +41,7 @@ export default function AccountIndexPage() {
     getAvatarUrl().then(setAvatarUrl);
   }, []);
 
-  // /api/account خودش `name` رو «نام + نام خانوادگی» برمی‌گردونه؛ چسبوندنِ
+  // /api/account خودش `name` رو «نام + نام خانوادگی» برمی‌گردونه؛ چسبوندن
   // دوباره‌ی lastName فامیل رو دوبار نشون می‌داد.
   const fullName = data ? data.name?.trim() || "کاربر آریون" : "";
   // /api/account فقط اشتراک واقعا فعال (ACTIVE/TRIAL منقضی‌نشده) رو برمی‌گردونه،
@@ -50,9 +50,9 @@ export default function AccountIndexPage() {
   const sub = data?.subscriptions?.[0];
   const isPremium = !!sub;
 
-  // همون توالیِ خروجِ سایدبارِ دسکتاپ (app/account/layout.tsx) — طبقِ
-  // گزارشِ باگ، روی موبایل سایدبار دیده نمی‌شه و راهِ دیگه‌ای برای خروج از
-  // حساب نبود. این‌جا (صفحه‌ی اولِ پنل) تنها جایی‌ست که موبایل همیشه بهش
+  // همون توالی خروج سایدبار دسکتاپ (app/account/layout.tsx) — طبق
+  // گزارش باگ، روی موبایل سایدبار دیده نمی‌شه و راه دیگه‌ای برای خروج از
+  // حساب نبود. این‌جا (صفحه‌ی اول پنل) تنها جایی‌ست که موبایل همیشه بهش
   // می‌رسه، پس همین‌جا هم اضافه شد.
   return (
     <section>
@@ -62,8 +62,8 @@ export default function AccountIndexPage() {
         </motion.div>
       )}
 
-      {/* طبقِ درخواستِ صریح، «خروج از حساب» دیگر باکسِ جدا و مجزا نیست —
-          داخلِ همون یک کارتِ بخش‌ها می‌نشیند، درست مثلِ بقیه‌ی ردیف‌ها. */}
+      {/* طبق درخواست صریح، «خروج از حساب» دیگر باکس جدا و مجزا نیست —
+          داخل همون یک کارت بخش‌ها می‌نشیند، درست مثل بقیه‌ی ردیف‌ها. */}
       <div className="account-card account-card-full">
         {ACCOUNT_SECTIONS.map((s, i) => (
           <AccountRowLink key={s.href} href={s.href} icon={s.icon} label={s.label} desc={s.desc} index={i} />
@@ -77,8 +77,8 @@ export default function AccountIndexPage() {
         />
       </div>
 
-      {/* طبقِ درخواستِ صریح، لینک‌های حقوقی/فوتر حذف شدند — فقط نسخه‌ی اپ
-          می‌ماند، آن‌هم دیگر وسطِ صفحه نیست: گوشه‌ی پایین-راست. */}
+      {/* طبق درخواست صریح، لینک‌های حقوقی/فوتر حذف شدند — فقط نسخه‌ی اپ
+          می‌ماند، آن‌هم دیگر وسط صفحه نیست: گوشه‌ی پایین-راست. */}
       <div className="account-index-version mono" dir="ltr">
         Arion v{process.env.NEXT_PUBLIC_APP_VERSION || "1.0.0"}
       </div>

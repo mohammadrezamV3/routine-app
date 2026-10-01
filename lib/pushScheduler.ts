@@ -2,30 +2,30 @@ import { isPushConfigured } from "@/lib/webPush";
 import { pruneReminderLog, runDueReminders, runEconomicAlerts } from "@/lib/pushReminders";
 import { sweepWaitlists } from "@/lib/mentorWaitlistServer";
 
-// زمان‌بندِ داخلیِ یادآوری‌ها — از instrumentation.ts یک‌بار موقعِ بالا
-// آمدنِ هر پروسه‌ی سرور (next dev / next start / هر workerِ cluster.js) شروع
-// می‌شه. قبلا ارسالِ پوش فقط با یک crontabِ بیرونی (deploy/cron.example، هر
-// ۵ دقیقه) اتفاق می‌افتاد که روی دیپلویِ داکر اصلا تنظیم نشده بود — یعنی وقتی
+// زمان‌بند داخلی یادآوری‌ها — از instrumentation.ts یک‌بار موقع بالا
+// آمدن هر پروسه‌ی سرور (next dev / next start / هر worker cluster.js) شروع
+// می‌شه. قبلا ارسال پوش فقط با یک crontab بیرونی (deploy/cron.example، هر
+// ۵ دقیقه) اتفاق می‌افتاد که روی دیپلوی داکر اصلا تنظیم نشده بود — یعنی وقتی
 // مرورگر بسته بود *هیچ* یادآوری‌ای نمی‌رفت، و اگه هم تنظیم می‌شد تا ۵ دقیقه
-// دیر. حالا هر ۳۰ ثانیه (هم‌تراز با ثانیه‌ی ~۱ و ~۳۱ِ هر دقیقه، چون بازه‌ها
-// سرِ دقیقه باز می‌شن) خودِ سرور چک می‌کنه.
+// دیر. حالا هر ۳۰ ثانیه (هم‌تراز با ثانیه‌ی ~۱ و ~۳۱ هر دقیقه، چون بازه‌ها
+// سر دقیقه باز می‌شن) خود سرور چک می‌کنه.
 //
 // چند worker هم‌زمان این رو اجرا می‌کنن؛ تکراری فرستاده نمی‌شه چون هر ارسال
-// اول کلیدِ یکتای PushReminderLog رو ادعا می‌کنه (lib/pushReminders.ts).
+// اول کلید یکتای PushReminderLog رو ادعا می‌کنه (lib/pushReminders.ts).
 
 const TICK_MS = 30_000;
 const PRUNE_EVERY_MS = 60 * 60 * 1000;
-// صفِ انتظارِ منتورها (lib/mentorWaitlistServer.ts): انقضای نوبت‌ها و صندلی‌هایی
-// که بدونِ مسیرِ خواندن آزاد شده‌اند (حذفِ حساب، اقدامِ ادمین). مستقل از VAPID —
-// اعلانِ درون‌برنامه‌ای بدونِ پوش هم ارزش دارد. چند worker هم‌زمان امن است.
+// صف انتظار منتورها (lib/mentorWaitlistServer.ts): انقضای نوبت‌ها و صندلی‌هایی
+// که بدون مسیر خواندن آزاد شده‌اند (حذف حساب، اقدام ادمین). مستقل از VAPID —
+// اعلان درون‌برنامه‌ای بدون پوش هم ارزش دارد. چند worker هم‌زمان امن است.
 const WAITLIST_EVERY_MS = 5 * 60 * 1000;
 
 export function startPushScheduler(): void {
   const g = globalThis as unknown as { __arionPushScheduler?: boolean };
-  if (g.__arionPushScheduler) return; // HMRِ dev یا import دوباره
+  if (g.__arionPushScheduler) return; // HMR dev یا import دوباره
   g.__arionPushScheduler = true;
   if (process.env.PUSH_SCHEDULER === "off") {
-    console.log("[push] زمان‌بندِ داخلی با PUSH_SCHEDULER=off خاموشه");
+    console.log("[push] زمان‌بند داخلی با PUSH_SCHEDULER=off خاموشه");
     return;
   }
   if (!isPushConfigured()) {
@@ -39,7 +39,7 @@ export function startPushScheduler(): void {
   const jitterMs = 1000 + Math.floor(Math.random() * 1500);
 
   async function tick() {
-    if (running) return; // تیکِ قبلی هنوز تموم نشده
+    if (running) return; // تیک قبلی هنوز تموم نشده
     running = true;
     try {
       const now = new Date();

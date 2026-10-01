@@ -1,5 +1,5 @@
-// دسترس‌پذیریِ منتور و گزینه‌های مدیریتِ شاگرد — منطقِ خالص (بدونِ Prisma)
-// تا هم سرور (روت‌ها، کارتِ کشف) و هم کلاینت (پنلِ منتور، پروفایلِ عمومی)
+// دسترس‌پذیری منتور و گزینه‌های مدیریت شاگرد — منطق خالص (بدون Prisma)
+// تا هم سرور (روت‌ها، کارت کشف) و هم کلاینت (پنل منتور، پروفایل عمومی)
 // یک تعریف داشته باشند. سقف‌ها همین‌جا تعریف می‌شوند و فرم‌ها از همین می‌خوانند.
 import { fmtDate } from "@/lib/mentorFormat";
 import { faNum } from "@/lib/jalali";
@@ -22,8 +22,8 @@ export const END_REASON_MAX = 300;
 
 /**
  * OPEN: درخواست باز است · CLOSED: منتور پذیرش را خاموش کرده ·
- * FULL: ظرفیتِ شاگردِ فعال پر است · AWAY: در دسترس نیست و درخواست‌ها متوقف است.
- * عدمِ حضور بدونِ توقفِ درخواست‌ها state را OPEN نگه می‌دارد (away=true).
+ * FULL: ظرفیت شاگرد فعال پر است · AWAY: در دسترس نیست و درخواست‌ها متوقف است.
+ * عدم حضور بدون توقف درخواست‌ها state را OPEN نگه می‌دارد (away=true).
  */
 export type AvailabilityState = "OPEN" | "CLOSED" | "FULL" | "AWAY";
 
@@ -49,7 +49,7 @@ export function dayIso(v: Date | string | null | undefined): string | null {
   return /^\d{4}-\d{2}-\d{2}/.test(s) ? s.slice(0, 10) : null;
 }
 
-/** عدمِ حضور تا روزِ بازگشت (خودِ آن روز در دسترس است) */
+/** عدم حضور تا روز بازگشت (خود آن روز در دسترس است) */
 export function isAway(awayUntil: Date | string | null | undefined, todayIso: string): boolean {
   const d = dayIso(awayUntil);
   return !!d && d > todayIso;
@@ -65,7 +65,7 @@ export function computeAvailability(p: AvailabilityInput, activeStudents: number
   return { state, away, full, awayUntil: away ? dayIso(p.awayUntil) : null };
 }
 
-/** برچسبِ کوتاه برای کارت/چیپ */
+/** برچسب کوتاه برای کارت/چیپ */
 export function availabilityShort(state: AvailabilityState, awayUntil: string | null): string {
   switch (state) {
     case "CLOSED": return "شاگرد جدید نمی‌پذیرد";
@@ -75,21 +75,21 @@ export function availabilityShort(state: AvailabilityState, awayUntil: string | 
   }
 }
 
-/** پیامِ ردِ درخواستِ شاگرد (سمتِ سرور) */
+/** پیام رد درخواست شاگرد (سمت سرور) */
 export function requestBlockedMessage(state: AvailabilityState, awayUntil: string | null): string {
   switch (state) {
-    case "CLOSED": return "این مربی فعلاً شاگرد جدید نمی‌پذیرد";
+    case "CLOSED": return "این مربی فعلا شاگرد جدید نمی‌پذیرد";
     case "FULL": return "ظرفیت شاگردهای این مربی تکمیل است";
     case "AWAY": return awayUntil
       ? `این مربی تا ${fmtDate(awayUntil)} در دسترس نیست؛ پس از آن درخواست بده`
-      : "این مربی فعلاً در دسترس نیست";
+      : "این مربی فعلا در دسترس نیست";
     default: return "";
   }
 }
 
 export function responseTimeLabel(hours: number | null | undefined): string | null {
   if (!hours) return null;
-  return `معمولاً تا ${faNum(hours)} ساعت پاسخ می‌دهد`;
+  return `معمولا تا ${faNum(hours)} ساعت پاسخ می‌دهد`;
 }
 
 // ───────────────────────── اعتبارسنجی ─────────────────────────
@@ -100,7 +100,7 @@ function clean(v: string): string {
   return v.replace(/\s+/g, " ").trim();
 }
 
-/** لیستِ سؤال‌های پذیرش؛ سؤالِ خالی حذف و تکراری یکی می‌شود */
+/** لیست سؤال‌های پذیرش؛ سؤال خالی حذف و تکراری یکی می‌شود */
 export function validateIntakeQuestions(v: unknown): Result<string[]> {
   if (v === null || v === undefined) return { ok: true, data: [] };
   if (!Array.isArray(v)) return { ok: false, error: "سؤال‌ها باید لیست باشد" };
@@ -119,9 +119,9 @@ export function validateIntakeQuestions(v: unknown): Result<string[]> {
 export type IntakeAnswer = { question: string; answer: string };
 
 /**
- * پاسخ‌ها به‌ترتیبِ سؤال‌های *فعلیِ* منتور (آرایه‌ی رشته). همه‌ی سؤال‌ها
- * جواب لازم دارند. خروجی snapshotِ سؤال و جواب است تا ویرایشِ بعدیِ
- * سؤال‌ها جوابِ قبلی را بی‌معنا نکند.
+ * پاسخ‌ها به‌ترتیب سؤال‌های *فعلی* منتور (آرایه‌ی رشته). همه‌ی سؤال‌ها
+ * جواب لازم دارند. خروجی snapshot سؤال و جواب است تا ویرایش بعدی
+ * سؤال‌ها جواب قبلی را بی‌معنا نکند.
  */
 export function validateIntakeAnswers(questions: string[], v: unknown): Result<IntakeAnswer[] | null> {
   if (questions.length === 0) return { ok: true, data: null };
@@ -138,7 +138,7 @@ export function validateIntakeAnswers(questions: string[], v: unknown): Result<I
   return { ok: true, data: out };
 }
 
-/** خواندنِ امنِ intakeAnswersِ ذخیره‌شده (Json) */
+/** خواندن امن intakeAnswers ذخیره‌شده (Json) */
 export function parseIntakeAnswers(v: unknown): IntakeAnswer[] {
   if (!Array.isArray(v)) return [];
   return v.flatMap((x) =>
@@ -148,7 +148,7 @@ export function parseIntakeAnswers(v: unknown): IntakeAnswer[] {
   );
 }
 
-/** سقفِ ظرفیت؛ null/"" = بدونِ سقف */
+/** سقف ظرفیت؛ null/"" = بدون سقف */
 export function validateCapacity(v: unknown): Result<number | null> {
   if (v === null || v === undefined || v === "") return { ok: true, data: null };
   const n = typeof v === "string" ? Number(toEnglishDigits(v).trim()) : v;
@@ -164,7 +164,7 @@ export function validateResponseTime(v: unknown): Result<number | null> {
   return { ok: true, data: v };
 }
 
-/** متنِ اختیاری با سقف؛ طولانی‌تر رد می‌شود (نه بریدنِ بی‌صدا) */
+/** متن اختیاری با سقف؛ طولانی‌تر رد می‌شود (نه بریدن بی‌صدا) */
 export function validateOptionalText(v: unknown, max: number, label: string): Result<string | null> {
   if (v === null || v === undefined) return { ok: true, data: null };
   if (typeof v !== "string") return { ok: false, error: `${label} معتبر نیست` };
@@ -174,7 +174,7 @@ export function validateOptionalText(v: unknown, max: number, label: string): Re
   return { ok: true, data: t };
 }
 
-/** تاریخِ بازگشت: YYYY-MM-DD، بعد از امروز و حداکثر AWAY_MAX_DAYS روز بعد */
+/** تاریخ بازگشت: YYYY-MM-DD، بعد از امروز و حداکثر AWAY_MAX_DAYS روز بعد */
 export function validateAwayUntil(v: unknown, todayIso: string): Result<string> {
   if (typeof v !== "string" || !/^\d{4}-\d{2}-\d{2}$/.test(v)) return { ok: false, error: "تاریخ بازگشت معتبر نیست" };
   const d = new Date(v + "T00:00:00.000Z");
@@ -194,7 +194,7 @@ export function validateLabelName(v: unknown): Result<string> {
   return { ok: true, data: t };
 }
 
-/** متنِ یادداشتِ خصوصی: خالی نه، بیشتر از سقف رد می‌شود */
+/** متن یادداشت خصوصی: خالی نه، بیشتر از سقف رد می‌شود */
 export function validateNoteBody(v: unknown): Result<string> {
   if (typeof v !== "string" || !v.trim()) return { ok: false, error: "متن یادداشت را بنویس" };
   const t = v.trim();

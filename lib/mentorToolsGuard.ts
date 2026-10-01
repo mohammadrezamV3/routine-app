@@ -3,10 +3,10 @@ import type { MentorProfile } from "@prisma/client";
 import { prisma } from "@/lib/prisma";
 import { requireMentorsUser, forbidden } from "@/lib/mentorGuard";
 
-// نگهبانِ مشترکِ روت‌های ابزارِ منتور (/api/mentor/templates|replies|alerts|reports|export).
-// کاربرِ لاگین‌کرده + فلگِ mentors (requireMentorsUser) + پروفایلِ منتوری.
-// write=true یعنی منتورِ معلق نمی‌تواند چیزی بسازد/تغییر دهد؛ خواندنِ داده‌ی
-// خودِ منتور (قالب‌ها، پاسخ‌ها) در تعلیق هم باز است.
+// نگهبان مشترک روت‌های ابزار منتور (/api/mentor/templates|replies|alerts|reports|export).
+// کاربر لاگین‌کرده + فلگ mentors (requireMentorsUser) + پروفایل منتوری.
+// write=true یعنی منتور معلق نمی‌تواند چیزی بسازد/تغییر دهد؛ خواندن داده‌ی
+// خود منتور (قالب‌ها، پاسخ‌ها) در تعلیق هم باز است.
 
 export type MentorToolsGuard =
   | { ok: true; userId: string; profile: MentorProfile }

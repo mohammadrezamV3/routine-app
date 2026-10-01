@@ -7,7 +7,7 @@ import { toTemplateDetail, toTemplateRow, validateTemplateName } from "@/lib/men
 
 type Ctx = { params: { id: string } };
 
-// هر سه متد فقط روی قالبِ خودِ منتور (where: { id, profileId }) — ضدِ IDOR.
+// هر سه متد فقط روی قالب خود منتور (where: { id, profileId }) — ضد IDOR.
 
 // GET /api/mentor/templates/:id → قالب با آیتم‌ها
 export async function GET(_req: Request, { params }: Ctx) {
@@ -19,7 +19,7 @@ export async function GET(_req: Request, { params }: Ctx) {
   return NextResponse.json({ template: toTemplateDetail(t) });
 }
 
-// PATCH /api/mentor/templates/:id { name } → تغییرِ نام
+// PATCH /api/mentor/templates/:id { name } → تغییر نام
 export async function PATCH(req: Request, { params }: Ctx) {
   const g = await requireMentorTools({ write: true });
   if (!g.ok) return g.response;

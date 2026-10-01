@@ -49,9 +49,9 @@ export function TradeDetailDrawer({
 
   if (typeof document === "undefined") return null;
 
-  // بخش‌بندیِ کارت دقیقا همان بخش‌هایی‌ست که کاربر موقعِ «افزودن» پر می‌کند
+  // بخش‌بندی کارت دقیقا همان بخش‌هایی‌ست که کاربر موقع «افزودن» پر می‌کند
   // (تب‌های TradeFormModal): اطلاعات / دلایل / چک‌لیست / عکس‌ها / برچسب‌ها /
-  // احساسات — تا خواندنِ معامله همان نقشه‌ی ذهنیِ نوشتنش را داشته باشد.
+  // احساسات — تا خواندن معامله همان نقشه‌ی ذهنی نوشتنش را داشته باشد.
   const row = (k: string, v: string | null | undefined): [string, string][] =>
     v === null || v === undefined || v === "" ? [] : [[k, v]];
 
@@ -178,7 +178,7 @@ export function TradeDetailDrawer({
                 <div className="trade-tag-row">
                   {entry.tags.map((t) => (
                     <span key={t.id} className="trade-tag-chip active" style={{ "--tag-c": t.color } as CSSProperties}>
-                      {/* توپِ برچسب سمتِ چپِ نامش (در RTL یعنی بعد از متن) */}
+                      {/* توپ برچسب سمت چپ نامش (در RTL یعنی بعد از متن) */}
                       {t.name}<span className="trade-tag-dot" style={{ background: t.color }} />
                     </span>
                   ))}

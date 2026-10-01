@@ -66,24 +66,24 @@ export type MtTradeInput = {
   closed: boolean;
 };
 
-/** سقفِ ردیف در هر درخواست. EAها چانک‌های ≤۳۰۰تایی می‌فرستند؛ این فقط سپرِ سوءاستفاده‌ست. */
+/** سقف ردیف در هر درخواست. EAها چانک‌های ≤۳۰۰تایی می‌فرستند؛ این فقط سپر سوءاستفاده‌ست. */
 export const MT_MAX_TRADES_PER_REQUEST = 1000;
 
 function num(v: unknown): number | null {
   if (v === null || v === undefined || v === "") return null;
-  // رشته با ممیزِ «,» (ترمینالِ با locale اروپایی/اکسپرتِ دست‌ساز) هم قبول است
+  // رشته با ممیز «,» (ترمینال با locale اروپایی/اکسپرت دست‌ساز) هم قبول است
   const n = typeof v === "number" ? v : Number(String(v).trim().replace(",", "."));
   return Number.isFinite(n) ? n : null;
 }
 
-/** قیمت/حدضرر/حدسود: MQL «نداشتن» را با 0 نشان می‌دهد — 0 یعنی null، نه قیمتِ صفر */
+/** قیمت/حدضرر/حدسود: MQL «نداشتن» را با 0 نشان می‌دهد — 0 یعنی null، نه قیمت صفر */
 function price(v: unknown): number | null {
   const n = num(v);
   return n !== null && n > 0 ? n : null;
 }
 
 function parseTime(v: unknown): Date | null {
-  // ثانیه‌ی یونیکس (چیزی که MQL می‌دهد) — نه میلی‌ثانیه. عددِ رشته‌ای هم همین.
+  // ثانیه‌ی یونیکس (چیزی که MQL می‌دهد) — نه میلی‌ثانیه. عدد رشته‌ای هم همین.
   // ۰ (OrderCloseTime() معامله‌ی باز در MT4) یعنی «ندارد»، نه ۱ ژانویه‌ی ۱۹۷۰.
   const asNum = typeof v === "number" ? v : typeof v === "string" && /^\s*\d+\s*$/.test(v) ? Number(v) : null;
   if (asNum !== null) {
@@ -99,8 +99,8 @@ function parseTime(v: unknown): Date | null {
 }
 
 /**
- * نمادِ بروکر را تمیز می‌کند. قبلا یک regexِ سخت‌گیر (`[A-Z0-9._#-]`، حداکثر
- * ۲۰) داشتیم که نمادهای کاملا رایجِ بروکرها مثل `EURUSD+`، `XAUUSD!`،
+ * نماد بروکر را تمیز می‌کند. قبلا یک regex سخت‌گیر (`[A-Z0-9._#-]`، حداکثر
+ * ۲۰) داشتیم که نمادهای کاملا رایج بروکرها مثل `EURUSD+`، `XAUUSD!`،
  * `US30 Cash`، `BTC/USD`، `.US500` یا `[DJI30]` را رد می‌کرد — و هر معامله
  * روی چنین نمادی *بی‌صدا* دور ریخته می‌شد (ریشه‌ی «فقط ۲ تا از ۱۰ معامله
  * رسید»). حالا فقط کاراکترهای کنترلی حذف و طول محدود می‌شود.
@@ -118,8 +118,8 @@ export function cleanMtSymbol(v: unknown): string {
  * ردیف‌های خام EA را به شکل داخلی تبدیل می‌کند.
  * ردیف بدشکل بی‌صدا کنار گذاشته می‌شود، نه اینکه کل sync را بشکند — یک
  * نماد عجیب بروکر نباید باعث شود بقیه‌ی معاملات هم ثبت نشوند. فقط چیزهایی
- * که بدونشان واقعا نمی‌شود ردیف ساخت (شناسه، نماد، زمانِ باز شدن) اجباری‌اند؛
- * نبودِ SL/TP/قیمت/کمیسیون هیچ‌وقت باعثِ رد شدن نمی‌شود.
+ * که بدونشان واقعا نمی‌شود ردیف ساخت (شناسه، نماد، زمان باز شدن) اجباری‌اند؛
+ * نبود SL/TP/قیمت/کمیسیون هیچ‌وقت باعث رد شدن نمی‌شود.
  */
 export function normalizeMtTrades(raw: unknown): MtTradeInput[] {
   if (!Array.isArray(raw)) return [];
@@ -150,7 +150,7 @@ export function normalizeMtTrades(raw: unknown): MtTradeInput[] {
     const closeTime = parseTime(r.closeTime ?? r.close_time);
     const closePriceRaw = price(r.closePrice ?? r.close_price);
     // «closed» صریح همیشه برنده است. قبلا MT4 برای معامله‌ی باز closeTime=0
-    // و closePrice=قیمتِ لحظه‌ای می‌فرستاد و این‌جا «بسته» حساب می‌شد.
+    // و closePrice=قیمت لحظه‌ای می‌فرستاد و این‌جا «بسته» حساب می‌شد.
     const closed =
       r.closed === true || r.closed === "true"
         ? true
@@ -171,7 +171,7 @@ export function normalizeMtTrades(raw: unknown): MtTradeInput[] {
       commission: num(r.commission),
       swap: num(r.swap),
       openTime,
-      // اکسپرتِ قدیمیِ MT5 برای معامله‌ی بسته closeTime نمی‌داد مگر همراهِ openTime
+      // اکسپرت قدیمی MT5 برای معامله‌ی بسته closeTime نمی‌داد مگر همراه openTime
       closeTime: closed ? closeTime ?? openTime : null,
       closed,
     });
@@ -180,10 +180,10 @@ export function normalizeMtTrades(raw: unknown): MtTradeInput[] {
 }
 
 /**
- * اختلافِ ساعتِ سرورِ بروکر با UTC (دقیقه) → میلی‌ثانیه. اکسپرتِ قدیمی آن را
- * از TimeCurrent()−TimeGMT() می‌گیرد که به زمانِ *آخرین تیک* وابسته است و
+ * اختلاف ساعت سرور بروکر با UTC (دقیقه) → میلی‌ثانیه. اکسپرت قدیمی آن را
+ * از TimeCurrent()−TimeGMT() می‌گیرد که به زمان *آخرین تیک* وابسته است و
  * چند ثانیه/دقیقه عقب است (۱۱۹ به‌جای ۱۲۰) — به نزدیک‌ترین ۱۵ دقیقه گرد
- * می‌شود. بیرون از ±۱۴ ساعت (بازارِ بسته/آخرِ هفته) یعنی نامعتبر → ۰.
+ * می‌شود. بیرون از ±۱۴ ساعت (بازار بسته/آخر هفته) یعنی نامعتبر → ۰.
  */
 export function normalizeTzOffsetMs(raw: unknown): number {
   const n = Number(raw);
@@ -210,12 +210,12 @@ export type MtTradeData = {
   externalSource: string;
 };
 
-/** ردیفِ نرمال‌شده → داده‌ی TradeEntry (بدونِ sessions که به lib سرور وابسته است). */
+/** ردیف نرمال‌شده → داده‌ی TradeEntry (بدون sessions که به lib سرور وابسته است). */
 export function mtTradeToEntryData(t: MtTradeInput, tzOffsetMs: number, platform: string): MtTradeData {
   const toUtc = (d: Date | null) => (d && tzOffsetMs ? new Date(d.getTime() - tzOffsetMs) : d);
-  // «profit»ی که EA می‌فرستد (OrderProfit در MT4، DEAL_PROFIT در MT5) طبقِ
-  // داکیومنتِ متاتریدر فقط سودِ خامِ قیمتی‌ست و کمیسیون/سواپ را شامل نمی‌شود؛
-  // pnlِ این جدول باید خالص باشد، پس یک‌بار همین‌جا جمع می‌شوند.
+  // «profit»ی که EA می‌فرستد (OrderProfit در MT4، DEAL_PROFIT در MT5) طبق
+  // داکیومنت متاتریدر فقط سود خام قیمتی‌ست و کمیسیون/سواپ را شامل نمی‌شود؛
+  // pnl این جدول باید خالص باشد، پس یک‌بار همین‌جا جمع می‌شوند.
   const pnl = Math.round((t.profit + (t.commission ?? 0) + (t.swap ?? 0)) * 100) / 100;
   return {
     symbol: t.symbol,
@@ -238,11 +238,11 @@ export function mtTradeToEntryData(t: MtTradeInput, tzOffsetMs: number, platform
 }
 
 /**
- * داده‌ی آپدیتِ یک معامله‌ی *موجود*. فیلدهای اختیاری که این بار نیامده‌اند
- * (null) مقدارِ قبلی را پاک نمی‌کنند: اکسپرتِ قدیمیِ MT5 برای معامله‌ی بسته
- * قیمتِ ورود/SL/TP نمی‌فرستاد و openTime را همان زمانِ بستن می‌گذاشت، و
- * همین باعث می‌شد معامله‌ای که وقتِ باز بودن کامل ثبت شده بود بعد از بسته
- * شدن ناقص شود. وقتی قیمتِ ورود نیامده، زمانِ ورودِ قبلی هم حفظ می‌شود.
+ * داده‌ی آپدیت یک معامله‌ی *موجود*. فیلدهای اختیاری که این بار نیامده‌اند
+ * (null) مقدار قبلی را پاک نمی‌کنند: اکسپرت قدیمی MT5 برای معامله‌ی بسته
+ * قیمت ورود/SL/TP نمی‌فرستاد و openTime را همان زمان بستن می‌گذاشت، و
+ * همین باعث می‌شد معامله‌ای که وقت باز بودن کامل ثبت شده بود بعد از بسته
+ * شدن ناقص شود. وقتی قیمت ورود نیامده، زمان ورود قبلی هم حفظ می‌شود.
  */
 export function mtUpdateData(data: MtTradeData, t: MtTradeInput): Partial<MtTradeData> {
   const out: Partial<MtTradeData> = { ...data };

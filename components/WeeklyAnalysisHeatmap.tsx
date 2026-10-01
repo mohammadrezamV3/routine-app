@@ -9,9 +9,9 @@ import { jalaliShort, scoreFill, weekdayLetter } from "./WeeklyAnalysisShared";
 
 type Row = { key: string; label: string; values: (number | null)[]; total?: boolean };
 
-// نقشه‌ی حرارتیِ ۷ روز × دامنه‌ها — شدتِ رنگ = امتیاز (مقیاسِ شفافیتِ
-// accent). خانه‌ی بدونِ داده فقط یک قابِ خط‌چینه (نه رنگِ صفر)، روزِ آینده
-// کم‌رنگ، و ستونِ امروز قابِ accent داره.
+// نقشه‌ی حرارتی ۷ روز × دامنه‌ها — شدت رنگ = امتیاز (مقیاس شفافیت
+// accent). خانه‌ی بدون داده فقط یک قاب خط‌چینه (نه رنگ صفر)، روز آینده
+// کم‌رنگ، و ستون امروز قاب accent داره.
 export function WeeklyAnalysisHeatmap({ domains, days }: { domains: DomainResult[]; days: DayCell[] }) {
   const [sel, setSel] = useState<{ row: number; col: number } | null>(null);
 

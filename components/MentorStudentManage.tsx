@@ -12,7 +12,7 @@ import type { StudentLabel, StudentManageResponse } from "@/lib/mentorTypes";
 
 const ic = (Icon: typeof Tag, size: number) => <Icon size={size} strokeWidth={MI_STROKE} aria-hidden />;
 
-/** دادهِ مدیریتیِ خصوصیِ منتور برای یک شاگرد — یک بار برای کلِ صفحه */
+/** داده مدیریتی خصوصی منتور برای یک شاگرد — یک بار برای کل صفحه */
 export function useStudentManage(studentId: string) {
   const [data, setData] = useState<StudentManageResponse | null>(null);
   const [error, setError] = useState<string | null>(null);
@@ -28,7 +28,7 @@ export function useStudentManage(studentId: string) {
 }
 
 /**
- * بخش‌های خصوصیِ منتور در صفحه‌ی شاگرد: جواب‌های پذیرش، برچسب‌ها و
+ * بخش‌های خصوصی منتور در صفحه‌ی شاگرد: جواب‌های پذیرش، برچسب‌ها و
  * یادداشت‌ها. شاگرد هیچ‌کدام از برچسب‌ها و یادداشت‌ها را نمی‌بیند.
  */
 export function MentorStudentManage({
@@ -47,7 +47,7 @@ export function MentorStudentManage({
   );
 }
 
-/** انتخابِ چندتاییِ برچسب‌ها؛ هر کلیک فوراً ذخیره می‌شود */
+/** انتخاب چندتایی برچسب‌ها؛ هر کلیک فورا ذخیره می‌شود */
 function StudentLabels({
   studentId, labels, value, onSaved,
 }: { studentId: string; labels: StudentLabel[]; value: string[]; onSaved: (ids: string[]) => void }) {

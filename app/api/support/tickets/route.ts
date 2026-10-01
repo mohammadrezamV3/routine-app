@@ -7,9 +7,9 @@ import { checkRateLimit } from "@/lib/rateLimit";
 
 // تیکت‌های پشتیبانی — طبق درخواست صریح، تنها راه پشتیبانی همین سایت است
 // (نه ایمیل/تلگرام). هر کاربر فقط تیکت‌های خودش را می‌بیند/می‌سازد؛ جواب
-// دادن کارِ ادمینه (app/api/admin/support).
+// دادن کار ادمینه (app/api/admin/support).
 
-// GET /api/support/tickets — فهرست تیکت‌های خودِ کاربر، تازه‌ترین اول
+// GET /api/support/tickets — فهرست تیکت‌های خود کاربر، تازه‌ترین اول
 export async function GET() {
   const session = await getServerSession(authOptions);
   const userId = (session?.user as any)?.id as string | undefined;
@@ -36,7 +36,7 @@ export async function GET() {
   });
 }
 
-// POST /api/support/tickets — تیکتِ جدید (موضوع + متنِ اولین پیام)
+// POST /api/support/tickets — تیکت جدید (موضوع + متن اولین پیام)
 export async function POST(req: NextRequest) {
   const session = await getServerSession(authOptions);
   const userId = (session?.user as any)?.id as string | undefined;

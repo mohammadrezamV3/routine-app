@@ -33,7 +33,7 @@ afterAll(async () => {
 
 type Target = { userId: string; profileId: string; docId: string; reviewId: string };
 
-/** منتور + یک مدرک (مستقیم در دیتابیس) + یک نظرِ VISIBLE از یک شاگردِ واقعی */
+/** منتور + یک مدرک (مستقیم در دیتابیس) + یک نظر VISIBLE از یک شاگرد واقعی */
 async function mentorTarget(opts: { adminPermissions?: string[]; owner?: boolean; username?: string } = {}): Promise<Target> {
   const userId = await makeMentor({ adminPermissions: opts.adminPermissions, username: opts.username });
   if (opts.owner) await prisma.user.update({ where: { id: userId }, data: { isSuperAdmin: true } });
@@ -52,7 +52,7 @@ async function mentorTarget(opts: { adminPermissions?: string[]; owner?: boolean
 }
 
 const act = {
-  // makeMentor هویت را تاییدشده می‌سازد (احرازِ اجباری)؛ برای سنجیدنِ خودِ اقدامِ تایید،
+  // makeMentor هویت را تاییدشده می‌سازد (احراز اجباری)؛ برای سنجیدن خود اقدام تایید،
   // هدف پیش از هر بار به «ارسال نشده» برمی‌گردد
   verify: async (t: Target) => {
     await prisma.mentorProfile.update({ where: { id: t.profileId }, data: { identityStatus: "NOT_PROVIDED" } });
@@ -70,7 +70,7 @@ async function statusesAs(actor: string, t: Target, withSuspended = true) {
   out.verify = (await act.verify(t)).status;
   out.suspend = (await act.suspend(t)).status;
   if (withSuspended) {
-    // برای سنجشِ unsuspend، پروفایل واقعا معلق باشد
+    // برای سنجش unsuspend، پروفایل واقعا معلق باشد
     await prisma.mentorProfile.update({ where: { id: t.profileId }, data: { suspendedAt: new Date() } });
     as(actor);
     out.unsuspend = (await act.unsuspend(t)).status;
@@ -82,8 +82,8 @@ async function statusesAs(actor: string, t: Target, withSuspended = true) {
   return out;
 }
 
-describe("ادمین — احرازِ هویتِ خودِ درخواست", () => {
-  it("ناشناس و کاربرِ عادی ۴۰۱ روی همه‌ی روت‌های /api/admin/mentors/*", async () => {
+describe("ادمین — احراز هویت خود درخواست", () => {
+  it("ناشناس و کاربر عادی ۴۰۱ روی همه‌ی روت‌های /api/admin/mentors/*", async () => {
     const t = await mentorTarget();
     for (const who of [null, await makeUser(), t.userId]) {
       as(who);
@@ -99,7 +99,7 @@ describe("ادمین — احرازِ هویتِ خودِ درخواست", () =>
     expect((await prisma.mentorProfile.findUnique({ where: { id: t.profileId } }))!.identityStatus).toBe("NOT_PROVIDED");
   });
 
-  it("ادمینِ بدونِ دسترسیِ mentors → ۴۰۳", async () => {
+  it("ادمین بدون دسترسی mentors → ۴۰۳", async () => {
     const t = await mentorTarget();
     const support = await makeUser({ adminPermissions: ["support", "users.view"] });
     as(support);
@@ -108,7 +108,7 @@ describe("ادمین — احرازِ هویتِ خودِ درخواست", () =>
     expect(await statusesAs(support, t, false)).toEqual({ verify: 403, suspend: 403, doc: 403, hide: 403 });
   });
 
-  it("ادمینِ مسدودشده حتی با دسترسی ۴۰۱", async () => {
+  it("ادمین مسدودشده حتی با دسترسی ۴۰۱", async () => {
     const t = await mentorTarget();
     const a = await makeUser({ adminPermissions: ["mentors"] });
     await prisma.user.update({ where: { id: a }, data: { isBlocked: true } });
@@ -118,8 +118,8 @@ describe("ادمین — احرازِ هویتِ خودِ درخواست", () =>
   });
 });
 
-describe("ادمین — قوانینِ «کی روی کی» (loadTarget)", () => {
-  it("ادمینِ محدود روی خودش: هیچ اقدامی (verify/suspend/unsuspend/doc/hide)", async () => {
+describe("ادمین — قوانین «کی روی کی» (loadTarget)", () => {
+  it("ادمین محدود روی خودش: هیچ اقدامی (verify/suspend/unsuspend/doc/hide)", async () => {
     const self = await mentorTarget({ adminPermissions: ["mentors"] });
     const s = await statusesAs(self.userId, self);
     expect(s).toEqual({ verify: 400, suspend: 400, unsuspend: 400, doc: 400, hide: 400 });
@@ -129,13 +129,13 @@ describe("ادمین — قوانینِ «کی روی کی» (loadTarget)", () =
     expect(await prisma.auditLog.count({ where: { actorUserId: self.userId } })).toBe(0);
   });
 
-  it("ادمینِ محدود روی Owner: ۴۰۳ برای همه", async () => {
+  it("ادمین محدود روی Owner: ۴۰۳ برای همه", async () => {
     const owner = await mentorTarget({ owner: true });
     const admin = await makeUser({ adminPermissions: ["mentors"] });
     expect(await statusesAs(admin, owner)).toEqual({ verify: 403, suspend: 403, unsuspend: 403, doc: 403, hide: 403 });
   });
 
-  it("ادمینِ محدود روی ادمینِ دیگر: بدونِ admins.manage ۴۰۳، با آن مجاز", async () => {
+  it("ادمین محدود روی ادمین دیگر: بدون admins.manage ۴۰۳، با آن مجاز", async () => {
     const other = await mentorTarget({ adminPermissions: ["support"] });
     const admin = await makeUser({ adminPermissions: ["mentors"] });
     expect(await statusesAs(admin, other)).toEqual({ verify: 403, suspend: 403, unsuspend: 403, doc: 403, hide: 403 });
@@ -145,7 +145,7 @@ describe("ادمین — قوانینِ «کی روی کی» (loadTarget)", () =
     expect((await act.doc(other)).status).toBe(200);
   });
 
-  it("Owner روی ادمینِ محدود مجاز است؛ روی خودش تایید/مدرک مجاز، تعلیق/پنهان‌کردن نه", async () => {
+  it("Owner روی ادمین محدود مجاز است؛ روی خودش تایید/مدرک مجاز، تعلیق/پنهان‌کردن نه", async () => {
     const limited = await mentorTarget({ adminPermissions: ["mentors"] });
     const owner = await mentorTarget({ owner: true });
     expect(await statusesAs(owner.userId, limited)).toEqual({ verify: 200, suspend: 200, unsuspend: 200, doc: 200, hide: 200 });
@@ -153,7 +153,7 @@ describe("ادمین — قوانینِ «کی روی کی» (loadTarget)", () =
     expect(own).toEqual({ verify: 200, suspend: 400, unsuspend: 400, doc: 200, hide: 400 });
   });
 
-  it("ادمینِ mentors روی منتورِ عادی: همه مجاز + AuditLog", async () => {
+  it("ادمین mentors روی منتور عادی: همه مجاز + AuditLog", async () => {
     const t = await mentorTarget();
     const admin = await makeUser({ adminPermissions: ["mentors"] });
     expect(await statusesAs(admin, t)).toEqual({ verify: 200, suspend: 200, unsuspend: 200, doc: 200, hide: 200 });
@@ -163,7 +163,7 @@ describe("ادمین — قوانینِ «کی روی کی» (loadTarget)", () =
 });
 
 describe("ادمین — تعلیق", () => {
-  it("تعلیق → حذف از کشف و صفحه‌ی عمومی (برای غریبه)، اعلان به منتور؛ دوباره ۴۰۹؛ رفعِ تعلیق برمی‌گرداند", async () => {
+  it("تعلیق → حذف از کشف و صفحه‌ی عمومی (برای غریبه)، اعلان به منتور؛ دوباره ۴۰۹؛ رفع تعلیق برمی‌گرداند", async () => {
     const tag = uniqueTag();
     const t = await mentorTarget({ username: `${tag}m`.slice(0, 20) });
     const admin = await makeUser({ adminPermissions: ["mentors"] });
@@ -196,9 +196,9 @@ describe("ادمین — تعلیق", () => {
 });
 
 describe("ادمین — نظرها", () => {
-  it("پنهان‌کردن بدونِ دلیل ۴۰۰؛ پنهان → از صفحه‌ی عمومی حذف و میانگین بازمحاسبه؛ بازگردانی", async () => {
+  it("پنهان‌کردن بدون دلیل ۴۰۰؛ پنهان → از صفحه‌ی عمومی حذف و میانگین بازمحاسبه؛ بازگردانی", async () => {
     const t = await mentorTarget();
-    // نظرِ دوم با امتیاز ۲
+    // نظر دوم با امتیاز ۲
     const s2 = await makeUser();
     await connect(s2, t.userId);
     as(s2);
@@ -236,7 +236,7 @@ describe("ادمین — نظرها", () => {
 });
 
 describe("ادمین — لیست و جزئیات", () => {
-  it("صفِ pending؛ جزئیات بدونِ بایتِ فایل و بدونِ ایمیل/شماره", async () => {
+  it("صف pending؛ جزئیات بدون بایت فایل و بدون ایمیل/شماره", async () => {
     const t = await mentorTarget();
     await prisma.mentorProfile.update({ where: { id: t.profileId }, data: { identityStatus: "PENDING" } });
     const admin = await makeUser({ adminPermissions: ["mentors"] });
@@ -254,8 +254,8 @@ describe("ادمین — لیست و جزئیات", () => {
 });
 
 
-// گفت‌وگو رمزگذاریِ سرتاسری دارد: گزارشِ پیام متن + کلیدِ فرانکینگِ همان پیام را
-// می‌فرستد (همان کاری که کلاینتِ گیرنده بعد از رمزگشایی می‌کند)
+// گفت‌وگو رمزگذاری سرتاسری دارد: گزارش پیام متن + کلید فرانکینگ همان پیام را
+// می‌فرستد (همان کاری که کلاینت گیرنده بعد از رمزگشایی می‌کند)
 const franking = new Map<string, { text: string; frankingKey: string }>();
 
 async function report(userId: string, body: Record<string, unknown>) {
@@ -279,8 +279,8 @@ async function sendMsg(userId: string, msId: string, body: string): Promise<stri
   return id;
 }
 
-describe("گزارش‌ها — ثبت توسطِ کاربر", () => {
-  it("فقط با دسترسیِ مشروع؛ تکراری ۴۰۹؛ خود/پیامِ خود/پیش‌نویسِ ارسال‌نشده ۴۰۴", async () => {
+describe("گزارش‌ها — ثبت توسط کاربر", () => {
+  it("فقط با دسترسی مشروع؛ تکراری ۴۰۹؛ خود/پیام خود/پیش‌نویس ارسال‌نشده ۴۰۴", async () => {
     const m = await makeMentor();
     const s = await makeUser();
     const ms = await connect(s, m);
@@ -298,7 +298,7 @@ describe("گزارش‌ها — ثبت توسطِ کاربر", () => {
     const ok = await report(s, { targetType: "MESSAGE", targetId: mMsg, reason: "توهین" });
     expect(ok.status).toBe(200);
     expect((await report(s, { targetType: "MESSAGE", targetId: mMsg, reason: "توهین" })).status).toBe(409);
-    // منتورِ عمومی را هرکسی می‌تواند گزارش کند
+    // منتور عمومی را هرکسی می‌تواند گزارش کند
     expect((await report(stranger, { targetType: "USER", targetId: m, reason: "x" })).status).toBe(200);
 
     const { POST: postProg } = await import("@/app/api/mentor-programs/route");
@@ -309,10 +309,10 @@ describe("گزارش‌ها — ثبت توسطِ کاربر", () => {
   });
 });
 
-describe("گزارش‌ها — رسیدگیِ ادمین", () => {
-  it("hide_review از طریقِ گزارش: نظر پنهان و میانگین بازمحاسبه؛ دوباره ۴۰۹", async () => {
+describe("گزارش‌ها — رسیدگی ادمین", () => {
+  it("hide_review از طریق گزارش: نظر پنهان و میانگین بازمحاسبه؛ دوباره ۴۰۹", async () => {
     const t = await mentorTarget();
-    const r = await report(t.userId, { targetType: "REVIEW", targetId: t.reviewId, reason: "نظرِ جعلی" });
+    const r = await report(t.userId, { targetType: "REVIEW", targetId: t.reviewId, reason: "نظر جعلی" });
     expect(r.status).toBe(200);
     const reportId = (await j(r)).report.id;
     const admin = await makeUser({ adminPermissions: ["mentors"] });
@@ -324,7 +324,7 @@ describe("گزارش‌ها — رسیدگیِ ادمین", () => {
     expect((await resolve(admin, reportId, { status: "RESOLVED" })).status).toBe(409);
   });
 
-  it("suspend_mentor از طریقِ گزارش روی Owner برای ادمینِ محدود ۴۰۳ است", async () => {
+  it("suspend_mentor از طریق گزارش روی Owner برای ادمین محدود ۴۰۳ است", async () => {
     const owner = await mentorTarget({ owner: true });
     const s = await makeUser();
     await connect(s, owner.userId);
@@ -334,15 +334,15 @@ describe("گزارش‌ها — رسیدگیِ ادمین", () => {
     expect((await prisma.mentorProfile.findUnique({ where: { userId: owner.userId } }))!.suspendedAt).toBeNull();
   });
 
-  // باگ: روتِ PATCH /api/admin/mentors/reports/[id] برای hide_review و suspend_mentor
-  // loadTarget (قوانینِ «کی روی کی») را اجرا می‌کند ولی برای delete_message نه.
-  // نتیجه: ادمینِ محدودی که خودش منتور است می‌تواند پیامِ آزارندهٔ *خودش* را که
-  // شاگرد گزارش کرده حذف کند (پاک‌کردنِ مدرک علیهِ خود)، یا پیامِ Owner را حذف کند.
-  it("delete_message روی پیامِ خودِ ادمینِ محدود باید رد شود (۴۰۰) — تضادِ منافع", async () => {
+  // باگ: روت PATCH /api/admin/mentors/reports/[id] برای hide_review و suspend_mentor
+  // loadTarget (قوانین «کی روی کی») را اجرا می‌کند ولی برای delete_message نه.
+  // نتیجه: ادمین محدودی که خودش منتور است می‌تواند پیام آزارنده *خودش* را که
+  // شاگرد گزارش کرده حذف کند (پاک‌کردن مدرک علیه خود)، یا پیام Owner را حذف کند.
+  it("delete_message روی پیام خود ادمین محدود باید رد شود (۴۰۰) — تضاد منافع", async () => {
     const adminMentor = await makeMentor({ adminPermissions: ["mentors"] });
     const s = await makeUser();
     const ms = await connect(s, adminMentor);
-    const msg = await sendMsg(adminMentor, ms, "پیامِ آزارنده");
+    const msg = await sendMsg(adminMentor, ms, "پیام آزارنده");
     const rid = (await j(await report(s, { targetType: "MESSAGE", targetId: msg, reason: "آزار" }))).report.id;
 
     const res = await resolve(adminMentor, rid, { status: "RESOLVED", action: "delete_message" });
@@ -350,7 +350,7 @@ describe("گزارش‌ها — رسیدگیِ ادمین", () => {
     expect(await prisma.mentorMessage.count({ where: { id: msg } })).toBe(1);
   });
 
-  it("delete_message روی پیامِ Owner توسطِ ادمینِ محدود باید ۴۰۳ باشد", async () => {
+  it("delete_message روی پیام Owner توسط ادمین محدود باید ۴۰۳ باشد", async () => {
     const owner = await mentorTarget({ owner: true });
     const s = await makeUser();
     const ms = await connect(s, owner.userId);

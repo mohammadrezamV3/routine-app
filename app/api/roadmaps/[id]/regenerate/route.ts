@@ -10,8 +10,8 @@ import { checkRateLimit } from "@/lib/rateLimit";
 import { normalizePlan, sanitizeStepProgress } from "@/lib/roadmapPlan";
 import { withLiveSync } from "@/lib/realtime";
 
-// یک فراخوانیِ AI تا ۴۵ ثانیه (AI_TIMEOUT_MS) — همان دلیلِ روتِ ساخت.
-// یک مرحله با جزئیاتِ کامل (تا ۹۰۰۰ توکن) بیشتر از ۶۰ ثانیه طول می‌کشد؛
+// یک فراخوانی AI تا ۴۵ ثانیه (AI_TIMEOUT_MS) — همان دلیل روت ساخت.
+// یک مرحله با جزئیات کامل (تا ۹۰۰۰ توکن) بیشتر از ۶۰ ثانیه طول می‌کشد؛
 // nginx همین مسیر را ۱۳۰ ثانیه صبر می‌کند (deploy/nginx.*.conf).
 export const maxDuration = 120;
 
@@ -19,18 +19,18 @@ const LIMIT = 20;
 const WINDOW_MS = 30 * 60_000;
 
 /**
- * ساختنِ دوباره‌ی یک تکه از مسیر: `{target:"stage", n}` جزئیاتِ یک مرحله،
- * `{target:"guide"}` متنِ راهنما.
+ * ساختن دوباره‌ی یک تکه از مسیر: `{target:"stage", n}` جزئیات یک مرحله،
+ * `{target:"guide"}` متن راهنما.
  *
- * برای تکه‌هایی‌ست که در بودجه‌ی زمانیِ ساختِ اول نرسیدند (detailed:false یا
- * راهنمای خالی)، یا کاربر از جزئیاتِ یک مرحله راضی نیست. اسکلت (عنوان،
+ * برای تکه‌هایی‌ست که در بودجه‌ی زمانی ساخت اول نرسیدند (detailed:false یا
+ * راهنمای خالی)، یا کاربر از جزئیات یک مرحله راضی نیست. اسکلت (عنوان،
  * هدف، محدوده‌ی مرحله‌ها) هیچ‌وقت عوض نمی‌شود — وگرنه بقیه‌ی مرحله‌ها با
  * آن ناهم‌خوان می‌شدند.
  */
 async function handlePOST(req: NextRequest, { params }: { params: { id: string } }) {
   const guard = await requireFeature("roadmaps");
   if (!guard.ok) return guard.response;
-  // رودمپ ماژولِ پولیه — وقتی فلگ برای همه روشن شد، دسترسیِ ماژول هم لازمه
+  // رودمپ ماژول پولیه — وقتی فلگ برای همه روشن شد، دسترسی ماژول هم لازمه
   { const mod = await requireModule(ModuleKey.ROADMAP); if (!mod.ok) return mod.response; }
   const userId = guard.userId;
 
@@ -56,10 +56,10 @@ async function handlePOST(req: NextRequest, { params }: { params: { id: string }
     },
   });
   if (!row) return NextResponse.json({ error: "not found" }, { status: 404 });
-  // تا وقتی ساختِ پس‌زمینه همین ردیف را می‌نویسد، ساختِ دستی یعنی دو نویسنده
-  // روی یک steps — یکی کارِ دیگری را پاک می‌کند.
+  // تا وقتی ساخت پس‌زمینه همین ردیف را می‌نویسد، ساخت دستی یعنی دو نویسنده
+  // روی یک steps — یکی کار دیگری را پاک می‌کند.
   if (buildStatusOf(row.meta)?.status === "building") {
-    return NextResponse.json({ error: "این مسیر هنوز در حالِ ساخته‌شدن است — چند لحظه صبر کن" }, { status: 409 });
+    return NextResponse.json({ error: "این مسیر هنوز در حال ساخته‌شدن است — چند لحظه صبر کن" }, { status: 409 });
   }
 
   const plan = normalizePlan({
@@ -77,7 +77,7 @@ async function handlePOST(req: NextRequest, { params }: { params: { id: string }
     plan,
   };
 
-  // سهمیه‌ی AI (سقفِ کلِ دوره‌ی آزمایشی برای حسابِ تازه — lib/trial.ts)
+  // سهمیه‌ی AI (سقف کل دوره‌ی آزمایشی برای حساب تازه — lib/trial.ts)
   const quota = await checkAndConsumeAiQuota(userId, guard.isSuperAdmin, AiFeatureKey.ROADMAP_GENERATION);
   if (!quota.ok) return NextResponse.json({ error: quota.error, code: quota.code }, { status: 429 });
 
@@ -90,7 +90,7 @@ async function handlePOST(req: NextRequest, { params }: { params: { id: string }
 
     const stage = await generateStageDetail(ctx, n, userId, STAGE_REGEN_TIMEOUT_MS);
     const stages = plan.stages.map((s) => (s.n === n ? stage : s));
-    // کارهای مرحله عوض شده‌اند؛ تیکِ کارهایی که دیگر نیستند دور ریخته می‌شود.
+    // کارهای مرحله عوض شده‌اند؛ تیک کارهایی که دیگر نیستند دور ریخته می‌شود.
     const progress = sanitizeStepProgress(stages, row.progress);
     await prisma.roadmap.updateMany({
       where: { id: params.id, userId },
@@ -104,5 +104,5 @@ async function handlePOST(req: NextRequest, { params }: { params: { id: string }
   }
 }
 
-// بعد از هر نوشتنِ موفق، بقیه‌ی دستگاه‌ها/تب‌های همین کاربر با WebSocket خبردار می‌شن (lib/realtime.ts)
+// بعد از هر نوشتن موفق، بقیه‌ی دستگاه‌ها/تب‌های همین کاربر با WebSocket خبردار می‌شن (lib/realtime.ts)
 export const POST = withLiveSync(["roadmaps"], handlePOST);

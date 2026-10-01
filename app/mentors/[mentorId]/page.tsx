@@ -124,7 +124,7 @@ function MentorProfile() {
             <div><dt><Activity {...CHIP} /> آخرین فعالیت</dt><dd className="is-text">{fmtRelative(mentor.lastActiveAt)}</dd></div>
           </dl>
 
-          {/* عدمِ حضور فقط یک‌بار، در یک بلوکِ فشرده (تاریخِ بازگشت + پیام) */}
+          {/* عدم حضور فقط یک‌بار، در یک بلوک فشرده (تاریخ بازگشت + پیام) */}
           {mentor.awayUntil && (
             <div className="mentor-away" role="note">
               <CalendarDays size={16} strokeWidth={1.75} aria-hidden />
@@ -214,7 +214,7 @@ function ReviewRow({ review, canReport, onReport }: { review: Review; canReport:
   );
 }
 
-/** اکشنِ اتصال — حالتش از myMentorship می‌آید. خطا بالای دکمه‌ها. */
+/** اکشن اتصال — حالتش از myMentorship می‌آید. خطا بالای دکمه‌ها. */
 function ConnectAction({
   mentorId, mentorName, mentorCategories, accepting, availability, awayUntil, intakeQuestions, mine, onChange, waitlist, waitlistCount, onWaitlist, onStale,
 }: {
@@ -227,7 +227,7 @@ function ConnectAction({
   intakeQuestions: string[];
   mine: MyMentorship | null;
   onChange: (m: MyMentorship | null) => void;
-  /** صفِ انتظار (components/MentorWaitlistAction.tsx) */
+  /** صف انتظار (components/MentorWaitlistAction.tsx) */
   waitlist: MyWaitlist | null;
   waitlistCount: number;
   onWaitlist: (w: MyWaitlist | null) => void;
@@ -237,7 +237,7 @@ function ConnectAction({
   const [busy, setBusy] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [confirmCancel, setConfirmCancel] = useState(false);
-  // پذیرشِ دعوتِ منتور هم پذیرشِ «شرایط منتورها» را لازم دارد (lib/mentorTerms.ts)
+  // پذیرش دعوت منتور هم پذیرش «شرایط منتورها» را لازم دارد (lib/mentorTerms.ts)
   const invited = mine?.status === "PENDING" && mine.initiatedBy === "MENTOR";
   const terms = useMentorTermsStatus();
   const needTerms = invited && !terms.loading && !terms.studentAccepted;
@@ -322,10 +322,10 @@ function ConnectAction({
   } else if (mine?.status === "BLOCKED") {
     body = <MentorChip tone="danger" icon={<Ban {...CHIP} />}>ارتباط با این مربی ممکن نیست</MentorChip>;
   } else if (availability === "AWAY") {
-    // عدمِ حضور بالاتر یک‌بار در بلوکِ «در دسترس نیست تا …» آمده؛ این‌جا تکرار نمی‌شود
+    // عدم حضور بالاتر یک‌بار در بلوک «در دسترس نیست تا …» آمده؛ این‌جا تکرار نمی‌شود
     body = null;
   } else if (availability === "FULL" || waitlist?.status === "OFFERED") {
-    // ظرفیت تکمیل → صفِ انتظار؛ نوبتِ رسیده همان فرمِ درخواستِ عادی را باز می‌کند
+    // ظرفیت تکمیل → صف انتظار؛ نوبت رسیده همان فرم درخواست عادی را باز می‌کند
     waitlistBody = true;
     body = (
       <MentorWaitlistAction
@@ -358,7 +358,7 @@ function ConnectAction({
   return (
     <>
       {error && !confirmCancel && <div className="form-inline-error" role="alert">{error}</div>}
-      {/* MentorWaitlistAction خطا و ردیفِ دکمه‌هایش را خودش می‌چیند */}
+      {/* MentorWaitlistAction خطا و ردیف دکمه‌هایش را خودش می‌چیند */}
       {waitlistBody ? body : body && <div className="mentor-hero-actions">{body}</div>}
       {(
         <RequestModal
@@ -375,7 +375,7 @@ function ConnectAction({
       {confirmCancel && (
         <MentorConfirmDialog
           message={`درخواست به ${mentorName} لغو شود؟`}
-          hint="بعداً می‌توانی دوباره درخواست بدهی."
+          hint="بعدا می‌توانی دوباره درخواست بدهی."
           confirmLabel="لغو درخواست"
           busy={busy === "cancel"}
           error={error}
@@ -405,12 +405,12 @@ function RequestModal({
   const [busy, setBusy] = useState(false);
   const [catsError, setCatsError] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
-  // جواب به سؤال‌های پذیرشِ منتور — همه لازم، به همان ترتیب
+  // جواب به سؤال‌های پذیرش منتور — همه لازم، به همان ترتیب
   const [answers, setAnswers] = useState<string[]>(() => intakeQuestions.map(() => ""));
   const [answerErrs, setAnswerErrs] = useState<(string | null)[]>([]);
   const len = message.trim().length;
   const tooLong = len > MESSAGE_MAX;
-  // پذیرشِ «شرایط استفاده از بخش منتورها» (lib/mentorTerms.ts) — فقط اگر نسخه‌ی جاری را نپذیرفته
+  // پذیرش «شرایط استفاده از بخش منتورها» (lib/mentorTerms.ts) — فقط اگر نسخه‌ی جاری را نپذیرفته
   const terms = useMentorTermsStatus();
   const needTerms = !terms.loading && !terms.studentAccepted;
   const [termsAccepted, setTermsAccepted] = useState(false);
@@ -448,7 +448,7 @@ function RequestModal({
         setError(typeof j?.error === "string" ? j.error : "درخواست ارسال نشد؛ دوباره تلاش کن");
         return;
       }
-      // ۴۰۹: درخواستِ باز/رابطه‌ی فعال، یا پذیرشِ بسته/ظرفیتِ پر/عدمِ حضور — پیامِ سرور دقیق‌تر است
+      // ۴۰۹: درخواست باز/رابطه‌ی فعال، یا پذیرش بسته/ظرفیت پر/عدم حضور — پیام سرور دقیق‌تر است
       if (res.status === 409) { setError(await readApiError(res, "با این مربی درخواست باز یا رابطه‌ی فعال داری")); onStale(); return; }
       if (!res.ok) { setError(await readApiError(res, "درخواست ارسال نشد؛ دوباره تلاش کن")); return; }
       const d = await res.json().catch(() => null);
@@ -513,7 +513,7 @@ function RequestModal({
             value={message}
             maxLength={MESSAGE_MAX + 50}
             onChange={(e) => { setMessage(e.target.value); setError(null); }}
-            placeholder="مثلاً «برای کنکور تجربی برنامه‌ی هفتگی می‌خواهم»"
+            placeholder="مثلا «برای کنکور تجربی برنامه‌ی هفتگی می‌خواهم»"
             aria-invalid={tooLong}
           />
         </MentorField>
@@ -538,7 +538,7 @@ function RequestModal({
   );
 }
 
-/** نوشتن/ویرایش/حذفِ نظرِ خودم */
+/** نوشتن/ویرایش/حذف نظر خودم */
 function MyReviewBox({ mentorId, myReview, onChanged }: { mentorId: string; myReview: Review | null; onChanged: () => void }) {
   const [editing, setEditing] = useState(!myReview);
   const [rating, setRating] = useState(myReview?.rating ?? 0);
@@ -567,7 +567,7 @@ function MyReviewBox({ mentorId, myReview, onChanged }: { mentorId: string; myRe
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ rating, body: body.trim() || undefined }),
       });
-      if (res.status === 409) { setError("برای این مربی قبلاً نظر ثبت کرده‌ای"); onChanged(); return; }
+      if (res.status === 409) { setError("برای این مربی قبلا نظر ثبت کرده‌ای"); onChanged(); return; }
       if (!res.ok) { setError(await readApiError(res, "نظر ثبت نشد؛ دوباره تلاش کن")); return; }
       setEditing(false);
       onChanged();
@@ -643,7 +643,7 @@ function MyReviewBox({ mentorId, myReview, onChanged }: { mentorId: string; myRe
               value={body}
               maxLength={REVIEW_MAX + 50}
               onChange={(e) => setBody(e.target.value)}
-              placeholder="مثلاً «برنامه‌ها دقیق و قابل اجرا بود»"
+              placeholder="مثلا «برنامه‌ها دقیق و قابل اجرا بود»"
               aria-invalid={tooLong}
             />
           </MentorField>

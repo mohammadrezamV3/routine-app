@@ -10,7 +10,7 @@ import { DOMAIN_HREFS, DOMAIN_ICONS } from "./WeeklyAnalysisShared";
 // مستقیم به بخش‌هایی که کاربر بهشون دسترسی داره لینک می‌ده.
 export function WeeklyAnalysisEmpty({ domains, isCurrentWeek }: { domains: DomainResult[]; isCurrentWeek: boolean }) {
   const list: AnalysisDomain[] = domains.length > 0 ? domains.map((d) => d.domain) : ANALYSIS_DOMAINS;
-  // چند دامنه یک مقصد مشترک دارن (روتین/خواب/کارها → برنامه‌ی هفتگی)؛ لینکِ تکراری نمی‌خوایم
+  // چند دامنه یک مقصد مشترک دارن (روتین/خواب/کارها → برنامه‌ی هفتگی)؛ لینک تکراری نمی‌خوایم
   const seen = new Set<string>();
   const links = list.filter((d) => {
     const href = DOMAIN_HREFS[d];

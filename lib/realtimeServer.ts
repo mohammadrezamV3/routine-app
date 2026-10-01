@@ -1,24 +1,24 @@
 // ─────────────────────────────────────────────────────────────────────────
-// سرورِ WebSocket (`/ws`) — روی همون پورت/originِ سایت، داخلِ هر worker.
+// سرور WebSocket (`/ws`) — روی همون پورت/origin سایت، داخل هر worker.
 //
 // چرا این‌جا (instrumentation) و نه route handler: روت‌های Next نمی‌تونن
-// کانکشن رو upgrade کنن. چرا نه یک server.js سفارشی: خروجیِ standaloneِ نکست
+// کانکشن رو upgrade کنن. چرا نه یک server.js سفارشی: خروجی standalone نکست
 // خودش server.js رو می‌سازه و cluster.js همونو require می‌کنه؛ جایگزین‌کردنش
-// یعنی از دست دادنِ رفتارِ دقیقِ start-serverِ نکست (keep-alive، شاتدانِ
+// یعنی از دست دادن رفتار دقیق start-server نکست (keep-alive، شاتدان
 // تمیز، …). به‌جاش:
 //
 //   instrumentation.ts → register() → startRealtimeServer()
-//     └ http.Server.prototype.emit یک‌بار وصله می‌شه: فقط رویدادِ 'upgrade'ِ
-//       مسیرِ دقیقِ `/ws` این‌جا گرفته می‌شه؛ *هر* upgradeِ دیگه (مثلا
-//       `/_next/webpack-hmr`ِ حالتِ dev) عیناً به هندلرِ خودِ نکست می‌رسه.
+//     └ http.Server.prototype.emit یک‌بار وصله می‌شه: فقط رویداد 'upgrade'
+//       مسیر دقیق `/ws` این‌جا گرفته می‌شه؛ *هر* upgrade دیگه (مثلا
+//       `/_next/webpack-hmr` حالت dev) عینا به هندلر خود نکست می‌رسه.
 //
 // وصله روی prototype است (نه روی یک نمونه) چون instrumentation *بعد* از
-// ساخته‌شدن و listenِ http.Serverِ نکست اجرا می‌شه — ولی emitِ همون نمونه
+// ساخته‌شدن و listen http.Server نکست اجرا می‌شه — ولی emit همون نمونه
 // هنوز از prototype خونده می‌شه. همین یک مسیر هم در `next start`، هم در
 // standalone/cluster.js، هم در `next dev` کار می‌کنه (dev هم instrumentation
-// رو در همون پروسه‌ی سرور اجرا می‌کنه) — بدونِ هیچ اسکریپتِ جدا.
+// رو در همون پروسه‌ی سرور اجرا می‌کنه) — بدون هیچ اسکریپت جدا.
 //
-// fan-out بینِ workerها: Postgres LISTEN/NOTIFY (نگاه کن به lib/realtime.ts).
+// fan-out بین workerها: Postgres LISTEN/NOTIFY (نگاه کن به lib/realtime.ts).
 // ─────────────────────────────────────────────────────────────────────────
 
 import http from "node:http";
@@ -42,7 +42,7 @@ import {
 } from "@/lib/realtimeProtocol";
 
 const HEARTBEAT_MS = 30_000;
-/** هر چند تیکِ heartbeat یک‌بار وضعیتِ کاربر/نشست دوباره از دیتابیس چک می‌شه (~۵ دقیقه) */
+/** هر چند تیک heartbeat یک‌بار وضعیت کاربر/نشست دوباره از دیتابیس چک می‌شه (~۵ دقیقه) */
 const RECHECK_EVERY_TICKS = 10;
 const MAX_CLIENT_MSGS_PER_WINDOW = 20;
 const CLIENT_MSG_WINDOW_MS = 10_000;
@@ -75,8 +75,8 @@ function log(msg: string) {
 }
 
 /**
- * آدرسِ LISTEN. Prisma پارامترهای مخصوصِ خودش (schema/connection_limit/…) رو
- * توی URL می‌پذیره که pg نمی‌شناسه — حذف می‌شن. پشتِ PgBouncerِ
+ * آدرس LISTEN. Prisma پارامترهای مخصوص خودش (schema/connection_limit/…) رو
+ * توی URL می‌پذیره که pg نمی‌شناسه — حذف می‌شن. پشت PgBouncer
  * transaction-mode، LISTEN کار نمی‌کنه؛ اون‌وقت REALTIME_DATABASE_URL باید
  * مستقیم به Postgres اشاره کنه.
  */
@@ -118,7 +118,7 @@ function deliver(st: State, raw: string | undefined) {
   }
 }
 
-/** بعد از قطعیِ LISTEN ممکنه رویدادی جا افتاده باشه → همه‌ی سوکت‌ها یه «همه‌چیز رو تازه کن» می‌گیرن */
+/** بعد از قطعی LISTEN ممکنه رویدادی جا افتاده باشه → همه‌ی سوکت‌ها یه «همه‌چیز رو تازه کن» می‌گیرن */
 function broadcastResync(st: State) {
   const msg = JSON.stringify({ type: "data.changed", keys: ["*"] });
   for (const set of st.byUser.values()) for (const ws of set) if (ws.readyState === WebSocket.OPEN) ws.send(msg);
@@ -153,7 +153,7 @@ async function ensureListener(st: State): Promise<void> {
   });
   try {
     await client.connect();
-    await client.query(`LISTEN ${REALTIME_CHANNEL}`); // نامِ کانال ثابتِ کد است، نه ورودیِ کاربر
+    await client.query(`LISTEN ${REALTIME_CHANNEL}`); // نام کانال ثابت کد است، نه ورودی کاربر
     const wasReconnect = st.reconnectDelay > 1000;
     st.listenerReady = true;
     st.reconnectDelay = 1000;
@@ -177,7 +177,7 @@ async function authenticate(req: IncomingMessage): Promise<Authed | null> {
       const t = await decode({ token: raw, secret });
       if (t && typeof (t as any).userId === "string") { token = t as any; break; }
     } catch {
-      // امضا/رمزگشایی نامعتبر → کوکیِ بعدی
+      // امضا/رمزگشایی نامعتبر → کوکی بعدی
     }
   }
   if (!token) return null;
@@ -203,7 +203,7 @@ function reject(socket: Duplex, status: 400 | 401 | 403 | 404 | 429 | 503) {
   socket.destroy();
 }
 
-// ── مدیریتِ سوکت‌ها ─────────────────────────────────────────────────────
+// ── مدیریت سوکت‌ها ─────────────────────────────────────────────────────
 
 function register(st: State, ws: Conn) {
   let set = st.byUser.get(ws.userId);
@@ -211,8 +211,8 @@ function register(st: State, ws: Conn) {
     set = new Set();
     st.byUser.set(ws.userId, set);
   }
-  // سقفِ اتصالِ هر کاربر روی این worker: به‌جای ردِ تبِ تازه، قدیمی‌ترین
-  // (معمولا یه تبِ فراموش‌شده) بسته می‌شه.
+  // سقف اتصال هر کاربر روی این worker: به‌جای رد تب تازه، قدیمی‌ترین
+  // (معمولا یه تب فراموش‌شده) بسته می‌شه.
   while (set.size >= maxPerUser()) {
     const oldest = set.values().next().value as Conn | undefined;
     if (!oldest) break;
@@ -262,8 +262,8 @@ async function handleUpgrade(st: State, req: IncomingMessage, socket: Duplex, he
       }
 
       ws.on("pong", () => { ws.alive = true; });
-      // کانال یک‌طرفه‌ست (سرور → کلاینت). پیامِ کلاینت فقط ping-ِ اپلیکیشنیه
-      // و نادیده گرفته می‌شه؛ سیلِ پیام = بستنِ اتصال.
+      // کانال یک‌طرفه‌ست (سرور → کلاینت). پیام کلاینت فقط ping- اپلیکیشنیه
+      // و نادیده گرفته می‌شه؛ سیل پیام = بستن اتصال.
       ws.on("message", () => {
         const now = Date.now();
         if (now - ws.msgWindowStart > CLIENT_MSG_WINDOW_MS) {
@@ -336,14 +336,14 @@ export function startRealtimeServer(): void {
   const hb = setInterval(() => heartbeat(st), HEARTBEAT_MS);
   hb.unref?.();
 
-  // شاتدانِ تمیز (docker stop → cluster.js → SIGTERM به worker): سوکت‌های باز
-  // با کدِ 1001 بسته می‌شن تا کلاینت فوری به workerِ/کانتینرِ تازه وصل بشه.
+  // شاتدان تمیز (docker stop → cluster.js → SIGTERM به worker): سوکت‌های باز
+  // با کد 1001 بسته می‌شن تا کلاینت فوری به worker/کانتینر تازه وصل بشه.
   process.prependListener("SIGTERM", () => {
     for (const set of st.byUser.values()) for (const ws of set) { try { ws.close(1001, "server restart"); } catch {} }
     st.listener?.end().catch(() => {});
   });
 
-  // LISTEN از همون اول (نه با اولین سوکت) تا اولین رویدادِ اولین کاربر جا نیفته
+  // LISTEN از همون اول (نه با اولین سوکت) تا اولین رویداد اولین کاربر جا نیفته
   void ensureListener(st);
   if (debug()) log("WebSocket endpoint ready at /ws");
 }

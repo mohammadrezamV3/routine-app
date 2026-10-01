@@ -1,6 +1,6 @@
-/* بخشِ «داشبورد» لندینگ (LandingDashboard در LandingSections.tsx) — پیشوندِ
+/* بخش «داشبورد» لندینگ (LandingDashboard در LandingSections.tsx) — پیشوند
    ls-dash- و فقط توکن‌های تم (--accent, --text, --muted, --ls-*). رنگ‌های
-   حلقه‌ها همون پالتِ app/dashboard/dashboard.css. همه‌ی حرکت‌ها transform/opacity. */
+   حلقه‌ها همون پالت app/dashboard/dashboard.css. همه‌ی حرکت‌ها transform/opacity. */
 
 .ls-dash-intro{ margin:-6px 0 18px; font-size:13.5px; line-height:2; color:var(--muted); max-width:720px; }
 .ls-dash{ display:grid; grid-template-columns:minmax(0,1fr); gap:18px; align-items:center; }
@@ -63,7 +63,7 @@
 .ls-dash-spark{ width:100%; height:34px; }
 .ls-dash-sub{ font-size:10px; color:var(--muted); }
 
-/* پاپ‌آپِ نمونه روی خودِ ماکت — ورود/خروجش با «تپ» روی «ثبتِ غذا» هم‌زمانه */
+/* پاپ‌آپ نمونه روی خود ماکت — ورود/خروجش با «تپ» روی «ثبت غذا» هم‌زمانه */
 .ls-dash-pop{
   position:absolute; z-index:2; left:50%; bottom:18px; width:min(220px, 70%);
   padding:12px; border-radius:18px; border:1px solid rgba(var(--accent-rgb),.45);

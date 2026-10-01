@@ -16,11 +16,11 @@ const BTN = { size: 15, strokeWidth: 1.75, "aria-hidden": true } as const;
 const BTN_SM = { size: 14, strokeWidth: 1.75, "aria-hidden": true } as const;
 
 /**
- * صفِ انتظار روی پروفایلِ مربیِ پُر (lib/mentorWaitlist.ts):
- *   بیرونِ صف → «ورود به صف» (با پذیرشِ شرایط اگر لازم باشد)
+ * صف انتظار روی پروفایل مربی پر (lib/mentorWaitlist.ts):
+ *   بیرون صف → «ورود به صف» (با پذیرش شرایط اگر لازم باشد)
  *   WAITING   → «نفر N در صف» + «خروج از صف»
- *   OFFERED   → «نوبتت رسید» + «ارسال درخواست» (همان فرمِ درخواستِ عادی) / «رد نوبت»
- * فقط کلاس‌های دکمه‌ی خودِ سایت؛ بدونِ بک‌گراندِ تازه.
+ *   OFFERED   → «نوبتت رسید» + «ارسال درخواست» (همان فرم درخواست عادی) / «رد نوبت»
+ * فقط کلاس‌های دکمه‌ی خود سایت؛ بدون بک‌گراند تازه.
  */
 export function MentorWaitlistAction({
   mentorId, mentorName, waitlist, waitlistCount, onChange, onRequest, onStale,
@@ -30,7 +30,7 @@ export function MentorWaitlistAction({
   waitlist: MyWaitlist | null;
   waitlistCount: number;
   onChange: (w: MyWaitlist | null) => void;
-  /** باز کردنِ فرمِ درخواستِ عادی (پذیرشِ نوبت) */
+  /** باز کردن فرم درخواست عادی (پذیرش نوبت) */
   onRequest: () => void;
   onStale: () => void;
 }) {

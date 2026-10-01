@@ -25,8 +25,8 @@ function userLabel(u: TicketUser) {
   return [u.name, u.lastName].filter(Boolean).join(" ") || u.username || u.email || u.phone || "کاربر";
 }
 
-// صفِ تیکت‌های پشتیبانیِ در-سایت. طبقِ همون الگویِ گزارش‌های چت
-// (app/admin/chat-reports): تب‌بندی بر اساسِ status + شمارشِ هر تب.
+// صف تیکت‌های پشتیبانی در-سایت. طبق همون الگوی گزارش‌های چت
+// (app/admin/chat-reports): تب‌بندی بر اساس status + شمارش هر تب.
 export default function AdminSupportPage() {
   const [tab, setTab] = useState<TicketStatus>("OPEN");
   const [data, setData] = useState<Data | null>(null);
@@ -36,7 +36,7 @@ export default function AdminSupportPage() {
   const retry = useCallback(() => setReloadKey((k) => k + 1), []);
 
   useEffect(() => {
-    // پاسخِ تبِ قبلی اگه دیرتر برسه نباید لیستِ تبِ فعلی رو بازنویسی کنه.
+    // پاسخ تب قبلی اگه دیرتر برسه نباید لیست تب فعلی رو بازنویسی کنه.
     let alive = true;
     setLoading(true);
     setFailed(false);
@@ -60,7 +60,7 @@ export default function AdminSupportPage() {
         <div>
           <div className="admin-page-kicker">تیکت‌های پشتیبانی</div>
           <div className="admin-section-hint" style={{ margin: 0 }}>
-            تنها راهِ پشتیبانی همین سایته — هر سوال/مشکلی که کاربرها دارن از همین‌جا میاد.
+            تنها راه پشتیبانی همین سایته — هر سوال/مشکلی که کاربرها دارن از همین‌جا میاد.
           </div>
         </div>
       </div>

@@ -26,7 +26,7 @@ import type {
 } from "@/lib/mentorTypes";
 import { GoldenName } from "@/components/GoldenName";
 
-/** تعداد ردیف‌های «فعالیت اخیر» پیش از بازکردنِ کامل */
+/** تعداد ردیف‌های «فعالیت اخیر» پیش از بازکردن کامل */
 const ACTIVITY_PREVIEW = 5;
 
 const ic = (Icon: typeof Users, size: number) => <Icon size={size} strokeWidth={MI_STROKE} aria-hidden />;
@@ -55,7 +55,7 @@ export function MentorDashBoard({ self }: { self: MentorSelf }) {
   }, []);
 
   useEffect(() => { load(); }, [load]);
-  // زنده: پیام/درخواست/لاگِ تازه‌ی شاگردها (WebSocket/تب دیگه/برگشت به تب)
+  // زنده: پیام/درخواست/لاگ تازه‌ی شاگردها (WebSocket/تب دیگه/برگشت به تب)
   useLiveRefresh("mentor", () => { load(true); });
   useVisiblePolling(() => { load(true); }, 30_000);
 
@@ -67,7 +67,7 @@ export function MentorDashBoard({ self }: { self: MentorSelf }) {
   const published = profile?.published ?? self.published;
   const identity = profile?.identityStatus ?? self.identityStatus;
   const active = rows.filter((r) => r.status === "ACTIVE");
-  // همکاریِ متوقف‌شده هشدارِ پایبندی نمی‌گیرد
+  // همکاری متوقف‌شده هشدار پایبندی نمی‌گیرد
   const pausedIds = new Set(active.filter((r) => r.pausedAt).map((r) => r.counterpart.id));
   const attention = dash.attention.filter((a) => !pausedIds.has(a.studentId));
   // دعوت‌هایی که خود منتور فرستاده و هنوز بی‌پاسخ‌اند
@@ -83,7 +83,7 @@ export function MentorDashBoard({ self }: { self: MentorSelf }) {
       </MentorNotice>,
     );
   }
-  // احراز هویت اجباری است: تا تایید و انتشار، مراحلِ فعال‌سازی بالای داشبورد می‌ماند
+  // احراز هویت اجباری است: تا تایید و انتشار، مراحل فعال‌سازی بالای داشبورد می‌ماند
   const setupDone = identity === "VERIFIED" && published;
 
   return (
@@ -158,7 +158,7 @@ export function MentorDashBoard({ self }: { self: MentorSelf }) {
         })}
       </MentorSection>
 
-      {/* ارسالِ گروهیِ رمزگذاری‌شده (agent D) — خودکفا در MentorBroadcast.tsx */}
+      {/* ارسال گروهی رمزگذاری‌شده (agent D) — خودکفا در MentorBroadcast.tsx */}
       {!suspended && !rowsError && <MentorBroadcast activeCount={active.length} />}
 
       <MentorSection title="منتظر پاسخ شاگرد" icon={ic(ClipboardList, MI.section)} count={dash.pendingPrograms.length ? fa(dash.pendingPrograms.length) : undefined} flush>
@@ -243,7 +243,7 @@ export function MentorDashBoard({ self }: { self: MentorSelf }) {
   );
 }
 
-/** یک ردیفِ «فعالیت اخیر»؛ url فقط مسیرِ داخلی لینک می‌شود */
+/** یک ردیف «فعالیت اخیر»؛ url فقط مسیر داخلی لینک می‌شود */
 function ActivityRow({ a }: { a: MentorDashboard["recentActivity"][number] }) {
   const lead = a.type === "message" ? ic(MessageCircle, MI.row) : a.type === "program" ? ic(ClipboardList, MI.row) : ic(CalendarCheck, MI.row);
   const internal = typeof a.url === "string" && a.url.startsWith("/") && !a.url.startsWith("//");
@@ -257,7 +257,7 @@ function ActivityRow({ a }: { a: MentorDashboard["recentActivity"][number] }) {
   );
 }
 
-/** درخواست‌های ورودی (پذیرش/رد) و دعوت‌های ارسالیِ بی‌پاسخ (لغو) */
+/** درخواست‌های ورودی (پذیرش/رد) و دعوت‌های ارسالی بی‌پاسخ (لغو) */
 function MentorDashRequests({
   incoming, sent, suspended, onChanged,
 }: { incoming: MentorshipRow[]; sent: MentorshipRow[]; suspended: boolean; onChanged: () => void }) {
@@ -349,7 +349,7 @@ function MentorDashRequests({
 function MentorDashInvite({
   suspended, categories, onSent,
 }: { suspended: boolean; categories: string[]; onSent: () => void }) {
-  // حوزه‌ی دعوت (مثلاً فقط «روتین»)؛ پیش‌فرض همه‌ی حوزه‌های خود منتور
+  // حوزه‌ی دعوت (مثلا فقط «روتین»)؛ پیش‌فرض همه‌ی حوزه‌های خود منتور
   const [cats, setCats] = useState<string[]>(categories);
   const [username, setUsername] = useState("");
   const [message, setMessage] = useState("");
@@ -420,7 +420,7 @@ function MentorDashInvite({
               <textarea
                 id="md-invite-msg" className="wsearch-newform-name trade-glass-field" rows={2} maxLength={500}
                 value={message} onChange={(e) => setMessage(e.target.value)}
-                placeholder="مثلاً «برای برنامه‌ی تمرینی این فصل با هم کار کنیم»"
+                placeholder="مثلا «برای برنامه‌ی تمرینی این فصل با هم کار کنیم»"
               />
             </MentorField>
           </div>

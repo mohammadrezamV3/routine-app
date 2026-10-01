@@ -1,29 +1,29 @@
-// رتبه‌بندیِ شایستگیِ منتورها — هسته‌ی خالص (بدونِ دیتابیس، کاملاً تست‌پذیر).
+// رتبه‌بندی شایستگی منتورها — هسته‌ی خالص (بدون دیتابیس، کاملا تست‌پذیر).
 //
-// هدف: منتور به‌خاطرِ *نتیجه‌ی واقعیِ شاگردهاش* بالا بیاد، نه به‌خاطرِ تعدادِ
-// شاگرد، چند نظرِ ۵ستاره‌ی ساختگی یا این‌که زودتر ثبت‌نام کرده. توضیحِ کامل،
-// وزن‌ها و دلیلِ هر کدوم: docs/mentor-ranking.md.
+// هدف: منتور به‌خاطر *نتیجه‌ی واقعی شاگردهاش* بالا بیاد، نه به‌خاطر تعداد
+// شاگرد، چند نظر ۵ستاره‌ی ساختگی یا این‌که زودتر ثبت‌نام کرده. توضیح کامل،
+// وزن‌ها و دلیل هر کدوم: docs/mentor-ranking.md.
 //
-// شکلِ کلی:
+// شکل کلی:
 //
-//   کیفیت (Q, ۰..۱) = میانگینِ وزن‌دارِ شش مؤلفه‌ی *هموارشده‌ی بیزی*
-//       پایبندیِ واقعیِ شاگردها ۳۰٪ · تکمیلِ برنامه ۲۰٪ · نظرهای تاییدشده ۲۰٪
-//       ماندگاریِ ۴هفته‌ای ۱۵٪ · سرعتِ پاسخ ۱۰٪ · تمدید/ادامه ۵٪
+//   کیفیت (Q, ۰..۱) = میانگین وزن‌دار شش مؤلفه‌ی *هموارشده‌ی بیزی*
+//       پایبندی واقعی شاگردها ۳۰٪ · تکمیل برنامه ۲۰٪ · نظرهای تاییدشده ۲۰٪
+//       ماندگاری ۴هفته‌ای ۱۵٪ · سرعت پاسخ ۱۰٪ · تمدید/ادامه ۵٪
 //   امتیاز = ۱۰۰ × Q × شواهد × اعتماد × سلامت × فعالیت
 //
-// هر مؤلفه با نمونه‌ی کم به سمتِ یک پیش‌فرض کشیده می‌شه (نه ۰ و نه ۱) تا یک
-// شاگردِ خوب یا بد به‌تنهایی منتور رو بالا/پایین نبره. ضریب‌ها همه ≤ ۱ـن: احراز
-// هویت/مدرک *جریمه‌ی نبودن* رو برمی‌داره، ولی هیچ‌وقت امتیازِ رایگان نمی‌ده.
+// هر مؤلفه با نمونه‌ی کم به سمت یک پیش‌فرض کشیده می‌شه (نه ۰ و نه ۱) تا یک
+// شاگرد خوب یا بد به‌تنهایی منتور رو بالا/پایین نبره. ضریب‌ها همه ≤ ۱ـن: احراز
+// هویت/مدرک *جریمه‌ی نبودن* رو برمی‌داره، ولی هیچ‌وقت امتیاز رایگان نمی‌ده.
 //
-// ضدِ دست‌کاری (قاعده‌ها این‌جا، جمع‌آوری در lib/mentorRankingStats.ts):
-//   - سهمِ هر شاگرد سقف داره (وزنِ پایبندی ≤ ۱، حداکثر ۳ برنامه، یک رایِ پاسخ،
-//     یک نظر)؛ پس یک حسابِ پرکار نمی‌تونه نتیجه رو بسازه.
-//   - نظر فقط از شاگردِ واقعی: رابطه‌ی فعالِ حداقل REVIEW_MIN_ACTIVE_DAYS روز و
-//     حداقل یک برنامه‌ی فعال‌شده؛ وزن با میزانِ مشارکتِ واقعی؛ رگباری از حساب‌های
+// ضد دست‌کاری (قاعده‌ها این‌جا، جمع‌آوری در lib/mentorRankingStats.ts):
+//   - سهم هر شاگرد سقف داره (وزن پایبندی ≤ ۱، حداکثر ۳ برنامه، یک رای پاسخ،
+//     یک نظر)؛ پس یک حساب پرکار نمی‌تونه نتیجه رو بسازه.
+//   - نظر فقط از شاگرد واقعی: رابطه‌ی فعال حداقل REVIEW_MIN_ACTIVE_DAYS روز و
+//     حداقل یک برنامه‌ی فعال‌شده؛ وزن با میزان مشارکت واقعی؛ رگباری از حساب‌های
 //     تازه در پنجره‌ی کوتاه کم‌اثر می‌شه.
 //   - برنامه‌ی کوتاه‌تر از یک هفته «تکمیل» حساب نمی‌شه (برنامه‌ی یک‌روزه‌ی
-//     ساختگی نرخِ تکمیل نمی‌سازه).
-//   - ورود به «منتورهای محبوب» حداقلِ نمونه، احرازِ هویت و سلامتِ کافی می‌خواد.
+//     ساختگی نرخ تکمیل نمی‌سازه).
+//   - ورود به «منتورهای محبوب» حداقل نمونه، احراز هویت و سلامت کافی می‌خواد.
 
 // ───────────────────────── ثابت‌ها ─────────────────────────
 
@@ -41,16 +41,16 @@ export const MERIT_WEIGHTS = {
 export type MeritComponentKey = keyof typeof MERIT_WEIGHTS;
 
 export const RANKING_RULES = {
-  /** پیش‌فرض و وزنِ پیش‌فرضِ هر مؤلفه (به‌تعدادِ «شاگردِ فرضی») */
+  /** پیش‌فرض و وزن پیش‌فرض هر مؤلفه (به‌تعداد «شاگرد فرضی») */
   adherencePrior: 0.5,
   adherencePriorWeight: 3,
-  /** ثبتِ روزانه‌ای که یک شاگرد را «کامل» می‌شمارد؛ کمتر = سهمِ کمتر، بیشتر = بی‌اثر (سقف) */
+  /** ثبت روزانه‌ای که یک شاگرد را «کامل» می‌شمارد؛ کمتر = سهم کمتر، بیشتر = بی‌اثر (سقف) */
   adherenceFullWeightEntries: 14,
   completionPrior: 0.5,
   completionPriorWeight: 3,
   /** برنامه‌ی کوتاه‌تر از این «تکمیل» حساب نمی‌شود */
   completionMinDays: 7,
-  /** برنامه‌ی فعالی که این‌قدر از تاریخِ پایانش گذشته و تکمیل نشده = رهاشده */
+  /** برنامه‌ی فعالی که این‌قدر از تاریخ پایانش گذشته و تکمیل نشده = رهاشده */
   abandonGraceDays: 7,
   /** حداکثر برنامه‌ی شمرده‌شده از هر شاگرد */
   maxProgramsPerStudent: 3,
@@ -61,7 +61,7 @@ export const RANKING_RULES = {
   renewalPriorWeight: 3,
   responsePrior: 0.5,
   responsePriorWeight: 3,
-  /** نیمه‌عمرِ امتیازِ پاسخ: پاسخ در ۲۴ ساعت = ۰٫۵ */
+  /** نیمه‌عمر امتیاز پاسخ: پاسخ در ۲۴ ساعت = ۰٫۵ */
   responseHalfLifeHours: 24,
   /** بی‌پاسخ بعد از این مدت = نمونه‌ی «دیر» (قبلش هنوز قضاوت نمی‌شود) */
   responseOverdueHours: 72,
@@ -69,15 +69,15 @@ export const RANKING_RULES = {
   ratingPriorMean: 3.5,
   ratingPriorWeight: 4,
   reviewMinActiveDays: 14,
-  /** وزنِ پایه‌ی نظرِ تاییدشده؛ بقیه با مشارکت (ثبتِ اجرای برنامه) پر می‌شود */
+  /** وزن پایه‌ی نظر تاییدشده؛ بقیه با مشارکت (ثبت اجرای برنامه) پر می‌شود */
   reviewBaseWeight: 0.4,
   reviewFullEngagementEntries: 20,
-  /** حسابِ «تازه» در لحظه‌ی نوشتنِ نظر */
+  /** حساب «تازه» در لحظه‌ی نوشتن نظر */
   burstNewAccountDays: 30,
   burstWindowDays: 7,
-  /** تا این تعداد نظرِ حسابِ تازه در یک پنجره بی‌جریمه است */
+  /** تا این تعداد نظر حساب تازه در یک پنجره بی‌جریمه است */
   burstAllowance: 2,
-  /** ضریبِ شواهد: ۰٫۵ + ۰٫۵ × n/(n+k) */
+  /** ضریب شواهد: ۰٫۵ + ۰٫۵ × n/(n+k) */
   evidenceHalfStudents: 4,
   activityHalfLifeDays: 14,
   /** حداقل‌های ورود به «منتورهای محبوب» */
@@ -93,7 +93,7 @@ const R = RANKING_RULES;
 
 const clamp01 = (x: number) => (Number.isFinite(x) ? Math.min(1, Math.max(0, x)) : 0);
 
-/** میانگینِ هموارشده: (Σ وزن×مقدار + پیش‌فرض×k) ÷ (Σ وزن + k) */
+/** میانگین هموارشده: (Σ وزن×مقدار + پیش‌فرض×k) ÷ (Σ وزن + k) */
 export function smoothedMean(sumWeighted: number, sumWeights: number, prior: number, priorWeight: number): number {
   const w = Math.max(0, sumWeights);
   return clamp01((Math.max(0, sumWeighted) + prior * priorWeight) / (w + priorWeight));
@@ -108,11 +108,11 @@ export function median(values: number[]): number | null {
 
 const daysBetween = (a: Date, b: Date) => (b.getTime() - a.getTime()) / DAY_MS;
 
-// ───────────────────────── هویتِ داده‌ی آزمایشی ─────────────────────────
+// ───────────────────────── هویت داده‌ی آزمایشی ─────────────────────────
 
 /**
- * همون تعریفِ lib/demoData.ts (هر دو شرط با هم). سیگنالِ کاربرِ آزمایشی هیچ‌وقت
- * به منتورِ واقعی نمی‌رسه و برعکس — دنیای آزمایشی فقط خودش رو رتبه‌بندی می‌کنه.
+ * همون تعریف lib/demoData.ts (هر دو شرط با هم). سیگنال کاربر آزمایشی هیچ‌وقت
+ * به منتور واقعی نمی‌رسه و برعکس — دنیای آزمایشی فقط خودش رو رتبه‌بندی می‌کنه.
  */
 export function isDemoIdentity(u: { email: string | null; username: string | null }): boolean {
   return !!u.email && u.email.endsWith("@demo.arion.local") && !!u.username && u.username.startsWith("demo_");
@@ -128,16 +128,16 @@ export type ProgramOutcome = {
   endDate: Date | null;
 };
 
-/** همه‌ی سیگنال‌های *یک شاگردِ معتبر* نزدِ یک منتور، در یک دامنه (کلی یا یک دسته) */
+/** همه‌ی سیگنال‌های *یک شاگرد معتبر* نزد یک منتور، در یک دامنه (کلی یا یک دسته) */
 export type StudentSignals = {
   studentId: string;
   startedAt: Date;
-  /** پایانِ رابطه (ENDED/BLOCKED)؛ null = هنوز فعال */
+  /** پایان رابطه (ENDED/BLOCKED)؛ null = هنوز فعال */
   endedAt: Date | null;
-  /** شمارشِ روز-آیتم‌های اجرای برنامه در پنجره‌ی اخیر (از پیشرفتِ خودکار) */
+  /** شمارش روز-آیتم‌های اجرای برنامه در پنجره‌ی اخیر (از پیشرفت خودکار) */
   adherence: { completed: number; partial: number; missed: number };
   programs: ProgramOutcome[];
-  /** زمان‌های پاسخِ منتور به این شاگرد (ساعت): درخواست و پیام‌ها */
+  /** زمان‌های پاسخ منتور به این شاگرد (ساعت): درخواست و پیام‌ها */
   responseHours: number[];
 };
 
@@ -146,26 +146,26 @@ export type ReviewSignal = {
   rating: number;
   createdAt: Date;
   reviewerCreatedAt: Date;
-  /** مدتِ فعال‌بودنِ رابطه‌ی همین نظر (روز) */
+  /** مدت فعال‌بودن رابطه‌ی همین نظر (روز) */
   activeDays: number;
   /** برنامه‌ی فعال‌شده در همین رابطه */
   activatedPrograms: number;
-  /** ثبتِ اجرای برنامه در همین رابطه (همه‌ی زمان‌ها) */
+  /** ثبت اجرای برنامه در همین رابطه (همه‌ی زمان‌ها) */
   engagementEntries: number;
 };
 
 export type TrustSignals = {
   identityVerified: boolean;
-  /** مدرکِ تاییدشده برای همین دامنه (کلی: هر کدوم از دسته‌های فعلی) */
+  /** مدرک تاییدشده برای همین دامنه (کلی: هر کدوم از دسته‌های فعلی) */
   certificateVerified: boolean;
 };
 
 export type IntegritySignals = {
-  /** گزارش‌گرانِ متمایزِ معتبر با گزارشِ OPEN علیهِ منتور */
+  /** گزارش‌گران متمایز معتبر با گزارش OPEN علیه منتور */
   openReporters: number;
-  /** گزارش‌گرانِ متمایز با گزارشِ RESOLVED (تاییدشده توسطِ ادمین) در ۱۸۰ روزِ اخیر */
+  /** گزارش‌گران متمایز با گزارش RESOLVED (تاییدشده توسط ادمین) در ۱۸۰ روز اخیر */
   resolvedReporters: number;
-  /** تعلیق در ۱۸۰ روزِ اخیر (حتی اگه الان رفع شده) */
+  /** تعلیق در ۱۸۰ روز اخیر (حتی اگه الان رفع شده) */
   recentSuspension: boolean;
 };
 
@@ -176,8 +176,8 @@ export type MeritInputs = {
   integrity: IntegritySignals;
   lastActiveAt: Date | null;
   /**
-   * زمان‌های پاسخ به درخواست‌کننده‌هایی که (هنوز) شاگرد نشدن — درخواستِ ردشده یا
-   * بی‌جواب. فقط در سرعتِ پاسخ اثر دارن (هر نفر یک رای)، نه در شواهد/ماندگاری.
+   * زمان‌های پاسخ به درخواست‌کننده‌هایی که (هنوز) شاگرد نشدن — درخواست ردشده یا
+   * بی‌جواب. فقط در سرعت پاسخ اثر دارن (هر نفر یک رای)، نه در شواهد/ماندگاری.
    */
   requestResponses?: number[][];
 };
@@ -185,17 +185,17 @@ export type MeritInputs = {
 // ───────────────────────── مؤلفه‌ها ─────────────────────────
 
 export type ComponentResult = {
-  /** مقدارِ هموارشده ۰..۱ که وارد فرمول می‌شود */
+  /** مقدار هموارشده ۰..۱ که وارد فرمول می‌شود */
   value: number;
-  /** مقدارِ خام بدونِ پیش‌فرض (null = داده‌ای نیست) */
+  /** مقدار خام بدون پیش‌فرض (null = داده‌ای نیست) */
   raw: number | null;
   /** اندازه‌ی نمونه‌ی مؤثر (شاگرد/برنامه/نظر، بسته به مؤلفه) */
   sample: number;
 };
 
 /**
- * پایبندی: نرخِ اجرای هر شاگرد (PARTIAL نصف) از پیشرفتِ ثبت‌شده، وزن‌دار با
- * min(1, ثبت‌ها/۱۴) — شاگردی با ۲ ثبت سهمِ کمی داره و شاگردِ پرثبت بیش از یک
+ * پایبندی: نرخ اجرای هر شاگرد (PARTIAL نصف) از پیشرفت ثبت‌شده، وزن‌دار با
+ * min(1, ثبت‌ها/۱۴) — شاگردی با ۲ ثبت سهم کمی داره و شاگرد پرثبت بیش از یک
  * رای نمی‌گیره.
  */
 export function adherenceComponent(students: StudentSignals[]): ComponentResult & { entries: number } {
@@ -220,7 +220,7 @@ export function adherenceComponent(students: StudentSignals[]): ComponentResult 
   };
 }
 
-/** یک برنامه در نرخِ تکمیل چطور شمرده می‌شود */
+/** یک برنامه در نرخ تکمیل چطور شمرده می‌شود */
 export function programVerdict(p: ProgramOutcome, now: Date): "completed" | "failed" | "ignored" {
   if (p.status === "COMPLETED") {
     const end = p.completedAt ?? now;
@@ -264,7 +264,7 @@ export function retentionComponent(students: StudentSignals[], now: Date): Compo
   let decided = 0;
   let stayed = 0;
   for (const s of students) {
-    if (daysBetween(s.startedAt, now) < R.retentionDays) continue; // هنوز قابلِ قضاوت نیست
+    if (daysBetween(s.startedAt, now) < R.retentionDays) continue; // هنوز قابل قضاوت نیست
     decided++;
     if (daysBetween(s.startedAt, s.endedAt ?? now) >= R.retentionDays) stayed++;
   }
@@ -295,13 +295,13 @@ export function renewalComponent(students: StudentSignals[], now: Date): Compone
   };
 }
 
-/** امتیازِ یک زمانِ پاسخ: ۰ ساعت = ۱، ۲۴ ساعت = ۰٫۵، ۷۲ ساعت ≈ ۰٫۱۲ */
+/** امتیاز یک زمان پاسخ: ۰ ساعت = ۱، ۲۴ ساعت = ۰٫۵، ۷۲ ساعت ≈ ۰٫۱۲ */
 export function responseScore(hours: number): number {
   const h = Math.min(R.responseCapHours, Math.max(0, hours));
   return Math.pow(0.5, h / R.responseHalfLifeHours);
 }
 
-/** سرعتِ پاسخ: هر شاگرد یک رای (میانه‌ی زمان‌های خودش)، بعد هموارسازی */
+/** سرعت پاسخ: هر شاگرد یک رای (میانه‌ی زمان‌های خودش)، بعد هموارسازی */
 export function responseComponent(students: StudentSignals[], requestResponses: number[][] = []): ComponentResult & { medianHours: number | null } {
   const perStudent: number[] = [];
   for (const hours of [...students.map((s) => s.responseHours), ...requestResponses]) {
@@ -318,10 +318,10 @@ export function responseComponent(students: StudentSignals[], requestResponses: 
 }
 
 /**
- * زمان‌های پاسخ از روی زمان‌بندیِ پیام‌ها (محتوای پیام لازم نیست — با رمزنگاریِ
- * سرتاسری هم کار می‌کنه). از اولین پیامِ بی‌جوابِ شاگرد تا اولین پیامِ منتور =
+ * زمان‌های پاسخ از روی زمان‌بندی پیام‌ها (محتوای پیام لازم نیست — با رمزنگاری
+ * سرتاسری هم کار می‌کنه). از اولین پیام بی‌جواب شاگرد تا اولین پیام منتور =
  * یک نمونه. بی‌جواب بیش از responseOverdueHours = نمونه‌ی دیر (با سقف).
- * پیامِ «ارسالِ گروهی» (broadcastId) پاسخ حساب نمی‌شه.
+ * پیام «ارسال گروهی» (broadcastId) پاسخ حساب نمی‌شه.
  */
 export function responseHoursFromMessages(
   messages: { senderId: string; createdAt: Date; broadcastId?: string | null }[],
@@ -333,7 +333,7 @@ export function responseHoursFromMessages(
   const sorted = [...messages].sort((a, b) => a.createdAt.getTime() - b.createdAt.getTime());
   for (const m of sorted) {
     if (m.senderId === mentorId) {
-      // «ارسالِ گروهی» جوابِ این شاگرد نیست — وگرنه یک پیامِ همگانی همه‌ی انتظارها رو صفر می‌کرد
+      // «ارسال گروهی» جواب این شاگرد نیست — وگرنه یک پیام همگانی همه‌ی انتظارها رو صفر می‌کرد
       if (m.broadcastId) continue;
       if (waitingSince) out.push((m.createdAt.getTime() - waitingSince.getTime()) / 3_600_000);
       waitingSince = null;
@@ -348,7 +348,7 @@ export function responseHoursFromMessages(
   return out;
 }
 
-/** زمانِ پاسخ به درخواستِ شاگردی (فقط درخواست‌هایی که شاگرد فرستاده) */
+/** زمان پاسخ به درخواست شاگردی (فقط درخواست‌هایی که شاگرد فرستاده) */
 export function requestResponseHours(
   r: { initiatedBy: string; status: string; createdAt: Date; startedAt: Date | null; updatedAt: Date },
   now: Date
@@ -364,20 +364,20 @@ export function requestResponseHours(
   return null;
 }
 
-/** نظرِ تاییدشده: رابطه‌ی فعالِ کافی + حداقل یک برنامه‌ی فعال‌شده */
+/** نظر تاییدشده: رابطه‌ی فعال کافی + حداقل یک برنامه‌ی فعال‌شده */
 export function isVerifiedReview(r: ReviewSignal): boolean {
   return r.activeDays >= R.reviewMinActiveDays && r.activatedPrograms >= 1 && r.rating >= 1 && r.rating <= 5;
 }
 
-/** وزنِ مشارکت: ۰٫۴ پایه + تا ۰٫۶ با ثبتِ اجرای واقعی */
+/** وزن مشارکت: ۰٫۴ پایه + تا ۰٫۶ با ثبت اجرای واقعی */
 export function engagementWeight(entries: number): number {
   return R.reviewBaseWeight + (1 - R.reviewBaseWeight) * Math.min(1, Math.max(0, entries) / R.reviewFullEngagementEntries);
 }
 
 /**
- * ضریبِ رگبار برای هر نظر (هم‌ترتیب با ورودی). نظرهای حساب‌های تازه که در یک
+ * ضریب رگبار برای هر نظر (هم‌ترتیب با ورودی). نظرهای حساب‌های تازه که در یک
  * پنجره‌ی ۷روزه (±۳٫۵ روز) بیش از burstAllowance تا هستن، هر کدوم allowance/n وزن
- * می‌گیرن — پس ۱۰ نظرِ هم‌زمان از حساب‌های نو روی‌هم اندازه‌ی ۲ نظر اثر دارن.
+ * می‌گیرن — پس ۱۰ نظر هم‌زمان از حساب‌های نو روی‌هم اندازه‌ی ۲ نظر اثر دارن.
  */
 export function burstFactors(reviews: ReviewSignal[]): number[] {
   const half = (R.burstWindowDays / 2) * DAY_MS;
@@ -392,7 +392,7 @@ export function burstFactors(reviews: ReviewSignal[]): number[] {
   });
 }
 
-/** امتیازِ نظرها: میانگینِ بیزیِ وزن‌دار فقط از نظرهای تاییدشده، نرمال به ۰..۱ */
+/** امتیاز نظرها: میانگین بیزی وزن‌دار فقط از نظرهای تاییدشده، نرمال به ۰..۱ */
 export function reviewComponent(reviews: ReviewSignal[]): ComponentResult & { verified: number; weightedAvg: number | null; excluded: number } {
   const verified = reviews.filter(isVerifiedReview);
   const burst = burstFactors(verified);
@@ -417,9 +417,9 @@ export function reviewComponent(reviews: ReviewSignal[]): ComponentResult & { ve
 // ───────────────────────── ضریب‌ها ─────────────────────────
 
 /**
- * شاگردی که واقعاً *نتیجه‌ی قابلِ اندازه‌گیری* داره: ثبتِ اجرای برنامه، برنامه‌ی
+ * شاگردی که واقعا *نتیجه‌ی قابل اندازه‌گیری* داره: ثبت اجرای برنامه، برنامه‌ی
  * قضاوت‌شده (تمام/لغو/رهاشده)، یا حداقل ۴ هفته از شروعش گذشته. رابطه‌ی چندروزه‌ی
- * بدونِ برنامه «شاهد» نیست — وگرنه جذبِ انبوهِ شاگرد بدونِ کار، شواهد می‌ساخت.
+ * بدون برنامه «شاهد» نیست — وگرنه جذب انبوه شاگرد بدون کار، شواهد می‌ساخت.
  */
 export function hasOutcome(s: StudentSignals, now: Date): boolean {
   const a = s.adherence;
@@ -428,19 +428,19 @@ export function hasOutcome(s: StudentSignals, now: Date): boolean {
   return daysBetween(s.startedAt, now) >= R.retentionDays;
 }
 
-/** شواهد: منتورِ بدونِ شاگردِ دارای نتیجه نصفِ کیفیتش رو می‌گیره، با ۴ شاگرد ۷۵٪، با ۱۲ ≈ ۸۸٪ */
+/** شواهد: منتور بدون شاگرد دارای نتیجه نصف کیفیتش رو می‌گیره، با ۴ شاگرد ۷۵٪، با ۱۲ ≈ ۸۸٪ */
 export function evidenceFactor(students: number): number {
   const n = Math.max(0, students);
   return 0.5 + 0.5 * (n / (n + R.evidenceHalfStudents));
 }
 
-/** اعتماد (≤ ۱): احراز نشده ۰٫۸۵؛ هویتِ تاییدشده ۰٫۹۵؛ هویت + مدرکِ همین حوزه ۱ */
+/** اعتماد (≤ ۱): احراز نشده ۰٫۸۵؛ هویت تاییدشده ۰٫۹۵؛ هویت + مدرک همین حوزه ۱ */
 export function trustMultiplier(t: TrustSignals): number {
   if (!t.identityVerified) return 0.85;
   return t.certificateVerified ? 1 : 0.95;
 }
 
-/** سلامت: هر گزارشِ تاییدشده −۰٫۱۵، هر گزارشِ باز −۰٫۰۵ (هر کدوم سقفِ ۳)، تعلیقِ اخیر −۰٫۲؛ کف ۰٫۴ */
+/** سلامت: هر گزارش تاییدشده −۰٫۱۵، هر گزارش باز −۰٫۰۵ (هر کدوم سقف ۳)، تعلیق اخیر −۰٫۲؛ کف ۰٫۴ */
 export function integrityMultiplier(i: IntegritySignals): number {
   const penalty =
     0.15 * Math.min(3, Math.max(0, i.resolvedReporters)) +
@@ -449,14 +449,14 @@ export function integrityMultiplier(i: IntegritySignals): number {
   return Math.max(0.4, 1 - penalty);
 }
 
-/** فعالیت: ۰٫۸ + ۰٫۲ × نیمه‌عمرِ ۱۴روزه‌ی آخرین حضور — غیبت پایین می‌بره ولی نتیجه رو پاک نمی‌کنه */
+/** فعالیت: ۰٫۸ + ۰٫۲ × نیمه‌عمر ۱۴روزه‌ی آخرین حضور — غیبت پایین می‌بره ولی نتیجه رو پاک نمی‌کنه */
 export function activityMultiplier(lastActiveAt: Date | null, now: Date): number {
   if (!lastActiveAt) return 0.8;
   const days = Math.max(0, daysBetween(lastActiveAt, now));
   return 0.8 + 0.2 * Math.pow(0.5, days / R.activityHalfLifeDays);
 }
 
-// ───────────────────────── امتیازِ نهایی ─────────────────────────
+// ───────────────────────── امتیاز نهایی ─────────────────────────
 
 export type MeritBreakdown = {
   version: 1;
@@ -466,7 +466,7 @@ export type MeritBreakdown = {
   components: Record<MeritComponentKey, ComponentResult & { weight: number }>;
   multipliers: { evidence: number; trust: number; integrity: number; activity: number };
   sample: {
-    /** شاگردهای دارای نتیجه (پایه‌ی ضریبِ شواهد و حداقلِ «محبوب») */
+    /** شاگردهای دارای نتیجه (پایه‌ی ضریب شواهد و حداقل «محبوب») */
     students: number;
     /** همه‌ی رابطه‌های شروع‌شده‌ی معتبر */
     startedStudents: number;
@@ -479,7 +479,7 @@ export type MeritBreakdown = {
     medianResponseHours: number | null;
   };
   eligible: boolean;
-  /** دلایلِ ماندن بیرونِ «منتورهای محبوب» (کلیدِ ماشینی؛ متن در UIِ ادمین) */
+  /** دلایل ماندن بیرون «منتورهای محبوب» (کلید ماشینی؛ متن در UI ادمین) */
   ineligibleReasons: IneligibleReason[];
 };
 
@@ -553,14 +553,14 @@ export function computeMerit(inp: MeritInputs, now: Date = new Date()): MeritBre
 export type RankedEntry = { profileId: string; score: number; sampleStudents: number };
 
 /**
- * مقایسه‌ی قطعی — همون ترتیبی که ORDER BYِ lib/mentorRankingStats.ts می‌سازه:
- * امتیاز ↓، بعد شاگردِ معتبرِ بیشتر ↓، بعد profileId ↑ (هیچ‌وقت ترتیبِ تصادفی).
+ * مقایسه‌ی قطعی — همون ترتیبی که ORDER BY lib/mentorRankingStats.ts می‌سازه:
+ * امتیاز ↓، بعد شاگرد معتبر بیشتر ↓، بعد profileId ↑ (هیچ‌وقت ترتیب تصادفی).
  */
 export function compareRanked(a: RankedEntry, b: RankedEntry): number {
   return b.score - a.score || b.sampleStudents - a.sampleStudents || (a.profileId < b.profileId ? -1 : a.profileId > b.profileId ? 1 : 0);
 }
 
-/** چرخشِ روزانه‌ی قطعیِ «منتورهای تازه»: هر روز ترتیبِ متفاوت، در یک روز ثابت */
+/** چرخش روزانه‌ی قطعی «منتورهای تازه»: هر روز ترتیب متفاوت، در یک روز ثابت */
 export function explorationOrder<T extends { profileId: string }>(items: T[], dayKey: string): T[] {
   const h = (s: string) => {
     let x = 2166136261;

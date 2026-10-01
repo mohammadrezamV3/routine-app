@@ -28,8 +28,8 @@ export function TradeChecklistDetailView({ checklistId }: { checklistId: string 
       const found = (cRes?.checklists || []).find((c: Checklist) => c.id === checklistId) || null;
       if (!found) { setNotFound(true); return; }
       setChecklist(found);
-      // تیک‌ها از سرور می‌آیند (persist شده‌اند)، نه از صفر — این دقیقاً
-      // همان چیزی است که قبلاً نبود («چک‌لیستم ذخیره نمیشه»).
+      // تیک‌ها از سرور می‌آیند (persist شده‌اند)، نه از صفر — این دقیقا
+      // همان چیزی است که قبلا نبود («چک‌لیستم ذخیره نمیشه»).
       setCheckedState(Object.fromEntries(found.items.map((i: Item) => [i.id, i.checked])));
     } finally {
       setLoading(false);
@@ -55,13 +55,13 @@ export function TradeChecklistDetailView({ checklistId }: { checklistId: string 
 
   return (
     <div>
-      {/* طبقِ درخواستِ صریح: یک باکسِ واحد — نه هدر جدا از لیست. نام چک‌لیست
+      {/* طبق درخواست صریح: یک باکس واحد — نه هدر جدا از لیست. نام چک‌لیست
           و ویرایش هم‌ردیف بالای باکس، لیست زیرش. */}
       <div className="trade-surface trade-page-box trade-checklist-detail-box">
         <div className="trade-checklist-detail-head">
           <div className="trade-checklist-detail-title">
             <h1 style={{ margin: 0 }}>{checklist.name}</h1>
-            {/* توپِ رنگی سمتِ چپِ اسم، نه گوشه‌ی مطلقِ باکس */}
+            {/* توپ رنگی سمت چپ اسم، نه گوشه‌ی مطلق باکس */}
             <span className="trade-account-dot" style={{ background: checklist.color }} />
             {checklist.required && <span className="trade-account-type">الزامی</span>}
           </div>
@@ -89,8 +89,8 @@ export function TradeChecklistDetailView({ checklistId }: { checklistId: string 
           <span className="mono">{faNum(done)} / {faNum(checklist.items.length)}</span>
         </div>
 
-        {/* طبقِ درخواستِ صریح: وقتی همه‌ی آیتم‌ها تیک خوردند، راهِ رفتن به
-            صفحه‌ی ثبتِ معامله (با همین چک‌لیستِ از پیش انتخاب‌شده) ظاهر شود. */}
+        {/* طبق درخواست صریح: وقتی همه‌ی آیتم‌ها تیک خوردند، راه رفتن به
+            صفحه‌ی ثبت معامله (با همین چک‌لیست از پیش انتخاب‌شده) ظاهر شود. */}
         {done > 0 && done === checklist.items.length && (
           <Link href={`/trade/chart?checklist=${checklist.id}`} className="account-outline-btn" style={{ width: "100%", marginTop: 10 }}>
             <NotebookPen size={15} /> ثبت معامله

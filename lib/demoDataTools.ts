@@ -1,12 +1,12 @@
 import type { Prisma, PrismaClient } from "@prisma/client";
 
-// داده‌ی آزمایشیِ ابزارهای منتور (قالبِ برنامه، پاسخِ آماده، هشدارِ پایبندی)
-// روی پروفایلِ منتوریِ Owner — جدا از lib/demoData.ts تا با حذفِ این گزینه‌ها
+// داده‌ی آزمایشی ابزارهای منتور (قالب برنامه، پاسخ آماده، هشدار پایبندی)
+// روی پروفایل منتوری Owner — جدا از lib/demoData.ts تا با حذف این گزینه‌ها
 // فقط همین فایل و یک فراخوانی برداشته شود.
 //
-// اگر پروفایلِ منتوریِ Owner را خودِ ابزارِ داده‌ی آزمایشی ساخته باشد، همه‌ی
-// این‌ها با حذفِ پروفایل cascade می‌شوند؛ وگرنه idها در state نگه داشته
-// می‌شوند و clearToolsDemo فقط همان‌ها را برمی‌دارد (داده‌ی واقعیِ Owner دست نمی‌خورد).
+// اگر پروفایل منتوری Owner را خود ابزار داده‌ی آزمایشی ساخته باشد، همه‌ی
+// این‌ها با حذف پروفایل cascade می‌شوند؛ وگرنه idها در state نگه داشته
+// می‌شوند و clearToolsDemo فقط همان‌ها را برمی‌دارد (داده‌ی واقعی Owner دست نمی‌خورد).
 
 export type ToolsDemoState = { templateIds: string[]; replyIds: string[]; alertSet: boolean };
 
@@ -89,7 +89,7 @@ export async function seedToolsDemo(c: {
     select: { id: true },
   });
 
-  // هشدار پایبندی: پروفایلِ ساخته‌ی همین ابزار → روشن؛ پروفایلِ واقعیِ Owner → فقط اگر خاموش بوده
+  // هشدار پایبندی: پروفایل ساخته‌ی همین ابزار → روشن؛ پروفایل واقعی Owner → فقط اگر خاموش بوده
   let alertSet = false;
   if (c.ownerProfileCreated) {
     await tx.mentorProfile.update({ where: { id: profileId }, data: { alertMissedDays: 3 } });
@@ -101,7 +101,7 @@ export async function seedToolsDemo(c: {
   return { templateIds: tpl.map((t) => t.id), replyIds: replies.map((r) => r.id), alertSet };
 }
 
-/** برداشتنِ داده‌ی آزمایشیِ ابزارها از پروفایلِ از قبل موجودِ Owner */
+/** برداشتن داده‌ی آزمایشی ابزارها از پروفایل از قبل موجود Owner */
 export async function clearToolsDemo(db: PrismaClient, ownerId: string, s: ToolsDemoState): Promise<void> {
   const profile = await db.mentorProfile.findUnique({ where: { userId: ownerId }, select: { id: true } });
   if (!profile) return;

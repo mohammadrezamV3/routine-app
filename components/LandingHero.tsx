@@ -14,23 +14,25 @@ import {
 } from "@/components/LandingMockups";
 import "./landing-hero.css";
 
-// ─── هیروی لندینگ (کاربرِ واردنشده) ────────────────────────────────────────
-// همه‌ی تصویرِ سمتِ چپ (گوشی + کارت‌های شناور) با JSX/CSS خالص ساخته شده —
-// نه اسکرین‌شات — و فقط یک پیش‌نمایشِ نمونه است، نه دیتای واقعی کاربر.
+// ─── هیروی لندینگ (کاربر واردنشده) ────────────────────────────────────────
+// همه‌ی تصویر سمت چپ (گوشی + کارت‌های شناور) با JSX/CSS خالص ساخته شده —
+// نه اسکرین‌شات — و فقط یک پیش‌نمایش نمونه است، نه دیتای واقعی کاربر.
 // حلقه‌های انیمیشن فقط وقتی هیرو در دید است اجرا می‌شوند (IntersectionObserver)
-// و با prefers-reduced-motion کاملاً ساکن می‌مانند. هیچ Math.random/Date در
-// رندر نیست؛ حالتِ اولیه‌ی سرور و کلاینت یکی است (بدون hydration mismatch).
+// و با prefers-reduced-motion کاملا ساکن می‌مانند. هیچ Math.random/Date در
+// رندر نیست؛ حالت اولیه‌ی سرور و کلاینت یکی است (بدون hydration mismatch).
 
-// ارقام در کلِ سایت انگلیسی‌اند (مثلِ faNum ِ lib/jalali.ts)
+// ارقام در کل سایت انگلیسی‌اند (مثل faNum  lib/jalali.ts)
 export function faNum(n: number | string) {
   return String(n);
 }
 
-const ROT_WORDS = ["روتین", "تمرین", "معامله", "یادگیری"];
+// خط چرخان تیتر: «برنامه‌هات را زندگی کن، / نه فقط بنویس» (متن صاحب محصول)؛
+// انیمیشن همونه، فقط کلمه‌ها فعل «نوشتن/چیدن» شدن و اولیش «بنویس» ـه.
+const ROT_WORDS = ["بنویس", "بچین", "لیست کن", "یادداشت کن"];
 
 // «روتین من» (app/weekly) همون‌طور که روی گوشی دیده می‌شه — ردیف‌ها آینه‌ی
-// DashTaskRow ـن، ردیفِ آخر همون ردیفِ سنتتیکِ «برنامه تمرینی امروز» با دکمه‌ی
-// «شروع». چرخه فقط تیک‌خوردنِ پشت‌سرهمِ همین ردیف‌هاست.
+// DashTaskRow ـن، ردیف آخر همون ردیف سنتتیک «برنامه تمرینی امروز» با دکمه‌ی
+// «شروع». چرخه فقط تیک‌خوردن پشت‌سرهم همین ردیف‌هاست.
 const PHONE_TASKS: MockTask[] = [
   { name: "مدیتیشن صبحگاهی", time: "07:00", importance: "medium" },
   { name: "مطالعه", time: "13:30", importance: "high", tag: "یادگیری" },
@@ -39,12 +41,12 @@ const PHONE_TASKS: MockTask[] = [
 ];
 
 const SEO_LINKS = [
-  { href: "/routine", label: "برنامه‌ی روتین روزانه" },
-  { href: "/habit-tracker", label: "پیگیری عادت‌ها" },
-  { href: "/bodybuilding-program", label: "برنامه‌ی بدنسازی هوشمند" },
-  { href: "/trading-journal", label: "ژورنال معاملاتی" },
-  { href: "/calorie-counter", label: "کالری‌شمار" },
-  { href: "/ai-planner", label: "برنامه‌ریز هوشمند" },
+  { href: "/routine", label: "روتین" },
+  { href: "/habit-tracker", label: "پیگیری عادت" },
+  { href: "/bodybuilding-program", label: "تمرین" },
+  { href: "/trading-journal", label: "ترید" },
+  { href: "/calorie-counter", label: "تغذیه" },
+  { href: "/ai-planner", label: "مدیر برنامه هوشمند" },
 ];
 
 function prefersReducedMotion() {
@@ -60,13 +62,13 @@ export function LandingHero() {
   // شمارنده‌ی چرخه‌ی تیک‌ها: ۰..۵ تیک‌خوردن، ۶..۸ مکث روی «همه انجام شد»، بعد از نو.
   const [step, setStep] = useState(2);
   const [reduced, setReduced] = useState(false);
-  // گوِ «نومو» (SiriOrb) انیمیشنِ فریمری دارد؛ فقط بعد از mount و وقتی هیرو
-  // در دید است سوار می‌شود — بیرونِ دید یک دایره‌ی ساکنِ هم‌اندازه جایش است.
+  // گو «نومو» (SiriOrb) انیمیشن فریمری دارد؛ فقط بعد از mount و وقتی هیرو
+  // در دید است سوار می‌شود — بیرون دید یک دایره‌ی ساکن هم‌اندازه جایش است.
   const [mounted, setMounted] = useState(false);
 
   useEffect(() => { setReduced(prefersReducedMotion()); setMounted(true); }, []);
 
-  // حلقه‌ها فقط وقتی هیرو واقعاً دیده می‌شه
+  // حلقه‌ها فقط وقتی هیرو واقعا دیده می‌شه
   useEffect(() => {
     const el = sectionRef.current;
     if (!el || typeof IntersectionObserver === "undefined") return;
@@ -87,11 +89,11 @@ export function LandingHero() {
     return () => clearInterval(id);
   }, [inView, reduced]);
 
-  // حرکتِ لایه‌ها (پارالاکسِ نشانگر + شناوریِ آرامِ کارت‌ها) — با JS، نه
-  // transition/animation ـِ CSS: هر فریم مقدارِ نهایی روی پیکسلِ کاملِ دستگاه
-  // گرد می‌شه (با حسابِ zoom ـِ صحنه و devicePixelRatio) و فقط وقتی عوض شده
-  // نوشته می‌شه. پس لایه هیچ‌وقت کامپوزیت/راسترِ جدا نمی‌شه و متن همیشه تیزه.
-  // پارالاکس فقط دسکتاپِ واقعی (hover+pointer:fine)؛ با حرکت‌کاهی هیچ‌کدوم.
+  // حرکت لایه‌ها (پارالاکس نشانگر + شناوری آرام کارت‌ها) — با JS، نه
+  // transition/animation ـ CSS: هر فریم مقدار نهایی روی پیکسل کامل دستگاه
+  // گرد می‌شه (با حساب zoom ـ صحنه و devicePixelRatio) و فقط وقتی عوض شده
+  // نوشته می‌شه. پس لایه هیچ‌وقت کامپوزیت/راستر جدا نمی‌شه و متن همیشه تیزه.
+  // پارالاکس فقط دسکتاپ واقعی (hover+pointer:fine)؛ با حرکت‌کاهی هیچ‌کدوم.
   useEffect(() => {
     const sec = sectionRef.current;
     const stage = stageRef.current;
@@ -105,7 +107,7 @@ export function LandingHero() {
     const parallax = !!window.matchMedia?.("(hover: hover) and (pointer: fine)").matches;
     let k = 1;
     let dpr = window.devicePixelRatio || 1;
-    // موقعیتِ پایه‌ی هر لایه (بدونِ جابه‌جاییِ فعلی) به پیکسلِ واقعی
+    // موقعیت پایه‌ی هر لایه (بدون جابه‌جایی فعلی) به پیکسل واقعی
     const measure = () => {
       dpr = window.devicePixelRatio || 1;
       k = parseFloat(getComputedStyle(stage).getPropertyValue("--k")) || 1;
@@ -115,8 +117,8 @@ export function LandingHero() {
         L.by = r.top - L.ty * k;
       }
     };
-    // مقدارِ دلخواه (px ـِ داخلِ صحنه) → نزدیک‌ترین مقداری که لبه‌ی لایه رو
-    // روی پیکسلِ کاملِ دستگاه می‌نشونه
+    // مقدار دلخواه (px ـ داخل صحنه) → نزدیک‌ترین مقداری که لبه‌ی لایه رو
+    // روی پیکسل کامل دستگاه می‌نشونه
     const snap = (base: number, v: number) => (Math.round((base + v * k) * dpr) / dpr - base) / k;
     let tx = 0, ty = 0, cx = 0, cy = 0;
     let raf = 0;
@@ -143,8 +145,8 @@ export function LandingHero() {
       ty = Math.max(-0.5, Math.min(0.5, (e.clientY - r.top) / r.height - 0.5));
     };
     const onLeave = () => { tx = 0; ty = 0; };
-    // جابه‌جاییِ اسکرول موقعیتِ نسبیِ لایه‌ها به پیکسل رو عوض نمی‌کنه (اسکرول
-    // همیشه عددِ صحیحِ پیکسلِ دستگاهه)، ولی تغییرِ اندازه چرا
+    // جابه‌جایی اسکرول موقعیت نسبی لایه‌ها به پیکسل رو عوض نمی‌کنه (اسکرول
+    // همیشه عدد صحیح پیکسل دستگاهه)، ولی تغییر اندازه چرا
     const ro = typeof ResizeObserver !== "undefined" ? new ResizeObserver(measure) : null;
     ro?.observe(stage);
     window.addEventListener("resize", measure);
@@ -186,17 +188,17 @@ export function LandingHero() {
         <div className="lh-copy">
           <span className="lh-eyebrow lh-rise" style={{ "--i": 0 } as React.CSSProperties}>
             <span className="lh-eyebrow-dot" aria-hidden="true" />
-            روتین، تمرین، تغذیه، ترید و یادگیری — یک‌جا و فارسی
+            یک سیستم برای پیشرفت روزانه
           </span>
 
-          {/* SEO: «روتین اپ» و «آریون» هر دو داخلِ خودِ h1 هستند (نه فقط متادیتا). */}
+          {/* SEO: «روتین اپ» و «آریون» هر دو داخل خود h1 هستند (نه فقط متادیتا). */}
           <h1 id="lh-title" className={`lh-title lh-rise ${t.heading}`} style={{ "--i": 1 } as React.CSSProperties}>
             <span className="lh-title-kicker">
               روتین اپ <span className="lh-brand">آریون</span>
             </span>
-            <span className="lh-title-main">هر روز یک قدم جلوتر</span>
+            <span className="lh-title-main">برنامه‌هات را زندگی کن،</span>
             <span className="lh-title-main lh-title-rot">
-              در{" "}
+              نه فقط{" "}
               <span className="lh-rot" aria-hidden="true">
                 {ROT_WORDS.map((w, i) => (
                   <span
@@ -207,15 +209,13 @@ export function LandingHero() {
                   </span>
                 ))}
               </span>
-              <span className="lh-sr">روتین، تمرین، معامله و یادگیری</span>
+              <span className="lh-sr">بنویس</span>
             </span>
           </h1>
 
           <p className={`lh-sub lh-rise ${t.muted}`} style={{ "--i": 2 } as React.CSSProperties}>
-            هدف‌ها لای چند اپ و یادداشت پخش شده‌اند، عادتِ تازه بعد از چند روز فراموش می‌شود و
-            معامله‌ها بی‌مرور تکرار می‌شوند. آریون همه را یک‌جا جمع می‌کند: روتین با یادآوری و استریک،
-            تمرین و کالری، ژورنال ترید همگام با متاتریدر و رودمپ یادگیری — تا هر روز بدانی کجای مسیری
-            و قدمِ بعدی چیست.
+            برنامه‌ریزی کن، اجرا کن و پیشرفتت را ببین؛ آریون همه ابزارهایی را که برای ساختن
+            یک مسیر منظم نیاز داری، یک‌جا در اختیارت می‌گذارد.
           </p>
 
           <div className="lh-ctas lh-rise" style={{ "--i": 3 } as React.CSSProperties}>
@@ -223,7 +223,7 @@ export function LandingHero() {
               href="/auth/signup"
               className={`lh-cta-primary inline-flex items-center gap-1.5 rounded-[20px] px-6 py-3.5 text-[14.5px] font-bold text-white transition hover:brightness-105 active:scale-[0.97] sm:px-8 sm:text-[15.5px] ${t.accentBg} ${t.accentShadow}`}
             >
-              رایگان شروع کن <ArrowLeft size={17} className="lh-cta-arrow" />
+              شروع رایگان <ArrowLeft size={17} className="lh-cta-arrow" />
             </Link>
             <Link
               href="/auth/login"
@@ -234,9 +234,9 @@ export function LandingHero() {
           </div>
 
           <ul className={`lh-trust lh-rise ${t.muted}`} style={{ "--i": 4 } as React.CSSProperties}>
-            <li><Sparkles size={14} aria-hidden="true" /> «روتین من» 14 روز رایگان</li>
+            <li><Sparkles size={14} aria-hidden="true" /> 14 روز رایگان</li>
             <li><Sparkles size={14} aria-hidden="true" /> 3 روز بدنسازی، کالری‌شمار و ژورنال ترید</li>
-            <li><ShieldCheck size={15} aria-hidden="true" /> بدون کارت بانکی</li>
+            <li><ShieldCheck size={15} aria-hidden="true" /> بدون ثبت‌نام هم می‌توانی امتحان کنی</li>
             <li><Lock size={14} aria-hidden="true" /> گفت‌وگوی مربی با رمزگذاری سرتاسری</li>
           </ul>
 
@@ -249,7 +249,7 @@ export function LandingHero() {
           </nav>
         </div>
 
-        {/* ── تصویر: گوشی + کارت‌های شناور — همه از روی خودِ اپ ── */}
+        {/* ── تصویر: گوشی + کارت‌های شناور — همه از روی خود اپ ── */}
         <div className="lh-stage" ref={stageRef} aria-hidden="true" {...INERT}>
           <div className="lh-stage-inner">
             <div className="lh-halo" />
@@ -257,8 +257,8 @@ export function LandingHero() {
             <div className="lh-layer lh-layer-phone" data-d="10">
               <div className="lh-phone">
                 <div className="lh-phone-screen">
-                  {/* بومِ ۳۶۰پیکسلی = عرضِ واقعیِ یک گوشی؛ کوچک‌نمایی با transform.
-                      پس کلاس‌های موبایلِ خودِ اپ همون اندازه‌ای رو دارن که روی گوشی. */}
+                  {/* بوم 360پیکسلی = عرض واقعی یک گوشی؛ کوچک‌نمایی با transform.
+                      پس کلاس‌های موبایل خود اپ همون اندازه‌ای رو دارن که روی گوشی. */}
                   <div className="lh-canvas dash-scope text-dash-text">
                     <div className="lh-ph-status">
                       <span>9:41</span>
@@ -304,7 +304,7 @@ export function LandingHero() {
                       <MockMedicationCard meds={[{ name: "ویتامین D", every: "هر 24 ساعت", times: "22:00", left: "12 روز مونده" }]} />
                     </div>
 
-                    {/* گوِ «نومو» — همون جای routine-ai-fab روی صفحه‌ی روتین */}
+                    {/* گو «نومو» — همون جای routine-ai-fab روی صفحه‌ی روتین */}
                     <span className="lh-ph-fab">
                       {orbLive ? <SiriOrb size="52px" /> : <span className="lh-orb-still" />}
                     </span>
@@ -313,7 +313,7 @@ export function LandingHero() {
               </div>
             </div>
 
-            {/* ژورنال ترید — کارتِ یک حساب (TradeAccountsPanel) */}
+            {/* ژورنال ترید — کارت یک حساب (TradeAccountsPanel) */}
             <div className="lh-layer lh-pos-trade" data-d="34" data-f="0">
               <div className="lh-float lh-card lh-card-trade">
                 <div className="lh-trade-name">
@@ -331,7 +331,7 @@ export function LandingHero() {
               </div>
             </div>
 
-            {/* کالری‌شمار — سرِ CalorieFoodPlanCard */}
+            {/* کالری‌شمار — سر CalorieFoodPlanCard */}
             <div className="lh-layer lh-pos-cal" data-d="26" data-f="-2.2">
               <div className="lh-float lh-card lh-card-cal dash-scope">
                 <div className="mono text-[15px] font-extrabold" style={{ color: "var(--accent)" }}>
@@ -351,7 +351,7 @@ export function LandingHero() {
               </div>
             </div>
 
-            {/* نومو — پنلِ RoutineAiFab */}
+            {/* نومو — پنل RoutineAiFab */}
             <div className="lh-layer lh-pos-ai" data-d="42" data-f="-4.1">
               <div className="lh-float lh-card lh-card-ai">
                 <div className="routine-ai-title lh-ai-title">
@@ -359,11 +359,11 @@ export function LandingHero() {
                   نومو
                 </div>
                 <div className="routine-ai-bubble-user lh-ai-bubble lh-ai-user">فردا ساعت 7 عصر باشگاه</div>
-                <div className="routine-ai-bubble-bot lh-ai-bubble lh-ai-bot">«باشگاه» سه‌شنبه ساعتِ 19:00 اضافه شد.</div>
+                <div className="routine-ai-bubble-bot lh-ai-bubble lh-ai-bot">«باشگاه» سه‌شنبه ساعت 19:00 اضافه شد.</div>
               </div>
             </div>
 
-            {/* مربی — MentorCard + خطِ رمزگذاریِ گفت‌وگو */}
+            {/* مربی — MentorCard + خط رمزگذاری گفت‌وگو */}
             <div className="lh-layer lh-pos-mentor" data-d="30" data-f="-1.2">
               <div className="lh-float lh-card-mentor">
                 <MockMentorCard name="سارا رحیمی" line="مربی تغذیه" rating="4.9" count="38" since="فروردین 1404" />

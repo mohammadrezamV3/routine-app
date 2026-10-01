@@ -1,6 +1,6 @@
-// اچیومنت‌ها سمتِ سرور: متریک‌ها از دیتابیس ساخته می‌شن (هیچ‌وقت از کلاینت
+// اچیومنت‌ها سمت سرور: متریک‌ها از دیتابیس ساخته می‌شن (هیچ‌وقت از کلاینت
 // پذیرفته نمی‌شن)، هر اچیومنتی که تازه باز شد در UserAchievement ثبت می‌شه و
-// دیگه قفل نمی‌شه، و وقتی همه باز شدن User.goldenSince (نامِ طلایی) ست می‌شه.
+// دیگه قفل نمی‌شه، و وقتی همه باز شدن User.goldenSince (نام طلایی) ست می‌شه.
 
 import { prisma } from "./prisma";
 import { dayInTimezone } from "./dashboardServer";
@@ -15,15 +15,15 @@ export type AchievementsPayload = {
   total: number;
   golden: boolean;
   goldenSince: string | null;
-  /** اچیومنت‌هایی که همین درخواست باز شدن (برای جشنِ کلاینت) */
+  /** اچیومنت‌هایی که همین درخواست باز شدن (برای جشن کلاینت) */
   fresh: string[];
 };
 
-// همون پیش‌فرض‌های lib/wakeSleep.ts (اون فایل storage ِ کلاینتی رو import می‌کنه)
+// همون پیش‌فرض‌های lib/wakeSleep.ts (اون فایل storage  کلاینتی رو import می‌کنه)
 const DEFAULT_WAKE = "09:30";
 const DEFAULT_SLEEP = "01:30";
 
-/** ستونِ @db.Date نیمه‌شبِ UTC ـه — روزِ تقویمی با getterهای UTC (نه محلیِ سرور) */
+/** ستون @db.Date نیمه‌شب UTC ـه — روز تقویمی با getterهای UTC (نه محلی سرور) */
 function dbDayIso(d: Date): string {
   return d.toISOString().slice(0, 10);
 }
@@ -34,7 +34,7 @@ function hhmmToMin(v: unknown, fallback: string): number {
   return h * 60 + m;
 }
 
-/** دقیقه‌ی ساعتِ محلیِ یک لحظه در منطقه‌ی زمانیِ کاربر */
+/** دقیقه‌ی ساعت محلی یک لحظه در منطقه‌ی زمانی کاربر */
 function minutesInTz(d: Date, tz: string): number {
   try {
     const parts = new Intl.DateTimeFormat("en-GB", { timeZone: tz, hour: "2-digit", minute: "2-digit", hourCycle: "h23" }).formatToParts(d);
@@ -74,7 +74,7 @@ export async function computeUserAchievements(userId: string): Promise<Achieveme
 
   const sleeps = sleepRows
     .map((s) => ({ iso: dbDayIso(s.date), durationMin: Math.round((s.wokeAt!.getTime() - s.sleptAt!.getTime()) / 60000), bedMin: minutesInTz(s.sleptAt!, tz) }))
-    .filter((s) => s.durationMin > 0 && s.durationMin <= 20 * 60); // همون سقفِ /api/sleep
+    .filter((s) => s.durationMin > 0 && s.durationMin <= 20 * 60); // همون سقف /api/sleep
 
   const metrics = computeAchievementMetrics({
     todayIso,

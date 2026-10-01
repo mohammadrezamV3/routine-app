@@ -8,8 +8,8 @@ function validId(id: unknown): id is string {
   return typeof id === "string" && id.length > 0 && id.length <= 64;
 }
 
-// GET /api/mentors/me/documents/:docId → خودِ فایل، فقط برای صاحبش.
-// هیچ مسیرِ ذخیره‌سازی برنمی‌گرده؛ بایت‌ها از دیتابیس و با هدرهایی سرو
+// GET /api/mentors/me/documents/:docId → خود فایل، فقط برای صاحبش.
+// هیچ مسیر ذخیره‌سازی برنمی‌گرده؛ بایت‌ها از دیتابیس و با هدرهایی سرو
 // می‌شن که مرورگر نه اجراشون کنه (nosniff + attachment) نه کش‌شون کنه.
 export async function GET(_req: Request, { params }: Ctx) {
   const g = await requireMentorsUser();
@@ -35,8 +35,8 @@ export async function GET(_req: Request, { params }: Ctx) {
   });
 }
 
-// DELETE /api/mentors/me/documents/:docId → فقط وقتی وضعیتِ مربوط VERIFIED نیست
-// (مدرکی که تاییدِ فعلی بهش تکیه داره نباید بی‌صدا پاک بشه).
+// DELETE /api/mentors/me/documents/:docId → فقط وقتی وضعیت مربوط VERIFIED نیست
+// (مدرکی که تایید فعلی بهش تکیه داره نباید بی‌صدا پاک بشه).
 export async function DELETE(_req: Request, { params }: Ctx) {
   const g = await requireMentorsUser();
   if (!g.ok) return g.response;
@@ -57,11 +57,11 @@ export async function DELETE(_req: Request, { params }: Ctx) {
             select: { status: true },
           })
         )?.status ?? "NOT_PROVIDED";
-  if (status === "VERIFIED") return conflict("مدرکِ تاییدشده قابل حذف نیست");
+  if (status === "VERIFIED") return conflict("مدرک تاییدشده قابل حذف نیست");
 
   await prisma.$transaction(async (tx) => {
     await tx.mentorDocument.delete({ where: { id: doc.id } });
-    // اگه آخرین فایلِ یک درخواستِ «در انتظار بررسی» حذف شد، چیزی برای بررسی
+    // اگه آخرین فایل یک درخواست «در انتظار بررسی» حذف شد، چیزی برای بررسی
     // نمونده — وضعیت به «ارسال نشده» برمی‌گرده (ردشده دست نمی‌خوره تا دلیلش بمونه).
     if (status !== "PENDING") return;
     const remaining = await tx.mentorDocument.count({

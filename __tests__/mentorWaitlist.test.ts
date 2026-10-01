@@ -58,7 +58,7 @@ async function entry(mentorId: string, userId: string) {
   return prisma.mentorWaitlistEntry.findUnique({ where: { mentorId_userId: { mentorId, userId } } });
 }
 
-/** منتورِ پُر با ظرفیتِ ۱ و یک شاگردِ فعال → { m, s0, rel } */
+/** منتور پر با ظرفیت ۱ و یک شاگرد فعال → { m, s0, rel } */
 async function fullMentor() {
   const m = await makeMentor();
   await settings(m, { maxActiveStudents: 1 });
@@ -67,13 +67,13 @@ async function fullMentor() {
   return { m, s0, rel };
 }
 
-describe("صفِ انتظار — منطقِ خالص", () => {
+describe("صف انتظار — منطق خالص", () => {
   it("فقط FULL صف دارد", () => {
     expect(canJoinWaitlist("FULL")).toBe(true);
     for (const s of ["OPEN", "CLOSED", "AWAY"] as const) expect(canJoinWaitlist(s)).toBe(false);
   });
 
-  it("صندلیِ آزاد: رزروها کم می‌شوند؛ بدونِ سقف بی‌نهایت؛ منفی نه", () => {
+  it("صندلی آزاد: رزروها کم می‌شوند؛ بدون سقف بی‌نهایت؛ منفی نه", () => {
     expect(freeSeats(3, 1, 1)).toBe(1);
     expect(freeSeats(3, 3, 1)).toBe(0);
     expect(freeSeats(null, 50, 5)).toBe(Number.POSITIVE_INFINITY);
@@ -91,7 +91,7 @@ describe("صفِ انتظار — منطقِ خالص", () => {
     expect(planOffers({ ...base, maxActiveStudents: null, waiting: many })).toHaveLength(WAITLIST_OFFER_BATCH);
   });
 
-  it("جایگاه با joinedAt و بعد id؛ نوبتِ زنده؛ برچسبِ مهلت", () => {
+  it("جایگاه با joinedAt و بعد id؛ نوبت زنده؛ برچسب مهلت", () => {
     const t = new Date("2026-09-28T10:00:00Z");
     const rows = [
       { id: "b", joinedAt: t },
@@ -115,8 +115,8 @@ describe("صفِ انتظار — منطقِ خالص", () => {
   });
 });
 
-describe("صفِ انتظار — ورود، جایگاه، خروج", () => {
-  it("فقط وقتی پر است؛ گیت‌های درخواستِ عادی (خود، شرایط، رابطه‌ی فعال) اعمال می‌شوند", async () => {
+describe("صف انتظار — ورود، جایگاه، خروج", () => {
+  it("فقط وقتی پر است؛ گیت‌های درخواست عادی (خود، شرایط، رابطه‌ی فعال) اعمال می‌شوند", async () => {
     const open = await makeMentor();
     const u = await makeUser();
     const r0 = await join(u, open);
@@ -125,7 +125,7 @@ describe("صفِ انتظار — ورود، جایگاه، خروج", () => {
 
     const { m, s0 } = await fullMentor();
     expect((await join(m, m)).status).toBe(400);
-    expect((await join(s0, m)).status).toBe(409); // شاگردِ فعال
+    expect((await join(s0, m)).status).toBe(409); // شاگرد فعال
 
     const fresh = await makeUser();
     const noTerms = await join(fresh, m, false);
@@ -136,7 +136,7 @@ describe("صفِ انتظار — ورود، جایگاه، خروج", () => {
     expect((await getMyWaitlist(req("GET", `/api/mentors/${m}/waitlist`), { params: { mentorId: m } })).status).toBe(401);
   });
 
-  it("FIFO: «نفر N در صف»، تکراری ۴۰۹، خروج و ورودِ دوباره ته صف", async () => {
+  it("FIFO: «نفر N در صف»، تکراری ۴۰۹، خروج و ورود دوباره ته صف", async () => {
     const { m } = await fullMentor();
     const a = await makeUser();
     const b = await makeUser();
@@ -146,7 +146,7 @@ describe("صفِ انتظار — ورود، جایگاه، خروج", () => {
     expect((await j(await join(b, m))).waitlist).toMatchObject({ status: "WAITING", position: 2, waiting: 2 });
     expect((await join(a, m)).status).toBe(409);
 
-    // پذیرشِ شرایط روی کاربر ثبت شد (مثلِ درخواستِ عادی)
+    // پذیرش شرایط روی کاربر ثبت شد (مثل درخواست عادی)
     const u = await prisma.user.findUnique({ where: { id: a }, select: { mentorStudentTermsVersion: true } });
     expect(u?.mentorStudentTermsVersion).toBe(MENTOR_TERMS_VERSION);
 
@@ -157,7 +157,7 @@ describe("صفِ انتظار — ورود، جایگاه، خروج", () => {
     expect(await mine(a, m)).toMatchObject({ position: 2 });
     expect((await leave(await makeUser(), m)).status).toBe(404);
 
-    // پروفایلِ عمومی: وضعیتِ من + تعداد
+    // پروفایل عمومی: وضعیت من + تعداد
     as(a);
     const d = await j(await mentorDetail(req("GET", `/api/mentors/${m}`), { params: { mentorId: m } }));
     expect(d.mentor.availability).toBe("FULL");
@@ -166,8 +166,8 @@ describe("صفِ انتظار — ورود، جایگاه، خروج", () => {
   });
 });
 
-describe("صفِ انتظار — آزاد شدنِ صندلی و نوبت", () => {
-  it("پایانِ رابطه → نفرِ اول نوبت + اعلان؛ صندلی رزرو است؛ نوبت → درخواستِ عادی → پذیرش", async () => {
+describe("صف انتظار — آزاد شدن صندلی و نوبت", () => {
+  it("پایان رابطه → نفر اول نوبت + اعلان؛ صندلی رزرو است؛ نوبت → درخواست عادی → پذیرش", async () => {
     const { m, s0, rel } = await fullMentor();
     const a = await makeUser();
     const b = await makeUser();
@@ -184,19 +184,19 @@ describe("صفِ انتظار — آزاد شدنِ صندلی و نوبت", () 
     const note = await prisma.inAppNotification.findFirst({ where: { userId: a, type: "mentor.waitlist.offer" } });
     expect(note?.url).toBe(`/mentors/${m}`);
 
-    // صندلی برای a نگه داشته شده: درخواستِ مستقیمِ غریبه ۴۰۹ با کدِ پر بودن
+    // صندلی برای a نگه داشته شده: درخواست مستقیم غریبه ۴۰۹ با کد پر بودن
     const direct = await requestMentorship(outsider, m);
     expect(direct.status).toBe(409);
     expect((await j(direct)).code).toBe("MENTOR_FULL");
 
-    // صفِ مربی: نوبت‌دار اول، بعد منتظرها
+    // صف مربی: نوبت‌دار اول، بعد منتظرها
     as(m);
     const q = await j(await mentorWaitlist());
     expect(q.entries.map((e: any) => [e.user.id, e.status, e.position])).toEqual([[a, "OFFERED", null], [b, "WAITING", 1]]);
     expect(q.reserved).toBe(1);
     expect(JSON.stringify(q)).not.toMatch(/email|phone/i);
 
-    // پذیرشِ نوبت = درخواستِ عادی (با سقفِ پر هم مجاز)
+    // پذیرش نوبت = درخواست عادی (با سقف پر هم مجاز)
     const req1 = await requestMentorship(a, m, "سلام");
     expect(req1.status).toBe(200);
     const mid = (await j(req1)).mentorship.id;
@@ -210,7 +210,7 @@ describe("صفِ انتظار — آزاد شدنِ صندلی و نوبت", () 
     expect(await prisma.mentorship.count({ where: { mentorId: m, status: "ACTIVE" } })).toBe(1);
   });
 
-  it("ردِ درخواستِ آمده از صف → صندلی به نفرِ بعدی؛ درخواستِ قدیمیِ مستقیم نمی‌تواند از صف جلو بزند", async () => {
+  it("رد درخواست آمده از صف → صندلی به نفر بعدی؛ درخواست قدیمی مستقیم نمی‌تواند از صف جلو بزند", async () => {
     const m = await makeMentor();
     const s0 = await makeUser();
     const early = await makeUser();
@@ -224,7 +224,7 @@ describe("صفِ انتظار — آزاد شدنِ صندلی و نوبت", () 
     await mentorshipAction(m, rel, "end");
     expect((await entry(m, a))?.status).toBe("OFFERED");
 
-    // صندلی رزروِ a است؛ پذیرشِ درخواستِ قدیمیِ early ۴۰۹
+    // صندلی رزرو a است؛ پذیرش درخواست قدیمی early ۴۰۹
     const acc = await mentorshipAction(m, earlyReq, "accept");
     expect(acc.status).toBe(409);
     expect((await j(acc)).error).toContain("صف");
@@ -235,7 +235,7 @@ describe("صفِ انتظار — آزاد شدنِ صندلی و نوبت", () 
     expect((await entry(m, a))?.mentorshipId).toBeNull();
   });
 
-  it("انقضا: نوبتِ منقضی → EXPIRED + اعلان و نوبت به نفرِ بعد؛ ردِ نوبت هم همین", async () => {
+  it("انقضا: نوبت منقضی → EXPIRED + اعلان و نوبت به نفر بعد؛ رد نوبت هم همین", async () => {
     const { m, s0, rel } = await fullMentor();
     const a = await makeUser();
     const b = await makeUser();
@@ -247,25 +247,25 @@ describe("صفِ انتظار — آزاد شدنِ صندلی و نوبت", () 
     expect((await entry(m, a))?.status).toBe("OFFERED");
 
     await prisma.mentorWaitlistEntry.update({ where: { mentorId_userId: { mentorId: m, userId: a } }, data: { offerExpiresAt: new Date(Date.now() - 1000) } });
-    // مسیرِ خواندن صف را جلو می‌برد (بدونِ کران)
+    // مسیر خواندن صف را جلو می‌برد (بدون کران)
     expect(await mine(b, m)).toMatchObject({ status: "OFFERED" });
     expect(await mine(a, m)).toMatchObject({ status: "EXPIRED" });
     expect(await prisma.inAppNotification.count({ where: { userId: a, type: "mentor.waitlist.expired" } })).toBe(1);
-    // دوباره اجرا → اعلانِ تکراری نه (idempotent)
+    // دوباره اجرا → اعلان تکراری نه (idempotent)
     await advanceWaitlist(m);
     expect(await prisma.inAppNotification.count({ where: { userId: a, type: "mentor.waitlist.expired" } })).toBe(1);
 
-    // نوبت‌دارِ منقضی دیگر نمی‌تواند با آن نوبت درخواست بدهد
+    // نوبت‌دار منقضی دیگر نمی‌تواند با آن نوبت درخواست بدهد
     expect((await requestMentorship(a, m)).status).toBe(409);
 
-    // ردِ نوبت (DELETE) → c
+    // رد نوبت (DELETE) → c
     expect((await leave(b, m)).status).toBe(200);
     expect((await entry(m, c))?.status).toBe("OFFERED");
-    // ورودِ دوباره‌ی a بعد از انقضا → ته صف
+    // ورود دوباره‌ی a بعد از انقضا → ته صف
     expect((await j(await join(a, m))).waitlist).toMatchObject({ status: "WAITING", position: 1 });
   });
 
-  it("بالا بردنِ ظرفیت در تنظیمات به همان تعداد نوبت می‌دهد", async () => {
+  it("بالا بردن ظرفیت در تنظیمات به همان تعداد نوبت می‌دهد", async () => {
     const { m } = await fullMentor();
     const users = [await makeUser(), await makeUser(), await makeUser()];
     for (const u of users) await join(u, m);
@@ -274,7 +274,7 @@ describe("صفِ انتظار — آزاد شدنِ صندلی و نوبت", () 
     expect(st).toEqual(["OFFERED", "OFFERED", "WAITING"]);
   });
 
-  it("پذیرشِ خاموش نوبت نمی‌دهد؛ روشن شدنش می‌دهد", async () => {
+  it("پذیرش خاموش نوبت نمی‌دهد؛ روشن شدنش می‌دهد", async () => {
     const { m, s0, rel } = await fullMentor();
     const a = await makeUser();
     await join(a, m);
@@ -285,11 +285,11 @@ describe("صفِ انتظار — آزاد شدنِ صندلی و نوبت", () 
     expect((await entry(m, a))?.status).toBe("OFFERED");
   });
 
-  it("هم‌زمانی: چند پیش‌بردنِ هم‌زمان برای یک صندلی فقط یک نوبت و یک اعلان", async () => {
+  it("هم‌زمانی: چند پیش‌بردن هم‌زمان برای یک صندلی فقط یک نوبت و یک اعلان", async () => {
     const { m, s0, rel } = await fullMentor();
     const users = [await makeUser(), await makeUser(), await makeUser()];
     for (const u of users) await join(u, m);
-    // پایان بدونِ مسیرِ روت (مثلِ حذفِ حساب) تا پیش‌بردن فقط از این‌جا باشد
+    // پایان بدون مسیر روت (مثل حذف حساب) تا پیش‌بردن فقط از این‌جا باشد
     await prisma.mentorship.update({ where: { id: rel }, data: { status: "ENDED", endedAt: new Date() } });
     await Promise.all(Array.from({ length: 6 }, () => advanceWaitlist(m)));
     const offered = await prisma.mentorWaitlistEntry.count({ where: { mentorId: m, status: "OFFERED" } });
@@ -300,8 +300,8 @@ describe("صفِ انتظار — آزاد شدنِ صندلی و نوبت", () 
   });
 });
 
-describe("صفِ انتظار — سمتِ مربی", () => {
-  it("خارج کردن: فقط صفِ خودم (ضد IDOR)، اعلان به کاربر، نوبتِ آزاد به نفرِ بعد", async () => {
+describe("صف انتظار — سمت مربی", () => {
+  it("خارج کردن: فقط صف خودم (ضد IDOR)، اعلان به کاربر، نوبت آزاد به نفر بعد", async () => {
     const { m, s0, rel } = await fullMentor();
     const other = await makeMentor();
     const a = await makeUser();
@@ -321,7 +321,7 @@ describe("صفِ انتظار — سمتِ مربی", () => {
     as(m);
     expect((await mentorRemove(req("DELETE", `/api/mentor/waitlist/${ea!.id}`), { params: { entryId: ea!.id } })).status).toBe(404);
 
-    // کاربرِ بدونِ پروفایلِ مربی
+    // کاربر بدون پروفایل مربی
     as(a);
     expect((await mentorWaitlist()).status).toBe(403);
   });

@@ -34,14 +34,14 @@ const BTN = { size: 15, strokeWidth: 1.75, "aria-hidden": true } as const;
 const BTN_SM = { size: 14, strokeWidth: 1.75, "aria-hidden": true } as const;
 
 /**
- * صفحه‌ی یک رابطه‌ی منتوری (هر دو طرف). ترتیب عمداً بر اساسِ «چه کاری الان
+ * صفحه‌ی یک رابطه‌ی منتوری (هر دو طرف). ترتیب عمدا بر اساس «چه کاری الان
  * با توست»:
- *   ۱. پاسخ به دعوت/درخواست (اگر منتظرِ توست)
- *   ۲. برنامه‌های تازه‌ای که منتظرِ پاسخِ تو هستند، با یادداشتِ منتور و دکمه‌های پذیرش
+ *   ۱. پاسخ به دعوت/درخواست (اگر منتظر توست)
+ *   ۲. برنامه‌های تازه‌ای که منتظر پاسخ تو هستند، با یادداشت منتور و دکمه‌های پذیرش
  *   ۳. ورود به گفت‌وگو (صفحه‌ی جدا: /mentorship/[id]/chat)
- *   ۴. برای شاگرد یک ردیفِ «دسترسی‌ها» → تنظیماتِ پنلِ کاربری (/account/general/mentors)
- *   ۵. برنامه‌ها (هر کدام با یادداشتِ منتور)
- * اقدام‌های مخرب (پایان، لغو، مسدودی، گزارشِ گفت‌وگو) فقط در منوی سه‌نقطه‌ی سر.
+ *   ۴. برای شاگرد یک ردیف «دسترسی‌ها» → تنظیمات پنل کاربری (/account/general/mentors)
+ *   ۵. برنامه‌ها (هر کدام با یادداشت منتور)
+ * اقدام‌های مخرب (پایان، لغو، مسدودی، گزارش گفت‌وگو) فقط در منوی سه‌نقطه‌ی سر.
  */
 export default function MentorshipPage() {
   const { id } = useParams<{ id: string }>();
@@ -106,7 +106,7 @@ function Relationship({ rel, reload }: { rel: Relation; reload: () => void }) {
   const chatOpen = row.status === "ACTIVE" || row.status === "ENDED";
   const needTerms = role === "student" && iMustAnswer && (forceTerms || (!terms.loading && !terms.studentAccepted));
 
-  // «دسترسی‌ها» به تنظیماتِ پنلِ کاربری منتقل شد؛ لینکِ قدیمیِ ?tab=privacy همان‌جا می‌رود
+  // «دسترسی‌ها» به تنظیمات پنل کاربری منتقل شد؛ لینک قدیمی ?tab=privacy همان‌جا می‌رود
   const privacyHref = `/account/general/mentors?mentorship=${encodeURIComponent(row.id)}`;
   useEffect(() => {
     const t = new URLSearchParams(window.location.search).get("tab");
@@ -125,7 +125,7 @@ function Relationship({ rel, reload }: { rel: Relation; reload: () => void }) {
     }
   }, [row.id, role]);
   useEffect(() => { loadPrograms(); }, [loadPrograms]);
-  // زنده: برنامه‌ی تازه/پاسخِ طرفِ مقابل همون لحظه
+  // زنده: برنامه‌ی تازه/پاسخ طرف مقابل همون لحظه
   useLiveRefresh("mentor:program", () => { loadPrograms(); });
   useVisiblePolling(() => { loadPrograms(); }, 30_000);
 
@@ -328,7 +328,7 @@ function ProgramFacts({ p }: { p: ProgramRow }) {
   );
 }
 
-/** یادداشتِ منتور روی برنامه — برچسب‌دار تا با توضیحِ برنامه اشتباه نشود */
+/** یادداشت منتور روی برنامه — برچسب‌دار تا با توضیح برنامه اشتباه نشود */
 function MentorNote({ note, role }: { note: string; role: Role }) {
   return (
     <div className="mentor-note-box mentor-program-note">

@@ -12,7 +12,7 @@ type Item = { id: string; text: string; order: number };
 type Checklist = { id: string; name: string; color: string; required: boolean; archived: boolean; order: number; note: string | null; items: Item[] };
 
 // ویرایشگر چک‌لیست — از TradeChecklistsPanel جدا شد تا هم از فهرست چک‌لیست‌ها
-// هم از صفحه‌ی اختصاصیِ یک چک‌لیست (TradeChecklistDetailView) قابل استفاده
+// هم از صفحه‌ی اختصاصی یک چک‌لیست (TradeChecklistDetailView) قابل استفاده
 // باشد؛ یک فرم، نه دو نسخه‌ی جداگانه که از هم دور می‌افتند.
 export function ChecklistEditor({
   checklist,

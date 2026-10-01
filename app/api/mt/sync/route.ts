@@ -22,8 +22,8 @@ import { publishDataChanged } from "@/lib/realtime";
 // دوباره‌ی sync (که در EA کاملا عادی است) هیچ‌وقت معامله‌ی تکراری نمی‌سازد.
 
 // ریت‌لیمیت روی *توکن* (یعنی هر حساب)، نه IP: کاربرانی که ده‌ها حساب روی
-// یک VPS دارند همه از یک IP می‌آیند و قبلا سقفِ ۳۰/دقیقه‌ی مشترکِ IP باعث
-// ۴۲۹ و جا ماندنِ کلِ دسته‌ها می‌شد. سقفِ IP فقط سپرِ حدسِ توکن است.
+// یک VPS دارند همه از یک IP می‌آیند و قبلا سقف ۳۰/دقیقه‌ی مشترک IP باعث
+// ۴۲۹ و جا ماندن کل دسته‌ها می‌شد. سقف IP فقط سپر حدس توکن است.
 const SYNC_LIMIT_PER_TOKEN = 60;
 const SYNC_LIMIT_PER_IP = 600;
 const SYNC_WINDOW_MS = 60_000;
@@ -52,14 +52,14 @@ export async function POST(req: NextRequest) {
   if (!body || typeof body !== "object") {
     return NextResponse.json({ error: "invalid json" }, { status: 400 });
   }
-  // زمانِ معاملات در متاتریدر زمانِ *سرورِ بروکر* است نه UTC؛ اکسپرت اختلافش
+  // زمان معاملات در متاتریدر زمان *سرور بروکر* است نه UTC؛ اکسپرت اختلافش
   // را می‌فرستد (اکسپرت‌های قدیمی شاید نه → بدون تصحیح).
   const tzOffsetMs = normalizeTzOffsetMs(body.tzOffsetMinutes);
 
   const rawCount = Array.isArray(body.trades) ? body.trades.length : 0;
   const trades = normalizeMtTrades(body.trades);
-  // اگر یک شناسه دو بار در همین درخواست آمد، آخری برنده است (نه دو upsertِ
-  // پشتِ‌سرهم روی یک ردیف)
+  // اگر یک شناسه دو بار در همین درخواست آمد، آخری برنده است (نه دو upsert
+  // پشت‌سرهم روی یک ردیف)
   const byId = new Map(trades.map((t) => [t.externalId, t]));
 
   const existingRows = byId.size
@@ -91,9 +91,9 @@ export async function POST(req: NextRequest) {
       continue;
     }
 
-    // کاربر یک‌بار خودش جزئیاتِ این معامله را دستی ویرایش کرده — دیگر حتی
+    // کاربر یک‌بار خودش جزئیات این معامله را دستی ویرایش کرده — دیگر حتی
     // فیلدهای اصلی (symbol/pnl/قیمت‌ها/...) هم با sync بازنویسی نشوند.
-    // فیلدهای دستیِ کاربر (احساسات، چک‌لیست، برچسب، دلایل، عکس، یادداشت) هم
+    // فیلدهای دستی کاربر (احساسات، چک‌لیست، برچسب، دلایل، عکس، یادداشت) هم
     // اصلا در data نیستند، پس هیچ‌وقت دست نمی‌خورند.
     if (row.syncLocked) continue;
 
@@ -109,7 +109,7 @@ export async function POST(req: NextRequest) {
       });
       updated++;
     } catch (e) {
-      // خطای یک ردیف نباید کلِ دسته را ۵۰۰ کند — وگرنه EA کِرسرش را جلو
+      // خطای یک ردیف نباید کل دسته را ۵۰۰ کند — وگرنه EA کرسرش را جلو
       // نمی‌برد و همان دسته تا ابد دوباره شکست می‌خورد.
       failed++;
       console.error("[mt/sync] update failed", link.id, t.externalId, e);
@@ -118,8 +118,8 @@ export async function POST(req: NextRequest) {
 
   if (toCreate.length) {
     try {
-      // یک کوئری برای کلِ بک‌فیل — قبلا ۲ کوئری به‌ازای هر معامله بود و دسته‌ی
-      // ۳۰۰تایی از timeoutِ ۱۰ ثانیه‌ایِ WebRequest رد می‌شد.
+      // یک کوئری برای کل بک‌فیل — قبلا ۲ کوئری به‌ازای هر معامله بود و دسته‌ی
+      // ۳۰۰تایی از timeout ۱۰ ثانیه‌ای WebRequest رد می‌شد.
       const r = await prisma.tradeEntry.createMany({ data: toCreate, skipDuplicates: true });
       created += r.count;
     } catch (e) {
@@ -152,7 +152,7 @@ export async function POST(req: NextRequest) {
     },
   });
 
-  // معامله‌ی تازه/به‌روزشده از EA → حساب/ژورنالِ بازِ کاربر (روی هر دستگاهی) همون لحظه
+  // معامله‌ی تازه/به‌روزشده از EA → حساب/ژورنال باز کاربر (روی هر دستگاهی) همون لحظه
   if (created > 0 || updated > 0) void publishDataChanged(link.userId, ["trade"]);
 
   return NextResponse.json({ ok: true, received: trades.length, created, updated, skipped, failed });

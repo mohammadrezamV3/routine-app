@@ -17,8 +17,8 @@ import { countsForMentor, loadNewcomerCards, loadRankingBreakdown, recomputeMent
 import { DISCOVERABLE_PROFILE_WHERE } from "@/lib/mentorServer";
 import { as, req, j, makeUser, cleanupUsers, uniqueTag } from "./helpers/mentorTestUtils";
 
-// تستِ یکپارچه‌ی رتبه‌بندیِ شایستگی روی دیتابیسِ واقعی: چند منتور با الگوهای
-// متفاوت ساخته می‌شن و ترتیبِ «بهترین نتیجه»، «بالاترین امتیاز»، دسته،
+// تست یکپارچه‌ی رتبه‌بندی شایستگی روی دیتابیس واقعی: چند منتور با الگوهای
+// متفاوت ساخته می‌شن و ترتیب «بهترین نتیجه»، «بالاترین امتیاز»، دسته،
 // «منتورهای محبوب» و «منتورهای تازه» بررسی می‌شه.
 
 const DAY = 86_400_000;
@@ -75,7 +75,7 @@ async function rel(mentorId: string, studentId: string, o: { startedDaysAgo: num
   });
 }
 
-/** برنامه با یک آیتمِ روزانه و لاگِ روزهای گذشته (done از هر ۱۰ روز) */
+/** برنامه با یک آیتم روزانه و لاگ روزهای گذشته (done از هر ۱۰ روز) */
 async function program(
   r: { id: string; mentorId: string; studentId: string },
   o: { type: MentorProgramType; status: MentorProgramStatus; activatedDaysAgo: number; completedDaysAgo?: number; endInDays?: number; logDays?: number; donePer10?: number }
@@ -88,7 +88,7 @@ async function program(
       sentAt: ago(o.activatedDaysAgo + 1), respondedAt: ago(o.activatedDaysAgo), activatedAt: ago(o.activatedDaysAgo),
       completedAt: o.status === "COMPLETED" ? ago(o.completedDaysAgo ?? 1) : null,
       cancelledAt: o.status === "CANCELLED" ? ago(o.completedDaysAgo ?? 1) : null,
-      // همگام‌سازیِ خودکار روی این برنامه‌ها اجرا نشه (لاگ‌ها دستی ساخته می‌شن)
+      // همگام‌سازی خودکار روی این برنامه‌ها اجرا نشه (لاگ‌ها دستی ساخته می‌شن)
       progressSyncedAt: now,
       items: { create: [{ order: 0, title: "آیتم", repeat: "DAILY", days: [0, 1, 2, 3, 4, 5, 6] }] },
     },
@@ -124,14 +124,14 @@ beforeAll(async () => {
     if (i < 2) await prisma.mentorReview.create({ data: { mentorId: ids.strong, studentId: s, mentorshipId: r.id, rating: 5 - i, createdAt: ago(5) } });
   }
 
-  // ── hype: شش نظرِ ۵ستاره از رابطه‌های سه‌روزه، بدونِ برنامه ──
+  // ── hype: شش نظر ۵ستاره از رابطه‌های سه‌روزه، بدون برنامه ──
   profiles.hype = await makeProfile(ids.hype, "hype", { categories: ["FITNESS"], certs: ["FITNESS"], ratingAvg: 5, ratingCount: 6 });
   for (const s of await students("hy", 6)) {
     const r = await rel(ids.hype, s, { startedDaysAgo: 3, categories: ["FITNESS"] });
     await prisma.mentorReview.create({ data: { mentorId: ids.hype, studentId: s, mentorshipId: r.id, rating: 5, createdAt: ago(1) } });
   }
 
-  // ── demoBoost: منتورِ واقعی که فقط شاگردهای آزمایشیِ عالی داره ──
+  // ── demoBoost: منتور واقعی که فقط شاگردهای آزمایشی عالی داره ──
   profiles.demoBoost = await makeProfile(ids.demoBoost, "demoboost", { categories: ["FITNESS"], certs: ["FITNESS"] });
   for (let i = 0; i < 5; i++) {
     const s = await makeDemoUser(`d${i}`);
@@ -141,17 +141,17 @@ beforeAll(async () => {
     await prisma.mentorReview.create({ data: { mentorId: ids.demoBoost, studentId: s, mentorshipId: r.id, rating: 5, createdAt: ago(10) } });
   }
 
-  // ── suspended: مثلِ strong ولی تعلیق‌شده ──
+  // ── suspended: مثل strong ولی تعلیق‌شده ──
   profiles.suspended = await makeProfile(ids.suspended, "suspended", { categories: ["FITNESS"], certs: ["FITNESS"], suspended: true });
   for (const s of await students("su", 4)) {
     const r = await rel(ids.suspended, s, { startedDaysAgo: 70, categories: ["FITNESS"] });
     await program(r, { type: "WORKOUT", status: "ACTIVE", activatedDaysAgo: 30, logDays: 25, donePer10: 10 });
   }
 
-  // ── fresh: تاییدشده، پروفایلِ کامل، بدونِ شاگرد ──
+  // ── fresh: تاییدشده، پروفایل کامل، بدون شاگرد ──
   profiles.fresh = await makeProfile(ids.fresh, "fresh", { categories: ["FITNESS"], certs: ["FITNESS"], createdDaysAgo: 5 });
 
-  // ── hybrid: روتینِ عالی، بدنسازیِ ضعیف ──
+  // ── hybrid: روتین عالی، بدنسازی ضعیف ──
   profiles.hybrid = await makeProfile(ids.hybrid, "hybrid", { categories: ["ROUTINE", "FITNESS"], certs: ["ROUTINE", "FITNESS"] });
   for (const s of await students("hr", 4)) {
     const r = await rel(ids.hybrid, s, { startedDaysAgo: 70, categories: ["ROUTINE"] });
@@ -179,23 +179,23 @@ async function list(params: string) {
 }
 const who = (userIds: string[]) => userIds.map((u) => Object.keys(ids).find((k) => ids[k] === u));
 
-describe("رتبه‌بندیِ شایستگی — ترتیبِ واقعی", () => {
-  it("«بهترین نتیجه»: نتیجه‌ی واقعی اول؛ تعلیق‌شده نیست؛ نظرِ ساختگی و شاگردِ آزمایشی بالا نمی‌برند", async () => {
+describe("رتبه‌بندی شایستگی — ترتیب واقعی", () => {
+  it("«بهترین نتیجه»: نتیجه‌ی واقعی اول؛ تعلیق‌شده نیست؛ نظر ساختگی و شاگرد آزمایشی بالا نمی‌برند", async () => {
     const order = who(await list("sort=best"));
     expect(order[0]).toBe("strong");
     expect(order).not.toContain("suspended");
     expect(order.indexOf("strong")).toBeLessThan(order.indexOf("hype"));
     expect(order.indexOf("strong")).toBeLessThan(order.indexOf("demoBoost"));
     expect(order.sort()).toEqual(["demoBoost", "fresh", "hybrid", "hype", "strong"]);
-    // نام قدیمیِ popular همون ترتیب رو می‌ده
+    // نام قدیمی popular همون ترتیب رو می‌ده
     expect(who(await list("sort=popular"))[0]).toBe("strong");
   });
 
-  it("ترتیب قطعی است (دو درخواستِ پشت‌سرهم یکسان)", async () => {
+  it("ترتیب قطعی است (دو درخواست پشت‌سرهم یکسان)", async () => {
     expect(await list("sort=best")).toEqual(await list("sort=best"));
   });
 
-  it("«بالاترین امتیاز» فقط از نظرهای تاییدشده: میانگینِ خامِ ۵ی hype جلو نمی‌زند", async () => {
+  it("«بالاترین امتیاز» فقط از نظرهای تاییدشده: میانگین خام ۵ی hype جلو نمی‌زند", async () => {
     const order = who(await list("sort=rating"));
     expect(order.indexOf("strong")).toBeLessThan(order.indexOf("hype"));
   });
@@ -207,7 +207,7 @@ describe("رتبه‌بندیِ شایستگی — ترتیبِ واقعی", () 
     expect(fitness.indexOf("strong")).toBeLessThan(fitness.indexOf("hybrid"));
   });
 
-  it("شاگردهای آزمایشی برای منتورِ واقعی شمرده نمی‌شوند", async () => {
+  it("شاگردهای آزمایشی برای منتور واقعی شمرده نمی‌شوند", async () => {
     const rows = await loadRankingBreakdown(profiles.demoBoost);
     const all = rows.find((r) => r.scope === "ALL")!;
     expect(all.breakdown.sample.students).toBe(0);
@@ -217,7 +217,7 @@ describe("رتبه‌بندیِ شایستگی — ترتیبِ واقعی", () 
     expect(countsForMentor({ email: "a@b.com", username: "a", isBlocked: true, deletedAt: null, createdAt: now }, false)).toBe(false);
   });
 
-  it("breakdownِ ادمین: هر دامنه، جایگاه و eligibility", async () => {
+  it("breakdown ادمین: هر دامنه، جایگاه و eligibility", async () => {
     const rows = await loadRankingBreakdown(profiles.strong);
     expect(rows.map((r) => r.scope)).toEqual(["ALL", "FITNESS"]);
     const all = rows[0];
@@ -234,7 +234,7 @@ describe("رتبه‌بندیِ شایستگی — ترتیبِ واقعی", () 
     expect(suspended.position).toBeNull();
   });
 
-  it("«منتورهای محبوب» فقط واجدِ شرایط؛ «منتورهای تازه» جدا", async () => {
+  it("«منتورهای محبوب» فقط واجد شرایط؛ «منتورهای تازه» جدا", async () => {
     as(ids.viewer);
     const data = await j(await popular());
     const pop = who((data.mentors as { userId: string }[]).map((m) => m.userId));

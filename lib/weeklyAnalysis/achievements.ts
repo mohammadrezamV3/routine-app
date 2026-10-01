@@ -1,7 +1,7 @@
 import type { Achievement, AnalysisDomain, DayCell, Grade } from "./types";
 import { longestStreak } from "./score";
 
-// دستاوردهای هفته — تابعِ خالص. دستاوردهای مخصوصِ هر دامنه فقط وقتی
+// دستاوردهای هفته — تابع خالص. دستاوردهای مخصوص هر دامنه فقط وقتی
 // نشون داده می‌شن که اون دامنه برای کاربر فعال باشه؛ بقیه عمومی‌ان.
 
 export type AchievementDomainInput = {
@@ -60,7 +60,7 @@ export function buildAchievements(input: AchievementInput): Achievement[] {
     progress: prog(input.score ?? 0, 80),
   });
 
-  // ── مخصوصِ دامنه‌ها ──
+  // ── مخصوص دامنه‌ها ──
   const routine = dom.get("routine");
   if (routine) {
     const max = routine.meta.maxDay ?? 0;

@@ -1,5 +1,5 @@
-// کدگذاری‌های کمکیِ لایه‌ی رمزگذاریِ سرتاسری — ایزومورفیک (مرورگر + Node ≥ 20).
-// هیچ وابستگی‌ای به Buffer ندارد تا همین فایل در باندلِ کلاینت هم بی‌هزینه باشد.
+// کدگذاری‌های کمکی لایه‌ی رمزگذاری سرتاسری — ایزومورفیک (مرورگر + Node ≥ 20).
+// هیچ وابستگی‌ای به Buffer ندارد تا همین فایل در باندل کلاینت هم بی‌هزینه باشد.
 
 const enc = new TextEncoder();
 const dec = new TextDecoder("utf-8", { fatal: true });
@@ -8,7 +8,7 @@ export function utf8(s: string): Uint8Array {
   return enc.encode(s);
 }
 
-/** UTF-8 سخت‌گیر: بایتِ نامعتبر = خطا (نه جایگزینیِ بی‌صدا با �) */
+/** UTF-8 سخت‌گیر: بایت نامعتبر = خطا (نه جایگزینی بی‌صدا با �) */
 export function fromUtf8(b: Uint8Array | ArrayBuffer): string {
   return dec.decode(b instanceof Uint8Array ? b : new Uint8Array(b));
 }
@@ -22,7 +22,7 @@ export function toB64(b: Uint8Array | ArrayBuffer): string {
 
 const B64_RE = /^[A-Za-z0-9+/]*={0,2}$/;
 
-/** base64 استاندارد؛ ورودیِ بدشکل → null (هرگز استثنا به سمتِ روت نمی‌رود) */
+/** base64 استاندارد؛ ورودی بدشکل → null (هرگز استثنا به سمت روت نمی‌رود) */
 export function fromB64(s: string): Uint8Array | null {
   if (typeof s !== "string" || s.length % 4 !== 0 || !B64_RE.test(s)) return null;
   try {
@@ -35,7 +35,7 @@ export function fromB64(s: string): Uint8Array | null {
   }
 }
 
-/** طولِ بایتیِ یک رشته‌ی base64 معتبر، بدونِ دیکد (برای اعتبارسنجیِ ارزان) */
+/** طول بایتی یک رشته‌ی base64 معتبر، بدون دیکد (برای اعتبارسنجی ارزان) */
 export function b64ByteLength(s: string): number | null {
   if (typeof s !== "string" || s.length % 4 !== 0 || !B64_RE.test(s)) return null;
   const pad = s.endsWith("==") ? 2 : s.endsWith("=") ? 1 : 0;
@@ -54,8 +54,8 @@ export function concat(...parts: Uint8Array[]): Uint8Array {
 }
 
 /**
- * سریال‌سازیِ یکتا و بی‌ابهامِ چند فیلد (هر فیلد = طولِ ۴ بایتیِ big-endian +
- * بایت‌ها). برای AAD، ورودیِ HKDF و متنِ تعهدِ فرانکینگ — با الحاقِ ساده‌ی
+ * سریال‌سازی یکتا و بی‌ابهام چند فیلد (هر فیلد = طول ۴ بایتی big-endian +
+ * بایت‌ها). برای AAD، ورودی HKDF و متن تعهد فرانکینگ — با الحاق ساده‌ی
  * رشته‌ها («a|bc» و «ab|c») دو زمینه‌ی متفاوت می‌توانستند یکی شوند.
  */
 export function lp(...parts: (string | number | Uint8Array)[]): Uint8Array {
@@ -77,14 +77,14 @@ export function equalBytes(a: Uint8Array, b: Uint8Array): boolean {
   return d === 0;
 }
 
-/** شناسه‌ی تصادفیِ URL-safe (پیش‌فرض ۱۲۸ بیت) — clientIdِ پیام */
+/** شناسه‌ی تصادفی URL-safe (پیش‌فرض ۱۲۸ بیت) — clientId پیام */
 export function randomId(bytes = 16): string {
   const b = new Uint8Array(bytes);
   globalThis.crypto.getRandomValues(b);
   return toB64(b).replace(/\+/g, "-").replace(/\//g, "_").replace(/=+$/, "");
 }
 
-/** تبدیلِ ارقامِ فارسی/عربی به لاتین — برای رمزِ گفت‌وگو روی کیبوردهای مختلف */
+/** تبدیل ارقام فارسی/عربی به لاتین — برای رمز گفت‌وگو روی کیبوردهای مختلف */
 export function normalizeDigits(s: string): string {
   return s.replace(/[۰-۹]/g, (d) => String(d.charCodeAt(0) - 0x06f0)).replace(/[٠-٩]/g, (d) => String(d.charCodeAt(0) - 0x0660));
 }

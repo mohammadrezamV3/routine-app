@@ -1,8 +1,8 @@
 import { isoLocal } from "./jalali";
 
-// بخشِ خالص و بی‌وابستگیِ یادآوری دارو (بدونِ lib/storage که next-auth/react
-// و کشِ کلاینت رو می‌کشه) — تا زمان‌بندِ سمتِ سرور (lib/pushReminders.ts) هم
-// دقیقا با همین منطق نوبت‌ها رو حساب کنه، نه یه کپیِ جدا که دریفت کنه.
+// بخش خالص و بی‌وابستگی یادآوری دارو (بدون lib/storage که next-auth/react
+// و کش کلاینت رو می‌کشه) — تا زمان‌بند سمت سرور (lib/pushReminders.ts) هم
+// دقیقا با همین منطق نوبت‌ها رو حساب کنه، نه یه کپی جدا که دریفت کنه.
 // lib/medications.ts همه‌ی این‌ها رو دوباره export می‌کنه.
 
 export type Medication = {

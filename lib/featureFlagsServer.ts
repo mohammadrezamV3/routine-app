@@ -16,14 +16,14 @@ export async function setFeatureFlags(flags: FeatureFlags) {
   await setAppSetting(KEY, flags);
 }
 
-// نقشِ کاربر برای تصمیمِ فلگ — از کشِ ۶۰ثانیه‌ایِ adminFlag (نه JWT)
+// نقش کاربر برای تصمیم فلگ — از کش ۶۰ثانیه‌ای adminFlag (نه JWT)
 async function whoIs(userId: string | undefined) {
   if (!userId) return { isSuperAdmin: false, isAdmin: false };
   const f = await getAdminFlags(userId).catch(() => null);
   return { isSuperAdmin: !!f?.isSuperAdmin, isAdmin: !!f?.isAdmin };
 }
 
-/** وضعیتِ همه‌ی قابلیت‌ها برای این کاربر (true/false) — برای /api/features */
+/** وضعیت همه‌ی قابلیت‌ها برای این کاربر (true/false) — برای /api/features */
 export async function resolveFeaturesFor(userId: string | undefined): Promise<Record<FeatureKey, boolean>> {
   const [flags, who] = await Promise.all([getFeatureFlags(), whoIs(userId)]);
   return Object.fromEntries(Object.entries(flags).map(([k, m]) => [k, featureAllowed(m, who)])) as Record<FeatureKey, boolean>;
@@ -34,14 +34,14 @@ export async function isFeatureEnabled(key: FeatureKey, userId: string | undefin
   return featureAllowed(flags[key], who);
 }
 
-/** پاسخِ ۴۰۳ اگه قابلیت برای این کاربر خاموشه، وگرنه null */
+/** پاسخ ۴۰۳ اگه قابلیت برای این کاربر خاموشه، وگرنه null */
 export async function featureBlocked(key: FeatureKey, userId: string | undefined): Promise<NextResponse | null> {
   if (await isFeatureEnabled(key, userId)) return null;
   return NextResponse.json({ error: "این بخش موقتا غیرفعال است" }, { status: 403 });
 }
 
-// جایگزینِ requireSuperAdmin برای بخش‌هایی که قبلا با قفلِ سطح کد بسته بودن
-// (رودمپ) — همون شکلِ خروجی، ولی حالا تصمیم با فلگِ پنل ادمینه.
+// جایگزین requireSuperAdmin برای بخش‌هایی که قبلا با قفل سطح کد بسته بودن
+// (رودمپ) — همون شکل خروجی، ولی حالا تصمیم با فلگ پنل ادمینه.
 export type FeatureGuardResult = { ok: true; userId: string; isSuperAdmin: boolean } | { ok: false; response: NextResponse };
 
 export async function requireFeature(key: FeatureKey): Promise<FeatureGuardResult> {

@@ -11,9 +11,9 @@ import { MentorPage, useMentorFlat } from "./MentorUI";
 
 /**
  * سرصفحه‌ی مشترک همه‌ی صفحه‌های منتور — همان مارک‌آپ TradePageShell:
- * لینک بازگشت، زیرش ردیفِ عنوان با اکشنِ عنوان در انتهای ردیف (سمت چپ)،
+ * لینک بازگشت، زیرش ردیف عنوان با اکشن عنوان در انتهای ردیف (سمت چپ)،
  * MentorDashShell هم از همین استفاده می‌کند. زیرعنوان (`hint`) دیگر رندر
- * نمی‌شود (قانونِ دورِ ۳: بدونِ زیرعنوان زیرِ عنوانِ صفحه).
+ * نمی‌شود (قانون دور ۳: بدون زیرعنوان زیر عنوان صفحه).
  */
 export function MentorPageHead({
   title, back, titleAction, head,
@@ -46,9 +46,9 @@ export function MentorPageHead({
 
 /**
  * پوسته‌ی صفحه‌های سمت شاگرد (/mentors، /mentorship، /mentor-programs).
- * تا وقتی نشست در حال بارگذاری است اسکلت نشان داده می‌شود (نه پیام اشتباهِ
- * «وارد شوید»)، بعد گیتِ قابلیت `mentors`. ورودِ صفحه را template.tsx
- * (MentorRouteTransition) می‌دهد. `surface` کلِ محتوا را در یک ظرف (MentorPage)
+ * تا وقتی نشست در حال بارگذاری است اسکلت نشان داده می‌شود (نه پیام اشتباه
+ * «وارد شوید»)، بعد گیت قابلیت `mentors`. ورود صفحه را template.tsx
+ * (MentorRouteTransition) می‌دهد. `surface` کل محتوا را در یک ظرف (MentorPage)
  * می‌گذارد. enforcement واقعی سمت سرور است (requireMentorsUser).
  */
 export function MentorPageShell({
@@ -60,9 +60,9 @@ export function MentorPageShell({
   children,
 }: {
   title?: string;
-  /** @deprecated زیرعنوانِ صفحه حذف شد؛ نادیده گرفته می‌شود */
+  /** @deprecated زیرعنوان صفحه حذف شد؛ نادیده گرفته می‌شود */
   hint?: string;
-  /** کلِ محتوا داخلِ یک ظرفِ واحد (بخش‌ها تخت می‌شوند) */
+  /** کل محتوا داخل یک ظرف واحد (بخش‌ها تخت می‌شوند) */
   surface?: boolean;
   back?: { href: string; label: string } | null;
   titleAction?: React.ReactNode;

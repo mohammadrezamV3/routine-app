@@ -1,7 +1,7 @@
-// لایه‌ی سرویسِ «آنالیز هفتگی» — تنها نقطه‌ای که همه‌چیز (محاسبه‌ی زنده +
-// کشِ AI + اهداف + ریفلکشن) رو کنارِ هم می‌ذاره و DTOِ نهاییِ WeeklyAnalysis
-// (قراردادِ lib/weeklyAnalysis/types.ts) رو برمی‌گردونه. روت‌های API فقط
-// همین تابع رو صدا می‌زنن، منطقِ ترکیب این‌جاست.
+// لایه‌ی سرویس «آنالیز هفتگی» — تنها نقطه‌ای که همه‌چیز (محاسبه‌ی زنده +
+// کش AI + اهداف + ریفلکشن) رو کنار هم می‌ذاره و DTO نهایی WeeklyAnalysis
+// (قرارداد lib/weeklyAnalysis/types.ts) رو برمی‌گردونه. روت‌های API فقط
+// همین تابع رو صدا می‌زنن، منطق ترکیب این‌جاست.
 
 import { prisma } from "@/lib/prisma";
 import { computeWeeklyAnalysis, computeDomainScoresForWeek } from "@/lib/weeklyAnalysis/compute";
@@ -11,7 +11,7 @@ import { AiCoach, AnalysisDomain, ReflectionDto, WeeklyAnalysis, WeeklyGoalDto, 
 
 const MS_PER_WEEK = 7 * 86_400_000;
 
-/** تاریخِ `@db.Date` (نیمه‌شبِ UTC) رو به `YYYY-MM-DD` تبدیل می‌کنه. */
+/** تاریخ `@db.Date` (نیمه‌شب UTC) رو به `YYYY-MM-DD` تبدیل می‌کنه. */
 function toIsoDate(d: Date): string {
   return d.toISOString().slice(0, 10);
 }
@@ -44,10 +44,10 @@ function mapReflection(row: { wentWell: string; improve: string; mood: number | 
 }
 
 /**
- * هر هدفِ ACTIVEای که هفته‌اش کاملا تموم شده (نسبت به هفته‌ی *واقعیِ* جاری،
- * نه offsetِ فعلیِ کاربر) رو قفل می‌کنه: امتیازِ دامنه‌ی همون هفته رو
- * می‌سنجه و DONE/MISSED می‌کنه. هدفی که domain یا target نداره (هدفِ
- * متنیِ صرف) خودکار قابلِ‌سنجش نیست — دست‌نخورده (ACTIVE) می‌مونه. هدفی که
+ * هر هدف ACTIVEای که هفته‌اش کاملا تموم شده (نسبت به هفته‌ی *واقعی* جاری،
+ * نه offset فعلی کاربر) رو قفل می‌کنه: امتیاز دامنه‌ی همون هفته رو
+ * می‌سنجه و DONE/MISSED می‌کنه. هدفی که domain یا target نداره (هدف
+ * متنی صرف) خودکار قابل‌سنجش نیست — دست‌نخورده (ACTIVE) می‌مونه. هدفی که
  * هنوز داده‌ی کافی نداره (score=null) هم دست‌نخورده می‌مونه — دفعه‌ی بعد
  * دوباره امتحان می‌شه.
  */
@@ -67,7 +67,7 @@ async function resolveExpiredGoals(userId: string, timezone: string, isSuperAdmi
     try {
       scores = await computeDomainScoresForWeek(userId, timezone, offsetForWeek, isSuperAdmin);
     } catch {
-      continue; // خطای محاسبه نباید کلِ درخواستِ آنالیز رو بترکونه — دفعه‌ی بعد دوباره امتحان می‌شه
+      continue; // خطای محاسبه نباید کل درخواست آنالیز رو بترکونه — دفعه‌ی بعد دوباره امتحان می‌شه
     }
     const score = scores[goal.domain as AnalysisDomain];
     if (score == null) continue;
@@ -90,8 +90,8 @@ export type WeeklyAnalysisOptions = { timezone: string; offset: number; isSuperA
 export async function getWeeklyAnalysis(userId: string, opts: WeeklyAnalysisOptions): Promise<WeeklyAnalysis> {
   const { timezone, offset, isSuperAdmin } = opts;
 
-  // قفل‌کردنِ اهدافِ منقضی قبل از خوندنِ لیست، تا وضعیتِ نمایش‌داده‌شده
-  // همیشه تازه باشه (نه یک ACTIVEِ قدیمی که هفته‌هاست تموم شده).
+  // قفل‌کردن اهداف منقضی قبل از خوندن لیست، تا وضعیت نمایش‌داده‌شده
+  // همیشه تازه باشه (نه یک ACTIVE قدیمی که هفته‌هاست تموم شده).
   await resolveExpiredGoals(userId, timezone, isSuperAdmin);
 
   const weekRange = getWeekRange(timezone, offset);

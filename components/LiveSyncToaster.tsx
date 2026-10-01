@@ -7,9 +7,9 @@ import { ensureStarted, subscribeLiveErrors } from "@/lib/liveSync";
 
 /**
  * لایه‌ی زنده (lib/liveSync.ts) رو از همون اول راه می‌ندازه — BroadcastChannel،
- * رویدادهای WebSocket، focus/visibility/online و قلابِ نوشتن‌ها — و وقتی یه
- * تغییرِ optimistic روی سرور رد شد و برگشت خورد، پیامش رو نشون می‌ده.
- * همون مارک‌آپ/استایلِ پیامِ کوتاهِ DashReminderCard، نه یه ظاهرِ تازه.
+ * رویدادهای WebSocket، focus/visibility/online و قلاب نوشتن‌ها — و وقتی یه
+ * تغییر optimistic روی سرور رد شد و برگشت خورد، پیامش رو نشون می‌ده.
+ * همون مارک‌آپ/استایل پیام کوتاه DashReminderCard، نه یه ظاهر تازه.
  */
 export function LiveSyncToaster() {
   const [mounted, setMounted] = useState(false);

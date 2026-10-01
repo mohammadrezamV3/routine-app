@@ -52,11 +52,11 @@ const TRADE_STAT_ICONS: Record<TradeStatKey, typeof Wallet> = {
 // سه آماری که همیشه بالای باکس‌اند و توی لیست «بقیه‌ی آمارها» تکرار نمی‌شوند
 const HEADLINE_STATS: TradeStatKey[] = ["goalRing", "monthTotal", "winRate"];
 
-// «همگام‌سازی» با متاتریدر. ارتباط عمداً یک‌طرفه است (lib/metatrader.ts):
+// «همگام‌سازی» با متاتریدر. ارتباط عمدا یک‌طرفه است (lib/metatrader.ts):
 // اکسپرت هر SyncSeconds ثانیه (پیش‌فرض ۶۰) خودش داده می‌فرستد و Arion هیچ
 // دستوری به ترمینال برنمی‌گرداند — پس سرور نمی‌تواند «بکشد». دکمه همان
-// چیزی را انجام می‌دهد که واقعاً ممکن است: داده‌ی ذخیره‌شده را دوباره
-// می‌خواند و تا رسیدنِ ارسالِ بعدیِ اکسپرت (lastSyncAt جدیدتر از لحظه‌ی
+// چیزی را انجام می‌دهد که واقعا ممکن است: داده‌ی ذخیره‌شده را دوباره
+// می‌خواند و تا رسیدن ارسال بعدی اکسپرت (lastSyncAt جدیدتر از لحظه‌ی
 // کلیک) منتظر می‌ماند. اگر در این بازه چیزی نرسید، صادقانه همین را می‌گوید.
 const MT_SYNC_WAIT_MS = 90_000;
 const MT_SYNC_POLL_MS = 5_000;
@@ -71,12 +71,12 @@ type MtSyncState =
 /**
  * صفحه‌ی یک حساب («ژورنال‌نویسی»).
  *
- * چیدمان طبق شماتیکِ خواسته‌شده، از بالا به پایین:
- *   ۱) تایتل صفحه، و زیرش نام حساب (ابتدای خط) هم‌ردیفِ بالانس اولیه (انتهای خط)
- *   ۲) یک باکسِ واحدِ دوبخشی: بالا سه آمارِ سرخط (سود/زیان، دایره‌ی هدف،
- *      نرخ برد) + کشویی نرمِ بقیه‌ی آمارها؛ پایینِ همان باکس، تقویمِ ماهانه
- *   ۳) «تریدها» هم‌ردیفِ دکمه‌ی افزودن، و زیرش تریدهای همان روزِ انتخاب‌شده‌ی
- *      تقویم — هرکدام با دکمه‌ی «جزئیات» که کارتِ کاملِ معامله را باز می‌کند.
+ * چیدمان طبق شماتیک خواسته‌شده، از بالا به پایین:
+ *   ۱) تایتل صفحه، و زیرش نام حساب (ابتدای خط) هم‌ردیف بالانس اولیه (انتهای خط)
+ *   ۲) یک باکس واحد دوبخشی: بالا سه آمار سرخط (سود/زیان، دایره‌ی هدف،
+ *      نرخ برد) + کشویی نرم بقیه‌ی آمارها؛ پایین همان باکس، تقویم ماهانه
+ *   ۳) «تریدها» هم‌ردیف دکمه‌ی افزودن، و زیرش تریدهای همان روز انتخاب‌شده‌ی
+ *      تقویم — هرکدام با دکمه‌ی «جزئیات» که کارت کامل معامله را باز می‌کند.
  */
 export function TradeAccountView({ accountId }: { accountId: string }) {
   const [account, setAccount] = useState<TradeAccount | null>(null);
@@ -127,10 +127,10 @@ export function TradeAccountView({ accountId }: { accountId: string }) {
   }, [accountId]);
 
   useEffect(() => { load(); }, [load]);
-  // زنده: ثبت/ویرایش/حذف از هرجا (مودال، تبِ دیگه، همگام‌سازیِ متاتریدر) → آمار همون لحظه
+  // زنده: ثبت/ویرایش/حذف از هرجا (مودال، تب دیگه، همگام‌سازی متاتریدر) → آمار همون لحظه
   useLiveRefresh("trade", () => { load(true); });
 
-  // اگر کاربر وسطِ انتظار از صفحه رفت، حلقه‌ی poll دیگر state را دست نزند
+  // اگر کاربر وسط انتظار از صفحه رفت، حلقه‌ی poll دیگر state را دست نزند
   useEffect(() => () => { syncRun.current++; }, []);
 
   async function fetchMtLink(): Promise<{ connected: boolean; lastSyncAt: string | null } | null> {
@@ -160,7 +160,7 @@ export function TradeAccountView({ accountId }: { accountId: string }) {
         if (runId !== syncRun.current) return;
         const link = await fetchMtLink();
         if (runId !== syncRun.current) return;
-        if (!link?.connected) { setMtSync({ kind: "error", message: "اتصال متاتریدرِ این حساب قطع شده است." }); return; }
+        if (!link?.connected) { setMtSync({ kind: "error", message: "اتصال متاتریدر این حساب قطع شده است." }); return; }
         last = link.lastSyncAt;
         if (last && new Date(last).getTime() >= startedAt) {
           await load(true);
@@ -176,8 +176,8 @@ export function TradeAccountView({ accountId }: { accountId: string }) {
 
   const stats = useMemo(() => computeTradeStats(entries, account || undefined), [entries, account]);
 
-  // روزِ نمایش‌داده‌شده: هرچه روی تقویم انتخاب شده، وگرنه امروز. لیستِ پایین
-  // همیشه «تریدهای همان روز» است، نه کلِ تاریخچه — طبق شماتیک.
+  // روز نمایش‌داده‌شده: هرچه روی تقویم انتخاب شده، وگرنه امروز. لیست پایین
+  // همیشه «تریدهای همان روز» است، نه کل تاریخچه — طبق شماتیک.
   const activeDay = selectedDay || isoLocal(new Date());
   const dayEntries = useMemo(
     () => entries.filter((e) => isoLocal(new Date(e.openedAt)) === activeDay),
@@ -219,7 +219,7 @@ export function TradeAccountView({ accountId }: { accountId: string }) {
       <div className="trade-journal-idrow">
         <div className="trade-journal-idrow-name">
           <b>{account.name}</b>
-          {/* توپِ رنگی سمتِ چپِ اسم (بعدش در RTL) — هم‌قاعده‌ی بقیه‌ی صفحه‌های ترید */}
+          {/* توپ رنگی سمت چپ اسم (بعدش در RTL) — هم‌قاعده‌ی بقیه‌ی صفحه‌های ترید */}
           <span className="trade-journal-acc-dot" style={{ background: account.color }} />
           <span className="trade-account-type">{ACCOUNT_TYPE_LABELS[account.type]}</span>
           {account.archived && <span className="trade-account-archived-badge">آرشیو</span>}
@@ -255,7 +255,7 @@ export function TradeAccountView({ accountId }: { accountId: string }) {
 
       {mtSync.kind !== "idle" && (
         <div className={mtSync.kind === "error" ? "trade-form-error" : "trade-mt-note"} role="status" style={{ marginTop: 10 }}>
-          {mtSync.kind === "waiting" && "در انتظار ارسالِ داده از اکسپرت متاتریدر… (حداکثر حدود یک و نیم دقیقه)"}
+          {mtSync.kind === "waiting" && "در انتظار ارسال داده از اکسپرت متاتریدر… (حداکثر حدود یک و نیم دقیقه)"}
           {mtSync.kind === "done" && `همگام‌سازی انجام شد — ${formatTradeDateTime(mtSync.at, calSystem)}`}
           {mtSync.kind === "stale" && (
             <>
@@ -267,7 +267,7 @@ export function TradeAccountView({ accountId }: { accountId: string }) {
         </div>
       )}
 
-      {/* ── باکسِ واحدِ دوبخشی: آمار (بالا) + تقویم (پایین) ────────────── */}
+      {/* ── باکس واحد دوبخشی: آمار (بالا) + تقویم (پایین) ────────────── */}
       <div className="trade-surface trade-journal-box">
         <div className="trade-journal-stats-part">
           <div className="trade-headline-stats">
@@ -278,8 +278,8 @@ export function TradeAccountView({ accountId }: { accountId: string }) {
               icon={<Percent size={13} />}
             />
 
-            {/* دایره‌ی هدفِ سود: توی ضرر خالی می‌ماند (صفر)، توی سود پر می‌شود.
-                دایره سمتِ راست، و لیبل + مقدارِ هدف سمتِ چپش. */}
+            {/* دایره‌ی هدف سود: توی ضرر خالی می‌ماند (صفر)، توی سود پر می‌شود.
+                دایره سمت راست، و لیبل + مقدار هدف سمت چپش. */}
             <div className="trade-headline-goal">
               <div className="trade-goal-ring-wrap">
                 <GradientRing value={inProfit ? (goal ?? 0) : 0} size={72} stroke={6} className="trade-goal-ring" />
@@ -303,8 +303,8 @@ export function TradeAccountView({ accountId }: { accountId: string }) {
             />
           </div>
 
-          {/* طبقِ درخواستِ صریح، دکمه‌ی «جزئیات بیشتر» برگشت: بقیه‌ی آمارها
-              پشتِ دستگیره‌ی پیکان، نرم باز/بسته می‌شوند. */}
+          {/* طبق درخواست صریح، دکمه‌ی «جزئیات بیشتر» برگشت: بقیه‌ی آمارها
+              پشت دستگیره‌ی پیکان، نرم باز/بسته می‌شوند. */}
           {!!restStats.length && (
             <TradeStatsCollapse>
               <div className="trade-stats-grid">
@@ -329,9 +329,9 @@ export function TradeAccountView({ accountId }: { accountId: string }) {
           )}
         </div>
 
-        {/* طبقِ درخواستِ صریح: تقویم سمتِ راستِ باکس، جزئیات/آمار سمتِ چپ —
-            روی دسکتاپ کنارِ هم (CSSِ `.trade-journal-box`)، روی موبایل
-            همچنان زیرِ هم. */}
+        {/* طبق درخواست صریح: تقویم سمت راست باکس، جزئیات/آمار سمت چپ —
+            روی دسکتاپ کنار هم (CSS `.trade-journal-box`)، روی موبایل
+            همچنان زیر هم. */}
         <TradeCalendarPanel
           embedded
           entries={entries}
@@ -342,7 +342,7 @@ export function TradeAccountView({ accountId }: { accountId: string }) {
         />
       </div>
 
-      {/* ── تریدهای روزِ انتخاب‌شده ───────────────────────────────────── */}
+      {/* ── تریدهای روز انتخاب‌شده ───────────────────────────────────── */}
       <div className="trade-list-head">
         <div className="trade-section-title">
           تریدها
@@ -458,7 +458,7 @@ export function TradeAccountView({ accountId }: { accountId: string }) {
 }
 
 /**
- * مقدارِ یک «جزئیاتِ اولیه» برای نمایش در ردیفِ ترید.
+ * مقدار یک «جزئیات اولیه» برای نمایش در ردیف ترید.
  * `null` یعنی این ترید آن فیلد را ندارد، پس اصلا رندر نمی‌شود (نه «—»).
  */
 function tradeFactValue(
@@ -467,7 +467,7 @@ function tradeFactValue(
   calSystem: CalSystem,
   sym: string
 ): string | null {
-  // فقط ساعت، نه تاریخ: تاریخِ همه‌ی این ردیف‌ها همان روزِ انتخاب‌شده است
+  // فقط ساعت، نه تاریخ: تاریخ همه‌ی این ردیف‌ها همان روز انتخاب‌شده است
   const timeOf = (iso: string) => formatTradeDateTime(iso, calSystem).split(" ").slice(-1)[0];
   switch (key) {
     case "openedAt": return timeOf(e.openedAt);

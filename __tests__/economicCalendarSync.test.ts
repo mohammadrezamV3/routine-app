@@ -4,9 +4,9 @@ import {
   normalizeExternalEvents, normalizeTradingViewEvents, syncEconomicCalendar,
 } from "@/lib/economicCalendar";
 
-// رگرسیونِ گزارشِ «اکشوال‌ها هیچ‌وقت نمی‌آیند»: مسیرِ کامل fetch → نرمال‌سازی
-// → upsert باید در پاسِ دوم مقدارِ actual تازه‌منتشرشده را روی همان ردیف
-// بنشاند (نه ردیفِ تکراری بسازد و نه مقدارِ قبلی را نگه دارد).
+// رگرسیون گزارش «اکشوال‌ها هیچ‌وقت نمی‌آیند»: مسیر کامل fetch → نرمال‌سازی
+// → upsert باید در پاس دوم مقدار actual تازه‌منتشرشده را روی همان ردیف
+// بنشاند (نه ردیف تکراری بسازد و نه مقدار قبلی را نگه دارد).
 
 const jbRow = (actual: string | number) => [{
   ID: "12345",
@@ -36,8 +36,8 @@ function fakePrisma() {
         Object.assign(existing, update, { updatedAt: new Date(existing.createdAt.getTime() + 1000) });
         return { createdAt: existing.createdAt, updatedAt: existing.updatedAt };
       },
-      // پیاده‌سازیِ واقعیِ فیلتر (نه یک vi.fn تهی) تا هم بشه روی
-      // آرگومان‌هایِ where اسرت کرد، هم رفتارِ واقعیِ حذف را (که removed
+      // پیاده‌سازی واقعی فیلتر (نه یک vi.fn تهی) تا هم بشه روی
+      // آرگومان‌های where اسرت کرد، هم رفتار واقعی حذف را (که removed
       // چند رویداد باشه) سنجید.
       deleteMany: vi.fn(async ({ where }: any) => {
         let count = 0;
@@ -70,7 +70,7 @@ function stubFeed(payload: unknown) {
   )));
 }
 
-/** موکِ fetch بر اساسِ URL — لازم چون حالا هر sync ممکنه چند منبعِ متفاوت (TradingView، سه فایلِ فارکس‌فکتوری) را صدا بزنه. */
+/** موک fetch بر اساس URL — لازم چون حالا هر sync ممکنه چند منبع متفاوت (TradingView، سه فایل فارکس‌فکتوری) را صدا بزنه. */
 function stubFeedByUrl(handler: (url: string) => { status: number; body?: unknown }) {
   vi.stubGlobal("fetch", vi.fn(async (url: unknown) => {
     const { status, body } = handler(String(url));
@@ -87,8 +87,8 @@ beforeEach(() => {
 });
 afterEach(() => { vi.unstubAllGlobals(); vi.unstubAllEnvs(); });
 
-describe("normalizeExternalEvents (شکلِ واقعیِ فیدِ JBlanked)", () => {
-  it("ارز را از فیلد Currency می‌گیرد و actualِ خالی را null می‌کند", () => {
+describe("normalizeExternalEvents (شکل واقعی فید JBlanked)", () => {
+  it("ارز را از فیلد Currency می‌گیرد و actual خالی را null می‌کند", () => {
     const [e] = normalizeExternalEvents(jbRow(""));
     expect(e.currency).toBe("USD");
     expect(e.country).toBe("US");
@@ -97,18 +97,18 @@ describe("normalizeExternalEvents (شکلِ واقعیِ فیدِ JBlanked)", ()
     expect(e.forecast).toBe("160K");
   });
 
-  it("externalId بینِ پاسِ بی‌actual و پاسِ باactual یکی می‌ماند", () => {
+  it("externalId بین پاس بی‌actual و پاس باactual یکی می‌ماند", () => {
     const before = normalizeExternalEvents(jbRow(""))[0];
     const after = normalizeExternalEvents(jbRow("173K"))[0];
     expect(after.externalId).toBe(before.externalId);
   });
 
-  it("تاریخِ نقطه‌ای JBlanked («YYYY.MM.DD HH:mm:ss») را به‌عنوانِ UTC پارس می‌کند", () => {
+  it("تاریخ نقطه‌ای JBlanked («YYYY.MM.DD HH:mm:ss») را به‌عنوان UTC پارس می‌کند", () => {
     const [e] = normalizeExternalEvents(jbRow(""));
     expect(e.occursAt.toISOString()).toBe("2026-09-16T12:30:00.000Z");
   });
 
-  it("Impactِ متنی («High»/«Medium») را به سطحِ تاثیر درست تبدیل می‌کند", () => {
+  it("Impact متنی («High»/«Medium») را به سطح تاثیر درست تبدیل می‌کند", () => {
     const [medium] = normalizeExternalEvents([{ ...jbRow("")[0], Impact: "Medium" }]);
     const [low] = normalizeExternalEvents([{ ...jbRow("")[0], Impact: "Low" }]);
     expect(medium.impact).toBe("MEDIUM");
@@ -116,7 +116,7 @@ describe("normalizeExternalEvents (شکلِ واقعیِ فیدِ JBlanked)", ()
   });
 });
 
-describe("normalizeTradingViewEvents (منبعِ پیش‌فرضِ بدونِ کلید)", () => {
+describe("normalizeTradingViewEvents (منبع پیش‌فرض بدون کلید)", () => {
   const tvPayload = (overrides: Record<string, unknown> = {}) => ({
     status: "ok",
     result: [{
@@ -132,12 +132,12 @@ describe("normalizeTradingViewEvents (منبعِ پیش‌فرضِ بدونِ ک
       scale: "K",
       unit: "",
       period: "Aug",
-      comment: "توضیحِ رویداد",
+      comment: "توضیح رویداد",
       ...overrides,
     }],
   });
 
-  it("شکلِ استانداردِ یک ردیف را درست نرمال می‌کند", () => {
+  it("شکل استاندارد یک ردیف را درست نرمال می‌کند", () => {
     const [e] = normalizeTradingViewEvents(tvPayload());
     expect(e.externalId).toBe("360047");
     expect(e.title).toBe("Non Farm Payrolls (Aug)");
@@ -148,15 +148,15 @@ describe("normalizeTradingViewEvents (منبعِ پیش‌فرضِ بدونِ ک
     expect(e.forecast).toBe("243K");
     expect(e.previous).toBe("315K");
     expect(e.occursAt.toISOString()).toBe("2026-09-04T12:30:00.000Z");
-    expect(e.description).toBe("توضیحِ رویداد");
+    expect(e.description).toBe("توضیح رویداد");
   });
 
-  it("واحدِ درصد را می‌چسباند («3.2%»)", () => {
+  it("واحد درصد را می‌چسباند («3.2%»)", () => {
     const [e] = normalizeTradingViewEvents(tvPayload({ actual: 3.2, scale: "", unit: "%" }));
     expect(e.actual).toBe("3.2%");
   });
 
-  it("importance را به سطحِ تاثیر درست تبدیل می‌کند", () => {
+  it("importance را به سطح تاثیر درست تبدیل می‌کند", () => {
     const [low] = normalizeTradingViewEvents(tvPayload({ importance: -1 }));
     const [medium] = normalizeTradingViewEvents(tvPayload({ importance: 0 }));
     const [high] = normalizeTradingViewEvents(tvPayload({ importance: 1 }));
@@ -165,14 +165,14 @@ describe("normalizeTradingViewEvents (منبعِ پیش‌فرضِ بدونِ ک
     expect(high.impact).toBe("HIGH");
   });
 
-  it("actualِ null را null نگه می‌دارد (نه رشته‌ی «null»)", () => {
+  it("actual null را null نگه می‌دارد (نه رشته‌ی «null»)", () => {
     const [e] = normalizeTradingViewEvents(tvPayload({ actual: null }));
     expect(e.actual).toBeNull();
   });
 });
 
 describe("syncEconomicCalendar", () => {
-  it("پاسِ دوم actual را روی همان ردیف به‌روز می‌کند، نه ردیفِ تازه", async () => {
+  it("پاس دوم actual را روی همان ردیف به‌روز می‌کند، نه ردیف تازه", async () => {
     const prisma = fakePrisma();
 
     stubFeed(jbRow(""));
@@ -189,22 +189,22 @@ describe("syncEconomicCalendar", () => {
     expect([...prisma.rows.values()][0].actual).toBe("173K");
   });
 
-  it("توضیحِ دستیِ ادمین را با nullِ منبع پاک نمی‌کند", async () => {
+  it("توضیح دستی ادمین را با null منبع پاک نمی‌کند", async () => {
     const prisma = fakePrisma();
     stubFeed(jbRow(""));
     await syncEconomicCalendar(prisma as any);
     const row = [...prisma.rows.values()][0];
-    row.description = "توضیحِ دستی";
+    row.description = "توضیح دستی";
 
     stubFeed(jbRow("173K"));
     await syncEconomicCalendar(prisma as any);
-    expect(row.description).toBe("توضیحِ دستی");
+    expect(row.description).toBe("توضیح دستی");
     expect(row.actual).toBe("173K");
   });
 
-  it("بدونِ ECONOMIC_CALENDAR_API_KEY هم کار می‌کند — سراغِ TradingView می‌رود (منبعِ پیش‌فرض)", async () => {
-    // این تست قبلاً برعکس بود (انتظارِ پرتابِ خطا) و دقیقاً همان رفتاری را
-    // تثبیت می‌کرد که باعثِ «actual هیچ‌وقت نمی‌آید» می‌شد: نبودِ کلید یعنی
+  it("بدون ECONOMIC_CALENDAR_API_KEY هم کار می‌کند — سراغ TradingView می‌رود (منبع پیش‌فرض)", async () => {
+    // این تست قبلا برعکس بود (انتظار پرتاب خطا) و دقیقا همان رفتاری را
+    // تثبیت می‌کرد که باعث «actual هیچ‌وقت نمی‌آید» می‌شد: نبود کلید یعنی
     // هیچ داده‌ای، برای همیشه.
     vi.unstubAllEnvs();
     const prisma = fakePrisma();
@@ -221,7 +221,7 @@ describe("syncEconomicCalendar", () => {
 describe("فالبک به فارکس‌فکتوری وقتی TradingView در دسترس نیست", () => {
   beforeEach(() => { vi.unstubAllEnvs(); });
 
-  it("در پاسِ کامل: TradingView شکست می‌خورد، فارکس‌فکتوری جایگزینِ منبع می‌شود", async () => {
+  it("در پاس کامل: TradingView شکست می‌خورد، فارکس‌فکتوری جایگزین منبع می‌شود", async () => {
     const prisma = fakePrisma();
     stubFeedByUrl((url) => {
       if (isTradingView(url)) return { status: 503 };
@@ -234,7 +234,7 @@ describe("فالبک به فارکس‌فکتوری وقتی TradingView در د
     expect([...prisma.rows.values()][0].actual).toBe("173K");
   });
 
-  it("در حالتِ تند اگه TradingView شکست بخوره، فالبک نمی‌زنه و خطا پرتاب می‌شه", async () => {
+  it("در حالت تند اگه TradingView شکست بخوره، فالبک نمی‌زنه و خطا پرتاب می‌شه", async () => {
     const prisma = fakePrisma();
     stubFeedByUrl((url) => (isTradingView(url) ? { status: 503 } : { status: 200, body: ffRow("173K") }));
 
@@ -242,7 +242,7 @@ describe("فالبک به فارکس‌فکتوری وقتی TradingView در د
   });
 });
 
-// ── فیدِ رایگانِ فارکس‌فکتوری ────────────────────────────────────────────
+// ── فید رایگان فارکس‌فکتوری ────────────────────────────────────────────
 // شکلش با JBlanked فرق دارد: کلیدها کوچک‌اند، `country` در واقع *کد ارز*
 // است، تاریخ ISO با آفست است، و شناسه‌ی پایداری وجود ندارد.
 
@@ -256,27 +256,27 @@ const ffRow = (actual: string) => [{
   actual,
 }];
 
-describe("فیدِ رایگان (بدونِ کلید، فقط وقتی TradingView در دسترس نیست)", () => {
+describe("فید رایگان (بدون کلید، فقط وقتی TradingView در دسترس نیست)", () => {
   beforeEach(() => { vi.unstubAllEnvs(); });
 
-  it("کدِ ارز را از فیلدِ country می‌خواند و تاریخِ ISO با آفست را درست می‌فهمد", () => {
+  it("کد ارز را از فیلد country می‌خواند و تاریخ ISO با آفست را درست می‌فهمد", () => {
     const [e] = normalizeExternalEvents(ffRow("173K"));
     expect(e.currency).toBe("USD");
     expect(e.country).toBe("US");
     expect(e.impact).toBe("HIGH");
     expect(e.actual).toBe("173K");
-    // ۰۸:۳۰ به وقتِ ‎-۰۴:۰۰ یعنی ۱۲:۳۰ UTC
+    // ۰۸:۳۰ به وقت ‎-۰۴:۰۰ یعنی ۱۲:۳۰ UTC
     expect(e.occursAt.toISOString()).toBe("2026-09-16T12:30:00.000Z");
   });
 
-  it("actualِ خالی null می‌شود ولی externalId همان می‌ماند", () => {
+  it("actual خالی null می‌شود ولی externalId همان می‌ماند", () => {
     const before = normalizeExternalEvents(ffRow(""))[0];
     const after = normalizeExternalEvents(ffRow("173K"))[0];
     expect(before.actual).toBeNull();
     expect(after.externalId).toBe(before.externalId);
   });
 
-  it("actualِ منتشرشده روی همان ردیف می‌نشیند (بدونِ هیچ کارِ ادمین)", async () => {
+  it("actual منتشرشده روی همان ردیف می‌نشیند (بدون هیچ کار ادمین)", async () => {
     const prisma = fakePrisma();
 
     stubFeedByUrl((url) => (isTradingView(url) ? { status: 503 } : { status: 200, body: ffRow("") }));
@@ -290,11 +290,11 @@ describe("فیدِ رایگان (بدونِ کلید، فقط وقتی TradingVi
     expect([...prisma.rows.values()][0].actual).toBe("173K");
   });
 
-  it("یک فیدِ از‌کارافتاده کلِ sync را نمی‌شکند", async () => {
+  it("یک فید از‌کارافتاده کل sync را نمی‌شکند", async () => {
     const prisma = fakePrisma();
     stubFeedByUrl((url) => {
       if (isTradingView(url)) return { status: 503 };
-      // فایلِ lastweek خراب، بقیه سالم
+      // فایل lastweek خراب، بقیه سالم
       if (url.includes("lastweek")) return { status: 503 };
       return { status: 200, body: ffRow("173K") };
     });
@@ -305,11 +305,11 @@ describe("فیدِ رایگان (بدونِ کلید، فقط وقتی TradingVi
     expect([...prisma.rows.values()][0].actual).toBe("173K");
   });
 
-  it("فایلِ عقب‌مانده، actualِ منتشرشده را با خالی بازنویسی نمی‌کند", async () => {
+  it("فایل عقب‌مانده، actual منتشرشده را با خالی بازنویسی نمی‌کند", async () => {
     const prisma = fakePrisma();
     stubFeedByUrl((url) => {
       if (isTradingView(url)) return { status: 503 };
-      // فایلِ lastweek هنوز actual ندارد، بقیه دارند — همان رویداد
+      // فایل lastweek هنوز actual ندارد، بقیه دارند — همان رویداد
       const body = url.includes("lastweek") ? ffRow("") : ffRow("173K");
       return { status: 200, body };
     });
@@ -326,40 +326,40 @@ describe("فیدِ رایگان (بدونِ کلید، فقط وقتی TradingVi
   });
 });
 
-describe("پاک‌سازیِ رویدادهایِ حذف‌شده/تغییرِ منبع (پاسِ کامل)", () => {
+describe("پاک‌سازی رویدادهای حذف‌شده/تغییر منبع (پاس کامل)", () => {
   beforeEach(() => { vi.unstubAllEnvs(); vi.stubEnv("ECONOMIC_CALENDAR_API_KEY", "test-key"); });
 
-  it("در حالتِ تند اصلاً deleteMany صدا زده نمی‌شود", async () => {
+  it("در حالت تند اصلا deleteMany صدا زده نمی‌شود", async () => {
     const prisma = fakePrisma();
     stubFeed(jbRow("173K"));
     await syncEconomicCalendar(prisma as any, { fast: true });
     expect(prisma.economicEvent.deleteMany).not.toHaveBeenCalled();
   });
 
-  it("وقتی فید خالیه، deleteMany صدا زده نمی‌شود (فیدِ خالی یعنی احتمالِ خرابیِ منبع)", async () => {
+  it("وقتی فید خالیه، deleteMany صدا زده نمی‌شود (فید خالی یعنی احتمال خرابی منبع)", async () => {
     const prisma = fakePrisma();
     stubFeed([]);
     await syncEconomicCalendar(prisma as any);
     expect(prisma.economicEvent.deleteMany).not.toHaveBeenCalled();
   });
 
-  it("ردیف‌هایِ منابعِ خودکارِ دیگر و ردیف‌هایِ همین منبع که دیگر در فید نیستند را در همان بازه پاک می‌کند", async () => {
+  it("ردیف‌های منابع خودکار دیگر و ردیف‌های همین منبع که دیگر در فید نیستند را در همان بازه پاک می‌کند", async () => {
     const prisma = fakePrisma();
 
-    // بازه‌ی پاک‌سازی بر اساسِ min/max زمانِ رویدادهایِ *تازه‌فچ‌شده* حساب
-    // می‌شه (این‌جا فقط یک رویداد، پس بازه دقیقاً همون یک لحظه‌ست) — پس
-    // ردیف‌هایِ از‌قبل‌موجود باید دقیقاً همون occursAt رو داشته باشن تا
-    // داخلِ بازه بیفتن.
+    // بازه‌ی پاک‌سازی بر اساس min/max زمان رویدادهای *تازه‌فچ‌شده* حساب
+    // می‌شه (این‌جا فقط یک رویداد، پس بازه دقیقا همون یک لحظه‌ست) — پس
+    // ردیف‌های از‌قبل‌موجود باید دقیقا همون occursAt رو داشته باشن تا
+    // داخل بازه بیفتن.
     const sameMoment = new Date("2026-09-16T12:30:00.000Z");
-    // یک ردیفِ قدیمی از منبعِ دیگر (مثلاً فارکس‌فکتوریِ قبلی) در همین بازه
+    // یک ردیف قدیمی از منبع دیگر (مثلا فارکس‌فکتوری قبلی) در همین بازه
     prisma.rows.set("FOREXFACTORY|old-1", {
       source: "FOREXFACTORY", externalId: "old-1", occursAt: sameMoment,
     });
-    // یک ردیفِ دستیِ ادمین در همان بازه — نباید هیچ‌وقت پاک شود
+    // یک ردیف دستی ادمین در همان بازه — نباید هیچ‌وقت پاک شود
     prisma.rows.set("MANUAL|manual-1", {
       source: "MANUAL", externalId: "manual-1", occursAt: sameMoment,
     });
-    // یک ردیفِ قدیمیِ خودِ همین منبع که در فیدِ تازه دیگر نیست
+    // یک ردیف قدیمی خود همین منبع که در فید تازه دیگر نیست
     prisma.rows.set("JBLANKED|stale-1", {
       source: "JBLANKED", externalId: "stale-1", occursAt: sameMoment,
     });
@@ -385,7 +385,7 @@ describe("پاک‌سازیِ رویدادهایِ حذف‌شده/تغییرِ 
 describe("externalProviderName", () => {
   beforeEach(() => { vi.unstubAllEnvs(); });
 
-  it("با اولویتِ واقعیِ انتخابِ منبع هم‌نظر است", async () => {
+  it("با اولویت واقعی انتخاب منبع هم‌نظر است", async () => {
     const { externalProviderName } = await import("@/lib/economicCalendar");
     expect(externalProviderName()).toBe("TRADINGVIEW");
     vi.stubEnv("ECONOMIC_CALENDAR_API_KEY", "k");
@@ -404,10 +404,10 @@ describe("compareActualToForecast", () => {
   });
 });
 
-// ── پنجره‌ی رصدِ انتشار ─────────────────────────────────────────────────
+// ── پنجره‌ی رصد انتشار ─────────────────────────────────────────────────
 // خواسته‌ی صریح: «تا حدود ۳ دقیقه بعد، هر ۵ ثانیه، تا وقتی آپدیت شود».
 
-/** prismaی قلابی که واقعاً شرطِ where را اعمال می‌کند (وگرنه تست چیزی را نمی‌سنجد). */
+/** prismaی قلابی که واقعا شرط where را اعمال می‌کند (وگرنه تست چیزی را نمی‌سنجد). */
 function prismaWithEvents(rows: { occursAt: Date; actual: string | null }[]) {
   return {
     economicEvent: {
@@ -424,29 +424,29 @@ function prismaWithEvents(rows: { occursAt: Date; actual: string | null }[]) {
 
 const minutesAgo = (m: number) => new Date(Date.now() - m * 60_000);
 
-describe("computeNextSyncDelayMs — رصدِ لحظه‌ی انتشار", () => {
-  it("تا ۳ دقیقه بعدِ رویدادِ بی‌actual، هر ۵ ثانیه چک می‌کند", async () => {
+describe("computeNextSyncDelayMs — رصد لحظه‌ی انتشار", () => {
+  it("تا ۳ دقیقه بعد رویداد بی‌actual، هر ۵ ثانیه چک می‌کند", async () => {
     for (const m of [0.5, 1, 2, 2.9]) {
       const prisma = prismaWithEvents([{ occursAt: minutesAgo(m), actual: null }]);
       expect(await computeNextSyncDelayMs(prisma as any)).toBe(5_000);
     }
   });
 
-  it("بعد از ۳ دقیقه دست می‌کشد و به حالتِ آرام برمی‌گردد", async () => {
+  it("بعد از ۳ دقیقه دست می‌کشد و به حالت آرام برمی‌گردد", async () => {
     const prisma = prismaWithEvents([{ occursAt: minutesAgo(4), actual: null }]);
     expect(await computeNextSyncDelayMs(prisma as any)).toBe(10 * 60 * 1000);
   });
 
-  it("به‌محضِ رسیدنِ actual، رصدِ تند تمام می‌شود (نه اینکه ۳ دقیقه را صبر کند)", async () => {
+  it("به‌محض رسیدن actual، رصد تند تمام می‌شود (نه اینکه ۳ دقیقه را صبر کند)", async () => {
     const prisma = prismaWithEvents([{ occursAt: minutesAgo(1), actual: "173K" }]);
     expect(await computeNextSyncDelayMs(prisma as any)).toBe(10 * 60 * 1000);
   });
 
-  it("رویدادی که هنوز نرسیده: دقیقاً تا لحظه‌ی سررسید صبر می‌کند", async () => {
+  it("رویدادی که هنوز نرسیده: دقیقا تا لحظه‌ی سررسید صبر می‌کند", async () => {
     const in30s = new Date(Date.now() + 30_000);
     const prisma = prismaWithEvents([{ occursAt: in30s, actual: null }]);
     const delay = await computeNextSyncDelayMs(prisma as any);
-    // ۳۰ثانیه تا رویداد + ۳ثانیه مهلتِ ته‌نشینی
+    // ۳۰ثانیه تا رویداد + ۳ثانیه مهلت ته‌نشینی
     expect(delay).toBeGreaterThan(30_000);
     expect(delay).toBeLessThanOrEqual(34_000);
   });
@@ -456,10 +456,10 @@ describe("computeNextSyncDelayMs — رصدِ لحظه‌ی انتشار", () =>
   });
 });
 
-// ── ensureFreshCalendar — تازه‌نگه‌داشتن هنگامِ خواندن ────────────────────
+// ── ensureFreshCalendar — تازه‌نگه‌داشتن هنگام خواندن ────────────────────
 // هر تست ماژول را از نو ایمپورت می‌کند (vi.resetModules) چون
-// ensureFreshCalendar وضعیتِ ماژول‌سطحی (inflight/lastAttemptAt) دارد که
-// نباید بینِ تست‌ها درز کند.
+// ensureFreshCalendar وضعیت ماژول‌سطحی (inflight/lastAttemptAt) دارد که
+// نباید بین تست‌ها درز کند.
 
 describe("ensureFreshCalendar", () => {
   beforeEach(() => {
@@ -472,13 +472,13 @@ describe("ensureFreshCalendar", () => {
   function fakeFreshnessPrisma(latestUpdatedAt: Date | null) {
     return {
       economicEvent: {
-        // تشخیصِ نوعِ کوئری با شکلِ where: کوئریِ تازگی `source` دارد،
-        // کوئریِ pending-release `actual: null` دارد.
+        // تشخیص نوع کوئری با شکل where: کوئری تازگی `source` دارد،
+        // کوئری pending-release `actual: null` دارد.
         findFirst: vi.fn(async ({ where }: any) => {
           if (where && "source" in where) {
             return latestUpdatedAt ? { updatedAt: latestUpdatedAt } : null;
           }
-          return null; // هیچ رویدادِ در‌انتظارِ انتشاری نیست
+          return null; // هیچ رویداد در‌انتظار انتشاری نیست
         }),
         upsert: vi.fn(async () => {
           const now = new Date();
@@ -504,7 +504,7 @@ describe("ensureFreshCalendar", () => {
     expect(fetch).not.toHaveBeenCalled();
   });
 
-  it("وقتی جدول خالیه (هیچ ردیفِ خودکاری نیست)، sync می‌زند", async () => {
+  it("وقتی جدول خالیه (هیچ ردیف خودکاری نیست)، sync می‌زند", async () => {
     stubEmptyFeed();
     const { ensureFreshCalendar } = await import("@/lib/economicCalendar");
     const prisma = fakeFreshnessPrisma(null);

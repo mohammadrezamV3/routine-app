@@ -1,11 +1,11 @@
-// یادداشتِ خصوصیِ منتور درباره‌ی شاگرد — رمزگذاریِ سرتاسری «فقط برای خودم».
-// ایزومورفیک (کلاینت + تست). هیچ‌کس جز دارنده‌ی کلیدهای خصوصیِ منتور — نه شاگرد،
+// یادداشت خصوصی منتور درباره‌ی شاگرد — رمزگذاری سرتاسری «فقط برای خودم».
+// ایزومورفیک (کلاینت + تست). هیچ‌کس جز دارنده‌ی کلیدهای خصوصی منتور — نه شاگرد،
 // نه سرور، نه Owner — نمی‌تواند بخواندش.
 //
 // قالب‌ها در MentorStudentNote.body:
-//   e2e2:<JSON {i, c, f:{k}, w:[{u,k,w}]}>  — CEKِ تصادفی، بسته‌بندی برای همه‌ی کلیدهای
-//                                           فعالِ خودِ منتور (هر دستگاه)؛ پیش‌فرضِ تازه
-//   e2e1:<version>:<iv>:<ct>                — قدیمی: ECDH(خصوصی، عمومیِ خودم) با یک نسخه
+//   e2e2:<JSON {i, c, f:{k}, w:[{u,k,w}]}>  — CEK تصادفی، بسته‌بندی برای همه‌ی کلیدهای
+//                                           فعال خود منتور (هر دستگاه)؛ پیش‌فرض تازه
+//   e2e1:<version>:<iv>:<ct>                — قدیمی: ECDH(خصوصی، عمومی خودم) با یک نسخه
 //   بی‌پیشوند                               — پیش از رمزگذاری؛ کلاینت خودکار بازرمزش می‌کند
 
 import { deriveSelfKey, findCek, importPublicKey, openEnvelope, openText, sealEnvelope, WRAP_BYTES, type KeyWrap } from "./core";
@@ -14,16 +14,16 @@ import { b64ByteLength, fromUtf8, lp, utf8 } from "./encoding";
 export const NOTE_PREFIX = "e2e1:";
 export const NOTE_PREFIX_V2 = "e2e2:";
 const NOTE_RE = /^e2e1:(\d{1,6}):([A-Za-z0-9+/]{16}):([A-Za-z0-9+/]+={0,2})$/;
-/** سقفِ طولِ پاکتِ رمزشده (۲۰۰۰ نویسه × ۴ بایت + padding + بسته‌بندی‌ها، به base64) */
+/** سقف طول پاکت رمزشده (۲۰۰۰ نویسه × ۴ بایت + padding + بسته‌بندی‌ها، به base64) */
 export const SEALED_NOTE_MAX = 16_000;
 
 type NoteKey = { version: number; publicKey: string; privateKey: CryptoKey };
-/** کلیدِ ارسالِ همین دستگاه + (اختیاری) همه‌ی کلیدهای این دستگاه و کلیدهای فعالِ منتور روی همه‌ی دستگاه‌ها */
+/** کلید ارسال همین دستگاه + (اختیاری) همه‌ی کلیدهای این دستگاه و کلیدهای فعال منتور روی همه‌ی دستگاه‌ها */
 export type NoteIdentity = NoteKey & {
   userId: string;
   ring?: NoteKey[];
   active?: { version: number; publicKey: string }[];
-  /** همه‌ی کلیدهای عمومیِ خودم، از جمله بازنشسته (سازنده‌ی بسته‌بندیِ یادداشت‌های قدیمی) */
+  /** همه‌ی کلیدهای عمومی خودم، از جمله بازنشسته (سازنده‌ی بسته‌بندی یادداشت‌های قدیمی) */
   known?: { version: number; publicKey: string }[];
 };
 
@@ -102,7 +102,7 @@ export async function openNote(me: NoteIdentity, studentId: string, stored: stri
   }
 }
 
-/** شکلِ پاکت (سمتِ سرور): فقط رمزشده پذیرفته می‌شود */
+/** شکل پاکت (سمت سرور): فقط رمزشده پذیرفته می‌شود */
 export function isSealedNote(v: unknown): v is string {
   if (typeof v !== "string" || v.length > SEALED_NOTE_MAX) return false;
   if (v.startsWith(NOTE_PREFIX_V2)) return parseV2(v) !== null;

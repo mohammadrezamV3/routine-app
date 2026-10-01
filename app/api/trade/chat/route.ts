@@ -10,11 +10,11 @@ import {
   ChatViewerModeration, MAX_CHAT_BODY, normalizeRoomSymbol,
 } from "@/lib/tradeChat";
 
-// اتاقِ گفت‌وگوی هر نماد. برخلافِ بقیه‌ی روت‌های ترید که داده‌ی خصوصیِ یک
+// اتاق گفت‌وگوی هر نماد. برخلاف بقیه‌ی روت‌های ترید که داده‌ی خصوصی یک
 // کاربرند، این‌جا داده عمومی است — پس قاعده‌ی `where:{id, userId}` این‌جا
 // معنا ندارد و به‌جایش این‌ها را داریم:
-//   • خواندن و نوشتن هر دو پشتِ ماژولِ TRADE قفل است.
-//   • نوشتن سقفِ نرخ دارد (اسپم).
+//   • خواندن و نوشتن هر دو پشت ماژول TRADE قفل است.
+//   • نوشتن سقف نرخ دارد (اسپم).
 //   • حذف فقط برای نویسنده یا ادمین، و «نرم» است تا گزارش‌ها خالی نشوند.
 
 const MESSAGE_SELECT = {
@@ -50,8 +50,8 @@ function serialize(m: MessageRow, viewerId: string, reportedIds: Set<string>): C
     body: m.body,
     createdAt: m.createdAt.toISOString(),
     authorId: m.userId,
-    // نامِ نمایشی؛ اگر کاربر نام نگذاشته باشد یوزرنیم را نشان می‌دهیم.
-    // ایمیل/شماره هیچ‌وقت در پاسخِ عمومی نمی‌آید.
+    // نام نمایشی؛ اگر کاربر نام نگذاشته باشد یوزرنیم را نشان می‌دهیم.
+    // ایمیل/شماره هیچ‌وقت در پاسخ عمومی نمی‌آید.
     authorName: m.user.name?.trim() || m.user.username || "کاربر",
     authorGolden: !!m.user.goldenSince,
     mine: m.userId === viewerId,
@@ -60,7 +60,7 @@ function serialize(m: MessageRow, viewerId: string, reportedIds: Set<string>): C
 }
 
 // GET /api/trade/chat?symbol=EURUSD[&since=<iso>]
-// `since` برای پولینگ است: فقط پیام‌های جدیدتر برمی‌گردند، نه کلِ اتاق.
+// `since` برای پولینگ است: فقط پیام‌های جدیدتر برمی‌گردند، نه کل اتاق.
 export async function GET(req: NextRequest) {
   const guard = await requireModule(ModuleKey.TRADE);
   if (!guard.ok) return guard.response;
@@ -79,15 +79,15 @@ export async function GET(req: NextRequest) {
       deletedAt: null,
       ...(validSince ? { createdAt: { gt: validSince } } : {}),
     },
-    // تازه‌ترین‌ها را می‌گیریم و بعد برمی‌گردانیم، چون بدونِ desc در
-    // اتاقِ شلوغ همیشه قدیمی‌ترین‌ها را می‌گرفتیم نه آخرین‌ها.
+    // تازه‌ترین‌ها را می‌گیریم و بعد برمی‌گردانیم، چون بدون desc در
+    // اتاق شلوغ همیشه قدیمی‌ترین‌ها را می‌گرفتیم نه آخرین‌ها.
     orderBy: { createdAt: "desc" },
     take: CHAT_PAGE_SIZE,
     select: MESSAGE_SELECT,
   });
   rows.reverse();
 
-  // کدام‌یک را همین کاربر قبلاً گزارش کرده — تا دکمه‌ی گزارش دوباره فعال نباشد
+  // کدام‌یک را همین کاربر قبلا گزارش کرده — تا دکمه‌ی گزارش دوباره فعال نباشد
   const reported = rows.length
     ? await prisma.tradeChatReport.findMany({
         where: { reporterId: guard.userId, messageId: { in: rows.map((r) => r.id) } },
@@ -122,7 +122,7 @@ export async function POST(req: NextRequest) {
     const viewer = await prisma.user.findUnique({ where: { id: guard.userId }, select: MODERATION_SELECT });
     const state = moderationState(viewer, false);
     if (state.disabled) {
-      return NextResponse.json({ error: "دسترسیِ تو به این گفت‌وگو توسط مدیریت غیرفعال شده است" }, { status: 403 });
+      return NextResponse.json({ error: "دسترسی تو به این گفت‌وگو توسط مدیریت غیرفعال شده است" }, { status: 403 });
     }
     if (state.bannedUntil) {
       const until = new Date(state.bannedUntil).toLocaleString("fa-IR-u-nu-latn", { timeZone: "Asia/Tehran" });
@@ -130,7 +130,7 @@ export async function POST(req: NextRequest) {
     }
   }
 
-  // سقفِ نرخ روی کاربر است نه IP: کاربر شناخته‌شده است و بستنِ IP در
+  // سقف نرخ روی کاربر است نه IP: کاربر شناخته‌شده است و بستن IP در
   // شبکه‌های اشتراکی بی‌گناه‌ها را هم می‌گیرد.
   if (!(await checkRateLimit(`chat:${guard.userId}`, CHAT_RATE_LIMIT, CHAT_RATE_WINDOW_MS))) {
     return NextResponse.json(
@@ -144,10 +144,10 @@ export async function POST(req: NextRequest) {
     select: MESSAGE_SELECT,
   });
 
-  // نگه‌داری فقط ۲۰۰ پیامِ آخرِ همین اتاق — طبقِ درخواستِ صریح، قدیمی‌ترها
-  // نه فقط از نمایش بلکه از دیتابیس هم واقعاً پاک می‌شوند (سیو نمی‌شوند).
-  // این کوئری روی هر پیامِ تازه اجرا می‌شود؛ برای حجمِ چتِ یک اتاق (چندتا
-  // پیام در دقیقه) این هزینه ناچیز است، پس صف/کرانِ جداگانه لازم نیست.
+  // نگه‌داری فقط ۲۰۰ پیام آخر همین اتاق — طبق درخواست صریح، قدیمی‌ترها
+  // نه فقط از نمایش بلکه از دیتابیس هم واقعا پاک می‌شوند (سیو نمی‌شوند).
+  // این کوئری روی هر پیام تازه اجرا می‌شود؛ برای حجم چت یک اتاق (چندتا
+  // پیام در دقیقه) این هزینه ناچیز است، پس صف/کران جداگانه لازم نیست.
   const surplus = await prisma.tradeChatMessage.findMany({
     where: { symbol },
     orderBy: { createdAt: "desc" },
@@ -163,7 +163,7 @@ export async function POST(req: NextRequest) {
 }
 
 // DELETE /api/trade/chat?id=...
-// حذفِ نرم. نویسنده پیامِ خودش را، و ادمین هر پیامی را می‌تواند بردارد.
+// حذف نرم. نویسنده پیام خودش را، و ادمین هر پیامی را می‌تواند بردارد.
 export async function DELETE(req: NextRequest) {
   const guard = await requireModule(ModuleKey.TRADE);
   if (!guard.ok) return guard.response;

@@ -28,13 +28,13 @@ type Ready = Extract<IdentityState, { status: "ready" }>;
 export { useE2EEReady } from "@/lib/e2ee/client";
 
 /**
- * راه‌اندازِ نامرئیِ رمزگذاریِ سرتاسری (docs/mentor-e2ee.md). کاربر هیچ رمزی
+ * راه‌انداز نامرئی رمزگذاری سرتاسری (docs/mentor-e2ee.md). کاربر هیچ رمزی
  * نمی‌سازد و هیچ فرمی نمی‌بیند: کلید در پس‌زمینه ساخته/باز می‌شود و children با
- * کلیدِ آماده رندر می‌شود. فقط در این حالت‌ها یک خطِ کوچک دیده می‌شود:
+ * کلید آماده رندر می‌شود. فقط در این حالت‌ها یک خط کوچک دیده می‌شود:
  *   • خطای واقعی (شبکه/سرور) — با «تلاش دوباره»
- *   • پشتیبانِ قدیمیِ «رمز گفت‌وگو» — یک بارِ آخر، سپس هرگز
- *   • دستگاهی که سابقه‌ی قبلی را ندارد — یک جمله، و برای حسابِ بی‌رمز «انتقال سابقه»
- *   • تاییدِ انتقالِ سابقه روی دستگاهِ قدیمی (با کدِ کوتاه)
+ *   • پشتیبان قدیمی «رمز گفت‌وگو» — یک بار آخر، سپس هرگز
+ *   • دستگاهی که سابقه‌ی قبلی را ندارد — یک جمله، و برای حساب بی‌رمز «انتقال سابقه»
+ *   • تایید انتقال سابقه روی دستگاه قدیمی (با کد کوتاه)
  */
 export type GateContext = "chat" | "notes";
 
@@ -106,7 +106,7 @@ function NoticeLine({ notice, link }: { notice: E2EENotice; link: LinkState | nu
 }
 
 function RequesterLine({ link }: { link: Extract<LinkState, { role: "requester" }> }) {
-  // تا دستگاهِ قدیمی تایید کند، وضعیت هر چند ثانیه تازه می‌شود
+  // تا دستگاه قدیمی تایید کند، وضعیت هر چند ثانیه تازه می‌شود
   useEffect(() => {
     if (link.status !== "PENDING") return;
     const t = setInterval(() => { if (document.visibilityState === "visible") refreshIdentity(); }, 5000);
@@ -160,7 +160,7 @@ function ApproveDialog({ link }: { link: Extract<LinkState, { role: "approver" }
   );
 }
 
-/** پشتیبانِ قدیمیِ «رمز گفت‌وگو»: یک بار رمزِ قدیمی، بعد انتقال به روشِ تازه و دیگر هرگز */
+/** پشتیبان قدیمی «رمز گفت‌وگو»: یک بار رمز قدیمی، بعد انتقال به روش تازه و دیگر هرگز */
 function LegacyPasscode({ version }: { version: number }) {
   const [pass, setPass] = useState("");
   const [error, setError] = useState<string | null>(null);

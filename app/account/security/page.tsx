@@ -67,8 +67,8 @@ export default function SecurityPage() {
   const [discoverable, setDiscoverable] = useState<boolean | null>(null);
   const [discoverableSaving, setDiscoverableSaving] = useState(false);
 
-  // اشتراک‌گذاریِ شماره با دوستان — طبقِ درخواستِ صریح، توی همین بخشِ
-  // حریمِ خصوصی. بدونِ شماره‌ی ثبت‌شده معنا ندارد، پس سوییچش غیرفعال می‌ماند.
+  // اشتراک‌گذاری شماره با دوستان — طبق درخواست صریح، توی همین بخش
+  // حریم خصوصی. بدون شماره‌ی ثبت‌شده معنا ندارد، پس سوییچش غیرفعال می‌ماند.
   const [hasPhone, setHasPhone] = useState(false);
   const [sharePhone, setSharePhone] = useState<boolean | null>(null);
   const [sharePhoneSaving, setSharePhoneSaving] = useState(false);
@@ -195,7 +195,7 @@ export default function SecurityPage() {
     if (newPassword !== confirmPassword) { setPwError("رمز جدید با تکرارش یکی نیست"); return; }
     setPwSaving(true);
     try {
-      // کلیدِ رمزگذاریِ سرتاسری با رمزِ تازه دوباره بسته‌بندی می‌شود (روی دستگاه؛ lib/e2ee/client.ts)
+      // کلید رمزگذاری سرتاسری با رمز تازه دوباره بسته‌بندی می‌شود (روی دستگاه؛ lib/e2ee/client.ts)
       const commitE2EE = await import("@/lib/e2ee/client").then((m) => m.prepareE2EEPasswordChange(currentPassword, newPassword)).catch(() => null);
       const res = await fetch("/api/account/password", {
         method: "POST",
@@ -218,8 +218,8 @@ export default function SecurityPage() {
   const otherSessionCount = sessions ? sessions.filter((s) => !s.current).length : 0;
 
   return (
-    // طبقِ درخواستِ صریح این صفحه جمع‌تر شد (acc-compact): فاصله‌ها کمتر و
-    // توضیح‌ها یک‌خطی — قبلا بینِ چهار بخش فضای خالیِ زیادی می‌افتاد.
+    // طبق درخواست صریح این صفحه جمع‌تر شد (acc-compact): فاصله‌ها کمتر و
+    // توضیح‌ها یک‌خطی — قبلا بین چهار بخش فضای خالی زیادی می‌افتاد.
     <section className="acc-compact">
       {/* تغییر یوزرنیم طبق درخواست کاربر فقط از «پروفایل» انجام می‌شه، نه این‌جا */}
       <AccountPageHead title="امنیت" hint="رمز عبور، ورود دومرحله‌ای، دستگاه‌های فعال و حریم خصوصی" />
@@ -230,8 +230,8 @@ export default function SecurityPage() {
           <input type="password" placeholder="رمز عبور جدید" value={newPassword} onChange={(e) => setNewPassword(e.target.value)} className="wsearch-newform-name" dir="ltr" />
           <input type="password" placeholder="تکرار رمز عبور جدید" value={confirmPassword} onChange={(e) => setConfirmPassword(e.target.value)} className="wsearch-newform-name" dir="ltr" />
           {pwError && <div className="field-error-msg" style={{ display: "block" }}>{pwError}</div>}
-          {/* مثل دکمه‌ی ذخیره‌ی بقیه‌ی پنل: سمت چپ، موقعِ ذخیره فقط دایره‌ی
-              لودینگ، بعدش تیک — بدونِ هیچ متنِ «ذخیره شد». */}
+          {/* مثل دکمه‌ی ذخیره‌ی بقیه‌ی پنل: سمت چپ، موقع ذخیره فقط دایره‌ی
+              لودینگ، بعدش تیک — بدون هیچ متن «ذخیره شد». */}
           <button
             className={`account-outline-btn acc-save-btn is-${pwSaving ? "saving" : pwSuccess ? "ok" : pwError ? "bad" : "idle"}`}
             onClick={changePassword}
@@ -252,7 +252,7 @@ export default function SecurityPage() {
           <div style={{ minWidth: 0 }}>
             <div style={{ fontSize: 13, fontWeight: 600, color: "var(--text)" }}>تایید ورود با پیامک</div>
             <div className="item-line" style={{ marginTop: 2 }}>
-              بعد از رمزِ درست، یک کد به شماره‌ی حسابت پیامک می‌شه.
+              بعد از رمز درست، یک کد به شماره‌ی حسابت پیامک می‌شه.
             </div>
           </div>
           {twoFactor !== null && (
