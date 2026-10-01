@@ -36,7 +36,7 @@ export const WEEKLY_ANALYSIS_AI_MODEL = process.env.ARVAN_AI_WEEKLY_MODEL || "gp
 export type ChatContentPart = { type: "text"; text: string };
 
 export type ChatUsage = { inputTokens: number; outputTokens: number };
-export type ChatResult = { text: string; usage: ChatUsage; durationMs: number };
+export type ChatResult = { text: string; usage: ChatUsage; durationMs: number; truncated?: boolean };
 
 // پنل Owner › مصرف AI — یک ردیف واقعی به‌ازای هر فراخوانی واقعی گیت‌وی.
 // success:true یعنی گیت‌وی واقعا پاسخ داد و توکن مصرف شد (حتی اگه بعدا
@@ -193,7 +193,9 @@ export async function callAiChat(
     outputTokens: Number(data?.usage?.completion_tokens) || 0,
   };
   if (!text) throw new Error("پاسخ مدل خالی بود");
-  return { text, usage, durationMs };
+  // «length» یعنی سقف توکن خروجی وسط پاسخ رسید و JSON نصفه‌ست
+  const truncated = data?.choices?.[0]?.finish_reason === "length";
+  return { text, usage, durationMs, truncated };
 }
 
 export function parseJsonResponse(text: string): any {
@@ -620,7 +622,8 @@ export async function generateRoadmapPlan(profile: RoadmapProfile, userId: strin
 // باید به قالب ایستای lib/exercisePlans.ts برگرده — این فایل فقط پرتاب خطا می‌کنه.
 // ============================================================================
 
-const EXERCISE_SYSTEM_PROMPT = `تو یک مربی حرفه‌ای بدنسازی و برنامه‌ریزی تمرینی هستی. برای هر کاربر یک برنامه شخصی‌سازی‌شده،
+// قواعد مربی — مشترک بین دو فاز ساخت برنامه (تقسیم هفتگی و طراحی هر جلسه)
+const EXERCISE_COACH_RULES = `تو یک مربی حرفه‌ای بدنسازی و برنامه‌ریزی تمرینی هستی. برای هر کاربر یک برنامه شخصی‌سازی‌شده،
 اصولی و قابل اجرا طراحی کن.
 
 هدف کاربر با متن آزاد خودش داده می‌شود (نه از یک لیست بسته) — ممکن است ترکیبی/غیرمتعارف هم باشد؛
@@ -643,18 +646,14 @@ const EXERCISE_SYSTEM_PROMPT = `تو یک مربی حرفه‌ای بدنساز�
   ساق، شکم — نه یک دسته‌ی کلی «بالاتنه»). هر گروه عضلانی مستقل روی روز خودش برنامه‌ریزی شود؛ دو گروه
   جداگانه (مثلا جلوبازو و پشت‌بازو) را در یک روز با هم نیاور، مگر این‌که خود کاربر صریحا در هدفش خواسته
   باشد آن‌ها با هم ترکیب شوند.
-- این «حداقل 3 حرکت» مال هر عضله‌ی هدف است، نه مجموع کل آن روز. یعنی اگر در یک روز فقط یک گروه عضلانی
-  تمرین می‌شود (مثلا فقط سینه)، آن روز حداقل 3 حرکت متمایز (نه تکراری، نه وارم‌آپ) برای همان یک عضله دارد؛
-  و اگر آن روز چند گروه عضلانی با هم تمرین می‌شوند (مثلا سینه + سرشانه + پشت‌بازو)، هرکدام از آن گروه‌ها
-  باید جداگانه حداقل 3 حرکت خودش را داشته باشد — یعنی جمع کل حرکات آن روز حداقل برابر (تعداد گروه‌های
-  عضلانی همان روز × 3) است، نه 3 حرکت برای کل روز. تعداد دقیق حرکات هر عضله ثابت یا از پیش تعیین‌شده
-  نیست — نتیجه‌ی حجم تمرینی موردنیاز، عضلات هدف، سطح کاربر، هدف، زمان جلسه و ریکاوری است، اما هیچ‌وقت برای
-  هیچ عضله‌ای از این حداقل 3 کمتر نرود.
-- اگر یک عضله به حرکات بیشتری نیاز دارد، حرکات کافی اضافه کن؛ اگر حرکت اضافه باعث حجم غیرضروری می‌شود، اضافه نکن.
-- هیچ جلسه‌ای را صرفا برای کوتاه کردن خروجی به چند حرکت محدود نکن. حجم را عملی نگه دار — معمولا از 10 تا
-  15 حرکت در یک جلسه بیشتر نشو مگر واقعا لازم باشد — ولی این سقف هیچ‌وقت بهانه‌ای برای پایین‌آوردن تعداد
-  حرکات یک عضله زیر حداقل 3 نیست؛ اگر تعداد گروه‌های عضلانی یک روز طوری است که رعایت هر دو (حداقل 3
-  به‌ازای هر عضله و سقف 10-15) با هم ممکن نیست، همیشه حداقل 3 به‌ازای هر عضله اولویت دارد.
+- برنامه‌ی پیش‌فرض باید «کامل‌ترین» نسخه‌ی اصولی باشد، نه حداقلی و نه سه‌حرکتی. هر عضله‌ی هدف هر روز
+  را کامل کار کن و زاویه‌ها/الگوهای مختلفش را پوشش بده:
+  • عضله‌های بزرگ (سینه، پشت، سرشانه، چهارسر ران، پشت ران، سرینی): حداقل 4 حرکت متمایز، معمولا 4 تا 6.
+  • عضله‌های کوچک (جلوبازو، پشت‌بازو، ساق، شکم/میان‌تنه، ساعد، ذوزنقه): حداقل 3 حرکت متمایز، معمولا 3 تا 4.
+  این حداقل‌ها مال *هر* عضله‌ی هدف است، نه مجموع روز؛ روزی که سه عضله دارد جمعا حداقل همان سه سهم را دارد.
+- فقط وقتی خود کاربر محدودیت جسمی یا محدودیت خاصی (مثلا زمان کم جلسه، تجهیزات محدود، درخواست برنامه‌ی کوتاه)
+  نوشته، برنامه را دقیقا به اندازه‌ی همان محدودیت سبک کن؛ بدون چنین توضیحی همیشه نسخه‌ی کامل را بده.
+- هیچ حرکتی را برای کوتاه‌شدن خروجی حذف نکن — طول خروجی هیچ محدودیتی برای تو ایجاد نمی‌کند.
 - تمام عضلات و الگوهای حرکتی موردنیاز را پوشش بده.
 - حرکات اصلی، چندمفصلی، کمکی و تک‌مفصلی را با ترتیب منطقی استفاده کن.
 - از حرکات تکراری و حجم غیرضروری جلوگیری کن.
@@ -682,8 +681,9 @@ const EXERCISE_SYSTEM_PROMPT = `تو یک مربی حرفه‌ای بدنساز�
   پزشکی نده، و در صورت آسیب/محدودیت جدی کاربر را به ارزیابی متخصص ارجاع بده.
 - داده‌ای که کاربر نداده را حدس یا اختراع نکن — فقط از همان چیزی که در پروفایل آمده استفاده کن.
 - بدون دلیل صریح از طرف هدف کاربر، کاهش‌وزن/کسری‌کالری/کاردیو/مکمل فرض نکن.
-- حجم هفتگی هر عضله (ست سخت، یعنی 0 تا 3 تکرار مانده تا ناتوانی): مبتدی حدود 8 تا 12 ست، متوسط 12 تا 18،
-  پیشرفته 15 تا 22 — مگر هدف کاربر چیز دیگری بخواهد. عضله‌ای که کاربر اولویتش داده بالای بازه، بقیه وسط بازه.
+- حجم هفتگی هر عضله (ست سخت، یعنی 0 تا 3 تکرار مانده تا ناتوانی): مبتدی حدود 10 تا 14 ست، متوسط 14 تا 20،
+  پیشرفته 16 تا 24 — مگر هدف یا محدودیت نوشته‌شده‌ی کاربر چیز دیگری بخواهد. برنامه‌ی کامل یعنی نیمه‌ی بالای
+  همین بازه؛ عضله‌ای که کاربر اولویتش داده بالاترین بخش بازه.
 - هر جلسه: حرکت اصلی چندمفصلی اول (سنگین‌ترین، کم‌تکرارتر)، بعد کمکی‌ها، بعد تک‌مفصلی‌ها (پرتکرارتر).
   ست‌های حرکت اول معمولا 3 تا 5، بقیه 2 تا 4. استراحت: چندمفصلی سنگین 2 تا 3 دقیقه، کمکی 90 ثانیه تا 2 دقیقه،
   تک‌مفصلی 60 تا 90 ثانیه. برای اولین حرکت هر جلسه در note بنویس «1-2 ست گرم‌کردن با وزن سبک قبل از ست‌های اصلی».
@@ -693,14 +693,19 @@ const EXERCISE_SYSTEM_PROMPT = `تو یک مربی حرفه‌ای بدنساز�
 
 ## بررسی نهایی (در ذهنت، قبل از خروجی — هرکدام رد شد، برنامه را اصلاح کن)
 1. تعداد آیتم‌های days دقیقا برابر تعداد روزهای باشگاه کاربر است و هر روز دقیقا یک بار آمده.
-2. هر گروه عضلانی هدف هر روز حداقل 3 حرکت متمایز دارد.
+2. هر عضله‌ی بزرگ هدف حداقل 4 و هر عضله‌ی کوچک حداقل 3 حرکت متمایز دارد (مگر محدودیتی که خود کاربر نوشته).
 3. حجم هفتگی هر عضله در بازه‌ی سطح کاربر است؛ هیچ عضله‌ی اصلی جا نیفتاده و هیچ‌کدام بی‌دلیل دو برابر بقیه نیست.
 4. هیچ حرکتی به تجهیزاتی که کاربر ندارد نیاز ندارد و هیچ حرکتی با محدودیت جسمی کاربر تضاد ندارد.
 5. sets عدد صحیح 1 تا 6 است، reps هیچ‌وقت خالی نیست، rest هیچ‌وقت خالی نیست.
 6. JSON کامل و معتبر است (هیچ آرایه یا آکولاد بازی نمانده).
 - قبل از خروجی، برنامه را از نظر حجم، تعادل عضلانی، شدت، ریکاوری و تناسب با هدف بررسی کن.
 - برنامه باید امکان پیشرفت تدریجی داشته باشد.
-- هیچ توصیه‌ی پزشکی یا تغذیه‌ای نده.
+- هیچ توصیه‌ی پزشکی یا تغذیه‌ای نده.`;
+
+// فاز ۱: فقط تقسیم هفتگی (کدام روز کدام عضله‌ها). کوچک و سریع است.
+const EXERCISE_SPLIT_PROMPT = `${EXERCISE_COACH_RULES}
+
+الان فقط *تقسیم هفتگی* را طراحی کن، نه حرکات را. حرکات هر جلسه در مرحله‌ی بعد جدا طراحی می‌شوند.
 
 پیش از طراحی، بررسی کن که درخواست کاربر (با توجه به توضیحی که خودش نوشته، محدودیت جسمی‌اش و روزهایی که
 در اختیار داره) از نظر بدنی/تمرینی واقع‌بینانه، بی‌خطر و قابل‌اجراست یا نه.
@@ -708,19 +713,29 @@ const EXERCISE_SYSTEM_PROMPT = `تو یک مربی حرفه‌ای بدنساز�
 اگر واقع‌بینانه نبود، فقط همین JSON خام را برگردان (بدون Markdown fence، بدون هیچ متن دیگر):
 { "feasible": false, "message": "یک پیام کوتاه و دوستانه به فارسی، مثل یک مربی که مستقیم با کاربر حرف می‌زند، که توضیح دهد چرا این ممکن نیست و چه پیشنهاد جایگزینی داری" }
 
-اگر واقع‌بینانه بود، فقط همین JSON خام را برگردان (بدون Markdown fence، بدون هیچ متن دیگر) — دقیقا یک
-آیتم به‌ازای هر روزی که کاربر گفته باشگاه می‌رود (نه کمتر، نه بیشتر)، و مقدار day باید دقیقا یکی از
-همان روزهایی باشد که کاربر داده:
+اگر واقع‌بینانه بود، فقط همین JSON خام را برگردان (بدون Markdown fence، بدون هیچ متن دیگر) — دقیقا یک آیتم
+به‌ازای هر روزی که کاربر گفته باشگاه می‌رود (نه کمتر، نه بیشتر)، و مقدار day دقیقا یکی از همان روزها:
 {
   "feasible": true,
+  "split": "نام کوتاه روش تقسیم‌بندی، مثلا Push/Pull/Legs",
   "days": [
-    {
-      "day": "شنبه",
-      "focus": "پایین‌تنه — اسکوات",
-      "exercises": [
-        { "name": "اسکوات هالتر", "muscle": "چهارسر ران", "sets": 4, "reps": "6-8", "rest": "3 دقیقه", "note": "زانو هم‌راستای پنجه" }
-      ]
-    }
+    { "day": "شنبه", "focus": "سینه و پشت‌بازو", "muscles": ["سینه", "پشت‌بازو"] }
+  ]
+}
+muscles: عضله‌های هدف همان روز با نام‌های تفکیک‌شده (سینه، پشت، سرشانه، جلوبازو، پشت‌بازو، چهارسر ران، پشت ران،
+سرینی، ساق، شکم، ساعد، ذوزنقه)، به ترتیب اولویت. فقط JSON معتبر.`;
+
+// فاز ۲: یک جلسه‌ی کامل برای یک روز — هر روز یک فراخوانی جدا و هم‌زمان، پس
+// هیچ جلسه‌ای به‌خاطر سقف توکن یک خروجی بزرگ کوتاه یا بریده نمی‌شود.
+const EXERCISE_DAY_PROMPT = `${EXERCISE_COACH_RULES}
+
+تقسیم هفتگی قبلا مشخص شده و به تو داده می‌شود. الان فقط *جلسه‌ی همان یک روزی* را که خواسته شده کامل طراحی کن،
+با در نظر گرفتن بقیه‌ی روزهای هفته (حجم هفتگی هر عضله و ریکاوری).
+
+فقط همین JSON خام را برگردان (بدون Markdown fence، بدون هیچ متن دیگر):
+{
+  "exercises": [
+    { "name": "اسکوات هالتر", "muscle": "چهارسر ران", "sets": 4, "reps": "6-8", "rest": "3 دقیقه", "note": "زانو هم‌راستای پنجه" }
   ]
 }
 
@@ -732,6 +747,9 @@ const EXERCISE_SYSTEM_PROMPT = `تو یک مربی حرفه‌ای بدنساز�
 - reps: تعداد تکرار (رشته؛ می‌تواند بازه باشد مثل "8-12")، یا برای حرکات زمان‌محور مدت‌زمان مثل "30 ثانیه".
 - rest: زمان استراحت بین ست‌ها.
 - note: یک نکته‌ی کوتاه و کاربردی درباره‌ی اجرای همان حرکت (یا رشته‌ی خالی).
+
+خروجی فقط JSON معتبر باشد.
+- muscle: دقیقا یکی از عضله‌های هدف همین روز، با همان نامی که به تو داده شده.
 
 خروجی فقط JSON معتبر باشد.`;
 
@@ -754,10 +772,13 @@ export type ExercisePlanResult =
   | { feasible: true; days: GeneratedExerciseDay[] }
   | { feasible: false; message: string };
 
-// برنامه‌ی ۵-۶ روزه با حداقل ۳ حرکت به‌ازای هر عضله، به فارسی، به‌راحتی از ۴۰۰۰
-// توکن رد می‌شد و JSON وسط راه بریده می‌شد (روز/حرکت جاافتاده). طبق درخواست
-// صریح، دقت مهم‌تر از هزینه‌ی توکن است.
-const EXERCISE_MAX_TOKENS = 8000;
+// سقف توکن هر فراخوانی. کل هفته دیگه توی یک خروجی نمیاد (قبلا با ۸۰۰۰ توکن
+// برنامه‌ی ۵-۶ روزه وسط راه بریده می‌شد یا مدل برای جا شدن حرکات رو کم می‌کرد)؛
+// هر جلسه جدا ساخته می‌شه و یک جلسه‌ی کامل (حتی ۱۸ حرکت) خیلی زیر این سقفه.
+const EXERCISE_SPLIT_MAX_TOKENS = 3000;
+const EXERCISE_DAY_MAX_TOKENS = 6000;
+// اگه با همه‌ی این‌ها باز هم خروجی بریده شد (finish_reason=length)، یک بار با این سقف
+const EXERCISE_DAY_MAX_TOKENS_RETRY = 12000;
 
 const VALID_FA_DAYS = ["شنبه", "یکشنبه", "دوشنبه", "سه‌شنبه", "چهارشنبه", "پنجشنبه", "جمعه"];
 const LEVEL_LABELS_FA: Record<ExercisePlanProfile["level"], string> = { beginner: "مبتدی", intermediate: "متوسط", advanced: "پیشرفته" };
@@ -815,10 +836,26 @@ function normalizeExercisePlan(raw: any, allowedDays: string[]): GeneratedExerci
   return days;
 }
 
-// بررسی سمت سرور همان قواعدی که در پرامپت آمده — مدل گاهی روزی را جا
-// می‌اندازد، روزی را دو بار می‌آورد، یا برای یک عضله کمتر از ۳ حرکت می‌گذارد.
-// ایرادها یک بار (در همان بودجه‌ی زمانی) برای اصلاح به خود مدل برگردانده می‌شوند.
-function exercisePlanIssues(rawDays: unknown, gymDays: string[]): string[] {
+// ── اعتبارسنجی سمت سرور همان قواعد پرامپت ──
+// مدل گاهی روزی را جا می‌اندازد، روزی را دو بار می‌آورد، یا با وجود دستور
+// «کامل‌ترین برنامه» باز به سه حرکت بسنده می‌کند. ایرادها یک بار (در همان
+// بودجه‌ی زمانی) برای اصلاح به خود مدل برگردانده می‌شوند.
+
+const SMALL_MUSCLE_RE = /بازو|ساق|شکم|میان\s*‌?\s*تنه|ساعد|ذوزنقه|کول|core|abs|calf|calves|biceps|triceps|forearm/i;
+/** حداقل حرکت متمایز هر عضله‌ی هدف — محدودیتی که خود کاربر نوشته این کف را برمی‌دارد. */
+export function minExercisesFor(muscle: string, relaxed: boolean): number {
+  if (relaxed) return 1;
+  return SMALL_MUSCLE_RE.test(muscle) ? 3 : 4;
+}
+const normMuscle = (m: string) => toEnglishDigits(String(m || "")).replace(/[\s\u200c\-–—_]/g, "").toLowerCase();
+function muscleMatches(exMuscle: string, target: string): boolean {
+  const a = normMuscle(exMuscle), b = normMuscle(target);
+  return !!a && !!b && (a === b || a.includes(b) || b.includes(a));
+}
+
+export type SplitDay = { day: string; focus: string; muscles: string[] };
+
+export function splitIssues(rawDays: unknown, gymDays: string[]): string[] {
   const issues: string[] = [];
   if (!Array.isArray(rawDays)) return ["days آرایه نیست."];
   const seen = rawDays.map((d: any) => (typeof d?.day === "string" ? d.day.trim() : ""));
@@ -829,31 +866,55 @@ function exercisePlanIssues(rawDays: unknown, gymDays: string[]): string[] {
   const extra = seen.filter((d) => d && !gymDays.includes(d));
   if (extra.length) issues.push(`این روزها جزو روزهای باشگاه کاربر نیستند: ${extra.join("، ")}.`);
   for (const d of rawDays as any[]) {
-    const ex: any[] = Array.isArray(d?.exercises) ? d.exercises : [];
-    if (!ex.length) { issues.push(`روز ${d?.day || "?"} هیچ حرکتی ندارد.`); continue; }
-    const names = ex.map((e) => String(e?.name || "").trim()).filter(Boolean);
-    const dupEx = names.filter((n, i) => names.indexOf(n) !== i);
-    if (dupEx.length) issues.push(`در روز ${d.day} حرکت تکراری آمده: ${Array.from(new Set(dupEx)).join("، ")}.`);
-    const perMuscle = new Map<string, number>();
-    for (const e of ex) {
-      const m = String(e?.muscle || "").trim();
-      if (m) perMuscle.set(m, (perMuscle.get(m) || 0) + 1);
-      const sets = Number(e?.sets);
-      if (!Number.isInteger(sets) || sets < 1 || sets > 8) issues.push(`در روز ${d.day} حرکت «${e?.name}» تعداد ست نامعتبر دارد.`);
-      if (!String(e?.reps ?? "").trim()) issues.push(`در روز ${d.day} حرکت «${e?.name}» تکرار ندارد.`);
-    }
-    const thin = Array.from(perMuscle.entries()).filter(([, c]) => c < 3).map(([m]) => m);
-    // فقط وقتی ایراد است که عضله‌ی «هدف» روز باشد؛ یک حرکت کمکی برای یک عضله‌ی
-    // فرعی (مثلا ساق در روز پا) مجاز است — پس فقط اگر بیش از نیمی از عضله‌ها کم‌حرکت‌اند.
-    if (thin.length && thin.length > perMuscle.size / 2) {
-      issues.push(`در روز ${d.day} این عضله‌ها کمتر از 3 حرکت دارند: ${thin.join("، ")}.`);
-    }
+    if (!asStringArray(d?.muscles).length) issues.push(`روز ${d?.day || "?"} هیچ عضله‌ی هدفی ندارد.`);
   }
   return issues;
 }
 
-async function callExercisePlanOnce(profile: ExercisePlanProfile, userId: string, timeoutMs: number): Promise<ExercisePlanResult> {
-  const profileText = [
+function normalizeSplit(rawDays: unknown, gymDays: string[]): SplitDay[] {
+  if (!Array.isArray(rawDays)) throw new Error("تقسیم هفتگی مدل ساختار معتبری نداشت");
+  const out: SplitDay[] = [];
+  for (const day of gymDays) {
+    const d: any = (rawDays as any[]).find((x) => typeof x?.day === "string" && x.day.trim() === day);
+    const muscles = Array.from(new Set(asStringArray(d?.muscles)));
+    if (!d || !muscles.length) continue;
+    out.push({ day, focus: typeof d.focus === "string" && d.focus.trim() ? d.focus.trim() : muscles.join(" و "), muscles });
+  }
+  if (!out.length) throw new Error("مدل هیچ روز قابل‌استفاده‌ای برنگردوند");
+  return out;
+}
+
+/** ایرادهای یک جلسه: حرکت تکراری، ست/تکرار نامعتبر، و عضله‌ی هدفی که کمتر از کف «کامل» حرکت دارد. */
+export function dayIssues(rawExercises: unknown, muscles: string[], relaxed: boolean): string[] {
+  const issues: string[] = [];
+  if (!Array.isArray(rawExercises) || !rawExercises.length) return ["هیچ حرکتی نیامده."];
+  const ex = rawExercises as any[];
+  const names = ex.map((e) => String(e?.name || "").trim()).filter(Boolean);
+  const dupEx = names.filter((n, i) => names.indexOf(n) !== i);
+  if (dupEx.length) issues.push(`حرکت تکراری آمده: ${Array.from(new Set(dupEx)).join("، ")}.`);
+  for (const e of ex) {
+    const sets = Number(e?.sets);
+    if (!Number.isInteger(sets) || sets < 1 || sets > 8) issues.push(`حرکت «${e?.name}» تعداد ست نامعتبر دارد.`);
+    if (!String(e?.reps ?? "").trim()) issues.push(`حرکت «${e?.name}» تکرار ندارد.`);
+  }
+  for (const m of muscles) {
+    const distinct = new Set(ex.filter((e) => muscleMatches(String(e?.muscle || ""), m)).map((e) => String(e?.name || "").trim()).filter(Boolean));
+    const min = minExercisesFor(m, relaxed);
+    if (distinct.size < min) issues.push(`عضله‌ی «${m}» فقط ${distinct.size} حرکت دارد؛ برنامه‌ی کامل حداقل ${min} حرکت متمایز برای آن می‌خواهد.`);
+  }
+  return issues;
+}
+
+/** کاربر خودش محدودیتی نوشته؟ (محدودیت جسمی، یا زمان/تجهیزات/برنامه‌ی کوتاه در توضیحش) */
+function userAskedForLess(profile: ExercisePlanProfile): boolean {
+  if (profile.hasPhysicalLimitation) return true;
+  const d = profile.description || "";
+  return /محدود|کوتاه|کم\s*‌?\s*حجم|وقت\s*ندار|وقت\s*کم|فقط\s*\d+\s*دقیقه|دقیقه\s*وقت|حداکثر\s*\d+\s*حرکت|آسیب|درد/.test(d);
+}
+
+function exerciseProfileText(profile: ExercisePlanProfile): string {
+  const prev = profile.previousProgram ? JSON.stringify(profile.previousProgram) : "";
+  return [
     `سطح: ${LEVEL_LABELS_FA[profile.level]}`,
     `هدف: ${profile.goalLabel}`,
     `روزهای باشگاه: ${profile.gymDays.join("، ")}`,
@@ -864,53 +925,96 @@ async function callExercisePlanOnce(profile: ExercisePlanProfile, userId: string
     profile.hasPhysicalLimitation ? "محدودیت جسمی داره — از حرکات پرفشار/پرضربه پرهیز کن" : null,
     profile.hasPhysicalLimitation && profile.limitationDetails ? `توضیح محدودیت جسمی: ${profile.limitationDetails}` : null,
     profile.description ? `توضیح کاربر درباره‌ی برنامه‌ی دلخواهش: ${profile.description}` : null,
-    profile.previousProgram
-      ? `برنامه‌ی ماه قبل همین کاربر (برای پیشرفت منطقی، نه تکرار عین آن):\n${JSON.stringify(profile.previousProgram)}`
-      : null,
+    prev ? `برنامه‌ی ماه قبل همین کاربر (برای پیشرفت منطقی، نه تکرار عین آن):\n${prev.slice(0, 8000)}` : null,
+    userAskedForLess(profile)
+      ? "کاربر خودش محدودیت نوشته — حجم را دقیقا متناسب با همان محدودیت تنظیم کن."
+      : "کاربر هیچ محدودیتی ننوشته — کامل‌ترین برنامه را بده (حداقل 4 حرکت برای هر عضله‌ی بزرگ و 3 برای هر عضله‌ی کوچک).",
   ].filter(Boolean).join("\n");
+}
 
-  const startedAt = Date.now();
-  const { text, usage, durationMs } = await callAiChat(EXERCISE_SYSTEM_PROMPT, profileText, EXERCISE_MAX_TOKENS, AI_MODEL_NAME, timeoutMs);
-  recordAiUsage(userId, AiFeatureKey.EXERCISE_PLAN_GENERATION, usage, durationMs, true);
-  let parsed = parseJsonResponse(text);
+const msLeft = (deadline: number) => deadline - Date.now();
 
-  // یک دور اصلاح: اگر خروجی قواعد را رعایت نکرده و هنوز وقت هست، ایرادها را
-  // به خود مدل برمی‌گردانیم. اگر اصلاح هم بهتر نبود، نسخه‌ی اول می‌ماند.
-  if (parsed?.feasible !== false) {
-    const issues = exercisePlanIssues(parsed?.days, profile.gymDays);
-    const left = timeoutMs - (Date.now() - startedAt);
-    if (issues.length && left > 20_000) {
-      try {
-        const repair = await callAiChat(
-          EXERCISE_SYSTEM_PROMPT,
-          [profileText, "", "برنامه‌ای که قبلا دادی این ایرادها را داشت:", ...issues.map((x, i) => `${i + 1}. ${x}`), "",
-            "برنامه‌ی قبلی:", text.slice(0, 12_000), "", "همان برنامه را با رفع همه‌ی این ایرادها کامل دوباره بده. فقط JSON خام."].join("\n"),
-          EXERCISE_MAX_TOKENS, AI_MODEL_NAME, left - 2_000,
-        );
-        recordAiUsage(userId, AiFeatureKey.EXERCISE_PLAN_GENERATION, repair.usage, repair.durationMs, true);
-        const fixed = parseJsonResponse(repair.text);
-        if (fixed?.feasible !== false && exercisePlanIssues(fixed?.days, profile.gymDays).length < issues.length) parsed = fixed;
-      } catch (err: any) {
-        logError("ai-gateway", `اصلاح برنامه‌ی تمرینی شکست خورد: ${err?.message || err}`, { severity: "WARNING" as any, context: { feature: "EXERCISE_PLAN_GENERATION" } });
-      }
-    }
-  }
-
+/** فاز ۱ — تقسیم هفتگی (یک دور اصلاح اگر روزی جا افتاده/تکراری بود). */
+async function generateSplit(profile: ExercisePlanProfile, profileText: string, userId: string, deadline: number): Promise<{ feasible: false; message: string } | { feasible: true; days: SplitDay[] }> {
+  const res = await callAiChat(EXERCISE_SPLIT_PROMPT, profileText, EXERCISE_SPLIT_MAX_TOKENS, AI_MODEL_NAME, Math.min(25_000, msLeft(deadline)));
+  recordAiUsage(userId, AiFeatureKey.EXERCISE_PLAN_GENERATION, res.usage, res.durationMs, true);
+  let parsed = parseJsonResponse(res.text);
   if (parsed?.feasible === false) {
-    const message = typeof parsed?.message === "string" && parsed.message.trim()
-      ? parsed.message.trim()
-      : "این برنامه با مشخصاتی که وارد کردی قابل‌اجرا نیست.";
+    const message = typeof parsed?.message === "string" && parsed.message.trim() ? parsed.message.trim() : "این برنامه با مشخصاتی که وارد کردی قابل‌اجرا نیست.";
     return { feasible: false, message };
   }
+  const issues = splitIssues(parsed?.days, profile.gymDays);
+  if (issues.length && msLeft(deadline) > 30_000) {
+    try {
+      const repair = await callAiChat(
+        EXERCISE_SPLIT_PROMPT,
+        [profileText, "", "تقسیم قبلی این ایرادها را داشت:", ...issues.map((x, i) => `${i + 1}. ${x}`), "", "تقسیم قبلی:", res.text.slice(0, 4000), "", "همان تقسیم را با رفع همه‌ی ایرادها دوباره بده. فقط JSON خام."].join("\n"),
+        EXERCISE_SPLIT_MAX_TOKENS, AI_MODEL_NAME, Math.min(15_000, msLeft(deadline) - 20_000),
+      );
+      recordAiUsage(userId, AiFeatureKey.EXERCISE_PLAN_GENERATION, repair.usage, repair.durationMs, true);
+      const fixed = parseJsonResponse(repair.text);
+      if (fixed?.feasible !== false && splitIssues(fixed?.days, profile.gymDays).length < issues.length) parsed = fixed;
+    } catch (err: any) {
+      logError("ai-gateway", `اصلاح تقسیم هفتگی شکست خورد: ${err?.message || err}`, { severity: "WARNING" as any, context: { feature: "EXERCISE_PLAN_GENERATION" } });
+    }
+  }
+  return { feasible: true, days: normalizeSplit(parsed?.days, profile.gymDays) };
+}
 
-  return { feasible: true, days: normalizeExercisePlan(parsed?.days, profile.gymDays) };
+/** فاز ۲ — یک جلسه‌ی کامل برای یک روز؛ بریده‌شدن خروجی یا جلسه‌ی ناقص یک بار جبران می‌شود. */
+async function generateDay(day: SplitDay, split: SplitDay[], profileText: string, relaxed: boolean, userId: string, deadline: number): Promise<GeneratedExerciseDay> {
+  const weekText = split.map((d) => `- ${d.day}: ${d.muscles.join("، ")}`).join("\n");
+  const ask = [
+    profileText, "", "تقسیم هفتگی کل برنامه:", weekText, "",
+    `حالا فقط جلسه‌ی روز ${day.day} را کامل طراحی کن. عضله‌های هدف این روز: ${day.muscles.join("، ")}.`,
+    ...day.muscles.map((m) => `- ${m}: حداقل ${minExercisesFor(m, relaxed)} حرکت متمایز`),
+  ].join("\n");
+
+  const attempt = async (content: string, maxTokens: number) => {
+    const timeout = Math.min(AI_TIMEOUT_MS, msLeft(deadline));
+    if (timeout < 5_000) throw new Error("زمان کافی برای ساخت این جلسه نماند");
+    const r = await callAiChat(EXERCISE_DAY_PROMPT, content, maxTokens, AI_MODEL_NAME, timeout);
+    recordAiUsage(userId, AiFeatureKey.EXERCISE_PLAN_GENERATION, r.usage, r.durationMs, true);
+    if (r.truncated) throw new Error("خروجی جلسه به سقف توکن رسید");
+    return { text: r.text, exercises: parseJsonResponse(r.text)?.exercises };
+  };
+
+  let first: { text: string; exercises: any };
+  try {
+    first = await attempt(ask, EXERCISE_DAY_MAX_TOKENS);
+  } catch (err) {
+    // بریده‌شدن/JSON خراب/خطای شبکه: یک بار دیگر با سقف توکن بالاتر، اگر وقت هست
+    if (msLeft(deadline) < 12_000) throw err;
+    first = await attempt(ask, EXERCISE_DAY_MAX_TOKENS_RETRY);
+  }
+  let exercises = first.exercises;
+  const issues = dayIssues(exercises, day.muscles, relaxed);
+  if (issues.length && msLeft(deadline) > 15_000) {
+    try {
+      const fixed = await attempt(
+        [ask, "", "جلسه‌ای که دادی این ایرادها را داشت:", ...issues.map((x, i) => `${i + 1}. ${x}`), "", "جلسه‌ی قبلی:", first.text.slice(0, 8000), "", "همان جلسه را کامل و با رفع همه‌ی ایرادها دوباره بده. فقط JSON خام."].join("\n"),
+        EXERCISE_DAY_MAX_TOKENS_RETRY,
+      );
+      if (dayIssues(fixed.exercises, day.muscles, relaxed).length < issues.length) exercises = fixed.exercises;
+    } catch (err: any) {
+      logError("ai-gateway", `اصلاح جلسه‌ی ${day.day} شکست خورد: ${err?.message || err}`, { severity: "WARNING" as any, context: { feature: "EXERCISE_PLAN_GENERATION" } });
+    }
+  }
+  const [norm] = normalizeExercisePlan([{ day: day.day, focus: day.focus, exercises }], [day.day]);
+  return norm;
 }
 
 export async function generateExercisePlan(profile: ExercisePlanProfile, userId: string): Promise<ExercisePlanResult> {
+  // کل کار (تقسیم + همه‌ی جلسه‌ها به‌صورت موازی + اصلاح‌ها) زیر همان بودجه‌ی
+  // کلی AI می‌ماند تا nginx (۶۰ ثانیه) زودتر کانکشن را نبندد.
+  const deadline = Date.now() + AI_TOTAL_BUDGET_MS;
   try {
-    // «feasible: false» یک پاسخ معتبر مدله (return می‌شه، throw نه) — پس
-    // withAiBudget خودش بدون retry اضافه همون رو برمی‌گردونه.
-    return await withAiBudget((timeoutMs) => callExercisePlanOnce(profile, userId, timeoutMs));
+    const profileText = exerciseProfileText(profile);
+    const split = await generateSplit(profile, profileText, userId, deadline);
+    if (!split.feasible) return split;
+    const relaxed = userAskedForLess(profile);
+    const days = await Promise.all(split.days.map((d) => generateDay(d, split.days, profileText, relaxed, userId, deadline)));
+    return { feasible: true, days };
   } catch (err: any) {
     logError("ai-gateway", `ساخت برنامه‌ی تمرینی شکست خورد: ${err?.message || err}`, { context: { feature: "EXERCISE_PLAN_GENERATION" } });
     throw err;

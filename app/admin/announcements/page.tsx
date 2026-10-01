@@ -1,19 +1,77 @@
 "use client";
 
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useEffect, useMemo, useState } from "react";
 import { Pencil, Trash2 } from "lucide-react";
 import { EmptyState } from "@/components/admin/EmptyState";
 import { SegmentedTabs } from "@/components/SegmentedTabs";
+import { TickOption } from "@/components/TickOption";
 import { ConfirmModal } from "@/components/admin/AdminModal";
 import { adminFetch, useAdminToast } from "@/components/admin/useAdminToast";
+import { AnnouncementView } from "@/components/AnnouncementView";
 import { formatDateTime } from "@/lib/adminFormat";
-import { ANNOUNCEMENT_BODY_MAX, ANNOUNCEMENT_TITLE_MAX } from "@/lib/announcements";
+import {
+  ANNOUNCEMENT_AUDIENCES,
+  ANNOUNCEMENT_AUDIENCE_LABELS,
+  ANNOUNCEMENT_BODY_MAX,
+  ANNOUNCEMENT_CTA_LABEL_MAX,
+  ANNOUNCEMENT_DISPLAYS,
+  ANNOUNCEMENT_DISPLAY_LABELS,
+  ANNOUNCEMENT_FREQUENCIES,
+  ANNOUNCEMENT_FREQUENCY_LABELS,
+  ANNOUNCEMENT_PAGE_PRESETS,
+  ANNOUNCEMENT_POSITIONS,
+  ANNOUNCEMENT_POSITION_LABELS,
+  ANNOUNCEMENT_PRIORITY_MAX,
+  ANNOUNCEMENT_PRIORITY_MIN,
+  ANNOUNCEMENT_TITLE_MAX,
+  ANNOUNCEMENT_TONES,
+  ANNOUNCEMENT_TONE_LABELS,
+  ANNOUNCEMENT_URL_MAX,
+  announcementStatus,
+  isSafeAnnouncementUrl,
+  normalizePagePrefix,
+  validateAnnouncementMerged,
+  type AnnouncementAudience,
+  type AnnouncementDisplay,
+  type AnnouncementFrequency,
+  type AnnouncementPosition,
+  type AnnouncementStatus,
+  type AnnouncementTone,
+} from "@/lib/announcements";
 
 type Row = {
   id: string; title: string; body: string; active: boolean;
-  expiresAt: string | null; createdAt: string; updatedAt: string;
+  startsAt: string | null; expiresAt: string | null; createdAt: string; updatedAt: string;
+  showInList: boolean; display: AnnouncementDisplay; position: AnnouncementPosition; pages: string[];
+  audience: AnnouncementAudience; tone: AnnouncementTone; priority: number; dismissible: boolean;
+  frequency: AnnouncementFrequency; ctaLabel: string | null; ctaUrl: string | null; imageUrl: string | null;
+  _count?: { dismissals: number };
 };
 type Resp = { announcements: Row[] };
+
+type Form = {
+  title: string; body: string; active: boolean; startsAt: string; expiresAt: string;
+  showInList: boolean; display: AnnouncementDisplay; position: AnnouncementPosition;
+  pagesMode: "all" | "some"; pages: string[]; customPages: string;
+  audience: AnnouncementAudience; tone: AnnouncementTone; priority: string; dismissible: boolean;
+  frequency: AnnouncementFrequency; ctaLabel: string; ctaUrl: string; imageUrl: string;
+};
+
+const EMPTY: Form = {
+  title: "", body: "", active: true, startsAt: "", expiresAt: "",
+  showInList: true, display: "NONE", position: "TOP", pagesMode: "all", pages: [], customPages: "",
+  audience: "ALL", tone: "INFO", priority: "0", dismissible: true, frequency: "UNTIL_DISMISSED",
+  ctaLabel: "", ctaUrl: "", imageUrl: "",
+};
+
+const PRESET_VALUES = new Set(ANNOUNCEMENT_PAGE_PRESETS.map((p) => p.value));
+
+const STATUS_BADGE: Record<AnnouncementStatus, { cls: string; label: string }> = {
+  disabled: { cls: "gray", label: "غیرفعال" },
+  scheduled: { cls: "amber", label: "زمان‌بندی‌شده" },
+  live: { cls: "green", label: "در حال نمایش" },
+  ended: { cls: "red", label: "پایان‌یافته" },
+};
 
 // مقدار input[type=datetime-local] به وقت محلی مرورگر
 function toLocalInput(iso: string | null): string {
@@ -23,19 +81,50 @@ function toLocalInput(iso: string | null): string {
   return `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}T${pad(d.getHours())}:${pad(d.getMinutes())}`;
 }
 
+function rowToForm(r: Row): Form {
+  const custom = r.pages.filter((p) => !PRESET_VALUES.has(p));
+  return {
+    title: r.title, body: r.body, active: r.active, startsAt: toLocalInput(r.startsAt), expiresAt: toLocalInput(r.expiresAt),
+    showInList: r.showInList, display: r.display, position: r.position,
+    pagesMode: r.pages.length ? "some" : "all", pages: r.pages.filter((p) => PRESET_VALUES.has(p)), customPages: custom.join(", "),
+    audience: r.audience, tone: r.tone, priority: String(r.priority), dismissible: r.dismissible, frequency: r.frequency,
+    ctaLabel: r.ctaLabel ?? "", ctaUrl: r.ctaUrl ?? "", imageUrl: r.imageUrl ?? "",
+  };
+}
+
+/** صفحه‌های نهایی فرم؛ نامعتبر → رشته‌ی خطا */
+function formPages(f: Form): string[] | string {
+  if (f.pagesMode === "all") return [];
+  const out = [...f.pages];
+  for (const raw of f.customPages.split(/[,،\s]+/)) {
+    if (!raw.trim()) continue;
+    const p = normalizePagePrefix(raw);
+    if (!p) return `آدرس صفحه نامعتبر است: ${raw}`;
+    if (!out.includes(p)) out.push(p);
+  }
+  if (!out.length) return "حداقل یک صفحه انتخاب کنید";
+  return out;
+}
+
+function placementLabel(r: Pick<Row, "display" | "position" | "pages">): string {
+  if (r.display === "NONE") return "—";
+  const where = r.pages.length ? r.pages.join("، ") : "همه‌ی صفحه‌ها";
+  return r.display === "BANNER" ? `${ANNOUNCEMENT_POSITION_LABELS[r.position]} · ${where}` : where;
+}
+
 export default function AdminAnnouncementsPage() {
   const toast = useAdminToast();
   const [data, setData] = useState<Resp | null>(null);
   const [loadError, setLoadError] = useState<string | null>(null);
   const [editing, setEditing] = useState<Row | null>(null);
-  const [title, setTitle] = useState("");
-  const [body, setBody] = useState("");
-  const [active, setActive] = useState(true);
-  const [expiresAt, setExpiresAt] = useState("");
+  const [form, setForm] = useState<Form>(EMPTY);
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [pendingDelete, setPendingDelete] = useState<Row | null>(null);
   const [toggling, setToggling] = useState<string | null>(null);
+  const [previewDevice, setPreviewDevice] = useState<"desktop" | "mobile">("desktop");
+
+  const set = <K extends keyof Form>(k: K, v: Form[K]) => setForm((f) => ({ ...f, [k]: v }));
 
   const load = useCallback(() => {
     adminFetch<Resp>("/api/admin/announcements")
@@ -46,41 +135,60 @@ export default function AdminAnnouncementsPage() {
 
   function resetForm() {
     setEditing(null);
-    setTitle("");
-    setBody("");
-    setActive(true);
-    setExpiresAt("");
+    setForm(EMPTY);
     setError(null);
   }
 
   function startEdit(row: Row) {
     setEditing(row);
-    setTitle(row.title);
-    setBody(row.body);
-    setActive(row.active);
-    setExpiresAt(toLocalInput(row.expiresAt));
+    setForm(rowToForm(row));
     setError(null);
     if (typeof window !== "undefined") window.scrollTo({ top: 0, behavior: "smooth" });
   }
 
   async function save() {
     if (saving) return;
-    const t = title.trim();
-    const b = body.trim();
+    const f = form;
+    const t = f.title.trim();
+    const b = f.body.trim();
     if (!t) { setError("عنوان لازمه"); return; }
     if (!b) { setError("متن اطلاعیه لازمه"); return; }
     // انقضا فقط وقتی فرستاده می‌شه که عوض شده — وگرنه ویرایش اطلاعیه‌ی
     // منقضی‌شده به‌خاطر «تاریخ باید در آینده باشد» رد می‌شد.
-    const expiryChanged = !editing || expiresAt !== toLocalInput(editing.expiresAt);
-    if (expiryChanged && expiresAt) {
-      const ms = new Date(expiresAt).getTime();
+    const expiryChanged = !editing || f.expiresAt !== toLocalInput(editing.expiresAt);
+    if (expiryChanged && f.expiresAt) {
+      const ms = new Date(f.expiresAt).getTime();
       if (Number.isNaN(ms)) { setError("تاریخ انقضا معتبر نیست"); return; }
       if (ms <= Date.now()) { setError("تاریخ انقضا باید در آینده باشد"); return; }
     }
+    const pages = formPages(f);
+    if (typeof pages === "string") { setError(pages); return; }
+    const priority = Number(f.priority || 0);
+    if (!Number.isInteger(priority) || priority < ANNOUNCEMENT_PRIORITY_MIN || priority > ANNOUNCEMENT_PRIORITY_MAX) {
+      setError(`اولویت باید عدد صحیح بین ${ANNOUNCEMENT_PRIORITY_MIN} و ${ANNOUNCEMENT_PRIORITY_MAX} باشد`); return;
+    }
+    const ctaUrl = f.ctaUrl.trim();
+    const imageUrl = f.imageUrl.trim();
+    if (ctaUrl && !isSafeAnnouncementUrl(ctaUrl)) { setError("لینک دکمه باید مسیر داخلی (/...) یا https:// باشد"); return; }
+    if (imageUrl && !isSafeAnnouncementUrl(imageUrl)) { setError("آدرس تصویر باید مسیر داخلی (/...) یا https:// باشد"); return; }
+    const startsAt = f.startsAt ? new Date(f.startsAt) : null;
+    const expiresAt = f.expiresAt ? new Date(f.expiresAt) : null;
+    const merged = validateAnnouncementMerged({
+      showInList: f.showInList, display: f.display, startsAt, expiresAt,
+      ctaLabel: f.ctaLabel.trim() || null, ctaUrl: ctaUrl || null,
+    });
+    if (merged) { setError(merged); return; }
+
     setSaving(true);
     setError(null);
-    const payload: Record<string, unknown> = { title: t, body: b, active };
-    if (expiryChanged) payload.expiresAt = expiresAt ? new Date(expiresAt).toISOString() : null;
+    const payload: Record<string, unknown> = {
+      title: t, body: b, active: f.active,
+      startsAt: startsAt ? startsAt.toISOString() : null,
+      showInList: f.showInList, display: f.display, position: f.position, pages,
+      audience: f.audience, tone: f.tone, priority, dismissible: f.dismissible, frequency: f.frequency,
+      ctaLabel: f.ctaLabel.trim() || null, ctaUrl: ctaUrl || null, imageUrl: imageUrl || null,
+    };
+    if (expiryChanged) payload.expiresAt = expiresAt ? expiresAt.toISOString() : null;
     try {
       if (editing) {
         await adminFetch(`/api/admin/announcements/${editing.id}`, { method: "PATCH", json: payload });
@@ -123,6 +231,21 @@ export default function AdminAnnouncementsPage() {
     }
   }
 
+  const previewItem = useMemo(() => ({
+    id: "preview",
+    title: form.title.trim() || "عنوان اطلاعیه",
+    body: form.body.trim() || "متن اطلاعیه این‌جا نشون داده می‌شه.",
+    tone: form.tone,
+    dismissible: form.dismissible,
+    ctaLabel: form.ctaLabel.trim() || null,
+    ctaUrl: form.ctaLabel.trim() ? form.ctaUrl.trim() || "#" : null,
+    imageUrl: form.imageUrl.trim() && isSafeAnnouncementUrl(form.imageUrl.trim()) ? form.imageUrl.trim() : null,
+  }), [form]);
+
+  // روی موبایل گوشه‌ها کارت پایین می‌شن — پیش‌نمایش هم همین رو نشون می‌ده
+  const previewPos: AnnouncementPosition = previewDevice === "mobile" && form.position !== "TOP" ? "BOTTOM" : form.position;
+  const previewVariant = form.position === "TOP" || form.position === "BOTTOM" ? "bar" : "corner";
+
   return (
     <section>
       <div className="admin-chart-card">
@@ -133,11 +256,7 @@ export default function AdminAnnouncementsPage() {
           <div className="admin-form-grid">
             <label className="admin-field">
               <span>عنوان</span>
-              <input className="admin-input" maxLength={ANNOUNCEMENT_TITLE_MAX} value={title} onChange={(e) => setTitle(e.target.value)} autoComplete="off" />
-            </label>
-            <label className="admin-field">
-              <span>انقضا (اختیاری)</span>
-              <input className="admin-input" type="datetime-local" value={expiresAt} onChange={(e) => setExpiresAt(e.target.value)} />
+              <input className="admin-input" maxLength={ANNOUNCEMENT_TITLE_MAX} value={form.title} onChange={(e) => set("title", e.target.value)} autoComplete="off" />
             </label>
             <div className="admin-field">
               <span>وضعیت</span>
@@ -145,19 +264,189 @@ export default function AdminAnnouncementsPage() {
                 className="admin-seg"
                 ariaLabel="وضعیت"
                 options={[{ value: "on", label: "فعال" }, { value: "off", label: "غیرفعال" }]}
-                active={active ? "on" : "off"}
-                onChange={(v) => setActive(v === "on")}
+                active={form.active ? "on" : "off"}
+                onChange={(v) => set("active", v === "on")}
               />
             </div>
           </div>
           <label className="admin-field" style={{ marginTop: 12 }}>
             <span>متن (متن ساده)</span>
-            <textarea className="admin-input" rows={5} maxLength={ANNOUNCEMENT_BODY_MAX} value={body} onChange={(e) => setBody(e.target.value)} />
+            <textarea className="admin-input" rows={4} maxLength={ANNOUNCEMENT_BODY_MAX} value={form.body} onChange={(e) => set("body", e.target.value)} />
           </label>
+
+          <div className="ann-admin-section">
+            <div className="ann-admin-section-title">نحوه‌ی نمایش</div>
+            <TickOption checked={form.showInList} onChange={(v) => set("showInList", v)}>در لیست اعلان‌ها (زنگوله)</TickOption>
+            <div className="admin-field">
+              <span>روی صفحه</span>
+              <SegmentedTabs
+                className="admin-seg ann-seg"
+                ariaLabel="نمایش روی صفحه"
+                options={ANNOUNCEMENT_DISPLAYS.map((d) => ({ value: d, label: d === "NONE" ? "هیچ" : ANNOUNCEMENT_DISPLAY_LABELS[d] }))}
+                active={form.display}
+                onChange={(v) => set("display", v)}
+              />
+            </div>
+            {form.display === "BANNER" && (
+              <div className="admin-field">
+                <span>جایگاه بنر</span>
+                <SegmentedTabs
+                  className="admin-seg ann-seg"
+                  ariaLabel="جایگاه بنر"
+                  options={ANNOUNCEMENT_POSITIONS.map((p) => ({ value: p, label: ANNOUNCEMENT_POSITION_LABELS[p] }))}
+                  active={form.position}
+                  onChange={(v) => set("position", v)}
+                />
+              </div>
+            )}
+            {form.display !== "NONE" && (
+              <>
+                <div className="admin-field">
+                  <span>صفحه‌ها</span>
+                  <SegmentedTabs
+                    className="admin-seg"
+                    ariaLabel="صفحه‌ها"
+                    options={[{ value: "all", label: "همه‌ی صفحه‌ها" }, { value: "some", label: "صفحه‌های مشخص" }]}
+                    active={form.pagesMode}
+                    onChange={(v) => set("pagesMode", v)}
+                  />
+                </div>
+                {form.pagesMode === "some" && (
+                  <>
+                    <div className="ann-admin-ticks">
+                      {ANNOUNCEMENT_PAGE_PRESETS.map((p) => (
+                        <TickOption
+                          key={p.value}
+                          checked={form.pages.includes(p.value)}
+                          onChange={(v) => set("pages", v ? [...form.pages, p.value] : form.pages.filter((x) => x !== p.value))}
+                        >
+                          {p.label} <span className="admin-ltr admin-muted">{p.value}</span>
+                        </TickOption>
+                      ))}
+                    </div>
+                    <label className="admin-field">
+                      <span>مسیرهای دیگر (با کاما جدا کنید، مثلا /trade/calendar)</span>
+                      <input className="admin-input admin-ltr" dir="ltr" value={form.customPages} onChange={(e) => set("customPages", e.target.value)} autoComplete="off" />
+                    </label>
+                  </>
+                )}
+                <div className="ann-admin-hint admin-muted">پاپ‌آپ و بنر هیچ‌وقت روی پنل ادمین و صفحه‌های ورود/ثبت‌نام نشون داده نمی‌شن.</div>
+              </>
+            )}
+          </div>
+
+          <div className="ann-admin-section">
+            <div className="ann-admin-section-title">مخاطب و زمان‌بندی</div>
+            <div className="admin-field">
+              <span>مخاطب</span>
+              <SegmentedTabs
+                className="admin-seg ann-seg"
+                ariaLabel="مخاطب"
+                options={ANNOUNCEMENT_AUDIENCES.map((a) => ({ value: a, label: ANNOUNCEMENT_AUDIENCE_LABELS[a] }))}
+                active={form.audience}
+                onChange={(v) => set("audience", v)}
+              />
+            </div>
+            <div className="admin-form-grid">
+              <label className="admin-field">
+                <span>شروع (اختیاری)</span>
+                <input className="admin-input" type="datetime-local" value={form.startsAt} onChange={(e) => set("startsAt", e.target.value)} />
+              </label>
+              <label className="admin-field">
+                <span>پایان (اختیاری)</span>
+                <input className="admin-input" type="datetime-local" value={form.expiresAt} onChange={(e) => set("expiresAt", e.target.value)} />
+              </label>
+              <label className="admin-field">
+                <span>اولویت ({ANNOUNCEMENT_PRIORITY_MIN} تا {ANNOUNCEMENT_PRIORITY_MAX}، بیشتر = جلوتر)</span>
+                <input className="admin-input admin-ltr" type="number" inputMode="numeric" min={ANNOUNCEMENT_PRIORITY_MIN} max={ANNOUNCEMENT_PRIORITY_MAX} value={form.priority} onChange={(e) => set("priority", e.target.value)} />
+              </label>
+            </div>
+          </div>
+
+          {form.display !== "NONE" && (
+            <div className="ann-admin-section">
+              <div className="ann-admin-section-title">رفتار و ظاهر</div>
+              <div className="admin-field">
+                <span>حالت رنگ</span>
+                <SegmentedTabs
+                  className="admin-seg ann-seg"
+                  ariaLabel="حالت رنگ"
+                  options={ANNOUNCEMENT_TONES.map((t) => ({ value: t, label: ANNOUNCEMENT_TONE_LABELS[t] }))}
+                  active={form.tone}
+                  onChange={(v) => set("tone", v)}
+                />
+              </div>
+              <div className="admin-field">
+                <span>تکرار</span>
+                <SegmentedTabs
+                  className="admin-seg ann-seg"
+                  ariaLabel="تکرار"
+                  options={ANNOUNCEMENT_FREQUENCIES.map((x) => ({ value: x, label: ANNOUNCEMENT_FREQUENCY_LABELS[x] }))}
+                  active={form.frequency}
+                  onChange={(v) => set("frequency", v)}
+                />
+              </div>
+              <TickOption checked={form.dismissible} onChange={(v) => set("dismissible", v)}>کاربر بتونه برای همیشه ببندتش</TickOption>
+              <div className="ann-admin-hint admin-muted">
+                {form.display === "POPUP"
+                  ? "پاپ‌آپ همیشه دکمه‌ی بستن داره؛ اگه این گزینه خاموش باشه، بعد از بستن در بازدید بعدی دوباره میاد."
+                  : "اگه خاموش باشه، بنر دکمه‌ی بستن نداره و تا پایان زمان نمایش می‌مونه."}
+              </div>
+              <div className="admin-form-grid">
+                <label className="admin-field">
+                  <span>متن دکمه (اختیاری)</span>
+                  <input className="admin-input" maxLength={ANNOUNCEMENT_CTA_LABEL_MAX} value={form.ctaLabel} onChange={(e) => set("ctaLabel", e.target.value)} autoComplete="off" />
+                </label>
+                <label className="admin-field">
+                  <span>لینک دکمه (/مسیر یا https://)</span>
+                  <input className="admin-input admin-ltr" dir="ltr" maxLength={ANNOUNCEMENT_URL_MAX} value={form.ctaUrl} onChange={(e) => set("ctaUrl", e.target.value)} autoComplete="off" />
+                </label>
+                <label className="admin-field">
+                  <span>آدرس تصویر (اختیاری)</span>
+                  <input className="admin-input admin-ltr" dir="ltr" maxLength={ANNOUNCEMENT_URL_MAX} value={form.imageUrl} onChange={(e) => set("imageUrl", e.target.value)} autoComplete="off" />
+                </label>
+              </div>
+            </div>
+          )}
+
+          {form.display !== "NONE" && (
+            <div className="ann-admin-section">
+              <div className="ann-admin-preview-head">
+                <div className="ann-admin-section-title">پیش‌نمایش</div>
+                <SegmentedTabs
+                  className="admin-seg"
+                  ariaLabel="دستگاه پیش‌نمایش"
+                  options={[{ value: "desktop", label: "دسکتاپ" }, { value: "mobile", label: "موبایل" }]}
+                  active={previewDevice}
+                  onChange={setPreviewDevice}
+                />
+              </div>
+              <div className={`ann-preview${previewDevice === "mobile" ? " is-mobile" : ""}`} aria-hidden="true">
+                <div className="ann-preview-bar" />
+                <div className="ann-preview-lines"><i /><i /><i /><i /></div>
+                {form.display === "POPUP" ? (
+                  <div className="ann-preview-scrim">
+                    <div className="ann-preview-modal">
+                      <AnnouncementView item={previewItem} variant="popup" closable />
+                    </div>
+                  </div>
+                ) : (
+                  <div className={`ann-slot ann-pos-${previewPos.toLowerCase().replace("_", "-")}`}>
+                    <AnnouncementView
+                      item={previewItem}
+                      variant={previewDevice === "mobile" && previewPos === "BOTTOM" && form.position !== "BOTTOM" ? "corner" : previewVariant}
+                      closable={form.dismissible}
+                    />
+                  </div>
+                )}
+              </div>
+            </div>
+          )}
+
           {error && <div className="admin-form-error" role="alert">{error}</div>}
           <div className="admin-modal-actions">
             {editing && <button type="button" className="admin-btn" onClick={resetForm} disabled={saving}>انصراف</button>}
-            <button type="submit" className="admin-btn primary" disabled={saving || !title.trim() || !body.trim()}>
+            <button type="submit" className="admin-btn primary" disabled={saving || !form.title.trim() || !form.body.trim()}>
               {saving ? "در حال ذخیره…" : editing ? "ذخیره تغییرات" : "انتشار اطلاعیه"}
             </button>
           </div>
@@ -175,32 +464,39 @@ export default function AdminAnnouncementsPage() {
         ) : (
           <div className="admin-table-wrap">
             <table className="admin-table">
-              <thead><tr><th>عنوان</th><th>متن</th><th>وضعیت</th><th>انقضا</th><th>ساخته‌شده</th><th aria-label="عملیات" /></tr></thead>
+              <thead>
+                <tr><th>عنوان</th><th>وضعیت</th><th>نمایش</th><th>جایگاه</th><th>مخاطب</th><th>اولویت</th><th>بازه</th><th aria-label="عملیات" /></tr>
+              </thead>
               <tbody>
                 {data.announcements.map((a) => {
-                  const expired = a.expiresAt ? new Date(a.expiresAt).getTime() < Date.now() : false;
+                  const st = STATUS_BADGE[announcementStatus(a, new Date())];
                   return (
                     <tr key={a.id}>
-                      <td>{a.title}</td>
-                      <td className="admin-muted" style={{ maxWidth: 320, whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }} title={a.body}>{a.body}</td>
+                      <td style={{ maxWidth: 240, whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }} title={a.body}>{a.title}</td>
+                      <td><span className={`admin-badge ${st.cls}`}>{st.label}</span></td>
                       <td>
-                        {!a.active ? <span className="admin-badge gray">غیرفعال</span>
-                          : expired ? <span className="admin-badge amber">منقضی‌شده</span>
-                          : <span className="admin-badge green">فعال</span>}
+                        <div style={{ display: "inline-flex", gap: 4, flexWrap: "wrap" }}>
+                          {a.showInList && <span className="admin-badge gray">اعلان</span>}
+                          {a.display !== "NONE" && <span className="admin-badge green">{ANNOUNCEMENT_DISPLAY_LABELS[a.display]}</span>}
+                        </div>
                       </td>
-                      <td className={a.expiresAt ? "admin-ltr" : "admin-muted"}>{a.expiresAt ? formatDateTime(a.expiresAt) : "بدون انقضا"}</td>
-                      <td className="admin-ltr">{formatDateTime(a.createdAt)}</td>
+                      <td className="admin-muted" style={{ maxWidth: 220, whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }} title={placementLabel(a)}>{placementLabel(a)}</td>
+                      <td>{ANNOUNCEMENT_AUDIENCE_LABELS[a.audience]}</td>
+                      <td className="admin-ltr">{a.priority}</td>
+                      <td className="admin-ltr admin-muted" style={{ whiteSpace: "nowrap" }}>
+                        {a.startsAt ? formatDateTime(a.startsAt) : "اکنون"} → {a.expiresAt ? formatDateTime(a.expiresAt) : "∞"}
+                      </td>
                       <td className="admin-cell-actions">
                         <div style={{ display: "inline-flex", gap: 6, whiteSpace: "nowrap" }}>
-                        <button type="button" className="admin-btn sm" onClick={() => toggleActive(a)} disabled={toggling === a.id}>
-                          {a.active ? "غیرفعال‌کردن" : "فعال‌کردن"}
-                        </button>
-                        <button type="button" className="admin-btn sm" onClick={() => startEdit(a)} aria-label={`ویرایش ${a.title}`} title="ویرایش">
-                          <Pencil size={14} />
-                        </button>
-                        <button type="button" className="admin-btn danger sm" onClick={() => setPendingDelete(a)} aria-label={`حذف ${a.title}`} title="حذف">
-                          <Trash2 size={14} />
-                        </button>
+                          <button type="button" className="admin-btn sm" onClick={() => toggleActive(a)} disabled={toggling === a.id}>
+                            {a.active ? "غیرفعال‌کردن" : "فعال‌کردن"}
+                          </button>
+                          <button type="button" className="admin-btn sm" onClick={() => startEdit(a)} aria-label={`ویرایش ${a.title}`} title="ویرایش">
+                            <Pencil size={14} />
+                          </button>
+                          <button type="button" className="admin-btn danger sm" onClick={() => setPendingDelete(a)} aria-label={`حذف ${a.title}`} title="حذف">
+                            <Trash2 size={14} />
+                          </button>
                         </div>
                       </td>
                     </tr>
@@ -215,7 +511,7 @@ export default function AdminAnnouncementsPage() {
       {pendingDelete && (
         <ConfirmModal
           title="حذف اطلاعیه"
-          message={<>اطلاعیه‌ی <b>{pendingDelete.title}</b> برای همیشه حذف می‌شه و از پنل اطلاعیه‌های کاربران هم برداشته می‌شه.</>}
+          message={<>اطلاعیه‌ی <b>{pendingDelete.title}</b> برای همیشه حذف می‌شه و از اعلان‌ها، پاپ‌آپ و بنرهای کاربران هم برداشته می‌شه.</>}
           confirmLabel="حذف اطلاعیه"
           onConfirm={() => remove(pendingDelete)}
           onClose={() => setPendingDelete(null)}

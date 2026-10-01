@@ -16,6 +16,7 @@ import { getAccount, getAvatarUrl, invalidateAccountCache, AccountData } from "@
 import { getBodyMetrics, saveBodyMetrics } from "@/lib/bodyMetrics";
 import { isValidUsername, isValidPersianName } from "@/lib/validate";
 import { ImageCropModal } from "@/components/ImageCropModal";
+import { centerCropToDataUrl } from "@/lib/imageResize";
 import { Spinner } from "@/components/Spinner";
 
 type ProfileUser = {
@@ -110,9 +111,9 @@ export default function AccountProfilePage() {
     });
   }, []);
 
-  // ورودی هر دو تابع دیگر خود File نیست — همان dataURL از قبل با
-  // centerCropToDataUrl ریسایزشده (کراپ خودکار وسط، بدون پاپ‌آپ انتخاب
-  // کاربر — طبق درخواست صریح، همون عکس همونطوری آپلود می‌شود).
+  // ورودی هر دو تابع خود File نیست، dataURL کوچیک‌شده‌ست: آواتار از
+  // centerCropToDataUrl (کراپ خودکار وسط، بدون هیچ پاپ‌آپی) و بنر از
+  // ImageCropModal.
   async function uploadAvatar(dataUrl: string) {
     setMediaError(null);
     setAvatarSaving(true);
@@ -165,14 +166,26 @@ export default function AccountProfilePage() {
     }
   }
 
-  // انتخاب فایل دیگه مستقیم آپلود نمی‌کنه — اول پاپ‌آپ پیش‌نمایش باز
-  // می‌شه تا کاربر خودش جای عکس داخل قاب رو تعیین کنه (ImageCropModal).
-  const [cropping, setCropping] = useState<{ file: File; kind: "avatar" | "banner" } | null>(null);
+  // بنر هنوز پاپ‌آپ جابه‌جایی (ImageCropModal) داره؛ عکس پروفایل نه.
+  const [cropping, setCropping] = useState<{ file: File; kind: "banner" } | null>(null);
 
-  function pickAvatarFile(file: File) {
+  // طبق درخواست صریح، عکس پروفایل هیچ مرحله‌ی ویرایش/جابه‌جایی نداره:
+  // عکس انتخاب‌شده همون لحظه با کراپ خودکار وسط (cover) به 256×256
+  // کوچیک و فشرده می‌شه و مستقیم آپلود می‌شه. اعتبارسنجی سمت سرور
+  // (/api/account/avatar) دست نخورده.
+  async function pickAvatarFile(file: File) {
     setMediaError(null);
     if (!file.type.startsWith("image/")) { setMediaError("فایل انتخاب‌شده عکس نیست"); return; }
-    setCropping({ file, kind: "avatar" });
+    setAvatarSaving(true);
+    let dataUrl: string;
+    try {
+      dataUrl = await centerCropToDataUrl(file, 256, 256);
+    } catch {
+      setAvatarSaving(false);
+      setMediaError("این فرمت عکس پشتیبانی نمی‌شه (JPG یا PNG انتخاب کن)");
+      return;
+    }
+    await uploadAvatar(dataUrl);
   }
 
   function pickBannerFile(file: File) {
@@ -328,15 +341,13 @@ export default function AccountProfilePage() {
       {cropping && (
         <ImageCropModal
           file={cropping.file}
-          shape={cropping.kind === "avatar" ? "circle" : "rect"}
-          outputW={cropping.kind === "avatar" ? 256 : 1024}
-          outputH={cropping.kind === "avatar" ? 256 : 320}
-          title={cropping.kind === "avatar" ? "عکس پروفایل" : "بنر"}
+          outputW={1024}
+          outputH={320}
+          title="بنر"
           onCancel={() => setCropping(null)}
           onConfirm={(dataUrl) => {
-            const kind = cropping.kind;
             setCropping(null);
-            if (kind === "avatar") uploadAvatar(dataUrl); else uploadBanner(dataUrl);
+            uploadBanner(dataUrl);
           }}
         />
       )}

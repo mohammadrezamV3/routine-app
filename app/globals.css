@@ -1481,34 +1481,69 @@
   /* طبق درخواست صریح: پنل کاربری نباید فقط نیمه‌ی بالایی صفحه رو بگیره و
      زیرش خالی بمونه — باکس‌ها باید فول‌اسکرین باشن. */
   .account-shell{ position:relative; min-height:calc(100dvh - 140px); }
+  .account-body{ display:flex; flex-direction:column; align-items:stretch; }
+  .account-content{ flex:1; min-width:0; }
+
+  /* سایدبار فقط دسکتاپ (۱۰۲۴ به بالا) — همون مرزی که دکمه‌ی بازگشت پنهان
+     می‌شه و /account مستقیم به پروفایل می‌ره. زیر این عرض (تبلت/موبایل)
+     ناوبری از صفحه‌ی اول پنل و دکمه‌ی بازگشت انجام می‌شه. */
+  .account-sidebar{ display:none; }
+
+  /* ── چیدمان دسکتاپ پنل کاربری ─────────────────────────────────────
+     باگ گزارش‌شده («جای پنل روی دسکتاپ اصلا درست نیست»): سایدبار ۱۶۴
+     پیکسلی بی‌قاب کنار محتوا شناور بود، عنوانش جدا از لینک‌ها معلق بود و
+     محتوا هیچ زمینه‌ی مشترکی نداشت. حالا یک گرید دوستونه‌ی واقعی:
+     ستون اول (در RTL سمت راست) منو، ستون دوم محتوا — هرکدام روی یک پنل
+     شیشه‌ای هم‌زبان با هدر سایت (surface-glass + surface-line). طبق
+     درخواست صریح صاحب محصول، هم پشت منو و هم پشت محتوا یک بک‌گراند کلی
+     هست. منو sticky است و موقع اسکرول کنار محتوا می‌ماند. */
   @media (min-width:1024px){
     .account-shell{
-      /* باگ گزارش‌شده («جاش دسکتاپ خرابه»): فرمول قبلی لبه‌ی راست را با
-         margin-inline-end (بدون /۲) پین می‌کرد، نه واقعا وسط‌چین — نتیجه‌اش
-         محتوای چسبیده‌به‌راست با یک فاصله‌ی خالی بزرگ سمت چپ بود. حالا
-         دقیقا همون ترفند اثبات‌شده‌ی `.dash-breakout` (روتین من): وسط‌چینی
-         متقارن حول مرکز همون ستون ۶۲۰پیکسلی سایت، با margin-inline-start
-         مثبت/منفی محاسبه‌شده از calc(.../2) — نه پین‌کردن یک لبه.
-         سقف عرض هم کمی بزرگ‌تر شد (۹۶۶ → ۱۰۸۰، طبق درخواست صریح). */
-      --acc-w: min(1080px, calc(100vw - 64px));
+      /* وسط‌چینی متقارن حول مرکز ستون ۶۲۰پیکسلی سایت (همون ترفند
+         `.dash-breakout`)، با سقف عرض ۱۱۲۰. */
+      --acc-w: min(1120px, calc(100vw - 64px));
       width: var(--acc-w); max-width: var(--acc-w);
       margin-inline-start: calc((620px - var(--acc-w)) / 2);
     }
+    .account-body{
+      display:grid; grid-template-columns:240px minmax(0, 1fr); gap:20px; align-items:start;
+    }
+    .account-sidebar,
+    .account-content{
+      background:var(--surface-glass);
+      backdrop-filter:blur(22px) saturate(170%); -webkit-backdrop-filter:blur(22px) saturate(170%);
+      border:1px solid var(--surface-line); border-radius:24px;
+    }
+    .account-sidebar{
+      display:flex; flex-direction:column; gap:6px;
+      position:sticky; top:calc(92px + env(safe-area-inset-top));
+      max-height:calc(100dvh - 112px - env(safe-area-inset-top)); overflow-y:auto;
+      padding:16px 12px 12px;
+    }
+    .account-content{
+      padding:26px 28px 28px;
+      min-height:calc(100dvh - 112px - env(safe-area-inset-top));
+    }
   }
-  /* row (نه row-reverse) — توی dir="rtl" فرزند اول DOM (سایدبار/تایتل‌ها)
-     خودش سمت راست می‌شینه؛ row-reverse قبلا این رو برعکس می‌کرد و محتوا
-     (که خود عکس/آواتار پروفایل بالاشه) رو می‌برد سمت راست. */
-  .account-body{ display:flex; flex-direction:row; gap:22px; align-items:flex-start; }
-
-  .account-sidebar{
-    width:164px; flex-shrink:0; position:sticky; top:calc(88px + env(safe-area-inset-top));
-    display:flex; flex-direction:column; gap:18px;
+  @media (min-width:1024px){
+    /* حلقه‌ی بریدگی دور آواتار پروفایل حالا روی پنل شیشه‌ای می‌افتد نه
+       روی بک‌گراند صفحه، پس هم‌رنگ همان پنل می‌شود (surface-glass روی bg). */
+    .account-content .profile-hero-avatar-wrap{
+      outline-color:color-mix(in srgb, var(--surface-2) 72%, var(--bg));
+    }
   }
-  .account-sidebar-title{ font-size:11px; font-weight:700; color:var(--muted2); margin:0 6px; letter-spacing:.02em; }
-  .account-sidebar-links{ display:flex; flex-direction:column; gap:1px; }
+  @media (min-width:1280px){
+    .account-body{ grid-template-columns:260px minmax(0, 1fr); gap:24px; }
+    .account-content{ padding:30px 34px 34px; }
+  }
+  .account-sidebar-title{
+    font-size:12px; font-weight:800; color:var(--muted); letter-spacing:.02em;
+    padding:2px 10px 12px; margin-bottom:4px; border-bottom:1px solid var(--surface-line);
+  }
+  .account-sidebar-links{ display:flex; flex-direction:column; gap:2px; }
   .account-sidebar-link{
-    position:relative; display:flex; align-items:center; gap:10px; padding:9px 11px; border-radius:13px;
-    color:var(--muted); font-size:12.5px; font-weight:600; text-decoration:none;
+    position:relative; display:flex; align-items:center; gap:10px; padding:10px 12px; border-radius:14px;
+    color:var(--muted); font-size:13px; font-weight:600; text-decoration:none;
     background:none; border:none; box-shadow:none; backdrop-filter:none; -webkit-backdrop-filter:none;
     cursor:pointer; transition:color .18s ease; text-align:start; width:100%;
   }
@@ -1518,24 +1553,33 @@
   .account-sidebar-link.active{ color:var(--accent); }
   .account-sidebar-link > *:not(.account-sidebar-active-pill){ position:relative; z-index:1; }
   .account-sidebar-active-pill{
-    position:absolute; inset:0; border-radius:13px; background:var(--accent-dim); z-index:0;
+    position:absolute; inset:0; border-radius:14px; background:var(--accent-dim); z-index:0;
   }
   .account-sidebar-link-icon{
     display:flex; align-items:center; justify-content:center; flex-shrink:0;
-    width:26px; height:26px; border-radius:9px; background:rgba(255,255,255,.04); color:inherit;
+    width:28px; height:28px; border-radius:9px; background:rgba(255,255,255,.04); color:inherit;
     transition:background .18s ease;
   }
   .account-sidebar-link.active .account-sidebar-link-icon{ background:rgba(var(--accent-rgb),.14); }
+  /* خروج همیشه پایین پنل منو، با یک خط جداکننده */
   .account-sidebar-logout{
-    display:flex; align-items:center; gap:10px; padding:9px 11px; border-radius:13px;
+    display:flex; align-items:center; gap:10px; padding:10px 12px; border-radius:14px;
+    margin-top:8px; position:relative;
     color:#E05252; background:none; border:none; box-shadow:none;
-    font-size:12.5px; font-weight:600; text-align:start; width:100%; cursor:pointer;
+    font-size:13px; font-weight:600; text-align:start; width:100%; cursor:pointer;
     transition:background .18s ease;
   }
-  @media (hover:hover){.account-sidebar-logout:hover{ background:rgba(224,82,82,.08); box-shadow:none; }}
+  .account-sidebar-logout::before{
+    content:""; position:absolute; top:-5px; inset-inline:10px; height:1px; background:var(--surface-line); pointer-events:none;
+  }
+  body[data-theme="light"] .account-sidebar-logout,
+  body:not([data-theme="light"]) .account-sidebar-logout{ background:none; box-shadow:none; border:none; }
+  @media (hover:hover){
+    body[data-theme="light"] .account-sidebar-logout:hover,
+    body:not([data-theme="light"]) .account-sidebar-logout:hover{ background:rgba(224,82,82,.08); box-shadow:none; color:#E05252; }
+  }
   .account-sidebar-logout .account-sidebar-link-icon{ background:rgba(224,82,82,.1); }
 
-  .account-content{ flex:1; min-width:0; }
   .account-content > h1{ margin-bottom:3px; font-size:20px; letter-spacing:-.01em; }
   .account-content-hint{ font-size:12px; color:var(--muted); line-height:1.8; margin-bottom:20px; }
 
@@ -1717,11 +1761,13 @@
   }
   body[data-theme="light"] .profile-hero-avatar-wrap,
   body:not([data-theme="light"]) .profile-hero-avatar-wrap{ background:none; box-shadow:none; }
-  /* باگ گزارش‌شده («سایه‌ی ادیت روی عکس پروفایل جاش اشتباهه»): این هاله
-     inset:0 بود، یعنی حلقه‌ی ۶پیکسلی دور عکس را هم می‌پوشاند و یک لبه‌ی
-     تیره‌ی بیرون‌زده می‌ساخت. حالا دقیقا روی خود عکس می‌نشیند. */
+  /* باگ گزارش‌شده («سایه‌ی هاور روی عکس پروفایل جاش اشتباهه»): حلقه‌ی
+     دور عکس `outline` است که *بیرون* باکس کشیده می‌شه، نه داخلش — پس عکس
+     کل ۹۲px دکمه رو پر می‌کنه. هاله‌ی قبلی با inset:6px یک دایره‌ی
+     ۸۰پیکسلی وسط عکس می‌ساخت و یک نوار روشن از عکس دورش بیرون می‌موند.
+     حالا inset:0، یعنی دقیقا هم‌اندازه و هم‌مرکز خود دایره‌ی عکس. */
   .profile-hero-avatar-hint{
-    position:absolute; inset:6px; border-radius:50%; display:flex; align-items:center; justify-content:center;
+    position:absolute; inset:0; border-radius:50%; display:flex; align-items:center; justify-content:center;
     color:#fff; background:rgba(0,0,0,.45); opacity:0; transition:opacity .18s ease; pointer-events:none;
   }
   .profile-hero-avatar-wrap:focus-visible .profile-hero-avatar-hint, .profile-hero-avatar-wrap:disabled .profile-hero-avatar-hint{ opacity:1; }
@@ -1747,7 +1793,7 @@
     padding:56px 20px 14px; display:flex; justify-content:flex-end;
   }
 
-  /* پاپ‌آپ پیش‌نمایش/جابه‌جایی عکس پروفایل و بنر (ImageCropModal) —
+  /* پاپ‌آپ پیش‌نمایش/جابه‌جایی بنر (ImageCropModal) —
      خود پنل همون .modal-panel اپه؛ قاب فقط بوردر داره، بک‌گراند نه. */
   .crop-modal{ max-width:400px; }
   .crop-frame{
@@ -1756,7 +1802,6 @@
     user-select:none; -webkit-user-select:none;
   }
   .crop-frame:active{ cursor:grabbing; }
-  .crop-frame.is-circle{ border-radius:50%; max-width:260px; }
   .crop-img{ position:absolute; top:0; left:0; max-width:none; pointer-events:none; will-change:transform; }
   .crop-hint{ text-align:center; font-size:11.5px; color:var(--muted); margin:10px 0 4px; }
   .crop-zoom{ display:flex; align-items:center; gap:10px; color:var(--muted); margin:8px auto 0; max-width:340px; }
@@ -1970,7 +2015,6 @@
        همون دایره‌ی ۹۲پیکسلی از wrap ۷۸پیکسلی موبایل بیرون می‌زد. */
     .profile-hero-avatar-img{ width:78px !important; height:78px !important; }
     .profile-hero-avatar-wrap{ outline-width:5px; }
-    .profile-hero-avatar-hint{ inset:5px; }
     .profile-hero-meta{ padding:48px 16px 12px; }
     .profile-banner-btn{ padding:6px; }
   }
@@ -2157,17 +2201,6 @@
   }
 
   @media (max-width:700px){
-    /* باگ گزارش‌شده («فاصله‌ی چپ و راست پنل با لبه یکی نیست»): والد
-       `align-items:flex-start` دارد — روی محور عمودی row بی‌ضرر است، ولی
-       اینجا که ستونی می‌شود همان قانون محور *عرضی* را کنترل می‌کند و
-       `.account-content` به‌جای پرکردن عرض، به اندازه‌ی محتوایش جمع می‌شد و
-       در RTL به لبه‌ی راست می‌چسبید — یعنی تمام فضای اضافه سمت چپ می‌ماند. */
-    .account-body{ flex-direction:column; align-items:stretch; }
-    /* روی موبایل سایدبار جا نمی‌شود و طبق درخواست صریح، نوار منوی زیر
-       هدر هم حذف شد — ناوبری از صفحه‌ی اول پنل و دکمه‌ی «بازگشت» انجام
-       می‌شود. */
-    .account-sidebar{ display:none; }
-
     /* باگ گزارش‌شده («پنل کاربری جاهاش به‌هم‌ریخته‌ست و باکسش کرو نیست»):
        این کارت قبلا با ترفند breakout تا لبه‌های واقعی صفحه کشیده می‌شد و
        در نتیجه هم گوشه‌ی گردش را از دست می‌داد (border-radius:0) هم با
@@ -4351,7 +4384,10 @@ body[data-theme="light"] .plan-duration-btn, body:not([data-theme="light"]) .pla
   font-family:var(--font-vazir), var(--font-latin), sans-serif; font-size:13px; padding:12px 14px; outline:none;
   min-height:96px; line-height:1.7; resize:none; text-align:start;
 }
-body:not([data-theme="light"]) .exercise-desc-textarea{ background:#0B0C0D; border:1px solid rgba(255,255,255,.08); }
+/* همون ظاهر شیشه‌ای فیلدهای فرم‌های بدنسازی (add-program-glass) — نه مشکی تخت */
+.exercise-desc-textarea{ backdrop-filter:blur(20px) saturate(160%); -webkit-backdrop-filter:blur(20px) saturate(160%); }
+body:not([data-theme="light"]) .exercise-desc-textarea{ background:rgba(255,255,255,.05); border:1px solid rgba(255,255,255,.1); }
+body[data-theme="light"] .exercise-desc-textarea{ background:rgba(255,255,255,.35); border:1px solid rgba(0,0,0,.08); }
 .exercise-desc-textarea:focus{ border-color:var(--accent); }
 .exercise-desc-textarea::placeholder{ color:var(--muted2); }
 
@@ -9893,3 +9929,95 @@ html[data-perf-weak] .bs-glow{ animation:bs-glow-in 1.1s ease both; }
   html[data-boot="out"] .bs-stage, html[data-boot="out"] .bs-rings, html[data-boot="out"] .bs-glow{ animation:none; }
   html[data-boot="out"] .boot-splash{ animation:bs-out .3s ease forwards; }
 }
+
+/* ── اطلاعیه‌ها: پاپ‌آپ، نوار و کارت گوشه (AnnouncementView/AnnouncementDelivery) ──
+   سطح بنر/کارت همون سطح مودال سایته (--surface-2 + --surface-line) چون روی
+   محتوای صفحه شناوره و بدون سطح خوانا نیست (درخواست صریح صاحب محصول برای
+   بنر/کارت روی سایت). رنگ حالت فقط نوار کناری و نقطه‌ست، از توکن‌های خود سایت. */
+.ann-tone-info{ --ann-tone:var(--secondary); }
+.ann-tone-success{ --ann-tone:var(--accent); }
+.ann-tone-warning{ --ann-tone:var(--ring-3a); }
+.ann-tone-promo{ --ann-tone:var(--ring-2b); }
+
+.ann-content{ font-family:var(--font-vazir), var(--font-latin), sans-serif; color:var(--text); }
+.ann-title{ font-size:14px; font-weight:800; line-height:1.6; }
+.ann-body{ margin:2px 0 0; font-size:12.5px; line-height:1.85; color:var(--muted); white-space:pre-line; overflow-wrap:anywhere; }
+.ann-cta{ text-decoration:none; white-space:nowrap; flex-shrink:0; }
+.ann-close{ flex-shrink:0; margin-inline-start:auto; }
+
+/* پاپ‌آپ */
+.ann-popup-panel{ padding:0; max-width:440px; }
+.ann-content-popup{ padding:20px 22px 22px; border-top:3px solid var(--ann-tone); }
+.ann-popup-img{ display:block; width:calc(100% + 44px); margin:-20px -22px 16px; max-height:220px; object-fit:cover; }
+.ann-head{ display:flex; align-items:center; gap:10px; }
+.ann-head .ann-title{ font-size:16px; }
+.ann-dot{ width:9px; height:9px; border-radius:999px; flex-shrink:0; background:var(--ann-tone); box-shadow:0 0 0 4px color-mix(in srgb, var(--ann-tone) 22%, transparent); }
+.ann-content-popup .ann-body{ margin-top:10px; font-size:13px; }
+.ann-actions{ display:flex; justify-content:flex-end; margin-top:16px; }
+
+/* نوار و کارت */
+.ann-content-bar, .ann-content-corner{
+  display:flex; align-items:center; gap:12px;
+  background:var(--surface-2); border:1px solid var(--surface-line); border-inline-start:3px solid var(--ann-tone);
+  box-shadow:0 10px 30px rgba(0,0,0,.28);
+}
+.ann-content-bar{ border-radius:18px; padding:10px 14px; }
+.ann-content-bar .ann-text{ flex:1; min-width:0; display:flex; align-items:baseline; gap:10px; flex-wrap:wrap; }
+.ann-content-bar .ann-title{ font-size:13px; }
+.ann-content-bar .ann-body{ margin:0; font-size:12px; overflow:hidden; text-overflow:ellipsis; display:-webkit-box; -webkit-line-clamp:2; -webkit-box-orient:vertical; }
+.ann-content-bar .ann-cta{ padding:7px 14px; }
+.ann-content-corner{ border-radius:20px; padding:14px; align-items:flex-start; flex-wrap:wrap; }
+.ann-content-corner .ann-text{ flex:1; min-width:0; }
+.ann-content-corner .ann-body{ overflow:hidden; display:-webkit-box; -webkit-line-clamp:4; -webkit-box-orient:vertical; }
+.ann-content-corner .ann-cta{ order:4; width:100%; padding:8px 14px; }
+.ann-thumb{ width:44px; height:44px; border-radius:12px; object-fit:cover; flex-shrink:0; }
+.ann-content-corner .ann-thumb{ width:56px; height:56px; }
+body[data-theme="light"] .ann-content-bar, body[data-theme="light"] .ann-content-corner{ box-shadow:0 10px 30px rgba(60,40,10,.12); }
+
+/* جایگاه‌ها — زیر هدر شناور (.app-topbar: 14px + 58px) و بالای محتوا،
+   پایین‌تر از مودال‌ها (z 55) */
+.ann-slot{ position:fixed; z-index:38; animation:annIn .42s cubic-bezier(.22,1,.36,1) both; }
+.ann-pos-top{ top:calc(84px + env(safe-area-inset-top)); inset-inline:14px; max-width:960px; margin-inline:auto; }
+.ann-pos-bottom{ bottom:calc(14px + env(safe-area-inset-bottom)); inset-inline:14px; max-width:960px; margin-inline:auto; }
+.ann-pos-top-right, .ann-pos-top-left{ top:calc(84px + env(safe-area-inset-top)); width:340px; }
+.ann-pos-bottom-right, .ann-pos-bottom-left{ bottom:calc(16px + env(safe-area-inset-bottom)); width:340px; }
+.ann-pos-top-right, .ann-pos-bottom-right{ right:16px; }
+.ann-pos-top-left, .ann-pos-bottom-left{ left:16px; }
+.ann-pos-bottom-right, .ann-pos-bottom-left, .ann-pos-bottom{ animation-name:annInUp; }
+@keyframes annIn{ from{ opacity:0; transform:translateY(-10px); } to{ opacity:1; transform:none; } }
+@keyframes annInUp{ from{ opacity:0; transform:translateY(14px); } to{ opacity:1; transform:none; } }
+@media (prefers-reduced-motion:reduce){ .ann-slot{ animation:none; } }
+/* موبایل: نوار بالا تمام‌عرض زیر هدر؛ کارت‌های گوشه به یک کارت پایین تبدیل
+   می‌شن (AnnouncementDelivery فقط یکی رو در جایگاه BOTTOM می‌ذاره) */
+@media (max-width:640px){
+  .ann-pos-top{ inset-inline:12px; }
+  .ann-pos-bottom{ inset-inline:12px; bottom:calc(12px + env(safe-area-inset-bottom)); }
+  .ann-content-bar .ann-text{ display:block; }
+  .ann-content-bar{ flex-wrap:wrap; }
+}
+
+/* پیش‌نمایش فرم ادمین — یک صفحه‌ی کوچک نمادین با همون کامپوننت */
+.ann-preview{ position:relative; height:340px; border-radius:18px; overflow:hidden; border:1px solid var(--surface-line); background:var(--bg); }
+.ann-preview.is-mobile{ width:300px; height:520px; margin-inline:auto; }
+.ann-preview-bar{ position:absolute; top:10px; inset-inline:10px; height:34px; border-radius:999px; border:1px solid var(--surface-line); }
+.ann-preview-lines{ position:absolute; top:60px; inset-inline:18px; display:grid; gap:10px; }
+.ann-preview-lines i{ display:block; height:44px; border-radius:14px; border:1px dashed var(--surface-line); }
+.ann-preview .ann-slot{ position:absolute; z-index:2; animation:none; }
+.ann-preview .ann-pos-top, .ann-preview .ann-pos-top-right, .ann-preview .ann-pos-top-left{ top:54px; }
+.ann-preview .ann-pos-top, .ann-preview .ann-pos-bottom{ inset-inline:10px; }
+.ann-preview .ann-pos-bottom{ bottom:10px; }
+.ann-preview .ann-pos-bottom-right, .ann-preview .ann-pos-bottom-left{ bottom:10px; }
+.ann-preview .ann-pos-top-right, .ann-preview .ann-pos-bottom-right{ right:10px; }
+.ann-preview .ann-pos-top-left, .ann-preview .ann-pos-bottom-left{ left:10px; }
+.ann-preview .ann-pos-top-right, .ann-preview .ann-pos-top-left, .ann-preview .ann-pos-bottom-right, .ann-preview .ann-pos-bottom-left{ width:min(300px, calc(100% - 20px)); }
+.ann-preview-scrim{ position:absolute; inset:0; z-index:2; background:rgba(0,0,0,.5); display:flex; align-items:center; justify-content:center; padding:14px; }
+.ann-preview-modal{ width:100%; max-width:380px; max-height:100%; overflow:auto; background:var(--surface-2); border:1px solid var(--surface-line); border-radius:22px; }
+
+/* فرم اطلاعیه در پنل ادمین */
+.ann-admin-section{ display:flex; flex-direction:column; gap:12px; margin-top:18px; padding-top:16px; border-top:1px solid var(--adm-line, var(--surface-line)); }
+.ann-admin-section-title{ font-size:13px; font-weight:800; color:var(--text); }
+.ann-admin-ticks{ display:flex; flex-wrap:wrap; gap:4px 16px; }
+.ann-admin-hint{ font-size:11.5px; line-height:1.8; }
+.ann-admin-preview-head{ display:flex; align-items:center; justify-content:space-between; gap:12px; flex-wrap:wrap; }
+.admin-seg.ann-seg{ max-width:100%; overflow-x:auto; scrollbar-width:none; }
+.admin-seg.ann-seg::-webkit-scrollbar{ display:none; }

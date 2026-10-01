@@ -6,7 +6,7 @@ import { ToggleSwitch } from "@/components/ToggleSwitch";
 
 import { AccountPageHead, AccountBlock } from "@/components/AccountUI";
 import { getAccount, invalidateAccountCache, AccountData } from "@/lib/accountCache";
-import { toJalali, J_MONTHS } from "@/lib/jalali";
+import { formatTehranDateTime } from "@/lib/tehranTime";
 import { GoldenName } from "@/components/GoldenName";
 import { Spinner } from "@/components/Spinner";
 
@@ -40,11 +40,7 @@ function guessDevice(ua: string | null): string {
 // می‌داد که کاربر صریحا نخواسته. ماه جلالی به حروف نوشته می‌شه تا با بقیه‌ی
 // تاریخ‌های اپ هم‌شکل بمونه.
 function formatDateTimeEn(iso: string): string {
-  const d = new Date(iso);
-  const [, jm, jd] = toJalali(d.getFullYear(), d.getMonth() + 1, d.getDate());
-  const hh = String(d.getHours()).padStart(2, "0");
-  const mm = String(d.getMinutes()).padStart(2, "0");
-  return `${jd} ${J_MONTHS[jm - 1]} · ${hh}:${mm}`;
+  return formatTehranDateTime(iso); // همیشه به وقت تهران، نه ساعت مرورگر
 }
 
 export default function SecurityPage() {
