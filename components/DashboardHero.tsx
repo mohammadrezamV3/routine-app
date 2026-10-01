@@ -184,9 +184,9 @@ export function DashboardHero({
         <p className="db-hero-insight" aria-live="polite">{insight ?? <Skel w="70%" h={13} />}</p>
 
         <div className="db-hero-chips">
-          <Link href="/streak" prefetch className={`db-chip db-chip-streak tier-${tier.tier}`} title={tier.name}>
+          <Link href="/streak" prefetch className={`db-chip db-chip-streak tier-${tier.tier}`} title={tier.name} aria-label={routine.streak === null ? "استریک" : `${faNum(routine.streak)} روز پشت‌سرهم`}>
             <DashIcon name="flame" className="dbi-live" />
-            {routine.streak === null ? <Skel w={24} h={10} /> : <><b>{faNum(routine.streak)}</b> روز پشت‌سرهم</>}
+            {routine.streak === null ? <Skel w={24} h={10} /> : <b>{faNum(routine.streak)}</b>}
           </Link>
           {data?.routineTrial && (
             <Link href={`/subscription/checkout?plan=${ROUTINE_PLAN_KEY}&duration=1`} prefetch={false} className={`db-chip db-chip-trial${data.routineTrial.daysLeft <= 3 ? " is-urgent" : ""}`}>
