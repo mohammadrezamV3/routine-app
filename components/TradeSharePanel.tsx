@@ -70,14 +70,6 @@ function shiftAnchor(period: TradeSharePeriod, iso: string, dir: 1 | -1): string
   if (period === "week") return addDays(iso, 7 * dir);
   return addJalaliMonths(iso, dir);
 }
-/** شروع بازه‌ای که iso داخلشه — هفته از شنبه، ماه = اول ماه شمسی */
-function rangeStart(period: TradeSharePeriod, iso: string): string {
-  if (period === "day") return iso;
-  const d = parseIso(iso);
-  if (period === "week") return addDays(iso, -((d.getDay() + 1) % 7));
-  const [jy, jm] = toJalali(d.getFullYear(), d.getMonth() + 1, d.getDate());
-  return jalaliToIso(jy, jm, 1) ?? iso;
-}
 
 const queryKey = (q: TradeShareQuery) => `${q.period}|${q.date}|${q.account}`;
 
@@ -110,12 +102,6 @@ export function TradeSharePanel({
 
   const query = useMemo<TradeShareQuery>(() => ({ period, date: anchor, account }), [period, anchor, account]);
   const qKey = queryKey(query);
-  const nextDisabled = rangeStart(period, shiftAnchor(period, anchor, 1)) > today;
-  const goPrev = () => setAnchor((a) => shiftAnchor(period, a, -1));
-  const goNext = () => {
-    if (nextDisabled) return;
-    setAnchor((a) => { const n = shiftAnchor(period, a, 1); return n > today ? today : n; });
-  };
 
   // ── داده: هر تغییر انتخاب یک درخواست، درخواست کهنه abort می‌شه ──
   const [resp, setResp] = useState<{ key: string; body: TradeShareResponse } | null>(null);
@@ -149,6 +135,14 @@ export function TradeSharePanel({
 
   const data = resp?.key === qKey ? resp.body.data : null;
   const rangeLabel = resp?.body.data.rangeLabel ?? null;
+  // «بعدی» از روی بازه‌ای که خود سرور برگردونده (lib/tradeShare.ts) قفل می‌شه، نه یک
+  // محاسبه‌ی جدای کلاینت: وقتی پایان بازه‌ی فعلی هنوز نرسیده، بازه‌ی بعدی آینده‌ست.
+  const nextDisabled = !data || new Date(data.endIso).getTime() > Date.now();
+  const goPrev = () => setAnchor((a) => shiftAnchor(period, a, -1));
+  const goNext = () => {
+    if (nextDisabled) return;
+    setAnchor((a) => { const n = shiftAnchor(period, a, 1); return n > today ? today : n; });
+  };
 
   // کارت رنگ‌های تم فعلی رو می‌گیره — عوض‌شدن تم باید پیش‌نمایش رو تازه کنه
   const [theme, setTheme] = useState("");
