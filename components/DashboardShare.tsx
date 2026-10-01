@@ -160,13 +160,13 @@ export function DashboardShare({
 
   // ── کارایی ──
   // قبلا هر تغییر کوچک کل کارت رو با تراکم 2 (2160×2700) از صفر می‌ساخت، بعد
-  // PNG ِ چندمگابایتی encode و دوباره به‌صورت <img> decode می‌کرد — همه روی
+  // PNG  چندمگابایتی encode و دوباره به‌صورت <img> decode می‌کرد — همه روی
   // ترد اصلی، که مودال و سوییچ‌ها رو لگ می‌کرد. حالا:
   //  • پیش‌نمایش مستقیم روی همین <canvas> با تراکم 1 کشیده می‌شه (یک‌چهارم پیکسل، بدون encode/decode)
   //  • پس‌زمینه‌ی شیشه‌ای سنگین یک بار برای هر تم کش می‌شه (lib/shareCard.ts)
-  //  • فقط وقتی *محتوای* کارت عوض شده رندر می‌شه (کلید متنی، نه هویتِ شیء)
+  //  • فقط وقتی *محتوای* کارت عوض شده رندر می‌شه (کلید متنی، نه هویت شیء)
   //  • اولین رندر بعد از تموم‌شدن انیمیشن بازشدن، تا باز شدن نرم بمونه
-  //  • نسخه‌ی کامل 2× فقط برای خودِ اشتراک، و در زمانِ بیکاری از قبل آماده می‌شه
+  //  • نسخه‌ی کامل 2× فقط برای خود اشتراک، و در زمان بیکاری از قبل آماده می‌شه
   const contentKey = useMemo(() => (input ? JSON.stringify(input) : ""), [input]);
   const inputRef = useRef<ShareCardInput | null>(input);
   inputRef.current = input;
@@ -176,7 +176,7 @@ export function DashboardShare({
   const [rendering, setRendering] = useState(false);
   const [ready, setReady] = useState(false);
   useEffect(() => { if (open) { openedAt.current = performance.now(); setReady(false); } }, [open]);
-  // پس‌زمینه‌ی پیش‌نمایش (1×) از قبل، در زمانِ بیکاری بعد از لود داشبورد — تا باز شدن مودال سبک باشه
+  // پس‌زمینه‌ی پیش‌نمایش (1×) از قبل، در زمان بیکاری بعد از لود داشبورد — تا باز شدن مودال سبک باشه
   useEffect(() => {
     const w = window as Window & { requestIdleCallback?: (cb: () => void, o?: { timeout: number }) => number; cancelIdleCallback?: (id: number) => void };
     const run = () => { try { prepareShareBackground(1); } catch { /* موقع باز شدن ساخته می‌شه */ } };

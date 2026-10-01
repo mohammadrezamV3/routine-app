@@ -350,7 +350,7 @@ export function prepareShareBackground(dpr: number = SHARE_DPR): void {
 export type RenderOpts = {
   /** تراکم خروجی؛ پیش‌فرض SHARE_DPR (2). پیش‌نمایش با 1 */
   dpr?: number;
-  /** رندر مستقیم روی همین canvas (مثلا canvas ِ پیش‌نمایش) به‌جای ساخت canvas تازه */
+  /** رندر مستقیم روی همین canvas (مثلا canvas  پیش‌نمایش) به‌جای ساخت canvas تازه */
   target?: HTMLCanvasElement;
 };
 
