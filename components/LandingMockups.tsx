@@ -26,25 +26,7 @@ export function fa(n: number | string) {
   return String(n);
 }
 
-/* ───────────── DashImportanceBadge (نسخه‌ی موبایل) ───────────── */
 type Importance = "veryHigh" | "high" | "medium" | "low";
-const IMP: Record<Importance, { label: string; text: string; bg: string; border: string }> = {
-  veryHigh: { label: "خیلی زیاد", text: "#E05252", bg: "rgba(224,82,82,.12)", border: "rgba(224,82,82,.3)" },
-  high: { label: "زیاد", text: "#F5A524", bg: "rgba(245,165,36,.12)", border: "rgba(245,165,36,.3)" },
-  medium: { label: "متوسط", text: "#F5C518", bg: "rgba(245,197,24,.12)", border: "rgba(245,197,24,.3)" },
-  low: { label: "کم", text: "var(--muted)", bg: "rgba(255,255,255,.05)", border: "var(--line)" },
-};
-function ImportanceBadge({ importance = "low" }: { importance?: Importance }) {
-  const s = IMP[importance];
-  return (
-    <span
-      className="min-w-[48px] shrink-0 whitespace-nowrap rounded-full border px-1.5 py-0.5 text-center text-[9px] font-semibold"
-      style={{ color: s.text, backgroundColor: s.bg, borderColor: s.border }}
-    >
-      {s.label}
-    </span>
-  );
-}
 
 /* ───────────── DashTaskRow (نسخه‌ی موبایل) ───────────── */
 export type MockTask = {
@@ -66,11 +48,10 @@ export function MockTaskRow({ task }: { task: MockTask }) {
         <div className="flex min-w-0 items-center gap-1.5">
           <span className="min-w-0 truncate text-right text-[13px] font-medium text-dash-text">{task.name}</span>
           {task.tag && (
-            <span className="max-w-[64px] shrink-0 truncate rounded-full border border-dash-border bg-white/[0.03] px-2 py-0.5 text-center text-[9px] font-semibold text-dash-muted">
+            <span className="max-w-[72px] shrink-0 truncate whitespace-nowrap rounded-full border border-dash-border px-2 py-0.5 text-center text-[9.5px] font-semibold text-dash-muted">
               {task.tag}
             </span>
           )}
-          <ImportanceBadge importance={task.importance} />
         </div>
         <div className="flex shrink-0 flex-col items-end gap-0.5">
           {task.time ? (

@@ -34,7 +34,7 @@ const ROT_WORDS = ["بنویس", "بچین", "لیست کن", "یادداشت ک
 // DashTaskRow ـن، ردیف آخر همون ردیف سنتتیک «برنامه تمرینی امروز» با دکمه‌ی
 // «شروع». چرخه فقط تیک‌خوردن پشت‌سرهم همین ردیف‌هاست.
 const PHONE_TASKS: MockTask[] = [
-  { name: "مدیتیشن صبحگاهی", time: "07:00", importance: "medium" },
+  { name: "مدیتیشن صبحگاهی", time: "07:00", importance: "medium", tag: "سلامتی" },
   { name: "مطالعه", time: "13:30", importance: "high", tag: "یادگیری" },
   { name: "پیاده‌روی عصر", time: "18:00" },
   { name: "برنامه تمرینی امروز", exercise: true },

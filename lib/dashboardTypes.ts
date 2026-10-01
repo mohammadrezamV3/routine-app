@@ -31,8 +31,8 @@ export type DashExercise = {
   };
   week: { done: number; target: number };
   streak: number;
-  /** ۱۴ روز اخیر تا امروز (قدیمی → جدید) */
-  last14: { iso: string; planned: boolean; done: boolean }[];
+  /** ۱۴ روز اخیر تا امروز (قدیمی → جدید). روز استراحت (rest) خودکار done ـه. */
+  last14: { iso: string; planned: boolean; done: boolean; rest: boolean }[];
 };
 
 export type DashCalorie = {
@@ -66,7 +66,7 @@ export type DashTrade = {
   openTrades: number;
   /** سود/زیان خالص هر روز در ۳۰ روز اخیر (قدیمی → جدید، ۳۰ عدد) */
   daily30: number[];
-  recent: { id: string; accountId: string; symbol: string; direction: "BUY" | "SELL"; pnl: number; result: string; status: string; openedAt: string }[];
+  recent: { id: string; accountId: string; currency: string; symbol: string; direction: "BUY" | "SELL"; pnl: number; result: string; status: string; openedAt: string }[];
   accounts: DashTradeAccount[];
 };
 

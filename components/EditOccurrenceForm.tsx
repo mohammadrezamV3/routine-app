@@ -13,6 +13,7 @@ import { focusNextOnEnter } from "@/lib/formNav";
 import { useLockBodyScroll } from "@/lib/useLockBodyScroll";
 import { TickOption } from "./TickOption";
 import { RoutineChecklistEditor } from "./RoutineChecklistEditor";
+import { RoutineTagField } from "./RoutineTagField";
 import { checklistOf, type ChecklistItem } from "@/lib/routineChecklist";
 
 type Occ = { dayName: string; jsDay: number; time: string; id: string; custom?: boolean; importance?: Importance; tag?: string };
@@ -206,14 +207,7 @@ export function EditOccurrenceForm({
           {isList && <div style={{ marginBottom: 14 }}><RoutineChecklistEditor items={items} onChange={setItems} /></div>}
 
           <label htmlFor="editOccTag">تگ (اختیاری)</label>
-          <input
-            id="editOccTag"
-            type="text"
-            className="wsearch-newform-name"
-            placeholder="درس، ورزش، کار…"
-            value={tag}
-            onChange={(e) => setTag(e.target.value)}
-          />
+          <RoutineTagField id="editOccTag" value={tag} onChange={setTag} occurrences={scheduleOpts.customOccurrences} />
 
           <label>میزان اهمیت</label>
           <SegmentedTabs

@@ -126,7 +126,7 @@ export function streakFromHeatmap(cols: HeatCell[][]): number {
 
 // ── اسپارک‌لاین (بدون کتابخانه‌ی نمودار) ───────────────────────
 /**
- * مسیر نرم SVG (منحنی مونوتون-تقریبی با کنترل‌پوینت‌های افقی) برای یک سری
+ * مسیر نرم SVG (منحنی مونوتون، بدون برآمدگی ساختگی) برای یک سری
  * عدد، در کادر w×h با پدینگ عمودی pad. خروجی: خط + ناحیه‌ی زیر خط + جای
  * آخرین نقطه (برای نقطه‌ی درخشان). سری کمتر از ۲ نقطه → null.
  */
@@ -138,11 +138,28 @@ export function sparkPath(values: number[], w: number, h: number, pad = 4): { li
   const y = (v: number) => pad + (h - pad * 2) * (1 - (v - min) / range);
   const pts = values.map((v, i) => ({ x: i * step, y: y(v) }));
   const r = (n: number) => Math.round(n * 100) / 100;
+  // منحنی مونوتون (Fritsch–Carlson، همون curveMonotoneX  d3): روزهای بی‌تغییر
+  // صاف می‌مونن و بین دو نقطه هیچ برآمدگی/فرورفتگی ساختگی نیست. قبلا هر پاره
+  // یک S جدا بود (کنترل‌پوینت افقی وسط) و منحنی سرمایه با روزهای صاف و پرش‌های
+  // ناگهانی پله‌پله و کج دیده می‌شد.
+  const n = pts.length;
+  const d: number[] = [];
+  for (let i = 0; i < n - 1; i++) d.push((pts[i + 1].y - pts[i].y) / (pts[i + 1].x - pts[i].x));
+  const m: number[] = new Array(n);
+  m[0] = d[0];
+  m[n - 1] = d[n - 2];
+  for (let i = 1; i < n - 1; i++) m[i] = d[i - 1] * d[i] <= 0 ? 0 : (d[i - 1] + d[i]) / 2;
+  for (let i = 0; i < n - 1; i++) {
+    if (d[i] === 0) { m[i] = 0; m[i + 1] = 0; continue; }
+    const a = m[i] / d[i], b = m[i + 1] / d[i];
+    const q = a * a + b * b;
+    if (q > 9) { const t = 3 / Math.sqrt(q); m[i] = t * a * d[i]; m[i + 1] = t * b * d[i]; }
+  }
   let line = `M${r(pts[0].x)} ${r(pts[0].y)}`;
-  for (let i = 1; i < pts.length; i++) {
-    const p0 = pts[i - 1], p1 = pts[i];
-    const cx = (p0.x + p1.x) / 2;
-    line += ` C${r(cx)} ${r(p0.y)} ${r(cx)} ${r(p1.y)} ${r(p1.x)} ${r(p1.y)}`;
+  for (let i = 0; i < n - 1; i++) {
+    const p0 = pts[i], p1 = pts[i + 1];
+    const h3 = (p1.x - p0.x) / 3;
+    line += ` C${r(p0.x + h3)} ${r(p0.y + m[i] * h3)} ${r(p1.x - h3)} ${r(p1.y - m[i + 1] * h3)} ${r(p1.x)} ${r(p1.y)}`;
   }
   const area = `${line} L${r(w)} ${h} L0 ${h} Z`;
   const zeroY = min < 0 && max > 0 ? r(y(0)) : null;
@@ -153,6 +170,19 @@ export function sparkPath(values: number[], w: number, h: number, pad = 4): { li
 export function cumulative(values: number[]): number[] {
   let acc = 0;
   return values.map((v) => (acc += v));
+}
+
+/**
+ * منحنی سرمایه برای اسپارک‌لاین: [0, ...جمع تجمعی] ولی فقط روزهایی که موجودی
+ * واقعا عوض شده (به‌علاوه‌ی شروع). روزهای بی‌معامله «پله»ی صاف می‌ساختن و هر
+ * معامله یک پرش عمودی بین دو پله بود — نمودار کج و پله‌پله دیده می‌شد.
+ */
+export function equityPoints(daily: number[]): number[] {
+  const eq = [0, ...cumulative(daily)];
+  const out = [eq[0]];
+  for (let k = 1; k < eq.length; k++) if (eq[k] !== out[out.length - 1]) out.push(eq[k]);
+  if (out.length === 1) out.push(eq[eq.length - 1]);
+  return out;
 }
 
 // ── زمان ─────────────────────────────────────────────────────

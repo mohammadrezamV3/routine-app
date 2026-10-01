@@ -5,9 +5,14 @@
 // معامله‌ها. سبز/قرمز سود و زیان از توکن‌های --pnl-* (بیرون پالت تم).
 
 import Link from "next/link";
+import { useEffect, useState } from "react";
 import { motion } from "framer-motion";
 import { faNum } from "@/lib/jalali";
-import { cumulative, compactNumber } from "@/lib/dashboardCompute";
+import { getSetting } from "@/lib/storage";
+import { rowActivateProps } from "@/lib/rowActivate";
+import { CAL_SYSTEM_KEY, type CalSystem } from "@/lib/tradeTypes";
+import { TradeDetailDrawer } from "./TradeDetailDrawer";
+import { compactNumber, equityPoints } from "@/lib/dashboardCompute";
 import type { DashTrade } from "@/lib/dashboardTypes";
 import { BentoCard, CardHead, CountUp, EmptyState, Meter, Skel, Sparkline } from "./DashboardKit";
 
@@ -32,7 +37,16 @@ export function DashboardTrade({ trade, loading }: { trade: DashTrade | null; lo
 
 function TradeBody({ t }: { t: DashTrade }) {
   const cur = t.sumCurrency;
-  const equity = [0, ...cumulative(t.daily30)];
+  // جزئیات کامل معامله درجا روی داشبورد (فقط‌خواندنی). payload در recent
+  // عمدا سبک است؛ خود کشو معامله را با GET /api/trade/entries/[id] می‌گیرد
+  // (گیت ماژول TRADE + where:{id,userId}). ویرایش = رفتن به صفحه‌ی حساب.
+  const [openTrade, setOpenTrade] = useState<{ id: string; accountId: string; currency: string } | null>(null);
+  const [calSystem, setCalSystem] = useState<CalSystem>("jalali");
+  useEffect(() => {
+    if (!openTrade) return;
+    getSetting<CalSystem>(CAL_SYSTEM_KEY, "jalali").then(setCalSystem).catch(() => {});
+  }, [openTrade]);
+  const equity = equityPoints(t.daily30);
   const flat = t.daily30.every((v) => v === 0);
   return (
     <div className="db-trade-body">
@@ -80,19 +94,38 @@ function TradeBody({ t }: { t: DashTrade }) {
           ) : (
             t.recent.map((r, i) => {
               const acc = t.accounts.find((a) => a.id === r.accountId);
+              const rowCur = r.currency ?? acc?.currency ?? cur;
               return (
-                <motion.div key={r.id} className="db-trow" initial={{ opacity: 0, x: -8 }} animate={{ opacity: 1, x: 0 }} transition={{ delay: 0.35 + i * 0.05 }}>
+                <motion.div
+                  key={r.id}
+                  className="db-trow is-clickable"
+                  initial={{ opacity: 0, x: -8 }}
+                  animate={{ opacity: 1, x: 0 }}
+                  transition={{ delay: 0.35 + i * 0.05 }}
+                  whileHover={{ x: -3, transition: { duration: 0.2 } }}
+                  {...rowActivateProps(() => setOpenTrade({ id: r.id, accountId: r.accountId, currency: rowCur }), `جزئیات معامله‌ی ${r.symbol}`)}
+                >
                   <span className={`db-dir ${r.direction === "BUY" ? "is-buy" : "is-sell"}`} aria-label={r.direction === "BUY" ? "خرید" : "فروش"}>
                     <svg viewBox="0 0 12 12" aria-hidden="true"><path d={r.direction === "BUY" ? "M6 2.5 10 8H2Z" : "M6 9.5 2 4h8Z"} fill="currentColor" /></svg>
                   </span>
                   <span className="db-trow-sym" dir="ltr">{r.symbol}</span>
-                  {r.status === "OPEN" ? <span className="db-pill">باز</span> : <span className={`db-trow-pnl ${tone(r.pnl)}`} dir="ltr">{money(r.pnl, acc?.currency ?? cur)}</span>}
+                  {r.status === "OPEN" ? <span className="db-pill">باز</span> : <span className={`db-trow-pnl ${tone(r.pnl)}`} dir="ltr">{money(r.pnl, rowCur)}</span>}
                 </motion.div>
               );
             })
           )}
         </div>
       </div>
+
+      {openTrade && (
+        <TradeDetailDrawer
+          entryId={openTrade.id}
+          calSystem={calSystem}
+          currency={openTrade.currency}
+          editHref={`/trade/accounts/${openTrade.accountId}`}
+          onClose={() => setOpenTrade(null)}
+        />
+      )}
     </div>
   );
 }

@@ -29,6 +29,7 @@ import { TradeStatsCollapse } from "./TradeStatsCollapse";
 import { PanelSkeleton } from "./PanelSkeleton";
 import { useAsyncAction } from "@/lib/useAsyncAction";
 import { useLiveRefresh } from "@/lib/liveSync";
+import { rowActivateProps } from "@/lib/rowActivate";
 
 // آیکون هر کارت آماری — فقط یک لمس بصری، بدون تغییر در منطق محاسبه‌ها
 const TRADE_STAT_ICONS: Record<TradeStatKey, typeof Wallet> = {
@@ -364,7 +365,11 @@ export function TradeAccountView({ accountId }: { accountId: string }) {
         )}
 
         {dayEntries.map((e) => (
-          <div key={e.id} className="trade-day-row">
+          <div
+            key={e.id}
+            className="trade-day-row is-clickable"
+            {...rowActivateProps(() => setDetailId(e.id), `جزئیات معامله‌ی ${e.symbol}`)}
+          >
             <div className="trade-day-row-head">
               <span className={`trade-row-dir ${e.direction === "BUY" ? "buy" : "sell"}`}>
                 {e.direction === "BUY" ? "خرید" : "فروش"}
@@ -404,9 +409,11 @@ export function TradeAccountView({ accountId }: { accountId: string }) {
               </div>
             )}
 
-            <button type="button" className="trade-detail-btn" onClick={() => setDetailId(e.id)}>
+            {/* کل ردیف قابل‌کلیک است؛ این فقط نشانه‌ی بصری است (دکمه‌ی تودرتو
+                داخل role=button برای صفحه‌خوان نامعتبر است) */}
+            <span className="trade-detail-btn" aria-hidden="true">
               جزئیات
-            </button>
+            </span>
           </div>
         ))}
       </div>

@@ -203,7 +203,11 @@ export function ExerciseTaskList({
       </div>
 
       {!todayPlan ? (
-        <div className="py-6 text-center text-[11.5px] text-dash-muted sm:text-[12.5px]">{restDayLabel}</div>
+        // روز استراحت خودکار تیک می‌خوره (از خود پلن، بدون لاگ) — فقط نمایشی
+        <div className="flex flex-col items-center gap-2 py-6 text-center text-[11.5px] text-dash-muted sm:text-[12.5px]">
+          <TickButton as="span" size={24} disabled checked={!isFutureDay} />
+          <span>{restDayLabel}</span>
+        </div>
       ) : (
         <>
           <div className="mt-1 shrink-0 text-[11px] text-dash-muted sm:text-[12.5px]">{todayPlan.focus}</div>
@@ -264,7 +268,7 @@ export function ExerciseTaskList({
                               شروع
                             </motion.button>
                           ) : (
-                            <TickButton as="span" size={24} checked={isChecked} state={showMiss ? "missed" : "idle"} />
+                            <TickButton as="span" tone="exercise" size={24} checked={isChecked} state={showMiss ? "missed" : "idle"} />
                           )}
                         </div>
                       </td>

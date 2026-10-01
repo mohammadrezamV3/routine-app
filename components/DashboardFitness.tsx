@@ -56,7 +56,7 @@ function ExerciseBody({ ex }: { ex: DashExercise }) {
           const wd = FA_WEEKDAY_SHORT[new Date(y, m - 1, dd).getDay()];
           const isToday = i === ex.last14.length - 1;
           return (
-            <span key={d.iso} className={`db-wdot${d.done ? " is-done" : d.planned ? " is-planned" : ""}${isToday ? " is-today" : ""}`} title={d.iso}>
+            <span key={d.iso} className={`db-wdot${d.done ? " is-done" : d.planned ? " is-planned" : ""}${d.rest ? " is-rest" : ""}${isToday ? " is-today" : ""}`} title={d.rest ? `${d.iso} · استراحت` : d.iso}>
               <motion.i initial={{ scale: 0 }} animate={{ scale: 1 }} transition={{ delay: 0.3 + i * 0.03, type: "spring", stiffness: 500, damping: 22 }} />
               {i >= 7 && <em>{wd}</em>}
             </span>
@@ -68,7 +68,7 @@ function ExerciseBody({ ex }: { ex: DashExercise }) {
         <ul className="db-ex-items" aria-label="حرکت‌های امروز">
           {t.items.map((it, i) => (
             <motion.li key={it.name + i} className={it.done ? "is-done" : t.done ? "is-missed" : ""} initial={{ opacity: 0, y: 4 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.35 + i * 0.04 }}>
-              <TickButton as="span" size={18} checked={!!it.done} state={!it.done && t.done ? "missed" : "idle"} />
+              <TickButton as="span" tone="exercise" size={18} checked={!!it.done} state={!it.done && t.done ? "missed" : "idle"} />
               <span className="db-ex-name">{it.name}</span>
             </motion.li>
           ))}

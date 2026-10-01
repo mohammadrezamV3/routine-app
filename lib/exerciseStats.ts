@@ -16,6 +16,32 @@ export async function fetchExerciseLogRange(planId: string, start: Date, end: Da
   return data.logs ?? {};
 }
 
+/**
+ * روز استراحت = روزی از هفته که توی gymDays پلن نیست. این روزها «خودکار
+ * انجام‌شده»ن: هیچ لاگی براشون نوشته نمی‌شه (از خود پلن مشتق می‌شن)، هیچ‌وقت
+ * «وقتش گذشته» نمی‌شن و استریک رو نمی‌شکنن. بدون پلن (gymDays خالی) هیچ روزی
+ * استراحت نیست — اصلا برنامه‌ای نیست که روزش استراحت باشه.
+ */
+export function isRestDay(gymDayNames: Iterable<string> | null | undefined, dayName: string): boolean {
+  const set = gymDayNames instanceof Set ? (gymDayNames as Set<string>) : new Set(gymDayNames ?? []);
+  return set.size > 0 && !set.has(dayName);
+}
+
+/**
+ * وضعیت یک روز برای نمایش: روز استراحت تا امروز (نه آینده) خودکار تیک
+ * می‌خوره؛ روز باشگاه فقط با «پایان تمرین» واقعی (completed) انجام‌شده‌ست.
+ */
+export function exerciseDayDone(
+  gymDayNames: Iterable<string> | null | undefined,
+  dayName: string,
+  iso: string,
+  todayIso: string,
+  log: ExerciseLogEntry | undefined
+): boolean {
+  if (isRestDay(gymDayNames, dayName)) return iso <= todayIso;
+  return !!log?.completed;
+}
+
 /** چند روز این هفته (شنبه تا جمعه) واقعا روز باشگاهه — طبق gymDays پلن */
 export function sessionsThisWeekTotal(gymDays: string[] | null | undefined): number {
   return gymDays?.length ?? 0;
@@ -64,6 +90,8 @@ export function computeExerciseStreak(
 ): number {
   const gymSet = new Set(gymDayNames ?? []);
   if (gymSet.size === 0) return 0;
+  // روزهای استراحت «جلسه» نیستن که به عدد اضافه بشن (برچسب «جلسه‌ی
+  // پشت‌سرهم»)، ولی خودکار انجام‌شده‌ن، پس هیچ‌وقت استریک رو نمی‌شکنن.
 
   let streak = 0;
   const cursor = new Date(now);
@@ -74,7 +102,7 @@ export function computeExerciseStreak(
   cursor.setDate(cursor.getDate() - 1);
 
   for (let i = 0; i < 120; i++) {
-    if (!gymSet.has(gymDayNameOf(cursor))) {
+    if (isRestDay(gymSet, gymDayNameOf(cursor))) {
       cursor.setDate(cursor.getDate() - 1);
       continue;
     }

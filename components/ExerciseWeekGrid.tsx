@@ -6,6 +6,7 @@ import { CAL_WEEK_ORDER, FA_WEEKDAY } from "@/lib/jalali";
 import type { ExerciseDay } from "@/lib/exercisePlans";
 import { toEnDigits } from "@/lib/schedule";
 import { cn } from "@/lib/utils";
+import { TickButton } from "./TickButton";
 
 // «برنامه هفتگی» بدنسازی — یک باکس واحد، با پدینگ دورش تا خط جداکننده‌ی
 // بین روزها به لبه‌ی باکس نچسبه. موبایل: تک‌ستونی (زیر هم)، بدون تغییر
@@ -21,8 +22,9 @@ export function ExerciseWeekGrid({
 }: {
   planData: ExerciseDay[];
   todayName: string;
-  /** وضعیت روزهای باشگاه *همین هفته* (اسم روز → done/missed) از لاگ واقعی */
-  dayStatus?: Record<string, "done" | "missed">;
+  /** وضعیت روزهای *همین هفته* (اسم روز → done/missed از لاگ واقعی؛ rest =
+   *  روز استراحتی که رسیده و خودکار تیک می‌خوره) */
+  dayStatus?: Record<string, "done" | "missed" | "rest">;
 }) {
   const byDay = new Map(planData.map((d) => [d.day, d]));
 
@@ -62,7 +64,7 @@ export function ExerciseWeekGrid({
                     {dayName}
                   </span>
                   <div className="flex shrink-0 items-center gap-1.5">
-                    {d && dayStatus?.[dayName] && (
+                    {d && dayStatus?.[dayName] && dayStatus[dayName] !== "rest" && (
                       <span
                         className="shrink-0 text-[9.5px] font-semibold sm:text-[10.5px]"
                         style={{ color: dayStatus[dayName] === "done" ? "var(--accent)" : "#E05252" }}
@@ -79,7 +81,12 @@ export function ExerciseWeekGrid({
                 </div>
 
                 {!d ? (
-                  <div className="flex flex-1 items-center py-1.5 text-[10.5px] text-dash-muted lg:justify-center lg:text-center">روز استراحت</div>
+                  // روز استراحت خودکار «انجام‌شده»ست: همون تیک سایت، ولی فقط
+                  // نمایشی (disabled، بدون کلیک) — تا خود روز نرسیده تیک نمی‌خوره.
+                  <div className="flex flex-1 items-center gap-1.5 py-1.5 text-[10.5px] text-dash-muted lg:flex-col lg:justify-center lg:text-center">
+                    <TickButton as="span" size={20} disabled checked={dayStatus?.[dayName] === "rest"} />
+                    <span>استراحت</span>
+                  </div>
                 ) : (
                   <>
                     <div className="mt-1 truncate text-[10px] font-semibold text-dash-green sm:text-[11px]" title={d.focus}>

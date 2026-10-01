@@ -615,6 +615,21 @@ export async function canvasToBlob(canvas: HTMLCanvasElement): Promise<Blob> {
 }
 
 /**
+ * مرورگر می‌تونه *فایل* تصویر رو مستقیم به برگه‌ی اشتراک سیستم بده؟ (موبایل و
+ * بعضی دسکتاپ‌ها بله؛ بقیه فقط دانلود) — برای این‌که برچسب تنها دکمه‌ی اشتراک
+ * از قبل درست باشه («اشتراک‌گذاری» یا «ذخیره تصویر»).
+ */
+export function canShareFiles(): boolean {
+  try {
+    const nav = navigator as Navigator & { canShare?: (d: ShareData) => boolean };
+    if (typeof nav.share !== "function" || typeof nav.canShare !== "function") return false;
+    return nav.canShare({ files: [new File([new Uint8Array([0])], "arion.png", { type: "image/png" })] });
+  } catch {
+    return false;
+  }
+}
+
+/**
  * اشتراک تصویر: اگه مرورگر اشتراک فایل داره (موبایل) با navigator.share
  * (همراه متن و لینک دعوت)، وگرنه PNG دانلود می‌شه. «cancelled» یعنی کاربر
  * خودش برگه‌ی اشتراک رو بست — خطا نیست.
