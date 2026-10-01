@@ -38,8 +38,11 @@ const SHARE_DPR = 2;
 const NO_DIACRITICS = /[\u064B-\u0652\u0670]/g;
 const W = SHARE_W;
 const H = SHARE_H;
-// قاب شیشه‌ای کارت (مختصات منطقی) — مشترک بین لایه‌ی پس‌زمینه و محتوا
-const CX = 48, CY = 48, CW = W - 96, CH = H - 96, CR = 52;
+// کل تصویر خود باکس کارته (بدون حاشیه، قاب یا گوشه‌ی شفاف — پیام‌رسان‌ها آلفا رو
+// سفید/سیاه می‌کنن). محتوا هنوز در مختصات قاب قدیمی (984×1254 از 48,48) چیده
+// می‌شه و با یک مقیاس یکنواخت (CS) وسط کل تصویر می‌شینه — همون تناسب‌ها، بدون برش.
+const CY = 48, CH = H - 96;
+const CS = Math.min(W / (W - 96), H / CH);
 
 type Palette = {
   bg: string; surface: string; line: string; accent: string; accentRgb: string;
@@ -133,9 +136,9 @@ function drawFlame(ctx: CanvasRenderingContext2D, x: number, y: number, size: nu
 }
 
 // ── پس‌زمینه‌ی شیشه‌ای ─────────────────────────────────────────────
-// یک صحنه‌ی نورانی (چند هاله‌ی رنگی خیلی پخش) ساخته می‌شه و *فقط داخل قاب
-// کارت* دیده می‌شه — بیرون کارت رنگ ساده‌ی پس‌زمینه‌ست. داخل قاب: نسخه‌ی خیلی
-// تار صحنه + لایه‌ی رنگ شیری + درخشش لبه‌ی بالا + حاشیه‌ی نوری. تاری با
+// یک صحنه‌ی نورانی (چند هاله‌ی رنگی خیلی پخش) ساخته می‌شه و کل تصویر رو
+// می‌پوشونه (تصویر خود باکس کارته، بدون حاشیه یا قاب): نسخه‌ی خیلی تار صحنه +
+// لایه‌ی رنگ شیری + درخشش بالا-چپ + شبکه‌ی نقطه‌ای + دانه. تاری با
 // کوچک‌کردن مرحله‌ای و بزرگ‌کردن دوباره ساخته می‌شه (نه ctx.filter) تا روی همه‌ی
 // مرورگرها — از جمله سافاری قدیمی — یکسان و نرم دربیاد.
 type Orb = { x: number; y: number; r: number; color: string; a: number; soft: boolean };
@@ -283,60 +286,28 @@ function backgroundLayer(p: Palette, dpr: number): HTMLCanvasElement {
   const sc = scene.getContext("2d");
   if (!sc) throw new Error("canvas");
   paintScene(sc, W, H, p);
-  // بیرون کارت ساده و بی‌رنگه — رنگ‌ها فقط داخل شیشه دیده می‌شن
+  // شیشه‌ی مات کل تصویر رو می‌پوشونه — رنگ‌ها فقط رنگ‌های برند، خیلی پخش
   ctx.fillStyle = p.bg;
   ctx.fillRect(0, 0, W, H);
-
-  // سایه‌ی نرم زیر شیشه
-  ctx.save();
-  roundRect(ctx, CX, CY, CW, CH, CR);
-  ctx.shadowColor = p.light ? "rgba(80,50,20,.22)" : "rgba(0,0,0,.55)";
-  ctx.shadowBlur = 60;
-  ctx.shadowOffsetY = 24;
-  ctx.fillStyle = p.bg;
-  ctx.fill();
-  ctx.restore();
-
-  ctx.save();
-  roundRect(ctx, CX, CY, CW, CH, CR);
-  ctx.clip();
-  // خود «ماتی»: صحنه‌ی خیلی تار شده داخل قاب
-  // خیلی تار (عرض ۱۷px و بعد بزرگ) تا رنگ‌ها کاملا پخش و بی‌لبه باشن
+  // خود «ماتی»: صحنه‌ی خیلی تار (عرض 17px و بعد بزرگ) تا رنگ‌ها کاملا پخش و بی‌لبه باشن
   ctx.drawImage(blurredScene(scene, 17), 0, 0, W, H);
   // رنگ شیری/دودی شیشه
   ctx.fillStyle = p.light ? "rgba(255,255,255,.3)" : rgba(p.bg, 0.44);
-  ctx.fillRect(CX, CY, CW, CH);
+  ctx.fillRect(0, 0, W, H);
   // درخشش بالای شیشه (نور از بالا-چپ)
-  const sheen = ctx.createLinearGradient(CX, CY, CX + CW * 0.55, CY + CH * 0.45);
+  const sheen = ctx.createLinearGradient(0, 0, W * 0.55, H * 0.45);
   sheen.addColorStop(0, p.light ? "rgba(255,255,255,.42)" : "rgba(255,255,255,.12)");
   sheen.addColorStop(1, "rgba(255,255,255,0)");
   ctx.fillStyle = sheen;
-  ctx.fillRect(CX, CY, CW, CH);
+  ctx.fillRect(0, 0, W, H);
   // طرح: شبکه‌ی نقطه‌ای محو (زیر محتوا)
-  drawDotGrid(ctx, CX, CY, CW, CH, p);
+  drawDotGrid(ctx, 0, 0, W, H, p);
   // دانه‌ی ریز
   const grain = grainPattern(ctx, p.light);
   if (grain) {
     ctx.fillStyle = grain;
-    ctx.fillRect(CX, CY, CW, CH);
+    ctx.fillRect(0, 0, W, H);
   }
-  ctx.restore();
-
-  // حاشیه‌ی نوری: روشن بالا-چپ، محو پایین-راست + یه خط داخلی نازک
-  const edge = ctx.createLinearGradient(CX, CY, CX + CW, CY + CH);
-  // لبه‌ی بالا-چپ ته‌رنگ برند داره — همون نوری که از گوشه‌ی اکسنت میاد
-  edge.addColorStop(0, p.light ? rgba(p.accent, 0.55) : `rgba(${p.accentRgb},.6)`);
-  edge.addColorStop(0.18, p.light ? "rgba(255,255,255,.9)" : "rgba(255,255,255,.26)");
-  edge.addColorStop(0.5, p.light ? "rgba(255,255,255,.35)" : "rgba(255,255,255,.08)");
-  edge.addColorStop(1, p.light ? "rgba(255,255,255,.7)" : "rgba(255,255,255,.18)");
-  roundRect(ctx, CX + 1, CY + 1, CW - 2, CH - 2, CR - 1);
-  ctx.lineWidth = 2.5;
-  ctx.strokeStyle = edge;
-  ctx.stroke();
-  roundRect(ctx, CX + 4, CY + 4, CW - 8, CH - 8, CR - 4);
-  ctx.lineWidth = 1;
-  ctx.strokeStyle = p.light ? "rgba(0,0,0,.05)" : "rgba(0,0,0,.25)";
-  ctx.stroke();
 
   if (bgCache.size >= 4) bgCache.delete(bgCache.keys().next().value as string);
   bgCache.set(key, layer);
@@ -380,10 +351,14 @@ export async function renderShareCard(input: ShareCardInput, opts: RenderOpts = 
   const ctx = canvas.getContext("2d");
   if (!ctx) throw new Error("canvas");
   ctx.setTransform(1, 0, 0, 1, 0, 0);
-  // پس‌زمینه‌ی شیشه‌ای (صحنه، سایه‌ی 60px، تاری، درخشش، نقطه‌ها، دانه، لبه‌ها) به
+  // پس‌زمینه‌ی شیشه‌ای (صحنه، تاری، درخشش، نقطه‌ها، دانه) به
   // ورودی بستگی نداره — یک بار برای هر تم/تراکم ساخته و کش می‌شه، بعد 1:1 کپی.
   ctx.drawImage(backgroundLayer(p, dpr), 0, 0);
   ctx.scale(dpr, dpr);
+  // محتوا در مختصات قاب قدیمی؛ مقیاس یکنواخت حول مرکز تا کل تصویر رو پر کنه
+  ctx.translate(W / 2, H / 2);
+  ctx.scale(CS, CS);
+  ctx.translate(-W / 2, -H / 2);
   ctx.imageSmoothingEnabled = true;
   ctx.imageSmoothingQuality = "high";
 
