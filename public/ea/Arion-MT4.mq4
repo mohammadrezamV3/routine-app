@@ -21,7 +21,7 @@
 //
 #property copyright "Arion"
 #property link      "https://arionapp.ir"
-#property version   "1.20"
+#property version   "1.30"
 #property strict
 
 input string ArionUrl     = "https://arionapp.ir"; // آدرس سایت Arion
@@ -63,7 +63,9 @@ bool     g_tzKnown    = false;
 // تاریخچه دوباره فرستاده می‌شود.
 int      g_cursorTime  = 0;
 int      g_knownTotal  = 0;
-string   g_cursorFile  = "arion_cursor.txt";
+string   g_cursorFile  = "arion_cursor_v13.txt";
+// نسخه‌ی 1.30: فایل کرسر جدید تا اولین اجرا بعد از آپدیت یک‌بار کل تاریخچه (همراه
+// واریز/برداشت و هزینه‌هایی که نسخه‌های قبل نمی‌فرستادن) دوباره فرستاده بشه.
 
 // تا وقتی وصل نشده‌ایم زود‌به‌زود تلاش می‌کنیم (نه با فاصله‌ی ارسالِ کامل)،
 // چون معمولا کاربر همین چند دقیقه‌ی اول دارد تنظیمات را درست می‌کند.
@@ -289,15 +291,15 @@ void Pair()
 //+------------------------------------------------------------------+
 //| یک دسته از معاملات را می‌فرستد (بالانس/اکوئیتی همیشه همراهش می‌رود)  |
 //+------------------------------------------------------------------+
-bool SendBatch(string tradesJson)
+bool SendBatch(string itemsJson, bool cash)
   {
    string body = "{\"balance\":" + Num(AccountBalance(), 2) +
                  ",\"equity\":" + Num(AccountEquity(), 2) +
                  ",\"currency\":\"" + JsonEscape(AccountCurrency()) + "\"" +
-                 ",\"eaVersion\":\"1.20\"";
+                 ",\"eaVersion\":\"1.30\"";
    int tz = BrokerTzOffsetMinutes();
    if(g_tzKnown) body += ",\"tzOffsetMinutes\":" + IntegerToString(tz);
-   body += ",\"trades\":[" + tradesJson + "]}";
+   body += (cash ? ",\"trades\":[],\"cashflows\":[" : ",\"trades\":[") + itemsJson + "]}";
 
    int status;
    string res = HttpPost(ArionUrl + "/api/mt/sync",
@@ -336,10 +338,10 @@ bool SendBatch(string tradesJson)
 //+------------------------------------------------------------------+
 //| فهرستی از رشته‌ها را در دسته‌های MT_CHUNK_SIZE تایی می‌فرستد.        |
 //+------------------------------------------------------------------+
-bool SendAll(string &items[])
+bool SendAll(string &items[], bool cash = false)
   {
    int total = ArraySize(items);
-   if(total == 0) return(SendBatch(""));
+   if(total == 0) return(cash ? true : SendBatch("", false));
    int sent = 0;
    while(sent < total)
      {
@@ -351,7 +353,7 @@ bool SendAll(string &items[])
          chunk += items[k];
         }
       // دسته‌ی ناموفق → توقف؛ کِرسر جلو نرفته، پس دفعه‌ی بعد تکرار می‌شود
-      if(!SendBatch(chunk)) return(false);
+      if(!SendBatch(chunk, cash)) return(false);
       sent = end;
       if(sent < total) Sleep(500); // زیرِ سقفِ نرخِ سرور می‌ماند
      }
@@ -388,12 +390,30 @@ void Sync()
    int since = full ? 0 : g_cursorTime - CURSOR_OVERLAP;
 
    string batch[]; ArrayResize(batch, 0);
+   string cashItems[]; ArrayResize(cashItems, 0);
    int newCursor = g_cursorTime;
    for(int j = 0; j < total; j++)
      {
       if(!OrderSelect(j, SELECT_BY_POS, MODE_HISTORY)) continue;
       int ct = (int)OrderCloseTime();
       if(ct > newCursor) newCursor = ct;
+      // نوع 6 (balance: واریز/برداشت و هزینه‌هایی که بروکر با کامنت ثبت می‌کنه مثل
+      // مالیات/کمیسیون) و 7 (credit). قبلا نادیده گرفته می‌شد و موجودی ژورنال
+      // با موجودی متاتریدر نمی‌خوند.
+      if(OrderType() == 6 || OrderType() == 7)
+        {
+         if(!full && ct < since) continue;
+         double amt = OrderProfit() + OrderCommission() + OrderSwap();
+         if(amt == 0) continue;
+         int bt = (int)OrderOpenTime(); if(bt <= 0) bt = ct;
+         string cj = "{\"ticket\":\"" + IntegerToString(OrderTicket()) + "\"" +
+                     ",\"type\":\"" + (OrderType() == 7 ? "CREDIT" : "BALANCE") + "\"" +
+                     ",\"amount\":" + Num(amt, 2) +
+                     ",\"time\":" + IntegerToString(bt) +
+                     ",\"comment\":\"" + JsonEscape(OrderComment()) + "\"}";
+         int cn = ArraySize(cashItems); ArrayResize(cashItems, cn + 1); cashItems[cn] = cj;
+         continue;
+        }
       if(OrderType() > OP_SELL) continue;
       if(!full && ct < since) continue;
       int n = ArraySize(batch);
@@ -402,13 +422,15 @@ void Sync()
      }
 
    if(ArraySize(batch) > 0 && !SendAll(batch)) return;
+   if(ArraySize(cashItems) > 0 && !SendAll(cashItems, true)) return;
 
    g_cursorTime = newCursor;
    g_knownTotal = total;
    SaveCursor();
    g_lastSync = TimeCurrent();
    g_status = "ارسال شد: " + IntegerToString(ArraySize(openItems)) + " باز، " +
-              IntegerToString(ArraySize(batch)) + " بسته" +
+              IntegerToString(ArraySize(batch)) + " بسته، " +
+              IntegerToString(ArraySize(cashItems)) + " واریز/هزینه" +
               (full ? " (کلِ تاریخچه‌ی قابلِ دید — برای همه‌ی معاملات در تبِ Account History «All History» را انتخاب کنید)" : "");
   }
 
