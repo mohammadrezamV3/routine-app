@@ -8,7 +8,7 @@ import { getPricingConfig } from "@/lib/planPricingServer";
 import { signCheckoutParams } from "@/lib/checkoutSignature";
 import { zibalRequest } from "@/lib/zibal";
 import { getSiteUrl } from "@/lib/siteUrl";
-import { resolveDiscountCode } from "@/lib/discountValidation";
+import { resolveDiscountCode, findInviterRewards, REFERRAL_INVITER_REWARD_PERCENT } from "@/lib/discountValidation";
 import { findUpgradeSource, computeUpgradePricing, UPGRADE_TARGET_PLAN_KEY } from "@/lib/planUpgrade";
 
 // زرین‌پال طبق درخواست صریح کامل از پروژه حذف شد — زیبال تنها درگاهه.
@@ -74,14 +74,26 @@ export async function POST(req: NextRequest) {
     let discountPercent = 0;
     let referralUsageId: string | undefined;
     let discountCodeId: string | undefined;
+    let inviterRewardId: string | undefined;
     let discountApplied = false;
+    let resolution: Awaited<ReturnType<typeof resolveDiscountCode>> | null = null;
     if (discountCode?.trim()) {
-      const resolution = await resolveDiscountCode(discountCode, userId, planKey);
+      resolution = await resolveDiscountCode(discountCode, userId, planKey);
       if (!resolution.ok) {
         // کدی وارد شده ولی نه توی هیچ‌کدوم از دو جدول معتبر بود — به‌جای
         // نادیده‌گرفتن بی‌صدا (که کاربر فکر می‌کنه تخفیف اعمال شده)، صریح خطا می‌دیم.
         return NextResponse.json({ error: resolution.error }, { status: 400 });
       }
+    }
+    // پاداش دعوت صاحب کد (lib/referral.ts) خودکار اعمال می‌شه؛ با کد تخفیف جمع
+    // نمی‌شه — هر کدوم بیشتر بود همون، و اونی که استفاده نشد مصرف هم نمی‌شه.
+    const reward = await findInviterRewards(userId);
+    const codePercent = resolution?.ok ? resolution.percent : 0;
+    if (reward.nextUsageId && REFERRAL_INVITER_REWARD_PERCENT > codePercent) {
+      discountPercent = REFERRAL_INVITER_REWARD_PERCENT;
+      inviterRewardId = reward.nextUsageId;
+      discountApplied = true;
+    } else if (resolution?.ok) {
       discountPercent = resolution.percent;
       discountApplied = true;
       if (resolution.source === "referral") {
@@ -118,8 +130,8 @@ export async function POST(req: NextRequest) {
     const origin = getSiteUrl(req.nextUrl.origin);
     // پلن/مدت/ماه/مبلغ با HMAC امضا می‌شن (lib/checkoutSignature.ts) تا
     // verify به هیچ پارامتر دستکاری‌شده‌ای از URL بازگشت اعتماد نکنه.
-    const sig = signCheckoutParams({ userId, planKey, duration, months, amount: finalAmount, discountPercent, referralUsageId, discountCodeId, upgradeFromSubId });
-    const callbackUrl = `${origin}/api/subscription/verify?gateway=${gateway}&planKey=${encodeURIComponent(planKey)}&duration=${duration}&months=${months}&amount=${finalAmount}&discountPercent=${discountPercent}${referralUsageId ? `&referralUsageId=${referralUsageId}` : ""}${discountCodeId ? `&discountCodeId=${discountCodeId}` : ""}${upgradeFromSubId ? `&upgradeFromSubId=${upgradeFromSubId}` : ""}&sig=${sig}`;
+    const sig = signCheckoutParams({ userId, planKey, duration, months, amount: finalAmount, discountPercent, referralUsageId, discountCodeId, inviterRewardId, upgradeFromSubId });
+    const callbackUrl = `${origin}/api/subscription/verify?gateway=${gateway}&planKey=${encodeURIComponent(planKey)}&duration=${duration}&months=${months}&amount=${finalAmount}&discountPercent=${discountPercent}${referralUsageId ? `&referralUsageId=${referralUsageId}` : ""}${discountCodeId ? `&discountCodeId=${discountCodeId}` : ""}${inviterRewardId ? `&inviterRewardId=${inviterRewardId}` : ""}${upgradeFromSubId ? `&upgradeFromSubId=${upgradeFromSubId}` : ""}&sig=${sig}`;
 
     const description = `خرید ${pricing.nameFa} — ${months} ماهه`;
     const { paymentUrl } = await zibalRequest(finalAmount, callbackUrl, description);

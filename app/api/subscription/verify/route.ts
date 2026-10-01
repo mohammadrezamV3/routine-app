@@ -68,6 +68,7 @@ export async function GET(req: NextRequest) {
   const discountPercent = Number(searchParams.get("discountPercent") || 0);
   const referralUsageId = searchParams.get("referralUsageId") || undefined;
   const discountCodeId = searchParams.get("discountCodeId") || undefined;
+  const inviterRewardId = searchParams.get("inviterRewardId") || undefined;
   const upgradeFromSubId = searchParams.get("upgradeFromSubId") || undefined;
 
   if (!planKey || !duration || !amount || !Number.isInteger(months) || months < PRICING_LIMITS.minMonths || months > PRICING_LIMITS.maxMonths) {
@@ -75,7 +76,7 @@ export async function GET(req: NextRequest) {
   }
   // پلن/مدت/مبلغ/تخفیف همه با امضای checkout مطابقت داده می‌شن؛ زیبال فقط
   // مبلغ رو تضمین می‌کنه، نه این‌که این مبلغ قیمت کدوم پلن بوده.
-  if (!verifyCheckoutSignature({ userId, planKey, duration, months, amount, discountPercent, referralUsageId, discountCodeId, upgradeFromSubId }, searchParams.get("sig"))) {
+  if (!verifyCheckoutSignature({ userId, planKey, duration, months, amount, discountPercent, referralUsageId, discountCodeId, inviterRewardId, upgradeFromSubId }, searchParams.get("sig"))) {
     return failRedirect("bad_signature", userId, planKey, duration);
   }
 
@@ -161,13 +162,21 @@ export async function GET(req: NextRequest) {
     }),
   });
 
-  // شرط «اولین پرداخت موفق» برای کد رفرال محقق شد — وضعیت REWARDED می‌شه.
-  // توجه: پاداش «یک ماه رایگان برای دعوت‌کننده» هنوز پیاده نشده (فاز بعدی)،
-  // اینجا فقط رکورد استفاده‌ی موفق ثبت می‌شه.
+  // شرط «اولین پرداخت موفق» برای کد رفرال محقق شد — وضعیت REWARDED می‌شه و
+  // از همین لحظه صاحب کد یک پاداش ۱۵٪ برای خرید بعدی خودش داره (lib/referral.ts).
+  // where شامل inviteeUserId هست تا id دستکاری‌شده‌ی query مال کاربر دیگه‌ای نباشه.
   if (referralUsageId) {
-    await prisma.referralUsage.update({
-      where: { id: referralUsageId },
+    await prisma.referralUsage.updateMany({
+      where: { id: referralUsageId, inviteeUserId: userId, status: "PENDING" },
       data: { status: "REWARDED", rewardedAt: new Date() },
+    }).catch(() => {});
+  }
+
+  // مصرف پاداش دعوت صاحب کد — فقط پاداشی که واقعا مال همین کاربره و هنوز مصرف نشده
+  if (inviterRewardId) {
+    await prisma.referralUsage.updateMany({
+      where: { id: inviterRewardId, status: "REWARDED", inviterRewardApplied: false, referralCode: { userId } },
+      data: { inviterRewardApplied: true },
     }).catch(() => {});
   }
 

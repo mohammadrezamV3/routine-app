@@ -18,6 +18,7 @@ export type CheckoutParams = {
   discountPercent: number;
   referralUsageId?: string;
   discountCodeId?: string;
+  inviterRewardId?: string;
   upgradeFromSubId?: string;
 };
 
@@ -38,6 +39,7 @@ function canonical(p: CheckoutParams): string {
     String(p.discountPercent),
     p.referralUsageId || "",
     p.discountCodeId || "",
+    p.inviterRewardId || "",
     p.upgradeFromSubId || "",
   ].join("|");
 }

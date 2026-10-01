@@ -543,7 +543,9 @@ model ReferralUsage {
 
   status ReferralUsageStatus @default(PENDING)
 
-  // پاداش هر دو طرف: یک ماه رایگان — این مقدار وقتی status=REWARDED می‌شود اعمال می‌گردد
+  // status=REWARDED یعنی دعوت‌شونده خرید اولش رو با این کد کرد (10٪ گرفت)؛ از همون
+  // لحظه صاحب کد یک بار 15٪ روی خرید بعدی خودش داره و inviterRewardApplied یعنی
+  // اون پاداش مصرف شده (lib/referral.ts). inviteeRewardApplied فعلا استفاده نمی‌شه.
   inviterRewardApplied Boolean @default(false)
   inviteeRewardApplied Boolean @default(false)
 
