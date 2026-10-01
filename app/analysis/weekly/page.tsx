@@ -23,7 +23,7 @@ import { WeeklyAnalysisShare } from "@/components/WeeklyAnalysisShare";
 import { WeeklyAnalysisEmpty } from "@/components/WeeklyAnalysisEmpty";
 import { waFetch } from "@/components/WeeklyAnalysisShared";
 
-// اگه از یه لینک مشخص باز شده باشه (مثلا نوتیفِ «آنالیز هفته‌ی قبلت آماده‌ست»
+// اگه از یه لینک مشخص باز شده باشه (مثلا نوتیف «آنالیز هفته‌ی قبلت آماده‌ست»
 // با ?offset=-1)، همون هفته باز می‌شه. از window.location مستقیم می‌خونیم
 // (نه useSearchParams) تا Suspense لازم نباشه — هم‌الگوی بقیه‌ی صفحه‌ها.
 function initialOffsetFromUrl(): number {
@@ -66,7 +66,7 @@ function WeeklyAnalysisContent() {
 
   useEffect(() => {
     load(offset);
-    // آدرس هم‌گام با هفته‌ی انتخابی — رفرش/اشتراکِ لینک همون هفته رو باز می‌کنه
+    // آدرس هم‌گام با هفته‌ی انتخابی — رفرش/اشتراک لینک همون هفته رو باز می‌کنه
     try {
       const url = new URL(window.location.href);
       if (offset === 0) url.searchParams.delete("offset");
@@ -76,7 +76,7 @@ function WeeklyAnalysisContent() {
     return () => abortRef.current?.abort();
   }, [offset, load]);
 
-  // داده‌ی نمایش‌داده‌شده فقط وقتی معتبره که مالِ همین هفته‌ی انتخابی باشه
+  // داده‌ی نمایش‌داده‌شده فقط وقتی معتبره که مال همین هفته‌ی انتخابی باشه
   const current = analysis && analysis.offset === offset ? analysis : null;
 
   const patch = (fn: (a: WeeklyAnalysis) => WeeklyAnalysis) => setAnalysis((a) => (a ? fn(a) : a));

@@ -1,13 +1,13 @@
 "use client";
 
-// دعوتِ دوست — «بهونه»ی اشتراک‌گذاری: هر کارتِ اشتراکی (استریک، داشبورد) کدِ
-// رفرالِ شخصیِ کاربر رو همراه داره و دوستی که با لینکش بیاد روی اولین
-// اشتراکش REFERRAL_DISCOUNT_PERCENT ٪ تخفیف می‌گیره (همون منطقِ موجودِ
-// lib/discountValidation.ts — این‌جا هیچ پاداشِ تازه‌ای سمتِ سرور ساخته نشده).
+// دعوت دوست — «بهونه»ی اشتراک‌گذاری: هر کارت اشتراکی (استریک، داشبورد) کد
+// رفرال شخصی کاربر رو همراه داره و دوستی که با لینکش بیاد روی اولین
+// اشتراکش REFERRAL_DISCOUNT_PERCENT ٪ تخفیف می‌گیره (همون منطق موجود
+// lib/discountValidation.ts — این‌جا هیچ پاداش تازه‌ای سمت سرور ساخته نشده).
 //
-// جریان: لینکِ `/?ref=CODE` → InviteRefCapture کد رو (فقط روی همین مرورگر،
+// جریان: لینک `/?ref=CODE` → InviteRefCapture کد رو (فقط روی همین مرورگر،
 // ۳۰ روز) نگه می‌داره → صفحه‌ی ثبت‌نام خبر می‌ده که تخفیف منتظرشه → چک‌اوت
-// فیلدِ کدِ تخفیف رو خودش پر می‌کنه. اعتبارِ واقعیِ کد همیشه سمتِ سرور چک می‌شه.
+// فیلد کد تخفیف رو خودش پر می‌کنه. اعتبار واقعی کد همیشه سمت سرور چک می‌شه.
 
 import { useEffect, useState } from "react";
 import { getAccount } from "./accountCache";
@@ -29,7 +29,7 @@ export function captureInviteRef(): void {
   try {
     localStorage.setItem(KEY, JSON.stringify({ code, at: Date.now() }));
   } catch {
-    // ذخیره‌سازیِ بسته — دعوت فقط برای همین بازدید از دست می‌ره
+    // ذخیره‌سازی بسته — دعوت فقط برای همین بازدید از دست می‌ره
   }
 }
 
@@ -55,7 +55,7 @@ export function inviteUrl(code: string | null): string {
 
 export type MyInvite = { code: string | null; url: string };
 
-/** کدِ رفرالِ خودِ کاربر (از کشِ /api/account) + لینکِ دعوت */
+/** کد رفرال خود کاربر (از کش /api/account) + لینک دعوت */
 export function useMyInvite(): MyInvite | null {
   const [invite, setInvite] = useState<MyInvite | null>(null);
   useEffect(() => {

@@ -43,8 +43,8 @@ export async function GET(req: NextRequest) {
   });
   return NextResponse.json({
     events: events.map((e) => ({ ...e, occursAt: e.occursAt.toISOString(), createdAt: e.createdAt.toISOString(), updatedAt: e.updatedAt.toISOString() })),
-    // همون اولویتِ lib/economicCalendar: ECONOMIC_CALENDAR_URL → JBlanked (با
-    // ECONOMIC_CALENDAR_API_KEY) → TradingViewِ بی‌کلید (پیش‌فرض).
+    // همون اولویت lib/economicCalendar: ECONOMIC_CALENDAR_URL → JBlanked (با
+    // ECONOMIC_CALENDAR_API_KEY) → TradingView بی‌کلید (پیش‌فرض).
     externalSource: externalProviderName(),
   });
 }
@@ -73,7 +73,7 @@ export async function PATCH(req: NextRequest) {
   if (typeof parsed === "string") return NextResponse.json({ error: parsed }, { status: 400 });
 
   // updateMany تا شناسه‌ی ناموجود (مثلا رویدادی که همین حالا حذف شده) ۴۰۴
-  // بده، نه خطای ۵۰۰ِ P2025.
+  // بده، نه خطای ۵۰۰ P2025.
   const result = await prisma.economicEvent.updateMany({ where: { id }, data: parsed });
   if (!result.count) return NextResponse.json({ error: "رویداد پیدا نشد" }, { status: 404 });
   await writeAuditLog(guard.userId, "economic_event.update", "EconomicEvent", id, { title: parsed.title });

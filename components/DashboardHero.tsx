@@ -1,9 +1,9 @@
 "use client";
 
-// هیروی داشبورد: سلامِ زمان‌محور، تاریخِ شمسی، یک جمله‌ی خلاصه‌ی «امروزت
-// کجاست»، سه حلقه‌ی هم‌مرکزِ روز (روتین/تمرین/کالری) و «نوارِ روز» — مسیرِ
-// بیداری تا خوابِ خودِ کاربر که خورشید روی ساعتِ فعلی می‌شینه و برنامه‌های
-// امروز به‌شکلِ نقطه روش هستن (پر = انجام‌شده).
+// هیروی داشبورد: سلام زمان‌محور، تاریخ شمسی، یک جمله‌ی خلاصه‌ی «امروزت
+// کجاست»، سه حلقه‌ی هم‌مرکز روز (روتین/تمرین/کالری) و «نوار روز» — مسیر
+// بیداری تا خواب خود کاربر که خورشید روی ساعت فعلی می‌شینه و برنامه‌های
+// امروز به‌شکل نقطه روش هستن (پر = انجام‌شده).
 
 import Link from "next/link";
 import { useEffect, useMemo, useRef, useState } from "react";
@@ -32,7 +32,7 @@ export function useNow(stepMs = 30_000) {
 
 const two = (n: number) => String(n).padStart(2, "0");
 
-// ساعتِ زنده — interval ِ یک‌ثانیه‌ای فقط داخلِ همین کامپوننته تا کلِ هیرو هر ثانیه رندر نشه
+// ساعت زنده — interval  یک‌ثانیه‌ای فقط داخل همین کامپوننته تا کل هیرو هر ثانیه رندر نشه
 function LiveClock() {
   const [t, setT] = useState<Date | null>(null);
   useEffect(() => {
@@ -42,15 +42,15 @@ function LiveClock() {
   }, []);
   if (!t) return <span className="db-ribbon-clock" dir="ltr" aria-hidden="true">--:--<span className="s">:--</span></span>;
   return (
-    <span className="db-ribbon-clock" dir="ltr" role="timer" aria-label="ساعتِ فعلی">
+    <span className="db-ribbon-clock" dir="ltr" role="timer" aria-label="ساعت فعلی">
       {two(t.getHours())}<i>:</i>{two(t.getMinutes())}<i className="s">:</i><span className="s">{two(t.getSeconds())}</span>
     </span>
   );
 }
 
-// رنگِ خورشید/ماه از زرد (صبح) تا بنفش (شب) بر اساسِ پیشرفت
+// رنگ خورشید/ماه از زرد (صبح) تا بنفش (شب) بر اساس پیشرفت
 const SUN_STOPS: [number, [number, number, number]][] = [
-  // شب = مهتابیِ آبیِ روشن روی سرمه‌ای، نه بنفش (نشانگر باید روی نوارِ تیره دیده بشه)
+  // شب = مهتابی آبی روشن روی سرمه‌ای، نه بنفش (نشانگر باید روی نوار تیره دیده بشه)
   [0, [255, 211, 90]], [0.3, [255, 159, 67]], [0.52, [240, 112, 90]], [0.76, [120, 160, 230]], [1, [205, 222, 255]],
 ];
 function sunColor(p: number) {
@@ -83,13 +83,13 @@ export function DashboardHero({
     hasWakeSleep: boolean;
   };
   onOpenCommand: () => void;
-  /** «اشتراکِ موفقیت» — پاپ‌آپِ DashboardShare */
+  /** «اشتراک موفقیت» — پاپ‌آپ DashboardShare */
   onShare?: () => void;
   routineLocked?: boolean;
 }) {
   const now = useNow();
   const heroRef = useRef<HTMLElement>(null);
-  // همان نورِ دنبال‌کننده‌ی موسِ BentoCard
+  // همان نور دنبال‌کننده‌ی موس BentoCard
   useEffect(() => {
     const el = heroRef.current;
     if (!el || typeof window === "undefined") return;
@@ -129,8 +129,8 @@ export function DashboardHero({
     if (!routine.ready) return null;
     if (total === 0) parts.push("امروز برنامه‌ای در روتینت نیست");
     else if (completed === total) parts.push("همه‌ی برنامه‌های امروز انجام شده");
-    else parts.push(`${faNum(total - completed)} برنامه‌ی دیگه تا کامل‌شدنِ امروز`);
-    if (ex?.hasPlan && ex.today.isGymDay && !ex.today.done) parts.push(ex.today.focus ? `تمرینِ امروز: ${ex.today.focus}` : "امروز روزِ تمرینه");
+    else parts.push(`${faNum(total - completed)} برنامه‌ی دیگه تا کامل‌شدن امروز`);
+    if (ex?.hasPlan && ex.today.isGymDay && !ex.today.done) parts.push(ex.today.focus ? `تمرین امروز: ${ex.today.focus}` : "امروز روز تمرینه");
     if (cal?.target) {
       const left = Math.round(cal.target.kcal - cal.today.kcal);
       parts.push(left >= 0 ? `${faNum(left)} کالری تا هدف` : `${faNum(-left)} کالری بیشتر از هدف`);
@@ -169,7 +169,7 @@ export function DashboardHero({
         <div className="db-hero-chips">
           <Link href="/streak" prefetch className={`db-chip db-chip-streak tier-${tier.tier}`} title={tier.name}>
             <DashIcon name="flame" className="dbi-live" />
-            {routine.streak === null ? <Skel w={24} h={10} /> : <><b>{faNum(routine.streak)}</b> روز پشتِ‌سرهم</>}
+            {routine.streak === null ? <Skel w={24} h={10} /> : <><b>{faNum(routine.streak)}</b> روز پشت‌سرهم</>}
           </Link>
           {onShare && (
             <button type="button" className="db-chip db-chip-share" onClick={onShare} disabled={!routine.ready}>
@@ -193,25 +193,25 @@ export function DashboardHero({
             <Link href="/account/subscription" prefetch className="db-chip">
               <DashIcon name="card" />
               {data.plan.status === "TRIAL" ? "دوره‌ی آزمایشی" : data.plan.name}
-              <span className="db-chip-sub">تا {daysLeft(data.plan.endsAt)} روزِ دیگه</span>
+              <span className="db-chip-sub">تا {daysLeft(data.plan.endsAt)} روز دیگه</span>
             </Link>
           )}
           {data && data.notifications.unread > 0 && (
             <span className="db-chip db-chip-bell">
               <DashIcon name="bell" className="dbi-live" />
-              <b>{faNum(data.notifications.unread)}</b> اعلانِ تازه
+              <b>{faNum(data.notifications.unread)}</b> اعلان تازه
             </span>
           )}
         </div>
 
-        <button type="button" className="db-cmd-trigger" onClick={onOpenCommand} aria-label="جست‌وجو و دسترسیِ سریع">
+        <button type="button" className="db-cmd-trigger" onClick={onOpenCommand} aria-label="جست‌وجو و دسترسی سریع">
           <DashIcon name="command" />
           <span>کجا بریم؟ جست‌وجو در همه‌ی بخش‌ها…</span>
           <span className="db-cmd-trigger-keys" aria-hidden="true"><kbd className="db-kbd">Ctrl</kbd><kbd className="db-kbd">K</kbd></span>
         </button>
       </div>
 
-      <div className="db-hero-orbit" aria-label="پیشرفتِ امروز">
+      <div className="db-hero-orbit" aria-label="پیشرفت امروز">
         <OrbitRings rings={shownRings} ready={routine.ready} />
         <ul className="db-orbit-legend">
           {shownRings.map((r, i) => (
@@ -233,7 +233,7 @@ export function DashboardHero({
 
 export type HeroRing = { key: "routine" | "exercise" | "calorie"; label: string; value: number; display: string; grad: [string, string]; show: boolean; href: string };
 
-/** سه حلقه‌ی روز (روتین/تمرین/کالری) — مشترکِ هیرو و کارتِ اشتراکی (DashboardShare) */
+/** سه حلقه‌ی روز (روتین/تمرین/کالری) — مشترک هیرو و کارت اشتراکی (DashboardShare) */
 export function heroRings(data: DashboardData | null, stats: { completed: number; total: number }, routineLocked = false): HeroRing[] {
   const ex = data?.exercise;
   const cal = data?.calorie;
@@ -241,7 +241,7 @@ export function heroRings(data: DashboardData | null, stats: { completed: number
   const calVal = cal?.target?.kcal ? cal.today.kcal / cal.target.kcal : 0;
   return [
     { key: "routine", label: "روتین", value: stats.total ? stats.completed / stats.total : 0, display: stats.total ? `${faNum(stats.completed)}/${faNum(stats.total)}` : "—", grad: ["var(--ring-1a)", "var(--ring-1b)"], show: !routineLocked, href: "/weekly" },
-    { key: "exercise", label: ex?.today.isGymDay ? "تمرینِ امروز" : "تمرینِ هفته", value: exVal, display: ex ? (ex.today.isGymDay ? `${faNum(ex.today.doneItems)}/${faNum(ex.today.itemCount)}` : `${faNum(ex.week.done)}/${faNum(ex.week.target)}`) : "—", grad: ["var(--ring-2a)", "var(--ring-2b)"], show: !!ex?.hasPlan, href: "/exercise?tab=exercise" },
+    { key: "exercise", label: ex?.today.isGymDay ? "تمرین امروز" : "تمرین هفته", value: exVal, display: ex ? (ex.today.isGymDay ? `${faNum(ex.today.doneItems)}/${faNum(ex.today.itemCount)}` : `${faNum(ex.week.done)}/${faNum(ex.week.target)}`) : "—", grad: ["var(--ring-2a)", "var(--ring-2b)"], show: !!ex?.hasPlan, href: "/exercise?tab=exercise" },
     { key: "calorie", label: "کالری", value: Math.min(calVal, 1), display: cal?.target ? `${faNum(Math.round(cal.today.kcal))}` : "—", grad: calVal > 1 ? ["var(--ring-3b)", "var(--ring-over)"] : ["var(--ring-3a)", "var(--ring-3b)"], show: !!cal?.target, href: "/exercise?tab=calorie" },
   ];
 }
@@ -251,8 +251,8 @@ function daysLeft(iso: string) {
 }
 
 // ── حلقه‌های هم‌مرکز ────────────────────────────────────────
-// هر حلقه گرادیانِ دورانیِ خودش رو داره (GradientArc) + سرِ درخشان؛ رنگ‌ها از
-// توکن‌های --ring-* در dashboard.css (دو پالتِ جدا برای شب و روز).
+// هر حلقه گرادیان دورانی خودش رو داره (GradientArc) + سر درخشان؛ رنگ‌ها از
+// توکن‌های --ring-* در dashboard.css (دو پالت جدا برای شب و روز).
 function OrbitRings({ rings, ready }: { rings: { key: string; value: number; grad: [string, string] }[]; ready: boolean }) {
   const size = 176, stroke = 13, gap = 5;
   const main = rings[0];
@@ -294,7 +294,7 @@ function OrbitRings({ rings, ready }: { rings: { key: string; value: number; gra
   );
 }
 
-// ── نوارِ روز ────────────────────────────────────────────────
+// ── نوار روز ────────────────────────────────────────────────
 function toMin(v: string) {
   const [h, m] = v.split(":").map(Number);
   return h * 60 + m;
@@ -312,12 +312,12 @@ export function DayRibbon({ now, tasks, wake, sleep, configured }: { now: Date |
   const dots = tasks.filter((t) => t.startMin !== null);
 
   return (
-    <div className="db-ribbon" aria-label="نوارِ روز">
+    <div className="db-ribbon" aria-label="نوار روز">
       <div className="db-ribbon-head">
         <span className="db-ribbon-end"><DashIcon name="sunrise" /> <span dir="ltr">{wake}</span></span>
         <span className="db-ribbon-left">
           <LiveClock />
-          {!configured && <Link href="/weekly" prefetch className="db-ribbon-set">تنظیمِ ساعتِ خواب</Link>}
+          {!configured && <Link href="/weekly" prefetch className="db-ribbon-set">تنظیم ساعت خواب</Link>}
         </span>
         <span className="db-ribbon-end"><span dir="ltr">{sleep}</span> <DashIcon name="bed" /></span>
       </div>

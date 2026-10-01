@@ -84,7 +84,7 @@ export async function POST(req: NextRequest) {
       },
     });
   } catch (e: any) {
-    // دو درخواستِ هم‌زمان با یک کد — findUnique بالا هر دو رو رد نمی‌کنه
+    // دو درخواست هم‌زمان با یک کد — findUnique بالا هر دو رو رد نمی‌کنه
     if (e?.code === "P2002") return NextResponse.json({ error: "این کد قبلا ساخته شده" }, { status: 409 });
     throw e;
   }

@@ -7,13 +7,13 @@ import { useCallback, useLayoutEffect, useRef } from "react";
 // چند گزینه» انتخاب می‌شه عینا همون ظاهر و انیمیشن رو داشته باشه.
 //
 // بهینه‌سازی: نشانگر قبلا `left`/`width` رو با transition CSS می‌برد — هر دو
-// propِ layout ـن، پس هر فریمِ انیمیشن یک reflow کامل می‌داد. حالا نشانگر
-// ثابت روی left:0 می‌شینه و فقط با `transform` (translate3d، و وقتی عرضِ دو
-// گزینه فرق داره یک scaleX به روشِ FLIP) جابه‌جا می‌شه؛ یعنی کل انیمیشن روی
+// prop layout ـن، پس هر فریم انیمیشن یک reflow کامل می‌داد. حالا نشانگر
+// ثابت روی left:0 می‌شینه و فقط با `transform` (translate3d، و وقتی عرض دو
+// گزینه فرق داره یک scaleX به روش FLIP) جابه‌جا می‌شه؛ یعنی کل انیمیشن روی
 // compositor اجرا می‌شه و در حالت سکون (scaleX(1)) پیکسل‌به‌پیکسل همون قبلیه.
 //
 // RTL: offsetLeft و translateX هر دو فیزیکی (از چپ) هستن و نشانگر صریحا
-// left:0 داره، پس جهتِ متن هیچ اثری روی محاسبه نداره.
+// left:0 داره، پس جهت متن هیچ اثری روی محاسبه نداره.
 //
 // active می‌تونه null باشه (هنوز چیزی انتخاب نشده، مثلا «کجا تمرین
 // می‌کنی؟») — نشانگر پنهان می‌مونه و با اولین انتخاب همون‌جا محو-ظاهر می‌شه.
@@ -25,11 +25,11 @@ export function SegmentedTabs<T extends string>({
   disabled = false,
   ariaLabel,
 }: {
-  // label معمولاً متن است؛ ReactNode فقط برای موردی مثلِ نشانِ شمارنده کنارِ متن
+  // label معمولا متن است؛ ReactNode فقط برای موردی مثل نشان شمارنده کنار متن
   options: { value: T; label: React.ReactNode }[];
   active: T | null;
   onChange: (value: T) => void;
-  /** کلاسِ اضافه روی ظرف (برای اندازه/فاصله‌ی مخصوصِ هر جا) */
+  /** کلاس اضافه روی ظرف (برای اندازه/فاصله‌ی مخصوص هر جا) */
   className?: string;
   disabled?: boolean;
   ariaLabel?: string;
@@ -54,7 +54,7 @@ export function SegmentedTabs<T extends string>({
     }
     // عمدا به‌جای getBoundingClientRect از offsetLeft/offsetWidth استفاده
     // می‌شه — پاپ‌آپ‌های میزبان (.modal-panel) موقع باز شدن انیمیشن
-    // transform:scale دارن؛ getBoundingClientRect مقیاسِ کوچیکِ همون لحظه
+    // transform:scale دارن؛ getBoundingClientRect مقیاس کوچیک همون لحظه
     // رو می‌گیره، ولی offset* مقادیر layout واقعی‌ان و از transform والد
     // اثر نمی‌گیرن.
     const x = target.offsetLeft;
@@ -64,7 +64,7 @@ export function SegmentedTabs<T extends string>({
     last.current = { x, w };
 
     if (!animate || !prev) {
-      // اولین جای‌گیری/تغییرِ اندازه نباید انیمیشن بخوره (وگرنه نشانگر از
+      // اولین جای‌گیری/تغییر اندازه نباید انیمیشن بخوره (وگرنه نشانگر از
       // گوشه‌ی صفر پرواز می‌کنه سر جاش). خواندن offsetWidth یک reflow
       // اجباری می‌سازه تا با برداشتن no-anim، مقدار بالا «قدیمی» حساب نشه.
       ind.classList.add("no-anim");
@@ -80,8 +80,8 @@ export function SegmentedTabs<T extends string>({
       ind.style.transform = `translate3d(${x}px,0,0)`;
       return;
     }
-    // FLIP: عرضِ جدید یک‌جا نوشته می‌شه، ولی با scaleX دقیقا به شکلِ قبلی
-    // برگردونده می‌شه و بعد فقط transform به حالتِ نهایی transition می‌خوره.
+    // FLIP: عرض جدید یک‌جا نوشته می‌شه، ولی با scaleX دقیقا به شکل قبلی
+    // برگردونده می‌شه و بعد فقط transform به حالت نهایی transition می‌خوره.
     ind.classList.add("no-anim");
     ind.style.width = `${w}px`;
     ind.style.transform = `translate3d(${prev.x}px,0,0) scaleX(${prev.w / w})`;
@@ -95,7 +95,7 @@ export function SegmentedTabs<T extends string>({
     place(true);
   }, [active, optionsKey, place]);
 
-  // عوض‌شدنِ عرضِ ظرف/برچسب‌ها (چرخشِ صفحه، لودِ دیرترِ فونت، تغییرِ متنِ
+  // عوض‌شدن عرض ظرف/برچسب‌ها (چرخش صفحه، لود دیرتر فونت، تغییر متن
   // گزینه) نشانگر رو از جاش درمی‌آورد — حالا بی‌انیمیشن دوباره جا می‌افته.
   useLayoutEffect(() => {
     const container = containerRef.current;

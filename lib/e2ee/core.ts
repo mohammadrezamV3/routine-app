@@ -1,20 +1,20 @@
-// هسته‌ی رمزنگاریِ سرتاسریِ گفت‌وگوی منتور — فقط WebCrypto (بدونِ وابستگیِ جدید).
+// هسته‌ی رمزنگاری سرتاسری گفت‌وگوی منتور — فقط WebCrypto (بدون وابستگی جدید).
 // ایزومورفیک: همین کد در مرورگر (کلاینت)، در Node ≥ 20 (تست‌ها، داده‌ی آزمایشی)
-// و در سرور (فقط برای «تاییدِ» تعهدِ فرانکینگ؛ سرور هیچ کلیدِ خصوصی‌ای ندارد) اجرا می‌شود.
+// و در سرور (فقط برای «تایید» تعهد فرانکینگ؛ سرور هیچ کلید خصوصی‌ای ندارد) اجرا می‌شود.
 //
-// طرحِ کامل و دلیلِ هر انتخاب: docs/mentor-e2ee.md. خلاصه:
-//   • کلیدِ هویت: ECDH P-256 به‌ازای هر کاربر (نسخه‌دار). کلیدِ عمومی روی سرور.
-//   • کلیدِ گفت‌وگو: ECDH(خصوصیِ من، عمومیِ طرف) → HKDF-SHA256 با info شاملِ
-//     mentorshipId، شناسه‌ی هر دو طرف، نسخه‌ی هر دو کلید و *جهتِ ارسال* →
-//     دو کلیدِ AES-256-GCM (منتور→شاگرد و شاگرد→منتور).
-//   • هر پیام: IVِ تصادفیِ ۹۶ بیتی، AAD = (mentorshipId, senderId, clientId, نسخه‌ها).
-//   • فرانکینگ: کلیدِ تصادفیِ ۳۲ بایتی داخلِ متنِ رمزشده؛ تعهد = HMAC(fk, زمینه‖متن).
-//   • پیامِ scheme 2 (چنددستگاهی): کلیدِ محتوای تصادفی (CEK) متن را رمز می‌کند و CEK برای
-//     *هر* کلیدِ فعالِ دو طرف جدا بسته‌بندی می‌شود: ECDH(کلیدِ فرستنده، کلیدِ هدف) → HKDF با
+// طرح کامل و دلیل هر انتخاب: docs/mentor-e2ee.md. خلاصه:
+//   • کلید هویت: ECDH P-256 به‌ازای هر کاربر (نسخه‌دار). کلید عمومی روی سرور.
+//   • کلید گفت‌وگو: ECDH(خصوصی من، عمومی طرف) → HKDF-SHA256 با info شامل
+//     mentorshipId، شناسه‌ی هر دو طرف، نسخه‌ی هر دو کلید و *جهت ارسال* →
+//     دو کلید AES-256-GCM (منتور→شاگرد و شاگرد→منتور).
+//   • هر پیام: IV تصادفی ۹۶ بیتی، AAD = (mentorshipId, senderId, clientId, نسخه‌ها).
+//   • فرانکینگ: کلید تصادفی ۳۲ بایتی داخل متن رمزشده؛ تعهد = HMAC(fk, زمینه‖متن).
+//   • پیام scheme 2 (چنددستگاهی): کلید محتوای تصادفی (CEK) متن را رمز می‌کند و CEK برای
+//     *هر* کلید فعال دو طرف جدا بسته‌بندی می‌شود: ECDH(کلید فرستنده، کلید هدف) → HKDF با
 //     زمینه‌ی کامل → AES-256-GCM. همان الگوی Signal/WhatsApp برای چند دستگاه.
-//   • پشتیبانِ کلیدِ SYNCED: کلیدِ بسته‌بندیِ مشتق از رمزِ عبورِ حساب روی خودِ دستگاه
-//     (PBKDF2-SHA256، ۶۰۰هزار دور، نمکِ اختصاصی + زمینه‌ی جدا) → AES-256-GCM.
-//     پشتیبانِ قدیمیِ «رمز گفت‌وگو» (PBKDF2 ≥ ۶۰۰هزار دور) فقط برای یک بار باز کردن می‌ماند.
+//   • پشتیبان کلید SYNCED: کلید بسته‌بندی مشتق از رمز عبور حساب روی خود دستگاه
+//     (PBKDF2-SHA256، ۶۰۰هزار دور، نمک اختصاصی + زمینه‌ی جدا) → AES-256-GCM.
+//     پشتیبان قدیمی «رمز گفت‌وگو» (PBKDF2 ≥ ۶۰۰هزار دور) فقط برای یک بار باز کردن می‌ماند.
 
 import { concat, fromB64, fromUtf8, lp, normalizeDigits, toB64, utf8 } from "./encoding";
 
@@ -23,7 +23,7 @@ export class E2EEUnsupportedError extends Error {
     super("WebCrypto در این مرورگر در دسترس نیست");
   }
 }
-/** رمزگشایی/احرازِ اصالت شکست خورد (کلیدِ اشتباه، داده‌ی دست‌کاری‌شده، رمزِ نادرست) */
+/** رمزگشایی/احراز اصالت شکست خورد (کلید اشتباه، داده‌ی دست‌کاری‌شده، رمز نادرست) */
 export class E2EEDecryptError extends Error {}
 
 function subtle(): SubtleCrypto {
@@ -59,18 +59,18 @@ export const GCM_TAG_BYTES = 16;
 /** OWASP 2023 برای PBKDF2-HMAC-SHA256 حداقل ۶۰۰هزار؛ ما با حاشیه ۱ میلیون */
 export const PBKDF2_ITERATIONS = 1_000_000;
 export const PBKDF2_MIN_ITERATIONS = 600_000;
-/** سقف تا سرورِ بدخواه نتواند با عددِ عظیم مرورگر را قفل کند */
+/** سقف تا سرور بدخواه نتواند با عدد عظیم مرورگر را قفل کند */
 export const PBKDF2_MAX_ITERATIONS = 5_000_000;
 export const BACKUP_SALT_BYTES = 16;
-/** طولِ متنِ رمزشده به مضربِ این عدد گرد می‌شود تا طولِ دقیقِ پیام نشت نکند */
+/** طول متن رمزشده به مضرب این عدد گرد می‌شود تا طول دقیق پیام نشت نکند */
 const PAD_BLOCK = 128;
 
-// ───────────────────────── کلیدِ هویت ─────────────────────────
+// ───────────────────────── کلید هویت ─────────────────────────
 
 export type IdentityKeyPair = { privateKey: CryptoKey; publicKey: CryptoKey; publicB64: string };
 
 /**
- * جفت‌کلیدِ هویتِ تازه. خصوصی فقط برای یک بار (ساختِ پشتیبانِ رمزشده) قابلِ
+ * جفت‌کلید هویت تازه. خصوصی فقط برای یک بار (ساخت پشتیبان رمزشده) قابل
  * export است؛ نسخه‌ای که روی دستگاه ذخیره می‌شود با importNonExtractable
  * دوباره ساخته می‌شود (غیرقابل‌استخراج).
  */
@@ -80,14 +80,14 @@ export async function generateIdentityKeyPair(): Promise<IdentityKeyPair> {
   return { privateKey: kp.privateKey, publicKey: kp.publicKey, publicB64: toB64(raw) };
 }
 
-/** کلیدِ عمومیِ base64 (raw، ۶۵ بایت) → CryptoKey. import خودش «روی منحنی بودن» را چک می‌کند */
+/** کلید عمومی base64 (raw، ۶۵ بایت) → CryptoKey. import خودش «روی منحنی بودن» را چک می‌کند */
 export async function importPublicKey(b64: string): Promise<CryptoKey> {
   const raw = fromB64(b64);
   if (!raw || raw.length !== PUBLIC_KEY_BYTES || raw[0] !== 0x04) throw new E2EEDecryptError("کلید عمومی نامعتبر است");
   return subtle().importKey("raw", bs(raw), CURVE, true, []);
 }
 
-/** شکلِ سطحیِ کلیدِ عمومی (سمتِ سرور، بدونِ WebCrypto) */
+/** شکل سطحی کلید عمومی (سمت سرور، بدون WebCrypto) */
 export function isPublicKeyShape(b64: unknown): b64 is string {
   if (typeof b64 !== "string" || b64.length !== 88) return false;
   const raw = fromB64(b64);
@@ -102,7 +102,7 @@ export async function importPrivatePkcs8(pkcs8: Uint8Array, extractable = false)
   return subtle().importKey("pkcs8", bs(pkcs8), CURVE, extractable, ["deriveBits"]);
 }
 
-/** کلیدِ عمومیِ متناظر با یک کلیدِ خصوصیِ PKCS8 (از x,yِ JWK) — برای چکِ سازگاریِ پشتیبان با کلیدِ منتشرشده */
+/** کلید عمومی متناظر با یک کلید خصوصی PKCS8 (از x,y JWK) — برای چک سازگاری پشتیبان با کلید منتشرشده */
 async function publicB64FromPkcs8(pkcs8: Uint8Array): Promise<string> {
   const k = await importPrivatePkcs8(pkcs8, true);
   const jwk = await subtle().exportKey("jwk", k);
@@ -117,16 +117,16 @@ function b64urlToBytes(s: string): Uint8Array {
   return fromB64(std + "=".repeat((4 - (std.length % 4)) % 4)) ?? new Uint8Array();
 }
 
-// ───────────────────────── اثرِ انگشت و کدِ امنیتی ─────────────────────────
+// ───────────────────────── اثر انگشت و کد امنیتی ─────────────────────────
 
 async function sha256(b: Uint8Array): Promise<Uint8Array> {
   return new Uint8Array(await subtle().digest("SHA-256", bs(b)));
 }
 
 /**
- * کدِ امنیتیِ یک گفت‌وگو: ۲۴ رقم (۶ گروهِ ۴تایی) از SHA-256ِ هر دو کلیدِ
+ * کد امنیتی یک گفت‌وگو: ۲۴ رقم (۶ گروه ۴تایی) از SHA-256 هر دو کلید
  * عمومی و شناسه‌ها، مستقل از این‌که کدام طرف حسابش می‌کند. اگر دو طرف
- * (حضوری یا از کانالی دیگر) کدِ یکسان ببینند، سرور کلیدِ جعلی جا نزده است.
+ * (حضوری یا از کانالی دیگر) کد یکسان ببینند، سرور کلید جعلی جا نزده است.
  */
 export async function safetyCode(a: { userId: string; publicKey: string }, b: { userId: string; publicKey: string }): Promise<string> {
   const [x, y] = a.userId < b.userId ? [a, b] : [b, a];
@@ -136,12 +136,12 @@ export async function safetyCode(a: { userId: string; publicKey: string }, b: { 
   return groups.join(" ");
 }
 
-/** اثرِ انگشتِ کوتاهِ یک کلیدِ عمومی (برای تشخیصِ تغییرِ کلیدِ طرفِ مقابل، TOFU) */
+/** اثر انگشت کوتاه یک کلید عمومی (برای تشخیص تغییر کلید طرف مقابل، TOFU) */
 export async function keyFingerprint(userId: string, publicKey: string): Promise<string> {
   return toB64((await sha256(lp("arion/key-fp/v1", userId, publicKey))).subarray(0, 16));
 }
 
-// ───────────────────────── مشتقِ کلید ─────────────────────────
+// ───────────────────────── مشتق کلید ─────────────────────────
 
 async function ecdhHkdfKey(myPrivate: CryptoKey, peerPublic: CryptoKey, info: Uint8Array): Promise<CryptoKey> {
   const shared = await subtle().deriveBits({ name: "ECDH", public: peerPublic }, myPrivate, 256);
@@ -166,9 +166,9 @@ export type ChatKeyContext = {
 export type ChatKeys = { fromMentor: CryptoKey; fromStudent: CryptoKey };
 
 /**
- * دو کلیدِ جهت‌دارِ یک گفت‌وگو. هر دو طرف به همین دو کلید می‌رسند
- * (ECDH متقارن است). info همه‌ی شناسه‌ها و نسخه‌ها را می‌بندد، پس کلیدِ یک
- * گفت‌وگو هرگز برای گفت‌وگوی دیگر (یا نسخه‌ی دیگرِ کلید) کار نمی‌کند.
+ * دو کلید جهت‌دار یک گفت‌وگو. هر دو طرف به همین دو کلید می‌رسند
+ * (ECDH متقارن است). info همه‌ی شناسه‌ها و نسخه‌ها را می‌بندد، پس کلید یک
+ * گفت‌وگو هرگز برای گفت‌وگوی دیگر (یا نسخه‌ی دیگر کلید) کار نمی‌کند.
  */
 export async function deriveChatKeys(myPrivate: CryptoKey, peerPublic: CryptoKey, c: ChatKeyContext): Promise<ChatKeys> {
   const base = ["arion/mentor-chat/v1", c.mentorshipId, c.mentorId, c.studentId, c.mentorKeyVersion, c.studentKeyVersion] as const;
@@ -180,22 +180,22 @@ export async function deriveChatKeys(myPrivate: CryptoKey, peerPublic: CryptoKey
 }
 
 /**
- * کلیدِ جفتیِ یک «کاربرد» مشخص (مثلا جواب‌های پذیرش: scope = ["intake", mentorId, studentId]).
- * برای فیلدهای متنیِ غیرِ پیام که فقط دو طرف باید بخوانند.
+ * کلید جفتی یک «کاربرد» مشخص (مثلا جواب‌های پذیرش: scope = ["intake", mentorId, studentId]).
+ * برای فیلدهای متنی غیر پیام که فقط دو طرف باید بخوانند.
  */
 export async function derivePairKey(myPrivate: CryptoKey, peerPublic: CryptoKey, scope: (string | number)[]): Promise<CryptoKey> {
   return ecdhHkdfKey(myPrivate, peerPublic, lp("arion/mentor-pair/v1", ...scope));
 }
 
 /**
- * کلیدِ «فقط خودم» (مثلا یادداشتِ خصوصیِ منتور): ECDH کلیدِ خصوصی با
- * عمومیِ خودِ کاربر. فقط دارنده‌ی کلیدِ خصوصی به آن می‌رسد.
+ * کلید «فقط خودم» (مثلا یادداشت خصوصی منتور): ECDH کلید خصوصی با
+ * عمومی خود کاربر. فقط دارنده‌ی کلید خصوصی به آن می‌رسد.
  */
 export async function deriveSelfKey(myPrivate: CryptoKey, myPublic: CryptoKey, scope: (string | number)[]): Promise<CryptoKey> {
   return ecdhHkdfKey(myPrivate, myPublic, lp("arion/mentor-self/v1", ...scope));
 }
 
-// ───────────────────────── رمزِ متن (عمومی) ─────────────────────────
+// ───────────────────────── رمز متن (عمومی) ─────────────────────────
 
 export type SealedText = { ct: string; iv: string };
 
@@ -224,7 +224,7 @@ async function aesDecrypt(key: CryptoKey, s: SealedText, aad: Uint8Array): Promi
   }
 }
 
-/** رمزِ یک فیلدِ متنی با کلیدِ جفتی/خودی. aad = زمینه‌ی آن فیلد (مثلا ["note", noteId]) */
+/** رمز یک فیلد متنی با کلید جفتی/خودی. aad = زمینه‌ی آن فیلد (مثلا ["note", noteId]) */
 export async function sealText(key: CryptoKey, text: string, aad: (string | number)[]): Promise<SealedText> {
   return aesEncrypt(key, pad(utf8(JSON.stringify({ v: 1, t: text }))), lp("arion/mentor-field/v1", ...aad));
 }
@@ -251,13 +251,13 @@ function parsePayload(plain: Uint8Array): Record<string, unknown> {
 export type MessageContext = {
   mentorshipId: string;
   senderId: string;
-  /** شناسه‌ی تصادفیِ سمتِ کلاینت؛ سرور یکتاییِ (mentorshipId, clientId) را اجبار می‌کند → ضدِ replay */
+  /** شناسه‌ی تصادفی سمت کلاینت؛ سرور یکتایی (mentorshipId, clientId) را اجبار می‌کند → ضد replay */
   clientId: string;
   senderKeyVersion: number;
   recipientKeyVersion: number;
 };
 
-/** قالبِ scheme 1 (کلیدِ جفتیِ نسخه‌دار) — فقط برای خواندنِ پیام‌های قدیمی و تست‌ها */
+/** قالب scheme 1 (کلید جفتی نسخه‌دار) — فقط برای خواندن پیام‌های قدیمی و تست‌ها */
 export type EncryptedMessageV1 = {
   v?: 1;
   clientId: string;
@@ -265,7 +265,7 @@ export type EncryptedMessageV1 = {
   iv: string;
   senderKeyVersion: number;
   recipientKeyVersion: number;
-  /** تعهدِ فرانکینگ (base64، ۳۲ بایت) — تنها چیزِ مشتق از متن که سرور می‌بیند، و بدونِ fk هیچ اطلاعی نمی‌دهد */
+  /** تعهد فرانکینگ (base64، ۳۲ بایت) — تنها چیز مشتق از متن که سرور می‌بیند، و بدون fk هیچ اطلاعی نمی‌دهد */
   commitment: string;
 };
 
@@ -286,8 +286,8 @@ export async function computeCommitment(fk: Uint8Array, c: Pick<MessageContext, 
 }
 
 /**
- * تاییدِ تعهد (زمان‌ثابت، با subtle.verify). هم کلاینتِ گیرنده بعد از رمزگشایی
- * صدایش می‌زند (پیامِ «غیرقابل‌گزارش» نمایش داده نشود) و هم سرور هنگامِ گزارش.
+ * تایید تعهد (زمان‌ثابت، با subtle.verify). هم کلاینت گیرنده بعد از رمزگشایی
+ * صدایش می‌زند (پیام «غیرقابل‌گزارش» نمایش داده نشود) و هم سرور هنگام گزارش.
  */
 export async function verifyCommitment(
   fkB64: string,
@@ -324,7 +324,7 @@ export async function encryptMessage(key: CryptoKey, text: string, c: MessageCon
 export type DecryptedMessage = {
   text: string;
   frankingKey: string;
-  /** تعهدِ ذخیره‌شده روی سرور با متن و fkِ داخلِ پیام می‌خواند (پیام قابلِ گزارش است) */
+  /** تعهد ذخیره‌شده روی سرور با متن و fk داخل پیام می‌خواند (پیام قابل گزارش است) */
   committed: boolean;
 };
 
@@ -340,17 +340,17 @@ export async function decryptMessage(
   return { text: o.t, frankingKey: o.f, committed };
 }
 
-// ───────────────────────── پشتیبانِ کلید با رمزِ گفت‌وگو ─────────────────────────
+// ───────────────────────── پشتیبان کلید با رمز گفت‌وگو ─────────────────────────
 
 export type KeyBackup = {
   kdf: "PBKDF2-SHA256";
   iterations: number;
   salt: string; // base64، ۱۶ بایت
   iv: string; // base64، ۱۲ بایت
-  ciphertext: string; // base64، PKCS8ِ رمزشده
+  ciphertext: string; // base64، PKCS8 رمزشده
 };
 
-/** یکسان‌سازیِ رمز: NFC + ارقامِ فارسی/عربی → لاتین (تا روی هر کیبوردی همان کلید ساخته شود) */
+/** یکسان‌سازی رمز: NFC + ارقام فارسی/عربی → لاتین (تا روی هر کیبوردی همان کلید ساخته شود) */
 export function normalizePasscode(p: string): string {
   return normalizeDigits(p.normalize("NFC"));
 }
@@ -367,7 +367,7 @@ function backupAad(userId: string, version: number, publicKey: string): Uint8Arr
   return lp("arion/e2ee-backup/v1", userId, version, publicKey);
 }
 
-/** بسته‌بندیِ کلیدِ خصوصی با رمزِ گفت‌وگو. privateKey باید extractable باشد (فقط لحظه‌ی ساخت/تغییرِ رمز) */
+/** بسته‌بندی کلید خصوصی با رمز گفت‌وگو. privateKey باید extractable باشد (فقط لحظه‌ی ساخت/تغییر رمز) */
 export async function wrapPrivateKey(
   privateKey: CryptoKey,
   passcode: string,
@@ -383,9 +383,9 @@ export async function wrapPrivateKey(
 }
 
 /**
- * باز کردنِ پشتیبان. رمزِ نادرست → E2EEDecryptError. کلیدِ به‌دست‌آمده باید
- * با کلیدِ عمومیِ منتشرشده بخواند (وگرنه خطا) — AAD هم userId/نسخه/کلیدِ عمومی
- * را می‌بندد، پس پشتیبانِ یک کاربر/نسخه جای دیگری پذیرفته نمی‌شود.
+ * باز کردن پشتیبان. رمز نادرست → E2EEDecryptError. کلید به‌دست‌آمده باید
+ * با کلید عمومی منتشرشده بخواند (وگرنه خطا) — AAD هم userId/نسخه/کلید عمومی
+ * را می‌بندد، پس پشتیبان یک کاربر/نسخه جای دیگری پذیرفته نمی‌شود.
  */
 export async function unwrapPrivateKey(
   b: KeyBackup,
@@ -408,7 +408,7 @@ export async function unwrapPrivateKey(
   }
 }
 
-/** شکلِ سطحیِ پشتیبان (سمتِ سرور) */
+/** شکل سطحی پشتیبان (سمت سرور) */
 export function isKeyBackupShape(v: unknown): v is KeyBackup {
   if (!v || typeof v !== "object") return false;
   const b = v as Record<string, unknown>;
@@ -428,18 +428,18 @@ export function isKeyBackupShape(v: unknown): v is KeyBackup {
 
 // ═══════════════════════ scheme 2: چنددستگاهی ═══════════════════════
 //
-// هر کاربر می‌تواند چند کلیدِ فعال داشته باشد (یک SYNCED + کلیدِ هر دستگاه). متن یک بار
-// با CEKِ تصادفی رمز می‌شود و CEK برای هر کلیدِ فعالِ هر دو طرف (از جمله دستگاه‌های
-// دیگرِ خودِ فرستنده) جدا بسته‌بندی می‌شود. سرور تعدادِ بسته‌بندی‌ها و صاحبِ هرکدام را
-// می‌بیند (یعنی تعدادِ دستگاه‌ها را)، نه محتوا را.
+// هر کاربر می‌تواند چند کلید فعال داشته باشد (یک SYNCED + کلید هر دستگاه). متن یک بار
+// با CEK تصادفی رمز می‌شود و CEK برای هر کلید فعال هر دو طرف (از جمله دستگاه‌های
+// دیگر خود فرستنده) جدا بسته‌بندی می‌شود. سرور تعداد بسته‌بندی‌ها و صاحب هرکدام را
+// می‌بیند (یعنی تعداد دستگاه‌ها را)، نه محتوا را.
 
-/** اشاره به یک کلیدِ مشخص: کاربر + نسخه (نسخه در هر کاربر یکتاست) */
+/** اشاره به یک کلید مشخص: کاربر + نسخه (نسخه در هر کاربر یکتاست) */
 export type KeyRef = { u: string; k: number };
-/** CEKِ بسته‌بندی‌شده برای کلیدِ (u, k). via = انتقالِ سابقه با کلیدِ via از *همان* کاربر */
+/** CEK بسته‌بندی‌شده برای کلید (u, k). via = انتقال سابقه با کلید via از *همان* کاربر */
 export type KeyWrap = { u: string; k: number; w: string; via?: number };
 export const CEK_BYTES = 32;
 export const WRAP_BYTES = IV_BYTES + CEK_BYTES + GCM_TAG_BYTES;
-/** سقفِ کلیدهای فعالِ یک کاربر که پیام برایشان بسته‌بندی می‌شود (۱ SYNCED + دستگاه‌ها) */
+/** سقف کلیدهای فعال یک کاربر که پیام برایشان بسته‌بندی می‌شود (۱ SYNCED + دستگاه‌ها) */
 export const MAX_ACTIVE_KEYS = 10;
 const HKDF_SALT_V2 = utf8("arion/mentor-e2ee/v2/hkdf-salt");
 
@@ -449,7 +449,7 @@ export type EncryptedMessageV2 = {
   ciphertext: string;
   iv: string;
   commitment: string;
-  /** کلیدی که بسته‌بندی‌ها را ساخته (معمولا کلیدِ فرستنده روی دستگاهِ ارسال) */
+  /** کلیدی که بسته‌بندی‌ها را ساخته (معمولا کلید فرستنده روی دستگاه ارسال) */
   from: KeyRef;
   wraps: KeyWrap[];
 };
@@ -459,12 +459,12 @@ export function isV2(m: EncryptedMessage | null | undefined): m is EncryptedMess
   return !!m && (m as EncryptedMessageV2).v === 2;
 }
 
-/** کلیدِ خصوصیِ در دسترس روی این دستگاه */
+/** کلید خصوصی در دسترس روی این دستگاه */
 export type OwnKey = { ref: KeyRef; privateKey: CryptoKey };
-/** کلیدِ عمومیِ یک هدف */
+/** کلید عمومی یک هدف */
 export type TargetKey = { ref: KeyRef; publicKey: string };
 
-// ECDH گران‌ترین قدم است؛ پایه‌ی HKDFِ هر جفت (کلیدِ خصوصی، کلیدِ عمومی) یک بار ساخته
+// ECDH گران‌ترین قدم است؛ پایه‌ی HKDF هر جفت (کلید خصوصی، کلید عمومی) یک بار ساخته
 // و در حافظه (نه روی دیسک) نگه داشته می‌شود. غیرقابل‌استخراج.
 const pairBaseCache = new WeakMap<CryptoKey, Map<string, Promise<CryptoKey>>>();
 
@@ -488,7 +488,7 @@ function pairBase(myPrivate: CryptoKey, peerPublicB64: string): Promise<CryptoKe
   return p;
 }
 
-/** scope = کاربردِ بسته‌بندی (مثلا ["msg", mentorshipId, clientId]) — کلیدِ هر پیام/یادداشت جداست */
+/** scope = کاربرد بسته‌بندی (مثلا ["msg", mentorshipId, clientId]) — کلید هر پیام/یادداشت جداست */
 async function wrapKeyFor(base: CryptoKey, scope: (string | number)[], from: KeyRef, to: KeyRef): Promise<CryptoKey> {
   return subtle().deriveKey(
     { name: "HKDF", hash: "SHA-256", salt: bs(HKDF_SALT_V2), info: bs(lp("arion/e2ee-wrap/v2", scope.length, ...scope, from.u, from.k, to.u, to.k)) },
@@ -503,7 +503,7 @@ function wrapAad(scope: (string | number)[], from: KeyRef, to: KeyRef): Uint8Arr
   return lp("arion/e2ee-wrap-aad/v2", scope.length, ...scope, from.u, from.k, to.u, to.k);
 }
 
-/** بسته‌بندیِ CEK برای یک هدف با کلیدِ from (خصوصیِ from روی همین دستگاه است) */
+/** بسته‌بندی CEK برای یک هدف با کلید from (خصوصی from روی همین دستگاه است) */
 export async function wrapCek(cek: Uint8Array, from: OwnKey, to: TargetKey, scope: (string | number)[], via?: number): Promise<KeyWrap> {
   if (cek.length !== CEK_BYTES) throw new E2EEDecryptError("کلید محتوا نامعتبر است");
   const key = await wrapKeyFor(await pairBase(from.privateKey, to.publicKey), scope, from.ref, to.ref);
@@ -514,7 +514,7 @@ export async function wrapCek(cek: Uint8Array, from: OwnKey, to: TargetKey, scop
   return w;
 }
 
-/** باز کردنِ بسته‌بندی با کلیدِ خصوصیِ هدف؛ fromPublic = کلیدِ عمومیِ سازنده‌ی بسته‌بندی */
+/** باز کردن بسته‌بندی با کلید خصوصی هدف؛ fromPublic = کلید عمومی سازنده‌ی بسته‌بندی */
 export async function unwrapCek(w: KeyWrap, mine: OwnKey, from: TargetKey, scope: (string | number)[]): Promise<Uint8Array> {
   if (w.u !== mine.ref.u || w.k !== mine.ref.k) throw new E2EEDecryptError("این بسته‌بندی برای کلید دیگری است");
   const raw = fromB64(w.w);
@@ -537,7 +537,7 @@ async function cekKey(cek: Uint8Array): Promise<CryptoKey> {
   return subtle().importKey("raw", bs(cek), { name: "AES-GCM" }, false, ["encrypt", "decrypt"]);
 }
 
-/** رمزِ یک محتوا با CEKِ تازه + بسته‌بندی برای همه‌ی هدف‌ها */
+/** رمز یک محتوا با CEK تازه + بسته‌بندی برای همه‌ی هدف‌ها */
 export async function sealEnvelope(
   plain: Uint8Array,
   aad: Uint8Array,
@@ -548,7 +548,7 @@ export async function sealEnvelope(
   const seen = new Set<string>();
   for (const t of targets) {
     const id = `${t.ref.u}:${t.ref.k}`;
-    if (seen.has(id)) throw new E2EEDecryptError("هدفِ تکراری");
+    if (seen.has(id)) throw new E2EEDecryptError("هدف تکراری");
     seen.add(id);
   }
   const cek = random(CEK_BYTES);
@@ -562,8 +562,8 @@ export async function sealEnvelope(
 }
 
 /**
- * پیدا کردنِ CEK: بسته‌بندی‌ای که برای یکی از کلیدهای من است. fromOf نسخه‌ی عمومیِ
- * سازنده‌ی بسته‌بندی را می‌دهد (via → کلیدِ دیگرِ خودم؛ وگرنه from پیام). null = هیچ
+ * پیدا کردن CEK: بسته‌بندی‌ای که برای یکی از کلیدهای من است. fromOf نسخه‌ی عمومی
+ * سازنده‌ی بسته‌بندی را می‌دهد (via → کلید دیگر خودم؛ وگرنه from پیام). null = هیچ
  * بسته‌بندی‌ای برای کلیدهای این دستگاه نیست.
  */
 export async function findCek(
@@ -584,7 +584,7 @@ export async function findCek(
     try {
       return await unwrapCek(w, own, { ref: src, publicKey: pub }, scope);
     } catch {
-      // بسته‌بندیِ بعدی (مثلا هم مستقیم هم via)
+      // بسته‌بندی بعدی (مثلا هم مستقیم هم via)
     }
   }
   if (tried) throw new E2EEDecryptError("بسته‌بندی باز نشد");
@@ -604,9 +604,9 @@ function messageAadV2(c: Pick<MessageContext, "mentorshipId" | "senderId" | "cli
 }
 
 /**
- * پیامِ scheme 2. senderId = فرستنده‌ی پیام (در AAD و تعهد)؛ from = کلیدی که
- * بسته‌بندی‌ها را می‌سازد (معمولا کلیدِ همان فرستنده؛ در بازرمزگذاریِ پیامِ قدیمی
- * می‌تواند کلیدِ طرفِ دیگر باشد).
+ * پیام scheme 2. senderId = فرستنده‌ی پیام (در AAD و تعهد)؛ from = کلیدی که
+ * بسته‌بندی‌ها را می‌سازد (معمولا کلید همان فرستنده؛ در بازرمزگذاری پیام قدیمی
+ * می‌تواند کلید طرف دیگر باشد).
  */
 export async function encryptMessageV2(
   text: string,
@@ -622,7 +622,7 @@ export async function encryptMessageV2(
   return { v: 2, clientId: c.clientId, ciphertext: env.ct, iv: env.iv, commitment: toB64(commitment), from: from.ref, wraps: env.wraps, frankingKey: toB64(fk) };
 }
 
-/** رمزگشاییِ پیامِ scheme 2. null = این دستگاه هیچ کلیدی برای این پیام ندارد */
+/** رمزگشایی پیام scheme 2. null = این دستگاه هیچ کلیدی برای این پیام ندارد */
 export async function decryptMessageV2(
   m: EncryptedMessageV2,
   c: { mentorshipId: string; senderId: string },
@@ -644,8 +644,8 @@ export async function decryptMessageV2(
 }
 
 /**
- * انتقالِ سابقه: CEKِ یک پیام را با یکی از کلیدهای من باز و برای کلیدِ دیگرِ *خودم*
- * بسته‌بندی می‌کند (via = کلیدِ منبع). متنِ پیام دست نمی‌خورد، پس تعهدِ فرانکینگ و
+ * انتقال سابقه: CEK یک پیام را با یکی از کلیدهای من باز و برای کلید دیگر *خودم*
+ * بسته‌بندی می‌کند (via = کلید منبع). متن پیام دست نمی‌خورد، پس تعهد فرانکینگ و
  * گزارش‌پذیری همان می‌ماند.
  */
 export async function rewrapForOwnKey(
@@ -656,7 +656,7 @@ export async function rewrapForOwnKey(
   publicOf: (ref: KeyRef) => string | null,
   scope: (string | number)[]
 ): Promise<KeyWrap | null> {
-  if (source.ref.u !== target.ref.u) throw new E2EEDecryptError("انتقال فقط بینِ کلیدهای یک کاربر");
+  if (source.ref.u !== target.ref.u) throw new E2EEDecryptError("انتقال فقط بین کلیدهای یک کاربر");
   const cek = await findCek(wraps, [source], from, publicOf, scope);
   if (!cek) return null;
   try {
@@ -666,11 +666,11 @@ export async function rewrapForOwnKey(
   }
 }
 
-// ───────────────────────── کدِ امنیتیِ چنددستگاهی ─────────────────────────
+// ───────────────────────── کد امنیتی چنددستگاهی ─────────────────────────
 
 /**
- * کدِ امنیتیِ یک گفت‌وگو روی *همه‌ی* کلیدهای فعالِ دو طرف (مرتب‌شده). اگر سرور
- * دستگاهِ جعلی به فهرستِ یکی اضافه کند، کد روی دو دستگاه فرق می‌کند.
+ * کد امنیتی یک گفت‌وگو روی *همه‌ی* کلیدهای فعال دو طرف (مرتب‌شده). اگر سرور
+ * دستگاه جعلی به فهرست یکی اضافه کند، کد روی دو دستگاه فرق می‌کند.
  */
 export async function safetyCodeForSets(a: { userId: string; publicKeys: string[] }, b: { userId: string; publicKeys: string[] }): Promise<string> {
   const [x, y] = a.userId < b.userId ? [a, b] : [b, a];
@@ -682,7 +682,7 @@ export async function safetyCodeForSets(a: { userId: string; publicKeys: string[
   return groups.join(" ");
 }
 
-/** کدِ کوتاهِ «انتقال سابقه»: از کلیدِ عمومیِ دستگاهِ تازه — هر دو دستگاه باید همین را ببینند */
+/** کد کوتاه «انتقال سابقه»: از کلید عمومی دستگاه تازه — هر دو دستگاه باید همین را ببینند */
 export async function linkCode(userId: string, targetVersion: number, targetPublicKey: string, requestId: string): Promise<string> {
   const h = await sha256(lp("arion/e2ee-link-code/v1", userId, targetVersion, targetPublicKey, requestId));
   const n = ((h[0] << 16) | (h[1] << 8) | h[2]) % 1_000_000;
@@ -690,12 +690,12 @@ export async function linkCode(userId: string, targetVersion: number, targetPubl
   return `${s.slice(0, 3)} ${s.slice(3)}`;
 }
 
-// ═══════════════════════ کلیدِ بسته‌بندیِ مشتق از رمزِ عبور ═══════════════════════
+// ═══════════════════════ کلید بسته‌بندی مشتق از رمز عبور ═══════════════════════
 //
-// فقط روی دستگاه، لحظه‌ی ورود/ثبت‌نام/تغییرِ رمز (همان رمزی که به‌هرحال به
-// /api/auth/callback می‌رود؛ هیچ درخواستِ تازه‌ای رمز را نمی‌برد). ورودیِ PBKDF2
-// با برچسبِ جدا + شناسه‌ی کاربر + نمکِ تصادفیِ اختصاصی است، پس با bcryptِ سرور یا
-// هر مشتقِ دیگری یکی نمی‌شود. خروجی غیرقابل‌استخراج است.
+// فقط روی دستگاه، لحظه‌ی ورود/ثبت‌نام/تغییر رمز (همان رمزی که به‌هرحال به
+// /api/auth/callback می‌رود؛ هیچ درخواست تازه‌ای رمز را نمی‌برد). ورودی PBKDF2
+// با برچسب جدا + شناسه‌ی کاربر + نمک تصادفی اختصاصی است، پس با bcrypt سرور یا
+// هر مشتق دیگری یکی نمی‌شود. خروجی غیرقابل‌استخراج است.
 
 export const PASSWORD_KDF_ITERATIONS = 600_000;
 export const KDF_SALT_BYTES = 16;
@@ -703,7 +703,7 @@ export const KDF_SALT_BYTES = 16;
 export async function derivePasswordKek(password: string, userId: string, saltB64: string, iterations: number): Promise<CryptoKey> {
   const salt = fromB64(saltB64);
   if (!salt || salt.length !== KDF_SALT_BYTES) throw new E2EEDecryptError("نمک نامعتبر است");
-  if (!Number.isInteger(iterations) || iterations < PBKDF2_MIN_ITERATIONS || iterations > PBKDF2_MAX_ITERATIONS) throw new E2EEDecryptError("پارامترِ KDF نامعتبر است");
+  if (!Number.isInteger(iterations) || iterations < PBKDF2_MIN_ITERATIONS || iterations > PBKDF2_MAX_ITERATIONS) throw new E2EEDecryptError("پارامتر KDF نامعتبر است");
   if (!password) throw new E2EEDecryptError("رمز خالی است");
   const base = await subtle().importKey("raw", bs(utf8(password)), "PBKDF2", false, ["deriveKey"]);
   return subtle().deriveKey(
@@ -723,7 +723,7 @@ function kekBackupAad(userId: string, version: number, publicKey: string): Uint8
   return lp("arion/e2ee-backup/v2-password", userId, version, publicKey);
 }
 
-/** بسته‌بندیِ کلیدِ SYNCED با کلیدِ مشتق از رمزِ عبور (privateKey باید extractable باشد) */
+/** بسته‌بندی کلید SYNCED با کلید مشتق از رمز عبور (privateKey باید extractable باشد) */
 export async function wrapPrivateKeyWithKek(
   privateKey: CryptoKey,
   kek: CryptoKey,

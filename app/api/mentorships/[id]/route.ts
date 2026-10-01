@@ -17,8 +17,8 @@ const ACTIONS = ["accept", "reject", "cancel", "end", "block", "unblock"] as con
 type Action = (typeof ACTIONS)[number];
 
 /**
- * با پایان/بلاکِ رابطه، برنامه‌های باز (PENDING/ACCEPTED/ACTIVE) لغو و آینه‌ی
- * روتینشون از «روتین من»ِ شاگرد حذف می‌شه — وگرنه تسک‌های منتوری که دیگه
+ * با پایان/بلاک رابطه، برنامه‌های باز (PENDING/ACCEPTED/ACTIVE) لغو و آینه‌ی
+ * روتینشون از «روتین من» شاگرد حذف می‌شه — وگرنه تسک‌های منتوری که دیگه
  * رابطه‌ای باهاش نیست تا ابد توی برنامه‌ی شاگرد می‌موند.
  */
 async function closeOpenPrograms(mentorshipId: string, studentId: string): Promise<void> {
@@ -27,7 +27,7 @@ async function closeOpenPrograms(mentorshipId: string, studentId: string): Promi
     select: { id: true, status: true },
   });
   if (open.length === 0) return;
-  // هر برنامه با قفلِ وضعیتِ خودش — اگه هم‌زمان عوض شده باشه، همون یکی رد می‌شه
+  // هر برنامه با قفل وضعیت خودش — اگه هم‌زمان عوض شده باشه، همون یکی رد می‌شه
   for (const p of open) {
     await prisma.mentorProgram.updateMany({ where: { id: p.id, status: p.status }, data: { status: "CANCELLED", cancelledAt: new Date() } });
   }
@@ -35,7 +35,7 @@ async function closeOpenPrograms(mentorshipId: string, studentId: string): Promi
 }
 
 // PATCH /api/mentorships/:id { action, reason? } → accept | reject | cancel | end | block | unblock
-// reason فقط برای end (دلیلِ پایان، اختیاری) — به طرفِ مقابل نشون داده می‌شه.
+// reason فقط برای end (دلیل پایان، اختیاری) — به طرف مقابل نشون داده می‌شه.
 export async function PATCH(req: Request, { params }: Ctx) {
   const g = await requireMentorsUser();
   if (!g.ok) return g.response;
@@ -57,7 +57,7 @@ export async function PATCH(req: Request, { params }: Ctx) {
   let from: MentorshipStatus[];
   let data: Prisma.MentorshipUpdateManyMutationInput;
   let endReason: string | null = null;
-  // شاگردی که دعوتِ منتور را می‌پذیرد همان «شرایط منتورها»ی درخواستِ شاگرد را می‌پذیرد (lib/mentorTerms.ts)
+  // شاگردی که دعوت منتور را می‌پذیرد همان «شرایط منتورها»ی درخواست شاگرد را می‌پذیرد (lib/mentorTerms.ts)
   let recordStudentTerms = false;
 
   switch (action) {
@@ -66,15 +66,15 @@ export async function PATCH(req: Request, { params }: Ctx) {
       if (m.status !== "PENDING") return conflict("این درخواست دیگه در انتظار پاسخ نیست");
       if (isInitiator) return forbidden("فقط طرف مقابل می‌تونه به درخواست پاسخ بده");
       if (action === "accept") {
-        // منتورِ معلق شاگردِ جدید نمی‌پذیره — چه خودش قبول کنه، چه شاگرد دعوتش رو
+        // منتور معلق شاگرد جدید نمی‌پذیره — چه خودش قبول کنه، چه شاگرد دعوتش رو
         const mp = await prisma.mentorProfile.findUnique({ where: { userId: m.mentorId }, select: { suspendedAt: true, maxActiveStudents: true, identityStatus: true } });
         if (!mp) return conflict("این کاربر دیگه پروفایل مربی‌گری نداره");
         if (mp.suspendedAt) return forbidden(role === "MENTOR" ? "حساب مربی‌گری تو تعلیق شده" : "این مربی فعلا امکان پذیرش شاگرد نداره");
-        // احرازِ هویتِ منتور اجباریه (lib/mentorServer.ts → IDENTITY_VERIFIED_WHERE)
+        // احراز هویت منتور اجباریه (lib/mentorServer.ts → IDENTITY_VERIFIED_WHERE)
         if (mp.identityStatus !== "VERIFIED") return forbidden(role === "MENTOR" ? MENTOR_IDENTITY_REQUIRED_MSG : "این مربی فعلا امکان پذیرش شاگرد نداره");
-        // سقفِ ظرفیت فقط جلوی پذیرشِ *درخواستِ شاگرد* رو می‌گیره؛ دعوتِ خودِ منتور انتخابِ خودشه.
-        // صندلیِ رزروِ صفِ انتظار (نوبتِ زنده یا درخواستِ دیگری که از صف اومده) هم پُر حساب می‌شه
-        // تا درخواستِ مستقیم از نفرِ صف جلو نزنه؛ درخواستِ خودِ همین رابطه از رزروها کم می‌شه
+        // سقف ظرفیت فقط جلوی پذیرش *درخواست شاگرد* رو می‌گیره؛ دعوت خود منتور انتخاب خودشه.
+        // صندلی رزرو صف انتظار (نوبت زنده یا درخواست دیگری که از صف اومده) هم پر حساب می‌شه
+        // تا درخواست مستقیم از نفر صف جلو نزنه؛ درخواست خود همین رابطه از رزروها کم می‌شه
         if (role === "MENTOR" && mp.maxActiveStudents != null) {
           await advanceWaitlist(m.mentorId, now);
           const [active, reserved] = await Promise.all([countActiveStudents(m.mentorId), countReservedSeats(m.mentorId, now, m.id)]);
@@ -123,7 +123,7 @@ export async function PATCH(req: Request, { params }: Ctx) {
       break;
     case "unblock":
       if (m.status !== "BLOCKED") return conflict("این رابطه مسدود نیست");
-      // فقط کسی که بلاک کرده؛ برای طرفِ دیگه همون ۴۰۴ تا جزئیات لو نره
+      // فقط کسی که بلاک کرده؛ برای طرف دیگه همون ۴۰۴ تا جزئیات لو نره
       if (m.blockedById !== me) return notFound();
       from = ["BLOCKED"];
       data = { status: "ENDED", blockedById: null };
@@ -142,12 +142,12 @@ export async function PATCH(req: Request, { params }: Ctx) {
   if ((action === "end" || action === "block") && (m.status === "ACTIVE" || m.status === "PENDING")) {
     await closeOpenPrograms(m.id, m.studentId);
   }
-  // صندلیِ آزادشده (یا رزروِ صفی که دیگه PENDING نیست) به نفرِ بعدیِ صفِ انتظار می‌رسه
+  // صندلی آزادشده (یا رزرو صفی که دیگه PENDING نیست) به نفر بعدی صف انتظار می‌رسه
   if (action !== "accept" && action !== "unblock") await advanceWaitlist(m.mentorId, now);
-  // هر دو طرف (و بقیه‌ی دستگاه‌های خودم) وضعیتِ تازه رو همون لحظه می‌بینن
+  // هر دو طرف (و بقیه‌ی دستگاه‌های خودم) وضعیت تازه رو همون لحظه می‌بینن
   void publishToUsers([m.mentorId, m.studentId], { type: "mentor.mentorship", data: { id: m.id } });
 
-  // پیامِ خوش‌آمدِ منتور (اگه تعریف شده) با اعلانِ شروعِ رابطه به شاگرد می‌رسه
+  // پیام خوش‌آمد منتور (اگه تعریف شده) با اعلان شروع رابطه به شاگرد می‌رسه
   const welcome = action === "accept" && counterpartId === m.studentId ? await readWelcomeMessage(m.mentorId) : null;
 
   if (action === "accept" || action === "reject" || action === "end") {

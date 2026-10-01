@@ -55,7 +55,7 @@ export async function GET() {
   // جدول ModuleAccess چی می‌گه (که معمولا seed هم شده، ولی این تضمین اضافه‌ست)
   const moduleAccess = user.isSuperAdmin
     ? Object.values(ModuleKey).map((m) => ({ module: m, active: true, expiresAt: null }))
-    : user.moduleAccess; // «روتین من» هم مثلِ بقیه: تریالِ ۱۴روزه، بعد پلن (lib/modules.ts)
+    : user.moduleAccess; // «روتین من» هم مثل بقیه: تریال ۱۴روزه، بعد پلن (lib/modules.ts)
 
   const fullName = [user.name, user.lastName].filter(Boolean).join(" ") || null;
 
@@ -98,8 +98,8 @@ async function handlePATCH(req: NextRequest) {
     }
     data.lastName = v || null;
   }
-  // بیوگرافی: متنِ آزاد ولی کوتاه — هم توی پروفایلِ خودِ کاربر ویرایش
-  // می‌شه هم توی پاپ‌آپِ پروفایلِ دوستان نشون داده می‌شه.
+  // بیوگرافی: متن آزاد ولی کوتاه — هم توی پروفایل خود کاربر ویرایش
+  // می‌شه هم توی پاپ‌آپ پروفایل دوستان نشون داده می‌شه.
   if (body.bio !== undefined) {
     data.bio = clampText(String(body.bio || "").trim(), 200) || null;
   }

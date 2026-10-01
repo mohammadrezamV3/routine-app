@@ -14,13 +14,13 @@ import { NETWORK_ERROR, readApiError } from "@/lib/mentorFormat";
 
 const SECTION = { size: 15, strokeWidth: 1.75, "aria-hidden": true } as const;
 
-// دسترسیِ منتور به روتینِ شاگرد («برنامه‌های قابل مشاهده» + «جزئیات قابل مشاهده»)
-// — قبلا زبانه‌ی «دسترسی‌ها» توی صفحه‌ی رابطه بود؛ طبقِ درخواستِ صریح به
-// «تنظیمات» پنلِ کاربری (/account/general) منتقل شد. تنظیم همچنان به‌ازای هر
+// دسترسی منتور به روتین شاگرد («برنامه‌های قابل مشاهده» + «جزئیات قابل مشاهده»)
+// — قبلا زبانه‌ی «دسترسی‌ها» توی صفحه‌ی رابطه بود؛ طبق درخواست صریح به
+// «تنظیمات» پنل کاربری (/account/general) منتقل شد. تنظیم همچنان به‌ازای هر
 // رابطه است و API همون /api/mentorships/[id]/privacy.
 // ───────────────────────── دسترسی‌ها ─────────────────────────
 
-/** همان کلیدِ lib/mentorPrivacy.ts (routineScopeKey) — نسخه‌ی کلاینتیِ بی‌وابستگی به سرور */
+/** همان کلید lib/mentorPrivacy.ts (routineScopeKey) — نسخه‌ی کلاینتی بی‌وابستگی به سرور */
 function scopeKeyOf(o: { name: string; tag?: string }): string {
   const label = (o.tag && o.tag.trim()) || (o.name || "").trim();
   return "routine:" + label.slice(0, 120);
@@ -28,7 +28,7 @@ function scopeKeyOf(o: { name: string; tag?: string }): string {
 
 const DETAIL_TOGGLES: { key: keyof Omit<PrivacySettings, "shareAllPrograms" | "sharedPrograms">; title: string; desc: string }[] = [
   { key: "showSchedule", title: "زمان‌بندی", desc: "روزها و ساعت‌هایی که مشغولی؛ خاموش باشد، هیچ بخشی از روتین دیده نمی‌شود" },
-  { key: "showProgramName", title: "نام برنامه", desc: "برچسب هر بازه‌ی زمانی، مثلاً «دانشگاه»" },
+  { key: "showProgramName", title: "نام برنامه", desc: "برچسب هر بازه‌ی زمانی، مثلا «دانشگاه»" },
   { key: "showTaskName", title: "نام کار", desc: "عنوان هر کار؛ خاموش باشد، فقط «مشغول» دیده می‌شود" },
   { key: "showTaskDetails", title: "جزئیات کار", desc: "میزان اهمیت هر کار" },
   { key: "showProgress", title: "پیشرفت", desc: "انجام شدن یا نشدن هر کار در هر روز" },
@@ -124,7 +124,7 @@ export function MentorPrivacySettings({ mentorshipId, mentorName, active }: { me
           <TickButton shape="square" size={22} checked={allOn} onToggle={() => patch({ shareAllPrograms: !allOn })} />
           <span className="mentor-check-label">
             <b>همه‌ی برنامه‌ها</b>
-            <div className="mentor-check-kind">برنامه‌هایی که بعداً بسازی هم خودکار دیده می‌شوند</div>
+            <div className="mentor-check-kind">برنامه‌هایی که بعدا بسازی هم خودکار دیده می‌شوند</div>
           </span>
         </label>
         {routineScopes.length === 0 && <MentorEmpty>هنوز برنامه‌ای در روتینت نیست</MentorEmpty>}
@@ -168,7 +168,7 @@ function prettyTime(t: string): string {
   return t.replace(/\s*[-–—]\s*/, " – ");
 }
 
-/** پیش‌نمایشِ زنده — همان منطقِ projectRoutineForMentor سمتِ سرور، روی یکی از برنامه‌های خودِ کاربر */
+/** پیش‌نمایش زنده — همان منطق projectRoutineForMentor سمت سرور، روی یکی از برنامه‌های خود کاربر */
 function PrivacyPreview({ draft, occs }: { draft: PrivacySettings; occs: CustomOccurrence[] }) {
   const visible = (o: CustomOccurrence) => draft.shareAllPrograms || draft.sharedPrograms.includes(scopeKeyOf(o));
   const real = occs.find(visible) ?? occs[0];
@@ -213,9 +213,9 @@ function PrivacyPreview({ draft, occs }: { draft: PrivacySettings; occs: CustomO
 }
 
 /**
- * هر بخش جدا ایزوله می‌شود تا ترتیبِ راست‌به‌چپ حفظ شود — بدونِ این، متنی که
- * با ساعت و برچسبِ لاتین (مثلا «Workout») شروع می‌شد کلِ خط را چپ‌به‌راست
- * و ترتیبِ بخش‌ها را برعکس نشان می‌داد. بازه‌ی ساعت خودش چپ‌به‌راست می‌ماند.
+ * هر بخش جدا ایزوله می‌شود تا ترتیب راست‌به‌چپ حفظ شود — بدون این، متنی که
+ * با ساعت و برچسب لاتین (مثلا «Workout») شروع می‌شد کل خط را چپ‌به‌راست
+ * و ترتیب بخش‌ها را برعکس نشان می‌داد. بازه‌ی ساعت خودش چپ‌به‌راست می‌ماند.
  */
 function PreviewParts({ time, parts }: { time: string; parts: string[] }) {
   return (

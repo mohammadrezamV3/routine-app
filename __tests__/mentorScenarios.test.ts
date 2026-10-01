@@ -60,14 +60,14 @@ afterAll(async () => {
 
 const P = (id: string) => ({ params: { id } });
 
-describe("سناریو ۱ — مسیرِ کاملِ منتور/شاگرد با برنامه‌ی تمرینی", () => {
-  it("ثبت‌نام → کشف → درخواست → قبول → اجازه → برنامه‌ی WORKOUT → قبول → اجرا → پایشِ منتور → فیدبک → اعلانِ شاگرد", async () => {
+describe("سناریو ۱ — مسیر کامل منتور/شاگرد با برنامه‌ی تمرینی", () => {
+  it("ثبت‌نام → کشف → درخواست → قبول → اجازه → برنامه‌ی WORKOUT → قبول → اجرا → پایش منتور → فیدبک → اعلان شاگرد", async () => {
     const tag = uniqueTag();
-    // «ثبت‌نام» دو کاربر؛ یکی پروفایلِ منتوری می‌سازد
+    // «ثبت‌نام» دو کاربر؛ یکی پروفایل منتوری می‌سازد
     const mentor = await makeUser({ username: `${tag}coach`.slice(0, 20), name: "مربی", lastName: "سناریو" });
     const student = await makeUser({ username: `${tag}st`.slice(0, 20), name: "شاگرد" });
     await makeMentorProfile(mentor, { headline: `مربی ${tag}`, bio: "بیو", categories: ["FITNESS"], published: true });
-    // احرازِ هویتِ منتور اجباری است؛ تاییدِ ادمین (مسیرِ خودش در mentorVerification.test.ts)
+    // احراز هویت منتور اجباری است؛ تایید ادمین (مسیر خودش در mentorVerification.test.ts)
     await prisma.mentorProfile.update({ where: { userId: mentor }, data: { identityStatus: "VERIFIED" } });
 
     // کشف با q
@@ -123,7 +123,7 @@ describe("سناریو ۱ — مسیرِ کاملِ منتور/شاگرد با �
     expect(notifs.notifications.some((n: any) => n.type === "program.new" && n.url === `/mentor-programs/${pid}`)).toBe(true);
     const acc = await postTransition(req("POST", "/x", { action: "accept" }), P(pid));
     expect((await j(acc)).program.status).toBe("ACTIVE");
-    // WORKOUT هم در روتین آینه می‌شود — تیکِ همان‌جا منبعِ پیشرفتِ خودکار است
+    // WORKOUT هم در روتین آینه می‌شود — تیک همان‌جا منبع پیشرفت خودکار است
     const mirrored = (await readOccurrences(student)).filter((o) => o.mentorProgramId === pid);
     expect(mirrored.length).toBeGreaterThan(0);
 
@@ -134,7 +134,7 @@ describe("سناریو ۱ — مسیرِ کاملِ منتور/شاگرد با �
       ["پرس سینه", 4, "8-12", 60],
       ["اسکوات", 5, "5", 100],
     ]);
-    // ثبتِ دستیِ وضعیت دیگر ممکن نیست؛ شاگرد در روتینش تیک می‌زند
+    // ثبت دستی وضعیت دیگر ممکن نیست؛ شاگرد در روتینش تیک می‌زند
     as(student);
     expect((await postLog(req("POST", "/x", { itemId: detail.items[0].id, date: today(), status: "COMPLETED" }), P(pid))).status).toBe(410);
     const todays = mirrored.filter((o) => o.jsDay === jsDayOf(today()));
@@ -151,26 +151,26 @@ describe("سناریو ۱ — مسیرِ کاملِ منتور/شاگرد با �
     dash = await j(await dashboard());
     expect(dash.stats).toMatchObject({ students: 1, activeStudents: 1, pendingRequests: 0, activePrograms: 1 });
     expect(dash.completion).toEqual([expect.objectContaining({ studentId: student, completed: 2, rate: 100 })]);
-    // دو آیتمِ یک روز یک ردیفِ فعالیت می‌شوند (lib/mentorActivity.ts)
+    // دو آیتم یک روز یک ردیف فعالیت می‌شوند (lib/mentorActivity.ts)
     expect(dash.recentActivity.some((a: any) => a.type === "log" && a.text === "2 آیتم انجام شد" && a.day === today())).toBe(true);
     expect(dash.attention).toEqual([]);
 
-    // فیدبک → اعلانِ شاگرد
+    // فیدبک → اعلان شاگرد
     as(mentor);
-    const fb = await postFeedback(req("POST", "/x", { body: "فرمِ اسکوات عالی بود", logId: mv.logs[0].id }), P(pid));
+    const fb = await postFeedback(req("POST", "/x", { body: "فرم اسکوات عالی بود", logId: mv.logs[0].id }), P(pid));
     expect(fb.status).toBe(200);
     as(student);
     notifs = await j(await getNotifs(req("GET", "/api/notifications")));
     const fbN = notifs.notifications.find((n: any) => n.type === "program.feedback");
     expect(fbN).toBeTruthy();
-    // متنِ فیدبک رمزشده در حالِ سکون است و در اعلان/پوش نمی‌آید (docs/mentor-e2ee.md)
-    expect(fbN.body).not.toContain("فرمِ اسکوات");
+    // متن فیدبک رمزشده در حال سکون است و در اعلان/پوش نمی‌آید (docs/mentor-e2ee.md)
+    expect(fbN.body).not.toContain("فرم اسکوات");
     expect(fbN.body).toContain("هایپرتروفی");
     expect(fbN.url).toBe(`/mentor-programs/${pid}`);
     as(student);
     expect((await j(await readFeedback(req("POST", "/x"), P(pid)))).count).toBe(1);
 
-    // پایان: complete توسطِ منتور؛ شمارِ برنامه‌های تکمیل‌شده روی صفحه‌ی منتور
+    // پایان: complete توسط منتور؛ شمار برنامه‌های تکمیل‌شده روی صفحه‌ی منتور
     as(mentor);
     expect((await postTransition(req("POST", "/x", { action: "complete" }), P(pid))).status).toBe(200);
     as(student);
@@ -179,7 +179,7 @@ describe("سناریو ۱ — مسیرِ کاملِ منتور/شاگرد با �
 });
 
 describe("سناریو ۲ — سه منتور با اجازه‌های متفاوت", () => {
-  it("هر منتور فقط برنامه‌ی مجازِ خودش را می‌بیند؛ اسمِ بقیه در هیچ پاسخی نیست", async () => {
+  it("هر منتور فقط برنامه‌ی مجاز خودش را می‌بیند؛ اسم بقیه در هیچ پاسخی نیست", async () => {
     const student = await makeUser({ name: "رها" });
     const A = await makeMentor({ name: "منتورالف" });
     const B = await makeMentor({ name: "منتورب" });
@@ -203,7 +203,7 @@ describe("سناریو ۲ — سه منتور با اجازه‌های متفا�
     await setPrivacy(student, msA, { sharedPrograms: ["routine:Workout"], showTaskName: true });
     await setPrivacy(student, msB, { sharedPrograms: ["routine:Study"], showTaskName: true });
     await setPrivacy(student, msC, { showTaskName: true });
-    // هر منتور یک برنامه‌ی ROUTINEِ خودش هم دارد که در روتینِ شاگرد آینه می‌شود
+    // هر منتور یک برنامه‌ی ROUTINE خودش هم دارد که در روتین شاگرد آینه می‌شود
     await activeProgram(A, student, msA, { title: "برنامه‌ی‌مخفی‌الف", items: [{ title: "تسک‌مخفی‌الف", repeat: "DAILY" }] });
     await activeProgram(B, student, msB, { title: "برنامه‌ی‌مخفی‌ب", items: [{ title: "تسک‌مخفی‌ب", repeat: "DAILY" }] });
 
@@ -239,7 +239,7 @@ describe("سناریو ۲ — سه منتور با اجازه‌های متفا�
     expect(b).not.toMatch(/منتورالف|منتورج/);
     expect(c).not.toMatch(/منتورالف|منتورب/);
 
-    // شکلِ اسلات‌ها
+    // شکل اسلات‌ها
     as(A);
     const va = await j(await studentView(req("GET", `/api/mentor/students/${student}`), { params: { studentId: student } }));
     expect(va.routine.slots.map((s: any) => s.title).sort()).toEqual([...WORKOUT_NAMES].sort());
@@ -250,8 +250,8 @@ describe("سناریو ۲ — سه منتور با اجازه‌های متفا�
   });
 });
 
-describe("سناریو ۳ — دست‌کاریِ idها توسطِ منتورِ مهاجم", () => {
-  it("همه‌ی تلاش‌ها روی studentId/programId/mentorshipIdِ قربانی شکست می‌خورد", async () => {
+describe("سناریو ۳ — دست‌کاری idها توسط منتور مهاجم", () => {
+  it("همه‌ی تلاش‌ها روی studentId/programId/mentorshipId قربانی شکست می‌خورد", async () => {
     const victimMentor = await makeMentor();
     const victim = await makeUser({ name: "قربانی" });
     const vMs = await connect(victim, victimMentor);
@@ -304,21 +304,21 @@ describe("سناریو ۳ — دست‌کاریِ idها توسطِ منتورِ
 
     for (const [k, v] of Object.entries(statuses)) expect([k, v]).toEqual([k, 404]);
 
-    // شاگردِ همدست هم با itemIdِ قربانی روی برنامه‌ی خودش لاگ نمی‌تواند بزند
+    // شاگرد همدست هم با itemId قربانی روی برنامه‌ی خودش لاگ نمی‌تواند بزند
     as(accomplice);
-    // (ثبتِ دستیِ وضعیت کلا منسوخ است: ۴۱۰ و هیچ ردیفی برای آیتمِ قربانی ساخته نمی‌شود)
+    // (ثبت دستی وضعیت کلا منسوخ است: ۴۱۰ و هیچ ردیفی برای آیتم قربانی ساخته نمی‌شود)
     expect((await postLog(req("POST", "/x", { itemId: vItem.id, date: today(), status: "COMPLETED" }), P(aProg))).status).toBe(410);
     expect(await prisma.mentorProgramLog.count({ where: { itemId: vItem.id, programId: aProg } })).toBe(0);
     as(accomplice);
     expect((await getProgram(req("GET", "/x"), P(vProg))).status).toBe(404);
 
-    // فیلترِ mentorshipIdِ قربانی در لیست → خالی
+    // فیلتر mentorshipId قربانی در لیست → خالی
     as(attacker);
     expect((await j(await listPrograms(req("GET", `/api/mentor-programs?role=mentor&mentorshipId=${vMs}`)))).programs).toEqual([]);
     as(attacker);
     expect((await j(await listPrograms(req("GET", `/api/mentor-programs?role=student&mentorshipId=${vMs}`)))).programs).toEqual([]);
 
-    // ویرایشِ پیش‌نویسِ خودِ مهاجم با studentId/mentorshipIdِ قربانی در بدنه بی‌اثر است
+    // ویرایش پیش‌نویس خود مهاجم با studentId/mentorshipId قربانی در بدنه بی‌اثر است
     const aDraft = await createProgramId(attacker, aMs);
     as(attacker);
     const pu = await putProgram(req("PUT", "/x", { title: "y", items: [{ title: "z", repeat: "DAILY" }], studentId: victim, mentorshipId: vMs, mentorId: victimMentor }), P(aDraft));
@@ -335,8 +335,8 @@ describe("سناریو ۳ — دست‌کاریِ idها توسطِ منتورِ
   });
 });
 
-describe("سناریو ۴ — تاییدِ مدرک توسطِ ادمین", () => {
-  it("مدرک تایید → نشانِ تایید روی کارتِ کشف؛ کاربرانِ عادی به فایل دسترسی ندارند", async () => {
+describe("سناریو ۴ — تایید مدرک توسط ادمین", () => {
+  it("مدرک تایید → نشان تایید روی کارت کشف؛ کاربران عادی به فایل دسترسی ندارند", async () => {
     const tag = uniqueTag();
     const mentor = await makeMentor({ username: `${tag}cert`.slice(0, 20) }, { headline: "مربی", bio: "بیو", categories: ["FITNESS"], published: true });
     as(mentor);
@@ -360,7 +360,7 @@ describe("سناریو ۴ — تاییدِ مدرک توسطِ ادمین", () =
     expect(card.certifications).toEqual([{ category: "FITNESS", verified: true }]);
     expect(JSON.stringify(card)).not.toContain(docId);
 
-    // کاربرِ عادی: روتِ صاحب ۴۰۴، روتِ ادمین ۴۰۱؛ منتورِ دیگر هم همین
+    // کاربر عادی: روت صاحب ۴۰۴، روت ادمین ۴۰۱؛ منتور دیگر هم همین
     as(user);
     expect((await ownerDoc(req("GET", "/x"), { params: { docId } })).status).toBe(404);
     as(user);
@@ -368,13 +368,13 @@ describe("سناریو ۴ — تاییدِ مدرک توسطِ ادمین", () =
     const otherMentor = await makeMentor();
     as(otherMentor);
     expect((await ownerDoc(req("GET", "/x"), { params: { docId } })).status).toBe(404);
-    // خودِ منتور به فایل دسترسی دارد
+    // خود منتور به فایل دسترسی دارد
     as(mentor);
     const own = await ownerDoc(req("GET", "/x"), { params: { docId } });
     expect(own.status).toBe(200);
     expect(own.headers.get("content-type")).toBe("application/pdf");
 
-    // منتور اعلانِ نتیجه را گرفت
+    // منتور اعلان نتیجه را گرفت
     as(mentor);
     const n = await j(await getNotifs(req("GET", "/api/notifications")));
     expect(n.notifications.some((x: any) => x.type === "verification.result" && x.url === "/mentor/profile")).toBe(true);

@@ -1,6 +1,6 @@
-// نوتیفِ تب‌باز از طریق Notification API مرورگر — فقط پشتیبان. یادآوری‌های
+// نوتیف تب‌باز از طریق Notification API مرورگر — فقط پشتیبان. یادآوری‌های
 // اصلی (حتی وقتی مرورگر بسته‌ست) از سرور با Web Push می‌رسن
-// (lib/pushScheduler.ts + public/sw.js)؛ این برای مهمان/دستگاهِ بدونِ پوش است.
+// (lib/pushScheduler.ts + public/sw.js)؛ این برای مهمان/دستگاه بدون پوش است.
 
 import { subscribeToPush } from "./pushClient";
 
@@ -21,14 +21,14 @@ export async function requestNotificationPermission(): Promise<NotificationPermi
   // اجازه‌ی نوتیف به‌تنهایی فقط نسخه‌ی تب‌باز رو فعال می‌کنه؛ برای اینکه
   // وقتی مرورگر بسته‌ست هم یادآوری برسه، دستگاه باید برای Web Push ثبت بشه.
   // قبلا فقط NavDrawer این رو صدا می‌زد و اجازه‌ای که از تنظیمات یا کارت‌های
-  // یادآوری/دارو داده می‌شد هیچ‌وقت به پوشِ سرور نمی‌رسید. (برای مهمان
+  // یادآوری/دارو داده می‌شد هیچ‌وقت به پوش سرور نمی‌رسید. (برای مهمان
   // سرور ۴۰۱ می‌ده و بی‌اثره.)
   if (p === "granted") void subscribeToPush();
   return p;
 }
 
 /** رد «این یادآوری نشون داده شد» — کلید خودش تاریخ داره، مقدار deadline (ms) است
- *  تا ردهای کهنه جارو بشن. قبلا مقدار «امروز» بود و یادآوری‌ای که دیروقتِ
+ *  تا ردهای کهنه جارو بشن. قبلا مقدار «امروز» بود و یادآوری‌ای که دیروقت
  *  دیشب برای برنامه‌ی بامداد رفته بود، بعد از نیمه‌شب دوباره می‌رفت. */
 function alreadyFired(key: string): boolean {
   try {
@@ -61,15 +61,15 @@ function pruneFired() {
       const k = ls.key(i);
       if (!k || !k.startsWith(NOTIFIED_PREFIX)) continue;
       const v = Number(ls.getItem(k));
-      // مقدارهای فرمتِ قدیمی (رشته‌ی تاریخ) هم NaN می‌شن و پاک می‌شن
+      // مقدارهای فرمت قدیمی (رشته‌ی تاریخ) هم NaN می‌شن و پاک می‌شن
       if (!Number.isFinite(v) || v < cutoff) ls.removeItem(k);
     }
   } catch {}
 }
 
 /**
- * نمایشِ نوتیف. اول از سرویس‌ورکر (registration.showNotification) — روی
- * کرومِ اندروید `new Notification()` اصلا مجاز نیست و TypeError می‌ده، یعنی
+ * نمایش نوتیف. اول از سرویس‌ورکر (registration.showNotification) — روی
+ * کروم اندروید `new Notification()` اصلا مجاز نیست و TypeError می‌ده، یعنی
  * قبلا نسخه‌ی تب‌باز روی موبایل هیچ‌وقت چیزی نشون نمی‌داد.
  */
 async function showNotification(title: string, options: NotificationOptions): Promise<boolean> {
@@ -90,8 +90,8 @@ async function showNotification(title: string, options: NotificationOptions): Pr
 
 /**
  * یک‌بار به‌ازای هر key (کلید خودش تاریخ/نوبت رو داره). `deadline` لحظه‌ی
- * شروعِ برنامه است: بعد از اون هیچ‌وقت نشون داده نمی‌شه. tag همون key است،
- * پس اگه همون یادآوری از پوشِ سرور هم رسیده باشه، جایگزینش می‌شه نه تکرار.
+ * شروع برنامه است: بعد از اون هیچ‌وقت نشون داده نمی‌شه. tag همون key است،
+ * پس اگه همون یادآوری از پوش سرور هم رسیده باشه، جایگزینش می‌شه نه تکرار.
  */
 export function fireReminder(key: string, title: string, body: string, opts?: { deadline?: number; url?: string }) {
   if (getNotificationPermission() !== "granted") return;

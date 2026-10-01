@@ -1,16 +1,16 @@
-// برنامه‌ریزیِ یادآوری‌ها — منطقِ خالص و مشترک بینِ زمان‌بندِ سرور
+// برنامه‌ریزی یادآوری‌ها — منطق خالص و مشترک بین زمان‌بند سرور
 // (lib/pushReminders.ts → Web Push، حتی وقتی مرورگر بسته‌ست) و نسخه‌ی
-// پشتیبانِ تب‌باز (components/NotificationEngine.tsx). هیچ وابستگی‌ای به
+// پشتیبان تب‌باز (components/NotificationEngine.tsx). هیچ وابستگی‌ای به
 // prisma/next-auth/react نداره تا هر دو طرف دقیقا با یک قانون حساب کنن.
 //
-// قانونِ ثابت (درخواستِ صریحِ کاربر): هیچ یادآوری‌ای بعد از لحظه‌ی شروعِ
+// قانون ثابت (درخواست صریح کاربر): هیچ یادآوری‌ای بعد از لحظه‌ی شروع
 // برنامه/نوبت فرستاده یا نشون داده نمی‌شه. هر یادآوری یک `deadline` (همون
 // لحظه‌ی شروع، به epoch ms) داره: ارسال فقط در بازه‌ی [from, until) و
-// until <= deadline؛ TTLِ پوش هم تا deadline تنظیم می‌شه و سرویس‌ورکر پوشِ
+// until <= deadline؛ TTL پوش هم تا deadline تنظیم می‌شه و سرویس‌ورکر پوش
 // کهنه‌تر از deadline رو نشون نمی‌ده. اگه به هر دلیلی تا شروع نرسید، دیگه
 // اصلا نمی‌رسه.
 //
-// زمان‌ها همه به وقتِ محلیِ *کاربر* (timezone) حساب می‌شن، نه TZِ پروسه‌ی
+// زمان‌ها همه به وقت محلی *کاربر* (timezone) حساب می‌شن، نه TZ پروسه‌ی
 // سرور — قبلا سرور با getHours() (یعنی UTC روی داکر) حساب می‌کرد و یادآوری
 // ۳:۳۰ ساعت جابه‌جا (یا اصلا) می‌رسید.
 
@@ -18,22 +18,22 @@ import { tasksForDate, timeStartMinutes, toEnDigits } from "./schedule";
 import { addDaysIso, localIso, localMinuteOfDay, safeTimezone } from "./weeklyAnalysis/week";
 import { Medication, doseMinutesOfDay, isMedicationActiveOn, minutesToDoseTime } from "./medicationSchedule";
 
-/** یادآوریِ «به‌زودی» چند دقیقه قبل از شروعِ برنامه باز می‌شه */
+/** یادآوری «به‌زودی» چند دقیقه قبل از شروع برنامه باز می‌شه */
 export const ROUTINE_SOON_MIN = 30;
-/** یادآوریِ «همین الان شروع می‌شه» — آخرین دقیقه‌ی قبل از شروع */
+/** یادآوری «همین الان شروع می‌شه» — آخرین دقیقه‌ی قبل از شروع */
 export const ROUTINE_START_LEAD_MS = 60_000;
-/** یادآوریِ دارو این‌قدر قبل از ساعتِ نوبت */
+/** یادآوری دارو این‌قدر قبل از ساعت نوبت */
 export const MED_LEAD_MIN = 5;
-/** اگه تا این ساعت (محلی) تمرینِ امروز ثبت نشده بود، یک‌بار یادآوری */
+/** اگه تا این ساعت (محلی) تمرین امروز ثبت نشده بود، یک‌بار یادآوری */
 export const EXERCISE_REMINDER_HOUR = 17;
 
 export type ReminderKind = "routine" | "med" | "exercise";
 
 export type PlannedReminder = {
-  /** کلیدِ یکتا و پایدار — هم کلیدِ ضدتکرارِ سرور، هم tagِ نوتیف، هم کلیدِ localStorageِ کلاینت */
+  /** کلید یکتا و پایدار — هم کلید ضدتکرار سرور، هم tag نوتیف، هم کلید localStorage کلاینت */
   key: string;
   kind: ReminderKind;
-  /** تاریخِ محلیِ برنامه (YYYY-MM-DD) */
+  /** تاریخ محلی برنامه (YYYY-MM-DD) */
   dateIso: string;
   itemId?: string;
   from: number;
@@ -63,7 +63,7 @@ function offsetFormatter(tz: string): Intl.DateTimeFormat {
   return f;
 }
 
-/** اختلافِ ساعتِ محلیِ tz با UTC در لحظه‌ی utcMs (ms) */
+/** اختلاف ساعت محلی tz با UTC در لحظه‌ی utcMs (ms) */
 function tzOffsetMs(tz: string, utcMs: number): number {
   const parts = offsetFormatter(tz).formatToParts(new Date(utcMs));
   const get = (t: string) => Number(parts.find((p) => p.type === t)?.value);
@@ -71,7 +71,7 @@ function tzOffsetMs(tz: string, utcMs: number): number {
   return asUtc - Math.floor(utcMs / 1000) * 1000;
 }
 
-/** «تاریخِ iso، دقیقه‌ی minutes از نیمه‌شب، به وقتِ tz» → epoch ms (با DSTِ درست) */
+/** «تاریخ iso، دقیقه‌ی minutes از نیمه‌شب، به وقت tz» → epoch ms (با DST درست) */
 export function zonedToUtcMs(iso: string, minutes: number, tz: string): number {
   const [y, m, d] = iso.split("-").map(Number);
   const wall = Date.UTC(y, m - 1, d) + minutes * 60_000;
@@ -82,14 +82,14 @@ export function zonedToUtcMs(iso: string, minutes: number, tz: string): number {
   return t;
 }
 
-/** امروز و فردا به وقتِ محلی — فردا لازمه چون یادآوریِ برنامه‌ی ۰۰:۱۰ از ۲۳:۴۰ِ امشب باز می‌شه */
+/** امروز و فردا به وقت محلی — فردا لازمه چون یادآوری برنامه‌ی ۰۰:۱۰ از ۲۳:۴۰ امشب باز می‌شه */
 export function localDays(tz: string, now: Date): { tz: string; today: string; tomorrow: string; minuteOfDay: number } {
   const zone = safeTimezone(tz);
   const today = localIso(zone, now);
   return { tz: zone, today, tomorrow: addDaysIso(today, 1), minuteOfDay: localMinuteOfDay(zone, now) };
 }
 
-/** Date ای که getDay/isoLocalِ پروسه‌ی فعلی برای همون iso درست جواب بدن (ورودیِ tasksForDate) */
+/** Date ای که getDay/isoLocal پروسه‌ی فعلی برای همون iso درست جواب بدن (ورودی tasksForDate) */
 function processLocalDate(iso: string): Date {
   return new Date(`${iso}T12:00:00`);
 }
@@ -100,7 +100,7 @@ function minutesLeftText(deadline: number, nowMs: number): string {
 }
 
 /**
- * یادآوری‌های برنامه‌ی روتینِ امروز و فردا. برای هر برنامه‌ی ساعت‌دار دو
+ * یادآوری‌های برنامه‌ی روتین امروز و فردا. برای هر برنامه‌ی ساعت‌دار دو
  * یادآوری: «به‌زودی» ([شروع−۳۰، شروع−۱دقیقه)) و «همین الان» ([شروع−۱دقیقه، شروع)).
  * برنامه‌ای که یادآوریش خاموشه (notify=false) یا حذف شده حذف می‌شه؛ انجام‌شدن
  * رو صدازننده چک می‌کنه (سرور از دیتابیس، کلاینت از storage).
@@ -164,7 +164,7 @@ export function planMedicationReminders(opts: { tz: string; now: Date; meds: Med
           key: `med:${med.id}:${iso}:${doseMin}`, kind: "med", dateIso: iso, itemId: med.id,
           from: dose - MED_LEAD_MIN * 60_000, until: dose, deadline: dose,
           title: "یادآوری دارو",
-          body: `نوبتِ «${med.name}» ساعت ${toEnDigits(minutesToDoseTime(doseMin))} — ${minutesLeftText(dose, nowMs)} دقیقه‌ی دیگه.${med.note ? " " + med.note : ""}`,
+          body: `نوبت «${med.name}» ساعت ${toEnDigits(minutesToDoseTime(doseMin))} — ${minutesLeftText(dose, nowMs)} دقیقه‌ی دیگه.${med.note ? " " + med.note : ""}`,
           url: "/",
         });
       }
@@ -173,7 +173,7 @@ export function planMedicationReminders(opts: { tz: string; now: Date; meds: Med
   return out;
 }
 
-/** بازه‌ی یادآوریِ تمرینِ امروز: از ساعتِ EXERCISE_REMINDER_HOUR تا پایانِ روزِ محلی */
+/** بازه‌ی یادآوری تمرین امروز: از ساعت EXERCISE_REMINDER_HOUR تا پایان روز محلی */
 export function planExerciseReminder(opts: { tz: string; now: Date }): PlannedReminder {
   const { tz, today, tomorrow } = localDays(opts.tz, opts.now);
   const end = zonedToUtcMs(tomorrow, 0, tz);

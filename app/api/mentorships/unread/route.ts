@@ -2,9 +2,9 @@ import { NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 import { requireMentorsUser } from "@/lib/mentorGuard";
 
-// GET /api/mentorships/unread → شمارِ پیام‌های خوانده‌نشده‌ی من (کل + به‌ازای هر رابطه).
-// فقط رابطه‌هایی که چتشون در دسترسه (ACTIVE/ENDED) — پیامِ یک رابطه‌ی بلاک‌شده
-// نباید نشانِ «خوانده‌نشده»ای بسازه که هیچ‌وقت نمی‌شه بازش کرد.
+// GET /api/mentorships/unread → شمار پیام‌های خوانده‌نشده‌ی من (کل + به‌ازای هر رابطه).
+// فقط رابطه‌هایی که چتشون در دسترسه (ACTIVE/ENDED) — پیام یک رابطه‌ی بلاک‌شده
+// نباید نشان «خوانده‌نشده»ای بسازه که هیچ‌وقت نمی‌شه بازش کرد.
 export async function GET() {
   const g = await requireMentorsUser();
   if (!g.ok) return g.response;

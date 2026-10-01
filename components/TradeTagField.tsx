@@ -39,7 +39,7 @@ export function TradeTagField({
               style={active ? ({ "--tag-c": t.color } as CSSProperties) : undefined}
               onClick={() => toggle(t.id)}
             >
-              {/* توپِ برچسب سمتِ چپِ نامش (در RTL یعنی بعد از متن) */}
+              {/* توپ برچسب سمت چپ نامش (در RTL یعنی بعد از متن) */}
               {t.name}
               <span className="trade-tag-dot" style={{ background: t.color }} />
             </button>

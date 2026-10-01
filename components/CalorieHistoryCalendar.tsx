@@ -75,9 +75,9 @@ export function CalorieHistoryCalendar({
   return (
     <div>
       <div className="flex items-center justify-between">
-        {/* طبقِ درخواستِ صریح: جهتِ این دو دکمه برعکس بود — آیکونِ هرکدام
-            درست بود ولی به عملکردِ اشتباه وصل شده بود (هم‌الگویِ
-            HistoryCalendar: راست=ماهِ قبل، چپ=ماهِ بعد). */}
+        {/* طبق درخواست صریح: جهت این دو دکمه برعکس بود — آیکون هرکدام
+            درست بود ولی به عملکرد اشتباه وصل شده بود (هم‌الگوی
+            HistoryCalendar: راست=ماه قبل، چپ=ماه بعد). */}
         <button type="button" onClick={goPrev} aria-label="ماه قبل" className="flex h-8 w-8 items-center justify-center rounded-full text-dash-muted transition hover:bg-white/5 hover:text-dash-text">
           <ChevronLeft size={18} />
         </button>

@@ -36,7 +36,7 @@ afterAll(async () => {
 
 const p = (id: string) => ({ params: { id } });
 
-// ───────────────────────── توابعِ خالص ─────────────────────────
+// ───────────────────────── توابع خالص ─────────────────────────
 
 describe("mentorProgramCopy", () => {
   it("shifts a range by the source duration", () => {
@@ -140,7 +140,7 @@ describe("program templates", () => {
     const t2 = (await j(r)).template;
     expect(t2.durationDays).toBeNull();
 
-    // اعتبارسنجی: بدونِ آیتم / بدونِ نام
+    // اعتبارسنجی: بدون آیتم / بدون نام
     r = await postTemplate(req("POST", "/api/mentor/templates", { name: "خالی", program: { type: "ROUTINE", title: "x", items: [] } }));
     expect(r.status).toBe(400);
     r = await postTemplate(req("POST", "/api/mentor/templates", { name: " ", programId: pid }));
@@ -152,7 +152,7 @@ describe("program templates", () => {
     const detail = (await j(await getTemplate(req("GET", `/api/mentor/templates/${t2.id}`), p(t2.id)))).template;
     expect(detail.items[0]).toMatchObject({ title: "اسکوات", sets: 4, reps: "8-10", days: [1, 3] });
 
-    // منتورِ دیگر: نه برنامه‌ی من را قالب می‌کند، نه قالبِ من را می‌بیند/تغییر می‌دهد
+    // منتور دیگر: نه برنامه‌ی من را قالب می‌کند، نه قالب من را می‌بیند/تغییر می‌دهد
     as(other);
     expect((await postTemplate(req("POST", "/api/mentor/templates", { name: "دزدی", programId: pid }))).status).toBe(404);
     expect((await getTemplate(req("GET", `/api/mentor/templates/${t1.id}`), p(t1.id))).status).toBe(404);
@@ -179,7 +179,7 @@ describe("program templates", () => {
     expect(row?.usedCount).toBe(1);
     expect(row?.lastUsedAt).not.toBeNull();
 
-    // منتورِ دیگر با idِ قالبِ من آمارش را عوض نمی‌کند
+    // منتور دیگر با id قالب من آمارش را عوض نمی‌کند
     const s = await makeUser();
     const rel = await connect(s, other);
     as(other);
@@ -209,7 +209,7 @@ describe("saved replies", () => {
     expect((await deleteReply(req("DELETE", `/api/mentor/replies/${rep.id}`), p(rep.id))).status).toBe(404);
     expect((await j(await listReplies())).replies).toEqual([]);
 
-    // کاربرِ بدونِ پروفایلِ منتوری
+    // کاربر بدون پروفایل منتوری
     as(student);
     expect((await listReplies()).status).toBe(403);
 
@@ -238,7 +238,7 @@ describe("duplicate program", () => {
     expect(items[0]).toMatchObject({ title: "اسکوات", sets: 4, reps: "8-10", weightKg: 60, days: [1, 3, 5] });
     expect(await prisma.mentorProgramLog.count({ where: { programId: copy.id } })).toBe(0);
 
-    // همان شاگرد، بدونِ تاریخ
+    // همان شاگرد، بدون تاریخ
     r = await postDuplicate(req("POST", `/api/mentor-programs/${src}/duplicate`, { mentorshipId: rel1 }), p(src));
     expect((await j(r)).program).toMatchObject({ startDate: null, endDate: null });
 
@@ -280,7 +280,7 @@ describe("scheduled start", () => {
     expect((await j(a)).program.status).toBe("ACCEPTED");
     expect(await activateDueForUser(student)).toEqual([]);
 
-    // روزِ شروع رسید
+    // روز شروع رسید
     await prisma.mentorProgram.update({ where: { id }, data: { startDate: dateFromIso(today()) } });
     expect(await activateDueForUser(student)).toEqual([id]);
     expect((await prisma.mentorProgram.findUnique({ where: { id } }))?.status).toBe("ACTIVE");
@@ -291,7 +291,7 @@ describe("scheduled start", () => {
   });
 });
 
-/** برنامه‌ی فعالِ روزانه که از n روز پیش شروع شده، با لاگ‌های دستی برای روزهای داده‌شده */
+/** برنامه‌ی فعال روزانه که از n روز پیش شروع شده، با لاگ‌های دستی برای روزهای داده‌شده */
 async function backdatedProgram(mentor: string, student: string, rel: string, startedDaysAgo: number, done: number[]) {
   const id = await activeProgram(mentor, student, rel, { items: [{ title: "مطالعه", repeat: "DAILY" }] });
   const start = dayOffset(-startedDaysAgo);
@@ -322,7 +322,7 @@ describe("adherence alerts", () => {
     const relIdle = await connect(idle, mentor);
     const relBusy = await connect(busy, mentor);
     const relHidden = await connect(hidden, mentor);
-    await backdatedProgram(mentor, idle, relIdle, 6, [6, 5]); // ۴ روزِ آخر (تا دیروز) بی‌کار
+    await backdatedProgram(mentor, idle, relIdle, 6, [6, 5]); // ۴ روز آخر (تا دیروز) بی‌کار
     await backdatedProgram(mentor, busy, relBusy, 6, [6, 5, 4, 3, 2, 1]);
     await backdatedProgram(mentor, hidden, relHidden, 6, []);
     await setPrivacy(hidden, relHidden, { showProgress: false });

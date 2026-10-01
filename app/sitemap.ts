@@ -11,7 +11,7 @@ export default function sitemap(): MetadataRoute.Sitemap {
 
   const staticPages: MetadataRoute.Sitemap = [
     { url: SITE_URL, lastModified: now, changeFrequency: "weekly", priority: 1 },
-    // صفحه‌ی دسته‌ی روتین — مقصد اصلیِ جست‌وجوی «روتین اپ»/«برنامه روتین روزانه»
+    // صفحه‌ی دسته‌ی روتین — مقصد اصلی جست‌وجوی «روتین اپ»/«برنامه روتین روزانه»
     { url: absoluteUrl("/routine"), lastModified: now, changeFrequency: "monthly", priority: 0.9 },
     { url: absoluteUrl("/habit-tracker"), lastModified: now, changeFrequency: "monthly", priority: 0.8 },
     { url: absoluteUrl("/daily-planner"), lastModified: now, changeFrequency: "monthly", priority: 0.8 },
@@ -29,9 +29,9 @@ export default function sitemap(): MetadataRoute.Sitemap {
     { url: absoluteUrl("/terms/mentors"), lastModified: now, changeFrequency: "yearly", priority: 0.3 },
   ];
 
-  // lastModified مقاله‌ها از تاریخ واقعیِ خودشان می‌آید، نه `now` — تاریخِ
-  // همیشه-امروز به گوگل سیگنالِ دروغِ «تازه به‌روز شد» می‌دهد و بعد از
-  // چند بار، اعتبار کلِ sitemap را پایین می‌آورد.
+  // lastModified مقاله‌ها از تاریخ واقعی خودشان می‌آید، نه `now` — تاریخ
+  // همیشه-امروز به گوگل سیگنال دروغ «تازه به‌روز شد» می‌دهد و بعد از
+  // چند بار، اعتبار کل sitemap را پایین می‌آورد.
   const posts: MetadataRoute.Sitemap = sortedPosts().map((p) => ({
     url: absoluteUrl(`/blog/${p.slug}`),
     lastModified: new Date(p.updated || p.published),

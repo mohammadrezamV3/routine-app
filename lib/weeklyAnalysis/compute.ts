@@ -12,12 +12,12 @@ import {
   daysElapsed as daysElapsedFor, daysOfWeekIso, getWeekRange, safeTimezone, todayIso, weekLabelFa, weekdayFa,
 } from "./week";
 
-// نقطه‌ی ورودِ موتورِ آنالیز هفتگی. بخش‌های ai/goals/reflection رو لایه‌ی
-// API اضافه می‌کنه؛ این‌جا فقط چیزهایی‌ه که از داده‌ی خامِ ماژول‌ها درمیاد.
+// نقطه‌ی ورود موتور آنالیز هفتگی. بخش‌های ai/goals/reflection رو لایه‌ی
+// API اضافه می‌کنه؛ این‌جا فقط چیزهایی‌ه که از داده‌ی خام ماژول‌ها درمیاد.
 
 const TREND_WEEKS = 8;
 
-/** دامنه‌های فعالِ کاربر — سوپریوزر همه، وگرنه ModuleAccessِ فعال و منقضی‌نشده. */
+/** دامنه‌های فعال کاربر — سوپریوزر همه، وگرنه ModuleAccess فعال و منقضی‌نشده. */
 async function activeDomains(userId: string, isSuperAdmin: boolean): Promise<AnalysisDomain[]> {
   if (isSuperAdmin) return [...ANALYSIS_DOMAINS];
   const rows = await prisma.moduleAccess.findMany({
@@ -62,7 +62,7 @@ export async function computeWeeklyAnalysis(
   const cur = TREND_WEEKS - 1;
   const week = weeks[cur];
 
-  // ── ترند: امتیازِ کلِ هر هفته با همون منطقِ امتیازِ کل ──
+  // ── ترند: امتیاز کل هر هفته با همون منطق امتیاز کل ──
   const trend: TrendPoint[] = weeks.map((w, i) => {
     const ds = domains.map((d) => all.get(d)![i].result);
     return {
@@ -74,8 +74,8 @@ export async function computeWeeklyAnalysis(
 
   // ── دامنه‌ها + مقایسه با هفته‌ی قبل ──
   // دامنه‌ای که در کل ۸ هفته هیچ داده‌ای نداشته (مثلا خواب/کارها که فعلا
-  // هیچ مسیری در اپ براشون ردیف نمی‌سازه) کارت خالیِ دائمی می‌شد — مخفی.
-  // اگه هیچ دامنه‌ای داده نداشت، همه می‌مونن تا حالت خالیِ UI نشون داده بشه.
+  // هیچ مسیری در اپ براشون ردیف نمی‌سازه) کارت خالی دائمی می‌شد — مخفی.
+  // اگه هیچ دامنه‌ای داده نداشت، همه می‌مونن تا حالت خالی UI نشون داده بشه.
   const withHistory = domains.filter((d) => all.get(d)!.some((w) => w.result.hasData));
   const shown = withHistory.length ? withHistory : domains;
   const domainResults: DomainResult[] = shown.map((d) => {
@@ -172,7 +172,7 @@ export async function computeWeeklyAnalysis(
   };
 }
 
-/** امتیازِ هر دامنه‌ی فعال در یک هفته — برای ارزیابیِ اهدافِ هفتگی در لایه‌ی API. */
+/** امتیاز هر دامنه‌ی فعال در یک هفته — برای ارزیابی اهداف هفتگی در لایه‌ی API. */
 export async function computeDomainScoresForWeek(
   userId: string,
   timezone: string,

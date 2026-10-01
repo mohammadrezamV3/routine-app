@@ -22,7 +22,7 @@ import { publishToUsers } from "@/lib/realtime";
 
 const MESSAGE_MAX = 500;
 const OFFER_GONE_MSG = "مهلت نوبتت همین الان تموم شد؛ دوباره وارد صف شو";
-// پیامِ عمومی برای هر حالتِ «بلاک» — تا معلوم نشه دقیقاً کی کی رو بلاک کرده
+// پیام عمومی برای هر حالت «بلاک» — تا معلوم نشه دقیقا کی کی رو بلاک کرده
 const BLOCKED_MSG = "امکان ارسال درخواست به این کاربر وجود ندارد";
 
 // GET /api/mentorships?role=student|mentor → رابطه‌های من از یک نقش
@@ -41,10 +41,10 @@ export async function GET(req: NextRequest) {
 }
 
 // POST /api/mentorships
-//   { mentorId, message?, intakeAnswers? } → شاگرد به یک منتورِ قابل‌کشف درخواست می‌ده
-//     (پذیرشِ خاموش، ظرفیتِ پر، یا عدمِ حضورِ منتور با توقفِ درخواست → ۴۰۹؛
-//      اگه منتور سؤالِ پذیرش تعریف کرده، جوابِ همه‌شون به همون ترتیب لازمه)
-//   { studentUsername, message? }  → منتورِ فعال (غیرمعلق) یک کاربر رو دعوت می‌کنه
+//   { mentorId, message?, intakeAnswers? } → شاگرد به یک منتور قابل‌کشف درخواست می‌ده
+//     (پذیرش خاموش، ظرفیت پر، یا عدم حضور منتور با توقف درخواست → ۴۰۹؛
+//      اگه منتور سؤال پذیرش تعریف کرده، جواب همه‌شون به همون ترتیب لازمه)
+//   { studentUsername, message? }  → منتور فعال (غیرمعلق) یک کاربر رو دعوت می‌کنه
 const REREQUEST_COOLDOWN_MS = 7 * 24 * 60 * 60 * 1000;
 
 export async function POST(req: Request) {
@@ -67,10 +67,10 @@ export async function POST(req: Request) {
   let initiatedBy: "STUDENT" | "MENTOR";
   let mentorCategories: string[] = [];
   let intakeAnswers: IntakeAnswer[] | null = null;
-  // پذیرشِ «شرایط منتورها» از سمتِ شاگرد (lib/mentorTerms.ts) — فقط درخواستِ خودِ شاگرد
+  // پذیرش «شرایط منتورها» از سمت شاگرد (lib/mentorTerms.ts) — فقط درخواست خود شاگرد
   let studentTermsVersion: string | null = null;
   let recordStudentTerms = false;
-  // نوبتِ زنده‌ی صفِ انتظار (lib/mentorWaitlistServer.ts) — صندلیِ رزروِ همین شاگرد
+  // نوبت زنده‌ی صف انتظار (lib/mentorWaitlistServer.ts) — صندلی رزرو همین شاگرد
   let offer: { id: string } | null = null;
   const now = new Date();
 
@@ -78,19 +78,19 @@ export async function POST(req: Request) {
     if (typeof b.mentorId !== "string" || !b.mentorId || b.mentorId.length > 64) return badRequest("مربی نامعتبره");
     if (b.mentorId === me) return badRequest("نمی‌تونی به خودت درخواست بدی");
     const profile = await prisma.mentorProfile.findFirst({
-      // همان شرطِ قابلِ کشف: منتشرشده، غیرمعلق، هویتِ تاییدشده (احراز اجباری)
+      // همان شرط قابل کشف: منتشرشده، غیرمعلق، هویت تاییدشده (احراز اجباری)
       where: { userId: b.mentorId, ...DISCOVERABLE_PROFILE_WHERE },
       select: { ...AVAILABILITY_SELECT, categories: true, intakeQuestions: true },
     });
     if (!profile) return notFound();
-    // پذیرش/ظرفیت/عدمِ حضور — دعوتِ خودِ منتور (شاخه‌ی پایین) از این‌ها معافه.
-    // ظرفیت = شاگردِ فعال + صندلی‌های رزروِ صف؛ نوبتِ خودِ این شاگرد از رزروها کم می‌شه
+    // پذیرش/ظرفیت/عدم حضور — دعوت خود منتور (شاخه‌ی پایین) از این‌ها معافه.
+    // ظرفیت = شاگرد فعال + صندلی‌های رزرو صف؛ نوبت خود این شاگرد از رزروها کم می‌شه
     await advanceWaitlist(b.mentorId, now);
     offer = await findLiveOffer(b.mentorId, me, now);
     const occupied = (await countOccupiedSeats(b.mentorId, now)) - (offer ? 1 : 0);
     const availability = availabilityOf(profile, occupied);
     if (availability.state !== "OPEN") {
-      // با ظرفیتِ پر، کد تا کلاینت «ورود به صف» را پیشنهاد بده
+      // با ظرفیت پر، کد تا کلاینت «ورود به صف» را پیشنهاد بده
       return NextResponse.json(
         { error: requestBlockedMessage(availability.state, availability.awayUntil), ...(availability.state === "FULL" ? { code: "MENTOR_FULL" } : {}) },
         { status: 409 }
@@ -111,7 +111,7 @@ export async function POST(req: Request) {
   } else if (b.studentUsername !== undefined) {
     const mp = await getActiveMentorProfile(me);
     if (!mp.ok) return mp.response;
-    // احرازِ هویت برای منتور اجباریه — بدونِ تایید، دعوتِ شاگرد هم ممکن نیست
+    // احراز هویت برای منتور اجباریه — بدون تایید، دعوت شاگرد هم ممکن نیست
     if (mp.profile.identityStatus !== IDENTITY_VERIFIED_WHERE.identityStatus) return forbidden(MENTOR_IDENTITY_REQUIRED_MSG);
     const username = typeof b.studentUsername === "string" ? b.studentUsername.trim().replace(/^@/, "") : "";
     if (!isValidUsername(username)) return badRequest("یوزرنیم نامعتبره");
@@ -159,7 +159,7 @@ export async function POST(req: Request) {
     // REJECTED/ENDED → همون ردیف دوباره PENDING می‌شه و حریم خصوصی به
     // پیش‌فرض (هیچ برنامه‌ای مشترک نیست) برمی‌گرده؛ اجازه‌ی رابطه‌ی قبلی
     // نباید بی‌صدا به رابطه‌ی جدید منتقل بشه.
-    // وضعیتِ مدیریتیِ رابطه‌ی قبلی (توقف، دلیلِ پایان، جواب‌های پذیرش) هم پاک می‌شه
+    // وضعیت مدیریتی رابطه‌ی قبلی (توقف، دلیل پایان، جواب‌های پذیرش) هم پاک می‌شه
     const count = await prisma.$transaction(async (tx) => {
       const res = await tx.mentorship.updateMany({
         where: { id: existing.id, status: existing.status },
@@ -196,7 +196,7 @@ export async function POST(req: Request) {
   }
 
   void publishToUsers([mentorId, studentId], { type: "mentor.mentorship", data: { id } });
-  // درخواستِ مستقیم (بدونِ نوبت) یعنی دیگر لازم نیست در صف بماند
+  // درخواست مستقیم (بدون نوبت) یعنی دیگر لازم نیست در صف بماند
   if (initiatedBy === "STUDENT" && !offer) await closeWaitingEntry(mentorId, studentId, now);
 
   const row = await prisma.mentorship.findUnique({ where: { id }, include: MENTORSHIP_WITH_USERS_INCLUDE });
@@ -218,7 +218,7 @@ export async function POST(req: Request) {
 
 type Tx = Parameters<Parameters<typeof prisma.$transaction>[0]>[0];
 
-/** ثبتِ پذیرشِ نسخه‌ی جاریِ شرایط روی کاربر — هم‌تراکنش با ساختِ درخواست */
+/** ثبت پذیرش نسخه‌ی جاری شرایط روی کاربر — هم‌تراکنش با ساخت درخواست */
 async function recordStudentTermsAcceptance(tx: Tx, userId: string): Promise<void> {
   await tx.user.update({
     where: { id: userId },

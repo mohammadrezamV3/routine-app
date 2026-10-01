@@ -271,7 +271,7 @@ export default function AdminMentorDetailPage() {
         </div>
       )}
 
-      {/* رتبه‌بندیِ شایستگی — بخشِ مستقل (components/admin/MentorRankingBreakdown.tsx) */}
+      {/* رتبه‌بندی شایستگی — بخش مستقل (components/admin/MentorRankingBreakdown.tsx) */}
       <MentorRankingBreakdown profileId={p.id} />
 
       <div className="admin-chart-card">
@@ -475,7 +475,7 @@ function VerifyModal({ profileId, target, onClose, onDone }: { profileId: string
         <span>{needsReason ? "دلیل رد" : "توضیح (اختیاری)"}</span>
         <textarea
           className="admin-input" rows={3} maxLength={500} value={reason}
-          placeholder={needsReason ? "مثلاً تصویر مدرک خوانا نیست" : undefined}
+          placeholder={needsReason ? "مثلا تصویر مدرک خوانا نیست" : undefined}
           onChange={(e) => { setReason(e.target.value); setError(null); }}
         />
         {needsReason && <span className="admin-perm-hint" style={{ marginTop: 0, fontWeight: 400 }}>این دلیل برای مربی نمایش داده می‌شود</span>}
@@ -536,8 +536,8 @@ function SuspendModal({ profileId, onClose, onDone }: { profileId: string; onClo
   );
 }
 
-// نمایشگرِ مدرک: فایل با fetch (کوکیِ سشن) گرفته و به blob URL تبدیل می‌شه —
-// هیچ آدرسِ مستقیمی از فایل در DOM نمی‌مونه و بعد از بستن revoke می‌شه.
+// نمایشگر مدرک: فایل با fetch (کوکی سشن) گرفته و به blob URL تبدیل می‌شه —
+// هیچ آدرس مستقیمی از فایل در DOM نمی‌مونه و بعد از بستن revoke می‌شه.
 function DocumentViewer({ doc, onClose }: { doc: Doc; onClose: () => void }) {
   const [url, setUrl] = useState<string | null>(null);
   const [mime, setMime] = useState<string>(doc.mimeType);

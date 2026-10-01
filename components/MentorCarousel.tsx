@@ -12,9 +12,9 @@ import { MentorStaggerItem } from "./MentorMotion";
 /** حداکثر کارت در هر ردیف؛ بقیه با «مشاهده همه» */
 export const CAROUSEL_LIMIT = 10;
 
-// یک ردیفِ افقیِ کشف (محبوب/تازه/هر حوزه): عنوان راست، «مشاهده همه» چپ؛
+// یک ردیف افقی کشف (محبوب/تازه/هر حوزه): عنوان راست، «مشاهده همه» چپ؛
 // کارت‌ها با لمس اسکرول می‌شوند و با ماوس هم می‌شود کشید (drag). بعد از
-// چند کارت، یک خانه‌ی «مشاهده همه ←» تهِ ردیف می‌آید.
+// چند کارت، یک خانه‌ی «مشاهده همه ←» ته ردیف می‌آید.
 export function MentorCarousel({
   title, icon, note, mentors, onViewAll,
 }: {
@@ -41,7 +41,7 @@ export function MentorCarousel({
         {title}
       </MentorSectionTitle>
       {note && <p className="mentor-muted mentor-section-note">{note}</p>}
-      {/* خودِ ردیف والدِ پله‌ها است (همان کارِ MentorStagger، با ref برای کشیدن) */}
+      {/* خود ردیف والد پله‌ها است (همان کار MentorStagger، با ref برای کشیدن) */}
       <motion.div className="mentor-popular-row mentor-carousel-row" ref={rowRef} initial="hidden" animate="show" variants={{ hidden: {}, show: {} }}>
         {shown.map((m, i) => (
           <MentorStaggerItem key={m.userId} index={i} className="mentor-grid-item">
@@ -60,9 +60,9 @@ export function MentorCarousel({
 }
 
 /**
- * کشیدنِ افقی با ماوس. لمس همان اسکرولِ بومیِ مرورگر است (دست نمی‌زنیم).
- * اگر ماوس بیشتر از چند پیکسل جابه‌جا شد، کلیکِ بعدی (روی لینکِ کارت) خنثی
- * می‌شود تا کشیدن باعثِ ورود به پروفایل نشود.
+ * کشیدن افقی با ماوس. لمس همان اسکرول بومی مرورگر است (دست نمی‌زنیم).
+ * اگر ماوس بیشتر از چند پیکسل جابه‌جا شد، کلیک بعدی (روی لینک کارت) خنثی
+ * می‌شود تا کشیدن باعث ورود به پروفایل نشود.
  */
 function useDragScroll(ref: React.RefObject<HTMLDivElement>) {
   useEffect(() => {

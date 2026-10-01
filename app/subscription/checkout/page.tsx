@@ -44,8 +44,8 @@ export default function CheckoutPage() {
     const sp = new URLSearchParams(window.location.search);
     setQuery({ planKey: sp.get("plan") || "", duration: (sp.get("duration") || "1") as Duration });
     if (sp.get("checkout") === "failed") setFailedReturn(true);
-    // کدِ دعوتِ دوستی که کاربر با لینکش اومده (lib/invite.ts) — فقط پیش‌پر می‌شه؛
-    // اعمال و اعتبارسنجی مثلِ هر کدِ دیگه با دکمه‌ی «اعمال» و سمتِ سرور.
+    // کد دعوت دوستی که کاربر با لینکش اومده (lib/invite.ts) — فقط پیش‌پر می‌شه؛
+    // اعمال و اعتبارسنجی مثل هر کد دیگه با دکمه‌ی «اعمال» و سمت سرور.
     const ref = readInviteRef();
     if (ref) { setDiscountCode((c) => c || ref); setFromInvite(true); }
   }, []);

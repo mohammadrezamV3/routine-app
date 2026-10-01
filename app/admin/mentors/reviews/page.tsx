@@ -44,7 +44,7 @@ function Stars({ n }: { n: number }) {
 }
 
 // نظرهای شاگردها درباره‌ی منتورها — پنهان/بازگردانی با دلیل. پنهان‌کردن
-// خلاصه‌ی امتیازِ منتور رو هم (سمت سرور) بازمحاسبه می‌کنه.
+// خلاصه‌ی امتیاز منتور رو هم (سمت سرور) بازمحاسبه می‌کنه.
 export default function AdminMentorReviewsPage() {
   const toast = useAdminToast();
   const { data: session } = useSession();

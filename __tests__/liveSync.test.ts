@@ -1,7 +1,7 @@
 import { describe, it, expect, vi, beforeAll, afterAll } from "vitest";
 
-// لایه‌ی زنده (lib/liveSync.ts) + مسیرِ optimistic/rollbackِ lib/storage.ts.
-// محیط node است؛ یک window حداقلی ساخته می‌شود تا storage مسیرِ «لاگین‌کرده»
+// لایه‌ی زنده (lib/liveSync.ts) + مسیر optimistic/rollback lib/storage.ts.
+// محیط node است؛ یک window حداقلی ساخته می‌شود تا storage مسیر «لاگین‌کرده»
 // (API) را برود و fetch شبیه‌سازی شود.
 
 const flush = () => new Promise((r) => setTimeout(r, 0));
@@ -31,7 +31,7 @@ describe("liveSync — تطبیق کلیدها و دامنه‌ی نوشتن‌�
     expect(domainsForMutation("/api/tasks/daily")).toEqual([]);
   });
 
-  it("چند publish در یک tick = یک فراخوانی؛ remote فقط برای تغییرِ بیرونی", async () => {
+  it("چند publish در یک tick = یک فراخوانی؛ remote فقط برای تغییر بیرونی", async () => {
     const { subscribe, publishLocal, invalidate } = await import("@/lib/liveSync");
     const calls: { keys: string[]; remote: boolean }[] = [];
     const off = subscribe(["daily"], (keys, meta) => calls.push({ keys, remote: meta.remote }));
@@ -50,7 +50,7 @@ describe("liveSync — تطبیق کلیدها و دامنه‌ی نوشتن‌�
   });
 });
 
-describe("storage — optimistic + rollback روی باسِ زنده", () => {
+describe("storage — optimistic + rollback روی باس زنده", () => {
   const g = globalThis as any;
   let fetchMock: ReturnType<typeof vi.fn>;
 
@@ -77,7 +77,7 @@ describe("storage — optimistic + rollback روی باسِ زنده", () => {
     delete g.fetch;
   });
 
-  it("setDaily همان لحظه خوانده/اعلام می‌شود، و با شکستِ سرور برمی‌گردد و خطا می‌دهد", async () => {
+  it("setDaily همان لحظه خوانده/اعلام می‌شود، و با شکست سرور برمی‌گردد و خطا می‌دهد", async () => {
     vi.resetModules();
     const live = await import("@/lib/liveSync");
     const storage = await import("@/lib/storage");
@@ -98,7 +98,7 @@ describe("storage — optimistic + rollback روی باسِ زنده", () => {
     const rec = { tasks: { a: true }, wake: null };
     const writing = storage.setDaily("2026-09-27", rec);
     await flush();
-    // هنوز جوابِ سرور نیامده، ولی خواندن مقدارِ تازه را می‌دهد و مشترک خبر گرفته
+    // هنوز جواب سرور نیامده، ولی خواندن مقدار تازه را می‌دهد و مشترک خبر گرفته
     expect(await storage.getDaily("2026-09-27")).toEqual(rec);
     expect((await storage.getDailyRange("2026-09-20", "2026-09-30"))["2026-09-27"]).toEqual(rec);
     expect(events.length).toBe(1);
@@ -106,13 +106,13 @@ describe("storage — optimistic + rollback روی باسِ زنده", () => {
     rejectPost({ ok: false, status: 500, json: async () => ({}) });
     await writing;
     await flush();
-    // rollback: خواندن دوباره از سرور (خالی)، اعلانِ دوباره، پیامِ خطا
+    // rollback: خواندن دوباره از سرور (خالی)، اعلان دوباره، پیام خطا
     expect(await storage.getDaily("2026-09-27")).toEqual({ tasks: {}, wake: null });
     expect(events.length).toBe(2);
     expect(errors.length).toBe(1);
   });
 
-  it("setSetting موفق: write-through و خواندنِ بعدی بدون درخواستِ تازه", async () => {
+  it("setSetting موفق: write-through و خواندن بعدی بدون درخواست تازه", async () => {
     vi.resetModules();
     const storage = await import("@/lib/storage");
     storage.publishSessionState(true);
@@ -146,7 +146,7 @@ describe("liveSync — رویدادهای سرور (WebSocket)", () => {
     delete g.document;
   });
 
-  it("data.changed کلیدها را باطل می‌کند، اکوی همین تب نادیده گرفته می‌شود، و نوعِ بدون کلید نگاشت می‌شود", async () => {
+  it("data.changed کلیدها را باطل می‌کند، اکوی همین تب نادیده گرفته می‌شود، و نوع بدون کلید نگاشت می‌شود", async () => {
     vi.resetModules();
     const live = await import("@/lib/liveSync");
     const got: { keys: string[]; remote: boolean }[] = [];
@@ -169,7 +169,7 @@ describe("liveSync — رویدادهای سرور (WebSocket)", () => {
     await flush();
     expect(got[2].keys).toEqual(["notifications"]);
 
-    // همون نوشتن از دو راه (BroadcastChannel + WS) = یک باطل‌سازی؛ نوشتنِ بعدیِ همون کلید دوباره خبر می‌ده
+    // همون نوشتن از دو راه (BroadcastChannel + WS) = یک باطل‌سازی؛ نوشتن بعدی همون کلید دوباره خبر می‌ده
     const other = new BroadcastChannel("arion-live");
     other.postMessage({ from: "tabX", keys: ["trade"] });
     await new Promise((r) => setTimeout(r, 30));

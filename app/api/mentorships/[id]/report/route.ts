@@ -12,9 +12,9 @@ const REASON_MAX = 200;
 const DETAILS_MAX = 2000;
 
 // POST /api/mentorships/:id/report { reason, details?, messages: [{ id, text, frankingKey }] }
-// «گزارش گفت‌وگو»: هر پیامِ پیوست جداگانه با فرانکینگ تایید می‌شود
-// (lib/mentorConversationReport.ts). یکی نخواند = کلِ گزارش رد. ادمین فقط همین
-// پیام‌ها را می‌بیند؛ متنشان رمزشده در حالِ سکون در MentorReportMessage می‌ماند.
+// «گزارش گفت‌وگو»: هر پیام پیوست جداگانه با فرانکینگ تایید می‌شود
+// (lib/mentorConversationReport.ts). یکی نخواند = کل گزارش رد. ادمین فقط همین
+// پیام‌ها را می‌بیند؛ متنشان رمزشده در حال سکون در MentorReportMessage می‌ماند.
 export async function POST(req: Request, { params }: Ctx) {
   const g = await requireMentorsUser();
   if (!g.ok) return g.response;
@@ -23,7 +23,7 @@ export async function POST(req: Request, { params }: Ctx) {
   const m = await getMentorshipForUser(params.id, me);
   if (!m) return notFound();
 
-  // همان سقفِ گزارشِ تکی (مشترک)
+  // همان سقف گزارش تکی (مشترک)
   if (!(await checkRateLimit(`mentor-report:${me}`, 10, 60 * 60 * 1000))) {
     return NextResponse.json({ error: "تعداد گزارش‌ها زیاد بوده؛ کمی بعد دوباره تلاش کن" }, { status: 429 });
   }

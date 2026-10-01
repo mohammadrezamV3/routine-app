@@ -20,9 +20,9 @@ import { ImageCropModal } from "@/components/ImageCropModal";
 type ProfileUser = {
   username: string | null;
   phone: string | null;
-  /** توجه: /api/account در `name` نامِ *کامل* (نام + نام خانوادگی) را
-   *  می‌دهد و نامِ کوچک را در `firstName`. باگِ «فامیل می‌پره توی اسم»
-   *  دقیقا از همین بود: فیلدِ نام با `name` پر می‌شد، یعنی بعد از هر
+  /** توجه: /api/account در `name` نام *کامل* (نام + نام خانوادگی) را
+   *  می‌دهد و نام کوچک را در `firstName`. باگ «فامیل می‌پره توی اسم»
+   *  دقیقا از همین بود: فیلد نام با `name` پر می‌شد، یعنی بعد از هر
    *  ذخیره نام خانوادگی به ته نام اضافه می‌شد. */
   name: string | null;
   firstName?: string | null;
@@ -35,15 +35,15 @@ const BIO_MAX = 200;
 
 /**
  * صفحه‌ی پروفایل:
- *   بنر (کلیک‌پذیر برای آپلود) با آواتارِ کلیک‌پذیرِ نشسته روی لبه‌اش
+ *   بنر (کلیک‌پذیر برای آپلود) با آواتار کلیک‌پذیر نشسته روی لبه‌اش
  *   ← «پروفایل عمومی»: نام | نام خانوادگی · شماره · یوزرنیم · تاریخ تولد · بیوگرافی
  *   ← «پروفایل ورزشی»: سن | قد · وزن | جنسیت
  *   ← یک دکمه‌ی «ذخیره تغییرات» برای همه‌چیز
  *
- * طبقِ درخواستِ صریحِ کاربر:
+ * طبق درخواست صریح کاربر:
  *   • ایمیل اصلا این‌جا نیست (نه نمایش، نه فلوی تغییر).
- *   • یوزرنیم دکمه‌ی «تغییر» ندارد — خودِ فیلد ویرایش‌پذیر است و با همان
- *     دکمه‌ی ذخیره‌ی پایین ثبت می‌شود (روتِ اختصاصی‌اش داخلِ saveAll صدا زده
+ *   • یوزرنیم دکمه‌ی «تغییر» ندارد — خود فیلد ویرایش‌پذیر است و با همان
+ *     دکمه‌ی ذخیره‌ی پایین ثبت می‌شود (روت اختصاصی‌اش داخل saveAll صدا زده
  *     می‌شود، چون یکتایی‌اش سمت سرور چک می‌شود).
  */
 export default function AccountProfilePage() {
@@ -109,9 +109,9 @@ export default function AccountProfilePage() {
     });
   }, []);
 
-  // ورودیِ هر دو تابع دیگر خودِ File نیست — همان dataURLِ از قبل با
-  // centerCropToDataUrl ریسایزشده (کراپِ خودکارِ وسط، بدونِ پاپ‌آپِ انتخابِ
-  // کاربر — طبقِ درخواستِ صریح، همون عکس همونطوری آپلود می‌شود).
+  // ورودی هر دو تابع دیگر خود File نیست — همان dataURL از قبل با
+  // centerCropToDataUrl ریسایزشده (کراپ خودکار وسط، بدون پاپ‌آپ انتخاب
+  // کاربر — طبق درخواست صریح، همون عکس همونطوری آپلود می‌شود).
   async function uploadAvatar(dataUrl: string) {
     setMediaError(null);
     setAvatarSaving(true);
@@ -164,7 +164,7 @@ export default function AccountProfilePage() {
     }
   }
 
-  // انتخاب فایل دیگه مستقیم آپلود نمی‌کنه — اول پاپ‌آپِ پیش‌نمایش باز
+  // انتخاب فایل دیگه مستقیم آپلود نمی‌کنه — اول پاپ‌آپ پیش‌نمایش باز
   // می‌شه تا کاربر خودش جای عکس داخل قاب رو تعیین کنه (ImageCropModal).
   const [cropping, setCropping] = useState<{ file: File; kind: "avatar" | "banner" } | null>(null);
 
@@ -187,7 +187,7 @@ export default function AccountProfilePage() {
     setBannerSaving(false);
   }
 
-  /** یک دکمه برای همه‌چیز: عمومی روی /api/account، یوزرنیم روی روتِ خودش، ورزشی روی bodyMetrics */
+  /** یک دکمه برای همه‌چیز: عمومی روی /api/account، یوزرنیم روی روت خودش، ورزشی روی bodyMetrics */
   async function saveAll() {
     setSaveError(null);
     setSaved(false);
@@ -207,7 +207,7 @@ export default function AccountProfilePage() {
 
     setSaving(true);
     try {
-      // یوزرنیم اول: روتِ خودش را دارد (یکتایی) و اگر تکراری بود نباید
+      // یوزرنیم اول: روت خودش را دارد (یکتایی) و اگر تکراری بود نباید
       // بقیه‌ی فیلدها هم بی‌سروصدا ذخیره شده باشند.
       if (uname && uname !== savedUsername) {
         const uRes = await fetch("/api/account/username", {
@@ -264,9 +264,9 @@ export default function AccountProfilePage() {
       {/* ── بنر + آواتار ── */}
       <motion.div className="profile-hero" initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.32, ease: [0.22, 1, 0.36, 1] }}>
         <div className="profile-banner">
-          {/* طبقِ درخواستِ صریح، دیگر دکمه‌ی جدای «افزودن/تغییر بنر» نیست —
-              خودِ بنر مثلِ عکسِ پروفایل کلیک‌پذیر است؛ یک لایه‌ی نیمه‌شفافِ
-              دوربین فقط موقعِ هاور/فوکوس راهنماییِ بصری می‌دهد. */}
+          {/* طبق درخواست صریح، دیگر دکمه‌ی جدای «افزودن/تغییر بنر» نیست —
+              خود بنر مثل عکس پروفایل کلیک‌پذیر است؛ یک لایه‌ی نیمه‌شفاف
+              دوربین فقط موقع هاور/فوکوس راهنمایی بصری می‌دهد. */}
           <button
             type="button" className="profile-banner-hit" onClick={() => bannerInputRef.current?.click()}
             disabled={bannerSaving} aria-label={bannerUrl ? "تغییر بنر" : "افزودن بنر"}
@@ -289,8 +289,8 @@ export default function AccountProfilePage() {
             onChange={(e) => { const f = e.target.files?.[0]; if (f) pickBannerFile(f); e.target.value = ""; }}
           />
 
-          {/* طبقِ درخواستِ صریح دکمه‌ی جدا ندارد — خودِ عکس کلیک‌پذیر است.
-              آیکونِ دوربین فقط یک نشانه‌ی بصری است (pointer-events ندارد). */}
+          {/* طبق درخواست صریح دکمه‌ی جدا ندارد — خود عکس کلیک‌پذیر است.
+              آیکون دوربین فقط یک نشانه‌ی بصری است (pointer-events ندارد). */}
           <button
             type="button" className="profile-hero-avatar-wrap" onClick={() => avatarInputRef.current?.click()}
             disabled={avatarSaving} aria-label="تغییر عکس پروفایل"
@@ -310,9 +310,9 @@ export default function AccountProfilePage() {
           />
         </div>
 
-        {/* طبقِ درخواستِ صریح، نام و آیدی زیرِ بنر نوشته نمی‌شوند — همان‌ها
+        {/* طبق درخواست صریح، نام و آیدی زیر بنر نوشته نمی‌شوند — همان‌ها
             پایین‌تر توی فیلدهای «پروفایل عمومی» هستند. این ردیف فقط جای
-            دکمه‌ی حذفِ عکس است و اگر عکسی نباشد اصلا رندر نمی‌شود. */}
+            دکمه‌ی حذف عکس است و اگر عکسی نباشد اصلا رندر نمی‌شود. */}
         {avatarUrl && (
           <div className="profile-hero-meta">
             <button type="button" className="account-avatar-remove-btn" onClick={removeAvatar} disabled={avatarSaving}>
@@ -342,8 +342,8 @@ export default function AccountProfilePage() {
 
       {/* ── پروفایل عمومی ── */}
       <AccountBlock title="پروفایل عمومی" icon={<IdCard size={15} />} index={0}>
-        {/* طبقِ درخواستِ صریح: فقط نام و نام‌خانوادگی هم‌ردیف‌اند، بقیه
-            هرکدام یک خطِ کامل می‌گیرند. */}
+        {/* طبق درخواست صریح: فقط نام و نام‌خانوادگی هم‌ردیف‌اند، بقیه
+            هرکدام یک خط کامل می‌گیرند. */}
         <div className="auth-field-grid">
           <AuthField id="pf-name" label="نام" icon={<UserIcon size={16} />}>
             <input id="pf-name" type="text" className="wsearch-newform-name" value={firstName} onChange={(e) => setFirstName(e.target.value)} />

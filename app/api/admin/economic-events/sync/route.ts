@@ -6,15 +6,15 @@ import { checkRateLimit } from "@/lib/rateLimit";
 import { logError } from "@/lib/errorLog";
 import { syncEconomicCalendar } from "@/lib/economicCalendar";
 
-// همون کاری که کرانِ روزانه (/api/cron/economic-calendar) انجام می‌ده، ولی
-// دستی و فوری — برای وقتی که ادمین نمی‌خواد تا اجرای بعدیِ کران یا تازه‌سازیِ
-// خودکارِ روتِ خواندن (ensureFreshCalendar) صبر کنه و همین الان از منبعِ
+// همون کاری که کران روزانه (/api/cron/economic-calendar) انجام می‌ده، ولی
+// دستی و فوری — برای وقتی که ادمین نمی‌خواد تا اجرای بعدی کران یا تازه‌سازی
+// خودکار روت خواندن (ensureFreshCalendar) صبر کنه و همین الان از منبع
 // فعال (externalProviderName) به‌روز کنه.
 export async function POST() {
   const guard = await requireAdmin("content");
   if (!guard.ok) return guard.response;
 
-  // فراخوانیِ یک سرویسِ بیرونی — یه سقفِ سبک تا کلیکِ تکراری/اسکریپت اتفاقی
+  // فراخوانی یک سرویس بیرونی — یه سقف سبک تا کلیک تکراری/اسکریپت اتفاقی
   // منبع رو اسپم نکنه.
   if (!(await checkRateLimit(`economic-calendar-sync:${guard.userId}`, 10, 60 * 60 * 1000))) {
     return NextResponse.json({ error: "درخواست‌های زیاد — کمی بعد دوباره امتحان کن" }, { status: 429 });
@@ -29,7 +29,7 @@ export async function POST() {
   } catch (err) {
     logError(
       "admin-economic-calendar-sync",
-      `همگام‌سازیِ دستیِ تقویم اقتصادی شکست خورد: ${err instanceof Error ? err.message : err}`,
+      `همگام‌سازی دستی تقویم اقتصادی شکست خورد: ${err instanceof Error ? err.message : err}`,
       { context: { userId: guard.userId } }
     );
     return NextResponse.json({ error: err instanceof Error ? err.message : "همگام‌سازی ناموفق بود" }, { status: 502 });

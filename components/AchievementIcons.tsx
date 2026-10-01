@@ -3,9 +3,9 @@
 import { Fragment, useId } from "react";
 import type { ReactNode } from "react";
 
-// آیکون‌های دست‌طراحیِ اچیومنت‌ها — هر id یک گلیفِ منحصربه‌فرد، داخلِ قابی که
+// آیکون‌های دست‌طراحی اچیومنت‌ها — هر id یک گلیف منحصربه‌فرد، داخل قابی که
 // ظاهرش از روی rarity عوض می‌شه (۱ برنزی، ۲ نقره‌ای، ۳ طلایی، ۴ افسانه‌ای).
-// بدون متن، بدون بک‌گراند (بیرونِ قاب شفافه)، بدون کتابخونه‌ی بیرونی.
+// بدون متن، بدون بک‌گراند (بیرون قاب شفافه)، بدون کتابخونه‌ی بیرونی.
 
 type Rarity = 1 | 2 | 3 | 4;
 type Ink = { ink: string; acc: string };
@@ -495,7 +495,7 @@ export type AchievementIconProps = {
   rarity: Rarity;
   size?: number;
   className?: string;
-  /** کاربر prefers-reduced-motion رو بهش می‌ده؛ true یعنی انیمیشنِ درخشش خاموش */
+  /** کاربر prefers-reduced-motion رو بهش می‌ده؛ true یعنی انیمیشن درخشش خاموش */
   reduced?: boolean;
 };
 

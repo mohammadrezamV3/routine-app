@@ -62,8 +62,8 @@ export function AccountRowLink({
   );
 }
 
-// ردیفِ اکشن (نه ناوبری) — برای «خروج از حساب» توی صفحه‌ی اولِ پنل، طبقِ
-// درخواستِ صریح («روی موبایل هیچ راهی برای خروج نبود، اضافه‌ش کن این‌جا»).
+// ردیف اکشن (نه ناوبری) — برای «خروج از حساب» توی صفحه‌ی اول پنل، طبق
+// درخواست صریح («روی موبایل هیچ راهی برای خروج نبود، اضافه‌ش کن این‌جا»).
 export function AccountRowButton({
   icon, label, desc, onClick, index, danger,
 }: { icon: React.ReactNode; label: string; desc?: string; onClick: () => void; index?: number; danger?: boolean }) {

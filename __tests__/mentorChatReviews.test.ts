@@ -23,9 +23,9 @@ afterAll(async () => {
   await cleanupUsers();
 });
 
-// گفت‌وگو رمزگذاریِ سرتاسری دارد: متن روی «دستگاه» (همین تست، webcryptoِ Node)
-// رمز می‌شود و فقط متنِ رمزشده به سرور می‌رود. رشته‌ی غیرِمتنی/خالی/بلند به
-// همان شکلِ خام (body) فرستاده می‌شود تا ردِ متنِ ساده هم تست شود.
+// گفت‌وگو رمزگذاری سرتاسری دارد: متن روی «دستگاه» (همین تست، webcrypto Node)
+// رمز می‌شود و فقط متن رمزشده به سرور می‌رود. رشته‌ی غیرمتنی/خالی/بلند به
+// همان شکل خام (body) فرستاده می‌شود تا رد متن ساده هم تست شود.
 async function send(userId: string | null, id: string, body: unknown) {
   let payload: unknown = { body };
   if (typeof body === "string" && body.trim() && body.length <= 2000 && userId) {
@@ -38,7 +38,7 @@ async function send(userId: string | null, id: string, body: unknown) {
   as(userId);
   return postMessage(req("POST", `/api/mentorships/${id}/messages`, payload), { params: { id } });
 }
-/** متنِ پیام‌های یک GET از دیدِ viewer (رمزگشایی روی «دستگاهِ» او) */
+/** متن پیام‌های یک GET از دید viewer (رمزگشایی روی «دستگاه» او) */
 async function texts(viewerId: string, id: string, v: any): Promise<string[]> {
   const out: string[] = [];
   for (const m of v.messages) {
@@ -66,7 +66,7 @@ async function page(userId: string, mentorId: string) {
 }
 
 describe("چت", () => {
-  it("ارسال/دریافت، شمارشِ خوانده‌نشده، read با GET، اعلانِ throttled", async () => {
+  it("ارسال/دریافت، شمارش خوانده‌نشده، read با GET، اعلان throttled", async () => {
     const m = await makeMentor();
     const s = await makeUser();
     const id = await connect(s, m);
@@ -79,7 +79,7 @@ describe("چت", () => {
     expect(JSON.stringify(m1)).not.toContain("سلام");
     expect((await send(s, id, "سوال دوم")).status).toBe(200);
 
-    // فقط یک اعلانِ «پیام جدید» برای دو پیامِ پشت‌سرهم
+    // فقط یک اعلان «پیام جدید» برای دو پیام پشت‌سرهم
     expect(await prisma.inAppNotification.count({ where: { userId: m, type: "message.new" } })).toBe(1);
 
     expect(await unread(m)).toEqual({ total: 2, byMentorship: { [id]: 2 } });
@@ -104,7 +104,7 @@ describe("چت", () => {
     expect((await unread(s)).byMentorship[id]).toBe(1);
   });
 
-  it("غیرِ شرکت‌کننده ۴۰۴؛ ناشناس ۴۰۱؛ پیامِ خالی/بلند ۴۰۰", async () => {
+  it("غیر شرکت‌کننده ۴۰۴؛ ناشناس ۴۰۱؛ پیام خالی/بلند ۴۰۰", async () => {
     const m = await makeMentor();
     const s = await makeUser();
     const id = await connect(s, m);
@@ -120,7 +120,7 @@ describe("چت", () => {
     expect(await unread(x)).toEqual({ total: 0, byMentorship: {} });
   });
 
-  it("رابطه‌ی ENDED: فقط‌خواندنی (canSend=false، ارسال ۴۰۹)؛ PENDING بدونِ چت (۴۰۳)", async () => {
+  it("رابطه‌ی ENDED: فقط‌خواندنی (canSend=false، ارسال ۴۰۹)؛ PENDING بدون چت (۴۰۳)", async () => {
     const m = await makeMentor();
     const s = await makeUser();
     const id = await connect(s, m);
@@ -150,7 +150,7 @@ describe("چت", () => {
     expect((await read(m, id)).status).toBe(403);
   });
 
-  it("منتورِ تعلیق‌شده: ارسالِ پیام از هر دو طرف ۴۰۳", async () => {
+  it("منتور تعلیق‌شده: ارسال پیام از هر دو طرف ۴۰۳", async () => {
     const m = await makeMentor();
     const s = await makeUser();
     const id = await connect(s, m);
@@ -161,7 +161,7 @@ describe("چت", () => {
 });
 
 describe("نظرها", () => {
-  it("بدونِ رابطه یا فقط PENDING/REJECTED → ۴۰۳؛ خود → ۴۰۴؛ امتیازِ نامعتبر ۴۰۰", async () => {
+  it("بدون رابطه یا فقط PENDING/REJECTED → ۴۰۳؛ خود → ۴۰۴؛ امتیاز نامعتبر ۴۰۰", async () => {
     const m = await makeMentor();
     const none = await makeUser();
     expect((await review(none, m, { rating: 5 })).status).toBe(403);
@@ -230,7 +230,7 @@ describe("نظرها", () => {
 });
 
 describe("اعلان‌ها", () => {
-  it("فقط اعلان‌های خودم؛ علامتِ خوانده با ids (idِ دیگران بی‌اثر) و all", async () => {
+  it("فقط اعلان‌های خودم؛ علامت خوانده با ids (id دیگران بی‌اثر) و all", async () => {
     const a = await makeUser();
     const b = await makeUser();
     const mk = (userId: string, t: string) => prisma.inAppNotification.create({ data: { userId, type: "t", title: t, body: t, url: "/x" } });

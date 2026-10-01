@@ -15,20 +15,20 @@ import { syncProgramProgress } from "@/lib/mentorProgress";
 import { mirrorOccurrenceId } from "@/lib/mentorProgressCore";
 import { recomputeMentorRankings } from "@/lib/mentorRankingStats";
 
-// داده‌ی آزمایشیِ اکوسیستمِ منتور — فقط از پنلِ Owner (/admin/demo-data).
+// داده‌ی آزمایشی اکوسیستم منتور — فقط از پنل Owner (/admin/demo-data).
 //
 // شناسه‌ی داده‌ی آزمایشی:
-//   - کاربرِ آزمایشی = ایمیلِ demo+N@demo.arion.local *و* یوزرنیمِ demo_…؛ هر دو
-//     شرط با هم، تا هیچ کاربرِ واقعی‌ای اتفاقی زیرِ پاک‌سازی نره.
-//   - ورود ممکن نیست: رمز یک رشته‌ی تصادفیِ دورریخته‌ست و دامنه‌ی .local ایمیل
+//   - کاربر آزمایشی = ایمیل demo+N@demo.arion.local *و* یوزرنیم demo_…؛ هر دو
+//     شرط با هم، تا هیچ کاربر واقعی‌ای اتفاقی زیر پاک‌سازی نره.
+//   - ورود ممکن نیست: رمز یک رشته‌ی تصادفی دورریخته‌ست و دامنه‌ی .local ایمیل
 //     (OTP) دریافت نمی‌کنه.
-//   - همه‌چیزِ دیگه‌ی آزمایشی به کاربرِ آزمایشی گره خورده و با حذفِ او cascade
+//   - همه‌چیز دیگه‌ی آزمایشی به کاربر آزمایشی گره خورده و با حذف او cascade
 //     می‌شه. استثناها (ردیف‌هایی که مالکشون Owner ـه) در AppSetting("demo_data")
-//     ثبت می‌شن: پروفایلِ منتوریِ Owner اگه همین ابزار ساخته باشدش، و اعلان‌ها.
-//     آینه‌ی برنامه در روتینِ Owner و گزارش‌های Owner علیهِ کاربرِ آزمایشی هم
-//     موقعِ پاک‌سازی از روی خودِ داده پیدا و حذف می‌شن.
+//     ثبت می‌شن: پروفایل منتوری Owner اگه همین ابزار ساخته باشدش، و اعلان‌ها.
+//     آینه‌ی برنامه در روتین Owner و گزارش‌های Owner علیه کاربر آزمایشی هم
+//     موقع پاک‌سازی از روی خود داده پیدا و حذف می‌شن.
 //
-// ساختِ دوباره اول همه‌چیز رو پاک می‌کنه، پس idempotent ـه.
+// ساخت دوباره اول همه‌چیز رو پاک می‌کنه، پس idempotent ـه.
 
 export const DEMO_DATA_SETTING_KEY = "demo_data";
 const DEMO_EMAIL_DOMAIN = "@demo.arion.local";
@@ -42,12 +42,12 @@ export const DEMO_USER_WHERE: Prisma.UserWhereInput = {
 type DemoState = {
   seededAt: string;
   ownerId: string;
-  // فقط وقتی Owner قبلا پروفایلِ منتوری نداشته و همین ابزار ساخته
+  // فقط وقتی Owner قبلا پروفایل منتوری نداشته و همین ابزار ساخته
   ownerProfileId: string | null;
   notificationIds: string[];
-  // برچسب‌های مدیریتِ شاگرد روی پروفایلِ از قبل موجودِ Owner (lib/demoDataManage.ts)
+  // برچسب‌های مدیریت شاگرد روی پروفایل از قبل موجود Owner (lib/demoDataManage.ts)
   manageLabelIds?: string[];
-  // قالب/پاسخ/هشدارِ آزمایشی روی پروفایلِ از قبل موجودِ Owner (lib/demoDataTools.ts)
+  // قالب/پاسخ/هشدار آزمایشی روی پروفایل از قبل موجود Owner (lib/demoDataTools.ts)
   toolsDemo?: ToolsDemoState;
 };
 
@@ -114,7 +114,7 @@ export async function clearDemoData(): Promise<{ deletedUsers: number }> {
   const ids = await demoUserIds();
 
   if (ids.length > 0) {
-    // آینه‌ی برنامه‌های منتورهای آزمایشی در روتینِ کاربرِ واقعی (Owner)
+    // آینه‌ی برنامه‌های منتورهای آزمایشی در روتین کاربر واقعی (Owner)
     const mirrored = await prisma.mentorProgram.findMany({
       where: { mentorId: { in: ids }, studentId: { notIn: ids } },
       select: { id: true, studentId: true },
@@ -126,11 +126,11 @@ export async function clearDemoData(): Promise<{ deletedUsers: number }> {
       await stripDemoTicks(studentId, programIds);
     }
 
-    // گزارش‌هایی که کاربرِ واقعی علیهِ کاربرِ آزمایشی ثبت کرده (reporter واقعیه، cascade نمی‌شه)
+    // گزارش‌هایی که کاربر واقعی علیه کاربر آزمایشی ثبت کرده (reporter واقعیه، cascade نمی‌شه)
     await prisma.mentorReport.deleteMany({ where: { targetUserId: { in: ids } } });
   }
 
-  // منتورهای واقعی‌ای که نظرِ شاگردِ آزمایشی دارن — امتیازشون بعد از حذف بازمحاسبه می‌شه
+  // منتورهای واقعی‌ای که نظر شاگرد آزمایشی دارن — امتیازشون بعد از حذف بازمحاسبه می‌شه
   const reviewed = ids.length
     ? await prisma.mentorReview.findMany({ where: { studentId: { in: ids }, mentorId: { notIn: ids } }, select: { mentorId: true }, distinct: ["mentorId"] })
     : [];
@@ -144,15 +144,15 @@ export async function clearDemoData(): Promise<{ deletedUsers: number }> {
 
   const res = await prisma.user.deleteMany({ where: DEMO_USER_WHERE });
   for (const r of reviewed) await recomputeMentorRating(r.mentorId);
-  // امتیازِ منتورهای واقعی که شاگردِ آزمایشی داشتن (ردیف‌های آزمایشی با پروفایل cascade شدن)
+  // امتیاز منتورهای واقعی که شاگرد آزمایشی داشتن (ردیف‌های آزمایشی با پروفایل cascade شدن)
   await recomputeMentorRankings().catch(() => undefined);
   await prisma.appSetting.deleteMany({ where: { key: DEMO_DATA_SETTING_KEY } });
   return { deletedUsers: res.count };
 }
 
 /**
- * تیک‌های آزمایشی (کلیدهای mp-<programId>-…) از DailyEntryِ کاربرِ واقعی (Owner)
- * برداشته می‌شن؛ تیک‌های خودِ او دست نمی‌خورن. ردیفِ روزی که فقط تیکِ آزمایشی
+ * تیک‌های آزمایشی (کلیدهای mp-<programId>-…) از DailyEntry کاربر واقعی (Owner)
+ * برداشته می‌شن؛ تیک‌های خود او دست نمی‌خورن. ردیف روزی که فقط تیک آزمایشی
  * داشت و بیداری هم نداشت حذف می‌شه.
  */
 async function stripDemoTicks(userId: string, programIds: string[]): Promise<void> {
@@ -170,7 +170,7 @@ async function stripDemoTicks(userId: string, programIds: string[]): Promise<voi
 
 // ───────────────────────── ساخت ─────────────────────────
 
-// PNGِ ۱×۱ — جای مدرکِ واقعی تا صفِ احراز و نمایشگرِ مدرک چیزی برای باز کردن داشته باشن
+// PNG ۱×۱ — جای مدرک واقعی تا صف احراز و نمایشگر مدرک چیزی برای باز کردن داشته باشن
 const PLACEHOLDER_PNG = Buffer.from(
   "iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mNkYPhfDwAChwGA60e6kgAAAABJRU5ErkJggg==",
   "base64"
@@ -193,7 +193,7 @@ type MentorSpec = Person & {
   acceptingStudents?: boolean;
   suspendedReason?: string;
   lastActiveDaysAgo: number;
-  // سنِ پروفایلِ منتوری (روز) — «منتورهای تازه» فقط پروفایلِ زیرِ ۹۰ روز؛ پیش‌فرض ۱۸۰
+  // سن پروفایل منتوری (روز) — «منتورهای تازه» فقط پروفایل زیر ۹۰ روز؛ پیش‌فرض ۱۸۰
   profileAgeDays?: number;
 };
 
@@ -257,9 +257,9 @@ const MENTORS: MentorSpec[] = [
   },
 ];
 
-// منتورهای اضافه برای رتبه‌بندیِ شایستگی (lib/mentorRanking.ts):
-//   پریسا — تاییدشده و تازه، بدونِ شاگرد → «منتورهای تازه»
-//   کیان — چهار نظرِ ۵ستاره از رابطه‌های چندروزه و بدونِ برنامه → نظرها تایید نمی‌شن
+// منتورهای اضافه برای رتبه‌بندی شایستگی (lib/mentorRanking.ts):
+//   پریسا — تاییدشده و تازه، بدون شاگرد → «منتورهای تازه»
+//   کیان — چهار نظر ۵ستاره از رابطه‌های چندروزه و بدون برنامه → نظرها تایید نمی‌شن
 MENTORS.push(
   {
     key: "parisa", name: "پریسا", lastName: "مرادی",
@@ -281,9 +281,9 @@ MENTORS.push(
   }
 );
 
-// پیدا کردن منتور (agent F — lib/mentorSearch.ts): منتورِ تاییدشده‌ی کنکور با مدرکِ
-// تاییدشده (نشانِ مدرک کنارِ نام) تا جستجوی «کنکر»/«کنگور»/«konkur»/«آزمون سراسری»
-// نتیجه داشته باشد — نگار (کنکور) هویتش در صفِ بررسی است و دیگر در جستجو نمی‌آید.
+// پیدا کردن منتور (agent F — lib/mentorSearch.ts): منتور تاییدشده‌ی کنکور با مدرک
+// تاییدشده (نشان مدرک کنار نام) تا جستجوی «کنکر»/«کنگور»/«konkur»/«آزمون سراسری»
+// نتیجه داشته باشد — نگار (کنکور) هویتش در صف بررسی است و دیگر در جستجو نمی‌آید.
 MENTORS.push({
   key: "hamed", name: "حامد", lastName: "ملکی",
   categories: ["ROUTINE"], routineRole: "مشاور کنکور",
@@ -294,7 +294,7 @@ MENTORS.push({
   lastActiveDaysAgo: 0, profileAgeDays: 120,
 });
 
-// منتورهای ذخیره‌شده‌ی Owner (نشانک، تبِ «ذخیره‌شده‌ها» در /mentors)
+// منتورهای ذخیره‌شده‌ی Owner (نشانک، تب «ذخیره‌شده‌ها» در /mentors)
 const OWNER_SAVED_MENTORS = ["sara", "parisa", "hamed"];
 
 const STUDENTS: Person[] = [
@@ -336,10 +336,10 @@ type ProgramSpec = {
   changeRequestNote?: string;
   rejectReason?: string;
   items: ItemSpec[];
-  // تیکِ روتینِ شاگرد برای روزهای گذشته (تا دیروز، یا امروز هم اگه withToday) —
-  // پیشرفتِ خودکار از همین تیک‌ها ساخته می‌شه (lib/mentorProgress.ts)
+  // تیک روتین شاگرد برای روزهای گذشته (تا دیروز، یا امروز هم اگه withToday) —
+  // پیشرفت خودکار از همین تیک‌ها ساخته می‌شه (lib/mentorProgress.ts)
   logs?: boolean;
-  // یادداشتِ شاگرد برای منتور روی یک روز (offset نسبت به امروز)
+  // یادداشت شاگرد برای منتور روی یک روز (offset نسبت به امروز)
   dayNotes?: { offset: number; body: string }[];
   withToday?: boolean;
   feedback?: { body: string; read: boolean }[];
@@ -381,8 +381,8 @@ const WORKOUT_B: ItemSpec[] = [
 ];
 
 /**
- * شبه‌تصادفیِ قطعی — آیا شاگرد این آیتم را در این روز در روتینش تیک زده؟
- * حدودِ دو سوم انجام، و هر چند روز یک روزِ کاملا خالی تا «انجام‌نشده» و
+ * شبه‌تصادفی قطعی — آیا شاگرد این آیتم را در این روز در روتینش تیک زده؟
+ * حدود دو سوم انجام، و هر چند روز یک روز کاملا خالی تا «انجام‌نشده» و
  * «نیمه‌کاره»ی روز هم دیده شود.
  */
 function ticked(off: number, order: number): boolean {
@@ -528,13 +528,13 @@ class Seeder {
     return p.id;
   }
 
-  // ── رمزگذاریِ سرتاسریِ پیام‌های آزمایشی (docs/mentor-e2ee.md) ──
-  // کاربرِ آزمایشی کلیدِ واقعیِ P-256 (SYNCED، بی‌پشتیبان) می‌گیرد که همین‌جا ساخته و
-  // بعد از ساخت دور ریخته می‌شود؛ کسی با این کاربرها وارد نمی‌شود. گفت‌وگوی دو کاربرِ
+  // ── رمزگذاری سرتاسری پیام‌های آزمایشی (docs/mentor-e2ee.md) ──
+  // کاربر آزمایشی کلید واقعی P-256 (SYNCED، بی‌پشتیبان) می‌گیرد که همین‌جا ساخته و
+  // بعد از ساخت دور ریخته می‌شود؛ کسی با این کاربرها وارد نمی‌شود. گفت‌وگوی دو کاربر
   // آزمایشی برای هیچ‌کس — حتی Owner — خواندنی نیست، همان‌طور که باید.
-  // گفت‌وگو با Owner: CEKِ هر پیام برای *همه‌ی* کلیدهای فعالِ Owner (هر دستگاه) و کلیدِ
-  // کاربرِ آزمایشی بسته‌بندی می‌شود؛ بسته‌بندی‌ها را همیشه کلیدِ کاربرِ آزمایشی می‌سازد
-  // (keyFromId)، چون کلیدِ خصوصیِ Owner روی سرور نیست. Owner از اولین ورودش خودکار کلید
+  // گفت‌وگو با Owner: CEK هر پیام برای *همه‌ی* کلیدهای فعال Owner (هر دستگاه) و کلید
+  // کاربر آزمایشی بسته‌بندی می‌شود؛ بسته‌بندی‌ها را همیشه کلید کاربر آزمایشی می‌سازد
+  // (keyFromId)، چون کلید خصوصی Owner روی سرور نیست. Owner از اولین ورودش خودکار کلید
   // دارد؛ اگر هنوز نداشته باشد (هرگز وارد نشده)، این گفت‌وگوها خالی می‌مانند.
   demoKeys = new Map<string, { version: number; publicB64: string; privateKey: CryptoKey }>();
   ownerKey: { userId: string; keys: { version: number; publicKey: string }[] } | null = null;
@@ -552,8 +552,8 @@ class Seeder {
   }
 
   /**
-   * پیام‌ها به‌ترتیبِ زمان؛ true = از طرفِ منتور. پیام‌های آخرِ «unreadTail» خوانده‌نشده می‌مونن.
-   * خروجی: متن و clientIdِ هر پیام (برای ساختِ گزارشِ تاییدشده).
+   * پیام‌ها به‌ترتیب زمان؛ true = از طرف منتور. پیام‌های آخر «unreadTail» خوانده‌نشده می‌مونن.
+   * خروجی: متن و clientId هر پیام (برای ساخت گزارش تاییدشده).
    */
   async messages(rel: Rel, lines: [boolean, string][], unreadTail = 0): Promise<{ clientId: string; senderId: string; text: string }[]> {
     const ownerSide = this.ownerKey && (rel.mentorId === this.ownerKey.userId || rel.studentId === this.ownerKey.userId) ? this.ownerKey : null;
@@ -562,7 +562,7 @@ class Seeder {
       this.skippedOwnerThreads++;
       return [];
     }
-    // یک طرف همیشه کاربرِ آزمایشی است و کلیدِ خصوصی‌اش را داریم
+    // یک طرف همیشه کاربر آزمایشی است و کلید خصوصی‌اش را داریم
     const demoId = this.isDemo(rel.mentorId) ? rel.mentorId : rel.studentId;
     const otherId = demoId === rel.mentorId ? rel.studentId : rel.mentorId;
     const mine = await this.demoKey(demoId);
@@ -629,7 +629,7 @@ async function createDemoUsers(tx: Tx, passwordHash: string) {
         name: p.name,
         lastName: p.lastName,
         market: "IRAN",
-        // در جست‌وجوی دوستان دیده نشن؛ کشفِ منتور از MentorProfile.published می‌خونه
+        // در جست‌وجوی دوستان دیده نشن؛ کشف منتور از MentorProfile.published می‌خونه
         discoverable: false,
         createdAt: new Date(Date.now() - (60 - i) * 86_400_000),
       },
@@ -695,8 +695,8 @@ async function createMentorProfile(tx: Tx, userId: string, m: MentorSpec, ownerI
 
 
 /**
- * همه‌چیزِ قبلی رو پاک می‌کنه و دیتاستِ کامل رو می‌سازه. ownerId = Ownerی که
- * دکمه رو زده؛ به‌عنوانِ شاگرد و منتور وارد داده می‌شه تا از حسابِ خودش تست کنه.
+ * همه‌چیز قبلی رو پاک می‌کنه و دیتاست کامل رو می‌سازه. ownerId = Ownerی که
+ * دکمه رو زده؛ به‌عنوان شاگرد و منتور وارد داده می‌شه تا از حساب خودش تست کنه.
  */
 export async function seedDemoData(ownerId: string): Promise<SeedResult> {
   await clearDemoData();
@@ -708,13 +708,13 @@ export async function seedDemoData(ownerId: string): Promise<SeedResult> {
   const now = new Date();
   const passwordHash = await bcrypt.hash(crypto.randomBytes(32).toString("hex"), 10);
 
-  // حوزه‌های منتوریِ Owner: پروفایلِ موجود دست نمی‌خوره؛ نبود → با ROUTINE+FITNESS ساخته می‌شه
+  // حوزه‌های منتوری Owner: پروفایل موجود دست نمی‌خوره؛ نبود → با ROUTINE+FITNESS ساخته می‌شه
   const ownerCats = owner.mentorProfile ? owner.mentorProfile.categories : ["ROUTINE", "FITNESS"];
   const ownerRoutineOk = ownerCats.length === 0 || ownerCats.includes("ROUTINE");
   const ownerWorkoutOk = ownerCats.length === 0 || ownerCats.includes("FITNESS");
   const ownerRelCats = ownerCats.filter((c) => c === "ROUTINE" || c === "FITNESS" || c === "NUTRITION");
 
-  // کلیدِ رمزگذاریِ Owner (اگر فعال کرده) — گفت‌وگوهای او با کاربرانِ آزمایشی به همین کلید رمز می‌شوند
+  // کلید رمزگذاری Owner (اگر فعال کرده) — گفت‌وگوهای او با کاربران آزمایشی به همین کلید رمز می‌شوند
   const ownerActive = (await activeKeysFor([ownerId]))[ownerId];
   const ownerE2E = ownerActive.length ? { userId: ownerId, keys: ownerActive.map((k) => ({ version: k.version, publicKey: k.publicKey })) } : null;
   let skippedOwnerThreads = 0;
@@ -804,7 +804,7 @@ export async function seedDemoData(ownerId: string): Promise<SeedResult> {
       });
       await S.program(amirAli, { type: "WORKOUT", title: "تمام‌بدن سه‌روزه", status: "CANCELLED", startOffset: -12, endOffset: 20, note: "به‌خاطر امتحانات لغو شد.", items: WORKOUT_A.slice(0, 3) });
 
-      // ── نگار (ROUTINE، در صفِ احراز) ──
+      // ── نگار (ROUTINE، در صف احراز) ──
       await S.mentorship(id("negar"), id("mohammad"), "PENDING", { categories: ["ROUTINE"], message: "کنکور تجربی 1406 دارم.", createdDaysAgo: 3 });
 
       // ── رضا (NUTRITION، معلق) ──
@@ -821,7 +821,7 @@ export async function seedDemoData(ownerId: string): Promise<SeedResult> {
       await S.program(maryamZahra, { type: "ROUTINE", title: "روتین ترم بهار", status: "COMPLETED", startOffset: -65, endOffset: -18, items: STUDY_ITEMS, logs: true });
       await S.review(maryamZahra, 2, "شماره‌ی تلفنش رو بده تا بیرون از اپ هماهنگ کنیم.", "شامل اطلاعات تماس شخصی");
 
-      // ── رتبه‌بندیِ شایستگی: شاگردهای بیشترِ امیر و نظرهای تاییدنشده‌ی کیان ──
+      // ── رتبه‌بندی شایستگی: شاگردهای بیشتر امیر و نظرهای تاییدنشده‌ی کیان ──
       const amirSina = await S.mentorship(id("amir"), id("sina"), "ACTIVE", { categories: ["FITNESS"], startedDaysAgo: 60 });
       await S.program(amirSina, { type: "WORKOUT", title: "آمادگی پایه", status: "COMPLETED", startOffset: -55, endOffset: -25, items: WORKOUT_B, logs: true });
       await S.program(amirSina, { type: "WORKOUT", title: "قدرت — دوره‌ی اول", status: "ACTIVE", startOffset: -20, endOffset: 30, items: WORKOUT_A, logs: true });
@@ -837,7 +837,7 @@ export async function seedDemoData(ownerId: string): Promise<SeedResult> {
       }
 
       // ── گزارش‌ها ──
-      // گزارشِ پیام همان مدرکی را دارد که مسیرِ واقعی بعد از تاییدِ فرانکینگ ذخیره می‌کند
+      // گزارش پیام همان مدرکی را دارد که مسیر واقعی بعد از تایید فرانکینگ ذخیره می‌کند
       const rezaLine = rezaLines.find((l) => l.senderId === id("reza"));
       const rezaMsg = rezaLine
         ? await tx.mentorMessage.findFirst({ where: { mentorshipId: rezaNarges.id, clientId: rezaLine.clientId }, select: { id: true, createdAt: true } })
@@ -847,12 +847,12 @@ export async function seedDemoData(ownerId: string): Promise<SeedResult> {
           { reporterId: id("narges"), targetType: "USER", targetId: id("reza"), targetUserId: id("reza"), reason: "اسپم یا تبلیغ", details: "پیام تبلیغ مکمل می‌فرسته.", createdAt: S.ago(3) },
           ...(rezaMsg && rezaLine
             ? [{
-                reporterId: id("narges"), targetType: "MESSAGE" as const, targetId: rezaMsg.id, targetUserId: id("reza"), reason: "درخواستِ پرداخت/ارتباط خارج از آریون", details: null, createdAt: S.ago(3, 10),
+                reporterId: id("narges"), targetType: "MESSAGE" as const, targetId: rezaMsg.id, targetUserId: id("reza"), reason: "درخواست پرداخت/ارتباط خارج از آریون", details: null, createdAt: S.ago(3, 10),
                 reportedText: sealReportedText(rezaLine.text, rezaMsg.id, id("narges")), reportedMessageAt: rezaMsg.createdAt, reportVerified: true,
               }]
             : []),
           {
-            reporterId: id("elham"), targetType: "USER", targetId: id("maryam"), targetUserId: id("maryam"), reason: "رفتارِ نامناسب یا توهین‌آمیز", details: "پیام‌های خارج از برنامه می‌فرستاد.",
+            reporterId: id("elham"), targetType: "USER", targetId: id("maryam"), targetUserId: id("maryam"), reason: "رفتار نامناسب یا توهین‌آمیز", details: "پیام‌های خارج از برنامه می‌فرستاد.",
             status: "RESOLVED", resolution: "پیام‌ها بررسی شد؛ به مربی تذکر داده شد.", resolvedById: ownerId, resolvedAt: S.ago(5), createdAt: S.ago(6),
           },
           {
@@ -863,7 +863,7 @@ export async function seedDemoData(ownerId: string): Promise<SeedResult> {
       });
       S.counts.reports += rezaMsg ? 4 : 3;
 
-      // ── Owner به‌عنوانِ شاگرد ──
+      // ── Owner به‌عنوان شاگرد ──
       const saraOwner = await S.mentorship(id("sara"), ownerId, "ACTIVE", { categories: ["ROUTINE"], startedDaysAgo: 10 });
       const ownerActive = await S.program(saraOwner, {
         type: "ROUTINE", title: "برنامه‌ی مرور هفتگی", status: "ACTIVE", startOffset: -7, endOffset: 21,
@@ -884,10 +884,10 @@ export async function seedDemoData(ownerId: string): Promise<SeedResult> {
       ], 2);
 
       await S.mentorship(id("amir"), ownerId, "PENDING", { initiatedBy: "MENTOR", categories: ["FITNESS"], message: "یک برنامه‌ی تمرینی سه‌روزه برات دارم؛ اگه قبول کنی می‌فرستم.", createdDaysAgo: 1 });
-      // نشانک‌های Owner — با حذفِ کاربرانِ آزمایشی cascade می‌شوند
+      // نشانک‌های Owner — با حذف کاربران آزمایشی cascade می‌شوند
       await tx.savedMentor.createMany({ data: OWNER_SAVED_MENTORS.map((k) => ({ userId: ownerId, mentorUserId: id(k) })), skipDuplicates: true });
 
-      // ── Owner به‌عنوانِ منتور ──
+      // ── Owner به‌عنوان منتور ──
       if (!owner.mentorProfile) {
         const p = await tx.mentorProfile.create({
           data: {
@@ -936,14 +936,14 @@ export async function seedDemoData(ownerId: string): Promise<SeedResult> {
         await S.program(ownerPouya, { type: pType, title: "برنامه‌ی پیش‌نویس", status: "DRAFT", startOffset: 10, endOffset: 40, items: pItems(pType).slice(0, 1) });
       }
 
-      // الهام «نمایش پیشرفت» را برای Owner بسته — نمای مخفیِ پیشرفت را نشان می‌دهد
+      // الهام «نمایش پیشرفت» را برای Owner بسته — نمای مخفی پیشرفت را نشان می‌دهد
       const ownerElham = await S.mentorship(ownerId, id("elham"), "ACTIVE", { categories: ownerRelCats, startedDaysAgo: 45, showProgress: false });
       if (pType) {
         await S.program(ownerElham, { type: pType, title: "برنامه‌ی ماه قبل", status: "COMPLETED", startOffset: -40, endOffset: -12, items: pItems(pType), logs: true });
         await S.program(ownerElham, { type: pType, title: "برنامه‌ی فشرده", status: "CANCELLED", startOffset: -10, endOffset: 10, note: "به درخواست شاگرد لغو شد.", items: pItems(pType).slice(0, 2) });
       }
 
-      // اعلان‌های Owner — تا بخشِ اعلان هم چیزی برای نمایش داشته باشه
+      // اعلان‌های Owner — تا بخش اعلان هم چیزی برای نمایش داشته باشه
       const notes = await tx.inAppNotification.createManyAndReturn({
         data: [
           { userId: ownerId, type: "mentor.request", title: "درخواست شاگردی جدید", body: "حسین جعفری درخواست شاگردی فرستاده.", url: "/mentor", createdAt: S.ago(0, 20) },
@@ -957,14 +957,14 @@ export async function seedDemoData(ownerId: string): Promise<SeedResult> {
       tickPlan = S.ticks;
       tracked = S.tracked;
       skippedOwnerThreads = S.skippedOwnerThreads;
-      // دسترس‌پذیری و مدیریتِ شاگرد (ظرفیت، عدم حضور، سؤال‌های پذیرش، برچسب، یادداشت، توقف، دلیلِ پایان)
+      // دسترس‌پذیری و مدیریت شاگرد (ظرفیت، عدم حضور، سؤال‌های پذیرش، برچسب، یادداشت، توقف، دلیل پایان)
       const manage = await seedManageDemo({ tx, id, ownerId, ownerProfileCreated: !!ownerProfileId, today, now });
       manageLabelIds = manage.ownerLabelIds;
       S.counts.mentorships += manage.addedMentorships;
 
-      // ── ابزارهای منتور: هشدارِ پایبندی، گزارشِ هفتگی، شروعِ زمان‌بندی‌شده، قالب و پاسخِ آماده ──
+      // ── ابزارهای منتور: هشدار پایبندی، گزارش هفتگی، شروع زمان‌بندی‌شده، قالب و پاسخ آماده ──
       if (pType) {
-        // علی: برنامه‌ی فعال که ۴ روزِ آخر هیچ تیکی ندارد → هشدارِ «۳ روز» با بازکردنِ پنل منتور
+        // علی: برنامه‌ی فعال که ۴ روز آخر هیچ تیکی ندارد → هشدار «۳ روز» با بازکردن پنل منتور
         const ownerAli = await S.mentorship(ownerId, id("ali"), "ACTIVE", { categories: ownerRelCats, startedDaysAgo: 16 });
         const aliItems = pItems(pType).slice(0, 2);
         const aliProgram = await S.program(ownerAli, {
@@ -983,13 +983,13 @@ export async function seedDemoData(ownerId: string): Promise<SeedResult> {
           });
         }
         if (ownerFatemeh) {
-          // دوره‌ی بعد، پذیرفته‌شده و زمان‌بندی‌شده برای روزِ بعد از پایانِ برنامه‌ی فعلی
+          // دوره‌ی بعد، پذیرفته‌شده و زمان‌بندی‌شده برای روز بعد از پایان برنامه‌ی فعلی
           await S.program(ownerFatemeh, {
             type: pType, title: pType === "ROUTINE" ? "روتین مطالعه — دوره‌ی دوم" : "تمرین شش‌روزه — دوره‌ی دوم", status: "ACCEPTED", startOffset: 17, endOffset: 46,
             note: "بعد از پایان دوره‌ی اول خودکار شروع می‌شود.", items: pItems(pType),
           });
         }
-        // پویا: پذیرفته‌شده با شروعِ امروز → با بازکردنِ پنل منتور خودکار فعال می‌شود (اعلانِ «شروع برنامه»)
+        // پویا: پذیرفته‌شده با شروع امروز → با بازکردن پنل منتور خودکار فعال می‌شود (اعلان «شروع برنامه»)
         await S.program(ownerPouya, {
           type: pType, title: "برنامه‌ی دو هفته‌ای", status: "ACCEPTED", startOffset: 0, endOffset: 13,
           note: "از امروز شروع می‌شود.", items: pItems(pType).slice(0, 2),
@@ -1007,7 +1007,7 @@ export async function seedDemoData(ownerId: string): Promise<SeedResult> {
     { timeout: 60_000, maxWait: 10_000 }
   );
 
-  // امتیازِ خلاصه از روی نظرهای VISIBLE
+  // امتیاز خلاصه از روی نظرهای VISIBLE
   const reviewedMentors = await prisma.mentorReview.findMany({
     where: { student: DEMO_USER_WHERE },
     select: { mentorId: true },
@@ -1015,7 +1015,7 @@ export async function seedDemoData(ownerId: string): Promise<SeedResult> {
   });
   for (const r of reviewedMentors) await recomputeMentorRating(r.mentorId);
 
-  // آینه‌ی برنامه‌های فعال در «روتین من»ِ شاگردها (Owner هم) — همون مسیری که فعال‌سازیِ واقعی می‌ره
+  // آینه‌ی برنامه‌های فعال در «روتین من» شاگردها (Owner هم) — همون مسیری که فعال‌سازی واقعی می‌ره
   for (const m of tracked.filter((t) => t.mirror)) {
     try {
       const occ = await loadMirrorOccurrences(m.programId, m.activationIso);
@@ -1025,7 +1025,7 @@ export async function seedDemoData(ownerId: string): Promise<SeedResult> {
     }
   }
 
-  // تیک‌های روتین — ادغام با DailyEntryِ موجود (برای Owner تیک‌های خودش می‌مونه)
+  // تیک‌های روتین — ادغام با DailyEntry موجود (برای Owner تیک‌های خودش می‌مونه)
   for (const [userId, byDay] of Array.from(tickPlan)) {
     for (const [iso, items] of Array.from(byDay)) {
       const date = dateFromIso(iso);
@@ -1035,12 +1035,12 @@ export async function seedDemoData(ownerId: string): Promise<SeedResult> {
     }
   }
 
-  // پیشرفتِ خودکار از روی همین تیک‌ها (برنامه‌های تمام‌شده هم یک بار نهایی می‌شن)
+  // پیشرفت خودکار از روی همین تیک‌ها (برنامه‌های تمام‌شده هم یک بار نهایی می‌شن)
   await syncProgramProgress(tracked.map((t) => t.programId), { force: true, finalize: true }).catch(() => {
     warnings.push("پیشرفت خودکار برنامه‌ها ساخته نشد");
   });
 
-  // رتبه‌بندیِ شایستگی همین حالا از روی داده‌ی تازه (وگرنه تا TTL کهنه می‌موند)
+  // رتبه‌بندی شایستگی همین حالا از روی داده‌ی تازه (وگرنه تا TTL کهنه می‌موند)
   await recomputeMentorRankings().catch(() => {
     warnings.push("رتبه‌بندی مربی‌ها بازمحاسبه نشد");
   });

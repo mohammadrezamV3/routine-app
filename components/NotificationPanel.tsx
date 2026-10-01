@@ -22,7 +22,7 @@ type NotifItem =
   | { kind: "static"; id: string; title: string; body: string; modalTitle: string; modalBody: string }
   | ServerNotif;
 
-// اعلان‌های ذخیره‌شده‌ی سرور (InAppNotification — منتورها و …) فقط برای کاربرِ
+// اعلان‌های ذخیره‌شده‌ی سرور (InAppNotification — منتورها و …) فقط برای کاربر
 // لاگین‌کرده؛ برای مهمان یا وقتی قابلیت خاموش است پاسخ ok نیست و بی‌صدا
 // نادیده گرفته می‌شود، پس بقیه‌ی اطلاعیه‌های محاسبه‌شده دست‌نخورده می‌مانند.
 let serverHasMore = false;
@@ -42,9 +42,9 @@ async function loadServerNotifications(before?: string): Promise<{ items: Server
   }
 }
 
-// اطلاعیه‌های سراسریِ ادمین (/admin/announcements) — عمومی، پس برای مهمان هم
-// میاد. «خوانده‌شده» مثلِ dismissedStaticNotifs در تنظیمِ کاربر (یا localStorage
-// مهمان) نگه داشته می‌شه. خطا → لیستِ خالی، بقیه‌ی پنل دست‌نخورده.
+// اطلاعیه‌های سراسری ادمین (/admin/announcements) — عمومی، پس برای مهمان هم
+// میاد. «خوانده‌شده» مثل dismissedStaticNotifs در تنظیم کاربر (یا localStorage
+// مهمان) نگه داشته می‌شه. خطا → لیست خالی، بقیه‌ی پنل دست‌نخورده.
 async function loadAnnouncements(): Promise<PublicAnnouncement[]> {
   try {
     const res = await fetch("/api/announcements", { cache: "no-store" });
@@ -64,7 +64,7 @@ function serverId(it: ServerNotif): string {
   return it.id.slice("srv:".length);
 }
 
-/** تعدادِ «نخوانده»‌ها برای نقطه‌ی زنگوله — اعلانِ سرورِ خوانده‌شده حساب نمی‌شود */
+/** تعداد «نخوانده»‌ها برای نقطه‌ی زنگوله — اعلان سرور خوانده‌شده حساب نمی‌شود */
 export function countUnreadNotifications(items: NotifItem[]): number {
   return items.filter((i) => (i.kind === "server" ? !i.readAt : i.kind === "announcement" ? !i.read : true)).length;
 }
@@ -224,7 +224,7 @@ export function NotificationPanel({ onClose, anchor }: { onClose: () => void; an
 
   function openServerNotif(it: ServerNotif) {
     if (!it.readAt) markRead([serverId(it)]).catch(() => {});
-    // فقط مسیرِ داخلی — url سمتِ سرور همیشه «/…» است، این فقط کمربندِ ایمنی است
+    // فقط مسیر داخلی — url سمت سرور همیشه «/…» است، این فقط کمربند ایمنی است
     if (it.url && it.url.startsWith("/") && !it.url.startsWith("//")) {
       onClose();
       router.push(it.url);
@@ -270,7 +270,7 @@ export function NotificationPanel({ onClose, anchor }: { onClose: () => void; an
     return () => { cancelled = true; };
   }, []);
 
-  // پنلِ باز هم زنده‌ست: اعلانِ تازه (WebSocket/تب دیگه) همون لحظه به لیست میاد
+  // پنل باز هم زنده‌ست: اعلان تازه (WebSocket/تب دیگه) همون لحظه به لیست میاد
   useLiveRefresh(["notifications", "mentor"], () => {
     loadPendingNotifications().then((res) => {
       cachedItems = res;

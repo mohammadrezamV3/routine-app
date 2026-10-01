@@ -5,13 +5,13 @@ import {
 } from "./brand";
 
 /**
- * تنها منبعِ آدرسِ سایت. هرجا آدرس مطلق لازم است (canonical، JSON-LD،
+ * تنها منبع آدرس سایت. هرجا آدرس مطلق لازم است (canonical، JSON-LD،
  * sitemap، robots) باید از این‌جا بیاید — نه هاردکد. قبلا همین یک رشته در
- * چهار فایل جدا تکرار شده بود؛ یک بار عوض‌شدنِ دامنه یعنی چهار جای فراموش‌شدنی.
+ * چهار فایل جدا تکرار شده بود؛ یک بار عوض‌شدن دامنه یعنی چهار جای فراموش‌شدنی.
  */
 export const SITE_URL = (process.env.NEXT_PUBLIC_SITE_URL || "https://arionapp.ir").replace(/\/$/, "");
 
-/** آدرس مطلقِ کانونیکال از یک مسیر نسبی. همیشه بدون اسلشِ انتهایی (به‌جز ریشه). */
+/** آدرس مطلق کانونیکال از یک مسیر نسبی. همیشه بدون اسلش انتهایی (به‌جز ریشه). */
 export function absoluteUrl(path: string): string {
   if (!path || path === "/") return SITE_URL;
   const clean = `/${path.replace(/^\/+/, "").replace(/\/+$/, "")}`;
@@ -19,14 +19,14 @@ export function absoluteUrl(path: string): string {
 }
 
 /**
- * متادیتای یک صفحه‌ی عمومیِ قابل‌ایندکس.
+ * متادیتای یک صفحه‌ی عمومی قابل‌ایندکس.
  *
- * سه اشتباهِ تکرارشونده را یک‌جا حل می‌کند:
- *  ۱) `title.absolute` تا قالبِ «%s | Arion آریون» دوباره نام برند را به
- *     عنوانی که خودش برند دارد نچسباند (عنوانِ بلند در نتیجه بریده می‌شود).
+ * سه اشتباه تکرارشونده را یک‌جا حل می‌کند:
+ *  ۱) `title.absolute` تا قالب «%s | Arion آریون» دوباره نام برند را به
+ *     عنوانی که خودش برند دارد نچسباند (عنوان بلند در نتیجه بریده می‌شود).
  *  ۲) spread کردن `OG_BASE` — نکست `openGraph` را بین layout و page ادغام
  *     نمی‌کند، جایگزین می‌کند؛ بدون این، صفحه og:image خودش را از دست می‌دهد.
- *  ۳) `twitter` که اگر تعریف نشود، کارتِ لینک در شبکه‌های اجتماعی بی‌تصویر می‌ماند.
+ *  ۳) `twitter` که اگر تعریف نشود، کارت لینک در شبکه‌های اجتماعی بی‌تصویر می‌ماند.
  */
 export function pageMetadata({
   title,
@@ -38,13 +38,13 @@ export function pageMetadata({
   title: string;
   description: string;
   path: string;
-  /** اگر عنوانِ کارتِ اشتراک‌گذاری باید کوتاه‌تر از عنوانِ تبِ مرورگر باشد */
+  /** اگر عنوان کارت اشتراک‌گذاری باید کوتاه‌تر از عنوان تب مرورگر باشد */
   ogTitle?: string;
   /**
    * true وقتی این مسیر خودش یک `opengraph-image.tsx` کنارش داره. نکست
    * خودش og:image رو از اون فایل تزریق می‌کنه، ولی *فقط* اگه
    * `openGraph.images` این‌جا صریح ست نشده باشه — وگرنه همیشه `/og.png`ی
-   * که پایین می‌ذاریم رو می‌بینه، نه تصویرِ اختصاصیِ صفحه. پس این‌جا فیلد
+   * که پایین می‌ذاریم رو می‌بینه، نه تصویر اختصاصی صفحه. پس این‌جا فیلد
    * images رو کلا حذف می‌کنیم تا نکست بتونه خودش تزریق کنه.
    */
   ownOgImage?: boolean;
@@ -68,11 +68,11 @@ export function pageMetadata({
 }
 
 /**
- * `alternates` کاملِ یک صفحه‌ی عمومی: canonical + hreflang (fa-IR و
+ * `alternates` کامل یک صفحه‌ی عمومی: canonical + hreflang (fa-IR و
  * x-default — سایت تک‌زبانه است، پس هر دو به همان آدرس اشاره می‌کنند) +
- * فیدِ RSS. چرا فیدِ RSS هم این‌جاست: نکست `alternates` را بینِ layout و
+ * فید RSS. چرا فید RSS هم این‌جاست: نکست `alternates` را بین layout و
  * page ادغام نمی‌کند، جایگزین می‌کند؛ یعنی هر صفحه‌ای که canonical خودش را
- * می‌داد، <link rel="alternate" type="application/rss+xml">ِ root layout را
+ * می‌داد، <link rel="alternate" type="application/rss+xml"> root layout را
  * بی‌صدا از دست می‌داد.
  */
 export function pageAlternates(path: string): NonNullable<Metadata["alternates"]> {
@@ -96,7 +96,7 @@ export const SOFTWARE_ID = `${SITE_URL}/#software`;
 
 /**
  * Organization — تنها یک بار در root layout رندر می‌شود. name عمدا
- * انگلیسیِ «Arion» است (شکلِ رسمیِ نامِ برند در schema.org) و «آریون»
+ * انگلیسی «Arion» است (شکل رسمی نام برند در schema.org) و «آریون»
  * توی alternateName می‌آید؛ دقیقا همون قراردادی که BRAND_ALT_NAMES/
  * BRAND_SAME_AS برای گوگل تعریف می‌کنن.
  */
@@ -137,7 +137,7 @@ export function websiteJsonLd(): JsonLd {
 /**
  * BreadcrumbList — به گوگل می‌گوید این صفحه کجای ساختار سایت است و در
  * نتیجه‌ی جست‌وجو به‌جای URL خام، مسیر خوانا نشان داده می‌شود.
- * `items` باید دقیقا همان مسیری باشد که در خودِ صفحه هم دیده می‌شود.
+ * `items` باید دقیقا همان مسیری باشد که در خود صفحه هم دیده می‌شود.
  */
 export function breadcrumbJsonLd(items: { name: string; path: string }[]): JsonLd {
   return {
@@ -153,13 +153,13 @@ export function breadcrumbJsonLd(items: { name: string; path: string }[]): JsonL
 }
 
 /**
- * SiteNavigationElement — فهرستِ صفحه‌های اصلیِ عمومی با نامِ فارسی.
- * این دقیقا سیگنالی است که گوگل برای ساختنِ «sitelinks» زیرِ نتیجه‌ی
+ * SiteNavigationElement — فهرست صفحه‌های اصلی عمومی با نام فارسی.
+ * این دقیقا سیگنالی است که گوگل برای ساختن «sitelinks» زیر نتیجه‌ی
  * برند استفاده می‌کند؛ بدونش گوگل خودش حدس می‌زند کدام لینک‌ها مهم‌ترند
- * (و معمولا حدسش با همین لیستِ واقعیِ منوی سایت یکی نیست).
- * ورودی‌اش عمدا از بیرون می‌آید (نه import مستقیمِ `PUBLIC_PAGES` این‌جا)
- * چون `lib/llmsContent.ts` خودش از این فایل import می‌کند — وارد کردنِ
- * مستقیمِ آن این‌جا یک import دایره‌ای می‌ساخت.
+ * (و معمولا حدسش با همین لیست واقعی منوی سایت یکی نیست).
+ * ورودی‌اش عمدا از بیرون می‌آید (نه import مستقیم `PUBLIC_PAGES` این‌جا)
+ * چون `lib/llmsContent.ts` خودش از این فایل import می‌کند — وارد کردن
+ * مستقیم آن این‌جا یک import دایره‌ای می‌ساخت.
  */
 export function siteNavigationJsonLd(pages: { path: string; label: string }[]): JsonLd {
   return {
@@ -187,8 +187,8 @@ export function faqJsonLd(faqs: { q: string; a: string }[]): JsonLd {
   };
 }
 
-// فهرست واقعیِ بخش‌های آریون — دقیقا منطبق با چیزی که کد الان انجام
-// می‌دهد (چک‌شده روی app/ و components/). رودمپ یادگیری و تحلیل هفتگیِ
+// فهرست واقعی بخش‌های آریون — دقیقا منطبق با چیزی که کد الان انجام
+// می‌دهد (چک‌شده روی app/ و components/). رودمپ یادگیری و تحلیل هفتگی
 // AI عمدا اینجا با «به‌زودی برای عموم» می‌آیند: هردو پشت گیت هستند
 // (رودمپ کاملا مخصوص سوپریوزر، تحلیل هفتگی هنوز از منوی اصلی مخفی است)
 // و ادعای «همین الان برای همه در دسترس است» درست نیست.
@@ -207,11 +207,11 @@ export const FEATURE_LIST_FA = [
 ];
 
 /**
- * SoftwareApplication — توصیفِ خودِ محصول.
+ * SoftwareApplication — توصیف خود محصول.
  *
  * عمدا بدون `aggregateRating`/`review`/تعداد دانلود: آریون هنوز هیچ‌کدام
- * از این داده‌ها را واقعی ندارد و ساختنشان هم نقضِ راهنمای گوگل است هم
- * ریسکِ جریمه‌ی دستی. `offers` فقط همان پلن پایه‌ی رایگان را می‌گوید —
+ * از این داده‌ها را واقعی ندارد و ساختنشان هم نقض راهنمای گوگل است هم
+ * ریسک جریمه‌ی دستی. `offers` فقط همان پلن پایه‌ی رایگان را می‌گوید —
  * قیمت پلن‌های پولی (lib/planPricing.ts) به تومان/دوره‌ست، نه یک عدد
  * ثابت قابل‌بیان با schema.org Offer، پس ادعای نادرست بهتر از سکوت نیست.
  */
@@ -223,7 +223,7 @@ export function softwareApplicationJsonLd(): JsonLd {
     name: BRAND_FA,
     alternateName: BRAND_ALT_NAMES,
     url: SITE_URL,
-    // دسته‌ی درستِ schema.org برای اپِ برنامه‌ریزی/بهره‌وری. قبلا
+    // دسته‌ی درست schema.org برای اپ برنامه‌ریزی/بهره‌وری. قبلا
     // LifestyleApplication بود که برای یک روتین اپ دقیق نیست.
     applicationCategory: "ProductivityApplication",
     operatingSystem: "Web, Android, iOS (PWA)",
@@ -248,7 +248,7 @@ export function softwareApplicationJsonLd(): JsonLd {
  * دقیق‌تر Article برای پست‌های بلاگ)، و author/publisher به همون
  * Organization ریشه (`ORGANIZATION_ID` در root layout) با `@id` وصل می‌شن —
  * نه یک کپی جدا — تا گوگل این‌ها رو یک موجودیت واحد ببینه، نه چند تا.
- * image پیش‌فرض همون opengraph-image خودِ صفحه است (اگه صفحه یکی نداشته
+ * image پیش‌فرض همون opengraph-image خود صفحه است (اگه صفحه یکی نداشته
  * باشه، مقدار دیگه‌ای پاس داده می‌شود).
  */
 export function articleJsonLd({
@@ -281,5 +281,5 @@ export function articleJsonLd({
   };
 }
 
-/** برچسبِ دسته که در چند صفحه تکرار می‌شود */
+/** برچسب دسته که در چند صفحه تکرار می‌شود */
 export const CATEGORY_LABEL = `${BRAND_CATEGORY_FA} ${BRAND_FA}`;

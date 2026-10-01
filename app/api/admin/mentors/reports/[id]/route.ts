@@ -8,8 +8,8 @@ import { notifyUser } from "@/lib/inAppNotify";
 
 // PATCH /api/admin/mentors/reports/:id
 // بدنه { status: RESOLVED|DISMISSED, resolution?, action?: hide_review|delete_message|suspend_mentor }
-// اقدام فقط همراهِ RESOLVED و فقط اگه با نوعِ هدف جور باشه. وقتی اقدامی روی
-// هدف انجام می‌شه، بقیه‌ی گزارش‌های بازِ *همون هدف* هم بسته می‌شن (مثلِ
+// اقدام فقط همراه RESOLVED و فقط اگه با نوع هدف جور باشه. وقتی اقدامی روی
+// هدف انجام می‌شه، بقیه‌ی گزارش‌های باز *همون هدف* هم بسته می‌شن (مثل
 // الگوی گزارش‌های چت) تا ادمین یک چیز رو چند بار بررسی نکنه.
 
 const ACTIONS = ["hide_review", "delete_message", "suspend_mentor"] as const;
@@ -39,8 +39,8 @@ export async function PATCH(req: NextRequest, { params }: { params: { id: string
   if (!report) return NextResponse.json({ error: "گزارش پیدا نشد" }, { status: 404 });
   if (report.status !== "OPEN") return NextResponse.json({ error: "این گزارش قبلا بررسی شده" }, { status: 409 });
 
-  // گزارشی که علیهِ خودِ ادمین یا Owner (یا ادمینِ دیگه بدونِ admins.manage) ثبت شده،
-  // حتی بدونِ اقدام هم نباید توسطِ همون ادمین بسته/رد بشه
+  // گزارشی که علیه خود ادمین یا Owner (یا ادمین دیگه بدون admins.manage) ثبت شده،
+  // حتی بدون اقدام هم نباید توسط همون ادمین بسته/رد بشه
   if (report.targetUserId) {
     try {
       await loadTarget(g, report.targetUserId, { destructive: true });
@@ -49,14 +49,14 @@ export async function PATCH(req: NextRequest, { params }: { params: { id: string
     }
   }
 
-  // ── پیش‌بررسیِ اقدام (قبل از هر نوشتنی) ──
+  // ── پیش‌بررسی اقدام (قبل از هر نوشتنی) ──
   let reviewMentorId: string | null = null;
   let suspendProfile: { id: string; userId: string; suspendedAt: Date | null } | null = null;
 
   if (action === "hide_review") {
-    if (report.targetType !== "REVIEW") return NextResponse.json({ error: "این اقدام فقط برای گزارشِ نظر است" }, { status: 400 });
+    if (report.targetType !== "REVIEW") return NextResponse.json({ error: "این اقدام فقط برای گزارش نظر است" }, { status: 400 });
     const review = await prisma.mentorReview.findUnique({ where: { id: report.targetId }, select: { mentorId: true } });
-    if (!review) return NextResponse.json({ error: "نظرِ گزارش‌شده دیگه وجود نداره" }, { status: 404 });
+    if (!review) return NextResponse.json({ error: "نظر گزارش‌شده دیگه وجود نداره" }, { status: 404 });
     reviewMentorId = review.mentorId;
     try {
       await loadTarget(g, review.mentorId, { destructive: true });
@@ -64,7 +64,7 @@ export async function PATCH(req: NextRequest, { params }: { params: { id: string
       return adminErrorResponse(e);
     }
   } else if (action === "delete_message") {
-    if (report.targetType !== "MESSAGE") return NextResponse.json({ error: "این اقدام فقط برای گزارشِ پیام است" }, { status: 400 });
+    if (report.targetType !== "MESSAGE") return NextResponse.json({ error: "این اقدام فقط برای گزارش پیام است" }, { status: 400 });
     const msg = await prisma.mentorMessage.findUnique({ where: { id: report.targetId }, select: { senderId: true } });
     if (msg) {
       try {
@@ -82,7 +82,7 @@ export async function PATCH(req: NextRequest, { params }: { params: { id: string
     suspendProfile = mentorUserId
       ? await prisma.mentorProfile.findUnique({ where: { userId: mentorUserId }, select: { id: true, userId: true, suspendedAt: true } })
       : null;
-    if (!suspendProfile) return NextResponse.json({ error: "صاحبِ این محتوا مربی نیست" }, { status: 400 });
+    if (!suspendProfile) return NextResponse.json({ error: "صاحب این محتوا مربی نیست" }, { status: 400 });
     try {
       await loadTarget(g, suspendProfile.userId, { destructive: true });
     } catch (e) {
@@ -104,8 +104,8 @@ export async function PATCH(req: NextRequest, { params }: { params: { id: string
       if (r.count === 0) throw new Conflict();
 
       if (action === "hide_review") {
-        // فقط اگه هنوز نمایش داده می‌شه — نظرِ از قبل پنهان دلیلش رو نگه می‌داره
-        // و لاگِ تکراریِ «پنهان‌کردن» ثبت نمی‌شه
+        // فقط اگه هنوز نمایش داده می‌شه — نظر از قبل پنهان دلیلش رو نگه می‌داره
+        // و لاگ تکراری «پنهان‌کردن» ثبت نمی‌شه
         const h = await tx.mentorReview.updateMany({
           where: { id: report.targetId, status: "VISIBLE" },
           data: { status: "HIDDEN", hiddenReason: clampText(hideReason, 500) },
@@ -123,7 +123,7 @@ export async function PATCH(req: NextRequest, { params }: { params: { id: string
         const d = await tx.mentorMessage.deleteMany({ where: { id: report.targetId } });
         messageDeleted = d.count > 0;
       } else if (action === "suspend_mentor" && suspendProfile && !suspendProfile.suspendedAt) {
-        // قفلِ خوش‌بینانه: اگه همزمان تعلیق شده، نه لاگِ تکراری نه اعلانِ دوباره
+        // قفل خوش‌بینانه: اگه همزمان تعلیق شده، نه لاگ تکراری نه اعلان دوباره
         const sp = await tx.mentorProfile.updateMany({
           where: { id: suspendProfile.id, suspendedAt: null },
           data: { suspendedAt: now, suspendedReason: clampText(resolution || report.reason, 500) },
@@ -139,7 +139,7 @@ export async function PATCH(req: NextRequest, { params }: { params: { id: string
         });
       }
 
-      // گزارش‌های بازِ دیگه روی همون هدف هم بسته می‌شن
+      // گزارش‌های باز دیگه روی همون هدف هم بسته می‌شن
       const siblings = action
         ? await tx.mentorReport.updateMany({
             where: { targetType: report.targetType, targetId: report.targetId, status: "OPEN", id: { not: report.id } },

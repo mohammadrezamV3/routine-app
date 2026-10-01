@@ -1,10 +1,10 @@
 "use client";
 
-// بخشِ «استریک» — باکسِ اصلیِ استریک (شعله‌ی زنده، شمارنده، حلقه تا مایلستونِ
-// بعدی، مسیرِ مایلستون‌ها، ۷ روزِ اخیر و وضعیتِ امروز) + همه‌ی اچیومنت‌ها + نامِ
+// بخش «استریک» — باکس اصلی استریک (شعله‌ی زنده، شمارنده، حلقه تا مایلستون
+// بعدی، مسیر مایلستون‌ها، ۷ روز اخیر و وضعیت امروز) + همه‌ی اچیومنت‌ها + نام
 // طلایی. استریک زنده از lib/storage (useDashboardRoutine → lib/routineStreak.ts،
-// همون تعریفِ هدر و داشبورد) میاد، پس همون ثانیه‌ای که آخرین برنامه‌ی امروز
-// تیک می‌خوره این‌جا هم یکی بالا می‌ره. اچیومنت‌ها کاملا سمتِ سرور حساب/ثبت
+// همون تعریف هدر و داشبورد) میاد، پس همون ثانیه‌ای که آخرین برنامه‌ی امروز
+// تیک می‌خوره این‌جا هم یکی بالا می‌ره. اچیومنت‌ها کاملا سمت سرور حساب/ثبت
 // می‌شن (/api/achievements) و با هر تیک (بی‌درنگ، با کمی مکث) دوباره خونده می‌شن.
 
 import "@/app/dashboard/dashboard.css";
@@ -30,7 +30,7 @@ import { FA_WEEKDAY_SHORT, J_MONTHS, toJalali } from "@/lib/jalali";
 export function StreakClient() {
   const { status } = useSession();
   if (status === "unauthenticated") {
-    return <section className="db-page"><AuthGate message="برای دیدنِ استریک و اچیومنت‌ها وارد شوید" /></section>;
+    return <section className="db-page"><AuthGate message="برای دیدن استریک و اچیومنت‌ها وارد شوید" /></section>;
   }
   return (
     <section className="db-page dash-scope stk-page">
@@ -56,7 +56,7 @@ function useAchievements() {
       .catch(() => setError(true));
   }, []);
   useEffect(() => { load(); return () => { if (timer.current) clearTimeout(timer.current); }; }, [load]);
-  // هر تیک/تغییرِ خواب → یک بار (debounce) دوباره حساب — تا تیکِ پشتِ‌سرهم ده درخواست نسازه
+  // هر تیک/تغییر خواب → یک بار (debounce) دوباره حساب — تا تیک پشت‌سرهم ده درخواست نسازه
   useLiveRefresh(["daily", "customOccurrences", "sleep", "wakeSleepTimes"], (changed) => {
     if (!changed.some((c) => c === "*" || keyMatches("daily", c) || c === "customOccurrences" || c === "sleep" || c === "wakeSleepTimes")) return;
     if (timer.current) clearTimeout(timer.current);
@@ -107,8 +107,8 @@ function StreakBody() {
         </div>
         {ach.error && !ach.data ? (
           <div className="db-empty">
-            <p>دریافتِ اچیومنت‌ها ناموفق بود.</p>
-            <button type="button" className="account-outline-btn mentor-btn is-sm" onClick={ach.reload}>تلاشِ دوباره</button>
+            <p>دریافت اچیومنت‌ها ناموفق بود.</p>
+            <button type="button" className="account-outline-btn mentor-btn is-sm" onClick={ach.reload}>تلاش دوباره</button>
           </div>
         ) : (
           <AchievementGrid data={ach.data} filter={filter} />
@@ -122,7 +122,7 @@ function StreakBody() {
   );
 }
 
-// ── باکسِ اصلیِ استریک ───────────────────────────────────────
+// ── باکس اصلی استریک ───────────────────────────────────────
 function StreakHero({ routine, best }: { routine: ReturnType<typeof useDashboardRoutine>; best: number | null }) {
   const streak = routine.streak;
   const tier = getStreakTier(streak);
@@ -137,10 +137,10 @@ function StreakHero({ routine, best }: { routine: ReturnType<typeof useDashboard
   const todayLine = !routine.ready
     ? null
     : total === 0
-      ? "امروز برنامه‌ای نداری — استریک سرِ جاش می‌مونه"
+      ? "امروز برنامه‌ای نداری — استریک سر جاش می‌مونه"
       : todayDone
         ? "امروز هم کامل شد — همین الان به استریک اضافه شد"
-        : `${total - completed} برنامه‌ی دیگه تا اضافه‌شدنِ امروز به استریک`;
+        : `${total - completed} برنامه‌ی دیگه تا اضافه‌شدن امروز به استریک`;
 
   return (
     <motion.div variants={V_GRID} initial="hidden" animate="show">
@@ -156,21 +156,21 @@ function StreakHero({ routine, best }: { routine: ReturnType<typeof useDashboard
           <span className="stk-kicker">{tier.name}</span>
           <div className="stk-count">
             {streak === null ? <Skel w={90} h={56} r={14} /> : <CountUp value={s} className="stk-count-num" />}
-            <span className="stk-count-unit">روز پشتِ‌سرهم</span>
+            <span className="stk-count-unit">روز پشت‌سرهم</span>
           </div>
           <p className="stk-today" aria-live="polite">
             {todayLine === null ? <Skel w="80%" h={12} /> : <><span className={`stk-today-dot${todayDone ? " is-done" : ""}`} />{todayLine}</>}
           </p>
           <div className="stk-hero-meta">
             <span><DashIcon name="trophy" /> بهترین رکورد: <b>{best === null ? "…" : Math.max(best, s)}</b> روز</span>
-            {next && <span><DashIcon name="target" /> مایلستونِ بعدی: <b>{next}</b> روز ({next - s} روزِ دیگه)</span>}
+            {next && <span><DashIcon name="target" /> مایلستون بعدی: <b>{next}</b> روز ({next - s} روز دیگه)</span>}
           </div>
         </div>
       </div>
 
       <MilestoneTrack streak={s} />
 
-      <div className="stk-week" aria-label="7 روزِ اخیر">
+      <div className="stk-week" aria-label="7 روز اخیر">
         {last7.map((c, i) => {
           const [y, m, d] = c.iso.split("-").map(Number);
           const wd = FA_WEEKDAY_SHORT[new Date(y, m - 1, d).getDay()];
@@ -210,7 +210,7 @@ function MilestoneTrack({ streak }: { streak: number }) {
   );
 }
 
-/** شعله‌ی بزرگِ چندلایه — رنگ و شدتِ حرکتش با سطحِ استریک زیاد می‌شه */
+/** شعله‌ی بزرگ چندلایه — رنگ و شدت حرکتش با سطح استریک زیاد می‌شه */
 function BigFlame({ tier, lit }: { tier: number; lit: boolean }) {
   return (
     <svg className={`stk-flame${lit ? " is-lit" : ""}`} viewBox="0 0 120 140" aria-hidden="true">
@@ -251,12 +251,12 @@ function MiniFlame() {
   );
 }
 
-// ── نامِ طلایی ───────────────────────────────────────────────
+// ── نام طلایی ───────────────────────────────────────────────
 function GoldenCard({ data, name }: { data: AchievementsPayload | null; name: string }) {
   const pct = data ? data.unlockedCount / data.total : 0;
   return (
-    <BentoCard className={`stk-golden${data?.golden ? " is-golden" : ""}`} label="نامِ طلایی">
-      <CardHead icon="spark" title="نامِ طلایی" />
+    <BentoCard className={`stk-golden${data?.golden ? " is-golden" : ""}`} label="نام طلایی">
+      <CardHead icon="spark" title="نام طلایی" />
       <div className="stk-golden-body">
         <GradientRing value={pct} size={92} stroke={8} grad={["#d4891a", "#fff3b0"]} delay={0.3}>
           <b className="stk-golden-pct">{data ? Math.round(pct * 100) : "…"}%</b>
@@ -270,8 +270,8 @@ function GoldenCard({ data, name }: { data: AchievementsPayload | null; name: st
           ) : (
             <>
               <strong>همه رو باز کن، اسمت طلایی می‌شه</strong>
-              <p>{data ? `${data.total - data.unlockedCount} اچیومنتِ دیگه تا نامِ طلاییِ دورنگ، همه‌جای آریون.` : <Skel w="70%" h={12} />}</p>
-              <span className="stk-golden-preview" aria-hidden="true"><GoldenName golden>{name || "نامِ تو"}</GoldenName></span>
+              <p>{data ? `${data.total - data.unlockedCount} اچیومنت دیگه تا نام طلایی دورنگ، همه‌جای آریون.` : <Skel w="70%" h={12} />}</p>
+              <span className="stk-golden-preview" aria-hidden="true"><GoldenName golden>{name || "نام تو"}</GoldenName></span>
             </>
           )}
         </div>
@@ -285,7 +285,7 @@ function StatsCard({ data, streak }: { data: AchievementsPayload | null; streak:
   const items = [
     { k: "best", label: "بهترین استریک", v: m ? Math.max(m.bestStreak, streak ?? 0) : null, unit: "روز" },
     { k: "perfect", label: "روزهای کامل", v: m?.perfectDays ?? null, unit: "روز" },
-    { k: "ticks", label: "کلِ تیک‌ها", v: m?.totalTicks ?? null, unit: "" },
+    { k: "ticks", label: "کل تیک‌ها", v: m?.totalTicks ?? null, unit: "" },
     { k: "weeks", label: "هفته‌های بی‌نقص", v: m?.perfectWeeks ?? null, unit: "" },
   ];
   return (
@@ -357,7 +357,7 @@ function jDate(iso: string) {
   return `${jd} ${J_MONTHS[jm - 1]} ${jy}`;
 }
 
-// ── جشنِ بازشدن ─────────────────────────────────────────────
+// ── جشن بازشدن ─────────────────────────────────────────────
 function UnlockToast({ ids, onDone }: { ids: string[]; onDone: () => void }) {
   useEffect(() => { const t = setTimeout(onDone, 5200); return () => clearTimeout(t); }, [onDone]);
   const first = ACHIEVEMENT_BY_ID[ids[0]];
@@ -374,7 +374,7 @@ function UnlockToast({ ids, onDone }: { ids: string[]; onDone: () => void }) {
     >
       <AchievementIcon id={first.id} unlocked rarity={first.rarity} size={52} />
       <div>
-        <span className="stk-toast-kicker">اچیومنتِ تازه{ids.length > 1 ? ` (+${ids.length - 1})` : ""}</span>
+        <span className="stk-toast-kicker">اچیومنت تازه{ids.length > 1 ? ` (+${ids.length - 1})` : ""}</span>
         <strong>{first.title}</strong>
       </div>
     </motion.div>

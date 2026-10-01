@@ -15,8 +15,8 @@ function markCelebrated(iso: string) {
 }
 
 // شعله + عدد استریک خود کاربر — توی هدر استفاده می‌شه، پس همیشه compact.
-// لحظه‌ای که امروز (با تیکِ همین تب) کامل می‌شه، جشنِ دوالینگویی از همین
-// شعله بیرون می‌پره (StreakCelebration)؛ زدنِ شعله هم همون صفحه رو نشون می‌ده.
+// لحظه‌ای که امروز (با تیک همین تب) کامل می‌شه، جشن دوالینگویی از همین
+// شعله بیرون می‌پره (StreakCelebration)؛ زدن شعله هم همون صفحه رو نشون می‌ده.
 export function StreakBadge({ className }: { className?: string }) {
   const { streak, todayDone, todayIso, cause } = useMyStreak();
   const anchorRef = useRef<HTMLSpanElement>(null);

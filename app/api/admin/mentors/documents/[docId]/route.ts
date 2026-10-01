@@ -4,10 +4,10 @@ import { requireAdmin } from "@/lib/requireAdmin";
 import { adminErrorResponse, loadTarget } from "@/lib/adminUsers";
 import { ALLOWED_DOCUMENT_MIME } from "@/lib/mentorUpload";
 
-// GET /api/admin/mentors/documents/:docId — فایلِ مدرک برای بررسیِ ادمین.
-// inline فقط این‌جا مجازه چون نوعِ ذخیره‌شده از magic bytes (تصویر/PDF)
+// GET /api/admin/mentors/documents/:docId — فایل مدرک برای بررسی ادمین.
+// inline فقط این‌جا مجازه چون نوع ذخیره‌شده از magic bytes (تصویر/PDF)
 // تشخیص داده شده؛ با این حال nosniff + CSP سخت + sandbox تا حتی اگه محتوا
-// دستکاری‌شده باشه اجرا نشه. هر مشاهده در AuditLog ثبت می‌شه (بدونِ بایت).
+// دستکاری‌شده باشه اجرا نشه. هر مشاهده در AuditLog ثبت می‌شه (بدون بایت).
 
 function contentDisposition(kind: "inline" | "attachment", name: string): string {
   const clean = name.replace(/[\u0000-\u001f\u007f"\\/]+/g, "").trim().slice(0, 100) || "document";
@@ -27,7 +27,7 @@ export async function GET(_req: NextRequest, { params }: { params: { docId: stri
     },
   });
   if (!doc) return NextResponse.json({ error: "فایل پیدا نشد" }, { status: 404 });
-  // قوانینِ «کی روی کی»: نه روی خودش (تضاد منافع — جز Owner که همه رو، حتی خودش رو، تایید می‌کنه)، نه روی Owner، روی ادمینِ دیگه فقط با admins.manage
+  // قوانین «کی روی کی»: نه روی خودش (تضاد منافع — جز Owner که همه رو، حتی خودش رو، تایید می‌کنه)، نه روی Owner، روی ادمین دیگه فقط با admins.manage
   try {
     await loadTarget(g, doc.profile.userId, { destructive: !g.isSuperAdmin });
   } catch (e) {

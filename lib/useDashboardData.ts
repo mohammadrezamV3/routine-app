@@ -1,9 +1,9 @@
 "use client";
 
-// دریافتِ /api/dashboard — یک درخواست برای همه‌ی بخش‌ها (نه ده فچِ جدا).
+// دریافت /api/dashboard — یک درخواست برای همه‌ی بخش‌ها (نه ده فچ جدا).
 // stale-while-revalidate: آخرین پاسخ در حافظه‌ی ماژول می‌مونه، پس برگشتن به
-// داشبورد از هر صفحه‌ی دیگه آنی رندر می‌شه و تازه‌سازی پشتِ صحنه انجام می‌شه.
-// تازه‌سازی: رویدادهای زنده‌ی هر ماژول (lib/liveSync.ts) + پولینگِ آرام فقط
+// داشبورد از هر صفحه‌ی دیگه آنی رندر می‌شه و تازه‌سازی پشت صحنه انجام می‌شه.
+// تازه‌سازی: رویدادهای زنده‌ی هر ماژول (lib/liveSync.ts) + پولینگ آرام فقط
 // وقتی تب دیده می‌شه.
 
 import { useCallback, useEffect, useRef, useState } from "react";
@@ -12,7 +12,7 @@ import { useLiveRefresh, useVisiblePolling } from "./liveSync";
 import type { DashboardData } from "./dashboardTypes";
 
 let cache: { key: string; data: DashboardData; at: number } | null = null;
-/** داده‌ی تازه‌تر از این، موقعِ mount دوباره گرفته نمی‌شه (مثلا همون که سرور رندر کرده) */
+/** داده‌ی تازه‌تر از این، موقع mount دوباره گرفته نمی‌شه (مثلا همون که سرور رندر کرده) */
 const FRESH_MS = 30_000;
 let inflight: { key: string; p: Promise<DashboardData | null> } | null = null;
 
@@ -35,7 +35,7 @@ function load(force = false): Promise<DashboardData | null> {
   return p;
 }
 
-/** داده‌ای که سرور همراهِ HTML فرستاده (app/dashboard/page.tsx) — کش رو باهاش پر می‌کنه */
+/** داده‌ای که سرور همراه HTML فرستاده (app/dashboard/page.tsx) — کش رو باهاش پر می‌کنه */
 function seed(initial: { key: string; data: DashboardData } | null | undefined) {
   if (!initial) return;
   const at = Date.parse(initial.data.generatedAt) || Date.now();
@@ -48,7 +48,7 @@ export function useDashboardData(initial?: { key: string; data: DashboardData } 
   const [data, setData] = useState<DashboardData | null>(() => { seed(initial); return cache?.data ?? null; });
   const [status, setStatus] = useState<"loading" | "ready" | "error" | "forbidden">(cache ? "ready" : "loading");
   const alive = useRef(true);
-  // StrictMode (dev) افکت رو mount→unmount→mount می‌کنه؛ بدونِ ست‌کردنِ دوباره، همه‌ی پاسخ‌ها دور ریخته می‌شد
+  // StrictMode (dev) افکت رو mount→unmount→mount می‌کنه؛ بدون ست‌کردن دوباره، همه‌ی پاسخ‌ها دور ریخته می‌شد
   useEffect(() => { alive.current = true; return () => { alive.current = false; }; }, []);
 
   const refresh = useCallback((force = true) => {
@@ -64,15 +64,15 @@ export function useDashboardData(initial?: { key: string; data: DashboardData } 
       });
   }, []);
 
-  // دادهِ هم‌روز و تازه (همون که سرور رندر کرد) دوباره گرفته نمی‌شه؛ اگه روزِ
-  // مرورگر با منطقه‌ی زمانیِ حساب فرق داشت یا داده کهنه بود، یک بار تازه می‌شه.
+  // داده هم‌روز و تازه (همون که سرور رندر کرد) دوباره گرفته نمی‌شه؛ اگه روز
+  // مرورگر با منطقه‌ی زمانی حساب فرق داشت یا داده کهنه بود، یک بار تازه می‌شه.
   useEffect(() => {
     if (cache && cache.key === requestKey() && Date.now() - cache.at < FRESH_MS) return;
     refresh(false);
   }, [refresh]);
 
-  // تغییرِ هر ماژول (از همین تب یا دستگاهِ دیگه) → یک تازه‌سازیِ تجمیعی.
-  // debounce: چند رویدادِ پشتِ‌سرهم (مثلا ثبتِ چند غذا) فقط یک درخواست.
+  // تغییر هر ماژول (از همین تب یا دستگاه دیگه) → یک تازه‌سازی تجمیعی.
+  // debounce: چند رویداد پشت‌سرهم (مثلا ثبت چند غذا) فقط یک درخواست.
   const timer = useRef<ReturnType<typeof setTimeout> | null>(null);
   useLiveRefresh(LIVE_KEYS, () => {
     if (timer.current) clearTimeout(timer.current);

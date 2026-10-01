@@ -7,7 +7,7 @@ import { isUniqueViolation } from "@/lib/mentorServer";
 import { isPublicKeyShape } from "@/lib/e2ee/core";
 import { enforceDeviceCap, keyChangedResponse, nextVersionOk } from "@/lib/e2ee/keyServer";
 
-// کلیدِ یک دستگاه (DEVICE): کلیدِ خصوصی روی همان دستگاه ساخته می‌شود و هرگز — حتی
+// کلید یک دستگاه (DEVICE): کلید خصوصی روی همان دستگاه ساخته می‌شود و هرگز — حتی
 // رمزشده — به سرور نمی‌آید. پیام‌ها برای همه‌ی کلیدهای فعال بسته‌بندی می‌شوند.
 
 // POST /api/e2ee/keys/device { publicKey, version, label }
@@ -43,7 +43,7 @@ export async function POST(req: Request) {
   }
 }
 
-// DELETE /api/e2ee/keys/device?version=N → بازنشسته کردنِ کلیدِ یکی از دستگاه‌های خودم
+// DELETE /api/e2ee/keys/device?version=N → بازنشسته کردن کلید یکی از دستگاه‌های خودم
 export async function DELETE(req: NextRequest) {
   const g = await requireMentorsUser();
   if (!g.ok) return g.response;

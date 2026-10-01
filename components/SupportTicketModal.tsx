@@ -5,7 +5,7 @@ import { createPortal } from "react-dom";
 import { Loader2, X } from "lucide-react";
 import { LockBodyScroll } from "./LockBodyScroll";
 
-// پاپ‌آپِ «ایجاد تیکت» — موضوع + متنِ اولین پیام. همون الگوی مودال‌های
+// پاپ‌آپ «ایجاد تیکت» — موضوع + متن اولین پیام. همون الگوی مودال‌های
 // دیگه‌ی همین اپ (TradeAccountModal): modal-overlay/modal-panel + فیلدهای
 // wsearch-newform-name/trade-glass-field.
 export function SupportTicketModal({

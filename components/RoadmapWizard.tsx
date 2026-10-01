@@ -6,13 +6,13 @@ import { ChevronRight } from "lucide-react";
 import { HOURS_OPTIONS, LEVEL_OPTIONS, type HoursValue, type LevelValue } from "@/lib/roadmapPlan";
 
 /**
- * ویزاردِ ساختِ مسیر — سه گامِ کوتاه.
+ * ویزارد ساخت مسیر — سه گام کوتاه.
  *
- * ۱) چی (اجباری)  ۲) برای چی  ۳) سطح + وقتِ هفتگی + پیش‌زمینه.
- * گامِ سوم کاملاً اختیاری‌ست، ولی همین دوتا عدد مستقیم مدت‌زمان و عمقِ هر
- * مرحله را عوض می‌کنند: مسیرِ «صفرِ مطلق با هفته‌ای ۳ ساعت» با «متوسط با
- * هفته‌ای ۲۰ ساعت» حتی تعدادِ مرحله‌هایش هم یکی نیست. به‌جای متنِ آزاد
- * چیپ‌اند تا یک کلیک باشند و سرور هم فقط مقدارِ معتبر بپذیرد.
+ * ۱) چی (اجباری)  ۲) برای چی  ۳) سطح + وقت هفتگی + پیش‌زمینه.
+ * گام سوم کاملا اختیاری‌ست، ولی همین دوتا عدد مستقیم مدت‌زمان و عمق هر
+ * مرحله را عوض می‌کنند: مسیر «صفر مطلق با هفته‌ای ۳ ساعت» با «متوسط با
+ * هفته‌ای ۲۰ ساعت» حتی تعداد مرحله‌هایش هم یکی نیست. به‌جای متن آزاد
+ * چیپ‌اند تا یک کلیک باشند و سرور هم فقط مقدار معتبر بپذیرد.
  */
 
 const MAX_TOPIC = 120;
@@ -20,24 +20,24 @@ const MAX_GOAL = 300;
 const MAX_BACKGROUND = 300;
 
 const GOAL_CHIPS = [
-  "استخدام و کارِ واقعی",
-  "ارتقا توی شغلِ فعلی",
+  "استخدام و کار واقعی",
+  "ارتقا توی شغل فعلی",
   "فریلنسری و درآمد",
-  "ساختنِ یه پروژه‌ی شخصی",
-  "گرفتنِ مدرک/سرتیفیکیت",
+  "ساختن یه پروژه‌ی شخصی",
+  "گرفتن مدرک/سرتیفیکیت",
   "علاقه و کنجکاوی",
 ];
 
 // ساخت دوفازی است و تا ~۵۵ ثانیه طول می‌کشد؛ جمله‌ها همان فازهای واقعی‌اند
-// تا کاربر بداند الان دقیقاً چه اتفاقی می‌افتد، نه یک اسپینرِ بی‌حرف.
+// تا کاربر بداند الان دقیقا چه اتفاقی می‌افتد، نه یک اسپینر بی‌حرف.
 const BUILD_LINES = [
   "دارم هدفت رو تحلیل می‌کنم…",
   "دارم پیش‌نیازها رو از هم جدا می‌کنم…",
-  "دارم مسیر رو به مرحله‌ها می‌بُرم…",
+  "دارم مسیر رو به مرحله‌ها می‌برم…",
   "دارم برای هر مرحله سرفصل‌های ریز می‌نویسم…",
   "دارم کارهای عملی و پروژه‌ها رو طراحی می‌کنم…",
   "دارم منابع و ابزارهای هر مرحله رو انتخاب می‌کنم…",
-  "دارم معیارهای تموم‌شدنِ هر مرحله رو می‌نویسم…",
+  "دارم معیارهای تموم‌شدن هر مرحله رو می‌نویسم…",
   "دارم نامه‌ی راهنمای مسیر رو می‌نویسم…",
 ];
 
@@ -93,7 +93,7 @@ export function RoadmapWizard({
     setStatus("building");
     setError(null);
 
-    // فقط خودِ fetch داخلِ try است؛ خطای جانبی *بعد از* ساختِ موفق نباید
+    // فقط خود fetch داخل try است؛ خطای جانبی *بعد از* ساخت موفق نباید
     // به کاربر «ساخته نشد» نشان بدهد.
     let data: any;
     try {
@@ -110,7 +110,7 @@ export function RoadmapWizard({
       });
       data = await res.json().catch(() => null);
       if (!res.ok) {
-        flashError(data?.error || "ساختِ مسیر انجام نشد — دوباره امتحان کن");
+        flashError(data?.error || "ساخت مسیر انجام نشد — دوباره امتحان کن");
         return;
       }
     } catch {
@@ -119,7 +119,7 @@ export function RoadmapWizard({
     }
 
     // ساخت در پس‌زمینه‌ی سرور ادامه دارد — کاربر فورا به لیست برمی‌گردد و
-    // کارتِ همین رودمپ پیشرفت را نشان می‌دهد (نه ماندن پشتِ صفحه‌ی ساخت).
+    // کارت همین رودمپ پیشرفت را نشان می‌دهد (نه ماندن پشت صفحه‌ی ساخت).
     setStatus("success");
     onCreated?.();
     onClose();
@@ -153,7 +153,7 @@ export function RoadmapWizard({
       <div className="wsearch-newform dash-scope open">
         <div className="relative z-[1] add-program-glass rp-wiz">
           <div className="wsearch-newform-head">
-            <div className="wsearch-newform-title accent">{busy ? "در حال ساختِ مسیرت" : TITLES[step]}</div>
+            <div className="wsearch-newform-title accent">{busy ? "در حال ساخت مسیرت" : TITLES[step]}</div>
             {!busy && <button className="nav-close" onClick={onClose} aria-label="بستن">×</button>}
           </div>
 
@@ -183,7 +183,7 @@ export function RoadmapWizard({
                     ref={inputRef}
                     type="text"
                     className="wsearch-newform-name"
-                    placeholder="مثلاً امنیت شبکه، ادیت ویدیو، گیتار، React"
+                    placeholder="مثلا امنیت شبکه، ادیت ویدیو، گیتار، React"
                     value={topic}
                     maxLength={MAX_TOPIC}
                     onChange={(e) => { setTopic(e.target.value); setError(null); }}
@@ -203,7 +203,7 @@ export function RoadmapWizard({
                     ref={inputRef}
                     type="text"
                     className="wsearch-newform-name"
-                    placeholder="مثلاً می‌خوام تا یک سال دیگه تو همین حوزه استخدام بشم"
+                    placeholder="مثلا می‌خوام تا یک سال دیگه تو همین حوزه استخدام بشم"
                     value={goal}
                     maxLength={MAX_GOAL}
                     onChange={(e) => setGoal(e.target.value)}
@@ -221,7 +221,7 @@ export function RoadmapWizard({
                       </button>
                     ))}
                   </div>
-                  <div className="rp-wiz-hint">هدفت مسیر رو از ریشه عوض می‌کنه. اگه هدفِ مشخصی نداری خالی بذار.</div>
+                  <div className="rp-wiz-hint">هدفت مسیر رو از ریشه عوض می‌کنه. اگه هدف مشخصی نداری خالی بذار.</div>
                 </>
               )}
 
@@ -255,18 +255,18 @@ export function RoadmapWizard({
                     ))}
                   </div>
 
-                  <label className="rp-wiz-label">چیزِ مرتبطی بلدی؟ <span className="rp-wiz-optional">(اختیاری)</span></label>
+                  <label className="rp-wiz-label">چیز مرتبطی بلدی؟ <span className="rp-wiz-optional">(اختیاری)</span></label>
                   <input
                     ref={inputRef}
                     type="text"
                     className="wsearch-newform-name"
-                    placeholder="مثلاً پایتون در حدِ مقدماتی، انگلیسیِ خوب"
+                    placeholder="مثلا پایتون در حد مقدماتی، انگلیسی خوب"
                     value={background}
                     maxLength={MAX_BACKGROUND}
                     onChange={(e) => setBackground(e.target.value)}
                     onKeyDown={(e) => { if (e.key === "Enter") next(); }}
                   />
-                  <div className="rp-wiz-hint">مدتِ هر مرحله رو با همین وقتِ هفتگی حساب می‌کنم و چیزی که بلدی رو دوباره درس نمی‌دم.</div>
+                  <div className="rp-wiz-hint">مدت هر مرحله رو با همین وقت هفتگی حساب می‌کنم و چیزی که بلدی رو دوباره درس نمی‌دم.</div>
                 </>
               )}
 

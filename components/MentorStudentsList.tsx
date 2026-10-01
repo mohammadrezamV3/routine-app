@@ -31,14 +31,14 @@ function sortRows(rows: StudentIndexRow[], sort: Sort): StudentIndexRow[] {
   const name = (r: StudentIndexRow) => publicUserName(r.student);
   switch (sort) {
     case "name": return out.sort((a, b) => name(a).localeCompare(name(b), "fa"));
-    // پایبندیِ کم‌تر اول — شاگردی که عقب مانده زودتر دیده شود؛ بدونِ ثبت در انتها
+    // پایبندی کم‌تر اول — شاگردی که عقب مانده زودتر دیده شود؛ بدون ثبت در انتها
     case "adherence": return out.sort((a, b) => (a.adherence ?? Infinity) - (b.adherence ?? Infinity) || name(a).localeCompare(name(b), "fa"));
     case "activity": return out.sort((a, b) => time(b.lastActivityAt) - time(a.lastActivityAt));
     case "joined": return out.sort((a, b) => time(b.startedAt) - time(a.startedAt));
   }
 }
 
-/** فهرستِ کاملِ شاگردهای فعال با جست‌وجو، فیلترِ برچسب/توقف و مرتب‌سازی */
+/** فهرست کامل شاگردهای فعال با جست‌وجو، فیلتر برچسب/توقف و مرتب‌سازی */
 export function MentorStudentsList({ data }: { data: StudentIndexResponse }) {
   const [q, setQ] = useState("");
   const [filter, setFilter] = useState<string>(FILTER_ALL);

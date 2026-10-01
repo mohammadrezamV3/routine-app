@@ -1,8 +1,8 @@
 import { describe, it, expect, afterAll, vi, beforeAll } from "vitest";
 
-// رمزگذاریِ خودکار از دیدِ *کلاینت* (lib/e2ee/client.ts) — هر «دستگاه» یک نمونه‌ی تازه از
-// ماژول‌های کلاینت است (vi.resetModules؛ بدونِ IndexedDB → حافظه‌ی همان نمونه) و fetch
-// مستقیم به route handlerهای واقعی وصل است. هیچ رمزی جدا از رمزِ عبورِ حساب ساخته نمی‌شود.
+// رمزگذاری خودکار از دید *کلاینت* (lib/e2ee/client.ts) — هر «دستگاه» یک نمونه‌ی تازه از
+// ماژول‌های کلاینت است (vi.resetModules؛ بدون IndexedDB → حافظه‌ی همان نمونه) و fetch
+// مستقیم به route handlerهای واقعی وصل است. هیچ رمزی جدا از رمز عبور حساب ساخته نمی‌شود.
 
 vi.mock("next-auth", async (orig) => ({
   ...(await orig<any>()),
@@ -51,7 +51,7 @@ function route(url: URL, method: string): [Handler | undefined, any] {
   return [undefined, undefined];
 }
 
-/** همه‌ی بدنه‌های درخواست — برای اثباتِ این‌که رمزِ عبور هرگز به API نمی‌رود */
+/** همه‌ی بدنه‌های درخواست — برای اثبات این‌که رمز عبور هرگز به API نمی‌رود */
 const sentBodies: string[] = [];
 
 beforeAll(() => {
@@ -66,7 +66,7 @@ beforeAll(() => {
   }) as typeof fetch;
 });
 
-/** یک دستگاهِ تازه: ماژول‌های کلاینت از نو (حافظه‌ی کلید خالی) */
+/** یک دستگاه تازه: ماژول‌های کلاینت از نو (حافظه‌ی کلید خالی) */
 async function device(): Promise<Client> {
   vi.resetModules();
   return import("@/lib/e2ee/client");
@@ -99,21 +99,21 @@ async function readAll(c: Client, msId: string) {
   return out;
 }
 
-describe("رمزگذاریِ خودکار (بدونِ رمزِ گفت‌وگو)", () => {
-  it("حسابِ رمزدار: ورود روی هر دستگاه همان کلید را بی‌صدا باز می‌کند؛ تغییرِ رمز بازبسته‌بندی؛ بازیابی با پیامک کلیدِ تازه و دستگاهِ قدیمی همچنان سابقه را می‌خواند", async () => {
+describe("رمزگذاری خودکار (بدون رمز گفت‌وگو)", () => {
+  it("حساب رمزدار: ورود روی هر دستگاه همان کلید را بی‌صدا باز می‌کند؛ تغییر رمز بازبسته‌بندی؛ بازیابی با پیامک کلید تازه و دستگاه قدیمی همچنان سابقه را می‌خواند", async () => {
     const m = await makeMentor();
     const s = await makeUser();
     const ms = await connect(s, m);
     const PW = "رمز عبور حساب شاگرد ۱";
 
-    // منتور: حسابِ بی‌رمز (کلیدِ دستگاه)
+    // منتور: حساب بی‌رمز (کلید دستگاه)
     await prisma.user.update({ where: { id: m }, data: { passwordHash: null } });
     as(m);
     const mDev = await device();
     await mDev.refreshIdentity();
     expect(ready(mDev).identity.kind).toBe("DEVICE");
 
-    // شاگرد، دستگاهِ A: ورود با رمز → SYNCED بی‌صدا
+    // شاگرد، دستگاه A: ورود با رمز → SYNCED بی‌صدا
     as(s);
     const A = await device();
     await A.primeE2EEFromPassword(s, PW);
@@ -129,16 +129,16 @@ describe("رمزگذاریِ خودکار (بدونِ رمزِ گفت‌وگو)"
     as(s);
     expect((await sendFrom(A, ms, "سلام از شاگرد")).res.status).toBe(200);
 
-    // دستگاهِ B: فقط ورود با همان رمز — همان کلید، همه‌ی سابقه
+    // دستگاه B: فقط ورود با همان رمز — همان کلید، همه‌ی سابقه
     const B = await device();
     await B.primeE2EEFromPassword(s, PW);
     expect(ready(B).identity.version).toBe(a.identity.version);
     expect(await readAll(B, ms)).toEqual(["سلام از منتور", "سلام از شاگرد"]);
 
-    // رمزِ عبور هرگز در بدنه‌ی هیچ درخواستی به API نرفت
+    // رمز عبور هرگز در بدنه‌ی هیچ درخواستی به API نرفت
     expect(sentBodies.some((b) => b.includes(PW))).toBe(false);
 
-    // تغییرِ رمز از پنل روی B: بازبسته‌بندی با رمزِ تازه (نمکِ تازه)
+    // تغییر رمز از پنل روی B: بازبسته‌بندی با رمز تازه (نمک تازه)
     const PW2 = "رمز عبور تازه‌ی شاگرد ۲";
     const commit = await B.prepareE2EEPasswordChange(PW, PW2);
     expect(commit).toBeTruthy();
@@ -147,35 +147,35 @@ describe("رمزگذاریِ خودکار (بدونِ رمزِ گفت‌وگو)"
     await C.primeE2EEFromPassword(s, PW2);
     expect(ready(C).identity.version).toBe(a.identity.version);
     expect(await readAll(C, ms)).toEqual(["سلام از منتور", "سلام از شاگرد"]);
-    // A (با KEKِ رمزِ قبلی) هیچ‌وقت کلید عوض نمی‌کند؛ فقط KEKِ کهنه کنار می‌رود
+    // A (با KEK رمز قبلی) هیچ‌وقت کلید عوض نمی‌کند؛ فقط KEK کهنه کنار می‌رود
     await A.refreshIdentity();
     expect(ready(A).identity.version).toBe(a.identity.version);
 
-    // بازیابیِ رمز با پیامک (رمزِ قبلی نامعلوم): ورود با رمزِ سوم → کلیدِ SYNCEDِ تازه
+    // بازیابی رمز با پیامک (رمز قبلی نامعلوم): ورود با رمز سوم → کلید SYNCED تازه
     const PW3 = "رمز سوم پس از فراموشی ۳";
     const D = await device();
     await D.primeE2EEFromPassword(s, PW3);
     const d = ready(D);
     expect(d.identity.version).not.toBe(a.identity.version);
     expect(await readAll(D, ms)).toEqual(["<old-key>", "<old-key>"]);
-    // پیامِ تازه برای کلیدِ تازه + دستگاهِ منتور؛ A کلیدِ قبلی را هنوز دارد و سابقه را می‌خواند
+    // پیام تازه برای کلید تازه + دستگاه منتور؛ A کلید قبلی را هنوز دارد و سابقه را می‌خواند
     as(m);
     await mDev.refreshIdentity();
     expect((await sendFrom(mDev, ms, "بعد از بازیابی")).res.status).toBe(200);
     as(s);
     expect(await readAll(D, ms)).toEqual(["<old-key>", "<old-key>", "بعد از بازیابی"]);
-    await A.refreshIdentity(); // KEKِ A کهنه است → کلیدِ دستگاه برای پیام‌های تازه؛ کلیدِ قبلی برای سابقه
+    await A.refreshIdentity(); // KEK A کهنه است → کلید دستگاه برای پیام‌های تازه؛ کلید قبلی برای سابقه
     const a2 = ready(A);
     expect(a2.identity.kind).toBe("DEVICE");
     expect(a2.notice).toEqual({ kind: "history-relogin" });
     const onA = await readAll(A, ms);
     expect(onA.slice(0, 2)).toEqual(["سلام از منتور", "سلام از شاگرد"]);
-    // C دوباره بالا بیاید هم کلید را عوض نمی‌کند (نمکِ کهنه)
+    // C دوباره بالا بیاید هم کلید را عوض نمی‌کند (نمک کهنه)
     await C.refreshIdentity();
     expect((await prisma.userE2EKey.count({ where: { userId: s, kind: "SYNCED" } }))).toBe(2);
   }, 120_000);
 
-  it("حسابِ گوگل: کلیدِ هر دستگاه؛ دستگاهِ تازه پیام‌های تازه را فوری می‌خواند؛ «انتقال سابقه» با کدِ یکسان روی دو دستگاه", async () => {
+  it("حساب گوگل: کلید هر دستگاه؛ دستگاه تازه پیام‌های تازه را فوری می‌خواند؛ «انتقال سابقه» با کد یکسان روی دو دستگاه", async () => {
     const m = await makeMentor();
     const s = await makeUser();
     const ms = await connect(s, m);
@@ -192,7 +192,7 @@ describe("رمزگذاریِ خودکار (بدونِ رمزِ گفت‌وگو)"
     await M.refreshIdentity();
     await sendFrom(M, ms, "قدیمی");
 
-    // دستگاهِ دوم: بی‌هیچ کاری کلید دارد؛ پیامِ قدیمی نه، پیامِ تازه بله
+    // دستگاه دوم: بی‌هیچ کاری کلید دارد؛ پیام قدیمی نه، پیام تازه بله
     as(s);
     const P2 = await device();
     await P2.refreshIdentity();
@@ -205,7 +205,7 @@ describe("رمزگذاریِ خودکار (بدونِ رمزِ گفت‌وگو)"
     expect(await readAll(P2, ms)).toEqual(["<old-key>", "تازه"]);
     expect(await readAll(P1, ms)).toEqual(["قدیمی", "تازه"]);
 
-    // انتقالِ سابقه: P2 درخواست می‌دهد، P1 همان کد را می‌بیند و تایید می‌کند
+    // انتقال سابقه: P2 درخواست می‌دهد، P1 همان کد را می‌بیند و تایید می‌کند
     await P2.requestHistoryLink();
     const req = ready(P2).link;
     expect(req?.role).toBe("requester");
@@ -220,7 +220,7 @@ describe("رمزگذاریِ خودکار (بدونِ رمزِ گفت‌وگو)"
     expect(await readAll(P2, ms)).toEqual(["قدیمی", "تازه"]);
   }, 120_000);
 
-  it("یادداشتِ خصوصیِ منتور روی همه‌ی دستگاه‌های منتور خوانا؛ نشستِ قدیمی (بدونِ KEK) کلیدِ دستگاه و پس از ورود به SYNCED منتقل", async () => {
+  it("یادداشت خصوصی منتور روی همه‌ی دستگاه‌های منتور خوانا؛ نشست قدیمی (بدون KEK) کلید دستگاه و پس از ورود به SYNCED منتقل", async () => {
     const m = await makeMentor();
     const s = await makeUser();
     const ms = await connect(s, m);
@@ -228,7 +228,7 @@ describe("رمزگذاریِ خودکار (بدونِ رمزِ گفت‌وگو)"
     const S = await device();
     await S.refreshIdentity();
 
-    // منتور: نشستی که از پیش از این تغییر باز مانده → بدونِ KEK → کلیدِ دستگاه
+    // منتور: نشستی که از پیش از این تغییر باز مانده → بدون KEK → کلید دستگاه
     as(m);
     const OLD = await device();
     await OLD.refreshIdentity();
@@ -240,13 +240,13 @@ describe("رمزگذاریِ خودکار (بدونِ رمزِ گفت‌وگو)"
     expect(nr.status).toBe(200);
     await sendFrom(OLD, ms, "پیام از نشست قدیمی");
 
-    // ورود با رمز روی همان دستگاه → SYNCED؛ سابقه‌ی کلیدِ دستگاه در پس‌زمینه به SYNCED منتقل و دستگاه بازنشسته
+    // ورود با رمز روی همان دستگاه → SYNCED؛ سابقه‌ی کلید دستگاه در پس‌زمینه به SYNCED منتقل و دستگاه بازنشسته
     await OLD.primeE2EEFromPassword(m, "رمز منتور ۱۲۳۴۵");
     expect(ready(OLD).identity.kind).toBe("SYNCED");
     for (let i = 0; i < 50 && (await prisma.userE2EKey.count({ where: { userId: m, kind: "DEVICE", retiredAt: null } })) > 0; i++) await new Promise((r) => setTimeout(r, 100));
     expect(await prisma.userE2EKey.count({ where: { userId: m, kind: "DEVICE", retiredAt: null } })).toBe(0);
 
-    // دستگاهِ تازه‌ی منتور، فقط با ورود: پیام و یادداشت هر دو خوانا
+    // دستگاه تازه‌ی منتور، فقط با ورود: پیام و یادداشت هر دو خوانا
     const NEW = await device();
     await NEW.primeE2EEFromPassword(m, "رمز منتور ۱۲۳۴۵");
     expect(await readAll(NEW, ms)).toEqual(["پیام از نشست قدیمی"]);

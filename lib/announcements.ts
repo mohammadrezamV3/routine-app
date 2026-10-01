@@ -1,4 +1,4 @@
-// اطلاعیه‌های سراسریِ اپ — اعتبارسنجیِ مشترکِ روت‌های ادمین + نوعِ پاسخِ عمومی.
+// اطلاعیه‌های سراسری اپ — اعتبارسنجی مشترک روت‌های ادمین + نوع پاسخ عمومی.
 // هیچ import سروری این‌جا نیست تا صفحه‌ی ادمین و NotificationPanel هم بتونن
 // از همین سقف‌ها استفاده کنن. متن همیشه ساده‌ست و فقط به‌صورت text رندر می‌شه.
 
@@ -6,7 +6,7 @@ export const ANNOUNCEMENT_TITLE_MAX = 120;
 export const ANNOUNCEMENT_BODY_MAX = 4000;
 /** چندتا اطلاعیه‌ی فعال به کاربر نشون داده بشه */
 export const ANNOUNCEMENT_PUBLIC_LIMIT = 20;
-/** سقفِ idهای «خوانده‌شده» که در تنظیمِ کاربر نگه داشته می‌شه */
+/** سقف idهای «خوانده‌شده» که در تنظیم کاربر نگه داشته می‌شه */
 export const ANNOUNCEMENT_READ_KEEP = 100;
 
 export type PublicAnnouncement = { id: string; title: string; body: string; createdAt: string };
@@ -14,7 +14,7 @@ export type PublicAnnouncement = { id: string; title: string; body: string; crea
 export type AnnouncementInput = { title: string; body: string; active: boolean; expiresAt: Date | null };
 
 /**
- * اعتبارسنجیِ ورودیِ ساخت/ویرایش. در حالتِ partial (PATCH) فیلدِ نفرستاده
+ * اعتبارسنجی ورودی ساخت/ویرایش. در حالت partial (PATCH) فیلد نفرستاده
  * دست نمی‌خوره. expiresAt: null/"" یعنی بدون انقضا.
  */
 export function parseAnnouncementInput(

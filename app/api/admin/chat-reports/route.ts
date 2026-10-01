@@ -4,10 +4,10 @@ import { prisma } from "@/lib/prisma";
 import { requireAdmin } from "@/lib/requireAdmin";
 import { writeAuditLog } from "@/lib/adminAnalytics";
 
-// صفِ بررسیِ گزارش‌های چت — دسترسیِ «chat».
+// صف بررسی گزارش‌های چت — دسترسی «chat».
 //
-// چرا خودِ متنِ پیام این‌جا برمی‌گردد (حتی وقتی حذف شده): ادمین باید ببیند
-// چه چیزی گزارش شده تا بتواند تصمیم بگیرد. حذفِ نرم دقیقاً برای همین است.
+// چرا خود متن پیام این‌جا برمی‌گردد (حتی وقتی حذف شده): ادمین باید ببیند
+// چه چیزی گزارش شده تا بتواند تصمیم بگیرد. حذف نرم دقیقا برای همین است.
 
 const STATUSES = ["OPEN", "ACTIONED", "DISMISSED"] as const;
 
@@ -75,8 +75,8 @@ export async function PATCH(req: NextRequest) {
     select: { id: true, messageId: true, status: true },
   });
   if (!report) return NextResponse.json({ error: "گزارش پیدا نشد" }, { status: 404 });
-  // گزارشِ بسته‌شده دوباره قابلِ تغییر نیست — وگرنه «رد» روی یک گزارشِ
-  // ACTIONED وضعیتش رو برخلافِ واقعیت (پیامی که واقعا حذف شده) عوض می‌کرد.
+  // گزارش بسته‌شده دوباره قابل تغییر نیست — وگرنه «رد» روی یک گزارش
+  // ACTIONED وضعیتش رو برخلاف واقعیت (پیامی که واقعا حذف شده) عوض می‌کرد.
   if (report.status !== "OPEN") {
     return NextResponse.json({ error: "این گزارش قبلا بررسی شده" }, { status: 409 });
   }
@@ -86,7 +86,7 @@ export async function PATCH(req: NextRequest) {
     // پیام برداشته می‌شود و **همه‌ی** گزارش‌های همان پیام بسته می‌شوند،
     // نه فقط این یکی — وگرنه ادمین باید یک پیام را چند بار بررسی کند.
     await prisma.$transaction([
-      // پیامی که قبلا حذف شده زمان/عاملِ حذفِ اصلی‌اش را نگه می‌دارد.
+      // پیامی که قبلا حذف شده زمان/عامل حذف اصلی‌اش را نگه می‌دارد.
       prisma.tradeChatMessage.updateMany({
         where: { id: report.messageId, deletedAt: null },
         data: { deletedAt: now, deletedBy: guard.userId },

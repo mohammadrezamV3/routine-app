@@ -31,11 +31,11 @@ function clockNow() {
 }
 
 /**
- * گویِ گوشه‌ی چپ‌پایینِ صفحه‌ی روتین — «مدیرِ برنامه».
+ * گوی گوشه‌ی چپ‌پایین صفحه‌ی روتین — «مدیر برنامه».
  *
- * کاربر هیچ گزینه‌ای انتخاب نمی‌کند: فقط با زبانِ خودش می‌گوید چه می‌خواهد و
+ * کاربر هیچ گزینه‌ای انتخاب نمی‌کند: فقط با زبان خودش می‌گوید چه می‌خواهد و
  * سرور تصمیم می‌گیرد. هر تغییری که واقعا اعمال شود، همان‌جا با `onChanged`
- * به صفحه خبر داده می‌شود تا فهرستِ برنامه‌ها بلافاصله تازه شود.
+ * به صفحه خبر داده می‌شود تا فهرست برنامه‌ها بلافاصله تازه شود.
  */
 export function RoutineAiFab({ onChanged }: { onChanged: () => void }) {
   const { status } = useSession();
@@ -47,31 +47,31 @@ export function RoutineAiFab({ onChanged }: { onChanged: () => void }) {
   const listRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLTextAreaElement>(null);
 
-  // فیکسِ سافاری/iOS برای شکافِ کیبورد: dvh + interactive-widget (توی
-  // app/layout.tsx) فقط روی کروم/اندروید کار می‌کنه — وبکیت با بازشدنِ
+  // فیکس سافاری/iOS برای شکاف کیبورد: dvh + interactive-widget (توی
+  // app/layout.tsx) فقط روی کروم/اندروید کار می‌کنه — وبکیت با بازشدن
   // کیبورد فقط visual viewport رو کوچیک می‌کنه، نه layout viewport، پس
-  // top:50%ی مودال (که رویِ layout viewport حساب می‌شه) همون‌جای قبل از
+  // top:50%ی مودال (که روی layout viewport حساب می‌شه) همون‌جای قبل از
   // کیبورد می‌مونه. اینجا مستقیم از visualViewport واقعی می‌خونیم و
-  // مرکز/ارتفاعِ پنل رو با inline style بازنویسی می‌کنیم.
+  // مرکز/ارتفاع پنل رو با inline style بازنویسی می‌کنیم.
   //
-  // minHeight هم همین‌جا محاسبه و ست می‌شه — طبق گزارشِ باگ، min-height
-  // ثابتِ CSSِ .routine-ai-panel (برای اینکه یک پیامِ تنها پنل رو کوچیک
-  // نشون نده) با maxHeightِ واقعیِ این‌جا تداخل داشت: وقتی کیبورد باز
-  // می‌شد و ویوپورتِ واقعی کوچیک‌تر از اون min-height ثابت می‌شد، مرورگر
+  // minHeight هم همین‌جا محاسبه و ست می‌شه — طبق گزارش باگ، min-height
+  // ثابت CSS .routine-ai-panel (برای اینکه یک پیام تنها پنل رو کوچیک
+  // نشون نده) با maxHeight واقعی این‌جا تداخل داشت: وقتی کیبورد باز
+  // می‌شد و ویوپورت واقعی کوچیک‌تر از اون min-height ثابت می‌شد، مرورگر
   // min-height رو برنده می‌کرد و پنل بلندتر از فضای واقعا دیده‌شده
   // می‌موند — نتیجه‌اش نیمه‌ی بالای پنل (هدر/پیام‌ها) از صفحه بیرون می‌زد.
-  // با ست‌کردنِ minHeight هم از همون maxHeightِ واقعی (نه بیشتر)، پنل
-  // هیچ‌وقت از فضای واقعا در دسترس بزرگ‌تر نمی‌شه — بدونِ هیچ تغییری در
-  // ظاهر/چیدمانِ خودِ کارت (طبق درخواستِ صریح: فقط مقدار، نه دیزاین).
+  // با ست‌کردن minHeight هم از همون maxHeight واقعی (نه بیشتر)، پنل
+  // هیچ‌وقت از فضای واقعا در دسترس بزرگ‌تر نمی‌شه — بدون هیچ تغییری در
+  // ظاهر/چیدمان خود کارت (طبق درخواست صریح: فقط مقدار، نه دیزاین).
   //
-  // باگِ «پنل زیرِ هدر می‌رود» (کرومِ اندروید): پنل وسطِ *کلِ* ویوپورت
-  // می‌نشست و تا ۸۸٪ِ ارتفاع قد می‌کشید؛ روی گوشی‌ای که نوارِ ابزارِ کروم
-  // باز است (ویوپورتِ ~۷۰۰پیکسلی) لبه‌ی بالایش به ~۴۰px می‌رسید، یعنی زیرِ
-  // قرصِ هدر (که تا 72px + safe-area پایین می‌آید). حالا ناحیه‌ی مجاز از
-  // *لبه‌ی پایینِ واقعیِ هدر* (اندازه‌گیری‌شده، نه عددِ ثابت) تا پایینِ
-  // visual viewport است و پنل وسطِ همان ناحیه می‌نشیند.
+  // باگ «پنل زیر هدر می‌رود» (کروم اندروید): پنل وسط *کل* ویوپورت
+  // می‌نشست و تا ۸۸٪ ارتفاع قد می‌کشید؛ روی گوشی‌ای که نوار ابزار کروم
+  // باز است (ویوپورت ~۷۰۰پیکسلی) لبه‌ی بالایش به ~۴۰px می‌رسید، یعنی زیر
+  // قرص هدر (که تا 72px + safe-area پایین می‌آید). حالا ناحیه‌ی مجاز از
+  // *لبه‌ی پایین واقعی هدر* (اندازه‌گیری‌شده، نه عدد ثابت) تا پایین
+  // visual viewport است و پنل وسط همان ناحیه می‌نشیند.
   // useLayoutEffect (نه useEffect) تا اولین فریم هم با همین مقدارها پینت
-  // شود، نه یک فریم با وسط‌چینیِ CSSی و بعد پرش.
+  // شود، نه یک فریم با وسط‌چینی CSSی و بعد پرش.
   const [kbViewport, setKbViewport] = useState<{ top: number; maxHeight: number; minHeight: number } | null>(null);
   useLayoutEffect(() => {
     if (!open) { setKbViewport(null); return; }
@@ -100,13 +100,13 @@ export function RoutineAiFab({ onChanged }: { onChanged: () => void }) {
     };
   }, [open]);
 
-  // وضعیتِ گویِ دستیار. یک منبعِ واحد برای هر دو گو (دکمه‌ی شناور و سرِ پنل)
+  // وضعیت گوی دستیار. یک منبع واحد برای هر دو گو (دکمه‌ی شناور و سر پنل)
   // تا هر دو یک چیز بگویند.
   const [orbState, setOrbState] = useState<AIState>("idle");
   const simulated = useSimulatedAmplitude(orbState);
 
-  // سهمیه فقط برای *بستنِ* ورودی وقتی تمام شده لازم است — دیگر بالای پنل
-  // نوشته نمی‌شود (درخواستِ صریح: «نامحدود» بالا ننویس).
+  // سهمیه فقط برای *بستن* ورودی وقتی تمام شده لازم است — دیگر بالای پنل
+  // نوشته نمی‌شود (درخواست صریح: «نامحدود» بالا ننویس).
   useEffect(() => {
     if (!open || quota || status !== "authenticated") return;
     let alive = true;
@@ -117,7 +117,7 @@ export function RoutineAiFab({ onChanged }: { onChanged: () => void }) {
     return () => { alive = false; };
   }, [open, quota, status]);
 
-  // پیامِ خوش‌آمد یک‌بار، همان لحظه‌ی بازشدن — به‌جای فهرستِ پیشنهادها.
+  // پیام خوش‌آمد یک‌بار، همان لحظه‌ی بازشدن — به‌جای فهرست پیشنهادها.
   useEffect(() => {
     if (open && msgs.length === 0) {
       setMsgs([{ id: newId(), role: "bot", text: GREETING }]);
@@ -130,7 +130,7 @@ export function RoutineAiFab({ onChanged }: { onChanged: () => void }) {
     setOrbState("idle");
   }, [open]);
 
-  // «done» و «error» حالتِ لحظه‌ای‌اند؛ گو باید بعدشان به آرامش برگردد.
+  // «done» و «error» حالت لحظه‌ای‌اند؛ گو باید بعدشان به آرامش برگردد.
   useEffect(() => {
     if (orbState !== "done" && orbState !== "error") return;
     const t = setTimeout(() => setOrbState("idle"), 1400);
@@ -151,7 +151,7 @@ export function RoutineAiFab({ onChanged }: { onChanged: () => void }) {
     const body = text.trim();
     if (!body || sending) return;
     setInput("");
-    // تاریخچه *قبل* از افزودنِ همین پیام گرفته می‌شود؛ خودِ پیام جدا می‌رود.
+    // تاریخچه *قبل* از افزودن همین پیام گرفته می‌شود؛ خود پیام جدا می‌رود.
     const history = msgs.slice(-6).map((m) => ({ role: m.role === "user" ? "user" : "assistant", text: m.text }));
     push("user", body);
     setSending(true);
@@ -160,13 +160,13 @@ export function RoutineAiFab({ onChanged }: { onChanged: () => void }) {
       const res = await fetch("/api/routine/assistant", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        // تاریخِ محلیِ دستگاه — «امروز/فردا» باید همان روزی باشد که کاربر می‌بیند
+        // تاریخ محلی دستگاه — «امروز/فردا» باید همان روزی باشد که کاربر می‌بیند
         body: JSON.stringify({ message: body, history, today: isoLocal(new Date()) }),
       });
       const data = await res.json().catch(() => null);
 
       if (!res.ok) {
-        push("bot", data?.error || "یک مشکلِ ناشناخته پیش آمد. دوباره امتحان کن.", "error");
+        push("bot", data?.error || "یک مشکل ناشناخته پیش آمد. دوباره امتحان کن.", "error");
         if (data?.quota) setQuota(data.quota);
         setOrbState("error");
         return;
@@ -175,8 +175,8 @@ export function RoutineAiFab({ onChanged }: { onChanged: () => void }) {
       if (data?.quota) setQuota(data.quota);
 
       if (data?.changed && Array.isArray(data.occurrences)) {
-        // سرور نوشته، پس کشِ کلاینت باید همان لحظه مقدارِ تازه را بگیرد —
-        // وگرنه refresh() زیر، تا انقضای TTL همان فهرستِ قدیمی را می‌خواند.
+        // سرور نوشته، پس کش کلاینت باید همان لحظه مقدار تازه را بگیرد —
+        // وگرنه refresh() زیر، تا انقضای TTL همان فهرست قدیمی را می‌خواند.
         primeSettingCache(SETTING_KEYS.customOccurrences, data.occurrences);
         if (Array.isArray(data.removed)) primeSettingCache(SETTING_KEYS.removedOccurrences, data.removed);
         onChanged();
@@ -211,10 +211,10 @@ export function RoutineAiFab({ onChanged }: { onChanged: () => void }) {
         <SiriOrb size="52px" state={orbState} amplitude={simulated} />
       </button>
 
-      {/* پورتال به body — مثلِ بقیه‌ی مودال‌های اپ (TradeFormModal، …).
-          زیرِ <section>ِ صفحه، z-indexِ پنل/اوِرلِی در stacking contextِ
-          همان بخش حبس می‌شد و هدرِ fixed (z-index:40 در ریشه) رویش
-          می‌نشست؛ اوِرلِی هم هدر را تار/تیره نمی‌کرد. */}
+      {/* پورتال به body — مثل بقیه‌ی مودال‌های اپ (TradeFormModal، …).
+          زیر <section> صفحه، z-index پنل/اورلی در stacking context
+          همان بخش حبس می‌شد و هدر fixed (z-index:40 در ریشه) رویش
+          می‌نشست؛ اورلی هم هدر را تار/تیره نمی‌کرد. */}
       {open && typeof document !== "undefined" && createPortal(
         <>
           <LockBodyScroll />
@@ -263,17 +263,17 @@ export function RoutineAiFab({ onChanged }: { onChanged: () => void }) {
 
             {status !== "authenticated" ? (
               /* صفحه‌ی روتین برای مهمان هم کار می‌کند (روی localStorage)، ولی
-                 دستیار بدونِ حساب نه: نه جایی برای شمردنِ سهمیه هست نه
+                 دستیار بدون حساب نه: نه جایی برای شمردن سهمیه هست نه
                  برنامه‌ای روی سرور که بشود عوضش کرد. */
               <div className="routine-ai-exhausted">
-                <p>نومو فقط با حسابِ کاربری کار می‌کند.</p>
+                <p>نومو فقط با حساب کاربری کار می‌کند.</p>
                 <Link href="/auth/login" className="trade-primary-btn" onClick={() => setOpen(false)}>
                   ورود / ثبت‌نام
                 </Link>
               </div>
             ) : exhausted ? (
               <div className="routine-ai-exhausted">
-                <p>پیام‌های رایگانِ نومو تمام شد.</p>
+                <p>پیام‌های رایگان نومو تمام شد.</p>
                 <Link href="/subscription" className="trade-primary-btn" onClick={() => setOpen(false)}>
                   دیدن اشتراک‌ها
                 </Link>

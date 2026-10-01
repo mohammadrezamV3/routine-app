@@ -1,10 +1,10 @@
 import type { MentorSavedReply } from "@prisma/client";
 
-// پاسخِ آماده‌ی منتور — اعتبارسنجی و شکلِ پاسخ. فقط ذخیره‌ی متن است؛ درج در
-// گفت‌وگو (و هر رمزنگاری‌ای) سمتِ کلاینت و بیرون از این ماژول انجام می‌شود.
+// پاسخ آماده‌ی منتور — اعتبارسنجی و شکل پاسخ. فقط ذخیره‌ی متن است؛ درج در
+// گفت‌وگو (و هر رمزنگاری‌ای) سمت کلاینت و بیرون از این ماژول انجام می‌شود.
 
 export const REPLY_TITLE_MAX = 40;
-export const REPLY_BODY_MAX = 2000; // هم‌اندازه‌ی سقفِ پیامِ گفت‌وگو
+export const REPLY_BODY_MAX = 2000; // هم‌اندازه‌ی سقف پیام گفت‌وگو
 export const MAX_REPLIES_PER_MENTOR = 50;
 
 export type SavedReplyRow = { id: string; title: string; body: string; createdAt: Date; updatedAt: Date };

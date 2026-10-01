@@ -9,8 +9,8 @@ import type { StudentPrivacySummary, StudentView } from "./MentorStudentTypes";
 const CHIP_ICON = { size: 13, strokeWidth: 1.75, "aria-hidden": true } as const;
 
 /**
- * «آنچه می‌بینی» — خلاصه‌ی تنظیماتِ حریم خصوصیِ شاگرد برای همین رابطه.
- * هر ردیف یک بخش است با یک چیپ (دیده می‌شود / مخفی) تا منتور خالی‌بودنِ
+ * «آنچه می‌بینی» — خلاصه‌ی تنظیمات حریم خصوصی شاگرد برای همین رابطه.
+ * هر ردیف یک بخش است با یک چیپ (دیده می‌شود / مخفی) تا منتور خالی‌بودن
  * یک بخش را با «کاری نکرده» اشتباه نگیرد.
  */
 export function MentorStudentPrivacy({

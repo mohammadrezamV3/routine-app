@@ -7,15 +7,15 @@ import { getCustomOccurrences, getDaily, getDailyRange, getRemovedOccurrences } 
 import { keyMatches, useLiveRefresh } from "./liveSync";
 
 export type MyStreak = {
-  /** روزهای پشت‌سرهمِ کامل (lib/routineStreak.ts — امروز همون لحظه‌ی کامل‌شدن حساب می‌شه) */
+  /** روزهای پشت‌سرهم کامل (lib/routineStreak.ts — امروز همون لحظه‌ی کامل‌شدن حساب می‌شه) */
   streak: number | null;
-  /** همه‌ی برنامه‌های امروز تیک خورده؟ (امروزِ بی‌برنامه = false) */
+  /** همه‌ی برنامه‌های امروز تیک خورده؟ (امروز بی‌برنامه = false) */
   todayDone: boolean;
   todayIso: string;
   /**
-   * آخرین محاسبه از چی راه افتاد: «init» بارِ اول، «local» تیکِ همین تب، «remote»
-   * تب/دستگاهِ دیگه یا برگشت به تب. جشنِ استریک فقط روی «local» — کاربری که
-   * روی گوشی کامل کرده و بعد به تبِ دسکتاپ برمی‌گرده نباید وسطِ کار غافلگیر بشه.
+   * آخرین محاسبه از چی راه افتاد: «init» بار اول، «local» تیک همین تب، «remote»
+   * تب/دستگاه دیگه یا برگشت به تب. جشن استریک فقط روی «local» — کاربری که
+   * روی گوشی کامل کرده و بعد به تب دسکتاپ برمی‌گرده نباید وسط کار غافلگیر بشه.
    */
   cause: "init" | "local" | "remote";
 };
@@ -29,7 +29,7 @@ export function useMyStreak(): MyStreak {
   const [removedOcc, setRemovedOcc] = useState<Set<string>>(new Set());
   const [customOcc, setCustomOcc] = useState<{ id: string; name: string; jsDay: number; time: string }[]>([]);
 
-  // دوباره‌خوانی با هر تغییرِ زنده (lib/liveSync.ts) — `version` محاسبه‌ی
+  // دوباره‌خوانی با هر تغییر زنده (lib/liveSync.ts) — `version` محاسبه‌ی
   // استریک رو هم وقتی فقط تیک‌ها (نه برنامه‌ها) عوض شدن دوباره راه می‌ندازه.
   const [version, setVersion] = useState(0);
   const causeRef = useRef<MyStreak["cause"]>("init");
@@ -54,9 +54,9 @@ export function useMyStreak(): MyStreak {
     let alive = true;
     const cause = causeRef.current;
     // امروز هم خونده می‌شه: استریک همون لحظه‌ای که آخرین برنامه‌ی امروز تیک
-    // می‌خوره یکی بالا می‌ره (lib/routineStreak.ts — تعریفِ مشترک با داشبورد).
-    // امروز جدا هم با getDaily خونده می‌شه تا تیکِ optimistic ِ همین لحظه (قبل
-    // از جوابِ سرور) دیده بشه — همون تیکی که جشنِ استریک رو راه می‌ندازه.
+    // می‌خوره یکی بالا می‌ره (lib/routineStreak.ts — تعریف مشترک با داشبورد).
+    // امروز جدا هم با getDaily خونده می‌شه تا تیک optimistic  همین لحظه (قبل
+    // از جواب سرور) دیده بشه — همون تیکی که جشن استریک رو راه می‌ندازه.
     const now = new Date();
     const todayIso = isoLocal(now);
     const rangeStart = new Date(now); rangeStart.setDate(rangeStart.getDate() - STREAK_WINDOW);

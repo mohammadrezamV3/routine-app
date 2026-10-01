@@ -8,9 +8,9 @@ import { parseDateRange, parseIsoDate, readJsonBody } from "@/lib/validate";
 import { withLiveSync } from "@/lib/realtime";
 import { SLEEP_MAX_MIN, SLEEP_MIN_MIN, type SleepRecord } from "@/lib/sleep";
 
-// ثبتِ خواب — بخشی از «روتین من» (ماژولِ SLEEP). هر شب یک ردیف با کلیدِ
-// (userId, date) که date = روزِ *بیدارشدن* ـه (خوابِ شبِ ۱۰ → ۱۱ مال ۱۱ ـه).
-// زمان‌ها ISO ِ کامل (UTC) ذخیره می‌شن؛ ساعتِ محلی سمتِ کلاینت ساخته می‌شه.
+// ثبت خواب — بخشی از «روتین من» (ماژول SLEEP). هر شب یک ردیف با کلید
+// (userId, date) که date = روز *بیدارشدن* ـه (خواب شب ۱۰ → ۱۱ مال ۱۱ ـه).
+// زمان‌ها ISO  کامل (UTC) ذخیره می‌شن؛ ساعت محلی سمت کلاینت ساخته می‌شه.
 
 function toRecord(r: { date: Date; sleptAt: Date | null; wokeAt: Date | null; quality: number | null; note: string | null }): SleepRecord | null {
   if (!r.sleptAt || !r.wokeAt) return null;
@@ -25,8 +25,8 @@ function toRecord(r: { date: Date; sleptAt: Date | null; wokeAt: Date | null; qu
   };
 }
 
-// GET /api/sleep?from=YYYY-MM-DD&to=YYYY-MM-DD — خوندن فقط سشن می‌خواد (مثلِ
-// tasks/daily): بعد از پایانِ دوره‌ی رایگان هم تاریخچه گروگان نمی‌مونه؛ نوشتن پلن می‌خواد.
+// GET /api/sleep?from=YYYY-MM-DD&to=YYYY-MM-DD — خوندن فقط سشن می‌خواد (مثل
+// tasks/daily): بعد از پایان دوره‌ی رایگان هم تاریخچه گروگان نمی‌مونه؛ نوشتن پلن می‌خواد.
 export async function GET(req: NextRequest) {
   const session = await getServerSession(authOptions);
   const userId = (session?.user as { id?: string } | undefined)?.id;
@@ -55,18 +55,18 @@ async function handlePOST(req: NextRequest) {
   const sleptAt = typeof b.sleptAt === "string" ? new Date(b.sleptAt) : null;
   const wokeAt = typeof b.wokeAt === "string" ? new Date(b.wokeAt) : null;
   if (!date || !sleptAt || !wokeAt || Number.isNaN(sleptAt.getTime()) || Number.isNaN(wokeAt.getTime())) {
-    return NextResponse.json({ error: "زمانِ خواب یا بیداری نامعتبر است" }, { status: 400 });
+    return NextResponse.json({ error: "زمان خواب یا بیداری نامعتبر است" }, { status: 400 });
   }
   const minutes = (wokeAt.getTime() - sleptAt.getTime()) / 60000;
   if (minutes < SLEEP_MIN_MIN || minutes > SLEEP_MAX_MIN) {
-    return NextResponse.json({ error: "مدتِ خواب باید بینِ 30 دقیقه تا 20 ساعت باشد" }, { status: 400 });
+    return NextResponse.json({ error: "مدت خواب باید بین 30 دقیقه تا 20 ساعت باشد" }, { status: 400 });
   }
   if (wokeAt.getTime() > Date.now() + 12 * 3600_000) {
-    return NextResponse.json({ error: "زمانِ بیداری در آینده است" }, { status: 400 });
+    return NextResponse.json({ error: "زمان بیداری در آینده است" }, { status: 400 });
   }
-  // روزِ ثبت باید همون حوالیِ بیداری باشه (±۱ روز برای اختلافِ منطقه‌ی زمانی)
+  // روز ثبت باید همون حوالی بیداری باشه (±۱ روز برای اختلاف منطقه‌ی زمانی)
   if (Math.abs(wokeAt.getTime() - date.getTime()) > 2 * 86_400_000) {
-    return NextResponse.json({ error: "تاریخ با زمانِ بیداری جور نیست" }, { status: 400 });
+    return NextResponse.json({ error: "تاریخ با زمان بیداری جور نیست" }, { status: 400 });
   }
   const quality = typeof b.quality === "number" && Number.isInteger(b.quality) && b.quality >= 1 && b.quality <= 5 ? b.quality : null;
   const note = typeof b.note === "string" && b.note.trim() ? b.note.trim().slice(0, 200) : null;

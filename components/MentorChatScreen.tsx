@@ -23,14 +23,14 @@ import { GoldenName } from "@/components/GoldenName";
 const MENU_ICON = { size: 15, strokeWidth: 1.75, "aria-hidden": true } as const;
 
 /**
- * صفحه‌ی گفت‌وگو (/mentorship/[id]/chat) — یک صفحه‌ی کامل مثلِ پیام‌رسان‌ها:
- * سرِ شناورِ شیشه‌ای (بازگشت، نام + وضعیت، منوی سه‌نقطه، آواتار)، رشته‌ی پیام‌ها
- * لبه‌به‌لبه و نوارِ نوشتنِ شناور پایینِ صفحه.
+ * صفحه‌ی گفت‌وگو (/mentorship/[id]/chat) — یک صفحه‌ی کامل مثل پیام‌رسان‌ها:
+ * سر شناور شیشه‌ای (بازگشت، نام + وضعیت، منوی سه‌نقطه، آواتار)، رشته‌ی پیام‌ها
+ * لبه‌به‌لبه و نوار نوشتن شناور پایین صفحه.
  *
  * به body پورتال می‌شود (بیرون از template که transform دارد) و تا وقتی باز
- * است نوارِ بالای سایت پنهان می‌ماند. ارتفاع از visualViewport خوانده
- * می‌شود تا با باز شدنِ کیبوردِ موبایل نوارِ نوشتن بالای کیبورد بماند.
- * بک‌گراندِ تازه ندارد: پس‌زمینه‌ی خودِ سایت پشتِ پیام‌ها دیده می‌شود.
+ * است نوار بالای سایت پنهان می‌ماند. ارتفاع از visualViewport خوانده
+ * می‌شود تا با باز شدن کیبورد موبایل نوار نوشتن بالای کیبورد بماند.
+ * بک‌گراند تازه ندارد: پس‌زمینه‌ی خود سایت پشت پیام‌ها دیده می‌شود.
  */
 export function MentorChatScreen({ id }: { id: string }) {
   const { status } = useSession();
@@ -44,7 +44,7 @@ export function MentorChatScreen({ id }: { id: string }) {
     return () => root.classList.remove("mc-open");
   }, []);
 
-  // کیبوردِ موبایل: ارتفاع و جای صفحه = viewportِ دیدنی
+  // کیبورد موبایل: ارتفاع و جای صفحه = viewport دیدنی
   useEffect(() => {
     const vv = window.visualViewport;
     const el = screenRef.current;
@@ -87,7 +87,7 @@ function ChatScreenBody({ id }: { id: string }) {
   const [wantReport, setWantReport] = useState(false);
   const onReady = useCallback((r: boolean) => setReady(r), []);
 
-  // ?report=1 (از منوی صفحه‌ی رابطه): پنلِ گزارش پس از آماده شدنِ پیام‌ها
+  // ?report=1 (از منوی صفحه‌ی رابطه): پنل گزارش پس از آماده شدن پیام‌ها
   useEffect(() => {
     if (new URLSearchParams(window.location.search).get("report") === "1") {
       setWantReport(true);

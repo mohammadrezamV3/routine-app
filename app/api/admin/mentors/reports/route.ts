@@ -7,9 +7,9 @@ import { openReportMessage } from "@/lib/mentorConversationReport";
 
 // GET /api/admin/mentors/reports?status=OPEN|RESOLVED|DISMISSED&page=
 // خلاصه‌ی محتوای هدف سمت سرور ساخته می‌شه (متن نظر، عنوان برنامه، اسم عمومی
-// کاربر) — هرگز ایمیل/شماره. پیام‌های گفت‌وگو رمزگذاریِ سرتاسری دارند: ادمین فقط
-// متنِ *همان پیامِ گزارش‌شده* را می‌بیند که هنگامِ گزارش با تعهدِ فرانکینگ تایید
-// و در خودِ گزارش ذخیره شده (reportedText) — هرگز از جدولِ پیام خوانده نمی‌شود.
+// کاربر) — هرگز ایمیل/شماره. پیام‌های گفت‌وگو رمزگذاری سرتاسری دارند: ادمین فقط
+// متن *همان پیام گزارش‌شده* را می‌بیند که هنگام گزارش با تعهد فرانکینگ تایید
+// و در خود گزارش ذخیره شده (reportedText) — هرگز از جدول پیام خوانده نمی‌شود.
 
 const STATUSES: MentorReportStatus[] = ["OPEN", "RESOLVED", "DISMISSED"];
 const PAGE_SIZE = 25;
@@ -55,7 +55,7 @@ export async function GET(req: NextRequest) {
         reporterId: true, reportedText: true, reportedMessageAt: true, reportVerified: true,
         status: true, resolution: true, resolvedById: true, resolvedAt: true, createdAt: true,
         reporter: { select: PUBLIC_USER },
-        // متنِ پیام‌های پیوستِ «گزارش گفت‌وگو» فقط از خودِ گزارش (نه جدولِ پیام)
+        // متن پیام‌های پیوست «گزارش گفت‌وگو» فقط از خود گزارش (نه جدول پیام)
         messages: { orderBy: { position: "asc" }, select: { messageId: true, senderId: true, text: true, messageAt: true, verified: true } },
       },
     }),
@@ -84,7 +84,7 @@ export async function GET(req: NextRequest) {
           select: { id: true, rating: true, body: true, status: true, student: { select: PUBLIC_USER }, mentor: { select: PUBLIC_USER } },
         })
       : [],
-    // فقط وجود و فرستنده — هیچ ستونِ محتوایی (رمزشده یا قدیمی) انتخاب نمی‌شود
+    // فقط وجود و فرستنده — هیچ ستون محتوایی (رمزشده یا قدیمی) انتخاب نمی‌شود
     messageIds.length
       ? prisma.mentorMessage.findMany({
           where: { id: { in: messageIds } },
@@ -100,7 +100,7 @@ export async function GET(req: NextRequest) {
     resolverIds.length
       ? prisma.user.findMany({ where: { id: { in: resolverIds } }, select: { id: true, name: true, lastName: true, username: true } })
       : [],
-    // فقط دو طرفِ رابطه — هیچ ستونِ محتوایی از پیام‌ها
+    // فقط دو طرف رابطه — هیچ ستون محتوایی از پیام‌ها
     conversationIds.length
       ? prisma.mentorship.findMany({
           where: { id: { in: conversationIds } },

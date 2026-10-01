@@ -3,9 +3,9 @@ import { prisma } from "@/lib/prisma";
 import { computeAvailability, type Availability, type IntakeAnswer } from "@/lib/mentorAvailability";
 import { openAtRest, sealAtRest } from "@/lib/e2ee/server";
 
-// سمتِ سرورِ گزینه‌های دسترس‌پذیری و مدیریتِ شاگرد. خواندن/نوشتنِ متن‌های
-// آزادِ بینِ دو طرف (جوابِ سؤال‌های پذیرش، یادداشتِ خصوصی، پیامِ خوش‌آمد)
-// فقط از همین تابع‌ها می‌گذرد تا رمزنگاریِ سرتاسری بعداً فقط همین‌جا عوض شود.
+// سمت سرور گزینه‌های دسترس‌پذیری و مدیریت شاگرد. خواندن/نوشتن متن‌های
+// آزاد بین دو طرف (جواب سؤال‌های پذیرش، یادداشت خصوصی، پیام خوش‌آمد)
+// فقط از همین تابع‌ها می‌گذرد تا رمزنگاری سرتاسری بعدا فقط همین‌جا عوض شود.
 
 export const AVAILABILITY_SELECT = {
   acceptingStudents: true,
@@ -22,7 +22,7 @@ export async function countActiveStudents(mentorId: string): Promise<number> {
   return prisma.mentorship.count({ where: { mentorId, status: "ACTIVE" } });
 }
 
-/** «امروز» برای مقایسه‌ی تاریخِ بازگشت — تهران (بازار اصلیِ اپ) */
+/** «امروز» برای مقایسه‌ی تاریخ بازگشت — تهران (بازار اصلی اپ) */
 export function availabilityToday(): string {
   return new Intl.DateTimeFormat("en-CA", { timeZone: "Asia/Tehran", year: "numeric", month: "2-digit", day: "2-digit" }).format(new Date());
 }
@@ -33,12 +33,12 @@ export function availabilityOf(p: AvailabilityFields, activeStudents: number): A
 
 // ───────────────────────── سؤال‌های پذیرش ─────────────────────────
 
-/** جایگزینیِ کاملِ جواب‌های یک رابطه (درخواستِ دوباره جواب‌های قبلی را پاک می‌کند) */
+/** جایگزینی کامل جواب‌های یک رابطه (درخواست دوباره جواب‌های قبلی را پاک می‌کند) */
 export async function writeIntakeAnswers(tx: Prisma.TransactionClient, mentorshipId: string, answers: IntakeAnswer[] | null): Promise<void> {
   await tx.mentorIntakeAnswer.deleteMany({ where: { mentorshipId } });
   if (answers && answers.length) {
     await tx.mentorIntakeAnswer.createMany({
-      // جواب رمزشده در حالِ سکون (agent D — docs/mentor-e2ee.md)؛ سؤال متنِ عمومیِ خودِ منتور است
+      // جواب رمزشده در حال سکون (agent D — docs/mentor-e2ee.md)؛ سؤال متن عمومی خود منتور است
       data: answers.map((a, order) => ({ mentorshipId, order, question: a.question, answer: sealAtRest(a.answer, intakeAad(mentorshipId, order)) })),
     });
   }
@@ -48,7 +48,7 @@ export function intakeAad(mentorshipId: string, order: number): (string | number
   return ["MentorIntakeAnswer.answer", mentorshipId, order];
 }
 
-/** جواب‌ها به‌ازای هر رابطه، به‌ترتیبِ سؤال */
+/** جواب‌ها به‌ازای هر رابطه، به‌ترتیب سؤال */
 export async function readIntakeAnswers(mentorshipIds: string[]): Promise<Map<string, IntakeAnswer[]>> {
   const out = new Map<string, IntakeAnswer[]>();
   if (mentorshipIds.length === 0) return out;
@@ -64,12 +64,12 @@ export async function readIntakeAnswers(mentorshipIds: string[]): Promise<Map<st
   return out;
 }
 
-// ───────────────────────── پیامِ خوش‌آمد ─────────────────────────
+// ───────────────────────── پیام خوش‌آمد ─────────────────────────
 
 /**
- * پیامِ خوش‌آمدِ منتور (متنِ عمومیِ خودِ منتور، نه گفت‌وگوی خصوصی). چون
- * گفت‌وگو رمزگذاریِ سرتاسری دارد، سرور پیامی در گفت‌وگو نمی‌نویسد؛ این متن
- * با شروعِ رابطه در اعلانِ پذیرش به شاگرد می‌رسد و در صفحه‌ی رابطه نمایش
+ * پیام خوش‌آمد منتور (متن عمومی خود منتور، نه گفت‌وگوی خصوصی). چون
+ * گفت‌وگو رمزگذاری سرتاسری دارد، سرور پیامی در گفت‌وگو نمی‌نویسد؛ این متن
+ * با شروع رابطه در اعلان پذیرش به شاگرد می‌رسد و در صفحه‌ی رابطه نمایش
  * داده می‌شود (MentorshipRow.welcomeMessage).
  */
 export async function readWelcomeMessage(mentorId: string): Promise<string | null> {
@@ -81,10 +81,10 @@ export async function readWelcomeMessage(mentorId: string): Promise<string | nul
   }
 }
 
-/** تا چند روز بعد از شروعِ رابطه پیامِ خوش‌آمد در صفحه‌ی رابطه دیده می‌شود */
+/** تا چند روز بعد از شروع رابطه پیام خوش‌آمد در صفحه‌ی رابطه دیده می‌شود */
 export const WELCOME_VISIBLE_DAYS = 14;
 
-// ───────────────────────── یادداشتِ خصوصی ─────────────────────────
+// ───────────────────────── یادداشت خصوصی ─────────────────────────
 
 export type StudentNoteRow = { id: string; body: string; createdAt: Date; updatedAt: Date };
 
@@ -124,7 +124,7 @@ export async function readLabels(profileId: string): Promise<LabelRow[]> {
   return prisma.mentorStudentLabel.findMany({ where: { profileId }, orderBy: { createdAt: "asc" }, select: { id: true, name: true } });
 }
 
-/** فقط idهایی که هنوز برچسبِ موجودِ همین منتورند */
+/** فقط idهایی که هنوز برچسب موجود همین منتورند */
 export function liveLabelIds(ids: string[], labels: LabelRow[]): string[] {
   const set = new Set(labels.map((l) => l.id));
   return ids.filter((id) => set.has(id));

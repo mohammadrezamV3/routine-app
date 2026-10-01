@@ -57,10 +57,10 @@ async function rowAs(userId: string, role: "student" | "mentor", id: string) {
   return list.find((r) => r.id === id);
 }
 
-describe("دسترس‌پذیری — منطقِ خالص", () => {
+describe("دسترس‌پذیری — منطق خالص", () => {
   const base = { acceptingStudents: true, maxActiveStudents: null, awayUntil: null, awayPausesRequests: true };
 
-  it("وضعیت‌ها: باز، بسته، پر، عدمِ حضور (با/بدونِ توقفِ درخواست)", () => {
+  it("وضعیت‌ها: باز، بسته، پر، عدم حضور (با/بدون توقف درخواست)", () => {
     expect(computeAvailability(base, 3, "2026-09-27").state).toBe("OPEN");
     expect(computeAvailability({ ...base, acceptingStudents: false }, 0, "2026-09-27").state).toBe("CLOSED");
     expect(computeAvailability({ ...base, maxActiveStudents: 3 }, 3, "2026-09-27")).toMatchObject({ state: "FULL", full: true });
@@ -68,13 +68,13 @@ describe("دسترس‌پذیری — منطقِ خالص", () => {
     const away = computeAvailability({ ...base, awayUntil: "2026-10-05" }, 0, "2026-09-27");
     expect(away).toMatchObject({ state: "AWAY", away: true, awayUntil: "2026-10-05" });
     expect(computeAvailability({ ...base, awayUntil: "2026-10-05", awayPausesRequests: false }, 0, "2026-09-27")).toMatchObject({ state: "OPEN", away: true });
-    // خودِ روزِ بازگشت در دسترس است؛ تاریخِ گذشته بی‌اثر
+    // خود روز بازگشت در دسترس است؛ تاریخ گذشته بی‌اثر
     expect(computeAvailability({ ...base, awayUntil: "2026-09-27" }, 0, "2026-09-27")).toMatchObject({ state: "OPEN", away: false, awayUntil: null });
-    // بسته بودن بر عدمِ حضور مقدم است
+    // بسته بودن بر عدم حضور مقدم است
     expect(computeAvailability({ ...base, acceptingStudents: false, awayUntil: "2026-10-05" }, 0, "2026-09-27").state).toBe("CLOSED");
   });
 
-  it("اعتبارسنجی: سؤال‌ها، جواب‌ها، ظرفیت، تاریخِ بازگشت", () => {
+  it("اعتبارسنجی: سؤال‌ها، جواب‌ها، ظرفیت، تاریخ بازگشت", () => {
     expect(validateIntakeQuestions([" هدفت؟ ", "", "هدفت؟", "وقتت؟"])).toEqual({ ok: true, data: ["هدفت؟", "وقتت؟"] });
     expect(validateIntakeQuestions(["a", "b", "c", "d", "e", "f"]).ok).toBe(false);
     expect(validateIntakeQuestions(["x".repeat(201)]).ok).toBe(false);
@@ -92,8 +92,8 @@ describe("دسترس‌پذیری — منطقِ خالص", () => {
   });
 });
 
-describe("تنظیماتِ منتور — /api/mentor/settings", () => {
-  it("بدونِ پروفایل ۴۰۳؛ ناشناس ۴۰۱", async () => {
+describe("تنظیمات منتور — /api/mentor/settings", () => {
+  it("بدون پروفایل ۴۰۳؛ ناشناس ۴۰۱", async () => {
     as(null);
     expect((await getSettings()).status).toBe(401);
     const u = await makeUser();
@@ -102,7 +102,7 @@ describe("تنظیماتِ منتور — /api/mentor/settings", () => {
     expect((await settings(u, { acceptingStudents: false })).status).toBe(403);
   });
 
-  it("به‌روزرسانیِ جزئی و اعتبارسنجی", async () => {
+  it("به‌روزرسانی جزئی و اعتبارسنجی", async () => {
     const m = await makeMentor();
     let r = await settings(m, { maxActiveStudents: 5, responseTimeHours: 24, intakeQuestions: ["هدفت؟"], welcomeMessage: " خوش آمدی " });
     expect(r.status).toBe(200);
@@ -122,7 +122,7 @@ describe("تنظیماتِ منتور — /api/mentor/settings", () => {
     expect(d.settings.awayMessage).toBe("سفرم");
     expect(d.availability.state).toBe("AWAY");
 
-    // خاموش کردنِ عدمِ حضور پیامش را هم پاک می‌کند؛ بقیه دست نمی‌خورد
+    // خاموش کردن عدم حضور پیامش را هم پاک می‌کند؛ بقیه دست نمی‌خورد
     d = await j(await settings(m, { awayUntil: null }));
     expect(d.settings).toMatchObject({ awayUntil: null, awayMessage: null, maxActiveStudents: 5 });
     const p = await prisma.mentorProfile.findUnique({ where: { userId: m }, select: { awayMessage: true, awayUntil: true } });
@@ -130,8 +130,8 @@ describe("تنظیماتِ منتور — /api/mentor/settings", () => {
   });
 });
 
-describe("پذیرش، ظرفیت و عدمِ حضور — اعمالِ سمتِ سرور", () => {
-  it("پذیرشِ خاموش: درخواستِ شاگرد ۴۰۹ با پیامِ روشن؛ دعوتِ منتور مجاز", async () => {
+describe("پذیرش، ظرفیت و عدم حضور — اعمال سمت سرور", () => {
+  it("پذیرش خاموش: درخواست شاگرد ۴۰۹ با پیام روشن؛ دعوت منتور مجاز", async () => {
     const m = await makeMentor();
     await settings(m, { acceptingStudents: false });
     const s = await makeUser();
@@ -141,7 +141,7 @@ describe("پذیرش، ظرفیت و عدمِ حضور — اعمالِ سمتِ
     expect((await invite(m, s)).status).toBe(200);
   });
 
-  it("ظرفیت: پر بودن درخواست را می‌بندد، پذیرشِ درخواستِ قدیمی را هم؛ دعوتِ منتور نه", async () => {
+  it("ظرفیت: پر بودن درخواست را می‌بندد، پذیرش درخواست قدیمی را هم؛ دعوت منتور نه", async () => {
     const tag = uniqueTag();
     const m = await makeMentor({ username: `${tag}m`.slice(0, 20) });
     const s1 = await makeUser();
@@ -159,12 +159,12 @@ describe("پذیرش، ظرفیت و عدمِ حضور — اعمالِ سمتِ
     expect(acc.status).toBe(409);
     expect((await j(acc)).error).toContain("ظرفیت");
 
-    // کارتِ کشف «FULL» است
+    // کارت کشف «FULL» است
     as(s3);
     const card = (await j(await discover(req("GET", `/api/mentors?q=${tag}`)))).mentors.find((c: any) => c.userId === m);
     expect(card.availability).toBe("FULL");
 
-    // دعوتِ خودِ منتور و پذیرشِ آن توسطِ شاگرد مجاز است
+    // دعوت خود منتور و پذیرش آن توسط شاگرد مجاز است
     const inv = await invite(m, s3);
     expect(inv.status).toBe(200);
     expect((await mentorshipAction(s3, (await j(inv)).mentorship.id, "accept")).status).toBe(200);
@@ -175,7 +175,7 @@ describe("پذیرش، ظرفیت و عدمِ حضور — اعمالِ سمتِ
     expect(st.availability.full).toBe(true);
   });
 
-  it("عدمِ حضور: با توقفِ درخواست ۴۰۹، بدونِ توقف مجاز؛ شاگرد تاریخ و پیام را می‌بیند", async () => {
+  it("عدم حضور: با توقف درخواست ۴۰۹، بدون توقف مجاز؛ شاگرد تاریخ و پیام را می‌بیند", async () => {
     const m = await makeMentor();
     const until = addDaysIso(today(), 4);
     await settings(m, { awayUntil: until, awayMessage: "در سفرم" });
@@ -197,7 +197,7 @@ describe("پذیرش، ظرفیت و عدمِ حضور — اعمالِ سمتِ
 });
 
 describe("سؤال‌های پذیرش", () => {
-  it("جواب لازم است، snapshot ذخیره می‌شود و با درخواستِ دوباره جایگزین می‌شود", async () => {
+  it("جواب لازم است، snapshot ذخیره می‌شود و با درخواست دوباره جایگزین می‌شود", async () => {
     const m = await makeMentor();
     await settings(m, { intakeQuestions: ["هدفت؟", "وقتت؟"] });
     const s = await makeUser();
@@ -209,12 +209,12 @@ describe("سؤال‌های پذیرش", () => {
     expect(r.status).toBe(200);
     const id = (await j(r)).mentorship.id;
 
-    // منتور سؤال را عوض می‌کند؛ جوابِ قبلی با متنِ سؤالِ قبلی می‌ماند
+    // منتور سؤال را عوض می‌کند؛ جواب قبلی با متن سؤال قبلی می‌ماند
     await settings(m, { intakeQuestions: ["سؤال تازه"] });
     const mRow = await rowAs(m, "mentor", id);
     expect(mRow.intakeAnswers).toEqual([{ question: "هدفت؟", answer: "کنکور" }, { question: "وقتت؟", answer: "۵ ساعت" }]);
 
-    // رد + گذشتِ مهلت + درخواستِ دوباره → جواب‌ها جایگزین
+    // رد + گذشت مهلت + درخواست دوباره → جواب‌ها جایگزین
     await mentorshipAction(m, id, "reject");
     await prisma.mentorship.update({ where: { id }, data: { updatedAt: new Date(Date.now() - 8 * 86_400_000) } });
     as(s);
@@ -224,15 +224,15 @@ describe("سؤال‌های پذیرش", () => {
   });
 });
 
-describe("یادداشتِ خصوصی و برچسب", () => {
-  it("یادداشت: CRUD فقط برای منتورِ همین شاگرد", async () => {
+describe("یادداشت خصوصی و برچسب", () => {
+  it("یادداشت: CRUD فقط برای منتور همین شاگرد", async () => {
     const m = await makeMentor();
     const other = await makeMentor();
     const s = await makeUser();
     await connect(s, m);
     const ctx = { params: { studentId: s } };
 
-    // یادداشت رمزگذاریِ سرتاسریِ «فقط برای خودم» دارد (agent D): متنِ ساده رد، پاکتِ رمزشده ذخیره
+    // یادداشت رمزگذاری سرتاسری «فقط برای خودم» دارد (agent D): متن ساده رد، پاکت رمزشده ذخیره
     const mk = await giveKey(m);
     const seal = (t: string) => sealNote({ userId: m, version: mk.version, publicKey: mk.publicB64, privateKey: mk.privateKey }, s, t);
     const open = async (b: string) => ((await openNote({ userId: m, version: mk.version, publicKey: mk.publicB64, privateKey: mk.privateKey }, s, b)) as any).text;
@@ -244,7 +244,7 @@ describe("یادداشتِ خصوصی و برچسب", () => {
     expect(JSON.stringify(await prisma.mentorStudentNote.findMany({ where: { mentorId: m } }))).not.toContain("شیمی");
     const noteId = created.note.id;
 
-    // منتورِ دیگر و خودِ شاگرد دسترسی ندارند (۴۰۴)
+    // منتور دیگر و خود شاگرد دسترسی ندارند (۴۰۴)
     as(other);
     expect((await getNotes(req("GET", "/x"), ctx)).status).toBe(404);
     expect((await patchNote(req("PATCH", "/x", { body: await seal("هک") }), { params: { studentId: s, noteId } })).status).toBe(404);
@@ -257,7 +257,7 @@ describe("یادداشتِ خصوصی و برچسب", () => {
     expect(await open(edited.note.body)).toBe("شیمی و فیزیک");
     expect((await j(await getNotes(req("GET", "/x"), ctx))).notes).toHaveLength(1);
 
-    // یادداشت در هیچ پاسخِ سمتِ شاگرد نیست
+    // یادداشت در هیچ پاسخ سمت شاگرد نیست
     const sRow = await rowAs(s, "student", (await prisma.mentorship.findFirst({ where: { mentorId: m, studentId: s } }))!.id);
     expect(JSON.stringify(sRow)).not.toContain("شیمی");
 
@@ -266,7 +266,7 @@ describe("یادداشتِ خصوصی و برچسب", () => {
     expect((await deleteNote(req("DELETE", "/x"), { params: { studentId: s, noteId } })).status).toBe(404);
   });
 
-  it("برچسب: ساخت، تکراری ۴۰۹، اختصاص فقط برچسبِ خود، حذف از روی شاگرد برداشته می‌شود", async () => {
+  it("برچسب: ساخت، تکراری ۴۰۹، اختصاص فقط برچسب خود، حذف از روی شاگرد برداشته می‌شود", async () => {
     const m = await makeMentor();
     const other = await makeMentor();
     const s = await makeUser();
@@ -305,7 +305,7 @@ describe("یادداشتِ خصوصی و برچسب", () => {
   });
 });
 
-describe("توقف و پایانِ رابطه", () => {
+describe("توقف و پایان رابطه", () => {
   it("توقف با دلیل به شاگرد اعلام و در ردیفش دیده می‌شود؛ ادامه پاکش می‌کند", async () => {
     const m = await makeMentor();
     const s = await makeUser();
@@ -333,7 +333,7 @@ describe("توقف و پایانِ رابطه", () => {
     expect((await rowAs(s, "student", id)).pausedAt).toBeNull();
   });
 
-  it("پایان با دلیل: دلیل و طرفِ پایان‌دهنده در ردیف و اعلان", async () => {
+  it("پایان با دلیل: دلیل و طرف پایان‌دهنده در ردیف و اعلان", async () => {
     const m = await makeMentor();
     const s = await makeUser();
     const id = await connect(s, m);
@@ -349,7 +349,7 @@ describe("توقف و پایانِ رابطه", () => {
     expect(n?.body).toContain("دوره تمام شد");
   });
 
-  it("پیامِ خوش‌آمد: در اعلانِ پذیرش و ردیفِ شاگرد", async () => {
+  it("پیام خوش‌آمد: در اعلان پذیرش و ردیف شاگرد", async () => {
     const m = await makeMentor();
     await settings(m, { welcomeMessage: "خوش آمدی" });
     const s = await makeUser();

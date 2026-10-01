@@ -1,22 +1,22 @@
 /* ============================================================
-   داشبورد (/dashboard) — استایلِ جدا از globals.css تا فقط روی همین
+   داشبورد (/dashboard) — استایل جدا از globals.css تا فقط روی همین
    صفحه لود بشه (code-split با import در DashboardClient).
 
    قواعد:
-   • سطحِ همه‌ی کارت‌ها همون توکنِ واحدِ سایت (--box-bg / --box-line) —
-     هیچ بک‌گراندِ تزئینیِ تازه‌ای روی دکمه/کارت اضافه نشده؛ جلوه‌ها از
+   • سطح همه‌ی کارت‌ها همون توکن واحد سایت (--box-bg / --box-line) —
+     هیچ بک‌گراند تزئینی تازه‌ای روی دکمه/کارت اضافه نشده؛ جلوه‌ها از
      خط/SVG/نور روی *بوردر* میان.
-   • دکمه‌ها داخلِ .dash-scope ریستِ شیشه‌ایِ سراسری رو نمی‌گیرن (transparent
-     می‌مونن) و CTAها فقط کلاس‌های خودِ سایت‌ان (trade-primary-btn /
+   • دکمه‌ها داخل .dash-scope ریست شیشه‌ای سراسری رو نمی‌گیرن (transparent
+     می‌مونن) و CTAها فقط کلاس‌های خود سایت‌ان (trade-primary-btn /
      account-outline-btn).
    • همه‌ی انیمیشن‌ها transform/opacity؛ روی html[data-perf="low"] و
      prefers-reduced-motion افکت‌های گرون/دائمی خاموش می‌شن.
    ============================================================ */
 
 /* ── پوسته‌ی صفحه ─────────────────────────────────────────── */
-/* پالتِ هویتیِ ماژول‌ها برای حلقه‌ها/گیج‌ها — هر ماژول یک گرادیانِ دورنگ:
-   روتین زمرد→نعنایی، تمرین آبی→بنفش، کالری کهربایی→مرجانی. تمِ روز نسخه‌ی
-   عمیق‌ترِ همون‌ها رو داره تا روی زمینه‌ی کرمی کنتراست کافی داشته باشن. */
+/* پالت هویتی ماژول‌ها برای حلقه‌ها/گیج‌ها — هر ماژول یک گرادیان دورنگ:
+   روتین زمرد→نعنایی، تمرین آبی→بنفش، کالری کهربایی→مرجانی. تم روز نسخه‌ی
+   عمیق‌تر همون‌ها رو داره تا روی زمینه‌ی کرمی کنتراست کافی داشته باشن. */
 .db-page, .db-cmd-root{
   --ring-1a:#00C98D; --ring-1b:#7DF9CF;
   --ring-2a:#3D7DFF; --ring-2b:#B06DFF;
@@ -45,14 +45,14 @@ body[data-theme="light"] .db-page, body[data-theme="light"] .db-cmd-root{
     margin-inline:calc((620px - var(--db-w)) / 2);
   }
 }
-/* sectionِ سراسری (padding:34px + border-top) نباید به کارت‌های داخلی برسه */
+/* section سراسری (padding:34px + border-top) نباید به کارت‌های داخلی برسه */
 .db-page section{ border-top:none; }
 .db-page h1, .db-page h2{ margin:0; }
 .db-page a{ color:inherit; text-decoration:none; }
 
 .db-num{ font-variant-numeric:tabular-nums; }
 
-/* ── کارتِ بنتو ─────────────────────────────────────────────── */
+/* ── کارت بنتو ─────────────────────────────────────────────── */
 .db-page .db-card{
   position:relative; isolation:isolate;
   padding:16px; border-radius:var(--db-radius);
@@ -61,7 +61,7 @@ body[data-theme="light"] .db-page, body[data-theme="light"] .db-cmd-root{
   transition:border-color .25s ease, transform .25s ease;
 }
 @media (min-width:640px){ .db-page .db-card{ padding:20px; } }
-/* نورِ دنبال‌کننده‌ی موس — فقط روی *بوردر* (mask)، نه پُرکردنِ کارت */
+/* نور دنبال‌کننده‌ی موس — فقط روی *بوردر* (mask)، نه پرکردن کارت */
 .db-page .db-card::before{
   content:""; position:absolute; inset:-1px; border-radius:inherit; padding:1px; pointer-events:none; z-index:-1;
   background:radial-gradient(260px circle at var(--mx, 50%) var(--my, -40%), rgba(var(--accent-rgb),.75), transparent 60%);
@@ -74,8 +74,8 @@ body[data-theme="light"] .db-page, body[data-theme="light"] .db-cmd-root{
 }
 html[data-perf="low"] .db-page .db-card::before{ display:none; }
 
-/* content-visibility:auto این‌جا عمدا نیست: با ارتفاعِ تخمینیِ ثابت، کارت‌های
-   پایینِ صفحه موقعِ اسکرولِ سریع خالی دیده می‌شدن و صفحه می‌پرید. کارت‌ها سبک‌ان. */
+/* content-visibility:auto این‌جا عمدا نیست: با ارتفاع تخمینی ثابت، کارت‌های
+   پایین صفحه موقع اسکرول سریع خالی دیده می‌شدن و صفحه می‌پرید. کارت‌ها سبک‌ان. */
 
 .db-card-head{ display:flex; align-items:center; gap:10px; min-height:30px; }
 .db-card-icon{
@@ -120,9 +120,9 @@ body[data-theme="light"] .db-skel::after{ background:linear-gradient(90deg, tran
 .db-shell-skel-row{ display:grid; gap:var(--db-gap); }
 @media (min-width:720px){ .db-shell-skel-row{ grid-template-columns:1fr 1.4fr; } }
 
-/* account-outline-btn هندسه‌اش (پدینگ/گردی/بوردر) رو از قانونِ سراسریِ button{}
-   می‌گیره؛ این‌جا روی <a> (و روی <button>ِ داخلِ ریستِ dash-scope) همون هندسه
-   صریح داده می‌شه — همون ظاهرِ دکمه‌ی سایت، بدونِ بک‌گراند (outline می‌مونه). */
+/* account-outline-btn هندسه‌اش (پدینگ/گردی/بوردر) رو از قانون سراسری button{}
+   می‌گیره؛ این‌جا روی <a> (و روی <button> داخل ریست dash-scope) همون هندسه
+   صریح داده می‌شه — همون ظاهر دکمه‌ی سایت، بدون بک‌گراند (outline می‌مونه). */
 .db-page a.account-outline-btn, .db-page button.account-outline-btn{
   padding:8px 16px; border-radius:11px; border:1px solid var(--accent);
   font-size:12.5px; font-weight:600; color:var(--accent); line-height:1.6;
@@ -161,7 +161,7 @@ body[data-theme="light"] .db-skel::after{ background:linear-gradient(90deg, tran
   .db-page .db-hero{ grid-template-columns:1fr; grid-template-areas:"main" "orbit" "ribbon"; padding:18px 15px 16px; }
 }
 @media (min-width:1024px){ .db-page .db-hero{ padding:28px 30px 24px; gap:22px 34px; } }
-/* بوردرِ نورانیِ چرخان — فقط لبه (mask)، کند و آرام */
+/* بوردر نورانی چرخان — فقط لبه (mask)، کند و آرام */
 .db-page .db-hero::before{
   content:""; position:absolute; inset:-1px; border-radius:inherit; padding:1.2px; z-index:-1; pointer-events:none;
   background:conic-gradient(from var(--db-rot, 0deg), transparent 0 70%, rgba(var(--accent-rgb),.9) 82%, rgba(var(--secondary-rgb),.8) 90%, transparent 100%);
@@ -172,7 +172,7 @@ body[data-theme="light"] .db-skel::after{ background:linear-gradient(90deg, tran
 @property --db-rot{ syntax:"<angle>"; inherits:false; initial-value:0deg; }
 @keyframes db-rot{ to{ --db-rot:360deg; } }
 html[data-perf-weak] .db-hero::before{ animation:none; opacity:.35; }
-/* همان نورِ دنبال‌کننده‌ی موسِ کارت‌های بنتو (BentoCard) — فقط روی بوردر */
+/* همان نور دنبال‌کننده‌ی موس کارت‌های بنتو (BentoCard) — فقط روی بوردر */
 .db-page .db-hero::after{
   content:""; position:absolute; inset:-1px; border-radius:inherit; padding:1px; pointer-events:none; z-index:-1;
   background:radial-gradient(260px circle at var(--mx, 50%) var(--my, -40%), rgba(var(--accent-rgb),.75), transparent 60%);
@@ -249,9 +249,9 @@ body[data-theme="light"] .db-hero-phase:not(.is-night){ color:#D98A1E; }
 .db-orbit svg{ display:block; overflow:visible; }
 .db-orbit-arcs{ filter:url(#db-orbit-glow); }
 html[data-perf="low"] .db-orbit-arcs{ filter:none; }
-/* روی زمینه‌ی کرمیِ تمِ روز گلو هاله‌ی گِل‌آلود می‌سازه — فقط رنگِ تمیز */
+/* روی زمینه‌ی کرمی تم روز گلو هاله‌ی گل‌آلود می‌سازه — فقط رنگ تمیز */
 body[data-theme="light"] .db-orbit-arcs{ filter:none; }
-/* سرِ قوس: سایه‌ی نرم تا وقتی از روی ابتدای خودش رد می‌شه عمق داشته باشه */
+/* سر قوس: سایه‌ی نرم تا وقتی از روی ابتدای خودش رد می‌شه عمق داشته باشه */
 .db-arc-cap{ filter:drop-shadow(0 0 3px rgba(0,0,0,.45)); }
 body[data-theme="light"] .db-arc-cap{ filter:drop-shadow(0 0 2px rgba(80,50,20,.35)); }
 .db-orbit-center{ position:absolute; inset:0; display:flex; flex-direction:column; align-items:center; justify-content:center; }
@@ -265,7 +265,7 @@ body[data-theme="light"] .db-arc-cap{ filter:drop-shadow(0 0 2px rgba(80,50,20,.
 .db-orbit-label{ color:var(--muted); font-weight:600; white-space:nowrap; }
 .db-orbit-legend b{ font-weight:800; font-variant-numeric:tabular-nums; }
 
-/* نوارِ روز */
+/* نوار روز */
 .db-ribbon{ grid-area:ribbon; }
 .db-ribbon-head{ display:flex; align-items:center; justify-content:space-between; gap:8px; font-size:11px; color:var(--muted); margin-bottom:10px; }
 .db-ribbon-end{ display:inline-flex; align-items:center; gap:5px; font-weight:700; font-family:var(--font-latin), var(--font-vazir), sans-serif; }
@@ -278,10 +278,10 @@ body[data-theme="light"] .db-arc-cap{ filter:drop-shadow(0 0 2px rgba(80,50,20,.
 .db-ribbon-track{ position:relative; height:8px; border-radius:99px; background:rgba(var(--accent-rgb),.1); }
 .db-ribbon-fill{
   position:absolute; inset:0; border-radius:inherit;
-  /* زردِ آفتابِ صبح → نارنجیِ عصر → سرخیِ غروب → آبیِ گرگ‌ومیش → سرمه‌ایِ شب */
+  /* زرد آفتاب صبح → نارنجی عصر → سرخی غروب → آبی گرگ‌ومیش → سرمه‌ای شب */
   background:linear-gradient(270deg, #ffd35a 0%, #ff9f43 30%, #f0705a 52%, #3f6fb5 76%, #1c2d5e 100%);
 }
-/* گرادیان روی کلِ عرضِ ترک ثابته؛ clip-path (نه scaleX) فقط بخشِ طی‌شده رو نشون می‌ده */
+/* گرادیان روی کل عرض ترک ثابته؛ clip-path (نه scaleX) فقط بخش طی‌شده رو نشون می‌ده */
 .db-ribbon-dot{
   position:absolute; top:50%; width:10px; height:10px; margin-inline-start:-5px; margin-top:-5px; border-radius:50%;
   background:var(--box-bg); border:2px solid var(--muted2); z-index:1;
@@ -296,11 +296,11 @@ body[data-theme="light"] .db-arc-cap{ filter:drop-shadow(0 0 2px rgba(80,50,20,.
 @keyframes db-sun-pulse{ 50%{ box-shadow:0 0 0 7px color-mix(in srgb, var(--sun-c, #ffc94a) 12%, transparent), 0 0 26px 8px color-mix(in srgb, var(--sun-c, #ffc94a) 45%, transparent); } }
 
 /* ── کارهای سریع ───────────────────────────────────────────── */
-/* گرید، نه اسکرولِ افقی: روی موبایل کاشیِ چهارم نصفه بریده می‌شد و معلوم نبود
+/* گرید، نه اسکرول افقی: روی موبایل کاشی چهارم نصفه بریده می‌شد و معلوم نبود
    بقیه کجان. ۴ ستون تا تبلت، ۸ ستون روی دسکتاپ. */
 .db-quick{ display:grid; grid-template-columns:repeat(var(--qc, 4), minmax(0,1fr)); gap:8px; margin:var(--db-gap) 0; }
 @media (min-width:640px){ .db-quick{ gap:10px; } }
-/* تعدادِ ستون = تعدادِ کارهای سریعِ قابلِ‌نمایش (فلگِ خاموش یک خانه‌ی خالی نمی‌ذاره) */
+/* تعداد ستون = تعداد کارهای سریع قابل‌نمایش (فلگ خاموش یک خانه‌ی خالی نمی‌ذاره) */
 @media (min-width:1024px){ .db-quick{ grid-template-columns:repeat(var(--qn, 8), minmax(0,1fr)); } }
 .db-quick > div{ min-width:0; }
 .db-quick-item{
@@ -326,7 +326,7 @@ body[data-theme="light"] .db-arc-cap{ filter:drop-shadow(0 0 2px rgba(80,50,20,.
   .db-quick-item:hover .db-quick-icon{ transform:scale(1.1) rotate(-4deg); }
 }
 .db-quick-item:active{ transform:scale(.96); }
-/* کارهای «ثبت» دکمه‌ان نه لینک (پاپ‌آپ باز می‌کنن) — باید عینا هم‌شکلِ لینک‌ها بمونن */
+/* کارهای «ثبت» دکمه‌ان نه لینک (پاپ‌آپ باز می‌کنن) — باید عینا هم‌شکل لینک‌ها بمونن */
 .db-page button.db-quick-item{ width:100%; font:inherit; color:inherit; cursor:pointer; background:var(--box-bg); }
 
 /* ── بنتو ──────────────────────────────────────────────────── */
@@ -334,11 +334,11 @@ body[data-theme="light"] .db-arc-cap{ filter:drop-shadow(0 0 2px rgba(80,50,20,.
 @media (min-width:720px){ .db-bento{ grid-template-columns:repeat(2, minmax(0,1fr)); grid-template-areas:var(--areas-md); } }
 @media (min-width:1100px){ .db-bento{ grid-template-columns:minmax(0,1fr) minmax(0,1fr) minmax(0,1fr); grid-template-areas:var(--areas-lg); } }
 
-/* ── امروز (خطِ زمانی) ────────────────────────────────────── */
+/* ── امروز (خط زمانی) ────────────────────────────────────── */
 .db-tag{ font-size:10px; color:var(--muted); border:1px solid var(--box-line); border-radius:7px; padding:1px 6px; white-space:nowrap; max-width:90px; overflow:hidden; text-overflow:ellipsis; }
 .db-today-more{ display:inline-block; font-size:11.5px; font-weight:700; color:var(--accent) !important; padding:2px 6px; }
 
-/* خلاصه: عددِ بزرگ + نوارِ قطعه‌قطعه (هر قطعه یک برنامه) + «بعدی / الان» */
+/* خلاصه: عدد بزرگ + نوار قطعه‌قطعه (هر قطعه یک برنامه) + «بعدی / الان» */
 .db-tl-summary{ display:flex; align-items:center; gap:14px; }
 .db-tl-score{ display:flex; align-items:baseline; gap:4px; flex-shrink:0; }
 .db-tl-score b{ font-size:34px; font-weight:900; letter-spacing:-.03em; line-height:1; color:var(--ring-1a); }
@@ -359,7 +359,7 @@ body[data-theme="light"] .db-arc-cap{ filter:drop-shadow(0 0 2px rgba(80,50,20,.
 .db-tl-row{ display:grid; grid-template-columns:var(--tl-time) var(--tl-rail) minmax(0,1fr); gap:0 var(--tl-gap); align-items:start; }
 .db-tl-skel{ display:grid; grid-template-columns:46px 30px 1fr; gap:10px; align-items:center; padding-bottom:12px; }
 
-/* ریل: از زیرِ گره تا بالای گرهِ بعدی — گذشته پُر و گرادیانی، آینده خط‌چین */
+/* ریل: از زیر گره تا بالای گره بعدی — گذشته پر و گرادیانی، آینده خط‌چین */
 .db-tl-item::before{
   content:""; position:absolute; width:2px; border-radius:2px;
   inset-inline-start:calc(var(--tl-time) + var(--tl-gap) + var(--tl-rail) / 2 - 1px);
@@ -406,7 +406,7 @@ body[data-theme="light"] .db-page .db-tl-item.is-done .db-tl-node{ background:li
 .db-tl-spark i:nth-child(3n){ background:var(--ring-2b); }
 .db-tl-spark i:nth-child(3n+1){ background:var(--ring-3a); }
 
-/* کارت: فقط بوردر؛ «در جریان» بوردرِ نورانیِ گرادیانی می‌گیره */
+/* کارت: فقط بوردر؛ «در جریان» بوردر نورانی گرادیانی می‌گیره */
 .db-tl-card{
   position:relative; isolation:isolate; min-width:0;
   display:flex; flex-direction:column; gap:5px; padding:9px 12px 10px; border-radius:14px;
@@ -448,7 +448,7 @@ a.db-tl-name{ text-decoration:underline dotted color-mix(in srgb, var(--ring-1a)
 .db-tl-prog{ display:block; height:4px; border-radius:99px; overflow:hidden; background:color-mix(in srgb, var(--ring-1a) 14%, transparent); }
 .db-tl-prog i{ display:block; height:100%; border-radius:inherit; transform-origin:right; background:linear-gradient(270deg, var(--ring-1a), var(--ring-1b)); }
 
-/* نشانگرِ «الان» */
+/* نشانگر «الان» */
 .db-tl-now{ display:grid; grid-template-columns:var(--tl-time) var(--tl-rail) auto minmax(0,1fr); gap:0 var(--tl-gap); align-items:center; margin:2px 0 12px; }
 .db-tl-now-time{ justify-self:end; font-family:var(--font-latin), sans-serif; font-size:10.5px; font-weight:800; color:var(--pnl-loss); padding:1px 6px; border-radius:7px; border:1px solid rgba(var(--pnl-loss-rgb),.5); font-variant-numeric:tabular-nums; }
 .db-tl-now-dot{ justify-self:center; width:10px; height:10px; border-radius:50%; background:var(--pnl-loss); box-shadow:0 0 0 3px rgba(var(--pnl-loss-rgb),.22); animation:db-live 2s ease-in-out infinite; position:relative; z-index:1; }
@@ -487,8 +487,8 @@ a.db-tl-name{ text-decoration:underline dotted color-mix(in srgb, var(--ring-1a)
 @media (max-width:420px){ .db-heat-stats{ grid-template-columns:repeat(2, 1fr); } }
 .db-heat-scroll{ overflow-x:auto; scrollbar-width:none; direction:rtl; container-type:inline-size; }
 .db-heat-scroll::-webkit-scrollbar{ display:none; }
-/* ستون‌ها کلِ عرض رو پر می‌کنن (نه فاصله‌های خالیِ بزرگ بینِ مربع‌های کوچیک در
-   کارتِ عریض): خانه‌ها عرضِ ستون رو می‌گیرن و ارتفاعشون ثابته. */
+/* ستون‌ها کل عرض رو پر می‌کنن (نه فاصله‌های خالی بزرگ بین مربع‌های کوچیک در
+   کارت عریض): خانه‌ها عرض ستون رو می‌گیرن و ارتفاعشون ثابته. */
 .db-heat-grid{ --cell:16px; display:grid; grid-template-columns:18px repeat(var(--cols), minmax(12px, 1fr)); gap:0 5px; padding-top:16px; min-width:100%; }
 .db-heat-rows{ display:flex; flex-direction:column; gap:4px; margin-inline-end:4px; }
 .db-heat-rows span{ height:var(--cell,16px); font-size:9px; color:var(--muted); line-height:var(--cell,16px); }
@@ -542,11 +542,11 @@ a.db-tl-name{ text-decoration:underline dotted color-mix(in srgb, var(--ring-1a)
 .db-wdot.is-today i{ outline:2px solid var(--text); outline-offset:1px; }
 .db-wdot em{ font-style:normal; font-size:9px; color:var(--muted); }
 
-/* حرکت‌های امروزِ کارتِ تمرین — فقط نمایش (تیک در صفحه‌ی خودِ تمرین) */
+/* حرکت‌های امروز کارت تمرین — فقط نمایش (تیک در صفحه‌ی خود تمرین) */
 .db-ex-items{ list-style:none; display:grid; grid-template-columns:repeat(2, minmax(0,1fr)); gap:6px 12px; }
 .db-ex-items li{ display:flex; align-items:center; gap:7px; min-width:0; font-size:11.5px; font-weight:700; }
 .db-ex-items li.is-done .db-ex-name{ color:var(--muted); text-decoration:line-through; text-decoration-color:color-mix(in srgb, var(--ring-2a) 60%, transparent); }
-/* حرکتی که با «پایانِ تمرین» انجام‌نشده موند — ضربدرِ قرمز، هم‌معنی با صفحه‌ی بدنسازی */
+/* حرکتی که با «پایان تمرین» انجام‌نشده موند — ضربدر قرمز، هم‌معنی با صفحه‌ی بدنسازی */
 .db-ex-items li.is-missed .db-ex-name{ color:var(--muted); }
 .db-ex-name{ overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
 .db-ex-more{ grid-column:1 / -1; color:var(--muted); font-size:10.5px !important; }
@@ -617,7 +617,7 @@ a.db-tl-name{ text-decoration:underline dotted color-mix(in srgb, var(--ring-1a)
 .db-trow-sym{ flex:1; font-family:var(--font-latin), sans-serif; font-weight:800; font-size:12.5px; text-align:start; }
 .db-trow-pnl{ font-family:var(--font-latin), sans-serif; font-weight:800; font-size:12.5px; }
 
-/* ── بازار و اخبارِ اقتصادی ────────────────────────────────────────────── */
+/* ── بازار و اخبار اقتصادی ────────────────────────────────────────────── */
 .db-sessions{ display:flex; flex-direction:column; gap:8px; }
 .db-mkt-status{ display:flex; align-items:center; gap:8px; flex-wrap:wrap; font-size:12px; font-weight:800; color:var(--muted); margin-bottom:2px; }
 .db-mkt-status.is-open{ color:var(--text); }
@@ -691,7 +691,7 @@ a.db-tl-name{ text-decoration:underline dotted color-mix(in srgb, var(--ring-1a)
 .db-note-body span{ font-size:11px; color:var(--muted); overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
 .db-note-time{ font-size:10px; color:var(--muted); white-space:nowrap; }
 
-/* ── پالتِ فرمان ───────────────────────────────────────────── */
+/* ── پالت فرمان ───────────────────────────────────────────── */
 .db-cmd-root{
   position:fixed; inset:0; z-index:9000; display:flex; justify-content:center; align-items:flex-start;
   padding:calc(90px + env(safe-area-inset-top)) 14px 14px; background:rgba(0,0,0,.5);
@@ -732,7 +732,7 @@ body[data-theme="light"] .db-cmd{ box-shadow:0 30px 70px -20px rgba(80,50,20,.35
 
 /* ============================================================
    حرکت‌های آیکون (components/DashboardIcons.tsx)
-   hover/focusِ کارت یا کاشیِ والد → یک‌بار؛ .dbi-live → آرام و دائمی.
+   hover/focus کارت یا کاشی والد → یک‌بار؛ .dbi-live → آرام و دائمی.
    ============================================================ */
 .dbi *{ transform-box:fill-box; transform-origin:center; }
 .dbi .dbi-rays{ transform-origin:50% 50%; transform-box:view-box; }
@@ -817,10 +817,10 @@ body[data-theme="light"] .db-cmd{ box-shadow:0 30px 70px -20px rgba(80,50,20,.35
 }
 html[data-perf-weak] .db-page .dbi-live *, html[data-perf-weak] .db-ribbon-sun-core{ animation:none !important; }
 
-/* «تلاشِ دوباره» ِ تاریخچه‌ی سالِ نقشه‌ی ثبات — لینک‌مانند، بی‌بک‌گراند */
+/* «تلاش دوباره»  تاریخچه‌ی سال نقشه‌ی ثبات — لینک‌مانند، بی‌بک‌گراند */
 .db-page .db-heat-retry{ color:var(--ring-1a); font-weight:800; text-decoration:underline; text-underline-offset:3px; }
 
-/* ── اشتراکِ موفقیت (components/DashboardShare.tsx) — پورتال روی body ── */
+/* ── اشتراک موفقیت (components/DashboardShare.tsx) — پورتال روی body ── */
 .db-share-root{
   position:fixed; inset:0; z-index:9000; display:flex; justify-content:center; align-items:center;
   padding:calc(20px + env(safe-area-inset-top)) 20px calc(20px + env(safe-area-inset-bottom)); background:rgba(0,0,0,.55);
@@ -861,14 +861,14 @@ body[data-theme="light"] .db-share-root{ background:rgba(60,40,20,.28); }
 @media (max-width:760px){
   .db-share-root{ align-items:flex-end; padding:0; }
   .db-share{ border-radius:24px 24px 0 0; max-height:94vh; }
-  /* ستونِ فلکس (نه گرید): عرضِ درصدیِ پیش‌نمایش با aspect-ratio داخلِ ترکِ گرید
+  /* ستون فلکس (نه گرید): عرض درصدی پیش‌نمایش با aspect-ratio داخل ترک گرید
      دوری حل می‌شد و ردیف کوتاه‌تر از تصویر می‌موند (روی کنترل‌ها می‌افتاد) */
   .db-share-body{ display:flex; flex-direction:column; align-items:stretch; gap:20px; padding:16px 16px calc(16px + env(safe-area-inset-bottom)); }
   .db-share-preview{ flex-shrink:0; align-self:center; width:min(100%, 340px); }
 }
 
 
-/* برنامه‌ی لیستی در «برنامه‌های امروز» — آیتم‌ها با همون تیکِ داشبورد (TickButton) */
+/* برنامه‌ی لیستی در «برنامه‌های امروز» — آیتم‌ها با همون تیک داشبورد (TickButton) */
 .db-page button.db-tl-name-btn{ background:transparent; border:none; padding:0; font:inherit; color:inherit; cursor:pointer; text-align:start; }
 .db-tl-items{ list-style:none; margin:8px 0 0; padding:0; overflow:hidden; display:flex; flex-direction:column; gap:6px; }
 .db-tl-items li{ display:flex; align-items:center; gap:9px; font-size:12px; font-weight:600; }

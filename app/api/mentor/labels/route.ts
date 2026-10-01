@@ -7,7 +7,7 @@ import { LABELS_MAX, validateLabelName } from "@/lib/mentorAvailability";
 import { readLabels } from "@/lib/mentorManageServer";
 import { faNum } from "@/lib/jalali";
 
-// برچسب‌های خصوصیِ منتور برای دسته‌بندیِ شاگردها — فقط خودِ منتور می‌بیند.
+// برچسب‌های خصوصی منتور برای دسته‌بندی شاگردها — فقط خود منتور می‌بیند.
 
 async function myProfileId(userId: string): Promise<string | null> {
   const p = await prisma.mentorProfile.findUnique({ where: { userId }, select: { id: true } });

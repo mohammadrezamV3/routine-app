@@ -1,18 +1,18 @@
 "use client";
 
-// نگه‌داریِ کلیدها روی دستگاه — IndexedDB، با CryptoKeyِ *غیرقابل‌استخراج*.
-// CryptoKey قابلِ structured-clone است، پس خودِ شیء (نه بایت‌هایش) ذخیره می‌شود و
+// نگه‌داری کلیدها روی دستگاه — IndexedDB، با CryptoKey *غیرقابل‌استخراج*.
+// CryptoKey قابل structured-clone است، پس خود شیء (نه بایت‌هایش) ذخیره می‌شود و
 // هیچ اسکریپتی (حتی XSS) نمی‌تواند بایت‌های کلید را بیرون بکشد؛ فقط تا وقتی
 // صفحه باز است می‌تواند از آن استفاده کند (docs/mentor-e2ee.md).
 //
 // انبارها (نسخه‌ی ۲):
-//   keys    — همه‌ی کلیدهای خصوصیِ این دستگاه، به‌ازای (کاربر، نسخه): SYNCEDِ جاری،
-//             کلیدِ این دستگاه (DEVICE) و نسخه‌های بازنشسته (برای خواندنِ پیام‌های قدیمی)
-//   kek     — کلیدِ بسته‌بندیِ مشتق از رمزِ عبور (غیرقابل‌استخراج)؛ فقط تا خروج
-//   pending — پشتیبانِ تازه‌ای که پس از تغییرِ رمز هنوز به سرور نرسیده (خودش رمزشده است)
-//   peers   — اثرِ انگشتِ کلیدهای طرفِ مقابل (TOFU)
+//   keys    — همه‌ی کلیدهای خصوصی این دستگاه، به‌ازای (کاربر، نسخه): SYNCED جاری،
+//             کلید این دستگاه (DEVICE) و نسخه‌های بازنشسته (برای خواندن پیام‌های قدیمی)
+//   kek     — کلید بسته‌بندی مشتق از رمز عبور (غیرقابل‌استخراج)؛ فقط تا خروج
+//   pending — پشتیبان تازه‌ای که پس از تغییر رمز هنوز به سرور نرسیده (خودش رمزشده است)
+//   peers   — اثر انگشت کلیدهای طرف مقابل (TOFU)
 //
-// نبودِ IndexedDB (برخی حالت‌های خصوصی) → فقط حافظه‌ی همین تب.
+// نبود IndexedDB (برخی حالت‌های خصوصی) → فقط حافظه‌ی همین تب.
 
 const DB_NAME = "arion-e2ee";
 const DB_VERSION = 2;
@@ -30,7 +30,7 @@ export type LocalKey = {
   kind: LocalKeyKind;
   publicKey: string;
   privateKey: CryptoKey;
-  /** روی سرور بازنشسته شده؛ فقط برای خواندنِ پیام‌های قدیمی نگه داشته می‌شود */
+  /** روی سرور بازنشسته شده؛ فقط برای خواندن پیام‌های قدیمی نگه داشته می‌شود */
   retired?: boolean;
   savedAt: number;
 };
@@ -61,7 +61,7 @@ function openDb(): Promise<IDBDatabase | null> {
         if (!db.objectStoreNames.contains(KEK)) db.createObjectStore(KEK, { keyPath: "userId" });
         if (!db.objectStoreNames.contains(PENDING)) db.createObjectStore(PENDING, { keyPath: "userId" });
         if (!db.objectStoreNames.contains(PEERS)) db.createObjectStore(PEERS, { keyPath: "userId" });
-        // نسخه‌ی ۱: یک کلید به‌ازای هر کاربر در انبارِ identity → کلیدِ SYNCED در keys
+        // نسخه‌ی ۱: یک کلید به‌ازای هر کاربر در انبار identity → کلید SYNCED در keys
         if (db.objectStoreNames.contains(LEGACY_IDENTITY)) {
           const old = t.objectStore(LEGACY_IDENTITY).getAll();
           old.onsuccess = () => {
@@ -174,7 +174,7 @@ export async function deleteKek(userId: string): Promise<void> {
   }
 }
 
-// ───────────────────────── پشتیبانِ در انتظار ─────────────────────────
+// ───────────────────────── پشتیبان در انتظار ─────────────────────────
 
 export async function getPending(userId: string): Promise<PendingRewrap | null> {
   try {
@@ -207,17 +207,17 @@ export async function deletePending(userId: string): Promise<void> {
 // ───────────────────────── خروج ─────────────────────────
 
 const wipeListeners = new Set<() => void>();
-/** client.ts وضعیتِ در حافظه را با خروج پاک می‌کند */
+/** client.ts وضعیت در حافظه را با خروج پاک می‌کند */
 export function onWipe(fn: () => void): () => void {
   wipeListeners.add(fn);
   return () => wipeListeners.delete(fn);
 }
 
 /**
- * خروج از حساب: هرچه با ورودِ دوباره *بی‌صدا* برمی‌گردد پاک می‌شود — KEK، کلیدِ
- * SYNCEDِ جاری (با رمزِ عبور از پشتیبان باز می‌شود) و وضعیتِ در حافظه. کلیدی که
- * جای دیگری ندارد (کلیدِ DEVICEِ این دستگاه، نسخه‌های بازنشسته) می‌ماند، وگرنه
- * سابقه‌ی گفت‌وگو روی همین دستگاه با ورودِ بعدی برای همیشه از دست می‌رفت.
+ * خروج از حساب: هرچه با ورود دوباره *بی‌صدا* برمی‌گردد پاک می‌شود — KEK، کلید
+ * SYNCED جاری (با رمز عبور از پشتیبان باز می‌شود) و وضعیت در حافظه. کلیدی که
+ * جای دیگری ندارد (کلید DEVICE این دستگاه، نسخه‌های بازنشسته) می‌ماند، وگرنه
+ * سابقه‌ی گفت‌وگو روی همین دستگاه با ورود بعدی برای همیشه از دست می‌رفت.
  * «حذف از این دستگاه» در تنظیمات همه را پاک می‌کند (wipeEverything).
  */
 export async function wipeOnLogout(): Promise<void> {
@@ -238,7 +238,7 @@ export async function wipeOnLogout(): Promise<void> {
   }
 }
 
-/** پاک‌کردنِ همه‌چیزِ یک کاربر روی این مرورگر (تنظیمات → «حذف از این دستگاه») */
+/** پاک‌کردن همه‌چیز یک کاربر روی این مرورگر (تنظیمات → «حذف از این دستگاه») */
 export async function wipeUser(userId: string): Promise<void> {
   memory.kek.delete(userId);
   memory.pending.delete(userId);
@@ -255,10 +255,10 @@ export async function wipeUser(userId: string): Promise<void> {
   }
 }
 
-/** سازگاری با فراخوان‌های قدیمی (NavDrawer/AdminShell): همان سیاستِ خروج */
+/** سازگاری با فراخوان‌های قدیمی (NavDrawer/AdminShell): همان سیاست خروج */
 export const clearAllLocalKeys = wipeOnLogout;
 
-// ───────────────────────── طرفِ مقابل (TOFU) ─────────────────────────
+// ───────────────────────── طرف مقابل (TOFU) ─────────────────────────
 
 export async function getPeer(userId: string): Promise<PeerRecord | null> {
   try {

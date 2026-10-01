@@ -7,8 +7,8 @@ import { adminErrorResponse, loadTarget } from "@/lib/adminUsers";
 
 // POST /api/admin/chat-moderation  { userId, action, note? }
 //
-// اعمالِ یکی از سه سطحِ تعدیلِ چت (یا رفعِ محدودیت) روی هر کاربری با هر
-// شناسه‌ای — طبقِ درخواستِ صریح، از پنلِ کاربر (`/admin/users/[id]`) صدا
+// اعمال یکی از سه سطح تعدیل چت (یا رفع محدودیت) روی هر کاربری با هر
+// شناسه‌ای — طبق درخواست صریح، از پنل کاربر (`/admin/users/[id]`) صدا
 // زده می‌شود، پس شناسه از قبل معلوم و معتبر است.
 export async function POST(req: NextRequest) {
   const guard = await requireAdmin("users.edit");

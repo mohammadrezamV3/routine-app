@@ -14,9 +14,9 @@ const ic = (Icon: typeof LogOut, size: number) => <Icon size={size} strokeWidth=
 type Dialog = "pause" | "resume" | "end" | null;
 
 /**
- * کنترل‌های رابطه از سمتِ منتور، پایینِ صفحه‌ی شاگرد:
- * توقفِ موقت (با دلیلِ اختیاری که به شاگرد نشان داده می‌شود)، ادامه، و
- * پایانِ رابطه با دلیل. پایان برنامه‌های در جریان را لغو می‌کند.
+ * کنترل‌های رابطه از سمت منتور، پایین صفحه‌ی شاگرد:
+ * توقف موقت (با دلیل اختیاری که به شاگرد نشان داده می‌شود)، ادامه، و
+ * پایان رابطه با دلیل. پایان برنامه‌های در جریان را لغو می‌کند.
  */
 export function MentorStudentRelationControls({
   studentId, mentorshipId, name, pausedAt, pauseReason, onPaused, onEnded,
@@ -86,7 +86,7 @@ export function MentorStudentRelationControls({
       {dialog && (
         <MentorConfirmDialog
           message={
-            dialog === "pause" ? `همکاری با ${name} موقتاً متوقف شود؟`
+            dialog === "pause" ? `همکاری با ${name} موقتا متوقف شود؟`
               : dialog === "resume" ? `همکاری با ${name} ادامه پیدا کند؟`
               : `رابطه با ${name} پایان یابد؟`
           }
@@ -110,7 +110,7 @@ export function MentorStudentRelationControls({
               <textarea
                 id="mrc-reason" className="wsearch-newform-name trade-glass-field" rows={2}
                 maxLength={(dialog === "end" ? END_REASON_MAX : PAUSE_REASON_MAX) + 20} value={reason}
-                placeholder={dialog === "end" ? "مثلاً «هدف دوره به نتیجه رسید»" : "مثلاً «تا پایان امتحانات برنامه‌ی تازه نمی‌فرستم»"}
+                placeholder={dialog === "end" ? "مثلا «هدف دوره به نتیجه رسید»" : "مثلا «تا پایان امتحانات برنامه‌ی تازه نمی‌فرستم»"}
                 onChange={(e) => { setReason(e.target.value); setError(null); }}
               />
             </MentorField>

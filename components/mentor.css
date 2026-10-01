@@ -5,14 +5,14 @@
    (trade-surface، acc-block، account-card، trade-primary-btn،
    account-outline-btn، trade-danger-btn، trade-title-add-btn، rp-empty،
    wsearch-newform-name، SegmentedTabs، LoadingBlock). این فایل فقط
-   فاصله‌گذاری، ردیف، چیپ وضعیت، سرِ بخش، فرم و گروه دکمه را اضافه می‌کند.
+   فاصله‌گذاری، ردیف، چیپ وضعیت، سر بخش، فرم و گروه دکمه را اضافه می‌کند.
 
    قانون‌ها (CLAUDE.md و brief):
-   • به هیچ عنصری بک‌گراند اضافه نمی‌شود. هر <button> تازه صریحاً
+   • به هیچ عنصری بک‌گراند اضافه نمی‌شود. هر <button> تازه صریحا
      background:none می‌گیرد تا ریست سراسری button{} رویش ننشیند.
-   • حرکت (دورِ ۳): فقط از سیستمِ MentorMotion.tsx و بلوکِ «حرکت» انتهای
-     همین فایل — آرام، 160 تا 320ms، opacity + جابه‌جاییِ حداکثر 8px، فشارِ
-     دکمه scale(.97). بدونِ بالا آمدن در هاور، بدونِ pulse.
+   • حرکت (دور ۳): فقط از سیستم MentorMotion.tsx و بلوک «حرکت» انتهای
+     همین فایل — آرام، 160 تا 320ms، opacity + جابه‌جایی حداکثر 8px، فشار
+     دکمه scale(.97). بدون بالا آمدن در هاور، بدون pulse.
    • مقیاس فاصله: 4 / 8 / 12 / 16 / 24 / 32 (متغیرهای --m-1..--m-6).
    ============================================================ */
 
@@ -33,8 +33,8 @@ body[data-theme="light"]{ --m-warn:#9A6414; }
 .mentor-page .trade-head-row{ margin:0; }
 .mentor-head-custom{ display:flex; align-items:center; gap:var(--m-3); min-width:0; }
 
-/* کلاس‌های مشترک سایت در هاور جابه‌جا نمی‌شوند (فقط رنگ)؛ فیدبکِ فشار در
-   بلوکِ «حرکت» انتهای فایل تعریف شده است */
+/* کلاس‌های مشترک سایت در هاور جابه‌جا نمی‌شوند (فقط رنگ)؛ فیدبک فشار در
+   بلوک «حرکت» انتهای فایل تعریف شده است */
 .mentor-page .trade-back-link svg,
 .mentor-page .rp-card-arrow,
 .mentor-page .account-row2-chevron{ transition:color .15s ease; }
@@ -51,9 +51,9 @@ body[data-theme="light"]{ --m-warn:#9A6414; }
 
 /* ── بخش (MentorSection) ───────────────────────────────────────
    همان acc-block سایت: عنوان داخل قاب. .mentor-section-head فقط عنوان و
-   اکشنِ بخش را در یک ردیف می‌گذارد. */
+   اکشن بخش را در یک ردیف می‌گذارد. */
 .mentor-page .acc-block{ margin-bottom:var(--m-4); }
-/* ریستِ سراسریِ section{padding:34px 0; border-top} نباید روی بخش‌ها بنشیند:
+/* ریست سراسری section{padding:34px 0; border-top} نباید روی بخش‌ها بنشیند:
    فاصله فقط همان margin-bottom بالاست و قاب از acc-block-body می‌آید */
 section.mentor-section{ padding:0; border-top:none; }
 .mentor-page .acc-block-body{ padding:var(--m-4); }
@@ -68,7 +68,7 @@ section.mentor-section{ padding:0; border-top:none; }
 .mentor-count{ font-size:11px; font-weight:700; color:var(--muted); }
 .mentor-section-action{ flex-shrink:0; }
 
-/* عنوان بخش بیرون از قاب (بالای گریدِ کارت‌ها) */
+/* عنوان بخش بیرون از قاب (بالای گرید کارت‌ها) */
 .mentor-section-title{
   display:flex; align-items:center; gap:var(--m-2); margin:var(--m-5) 0 var(--m-3);
   font-size:13.5px; font-weight:800; color:var(--text);
@@ -167,8 +167,8 @@ a.mentor-row:focus-visible{ outline:2px solid var(--accent); outline-offset:2px;
 
 /* ── دکمه‌ها ──────────────────────────────────────────────────
    .mentor-btn کنار کلاس سایت می‌نشیند و فقط قاب را یکسان می‌کند
-   (پدینگ، ارتفاع، فاصله‌ی آیکون تا متن) — روی <a> و <button>. گردیِ گوشه و
-   بک‌گراند عمداً از خودِ کلاسِ سایت می‌آید تا عیناً مثلِ بقیه‌ی دکمه‌های سایت باشد. */
+   (پدینگ، ارتفاع، فاصله‌ی آیکون تا متن) — روی <a> و <button>. گردی گوشه و
+   بک‌گراند عمدا از خود کلاس سایت می‌آید تا عینا مثل بقیه‌ی دکمه‌های سایت باشد. */
 .mentor-btn{
   display:inline-flex; align-items:center; justify-content:center; gap:6px;
   min-height:38px; padding:8px 16px;
@@ -179,15 +179,15 @@ a.mentor-row:focus-visible{ outline:2px solid var(--accent); outline-offset:2px;
 .mentor-btn.is-sm{ min-height:32px; padding:5px 12px; font-size:12px; gap:5px; }
 .mentor-btn.is-icon{ min-width:32px; padding:5px; }
 .mentor-btn svg{ flex-shrink:0; }
-/* <a> ریستِ سراسریِ button{} را نمی‌گیرد؛ همان گردیِ دکمه‌های سایت را صریح می‌دهیم */
+/* <a> ریست سراسری button{} را نمی‌گیرد؛ همان گردی دکمه‌های سایت را صریح می‌دهیم */
 a.mentor-btn{ border-radius:11px; }
 a.mentor-btn.trade-primary-btn{ border-radius:13px; }
 .mentor-btn:focus-visible,
 .mentor-page .trade-title-add-btn:focus-visible,
 .mentor-link:focus-visible{ outline:2px solid var(--accent); outline-offset:2px; }
-/* <a> با کلاس دکمه، بوردرِ پیش‌فرضِ button را ندارد */
+/* <a> با کلاس دکمه، بوردر پیش‌فرض button را ندارد */
 a.mentor-btn.account-outline-btn.muted{ border-color:var(--line); }
-/* ریستِ سراسری button{} نباید رنگ/بک‌گراند بدهد */
+/* ریست سراسری button{} نباید رنگ/بک‌گراند بدهد */
 .mentor-btn.account-outline-btn,
 .mentor-btn.trade-danger-btn{ background:none; box-shadow:none; }
 body[data-theme="light"] .mentor-btn.account-outline-btn, body:not([data-theme="light"]) .mentor-btn.account-outline-btn,
@@ -197,13 +197,13 @@ a.mentor-btn.trade-danger-btn{ border-color:#E05252; color:#E05252; }
 /* گروه دکمه: فاصله 8، پیچش در موبایل */
 .mentor-btn-group{ display:flex; flex-wrap:wrap; align-items:center; gap:var(--m-2); }
 .mentor-btn-group.is-end{ justify-content:flex-end; }
-/* در موبایل دکمه‌های گروهِ پایانی ردیف را پر می‌کنند تا دکمه‌ی تنهای خط دوم
-   وسطِ هوا نماند */
+/* در موبایل دکمه‌های گروه پایانی ردیف را پر می‌کنند تا دکمه‌ی تنهای خط دوم
+   وسط هوا نماند */
 @media (max-width:480px){
   .mentor-btn-group.is-end > *, .mentor-hero-actions > *{ flex:1 1 auto; }
 }
 
-/* اکشن‌های پایانِ فرم: ثانویه اول، اصلی آخر (سمت چپ در RTL) */
+/* اکشن‌های پایان فرم: ثانویه اول، اصلی آخر (سمت چپ در RTL) */
 .mentor-form-actions{
   display:flex; flex-wrap:wrap; align-items:center; justify-content:flex-end; gap:var(--m-2);
   margin-top:var(--m-4);
@@ -225,7 +225,7 @@ a.mentor-btn.trade-danger-btn{ border-color:#E05252; color:#E05252; }
 }
 @media (hover:hover){ .mentor-link:hover{ opacity:.8; } }
 
-/* دکمه‌ی متنی بی‌قاب (مثلاً «بیشتر») */
+/* دکمه‌ی متنی بی‌قاب (مثلا «بیشتر») */
 .mentor-text-btn{
   display:inline-flex; align-items:center; gap:var(--m-1); padding:4px 2px;
   font-family:inherit; font-size:12px; font-weight:700; color:var(--accent); cursor:pointer;
@@ -245,7 +245,7 @@ body[data-theme="light"] .mentor-text-btn, body:not([data-theme="light"]) .mento
 .mentor-field-row{ display:grid; grid-template-columns:1fr; gap:var(--m-4) var(--m-3); }
 @media (min-width:520px){ .mentor-field-row{ grid-template-columns:1fr 1fr; } }
 .mentor-field .wsearch-newform-name{ width:100%; }
-/* تب‌های انتخابی داخلِ فیلد: فاصله‌ی برچسب همان 6px فیلدهاست، نه margin خودِ auth-tabs */
+/* تب‌های انتخابی داخل فیلد: فاصله‌ی برچسب همان 6px فیلدهاست، نه margin خود auth-tabs */
 .mentor-field > .auth-tabs{ margin-top:0; margin-bottom:0; }
 
 /* چک‌باکس/سوییچ در یک ردیف */
@@ -400,7 +400,7 @@ body[data-theme="light"] .mentor-star-input button, body:not([data-theme="light"
 @media (hover:hover){ .mentor-msg-actions button:hover{ opacity:1; text-decoration:underline; background:none; } }
 body[data-theme="light"] .mentor-msg-actions button, body:not([data-theme="light"]) .mentor-msg-actions button{ background:none; box-shadow:none; }
 .mentor-chat-older{ align-self:center; }
-/* گزارش پیام: فقط آیکون، هم‌خطِ ساعت (نه یک ردیف جدا زیر هر پیام) */
+/* گزارش پیام: فقط آیکون، هم‌خط ساعت (نه یک ردیف جدا زیر هر پیام) */
 .mentor-msg-report{
   display:inline-flex; align-items:center; margin-inline-start:auto; padding:2px; border:none; border-radius:6px;
   color:inherit; cursor:pointer; opacity:.7;
@@ -443,7 +443,7 @@ body[data-theme="light"] .mentor-msg-report, body:not([data-theme="light"]) .men
 .mentor-log-status .day-pill{ font-size:11.5px; padding:8px 0; }
 .mentor-log-status .day-pill.on.is-partial{ color:var(--m-warn); border-color:var(--m-warn); box-shadow:0 0 0 1px var(--m-warn); }
 .mentor-log-status .day-pill.on.is-missed{ color:var(--m-danger); border-color:var(--m-danger); box-shadow:0 0 0 1px var(--m-danger); }
-/* هاله و ته‌رنگِ سبزِ day-pill.on روی «نیمه‌کاره/انجام نشد» رنگِ همان وضعیت را می‌گیرد */
+/* هاله و ته‌رنگ سبز day-pill.on روی «نیمه‌کاره/انجام نشد» رنگ همان وضعیت را می‌گیرد */
 .mentor-log-status .day-pill.on.is-partial{ background:color-mix(in srgb, var(--m-warn) 12%, transparent); }
 .mentor-log-status .day-pill.on.is-missed{ background:color-mix(in srgb, var(--m-danger) 12%, transparent); }
 .mentor-log-status .day-pill.on.is-partial::after,
@@ -493,8 +493,8 @@ body[data-theme="light"] .mentor-msg-report, body:not([data-theme="light"]) .men
 .mentor-dialog-msg{ margin:0; font-size:13px; font-weight:700; line-height:1.9; color:var(--text); text-align:center; }
 .mentor-dialog-hint{ margin:6px 0 0; font-size:12px; line-height:1.9; color:var(--muted); text-align:center; }
 
-/* ── Agent A: پیشرفتِ خودکار (MentorProgressWeek) ─────────────────
-   جدولِ فقط‌خواندنیِ هفته: وضعیت فقط با رنگِ آیکون، بدونِ بک‌گراند. */
+/* ── Agent A: پیشرفت خودکار (MentorProgressWeek) ─────────────────
+   جدول فقط‌خواندنی هفته: وضعیت فقط با رنگ آیکون، بدون بک‌گراند. */
 .mentor-pg-nav{ display:flex; align-items:center; justify-content:space-between; gap:var(--m-2); margin-bottom:var(--m-2); }
 .mentor-pg-range{ display:inline-flex; align-items:center; gap:var(--m-2); font-size:12px; font-weight:700; color:var(--text); }
 .mentor-pg-today{ display:flex; justify-content:center; margin-bottom:var(--m-2); }
@@ -521,26 +521,26 @@ body[data-theme="light"] .mentor-msg-report, body:not([data-theme="light"]) .men
 .mentor-pg td.is-upcoming, .mentor-pg td.is-untracked{ color:var(--muted); opacity:.7; }
 .mentor-pg-none{ color:var(--muted); opacity:.5; }
 
-/* ── رتبه‌بندیِ شایستگی (agent E — /mentors) ─────────────────────
-   فقط یک خطِ توضیحِ کوتاه زیرِ عنوانِ بخش؛ بدونِ سطح/پس‌زمینه. */
+/* ── رتبه‌بندی شایستگی (agent E — /mentors) ─────────────────────
+   فقط یک خط توضیح کوتاه زیر عنوان بخش؛ بدون سطح/پس‌زمینه. */
 .mentor-section-title + .mentor-section-note{ margin:calc(-1 * var(--m-2)) 0 var(--m-3); }
 
 /* ── ابزارهای منتور (agent C): قالب، پاسخ آماده، گزارش هفتگی ─────────── */
-/* پیش‌نمایشِ یک‌خطیِ متنِ پاسخ در ردیف */
+/* پیش‌نمایش یک‌خطی متن پاسخ در ردیف */
 .mentor-reply-preview{ display:block; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; max-width:100%; }
 .mentor-row-sub > .mentor-reply-preview{ display:block; }
-/* انتخابگرِ پاسخِ آماده بالای کادرِ پیام: بی‌قاب و بی‌بک‌گراند */
+/* انتخابگر پاسخ آماده بالای کادر پیام: بی‌قاب و بی‌بک‌گراند */
 .mentor-replies-picker{ display:flex; flex-direction:column; align-items:flex-start; gap:var(--m-2); margin-top:var(--m-2); }
 .mentor-replies-picker .mentor-btn-group{ width:100%; }
-/* جزئیاتِ زیرِ ردیفِ گزارش */
+/* جزئیات زیر ردیف گزارش */
 .mentor-report-below{ display:flex; flex-direction:column; gap:var(--m-2); }
 .mentor-report-line{ margin:0; font-size:11.5px; line-height:1.9; color:var(--muted); word-break:break-word; }
 .mentor-report-line b{ color:var(--text); font-weight:700; }
 
 /* ============================================================
-   دسترس‌پذیری و مدیریتِ شاگرد (agent B — round 2)
-   پذیرش/ظرفیت/عدم حضور، سؤال‌های پذیرش، برچسب، یادداشتِ خصوصی،
-   توقف/پایانِ رابطه. بدونِ بک‌گراند و بدونِ حرکت.
+   دسترس‌پذیری و مدیریت شاگرد (agent B — round 2)
+   پذیرش/ظرفیت/عدم حضور، سؤال‌های پذیرش، برچسب، یادداشت خصوصی،
+   توقف/پایان رابطه. بدون بک‌گراند و بدون حرکت.
    ============================================================ */
 
 /* جواب‌های پذیرش: سؤال کم‌رنگ، جواب زیرش */
@@ -550,22 +550,22 @@ body[data-theme="light"] .mentor-msg-report, body:not([data-theme="light"]) .men
 .mentor-intake-item dd{ margin:0; font-size:12px; color:var(--text); line-height:1.9; white-space:pre-wrap; word-break:break-word; }
 .mentor-row.is-stacked > .mentor-intake{ padding-inline-start:10px; border-inline-start:2px solid var(--surface-line); }
 
-/* ویرایشِ سؤال‌ها و افزودنِ برچسب: فیلد + دکمه در یک ردیف */
+/* ویرایش سؤال‌ها و افزودن برچسب: فیلد + دکمه در یک ردیف */
 .mentor-intake-edit, .mentor-inline-add{ display:flex; align-items:center; gap:var(--m-2); }
 .mentor-intake-edit > input, .mentor-inline-add > input{ flex:1; min-width:0; }
 .mentor-list .mentor-row > input.wsearch-newform-name{ flex:1; min-width:0; }
 
-/* فهرستِ شاگردها: تبِ مرتب‌سازی بدونِ حاشیه‌ی خودِ auth-tabs */
+/* فهرست شاگردها: تب مرتب‌سازی بدون حاشیه‌ی خود auth-tabs */
 .mentor-sort-tabs > .auth-tabs{ margin:0; }
 
 /* یادداشت‌های خصوصی */
 .mentor-notes{ margin-top:var(--m-2); }
 .mentor-note-actions{ display:inline-flex; align-items:center; gap:var(--m-1); margin-inline-start:auto; }
 
-/* کنترل‌های رابطه: وضعیتِ توقف بالای دکمه‌ها */
+/* کنترل‌های رابطه: وضعیت توقف بالای دکمه‌ها */
 .mentor-pause-state{ flex:1 1 100%; display:flex; flex-wrap:wrap; align-items:center; gap:var(--m-2); }
 
-/* خط‌های وضعیت (توقف، عدم حضور، دلیلِ پایان، پیام خوش‌آمد، زمانِ پاسخ) */
+/* خط‌های وضعیت (توقف، عدم حضور، دلیل پایان، پیام خوش‌آمد، زمان پاسخ) */
 .mentor-state-notes{ display:flex; flex-direction:column; gap:var(--m-2); margin-bottom:var(--m-4); }
 .mentor-state-note{
   display:flex; flex-wrap:wrap; align-items:center; gap:var(--m-1) var(--m-2); margin:0;
@@ -574,32 +574,32 @@ body[data-theme="light"] .mentor-msg-report, body:not([data-theme="light"]) .men
 .mentor-state-note.is-block{ flex-direction:column; align-items:stretch; }
 .mentor-state-label{ display:inline-flex; align-items:center; gap:var(--m-1); font-size:11.5px; font-weight:700; color:var(--muted); }
 
-/* فیلدِ داخلِ پاپ‌آپِ تایید (دلیلِ توقف/پایان) */
+/* فیلد داخل پاپ‌آپ تایید (دلیل توقف/پایان) */
 .mentor-modal .mentor-field{ margin-top:var(--m-3); text-align:start; }
 
 /* ============================================================
-   رمزگذاریِ سرتاسریِ گفت‌وگو و ارسالِ گروهی (agent D — docs/mentor-e2ee.md)
-   بدونِ بک‌گراند، بدونِ حرکت؛ فقط متن، رنگ و خطِ مو.
+   رمزگذاری سرتاسری گفت‌وگو و ارسال گروهی (agent D — docs/mentor-e2ee.md)
+   بدون بک‌گراند، بدون حرکت؛ فقط متن، رنگ و خط مو.
    ============================================================ */
 
-/* خطِ آرامِ قفل بالای گفت‌وگو (و هشدارِ تغییرِ کلید) */
+/* خط آرام قفل بالای گفت‌وگو (و هشدار تغییر کلید) */
 .mentor-e2ee-line{
   display:flex; align-items:flex-start; gap:var(--m-2); margin:0 0 var(--m-2);
   font-size:11.5px; line-height:1.9; color:var(--muted);
 }
-/* آیکون و دکمه کنارِ خطِ اولِ متن می‌مانند؛ در موبایل فقط متن می‌شکند */
+/* آیکون و دکمه کنار خط اول متن می‌مانند؛ در موبایل فقط متن می‌شکند */
 .mentor-e2ee-line > svg{ flex-shrink:0; margin-top:4px; }
 .mentor-e2ee-line > span{ flex:1 1 0; min-width:0; }
 .mentor-e2ee-line > .mentor-text-btn{ flex-shrink:0; }
 .mentor-e2ee-line .mentor-text-btn{ padding:0 2px; font-size:11.5px; }
 .mentor-e2ee-line.is-warn{ color:var(--m-warn); }
 
-/* پیامی که خوانده نمی‌شود (کلیدِ قبلی/تاییدنشده) */
+/* پیامی که خوانده نمی‌شود (کلید قبلی/تاییدنشده) */
 .mentor-msg-unreadable{ font-size:12px; font-style:italic; opacity:.75; }
-/* پیامِ خوش‌آمد از تنظیماتِ منتور — همان حبابِ پیام، با خطِ نقطه‌چین به‌جای پر */
+/* پیام خوش‌آمد از تنظیمات منتور — همان حباب پیام، با خط نقطه‌چین به‌جای پر */
 .support-msg.mentor-msg-welcome{ border-style:dashed; }
 
-/* پاپ‌آپِ جزئیاتِ رمزگذاری: بخش‌ها با خطِ مو جدا می‌شوند */
+/* پاپ‌آپ جزئیات رمزگذاری: بخش‌ها با خط مو جدا می‌شوند */
 .mentor-e2ee-block{ padding-top:var(--m-3); border-top:1px solid var(--surface-line); }
 .mentor-e2ee-block:first-child{ padding-top:0; border-top:none; }
 .mentor-e2ee-block .mentor-field{ margin-top:0; }
@@ -610,24 +610,24 @@ body[data-theme="light"] .mentor-msg-report, body:not([data-theme="light"]) .men
   text-align:center; font-variant-numeric:tabular-nums; word-spacing:.35em;
 }
 
-/* ارسالِ گروهی: فهرستِ گیرنده‌ها داخلِ پاپ‌آپ */
+/* ارسال گروهی: فهرست گیرنده‌ها داخل پاپ‌آپ */
 .mentor-broadcast-list{ max-height:min(38vh, 320px); overflow-y:auto; }
 .mentor-broadcast-summary{ margin:0; font-size:11.5px; line-height:1.9; color:var(--muted); }
 
-/* ابزارِ برنامه (MentorProgramTools، agent C) زیرِ ردیفِ برنامه در صفحه‌ی شاگرد:
-   قاب و سرِ بخشِ خودش برداشته می‌شود تا فقط گروهِ دکمه‌ها در ردیف بماند */
+/* ابزار برنامه (MentorProgramTools، agent C) زیر ردیف برنامه در صفحه‌ی شاگرد:
+   قاب و سر بخش خودش برداشته می‌شود تا فقط گروه دکمه‌ها در ردیف بماند */
 .mentor-program-tools .acc-block{ margin:0; }
 .mentor-program-tools .acc-block-body{ padding:0; border:none; background:none; }
 .mentor-program-tools .mentor-section-head{ display:none; }
-/* آیکونِ گفت‌وگو در انتهای ردیفِ منتورِ فعال (/mentorship) */
+/* آیکون گفت‌وگو در انتهای ردیف منتور فعال (/mentorship) */
 .mentor-row-chat{ color:var(--muted2); flex-shrink:0; }
 
 /* ── QA round 2 ─────────────────────────────────────────────── */
-/* فیلترِ تک‌انتخابیِ داخلِ یک بخشِ flush (SegmentedTabs) */
+/* فیلتر تک‌انتخابی داخل یک بخش flush (SegmentedTabs) */
 .mentor-section-filter{ padding:0 var(--m-4) var(--m-3); }
 
 /* ── شرایط منتورها (agent J) — MentorPlatformNotice و MentorTermsAcceptance ── */
-/* خطِ ثابتِ «آریون فقط بستر است» — متنِ کم‌رنگ، بدونِ پس‌زمینه و قاب */
+/* خط ثابت «آریون فقط بستر است» — متن کم‌رنگ، بدون پس‌زمینه و قاب */
 .mentor-platform-notice{
   margin:var(--m-4) 0 0; padding:0; background:none;
   font-size:11.5px; line-height:1.9; color:var(--muted2); text-align:center;
@@ -639,12 +639,12 @@ body[data-theme="light"] .mentor-msg-report, body:not([data-theme="light"]) .men
 .mentor-terms-accept .field-error-msg{ margin-top:0; margin-inline-start:calc(17px + var(--m-3)); }
 
 /* ============================================================
-   دورِ ۳ (agent I): حرکت، ظرفِ واحدِ صفحه، ناوبریِ پنلِ منتور
-   API: components/MentorMotion.tsx و سرِ components/MentorUI.tsx
+   دور ۳ (agent I): حرکت، ظرف واحد صفحه، ناوبری پنل منتور
+   API: components/MentorMotion.tsx و سر components/MentorUI.tsx
    ============================================================ */
 
 /* ── حرکت ─────────────────────────────────────────────────── */
-/* فشارِ دکمه: کوتاه و آرام؛ فقط transform (بدونِ reflow) */
+/* فشار دکمه: کوتاه و آرام؛ فقط transform (بدون reflow) */
 .mentor-page .mentor-btn,
 .mentor-page .trade-title-add-btn,
 .mentor-page .mentor-text-btn,
@@ -663,17 +663,17 @@ body[data-theme="light"] .mentor-msg-report, body:not([data-theme="light"]) .men
 .m-sheet .trade-icon-btn:not(:disabled):active,
 .m-press:active{ transform:scale(.97); }
 .mentor-page .mentor-panel-tab:active{ transform:scale(.96); }
-/* ردیفِ لینک: فقط کمی کم‌رنگ، جابه‌جا نمی‌شود (لیستِ لبه‌به‌لبه) */
+/* ردیف لینک: فقط کمی کم‌رنگ، جابه‌جا نمی‌شود (لیست لبه‌به‌لبه) */
 .mentor-page a.mentor-row{ transition:opacity .16s ease; }
 .mentor-page a.mentor-row:active{ opacity:.7; }
 
-/* ورودِ صفحه (template.tsx): ظرفِ بی‌اثر، فقط برای transform/opacity */
+/* ورود صفحه (template.tsx): ظرف بی‌اثر، فقط برای transform/opacity */
 .m-route{ min-width:0; }
 
-/* باز/بسته‌شدن: محتوا در حینِ تغییرِ ارتفاع بیرون نزند */
+/* باز/بسته‌شدن: محتوا در حین تغییر ارتفاع بیرون نزند */
 .m-collapse{ overflow:hidden; }
 
-/* آیتمِ لیستِ متحرک: مرزِ ردیف‌ها مثلِ قبل، فقط آخرینِ لیست بی‌مرز */
+/* آیتم لیست متحرک: مرز ردیف‌ها مثل قبل، فقط آخرین لیست بی‌مرز */
 .mentor-li > .mentor-row{ border-bottom:1px solid var(--surface-line); }
 .mentor-li:last-child > .mentor-row{ border-bottom:none; }
 
@@ -707,15 +707,15 @@ body[data-theme="light"] .mentor-msg-report, body:not([data-theme="light"]) .men
 .m-sheet-title{ margin:0; font-size:14px; font-weight:800; color:var(--text); }
 .m-sheet .mentor-form-actions{ margin-top:var(--m-4); }
 
-/* ── ظرفِ واحدِ صفحه (MentorPage) و بخشِ تخت ──────────────── */
+/* ── ظرف واحد صفحه (MentorPage) و بخش تخت ──────────────── */
 .mentor-surface{ padding:var(--m-4); margin-bottom:var(--m-4); }
 .mentor-surface > .mentor-tabs:first-child{ margin-top:0; }
-/* بخشِ تخت لبه‌به‌لبه‌ی ظرف است تا خطِ مو سرتاسری باشد */
+/* بخش تخت لبه‌به‌لبه‌ی ظرف است تا خط مو سرتاسری باشد */
 section.mentor-section.is-flat{
   margin:0 calc(-1 * var(--m-4)); padding:var(--m-4);
   border-top:1px solid var(--surface-line);
 }
-/* اول/آخرِ ظرف (مستقیم یا داخلِ یک فرم/wrapperِ اول/آخر) خط و فاصله‌ی اضافه ندارد */
+/* اول/آخر ظرف (مستقیم یا داخل یک فرم/wrapper اول/آخر) خط و فاصله‌ی اضافه ندارد */
 .mentor-surface > section.mentor-section.is-flat:first-child,
 .mentor-surface > :first-child > section.mentor-section.is-flat:first-child{ margin-top:calc(-1 * var(--m-4)); border-top:none; }
 .mentor-surface > section.mentor-section.is-flat:last-child,
@@ -725,17 +725,17 @@ section.mentor-section.is-flat.flush > .mentor-section-head{ margin:0; padding:v
 section.mentor-section.is-flat.flush .mentor-row{ padding-inline:var(--m-4); }
 section.mentor-section.is-flat.flush > .mentor-empty{ padding-inline:var(--m-4); }
 section.mentor-section.is-flat.flush > .mentor-section-filter{ padding:0 var(--m-4) var(--m-3); }
-/* بخشِ بی‌عنوان (مثلاً یک ردیفِ تنها) */
+/* بخش بی‌عنوان (مثلا یک ردیف تنها) */
 section.mentor-section.is-flat.flush > .mentor-row:first-child{ padding-top:var(--m-3); }
-/* خالی/خطا داخلِ ظرف: بدونِ قابِ دوم */
+/* خالی/خطا داخل ظرف: بدون قاب دوم */
 .mentor-surface .rp-empty.mentor-empty-flat{ border:none; background:none; box-shadow:none; padding-block:var(--m-5); }
 .mentor-surface .mentor-error{ padding:var(--m-5) var(--m-2); }
-/* ردیفِ اطلاعیه‌ها بالای ظرف: فاصله از بخشِ بعد */
+/* ردیف اطلاعیه‌ها بالای ظرف: فاصله از بخش بعد */
 .mentor-surface > .mentor-notice + section.mentor-section.is-flat,
 .mentor-surface > .mentor-notices + section.mentor-section.is-flat{ margin-top:var(--m-4); }
 .mentor-notices{ display:flex; flex-direction:column; gap:var(--m-2); }
 
-/* ── ناوبریِ پنلِ منتور ───────────────────────────────────── */
+/* ── ناوبری پنل منتور ───────────────────────────────────── */
 .mentor-panel-nav{ margin:0 0 var(--m-4); }
 .mentor-panel-tabs.auth-tabs{ margin:0; }
 .mentor-panel-tab.auth-tab{
@@ -744,7 +744,7 @@ section.mentor-section.is-flat.flush > .mentor-row:first-child{ padding-top:var(
 }
 .mentor-panel-tab.auth-tab > svg, .mentor-panel-tab.auth-tab > span:not(.mentor-panel-ind){ position:relative; z-index:1; }
 .mentor-panel-tab.auth-tab:focus-visible{ outline:2px solid var(--accent); outline-offset:2px; }
-/* نشانگرِ فعال همان قرصِ accentِ SegmentedTabs؛ بینِ صفحه‌ها می‌لغزد */
+/* نشانگر فعال همان قرص accent SegmentedTabs؛ بین صفحه‌ها می‌لغزد */
 .mentor-panel-ind{
   position:absolute; inset:0; z-index:0; border-radius:999px;
   background:var(--accent); box-shadow:0 4px 14px rgba(var(--accent-rgb),.35);
@@ -754,7 +754,7 @@ section.mentor-section.is-flat.flush > .mentor-row:first-child{ padding-top:var(
   .mentor-panel-tabs.auth-tabs{ border-radius:20px; }
   .mentor-panel-ind{ border-radius:16px; }
 }
-/* سرِ صفحه‌ی پنل: عنوانِ هر صفحه زیرِ نوار */
+/* سر صفحه‌ی پنل: عنوان هر صفحه زیر نوار */
 .mentor-panel-page .trade-head-block{ margin-bottom:var(--m-3); }
 .mentor-panel-page .trade-back-link{ margin-bottom:var(--m-1); }
 
@@ -772,14 +772,14 @@ section.mentor-section.is-flat.flush > .mentor-row:first-child{ padding-top:var(
 .mentor-avail-away{ display:flex; flex-direction:column; gap:var(--m-2); }
 .mentor-avail-away .mentor-quote{ margin:0; }
 .mentor-avail-skeleton{ display:flex; justify-content:center; min-height:86px; align-items:center; }
-/* دکمه‌ی تاریخ داخلِ شیت: همان فیلدِ استاندارد، آیکون + متن */
+/* دکمه‌ی تاریخ داخل شیت: همان فیلد استاندارد، آیکون + متن */
 .mentor-date-btn{ display:flex; align-items:center; gap:var(--m-2); width:100%; text-align:start; cursor:pointer; }
 .mentor-date-btn.placeholder{ color:var(--muted); }
 /* تقویم روی شیت (z-index شیت 90) */
 .m-date-over .jdate-overlay{ z-index:96; }
 .m-date-over .jdate-popup{ z-index:97; }
 
-/* ── مراحلِ فعال‌سازی (MentorSetupSteps) ─────────────────── */
+/* ── مراحل فعال‌سازی (MentorSetupSteps) ─────────────────── */
 .mentor-step-mark{
   display:inline-flex; align-items:center; justify-content:center; width:26px; height:26px;
   border-radius:50%; border:1px solid var(--surface-line); font-size:12px; font-weight:800; color:var(--muted);
@@ -793,8 +793,8 @@ section.mentor-section.is-flat.flush > .mentor-row:first-child{ padding-top:var(
 .mentor-li > .mentor-feedback{ border-bottom:1px solid var(--surface-line); }
 .mentor-li:last-child > .mentor-feedback{ border-bottom:none; }
 
-/* ── ادمین: جزئیاتِ منتور در یک ظرف (/admin/mentors/[id]) ──────
-   کارت‌های داخلی قاب/بک‌گراندِ خودشان را از دست می‌دهند و با خطِ مو جدا می‌شوند */
+/* ── ادمین: جزئیات منتور در یک ظرف (/admin/mentors/[id]) ──────
+   کارت‌های داخلی قاب/بک‌گراند خودشان را از دست می‌دهند و با خط مو جدا می‌شوند */
 .admin-onebox > .admin-card,
 .admin-onebox > .admin-chart-card,
 .admin-onebox .admin-chart-card{
@@ -807,10 +807,10 @@ section.mentor-section.is-flat.flush > .mentor-row:first-child{ padding-top:var(
 @media (prefers-reduced-motion: reduce){ .m-sheet *, .mentor-panel-nav *{ transition:none !important; } }
 
 /* ============================================================
-   دورِ ۳ (agent F): جستجوی منتور، کارتِ فشرده، نشانِ مدرک،
-   ذخیره‌شده‌ها، پروفایلِ عمومی. بدونِ بک‌گراندِ تازه؛ تنها سطحِ
-   شناور (پاپ‌آوِرِ مدرک و پیامِ پایینِ صفحه) همان دستورِ پاپ‌آپ‌های
-   اپ است: surface-2 + surface-line + سایه (مثلِ .wa-tooltip).
+   دور ۳ (agent F): جستجوی منتور، کارت فشرده، نشان مدرک،
+   ذخیره‌شده‌ها، پروفایل عمومی. بدون بک‌گراند تازه؛ تنها سطح
+   شناور (پاپ‌آور مدرک و پیام پایین صفحه) همان دستور پاپ‌آپ‌های
+   اپ است: surface-2 + surface-line + سایه (مثل .wa-tooltip).
    ============================================================ */
 
 /* ── تب‌های نما (همه / ذخیره‌شده‌ها) ─────────────────────── */
@@ -819,7 +819,7 @@ section.mentor-section.is-flat.flush > .mentor-row:first-child{ padding-top:var(
 /* ── ناحیه‌ی فیلتر ─────────────────────────────────────────── */
 .mentor-filters{ display:flex; flex-direction:column; gap:10px; padding:var(--m-3); margin-bottom:var(--m-2); }
 .mentor-filters .auth-tabs{ margin:0; }
-/* ردیفِ جستجو: فیلد + دکمه‌ی فیلترها (در RTL، چپِ جستجو چون بعدش می‌آید) */
+/* ردیف جستجو: فیلد + دکمه‌ی فیلترها (در RTL، چپ جستجو چون بعدش می‌آید) */
 .mentor-search-row{ display:flex; align-items:stretch; gap:var(--m-2); }
 .mentor-filters .mentor-search{ flex:1 1 auto; display:block; min-width:0; }
 .mentor-search input.wsearch-newform-name{ padding-inline-end:36px; }
@@ -827,9 +827,9 @@ section.mentor-section.is-flat.flush > .mentor-row:first-child{ padding-top:var(
   position:absolute; top:0; bottom:0; inset-inline-end:4px; margin:auto 0; height:30px; padding:6px;
 }
 .mentor-search .mentor-search-clear svg{ position:static; transform:none; color:inherit; pointer-events:none; }
-/* فیلدِ search مرورگر دکمه‌ی پاک‌کنِ خودش را هم دارد؛ یکی کافی است */
+/* فیلد search مرورگر دکمه‌ی پاک‌کن خودش را هم دارد؛ یکی کافی است */
 .mentor-search input[type="search"]::-webkit-search-cancel-button{ -webkit-appearance:none; appearance:none; display:none; }
-/* دکمه‌ی «فیلتر» کنارِ فیلدِ جستجو: خودِ قرصِ .trade-cal-pill-btnِ تقویمِ اقتصادی
+/* دکمه‌ی «فیلتر» کنار فیلد جستجو: خود قرص .trade-cal-pill-btn تقویم اقتصادی
    (ظاهر همان‌جا تعریف شده)؛ این‌جا فقط جایش در ردیف */
 .mentor-filter-toggle{ flex:0 0 auto; align-self:center; white-space:nowrap; cursor:pointer; font-family:inherit; }
 .mentor-filter-grid{ display:grid; grid-template-columns:1fr; gap:10px; padding-top:2px; }
@@ -837,11 +837,11 @@ section.mentor-section.is-flat.flush > .mentor-row:first-child{ padding-top:var(
 @media (min-width:760px){ .mentor-filter-grid{ grid-template-columns:repeat(3, minmax(0, 1fr)); } }
 .mentor-filter-field{ display:flex; flex-direction:column; gap:5px; min-width:0; }
 .mentor-filter-label{ font-size:11px; font-weight:700; color:var(--muted); }
-/* مدرک/پذیرش: چک‌باکسِ استانداردِ سایت (.auth-checkbox) */
+/* مدرک/پذیرش: چک‌باکس استاندارد سایت (.auth-checkbox) */
 .mentor-filter-checks{ display:flex; flex-wrap:wrap; align-items:center; gap:var(--m-2) var(--m-5); padding-top:var(--m-3); }
 .mentor-filter-actions{ display:flex; align-items:center; justify-content:flex-end; gap:var(--m-3); margin-top:var(--m-1); }
 
-/* نتیجه‌ی قبلی تا رسیدنِ نتیجه‌ی تازه کم‌رنگ می‌ماند (بدونِ پرشِ اسپینر) */
+/* نتیجه‌ی قبلی تا رسیدن نتیجه‌ی تازه کم‌رنگ می‌ماند (بدون پرش اسپینر) */
 .mentor-results{ transition:opacity .2s ease; }
 .mentor-results.is-stale{ opacity:.5; pointer-events:none; }
 .mentor-empty-search{ display:flex; flex-direction:column; align-items:center; gap:var(--m-2); padding:var(--m-4) 0; }
@@ -850,21 +850,21 @@ section.mentor-section.is-flat.flush > .mentor-row:first-child{ padding-top:var(
 .mentor-grid-item{ min-width:0; display:flex; }
 .mentor-grid-item > .mentor-card{ flex:1; }
 
-/* ── کارتِ فشرده: تکمیلِ چیدمانِ کارتِ main (پایین‌تر، «کارت: جمع‌وجور») ── */
+/* ── کارت فشرده: تکمیل چیدمان کارت main (پایین‌تر، «کارت: جمع‌وجور») ── */
 .mentor-card-id{ display:flex; flex-direction:column; gap:2px; }
 .mentor-card .mentor-card-name{ line-height:1.6; }
 .mentor-card .mentor-card-headline{
   margin:0; display:block; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; -webkit-line-clamp:unset;
 }
-/* پذیرشِ بسته/عدمِ حضور — یک خطِ کوچکِ کم‌رنگ، بی‌قاب */
+/* پذیرش بسته/عدم حضور — یک خط کوچک کم‌رنگ، بی‌قاب */
 .mentor-card-closed{ display:inline-flex; align-items:center; gap:4px; font-size:11px; color:var(--muted2); white-space:nowrap; }
 .mentor-card-foot .mentor-rating-inline{ font-size:11px; }
-/* نشانک و مدال بالای لینکِ کشیده (::after با z-index:1) */
+/* نشانک و مدال بالای لینک کشیده (::after با z-index:1) */
 .mentor-card-save{ position:relative; z-index:2; flex-shrink:0; align-self:flex-start; margin:-4px 0 0 -6px; }
 .mentor-card .mentor-cert-mark{ position:relative; z-index:2; }
 @media (hover:hover) and (pointer:fine){ .mentor-card:hover .mentor-card-link{ color:var(--accent); } }
 
-/* برچسبِ کوچکِ حوزه/تخصص */
+/* برچسب کوچک حوزه/تخصص */
 .mentor-tag{
   display:inline-flex; align-items:center; padding:0 8px; border:1px solid var(--surface-line); border-radius:999px;
   font-size:10.5px; font-weight:600; line-height:1.9; color:var(--muted); white-space:nowrap;
@@ -872,13 +872,13 @@ section.mentor-section.is-flat.flush > .mentor-row:first-child{ padding-top:var(
 .mentor-tags{ display:flex; flex-wrap:wrap; gap:6px; margin-top:var(--m-3); }
 .mentor-tags .mentor-tag{ font-size:11px; padding:1px 9px; }
 
-/* امتیازِ یک‌خطی */
+/* امتیاز یک‌خطی */
 .mentor-rating-inline{ display:inline-flex; align-items:center; gap:3px; color:var(--muted); white-space:nowrap; }
 .mentor-rating-inline svg{ color:var(--sun); flex-shrink:0; }
 .mentor-rating-inline b{ font-size:11.5px; font-weight:800; color:var(--text); }
 .mentor-rating-inline.is-none svg{ color:var(--muted2); }
 
-/* ── نشانِ مدرک + پاپ‌آوِر ─────────────────────────────────── */
+/* ── نشان مدرک + پاپ‌آور ─────────────────────────────────── */
 .mentor-cert-mark{
   display:inline-flex; align-items:center; justify-content:center; flex-shrink:0;
   padding:3px; margin:-3px 0; border:none; border-radius:8px; cursor:pointer; color:#D9A21B;
@@ -886,7 +886,7 @@ section.mentor-section.is-flat.flush > .mentor-row:first-child{ padding-top:var(
   transition:opacity .15s ease, transform .16s cubic-bezier(.22,1,.36,1);
 }
 body[data-theme="light"] .mentor-cert-mark, body:not([data-theme="light"]) .mentor-cert-mark{ background:none; box-shadow:none; border:none; }
-/* مدالِ طلایی (رنگِ main) — در تمِ روشن تیره‌تر برای کنتراست */
+/* مدال طلایی (رنگ main) — در تم روشن تیره‌تر برای کنتراست */
 body[data-theme="light"] .mentor-cert-mark{ color:#B7860B; }
 .mentor-cert-mark:active{ transform:scale(.92); }
 .mentor-cert-mark:focus-visible{ outline:2px solid var(--accent); outline-offset:1px; }
@@ -902,7 +902,7 @@ body[data-theme="light"] .mentor-cert-mark{ color:#B7860B; }
 .mentor-pop-title.is-gold{ color:#D9A21B; }
 body[data-theme="light"] .mentor-pop-title.is-gold{ color:#B7860B; }
 
-/* ── نشانک و پیامِ پایینِ صفحه ─────────────────────────────── */
+/* ── نشانک و پیام پایین صفحه ─────────────────────────────── */
 .mentor-save-btn.is-on{ color:var(--accent); }
 .mentor-save-icon{ display:inline-flex; }
 .mentor-toast-wrap{
@@ -915,7 +915,7 @@ body[data-theme="light"] .mentor-pop-title.is-gold{ color:#B7860B; }
   font-size:12.5px; line-height:1.8; color:var(--text); text-align:center; direction:rtl;
 }
 
-/* ── پروفایلِ عمومی (داخلِ یک ظرفِ واحد) ─────────────────── */
+/* ── پروفایل عمومی (داخل یک ظرف واحد) ─────────────────── */
 .mentor-profile .mentor-hero{ padding:0; margin-bottom:var(--m-4); }
 .mentor-profile .mentor-hero-top{ align-items:flex-start; }
 .mentor-hero-title{ display:flex; align-items:center; gap:6px; min-width:0; }
@@ -953,12 +953,12 @@ body[data-theme="light"] .mentor-pop-title.is-gold{ color:#B7860B; }
 /* ============================================================
    G · صفحه‌ی گفت‌وگو (mc-*) — MentorChatScreen / MentorChat
    ------------------------------------------------------------
-   الگوی پیام‌رسان: سرِ شناورِ شیشه‌ای، رشته‌ی لبه‌به‌لبه، نوارِ نوشتنِ
-   شناور. سطح‌ها همه از سایت‌اند: قرص‌ها همان سطحِ شیشه‌ای .app-topbar
+   الگوی پیام‌رسان: سر شناور شیشه‌ای، رشته‌ی لبه‌به‌لبه، نوار نوشتن
+   شناور. سطح‌ها همه از سایت‌اند: قرص‌ها همان سطح شیشه‌ای .app-topbar
    (که در این صفحه پنهان است)، حباب‌ها همان .support-msg، ورودی و دکمه‌ی
-   ارسال همان .routine-ai-input / .routine-ai-action. خودِ صفحه بک‌گراند
-   ندارد؛ پس‌زمینه‌ی سایت پشتِ پیام‌ها دیده می‌شود.
-   قانون‌های دکمه با پیشوندِ «body .mc-screen» تا ریستِ سراسریِ
+   ارسال همان .routine-ai-input / .routine-ai-action. خود صفحه بک‌گراند
+   ندارد؛ پس‌زمینه‌ی سایت پشت پیام‌ها دیده می‌شود.
+   قانون‌های دکمه با پیشوند «body .mc-screen» تا ریست سراسری
    button{} و body[data-theme="light"] button{} رویشان ننشیند.
    ============================================================ */
 html.mc-open .app-topbar,
@@ -1011,7 +1011,7 @@ body .mc-screen .mc-pill:focus-visible{ outline:2px solid var(--accent); outline
 
 /* ── بدنه ───────────────────────────────────────────────────── */
 .mc-main{ position:relative; flex:1 1 auto; min-height:0; display:flex; flex-direction:column; overflow-y:auto; }
-/* فرم‌های گیتِ رمزگذاری و حالت‌های خالی/خطا: وسطِ ستون، زیرِ سر */
+/* فرم‌های گیت رمزگذاری و حالت‌های خالی/خطا: وسط ستون، زیر سر */
 .mc-main > :not(.mc-body){ width:min(100% - 24px, 520px); margin:calc(var(--mc-head-h) + 12px) auto 24px; }
 .mc-state{ display:flex; flex-direction:column; justify-content:center; min-height:40vh; }
 .mc-body{ position:absolute; inset:0; display:flex; flex-direction:column; }
@@ -1029,7 +1029,7 @@ body .mc-screen .mc-pill:focus-visible{ outline:2px solid var(--accent); outline
 .mc-thread-inner > .mc-older:first-child{ margin-top:auto; }
 .mc-older{ display:flex; justify-content:center; padding:6px 0 10px; }
 
-/* خطِ سرویس و جداکننده‌ی روز — قرصِ کوچکِ شیشه‌ای وسطِ رشته */
+/* خط سرویس و جداکننده‌ی روز — قرص کوچک شیشه‌ای وسط رشته */
 .mc-service, .mc-day{ display:flex; justify-content:center; margin:10px 0; }
 .mc-service span, .mc-day span{
   display:inline-flex; align-items:center; gap:6px; max-width:88%;
@@ -1044,8 +1044,8 @@ body .mc-screen .mc-pill:focus-visible{ outline:2px solid var(--accent); outline
 /* ── حباب ───────────────────────────────────────────────────── */
 .mc-row{ display:flex; flex-direction:column; margin-top:3px; }
 .mc-row.is-first{ margin-top:10px; }
-.mc-row.is-mine{ align-items:flex-start; }   /* RTL: سمتِ راست */
-.mc-row.is-peer{ align-items:flex-end; }     /* RTL: سمتِ چپ */
+.mc-row.is-mine{ align-items:flex-start; }   /* RTL: سمت راست */
+.mc-row.is-peer{ align-items:flex-end; }     /* RTL: سمت چپ */
 .mc-screen .support-msg.mc-bubble{
   position:relative; max-width:min(78%, 540px); margin:0;
   padding:7px 12px 8px; border-radius:18px;
@@ -1053,7 +1053,7 @@ body .mc-screen .mc-pill:focus-visible{ outline:2px solid var(--accent); outline
   cursor:default; -webkit-tap-highlight-color:transparent;
   -webkit-user-select:text; user-select:text;
 }
-/* گوشه‌های سمتِ فرستنده در یک گروه تیزتر؛ آخری دُم دارد */
+/* گوشه‌های سمت فرستنده در یک گروه تیزتر؛ آخری دم دارد */
 .mc-screen .support-msg.mc-bubble.mine{ border-radius:18px 6px 6px 18px; }
 .mc-screen .mc-row.is-first .support-msg.mc-bubble.mine{ border-top-right-radius:18px; }
 .mc-screen .mc-row.is-last .support-msg.mc-bubble.mine{ border-bottom-right-radius:4px; }
@@ -1076,7 +1076,7 @@ body .mc-screen .mc-pill:focus-visible{ outline:2px solid var(--accent); outline
 }
 .mc-screen .support-msg.mc-bubble.admin{ box-shadow:0 1px 1px rgba(0,0,0,.12); }
 .mc-text{ unicode-bidi:plaintext; }
-/* جای ساعت/تیک در انتهای خطِ آخر (مثلِ پیام‌رسان‌ها) */
+/* جای ساعت/تیک در انتهای خط آخر (مثل پیام‌رسان‌ها) */
 .mc-spacer{ display:inline-block; width:44px; height:1px; }
 .mc-spacer.is-mine{ width:60px; }
 .mc-meta{
@@ -1093,7 +1093,7 @@ body .mc-screen .mc-pill:focus-visible{ outline:2px solid var(--accent); outline
 .mc-fail-note{ font-size:11px; color:var(--m-danger); margin-top:3px; }
 @media (hover:hover){ .mc-screen .mc-bubble{ cursor:pointer; } }
 
-/* ── پایین: نوارِ نوشتن و اطلاعیه‌ها ───────────────────────── */
+/* ── پایین: نوار نوشتن و اطلاعیه‌ها ───────────────────────── */
 .mc-dock{
   position:absolute; bottom:0; inset-inline:0; z-index:2;
   display:flex; flex-direction:column; gap:8px;
@@ -1108,7 +1108,7 @@ body .mc-screen .mc-composer .routine-ai-action{ width:46px; height:46px; flex:0
   border-radius:23px; font-size:14px; line-height:1.6; overflow-y:auto;
   background:var(--surface-glass); border-color:var(--surface-line);
 }
-.mc-send-icon{ transform:scaleX(-1); }   /* RTL: پیکان به سمتِ چپ */
+.mc-send-icon{ transform:scaleX(-1); }   /* RTL: پیکان به سمت چپ */
 body .mc-screen .mc-send:not(.is-send){ color:var(--muted); }
 body .mc-screen .mc-side-btn{ color:var(--muted); }
 body .mc-screen .mc-side-btn.is-on{ color:var(--accent); border-color:rgba(var(--accent-rgb),.45); }
@@ -1144,7 +1144,7 @@ body .mc-screen .mc-jump{
   backdrop-filter:blur(18px); -webkit-backdrop-filter:blur(18px);
 }
 
-/* ── گزارشِ گفت‌وگو: انتخابِ پیام‌ها ─────────────────────────── */
+/* ── گزارش گفت‌وگو: انتخاب پیام‌ها ─────────────────────────── */
 .mc-pick-head{ display:flex; align-items:center; gap:8px; }
 .mc-pick-head .mentor-field-label{ margin-inline-end:auto; }
 .mc-pick-list{ max-height:min(40vh, 320px); overflow-y:auto; border:1px solid var(--surface-line); border-radius:14px; padding:0 10px; }
@@ -1164,13 +1164,13 @@ body .mc-screen .mc-jump{
   .mc-screen .support-msg.mc-bubble{ max-width:84%; }
 }
 @media (prefers-reduced-motion: reduce){ body .mc-screen .mc-pill:active{ transform:none; } }
-/* ============ پایانِ G · صفحه‌ی گفت‌وگو ============ */
+/* ============ پایان G · صفحه‌ی گفت‌وگو ============ */
 .mentor-terms-row{ padding-bottom:var(--m-3); }
-/* آمارِ داشبورد داخلِ ظرف: فاصله از بخشِ قبل/بعد */
+/* آمار داشبورد داخل ظرف: فاصله از بخش قبل/بعد */
 .mentor-dash-stats{ margin:0 0 var(--m-4); }
 section.mentor-section.is-flat + .mentor-dash-stats{ margin-top:var(--m-4); }
 
-/* ── H: رمزگذاریِ خودکار — خطِ «رمز گفت‌وگوی قبلی» و فهرستِ دستگاه‌ها (MentorE2EEGate / MentorE2EESettings) ── */
+/* ── H: رمزگذاری خودکار — خط «رمز گفت‌وگوی قبلی» و فهرست دستگاه‌ها (MentorE2EEGate / MentorE2EESettings) ── */
 .mentor-e2ee-legacy-row{ display:flex; flex-wrap:wrap; align-items:center; gap:var(--m-2, 8px); margin-top:var(--m-2, 8px); }
 .mentor-e2ee-legacy-row > input{ flex:1 1 160px; min-width:0; }
 .mentor-e2ee-legacy .mentor-field-error{ display:block; margin-top:4px; }
@@ -1180,9 +1180,9 @@ section.mentor-section.is-flat + .mentor-dash-stats{ margin-top:var(--m-4); }
 .mentor-e2ee-devices > li > span{ flex:1 1 0; min-width:0; }
 
 /* ============================================================
-   G · رابطه، فهرستِ منتورها، سابقه‌ی گفت‌وگو
+   G · رابطه، فهرست منتورها، سابقه‌ی گفت‌وگو
    ============================================================ */
-/* نشانِ قرمزِ «دعوت‌ها» داخلِ تبِ SegmentedTabs */
+/* نشان قرمز «دعوت‌ها» داخل تب SegmentedTabs */
 .mentor-tab-label{ display:inline-flex; align-items:center; gap:6px; }
 .mentor-tab-badge{
   min-width:18px; height:18px; padding:0 5px; border-radius:999px;
@@ -1192,7 +1192,7 @@ section.mentor-section.is-flat + .mentor-dash-stats{ margin-top:var(--m-4); }
 .mentor-invite-terms{ padding:var(--m-2) var(--m-4) 0; }
 .mentor-section.is-flat.flush .mentor-invite-terms{ padding-inline:0; }
 
-/* برنامه‌ی منتظرِ پاسخ: عنوان (لینک به جزئیات) + واقعیت‌ها + یادداشتِ منتور + سه دکمه */
+/* برنامه‌ی منتظر پاسخ: عنوان (لینک به جزئیات) + واقعیت‌ها + یادداشت منتور + سه دکمه */
 .mentor-decision-card{ display:flex; flex-direction:column; gap:var(--m-2); padding:var(--m-3) 0; border-bottom:1px solid var(--surface-line); }
 .mentor-li:last-child > .mentor-decision-card{ border-bottom:none; padding-bottom:0; }
 .mentor-li:first-child > .mentor-decision-card{ padding-top:0; }
@@ -1214,32 +1214,32 @@ section.mentor-section.is-flat + .mentor-dash-stats{ margin-top:var(--m-4); }
   padding:var(--m-3) var(--m-4); border-top:1px solid var(--surface-line);
 }
 .mentor-history-empty{ display:flex; align-items:center; justify-content:center; gap:var(--m-2); padding:var(--m-4); }
-/* ============ پایانِ G · رابطه ============ */
+/* ============ پایان G · رابطه ============ */
 
 /* ============================================================
-   QA دورِ ۳ — اصلاحاتِ بررسیِ تصویری
+   QA دور ۳ — اصلاحات بررسی تصویری
    ============================================================ */
-/* نظر: پرچمِ گزارش در انتهای ردیف، نه در خطِ جداگانه */
+/* نظر: پرچم گزارش در انتهای ردیف، نه در خط جداگانه */
 .mentor-review-flag{ flex-shrink:0; align-self:flex-start; margin-top:-6px; margin-inline-end:-8px; }
-/* آمارِ سرِ پروفایل: مقدارِ متنی («چند دقیقه پیش») در یک خط */
+/* آمار سر پروفایل: مقدار متنی («چند دقیقه پیش») در یک خط */
 .mentor-hero-stats dd.is-text{ font-size:12px; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; line-height:1.75; }
-/* فرمِ پروفایل: فاصله‌ی اضافه بینِ کلیدِ انتشار و چک‌باکسِ شرایط */
+/* فرم پروفایل: فاصله‌ی اضافه بین کلید انتشار و چک‌باکس شرایط */
 section.mentor-section.is-flat .mentor-toggle-row:last-child{ padding-bottom:0; }
 .mentor-terms-row .mentor-check{ padding-top:var(--m-1); }
-/* شاگردها: جست‌وجو و فیلتر در موبایل در یک ردیف (نه نیم‌ردیفِ تنها) */
+/* شاگردها: جست‌وجو و فیلتر در موبایل در یک ردیف (نه نیم‌ردیف تنها) */
 @media (max-width:480px){
   .mentor-filter-row{ flex-wrap:nowrap; }
   .mentor-filter-row .mentor-search{ flex:1 1 0; }
   .mentor-filter-row select.wsearch-newform-name.mentor-sort{ flex:0 0 156px; min-width:0; }
 }
-/* ادمین/جزئیاتِ منتور: `.admin-onebox > .admin-chart-card{margin:0;padding:0}` فاصله‌ی بینِ بخش‌ها را صفر می‌کرد
-   و عنوانِ هر بخش به محتوای قبلی می‌چسبید */
+/* ادمین/جزئیات منتور: `.admin-onebox > .admin-chart-card{margin:0;padding:0}` فاصله‌ی بین بخش‌ها را صفر می‌کرد
+   و عنوان هر بخش به محتوای قبلی می‌چسبید */
 .admin-onebox > * + .admin-chart-card,
 .admin-onebox > * + .admin-card,
 .admin-onebox > * + .admin-kpi-grid{ margin-top:18px; padding-top:18px; }
-/* ردیفِ افقیِ منتورها با فقط یک کارت در موبایل: تمام‌عرض، نه ۸۲٪ و یک فضای خالی */
+/* ردیف افقی منتورها با فقط یک کارت در موبایل: تمام‌عرض، نه ۸۲٪ و یک فضای خالی */
 @media (max-width:719px){ .mentor-popular-row:has(> :only-child){ grid-auto-columns:100%; } }
-/* آمارِ سرِ پروفایل در موبایل: ۲×۲ تا «۲۴ دقیقه پیش» بریده نشود */
+/* آمار سر پروفایل در موبایل: ۲×۲ تا «۲۴ دقیقه پیش» بریده نشود */
 @media (max-width:420px){
   .mentor-hero-stats{ grid-template-columns:repeat(2, minmax(0, 1fr)); }
   .mentor-hero-stats > div + div{ border-inline-start:none; }
@@ -1249,22 +1249,22 @@ section.mentor-section.is-flat .mentor-toggle-row:last-child{ padding-bottom:0; 
 }
 
 /* ── کشف: «پیدا کردن منتور» (ردیف‌های افقی + فیلتر) ─────────────────── */
-/* هر بخش (ردیفِ افقی، نتیجه‌ها، ذخیره‌شده‌ها) داخلِ یک قابِ .trade-surface.
-   ریستِ سراسریِ section{padding:34px 0; border-top} نباید روی قاب بنشیند. */
+/* هر بخش (ردیف افقی، نتیجه‌ها، ذخیره‌شده‌ها) داخل یک قاب .trade-surface.
+   ریست سراسری section{padding:34px 0; border-top} نباید روی قاب بنشیند. */
 section.mentor-box{ padding:var(--m-4); margin:0 0 var(--m-4); border-top:1px solid var(--surface-line); min-width:0; }
 .mentor-box > .mentor-section-title{ margin-top:0; }
 .mentor-carousel .mentor-section-title{ margin-bottom:var(--m-3); }
-/* کشیدن با ماوس: نشانگرِ دست، و در حینِ کشیدن اسنپ خاموش تا کشیدن روان باشد */
+/* کشیدن با ماوس: نشانگر دست، و در حین کشیدن اسنپ خاموش تا کشیدن روان باشد */
 @media (hover:hover) and (pointer:fine){ .mentor-carousel-row{ cursor:grab; } }
 .mentor-carousel-row.is-dragging{ cursor:grabbing; scroll-snap-type:none; user-select:none; }
 .mentor-carousel-row.is-dragging .mentor-card{ pointer-events:none; }
 .mentor-carousel-row .mentor-card{ height:100%; }
-/* خانه‌ی «مشاهده همه ←» عرضِ ستونِ ردیف را نمی‌گیرد — درست چسبیده به آخرین
-   کارت می‌نشیند (فاصله‌اش فقط gapِ خودِ ردیف است)، بدونِ بوردر */
+/* خانه‌ی «مشاهده همه ←» عرض ستون ردیف را نمی‌گیرد — درست چسبیده به آخرین
+   کارت می‌نشیند (فاصله‌اش فقط gap خود ردیف است)، بدون بوردر */
 .mentor-carousel-row > .mentor-grid-item:last-child{ width:auto; justify-self:start; }
 .mentor-grid-item > .mentor-carousel-more{ flex:1; }
 
-/* خانه‌ی «مشاهده همه ←» تهِ هر ردیف — بی‌بک‌گراند، بی‌بوردر */
+/* خانه‌ی «مشاهده همه ←» ته هر ردیف — بی‌بک‌گراند، بی‌بوردر */
 .mentor-carousel-more{
   display:flex; flex-direction:row; align-items:center; justify-content:center; gap:var(--m-2);
   height:100%; padding:0 var(--m-5); border-radius:18px; border:none;
@@ -1282,11 +1282,11 @@ body[data-theme="light"] .mentor-carousel-more, body:not([data-theme="light"]) .
 .mentor-popular-row.mentor-carousel-row{ grid-auto-columns:minmax(250px, 78%); }
 @media (min-width:720px){ .mentor-popular-row.mentor-carousel-row{ grid-auto-columns:calc((100% - 2 * var(--m-3)) / 2.6); } }
 
-/* کارت: جمع‌وجور — سرِ کارت (نام + مدال)، و یک ردیفِ پایین (امتیاز · عضویت · شِورون) */
+/* کارت: جمع‌وجور — سر کارت (نام + مدال)، و یک ردیف پایین (امتیاز · عضویت · شورون) */
 .mentor-card{ position:relative; min-width:0; padding:14px 15px; gap:12px; cursor:pointer; }
 .mentor-card-name-row{ display:flex; align-items:center; gap:4px; min-width:0; }
 .mentor-card-name-row .mentor-card-name{ min-width:0; }
-/* لینکِ کشیده: کلِ کارت کلیک‌پذیر است */
+/* لینک کشیده: کل کارت کلیک‌پذیر است */
 .mentor-card-link{ text-decoration:none; color:var(--text); }
 .mentor-card-link::after{ content:""; position:absolute; inset:0; border-radius:inherit; z-index:1; }
 .mentor-card-link:focus-visible{ outline:none; }
@@ -1298,16 +1298,16 @@ body[data-theme="light"] .mentor-carousel-more, body:not([data-theme="light"]) .
 .mentor-list-back{ margin-top:var(--m-2); }
 .mentor-privacy-picker{ margin-bottom:var(--m-3); }
 
-/* ── درخواستِ کاربر: بخشِ منتورها ─────────────────────────────── */
-/* «مشاهده همه» تهِ هر ردیف: متن زیرِ آیکون، نه کنارش */
+/* ── درخواست کاربر: بخش منتورها ─────────────────────────────── */
+/* «مشاهده همه» ته هر ردیف: متن زیر آیکون، نه کنارش */
 .mentor-carousel-more{ flex-direction:column; gap:6px; }
-/* باکس‌های پشتِ ردیف‌ها و جستجو: شیشه‌ای/کدر به‌جای مشکیِ کامل */
+/* باکس‌های پشت ردیف‌ها و جستجو: شیشه‌ای/کدر به‌جای مشکی کامل */
 .mentor-page section.mentor-box.trade-surface,
 .mentor-page .mentor-filters.trade-surface{
   background:rgba(var(--bg-rgb), .42);
   backdrop-filter:blur(20px) saturate(140%); -webkit-backdrop-filter:blur(20px) saturate(140%);
 }
-/* فیلدِ جستجو کاملا گرد */
+/* فیلد جستجو کاملا گرد */
 .mentor-filters .mentor-search input.wsearch-newform-name{ border-radius:999px; }
 /* دکمه‌ی فیلتر کمی بزرگ‌تر */
 .mentor-filters .mentor-filter-toggle{ gap:6px; padding:9px 15px; font-size:12.5px; }

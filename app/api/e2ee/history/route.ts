@@ -6,10 +6,10 @@ import { checkRateLimit } from "@/lib/rateLimit";
 import { isSealedNote } from "@/lib/e2ee/notes";
 import { parseWraps, publicKeysFor } from "@/lib/e2ee/server";
 
-// انتقالِ سابقه بینِ کلیدهای *یک* کاربر (docs/mentor-e2ee.md): دستگاهی که کلیدِ from
-// را دارد، CEKِ هر پیام را باز و برای کلیدِ to (کلیدِ فعالِ دیگرِ همین کاربر) بسته‌بندی
-// می‌کند. سرور فقط بسته‌بندی‌های تازه (via = from) را کنارِ پیام می‌گذارد؛ متنِ رمزشده،
-// تعهدِ فرانکینگ و برچسبِ سرور دست نمی‌خورند. یادداشت‌های خصوصیِ منتور هم دوباره رمز می‌شوند.
+// انتقال سابقه بین کلیدهای *یک* کاربر (docs/mentor-e2ee.md): دستگاهی که کلید from
+// را دارد، CEK هر پیام را باز و برای کلید to (کلید فعال دیگر همین کاربر) بسته‌بندی
+// می‌کند. سرور فقط بسته‌بندی‌های تازه (via = from) را کنار پیام می‌گذارد؛ متن رمزشده،
+// تعهد فرانکینگ و برچسب سرور دست نمی‌خورند. یادداشت‌های خصوصی منتور هم دوباره رمز می‌شوند.
 
 const PAGE = 200;
 const MAX_WRAPS = 300;
@@ -111,7 +111,7 @@ export async function POST(req: Request) {
   const items = Array.isArray(b.wraps) ? b.wraps : [];
   if (items.length > MAX_WRAPS) return badRequest("تعداد زیاد است");
   if (items.length) {
-    // بسته‌بندی‌ها همه برای همان یک کلیدند؛ parseWraps یکتاییِ (u,k) را می‌خواهد، پس یکی‌یکی
+    // بسته‌بندی‌ها همه برای همان یک کلیدند؛ parseWraps یکتایی (u,k) را می‌خواهد، پس یکی‌یکی
     const ok: { messageId: string; w: string; via: number }[] = [];
     for (const it of items) {
       const one = parseWraps([it?.wrap], 1, true)?.[0];

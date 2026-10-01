@@ -2,11 +2,11 @@
 
 import { useEffect, useState } from "react";
 
-// عرضِ واقعیِ ظرفِ نمودار — viewBox دقیقاً هم‌عرضِ پیکسلیِ کانتینر ساخته می‌شه.
-// قبلاً viewBox ثابت ۶۴۰ با preserveAspectRatio="none" کش می‌اومد و متنِ
+// عرض واقعی ظرف نمودار — viewBox دقیقا هم‌عرض پیکسلی کانتینر ساخته می‌شه.
+// قبلا viewBox ثابت ۶۴۰ با preserveAspectRatio="none" کش می‌اومد و متن
 // محورها روی دسکتاپ پهن و روی موبایل له می‌شد.
-// callback-ref (نه useRef) چون نمودار تا رسیدنِ داده EmptyState برمی‌گردونه و
-// ظرف بعداً mount می‌شه — افکتِ [] با useRef اون موقع دیگه اجرا نمی‌شد.
+// callback-ref (نه useRef) چون نمودار تا رسیدن داده EmptyState برمی‌گردونه و
+// ظرف بعدا mount می‌شه — افکت [] با useRef اون موقع دیگه اجرا نمی‌شد.
 export function useChartWidth(fallback = 640) {
   const [el, ref] = useState<HTMLDivElement | null>(null);
   const [width, setWidth] = useState(fallback);
@@ -25,7 +25,7 @@ export function useChartWidth(fallback = 640) {
   return { ref, width };
 }
 
-// برچسبِ محورِ افقی: روز/هفته → MM-DD، ماه (YYYY-MM) → کامل
+// برچسب محور افقی: روز/هفته → MM-DD، ماه (YYYY-MM) → کامل
 export function bucketLabel(bucket: string): string {
   return bucket.length > 7 ? bucket.slice(5) : bucket;
 }

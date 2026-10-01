@@ -1,7 +1,7 @@
 "use client";
 
-// حلقه‌ی پیشرفتِ مشترکِ کلِ اپ — عینِ حلقه‌ی داشبورد: قوسِ گرادیانیِ شبه‌conic،
-// سرِ درخشان، سرِ گردِ قوس و انیمیشنِ ورود. رنگ‌ها از توکن‌های --ring-* میان.
+// حلقه‌ی پیشرفت مشترک کل اپ — عین حلقه‌ی داشبورد: قوس گرادیانی شبه‌conic،
+// سر درخشان، سر گرد قوس و انیمیشن ورود. رنگ‌ها از توکن‌های --ring-* میان.
 import { ReactNode, useEffect, useId } from "react";
 import { animate, motion, useMotionValue, useReducedMotion, useTransform } from "framer-motion";
 
@@ -14,8 +14,8 @@ export const RING_AMBER: RingGrad = ["var(--ring-3a)", "var(--ring-3b)"];
 export const RING_OVER: RingGrad = ["var(--ring-over)", "var(--ring-over)"];
 
 /**
- * قوسِ گرادیانی: دو نیم‌دایره با گرادیانِ خودشون (from→mid و mid→to) که با یک
- * motion value پر می‌شن؛ سرِ قوس دایره‌ی درخشانی با رنگِ همون نقطه‌ست.
+ * قوس گرادیانی: دو نیم‌دایره با گرادیان خودشون (from→mid و mid→to) که با یک
+ * motion value پر می‌شن؛ سر قوس دایره‌ی درخشانی با رنگ همون نقطه‌ست.
  */
 export function GradientArc({ c, r, stroke, value, from, to, delay = 0, trackOpacity = 16 }: { c: number; r: number; stroke: number; value: number; from: string; to: string; delay?: number; trackOpacity?: number }) {
   const uid = useId().replace(/:/g, "");

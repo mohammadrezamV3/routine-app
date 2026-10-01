@@ -1,15 +1,15 @@
-// بازخوردِ کلیک روی باکس‌های قابل‌کلیک (نه فقط <button> واقعی، خیلی از
+// بازخورد کلیک روی باکس‌های قابل‌کلیک (نه فقط <button> واقعی، خیلی از
 // کارت‌ها/ردیف‌ها یک <div onClick> ساده‌اند). دو مشکل با تکیه‌ی صرف روی
 // CSS `:active`:
 //   ۱) خیلی از این باکس‌ها اصلا قاعده‌ی `:active` اختصاصی ندارند، پس با
 //      لمس/کلیک هیچ واکنشی دیده نمی‌شود — کاربر نمی‌فهمد کلیکش گرفته یا نه.
-//   ۲) سافاریِ iOS اصلا `:active` را (even اگه تعریف شده باشه) روی عنصری
+//   ۲) سافاری iOS اصلا `:active` را (even اگه تعریف شده باشه) روی عنصری
 //      که در مسیر رویدادش یک هندلر لمس نباشد اعمال نمی‌کند.
-// راه‌حل یکسان برای موس و لمس: با `pointerdown` نزدیک‌ترین جدِ «قابل‌کلیک»
+// راه‌حل یکسان برای موس و لمس: با `pointerdown` نزدیک‌ترین جد «قابل‌کلیک»
 // (button/a/role=button، یا هر چیزی که cursor:pointer دارد) را پیدا و یک
-// کلاس موقت رویش می‌گذاریم؛ با رهاشدن، بعد از یک حداقلِ زمانِ کوتاه (تا
-// حتی روی یک تپِ خیلی سریع هم واقعا دیده شود) برداشته می‌شود. چون فقط
-// opacity را عوض می‌کند (نه transform)، با انیمیشن‌های اختصاصیِ `:active`ی
+// کلاس موقت رویش می‌گذاریم؛ با رهاشدن، بعد از یک حداقل زمان کوتاه (تا
+// حتی روی یک تپ خیلی سریع هم واقعا دیده شود) برداشته می‌شود. چون فقط
+// opacity را عوض می‌کند (نه transform)، با انیمیشن‌های اختصاصی `:active`ی
 // که جاهای دیگر همین پروژه از قبل دارند (day-pill, rm-card, ...) تداخلی
 // ندارد و رویشان جمع می‌شود.
 export const TAP_FEEDBACK_INIT_SCRIPT = `(function(){try{
@@ -32,12 +32,12 @@ function findTappable(el){
   }
   return null;
 }
-/* هپتیک — لرزشِ خیلی کوتاه روی لمسِ هر چیزِ قابل‌کلیک، تا تپ «حس» بشه.
-   اندروید: navigator.vibrate. کروم فقط بعد از اولین تعاملِ کاربر (sticky
-   activation) اجازه می‌ده، و pointerdownِ لمسی خودش activation نیست — پس
+/* هپتیک — لرزش خیلی کوتاه روی لمس هر چیز قابل‌کلیک، تا تپ «حس» بشه.
+   اندروید: navigator.vibrate. کروم فقط بعد از اولین تعامل کاربر (sticky
+   activation) اجازه می‌ده، و pointerdown لمسی خودش activation نیست — پس
    تا قبل از اون، لرزش به pointerup (که activation حساب می‌شه) موکول می‌شه.
-   iOS (سافاری ۱۸+) vibrate نداره؛ کلیکِ برنامه‌ای روی لیبلِ یک
-   <input type=checkbox switch> مخفی هپتیکِ سیستمی رو فعال می‌کنه.
+   iOS (سافاری ۱۸+) vibrate نداره؛ کلیک برنامه‌ای روی لیبل یک
+   <input type=checkbox switch> مخفی هپتیک سیستمی رو فعال می‌کنه.
    کاربر با localStorage["arion:haptics"]="off" خاموشش می‌کنه. */
 var HAPTIC_MS=8,pendingHaptic=false,iosLabel=null;
 function hapticsOff(){try{return localStorage.getItem("arion:haptics")==="off";}catch(_){return false;}} /* هم‌کلید با lib/haptics.ts (HAPTICS_KEY) — تنظیمات › بازخورد لمسی */
@@ -72,9 +72,9 @@ document.addEventListener("pointerdown",function(e){
     if(canVibrate&&(!ua||ua.hasBeenActive))haptic();else pendingHaptic=true;
   }
 },{passive:true});
-// iOS: هپتیک (کلیکِ برنامه‌ایِ یک label/checkbox) دیگه توی pointerup نیست —
-// اونجا درست قبل از کلیکِ واقعیِ Safari اجرا می‌شد و گاهی کلیکِ لینک/باکس
-// (پشتیبانی، امنیت، حسابِ ترید) رو می‌خورد. حالا بعد از کلیکِ واقعی (فازِ
+// iOS: هپتیک (کلیک برنامه‌ای یک label/checkbox) دیگه توی pointerup نیست —
+// اونجا درست قبل از کلیک واقعی Safari اجرا می‌شد و گاهی کلیک لینک/باکس
+// (پشتیبانی، امنیت، حساب ترید) رو می‌خورد. حالا بعد از کلیک واقعی (فاز
 // bubble روی document، بعد از هندلرهای React) اجرا می‌شه.
 document.addEventListener("pointerup",function(){
   if(pendingHaptic&&!isIOS){pendingHaptic=false;haptic();}

@@ -10,8 +10,8 @@ function relativeWeekLabel(offset: number): string {
   return `${Math.abs(offset)} هفته قبل`;
 }
 
-// ناوبرِ هفته — فلشِ «بعدی» روی هفته‌ی جاری غیرفعاله (آینده قابل‌تحلیل
-// نیست). توی RTL فلشِ راست یعنی عقب (قدیمی‌تر)، چپ یعنی جلو.
+// ناوبر هفته — فلش «بعدی» روی هفته‌ی جاری غیرفعاله (آینده قابل‌تحلیل
+// نیست). توی RTL فلش راست یعنی عقب (قدیمی‌تر)، چپ یعنی جلو.
 export function WeeklyAnalysisHeader({
   offset,
   weekLabel,

@@ -21,7 +21,7 @@ const COUNT_LABELS: [keyof Counts, string][] = [
   ["reports", "گزارش"],
 ];
 
-// داده‌ی آزمایشیِ بخشِ منتورها — فقط Owner. ساخت و حذف هر دو در لاگِ فعالیت ثبت می‌شن.
+// داده‌ی آزمایشی بخش منتورها — فقط Owner. ساخت و حذف هر دو در لاگ فعالیت ثبت می‌شن.
 export default function AdminDemoDataPage() {
   const toast = useAdminToast();
   const { isSuperAdmin } = useAdminAccess();
@@ -42,7 +42,7 @@ export default function AdminDemoDataPage() {
   async function run(kind: "seed" | "clear") {
     setBusy(kind);
     try {
-      // کلیدِ رمزگذاریِ خودِ Owner پیش از ساخت (تا گفت‌وگوهایش با کاربرانِ آزمایشی پُر شوند)
+      // کلید رمزگذاری خود Owner پیش از ساخت (تا گفت‌وگوهایش با کاربران آزمایشی پر شوند)
       if (kind === "seed") await ensureE2EEKeys();
       const d = await adminFetch<{ status: Status; warnings?: string[] }>("/api/admin/demo-data", { method: kind === "seed" ? "POST" : "DELETE" });
       setStatus(d.status);

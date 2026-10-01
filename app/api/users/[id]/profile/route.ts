@@ -4,11 +4,11 @@ import { authOptions } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
 import { getFriendProfile } from "@/lib/friendProfile";
 
-// GET /api/users/:id/profile — پروفایلِ یک کاربر (پاپ‌آپِ کلیک روی اسم).
-// برخلافِ نسخه‌ی اولیه (که فقط برای دوستِ تاییدشده باز می‌شد)، طبقِ
-// درخواستِ صریح باید توی «افزودن دوست» هم قابل دیدن باشه — یعنی قبل از
-// این‌که دوست شوند. پس این‌جا شرط دوستی نیست، شرطِ discoverable/بلاک است:
-// - کاربرِ مقصد discoverable=false باشد و دوست نباشند → دیده نمی‌شود
+// GET /api/users/:id/profile — پروفایل یک کاربر (پاپ‌آپ کلیک روی اسم).
+// برخلاف نسخه‌ی اولیه (که فقط برای دوست تاییدشده باز می‌شد)، طبق
+// درخواست صریح باید توی «افزودن دوست» هم قابل دیدن باشه — یعنی قبل از
+// این‌که دوست شوند. پس این‌جا شرط دوستی نیست، شرط discoverable/بلاک است:
+// - کاربر مقصد discoverable=false باشد و دوست نباشند → دیده نمی‌شود
 // - هرکدام از دو طرف دیگری را بلاک کرده باشد → دیده نمی‌شود
 export async function GET(_req: NextRequest, { params }: { params: { id: string } }) {
   const session = await getServerSession(authOptions);
@@ -17,7 +17,7 @@ export async function GET(_req: NextRequest, { params }: { params: { id: string 
 
   const targetUserId = params.id;
   if (targetUserId === viewerId) {
-    // خودِ کاربر روی اسمِ خودش کلیک نمی‌کند، ولی اگر شد بی‌معنی است
+    // خود کاربر روی اسم خودش کلیک نمی‌کند، ولی اگر شد بی‌معنی است
     return NextResponse.json({ error: "not found" }, { status: 404 });
   }
 

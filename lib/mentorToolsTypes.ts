@@ -1,6 +1,6 @@
-// تایپ‌های سمتِ کلاینتِ ابزارهای منتور (قالب، پاسخِ آماده، گزارشِ هفتگی،
-// هشدار) — آینه‌ی شکلِ پاسخِ روت‌های /api/mentor/templates|replies|reports|alerts.
-// بدونِ import سروری؛ تاریخ‌ها رشته‌ی ISO‌اند.
+// تایپ‌های سمت کلاینت ابزارهای منتور (قالب، پاسخ آماده، گزارش هفتگی،
+// هشدار) — آینه‌ی شکل پاسخ روت‌های /api/mentor/templates|replies|reports|alerts.
+// بدون import سروری؛ تاریخ‌ها رشته‌ی ISO‌اند.
 
 import type { ProgramType } from "@/lib/mentorTypes";
 
@@ -67,7 +67,7 @@ export type WeeklyReport = { offset: number; generatedAt: string; students: Week
 
 export type AlertsResponse = { alertMissedDays: number | null };
 
-/** لینکِ دریافتِ CSVِ پیشرفتِ یک شاگرد (۳۰ روزِ اخیر یا بازه‌ی داده‌شده) */
+/** لینک دریافت CSV پیشرفت یک شاگرد (۳۰ روز اخیر یا بازه‌ی داده‌شده) */
 export function exportCsvUrl(studentId: string, range?: { from: string; to: string }): string {
   const q = new URLSearchParams({ studentId });
   if (range) { q.set("from", range.from); q.set("to", range.to); }

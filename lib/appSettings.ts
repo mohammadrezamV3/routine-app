@@ -20,7 +20,7 @@ async function getSetting<T>(key: string, fallback: T): Promise<T> {
   }
 }
 
-// نسخه‌ی عمومیِ همین خواندن/نوشتن برای بقیه‌ی تنظیماتِ سراسری (مثلا فلگِ قابلیت‌ها)
+// نسخه‌ی عمومی همین خواندن/نوشتن برای بقیه‌ی تنظیمات سراسری (مثلا فلگ قابلیت‌ها)
 export function getAppSetting<T>(key: string, fallback: T): Promise<T> {
   return getSetting(key, fallback);
 }

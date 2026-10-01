@@ -19,7 +19,7 @@ const INSIGHT_ICONS: Record<Insight["icon"], LucideIcon> = {
   zap: Zap,
 };
 
-// بینش‌های قطعیِ موتورِ محاسبه (نه AI) — هرکدوم با رنگِ لحنِ خودش
+// بینش‌های قطعی موتور محاسبه (نه AI) — هرکدوم با رنگ لحن خودش
 export function WeeklyAnalysisInsights({ insights }: { insights: Insight[] }) {
   return (
     <DashCard className="wa-insights-card">

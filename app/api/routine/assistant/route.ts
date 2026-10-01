@@ -18,30 +18,30 @@ import { addDaysIso, jsDayOfIso } from "@/lib/schedule";
 import type { CustomOccurrence } from "@/lib/storage";
 import { publishDataChanged, clientTabId } from "@/lib/realtime";
 
-// دستیارِ «مدیرِ برنامه» — تنها نقطه‌ای که مدلِ زبانی اجازه دارد برنامه‌های
+// دستیار «مدیر برنامه» — تنها نقطه‌ای که مدل زبانی اجازه دارد برنامه‌های
 // کاربر را عوض کند.
 //
-// چیدمانِ عمدیِ مسئولیت‌ها:
+// چیدمان عمدی مسئولیت‌ها:
 //   • مدل  → فقط *پیشنهاد* می‌دهد (چه چیزی اضافه/جابه‌جا/حذف شود)
 //   • این روت → اعتبارسنجی، اعمال، ذخیره
 // یعنی هیچ ادعایی از مدل (ساعت آزاد است، برنامه وجود دارد، روز درست است)
-// بدونِ بررسیِ دوباره اثر نمی‌کند. `lib/routineAssistant.ts` همان
+// بدون بررسی دوباره اثر نمی‌کند. `lib/routineAssistant.ts` همان
 // اعتبارسنجی‌هایی را می‌کند که فرم‌های دستی می‌کنند، پس نتیجه‌ی دو مسیر یکی است.
 
 export const dynamic = "force-dynamic";
 
 const MAX_MESSAGE_LEN = 500;
 
-/** متنِ ثابتِ ردِ پیامِ خارج از موضوع — عمدا از خودِ کد، نه از مدل. */
+/** متن ثابت رد پیام خارج از موضوع — عمدا از خود کد، نه از مدل. */
 const OFF_TOPIC_REPLY =
-  "من نومو‌ام، مدیرِ برنامه‌ات — بگو چه برنامه‌ای اضافه/جابه‌جا/حذف کنم.";
+  "من نومو‌ام، مدیر برنامه‌ات — بگو چه برنامه‌ای اضافه/جابه‌جا/حذف کنم.";
 
 /**
- * آیا این کاربر اشتراکِ فعال دارد؟
+ * آیا این کاربر اشتراک فعال دارد؟
  *
- * ثبت‌نامِ عادی هیچ ردیفِ Subscription نمی‌سازد (فقط ModuleAccess پایه)، پس
- * «نداشتنِ ردیفِ فعال» دقیقا یعنی کاربرِ رایگان. شرطِ currentPeriodEnd هم
- * لازم است چون ردیفِ منقضی ممکن است هنوز status قدیمی داشته باشد — همان
+ * ثبت‌نام عادی هیچ ردیف Subscription نمی‌سازد (فقط ModuleAccess پایه)، پس
+ * «نداشتن ردیف فعال» دقیقا یعنی کاربر رایگان. شرط currentPeriodEnd هم
+ * لازم است چون ردیف منقضی ممکن است هنوز status قدیمی داشته باشد — همان
  * باگی که در /api/account هم بود.
  */
 async function hasActiveSubscription(userId: string): Promise<boolean> {
@@ -53,10 +53,10 @@ async function hasActiveSubscription(userId: string): Promise<boolean> {
 }
 
 /**
- * «نومو» مثلِ خودِ روتین کامل رایگان نیست:
- *   • سوپریوزر یا اشتراکِ فعال → نامحدود
- *   • بقیه → سهمیه‌ی مادام‌العمرِ پیام‌های رایگان (getNomoFreeUses، پیش‌فرض
- *     FREE_ASSISTANT_USES = ۱۰، قابلِ تغییر از پنلِ ادمین)
+ * «نومو» مثل خود روتین کامل رایگان نیست:
+ *   • سوپریوزر یا اشتراک فعال → نامحدود
+ *   • بقیه → سهمیه‌ی مادام‌العمر پیام‌های رایگان (getNomoFreeUses، پیش‌فرض
+ *     FREE_ASSISTANT_USES = ۱۰، قابل تغییر از پنل ادمین)
  */
 async function assistantAccess(userId: string, isSuperAdmin: boolean): Promise<{ unlimited: boolean; freeLimit: number }> {
   if (isSuperAdmin || (await hasActiveSubscription(userId))) return { unlimited: true, freeLimit: 0 };
@@ -89,10 +89,10 @@ async function readOccurrences(userId: string, key: string): Promise<any> {
 }
 
 /**
- * ساعت‌های بیداریِ کاربر — وقتی خودمان باید برای یک برنامه وقت پیدا کنیم،
- * جست‌وجو باید داخلِ همین بازه باشد نه کلِ شبانه‌روز. نبودِ تنظیم یعنی
- * بازه‌ی پیش‌فرض؛ خوابِ بعد از نیمه‌شب هم به آخرِ روز محدود می‌شود چون
- * برنامه‌ها روزِ هفته‌ای‌اند و از نیمه‌شب به روزِ بعد سر نمی‌روند.
+ * ساعت‌های بیداری کاربر — وقتی خودمان باید برای یک برنامه وقت پیدا کنیم،
+ * جست‌وجو باید داخل همین بازه باشد نه کل شبانه‌روز. نبود تنظیم یعنی
+ * بازه‌ی پیش‌فرض؛ خواب بعد از نیمه‌شب هم به آخر روز محدود می‌شود چون
+ * برنامه‌ها روز هفته‌ای‌اند و از نیمه‌شب به روز بعد سر نمی‌روند.
  */
 function awakeWindow(raw: unknown): AwakeWindow {
   const v = raw as { wake?: unknown; sleep?: unknown } | null;
@@ -111,7 +111,7 @@ function awakeWindow(raw: unknown): AwakeWindow {
   return { startMin, endMin };
 }
 
-/** تاریخچه‌ی گفت‌وگو از کلاینت می‌آید، پس مثل هر ورودیِ دیگری پاک‌سازی می‌شود */
+/** تاریخچه‌ی گفت‌وگو از کلاینت می‌آید، پس مثل هر ورودی دیگری پاک‌سازی می‌شود */
 function parseHistory(raw: unknown): RoutineChatTurn[] {
   if (!Array.isArray(raw)) return [];
   return raw
@@ -120,8 +120,8 @@ function parseHistory(raw: unknown): RoutineChatTurn[] {
     .map((t: any) => ({ role: t.role, text: String(t.text).slice(0, 600) }));
 }
 
-/** امروز به وقتِ ایران — سرور (Docker) معمولا UTC است و بینِ ۰۰:۰۰ تا ۰۳:۳۰
- *  بامدادِ ایران، `new Date()` سرور هنوز «دیروز» را می‌دهد. */
+/** امروز به وقت ایران — سرور (Docker) معمولا UTC است و بین ۰۰:۰۰ تا ۰۳:۳۰
+ *  بامداد ایران، `new Date()` سرور هنوز «دیروز» را می‌دهد. */
 function tehranTodayIso(): string {
   try {
     return new Intl.DateTimeFormat("en-CA", { timeZone: "Asia/Tehran", year: "numeric", month: "2-digit", day: "2-digit" }).format(new Date());
@@ -131,10 +131,10 @@ function tehranTodayIso(): string {
 }
 
 /**
- * «امروز»ِ کاربر. ریشه‌ی باگِ «روزِ اشتباه»: قبلا سرور با ساعتِ خودش
+ * «امروز» کاربر. ریشه‌ی باگ «روز اشتباه»: قبلا سرور با ساعت خودش
  * (UTC) امروز را حساب می‌کرد و «فردا»ی کاربر نیمه‌شب‌ها یک روز عقب ثبت
- * می‌شد. حالا تاریخِ محلیِ دستگاهِ کاربر ملاک است — ولی چون از کلاینت
- * می‌آید، فقط اگر حداکثر یک روز با تاریخِ ایران فاصله داشته باشد پذیرفته
+ * می‌شد. حالا تاریخ محلی دستگاه کاربر ملاک است — ولی چون از کلاینت
+ * می‌آید، فقط اگر حداکثر یک روز با تاریخ ایران فاصله داشته باشد پذیرفته
  * می‌شود.
  */
 function resolveToday(raw: unknown): string {
@@ -152,8 +152,8 @@ function jalaliLabel(iso: string, withWeekday = true): string {
 }
 
 /**
- * جدولِ سه هفته‌ی پیش‌رو برای مدل: مدل روزِ هفته‌ی یک تاریخ را از حافظه
- * حساب نمی‌کند (همان‌جا بود که «این پنجشنبه» روزِ اشتباه می‌خورد)، از این
+ * جدول سه هفته‌ی پیش‌رو برای مدل: مدل روز هفته‌ی یک تاریخ را از حافظه
+ * حساب نمی‌کند (همان‌جا بود که «این پنجشنبه» روز اشتباه می‌خورد)، از این
  * جدول برمی‌دارد.
  */
 function calendarTable(todayIso: string, days = 21): string {
@@ -170,21 +170,21 @@ function calendarTable(todayIso: string, days = 21): string {
 }
 
 export async function POST(req: NextRequest) {
-  // ROUTINE ماژولِ پایه و همیشه رایگان است؛ این نگهبان این‌جا برای دسترسی
-  // نیست، برای همان سه کارِ دیگری است که می‌کند: ۴۰۱ برای مهمان، بلاکِ
-  // کاربرِ مسدودشده، و بیرون‌دادنِ userId/isSuperAdmin. خودِ «نومو» جزوِ
-  // رایگان نیست — پایین‌تر با assistantAccess (سهمیه‌ی پیامِ رایگان) سنجیده می‌شود.
+  // ROUTINE ماژول پایه و همیشه رایگان است؛ این نگهبان این‌جا برای دسترسی
+  // نیست، برای همان سه کار دیگری است که می‌کند: ۴۰۱ برای مهمان، بلاک
+  // کاربر مسدودشده، و بیرون‌دادن userId/isSuperAdmin. خود «نومو» جزو
+  // رایگان نیست — پایین‌تر با assistantAccess (سهمیه‌ی پیام رایگان) سنجیده می‌شود.
   const guard = await requireModule(ModuleKey.ROUTINE);
   if (!guard.ok) return guard.response;
   { const off = await featureBlocked("routineAssistant", guard.userId); if (off) return off; }
   const { userId, isSuperAdmin } = guard;
 
-  // سقفِ نرخ مستقل از سهمیه است: سهمیه محدودیتِ محصولی است، این جلوی
+  // سقف نرخ مستقل از سهمیه است: سهمیه محدودیت محصولی است، این جلوی
   // هزینه‌ی گیت‌وی را می‌گیرد — از جمله برای مشترکی که سهمیه‌اش نامحدود است
   // و برای پیام‌های خارج از موضوع که سهمیه مصرف نمی‌کنند.
   if (!(await checkRateLimit(`routine-assistant:${userId}`, 15, 10 * 60 * 1000))) {
     return NextResponse.json(
-      { error: "پیام‌ها را خیلی سریع پشتِ هم فرستادی. چند دقیقه صبر کن و دوباره امتحان کن." },
+      { error: "پیام‌ها را خیلی سریع پشت هم فرستادی. چند دقیقه صبر کن و دوباره امتحان کن." },
       { status: 429 }
     );
   }
@@ -212,15 +212,15 @@ export async function POST(req: NextRequest) {
       return NextResponse.json(
         {
           error:
-            `${freeLimit} پیامِ رایگانِ نومو تمام شده. با فعال‌کردنِ اشتراک، ` +
-            `بدونِ محدودیت می‌توانی برنامه‌هایت را با گفت‌وگو بچینی.`,
+            `${freeLimit} پیام رایگان نومو تمام شده. با فعال‌کردن اشتراک، ` +
+            `بدون محدودیت می‌توانی برنامه‌هایت را با گفت‌وگو بچینی.`,
           quotaExhausted: true,
           quota: { unlimited: false, used: usesBefore, limit: freeLimit, remaining: 0 },
         },
         { status: 403 }
       );
     }
-    // *قبل* از فراخوانی مصرف می‌شود، نه بعدش: دو درخواستِ هم‌زمان نباید هر
+    // *قبل* از فراخوانی مصرف می‌شود، نه بعدش: دو درخواست هم‌زمان نباید هر
     // دو یک سهمیه را ببینند. اگر پیام خارج از موضوع بود یا گیت‌وی خطا داد،
     // پایین‌تر پس داده می‌شود.
     await writeUses(userId, usesBefore + 1);
@@ -230,7 +230,7 @@ export async function POST(req: NextRequest) {
     if (!unlimited) await writeUses(userId, usesBefore).catch(() => {});
   }
 
-  // ---------- وضعیتِ فعلیِ برنامه‌ها ----------
+  // ---------- وضعیت فعلی برنامه‌ها ----------
   const history = parseHistory(parsed.body?.history);
   const rawOcc = await readOccurrences(userId, SETTING_KEYS.customOccurrences);
   const occurrences: CustomOccurrence[] = Array.isArray(rawOcc) ? (rawOcc as CustomOccurrence[]) : [];
@@ -254,7 +254,7 @@ export async function POST(req: NextRequest) {
     );
   } catch (err: any) {
     await refundQuota();
-    logError("ai-gateway", `دستیارِ روتین شکست خورد: ${err?.message || err}`, {
+    logError("ai-gateway", `دستیار روتین شکست خورد: ${err?.message || err}`, {
       context: { feature: "ROUTINE_ASSISTANT" },
     });
     return NextResponse.json(
@@ -297,7 +297,7 @@ export async function POST(req: NextRequest) {
     });
   }
 
-  // ---------- فقط سوال، بدونِ تغییر ----------
+  // ---------- فقط سوال، بدون تغییر ----------
   if (!plan.ops.length) {
     return NextResponse.json({
       reply: plan.reply || "چیزی برای تغییر پیدا نکردم. دقیق‌تر بگو با کدام برنامه چه کار کنم.",
@@ -310,8 +310,8 @@ export async function POST(req: NextRequest) {
   }
 
   // ---------- اعمال ----------
-  // ساعتی که کاربر اصلا نگفته، دور ریخته می‌شود — آخرین پیامِ کاربر و دو
-  // پیامِ قبلی‌اش (برای جواب‌های کوتاه به سوالِ دستیار) ملاک‌اند.
+  // ساعتی که کاربر اصلا نگفته، دور ریخته می‌شود — آخرین پیام کاربر و دو
+  // پیام قبلی‌اش (برای جواب‌های کوتاه به سوال دستیار) ملاک‌اند.
   const userTexts = [message, ...history.filter((t) => t.role === "user").slice(-2).map((t) => t.text)];
   const { ops } = stripInventedTimes(plan.ops, userTexts);
   const outcome = applyOps(ordered, removed, ops, todayIso, awake);
@@ -323,7 +323,7 @@ export async function POST(req: NextRequest) {
       create: { userId, key: SETTING_KEYS.customOccurrences, value: next as any },
       update: { value: next as any },
     });
-    // فهرستِ حذف‌شده‌ها فقط وقتی نوشته می‌شود که واقعا فرق کرده باشد —
+    // فهرست حذف‌شده‌ها فقط وقتی نوشته می‌شود که واقعا فرق کرده باشد —
     // یک upsert اضافه برای هر پیام بی‌دلیل است.
     if (outcome.removed.length !== removed.length) {
       await prisma.userSetting.upsert({
@@ -336,7 +336,7 @@ export async function POST(req: NextRequest) {
     void publishDataChanged(userId, [SETTING_KEYS.customOccurrences, SETTING_KEYS.removedOccurrences], clientTabId(req));
   }
 
-  // متنِ نهایی از نتیجه‌ی *واقعی* ساخته می‌شود، نه از حرفِ مدل. اگر مدل
+  // متن نهایی از نتیجه‌ی *واقعی* ساخته می‌شود، نه از حرف مدل. اگر مدل
   // گفته باشد «انجام شد» ولی تداخل مانع شده باشد، کاربر نباید آن را ببیند.
   const lines: string[] = [];
   if (outcome.applied.length) lines.push(...outcome.applied);
@@ -355,8 +355,8 @@ export async function POST(req: NextRequest) {
   });
 }
 
-// GET — فقط وضعیتِ سهمیه، برای این‌که UI بتواند قبل از تایپ‌کردن بگوید
-// چند بار مانده (و دکمه را برای کاربرِ تمام‌شده غیرفعال کند).
+// GET — فقط وضعیت سهمیه، برای این‌که UI بتواند قبل از تایپ‌کردن بگوید
+// چند بار مانده (و دکمه را برای کاربر تمام‌شده غیرفعال کند).
 export async function GET() {
   const guard = await requireModule(ModuleKey.ROUTINE);
   if (!guard.ok) return guard.response;

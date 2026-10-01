@@ -170,7 +170,7 @@ async function handleDELETE(req: NextRequest) {
   return NextResponse.json({ ok: true, archived });
 }
 
-// بعد از هر نوشتنِ موفق، بقیه‌ی دستگاه‌ها/تب‌های همین کاربر با WebSocket خبردار می‌شن (lib/realtime.ts)
+// بعد از هر نوشتن موفق، بقیه‌ی دستگاه‌ها/تب‌های همین کاربر با WebSocket خبردار می‌شن (lib/realtime.ts)
 export const POST = withLiveSync(["trade"], handlePOST);
 export const PATCH = withLiveSync(["trade"], handlePATCH);
 export const DELETE = withLiveSync(["trade"], handleDELETE);

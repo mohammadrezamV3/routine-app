@@ -1,6 +1,6 @@
-// کپیِ برنامه/قالب و جابه‌جاییِ تاریخ — تابع‌های خالص، بدونِ import سروری،
-// تا هم روتِ duplicate و هم ویرایشگرِ کلاینت (پیش‌پرکردن از قالب) از همین
-// یک منطق استفاده کنند و «تاریخِ پایان» در دو جا دو جور حساب نشود.
+// کپی برنامه/قالب و جابه‌جایی تاریخ — تابع‌های خالص، بدون import سروری،
+// تا هم روت duplicate و هم ویرایشگر کلاینت (پیش‌پرکردن از قالب) از همین
+// یک منطق استفاده کنند و «تاریخ پایان» در دو جا دو جور حساب نشود.
 
 const ISO_RE = /^\d{4}-\d{2}-\d{2}$/;
 
@@ -24,7 +24,7 @@ export function daysBetween(a: string, b: string): number {
   return Math.round((toUtc(b) - toUtc(a)) / 86_400_000);
 }
 
-/** طولِ بازه‌ی برنامه به روز؛ فقط وقتی هر دو تاریخ هست و پایان ≥ شروع */
+/** طول بازه‌ی برنامه به روز؛ فقط وقتی هر دو تاریخ هست و پایان ≥ شروع */
 export function rangeDuration(startIso: string | null | undefined, endIso: string | null | undefined): number | null {
   const s = isoDay(startIso);
   const e = isoDay(endIso);
@@ -34,8 +34,8 @@ export function rangeDuration(startIso: string | null | undefined, endIso: strin
 }
 
 /**
- * بازه‌ی برنامه‌ی کپی‌شده: شروعِ تازه + همان طولِ مبدا. بدونِ شروعِ تازه،
- * برنامه بی‌تاریخ می‌ماند (از روزِ پذیرش شروع می‌شود).
+ * بازه‌ی برنامه‌ی کپی‌شده: شروع تازه + همان طول مبدا. بدون شروع تازه،
+ * برنامه بی‌تاریخ می‌ماند (از روز پذیرش شروع می‌شود).
  */
 export function shiftedRange(durationDays: number | null, newStartIso: string | null): { startDate: string | null; endDate: string | null } {
   const s = isoDay(newStartIso);
@@ -44,7 +44,7 @@ export function shiftedRange(durationDays: number | null, newStartIso: string | 
 }
 
 /**
- * شروعِ پیش‌فرض برای «دوره‌ی بعد»: روزِ بعد از پایانِ برنامه‌ی مبدا، ولی
+ * شروع پیش‌فرض برای «دوره‌ی بعد»: روز بعد از پایان برنامه‌ی مبدا، ولی
  * هرگز قبل از امروز.
  */
 export function nextPeriodStart(sourceEndIso: string | null | undefined, todayIso: string): string {
@@ -54,7 +54,7 @@ export function nextPeriodStart(sourceEndIso: string | null | undefined, todayIs
   return next > todayIso ? next : todayIso;
 }
 
-/** شکلِ آیتمی که هم از برنامه و هم از قالب می‌آید */
+/** شکل آیتمی که هم از برنامه و هم از قالب می‌آید */
 export type CopyableItem = {
   title: string;
   details?: string | null;
@@ -68,7 +68,7 @@ export type CopyableItem = {
   restSec?: number | null;
 };
 
-/** آیتم → بدنه‌ی ItemInputِ API (فیلدهای خالی حذف می‌شوند) */
+/** آیتم → بدنه‌ی ItemInput API (فیلدهای خالی حذف می‌شوند) */
 export function toItemInput(i: CopyableItem): Record<string, unknown> {
   const out: Record<string, unknown> = {
     title: i.title,

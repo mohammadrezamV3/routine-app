@@ -10,8 +10,8 @@ import { exportCsvUrl } from "@/lib/mentorToolsTypes";
 const ic = (Icon: typeof Copy, size: number) => <Icon size={size} strokeWidth={MI_STROKE} aria-hidden />;
 
 /**
- * ابزارهای یک برنامه برای منتورِ سازنده‌اش: ذخیره به‌عنوان قالب، کپی برای
- * شاگرد (همان شاگرد برای دوره‌ی بعد یا شاگردِ دیگر) و دریافتِ CSVِ پیشرفت.
+ * ابزارهای یک برنامه برای منتور سازنده‌اش: ذخیره به‌عنوان قالب، کپی برای
+ * شاگرد (همان شاگرد برای دوره‌ی بعد یا شاگرد دیگر) و دریافت CSV پیشرفت.
  * مستقل است؛ هر صفحه‌ای که برنامه را به منتور نشان می‌دهد می‌تواند سوارش کند:
  *   <MentorProgramTools programId={p.id} title={p.title} studentId={studentId} />
  */

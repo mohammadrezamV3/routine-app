@@ -9,9 +9,9 @@ import { summarizeDay } from "@/lib/mentorProgressCore";
 import { fmtWeekday, NETWORK_ERROR, readApiError } from "@/lib/mentorFormat";
 import { FA_WEEKDAY_SHORT, J_MONTHS, faNum, toJalali } from "@/lib/jalali";
 
-// نمای هفتگیِ «پیشرفتِ خودکار» — فقط‌خواندنی. وضعیتِ هر آیتم از تیک‌های خودِ
+// نمای هفتگی «پیشرفت خودکار» — فقط‌خواندنی. وضعیت هر آیتم از تیک‌های خود
 // شاگرد در «روتین من» می‌آید (lib/mentorProgress.ts)؛ شاگرد فقط می‌تواند برای
-// هر روز یک یادداشتِ اختیاری برای منتور بنویسد، نه وضعیت.
+// هر روز یک یادداشت اختیاری برای منتور بنویسد، نه وضعیت.
 
 const NOTE_MAX = 500;
 const CHIP = { size: 13, strokeWidth: 1.75, "aria-hidden": true } as const;
@@ -254,7 +254,7 @@ function DayNoteEditor({
           value={body}
           maxLength={NOTE_MAX + 20}
           onChange={(e) => { setBody(e.target.value); setJustSaved(false); setError(null); }}
-          placeholder="مثلاً «پنجشنبه امتحان داشتم و آزمون را جمعه زدم»"
+          placeholder="مثلا «پنجشنبه امتحان داشتم و آزمون را جمعه زدم»"
         />
       </MentorField>
       <div className="mentor-btn-group is-end" style={{ marginTop: 8 }}>

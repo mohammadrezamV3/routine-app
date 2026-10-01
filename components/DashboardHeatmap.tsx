@@ -1,7 +1,7 @@
 "use client";
 
-// نقشه‌ی ثبات — ۱۳ هفته‌ی اخیرِ روتین، هر خانه یک روز (شنبه بالا). روزِ بی‌برنامه
-// خاکستریِ خنثی‌ست نه «شکست». ورودِ خانه‌ها یک موجِ قطری با CSS ـه (نه JS
+// نقشه‌ی ثبات — ۱۳ هفته‌ی اخیر روتین، هر خانه یک روز (شنبه بالا). روز بی‌برنامه
+// خاکستری خنثی‌ست نه «شکست». ورود خانه‌ها یک موج قطری با CSS ـه (نه JS
 // per-cell) تا ۱۲۶ خانه هیچ هزینه‌ی رندری نداشته باشن.
 
 import { useMemo, useState } from "react";
@@ -17,7 +17,7 @@ function jalaliOf(iso: string) {
 }
 
 export function DashboardHeatmap({ heat, streak, ready, memberSince }: { heat: HeatCell[][]; streak: number | null; ready: boolean; memberSince?: string | null }) {
-  // روزهای قبل از ساختِ حساب «شکست» نیستن — خنثی نشون داده می‌شن (مثلِ روزِ بی‌برنامه)
+  // روزهای قبل از ساخت حساب «شکست» نیستن — خنثی نشون داده می‌شن (مثل روز بی‌برنامه)
   const sinceIso = memberSince ? memberSince.slice(0, 10) : null;
   const [hover, setHover] = useState<HeatCell | null>(null);
 
@@ -34,7 +34,7 @@ export function DashboardHeatmap({ heat, streak, ready, memberSince }: { heat: H
     return { avg, perfect, best };
   }, [heat, sinceIso]);
 
-  // اسمِ ماهِ شمسی بالای ستونی که ماه عوض می‌شه
+  // اسم ماه شمسی بالای ستونی که ماه عوض می‌شه
   const monthMarks = useMemo(() => {
     let prev = -1;
     return heat.map((col) => {
@@ -50,7 +50,7 @@ export function DashboardHeatmap({ heat, streak, ready, memberSince }: { heat: H
         const [, jm, jd] = jalaliOf(hover.iso);
         const [y, m, d] = hover.iso.split("-").map(Number);
         const wd = FA_WEEKDAY[new Date(y, m - 1, d).getDay()];
-        return `${wd} ${faNum(jd)} ${J_MONTHS[jm - 1]} — ${hover.future ? "هنوز نرسیده" : sinceIso && hover.iso < sinceIso ? "قبل از عضویت" : hover.pct === null ? "بدونِ برنامه" : `${faNum(hover.pct)}٪ انجام`}`;
+        return `${wd} ${faNum(jd)} ${J_MONTHS[jm - 1]} — ${hover.future ? "هنوز نرسیده" : sinceIso && hover.iso < sinceIso ? "قبل از عضویت" : hover.pct === null ? "بدون برنامه" : `${faNum(hover.pct)}٪ انجام`}`;
       })()
     : "روی هر روز بایست تا جزئیاتش رو ببینی";
 
@@ -58,9 +58,9 @@ export function DashboardHeatmap({ heat, streak, ready, memberSince }: { heat: H
     <BentoCard area="heat" className="db-heat" label="نقشه‌ی ثبات">
       <CardHead icon="chart" title="نقشه‌ی ثبات" href="/weekly" hrefLabel="تاریخچه" />
       <div className="db-heat-stats">
-        <div><span className="db-stat-label">استریکِ فعلی</span><b className="db-stat-val">{streak === null ? <Skel w={28} h={16} /> : <CountUp value={streak} />}<small> روز</small></b></div>
+        <div><span className="db-stat-label">استریک فعلی</span><b className="db-stat-val">{streak === null ? <Skel w={28} h={16} /> : <CountUp value={streak} />}<small> روز</small></b></div>
         <div><span className="db-stat-label">بهترین رکورد</span><b className="db-stat-val"><CountUp value={summary.best} /><small> روز</small></b></div>
-        <div><span className="db-stat-label">میانگینِ ۳۰ روز</span><b className="db-stat-val"><CountUp value={summary.avg} suffix="٪" /></b></div>
+        <div><span className="db-stat-label">میانگین ۳۰ روز</span><b className="db-stat-val"><CountUp value={summary.avg} suffix="٪" /></b></div>
         <div><span className="db-stat-label">روزهای کامل</span><b className="db-stat-val"><CountUp value={summary.perfect} /></b></div>
       </div>
 

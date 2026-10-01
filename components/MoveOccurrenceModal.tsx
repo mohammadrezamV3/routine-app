@@ -47,7 +47,7 @@ export function MoveOccurrenceModal({
   const [start, setStart] = useState((parts[0] || "").trim());
   const [end, setEnd] = useState((parts[1] || "").trim());
   const [status, setStatus] = useState<"idle" | "loading" | "success" | "error">("idle");
-  // پیامِ خطا داخلِ همین پاپ‌آپ، نه بنرِ بالای صفحه (درخواستِ صریحِ کاربر).
+  // پیام خطا داخل همین پاپ‌آپ، نه بنر بالای صفحه (درخواست صریح کاربر).
   const [formError, setFormError] = useState<string | null>(null);
   const [errors, setErrors] = useState<{ start?: boolean; end?: boolean }>({});
   const formRef = useRef<HTMLDivElement>(null);
@@ -68,7 +68,7 @@ export function MoveOccurrenceModal({
     const startMin = timeStartMinutes(startFa);
     const endMin = timeStartMinutes(endFa);
 
-    // هیچ قفلی روی «این ساعت امروز گذشته» نیست — درخواستِ صریحِ کاربر.
+    // هیچ قفلی روی «این ساعت امروز گذشته» نیست — درخواست صریح کاربر.
     const conflict = findScheduleConflict(targetJsDay, startMin, endMin, now, scheduleOpts, occ.id);
 
     if (conflict) {
@@ -82,14 +82,14 @@ export function MoveOccurrenceModal({
     setFormError(null);
     setStatus("loading");
 
-    // بدون لودینگِ مصنوعی — همین که واقعاً ذخیره شد باید همه‌جای اپ دیده بشه.
+    // بدون لودینگ مصنوعی — همین که واقعا ذخیره شد باید همه‌جای اپ دیده بشه.
     let nextRemoved = scheduleOpts.removedOccurrences;
     let nextCustom = scheduleOpts.customOccurrences;
     if (occ.custom) {
-      // پاک‌کردنِ کاملِ رکوردِ قبلی یعنی گذشته‌ی همان occurrence هم از
+      // پاک‌کردن کامل رکورد قبلی یعنی گذشته‌ی همان occurrence هم از
       // «برنامه هفتگی» ناپدید می‌شود (چون از روی همین آرایه محاسبه می‌شود،
-      // نه یک اسنپ‌شاتِ جدا) — به‌جایش endDate روی «یک روز قبل از روزی که
-      // انتقال از رویش زده شده» ست می‌شود، دقیقا مثلِ حذف.
+      // نه یک اسنپ‌شات جدا) — به‌جایش endDate روی «یک روز قبل از روزی که
+      // انتقال از رویش زده شده» ست می‌شود، دقیقا مثل حذف.
       const cutoff = dayBeforeIso(sourceIso);
       nextCustom = scheduleOpts.customOccurrences.flatMap((c) => {
         if (c.id !== occ.id) return [c];
@@ -112,9 +112,9 @@ export function MoveOccurrenceModal({
       startDate: isoLocal(now),
       ...(occ.importance ? { importance: occ.importance } : {}),
       ...(occ.tag ? { tag: occ.tag } : {}),
-      // جابه‌جایی نباید پیوندِ آینه با برنامه‌ی منتور رو قطع کنه (حریم خصوصی/حذف خودکار)
+      // جابه‌جایی نباید پیوند آینه با برنامه‌ی منتور رو قطع کنه (حریم خصوصی/حذف خودکار)
       ...(mentorProgramId ? { mentorProgramId } : {}),
-      // و پیوند با آیتمِ همان برنامه — تیکِ روزِ جدید به پیشرفتِ خودکارِ همان آیتم می‌رسد
+      // و پیوند با آیتم همان برنامه — تیک روز جدید به پیشرفت خودکار همان آیتم می‌رسد
       ...(mentorProgramId && mentorItemId ? { mentorItemId } : {}),
       // برنامه‌ی لیستی با جابه‌جایی آیتم‌هاش رو از دست نمی‌ده
       ...(mirrorOf?.items?.length ? { items: mirrorOf.items } : {}),

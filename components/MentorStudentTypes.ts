@@ -1,6 +1,6 @@
 import type { Feedback, MentorRoutineSlot, ProgramRow, PublicUser } from "@/lib/mentorTypes";
 
-// شکلِ پاسخِ GET /api/mentor/students/[studentId] (docs/mentors.md › دیدِ منتور).
+// شکل پاسخ GET /api/mentor/students/[studentId] (docs/mentors.md › دید منتور).
 // فقط برای صفحه‌ی /mentor/students/[studentId] و اجزای MentorStudent*.
 
 export type StudentPrivacySummary = {
@@ -26,7 +26,7 @@ export type StudentExerciseSummary =
       progress: { planned: number; completed: number; days: { date: string; completed: boolean; itemsDone: number }[] } | null;
     };
 
-/** خلاصه‌ی کالری (calorieSummary در روت) — فقط عدد، هرگز اسمِ غذا */
+/** خلاصه‌ی کالری (calorieSummary در روت) — فقط عدد، هرگز اسم غذا */
 export type StudentCalorieSummary = {
   hasTarget: boolean;
   dailyTargetKcal: number | null;

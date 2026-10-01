@@ -5,9 +5,9 @@ import { prisma } from "@/lib/prisma";
 import { checkRateLimit } from "@/lib/rateLimit";
 import { withLiveSync } from "@/lib/realtime";
 
-// بنرِ بالای پروفایل — دقیقا هم‌الگویِ /api/account/avatar: data URL توی
-// همون ردیفِ User. سقفش بزرگ‌تره چون تصویر پهنه (۱۰۲۴×۳۲۰)، ولی باز هم
-// سمت کلاینت فشرده می‌شه و این فقط یه محافظِ اضافه‌ست.
+// بنر بالای پروفایل — دقیقا هم‌الگوی /api/account/avatar: data URL توی
+// همون ردیف User. سقفش بزرگ‌تره چون تصویر پهنه (۱۰۲۴×۳۲۰)، ولی باز هم
+// سمت کلاینت فشرده می‌شه و این فقط یه محافظ اضافه‌ست.
 const MAX_DATA_URL_LENGTH = 700_000;
 
 export async function GET() {

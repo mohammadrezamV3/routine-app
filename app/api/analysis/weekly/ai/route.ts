@@ -9,9 +9,9 @@ import { computeWeeklyAnalysis } from "@/lib/weeklyAnalysis/compute";
 import { getWeekRange } from "@/lib/weeklyAnalysis/week";
 import { generateAiCoach, isAiAvailable } from "@/lib/weeklyAnalysis/ai";
 
-// POST /api/analysis/weekly/ai { offset } — ساخت/بازسازیِ مربیِ AI برایِ
+// POST /api/analysis/weekly/ai { offset } — ساخت/بازسازی مربی AI برای
 // یک هفته‌ی مشخص. واقعا گیت‌وی AI رو صدا می‌زنه (هزینه/زمان داره)، پس
-// سخت‌گیرانه‌تر از روتِ GET اصلی rate-limit می‌شه.
+// سخت‌گیرانه‌تر از روت GET اصلی rate-limit می‌شه.
 const MAX_OFFSET_BACK = -52;
 
 // گیت‌وی AI ممکنه تا ~۵۵ ثانیه طول بکشه (lib/aiClient.ts → AI_TOTAL_BUDGET_MS)
@@ -25,11 +25,11 @@ export async function POST(req: NextRequest) {
     const { userId, isSuperAdmin } = guard;
 
     if (!isAiAvailable()) {
-      return NextResponse.json({ error: "مربیِ هوش‌مصنوعی در دسترس نیست" }, { status: 503 });
+      return NextResponse.json({ error: "مربی هوش‌مصنوعی در دسترس نیست" }, { status: 503 });
     }
 
     if (!isSuperAdmin && !(await checkRateLimit(`weekly-analysis-ai:${userId}`, 6, 60 * 60 * 1000))) {
-      return NextResponse.json({ error: "تعداد ساخت مربیِ AI امروز/این‌ساعت تمام شده — کمی بعد دوباره امتحان کن" }, { status: 429 });
+      return NextResponse.json({ error: "تعداد ساخت مربی AI امروز/این‌ساعت تمام شده — کمی بعد دوباره امتحان کن" }, { status: 429 });
     }
 
     const body = await req.json().catch(() => ({}));
@@ -48,7 +48,7 @@ export async function POST(req: NextRequest) {
 
     const analysis = await computeWeeklyAnalysis(userId, { timezone, offset, isSuperAdmin });
 
-    // سهمیه‌ی AI (سقفِ کلِ دوره‌ی آزمایشی برای حسابِ تازه — lib/trial.ts)
+    // سهمیه‌ی AI (سقف کل دوره‌ی آزمایشی برای حساب تازه — lib/trial.ts)
     const quota = await checkAndConsumeAiQuota(userId, isSuperAdmin, AiFeatureKey.WEEKLY_COACH_REPORT);
     if (!quota.ok) return NextResponse.json({ error: quota.error, code: quota.code }, { status: 429 });
 
@@ -61,11 +61,11 @@ export async function POST(req: NextRequest) {
       if (msg.includes("ثانیه پاسخ نداد")) {
         return NextResponse.json({ error: "گیت‌وی هوش‌مصنوعی به‌موقع پاسخ نداد" }, { status: 504 });
       }
-      return NextResponse.json({ error: msg || "ساخت مربیِ AI شکست خورد" }, { status: 502 });
+      return NextResponse.json({ error: msg || "ساخت مربی AI شکست خورد" }, { status: 502 });
     }
     if (!ai) {
       await quota.release();
-      return NextResponse.json({ error: "مربیِ هوش‌مصنوعی در دسترس نیست" }, { status: 503 });
+      return NextResponse.json({ error: "مربی هوش‌مصنوعی در دسترس نیست" }, { status: 503 });
     }
 
     const { weekStart } = getWeekRange(timezone, offset);

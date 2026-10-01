@@ -29,7 +29,7 @@ function toEnDigits(v: string): string {
 }
 
 /**
- * تنظیماتِ ظرفیت، پاسخ‌گویی و سؤال‌های پذیرش — PUT /api/mentor/settings.
+ * تنظیمات ظرفیت، پاسخ‌گویی و سؤال‌های پذیرش — PUT /api/mentor/settings.
  * همه‌ی بخش‌ها با یک «ذخیره» ثبت می‌شوند؛ سرور همان سقف‌ها را دوباره می‌سنجد.
  * پذیرش باز/بسته و عدم حضور فوری‌اند و در MentorAvailabilityQuick (بالای همین صفحه).
  */
@@ -90,7 +90,7 @@ export function MentorSettingsForm({ initial, onSaved }: { initial: MentorSettin
         >
           <input
             id="ms-capacity" type="text" inputMode="numeric" className="wsearch-newform-name trade-glass-field" maxLength={4}
-            value={capacity} placeholder="مثلاً 10"
+            value={capacity} placeholder="مثلا 10"
             onChange={(e) => { setCapacity(e.target.value); setFieldErr((x) => ({ ...x, capacity: undefined })); touched(); }}
           />
         </MentorField>
@@ -98,7 +98,7 @@ export function MentorSettingsForm({ initial, onSaved }: { initial: MentorSettin
 
       <MentorSection title="پاسخ‌گویی" icon={ic(MessageCircle, MI.section)}>
         <div className="mentor-form">
-          <MentorField label="زمان معمول پاسخ" hint={responseTime === "0" ? "روی پروفایلت زمان پاسخ نمایش داده نمی‌شود" : `روی پروفایلت نمایش داده می‌شود: «معمولاً تا ${fa(Number(responseTime))} ساعت پاسخ می‌دهد»`}>
+          <MentorField label="زمان معمول پاسخ" hint={responseTime === "0" ? "روی پروفایلت زمان پاسخ نمایش داده نمی‌شود" : `روی پروفایلت نمایش داده می‌شود: «معمولا تا ${fa(Number(responseTime))} ساعت پاسخ می‌دهد»`}>
             <SegmentedTabs options={RT_OPTIONS} active={responseTime} onChange={(v) => { setResponseTime(v); touched(); }} />
           </MentorField>
           <MentorField
@@ -107,7 +107,7 @@ export function MentorSettingsForm({ initial, onSaved }: { initial: MentorSettin
           >
             <textarea
               id="ms-welcome" className="wsearch-newform-name trade-glass-field" rows={3} maxLength={WELCOME_MAX + 50}
-              value={welcome} placeholder="مثلاً «خوش آمدی؛ اول برنامه‌ی هفتگی فعلی‌ات را در بخش دسترسی‌ها با من به اشتراک بگذار»"
+              value={welcome} placeholder="مثلا «خوش آمدی؛ اول برنامه‌ی هفتگی فعلی‌ات را در بخش دسترسی‌ها با من به اشتراک بگذار»"
               onChange={(e) => { setWelcome(e.target.value); setFieldErr((x) => ({ ...x, welcome: undefined })); touched(); }}
             />
           </MentorField>
@@ -124,7 +124,7 @@ export function MentorSettingsForm({ initial, onSaved }: { initial: MentorSettin
               <input
                 type="text" className="wsearch-newform-name trade-glass-field" maxLength={INTAKE_QUESTION_MAX + 20}
                 aria-label={`سؤال ${fa(i + 1)}`} value={q}
-                placeholder={i === 0 ? "مثلاً هدفت از این همکاری چیست؟" : "مثلاً چند ساعت در هفته وقت داری؟"}
+                placeholder={i === 0 ? "مثلا هدفت از این همکاری چیست؟" : "مثلا چند ساعت در هفته وقت داری؟"}
                 onChange={(e) => { const v = e.target.value; setQuestions((xs) => xs.map((x, j) => (j === i ? v : x))); setFieldErr((x) => ({ ...x, questions: undefined })); touched(); }}
               />
               <button

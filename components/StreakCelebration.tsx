@@ -1,13 +1,13 @@
 "use client";
 
-// جشنِ استریک به سبکِ دوالینگو — وقتی همه‌ی برنامه‌های امروز تیک خورد، شعله‌ی
-// کوچیکِ هدر از جاش «بیرون می‌پره»، با قوس تا وسطِ صفحه پرواز می‌کنه و به یه
-// شعله‌ی بزرگِ زنده (AnimatedStreakFlame — زبانه‌های مورف‌شونده + جرقه) تبدیل
-// می‌شه؛ عدد از دیروز به امروز می‌غلته، دایره‌ی امروزِ هفته پر می‌شه، و با
-// «ادامه» شعله دوباره برمی‌گرده سرِ جاش توی هدر. از همین‌جا کاربر می‌تونه
-// استریکش رو (همراهِ کدِ دعوتش) به اشتراک بذاره.
+// جشن استریک به سبک دوالینگو — وقتی همه‌ی برنامه‌های امروز تیک خورد، شعله‌ی
+// کوچیک هدر از جاش «بیرون می‌پره»، با قوس تا وسط صفحه پرواز می‌کنه و به یه
+// شعله‌ی بزرگ زنده (AnimatedStreakFlame — زبانه‌های مورف‌شونده + جرقه) تبدیل
+// می‌شه؛ عدد از دیروز به امروز می‌غلته، دایره‌ی امروز هفته پر می‌شه، و با
+// «ادامه» شعله دوباره برمی‌گرده سر جاش توی هدر. از همین‌جا کاربر می‌تونه
+// استریکش رو (همراه کد دعوتش) به اشتراک بذاره.
 //
-// همین پاپ‌آپ با زدنِ شعله‌ی هدر در حالتِ «view» هم باز می‌شه (بدونِ غلتیدنِ عدد).
+// همین پاپ‌آپ با زدن شعله‌ی هدر در حالت «view» هم باز می‌شه (بدون غلتیدن عدد).
 
 import { useCallback, useEffect, useLayoutEffect, useMemo, useRef, useState } from "react";
 import { createPortal } from "react-dom";
@@ -39,8 +39,8 @@ export type StreakCelebrationProps = {
 
 function weekRow(streak: number, todayDone: boolean) {
   const todayIdx = (new Date().getDay() + 1) % 7; // شنبه = ۰
-  // روزهای کامل: از امروز (اگه کامل شده) یا دیروز، `streak` روز به عقب — تقریبِ
-  // بصری؛ روزِ بی‌برنامه‌ای که وسطِ استریک رد شده این‌جا هم پر دیده می‌شه.
+  // روزهای کامل: از امروز (اگه کامل شده) یا دیروز، `streak` روز به عقب — تقریب
+  // بصری؛ روز بی‌برنامه‌ای که وسط استریک رد شده این‌جا هم پر دیده می‌شه.
   const last = todayDone ? todayIdx : todayIdx - 1;
   return { todayIdx, done: WEEK.map((_, i) => i <= last && last - i < streak) };
 }
@@ -60,7 +60,7 @@ export function StreakCelebration({ mode, from, to, todayDone, anchor, onClose }
   const isMilestone = mode === "extend" && (STREAK_MILESTONES as readonly number[]).includes(to);
   const week = useMemo(() => weekRow(to, todayDone), [to, todayDone]);
 
-  // فاصله‌ی شعله‌ی هدر تا جای شعله‌ی بزرگ — نقطه‌ی شروعِ پرواز (و مقصدِ برگشت)
+  // فاصله‌ی شعله‌ی هدر تا جای شعله‌ی بزرگ — نقطه‌ی شروع پرواز (و مقصد برگشت)
   useLayoutEffect(() => {
     const slot = slotRef.current?.getBoundingClientRect();
     if (!slot) return;
@@ -76,7 +76,7 @@ export function StreakCelebration({ mode, from, to, todayDone, anchor, onClose }
     }
   }, [anchor]);
 
-  // بعد از فرود: عدد می‌غلته + لرزشِ کوتاه
+  // بعد از فرود: عدد می‌غلته + لرزش کوتاه
   useEffect(() => {
     if (mode !== "extend") return;
     const t = setTimeout(() => {

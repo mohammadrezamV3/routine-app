@@ -9,14 +9,14 @@ import { SegmentedTabs } from "@/components/SegmentedTabs";
 const MODES: FeatureMode[] = ["on", "admins", "off"];
 const MODE_OPTIONS = MODES.map((m) => ({ value: m, label: FEATURE_MODE_LABELS[m] }));
 
-// روشن/خاموش‌کردنِ قابلیت‌های اپ بدونِ دیپلوی. هر تغییر فورا ذخیره می‌شه
-// (کشِ سمت سرور حداکثر ۶۰ ثانیه) و در لاگِ فعالیت ثبت می‌شه.
+// روشن/خاموش‌کردن قابلیت‌های اپ بدون دیپلوی. هر تغییر فورا ذخیره می‌شه
+// (کش سمت سرور حداکثر ۶۰ ثانیه) و در لاگ فعالیت ثبت می‌شه.
 export default function AdminFeaturesPage() {
   const toast = useAdminToast();
   const [flags, setFlags] = useState<FeatureFlags | null>(null);
   const [failed, setFailed] = useState(false);
   // چند قابلیت می‌تونن هم‌زمان در حال ذخیره باشن — قبلا فقط یک کلید نگه
-  // داشته می‌شد و پاسخِ اولی مقدارِ خوش‌بینانه‌ی دومی رو برمی‌گردوند
+  // داشته می‌شد و پاسخ اولی مقدار خوش‌بینانه‌ی دومی رو برمی‌گردوند
   const [saving, setSaving] = useState<Set<FeatureKey>>(new Set());
 
   const load = useCallback(() => {
@@ -30,7 +30,7 @@ export default function AdminFeaturesPage() {
   async function change(key: FeatureKey, mode: FeatureMode) {
     if (!flags || flags[key] === mode || saving.has(key)) return;
     const prevMode = flags[key];
-    // فقط همین کلید عوض می‌شه (نه کلِ آبجکت) تا با ذخیره‌ی هم‌زمانِ کلیدهای دیگه تداخل نکنه
+    // فقط همین کلید عوض می‌شه (نه کل آبجکت) تا با ذخیره‌ی هم‌زمان کلیدهای دیگه تداخل نکنه
     setFlags((f) => (f ? { ...f, [key]: mode } : f));
     setSaving((s) => new Set(s).add(key));
     try {
@@ -53,7 +53,7 @@ export default function AdminFeaturesPage() {
           <div className="admin-page-kicker">قابلیت‌ها</div>
           <div className="admin-section-hint admin-page-sub">
             هر بخش رو برای همه روشن کن، فقط برای ادمین‌ها نگه دار (برای تست)، یا کامل خاموشش کن. Owner همیشه همه‌چیز رو می‌بینه.
-            بخش‌های پولی همچنان به اشتراکِ همون ماژول نیاز دارن. تغییرات حداکثر تا یک دقیقه همه‌جا اعمال می‌شن.
+            بخش‌های پولی همچنان به اشتراک همون ماژول نیاز دارن. تغییرات حداکثر تا یک دقیقه همه‌جا اعمال می‌شن.
           </div>
         </div>
       </div>

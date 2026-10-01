@@ -17,7 +17,7 @@ export async function PATCH(req: Request, { params }: Ctx) {
 
   const parsed = await readJsonBody(req, 16 * 1024);
   if (!parsed.ok) return NextResponse.json({ error: parsed.error }, { status: parsed.status });
-  // فقط پاکتِ رمزشده (lib/e2ee/notes.ts)؛ متنِ ساده رد می‌شود
+  // فقط پاکت رمزشده (lib/e2ee/notes.ts)؛ متن ساده رد می‌شود
   const body = parsed.body?.body;
   if (!isSealedNote(body)) return badRequest("یادداشت باید روی دستگاه رمزگذاری شود");
 

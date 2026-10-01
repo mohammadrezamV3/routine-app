@@ -14,26 +14,26 @@ import {
   type StudentSignals,
 } from "@/lib/mentorRanking";
 
-// جمع‌آوری و نگه‌داریِ رتبه‌بندیِ شایستگی (فرمول: lib/mentorRanking.ts،
+// جمع‌آوری و نگه‌داری رتبه‌بندی شایستگی (فرمول: lib/mentorRanking.ts،
 // توضیح: docs/mentor-ranking.md).
 //
-// - امتیاز در جدولِ MentorRankingStat (یک ردیف به‌ازای هر منتور × دامنه) ذخیره
-//   و با ایندکس مرتب می‌شه؛ صفحه‌بندی سمتِ دیتابیسه، نه در حافظه.
-// - تازه‌سازی تنبل و بدونِ cron (همون الگوی ensureFreshCalendar): روتِ خواندن
-//   اگه ردیفی نبود منتظر ساخت می‌مونه (با سقفِ زمان)، و اگه کهنه بود با داده‌ی
+// - امتیاز در جدول MentorRankingStat (یک ردیف به‌ازای هر منتور × دامنه) ذخیره
+//   و با ایندکس مرتب می‌شه؛ صفحه‌بندی سمت دیتابیسه، نه در حافظه.
+// - تازه‌سازی تنبل و بدون cron (همون الگوی ensureFreshCalendar): روت خواندن
+//   اگه ردیفی نبود منتظر ساخت می‌مونه (با سقف زمان)، و اگه کهنه بود با داده‌ی
 //   موجود جواب می‌ده و در پس‌زمینه بازمحاسبه می‌کنه.
-// - فیلترهای «قابلِ نمایش بودن» (انتشار، تعلیق، مسدودی، بلاکِ کاربر-به-کاربر)
-//   *زنده* روی کوئری اعمال می‌شن، نه از روی ردیفِ ذخیره‌شده — تعلیق فوری اثر داره.
+// - فیلترهای «قابل نمایش بودن» (انتشار، تعلیق، مسدودی، بلاک کاربر-به-کاربر)
+//   *زنده* روی کوئری اعمال می‌شن، نه از روی ردیف ذخیره‌شده — تعلیق فوری اثر داره.
 
 export const RANK_SCOPE_ALL = "ALL";
 export type RankScope = typeof RANK_SCOPE_ALL | (typeof MENTOR_CATEGORIES)[number];
 
 /** بعد از این مدت ردیف کهنه حساب می‌شه و در پس‌زمینه بازمحاسبه می‌شه */
 export const RANKING_TTL_MS = 15 * 60 * 1000;
-/** بیشترین انتظارِ درخواستِ کاربر برای ساختِ اولیه */
+/** بیشترین انتظار درخواست کاربر برای ساخت اولیه */
 const READ_WAIT_MS = 8 * 1000;
 const MIN_ATTEMPT_GAP_MS = 60 * 1000;
-/** پروفایل‌های بی‌ردیف که روی مسیرِ خواندن محاسبه می‌شن (بیشتر = دورِ بعد) */
+/** پروفایل‌های بی‌ردیف که روی مسیر خواندن محاسبه می‌شن (بیشتر = دور بعد) */
 const MISSING_BATCH = 50;
 /** پنجره‌ی سیگنال‌های رفتاری (پایبندی، پیام‌ها) */
 const SIGNAL_WINDOW_DAYS = 90;
@@ -69,8 +69,8 @@ function programInScope(type: string, scope: RankScope): boolean {
 }
 
 /**
- * بازمحاسبه‌ی امتیازِ منتورها. بدونِ ورودی = همه‌ی پروفایل‌های منتشرشده.
- * خروجی: تعدادِ پروفایل‌های بازمحاسبه‌شده.
+ * بازمحاسبه‌ی امتیاز منتورها. بدون ورودی = همه‌ی پروفایل‌های منتشرشده.
+ * خروجی: تعداد پروفایل‌های بازمحاسبه‌شده.
  */
 export async function recomputeMentorRankings(opts: { profileIds?: string[]; now?: Date } = {}): Promise<number> {
   const now = opts.now ?? new Date();
@@ -136,9 +136,9 @@ async function recomputeChunk(profiles: ProfileRow[], now: Date): Promise<void> 
 
   const mentorshipIds = mentorships.map((m) => m.id);
   const programIds = programs.map((p) => p.id);
-  // پیشرفتِ خودکار (لاگ‌های AUTO از تیک‌های روتینِ شاگرد) فقط برای برنامه‌های فعال
-  // و با TTLِ خودِ lib/mentorProgress.ts — این مسیر در پس‌زمینه اجرا می‌شه، نه
-  // روی درخواستِ کاربر (جز ساختِ اولیه با سقفِ زمان).
+  // پیشرفت خودکار (لاگ‌های AUTO از تیک‌های روتین شاگرد) فقط برای برنامه‌های فعال
+  // و با TTL خود lib/mentorProgress.ts — این مسیر در پس‌زمینه اجرا می‌شه، نه
+  // روی درخواست کاربر (جز ساخت اولیه با سقف زمان).
   await syncProgramProgress(programs.filter((p) => p.status === "ACTIVE").map((p) => p.id)).catch(() => undefined);
   const [recentProgress, allProgress, messages, reportedReviews] = await Promise.all([
     loadProgramProgress(programIds, since),
@@ -188,14 +188,14 @@ async function recomputeChunk(profiles: ProfileRow[], now: Date): Promise<void> 
         scope === RANK_SCOPE_ALL || effectiveCategories(relCategories, p.categories).includes(scope);
       const scopedRels = rels.filter((r) => inScope(r.categories));
 
-      // شاگردهای معتبر: رابطه‌ای که واقعاً شروع شده (یک رابطه به‌ازای هر شاگرد — @@unique)
+      // شاگردهای معتبر: رابطه‌ای که واقعا شروع شده (یک رابطه به‌ازای هر شاگرد — @@unique)
       const students: StudentSignals[] = [];
       for (const r of scopedRels) {
         if (!r.startedAt) continue;
         const progs = (programsByRel.get(r.id) ?? []).filter((x) => programInScope(x.type, scope));
         const adherence = { completed: 0, partial: 0, missed: 0 };
-        // شاگردی که «نمایشِ پیشرفت» رو برای این منتور بسته، در پایبندی شمرده نمی‌شه
-        // (نه به نفع و نه به ضررِ منتور) — بقیه‌ی سیگنال‌ها (تکمیل، ماندگاری، نظر) می‌مونن
+        // شاگردی که «نمایش پیشرفت» رو برای این منتور بسته، در پایبندی شمرده نمی‌شه
+        // (نه به نفع و نه به ضرر منتور) — بقیه‌ی سیگنال‌ها (تکمیل، ماندگاری، نظر) می‌مونن
         for (const x of r.showProgress ? progs : []) {
           const pr = recentProgress.get(x.id);
           if (!pr) continue;
@@ -215,7 +215,7 @@ async function recomputeChunk(profiles: ProfileRow[], now: Date): Promise<void> 
           responseHours,
         });
       }
-      // درخواست‌هایی که شروع نشدن (رد/بی‌جواب) فقط در سرعتِ پاسخ اثر دارن
+      // درخواست‌هایی که شروع نشدن (رد/بی‌جواب) فقط در سرعت پاسخ اثر دارن
       const requestResponses: number[][] = [];
       for (const r of scopedRels) {
         if (r.startedAt || r.createdAt < since) continue;
@@ -225,7 +225,7 @@ async function recomputeChunk(profiles: ProfileRow[], now: Date): Promise<void> 
 
       const reviewSignals: ReviewSignal[] = [];
       for (const rv of reviewsByMentor.get(p.userId) ?? []) {
-        if (reportedReviewIds.has(rv.id)) continue; // گزارشِ باز روی نظر: تا بررسی شمرده نمی‌شه
+        if (reportedReviewIds.has(rv.id)) continue; // گزارش باز روی نظر: تا بررسی شمرده نمی‌شه
         if (!countsForMentor(rv.student, mentorIsDemo)) continue;
         const rel = relById.get(rv.mentorshipId);
         if (!rel || !rel.startedAt || !inScope(rel.categories)) continue;
@@ -279,7 +279,7 @@ async function recomputeChunk(profiles: ProfileRow[], now: Date): Promise<void> 
   }
 
   // حذف + درج در یک تراکنش (دامنه‌ای که دیگه نیست هم پاک می‌شه). دو بازمحاسبه‌ی
-  // هم‌زمان (پس‌زمینه + درخواستِ ادمین) هر دو داده‌ی تازه دارن؛ skipDuplicates
+  // هم‌زمان (پس‌زمینه + درخواست ادمین) هر دو داده‌ی تازه دارن؛ skipDuplicates
   // نمی‌ذاره یکی‌شون با خطای یکتایی بشکنه.
   await prisma.$transaction([
     prisma.mentorRankingStat.deleteMany({ where: { profileId: { in: profiles.map((p) => p.id) } } }),
@@ -298,7 +298,7 @@ function groupBy<T>(items: T[], key: (t: T) => string): Map<string, T[]> {
   return m;
 }
 
-// ───────────────────────── تازه‌نگه‌داشتن (بدونِ cron) ─────────────────────────
+// ───────────────────────── تازه‌نگه‌داشتن (بدون cron) ─────────────────────────
 
 let inflight: Promise<unknown> | null = null;
 let lastAttemptAt = 0;
@@ -321,8 +321,8 @@ function startRecompute(): Promise<unknown> {
 
 /**
  * stale-while-revalidate:
- *   - پروفایلِ منتشرشده‌ای که ردیفِ همین دامنه رو نداره (تازه منتشر شده یا حوزه
- *     اضافه کرده) همین حالا و *فقط خودش* محاسبه می‌شه — تا فوراً در فهرست بیاد؛
+ *   - پروفایل منتشرشده‌ای که ردیف همین دامنه رو نداره (تازه منتشر شده یا حوزه
+ *     اضافه کرده) همین حالا و *فقط خودش* محاسبه می‌شه — تا فورا در فهرست بیاد؛
  *   - ردیف‌های کهنه‌تر از TTL: جواب با داده‌ی موجود، بازمحاسبه‌ی کامل در پس‌زمینه.
  */
 export async function ensureFreshRankings(scope: RankScope = RANK_SCOPE_ALL): Promise<void> {
@@ -349,7 +349,7 @@ export async function ensureFreshRankings(scope: RankScope = RANK_SCOPE_ALL): Pr
   if (oldest && Date.now() - oldest.computedAt.getTime() > RANKING_TTL_MS) void startRecompute();
 }
 
-/** فقط برای تست‌ها: وضعیتِ درون‌پروسه‌ای رو صفر می‌کنه */
+/** فقط برای تست‌ها: وضعیت درون‌پروسه‌ای رو صفر می‌کنه */
 export function __resetRankingFreshnessForTests(): void {
   inflight = null;
   lastAttemptAt = 0;
@@ -375,7 +375,7 @@ const orderFor = (sort: RankSort): Prisma.MentorRankingStatOrderByWithRelationIn
     ? [{ ratingScore: "desc" }, { verifiedReviews: "desc" }, { score: "desc" }, { profileId: "asc" }]
     : [{ score: "desc" }, { sampleStudents: "desc" }, { profileId: "asc" }];
 
-/** فهرستِ مرتب‌شده با صفحه‌بندیِ دیتابیسی. where = شرطِ زنده روی MentorProfile */
+/** فهرست مرتب‌شده با صفحه‌بندی دیتابیسی. where = شرط زنده روی MentorProfile */
 export async function loadRankedCards(
   where: Prisma.MentorProfileWhereInput,
   scope: RankScope,
@@ -395,12 +395,12 @@ export async function loadRankedCards(
   return { cards, hasMore: rows.length > limit };
 }
 
-/** ظرفیتِ پر، پذیرشِ بسته یا «در دسترس نیستم» زنده حساب می‌شه (lib/mentorAvailability.ts) */
+/** ظرفیت پر، پذیرش بسته یا «در دسترس نیستم» زنده حساب می‌شه (lib/mentorAvailability.ts) */
 function isOpenForRequests(c: MentorCard): boolean {
   return c.acceptingStudents && (c.availability ?? "OPEN") === "OPEN";
 }
 
-/** «منتورهای محبوب»: فقط eligible، فقط کسانی که الان واقعاً درخواست می‌پذیرن */
+/** «منتورهای محبوب»: فقط eligible، فقط کسانی که الان واقعا درخواست می‌پذیرن */
 export async function loadPopularMentorCards(where: Prisma.MentorProfileWhereInput, limit: number): Promise<MentorCard[]> {
   await ensureFreshRankings(RANK_SCOPE_ALL);
   const rows = await prisma.mentorRankingStat.findMany({
@@ -409,12 +409,12 @@ export async function loadPopularMentorCards(where: Prisma.MentorProfileWhereInp
     take: limit * 2,
     select: { profileId: true },
   });
-  // ویترین نباید به درِ بسته بفرسته
+  // ویترین نباید به در بسته بفرسته
   const cards = await cardsForProfileIds(rows.map((r) => r.profileId));
   return cards.filter(isOpenForRequests).slice(0, limit);
 }
 
-/** پروفایلِ «کامل» برای جایگاهِ منتورهای تازه */
+/** پروفایل «کامل» برای جایگاه منتورهای تازه */
 const COMPLETE_PROFILE_WHERE: Prisma.MentorProfileWhereInput = {
   identityStatus: "VERIFIED",
   headline: { not: null },
@@ -425,8 +425,8 @@ const NEWCOMER_MAX_AGE_DAYS = 90;
 const NEWCOMER_POOL = 60;
 
 /**
- * «منتورهای تازه» — جایگاهِ جدا و برچسب‌دار برای دیده‌شدنِ منتورهای تاییدشده‌ای
- * که هنوز نمونه‌ی کافی برای رتبه‌بندیِ شایستگی ندارن. با فهرستِ محبوب قاطی
+ * «منتورهای تازه» — جایگاه جدا و برچسب‌دار برای دیده‌شدن منتورهای تاییدشده‌ای
+ * که هنوز نمونه‌ی کافی برای رتبه‌بندی شایستگی ندارن. با فهرست محبوب قاطی
  * نمی‌شه؛ ترتیب روزانه و قطعی می‌چرخه تا همیشه همون چند نفر اول نباشن.
  */
 export async function loadNewcomerCards(
@@ -461,7 +461,7 @@ export type RankingBreakdownRow = {
   score: number;
   ratingScore: number;
   eligible: boolean;
-  /** جایگاه در دامنه‌ی خودش بینِ منتورهای قابلِ نمایش (۱ = اول) */
+  /** جایگاه در دامنه‌ی خودش بین منتورهای قابل نمایش (۱ = اول) */
   position: number | null;
   of: number;
   computedAt: Date;

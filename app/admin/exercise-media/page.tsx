@@ -14,13 +14,13 @@ type Item = { nameKey: string; name: string; updatedAt: string };
 
 // همون سه فرمتی که سرور قبول می‌کنه (lib/exerciseMedia → checkMediaDataUrl).
 const ACCEPTED_TYPES = ["image/png", "image/jpeg", "image/webp"];
-// سقفِ فایلِ *خام* قبل از فشرده‌سازی — فقط تا مرورگر یه عکسِ چند ده مگابایتی
-// رو برای دیکود توی حافظه باز نکنه؛ خروجیِ نهایی سقفِ خودش رو داره.
+// سقف فایل *خام* قبل از فشرده‌سازی — فقط تا مرورگر یه عکس چند ده مگابایتی
+// رو برای دیکود توی حافظه باز نکنه؛ خروجی نهایی سقف خودش رو داره.
 const MAX_RAW_BYTES = 15 * 1024 * 1024;
 
-// عکسِ حرکات همیشه قبل از ارسال سمتِ کلاینت کوچک می‌شود، نه سمتِ سرور:
-// عکسِ خامِ گوشی چند مگابایت است و همان‌طور که هست هم در دیتابیس می‌ماند و
-// هم دوباره برای هر کاربر دانلود می‌شود. ۷۲۰px برای کارتِ جزئیاتِ حرکت
+// عکس حرکات همیشه قبل از ارسال سمت کلاینت کوچک می‌شود، نه سمت سرور:
+// عکس خام گوشی چند مگابایت است و همان‌طور که هست هم در دیتابیس می‌ماند و
+// هم دوباره برای هر کاربر دانلود می‌شود. ۷۲۰px برای کارت جزئیات حرکت
 // بیش‌ازحد کافی‌ست.
 function compressToDataUrl(file: File): Promise<string> {
   return new Promise((resolve, reject) => {
@@ -35,8 +35,8 @@ function compressToDataUrl(file: File): Promise<string> {
       canvas.height = Math.max(1, Math.round(img.height * scale));
       const ctx = canvas.getContext("2d");
       if (!ctx) { reject(new Error("canvas")); return; }
-      // PNGهای شفاف روی بومِ خالی سیاه می‌شوند؛ پس‌زمینه‌ی سفید همان چیزی‌ست
-      // که کارتِ حرکت هم نشان می‌دهد.
+      // PNGهای شفاف روی بوم خالی سیاه می‌شوند؛ پس‌زمینه‌ی سفید همان چیزی‌ست
+      // که کارت حرکت هم نشان می‌دهد.
       ctx.fillStyle = "#ffffff";
       ctx.fillRect(0, 0, canvas.width, canvas.height);
       ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
@@ -47,9 +47,9 @@ function compressToDataUrl(file: File): Promise<string> {
   });
 }
 
-// «عکس حرکات ورزشی» — ادمین برای هر حرکتِ کاتالوگ یک عکس می‌گذارد و همان
-// عکس در کارتِ جزئیاتِ «مشاهده حرکات» به‌جای placeholder نشان داده می‌شود.
-// نامِ حرکت از خودِ کاتالوگ انتخاب می‌شود (نه تایپِ آزاد) تا عکس به حرکتی
+// «عکس حرکات ورزشی» — ادمین برای هر حرکت کاتالوگ یک عکس می‌گذارد و همان
+// عکس در کارت جزئیات «مشاهده حرکات» به‌جای placeholder نشان داده می‌شود.
+// نام حرکت از خود کاتالوگ انتخاب می‌شود (نه تایپ آزاد) تا عکس به حرکتی
 // که وجود ندارد نچسبد.
 export default function AdminExerciseMediaPage() {
   const toast = useAdminToast();
@@ -69,8 +69,8 @@ export default function AdminExerciseMediaPage() {
   const [deleting, setDeleting] = useState<Item | null>(null);
   const fileRef = useRef<HTMLInputElement>(null);
   const formRef = useRef<HTMLDivElement>(null);
-  // کلیک پشتِ‌سرِهم روی دو ردیف: پاسخِ ردیفِ قبلی اگه دیرتر برسه نباید عکسِ
-  // حرکتِ اشتباه رو توی پیش‌نمایشِ حرکتِ فعلی بذاره.
+  // کلیک پشت‌سرهم روی دو ردیف: پاسخ ردیف قبلی اگه دیرتر برسه نباید عکس
+  // حرکت اشتباه رو توی پیش‌نمایش حرکت فعلی بذاره.
   const editSeq = useRef(0);
 
   const load = useCallback(async () => {
@@ -91,7 +91,7 @@ export default function AdminExerciseMediaPage() {
 
   const haveKeys = useMemo(() => new Set((items || []).map((i) => i.nameKey)), [items]);
 
-  // فقط وقتی کاربر چیزی تایپ کرده پیشنهاد می‌دهیم — رندرِ هر ~۳۰۰ حرکت
+  // فقط وقتی کاربر چیزی تایپ کرده پیشنهاد می‌دهیم — رندر هر ~۳۰۰ حرکت
   // به‌صورت پیش‌فرض نه مفید است نه سریع.
   const suggestions = useMemo(() => {
     const q = normalizeFa(query);
@@ -150,7 +150,7 @@ export default function AdminExerciseMediaPage() {
         setError("حجم عکس حتی بعد از فشرده‌سازی زیاد است — عکس کوچک‌تری انتخاب کن");
         return;
       }
-      editSeq.current++; // پیش‌نمایشِ در-راهِ یک ردیف دیگه نباید این عکس رو پاک کنه
+      editSeq.current++; // پیش‌نمایش در-راه یک ردیف دیگه نباید این عکس رو پاک کنه
       setLoadingPreview(false);
       setDataUrl(url);
     } catch {
@@ -184,7 +184,7 @@ export default function AdminExerciseMediaPage() {
     }
   }
 
-  /** ردیفِ موجود را برای جایگزینیِ عکس داخلِ فرم باز می‌کند. */
+  /** ردیف موجود را برای جایگزینی عکس داخل فرم باز می‌کند. */
   async function edit(item: Item) {
     const seq = ++editSeq.current;
     setError(null);
@@ -233,7 +233,7 @@ export default function AdminExerciseMediaPage() {
         <div>
           <div className="admin-page-kicker">عکس حرکات ورزشی</div>
           <div className="admin-section-hint" style={{ margin: 0 }}>
-            برای هر حرکتِ کاتالوگ می‌توانی یک عکس بگذاری؛ همان عکس در «مشاهده حرکات» بالای کارتِ جزئیات
+            برای هر حرکت کاتالوگ می‌توانی یک عکس بگذاری؛ همان عکس در «مشاهده حرکات» بالای کارت جزئیات
             نشان داده می‌شود. حرکتی که عکس ندارد مثل قبل placeholder می‌گیرد. عکس قبل از ارسال خودکار به
             حداکثر {MEDIA_MAX_EDGE} پیکسل کوچک می‌شود.
           </div>
@@ -253,7 +253,7 @@ export default function AdminExerciseMediaPage() {
                   value={query}
                   onChange={(e) => { setQuery(e.target.value); setName(""); setSuggestOpen(true); setActiveIdx(-1); }}
                   onFocus={() => setSuggestOpen(true)}
-                  // با تاخیر، تا کلیک روی یک پیشنهاد قبل از بسته‌شدنِ لیست ثبت بشه.
+                  // با تاخیر، تا کلیک روی یک پیشنهاد قبل از بسته‌شدن لیست ثبت بشه.
                   onBlur={() => setTimeout(() => setSuggestOpen(false), 120)}
                   onKeyDown={onQueryKey}
                   placeholder="اسم حرکت را بنویس و از لیست انتخاب کن…"
@@ -292,7 +292,7 @@ export default function AdminExerciseMediaPage() {
                 {name && (
                   <span className="admin-media-note">
                     حرکت انتخاب‌شده: <b>{name}</b>
-                    {haveKeys.has(mediaKey(name)) && " — عکسِ فعلی جایگزین می‌شود"}
+                    {haveKeys.has(mediaKey(name)) && " — عکس فعلی جایگزین می‌شود"}
                   </span>
                 )}
               </div>
@@ -358,7 +358,7 @@ export default function AdminExerciseMediaPage() {
         <div className={`trade-list${loading ? " admin-list-dim" : ""}`}>
           {visibleItems.map((item) => (
             <div key={item.nameKey} className={`trade-row admin-media-row${mediaKey(name) === item.nameKey ? " is-editing" : ""}`}>
-              <button type="button" className="admin-media-row-main" onClick={() => edit(item)} title="جایگزینیِ عکس">
+              <button type="button" className="admin-media-row-main" onClick={() => edit(item)} title="جایگزینی عکس">
                 <span className="trade-row-symbol">{item.name}</span>
                 <span className="trade-row-sub">آخرین تغییر: <span className="admin-ltr-inline">{formatDateTime(item.updatedAt)}</span></span>
               </button>
@@ -379,7 +379,7 @@ export default function AdminExerciseMediaPage() {
       {deleting && (
         <ConfirmModal
           title="حذف عکس"
-          message={<>عکسِ «{deleting.name}» حذف می‌شه و کارتِ این حرکت دوباره placeholder نشون می‌ده.</>}
+          message={<>عکس «{deleting.name}» حذف می‌شه و کارت این حرکت دوباره placeholder نشون می‌ده.</>}
           confirmLabel="حذف عکس"
           onConfirm={remove}
           onClose={() => setDeleting(null)}

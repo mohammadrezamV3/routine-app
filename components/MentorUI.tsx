@@ -10,26 +10,26 @@ import { M_DUR, mT } from "./MentorMotion";
 /**
  * پایه‌های مشترک بخش منتورها (سمت شاگرد و سمت منتور). همه از کلاس‌های
  * موجود سایت ساخته شده‌اند (acc-block، rp-empty، trade-surface) به‌علاوه‌ی
- * چیدمان mentor.css. بک‌گراندِ تازه اضافه نمی‌کنند.
+ * چیدمان mentor.css. بک‌گراند تازه اضافه نمی‌کنند.
  * مشخصات استفاده: scratchpad/design-spec.md
  *
- * ── «یک صفحه = یک ظرف» (دورِ ۳) ───────────────────────────────
+ * ── «یک صفحه = یک ظرف» (دور ۳) ───────────────────────────────
  *   <MentorPage> … </MentorPage>
- *     یک سطحِ بیرونیِ واحد (trade-surface) برای کلِ محتوای صفحه. هر
- *     MentorSection داخلش خودبه‌خود «تخت» می‌شود: بی‌قاب، فقط عنوان + خطِ
- *     مو بالای هر بخش (بخشِ اول خط ندارد). flush هم کار می‌کند (ردیف‌ها
- *     لبه‌به‌لبه). MentorEmptyState و MentorErrorState داخلِ آن قابِ دوم
- *     نمی‌گیرند. هر محتوای دیگری (تب، فرم، اطلاعیه) پدینگِ 16 سطح را دارد.
- *     ورودِ نرم (fade) دارد و بخش‌های داخلش با پله‌ی کوتاه ظاهر می‌شوند.
- *   - سمتِ منتور: MentorDashShell خودش محتوا را در MentorPage می‌گذارد
+ *     یک سطح بیرونی واحد (trade-surface) برای کل محتوای صفحه. هر
+ *     MentorSection داخلش خودبه‌خود «تخت» می‌شود: بی‌قاب، فقط عنوان + خط
+ *     مو بالای هر بخش (بخش اول خط ندارد). flush هم کار می‌کند (ردیف‌ها
+ *     لبه‌به‌لبه). MentorEmptyState و MentorErrorState داخل آن قاب دوم
+ *     نمی‌گیرند. هر محتوای دیگری (تب، فرم، اطلاعیه) پدینگ 16 سطح را دارد.
+ *     ورود نرم (fade) دارد و بخش‌های داخلش با پله‌ی کوتاه ظاهر می‌شوند.
+ *   - سمت منتور: MentorDashShell خودش محتوا را در MentorPage می‌گذارد
  *     (`surface={false}` برای خاموش‌کردن).
- *   - سمتِ شاگرد: <MentorPageShell surface> همین کار را می‌کند؛ یا خودتان
- *     <MentorPage> را دورِ بخشِ دلخواه بگذارید. گریدِ کارت‌ها (mentor-grid)
- *     و شیت/مودال از این قانون مستثنا هستند؛ آن‌ها را بیرونِ MentorPage بگذارید.
- *   - `useMentorFlat()` → true اگر داخلِ MentorPage هستید (برای قابِ سفارشی).
- *   - `desc` در MentorSection و `hint` در شِل‌ها دیگر رندر نمی‌شوند (قانونِ
- *     «بدونِ زیرعنوان»). راهنمای لازمِ فیلد فقط `MentorField hint`.
- *   - حرکت: components/MentorMotion.tsx (API در سرِ همان فایل).
+ *   - سمت شاگرد: <MentorPageShell surface> همین کار را می‌کند؛ یا خودتان
+ *     <MentorPage> را دور بخش دلخواه بگذارید. گرید کارت‌ها (mentor-grid)
+ *     و شیت/مودال از این قانون مستثنا هستند؛ آن‌ها را بیرون MentorPage بگذارید.
+ *   - `useMentorFlat()` → true اگر داخل MentorPage هستید (برای قاب سفارشی).
+ *   - `desc` در MentorSection و `hint` در شل‌ها دیگر رندر نمی‌شوند (قانون
+ *     «بدون زیرعنوان»). راهنمای لازم فیلد فقط `MentorField hint`.
+ *   - حرکت: components/MentorMotion.tsx (API در سر همان فایل).
  */
 
 export type MentorTone = "neutral" | "accent" | "info" | "ok" | "warn" | "danger";
@@ -39,19 +39,19 @@ export const MI = { chip: 13, btnSm: 14, btn: 15, row: 16, section: 15, empty: 2
 /** strokeWidth استاندارد آیکون‌های lucide در این بخش */
 export const MI_STROKE = 1.75;
 
-/* ── ظرفِ صفحه ───────────────────────────────────────────────── */
+/* ── ظرف صفحه ───────────────────────────────────────────────── */
 type FlatCtx = { flat: boolean; next: () => number };
 const MentorFlatContext = createContext<FlatCtx>({ flat: false, next: () => 0 });
 
-/** true داخلِ MentorPage (بخش‌ها تخت‌اند و قابِ دوم نمی‌گیرند) */
+/** true داخل MentorPage (بخش‌ها تخت‌اند و قاب دوم نمی‌گیرند) */
 export function useMentorFlat() {
   return useContext(MentorFlatContext).flat;
 }
 
 /**
- * یک سطحِ بیرونی برای کلِ صفحه؛ بخش‌های داخل با عنوان + خطِ مو جدا می‌شوند.
- * بخش‌هایی که در یک «دسته» mount می‌شوند (مثلاً پس از بارگذاری) با فاصله‌ی
- * 40ms پشتِ هم ظاهر می‌شوند؛ سقف 8 پله.
+ * یک سطح بیرونی برای کل صفحه؛ بخش‌های داخل با عنوان + خط مو جدا می‌شوند.
+ * بخش‌هایی که در یک «دسته» mount می‌شوند (مثلا پس از بارگذاری) با فاصله‌ی
+ * 40ms پشت هم ظاهر می‌شوند؛ سقف 8 پله.
  */
 export function MentorPage({ children, className, id }: { children: React.ReactNode; className?: string; id?: string }) {
   const batch = useRef({ n: 0, t: 0 });
@@ -80,10 +80,10 @@ export function MentorPage({ children, className, id }: { children: React.ReactN
 }
 
 /**
- * یک بخشِ صفحه. داخلِ MentorPage: تخت (عنوان + خطِ مو، بی‌قاب). بیرونِ آن:
- * قاب acc-block با عنوانِ داخل قاب. شمارنده و یک اکشن اختیاری در انتهای
- * همان ردیفِ عنوان. `flush` برای وقتی‌ست که بدنه ردیف‌های لبه‌به‌لبه
- * (MentorRow) دارد. `desc` دیگر رندر نمی‌شود (بدونِ زیرعنوان).
+ * یک بخش صفحه. داخل MentorPage: تخت (عنوان + خط مو، بی‌قاب). بیرون آن:
+ * قاب acc-block با عنوان داخل قاب. شمارنده و یک اکشن اختیاری در انتهای
+ * همان ردیف عنوان. `flush` برای وقتی‌ست که بدنه ردیف‌های لبه‌به‌لبه
+ * (MentorRow) دارد. `desc` دیگر رندر نمی‌شود (بدون زیرعنوان).
  */
 export function MentorSection({
   title, icon, count, action, flush = false, id, children,
@@ -92,7 +92,7 @@ export function MentorSection({
   icon?: React.ReactNode;
   count?: number | string;
   action?: React.ReactNode;
-  /** @deprecated زیرعنوانِ بخش حذف شد؛ نادیده گرفته می‌شود */
+  /** @deprecated زیرعنوان بخش حذف شد؛ نادیده گرفته می‌شود */
   desc?: string;
   flush?: boolean;
   id?: string;
@@ -138,7 +138,7 @@ export function MentorSection({
   );
 }
 
-/** عنوان بخش بیرون از قاب — فقط بالای گریدِ کارت‌ها */
+/** عنوان بخش بیرون از قاب — فقط بالای گرید کارت‌ها */
 export function MentorSectionTitle({
   icon, children, count, action,
 }: {
@@ -158,9 +158,9 @@ export function MentorSectionTitle({
 }
 
 /**
- * ردیفِ لیست: [lead] [عنوان + زیرعنوان] [end]. با `href` لینک است و
- * شِورون می‌گیرد (مگر `chevron={false}`). اکشن‌ها داخل `end` می‌روند؛
- * اگر ردیف لینک است، اکشنِ کلیک‌پذیر داخلش نگذارید — از `below` استفاده کنید.
+ * ردیف لیست: [lead] [عنوان + زیرعنوان] [end]. با `href` لینک است و
+ * شورون می‌گیرد (مگر `chevron={false}`). اکشن‌ها داخل `end` می‌روند؛
+ * اگر ردیف لینک است، اکشن کلیک‌پذیر داخلش نگذارید — از `below` استفاده کنید.
  */
 export function MentorRow({
   href, lead, title, sub, end, below, chevron, onClick, ariaLabel,
@@ -170,7 +170,7 @@ export function MentorRow({
   title: React.ReactNode;
   sub?: React.ReactNode;
   end?: React.ReactNode;
-  /** محتوای زیرِ ردیف (نقل‌قول، دکمه‌ها) — ردیف را دوطبقه می‌کند */
+  /** محتوای زیر ردیف (نقل‌قول، دکمه‌ها) — ردیف را دوطبقه می‌کند */
   below?: React.ReactNode;
   chevron?: boolean;
   onClick?: () => void;
@@ -236,7 +236,7 @@ export function MentorChip({
 /**
  * اطلاعیه‌ی فشرده‌ی درون‌صفحه: یک ردیف، عنوان کوتاه + یک جمله + حداکثر یک
  * اکشن. برای وضعیت‌هایی که کاربر باید کاری بکند (پروفایل منتشر نشده،
- * حساب معلق). وضعیتِ صرفاً اطلاعاتی = MentorChip، نه این.
+ * حساب معلق). وضعیت صرفا اطلاعاتی = MentorChip، نه این.
  */
 export function MentorNotice({
   tone = "info", icon, title, children, action,
@@ -259,7 +259,7 @@ export function MentorNotice({
   );
 }
 
-/** خالیِ داخلِ یک بخش: یک خط متن، بدون قاب */
+/** خالی داخل یک بخش: یک خط متن، بدون قاب */
 export function MentorEmpty({ icon, children }: { icon?: React.ReactNode; children: React.ReactNode }) {
   return (
     <p className="mentor-empty">
@@ -269,7 +269,7 @@ export function MentorEmpty({ icon, children }: { icon?: React.ReactNode; childr
   );
 }
 
-/** خالیِ کل صفحه: همان rp-empty رودمپ‌ها — آیکون، عنوان، یک جمله، حداکثر یک اکشن */
+/** خالی کل صفحه: همان rp-empty رودمپ‌ها — آیکون، عنوان، یک جمله، حداکثر یک اکشن */
 export function MentorEmptyState({
   icon, title, text, action,
 }: {

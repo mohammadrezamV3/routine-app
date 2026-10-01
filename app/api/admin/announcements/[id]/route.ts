@@ -5,7 +5,7 @@ import { writeAuditLog } from "@/lib/adminAnalytics";
 import { readJsonBody } from "@/lib/validate";
 import { parseAnnouncementInput } from "@/lib/announcements";
 
-// PATCH → ویرایش (عنوان/متن/وضعیت/انقضا — هر فیلدِ نفرستاده دست نمی‌خوره)
+// PATCH → ویرایش (عنوان/متن/وضعیت/انقضا — هر فیلد نفرستاده دست نمی‌خوره)
 export async function PATCH(req: NextRequest, { params }: { params: { id: string } }) {
   const guard = await requireAdmin("content");
   if (!guard.ok) return guard.response;
@@ -28,7 +28,7 @@ export async function PATCH(req: NextRequest, { params }: { params: { id: string
   return NextResponse.json({ announcement: updated });
 }
 
-// DELETE → حذفِ کامل
+// DELETE → حذف کامل
 export async function DELETE(_req: NextRequest, { params }: { params: { id: string } }) {
   const guard = await requireAdmin("content");
   if (!guard.ok) return guard.response;

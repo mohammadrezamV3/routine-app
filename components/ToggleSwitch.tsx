@@ -2,7 +2,7 @@
 
 import { TickButton } from "./TickButton";
 
-// گزینه‌ی روشن/خاموش — همون تیکِ واحدِ اپ (TickButton)، نه سوییچ.
+// گزینه‌ی روشن/خاموش — همون تیک واحد اپ (TickButton)، نه سوییچ.
 export function ToggleSwitch({
   checked,
   onChange,

@@ -30,7 +30,7 @@ export default function LoginPage() {
   const [fieldErrors, setFieldErrors] = useState<{ identifier?: string; password?: string }>({});
   const [error, setError] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
-  // بعد از تاییدِ نشستِ واقعی، دایره‌ی لودینگ به تیک تبدیل می‌شه و بعد ناوبری.
+  // بعد از تایید نشست واقعی، دایره‌ی لودینگ به تیک تبدیل می‌شه و بعد ناوبری.
   const [success, setSuccess] = useState(false);
   // مرحله‌ی دوم ورود (فقط وقتی کاربر ورود دومرحله‌ای پیامکی رو روشن کرده)
   const [twoFactor, setTwoFactor] = useState<{ phoneHint: string } | null>(null);
@@ -40,7 +40,7 @@ export default function LoginPage() {
   const identifierRef = useRef<HTMLDivElement>(null);
   const passwordRef = useRef<HTMLDivElement>(null);
 
-  // شل و تب‌ها در app/auth/layout.tsx (AuthFrame) پایدارن؛ این صفحه فقط خودِ فرم رو می‌سازه
+  // شل و تب‌ها در app/auth/layout.tsx (AuthFrame) پایدارن؛ این صفحه فقط خود فرم رو می‌سازه
   useAuthFieldsStagger(formRef);
 
   function clearError(key: "identifier" | "password") {
@@ -48,26 +48,26 @@ export default function LoginPage() {
   }
 
   async function finalizeLogin(): Promise<boolean> {
-    // هیچ‌وقت فقط به خروجیِ signIn اعتماد نکن — یک بار نشستِ واقعی را از
-    // سرور بپرس و فقط اگر کاربرِ واقعی برگشت، ناوبری کن.
+    // هیچ‌وقت فقط به خروجی signIn اعتماد نکن — یک بار نشست واقعی را از
+    // سرور بپرس و فقط اگر کاربر واقعی برگشت، ناوبری کن.
     //
-    // چرا: خروجیِ signIn از روی *بدنه‌ی پاسخِ* /api/auth/callback ساخته
-    // می‌شود، و مهاجم با یک پروکسی (مثل Burp) می‌تواند آن بدنه را به شکلِ
-    // «موفق» بازنویسی کند حتی وقتی رمز غلط بوده و سرور هیچ کوکیِ نشستی
-    // نساخته. آن‌وقت router.push کاربر را به /weekly می‌بُرد و *ظاهرِ*
+    // چرا: خروجی signIn از روی *بدنه‌ی پاسخ* /api/auth/callback ساخته
+    // می‌شود، و مهاجم با یک پروکسی (مثل Burp) می‌تواند آن بدنه را به شکل
+    // «موفق» بازنویسی کند حتی وقتی رمز غلط بوده و سرور هیچ کوکی نشستی
+    // نساخته. آن‌وقت router.push کاربر را به /weekly می‌برد و *ظاهر*
     // ورود ساخته می‌شد (هرچند سرور همچنان همه‌چیز را ۴۰۱ می‌کرد و هیچ
-    // داده‌ی واقعی‌ای در دسترس نبود). getSession یک رفت‌وبرگشتِ تازه به
-    // سرور می‌زند که کوکیِ *واقعی* را می‌خواند، پس بازنویسیِ بدنه بی‌اثر
-    // می‌شود: نشستِ جعلی هیچ‌وقت کاربر ندارد.
+    // داده‌ی واقعی‌ای در دسترس نبود). getSession یک رفت‌وبرگشت تازه به
+    // سرور می‌زند که کوکی *واقعی* را می‌خواند، پس بازنویسی بدنه بی‌اثر
+    // می‌شود: نشست جعلی هیچ‌وقت کاربر ندارد.
     const session = await getSession();
     if (!(session?.user as any)?.id) {
       setError("ورود ناموفق بود — دوباره امتحان کن");
       return false;
     }
 
-    // رمزگذاریِ سرتاسریِ گفت‌وگوی منتور: از همین رمز، *روی دستگاه*، کلیدِ بسته‌بندی
-    // مشتق می‌شود تا کلیدِ گفت‌وگو بی‌صدا باز شود (lib/e2ee/client.ts). رمز به هیچ
-    // درخواستِ تازه‌ای نمی‌رود؛ در پس‌زمینه و بی‌اثر بر ورود.
+    // رمزگذاری سرتاسری گفت‌وگوی منتور: از همین رمز، *روی دستگاه*، کلید بسته‌بندی
+    // مشتق می‌شود تا کلید گفت‌وگو بی‌صدا باز شود (lib/e2ee/client.ts). رمز به هیچ
+    // درخواست تازه‌ای نمی‌رود؛ در پس‌زمینه و بی‌اثر بر ورود.
     if (password) void import("@/lib/e2ee/client").then((m) => m.primeE2EEFromPassword((session!.user as any).id, password)).catch(() => {});
 
     // لایه‌ی داده تا اینجا وضعیت «مهمان» رو کش کرده (و از localStorage
@@ -77,7 +77,7 @@ export default function LoginPage() {
     // تا لود بعدی بتونه داده‌ها رو پیش‌درخواست کنه (lib/preload.ts)
     setAuthHintCookie();
     setSuccess(true);
-    // مقصد (داشبورد یا روتین — lib/homePath.ts) هم‌زمان با انیمیشنِ تیک معلوم می‌شه
+    // مقصد (داشبورد یا روتین — lib/homePath.ts) هم‌زمان با انیمیشن تیک معلوم می‌شه
     const [home] = await Promise.all([resolveHomePath(), new Promise((r) => setTimeout(r, 650))]);
     router.push(home);
     return true;

@@ -34,7 +34,7 @@ export default function AdminSystemStatusPage() {
   const alive = useRef(true);
 
   const load = useCallback(() => {
-    // هر ۳۰ ثانیه + دکمه‌ی دستی — دو درخواستِ هم‌زمان لازم نیست
+    // هر ۳۰ ثانیه + دکمه‌ی دستی — دو درخواست هم‌زمان لازم نیست
     if (inFlight.current) return;
     inFlight.current = true;
     setLoading(true);
@@ -57,7 +57,7 @@ export default function AdminSystemStatusPage() {
   useEffect(() => {
     alive.current = true;
     load();
-    // تبِ پس‌زمینه لازم نیست سرور رو هر ۳۰ ثانیه صدا بزنه؛ برگشت به تب → تازه‌سازیِ فوری
+    // تب پس‌زمینه لازم نیست سرور رو هر ۳۰ ثانیه صدا بزنه؛ برگشت به تب → تازه‌سازی فوری
     const interval = setInterval(() => { if (!document.hidden) load(); }, REFRESH_MS);
     const onVisible = () => { if (!document.hidden) load(); };
     document.addEventListener("visibilitychange", onVisible);
@@ -83,7 +83,7 @@ export default function AdminSystemStatusPage() {
             دیتابیس {status.db.connected ? "متصل" : "قطع"}
           </span>
         )}
-        {/* برچسب ثابت می‌مونه تا تازه‌سازیِ خودکارِ هر ۳۰ ثانیه دکمه رو نپرونه؛ inFlight دوبل‌کلیک رو می‌گیره */}
+        {/* برچسب ثابت می‌مونه تا تازه‌سازی خودکار هر ۳۰ ثانیه دکمه رو نپرونه؛ inFlight دوبل‌کلیک رو می‌گیره */}
         <button type="button" className="admin-btn" onClick={load} aria-busy={loading}>
           <RefreshCw size={14} /> تازه‌سازی
         </button>

@@ -1,13 +1,13 @@
 "use client";
 
-// داشبورد — نمای کلیِ همه‌ی بخش‌ها و (وقتی فلگِ `dashboard` روشن باشه) صفحه‌ی
-// اصلیِ بعد از ورود. فعلا فقط ادمین‌ها (فلگ پیش‌فرض admins؛ Owner همیشه).
+// داشبورد — نمای کلی همه‌ی بخش‌ها و (وقتی فلگ `dashboard` روشن باشه) صفحه‌ی
+// اصلی بعد از ورود. فعلا فقط ادمین‌ها (فلگ پیش‌فرض admins؛ Owner همیشه).
 //
 // معماری:
 //   • روتین از lib/storage.ts (useDashboardRoutine) — زنده و هم‌گام با /weekly.
 //   • بقیه‌ی ماژول‌ها با یک درخواست از /api/dashboard (useDashboardData) که
-//     خودش پشتِ فلگ و گیتِ ماژول‌هاست؛ این‌جا FeatureGate فقط UI ـه.
-//   • چیدمانِ بنتو با grid-template-areas در app/dashboard/dashboard.css.
+//     خودش پشت فلگ و گیت ماژول‌هاست؛ این‌جا FeatureGate فقط UI ـه.
+//   • چیدمان بنتو با grid-template-areas در app/dashboard/dashboard.css.
 
 import "@/app/dashboard/dashboard.css";
 import { useCallback, useMemo, useState } from "react";
@@ -38,13 +38,13 @@ import { DashIcon } from "./DashboardIcons";
 export type DashboardGate = "guest" | "off" | "on";
 
 /**
- * گیت سمتِ سرور تصمیم گرفته می‌شه (app/dashboard/page.tsx) و دادهِ اولیه هم
- * همراهِ HTML میاد — دیگه نه منتظرِ /api/features می‌مونیم نه /api/dashboard.
- * enforcement واقعی همچنان روی روتِ API هم هست (featureBlocked).
+ * گیت سمت سرور تصمیم گرفته می‌شه (app/dashboard/page.tsx) و داده اولیه هم
+ * همراه HTML میاد — دیگه نه منتظر /api/features می‌مونیم نه /api/dashboard.
+ * enforcement واقعی همچنان روی روت API هم هست (featureBlocked).
  */
 export function DashboardClient({ gate, initial }: { gate: DashboardGate; initial: { key: string; data: DashboardData } | null }) {
   if (gate === "guest") {
-    return <section className="db-page"><AuthGate message="برای دیدنِ داشبورد وارد شوید" /></section>;
+    return <section className="db-page"><AuthGate message="برای دیدن داشبورد وارد شوید" /></section>;
   }
   if (gate === "off") {
     return <section className="db-page dash-scope"><SuperAdminGate forceLocked><DashboardShellSkeleton /></SuperAdminGate></section>;
@@ -58,22 +58,22 @@ export function DashboardClient({ gate, initial }: { gate: DashboardGate; initia
 
 /**
  * grid-template-areas برای سه عرض — از روی کارت‌هایی که واقعا هستن ساخته
- * می‌شه: کارتِ ماژولِ خریده‌نشده یا فلگِ خاموش اصلا رندر نمی‌شه و هیچ‌وقت یک
+ * می‌شه: کارت ماژول خریده‌نشده یا فلگ خاموش اصلا رندر نمی‌شه و هیچ‌وقت یک
  * خانه‌ی خالی در چیدمان نمی‌ذاره.
  */
 type Area = "today" | "heat" | "ex" | "cal" | "trade" | "market" | "mentor" | "road" | "inbox";
 function bentoAreas(has: Set<Area>) {
   const q = (row: string[]) => `"${row.join(" ")}"`;
   const fit = (list: string[], cols: number) => {
-    // یک ردیف با `cols` ستون؛ کارتِ آخر جای خالی رو پر می‌کنه
+    // یک ردیف با `cols` ستون؛ کارت آخر جای خالی رو پر می‌کنه
     const row = list.slice(0, cols);
     while (row.length < cols) row.push(row[row.length - 1]);
     return row;
   };
   const fitness = (["ex", "cal"] as Area[]).filter((a) => has.has(a));
   const bottom = (["mentor", "road", "inbox"] as Area[]).filter((a) => has.has(a));
-  // «دوستان» و «همه‌ی بخش‌ها» به درخواستِ صریح از پایینِ داشبورد برداشته شدن؛
-  // آخرین ردیف همون کارت‌های کوتاهِ مربی/رودمپ/اعلان‌هاست.
+  // «دوستان» و «همه‌ی بخش‌ها» به درخواست صریح از پایین داشبورد برداشته شدن؛
+  // آخرین ردیف همون کارت‌های کوتاه مربی/رودمپ/اعلان‌هاست.
   const lg: string[] = [q(["today", "heat", "heat"])];
   if (fitness.length) lg.push(q(["today", ...fit(fitness, 2)]));
   if (has.has("trade")) lg.push(q(["trade", "trade", "market"]));
@@ -108,9 +108,9 @@ function DashboardBody({ initial }: { initial: { key: string; data: DashboardDat
   const modules = useMemo(() => (data ? new Set(data.modules) : null), [data]);
   const isAdmin = !!(data?.user.isAdmin ?? ((session?.user as any)?.isAdmin || (session?.user as any)?.isSuperAdmin));
   const loading = !data && status === "loading";
-  // هر بخشِ ماژولِ پولی فقط با خریدِ همون بخش به داشبورد اضافه می‌شه (نه کارتِ
+  // هر بخش ماژول پولی فقط با خرید همون بخش به داشبورد اضافه می‌شه (نه کارت
   // قفل برای همه). بخش‌های چندبخشی (هیرو، کارهای سریع، همه‌ی بخش‌ها، جست‌وجو)
-  // می‌مونن ولی داده‌ی ماژولِ خریده‌نشده رو نمی‌گیرن (سرور براش null می‌ده).
+  // می‌مونن ولی داده‌ی ماژول خریده‌نشده رو نمی‌گیرن (سرور براش null می‌ده).
   const owns = (m: string) => !!modules && modules.has(m);
   const showMentors = features?.mentors !== false;
   const has = useMemo(() => {
@@ -140,8 +140,8 @@ function DashboardBody({ initial }: { initial: { key: string; data: DashboardDat
 
       {status === "error" && !data && (
         <div className="db-error">
-          <DashIcon name="bell" /> دریافتِ اطلاعات ناموفق بود.
-          <button type="button" className="account-outline-btn mentor-btn is-sm" onClick={() => refresh(true)}>تلاشِ دوباره</button>
+          <DashIcon name="bell" /> دریافت اطلاعات ناموفق بود.
+          <button type="button" className="account-outline-btn mentor-btn is-sm" onClick={() => refresh(true)}>تلاش دوباره</button>
         </div>
       )}
 

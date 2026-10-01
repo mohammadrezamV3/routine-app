@@ -11,12 +11,12 @@ import { decideMentorTerms, MENTOR_TERMS_ERROR_CODE, MENTOR_TERMS_VERSION } from
 import { WAITLIST_MAX, canJoinWaitlist } from "@/lib/mentorWaitlist";
 import { advanceWaitlist, countOccupiedSeats, countWaiting, loadMyWaitlist } from "@/lib/mentorWaitlistServer";
 
-// صفِ انتظارِ منتورِ پُر — سمتِ کاربر (lib/mentorWaitlistServer.ts).
+// صف انتظار منتور پر — سمت کاربر (lib/mentorWaitlistServer.ts).
 //   GET    → { waitlist: MyWaitlist | null }
 //   POST   { acceptMentorTerms? } → ورود به صف (فقط وقتی ظرفیت پر است)
-//   DELETE → خروج از صف / ردِ نوبت
-// پذیرشِ نوبت = همان POST /api/mentorships (درخواستِ عادی با سؤال‌های پذیرش)؛
-// نوبتِ زنده سقفِ ظرفیت را برای همان کاربر باز می‌کند.
+//   DELETE → خروج از صف / رد نوبت
+// پذیرش نوبت = همان POST /api/mentorships (درخواست عادی با سؤال‌های پذیرش)؛
+// نوبت زنده سقف ظرفیت را برای همان کاربر باز می‌کند.
 
 type Ctx = { params: { mentorId: string } };
 const BLOCKED_MSG = "امکان ارسال درخواست به این کاربر وجود ندارد";
@@ -51,7 +51,7 @@ export async function POST(req: Request, { params }: Ctx) {
   if (!parsed.ok) return NextResponse.json({ error: parsed.error }, { status: parsed.status });
   const b = parsed.body || {};
 
-  // همان گیت‌های درخواستِ عادی (app/api/mentorships/route.ts)
+  // همان گیت‌های درخواست عادی (app/api/mentorships/route.ts)
   const profile = await prisma.mentorProfile.findFirst({
     where: { userId: mentorId, ...DISCOVERABLE_PROFILE_WHERE },
     select: AVAILABILITY_SELECT,
@@ -70,7 +70,7 @@ export async function POST(req: Request, { params }: Ctx) {
     return conflict("این درخواست به‌تازگی رد شده؛ بعدا دوباره امتحان کن");
   }
 
-  // اول صف جلو برود تا «پر بودن» با صندلی‌های رزروِ به‌روز سنجیده شود
+  // اول صف جلو برود تا «پر بودن» با صندلی‌های رزرو به‌روز سنجیده شود
   await advanceWaitlist(mentorId);
   const now = new Date();
   const availability = availabilityOf(profile, await countOccupiedSeats(mentorId, now));
@@ -90,7 +90,7 @@ export async function POST(req: Request, { params }: Ctx) {
   if (existing && (existing.status === "WAITING" || (existing.status === "OFFERED" && existing.offerExpiresAt && existing.offerExpiresAt > now))) {
     return conflict("از قبل توی صف این مربی هستی");
   }
-  if ((await countWaiting(mentorId)) >= WAITLIST_MAX) return conflict("صف این مربی فعلاً پُره؛ کمی بعد دوباره سر بزن");
+  if ((await countWaiting(mentorId)) >= WAITLIST_MAX) return conflict("صف این مربی فعلا پره؛ کمی بعد دوباره سر بزن");
 
   const recordTerms = async (tx: Parameters<Parameters<typeof prisma.$transaction>[0]>[0]) => {
     if (terms.record) {
@@ -104,7 +104,7 @@ export async function POST(req: Request, { params }: Ctx) {
   try {
     const ok = await prisma.$transaction(async (tx) => {
       if (existing) {
-        // ورودِ دوباره (بعد از خروج/انقضا/پذیرشِ قبلی) — ته صف، با قفلِ وضعیتِ قبلی
+        // ورود دوباره (بعد از خروج/انقضا/پذیرش قبلی) — ته صف، با قفل وضعیت قبلی
         const r = await tx.mentorWaitlistEntry.updateMany({ where: { id: existing.id, status: existing.status }, data: fresh });
         if (r.count === 0) return false;
       } else {
@@ -134,7 +134,7 @@ export async function DELETE(_req: Request, { params }: Ctx) {
     data: { status: "CANCELLED", closedBy: "USER", closedAt: now },
   });
   if (res.count === 0) return notFound();
-  // اگر نوبت داشت، صندلی به نفرِ بعدی می‌رسد
+  // اگر نوبت داشت، صندلی به نفر بعدی می‌رسد
   await advanceWaitlist(params.mentorId, now);
   void publishToUsers([params.mentorId, me], { type: "mentor.mentorship", data: { mentorId: params.mentorId } });
   return NextResponse.json({ waitlist: null });

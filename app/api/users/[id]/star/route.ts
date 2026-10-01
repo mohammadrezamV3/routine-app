@@ -3,9 +3,9 @@ import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
 
-// PATCH /api/users/:id/star { starred: boolean } — استاردادن/برداشتنِ
-// استار از یک دوست. فقط بین دوستانِ تاییدشده معنا دارد (جلوگیری از
-// اسپم‌کردنِ استار به هر کاربرِ discoverable).
+// PATCH /api/users/:id/star { starred: boolean } — استاردادن/برداشتن
+// استار از یک دوست. فقط بین دوستان تاییدشده معنا دارد (جلوگیری از
+// اسپم‌کردن استار به هر کاربر discoverable).
 export async function PATCH(req: NextRequest, { params }: { params: { id: string } }) {
   const session = await getServerSession(authOptions);
   const userId = (session?.user as any)?.id;

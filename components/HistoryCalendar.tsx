@@ -49,7 +49,7 @@ export function HistoryCalendar({
     loadOutingDates();
   }
   useEffect(loadAll, []);
-  // لایه‌ی زنده: تیک/برنامه/روزِ بیرون‌رفتن از هرجا عوض شد، تقویم همون لحظه
+  // لایه‌ی زنده: تیک/برنامه/روز بیرون‌رفتن از هرجا عوض شد، تقویم همون لحظه
   useLiveRefresh(["daily", "customOccurrences", "removedOccurrences", "outingDates"], (changed) => {
     const all = changed.includes("*");
     if (all || changed.some((c) => c === "customOccurrences" || c === "removedOccurrences")) {

@@ -7,9 +7,9 @@ import { cn } from "@/lib/utils";
 export type WeekPlanGridItem = {
   id: string;
   label: string;
-  /** متنِ کوچکِ کمکی کنارِ اسم (مثلا ساعتِ برنامه) — اختیاری */
+  /** متن کوچک کمکی کنار اسم (مثلا ساعت برنامه) — اختیاری */
   meta?: string;
-  /** وضعیتِ واقعیِ آیتم؛ فقط با آیکونِ جای شماره نشان داده می‌شود، نه متن */
+  /** وضعیت واقعی آیتم؛ فقط با آیکون جای شماره نشان داده می‌شود، نه متن */
   state?: "done" | "missed";
 };
 
@@ -17,16 +17,16 @@ export type WeekPlanGridDay = {
   key: string;
   dayName: string;
   isToday: boolean;
-  /** خطِ سبزِ زیرِ اسمِ روز (هم‌نقشِ focus در برنامه‌ی تمرینی) */
+  /** خط سبز زیر اسم روز (هم‌نقش focus در برنامه‌ی تمرینی) */
   subtitle?: string;
   items: WeekPlanGridItem[];
 };
 
-// «برنامه هفتگی» به همان شکلِ برنامه‌ی هفتگیِ بخشِ ورزش (ExerciseWeekGrid):
-// یک باکسِ واحد؛ موبایل تک‌ستونی، sm دوستونی، lg هفت‌ستونی با جداکننده‌ی
-// گرادیانی بینِ روزها. نسخه‌ی عمومی است تا روتین (app/weekly) هم همین
-// چیدمان را با داده‌ی خودش بگیرد. طبقِ درخواستِ صریح، زیر/کنارِ آیتم‌ها هیچ
-// متنِ «انجام دادی»/«وقتش گذشته» نمی‌آید — وضعیت فقط با آیکونِ کوچکِ جای
+// «برنامه هفتگی» به همان شکل برنامه‌ی هفتگی بخش ورزش (ExerciseWeekGrid):
+// یک باکس واحد؛ موبایل تک‌ستونی، sm دوستونی، lg هفت‌ستونی با جداکننده‌ی
+// گرادیانی بین روزها. نسخه‌ی عمومی است تا روتین (app/weekly) هم همین
+// چیدمان را با داده‌ی خودش بگیرد. طبق درخواست صریح، زیر/کنار آیتم‌ها هیچ
+// متن «انجام دادی»/«وقتش گذشته» نمی‌آید — وضعیت فقط با آیکون کوچک جای
 // شماره دیده می‌شود.
 export function WeekPlanGrid({
   days,
@@ -40,7 +40,7 @@ export function WeekPlanGrid({
   onItemClick?: (item: WeekPlanGridItem, day: WeekPlanGridDay) => void;
 }) {
   return (
-    // div نه section: قانونِ سراسریِ section{border-top} خطِ اضافه می‌کشید.
+    // div نه section: قانون سراسری section{border-top} خط اضافه می‌کشید.
     <div>
       <h1 className="mb-4 flex items-center justify-start gap-2 text-[20px] font-bold text-dash-text sm:mb-5 sm:text-[26px]">
         <CalendarDays className="h-[19px] w-[19px] text-dash-green sm:h-6 sm:w-6" />

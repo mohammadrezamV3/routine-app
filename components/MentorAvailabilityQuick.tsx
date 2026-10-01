@@ -25,11 +25,11 @@ function isoToJalali(iso: string | null | undefined): JalaliDate | null {
 }
 
 /**
- * «وضعیت پذیرش» — یک کنترلِ تک‌انتخابی (SegmentedTabs) برای سه حالت:
+ * «وضعیت پذیرش» — یک کنترل تک‌انتخابی (SegmentedTabs) برای سه حالت:
  * پذیرش باز / پذیرش بسته / در دسترس نیستم. عدم حضور با یک شیت (تاریخ
  * بازگشت، پیام، توقف درخواست‌ها) ثبت می‌شود و تا وقتی برقرار است، تاریخ
  * بازگشت همین‌جا دیده می‌شود و با یک تپ («پایان عدم حضور») تمام می‌شود.
- * هر تغییر فوراً با PUT /api/mentor/settings ذخیره می‌شود. روی داشبورد و
+ * هر تغییر فورا با PUT /api/mentor/settings ذخیره می‌شود. روی داشبورد و
  * بالای /mentor/settings استفاده می‌شود؛ `onChange` تنظیمات را به والد می‌دهد.
  */
 export function MentorAvailabilityQuick({
@@ -170,7 +170,7 @@ export function MentorAvailabilityQuick({
   );
 }
 
-/** شیتِ ثبت/ویرایشِ عدم حضور: تاریخ بازگشت، پیام، توقف درخواست‌ها */
+/** شیت ثبت/ویرایش عدم حضور: تاریخ بازگشت، پیام، توقف درخواست‌ها */
 function AwaySheet({
   open, settings, onClose, onSave, busy, error,
 }: {
@@ -187,7 +187,7 @@ function AwaySheet({
   const [picker, setPicker] = useState(false);
   const [err, setErr] = useState<{ date?: string; message?: string }>({});
 
-  // هر بار باز شدن از وضعیتِ فعلی شروع می‌شود
+  // هر بار باز شدن از وضعیت فعلی شروع می‌شود
   useEffect(() => {
     if (!open) return;
     setDate(isoToJalali(settings.awayUntil));
@@ -226,7 +226,7 @@ function AwaySheet({
           >
             <textarea
               id="away-msg" className="wsearch-newform-name trade-glass-field" rows={2} maxLength={AWAY_MESSAGE_MAX + 20}
-              value={message} placeholder="مثلاً «در سفرم؛ پیام‌ها را پس از بازگشت جواب می‌دهم»"
+              value={message} placeholder="مثلا «در سفرم؛ پیام‌ها را پس از بازگشت جواب می‌دهم»"
               onChange={(e) => { setMessage(e.target.value); setErr((x) => ({ ...x, message: undefined })); }}
             />
           </MentorField>

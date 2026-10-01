@@ -75,7 +75,7 @@ async function pair() {
 
 // ───────────────────────── هسته‌ی رمزنگاری ─────────────────────────
 
-describe("هسته‌ی رمزنگاری (webcryptoِ Node)", () => {
+describe("هسته‌ی رمزنگاری (webcrypto Node)", () => {
   it("رفت‌وبرگشت: هر دو طرف به یک کلید می‌رسند؛ متن، fk و تعهد درست برمی‌گردد", async () => {
     const { onMentor, onStudent } = await pair();
     const e = await encryptMessage(onStudent.fromStudent, "سلام استاد؛ تست ۱۲۳", MCTX);
@@ -83,19 +83,19 @@ describe("هسته‌ی رمزنگاری (webcryptoِ Node)", () => {
     expect(d.text).toBe("سلام استاد؛ تست ۱۲۳");
     expect(d.frankingKey).toBe(e.frankingKey);
     expect(d.committed).toBe(true);
-    // متنِ رمزشده هیچ ردی از متن ندارد و طولش به بلوکِ ۱۲۸ بایتی گرد شده
+    // متن رمزشده هیچ ردی از متن ندارد و طولش به بلوک ۱۲۸ بایتی گرد شده
     expect(e.ciphertext).not.toContain("سلام");
     expect((fromB64(e.ciphertext)!.length - 16) % 128).toBe(0);
   });
 
-  it("IV تصادفی: دو رمزِ یک متن متفاوت است؛ IVها تکرار نمی‌شوند", async () => {
+  it("IV تصادفی: دو رمز یک متن متفاوت است؛ IVها تکرار نمی‌شوند", async () => {
     const { onStudent } = await pair();
     const ivs = new Set<string>();
     for (let i = 0; i < 200; i++) ivs.add((await encryptMessage(onStudent.fromStudent, "x", MCTX)).iv);
     expect(ivs.size).toBe(200);
   });
 
-  it("AAD: جابه‌جاییِ فرستنده/گفت‌وگو/clientId/نسخه یا دست‌کاریِ بایت → رد", async () => {
+  it("AAD: جابه‌جایی فرستنده/گفت‌وگو/clientId/نسخه یا دست‌کاری بایت → رد", async () => {
     const { onMentor, onStudent } = await pair();
     const e = await encryptMessage(onStudent.fromStudent, "متن", MCTX);
     for (const bad of [
@@ -111,7 +111,7 @@ describe("هسته‌ی رمزنگاری (webcryptoِ Node)", () => {
     await expect(decryptMessage(onMentor.fromStudent, { ...e, ciphertext: toB64(ct) }, MCTX)).rejects.toBeInstanceOf(E2EEDecryptError);
   });
 
-  it("جداسازیِ کلید: جهتِ مخالف، گفت‌وگوی دیگر، نسخه‌ی دیگر و کاربرِ ثالث کلیدِ دیگری دارند", async () => {
+  it("جداسازی کلید: جهت مخالف، گفت‌وگوی دیگر، نسخه‌ی دیگر و کاربر ثالث کلید دیگری دارند", async () => {
     const { mentor, student, onMentor, onStudent } = await pair();
     const e = await encryptMessage(onStudent.fromStudent, "متن", MCTX);
     await expect(decryptMessage(onMentor.fromMentor, e, MCTX)).rejects.toBeInstanceOf(E2EEDecryptError);
@@ -124,7 +124,7 @@ describe("هسته‌ی رمزنگاری (webcryptoِ Node)", () => {
     await expect(decryptMessage(eveKeys.fromStudent, e, MCTX)).rejects.toBeInstanceOf(E2EEDecryptError);
   });
 
-  it("فرانکینگ: تعهد با متن/زمینه‌ی دیگر یا fkِ دیگر تایید نمی‌شود", async () => {
+  it("فرانکینگ: تعهد با متن/زمینه‌ی دیگر یا fk دیگر تایید نمی‌شود", async () => {
     const fk = crypto.getRandomValues(new Uint8Array(32));
     const c = toB64(await computeCommitment(fk, MCTX, "متن اصلی"));
     expect(await verifyCommitment(toB64(fk), c, MCTX, "متن اصلی")).toBe(true);
@@ -135,7 +135,7 @@ describe("هسته‌ی رمزنگاری (webcryptoِ Node)", () => {
     expect(await verifyCommitment("not-b64", c, MCTX, "متن اصلی")).toBe(false);
   });
 
-  it("فرستنده‌ی بدخواه: fkِ داخلِ پیام با تعهدِ بیرونی نمی‌خواند → committed=false", async () => {
+  it("فرستنده‌ی بدخواه: fk داخل پیام با تعهد بیرونی نمی‌خواند → committed=false", async () => {
     const { onMentor, onStudent } = await pair();
     const e = await encryptMessage(onStudent.fromStudent, "متن توهین‌آمیز", MCTX);
     const fake = await encryptMessage(onStudent.fromStudent, "متن بی‌خطر", MCTX);
@@ -143,14 +143,14 @@ describe("هسته‌ی رمزنگاری (webcryptoِ Node)", () => {
     expect(d.committed).toBe(false);
   });
 
-  it("پشتیبانِ کلید: رمزِ درست باز می‌کند، نادرست نه؛ به کاربر/نسخه/کلیدِ عمومی گره خورده؛ ارقامِ فارسی یکسان", async () => {
+  it("پشتیبان کلید: رمز درست باز می‌کند، نادرست نه؛ به کاربر/نسخه/کلید عمومی گره خورده؛ ارقام فارسی یکسان", async () => {
     const kp = await generateIdentityKeyPair();
     const ctx = { userId: "u1", version: 1, publicKey: kp.publicB64 };
     const b = await wrapPrivateKey(kp.privateKey, "اسب باتری ۱۲۳۴ منگنه", ctx, PBKDF2_MIN_ITERATIONS);
     expect(b.iterations).toBeGreaterThanOrEqual(600_000);
     const k = await unwrapPrivateKey(b, "اسب باتری 1234 منگنه", ctx);
     expect(k.extractable).toBe(false);
-    // کلیدِ بازشده همان کلید است: با کلیدِ عمومیِ طرفِ دیگر به همان رازِ مشترک می‌رسد
+    // کلید بازشده همان کلید است: با کلید عمومی طرف دیگر به همان راز مشترک می‌رسد
     const peer = await generateIdentityKeyPair();
     const a1 = await deriveSelfKey(k, peer.publicKey, ["t"]);
     const a2 = await deriveSelfKey(peer.privateKey, await importPublicKey(kp.publicB64), ["t"]);
@@ -164,7 +164,7 @@ describe("هسته‌ی رمزنگاری (webcryptoِ Node)", () => {
     expect(normalizePasscode("۱۲۳٤٥")).toBe("12345");
   }, 30_000);
 
-  it("کدِ امنیتی متقارن است و با کلیدِ دیگر عوض می‌شود؛ کلیدِ جفتی/خودی جدا از هم", async () => {
+  it("کد امنیتی متقارن است و با کلید دیگر عوض می‌شود؛ کلید جفتی/خودی جدا از هم", async () => {
     const a = await generateIdentityKeyPair();
     const b = await generateIdentityKeyPair();
     const c = await generateIdentityKeyPair();
@@ -182,7 +182,7 @@ describe("هسته‌ی رمزنگاری (webcryptoِ Node)", () => {
     await expect(openText(k2, s, ["intake", 1])).rejects.toBeInstanceOf(E2EEDecryptError);
   });
 
-  it("سمتِ سرور: برچسبِ فرانکینگ و رمزِ در حالِ سکون", () => {
+  it("سمت سرور: برچسب فرانکینگ و رمز در حال سکون", () => {
     const ctx = { mentorshipId: "m", senderId: "s", clientId: "c".repeat(22), commitment: "AAAA", createdAt: new Date("2026-01-01T00:00:00Z") };
     const tag = serverFrankingTag(ctx);
     expect(verifyServerFrankingTag(tag, ctx)).toBe(true);
@@ -201,8 +201,8 @@ describe("هسته‌ی رمزنگاری (webcryptoِ Node)", () => {
 
 // ───────────────────────── کلیدها (API) ─────────────────────────
 
-describe("کلیدها: SYNCED با رمزِ عبور، DEVICE، انتقال از رمزِ گفت‌وگو", () => {
-  it("SYNCED با KEKِ رمزِ عبور: سرور فقط کلیدِ عمومی و پشتیبانِ رمزشده؛ نمکِ حساب اجباری؛ جایگزینی پشتیبانِ قبلی را پاک می‌کند", async () => {
+describe("کلیدها: SYNCED با رمز عبور، DEVICE، انتقال از رمز گفت‌وگو", () => {
+  it("SYNCED با KEK رمز عبور: سرور فقط کلید عمومی و پشتیبان رمزشده؛ نمک حساب اجباری؛ جایگزینی پشتیبان قبلی را پاک می‌کند", async () => {
     const u = await makeUser();
     await prisma.user.update({ where: { id: u }, data: { passwordHash: "$2a$12$abcdefghijklmnopqrstuv" } });
     as(u);
@@ -216,30 +216,30 @@ describe("کلیدها: SYNCED با رمزِ عبور، DEVICE، انتقال ا
     const kek = await derivePasswordKek(pw, u, kdf.salt, kdf.iterations);
     const kp = await generateIdentityKeyPair();
     const backup = await wrapPrivateKeyWithKek(kp.privateKey, kek, { userId: u, version: 1, publicKey: kp.publicB64 }, kdf);
-    // شکل‌های بد / نمکِ دلخواه / نسخه‌ی نادرست
+    // شکل‌های بد / نمک دلخواه / نسخه‌ی نادرست
     expect((await postKey(req("POST", "/x", { publicKey: "xx", backup, version: 1, replaceVersion: 0 }))).status).toBe(400);
     expect((await postKey(req("POST", "/x", { publicKey: kp.publicB64, backup: { ...backup, salt: toB64(new Uint8Array(16)) }, version: 1, replaceVersion: 0 }))).status).toBe(400);
     expect((await postKey(req("POST", "/x", { publicKey: kp.publicB64, backup, version: 3, replaceVersion: 0 }))).status).toBe(409);
     expect((await postKey(req("POST", "/x", { publicKey: kp.publicB64, backup, version: 1, replaceVersion: 0 }))).status).toBe(200);
-    // دوباره «بارِ اول» → ۴۰۹ (دو دستگاه هم‌زمان)
+    // دوباره «بار اول» → ۴۰۹ (دو دستگاه هم‌زمان)
     expect((await postKey(req("POST", "/x", { publicKey: kp.publicB64, backup, version: 2, replaceVersion: 0 }))).status).toBe(409);
 
     const me = await j(await getMyKey(req("GET", "/api/e2ee/keys") as any));
     expect(me.keys).toMatchObject([{ version: 1, kind: "SYNCED", active: true, hasBackup: true, backupKind: "PASSWORD" }]);
     expect(JSON.stringify(me)).not.toContain(backup.ciphertext);
 
-    // دستگاهِ تازه با همان رمز → همان کلید؛ رمزِ دیگر → نه
+    // دستگاه تازه با همان رمز → همان کلید؛ رمز دیگر → نه
     const b = await j(await getBackup());
     expect(b.backupKind).toBe("PASSWORD");
     const k = await unwrapPrivateKeyWithKek(b.backup, await derivePasswordKek(pw, u, kdf.salt, kdf.iterations), { userId: u, version: 1, publicKey: kp.publicB64 });
     expect(k.extractable).toBe(false);
     await expect(unwrapPrivateKeyWithKek(b.backup, await derivePasswordKek("رمز دیگر", u, kdf.salt, kdf.iterations), { userId: u, version: 1, publicKey: kp.publicB64 })).rejects.toBeInstanceOf(E2EEDecryptError);
-    // KEK به کاربر گره خورده (همان رمز و نمک برای کاربرِ دیگر کلیدِ دیگری است)
+    // KEK به کاربر گره خورده (همان رمز و نمک برای کاربر دیگر کلید دیگری است)
     await expect(unwrapPrivateKeyWithKek(b.backup, await derivePasswordKek(pw, "other", kdf.salt, kdf.iterations), { userId: u, version: 1, publicKey: kp.publicB64 })).rejects.toBeInstanceOf(E2EEDecryptError);
     const row = await prisma.userE2EKey.findFirstOrThrow({ where: { userId: u } });
     expect(JSON.stringify(row)).not.toContain(pw);
 
-    // تغییرِ رمزِ عبور: همان نسخه، نمکِ تازه (اتمی با پشتیبان)
+    // تغییر رمز عبور: همان نسخه، نمک تازه (اتمی با پشتیبان)
     const key = await unwrapPrivateKeyWithKek(b.backup, kek, { userId: u, version: 1, publicKey: kp.publicB64 }, true);
     const kdf2 = { salt: toB64(crypto.getRandomValues(new Uint8Array(16))), iterations: PASSWORD_KDF_ITERATIONS };
     const kek2 = await derivePasswordKek("رمز تازه‌ی حساب", u, kdf2.salt, kdf2.iterations);
@@ -249,7 +249,7 @@ describe("کلیدها: SYNCED با رمزِ عبور، DEVICE، انتقال ا
     expect((await putBackup(req("PUT", "/x", { version: 1, backup: b2, backupKind: "PASSWORD", kdf: kdf2 }))).status).toBe(200);
     expect((await j(await getKdf())).salt).toBe(kdf2.salt);
 
-    // بازیابیِ رمز با پیامک (رمزِ قبلی نامعلوم): کلیدِ SYNCEDِ تازه جایگزین می‌شود
+    // بازیابی رمز با پیامک (رمز قبلی نامعلوم): کلید SYNCED تازه جایگزین می‌شود
     const kp2 = await generateIdentityKeyPair();
     const nb = await wrapPrivateKeyWithKek(kp2.privateKey, kek2, { userId: u, version: 2, publicKey: kp2.publicB64 }, kdf2);
     expect((await postKey(req("POST", "/x", { publicKey: kp2.publicB64, backup: nb, version: 2, replaceVersion: 1 }))).status).toBe(200);
@@ -259,7 +259,7 @@ describe("کلیدها: SYNCED با رمزِ عبور، DEVICE، انتقال ا
     expect(audit.map((a) => a.action).sort()).toEqual(["e2ee.key_create", "e2ee.key_reset", "e2ee.password_rewrap"]);
   }, 60_000);
 
-  it("حسابِ بی‌رمز (گوگل): KDF ندارد؛ کلیدِ هر دستگاه جدا؛ سقفِ دستگاه‌ها؛ حذفِ دستگاهِ خودم فقط", async () => {
+  it("حساب بی‌رمز (گوگل): KDF ندارد؛ کلید هر دستگاه جدا؛ سقف دستگاه‌ها؛ حذف دستگاه خودم فقط", async () => {
     const u = await makeUser();
     await prisma.user.update({ where: { id: u }, data: { passwordHash: null } });
     as(u);
@@ -269,7 +269,7 @@ describe("کلیدها: SYNCED با رمزِ عبور، DEVICE، انتقال ا
       const kp = await generateIdentityKeyPair();
       pubs.push(kp.publicB64);
       const r = await postDevice(req("POST", "/x", { publicKey: kp.publicB64, version: v, label: "Chrome · Android" }));
-      expect(r.status).toBe(v <= 10 ? 200 : 429); // سقفِ ساخت در ساعت
+      expect(r.status).toBe(v <= 10 ? 200 : 429); // سقف ساخت در ساعت
       if (v === 10) break;
     }
     const act = await prisma.userE2EKey.count({ where: { userId: u, retiredAt: null } });
@@ -284,7 +284,7 @@ describe("کلیدها: SYNCED با رمزِ عبور، DEVICE، انتقال ا
     expect((await delDevice(req("DELETE", "/api/e2ee/keys/device?version=3") as any)).status).toBe(404);
   });
 
-  it("پشتیبانِ قدیمیِ «رمز گفت‌وگو»: یک بار باز، به PASSWORD منتقل؛ برای حسابِ بی‌رمز → کلیدِ دستگاه", async () => {
+  it("پشتیبان قدیمی «رمز گفت‌وگو»: یک بار باز، به PASSWORD منتقل؛ برای حساب بی‌رمز → کلید دستگاه", async () => {
     const u = await makeUser();
     await prisma.user.update({ where: { id: u }, data: { passwordHash: "$2a$12$abcdefghijklmnopqrstuv" } });
     const kp = await generateIdentityKeyPair();
@@ -312,7 +312,7 @@ describe("کلیدها: SYNCED با رمزِ عبور، DEVICE، انتقال ا
     expect([row.kind, row.backupCiphertext, row.activeSyncedFor, row.retiredAt]).toEqual(["DEVICE", null, null, null]);
   }, 60_000);
 
-  it("کلیدِ عمومیِ دیگران فقط برای منتورِ منتشرشده یا طرفِ یک رابطه", async () => {
+  it("کلید عمومی دیگران فقط برای منتور منتشرشده یا طرف یک رابطه", async () => {
     const m = await makeMentor();
     const s = await makeUser();
     const x = await makeUser();
@@ -336,8 +336,8 @@ async function sendEnc(userId: string, msId: string, text: string, over: Record<
   return { res, enc, frankingKey };
 }
 
-describe("گفت‌وگو: سرور هرگز متنِ ساده نمی‌گیرد و نمی‌دهد", () => {
-  it("متنِ ساده ۴۰۰؛ ذخیره و پاسخ فقط رمزشده؛ طرفِ مقابل رمزگشایی می‌کند؛ اعلان بدونِ متن", async () => {
+describe("گفت‌وگو: سرور هرگز متن ساده نمی‌گیرد و نمی‌دهد", () => {
+  it("متن ساده ۴۰۰؛ ذخیره و پاسخ فقط رمزشده؛ طرف مقابل رمزگشایی می‌کند؛ اعلان بدون متن", async () => {
     const m = await makeMentor();
     const s = await makeUser();
     const ms = await connect(s, m);
@@ -368,23 +368,23 @@ describe("گفت‌وگو: سرور هرگز متنِ ساده نمی‌گیرد
     const notif = await prisma.inAppNotification.findFirstOrThrow({ where: { userId: m, type: "message.new" } });
     expect(notif.body).not.toContain("راز");
 
-    // داشبوردِ منتور هم متن ندارد
+    // داشبورد منتور هم متن ندارد
     as(m);
     const dash = await j(await mentorDashboard());
     expect(JSON.stringify(dash)).not.toContain("راز");
   });
 
-  it("نسخه‌ی کلید: کهنه → KEY_CHANGED؛ بدونِ کلیدِ طرف → PEER_NO_KEY؛ بدونِ کلیدِ خودم → NO_KEY", async () => {
+  it("نسخه‌ی کلید: کهنه → KEY_CHANGED؛ بدون کلید طرف → PEER_NO_KEY؛ بدون کلید خودم → NO_KEY", async () => {
     const m = await makeMentor();
     const s = await makeUser();
     const ms = await connect(s, m);
     await giveKey(s);
 
     as(s);
-    // طرفِ مقابل کلید ندارد: کلاینت نمی‌تواند رمز کند؛ بسته‌ی دست‌ساز هم پذیرفته نمی‌شود
+    // طرف مقابل کلید ندارد: کلاینت نمی‌تواند رمز کند؛ بسته‌ی دست‌ساز هم پذیرفته نمی‌شود
     const fakeFor = (u: string) => ({ v: 2, clientId: randomId(), ciphertext: toB64(new Uint8Array(64)), iv: toB64(new Uint8Array(12)), commitment: toB64(new Uint8Array(32)), from: { u, k: 1 }, wraps: [{ u, k: 1, w: toB64(new Uint8Array(60)) }] });
     const fake = fakeFor(s);
-    // قالبِ قدیمیِ scheme 1 برای پیامِ تازه پذیرفته نمی‌شود
+    // قالب قدیمی scheme 1 برای پیام تازه پذیرفته نمی‌شود
     expect((await postMessage(req("POST", "/x", { clientId: randomId(), ciphertext: toB64(new Uint8Array(64)), iv: toB64(new Uint8Array(12)), commitment: toB64(new Uint8Array(32)), senderKeyVersion: 1, recipientKeyVersion: 1 }), P(ms))).status).toBe(400);
     const r0 = await postMessage(req("POST", "/x", fake), P(ms));
     expect(r0.status).toBe(409);
@@ -406,7 +406,7 @@ describe("گفت‌وگو: سرور هرگز متنِ ساده نمی‌گیرد
     expect(r1.status).toBe(409);
     expect((await j(r1)).code).toBe("KEY_CHANGED");
 
-    // کلیدهای گفت‌وگو: همه‌ی نسخه‌ها برای خواندنِ پیام‌های قدیمی
+    // کلیدهای گفت‌وگو: همه‌ی نسخه‌ها برای خواندن پیام‌های قدیمی
     as(s);
     const k = await j(await getConvKeys(req("GET", "/x"), P(ms)));
     expect(k.keys[m].map((x: any) => [x.version, x.current])).toEqual([[1, false], [2, true]]);
@@ -421,7 +421,7 @@ describe("گفت‌وگو: سرور هرگز متنِ ساده نمی‌گیرد
     expect((await j(r2)).code).toBe("NO_KEY");
   });
 
-  it("ضدِ replay: همان بسته دوباره = بی‌اثر؛ clientIdِ تکراری با محتوای دیگر ۴۰۹؛ بسته در گفت‌وگوی دیگر رمزگشایی نمی‌شود", async () => {
+  it("ضد replay: همان بسته دوباره = بی‌اثر؛ clientId تکراری با محتوای دیگر ۴۰۹؛ بسته در گفت‌وگوی دیگر رمزگشایی نمی‌شود", async () => {
     const m = await makeMentor();
     const s = await makeUser();
     const ms = await connect(s, m);
@@ -442,13 +442,13 @@ describe("گفت‌وگو: سرور هرگز متنِ ساده نمی‌گیرد
     expect(dup.status).toBe(409);
     expect((await j(dup)).code).toBe("DUPLICATE");
 
-    // replay به گفت‌وگوی دیگرِ همین شاگرد: سرور ذخیره می‌کند ولی AAD/کلید نمی‌گذارد باز شود
+    // replay به گفت‌وگوی دیگر همین شاگرد: سرور ذخیره می‌کند ولی AAD/کلید نمی‌گذارد باز شود
     const m2 = await makeMentor();
     const ms2 = await connect(s, m2);
     await giveKey(m2);
     as(s);
     const k2 = await keyOf(m2);
-    // بسته‌بندیِ منتورِ اول را به‌نامِ کلیدِ m2 جا می‌زنیم تا سرور (که محتوا را نمی‌بیند) بپذیرد
+    // بسته‌بندی منتور اول را به‌نام کلید m2 جا می‌زنیم تا سرور (که محتوا را نمی‌بیند) بپذیرد
     const moved = await postMessage(req("POST", "/x", { ...enc, wraps: enc.wraps.map((w: any) => (w.u === m ? { ...w, u: m2, k: k2.version } : w)) }), P(ms2));
     expect(moved.status).toBe(200);
     as(m2);
@@ -459,8 +459,8 @@ describe("گفت‌وگو: سرور هرگز متنِ ساده نمی‌گیرد
 
 // ───────────────────────── گزارش (فرانکینگ) ─────────────────────────
 
-describe("گزارشِ پیام: فقط همان یک پیامِ تاییدشده به ادمین می‌رسد", () => {
-  it("جعلِ متن/کلید رد؛ گزارشِ درست دقیقا یک متنِ تاییدشده (رمزشده در سکون) ذخیره می‌کند؛ ادمین پیام‌های دیگر را نمی‌بیند", async () => {
+describe("گزارش پیام: فقط همان یک پیام تاییدشده به ادمین می‌رسد", () => {
+  it("جعل متن/کلید رد؛ گزارش درست دقیقا یک متن تاییدشده (رمزشده در سکون) ذخیره می‌کند؛ ادمین پیام‌های دیگر را نمی‌بیند", async () => {
     const m = await makeMentor();
     const s = await makeUser();
     const ms = await connect(s, m);
@@ -475,17 +475,17 @@ describe("گزارشِ پیام: فقط همان یک پیامِ تاییدشد�
     const mineId = (await j(mine.res)).message.id;
 
     const report = (body: Record<string, unknown>) => { as(s); return postReport(req("POST", "/x", body)); };
-    // بدونِ مدرک
+    // بدون مدرک
     expect((await report({ targetType: "MESSAGE", targetId: badId, reason: "آزار" })).status).toBe(400);
-    // متنِ جعلی (گزارش‌دهنده می‌خواهد متنی را به منتور نسبت دهد که نفرستاده)
+    // متن جعلی (گزارش‌دهنده می‌خواهد متنی را به منتور نسبت دهد که نفرستاده)
     expect((await report({ targetType: "MESSAGE", targetId: badId, reason: "آزار", franking: { text: "متن ساختگی", frankingKey: bad.frankingKey } })).status).toBe(400);
-    // کلیدِ فرانکینگِ پیامِ دیگر
+    // کلید فرانکینگ پیام دیگر
     expect((await report({ targetType: "MESSAGE", targetId: badId, reason: "آزار", franking: { text: "پیام خصوصی دیگر منتور", frankingKey: other.frankingKey } })).status).toBe(400);
-    // پیامِ خودش را نمی‌تواند گزارش کند
+    // پیام خودش را نمی‌تواند گزارش کند
     expect((await report({ targetType: "MESSAGE", targetId: mineId, reason: "x", franking: { text: "پیام خصوصی شاگرد", frankingKey: mine.frankingKey } })).status).toBe(404);
     expect(await prisma.mentorReport.count({ where: { reporterId: s } })).toBe(0);
 
-    // دست‌کاریِ برچسبِ سرور در DB (مثلا کسی با دسترسیِ نوشتن) → قابلِ تایید نیست
+    // دست‌کاری برچسب سرور در DB (مثلا کسی با دسترسی نوشتن) → قابل تایید نیست
     const orig = await prisma.mentorMessage.findUniqueOrThrow({ where: { id: badId }, select: { serverTag: true } });
     await prisma.mentorMessage.update({ where: { id: badId }, data: { serverTag: "n0:AAAA" } });
     expect((await report({ targetType: "MESSAGE", targetId: badId, reason: "آزار", franking: { text: "پیام آزارنده‌ی منتور", frankingKey: bad.frankingKey } })).status).toBe(400);
@@ -511,7 +511,7 @@ describe("گزارشِ پیام: فقط همان یک پیامِ تاییدشد�
     void otherId;
   });
 
-  it("ادمین هیچ مسیری به پیامِ گزارش‌نشده ندارد: جدولِ پیام فقط متنِ رمزشده دارد", async () => {
+  it("ادمین هیچ مسیری به پیام گزارش‌نشده ندارد: جدول پیام فقط متن رمزشده دارد", async () => {
     const m = await makeMentor();
     const s = await makeUser();
     const ms = await connect(s, m);
@@ -532,7 +532,7 @@ describe("گزارشِ پیام: فقط همان یک پیامِ تاییدشد�
 // ───────────────────────── پیام‌های قدیمی ─────────────────────────
 
 describe("پیام‌های پیش از رمزگذاری", () => {
-  it("فقط برای دو طرف؛ بازرمزگذاری با تعهدِ همان متن متنِ ساده را پاک می‌کند؛ متنِ دیگر رد؛ ۳۰ روزه پاک می‌شود", async () => {
+  it("فقط برای دو طرف؛ بازرمزگذاری با تعهد همان متن متن ساده را پاک می‌کند؛ متن دیگر رد؛ ۳۰ روزه پاک می‌شود", async () => {
     const m = await makeMentor();
     const s = await makeUser();
     const ms = await connect(s, m);
@@ -546,7 +546,7 @@ describe("پیام‌های پیش از رمزگذاری", () => {
 
     await giveKey(m);
     await giveKey(s);
-    // شاگرد پیامِ منتور را بازرمزگذاری می‌کند — با متنِ دیگر: رد
+    // شاگرد پیام منتور را بازرمزگذاری می‌کند — با متن دیگر: رد
     const forged = await encFor(ms, m, "متن عوض‌شده", randomId(), s);
     as(s);
     let r = await j(await postLegacy(req("POST", "/x", { items: [{ id: legacy.id, ...forged }] }), P(ms)));
@@ -562,13 +562,13 @@ describe("پیام‌های پیش از رمزگذاری", () => {
     as(m);
     v = await j(await getMessages(req("GET", "/x"), P(ms)));
     expect(((await openAs(m, ms, v.messages[0])) as any)).toMatchObject({ text: "پیام قدیمی منتور", committed: true });
-    // حالا قابلِ گزارشِ تاییدشده است (کلیدِ فرانکینگ را فقط دو طرف دارند)
+    // حالا قابل گزارش تاییدشده است (کلید فرانکینگ را فقط دو طرف دارند)
     as(s);
     const rep = await postReport(req("POST", "/x", { targetType: "MESSAGE", targetId: legacy.id, reason: "x", franking: { text: "پیام قدیمی منتور", frankingKey: real.frankingKey } }));
     expect(rep.status).toBe(200);
   });
 
-  it("گزارشِ پیامِ قدیمیِ هنوز بازرمزنشده: متنِ سرور، با برچسبِ «تاییدنشده»", async () => {
+  it("گزارش پیام قدیمی هنوز بازرمزنشده: متن سرور، با برچسب «تاییدنشده»", async () => {
     const m = await makeMentor();
     const s = await makeUser();
     const ms = await connect(s, m);
@@ -580,7 +580,7 @@ describe("پیام‌های پیش از رمزگذاری", () => {
     expect(rep.reportedText).not.toContain("قدیمی");
   });
 
-  it("CHECK: ردیفی که هم متنِ ساده و هم رمزشده دارد یا هیچ‌کدام، در DB رد می‌شود", async () => {
+  it("CHECK: ردیفی که هم متن ساده و هم رمزشده دارد یا هیچ‌کدام، در DB رد می‌شود", async () => {
     const m = await makeMentor();
     const s = await makeUser();
     const ms = await connect(s, m);
@@ -591,14 +591,14 @@ describe("پیام‌های پیش از رمزگذاری", () => {
   });
 });
 
-// ───────────────────────── ارسالِ گروهی ─────────────────────────
+// ───────────────────────── ارسال گروهی ─────────────────────────
 
-describe("ارسالِ گروهی", () => {
-  it("هر گیرنده بسته‌ی جدای خودش؛ رابطه‌ی دیگران/بدونِ کلید/نسخه‌ی کهنه رد؛ فقط منتور", async () => {
+describe("ارسال گروهی", () => {
+  it("هر گیرنده بسته‌ی جدای خودش؛ رابطه‌ی دیگران/بدون کلید/نسخه‌ی کهنه رد؛ فقط منتور", async () => {
     const m = await makeMentor();
     const s1 = await makeUser();
     const s2 = await makeUser();
-    const s3 = await makeUser(); // بدونِ کلید
+    const s3 = await makeUser(); // بدون کلید
     const [ms1, ms2, ms3] = [await connect(s1, m), await connect(s2, m), await connect(s3, m)];
     const other = await makeMentor();
     const x = await makeUser();
@@ -619,8 +619,8 @@ describe("ارسالِ گروهی", () => {
       items.push({ mentorshipId: ms, ...e });
     }
     const { frankingKey: _fx, ...ex } = await encFor(msX, other, text);
-    items.push({ mentorshipId: msX, ...ex }); // رابطه‌ی منتورِ دیگر
-    items.push({ ...items[0], mentorshipId: ms3, clientId: randomId() }); // بدونِ کلید
+    items.push({ mentorshipId: msX, ...ex }); // رابطه‌ی منتور دیگر
+    items.push({ ...items[0], mentorshipId: ms3, clientId: randomId() }); // بدون کلید
     as(m);
     const r = await j(await postBroadcast(req("POST", "/x", { items })));
     expect(r.sent).toBe(2);
@@ -637,16 +637,16 @@ describe("ارسالِ گروهی", () => {
     expect(((await openAs(s2, ms2, v.messages[0])) as any).text).toBe(text);
     expect(await prisma.mentorMessage.count({ where: { mentorshipId: msX } })).toBe(0);
 
-    // شاگرد (غیرِ منتور) نمی‌تواند
+    // شاگرد (غیر منتور) نمی‌تواند
     as(s1);
     expect((await postBroadcast(req("POST", "/x", { items }))).status).toBe(403);
   });
 });
 
-// ───────────────────────── رمزِ در حالِ سکون ─────────────────────────
+// ───────────────────────── رمز در حال سکون ─────────────────────────
 
-describe("رمزگذاریِ در حالِ سکون (داده‌ای که سرور لازم دارد)", () => {
-  it("فیدبکِ برنامه: در DB رمزشده، برای دو طرف خوانا، در اعلان نه", async () => {
+describe("رمزگذاری در حال سکون (داده‌ای که سرور لازم دارد)", () => {
+  it("فیدبک برنامه: در DB رمزشده، برای دو طرف خوانا، در اعلان نه", async () => {
     const m = await makeMentor();
     const s = await makeUser();
     const ms = await connect(s, m);
@@ -665,7 +665,7 @@ describe("رمزگذاریِ در حالِ سکون (داده‌ای که سرو
     expect(v.feedback[0].body).toBe("تمرین سه‌شنبه عالی بود");
     const n = await prisma.inAppNotification.findFirstOrThrow({ where: { userId: s, type: "program.feedback" } });
     expect(n.body).not.toContain("سه‌شنبه");
-    // مقدارِ رمزشده به برنامه‌ی دیگری منتقل‌شدنی نیست (AAD)
+    // مقدار رمزشده به برنامه‌ی دیگری منتقل‌شدنی نیست (AAD)
     const other = await prisma.mentorProgram.create({ data: { mentorshipId: ms, mentorId: m, studentId: s, type: "ROUTINE", title: "دیگر", status: "ACTIVE" } });
     await prisma.mentorFeedback.create({ data: { programId: other.id, mentorId: m, studentId: s, body: row.body } });
     as(s);
@@ -673,7 +673,7 @@ describe("رمزگذاریِ در حالِ سکون (داده‌ای که سرو
     expect(v2.feedback[0].body).toBe("");
   });
 
-  it("جوابِ سؤال‌های پذیرش: در DB رمزشده، برای منتور خوانا", async () => {
+  it("جواب سؤال‌های پذیرش: در DB رمزشده، برای منتور خوانا", async () => {
     const m = await makeMentor();
     const s = await makeUser();
     const ms = await connect(s, m);
@@ -688,7 +688,7 @@ describe("رمزگذاریِ در حالِ سکون (داده‌ای که سرو
 // ───────────────────────── رابطه‌ی در انتظار ─────────────────────────
 
 describe("دسترسی", () => {
-  it("رابطه‌ی PENDING کلیدِ گفت‌وگو ندارد (۴۰۳)", async () => {
+  it("رابطه‌ی PENDING کلید گفت‌وگو ندارد (۴۰۳)", async () => {
     const m = await makeMentor();
     const s = await makeUser();
     const pid = (await j(await requestMentorship(s, m))).mentorship.id;
@@ -699,13 +699,13 @@ describe("دسترسی", () => {
 
 // ───────────────────────── چنددستگاهی ─────────────────────────
 
-describe("چنددستگاهی: بسته‌بندی برای همه‌ی دستگاه‌ها، انتقالِ سابقه", () => {
-  it("پیام برای هر کلیدِ فعالِ دو طرف؛ جا انداختنِ یک دستگاه یا کلیدِ اضافه → KEY_CHANGED؛ هر دستگاه جدا باز می‌کند؛ گزارش همچنان تایید می‌شود", async () => {
+describe("چنددستگاهی: بسته‌بندی برای همه‌ی دستگاه‌ها، انتقال سابقه", () => {
+  it("پیام برای هر کلید فعال دو طرف؛ جا انداختن یک دستگاه یا کلید اضافه → KEY_CHANGED؛ هر دستگاه جدا باز می‌کند؛ گزارش همچنان تایید می‌شود", async () => {
     const m = await makeMentor();
     const s = await makeUser();
     const ms = await connect(s, m);
     const s1 = await giveKey(s);
-    const s2 = await giveDeviceKey(s); // دستگاهِ دوم (مثلا حسابِ گوگل روی گوشی)
+    const s2 = await giveDeviceKey(s); // دستگاه دوم (مثلا حساب گوگل روی گوشی)
     await giveKey(m);
 
     const { res, enc, frankingKey } = await sendEnc(m, ms, "برای هر دو دستگاه");
@@ -722,13 +722,13 @@ describe("چنددستگاهی: بسته‌بندی برای همه‌ی دست�
       expect(((await openAs(s, ms, only)) as any).text).toBe("برای هر دو دستگاه");
     }
 
-    // دستگاهِ سومِ شاگرد بعد از رمز شدن → بسته‌ی کهنه رد
+    // دستگاه سوم شاگرد بعد از رمز شدن → بسته‌ی کهنه رد
     const stale = await encFor(ms, m, "کهنه");
     const s3 = await giveDeviceKey(s);
     const { frankingKey: _f1, ...st } = stale;
     as(m);
     expect((await j(await postMessage(req("POST", "/x", st), P(ms)))).code).toBe("KEY_CHANGED");
-    // بسته‌بندیِ اضافه برای کلیدِ ناشناس / حذفِ یکی → رد
+    // بسته‌بندی اضافه برای کلید ناشناس / حذف یکی → رد
     const fresh = await encFor(ms, m, "تازه");
     const { frankingKey: _f2, ...fr } = fresh;
     as(m);
@@ -737,22 +737,22 @@ describe("چنددستگاهی: بسته‌بندی برای همه‌ی دست�
     expect((await j(await postMessage(req("POST", "/x", { ...fr, from: { u: s, k: s1.version } }), P(ms)))).code).toBe("KEY_CHANGED");
     expect((await postMessage(req("POST", "/x", fr), P(ms))).status).toBe(200);
 
-    // فرانکینگ دست‌نخورده: گزارشِ پیامِ scheme 2
+    // فرانکینگ دست‌نخورده: گزارش پیام scheme 2
     const firstId = (await j(res)).message.id;
     as(s);
     const rep = await postReport(req("POST", "/x", { targetType: "MESSAGE", targetId: firstId, reason: "x", franking: { text: "برای هر دو دستگاه", frankingKey } }));
     expect(rep.status).toBe(200);
     expect((await prisma.mentorReport.findFirstOrThrow({ where: { reporterId: s } })).reportVerified).toBe(true);
 
-    // انتقالِ سابقه به دستگاهِ سوم: فقط با کلیدِ خودم، فقط پیام‌های گفت‌وگوی خودم
+    // انتقال سابقه به دستگاه سوم: فقط با کلید خودم، فقط پیام‌های گفت‌وگوی خودم
     as(s);
     const page = await j(await getHistory(req("GET", `/api/e2ee/history?from=${s1.version}&to=${s3.version}`) as any));
-    expect(page.items.length).toBe(1); // پیامِ «تازه» از قبل برای s3 بسته‌بندی شده
+    expect(page.items.length).toBe(1); // پیام «تازه» از قبل برای s3 بسته‌بندی شده
     const it0 = page.items[0];
     const pub = (r: { u: string; k: number }) => page.keys[r.u]?.find((x: any) => x.version === r.k)?.publicKey ?? null;
     const w = await rewrapForOwnKey(it0.wraps, it0.from, { ref: { u: s, k: s1.version }, privateKey: s1.privateKey }, { ref: { u: s, k: s3.version }, publicKey: s3.publicB64 }, pub, messageScope(ms, it0.clientId));
     expect(w).toMatchObject({ u: s, k: s3.version, via: s1.version });
-    // مقصدِ غیرفعال / via مالِ دیگری / پیامِ دیگری → نادیده
+    // مقصد غیرفعال / via مال دیگری / پیام دیگری → نادیده
     expect((await postHistory(req("POST", "/x", { target: 99, wraps: [{ messageId: it0.messageId, wrap: w }] }))).status).toBe(400);
     const stranger = await makeUser();
     const sk = await giveDeviceKey(stranger);
@@ -761,7 +761,7 @@ describe("چنددستگاهی: بسته‌بندی برای همه‌ی دست�
     as(s);
     expect((await j(await postHistory(req("POST", "/x", { target: s3.version, wraps: [{ messageId: it0.messageId, wrap: w }] })))).added).toBe(1);
     expect((await j(await postHistory(req("POST", "/x", { target: s3.version, wraps: [{ messageId: it0.messageId, wrap: w }] })))).added).toBe(0);
-    // دستگاهِ سوم حالا پیامِ قدیمی را می‌خواند (از طریقِ via) و متن/تعهد همان است
+    // دستگاه سوم حالا پیام قدیمی را می‌خواند (از طریق via) و متن/تعهد همان است
     const v2 = await j(await getMessages(req("GET", "/x"), P(ms)));
     const old = v2.messages.find((x: any) => x.id === firstId);
     const only3 = { ...old, enc: { ...old.enc, wraps: old.enc.wraps.filter((x: any) => x.k === s3.version) } };
@@ -769,7 +769,7 @@ describe("چنددستگاهی: بسته‌بندی برای همه‌ی دست�
     expect(testKey(s, s3.version)).toBeTruthy();
   }, 60_000);
 
-  it("درخواستِ انتقالِ سابقه: فقط برای کلیدِ فعالِ خودم؛ done/decline فقط یک بار و فقط برای صاحبش", async () => {
+  it("درخواست انتقال سابقه: فقط برای کلید فعال خودم؛ done/decline فقط یک بار و فقط برای صاحبش", async () => {
     const u = await makeUser();
     const d1 = await giveKey(u);
     as(u);

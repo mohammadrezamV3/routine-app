@@ -38,7 +38,7 @@ export function MarketTicker() {
     });
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
-  // زنده: نمادها از تنظیماتِ ترید (یا تبِ دیگه) عوض شدن → نوار همون لحظه
+  // زنده: نمادها از تنظیمات ترید (یا تب دیگه) عوض شدن → نوار همون لحظه
   useLiveRefresh(TICKER_SETTING_KEY, () => {
     getSetting<string[]>(TICKER_SETTING_KEY, defaultSymbols).then((saved) => { if (saved?.length) setSymbols(saved); });
   }, { includeFocus: false });

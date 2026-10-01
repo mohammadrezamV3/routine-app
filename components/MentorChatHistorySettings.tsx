@@ -20,9 +20,9 @@ type Conv = ChatHistoryResponse["conversations"][number];
 type Confirm = { kind: "one"; conv: Conv } | { kind: "all" };
 
 /**
- * «سابقه‌ی گفت‌وگو» در تنظیماتِ پنل کاربری. پاک کردن فقط برای خودِ کاربر است:
- * پیام‌ها برای او دیگر نمایش داده نمی‌شوند و نسخه‌ی طرفِ مقابل دست نمی‌خورد
- * (lib/mentorChatHistory.ts). وقتی بخشِ منتورها خاموش است یا گفت‌وگویی نیست، نمایش داده نمی‌شود.
+ * «سابقه‌ی گفت‌وگو» در تنظیمات پنل کاربری. پاک کردن فقط برای خود کاربر است:
+ * پیام‌ها برای او دیگر نمایش داده نمی‌شوند و نسخه‌ی طرف مقابل دست نمی‌خورد
+ * (lib/mentorChatHistory.ts). وقتی بخش منتورها خاموش است یا گفت‌وگویی نیست، نمایش داده نمی‌شود.
  */
 export function MentorChatHistorySettings({ index = 0, showEmpty = false }: { index?: number; showEmpty?: boolean }) {
   const on = useFeature("mentors");
@@ -67,8 +67,8 @@ export function MentorChatHistorySettings({ index = 0, showEmpty = false }: { in
     }
   }
 
-  // در صفحه‌ی خودش (/account/general/chats) به‌جای صفحه‌ی خالی یک پیامِ کوتاه
-  if (!on) return showEmpty ? <MentorEmpty>بخش مربی‌ها فعلاً در دسترس نیست</MentorEmpty> : null;
+  // در صفحه‌ی خودش (/account/general/chats) به‌جای صفحه‌ی خالی یک پیام کوتاه
+  if (!on) return showEmpty ? <MentorEmpty>بخش مربی‌ها فعلا در دسترس نیست</MentorEmpty> : null;
   if (list !== null && list.length === 0 && !loadError) return showEmpty ? <MentorEmpty>هنوز گفت‌وگویی با مربی یا شاگردی نداری</MentorEmpty> : null;
 
   const withMessages = (list ?? []).filter((c) => c.messageCount > 0);

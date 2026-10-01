@@ -10,13 +10,13 @@ import { publishToUsers } from "@/lib/realtime";
 type Ctx = { params: { id: string } };
 const NOTE_MAX = 500;
 
-// وضعیتِ اجرا دیگر دستی ثبت نمی‌شود: از تیک‌های روتینِ شاگرد خوانده می‌شود
-// (lib/mentorProgress.ts). ردیف‌های دستیِ قدیمی (source = MANUAL) سرِ جایشان
+// وضعیت اجرا دیگر دستی ثبت نمی‌شود: از تیک‌های روتین شاگرد خوانده می‌شود
+// (lib/mentorProgress.ts). ردیف‌های دستی قدیمی (source = MANUAL) سر جایشان
 // می‌مانند و در آمار و نمایش حساب می‌شوند.
 const MANUAL_STATUS_GONE = "وضعیت اجرا خودکار از تیک‌های روتین خوانده می‌شود و دستی ثبت نمی‌شود";
 
 // POST /api/mentor-programs/:id/logs { date, note }
-// یادداشتِ اختیاریِ شاگرد برای منتور روی یک روزِ برنامه (upsert روی programId+date؛
+// یادداشت اختیاری شاگرد برای منتور روی یک روز برنامه (upsert روی programId+date؛
 // note خالی = حذف). فقط شاگرد، فقط برنامه‌ی ACTIVE، فقط روزهای تا امروز در بازه‌ی برنامه.
 // هر بدنه‌ای که status/setsDone داشته باشد با ۴۱۰ رد می‌شود.
 export async function POST(req: Request, { params }: Ctx) {

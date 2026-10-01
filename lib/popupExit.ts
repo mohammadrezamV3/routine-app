@@ -1,16 +1,16 @@
-// خروجِ نرمِ همه‌ی پاپ‌آپ‌ها — بدونِ دست‌زدن به تک‌تکِ والدها.
+// خروج نرم همه‌ی پاپ‌آپ‌ها — بدون دست‌زدن به تک‌تک والدها.
 //
-// مسئله: تقریبا همه‌ی پاپ‌آپ‌های اپ با رندرِ شرطی mount/unmount می‌شوند
+// مسئله: تقریبا همه‌ی پاپ‌آپ‌های اپ با رندر شرطی mount/unmount می‌شوند
 // ({open && <Modal/>}). React عنصر را همان لحظه از DOM برمی‌دارد، پس
-// «بستن»، «ثبت» یا «تایید» پاپ‌آپ را یک‌باره غیب می‌کرد. تبدیلِ ده‌ها والد
-// به الگوی presence هم پرخطر بود و هم هر پاپ‌آپِ تازه دوباره از قلم می‌افتاد.
+// «بستن»، «ثبت» یا «تایید» پاپ‌آپ را یک‌باره غیب می‌کرد. تبدیل ده‌ها والد
+// به الگوی presence هم پرخطر بود و هم هر پاپ‌آپ تازه دوباره از قلم می‌افتاد.
 //
-// راه‌حل: یک MutationObserver روی body. وقتی یک پرده/پنلِ پاپ‌آپ حذف
-// می‌شود، یک کپیِ ایستا (cloneNode) از آن — با data-popup-ghost، inert و
-// aria-hidden — دقیقا سرِ جای قبلی‌اش گذاشته می‌شود، با Web Animations
+// راه‌حل: یک MutationObserver روی body. وقتی یک پرده/پنل پاپ‌آپ حذف
+// می‌شود، یک کپی ایستا (cloneNode) از آن — با data-popup-ghost، inert و
+// aria-hidden — دقیقا سر جای قبلی‌اش گذاشته می‌شود، با Web Animations
 // پایین می‌رود و محو می‌شود و بعد حذف می‌شود. فقط opacity و translate
-// انیمیت می‌شوند (کامپوزیتور، بدونِ layout)؛ تاریِ پرده ثابت می‌ماند چون
-// opacity روی خودِ پرده است، نه روی یک جدِ آن.
+// انیمیت می‌شوند (کامپوزیتور، بدون layout)؛ تاری پرده ثابت می‌ماند چون
+// opacity روی خود پرده است، نه روی یک جد آن.
 //
 // مستثناها: هرچه خودش خروج دارد (MentorSheet → .m-sheet-wrap، یا هر عنصری
 // با data-popup-exit="self")، و عنصری که framer پیش‌تر به opacity:0 برده.
@@ -50,8 +50,8 @@ const MENU_OUT_MS = 160;
 const REDUCED_OUT_MS = 140;
 const EASE_OUT = "cubic-bezier(.4,0,.2,1)";
 
-// آخرین اسکرولِ هر عنصر؛ عنصرِ جداشده از DOM دیگر scrollTop ندارد و
-// کپی از بالا شروع می‌شد (پرشِ محتوا حینِ خروج).
+// آخرین اسکرول هر عنصر؛ عنصر جداشده از DOM دیگر scrollTop ندارد و
+// کپی از بالا شروع می‌شد (پرش محتوا حین خروج).
 const scrollPos = new WeakMap<Element, [number, number]>();
 
 function isFadedOut(el: HTMLElement) {
@@ -64,7 +64,7 @@ function isIgnorableChild(el: Element) {
   return el.children.length === 0 && !(el.textContent || "").trim();
 }
 
-/** عنصری که فرزندانش فقط پاپ‌آپ (یا پوسته‌ی خالی) هستند — کلِ خودش کپی می‌شود. */
+/** عنصری که فرزندانش فقط پاپ‌آپ (یا پوسته‌ی خالی) هستند — کل خودش کپی می‌شود. */
 function isPopupWrapper(el: Element, depth = 0): boolean {
   if (depth > 3) return false;
   let found = false;
@@ -102,7 +102,7 @@ function prepareGhost(orig: HTMLElement): HTMLElement {
   return ghost;
 }
 
-/** مقدارِ فیلدها، اسکرول و بومِ canvas از نسخه‌ی اصلی — بعد از درج. */
+/** مقدار فیلدها، اسکرول و بوم canvas از نسخه‌ی اصلی — بعد از درج. */
 function syncLiveState(orig: HTMLElement, ghost: HTMLElement) {
   const a = [orig, ...Array.from(orig.querySelectorAll("*"))];
   const b = [ghost, ...Array.from(ghost.querySelectorAll("*"))];
@@ -134,7 +134,7 @@ function animateGhost(ghost: HTMLElement, reduced: boolean) {
     const isPanel = !isMenu && el.matches(PANEL_SEL);
     const dur = reduced ? REDUCED_OUT_MS : isMenu ? MENU_OUT_MS : OUT_MS;
     // اگر جدی از همین کپی خودش محو می‌شود، این یکی فقط جابه‌جا شود (نه
-    // opacityِ دوباره که ضرب شود و زودتر ناپدید شود).
+    // opacity دوباره که ضرب شود و زودتر ناپدید شود).
     let parentFades = false;
     for (let p = el.parentElement; p && ghost.contains(p); p = p.parentElement) {
       if (faded.has(p)) { parentFades = true; break; }
@@ -180,12 +180,12 @@ export function installPopupExitAnimator(): () => void {
 
   const observer = new MutationObserver((records) => {
     if (document.visibilityState === "hidden") return;
-    // حینِ خروج از حساب (lib/logout.ts) صفحه در حالِ ترکه — کپی/انیمیشن هدره.
+    // حین خروج از حساب (lib/logout.ts) صفحه در حال ترکه — کپی/انیمیشن هدره.
     if (document.documentElement.hasAttribute("data-logging-out")) return;
     const reduced = reducedMq.matches;
-    // React هر فرزندِ یک Fragment (پرده، بعد پنل) را جدا حذف می‌کند؛ nextSiblingِ
-    // رکوردِ پرده خودش پنلِ حذف‌شده است. با دنبال‌کردنِ این زنجیره تا اولین
-    // گره‌ی هنوز-موجود، کپی‌ها به همان ترتیبِ اصلی درج می‌شوند.
+    // React هر فرزند یک Fragment (پرده، بعد پنل) را جدا حذف می‌کند؛ nextSibling
+    // رکورد پرده خودش پنل حذف‌شده است. با دنبال‌کردن این زنجیره تا اولین
+    // گره‌ی هنوز-موجود، کپی‌ها به همان ترتیب اصلی درج می‌شوند.
     const nextOf = new Map<Node, Node | null>();
     for (const rec of records) rec.removedNodes.forEach((n) => nextOf.set(n, rec.nextSibling));
     const resolveRef = (n: Node | null, parent: Node) => {

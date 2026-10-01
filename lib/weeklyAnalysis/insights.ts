@@ -1,12 +1,12 @@
 import { ANALYSIS_DOMAIN_LABELS, type AnalysisDomain, type DayCell, type Insight } from "./types";
 import { consistencyFor, longestStreak, mean } from "./score";
 
-// بینش‌ها — همه تابعِ خالص روی خروجیِ محاسبه‌شده. هر بینش یک priority
+// بینش‌ها — همه تابع خالص روی خروجی محاسبه‌شده. هر بینش یک priority
 // داخلی داره؛ آخر کار مرتب و به ۶ تا بریده می‌شه. متن‌ها فارسی، عددها لاتین.
 //
-// قانونِ صداقت: هیچ همبستگی‌ای بدون نمونه‌ی کافی گفته نمی‌شه — حداقل ۲ روز
-// در هر گروه و اختلافِ حداقل ۱۰ امتیاز. دو روز هنوز «الگو» نیست، ولی
-// برای یک مشاهده‌ی هفتگی با قیدِ «روزهایی که…» منصفانه‌ست.
+// قانون صداقت: هیچ همبستگی‌ای بدون نمونه‌ی کافی گفته نمی‌شه — حداقل ۲ روز
+// در هر گروه و اختلاف حداقل ۱۰ امتیاز. دو روز هنوز «الگو» نیست، ولی
+// برای یک مشاهده‌ی هفتگی با قید «روزهایی که…» منصفانه‌ست.
 
 export const CORR_MIN_GROUP = 2;
 export const CORR_MIN_DIFF = 10;
@@ -26,11 +26,11 @@ export type InsightInput = {
   days: DayCell[];
   overallScore: number | null;
   prevOverallScore: number | null;
-  /** امتیازِ کلِ هفته‌های قبل (قدیمی → جدید)، بدون همین هفته */
+  /** امتیاز کل هفته‌های قبل (قدیمی → جدید)، بدون همین هفته */
   history: (number | null)[];
 };
 
-// «روزهایی که …» — عبارتِ حالتِ خوبِ هر دامنه
+// «روزهایی که …» — عبارت حالت خوب هر دامنه
 const GOOD_PHRASE: Record<AnalysisDomain, string> = {
   routine: "روتینت رو کامل‌تر انجام دادی",
   sleep: "خواب خوبی داشتی",
@@ -46,8 +46,8 @@ type Ranked = Insight & { priority: number };
 export type Correlation = { driver: AnalysisDomain; outcome: AnalysisDomain; diff: number; goodN: number; badN: number };
 
 /**
- * همبستگیِ روزانه بین دو دامنه: روزهای «خوبِ» driver (≥70) در برابر بقیه،
- * میانگینِ outcome در هر گروه. null اگه نمونه یا اختلاف کافی نبود.
+ * همبستگی روزانه بین دو دامنه: روزهای «خوب» driver (≥70) در برابر بقیه،
+ * میانگین outcome در هر گروه. null اگه نمونه یا اختلاف کافی نبود.
  */
 export function correlate(
   driver: (number | null)[],
@@ -76,7 +76,7 @@ export function findCorrelations(domains: InsightDomainInput[]): Correlation[] {
       if (a.domain === b.domain) continue;
       const c = correlate(a.daily, b.daily);
       if (!c) continue;
-      // جفتِ (a,b) و (b,a) تقریبا یک حرف رو می‌زنن — فقط قوی‌ترش می‌مونه
+      // جفت (a,b) و (b,a) تقریبا یک حرف رو می‌زنن — فقط قوی‌ترش می‌مونه
       const key = [a.domain, b.domain].sort().join("|");
       const prev = found.get(key);
       if (!prev || Math.abs(c.diff) > Math.abs(prev.diff)) found.set(key, { driver: a.domain, outcome: b.domain, ...c });
@@ -118,7 +118,7 @@ export function buildInsights(input: InsightInput): Insight[] {
       out.push({ id: "overall_down", kind: "decline", icon: "trend_down", title: "افت نسبت به هفته‌ی قبل", body: `امتیاز کلت از ${prev} به ${score} رسید (${d}).`, tone: "bad", priority: 82 + Math.min(9, -d / 2) });
     }
   }
-  // بزرگ‌ترین تغییرِ یک دامنه
+  // بزرگ‌ترین تغییر یک دامنه
   const movers = domains
     .filter((x) => x.delta != null && Math.abs(x.delta) >= 10)
     .sort((a, b) => Math.abs(b.delta!) - Math.abs(a.delta!));
@@ -137,7 +137,7 @@ export function buildInsights(input: InsightInput): Insight[] {
     });
   }
 
-  // ── در برابر میانگینِ هفته‌های قبل (حداقل ۲ هفته سابقه) ──
+  // ── در برابر میانگین هفته‌های قبل (حداقل ۲ هفته سابقه) ──
   const hist = input.history.filter((h): h is number => h != null);
   if (score != null && hist.length >= 2) {
     const avg = Math.round(mean(hist)!);
@@ -156,7 +156,7 @@ export function buildInsights(input: InsightInput): Insight[] {
     out.push({ id: "streak", kind: "streak", icon: "flame", title: `${streak} روز پشت‌سرهم`, body: `${streak} روز متوالی امتیاز 70 یا بیشتر گرفتی.`, tone: "good", priority: 70 + streak });
   }
 
-  // ── روزِ غیرعادی در یک دامنه (حداقل ۴ روز داده، فاصله ≥۳۵ از میانگین) ──
+  // ── روز غیرعادی در یک دامنه (حداقل ۴ روز داده، فاصله ≥۳۵ از میانگین) ──
   let outlier: { d: InsightDomainInput; i: number; v: number; avg: number } | null = null;
   for (const d of domains) {
     const vals = d.daily.filter((v): v is number => v != null);
@@ -183,7 +183,7 @@ export function buildInsights(input: InsightInput): Insight[] {
     });
   }
 
-  // ── بهترین/بدترین روز (حداقل ۳ روزِ دارای امتیاز و فاصله‌ی ≥۱۵) ──
+  // ── بهترین/بدترین روز (حداقل ۳ روز دارای امتیاز و فاصله‌ی ≥۱۵) ──
   const scored = days.filter((d) => !d.isFuture && d.score != null);
   if (scored.length >= 3) {
     const best = scored.reduce((a, b) => (b.score! > a.score! ? b : a));

@@ -7,23 +7,23 @@ import { MENTOR_CARD_INCLUDE, buildMentorCards, dateFromIso, loadMentorStats, ty
 import { RANK_SCOPE_ALL, ensureFreshRankings, loadRankedCards, type RankScope } from "@/lib/mentorRankingStats";
 import { RELEVANCE_MIN, blendScore, buildSearchDoc, parseQuery, relevance, type MentorFilters } from "@/lib/mentorSearch";
 
-// اجرای جستجو/فیلترِ «پیدا کردن منتور» روی دیتابیس.
+// اجرای جستجو/فیلتر «پیدا کردن منتور» روی دیتابیس.
 //
-//   • هر فیلتری که در SQL بیان‌شدنیه (حوزه، مدرک، پذیرش، امتیاز، زمانِ پاسخ)
+//   • هر فیلتری که در SQL بیان‌شدنیه (حوزه، مدرک، پذیرش، امتیاز، زمان پاسخ)
 //     همون‌جا اعمال می‌شه (filterWhere).
-//   • بدونِ عبارتِ جستجو ترتیب از جدولِ رتبه‌بندیِ شایستگی (lib/mentorRankingStats.ts،
-//     agent E) با صفحه‌بندیِ دیتابیسی میاد — همون مسیرِ قبلی.
-//   • با عبارت (یا فیلترِ «پذیرش باز» که ظرفیتِ پر فقط با شمارشِ شاگردِ فعال معلوم
-//     می‌شه) نامزدها با سقفِ CANDIDATE_CAP از دیتابیس خوانده و در حافظه با
-//     lib/mentorSearch.ts امتیاز می‌گیرن؛ فقط نتایجِ مرتبط (≥ RELEVANCE_MIN) می‌مونن
-//     و شایستگی فقط ترتیبِ همون‌ها رو تنظیم می‌کنه.
-//   اگه تعدادِ منتورها از چند هزار گذشت، پیش‌فیلترِ pg_trgm جای سقفِ ساده رو می‌گیره.
+//   • بدون عبارت جستجو ترتیب از جدول رتبه‌بندی شایستگی (lib/mentorRankingStats.ts،
+//     agent E) با صفحه‌بندی دیتابیسی میاد — همون مسیر قبلی.
+//   • با عبارت (یا فیلتر «پذیرش باز» که ظرفیت پر فقط با شمارش شاگرد فعال معلوم
+//     می‌شه) نامزدها با سقف CANDIDATE_CAP از دیتابیس خوانده و در حافظه با
+//     lib/mentorSearch.ts امتیاز می‌گیرن؛ فقط نتایج مرتبط (≥ RELEVANCE_MIN) می‌مونن
+//     و شایستگی فقط ترتیب همون‌ها رو تنظیم می‌کنه.
+//   اگه تعداد منتورها از چند هزار گذشت، پیش‌فیلتر pg_trgm جای سقف ساده رو می‌گیره.
 
 export const CANDIDATE_CAP = 400;
 
-const RATING_EPS = 0.05; // میانگینِ ۴٫۴۶ روی کارت «۴٫۵» دیده می‌شه
+const RATING_EPS = 0.05; // میانگین ۴٫۴۶ روی کارت «۴٫۵» دیده می‌شه
 
-/** فیلترهای SQL-بیان‌شدنی روی MentorProfile (کنارِ شرطِ «قابلِ کشف») */
+/** فیلترهای SQL-بیان‌شدنی روی MentorProfile (کنار شرط «قابل کشف») */
 export function filterWhere(f: MentorFilters, base: Prisma.MentorProfileWhereInput): Prisma.MentorProfileWhereInput {
   const and: Prisma.MentorProfileWhereInput[] = [base];
   const category = isMentorCategory(f.category) ? f.category : null;
@@ -37,7 +37,7 @@ export function filterWhere(f: MentorFilters, base: Prisma.MentorProfileWhereInp
     );
   }
   if (f.open) {
-    // پذیرش روشن و «در دسترس نیستم» با توقفِ درخواست فعال نباشه؛ ظرفیتِ پر در حافظه
+    // پذیرش روشن و «در دسترس نیستم» با توقف درخواست فعال نباشه؛ ظرفیت پر در حافظه
     const today = dateFromIso(availabilityToday());
     and.push({ acceptingStudents: true, OR: [{ awayUntil: null }, { awayUntil: { lte: today } }, { awayPausesRequests: false }] });
   }
@@ -59,14 +59,14 @@ const CATEGORY_LABEL = (c: string) => (isMentorCategory(c) ? `${MENTOR_CATEGORY_
 export type SearchPage = { cards: MentorCard[]; hasMore: boolean };
 
 /**
- * یک صفحه از نتیجه‌ی جستجو. `base` = شرطِ قابلِ کشف‌بودن (+ بلاک‌ها) از روت.
+ * یک صفحه از نتیجه‌ی جستجو. `base` = شرط قابل کشف‌بودن (+ بلاک‌ها) از روت.
  */
 export async function searchMentors(f: MentorFilters, base: Prisma.MentorProfileWhereInput, page: number, pageSize: number): Promise<SearchPage> {
   const where = filterWhere(f, base);
   const scope: RankScope = isMentorCategory(f.category) ? f.category : RANK_SCOPE_ALL;
   const offset = (page - 1) * pageSize;
 
-  // ── مسیرِ دیتابیسی: بدونِ عبارت و بدونِ نیاز به شمارشِ ظرفیت ──
+  // ── مسیر دیتابیسی: بدون عبارت و بدون نیاز به شمارش ظرفیت ──
   if (!f.q && !f.open) {
     if (f.sort !== "new") {
       const { cards, hasMore } = await loadRankedCards(where, scope, f.sort, offset, pageSize);
@@ -82,7 +82,7 @@ export async function searchMentors(f: MentorFilters, base: Prisma.MentorProfile
     return { cards: await cardsInOrder(rows.slice(0, pageSize).map((r) => r.id)), hasMore: rows.length > pageSize };
   }
 
-  // ── مسیرِ حافظه‌ای: نامزدهای محدود، امتیازِ مرتبط‌بودن، ترکیب با شایستگی ──
+  // ── مسیر حافظه‌ای: نامزدهای محدود، امتیاز مرتبط‌بودن، ترکیب با شایستگی ──
   const candidates = await prisma.mentorProfile.findMany({
     where,
     orderBy: [{ lastActiveAt: { sort: "desc", nulls: "last" } }, { id: "asc" }],
@@ -107,7 +107,7 @@ export async function searchMentors(f: MentorFilters, base: Prisma.MentorProfile
               name: displayName(c.user),
               username: c.user.username,
               headline: c.headline,
-              // نقشِ روتین فقط با دسته‌ی ROUTINE عمومیه (publicRoutineRole)
+              // نقش روتین فقط با دسته‌ی ROUTINE عمومیه (publicRoutineRole)
               routineRole: c.categories.includes("ROUTINE") ? c.routineRole : null,
               specialties: c.specialties,
               bio: c.bio,
@@ -124,7 +124,7 @@ export async function searchMentors(f: MentorFilters, base: Prisma.MentorProfile
     const capped = pool.filter((x) => x.c.maxActiveStudents != null).map((x) => x.c.userId);
     if (capped.length) {
       const stats = await loadMentorStats(capped);
-      // صندلی‌های رزروِ صفِ انتظار هم پُر حساب می‌شوند (هم‌راستا با کارت)
+      // صندلی‌های رزرو صف انتظار هم پر حساب می‌شوند (هم‌راستا با کارت)
       pool = pool.filter((x) => {
         const s = stats.get(x.c.userId);
         return x.c.maxActiveStudents == null || (s?.activeStudents ?? 0) + (s?.reservedSeats ?? 0) < x.c.maxActiveStudents;
@@ -157,7 +157,7 @@ export async function searchMentors(f: MentorFilters, base: Prisma.MentorProfile
       return { id: x.c.id, score, tie, createdAt: x.c.createdAt.getTime() };
     });
   }
-  // ترتیبِ قطعی: امتیاز، بعد نمونه، بعد id
+  // ترتیب قطعی: امتیاز، بعد نمونه، بعد id
   scored.sort((a, b) => b.score - a.score || b.tie - a.tie || (a.id < b.id ? -1 : a.id > b.id ? 1 : 0));
 
   const slice = scored.slice(offset, offset + pageSize);

@@ -7,7 +7,7 @@ import { notifyUser } from "@/lib/inAppNotify";
 
 // POST /api/admin/mentors/:profileId/suspend  بدنه { suspend: bool, reason? }
 // فقط «منتوری» رو تعلیق می‌کنه (از کشف حذف، پذیرش شاگرد/ساخت برنامه بسته)؛
-// مسدودکردنِ کلِ حساب از /admin/users. قوانینِ «کی روی کی» از lib/adminUsers.
+// مسدودکردن کل حساب از /admin/users. قوانین «کی روی کی» از lib/adminUsers.
 export async function POST(req: NextRequest, { params }: { params: { profileId: string } }) {
   const g = await requireAdmin("mentors");
   if (!g.ok) return g.response;
@@ -24,14 +24,14 @@ export async function POST(req: NextRequest, { params }: { params: { profileId: 
   if (!profile) return NextResponse.json({ error: "مربی پیدا نشد" }, { status: 404 });
 
   try {
-    // همیشه destructive: خود-تعلیق‌برداری یا اقدام روی Owner/ادمینِ دیگه نباید ممکن باشه
+    // همیشه destructive: خود-تعلیق‌برداری یا اقدام روی Owner/ادمین دیگه نباید ممکن باشه
     await loadTarget(g, profile.userId, { destructive: true });
   } catch (e) {
     return adminErrorResponse(e);
   }
 
-  // دلیلِ تعلیق به منتور نشون داده می‌شه — مثلِ «رد» در احراز، بدونِ دلیل پذیرفته نیست
-  if (suspend && !reason) return NextResponse.json({ error: "برای تعلیق، نوشتنِ دلیل الزامیه" }, { status: 400 });
+  // دلیل تعلیق به منتور نشون داده می‌شه — مثل «رد» در احراز، بدون دلیل پذیرفته نیست
+  if (suspend && !reason) return NextResponse.json({ error: "برای تعلیق، نوشتن دلیل الزامیه" }, { status: 400 });
 
   if (suspend === !!profile.suspendedAt) {
     return NextResponse.json({ error: suspend ? "این مربی از قبل تعلیقه" : "این مربی تعلیق نیست" }, { status: 409 });
@@ -55,7 +55,7 @@ export async function POST(req: NextRequest, { params }: { params: { profileId: 
 
   await notifyUser(profile.userId, {
     type: "mentor.suspension",
-    title: suspend ? "مربی‌گری شما تعلیق شد" : "تعلیقِ مربی‌گری برداشته شد",
+    title: suspend ? "مربی‌گری شما تعلیق شد" : "تعلیق مربی‌گری برداشته شد",
     body: suspend
       ? `پروفایل مربی‌گری شما تا اطلاع ثانوی از فهرست مربی‌ها حذف شد.${reason ? ` دلیل: ${reason}` : ""}`
       : "پروفایل مربی‌گری‌ات دوباره فعاله.",

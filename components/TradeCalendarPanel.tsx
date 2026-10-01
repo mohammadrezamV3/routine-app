@@ -18,7 +18,7 @@ const todayIso = isoLocal(now);
 // همان روز می‌آید (همون dailyPnl که قبلا توی lib/tradeAnalytics بود ولی
 // هیچ مصرف‌کننده‌ای نداشت). کلیک روی روزی که معامله دارد، لیست معاملات
 // پایین صفحه رو به همون روز فیلتر می‌کنه (state بالادستی، اینجا فقط
-// انتخاب/لغوِ انتخاب).
+// انتخاب/لغو انتخاب).
 export function TradeCalendarPanel({
   entries,
   calSystem,
@@ -31,9 +31,9 @@ export function TradeCalendarPanel({
   calSystem: CalSystem;
   selectedDay: string | null;
   onSelectDay: (iso: string) => void;
-  /** کدِ ارزِ حساب — فقط برای نمادِ کنارِ عددِ سود/زیان روی دسکتاپ */
+  /** کد ارز حساب — فقط برای نماد کنار عدد سود/زیان روی دسکتاپ */
   currency: string;
-  /** داخلِ باکسِ ژورنال رندر می‌شود، پس نه سطحِ خودش را می‌گیرد نه حاشیه‌ی بالا */
+  /** داخل باکس ژورنال رندر می‌شود، پس نه سطح خودش را می‌گیرد نه حاشیه‌ی بالا */
   embedded?: boolean;
 }) {
   const jalali = calSystem === "jalali";
@@ -68,9 +68,9 @@ export function TradeCalendarPanel({
     cells.push(
       <div
         key={iso}
-        // باگِ گزارش‌شده: کلیک روی روزی که ترید نداشت هیچ‌کاری نمی‌کرد
+        // باگ گزارش‌شده: کلیک روی روزی که ترید نداشت هیچ‌کاری نمی‌کرد
         // (اینجا `hasTrades &&` جلوش رو می‌گرفت) — یعنی انتخاب گیر می‌کرد
-        // روی همون روزِ قبلی و لیستِ پایین صفحه هیچ‌وقت عوض نمی‌شد. حالا
+        // روی همون روز قبلی و لیست پایین صفحه هیچ‌وقت عوض نمی‌شد. حالا
         // هر روزی قابل‌کلیکه؛ روزهای بی‌ترید فقط پیام «معامله‌ای ثبت
         // نشده» رو نشون می‌دن (نگاه کن به TradeAccountView).
         onClick={() => onSelectDay(iso)}
@@ -79,9 +79,9 @@ export function TradeCalendarPanel({
         <span className="cal-daynum mono">{faNum(d)}</span>
         {hasTrades && (
           <>
-            {/* دسکتاپ: عدد با نمادِ ارز. موبایل: خانه جای عدد ندارد، پس فقط
-                یک نقطه‌ی رنگی که سود یا ضررِ آن روز را می‌رساند (CSS کدام را
-                نشان بدهد تصمیم می‌گیرد، نه JS — تا با تغییر عرضِ پنجره هم
+            {/* دسکتاپ: عدد با نماد ارز. موبایل: خانه جای عدد ندارد، پس فقط
+                یک نقطه‌ی رنگی که سود یا ضرر آن روز را می‌رساند (CSS کدام را
+                نشان بدهد تصمیم می‌گیرد، نه JS — تا با تغییر عرض پنجره هم
                 درست بماند). */}
             <span className="trade-cal-pnl mono">{formatCompact(pnl)} {currencySymbol(currency)}</span>
             <span className="trade-cal-dot" aria-hidden="true" />
@@ -93,8 +93,8 @@ export function TradeCalendarPanel({
 
   return (
     <div className={embedded ? "trade-calendar-box embedded" : "trade-surface trade-calendar-box"}>
-      {/* بدونِ تایتل/آیکون و بدونِ جمعِ ماه (درخواستِ صریح) — فقط ناوبریِ ماه.
-          جهتِ پیکان‌ها طبقِ RTL: «قبل» به راست و «بعد» به چپ اشاره می‌کند. */}
+      {/* بدون تایتل/آیکون و بدون جمع ماه (درخواست صریح) — فقط ناوبری ماه.
+          جهت پیکان‌ها طبق RTL: «قبل» به راست و «بعد» به چپ اشاره می‌کند. */}
       <div className="cal-controls trade-cal-controls">
         <button type="button" className="trade-icon-btn" onClick={() => go(-1)} aria-label="ماه قبل"><ChevronRight size={16} /></button>
         <div className="cal-label">{label}</div>

@@ -9,10 +9,10 @@ import { MentorPrivacySettings } from "@/components/MentorPrivacySettings";
 import type { MentorshipRow, MentorshipsResponse } from "@/lib/mentorTypes";
 import { publicUserName } from "@/lib/mentorTypes";
 
-// بخشِ «دسترسیِ منتورها» در تنظیماتِ پنلِ کاربری — برای هر رابطه‌ی فعال/در
-// انتظارِ من به‌عنوانِ شاگرد، «برنامه‌های قابل مشاهده» و «جزئیات قابل مشاهده».
+// بخش «دسترسی منتورها» در تنظیمات پنل کاربری — برای هر رابطه‌ی فعال/در
+// انتظار من به‌عنوان شاگرد، «برنامه‌های قابل مشاهده» و «جزئیات قابل مشاهده».
 // صفحه‌ی خودش: /account/general/mentors
-// ?mentorship=<id> همون رابطه رو از اول انتخاب‌شده باز می‌کنه (لینکِ صفحه‌ی رابطه).
+// ?mentorship=<id> همون رابطه رو از اول انتخاب‌شده باز می‌کنه (لینک صفحه‌ی رابطه).
 export function MentorPrivacyAccountSection() {
   const searchParams = useSearchParams();
   const wanted = searchParams.get("mentorship");
@@ -34,12 +34,12 @@ export function MentorPrivacyAccountSection() {
   }, [wanted]);
 
   if (!rows) return <LoadingBlock />;
-  if (rows.length === 0) return <MentorEmpty>هنوز مربی‌ای نداری؛ بعد از شروعِ همکاری با یک مربی، دسترسی‌اش این‌جا تنظیم می‌شود</MentorEmpty>;
+  if (rows.length === 0) return <MentorEmpty>هنوز مربی‌ای نداری؛ بعد از شروع همکاری با یک مربی، دسترسی‌اش این‌جا تنظیم می‌شود</MentorEmpty>;
   const current = rows.find((m) => m.id === selected) ?? rows[0];
 
   return (
     <>
-      {/* چند منتور → انتخابِ تکی با SegmentedTabs؛ یک منتور → مستقیم تنظیماتش */}
+      {/* چند منتور → انتخاب تکی با SegmentedTabs؛ یک منتور → مستقیم تنظیماتش */}
       {rows.length > 1 && (
         <div className="mentor-privacy-picker">
           <SegmentedTabs

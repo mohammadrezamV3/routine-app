@@ -1,47 +1,47 @@
 // ─────────────────────────────────────────────────────────────────────────
 // لایه‌ی «زنده» — هر تغییری همون لحظه همه‌جا دیده بشه.
 //
-// یک باس رویدادِ کلید‌محور. هرجا داده‌ای عوض می‌شه، «دامنه»ی اون داده
+// یک باس رویداد کلید‌محور. هرجا داده‌ای عوض می‌شه، «دامنه»ی اون داده
 // publish می‌شه؛ هر کامپوننتی که همون دامنه رو نشون می‌ده (با useLiveRefresh)
 // همون لحظه دوباره می‌خونه و رندر می‌شه. منابع رویداد:
 //
-//   ۱) نوشتنِ همین تب  — lib/storage.ts (setDaily/setSetting/…) و روت‌های
+//   ۱) نوشتن همین تب  — lib/storage.ts (setDaily/setSetting/…) و روت‌های
 //      دیگه (ترید/کالری/رودمپ/…) با publishChange. محلی و فوری (optimistic).
 //   ۲) تب‌های دیگه‌ی همین مرورگر — BroadcastChannel (و برای مرورگرهای
-//      بدون BroadcastChannel، رویداد `storage` خودِ localStorage). گیرنده
-//      اول کشِ خواندنی رو برای همون کلیدها باطل می‌کنه، بعد خبر می‌ده.
-//   ۳) سرور (WebSocket) — کلاینتِ realtime روی window رویدادِ
+//      بدون BroadcastChannel، رویداد `storage` خود localStorage). گیرنده
+//      اول کش خواندنی رو برای همون کلیدها باطل می‌کنه، بعد خبر می‌ده.
+//   ۳) سرور (WebSocket) — کلاینت realtime روی window رویداد
 //      `arion:server-event` با detail = { type, keys?, data? } می‌فرسته
 //      (lib/realtimeClient.ts). همین‌جا به کلیدها ترجمه می‌شه.
 //   ۴) برگشتن به تب — focus / visibilitychange / online → همه‌چیز ("*")
-//      باطل و دوباره خونده می‌شه (با ترتلِ کوتاه).
+//      باطل و دوباره خونده می‌شه (با ترتل کوتاه).
 //
-// قراردادِ ذخیره‌سازی (CLAUDE.md) دست نخورده: کامپوننت‌ها هنوز نمی‌دونن داده
+// قرارداد ذخیره‌سازی (CLAUDE.md) دست نخورده: کامپوننت‌ها هنوز نمی‌دونن داده
 // از localStorage میاد یا API — فقط می‌دونن «دامنه‌ی X عوض شد، دوباره بخون».
 //
-// ─── نام دامنه‌ها (کلیدها) — WS و کلاینت باید دقیقاً همین‌ها رو استفاده کنن ───
+// ─── نام دامنه‌ها (کلیدها) — WS و کلاینت باید دقیقا همین‌ها رو استفاده کنن ───
 //   daily                 تیک‌های روزانه (DailyEntry). زیرکلید: `daily:YYYY-MM-DD`
 //   customOccurrences     برنامه‌های سفارشی (UserSetting) — و به‌طور کلی هر
-//   removedOccurrences    کلیدِ UserSetting با همون اسمِ خودش یه دامنه‌ست
+//   removedOccurrences    کلید UserSetting با همون اسم خودش یه دامنه‌ست
 //   wakeSleepTimes / outingDates / dashboardPrefs / notifPrefs / medications / …
 //   trade                 حساب‌ها/معاملات/تگ‌ها/چک‌لیست‌ها/یادداشت‌های ترید
-//   exercise              پلن/لاگِ ورزش
-//   calorie               هدف/لاگِ کالری
+//   exercise              پلن/لاگ ورزش
+//   calorie               هدف/لاگ کالری
 //   roadmaps              رودمپ‌ها و پیشرفتشون
 //   notifications         اعلان‌های سرور (و شمارنده‌ی خوانده‌نشده)
 //   mentor                منتورشیپ. زیرکلیدها: `mentor:messages`,
 //                         `mentor:mentorship`, `mentor:program`
 //   account               حساب/پلن/ماژول‌ها
 //
-// قاعده‌ی تطبیق: مشترکِ `daily` با انتشارِ `daily:2026-09-27` بیدار می‌شه و
-// مشترکِ `daily:2026-09-27` با انتشارِ `daily` هم (پیشوند در هر دو جهت).
+// قاعده‌ی تطبیق: مشترک `daily` با انتشار `daily:2026-09-27` بیدار می‌شه و
+// مشترک `daily:2026-09-27` با انتشار `daily` هم (پیشوند در هر دو جهت).
 // `*` با همه جوره.
 // ─────────────────────────────────────────────────────────────────────────
 
-// namespace import عمداً (نه `{ useEffect, useRef }`): این فایل از زنجیره‌ی
+// namespace import عمدا (نه `{ useEffect, useRef }`): این فایل از زنجیره‌ی
 // storage → notifPrefs به یک route handler هم می‌رسه (app/api/push/send-reminders
-// فقط DEFAULT_NOTIF_PREFS می‌خواد) و گاردِ RSCِ نکست import با نامِ هوک رو در
-// گرافِ سرور رد می‌کنه و build می‌شکست. هوک‌ها فقط سمتِ کلاینت صدا زده می‌شن.
+// فقط DEFAULT_NOTIF_PREFS می‌خواد) و گارد RSC نکست import با نام هوک رو در
+// گراف سرور رد می‌کنه و build می‌شکست. هوک‌ها فقط سمت کلاینت صدا زده می‌شن.
 import * as React from "react";
 
 export const LIVE_DOMAINS = {
@@ -68,7 +68,7 @@ export const LIVE_DOMAINS = {
 
 export const ALL = "*";
 
-/** نوعِ رویدادهای سرور → دامنه‌ها (برای type هایی که keys ندارن) */
+/** نوع رویدادهای سرور → دامنه‌ها (برای type هایی که keys ندارن) */
 const SERVER_EVENT_KEYS: Record<string, string[]> = {
   "notification.new": [LIVE_DOMAINS.notifications],
   "notification.read": [LIVE_DOMAINS.notifications],
@@ -83,7 +83,7 @@ const PING_KEY = "arion-live-ping";
 const STORAGE_PREFIX = "panelMohammad:";
 const FOCUS_THROTTLE_MS = 3000;
 
-/** remote = دست‌کم یکی از کلیدها از بیرونِ همین تب اومده (تب دیگه/سرور/برگشت به تب) */
+/** remote = دست‌کم یکی از کلیدها از بیرون همین تب اومده (تب دیگه/سرور/برگشت به تب) */
 export type LiveMeta = { remote: boolean };
 type Listener = { keys: string[]; cb: (changed: string[], meta: LiveMeta) => void };
 
@@ -101,7 +101,7 @@ export function keyMatches(a: string, b: string): boolean {
   return a.startsWith(b + ":") || b.startsWith(a + ":");
 }
 
-// ── اطلاع‌رسانی دسته‌ای: چند publish در یک tick = یک بار صدا زدنِ هر مشترک ──
+// ── اطلاع‌رسانی دسته‌ای: چند publish در یک tick = یک بار صدا زدن هر مشترک ──
 let pendingKeys: Map<string, boolean> | null = null; // کلید → remote
 function scheduleNotify(keys: string[], remote: boolean) {
   if (!pendingKeys) {
@@ -123,9 +123,9 @@ function flush() {
 }
 
 /**
- * لایه‌ی داده (lib/storage.ts) این‌جا ثبت می‌کنه که با شنیدنِ «کلید X از
+ * لایه‌ی داده (lib/storage.ts) این‌جا ثبت می‌کنه که با شنیدن «کلید X از
  * جای دیگه عوض شد» کدوم کش‌ها رو دور بریزه. جدا نگه داشته شده تا این فایل
- * به storage وابسته نباشه (وابستگیِ حلقوی).
+ * به storage وابسته نباشه (وابستگی حلقوی).
  */
 export function registerInvalidator(fn: (keys: string[]) => void): () => void {
   invalidators.add(fn);
@@ -142,7 +142,7 @@ function toArray(keys: string | string[]) {
   return Array.isArray(keys) ? keys : [keys];
 }
 
-/** فقط همین تب — برای به‌روزرسانیِ optimistic قبل از رسیدنِ جوابِ سرور */
+/** فقط همین تب — برای به‌روزرسانی optimistic قبل از رسیدن جواب سرور */
 export function publishLocal(keys: string | string[]) {
   ensureStarted();
   scheduleNotify(toArray(keys), false);
@@ -162,12 +162,12 @@ export function broadcast(keys: string | string[]) {
 
 /**
  * «داده‌ی این دامنه‌ها عوض شد» — هم همین تب (فوری) هم بقیه‌ی تب‌ها. برای
- * نوشتن‌هایی که از lib/storage.ts رد نمی‌شن (fetch مستقیمِ ترید/کالری/…)،
- * بعد از پاسخِ موفقِ سرور صدا زده بشه.
+ * نوشتن‌هایی که از lib/storage.ts رد نمی‌شن (fetch مستقیم ترید/کالری/…)،
+ * بعد از پاسخ موفق سرور صدا زده بشه.
  */
 export function publishChange(keys: string | string[]) {
   const list = toArray(keys);
-  // کش‌های خواندنیِ همین تب هم باید باطل بشن — نوشتن از مسیری بوده که کش خبر نداشته
+  // کش‌های خواندنی همین تب هم باید باطل بشن — نوشتن از مسیری بوده که کش خبر نداشته
   runInvalidators(list);
   publishLocal(list);
   broadcast(list);
@@ -191,10 +191,10 @@ export function subscribe(keys: string | string[], cb: (changed: string[], meta:
 /**
  * هر بار یکی از این دامنه‌ها عوض شد (یا کاربر به تب برگشت)، cb دوباره صدا
  * زده می‌شه. cb همیشه آخرین نسخه‌ست (ref)، پس لازم نیست useCallback بشه.
- * `includeFocus: false` یعنی فقط تغییرِ واقعیِ داده، نه برگشت به تب.
+ * `includeFocus: false` یعنی فقط تغییر واقعی داده، نه برگشت به تب.
  * `remoteOnly: true` یعنی نوشتن‌های *همین تب* نادیده گرفته بشن — برای
- * صفحه‌ای که خودش optimistic به‌روز می‌شه و دوباره‌خوانیِ پژواکِ نوشتنِ
- * خودش (وسطِ چند تیکِ پشت‌سرهم) فقط باعثِ پرش می‌شد.
+ * صفحه‌ای که خودش optimistic به‌روز می‌شه و دوباره‌خوانی پژواک نوشتن
+ * خودش (وسط چند تیک پشت‌سرهم) فقط باعث پرش می‌شد.
  */
 export function useLiveRefresh(
   keys: string | string[],
@@ -230,7 +230,7 @@ export function subscribeLiveErrors(fn: (msg: string) => void): () => void {
 }
 
 // ── WebSocket ──
-/** کلاینتِ realtime وقتی وصله `window.__arionRealtimeConnected = true` می‌ذاره */
+/** کلاینت realtime وقتی وصله `window.__arionRealtimeConnected = true` می‌ذاره */
 export function isRealtimeConnected(): boolean {
   return typeof window !== "undefined" && (window as any).__arionRealtimeConnected === true;
 }
@@ -240,9 +240,9 @@ function isVisible() {
 }
 
 /**
- * پولینگِ کم‌هزینه برای داده‌ای که *کاربرِ دیگه* عوضش می‌کنه (چت/اعلان):
+ * پولینگ کم‌هزینه برای داده‌ای که *کاربر دیگه* عوضش می‌کنه (چت/اعلان):
  * فقط وقتی تب دیده می‌شه تیک می‌زنه؛ وقتی WebSocket وصله فاصله به
- * `realtimeIntervalMs` بلند می‌شه (فقط تورِ ایمنی — خودِ رویدادهای WS از
+ * `realtimeIntervalMs` بلند می‌شه (فقط تور ایمنی — خود رویدادهای WS از
  * useLiveRefresh می‌رسن). برگشت به تب همون لحظه یه تیک می‌زنه.
  */
 export function useVisiblePolling(
@@ -279,15 +279,15 @@ export function useVisiblePolling(
   }, [intervalMs, rtInterval, enabled]);
 }
 
-// ── نوشتن‌های مستقیم (fetch) — خبرِ خودکار ──
+// ── نوشتن‌های مستقیم (fetch) — خبر خودکار ──
 //
 // ترید/کالری/ورزش/رودمپ/منتور/اعلان‌ها از lib/storage.ts رد نمی‌شن و هرکدوم
-// مستقیم fetch می‌زنن. به‌جای دست‌بردن در ده‌ها نقطه‌ی نوشتن، هر درخواستِ
-// *غیر-GET*ِ موفق به این مسیرها خودش دامنه‌اش رو publish می‌کنه (همین تب +
+// مستقیم fetch می‌زنن. به‌جای دست‌بردن در ده‌ها نقطه‌ی نوشتن، هر درخواست
+// *غیر-GET* موفق به این مسیرها خودش دامنه‌اش رو publish می‌کنه (همین تب +
 // تب‌های دیگه). ترتیب مهمه: خاص‌ترها اول.
 // `/api/settings/*` و `/api/tasks/daily*` عمدا این‌جا نیستن — lib/storage.ts
-// خودش optimistic و write-through خبرشون رو می‌ده؛ باطل‌کردنِ دوباره‌ی کش
-// این‌جا فقط یه رفت‌وبرگشتِ اضافه می‌ساخت.
+// خودش optimistic و write-through خبرشون رو می‌ده؛ باطل‌کردن دوباره‌ی کش
+// این‌جا فقط یه رفت‌وبرگشت اضافه می‌ساخت.
 const MUTATION_DOMAINS: [RegExp, string[]][] = [
   [/^\/api\/mentorships\/[^/]+\/messages/, [LIVE_DOMAINS.mentorMessages]],
   [/^\/api\/mentorships/, [LIVE_DOMAINS.mentorMentorship]],
@@ -306,7 +306,7 @@ export function domainsForMutation(path: string): string[] {
   return [];
 }
 
-/** شناسه‌ی این تب — lib/realtime.ts (سرور) با همین، رویدادِ اکو رو علامت می‌زنه */
+/** شناسه‌ی این تب — lib/realtime.ts (سرور) با همین، رویداد اکو رو علامت می‌زنه */
 export const LIVE_TAB_ID = tabId;
 
 function withTabHeader(input: RequestInfo | URL, init?: RequestInit): RequestInit | undefined {
@@ -328,9 +328,9 @@ function installFetchHook() {
   const orig = window.fetch;
   if (typeof orig !== "function" || (orig as any).__arionLive) return;
   const hooked = async function (input: RequestInfo | URL, init?: RequestInit) {
-    // شناسه‌ی همین تب روی نوشتن‌های /api (هدرِ x-arion-client) — سرور همونو
-    // توی `src`ِ رویدادِ WebSocket برمی‌گردونه تا این تب اکوی نوشتنِ خودش رو
-    // (که قبلاً optimistic اعمال کرده) دوباره نخونه. فقط برای ورودیِ رشته/URL
+    // شناسه‌ی همین تب روی نوشتن‌های /api (هدر x-arion-client) — سرور همونو
+    // توی `src` رویداد WebSocket برمی‌گردونه تا این تب اکوی نوشتن خودش رو
+    // (که قبلا optimistic اعمال کرده) دوباره نخونه. فقط برای ورودی رشته/URL
     // (نه Request که هدرهاش immutableـه).
     init = withTabHeader(input, init);
     const res = await orig.call(window, input, init);
@@ -351,7 +351,7 @@ function installFetchHook() {
   window.fetch = hooked as typeof window.fetch;
 }
 
-// ── راه‌اندازیِ شنونده‌های سراسری (یک‌بار، تنبل) ──
+// ── راه‌اندازی شنونده‌های سراسری (یک‌بار، تنبل) ──
 function revalidateAll() {
   const now = Date.now();
   if (now - lastRevalidate < FOCUS_THROTTLE_MS) return;
@@ -370,7 +370,7 @@ function storageKeyToDomain(key: string): string | null {
 function onServerEvent(e: Event) {
   const detail = (e as CustomEvent).detail as { type?: string; keys?: string[]; src?: string } | undefined;
   if (!detail?.type) return;
-  // اکوی نوشتنِ خودِ همین تب — قبلاً محلی (publishChange/optimistic) اعمال شده
+  // اکوی نوشتن خود همین تب — قبلا محلی (publishChange/optimistic) اعمال شده
   if (detail.type === "data.changed" && detail.src === tabId) return;
   const keys = new Set<string>();
   if (Array.isArray(detail.keys)) for (const k of detail.keys) if (typeof k === "string" && k) keys.add(k);
@@ -381,13 +381,13 @@ function onServerEvent(e: Event) {
 }
 
 // ── یک نوشتن = یک بار دوباره‌خوانی ──
-// نوشتنِ تبِ A به تبِ B همین مرورگر از *دو* راه می‌رسه: BroadcastChannel
-// (فوری) و WebSocket (`data.changed` با src = شناسه‌ی تبِ A). هر دو باید
+// نوشتن تب A به تب B همین مرورگر از *دو* راه می‌رسه: BroadcastChannel
+// (فوری) و WebSocket (`data.changed` با src = شناسه‌ی تب A). هر دو باید
 // کار کنن (WS برای دستگاه‌های دیگه، BroadcastChannel وقتی WS وصل نیست)،
-// ولی دو باطل‌سازی پشتِ‌سرِ هم یعنی دو دور درخواستِ تکراری. هر خبری که از
-// یک راه رسیده چند ثانیه نگه داشته می‌شه؛ اگه جفتش (همون نویسنده، کلیدِ
-// جور، از راهِ *دیگه*) رسید، هر دو مصرف می‌شن و دومی نادیده گرفته می‌شه.
-// یک‌به‌یکه: دو نوشتنِ پشتِ‌سرهمِ همون کلید (تیک و برداشتنِ تیک) هر کدوم
+// ولی دو باطل‌سازی پشت‌سر هم یعنی دو دور درخواست تکراری. هر خبری که از
+// یک راه رسیده چند ثانیه نگه داشته می‌شه؛ اگه جفتش (همون نویسنده، کلید
+// جور، از راه *دیگه*) رسید، هر دو مصرف می‌شن و دومی نادیده گرفته می‌شه.
+// یک‌به‌یکه: دو نوشتن پشت‌سرهم همون کلید (تیک و برداشتن تیک) هر کدوم
 // جدا خبر داده می‌شن.
 const WRITER_DEDUPE_MS = 5000;
 type Via = "bc" | "ws";
@@ -399,7 +399,7 @@ function dedupeFromWriter(src: string | undefined, keys: string[], via: Via): st
   const fresh: string[] = [];
   for (const k of keys) {
     const i = seen.findIndex((r) => r.via !== via && keyMatches(r.key, k));
-    if (i >= 0) seen.splice(i, 1); // جفتش قبلاً اعمال شده
+    if (i >= 0) seen.splice(i, 1); // جفتش قبلا اعمال شده
     else { fresh.push(k); seen.push({ key: k, via, at: now }); }
   }
   if (seen.length) recentFromWriter.set(src, seen);

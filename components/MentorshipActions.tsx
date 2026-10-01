@@ -15,8 +15,8 @@ const MENU_ICON = { size: 15, strokeWidth: 1.75, "aria-hidden": true } as const;
 type Confirm = "end" | "block" | "cancel";
 
 /**
- * اقدام‌های رابطه (پایان، لغوِ درخواست، مسدودی، گزارشِ گفت‌وگو) برای منوی
- * سه‌نقطه‌ی سرِ صفحه‌ی رابطه و سرِ گفت‌وگو. هر اقدامِ مخرب پیش از اجرا
+ * اقدام‌های رابطه (پایان، لغو درخواست، مسدودی، گزارش گفت‌وگو) برای منوی
+ * سه‌نقطه‌ی سر صفحه‌ی رابطه و سر گفت‌وگو. هر اقدام مخرب پیش از اجرا
  * MentorConfirmDialog می‌گیرد. خروجی: آیتم‌های منو + دیالوگ‌ها (برای رندر).
  */
 export function useMentorshipActions({
@@ -24,7 +24,7 @@ export function useMentorshipActions({
 }: {
   rel: Relation | null;
   onChanged: () => void;
-  /** وقتی داده شود، آیتمِ «گزارش گفت‌وگو» در منو می‌آید */
+  /** وقتی داده شود، آیتم «گزارش گفت‌وگو» در منو می‌آید */
   onReportConversation?: (() => void) | null;
 }) {
   const router = useRouter();
@@ -70,7 +70,7 @@ export function useMentorshipActions({
       message={confirm === "end" ? `رابطه با ${name} پایان یابد؟` : confirm === "cancel" ? `درخواست به ${name} لغو شود؟` : `${name} مسدود شود؟`}
       hint={
         confirm === "end" ? "برنامه‌های در جریان لغو می‌شوند؛ گفت‌وگو فقط‌خواندنی می‌ماند."
-          : confirm === "cancel" ? "بعداً می‌توانی دوباره درخواست بدهی."
+          : confirm === "cancel" ? "بعدا می‌توانی دوباره درخواست بدهی."
           : "رابطه قطع و برنامه‌های در جریان لغو می‌شوند؛ دیگر درخواست یا پیامی از او نمی‌رسد."
       }
       confirmLabel={confirm === "end" ? "پایان رابطه" : confirm === "cancel" ? "لغو درخواست" : "مسدود کردن"}

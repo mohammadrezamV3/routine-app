@@ -1,4 +1,4 @@
-// محاسبه‌ی خالصِ متریک‌های اچیومنت (بدونِ prisma) — ورودی: داده‌ی خامِ کاربر،
+// محاسبه‌ی خالص متریک‌های اچیومنت (بدون prisma) — ورودی: داده‌ی خام کاربر،
 // خروجی: AchievementMetrics. جدا از achievementsServer.ts تا تست‌پذیر باشه.
 
 import { isoLocal, jalaliToIso, toJalali } from "./jalali";
@@ -11,10 +11,10 @@ export type AchievementInput = {
   createdAtIso: string;
   opts: ScheduleOpts;
   daily: Record<string, { tasks: Record<string, boolean>; wakeMin?: number | null }>;
-  /** دقیقه‌ی هدفِ بیداری/خواب از تنظیمات (wakeSleepTimes) */
+  /** دقیقه‌ی هدف بیداری/خواب از تنظیمات (wakeSleepTimes) */
   wakeTargetMin: number;
   sleepTargetMin: number;
-  /** شب‌های ثبت‌شده: مدت (دقیقه) و دقیقه‌ی محلیِ به‌خواب‌رفتن */
+  /** شب‌های ثبت‌شده: مدت (دقیقه) و دقیقه‌ی محلی به‌خواب‌رفتن */
   sleeps: { iso: string; durationMin: number; bedMin: number }[];
   routineItems: number;
 };
@@ -87,7 +87,7 @@ export function computeAchievementMetrics(inp: AchievementInput): AchievementMet
     if (ok && planned > 0) perfectWeeks++;
   }
 
-  // ماه‌های شمسیِ کاملا گذشته که همه‌ی روزهای برنامه‌دارش کامل بوده
+  // ماه‌های شمسی کاملا گذشته که همه‌ی روزهای برنامه‌دارش کامل بوده
   let perfectMonths = 0;
   const [sy, sm] = toJalali(start.getFullYear(), start.getMonth() + 1, start.getDate());
   const [ty, tm] = toJalali(today.getFullYear(), today.getMonth() + 1, today.getDate());
@@ -103,7 +103,7 @@ export function computeAchievementMetrics(inp: AchievementInput): AchievementMet
     if (ok && planned >= 20) perfectMonths++;
   }
 
-  // بهترین میانگینِ ۳۰ روزه (فقط پنجره‌هایی با حداقل ۲۰ روزِ برنامه‌دار)
+  // بهترین میانگین ۳۰ روزه (فقط پنجره‌هایی با حداقل ۲۰ روز برنامه‌دار)
   let best30Avg = 0;
   for (let i = 29; i < days.length; i++) {
     const win = days.slice(i - 29, i + 1).filter((x) => x.planned);

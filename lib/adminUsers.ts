@@ -7,7 +7,7 @@ import { invalidateAdminAnalyticsCache, writeAuditLog } from "@/lib/adminAnalyti
 import { revokeOtherDeviceSessions } from "@/lib/deviceSessions";
 import { invalidateAdminFlagCache } from "@/lib/adminFlag";
 
-// عملیات نوشتنیِ پنل ادمین روی کاربران. همه‌ی قوانینِ «کی روی کی» این‌جا
+// عملیات نوشتنی پنل ادمین روی کاربران. همه‌ی قوانین «کی روی کی» این‌جا
 // متمرکزه تا هیچ روتی یادش نره:
 //  - هیچ‌کس روی حساب خودش اقدام مخرب (مسدود/حذف/گرفتن ادمینی) نمی‌کنه
 //  - ادمین محدود هیچ اقدامی روی Owner (سوپرادمین) نمی‌تونه بکنه

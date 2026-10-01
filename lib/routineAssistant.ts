@@ -1,36 +1,36 @@
-// هسته‌ی «مدیرِ برنامه» — تبدیلِ نقشه‌ای که مدل زبانی پیشنهاد می‌دهد به
-// تغییرِ واقعی روی برنامه‌های کاربر.
+// هسته‌ی «مدیر برنامه» — تبدیل نقشه‌ای که مدل زبانی پیشنهاد می‌دهد به
+// تغییر واقعی روی برنامه‌های کاربر.
 //
-// چرا این‌جا و نه داخلِ روت: خروجیِ یک مدلِ زبانی ورودیِ غیرقابل‌اعتماد است.
+// چرا این‌جا و نه داخل روت: خروجی یک مدل زبانی ورودی غیرقابل‌اعتماد است.
 // هیچ‌کدام از این‌ها را نباید باور کرد: که ساعت معتبر است، که برنامه‌ی مرجع
-// وجود دارد، که با چیزِ دیگری تداخل ندارد، که روز عددِ ۰..۶ است، که تعدادِ
-// عملیات معقول است. پس مدل فقط *پیشنهاد* می‌دهد و تصمیمِ نهایی این‌جاست —
+// وجود دارد، که با چیز دیگری تداخل ندارد، که روز عدد ۰..۶ است، که تعداد
+// عملیات معقول است. پس مدل فقط *پیشنهاد* می‌دهد و تصمیم نهایی این‌جاست —
 // همان اعتبارسنجی‌هایی که فرم‌های دستی (AddProgramForm/EditOccurrenceForm/
 // MoveOccurrenceModal) انجام می‌دهند، تا نتیجه‌ی دو مسیر یکی باشد.
 //
 // این فایل عمدا هیچ وابستگی‌ای به Prisma/شبکه/React ندارد تا کاملا
 // تست‌پذیر بماند.
 
-// فقط تایپ — `lib/storage.ts` منطقِ سمتِ کلاینت (localStorage/fetch) دارد و
-// نباید داخلِ باندلِ سرور کشیده شود؛ `import type` تضمین می‌کند که نمی‌شود.
+// فقط تایپ — `lib/storage.ts` منطق سمت کلاینت (localStorage/fetch) دارد و
+// نباید داخل باندل سرور کشیده شود؛ `import type` تضمین می‌کند که نمی‌شود.
 import type { CustomOccurrence, Importance } from "./storage";
 import { addDaysIso, dayBeforeIso, jsDayOfIso, sameWeekIso, timeStartMinutes, toEnDigits, WEEK_ORDER } from "./schedule";
 import { isoLocal, J_MONTHS, jalaliToIso, toJalali, faNum } from "./jalali";
 import { normalizeTimeToFa } from "./timeUtils";
 import { rangesOverlap } from "./conflict";
 
-/** سقفِ تعدادِ برنامه‌ی یک کاربر — جلوی پرکردنِ UserSetting با یک درخواست را می‌گیرد */
+/** سقف تعداد برنامه‌ی یک کاربر — جلوی پرکردن UserSetting با یک درخواست را می‌گیرد */
 export const MAX_OCCURRENCES = 200;
 /**
- * سقفِ عملیاتِ یک پیام. قبلا ۱۲ بود و «کلِ هفته‌ام را از نو بچین» وسطش
- * بریده می‌شد؛ ۴۰ برای بازچیدنِ یک هفته‌ی کامل جا دارد و هنوز جلوی یک
- * خروجیِ بی‌مهارِ مدل را می‌گیرد.
+ * سقف عملیات یک پیام. قبلا ۱۲ بود و «کل هفته‌ام را از نو بچین» وسطش
+ * بریده می‌شد؛ ۴۰ برای بازچیدن یک هفته‌ی کامل جا دارد و هنوز جلوی یک
+ * خروجی بی‌مهار مدل را می‌گیرد.
  */
 export const MAX_OPS_PER_MESSAGE = 40;
 /**
- * تعدادِ پیامِ رایگانِ نومو برای کاربرِ بدونِ اشتراک (مادام‌العمر؛ مشترک
- * نامحدود است). فقط پیش‌فرض است — Owner از پنلِ ادمین (تنظیمات) عوضش می‌کند:
- * AppSetting با کلیدِ NOMO_FREE_USES_SETTING_KEY، خواندن با getNomoFreeUses
+ * تعداد پیام رایگان نومو برای کاربر بدون اشتراک (مادام‌العمر؛ مشترک
+ * نامحدود است). فقط پیش‌فرض است — Owner از پنل ادمین (تنظیمات) عوضش می‌کند:
+ * AppSetting با کلید NOMO_FREE_USES_SETTING_KEY، خواندن با getNomoFreeUses
  * در lib/aiQuota.ts.
  */
 export const FREE_ASSISTANT_USES = 10;
@@ -44,9 +44,9 @@ export function normalizeNomoFreeUses(raw: unknown): number {
 /**
  * برنامه لازم نیست ساعت داشته باشد.
  *
- * «امروز ورزش دارم» یک برنامه‌ی واقعی است بدونِ هیچ ساعتی؛ اجبار به ساعت
- * یا حدس‌زدنِ آن، چیزی می‌سازد که کاربر نگفته. برنامه‌ی بی‌ساعت `time` خالی
- * می‌گیرد و `sortTasksByTime` خودش آن را ته فهرستِ همان روز می‌نشاند.
+ * «امروز ورزش دارم» یک برنامه‌ی واقعی است بدون هیچ ساعتی؛ اجبار به ساعت
+ * یا حدس‌زدن آن، چیزی می‌سازد که کاربر نگفته. برنامه‌ی بی‌ساعت `time` خالی
+ * می‌گیرد و `sortTasksByTime` خودش آن را ته فهرست همان روز می‌نشاند.
  * چون بازه‌ای ندارد، با هیچ‌چیز هم تداخل پیدا نمی‌کند.
  */
 export const DEFAULT_DURATION_MIN = 60;
@@ -54,13 +54,13 @@ export type AwakeWindow = { startMin: number; endMin: number };
 export const DEFAULT_AWAKE: AwakeWindow = { startMin: 8 * 60, endMin: 22 * 60 };
 
 /**
- * تکرارِ درون‌روزی («هر یک ساعت به مدتِ ۵ دقیقه») — یک add با فاصله‌ی
+ * تکرار درون‌روزی («هر یک ساعت به مدت ۵ دقیقه») — یک add با فاصله‌ی
  * ثابت چند بار در همان روز تکرار می‌شود، نه یک برنامه‌ی تک.
  */
 export const MIN_REPEAT_EVERY_MIN = 5;
 export const MAX_REPEAT_EVERY_MIN = 720;
 export const DEFAULT_REPEAT_DURATION_MIN = 5;
-/** سقفِ تعدادِ تکرار در یک op — جلوی یک repeatEveryMin خیلی کوچک را می‌گیرد */
+/** سقف تعداد تکرار در یک op — جلوی یک repeatEveryMin خیلی کوچک را می‌گیرد */
 export const MAX_REPEATS_PER_OP = 48;
 
 export const DAY_NAME_FA: Record<number, string> = {
@@ -68,28 +68,28 @@ export const DAY_NAME_FA: Record<number, string> = {
 };
 
 // ─────────────────────────────────────────────────────────────────────────
-// شکلِ خامِ چیزی که مدل برمی‌گرداند (هیچ فیلدی تضمین‌شده نیست)
+// شکل خام چیزی که مدل برمی‌گرداند (هیچ فیلدی تضمین‌شده نیست)
 // ─────────────────────────────────────────────────────────────────────────
 
 export type RawOp = {
   op?: unknown;
-  ref?: unknown;      // شماره‌ی ردیفِ برنامه در فهرستی که به مدل داده‌ایم (۱-پایه)
+  ref?: unknown;      // شماره‌ی ردیف برنامه در فهرستی که به مدل داده‌ایم (۱-پایه)
   name?: unknown;
-  days?: unknown;     // برای add — آرایه‌ی روز (نامِ فارسی یا jsDay)
+  days?: unknown;     // برای add — آرایه‌ی روز (نام فارسی یا jsDay)
   toDay?: unknown;    // برای move
   start?: unknown;
   end?: unknown;
   importance?: unknown;
   tag?: unknown;
   notify?: unknown;
-  /** برای add — تکرارِ درون‌روزی: هر چند دقیقه یک‌بار («هر یک ساعت») */
+  /** برای add — تکرار درون‌روزی: هر چند دقیقه یک‌بار («هر یک ساعت») */
   repeatEveryMin?: unknown;
-  /** برای add — آخرین ساعتِ مجاز برای شروعِ یک تکرار؛ نبودش یعنی تا آخرِ بیداری */
+  /** برای add — آخرین ساعت مجاز برای شروع یک تکرار؛ نبودش یعنی تا آخر بیداری */
   repeatUntil?: unknown;
-  /** add: تاریخ‌های مشخصِ تک‌روزه (تکرار نمی‌شوند) */
+  /** add: تاریخ‌های مشخص تک‌روزه (تکرار نمی‌شوند) */
   date?: unknown;
   dates?: unknown;
-  /** retime/move/delete: فقط همین یک تاریخ، نه کلِ تکرارها */
+  /** retime/move/delete: فقط همین یک تاریخ، نه کل تکرارها */
   toDate?: unknown;
   /** add/update/delete: بازه‌ی دوره */
   from?: unknown;
@@ -101,7 +101,7 @@ export type RawOp = {
 export type AssistantPlan = {
   /** مدل تشخیص داده پیام ربطی به برنامه‌ریزی ندارد */
   offTopic?: boolean;
-  /** پاسخِ متنی برای وقتی که فقط سوال پرسیده شده (بدون تغییر) */
+  /** پاسخ متنی برای وقتی که فقط سوال پرسیده شده (بدون تغییر) */
   reply?: string;
   ops?: RawOp[];
 };
@@ -115,7 +115,7 @@ export type ApplyOutcome = {
   problems: string[];
   /**
    * پاسخ‌های آماده‌ای که کاربر می‌تواند فقط رویشان بزند به‌جای تایپ‌کردن.
-   * وقتی کاری نشد، بن‌بست ندهیم: راهِ ادامه را جلوی دستش بگذاریم.
+   * وقتی کاری نشد، بن‌بست ندهیم: راه ادامه را جلوی دستش بگذاریم.
    */
   options: string[];
   /** آیا چیزی واقعا تغییر کرد (یعنی باید ذخیره شود) */
@@ -134,7 +134,7 @@ function isBlank(v: unknown): boolean {
   return v === undefined || v === null || v === "";
 }
 
-/** ساعتِ معتبر «HH:MM» با ارقامِ انگلیسی، یا null اگر ورودی بدشکل/خارج از بازه بود */
+/** ساعت معتبر «HH:MM» با ارقام انگلیسی، یا null اگر ورودی بدشکل/خارج از بازه بود */
 export function parseClock(v: unknown): { fa: string; min: number } | null {
   if (typeof v !== "string") return null;
   const en = toEnDigits(v).trim();
@@ -157,10 +157,10 @@ const DAY_BY_NAME: Record<string, number> = {
 };
 
 /**
- * روزِ هفته از خروجیِ مدل — هم نامِ فارسی («سه‌شنبه») هم عدد.
+ * روز هفته از خروجی مدل — هم نام فارسی («سه‌شنبه») هم عدد.
  *
- * چرا نام: نگاشتِ «شنبه=6، یکشنبه=0» برخلافِ ترتیبِ طبیعیِ هفته‌ی ایرانی
- * است و مدل گاهی یکی جابه‌جا می‌زد — یعنی برنامه روزِ اشتباه ثبت می‌شد.
+ * چرا نام: نگاشت «شنبه=6، یکشنبه=0» برخلاف ترتیب طبیعی هفته‌ی ایرانی
+ * است و مدل گاهی یکی جابه‌جا می‌زد — یعنی برنامه روز اشتباه ثبت می‌شد.
  * حالا مدل همان نامی را می‌نویسد که کاربر گفته و تبدیل این‌جا انجام می‌شود.
  */
 export function parseDay(v: unknown): number | null {
@@ -183,10 +183,10 @@ function parseDays(v: unknown): number[] {
 }
 
 /**
- * تاریخ از خروجیِ مدل → ISO محلی. میلادی («2026-10-01») و جلالی
- * («1405/07/09») هر دو پذیرفته‌اند؛ مدل تاریخِ جلالی را که کاربر گفته
- * («تا ۱۵ آبان») مستقیم می‌نویسد و تبدیلِ دقیق این‌جا انجام می‌شود، نه با
- * حسابِ ذهنیِ مدل.
+ * تاریخ از خروجی مدل → ISO محلی. میلادی («2026-10-01») و جلالی
+ * («1405/07/09») هر دو پذیرفته‌اند؛ مدل تاریخ جلالی را که کاربر گفته
+ * («تا ۱۵ آبان») مستقیم می‌نویسد و تبدیل دقیق این‌جا انجام می‌شود، نه با
+ * حساب ذهنی مدل.
  */
 export function parseDateInput(v: unknown, todayIso: string): string | null {
   if (typeof v !== "string") return null;
@@ -204,14 +204,14 @@ export function parseDateInput(v: unknown, todayIso: string): string | null {
   return isoLocal(date);
 }
 
-/** «۵ مهر» — برچسبِ کوتاهِ تاریخ برای پیام‌ها */
+/** «۵ مهر» — برچسب کوتاه تاریخ برای پیام‌ها */
 export function faDateLabel(iso: string): string {
   const d = new Date(iso + "T00:00:00");
   const j = toJalali(d.getFullYear(), d.getMonth() + 1, d.getDate());
   return `${faNum(j[2])} ${J_MONTHS[j[1] - 1]}`;
 }
 
-/** بازه‌ی تاریخیِ یک برنامه — هر دو سر شامل؛ نبودِ هر سر یعنی باز */
+/** بازه‌ی تاریخی یک برنامه — هر دو سر شامل؛ نبود هر سر یعنی باز */
 export type Period = { from?: string; to?: string };
 
 function periodOf(o: CustomOccurrence): Period {
@@ -229,15 +229,15 @@ function periodLabel(p: Period, todayIso: string): string {
   return "";
 }
 
-/** آیا این برنامه در تاریخِ `iso` واقعا اتفاق می‌افتد؟ */
+/** آیا این برنامه در تاریخ `iso` واقعا اتفاق می‌افتد؟ */
 function occursOn(o: CustomOccurrence, iso: string): boolean {
   return o.jsDay === jsDayOfIso(iso) && (!o.startDate || o.startDate <= iso) && (!o.endDate || iso <= o.endDate);
 }
 
 /**
- * آیا متنِ کاربر اصلا حرفی از ساعت زده؟ مدل با وجودِ دستورِ صریح گاهی برای
- * برنامه‌ی بی‌ساعت ساعت می‌سازد («هر روز ورزش» → ۰۸:۰۰)؛ این قفلِ سمتِ
- * سرور است: اگر کاربر هیچ نشانه‌ای از زمان نداده، ساعتِ پیشنهادیِ مدل
+ * آیا متن کاربر اصلا حرفی از ساعت زده؟ مدل با وجود دستور صریح گاهی برای
+ * برنامه‌ی بی‌ساعت ساعت می‌سازد («هر روز ورزش» → ۰۸:۰۰)؛ این قفل سمت
+ * سرور است: اگر کاربر هیچ نشانه‌ای از زمان نداده، ساعت پیشنهادی مدل
  * برای add/move دور ریخته می‌شود.
  */
 const TIME_HINT_RE = new RegExp(
@@ -255,7 +255,7 @@ export function mentionsTime(text: string): boolean {
 
 /**
  * ساعتی که کاربر نگفته، از add/move پاک می‌شود. retime دست نمی‌خورد: آن
- * عملیات خودش یعنی «ساعت را عوض کن» و بدونِ ساعت معنایش «ساعت را بردار» است.
+ * عملیات خودش یعنی «ساعت را عوض کن» و بدون ساعت معنایش «ساعت را بردار» است.
  */
 export function stripInventedTimes(ops: RawOp[], userTexts: string[]): { ops: RawOp[]; stripped: number } {
   if (userTexts.some(mentionsTime)) return { ops, stripped: 0 };
@@ -275,7 +275,7 @@ function occStart(o: CustomOccurrence): number | null {
   return timeStartMinutes(o.time);
 }
 
-/** پایانِ بازه؛ برنامه‌ی بدونِ ساعتِ پایان یک لحظه حساب می‌شود (مثل rangesOverlap) */
+/** پایان بازه؛ برنامه‌ی بدون ساعت پایان یک لحظه حساب می‌شود (مثل rangesOverlap) */
 function occEnd(o: CustomOccurrence): number | null {
   const parts = toEnDigits(o.time).split(/[–—-]/);
   if (parts.length !== 2) return null;
@@ -288,15 +288,15 @@ function timeLabel(startFa: string, endFa?: string | null): string {
 }
 
 /**
- * تداخل را روی خودِ فهرستِ occurrences می‌سنجد، نه با tasksForDate.
+ * تداخل را روی خود فهرست occurrences می‌سنجد، نه با tasksForDate.
  *
  * چرا: tasksForDate به یک `Date` نیاز دارد و «هفته‌ی جاری» را فرض می‌کند،
- * ولی این‌جا در حال ساختنِ یک وضعیتِ *میانی* هستیم که هنوز ذخیره نشده و
+ * ولی این‌جا در حال ساختن یک وضعیت *میانی* هستیم که هنوز ذخیره نشده و
  * ممکن است چند عملیات پشت‌سرهم رویش اجرا شود.
  *
- * `period` بازه‌ی تاریخیِ برنامه‌ی جدید است: دو برنامه فقط وقتی تداخل دارند
- * که دوره‌هایشان هم هم‌پوشانی داشته باشد — یک کلاسِ تمام‌شده یا یک
- * برنامه‌ی تک‌روزه‌ی هفته‌ی بعد نباید جلوی ساعتِ این هفته را بگیرد.
+ * `period` بازه‌ی تاریخی برنامه‌ی جدید است: دو برنامه فقط وقتی تداخل دارند
+ * که دوره‌هایشان هم هم‌پوشانی داشته باشد — یک کلاس تمام‌شده یا یک
+ * برنامه‌ی تک‌روزه‌ی هفته‌ی بعد نباید جلوی ساعت این هفته را بگیرد.
  */
 export function findConflict(
   list: CustomOccurrence[],
@@ -318,7 +318,7 @@ export function findConflict(
 }
 
 /**
- * اولین بازه‌ی آزادِ `durationMin`دقیقه‌ای از `fromMin` به بعد، حداکثر تا
+ * اولین بازه‌ی آزاد `durationMin`دقیقه‌ای از `fromMin` به بعد، حداکثر تا
  * `untilMin`.
  */
 export function findFreeSlot(
@@ -343,8 +343,8 @@ export function minutesToFa(min: number): string {
 }
 
 /**
- * نزدیک‌ترین بازه‌ی آزادِ هم‌طولِ همان روز — پاسخِ سوالِ «اون ساعت پره، پس کِی؟».
- * null یعنی آن روز واقعا جای خالیِ هم‌اندازه ندارد.
+ * نزدیک‌ترین بازه‌ی آزاد هم‌طول همان روز — پاسخ سوال «اون ساعت پره، پس کی؟».
+ * null یعنی آن روز واقعا جای خالی هم‌اندازه ندارد.
  */
 export function suggestFreeSlot(
   list: CustomOccurrence[],
@@ -369,15 +369,15 @@ function parseImportance(v: unknown): Importance | null {
 }
 
 /**
- * فهرستی که به مدل داده می‌شود — با شماره‌ی ردیفِ ۱-پایه.
+ * فهرستی که به مدل داده می‌شود — با شماره‌ی ردیف ۱-پایه.
  *
- * عمدا شناسه‌ی واقعی (`custom-m3x8...`) به مدل داده نمی‌شود: رشته‌های تصادفیِ
- * بلند را مدل‌ها خوب کپی نمی‌کنند. نگاشتِ عدد → شناسه فقط سمتِ سرور است.
+ * عمدا شناسه‌ی واقعی (`custom-m3x8...`) به مدل داده نمی‌شود: رشته‌های تصادفی
+ * بلند را مدل‌ها خوب کپی نمی‌کنند. نگاشت عدد → شناسه فقط سمت سرور است.
  *
- * برنامه‌های تمام‌شده (endDate قبل از امروز) و مخفی‌شده (کلیدِ قدیمیِ
+ * برنامه‌های تمام‌شده (endDate قبل از امروز) و مخفی‌شده (کلید قدیمی
  * removed) نشان داده نمی‌شوند — کاربر آن‌ها را نمی‌بیند و مدل نباید با
- * آن‌ها «امروز چی دارم» را جواب بدهد. شماره‌ها ولی همان اندیسِ فهرستِ کامل
- * می‌مانند تا نگاشتِ applyOps عوض نشود.
+ * آن‌ها «امروز چی دارم» را جواب بدهد. شماره‌ها ولی همان اندیس فهرست کامل
+ * می‌مانند تا نگاشت applyOps عوض نشود.
  */
 export function describeSchedule(
   list: CustomOccurrence[],
@@ -400,18 +400,18 @@ export function describeSchedule(
 }
 
 // ─────────────────────────────────────────────────────────────────────────
-// اعمالِ نقشه
+// اعمال نقشه
 // ─────────────────────────────────────────────────────────────────────────
 
 type TimeSpec = { kind: "keep" } | { kind: "clear" } | { kind: "set"; start: { fa: string; min: number }; end: { fa: string; min: number } | null };
 
 /**
  * `ops` را یکی‌یکی و به‌ترتیب روی فهرست اعمال می‌کند. هر عملیات روی نتیجه‌ی
- * عملیاتِ قبلی سوار می‌شود، و هر شکستْ فقط همان عملیات را رد می‌کند نه کلِ پیام را.
+ * عملیات قبلی سوار می‌شود، و هر شکست فقط همان عملیات را رد می‌کند نه کل پیام را.
  *
- * هیچ تغییری گذشته را پاک نمی‌کند (همان قراردادِ فرم‌های دستی): حذف/تغییرِ
- * «از امروز به بعد» ردیفِ قبلی را با endDate می‌بندد و ردیفِ تازه از امروز
- * شروع می‌شود؛ تغییرِ «فقط یک روز» ردیف را دورِ همان روز دو تکه می‌کند.
+ * هیچ تغییری گذشته را پاک نمی‌کند (همان قرارداد فرم‌های دستی): حذف/تغییر
+ * «از امروز به بعد» ردیف قبلی را با endDate می‌بندد و ردیف تازه از امروز
+ * شروع می‌شود؛ تغییر «فقط یک روز» ردیف را دور همان روز دو تکه می‌کند.
  */
 export function applyOps(
   input: CustomOccurrence[],
@@ -431,11 +431,11 @@ export function applyOps(
     for (const it of items) if (it && !options.includes(it) && options.length < 4) options.push(it);
   }
 
-  // نگاشتِ شماره‌ی ردیف → شناسه، *قبل* از هر تغییری گرفته می‌شود.
+  // نگاشت شماره‌ی ردیف → شناسه، *قبل* از هر تغییری گرفته می‌شود.
   const refToId = new Map<number, string>();
   input.forEach((o, i) => refToId.set(i + 1, o.id));
-  // وقتی یک عملیات ردیفی را با ردیفِ تازه عوض می‌کند، عملیاتِ بعدیِ همان
-  // پیام روی همان ref باید به ردیفِ تازه برسد («ساعتش رو ۱۰ کن و اسمش رو
+  // وقتی یک عملیات ردیفی را با ردیف تازه عوض می‌کند، عملیات بعدی همان
+  // پیام روی همان ref باید به ردیف تازه برسد («ساعتش رو ۱۰ کن و اسمش رو
   // عوض کن»). null یعنی در همین پیام حذف شد.
   const successor = new Map<string, string | null>();
 
@@ -448,7 +448,7 @@ export function applyOps(
     let id: string | null | undefined = refToId.get(n);
     if (!id) {
       offer("همه‌ی برنامه‌هایم را نشانم بده");
-      return { error: "برنامه‌ای که گفتی در فهرستِ برنامه‌هایت نیست." };
+      return { error: "برنامه‌ای که گفتی در فهرست برنامه‌هایت نیست." };
     }
     for (let guard = 0; guard < 50 && id && successor.has(id); guard++) id = successor.get(id)!;
     if (!id) return { error: "آن برنامه در همین پیام حذف شده بود." };
@@ -481,7 +481,7 @@ export function applyOps(
   }
 
   /**
-   * فقط روزِ `iso` را از یک برنامه برمی‌دارد: تکه‌ی قبل (همان شناسه) و
+   * فقط روز `iso` را از یک برنامه برمی‌دارد: تکه‌ی قبل (همان شناسه) و
    * تکه‌ی بعد (شناسه‌ی نو). برنامه‌ی تک‌روزه کامل می‌رود.
    */
   function carveOut(target: CustomOccurrence, iso: string): CustomOccurrence[] {
@@ -497,12 +497,12 @@ export function applyOps(
 
   function parseTimeSpec(raw: RawOp, name: string): TimeSpec | { error: string } {
     if (isBlank(raw.start) && isBlank(raw.end)) return { kind: "keep" };
-    if (isBlank(raw.start)) return { error: `ساعتِ شروعِ «${name}» را نفهمیدم.` };
+    if (isBlank(raw.start)) return { error: `ساعت شروع «${name}» را نفهمیدم.` };
     const start = parseClock(raw.start);
-    if (!start) return { error: `ساعتِ شروعِ «${name}» را نفهمیدم. مثلا «8:30» بنویس.` };
+    if (!start) return { error: `ساعت شروع «${name}» را نفهمیدم. مثلا «8:30» بنویس.` };
     const end = isBlank(raw.end) ? null : parseClock(raw.end);
-    if (!isBlank(raw.end) && !end) return { error: `ساعتِ پایانِ «${name}» را نفهمیدم.` };
-    if (end && end.min <= start.min) return { error: `ساعتِ پایانِ «${name}» باید بعد از ساعتِ شروع باشد.` };
+    if (!isBlank(raw.end) && !end) return { error: `ساعت پایان «${name}» را نفهمیدم.` };
+    if (end && end.min <= start.min) return { error: `ساعت پایان «${name}» باید بعد از ساعت شروع باشد.` };
     return { kind: "set", start, end };
   }
 
@@ -511,14 +511,14 @@ export function applyOps(
     let from = defaults.from;
     if (!isBlank(raw.from)) {
       const f = parseDateInput(raw.from, todayIso);
-      if (!f) return { error: `تاریخِ شروعِ «${name}» را نفهمیدم.` };
+      if (!f) return { error: `تاریخ شروع «${name}» را نفهمیدم.` };
       from = f;
     }
     let to = defaults.to;
     if (raw.until === null) to = undefined;
     else if (!isBlank(raw.until)) {
       const u = parseDateInput(raw.until, todayIso);
-      if (!u) return { error: `تاریخِ پایانِ «${name}» را نفهمیدم.` };
+      if (!u) return { error: `تاریخ پایان «${name}» را نفهمیدم.` };
       to = u;
     } else if (!isBlank(raw.weeks) || !isBlank(raw.months)) {
       const base = from ?? todayIso;
@@ -530,10 +530,10 @@ export function applyOps(
         d.setMonth(d.getMonth() + months);
         to = addDaysIso(isoLocal(d), -1);
       } else {
-        return { error: `طولِ دوره‌ی «${name}» را نفهمیدم.` };
+        return { error: `طول دوره‌ی «${name}» را نفهمیدم.` };
       }
     }
-    if (from && to && to < from) return { error: `تاریخِ پایانِ «${name}» قبل از شروعش است.` };
+    if (from && to && to < from) return { error: `تاریخ پایان «${name}» قبل از شروعش است.` };
     return { from, to };
   }
 
@@ -546,11 +546,11 @@ export function applyOps(
     const slot = suggestFreeSlot(list, jsDay, start.min, end?.min ?? null, excludeId, period);
     problems.push(
       slot
-        ? `${dayFa} ساعتِ ${timeLabel(start.fa, end?.fa)} با «${conflict.name}» پر است. نزدیک‌ترین وقتِ آزاد ${timeLabel(slot.startFa, slot.endFa)} است.`
-        : `${dayFa} ساعتِ ${timeLabel(start.fa, end?.fa)} با «${conflict.name}» پر است و تا آخرِ آن روز هم جای خالیِ هم‌اندازه نمانده.`
+        ? `${dayFa} ساعت ${timeLabel(start.fa, end?.fa)} با «${conflict.name}» پر است. نزدیک‌ترین وقت آزاد ${timeLabel(slot.startFa, slot.endFa)} است.`
+        : `${dayFa} ساعت ${timeLabel(start.fa, end?.fa)} با «${conflict.name}» پر است و تا آخر آن روز هم جای خالی هم‌اندازه نمانده.`
     );
-    if (slot) offer(`«${name}» را ${singleDay ? "همان روز" : dayFa} ساعتِ ${slot.startFa} بگذار`);
-    offer(`«${name}» را یک روزِ دیگر بگذار`, `«${conflict.name}» را جابه‌جا کن`);
+    if (slot) offer(`«${name}» را ${singleDay ? "همان روز" : dayFa} ساعت ${slot.startFa} بگذار`);
+    offer(`«${name}» را یک روز دیگر بگذار`, `«${conflict.name}» را جابه‌جا کن`);
   }
 
   for (const raw of ops.slice(0, MAX_OPS_PER_MESSAGE)) {
@@ -572,7 +572,7 @@ export function applyOps(
         if (!iso) { badDate = true; continue; }
         if (!dates.includes(iso)) dates.push(iso);
       }
-      if (badDate && !dates.length) { problems.push(`تاریخِ «${name}» را نفهمیدم.`); continue; }
+      if (badDate && !dates.length) { problems.push(`تاریخ «${name}» را نفهمیدم.`); continue; }
       if (badDate) problems.push(`یکی از تاریخ‌های «${name}» را نفهمیدم و از آن گذشتم.`);
 
       type Target = { jsDay: number; period: Period };
@@ -582,7 +582,7 @@ export function applyOps(
       } else {
         const days = parseDays(raw.days);
         if (!days.length) {
-          problems.push(`برای «${name}» روزی مشخص نکردی — کدام روزِ هفته؟`);
+          problems.push(`برای «${name}» روزی مشخص نکردی — کدام روز هفته؟`);
           offer(`«${name}» را برای امروز بگذار`, `«${name}» را برای فردا بگذار`, `«${name}» را هر روز بگذار`);
           continue;
         }
@@ -591,14 +591,14 @@ export function applyOps(
         targets = days.map((jsDay) => ({ jsDay, period }));
       }
 
-      // ساعت *اختیاری* است. نبودش یعنی برنامه‌ی بی‌ساعت، نه ساعتِ حدسی.
+      // ساعت *اختیاری* است. نبودش یعنی برنامه‌ی بی‌ساعت، نه ساعت حدسی.
       const hasStart = !isBlank(raw.start);
       const start = hasStart ? parseClock(raw.start) : null;
-      if (hasStart && !start) { problems.push(`ساعتِ شروعِ «${name}» را نفهمیدم. مثلا «8:30» بنویس.`); continue; }
+      if (hasStart && !start) { problems.push(`ساعت شروع «${name}» را نفهمیدم. مثلا «8:30» بنویس.`); continue; }
       const end = isBlank(raw.end) ? null : parseClock(raw.end);
-      if (!isBlank(raw.end) && !end) { problems.push(`ساعتِ پایانِ «${name}» را نفهمیدم.`); continue; }
+      if (!isBlank(raw.end) && !end) { problems.push(`ساعت پایان «${name}» را نفهمیدم.`); continue; }
       if (start && end && end.min <= start.min) {
-        problems.push(`ساعتِ پایانِ «${name}» باید بعد از ساعتِ شروع باشد.`);
+        problems.push(`ساعت پایان «${name}» باید بعد از ساعت شروع باشد.`);
         continue;
       }
 
@@ -613,23 +613,23 @@ export function applyOps(
       });
       const where = (t: Target) => `${DAY_NAME_FA[t.jsDay]}${periodLabel(t.period, todayIso) ? " " + periodLabel(t.period, todayIso) : ""}`;
 
-      // ── تکرارِ درون‌روزی («هر یک ساعت یک‌بار به مدتِ ۵ دقیقه») ──────────
+      // ── تکرار درون‌روزی («هر یک ساعت یک‌بار به مدت ۵ دقیقه») ──────────
       if (!isBlank(raw.repeatEveryMin)) {
         const everyRaw = Number(toEnDigits(String(raw.repeatEveryMin)));
         if (!Number.isFinite(everyRaw) || !Number.isInteger(everyRaw) || everyRaw < MIN_REPEAT_EVERY_MIN || everyRaw > MAX_REPEAT_EVERY_MIN) {
-          problems.push(`بازه‌ی تکرارِ «${name}» را نفهمیدم — بین ${MIN_REPEAT_EVERY_MIN} تا ${MAX_REPEAT_EVERY_MIN} دقیقه بنویس.`);
+          problems.push(`بازه‌ی تکرار «${name}» را نفهمیدم — بین ${MIN_REPEAT_EVERY_MIN} تا ${MAX_REPEAT_EVERY_MIN} دقیقه بنویس.`);
           continue;
         }
         const hasRepeatUntil = !isBlank(raw.repeatUntil);
         const repeatUntilParsed = hasRepeatUntil ? parseClock(raw.repeatUntil) : null;
         if (hasRepeatUntil && !repeatUntilParsed) {
-          problems.push(`ساعتِ پایانِ تکرارِ «${name}» را نفهمیدم.`);
+          problems.push(`ساعت پایان تکرار «${name}» را نفهمیدم.`);
           continue;
         }
         const anchor = start ?? { fa: minutesToFa(awake.startMin), min: awake.startMin };
         const duration = end ? end.min - anchor.min : DEFAULT_REPEAT_DURATION_MIN;
         if (duration <= 0) {
-          problems.push(`ساعتِ پایانِ «${name}» باید بعد از ساعتِ شروع باشد.`);
+          problems.push(`ساعت پایان «${name}» باید بعد از ساعت شروع باشد.`);
           continue;
         }
         const repeatUntilMin = repeatUntilParsed ? repeatUntilParsed.min : awake.endMin;
@@ -638,7 +638,7 @@ export function applyOps(
           let created = 0, skipped = 0, iterations = 0, capped = false;
           for (let m = anchor.min; m <= repeatUntilMin && iterations < MAX_REPEATS_PER_OP; m += everyRaw, iterations++) {
             if (list.length >= MAX_OCCURRENCES) {
-              problems.push(`به سقفِ ${MAX_OCCURRENCES} برنامه رسیدی — اول چند تا را پاک کن.`);
+              problems.push(`به سقف ${MAX_OCCURRENCES} برنامه رسیدی — اول چند تا را پاک کن.`);
               capped = true;
               break;
             }
@@ -652,7 +652,7 @@ export function applyOps(
               ? `${toEnDigits(String(everyRaw / 60))} ساعت`
               : `${toEnDigits(String(everyRaw))} دقیقه`;
             let msg = `«${name}» ${where(t)} هر ${everyLabel} یک‌بار (${toEnDigits(String(duration))} دقیقه‌ای) از ${minutesToFa(anchor.min)} تا ${minutesToFa(repeatUntilMin)} — ${toEnDigits(String(created))} بار اضافه شد.`;
-            if (skipped > 0) msg += ` (${toEnDigits(String(skipped))} بار به‌خاطرِ تداخل با برنامه‌های دیگر رد شد)`;
+            if (skipped > 0) msg += ` (${toEnDigits(String(skipped))} بار به‌خاطر تداخل با برنامه‌های دیگر رد شد)`;
             applied.push(msg);
           } else if (!capped) {
             problems.push(`«${name}» ${where(t)} هیچ‌کدام از بازه‌های تکرار آزاد نبود — همه با برنامه‌ی دیگری تداخل داشتند.`);
@@ -664,12 +664,12 @@ export function applyOps(
 
       for (const t of targets) {
         if (list.length >= MAX_OCCURRENCES) {
-          problems.push(`به سقفِ ${MAX_OCCURRENCES} برنامه رسیدی — اول چند تا را پاک کن.`);
+          problems.push(`به سقف ${MAX_OCCURRENCES} برنامه رسیدی — اول چند تا را پاک کن.`);
           break;
         }
         if (!start) {
           list.push({ ...base(t), id: newOccId(), time: "" });
-          applied.push(`«${name}» ${where(t)} بدونِ ساعت اضافه شد.`);
+          applied.push(`«${name}» ${where(t)} بدون ساعت اضافه شد.`);
           offer(`برای «${name}» ساعت هم بگذار`);
           continue;
         }
@@ -679,17 +679,17 @@ export function applyOps(
           continue;
         }
         list.push({ ...base(t), id: newOccId(), time: timeLabel(start.fa, end?.fa) });
-        applied.push(`«${name}» ${where(t)} ساعتِ ${timeLabel(start.fa, end?.fa)} اضافه شد.`);
+        applied.push(`«${name}» ${where(t)} ساعت ${timeLabel(start.fa, end?.fa)} اضافه شد.`);
       }
       continue;
     }
 
-    // ---------- تغییرِ ساعت / جابه‌جایی ----------
+    // ---------- تغییر ساعت / جابه‌جایی ----------
     if (op === "retime" || op === "move") {
       const target = resolve(raw.ref);
       if ("error" in target) { problems.push(target.error); continue; }
 
-      // retime بدونِ هیچ ساعتی یعنی «ساعتش را بردار»؛ move بدونِ ساعت یعنی «همان ساعت»
+      // retime بدون هیچ ساعتی یعنی «ساعتش را بردار»؛ move بدون ساعت یعنی «همان ساعت»
       let spec = parseTimeSpec(raw, target.name);
       if ("error" in spec) { problems.push(spec.error); continue; }
       if (op === "retime" && spec.kind === "keep") spec = { kind: "clear" };
@@ -697,7 +697,7 @@ export function applyOps(
 
       // ── فقط یک روز («فقط همین شنبه») ──
       const singleIso = isBlank(raw.date) ? null : parseDateInput(raw.date, todayIso);
-      if (!isBlank(raw.date) && !singleIso) { problems.push(`تاریخِ «${target.name}» را نفهمیدم.`); continue; }
+      if (!isBlank(raw.date) && !singleIso) { problems.push(`تاریخ «${target.name}» را نفهمیدم.`); continue; }
       if (singleIso && !occursOn(target, singleIso)) {
         problems.push(`«${target.name}» در ${faDateLabel(singleIso)} (${DAY_NAME_FA[jsDayOfIso(singleIso)]}) برنامه‌ای ندارد.`);
         continue;
@@ -710,9 +710,9 @@ export function applyOps(
         if (!isBlank(raw.toDate) && !toDateIso) { problems.push(`نفهمیدم «${target.name}» را به کدام تاریخ ببرم.`); continue; }
         const toDay = parseDay(raw.toDay);
         if (toDateIso) {
-          // مقصدِ تاریخ‌دار همیشه یعنی «فقط همان روز»
+          // مقصد تاریخ‌دار همیشه یعنی «فقط همان روز»
           if (!singleIso && !(target.startDate && target.startDate === target.endDate)) {
-            // جابه‌جاییِ کلِ تکرارها به یک تاریخِ مشخص معنی ندارد — روزِ هفته‌اش را می‌گیریم
+            // جابه‌جایی کل تکرارها به یک تاریخ مشخص معنی ندارد — روز هفته‌اش را می‌گیریم
             newJsDay = jsDayOfIso(toDateIso);
           } else {
             destIso = toDateIso;
@@ -761,14 +761,14 @@ export function applyOps(
         const dayPart = destIso !== sourceIso
           ? `از ${DAY_NAME_FA[target.jsDay]} ${faDateLabel(sourceIso)} به ${DAY_NAME_FA[newJsDay]} ${faDateLabel(destIso)} منتقل شد`
           : `در ${DAY_NAME_FA[newJsDay]} ${faDateLabel(destIso)}`;
-        const timePart = spec.kind === "set" ? ` ساعتِ ${newTime}` : spec.kind === "clear" ? " بدونِ ساعت" : "";
+        const timePart = spec.kind === "set" ? ` ساعت ${newTime}` : spec.kind === "clear" ? " بدون ساعت" : "";
         applied.push(destIso !== sourceIso
           ? `«${target.name}» فقط برای همان یک روز ${dayPart}${timePart}.`
-          : `«${target.name}» فقط ${dayPart}${spec.kind === "clear" ? " ساعتش برداشته شد" : ` ساعتِ ${newTime} شد`}.`);
+          : `«${target.name}» فقط ${dayPart}${spec.kind === "clear" ? " ساعتش برداشته شد" : ` ساعت ${newTime} شد`}.`);
         continue;
       }
 
-      // ── کلِ تکرارها، از امروز به بعد ──
+      // ── کل تکرارها، از امروز به بعد ──
       const effectiveFrom = target.startDate && target.startDate > todayIso ? target.startDate : todayIso;
       if (target.endDate && target.endDate < effectiveFrom) { problems.push(`«${target.name}» تمام شده است.`); continue; }
       const period: Period = { from: effectiveFrom, to: target.endDate };
@@ -789,15 +789,15 @@ export function applyOps(
       successor.set(target.id, next.id);
       if (op === "retime") {
         applied.push(spec.kind === "clear"
-          ? `ساعتِ «${target.name}» (${toEnDigits(target.time ?? "")}) برداشته شد.`
-          : `ساعتِ «${target.name}» از ${target.time ? toEnDigits(target.time) : "بی‌ساعت"} به ${newTime} تغییر کرد.`);
+          ? `ساعت «${target.name}» (${toEnDigits(target.time ?? "")}) برداشته شد.`
+          : `ساعت «${target.name}» از ${target.time ? toEnDigits(target.time) : "بی‌ساعت"} به ${newTime} تغییر کرد.`);
       } else {
-        applied.push(`«${target.name}» از ${DAY_NAME_FA[target.jsDay]} به ${DAY_NAME_FA[newJsDay]}${newTime ? ` ساعتِ ${newTime}` : ""} منتقل شد${newTime ? "" : " (همچنان بدونِ ساعت)"}.`);
+        applied.push(`«${target.name}» از ${DAY_NAME_FA[target.jsDay]} به ${DAY_NAME_FA[newJsDay]}${newTime ? ` ساعت ${newTime}` : ""} منتقل شد${newTime ? "" : " (همچنان بدون ساعت)"}.`);
       }
       continue;
     }
 
-    // ---------- ویرایشِ مشخصات (اسم، اهمیت، تگ، اعلان، دوره) ----------
+    // ---------- ویرایش مشخصات (اسم، اهمیت، تگ، اعلان، دوره) ----------
     if (op === "update") {
       const target = resolve(raw.ref);
       if ("error" in target) { problems.push(target.error); continue; }
@@ -830,7 +830,7 @@ export function applyOps(
         }
         patch.startDate = period.from;
         patch.endDate = period.to;
-        notes.push(period.to ? `دوره‌اش ${periodLabel(period, todayIso) || `تا ${faDateLabel(period.to)}`} شد` : "دیگر تاریخِ پایان ندارد");
+        notes.push(period.to ? `دوره‌اش ${periodLabel(period, todayIso) || `تا ${faDateLabel(period.to)}`} شد` : "دیگر تاریخ پایان ندارد");
       }
       if (!notes.length) { problems.push(`برای «${target.name}» تغییری نگفتی.`); continue; }
       const updated: CustomOccurrence = { ...target, ...patch };
@@ -848,7 +848,7 @@ export function applyOps(
 
       if (!isBlank(raw.date)) {
         const iso = parseDateInput(raw.date, todayIso);
-        if (!iso) { problems.push(`تاریخِ «${target.name}» را نفهمیدم.`); continue; }
+        if (!iso) { problems.push(`تاریخ «${target.name}» را نفهمیدم.`); continue; }
         if (!occursOn(target, iso)) { problems.push(`«${target.name}» در ${faDateLabel(iso)} برنامه‌ای ندارد.`); continue; }
         replaceRow(target.id, carveOut(target, iso));
         if (!list.some((o) => o.id === target.id)) successor.set(target.id, null);
@@ -859,7 +859,7 @@ export function applyOps(
       let fromIso = todayIso;
       if (!isBlank(raw.from)) {
         const f = parseDateInput(raw.from, todayIso);
-        if (!f) { problems.push(`تاریخِ «${target.name}» را نفهمیدم.`); continue; }
+        if (!f) { problems.push(`تاریخ «${target.name}» را نفهمیدم.`); continue; }
         fromIso = f;
       }
       replaceRow(target.id, closeFrom(target, fromIso));
@@ -874,13 +874,13 @@ export function applyOps(
   }
 
   if (ops.length > MAX_OPS_PER_MESSAGE) {
-    problems.push(`در هر پیام حداکثر ${MAX_OPS_PER_MESSAGE} تغییر انجام می‌دهم — بقیه را در پیامِ بعدی بگو.`);
+    problems.push(`در هر پیام حداکثر ${MAX_OPS_PER_MESSAGE} تغییر انجام می‌دهم — بقیه را در پیام بعدی بگو.`);
   }
 
   return { occurrences: list, removed, applied, problems, options, changed: applied.length > 0 };
 }
 
-/** مرتب‌سازیِ نمایشی: روزِ هفته به ترتیبِ شنبه..جمعه، بعد ساعت */
+/** مرتب‌سازی نمایشی: روز هفته به ترتیب شنبه..جمعه، بعد ساعت */
 export function sortOccurrences(list: CustomOccurrence[]): CustomOccurrence[] {
   const dayRank = new Map(WEEK_ORDER.map((d, i) => [d.jsDay, i]));
   return [...list].sort((a, b) => {

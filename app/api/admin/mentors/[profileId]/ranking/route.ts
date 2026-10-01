@@ -4,9 +4,9 @@ import { requireAdmin } from "@/lib/requireAdmin";
 import { adminErrorResponse, loadTarget } from "@/lib/adminUsers";
 import { loadRankingBreakdown } from "@/lib/mentorRankingStats";
 
-// GET /api/admin/mentors/:profileId/ranking — جزئیاتِ امتیازِ شایستگیِ یک منتور
-// (هر مؤلفه، ضریب‌ها، نمونه‌ها و دلیلِ ماندن بیرونِ «منتورهای محبوب») برای
-// هر دامنه. همین لحظه بازمحاسبه می‌شه تا ادمین عددِ کهنه نبینه. فقط ادمین.
+// GET /api/admin/mentors/:profileId/ranking — جزئیات امتیاز شایستگی یک منتور
+// (هر مؤلفه، ضریب‌ها، نمونه‌ها و دلیل ماندن بیرون «منتورهای محبوب») برای
+// هر دامنه. همین لحظه بازمحاسبه می‌شه تا ادمین عدد کهنه نبینه. فقط ادمین.
 export async function GET(_req: NextRequest, { params }: { params: { profileId: string } }) {
   const g = await requireAdmin("mentors");
   if (!g.ok) return g.response;

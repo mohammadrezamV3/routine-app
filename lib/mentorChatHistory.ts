@@ -4,13 +4,13 @@ import { PUBLIC_USER_SELECT, toPublicUser, type PublicUser } from "@/lib/mentorS
 
 // «سابقه‌ی گفت‌وگو» در پنل کاربری (مهاجرت 20260928101000_mentor_chat_history).
 //
-// مدل: «پاک کردن برای خودم». هر طرفِ رابطه یک مهرِ زمانیِ جدا دارد
+// مدل: «پاک کردن برای خودم». هر طرف رابطه یک مهر زمانی جدا دارد
 // (mentorClearedBefore / studentClearedBefore). پیام‌های تا آن لحظه دیگر برای
-// همان طرف برگردانده نمی‌شوند؛ ردیف‌ها حذف نمی‌شوند، چون نسخه‌ی طرفِ مقابل
+// همان طرف برگردانده نمی‌شوند؛ ردیف‌ها حذف نمی‌شوند، چون نسخه‌ی طرف مقابل
 // همان ردیف‌هاست (پیام‌ها سرتاسری رمزند و سرور نسخه‌ی جداگانه‌ای برای هر طرف ندارد).
-// پیام‌های تازه بعد از پاک‌کردن مثلِ همیشه دیده می‌شوند.
+// پیام‌های تازه بعد از پاک‌کردن مثل همیشه دیده می‌شوند.
 //
-// پیام‌های خوانده‌نشده‌ی طرفِ مقابل که پاک می‌شوند «خوانده» علامت می‌خورند؛
+// پیام‌های خوانده‌نشده‌ی طرف مقابل که پاک می‌شوند «خوانده» علامت می‌خورند؛
 // وگرنه شمارنده‌ی خوانده‌نشده‌ها پیامی را نشان می‌داد که دیگر باز نمی‌شود.
 
 export type ChatHistoryRole = "mentor" | "student";
@@ -21,7 +21,7 @@ export function chatRoleOf(m: Pick<Mentorship, "mentorId" | "studentId">, userId
   return null;
 }
 
-/** مهرِ «پاک‌شده تا» برای این کاربر در این رابطه (یا null) */
+/** مهر «پاک‌شده تا» برای این کاربر در این رابطه (یا null) */
 export function clearedBeforeFor(
   m: Pick<Mentorship, "mentorId" | "studentId" | "mentorClearedBefore" | "studentClearedBefore">,
   userId: string
@@ -32,7 +32,7 @@ export function clearedBeforeFor(
   return null;
 }
 
-/** شرطِ where برای پیام‌هایی که این کاربر هنوز می‌بیند */
+/** شرط where برای پیام‌هایی که این کاربر هنوز می‌بیند */
 export function visibleSinceWhere(clearedBefore: Date | null): { createdAt?: { gt: Date } } {
   return clearedBefore ? { createdAt: { gt: clearedBefore } } : {};
 }
@@ -84,7 +84,7 @@ export async function listChatHistory(userId: string): Promise<ChatHistoryRow[]>
 
 /**
  * سابقه را برای همین کاربر پاک می‌کند. `target` = شناسه‌ی یک رابطه یا "all".
- * ضدِ IDOR: فقط رابطه‌هایی که کاربر یکی از دو طرفشان است؛ برای رابطه‌ی دیگران
+ * ضد IDOR: فقط رابطه‌هایی که کاربر یکی از دو طرفشان است؛ برای رابطه‌ی دیگران
  * چیزی تغییر نمی‌کند و ۰ برمی‌گردد (روت ۴۰۴ می‌دهد).
  */
 export async function clearChatHistory(userId: string, target: string | "all", now = new Date()): Promise<number> {
@@ -102,7 +102,7 @@ export async function clearChatHistory(userId: string, target: string | "all", n
   await prisma.$transaction([
     prisma.mentorship.updateMany({ where: { id: { in: asMentor }, mentorId: userId }, data: { mentorClearedBefore: now } }),
     prisma.mentorship.updateMany({ where: { id: { in: asStudent }, studentId: userId }, data: { studentClearedBefore: now } }),
-    // پیام‌های طرفِ مقابل که پاک شد دیگر «خوانده‌نشده» حساب نمی‌شوند
+    // پیام‌های طرف مقابل که پاک شد دیگر «خوانده‌نشده» حساب نمی‌شوند
     prisma.mentorMessage.updateMany({
       where: { mentorshipId: { in: ids }, senderId: { not: userId }, readAt: null, createdAt: { lte: now } },
       data: { readAt: now },

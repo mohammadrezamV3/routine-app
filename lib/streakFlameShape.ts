@@ -1,16 +1,16 @@
-// هندسه و رنگِ شعله‌ی بزرگِ استریک — مشترکِ شعله‌ی زنده (AnimatedStreakFlame،
-// SVG با مورفِ مسیر) و کارتِ اشتراکی (lib/shareCard.ts، canvas). هر فریم از یک
-// تابعِ پارامتری ساخته می‌شه، پس همه‌ی فریم‌ها دقیقا یک ساختارِ فرمان دارن و
+// هندسه و رنگ شعله‌ی بزرگ استریک — مشترک شعله‌ی زنده (AnimatedStreakFlame،
+// SVG با مورف مسیر) و کارت اشتراکی (lib/shareCard.ts، canvas). هر فریم از یک
+// تابع پارامتری ساخته می‌شه، پس همه‌ی فریم‌ها دقیقا یک ساختار فرمان دارن و
 // <animate attributeName="d"> بینشون نرم مورف می‌کنه (شعله واقعا «می‌سوزه»،
-// نه فقط بزرگ/کوچیک شدنِ یه آیکونِ ثابت).
+// نه فقط بزرگ/کوچیک شدن یه آیکون ثابت).
 
 import { getStreakTier } from "./streakTier";
 
 export type FlameFrame = { w: number; h: number; sway: number; lick: number; bulge: number };
 
 /**
- * زبانه‌ی شعله: پایه‌ی گرد در (cx, by)، نوک در ارتفاعِ h با انحرافِ افقیِ sway،
- * و یک «لیسِ» کناری (lick) که شعله رو نامتقارن و زنده نشون می‌ده.
+ * زبانه‌ی شعله: پایه‌ی گرد در (cx, by)، نوک در ارتفاع h با انحراف افقی sway،
+ * و یک «لیس» کناری (lick) که شعله رو نامتقارن و زنده نشون می‌ده.
  */
 export function flamePath(cx: number, by: number, f: FlameFrame): string {
   const r = f.w / 2;
@@ -72,8 +72,8 @@ export function layerFrame(layer: (typeof FLAME_LAYERS)[number], i: number): Fla
 
 export type FlamePalette = Record<FlameLayerKey, [string, string]> & { glow: string };
 
-// رنگ‌ها هم‌خانواده‌ی شعله‌ی کوچیکِ هدر (globals.css → .streak-flame-tierN):
-// نارنجیِ دوالینگویی تا ماهانه، بعد قرمز، بنفش، آبی و در آخر طلایی.
+// رنگ‌ها هم‌خانواده‌ی شعله‌ی کوچیک هدر (globals.css → .streak-flame-tierN):
+// نارنجی دوالینگویی تا ماهانه، بعد قرمز، بنفش، آبی و در آخر طلایی.
 const PALETTES: FlamePalette[] = [
   { outer: ["#FFA41B", "#FF5A00"], mid: ["#FFD233", "#FF9600"], core: ["#FFF8D6", "#FFE27A"], glow: "255,140,0" },
   { outer: ["#FF7A1A", "#E8231A"], mid: ["#FFC23A", "#FF6A00"], core: ["#FFF3CC", "#FFD66B"], glow: "255,80,20" },
@@ -91,5 +91,5 @@ export function flamePalette(days: number): FlamePalette {
   return PALETTES[0];
 }
 
-/** کادرِ کاملِ شعله (برای viewBox و canvas) */
+/** کادر کامل شعله (برای viewBox و canvas) */
 export const FLAME_BOX = { w: 200, h: 236, cx: 100, by: 226 };

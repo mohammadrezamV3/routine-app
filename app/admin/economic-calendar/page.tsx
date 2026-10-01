@@ -26,11 +26,11 @@ const SOURCE_TABS: { key: SourceFilter; label: string }[] = [
   { key: "synced", label: "همگام‌شده" },
 ];
 
-// ورود دستی رویدادهای تقویم اقتصادی + همگام‌سازیِ دستی از منبعِ بیرونی.
-// منبع با همون اولویتِ lib/economicCalendar انتخاب می‌شه (ECONOMIC_CALENDAR_URL
-// → JBlanked با ECONOMIC_CALENDAR_API_KEY → TradingViewِ بی‌کلید). تقویم به
-// هیچ زمان‌بندِ بیرونی وابسته نیست (کرانِ روزانه + ensureFreshCalendar روی
-// روتِ خواندن) — این صفحه فقط راهِ دستی/فوریِ همون کار رو هم می‌ده.
+// ورود دستی رویدادهای تقویم اقتصادی + همگام‌سازی دستی از منبع بیرونی.
+// منبع با همون اولویت lib/economicCalendar انتخاب می‌شه (ECONOMIC_CALENDAR_URL
+// → JBlanked با ECONOMIC_CALENDAR_API_KEY → TradingView بی‌کلید). تقویم به
+// هیچ زمان‌بند بیرونی وابسته نیست (کران روزانه + ensureFreshCalendar روی
+// روت خواندن) — این صفحه فقط راه دستی/فوری همون کار رو هم می‌ده.
 export default function AdminEconomicCalendarPage() {
   const toast = useAdminToast();
   const [data, setData] = useState<Resp | null>(null);
@@ -52,9 +52,9 @@ export default function AdminEconomicCalendarPage() {
   const [query, setQuery] = useState("");
   const [sourceFilter, setSourceFilter] = useState<SourceFilter>("all");
   const [deleting, setDeleting] = useState<EventRow | null>(null);
-  // null یعنی حالتِ «ثبتِ جدید»؛ وگرنه همین فرم دارد همان رویداد را ویرایش
-  // می‌کند. یک فرم برای هر دو کار، چون فیلدها دقیقاً یکی‌اند — دو فرمِ جدا
-  // یعنی دو جا برای از قلم‌افتادنِ یک فیلد.
+  // null یعنی حالت «ثبت جدید»؛ وگرنه همین فرم دارد همان رویداد را ویرایش
+  // می‌کند. یک فرم برای هر دو کار، چون فیلدها دقیقا یکی‌اند — دو فرم جدا
+  // یعنی دو جا برای از قلم‌افتادن یک فیلد.
   const [editing, setEditing] = useState<EventRow | null>(null);
   const formRef = useRef<HTMLDivElement>(null);
 
@@ -73,8 +73,8 @@ export default function AdminEconomicCalendarPage() {
   }, []);
   useEffect(() => { load(); }, [load]);
 
-  // برای وقتی ادمین نمی‌خواد تا اجرای بعدیِ کران/تازه‌سازیِ خودکار صبر کنه —
-  // همون منطقِ کران رو دستی و فوری صدا می‌زنه.
+  // برای وقتی ادمین نمی‌خواد تا اجرای بعدی کران/تازه‌سازی خودکار صبر کنه —
+  // همون منطق کران رو دستی و فوری صدا می‌زنه.
   async function syncNow() {
     if (syncing) return;
     setSyncing(true);
@@ -101,7 +101,7 @@ export default function AdminEconomicCalendarPage() {
     setError(null);
   }
 
-  /** ردیف را داخلِ همان فرمِ بالا باز می‌کند. */
+  /** ردیف را داخل همان فرم بالا باز می‌کند. */
   function startEdit(e: EventRow) {
     setEditing(e);
     setTitle(e.title);
@@ -176,8 +176,8 @@ export default function AdminEconomicCalendarPage() {
         <div>
           <div className="admin-page-kicker">تقویم اقتصادی</div>
           <div className="admin-section-hint" style={{ margin: 0 }}>
-            منبعِ فعلی: <b className="admin-ltr-inline">{data?.externalSource || "…"}</b> — تقویم خودکار تازه می‌شه
-            (کرانِ روزانه + تازه‌سازیِ خودکارِ داده‌ی کهنه)؛ اگه می‌خوای همین الان به‌روز بشه، «همگام‌سازی الان»
+            منبع فعلی: <b className="admin-ltr-inline">{data?.externalSource || "…"}</b> — تقویم خودکار تازه می‌شه
+            (کران روزانه + تازه‌سازی خودکار داده‌ی کهنه)؛ اگه می‌خوای همین الان به‌روز بشه، «همگام‌سازی الان»
             رو بزن. رویدادهایی که این‌جا دستی می‌سازی از همگام‌سازی دست‌نخورده می‌مانند.
           </div>
         </div>
@@ -195,13 +195,13 @@ export default function AdminEconomicCalendarPage() {
         <div className="admin-chart-head">
           <span className="admin-chart-title">{editing ? `ویرایش: ${editing.title}` : "ثبت رویداد جدید"}</span>
         </div>
-        {/* رویدادِ همگام‌شده را sync بعدی دوباره می‌نویسد — جز توضیحات، که
-            عمداً محافظت شده (lib/economicCalendar.ts). بدونِ این هشدار،
+        {/* رویداد همگام‌شده را sync بعدی دوباره می‌نویسد — جز توضیحات، که
+            عمدا محافظت شده (lib/economicCalendar.ts). بدون این هشدار،
             ادمین عددی را اصلاح می‌کند و چند دقیقه بعد بی‌دلیل برمی‌گردد. */}
         {editing && editing.source !== "MANUAL" && (
           <div className="admin-section-hint" style={{ margin: "0 0 12px" }}>
             این رویداد از <b>{editing.source}</b> همگام‌سازی شده — هر تغییری جز «توضیحات» در
-            همگام‌سازیِ بعدی با مقدارِ خودِ منبع بازنویسی می‌شود.
+            همگام‌سازی بعدی با مقدار خود منبع بازنویسی می‌شود.
           </div>
         )}
         <form onSubmit={(e) => { e.preventDefault(); save(); }}>
@@ -213,8 +213,8 @@ export default function AdminEconomicCalendarPage() {
             <label className="admin-field">
               <span>ارز</span>
               <select className="admin-input" value={currency} onChange={(e) => setCurrency(e.target.value)}>
-                {/* ارزِ رویدادهای همگام‌شده همیشه توی این نُه‌تا نیست؛ بدونِ این
-                    گزینه‌ی اضافه، باز کردنِ چنین رویدادی در فرم بی‌صدا ارزش را
+                {/* ارز رویدادهای همگام‌شده همیشه توی این نه‌تا نیست؛ بدون این
+                    گزینه‌ی اضافه، باز کردن چنین رویدادی در فرم بی‌صدا ارزش را
                     به USD عوض می‌کرد و ذخیره همان را می‌نوشت. */}
                 {!CALENDAR_CURRENCIES.some((c) => c.code === currency) && (
                   <option value={currency}>{currency}</option>
@@ -229,7 +229,7 @@ export default function AdminEconomicCalendarPage() {
               </select>
             </label>
             <label className="admin-field">
-              <span>زمان رویداد (وقتِ محلیِ خودت)</span>
+              <span>زمان رویداد (وقت محلی خودت)</span>
               <input className="admin-input" type="datetime-local" value={occursAt} onChange={(e) => setOccursAt(e.target.value)} required />
             </label>
             <label className="admin-field">
@@ -321,7 +321,7 @@ export default function AdminEconomicCalendarPage() {
           message={
             <>
               «{deleting.title}» حذف می‌شه.
-              {deleting.source !== "MANUAL" && " این رویداد همگام‌شده‌ست — اگه هنوز توی منبع باشه، همگام‌سازیِ بعدی دوباره اضافه‌اش می‌کنه."}
+              {deleting.source !== "MANUAL" && " این رویداد همگام‌شده‌ست — اگه هنوز توی منبع باشه، همگام‌سازی بعدی دوباره اضافه‌اش می‌کنه."}
             </>
           }
           confirmLabel="حذف"

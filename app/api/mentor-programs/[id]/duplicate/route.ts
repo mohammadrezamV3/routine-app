@@ -9,13 +9,13 @@ import { rangeDuration, shiftedRange, isoDay } from "@/lib/mentorProgramCopy";
 import { validId } from "@/lib/mentorToolsGuard";
 
 type Ctx = { params: { id: string } };
-const MAX_DRAFTS_PER_MENTOR = 200; // همان سقفِ POST /api/mentor-programs
+const MAX_DRAFTS_PER_MENTOR = 200; // همان سقف POST /api/mentor-programs
 
 // POST /api/mentor-programs/:id/duplicate { mentorshipId, startDate?: "YYYY-MM-DD" | null, title? }
-// کپیِ یکی از برنامه‌های خودِ منتور (هر وضعیتی) به‌صورتِ پیش‌نویسِ تازه برای
-// یک شاگردِ فعال — همان شاگرد برای دوره‌ی بعد، یا شاگردِ دیگر. آیتم‌ها،
+// کپی یکی از برنامه‌های خود منتور (هر وضعیتی) به‌صورت پیش‌نویس تازه برای
+// یک شاگرد فعال — همان شاگرد برای دوره‌ی بعد، یا شاگرد دیگر. آیتم‌ها،
 // توضیح و یادداشت کپی می‌شوند؛ لاگ، بازخورد و وضعیت نه. با startDate، پایان
-// با همان طولِ بازه‌ی مبدا جابه‌جا می‌شود؛ بدونِ آن برنامه بی‌تاریخ است.
+// با همان طول بازه‌ی مبدا جابه‌جا می‌شود؛ بدون آن برنامه بی‌تاریخ است.
 export async function POST(req: Request, { params }: Ctx) {
   const g = await requireMentorsUser();
   if (!g.ok) return g.response;
@@ -47,7 +47,7 @@ export async function POST(req: Request, { params }: Ctx) {
   const duration = rangeDuration(src.startDate ? isoDate(src.startDate) : null, src.endDate ? isoDate(src.endDate) : null);
   const range = shiftedRange(duration, newStart);
 
-  // از همان اعتبارسنجِ ساختِ برنامه رد می‌شود تا کپی هیچ‌وقت چیزی نامعتبر نسازد
+  // از همان اعتبارسنج ساخت برنامه رد می‌شود تا کپی هیچ‌وقت چیزی نامعتبر نسازد
   const v = validateProgramInput({
     type: src.type,
     title: typeof b.title === "string" && b.title.trim() ? b.title : src.title,

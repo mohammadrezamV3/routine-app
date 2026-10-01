@@ -9,25 +9,25 @@ import type { MentorWaitlistRow, MyWaitlist } from "@/lib/mentorTypes";
 import { WAITLIST_OFFER_BATCH, WAITLIST_OFFER_HOURS, offerDeadline, planOffers } from "@/lib/mentorWaitlist";
 import { faNum } from "@/lib/jalali";
 
-// سمتِ سرورِ صفِ انتظارِ منتورِ پُر (منطقِ خالص: lib/mentorWaitlist.ts).
+// سمت سرور صف انتظار منتور پر (منطق خالص: lib/mentorWaitlist.ts).
 //
-// پیش‌بردنِ صف (advanceWaitlist) idempotent است و به هیچ کرانِ بیرونی نیاز ندارد:
-// بعد از هر اتفاقی که صندلی آزاد می‌کند (پایان/رد/لغو/مسدودی، تغییرِ ظرفیت در
-// تنظیمات) و روی مسیرهای خواندن (پروفایلِ منتور، صفِ من، صفِ منتور، درخواستِ
-// جدید) صدا زده می‌شود؛ زمان‌بندِ داخلی (lib/pushScheduler.ts) هم هر چند دقیقه
-// نوبت‌های منقضی را جلو می‌برد. ضدِ مسابقه: پیشنهاد دادن زیرِ قفلِ ردیفیِ
-// MentorProfile (update روی waitlistSeq) و هر تغییرِ وضعیت با updateMany روی
-// وضعیتِ قبلی (قفلِ خوش‌بینانه) — دو فراخوانیِ هم‌زمان یک صندلی را دو بار نمی‌دهند
+// پیش‌بردن صف (advanceWaitlist) idempotent است و به هیچ کران بیرونی نیاز ندارد:
+// بعد از هر اتفاقی که صندلی آزاد می‌کند (پایان/رد/لغو/مسدودی، تغییر ظرفیت در
+// تنظیمات) و روی مسیرهای خواندن (پروفایل منتور، صف من، صف منتور، درخواست
+// جدید) صدا زده می‌شود؛ زمان‌بند داخلی (lib/pushScheduler.ts) هم هر چند دقیقه
+// نوبت‌های منقضی را جلو می‌برد. ضد مسابقه: پیشنهاد دادن زیر قفل ردیفی
+// MentorProfile (update روی waitlistSeq) و هر تغییر وضعیت با updateMany روی
+// وضعیت قبلی (قفل خوش‌بینانه) — دو فراخوانی هم‌زمان یک صندلی را دو بار نمی‌دهند
 // و یک اعلان دو بار نمی‌رود.
 //
-// متنِ آزادی (پیام/جوابِ پذیرش) این‌جا نیست: پذیرشِ نوبت همان درخواستِ عادیِ
-// POST /api/mentorships است و جواب‌ها همان‌جا (رمزشده در حالِ سکون) ذخیره می‌شوند.
+// متن آزادی (پیام/جواب پذیرش) این‌جا نیست: پذیرش نوبت همان درخواست عادی
+// POST /api/mentorships است و جواب‌ها همان‌جا (رمزشده در حال سکون) ذخیره می‌شوند.
 
 type Db = Prisma.TransactionClient | typeof prisma;
 
 const OPEN_STATUSES = ["WAITING", "OFFERED"] as const;
 
-/** نوبتِ زنده یا درخواستِ PENDINGِ آمده از صف — صندلیِ نگه‌داشته برای همان نفر */
+/** نوبت زنده یا درخواست PENDING آمده از صف — صندلی نگه‌داشته برای همان نفر */
 function reservedWhere(mentorId: string | { in: string[] }, now: Date, excludeMentorshipId?: string): Prisma.MentorWaitlistEntryWhereInput {
   return {
     mentorId,
@@ -45,7 +45,7 @@ export async function countReservedSeats(mentorId: string, now: Date = new Date(
   return db.mentorWaitlistEntry.count({ where: reservedWhere(mentorId, now, excludeMentorshipId) });
 }
 
-/** صندلی‌های رزرو برای چند منتور با یک کوئریِ گروهی (کارت‌های کشف) */
+/** صندلی‌های رزرو برای چند منتور با یک کوئری گروهی (کارت‌های کشف) */
 export async function loadReservedSeats(mentorIds: string[], now: Date = new Date()): Promise<Map<string, number>> {
   const out = new Map<string, number>();
   if (mentorIds.length === 0) return out;
@@ -58,7 +58,7 @@ export async function loadReservedSeats(mentorIds: string[], now: Date = new Dat
   return out;
 }
 
-/** شاگردِ فعال + صندلیِ رزرو — همان عددی که «پر بودن» با آن سنجیده می‌شود */
+/** شاگرد فعال + صندلی رزرو — همان عددی که «پر بودن» با آن سنجیده می‌شود */
 export async function countOccupiedSeats(mentorId: string, now: Date = new Date()): Promise<number> {
   const [active, reserved] = await Promise.all([
     prisma.mentorship.count({ where: { mentorId, status: "ACTIVE" } }),
@@ -67,7 +67,7 @@ export async function countOccupiedSeats(mentorId: string, now: Date = new Date(
   return active + reserved;
 }
 
-/** نوبتِ زنده‌ی این کاربر پیشِ این منتور (برای POST /api/mentorships) */
+/** نوبت زنده‌ی این کاربر پیش این منتور (برای POST /api/mentorships) */
 export async function findLiveOffer(mentorId: string, userId: string, now: Date = new Date()): Promise<{ id: string } | null> {
   return prisma.mentorWaitlistEntry.findFirst({
     where: { mentorId, userId, status: "OFFERED", offerExpiresAt: { gt: now } },
@@ -82,8 +82,8 @@ export class WaitlistOfferGoneError extends Error {
 }
 
 /**
- * نوبت → ACCEPTED و گره به رابطه‌ی PENDINGِ تازه، هم‌تراکنش با ساختِ درخواست.
- * اگر هم‌زمان منقضی/لغو شده باشد خطا می‌دهد تا کلِ تراکنش برگردد.
+ * نوبت → ACCEPTED و گره به رابطه‌ی PENDING تازه، هم‌تراکنش با ساخت درخواست.
+ * اگر هم‌زمان منقضی/لغو شده باشد خطا می‌دهد تا کل تراکنش برگردد.
  */
 export async function claimOffer(tx: Prisma.TransactionClient, offerId: string, mentorshipId: string, now: Date): Promise<void> {
   const r = await tx.mentorWaitlistEntry.updateMany({
@@ -93,7 +93,7 @@ export async function claimOffer(tx: Prisma.TransactionClient, offerId: string, 
   if (r.count === 0) throw new WaitlistOfferGoneError();
 }
 
-/** کاربری که (بدونِ نوبت) مستقیم درخواست داد دیگر لازم نیست در صف بماند */
+/** کاربری که (بدون نوبت) مستقیم درخواست داد دیگر لازم نیست در صف بماند */
 export async function closeWaitingEntry(mentorId: string, userId: string, now: Date = new Date()): Promise<void> {
   await prisma.mentorWaitlistEntry.updateMany({
     where: { mentorId, userId, status: "WAITING" },
@@ -107,9 +107,9 @@ async function mentorName(mentorId: string): Promise<string> {
 }
 
 /**
- * صف را جلو می‌برد: نوبت‌های منقضی → EXPIRED، پیوندِ درخواست‌های بسته‌شده آزاد،
- * و به‌ازای هر صندلیِ آزاد نفرِ بعدیِ WAITING → OFFERED (با اعلان و پوش).
- * خطا را نمی‌پراکند — شکستِ صف نباید اقدامِ اصلی را خراب کند.
+ * صف را جلو می‌برد: نوبت‌های منقضی → EXPIRED، پیوند درخواست‌های بسته‌شده آزاد،
+ * و به‌ازای هر صندلی آزاد نفر بعدی WAITING → OFFERED (با اعلان و پوش).
+ * خطا را نمی‌پراکند — شکست صف نباید اقدام اصلی را خراب کند.
  */
 export async function advanceWaitlist(mentorId: string, now: Date = new Date()): Promise<void> {
   try {
@@ -120,13 +120,13 @@ export async function advanceWaitlist(mentorId: string, now: Date = new Date()):
 }
 
 async function advanceWaitlistUnsafe(mentorId: string, now: Date): Promise<void> {
-  // مسیرِ داغ: بیشترِ منتورها صفی ندارند — یک count ارزان و تمام
+  // مسیر داغ: بیشتر منتورها صفی ندارند — یک count ارزان و تمام
   const pending = await prisma.mentorWaitlistEntry.count({
     where: { mentorId, OR: [{ status: { in: [...OPEN_STATUSES] } }, { status: "ACCEPTED", mentorshipId: { not: null } }] },
   });
   if (pending === 0) return;
 
-  // ۱) نوبت‌های منقضی — هر کدام با قفلِ وضعیتِ خودش تا اعلانِ انقضا یک‌بار برود
+  // ۱) نوبت‌های منقضی — هر کدام با قفل وضعیت خودش تا اعلان انقضا یک‌بار برود
   const stale = await prisma.mentorWaitlistEntry.findMany({
     where: { mentorId, status: "OFFERED", offerExpiresAt: { lte: now } },
     select: { id: true, userId: true },
@@ -140,14 +140,14 @@ async function advanceWaitlistUnsafe(mentorId: string, now: Date): Promise<void>
     if (r.count > 0) expired.push(s.userId);
   }
 
-  // ۲) درخواستِ آمده از صف که دیگر PENDING نیست (قبول/رد/لغو) صندلی نگه نمی‌دارد؛
-  //    پیوند آزاد می‌شود تا درخواستِ بعدیِ همان جفت بی‌صدا «رزرو» حساب نشود
+  // ۲) درخواست آمده از صف که دیگر PENDING نیست (قبول/رد/لغو) صندلی نگه نمی‌دارد؛
+  //    پیوند آزاد می‌شود تا درخواست بعدی همان جفت بی‌صدا «رزرو» حساب نشود
   await prisma.mentorWaitlistEntry.updateMany({
     where: { mentorId, status: "ACCEPTED", mentorshipId: { not: null }, mentorship: { is: { status: { not: "PENDING" } } } },
     data: { mentorshipId: null },
   });
 
-  // ۳) پیشنهادِ صندلی‌های آزاد زیرِ قفلِ ردیفیِ پروفایل
+  // ۳) پیشنهاد صندلی‌های آزاد زیر قفل ردیفی پروفایل
   const offered = await prisma.$transaction(async (tx) => {
     const locked = await tx.mentorProfile.updateMany({ where: { userId: mentorId }, data: { waitlistSeq: { increment: 1 } } });
     if (locked.count === 0) return [] as string[];
@@ -165,8 +165,8 @@ async function advanceWaitlistUnsafe(mentorId: string, now: Date): Promise<void>
     });
     if (waitingRows.length === 0) return [] as string[];
 
-    // کسی که دیگر نمی‌تواند شاگرد شود (حسابِ مسدود/حذف، رابطه‌ی فعال/در انتظار/مسدود،
-    // بلاکِ دوطرفه) نوبتِ بقیه را نگه ندارد
+    // کسی که دیگر نمی‌تواند شاگرد شود (حساب مسدود/حذف، رابطه‌ی فعال/در انتظار/مسدود،
+    // بلاک دوطرفه) نوبت بقیه را نگه ندارد
     const ids = waitingRows.map((w) => w.userId);
     const [rels, blocks] = await Promise.all([
       tx.mentorship.findMany({
@@ -239,7 +239,7 @@ async function advanceWaitlistUnsafe(mentorId: string, now: Date): Promise<void>
   void publishToUsers([mentorId, ...offered, ...expired], { type: "mentor.mentorship", data: { mentorId } });
 }
 
-/** همه‌ی صف‌های باز را جلو می‌برد — از زمان‌بندِ داخلی؛ چند worker هم‌زمان امن است */
+/** همه‌ی صف‌های باز را جلو می‌برد — از زمان‌بند داخلی؛ چند worker هم‌زمان امن است */
 export async function sweepWaitlists(now: Date = new Date()): Promise<void> {
   const rows = await prisma.mentorWaitlistEntry.findMany({
     where: { status: { in: [...OPEN_STATUSES] } },
@@ -261,7 +261,7 @@ async function positionOf(mentorId: string, e: { id: string; joinedAt: Date }): 
   return ahead + 1;
 }
 
-/** وضعیتِ من در صفِ این منتور؛ ACCEPTED/CANCELLED یعنی «در صف نیستی» (null) */
+/** وضعیت من در صف این منتور؛ ACCEPTED/CANCELLED یعنی «در صف نیستی» (null) */
 export async function loadMyWaitlist(mentorId: string, userId: string, now: Date = new Date()): Promise<MyWaitlist | null> {
   const e = await prisma.mentorWaitlistEntry.findUnique({
     where: { mentorId_userId: { mentorId, userId } },
@@ -286,7 +286,7 @@ export async function countWaiting(mentorId: string): Promise<number> {
 }
 
 
-/** صفِ منتور به ترتیبِ ورود (FIFO)؛ نوبت‌دارها اول — بدونِ هیچ متنِ آزادی */
+/** صف منتور به ترتیب ورود (FIFO)؛ نوبت‌دارها اول — بدون هیچ متن آزادی */
 export async function loadMentorWaitlist(mentorId: string, now: Date = new Date()): Promise<MentorWaitlistRow[]> {
   const rows = await prisma.mentorWaitlistEntry.findMany({
     where: {

@@ -25,9 +25,9 @@ type RecipientsResponse = { myKeys: KeyRow[]; recipients: Recipient[]; labels: {
 type SendResult = { sent: number; failed: { mentorshipId: string; code: string }[] };
 
 /**
- * «ارسال گروهی» در داشبوردِ منتور — یک متن برای چند شاگردِ فعال. متن روی همین
+ * «ارسال گروهی» در داشبورد منتور — یک متن برای چند شاگرد فعال. متن روی همین
  * دستگاه برای *هر* گفت‌وگو جداگانه رمز می‌شود (برای همه‌ی دستگاه‌های دو طرف)؛ سرور فقط
- * پیام‌های رمزشده‌ی مستقل می‌گیرد. خودکفا و قابلِ حذف: فقط همین فایل + /api/mentor/broadcast.
+ * پیام‌های رمزشده‌ی مستقل می‌گیرد. خودکفا و قابل حذف: فقط همین فایل + /api/mentor/broadcast.
  */
 export function MentorBroadcast({ activeCount }: { activeCount: number }) {
   const [open, setOpen] = useState(false);
@@ -117,7 +117,7 @@ function BroadcastForm({ identity, busy, setBusy, onClose }: { identity: Identit
     setError(null);
     setResult(null);
     try {
-      // برای هر گفت‌وگو جداگانه: کلیدِ همان جفت، IV و کلیدِ فرانکینگِ تازه
+      // برای هر گفت‌وگو جداگانه: کلید همان جفت، IV و کلید فرانکینگ تازه
       const items = [];
       for (const r of chosen) {
         // همه‌ی دستگاه‌های من و همان شاگرد (docs/mentor-e2ee.md)
@@ -176,7 +176,7 @@ function BroadcastForm({ identity, busy, setBusy, onClose }: { identity: Identit
 
       <SavedRepliesPicker onPick={(t) => { setText((d) => (d ? d + "\n" : "") + t); setTextErr(null); }} disabled={busy} />
       <MentorField label="متن پیام" htmlFor="bc-text" error={textErr}>
-        <textarea id="bc-text" className={FIELD} rows={4} maxLength={MAX_LEN + 200} value={text} onChange={(e) => { setText(e.target.value); setTextErr(null); setResult(null); }} placeholder="مثلاً «برنامه‌ی هفته‌ی بعد از شنبه فعال می‌شود»" />
+        <textarea id="bc-text" className={FIELD} rows={4} maxLength={MAX_LEN + 200} value={text} onChange={(e) => { setText(e.target.value); setTextErr(null); setResult(null); }} placeholder="مثلا «برنامه‌ی هفته‌ی بعد از شنبه فعال می‌شود»" />
       </MentorField>
 
       {error && <div className="form-inline-error" role="alert">{error}</div>}

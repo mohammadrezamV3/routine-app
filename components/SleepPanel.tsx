@@ -46,7 +46,7 @@ function toneColor(t: "good" | "low" | "high"): string {
 }
 
 export function SleepPanel() {
-  // امروز با گذشتنِ نیمه‌شب (صفحه‌ی باز) عوض می‌شه
+  // امروز با گذشتن نیمه‌شب (صفحه‌ی باز) عوض می‌شه
   const [todayIso, setTodayIso] = useState(() => isoLocal(new Date()));
   useEffect(() => {
     const t = setInterval(() => setTodayIso((p) => { const n = isoLocal(new Date()); return n === p ? p : n; }), 30_000);
@@ -79,7 +79,7 @@ export function SleepPanel() {
     const seq = ++loadSeq.current;
     const from = isoLocal(addDays(new Date(), -(LOAD_DAYS - 1)));
     const list = await getSleepRange(from, isoLocal(new Date()));
-    if (seq !== loadSeq.current) return; // درخواستِ جدیدتری در راهه
+    if (seq !== loadSeq.current) return; // درخواست جدیدتری در راهه
     setEntries(list.filter((e) => sleepMinutes(e) > 0));
     setLoaded(true);
   }, []);
@@ -96,13 +96,13 @@ export function SleepPanel() {
     return m;
   }, [entries]);
 
-  // پرکردنِ فرم: رکوردِ همون روز اگه هست، وگرنه ساعت‌های هدفِ کاربر.
-  // فقط وقتی روز عوض می‌شه (یا بارِ اول که داده اومد) — تایپِ کاربر رو پاک نمی‌کنه.
+  // پرکردن فرم: رکورد همون روز اگه هست، وگرنه ساعت‌های هدف کاربر.
+  // فقط وقتی روز عوض می‌شه (یا بار اول که داده اومد) — تایپ کاربر رو پاک نمی‌کنه.
   useEffect(() => {
     if (!loaded) return;
     const rec = byDate.get(date);
     if (prefilledFor.current === date) {
-      // هدفِ کاربر دیرتر از داده رسید و شبِ بی‌رکورد دست‌نخورده‌ست: پیش‌فرض‌ها رو به‌روز کن
+      // هدف کاربر دیرتر از داده رسید و شب بی‌رکورد دست‌نخورده‌ست: پیش‌فرض‌ها رو به‌روز کن
       if (!rec && !dirty.current && (bed !== target.sleep || wake !== target.wake)) {
         setBed(target.sleep); setWake(target.wake);
       }
@@ -132,7 +132,7 @@ export function SleepPanel() {
 
   async function onSave() {
     if (busy.current) return;
-    if (!times || !previewOk) { setErr("ساعت‌ها را درست وارد کن (خوابِ 30 دقیقه تا 20 ساعت)"); return; }
+    if (!times || !previewOk) { setErr("ساعت‌ها را درست وارد کن (خواب 30 دقیقه تا 20 ساعت)"); return; }
     busy.current = true;
     const forDate = date;
     setSaving(true); setErr(null); setPurchase(false); setOkMsg(false); setConfirmDel(false);
@@ -144,7 +144,7 @@ export function SleepPanel() {
         quality: quality ? Number(quality) : null,
         note: note.trim() ? note.trim().slice(0, 200) : null,
       });
-      // اگه وسطِ ذخیره روز عوض شده، پیامِ موفقیت/خطا مالِ روزِ دیگه‌ست
+      // اگه وسط ذخیره روز عوض شده، پیام موفقیت/خطا مال روز دیگه‌ست
       if (dateRef.current === forDate) { setOkMsg(true); dirty.current = false; }
       await load();
     } catch (e) {
@@ -189,39 +189,39 @@ export function SleepPanel() {
       <div className="sl-stack">
         {/* ثبت */}
         <div className="sl-card" ref={formRef}>
-          <h2 className="sl-card-title">ثبتِ خوابِ دیشب</h2>
+          <h2 className="sl-card-title">ثبت خواب دیشب</h2>
           <div className="sl-date-nav">
-            <button type="button" className="account-outline-btn mentor-btn" onClick={() => shift(-1)} disabled={date <= minDate} aria-label="روزِ قبل">›</button>
+            <button type="button" className="account-outline-btn mentor-btn" onClick={() => shift(-1)} disabled={date <= minDate} aria-label="روز قبل">›</button>
             <div className="sl-date-label">
               {jalaliLabel(date)}
-              <small>{dateLabel} · روزِ بیدارشدن</small>
+              <small>{dateLabel} · روز بیدارشدن</small>
             </div>
-            <button type="button" className="account-outline-btn mentor-btn" onClick={() => shift(1)} disabled={date >= todayIso} aria-label="روزِ بعد">‹</button>
+            <button type="button" className="account-outline-btn mentor-btn" onClick={() => shift(1)} disabled={date >= todayIso} aria-label="روز بعد">‹</button>
           </div>
 
           <div className="sl-fields">
             <div className="sl-field">
-              <label>ساعتِ خواب</label>
+              <label>ساعت خواب</label>
               <TimeInput value={bed} onChange={(v) => { dirty.current = true; setBed(v); }} className="wsearch-newform-name" />
             </div>
             <div className="sl-field">
-              <label>ساعتِ بیداری</label>
+              <label>ساعت بیداری</label>
               <TimeInput value={wake} onChange={(v) => { dirty.current = true; setWake(v); }} className="wsearch-newform-name" />
             </div>
           </div>
 
           <div className={`sl-preview${previewOk && previewMin != null ? ` is-${goalTone(previewMin)}` : ""}`} aria-live="polite">
-            <span className="sl-sub">مدتِ خواب</span>
+            <span className="sl-sub">مدت خواب</span>
             <b>{previewOk && previewMin != null ? durationLabel(previewMin) : "—"}</b>
           </div>
           {bed.length === 5 && wake.length === 5 && !previewOk && (
-            <div className="sl-sub">مدتِ خواب باید بینِ 30 دقیقه تا 20 ساعت باشد؛ ساعت‌ها را بررسی کن.</div>
+            <div className="sl-sub">مدت خواب باید بین 30 دقیقه تا 20 ساعت باشد؛ ساعت‌ها را بررسی کن.</div>
           )}
 
           <div className="sl-field">
-            <label>کیفیتِ خواب (اختیاری)</label>
+            <label>کیفیت خواب (اختیاری)</label>
             <SegmentedTabs
-              ariaLabel="کیفیتِ خواب"
+              ariaLabel="کیفیت خواب"
               active={quality ?? "0"}
               onChange={(v) => { dirty.current = true; setQuality(v === "0" ? null : v); }}
               options={[{ value: "0", label: "—" }, ...[1, 2, 3, 4, 5].map((q) => ({ value: String(q), label: String(q) }))]}
@@ -236,7 +236,7 @@ export function SleepPanel() {
 
           {purchase && (
             <div className="sl-err">
-              دوره‌ی آزمایشیِ «روتین من» تمام شده و برای ثبتِ خواب اشتراک لازمه. <Link href={BUY_HREF} prefetch={false}>خرید اشتراک</Link>
+              دوره‌ی آزمایشی «روتین من» تمام شده و برای ثبت خواب اشتراک لازمه. <Link href={BUY_HREF} prefetch={false}>خرید اشتراک</Link>
             </div>
           )}
           {err && <div className="sl-err">{err}</div>}
@@ -265,7 +265,7 @@ export function SleepPanel() {
             {/* آمار */}
             <div className="sl-card">
               <div className="sl-head-row">
-                <h2 className="sl-card-title">آمارِ خواب</h2>
+                <h2 className="sl-card-title">آمار خواب</h2>
                 <SegmentedTabs
                   className="sl-range-tabs"
                   ariaLabel="بازه‌ی آمار"
@@ -278,23 +278,23 @@ export function SleepPanel() {
                 <div className="sl-sub">در این بازه خوابی ثبت نشده.</div>
               ) : (
                 <div className="sl-stats">
-                  <Stat k="میانگینِ مدت" v={summary.avgMin != null ? durationLabel(summary.avgMin) : "—"} />
-                  <Stat k="میانگینِ ساعتِ خواب" v={summary.avgBed ?? "—"} ltr />
-                  <Stat k="میانگینِ ساعتِ بیداری" v={summary.avgWake ?? "—"} ltr />
+                  <Stat k="میانگین مدت" v={summary.avgMin != null ? durationLabel(summary.avgMin) : "—"} />
+                  <Stat k="میانگین ساعت خواب" v={summary.avgBed ?? "—"} ltr />
+                  <Stat k="میانگین ساعت بیداری" v={summary.avgWake ?? "—"} ltr />
                   <Stat k="شب‌های 7 تا 9 ساعت" v={`${faNum(summary.goalPct ?? 0)}%`} ltr />
                   <div className="sl-stat ring">
                     <div style={{ display: "flex", flexDirection: "column", gap: 4 }}>
-                      <span>ثباتِ خواب</span>
+                      <span>ثبات خواب</span>
                       <b style={{ fontSize: 12, fontWeight: 600, color: "var(--muted)" }}>از 100</b>
                     </div>
                     <GradientRing value={(summary.consistency ?? 0) / 100} size={60} stroke={6} grad={["var(--sl-ring-a)", "var(--sl-ring-b)"]}>
                       <span className="sl-ring-num">{faNum(summary.consistency ?? 0)}</span>
                     </GradientRing>
                   </div>
-                  <Stat k="بدهیِ خواب (نسبت به 8 ساعت)" v={summary.debtMin ? durationLabel(summary.debtMin) : "بدون بدهی"} />
+                  <Stat k="بدهی خواب (نسبت به 8 ساعت)" v={summary.debtMin ? durationLabel(summary.debtMin) : "بدون بدهی"} />
                 </div>
               )}
-              <div className="sl-sub">هدفِ تو: خواب {target.sleep} و بیداری {target.wake}</div>
+              <div className="sl-sub">هدف تو: خواب {target.sleep} و بیداری {target.wake}</div>
             </div>
 
             {/* نمودار */}
@@ -315,7 +315,7 @@ function Stat({ k, v, ltr }: { k: string; v: string; ltr?: boolean }) {
   );
 }
 
-// ── نمودار: میله‌ی مدتِ خواب + نوارِ زمانی «خواب→بیداری» ─────────────────
+// ── نمودار: میله‌ی مدت خواب + نوار زمانی «خواب→بیداری» ─────────────────
 const COL = 40;
 const W = COL * DAYS_BACK;
 const DUR_H = 150;
@@ -346,9 +346,9 @@ function SleepChart({ byDate, todayIso, selected, onPick }: { byDate: Map<string
 
   return (
     <div className="sl-card">
-      <h2 className="sl-card-title">{DAYS_BACK} شبِ اخیر</h2>
+      <h2 className="sl-card-title">{DAYS_BACK} شب اخیر</h2>
       <div className="sl-chart-wrap">
-        <svg className="sl-chart" viewBox={`0 0 ${W} ${totalH}`} role="img" aria-label="نمودارِ مدتِ خواب در 14 شبِ اخیر">
+        <svg className="sl-chart" viewBox={`0 0 ${W} ${totalH}`} role="img" aria-label="نمودار مدت خواب در 14 شب اخیر">
           <rect className="sl-band" x={0} y={y(SLEEP_GOAL_MAX)} width={W} height={(SLEEP_GOAL_MAX - SLEEP_GOAL_MIN) * scale} />
           <line className="sl-band-line" x1={0} x2={W} y1={y(SLEEP_GOAL_MAX)} y2={y(SLEEP_GOAL_MAX)} />
           <line className="sl-band-line" x1={0} x2={W} y1={y(SLEEP_GOAL_MIN)} y2={y(SLEEP_GOAL_MIN)} />
@@ -418,7 +418,7 @@ function SleepChart({ byDate, todayIso, selected, onPick }: { byDate: Map<string
       </div>
       <div className="sl-sub">
         {selRec
-          ? `${jalaliLabel(selected)}: ${clockOf(selRec.sleptAt)} تا ${clockOf(selRec.wokeAt)} (${durationLabel(sleepMinutes(selRec))}) — برای ویرایش یا حذف، فرمِ بالا را ببین.`
+          ? `${jalaliLabel(selected)}: ${clockOf(selRec.sleptAt)} تا ${clockOf(selRec.wokeAt)} (${durationLabel(sleepMinutes(selRec))}) — برای ویرایش یا حذف، فرم بالا را ببین.`
           : "روی هر میله بزن تا همان شب را ثبت یا ویرایش کنی."}
       </div>
     </div>

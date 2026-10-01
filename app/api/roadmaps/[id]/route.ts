@@ -8,17 +8,17 @@ import { buildStatusOf } from "@/lib/roadmapBuilder";
 import { withLiveSync } from "@/lib/realtime";
 
 /**
- * یک مسیر با مرحله‌های نرمال‌شده و پیشرفتِ حساب‌شده‌ی سمتِ سرور.
+ * یک مسیر با مرحله‌های نرمال‌شده و پیشرفت حساب‌شده‌ی سمت سرور.
  *
- * چرا ردیف دوباره normalize می‌شود: ردیفی که پیش از یک تغییرِ ساختار ذخیره
+ * چرا ردیف دوباره normalize می‌شود: ردیفی که پیش از یک تغییر ساختار ذخیره
  * شده ممکن است فیلدی کم داشته باشد و UI مستقیم روی این فیلدها map می‌زند.
- * کوئری هم همیشه `{ id, userId }` است، نه فقط `{ id }` — وگرنه با عوض‌کردنِ
- * id در URL می‌شود مسیرِ کاربرِ دیگری را دید.
+ * کوئری هم همیشه `{ id, userId }` است، نه فقط `{ id }` — وگرنه با عوض‌کردن
+ * id در URL می‌شود مسیر کاربر دیگری را دید.
  */
 export async function GET(req: NextRequest, { params }: { params: { id: string } }) {
   const guard = await requireFeature("roadmaps");
   if (!guard.ok) return guard.response;
-  // رودمپ ماژولِ پولیه — وقتی فلگ برای همه روشن شد، دسترسیِ ماژول هم لازمه
+  // رودمپ ماژول پولیه — وقتی فلگ برای همه روشن شد، دسترسی ماژول هم لازمه
   { const mod = await requireModule(ModuleKey.ROADMAP); if (!mod.ok) return mod.response; }
 
   const row = await prisma.roadmap.findFirst({
@@ -53,15 +53,15 @@ export async function GET(req: NextRequest, { params }: { params: { id: string }
 async function handleDELETE(req: NextRequest, { params }: { params: { id: string } }) {
   const guard = await requireFeature("roadmaps");
   if (!guard.ok) return guard.response;
-  // رودمپ ماژولِ پولیه — وقتی فلگ برای همه روشن شد، دسترسیِ ماژول هم لازمه
+  // رودمپ ماژول پولیه — وقتی فلگ برای همه روشن شد، دسترسی ماژول هم لازمه
   { const mod = await requireModule(ModuleKey.ROADMAP); if (!mod.ok) return mod.response; }
 
-  // deleteMany با شرطِ userId — delete با `{id}` تنها یعنی هر کاربری
-  // می‌تواند مسیرِ کاربرِ دیگری را پاک کند.
+  // deleteMany با شرط userId — delete با `{id}` تنها یعنی هر کاربری
+  // می‌تواند مسیر کاربر دیگری را پاک کند.
   const { count } = await prisma.roadmap.deleteMany({ where: { id: params.id, userId: guard.userId } });
   if (!count) return NextResponse.json({ error: "not found" }, { status: 404 });
   return NextResponse.json({ ok: true });
 }
 
-// بعد از هر نوشتنِ موفق، بقیه‌ی دستگاه‌ها/تب‌های همین کاربر با WebSocket خبردار می‌شن (lib/realtime.ts)
+// بعد از هر نوشتن موفق، بقیه‌ی دستگاه‌ها/تب‌های همین کاربر با WebSocket خبردار می‌شن (lib/realtime.ts)
 export const DELETE = withLiveSync(["roadmaps"], handleDELETE);

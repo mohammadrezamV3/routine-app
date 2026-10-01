@@ -8,13 +8,13 @@ import { publishToUser } from "@/lib/realtime";
 const PAGE_SIZE = 30;
 const MAX_IDS = 100;
 
-// GET /api/notifications?before=<ISO> → اعلان‌های درون‌برنامه‌ایِ خودم (جدیدترین اول)
+// GET /api/notifications?before=<ISO> → اعلان‌های درون‌برنامه‌ای خودم (جدیدترین اول)
 export async function GET(req: NextRequest) {
   const g = await requireMentorsUser();
   if (!g.ok) return g.response;
   const me = g.userId;
 
-  // اعلان‌ها با لودِ هر صفحه خوانده می‌شوند؛ برنامه‌ی زمان‌بندی‌شده‌ای که روزش رسیده همین‌جا فعال می‌شود
+  // اعلان‌ها با لود هر صفحه خوانده می‌شوند؛ برنامه‌ی زمان‌بندی‌شده‌ای که روزش رسیده همین‌جا فعال می‌شود
   if (!req.nextUrl.searchParams.get("before")) await activateDueForUser(me);
 
   const beforeRaw = req.nextUrl.searchParams.get("before");
@@ -56,7 +56,7 @@ export async function PATCH(req: Request) {
   if (b.ids.length > MAX_IDS) return badRequest(`حداکثر ${MAX_IDS} اعلان در هر درخواست`);
   const ids = b.ids.filter((x: unknown): x is string => typeof x === "string" && x.length > 0 && x.length <= 64);
   if (ids.length > 0) {
-    // userId در where: idِ اعلانِ کسِ دیگه بی‌اثر می‌مونه
+    // userId در where: id اعلان کس دیگه بی‌اثر می‌مونه
     const res = await prisma.inAppNotification.updateMany({ where: { id: { in: ids }, userId: me, readAt: null }, data: { readAt: new Date() } });
     // شمارنده‌ی زنگوله‌ی بقیه‌ی دستگاه‌های خودم
     if (res.count > 0) void publishToUser(me, { type: "notification.read", keys: ["notifications"] });

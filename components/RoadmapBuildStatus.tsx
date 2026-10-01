@@ -3,15 +3,15 @@
 import { AlertTriangle, Loader2 } from "lucide-react";
 import { faNum } from "@/lib/jalali";
 
-// وضعیتِ ساختِ پس‌زمینه‌ی یک رودمپ (lib/roadmapBuilder.ts → meta.build) —
-// هم روی کارتِ لیست، هم بالای صفحه‌ی خودِ رودمپ. بدونِ بک‌گراندِ اضافه:
-// فقط متن، آیکون و همان نوارِ پیشرفتِ .rp-bar که کارت‌ها دارند.
+// وضعیت ساخت پس‌زمینه‌ی یک رودمپ (lib/roadmapBuilder.ts → meta.build) —
+// هم روی کارت لیست، هم بالای صفحه‌ی خود رودمپ. بدون بک‌گراند اضافه:
+// فقط متن، آیکون و همان نوار پیشرفت .rp-bar که کارت‌ها دارند.
 export type BuildInfo = { status: "building" | "ready" | "failed"; phase?: "outline" | "stages" | "guide"; done?: number; total?: number; error?: string } | null;
 
 const PHASE_LABEL: Record<string, string> = {
-  outline: "در حال طراحیِ اسکلتِ مسیر…",
-  stages: "در حال نوشتنِ جزئیاتِ مرحله‌ها…",
-  guide: "در حال نوشتنِ راهنمای مسیر…",
+  outline: "در حال طراحی اسکلت مسیر…",
+  stages: "در حال نوشتن جزئیات مرحله‌ها…",
+  guide: "در حال نوشتن راهنمای مسیر…",
 };
 
 export function RoadmapBuildStatus({ build, compact = false }: { build: BuildInfo; compact?: boolean }) {

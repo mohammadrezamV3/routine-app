@@ -8,16 +8,16 @@ import { isChatReportReason } from "@/lib/tradeChat";
 
 // POST /api/trade/chat/report  { messageId, reason, note? }
 //
-// گزارشِ یک پیام: طبقِ درخواستِ صریح، پیام همان لحظه از اتاق حذف می‌شود
-// (حذفِ نرم — متن برای ادمین می‌ماند) و صفِ ادمین (`/admin/chat-reports`)
-// متنِ کاملش را نشان می‌دهد تا اگر لازم بود روی نویسنده‌اش (از پنلِ
+// گزارش یک پیام: طبق درخواست صریح، پیام همان لحظه از اتاق حذف می‌شود
+// (حذف نرم — متن برای ادمین می‌ماند) و صف ادمین (`/admin/chat-reports`)
+// متن کاملش را نشان می‌دهد تا اگر لازم بود روی نویسنده‌اش (از پنل
 // `/admin/users/[id]`) اخطار/بن/غیرفعال‌سازی اعمال کند.
 //
 // چرا این تصمیم امن است با اینکه یک نفر می‌تواند با یک گزارش پیامی را
-// پاک کند: هر کاربر هر پیام را فقط یک‌بار گزارش می‌تواند (یکتاییِ
-// messageId+reporterId)، سقفِ نرخِ ۲۰ گزارش در ساعت هم هست، و همه‌ی
-// گزارش‌ها با متنِ کاملِ پیام در صفِ ادمین باقی می‌مانند — سوءاستفاده‌ی
-// مکرر همان‌جا دیده و اکانتِ گزارش‌دهنده هم قابلِ تنبیه است.
+// پاک کند: هر کاربر هر پیام را فقط یک‌بار گزارش می‌تواند (یکتایی
+// messageId+reporterId)، سقف نرخ ۲۰ گزارش در ساعت هم هست، و همه‌ی
+// گزارش‌ها با متن کامل پیام در صف ادمین باقی می‌مانند — سوءاستفاده‌ی
+// مکرر همان‌جا دیده و اکانت گزارش‌دهنده هم قابل تنبیه است.
 export async function POST(req: NextRequest) {
   const guard = await requireModule(ModuleKey.TRADE);
   if (!guard.ok) return guard.response;
@@ -29,9 +29,9 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ error: "دلیل گزارش نامعتبر است" }, { status: 400 });
   }
 
-  // سقفِ نرخ تا کسی نتواند با گزارشِ انبوه صف را غرق کند
+  // سقف نرخ تا کسی نتواند با گزارش انبوه صف را غرق کند
   if (!(await checkRateLimit(`chat-report:${guard.userId}`, 20, 60 * 60_000))) {
-    return NextResponse.json({ error: "تعداد گزارش‌هایت زیاد شده — بعداً دوباره تلاش کن" }, { status: 429 });
+    return NextResponse.json({ error: "تعداد گزارش‌هایت زیاد شده — بعدا دوباره تلاش کن" }, { status: 429 });
   }
 
   const message = await prisma.tradeChatMessage.findUnique({
@@ -48,10 +48,10 @@ export async function POST(req: NextRequest) {
   const note = clampText(String(payload?.note ?? "").trim(), 500) || null;
   const now = new Date();
 
-  // یکتاییِ (messageId, reporterId) در دیتابیس تضمین شده؛ این‌جا upsert
-  // می‌کنیم تا گزارشِ دوباره خطای ۵۰۰ ندهد و فقط بی‌اثر باشد. همراهش پیام
-  // حذف (نرم) می‌شود و همه‌ی گزارش‌های همین پیام ACTIONED می‌شوند — طبقِ
-  // همان تصمیمِ بالای فایل.
+  // یکتایی (messageId, reporterId) در دیتابیس تضمین شده؛ این‌جا upsert
+  // می‌کنیم تا گزارش دوباره خطای ۵۰۰ ندهد و فقط بی‌اثر باشد. همراهش پیام
+  // حذف (نرم) می‌شود و همه‌ی گزارش‌های همین پیام ACTIONED می‌شوند — طبق
+  // همان تصمیم بالای فایل.
   await prisma.$transaction([
     prisma.tradeChatReport.upsert({
       where: { messageId_reporterId: { messageId, reporterId: guard.userId } },

@@ -15,7 +15,7 @@ import { as, j, makeUser, cleanupUsers } from "./helpers/mentorTestUtils";
 import { giveKey, openAs } from "./helpers/e2eeTestUtils";
 import { MESSAGE_SELECT, serializeMessage } from "@/lib/mentorChatServer";
 
-// ابزارِ داده‌ی آزمایشی: فقط Owner؛ ساختِ دوباره تکراری نمی‌سازه؛ حذف همه‌چیز
+// ابزار داده‌ی آزمایشی: فقط Owner؛ ساخت دوباره تکراری نمی‌سازه؛ حذف همه‌چیز
 // (از جمله ردیف‌های Owner که ابزار ساخته) رو برمی‌داره و بقیه‌ی داده‌ی Owner رو نه.
 
 afterAll(async () => {
@@ -24,7 +24,7 @@ afterAll(async () => {
 });
 
 describe("داده‌ی آزمایشی", () => {
-  it("ناشناس ۴۰۱، ادمینِ محدود (حتی با settings) ۴۰۳", async () => {
+  it("ناشناس ۴۰۱، ادمین محدود (حتی با settings) ۴۰۳", async () => {
     as(null);
     expect((await GET()).status).toBe(401);
     as(await makeUser({ adminPermissions: ["settings", "mentors"] }));
@@ -33,7 +33,7 @@ describe("داده‌ی آزمایشی", () => {
     expect((await DELETE()).status).toBe(403);
   });
 
-  it("Owner: ساخت، ساختِ دوباره بدونِ تکرار، حذفِ کامل", async () => {
+  it("Owner: ساخت، ساخت دوباره بدون تکرار، حذف کامل", async () => {
     const owner = await makeUser();
     await prisma.user.update({ where: { id: owner }, data: { isSuperAdmin: true } });
     as(owner);
@@ -47,7 +47,7 @@ describe("داده‌ی آزمایشی", () => {
     expect(second.counts).toEqual(first.counts);
     expect(await prisma.user.count({ where: DEMO_USER_WHERE })).toBe(21);
 
-    // رتبه‌بندیِ شایستگی همون لحظه ساخته شده و متنوعه: سارا و امیر واجدِ «محبوب»،
+    // رتبه‌بندی شایستگی همون لحظه ساخته شده و متنوعه: سارا و امیر واجد «محبوب»،
     // کیان (نظرهای تاییدنشده) و پریسا (تازه) نه؛ امیر با شاگردهای بیشتر جلوتر از کیان
     const rank = async (username: string) =>
       prisma.mentorRankingStat.findFirst({ where: { category: "ALL", profile: { user: { username } } }, select: { score: true, eligible: true, verifiedReviews: true } });
@@ -59,14 +59,14 @@ describe("داده‌ی آزمایشی", () => {
     expect(parisa?.eligible).toBe(false);
     expect(amir!.score).toBeGreaterThan(kian!.score);
 
-    // Owner هم شاگرد (فعال + دعوتِ در انتظار + یک رابطه‌ی پایان‌یافته با دلیل) و هم منتور است
+    // Owner هم شاگرد (فعال + دعوت در انتظار + یک رابطه‌ی پایان‌یافته با دلیل) و هم منتور است
     expect(await prisma.mentorship.count({ where: { studentId: owner } })).toBe(3);
     expect(await prisma.mentorship.count({ where: { mentorId: owner } })).toBeGreaterThanOrEqual(4);
     const statuses = new Set((await prisma.mentorProgram.findMany({ select: { status: true } })).map((p) => p.status));
     for (const s of ["DRAFT", "PENDING", "ACCEPTED", "REJECTED", "ACTIVE", "COMPLETED", "CANCELLED"]) expect(statuses.has(s as any)).toBe(true);
     const mirror = await prisma.userSetting.findFirst({ where: { userId: owner, key: "customOccurrences" } });
     expect((mirror?.value as unknown[]).length).toBeGreaterThan(0);
-    // کاربرِ آزمایشی نمی‌تونه وارد بشه: رمزِ ذخیره‌شده هش bcrypt یک رشته‌ی دورریخته‌ست
+    // کاربر آزمایشی نمی‌تونه وارد بشه: رمز ذخیره‌شده هش bcrypt یک رشته‌ی دورریخته‌ست
     const demo = await prisma.user.findFirst({ where: DEMO_USER_WHERE, select: { passwordHash: true } });
     expect(demo?.passwordHash).toMatch(/^\$2[aby]\$/);
 
@@ -83,10 +83,10 @@ describe("داده‌ی آزمایشی", () => {
     expect(after?.value).toEqual([]);
   });
 
-  // رمزگذاریِ سرتاسری (agent D): هیچ پیامِ آزمایشی متنِ ساده ندارد؛ گفت‌وگوی Owner فقط
-  // وقتی پیام می‌گیرد که Owner کلید داشته باشد و همان را با کلیدِ خودش باز می‌کند؛
-  // گزارشِ پیامِ آزمایشی متنِ تاییدشده (رمزشده در سکون) دارد.
-  it("پیام‌های آزمایشی رمزگذاری‌شده‌اند؛ Owner بدونِ کلید گفت‌وگوی خالی، با کلید قابل‌خواندن", async () => {
+  // رمزگذاری سرتاسری (agent D): هیچ پیام آزمایشی متن ساده ندارد؛ گفت‌وگوی Owner فقط
+  // وقتی پیام می‌گیرد که Owner کلید داشته باشد و همان را با کلید خودش باز می‌کند؛
+  // گزارش پیام آزمایشی متن تاییدشده (رمزشده در سکون) دارد.
+  it("پیام‌های آزمایشی رمزگذاری‌شده‌اند؛ Owner بدون کلید گفت‌وگوی خالی، با کلید قابل‌خواندن", async () => {
     const owner = await makeUser();
     await prisma.user.update({ where: { id: owner }, data: { isSuperAdmin: true } });
     as(owner);
@@ -101,7 +101,7 @@ describe("داده‌ی آزمایشی", () => {
     await giveKey(owner);
     as(owner);
     await POST();
-    // پیام‌ها scheme 2: برای همه‌ی کلیدهای فعالِ Owner بسته‌بندی شده‌اند (همان شکلی که API می‌دهد)
+    // پیام‌ها scheme 2: برای همه‌ی کلیدهای فعال Owner بسته‌بندی شده‌اند (همان شکلی که API می‌دهد)
     const rows = await prisma.mentorMessage.findMany({
       where: { mentorship: { OR: [{ mentorId: owner }, { studentId: owner }] } },
       select: { ...MESSAGE_SELECT, mentorshipId: true },
@@ -117,14 +117,14 @@ describe("داده‌ی آزمایشی", () => {
     await DELETE();
   });
 
-  it("پروفایلِ منتوریِ ازقبل‌موجودِ Owner با حذف دست نمی‌خورد", async () => {
+  it("پروفایل منتوری ازقبل‌موجود Owner با حذف دست نمی‌خورد", async () => {
     const owner = await makeUser();
     await prisma.user.update({ where: { id: owner }, data: { isSuperAdmin: true } });
     await prisma.mentorProfile.create({ data: { userId: owner, categories: ["FITNESS"], bio: "واقعی" } });
     as(owner);
     const st = (await j(await POST())).status;
     expect(st.ownerProfileCreated).toBe(false);
-    // برنامه‌های Owner به‌عنوانِ منتور با حوزه‌ی خودش (FITNESS → WORKOUT) ساخته می‌شن
+    // برنامه‌های Owner به‌عنوان منتور با حوزه‌ی خودش (FITNESS → WORKOUT) ساخته می‌شن
     const types = new Set((await prisma.mentorProgram.findMany({ where: { mentorId: owner }, select: { type: true } })).map((p) => p.type));
     expect(Array.from(types)).toEqual(["WORKOUT"]);
     await DELETE();

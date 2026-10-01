@@ -50,8 +50,8 @@ export function DashMedicationCard({ delay }: { delay?: number }) {
     await setMedications(next);
   }
 
-  // طبق درخواست صریح: اگر ذخیره واقعاً شکست بخورد (شبکه/سرور)، فرم باید
-  // بفهمد — قبلاً setMedications هر خطایی را بی‌صدا می‌بلعید و فرم همیشه
+  // طبق درخواست صریح: اگر ذخیره واقعا شکست بخورد (شبکه/سرور)، فرم باید
+  // بفهمد — قبلا setMedications هر خطایی را بی‌صدا می‌بلعید و فرم همیشه
   // «ثبت شد» نشان می‌داد، حتی وقتی چیزی ذخیره نشده بود.
   async function saveMedication(med: Medication) {
     const current = meds ?? [];

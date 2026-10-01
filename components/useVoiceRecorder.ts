@@ -2,21 +2,21 @@
 
 import { useCallback, useRef, useState } from "react";
 
-// ضبطِ ویس برای دستیارِ روتین.
+// ضبط ویس برای دستیار روتین.
 //
-// «فشرده‌سازی قبل از ارسال» این‌جا سه لایه دارد و هر سه *قبل* از رفتنِ داده
+// «فشرده‌سازی قبل از ارسال» این‌جا سه لایه دارد و هر سه *قبل* از رفتن داده
 // روی شبکه‌اند:
-//   ۱) خودِ گرفتنِ صدا مونو و ۱۶کیلوهرتز است (گفتار به بیشتر از این نیاز
+//   ۱) خود گرفتن صدا مونو و ۱۶کیلوهرتز است (گفتار به بیشتر از این نیاز
 //      ندارد؛ استریوی ۴۸کیلوهرتز فقط حجم است).
-//   ۲) کدکِ Opus با نرخِ ۱۶ کیلوبیت — حدودِ ۲ کیلوبایت در ثانیه، یعنی یک
-//      پیامِ ۱۰ثانیه‌ای حدودِ ۲۰ کیلوبایت.
-//   ۳) سقفِ زمان و سقفِ حجم، تا یک ضبطِ فراموش‌شده مگابایت‌ها نفرستد.
+//   ۲) کدک Opus با نرخ ۱۶ کیلوبیت — حدود ۲ کیلوبایت در ثانیه، یعنی یک
+//      پیام ۱۰ثانیه‌ای حدود ۲۰ کیلوبایت.
+//   ۳) سقف زمان و سقف حجم، تا یک ضبط فراموش‌شده مگابایت‌ها نفرستد.
 
 export const VOICE_MAX_SECONDS = 60;
 export const VOICE_MAX_BYTES = 1024 * 1024; // ۱ مگابایت
 export const VOICE_BITS_PER_SECOND = 16_000;
 
-/** محدودیت‌هایی که به getUserMedia داده می‌شود — لایه‌ی اولِ فشرده‌سازی */
+/** محدودیت‌هایی که به getUserMedia داده می‌شود — لایه‌ی اول فشرده‌سازی */
 export const VOICE_CONSTRAINTS: MediaTrackConstraints = {
   channelCount: 1,
   sampleRate: 16_000,
@@ -50,7 +50,7 @@ export function useVoiceRecorder(getStream: () => MediaStream | null) {
     const stream = getStream();
     if (!stream) { setError("میکروفون در دسترس نیست."); setState("error"); return false; }
     if (typeof MediaRecorder === "undefined") {
-      setError("مرورگرت ضبطِ صدا را پشتیبانی نمی‌کند.");
+      setError("مرورگرت ضبط صدا را پشتیبانی نمی‌کند.");
       setState("error");
       return false;
     }
@@ -63,7 +63,7 @@ export function useVoiceRecorder(getStream: () => MediaStream | null) {
         audioBitsPerSecond: VOICE_BITS_PER_SECOND,
       });
     } catch {
-      setError("ضبطِ صدا شروع نشد.");
+      setError("ضبط صدا شروع نشد.");
       setState("error");
       return false;
     }
@@ -81,14 +81,14 @@ export function useVoiceRecorder(getStream: () => MediaStream | null) {
     setError(null);
     setState("recording");
 
-    // سقفِ زمان: ضبطِ فراموش‌شده نباید تا بی‌نهایت ادامه پیدا کند
+    // سقف زمان: ضبط فراموش‌شده نباید تا بی‌نهایت ادامه پیدا کند
     stopTimerRef.current = setTimeout(() => {
       if (recorderRef.current?.state === "recording") recorderRef.current.stop();
     }, VOICE_MAX_SECONDS * 1000);
     return true;
   }, [getStream]);
 
-  /** ضبط را تمام می‌کند و بلابِ نهایی را می‌دهد (null یعنی چیزی ضبط نشد) */
+  /** ضبط را تمام می‌کند و بلاب نهایی را می‌دهد (null یعنی چیزی ضبط نشد) */
   const stop = useCallback((): Promise<Blob | null> => {
     if (stopTimerRef.current) { clearTimeout(stopTimerRef.current); stopTimerRef.current = null; }
     const rec = recorderRef.current;
@@ -101,7 +101,7 @@ export function useVoiceRecorder(getStream: () => MediaStream | null) {
     });
   }, []);
 
-  /** لغو بدونِ استفاده از نتیجه */
+  /** لغو بدون استفاده از نتیجه */
   const cancel = useCallback(() => {
     if (stopTimerRef.current) { clearTimeout(stopTimerRef.current); stopTimerRef.current = null; }
     resolveRef.current?.(null);

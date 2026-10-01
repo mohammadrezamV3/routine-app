@@ -55,7 +55,7 @@ function UsersInner() {
   const filter = searchParams.get("filter") || "all";
   const sort = searchParams.get("sort") || "newest";
   const page = Math.max(1, Math.floor(Number(searchParams.get("page")) || 1));
-  // جست‌وجو هم توی URL می‌شینه (مثلِ فیلتر/مرتب‌سازی) تا با برگشت از صفحه‌ی
+  // جست‌وجو هم توی URL می‌شینه (مثل فیلتر/مرتب‌سازی) تا با برگشت از صفحه‌ی
   // جزئیات از دست نره و — مهم‌تر — عوض‌شدنش صفحه رو به ۱ برگردونه.
   const urlSearch = (searchParams.get("search") || "").trim();
 
@@ -89,7 +89,7 @@ function UsersInner() {
   }, [search, urlSearch, setParams]);
 
   // URL از بیرون عوض شد (دکمه‌ی back) → اینپوت هم‌گام؛ ولی نه وقتی خودمون
-  // همین مقدار رو فرستادیم (وگرنه حروفی که وسطِ ناوبری تایپ شدن پاک می‌شدن)
+  // همین مقدار رو فرستادیم (وگرنه حروفی که وسط ناوبری تایپ شدن پاک می‌شدن)
   useEffect(() => {
     if (urlSearch === lastPushedSearch.current) return;
     lastPushedSearch.current = urlSearch;
@@ -104,7 +104,7 @@ function UsersInner() {
     fetch(`/api/admin/users?${sp.toString()}`)
       .then((r) => (r.ok ? r.json() : Promise.reject(new Error(String(r.status)))))
       .then((d) => {
-        // پاسخِ یک درخواستِ قدیمی‌تر (فیلتر/جست‌وجوی قبلی) نباید نتیجه‌ی جدید رو بپوشونه
+        // پاسخ یک درخواست قدیمی‌تر (فیلتر/جست‌وجوی قبلی) نباید نتیجه‌ی جدید رو بپوشونه
         if (seq !== reqSeq.current) return;
         setData(d);
         setFailed(false);
@@ -116,7 +116,7 @@ function UsersInner() {
 
   useEffect(load, [load]);
 
-  // بعد از حذفِ گروهی ممکنه صفحه‌ی فعلی از آخرین صفحه جلوتر بمونه
+  // بعد از حذف گروهی ممکنه صفحه‌ی فعلی از آخرین صفحه جلوتر بمونه
   useEffect(() => {
     if (!data || loading || data.users.length > 0 || page <= 1 || data.total === 0) return;
     setParams({ page: String(Math.max(1, Math.ceil(data.total / data.pageSize))) }, true);

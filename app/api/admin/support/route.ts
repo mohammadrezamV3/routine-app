@@ -4,8 +4,8 @@ import { requireAdmin } from "@/lib/requireAdmin";
 
 const STATUSES = ["OPEN", "ANSWERED", "CLOSED"] as const;
 
-// GET /api/admin/support?status=OPEN — فهرستِ تیکت‌های همه‌ی کاربرها،
-// تازه‌آپدیت‌شده اول (هم تیکتِ تازه‌ساز هم تیکتی که کاربر تازه بهش جواب داده).
+// GET /api/admin/support?status=OPEN — فهرست تیکت‌های همه‌ی کاربرها،
+// تازه‌آپدیت‌شده اول (هم تیکت تازه‌ساز هم تیکتی که کاربر تازه بهش جواب داده).
 export async function GET(req: NextRequest) {
   const guard = await requireAdmin("support");
   if (!guard.ok) return guard.response;

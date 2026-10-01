@@ -41,7 +41,7 @@ export const AUDIT_ACTION_LABELS: Record<string, string> = {
   "economic_event.sync": "همگام‌سازی تقویم اقتصادی",
   "exercise_media.upsert": "ثبت عکس حرکت ورزشی",
   "exercise_media.delete": "حذف عکس حرکت ورزشی",
-  // رمزگذاریِ سرتاسریِ گفت‌وگو — فقط رویداد، هرگز محتوا (agent D)
+  // رمزگذاری سرتاسری گفت‌وگو — فقط رویداد، هرگز محتوا (agent D)
   "e2ee.key_create": "فعال‌سازی رمزگذاری گفت‌وگو",
   "e2ee.key_reset": "ساخت کلید تازه‌ی گفت‌وگو",
   "e2ee.passcode_change": "تغییر کلید رمزگذاری گفت‌وگو",

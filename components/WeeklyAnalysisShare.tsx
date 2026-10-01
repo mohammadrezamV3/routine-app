@@ -14,8 +14,8 @@ type Palette = {
   text: string; muted: string; win: string; loss: string;
 };
 
-// رنگ‌ها مستقیم از توکن‌های تمِ فعلی خونده می‌شن (تمِ روشن توکن‌هاش رو روی
-// body بازتعریف می‌کنه، پس از body می‌خونیم نه html) — تصویر هم‌رنگِ همون
+// رنگ‌ها مستقیم از توکن‌های تم فعلی خونده می‌شن (تم روشن توکن‌هاش رو روی
+// body بازتعریف می‌کنه، پس از body می‌خونیم نه html) — تصویر هم‌رنگ همون
 // چیزیه که کاربر روی صفحه می‌بینه.
 function readPalette(): Palette {
   const cs = getComputedStyle(document.body);
@@ -33,9 +33,9 @@ function readPalette(): Palette {
   };
 }
 
-// فونت‌های next/font اسمِ هش‌شده دارن؛ اسمِ واقعی از متغیرِ CSS روی <html>
-// خونده می‌شه. لاتین اول، تا اعداد/حروفِ انگلیسی Inter بگیرن و فارسی به
-// وزیرمتن سقوط کنه — عینا همون استکِ فونتِ خودِ اپ.
+// فونت‌های next/font اسم هش‌شده دارن؛ اسم واقعی از متغیر CSS روی <html>
+// خونده می‌شه. لاتین اول، تا اعداد/حروف انگلیسی Inter بگیرن و فارسی به
+// وزیرمتن سقوط کنه — عینا همون استک فونت خود اپ.
 function fontStack(): string {
   const cs = getComputedStyle(document.documentElement);
   const vazir = cs.getPropertyValue("--font-vazir").trim();
@@ -64,7 +64,7 @@ async function renderCard(a: WeeklyAnalysis): Promise<HTMLCanvasElement> {
         document.fonts.load(f(500, 36), "هفته 0123"),
       ]);
       await document.fonts.ready;
-    } catch { /* فونتِ جایگزین هم قابلِ قبوله */ }
+    } catch { /* فونت جایگزین هم قابل قبوله */ }
   }
 
   const p = readPalette();
@@ -82,7 +82,7 @@ async function renderCard(a: WeeklyAnalysis): Promise<HTMLCanvasElement> {
     ctx.fillText(s, x, y);
   };
 
-  // پس‌زمینه + هاله‌ی ملایمِ accent
+  // پس‌زمینه + هاله‌ی ملایم accent
   ctx.fillStyle = p.bg;
   ctx.fillRect(0, 0, W, H);
   const glow = ctx.createRadialGradient(W / 2, 480, 40, W / 2, 480, 620);
@@ -91,7 +91,7 @@ async function renderCard(a: WeeklyAnalysis): Promise<HTMLCanvasElement> {
   ctx.fillStyle = glow;
   ctx.fillRect(0, 0, W, H);
 
-  // قابِ کارت — همون سطح/بوردرِ کارت‌های اپ
+  // قاب کارت — همون سطح/بوردر کارت‌های اپ
   roundRect(ctx, 60, 60, W - 120, H - 120, 44);
   ctx.fillStyle = p.surface;
   ctx.globalAlpha = 0.92;
@@ -130,11 +130,11 @@ async function renderCard(a: WeeklyAnalysis): Promise<HTMLCanvasElement> {
     const d = Math.round(delta);
     const color = d > 0 ? p.win : d < 0 ? p.loss : p.muted;
     const arrow = d > 0 ? "▲" : d < 0 ? "▼" : "•";
-    // عددِ علامت‌دار داخلِ ایزوله‌ی LTR، وگرنه bidi «+6» رو «6+» نشون می‌ده
+    // عدد علامت‌دار داخل ایزوله‌ی LTR، وگرنه bidi «+6» رو «6+» نشون می‌ده
     text(`${arrow} \u2066${d > 0 ? "+" : ""}${d}\u2069  نسبت به هفته‌ی قبل`, cx, 820, f(700, 38), color, "center");
   }
 
-  // سه بخشِ برتر
+  // سه بخش برتر
   const top = a.domains
     .filter((d) => d.hasData && d.score !== null)
     .sort((x, y) => (y.score as number) - (x.score as number))
@@ -162,7 +162,7 @@ async function renderCard(a: WeeklyAnalysis): Promise<HTMLCanvasElement> {
   return canvas;
 }
 
-// «اشتراک‌گذاری»: یک کارتِ خلاصه روی canvas می‌کشه؛ اگه مرورگر اشتراکِ فایل
+// «اشتراک‌گذاری»: یک کارت خلاصه روی canvas می‌کشه؛ اگه مرورگر اشتراک فایل
 // رو پشتیبانی کنه (موبایل) با navigator.share، وگرنه PNG دانلود می‌شه.
 export function WeeklyAnalysisShare({ analysis }: { analysis: WeeklyAnalysis | null }) {
   const [busy, setBusy] = useState(false);

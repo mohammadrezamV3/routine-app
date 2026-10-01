@@ -4,8 +4,8 @@ import { readJsonBody } from "@/lib/validate";
 import { checkRateLimit } from "@/lib/rateLimit";
 import { clearChatHistory, listChatHistory } from "@/lib/mentorChatHistory";
 
-// «سابقه‌ی گفت‌وگو» در پنل کاربری. پاک‌کردن فقط برای خودِ کاربر است
-// (lib/mentorChatHistory.ts)؛ نسخه‌ی طرفِ مقابل دست نمی‌خورد.
+// «سابقه‌ی گفت‌وگو» در پنل کاربری. پاک‌کردن فقط برای خود کاربر است
+// (lib/mentorChatHistory.ts)؛ نسخه‌ی طرف مقابل دست نمی‌خورد.
 
 // GET /api/mentorships/chat-history → { conversations }
 export async function GET() {

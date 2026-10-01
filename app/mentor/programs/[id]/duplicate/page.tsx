@@ -25,8 +25,8 @@ function isoToJalali(iso: string | null): JalaliDate | null {
 type Data = { program: Program; itemCount: number; students: MentorshipRow[] };
 
 /**
- * /mentor/programs/[id]/duplicate — کپیِ برنامه به‌صورتِ پیش‌نویسِ تازه برای
- * همان شاگرد (دوره‌ی بعد) یا شاگردِ دیگر، با جابه‌جاییِ تاریخ.
+ * /mentor/programs/[id]/duplicate — کپی برنامه به‌صورت پیش‌نویس تازه برای
+ * همان شاگرد (دوره‌ی بعد) یا شاگرد دیگر، با جابه‌جایی تاریخ.
  */
 export default function DuplicateMentorProgramPage() {
   const params = useParams<{ id: string }>();
@@ -78,7 +78,7 @@ export default function DuplicateMentorProgramPage() {
   function onStudentChange(v: string) {
     setMentorshipId(v);
     setError(null);
-    // همان شاگرد = دوره‌ی بعد؛ شاگردِ دیگر = از امروز (اگر مبدا تاریخ داشت)
+    // همان شاگرد = دوره‌ی بعد؛ شاگرد دیگر = از امروز (اگر مبدا تاریخ داشت)
     if (program && (program.startDate || duration != null)) {
       const today = isoLocal(new Date());
       setStart(isoToJalali(v === program.mentorshipId ? nextPeriodStart(program.endDate, today) : today));

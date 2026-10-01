@@ -19,10 +19,10 @@ export async function PUT(req: NextRequest) {
   if (!guard.ok) return guard.response;
   const body = await req.json().catch(() => null);
   if (!body?.flags || typeof body.flags !== "object") return NextResponse.json({ error: "ورودی نامعتبر است" }, { status: 400 });
-  // read-modify-write سریالی: دو PUTِ هم‌زمان (دو کلیدِ مختلف) هر دو همون
-  // «before» رو می‌خوندن و دومی تغییرِ اولی رو پاک می‌کرد. قفلِ درون‌پردازه‌ای
-  // هم‌راستا با فرضِ تک-instance بقیه‌ی پروژه (lib/rateLimit.ts)؛ کش هم قبل از
-  // خواندن خالی می‌شه تا مقدارِ تازه‌ی دیتابیس مبنا باشه.
+  // read-modify-write سریالی: دو PUT هم‌زمان (دو کلید مختلف) هر دو همون
+  // «before» رو می‌خوندن و دومی تغییر اولی رو پاک می‌کرد. قفل درون‌پردازه‌ای
+  // هم‌راستا با فرض تک-instance بقیه‌ی پروژه (lib/rateLimit.ts)؛ کش هم قبل از
+  // خواندن خالی می‌شه تا مقدار تازه‌ی دیتابیس مبنا باشه.
   const run = flagsLock.then(async () => {
     invalidateAppSettingsCache();
     const before = await getFeatureFlags();

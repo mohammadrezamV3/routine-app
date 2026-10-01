@@ -1,10 +1,10 @@
-// ست آیکونِ اختصاصیِ داشبورد — هم‌خانواده با ICONSِ منو (viewBox 24، خطِ
-// ۱.۷، سرِ گرد) ولی هرکدام یک «جزءِ زنده» دارند که با کلاسِ .dbi-* در
+// ست آیکون اختصاصی داشبورد — هم‌خانواده با ICONS منو (viewBox 24، خط
+// ۱.۷، سر گرد) ولی هرکدام یک «جزء زنده» دارند که با کلاس .dbi-* در
 // app/dashboard/dashboard.css حرکت می‌کند: شعاع‌های خورشید می‌چرخند، دمبل
 // بالا می‌رود، شمع‌ها رشد می‌کنند، زنگ تکان می‌خورد، … . حرکت‌ها فقط وقتی
-// کارتِ والد hover/focus می‌شود (یا یک‌بار موقعِ ورود) اجرا می‌شوند، نه
-// دائمی — هم برای آرامشِ صفحه هم برای باتری. همه‌ی حرکت‌ها transform/opacity
-// هستند (بدونِ layout) و با prefers-reduced-motion کلا خاموش می‌شوند.
+// کارت والد hover/focus می‌شود (یا یک‌بار موقع ورود) اجرا می‌شوند، نه
+// دائمی — هم برای آرامش صفحه هم برای باتری. همه‌ی حرکت‌ها transform/opacity
+// هستند (بدون layout) و با prefers-reduced-motion کلا خاموش می‌شوند.
 
 import type { SVGProps } from "react";
 
@@ -13,7 +13,7 @@ const base = { viewBox: "0 0 24 24", fill: "none", "aria-hidden": true } as cons
 const s = { stroke: "currentColor", strokeWidth: 1.7, strokeLinecap: "round", strokeLinejoin: "round" } as const;
 
 export const DI = {
-  // ── زمانِ روز (سلامِ هیرو) ─────────────────────────────
+  // ── زمان روز (سلام هیرو) ─────────────────────────────
   sunrise: (p: P) => (
     <svg {...base} {...p}>
       <g className="dbi-rise">

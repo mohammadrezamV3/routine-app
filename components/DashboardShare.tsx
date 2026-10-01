@@ -1,14 +1,14 @@
 "use client";
 
-// «اشتراکِ موفقیت» از داشبورد. کاربر اول انتخاب می‌کنه *چی* رو به اشتراک بذاره
-// — حلقه‌های امروز یا نقشه‌ی ثباتِ ماه (هر بار فقط یکی، تا تصویر شلوغ نشه) —
+// «اشتراک موفقیت» از داشبورد. کاربر اول انتخاب می‌کنه *چی* رو به اشتراک بذاره
+// — حلقه‌های امروز یا نقشه‌ی ثبات ماه (هر بار فقط یکی، تا تصویر شلوغ نشه) —
 // و بعد هرچی رو نخواد دیده بشه خاموش می‌کنه — حلقه‌ها همیشه روی کارت می‌مونن و
-// سوییچ فقط عددِ زیرِ هر حلقه (مثلا کالری، که پیش‌فرض پنهانه) رو پنهان می‌کنه. وسطِ حلقه‌ها تعدادِ روزهای استریک میاد. پیش‌نمایش همون لحظه عوض
+// سوییچ فقط عدد زیر هر حلقه (مثلا کالری، که پیش‌فرض پنهانه) رو پنهان می‌کنه. وسط حلقه‌ها تعداد روزهای استریک میاد. پیش‌نمایش همون لحظه عوض
 // می‌شه؛ انتخاب‌ها فقط روی همین دستگاه یادآوری می‌شن (localStorage) و تصویر فقط
-// با زدنِ «اشتراک‌گذاری» از دستگاه بیرون می‌ره — هیچ‌چیز به سرور نمی‌ره.
+// با زدن «اشتراک‌گذاری» از دستگاه بیرون می‌ره — هیچ‌چیز به سرور نمی‌ره.
 //
-// «بهونه»ی دعوت: کدِ رفرالِ کاربر (اگه روشن باشه) بالای کارت، و متن و لینکِ
-// دعوت همراهِ پیامِ اشتراک (lib/invite.ts).
+// «بهونه»ی دعوت: کد رفرال کاربر (اگه روشن باشه) بالای کارت، و متن و لینک
+// دعوت همراه پیام اشتراک (lib/invite.ts).
 
 import "@/app/dashboard/dashboard.css";
 import { useEffect, useMemo, useRef, useState } from "react";
@@ -32,7 +32,7 @@ import { D_EASE } from "./DashboardKit";
 
 type Kind = "rings" | "month";
 type Opts = { kind: Kind; routine: boolean; exercise: boolean; calorie: boolean; invite: boolean };
-// کالری پیش‌فرض خاموشه — عددِ شخصی‌تریه که خیلی‌ها نمی‌خوان دیده بشه
+// کالری پیش‌فرض خاموشه — عدد شخصی‌تریه که خیلی‌ها نمی‌خوان دیده بشه
 const DEFAULTS: Opts = { kind: "rings", routine: true, exercise: true, calorie: false, invite: true };
 const KEY = "arion:dashShare:v2";
 
@@ -47,7 +47,7 @@ function loadOpts(): Opts {
   }
 }
 
-/** رنگِ حلقه‌ها توکن‌های --ring-* ِ داشبوردن؛ canvas مقدارِ واقعی‌شون رو لازم داره */
+/** رنگ حلقه‌ها توکن‌های --ring-*  داشبوردن؛ canvas مقدار واقعی‌شون رو لازم داره */
 function resolveColor(v: string): string {
   const m = v.match(/^var\((--[\w-]+)\)$/);
   if (!m) return v;
@@ -55,7 +55,7 @@ function resolveColor(v: string): string {
   return getComputedStyle(el).getPropertyValue(m[1]).trim() || "#00C98D";
 }
 
-/** بخشِ اشتراک هیچ اِعرابی نداره — برچسب‌های مشترک با هیرو (مثلِ «تمرینِ امروز») هم تمیز می‌شن */
+/** بخش اشتراک هیچ اعرابی نداره — برچسب‌های مشترک با هیرو (مثل «تمرین امروز») هم تمیز می‌شن */
 const plain = (t: string) => t.replace(/[\u064B-\u0652\u0670]/g, "");
 
 function isoOf(d: Date) {
@@ -79,7 +79,7 @@ export function DashboardShare({
     daily: Record<string, DailyRecord>;
     todayIso: string;
   };
-  /** ماژولِ «روتین من» قفله → حلقه‌ی روتین نیست (هم‌رفتار با هیرو) */
+  /** ماژول «روتین من» قفله → حلقه‌ی روتین نیست (هم‌رفتار با هیرو) */
   routineLocked?: boolean;
 }) {
   useLockBodyScroll(open);
@@ -104,17 +104,17 @@ export function DashboardShare({
     return d && !Number.isNaN(d.getTime()) ? isoOf(d) : undefined;
   }, [data?.user.memberSince]);
 
-  // ماهِ جاری فقط وقتی لازمه ساخته می‌شه (حالتِ نقشه)
+  // ماه جاری فقط وقتی لازمه ساخته می‌شه (حالت نقشه)
   const month = useMemo(
     () => (opts.kind === "month" ? buildMonth(ty, tm, routine.todayIso, routine.opts, routine.daily, joinIso) : null),
     [opts.kind, ty, tm, routine.todayIso, routine.opts, routine.daily, joinIso]
   );
 
-  // مقدارِ نمایشیِ هر حلقه روی کارت — کالری با هدفش، نه فقط یه عددِ تنها
+  // مقدار نمایشی هر حلقه روی کارت — کالری با هدفش، نه فقط یه عدد تنها
   const cardRings = useMemo(() => {
     const cal = data?.calorie;
     return rings
-      // حلقه‌ها همیشه روی کارت می‌مونن؛ سوییچ فقط عددِ زیرِ هر حلقه رو پنهان می‌کنه
+      // حلقه‌ها همیشه روی کارت می‌مونن؛ سوییچ فقط عدد زیر هر حلقه رو پنهان می‌کنه
       .filter((r) => r.show)
       .map((r) => ({
         label: plain(r.label),
@@ -158,8 +158,8 @@ export function DashboardShare({
   const [busy, setBusy] = useState(false);
   const [msg, setMsg] = useState<string | null>(null);
 
-  // پیش‌نمایشِ زنده — کمی تأخیر تا چند تغییرِ پشتِ‌سرهم یک رندر بشن. blob ِ هر
-  // رندر با کلیدِ همون ورودی نگه داشته می‌شه تا «اشتراک» هیچ‌وقت تصویرِ کهنه نفرسته.
+  // پیش‌نمایش زنده — کمی تاخیر تا چند تغییر پشت‌سرهم یک رندر بشن. blob  هر
+  // رندر با کلید همون ورودی نگه داشته می‌شه تا «اشتراک» هیچ‌وقت تصویر کهنه نفرسته.
   const [preview, setPreview] = useState<string | null>(null);
   const previewRef = useRef<string | null>(null);
   const blobRef = useRef<{ input: ShareCardInput; blob: Blob } | null>(null);

@@ -1,8 +1,8 @@
 "use client";
 
-// نوارِ دوره‌ی آزمایشیِ «روتین من» — فقط وقتی کاربر هنوز در ۱۴ روزِ رایگانه
-// (ردیفِ ROUTINE انقضا داره و هیچ اشتراکِ فعالی نداره). بعد از تموم‌شدنش
-// ModuleGate خودش پیامِ خرید رو نشون می‌ده؛ این نوار فقط هشدارِ قبل از اونه.
+// نوار دوره‌ی آزمایشی «روتین من» — فقط وقتی کاربر هنوز در ۱۴ روز رایگانه
+// (ردیف ROUTINE انقضا داره و هیچ اشتراک فعالی نداره). بعد از تموم‌شدنش
+// ModuleGate خودش پیام خرید رو نشون می‌ده؛ این نوار فقط هشدار قبل از اونه.
 
 import Link from "next/link";
 import { useEffect, useState } from "react";
@@ -40,7 +40,7 @@ export function RoutineTrialBanner({ className }: { className?: string }) {
   return (
     <div className={`routine-trial-strip${left <= 3 ? " is-urgent" : ""}${className ? ` ${className}` : ""}`} role="status">
       <span>
-        <b>{left}</b> روز از دوره‌ی رایگانِ «روتین من» مونده
+        <b>{left}</b> روز از دوره‌ی رایگان «روتین من» مونده
       </span>
       <Link href={`/subscription/checkout?plan=${ROUTINE_PLAN_KEY}&duration=1`} prefetch={false}>
         خرید — ماهانه {ROUTINE_PLAN_PRICE_TOMAN.toLocaleString("en-US")} تومان

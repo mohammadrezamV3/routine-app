@@ -1,38 +1,38 @@
-// ساختارِ رودمپ — نسخه‌ی «اسکلت + جزئیاتِ ریزِ هر مرحله».
+// ساختار رودمپ — نسخه‌ی «اسکلت + جزئیات ریز هر مرحله».
 //
 // ساخت در دو فاز انجام می‌شود (lib/aiClient.ts):
 //   ۱) اسکلت: عنوان، خلاصه، پیش‌نیازها، خروجی‌های نهایی، ابزارها، و
-//      فهرستِ مرحله‌ها فقط با عنوان/هدف/محدوده.
-//   ۲) موازی: متنِ کاملِ راهنما (guide) + جزئیاتِ ریزِ *هر* مرحله در یک
-//      فراخوانیِ جدا (سرفصل‌ها با توضیح و نکته، کارهای عملی با خروجی،
+//      فهرست مرحله‌ها فقط با عنوان/هدف/محدوده.
+//   ۲) موازی: متن کامل راهنما (guide) + جزئیات ریز *هر* مرحله در یک
+//      فراخوانی جدا (سرفصل‌ها با توضیح و نکته، کارهای عملی با خروجی،
 //      پروژه، ابزار با کاربرد، منابع، اشتباه‌های رایج، معیارهای اتمام).
 //
-// چرا دو فاز: یک فراخوانیِ تکی که همه‌ی این جزئیات را برای ۱۰+ مرحله
-// بنویسد از سقفِ زمانیِ ۶۰ ثانیه‌ی nginx رد می‌شود. تکه‌تکه و موازی، هر
-// مرحله توجهِ کاملِ مدل را می‌گیرد و کلِ کار زیرِ همان سقف می‌ماند.
+// چرا دو فاز: یک فراخوانی تکی که همه‌ی این جزئیات را برای ۱۰+ مرحله
+// بنویسد از سقف زمانی ۶۰ ثانیه‌ی nginx رد می‌شود. تکه‌تکه و موازی، هر
+// مرحله توجه کامل مدل را می‌گیرد و کل کار زیر همان سقف می‌ماند.
 // مرحله‌ای که جزئیاتش نرسید `detailed:false` می‌ماند و کاربر از روی
-// صفحه دوباره می‌سازدش — مسیر هیچ‌وقت به‌خاطرِ یک مرحله کلاً شکست نمی‌خورد.
+// صفحه دوباره می‌سازدش — مسیر هیچ‌وقت به‌خاطر یک مرحله کلا شکست نمی‌خورد.
 
 export const PLAN_LIMITS = {
   maxStages: 16,
   minStages: 3,
   maxGuideChars: 24_000,
   minGuideChars: 600,
-  // points یک سرفصل می‌تواند یک استانداردِ کامل باشد (مثلا ده موردِ OWASP)
+  // points یک سرفصل می‌تواند یک استاندارد کامل باشد (مثلا ده مورد OWASP)
   maxListItems: 16,
   maxTextLen: 1600,
   maxTitleLen: 140,
 } as const;
 
 // ── ورودی‌های کاربر ────────────────────────────────────────────────────
-// سطح و وقتِ هفتگی مستقیم مدت‌زمان و عمقِ هر مرحله را عوض می‌کنند؛ برای
-// همین enum‌اند نه متنِ آزاد، تا مدل همیشه یک عددِ قابلِ استدلال بگیرد.
+// سطح و وقت هفتگی مستقیم مدت‌زمان و عمق هر مرحله را عوض می‌کنند؛ برای
+// همین enum‌اند نه متن آزاد، تا مدل همیشه یک عدد قابل استدلال بگیرد.
 
 export const LEVEL_OPTIONS = [
-  { value: "zero", label: "صفرِ مطلق", prompt: "هیچ پیش‌زمینه‌ای ندارد؛ از پایه‌ای‌ترین مفهوم شروع کن." },
-  { value: "basic", label: "یه چیزایی بلدم", prompt: "مفاهیمِ ابتدایی را پراکنده بلد است ولی منسجم نه؛ پایه‌ها را مرور سریع کن نه آموزش از صفر." },
-  { value: "mid", label: "متوسطم", prompt: "پایه‌ها را بلد است و تجربه‌ی کارِ کوچک دارد؛ از مرورِ پایه‌ها بگذر و روی عمق و پروژه‌ی واقعی تمرکز کن." },
-  { value: "pro", label: "حرفه‌ای‌ام، می‌خوام عمیق‌تر شم", prompt: "در این حوزه کار کرده؛ فقط مباحثِ پیشرفته، معماری، بهینه‌سازی و سطحِ ارشد." },
+  { value: "zero", label: "صفر مطلق", prompt: "هیچ پیش‌زمینه‌ای ندارد؛ از پایه‌ای‌ترین مفهوم شروع کن." },
+  { value: "basic", label: "یه چیزایی بلدم", prompt: "مفاهیم ابتدایی را پراکنده بلد است ولی منسجم نه؛ پایه‌ها را مرور سریع کن نه آموزش از صفر." },
+  { value: "mid", label: "متوسطم", prompt: "پایه‌ها را بلد است و تجربه‌ی کار کوچک دارد؛ از مرور پایه‌ها بگذر و روی عمق و پروژه‌ی واقعی تمرکز کن." },
+  { value: "pro", label: "حرفه‌ای‌ام، می‌خوام عمیق‌تر شم", prompt: "در این حوزه کار کرده؛ فقط مباحث پیشرفته، معماری، بهینه‌سازی و سطح ارشد." },
 ] as const;
 
 export const HOURS_OPTIONS = [
@@ -58,37 +58,37 @@ export function hoursLabel(v?: string | null): string | undefined {
   return HOURS_OPTIONS.find((o) => o.value === v)?.label;
 }
 
-// ── شکلِ داده ──────────────────────────────────────────────────────────
+// ── شکل داده ──────────────────────────────────────────────────────────
 
 export type PlanResource = {
   title: string;
   type: string;
   source?: string;
-  /** فقط لینکِ منابعِ شناخته‌شده نگه داشته می‌شود — نگاه کن به sanitizeUrl. */
+  /** فقط لینک منابع شناخته‌شده نگه داشته می‌شود — نگاه کن به sanitizeUrl. */
   url?: string;
-  /** این منبع دقیقاً برای کدام بخشِ مرحله است. */
+  /** این منبع دقیقا برای کدام بخش مرحله است. */
   why?: string;
 };
 
 export type PlanTool = { name: string; use: string };
 
-/** یک سرفصلِ یادگرفتنی: عنوان + توضیحِ کامل + نکته‌های ریز. */
+/** یک سرفصل یادگرفتنی: عنوان + توضیح کامل + نکته‌های ریز. */
 export type PlanTopic = { title: string; detail: string; points: string[] };
 
-/** یک کارِ عملی: چه کنی، دقیقاً چطور، و چه چیزی باید تحویل بدهی. */
+/** یک کار عملی: چه کنی، دقیقا چطور، و چه چیزی باید تحویل بدهی. */
 export type PlanTask = { title: string; detail: string; output: string };
 
 export type PlanProject = { title: string; brief: string; deliverables: string[] };
 
 export type PlanStage = {
-  /** شماره‌ی مرحله، همیشه ۱ تا n و پشتِ‌سرِ هم. */
+  /** شماره‌ی مرحله، همیشه ۱ تا n و پشت‌سر هم. */
   n: number;
   title: string;
   /** بعد از این مرحله چه کاری می‌توانی بکنی. */
   goal: string;
-  /** «۲ هفته» — رشته است نه عدد، چون واحدش را خودِ مدل انتخاب می‌کند. */
+  /** «۲ هفته» — رشته است نه عدد، چون واحدش را خود مدل انتخاب می‌کند. */
   duration: string;
-  /** محدوده‌ی مرحله در اسکلت — به فازِ جزئیات می‌گوید چه چیزی مالِ این مرحله است. */
+  /** محدوده‌ی مرحله در اسکلت — به فاز جزئیات می‌گوید چه چیزی مال این مرحله است. */
   focus: string;
   /** چرا این مرحله این‌جای مسیر است. */
   why: string;
@@ -101,7 +101,7 @@ export type PlanStage = {
   tools: PlanTool[];
   resources: PlanResource[];
   pitfalls: string[];
-  /** معیارهای قابلِ سنجشِ تمام‌شدن. */
+  /** معیارهای قابل سنجش تمام‌شدن. */
   done: string[];
 };
 
@@ -111,10 +111,10 @@ export type PlanMeta = {
   level?: LevelValue;
   weeklyHours?: HoursValue;
   background?: string;
-  /** این مسیر برای چه کسی طراحی شد (برداشتِ مدل از کاربر). */
+  /** این مسیر برای چه کسی طراحی شد (برداشت مدل از کاربر). */
   audience: string;
   prerequisites: string[];
-  /** آخرِ مسیر دقیقاً چه کارهایی از دستت برمی‌آید. */
+  /** آخر مسیر دقیقا چه کارهایی از دستت برمی‌آید. */
   outcomes: string[];
   certifications: PlanCert[];
 };
@@ -131,12 +131,12 @@ export type RoadmapPlan = {
 
 export type PlanIssue = { code: string; message: string };
 
-// ── پاک‌سازیِ ورودیِ مدل ─────────────────────────────────────────────────
-// خروجیِ مدل هیچ تضمینی ندارد: عدد به‌جای رشته، رشته به‌جای آرایه، فیلدِ
-// غایب. normalize هر خروجی‌ای — و هر ردیفِ قدیمیِ دیتابیس — را به یک
-// شکلِ قابلِ رندر تبدیل می‌کند تا UI هیچ‌وقت optional-chain نزند.
+// ── پاک‌سازی ورودی مدل ─────────────────────────────────────────────────
+// خروجی مدل هیچ تضمینی ندارد: عدد به‌جای رشته، رشته به‌جای آرایه، فیلد
+// غایب. normalize هر خروجی‌ای — و هر ردیف قدیمی دیتابیس — را به یک
+// شکل قابل رندر تبدیل می‌کند تا UI هیچ‌وقت optional-chain نزند.
 
-// ارقام در کلِ سایت انگلیسی‌اند — مدل گاهی فارسی می‌نویسه، و رودمپ‌های قدیمیِ
+// ارقام در کل سایت انگلیسی‌اند — مدل گاهی فارسی می‌نویسه، و رودمپ‌های قدیمی
 // دیتابیس هم از همین normalize رد می‌شن، پس هر دو همین‌جا لاتین می‌شن.
 function latinDigits(s: string): string {
   return s.replace(/[۰-۹]/g, (d) => String(d.charCodeAt(0) - 0x06f0));
@@ -172,10 +172,10 @@ function objects<T>(v: unknown, map: (o: any) => T | null, max: number = PLAN_LI
 }
 
 /**
- * دامنه‌هایی که لینکشان قابلِ اعتماد است.
+ * دامنه‌هایی که لینکشان قابل اعتماد است.
  *
- * مدل لینک‌های بسیار قانع‌کننده‌ای *می‌سازد* که وجود ندارند. یک منبعِ
- * واقعی با لینکِ ۴۰۴ بدتر از منبعِ بدونِ لینک است؛ پس عنوان می‌ماند و لینک
+ * مدل لینک‌های بسیار قانع‌کننده‌ای *می‌سازد* که وجود ندارند. یک منبع
+ * واقعی با لینک ۴۰۴ بدتر از منبع بدون لینک است؛ پس عنوان می‌ماند و لینک
  * فقط وقتی دامنه‌اش شناخته‌شده باشد. بقیه در UI به جست‌وجوی همان نام می‌روند.
  */
 const TRUSTED_HOSTS = [
@@ -219,7 +219,7 @@ function resource(r: any): PlanResource | null {
   return res;
 }
 
-/** ابزار هم شکلِ قدیمی (رشته) را می‌پذیرد هم شکلِ جدید ({name, use}). */
+/** ابزار هم شکل قدیمی (رشته) را می‌پذیرد هم شکل جدید ({name, use}). */
 function tool(t: any): PlanTool | null {
   if (typeof t === "string" || typeof t === "number") {
     const name = text(t, 80);
@@ -271,12 +271,12 @@ export function normalizeStage(raw: any, index: number): PlanStage | null {
   if (!raw || typeof raw !== "object") return null;
   const title = text(raw.title, PLAN_LIMITS.maxTitleLen);
   if (!title) return null;
-  // ردیف‌های نسخه‌ی قبل learn/do/done(رشته) داشتند — همان‌ها به شکلِ جدید
-  // نگاشت می‌شوند تا مسیرهای قدیمیِ کاربر خراب نشوند.
+  // ردیف‌های نسخه‌ی قبل learn/do/done(رشته) داشتند — همان‌ها به شکل جدید
+  // نگاشت می‌شوند تا مسیرهای قدیمی کاربر خراب نشوند.
   const topics = objects(raw.topics ?? raw.learn, topic);
   const tasks = objects(raw.tasks ?? raw.do, task);
   return {
-    // شماره‌ی مدل نادیده گرفته می‌شود و از ترتیبِ آرایه ساخته می‌شود:
+    // شماره‌ی مدل نادیده گرفته می‌شود و از ترتیب آرایه ساخته می‌شود:
     // مدل گاهی از ۰ شماره می‌دهد، گاهی می‌پرد، گاهی تکراری.
     n: index + 1,
     title,
@@ -324,8 +324,8 @@ export function normalizePlan(raw: any): RoadmapPlan {
   return {
     title: text(raw?.title, PLAN_LIMITS.maxTitleLen),
     summary: text(raw?.summary, 1_200),
-    // متنِ راهنما تنها چیزی‌ست که نباید تک‌خطی شود — شکستِ خط بخشی از
-    // معنایش است (تیترها و فهرست‌ها)، پس فقط trim و سقفِ طول.
+    // متن راهنما تنها چیزی‌ست که نباید تک‌خطی شود — شکست خط بخشی از
+    // معنایش است (تیترها و فهرست‌ها)، پس فقط trim و سقف طول.
     guide: typeof raw?.guide === "string" ? latinDigits(raw.guide.trim()).slice(0, PLAN_LIMITS.maxGuideChars) : "",
     totalDuration: text(raw?.totalDuration ?? raw?.total_duration, 60),
     tools: objects(raw?.tools, tool, PLAN_LIMITS.maxListItems * 2),
@@ -335,13 +335,13 @@ export function normalizePlan(raw: any): RoadmapPlan {
 }
 
 // ── اعتبارسنجی ──────────────────────────────────────────────────────────
-// پیامِ هر ایراد به مدل پس داده می‌شود (حلقه‌ی تعمیر)، پس باید *برای مدل*
-// قابلِ عمل باشد.
+// پیام هر ایراد به مدل پس داده می‌شود (حلقه‌ی تعمیر)، پس باید *برای مدل*
+// قابل عمل باشد.
 
-/** اسکلت: عنوان و مرحله‌بندیِ درست — جزئیات این‌جا چک نمی‌شود. */
+/** اسکلت: عنوان و مرحله‌بندی درست — جزئیات این‌جا چک نمی‌شود. */
 export function validateOutline(plan: RoadmapPlan): PlanIssue[] {
   const issues: PlanIssue[] = [];
-  if (!plan.title) issues.push({ code: "no_title", message: "عنوانِ مسیر (title) خالی است." });
+  if (!plan.title) issues.push({ code: "no_title", message: "عنوان مسیر (title) خالی است." });
   if (plan.stages.length < PLAN_LIMITS.minStages) {
     issues.push({
       code: "too_few_stages",
@@ -349,7 +349,7 @@ export function validateOutline(plan: RoadmapPlan): PlanIssue[] {
     });
   }
   if (!plan.meta.outcomes.length) {
-    issues.push({ code: "no_outcomes", message: "meta.outcomes خالی است — بگو آخرِ مسیر دقیقاً چه کارهایی از دستش برمی‌آید." });
+    issues.push({ code: "no_outcomes", message: "meta.outcomes خالی است — بگو آخر مسیر دقیقا چه کارهایی از دستش برمی‌آید." });
   }
   const seen = new Set<string>();
   for (const st of plan.stages) {
@@ -362,15 +362,15 @@ export function validateOutline(plan: RoadmapPlan): PlanIssue[] {
   return issues;
 }
 
-/** جزئیاتِ یک مرحله: حداقلِ چیزی که یک مرحله را «قابلِ اجرا» می‌کند. */
+/** جزئیات یک مرحله: حداقل چیزی که یک مرحله را «قابل اجرا» می‌کند. */
 export function validateStageDetail(st: PlanStage): PlanIssue[] {
   const issues: PlanIssue[] = [];
   if (st.topics.length < 2) issues.push({ code: "few_topics", message: "حداقل 2 سرفصل (topics) لازم است." });
   if (st.topics.some((t) => !t.detail)) {
-    issues.push({ code: "topic_no_detail", message: "هر سرفصل باید detail داشته باشد (توضیحِ کامل، نه فقط عنوان)." });
+    issues.push({ code: "topic_no_detail", message: "هر سرفصل باید detail داشته باشد (توضیح کامل، نه فقط عنوان)." });
   }
-  if (st.tasks.length < 2) issues.push({ code: "few_tasks", message: "حداقل 2 کارِ عملی (tasks) لازم است." });
-  if (!st.done.length) issues.push({ code: "no_checkpoint", message: "معیارِ اتمام (done) خالی است." });
+  if (st.tasks.length < 2) issues.push({ code: "few_tasks", message: "حداقل 2 کار عملی (tasks) لازم است." });
+  if (!st.done.length) issues.push({ code: "no_checkpoint", message: "معیار اتمام (done) خالی است." });
   return issues;
 }
 
@@ -378,13 +378,13 @@ export function validateGuide(guide: string): PlanIssue[] {
   if (guide.length >= PLAN_LIMITS.minGuideChars) return [];
   return [{
     code: "guide_too_short",
-    message: `متنِ guide خیلی کوتاه است (${guide.length} نویسه). باید یک راهنمای کاملِ چندبخشی باشد، نه چند جمله.`,
+    message: `متن guide خیلی کوتاه است (${guide.length} نویسه). باید یک راهنمای کامل چندبخشی باشد، نه چند جمله.`,
   }];
 }
 
 // ── پیشرفت ──────────────────────────────────────────────────────────────
-// دو نوع کلید: «۳» یعنی مرحله‌ی ۳ تمام شد، «۳.۲» یعنی کارِ دومِ مرحله‌ی ۳
-// انجام شد. درصدِ کل فقط از مرحله‌ها حساب می‌شود؛ کارها پیشرفتِ داخلیِ هر
+// دو نوع کلید: «۳» یعنی مرحله‌ی ۳ تمام شد، «۳.۲» یعنی کار دوم مرحله‌ی ۳
+// انجام شد. درصد کل فقط از مرحله‌ها حساب می‌شود؛ کارها پیشرفت داخلی هر
 // مرحله‌اند. کلید شماره است نه اندیس، چون شماره همان چیزی‌ست که دیده می‌شود.
 
 export type StepProgress = Record<string, boolean>;
@@ -393,7 +393,7 @@ export function taskKey(n: number, i: number): string {
   return `${n}.${i + 1}`;
 }
 
-/** فقط کلیدهایی که واقعاً مرحله/کاری به آن شماره هست — بقیه دور ریخته می‌شوند. */
+/** فقط کلیدهایی که واقعا مرحله/کاری به آن شماره هست — بقیه دور ریخته می‌شوند. */
 export function sanitizeStepProgress(stages: PlanStage[], raw: unknown): StepProgress {
   if (!raw || typeof raw !== "object" || Array.isArray(raw)) return {};
   const valid = new Set<string>();
@@ -417,9 +417,9 @@ export function computePlanProgress(stages: PlanStage[], progress: StepProgress)
 }
 
 /**
- * شمارشِ مرحله‌های یک ردیفِ خامِ دیتابیس — برای جاهایی بیرونِ خودِ ماژولِ
- * رودمپ (آمارِ ادمین، گزارشِ هفتگی، پروفایلِ دوستان) که فقط «چندتا از
- * چندتا» را می‌خواهند. کلیدهای کار («۳.۲») عمداً شمرده نمی‌شوند.
+ * شمارش مرحله‌های یک ردیف خام دیتابیس — برای جاهایی بیرون خود ماژول
+ * رودمپ (آمار ادمین، گزارش هفتگی، پروفایل دوستان) که فقط «چندتا از
+ * چندتا» را می‌خواهند. کلیدهای کار («۳.۲») عمدا شمرده نمی‌شوند.
  */
 export function countRowProgress(steps: unknown, progress: unknown): { total: number; done: number } {
   const arr = Array.isArray(steps) ? (steps as any[]) : [];

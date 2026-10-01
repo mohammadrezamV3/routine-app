@@ -9,8 +9,8 @@ import { faNum } from "@/lib/jalali";
 import { taskKey, type PlanStage } from "@/lib/roadmapPlan";
 import { RoadmapStepToProgram } from "@/components/RoadmapStepToProgram";
 
-// منبعی که مدل لینکِ قابلِ اعتماد برایش نداده (سمتِ سرور فیلتر شده) به یک
-// جست‌وجوی واقعی وصل می‌شود، نه یک URLِ ساختگی.
+// منبعی که مدل لینک قابل اعتماد برایش نداده (سمت سرور فیلتر شده) به یک
+// جست‌وجوی واقعی وصل می‌شود، نه یک URL ساختگی.
 export function searchUrl(query: string, topic: string): string {
   return `https://www.google.com/search?q=${encodeURIComponent(`${query} ${topic}`)}`;
 }
@@ -21,11 +21,11 @@ const RESOURCE_TYPES: Record<string, string> = {
 };
 
 /**
- * یک مرحله در تایم‌لاینِ مسیر — آکاردئونی.
+ * یک مرحله در تایم‌لاین مسیر — آکاردئونی.
  *
- * سربرگ همیشه دیده می‌شود (شماره/تیک، عنوان، مدت، پیشرفتِ کارها)؛ بدنه فقط
- * وقتی باز است. عمداً نه یک صفحه‌ی جدا: کاربر باید جای خودش در کلِ مسیر
- * را ببیند، و ۱۰+ مرحله‌ی کاملاً باز یک صفحه‌ی بی‌انتها می‌ساخت.
+ * سربرگ همیشه دیده می‌شود (شماره/تیک، عنوان، مدت، پیشرفت کارها)؛ بدنه فقط
+ * وقتی باز است. عمدا نه یک صفحه‌ی جدا: کاربر باید جای خودش در کل مسیر
+ * را ببیند، و ۱۰+ مرحله‌ی کاملا باز یک صفحه‌ی بی‌انتها می‌ساخت.
  */
 export function RoadmapStageCard({
   stage,
@@ -89,7 +89,7 @@ export function RoadmapStageCard({
                 {stage.focus && <p>{stage.focus}</p>}
                 <button type="button" className="trade-primary-btn" onClick={onRegenerate} disabled={regenerating}>
                   {regenerating ? <Loader2 size={14} className="trade-spin" /> : <Sparkles size={14} />}
-                  {regenerating ? "در حال ساخت…" : "ساختِ جزئیاتِ این مرحله"}
+                  {regenerating ? "در حال ساخت…" : "ساخت جزئیات این مرحله"}
                 </button>
               </div>
             ) : (
@@ -127,7 +127,7 @@ export function RoadmapStageCard({
                         const checked = !!progress[taskKey(stage.n, i)];
                         return (
                           <li key={i} className={checked ? "checked" : ""}>
-                            <TickButton size={22} checked={checked} onToggle={() => onToggleTask(i)} label={checked ? "برداشتنِ تیک" : "انجام شد"} />
+                            <TickButton size={22} checked={checked} onToggle={() => onToggleTask(i)} label={checked ? "برداشتن تیک" : "انجام شد"} />
                             <div className="rp-task-body">
                               <div className="rp-task-title">{t.title}</div>
                               {t.detail && <p>{t.detail}</p>}
@@ -175,7 +175,7 @@ export function RoadmapStageCard({
                         <li key={i}>
                           <span className="rp-res-type">{RESOURCE_TYPES[r.type] || r.type}</span>
                           <div className="rp-res-body">
-                            {/* لینکِ مستقیم فقط برای دامنه‌های شناخته‌شده (sanitizeUrl)؛ بقیه جست‌وجو. */}
+                            {/* لینک مستقیم فقط برای دامنه‌های شناخته‌شده (sanitizeUrl)؛ بقیه جست‌وجو. */}
                             <a href={r.url || searchUrl(r.title, topic)} target="_blank" rel="noopener noreferrer">
                               {r.title}<ExternalLink size={11} />
                             </a>
@@ -216,10 +216,10 @@ export function RoadmapStageCard({
                   className="rp-ghost-btn"
                   onClick={onRegenerate}
                   disabled={regenerating}
-                  title="جزئیاتِ این مرحله را دوباره بساز"
+                  title="جزئیات این مرحله را دوباره بساز"
                 >
                   {regenerating ? <Loader2 size={14} className="trade-spin" /> : <RefreshCw size={14} />}
-                  {regenerating ? "در حال ساخت…" : "ساختِ دوباره"}
+                  {regenerating ? "در حال ساخت…" : "ساخت دوباره"}
                 </button>
               )}
             </div>

@@ -14,10 +14,10 @@ function toReview(r: ReviewRow) {
   return { id: r.id, rating: r.rating, body: r.body, createdAt: r.createdAt, student: { name: displayName(r.student), avatarUrl: r.student.avatarUrl, golden: !!r.student.goldenSince } };
 }
 
-// GET /api/mentors/:mentorId (mentorId = userIdِ منتور) → پروفایلِ عمومی + نظرات.
+// GET /api/mentors/:mentorId (mentorId = userId منتور) → پروفایل عمومی + نظرات.
 // دیده می‌شه اگه: خودم باشم، یا پروفایل منتشرشده/غیرمعلق باشه، یا با این
-// منتور رابطه‌ای (هر وضعیتی جز BLOCKED) داشته باشم تا شاگردِ فعلی/قبلی بتونه
-// صفحه‌ی منتورش رو باز کنه. صاحبِ مسدود/حذف‌شده یا بلاکِ دوطرفه → ۴۰۴.
+// منتور رابطه‌ای (هر وضعیتی جز BLOCKED) داشته باشم تا شاگرد فعلی/قبلی بتونه
+// صفحه‌ی منتورش رو باز کنه. صاحب مسدود/حذف‌شده یا بلاک دوطرفه → ۴۰۴.
 export async function GET(_req: Request, { params }: { params: { mentorId: string } }) {
   const g = await requireMentorsUser();
   if (!g.ok) return g.response;
@@ -26,11 +26,11 @@ export async function GET(_req: Request, { params }: { params: { mentorId: strin
   if (typeof mentorId !== "string" || !mentorId || mentorId.length > 64) return notFound();
 
   const isSelf = mentorId === me;
-  // صفِ انتظار روی همین مسیرِ خواندن جلو می‌رود (بدونِ کرانِ بیرونی) تا
-  // «ظرفیت تکمیل»/نوبتِ من به‌روز باشد؛ بدونِ صف فقط یک count ارزان است
+  // صف انتظار روی همین مسیر خواندن جلو می‌رود (بدون کران بیرونی) تا
+  // «ظرفیت تکمیل»/نوبت من به‌روز باشد؛ بدون صف فقط یک count ارزان است
   await advanceWaitlist(mentorId);
-  // سرعت: قبلا پنج مرحله‌ی پشتِ‌سرِهم به دیتابیس می‌رفت (پروفایل → رابطه →
-  // بلاک → آمار/نظرات). حالا همه هم‌زمان؛ شرطِ دیده‌شدن بعدش سنجیده می‌شه و
+  // سرعت: قبلا پنج مرحله‌ی پشت‌سرهم به دیتابیس می‌رفت (پروفایل → رابطه →
+  // بلاک → آمار/نظرات). حالا همه هم‌زمان؛ شرط دیده‌شدن بعدش سنجیده می‌شه و
   // اگه رد شد همون ۴۰۴ برمی‌گرده (داده‌ای به بیرون نمی‌ره).
   const [profile, myMentorship, blocked, stats, reviews, myReviewRow, saved, myWaitlist, waitlistCount] = await Promise.all([
     prisma.mentorProfile.findFirst({
@@ -64,7 +64,7 @@ export async function GET(_req: Request, { params }: { params: { mentorId: strin
   if (!profile) return notFound();
 
   if (!isSelf) {
-    // احرازِ هویت اجباریه: منتورِ تاییدنشده فقط برای شاگردهای قبلی/فعلیش دیده می‌شه
+    // احراز هویت اجباریه: منتور تاییدنشده فقط برای شاگردهای قبلی/فعلیش دیده می‌شه
     const discoverable = profile.published && !profile.suspendedAt && profile.identityStatus === "VERIFIED";
     const related = !!myMentorship && myMentorship.status !== "BLOCKED";
     if (!discoverable && !related) return notFound();
@@ -73,7 +73,7 @@ export async function GET(_req: Request, { params }: { params: { mentorId: strin
 
   const s = stats.get(mentorId);
 
-  // نظر فقط از شاگردی که رابطه‌اش واقعاً شروع شده (ACTIVE یا ENDED بعد از فعال‌شدن)
+  // نظر فقط از شاگردی که رابطه‌اش واقعا شروع شده (ACTIVE یا ENDED بعد از فعال‌شدن)
   const canReview =
     !isSelf && !myReviewRow && !!myMentorship?.startedAt && (myMentorship.status === "ACTIVE" || myMentorship.status === "ENDED");
 
@@ -85,7 +85,7 @@ export async function GET(_req: Request, { params }: { params: { mentorId: strin
       completedPrograms: s?.completedPrograms ?? 0,
       lastActiveAt: profile.lastActiveAt,
       memberSince: profile.createdAt,
-      // دسترس‌پذیری (lib/mentorAvailability.ts): پیامِ عدمِ حضور فقط تا روزِ بازگشت
+      // دسترس‌پذیری (lib/mentorAvailability.ts): پیام عدم حضور فقط تا روز بازگشت
       awayMessage: toMentorCard(profile, s).awayUntil ? profile.awayMessage : null,
       intakeQuestions: profile.intakeQuestions,
     },
@@ -93,9 +93,9 @@ export async function GET(_req: Request, { params }: { params: { mentorId: strin
     myMentorship: myMentorship ? { id: myMentorship.id, status: myMentorship.status, initiatedBy: myMentorship.initiatedBy } : null,
     canReview,
     myReview: myReviewRow ? toReview(myReviewRow) : null,
-    // نشانکِ «ذخیره‌شده‌ها» (lib/savedMentors.ts)
+    // نشانک «ذخیره‌شده‌ها» (lib/savedMentors.ts)
     saved,
-    // صفِ انتظار (lib/mentorWaitlistServer.ts): وضعیتِ من + تعدادِ منتظرها
+    // صف انتظار (lib/mentorWaitlistServer.ts): وضعیت من + تعداد منتظرها
     waitlist: myWaitlist,
     waitlistCount,
   });

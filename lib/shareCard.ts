@@ -1,24 +1,24 @@
 "use client";
 
-// کارتِ اشتراکیِ «موفقیت» — یک تصویرِ PNG (۱۰۸۰×۱۳۵۰) که کاربر با دوستاش به
+// کارت اشتراکی «موفقیت» — یک تصویر PNG (۱۰۸۰×۱۳۵۰) که کاربر با دوستاش به
 // اشتراک می‌ذاره. هر کارت *یک* محتوا داره (حلقه‌ها یا نقشه‌ی ثبات یا استریک) تا
-// فضا شلوغ نشه؛ داخلِ حلقه‌ها تعدادِ روزهای استریک میاد. بالای کارت لوگوی هدر
-// (نشان + اسمِ برند)، آدرسِ سایت و — اگه کاربر بخواد — کدِ دعوتش؛ پایینِ کارت
+// فضا شلوغ نشه؛ داخل حلقه‌ها تعداد روزهای استریک میاد. بالای کارت لوگوی هدر
+// (نشان + اسم برند)، آدرس سایت و — اگه کاربر بخواد — کد دعوتش؛ پایین کارت
 // هیچ لینکی نیست. هیچ داده‌ای از دستگاه بیرون نمی‌ره مگر همین تصویر، وقتی خودش
 // «اشتراک» رو می‌زنه.
 //
-// رنگ‌ها از توکن‌های تمِ فعلی خونده می‌شن (مثلِ WeeklyAnalysisShare) تا تصویر
-// هم‌رنگِ همون چیزی باشه که کاربر روی صفحه می‌بینه.
+// رنگ‌ها از توکن‌های تم فعلی خونده می‌شن (مثل WeeklyAnalysisShare) تا تصویر
+// هم‌رنگ همون چیزی باشه که کاربر روی صفحه می‌بینه.
 
 import { faNum } from "./jalali";
 import { FLAME_BOX, FLAME_LAYERS, flamePalette, flamePath, layerFrame } from "./streakFlameShape";
 
-/** display=null یعنی کاربر عددِ این حلقه رو پنهان کرده — خودِ حلقه کشیده می‌شه، عددش نه */
+/** display=null یعنی کاربر عدد این حلقه رو پنهان کرده — خود حلقه کشیده می‌شه، عددش نه */
 export type ShareRing = { label: string; value: number; display: string | null; colors: [string, string] };
 
 export type ShareMonthCell = { jd: number; level: number; today: boolean; future: boolean };
 
-/** محتوای اصلیِ کارت — هر کارت دقیقا *یکی* از این‌هاست (کاربر خودش انتخاب می‌کنه) */
+/** محتوای اصلی کارت — هر کارت دقیقا *یکی* از این‌هاست (کاربر خودش انتخاب می‌کنه) */
 export type ShareBody =
   | { kind: "rings"; streak: number; items: ShareRing[] }
   | { kind: "month"; streak: number; title: string; lead: number; cells: ShareMonthCell[]; stats: { label: string; value: string }[] }
@@ -28,16 +28,16 @@ export type ShareCardInput = {
   title: string;
   subtitle?: string;
   body: ShareBody;
-  /** کدِ دعوت — بالای کارت، کنارِ آدرسِ سایت (پایینِ کارت هیچ لینکی نیست) */
+  /** کد دعوت — بالای کارت، کنار آدرس سایت (پایین کارت هیچ لینکی نیست) */
   inviteCode?: string | null;
 };
 
-// یک قالبِ ثابت (۴:۵) — هم پست هم استوری/چت بدونِ برش نشونش می‌دن
+// یک قالب ثابت (۴:۵) — هم پست هم استوری/چت بدون برش نشونش می‌دن
 export const SHARE_W = 1080;
 export const SHARE_H = 1350;
-/** تراکمِ پیکسلِ خروجی */
+/** تراکم پیکسل خروجی */
 const SHARE_DPR = 2;
-/** فتحه/کسره/ضمه/تنوین/تشدید/سکون و الفِ کوچک */
+/** فتحه/کسره/ضمه/تنوین/تشدید/سکون و الف کوچک */
 const NO_DIACRITICS = /[\u064B-\u0652\u0670]/g;
 const W = SHARE_W;
 const H = SHARE_H;
@@ -75,7 +75,7 @@ function fontStack(): string {
   return [latin, vazir, "sans-serif"].filter(Boolean).join(", ");
 }
 
-/** رنگِ هگز یا rgb() → rgba با شفافیتِ دلخواه (توکن‌های تم هر دو شکل رو دارن) */
+/** رنگ هگز یا rgb() → rgba با شفافیت دلخواه (توکن‌های تم هر دو شکل رو دارن) */
 function rgba(color: string, a: number): string {
   const c = color.trim();
   const hex = c.match(/^#?([0-9a-f]{6})$/i);
@@ -104,7 +104,7 @@ function roundRect(ctx: CanvasRenderingContext2D, x: number, y: number, w: numbe
   ctx.closePath();
 }
 
-/** شعله‌ی بزرگ (یک فریمِ همون شعله‌ی زنده) با مرکزِ پایه در (x, y) و عرضِ size */
+/** شعله‌ی بزرگ (یک فریم همون شعله‌ی زنده) با مرکز پایه در (x, y) و عرض size */
 function drawFlame(ctx: CanvasRenderingContext2D, x: number, y: number, size: number, days: number, glow = true) {
   const pal = flamePalette(days);
   const s = size / FLAME_BOX.w;
@@ -130,16 +130,16 @@ function drawFlame(ctx: CanvasRenderingContext2D, x: number, y: number, size: nu
 }
 
 // ── پس‌زمینه‌ی شیشه‌ای ─────────────────────────────────────────────
-// یک صحنه‌ی نورانی (چند هاله‌ی رنگیِ خیلی پخش) ساخته می‌شه و *فقط داخلِ قابِ
-// کارت* دیده می‌شه — بیرونِ کارت رنگِ ساده‌ی پس‌زمینه‌ست. داخلِ قاب: نسخه‌ی خیلی
-// تارِ صحنه + لایه‌ی رنگِ شیری + درخششِ لبه‌ی بالا + حاشیه‌ی نوری. تاری با
-// کوچک‌کردنِ مرحله‌ای و بزرگ‌کردنِ دوباره ساخته می‌شه (نه ctx.filter) تا روی همه‌ی
-// مرورگرها — از جمله سافاریِ قدیمی — یکسان و نرم دربیاد.
+// یک صحنه‌ی نورانی (چند هاله‌ی رنگی خیلی پخش) ساخته می‌شه و *فقط داخل قاب
+// کارت* دیده می‌شه — بیرون کارت رنگ ساده‌ی پس‌زمینه‌ست. داخل قاب: نسخه‌ی خیلی
+// تار صحنه + لایه‌ی رنگ شیری + درخشش لبه‌ی بالا + حاشیه‌ی نوری. تاری با
+// کوچک‌کردن مرحله‌ای و بزرگ‌کردن دوباره ساخته می‌شه (نه ctx.filter) تا روی همه‌ی
+// مرورگرها — از جمله سافاری قدیمی — یکسان و نرم دربیاد.
 type Orb = { x: number; y: number; r: number; color: string; a: number; soft: boolean };
 
-// فقط رنگ‌های برند: اکسنتِ تم (سبزِ آریون در شب، مسیِ گرم در روز) + رنگِ دومِ
-// لوگو (فیروزه‌ایِ نشان در شب، طلاییِ گرم در روز). کم و آرام — کارت باید «آریون»
-// به‌نظر بیاد، نه رنگین‌کمان؛ رنگِ داده‌ها (حلقه‌ها/نقشه) خودشون روی شیشه می‌درخشن.
+// فقط رنگ‌های برند: اکسنت تم (سبز آریون در شب، مسی گرم در روز) + رنگ دوم
+// لوگو (فیروزه‌ای نشان در شب، طلایی گرم در روز). کم و آرام — کارت باید «آریون»
+// به‌نظر بیاد، نه رنگین‌کمان؛ رنگ داده‌ها (حلقه‌ها/نقشه) خودشون روی شیشه می‌درخشن.
 function sceneOrbs(p: Palette): Orb[] {
   const brand2 = p.light ? "#E0A15E" : "#14D2DC";
   if (p.light) {
@@ -178,7 +178,7 @@ function paintScene(c: CanvasRenderingContext2D, w: number, h: number, p: Palett
   }
 }
 
-/** نسخه‌ی تارِ صحنه: کوچک‌کردنِ نصف‌به‌نصف تا عرضِ `target` (بدونِ پله‌پله‌شدن) */
+/** نسخه‌ی تار صحنه: کوچک‌کردن نصف‌به‌نصف تا عرض `target` (بدون پله‌پله‌شدن) */
 function blurredScene(src: HTMLCanvasElement, target: number): HTMLCanvasElement {
   let cur = src;
   while (cur.width / 2 >= target) {
@@ -194,7 +194,7 @@ function blurredScene(src: HTMLCanvasElement, target: number): HTMLCanvasElement
   return cur;
 }
 
-/** دانه‌ی خیلی ریزِ شیشه‌ی مات — یک کاشیِ کوچکِ تکرارشونده، با شفافیتِ کم */
+/** دانه‌ی خیلی ریز شیشه‌ی مات — یک کاشی کوچک تکرارشونده، با شفافیت کم */
 function grainPattern(c: CanvasRenderingContext2D, light: boolean): CanvasPattern | null {
   const t = document.createElement("canvas");
   t.width = t.height = 128;
@@ -226,7 +226,7 @@ function loadImage(src: string): Promise<HTMLImageElement | null> {
   }
   return hit;
 }
-// لوگوی هدر (نشان + اسمِ برند، همون فایلی که NavDrawer نشون می‌ده) — نسخه‌ی تمِ فعلی
+// لوگوی هدر (نشان + اسم برند، همون فایلی که NavDrawer نشون می‌ده) — نسخه‌ی تم فعلی
 const loadLogo = (light: boolean) => loadImage(light ? "/images/logo-lockup-light-theme.webp" : "/images/logo-lockup-dark-theme.png");
 
 /** شبکه‌ی نقطه‌های ریز که از وسط به لبه‌ها محو می‌شه */
@@ -271,7 +271,7 @@ export async function renderShareCard(input: ShareCardInput): Promise<HTMLCanvas
     })(),
   ]);
 
-  // خروجی با ۲ برابرِ تراکم (۲۱۶۰×۲۷۰۰) — روی صفحه‌های رتینا و بعد از فشرده‌سازیِ
+  // خروجی با ۲ برابر تراکم (۲۱۶۰×۲۷۰۰) — روی صفحه‌های رتینا و بعد از فشرده‌سازی
   // پیام‌رسان‌ها هم لبه‌ی متن و شیشه تیز می‌مونه. همه‌ی مختصات منطقی (۱۰۸۰×۱۳۵۰).
   const canvas = document.createElement("canvas");
   canvas.width = W * SHARE_DPR;
@@ -288,25 +288,25 @@ export async function renderShareCard(input: ShareCardInput): Promise<HTMLCanvas
     ctx.textAlign = align;
     ctx.direction = dir;
     ctx.textBaseline = "alphabetic";
-    // هیچ اِعرابی روی تصویر نمیاد (درخواستِ صاحبِ محصول) — حتی اگه ورودی داشته باشه
+    // هیچ اعرابی روی تصویر نمیاد (درخواست صاحب محصول) — حتی اگه ورودی داشته باشه
     const plain = s.replace(NO_DIACRITICS, "");
     if (maxW) ctx.fillText(plain, x, y, maxW);
     else ctx.fillText(plain, x, y);
   };
 
-  // ── صحنه‌ی نورانیِ پشت + کارتِ شیشه‌ی مات ──
+  // ── صحنه‌ی نورانی پشت + کارت شیشه‌ی مات ──
   const scene = document.createElement("canvas");
   scene.width = W;
   scene.height = H;
   const sc = scene.getContext("2d");
   if (!sc) throw new Error("canvas");
   paintScene(sc, W, H, p);
-  // بیرونِ کارت ساده و بی‌رنگه — رنگ‌ها فقط داخلِ شیشه دیده می‌شن
+  // بیرون کارت ساده و بی‌رنگه — رنگ‌ها فقط داخل شیشه دیده می‌شن
   ctx.fillStyle = p.bg;
   ctx.fillRect(0, 0, W, H);
 
   const CX = 48, CY = 48, CW = W - 96, CH = H - 96, CR = 52;
-  // سایه‌ی نرمِ زیرِ شیشه
+  // سایه‌ی نرم زیر شیشه
   ctx.save();
   roundRect(ctx, CX, CY, CW, CH, CR);
   ctx.shadowColor = p.light ? "rgba(80,50,20,.22)" : "rgba(0,0,0,.55)";
@@ -319,19 +319,19 @@ export async function renderShareCard(input: ShareCardInput): Promise<HTMLCanvas
   ctx.save();
   roundRect(ctx, CX, CY, CW, CH, CR);
   ctx.clip();
-  // خودِ «ماتی»: صحنه‌ی خیلی تار شده داخلِ قاب
-  // خیلی تار (عرضِ ۱۷px و بعد بزرگ) تا رنگ‌ها کاملا پخش و بی‌لبه باشن
+  // خود «ماتی»: صحنه‌ی خیلی تار شده داخل قاب
+  // خیلی تار (عرض ۱۷px و بعد بزرگ) تا رنگ‌ها کاملا پخش و بی‌لبه باشن
   ctx.drawImage(blurredScene(scene, 17), 0, 0, W, H);
-  // رنگِ شیری/دودیِ شیشه
+  // رنگ شیری/دودی شیشه
   ctx.fillStyle = p.light ? "rgba(255,255,255,.3)" : rgba(p.bg, 0.44);
   ctx.fillRect(CX, CY, CW, CH);
-  // درخششِ بالای شیشه (نور از بالا-چپ)
+  // درخشش بالای شیشه (نور از بالا-چپ)
   const sheen = ctx.createLinearGradient(CX, CY, CX + CW * 0.55, CY + CH * 0.45);
   sheen.addColorStop(0, p.light ? "rgba(255,255,255,.42)" : "rgba(255,255,255,.12)");
   sheen.addColorStop(1, "rgba(255,255,255,0)");
   ctx.fillStyle = sheen;
   ctx.fillRect(CX, CY, CW, CH);
-  // طرح: شبکه‌ی نقطه‌ایِ محو (زیرِ محتوا)
+  // طرح: شبکه‌ی نقطه‌ای محو (زیر محتوا)
   drawDotGrid(ctx, CX, CY, CW, CH, p);
   // دانه‌ی ریز
   const grain = grainPattern(ctx, p.light);
@@ -341,9 +341,9 @@ export async function renderShareCard(input: ShareCardInput): Promise<HTMLCanvas
   }
   ctx.restore();
 
-  // حاشیه‌ی نوری: روشن بالا-چپ، محو پایین-راست + یه خطِ داخلیِ نازک
+  // حاشیه‌ی نوری: روشن بالا-چپ، محو پایین-راست + یه خط داخلی نازک
   const edge = ctx.createLinearGradient(CX, CY, CX + CW, CY + CH);
-  // لبه‌ی بالا-چپ ته‌رنگِ برند داره — همون نوری که از گوشه‌ی اکسنت میاد
+  // لبه‌ی بالا-چپ ته‌رنگ برند داره — همون نوری که از گوشه‌ی اکسنت میاد
   edge.addColorStop(0, p.light ? rgba(p.accent, 0.55) : `rgba(${p.accentRgb},.6)`);
   edge.addColorStop(0.18, p.light ? "rgba(255,255,255,.9)" : "rgba(255,255,255,.26)");
   edge.addColorStop(0.5, p.light ? "rgba(255,255,255,.35)" : "rgba(255,255,255,.08)");
@@ -357,7 +357,7 @@ export async function renderShareCard(input: ShareCardInput): Promise<HTMLCanvas
   ctx.strokeStyle = p.light ? "rgba(0,0,0,.05)" : "rgba(0,0,0,.25)";
   ctx.stroke();
 
-  // خط‌های داخلِ کارت روی شیشه — نیمه‌شفاف، نه رنگِ ثابتِ خطِ سطح‌ها
+  // خط‌های داخل کارت روی شیشه — نیمه‌شفاف، نه رنگ ثابت خط سطح‌ها
   const hair = p.light ? "rgba(0,0,0,.09)" : "rgba(255,255,255,.12)";
 
   // ── سربرگ: لوگو + آدرس (چپ)، عنوان + تاریخ (راست) ──
@@ -389,7 +389,7 @@ export async function renderShareCard(input: ShareCardInput): Promise<HTMLCanvas
   text(input.title, R, 170, f(900, 58), p.text, "right", "rtl", 520);
   if (input.subtitle) text(input.subtitle, R, 244, f(500, 30), p.muted, "right", "rtl", 520);
 
-  // بدونِ کدِ دعوت، سربرگ کوتاه‌تره و فضا به محتوا می‌رسه
+  // بدون کد دعوت، سربرگ کوتاه‌تره و فضا به محتوا می‌رسه
   const top = input.inviteCode ? 334 : 290, bottom = CY + CH - 56;
   ctx.strokeStyle = hair;
   ctx.lineWidth = 2;
@@ -431,7 +431,7 @@ export async function renderShareCard(input: ShareCardInput): Promise<HTMLCanvas
         ctx.restore();
       }
     });
-    // مرکز: شعله + تعدادِ روزهای استریک
+    // مرکز: شعله + تعداد روزهای استریک
     const inner = outer - n * (sw + gap);
     const k = Math.max(0.55, Math.min(1, inner / 170));
     drawFlame(ctx, cx, cy - 34 * k, 78 * k, b.streak, false);
@@ -458,7 +458,7 @@ export async function renderShareCard(input: ShareCardInput): Promise<HTMLCanvas
     }
   }
 
-  // ── نقشه‌ی ثباتِ ماه ──
+  // ── نقشه‌ی ثبات ماه ──
   if (b.kind === "month") {
     text(b.title, R, top + 78, f(900, 44), p.text, "right");
     const rows = Math.ceil((b.lead + b.cells.length) / 7);
@@ -526,7 +526,7 @@ export async function renderShareCard(input: ShareCardInput): Promise<HTMLCanvas
     });
   }
 
-  // ── استریک (جشنِ استریک): شعله‌ی بزرگ + عدد + هفته ──
+  // ── استریک (جشن استریک): شعله‌ی بزرگ + عدد + هفته ──
   if (b.kind === "streak") {
     const cx = W / 2;
     drawFlame(ctx, cx, top + 420, 280, b.streak);
@@ -574,8 +574,8 @@ export async function canvasToBlob(canvas: HTMLCanvasElement): Promise<Blob> {
 }
 
 /**
- * اشتراکِ تصویر: اگه مرورگر اشتراکِ فایل داره (موبایل) با navigator.share
- * (همراهِ متن و لینکِ دعوت)، وگرنه PNG دانلود می‌شه. «cancelled» یعنی کاربر
+ * اشتراک تصویر: اگه مرورگر اشتراک فایل داره (موبایل) با navigator.share
+ * (همراه متن و لینک دعوت)، وگرنه PNG دانلود می‌شه. «cancelled» یعنی کاربر
  * خودش برگه‌ی اشتراک رو بست — خطا نیست.
  */
 export async function shareImage(blob: Blob, name: string, title: string, textBody: string): Promise<"shared" | "downloaded" | "cancelled"> {
@@ -604,7 +604,7 @@ export function downloadBlob(blob: Blob, name: string) {
   setTimeout(() => URL.revokeObjectURL(url), 4000);
 }
 
-/** متنِ همراهِ تصویر — کدِ دعوت و آدرسِ سایت فقط این‌جا (نه روی خودِ تصویر) */
+/** متن همراه تصویر — کد دعوت و آدرس سایت فقط این‌جا (نه روی خود تصویر) */
 export function shareText(lead: string, invite: { code: string | null; url: string; percent: number } | null): string {
   if (!invite) return lead;
   const offer = invite.code ? ` با کد دعوت من (${invite.code}) ${faNum(invite.percent)}% تخفیف بگیر:` : "";

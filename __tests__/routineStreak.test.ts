@@ -5,7 +5,7 @@ import { ACHIEVEMENTS, evaluateAchievements, allUnlocked } from "@/lib/achieveme
 import { isoLocal } from "@/lib/jalali";
 import type { ScheduleOpts } from "@/lib/schedule";
 
-// یک برنامه‌ی «هر روز» (۷ occurrence با id های جدا، هر روزِ هفته یکی)
+// یک برنامه‌ی «هر روز» (۷ occurrence با id های جدا، هر روز هفته یکی)
 const everyDay: ScheduleOpts = {
   removedOccurrences: new Set(),
   customOccurrences: Array.from({ length: 7 }, (_, d) => ({ id: `t${d}`, name: "ورزش", jsDay: d, time: "08:00" })),
@@ -15,7 +15,7 @@ const iso = (back: number) => isoLocal(new Date(2026, 8, 30 - back));
 const done = (back: number) => ({ tasks: { [`t${new Date(2026, 8, 30 - back).getDay()}`]: true } });
 
 describe("computeRoutineStreak", () => {
-  it("امروزِ ناقص حساب نمی‌شه ولی استریک رو هم نمی‌شکنه", () => {
+  it("امروز ناقص حساب نمی‌شه ولی استریک رو هم نمی‌شکنه", () => {
     const daily = { [iso(1)]: done(1), [iso(2)]: done(2) };
     expect(computeRoutineStreak(today, everyDay, daily).streak).toBe(2);
   });
@@ -25,11 +25,11 @@ describe("computeRoutineStreak", () => {
     expect(r.streak).toBe(3);
     expect(r.todayCounted).toBe(true);
   });
-  it("روزِ ناقصِ دیروز زنجیره رو می‌شکنه", () => {
+  it("روز ناقص دیروز زنجیره رو می‌شکنه", () => {
     const daily = { [iso(0)]: done(0), [iso(2)]: done(2), [iso(3)]: done(3) };
     expect(computeRoutineStreak(today, everyDay, daily).streak).toBe(1);
   });
-  it("روزِ بی‌برنامه رد می‌شه، نه شکست", () => {
+  it("روز بی‌برنامه رد می‌شه، نه شکست", () => {
     // فقط شنبه..پنج‌شنبه برنامه؛ جمعه (jsDay 5) خالی
     const noFri: ScheduleOpts = { removedOccurrences: new Set(), customOccurrences: everyDay.customOccurrences.filter((c) => c.jsDay !== 5) };
     const daily: Record<string, { tasks: Record<string, boolean> }> = {};
@@ -64,7 +64,7 @@ describe("computeAchievementMetrics", () => {
     expect(m.perfectWeeks).toBeGreaterThanOrEqual(1);
   });
 
-  it("خواب: شبِ هدف و پیوستگیِ ساعتِ خواب (دایره‌ای، دورِ نیمه‌شب)", () => {
+  it("خواب: شب هدف و پیوستگی ساعت خواب (دایره‌ای، دور نیمه‌شب)", () => {
     const sleeps = [
       { iso: iso(3), durationMin: 450, bedMin: 23 * 60 + 40 },
       { iso: iso(2), durationMin: 480, bedMin: 5 }, // 00:05 — ۳۵ دقیقه با 23:30 → خارج
