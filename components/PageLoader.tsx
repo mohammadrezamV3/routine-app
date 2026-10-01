@@ -3,9 +3,13 @@
 // و زیرش اسکلت یک صفحه (عنوان + کارت‌ها) با درخشش، تا از همون لحظه‌ی کلیک
 // ساختار صفحه دیده بشه. بدون "use client" و بدون state — مستقیم داخل HTML
 // سرور و حتی قبل از لود جاوااسکریپت دیده می‌شه. چرخش با CSS (globals.css).
+import { NavSplashHold } from "./NavSplashHold";
+
 export function PageLoader() {
   return (
     <div className="page-loader" role="status" aria-label="در حال بارگذاری">
+      {/* تا داده‌ی صفحه نرسیده، اسپلش ناوبری رو نگه می‌داره (lib/navSplash.ts) */}
+      <NavSplashHold />
       <div className="page-loader-mark">
         <svg className="page-loader-ring" viewBox="0 0 100 100" aria-hidden="true">
           <defs>
