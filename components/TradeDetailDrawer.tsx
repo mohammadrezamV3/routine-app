@@ -2,6 +2,7 @@
 
 import { CSSProperties, useEffect, useState } from "react";
 import { createPortal } from "react-dom";
+import Link from "next/link";
 import { Pencil, Trash2, X } from "lucide-react";
 import { LockBodyScroll } from "./LockBodyScroll";
 import { faNum } from "@/lib/jalali";
@@ -17,6 +18,10 @@ import { TickButton } from "./TickButton";
 // جزئیات کامل یک معامله. عمدا کشویی (نه صفحه‌ی جدا): کاربر معمولا چند
 // معامله را پشت‌سرهم مرور می‌کند و برگشتن به لیست نباید هربار یک ناوبری
 // کامل باشد. تصاویر و اسنپ‌شات چک‌لیست فقط همین‌جا (نه در لیست) لود می‌شوند.
+//
+// حالت فقط‌خواندنی (مثلا داشبورد): بدون onEdit/onDelete. داشبورد حق نوشتن
+// مستقیم روی ماژول ترید را ندارد، پس به‌جای ویرایش درجا، `editHref` کاربر
+// را به صفحه‌ی همان حساب می‌برد و دکمه‌ی حذف اصلا نشان داده نمی‌شود.
 export function TradeDetailDrawer({
   entryId,
   calSystem,
@@ -24,13 +29,16 @@ export function TradeDetailDrawer({
   onClose,
   onEdit,
   onDelete,
+  editHref,
 }: {
   entryId: string;
   calSystem: CalSystem;
   currency: string;
   onClose: () => void;
-  onEdit: (entry: TradeEntryDetail) => void;
-  onDelete: () => void;
+  onEdit?: (entry: TradeEntryDetail) => void;
+  onDelete?: () => void;
+  /** فقط وقتی onEdit نیست: لینک ویرایش در صفحه‌ی حساب */
+  editHref?: string;
 }) {
   const [entry, setEntry] = useState<TradeEntryDetail | null>(null);
   const [loading, setLoading] = useState(true);
@@ -46,6 +54,17 @@ export function TradeDetailDrawer({
       .finally(() => { if (!cancelled) setLoading(false); });
     return () => { cancelled = true; };
   }, [entryId]);
+
+  // بستن با Esc — ردیف‌ها با کیبورد باز می‌شوند، پس باید با کیبورد هم بسته شوند
+  useEffect(() => {
+    const onKey = (e: KeyboardEvent) => {
+      if (e.key !== "Escape") return;
+      if (lightbox) setLightbox(null);
+      else onClose();
+    };
+    window.addEventListener("keydown", onKey);
+    return () => window.removeEventListener("keydown", onKey);
+  }, [lightbox, onClose]);
 
   if (typeof document === "undefined") return null;
 
@@ -104,10 +123,16 @@ export function TradeDetailDrawer({
             </div>
           </div>
           <div className="trade-drawer-actions">
-            <button type="button" className="trade-icon-btn" disabled={!entry}
-              onClick={() => entry && onEdit(entry)} aria-label="ویرایش"><Pencil size={16} /></button>
-            <button type="button" className="trade-icon-btn danger" onClick={() => setConfirmDelete(true)} aria-label="حذف"><Trash2 size={16} /></button>
-            <button type="button" className="trade-icon-btn" onClick={onClose} aria-label="بستن"><X size={16} /></button>
+            {onEdit ? (
+              <button type="button" className="trade-icon-btn" disabled={!entry}
+                onClick={() => entry && onEdit(entry)} aria-label="ویرایش"><Pencil size={16} /></button>
+            ) : editHref ? (
+              <Link href={editHref} prefetch className="trade-icon-btn" aria-label="ویرایش در صفحه‌ی حساب" title="ویرایش در صفحه‌ی حساب"><Pencil size={16} /></Link>
+            ) : null}
+            {onDelete && (
+              <button type="button" className="trade-icon-btn danger" onClick={() => setConfirmDelete(true)} aria-label="حذف"><Trash2 size={16} /></button>
+            )}
+            <button type="button" className="trade-icon-btn" onClick={onClose} aria-label="بستن" autoFocus><X size={16} /></button>
           </div>
         </div>
 
@@ -203,7 +228,7 @@ export function TradeDetailDrawer({
           </>
         )}
 
-        {confirmDelete && (
+        {confirmDelete && onDelete && (
           <div className="trade-inline-confirm">
             <span>این معامله برای همیشه حذف شود؟</span>
             <div className="trade-modal-actions">

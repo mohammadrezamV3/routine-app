@@ -1295,6 +1295,11 @@
   body[data-theme="light"] .trade-detail-btn, body:not([data-theme="light"]) .trade-detail-btn{
     background:none; box-shadow:none;
   }
+  /* کل ردیف معامله جزئیات را باز می‌کند (کلیک/لمس/Enter) — بدون بک‌گراند؛
+     فقط نشانگر دست و یک حلقه‌ی فوکوس برای کیبورد */
+  .trade-day-row.is-clickable{ cursor:pointer; border-radius:10px; -webkit-tap-highlight-color:transparent; }
+  .trade-day-row.is-clickable .trade-detail-btn{ cursor:pointer; }
+  .trade-day-row.is-clickable:focus-visible{ outline:2px solid var(--accent); outline-offset:2px; }
 
   /* روی دسکتاپ هر ترید یک خط واحد است: جهت/نماد/سود در ابتدای خط، جزئیات و
      برچسب‌ها وسط (بدون شکستن، هرچه جا نشد پنهان)، و دکمه‌ی جزئیات انتهای خط.

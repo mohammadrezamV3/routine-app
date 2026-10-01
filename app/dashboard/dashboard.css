@@ -607,6 +607,10 @@ a.db-tl-name{ text-decoration:underline dotted color-mix(in srgb, var(--ring-1a)
 .db-acc-goal .db-meter{ height:4px; }
 .db-trow{ display:flex; align-items:center; gap:9px; padding:7px 6px; border-bottom:1px solid var(--box-line); }
 .db-trow:last-child{ border-bottom:none; }
+/* هر ردیف جزئیات کامل معامله را درجا باز می‌کند — بی‌بک‌گراند؛ حرکت هاور
+   (همان ردیف حساب‌ها) با whileHover در framer است چون transform ردیف دست اوست */
+.db-trow.is-clickable{ cursor:pointer; border-radius:10px; -webkit-tap-highlight-color:transparent; }
+.db-trow.is-clickable:focus-visible{ outline:2px solid var(--accent); outline-offset:2px; }
 .db-dir{ width:22px; height:22px; border-radius:8px; display:flex; align-items:center; justify-content:center; flex-shrink:0; }
 .db-dir svg{ width:11px; height:11px; }
 .db-dir.is-buy{ color:var(--pnl-win); border:1px solid rgba(var(--pnl-win-rgb),.45); }

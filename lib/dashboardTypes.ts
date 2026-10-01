@@ -66,7 +66,7 @@ export type DashTrade = {
   openTrades: number;
   /** سود/زیان خالص هر روز در ۳۰ روز اخیر (قدیمی → جدید، ۳۰ عدد) */
   daily30: number[];
-  recent: { id: string; accountId: string; symbol: string; direction: "BUY" | "SELL"; pnl: number; result: string; status: string; openedAt: string }[];
+  recent: { id: string; accountId: string; currency: string; symbol: string; direction: "BUY" | "SELL"; pnl: number; result: string; status: string; openedAt: string }[];
   accounts: DashTradeAccount[];
 };
 
