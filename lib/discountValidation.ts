@@ -1,7 +1,7 @@
 import { prisma } from "@/lib/prisma";
-import { REFERRAL_DISCOUNT_PERCENT } from "@/lib/referral";
+import { REFERRAL_DISCOUNT_PERCENT, REFERRAL_INVITER_REWARD_PERCENT } from "@/lib/referral";
 
-export { REFERRAL_DISCOUNT_PERCENT };
+export { REFERRAL_DISCOUNT_PERCENT, REFERRAL_INVITER_REWARD_PERCENT };
 
 // منطق اعتبارسنجی کد تخفیف — مشترک بین چک‌اوت واقعی
 // (app/api/subscription/checkout) و پیش‌نمایش «اعمال» توی همون صفحه
@@ -13,6 +13,12 @@ export type DiscountResolution =
   | { ok: true; percent: number; source: "promo"; discountCodeId: string; referralCodeId?: undefined }
   | { ok: true; percent: number; source: "referral"; referralCodeId: string; discountCodeId?: undefined }
   | { ok: false; error: string };
+
+/** کاربر قبلا حداقل یک پرداخت موفق داشته؟ (کد دعوت فقط روی اولین خرید) */
+async function hasPaidBefore(userId: string): Promise<boolean> {
+  const n = await prisma.payment.count({ where: { paidAt: { not: null }, refundedAt: null, subscription: { userId } } });
+  return n > 0;
+}
 
 export async function resolveDiscountCode(rawCode: string, userId: string, planKey: string): Promise<DiscountResolution> {
   const normalizedCode = rawCode.trim().toUpperCase();
@@ -32,9 +38,28 @@ export async function resolveDiscountCode(rawCode: string, userId: string, planK
   }
 
   const referral = await prisma.referralCode.findUnique({ where: { code: normalizedCode } });
-  if (referral && referral.userId !== userId) {
+  if (referral) {
+    if (referral.userId === userId) return { ok: false, error: "کد دعوت خودت رو نمی‌تونی استفاده کنی — اون مال دوستاته" };
+    // هر نفر فقط یک بار و فقط روی اولین خرید
+    const usedBefore = await prisma.referralUsage.count({ where: { inviteeUserId: userId, status: "REWARDED" } });
+    if (usedBefore > 0) return { ok: false, error: "تو قبلا یک بار از کد دعوت استفاده کردی — هر نفر فقط یک بار" };
+    if (await hasPaidBefore(userId)) return { ok: false, error: "کد دعوت فقط روی اولین خرید اعمال می‌شه" };
     return { ok: true, percent: REFERRAL_DISCOUNT_PERCENT, source: "referral", referralCodeId: referral.id };
   }
 
   return { ok: false, error: "کد تخفیف نامعتبر، منقضی‌شده، یا برای این پکیج نیست" };
+}
+
+/**
+ * پاداش‌های مصرف‌نشده‌ی صاحب کد: هر دوستی که خرید اولش رو با کد این کاربر
+ * انجام داده (ReferralUsage با status=REWARDED) یک بار REFERRAL_INVITER_REWARD_PERCENT٪
+ * تخفیف می‌ده. قدیمی‌ترین پاداش اول مصرف می‌شه.
+ */
+export async function findInviterRewards(userId: string): Promise<{ count: number; nextUsageId: string | null }> {
+  const where = { status: "REWARDED" as const, inviterRewardApplied: false, referralCode: { userId } };
+  const [count, next] = await Promise.all([
+    prisma.referralUsage.count({ where }),
+    prisma.referralUsage.findFirst({ where, orderBy: { rewardedAt: "asc" }, select: { id: true } }),
+  ]);
+  return { count, nextUsageId: next?.id ?? null };
 }

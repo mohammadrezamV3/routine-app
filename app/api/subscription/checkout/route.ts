@@ -6,7 +6,7 @@ import { checkRateLimit, getClientIp } from "@/lib/rateLimit";
 import { DURATIONS, Duration, findPlanPricing } from "@/lib/planPricing";
 import { zibalRequest } from "@/lib/zibal";
 import { getSiteUrl } from "@/lib/siteUrl";
-import { resolveDiscountCode } from "@/lib/discountValidation";
+import { resolveDiscountCode, findInviterRewards, REFERRAL_INVITER_REWARD_PERCENT } from "@/lib/discountValidation";
 import { findUpgradeSource, computeUpgradePricing, UPGRADE_TARGET_PLAN_KEY } from "@/lib/planUpgrade";
 
 const DURATION_MONTHS: Record<Duration, number> = { "1": 1, "3": 3, "6": 6, "12": 12 };
@@ -66,14 +66,26 @@ export async function POST(req: NextRequest) {
     let discountPercent = 0;
     let referralUsageId: string | undefined;
     let discountCodeId: string | undefined;
+    let inviterRewardId: string | undefined;
     let discountApplied = false;
+    let resolution: Awaited<ReturnType<typeof resolveDiscountCode>> | null = null;
     if (discountCode?.trim()) {
-      const resolution = await resolveDiscountCode(discountCode, userId, planKey);
+      resolution = await resolveDiscountCode(discountCode, userId, planKey);
       if (!resolution.ok) {
         // کدی وارد شده ولی نه توی هیچ‌کدوم از دو جدول معتبر بود — به‌جای
         // نادیده‌گرفتن بی‌صدا (که کاربر فکر می‌کنه تخفیف اعمال شده)، صریح خطا می‌دیم.
         return NextResponse.json({ error: resolution.error }, { status: 400 });
       }
+    }
+    // پاداش دعوت صاحب کد (lib/referral.ts) خودکار اعمال می‌شه؛ با کد تخفیف جمع
+    // نمی‌شه — هر کدوم بیشتر بود همون، و اونی که استفاده نشد مصرف هم نمی‌شه.
+    const reward = await findInviterRewards(userId);
+    const codePercent = resolution?.ok ? resolution.percent : 0;
+    if (reward.nextUsageId && REFERRAL_INVITER_REWARD_PERCENT > codePercent) {
+      discountPercent = REFERRAL_INVITER_REWARD_PERCENT;
+      inviterRewardId = reward.nextUsageId;
+      discountApplied = true;
+    } else if (resolution?.ok) {
       discountPercent = resolution.percent;
       discountApplied = true;
       if (resolution.source === "referral") {
@@ -109,7 +121,7 @@ export async function POST(req: NextRequest) {
     // lib/siteUrl.ts. خلاصه‌اش: پشت nginx، origin می‌تواند http یا
     // localhost دربیاید و زیبال آدرس بازگشت نامعتبر را با کد ۱۰۶ رد می‌کند.
     const origin = getSiteUrl(req.nextUrl.origin);
-    const callbackUrl = `${origin}/api/subscription/verify?gateway=${gateway}&planKey=${encodeURIComponent(planKey)}&duration=${duration}&amount=${finalAmount}&discountPercent=${discountPercent}${referralUsageId ? `&referralUsageId=${referralUsageId}` : ""}${discountCodeId ? `&discountCodeId=${discountCodeId}` : ""}${upgradeFromSubId ? `&upgradeFromSubId=${upgradeFromSubId}` : ""}`;
+    const callbackUrl = `${origin}/api/subscription/verify?gateway=${gateway}&planKey=${encodeURIComponent(planKey)}&duration=${duration}&amount=${finalAmount}&discountPercent=${discountPercent}${referralUsageId ? `&referralUsageId=${referralUsageId}` : ""}${discountCodeId ? `&discountCodeId=${discountCodeId}` : ""}${inviterRewardId ? `&inviterRewardId=${inviterRewardId}` : ""}${upgradeFromSubId ? `&upgradeFromSubId=${upgradeFromSubId}` : ""}`;
 
     const description = `خرید ${pricing.nameFa} — ${duration} ماهه`;
     const { paymentUrl } = await zibalRequest(finalAmount, callbackUrl, description);

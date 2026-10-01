@@ -2,7 +2,7 @@
 
 import { useEffect, useRef, useState } from "react";
 import { readInviteRef } from "@/lib/invite";
-import { REFERRAL_DISCOUNT_PERCENT } from "@/lib/referral";
+import { REFERRAL_DISCOUNT_PERCENT, REFERRAL_INVITER_REWARD_PERCENT } from "@/lib/referral";
 import { faNum } from "@/lib/jalali";
 import { useSession } from "next-auth/react";
 import { XCircle } from "lucide-react";
@@ -74,9 +74,13 @@ export default function CheckoutPage() {
   // مبلغ واقعی همیشه سمت سرور، مستقل از این fetch، توی
   // api/subscription/checkout دوباره محاسبه می‌شه.
   const [upgradeOffer, setUpgradeOffer] = useState<UpgradeOffer | null>(null);
+  // پاداش دعوت صاحب کد (lib/referral.ts): خودکار، با کد تخفیف جمع نمی‌شه — هر کدوم
+  // بیشتر بود؛ همون قاعده‌ی سمت سرور (api/subscription/checkout)، این فقط پیش‌نمایشه.
+  const [inviterReward, setInviterReward] = useState(false);
   useEffect(() => {
     if (status !== "authenticated") return;
     fetch("/api/plans").then((r) => r.json()).then((data) => setUpgradeOffer(data.upgradeOffer || null)).catch(() => {});
+    fetch("/api/account/referral").then((r) => (r.ok ? r.json() : null)).then((d) => setInviterReward((d?.rewardsAvailable ?? 0) > 0)).catch(() => {});
   }, [status]);
 
   if (!query) return null;
@@ -107,8 +111,11 @@ export default function CheckoutPage() {
   // شده باشه، درصدش روی همون قیمت اعتبارخورده حساب می‌شه — نه روی قیمت
   // خام اولیه.
   const creditedBaseAmount = upgradeInfo ? upgradeInfo.amount : plan.amounts?.[duration];
-  const discountedAmount = discountResult?.ok && creditedBaseAmount != null
-    ? Math.round((creditedBaseAmount * (100 - discountResult.percentOff)) / 100)
+  const codePercent = discountResult?.ok ? discountResult.percentOff : 0;
+  const rewardWins = inviterReward && REFERRAL_INVITER_REWARD_PERCENT > codePercent;
+  const effectivePercent = rewardWins ? REFERRAL_INVITER_REWARD_PERCENT : codePercent;
+  const discountedAmount = effectivePercent > 0 && creditedBaseAmount != null
+    ? Math.round((creditedBaseAmount * (100 - effectivePercent)) / 100)
     : upgradeInfo
     ? upgradeInfo.amount
     : null;
@@ -258,7 +265,8 @@ export default function CheckoutPage() {
           </div>
         </div>
         {fromInvite && !discountResult && <div className="checkout-invite-hint">کد دعوت دوستت پر شده — «اعمال» رو بزن تا {faNum(REFERRAL_DISCOUNT_PERCENT)}٪ تخفیف بگیری</div>}
-        {discountResult?.ok && <div className="checkout-discount-success">کد تخفیف اعمال شد</div>}
+        {rewardWins && <div className="checkout-discount-success">{faNum(REFERRAL_INVITER_REWARD_PERCENT)}٪ تخفیف پاداش دعوت دوستت خودکار اعمال شد{discountResult?.ok ? " (از کد تخفیف بیشتره، پس اون مصرف نمی‌شه)" : ""}</div>}
+        {discountResult?.ok && !rewardWins && <div className="checkout-discount-success">کد تخفیف اعمال شد</div>}
         {discountResult && !discountResult.ok && <div className="field-error-msg" style={{ display: "block", marginTop: 7 }}>{discountResult.error}</div>}
       </div>
 

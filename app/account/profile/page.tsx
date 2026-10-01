@@ -4,7 +4,7 @@ import { useEffect, useRef, useState } from "react";
 import { motion } from "framer-motion";
 import {
   Camera, Trash2, Phone, Cake, AtSign, User as UserIcon,
-  Dumbbell, IdCard, Ruler, Weight, VenetianMask, ChevronDown, Loader2, NotebookPen,
+  Dumbbell, IdCard, Ruler, Weight, VenetianMask, ChevronDown, Loader2, NotebookPen, Gift,
 } from "lucide-react";
 import { AgentAvatar } from "@/components/AgentAvatar";
 import { AuthField } from "@/components/AuthField";
@@ -16,6 +16,8 @@ import { getAccount, getAvatarUrl, invalidateAccountCache, AccountData } from "@
 import { getBodyMetrics, saveBodyMetrics } from "@/lib/bodyMetrics";
 import { isValidUsername, isValidPersianName } from "@/lib/validate";
 import { ImageCropModal } from "@/components/ImageCropModal";
+import { CUSTOM_REFERRAL_CODE_RE, REFERRAL_DISCOUNT_PERCENT, REFERRAL_INVITER_REWARD_PERCENT, normalizeReferralCode } from "@/lib/referral";
+import { faNum } from "@/lib/jalali";
 
 type ProfileUser = {
   username: string | null;
@@ -64,6 +66,10 @@ export default function AccountProfilePage() {
   const [username, setUsername] = useState("");
   const [savedUsername, setSavedUsername] = useState<string | null>(null);
   const [bio, setBio] = useState("");
+  // کد دعوت — اسمش رو خود کاربر انتخاب می‌کنه (/api/account/referral، lib/referral.ts)
+  const [refCode, setRefCode] = useState("");
+  const [savedRefCode, setSavedRefCode] = useState<string | null>(null);
+  const [refStats, setRefStats] = useState<{ invitedPaid: number; rewardsAvailable: number } | null>(null);
   const [birthDate, setBirthDate] = useState<JalaliDate | null>(null);
   const [dobOpen, setDobOpen] = useState(false);
   const [gender, setGender] = useState<"male" | "female" | "unset">("unset");
@@ -95,6 +101,15 @@ export default function AccountProfilePage() {
         setBirthDate(toJalali(d.getFullYear(), d.getMonth() + 1, d.getDate()));
       }
     });
+    fetch("/api/account/referral")
+      .then((r) => (r.ok ? r.json() : null))
+      .then((d) => {
+        if (!d) return;
+        setRefCode(d.code ?? "");
+        setSavedRefCode(d.code ?? null);
+        setRefStats({ invitedPaid: d.invitedPaid ?? 0, rewardsAvailable: d.rewardsAvailable ?? 0 });
+      })
+      .catch(() => {});
     getAvatarUrl().then(setAvatarUrl);
     fetch("/api/account/banner")
       .then((r) => (r.ok ? r.json() : null))
@@ -197,6 +212,8 @@ export default function AccountProfilePage() {
     if (name && !isValidPersianName(name)) { setSaveError("نام باید فقط با حروف فارسی نوشته شود"); return; }
     if (family && !isValidPersianName(family)) { setSaveError("نام خانوادگی باید فقط با حروف فارسی نوشته شود"); return; }
     if (uname && !isValidUsername(uname)) { setSaveError("یوزرنیم باید 3 تا 20 کاراکتر انگلیسی/عدد/آندرلاین باشد"); return; }
+    const code = normalizeReferralCode(refCode);
+    if (code && code !== savedRefCode && !CUSTOM_REFERRAL_CODE_RE.test(code)) { setSaveError("کد دعوت باید 4 تا 16 حرف انگلیسی یا عدد باشه"); return; }
 
     const height = heightCm.trim() ? Number(heightCm) : undefined;
     const weight = weightKg.trim() ? Number(weightKg) : undefined;
@@ -218,6 +235,19 @@ export default function AccountProfilePage() {
         const uData = await uRes.json().catch(() => ({}));
         if (!uRes.ok) { setSaveError(uData.error || "تغییر یوزرنیم ناموفق بود"); return; }
         setSavedUsername(uname);
+      }
+
+      // کد دعوت هم روت خودش رو داره (یکتایی سمت سرور)
+      if (code && code !== savedRefCode) {
+        const cRes = await fetch("/api/account/referral", {
+          method: "PATCH",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ code }),
+        });
+        const cData = await cRes.json().catch(() => ({}));
+        if (!cRes.ok) { setSaveError(cData.error || "تغییر کد دعوت ناموفق بود"); return; }
+        setSavedRefCode(code);
+        setRefCode(code);
       }
 
       const res = await fetch("/api/account", {
@@ -384,12 +414,37 @@ export default function AccountProfilePage() {
         </div>
       </AccountBlock>
 
+      {/* ── کد دعوت ── */}
+      <AccountBlock
+        title="کد دعوت"
+        icon={<Gift size={15} />}
+        desc={`دوستت با کدت روی اولین خریدش ${faNum(REFERRAL_DISCOUNT_PERCENT)}٪ تخفیف می‌گیره (هر نفر فقط یک بار)، و تو به‌ازای هر دوستی که خرید کنه یک بار ${faNum(REFERRAL_INVITER_REWARD_PERCENT)}٪ تخفیف روی خرید بعدیت.`}
+        index={1}
+      >
+        <div className="acc-field-stack">
+          <AuthField id="pf-refcode" label="اسم کد (4 تا 16 حرف انگلیسی یا عدد)" icon={<Gift size={16} />}>
+            <input
+              id="pf-refcode" type="text" className="wsearch-newform-name mono" dir="ltr" style={{ textAlign: "right" }}
+              value={refCode} maxLength={16} autoCapitalize="characters" spellCheck={false}
+              onChange={(e) => setRefCode(e.target.value.toUpperCase().replace(/[^A-Z0-9]/g, ""))}
+              placeholder="MYCODE"
+            />
+          </AuthField>
+          {refStats && (
+            <p className="acc-option-desc">
+              {faNum(refStats.invitedPaid)} دوست با کدت خرید کردن · {faNum(refStats.rewardsAvailable)} تخفیف {faNum(REFERRAL_INVITER_REWARD_PERCENT)}٪ آماده‌ی استفاده
+              {refStats.rewardsAvailable > 0 ? " (خودکار روی خرید بعدیت اعمال می‌شه)" : ""}
+            </p>
+          )}
+        </div>
+      </AccountBlock>
+
       {/* ── پروفایل ورزشی ── */}
       <AccountBlock
         title="پروفایل ورزشی"
         icon={<Dumbbell size={15} />}
         desc="برای استفاده از بخش ورزش و کالری الزامی است — همین اطلاعات توی فرم‌های بدنسازی و کالری هم پر می‌شود."
-        index={1}
+        index={2}
       >
         <div className="auth-field-grid">
           <AuthField id="pf-age" label="سن" icon={<Cake size={16} />}>
