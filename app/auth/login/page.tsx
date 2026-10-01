@@ -4,16 +4,13 @@ import { SpinnerCheck } from "@/components/SpinnerCheck";
 import { TickButton } from "@/components/TickButton";
 import { useRef, useState } from "react";
 import { signIn, getSession } from "next-auth/react";
-import { invalidateStorageCache } from "@/lib/storage";
-import { useRouter } from "next/navigation";
 import Link from "next/link";
 import { User, Lock, ShieldCheck } from "lucide-react";
 import { AuthField, useAuthFieldsStagger } from "@/components/AuthField";
 import { AuthBackButton, AuthBrandMark } from "@/components/AuthChrome";
 import { PasswordVisibilityToggle } from "@/components/PasswordVisibilityToggle";
-import { setAuthHintCookie } from "@/lib/preload";
 import { toEnDigits } from "@/lib/schedule";
-import { resolveHomePath } from "@/lib/homePath";
+import { loginAndRedirect } from "@/lib/loginRedirect";
 
 // ورود فقط با یوزرنیم/شماره + رمز عبوره — روش کد ایمیل از اینجا حذف شد
 // (تصمیم صریح کاربر: «ورود به پنل فقط با رمز عبور باشه نه کد ایمیل»).
@@ -21,8 +18,6 @@ import { resolveHomePath } from "@/lib/homePath";
 // فقط دیگه از این صفحه صدا زده نمی‌شن — چون قبلا کاملا ساخته و تست شدن
 // و ممکنه بعدا لازم بشن؛ حذف کامل‌شون یه تصمیم جدا و بزرگ‌تره.
 export default function LoginPage() {
-  const router = useRouter();
-
   const [identifier, setIdentifier] = useState("");
   const [password, setPassword] = useState("");
   const [passwordVisible, setPasswordVisible] = useState(false);
@@ -65,21 +60,11 @@ export default function LoginPage() {
       return false;
     }
 
-    // رمزگذاری سرتاسری گفت‌وگوی منتور: از همین رمز، *روی دستگاه*، کلید بسته‌بندی
-    // مشتق می‌شود تا کلید گفت‌وگو بی‌صدا باز شود (lib/e2ee/client.ts). رمز به هیچ
-    // درخواست تازه‌ای نمی‌رود؛ در پس‌زمینه و بی‌اثر بر ورود.
-    if (password) void import("@/lib/e2ee/client").then((m) => m.primeE2EEFromPassword((session!.user as any).id, password)).catch(() => {});
-
-    // لایه‌ی داده تا اینجا وضعیت «مهمان» رو کش کرده (و از localStorage
-    // می‌خونده)؛ بدون این پاک‌سازی، چون این‌جا ناوبری کلاینتیه (نه ریلود
-    // کامل)، صفحه‌ی بعدی همچنان داده‌ی مهمان رو نشون می‌داد.
-    invalidateStorageCache();
-    // تا لود بعدی بتونه داده‌ها رو پیش‌درخواست کنه (lib/preload.ts)
-    setAuthHintCookie();
+    // بقیه‌ی ورود (پاک‌کردن کش‌های حالت مهمان، کلید رمزگذاری سرتاسری منتور
+    // از همین رمز *روی دستگاه*، و ناوبری کامل تا layout و سشن سمت سرور هم از نو
+    // ساخته بشن) یک‌جا در lib/loginRedirect.ts — قرینه‌ی lib/logout.ts.
     setSuccess(true);
-    // مقصد (داشبورد یا روتین — lib/homePath.ts) هم‌زمان با انیمیشن تیک معلوم می‌شه
-    const [home] = await Promise.all([resolveHomePath(), new Promise((r) => setTimeout(r, 650))]);
-    router.push(home);
+    void loginAndRedirect({ userId: (session!.user as any).id, password, minDelayMs: 650 });
     return true;
   }
 
