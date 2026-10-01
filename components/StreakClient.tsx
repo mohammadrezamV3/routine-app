@@ -178,7 +178,7 @@ function StreakHero({ routine, best }: { routine: ReturnType<typeof useDashboard
           return (
             <motion.div key={c.iso} className={`stk-day is-${state}`} initial={{ opacity: 0, y: 6 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.35 + i * 0.05 }}>
               <span className="stk-day-icon">
-                {state === "done" ? <MiniFlame /> : state === "rest" ? <span className="stk-day-rest" /> : <span className="stk-day-ring" style={{ ["--p" as string]: `${c.pct ?? 0}` }} />}
+                {state === "done" ? <MiniFlame /> : state === "rest" ? <span className="stk-day-rest" /> : <GradientRing value={(c.pct ?? 0) / 100} size={20} stroke={4} grad={["var(--stk-a)", "var(--stk-b)"]} className="stk-day-ring" />}
               </span>
               <em>{wd}</em>
             </motion.div>
