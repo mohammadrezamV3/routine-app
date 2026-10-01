@@ -22,6 +22,7 @@ import { PUBLIC_PAGES } from "@/lib/llmsContent";
 import { InlineBootstrap } from "@/components/InlineBootstrap";
 import { PwaProvider } from "@/components/PwaProvider";
 import { RealtimeProvider } from "@/components/RealtimeProvider";
+import { InviteRefCapture } from "@/components/InviteRefCapture";
 import { PopupExitAnimator } from "@/components/PopupExitAnimator";
 import { RouteProgress } from "@/components/RouteProgress";
 import { Suspense } from "react";
@@ -254,6 +255,8 @@ export default async function RootLayout({ children }: { children: React.ReactNo
               <RealtimeProvider />
               {/* ثبت سرویس‌ورکر (کش app shell) + پیشنهاد نصب اپ */}
               <PwaProvider />
+              {/* لینک دعوت دوست (?ref=) — lib/invite.ts */}
+              <InviteRefCapture />
               {/* Suspense: RouteProgress از useSearchParams استفاده می‌کنه و بدون مرز، رندر
                   استاتیک همه‌ی صفحه‌ها رو به کلاینت می‌کشوند */}
               <Suspense fallback={null}><RouteProgress /></Suspense>

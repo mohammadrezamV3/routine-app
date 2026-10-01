@@ -14,6 +14,8 @@ import { PasswordVisibilityToggle } from "@/components/PasswordVisibilityToggle"
 import { isValidIranPhone, isValidUsername, validatePassword, isValidPersianName, digitsOnly } from "@/lib/validate";
 import { passwordTier, PASSWORD_TIER_LABELS, PASSWORD_TIER_ORDER, isPasswordAcceptable } from "@/lib/passwordStrength";
 import { resolveHomePath } from "@/lib/homePath";
+import { captureInviteRef, readInviteRef } from "@/lib/invite";
+import { REFERRAL_DISCOUNT_PERCENT } from "@/lib/referral";
 import { TickButton } from "@/components/TickButton";
 
 type FieldErrors = {
@@ -52,6 +54,9 @@ export default function SignupPage() {
   const [resendCooldown, setResendCooldown] = useState(0);
 
   const [fieldErrors, setFieldErrors] = useState<FieldErrors>({});
+  // با لینک دعوت یه دوست اومده؟ (lib/invite.ts) — فقط یادآوری تخفیف؛ خود کد موقع خرید پر می‌شه
+  const [invited, setInvited] = useState(false);
+  useEffect(() => { captureInviteRef(); setInvited(!!readInviteRef()); }, []);
   const [error, setError] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
 
@@ -230,7 +235,7 @@ export default function SignupPage() {
   return (
     <form ref={formRef} onSubmit={submit} className="auth-box">
       <AuthBackButton />
-      <AuthBrandMark subtitle={"به آریون خوش اومدی!"} note={`${TRIAL_COPY_FA}. ${FREE_ROUTINE_COPY_FA}`} />
+      <AuthBrandMark subtitle={"به آریون خوش اومدی!"} note={invited ? `${TRIAL_COPY_FA}. دوستت دعوتت کرده — روی اولین اشتراکت ${faNum(REFERRAL_DISCOUNT_PERCENT)}٪ تخفیف داری.` : `${TRIAL_COPY_FA}. ${FREE_ROUTINE_COPY_FA}`} />
 
       <div className="auth-field-grid" ref={nameRef} style={{ marginTop: 20 }}>
         <AuthField id="firstName" label={"نام"} error={fieldErrors.name} icon={<User size={15} />}>

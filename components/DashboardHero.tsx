@@ -70,6 +70,7 @@ export function DashboardHero({
   data,
   routine,
   onOpenCommand,
+  onShare,
   routineLocked = false,
 }: {
   data: DashboardData | null;
@@ -82,6 +83,8 @@ export function DashboardHero({
     hasWakeSleep: boolean;
   };
   onOpenCommand: () => void;
+  /** «اشتراک موفقیت» — پاپ‌آپ DashboardShare */
+  onShare?: () => void;
   routineLocked?: boolean;
 }) {
   const now = useNow();
@@ -115,16 +118,9 @@ export function DashboardHero({
   }, [now]);
 
   // ── سه حلقه ──
+  const shownRings = heroRings(data, routine.stats, routineLocked).filter((r) => r.show);
   const ex = data?.exercise;
   const cal = data?.calorie;
-  const exVal = ex?.today.isGymDay ? (ex.today.done ? 1 : ex.today.itemCount ? ex.today.doneItems / ex.today.itemCount : 0) : ex?.week.target ? ex.week.done / ex.week.target : 0;
-  const calVal = cal?.target?.kcal ? cal.today.kcal / cal.target.kcal : 0;
-  const rings: { key: string; label: string; value: number; display: string; grad: [string, string]; show: boolean; href: string }[] = [
-    { key: "routine", label: "روتین", value: routine.stats.total ? routine.stats.completed / routine.stats.total : 0, display: routine.stats.total ? `${faNum(routine.stats.completed)}/${faNum(routine.stats.total)}` : "—", grad: ["var(--ring-1a)", "var(--ring-1b)"] as [string, string], show: !routineLocked, href: "/weekly" },
-    { key: "exercise", label: ex?.today.isGymDay ? "تمرین امروز" : "تمرین هفته", value: exVal, display: ex ? (ex.today.isGymDay ? `${faNum(ex.today.doneItems)}/${faNum(ex.today.itemCount)}` : `${faNum(ex.week.done)}/${faNum(ex.week.target)}`) : "—", grad: ["var(--ring-2a)", "var(--ring-2b)"] as [string, string], show: !!ex?.hasPlan, href: "/exercise?tab=exercise" },
-    { key: "calorie", label: "کالری", value: Math.min(calVal, 1), display: cal?.target ? `${faNum(Math.round(cal.today.kcal))}` : "—", grad: (calVal > 1 ? ["var(--ring-3b)", "var(--ring-over)"] : ["var(--ring-3a)", "var(--ring-3b)"]) as [string, string], show: !!cal?.target, href: "/exercise?tab=calorie" },
-  ];
-  const shownRings = rings.filter((r) => r.show);
 
   // ── جمله‌ی خلاصه ──
   const insight = useMemo(() => {
@@ -175,6 +171,12 @@ export function DashboardHero({
             <DashIcon name="flame" className="dbi-live" />
             {routine.streak === null ? <Skel w={24} h={10} /> : <><b>{faNum(routine.streak)}</b> روز پشت‌سرهم</>}
           </Link>
+          {onShare && (
+            <button type="button" className="db-chip db-chip-share" onClick={onShare} disabled={!routine.ready}>
+              <DashIcon name="share" />
+              اشتراک موفقیت
+            </button>
+          )}
           {data?.routineTrial && (
             <Link href={`/subscription/checkout?plan=${ROUTINE_PLAN_KEY}&duration=1`} prefetch={false} className={`db-chip db-chip-trial${data.routineTrial.daysLeft <= 3 ? " is-urgent" : ""}`}>
               <DashIcon name="routine" />
@@ -227,6 +229,21 @@ export function DashboardHero({
       <DayRibbon now={now} tasks={routine.tasks} wake={routine.wakeSleep.wake} sleep={routine.wakeSleep.sleep} configured={routine.hasWakeSleep} />
     </motion.section>
   );
+}
+
+export type HeroRing = { key: "routine" | "exercise" | "calorie"; label: string; value: number; display: string; grad: [string, string]; show: boolean; href: string };
+
+/** سه حلقه‌ی روز (روتین/تمرین/کالری) — مشترک هیرو و کارت اشتراکی (DashboardShare) */
+export function heroRings(data: DashboardData | null, stats: { completed: number; total: number }, routineLocked = false): HeroRing[] {
+  const ex = data?.exercise;
+  const cal = data?.calorie;
+  const exVal = ex?.today.isGymDay ? (ex.today.done ? 1 : ex.today.itemCount ? ex.today.doneItems / ex.today.itemCount : 0) : ex?.week.target ? ex.week.done / ex.week.target : 0;
+  const calVal = cal?.target?.kcal ? cal.today.kcal / cal.target.kcal : 0;
+  return [
+    { key: "routine", label: "روتین", value: stats.total ? stats.completed / stats.total : 0, display: stats.total ? `${faNum(stats.completed)}/${faNum(stats.total)}` : "—", grad: ["var(--ring-1a)", "var(--ring-1b)"], show: !routineLocked, href: "/weekly" },
+    { key: "exercise", label: ex?.today.isGymDay ? "تمرین امروز" : "تمرین هفته", value: exVal, display: ex ? (ex.today.isGymDay ? `${faNum(ex.today.doneItems)}/${faNum(ex.today.itemCount)}` : `${faNum(ex.week.done)}/${faNum(ex.week.target)}`) : "—", grad: ["var(--ring-2a)", "var(--ring-2b)"], show: !!ex?.hasPlan, href: "/exercise?tab=exercise" },
+    { key: "calorie", label: "کالری", value: Math.min(calVal, 1), display: cal?.target ? `${faNum(Math.round(cal.today.kcal))}` : "—", grad: calVal > 1 ? ["var(--ring-3b)", "var(--ring-over)"] : ["var(--ring-3a)", "var(--ring-3b)"], show: !!cal?.target, href: "/exercise?tab=calorie" },
+  ];
 }
 
 function daysLeft(iso: string) {
