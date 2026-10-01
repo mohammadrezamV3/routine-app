@@ -217,20 +217,19 @@ body[data-theme="light"] .db-hero-phase:not(.is-night){ color:#D98A1E; }
 .db-chip-streak svg{ color:#FF8A3D; }
 .db-chip-streak.tier-0 svg{ color:var(--muted); }
 .db-chip-bell svg{ color:var(--secondary); }
-/* دکمه‌ی «اشتراک موفقیت» هیرو — بی‌بک‌گراند (ریست :where(.dash-scope) button)،
-   ارتفاع لمسی کافی، حالت فشرده/غیرفعال/لودینگ و حلقه‌ی فوکوس کیبورد */
-.db-page .db-chip-share{
-  cursor:pointer; min-height:36px; padding:0 13px; gap:7px; border-radius:12px;
-  font-size:12px; font-weight:800; color:var(--accent);
-  border:1px solid rgba(var(--accent-rgb),.45); touch-action:manipulation; -webkit-tap-highlight-color:transparent;
+/* اشتراک موفقیت — فقط آیکون، گوشه‌ی بالا-چپ هیرو (فیزیکی چپ، مستقل از RTL).
+   بی‌بک‌گراند (ریست :where(.dash-scope) button)، هدف لمسی ۴۰ پیکسلی. */
+.db-page .db-hero-share{
+  position:absolute; top:12px; left:12px; z-index:3;
+  width:40px; height:40px; display:grid; place-items:center; border-radius:12px;
+  color:var(--muted); cursor:pointer; touch-action:manipulation; -webkit-tap-highlight-color:transparent;
+  transition:color .2s ease, transform .15s ease;
 }
-.db-page .db-chip-share-ic{ display:inline-grid; place-items:center; width:16px; height:16px; }
-.db-page .db-chip-share-ic svg{ width:16px; height:16px; }
-@media (hover:hover){ .db-page .db-chip-share:hover:not(:disabled){ border-color:var(--accent); transform:translateY(-1px); } }
-.db-page .db-chip-share:active:not(:disabled){ transform:scale(.95); border-color:var(--accent); }
-.db-page .db-chip-share:focus-visible{ outline:2px solid var(--accent); outline-offset:2px; }
-.db-page .db-chip-share:disabled{ opacity:.55; cursor:progress; }
-@media (max-width:760px){ .db-page .db-chip-share{ min-height:40px; padding:0 15px; font-size:12.5px; } }
+.db-page .db-hero-share svg{ width:20px; height:20px; }
+@media (hover:hover){ .db-page .db-hero-share:hover:not(:disabled){ color:var(--accent); transform:translateY(-1px); } }
+.db-page .db-hero-share:active:not(:disabled){ transform:scale(.9); color:var(--accent); }
+.db-page .db-hero-share:focus-visible{ outline:2px solid var(--accent); outline-offset:2px; }
+.db-page .db-hero-share:disabled{ opacity:.55; cursor:progress; }
 .db-chip-trial svg{ color:var(--accent); }
 .db-chip-trial.is-urgent{ border-color:color-mix(in srgb, #f97316 55%, transparent); }
 .db-chip-trial.is-urgent svg, .db-chip-trial.is-urgent b{ color:#f97316; }
@@ -268,6 +267,14 @@ body[data-theme="light"] .db-arc-cap{ filter:drop-shadow(0 0 2px rgba(80,50,20,.
 .db-orbit-center{ position:absolute; inset:0; display:flex; flex-direction:column; align-items:center; justify-content:center; }
 .db-orbit-pct{ font-size:26px; font-weight:900; letter-spacing:-.02em; }
 .db-orbit-cap{ font-size:10.5px; color:var(--muted); font-weight:700; }
+.db-orbit-flame{ display:grid; place-items:center; height:18px; margin-bottom:1px; color:#FF8A3D; }
+.db-orbit-flame svg{ width:18px; height:18px; }
+.db-orbit-flame.tier-0{ color:var(--muted); }
+/* سه حلقه: فضای وسط کوچیکه — شعله و عدد کوچیک‌تر، زیرنویس کوتاه */
+.db-orbit-center.is-tight .db-orbit-pct{ font-size:21px; line-height:1.05; }
+.db-orbit-center.is-tight .db-orbit-flame{ height:14px; }
+.db-orbit-center.is-tight .db-orbit-flame svg{ width:14px; height:14px; }
+.db-orbit-center.is-tight .db-orbit-cap{ font-size:9.5px; }
 .db-orbit-legend{ list-style:none; display:flex; flex-direction:column; gap:6px; min-width:0; }
 @media (min-width:640px){ .db-orbit-legend{ flex-direction:row; gap:12px; } }
 .db-orbit-legend a{ display:flex; align-items:center; gap:6px; font-size:11.5px; }

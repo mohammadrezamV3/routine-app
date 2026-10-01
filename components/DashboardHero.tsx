@@ -143,6 +143,22 @@ export function DashboardHero({
 
   return (
     <motion.section ref={heroRef as any} className="db-hero" initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.55, ease: D_EASE }}>
+      {onShare && (
+        // اشتراک موفقیت — فقط آیکون، گوشه‌ی بالا-چپ هیرو. تا روتین امروز خونده
+        // نشده کارت عدد درستی نداره: غیرفعال با دایره‌ی لودینگ به‌جای آیکون.
+        <button
+          type="button"
+          className="db-hero-share"
+          onClick={onShare}
+          disabled={!routine.ready}
+          aria-haspopup="dialog"
+          aria-busy={!routine.ready || undefined}
+          aria-label="اشتراک موفقیت امروز با دوستات"
+          title="اشتراک موفقیت"
+        >
+          {routine.ready ? <DashIcon name="share" /> : <Spinner size={16} />}
+        </button>
+      )}
       <div className="db-hero-main">
         <div className="db-hero-greet">
           <motion.span
@@ -172,24 +188,6 @@ export function DashboardHero({
             <DashIcon name="flame" className="dbi-live" />
             {routine.streak === null ? <Skel w={24} h={10} /> : <><b>{faNum(routine.streak)}</b> روز پشت‌سرهم</>}
           </Link>
-          {onShare && (
-            // تا روتین امروز خونده نشده، کارت اشتراکی عدد درستی نداره — دکمه
-            // غیرفعاله و به‌جای آیکون دایره‌ی لودینگ نشون می‌ده (عرضش نمی‌پره)
-            <button
-              type="button"
-              className="db-chip db-chip-share"
-              onClick={onShare}
-              disabled={!routine.ready}
-              aria-haspopup="dialog"
-              aria-busy={!routine.ready || undefined}
-              aria-label="اشتراک موفقیت امروز با دوستات"
-            >
-              <span className="db-chip-share-ic" aria-hidden="true">
-                {routine.ready ? <DashIcon name="share" /> : <Spinner size={14} />}
-              </span>
-              اشتراک موفقیت
-            </button>
-          )}
           {data?.routineTrial && (
             <Link href={`/subscription/checkout?plan=${ROUTINE_PLAN_KEY}&duration=1`} prefetch={false} className={`db-chip db-chip-trial${data.routineTrial.daysLeft <= 3 ? " is-urgent" : ""}`}>
               <DashIcon name="routine" />
@@ -225,7 +223,7 @@ export function DashboardHero({
       </div>
 
       <div className="db-hero-orbit" aria-label="پیشرفت امروز">
-        <OrbitRings rings={shownRings} ready={routine.ready} />
+        <OrbitRings rings={shownRings} ready={routine.ready} streak={routine.streak} />
         <ul className="db-orbit-legend">
           {shownRings.map((r, i) => (
             <li key={r.key}>
@@ -250,11 +248,13 @@ export type HeroRing = { key: "routine" | "exercise" | "calorie"; label: string;
 export function heroRings(data: DashboardData | null, stats: { completed: number; total: number }, routineLocked = false): HeroRing[] {
   const ex = data?.exercise;
   const cal = data?.calorie;
-  const exVal = ex?.today.isGymDay ? (ex.today.done ? 1 : ex.today.itemCount ? ex.today.doneItems / ex.today.itemCount : 0) : ex?.week.target ? ex.week.done / ex.week.target : 0;
+  // روزی که تمرین نداره (استراحت) حلقه کامله — هم‌قاعده‌ی تیک خودکار روز استراحت
+  // (lib/exerciseStats.ts)؛ قبلا پیشرفت هفته رو نشون می‌داد و نصفه می‌موند.
+  const exVal = ex?.today.isGymDay ? (ex.today.done ? 1 : ex.today.itemCount ? ex.today.doneItems / ex.today.itemCount : 0) : 1;
   const calVal = cal?.target?.kcal ? cal.today.kcal / cal.target.kcal : 0;
   return [
     { key: "routine", label: "روتین", value: stats.total ? stats.completed / stats.total : 0, display: stats.total ? `${faNum(stats.completed)}/${faNum(stats.total)}` : "—", grad: ["var(--ring-1a)", "var(--ring-1b)"], show: !routineLocked, href: "/weekly" },
-    { key: "exercise", label: ex?.today.isGymDay ? "تمرین امروز" : "تمرین هفته", value: exVal, display: ex ? (ex.today.isGymDay ? `${faNum(ex.today.doneItems)}/${faNum(ex.today.itemCount)}` : `${faNum(ex.week.done)}/${faNum(ex.week.target)}`) : "—", grad: ["var(--ring-2a)", "var(--ring-2b)"], show: !!ex?.hasPlan, href: "/exercise?tab=exercise" },
+    { key: "exercise", label: "تمرین امروز", value: exVal, display: ex ? (ex.today.isGymDay ? `${faNum(ex.today.doneItems)}/${faNum(ex.today.itemCount)}` : "استراحت") : "—", grad: ["var(--ring-2a)", "var(--ring-2b)"], show: !!ex?.hasPlan, href: "/exercise?tab=exercise" },
     { key: "calorie", label: "کالری", value: Math.min(calVal, 1), display: cal?.target ? `${faNum(Math.round(cal.today.kcal))}` : "—", grad: calVal > 1 ? ["var(--ring-3b)", "var(--ring-over)"] : ["var(--ring-3a)", "var(--ring-3b)"], show: !!cal?.target, href: "/exercise?tab=calorie" },
   ];
 }
@@ -266,7 +266,7 @@ function daysLeft(iso: string) {
 // ── حلقه‌های هم‌مرکز ────────────────────────────────────────
 // هر حلقه گرادیان دورانی خودش رو داره (GradientArc) + سر درخشان؛ رنگ‌ها از
 // توکن‌های --ring-* در dashboard.css (دو پالت جدا برای شب و روز).
-function OrbitRings({ rings, ready }: { rings: { key: string; value: number; grad: [string, string] }[]; ready: boolean }) {
+function OrbitRings({ rings, ready, streak }: { rings: { key: string; value: number; grad: [string, string] }[]; ready: boolean; streak: number | null }) {
   const size = 176, stroke = 13, gap = 5;
   const main = rings[0];
   return (
@@ -293,11 +293,13 @@ function OrbitRings({ rings, ready }: { rings: { key: string; value: number; gra
           ))}
         </g>
       </svg>
-      <div className="db-orbit-center">
-        {main && ready ? (
+      <div className={`db-orbit-center${rings.length >= 3 ? " is-tight" : ""}`}>
+        {/* وسط حلقه‌ها استریک، نه درصد (درصد هر حلقه کنارش در لیجند هست) */}
+        {main && ready && streak !== null ? (
           <>
-            <CountUp value={Math.round(Math.min(1, main.value) * 100)} suffix="٪" className="db-orbit-pct" />
-            <span className="db-orbit-cap">امروز</span>
+            <span className={`db-orbit-flame tier-${getStreakTier(streak).tier}`}><DashIcon name="flame" className="dbi-live" /></span>
+            <CountUp value={streak} className="db-orbit-pct" />
+            <span className="db-orbit-cap">{rings.length >= 3 ? "روز" : "روز استریک"}</span>
           </>
         ) : (
           <Skel w={46} h={20} />
