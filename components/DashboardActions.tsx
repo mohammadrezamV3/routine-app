@@ -10,7 +10,6 @@ import { createContext, useCallback, useContext, useEffect, useMemo, useState } 
 import { createPortal } from "react-dom";
 import { AddProgramForm } from "./AddProgramForm";
 import { CalorieAddEntryModal } from "./CalorieAddEntryModal";
-import { CalorieAiScanModal } from "./CalorieAiScanModal";
 import { TradeFormModal } from "./TradeFormModal";
 import { getSetting } from "@/lib/storage";
 import { isoLocal } from "@/lib/jalali";
@@ -49,7 +48,7 @@ export function DashboardActionsProvider({
   onNeedPage: (href: string) => void;
   children: React.ReactNode;
 }) {
-  const [open, setOpen] = useState<DashAction | "scan" | null>(null);
+  const [open, setOpen] = useState<DashAction | null>(null);
   const [mealTypes, setMealTypes] = useState(DEFAULT_MEAL_TYPES);
   const [trade, setTrade] = useState<TradeCtx | null>(null);
   const [mounted, setMounted] = useState(false);
@@ -104,13 +103,7 @@ export function DashboardActionsProvider({
           mealTypes={mealTypes}
           onClose={close}
           onAdded={() => { publishChange("calorie"); onChanged(); }}
-          onOpenAiScan={() => setOpen("scan")}
         />,
-        document.body
-      )}
-
-      {mounted && open === "scan" && createPortal(
-        <CalorieAiScanModal date={today} mealTypes={mealTypes} onClose={close} onLogged={() => { publishChange("calorie"); onChanged(); }} />,
         document.body
       )}
 

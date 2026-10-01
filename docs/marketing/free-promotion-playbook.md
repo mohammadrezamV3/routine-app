@@ -451,7 +451,7 @@ Aparat یک YouTube‌ی ایرانی است. ویدئوهای طولانی (۵-
   - Habit tracking with streaks
   - Task management
   - AI-powered workout program generator
-  - Smart calorie counter with food photo scanning
+  - Calorie counter with a Persian food catalog (Iranian foods included)
   - Trading journal with MetaTrader 5 sync
   - Economic calendar for forex traders
   - Weekly AI analysis & insights
@@ -494,8 +494,8 @@ Aparat یک YouTube‌ی ایرانی است. ویدئوهای طولانی (۵-
 **توضیح:**
 ```
 Arion uses AI to generate personalized workout programs, analyze your weekly
-routine with insights, and help you build better habits. Features AI food
-photo scanning for calorie tracking and smart suggestions.
+routine with insights, and help you build better habits. Includes a calorie
+counter with a Persian food catalog and a daily calorie target.
 ```
 
 ### ۴.۵ BetaList
@@ -517,7 +517,7 @@ photo scanning for calorie tracking and smart suggestions.
   and habit tracking. It features:
   
   - AI-generated workout programs
-  - Smart calorie counter with photo scanning
+  - Calorie counter with a Persian food catalog (Iranian foods included)
   - Trading journal with MetaTrader 5 sync
   - Economic calendar & forex sessions
   - Weekly AI analysis & insights
@@ -620,7 +620,7 @@ no installation required, and works on any browser.
 • پیگیری عادت‌ها و Streaks
 • مدیریت کارها و Tasks
 • تولید برنامه ورزش هوشمند
-• محاسبه‌گر کالری با اسکن عکس غذا (AI)
+• محاسبه‌گر کالری با کاتالوگ فارسی غذاها
 • ژورنال ترید کامل (حساب‌ها، چک‌لیست، اتصال MetaTrader 5)
 • تقویم اقتصادی برای ترید‌کنندگان
 • گزارش‌های هفتگی هوشمند
@@ -641,7 +641,7 @@ Key Features:
 • Habit tracking with streaks & challenges
 • Task management
 • AI-powered fitness program generator
-• Smart calorie counter with food photo scanning
+• Calorie counter with a Persian food catalog (Iranian foods included)
 • Complete trading journal (accounts, checklists, MetaTrader 5 sync)
 • Economic calendar for forex traders
 • Weekly AI-generated insights & analysis

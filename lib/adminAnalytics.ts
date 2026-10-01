@@ -563,13 +563,9 @@ export async function getProductAnalytics(module: ModuleKey, range: Range): Prom
       metrics.aiGeneratedPlans = aiPlans;
       metrics.logsInRange = logs.length;
     } else if (module === "CALORIE") {
-      const [logs, aiScanned] = await Promise.all([
-        prisma.foodLogEntry.findMany({ where: { createdAt: { gte: range.from, lte: range.to } }, select: { userId: true, aiScanned: true } }),
-        prisma.foodLogEntry.count({ where: { createdAt: { gte: range.from, lte: range.to }, aiScanned: true } }),
-      ]);
+      const logs = await prisma.foodLogEntry.findMany({ where: { createdAt: { gte: range.from, lte: range.to } }, select: { userId: true } });
       activeUserIds = new Set(logs.map((l) => l.userId));
       metrics.foodLogsInRange = logs.length;
-      metrics.aiScannedLogsInRange = aiScanned;
     } else if (module === "TRADE") {
       const entries = await prisma.tradeEntry.findMany({ where: { createdAt: { gte: range.from, lte: range.to } }, select: { userId: true } });
       activeUserIds = new Set(entries.map((e) => e.userId));

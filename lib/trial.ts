@@ -48,7 +48,6 @@ export const FREE_ROUTINE_COPY_FA = "«روتین من» 14 روز رایگان 
  */
 export const DEFAULT_TRIAL_AI_LIMITS = {
   EXERCISE_PLAN_GENERATION: 1,
-  FOOD_SCAN: 7,
 } satisfies Partial<Record<AiFeatureKey, number>>;
 
 export type TrialAiFeature = keyof typeof DEFAULT_TRIAL_AI_LIMITS;
@@ -57,7 +56,6 @@ export const TRIAL_AI_FEATURES = Object.keys(DEFAULT_TRIAL_AI_LIMITS) as TrialAi
 
 export const TRIAL_AI_FEATURE_LABELS_FA: Record<TrialAiFeature, string> = {
   EXERCISE_PLAN_GENERATION: "ساخت برنامه‌ی تمرینی",
-  FOOD_SCAN: "اسکن غذا",
 };
 
 export const TRIAL_AI_LIMITS_SETTING_KEY = "trial_ai_limits";

@@ -2,13 +2,12 @@
 
 import { useEffect, useState } from "react";
 import { AnimatePresence, motion } from "framer-motion";
-import { Check, ChevronDown, Sparkles } from "lucide-react";
+import { Check, ChevronDown } from "lucide-react";
 import { FoodSeedItem } from "@/lib/foodSeed";
 import { FoodUnit, UNIT_LABELS, UNIT_TO_GRAMS } from "@/lib/calorieCalc";
 import { SegmentedTabs } from "./SegmentedTabs";
 import { useLockBodyScroll } from "@/lib/useLockBodyScroll";
 import { NumberInput } from "./NumberInput";
-import { useFeature } from "@/lib/useFeatures";
 
 const LAST_UNIT_KEY = "arion-calorie-last-unit";
 
@@ -18,32 +17,21 @@ function readLastUnit(): FoodUnit {
   return v && v in UNIT_LABELS ? (v as FoodUnit) : "gram";
 }
 
-// پاپ‌آپ «افزودن غذا» — از کارت همیشه‌باز قبلی به یه پاپ‌آپ پشت دکمه‌ی
-// «افزودن» توی کارت «برنامه غذایی» تبدیل شده. مسیر اصلی حالا واردکردن
-// دستی/جستجوی کاتالوگه؛ اسکن عکس با هوش مصنوعی به‌عنوان یه راه جایگزین
-// سریع‌تر زیر دکمه‌ی اصلی «افزودن» جا گرفته (نه بالای فرم، طبق درخواست
-// کاربر). درشت‌مغذی‌ها (پروتئین/کربوهیدرات/چربی) دیگه فقط وقتی غذا توی
-// کاتالوگ پیدا نشه نیستن — همیشه اختیاری در دسترسن، چه کاتالوگی چه دستی.
-
-// اسکن غذا فعلا قابلیت ارائه‌شده نیست: وقتی فلگ calorieScan خاموشه
-// (پیش‌فرض)، تیزر بلورشده‌ی «به‌زودی» هم نشون داده نمی‌شه. کدش نگه داشته
-// شده تا اگه خواستیم دوباره فقط با همین ثابت برگرده.
-const SHOW_SCAN_COMING_SOON = false;
+// پاپ‌آپ «افزودن غذا» پشت دکمه‌ی «افزودن» توی کارت «برنامه غذایی»: واردکردن
+// دستی یا جستجوی کاتالوگ. درشت‌مغذی‌ها (پروتئین/کربوهیدرات/چربی) همیشه
+// اختیاری در دسترسن، چه کاتالوگی چه دستی.
 
 export function CalorieAddEntryModal({
   date,
   mealTypes,
   onClose,
   onAdded,
-  onOpenAiScan,
 }: {
   date: string;
   mealTypes: { key: string; label: string }[];
   onClose: () => void;
   onAdded: () => void;
-  onOpenAiScan: () => void;
 }) {
-  const scanOn = useFeature("calorieScan") === true;
   useLockBodyScroll();
   const [query, setQuery] = useState("");
   const [suggestions, setSuggestions] = useState<FoodSeedItem[]>([]);
@@ -224,57 +212,6 @@ export function CalorieAddEntryModal({
             >
               {saving ? <span className="wsearch-submit-spinner" /> : "افزودن"}
             </button>
-
-            {/* اسکن غذا با AI — روشن/خاموشش از پنل ادمین (فلگ calorieScan).
-                خاموش (پیش‌فرض): هیچ اثری از اسکن دیده نمی‌شه — نه دکمه، نه
-                تیزر «به‌زودی»، نه جداکننده‌ی «یا» — چون این قابلیت فعلا
-                ارائه نمی‌شه. تیزر «به‌زودی» فقط با SHOW_SCAN_COMING_SOON. */}
-            {(scanOn || SHOW_SCAN_COMING_SOON) && (
-            <div className="my-3.5 flex items-center gap-2.5 text-[10.5px] text-dash-muted">
-              <span className="h-px flex-1" style={{ background: "var(--line)" }} />
-              یا
-              <span className="h-px flex-1" style={{ background: "var(--line)" }} />
-            </div>
-            )}
-
-            {scanOn ? (
-              <button
-                type="button"
-                onClick={onOpenAiScan}
-                className="flex w-full items-center justify-center gap-1.5 rounded-2xl border py-2.5 text-[12px] font-bold sm:text-[13.5px]"
-                style={{ borderColor: "var(--accent)", color: "var(--accent)", background: "none", boxShadow: "none", backdropFilter: "none" }}
-              >
-                <Sparkles size={15} />
-                اسکن غذا با هوش مصنوعی
-              </button>
-            ) : SHOW_SCAN_COMING_SOON && (
-            <>
-            {/* فعلا غیرفعال — طبق همون الگوی ردیف‌های «به‌زودی» توی جدول
-                مقایسه‌ی پلن‌ها (PlanShowcase): خود محتوا با بلور پیش‌نمایش
-                می‌شه (نه یه متن جایگزین کم‌کنتراست)، یه نشان صریح روش می‌شینه. */}
-            <div className="relative">
-              <button
-                type="button"
-                disabled
-                aria-hidden="true"
-                tabIndex={-1}
-                className="pointer-events-none flex w-full select-none items-center justify-center gap-1.5 rounded-2xl border py-2.5 text-[12px] font-bold blur-[3px] sm:text-[13.5px]"
-                style={{ borderColor: "var(--accent)", color: "var(--accent)" }}
-              >
-                <Sparkles size={15} />
-                اسکن غذا با هوش مصنوعی
-              </button>
-              <div className="absolute inset-0 flex items-center justify-center">
-                <span
-                  className="rounded-full px-3.5 py-1 text-[11px] font-extrabold text-white"
-                  style={{ background: "var(--accent)", boxShadow: "0 8px 22px rgba(var(--accent-rgb),.3)" }}
-                >
-                  به‌زودی
-                </span>
-              </div>
-            </div>
-            </>
-            )}
           </motion.div>
 
           <AnimatePresence>

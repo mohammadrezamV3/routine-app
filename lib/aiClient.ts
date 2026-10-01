@@ -33,9 +33,7 @@ export const AI_MODEL_NAME = "gpt-4o-mini";
 // (اسم متغیر env عمدا عوض نشده تا دیپلوی‌های موجود نشکنن.)
 export const WEEKLY_ANALYSIS_AI_MODEL = process.env.ARVAN_AI_WEEKLY_MODEL || "gpt-5.4-mini";
 
-export type ChatContentPart =
-  | { type: "text"; text: string }
-  | { type: "image_url"; image_url: { url: string } };
+export type ChatContentPart = { type: "text"; text: string };
 
 export type ChatUsage = { inputTokens: number; outputTokens: number };
 export type ChatResult = { text: string; usage: ChatUsage; durationMs: number };
@@ -141,7 +139,7 @@ export async function callAiChat(
   timeoutMs: number = AI_TIMEOUT_MS,
   // فقط برای مکالمه‌های آزاد (دستیار روتین، مربی آنالیز هفتگی) پاس داده
   // می‌شود تا لحن طبیعی‌تر/کمتر تکراری باشد؛ مولدهای ساختاریافته (رودمپ،
-  // برنامه‌ی ورزشی، اسکن غذا) عمدا این را نمی‌فرستند و روی پیش‌فرض گیت‌وی
+  // برنامه‌ی ورزشی) عمدا این را نمی‌فرستند و روی پیش‌فرض گیت‌وی
   // می‌مانند، چون آن‌جا ثبات/دقت ساختار مهم‌تر از تنوع لحن است.
   temperature?: number
 ): Promise<ChatResult> {
@@ -917,84 +915,6 @@ export async function generateExercisePlan(profile: ExercisePlanProfile, userId:
     logError("ai-gateway", `ساخت برنامه‌ی تمرینی شکست خورد: ${err?.message || err}`, { context: { feature: "EXERCISE_PLAN_GENERATION" } });
     throw err;
   }
-}
-
-// ============================================================================
-// اسکن عکس غذا با هوش مصنوعی — تنها فراخوانی چندوجهی (multimodal) این فایل؛
-// بقیه‌ی فراخوان‌ها فقط متنی‌ان. خروجی شامل کالری + درشت‌مغذی‌هاست، چون
-// این تنها راه عملی این اپه که بدون کاتالوگ دستی درشت‌مغذی برای هزاران
-// غذا، بخش «ریز درشت‌مغذی‌ها» عدد داشته باشه.
-// ============================================================================
-
-const FOOD_SCAN_SYSTEM_PROMPT = `تو یک متخصص تغذیه هستی که با نگاه‌کردن به عکس یک وعده غذا، مقدار کالری و
-درشت‌مغذی‌هاش رو تخمین می‌زنی. این یک تخمین بصریه، نه اندازه‌گیری آزمایشگاهی — بر اساس نوع و حجم ظاهری
-غذا در عکس بهترین حدس واقع‌بینانه رو بزن.
-
-اگه عکس اصلا غذا/نوشیدنی قابل‌تشخیصی نشون نمی‌ده، فقط همین JSON خام رو برگردون:
-{ "recognized": false, "message": "یک جمله‌ی کوتاه و دوستانه به فارسی که بگه غذایی توی عکس تشخیص داده نشد" }
-
-اگه غذا قابل‌تشخیص بود، فقط همین JSON خام رو برگردون (بدون Markdown fence، بدون هیچ متن اضافه):
-{
-  "recognized": true,
-  "name": "نام فارسی کوتاه غذا",
-  "estimatedGrams": 250,
-  "calories": 480,
-  "proteinG": 22,
-  "carbsG": 55,
-  "fatG": 18
-}
-
-قوانین: همه‌ی اعداد بالا باید عدد مثبت باشن (نه رشته)؛ calories باید با estimatedGrams/proteinG/carbsG/fatG
-هم‌خوانی تقریبی داشته باشه (پروتئین×4 + کربوهیدرات×4 + چربی×9 ≈ calories)؛ هیچ توصیه‌ی پزشکی یا تشخیصی نده،
-فقط تخمین عددی.`;
-
-export type FoodScanResult =
-  | { recognized: true; name: string; estimatedGrams: number; calories: number; proteinG: number; carbsG: number; fatG: number }
-  | { recognized: false; message: string };
-
-function asPositiveNumber(v: unknown): number | null {
-  const n = typeof v === "number" ? v : NaN;
-  return Number.isFinite(n) && n > 0 ? n : null;
-}
-
-export async function analyzeFoodPhoto(base64Data: string, mediaType: "image/jpeg" | "image/png" | "image/webp", userId: string): Promise<FoodScanResult> {
-  let chatResult: { text: string; usage: { inputTokens: number; outputTokens: number }; durationMs: number };
-  try {
-    chatResult = await callAiChat(
-      FOOD_SCAN_SYSTEM_PROMPT,
-      [
-        { type: "text", text: "این عکس غذا رو تحلیل کن." },
-        { type: "image_url", image_url: { url: `data:${mediaType};base64,${base64Data}` } },
-      ],
-      500
-    );
-  } catch (err: any) {
-    logError("ai-gateway", `اسکن عکس غذا شکست خورد: ${err?.message || err}`, { context: { feature: "FOOD_SCAN" } });
-    throw err;
-  }
-  const { text, usage, durationMs } = chatResult;
-  recordAiUsage(userId, AiFeatureKey.FOOD_SCAN, usage, durationMs, true);
-  const parsed = parseJsonResponse(text);
-
-  if (parsed?.recognized === false) {
-    const message = typeof parsed?.message === "string" && parsed.message.trim()
-      ? parsed.message.trim()
-      : "غذایی توی این عکس تشخیص داده نشد.";
-    return { recognized: false, message };
-  }
-
-  const calories = asPositiveNumber(parsed?.calories);
-  const estimatedGrams = asPositiveNumber(parsed?.estimatedGrams);
-  const proteinG = asPositiveNumber(parsed?.proteinG) ?? 0;
-  const carbsG = asPositiveNumber(parsed?.carbsG) ?? 0;
-  const fatG = asPositiveNumber(parsed?.fatG) ?? 0;
-  const name = typeof parsed?.name === "string" && parsed.name.trim() ? parsed.name.trim() : "";
-
-  if (!calories || !estimatedGrams || !name) {
-    throw new Error("مدل تخمین قابل‌استفاده‌ای برنگردوند");
-  }
-
-  return { recognized: true, name, estimatedGrams, calories, proteinG, carbsG, fatG };
 }
 
 // ============================================================================

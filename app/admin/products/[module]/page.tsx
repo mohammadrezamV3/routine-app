@@ -11,7 +11,7 @@ import { formatNumber } from "@/lib/adminFormat";
 const MODULE_META: Record<string, { title: string; metricLabels: Record<string, string> }> = {
   routine: { title: "روتین", metricLabels: { totalRoutineItems: "تعداد برنامه‌ها (آیتم‌های روتین)", dailyEntriesInRange: "روزهای ثبت‌شده در بازه" } },
   exercise: { title: "بدنسازی", metricLabels: { totalPlans: "تعداد برنامه‌های تمرینی", aiGeneratedPlans: "ساخته‌شده با AI", logsInRange: "جلسه‌های ثبت‌شده در بازه" } },
-  calorie: { title: "کالری", metricLabels: { foodLogsInRange: "ثبت غذا در بازه", aiScannedLogsInRange: "تحلیل تصویر با AI در بازه" } },
+  calorie: { title: "کالری", metricLabels: { foodLogsInRange: "ثبت غذا در بازه" } },
   trade: { title: "ترید", metricLabels: { entriesInRange: "معامله‌های ثبت‌شده در بازه" } },
   roadmap: { title: "Skill / یادگیری", metricLabels: { roadmapsInRange: "رودمپ‌های ساخته‌شده در بازه", aiGeneratedInRange: "ساخته‌شده با AI", stageCompletionPercent: "نرخ تکمیل مرحله‌ها" } },
 };
