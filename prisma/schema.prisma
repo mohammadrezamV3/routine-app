@@ -200,22 +200,23 @@ model User {
   gymPartner   Partner? @relation("GymUsers", fields: [gymPartnerId], references: [id])
 
   // داده‌های ماژول‌ها
-  dailyEntries        DailyEntry[]
-  sleepEntries        SleepEntry[]
-  achievements        UserAchievement[]
-  tasks               Task[]
-  exercisePlans       ExercisePlan[]
-  exerciseLogs        ExerciseLog[]
-  foodLogs            FoodLogEntry[]
-  calorieTargets      CalorieTarget[]
-  tradeEntries        TradeEntry[]
-  tradeAccounts       TradeAccount[]
-  tradeTags           TradeTag[]
-  tradeChecklists     TradeChecklist[]
-  roadmaps            Roadmap[]
-  weeklyAnalysisAi    WeeklyAnalysisAi[]
-  weeklyAnalysisGoals WeeklyAnalysisGoal[]
-  weeklyReflections   WeeklyReflection[]
+  dailyEntries           DailyEntry[]
+  sleepEntries           SleepEntry[]
+  achievements           UserAchievement[]
+  announcementDismissals AnnouncementDismissal[]
+  tasks                  Task[]
+  exercisePlans          ExercisePlan[]
+  exerciseLogs           ExerciseLog[]
+  foodLogs               FoodLogEntry[]
+  calorieTargets         CalorieTarget[]
+  tradeEntries           TradeEntry[]
+  tradeAccounts          TradeAccount[]
+  tradeTags              TradeTag[]
+  tradeChecklists        TradeChecklist[]
+  roadmaps               Roadmap[]
+  weeklyAnalysisAi       WeeklyAnalysisAi[]
+  weeklyAnalysisGoals    WeeklyAnalysisGoal[]
+  weeklyReflections      WeeklyReflection[]
 
   userSettings      UserSetting[]
   exportRequests    ExportRequest[]
@@ -1651,22 +1652,93 @@ model AuditLog {
   @@index([actorUserId, createdAt])
 }
 
-// اطلاعیه‌ی سراسری اپ — از پنل ادمین (/admin/announcements) نوشته می‌شه و توی
-// همون پنل زنگوله (NotificationPanel) به همه (حتی مهمان) نشون داده می‌شه.
-// متن ساده‌ست (بدون HTML). «خوانده‌شده» سمت کاربر در تنظیم readAnnouncements
-// نگه داشته می‌شه، نه جدول جدا — پس برای مهمان هم کار می‌کنه.
+// اطلاعیه‌ی سراسری اپ — از پنل ادمین (/admin/announcements) نوشته می‌شه.
+// متن ساده‌ست (بدون HTML). هر اطلاعیه می‌تونه توی لیست زنگوله (showInList)،
+// به‌صورت پاپ‌آپ یا بنر/کارت گوشه (display) یا ترکیب لیست با یکی از این دو
+// نشون داده بشه؛ مخاطب، بازه‌ی زمانی، صفحه‌ها و جای بنر هم دست ادمینه
+// (منطق انتخاب: lib/announcements.ts، سمت سرور: lib/announcementsServer.ts).
+// «خوانده‌شده» در لیست همچنان در تنظیم readAnnouncements می‌مونه؛ بستن
+// پاپ‌آپ/بنر برای کاربر لاگین‌کرده در AnnouncementDismissal و برای مهمان در
+// localStorage. مقدارهای پیش‌فرض یعنی «فقط در لیست اعلان‌ها» (رفتار قبلی).
 model Announcement {
-  id          String    @id @default(cuid())
+  id          String                @id @default(cuid())
   title       String
   body        String
-  active      Boolean   @default(true)
+  active      Boolean               @default(true)
+  // شروع نمایش؛ null یعنی از همین حالا
+  startsAt    DateTime?
   // null یعنی بدون انقضا
   expiresAt   DateTime?
+  showInList  Boolean               @default(true)
+  display     AnnouncementDisplay   @default(NONE)
+  position    AnnouncementPosition  @default(TOP)
+  // پیشوند مسیرها؛ خالی یعنی همه‌ی صفحه‌ها. «/» فقط خود صفحه‌ی اصلی
+  pages       String[]              @default([])
+  audience    AnnouncementAudience  @default(ALL)
+  tone        AnnouncementTone      @default(INFO)
+  // بزرگ‌تر = جلوتر در صف پاپ‌آپ و انتخاب بنر هر جایگاه
+  priority    Int                   @default(0)
+  dismissible Boolean               @default(true)
+  frequency   AnnouncementFrequency @default(UNTIL_DISMISSED)
+  ctaLabel    String?
+  // مسیر داخلی (/...) یا https://
+  ctaUrl      String?
+  imageUrl    String?
   createdById String? // ادمینی که ساخته (بدون FK — حذف ادمین اطلاعیه رو پاک نکنه)
-  createdAt   DateTime  @default(now())
-  updatedAt   DateTime  @updatedAt
+  createdAt   DateTime              @default(now())
+  updatedAt   DateTime              @updatedAt
+
+  dismissals AnnouncementDismissal[]
 
   @@index([active, createdAt])
+  @@index([active, display])
+}
+
+enum AnnouncementDisplay {
+  NONE
+  POPUP
+  BANNER
+}
+
+enum AnnouncementPosition {
+  TOP
+  BOTTOM
+  TOP_RIGHT
+  TOP_LEFT
+  BOTTOM_RIGHT
+  BOTTOM_LEFT
+}
+
+enum AnnouncementAudience {
+  ALL
+  USERS
+  GUESTS
+  PAID
+  FREE
+}
+
+enum AnnouncementTone {
+  INFO
+  SUCCESS
+  WARNING
+  PROMO
+}
+
+enum AnnouncementFrequency {
+  ONCE
+  UNTIL_DISMISSED
+}
+
+// بستن پاپ‌آپ/بنر (یا «یک بار دیده‌شده») برای کاربر لاگین‌کرده
+model AnnouncementDismissal {
+  announcementId String
+  announcement   Announcement @relation(fields: [announcementId], references: [id], onDelete: Cascade)
+  userId         String
+  user           User         @relation(fields: [userId], references: [id], onDelete: Cascade)
+  createdAt      DateTime     @default(now())
+
+  @@id([announcementId, userId])
+  @@index([userId])
 }
 
 // رخدادهای خطای واقعی سیستم (نه Fake) — از جاهایی که واقعا catch می‌شن

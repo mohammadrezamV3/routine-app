@@ -23,6 +23,7 @@ import { InlineBootstrap } from "@/components/InlineBootstrap";
 import { PwaProvider } from "@/components/PwaProvider";
 import { RealtimeProvider } from "@/components/RealtimeProvider";
 import { InviteRefCapture } from "@/components/InviteRefCapture";
+import { AnnouncementDelivery } from "@/components/AnnouncementDelivery";
 import { PopupExitAnimator } from "@/components/PopupExitAnimator";
 import { RouteProgress } from "@/components/RouteProgress";
 import { Suspense } from "react";
@@ -262,6 +263,8 @@ export default async function RootLayout({ children }: { children: React.ReactNo
               <PwaProvider />
               {/* لینک دعوت دوست (?ref=) — lib/invite.ts */}
               <InviteRefCapture />
+              {/* پاپ‌آپ/بنر اطلاعیه‌ها — بعد از اولین پینت، در زمان بیکاری (lib/announcements.ts) */}
+              <AnnouncementDelivery />
               {/* Suspense: RouteProgress از useSearchParams استفاده می‌کنه و بدون مرز، رندر
                   استاتیک همه‌ی صفحه‌ها رو به کلاینت می‌کشوند */}
               <Suspense fallback={null}><RouteProgress /></Suspense>

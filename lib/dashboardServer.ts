@@ -20,6 +20,7 @@ import { countRowProgress } from "./roadmapPlan";
 import { ensureFreshCalendar } from "./economicCalendar";
 import { getAdminFlags } from "./adminFlag";
 import { resolveFeaturesFor } from "./featureFlagsServer";
+import { announcementViewer, listAnnouncementsFor } from "./announcementsServer";
 import type { DashCalorie, DashEvent, DashExercise, DashMentors, DashNotification, DashRoadmap, DashTrade, DashboardData } from "./dashboardTypes";
 
 // ── تاریخ ────────────────────────────────────────────────────
@@ -313,18 +314,13 @@ export async function buildNotifications({ userId }: Ctx): Promise<DashboardData
 }
 
 export async function buildAnnouncements({ userId }: Ctx): Promise<DashboardData["announcements"]> {
-  const now = new Date();
+  // همون قاعده‌ی لیست زنگوله: فقط showInList، مخاطب و بازه‌ی زمانی سمت سرور
   const [rows, readRow] = await Promise.all([
-    prisma.announcement.findMany({
-      where: { active: true, OR: [{ expiresAt: null }, { expiresAt: { gt: now } }] },
-      orderBy: { createdAt: "desc" },
-      take: 10,
-      select: { id: true, title: true, body: true, createdAt: true },
-    }),
+    announcementViewer(userId).then((viewer) => listAnnouncementsFor(viewer, 10)),
     prisma.userSetting.findUnique({ where: { userId_key: { userId, key: "readAnnouncements" } }, select: { value: true } }),
   ]);
   const read = new Set(Array.isArray(readRow?.value) ? (readRow!.value as unknown[]).filter((x): x is string => typeof x === "string") : []);
-  return rows.filter((r) => !read.has(r.id)).slice(0, 3).map((r) => ({ ...r, createdAt: r.createdAt.toISOString() }));
+  return rows.filter((r) => !read.has(r.id)).slice(0, 3).map((r) => ({ id: r.id, title: r.title, body: r.body, createdAt: r.createdAt.toISOString() }));
 }
 
 // ── اجرای امن ────────────────────────────────────────────────

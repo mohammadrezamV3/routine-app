@@ -3,9 +3,18 @@ import { requireAdmin } from "@/lib/requireAdmin";
 import { prisma } from "@/lib/prisma";
 import { writeAuditLog } from "@/lib/adminAnalytics";
 import { readJsonBody } from "@/lib/validate";
-import { parseAnnouncementInput } from "@/lib/announcements";
+import { parseAnnouncementInput, validateAnnouncementMerged } from "@/lib/announcements";
 
-// PATCH → ویرایش (عنوان/متن/وضعیت/انقضا — هر فیلد نفرستاده دست نمی‌خوره)
+const AUDIT_FIELDS = [
+  "title", "active", "startsAt", "expiresAt", "showInList", "display", "position", "pages",
+  "audience", "tone", "priority", "dismissible", "frequency", "ctaLabel", "ctaUrl", "imageUrl",
+] as const;
+
+function auditSnapshot(r: Record<string, unknown>) {
+  return Object.fromEntries(AUDIT_FIELDS.map((k) => [k, r[k]]));
+}
+
+// PATCH → ویرایش (هر فیلد نفرستاده دست نمی‌خوره)
 export async function PATCH(req: NextRequest, { params }: { params: { id: string } }) {
   const guard = await requireAdmin("content");
   if (!guard.ok) return guard.response;
@@ -18,17 +27,19 @@ export async function PATCH(req: NextRequest, { params }: { params: { id: string
   const input = parseAnnouncementInput(parsed.body, true);
   if (!input.ok) return NextResponse.json({ error: input.error }, { status: 400 });
   if (Object.keys(input.data).length === 0) return NextResponse.json({ error: "تغییری فرستاده نشده" }, { status: 400 });
+  const mergedError = validateAnnouncementMerged({ ...existing, ...input.data });
+  if (mergedError) return NextResponse.json({ error: mergedError }, { status: 400 });
 
   const updated = await prisma.announcement.update({ where: { id: existing.id }, data: input.data });
   await writeAuditLog(guard.userId, "announcement.update", "Announcement", updated.id, {
-    before: { title: existing.title, active: existing.active, expiresAt: existing.expiresAt },
-    after: { title: updated.title, active: updated.active, expiresAt: updated.expiresAt },
+    before: auditSnapshot(existing),
+    after: auditSnapshot(updated),
     bodyChanged: existing.body !== updated.body,
   });
   return NextResponse.json({ announcement: updated });
 }
 
-// DELETE → حذف کامل
+// DELETE → حذف کامل (بسته‌شدن‌ها با cascade پاک می‌شن)
 export async function DELETE(_req: NextRequest, { params }: { params: { id: string } }) {
   const guard = await requireAdmin("content");
   if (!guard.ok) return guard.response;
