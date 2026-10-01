@@ -7,7 +7,7 @@ import { FA_WEEKDAY, CAL_WEEK_ORDER, isoLocal } from "@/lib/jalali";
 import { startOfWeek } from "@/lib/schedule";
 import { ExercisePlan } from "@/lib/exerciseTypes";
 import {
-  fetchExerciseLogRange, sessionsThisWeekTotal, sessionsThisWeekDone,
+  fetchExerciseLogRange, isRestDay, sessionsThisWeekTotal, sessionsThisWeekDone,
   weekProgressPct, todayProgressPct, ExerciseLogRange,
 } from "@/lib/exerciseStats";
 import { DashDateSelector } from "./DashDateSelector";
@@ -153,13 +153,18 @@ export function ExerciseDashboard({
   // وضعیت هر روز باشگاه همین هفته (شنبه‌شروع) برای «برنامه هفتگی» پایین:
   // «انجام دادی» اگه همون روز تمرین «تمام» ثبت شده، «وقتش گذشته» اگه روزش
   // بی‌تمام‌شدن گذشته. امروز ناتمام هنوز وضعیتی نداره (تا آخر روز وقت هست).
+  // روز استراحت (روزی که در برنامه نیست) تا امروز خودکار «rest» = تیک‌خورده
+  // می‌شه — از خود پلن مشتق می‌شه، هیچ لاگی نوشته نمی‌شه.
   const weekDayStatus = useMemo(() => {
-    const out: Record<string, "done" | "missed"> = {};
+    const out: Record<string, "done" | "missed" | "rest"> = {};
     const start = startOfWeek(now);
+    const templateDays = plan.planData.map((p) => p.day);
     for (let i = 0; i < 7; i++) {
       const d = new Date(start);
       d.setDate(start.getDate() + i);
       const iso = isoLocal(d);
+      const calName = weekdayOf(iso);
+      if (iso <= todayIso && isRestDay(templateDays, calName)) out[calName] = "rest";
       if (missedPref.mode === "stay") {
         // «ماندن»: تمرین جامانده «وقتش گذشته» نمی‌شود، فردا دوباره می‌آید —
         // فقط «انجام دادی» روی همان تمرینی که آن روز واقعا نشان داده شد.

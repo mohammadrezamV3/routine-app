@@ -31,8 +31,8 @@ export type DashExercise = {
   };
   week: { done: number; target: number };
   streak: number;
-  /** ۱۴ روز اخیر تا امروز (قدیمی → جدید) */
-  last14: { iso: string; planned: boolean; done: boolean }[];
+  /** ۱۴ روز اخیر تا امروز (قدیمی → جدید). روز استراحت (rest) خودکار done ـه. */
+  last14: { iso: string; planned: boolean; done: boolean; rest: boolean }[];
 };
 
 export type DashCalorie = {

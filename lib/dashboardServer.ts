@@ -14,7 +14,7 @@ import { ModuleKey, Prisma, SubscriptionStatus } from "@prisma/client";
 import { ROUTINE_TRIAL_MS } from "./trial";
 import { prisma } from "./prisma";
 import { FA_WEEKDAY, isoLocal } from "./jalali";
-import { computeExerciseStreak, type ExerciseLogRange } from "./exerciseStats";
+import { computeExerciseStreak, exerciseDayDone, isRestDay, type ExerciseLogRange } from "./exerciseStats";
 import { computeTradeStats } from "./tradeAnalytics";
 import { countRowProgress } from "./roadmapPlan";
 import { ensureFreshCalendar } from "./economicCalendar";
@@ -70,7 +70,7 @@ export async function buildExercise({ userId, date }: Ctx): Promise<DashExercise
       hasPlan: false, planId: null, gymDays: [],
       today: { dayName, isGymDay: false, focus: null, itemCount: 0, doneItems: 0, started: false, done: false, items: [] },
       week: { done: 0, target: 0 }, streak: 0,
-      last14: last14Days.map((iso) => ({ iso, planned: false, done: false })),
+      last14: last14Days.map((iso) => ({ iso, planned: false, done: false, rest: false })),
     };
   }
   const gymDays = Array.isArray(plan.gymDays) ? (plan.gymDays as unknown[]).filter((d): d is string => typeof d === "string") : [];
@@ -120,7 +120,11 @@ export async function buildExercise({ userId, date }: Ctx): Promise<DashExercise
     },
     week: { done: weekDone, target: gymDays.length },
     streak,
-    last14: last14Days.map((iso) => ({ iso, planned: gymDays.includes(FA_WEEKDAY[jsDayOf(iso)]), done: !!logs[iso]?.completed })),
+    // روز استراحت از خود پلن مشتق و خودکار «انجام‌شده» حساب می‌شه (بدون لاگ).
+    last14: last14Days.map((iso) => {
+      const name = FA_WEEKDAY[jsDayOf(iso)];
+      return { iso, planned: gymDays.includes(name), rest: isRestDay(gymDays, name), done: exerciseDayDone(gymDays, name, iso, date, logs[iso]) };
+    }),
   };
 }
 
