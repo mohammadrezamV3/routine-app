@@ -36,6 +36,7 @@ type Detail = {
   chatModerationHistory: { id: string; action: string; meta: any; createdAt: string }[];
   adminHistory: { id: string; action: string; meta: any; createdAt: string; actorUserId: string }[];
   activeSessions: number;
+  lastActivityAt: string | null;
 };
 
 // کپی کلاینتی MODULE_LABELS_FA (lib/modules.ts) — اون فایل از @prisma/client
@@ -261,6 +262,7 @@ function OverviewTab({ data }: { data: Detail }) {
         <Kpi label="بازار" value={u.market === "IRAN" ? "ایران" : "بین‌المللی"} />
         <Kpi label="ثبت‌نام" value={formatDateShort(u.createdAt)} />
         <Kpi label="پلن فعلی" value={activeSub?.plan.nameFa || "رایگان"} />
+        <Kpi label="آخرین فعالیت" value={data.lastActivityAt ? formatDateTime(data.lastActivityAt) : "—"} />
         <Kpi label="نشست‌های فعال" value={formatNumber(data.activeSessions)} />
         <Kpi label="درخواست‌های AI" value={formatNumber(data.aiUsage.requests)} />
         <Kpi label="هزینه AI" value={formatUsdMicros(data.aiUsage.costUsdMicros)} />

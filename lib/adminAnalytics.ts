@@ -10,6 +10,7 @@
 
 import { prisma } from "@/lib/prisma";
 import { countRowProgress } from "@/lib/roadmapPlan";
+import { latestDate } from "@/lib/tehranTime";
 import { ModuleKey } from "@prisma/client";
 
 // ============================================================================
@@ -403,6 +404,13 @@ export async function getUsersList(params: UsersListParams) {
     prisma.user.count({ where }),
   ]);
 
+  // «آخرین ورود/فعالیت» = دیرترین بین آخرین ورود ثبت‌شده و آخرین بازدید نشست‌ها
+  // (نشست JWT تا ۳۰ روز می‌ماند و بدون ورود دوباره فعال است).
+  const seen = rows.length
+    ? await prisma.session.groupBy({ by: ["userId"], where: { userId: { in: rows.map((r) => r.id) } }, _max: { lastSeenAt: true } })
+    : [];
+  const seenBy = new Map(seen.map((g) => [g.userId, g._max.lastSeenAt]));
+
   return {
     users: rows.map((u) => ({
       id: u.id,
@@ -421,7 +429,7 @@ export async function getUsersList(params: UsersListParams) {
       plan: u.subscriptions[0]?.plan?.nameFa || null,
       subscriptionStatus: u.subscriptions[0]?.status || null,
       subscriptionExpiresAt: u.subscriptions[0]?.currentPeriodEnd || null,
-      lastActivityAt: u.loginEvents[0]?.createdAt || null,
+      lastActivityAt: latestDate(u.loginEvents[0]?.createdAt, seenBy.get(u.id)),
     })),
     total,
     page,
@@ -445,7 +453,7 @@ export async function getUserDetail(userId: string) {
   });
   if (!user) return null;
 
-  const [dailyEntries, exerciseLogs, foodLogs, tradeEntries, roadmaps, aiUsage, chatModerationHistory, adminHistory, activeSessions] = await Promise.all([
+  const [dailyEntries, exerciseLogs, foodLogs, tradeEntries, roadmaps, aiUsage, chatModerationHistory, adminHistory, activeSessions, seenAgg] = await Promise.all([
     prisma.dailyEntry.count({ where: { userId } }),
     prisma.exerciseLog.count({ where: { userId } }),
     prisma.foodLogEntry.count({ where: { userId } }),
@@ -461,6 +469,7 @@ export async function getUserDetail(userId: string) {
       orderBy: { createdAt: "desc" }, take: 30,
     }),
     prisma.session.count({ where: { userId, revokedAt: null, expiresAt: { gt: new Date() } } }),
+    prisma.session.aggregate({ where: { userId }, _max: { lastSeenAt: true } }),
   ]);
 
   return {
@@ -475,6 +484,7 @@ export async function getUserDetail(userId: string) {
     chatModerationHistory,
     adminHistory,
     activeSessions,
+    lastActivityAt: latestDate(user.loginEvents[0]?.createdAt, seenAgg._max.lastSeenAt),
   };
 }
 

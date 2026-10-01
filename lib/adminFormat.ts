@@ -28,12 +28,12 @@ export function formatPercent(n: number | null): string {
 
 export function formatDateShort(d: string | Date): string {
   const date = typeof d === "string" ? new Date(d) : d;
-  return date.toLocaleDateString("en-CA"); // YYYY-MM-DD، بدون ابهام ماه/روز
+  return date.toLocaleDateString("en-CA", { timeZone: "Asia/Tehran" }); // YYYY-MM-DD به وقت تهران
 }
 
 export function formatDateTime(d: string | Date): string {
   const date = typeof d === "string" ? new Date(d) : d;
-  return date.toLocaleString("en-CA", { hour12: false });
+  return date.toLocaleString("en-CA", { hour12: false, timeZone: "Asia/Tehran" });
 }
 
 /**
