@@ -132,7 +132,7 @@ function isGroup(item: NavItem): item is NavGroup {
 }
 
 const LINKS: NavItem[] = [
-  // داشبورد — نمای کلی همه‌ی بخش‌ها؛ پشت فلگ `dashboard` (فعلا فقط ادمین‌ها)
+  // داشبورد — نمای کلی همه‌ی بخش‌ها و صفحه‌ی اصلی بعد از ورود؛ پشت فلگ `dashboard` (پیش‌فرض روشن برای همه)
   { href: "/dashboard", label: "داشبورد", icon: "dashboard", feature: "dashboard" },
   { href: "/weekly", label: "روتین", icon: "weekly" },
   { href: "/sleep", label: "خواب", icon: "sleep", module: "SLEEP" },
@@ -389,7 +389,8 @@ export function NavDrawer() {
                 فقط با opacity جابه‌جا می‌شن — نه اینکه src عوض بشه، وگرنه موقع
                 تعویض تم، تصویر تم جدید (که تا اون لحظه fetch نشده) یه تاخیر
                 دیدنی داشت تا دانلود بشه. */}
-            <Link href="/" aria-label="رفتن به صفحه اصلی" className="topbar-logo-lockup-wrap">
+            {/* کاربر واردشده مستقیم به صفحه‌ی اصلی خودش (داشبورد) می‌ره، نه لندینگ و بعد ریدایرکت */}
+            <Link href={status === "authenticated" ? "/dashboard" : "/"} aria-label="رفتن به صفحه اصلی" className="topbar-logo-lockup-wrap">
               <Image
                 src="/images/logo-lockup-dark-theme.png"
                 alt="آریون"

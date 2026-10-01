@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from "react";
 import { createPortal } from "react-dom";
-import { Calendar, History, Loader2 } from "lucide-react";
+import { Calendar, History } from "lucide-react";
 import { useSession } from "next-auth/react";
 import { isoLocal, faNum } from "@/lib/jalali";
 import { AuthGate } from "./AuthGate";
@@ -24,6 +24,7 @@ import { getBodyMetrics, isWeightStale, saveBodyMetrics } from "@/lib/bodyMetric
 import { useDashboardPrefs } from "@/lib/dashboardPrefs";
 import { NumberInput } from "./NumberInput";
 import { reportLiveError, useLiveRefresh } from "@/lib/liveSync";
+import { Spinner } from "./Spinner";
 
 const now = new Date();
 const todayIso = isoLocal(now);
@@ -311,7 +312,7 @@ export function CaloriePanel() {
           {goalError && <div className="field-error-msg" style={{ display: "block", marginTop: 10 }}>{goalError}</div>}
           <div style={{ display: "flex", gap: 8, marginTop: 14 }}>
             <button onClick={saveGoal} disabled={savingGoal} style={{ flex: 2, borderColor: "var(--accent)", color: "var(--accent)" }}>
-              {savingGoal ? <Loader2 size={15} className="trade-spin" /> : "محاسبه‌ی برنامه کالری"}
+              {savingGoal ? <Spinner size={14} /> : "محاسبه‌ی برنامه کالری"}
             </button>
           </div>
         </div>

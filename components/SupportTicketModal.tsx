@@ -2,8 +2,9 @@
 
 import { useState } from "react";
 import { createPortal } from "react-dom";
-import { Loader2, X } from "lucide-react";
+import { X } from "lucide-react";
 import { LockBodyScroll } from "./LockBodyScroll";
+import { Spinner } from "./Spinner";
 
 // پاپ‌آپ «ایجاد تیکت» — موضوع + متن اولین پیام. همون الگوی مودال‌های
 // دیگه‌ی همین اپ (TradeAccountModal): modal-overlay/modal-panel + فیلدهای
@@ -71,7 +72,7 @@ export function SupportTicketModal({
         <div className="trade-modal-actions">
           <button type="button" className="account-outline-btn" onClick={onClose}>لغو</button>
           <button type="button" className="trade-primary-btn" onClick={submit} disabled={!subject.trim() || !message.trim() || saving}>
-            {saving ? <Loader2 size={15} className="trade-spin" /> : "ارسال تیکت"}
+            {saving ? <Spinner size={14} /> : "ارسال تیکت"}
           </button>
         </div>
       </div>

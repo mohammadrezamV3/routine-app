@@ -1,11 +1,12 @@
 "use client";
 
 import { useCallback, useEffect, useState } from "react";
-import { Check, Copy, Download, Link2Off, Loader2, RefreshCw } from "lucide-react";
+import { Check, Copy, Download, Link2Off, RefreshCw } from "lucide-react";
 import { faNum } from "@/lib/jalali";
 import { formatTradeDateTime } from "@/lib/tradeDateTime";
 import { SegmentedTabs } from "./SegmentedTabs";
 import type { CalSystem } from "@/lib/tradeTypes";
+import { Spinner } from "./Spinner";
 
 type MtLink = {
   id: string; platform: "MT4" | "MT5";
@@ -164,7 +165,7 @@ export function TradeMtLinkPanel({ accountId, calSystem, accountName }: { accoun
                 ابتدا یک کد اتصال برای این حساب بسازید.
               </div>
               <button type="button" className="trade-primary-btn" onClick={requestCode} disabled={busy} style={{ marginTop: 10 }}>
-                {busy ? <Loader2 size={14} className="trade-spin" /> : "ساخت کد اتصال"}
+                {busy ? <Spinner size={13} /> : "ساخت کد اتصال"}
               </button>
             </>
           )}

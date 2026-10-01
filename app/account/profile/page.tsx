@@ -4,7 +4,7 @@ import { useEffect, useRef, useState } from "react";
 import { motion } from "framer-motion";
 import {
   Camera, Trash2, Phone, Cake, AtSign, User as UserIcon,
-  Dumbbell, IdCard, Ruler, Weight, VenetianMask, ChevronDown, Loader2, NotebookPen,
+  Dumbbell, IdCard, Ruler, Weight, VenetianMask, ChevronDown, NotebookPen,
 } from "lucide-react";
 import { AgentAvatar } from "@/components/AgentAvatar";
 import { AuthField } from "@/components/AuthField";
@@ -17,6 +17,7 @@ import { getBodyMetrics, saveBodyMetrics } from "@/lib/bodyMetrics";
 import { isValidUsername, isValidPersianName } from "@/lib/validate";
 import { ImageCropModal } from "@/components/ImageCropModal";
 import { centerCropToDataUrl } from "@/lib/imageResize";
+import { Spinner } from "@/components/Spinner";
 
 type ProfileUser = {
   username: string | null;
@@ -286,7 +287,7 @@ export default function AccountProfilePage() {
           >
             {bannerUrl && <img src={bannerUrl} alt="" className="profile-banner-img" />}
             <span className="profile-banner-hint" aria-hidden="true">
-              {bannerSaving ? <Loader2 size={16} className="trade-spin" /> : <Camera size={16} />}
+              {bannerSaving ? <Spinner size={15} /> : <Camera size={16} />}
             </span>
           </button>
 
@@ -314,7 +315,7 @@ export default function AccountProfilePage() {
               <AgentAvatar seed={fullName || username || "؟"} size={92} className="profile-hero-avatar-img" />
             )}
             <span className="profile-hero-avatar-hint" aria-hidden="true">
-              {avatarSaving ? <Loader2 size={15} className="trade-spin" /> : <Camera size={15} />}
+              {avatarSaving ? <Spinner size={14} /> : <Camera size={15} />}
             </span>
           </button>
           <input

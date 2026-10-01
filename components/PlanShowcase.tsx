@@ -7,6 +7,8 @@ import { ICONS } from "@/components/NavDrawer";
 import { useTheme } from "@/components/ThemeProvider";
 import { toJalali, J_MONTHS } from "@/lib/jalali";
 import { TRIAL_COPY_FA } from "@/lib/trial";
+import { Duration, durationLabel, enabledDurations, formatToman, isPaidPlanKey } from "@/lib/planPricing";
+import { usePlanPricing } from "@/lib/usePlanPricing";
 
 // دقیقا هم‌شکل خروجی upgradeOffer توی app/api/plans — پیش‌نمایش قیمت
 // «ارتقا به مکس» وقتی کاربر از قبل ورزش/ترید فعال داره. مبلغ واقعی همیشه
@@ -23,24 +25,14 @@ export function formatJalaliLong(iso: string): string {
   return `${jd} ${J_MONTHS[jm - 1]} ${jy}`;
 }
 
-export type Duration = "1" | "3" | "6" | "12";
-export const DURATIONS: Duration[] = ["1", "3", "6", "12"];
-export const DURATION_LABELS: Record<Duration, string> = { "1": "1 ماهه", "3": "3 ماهه", "6": "6 ماهه", "12": "12 ماهه" };
+// قیمت‌ها/مدت‌ها/تخفیف‌ها دیگه این‌جا هاردکد نیستن: از پنل ادمین
+// (/admin/pricing) میان و با usePlanPricing خونده می‌شن — همون پیکربندی‌ای
+// که چک‌اوت سمت سرور مبلغ واقعی رو ازش حساب می‌کنه (lib/planPricing.ts).
+export type { Duration } from "@/lib/planPricing";
 
 export type PlanCard = {
   key: string; nameFa: string; highlight?: boolean; icon: JSX.Element;
-  free?: boolean; note?: string; prices?: Record<Duration, string>;
-  // مبلغ خام هر مدت به کوچک‌ترین واحد ارز (ریال برای ایران، سنت برای
-  // بین‌المللی) — دقیقا هم‌ارز همون رشته‌ی نمایشی prices، ولی برای
-  // پرداخت واقعی (چک‌اوت) لازمه، چون parse رشته‌ی فرمت‌شده شکننده‌ست.
-  amounts?: Record<Duration, number>;
-  // قیمت اصلی (قبل‌ازتخفیف) پلن یک‌ماهه — فقط اگه ست بشه، به‌صورت خط‌خورده
-  // کنار قیمت واقعی نشون داده می‌شه.
-  originalPrice1mo?: string;
-  // تخفیف ۱۲.۵٪ (هم‌ارز «۴۵ روز رایگان به‌ازای هر سال») — روی ۳/۶/۱۲ ماهه هم
-  // با همین نرخ اعمال شده، نه فقط سالانه. قیمت واقعی تخفیف‌خورده توی
-  // prices جایگزین شده؛ اینجا فقط عدد اصلی (پیش‌ازتخفیف) خط‌خورده‌ست.
-  originalPrices?: Partial<Record<Duration, string>>;
+  free?: boolean; note?: string;
   // فهرست کوتاه امکانات همین پلن، شامل سقف استفاده‌ی ماهانه‌ی فیچرهایی
   // که واقعا سقف دارن (lib/aiQuota.ts) — عددها فقط جایی نوشته می‌شن که یک
   // مکانیزم واقعی enforcement پشتشونه، نه یک ادعای تبلیغاتی بدون پشتوانه.
@@ -51,33 +43,20 @@ export type PlanCard = {
 export const PLANS_IRAN: PlanCard[] = [
   {
     key: "basic", nameFa: "روتین من", icon: ICONS.weekly,
-    // «روتین من» دیگه رایگان دائمی نیست: ۱۴ روز آزمایشی، بعد ماهانه 99 هزار تومان.
-    // مبلغ‌ها باید با lib/planPricing.ts یکی بمونن.
+    // «روتین من» دیگه رایگان دائمی نیست: 14 روز آزمایشی، بعد پلن پولی.
     note: "14 روز رایگان",
-    prices: { "1": "99,000 تومان", "3": "260,000 تومان", "6": "520,000 تومان", "12": "1,040,000 تومان" },
-    originalPrices: { "3": "297,000 تومان", "6": "594,000 تومان", "12": "1,188,000 تومان" },
-    amounts: { "1": 990000, "3": 2600000, "6": 5200000, "12": 10400000 },
     features: ["روتین روزانه و برنامه‌ی هفتگی", "یادآوری برنامه‌ها و دارو", "ثبت خواب و پیوستگی روزها"],
   },
   {
     key: "exercise", nameFa: "پلن بدنسازی", icon: ICONS.exercise,
-    prices: { "1": "150,000 تومان", "3": "394,000 تومان", "6": "788,000 تومان", "12": "1,575,000 تومان" },
-    originalPrices: { "3": "450,000 تومان", "6": "900,000 تومان", "12": "1,800,000 تومان" },
-    amounts: { "1": 1500000, "3": 3940000, "6": 7880000, "12": 15750000 },
     features: ["ساخت برنامه‌ی بدنسازی با هوش مصنوعی — 3 بار در ماه", "ثبت و پیگیری کالری و ماکروها", "روتین روزانه"],
   },
   {
     key: "trade", nameFa: "پلن ترید", icon: ICONS.trade,
-    prices: { "1": "175,000 تومان", "3": "459,000 تومان", "6": "919,000 تومان", "12": "1,838,000 تومان" },
-    originalPrices: { "3": "525,000 تومان", "6": "1,050,000 تومان", "12": "2,100,000 تومان" },
-    amounts: { "1": 1750000, "3": 4590000, "6": 9190000, "12": 18380000 },
     features: ["ژورنال ترید و چک‌لیست قبل از معامله", "تقویم اقتصادی", "ورود خودکار معاملات از MT4 و MT5", "روتین روزانه"],
   },
   {
     key: "max", nameFa: "پلن مکس", highlight: true, icon: <Sparkles size={16} />,
-    prices: { "1": "250,000 تومان", "3": "656,000 تومان", "6": "1,313,000 تومان", "12": "2,625,000 تومان" },
-    originalPrices: { "3": "750,000 تومان", "6": "1,500,000 تومان", "12": "3,000,000 تومان" },
-    amounts: { "1": 2500000, "3": 6560000, "6": 13130000, "12": 26250000 },
     // «تحلیل هوشمند» طبق درخواست صریح از فیچرهای پلن حذف شد (هنوز آماده
     // نیست — به بخش «به‌زودی»ی جدول جزئیات منتقل شده، COMPARE_ROWS_IRAN
     // پایین همین فایل)؛ جایگزینش «مدیربرنامه هوشمند» است.
@@ -171,14 +150,22 @@ export function useThemeTokens() {
 // پلن فعلیش (currentPlanKey) به‌جای دکمه‌ی خرید یه نشان «پلن فعلی تو» می‌گیره.
 function PlanCardView({ p, mode, currentPlanKey, upgradeOffer, upgradeFromNameFa }: { p: PlanCard; mode: "landing" | "account"; currentPlanKey?: string | null; upgradeOffer?: UpgradeOffer | null; upgradeFromNameFa?: string }) {
   const t = useThemeTokens();
-  const [duration, setDuration] = useState<Duration>("1");
+  const { pricing, ready } = usePlanPricing();
+  const durations = enabledDurations(pricing);
+  const [picked, setDuration] = useState<Duration | null>(null);
+  // مدت انتخاب‌شده اگه از پنل خاموش شده باشه، اولین مدت فعال جاش می‌شینه
+  const duration: Duration = picked && durations.includes(picked) ? picked : durations[0];
   const [renewOpen, setRenewOpen] = useState(false);
-  const labels = DURATION_LABELS;
+  const durationGridStyle = { gridTemplateColumns: `repeat(${durations.length}, minmax(0, 1fr))` };
+  const cell = isPaidPlanKey(p.key) ? pricing.plans[p.key][duration] : undefined;
+  // تا قیمت‌های پنل نرسیده، عدد نشون داده نمی‌شه (نه پیش‌فرض کد که ممکنه عوض شده باشه)
+  const priceLabel = ready && cell ? formatToman(cell.price) : "…";
+  const originalLabel = ready && cell && cell.original > cell.price ? formatToman(cell.original) : undefined;
   const isCurrent = mode === "account" && currentPlanKey === p.key;
   // پیشنهاد «ارتقا به مکس» فقط روی خود کارت مکس نشون داده می‌شه — فقط
   // وقتی کاربر از قبل پلن ورزش/ترید فعال داره (upgradeOffer از سرور اومده).
   const offer = mode === "account" && upgradeOffer?.toPlanKey === p.key ? upgradeOffer.perDuration[duration] : undefined;
-  const originalPrice = offer ? p.prices?.[duration] : p.originalPrices?.[duration];
+  const originalPrice = offer ? (ready ? priceLabel : undefined) : originalLabel;
 
   const cardClass = p.highlight
     ? `relative flex flex-col rounded-[22px] border ${t.secondaryBorderSoft} ${t.secondaryBgSoft} p-4 backdrop-blur-xl ${t.secondaryCardShadow}`
@@ -248,8 +235,8 @@ function PlanCardView({ p, mode, currentPlanKey, upgradeOffer, upgradeFromNameFa
 
           {renewOpen ? (
             <div className={`mt-1.5 flex flex-col gap-2 rounded-xl border ${t.line} p-2.5`}>
-              <div className="grid grid-cols-4 gap-1.5">
-                {DURATIONS.map((d) => {
+              <div className="grid gap-1.5" style={durationGridStyle}>
+                {durations.map((d) => {
                   const selected = d === duration;
                   return (
                     <button
@@ -261,12 +248,12 @@ function PlanCardView({ p, mode, currentPlanKey, upgradeOffer, upgradeFromNameFa
                         ? { background: t.accentColorRaw, color: "#fff" }
                         : { background: t.isLight ? "rgba(43,33,24,.07)" : "rgba(255,255,255,.06)" }}
                     >
-                      {labels[d]}
+                      {durationLabel(pricing, d)}
                     </button>
                   );
                 })}
               </div>
-              <div className={`text-center text-[13.5px] font-extrabold ${t.heading}`}>{p.prices![duration]}</div>
+              <div className={`text-center text-[13.5px] font-extrabold ${t.heading}`}>{priceLabel}</div>
               <Link
                 href={buyHref}
                 className={`flex w-full items-center justify-center gap-1.5 rounded-xl py-2.5 text-center text-[12.5px] font-bold text-white transition hover:brightness-105 active:scale-[0.98] ${t.accentBg}`}
@@ -297,8 +284,8 @@ function PlanCardView({ p, mode, currentPlanKey, upgradeOffer, upgradeFromNameFa
               قانون سراسری `button:hover` (globals.css) اسپسیفیسیتی‌ش از یه
               کلاس Tailwind تکی بیشتره و روی هاور/لمس، رنگ انتخاب‌شده رو با
               یه تینت کم‌رنگ جایگزین می‌کرد؛ inline style همیشه برنده‌ست. */}
-          <div className="mt-3 grid grid-cols-4 gap-1.5">
-            {DURATIONS.map((d) => {
+          <div className="mt-3 grid gap-1.5" style={durationGridStyle}>
+            {durations.map((d) => {
               const selected = d === duration;
               return (
                 <button
@@ -310,14 +297,14 @@ function PlanCardView({ p, mode, currentPlanKey, upgradeOffer, upgradeFromNameFa
                     ? { background: t.accentColorRaw, color: "#fff" }
                     : { background: t.isLight ? "rgba(43,33,24,.07)" : "rgba(255,255,255,.06)" }}
                 >
-                  {labels[d]}
+                  {durationLabel(pricing, d)}
                 </button>
               );
             })}
           </div>
 
           <div className="mt-3 flex items-baseline gap-2">
-            <span className={`text-[15px] font-extrabold ${t.heading}`}>{offer ? offer.priceLabel : p.prices![duration]}</span>
+            <span className={`text-[15px] font-extrabold ${t.heading}`}>{offer ? offer.priceLabel : priceLabel}</span>
             {originalPrice && (
               <span className={`text-[12px] font-semibold line-through ${t.muted}`}>{originalPrice}</span>
             )}

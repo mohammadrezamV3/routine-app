@@ -3,10 +3,11 @@
 import { useState } from "react";
 import { TickButton } from "./TickButton";
 import { Reorder } from "framer-motion";
-import { GripVertical, Loader2, Plus, Trash2, X } from "lucide-react";
+import { GripVertical, Plus, Trash2, X } from "lucide-react";
 import { faNum } from "@/lib/jalali";
 import { LockBodyScroll } from "./LockBodyScroll";
 import { MAX_CHECKLIST_ITEMS, MIN_CHECKLIST_ITEMS, TAG_COLORS } from "@/lib/tradeTypes";
+import { Spinner } from "./Spinner";
 
 type Item = { id: string; text: string; order: number };
 type Checklist = { id: string; name: string; color: string; required: boolean; archived: boolean; order: number; note: string | null; items: Item[] };
@@ -149,7 +150,7 @@ export function ChecklistEditor({
         <div className="trade-modal-actions">
           <button type="button" className="account-outline-btn" onClick={onClose}>لغو</button>
           <button type="button" className="trade-primary-btn" onClick={save} disabled={saving || items.length < MIN_CHECKLIST_ITEMS}>
-            {saving ? <Loader2 size={15} className="trade-spin" /> : "ذخیره"}
+            {saving ? <Spinner size={14} /> : "ذخیره"}
           </button>
         </div>
       </div>

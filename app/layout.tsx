@@ -25,6 +25,7 @@ import { RealtimeProvider } from "@/components/RealtimeProvider";
 import { InviteRefCapture } from "@/components/InviteRefCapture";
 import { AnnouncementDelivery } from "@/components/AnnouncementDelivery";
 import { PopupExitAnimator } from "@/components/PopupExitAnimator";
+import { BoxHoverTracker } from "@/components/BoxHoverTracker";
 import { RouteProgress } from "@/components/RouteProgress";
 import { Suspense } from "react";
 import { BootSplash } from "@/components/BootSplash";
@@ -252,6 +253,8 @@ export default async function RootLayout({ children }: { children: React.ReactNo
         <BackgroundCanvasLoader />
         {/* خروج نرم همه‌ی پاپ‌آپ‌ها — lib/popupExit.ts */}
         <PopupExitAnimator />
+        {/* نور هاور دور همه‌ی باکس‌ها — lib/boxHover.ts */}
+        <BoxHoverTracker />
         <AuthSessionProvider session={session}>
           <ThemeProvider initialTheme={theme}>
             <MotionTuner>

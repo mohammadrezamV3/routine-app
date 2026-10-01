@@ -1,7 +1,7 @@
 "use client";
 
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
-import { Loader2, Pencil, RefreshCw, Search, Trash2, X } from "lucide-react";
+import { Pencil, RefreshCw, Search, Trash2, X } from "lucide-react";
 import { EmptyState, ErrorState, LoadingState } from "@/components/admin/EmptyState";
 import { ConfirmModal } from "@/components/admin/AdminModal";
 import { AdminTabBar } from "@/components/admin/TabBar";
@@ -9,6 +9,7 @@ import { adminFetch, useAdminToast } from "@/components/admin/useAdminToast";
 import { formatDateTime, toLocalInputValue } from "@/lib/adminFormat";
 import { CALENDAR_CURRENCIES, EconomicImpact, IMPACT_LABELS, IMPACT_ORDER } from "@/lib/economicCalendar";
 import { normalizeFa } from "@/lib/utils";
+import { Spinner } from "@/components/Spinner";
 
 type EventRow = {
   id: string; title: string; country: string; currency: string; impact: EconomicImpact;
@@ -183,7 +184,7 @@ export default function AdminEconomicCalendarPage() {
         </div>
         <div className="admin-head-actions">
           <button type="button" className="admin-btn" onClick={syncNow} disabled={syncing}>
-            {syncing ? <Loader2 size={14} className="trade-spin" /> : <RefreshCw size={14} />}
+            {syncing ? <Spinner size={13} /> : <RefreshCw size={14} />}
             {syncing ? "در حال همگام‌سازی…" : "همگام‌سازی الان"}
           </button>
         </div>
@@ -264,7 +265,7 @@ export default function AdminEconomicCalendarPage() {
               </button>
             )}
             <button type="submit" className="admin-btn primary" disabled={!title.trim() || !occursAt || saving}>
-              {saving && <Loader2 size={14} className="trade-spin" />}
+              {saving && <Spinner size={13} />}
               {editing ? "ذخیره‌ی تغییرات" : "ثبت رویداد"}
             </button>
           </div>

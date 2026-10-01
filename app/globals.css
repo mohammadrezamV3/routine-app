@@ -3445,12 +3445,6 @@
     background:#E05252; border-color:#E05252; color:#fff; box-shadow:none;
     animation:wnsShake .4s ease;
   }
-  .wsearch-submit-spinner{
-    width:15px; height:15px; border-radius:50%; flex-shrink:0;
-    border:2px solid rgba(0,0,0,.25); border-top-color:currentColor;
-    animation:wnsSpinPlain .7s linear infinite;
-  }
-  @keyframes wnsSpinPlain{ to{ transform:rotate(360deg); } }
   /* همون دکمه ولی داخل ردیف «افزودن روز دیگر» (فرم ویرایش) — اونجا
      تمام‌عرض نمی‌شه، فقط اندازه‌ی محتواش. */
   .wsearch-submit-btn-inline{ width:auto; padding:10px 26px; font-size:13px; }
@@ -3464,24 +3458,16 @@
   .wsearch-newform-submit:active{transform:scale(.92);}
   .wsearch-newform-submit .wns-check, .wsearch-newform-submit .wns-x{width:16px; height:16px; display:block; transition:opacity .15s ease, transform .2s ease;}
   .wsearch-newform-submit .wns-x{position:absolute; opacity:0; transform:scale(.5);}
-  .wsearch-newform-submit .wns-spinner{
-    position:absolute; width:15px; height:15px; border-radius:50%;
-    border:2px solid transparent; border-top-color:currentColor; border-inline-start-color:currentColor;
-    opacity:0; transform:scale(.6);
-  }
+  .wsearch-newform-submit .wns-spinner{ position:absolute; display:flex; }
   .wsearch-newform-submit.loading{pointer-events:none;}
   .wsearch-newform-submit.loading .wns-check{opacity:0; transform:scale(.5);}
-  .wsearch-newform-submit.loading .wns-spinner{opacity:1; animation:wnsSpin .7s linear infinite;}
   .wsearch-newform-submit.success{pointer-events:none; background:var(--accent); color:var(--bg); border-color:var(--accent);}
-  .wsearch-newform-submit.success .wns-spinner{opacity:0;}
   .wsearch-newform-submit.success .wns-check{opacity:1; animation:wnsPop .4s cubic-bezier(.34,1.56,.64,1);}
   .wsearch-newform-submit.error{pointer-events:none; background:#E05252; color:#fff; border-color:#E05252; animation:wnsShake .4s ease;}
-  .wsearch-newform-submit.error .wns-spinner{opacity:0;}
   .wsearch-newform-submit.error .wns-check{opacity:0;}
   .wsearch-newform-submit.error .wns-x{opacity:1; transform:scale(1); animation:wnsPop .4s cubic-bezier(.34,1.56,.64,1);}
   .wsearch-newform-overlay.occ-edit-overlay{z-index:62;}
   .wsearch-newform.occ-edit-form{z-index:63;}
-  @keyframes wnsSpin{ from{transform:scale(.6) rotate(0deg);} to{transform:scale(.6) rotate(360deg);} }
   @keyframes wnsPop{ 0%{transform:scale(.3);} 60%{transform:scale(1.3);} 100%{transform:scale(1);} }
   @keyframes wnsShake{
     0%,100%{transform:translateX(0);}
@@ -5865,7 +5851,7 @@ html[data-perf="low"] .app-bottombar{
    GPU/CPU دائم بیدار می‌مانند و باتری و گرما همان‌جا می‌رود. روی دسکتاپ
    بی‌اهمیت است و دست‌نخورده می‌ماند.
 
-   عمدا فقط *تزئینی*ها: اسپینرها (.trade-spin، .app-spin، …)
+   عمدا فقط *تزئینی*ها: اسپینرها (.tg-spinner، .trade-spin، …)
    حرف می‌زنند — می‌گویند «منتظر بمان» — و نوار قیمت‌ها محتواست، پس
    هیچ‌کدام این‌جا نیستند.
    ============================================================ */
@@ -7446,12 +7432,7 @@ body:not([data-theme="light"]) button.trade-pair-suggest-item{ box-shadow:none; 
   display:flex; flex-direction:column; align-items:center; justify-content:center; gap:12px;
   font-size:12.5px; color:var(--muted);
 }
-.tv-chart-spinner{
-  width:26px; height:26px; border-radius:50%;
-  border:2px solid rgba(var(--accent-rgb),.25); border-top-color:var(--accent);
-  animation:tvSpin .8s linear infinite;
-}
-@keyframes tvSpin{ to{ transform:rotate(360deg); } }
+.tv-chart-spinner{ color:var(--accent); }
 
 /* ── پنل‌های صفحه‌ی چارت: چک‌لیست/ثبت معامله، گفت‌وگو، تقویم ─────────── */
 .trade-panel-head{ display:flex; align-items:center; justify-content:space-between; gap:10px; margin-bottom:10px; }
@@ -7716,17 +7697,34 @@ body:not([data-theme="light"]) .fx-hub-dot{ fill:#101820; }
 
 /* ===================== لودینگ مشترک ===================== */
 /* «هر جا چیزی لودینگ رفت، دایره‌ی لودینگ بیاد، بدون هیچ متن دیگری» —
-   درخواست صریح کاربر. Spinner (components/Spinner.tsx) حالا از
-   QuarterRing (components/QuarterRing.tsx) ساخته می‌شود؛ کلاس قدیمی
-   app-spinner دیگر جایی استفاده نمی‌شود. */
-/* چرخش دایره‌ی لودینگ — عمدا روی کلاس (نه style اینلاین) تا هیچ prop style‌ای
-   خاموشش نکنه. حتی با «کاهش حرکت» هم می‌چرخه (فقط کندتر): اسپینر ثابت یعنی
-   «هنگ کرده»، و این تنها بازخورد «در حال کار» است. */
-@keyframes loading-ui-quarter-ring-rotation{ to{ transform:rotate(360deg); } }
+   درخواست صریح کاربر. همه‌ی لودینگ‌های داخل دکمه/خط/بخش از Spinner
+   (components/Spinner.tsx) به سبک تلگرام‌اند: کمان نازک با سر گرد، بدون
+   ریل، که می‌چرخد و طولش نرم بلند/کوتاه می‌شه. فقط لودینگ تمام‌صفحه
+   (PageLoader/BootSplash/RouteProgress) طرح خودش رو داره.
+   چرخش عمدا روی کلاس (نه style اینلاین) تا هیچ prop style‌ای خاموشش نکنه.
+   با «کاهش حرکت» هم آروم می‌چرخه (فقط بدون تغییر طول کمان): اسپینر ثابت
+   یعنی «هنگ کرده»، و این تنها بازخورد «در حال کار» است.
+   شعاع کمان همیشه 10 واحده (محیط ~62.8)، پس عددهای dash ثابت‌اند. */
 /* .is-loading::before پایین‌تر به appSpin ارجاع می‌داد ولی این keyframes هیچ‌جا تعریف نشده بود — اون اسپینرها هم ثابت می‌موندن */
 @keyframes appSpin{ to{ transform:rotate(360deg); } }
-.quarter-ring{ animation:loading-ui-quarter-ring-rotation var(--duration, .8s) linear infinite !important; }
-@media (prefers-reduced-motion:reduce){ .quarter-ring{ animation-duration:1.6s !important; } }
+.tg-spinner{
+  display:inline-block; flex-shrink:0; vertical-align:middle; overflow:visible;
+  animation:tg-spinner-rotate 1.6s linear infinite !important;
+}
+.tg-spinner-arc{
+  stroke-dasharray:8 54.83; stroke-dashoffset:0;
+  animation:tg-spinner-dash 1.5s cubic-bezier(.4,0,.2,1) infinite;
+}
+@keyframes tg-spinner-rotate{ to{ transform:rotate(360deg); } }
+@keyframes tg-spinner-dash{
+  0%{ stroke-dasharray:8 54.83; stroke-dashoffset:0; }
+  50%{ stroke-dasharray:45 17.83; stroke-dashoffset:-15; }
+  100%{ stroke-dasharray:8 54.83; stroke-dashoffset:-62.83; }
+}
+@media (prefers-reduced-motion:reduce){
+  .tg-spinner{ animation-duration:2.4s !important; }
+  .tg-spinner-arc{ animation:none; stroke-dasharray:40 22.83; }
+}
 
 /* ── انتقال نرم بین صفحه‌ها (components/RouteProgress.tsx + app/template.tsx) ── */
 /* فقط بعد از اولین ناوبری داخلی (RouteProgress، data-navigated): لود کامل اول بدون fade
@@ -7791,17 +7789,28 @@ body[data-theme="light"] .pls-line::after, body[data-theme="light"] .pls-card::a
 /* هر عنصری که کلاس is-loading بگیرد، یک دایره‌ی چرخان کوچک قبل از متنش
    می‌گیرد. عمدا با ::before و نه یک کامپوننت: این حالت‌ها در ده‌ها فایل
    پراکنده بودند و هدف این بود که «هر جا لودینگ رفت دایره بیاید»، بدون
-   اینکه ساختار هر کدام دست بخورد. */
+   اینکه ساختار هر کدام دست بخورد. ظاهرش عین Spinner (سبک تلگرام) است:
+   کمان از mask یک SVG میاد که تغییر طولش با SMIL داخل خودشه (pseudo
+   نمی‌تونه circle داشته باشه)، چرخش با CSS، و رنگ همون اکسنت قبلی که
+   فقط از شکل کمان دیده می‌شه (پس‌زمینه‌ی جعبه‌ای نیست). */
 .is-loading{
   display:flex; align-items:center; justify-content:center; gap:9px;
 }
 .is-loading::before{
   content:""; display:inline-block; flex-shrink:0;
-  width:15px; height:15px; border-radius:50%;
-  border:2px solid rgba(var(--accent-rgb),.25); border-top-color:var(--accent);
-  animation:appSpin .8s linear infinite;
+  width:15px; height:15px;
+  background-color:var(--accent);
+  -webkit-mask:var(--tg-spinner-mask) center / 100% 100% no-repeat;
+  mask:var(--tg-spinner-mask) center / 100% 100% no-repeat;
+  --tg-spinner-mask:url("data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 23.5 23.5'><circle cx='11.75' cy='11.75' r='10' fill='none' stroke='%23000' stroke-width='2.5' stroke-linecap='round' stroke-dasharray='8 54.83'><animate attributeName='stroke-dasharray' values='8 54.83;45 17.83;8 54.83' keyTimes='0;.5;1' calcMode='spline' keySplines='.4 0 .2 1;.4 0 .2 1' dur='1.5s' repeatCount='indefinite'/><animate attributeName='stroke-dashoffset' values='0;-15;-62.83' keyTimes='0;.5;1' calcMode='spline' keySplines='.4 0 .2 1;.4 0 .2 1' dur='1.5s' repeatCount='indefinite'/></circle></svg>");
+  animation:tg-spinner-rotate 1.6s linear infinite;
 }
-html[data-perf="low"] .is-loading::before{ animation-duration:1s; }
+@media (prefers-reduced-motion:reduce){
+  .is-loading::before{
+    --tg-spinner-mask:url("data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 23.5 23.5'><circle cx='11.75' cy='11.75' r='10' fill='none' stroke='%23000' stroke-width='2.5' stroke-linecap='round' stroke-dasharray='40 22.83'></circle></svg>");
+    animation-duration:2.4s;
+  }
+}
 
 /* ستون وسط داشبورد روتین (یادآوری‌ها + یادآوری دارو).
    گرید `items-stretch` است، پس خود ستون تمام ارتفاع را می‌گیرد — ولی
@@ -9174,7 +9183,7 @@ body:not([data-theme="light"]) .rp-wiz-chip.on,
 body[data-theme="light"] .rp-wiz-chip.on{ color:var(--accent); border-color:var(--accent); background:var(--accent-dim); }
 
 .rp-wiz-loading{ display:flex; flex-direction:column; align-items:center; gap:10px; padding:22px 6px 16px; text-align:center; }
-.rp-wiz-spinner{ width:22px; height:22px; border-width:2.5px; border-color:rgba(var(--accent-rgb),.25); border-top-color:var(--accent); }
+.rp-wiz-spinner{ color:var(--accent); }
 .rp-wiz-loading-title{ font-size:13.5px; font-weight:800; color:var(--text); unicode-bidi:plaintext; }
 .rp-wiz-phases{ margin:4px 0 0; padding:0; list-style:none; display:flex; flex-direction:column; gap:5px; text-align:start; }
 .rp-wiz-phases li{
@@ -9247,6 +9256,71 @@ body[data-theme] :is(
 html[data-perf="low"] body[data-theme] .modal-panel{
   backdrop-filter:none !important; -webkit-backdrop-filter:none !important;
 }
+
+/* ============================================================
+   نور هاور دور باکس‌ها (همه‌ی باکس‌ها)
+   ------------------------------------------------------------
+   درخواست صریح: «هاور رنگی دور باکس‌ها روی همه‌ی باکس‌ها اعمال بشه».
+   دقیقا همان نور دنبال‌کننده‌ی موس کارت‌های بنتو داشبورد
+   (`.db-card::before` در app/dashboard/dashboard.css): گرادیان شعاعی
+   260px با اکسنت 75٪ که با mask فقط روی *بوردر* (1px) دیده می‌شود، شعاع
+   خود باکس را دنبال می‌کند، و با opacity .3s ظاهر می‌شود. هیچ بک‌گراندی
+   عوض نمی‌شود و ضخامت بوردر ثابت است (بدون layout shift).
+   مختصات موس (--mx/--my) را lib/boxHover.ts (BoxHoverTracker در layout)
+   برای هر عنصری که این‌جا مارکر --box-hover:1 گرفته می‌نویسد — پس باکس
+   تازه فقط باید به همین فهرست اضافه شود، نه کد جدا.
+   فقط سطح‌های «باکس»: دکمه/فیلد/تیک/چیپ و پاپ‌آپ‌های کامل (modal-panel و
+   مشابه) عمدا نیستند. کارت‌های داشبورد (.db-card/.db-hero) افکت خودشان را
+   دارند و این‌جا نیستند.
+   باکس‌هایی که overflow:hidden دارند لبه‌ی بیرونی را می‌برند، پس برای
+   آن‌ها حلقه دقیقا داخل بوردر (inset:0) کشیده می‌شود.
+   ============================================================ */
+@property --box-hover{ syntax:"<integer>"; inherits:false; initial-value:0; }
+:where(
+  .trade-surface:not(.trade-econ-monthpicker), .rp-card, .account-card, .acc-block-body, .auth-box,
+  .fx-card, .tv-chart-box, .trade-chart-side, .trade-chat-panel, .trade-cal-card,
+  .exercise-rules-box, .exercise-locked-box, .admin-card, .admin-kpi-tile, .admin-chart-card,
+  .admin-role-card, .cal-cell:not(.empty), .sl-card, .sl-stat, .trade-stat-tile, .wa-stat-tile,
+  .stk-ach-item, .mentor-note-box, .ls-card,
+  :is(div, section, article).rounded-dash.border-dash-border.bg-dash-card
+){
+  --box-hover:1;
+  position:relative;
+}
+body[data-theme] :where(
+  .trade-surface:not(.trade-econ-monthpicker), .rp-card, .account-card, .acc-block-body, .auth-box,
+  .fx-card, .tv-chart-box, .trade-chart-side, .trade-chat-panel, .trade-cal-card,
+  .exercise-rules-box, .exercise-locked-box, .admin-card, .admin-kpi-tile, .admin-chart-card,
+  .admin-role-card, .cal-cell:not(.empty), .sl-card, .sl-stat, .trade-stat-tile, .wa-stat-tile,
+  .stk-ach-item, .mentor-note-box, .ls-card,
+  :is(div, section, article).rounded-dash.border-dash-border.bg-dash-card
+)::before{
+  content:""; position:absolute; inset:-1px; border-radius:inherit; padding:1px; pointer-events:none;
+  background:radial-gradient(260px circle at var(--mx, 50%) var(--my, -40%), rgba(var(--accent-rgb),.75), transparent 60%);
+  -webkit-mask:linear-gradient(#000 0 0) content-box, linear-gradient(#000 0 0);
+  -webkit-mask-composite:xor; mask-composite:exclude;
+  opacity:0; transition:opacity .3s ease;
+}
+body[data-theme] :where(
+  .account-card, .acc-block-body, .trade-account-card, .trade-mt-row, .trade-note-card,
+  .trade-checklist-card, .trade-journal-box, .rp-stage-card, .ls-card, .overflow-hidden
+)::before{ inset:0; }
+/* محتوای کارت لندینگ (.ls-card-inner) با z-index:1 کل سطح را می‌پوشاند */
+body[data-theme] .ls-card::before{ z-index:2; }
+@media (hover:hover) and (pointer:fine){
+  body[data-theme] :where(
+    .trade-surface:not(.trade-econ-monthpicker), .rp-card, .account-card, .acc-block-body, .auth-box,
+    .fx-card, .tv-chart-box, .trade-chart-side, .trade-chat-panel, .trade-cal-card,
+    .exercise-rules-box, .exercise-locked-box, .admin-card, .admin-kpi-tile, .admin-chart-card,
+    .admin-role-card, .cal-cell:not(.empty), .sl-card, .sl-stat, .trade-stat-tile, .wa-stat-tile,
+    .stk-ach-item, .mentor-note-box, .ls-card,
+    :is(div, section, article).rounded-dash.border-dash-border.bg-dash-card
+  ):hover::before{ opacity:1; }
+}
+@media (prefers-reduced-motion:reduce){
+  body[data-theme] :where(.trade-surface, .rp-card, .account-card, .acc-block-body, .auth-box, .fx-card, .tv-chart-box, .trade-chart-side, .trade-chat-panel, .trade-cal-card, .exercise-rules-box, .exercise-locked-box, .admin-card, .admin-kpi-tile, .admin-chart-card, .admin-role-card, .cal-cell, .sl-card, .sl-stat, .trade-stat-tile, .wa-stat-tile, .stk-ach-item, .mentor-note-box, .ls-card, .bg-dash-card)::before{ transition:none; }
+}
+html[data-perf="low"] body[data-theme] :where(.trade-surface, .rp-card, .account-card, .acc-block-body, .auth-box, .fx-card, .tv-chart-box, .trade-chart-side, .trade-chat-panel, .trade-cal-card, .exercise-rules-box, .exercise-locked-box, .admin-card, .admin-kpi-tile, .admin-chart-card, .admin-role-card, .cal-cell, .sl-card, .sl-stat, .trade-stat-tile, .wa-stat-tile, .stk-ach-item, .mentor-note-box, .ls-card, .bg-dash-card)::before{ display:none; }
 
 /* ============================================================
    گوی دستیار روی لمسی

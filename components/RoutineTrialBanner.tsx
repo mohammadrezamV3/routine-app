@@ -8,7 +8,9 @@ import Link from "next/link";
 import { useEffect, useState } from "react";
 import { useSession } from "next-auth/react";
 import { getAccount } from "@/lib/accountCache";
-import { ROUTINE_PLAN_KEY, ROUTINE_PLAN_PRICE_TOMAN, ROUTINE_TRIAL_DAYS } from "@/lib/trial";
+import { ROUTINE_PLAN_KEY, ROUTINE_TRIAL_DAYS } from "@/lib/trial";
+import { entryOffer } from "@/lib/planPricing";
+import { usePlanPricing } from "@/lib/usePlanPricing";
 import { useLiveRefresh } from "@/lib/liveSync";
 
 export function routineTrialDaysLeft(data: Awaited<ReturnType<typeof getAccount>>): number | null {
@@ -28,6 +30,8 @@ export function RoutineTrialBanner({ className }: { className?: string }) {
   const [left, setLeft] = useState<number | null>(null);
   const [v, setV] = useState(0);
   useLiveRefresh(["account"], () => setV((x) => x + 1));
+  const { pricing, ready } = usePlanPricing();
+  const offer = entryOffer(pricing, ROUTINE_PLAN_KEY);
 
   useEffect(() => {
     if (status !== "authenticated") return;
@@ -42,8 +46,8 @@ export function RoutineTrialBanner({ className }: { className?: string }) {
       <span>
         <b>{left}</b> روز از دوره‌ی رایگان «روتین من» مونده
       </span>
-      <Link href={`/subscription/checkout?plan=${ROUTINE_PLAN_KEY}&duration=1`} prefetch={false}>
-        خرید — ماهانه {ROUTINE_PLAN_PRICE_TOMAN.toLocaleString("en-US")} تومان
+      <Link href={`/subscription/checkout?plan=${ROUTINE_PLAN_KEY}&duration=${offer.duration}`} prefetch={false}>
+        {ready ? `خرید — ${offer.label}` : "خرید"}
       </Link>
     </div>
   );

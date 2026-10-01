@@ -1,5 +1,7 @@
 import { SeoLanding, type SeoFaq } from "@/components/SeoLanding";
 import { BRAND_FA } from "@/lib/brand";
+import { fillPriceCopy } from "@/lib/planPricing";
+import { getPricingConfig } from "@/lib/planPricingServer";
 import { breadcrumbJsonLd, faqJsonLd, pageMetadata, softwareApplicationJsonLd } from "@/lib/seo";
 
 export const metadata = pageMetadata({
@@ -35,7 +37,7 @@ const FAQS: SeoFaq[] = [
   },
   {
     q: "بخش بدنسازی رایگان است؟",
-    a: "بخش تمرین بدنسازی جزو ماژول‌های اشتراکی است. هر حساب تازه 3 روز دسترسی به بدنسازی، کالری‌شمار و ژورنال ترید، با استفاده‌ی محدود از هوش مصنوعی می‌گیرد. «روتین من» (روتین و کارهای روزانه) 14 روز رایگان است و بعد با پلن «روتین من» (ماهانه 99 هزار تومان) ادامه پیدا می‌کند.",
+    a: "بخش تمرین بدنسازی جزو ماژول‌های اشتراکی است. هر حساب تازه 3 روز دسترسی به بدنسازی، کالری‌شمار و ژورنال ترید، با استفاده‌ی محدود از هوش مصنوعی می‌گیرد. «روتین من» (روتین و کارهای روزانه) 14 روز رایگان است و بعد با پلن «روتین من» ({{routine_monthly}}) ادامه پیدا می‌کند.",
   },
 ];
 
@@ -44,13 +46,18 @@ const BREADCRUMB = [
   { name: "برنامه بدنسازی", path: "/bodybuilding-program" },
 ];
 
-export default function BodybuildingProgramPage() {
+
+// قیمت «روتین من» داخل FAQ از پنل ادمین (/admin/pricing) پر می‌شه؛ ISR تا تغییر قیمت بدون دیپلوی برسه
+export const revalidate = 300;
+
+export default async function BodybuildingProgramPage() {
+  const faqs = fillPriceCopy(FAQS, await getPricingConfig());
   return (
     <>
       <script
         type="application/ld+json"
         dangerouslySetInnerHTML={{
-          __html: JSON.stringify([breadcrumbJsonLd(BREADCRUMB), faqJsonLd(FAQS), softwareApplicationJsonLd()]),
+          __html: JSON.stringify([breadcrumbJsonLd(BREADCRUMB), faqJsonLd(faqs), softwareApplicationJsonLd()]),
         }}
       />
       <SeoLanding
@@ -100,7 +107,7 @@ export default function BodybuildingProgramPage() {
             ],
           },
         ]}
-        faqs={FAQS}
+        faqs={faqs}
         faqTitle="سوال‌های رایج درباره برنامه بدنسازی"
         related={[
           { href: "/calorie-counter", label: "کالری‌شمار آریون", note: "محاسبه‌ی کالری روزانه و ثبت غذا و درشت‌مغذی‌ها، برای هماهنگی تغذیه با تمرین." },

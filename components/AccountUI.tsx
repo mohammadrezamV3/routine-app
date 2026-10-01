@@ -1,8 +1,9 @@
 "use client";
 
 import { motion } from "framer-motion";
-import { AlertTriangle, Check, Loader2 } from "lucide-react";
+import { AlertTriangle, Check } from "lucide-react";
 import { AccountBackButton } from "./AccountBackButton";
+import { Spinner } from "./Spinner";
 
 /**
  * پایه‌های مشترک همه‌ی زیرصفحه‌های پنل کاربری.
@@ -129,7 +130,7 @@ export function AccountSaveBar({
         disabled={saving || disabled}
         aria-label={label}
       >
-        {state === "saving" ? <Loader2 size={16} className="trade-spin" />
+        {state === "saving" ? <Spinner size={15} />
           : state === "ok" ? <Check size={16} />
           : state === "bad" ? <AlertTriangle size={16} />
           : label}

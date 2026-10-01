@@ -2,7 +2,7 @@
 
 import { useEffect, useLayoutEffect, useRef, useState } from "react";
 import { createPortal } from "react-dom";
-import { Check, ChevronRight, Loader2, Plus, Star, Trash2, Users, X } from "lucide-react";
+import { Check, ChevronRight, Plus, Star, Trash2, Users, X } from "lucide-react";
 import { DashCard } from "./DashCard";
 import { DashProgressCircle } from "./DashProgressCircle";
 import { StreakFlame } from "./StreakFlame";
@@ -12,6 +12,7 @@ import { FriendProfileModal } from "./FriendProfileModal";
 import { GoldenName } from "./GoldenName";
 import { useSession } from "next-auth/react";
 import { getPreloadedBootstrap } from "@/lib/preload";
+import { Spinner } from "./Spinner";
 
 type Friend = { friendshipId: string; id: string; name: string; username: string | null; avatarUrl: string | null; golden?: boolean; completed: number; total: number; pct: number; streak: number; favorite: boolean };
 type SearchStatus = "none" | "friends" | "pending_sent" | "pending_received";
@@ -466,7 +467,7 @@ export function DashFriendsCard({ delay, module, unitLabel = "برنامه" }: {
                   className="flex-1 rounded-2xl py-2.5 text-[12px] font-bold disabled:opacity-40"
                   style={{ background: "#E05252", color: "#fff" }}
                 >
-                  {deletingFriend ? <Loader2 size={15} className="trade-spin" /> : "بله، حذف کن"}
+                  {deletingFriend ? <Spinner size={14} /> : "بله، حذف کن"}
                 </button>
               </div>
             </div>

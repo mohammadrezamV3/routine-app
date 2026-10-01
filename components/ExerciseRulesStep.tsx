@@ -3,6 +3,7 @@
 import { useEffect, useState } from "react";
 import { ChevronRight } from "lucide-react";
 import { TickButton } from "./TickButton";
+import { Spinner } from "./Spinner";
 
 export const EXERCISE_RULES_TEXT = [
   "این برنامه توسط سیستم (به‌کمک هوش مصنوعی) پیشنهاد داده می‌شه و جایگزین نظر پزشک یا مربی حضوری نیست.",
@@ -78,7 +79,7 @@ export function ExerciseRulesStep({
       <div className="exercise-rules-actions">
         <button type="button" onClick={onAccept} disabled={!canSubmit} className="exercise-rules-accept-btn">
           {submitting ? (
-            <span className="wsearch-submit-spinner" />
+            <Spinner size={15} />
           ) : !timerDone ? (
             <>
               <span className="mono" dir="ltr">{remaining}</span>

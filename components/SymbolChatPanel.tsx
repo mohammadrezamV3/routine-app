@@ -1,7 +1,7 @@
 "use client";
 
 import { useCallback, useEffect, useRef, useState } from "react";
-import { Flag, Loader2, MessagesSquare, Send, ShieldAlert, Smile, Trash2, X } from "lucide-react";
+import { Flag, MessagesSquare, Send, ShieldAlert, Smile, Trash2, X } from "lucide-react";
 import { faNum } from "@/lib/jalali";
 import {
   CHAT_REPORT_REASONS, CHAT_RULES, ChatMessageDto, ChatReportReason, ChatViewerModeration, MAX_CHAT_BODY,
@@ -11,6 +11,7 @@ import { SETTING_KEYS } from "@/lib/userSettingKeys";
 import { pairLabel } from "@/lib/tradingView";
 import { useAsyncAction } from "@/lib/useAsyncAction";
 import { GoldenName } from "@/components/GoldenName";
+import { Spinner } from "./Spinner";
 
 // چت گروهی یک نماد. هر نماد اتاق خودش را دارد و پیام‌ها بین همه‌ی
 // کاربران دارای ماژول ترید مشترک است.
@@ -222,7 +223,7 @@ export function SymbolChatPanel({ symbol }: { symbol: string }) {
                         aria-label="حذف پیام"
                       >
                         {pendingKey === `del:${m.id}`
-                          ? <Loader2 size={13} className="trade-spin" />
+                          ? <Spinner size={12} />
                           : <Trash2 size={13} />}
                       </button>
                     ) : (
@@ -312,7 +313,7 @@ export function SymbolChatPanel({ symbol }: { symbol: string }) {
                 type="submit" className="trade-chat-send"
                 disabled={!draft.trim() || pendingKey === "send"} aria-label="ارسال"
               >
-                {pendingKey === "send" ? <Loader2 size={20} className="trade-spin" /> : <Send size={24} strokeWidth={2.2} />}
+                {pendingKey === "send" ? <Spinner size={18} /> : <Send size={24} strokeWidth={2.2} />}
               </button>
             </form>
           </div>
@@ -373,7 +374,7 @@ function ReportDialog({
           type="button" className="trade-danger-btn"
           onClick={() => onSubmit(reason, note)} disabled={pending}
         >
-          {pending ? <Loader2 size={14} className="trade-spin" /> : "ارسال گزارش"}
+          {pending ? <Spinner size={13} /> : "ارسال گزارش"}
         </button>
       </div>
     </div>

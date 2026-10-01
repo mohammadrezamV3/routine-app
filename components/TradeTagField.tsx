@@ -2,9 +2,10 @@
 
 import { CSSProperties, useState } from "react";
 import { createPortal } from "react-dom";
-import { Loader2, Plus, X } from "lucide-react";
+import { Plus, X } from "lucide-react";
 import { LockBodyScroll } from "./LockBodyScroll";
 import { TAG_COLORS, TradeTag } from "@/lib/tradeTypes";
+import { Spinner } from "./Spinner";
 
 // انتخاب برچسب + ساخت برچسب جدید در همان لحظه.
 // برچسب‌ها بین حساب و معامله مشترک‌اند، پس این کامپوننت هر دو جا استفاده
@@ -138,7 +139,7 @@ export function TradeTagCreateModal({
         <div className="trade-modal-actions">
           <button type="button" className="account-outline-btn" onClick={onClose}>لغو</button>
           <button type="button" className="trade-primary-btn" onClick={save} disabled={!name.trim() || saving}>
-            {saving ? <Loader2 size={15} className="trade-spin" /> : "ایجاد"}
+            {saving ? <Spinner size={14} /> : "ایجاد"}
           </button>
         </div>
       </div>

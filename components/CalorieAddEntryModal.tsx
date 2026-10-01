@@ -8,6 +8,7 @@ import { FoodUnit, UNIT_LABELS, UNIT_TO_GRAMS } from "@/lib/calorieCalc";
 import { SegmentedTabs } from "./SegmentedTabs";
 import { useLockBodyScroll } from "@/lib/useLockBodyScroll";
 import { NumberInput } from "./NumberInput";
+import { Spinner } from "./Spinner";
 
 const LAST_UNIT_KEY = "arion-calorie-last-unit";
 
@@ -210,7 +211,7 @@ export function CalorieAddEntryModal({
               className="mt-3 flex w-full items-center justify-center gap-2 rounded-2xl py-3 text-[13px] font-bold disabled:opacity-40 sm:text-[15px]"
               style={{ background: "var(--accent)", color: "var(--bg)", boxShadow: "0 8px 22px rgba(var(--accent-rgb),.3)" }}
             >
-              {saving ? <span className="wsearch-submit-spinner" /> : "افزودن"}
+              {saving ? <Spinner size={15} /> : "افزودن"}
             </button>
           </motion.div>
 

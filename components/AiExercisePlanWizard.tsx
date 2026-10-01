@@ -12,6 +12,7 @@ import { getBodyMetrics, saveBodyMetrics } from "@/lib/bodyMetrics";
 import { NumberInput } from "./NumberInput";
 import { SegmentedTabs } from "./SegmentedTabs";
 import { TickButton } from "./TickButton";
+import { Spinner } from "./Spinner";
 
 type Step = "hw" | "goal" | "gear" | "days" | "description" | "rules";
 const STEP_INDEX: Record<Step, number> = { hw: 0, goal: 1, gear: 2, days: 3, description: 4, rules: 4 };
@@ -301,7 +302,7 @@ export function AiExercisePlanWizard({
       <div style={{ display: "flex", justifyContent: "flex-end" }}>
         <button type="button" onClick={goNext} disabled={submitting} className="exercise-wizard-next-btn">
           {submitting ? (
-            <span className="wsearch-submit-spinner" />
+            <Spinner size={15} />
           ) : step === "description" && rejection ? (
             "ویرایش و امتحان دوباره"
           ) : (

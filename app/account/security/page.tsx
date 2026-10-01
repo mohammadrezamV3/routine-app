@@ -1,13 +1,14 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { KeyRound, ShieldCheck, MonitorSmartphone, Lock, UserX, Loader2, Check, AlertTriangle } from "lucide-react";
+import { KeyRound, ShieldCheck, MonitorSmartphone, Lock, UserX, Check, AlertTriangle } from "lucide-react";
 import { ToggleSwitch } from "@/components/ToggleSwitch";
 
 import { AccountPageHead, AccountBlock } from "@/components/AccountUI";
 import { getAccount, invalidateAccountCache, AccountData } from "@/lib/accountCache";
 import { formatTehranDateTime } from "@/lib/tehranTime";
 import { GoldenName } from "@/components/GoldenName";
+import { Spinner } from "@/components/Spinner";
 
 type BlockedUser = { id: string; name: string | null; username: string | null; avatarUrl: string | null; golden?: boolean };
 type DeviceSession = {
@@ -235,7 +236,7 @@ export default function SecurityPage() {
             style={{ alignSelf: "flex-end" }}
             aria-label="ذخیره رمز جدید"
           >
-            {pwSaving ? <Loader2 size={16} className="trade-spin" />
+            {pwSaving ? <Spinner size={15} />
               : pwSuccess ? <Check size={16} />
               : pwError ? <AlertTriangle size={16} />
               : "ذخیره رمز جدید"}

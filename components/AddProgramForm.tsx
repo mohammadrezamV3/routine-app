@@ -17,6 +17,7 @@ import { TickOption } from "./TickOption";
 import { RoutineChecklistEditor } from "./RoutineChecklistEditor";
 import { RoutineTagField } from "./RoutineTagField";
 import type { ChecklistItem } from "@/lib/routineChecklist";
+import { Spinner } from "./Spinner";
 
 const now = new Date();
 
@@ -460,7 +461,7 @@ export function AddProgramForm({
                   disabled={status !== "idle"}
                 >
                   {status === "loading" ? (
-                    <span className="wsearch-submit-spinner" />
+                    <Spinner size={15} />
                   ) : status === "success" ? "ثبت شد" : status === "error" ? "ثبت نشد" : "ثبت"}
                 </button>
               </div>

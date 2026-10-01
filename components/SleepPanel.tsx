@@ -4,7 +4,7 @@ import "@/app/sleep/sleep.css";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import Link from "next/link";
 import { motion } from "framer-motion";
-import { Loader2 } from "lucide-react";
+
 import { SegmentedTabs } from "./SegmentedTabs";
 import { TimeInput } from "./TimeInput";
 import { ICONS } from "./NavDrawer";
@@ -20,6 +20,7 @@ import {
   buildSleepTimes, clockOf, durationLabel, sleepMinutes, summarizeSleep, timelineSpan,
   type SleepRecord,
 } from "@/lib/sleep";
+import { Spinner } from "./Spinner";
 
 const DAYS_BACK = 14;
 const LOAD_DAYS = 30;
@@ -244,7 +245,7 @@ export function SleepPanel() {
 
           <div className="sl-actions">
             <button type="button" className="trade-primary-btn" onClick={onSave} disabled={saving || !previewOk}>
-              {saving ? <Loader2 size={16} className="trade-spin" /> : existing ? "ویرایش" : "ذخیره"}
+              {saving ? <Spinner size={15} /> : existing ? "ویرایش" : "ذخیره"}
             </button>
             {existing && (
               <button type="button" className="account-outline-btn mentor-btn" onClick={onDelete} disabled={saving}>

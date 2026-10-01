@@ -4,6 +4,7 @@ import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { Maximize, Minimize } from "lucide-react";
 import { useTheme } from "./ThemeProvider";
 import { tradingViewSymbol } from "@/lib/tradingView";
+import { Spinner } from "./Spinner";
 
 // اگر تا این مدت iframe سیگنال لود ندهد، خودمان دوباره تلاش می‌کنیم.
 const ATTEMPT_TIMEOUT_MS = 7_000;
@@ -167,7 +168,7 @@ export function TradingViewChart({ symbol }: { symbol: string }) {
     <div className="tv-chart-frame" ref={frameRef}>
       {!loaded && (
         <div className="tv-chart-loading">
-          <span className="tv-chart-spinner" aria-hidden="true" />
+          <Spinner size={26} className="tv-chart-spinner" label={null} />
           <span>در حال بارگذاری چارت…</span>
         </div>
       )}

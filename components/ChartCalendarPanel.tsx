@@ -1,7 +1,7 @@
 "use client";
 
 import { useCallback, useEffect, useState } from "react";
-import { CalendarClock, Loader2, RefreshCw } from "lucide-react";
+import { CalendarClock, RefreshCw } from "lucide-react";
 import { faNum } from "@/lib/jalali";
 import { formatTradeDateTime } from "@/lib/tradeDateTime";
 import {
@@ -11,6 +11,7 @@ import { getSetting } from "@/lib/storage";
 import {
   EconomicEventDto, IMPACT_COLORS, IMPACT_LABELS, currencyMeta, compareActualToForecast,
 } from "@/lib/economicCalendar";
+import { Spinner } from "./Spinner";
 
 // کارت فشرده‌ی تقویم اقتصادی برای صفحه‌ی چارت — جایگزین «اخبار بازار».
 //
@@ -74,7 +75,7 @@ export function ChartCalendarPanel() {
             فقط تاثیر بالا
           </button>
           <button type="button" className="trade-icon-btn" onClick={load} disabled={loading} aria-label="به‌روزرسانی">
-            {loading ? <Loader2 size={14} className="trade-spin" /> : <RefreshCw size={14} />}
+            {loading ? <Spinner size={13} /> : <RefreshCw size={14} />}
           </button>
         </div>
       </div>

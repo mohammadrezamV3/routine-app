@@ -3,12 +3,13 @@
 import { useCallback, useEffect, useLayoutEffect, useRef, useState } from "react";
 import { useParams } from "next/navigation";
 import Link from "next/link";
-import { ArrowRight, Loader2, Send, CheckCircle2 } from "lucide-react";
+import { ArrowRight, Send, CheckCircle2 } from "lucide-react";
 import { EmptyState, ErrorState, LoadingState } from "@/components/admin/EmptyState";
 import { ConfirmModal } from "@/components/admin/AdminModal";
 import { useAdminAccess } from "@/components/admin/AdminAccess";
 import { useAdminToast } from "@/components/admin/useAdminToast";
 import { formatDateTime } from "@/lib/adminFormat";
+import { Spinner } from "@/components/Spinner";
 
 type TicketStatus = "OPEN" | "ANSWERED" | "CLOSED";
 type Message = { id: string; body: string; fromAdmin: boolean; createdAt: string };
@@ -174,7 +175,7 @@ export default function AdminSupportTicketPage() {
           aria-label="متن پاسخ"
         />
         <button type="submit" className="admin-btn primary" disabled={!canSend} aria-label="ارسال">
-          {sending ? <Loader2 size={15} className="trade-spin" /> : <Send size={15} />}
+          {sending ? <Spinner size={14} /> : <Send size={15} />}
           <span className="admin-support-send-label">ارسال</span>
         </button>
       </form>

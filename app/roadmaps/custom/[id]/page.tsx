@@ -5,14 +5,14 @@ import { useCallback, useEffect, useMemo, useState } from "react";
 import { useParams, useRouter } from "next/navigation";
 import Link from "next/link";
 import {
-  Award, ChevronLeft, ChevronRight, Clock, Flag, Gauge, Layers, Loader2, Sparkles, Target,
+  Award, ChevronLeft, ChevronRight, Clock, Flag, Gauge, Layers, Sparkles, Target,
   Timer, Trash2, UserRound, Wrench,
 } from "lucide-react";
 import { faNum } from "@/lib/jalali";
 import { RoadmapDisclaimer } from "@/components/RoadmapDisclaimer";
 import { RoadmapStageCard, searchUrl } from "@/components/RoadmapStageCard";
 import { RoadmapBuildStatus, BuildInfo } from "@/components/RoadmapBuildStatus";
-import { LoadingBlock } from "@/components/Spinner";
+import { LoadingBlock, Spinner } from "@/components/Spinner";
 import { SegmentedTabs } from "@/components/SegmentedTabs";
 import { MentorConfirmDialog } from "@/components/MentorConfirmDialog";
 import { useLiveRefresh } from "@/lib/liveSync";
@@ -319,7 +319,7 @@ export default function RoadmapDetailPage() {
             <div className="rp-pending-box">
               <p>متن راهنمای این مسیر هنوز ساخته نشده.</p>
               <button type="button" className="trade-primary-btn" onClick={() => regenerate("guide")} disabled={!!busy}>
-                {busy === "guide" ? <Loader2 size={14} className="trade-spin" /> : <Sparkles size={14} />}
+                {busy === "guide" ? <Spinner size={13} /> : <Sparkles size={14} />}
                 {busy === "guide" ? "در حال ساخت…" : "ساخت راهنما"}
               </button>
             </div>

@@ -18,9 +18,9 @@ export const FEATURE_META: Record<FeatureKey, { label: string; hint: string; def
   tradeChat: { label: "چت نمادها", hint: "گفتگوی کاربران زیر چارت هر نماد", default: "on" },
   routineAssistant: { label: "دستیار هوشمند روتین", hint: "دکمه‌ی AI در صفحه‌ی روتین", default: "on" },
   mentors: { label: "مربی‌ها", hint: "اتصال مربی ↔ شاگرد، برنامه‌ها، چت و نظرات (/mentors)", default: "on" },
-  // فعلا فقط برای ادمین‌ها (درخواست صریح) — روشن‌شدنش برای همه یعنی صفحه‌ی
-  // اصلی بعد از ورود هم خودکار /dashboard می‌شه (HomeClient).
-  dashboard: { label: "داشبورد", hint: "صفحه‌ی /dashboard — نمای کلی همه‌ی بخش‌ها و صفحه‌ی اصلی بعد از ورود", default: "admins" },
+  // روشن برای همه (درخواست صریح صاحب محصول): داشبورد صفحه‌ی اصلی هر کاربر
+  // واردشده‌ست (lib/homePath.ts). خاموش‌کردنش از پنل ادمین یعنی برگشت به /weekly.
+  dashboard: { label: "داشبورد", hint: "صفحه‌ی /dashboard — نمای کلی همه‌ی بخش‌ها و صفحه‌ی اصلی بعد از ورود", default: "on" },
 };
 
 export const FEATURE_MODE_LABELS: Record<FeatureMode, string> = { on: "روشن برای همه", admins: "فقط ادمین‌ها", off: "خاموش" };
