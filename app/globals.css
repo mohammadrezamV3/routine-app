@@ -9213,6 +9213,71 @@ html[data-perf="low"] body[data-theme] .modal-panel{
 }
 
 /* ============================================================
+   نور هاور دور باکس‌ها (همه‌ی باکس‌ها)
+   ------------------------------------------------------------
+   درخواست صریح: «هاور رنگی دور باکس‌ها روی همه‌ی باکس‌ها اعمال بشه».
+   دقیقا همان نور دنبال‌کننده‌ی موس کارت‌های بنتو داشبورد
+   (`.db-card::before` در app/dashboard/dashboard.css): گرادیان شعاعی
+   260px با اکسنت 75٪ که با mask فقط روی *بوردر* (1px) دیده می‌شود، شعاع
+   خود باکس را دنبال می‌کند، و با opacity .3s ظاهر می‌شود. هیچ بک‌گراندی
+   عوض نمی‌شود و ضخامت بوردر ثابت است (بدون layout shift).
+   مختصات موس (--mx/--my) را lib/boxHover.ts (BoxHoverTracker در layout)
+   برای هر عنصری که این‌جا مارکر --box-hover:1 گرفته می‌نویسد — پس باکس
+   تازه فقط باید به همین فهرست اضافه شود، نه کد جدا.
+   فقط سطح‌های «باکس»: دکمه/فیلد/تیک/چیپ و پاپ‌آپ‌های کامل (modal-panel و
+   مشابه) عمدا نیستند. کارت‌های داشبورد (.db-card/.db-hero) افکت خودشان را
+   دارند و این‌جا نیستند.
+   باکس‌هایی که overflow:hidden دارند لبه‌ی بیرونی را می‌برند، پس برای
+   آن‌ها حلقه دقیقا داخل بوردر (inset:0) کشیده می‌شود.
+   ============================================================ */
+@property --box-hover{ syntax:"<integer>"; inherits:false; initial-value:0; }
+:where(
+  .trade-surface:not(.trade-econ-monthpicker), .rp-card, .account-card, .acc-block-body, .auth-box,
+  .fx-card, .tv-chart-box, .trade-chart-side, .trade-chat-panel, .trade-cal-card,
+  .exercise-rules-box, .exercise-locked-box, .admin-card, .admin-kpi-tile, .admin-chart-card,
+  .admin-role-card, .cal-cell:not(.empty), .sl-card, .sl-stat, .trade-stat-tile, .wa-stat-tile,
+  .stk-ach-item, .mentor-note-box, .ls-card,
+  :is(div, section, article).rounded-dash.border-dash-border.bg-dash-card
+){
+  --box-hover:1;
+  position:relative;
+}
+body[data-theme] :where(
+  .trade-surface:not(.trade-econ-monthpicker), .rp-card, .account-card, .acc-block-body, .auth-box,
+  .fx-card, .tv-chart-box, .trade-chart-side, .trade-chat-panel, .trade-cal-card,
+  .exercise-rules-box, .exercise-locked-box, .admin-card, .admin-kpi-tile, .admin-chart-card,
+  .admin-role-card, .cal-cell:not(.empty), .sl-card, .sl-stat, .trade-stat-tile, .wa-stat-tile,
+  .stk-ach-item, .mentor-note-box, .ls-card,
+  :is(div, section, article).rounded-dash.border-dash-border.bg-dash-card
+)::before{
+  content:""; position:absolute; inset:-1px; border-radius:inherit; padding:1px; pointer-events:none;
+  background:radial-gradient(260px circle at var(--mx, 50%) var(--my, -40%), rgba(var(--accent-rgb),.75), transparent 60%);
+  -webkit-mask:linear-gradient(#000 0 0) content-box, linear-gradient(#000 0 0);
+  -webkit-mask-composite:xor; mask-composite:exclude;
+  opacity:0; transition:opacity .3s ease;
+}
+body[data-theme] :where(
+  .account-card, .acc-block-body, .trade-account-card, .trade-mt-row, .trade-note-card,
+  .trade-checklist-card, .trade-journal-box, .rp-stage-card, .ls-card, .overflow-hidden
+)::before{ inset:0; }
+/* محتوای کارت لندینگ (.ls-card-inner) با z-index:1 کل سطح را می‌پوشاند */
+body[data-theme] .ls-card::before{ z-index:2; }
+@media (hover:hover) and (pointer:fine){
+  body[data-theme] :where(
+    .trade-surface:not(.trade-econ-monthpicker), .rp-card, .account-card, .acc-block-body, .auth-box,
+    .fx-card, .tv-chart-box, .trade-chart-side, .trade-chat-panel, .trade-cal-card,
+    .exercise-rules-box, .exercise-locked-box, .admin-card, .admin-kpi-tile, .admin-chart-card,
+    .admin-role-card, .cal-cell:not(.empty), .sl-card, .sl-stat, .trade-stat-tile, .wa-stat-tile,
+    .stk-ach-item, .mentor-note-box, .ls-card,
+    :is(div, section, article).rounded-dash.border-dash-border.bg-dash-card
+  ):hover::before{ opacity:1; }
+}
+@media (prefers-reduced-motion:reduce){
+  body[data-theme] :where(.trade-surface, .rp-card, .account-card, .acc-block-body, .auth-box, .fx-card, .tv-chart-box, .trade-chart-side, .trade-chat-panel, .trade-cal-card, .exercise-rules-box, .exercise-locked-box, .admin-card, .admin-kpi-tile, .admin-chart-card, .admin-role-card, .cal-cell, .sl-card, .sl-stat, .trade-stat-tile, .wa-stat-tile, .stk-ach-item, .mentor-note-box, .ls-card, .bg-dash-card)::before{ transition:none; }
+}
+html[data-perf="low"] body[data-theme] :where(.trade-surface, .rp-card, .account-card, .acc-block-body, .auth-box, .fx-card, .tv-chart-box, .trade-chart-side, .trade-chat-panel, .trade-cal-card, .exercise-rules-box, .exercise-locked-box, .admin-card, .admin-kpi-tile, .admin-chart-card, .admin-role-card, .cal-cell, .sl-card, .sl-stat, .trade-stat-tile, .wa-stat-tile, .stk-ach-item, .mentor-note-box, .ls-card, .bg-dash-card)::before{ display:none; }
+
+/* ============================================================
    گوی دستیار روی لمسی
    ------------------------------------------------------------
    قانون `html[data-perf="low"] .siri-orb *` فقط *فرزندان* واقعی را
