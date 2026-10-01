@@ -142,8 +142,9 @@ function sceneOrbs(p: Palette): Orb[] {
   const brand2 = p.light ? "#E0A15E" : "#14D2DC";
   if (p.light) {
     return [
-      { x: 0.1, y: 0.06, r: 0.85, color: p.accent, a: 0.2, soft: true },
-      { x: 0.95, y: 0.95, r: 0.8, color: brand2, a: 0.22, soft: true },
+      { x: 0.08, y: 0.05, r: 0.9, color: p.accent, a: 0.5, soft: true },
+      { x: 0.96, y: 0.96, r: 0.85, color: brand2, a: 0.55, soft: true },
+      { x: 0.55, y: 0.5, r: 0.55, color: p.accent, a: 0.12, soft: true },
     ];
   }
   return [
@@ -233,8 +234,8 @@ function drawDotGrid(ctx: CanvasRenderingContext2D, x: number, y: number, w: num
   c.height = Math.round(h);
   const cc = c.getContext("2d");
   if (!cc) return;
-  const gap = 30, r = 1.7;
-  cc.fillStyle = p.light ? "rgba(90,60,30,.16)" : "rgba(255,255,255,.16)";
+  const gap = 30, r = p.light ? 1.9 : 1.7;
+  cc.fillStyle = p.light ? "rgba(110,64,24,.34)" : "rgba(255,255,255,.16)";
   for (let yy = gap / 2; yy < h; yy += gap) {
     for (let xx = gap / 2; xx < w; xx += gap) {
       cc.beginPath();
@@ -318,11 +319,11 @@ export async function renderShareCard(input: ShareCardInput): Promise<HTMLCanvas
   // خیلی تار (عرضِ ۱۷px و بعد بزرگ) تا رنگ‌ها کاملا پخش و بی‌لبه باشن
   ctx.drawImage(blurredScene(scene, 17), 0, 0, W, H);
   // رنگِ شیری/دودیِ شیشه
-  ctx.fillStyle = p.light ? "rgba(255,255,255,.5)" : rgba(p.bg, 0.44);
+  ctx.fillStyle = p.light ? "rgba(255,255,255,.3)" : rgba(p.bg, 0.44);
   ctx.fillRect(CX, CY, CW, CH);
   // درخششِ بالای شیشه (نور از بالا-چپ)
   const sheen = ctx.createLinearGradient(CX, CY, CX + CW * 0.55, CY + CH * 0.45);
-  sheen.addColorStop(0, p.light ? "rgba(255,255,255,.55)" : "rgba(255,255,255,.12)");
+  sheen.addColorStop(0, p.light ? "rgba(255,255,255,.42)" : "rgba(255,255,255,.12)");
   sheen.addColorStop(1, "rgba(255,255,255,0)");
   ctx.fillStyle = sheen;
   ctx.fillRect(CX, CY, CW, CH);
