@@ -31,9 +31,9 @@ import { Spinner } from "./Spinner";
 import { D_EASE } from "./DashboardKit";
 
 type Kind = "rings" | "month";
-type Opts = { kind: Kind; name: boolean; routine: boolean; exercise: boolean; calorie: boolean; invite: boolean };
+type Opts = { kind: Kind; routine: boolean; exercise: boolean; calorie: boolean; invite: boolean };
 // کالری پیش‌فرض خاموشه — عددِ شخصی‌تریه که خیلی‌ها نمی‌خوان دیده بشه
-const DEFAULTS: Opts = { kind: "rings", name: true, routine: true, exercise: true, calorie: false, invite: true };
+const DEFAULTS: Opts = { kind: "rings", routine: true, exercise: true, calorie: false, invite: true };
 const KEY = "arion:dashShare:v2";
 
 function loadOpts(): Opts {
@@ -94,7 +94,6 @@ export function DashboardShare({
   const rings = useMemo(() => heroRings(data, routine.stats, routineLocked), [data, routine.stats, routineLocked]);
   const ringOf = (k: HeroRing["key"]) => rings.find((r) => r.key === k)!;
   const streak = routine.streak ?? 0;
-  const firstName = data?.user.name?.split(" ")[0] || null;
   const [ty, tm] = jalaliOfIso(routine.todayIso);
 
   const joinIso = useMemo(() => {
@@ -128,7 +127,7 @@ export function DashboardShare({
     const [jy, jm, jd] = toJalali(y, m, d);
     const weekday = FA_WEEKDAY[new Date(y, m - 1, d).getDay()];
     const base = {
-      title: opts.name && firstName ? `امروزِ ${firstName}` : "امروزِ من",
+      title: "فعالیتِ امروز",
       subtitle: `${weekday} ${faNum(jd)} ${J_MONTHS[jm - 1]} ${faNum(jy)}`,
       inviteCode: opts.invite ? invite?.code ?? null : null,
     };
@@ -151,7 +150,7 @@ export function DashboardShare({
         ],
       },
     };
-  }, [opts.kind, opts.name, opts.invite, firstName, invite?.code, routine.todayIso, cardRings, month, streak, ty, tm]);
+  }, [opts.kind, opts.invite, invite?.code, routine.todayIso, cardRings, month, streak, ty, tm]);
 
   const [busy, setBusy] = useState(false);
   const [msg, setMsg] = useState<string | null>(null);
@@ -201,7 +200,7 @@ export function DashboardShare({
       const blob = cached && cached.input === input ? cached.blob : await canvasToBlob(await renderShareCard(input));
       const lead = streak ? `${faNum(streak)} روزِ پشتِ‌سرهم روتینم رو کامل کردم 🔥` : "امروزم توی آریون 💪";
       const inv = invite && opts.invite ? { code: invite.code, url: invite.url, percent: REFERRAL_DISCOUNT_PERCENT } : null;
-      const res = await shareImage(blob, `arion-${routine.todayIso}.png`, "امروزِ من", shareText(lead, inv));
+      const res = await shareImage(blob, `arion-${routine.todayIso}.png`, "فعالیتِ امروز", shareText(lead, inv));
       if (res === "downloaded") setMsg("تصویر ذخیره شد — حالا برای دوستات بفرستش");
     } catch {
       setMsg("ساختِ تصویر ممکن نشد");
@@ -283,12 +282,6 @@ export function DashboardShare({
                 <div className="db-share-group">
                   <p className="db-share-label">روی تصویر</p>
                   <ul className="db-share-list">
-                    {firstName && (
-                      <li>
-                        <span className="db-share-row-text"><span>اسمم</span><small>{firstName}</small></span>
-                        <ToggleSwitch checked={opts.name} onChange={(v) => set("name", v)} label="اسمم" />
-                      </li>
-                    )}
                     <li>
                       <span className="db-share-row-text">
                         <span>کدِ دعوت</span>
