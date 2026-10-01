@@ -4,8 +4,9 @@ import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import { useSession } from "next-auth/react";
 import { getAccount, activeModulesOf } from "@/lib/accountCache";
-import { ROUTINE_PLAN_KEY, ROUTINE_PLAN_PRICE_TOMAN, ROUTINE_TRIAL_DAYS } from "@/lib/trial";
-import { faNum } from "@/lib/jalali";
+import { ROUTINE_PLAN_KEY, ROUTINE_TRIAL_DAYS } from "@/lib/trial";
+import { entryOffer } from "@/lib/planPricing";
+import { usePlanPricing } from "@/lib/usePlanPricing";
 
 type GateModule = "ROUTINE" | "SLEEP" | "EXERCISE" | "CALORIE" | "TRADE" | "ROADMAP" | "AI_INSIGHT";
 
@@ -55,7 +56,10 @@ const ROUTINE_GATE = new Set<GateModule>(["ROUTINE", "SLEEP"]);
 function GateDenied({ module }: { module: GateModule }) {
   const router = useRouter();
   const routine = ROUTINE_GATE.has(module);
-  const target = routine ? `/subscription/checkout?plan=${ROUTINE_PLAN_KEY}&duration=1` : "/subscription";
+  // قیمت/مدت از پنل ادمین (/admin/pricing)، نه عدد ثابت
+  const { pricing, ready } = usePlanPricing();
+  const offer = entryOffer(pricing, ROUTINE_PLAN_KEY);
+  const target = routine ? `/subscription/checkout?plan=${ROUTINE_PLAN_KEY}&duration=${offer.duration}` : "/subscription";
   // این صفحه یک بن‌بست است: تنها کار ممکن زدن همان یک دکمه است. پس
   // مقصدش را همین حالا آماده می‌کنیم، نه لحظه‌ی ضربه — وگرنه ضربه یعنی
   // شروع دانلود صفحه از صفر و همان مکث گزارش‌شده («دیر می‌ره»).
@@ -79,7 +83,7 @@ function GateDenied({ module }: { module: GateModule }) {
         <div className="module-gate-msg">
           {routine ? `دوره‌ی ${ROUTINE_TRIAL_DAYS} روزه‌ی رایگان «روتین من» تموم شد` : "اشتراک این بخش رو نداری"}
         </div>
-        {routine && <div className="module-gate-sub">برای ادامه، پلن «روتین من» ماهانه {faNum(ROUTINE_PLAN_PRICE_TOMAN.toLocaleString("en-US"))} تومان</div>}
+        {routine && <div className="module-gate-sub">{ready ? `برای ادامه، پلن «روتین من» ${offer.label}` : "برای ادامه، پلن «روتین من» رو بخر"}</div>}
         <button
           type="button"
           className="module-gate-cta"

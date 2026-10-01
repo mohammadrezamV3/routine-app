@@ -1,6 +1,8 @@
 import { BRAND_EN, BRAND_FA } from "@/lib/brand";
 import { DESCRIPTION_FA, FACTS_FA, FEATURES_FA, PUBLIC_PAGES } from "@/lib/llmsContent";
 import { absoluteUrl } from "@/lib/seo";
+import { fillPriceCopy } from "@/lib/planPricing";
+import { getPricingConfig } from "@/lib/planPricingServer";
 import { sortedPosts, type BlogBlock } from "@/lib/blogPosts";
 import { FAQS } from "@/lib/faqContent";
 
@@ -9,7 +11,8 @@ import { FAQS } from "@/lib/faqContent";
 // یک مدل زبانی بدون کراول‌کردن کل سایت، بتواند دقیق و صادقانه درباره‌ی
 // آریون جواب بدهد.
 export const dynamic = "force-static";
-export const revalidate = 86400;
+// قیمت داخل متن از پنل ادمین (/admin/pricing) پر می‌شه — هر ساعت تازه
+export const revalidate = 3600;
 
 function blockToText(b: BlogBlock): string {
   if (b.type === "ul") return b.items.map((i) => `- ${i}`).join("\n");
@@ -63,7 +66,7 @@ function build(): string {
 }
 
 export async function GET() {
-  return new Response(build(), {
+  return new Response(fillPriceCopy(build(), await getPricingConfig()), {
     headers: { "Content-Type": "text/plain; charset=utf-8" },
   });
 }

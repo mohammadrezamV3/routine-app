@@ -5,14 +5,18 @@
 // هیچ داده‌ی واقعی‌ای نشون داده نمی‌شه — فقط پیام خرید (گیت واقعی سمت سرور).
 
 import Link from "next/link";
-import { ROUTINE_PLAN_KEY, ROUTINE_PLAN_PRICE_TOMAN, ROUTINE_TRIAL_DAYS } from "@/lib/trial";
+import { ROUTINE_PLAN_KEY, ROUTINE_TRIAL_DAYS } from "@/lib/trial";
+import { entryOffer } from "@/lib/planPricing";
+import { usePlanPricing } from "@/lib/usePlanPricing";
 import { BentoCard, CardHead } from "./DashboardKit";
 import { DashIcon } from "./DashboardIcons";
 
-const BUY = `/subscription/checkout?plan=${ROUTINE_PLAN_KEY}&duration=1`;
-
 export function DashboardRoutineLock({ area }: { area: "today" | "heat" }) {
   const today = area === "today";
+  // قیمت از پنل ادمین (/admin/pricing)، نه عدد ثابت
+  const { pricing, ready } = usePlanPricing();
+  const offer = entryOffer(pricing, ROUTINE_PLAN_KEY);
+  const buyHref = `/subscription/checkout?plan=${ROUTINE_PLAN_KEY}&duration=${offer.duration}`;
   return (
     <BentoCard area={area} className="db-lock" label={today ? "برنامه‌های امروز" : "نقشه‌ی ثبات"}>
       <CardHead icon={today ? "routine" : "chart"} title={today ? "برنامه‌های امروز" : "نقشه‌ی ثبات"} />
@@ -23,8 +27,8 @@ export function DashboardRoutineLock({ area }: { area: "today" | "heat" }) {
             ? `دوره‌ی ${ROUTINE_TRIAL_DAYS} روزه‌ی رایگان «روتین من» تموم شد. برنامه‌ها و تیک‌هات سر جاشونه — با خرید پلن همون‌جا ادامه بده.`
             : "استریک، نقشه‌ی ثبات و اچیومنت‌ها با پلن «روتین من» دوباره فعال می‌شن."}
         </p>
-        <Link href={BUY} prefetch={false} className="trade-primary-btn db-empty-cta">
-          خرید «روتین من» — ماهانه {ROUTINE_PLAN_PRICE_TOMAN.toLocaleString("en-US")} تومان
+        <Link href={buyHref} prefetch={false} className="trade-primary-btn db-empty-cta">
+          {ready ? `خرید «روتین من» — ${offer.label}` : "خرید «روتین من»"}
         </Link>
       </div>
     </BentoCard>
