@@ -27,6 +27,7 @@ import { TradeDetailDrawer } from "./TradeDetailDrawer";
 import { TradeCalendarPanel } from "./TradeCalendarPanel";
 import { TradeStatsCollapse } from "./TradeStatsCollapse";
 import { PanelSkeleton } from "./PanelSkeleton";
+import { TradeShareButton } from "./TradeShareButton";
 import { useAsyncAction } from "@/lib/useAsyncAction";
 import { useLiveRefresh } from "@/lib/liveSync";
 import { rowActivateProps } from "@/lib/rowActivate";
@@ -227,6 +228,8 @@ export function TradeAccountView({ accountId }: { accountId: string }) {
           <button type="button" className="trade-icon-btn" onClick={() => setEditingAccount(true)} aria-label="ویرایش حساب">
             <Pencil size={14} />
           </button>
+          {/* اشتراک کارنامه با همین حساب از پیش انتخاب‌شده (حساب آرشیوشده در کارنامه نیست) */}
+          {!account.archived && <TradeShareButton account={account.id} size={14} />}
           {!account.archived && (
             <button
               type="button"
