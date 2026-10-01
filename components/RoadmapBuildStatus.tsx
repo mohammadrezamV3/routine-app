@@ -1,7 +1,8 @@
 "use client";
 
-import { AlertTriangle, Loader2 } from "lucide-react";
+import { AlertTriangle } from "lucide-react";
 import { faNum } from "@/lib/jalali";
+import { Spinner } from "./Spinner";
 
 // وضعیت ساخت پس‌زمینه‌ی یک رودمپ (lib/roadmapBuilder.ts → meta.build) —
 // هم روی کارت لیست، هم بالای صفحه‌ی خود رودمپ. بدون بک‌گراند اضافه:
@@ -30,7 +31,7 @@ export function RoadmapBuildStatus({ build, compact = false }: { build: BuildInf
   return (
     <div className={`rp-build${compact ? " compact" : ""}`} role="status" aria-live="polite">
       <div className="rp-build-head">
-        <Loader2 size={15} className="trade-spin" />
+        <Spinner size={14} />
         <span>{PHASE_LABEL[build.phase || "outline"]}</span>
         {total > 0 && <b className="rp-build-count">{faNum(done)} از {faNum(total)} مرحله</b>}
       </div>

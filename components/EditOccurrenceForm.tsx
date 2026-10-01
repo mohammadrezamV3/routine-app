@@ -15,6 +15,7 @@ import { TickOption } from "./TickOption";
 import { RoutineChecklistEditor } from "./RoutineChecklistEditor";
 import { RoutineTagField } from "./RoutineTagField";
 import { checklistOf, type ChecklistItem } from "@/lib/routineChecklist";
+import { Spinner } from "./Spinner";
 
 type Occ = { dayName: string; jsDay: number; time: string; id: string; custom?: boolean; importance?: Importance; tag?: string };
 type ScheduleOpts = { removedOccurrences: Set<string>; customOccurrences: CustomOccurrence[] };
@@ -265,7 +266,7 @@ export function EditOccurrenceForm({
               disabled={status !== "idle"}
             >
               {status === "loading" ? (
-                <span className="wsearch-submit-spinner" />
+                <Spinner size={15} />
               ) : status === "success" ? "ذخیره شد" : status === "error" ? "ذخیره نشد" : "ذخیره"}
             </button>
           </div>

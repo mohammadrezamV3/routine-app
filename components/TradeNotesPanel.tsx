@@ -2,7 +2,7 @@
 
 import { CSSProperties, useCallback, useEffect, useState } from "react";
 import { motion } from "framer-motion";
-import { Loader2, Pencil, Pin, PinOff, Search, StickyNote, Trash2, X } from "lucide-react";
+import { Pencil, Pin, PinOff, Search, StickyNote, Trash2, X } from "lucide-react";
 import { TradeKebabMenu } from "./TradeKebabMenu";
 import { faNum } from "@/lib/jalali";
 import { getSetting } from "@/lib/storage";
@@ -13,6 +13,7 @@ import { LockBodyScroll } from "./LockBodyScroll";
 import { TradeTagField } from "./TradeTagField";
 import { CAL_SYSTEM_KEY, CalSystem, TAG_COLORS, TradeTag } from "@/lib/tradeTypes";
 import { useLiveRefresh } from "@/lib/liveSync";
+import { Spinner } from "./Spinner";
 
 type Note = {
   id: string; title: string; content: string; color: string; pinned: boolean;
@@ -303,7 +304,7 @@ function NoteEditor({
         <div className="trade-modal-actions">
           <button type="button" className="account-outline-btn" onClick={onClose}>لغو</button>
           <button type="button" className="trade-primary-btn" onClick={save} disabled={saving}>
-            {saving ? <Loader2 size={15} className="trade-spin" /> : "ذخیره"}
+            {saving ? <Spinner size={14} /> : "ذخیره"}
           </button>
         </div>
       </div>

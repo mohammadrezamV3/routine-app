@@ -3,7 +3,7 @@
 import { CSSProperties, useCallback, useEffect, useState } from "react";
 import Link from "next/link";
 import { motion } from "framer-motion";
-import { Archive, ArchiveRestore, ArrowDown, ArrowUp, Hash, Loader2, Pencil, Percent, Target, Trash2, Wallet, X } from "lucide-react";
+import { Archive, ArchiveRestore, ArrowDown, ArrowUp, Hash, Pencil, Percent, Target, Trash2, Wallet, X } from "lucide-react";
 import { TradeAccountModal } from "./TradeAccountModal";
 import {
   TradeAccount, TradeTag, TradeTotalsStatKey, TRADE_TOTALS_STAT_LABELS, TRADE_TOTALS_STAT_ORDER,
@@ -17,6 +17,7 @@ import { TradeKebabMenu } from "./TradeKebabMenu";
 import { LockBodyScroll } from "./LockBodyScroll";
 import { PanelSkeleton } from "./PanelSkeleton";
 import { useLiveRefresh } from "@/lib/liveSync";
+import { Spinner } from "./Spinner";
 
 // صفحه‌ی «ژورنال‌نویسی»: اول حساب‌ها، فقط به‌شکل فشرده (اسم + سود/زیان +
 // برچسب) — جزئیات کامل (بالانس/تعداد معاملات/نرخ برد/هدف) جاش صفحه‌ی
@@ -435,7 +436,7 @@ function PurgeConfirm({ account, onCancel, onConfirm, busy }: { account: TradeAc
         <div className="trade-modal-actions">
           <button type="button" className="account-outline-btn" onClick={onCancel}>لغو</button>
           <button type="button" className="trade-danger-btn" disabled={typed.trim() !== account.name || busy} onClick={onConfirm}>
-            {busy ? <Loader2 size={15} className="trade-spin" /> : "حذف کامل"}
+            {busy ? <Spinner size={14} /> : "حذف کامل"}
           </button>
         </div>
       </div>

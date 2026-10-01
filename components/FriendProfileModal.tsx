@@ -2,13 +2,14 @@
 
 import { useEffect, useState } from "react";
 import { createPortal } from "react-dom";
-import { Ban, Loader2, Map, Phone, Star, User as UserIcon } from "lucide-react";
+import { Ban, Map, Phone, Star, User as UserIcon } from "lucide-react";
 import { AgentAvatar } from "./AgentAvatar";
 import { StreakFlame } from "./StreakFlame";
 import { LockBodyScroll } from "./LockBodyScroll";
 import { TradeKebabMenu } from "./TradeKebabMenu";
 import { faNum } from "@/lib/jalali";
 import { GoldenName } from "./GoldenName";
+import { Spinner } from "./Spinner";
 
 type Profile = {
   id: string;
@@ -118,7 +119,7 @@ export function FriendProfileModal({
       <div className="friend-profile-panel" role="dialog" aria-modal="true">
         {!profile && !notFound && (
           <div className="friend-profile-loading">
-            <Loader2 size={20} className="trade-spin" />
+            <Spinner size={18} />
           </div>
         )}
 
@@ -250,7 +251,7 @@ export function FriendProfileModal({
                   انصراف
                 </button>
                 <button type="button" className="trade-danger-btn" onClick={block} disabled={blockBusy}>
-                  {blockBusy ? <Loader2 size={14} className="trade-spin" /> : "بلاک کن"}
+                  {blockBusy ? <Spinner size={13} /> : "بلاک کن"}
                 </button>
               </div>
             </div>
