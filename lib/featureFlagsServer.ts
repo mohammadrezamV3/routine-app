@@ -8,12 +8,23 @@ import { FeatureFlags, FeatureKey, featureAllowed, normalizeFlags } from "@/lib/
 
 const KEY = "feature_flags";
 
+// نسخه‌ی قرارداد ذخیره. PUT پنل ادمین همیشه *همه‌ی* کلیدها رو می‌نویسه، پس
+// هر ردیفی که قبل از «داشبورد = صفحه‌ی اصلی همه» ذخیره شده `dashboard: "admins"`
+// (پیش‌فرض قدیمی) رو صریح نگه داشته و عوض‌شدن پیش‌فرض بهش نمی‌رسید. ردیف بی‌نسخه
+// با همون مقدار قدیمی یک بار «on» خونده می‌شه؛ «off» (انتخاب عمدی) دست نمی‌خوره
+// و هر ذخیره‌ی بعدی نسخه رو می‌نویسه، پس «admins»ی که از این به بعد انتخاب بشه می‌مونه.
+const FLAGS_REV = 2;
+
 export async function getFeatureFlags(): Promise<FeatureFlags> {
-  return normalizeFlags(await getAppSetting<unknown>(KEY, null));
+  const raw = await getAppSetting<unknown>(KEY, null);
+  const flags = normalizeFlags(raw);
+  const rev = raw && typeof raw === "object" ? (raw as { _rev?: unknown })._rev : undefined;
+  if (rev !== FLAGS_REV && flags.dashboard === "admins") flags.dashboard = "on";
+  return flags;
 }
 
 export async function setFeatureFlags(flags: FeatureFlags) {
-  await setAppSetting(KEY, flags);
+  await setAppSetting(KEY, { ...flags, _rev: FLAGS_REV });
 }
 
 // نقش کاربر برای تصمیم فلگ — از کش ۶۰ثانیه‌ای adminFlag (نه JWT)
