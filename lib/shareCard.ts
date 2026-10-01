@@ -209,29 +209,85 @@ function grainPattern(c: CanvasRenderingContext2D, light: boolean): CanvasPatter
   return c.createPattern(t, "repeat");
 }
 
-// لوگوی هدر (نشان + اسمِ برند، همون فایلی که NavDrawer نشون می‌ده) — نسخه‌ی تمِ فعلی
-const logoCache = new Map<string, Promise<HTMLImageElement | null>>();
-function loadLogo(light: boolean): Promise<HTMLImageElement | null> {
-  const src = light ? "/images/logo-lockup-light-theme.webp" : "/images/logo-lockup-dark-theme.png";
-  let hit = logoCache.get(src);
+const imageCache = new Map<string, Promise<HTMLImageElement | null>>();
+function loadImage(src: string): Promise<HTMLImageElement | null> {
+  let hit = imageCache.get(src);
   if (!hit) {
     hit = new Promise((res) => {
       const img = new Image();
       img.onload = () => res(img);
-      img.onerror = () => { logoCache.delete(src); res(null); };
+      img.onerror = () => { imageCache.delete(src); res(null); };
       img.src = src;
     });
-    logoCache.set(src, hit);
+    imageCache.set(src, hit);
   }
   return hit;
+}
+// لوگوی هدر (نشان + اسمِ برند، همون فایلی که NavDrawer نشون می‌ده) — نسخه‌ی تمِ فعلی
+const loadLogo = (light: boolean) => loadImage(light ? "/images/logo-lockup-light-theme.webp" : "/images/logo-lockup-dark-theme.png");
+// فقط نشانِ «A» — برای واترمارک؛ تک‌رنگ می‌شه، پس نسخه‌ی تم مهم نیست
+const loadMark = () => loadImage("/images/logo-icon-dark-theme.png");
+
+/**
+ * واترمارکِ نشانِ آریون: سیلوئتِ تک‌رنگِ «A»، خیلی بزرگ و کم‌رنگ، که از گوشه‌ی
+ * پایین-چپ تا نیمه بیرون زده (قابِ کارت بُرشش می‌ده). یک لبه‌ی نوریِ نازک
+ * (همون سیلوئت، کمی جابه‌جا و روشن‌تر) حجمِ شیشه‌ای بهش می‌ده.
+ */
+function drawMarkWatermark(ctx: CanvasRenderingContext2D, mark: HTMLImageElement, x: number, y: number, h: number, p: Palette) {
+  const w = (mark.naturalWidth / mark.naturalHeight) * h;
+  const tint = (color: string) => {
+    const c = document.createElement("canvas");
+    c.width = Math.round(w);
+    c.height = Math.round(h);
+    const cc = c.getContext("2d");
+    if (!cc) return null;
+    cc.imageSmoothingQuality = "high";
+    cc.drawImage(mark, 0, 0, c.width, c.height);
+    cc.globalCompositeOperation = "source-in";
+    cc.fillStyle = color;
+    cc.fillRect(0, 0, c.width, c.height);
+    return c;
+  };
+  const body = tint(p.light ? rgba(p.accent, 0.11) : "rgba(255,255,255,.045)");
+  const rim = tint(p.light ? "rgba(255,255,255,.55)" : `rgba(${p.accentRgb},.16)`);
+  if (rim) ctx.drawImage(rim, x - 3, y - 3, w, h);
+  if (body) ctx.drawImage(body, x, y, w, h);
+}
+
+/** شبکه‌ی نقطه‌های ریز که از وسط به لبه‌ها محو می‌شه */
+function drawDotGrid(ctx: CanvasRenderingContext2D, x: number, y: number, w: number, h: number, p: Palette) {
+  const c = document.createElement("canvas");
+  c.width = Math.round(w);
+  c.height = Math.round(h);
+  const cc = c.getContext("2d");
+  if (!cc) return;
+  const gap = 30, r = 1.7;
+  cc.fillStyle = p.light ? "rgba(90,60,30,.16)" : "rgba(255,255,255,.16)";
+  for (let yy = gap / 2; yy < h; yy += gap) {
+    for (let xx = gap / 2; xx < w; xx += gap) {
+      cc.beginPath();
+      cc.arc(xx, yy, r, 0, Math.PI * 2);
+      cc.fill();
+    }
+  }
+  // ماسک: وسط کامل، لبه‌ها صفر
+  cc.globalCompositeOperation = "destination-in";
+  const m = cc.createRadialGradient(w / 2, h * 0.48, 0, w / 2, h * 0.48, Math.max(w, h) * 0.62);
+  m.addColorStop(0, "rgba(0,0,0,1)");
+  m.addColorStop(0.55, "rgba(0,0,0,.55)");
+  m.addColorStop(1, "rgba(0,0,0,0)");
+  cc.fillStyle = m;
+  cc.fillRect(0, 0, w, h);
+  ctx.drawImage(c, x, y, w, h);
 }
 
 export async function renderShareCard(input: ShareCardInput): Promise<HTMLCanvasElement> {
   const fonts = fontStack();
   const f = (weight: number, size: number) => `${weight} ${size}px ${fonts}`;
   const p = readPalette();
-  const [logo] = await Promise.all([
+  const [logo, mark] = await Promise.all([
     loadLogo(p.light),
+    loadMark(),
     (async () => {
       if (!document.fonts) return;
       try {
@@ -299,6 +355,9 @@ export async function renderShareCard(input: ShareCardInput): Promise<HTMLCanvas
   sheen.addColorStop(1, "rgba(255,255,255,0)");
   ctx.fillStyle = sheen;
   ctx.fillRect(CX, CY, CW, CH);
+  // طرح: شبکه‌ی نقطه‌ایِ محو + واترمارکِ نشانِ آریون (هر دو زیرِ محتوا)
+  drawDotGrid(ctx, CX, CY, CW, CH, p);
+  if (mark) drawMarkWatermark(ctx, mark, CX - 150, CY + CH - 520, 640, p);
   // دانه‌ی ریز
   const grain = grainPattern(ctx, p.light);
   if (grain) {
