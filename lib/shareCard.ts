@@ -1,9 +1,9 @@
 "use client";
 
 // کارت اشتراکی «موفقیت» — یک تصویر PNG (۱۰۸۰×۱۳۵۰) که کاربر با دوستاش به
-// اشتراک می‌ذاره. هر کارت *یک* محتوا داره (حلقه‌ها یا نقشه‌ی ثبات یا استریک) تا
+// اشتراک می‌ذاره. هر کارت *یک* محتوا داره (حلقه‌ها یا استریک) تا
 // فضا شلوغ نشه؛ داخل حلقه‌ها تعداد روزهای استریک میاد. بالای کارت لوگوی هدر
-// (نشان + اسم برند)، آدرس سایت و — اگه کاربر بخواد — کد دعوتش؛ پایین کارت
+// (نشان + اسم برند)، آدرس سایت و کد دعوت (اگه داشته باشه)؛ پایین کارت
 // هیچ لینکی نیست. هیچ داده‌ای از دستگاه بیرون نمی‌ره مگر همین تصویر، وقتی خودش
 // «اشتراک» رو می‌زنه.
 //
@@ -13,15 +13,12 @@
 import { faNum } from "./jalali";
 import { FLAME_BOX, FLAME_LAYERS, flamePalette, flamePath, layerFrame } from "./streakFlameShape";
 
-/** display=null یعنی کاربر عدد این حلقه رو پنهان کرده — خود حلقه کشیده می‌شه، عددش نه */
+/** display=null یعنی عدد این حلقه پنهانه (مثلا کالری) — خود حلقه کشیده می‌شه، عددش نه */
 export type ShareRing = { label: string; value: number; display: string | null; colors: [string, string] };
 
-export type ShareMonthCell = { jd: number; level: number; today: boolean; future: boolean };
-
-/** محتوای اصلی کارت — هر کارت دقیقا *یکی* از این‌هاست (کاربر خودش انتخاب می‌کنه) */
+/** محتوای اصلی کارت — هر کارت دقیقا *یکی* از این‌هاست */
 export type ShareBody =
   | { kind: "rings"; streak: number; items: ShareRing[] }
-  | { kind: "month"; streak: number; title: string; lead: number; cells: ShareMonthCell[]; stats: { label: string; value: string }[] }
   | { kind: "streak"; streak: number; label: string; week: { labels: string[]; done: boolean[]; todayIdx: number } };
 
 export type ShareCardInput = {
@@ -41,19 +38,20 @@ const SHARE_DPR = 2;
 const NO_DIACRITICS = /[\u064B-\u0652\u0670]/g;
 const W = SHARE_W;
 const H = SHARE_H;
-// قاب شیشه‌ای کارت (مختصات منطقی) — مشترک بین لایه‌ی پس‌زمینه و محتوا
-const CX = 48, CY = 48, CW = W - 96, CH = H - 96, CR = 52;
+// کل تصویر خود باکس کارته (بدون حاشیه، قاب یا گوشه‌ی شفاف — پیام‌رسان‌ها آلفا رو
+// سفید/سیاه می‌کنن). محتوا هنوز در مختصات قاب قدیمی (984×1254 از 48,48) چیده
+// می‌شه و با یک مقیاس یکنواخت (CS) وسط کل تصویر می‌شینه — همون تناسب‌ها، بدون برش.
+const CY = 48, CH = H - 96;
+const CS = Math.min(W / (W - 96), H / CH);
 
 type Palette = {
   bg: string; surface: string; line: string; accent: string; accentRgb: string;
-  text: string; muted: string; loss: string; heat: string; heatHi: string; light: boolean;
+  text: string; muted: string; light: boolean;
 };
 
 function readPalette(): Palette {
   const cs = getComputedStyle(document.body);
   const v = (name: string, fb: string) => cs.getPropertyValue(name).trim() || fb;
-  const db = document.querySelector(".db-page");
-  const ds = db ? getComputedStyle(db) : null;
   const light = document.body.getAttribute("data-theme") === "light";
   return {
     bg: v("--bg", "#0E1011"),
@@ -63,9 +61,6 @@ function readPalette(): Palette {
     accentRgb: v("--accent-rgb", "0,168,107"),
     text: v("--text", "#EDEFEE"),
     muted: v("--muted", "#8A9099"),
-    loss: v("--pnl-loss", "#E05252"),
-    heat: ds?.getPropertyValue("--ring-1a").trim() || (light ? "#0A9A70" : "#00C98D"),
-    heatHi: ds?.getPropertyValue("--ring-1b").trim() || (light ? "#2ECB98" : "#7DF9CF"),
     light,
   };
 }
@@ -141,9 +136,9 @@ function drawFlame(ctx: CanvasRenderingContext2D, x: number, y: number, size: nu
 }
 
 // ── پس‌زمینه‌ی شیشه‌ای ─────────────────────────────────────────────
-// یک صحنه‌ی نورانی (چند هاله‌ی رنگی خیلی پخش) ساخته می‌شه و *فقط داخل قاب
-// کارت* دیده می‌شه — بیرون کارت رنگ ساده‌ی پس‌زمینه‌ست. داخل قاب: نسخه‌ی خیلی
-// تار صحنه + لایه‌ی رنگ شیری + درخشش لبه‌ی بالا + حاشیه‌ی نوری. تاری با
+// یک صحنه‌ی نورانی (چند هاله‌ی رنگی خیلی پخش) ساخته می‌شه و کل تصویر رو
+// می‌پوشونه (تصویر خود باکس کارته، بدون حاشیه یا قاب): نسخه‌ی خیلی تار صحنه +
+// لایه‌ی رنگ شیری + درخشش بالا-چپ + شبکه‌ی نقطه‌ای + دانه. تاری با
 // کوچک‌کردن مرحله‌ای و بزرگ‌کردن دوباره ساخته می‌شه (نه ctx.filter) تا روی همه‌ی
 // مرورگرها — از جمله سافاری قدیمی — یکسان و نرم دربیاد.
 type Orb = { x: number; y: number; r: number; color: string; a: number; soft: boolean };
@@ -291,60 +286,28 @@ function backgroundLayer(p: Palette, dpr: number): HTMLCanvasElement {
   const sc = scene.getContext("2d");
   if (!sc) throw new Error("canvas");
   paintScene(sc, W, H, p);
-  // بیرون کارت ساده و بی‌رنگه — رنگ‌ها فقط داخل شیشه دیده می‌شن
+  // شیشه‌ی مات کل تصویر رو می‌پوشونه — رنگ‌ها فقط رنگ‌های برند، خیلی پخش
   ctx.fillStyle = p.bg;
   ctx.fillRect(0, 0, W, H);
-
-  // سایه‌ی نرم زیر شیشه
-  ctx.save();
-  roundRect(ctx, CX, CY, CW, CH, CR);
-  ctx.shadowColor = p.light ? "rgba(80,50,20,.22)" : "rgba(0,0,0,.55)";
-  ctx.shadowBlur = 60;
-  ctx.shadowOffsetY = 24;
-  ctx.fillStyle = p.bg;
-  ctx.fill();
-  ctx.restore();
-
-  ctx.save();
-  roundRect(ctx, CX, CY, CW, CH, CR);
-  ctx.clip();
-  // خود «ماتی»: صحنه‌ی خیلی تار شده داخل قاب
-  // خیلی تار (عرض ۱۷px و بعد بزرگ) تا رنگ‌ها کاملا پخش و بی‌لبه باشن
+  // خود «ماتی»: صحنه‌ی خیلی تار (عرض 17px و بعد بزرگ) تا رنگ‌ها کاملا پخش و بی‌لبه باشن
   ctx.drawImage(blurredScene(scene, 17), 0, 0, W, H);
   // رنگ شیری/دودی شیشه
   ctx.fillStyle = p.light ? "rgba(255,255,255,.3)" : rgba(p.bg, 0.44);
-  ctx.fillRect(CX, CY, CW, CH);
+  ctx.fillRect(0, 0, W, H);
   // درخشش بالای شیشه (نور از بالا-چپ)
-  const sheen = ctx.createLinearGradient(CX, CY, CX + CW * 0.55, CY + CH * 0.45);
+  const sheen = ctx.createLinearGradient(0, 0, W * 0.55, H * 0.45);
   sheen.addColorStop(0, p.light ? "rgba(255,255,255,.42)" : "rgba(255,255,255,.12)");
   sheen.addColorStop(1, "rgba(255,255,255,0)");
   ctx.fillStyle = sheen;
-  ctx.fillRect(CX, CY, CW, CH);
+  ctx.fillRect(0, 0, W, H);
   // طرح: شبکه‌ی نقطه‌ای محو (زیر محتوا)
-  drawDotGrid(ctx, CX, CY, CW, CH, p);
+  drawDotGrid(ctx, 0, 0, W, H, p);
   // دانه‌ی ریز
   const grain = grainPattern(ctx, p.light);
   if (grain) {
     ctx.fillStyle = grain;
-    ctx.fillRect(CX, CY, CW, CH);
+    ctx.fillRect(0, 0, W, H);
   }
-  ctx.restore();
-
-  // حاشیه‌ی نوری: روشن بالا-چپ، محو پایین-راست + یه خط داخلی نازک
-  const edge = ctx.createLinearGradient(CX, CY, CX + CW, CY + CH);
-  // لبه‌ی بالا-چپ ته‌رنگ برند داره — همون نوری که از گوشه‌ی اکسنت میاد
-  edge.addColorStop(0, p.light ? rgba(p.accent, 0.55) : `rgba(${p.accentRgb},.6)`);
-  edge.addColorStop(0.18, p.light ? "rgba(255,255,255,.9)" : "rgba(255,255,255,.26)");
-  edge.addColorStop(0.5, p.light ? "rgba(255,255,255,.35)" : "rgba(255,255,255,.08)");
-  edge.addColorStop(1, p.light ? "rgba(255,255,255,.7)" : "rgba(255,255,255,.18)");
-  roundRect(ctx, CX + 1, CY + 1, CW - 2, CH - 2, CR - 1);
-  ctx.lineWidth = 2.5;
-  ctx.strokeStyle = edge;
-  ctx.stroke();
-  roundRect(ctx, CX + 4, CY + 4, CW - 8, CH - 8, CR - 4);
-  ctx.lineWidth = 1;
-  ctx.strokeStyle = p.light ? "rgba(0,0,0,.05)" : "rgba(0,0,0,.25)";
-  ctx.stroke();
 
   if (bgCache.size >= 4) bgCache.delete(bgCache.keys().next().value as string);
   bgCache.set(key, layer);
@@ -388,10 +351,14 @@ export async function renderShareCard(input: ShareCardInput, opts: RenderOpts = 
   const ctx = canvas.getContext("2d");
   if (!ctx) throw new Error("canvas");
   ctx.setTransform(1, 0, 0, 1, 0, 0);
-  // پس‌زمینه‌ی شیشه‌ای (صحنه، سایه‌ی 60px، تاری، درخشش، نقطه‌ها، دانه، لبه‌ها) به
+  // پس‌زمینه‌ی شیشه‌ای (صحنه، تاری، درخشش، نقطه‌ها، دانه) به
   // ورودی بستگی نداره — یک بار برای هر تم/تراکم ساخته و کش می‌شه، بعد 1:1 کپی.
   ctx.drawImage(backgroundLayer(p, dpr), 0, 0);
   ctx.scale(dpr, dpr);
+  // محتوا در مختصات قاب قدیمی؛ مقیاس یکنواخت حول مرکز تا کل تصویر رو پر کنه
+  ctx.translate(W / 2, H / 2);
+  ctx.scale(CS, CS);
+  ctx.translate(-W / 2, -H / 2);
   ctx.imageSmoothingEnabled = true;
   ctx.imageSmoothingQuality = "high";
 
@@ -537,74 +504,6 @@ export async function renderShareCard(input: ShareCardInput, opts: RenderOpts = 
         }
       });
     }
-  }
-
-  // ── نقشه‌ی ثبات ماه ──
-  if (b.kind === "month") {
-    text(b.title, R, top + 78, f(900, 44), p.text, "right");
-    const rows = Math.ceil((b.lead + b.cells.length) / 7);
-    const statsH = 150;
-    const gridTop = top + 150;
-    const gap = 14;
-    const cell = Math.min(104, Math.floor((bottom - statsH - gridTop - 30 - (rows - 1) * gap) / rows));
-    const gridW = 7 * cell + 6 * gap;
-    const x0 = (W - gridW) / 2;
-    ["ش", "ی", "د", "س", "چ", "پ", "ج"].forEach((hd, i) =>
-      text(hd, x0 + gridW - i * (cell + gap) - cell / 2, gridTop - 20, f(700, 28), p.muted, "center")
-    );
-    const all: (ShareMonthCell | null)[] = [...Array(b.lead).fill(null), ...b.cells];
-    all.forEach((cl, idx) => {
-      if (!cl) return;
-      const col = idx % 7, row = Math.floor(idx / 7);
-      const x = x0 + gridW - (col + 1) * cell - col * gap;
-      const y = gridTop + row * (cell + gap);
-      roundRect(ctx, x, y, cell, cell, cell * 0.24);
-      const lv = cl.future ? -2 : cl.level;
-      if (lv === 4) {
-        const g = ctx.createLinearGradient(x, y, x + cell, y + cell);
-        g.addColorStop(0, p.heat);
-        g.addColorStop(1, p.heatHi);
-        ctx.fillStyle = g;
-      } else if (lv === 3) ctx.fillStyle = rgba(p.heat, 0.7);
-      else if (lv === 2) ctx.fillStyle = rgba(p.heat, 0.45);
-      else if (lv === 1) ctx.fillStyle = rgba(p.heat, 0.24);
-      else if (lv === 0) ctx.fillStyle = rgba(p.loss, 0.2);
-      else ctx.fillStyle = rgba(p.muted, lv === -2 ? 0.05 : 0.1);
-      ctx.fill();
-      if (cl.today) {
-        ctx.lineWidth = 4;
-        ctx.strokeStyle = p.text;
-        ctx.stroke();
-      }
-      const fg = lv === 4 ? (p.light ? "#fff" : "#062a1e") : lv === 3 ? "#fff" : lv === 0 ? p.loss : p.muted;
-      text(faNum(cl.jd), x + cell / 2, y + cell / 2 + cell * 0.13, f(800, Math.round(cell * 0.34)), fg, "center", "ltr");
-    });
-
-    // آمار: استریک (با شعله) + بقیه
-    const sy = bottom - statsH + 20;
-    const stats = [{ label: "روز استریک", value: faNum(b.streak), flame: true }, ...b.stats.map((s) => ({ ...s, flame: false }))];
-    const colW = (R - L) / stats.length;
-    stats.forEach((s, i) => {
-      const x = R - colW * i - colW / 2;
-      if (i > 0) {
-        ctx.strokeStyle = hair;
-        ctx.lineWidth = 2;
-        ctx.beginPath();
-        ctx.moveTo(x + colW / 2, sy + 10);
-        ctx.lineTo(x + colW / 2, sy + 110);
-        ctx.stroke();
-      }
-      ctx.font = f(900, 52);
-      ctx.direction = "ltr";
-      const vw = ctx.measureText(s.value).width;
-      if (s.flame) {
-        drawFlame(ctx, x + vw / 2 + 26, sy + 62, 40, b.streak, false);
-        text(s.value, x - 18, sy + 62, f(900, 52), p.text, "center", "ltr");
-      } else {
-        text(s.value, x, sy + 62, f(900, 52), p.text, "center", "ltr");
-      }
-      text(s.label, x, sy + 108, f(700, 28), p.muted, "center");
-    });
   }
 
   // ── استریک (جشن استریک): شعله‌ی بزرگ + عدد + هفته ──
