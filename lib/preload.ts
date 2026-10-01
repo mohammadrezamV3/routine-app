@@ -35,11 +35,11 @@ export const AUTH_HINT_COOKIE = "arion-auth";
 const PRELOAD_RANGE_BACK_DAYS = 90;
 const PRELOAD_RANGE_FWD_DAYS = 7;
 
-// سقفِ زمانیِ هر پیش‌درخواست + یک تلاشِ دوباره برای خطای گذرا (شبکه، تایم‌اوت،
-// ۵۰۲/۵۰۳/۵۰۴ ِ وسطِ ری‌استارتِ سرور). بدونِ این، یک درخواستِ آویزون همه‌ی
+// سقف زمانی هر پیش‌درخواست + یک تلاش دوباره برای خطای گذرا (شبکه، تایم‌اوت،
+// ۵۰۲/۵۰۳/۵۰۴  وسط ری‌استارت سرور). بدون این، یک درخواست آویزون همه‌ی
 // مصرف‌کننده‌های bootstrap (آواتار، استریک، تنظیمات، برنامه‌ها، یادآوری‌ها) رو
-// تا ابد روی «در حال بارگذاری» نگه می‌داشت — تا ریلودِ دستی. با null شدن،
-// هرکدوم به مسیرِ عادیِ خودشون (lib/storage.ts، با همین سیاست) برمی‌گردن.
+// تا ابد روی «در حال بارگذاری» نگه می‌داشت — تا ریلود دستی. با null شدن،
+// هرکدوم به مسیر عادی خودشون (lib/storage.ts، با همین سیاست) برمی‌گردن.
 const PRELOAD_TIMEOUT_MS = 10_000;
 const PRELOAD_RETRY_DELAY_MS = 1_500;
 
@@ -141,7 +141,7 @@ export function clearPreloadedBootstrap() {
 export function setAuthHintCookie() {
   if (typeof document === "undefined") return;
   // ۳۰ روز، هم‌اندازه‌ی بلندترین عمر سشن. SameSite=Lax مثل خود کوکی سشن.
-  // روی https فلگِ Secure هم می‌گیرد — این کوکی تصمیمِ امنیتی نمی‌گیرد
+  // روی https فلگ Secure هم می‌گیرد — این کوکی تصمیم امنیتی نمی‌گیرد
   // (فقط راهنمای پیش‌درخواست است) ولی دلیلی هم ندارد cleartext برود.
   const secure = location.protocol === "https:" ? "; Secure" : "";
   document.cookie = `${AUTH_HINT_COOKIE}=1; path=/; max-age=${60 * 60 * 24 * 30}; SameSite=Lax${secure}`;

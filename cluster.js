@@ -1,25 +1,25 @@
 "use strict";
 
 // ─────────────────────────────────────────────────────────────────────────
-// ورودی Docker به‌جای اجرای مستقیمِ server.js — با ماژولِ داخلیِ cluster نودجی
-// (نه PM2: وابستگیِ جدید لازم نداره) به تعداد هسته‌های سرور (پیش‌فرض حداکثر ۲،
+// ورودی Docker به‌جای اجرای مستقیم server.js — با ماژول داخلی cluster نودجی
+// (نه PM2: وابستگی جدید لازم نداره) به تعداد هسته‌های سرور (پیش‌فرض حداکثر ۲،
 // چون هدف یک VPS دو-هسته‌ایه؛ با WEB_CONCURRENCY قابل تنظیمه) چند worker از
 // همون server.js فورک می‌کنیم تا هر دو هسته استفاده بشه، نه فقط یکی.
 //
 // چالش: lib/rateLimit.ts یک Map در-حافظه‌ست. با چند worker، هر worker حافظه‌ی
-// جدای خودشو داره — یعنی محدودیتِ نرخ عملاً N برابر شل می‌شه (هر worker
-// شمارشِ خودشو از صفر می‌کنه). راه‌حل‌های رایج (Redis یا جدولِ Postgres) یک
-// زیرساختِ جدید اضافه می‌کنن؛ چون primary فارغ از تعدادِ workerها همیشه
-// دقیقاً یکیه، به‌جاش خودِ primary میزبانِ Mapِ مشترک می‌شه و workerها با
-// IPCِ داخلیِ نود (worker.send/process.send، هم‌ماشین و زیرِ میلی‌ثانیه)
-// درخواستِ چک‌کردن رو ازش می‌پرسن — صفر کانتینر/وابستگیِ جدید.
+// جدای خودشو داره — یعنی محدودیت نرخ عملا N برابر شل می‌شه (هر worker
+// شمارش خودشو از صفر می‌کنه). راه‌حل‌های رایج (Redis یا جدول Postgres) یک
+// زیرساخت جدید اضافه می‌کنن؛ چون primary فارغ از تعداد workerها همیشه
+// دقیقا یکیه، به‌جاش خود primary میزبان Map مشترک می‌شه و workerها با
+// IPC داخلی نود (worker.send/process.send، هم‌ماشین و زیر میلی‌ثانیه)
+// درخواست چک‌کردن رو ازش می‌پرسن — صفر کانتینر/وابستگی جدید.
 const cluster = require("node:cluster");
 const os = require("node:os");
 
 const numWorkers = Math.max(1, Number(process.env.WEB_CONCURRENCY) || Math.min(os.cpus().length, 2));
 
 if (cluster.isPrimary) {
-  // ── منطقِ rate limit عیناً از lib/rateLimit.ts (نسخه‌ی local/fallback) ──
+  // ── منطق rate limit عینا از lib/rateLimit.ts (نسخه‌ی local/fallback) ──
   const buckets = new Map();
   function checkRateLimit(key, limit, windowMs) {
     const now = Date.now();
@@ -32,7 +32,7 @@ if (cluster.isPrimary) {
     existing.count++;
     return true;
   }
-  // جاروبِ دوره‌ای سطل‌های منقضی، که حافظه‌ی primary بی‌نهایت رشد نکنه
+  // جاروب دوره‌ای سطل‌های منقضی، که حافظه‌ی primary بی‌نهایت رشد نکنه
   setInterval(() => {
     const now = Date.now();
     for (const [key, b] of buckets) {
@@ -50,49 +50,49 @@ if (cluster.isPrimary) {
     return worker;
   }
 
-  // بدونِ `CRON_SECRET`، همگام‌سازیِ خودکارِ تقویمِ اقتصادی کلاً خاموش می‌ماند —
-  // یعنی جدولِ رویدادها هیچ‌وقت پر/به‌روز نمی‌شود و از بیرون دقیقاً شبیهِ
-  // «اکشوال‌ها هیچ‌وقت نمی‌آیند» دیده می‌شود، بدونِ هیچ خطایی. چون فراخوانِ
-  // کران همیشه روی `127.0.0.1` از خودِ همین پروسه است، یک رمزِ تصادفیِ
-  // در-حافظه برایِ همین بوت کافی‌ست: primary می‌سازدش و workerها آن را با
-  // env به ارث می‌برند (پس فورک باید بعدِ این باشد). ست‌کردنِ دستیِ
-  // `CRON_SECRET` همچنان کار می‌کند و برایِ crontabِ بیرونی لازم است.
+  // بدون `CRON_SECRET`، همگام‌سازی خودکار تقویم اقتصادی کلا خاموش می‌ماند —
+  // یعنی جدول رویدادها هیچ‌وقت پر/به‌روز نمی‌شود و از بیرون دقیقا شبیه
+  // «اکشوال‌ها هیچ‌وقت نمی‌آیند» دیده می‌شود، بدون هیچ خطایی. چون فراخوان
+  // کران همیشه روی `127.0.0.1` از خود همین پروسه است، یک رمز تصادفی
+  // در-حافظه برای همین بوت کافی‌ست: primary می‌سازدش و workerها آن را با
+  // env به ارث می‌برند (پس فورک باید بعد این باشد). ست‌کردن دستی
+  // `CRON_SECRET` همچنان کار می‌کند و برای crontab بیرونی لازم است.
   if (!process.env.CRON_SECRET) {
     process.env.CRON_SECRET = require("node:crypto").randomBytes(32).toString("hex");
-    console.warn("[cluster] CRON_SECRET ست نشده — یک رمزِ موقتِ داخلی برایِ کرانِ لوکال ساخته شد (برایِ crontabِ بیرونی در .env مقدار بده)");
+    console.warn("[cluster] CRON_SECRET ست نشده — یک رمز موقت داخلی برای کران لوکال ساخته شد (برای crontab بیرونی در .env مقدار بده)");
   }
 
-  console.log(`[cluster] primary ${process.pid} در حال بالا آوردنِ ${numWorkers} worker`);
+  console.log(`[cluster] primary ${process.pid} در حال بالا آوردن ${numWorkers} worker`);
   for (let i = 0; i < numWorkers; i++) forkWorker();
 
-  // اگه یک worker به هر دلیلی کرش کرد، سایتِ همه‌ی کاربرا نباید بخوابه — یک
-  // worker جدید فوری جای اون فورک می‌شه. موقعِ خاموشیِ عمدی (شاتدان زیر)
-  // این رفتار خاموشه، وگرنه هر workerِ خاموش‌شده بلافاصله دوباره فورک می‌شه.
+  // اگه یک worker به هر دلیلی کرش کرد، سایت همه‌ی کاربرا نباید بخوابه — یک
+  // worker جدید فوری جای اون فورک می‌شه. موقع خاموشی عمدی (شاتدان زیر)
+  // این رفتار خاموشه، وگرنه هر worker خاموش‌شده بلافاصله دوباره فورک می‌شه.
   let shuttingDown = false;
   cluster.on("exit", (worker, code, signal) => {
     if (shuttingDown) return;
-    console.error(`[cluster] worker ${worker.process.pid} خارج شد (code=${code} signal=${signal}) — فورکِ مجدد`);
+    console.error(`[cluster] worker ${worker.process.pid} خارج شد (code=${code} signal=${signal}) — فورک مجدد`);
     forkWorker();
   });
 
   // داکر روی `docker stop`/ری‌دیپلوی فقط SIGTERM رو به PID۱ (همین primary)
-  // می‌فرسته، نه به workerهای فورک‌شده. بدونِ این هندلر، primary بی‌سروصدا
-  // می‌مرد و کانتینر کلِ workerها رو هم با خودش می‌کشت — درخواست‌های در حالِ
-  // پردازش وسط راه قطع می‌شدن. خودِ server.js داخلِ هر worker (از
+  // می‌فرسته، نه به workerهای فورک‌شده. بدون این هندلر، primary بی‌سروصدا
+  // می‌مرد و کانتینر کل workerها رو هم با خودش می‌کشت — درخواست‌های در حال
+  // پردازش وسط راه قطع می‌شدن. خود server.js داخل هر worker (از
   // next/dist/server/lib/start-server.js) SIGTERM رو می‌گیره و HTTP server
   // رو تمیز می‌بنده؛ اینجا فقط باید سیگنال رو بهشون برسونیم و صبر کنیم.
   function shutdown(signal) {
     if (shuttingDown) return;
     shuttingDown = true;
     const workers = Object.values(cluster.workers || {}).filter(Boolean);
-    console.log(`[cluster] primary دریافتِ ${signal} — درحالِ خاموشیِ تمیزِ ${workers.length} worker`);
+    console.log(`[cluster] primary دریافت ${signal} — درحال خاموشی تمیز ${workers.length} worker`);
     if (workers.length === 0) {
       process.exit(0);
       return;
     }
     let remaining = workers.length;
-    // اگه یک worker به‌موقع (مثلا به‌خاطر یک درخواستِ گیرکرده) بسته نشد،
-    // نباید کلِ خاموشی رو نامحدود معطل نگه داریم.
+    // اگه یک worker به‌موقع (مثلا به‌خاطر یک درخواست گیرکرده) بسته نشد،
+    // نباید کل خاموشی رو نامحدود معطل نگه داریم.
     const forceTimer = setTimeout(() => {
       console.error("[cluster] بعضی workerها به‌موقع خاموش نشدن — force kill");
       for (const w of workers) w.process.kill("SIGKILL");
@@ -113,31 +113,31 @@ if (cluster.isPrimary) {
   process.on("SIGTERM", () => shutdown("SIGTERM"));
   process.on("SIGINT", () => shutdown("SIGINT"));
 
-  // ── همگام‌سازیِ خودکارِ روزانه‌ی تقویم اقتصادی ──────────────────────
-  // قبلا این کار فقط با یک crontab بیرونی روی خودِ سرور ممکن بود
-  // (deploy/cron.example) — یعنی بدونِ ست‌کردنِ دستیِ اپراتور، جدول خالی
-  // می‌موند. چون primary فارغ از تعدادِ worker همیشه دقیقاً یکیه (دقیقاً
-  // همون استدلالِ rate-limit بالا)، خودش زمان‌بندیِ این کار رو هم برعهده
-  // می‌گیره — بدونِ این، هر worker باید جدا زمان‌بندی می‌کرد و همون
-  // sync چند بار در روز تکرار می‌شد. به‌جای وارد کردنِ مستقیمِ
+  // ── همگام‌سازی خودکار روزانه‌ی تقویم اقتصادی ──────────────────────
+  // قبلا این کار فقط با یک crontab بیرونی روی خود سرور ممکن بود
+  // (deploy/cron.example) — یعنی بدون ست‌کردن دستی اپراتور، جدول خالی
+  // می‌موند. چون primary فارغ از تعداد worker همیشه دقیقا یکیه (دقیقا
+  // همون استدلال rate-limit بالا)، خودش زمان‌بندی این کار رو هم برعهده
+  // می‌گیره — بدون این، هر worker باید جدا زمان‌بندی می‌کرد و همون
+  // sync چند بار در روز تکرار می‌شد. به‌جای وارد کردن مستقیم
   // lib/economicCalendar.ts (که TypeScript/Prisma می‌خواد و اینجا primary
-  // هیچ‌کدومش رو لود نکرده)، primary همون روتِ HTTP کرانِ موجود
-  // (app/api/cron/economic-calendar) رو روی خودِ localhost صدا می‌زنه —
-  // دقیقاً همون‌کاری که crontabِ بیرونی می‌کرد، فقط از داخلِ خودِ کانتینر.
+  // هیچ‌کدومش رو لود نکرده)، primary همون روت HTTP کران موجود
+  // (app/api/cron/economic-calendar) رو روی خود localhost صدا می‌زنه —
+  // دقیقا همون‌کاری که crontab بیرونی می‌کرد، فقط از داخل خود کانتینر.
   const CRON_SECRET = process.env.CRON_SECRET;
   {
     const port = process.env.PORT || 3000;
     const SLOW_INTERVAL_MS = 10 * 60 * 1000;
     const ERROR_RETRY_MS = 2 * 60 * 1000;
 
-    // طبقِ درخواستِ صریح («سرِ ساعتِ ایونت دقیقا ۱۰ثانیه بعدش اپدیت شه، در
-    // غیرِ این حالت نیازی نیست تند‌تند اپدیت شه»): این دیگه یک setInterval
-    // با بازه‌ی ثابت نیست — یک لوپِ خودتنظیمِ setTimeout که هربار خودِ روت
-    // (`computeNextSyncDelayMs`، بر اساسِ نزدیک‌ترین رویدادِ بی‌actual توی
-    // دیتابیس) می‌گه دفعه‌ی بعد کِی دوباره چک کنه. وقتی رویدادی نزدیکه،
-    // این فاصله چند ثانیه می‌شه؛ در حالتِ آروم به همون ۱۰دقیقه‌ی قبلی
-    // برمی‌گرده. خودتنظیم‌بودن یعنی بعدِ هر ری‌استارتِ سرور هم بدونِ نیاز
-    // به یادآوریِ چیزی، خودش از نو تصمیمِ درست رو می‌گیره.
+    // طبق درخواست صریح («سر ساعت ایونت دقیقا ۱۰ثانیه بعدش اپدیت شه، در
+    // غیر این حالت نیازی نیست تند‌تند اپدیت شه»): این دیگه یک setInterval
+    // با بازه‌ی ثابت نیست — یک لوپ خودتنظیم setTimeout که هربار خود روت
+    // (`computeNextSyncDelayMs`، بر اساس نزدیک‌ترین رویداد بی‌actual توی
+    // دیتابیس) می‌گه دفعه‌ی بعد کی دوباره چک کنه. وقتی رویدادی نزدیکه،
+    // این فاصله چند ثانیه می‌شه؛ در حالت آروم به همون ۱۰دقیقه‌ی قبلی
+    // برمی‌گرده. خودتنظیم‌بودن یعنی بعد هر ری‌استارت سرور هم بدون نیاز
+    // به یادآوری چیزی، خودش از نو تصمیم درست رو می‌گیره.
     function scheduleNext(delayMs) {
       setTimeout(syncEconomicCalendarNow, Math.max(1000, delayMs)).unref();
     }
@@ -150,17 +150,17 @@ if (cluster.isPrimary) {
         });
         const body = await res.json().catch(() => null);
         if (!res.ok) {
-          console.error(`[cluster] همگام‌سازیِ تقویم اقتصادی با خطا مواجه شد: ${res.status} ${JSON.stringify(body)}`);
+          console.error(`[cluster] همگام‌سازی تقویم اقتصادی با خطا مواجه شد: ${res.status} ${JSON.stringify(body)}`);
           scheduleNext(ERROR_RETRY_MS);
           return;
         }
-        console.log(`[cluster] تقویمِ اقتصادی همگام‌سازی شد: ${JSON.stringify(body)}`);
+        console.log(`[cluster] تقویم اقتصادی همگام‌سازی شد: ${JSON.stringify(body)}`);
         scheduleNext(typeof body?.nextCheckInMs === "number" ? body.nextCheckInMs : SLOW_INTERVAL_MS);
       } catch (err) {
-        // اگه workerها هنوز کاملاً بالا نیومده باشن (مثلاً درست بعدِ استارتِ
+        // اگه workerها هنوز کاملا بالا نیومده باشن (مثلا درست بعد استارت
         // کانتینر)، این fail می‌شه — بی‌خطر: retry کوتاه‌مدت جبران می‌کنه، و
         // ادمین همیشه می‌تونه از پنل «همگام‌سازی الان» بزنه.
-        console.error(`[cluster] همگام‌سازیِ تقویم اقتصادی شکست خورد: ${err && err.message}`);
+        console.error(`[cluster] همگام‌سازی تقویم اقتصادی شکست خورد: ${err && err.message}`);
         scheduleNext(ERROR_RETRY_MS);
       }
     }
@@ -168,7 +168,7 @@ if (cluster.isPrimary) {
     setTimeout(syncEconomicCalendarNow, 30_000).unref();
   }
 } else {
-  // هر worker همون سرورِ standalone نکست رو مستقیم اجرا می‌کنه؛ رفتارش با
-  // حالتِ تک-پروسه‌ای قبلی یکسانه، فقط چند نسخه‌ش همزمان بالاست.
+  // هر worker همون سرور standalone نکست رو مستقیم اجرا می‌کنه؛ رفتارش با
+  // حالت تک-پروسه‌ای قبلی یکسانه، فقط چند نسخه‌ش همزمان بالاست.
   require("./server.js");
 }

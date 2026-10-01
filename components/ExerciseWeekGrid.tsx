@@ -21,15 +21,15 @@ export function ExerciseWeekGrid({
 }: {
   planData: ExerciseDay[];
   todayName: string;
-  /** وضعیتِ روزهای باشگاهِ *همین هفته* (اسمِ روز → done/missed) از لاگِ واقعی */
+  /** وضعیت روزهای باشگاه *همین هفته* (اسم روز → done/missed) از لاگ واقعی */
   dayStatus?: Record<string, "done" | "missed">;
 }) {
   const byDay = new Map(planData.map((d) => [d.day, d]));
 
   return (
     <section>
-      {/* طبقِ درخواستِ صریح: آیکون کنارِ تایتل — و flex با justify-start
-          (نه چیزی که فرزندها را به دو سرِ سطر پرت کند)، وگرنه تایتل
+      {/* طبق درخواست صریح: آیکون کنار تایتل — و flex با justify-start
+          (نه چیزی که فرزندها را به دو سر سطر پرت کند)، وگرنه تایتل
           چپ‌چین می‌شود. */}
       <h1 className="mb-4 flex items-center justify-start gap-2 text-[20px] font-bold text-dash-text sm:mb-5 sm:text-[26px]">
         <CalendarDays className="h-[19px] w-[19px] text-dash-green sm:h-6 sm:w-6" />

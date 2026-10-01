@@ -13,15 +13,15 @@ const REASON_MAX = 200;
 const DETAILS_MAX = 2000;
 
 /**
- * صاحبِ محتوای گزارش‌شده، *فقط اگه* گزارش‌دهنده دسترسیِ مشروع به اون هدف
- * داشته باشه؛ وگرنه null (→ ۴۰۴). بدونِ این، این روت یک اوراکل می‌شد برای
- * حدس‌زدنِ وجودِ پیام/برنامه‌ی دیگران، و هرکسی می‌تونست هر idای رو گزارش کنه.
+ * صاحب محتوای گزارش‌شده، *فقط اگه* گزارش‌دهنده دسترسی مشروع به اون هدف
+ * داشته باشه؛ وگرنه null (→ ۴۰۴). بدون این، این روت یک اوراکل می‌شد برای
+ * حدس‌زدن وجود پیام/برنامه‌ی دیگران، و هرکسی می‌تونست هر idای رو گزارش کنه.
  */
 async function resolveTargetOwner(type: Target, targetId: string, me: string): Promise<string | null> {
   switch (type) {
     case "USER": {
       if (targetId === me) return null;
-      // طرفِ یک رابطه‌ی منتوری با من، یا منتوری که پروفایلش عمومی منتشر شده
+      // طرف یک رابطه‌ی منتوری با من، یا منتوری که پروفایلش عمومی منتشر شده
       const related = await prisma.mentorship.findFirst({
         where: { OR: [{ mentorId: me, studentId: targetId }, { mentorId: targetId, studentId: me }] },
         select: { id: true },
@@ -46,7 +46,7 @@ async function resolveTargetOwner(type: Target, targetId: string, me: string): P
       return msg?.senderId ?? null;
     }
     case "PROGRAM": {
-      // فقط شاگرد برنامه‌ی منتورش رو گزارش می‌کنه (منتور صاحبِ برنامه‌ی خودشه)
+      // فقط شاگرد برنامه‌ی منتورش رو گزارش می‌کنه (منتور صاحب برنامه‌ی خودشه)
       const p = await prisma.mentorProgram.findFirst({ where: { id: targetId, studentId: me }, select: { mentorId: true, status: true, sentAt: true } });
       return p && visibleToStudent(p) ? p.mentorId : null;
     }
@@ -54,9 +54,9 @@ async function resolveTargetOwner(type: Target, targetId: string, me: string): P
 }
 
 // POST /api/mentor-reports { targetType, targetId, reason, details?, franking? }
-// برای MESSAGE: franking = { text, frankingKey } از کلاینتِ گیرنده (docs/mentor-e2ee.md).
-// سرور تعهدِ رمزنگاریِ فرستنده را چک می‌کند و فقط متنِ همین یک پیام را (رمزشده
-// در حالِ سکون) در گزارش نگه می‌دارد؛ ادمین هیچ پیامِ دیگری را نمی‌بیند.
+// برای MESSAGE: franking = { text, frankingKey } از کلاینت گیرنده (docs/mentor-e2ee.md).
+// سرور تعهد رمزنگاری فرستنده را چک می‌کند و فقط متن همین یک پیام را (رمزشده
+// در حال سکون) در گزارش نگه می‌دارد؛ ادمین هیچ پیام دیگری را نمی‌بیند.
 export async function POST(req: Request) {
   const g = await requireMentorsUser();
   if (!g.ok) return g.response;

@@ -53,26 +53,26 @@ import {
   type LocalKey,
 } from "./keyStore";
 
-// لایه‌ی کلاینتِ رمزگذاریِ سرتاسری — *خودکار*، بدونِ هیچ رمزِ جداگانه‌ای
+// لایه‌ی کلاینت رمزگذاری سرتاسری — *خودکار*، بدون هیچ رمز جداگانه‌ای
 // (docs/mentor-e2ee.md). کاربر هیچ کاری نمی‌کند:
 //
-//   • حسابِ رمزدار: لحظه‌ی ورود/ثبت‌نام، از همان رمزِ عبور روی دستگاه یک KEK مشتق
-//     می‌شود (primeE2EEFromPassword). با آن کلیدِ SYNCED بی‌صدا ساخته یا از پشتیبان
+//   • حساب رمزدار: لحظه‌ی ورود/ثبت‌نام، از همان رمز عبور روی دستگاه یک KEK مشتق
+//     می‌شود (primeE2EEFromPassword). با آن کلید SYNCED بی‌صدا ساخته یا از پشتیبان
 //     باز می‌شود؛ روی هر دستگاهی که با رمز وارد شود همان کلید و همه‌ی سابقه هست.
-//   • حسابِ گوگل (بی‌رمز) یا نشستی که از پیش از این تغییر باز مانده: کلیدِ DEVICEِ
-//     همین دستگاه. پیام‌ها برای همه‌ی کلیدهای فعالِ دو طرف بسته‌بندی می‌شوند، پس هر
-//     دستگاه از لحظه‌ی ساختِ کلیدش همه‌ی پیام‌های تازه را می‌خواند. سابقه‌ی قبلی با
-//     «انتقال سابقه از دستگاه دیگر» (تایید با کدِ کوتاه روی دستگاهِ قدیمی) می‌آید.
-//   • پشتیبانِ قدیمیِ «رمز گفت‌وگو»: یک بار رمزِ قدیمی خواسته و به روشِ تازه منتقل می‌شود.
+//   • حساب گوگل (بی‌رمز) یا نشستی که از پیش از این تغییر باز مانده: کلید DEVICE
+//     همین دستگاه. پیام‌ها برای همه‌ی کلیدهای فعال دو طرف بسته‌بندی می‌شوند، پس هر
+//     دستگاه از لحظه‌ی ساخت کلیدش همه‌ی پیام‌های تازه را می‌خواند. سابقه‌ی قبلی با
+//     «انتقال سابقه از دستگاه دیگر» (تایید با کد کوتاه روی دستگاه قدیمی) می‌آید.
+//   • پشتیبان قدیمی «رمز گفت‌وگو»: یک بار رمز قدیمی خواسته و به روش تازه منتقل می‌شود.
 
 export type KeyKind = "SYNCED" | "DEVICE";
 export type RingKey = { version: number; kind: KeyKind; publicKey: string; privateKey: CryptoKey; retired: boolean };
 export type ActiveKeyInfo = { version: number; kind: KeyKind; publicKey: string };
 
 /**
- * کلیدِ ارسالِ این دستگاه (userId/version/publicKey/privateKey — همان شکلِ قبلی) +
- * ring: همه‌ی کلیدهای خصوصیِ این دستگاه (برای خواندنِ پیام‌های قدیمی‌تر) +
- * active: کلیدهای فعالِ خودم روی همه‌ی دستگاه‌ها (هدف‌های بسته‌بندی).
+ * کلید ارسال این دستگاه (userId/version/publicKey/privateKey — همان شکل قبلی) +
+ * ring: همه‌ی کلیدهای خصوصی این دستگاه (برای خواندن پیام‌های قدیمی‌تر) +
+ * active: کلیدهای فعال خودم روی همه‌ی دستگاه‌ها (هدف‌های بسته‌بندی).
  */
 export type Identity = {
   userId: string;
@@ -82,7 +82,7 @@ export type Identity = {
   kind: KeyKind;
   ring: RingKey[];
   active: ActiveKeyInfo[];
-  /** همه‌ی کلیدهای عمومیِ خودم، از جمله بازنشسته */
+  /** همه‌ی کلیدهای عمومی خودم، از جمله بازنشسته */
   known: ActiveKeyInfo[];
 };
 
@@ -114,13 +114,13 @@ type KeysResponse = {
   link: LinkInfo | null;
 };
 
-/** خطِ کوتاهِ اطلاع‌رسانی (نه فرم) — فقط وقتی واقعا چیزی هست که کاربر بداند */
+/** خط کوتاه اطلاع‌رسانی (نه فرم) — فقط وقتی واقعا چیزی هست که کاربر بداند */
 export type E2EENotice =
-  /** پشتیبانِ قدیمیِ «رمز گفت‌وگو»: یک بار رمزِ قدیمی تا پیام‌های قبلی باز و منتقل شوند */
+  /** پشتیبان قدیمی «رمز گفت‌وگو»: یک بار رمز قدیمی تا پیام‌های قبلی باز و منتقل شوند */
   | { kind: "legacy-passcode"; version: number }
-  /** این نشست با رمزِ عبور شروع نشده؛ پیام‌های قبلی با ورودِ دوباره روی این دستگاه باز می‌شوند */
+  /** این نشست با رمز عبور شروع نشده؛ پیام‌های قبلی با ورود دوباره روی این دستگاه باز می‌شوند */
   | { kind: "history-relogin" }
-  /** حسابِ بی‌رمز روی دستگاهِ تازه: سابقه روی دستگاهِ دیگر است */
+  /** حساب بی‌رمز روی دستگاه تازه: سابقه روی دستگاه دیگر است */
   | { kind: "history-link" };
 
 export type LinkState =
@@ -135,13 +135,13 @@ export type IdentityState =
       status: "ready";
       identity: Identity;
       persistent: boolean;
-      /** سازگاری: کلیدِ SYNCED با پشتیبانِ رمزِ عبور دارد */
+      /** سازگاری: کلید SYNCED با پشتیبان رمز عبور دارد */
       hasBackup: boolean;
       hasPassword: boolean;
       notice: E2EENotice | null;
       link: LinkState | null;
       devices: ServerKeyInfo[];
-      /** با هر تغییرِ کلیدهای این دستگاه (انتقالِ سابقه، باز شدنِ پیام‌های قدیمی) زیاد می‌شود */
+      /** با هر تغییر کلیدهای این دستگاه (انتقال سابقه، باز شدن پیام‌های قدیمی) زیاد می‌شود */
       epoch: number;
     };
 
@@ -164,7 +164,7 @@ async function api<T>(url: string, init?: RequestInit): Promise<T> {
   return data as T;
 }
 
-// ───────────────────────── وضعیتِ مشترک ─────────────────────────
+// ───────────────────────── وضعیت مشترک ─────────────────────────
 
 let state: IdentityState = { status: "loading" };
 let loading: Promise<void> | null = null;
@@ -181,7 +181,7 @@ export function getIdentityState(): IdentityState {
   return state;
 }
 
-// خروج از حساب: وضعیتِ در حافظه (کلیدِ باز، KEK) با keyStore.wipeOnLogout پاک می‌شود
+// خروج از حساب: وضعیت در حافظه (کلید باز، KEK) با keyStore.wipeOnLogout پاک می‌شود
 onWipe(() => {
   loading = null;
   setState({ status: "loading" });
@@ -217,12 +217,12 @@ async function toNonExtractable(k: CryptoKey): Promise<CryptoKey> {
   }
 }
 
-// ───────────────────────── ساخت/باز کردنِ کلیدها ─────────────────────────
+// ───────────────────────── ساخت/باز کردن کلیدها ─────────────────────────
 
 /**
- * کلیدِ SYNCEDِ تازه (بارِ اول، یا پس از بازیابیِ رمز با پیامک) — بسته‌بندی با KEK.
- * newKdf فقط در جایگزینی: نمکِ تازه اتمی با کلید ثبت می‌شود تا KEKِ کهنه‌ی دستگاه‌های
- * دیگر (رمزِ قبلی) نامعتبر شود و آن‌ها هرگز دوباره کلید عوض نکنند.
+ * کلید SYNCED تازه (بار اول، یا پس از بازیابی رمز با پیامک) — بسته‌بندی با KEK.
+ * newKdf فقط در جایگزینی: نمک تازه اتمی با کلید ثبت می‌شود تا KEK کهنه‌ی دستگاه‌های
+ * دیگر (رمز قبلی) نامعتبر شود و آن‌ها هرگز دوباره کلید عوض نکنند.
  */
 async function createSynced(
   userId: string,
@@ -270,14 +270,14 @@ async function bootstrap(retry = true): Promise<void> {
     else if (!s.active && !l.retired) await putLocalKey({ ...l, retired: true });
   }
 
-  // ۲) KEKِ این دستگاه (فقط اگر با نمکِ فعلیِ سرور ساخته شده باشد)
+  // ۲) KEK این دستگاه (فقط اگر با نمک فعلی سرور ساخته شده باشد)
   let kek = await getKek(userId);
   if (kek && (!me.kdf || kek.salt !== me.kdf.salt)) {
     await deleteKek(userId);
     kek = null;
   }
 
-  // ۳) پشتیبانِ تازه‌ای که پس از تغییرِ رمز نرسیده بود
+  // ۳) پشتیبان تازه‌ای که پس از تغییر رمز نرسیده بود
   const pending = await getPending(userId);
   if (pending) {
     try {
@@ -305,8 +305,8 @@ async function bootstrap(retry = true): Promise<void> {
           send = await putLocalKey({ userId, version: b.version, kind: "SYNCED", publicKey: b.publicKey, privateKey: key });
         } catch (e) {
           if (!(e instanceof E2EEDecryptError)) throw e;
-          // KEKِ این دستگاه دیگر پشتیبان را باز نمی‌کند (رمز جای دیگری عوض شده). این‌جا رمز
-          // را نداریم، پس هرگز کلید عوض نمی‌کنیم — فقط KEK کنار می‌رود؛ ورودِ بعدی درستش می‌کند.
+          // KEK این دستگاه دیگر پشتیبان را باز نمی‌کند (رمز جای دیگری عوض شده). این‌جا رمز
+          // را نداریم، پس هرگز کلید عوض نمی‌کنیم — فقط KEK کنار می‌رود؛ ورود بعدی درستش می‌کند.
           await deleteKek(userId);
           kek = null;
           notice = { kind: "history-relogin" };
@@ -323,7 +323,7 @@ async function bootstrap(retry = true): Promise<void> {
     throw e;
   }
 
-  // ۴) بدونِ کلیدِ SYNCED روی این دستگاه → کلیدِ همین دستگاه
+  // ۴) بدون کلید SYNCED روی این دستگاه → کلید همین دستگاه
   if (!send) {
     local = await listLocalKeys(userId);
     const activeDevice = local.filter((l) => l.kind === "DEVICE" && !l.retired).sort((a, b) => b.version - a.version)[0];
@@ -338,7 +338,7 @@ async function bootstrap(retry = true): Promise<void> {
     }
   }
 
-  // کلیدهای تازه‌ساخته → وضعیتِ سرور دوباره (هدف‌های بسته‌بندی باید دقیق باشند)
+  // کلیدهای تازه‌ساخته → وضعیت سرور دوباره (هدف‌های بسته‌بندی باید دقیق باشند)
   me = await fetchState(send.kind === "DEVICE" ? send.version : undefined);
   local = await listLocalKeys(userId);
   const ringVersions = new Set(local.map((l) => l.version));
@@ -384,12 +384,12 @@ function sameIdentity(a: Identity, b: Identity): boolean {
   );
 }
 
-/** وضعیتِ کلید را از سرور + دستگاه می‌خواند و هرچه لازم است بی‌صدا می‌سازد. همزمان‌ها یکی می‌شوند. */
+/** وضعیت کلید را از سرور + دستگاه می‌خواند و هرچه لازم است بی‌صدا می‌سازد. همزمان‌ها یکی می‌شوند. */
 export function refreshIdentity(): Promise<void> {
   if (loading) return loading;
   loading = bootstrap()
     .catch((e) => {
-      // خطای شبکه/سرور وقتی کلید از قبل آماده است، وضعیتِ آماده را خراب نمی‌کند
+      // خطای شبکه/سرور وقتی کلید از قبل آماده است، وضعیت آماده را خراب نمی‌کند
       if (state.status === "ready") return;
       setState({ status: "error", message: e instanceof Error && e.message ? e.message : "رمزگذاری آماده نشد؛ دوباره تلاش کن" });
     })
@@ -404,7 +404,7 @@ export function useE2EEIdentity(): IdentityState {
   useEffect(() => {
     listeners.add(setS);
     setS(state);
-    // هر بار سوار شدن: وضعیت از سرور تازه می‌شود (کلیدِ تازه روی دستگاهِ دیگر، کاربرِ دیگر)
+    // هر بار سوار شدن: وضعیت از سرور تازه می‌شود (کلید تازه روی دستگاه دیگر، کاربر دیگر)
     refreshIdentity();
     return () => {
       listeners.delete(setS);
@@ -413,12 +413,12 @@ export function useE2EEIdentity(): IdentityState {
   return s;
 }
 
-/** مطمئن شو کلیدِ این حساب ساخته شده (مثلا پیش از ساختِ داده‌ی آزمایشی). خطا/کندی بی‌اثر؛ حداکثر ~۸ ثانیه */
+/** مطمئن شو کلید این حساب ساخته شده (مثلا پیش از ساخت داده‌ی آزمایشی). خطا/کندی بی‌اثر؛ حداکثر ~۸ ثانیه */
 export async function ensureE2EEKeys(): Promise<void> {
   await Promise.race([refreshIdentity().catch(() => {}), new Promise((r) => setTimeout(r, 8000))]);
 }
 
-/** آماده بودنِ رمزگذاری برای UI (قفلِ کوچکِ «رمزگذاری سرتاسری»، غیرفعال کردنِ ارسال) */
+/** آماده بودن رمزگذاری برای UI (قفل کوچک «رمزگذاری سرتاسری»، غیرفعال کردن ارسال) */
 export function useE2EEReady(): { ready: boolean; state: IdentityState } {
   const s = useE2EEIdentity();
   return { ready: s.status === "ready", state: s };
@@ -430,7 +430,7 @@ function runBackground(userId: string, me: KeysResponse, identity: Identity) {
   if (bgRunning) return;
   bgRunning = true;
   (async () => {
-    // کلیدِ DEVICEِ این دستگاه وقتی کلیدِ SYNCED هم این‌جا هست زائد است: سابقه‌اش به
+    // کلید DEVICE این دستگاه وقتی کلید SYNCED هم این‌جا هست زائد است: سابقه‌اش به
     // SYNCED منتقل و خودش بازنشسته می‌شود (پیام‌های بعدی فقط برای SYNCED بسته‌بندی می‌شوند).
     if (identity.kind === "SYNCED") {
       const target: TargetKey = { ref: { u: userId, k: identity.version }, publicKey: identity.publicKey };
@@ -441,7 +441,7 @@ function runBackground(userId: string, me: KeysResponse, identity: Identity) {
           const l = (await listLocalKeys(userId)).find((x) => x.version === d.version);
           if (l) await putLocalKey({ ...l, retired: true });
         } catch {
-          // دورِ بعد
+          // دور بعد
         }
       }
     }
@@ -452,13 +452,13 @@ function runBackground(userId: string, me: KeysResponse, identity: Identity) {
     });
 }
 
-// ───────────────────────── ورود/تغییرِ رمز ─────────────────────────
+// ───────────────────────── ورود/تغییر رمز ─────────────────────────
 
 /**
- * بعد از ورود یا ثبت‌نامِ موفق با رمزِ عبور (app/auth/login، app/auth/signup). رمز
+ * بعد از ورود یا ثبت‌نام موفق با رمز عبور (app/auth/login، app/auth/signup). رمز
  * فقط در همین تابع و فقط روی دستگاه به کار می‌رود — هیچ درخواستی آن را نمی‌برد؛
- * خروجی یک KEKِ غیرقابل‌استخراج است که تا خروج روی دستگاه می‌ماند. خطا هرگز
- * جلوی ورود را نمی‌گیرد (بدونِ KEK، کلیدِ همین دستگاه ساخته می‌شود).
+ * خروجی یک KEK غیرقابل‌استخراج است که تا خروج روی دستگاه می‌ماند. خطا هرگز
+ * جلوی ورود را نمی‌گیرد (بدون KEK، کلید همین دستگاه ساخته می‌شود).
  */
 export async function primeE2EEFromPassword(userId: string, password: string): Promise<void> {
   try {
@@ -466,8 +466,8 @@ export async function primeE2EEFromPassword(userId: string, password: string): P
     const kdf = await api<{ userId: string; salt: string; iterations: number }>("/api/e2ee/keys/kdf");
     if (kdf.userId !== userId) return;
     let kek = { userId, salt: kdf.salt, iterations: kdf.iterations, kek: await derivePasswordKek(password, userId, kdf.salt, kdf.iterations), savedAt: Date.now() };
-    // پشتیبانِ فعلی با همین رمز باز می‌شود؟ اگر نه، رمز بدونِ بازبسته‌بندی عوض شده (بازیابی
-    // با پیامک): تنها جایی که کلیدِ SYNCED عوض می‌شود — چون فقط این‌جا رمزِ درست را داریم.
+    // پشتیبان فعلی با همین رمز باز می‌شود؟ اگر نه، رمز بدون بازبسته‌بندی عوض شده (بازیابی
+    // با پیامک): تنها جایی که کلید SYNCED عوض می‌شود — چون فقط این‌جا رمز درست را داریم.
     const me = await fetchState().catch(() => null);
     const synced = me?.keys.find((k) => k.kind === "SYNCED" && k.active && k.backupKind === "PASSWORD");
     if (me && synced) {
@@ -492,10 +492,10 @@ export async function primeE2EEFromPassword(userId: string, password: string): P
 }
 
 /**
- * تغییرِ رمزِ عبور از پنل (کاربر رمزِ فعلی و تازه را می‌داند): *قبل از* درخواستِ تغییر،
- * پشتیبان با رمزِ فعلی باز و با رمزِ تازه (و نمکِ تازه) دوباره بسته‌بندی می‌شود؛ خروجی
- * یک commit است که *بعد از* موفقیتِ تغییرِ رمز صدا زده می‌شود. نبودِ کلید/خطا → null
- * (تغییرِ رمز بی‌وقفه انجام می‌شود؛ در بدترین حالت ورودِ بعدی کلیدِ تازه می‌سازد).
+ * تغییر رمز عبور از پنل (کاربر رمز فعلی و تازه را می‌داند): *قبل از* درخواست تغییر،
+ * پشتیبان با رمز فعلی باز و با رمز تازه (و نمک تازه) دوباره بسته‌بندی می‌شود؛ خروجی
+ * یک commit است که *بعد از* موفقیت تغییر رمز صدا زده می‌شود. نبود کلید/خطا → null
+ * (تغییر رمز بی‌وقفه انجام می‌شود؛ در بدترین حالت ورود بعدی کلید تازه می‌سازد).
  */
 export async function prepareE2EEPasswordChange(oldPassword: string, newPassword: string): Promise<(() => Promise<void>) | null> {
   try {
@@ -527,19 +527,19 @@ export async function prepareE2EEPasswordChange(oldPassword: string, newPassword
           await new Promise((r) => setTimeout(r, 800 * (i + 1)));
         }
       }
-      // هنوز نرسید: در pending می‌ماند و راه‌اندازیِ بعدی می‌فرستدش
+      // هنوز نرسید: در pending می‌ماند و راه‌اندازی بعدی می‌فرستدش
     };
   } catch {
     return null;
   }
 }
 
-// ───────────────────────── پشتیبانِ قدیمیِ «رمز گفت‌وگو» ─────────────────────────
+// ───────────────────────── پشتیبان قدیمی «رمز گفت‌وگو» ─────────────────────────
 
 /**
- * یک بارِ آخر: پشتیبانِ قدیمی با رمزِ گفت‌وگو باز می‌شود و به روشِ تازه می‌رود —
- * حسابِ رمزدار: بسته‌بندی با KEKِ رمزِ عبور؛ حسابِ گوگل: کلیدِ همین دستگاه (پشتیبانِ
- * سرور پاک می‌شود). بعد از این هرگز رمزِ گفت‌وگو خواسته نمی‌شود.
+ * یک بار آخر: پشتیبان قدیمی با رمز گفت‌وگو باز می‌شود و به روش تازه می‌رود —
+ * حساب رمزدار: بسته‌بندی با KEK رمز عبور؛ حساب گوگل: کلید همین دستگاه (پشتیبان
+ * سرور پاک می‌شود). بعد از این هرگز رمز گفت‌وگو خواسته نمی‌شود.
  */
 export async function unlockLegacyPasscode(passcode: string): Promise<void> {
   const me = await fetchState();
@@ -566,7 +566,7 @@ export async function unlockLegacyPasscode(passcode: string): Promise<void> {
   await refreshIdentity();
 }
 
-/** «از پیام‌های قبلی بگذر»: حسابِ رمزدار کلیدِ SYNCEDِ تازه می‌گیرد؛ حسابِ گوگل فقط دیگر پرسیده نمی‌شود */
+/** «از پیام‌های قبلی بگذر»: حساب رمزدار کلید SYNCED تازه می‌گیرد؛ حساب گوگل فقط دیگر پرسیده نمی‌شود */
 export async function skipLegacyPasscode(version: number): Promise<void> {
   const me = await fetchState();
   const kek = await getKek(me.userId);
@@ -582,16 +582,16 @@ export async function skipLegacyPasscode(version: number): Promise<void> {
   await refreshIdentity();
 }
 
-// ───────────────────────── انتقالِ سابقه ─────────────────────────
+// ───────────────────────── انتقال سابقه ─────────────────────────
 
 type HistoryItem = { messageId: string; mentorshipId: string; clientId: string; from: KeyRef; wraps: KeyWrap[] };
 type HistoryPage = { items: HistoryItem[]; keys: Record<string, { version: number; publicKey: string }[]>; next: string | null };
 type NoteRow = { id: string; studentId: string; body: string };
 
 /**
- * CEKِ هر پیامی که برای یکی از sources بسته‌بندی شده، برای target (کلیدِ دیگرِ
- * خودم) هم بسته‌بندی می‌شود؛ یادداشت‌های خصوصیِ منتور هم برای کلیدهای فعالِ فعلی
- * دوباره رمز می‌شوند. متنِ پیام دست نمی‌خورد (فرانکینگ همان می‌ماند).
+ * CEK هر پیامی که برای یکی از sources بسته‌بندی شده، برای target (کلید دیگر
+ * خودم) هم بسته‌بندی می‌شود؛ یادداشت‌های خصوصی منتور هم برای کلیدهای فعال فعلی
+ * دوباره رمز می‌شوند. متن پیام دست نمی‌خورد (فرانکینگ همان می‌ماند).
  */
 export async function transferHistory(userId: string, sources: OwnKey[], target: TargetKey, onProgress?: (n: number) => void): Promise<number> {
   let moved = 0;
@@ -653,12 +653,12 @@ async function linkStateFor(userId: string, me: KeysResponse, identity: Identity
   if (!target) return null;
   const code = await linkCode(userId, l.targetVersion, target.publicKey, l.id);
   if (mine) return { role: "requester", id: l.id, code, status: l.status, moved: l.moved };
-  // تاییدکننده فقط دستگاهی است که کلیدِ دیگری (با سابقه) دارد
+  // تاییدکننده فقط دستگاهی است که کلید دیگری (با سابقه) دارد
   if (l.status !== "PENDING" || !target.active || !identity.ring.some((r) => r.version !== l.targetVersion)) return null;
   return { role: "approver", id: l.id, code, targetVersion: l.targetVersion, deviceLabel: target.deviceLabel };
 }
 
-/** دستگاهِ تازه: درخواستِ انتقالِ سابقه → کدِ کوتاهی که روی دستگاهِ قدیمی هم دیده می‌شود */
+/** دستگاه تازه: درخواست انتقال سابقه → کد کوتاهی که روی دستگاه قدیمی هم دیده می‌شود */
 export async function requestHistoryLink(): Promise<void> {
   if (state.status !== "ready") return;
   await api("/api/e2ee/link", { method: "POST", body: JSON.stringify({ targetVersion: state.identity.version }) });
@@ -670,7 +670,7 @@ export async function cancelHistoryLink(id: string): Promise<void> {
   await refreshIdentity();
 }
 
-/** دستگاهِ قدیمی، پس از تطبیقِ کد: سابقه برای کلیدِ دستگاهِ تازه بسته‌بندی می‌شود */
+/** دستگاه قدیمی، پس از تطبیق کد: سابقه برای کلید دستگاه تازه بسته‌بندی می‌شود */
 export async function approveHistoryLink(link: Extract<LinkState, { role: "approver" }>, onProgress?: (n: number) => void): Promise<number> {
   if (state.status !== "ready") throw new E2EEApiError("رمزگذاری آماده نیست", 409);
   const { identity } = state;
@@ -686,7 +686,7 @@ export async function approveHistoryLink(link: Extract<LinkState, { role: "appro
 
 // ───────────────────────── دستگاه‌ها ─────────────────────────
 
-/** حذفِ کلیدهای این حساب از همین مرورگر (کلیدِ این دستگاه روی سرور هم بازنشسته می‌شود) */
+/** حذف کلیدهای این حساب از همین مرورگر (کلید این دستگاه روی سرور هم بازنشسته می‌شود) */
 export async function forgetThisDevice(userId: string): Promise<void> {
   if (state.status === "ready" && state.identity.kind === "DEVICE") {
     await api(`/api/e2ee/keys/device?version=${state.identity.version}`, { method: "DELETE" }).catch(() => {});
@@ -695,7 +695,7 @@ export async function forgetThisDevice(userId: string): Promise<void> {
   await refreshIdentity();
 }
 
-/** بیرون کردنِ یک دستگاهِ دیگر (پیام‌های بعدی دیگر برایش بسته‌بندی نمی‌شوند) */
+/** بیرون کردن یک دستگاه دیگر (پیام‌های بعدی دیگر برایش بسته‌بندی نمی‌شوند) */
 export async function removeDevice(version: number): Promise<void> {
   await api(`/api/e2ee/keys/device?version=${version}`, { method: "DELETE" });
   await refreshIdentity();
@@ -711,13 +711,13 @@ export type WireMessage = ChatMessage;
 export type OpenedMessage =
   | { kind: "text"; text: string; frankingKey: string; committed: boolean }
   | { kind: "legacy"; text: string }
-  /** برای هیچ‌کدام از کلیدهای این دستگاه رمز نشده (کلیدِ قبلیِ حساب، یا دستگاهِ دیگر) */
+  /** برای هیچ‌کدام از کلیدهای این دستگاه رمز نشده (کلید قبلی حساب، یا دستگاه دیگر) */
   | { kind: "old-key" }
   | { kind: "failed" };
 
 /**
- * کلیدهای دو طرفِ یک گفت‌وگو. ردیف‌های خودِ کاربر طوری مرتب می‌شوند که کلیدِ ارسالِ
- * همین دستگاه اولین ردیفِ جاری باشد (سازگاری با چکِ «کلیدِ من هنوز همین است» در MentorChat).
+ * کلیدهای دو طرف یک گفت‌وگو. ردیف‌های خود کاربر طوری مرتب می‌شوند که کلید ارسال
+ * همین دستگاه اولین ردیف جاری باشد (سازگاری با چک «کلید من هنوز همین است» در MentorChat).
  */
 export async function fetchConversationKeys(mentorshipId: string): Promise<ConversationKeys> {
   const k = await api<ConversationKeys>(`/api/mentorships/${mentorshipId}/messages/keys`);
@@ -729,14 +729,14 @@ export async function fetchConversationKeys(mentorshipId: string): Promise<Conve
   return k;
 }
 
-/** کلیدِ ارسالِ این دستگاه هنوز در فهرستِ کلیدهای فعالِ سرور هست؟ */
+/** کلید ارسال این دستگاه هنوز در فهرست کلیدهای فعال سرور هست؟ */
 export function sendKeyStillActive(identity: Identity, k: ConversationKeys): boolean {
   return (k.keys[identity.userId] || []).some((r) => r.current && r.version === identity.version && r.publicKey === identity.publicKey);
 }
 
 /**
- * رمز/رمزگشاییِ یک گفت‌وگو. پیامِ تازه: scheme 2 برای *همه‌ی* کلیدهای فعالِ دو طرف.
- * خواندن: scheme 2 با هر کلیدی از ring که بسته‌بندی دارد؛ scheme 1 با کلیدِ همان نسخه.
+ * رمز/رمزگشایی یک گفت‌وگو. پیام تازه: scheme 2 برای *همه‌ی* کلیدهای فعال دو طرف.
+ * خواندن: scheme 2 با هر کلیدی از ring که بسته‌بندی دارد؛ scheme 1 با کلید همان نسخه.
  */
 export class ConversationCipher {
   private cache = new Map<string, Promise<ChatKeys>>();
@@ -778,7 +778,7 @@ export class ConversationCipher {
     return this.encryptAs(this.me.userId, text, clientId);
   }
 
-  /** senderId ≠ من فقط برای بازرمزگذاریِ پیامِ قدیمیِ طرفِ مقابل (بسته‌بندی‌ها را کلیدِ من می‌سازد) */
+  /** senderId ≠ من فقط برای بازرمزگذاری پیام قدیمی طرف مقابل (بسته‌بندی‌ها را کلید من می‌سازد) */
   private async encryptAs(senderId: string, text: string, clientId: string) {
     if (!this.peerCurrent()) throw new E2EEApiError("طرف مقابل هنوز کلید رمزگذاری ندارد", 409, "PEER_NO_KEY");
     const from: OwnKey = { ref: { u: this.me.userId, k: this.me.version }, privateKey: this.me.privateKey };
@@ -818,7 +818,7 @@ export class ConversationCipher {
         if (!d) return { kind: "old-key" };
         return { kind: "text", text: d.text, frankingKey: d.frankingKey, committed: d.committed };
       }
-      // scheme 1: کلیدِ جفتیِ نسخه‌دار
+      // scheme 1: کلید جفتی نسخه‌دار
       const fromMentor = m.senderId === this.k.mentorId;
       const mentorV = fromMentor ? enc.senderKeyVersion : enc.recipientKeyVersion;
       const studentV = fromMentor ? enc.recipientKeyVersion : enc.senderKeyVersion;
@@ -839,7 +839,7 @@ export class ConversationCipher {
     }
   }
 
-  /** بسته‌ی بازرمزگذاریِ پیام‌های قدیمیِ متن‌ساده (هر دو طرف باید کلید داشته باشند) */
+  /** بسته‌ی بازرمزگذاری پیام‌های قدیمی متن‌ساده (هر دو طرف باید کلید داشته باشند) */
   async reencryptLegacy(ms: WireMessage[]): Promise<(EncryptedMessageV2 & { id: string; frankingKey: string })[]> {
     if (!this.peerCurrent()) return [];
     const out: (EncryptedMessageV2 & { id: string; frankingKey: string })[] = [];
@@ -851,7 +851,7 @@ export class ConversationCipher {
     return out;
   }
 
-  /** کدِ امنیتی روی همه‌ی کلیدهای فعالِ دو طرف (هر دستگاهِ جعلی کد را عوض می‌کند) */
+  /** کد امنیتی روی همه‌ی کلیدهای فعال دو طرف (هر دستگاه جعلی کد را عوض می‌کند) */
   async safetyCode(): Promise<string | null> {
     const peer = this.current(this.peerId);
     const mine = this.current(this.me.userId);
@@ -864,9 +864,9 @@ export class ConversationCipher {
   }
 
   /**
-   * TOFU روی مجموعه‌ی کلیدهای فعالِ طرفِ مقابل: بارِ اول به خاطر سپرده می‌شود. فقط
-   * *کلیدِ تازه‌ای* که قبلا دیده نشده (دستگاهِ تازه، یا کلیدِ تازه پس از بازیابیِ رمز)
-   * true می‌دهد؛ کم شدنِ کلید (خروجِ یک دستگاه) بی‌صدا ثبت می‌شود.
+   * TOFU روی مجموعه‌ی کلیدهای فعال طرف مقابل: بار اول به خاطر سپرده می‌شود. فقط
+   * *کلید تازه‌ای* که قبلا دیده نشده (دستگاه تازه، یا کلید تازه پس از بازیابی رمز)
+   * true می‌دهد؛ کم شدن کلید (خروج یک دستگاه) بی‌صدا ثبت می‌شود.
    */
   async peerKeyChanged(): Promise<boolean> {
     const prints = await this.peerPrints();
@@ -891,7 +891,7 @@ export class ConversationCipher {
   }
 }
 
-/** رمزکننده‌ی «ارسال گروهی» برای یک شاگرد، با فهرستِ کلیدهای فعالِ من و او از GET /api/mentor/broadcast */
+/** رمزکننده‌ی «ارسال گروهی» برای یک شاگرد، با فهرست کلیدهای فعال من و او از GET /api/mentor/broadcast */
 export function broadcastCipher(
   identity: Identity,
   mentorshipId: string,

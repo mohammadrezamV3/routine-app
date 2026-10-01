@@ -6,7 +6,7 @@ import { clampText } from "@/lib/validate";
 import { recomputeMentorRating } from "@/lib/mentorServer";
 
 // PATCH /api/admin/mentors/reviews/:id  بدنه { status: VISIBLE|HIDDEN, reason? }
-// پنهان‌کردن دلیل لازم داره. بعد از هر تغییر خلاصه‌ی امتیازِ منتور بازمحاسبه می‌شه.
+// پنهان‌کردن دلیل لازم داره. بعد از هر تغییر خلاصه‌ی امتیاز منتور بازمحاسبه می‌شه.
 export async function PATCH(req: NextRequest, { params }: { params: { id: string } }) {
   const g = await requireAdmin("mentors");
   if (!g.ok) return g.response;
@@ -15,11 +15,11 @@ export async function PATCH(req: NextRequest, { params }: { params: { id: string
   const status = body?.status === "VISIBLE" || body?.status === "HIDDEN" ? (body.status as "VISIBLE" | "HIDDEN") : null;
   if (!status) return NextResponse.json({ error: "وضعیت نامعتبر است" }, { status: 400 });
   const reason = typeof body.reason === "string" ? clampText(body.reason.trim(), 500) : "";
-  if (status === "HIDDEN" && !reason) return NextResponse.json({ error: "برای پنهان‌کردن، نوشتنِ دلیل الزامیه" }, { status: 400 });
+  if (status === "HIDDEN" && !reason) return NextResponse.json({ error: "برای پنهان‌کردن، نوشتن دلیل الزامیه" }, { status: 400 });
 
   const review = await prisma.mentorReview.findUnique({ where: { id: params.id }, select: { id: true, mentorId: true, status: true } });
   if (!review) return NextResponse.json({ error: "نظر پیدا نشد" }, { status: 404 });
-  // قوانینِ «کی روی کی»: نه روی خودش (تضاد منافع)، نه روی Owner، روی ادمینِ دیگه فقط با admins.manage
+  // قوانین «کی روی کی»: نه روی خودش (تضاد منافع)، نه روی Owner، روی ادمین دیگه فقط با admins.manage
   try {
     await loadTarget(g, review.mentorId, { destructive: true });
   } catch (e) {

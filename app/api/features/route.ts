@@ -5,7 +5,7 @@ import { resolveFeaturesFor } from "@/lib/featureFlagsServer";
 
 export const dynamic = "force-dynamic";
 
-// GET — کدوم قابلیت‌ها برای کاربرِ فعلی روشنن (فقط برای مخفی‌کردنِ UI)
+// GET — کدوم قابلیت‌ها برای کاربر فعلی روشنن (فقط برای مخفی‌کردن UI)
 export async function GET() {
   const session = await getServerSession(authOptions);
   const features = await resolveFeaturesFor((session?.user as any)?.id);

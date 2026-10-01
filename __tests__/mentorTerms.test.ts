@@ -27,15 +27,15 @@ afterAll(async () => {
 
 const PROFILE = { headline: "مربی", bio: "بیو", categories: ["FITNESS"], published: true };
 
-/** منتورِ قابلِ درخواست: منتشرشده + هویتِ تاییدشده (احرازِ هویت برای کشف/درخواست اجباری است) */
+/** منتور قابل درخواست: منتشرشده + هویت تاییدشده (احراز هویت برای کشف/درخواست اجباری است) */
 async function verifiedMentor(): Promise<string> {
   const id = await makeMentor({}, PROFILE);
   await prisma.mentorProfile.update({ where: { userId: id }, data: { identityStatus: "VERIFIED" } });
   return id;
 }
 
-describe("decideMentorTerms (منطقِ خالص)", () => {
-  it("فقط رشته‌ی دقیقِ نسخه‌ی جاری پذیرش است؛ true یا نسخه‌ی کهنه نه", () => {
+describe("decideMentorTerms (منطق خالص)", () => {
+  it("فقط رشته‌ی دقیق نسخه‌ی جاری پذیرش است؛ true یا نسخه‌ی کهنه نه", () => {
     expect(decideMentorTerms("mentor", null, MENTOR_TERMS_VERSION)).toEqual({ ok: true, record: true });
     expect(decideMentorTerms("mentor", MENTOR_TERMS_VERSION, MENTOR_TERMS_VERSION)).toEqual({ ok: true, record: false });
     expect(decideMentorTerms("mentor", MENTOR_TERMS_VERSION, undefined)).toEqual({ ok: true, record: false });
@@ -48,8 +48,8 @@ describe("decideMentorTerms (منطقِ خالص)", () => {
   });
 });
 
-describe("PUT /api/mentors/me — پذیرشِ شرایطِ منتوری", () => {
-  it("ساختِ پروفایل بدونِ پذیرش ۴۰۰ با code و هیچ پروفایلی ساخته نمی‌شود", async () => {
+describe("PUT /api/mentors/me — پذیرش شرایط منتوری", () => {
+  it("ساخت پروفایل بدون پذیرش ۴۰۰ با code و هیچ پروفایلی ساخته نمی‌شود", async () => {
     const u = await makeUser();
     as(u);
     for (const acceptMentorTerms of [undefined, true, "yes", "2000-01-01"]) {
@@ -62,7 +62,7 @@ describe("PUT /api/mentors/me — پذیرشِ شرایطِ منتوری", () =>
     expect(await prisma.mentorProfile.count({ where: { userId: u } })).toBe(0);
   });
 
-  it("با پذیرش ساخته می‌شود و زمان و نسخه ثبت و در GET برگردانده می‌شود؛ ویرایشِ بعدی بدونِ ارسالِ دوباره آزاد است", async () => {
+  it("با پذیرش ساخته می‌شود و زمان و نسخه ثبت و در GET برگردانده می‌شود؛ ویرایش بعدی بدون ارسال دوباره آزاد است", async () => {
     const u = await makeUser();
     as(u);
     const before = Date.now();
@@ -78,33 +78,33 @@ describe("PUT /api/mentors/me — پذیرشِ شرایطِ منتوری", () =>
     expect((await putMe(req("PUT", "/api/mentors/me", { headline: "جدید" }))).status).toBe(200);
     const again = await prisma.mentorProfile.findUnique({ where: { userId: u } });
     expect(again!.headline).toBe("جدید");
-    expect(again!.acceptedMentorTermsAt!.getTime()).toBe(firstAt); // پذیرشِ دوباره زمان را جابه‌جا نمی‌کند
+    expect(again!.acceptedMentorTermsAt!.getTime()).toBe(firstAt); // پذیرش دوباره زمان را جابه‌جا نمی‌کند
   });
 
-  it("نسخه‌ی کهنه (یا پروفایلِ پیش از این قابلیت): ویرایش ۴۰۰، اما کنار کشیدن (عدمِ انتشار / توقفِ پذیرش) آزاد است", async () => {
+  it("نسخه‌ی کهنه (یا پروفایل پیش از این قابلیت): ویرایش ۴۰۰، اما کنار کشیدن (عدم انتشار / توقف پذیرش) آزاد است", async () => {
     const m = await makeMentor({}, PROFILE);
     await prisma.mentorProfile.update({ where: { userId: m }, data: { mentorTermsVersion: null, acceptedMentorTermsAt: null } });
     as(m);
     const edit = await putMe(req("PUT", "/api/mentors/me", { bio: "بیوی تازه" }));
     expect(edit.status).toBe(400);
     expect((await j(edit)).code).toBe(MENTOR_TERMS_ERROR_CODE);
-    // «کنار کشیدن» با مقدارِ true (انتشارِ دوباره) معاف نیست
+    // «کنار کشیدن» با مقدار true (انتشار دوباره) معاف نیست
     expect((await putMe(req("PUT", "/api/mentors/me", { published: true }))).status).toBe(400);
     // کنار کشیدن آزاد است
     expect((await putMe(req("PUT", "/api/mentors/me", { published: false, acceptingStudents: false }))).status).toBe(200);
     const p = await prisma.mentorProfile.findUnique({ where: { userId: m } });
     expect(p!.published).toBe(false);
     expect(p!.mentorTermsVersion).toBeNull();
-    // کنار کشیدن + تغییرِ دیگر معاف نیست
+    // کنار کشیدن + تغییر دیگر معاف نیست
     expect((await putMe(req("PUT", "/api/mentors/me", { published: false, bio: "x" }))).status).toBe(400);
-    // پذیرشِ دوباره
+    // پذیرش دوباره
     expect((await putMe(req("PUT", "/api/mentors/me", { published: true, acceptMentorTerms: MENTOR_TERMS_VERSION }))).status).toBe(200);
     expect((await prisma.mentorProfile.findUnique({ where: { userId: m } }))!.mentorTermsVersion).toBe(MENTOR_TERMS_VERSION);
   });
 });
 
-describe("POST /api/mentorships — پذیرشِ شرایط توسطِ شاگرد", () => {
-  it("اولین درخواست بدونِ پذیرش ۴۰۰ و هیچ رابطه‌ای ساخته نمی‌شود؛ با پذیرش ثبت روی کاربر و snapshot روی رابطه", async () => {
+describe("POST /api/mentorships — پذیرش شرایط توسط شاگرد", () => {
+  it("اولین درخواست بدون پذیرش ۴۰۰ و هیچ رابطه‌ای ساخته نمی‌شود؛ با پذیرش ثبت روی کاربر و snapshot روی رابطه", async () => {
     const mentor = await verifiedMentor();
     const s = await makeUser();
     as(s);
@@ -125,7 +125,7 @@ describe("POST /api/mentorships — پذیرشِ شرایط توسطِ شاگر�
     const rel = await prisma.mentorship.findFirst({ where: { studentId: s, mentorId: mentor } });
     expect(rel!.studentTermsVersion).toBe(MENTOR_TERMS_VERSION);
 
-    // درخواستِ بعدی (منتورِ دیگر) بدونِ ارسالِ دوباره
+    // درخواست بعدی (منتور دیگر) بدون ارسال دوباره
     const mentor2 = await verifiedMentor();
     as(s);
     const second = await postMentorship(req("POST", "/api/mentorships", { mentorId: mentor2 }));
@@ -133,7 +133,7 @@ describe("POST /api/mentorships — پذیرشِ شرایط توسطِ شاگر�
     expect((await prisma.mentorship.findFirst({ where: { studentId: s, mentorId: mentor2 } }))!.studentTermsVersion).toBe(MENTOR_TERMS_VERSION);
   });
 
-  it("درخواستِ دوباره روی ردیفِ پایان‌یافته هم نسخه را snapshot و پذیرشِ کهنه را دوباره می‌خواهد", async () => {
+  it("درخواست دوباره روی ردیف پایان‌یافته هم نسخه را snapshot و پذیرش کهنه را دوباره می‌خواهد", async () => {
     const mentor = await verifiedMentor();
     const s = await makeUser();
     as(s);
@@ -150,7 +150,7 @@ describe("POST /api/mentorships — پذیرشِ شرایط توسطِ شاگر�
     expect((await prisma.user.findUnique({ where: { id: s } }))!.mentorStudentTermsVersion).toBe(MENTOR_TERMS_VERSION);
   });
 
-  it("ترتیبِ خطاها: منتورِ ناموجود همچنان ۴۰۴ است (نه خطای شرایط)", async () => {
+  it("ترتیب خطاها: منتور ناموجود همچنان ۴۰۴ است (نه خطای شرایط)", async () => {
     const s = await makeUser();
     as(s);
     expect((await postMentorship(req("POST", "/api/mentorships", { mentorId: "nope" }))).status).toBe(404);
@@ -158,7 +158,7 @@ describe("POST /api/mentorships — پذیرشِ شرایط توسطِ شاگر�
 });
 
 describe("GET /api/mentor-terms", () => {
-  it("بدونِ نشست ۴۰۱؛ وضعیتِ هر دو نقش را برمی‌گرداند", async () => {
+  it("بدون نشست ۴۰۱؛ وضعیت هر دو نقش را برمی‌گرداند", async () => {
     as(null);
     expect((await getTermsStatus()).status).toBe(401);
     const u = await makeUser();

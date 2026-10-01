@@ -10,7 +10,7 @@ import { faNum } from "@/lib/jalali";
 
 type Ctx = { params: { studentId: string } };
 
-// GET /api/mentor/students/:studentId/notes → یادداشت‌های خصوصیِ منتور، تازه‌ترین اول
+// GET /api/mentor/students/:studentId/notes → یادداشت‌های خصوصی منتور، تازه‌ترین اول
 export async function GET(_req: Request, { params }: Ctx) {
   const g = await requireMentorsUser();
   if (!g.ok) return g.response;
@@ -32,7 +32,7 @@ export async function POST(req: Request, { params }: Ctx) {
   }
   const parsed = await readJsonBody(req, 16 * 1024);
   if (!parsed.ok) return NextResponse.json({ error: parsed.error }, { status: parsed.status });
-  // یادداشت رمزگذاریِ سرتاسری دارد (فقط برای خودِ منتور؛ lib/e2ee/notes.ts) — متنِ ساده رد می‌شود
+  // یادداشت رمزگذاری سرتاسری دارد (فقط برای خود منتور؛ lib/e2ee/notes.ts) — متن ساده رد می‌شود
   const body = parsed.body?.body;
   if (!isSealedNote(body)) return badRequest("یادداشت باید روی دستگاه رمزگذاری شود");
 

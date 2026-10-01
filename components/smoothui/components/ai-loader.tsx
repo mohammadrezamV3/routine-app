@@ -4,9 +4,9 @@ import { cn } from "@/lib/utils";
 import { motion, useAnimationFrame, useReducedMotion } from "framer-motion";
 import { useRef, useState } from "react";
 
-// منبع: SmoothUI (ai-loader). تنها تغییرِ عمدی، عوض‌شدنِ `motion/react` با
-// `framer-motion` است (همان کتابخانه، نامِ بسته‌ی نصب‌شده در این پروژه) و
-// نگاشتِ کلاس‌های رنگِ shadcn به توکن‌های همین پروژه (`dash-*`).
+// منبع: SmoothUI (ai-loader). تنها تغییر عمدی، عوض‌شدن `motion/react` با
+// `framer-motion` است (همان کتابخانه، نام بسته‌ی نصب‌شده در این پروژه) و
+// نگاشت کلاس‌های رنگ shadcn به توکن‌های همین پروژه (`dash-*`).
 
 /**
  * One cycle length for every variant.

@@ -9,15 +9,15 @@ import { randomId } from "@/lib/e2ee/encoding";
 import { activeKeysFor, checkWrapTargets, parseEncryptedMessage } from "@/lib/e2ee/server";
 import { encryptedMessageData, notifyNewMessage } from "@/lib/mentorChatServer";
 
-// «ارسال گروهی»: منتور یک متن را برای چند شاگردِ فعال می‌فرستد. رمزگذاریِ سرتاسری
-// می‌ماند: کلاینتِ منتور همان متن را *جداگانه* برای هر گفت‌وگو (CEK، IV و کلیدِ
-// فرانکینگِ تازه، بسته‌بندی برای همه‌ی دستگاه‌های منتور و همان شاگرد) رمز می‌کند و
-// سرور فقط N پیامِ رمزشده‌ی مستقل می‌گیرد.
-// هر پیامِ حاصل مثلِ پیامِ عادی قابلِ گزارش است. docs/mentor-e2ee.md
+// «ارسال گروهی»: منتور یک متن را برای چند شاگرد فعال می‌فرستد. رمزگذاری سرتاسری
+// می‌ماند: کلاینت منتور همان متن را *جداگانه* برای هر گفت‌وگو (CEK، IV و کلید
+// فرانکینگ تازه، بسته‌بندی برای همه‌ی دستگاه‌های منتور و همان شاگرد) رمز می‌کند و
+// سرور فقط N پیام رمزشده‌ی مستقل می‌گیرد.
+// هر پیام حاصل مثل پیام عادی قابل گزارش است. docs/mentor-e2ee.md
 
 const MAX_RECIPIENTS = 200;
 
-// GET /api/mentor/broadcast → گیرنده‌های ممکن (رابطه‌های ACTIVEِ من به‌عنوانِ منتور) با کلیدِ جاری‌شان
+// GET /api/mentor/broadcast → گیرنده‌های ممکن (رابطه‌های ACTIVE من به‌عنوان منتور) با کلید جاری‌شان
 export async function GET() {
   const g = await requireMentorTools({ write: true });
   if (!g.ok) return g.response;
@@ -27,7 +27,7 @@ export async function GET() {
     orderBy: { startedAt: "asc" },
     take: 500,
   });
-  // همه‌ی کلیدهای فعالِ هر شاگرد و خودِ منتور (پیام برای همه‌ی دستگاه‌ها بسته‌بندی می‌شود)
+  // همه‌ی کلیدهای فعال هر شاگرد و خود منتور (پیام برای همه‌ی دستگاه‌ها بسته‌بندی می‌شود)
   const active = await activeKeysFor([g.userId, ...rels.map((r) => r.studentId)]);
   const labels = await prisma.mentorStudentLabel.findMany({ where: { profileId: g.profile.id }, select: { id: true, name: true }, orderBy: { createdAt: "asc" } });
   return NextResponse.json({
@@ -79,7 +79,7 @@ export async function POST(req: Request) {
     const enc = parseEncryptedMessage(rest);
     if (!enc.ok) { failed.push({ mentorshipId, code: "INVALID" }); continue; }
 
-    // ضدِ IDOR: فقط رابطه‌ی ACTIVEی که خودم منتورش هستم
+    // ضد IDOR: فقط رابطه‌ی ACTIVEی که خودم منتورش هستم
     const m = await prisma.mentorship.findFirst({
       where: { id: mentorshipId, mentorId: me, status: "ACTIVE", student: { isBlocked: false, deletedAt: null } },
       select: { id: true, mentorId: true, studentId: true },

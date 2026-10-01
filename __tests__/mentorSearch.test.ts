@@ -41,7 +41,7 @@ function hits(q: string): string[] {
 }
 
 describe("normalizeFa", () => {
-  it("یکسان‌سازیِ حروفِ عربی، تطویل، اعراب و نیم‌فاصله", () => {
+  it("یکسان‌سازی حروف عربی، تطویل، اعراب و نیم‌فاصله", () => {
     expect(normalizeFa("كنكور")).toBe("کنکور");
     expect(normalizeFa("برنامه‌ريزي")).toBe("برنامه ریزی");
     expect(normalizeFa("کـــنکور")).toBe("کنکور");
@@ -50,29 +50,29 @@ describe("normalizeFa", () => {
     expect(normalizeFa("آزمون  سراسری")).toBe("ازمون سراسری");
     expect(normalizeFa("إستاد أحمد")).toBe("استاد احمد");
   });
-  it("ارقامِ فارسی/عربی → لاتین و علائم → فاصله", () => {
+  it("ارقام فارسی/عربی → لاتین و علائم → فاصله", () => {
     expect(normalizeFa("کنکور ۱۴۰۵")).toBe("کنکور 1405");
     expect(normalizeFa("٢٤ ساعت")).toBe("24 ساعت");
     expect(normalizeFa("Konkur!!، تجربی")).toBe("konkur تجربی");
   });
-  it("توکن‌ها بدونِ کلماتِ ربطی", () => {
+  it("توکن‌ها بدون کلمات ربطی", () => {
     expect(tokenize("برنامه برای کنکور و امتحان")).toEqual(["برنامه", "کنکور", "امتحان"]);
   });
 });
 
 describe("فاصله و شباهت", () => {
-  it("دامرو-لونشتاین با جابه‌جایی و حروفِ هم‌صدا", () => {
+  it("دامرو-لونشتاین با جابه‌جایی و حروف هم‌صدا", () => {
     expect(damerauLevenshtein("کنکور", "کنکور")).toBe(0);
     expect(damerauLevenshtein("کنکر", "کنکور")).toBe(1);
     expect(damerauLevenshtein("کنوکر", "کنکور")).toBe(1); // جابه‌جایی
     expect(damerauLevenshtein("کنگور", "کنکور")).toBe(0.5); // ک/گ هم‌صدا
-    expect(damerauLevenshtein("abc", "xyz", 1)).toBe(2); // قطعِ زودهنگام
+    expect(damerauLevenshtein("abc", "xyz", 1)).toBe(2); // قطع زودهنگام
   });
-  it("شباهتِ سه‌حرفی", () => {
+  it("شباهت سه‌حرفی", () => {
     expect(trigramSimilarity("بدنسازی", "بدنسازی")).toBe(1);
     expect(trigramSimilarity("بدنسازی", "تغذیه")).toBe(0);
   });
-  it("tokenSimilarity: برابر > پیشوند > غلطِ املایی، و کلمه‌ی کوتاه سخت‌گیرانه", () => {
+  it("tokenSimilarity: برابر > پیشوند > غلط املایی، و کلمه‌ی کوتاه سخت‌گیرانه", () => {
     expect(tokenSimilarity("کنکور", "کنکور")).toBe(1);
     expect(tokenSimilarity("بدنس", "بدنسازی")).toBeGreaterThan(0.85);
     expect(tokenSimilarity("کنکر", "کنکور")).toBeGreaterThan(0.6);
@@ -80,7 +80,7 @@ describe("فاصله و شباهت", () => {
     expect(tokenSimilarity("کنگور", "کنکور")).toBeGreaterThan(0.7);
     expect(tokenSimilarity("رژ", "رز")).toBe(0);
     expect(tokenSimilarity("کنکور", "تغذیه")).toBe(0);
-    // دو خطا با حرفِ اولِ متفاوت دیگر «غلطِ املایی» حساب نمی‌شود («کنکر» منتورِ «منتوری» را نمی‌آورد)
+    // دو خطا با حرف اول متفاوت دیگر «غلط املایی» حساب نمی‌شود («کنکر» منتور «منتوری» را نمی‌آورد)
     expect(tokenSimilarity("کنکوری", "منتوری")).toBe(0);
   });
 });
@@ -90,10 +90,10 @@ describe("هم‌معنی‌ها", () => {
     const forms = expandSynonyms("کنکور").map((a) => a.tokens.join(" "));
     expect(forms).toContain("ازمون سراسری");
     expect(expandSynonyms("konkur").map((a) => a.tokens.join(" "))).toContain("کنکور");
-    // غلطِ املایی هم گروه را پیدا می‌کند
+    // غلط املایی هم گروه را پیدا می‌کند
     expect(expandSynonyms("کنکر").map((a) => a.tokens.join(" "))).toContain("کنکور");
   });
-  it("عبارتِ دوکلمه‌ایِ هم‌معنی یک ترم است", () => {
+  it("عبارت دوکلمه‌ای هم‌معنی یک ترم است", () => {
     expect(parseQuery("آزمون سراسری").terms).toHaveLength(1);
   });
 });
@@ -102,12 +102,12 @@ describe("relevance روی منتورهای نمونه", () => {
   it.each([
     ["کنکور"], ["کنکر"], ["کنکورر"], ["کنگور"], ["كنكور"], ["konkur"], ["آزمون سراسری"], ["برنامه‌ریزی کنکور"],
     ["برنامه ريزي كنكور"], ["برنامهریزی کنکور"],
-  ])("«%s» → منتورِ کنکور اول است", (q) => {
+  ])("«%s» → منتور کنکور اول است", (q) => {
     const h = hits(q);
     expect(h[0]).toBe("konkur");
     expect(h).not.toContain("fitness");
   });
-  it.each([["بدنسازی"], ["بدن سازی"], ["بدنصازی"], ["فیتنس"], ["باشگاه"], ["gym"], ["بدنس"]])("«%s» → فقط مربیِ بدنسازی", (q) => {
+  it.each([["بدنسازی"], ["بدن سازی"], ["بدنصازی"], ["فیتنس"], ["باشگاه"], ["gym"], ["بدنس"]])("«%s» → فقط مربی بدنسازی", (q) => {
     expect(hits(q)).toEqual(["fitness"]);
   });
   it("تغذیه ↔ رژیم/کالری (از روی دسته‌ی NUTRITION)", () => {
@@ -117,33 +117,33 @@ describe("relevance روی منتورهای نمونه", () => {
   it("ریاضی ↔ حسابان/هندسه", () => {
     expect(hits("حسابان")[0]).toBe("math");
     expect(hits("ریاضی")).toContain("math");
-    // هم‌معنی متقارن است: منتورِ کنکوری که «ریاضی» دارد هم می‌آید، ولی بعد از متخصصِ هندسه
+    // هم‌معنی متقارن است: منتور کنکوری که «ریاضی» دارد هم می‌آید، ولی بعد از متخصص هندسه
     expect(hits("هندسه")[0]).toBe("math");
   });
-  it("نام با غلطِ املایی", () => {
+  it("نام با غلط املایی", () => {
     expect(hits("نگار کریمی")).toEqual(["konkur"]);
     expect(hits("نگار کرمی")).toEqual(["konkur"]);
     expect(hits("رضائی")).toEqual(["fitness"]);
   });
-  it("عبارتِ بی‌ربط هیچ منتوری را نمی‌آورد", () => {
+  it("عبارت بی‌ربط هیچ منتوری را نمی‌آورد", () => {
     expect(hits("آشپزی")).toEqual([]);
     expect(hits("گیتار")).toEqual([]);
     expect(hits("xyzxyz")).toEqual([]);
   });
-  it("عبارتِ خالی فیلترِ متنی ندارد", () => {
+  it("عبارت خالی فیلتر متنی ندارد", () => {
     expect(relevance(parseQuery("   "), konkur)).toBe(1);
   });
 });
 
 describe("blendScore", () => {
   it("مرتبط‌بودن غالب است", () => {
-    // منتورِ دقیقاً مرتبط با شایستگیِ صفر جلوی منتورِ کم‌ربط با شایستگیِ کامل
+    // منتور دقیقا مرتبط با شایستگی صفر جلوی منتور کم‌ربط با شایستگی کامل
     expect(blendScore(1, 0)).toBeGreaterThan(blendScore(0.5, 100));
     expect(blendScore(0.9, 80)).toBeGreaterThan(blendScore(0.9, 20));
   });
 });
 
-describe("filtersFromParams — نام‌های پارامترِ نسخه‌ی ردیف‌های افقی", () => {
+describe("filtersFromParams — نام‌های پارامتر نسخه‌ی ردیف‌های افقی", () => {
   const isCat = (v: string) => v === "FITNESS" || v === "ROUTINE" || v === "NUTRITION";
   it("accepting=1 همان open=1 است و category همان cat", () => {
     const f = filtersFromParams(new URLSearchParams("accepting=1&category=FITNESS"), isCat);

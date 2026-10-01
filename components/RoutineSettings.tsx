@@ -6,8 +6,8 @@ import { DEFAULT_SLEEP, DEFAULT_WAKE, getWakeSleepTimes, WakeSleepTimes } from "
 import { WakeSleepSetup } from "@/components/WakeSleepSetup";
 import { AccountBlock, AccountOption } from "@/components/AccountUI";
 
-// تنظیمات بخش «روتین» — مثلِ ترید، یک بخش با یک قاب؛ بالای هر گزینه فقط
-// اسمِ خودش (نه یک کارتِ مستقل برای هرکدام).
+// تنظیمات بخش «روتین» — مثل ترید، یک بخش با یک قاب؛ بالای هر گزینه فقط
+// اسم خودش (نه یک کارت مستقل برای هرکدام).
 export function RoutineSettings() {
   const [wakeSleep, setWakeSleep] = useState<WakeSleepTimes | null>(null);
   const [editing, setEditing] = useState(false);

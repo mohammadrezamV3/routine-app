@@ -8,17 +8,17 @@ import { computeAvailability, dayIso, isAway, type AvailabilityState, type Intak
 import { WELCOME_VISIBLE_DAYS, availabilityToday, readIntakeAnswers } from "@/lib/mentorManageServer";
 import { loadReservedSeats } from "@/lib/mentorWaitlistServer";
 
-// کمک‌تابع‌های مشترکِ سمت سرورِ اکوسیستم منتور — شکلِ پاسخ‌های قرارداد
-// (docs/mentors.md) فقط همین‌جا ساخته می‌شه تا روت‌ها و پنلِ ادمین هر کدوم
-// نسخه‌ی خودشون رو نسازن و یکی‌شون بی‌صدا فیلدِ حساسی (ایمیل/شماره) لو نده.
+// کمک‌تابع‌های مشترک سمت سرور اکوسیستم منتور — شکل پاسخ‌های قرارداد
+// (docs/mentors.md) فقط همین‌جا ساخته می‌شه تا روت‌ها و پنل ادمین هر کدوم
+// نسخه‌ی خودشون رو نسازن و یکی‌شون بی‌صدا فیلد حساسی (ایمیل/شماره) لو نده.
 
-// ───────────────────────── کاربرِ عمومی ─────────────────────────
+// ───────────────────────── کاربر عمومی ─────────────────────────
 
-/** تنها فیلدهای کاربر که به طرفِ مقابل نشون داده می‌شه — هرگز ایمیل/شماره */
+/** تنها فیلدهای کاربر که به طرف مقابل نشون داده می‌شه — هرگز ایمیل/شماره */
 export const PUBLIC_USER_SELECT = { id: true, name: true, lastName: true, username: true, avatarUrl: true, goldenSince: true } as const;
-/** ورودیِ toPublicUser (ردیفِ prisma با PUBLIC_USER_SELECT) — goldenSince خام هرگز به کلاینت نمی‌رسه */
+/** ورودی toPublicUser (ردیف prisma با PUBLIC_USER_SELECT) — goldenSince خام هرگز به کلاینت نمی‌رسه */
 export type PublicUserRow = { id: string; name: string | null; lastName: string | null; username: string | null; avatarUrl: string | null; goldenSince?: Date | null };
-/** شکلِ خروجی: golden فقط یک بولینه (نامِ طلایی) */
+/** شکل خروجی: golden فقط یک بولینه (نام طلایی) */
 export type PublicUser = { id: string; name: string | null; lastName: string | null; username: string | null; avatarUrl: string | null; golden?: boolean };
 
 export function toPublicUser(u: PublicUserRow): PublicUser {
@@ -27,7 +27,7 @@ export function toPublicUser(u: PublicUserRow): PublicUser {
 
 // ───────────────────────── تاریخ ─────────────────────────
 
-/** YYYY-MM-DDِ یک ستونِ @db.Date (که Prisma به‌صورت نیمه‌شبِ UTC برمی‌گردونه) */
+/** YYYY-MM-DD یک ستون @db.Date (که Prisma به‌صورت نیمه‌شب UTC برمی‌گردونه) */
 export function isoDate(d: Date): string {
   return d.toISOString().slice(0, 10);
 }
@@ -50,8 +50,8 @@ export function datesBetween(fromIso: string, toIso: string): string[] {
 }
 
 /**
- * «امروز» در تایم‌زونِ خودِ کاربر — نه ساعتِ سرور. بدونِ این، شاگردِ تهرانی
- * بعد از نیمه‌شب (که هنوز روزِ قبل در UTCـه) نمی‌تونست اجرای امروزش رو ثبت کنه.
+ * «امروز» در تایم‌زون خود کاربر — نه ساعت سرور. بدون این، شاگرد تهرانی
+ * بعد از نیمه‌شب (که هنوز روز قبل در UTCـه) نمی‌تونست اجرای امروزش رو ثبت کنه.
  */
 export function dateIsoInTz(d: Date, tz: string | null | undefined): string {
   const fmt = (zone: string) => new Intl.DateTimeFormat("en-CA", { timeZone: zone, year: "numeric", month: "2-digit", day: "2-digit" }).format(d);
@@ -75,9 +75,9 @@ export async function todayIsoForUser(userId: string): Promise<string> {
   return todayIsoInTz(await userTimezone(userId));
 }
 
-// ───────────────────────── بلاکِ کاربر-به-کاربر ─────────────────────────
+// ───────────────────────── بلاک کاربر-به-کاربر ─────────────────────────
 
-/** آیا یکی از دو نفر اون یکی رو (از بخشِ دوستان) بلاک کرده؟ */
+/** آیا یکی از دو نفر اون یکی رو (از بخش دوستان) بلاک کرده؟ */
 export async function usersBlockEachOther(a: string, b: string): Promise<boolean> {
   const row = await prisma.userBlock.findFirst({
     where: { OR: [{ blockerId: a, blockedId: b }, { blockerId: b, blockedId: a }] },
@@ -96,12 +96,12 @@ export async function blockedUserIds(viewerId: string): Promise<string[]> {
   return rows.map((r) => (r.blockerId === viewerId ? r.blockedId : r.blockerId));
 }
 
-// ───────────────────────── پروفایلِ منتور ─────────────────────────
+// ───────────────────────── پروفایل منتور ─────────────────────────
 
 /**
- * شرطِ «قابلِ دیدن در کشف»: منتشرشده، معلق‌نشده، صاحبش مسدود/حذف نشده، و
- * هویتِ تاییدشده. احرازِ هویت برای هر منتور اجباریه (round 3): تا ادمین هویت
- * رو تایید نکنه، منتور نه در جستجو دیده می‌شه، نه درخواستِ شاگرد می‌گیره،
+ * شرط «قابل دیدن در کشف»: منتشرشده، معلق‌نشده، صاحبش مسدود/حذف نشده، و
+ * هویت تاییدشده. احراز هویت برای هر منتور اجباریه (round 3): تا ادمین هویت
+ * رو تایید نکنه، منتور نه در جستجو دیده می‌شه، نه درخواست شاگرد می‌گیره،
  * نه دعوت می‌فرسته/می‌پذیره (IDENTITY_VERIFIED_WHERE در روت‌های رابطه).
  */
 export const IDENTITY_VERIFIED_WHERE = { identityStatus: "VERIFIED" } as const satisfies Prisma.MentorProfileWhereInput;
@@ -127,7 +127,7 @@ export type MentorCard = {
   golden?: boolean;
   headline: string | null;
   categories: string[];
-  // فقط وقتی categories شاملِ ROUTINE باشه، وگرنه null
+  // فقط وقتی categories شامل ROUTINE باشه، وگرنه null
   routineRole: string | null;
   identityVerified: boolean;
   certifications: { category: string; verified: boolean }[];
@@ -136,11 +136,11 @@ export type MentorCard = {
   activeStudents: number;
   totalStudents: number;
   acceptingStudents: boolean;
-  // دسترس‌پذیری (lib/mentorAvailability.ts): پذیرش/ظرفیت/عدمِ حضور
+  // دسترس‌پذیری (lib/mentorAvailability.ts): پذیرش/ظرفیت/عدم حضور
   availability: AvailabilityState;
   awayUntil: string | null;
   responseTimeHours: number | null;
-  /** زمانِ ساختِ پروفایلِ منتوری (ISO) — «عضویت» روی کارتِ کشف */
+  /** زمان ساخت پروفایل منتوری (ISO) — «عضویت» روی کارت کشف */
   memberSince: string;
 };
 
@@ -148,11 +148,11 @@ export type MentorStats = {
   activeStudents: number;
   totalStudents: number;
   completedPrograms: number;
-  /** صندلی‌های رزروِ صفِ انتظار (lib/mentorWaitlistServer.ts) — فقط برای «پُر بودن»، نه رتبه‌بندی */
+  /** صندلی‌های رزرو صف انتظار (lib/mentorWaitlistServer.ts) — فقط برای «پر بودن»، نه رتبه‌بندی */
   reservedSeats?: number;
 };
 
-/** آمارِ شاگرد/برنامه برای چند منتور، با سه کوئریِ گروهی (نه به‌ازای هر منتور) */
+/** آمار شاگرد/برنامه برای چند منتور، با سه کوئری گروهی (نه به‌ازای هر منتور) */
 export async function loadMentorStats(mentorIds: string[]): Promise<Map<string, MentorStats>> {
   const out = new Map<string, MentorStats>();
   for (const id of mentorIds) out.set(id, { activeStudents: 0, totalStudents: 0, completedPrograms: 0 });
@@ -170,13 +170,13 @@ export async function loadMentorStats(mentorIds: string[]): Promise<Map<string, 
   return out;
 }
 
-/** نقشِ روتین برای نمایشِ عمومی — بدونِ دسته‌ی ROUTINE معنایی نداره */
+/** نقش روتین برای نمایش عمومی — بدون دسته‌ی ROUTINE معنایی نداره */
 export function publicRoutineRole(p: { categories: string[]; routineRole: string | null }): string | null {
   return p.categories.includes("ROUTINE") ? p.routineRole : null;
 }
 
 export function toMentorCard(p: CardProfile, stats: MentorStats | undefined): MentorCard {
-  // فقط مدرکِ دسته‌هایی که الان روی پروفایلن — مدرکِ دسته‌ی حذف‌شده نباید «تاییدشده» جلوه کنه
+  // فقط مدرک دسته‌هایی که الان روی پروفایلن — مدرک دسته‌ی حذف‌شده نباید «تاییدشده» جلوه کنه
   const certifications = p.categories.map((category) => ({
     category,
     verified: p.credentials.some((c) => c.category === category && c.status === "VERIFIED"),
@@ -201,7 +201,7 @@ export function toMentorCard(p: CardProfile, stats: MentorStats | undefined): Me
   };
 }
 
-/** occupiedSeats = شاگردِ فعال + صندلیِ رزروِ صفِ انتظار */
+/** occupiedSeats = شاگرد فعال + صندلی رزرو صف انتظار */
 function cardAvailability(p: CardProfile, occupiedSeats: number): Pick<MentorCard, "availability" | "awayUntil" | "responseTimeHours"> {
   const a = computeAvailability(p, occupiedSeats, availabilityToday());
   return { availability: a.state, awayUntil: a.awayUntil, responseTimeHours: p.responseTimeHours };
@@ -212,7 +212,7 @@ export async function buildMentorCards(profiles: CardProfile[]): Promise<MentorC
   return profiles.map((p) => toMentorCard(p, stats.get(p.userId)));
 }
 
-/** MentorSelf — پروفایلِ منتوریِ خودم با وضعیتِ احراز و متای مدارک (بدونِ بایتِ فایل) */
+/** MentorSelf — پروفایل منتوری خودم با وضعیت احراز و متای مدارک (بدون بایت فایل) */
 export async function loadMentorSelf(userId: string) {
   const p = await prisma.mentorProfile.findUnique({
     where: { userId },
@@ -243,7 +243,7 @@ export async function loadMentorSelf(userId: string) {
     ratingCount: p.ratingCount,
     credentials: p.credentials.filter((c) => p.categories.includes(c.category)),
     documents: p.documents,
-    // دسترس‌پذیری و تنظیماتِ شاگرد (GET/PUT /api/mentor/settings)
+    // دسترس‌پذیری و تنظیمات شاگرد (GET/PUT /api/mentor/settings)
     maxActiveStudents: p.maxActiveStudents,
     awayUntil: dayIso(p.awayUntil),
     awayMessage: p.awayMessage,
@@ -259,7 +259,7 @@ export async function loadMentorSelf(userId: string) {
 
 /**
  * بازمحاسبه‌ی خلاصه‌ی امتیاز از نظرهای VISIBLE — بعد از هر ساخت/ویرایش/حذف/
- * پنهان‌سازیِ نظر (هم روتِ کاربر، هم پنلِ ادمین). denormalized نگه داشته
+ * پنهان‌سازی نظر (هم روت کاربر، هم پنل ادمین). denormalized نگه داشته
  * می‌شه تا کشف و رتبه‌بندی برای هر منتور aggregate نزنن.
  */
 export async function recomputeMentorRating(mentorUserId: string): Promise<void> {
@@ -294,23 +294,23 @@ export type MentorshipRow = {
   counterpart: PublicUser;
   unread: number;
   activePrograms: number;
-  // فقط برای BLOCKED: خودِ بیننده بلاک کرده؟ (رفعِ مسدودی فقط برای همون)
+  // فقط برای BLOCKED: خود بیننده بلاک کرده؟ (رفع مسدودی فقط برای همون)
   blockedByMe: boolean;
-  // حوزه‌های مؤثرِ رابطه (برای تفکیکِ منتورها و نوعِ برنامه‌ی مجاز)
+  // حوزه‌های مؤثر رابطه (برای تفکیک منتورها و نوع برنامه‌ی مجاز)
   categories: string[];
-  // مدیریتِ رابطه (lib/mentorManageServer.ts)
+  // مدیریت رابطه (lib/mentorManageServer.ts)
   intakeAnswers: IntakeAnswer[];
   pausedAt: Date | null;
   pauseReason: string | null;
   endReason: string | null;
   endedBy: string | null;
-  // عدمِ حضورِ منتور (فقط تا روزِ بازگشت)
+  // عدم حضور منتور (فقط تا روز بازگشت)
   mentorAway: { until: string; message: string | null } | null;
-  // پیامِ خوش‌آمدِ منتور — فقط برای شاگردِ رابطه‌ی ACTIVE، تا WELCOME_VISIBLE_DAYS روز پس از شروع
+  // پیام خوش‌آمد منتور — فقط برای شاگرد رابطه‌ی ACTIVE، تا WELCOME_VISIBLE_DAYS روز پس از شروع
   welcomeMessage: string | null;
 };
 
-/** ردیف‌های لیستِ رابطه از دیدِ viewer — شمارشِ خوانده‌نشده/برنامه‌ی فعال با کوئریِ گروهی */
+/** ردیف‌های لیست رابطه از دید viewer — شمارش خوانده‌نشده/برنامه‌ی فعال با کوئری گروهی */
 export async function buildMentorshipRows(rows: MentorshipWithUsers[], viewerId: string): Promise<MentorshipRow[]> {
   const ids = rows.map((r) => r.id);
   const [unread, active] = ids.length
@@ -356,7 +356,7 @@ export async function buildMentorshipRows(rows: MentorshipWithUsers[], viewerId:
   }));
 }
 
-/** مقادیرِ پیش‌فرضِ حریم خصوصی — درخواستِ دوباره بعد از رد/پایان به همین برمی‌گرده */
+/** مقادیر پیش‌فرض حریم خصوصی — درخواست دوباره بعد از رد/پایان به همین برمی‌گرده */
 export const DEFAULT_PRIVACY = {
   shareAllPrograms: false,
   sharedPrograms: [] as string[],
@@ -369,14 +369,14 @@ export const DEFAULT_PRIVACY = {
 
 // ───────────────────────── برنامه ─────────────────────────
 
-// شمارش‌ها از MentorProgramLog‌اند که از این به بعد خودکار از تیک‌های روتینِ شاگرد
+// شمارش‌ها از MentorProgramLog‌اند که از این به بعد خودکار از تیک‌های روتین شاگرد
 // همگام می‌شوند (lib/mentorProgress.ts). hidden = شاگرد «نمایش پیشرفت» را برای این
-// منتور بسته؛ اعداد صفرند و نباید به‌عنوانِ «۰٪» نمایش داده شوند.
+// منتور بسته؛ اعداد صفرند و نباید به‌عنوان «۰٪» نمایش داده شوند.
 export type ProgramProgress = { completed: number; partial: number; missed: number; rate: number; hidden?: boolean };
 
 const HIDDEN_PROGRESS: ProgramProgress = { completed: 0, partial: 0, missed: 0, rate: 0, hidden: true };
 
-/** rate = درصدِ انجام (PARTIAL نصف حساب می‌شه) از روزهای ثبت‌شده؛ ۰ تا ۱۰۰ */
+/** rate = درصد انجام (PARTIAL نصف حساب می‌شه) از روزهای ثبت‌شده؛ ۰ تا ۱۰۰ */
 export function progressFromCounts(completed: number, partial: number, missed: number): ProgramProgress {
   const total = completed + partial + missed;
   const rate = total === 0 ? 0 : Math.round(((completed + partial * 0.5) / total) * 100);
@@ -443,12 +443,12 @@ export function toProgramRow(p: ProgramWithUsers, viewerId: string, progress: Pr
     mentorshipId: p.mentorshipId,
     counterpart: toPublicUser(p.mentorId === viewerId ? p.student : p.mentor),
     progress: progress ?? progressFromCounts(0, 0, 0),
-    // یادداشتِ منتور روی برنامه — در فهرستِ برنامه‌های صفحه‌ی رابطه کنارِ هر برنامه دیده می‌شود
+    // یادداشت منتور روی برنامه — در فهرست برنامه‌های صفحه‌ی رابطه کنار هر برنامه دیده می‌شود
     note: p.note ?? null,
   };
 }
 
-/** همگام‌سازیِ پیشرفتِ خودکار (با TTL) + شمارش + اعمالِ پرچمِ showProgress برای منتور */
+/** همگام‌سازی پیشرفت خودکار (با TTL) + شمارش + اعمال پرچم showProgress برای منتور */
 async function progressForRows(programs: ProgramWithUsers[], viewerId: string, force = false): Promise<Map<string, ProgramProgress>> {
   const ids = programs.map((p) => p.id);
   const trackable = programs.filter((p) => p.activatedAt && (p.status === "ACTIVE" || p.status === "COMPLETED" || p.status === "CANCELLED"));
@@ -463,7 +463,7 @@ export async function buildProgramRows(programs: ProgramWithUsers[], viewerId: s
   return programs.map((p) => toProgramRow(p, viewerId, progress.get(p.id)));
 }
 
-/** Program — ProgramRow به‌علاوه‌ی فیلدهای جزئیات (توضیح، یادداشتِ تغییر، زمان‌ها) */
+/** Program — ProgramRow به‌علاوه‌ی فیلدهای جزئیات (توضیح، یادداشت تغییر، زمان‌ها) */
 export async function serializeProgram(p: ProgramWithUsers, viewerId: string, opts: { forceSync?: boolean } = {}) {
   const progress = (await progressForRows([p], viewerId, !!opts.forceSync)).get(p.id);
   return {
@@ -487,12 +487,12 @@ export async function loadProgramWithUsers(id: string): Promise<ProgramWithUsers
 export type FeedbackRow = { id: string; body: string; createdAt: Date; readAt: Date | null; itemId: string | null; logId: string | null; itemTitle: string | null };
 
 export function toFeedbackRow(f: MentorFeedback & { item: { title: string } | null }): FeedbackRow {
-  // متنِ فیدبک رمزشده در حالِ سکون است (agent D — docs/mentor-e2ee.md)؛ ردیفِ قدیمی متنِ ساده
+  // متن فیدبک رمزشده در حال سکون است (agent D — docs/mentor-e2ee.md)؛ ردیف قدیمی متن ساده
   const body = openAtRest(f.body, feedbackAad(f.programId, f.mentorId)) ?? "";
   return { id: f.id, body, createdAt: f.createdAt, readAt: f.readAt, itemId: f.itemId, logId: f.logId, itemTitle: f.item?.title ?? null };
 }
 
-/** AADِ رمزِ در حالِ سکونِ MentorFeedback.body — مقدار به برنامه/منتورِ دیگری منتقل‌شدنی نیست */
+/** AAD رمز در حال سکون MentorFeedback.body — مقدار به برنامه/منتور دیگری منتقل‌شدنی نیست */
 export function feedbackAad(programId: string, mentorId: string): string[] {
   return ["MentorFeedback.body", programId, mentorId];
 }
@@ -513,18 +513,18 @@ export function serializeLog(l: {
 }) {
   return {
     id: l.id, itemId: l.itemId, date: isoDate(l.date), status: l.status, setsDone: l.setsDone, note: l.note, createdAt: l.createdAt, updatedAt: l.updatedAt,
-    // "AUTO" = از تیک‌های روتینِ شاگرد؛ "MANUAL" = ثبتِ دستیِ قدیمی
+    // "AUTO" = از تیک‌های روتین شاگرد؛ "MANUAL" = ثبت دستی قدیمی
     source: l.source ?? "MANUAL",
     doneOn: l.doneOn ? isoDate(l.doneOn) : null,
   };
 }
 
-/** نوعِ کمکی برای روت‌هایی که فقط ستون‌های خودِ برنامه رو لازم دارن */
+/** نوع کمکی برای روت‌هایی که فقط ستون‌های خود برنامه رو لازم دارن */
 export type ProgramCore = Pick<MentorProgram, "id" | "mentorId" | "studentId" | "mentorshipId" | "status" | "type" | "title" | "sentAt" | "startDate" | "endDate" | "activatedAt">;
 
-/** کدِ خطای یکتا (P2002) از Prisma */
+/** کد خطای یکتا (P2002) از Prisma */
 export function isUniqueViolation(e: unknown): boolean {
   return e instanceof Prisma.PrismaClientKnownRequestError && e.code === "P2002";
 }
 
-// رتبه‌بندیِ «بهترین نتیجه»/«محبوب»/«منتورهای تازه»: lib/mentorRankingStats.ts
+// رتبه‌بندی «بهترین نتیجه»/«محبوب»/«منتورهای تازه»: lib/mentorRankingStats.ts

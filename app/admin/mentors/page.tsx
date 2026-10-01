@@ -37,7 +37,7 @@ function categoryLabel(c: string) {
   return isMentorCategory(c) ? MENTOR_CATEGORY_META[c].label : c;
 }
 
-// چیپِ فشرده‌ی وضعیتِ احراز: برچسبِ کوتاه روی چیپ، برچسبِ کامل در title
+// چیپ فشرده‌ی وضعیت احراز: برچسب کوتاه روی چیپ، برچسب کامل در title
 function VBadge({ status, children }: { status: VStatus; children?: React.ReactNode }) {
   const Icon = V_ICON[status];
   return (
@@ -77,8 +77,8 @@ function MentorsInner() {
     return () => clearTimeout(t);
   }, [search]);
 
-  // جست‌وجوی جدید → برگشت به صفحه‌ی ۱ (از طریقِ URL تا تب/صفحه قابل‌اشتراک بمونه).
-  // replace نه push: هر حرفِ تایپ‌شده نباید یه قدم به تاریخچه‌ی «بازگشت» اضافه کنه.
+  // جست‌وجوی جدید → برگشت به صفحه‌ی ۱ (از طریق URL تا تب/صفحه قابل‌اشتراک بمونه).
+  // replace نه push: هر حرف تایپ‌شده نباید یه قدم به تاریخچه‌ی «بازگشت» اضافه کنه.
   const pushedQ = useRef(q);
   useEffect(() => {
     const next = debounced.trim();
@@ -89,8 +89,8 @@ function MentorsInner() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [debounced]);
 
-  // q از بیرون عوض شد (لینکِ منوی کناری/دکمه‌ی بازگشت) → فیلدِ جست‌وجو هم همون بشه،
-  // وگرنه متنِ قدیمی توی فیلد می‌موند و لیست فیلترنشده بود
+  // q از بیرون عوض شد (لینک منوی کناری/دکمه‌ی بازگشت) → فیلد جست‌وجو هم همون بشه،
+  // وگرنه متن قدیمی توی فیلد می‌موند و لیست فیلترنشده بود
   useEffect(() => {
     if (q === pushedQ.current) return; // همون تغییری که خودمون از فیلد فرستادیم
     pushedQ.current = q;

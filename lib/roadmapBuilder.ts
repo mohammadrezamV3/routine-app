@@ -3,14 +3,14 @@ import { generateRoadmapGuide, generateRoadmapPlan, generateStageDetail, Roadmap
 import { normalizePlan, PlanStage } from "@/lib/roadmapPlan";
 import { logError } from "@/lib/errorLog";
 
-// ساختِ رودمپ در پس‌زمینه‌ی سرور — طبقِ درخواستِ صریح کاربر دیگر پشتِ صفحه‌ی
-// ساخت منتظر نمی‌ماند: ردیف فورا با وضعیتِ «در حال ساخت» ذخیره می‌شود، کاربر
-// به لیستِ رودمپ‌ها برمی‌گردد و کارتِ همان رودمپ پیشرفت را زنده نشان می‌دهد.
+// ساخت رودمپ در پس‌زمینه‌ی سرور — طبق درخواست صریح کاربر دیگر پشت صفحه‌ی
+// ساخت منتظر نمی‌ماند: ردیف فورا با وضعیت «در حال ساخت» ذخیره می‌شود، کاربر
+// به لیست رودمپ‌ها برمی‌گردد و کارت همان رودمپ پیشرفت را زنده نشان می‌دهد.
 //
-// وضعیت داخلِ Roadmap.meta.build نگه داشته می‌شود (بدونِ migration):
+// وضعیت داخل Roadmap.meta.build نگه داشته می‌شود (بدون migration):
 //   { status: "building" | "ready" | "failed", phase, done, total, error?, at }
-// اجرا یک promiseِ رهاشده روی همان پروسه‌ی Node است (سرورِ شخصی/Docker، نه
-// serverless). اگر پروسه وسطِ کار ری‌استارت شود، ردیف «building» می‌ماند —
+// اجرا یک promise رهاشده روی همان پروسه‌ی Node است (سرور شخصی/Docker، نه
+// serverless). اگر پروسه وسط کار ری‌استارت شود، ردیف «building» می‌ماند —
 // buildStatusOf آن را بعد از STALE_MS «متوقف‌شده» حساب می‌کند و صفحه‌ی رودمپ
 // مرحله‌های باقی‌مانده را خودش کامل می‌کند.
 
@@ -24,7 +24,7 @@ export function buildStatusOf(meta: unknown): BuildState | null {
   const b = (meta as any)?.build;
   if (!b || typeof b !== "object") return null;
   if (b.status === "building" && Date.now() - Number(b.at || 0) > STALE_MS) {
-    return { ...b, status: "failed", error: b.error || "ساخت نیمه‌کاره ماند — ادامه‌اش از صفحه‌ی خودِ رودمپ کامل می‌شود" };
+    return { ...b, status: "failed", error: b.error || "ساخت نیمه‌کاره ماند — ادامه‌اش از صفحه‌ی خود رودمپ کامل می‌شود" };
   }
   return b as BuildState;
 }
@@ -47,12 +47,12 @@ export function startRoadmapBuild(id: string, userId: string, profile: RoadmapPr
 async function runBuild(id: string, userId: string, profile: RoadmapProfile) {
   const baseMeta = { level: profile.level, weeklyHours: profile.weeklyHours, background: profile.background };
 
-  // ۱) اسکلت + جزئیاتِ موازیِ مرحله‌ها تا جایی که بودجه‌ی زمانی اجازه بدهد
+  // ۱) اسکلت + جزئیات موازی مرحله‌ها تا جایی که بودجه‌ی زمانی اجازه بدهد
   let plan;
   try {
     plan = (await generateRoadmapPlan(profile, userId)).plan;
   } catch (err: any) {
-    await setBuild(id, userId, baseMeta, { status: "failed", phase: "outline", error: err?.message || "ساختِ مسیر انجام نشد" });
+    await setBuild(id, userId, baseMeta, { status: "failed", phase: "outline", error: err?.message || "ساخت مسیر انجام نشد" });
     return;
   }
   let stages: PlanStage[] = plan.stages;
@@ -70,7 +70,7 @@ async function runBuild(id: string, userId: string, profile: RoadmapProfile) {
     tools: plan.tools as any,
   });
 
-  // ۲) مرحله‌هایی که به بودجه‌ی اول نرسیدند — یکی‌یکی، هرکدام با مهلتِ کامل
+  // ۲) مرحله‌هایی که به بودجه‌ی اول نرسیدند — یکی‌یکی، هرکدام با مهلت کامل
   const ctx = { profile, plan: normalizePlan({ ...plan, stages }) };
   for (const s of stages.filter((x) => !x.detailed)) {
     try {

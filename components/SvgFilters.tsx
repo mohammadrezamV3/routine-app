@@ -3,10 +3,10 @@ export function SvgFilters() {
     <svg style={{ position: "absolute", width: 0, height: 0, overflow: "hidden" }} aria-hidden="true" focusable="false">
       <defs>
         <filter id="liquidGlassFilter" x="-30%" y="-30%" width="160%" height="160%" colorInterpolationFilters="sRGB">
-          {/* قبلا یک <animate>ِ SMILِ بی‌پایان روی baseFrequency این‌جا بود. هیچ
+          {/* قبلا یک <animate> SMIL بی‌پایان روی baseFrequency این‌جا بود. هیچ
               عنصری در اپ از این فیلتر (url(#liquidGlassFilter)) استفاده نمی‌کند،
-              ولی انیمیشنِ SMIL مستقل از استفاده روی تایم‌لاینِ سند تیک می‌خورد —
-              یعنی صفحه هیچ‌وقت کاملا «بی‌کار» نمی‌شد. بدونِ هیچ اثرِ بصری حذف شد. */}
+              ولی انیمیشن SMIL مستقل از استفاده روی تایم‌لاین سند تیک می‌خورد —
+              یعنی صفحه هیچ‌وقت کاملا «بی‌کار» نمی‌شد. بدون هیچ اثر بصری حذف شد. */}
           <feTurbulence type="fractalNoise" baseFrequency="0.012 0.018" numOctaves={2} seed={7} result="noise" />
           <feGaussianBlur in="noise" stdDeviation="3" result="softNoise" />
 

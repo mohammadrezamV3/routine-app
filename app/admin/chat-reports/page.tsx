@@ -21,18 +21,18 @@ type Data = { openCount: number; reports: Report[] };
 
 const TABS = ["ACTIONED", "OPEN", "DISMISSED"] as const;
 const TAB_LABELS: Record<ReportStatus, string> = {
-  ACTIONED: "حذف‌شده (به‌محضِ گزارش)",
+  ACTIONED: "حذف‌شده (به‌محض گزارش)",
   OPEN: "بررسی‌نشده",
   DISMISSED: "رد شده",
 };
 const STATUS_BADGE: Record<ReportStatus, "amber" | "red" | "gray"> = { OPEN: "amber", ACTIONED: "red", DISMISSED: "gray" };
 
-// صفِ گزارش‌های چتِ ترید. طبقِ تصمیمِ ثابت‌شده در app/api/trade/chat/report،
-// به‌محضِ گزارش‌شدنِ یک پیام همان لحظه حذف (نرم) می‌شود — پس این صفحه بیشتر
-// یک آرشیوِ «چه چیزی گزارش و حذف شد» است تا یک کارِ در-انتظار؛ نقشِ اصلی‌اش
-// این‌ست که متنِ کاملِ پیام را (حتی بعدِ حذف) به ادمین نشان بدهد تا اگر لازم
-// بود از پنلِ خودِ کاربر (لینکِ «نویسنده» پایین) اخطار/بن/غیرفعال‌سازی بدهد.
-// گزارش‌های «بررسی‌نشده»ِ احتمالی (مثلا قدیمی‌تر از این قاعده) این‌جا با
+// صف گزارش‌های چت ترید. طبق تصمیم ثابت‌شده در app/api/trade/chat/report،
+// به‌محض گزارش‌شدن یک پیام همان لحظه حذف (نرم) می‌شود — پس این صفحه بیشتر
+// یک آرشیو «چه چیزی گزارش و حذف شد» است تا یک کار در-انتظار؛ نقش اصلی‌اش
+// این‌ست که متن کامل پیام را (حتی بعد حذف) به ادمین نشان بدهد تا اگر لازم
+// بود از پنل خود کاربر (لینک «نویسنده» پایین) اخطار/بن/غیرفعال‌سازی بدهد.
+// گزارش‌های «بررسی‌نشده» احتمالی (مثلا قدیمی‌تر از این قاعده) این‌جا با
 // «حذف پیام» یا «رد گزارش» بسته می‌شوند.
 export default function AdminChatReportsPage() {
   const toast = useAdminToast();
@@ -81,9 +81,9 @@ export default function AdminChatReportsPage() {
         <div>
           <div className="admin-page-kicker">گزارش‌های چت</div>
           <div className="admin-section-hint" style={{ margin: 0 }}>
-            هر پیامِ گزارش‌شده همان لحظه از اتاقِ گفت‌وگو حذف می‌شود — این صفحه متنِ
-            کاملِ همان پیام‌ها را نشان می‌دهد. اگر نویسنده‌ای مکرر گزارش می‌شود، از
-            روی نامش وارد پنلِ کاربری‌اش شو و اخطار/بن/غیرفعال‌سازیِ چت را از آن‌جا بده.
+            هر پیام گزارش‌شده همان لحظه از اتاق گفت‌وگو حذف می‌شود — این صفحه متن
+            کامل همان پیام‌ها را نشان می‌دهد. اگر نویسنده‌ای مکرر گزارش می‌شود، از
+            روی نامش وارد پنل کاربری‌اش شو و اخطار/بن/غیرفعال‌سازی چت را از آن‌جا بده.
           </div>
         </div>
       </div>
@@ -112,7 +112,7 @@ export default function AdminChatReportsPage() {
                 </span>
               </div>
               <div className="admin-row-body">{r.message.body}</div>
-              {r.note && <div className="trade-row-sub">یادداشتِ گزارش‌دهنده: {r.note}</div>}
+              {r.note && <div className="trade-row-sub">یادداشت گزارش‌دهنده: {r.note}</div>}
               <div className="admin-row-foot">
                 <span className="trade-row-sub admin-ltr">
                   {formatDateTime(r.message.createdAt)}
@@ -139,8 +139,8 @@ export default function AdminChatReportsPage() {
         <ConfirmModal
           title={acting.action === "delete" ? "حذف پیام" : "رد گزارش"}
           message={acting.action === "delete"
-            ? "پیام از اتاقِ گفت‌وگو برداشته می‌شه و همه‌ی گزارش‌های بازِ همین پیام بسته می‌شن."
-            : "گزارش بدونِ اقدام بسته می‌شه و پیام سرِ جاش می‌مونه."}
+            ? "پیام از اتاق گفت‌وگو برداشته می‌شه و همه‌ی گزارش‌های باز همین پیام بسته می‌شن."
+            : "گزارش بدون اقدام بسته می‌شه و پیام سر جاش می‌مونه."}
           confirmLabel={acting.action === "delete" ? "حذف پیام" : "رد گزارش"}
           danger={acting.action === "delete"}
           onConfirm={act}

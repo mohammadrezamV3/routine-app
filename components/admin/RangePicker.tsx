@@ -21,7 +21,7 @@ function todayLocal(): string {
 
 // انتخاب‌گر بازه‌ی زمانی مشترک صفحات تحلیلی پنل Owner — وضعیت توی خود
 // URL نگه داشته می‌شه (?range=30d)، نه state محلی، تا لینک‌دادن/رفرش‌کردن
-// همون بازه رو حفظ کنه. تاریخ‌ها YYYY-MM-DD هستن و سرور «تا» رو تا آخرِ
+// همون بازه رو حفظ کنه. تاریخ‌ها YYYY-MM-DD هستن و سرور «تا» رو تا آخر
 // همون روز حساب می‌کنه.
 export function RangePicker() {
   const router = useRouter();
@@ -105,7 +105,7 @@ export function RangePicker() {
           <button type="submit" className="admin-btn primary sm" disabled={!valid || reversed}>
             اعمال
           </button>
-          {reversed && <span className="admin-form-error">تاریخِ «از» باید قبل از «تا» باشه</span>}
+          {reversed && <span className="admin-form-error">تاریخ «از» باید قبل از «تا» باشه</span>}
         </form>
       )}
     </div>

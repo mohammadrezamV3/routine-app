@@ -23,9 +23,9 @@ const ThemeContext = createContext<{ theme: Theme; toggle: () => void }>({
 // از این مسیر نمیاد — از data-theme روی body میاد که اسکریپت inline توی
 // layout.tsx مستقیم روی DOM (نه از راه ری‌اکت) قبل از هر پینتی درستش می‌کنه.
 //
-// به‌روزرسانی: layout.tsx حالا خودش کوکی رو سمتِ سرور می‌خونه و data-theme
-// درست رو از همون HTML می‌فرسته؛ همون مقدار این‌جا به‌عنوانِ initialTheme
-// میاد، پس state اولیه هم با رندرِ سرور یکیه و هم با تمِ واقعی.
+// به‌روزرسانی: layout.tsx حالا خودش کوکی رو سمت سرور می‌خونه و data-theme
+// درست رو از همون HTML می‌فرسته؛ همون مقدار این‌جا به‌عنوان initialTheme
+// میاد، پس state اولیه هم با رندر سرور یکیه و هم با تم واقعی.
 export function ThemeProvider({ children, initialTheme = "dark" }: { children: React.ReactNode; initialTheme?: Theme }) {
   const [theme, setTheme] = useState<Theme>(initialTheme);
   const mounted = useRef(false);
@@ -62,7 +62,7 @@ export function ThemeProvider({ children, initialTheme = "dark" }: { children: R
     getThemeSetting().then((saved) => {
       if (saved !== "light" && saved !== "dark") return;
       persisted.current = saved;
-      // کوکیِ این دستگاه رو با تمِ حساب هم‌گام کن تا لودِ *بعدی* از همون
+      // کوکی این دستگاه رو با تم حساب هم‌گام کن تا لود *بعدی* از همون
       // اولین بایت درست باشه (توضیح کامل: writeThemeCookie). فقط وقتی
       // کاربر خودش در این فاصله تم رو عوض نکرده.
       if (!userChose.current && readThemeFromDom() !== saved) writeThemeCookie(saved);

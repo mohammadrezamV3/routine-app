@@ -47,7 +47,7 @@ describe("mentorProgressCore — مشتق‌سازی", () => {
   const P = "prog1";
   const itemOf = buildOccurrenceItemMap(P, "ROUTINE", [it0], []);
 
-  it("انجام / انجام‌نشده / پیش رو (امروزِ تیک‌نخورده و آینده)", () => {
+  it("انجام / انجام‌نشده / پیش رو (امروز تیک‌نخورده و آینده)", () => {
     // ۲۰۲۶-۰۹-۲۱ دوشنبه … ۲۰۲۶-۰۹-۲۵ جمعه؛ امروز = ۲۴
     const cells = deriveItemStates({
       items: [it0],
@@ -69,7 +69,7 @@ describe("mentorProgressCore — مشتق‌سازی", () => {
     ]);
   });
 
-  it("تیکِ امروز = انجام؛ تیکِ روزِ آینده نادیده", () => {
+  it("تیک امروز = انجام؛ تیک روز آینده نادیده", () => {
     const cells = deriveItemStates({
       items: [it0],
       from: "2026-09-24",
@@ -84,7 +84,7 @@ describe("mentorProgressCore — مشتق‌سازی", () => {
     expect(cells.map((c) => c.state)).toEqual(["done", "upcoming"]);
   });
 
-  it("فقط روزهای برنامه‌ریزی‌شده‌ی آیتم؛ تیکِ آیتم/برنامه‌ی دیگر حساب نمی‌شود", () => {
+  it("فقط روزهای برنامه‌ریزی‌شده‌ی آیتم؛ تیک آیتم/برنامه‌ی دیگر حساب نمی‌شود", () => {
     const weekly: DeriveItem = { id: "w", order: 1, title: "باشگاه", days: [1] }; // دوشنبه
     const map = buildOccurrenceItemMap(P, "ROUTINE", [weekly], []);
     const cells = deriveItemStates({
@@ -98,7 +98,7 @@ describe("mentorProgressCore — مشتق‌سازی", () => {
     expect(cells).toEqual([{ date: "2026-09-21", itemId: "w", state: "missed", doneOn: null }]);
   });
 
-  it("جابه‌جایی در همان هفته: تیکِ occurrenceِ ویرایش‌شده (mentorItemId) روزِ برنامه را پر می‌کند، یک بار", () => {
+  it("جابه‌جایی در همان هفته: تیک occurrence ویرایش‌شده (mentorItemId) روز برنامه را پر می‌کند، یک بار", () => {
     const weekly: DeriveItem = { id: "w", order: 0, title: "آزمون", days: [4] }; // پنجشنبه
     const map = buildOccurrenceItemMap(P, "ROUTINE", [weekly], [{ id: "custom-moved", name: "آزمون", mentorProgramId: P, mentorItemId: "w" }]);
     const cells = deriveItemStates({
@@ -106,7 +106,7 @@ describe("mentorProgressCore — مشتق‌سازی", () => {
       from: "2026-09-19", // شنبه
       to: "2026-10-02",
       openDay: "2026-10-03",
-      // هفته‌ی اول: پنجشنبه تیک نخورد، جمعه‌ی همان هفته occurrenceِ جابه‌جاشده تیک خورد (دو بار ذخیره‌شده، یک بار حساب)
+      // هفته‌ی اول: پنجشنبه تیک نخورد، جمعه‌ی همان هفته occurrence جابه‌جاشده تیک خورد (دو بار ذخیره‌شده، یک بار حساب)
       // هفته‌ی دوم: فقط شنبه‌ی بعدش — هفته‌ی دیگری است و نباید هفته‌ی قبل را پر کند
       ticks: ticksOf([
         ["2026-09-25", { "custom-moved": true }],
@@ -120,7 +120,7 @@ describe("mentorProgressCore — مشتق‌سازی", () => {
     ]);
   });
 
-  it("نگاشتِ اسم برای occurrenceِ قدیمیِ بدونِ mentorItemId؛ اسمِ مبهم رد می‌شود", () => {
+  it("نگاشت اسم برای occurrence قدیمی بدون mentorItemId؛ اسم مبهم رد می‌شود", () => {
     const a: DeriveItem = { id: "a", order: 0, title: "اسکوات", days: [1], sets: 4, reps: "8" };
     const b: DeriveItem = { id: "b", order: 1, title: "پرس", days: [1] };
     const c: DeriveItem = { id: "c", order: 2, title: "پرس", days: [2] };
@@ -136,8 +136,8 @@ describe("mentorProgressCore — مشتق‌سازی", () => {
     expect(parseMirrorOccurrenceId(P, `mp-${P}-12-7`)).toBeNull();
   });
 
-  it("روزِ محلی مستقل از DST و ساعتِ سرور: روزِ هفته از خودِ تاریخ", () => {
-    // ۲۱ مارس (نوروز، تغییرِ ساعتِ قدیمیِ ایران) و ۲۹ مارس (DSTِ اروپا) — هر دو شنبه/یکشنبه‌ی درست
+  it("روز محلی مستقل از DST و ساعت سرور: روز هفته از خود تاریخ", () => {
+    // ۲۱ مارس (نوروز، تغییر ساعت قدیمی ایران) و ۲۹ مارس (DST اروپا) — هر دو شنبه/یکشنبه‌ی درست
     expect(weekStartIso("2026-03-21")).toBe("2026-03-21");
     expect(weekStartIso("2026-03-29")).toBe("2026-03-28");
     const sunday: DeriveItem = { id: "s", order: 0, title: "x", days: [0] };
@@ -145,7 +145,7 @@ describe("mentorProgressCore — مشتق‌سازی", () => {
     expect(cells.map((c) => c.date)).toEqual(["2026-03-29"]);
   });
 
-  it("programWindow: شروع = دیرترینِ (تاریخِ شروع، روزِ فعال‌سازی)؛ برنامه‌ی بسته تا روزِ بستن", () => {
+  it("programWindow: شروع = دیرترین (تاریخ شروع، روز فعال‌سازی)؛ برنامه‌ی بسته تا روز بستن", () => {
     expect(programWindow({ startIso: "2026-09-01", endIso: "2026-09-30", activationIso: "2026-09-05", closeIso: null, todayIso: "2026-09-10" }))
       .toEqual({ from: "2026-09-05", to: "2026-09-30", openDay: "2026-09-10", lastFinal: "2026-09-10" });
     expect(programWindow({ startIso: null, endIso: "2026-09-08", activationIso: "2026-09-05", closeIso: null, todayIso: "2026-09-10" }))
@@ -190,8 +190,8 @@ async function setup(over: Record<string, unknown> = {}) {
   return { m, s, ms, id, items };
 }
 
-describe("پیشرفتِ خودکار — همگام‌سازی از تیک‌های روتین", () => {
-  it("تیک در روتین → COMPLETED، روزِ گذشته‌ی بی‌تیک → MISSED، امروزِ بی‌تیک بدونِ ردیف؛ idempotent", async () => {
+describe("پیشرفت خودکار — همگام‌سازی از تیک‌های روتین", () => {
+  it("تیک در روتین → COMPLETED، روز گذشته‌ی بی‌تیک → MISSED، امروز بی‌تیک بدون ردیف؛ idempotent", async () => {
     const { m, s, id, items } = await setup({ items: [{ title: "مطالعه", repeat: "DAILY" }] });
     await backdate(id, 3);
     const occ = (d: string) => mirrorOccurrenceId(id, 0, jsDayOf(d));
@@ -207,12 +207,12 @@ describe("پیشرفتِ خودکار — همگام‌سازی از تیک‌ه
     ]);
     expect(v.program.progress).toMatchObject({ completed: 2, missed: 1, partial: 0, rate: 67 });
 
-    // تکرارِ همگام‌سازی چیزی را دو بار نمی‌شمارد
+    // تکرار همگام‌سازی چیزی را دو بار نمی‌شمارد
     await syncProgramProgress([id], { force: true });
     await syncProgramProgress([id], { force: true });
     expect(await prisma.mentorProgramLog.count({ where: { programId: id } })).toBe(3);
 
-    // تیکِ امروز → ردیف؛ برداشتنِ تیک → ردیف حذف (امروز هنوز «پیش رو»)
+    // تیک امروز → ردیف؛ برداشتن تیک → ردیف حذف (امروز هنوز «پیش رو»)
     await setDailyEntry(s, today(), { [occ(today())]: true });
     let sv = await getP(s, id);
     const cell = (view: any, d: string) => view.progressView.days.find((x: any) => x.date === d)?.cells[0];
@@ -222,7 +222,7 @@ describe("پیشرفتِ خودکار — همگام‌سازی از تیک‌ه
     expect(cell(sv, today())).toMatchObject({ state: "upcoming", logId: null });
     expect(await prisma.mentorProgramLog.count({ where: { programId: id } })).toBe(3);
 
-    // تیکِ دیرهنگامِ دیروزِ دیروز → MISSED به COMPLETED تبدیل می‌شود (همان ردیف)
+    // تیک دیرهنگام دیروز دیروز → MISSED به COMPLETED تبدیل می‌شود (همان ردیف)
     const before = await prisma.mentorProgramLog.findFirst({ where: { programId: id, date: new Date(dayOffset(-2) + "T00:00:00.000Z") } });
     await setDailyEntry(s, dayOffset(-2), { [occ(dayOffset(-2))]: true });
     await getP(m, id);
@@ -231,7 +231,7 @@ describe("پیشرفتِ خودکار — همگام‌سازی از تیک‌ه
     expect(after!.status).toBe("COMPLETED");
   });
 
-  it("ردیفِ دستیِ قدیمی دست نمی‌خورد و جای ردیفِ AUTO را می‌گیرد", async () => {
+  it("ردیف دستی قدیمی دست نمی‌خورد و جای ردیف AUTO را می‌گیرد", async () => {
     const { m, s, id, items } = await setup({ items: [{ title: "مطالعه", repeat: "DAILY" }] });
     await backdate(id, 2);
     await prisma.mentorProgramLog.create({
@@ -245,7 +245,7 @@ describe("پیشرفتِ خودکار — همگام‌سازی از تیک‌ه
     expect(day.cells[0].state).toBe("partial");
   });
 
-  it("بازه: روزهای قبل از فعال‌سازی و بعد از تاریخِ پایان بی‌ردیف", async () => {
+  it("بازه: روزهای قبل از فعال‌سازی و بعد از تاریخ پایان بی‌ردیف", async () => {
     const { m, id } = await setup({ items: [{ title: "مطالعه", repeat: "DAILY" }], endDate: dayOffset(20) });
     await prisma.mentorProgram.update({
       where: { id },
@@ -284,7 +284,7 @@ describe("پیشرفتِ خودکار — همگام‌سازی از تیک‌ه
     expect(dash.recentActivity.some((a: any) => a.type === "log" && a.url.includes(id))).toBe(false);
   });
 
-  it("WORKOUT در روتین آینه می‌شود (با mentorItemId) و تیکِ occurrenceِ جابه‌جاشده به همان آیتم می‌رسد", async () => {
+  it("WORKOUT در روتین آینه می‌شود (با mentorItemId) و تیک occurrence جابه‌جاشده به همان آیتم می‌رسد", async () => {
     const m = await makeMentor();
     const s = await makeUser();
     const ms = await connect(s, m);
@@ -307,7 +307,7 @@ describe("پیشرفتِ خودکار — همگام‌سازی از تیک‌ه
     else expect(row).toMatchObject({ status: "MISSED" });
   });
 
-  it("بستنِ برنامه: پیشرفت قبل از حذفِ آینه نهایی می‌شود و بعد منجمد می‌ماند", async () => {
+  it("بستن برنامه: پیشرفت قبل از حذف آینه نهایی می‌شود و بعد منجمد می‌ماند", async () => {
     const { m, s, id } = await setup({ items: [{ title: "مطالعه", repeat: "DAILY" }] });
     await backdate(id, 2);
     await setDailyEntry(s, dayOffset(-2), { [mirrorOccurrenceId(id, 0, jsDayOf(dayOffset(-2)))]: true });
@@ -315,13 +315,13 @@ describe("پیشرفتِ خودکار — همگام‌سازی از تیک‌ه
     expect((await readOccurrences(s)).some((o) => o.mentorProgramId === id)).toBe(false);
     const statuses = (await prisma.mentorProgramLog.findMany({ where: { programId: id }, orderBy: { date: "asc" } })).map((l) => l.status);
     expect(statuses).toEqual(["COMPLETED", "MISSED"]);
-    // تیکِ بعد از بستن اثری ندارد
+    // تیک بعد از بستن اثری ندارد
     await setDailyEntry(s, dayOffset(-1), { [mirrorOccurrenceId(id, 0, jsDayOf(dayOffset(-1)))]: true });
     await getP(m, id);
     expect((await prisma.mentorProgramLog.findMany({ where: { programId: id }, orderBy: { date: "asc" } })).map((l) => l.status)).toEqual(["COMPLETED", "MISSED"]);
   });
 
-  it("فیدبکِ منتور روی یک اجرای خودکار (logId) کار می‌کند", async () => {
+  it("فیدبک منتور روی یک اجرای خودکار (logId) کار می‌کند", async () => {
     const { m, s, id } = await setup({ items: [{ title: "مطالعه", repeat: "DAILY" }] });
     await backdate(id, 1);
     await setDailyEntry(s, dayOffset(-1), { [mirrorOccurrenceId(id, 0, jsDayOf(dayOffset(-1)))]: true });
@@ -334,7 +334,7 @@ describe("پیشرفتِ خودکار — همگام‌سازی از تیک‌ه
   });
 });
 
-describe("logs API — ثبتِ دستیِ وضعیت منسوخ؛ فقط یادداشتِ روز", () => {
+describe("logs API — ثبت دستی وضعیت منسوخ؛ فقط یادداشت روز", () => {
   it("status → ۴۱۰؛ یادداشت upsert/حذف؛ آینده/خارج از بازه ۴۰۰؛ منتور/غریبه ۴۰۴", async () => {
     const { m, s, id, items } = await setup({ items: [{ title: "مطالعه", repeat: "DAILY" }] });
     await backdate(id, 2);

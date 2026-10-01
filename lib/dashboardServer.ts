@@ -1,13 +1,13 @@
-// سازنده‌های بخش‌های GET /api/dashboard — سمتِ سرور.
+// سازنده‌های بخش‌های GET /api/dashboard — سمت سرور.
 //
 // قواعد (CLAUDE.md):
-//   • هر کوئری با userId محدود می‌شه (بدون IDOR)، بدونِ raw SQL.
-//   • بخشِ ماژولِ پولی فقط وقتی ساخته می‌شه که دسترسیِ واقعیِ دیتابیسی باشه
-//     (همون منطقِ requireModule) — وگرنه null. فلگ‌ها از featureFlagsServer.
-//   • متنِ پیام‌های منتور (رمزگذاری‌شده) و عکسِ معامله‌ها هیچ‌وقت select نمی‌شن.
-//   • هر بخش جدا try/catch داره تا خطای یکی کلِ داشبورد رو نخوابونه.
+//   • هر کوئری با userId محدود می‌شه (بدون IDOR)، بدون raw SQL.
+//   • بخش ماژول پولی فقط وقتی ساخته می‌شه که دسترسی واقعی دیتابیسی باشه
+//     (همون منطق requireModule) — وگرنه null. فلگ‌ها از featureFlagsServer.
+//   • متن پیام‌های منتور (رمزگذاری‌شده) و عکس معامله‌ها هیچ‌وقت select نمی‌شن.
+//   • هر بخش جدا try/catch داره تا خطای یکی کل داشبورد رو نخوابونه.
 //
-// «امروز» از کلاینت میاد (date + tz) تا با روتینِ مرورگر یکی باشه؛ روت
+// «امروز» از کلاینت میاد (date + tz) تا با روتین مرورگر یکی باشه؛ روت
 // اعتبارسنجی و محدودش می‌کنه (±۲ روز از الان).
 
 import { ModuleKey, Prisma, SubscriptionStatus } from "@prisma/client";
@@ -31,7 +31,7 @@ export function isoAdd(iso: string, n: number): string {
 function jsDayOf(iso: string): number {
   return new Date(iso + "T00:00:00Z").getUTCDay();
 }
-/** ستون‌های @db.Date نیمه‌شبِ UTC ذخیره می‌شن */
+/** ستون‌های @db.Date نیمه‌شب UTC ذخیره می‌شن */
 function dbDate(iso: string): Date {
   return new Date(iso + "T00:00:00.000Z");
 }
@@ -39,9 +39,9 @@ function dbIso(d: Date): string {
   return d.toISOString().slice(0, 10);
 }
 
-/** اعتبارسنجیِ ?date&tz — نامعتبر/خیلی دور → پیش‌فرض (امروزِ سرور، تهران) */
+/** اعتبارسنجی ?date&tz — نامعتبر/خیلی دور → پیش‌فرض (امروز سرور، تهران) */
 export function resolveDay(dateRaw: string | null, tzRaw: string | null): { date: string; tz: number } {
-  // Number(null) و Number("") هر دو ۰ (UTC) می‌شن — نبودِ پارامتر باید پیش‌فرض باشه نه UTC
+  // Number(null) و Number("") هر دو ۰ (UTC) می‌شن — نبود پارامتر باید پیش‌فرض باشه نه UTC
   let tz = tzRaw === null || tzRaw.trim() === "" ? NaN : Number(tzRaw);
   if (!Number.isInteger(tz) || tz < -720 || tz > 840) tz = 210;
   let date = isoLocal(new Date());
@@ -90,7 +90,7 @@ export async function buildExercise({ userId, date }: Ctx): Promise<DashExercise
   const todayDay = days.find((d) => d?.day === dayName);
   const todayLog = logs[date];
   const planItems = (Array.isArray(todayDay?.items) ? todayDay!.items! : []).filter((n): n is string => typeof n === "string");
-  // هر حرکت فقط وقتی «انجام‌شده»ست که واقعا تیک خورده باشه — «پایانِ تمرین»
+  // هر حرکت فقط وقتی «انجام‌شده»ست که واقعا تیک خورده باشه — «پایان تمرین»
   // (completed) به‌تنهایی یعنی جلسه بسته شده، نه اینکه همه‌ی حرکت‌ها انجام شدن.
   const doneSet = new Set(todayLog?.completedItems ?? []);
   const doneItems = planItems.filter((n) => doneSet.has(n)).length;
@@ -99,7 +99,7 @@ export async function buildExercise({ userId, date }: Ctx): Promise<DashExercise
   let weekDone = 0;
   for (let i = 0; i <= diffToSat; i++) if (logs[isoAdd(date, -i)]?.completed) weekDone++;
 
-  // computeExerciseStreak با getterهای محلی کار می‌کنه؛ تاریخِ محلیِ هم‌روز
+  // computeExerciseStreak با getterهای محلی کار می‌کنه؛ تاریخ محلی هم‌روز
   // ساخته می‌شه تا isoLocal/getDay دقیقا همون کلیدهای logs رو بدن.
   const [y, m, d] = date.split("-").map(Number);
   const streak = computeExerciseStreak(gymDays, (dt) => FA_WEEKDAY[dt.getDay()], logs, new Date(y, m - 1, d));
@@ -243,12 +243,12 @@ function round2(n: number) {
   return Math.round(n * 100) / 100;
 }
 
-// ── تقویمِ اقتصادی ───────────────────────────────────────────
+// ── تقویم اقتصادی ───────────────────────────────────────────
 export async function buildCalendar(): Promise<{ events: DashEvent[] }> {
-  // تازه‌سازیِ تقویم پس‌زمینه‌ای‌ه و *منتظرش نمی‌مونیم*: قبلا تا ۹۰۰ms صبر می‌شد و
-  // نزدیکِ هر انتشارِ خبر (که sync هر چند ثانیه تکرار می‌شه) تقریبا *همه‌ی*
+  // تازه‌سازی تقویم پس‌زمینه‌ای‌ه و *منتظرش نمی‌مونیم*: قبلا تا ۹۰۰ms صبر می‌شد و
+  // نزدیک هر انتشار خبر (که sync هر چند ثانیه تکرار می‌شه) تقریبا *همه‌ی*
   // درخواست‌های داشبورد همین ۹۰۰ms رو می‌خوردن — ریشه‌ی «دیر لود می‌شه». داشبورد
-  // نمای کلیه؛ داده‌ی تازه با پولینگِ بعدی میاد و صفحه‌ی تقویم پولینگِ تندِ خودش رو داره.
+  // نمای کلیه؛ داده‌ی تازه با پولینگ بعدی میاد و صفحه‌ی تقویم پولینگ تند خودش رو داره.
   void ensureFreshCalendar(prisma).catch(() => {});
   const now = Date.now();
   const rows = await prisma.economicEvent.findMany({
@@ -322,7 +322,7 @@ export async function buildAnnouncements({ userId }: Ctx): Promise<DashboardData
 }
 
 // ── اجرای امن ────────────────────────────────────────────────
-/** اجرای یک سازنده؛ خطا → null + ثبتِ اسمِ بخش (بقیه‌ی داشبورد سالم می‌مونه) */
+/** اجرای یک سازنده؛ خطا → null + ثبت اسم بخش (بقیه‌ی داشبورد سالم می‌مونه) */
 export async function safe<T>(name: string, errors: string[], fn: () => Promise<T>): Promise<T | null> {
   try {
     return await fn();
@@ -339,8 +339,8 @@ export function activeModuleSet(isSuperAdmin: boolean, rows: { module: ModuleKey
   return new Set(rows.filter((r) => r.active && (!r.expiresAt || r.expiresAt.getTime() > now)).map((r) => r.module));
 }
 
-// ── کلِ داشبورد ──────────────────────────────────────────────
-/** «امروز»ِ یک منطقه‌ی زمانیِ IANA (مثلا Asia/Tehran) + اختلافش با UTC به دقیقه */
+// ── کل داشبورد ──────────────────────────────────────────────
+/** «امروز» یک منطقه‌ی زمانی IANA (مثلا Asia/Tehran) + اختلافش با UTC به دقیقه */
 export function dayInTimezone(timezone: string | null | undefined, at = new Date()): { date: string; tz: number } {
   try {
     const tzName = timezone || "Asia/Tehran";
@@ -355,14 +355,14 @@ export function dayInTimezone(timezone: string | null | undefined, at = new Date
   }
 }
 
-/** کلیدِ درخواستِ کلاینت برای همین روز — باید دقیقا با lib/useDashboardData یکی باشه */
+/** کلید درخواست کلاینت برای همین روز — باید دقیقا با lib/useDashboardData یکی باشه */
 export function dashboardKey(day: { date: string; tz: number }) {
   return `/api/dashboard?date=${day.date}&tz=${day.tz}`;
 }
 
 /**
- * همه‌ی بخش‌ها برای یک کاربر — مشترکِ روتِ API و رندرِ سمتِ سرورِ /dashboard.
- * گیتِ فلگ و rate limit با صدازننده‌ست؛ این‌جا فقط مسدودبودن و دسترسیِ ماژول‌ها.
+ * همه‌ی بخش‌ها برای یک کاربر — مشترک روت API و رندر سمت سرور /dashboard.
+ * گیت فلگ و rate limit با صدازننده‌ست؛ این‌جا فقط مسدودبودن و دسترسی ماژول‌ها.
  */
 export async function buildDashboard(userId: string, day: { date: string; tz: number }): Promise<DashboardData | "blocked" | "notfound"> {
   const [user, flags, features] = await Promise.all([
@@ -404,7 +404,7 @@ export async function buildDashboard(userId: string, day: { date: string; tz: nu
   ]);
 
   const sub = user.subscriptions[0];
-  // «روتین من» در دوره‌ی رایگان: ردیفِ ROUTINE با انقضا و بدونِ هیچ اشتراکِ فعال
+  // «روتین من» در دوره‌ی رایگان: ردیف ROUTINE با انقضا و بدون هیچ اشتراک فعال
   const routineRow = user.moduleAccess.find((r) => r.module === ModuleKey.ROUTINE);
   const routineMsLeft = routineRow?.active && routineRow.expiresAt ? routineRow.expiresAt.getTime() - Date.now() : 0;
   const routineTrial = !isSuperAdmin && !sub && routineMsLeft > 0 && routineMsLeft <= ROUTINE_TRIAL_MS

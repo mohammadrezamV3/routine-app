@@ -13,7 +13,7 @@ type Tab = "programs" | "replies";
 export default function MentorTemplatesPage() {
   const [tab, setTab] = useState<Tab>("programs");
 
-  // ?tab=replies (مثلاً از فهرستِ خالیِ پاسخ‌ها در گفت‌وگو)
+  // ?tab=replies (مثلا از فهرست خالی پاسخ‌ها در گفت‌وگو)
   useEffect(() => {
     if (new URLSearchParams(window.location.search).get("tab") === "replies") setTab("replies");
   }, []);

@@ -25,22 +25,22 @@ function currentYearMonth(): string {
 }
 
 /**
- * سقف‌های تریال: پیش‌فرض‌های lib/trial.ts، قابلِ تغییر از پنلِ ادمین
- * (AppSetting با کلیدِ TRIAL_AI_LIMITS_SETTING_KEY).
+ * سقف‌های تریال: پیش‌فرض‌های lib/trial.ts، قابل تغییر از پنل ادمین
+ * (AppSetting با کلید TRIAL_AI_LIMITS_SETTING_KEY).
  */
 export async function getTrialAiLimits(): Promise<TrialAiLimits> {
   return normalizeTrialAiLimits(await getAppSetting<unknown>(TRIAL_AI_LIMITS_SETTING_KEY, null));
 }
 
-/** پیام‌های رایگانِ نومو برای کاربرِ بی‌اشتراک — پیش‌فرض FREE_ASSISTANT_USES، قابلِ تغییر از پنلِ ادمین */
+/** پیام‌های رایگان نومو برای کاربر بی‌اشتراک — پیش‌فرض FREE_ASSISTANT_USES، قابل تغییر از پنل ادمین */
 export async function getNomoFreeUses(): Promise<number> {
   return normalizeNomoFreeUses(await getAppSetting<unknown>(NOMO_FREE_USES_SETTING_KEY, null));
 }
 
 /**
- * شمارنده‌ی تریال روی همان جدولِ AiMonthlyQuota می‌نشیند، با «ماه»ِ ثابتِ
+ * شمارنده‌ی تریال روی همان جدول AiMonthlyQuota می‌نشیند، با «ماه» ثابت
  * "trial" — یک دوره‌ی آزمایشی فقط یک بار پیش می‌آید، پس یک ردیف به‌ازای
- * هر فیچر کافی است و کلیدِ یکتای (userId, feature, yearMonth) همان اتمی‌بودنِ
+ * هر فیچر کافی است و کلید یکتای (userId, feature, yearMonth) همان اتمی‌بودن
  * upsert را این‌جا هم می‌دهد.
  */
 const TRIAL_BUCKET = "trial";
@@ -55,14 +55,14 @@ const NOOP_RELEASE = async () => {};
  * چک و مصرف سهمیه‌ی یک فیچر AI برای یک کاربر — قبل از فراخوانی
  * واقعی AI صدا زده می‌شه (نه بعدش)، چون هدف کنترل هزینه‌ست. اگه خود
  * فراخوانی شکست خورد و کاربر هیچ خروجی‌ای نگرفت، روت می‌تونه با
- * `release()` همون یک واحد رو پس بده (مهم برای سقف‌های کوچیکِ تریال).
+ * `release()` همون یک واحد رو پس بده (مهم برای سقف‌های کوچیک تریال).
  *
  *   • سوپریوزر → بدون سقف
- *   • اشتراکِ فعال (ACTIVE/TRIAL و منقضی‌نشده) → سقفِ ماهانه‌ی پلن، اگه تعریف شده
- *   • بدون اشتراک و حسابِ کمتر از TRIAL_DAYS روزه → سقفِ *کلِ* دوره‌ی آزمایشی
- *   • بقیه (مثلا ModuleAccess دستیِ ادمین) → بدون سقف
+ *   • اشتراک فعال (ACTIVE/TRIAL و منقضی‌نشده) → سقف ماهانه‌ی پلن، اگه تعریف شده
+ *   • بدون اشتراک و حساب کمتر از TRIAL_DAYS روزه → سقف *کل* دوره‌ی آزمایشی
+ *   • بقیه (مثلا ModuleAccess دستی ادمین) → بدون سقف
  *
- * این یه محدودیت محصولیه، نه مرز امنیتی — دسترسی رو خودِ requireModule می‌سنجه.
+ * این یه محدودیت محصولیه، نه مرز امنیتی — دسترسی رو خود requireModule می‌سنجه.
  */
 export async function checkAndConsumeAiQuota(
   userId: string,
@@ -100,8 +100,8 @@ export async function checkAndConsumeAiQuota(
           code: "trial_ai_limit",
           error:
             limit! > 0
-              ? `سهمیه‌ی هوش مصنوعیِ دوره‌ی آزمایشی برای این بخش (${limit} بار) تموم شد. برای استفاده‌ی بیشتر، از صفحه‌ی «اشتراک» یکی از پلن‌ها رو فعال کن.`
-              : "این امکانِ هوش مصنوعی توی دوره‌ی آزمایشی فعال نیست. برای استفاده، از صفحه‌ی «اشتراک» یکی از پلن‌ها رو فعال کن.",
+              ? `سهمیه‌ی هوش مصنوعی دوره‌ی آزمایشی برای این بخش (${limit} بار) تموم شد. برای استفاده‌ی بیشتر، از صفحه‌ی «اشتراک» یکی از پلن‌ها رو فعال کن.`
+              : "این امکان هوش مصنوعی توی دوره‌ی آزمایشی فعال نیست. برای استفاده، از صفحه‌ی «اشتراک» یکی از پلن‌ها رو فعال کن.",
         }
       : {
           ok: false,

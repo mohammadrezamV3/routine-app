@@ -23,25 +23,25 @@ import {
 
 const ACTIVITY_LIMIT = 15;
 
-// «نیاز به توجه»: ≥۲ آیتم/روزِ انجام‌نشده در ۷ روز، یا برنامه‌ی فعالی که ۳ روزه هیچ
-// آیتمی ازش انجام نشده (هر دو از پیشرفتِ خودکار). برنامه‌ای که کمتر از ۳ روزه فعال شده هنوز فرصت داره،
-// پس برای شرطِ دوم حساب نمی‌شه (وگرنه هر برنامه‌ی تازه فوراً قرمز می‌شد).
+// «نیاز به توجه»: ≥۲ آیتم/روز انجام‌نشده در ۷ روز، یا برنامه‌ی فعالی که ۳ روزه هیچ
+// آیتمی ازش انجام نشده (هر دو از پیشرفت خودکار). برنامه‌ای که کمتر از ۳ روزه فعال شده هنوز فرصت داره،
+// پس برای شرط دوم حساب نمی‌شه (وگرنه هر برنامه‌ی تازه فورا قرمز می‌شد).
 const MISSED_THRESHOLD = 2;
 const SILENT_DAYS = 3;
 
 type Activity = { type: "log" | "program" | "message"; at: Date; studentName: string; studentGolden?: boolean; text: string; url: string; day?: string };
 
-// GET /api/mentor/dashboard → نمای کلیِ منتور: آمار، درخواست‌ها، برنامه‌های
-// منتظر، فعالیتِ اخیر، نرخِ انجامِ ۷ روزه و شاگردهای نیازمندِ توجه.
-// همه‌چیز فقط از برنامه/پیام‌هایی که مالِ *خودِ همین منتور*ن.
+// GET /api/mentor/dashboard → نمای کلی منتور: آمار، درخواست‌ها، برنامه‌های
+// منتظر، فعالیت اخیر، نرخ انجام ۷ روزه و شاگردهای نیازمند توجه.
+// همه‌چیز فقط از برنامه/پیام‌هایی که مال *خود همین منتور*ن.
 export async function GET() {
   const g = await requireMentorsUser();
   if (!g.ok) return g.response;
   const me = g.userId;
 
-  // lazy (بدونِ cron): شروعِ برنامه‌های زمان‌بندی‌شده و هشدارِ پایبندی — هیچ‌کدام throw نمی‌کنند
+  // lazy (بدون cron): شروع برنامه‌های زمان‌بندی‌شده و هشدار پایبندی — هیچ‌کدام throw نمی‌کنند
   await activateDueForUser(me);
-  // پیشرفتِ خودکار: لاگ‌های AUTO از تیک‌های روتینِ شاگردها (با TTL) قبل از هر شمارش
+  // پیشرفت خودکار: لاگ‌های AUTO از تیک‌های روتین شاگردها (با TTL) قبل از هر شمارش
   const toSync = await prisma.mentorProgram.findMany({ where: { mentorId: me, status: "ACTIVE" }, select: { id: true }, take: 200 });
   await syncProgramProgress(toSync.map((p) => p.id)).catch(() => undefined);
   await runAdherenceAlerts(me);
@@ -71,7 +71,7 @@ export async function GET() {
     }),
     prisma.mentorProgram.findMany({ where: { mentorId: me, status: "PENDING" }, include: PROGRAM_WITH_USERS_INCLUDE, orderBy: { sentAt: "desc" }, take: 50 }),
     prisma.mentorProgramLog.findMany({
-      // فقط «انجام شد»: ردیف‌های MISSEDِ خودکار با گذشتِ روز ساخته می‌شوند و «فعالیت» نیستند؛
+      // فقط «انجام شد»: ردیف‌های MISSED خودکار با گذشت روز ساخته می‌شوند و «فعالیت» نیستند؛
       // و فقط شاگردهایی که «نمایش پیشرفت» را باز گذاشته‌اند
       where: {
         program: { mentorId: me, mentorship: { status: "ACTIVE", showProgress: true } },
@@ -90,11 +90,11 @@ export async function GET() {
       select: { id: true, title: true, status: true, respondedAt: true, student: { select: PUBLIC_USER_SELECT } },
     }),
     prisma.mentorMessage.findMany({
-      // بعد از بلاک/پایانِ رابطه، اسنیپتِ پیام‌ها و لاگ‌های شاگرد دیگه به منتور نشون داده نمی‌شه
+      // بعد از بلاک/پایان رابطه، اسنیپت پیام‌ها و لاگ‌های شاگرد دیگه به منتور نشون داده نمی‌شه
       where: { mentorship: { mentorId: me, status: "ACTIVE" }, senderId: { not: me }, createdAt: { gte: recentCutoff } },
       orderBy: { createdAt: "desc" },
       take: ACTIVITY_LIMIT,
-      // متنِ پیام رمزگذاریِ سرتاسری دارد و سرور آن را ندارد — فقط «پیام جدید»
+      // متن پیام رمزگذاری سرتاسری دارد و سرور آن را ندارد — فقط «پیام جدید»
       select: { mentorshipId: true, createdAt: true, sender: { select: PUBLIC_USER_SELECT } },
     }),
     prisma.mentorship.findMany({
@@ -105,7 +105,7 @@ export async function GET() {
     prisma.mentorProgram.findMany({ where: { mentorId: me, status: "ACTIVE" }, select: { id: true, studentId: true, activatedAt: true } }),
   ]);
 
-  // منتورِ تعلیق‌شده اسنیپتِ لاگ/پیامِ شاگردها رو نمی‌بینه (مثل /api/mentor/students)
+  // منتور تعلیق‌شده اسنیپت لاگ/پیام شاگردها رو نمی‌بینه (مثل /api/mentor/students)
   const suspended = !!profile?.suspendedAt;
   const recentActivity: Activity[] = [
     ...groupLogActivity(suspended ? [] : recentLogs).map(({ student, ...g }) => ({ ...g, studentName: displayName(student), studentGolden: !!student.goldenSince })),
@@ -126,11 +126,11 @@ export async function GET() {
       url: `/mentorship/${m.mentorshipId}`,
     })),
   ]
-    // همگام‌سازی چند روز را هم‌زمان می‌نویسد؛ در زمانِ برابر، روزِ جدیدتر اول
+    // همگام‌سازی چند روز را هم‌زمان می‌نویسد؛ در زمان برابر، روز جدیدتر اول
     .sort((a, b) => b.at.getTime() - a.at.getTime() || ((b as Activity).day ?? "").localeCompare((a as Activity).day ?? ""))
     .slice(0, ACTIVITY_LIMIT);
 
-  // نرخِ انجامِ ۷ روزه به‌ازای هر شاگردِ فعال (فقط لاگ‌های برنامه‌های همین منتور).
+  // نرخ انجام ۷ روزه به‌ازای هر شاگرد فعال (فقط لاگ‌های برنامه‌های همین منتور).
   // شاگردی که «نمایش پیشرفت» را بسته در نرخ و «نیازمند توجه» نمی‌آید.
   const visibleRels = activeRels.filter((r) => r.showProgress);
   const studentIds = visibleRels.map((r) => r.studentId);
@@ -179,7 +179,7 @@ export async function GET() {
   for (const r of visibleRels) {
     const missed = missedMap.get(r.studentId) ?? 0;
     let reason: string | null = null;
-    if (missed >= MISSED_THRESHOLD) reason = `${faNum(missed)} آیتمِ انجام‌نشده در 7 روز اخیر`;
+    if (missed >= MISSED_THRESHOLD) reason = `${faNum(missed)} آیتم انجام‌نشده در 7 روز اخیر`;
     else if (silentStudents.has(r.studentId)) reason = `${faNum(SILENT_DAYS)} روز است هیچ آیتمی از برنامه‌ی فعال انجام نشده`;
     if (reason) attention.push({ studentId: r.studentId, name: displayName(r.student), avatarUrl: r.student.avatarUrl, golden: !!r.student.goldenSince, reason });
   }

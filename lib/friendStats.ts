@@ -118,7 +118,7 @@ type DailyMap = Record<string, { tasks: Record<string, boolean> }>;
  * برنامه‌های اون روز انجام شده».
  */
 function countStreak(entries: DailyMap, opts: ScheduleOpts, windowDays: number): { streak: number; hitEdge: boolean } {
-  // تعریفِ مشترک (lib/routineStreak.ts): امروزِ کامل همون لحظه حساب می‌شه
+  // تعریف مشترک (lib/routineStreak.ts): امروز کامل همون لحظه حساب می‌شه
   const { streak, hitEdge } = computeRoutineStreak(new Date(), opts, entries, windowDays);
   return { streak, hitEdge };
 }

@@ -4,8 +4,8 @@ import "./mentor.css";
 import { Ban, CheckCircle2, CircleDot, CircleSlash, Clock, FileEdit, Flag, XCircle } from "lucide-react";
 import { PROGRAM_STATUS_LABELS } from "@/lib/mentorProgramState";
 
-// برچسب‌های کوتاهِ چیپ. کلیدها همان وضعیت‌های دیتابیس‌اند؛ برای وضعیتِ
-// ناشناخته به PROGRAM_STATUS_LABELS و در نهایت خودِ کلید برمی‌گردد.
+// برچسب‌های کوتاه چیپ. کلیدها همان وضعیت‌های دیتابیس‌اند؛ برای وضعیت
+// ناشناخته به PROGRAM_STATUS_LABELS و در نهایت خود کلید برمی‌گردد.
 const PROGRAM_LABELS: Record<string, string> = {
   DRAFT: "پیش‌نویس",
   PENDING: "در انتظار پاسخ",
@@ -41,7 +41,7 @@ function statusIcon(status: string) {
   }
 }
 
-/** وضعیتِ برنامه‌ی منتور — چیپ کوچک: آیکون + متن، فقط رنگِ متن و بوردر */
+/** وضعیت برنامه‌ی منتور — چیپ کوچک: آیکون + متن، فقط رنگ متن و بوردر */
 export function ProgramStatusBadge({ status }: { status: string }) {
   const label = PROGRAM_LABELS[status] ?? (PROGRAM_STATUS_LABELS as Record<string, string>)[status] ?? MENTORSHIP_LABELS[status] ?? status;
   return (
@@ -52,7 +52,7 @@ export function ProgramStatusBadge({ status }: { status: string }) {
   );
 }
 
-/** وضعیتِ رابطه‌ی منتور ↔ شاگرد */
+/** وضعیت رابطه‌ی منتور ↔ شاگرد */
 export function MentorshipStatusBadge({ status }: { status: string }) {
   return (
     <span className={`mentor-status is-${status.toLowerCase()}`}>

@@ -7,7 +7,7 @@ import { getNotifPrefs, saveNotifPrefs, NotifPrefs, DEFAULT_NOTIF_PREFS } from "
 import { AccountToggleRow } from "@/components/AccountRow";
 import { AccountBlock, AccountOption } from "@/components/AccountUI";
 
-// اعلان‌ها — طبقِ درخواستِ صریح دیگر صفحه‌ی جدایی ندارد و بخشی از
+// اعلان‌ها — طبق درخواست صریح دیگر صفحه‌ی جدایی ندارد و بخشی از
 // «تنظیمات» است (/account/general).
 //
 // فقط دسته‌هایی که واقعا سمت سرور (lib/pushReminders.ts) و پنل
@@ -47,7 +47,7 @@ export function NotificationSettings({ index = 0 }: { index?: number }) {
           {notifPermission === "unsupported" ? (
             <div className="item-line empty">مرورگرت از نوتیف پشتیبانی نمی‌کنه.</div>
           ) : notifPermission === "denied" ? (
-            <div className="item-line empty">مرورگر مسدودش کرده — از تنظیمات سایتِ مرورگرت بازش کن.</div>
+            <div className="item-line empty">مرورگر مسدودش کرده — از تنظیمات سایت مرورگرت بازش کن.</div>
           ) : (
             <>
               <div className="item-line">وقتی برنامه‌ی امروزت (یا تمرینت) به وقتش برسه، یادآوری می‌گیری.</div>

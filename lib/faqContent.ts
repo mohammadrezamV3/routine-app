@@ -1,4 +1,4 @@
-// سوال‌وجواب‌های واقعیِ صفحه‌ی /faq — یک منبع واحد. هم app/faq/page.tsx و
+// سوال‌وجواب‌های واقعی صفحه‌ی /faq — یک منبع واحد. هم app/faq/page.tsx و
 // هم app/llms-full.txt/route.ts (برای ChatGPT/Claude/Perplexity و…) از
 // همین آرایه می‌خونن، تا این دو هیچ‌وقت از هم واگرا نشن. (این آرایه قبلا
 // مستقیم export یک page.tsx بود، ولی Next.js فقط export های خاصی رو از

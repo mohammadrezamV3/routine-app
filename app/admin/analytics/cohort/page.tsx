@@ -6,8 +6,8 @@ import { formatNumber } from "@/lib/adminFormat";
 
 type CohortRow = { monthKey: string; size: number; week1: number | null; month1: number | null; month2: number | null; month3: number | null };
 
-// شدتِ رنگِ هیت‌مپ — از متغیرِ اکسنتِ تم (نه سبزِ هاردکد) تا توی هر دو تم
-// با بقیه‌ی پنل یکی باشه؛ سقف ۰٫۶ تا متنِ روی سلول همیشه خوانا بمونه.
+// شدت رنگ هیت‌مپ — از متغیر اکسنت تم (نه سبز هاردکد) تا توی هر دو تم
+// با بقیه‌ی پنل یکی باشه؛ سقف ۰٫۶ تا متن روی سلول همیشه خوانا بمونه.
 function cellStyle(pct: number | null): React.CSSProperties | undefined {
   if (pct === null || !Number.isFinite(pct)) return undefined;
   const alpha = Math.min(0.6, 0.06 + (Math.max(0, Math.min(100, pct)) / 100) * 0.54);

@@ -1,7 +1,7 @@
 import { describe, it, expect } from "vitest";
 import { parseIsoDate } from "@/lib/validate";
 
-// روزِ ثبت = UTC نیمه‌شبِ همون روز؛ خروجی با getUTC* همون روز رو می‌ده، در هر TZ.
+// روز ثبت = UTC نیمه‌شب همون روز؛ خروجی با getUTC* همون روز رو می‌ده، در هر TZ.
 describe("sleep date column round trip", () => {
   for (const tz of ["Asia/Tehran", "America/New_York", "Pacific/Auckland", "Pacific/Honolulu"]) {
     it(`wake instant within 2 days of date in ${tz}`, () => {

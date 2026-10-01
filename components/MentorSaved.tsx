@@ -9,10 +9,10 @@ import type { MentorCard as MentorCardData, SavedMentorsResponse } from "@/lib/m
 import { NETWORK_ERROR, readApiError } from "@/lib/mentorFormat";
 import { M_DUR, mT } from "./MentorMotion";
 
-// «ذخیره‌شده‌ها» (نشانکِ منتور) — یک منبعِ حالت برای همه‌ی کارت‌ها و پروفایل،
-// تا نشانکِ یک منتور در ویترین، نتیجه‌ها و تبِ ذخیره‌شده‌ها هم‌زمان عوض شود.
-// سقف و ضدِ IDOR سمتِ سرور است (lib/savedMentors.ts)؛ این‌جا فقط به‌روزرسانیِ
-// خوش‌بینانه + برگرداندن در خطا + یک پیامِ کوتاهِ پایینِ صفحه.
+// «ذخیره‌شده‌ها» (نشانک منتور) — یک منبع حالت برای همه‌ی کارت‌ها و پروفایل،
+// تا نشانک یک منتور در ویترین، نتیجه‌ها و تب ذخیره‌شده‌ها هم‌زمان عوض شود.
+// سقف و ضد IDOR سمت سرور است (lib/savedMentors.ts)؛ این‌جا فقط به‌روزرسانی
+// خوش‌بینانه + برگرداندن در خطا + یک پیام کوتاه پایین صفحه.
 
 type Ctx = {
   /** null تا وقتی فهرست دریافت نشده */
@@ -84,7 +84,7 @@ export function SavedMentorsProvider({ children, initialSaved }: { children: Rea
         return;
       }
       showToast(wasSaved ? "از ذخیره‌شده‌ها برداشته شد" : "به ذخیره‌شده‌ها اضافه شد");
-      // کارتِ کامل برای تبِ ذخیره‌شده‌ها وقتی از پروفایل ذخیره شده
+      // کارت کامل برای تب ذخیره‌شده‌ها وقتی از پروفایل ذخیره شده
       if (!wasSaved && !("name" in mentor)) reload();
     } catch {
       revert();
@@ -127,8 +127,8 @@ export function SavedMentorsProvider({ children, initialSaved }: { children: Rea
 }
 
 /**
- * دکمه‌ی نشانک (ذخیره/برداشتن). بدونِ Provider چیزی رندر نمی‌کند. فشار: scaleِ
- * کوتاه (کلاسِ m-press)، و آیکون هنگامِ ذخیره با یک پرشدگیِ نرم عوض می‌شود.
+ * دکمه‌ی نشانک (ذخیره/برداشتن). بدون Provider چیزی رندر نمی‌کند. فشار: scale
+ * کوتاه (کلاس m-press)، و آیکون هنگام ذخیره با یک پرشدگی نرم عوض می‌شود.
  */
 export function MentorSaveButton({ mentor, size = 16, className }: { mentor: MentorCardData | { userId: string; name?: string }; size?: number; className?: string }) {
   const ctx = useSavedMentors();

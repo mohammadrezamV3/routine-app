@@ -13,17 +13,17 @@ import {
 } from "@/lib/e2ee/core";
 import { randomId } from "@/lib/e2ee/encoding";
 
-// کمک‌تابع‌های تستِ گفت‌وگوی رمزگذاری‌شده — همان هسته‌ی WebCrypto که مرورگر
-// اجرا می‌کند، این‌جا روی webcryptoِ Node. پیام‌ها scheme 2 (بسته‌بندی برای همه‌ی
-// کلیدهای فعالِ دو طرف).
+// کمک‌تابع‌های تست گفت‌وگوی رمزگذاری‌شده — همان هسته‌ی WebCrypto که مرورگر
+// اجرا می‌کند، این‌جا روی webcrypto Node. پیام‌ها scheme 2 (بسته‌بندی برای همه‌ی
+// کلیدهای فعال دو طرف).
 
 export type TestIdentity = { userId: string; version: number; publicB64: string; privateKey: CryptoKey; publicKey: CryptoKey };
 
 const identities = new Map<string, TestIdentity>();
-/** همه‌ی کلیدهای خصوصیِ ساخته‌شده در تست، به‌ازای `${userId}:${version}` */
+/** همه‌ی کلیدهای خصوصی ساخته‌شده در تست، به‌ازای `${userId}:${version}` */
 const allKeys = new Map<string, TestIdentity>();
 
-/** کلیدِ SYNCEDِ تازه برای کاربر؛ همه‌ی کلیدهای فعالِ قبلی بازنشسته می‌شوند */
+/** کلید SYNCED تازه برای کاربر؛ همه‌ی کلیدهای فعال قبلی بازنشسته می‌شوند */
 export async function giveKey(userId: string): Promise<TestIdentity> {
   await prisma.userE2EKey.updateMany({ where: { userId, retiredAt: null }, data: { retiredAt: new Date(), activeSyncedFor: null } });
   const max = await prisma.userE2EKey.aggregate({ where: { userId }, _max: { version: true } });
@@ -36,7 +36,7 @@ export async function giveKey(userId: string): Promise<TestIdentity> {
   return id;
 }
 
-/** کلیدِ DEVICEِ اضافه (دستگاهِ دوم) — کلیدِ قبلی فعال می‌ماند */
+/** کلید DEVICE اضافه (دستگاه دوم) — کلید قبلی فعال می‌ماند */
 export async function giveDeviceKey(userId: string): Promise<TestIdentity> {
   const max = await prisma.userE2EKey.aggregate({ where: { userId }, _max: { version: true } });
   const kp = await generateIdentityKeyPair();
@@ -60,13 +60,13 @@ async function activeTargets(userIds: string[]) {
   return rows.map((r) => ({ ref: { u: r.userId, k: r.version }, publicKey: r.publicKey }));
 }
 
-/** پیامِ رمزشده‌ی آماده‌ی POST، برای همه‌ی کلیدهای فعالِ دو طرف */
+/** پیام رمزشده‌ی آماده‌ی POST، برای همه‌ی کلیدهای فعال دو طرف */
 export async function encFor(mentorshipId: string, senderId: string, text: string, clientId = randomId(), wrapperId = senderId): Promise<EncryptedMessageV2 & { frankingKey: string }> {
   const rel = await relOf(mentorshipId);
   const recipientId = senderId === rel.mentorId ? rel.studentId : rel.mentorId;
   await keyOf(senderId);
   await keyOf(recipientId);
-  // wrapperId ≠ فرستنده: بازرمزگذاریِ پیامِ قدیمی توسطِ طرفِ مقابل (بسته‌بندی با کلیدِ او)
+  // wrapperId ≠ فرستنده: بازرمزگذاری پیام قدیمی توسط طرف مقابل (بسته‌بندی با کلید او)
   const w = await keyOf(wrapperId);
   return encryptMessageV2(text, { mentorshipId, senderId, clientId }, { ref: { u: wrapperId, k: w.version }, privateKey: w.privateKey }, await activeTargets([senderId, recipientId]));
 }
@@ -76,7 +76,7 @@ async function publicOfDb(r: KeyRef): Promise<string | null> {
   return row?.publicKey ?? null;
 }
 
-/** رمزگشاییِ یک پیامِ GET از دیدِ viewer (با هر کلیدی از viewer که در تست ساخته شده) */
+/** رمزگشایی یک پیام GET از دید viewer (با هر کلیدی از viewer که در تست ساخته شده) */
 export async function openAs(viewerId: string, mentorshipId: string, m: { senderId: string; enc: EncryptedMessage | null; legacyBody?: string | null }) {
   if (!m.enc) return m.legacyBody ?? null;
   const rel = await relOf(mentorshipId);
@@ -102,7 +102,7 @@ export async function openAs(viewerId: string, mentorshipId: string, m: { sender
   });
 }
 
-/** کلیدِ خصوصیِ یک نسخه که در تست ساخته شده */
+/** کلید خصوصی یک نسخه که در تست ساخته شده */
 export function testKey(userId: string, version: number): TestIdentity | undefined {
   return allKeys.get(`${userId}:${version}`);
 }

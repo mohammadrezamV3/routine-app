@@ -9,9 +9,9 @@ export type RelationRole = "student" | "mentor";
 export type Relation = { row: MentorshipRow; role: RelationRole };
 
 /**
- * یک رابطه‌ی منتوری + نقشِ بیننده. قرارداد GETِ تکیِ رابطه ندارد؛ دو فهرستِ
+ * یک رابطه‌ی منتوری + نقش بیننده. قرارداد GET تکی رابطه ندارد؛ دو فهرست
  * «شاگرد/منتور» خوانده و همین id پیدا می‌شود (هر دو طرف صفحه‌ی رابطه و
- * گفت‌وگو را می‌بینند). مشترکِ /mentorship/[id] و /mentorship/[id]/chat.
+ * گفت‌وگو را می‌بینند). مشترک /mentorship/[id] و /mentorship/[id]/chat.
  */
 export function useMentorshipRelation(id: string) {
   const [rel, setRel] = useState<Relation | null>(null);

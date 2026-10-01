@@ -12,14 +12,14 @@ import {
   EconomicEventDto, IMPACT_COLORS, IMPACT_LABELS, currencyMeta, compareActualToForecast,
 } from "@/lib/economicCalendar";
 
-// کارتِ فشرده‌ی تقویم اقتصادی برای صفحه‌ی چارت — جایگزینِ «اخبار بازار».
+// کارت فشرده‌ی تقویم اقتصادی برای صفحه‌ی چارت — جایگزین «اخبار بازار».
 //
-// هر ردیف دقیقاً همان هشت فیلدی را دارد که فارکس‌فکتوری می‌دهد: رویداد،
+// هر ردیف دقیقا همان هشت فیلدی را دارد که فارکس‌فکتوری می‌دهد: رویداد،
 // ارز، تاریخ، ساعت، اهمیت، پیش‌بینی، قبلی و واقعی.
 //
-// داده مثل بقیه‌ی اپ از جدولِ خودمان می‌آید (`/api/trade/economic-calendar`)
-// نه مستقیم از فارکس‌فکتوری — کرانِ سمتِ سرور فید را داخلِ همان جدول
-// می‌ریزد. مرورگر هیچ‌وقت به سرویسِ بیرونی وصل نمی‌شود.
+// داده مثل بقیه‌ی اپ از جدول خودمان می‌آید (`/api/trade/economic-calendar`)
+// نه مستقیم از فارکس‌فکتوری — کران سمت سرور فید را داخل همان جدول
+// می‌ریزد. مرورگر هیچ‌وقت به سرویس بیرونی وصل نمی‌شود.
 
 function isoLocal(d: Date) {
   return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}-${String(d.getDate()).padStart(2, "0")}`;
@@ -45,8 +45,8 @@ export function ChartCalendarPanel() {
       const now = new Date();
       const to = new Date(now.getTime() + 6 * 86_400_000);
       const qs = new URLSearchParams({ from: isoLocal(now), to: isoLocal(to) });
-      // بدونِ tz سرور مرزِ روزها را نیمه‌شبِ UTC می‌گرفت (برای ایران ۳:۳۰ جابه‌جا)
-      // و رویدادهای نزدیکِ نیمه‌شبِ محلی بیرون می‌افتادند.
+      // بدون tz سرور مرز روزها را نیمه‌شب UTC می‌گرفت (برای ایران ۳:۳۰ جابه‌جا)
+      // و رویدادهای نزدیک نیمه‌شب محلی بیرون می‌افتادند.
       qs.set("tz", String(-now.getTimezoneOffset()));
       if (highOnly) qs.set("impacts", "HIGH");
       const res = await fetch(`/api/trade/economic-calendar?${qs}`, { cache: "no-store" });

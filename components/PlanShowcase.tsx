@@ -51,7 +51,7 @@ export type PlanCard = {
 export const PLANS_IRAN: PlanCard[] = [
   {
     key: "basic", nameFa: "روتین من", icon: ICONS.weekly,
-    // «روتین من» دیگه رایگانِ دائمی نیست: ۱۴ روز آزمایشی، بعد ماهانه 99 هزار تومان.
+    // «روتین من» دیگه رایگان دائمی نیست: ۱۴ روز آزمایشی، بعد ماهانه 99 هزار تومان.
     // مبلغ‌ها باید با lib/planPricing.ts یکی بمونن.
     note: "14 روز رایگان",
     prices: { "1": "99,000 تومان", "3": "260,000 تومان", "6": "520,000 تومان", "12": "1,040,000 تومان" },
@@ -105,7 +105,7 @@ export const COMPARE_ROWS_IRAN: CompareRow[] = [
   { label: "اپلیکیشن موبایل", included: { basic: false, exercise: false, trade: false, max: true }, upcoming: true },
   { label: "یکپارچه‌سازی با ساعت هوشمند", included: { basic: false, exercise: false, trade: false, max: true }, upcoming: true },
   { label: "آنالیز هفتگی هوش مصنوعی", included: { basic: false, exercise: false, trade: false, max: true }, upcoming: true },
-  // «تحلیل هوشمند» طبق درخواست صریح دیگر فیچر آماده نیست — به همین بخشِ
+  // «تحلیل هوشمند» طبق درخواست صریح دیگر فیچر آماده نیست — به همین بخش
   // «به‌زودی» (تارشده در جدول) منتقل شد.
   { label: "تحلیل هوشمند", included: { basic: false, exercise: false, trade: false, max: true }, upcoming: true },
   { label: "اشتراک‌گذاری با مربی یا دوستان", included: { basic: false, exercise: false, trade: false, max: true }, upcoming: true },
@@ -120,16 +120,16 @@ export const PLANS_GRID_COLS = "grid-cols-1 sm:grid-cols-2 md:grid-cols-4";
 // روی دسکتاپ (md+) از ستون باریک ۶۲۰px سایت بیرون می‌زنه تا هر ۴ پلن بدون
 // اسکرول کنار هم جا بشن.
 //
-// باگِ گزارش‌شده («توی دسکتاپ اشتراک اومده وسط صفحه [و از لبه بیرون می‌زنه]»):
+// باگ گزارش‌شده («توی دسکتاپ اشتراک اومده وسط صفحه [و از لبه بیرون می‌زنه]»):
 // نسخه‌ی قبلی عرض رو با `w-screen + max-w-[1240px]` می‌ساخت ولی margin-right
-// رو یک عدد *ثابت* (-310px، یعنی دقیقا نصفِ ۱۲۴۰-۶۲۰) می‌ذاشت — درست فقط
-// وقتی عرضِ واقعی دقیقا ۱۲۴۰px بود؛ زیرِ آن (اکثرِ لپ‌تاپ‌ها، ۱۰۲۴/۱۲۸۰px)
-// که `w-screen` عرض را کوچیک‌تر می‌کرد، همان مارجینِ ثابت باقی می‌ماند و
-// جعبه از لبه بیرون می‌زد. کلاسِ Tailwindِ `mx-auto` هم اینجا امتحان شد ولی
-// مرورگر مارجینِ منفیِ حاصل از auto را قرینه تقسیم نکرد (یک سمت صفر، سمتِ
-// دیگر کل عددِ منفی) — به‌جایش `.plans-breakout` در globals.css با یک
+// رو یک عدد *ثابت* (-310px، یعنی دقیقا نصف ۱۲۴۰-۶۲۰) می‌ذاشت — درست فقط
+// وقتی عرض واقعی دقیقا ۱۲۴۰px بود؛ زیر آن (اکثر لپ‌تاپ‌ها، ۱۰۲۴/۱۲۸۰px)
+// که `w-screen` عرض را کوچیک‌تر می‌کرد، همان مارجین ثابت باقی می‌ماند و
+// جعبه از لبه بیرون می‌زد. کلاس Tailwind `mx-auto` هم اینجا امتحان شد ولی
+// مرورگر مارجین منفی حاصل از auto را قرینه تقسیم نکرد (یک سمت صفر، سمت
+// دیگر کل عدد منفی) — به‌جایش `.plans-breakout` در globals.css با یک
 // margin-inline صریح و محاسبه‌شده تعریف شده که هر دو سمت را قطعی و برابر
-// می‌کند، مستقل از عرضِ واقعی و جهت (RTL/LTR).
+// می‌کند، مستقل از عرض واقعی و جهت (RTL/LTR).
 export const BREAKOUT = "plans-breakout";
 
 // روز = نارنجی (طبق طرح جدید)، شب = همون هویت رنگی قبلی سایت (سبز اصلی +
@@ -193,8 +193,8 @@ function PlanCardView({ p, mode, currentPlanKey, upgradeOffer, upgradeFromNameFa
           پیشنهادی
         </span>
       )}
-      {/* طبقِ درخواستِ صریح: زیرِ تایتل دیگر متن «جزئیات» نوشته نمی‌شود —
-          خودِ جدولِ مقایسه‌ی پایینِ صفحه برای همین کافی‌ست. */}
+      {/* طبق درخواست صریح: زیر تایتل دیگر متن «جزئیات» نوشته نمی‌شود —
+          خود جدول مقایسه‌ی پایین صفحه برای همین کافی‌ست. */}
       <div className="flex items-center gap-2">
         <span className={`plan-icon-badge flex h-8 w-8 shrink-0 items-center justify-center rounded-full ${t.accentBgSofter} ${t.accentText}`}>{p.icon}</span>
         <div className={`text-right text-[15px] font-extrabold ${t.accentText}`}>{p.nameFa}</div>
@@ -278,8 +278,8 @@ function PlanCardView({ p, mode, currentPlanKey, upgradeOffer, upgradeFromNameFa
               </button>
             </div>
           ) : (
-            // طبقِ درخواستِ صریح: دیگر یک دکمه‌ی بزرگ نیست — فقط یک متنِ
-            // کوچکِ کلیک‌پذیر پایینِ کارت.
+            // طبق درخواست صریح: دیگر یک دکمه‌ی بزرگ نیست — فقط یک متن
+            // کوچک کلیک‌پذیر پایین کارت.
             <button
               type="button"
               onClick={() => setRenewOpen(true)}
@@ -342,7 +342,7 @@ function PlanCardView({ p, mode, currentPlanKey, upgradeOffer, upgradeFromNameFa
   );
 }
 
-// لیبل‌های کاملا لاتین (مثل نام‌های انگلیسیِ باقی‌مانده) باید چپ‌چین بمونن،
+// لیبل‌های کاملا لاتین (مثل نام‌های انگلیسی باقی‌مانده) باید چپ‌چین بمونن،
 // نه راست‌چین — حتی داخل جدولی که کلا dir="rtl" ارث می‌بره. «مدیربرنامه
 // هوشمند» فارسی‌ست، پس این قانون رویش اثر نمی‌کند و خودش راست‌چین می‌ماند.
 const isLatinLabel = (label: string) => /^[A-Za-z0-9 .,'&/-]+$/.test(label.trim());
@@ -351,11 +351,11 @@ const isLatinLabel = (label: string) => /^[A-Za-z0-9 .,'&/-]+$/.test(label.trim(
 // حساب هردو استفاده می‌شه، فقط رفتار دکمه‌ها (mode) فرق می‌کنه.
 export function PlansSection({ mode, currentPlanKey, title = "از چیزی که لازم داری شروع کن.", upgradeOffer }: { mode: "landing" | "account"; currentPlanKey?: string | null; title?: string; upgradeOffer?: UpgradeOffer | null }) {
   const t = useThemeTokens();
-  // توی صفحه‌ی اشتراک (mode="account") کارتِ پلنِ رایگان (اگه وجود داشته باشه) نشون داده نمی‌شه.
+  // توی صفحه‌ی اشتراک (mode="account") کارت پلن رایگان (اگه وجود داشته باشه) نشون داده نمی‌شه.
   // «روتین من» الان پولیه و این‌جا نشون داده می‌شه.
-  // این فقط کارتِ خریدِ بالای صفحه رو مخفی می‌کنه، نه دیتای پلن: PLANS_IRAN
-  // دست‌نخورده می‌مونه و جدولِ مقایسه‌ی پایین (tablePlans) هم‌چنان ستونِ
-  // رایگان رو داره، چون خودِ جدول برای مقایسه‌ست، نه خرید.
+  // این فقط کارت خرید بالای صفحه رو مخفی می‌کنه، نه دیتای پلن: PLANS_IRAN
+  // دست‌نخورده می‌مونه و جدول مقایسه‌ی پایین (tablePlans) هم‌چنان ستون
+  // رایگان رو داره، چون خود جدول برای مقایسه‌ست، نه خرید.
   const tablePlans = PLANS_IRAN;
   const plans = mode === "account" ? PLANS_IRAN.filter((p) => !p.free) : PLANS_IRAN;
   const compareRows = COMPARE_ROWS_IRAN;
@@ -370,8 +370,8 @@ export function PlansSection({ mode, currentPlanKey, title = "از چیزی که
           <h2 className={`text-2xl font-extrabold ${t.heading}`}>{title}</h2>
         </div>
       )}
-      {/* دوره‌ی آزمایشیِ حسابِ تازه (lib/trial.ts) — فقط لندینگ؛ صفحه‌ی اشتراک
-          همین متن رو توی یادداشتِ بالای خودش داره. متنِ ساده، بی‌بک‌گراند. */}
+      {/* دوره‌ی آزمایشی حساب تازه (lib/trial.ts) — فقط لندینگ؛ صفحه‌ی اشتراک
+          همین متن رو توی یادداشت بالای خودش داره. متن ساده، بی‌بک‌گراند. */}
       {mode === "landing" && (
         <p className={`text-center text-[13px] font-bold ${t.muted}`} style={{ marginBottom: 18 }}>
           14 روز رایگان امتحان کن و بعد بر اساس نیازت، امکانات موردنظرت را انتخاب کن. هر حساب تازه: {TRIAL_COPY_FA}. «نومو» 10 پیام رایگان دارد و در پلن‌های پولی نامحدود است.

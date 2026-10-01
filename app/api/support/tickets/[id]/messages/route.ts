@@ -5,9 +5,9 @@ import { prisma } from "@/lib/prisma";
 import { clampText } from "@/lib/validate";
 import { checkRateLimit } from "@/lib/rateLimit";
 
-// POST /api/support/tickets/:id/messages — پیامِ جدیدِ کاربر روی تیکتِ خودش.
+// POST /api/support/tickets/:id/messages — پیام جدید کاربر روی تیکت خودش.
 // اگه تیکت قبلا ANSWERED یا CLOSED شده بود، با این پیام دوباره OPEN می‌شه —
-// یعنی گفت‌وگو ادامه‌دار می‌مونه، کاربر مجبور نیست تیکتِ تازه بسازه.
+// یعنی گفت‌وگو ادامه‌دار می‌مونه، کاربر مجبور نیست تیکت تازه بسازه.
 export async function POST(req: NextRequest, { params }: { params: { id: string } }) {
   const session = await getServerSession(authOptions);
   const userId = (session?.user as any)?.id as string | undefined;

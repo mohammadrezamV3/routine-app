@@ -1,7 +1,7 @@
-/* بخشِ استریک و اچیومنت‌ها (components/StreakClient.tsx) — روی زیرساختِ
-   کارت‌های داشبورد (.db-page .db-card، هاله‌ی دنبال‌کننده‌ی موس). رنگِ شعله با
-   سطحِ استریک (lib/streakTier.ts) عوض می‌شه: --stk-a/b/c. هیچ بک‌گراندِ تازه‌ای
-   به دکمه/عنصرِ شفاف اضافه نشده؛ فقط خودِ کارت‌ها همون --box-bg ِ سایت رو دارن. */
+/* بخش استریک و اچیومنت‌ها (components/StreakClient.tsx) — روی زیرساخت
+   کارت‌های داشبورد (.db-page .db-card، هاله‌ی دنبال‌کننده‌ی موس). رنگ شعله با
+   سطح استریک (lib/streakTier.ts) عوض می‌شه: --stk-a/b/c. هیچ بک‌گراند تازه‌ای
+   به دکمه/عنصر شفاف اضافه نشده؛ فقط خود کارت‌ها همون --box-bg  سایت رو دارن. */
 
 .stk-page{ display:flex; flex-direction:column; gap:var(--db-gap); }
 .stk-page .stk-hero, .stk-page .stk-ach{ --stk-a:#8a8f98; --stk-b:#b7bcc4; --stk-c:#e5e7eb; }
@@ -14,7 +14,7 @@
 .stk-hero.tier-7{ --stk-a:#10b981; --stk-b:#a3e635; --stk-c:#f0ffd1; }
 .stk-hero.tier-8{ --stk-a:#b8860b; --stk-b:#f5c542; --stk-c:#fff6c9; }
 
-/* ── باکسِ اصلی ── */
+/* ── باکس اصلی ── */
 .stk-hero{ overflow:hidden; gap:18px !important; }
 .stk-hero-aura{
   position:absolute; inset:auto; width:420px; height:420px; top:-190px; inset-inline-start:-140px; z-index:-1; pointer-events:none;
@@ -56,9 +56,9 @@
 .stk-hero-meta svg{ width:14px; height:14px; color:var(--stk-b); }
 .stk-hero-meta b{ color:var(--text); font-variant-numeric:tabular-nums; }
 
-/* مسیرِ مایلستون‌ها */
+/* مسیر مایلستون‌ها */
 .stk-miles{ list-style:none; margin:0; padding:0; display:grid; grid-template-columns:repeat(8, 1fr); position:relative; }
-/* خطِ اتصال بینِ گره‌ها — تکه‌به‌تکه، تا گره‌ها بدونِ پرکردن روی خط بشینن */
+/* خط اتصال بین گره‌ها — تکه‌به‌تکه، تا گره‌ها بدون پرکردن روی خط بشینن */
 .stk-miles li:not(:last-child)::after{
   content:""; position:absolute; top:13px; inset-inline-start:calc(50% + 17px); width:calc(var(--gap-w, 100%) - 34px); height:2px; border-radius:2px;
   background:color-mix(in srgb, var(--muted) 25%, transparent);
@@ -76,7 +76,7 @@
 .stk-miles li.is-reached .stk-mile-label{ color:var(--text); }
 .stk-mini-flame{ width:14px; height:14px; }
 
-/* ۷ روزِ اخیر */
+/* ۷ روز اخیر */
 .stk-week{ display:grid; grid-template-columns:repeat(7, 1fr); gap:6px; }
 .stk-day{ display:flex; flex-direction:column; align-items:center; gap:4px; }
 .stk-day em{ font-style:normal; font-size:11px; font-weight:700; color:var(--muted); }
@@ -88,7 +88,7 @@
 .stk-day-rest{ width:8px; height:2px; border-radius:2px; background:color-mix(in srgb, var(--muted) 45%, transparent); }
 .stk-day-ring{ width:18px; height:18px; border-radius:50%; background:conic-gradient(var(--stk-b) calc(var(--p) * 1%), color-mix(in srgb, var(--muted) 22%, transparent) 0); -webkit-mask:radial-gradient(circle, transparent 5px, #000 5.5px); mask:radial-gradient(circle, transparent 5px, #000 5.5px); }
 
-/* ── ردیفِ کارت‌ها ── */
+/* ── ردیف کارت‌ها ── */
 .stk-grid{ display:grid; gap:var(--db-gap); grid-template-columns:1fr; }
 @media (min-width:900px){ .stk-grid{ grid-template-columns:1fr 1fr; } }
 .stk-golden-body{ display:flex; align-items:center; gap:16px; }
@@ -127,7 +127,7 @@
 .stk-ach-bar i{ display:block; height:100%; transform-origin:right; border-radius:inherit; background:linear-gradient(270deg, var(--ring-1a), var(--ring-1b)); }
 .stk-ach-prog em{ font-style:normal; font-size:10.5px; font-weight:700; color:var(--muted); font-variant-numeric:tabular-nums; }
 
-/* ── جشنِ اچیومنتِ تازه ── */
+/* ── جشن اچیومنت تازه ── */
 .stk-toast{
   position:fixed; bottom:24px; inset-inline:0; margin-inline:auto; width:max-content; max-width:calc(100vw - 32px); z-index:60;
   display:flex; align-items:center; gap:12px; padding:10px 18px 10px 12px; border-radius:20px; cursor:pointer;

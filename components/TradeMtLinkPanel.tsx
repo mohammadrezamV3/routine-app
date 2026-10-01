@@ -88,8 +88,8 @@ export function TradeMtLinkPanel({ accountId, calSystem, accountName }: { accoun
   return (
     <div className="trade-surface trade-page-box trade-mt-panel">
       {accountName && <div className="trade-mt-account-name-line">نام حساب: <b>{accountName}</b></div>}
-      {/* تایتلِ «اتصال متاتریدر» خودِ صفحه بالای این باکس هست — طبقِ درخواستِ
-          صریح داخلِ باکس تکرار نمی‌شود؛ فقط وضعیتِ اتصال می‌ماند. */}
+      {/* تایتل «اتصال متاتریدر» خود صفحه بالای این باکس هست — طبق درخواست
+          صریح داخل باکس تکرار نمی‌شود؛ فقط وضعیت اتصال می‌ماند. */}
       <div className="trade-mt-panel-head">
         <span className={`trade-mt-live${link?.connected ? " connected" : ""}`}>
           <span className="trade-mt-live-dot" />
@@ -133,10 +133,10 @@ export function TradeMtLinkPanel({ accountId, calSystem, accountName }: { accoun
             options={[{ value: "MT4" as const, label: "MetaTrader 4" }, { value: "MT5" as const, label: "MetaTrader 5" }]}
           />
 
-          {/* قدمِ اول همیشه گرفتنِ کده — قبلا کد پایینِ لیست بود و لیست از
-              «کدِ زیر» حرف می‌زد، یعنی کاربر باید اول اسکرول می‌کرد پایین
+          {/* قدم اول همیشه گرفتن کده — قبلا کد پایین لیست بود و لیست از
+              «کد زیر» حرف می‌زد، یعنی کاربر باید اول اسکرول می‌کرد پایین
               می‌دید کد کجاست، بعد برمی‌گشت بالا شروع می‌کرد. الان کد همینجا
-              بالای لیسته، و خودِ لیست به‌جاش می‌گه «همون کدی که بالا گرفتی». */}
+              بالای لیسته، و خود لیست به‌جاش می‌گه «همون کدی که بالا گرفتی». */}
           {code ? (
             <div className="trade-mt-code-box">
               <div className="trade-stat-label">کد اتصال این حساب</div>

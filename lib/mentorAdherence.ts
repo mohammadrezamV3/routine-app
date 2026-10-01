@@ -1,12 +1,12 @@
-// محاسبه‌ی روزبه‌روزِ پایبندی برای گزارشِ هفتگی و هشدارِ منتور — تابع‌های
-// خالص روی داده‌ای که از قبل خوانده شده (برنامه‌ها، آیتم‌ها، لاگ‌ها). خودِ
-// لاگ‌ها را سیستم از ردیابیِ روتین/تمرینِ شاگرد می‌سازد؛ این‌جا فقط خوانده
+// محاسبه‌ی روزبه‌روز پایبندی برای گزارش هفتگی و هشدار منتور — تابع‌های
+// خالص روی داده‌ای که از قبل خوانده شده (برنامه‌ها، آیتم‌ها، لاگ‌ها). خود
+// لاگ‌ها را سیستم از ردیابی روتین/تمرین شاگرد می‌سازد؛ این‌جا فقط خوانده
 // می‌شوند و هیچ منطقی برای «انجام شد یا نه» دوباره نوشته نمی‌شود.
 
 export type LogStatus = "COMPLETED" | "PARTIAL" | "MISSED";
 
 export type SchedItem = { id: string; title: string; days: number[] };
-/** بازه‌ی مؤثرِ برنامه (شروع = دیرترینِ تاریخِ شروع و روزِ فعال‌شدن؛ پایان = زودترینِ پایان و روزِ تمام‌شدن) */
+/** بازه‌ی مؤثر برنامه (شروع = دیرترین تاریخ شروع و روز فعال‌شدن؛ پایان = زودترین پایان و روز تمام‌شدن) */
 export type SchedProgram = { id: string; fromIso: string | null; toIso: string | null; items: SchedItem[] };
 export type LogLite = { itemId: string; date: string; status: LogStatus };
 
@@ -16,7 +16,7 @@ export type DayRoll = {
   completed: number;
   partial: number;
   missed: number;
-  /** روزِ گذشته‌ی برنامه‌دار که برای آیتمش هیچ ثبتی نیست */
+  /** روز گذشته‌ی برنامه‌دار که برای آیتمش هیچ ثبتی نیست */
   unlogged: number;
 };
 
@@ -29,7 +29,7 @@ function inRange(date: string, p: SchedProgram): boolean {
 }
 
 /**
- * جمع‌بندیِ هر روز. `todayIso`: آیتمِ امروزی که هنوز ثبتی ندارد «ثبت‌نشده»
+ * جمع‌بندی هر روز. `todayIso`: آیتم امروزی که هنوز ثبتی ندارد «ثبت‌نشده»
  * حساب نمی‌شود (روز تمام نشده)، فقط اگر ثبت شده باشد در شمارش می‌آید.
  */
 export function rollupDays(programs: SchedProgram[], logs: LogLite[], dates: string[], todayIso: string): DayRoll[] {
@@ -83,7 +83,7 @@ export function doneStreak(days: DayRoll[], todayIso: string): number {
 }
 
 /**
- * چند روزِ برنامه‌دارِ پشت‌سرهم (تا دیروز) هیچ آیتمی انجام نشده، و اولینِ
+ * چند روز برنامه‌دار پشت‌سرهم (تا دیروز) هیچ آیتمی انجام نشده، و اولین
  * آن روزها. امروز حساب نمی‌شود چون هنوز تمام نشده.
  */
 export function idleRun(days: DayRoll[], todayIso: string): { days: number; since: string | null } {
@@ -137,6 +137,6 @@ export function isoRange(fromIso: string, toIso: string): string[] {
   return out;
 }
 
-/** حداقل و حداکثرِ مجاز برای آستانه‌ی هشدار (روز) */
+/** حداقل و حداکثر مجاز برای آستانه‌ی هشدار (روز) */
 export const ALERT_MIN_DAYS = 2;
 export const ALERT_MAX_DAYS = 14;

@@ -39,12 +39,12 @@ function MentorshipHome() {
   const [programs, setPrograms] = useState<ProgramRow[] | null>(null);
   const [programsError, setProgramsError] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
-  // فیلترِ حوزه‌ی منتورهای فعال — فقط وقتی منتورها بیش از یک حوزه دارند دیده می‌شود
+  // فیلتر حوزه‌ی منتورهای فعال — فقط وقتی منتورها بیش از یک حوزه دارند دیده می‌شود
   const [area, setArea] = useState<string>("");
   const [confirmCancel, setConfirmCancel] = useState<MentorshipRow | null>(null);
   const { pendingKey, error: actionError, run, clearError } = useAsyncAction();
   const [actionFor, setActionFor] = useState<string | null>(null);
-  // «منتورها» و «دعوت‌ها» دو تبِ هم‌ردیف‌اند؛ دعوت‌ها بسته شروع می‌شود و فقط نشانِ شمارنده دارد
+  // «منتورها» و «دعوت‌ها» دو تب هم‌ردیف‌اند؛ دعوت‌ها بسته شروع می‌شود و فقط نشان شمارنده دارد
   const [view, setView] = useState<"mentors" | "invites">("mentors");
   const terms = useMentorTermsStatus();
   const [termsChecked, setTermsChecked] = useState(false);
@@ -77,13 +77,13 @@ function MentorshipHome() {
   }, []);
 
   useEffect(() => { load(); loadPrograms(); }, [load, loadPrograms]);
-  // زنده: پذیرش/لغوِ رابطه یا برنامه‌ی تازه از طرفِ منتور (WebSocket/تب دیگه/برگشت به تب)
+  // زنده: پذیرش/لغو رابطه یا برنامه‌ی تازه از طرف منتور (WebSocket/تب دیگه/برگشت به تب)
   useLiveRefresh("mentor", () => { load(); loadPrograms(); });
   useVisiblePolling(() => { load(); loadPrograms(); }, 30_000);
 
   async function act(row: MentorshipRow, action: MentorshipAction) {
     setActionFor(row.id);
-    // پذیرشِ دعوتِ منتور = پذیرشِ «شرایط منتورها» (مثلِ درخواستِ خودِ شاگرد)
+    // پذیرش دعوت منتور = پذیرش «شرایط منتورها» (مثل درخواست خود شاگرد)
     const withTerms = action === "accept" && row.initiatedBy === "MENTOR";
     if (withTerms && needTerms && !termsChecked) { setTermsError("برای پذیرش دعوت، شرایط را بپذیر"); return; }
     const ok = await run(`${action}:${row.id}`, async () => {
@@ -231,7 +231,7 @@ function MentorshipHome() {
                 </>
               }
               end={
-                // گفت‌وگو تبِ پیش‌فرضِ صفحه‌ی رابطه است؛ آیکون نشان می‌دهد این ردیف مستقیم به آن می‌رود
+                // گفت‌وگو تب پیش‌فرض صفحه‌ی رابطه است؛ آیکون نشان می‌دهد این ردیف مستقیم به آن می‌رود
                 r.unread > 0
                   ? <span className="mentor-unread" aria-label={`${faNum(r.unread)} پیام خوانده‌نشده`}>{faNum(r.unread)}</span>
                   : <MessageCircle size={16} strokeWidth={1.75} className="mentor-row-chat" aria-hidden />
@@ -346,7 +346,7 @@ function MentorshipHome() {
       {confirmCancel && (
         <MentorConfirmDialog
           message={`درخواست به ${publicUserName(confirmCancel.counterpart)} لغو شود؟`}
-          hint="بعداً می‌توانی دوباره درخواست بدهی."
+          hint="بعدا می‌توانی دوباره درخواست بدهی."
           confirmLabel="لغو درخواست"
           busy={busy(`cancel:${confirmCancel.id}`)}
           error={actionError}

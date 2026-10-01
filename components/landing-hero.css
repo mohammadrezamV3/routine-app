@@ -1,8 +1,8 @@
 /* ================================================================
-   هیرو + ویترینِ قابلیت‌های لندینگ (LandingHero / LandingShowcase)
+   هیرو + ویترین قابلیت‌های لندینگ (LandingHero / LandingShowcase)
    همه‌ی رنگ‌ها از توکن‌های تم (--accent, --text, --surface-2, …) می‌آیند
    تا هر دو تم خودکار درست باشند. همه‌ی انیمیشن‌ها فقط transform/opacity
-   (به‌جز حلقه‌ی کوچکِ پیشرفت) و با prefers-reduced-motion خاموش می‌شوند.
+   (به‌جز حلقه‌ی کوچک پیشرفت) و با prefers-reduced-motion خاموش می‌شوند.
    ================================================================ */
 
 /* ─── اسکلت و عرض ─── */
@@ -10,13 +10,13 @@
   --lh-w: 100%;
   position:relative;
   text-align:right;
-  /* خنثی‌سازیِ section{} سراسری (پدینگ و خطِ بالای هر بخش) */
+  /* خنثی‌سازی section{} سراسری (پدینگ و خط بالای هر بخش) */
   border-top:none; padding-bottom:0;
 }
 .lh{ padding-top:14px; isolation:isolate; }
 .lsc{ padding-top:64px; }
 
-/* دسکتاپ: از ستونِ ۶۲۰پیکسلیِ .wrap بیرون می‌زنیم (بدون 100vw بی‌حساب؛
+/* دسکتاپ: از ستون ۶۲۰پیکسلی .wrap بیرون می‌زنیم (بدون 100vw بی‌حساب؛
    ۶۴px حاشیه هم جای اسکرول‌بار را دارد و هم فاصله از لبه). */
 @media (min-width:1024px){
   .lh, .lsc{
@@ -33,9 +33,9 @@
   clip:rect(0,0,0,0); white-space:nowrap; border:0;
 }
 
-/* ─── شفقِ پس‌زمینه ─── */
-/* تمام‌عرضِ ویوپورت (اسکرول‌بارِ html در کلِ سایت پنهان است، پس 100vw همان
-   عرضِ واقعی است) تا لبه‌ی بریده‌ی گرادیان‌ها هیچ‌جا دیده نشود؛ لبه‌ی
+/* ─── شفق پس‌زمینه ─── */
+/* تمام‌عرض ویوپورت (اسکرول‌بار html در کل سایت پنهان است، پس 100vw همان
+   عرض واقعی است) تا لبه‌ی بریده‌ی گرادیان‌ها هیچ‌جا دیده نشود؛ لبه‌ی
    بالا/پایین هم با ماسک محو می‌شود. */
 .lh-aurora{
   position:absolute; top:-140px; bottom:-60px; z-index:-1; pointer-events:none; overflow:hidden;
@@ -83,7 +83,7 @@ body[data-theme="light"] .lh-aurora-b{ background:radial-gradient(closest-side, 
 }
 .lh-copy{ min-width:0; }
 
-/* ورودِ پله‌ای متن — پایه همیشه دیده‌شدنی است (بدون JS هم) */
+/* ورود پله‌ای متن — پایه همیشه دیده‌شدنی است (بدون JS هم) */
 .lh-rise{ animation:lh-rise .8s cubic-bezier(.2,.8,.2,1) both; animation-delay:calc(var(--i,0) * 90ms + 60ms); }
 @keyframes lh-rise{ from{ opacity:0; transform:translate3d(0,18px,0); } to{ opacity:1; transform:none; } }
 
@@ -125,7 +125,7 @@ body[data-theme="light"] .lh-aurora-b{ background:radial-gradient(closest-side, 
   padding-bottom:.08em;
 }
 
-/* کلمه‌ی چرخان — همه‌ی کلمه‌ها روی هم در یک سلولِ گرید؛ عرض = پهن‌ترین کلمه، پس بدون جابه‌جاییِ چیدمان */
+/* کلمه‌ی چرخان — همه‌ی کلمه‌ها روی هم در یک سلول گرید؛ عرض = پهن‌ترین کلمه، پس بدون جابه‌جایی چیدمان */
 .lh-rot{
   display:inline-grid; vertical-align:top; justify-items:start;
   padding-bottom:.12em; margin-bottom:-.12em;
@@ -177,10 +177,10 @@ body[data-theme="light"] .lh-brand{
 
 /* ─── صحنه‌ی تصویر ───
    وضوح: هیچ transform:scale ـی روی متن نیست. کوچک‌نمایی با CSS zoom انجام
-   می‌شه (چیدمان در اندازه‌ی نهایی، پس فونت با اندازه‌ی واقعیِ خودش رسم می‌شه،
-   نه بیت‌مپِ کوچک‌شده). هیچ backdrop-filter/filter/will-change/transform ـِ سه‌بعدی
-   روی ماکت و کارت‌ها نیست؛ پارالاکس و شناوری با JS و روی پیکسلِ کامل
-   (LandingHero → translate گرد‌شده). مرورگرِ بدونِ zoom: همون scale قبلی. */
+   می‌شه (چیدمان در اندازه‌ی نهایی، پس فونت با اندازه‌ی واقعی خودش رسم می‌شه،
+   نه بیت‌مپ کوچک‌شده). هیچ backdrop-filter/filter/will-change/transform ـ سه‌بعدی
+   روی ماکت و کارت‌ها نیست؛ پارالاکس و شناوری با JS و روی پیکسل کامل
+   (LandingHero → translate گرد‌شده). مرورگر بدون zoom: همون scale قبلی. */
 .lh-stage{
   --k:1; --iw:440px; --sh:520px;
   position:relative; min-width:0;
@@ -200,12 +200,12 @@ body[data-theme="light"] .lh-brand{
 @media (max-width:559px){ .lh-stage{ --k:.9; } }
 @media (max-width:439px){ .lh-stage{ --k:.8; } }
 @media (max-width:379px){ .lh-stage{ --k:.73; } }
-/* دسکتاپ: صحنه‌ی پهن‌تر تا کارت‌ها بیرونِ گوشی بنشینند و روی محتوایش نیفتند.
+/* دسکتاپ: صحنه‌ی پهن‌تر تا کارت‌ها بیرون گوشی بنشینند و روی محتوایش نیفتند.
    از ۱۳۶۰ به بعد اندازه‌ی واقعی (۱:۱). */
 @media (min-width:1024px){ .lh-stage{ --iw:580px; --sh:580px; --k:.8; } }
 @media (min-width:1200px){ .lh-stage{ --k:.9; } }
 @media (min-width:1360px){ .lh-stage{ --k:1; } }
-/* بیمه: هیچ لایه‌ی شیشه‌ای/مات‌کننده‌ای که متنِ ماکت رو راستر کنه */
+/* بیمه: هیچ لایه‌ی شیشه‌ای/مات‌کننده‌ای که متن ماکت رو راستر کنه */
 .lh-stage .lh-canvas *, .lh-stage .lh-card, .lh-stage .lh-card *, .lh-stage .lh-card-mentor *{
   backdrop-filter:none !important; -webkit-backdrop-filter:none !important; will-change:auto !important;
 }
@@ -217,8 +217,8 @@ body[data-theme="light"] .lh-brand{
 }
 @keyframes lh-breathe{ 0%,100%{ transform:scale(.92); opacity:.85; } 50%{ transform:scale(1.06); opacity:1; } }
 
-/* جابه‌جاییِ لایه‌ها (پارالاکس + شناوری) فقط از JS و همیشه روی پیکسلِ کاملِ
-   دستگاه — بدون transition/animation ـِ CSS که لایه رو کامپوزیت و متن رو تار کنه. */
+/* جابه‌جایی لایه‌ها (پارالاکس + شناوری) فقط از JS و همیشه روی پیکسل کامل
+   دستگاه — بدون transition/animation ـ CSS که لایه رو کامپوزیت و متن رو تار کنه. */
 .lh-layer{ position:absolute; }
 .lh-layer-phone{ inset:0; }
 
@@ -246,8 +246,8 @@ body[data-theme="light"] .lh-phone{
   position:relative; width:100%; height:100%; overflow:hidden;
   border-radius:36px; background:var(--bg); direction:rtl; color:var(--text);
 }
-/* بومِ ۳۶۰پیکسلی: عرضِ واقعیِ گوشی. ۲۵۰ = عرضِ داخلیِ صفحه (۲۶۸ − ۲×۹).
-   کوچک‌نمایی با zoom (چیدمان در اندازه‌ی نهایی → متنِ تیز)، نه transform. */
+/* بوم ۳۶۰پیکسلی: عرض واقعی گوشی. ۲۵۰ = عرض داخلی صفحه (۲۶۸ − ۲×۹).
+   کوچک‌نمایی با zoom (چیدمان در اندازه‌ی نهایی → متن تیز)، نه transform. */
 .lh-canvas{
   position:absolute; top:0; right:0; width:360px; height:769px;
   zoom:.69445;
@@ -267,7 +267,7 @@ body[data-theme="light"] .lh-phone{
 .lh-ph-sig i{ display:block; width:4px; border-radius:1px; background:var(--text); }
 .lh-ph-sig i:nth-child(1){ height:5px; } .lh-ph-sig i:nth-child(2){ height:9px; } .lh-ph-sig i:nth-child(3){ height:13px; }
 
-/* app-topbar: همبرگر + استریک سمتِ راست، لوگو سمتِ چپ */
+/* app-topbar: همبرگر + استریک سمت راست، لوگو سمت چپ */
 .lh-ph-top{
   display:flex; align-items:center; justify-content:space-between; flex-shrink:0;
   height:52px; padding:0 18px;
@@ -342,7 +342,7 @@ body[data-theme="light"] .lh-cal-bar{ background:rgba(0,0,0,.08); }
 .lh-ai-user{ align-self:flex-start; border-bottom-right-radius:5px; }
 .lh-ai-bot{ align-self:flex-end; border-bottom-left-radius:5px; border-color:rgba(0,168,107,.55); }
 
-/* مربی — خودِ کارتِ MentorCard، روی سطحِ توپر */
+/* مربی — خود کارت MentorCard، روی سطح توپر */
 .lh-pos-mentor{ bottom:14px; left:0; transform-origin:0 100%; }
 .lh-card-mentor{ width:224px; }
 .lh-card-mentor .lm-mentor-card{
@@ -351,8 +351,8 @@ body[data-theme="light"] .lh-cal-bar{ background:rgba(0,0,0,.08); }
 }
 body[data-theme="light"] .lh-card-mentor .lm-mentor-card{ box-shadow:0 22px 44px -18px rgba(107,79,61,.35), 0 2px 6px rgba(107,79,61,.08); }
 
-/* موبایل: کارت‌ها کوچک‌تر تا گوشی (و تیک‌های لیستِ برنامه) زیرشان گم نشود
-   (zoom روی خودِ کارت؛ لایه‌ی بیرونی با همون گوشه‌ی لنگر کوچک می‌شه) */
+/* موبایل: کارت‌ها کوچک‌تر تا گوشی (و تیک‌های لیست برنامه) زیرشان گم نشود
+   (zoom روی خود کارت؛ لایه‌ی بیرونی با همون گوشه‌ی لنگر کوچک می‌شه) */
 @media (max-width:1023px){
   .lh-layer > .lh-float{ zoom:.8; }
   @supports not (zoom:1){
@@ -370,9 +370,9 @@ body[data-theme="light"] .lh-card-mentor .lm-mentor-card{ box-shadow:0 22px 44px
 @keyframes lh-grow{ from{ transform:scaleX(0); } }
 
 /* ================================================================
-   اجزای مشترکِ ماکت‌ها (LandingMockups)
+   اجزای مشترک ماکت‌ها (LandingMockups)
    ================================================================ */
-/* پاپِ تیک — جای اسپرینگِ فریمرِ DashTaskRow (فقط transform/opacity) */
+/* پاپ تیک — جای اسپرینگ فریمر DashTaskRow (فقط transform/opacity) */
 .lm-pop{ animation:lm-pop .38s cubic-bezier(.34,1.56,.64,1) both; }
 @keyframes lm-pop{ from{ opacity:0; transform:scale(0) rotate(-45deg); } to{ opacity:1; transform:none; } }
 
@@ -382,11 +382,11 @@ body[data-theme="light"] .lh-card-mentor .lm-mentor-card{ box-shadow:0 22px 44px
   border-radius:14px; border:1px solid var(--surface-line); background:var(--surface-2);
 }
 .lm-tier .header-streak-clock-streak{ flex-direction:column; gap:3px; font-size:12px; }
-/* شعله‌ی واقعیِ هر سطح، فقط بزرگ‌نمایی (scale جدا از transformِ انیمیشنِ فلیکر) */
+/* شعله‌ی واقعی هر سطح، فقط بزرگ‌نمایی (scale جدا از transform انیمیشن فلیکر) */
 .lm-tier .streak-flame{ scale:1.5; margin:5px 0 4px; }
 .lm-tier small{ font-size:9.5px; color:var(--muted); font-weight:600; white-space:nowrap; }
 
-/* MentorCard (mentor.css سنگین است؛ فقط همین چند قانونِ کارت آینه شده) */
+/* MentorCard (mentor.css سنگین است؛ فقط همین چند قانون کارت آینه شده) */
 .lm-mentor-card{ gap:10px; padding:13px 14px; }
 .lm-mentor-head{ display:flex; align-items:center; gap:10px; min-width:0; }
 .lm-mentor-id{ flex:1; min-width:0; display:flex; flex-direction:column; gap:2px; }
@@ -402,7 +402,7 @@ body[data-theme="light"] .lm-cert{ color:#B7860B; }
 .lm-rating b{ font-size:11.5px; font-weight:800; color:var(--text); }
 .lm-since{ display:inline-flex; align-items:center; gap:4px; color:var(--muted); white-space:nowrap; flex:1; min-width:0; }
 
-/* MentorChat — ردیفِ سرویس + حباب‌های support-msg */
+/* MentorChat — ردیف سرویس + حباب‌های support-msg */
 .lm-chat{ display:flex; flex-direction:column; gap:6px; }
 .lm-chat-service{ display:flex; justify-content:center; margin-bottom:4px; }
 .lm-chat-service span{
@@ -418,15 +418,15 @@ body[data-theme="light"] .lm-cert{ color:#B7860B; }
 .lm-rp-sec{ margin-top:4px; }
 .lm-kebab{ display:flex; padding:6px; color:var(--muted); }
 
-/* مکث: وقتی هیرو/ویترین بیرونِ دید است، همه‌ی حلقه‌های CSS متوقف می‌شوند */
+/* مکث: وقتی هیرو/ویترین بیرون دید است، همه‌ی حلقه‌های CSS متوقف می‌شوند */
 .lh.is-paused *, .lh.is-paused *::before,
 .lsc.is-paused *, .lsc.is-paused *::before{ animation-play-state:paused !important; }
 
-/* دستگاهِ لمسیِ ضعیف: شفق و هاله ساکن */
+/* دستگاه لمسی ضعیف: شفق و هاله ساکن */
 html[data-perf-weak] .lh-aurora > span{ animation:none; }
 
 /* ================================================================
-   ویترینِ قابلیت‌ها
+   ویترین قابلیت‌ها
    ================================================================ */
 .lsc-head{ display:flex; flex-direction:column; align-items:flex-start; gap:12px; }
 .lsc-title{
@@ -483,7 +483,7 @@ html[data-perf-weak] .lh-aurora > span{ animation:none; }
   background:radial-gradient(closest-side at 70% 30%, rgba(var(--accent-rgb),.16), rgba(var(--accent-rgb),0));
   animation:lh-breathe 8s ease-in-out infinite;
 }
-/* برش مثلِ یک صفحه‌ی اسکرول‌شدنی: از بالا شروع می‌شود و پایینش محو */
+/* برش مثل یک صفحه‌ی اسکرول‌شدنی: از بالا شروع می‌شود و پایینش محو */
 .lsc-stage-in{
   position:relative; height:100%; display:flex; align-items:flex-start; justify-content:center;
   padding:16px 14px 0; overflow:hidden;
@@ -512,7 +512,7 @@ html[data-perf-weak] .lh-aurora > span{ animation:none; }
   display:flex; align-items:center; justify-content:center; color:#fff; background:var(--accent);
 }
 
-/* ورودِ پله‌ای پیش‌نمایش */
+/* ورود پله‌ای پیش‌نمایش */
 @keyframes lsc-in{ from{ opacity:0; transform:translate3d(0,14px,0); } to{ opacity:1; transform:none; } }
 .lsc-pv > *{
   animation:lsc-in .55s cubic-bezier(.2,.8,.2,1) both;
@@ -529,7 +529,7 @@ html[data-perf-weak] .lh-aurora > span{ animation:none; }
   font-size:12px; text-align:right;
 }
 
-/* روتین: اعلانِ پوش — بالای برش، روی هیچ ردیفی نمی‌افتد */
+/* روتین: اعلان پوش — بالای برش، روی هیچ ردیفی نمی‌افتد */
 .lsc-pv-routine{ padding-top:64px; }
 .lsc-push{
   position:absolute; top:12px; left:0; right:0; margin-inline:auto; z-index:3; width:min(270px, calc(100% - 28px));
@@ -545,7 +545,7 @@ body[data-theme="light"] .lsc-push{ box-shadow:0 18px 36px -16px rgba(107,79,61,
 .lsc-push b{ font-size:11.5px; font-weight:800; }
 .lsc-push span{ font-size:10.5px; color:var(--muted); }
 
-/* آنالیز — WeeklyAnalysisHero در عرضِ کمِ پیش‌نمایش */
+/* آنالیز — WeeklyAnalysisHero در عرض کم پیش‌نمایش */
 .lsc-pv-wa .wa-hero, .lsc-pv-wa .wa-insights-card{ padding:14px; }
 
 /* نومو */
@@ -559,7 +559,7 @@ body[data-theme="light"] .lsc-push{ box-shadow:0 18px 36px -16px rgba(107,79,61,
 .lsc-numo-input{ display:block; color:var(--muted); }
 .lsc-numo-send{ opacity:.45; }
 
-/* کالری — هدفِ روزانه، همون سطحِ .modal-panel */
+/* کالری — هدف روزانه، همون سطح .modal-panel */
 .lsc-goal-panel{ padding:14px; border-radius:22px; background:var(--surface-2); border:1px solid var(--surface-line); }
 .lsc-goal-panel .modal-head{ margin-bottom:10px; }
 /* کالری */
@@ -588,7 +588,7 @@ body[data-theme="light"] .lsc-kcal-bar{ background:rgba(0,0,0,.08); }
 .lsc-stages{ list-style:none; margin:0; padding:0; }
 .lsc-stages .rp-stage:last-child{ padding-bottom:0; }
 
-/* مربی — ردیفِ هفته (MentorProgressWeek) */
+/* مربی — ردیف هفته (MentorProgressWeek) */
 .lsc-week{ display:grid; grid-template-columns:repeat(7,1fr); gap:6px; margin-top:10px; }
 .lsc-week-cell{ display:flex; flex-direction:column; align-items:center; gap:5px; font-size:10.5px; color:var(--muted); font-weight:700; }
 .lsc-week-cell i{
@@ -599,15 +599,15 @@ body[data-theme="light"] .lsc-kcal-bar{ background:rgba(0,0,0,.08); }
 .lsc-week-cell.is-missed i{ background:#E05252; border-color:#E05252; }
 .lsc-week-cell.is-today i{ border-color:var(--accent); border-width:1.5px; }
 
-/* ─── حرکت‌کاهی: همه‌چیز ساکن، در حالتِ نهایی ─── */
+/* ─── حرکت‌کاهی: همه‌چیز ساکن، در حالت نهایی ─── */
 @media (prefers-reduced-motion:reduce){
   .lh *, .lh *::before, .lsc *, .lsc *::before{ animation:none !important; transition:none !important; }
   .lh-layer{ translate:none !important; }
   .lh-rot-word{ transform:none; }
 }
 
-/* گوشیِ باریک: برش‌ها با همان چیدمانِ عرضِ واقعیِ گوشی (~۳۴۰px) رندر و کوچک‌نمایی
-   می‌شوند تا نام‌ها مثلِ خودِ اپ دیده شوند، نه بریده. */
+/* گوشی باریک: برش‌ها با همان چیدمان عرض واقعی گوشی (~۳۴۰px) رندر و کوچک‌نمایی
+   می‌شوند تا نام‌ها مثل خود اپ دیده شوند، نه بریده. */
 @media (max-width:420px){
   .lsc-pv{ zoom:.84; }
 }

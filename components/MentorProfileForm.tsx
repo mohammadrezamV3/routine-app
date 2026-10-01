@@ -37,7 +37,7 @@ export function MentorProfileForm({ profile, onSaved }: { profile: MentorSelf | 
   );
   const [routineRole, setRoutineRole] = useState(profile?.routineRole ?? "");
   const [published, setPublished] = useState(profile?.published ?? false);
-  // پذیرشِ نسخه‌ی جاریِ «شرایط منتوری» (lib/mentorTerms.ts)؛ بدونِ آن سرور ۴۰۰ می‌دهد
+  // پذیرش نسخه‌ی جاری «شرایط منتوری» (lib/mentorTerms.ts)؛ بدون آن سرور ۴۰۰ می‌دهد
   const needsTerms = profile?.mentorTermsVersion !== MENTOR_TERMS_VERSION;
   const [termsAccepted, setTermsAccepted] = useState(false);
   const [termsErr, setTermsErr] = useState<string | null>(null);
@@ -87,7 +87,7 @@ export function MentorProfileForm({ profile, onSaved }: { profile: MentorSelf | 
     setTermsErr(termsMissing ? MENTOR_TERMS_REQUIRED_MESSAGE.mentor : null);
     if (Object.keys(errs).length || termsMissing) { setError(termsMissing && !Object.keys(errs).length ? null : "چند مورد نیاز به اصلاح دارد"); return; }
 
-    // تخصصِ تایپ‌شده‌ای که هنوز «افزودن» نخورده هم ذخیره شود
+    // تخصص تایپ‌شده‌ای که هنوز «افزودن» نخورده هم ذخیره شود
     const pending = specInput.trim().replace(/\s+/g, " ");
     const specs = pending && !specialties.includes(pending) && pending.length <= SPECIALTY_MAX && specialties.length < SPECIALTIES_MAX
       ? [...specialties, pending] : specialties;
@@ -132,7 +132,7 @@ export function MentorProfileForm({ profile, onSaved }: { profile: MentorSelf | 
           <MentorField label="عنوان کوتاه" htmlFor="mp-headline" optional error={fieldErr.headline} hint={`حداکثر ${fa(HEADLINE_MAX)} نویسه`}>
             <input
               id="mp-headline" type="text" className="wsearch-newform-name trade-glass-field" maxLength={HEADLINE_MAX}
-              value={headline} placeholder="مثلاً مربی بدنسازی با 8 سال سابقه"
+              value={headline} placeholder="مثلا مربی بدنسازی با 8 سال سابقه"
               onChange={(e) => { setHeadline(e.target.value); setFieldErr((x) => ({ ...x, headline: undefined })); touched(); }}
             />
           </MentorField>
@@ -142,7 +142,7 @@ export function MentorProfileForm({ profile, onSaved }: { profile: MentorSelf | 
           >
             <textarea
               id="mp-bio" className="wsearch-newform-name trade-glass-field" rows={5} maxLength={BIO_MAX}
-              value={bio} placeholder="مثلاً سابقه، روش کار و این‌که به چه کسانی کمک می‌کنی"
+              value={bio} placeholder="مثلا سابقه، روش کار و این‌که به چه کسانی کمک می‌کنی"
               onChange={(e) => { setBio(e.target.value); setFieldErr((x) => ({ ...x, bio: undefined })); touched(); }}
             />
           </MentorField>
@@ -172,7 +172,7 @@ export function MentorProfileForm({ profile, onSaved }: { profile: MentorSelf | 
             >
               <input
                 id="mp-role" type="text" className="wsearch-newform-name trade-glass-field" maxLength={ROUTINE_ROLE_MAX}
-                value={routineRole} placeholder="مثلاً استاد ریاضی، مشاور کنکور"
+                value={routineRole} placeholder="مثلا استاد ریاضی، مشاور کنکور"
                 onChange={(e) => { setRoutineRole(e.target.value); setFieldErr((x) => ({ ...x, role: undefined })); touched(); }}
               />
             </MentorField>
@@ -201,7 +201,7 @@ export function MentorProfileForm({ profile, onSaved }: { profile: MentorSelf | 
             <div className="flex items-stretch gap-2">
               <input
                 id="mp-spec" type="text" className="wsearch-newform-name trade-glass-field min-w-0 flex-1" maxLength={SPECIALTY_MAX}
-                value={specInput} placeholder="مثلاً کاهش وزن"
+                value={specInput} placeholder="مثلا کاهش وزن"
                 onChange={(e) => { setSpecInput(e.target.value); setFieldErr((x) => ({ ...x, spec: undefined })); }}
                 onKeyDown={(e) => { if (e.key === "Enter") { e.preventDefault(); addSpecialty(); } }}
               />

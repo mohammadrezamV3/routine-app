@@ -5,9 +5,9 @@ import { createPortal } from "react-dom";
 import { ZoomIn } from "lucide-react";
 import { useLockBodyScroll } from "@/lib/useLockBodyScroll";
 
-// پیش‌نمایشِ عکس پروفایل/بنر قبل از آپلود — قبلا عکس بی‌صدا از *وسط*
+// پیش‌نمایش عکس پروفایل/بنر قبل از آپلود — قبلا عکس بی‌صدا از *وسط*
 // کراپ می‌شد و کاربر نمی‌تونست انتخاب کنه کدوم قسمتش دیده بشه (همون
-// «جای پیش‌نمایش درست نیست»). حالا عکس داخلِ قابی با همون نسبتِ نهایی
+// «جای پیش‌نمایش درست نیست»). حالا عکس داخل قابی با همون نسبت نهایی
 // (دایره برای پروفایل، ۳.۲:۱ برای بنر) نشون داده می‌شه، با کشیدن جابه‌جا و
 // با اسلایدر زوم می‌شه، و خروجی دقیقا همون چیزیه که داخل قاب دیده می‌شد.
 //
@@ -33,7 +33,7 @@ export function ImageCropModal({ file, outputW, outputH, shape, title, onCancel,
   const [natural, setNatural] = useState<{ w: number; h: number } | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [zoom, setZoom] = useState(1);
-  const [pos, setPos] = useState({ x: 0, y: 0 }); // گوشه‌ی بالا-چپِ عکس نسبت به قاب (px)
+  const [pos, setPos] = useState({ x: 0, y: 0 }); // گوشه‌ی بالا-چپ عکس نسبت به قاب (px)
   const frameRef = useRef<HTMLDivElement>(null);
   const [frameW, setFrameW] = useState(FRAME_MAX_W);
   const drag = useRef<{ px: number; py: number; x: number; y: number } | null>(null);
@@ -91,7 +91,7 @@ export function ImageCropModal({ file, outputW, outputH, shape, title, onCancel,
   function changeZoom(next: number) {
     if (!natural) return;
     const nextScale = baseScale * next;
-    // زوم حولِ مرکزِ قاب، نه گوشه‌ی عکس
+    // زوم حول مرکز قاب، نه گوشه‌ی عکس
     const cx = frameW / 2, cy = frameH / 2;
     const ratio = nextScale / scale;
     const p = { x: cx - (cx - pos.x) * ratio, y: cy - (cy - pos.y) * ratio };

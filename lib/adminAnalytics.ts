@@ -478,8 +478,8 @@ export async function getUserDetail(userId: string) {
   };
 }
 
-// اعمالِ یکی از سه سطحِ تعدیلِ چت (+ رفعِ محدودیت) — نگاه کن به توضیحِ
-// enum CHAT_MODERATION_ACTIONS در lib/tradeChat.ts. هیچ escalationِ
+// اعمال یکی از سه سطح تعدیل چت (+ رفع محدودیت) — نگاه کن به توضیح
+// enum CHAT_MODERATION_ACTIONS در lib/tradeChat.ts. هیچ escalation
 // خودکاری نیست؛ ادمین خودش هر بار انتخاب می‌کند.
 export async function applyChatModeration(
   actorUserId: string,
@@ -582,8 +582,8 @@ export async function getProductAnalytics(module: ModuleKey, range: Range): Prom
       let totalStages = 0;
       let doneStages = 0;
       for (const r of roadmaps) {
-        // شمارش از countRowProgress می‌آید تا تعریفِ «مرحله‌ی انجام‌شده»
-        // یک‌جا بماند (همان تعریفی که خودِ ماژول و گزارشِ هفتگی دارند).
+        // شمارش از countRowProgress می‌آید تا تعریف «مرحله‌ی انجام‌شده»
+        // یک‌جا بماند (همان تعریفی که خود ماژول و گزارش هفتگی دارند).
         const c = countRowProgress(r.steps, r.progress);
         totalStages += c.total;
         doneStages += c.done;

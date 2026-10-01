@@ -8,13 +8,13 @@ import { readLabels } from "@/lib/mentorManageServer";
 
 type Ctx = { params: { labelId: string } };
 
-/** برچسبِ خودِ همین منتور (ضد IDOR: where با profileِ سشن) */
+/** برچسب خود همین منتور (ضد IDOR: where با profile سشن) */
 async function ownLabel(userId: string, labelId: string) {
   if (typeof labelId !== "string" || !labelId || labelId.length > 64) return null;
   return prisma.mentorStudentLabel.findFirst({ where: { id: labelId, profile: { userId } }, select: { id: true, profileId: true } });
 }
 
-// PATCH /api/mentor/labels/:labelId { name } → تغییرِ نام
+// PATCH /api/mentor/labels/:labelId { name } → تغییر نام
 export async function PATCH(req: Request, { params }: Ctx) {
   const g = await requireMentorsUser();
   if (!g.ok) return g.response;
@@ -34,7 +34,7 @@ export async function PATCH(req: Request, { params }: Ctx) {
   return NextResponse.json({ labels: await readLabels(label.profileId) });
 }
 
-// DELETE /api/mentor/labels/:labelId → حذفِ برچسب و برداشتنش از روی همه‌ی شاگردها
+// DELETE /api/mentor/labels/:labelId → حذف برچسب و برداشتنش از روی همه‌ی شاگردها
 export async function DELETE(_req: Request, { params }: Ctx) {
   const g = await requireMentorsUser();
   if (!g.ok) return g.response;

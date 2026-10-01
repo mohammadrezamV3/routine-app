@@ -3,7 +3,7 @@ import { prisma } from "@/lib/prisma";
 import { requireAdmin } from "@/lib/requireAdmin";
 import { writeAuditLog } from "@/lib/adminAnalytics";
 
-// GET /api/admin/support/:id — جزئیاتِ یک تیکت (هر تیکتی، نه فقط تیکتِ خودِ ادمین).
+// GET /api/admin/support/:id — جزئیات یک تیکت (هر تیکتی، نه فقط تیکت خود ادمین).
 export async function GET(_req: NextRequest, { params }: { params: { id: string } }) {
   const guard = await requireAdmin("support");
   if (!guard.ok) return guard.response;
@@ -28,7 +28,7 @@ export async function GET(_req: NextRequest, { params }: { params: { id: string 
   });
 }
 
-// PATCH /api/admin/support/:id — فقط برای بستنِ دستیِ تیکت.
+// PATCH /api/admin/support/:id — فقط برای بستن دستی تیکت.
 export async function PATCH(req: NextRequest, { params }: { params: { id: string } }) {
   const guard = await requireAdmin("support");
   if (!guard.ok) return guard.response;

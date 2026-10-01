@@ -64,7 +64,7 @@ beforeAll(async () => {
 });
 
 describe("نمای منتور — دسترسی", () => {
-  it("ناشناس ۴۰۱؛ منتورِ بی‌ربط ۴۰۴؛ شاگرد به نمای خودش ۴۰۴", async () => {
+  it("ناشناس ۴۰۱؛ منتور بی‌ربط ۴۰۴؛ شاگرد به نمای خودش ۴۰۴", async () => {
     expect((await view(null, student)).status).toBe(401);
     const stranger = await makeMentor();
     expect((await view(stranger, student)).status).toBe(404);
@@ -77,7 +77,7 @@ describe("نمای منتور — دسترسی", () => {
     expect((await view(mA, student, "?from=x&to=y")).status).toBe(400);
   });
 
-  it("پیش‌فرض: هیچ برنامه‌ای مشترک نیست → بدونِ اسلات و ماژول؛ ایمیل/شماره لو نمی‌رود", async () => {
+  it("پیش‌فرض: هیچ برنامه‌ای مشترک نیست → بدون اسلات و ماژول؛ ایمیل/شماره لو نمی‌رود", async () => {
     const v = await viewJ(mA, student);
     expect(v.routine).toEqual({ scheduleHidden: false, slots: [] });
     expect(v.modules).toEqual({ exercise: null, calorie: null });
@@ -100,7 +100,7 @@ describe("حریم خصوصی — تنظیمات", () => {
     expect((await j(await getPrivacy(req("GET", "/x"), { params: { id: msA } }))).privacy.shareAllPrograms).toBe(false);
   });
 
-  it("کلیدهای نامعتبر دور ریخته می‌شوند؛ مقدارِ غیرِ بولین ۴۰۰", async () => {
+  it("کلیدهای نامعتبر دور ریخته می‌شوند؛ مقدار غیر بولین ۴۰۰", async () => {
     const r = await setPrivacy(student, msA, {
       sharedPrograms: ["routine:Workout", "module:HACK", "evil", 42, "routine:", "routine:Workout", { a: 1 }, "module:EXERCISE"],
     });
@@ -108,14 +108,14 @@ describe("حریم خصوصی — تنظیمات", () => {
     expect((await j(r)).privacy.sharedPrograms).toEqual(["routine:Workout", "module:EXERCISE"]);
     expect((await setPrivacy(student, msA, { showSchedule: "yes" })).status).toBe(400);
     expect((await setPrivacy(student, msA, { sharedPrograms: "routine:Workout" })).status).toBe(400);
-    // فیلدِ ناشناخته (status) نادیده گرفته می‌شود
+    // فیلد ناشناخته (status) نادیده گرفته می‌شود
     await setPrivacy(student, msA, { status: "ENDED", mentorId: "x" } as any);
     expect((await prisma.mentorship.findUnique({ where: { id: msA } }))!.status).toBe("ACTIVE");
   });
 });
 
 describe("حریم خصوصی — پروجکشن", () => {
-  it("کلیدِ تکی: فقط همان برنامه؛ اسمِ تسک مخفی → «مشغول»؛ پیشرفت دیده می‌شود", async () => {
+  it("کلید تکی: فقط همان برنامه؛ اسم تسک مخفی → «مشغول»؛ پیشرفت دیده می‌شود", async () => {
     await setPrivacy(student, msA, { shareAllPrograms: false, sharedPrograms: ["routine:Workout"], showTaskName: false, showProgress: true, showSchedule: true, showProgramName: true });
     const v = await viewJ(mA, student);
     expect(v.routine.slots).toHaveLength(1);
@@ -129,7 +129,7 @@ describe("حریم خصوصی — پروجکشن", () => {
     expect(txt).not.toContain("دکتر");
   });
 
-  it("Select All: همه دیده می‌شوند؛ برنامه‌ی بی‌برچسب با اسمِ تسکِ مخفی → program null (اسم لو نمی‌رود)", async () => {
+  it("Select All: همه دیده می‌شوند؛ برنامه‌ی بی‌برچسب با اسم تسک مخفی → program null (اسم لو نمی‌رود)", async () => {
     await setPrivacy(student, msA, { shareAllPrograms: true, sharedPrograms: [], showTaskName: false });
     const v = await viewJ(mA, student);
     expect(v.routine.slots).toHaveLength(3);
@@ -165,7 +165,7 @@ describe("حریم خصوصی — پروجکشن", () => {
     await setPrivacy(student, msA, { showSchedule: true });
   });
 
-  it("showProgress=false → done null (و کالری/ورزش بدونِ progress)", async () => {
+  it("showProgress=false → done null (و کالری/ورزش بدون progress)", async () => {
     await setPrivacy(student, msA, { shareAllPrograms: true, showProgress: false });
     const v = await viewJ(mA, student);
     expect(v.routine.slots.length).toBe(3);
@@ -182,7 +182,7 @@ describe("حریم خصوصی — پروجکشن", () => {
     expect(v.routine.slots).toEqual([]);
   });
 
-  it("تنظیماتِ منتور A روی منتور B اثری ندارد", async () => {
+  it("تنظیمات منتور A روی منتور B اثری ندارد", async () => {
     await setPrivacy(student, msA, { shareAllPrograms: true, showTaskName: true });
     const vb = await viewJ(mB, student);
     expect(vb.routine.slots).toEqual([]);
@@ -196,7 +196,7 @@ describe("حریم خصوصی — پروجکشن", () => {
     expect(vb2.routine.slots.map((s: any) => s.title)).toEqual(["حل تمرین ریاضی"]);
   });
 
-  it("آینه‌ی برنامه‌ی منتور A در روتینِ شاگرد، حتی با Select All، برای منتور B دیده نمی‌شود؛ برنامه‌های A در لیستِ B نیستند", async () => {
+  it("آینه‌ی برنامه‌ی منتور A در روتین شاگرد، حتی با Select All، برای منتور B دیده نمی‌شود؛ برنامه‌های A در لیست B نیستند", async () => {
     const pid = await activeProgram(mA, student, msA, { title: "برنامه‌ی سری A", items: [{ title: "تمرین سری A", repeat: "DAILY" }] });
     await setPrivacy(student, msB, { shareAllPrograms: true, showTaskName: true, showProgramName: true });
     const vb = await viewJ(mB, student);
@@ -206,13 +206,13 @@ describe("حریم خصوصی — پروجکشن", () => {
     // A برنامه‌ی خودش را می‌بیند
     const va = await viewJ(mA, student);
     expect(va.programs.map((p: any) => p.id)).toContain(pid);
-    // و در لیستِ scopeهای شاگرد نیست
+    // و در لیست scopeهای شاگرد نیست
     as(student);
     const g = await j(await getPrivacy(req("GET", "/x"), { params: { id: msB } }));
     expect(g.scopes.map((s: any) => s.key)).not.toContain("routine:برنامه‌ی سری A");
   });
 
-  it("رابطه‌ی پایان‌یافته یا منتورِ تعلیق‌شده → ۴۰۴", async () => {
+  it("رابطه‌ی پایان‌یافته یا منتور تعلیق‌شده → ۴۰۴", async () => {
     const s2 = await makeUser();
     const m2 = await makeMentor();
     const ms2 = await connect(s2, m2);

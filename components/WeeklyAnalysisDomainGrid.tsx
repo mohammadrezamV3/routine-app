@@ -8,8 +8,8 @@ import { cn } from "@/lib/utils";
 import { ProgressRing } from "./ProgressRing";
 import { DOMAIN_ICONS, DeltaBadge, WA_CARD_CLASS, scoreFill, toneColor, weekdayLetter } from "./WeeklyAnalysisShared";
 
-// ۷ ستونِ ریز: روزِ آینده توخالی، روزِ گذشته‌ی بدون داده خط‌چین (یعنی
-// «ثبت نشده»، نه صفر)، بقیه به نسبتِ امتیاز پر.
+// ۷ ستون ریز: روز آینده توخالی، روز گذشته‌ی بدون داده خط‌چین (یعنی
+// «ثبت نشده»، نه صفر)، بقیه به نسبت امتیاز پر.
 export function WeeklyAnalysisMiniBars({ daily, days, tall = false }: { daily: (number | null)[]; days: DayCell[]; tall?: boolean }) {
   return (
     <div className={cn("wa-minibars", tall && "tall")} dir="rtl">
@@ -110,8 +110,8 @@ function DomainCard({
   );
 }
 
-// کارتِ هر دامنه‌ی فعال — با زدن، کارت تمام‌عرض می‌شه و جزئیات باز می‌شه
-// (انیمیشنِ layoutِ framer-motion جابه‌جاییِ بقیه‌ی کارت‌ها رو نرم می‌کنه).
+// کارت هر دامنه‌ی فعال — با زدن، کارت تمام‌عرض می‌شه و جزئیات باز می‌شه
+// (انیمیشن layout framer-motion جابه‌جایی بقیه‌ی کارت‌ها رو نرم می‌کنه).
 export function WeeklyAnalysisDomainGrid({ domains, days }: { domains: DomainResult[]; days: DayCell[] }) {
   const [open, setOpen] = useState<string | null>(null);
   if (domains.length === 0) return null;

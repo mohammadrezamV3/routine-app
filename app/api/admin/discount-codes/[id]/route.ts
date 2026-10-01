@@ -8,10 +8,10 @@ import { writeAuditLog } from "@/lib/adminAnalytics";
 // Subscription.discountPercent ذخیره می‌شه، پس حذف کد هیچ تراکنش گذشته‌ای
 // رو بی‌اعتبار نمی‌کنه، فقط جلوی استفاده‌ی بعدی رو می‌گیره.
 //
-// تنها وابسته DiscountCodeUsageه (شمارنده‌ی سقفِ مصرف هر کاربر، FK بدونِ
-// cascade) — قبلا حذفِ کدی که حتی یک بار مصرف شده بود با خطای FK شکست
+// تنها وابسته DiscountCodeUsageه (شمارنده‌ی سقف مصرف هر کاربر، FK بدون
+// cascade) — قبلا حذف کدی که حتی یک بار مصرف شده بود با خطای FK شکست
 // می‌خورد و چون خطا قورت داده می‌شد، پاسخ ok برمی‌گشت و کد عملا باقی می‌موند.
-// شمارنده‌ها بدونِ خودِ کد معنایی ندارن، پس با هم در یک تراکنش پاک می‌شن.
+// شمارنده‌ها بدون خود کد معنایی ندارن، پس با هم در یک تراکنش پاک می‌شن.
 export async function DELETE(_req: NextRequest, { params }: { params: { id: string } }) {
   const guard = await requireAdmin("discounts");
   if (!guard.ok) return guard.response;

@@ -47,7 +47,7 @@ export function AddProgramForm({
   scheduleOpts: ScheduleOpts;
   onClose: () => void;
   onChanged: () => void;
-  /** روزی که کاربر در صفحه انتخاب کرده — پیش‌فرضِ گزینه‌ی «فقط برای یک روز» */
+  /** روزی که کاربر در صفحه انتخاب کرده — پیش‌فرض گزینه‌ی «فقط برای یک روز» */
   defaultDateIso?: string;
 }) {
   useLockBodyScroll();
@@ -56,7 +56,7 @@ export function AddProgramForm({
   const [tag, setTag] = useState("");
   const [importance, setImportance] = useState<Importance>("medium");
   const [isPeriod, setIsPeriod] = useState(false);
-  // برنامه‌ی «لیستی»: چند آیتمِ جدا که تک‌تک تیک می‌خورن (lib/routineChecklist.ts)
+  // برنامه‌ی «لیستی»: چند آیتم جدا که تک‌تک تیک می‌خورن (lib/routineChecklist.ts)
   const [isList, setIsList] = useState(false);
   const [items, setItems] = useState<ChecklistItem[]>([]);
   const [itemsError, setItemsError] = useState(false);
@@ -69,8 +69,8 @@ export function AddProgramForm({
   const [pickerFor, setPickerFor] = useState<"start" | "end" | "once" | null>(null);
   const [rows, setRows] = useState<NewRow[]>([{ id: newRowId(), jsDays: [], start: "", end: "" }]);
   const [status, setStatus] = useState<"idle" | "loading" | "success" | "error">("idle");
-  // پیامِ خطا عمداً *داخلِ همین فرم* نشان داده می‌شود، نه با بنرِ بالای صفحه:
-  // درخواستِ صریحِ کاربر بود که آن بنرها حذف شوند. جایی که کاربر دارد نگاه
+  // پیام خطا عمدا *داخل همین فرم* نشان داده می‌شود، نه با بنر بالای صفحه:
+  // درخواست صریح کاربر بود که آن بنرها حذف شوند. جایی که کاربر دارد نگاه
   // می‌کند همین‌جاست، پس پیام هم باید همین‌جا باشد.
   const [formError, setFormError] = useState<string | null>(null);
   const [nameError, setNameError] = useState(false);
@@ -169,14 +169,14 @@ export function AddProgramForm({
     const onceIso = isOnce ? jalaliToIso(...onceJalali) : null;
     const periodStart = isPeriod && startJalali ? jalaliToIso(...startJalali) : null;
     const periodEnd = isPeriod && endJalali ? jalaliToIso(...endJalali) : null;
-    // تاریخِ ثبت: تک‌روزه → همان روز؛ دوره → بازه‌ی انتخاب‌شده؛ هفتگی → از امروز
+    // تاریخ ثبت: تک‌روزه → همان روز؛ دوره → بازه‌ی انتخاب‌شده؛ هفتگی → از امروز
     const dates: { startDate: string; endDate?: string } = onceIso
       ? { startDate: onceIso, endDate: onceIso }
       : periodStart && periodEnd
         ? { startDate: periodStart, endDate: periodEnd }
         : { startDate: today };
 
-    /** اولین وقوعِ واقعیِ این روزِ هفته — تداخل باید همان‌جا سنجیده شود، نه لزوما این هفته */
+    /** اولین وقوع واقعی این روز هفته — تداخل باید همان‌جا سنجیده شود، نه لزوما این هفته */
     function firstOccurrence(jsDay: number): Date | null {
       const from = dates.startDate > today ? dates.startDate : today;
       const d = new Date(from + "T00:00:00");
@@ -194,7 +194,7 @@ export function AddProgramForm({
       const endMin = timeStartMinutes(endFa);
 
       for (const jsDay of (onceIso ? [jsDayOfIso(onceIso)] : r.jsDays)) {
-        // عمداً هیچ قفلی روی «این ساعت امروز گذشته» نیست: کاربر باید بتواند
+        // عمدا هیچ قفلی روی «این ساعت امروز گذشته» نیست: کاربر باید بتواند
         // برنامه‌ی همین امروز را هم ثبت کند، حتی اگر ساعتش رد شده باشد.
         const at = onceIso || isPeriod ? firstOccurrence(jsDay) : null;
         let conflict = onceIso || isPeriod
@@ -225,10 +225,10 @@ export function AddProgramForm({
     setStatus("loading");
 
     // دیگه هیچ تاخیر مصنوعی‌ای قبل از نوشتن نیست — طبق درخواست صریح، برنامه
-    // باید همون لحظه‌ای که واقعاً ذخیره شد توی بقیه‌ی اپ هم دیده بشه، نه
+    // باید همون لحظه‌ای که واقعا ذخیره شد توی بقیه‌ی اپ هم دیده بشه، نه
     // بعد از یک لودینگ ساختگی که فقط برای نمایش بود.
     const trimmedTag = tag.trim();
-    // همه‌ی روزهای این برنامه همون آیتم‌ها رو دارن (کلیدِ تیک با id ِ هر occurrence جداست)
+    // همه‌ی روزهای این برنامه همون آیتم‌ها رو دارن (کلید تیک با id  هر occurrence جداست)
     const cleanItems = isList ? items.map((i) => ({ id: i.id, name: i.name.trim() })).filter((i) => i.name) : [];
     const additions: CustomOccurrence[] = normalizedRows.map((r) => ({
       id: "custom-" + Date.now().toString(36) + Math.random().toString(36).slice(2, 7),

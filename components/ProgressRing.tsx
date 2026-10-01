@@ -2,8 +2,8 @@
 
 import { GradientRing, RING_GREEN, RING_OVER, type RingGrad } from "./GradientRing";
 
-// حلقه‌ی پیشرفتِ عمومی — حالا روی GradientRing (همون حلقه‌ی داشبورد).
-// color فقط معنا رو مشخص می‌کنه: رنگِ خطر (قرمز) → --ring-over، بقیه → سبزِ پیش‌فرض.
+// حلقه‌ی پیشرفت عمومی — حالا روی GradientRing (همون حلقه‌ی داشبورد).
+// color فقط معنا رو مشخص می‌کنه: رنگ خطر (قرمز) → --ring-over، بقیه → سبز پیش‌فرض.
 export function ProgressRing({
   pct,
   size = 72,

@@ -37,8 +37,8 @@ function deviceTimezone(): string | undefined {
 }
 
 /**
- * idempotent: سابسکریپشنِ موجود رو دوباره به سرور می‌فرسته (نه یکی جدید)،
- * مگر اینکه با کلیدِ VAPIDِ دیگه‌ای ساخته شده باشه — اون‌وقت عوضش می‌کنه،
+ * idempotent: سابسکریپشن موجود رو دوباره به سرور می‌فرسته (نه یکی جدید)،
+ * مگر اینکه با کلید VAPID دیگه‌ای ساخته شده باشه — اون‌وقت عوضش می‌کنه،
  * وگرنه سرور هیچ‌وقت نمی‌تونست بهش پوش بفرسته.
  *
  * موفقیت برای همون کاربری که سرور برگردوند علامت می‌خوره (hasServerPush).
@@ -51,7 +51,7 @@ export async function subscribeToPush(): Promise<boolean> {
 
   try {
     await navigator.serviceWorker.register("/sw.js");
-    // pushManager.subscribe روی رجیستریشنی که هنوز workerِ *فعال* نداره (اولین
+    // pushManager.subscribe روی رجیستریشنی که هنوز worker *فعال* نداره (اولین
     // نصب) خطای «no active Service Worker» می‌ده — قبلا همین‌جا بی‌صدا شکست
     // می‌خورد و دستگاه هیچ‌وقت سابسکرایب نمی‌شد.
     const registration = await navigator.serviceWorker.ready;

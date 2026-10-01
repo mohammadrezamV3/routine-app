@@ -4,13 +4,13 @@ import { authOptions } from "@/lib/auth";
 import { checkRateLimit } from "@/lib/rateLimit";
 import { readAudioFromRequest, transcribeVoice } from "@/lib/speechToText";
 
-// تبدیلِ ویس به متن برای فیلدِ پیامِ پشتیبانی — طبقِ درخواستِ صریح («دکمه
-// ارسال و فیلدِ متن مثلِ مدیربرنامه باشه، فرد حتی بتونه ویس بفرسته»).
+// تبدیل ویس به متن برای فیلد پیام پشتیبانی — طبق درخواست صریح («دکمه
+// ارسال و فیلد متن مثل مدیربرنامه باشه، فرد حتی بتونه ویس بفرسته»).
 //
-// عمدا هیچ ماژولی گیت نمی‌شود (برخلافِ routine/assistant/voice که پشتِ
-// ModuleKey.ROUTINE است) — پشتیبانی باید برای هر کاربرِ واردشده در دسترس
-// باشد، صرف‌نظر از این‌که کدام پلن را دارد. منطقِ تبدیل خودش توی
-// lib/speechToText.ts مشترک با همان روتِ روتین است.
+// عمدا هیچ ماژولی گیت نمی‌شود (برخلاف routine/assistant/voice که پشت
+// ModuleKey.ROUTINE است) — پشتیبانی باید برای هر کاربر واردشده در دسترس
+// باشد، صرف‌نظر از این‌که کدام پلن را دارد. منطق تبدیل خودش توی
+// lib/speechToText.ts مشترک با همان روت روتین است.
 export const dynamic = "force-dynamic";
 
 export async function POST(req: NextRequest) {
@@ -20,7 +20,7 @@ export async function POST(req: NextRequest) {
 
   if (!(await checkRateLimit(`support-voice:${userId}`, 20, 10 * 60 * 1000))) {
     return NextResponse.json(
-      { error: "ویس‌ها را خیلی سریع پشتِ هم فرستادی. چند دقیقه صبر کن." },
+      { error: "ویس‌ها را خیلی سریع پشت هم فرستادی. چند دقیقه صبر کن." },
       { status: 429 }
     );
   }

@@ -34,7 +34,7 @@ export const ICONS: Record<string, JSX.Element> = {
   home: (
     <svg viewBox="0 0 24 24" fill="none"><path d="M4 11.5 12 4l8 7.5" stroke="currentColor" strokeWidth="1.7" strokeLinecap="round" strokeLinejoin="round"/><path d="M6 10v9a1 1 0 0 0 1 1h3v-5.5a1 1 0 0 1 1-1h2a1 1 0 0 1 1 1V20h3a1 1 0 0 0 1-1v-9" stroke="currentColor" strokeWidth="1.7" strokeLinecap="round" strokeLinejoin="round"/></svg>
   ),
-  // داشبورد — چیدمانِ بنتو (یک کاشیِ بلند + سه کاشی)
+  // داشبورد — چیدمان بنتو (یک کاشی بلند + سه کاشی)
   dashboard: (
     <svg viewBox="0 0 24 24" fill="none"><rect x="3.5" y="3.5" width="7.5" height="10" rx="2" stroke="currentColor" strokeWidth="1.7"/><rect x="13" y="3.5" width="7.5" height="6" rx="2" stroke="currentColor" strokeWidth="1.7"/><rect x="13" y="11.5" width="7.5" height="9" rx="2" stroke="currentColor" strokeWidth="1.7"/><rect x="3.5" y="15.5" width="7.5" height="5" rx="2" stroke="currentColor" strokeWidth="1.7"/></svg>
   ),
@@ -71,7 +71,7 @@ export const ICONS: Record<string, JSX.Element> = {
   checklist: (
     <svg viewBox="0 0 24 24" fill="none"><rect x="3.5" y="4.5" width="4" height="4" rx="1" stroke="currentColor" strokeWidth="1.6"/><path d="M4.3 6.5 5.2 7.4 6.8 5.6" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round"/><rect x="3.5" y="14" width="4" height="4" rx="1" stroke="currentColor" strokeWidth="1.6"/><path d="M4.3 16 5.2 16.9 6.8 15.1" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round"/><path d="M11 6.5h9.5M11 16h9.5" stroke="currentColor" strokeWidth="1.7" strokeLinecap="round"/></svg>
   ),
-  // منتورها — یک نفر (منتور) و یک نفرِ کوچک‌ترِ کنارش (شاگرد)، هم‌خط با بقیه‌ی ست
+  // منتورها — یک نفر (منتور) و یک نفر کوچک‌تر کنارش (شاگرد)، هم‌خط با بقیه‌ی ست
   mentors: (
     <svg viewBox="0 0 24 24" fill="none"><circle cx="9" cy="7.5" r="3.2" stroke="currentColor" strokeWidth="1.7"/><path d="M3 19.5c1-3.3 3.3-5 6-5s5 1.7 6 5" stroke="currentColor" strokeWidth="1.7" strokeLinecap="round"/><circle cx="17.2" cy="10" r="2.3" stroke="currentColor" strokeWidth="1.6"/><path d="M16.3 14.6c2.2-.2 3.9 1.1 4.7 3.4" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round"/></svg>
   ),
@@ -132,14 +132,14 @@ function isGroup(item: NavItem): item is NavGroup {
 }
 
 const LINKS: NavItem[] = [
-  // داشبورد — نمای کلیِ همه‌ی بخش‌ها؛ پشتِ فلگِ `dashboard` (فعلا فقط ادمین‌ها)
+  // داشبورد — نمای کلی همه‌ی بخش‌ها؛ پشت فلگ `dashboard` (فعلا فقط ادمین‌ها)
   { href: "/dashboard", label: "داشبورد", icon: "dashboard", feature: "dashboard" },
   { href: "/weekly", label: "روتین", icon: "weekly" },
   { href: "/sleep", label: "خواب", icon: "sleep", module: "SLEEP" },
   { href: "/roadmaps", label: "رودمپ‌ها", icon: "roadmaps", feature: "roadmaps" },
-  // منتورها درست زیرِ رودمپ‌ها. گروه فقط صفحه‌های سمتِ شاگرد را دارد؛
-  // «پنل منتور» (برای کسی که منتوری می‌کند) این‌جا نیست — در پاپ‌آپِ پروفایل،
-  // زیرِ «پنل کاربری»، کنارِ بقیه‌ی پنل‌ها. آیکونِ زیرمجموعه‌ها در داده هست ولی طبقِ درخواستِ قبلیِ
+  // منتورها درست زیر رودمپ‌ها. گروه فقط صفحه‌های سمت شاگرد را دارد؛
+  // «پنل منتور» (برای کسی که منتوری می‌کند) این‌جا نیست — در پاپ‌آپ پروفایل،
+  // زیر «پنل کاربری»، کنار بقیه‌ی پنل‌ها. آیکون زیرمجموعه‌ها در داده هست ولی طبق درخواست قبلی
   // کاربر زیرمجموعه‌های منو آیکون رندر نمی‌کنند (globals.css → .nav-link-sub-item).
   {
     label: "مربی‌ها", icon: "mentors", feature: "mentors",
@@ -206,12 +206,12 @@ export function NavDrawer() {
   // پس‌زمینه‌ی aurora (پایین‌تر در BackgroundCanvasLoader)
   const hideTopbar = pathname?.startsWith("/auth") || pathname?.startsWith("/admin");
 
-  // آیتم‌های منو عمداً `<Link>` واقعی‌اند، نه `<a onClick={router.push}>`.
-  // دو باگِ گزارش‌شده مستقیم از همان می‌آمد: «دکمه رو می‌زنم نمی‌ره» و «خیلی
+  // آیتم‌های منو عمدا `<Link>` واقعی‌اند، نه `<a onClick={router.push}>`.
+  // دو باگ گزارش‌شده مستقیم از همان می‌آمد: «دکمه رو می‌زنم نمی‌ره» و «خیلی
   // دیر می‌ره». با router.push هیچ prefetchی وجود ندارد، پس ضربه یعنی
-  // شروعِ دانلودِ صفحه از صفر — و چون هندلر جاوااسکریپتی‌ست، اگر همان
-  // لحظه ترد اصلی مشغول باشد (بسته‌شدنِ کشو، انیمیشن‌ها) کلیک عملا گم
-  // می‌شود. Link مقصد را از قبل آماده می‌کند و ناوبری‌اش دستِ خودِ Next است.
+  // شروع دانلود صفحه از صفر — و چون هندلر جاوااسکریپتی‌ست، اگر همان
+  // لحظه ترد اصلی مشغول باشد (بسته‌شدن کشو، انیمیشن‌ها) کلیک عملا گم
+  // می‌شود. Link مقصد را از قبل آماده می‌کند و ناوبری‌اش دست خود Next است.
 
   // منوی همبرگری، پروفایل، و اعلان‌ها هر سه توی هدر همزمان قابل بازشدن
   // بودن (سه تا state جدا، بدون هماهنگی) — کاربر می‌تونست چندتاشونو با هم
@@ -222,8 +222,8 @@ export function NavDrawer() {
     setNotifPanelOpen(false);
   }
   // مقصدهای منوی پروفایل در هیچ `<Link>`ی نیستند (آیتم‌هایش دکمه‌اند، چون
-  // پنل پورتال‌شده است)، پس Next خودش آماده‌شان نمی‌کند. با بازشدنِ پنل
-  // همان‌جا prefetch می‌شوند تا ضربه‌ی بعدی منتظرِ دانلود نماند.
+  // پنل پورتال‌شده است)، پس Next خودش آماده‌شان نمی‌کند. با بازشدن پنل
+  // همان‌جا prefetch می‌شوند تا ضربه‌ی بعدی منتظر دانلود نماند.
   useEffect(() => {
     if (!profileMenuOpen) return;
     router.prefetch("/account");
@@ -313,7 +313,7 @@ export function NavDrawer() {
     const seq = ++notifLoadSeq.current;
     import("./NotificationPanel").then(({ preloadNotifications, countUnreadNotifications }) =>
       preloadNotifications().then((items) => {
-        // پنلِ باز یعنی کاربر همین الان داره می‌بینه — نقطه‌ی زنگوله خاموش می‌مونه
+        // پنل باز یعنی کاربر همین الان داره می‌بینه — نقطه‌ی زنگوله خاموش می‌مونه
         if (seq === notifLoadSeq.current && !notifPanelOpenRef.current) setNotifCount(countUnreadNotifications(items));
       })
     );
@@ -323,9 +323,9 @@ export function NavDrawer() {
     return () => { notifLoadSeq.current++; };
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [status]);
-  // زنده: اعلانِ تازه (WebSocket/تب دیگه) یا تغییرِ برنامه‌ها/تیک‌ها (یادآوری‌های
-  // امروز از همون‌ها ساخته می‌شن) → شمارنده همون لحظه. پولینگِ فقط-وقتِ-دیده‌شدن
-  // تورِ ایمنیه برای وقتی WebSocket وصل نیست.
+  // زنده: اعلان تازه (WebSocket/تب دیگه) یا تغییر برنامه‌ها/تیک‌ها (یادآوری‌های
+  // امروز از همون‌ها ساخته می‌شن) → شمارنده همون لحظه. پولینگ فقط-وقت-دیده‌شدن
+  // تور ایمنیه برای وقتی WebSocket وصل نیست.
   useLiveRefresh(["notifications", "mentor", "customOccurrences", "removedOccurrences", "daily"], loadNotifCount, {
     enabled: status === "authenticated",
   });
@@ -376,12 +376,12 @@ export function NavDrawer() {
     <>
       {!hideTopbar && (
         <>
-          {/* طبقِ درخواستِ صریح: بالای صفحه (پشتِ نوار وضعیت/بریدگیِ دوربین
-              روی موبایل) هم باید موقعِ اسکرول بلور بماند، نه بک‌گراندِ خامِ
+          {/* طبق درخواست صریح: بالای صفحه (پشت نوار وضعیت/بریدگی دوربین
+              روی موبایل) هم باید موقع اسکرول بلور بماند، نه بک‌گراند خام
               صفحه. .app-topbar خودش از `top:14px + safe-area-inset-top`
-              شروع می‌شود، یعنی از خودِ safe-area تا لبه‌ی بالای صفحه یک
-              نواری می‌ماند که قبلاً هیچ بلوری نداشت. این عنصر مستقل، فقط
-              همان نوار را (به ارتفاعِ safe-area-inset-top) می‌پوشاند. */}
+              شروع می‌شود، یعنی از خود safe-area تا لبه‌ی بالای صفحه یک
+              نواری می‌ماند که قبلا هیچ بلوری نداشت. این عنصر مستقل، فقط
+              همان نوار را (به ارتفاع safe-area-inset-top) می‌پوشاند. */}
           <div className="app-topbar-statusbar-blur" aria-hidden="true" />
           <header className="app-topbar">
           <div className="topbar-actions-left">
@@ -555,13 +555,13 @@ export function NavDrawer() {
                       <ChevronDown size={16} />
                     </span>
                   </a>
-                  {/* باز/بسته‌شدنِ زیرمنو عمداً CSSیِ خالص است، نه انیمیشنِ
-                      ارتفاعِ framer-motion. دلیلش لگی بود که کاربر گزارش کرد:
-                      این کشو یک لایه‌ی backdrop-filterِ سنگین است، و
-                      انیمیشنِ height توسط JS یعنی هر فریم یک نوشتنِ استایل +
-                      layout + رسترِ دوباره‌ی همان بلور. با ترفندِ
-                      grid-template-rows: 0fr→1fr هیچ کارِ جاوااسکریپتی در
-                      هر فریم نیست، و `contain` هم نمی‌گذارد این تغییر کلِ
+                  {/* باز/بسته‌شدن زیرمنو عمدا CSSی خالص است، نه انیمیشن
+                      ارتفاع framer-motion. دلیلش لگی بود که کاربر گزارش کرد:
+                      این کشو یک لایه‌ی backdrop-filter سنگین است، و
+                      انیمیشن height توسط JS یعنی هر فریم یک نوشتن استایل +
+                      layout + رستر دوباره‌ی همان بلور. با ترفند
+                      grid-template-rows: 0fr→1fr هیچ کار جاوااسکریپتی در
+                      هر فریم نیست، و `contain` هم نمی‌گذارد این تغییر کل
                       کشو را باطل کند. */}
                   <div className={`nav-group-sub${isExpanded ? " open" : ""}`}>
                     <div className="nav-group-sub-inner">

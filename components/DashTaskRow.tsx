@@ -13,14 +13,14 @@ import { toEnDigits } from "@/lib/schedule";
 export type DashTaskItem = {
   id: string; name: string; time: string; importance?: Importance; tag?: string; done: boolean;
   isPast?: boolean; dayPast?: boolean; notStarted?: boolean; isFuture?: boolean;
-  /** «وقتش گذشته» و انجام نشده — روزش گذشته یا ساعتِ امروزش رد شده
-   * (lib/schedule.ts → isTaskTimePassed). منبعِ ✕ و لیبلِ وضعیت. */
+  /** «وقتش گذشته» و انجام نشده — روزش گذشته یا ساعت امروزش رد شده
+   * (lib/schedule.ts → isTaskTimePassed). منبع ✕ و لیبل وضعیت. */
   missed?: boolean;
-  /** ردیفِ سنتتیکِ «برنامه تمرینی امروز» — بجای چک‌باکس، دکمه‌ی «شروع»
+  /** ردیف سنتتیک «برنامه تمرینی امروز» — بجای چک‌باکس، دکمه‌ی «شروع»
    * دارد که با کلیک هم تیک می‌خورد هم به صفحه‌ی بدنسازی می‌برد. سه‌نقطه
    * (ویرایش/انتقال/حذف) برایش نیست چون یک occurrence واقعی نیست. */
   exercise?: boolean;
-  /** برنامه‌ی لیستی (lib/routineChecklist.ts): آیتم‌ها با وضعیتِ تیکِ همین روز */
+  /** برنامه‌ی لیستی (lib/routineChecklist.ts): آیتم‌ها با وضعیت تیک همین روز */
   items?: { id: string; name: string; done: boolean }[];
 };
 
@@ -41,7 +41,7 @@ export function DashTaskRow({
 }: {
   task: DashTaskItem;
   editable: boolean;
-  /** itemId = تیکِ یک آیتمِ برنامه‌ی لیستی؛ بدونش = کلِ برنامه (لیستی: همه با هم) */
+  /** itemId = تیک یک آیتم برنامه‌ی لیستی؛ بدونش = کل برنامه (لیستی: همه با هم) */
   onToggle: (id: string, itemId?: string) => void;
   onOpen: (name: string) => void;
   onEdit: (id: string) => void;
@@ -59,13 +59,13 @@ export function DashTaskRow({
   const [menuPos, setMenuPos] = useState<{ top: number; right: number } | null>(null);
   const btnWrapRef = useRef<HTMLDivElement>(null);
   const menuRef = useRef<HTMLDivElement>(null);
-  // جلوگیری از باگِ تپ‌استرایک: با اولین کلیکِ «شروع» بلافاصله دکمه غیرفعال
-  // می‌شود، وگرنه یک دابل‌تپِ سریع می‌توانست دوبار onStart را صدا بزند
-  // (دوبار ناوبری به صفحه‌ی بدنسازی، یا رِیس روی نوشتنِ وضعیتِ تیک).
+  // جلوگیری از باگ تپ‌استرایک: با اولین کلیک «شروع» بلافاصله دکمه غیرفعال
+  // می‌شود، وگرنه یک دابل‌تپ سریع می‌توانست دوبار onStart را صدا بزند
+  // (دوبار ناوبری به صفحه‌ی بدنسازی، یا ریس روی نوشتن وضعیت تیک).
   const [starting, setStarting] = useState(false);
-  // اگه onStart به هر دلیلی (خطای شبکه هنگام ثبتِ تیک) done رو true نکنه،
-  // دکمه نباید برای همیشه قفل بمونه — این یعنی خودِ همون باگی که قرار بود
-  // جلوش گرفته بشه، فقط برعکس (به‌جای دوبار زدن، دیگه اصلاً نمی‌شه زد).
+  // اگه onStart به هر دلیلی (خطای شبکه هنگام ثبت تیک) done رو true نکنه،
+  // دکمه نباید برای همیشه قفل بمونه — این یعنی خود همون باگی که قرار بود
+  // جلوش گرفته بشه، فقط برعکس (به‌جای دوبار زدن، دیگه اصلا نمی‌شه زد).
   useEffect(() => {
     if (!starting) return;
     const t = setTimeout(() => setStarting(false), 4000);
@@ -103,8 +103,8 @@ export function DashTaskRow({
           مرکز آیکون چند پیکسل بالاتر از مرکز متن می‌افتاد. حالا خودش یه
           فلکس مربعی هم‌ارتفاع ردیفه، پس مرکزش دقیقا روی مرکز ردیفه. */}
       <div className="flex h-6 w-6 shrink-0 items-center sm:h-[17px] sm:w-[17px]" ref={btnWrapRef}>
-        {/* ردیفِ سنتتیکِ ورزش یک occurrence واقعی نیست — ویرایش/انتقال/حذف
-            روی آن معنا ندارد، پس سه‌نقطه‌اش اصلاً رندر نمی‌شود (نه فقط
+        {/* ردیف سنتتیک ورزش یک occurrence واقعی نیست — ویرایش/انتقال/حذف
+            روی آن معنا ندارد، پس سه‌نقطه‌اش اصلا رندر نمی‌شود (نه فقط
             غیرفعال) تا هم‌تراز بماند ولی گمراه‌کننده نباشد. */}
         {!task.exercise && (
           <button
@@ -173,14 +173,14 @@ export function DashTaskRow({
         )}
       </div>
 
-      {/* تگ باید بچسبد به *نامِ برنامه*، نه به ساعت‌ها. قبلاً کانتینرِ نام
-          `flex-1` بود، پس نام تمامِ فضای خالی را می‌گرفت و تگ را هل می‌داد
-          تا کنارِ ساعت — روی نامِ بلند این خیلی واضح بود. حالا نام و تگ
-          به‌اندازه‌ی محتوایشان کنارِ هم می‌مانند و فضای خالی با
+      {/* تگ باید بچسبد به *نام برنامه*، نه به ساعت‌ها. قبلا کانتینر نام
+          `flex-1` بود، پس نام تمام فضای خالی را می‌گرفت و تگ را هل می‌داد
+          تا کنار ساعت — روی نام بلند این خیلی واضح بود. حالا نام و تگ
+          به‌اندازه‌ی محتوایشان کنار هم می‌مانند و فضای خالی با
           justify-between بینشان و ساعت می‌افتد. */}
       <div className="flex min-w-0 flex-1 items-center justify-between gap-2 text-right sm:gap-3">
         <div className="flex min-w-0 items-center gap-1.5">
-          {/* ردیفِ ورزش یک ProgramCardِ واقعی برای بازکردن ندارد — نامش فقط
+          {/* ردیف ورزش یک ProgramCard واقعی برای بازکردن ندارد — نامش فقط
               متن است، نه دکمه. */}
           {task.exercise ? (
             <span className="min-w-0 truncate text-right text-[13px] font-medium text-dash-text sm:text-[15px]">
@@ -189,7 +189,7 @@ export function DashTaskRow({
           ) : (
             <button
               type="button"
-              // برنامه‌ی لیستی: زدنِ اسم لیست رو باز/بسته می‌کنه (کارتِ برنامه از منو هم هست)
+              // برنامه‌ی لیستی: زدن اسم لیست رو باز/بسته می‌کنه (کارت برنامه از منو هم هست)
               onClick={() => (isList ? setExpanded((v) => !v) : onOpen(task.name))}
               aria-expanded={isList ? expanded : undefined}
               className="min-w-0 truncate text-right text-[13px] font-medium text-dash-text transition hover:text-dash-green sm:text-[15px]"
@@ -202,7 +202,7 @@ export function DashTaskRow({
               type="button"
               onClick={() => setExpanded((v) => !v)}
               aria-expanded={expanded}
-              aria-label={expanded ? "بستنِ لیست" : "بازکردنِ لیست"}
+              aria-label={expanded ? "بستن لیست" : "بازکردن لیست"}
               className="checklist-chip"
             >
               <span dir="ltr">{doneCount}/{items.length}</span>
@@ -214,14 +214,14 @@ export function DashTaskRow({
               {task.tag}
             </span>
           )}
-          {/* نشانِ اهمیت هم همین‌جا کنارِ نام می‌نشیند، نه چسبیده به ساعت.
-              سمتِ چپِ ردیف فقط ساعت می‌ماند. */}
+          {/* نشان اهمیت هم همین‌جا کنار نام می‌نشیند، نه چسبیده به ساعت.
+              سمت چپ ردیف فقط ساعت می‌ماند. */}
           <DashImportanceBadge importance={task.importance} />
         </div>
 
         <div className="flex shrink-0 flex-col items-end gap-0.5">
           {/* برنامه می‌تواند بی‌ساعت باشد («امروز ورزش دارم»). به‌جای یک جای
-              خالیِ مبهم، صریح می‌گوییم بی‌ساعت است. */}
+              خالی مبهم، صریح می‌گوییم بی‌ساعت است. */}
           {task.time ? (
             <span className="shrink-0 font-mono text-[10.5px] text-dash-muted sm:text-[13px]" dir="ltr">
               {toEnDigits(task.time)}
@@ -229,8 +229,8 @@ export function DashTaskRow({
           ) : (
             <span className="shrink-0 text-[10.5px] text-dash-muted sm:text-[12px]">بدون ساعت</span>
           )}
-          {/* وضعیتِ برنامه، زیرِ ساعت و فقط متن (بی‌پس‌زمینه). ردیفِ ورزش
-              وضعیتش را روی خودِ دکمه‌اش می‌گوید، این‌جا تکرار نمی‌شود.
+          {/* وضعیت برنامه، زیر ساعت و فقط متن (بی‌پس‌زمینه). ردیف ورزش
+              وضعیتش را روی خود دکمه‌اش می‌گوید، این‌جا تکرار نمی‌شود.
               برای انجام‌شده‌ها دیگه زیرنویس ننمایش تا تکراری/اضافه نباشه؛
               فقط «وقتش گذشته» (انجام‌نشده و زمانش گذشته) باقی می‌مونه. */}
           {!task.exercise && task.missed && (
@@ -245,16 +245,16 @@ export function DashTaskRow({
       </div>
 
       {task.exercise ? (
-        // دکمه‌ی ردیفِ ورزش وضعیتش را خودش می‌گوید: «انجام دادی» وقتی تمرینِ
-        // همان روز واقعاً «تمام» ثبت شده (ExerciseLog.completed)، «وقتش گذشته»
-        // وقتی روزش بی‌تمام‌شدن گذشته، و در غیرِ این صورت همان «شروع».
+        // دکمه‌ی ردیف ورزش وضعیتش را خودش می‌گوید: «انجام دادی» وقتی تمرین
+        // همان روز واقعا «تمام» ثبت شده (ExerciseLog.completed)، «وقتش گذشته»
+        // وقتی روزش بی‌تمام‌شدن گذشته، و در غیر این صورت همان «شروع».
         task.done ? (
           <motion.button
             type="button"
             whileTap={{ scale: 0.94, transition: { duration: 0.1 } }}
             disabled={!editable || task.dayPast}
             onClick={() => { if (!task.dayPast) onStart?.(task.id); }}
-            aria-label="تمرینِ این روز انجام شده"
+            aria-label="تمرین این روز انجام شده"
             className="flex shrink-0 items-center rounded-full px-2.5 py-1.5 text-[11px] font-bold transition-colors sm:px-3 sm:text-[12.5px]"
             style={{ background: "rgba(var(--accent-rgb),.14)", color: "var(--accent)" }}
           >
@@ -264,18 +264,18 @@ export function DashTaskRow({
           <button
             type="button"
             disabled
-            aria-label="روزِ این تمرین گذشته و انجام نشده"
+            aria-label="روز این تمرین گذشته و انجام نشده"
             className="flex shrink-0 cursor-not-allowed items-center rounded-full px-2.5 py-1.5 text-[11px] font-bold sm:px-3 sm:text-[12.5px]"
             style={{ background: "rgba(224,82,82,.14)", color: "#E05252" }}
           >
             وقتش گذشته
           </button>
         ) : task.isFuture ? (
-          // روزِ آینده: هنوز قابل شروع نیست، پس «شروع» نشون داده نمی‌شه.
+          // روز آینده: هنوز قابل شروع نیست، پس «شروع» نشون داده نمی‌شه.
           <button
             type="button"
             disabled
-            aria-label="روزِ این تمرین هنوز نرسیده"
+            aria-label="روز این تمرین هنوز نرسیده"
             className="flex shrink-0 cursor-not-allowed items-center rounded-full px-2.5 py-1.5 text-[11px] font-bold sm:px-3 sm:text-[12.5px]"
             style={{ background: "rgba(59,130,246,.14)", color: "#3B82F6" }}
           >
@@ -312,7 +312,7 @@ export function DashTaskRow({
           task.isFuture
             ? "این برنامه هنوز نرسیده — قابل تیک‌زدن نیست"
             : isList
-            ? task.done ? "برداشتنِ تیکِ همه‌ی آیتم‌ها" : "تیک‌زدنِ همه‌ی آیتم‌ها"
+            ? task.done ? "برداشتن تیک همه‌ی آیتم‌ها" : "تیک‌زدن همه‌ی آیتم‌ها"
             : task.done
             ? "انجام دادی — علامت‌زدن به‌عنوان انجام‌نشده"
             : task.missed
@@ -323,7 +323,7 @@ export function DashTaskRow({
       )}
     </div>
 
-    {/* لیستِ آیتم‌ها — هرکدوم همون تیکِ داشبورد؛ تیکِ بالا (عنوان) همه رو با هم می‌زنه */}
+    {/* لیست آیتم‌ها — هرکدوم همون تیک داشبورد؛ تیک بالا (عنوان) همه رو با هم می‌زنه */}
     <AnimatePresence initial={false}>
       {isList && expanded && (
         <motion.ul
@@ -348,7 +348,7 @@ export function DashTaskRow({
                 size={20}
                 disabled={!canTick}
                 onToggle={() => onToggle(task.id, it.id)}
-                label={`${it.done ? "برداشتنِ تیکِ" : "تیک‌زدنِ"} ${it.name}`}
+                label={`${it.done ? "برداشتن تیک" : "تیک‌زدن"} ${it.name}`}
               />
             </motion.li>
           ))}

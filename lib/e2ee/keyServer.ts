@@ -1,10 +1,10 @@
-// فقط سمتِ سرور — وضعیتِ کلیدهای یک کاربر برای /api/e2ee/* (docs/mentor-e2ee.md).
+// فقط سمت سرور — وضعیت کلیدهای یک کاربر برای /api/e2ee/* (docs/mentor-e2ee.md).
 import type { Prisma } from "@prisma/client";
 import { NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 import { MAX_ACTIVE_KEYS } from "./core";
 
-/** کلیدِ DEVICEی که این مدت دیده نشده بازنشسته می‌شود تا پیام‌ها برای دستگاهِ گم‌شده بسته‌بندی نشوند */
+/** کلید DEVICEی که این مدت دیده نشده بازنشسته می‌شود تا پیام‌ها برای دستگاه گم‌شده بسته‌بندی نشوند */
 export const DEVICE_STALE_DAYS = 120;
 const TOUCH_EVERY_MS = 12 * 60 * 60 * 1000;
 export const LINK_TTL_MS = 30 * 60 * 1000;
@@ -27,13 +27,13 @@ export const keyChangedResponse = () =>
 
 type Tx = Prisma.TransactionClient;
 
-/** نسخه‌ی تازه باید دقیقا «بزرگ‌ترین نسخه‌ی موجود + ۱» باشد (نسخه در AADِ پشتیبان است) */
+/** نسخه‌ی تازه باید دقیقا «بزرگ‌ترین نسخه‌ی موجود + ۱» باشد (نسخه در AAD پشتیبان است) */
 export async function nextVersionOk(tx: Tx, userId: string, version: number): Promise<boolean> {
   const max = await tx.userE2EKey.aggregate({ where: { userId }, _max: { version: true } });
   return (max._max.version ?? 0) + 1 === version;
 }
 
-/** سقفِ کلیدهای فعال: قدیمی‌ترین دستگاه (کم‌تر دیده‌شده) کنار می‌رود */
+/** سقف کلیدهای فعال: قدیمی‌ترین دستگاه (کم‌تر دیده‌شده) کنار می‌رود */
 export async function enforceDeviceCap(tx: Tx, userId: string): Promise<void> {
   const active = await tx.userE2EKey.findMany({ where: { userId, retiredAt: null }, select: { id: true, kind: true, lastSeenAt: true, createdAt: true } });
   const over = active.length - MAX_ACTIVE_KEYS;
@@ -47,7 +47,7 @@ export async function enforceDeviceCap(tx: Tx, userId: string): Promise<void> {
 
 export async function myKeyState(userId: string, touch: number | null) {
   const now = Date.now();
-  // دستگاه‌های رهاشده‌ی خودِ همین کاربر
+  // دستگاه‌های رهاشده‌ی خود همین کاربر
   await prisma.userE2EKey.updateMany({
     where: { userId, kind: "DEVICE", retiredAt: null, OR: [{ lastSeenAt: { lt: new Date(now - DEVICE_STALE_DAYS * 86_400_000) } }, { lastSeenAt: null, createdAt: { lt: new Date(now - DEVICE_STALE_DAYS * 86_400_000) } }] },
     data: { retiredAt: new Date() },
@@ -85,7 +85,7 @@ export async function myKeyState(userId: string, touch: number | null) {
       deviceLabel: k.deviceLabel,
       createdAt: k.createdAt,
       lastSeenAt: k.lastSeenAt,
-      // پیامِ scheme 1 فقط برای کلیدهای SYNCEDِ پیش از این مهاجرت بوده
+      // پیام scheme 1 فقط برای کلیدهای SYNCED پیش از این مهاجرت بوده
       hasMessages: withWraps.has(k.version) || (v1Count > 0 && k.kind === "SYNCED" && !!k.backupKind && k.backupKind === "PASSCODE"),
     })),
     link,

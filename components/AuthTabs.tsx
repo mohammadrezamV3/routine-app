@@ -31,7 +31,7 @@ export function AuthTabs({ active }: { active: Tab }) {
       active={pending ?? active}
       onChange={(v) => {
         setPending(v);
-        // scroll:false — لایه‌ی مشترک ثابت می‌مونه؛ پرشِ اسکرول به ابتدای سگمنت
+        // scroll:false — لایه‌ی مشترک ثابت می‌مونه؛ پرش اسکرول به ابتدای سگمنت
         // جدید فقط تب‌ها رو از دید بیرون می‌برد.
         router.push(HREF[v], { scroll: false });
       }}

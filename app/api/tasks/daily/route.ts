@@ -33,7 +33,7 @@ export async function GET(req: NextRequest) {
 
 // POST /api/tasks/daily  { date, tasks, wake }
 // تیک‌زدن = استفاده از «روتین من» → بعد از ۱۴ روز آزمایشی نیاز به پلن داره
-// (سمتِ سرور، نه فقط ModuleGate). خوندن آزاده تا تاریخچه گروگان نمونه.
+// (سمت سرور، نه فقط ModuleGate). خوندن آزاده تا تاریخچه گروگان نمونه.
 async function handlePOST(req: NextRequest) {
   const guard = await requireModule(ModuleKey.ROUTINE);
   if (!guard.ok) return guard.response;
@@ -67,5 +67,5 @@ async function handlePOST(req: NextRequest) {
   return NextResponse.json({ ok: true, id: entry.id });
 }
 
-// بعد از هر نوشتنِ موفق، بقیه‌ی دستگاه‌ها/تب‌های همین کاربر با WebSocket خبردار می‌شن (lib/realtime.ts)
+// بعد از هر نوشتن موفق، بقیه‌ی دستگاه‌ها/تب‌های همین کاربر با WebSocket خبردار می‌شن (lib/realtime.ts)
 export const POST = withLiveSync(["daily"], handlePOST);

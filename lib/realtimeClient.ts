@@ -1,20 +1,20 @@
 // ─────────────────────────────────────────────────────────────────────────
-// کلاینتِ WebSocketِ `/ws` — یک اتصالِ واحد برای کلِ تب (singleton).
+// کلاینت WebSocket `/ws` — یک اتصال واحد برای کل تب (singleton).
 //
-// هر رویدادِ سرور عیناً به‌صورتِ
+// هر رویداد سرور عینا به‌صورت
 //   window.dispatchEvent(new CustomEvent("arion:server-event", { detail }))
 // پخش می‌شه؛ lib/liveSync.ts گوش می‌ده و به دامنه‌ها (کلیدها) ترجمه‌ش می‌کنه،
-// و هوکِ useServerEvent (پایین) برای جاهایی که شناسه‌ی دقیق لازم دارن
-// (مثلا گفت‌وگوی باز با mentorshipIdِ خودش).
+// و هوک useServerEvent (پایین) برای جاهایی که شناسه‌ی دقیق لازم دارن
+// (مثلا گفت‌وگوی باز با mentorshipId خودش).
 //
 // رفتار:
-//  • فقط برای کاربرِ لاگین‌کرده (components/RealtimeProvider.tsx).
-//  • reconnect با backoffِ نمایی + jitter (۱s → ۳۰s)؛ آفلاین = مکث؛
-//    برگشتِ شبکه/برگشت به تب = تلاشِ فوری.
+//  • فقط برای کاربر لاگین‌کرده (components/RealtimeProvider.tsx).
+//  • reconnect با backoff نمایی + jitter (۱s → ۳۰s)؛ آفلاین = مکث؛
+//    برگشت شبکه/برگشت به تب = تلاش فوری.
 //  • window.__arionRealtimeConnected — پولینگ‌ها (useVisiblePolling) با این
-//    تصمیم می‌گیرن تند بزنن یا فقط تورِ ایمنی باشن.
-//  • بعد از وصلِ دوباره (نه اولین اتصال) یک «همه‌چیز رو تازه کن» پخش می‌شه،
-//    چون رویدادهای دورانِ قطعی از دست رفتن.
+//    تصمیم می‌گیرن تند بزنن یا فقط تور ایمنی باشن.
+//  • بعد از وصل دوباره (نه اولین اتصال) یک «همه‌چیز رو تازه کن» پخش می‌شه،
+//    چون رویدادهای دوران قطعی از دست رفتن.
 // ─────────────────────────────────────────────────────────────────────────
 
 import { useEffect, useRef, useState } from "react";
@@ -72,7 +72,7 @@ function scheduleReconnect() {
   if (!wanted || stopReconnect) return;
   if (typeof navigator !== "undefined" && navigator.onLine === false) return; // «online» خودش بیدار می‌کنه
   const exp = Math.min(MAX_DELAY, BASE_DELAY * 2 ** attempt);
-  const delay = exp / 2 + Math.random() * (exp / 2); // full-jitter نصفه — پخش‌کردنِ هجومِ بعد از ری‌استارت
+  const delay = exp / 2 + Math.random() * (exp / 2); // full-jitter نصفه — پخش‌کردن هجوم بعد از ری‌استارت
   attempt++;
   retryTimer = setTimeout(connect, delay);
 }
@@ -115,8 +115,8 @@ function connect() {
     if (ws !== sock) return;
     ws = null;
     if (connected) setConnected(false);
-    // نشستِ منقضی/ابطال‌شده: تلاشِ دوباره بی‌فایده‌ست تا وقتی وضعیتِ ورود عوض بشه
-    // (RealtimeProvider با تغییرِ نشست از نو شروع می‌کنه).
+    // نشست منقضی/ابطال‌شده: تلاش دوباره بی‌فایده‌ست تا وقتی وضعیت ورود عوض بشه
+    // (RealtimeProvider با تغییر نشست از نو شروع می‌کنه).
     if (ev.code === 4001 || ev.code === 4003) {
       stopReconnect = true;
       return;
@@ -138,7 +138,7 @@ function onOnline() {
 
 function onOffline() {
   clearRetry();
-  // سوکتِ نیمه‌مرده رو نگه نمی‌داریم؛ با برگشتِ شبکه تمیز از نو وصل می‌شه
+  // سوکت نیمه‌مرده رو نگه نمی‌داریم؛ با برگشت شبکه تمیز از نو وصل می‌شه
   if (ws) {
     const s = ws;
     ws = null;
@@ -163,7 +163,7 @@ function installListeners() {
   document.addEventListener("visibilitychange", onVisible);
 }
 
-/** شروعِ اتصال (idempotent) — فقط وقتی کاربر لاگینه */
+/** شروع اتصال (idempotent) — فقط وقتی کاربر لاگینه */
 export function startRealtime() {
   if (typeof window === "undefined" || typeof WebSocket === "undefined") return;
   installListeners();
@@ -173,7 +173,7 @@ export function startRealtime() {
   if (!ws) connect();
 }
 
-/** قطعِ اتصال (خروج از حساب) */
+/** قطع اتصال (خروج از حساب) */
 export function stopRealtime() {
   wanted = false;
   everConnected = false;
@@ -187,8 +187,8 @@ export function stopRealtime() {
 }
 
 /**
- * شنیدنِ رویدادهای مشخصِ سرور. cb همیشه آخرین نسخه‌ست (ref)، پس لازم نیست
- * useCallback بشه. برای به‌روزرسانیِ دامنه‌ای (بدونِ شناسه) useLiveRefresh
+ * شنیدن رویدادهای مشخص سرور. cb همیشه آخرین نسخه‌ست (ref)، پس لازم نیست
+ * useCallback بشه. برای به‌روزرسانی دامنه‌ای (بدون شناسه) useLiveRefresh
  * در lib/liveSync.ts مناسب‌تره.
  */
 export function useServerEvent(types: string | string[], cb: (e: ClientServerEvent) => void, enabled = true) {
@@ -207,7 +207,7 @@ export function useServerEvent(types: string | string[], cb: (e: ClientServerEve
   }, [key, enabled]);
 }
 
-/** وضعیتِ اتصال به‌صورتِ state (برای کم/زیاد کردنِ پولینگ) */
+/** وضعیت اتصال به‌صورت state (برای کم/زیاد کردن پولینگ) */
 export function useRealtimeConnected(): boolean {
   const [v, setV] = useState(false);
   useEffect(() => {

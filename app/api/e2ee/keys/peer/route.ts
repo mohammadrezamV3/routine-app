@@ -3,9 +3,9 @@ import { prisma } from "@/lib/prisma";
 import { requireMentorsUser, notFound } from "@/lib/mentorGuard";
 import { publicKeysFor } from "@/lib/e2ee/server";
 
-// GET /api/e2ee/keys/peer?userId=… → کلیدهای عمومیِ یک کاربرِ دیگر (همه‌ی نسخه‌ها).
-// فقط برای منتورِ منتشرشده (رمزِ جواب‌های پذیرش پیش از شکل‌گرفتنِ رابطه) یا کسی
-// که با من رابطه‌ی منتوری دارد — نه دفترچه‌ی عمومیِ همه‌ی کاربران.
+// GET /api/e2ee/keys/peer?userId=… → کلیدهای عمومی یک کاربر دیگر (همه‌ی نسخه‌ها).
+// فقط برای منتور منتشرشده (رمز جواب‌های پذیرش پیش از شکل‌گرفتن رابطه) یا کسی
+// که با من رابطه‌ی منتوری دارد — نه دفترچه‌ی عمومی همه‌ی کاربران.
 export async function GET(req: NextRequest) {
   const g = await requireMentorsUser();
   if (!g.ok) return g.response;

@@ -17,10 +17,10 @@ export type MentorMenuAction = {
 type Anchor = { top: number; bottom: number; left: number; right: number };
 
 /**
- * منوی شناورِ بخشِ منتورها — همان ظاهرِ منوی سه‌نقطه‌ی سایت (TradeKebabMenu:
- * dash-context-menu با همان ردیف‌ها و رنگِ خطرناک)، به‌علاوه‌ی باز/بسته‌شدنِ نرم.
- * هم زیرِ دکمه‌ی سه‌نقطه (MentorKebabMenu) و هم کنارِ یک حباب پیام
- * (MentorMenuAt) باز می‌شود. پورتال به body، موقعیتِ fixed؛ با اسکرول بسته می‌شود.
+ * منوی شناور بخش منتورها — همان ظاهر منوی سه‌نقطه‌ی سایت (TradeKebabMenu:
+ * dash-context-menu با همان ردیف‌ها و رنگ خطرناک)، به‌علاوه‌ی باز/بسته‌شدن نرم.
+ * هم زیر دکمه‌ی سه‌نقطه (MentorKebabMenu) و هم کنار یک حباب پیام
+ * (MentorMenuAt) باز می‌شود. پورتال به body، موقعیت fixed؛ با اسکرول بسته می‌شود.
  */
 export function MentorMenuAt({
   anchor, actions, onClose, label = "گزینه‌ها", align = "end",
@@ -29,7 +29,7 @@ export function MentorMenuAt({
   actions: MentorMenuAction[];
   onClose: () => void;
   label?: string;
-  /** end: لبه‌ی چپِ منو با لبه‌ی چپِ لنگر (RTL: انتهای ردیف)؛ start: لبه‌ی راست */
+  /** end: لبه‌ی چپ منو با لبه‌ی چپ لنگر (RTL: انتهای ردیف)؛ start: لبه‌ی راست */
   align?: "start" | "end";
 }) {
   const menuRef = useRef<HTMLDivElement>(null);
@@ -43,7 +43,7 @@ export function MentorMenuAt({
       onClose();
     }
     function onKey(e: KeyboardEvent) { if (e.key === "Escape") onClose(); }
-    // تاخیر: همان کلیکی که منو را باز کرد نباید فوراً ببندد
+    // تاخیر: همان کلیکی که منو را باز کرد نباید فورا ببندد
     const t = setTimeout(() => {
       document.addEventListener("mousedown", onDoc);
       document.addEventListener("touchstart", onDoc, { passive: true });

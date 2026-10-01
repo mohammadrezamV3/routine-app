@@ -16,9 +16,9 @@ function optId(v: unknown): string | null | "bad" {
   return typeof v === "string" && v.length <= 64 ? v : "bad";
 }
 
-// POST /api/mentor-programs/:id/feedback { body, itemId?, logId? } → فقط منتورِ
-// همین برنامه، برنامه‌ی غیرِ DRAFT. آیتم/لاگ باید مالِ همین برنامه باشن تا
-// فیدبک به داده‌ی برنامه‌ی دیگه‌ای (یا منتورِ دیگه‌ای) وصل نشه.
+// POST /api/mentor-programs/:id/feedback { body, itemId?, logId? } → فقط منتور
+// همین برنامه، برنامه‌ی غیر DRAFT. آیتم/لاگ باید مال همین برنامه باشن تا
+// فیدبک به داده‌ی برنامه‌ی دیگه‌ای (یا منتور دیگه‌ای) وصل نشه.
 export async function POST(req: Request, { params }: Ctx) {
   const g = await requireMentorsUser();
   if (!g.ok) return g.response;
@@ -31,7 +31,7 @@ export async function POST(req: Request, { params }: Ctx) {
   });
   if (!p) return notFound();
   if (p.status === "DRAFT") return conflict("برای پیش‌نویس نمی‌شه فیدبک فرستاد");
-  // بعد از پایان/بلاکِ رابطه، منتور دیگه راهی برای رسیدن به شاگرد نداره
+  // بعد از پایان/بلاک رابطه، منتور دیگه راهی برای رسیدن به شاگرد نداره
   if (p.mentorship.status !== "ACTIVE") return conflict("رابطه با این شاگرد فعال نیست");
   if (await isMentorSuspended(me)) return forbidden("حساب مربی‌گری تو تعلیق شده");
 
@@ -60,7 +60,7 @@ export async function POST(req: Request, { params }: Ctx) {
   }
 
   const fb = await prisma.mentorFeedback.create({
-    // رمزشده در حالِ سکون (MENTOR_DATA_KEY)؛ toFeedbackRow بازش می‌کند
+    // رمزشده در حال سکون (MENTOR_DATA_KEY)؛ toFeedbackRow بازش می‌کند
     data: { programId: p.id, itemId, logId, mentorId: me, studentId: p.studentId, body: sealAtRest(body, feedbackAad(p.id, me)) },
     include: { item: { select: { title: true } } },
   });
@@ -71,7 +71,7 @@ export async function POST(req: Request, { params }: Ctx) {
   await notifyUser(p.studentId, {
     type: "program.feedback",
     title: "فیدبک جدید از مربی",
-    // متنِ فیدبک در اعلان/پوش نمی‌آید (اعلان رمز نمی‌شود و پوش از سرویسِ بیرونی رد می‌شود)
+    // متن فیدبک در اعلان/پوش نمی‌آید (اعلان رمز نمی‌شود و پوش از سرویس بیرونی رد می‌شود)
     body: `${displayName(mentor)} درباره‌ی «${p.title}» فیدبک تازه‌ای نوشت`,
     url: `/mentor-programs/${p.id}`,
   });

@@ -7,9 +7,9 @@ import { faNum } from "@/lib/jalali";
 import type { BlogPost } from "@/lib/blogPosts";
 
 /**
- * رندرِ یک مقاله. بلاک‌ها عمدا داده‌اند نه HTML خام: هم `dangerouslySetInnerHTML`
+ * رندر یک مقاله. بلاک‌ها عمدا داده‌اند نه HTML خام: هم `dangerouslySetInnerHTML`
  * لازم نمی‌شود (قانون پروژه)، هم سلسله‌مراتب تیترها (یک H1، بعد H2/H3)
- * ساختاری می‌ماند نه دستیِ نویسنده.
+ * ساختاری می‌ماند نه دستی نویسنده.
  */
 export function BlogArticle({ post }: { post: BlogPost }) {
   const t = useThemeTokens();

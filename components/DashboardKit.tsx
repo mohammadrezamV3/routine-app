@@ -1,14 +1,14 @@
 "use client";
 
-// اجزای پایه‌ی داشبورد — کارتِ بنتو، عددِ شمارنده، حلقه، اسپارک‌لاین، اسکلت.
-// اصولِ کارایی (چون این صفحه قراره صفحه‌ی اصلیِ کاربر بشه):
-//   • هیچ کتابخانه‌ی نموداری نیست؛ همه SVGِ دست‌ساز.
+// اجزای پایه‌ی داشبورد — کارت بنتو، عدد شمارنده، حلقه، اسپارک‌لاین، اسکلت.
+// اصول کارایی (چون این صفحه قراره صفحه‌ی اصلی کاربر بشه):
+//   • هیچ کتابخانه‌ی نموداری نیست؛ همه SVG دست‌ساز.
 //   • شمارنده‌ها مقدار رو مستقیم روی textContent می‌نویسن (نه setState در
-//     هر فریم) — صفر رندرِ React حینِ انیمیشن.
-//   • نورِ دنبال‌کننده‌ی موسِ کارت‌ها فقط دو متغیرِ CSS رو عوض می‌کنه (بدون
-//     state) و فقط روی دستگاهِ hover-دار؛ روی لمسی اصلا لیسنری ثبت نمی‌شه.
+//     هر فریم) — صفر رندر React حین انیمیشن.
+//   • نور دنبال‌کننده‌ی موس کارت‌ها فقط دو متغیر CSS رو عوض می‌کنه (بدون
+//     state) و فقط روی دستگاه hover-دار؛ روی لمسی اصلا لیسنری ثبت نمی‌شه.
 //   • همه‌ی حرکت‌ها با MotionConfig reducedMotion="user" (در DashboardClient)
-//     برای کسی که «کاهشِ حرکت» رو روشن کرده خاموش می‌شن.
+//     برای کسی که «کاهش حرکت» رو روشن کرده خاموش می‌شن.
 
 import Link from "next/link";
 import { ReactNode, useEffect, useId, useRef, useState } from "react";
@@ -31,7 +31,7 @@ export const V_CARD: Variants = {
   show: { opacity: 1, y: 0, scale: 1, transition: { duration: 0.5, ease: D_EASE } },
 };
 
-// ── کارتِ بنتو ─────────────────────────────────────────────
+// ── کارت بنتو ─────────────────────────────────────────────
 export function BentoCard({
   children,
   className,
@@ -41,7 +41,7 @@ export function BentoCard({
 }: {
   children: ReactNode;
   className?: string;
-  /** نامِ ناحیه در grid-template-areas (app/dashboard/dashboard.css) */
+  /** نام ناحیه در grid-template-areas (app/dashboard/dashboard.css) */
   area?: string;
   as?: "section" | "div";
   label?: string;
@@ -78,7 +78,7 @@ export function BentoCard({
   );
 }
 
-/** سرتیترِ کارت: آیکونِ زنده + عنوان + (اختیاری) لینکِ «همه» */
+/** سرتیتر کارت: آیکون زنده + عنوان + (اختیاری) لینک «همه» */
 export function CardHead({ icon, title, href, hrefLabel = "مشاهده", extra }: { icon: DashIconName; title: string; href?: string; hrefLabel?: string; extra?: ReactNode }) {
   return (
     <header className="db-card-head">
@@ -95,7 +95,7 @@ export function CardHead({ icon, title, href, hrefLabel = "مشاهده", extra 
   );
 }
 
-// ── عددِ شمارنده ────────────────────────────────────────────
+// ── عدد شمارنده ────────────────────────────────────────────
 export function CountUp({
   value,
   decimals = 0,
@@ -110,7 +110,7 @@ export function CountUp({
   duration?: number;
   prefix?: string;
   suffix?: string;
-  /** علامتِ + برای مثبت (سود/زیان) */
+  /** علامت + برای مثبت (سود/زیان) */
   signed?: boolean;
   className?: string;
 }) {
@@ -176,15 +176,15 @@ export function Ring({ value, size = 64, stroke = 6, color = "var(--accent)", tr
   );
 }
 
-// قوسِ گرادیانی حالا مشترکِ کلِ اپه (components/GradientRing.tsx).
+// قوس گرادیانی حالا مشترک کل اپه (components/GradientRing.tsx).
 export { GradientArc };
 
 // ── اسپارک‌لاین ─────────────────────────────────────────────
-// باگِ «یه تیکه‌ی خط می‌افته، یه تیکه نه»: قبلا SVG با preserveAspectRatio="none"
-// کش می‌اومد و خط vector-effect:non-scaling-stroke داشت؛ انیمیشنِ pathLength
-// طولِ dash رو بر حسبِ واحدِ مسیر می‌ساخت ولی non-scaling-stroke اون رو به
-// پیکسلِ صفحه می‌برد — پس فقط بخشی از خط کشیده می‌شد. حالا عرضِ واقعی با
-// ResizeObserver اندازه گرفته می‌شه و SVG دقیقا ۱:۱ رسم می‌شه (بدونِ کش‌آمدن).
+// باگ «یه تیکه‌ی خط می‌افته، یه تیکه نه»: قبلا SVG با preserveAspectRatio="none"
+// کش می‌اومد و خط vector-effect:non-scaling-stroke داشت؛ انیمیشن pathLength
+// طول dash رو بر حسب واحد مسیر می‌ساخت ولی non-scaling-stroke اون رو به
+// پیکسل صفحه می‌برد — پس فقط بخشی از خط کشیده می‌شد. حالا عرض واقعی با
+// ResizeObserver اندازه گرفته می‌شه و SVG دقیقا ۱:۱ رسم می‌شه (بدون کش‌آمدن).
 export function Sparkline({ values, height = 72, tone = "auto", className }: { values: number[]; width?: number; height?: number; tone?: "auto" | "accent" | "win" | "loss"; className?: string }) {
   const id = useId().replace(/:/g, "");
   const box = useRef<HTMLDivElement>(null);
@@ -218,8 +218,8 @@ export function Sparkline({ values, height = 72, tone = "auto", className }: { v
             </clipPath>
           </defs>
           {p.zeroY !== null && <line x1="0" x2={w} y1={p.zeroY} y2={p.zeroY} className="db-spark-zero" />}
-          {/* خط و سایه‌ی زیرش با یک clipِ مشترک از چپ به راست ظاهر می‌شن — همیشه
-              هم‌گام و کامل، مستقل از طولِ مسیر */}
+          {/* خط و سایه‌ی زیرش با یک clip مشترک از چپ به راست ظاهر می‌شن — همیشه
+              هم‌گام و کامل، مستقل از طول مسیر */}
           <g clipPath={`url(#sc${id})`}>
             <path d={p.area} fill={`url(#sg${id})`} />
             <path d={p.line} fill="none" stroke={color} strokeWidth={2} strokeLinecap="round" strokeLinejoin="round" />
@@ -231,7 +231,7 @@ export function Sparkline({ values, height = 72, tone = "auto", className }: { v
   );
 }
 
-// ── نوارِ پیشرفتِ باریک ─────────────────────────────────────
+// ── نوار پیشرفت باریک ─────────────────────────────────────
 export function Meter({ value, color = "var(--accent)", delay = 0 }: { value: number; color?: string; delay?: number }) {
   const v = Math.max(0, Math.min(1, value));
   return (
@@ -252,7 +252,7 @@ export function Skel({ w = "100%", h = 12, r = 8, className }: { w?: number | st
   return <span className={cn("db-skel", className)} style={{ width: w, height: h, borderRadius: r }} />;
 }
 
-/** حالتِ خالیِ یک کارت (مثلا «هنوز پلن تمرینی نداری») با یک دکمه */
+/** حالت خالی یک کارت (مثلا «هنوز پلن تمرینی نداری») با یک دکمه */
 export function EmptyState({ icon, text, href, cta, action }: { icon: DashIconName; text: string; href?: string; cta?: string; action?: DashAction }) {
   const run = useDashAction();
   return (

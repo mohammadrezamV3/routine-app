@@ -34,10 +34,10 @@ const SECTION = { size: 15, strokeWidth: 1.75, "aria-hidden": true } as const;
 
 type Back = { href: string; label: string };
 type Head = { title: string; back: Back; canReport: boolean; canCancel: boolean } | null;
-/** فرمانِ منوی سه‌نقطه‌ی سرِ صفحه به بدنه */
+/** فرمان منوی سه‌نقطه‌ی سر صفحه به بدنه */
 type MenuCmd = { kind: "report" | "cancel"; n: number } | null;
 
-// ───────────────────────── تاریخِ محلی ─────────────────────────
+// ───────────────────────── تاریخ محلی ─────────────────────────
 
 function parseDay(iso: string): Date { return new Date(iso + "T00:00:00"); }
 function addDays(iso: string, n: number): string { const d = parseDay(iso); d.setDate(d.getDate() + n); return isoLocal(d); }
@@ -50,13 +50,13 @@ function daysLabel(item: Item): string {
   return order.filter((d) => item.days.includes(d)).map((d) => FA_WEEKDAY[d]).join("، ") || "بدون روز";
 }
 
-// عنوان (نام برنامه) و بازگشت (نامِ طرفِ مقابل) فقط بعد از بارگذاری معلوم‌اند؛
+// عنوان (نام برنامه) و بازگشت (نام طرف مقابل) فقط بعد از بارگذاری معلوم‌اند؛
 // بدنه آن‌ها را بالا می‌فرستد تا پوسته‌ی مشترک رندرشان کند.
 export default function MentorProgramPage() {
   const [head, setHead] = useState<Head>(null);
   const [fallbackBack, setFallbackBack] = useState(false);
   const [cmd, setCmd] = useState<MenuCmd>(null);
-  // اقدام‌های کم‌کاربرد/مخرب (گزارش، لغو) در منوی سه‌نقطه‌ی ردیفِ عنوان، نه دکمه‌ی آزاد پایینِ صفحه
+  // اقدام‌های کم‌کاربرد/مخرب (گزارش، لغو) در منوی سه‌نقطه‌ی ردیف عنوان، نه دکمه‌ی آزاد پایین صفحه
   const menu: MentorMenuAction[] = [
     ...(head?.canReport ? [{ label: "گزارش برنامه", icon: <Flag {...BTN} />, onClick: () => setCmd((c) => ({ kind: "report" as const, n: (c?.n ?? 0) + 1 })) }] : []),
     ...(head?.canCancel ? [{ label: "لغو برنامه", icon: <CircleSlash {...BTN} />, danger: true, onClick: () => setCmd((c) => ({ kind: "cancel" as const, n: (c?.n ?? 0) + 1 })) }] : []),
@@ -102,7 +102,7 @@ function ProgramView({ onHead, onFailed, cmd }: { onHead: (h: Head) => void; onF
       if (!res.ok) {
         const notFound = res.status === 404 || res.status === 403;
         const msg = notFound ? "این برنامه پیدا نشد یا به آن دسترسی نداری" : await readApiError(res, "برنامه دریافت نشد؛ دوباره تلاش کن");
-        // بارگذاریِ آرام (هفته/بعد از اقدام) صفحه را خراب نمی‌کند؛ خطا کنارِ دکمه‌ها دیده می‌شود
+        // بارگذاری آرام (هفته/بعد از اقدام) صفحه را خراب نمی‌کند؛ خطا کنار دکمه‌ها دیده می‌شود
         if (opts?.quiet) setActionError(msg); else setError({ msg, retry: !notFound });
         return;
       }
@@ -118,14 +118,14 @@ function ProgramView({ onHead, onFailed, cmd }: { onHead: (h: Head) => void; onF
     }
   }, [id, weekStart, weekEnd]);
 
-  // بارِ اول کل صفحه، بعد از آن (عوض‌شدنِ هفته) فقط نشانگرِ کوچکِ بالای روزها
+  // بار اول کل صفحه، بعد از آن (عوض‌شدن هفته) فقط نشانگر کوچک بالای روزها
   const hasData = !!data;
   useEffect(() => { load({ quiet: hasData }); }, [load]);
-  // زنده: بازخورد/تغییرِ برنامه از طرفِ منتور یا لاگِ همین کاربر از تبِ دیگه
+  // زنده: بازخورد/تغییر برنامه از طرف منتور یا لاگ همین کاربر از تب دیگه
   useLiveRefresh(["mentor:program", "customOccurrences"], () => { load({ quiet: true }); });
   useVisiblePolling(() => { load({ quiet: true }); }, 30_000);
 
-  // برنامه‌ای که پیش از این هفته تمام شده، از آخرین هفته‌ی خودش باز می‌شود (نه هفته‌ی خالیِ جاری)
+  // برنامه‌ای که پیش از این هفته تمام شده، از آخرین هفته‌ی خودش باز می‌شود (نه هفته‌ی خالی جاری)
   useEffect(() => {
     const end = data?.progressView?.to;
     if (!end || jumpedToEnd.current) return;
@@ -136,7 +136,7 @@ function ProgramView({ onHead, onFailed, cmd }: { onHead: (h: Head) => void; onF
     }
   }, [data, weekStart]);
 
-  // باز شدنِ صفحه توسطِ شاگرد = دیدنِ بازخوردها؛ فقط یک بار و فقط اگر نخوانده‌ای هست
+  // باز شدن صفحه توسط شاگرد = دیدن بازخوردها؛ فقط یک بار و فقط اگر نخوانده‌ای هست
   useEffect(() => {
     if (!data || data.role !== "STUDENT" || markedRead.current) return;
     if (!data.feedback.some((f) => !f.readAt)) return;
@@ -144,7 +144,7 @@ function ProgramView({ onHead, onFailed, cmd }: { onHead: (h: Head) => void; onF
     fetch(`/api/mentor-programs/${id}/feedback/read`, { method: "POST" }).catch(() => { markedRead.current = false; });
   }, [data, id]);
 
-  // سرِ صفحه: عنوان = نامِ برنامه، بازگشت = صفحه‌ی همین رابطه با نامِ طرفِ مقابل
+  // سر صفحه: عنوان = نام برنامه، بازگشت = صفحه‌ی همین رابطه با نام طرف مقابل
   const headTitle = data?.program.title;
   const headRel = data?.program.mentorshipId;
   const headName = data ? publicUserName(data.program.counterpart) : null;
@@ -274,7 +274,7 @@ function ProgramView({ onHead, onFailed, cmd }: { onHead: (h: Head) => void; onF
               </div>
               <div className="mentor-progress-legend">
                 <span>انجام‌شده {faNum(program.progress.completed)}</span>
-                {/* نیمه‌کاره فقط از ثبت‌های دستیِ قدیمی می‌آید */}
+                {/* نیمه‌کاره فقط از ثبت‌های دستی قدیمی می‌آید */}
                 {program.progress.partial > 0 && <span>نیمه‌کاره {faNum(program.progress.partial)}</span>}
                 <span>انجام‌نشده {faNum(program.progress.missed)}</span>
               </div>
@@ -320,7 +320,7 @@ function ProgramView({ onHead, onFailed, cmd }: { onHead: (h: Head) => void; onF
         </div>
       </MentorSection>
 
-      {/* ابزارهای منتور روی برنامه (قالب، کپی، CSV) — فقط سمتِ منتور */}
+      {/* ابزارهای منتور روی برنامه (قالب، کپی، CSV) — فقط سمت منتور */}
       {!isStudent && <MentorProgramTools programId={program.id} title={program.title} studentId={program.counterpart.id} />}
 
       {trackable ? (
@@ -497,7 +497,7 @@ function FeedbackBlock({
               value={body}
               maxLength={FEEDBACK_MAX + 50}
               onChange={(e) => { setBody(e.target.value); setError(null); }}
-              placeholder="مثلاً «ست آخر را با وزنه‌ی کمتر انجام بده»"
+              placeholder="مثلا «ست آخر را با وزنه‌ی کمتر انجام بده»"
             />
             <button type="submit" className={`routine-ai-action${body.trim() ? " has-text" : ""}`} disabled={busy || !body.trim()} aria-label="ارسال بازخورد">
               <span className="routine-ai-action-icon" aria-hidden="true">{busy ? <Spinner size={16} /> : <Send size={16} strokeWidth={1.75} />}</span>

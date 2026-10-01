@@ -6,7 +6,7 @@ import { AccountToggleRow } from "@/components/AccountRow";
 import { AccountPageHead, AccountBlock } from "@/components/AccountUI";
 import { hapticsEnabled, hapticsSupported, setHapticsEnabled } from "@/lib/haptics";
 
-// «تنظیمات › بازخورد لمسی» — ترجیحِ همین دستگاه (lib/haptics.ts)، نه حساب
+// «تنظیمات › بازخورد لمسی» — ترجیح همین دستگاه (lib/haptics.ts)، نه حساب
 export default function HapticsSettingsPage() {
   const [haptics, setHaptics] = useState(true);
   const [available, setAvailable] = useState(true);
@@ -19,7 +19,7 @@ export default function HapticsSettingsPage() {
   function toggle(next: boolean) {
     setHapticsEnabled(next);
     setHaptics(next);
-    // روشن‌کردن با یک لرزشِ نمونه تایید می‌شه تا کاربر حسش کنه
+    // روشن‌کردن با یک لرزش نمونه تایید می‌شه تا کاربر حسش کنه
     if (next) {
       try { navigator.vibrate?.(12); } catch {}
     }

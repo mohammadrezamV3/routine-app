@@ -42,14 +42,14 @@ async function invite(mentorId: string, studentUsername: string) {
 }
 
 describe("رابطه — احراز هویت", () => {
-  it("کاربرِ ناشناس ۴۰۱ می‌گیرد", async () => {
+  it("کاربر ناشناس ۴۰۱ می‌گیرد", async () => {
     as(null);
     expect((await listMentorships(req("GET", "/api/mentorships"))).status).toBe(401);
     expect((await postMentorship(req("POST", "/api/mentorships", { mentorId: "x" }))).status).toBe(401);
     expect((await mentorshipAction(null as any, "abc", "accept")).status).toBe(401);
   });
 
-  it("کاربرِ مسدودشده (isBlocked) ۴۰۳ می‌گیرد", async () => {
+  it("کاربر مسدودشده (isBlocked) ۴۰۳ می‌گیرد", async () => {
     const u = await makeUser();
     await prisma.user.update({ where: { id: u }, data: { isBlocked: true } });
     as(u);
@@ -58,7 +58,7 @@ describe("رابطه — احراز هویت", () => {
 });
 
 describe("رابطه — درخواست/قبول/رد/لغو", () => {
-  it("درخواست به خود ۴۰۰؛ منتورِ ناموجود ۴۰۴", async () => {
+  it("درخواست به خود ۴۰۰؛ منتور ناموجود ۴۰۴", async () => {
     const m = await makeMentor();
     const r = await requestMentorship(m, m);
     expect(r.status).toBe(400);
@@ -66,7 +66,7 @@ describe("رابطه — درخواست/قبول/رد/لغو", () => {
     expect((await requestMentorship(s, "nonexistent-id")).status).toBe(404);
   });
 
-  it("درخواست → PENDING، تکراری ۴۰۹، فقط طرفِ غیرِ initiator قبول می‌کند", async () => {
+  it("درخواست → PENDING، تکراری ۴۰۹، فقط طرف غیر initiator قبول می‌کند", async () => {
     const m = await makeMentor();
     const s = await makeUser();
     const r = await requestMentorship(s, m, "سلام");
@@ -75,12 +75,12 @@ describe("رابطه — درخواست/قبول/رد/لغو", () => {
     expect(ms.status).toBe("PENDING");
     expect(ms.initiatedBy).toBe("STUDENT");
     expect(ms.counterpart.id).toBe(m);
-    // پاسخ اطلاعاتِ حساسِ کاربر ندارد
+    // پاسخ اطلاعات حساس کاربر ندارد
     expect(JSON.stringify(ms)).not.toMatch(/email|phone|passwordHash/);
 
     expect((await requestMentorship(s, m)).status).toBe(409);
 
-    // خودِ فرستنده نمی‌تواند قبول/رد کند
+    // خود فرستنده نمی‌تواند قبول/رد کند
     expect((await mentorshipAction(s, ms.id, "accept")).status).toBe(403);
     expect((await mentorshipAction(s, ms.id, "reject")).status).toBe(403);
     // غریبه ۴۰۴
@@ -90,17 +90,17 @@ describe("رابطه — درخواست/قبول/رد/لغو", () => {
     const a = await mentorshipAction(m, ms.id, "accept");
     expect(a.status).toBe(200);
     expect((await j(a)).mentorship.status).toBe("ACTIVE");
-    // درخواستِ دوباره روی ACTIVE → ۴۰۹
+    // درخواست دوباره روی ACTIVE → ۴۰۹
     expect((await requestMentorship(s, m)).status).toBe(409);
     // accept دوباره → ۴۰۹
     expect((await mentorshipAction(m, ms.id, "accept")).status).toBe(409);
 
-    // منتور اعلانِ درخواست گرفت، شاگرد اعلانِ پذیرش
+    // منتور اعلان درخواست گرفت، شاگرد اعلان پذیرش
     expect(await prisma.inAppNotification.count({ where: { userId: m, type: "mentor.request" } })).toBe(1);
     expect(await prisma.inAppNotification.count({ where: { userId: s, type: "mentor.accepted" } })).toBe(1);
   });
 
-  it("لیستِ رابطه‌ها به تفکیکِ نقش", async () => {
+  it("لیست رابطه‌ها به تفکیک نقش", async () => {
     const m = await makeMentor();
     const s = await makeUser();
     const id = await connect(s, m);
@@ -114,7 +114,7 @@ describe("رابطه — درخواست/قبول/رد/لغو", () => {
     expect(asMentor.mentorships.find((x: any) => x.id === id).counterpart.id).toBe(s);
   });
 
-  it("رد → REJECTED؛ درخواستِ دوباره از همان طرف در ۷ روز ۴۰۹، بعد از ۷ روز مجاز و حریم خصوصی ریست", async () => {
+  it("رد → REJECTED؛ درخواست دوباره از همان طرف در ۷ روز ۴۰۹، بعد از ۷ روز مجاز و حریم خصوصی ریست", async () => {
     const m = await makeMentor();
     const s = await makeUser();
     const r = await requestMentorship(s, m);
@@ -127,7 +127,7 @@ describe("رابطه — درخواست/قبول/رد/لغو", () => {
     // cooldown
     expect((await requestMentorship(s, m)).status).toBe(409);
 
-    // حریم خصوصیِ دستی روی ردیف (شبیه‌سازیِ رابطه‌ی قبلی) — باید با درخواستِ تازه ریست شود
+    // حریم خصوصی دستی روی ردیف (شبیه‌سازی رابطه‌ی قبلی) — باید با درخواست تازه ریست شود
     await prisma.mentorship.update({
       where: { id },
       data: { shareAllPrograms: true, showTaskName: true, updatedAt: new Date(Date.now() - 8 * 86_400_000) },
@@ -142,7 +142,7 @@ describe("رابطه — درخواست/قبول/رد/لغو", () => {
     expect(row!.sharedPrograms).toEqual([]);
   });
 
-  it("cooldown فقط برای همان initiator است: بعد از ردِ درخواستِ شاگرد، منتور می‌تواند دعوت کند", async () => {
+  it("cooldown فقط برای همان initiator است: بعد از رد درخواست شاگرد، منتور می‌تواند دعوت کند", async () => {
     const m = await makeMentor();
     const sUsername = `s_${uniqueTag()}`.slice(0, 20);
     const s = await makeUser({ username: sUsername });
@@ -151,12 +151,12 @@ describe("رابطه — درخواست/قبول/رد/لغو", () => {
     const inv = await invite(m, sUsername);
     expect(inv.status).toBe(200);
     expect((await j(inv)).mentorship.initiatedBy).toBe("MENTOR");
-    // حالا شاگرد (غیرِ initiator) قبول می‌کند، منتور نمی‌تواند
+    // حالا شاگرد (غیر initiator) قبول می‌کند، منتور نمی‌تواند
     expect((await mentorshipAction(m, id, "accept")).status).toBe(403);
     expect((await mentorshipAction(s, id, "accept")).status).toBe(200);
   });
 
-  it("cancel فقط توسطِ initiator و فقط از PENDING", async () => {
+  it("cancel فقط توسط initiator و فقط از PENDING", async () => {
     const m = await makeMentor();
     const s = await makeUser();
     const id = (await j(await requestMentorship(s, m))).mentorship.id;
@@ -169,7 +169,7 @@ describe("رابطه — درخواست/قبول/رد/لغو", () => {
     expect((await requestMentorship(s, m)).status).toBe(200);
   });
 
-  it("اقدامِ نامعتبر ۴۰۰", async () => {
+  it("اقدام نامعتبر ۴۰۰", async () => {
     const m = await makeMentor();
     const s = await makeUser();
     const id = (await j(await requestMentorship(s, m))).mentorship.id;
@@ -177,7 +177,7 @@ describe("رابطه — درخواست/قبول/رد/لغو", () => {
     expect((await mentorshipAction(m, id, "delete")).status).toBe(400);
   });
 
-  it("منتورِ تعلیق‌شده: درخواستِ جدید ۴۰۴، قبولِ درخواستِ قبلی ۴۰۳، دعوت ۴۰۳", async () => {
+  it("منتور تعلیق‌شده: درخواست جدید ۴۰۴، قبول درخواست قبلی ۴۰۳، دعوت ۴۰۳", async () => {
     const m = await makeMentor();
     const s = await makeUser();
     const id = (await j(await requestMentorship(s, m))).mentorship.id;
@@ -191,7 +191,7 @@ describe("رابطه — درخواست/قبول/رد/لغو", () => {
     expect((await mentorshipAction(m, id, "reject")).status).toBe(200);
   });
 
-  it("منتورِ منتشرنشده یا بدونِ پذیرش: ۴۰۴ / ۴۰۹", async () => {
+  it("منتور منتشرنشده یا بدون پذیرش: ۴۰۴ / ۴۰۹", async () => {
     const hidden = await makeMentor({}, { headline: "x", bio: "b", categories: ["FITNESS"], published: false });
     const closed = await makeMentor({}, { headline: "x", bio: "b", categories: ["FITNESS"], published: true, acceptingStudents: false });
     const s = await makeUser();
@@ -201,7 +201,7 @@ describe("رابطه — درخواست/قبول/رد/لغو", () => {
 });
 
 describe("رابطه — end/block/unblock", () => {
-  it("end: برنامه‌های باز لغو و آینه‌ی روتین حذف می‌شود؛ روتینِ خودِ شاگرد دست نمی‌خورد", async () => {
+  it("end: برنامه‌های باز لغو و آینه‌ی روتین حذف می‌شود؛ روتین خود شاگرد دست نمی‌خورد", async () => {
     const m = await makeMentor();
     const s = await makeUser();
     const id = await connect(s, m);
@@ -239,7 +239,7 @@ describe("رابطه — end/block/unblock", () => {
     expect((await mentorshipAction(m, id, "end")).status).toBe(409);
   });
 
-  it("block: برنامه‌ها لغو؛ درخواستِ دوباره ۴۰۳ پیامِ عمومی؛ فقط blocker رفعِ بلاک می‌کند (طرفِ دیگر ۴۰۴)", async () => {
+  it("block: برنامه‌ها لغو؛ درخواست دوباره ۴۰۳ پیام عمومی؛ فقط blocker رفع بلاک می‌کند (طرف دیگر ۴۰۴)", async () => {
     const m = await makeMentor();
     const s = await makeUser();
     const id = await connect(s, m);
@@ -284,21 +284,21 @@ describe("دعوت با یوزرنیم", () => {
     expect(await prisma.inAppNotification.count({ where: { userId: s, type: "mentor.request" } })).toBe(1);
   });
 
-  it("کاربرِ غیرِ منتور نمی‌تواند دعوت کند (۴۰۳)", async () => {
+  it("کاربر غیر منتور نمی‌تواند دعوت کند (۴۰۳)", async () => {
     const notMentor = await makeUser();
     const uname = `x_${uniqueTag()}`.slice(0, 20);
     await makeUser({ username: uname });
     expect((await invite(notMentor, uname)).status).toBe(403);
   });
 
-  it("دعوتِ خود ۴۰۰؛ یوزرنیمِ نامعتبر ۴۰۰", async () => {
+  it("دعوت خود ۴۰۰؛ یوزرنیم نامعتبر ۴۰۰", async () => {
     const uname = `me_${uniqueTag()}`.slice(0, 20);
     const m = await makeMentor({ username: uname });
     expect((await invite(m, uname)).status).toBe(400);
     expect((await invite(m, "a b<script>")).status).toBe(400);
   });
 
-  it("ناموجود، کاربرِ مسدودشده، UserBlock و رابطه‌ی BLOCKED همه پاسخِ ۴۰۴ِ یکسان دارند (ضد کاوش)", async () => {
+  it("ناموجود، کاربر مسدودشده، UserBlock و رابطه‌ی BLOCKED همه پاسخ ۴۰۴ یکسان دارند (ضد کاوش)", async () => {
     const m = await makeMentor();
 
     const unknown = await invite(m, `nouser_${uniqueTag()}`.slice(0, 20));
@@ -323,7 +323,7 @@ describe("دعوت با یوزرنیم", () => {
     for (const b of bodies) expect(b).toEqual(bodies[0]);
   });
 
-  it("درخواستِ شاگرد به منتوری که UserBlock دارد → ۴۰۳ با پیامِ عمومی", async () => {
+  it("درخواست شاگرد به منتوری که UserBlock دارد → ۴۰۳ با پیام عمومی", async () => {
     const m = await makeMentor();
     const s = await makeUser();
     await prisma.userBlock.create({ data: { blockerId: m, blockedId: s } });
@@ -333,7 +333,7 @@ describe("دعوت با یوزرنیم", () => {
   });
 });
 
-describe("کشفِ منتور", () => {
+describe("کشف منتور", () => {
   it("جست‌وجو با q پیدا می‌کند؛ منتشرنشده/معلق/مسدود/بلاک‌شده دیده نمی‌شوند", async () => {
     const tag = uniqueTag();
     const visible = await makeMentor({ username: `${tag}a`.slice(0, 20), name: "نمایان" });

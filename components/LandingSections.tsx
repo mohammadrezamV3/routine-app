@@ -23,7 +23,7 @@ import { STATS_BASE, type PublicStats } from "@/lib/publicStatsBase";
 const EASE = [0.22, 1, 0.36, 1] as const;
 
 function fa(n: number) {
-  // ارقامِ انگلیسی؛ جداکننده‌ی هزارگان برای عددهای بزرگ (مثلِ تعدادِ کاربران)
+  // ارقام انگلیسی؛ جداکننده‌ی هزارگان برای عددهای بزرگ (مثل تعداد کاربران)
   return n >= 1000 ? n.toLocaleString("en-US") : String(n);
 }
 
@@ -71,13 +71,13 @@ function CountUp({ to, suffix = "" }: { to: number; suffix?: string }) {
     setArmed(true);
   }, [reduce]);
 
-  // بی‌حرکت: عددِ تازه (پاسخِ /api/public/stats) مستقیم نشون داده می‌شه
+  // بی‌حرکت: عدد تازه (پاسخ /api/public/stats) مستقیم نشون داده می‌شه
   useEffect(() => { if (reduce) setVal(to); }, [reduce, to]);
 
   useEffect(() => {
     if (!armed || !inView) return;
     let raf = 0;
-    // از همون عددِ فعلی (اگه پاسخِ API بعد از شمارش رسید، دوباره از صفر شروع نمی‌کنه)
+    // از همون عدد فعلی (اگه پاسخ API بعد از شمارش رسید، دوباره از صفر شروع نمی‌کنه)
     const from = cur.current;
     const start = performance.now();
     const dur = 1400;
@@ -93,12 +93,12 @@ function CountUp({ to, suffix = "" }: { to: number; suffix?: string }) {
   return <span ref={ref}>{fa(val)}{suffix}</span>;
 }
 
-// عددها = واقعی + پایه (lib/publicStatsBase.ts)؛ تا پاسخِ /api/public/stats برسه خودِ
+// عددها = واقعی + پایه (lib/publicStatsBase.ts)؛ تا پاسخ /api/public/stats برسه خود
 // پایه‌ها نشون داده می‌شن.
 const STATS: { key: keyof PublicStats; label: string }[] = [
-  { key: "users", label: "کاربر" },
-  { key: "routinePrograms", label: "برنامه روتین" },
-  { key: "exercisePlans", label: "برنامه ورزشی" },
+  { key: "users", label: "کاربر فعال" },
+  { key: "routinePrograms", label: "روتین ساخته‌شده" },
+  { key: "exercisePlans", label: "برنامه تمرینی" },
   { key: "journalEntries", label: "معامله ثبت‌شده" },
 ];
 
@@ -139,16 +139,16 @@ export function LandingStats() {
 /* ───────────────────────── 2) How it works ───────────────────────── */
 
 const STEPS = [
-  { icon: UserPlus, title: "حساب بساز", body: "کمتر از یک دقیقه ثبت‌نام کن و وارد آریون شو؛ بدون کارت بانکی. «روتین من» 14 روز رایگان است." },
-  { icon: LayoutGrid, title: "برنامه‌ات را بساز", body: "روتین، تمرین، کالری، ترید یا مسیر یادگیری‌ات را اضافه کن؛ یا فقط به «نومو» بگو چه می‌خواهی." },
-  { icon: CalendarCheck, title: "اجرا کن و پیشرفتت را ببین", body: "هر روز برنامه‌ات را اجرا کن و روند پیشرفتت را دنبال کن." },
+  { icon: UserPlus, title: "برنامه‌ات را بساز", body: "ثبت‌نام کن و روتینت را بچین؛ یا به «نومو» بگو چه می‌خواهی. «روتین من» 14 روز رایگان است." },
+  { icon: LayoutGrid, title: "اجرا کن", body: "کارهای امروزت را انجام بده و همان لحظه تیک بزن." },
+  { icon: CalendarCheck, title: "پیشرفتت را ببین", body: "استریک، تاریخچه و آنالیز هفتگی نشان می‌دهند مسیرت چطور پیش می‌رود." },
 ];
 
 export function LandingHowItWorks() {
   const reduce = useReducedMotion();
   return (
     <div>
-      <SectionHead title="در سه قدم" accent="شروع کن" />
+      <SectionHead title="برنامه، اجرا،" accent="پیشرفت" />
       <div className="ls-steps">
         <div className="ls-steps-line" aria-hidden="true">
           <motion.span
@@ -178,10 +178,10 @@ export function LandingHowItWorks() {
 }
 
 /* ───────────────────────── 2.5) Dashboard ───────────────────────── */
-// معرفیِ داشبورد (/dashboard) — ماکتِ ساده‌شده‌ی خودِ صفحه (حلقه‌های پیشرفت،
-// کارهای سریع، خطِ زمانیِ امروز، ترید) و یک پاپ‌آپِ «ثبتِ غذا» روی همون صفحه،
-// چون نکته‌ی اصلیش همینه: ثبت‌کردن بدونِ رفتن به صفحه‌ی دیگه. همه‌ی ادعاها با
-// کدِ DashboardClient/DashboardActions/DashboardCommand چک شده. تصویر inert.
+// معرفی داشبورد (/dashboard) — ماکت ساده‌شده‌ی خود صفحه (حلقه‌های پیشرفت،
+// کارهای سریع، خط زمانی امروز، ترید) و یک پاپ‌آپ «ثبت غذا» روی همون صفحه،
+// چون نکته‌ی اصلیش همینه: ثبت‌کردن بدون رفتن به صفحه‌ی دیگه. همه‌ی ادعاها با
+// کد DashboardClient/DashboardActions/DashboardCommand چک شده. تصویر inert.
 
 const DASH_RINGS = [
   { label: "روتین", v: 0.78, a: "var(--ring-1a)", b: "var(--ring-1b)" },
@@ -190,10 +190,10 @@ const DASH_RINGS = [
 ];
 
 const DASH_POINTS: { icon: LucideIcon; title: string; body: string }[] = [
-  { icon: LayoutGrid, title: "همه‌چیز در یک نگاه", body: "روتین امروز، تمرین، کالری، ترید، تقویم اقتصادی، مربی‌ها و اعلان‌ها کنار هم؛ بخشی که فعال نداری جای خالی نمی‌گذارد." },
-  { icon: Zap, title: "ثبت بدون ترکِ صفحه", body: "برنامه، غذا یا معامله را از همان‌جا ثبت کن؛ پاپ‌آپ همان بخش باز می‌شود و داشبورد همان لحظه به‌روز می‌شود." },
-  { icon: RefreshCw, title: "زنده و هم‌گام", body: "تیکی که این‌جا می‌زنی همان لحظه در برنامه هفتگی، استریک و دستگاه‌های دیگرت دیده می‌شود." },
-  { icon: Sparkles, title: "دسترسی سریع با جست‌وجو", body: "با پالت فرمان (Ctrl/⌘ + K) با چند حرف به هر بخش یا کاری برس." },
+  { icon: LayoutGrid, title: "امروزت را ببین", body: "برنامه‌های امروز، وضعیت انجام‌شدن و اولویت‌هایت را یک‌جا دنبال کن." },
+  { icon: Zap, title: "سریع ثبت کن", body: "کاری که انجام داده‌ای را همان لحظه ثبت کن و ادامه بده." },
+  { icon: RefreshCw, title: "پیشرفتت را دنبال کن", body: "عملکردت فقط یک لیست نیست؛ روندی است که می‌بینی. هر تیک همان لحظه در برنامه هفتگی، استریک و دستگاه‌های دیگرت هم دیده می‌شود." },
+  { icon: Sparkles, title: "جست‌وجوی سریع", body: "با Ctrl/⌘ + K و چند حرف به هر بخش برس." },
 ];
 
 function DashRings() {
@@ -226,9 +226,9 @@ function DashMock() {
       <div className="ls-dash-quick">
         {[
           { l: "برنامه‌ی جدید", I: CalendarCheck, c: "var(--accent)" },
-          { l: "ثبتِ غذا", I: Apple, c: "#FFB547", on: true },
-          { l: "ثبتِ معامله", I: CandlestickChart, c: "#00C98D" },
-          { l: "شروعِ تمرین", I: Dumbbell, c: "#3D7DFF" },
+          { l: "ثبت غذا", I: Apple, c: "#FFB547", on: true },
+          { l: "ثبت معامله", I: CandlestickChart, c: "#00C98D" },
+          { l: "شروع تمرین", I: Dumbbell, c: "#3D7DFF" },
         ].map(({ l, I, c, on }) => (
           <span key={l} className={`ls-dash-q${on ? " is-on" : ""}`} style={{ ["--c" as string]: c }}>
             <span className="ls-dash-q-ic"><I size={15} /></span>{l}
@@ -252,7 +252,7 @@ function DashMock() {
           ))}
         </div>
         <div className="ls-dash-card">
-          <div className="ls-dash-card-h"><TrendingUp size={13} /> عملکردِ ترید</div>
+          <div className="ls-dash-card-h"><TrendingUp size={13} /> عملکرد ترید</div>
           <div className="ls-dash-pnl mono" dir="ltr">+1,242$</div>
           <svg viewBox="0 0 100 34" className="ls-dash-spark" preserveAspectRatio="none">
             <path d="M0 28 L12 24 L22 26 L34 18 L46 20 L58 12 L70 14 L82 7 L100 4" fill="none" stroke="var(--pnl-win, #00C98D)" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round" vectorEffect="non-scaling-stroke" />
@@ -261,7 +261,7 @@ function DashMock() {
         </div>
       </div>
 
-      {/* پاپ‌آپِ «ثبتِ غذا» — روی خودِ داشبورد، نه صفحه‌ی جدید */}
+      {/* پاپ‌آپ «ثبت غذا» — روی خود داشبورد، نه صفحه‌ی جدید */}
       <div className="ls-dash-pop">
         <div className="ls-dash-pop-h"><Apple size={14} /> افزودن غذا</div>
         <div className="ls-dash-pop-f">جوجه‌کباب <span className="mono">200 گرم</span></div>
@@ -274,11 +274,10 @@ function DashMock() {
 export function LandingDashboard() {
   return (
     <div>
-      <SectionHead title="داشبورد؛" accent="کل روزت در یک نگاه" />
+      <SectionHead title="کل روزت،" accent="یک‌جا" />
       <Reveal>
         <p className="ls-dash-intro">
-          برنامه‌های امروز، تمرین، کالری، ترید و میزان پیشرفتت را از یک صفحه دنبال کن؛
-          بدون جابه‌جایی بین چند اپ.
+          از برنامه امروز تا میزان پیشرفتت؛ مهم‌ترین چیزها را بدون جابه‌جایی بین چند ابزار ببین.
         </p>
       </Reveal>
       <div className="ls-dash">
@@ -303,9 +302,9 @@ export function LandingDashboard() {
 }
 
 /* ───────────────────────── 3) Bento ───────────────────────── */
-// هر تصویرِ کوچک یک برش از خودِ اپ است (MentorChat، اعلانِ پوشِ reminderPlan،
+// هر تصویر کوچک یک برش از خود اپ است (MentorChat، اعلان پوش reminderPlan،
 // StreakFlame، DashFriendsCard، TradeMtLinkPanel، CalorieMacrosCard) — نه
-// شکلِ نمادین. کلِ بخشِ تصویر aria-hidden و inert است.
+// شکل نمادین. کل بخش تصویر aria-hidden و inert است.
 
 function VisE2EE() {
   return (
@@ -387,7 +386,7 @@ function VisFood() {
   return (
     <div className="ls-vis ls-vis-food dash-scope" aria-hidden="true" {...INERT}>
       <div className="flex items-center gap-1.5 text-[12px] font-bold text-dash-text">
-        <Target className="h-4 w-4 text-dash-green" /> هدفِ روزانه‌ی تو
+        <Target className="h-4 w-4 text-dash-green" /> هدف روزانه‌ی تو
       </div>
       <div className="ls-food-grid">
         {[
@@ -405,12 +404,12 @@ function VisFood() {
 }
 
 const BENTO = [
-  { key: "e2ee", cls: "ls-b-e2ee", icon: ShieldCheck, title: "حریم خصوصی، از ابتدا", body: "گفت‌وگوهای مربی، پیام‌های گروهی و یادداشت‌های خصوصی مربی‌ها رمزگذاری سرتاسری دارند؛ سرور و ادمین‌ها متن آن‌ها را نمی‌بینند.", vis: VisE2EE },
-  { key: "pwa", cls: "ls-b-pwa", icon: Smartphone, title: "همراهت، روی هر دستگاه", body: "آریون را روی گوشی نصب کن و یادآوری‌ها را سر وقت دریافت کن.", vis: VisPwa },
-  { key: "streak", cls: "ls-b-streak", icon: Flame, title: "استریک", body: "هر روز کامل شعله را بزرگ‌تر می‌کند؛ 8 سطح، از روز اول تا یک سال پیوسته.", vis: VisStreak },
-  { key: "friends", cls: "ls-b-friends", icon: Users, title: "دوستان", body: "پیشرفت و استریک دوستانت را ببین؛ ادامه دادن کنار هم ساده‌تر است.", vis: VisFriends },
-  { key: "meta", cls: "ls-b-meta", icon: TrendingUp, title: "معامله‌هایت، مستقیم وارد ژورنال", body: "با اتصال MetaTrader، معاملاتت بدون ثبت دستی و بدون تکرار وارد ژورنال می‌شوند؛ رمز حساب معاملاتی هرگز خواسته نمی‌شود.", vis: VisMeta },
-  { key: "food", cls: "ls-b-food", icon: Target, title: "کالری و ماکرو، متناسب با تو", body: "هدف کالری و درشت‌مغذی‌هایت را بر اساس اطلاعات و هدف خودت مشخص کن و روند تغذیه‌ات را دنبال کن.", vis: VisFood },
+  { key: "e2ee", cls: "ls-b-e2ee", icon: ShieldCheck, title: "حریم خصوصی، از ابتدا", body: "گفت‌وگوها، پیام‌های گروهی و یادداشت‌های خصوصی مربی‌ها رمزگذاری سرتاسری دارند؛ سرور و ادمین‌ها متن آن‌ها را نمی‌بینند.", vis: VisE2EE },
+  { key: "pwa", cls: "ls-b-pwa", icon: Smartphone, title: "چیزی از قلم نیفتد", body: "آریون را روی گوشی نصب کن و برای کارها و برنامه‌های مهمت یادآوری داشته باش.", vis: VisPwa },
+  { key: "streak", cls: "ls-b-streak", icon: Flame, title: "پیوستگی، خودش یک دستاورد است", body: "روزهایی را که به برنامه‌ات عمل کرده‌ای ثبت کن و زنجیره پیشرفتت را ببین.", vis: VisStreak },
+  { key: "friends", cls: "ls-b-friends", icon: Users, title: "با هم جلو بروید", body: "پیشرفت دوستانت را ببین و مسیرت را در کنار آن‌ها ادامه بده.", vis: VisFriends },
+  { key: "meta", cls: "ls-b-meta", icon: TrendingUp, title: "کمتر ثبت کن، بیشتر تحلیل کن", body: "با اتصال MT4 و MT5، معاملاتت را مستقیما وارد ژورنال کن؛ رمز حساب معاملاتی هرگز خواسته نمی‌شود.", vis: VisMeta },
+  { key: "food", cls: "ls-b-food", icon: Target, title: "تغذیه‌ات را هم اندازه‌گیری کن", body: "کالری و ماکروهای روزانه‌ات را ثبت کن و ببین چقدر به هدفت نزدیک شده‌ای.", vis: VisFood },
 ];
 
 export function LandingBento() {
@@ -442,35 +441,35 @@ export function LandingBento() {
 }
 
 /* ───────────────────────── 3.5) All features ───────────────────────── */
-// فهرستِ فشرده‌ی همه‌ی قابلیت‌ها — هر مورد با کدِ اپ چک شده و هرجا صفحه‌ی
-// توضیحیِ اختصاصی هست، به همان لینک می‌دهد (لینکِ داخلی برای سئو).
+// فهرست فشرده‌ی همه‌ی قابلیت‌ها — هر مورد با کد اپ چک شده و هرجا صفحه‌ی
+// توضیحی اختصاصی هست، به همان لینک می‌دهد (لینک داخلی برای سئو).
 
 const FEATURES: { icon: LucideIcon; title: string; body: string; href?: string }[] = [
-  { icon: LayoutGrid, title: "داشبورد", body: "همه بخش‌ها در یک صفحه، با ثبت سریع برنامه، غذا و معامله." },
-  { icon: CalendarCheck, title: "روتین روزانه", body: "برنامه‌های تکرارشونده با ساعت، تگ و اهمیت، و تیک هر روز.", href: "/routine" },
-  { icon: CalendarDays, title: "برنامه هفتگی و تاریخچه", body: "کل هفته در یک نگاه، و تقویم تاریخچه برای هر روز گذشته.", href: "/daily-planner" },
-  { icon: Flame, title: "پیگیری عادت و استریک", body: "8 سطح استریک، از 1 تا 365 روز کامل.", href: "/habit-tracker" },
-  { icon: Bell, title: "یادآوری و یادآوری دارو", body: "نوتیفیکیشن سر وقت برای برنامه‌ها و هر نوبت دارو." },
-  { icon: Bot, title: "مدیر برنامه هوشمند «نومو»", body: "نیازت را به زبان طبیعی بگو؛ برنامه ساخته، جابه‌جا یا اصلاح می‌شود.", href: "/ai-planner" },
-  { icon: BarChart3, title: "آنالیز هفتگی", body: "امتیاز، نمره، بینش و پیش‌بینی پایان هفته از داده‌ی خودت." },
-  { icon: Dumbbell, title: "برنامه بدنسازی", body: "برنامه AI یا دستی، کرنومتر تمرین و کاتالوگ 149 حرکت.", href: "/bodybuilding-program" },
-  { icon: Apple, title: "کالری‌شمار", body: "هدف کالری و ماکرو، 264 خوراکی آماده و نمودار هفتگی.", href: "/calorie-counter" },
-  { icon: CandlestickChart, title: "ژورنال ترید", body: "ژورنال هر حساب، با آمار، چک‌لیست ورود، یادداشت و برچسب.", href: "/trading-journal" },
-  { icon: RefreshCw, title: "همگام‌سازی متاتریدر", body: "MT4 و MT5 با اکسپرت و کد اتصال، بدون رمز حساب.", href: "/trading-journal" },
-  { icon: CalendarClock, title: "تقویم اقتصادی", body: "9 ارز اصلی با Actual، Forecast و Previous، فیلتر تاثیر و هشدار خبر.", href: "/economic-calendar" },
+  { icon: LayoutGrid, title: "داشبورد", body: "کل روزت را در یک صفحه ببین و سریع ثبت کن." },
+  { icon: CalendarCheck, title: "روتین روزانه", body: "کارهای هر روز را با ساعت و اولویت بچین و تیک بزن.", href: "/routine" },
+  { icon: CalendarDays, title: "برنامه هفتگی و تاریخچه", body: "کل هفته در یک نگاه؛ به روزهای گذشته برگرد و بررسی کن.", href: "/daily-planner" },
+  { icon: Flame, title: "پیگیری عادت و استریک", body: "زنجیره روزهای پیوسته‌ات را ببین؛ 8 سطح، از 1 تا 365 روز.", href: "/habit-tracker" },
+  { icon: Bell, title: "یادآوری برنامه و دارو", body: "برای کارها و برنامه‌های مهمت و هر نوبت دارو یادآوری داشته باش." },
+  { icon: Bot, title: "مدیر برنامه هوشمند «نومو»", body: "به فارسی بگو چه می‌خواهی؛ نومو برنامه‌هایت را می‌سازد و جابه‌جا می‌کند.", href: "/ai-planner" },
+  { icon: BarChart3, title: "آنالیز هفتگی", body: "ببین کجا جلو رفته‌ای، کجا عقب مانده‌ای و هفته بعد روی چه چیزی تمرکز کنی." },
+  { icon: Dumbbell, title: "برنامه بدنسازی", body: "برنامه AI یا دستی، کرنومتر تمرین و 149 حرکت آماده.", href: "/bodybuilding-program" },
+  { icon: Apple, title: "کالری‌شمار", body: "کالری و ماکروهایت را با 264 خوراکی آماده ثبت کن و نمودار هفتگی را ببین.", href: "/calorie-counter" },
+  { icon: CandlestickChart, title: "ژورنال ترید", body: "معاملات هر حساب را با آمار، چک‌لیست و یادداشت بررسی کن.", href: "/trading-journal" },
+  { icon: RefreshCw, title: "همگام‌سازی متاتریدر", body: "MT4 و MT5 با اکسپرت و کد اتصال؛ بدون رمز حساب.", href: "/trading-journal" },
+  { icon: CalendarClock, title: "تقویم اقتصادی", body: "رویدادهای 9 ارز اصلی با Actual، Forecast، Previous و هشدار خبر.", href: "/economic-calendar" },
   { icon: Clock, title: "ساعت سشن‌های فارکس", body: "پنج سشن اصلی به وقت خودت، با ساعت تابستانی واقعی.", href: "/forex-sessions" },
-  { icon: Route, title: "رودمپ یادگیری", body: "مسیر یادگیری مرحله‌به‌مرحله با هوش مصنوعی، برای هر مهارتی.", href: "/learning-roadmap" },
+  { icon: Route, title: "رودمپ یادگیری", body: "هدف بزرگت را با هوش مصنوعی به مسیر مرحله‌به‌مرحله تبدیل کن.", href: "/learning-roadmap" },
   { icon: GraduationCap, title: "مربی‌ها", body: "مربی احراز هویت‌شده، دریافت برنامه و گفت‌وگوی رمزگذاری‌شده.", href: "/mentors" },
-  { icon: Users, title: "دوستان", body: "پیشرفت و استریک دوستانت در روتین، تمرین و کالری." },
+  { icon: Users, title: "دوستان", body: "پیشرفت و استریک دوستانت را ببین و کنار هم ادامه بده." },
   { icon: Megaphone, title: "اعلان‌ها و اطلاعیه‌ها", body: "اطلاعیه‌های آریون و اعلان‌هایت در یک پنل." },
-  { icon: Smartphone, title: "نصب روی گوشی", body: "وب‌اپ PWA؛ مثل یک اپ، با آیکون خودش." },
-  { icon: SunMoon, title: "تمِ روشن و تیره", body: "هر دو تم، با ظاهری یکدست در همه بخش‌ها." },
+  { icon: Smartphone, title: "نصب روی گوشی", body: "وب‌اپ PWA؛ با «افزودن به صفحه‌ی اصلی» مثل یک اپ نصب می‌شود." },
+  { icon: SunMoon, title: "تم روشن و تیره", body: "هر دو تم، با ظاهری یکدست در همه بخش‌ها." },
 ];
 
 export function LandingFeatureGrid() {
   return (
     <div>
-      <SectionHead title="همه قابلیت‌ها،" accent="در یک نگاه" />
+      <SectionHead title="هر چیزی که برای مدیریت" accent="مسیرت لازم داری" />
       <Reveal>
       <ul className="ls-feat">
         {FEATURES.map((f) => {
@@ -500,14 +499,14 @@ export function LandingFeatureGrid() {
 
 const WHY_US = [
   { icon: ShieldCheck, color: "#22C55E", title: "امن و خصوصی", body: "رمز عبور با bcrypt ذخیره می‌شود، اطلاعاتت فروخته نمی‌شود و گفت‌وگوی مربی رمزگذاری سرتاسری دارد." },
-  { icon: TrendingUp, color: "#A855F7", title: "ساخته‌شده برای تو", body: "برنامه‌ها را با هدف، بدن و سبک زندگی خودت تنظیم کن." },
-  { icon: Headset, color: "#3B82F6", title: "پشتیبانی واقعی", body: "پیامت را تیم آریون پاسخ می‌دهد، نه یک پاسخ خودکار." },
-  { icon: Lightbulb, color: "#F59E0B", title: "همه‌چیز در یک سیستم", body: "روتین، تمرین، تغذیه، ترید و یادگیری زیر یک حساب." },
-  { icon: Smartphone, color: "#EC4899", title: "همیشه در دسترس", body: "گوشی، تبلت یا کامپیوتر؛ هر تغییر همه‌جا همگام می‌شود." },
-  { icon: BarChart3, color: "#06B6D4", title: "پیشرفت قابل اندازه‌گیری", body: "آنالیز هفتگی نشان می‌دهد کجا جلو رفته‌ای و کجا عقب مانده‌ای." },
-  { icon: Zap, color: "#F97316", title: "ساده و منظم", body: "بدون شلوغی؛ فقط چیزی که لازم داری." },
-  { icon: Users, color: "#14B8A6", title: "فارسی و سازگار با زندگی تو", body: "رابط فارسی و راست‌چین، برای هر سبک زندگی و هر سطحی." },
-  { icon: Sparkles, color: "#8B5CF6", title: "همیشه در حال بهتر شدن", body: "قابلیت‌های تازه مرتب اضافه می‌شوند." },
+  { icon: TrendingUp, color: "#A855F7", title: "ساخته‌شده برای اجرا", body: "آریون فقط برای برنامه‌ریزی نیست؛ اجرای روزانه و پیشرفتت را هم دنبال می‌کند." },
+  { icon: Headset, color: "#3B82F6", title: "پشتیبانی واقعی", body: "پیامت را خود تیم آریون پاسخ می‌دهد." },
+  { icon: Lightbulb, color: "#F59E0B", title: "همه‌چیز کنار هم", body: "به‌جای پراکندگی بین چند ابزار، برنامه‌هایت را در یک سیستم مدیریت کن." },
+  { icon: Smartphone, color: "#EC4899", title: "همراه تو", body: "از دستگاه‌های مختلف به برنامه‌ها و اطلاعاتت دسترسی داشته باش." },
+  { icon: BarChart3, color: "#06B6D4", title: "تصویر واضح‌تر", body: "وقتی اطلاعاتت یک‌جا باشد، بهتر می‌توانی عملکردت را ببینی." },
+  { icon: Zap, color: "#F97316", title: "ساده و فارسی", body: "یک تجربه فارسی و منظم، بدون پیچیدگی اضافه." },
+  { icon: Users, color: "#14B8A6", title: "متناسب با تو", body: "برنامه‌ها را با هدف و سبک زندگی خودت تنظیم کن." },
+  { icon: Sparkles, color: "#8B5CF6", title: "قابل توسعه", body: "از روتین شروع کن و هر زمان نیاز داشتی بخش‌های دیگر را اضافه کن." },
 ];
 
 export function LandingWhyUs() {
@@ -534,16 +533,16 @@ export function LandingWhyUs() {
 
 /* ───────────────────────── 5) Quote ───────────────────────── */
 
-// فقط جمله‌هایی با گوینده‌ی مشخص و قابل‌استناد (یا ضرب‌المثلِ واقعیِ فارسی)
+// فقط جمله‌هایی با گوینده‌ی مشخص و قابل‌استناد (یا ضرب‌المثل واقعی فارسی)
 const QUOTES = [
   { text: "ما همان چیزی هستیم که بارها و بارها انجامش می‌دهیم.", author: "ویل دورانت" },
-  { text: "به سطحِ هدف‌هایت بالا نمی‌روی؛ به سطحِ سیستم‌هایت سقوط می‌کنی.", author: "جیمز کلیر" },
-  { text: "سفرِ هزار فرسنگی با یک قدم آغاز می‌شود.", author: "لائوتزو" },
+  { text: "به سطح هدف‌هایت بالا نمی‌روی؛ به سطح سیستم‌هایت سقوط می‌کنی.", author: "جیمز کلیر" },
+  { text: "سفر هزار فرسنگی با یک قدم آغاز می‌شود.", author: "لائوتزو" },
   { text: "هر کاری که انجام می‌دهی، رایی است به آدمی که می‌خواهی باشی.", author: "جیمز کلیر" },
   { text: "قطره قطره جمع گردد، وانگهی دریا شود.", author: "ضرب‌المثل فارسی" },
   { text: "انگیزه شروعت می‌کند؛ عادت ادامه‌ات می‌دهد.", author: "جیم رایون" },
-  { text: "کامیابی جمعِ تلاش‌های کوچکی است که روز به روز تکرار می‌شوند.", author: "رابرت کالیر" },
-  { text: "کار نیکو کردن از پُر کردن است.", author: "ضرب‌المثل فارسی" },
+  { text: "کامیابی جمع تلاش‌های کوچکی است که روز به روز تکرار می‌شوند.", author: "رابرت کالیر" },
+  { text: "کار نیکو کردن از پر کردن است.", author: "ضرب‌المثل فارسی" },
   { text: "برنامه‌ها هیچ‌اند؛ برنامه‌ریزی همه‌چیز است.", author: "دوایت آیزنهاور" },
 ];
 
@@ -591,7 +590,7 @@ export function LandingFAQ() {
   const [open, setOpen] = useState<number | null>(0);
   return (
     <div>
-      <SectionHead title="سؤال‌های" accent="پرتکرار" />
+      <SectionHead title="پرسش‌های" accent="پرتکرار" />
       <Reveal>
         <div className="ls-faq">
           {FAQ_ITEMS.map((f, i) => {
@@ -633,15 +632,15 @@ export function LandingFinalCTA() {
         <span className="ls-cta-glow ls-cta-glow-2" aria-hidden="true" />
         <div className="ls-cta-in">
           <span className="ls-cta-chip"><Sparkles size={14} /> 14 روز رایگان</span>
-          <h2 className="ls-cta-title">از امروز شروع کن</h2>
-          <p className="ls-cta-sub">برنامه‌ات را بساز، اجرا کن و پیشرفتت را در یک سیستم دنبال کن.</p>
+          <h2 className="ls-cta-title">شروعش کن.</h2>
+          <p className="ls-cta-sub">مسیرت را مشخص کن، برنامه‌ات را بساز و از امروز اجرا کن.</p>
           <div className="ls-cta-actions">
             <Link href="/auth/signup" className="ls-btn ls-btn-primary">
-              رایگان شروع کن <ArrowLeft size={16} />
+              شروع رایگان <ArrowLeft size={16} />
             </Link>
             <Link href="/auth/login" className="ls-btn ls-btn-ghost">ورود</Link>
           </div>
-          <div className="ls-cta-note"><Check size={13} /> بدون کارت بانکی</div>
+          <div className="ls-cta-note"><Check size={13} /> ثبت‌نام در کمتر از یک دقیقه</div>
         </div>
       </div>
     </Reveal>

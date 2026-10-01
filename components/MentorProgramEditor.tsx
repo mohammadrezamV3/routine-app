@@ -125,7 +125,7 @@ function validateDraft(d: Draft, type: ProgramType): { errors: ItemErrors; input
   return { errors: {}, input };
 }
 
-/** پیش‌پرکردنِ «برنامه‌ی جدید» از قالب یا کپیِ برنامه‌ی قبلی (تاریخ‌ها از پیش جابه‌جا شده) */
+/** پیش‌پرکردن «برنامه‌ی جدید» از قالب یا کپی برنامه‌ی قبلی (تاریخ‌ها از پیش جابه‌جا شده) */
 export type ProgramPrefill = {
   type: ProgramType;
   title: string;
@@ -134,7 +134,7 @@ export type ProgramPrefill = {
   startDate: string | null;
   endDate: string | null;
   items: Item[];
-  /** وقتی از قالب آمده؛ با ذخیره آمارِ استفاده‌ی قالب بالا می‌رود */
+  /** وقتی از قالب آمده؛ با ذخیره آمار استفاده‌ی قالب بالا می‌رود */
   templateId?: string;
 };
 
@@ -252,7 +252,7 @@ export function MentorProgramEditor(props: MentorProgramEditorProps) {
 
     const errs: Record<string, ItemErrors> = {};
     const inputs: ItemInput[] = [];
-    // آیتمِ کاملاً خالی در پیش‌نویس نادیده گرفته می‌شود
+    // آیتم کاملا خالی در پیش‌نویس نادیده گرفته می‌شود
     const meaningful = items.filter((d) => d.title.trim() || d.details.trim() || d.days.length || d.startTime || d.sets || d.reps);
     for (const d of meaningful) {
       const r = validateDraft(d, type);
@@ -301,7 +301,7 @@ export function MentorProgramEditor(props: MentorProgramEditorProps) {
     setSaved(true);
   }
 
-  // عمداً فرم (onSubmit) نیست: Enter در یک فیلد نباید برنامه را برای شاگرد بفرستد
+  // عمدا فرم (onSubmit) نیست: Enter در یک فیلد نباید برنامه را برای شاگرد بفرستد
   async function send() {
     if (busy) return;
     setError(null);
@@ -320,7 +320,7 @@ export function MentorProgramEditor(props: MentorProgramEditorProps) {
     router.push(`/mentor-programs/${id}`);
   }
 
-  /** «ذخیره به‌عنوان قالب» از محتوای فعلیِ فرم، بدونِ ذخیره‌ی خودِ برنامه */
+  /** «ذخیره به‌عنوان قالب» از محتوای فعلی فرم، بدون ذخیره‌ی خود برنامه */
   function saveAsTemplate() {
     if (busy) return;
     setError(null);
@@ -376,7 +376,7 @@ export function MentorProgramEditor(props: MentorProgramEditorProps) {
           <MentorField label="عنوان" htmlFor="pe-title" error={formErr.title}>
             <input
               id="pe-title" type="text" className="wsearch-newform-name trade-glass-field" maxLength={TITLE_MAX} value={title}
-              placeholder={type === "WORKOUT" ? "مثلاً برنامه‌ی حجم 8 هفته‌ای" : "مثلاً روتین صبحگاهی"}
+              placeholder={type === "WORKOUT" ? "مثلا برنامه‌ی حجم 8 هفته‌ای" : "مثلا روتین صبحگاهی"}
               onChange={(e) => { setTitle(e.target.value); setFormErr((f) => ({ ...f, title: undefined })); dirty(); }}
             />
           </MentorField>
@@ -384,7 +384,7 @@ export function MentorProgramEditor(props: MentorProgramEditorProps) {
           <MentorField label="توضیحات" htmlFor="pe-desc" optional error={formErr.description}>
             <textarea
               id="pe-desc" className="wsearch-newform-name trade-glass-field" rows={3} maxLength={DESC_MAX} value={description}
-              placeholder="مثلاً هدف برنامه و نکات کلی"
+              placeholder="مثلا هدف برنامه و نکات کلی"
               onChange={(e) => { setDescription(e.target.value); setFormErr((f) => ({ ...f, description: undefined })); dirty(); }}
             />
           </MentorField>
@@ -422,7 +422,7 @@ export function MentorProgramEditor(props: MentorProgramEditorProps) {
           >
             <textarea
               id="pe-note" className="wsearch-newform-name trade-glass-field" rows={3} maxLength={NOTE_MAX} value={note}
-              placeholder="مثلاً هفته‌ی اول وزنه‌ها را سبک‌تر بردار و فرم حرکت را تمرین کن"
+              placeholder="مثلا هفته‌ی اول وزنه‌ها را سبک‌تر بردار و فرم حرکت را تمرین کن"
               onChange={(e) => { setNote(e.target.value); setFormErr((f) => ({ ...f, note: undefined })); dirty(); }}
             />
           </MentorField>
@@ -526,7 +526,7 @@ export function MentorProgramEditor(props: MentorProgramEditorProps) {
   );
 }
 
-/** یک آیتم برنامه: ردیفِ جداشده با خط مویی، بدون قاب و بک‌گراند */
+/** یک آیتم برنامه: ردیف جداشده با خط مویی، بدون قاب و بک‌گراند */
 function MentorProgramEditorItem({
   draft: d, index, count, type, errors, onPatch, onMove, onRemove,
 }: {
@@ -564,7 +564,7 @@ function MentorProgramEditorItem({
           <input
             id={id("title")} type="text" className="wsearch-newform-name trade-glass-field" maxLength={ITEM_TITLE_MAX} value={d.title}
             list={type === "WORKOUT" ? "pe-exercise-names" : undefined}
-            placeholder={type === "WORKOUT" ? "مثلاً اسکوات با هالتر" : "مثلاً پیاده‌روی 30 دقیقه"}
+            placeholder={type === "WORKOUT" ? "مثلا اسکوات با هالتر" : "مثلا پیاده‌روی 30 دقیقه"}
             onChange={(e) => onPatch({ title: e.target.value })}
           />
         </MentorField>
@@ -633,7 +633,7 @@ function MentorProgramEditorItem({
         <MentorField label="جزئیات" htmlFor={id("details")} optional error={errors.details}>
           <textarea
             id={id("details")} className="wsearch-newform-name trade-glass-field" rows={2} maxLength={ITEM_DETAILS_MAX} value={d.details}
-            placeholder={type === "WORKOUT" ? "مثلاً تمپوی 3-1-1، زانو هم‌راستای پنجه" : "مثلاً بعد از صبحانه"}
+            placeholder={type === "WORKOUT" ? "مثلا تمپوی 3-1-1، زانو هم‌راستای پنجه" : "مثلا بعد از صبحانه"}
             onChange={(e) => onPatch({ details: e.target.value })}
           />
         </MentorField>

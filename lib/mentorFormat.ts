@@ -1,5 +1,5 @@
-// قالب‌بندیِ تاریخ/زمان برای صفحه‌های منتور — همان الگوی صفحه‌ی پشتیبانی
-// (روز + نامِ ماهِ جلالی + ساعت)، با faNum تا هرجا اپ رقم‌ها را عوض کرد
+// قالب‌بندی تاریخ/زمان برای صفحه‌های منتور — همان الگوی صفحه‌ی پشتیبانی
+// (روز + نام ماه جلالی + ساعت)، با faNum تا هرجا اپ رقم‌ها را عوض کرد
 // این‌جا هم هم‌زمان عوض شود.
 import { toJalali, faNum, J_MONTHS, FA_WEEKDAY, isoLocal } from "@/lib/jalali";
 
@@ -16,7 +16,7 @@ export function fmtDate(iso: string | null | undefined): string {
   return `${faNum(jd)} ${J_MONTHS[jm - 1]} ${faNum(jy)}`;
 }
 
-/** تاریخِ روزِ @db.Date (UTC نیمه‌شب) بدونِ جابه‌جاییِ منطقه‌ی زمانی */
+/** تاریخ روز @db.Date (UTC نیمه‌شب) بدون جابه‌جایی منطقه‌ی زمانی */
 export function fmtDay(dateOnly: string | null | undefined): string {
   if (!dateOnly) return "";
   return fmtDate(dateOnly.slice(0, 10));
@@ -53,14 +53,14 @@ export function fmtRelative(iso: string | null | undefined): string {
   return fmtDate(iso);
 }
 
-/** «شنبه ۵ مهر» برای سرِ ستون/ردیفِ یک روز (ورودی YYYY-MM-DD محلی) */
+/** «شنبه ۵ مهر» برای سر ستون/ردیف یک روز (ورودی YYYY-MM-DD محلی) */
 export function fmtWeekday(dayIso: string): string {
   const d = new Date(dayIso + "T00:00:00");
   const [, jm, jd] = toJalali(d.getFullYear(), d.getMonth() + 1, d.getDate());
   return `${FA_WEEKDAY[d.getDay()]} ${faNum(jd)} ${J_MONTHS[jm - 1]}`;
 }
 
-/** خطای fetch → پیامِ دوستانه (۴۰۳/۴۰۴ هیچ‌وقت صفحه‌ی خالی نمی‌دهند) */
+/** خطای fetch → پیام دوستانه (۴۰۳/۴۰۴ هیچ‌وقت صفحه‌ی خالی نمی‌دهند) */
 export async function readApiError(res: Response, fallback = "انجام نشد؛ دوباره تلاش کن"): Promise<string> {
   const body = await res.json().catch(() => null);
   if (body && typeof body.error === "string" && body.error) return body.error;

@@ -3,8 +3,8 @@ import { NextRequest } from "next/server";
 
 // ── mockها ────────────────────────────────────────────────────────────────
 // گیت‌وی AI mock می‌شود چون تست نباید به شبکه/هزینه‌ی واقعی وابسته باشد؛
-// چیزی که این‌جا واقعا تست می‌شود، رفتارِ خودِ روت است: سهمیه، پس‌دادنِ
-// سهمیه، اعمالِ تغییر روی دیتابیس، و پیام‌های خطا.
+// چیزی که این‌جا واقعا تست می‌شود، رفتار خود روت است: سهمیه، پس‌دادن
+// سهمیه، اعمال تغییر روی دیتابیس، و پیام‌های خطا.
 let nextPlan: any = { offTopic: false, reply: "", ops: [] };
 let planShouldThrow = false;
 vi.mock("@/lib/aiClient", () => ({
@@ -14,9 +14,9 @@ vi.mock("@/lib/aiClient", () => ({
   }),
 }));
 
-// نگهبانِ ماژول mock می‌شود تا تست به ساختِ سشنِ NextAuth گره نخورد.
-// خودِ requireModule جداگانه در مسیرهای دیگر استفاده و اثباتش شده؛ چیزی که
-// این‌جا اهمیت دارد این است که روت با یک کاربرِ مشخص چه می‌کند.
+// نگهبان ماژول mock می‌شود تا تست به ساخت سشن NextAuth گره نخورد.
+// خود requireModule جداگانه در مسیرهای دیگر استفاده و اثباتش شده؛ چیزی که
+// این‌جا اهمیت دارد این است که روت با یک کاربر مشخص چه می‌کند.
 let currentUserId = "";
 let currentIsSuper = false;
 vi.mock("@/lib/moduleAccess", () => ({
@@ -49,9 +49,9 @@ async function makeUser(opts: { subscribed?: boolean } = {}): Promise<string> {
   });
   createdUsers.push(user.id);
   if (opts.subscribed) {
-    // پلنِ تست را خودمان می‌سازیم و *سکوت نمی‌کنیم* اگر نشد: نسخه‌ی اول این
-    // تست وقتی پلنی پیدا نمی‌کرد بی‌صدا از ساختِ اشتراک می‌گذشت، و تستِ
-    // «مشترک نامحدود است» عملا داشت کاربرِ رایگان را می‌سنجید.
+    // پلن تست را خودمان می‌سازیم و *سکوت نمی‌کنیم* اگر نشد: نسخه‌ی اول این
+    // تست وقتی پلنی پیدا نمی‌کرد بی‌صدا از ساخت اشتراک می‌گذشت، و تست
+    // «مشترک نامحدود است» عملا داشت کاربر رایگان را می‌سنجید.
     const plan = await prisma.plan.upsert({
       where: { key_market: { key: "test-plan", market: "IRAN" } },
       create: {
@@ -107,17 +107,17 @@ afterAll(async () => {
   if (createdUsers.length) await prisma.user.deleteMany({ where: { id: { in: createdUsers } } });
 });
 
-describe("POST /api/routine/assistant — اعتبارسنجیِ ورودی", () => {
+describe("POST /api/routine/assistant — اعتبارسنجی ورودی", () => {
   beforeAll(async () => { currentUserId = await makeUser(); });
 
-  it("پیامِ خالی را با پیامِ روشن رد می‌کند و سهمیه مصرف نمی‌کند", async () => {
+  it("پیام خالی را با پیام روشن رد می‌کند و سهمیه مصرف نمی‌کند", async () => {
     const res = await POST(post({ message: "   " }));
     expect(res.status).toBe(400);
     expect((await res.json()).error).toContain("چیزی ننوشتی");
     expect(await readUses(currentUserId)).toBe(0);
   });
 
-  it("پیامِ خیلی بلند را رد می‌کند", async () => {
+  it("پیام خیلی بلند را رد می‌کند", async () => {
     const res = await POST(post({ message: "ا".repeat(501) }));
     expect(res.status).toBe(400);
     expect((await res.json()).error).toContain("بلند");
@@ -126,7 +126,7 @@ describe("POST /api/routine/assistant — اعتبارسنجیِ ورودی", ()
 });
 
 describe("POST /api/routine/assistant — سهمیه", () => {
-  it("پیامِ خارج از موضوع سهمیه مصرف نمی‌کند و متنِ ثابتِ خودمان را می‌دهد", async () => {
+  it("پیام خارج از موضوع سهمیه مصرف نمی‌کند و متن ثابت خودمان را می‌دهد", async () => {
     currentUserId = await makeUser();
     nextPlan = { offTopic: true, reply: "پایتخت فرانسه پاریس است", ops: [] };
 
@@ -135,15 +135,15 @@ describe("POST /api/routine/assistant — سهمیه", () => {
 
     expect(res.status).toBe(200);
     expect(data.offTopic).toBe(true);
-    // متنِ مدل نباید به کاربر برسد — پاسخِ رد از خودِ کد می‌آید
+    // متن مدل نباید به کاربر برسد — پاسخ رد از خود کد می‌آید
     expect(data.reply).not.toContain("پاریس");
-    expect(data.reply).toContain("مدیرِ برنامه");
+    expect(data.reply).toContain("مدیر برنامه");
     expect(data.changed).toBe(false);
     expect(await readUses(currentUserId)).toBe(0);
     expect(data.quota.remaining).toBe(FREE_ASSISTANT_USES);
   });
 
-  it("خطای گیت‌وی، سهمیه را پس می‌دهد و ۵۰۳ با پیامِ روشن می‌دهد", async () => {
+  it("خطای گیت‌وی، سهمیه را پس می‌دهد و ۵۰۳ با پیام روشن می‌دهد", async () => {
     currentUserId = await makeUser();
     planShouldThrow = true;
 
@@ -153,7 +153,7 @@ describe("POST /api/routine/assistant — سهمیه", () => {
     expect(await readUses(currentUserId)).toBe(0);
   });
 
-  it("بعد از سه استفاده، چهارمی با ۴۰۳ و پیامِ اشتراک رد می‌شود", async () => {
+  it("بعد از سه استفاده، چهارمی با ۴۰۳ و پیام اشتراک رد می‌شود", async () => {
     currentUserId = await makeUser();
     nextPlan = {
       offTopic: false, reply: "",
@@ -161,7 +161,7 @@ describe("POST /api/routine/assistant — سهمیه", () => {
     };
 
     for (let i = 0; i < FREE_ASSISTANT_USES; i++) {
-      // هر بار یک ساعتِ متفاوت تا تداخل، تستِ سهمیه را خراب نکند
+      // هر بار یک ساعت متفاوت تا تداخل، تست سهمیه را خراب نکند
       nextPlan.ops[0].start = `0${6 + i}:00`;
       nextPlan.ops[0].end = `0${7 + i}:00`;
       const ok = await POST(post({ message: `اضافه کن ${i}` }));
@@ -177,7 +177,7 @@ describe("POST /api/routine/assistant — سهمیه", () => {
     expect(data.quota.remaining).toBe(0);
   });
 
-  it("کاربرِ دارای اشتراک نامحدود است و شمارنده‌اش بالا نمی‌رود", async () => {
+  it("کاربر دارای اشتراک نامحدود است و شمارنده‌اش بالا نمی‌رود", async () => {
     currentUserId = await makeUser({ subscribed: true });
     nextPlan = { offTopic: false, reply: "", ops: [] };
 
@@ -197,7 +197,7 @@ describe("POST /api/routine/assistant — سهمیه", () => {
   });
 });
 
-describe("POST /api/routine/assistant — تغییرِ واقعیِ برنامه", () => {
+describe("POST /api/routine/assistant — تغییر واقعی برنامه", () => {
   it("برنامه‌ی جدید را در دیتابیس می‌نویسد", async () => {
     currentUserId = await makeUser();
     await setOccurrences(currentUserId, [SAT_CLASS]);
@@ -220,7 +220,7 @@ describe("POST /api/routine/assistant — تغییرِ واقعیِ برنامه
     expect(saved.find((o) => o.name === "دویدن").time).toBe("19:00 – 20:00");
   });
 
-  it("«پر بودنِ» ساعت را می‌گوید، وقتِ آزاد پیشنهاد می‌دهد و چیزی نمی‌نویسد", async () => {
+  it("«پر بودن» ساعت را می‌گوید، وقت آزاد پیشنهاد می‌دهد و چیزی نمی‌نویسد", async () => {
     currentUserId = await makeUser();
     await setOccurrences(currentUserId, [SAT_CLASS]);
     nextPlan = {
@@ -240,7 +240,7 @@ describe("POST /api/routine/assistant — تغییرِ واقعیِ برنامه
     expect(await readOccurrences(currentUserId)).toHaveLength(1);
   });
 
-  it("جابه‌جایی به روزِ دیگر را ذخیره می‌کند", async () => {
+  it("جابه‌جایی به روز دیگر را ذخیره می‌کند", async () => {
     currentUserId = await makeUser();
     await setOccurrences(currentUserId, [SAT_CLASS]);
     nextPlan = { offTopic: false, reply: "", ops: [{ op: "move", ref: 1, toDay: 4 }] };
@@ -249,7 +249,7 @@ describe("POST /api/routine/assistant — تغییرِ واقعیِ برنامه
     const data = await res.json();
 
     expect(data.changed).toBe(true);
-    // ردیفِ شنبه با endDate بسته می‌ماند (گذشته حفظ می‌شود)؛ ردیفِ زنده پنجشنبه است
+    // ردیف شنبه با endDate بسته می‌ماند (گذشته حفظ می‌شود)؛ ردیف زنده پنجشنبه است
     const saved = await readOccurrences(currentUserId);
     const current = saved.filter((o: any) => !o.endDate);
     expect(current).toHaveLength(1);
@@ -280,7 +280,7 @@ describe("POST /api/routine/assistant — تغییرِ واقعیِ برنامه
     expect(saved[0].time).toBe("");
   });
 
-  it("ارجاع به برنامه‌ای که وجود ندارد، پیامِ روشن می‌دهد نه کرش", async () => {
+  it("ارجاع به برنامه‌ای که وجود ندارد، پیام روشن می‌دهد نه کرش", async () => {
     currentUserId = await makeUser();
     await setOccurrences(currentUserId, []);
     nextPlan = { offTopic: false, reply: "", ops: [{ op: "delete", ref: 5 }] };
@@ -289,10 +289,10 @@ describe("POST /api/routine/assistant — تغییرِ واقعیِ برنامه
     const data = await res.json();
     expect(res.status).toBe(200);
     expect(data.changed).toBe(false);
-    expect(data.problems[0]).toContain("فهرستِ برنامه‌هایت نیست");
+    expect(data.problems[0]).toContain("فهرست برنامه‌هایت نیست");
   });
 
-  it("سوالِ بدونِ تغییر، پاسخِ متنیِ مدل را می‌دهد", async () => {
+  it("سوال بدون تغییر، پاسخ متنی مدل را می‌دهد", async () => {
     currentUserId = await makeUser();
     await setOccurrences(currentUserId, [SAT_CLASS]);
     nextPlan = { offTopic: false, reply: "شنبه فقط کلاس زبان داری.", ops: [] };
@@ -304,8 +304,8 @@ describe("POST /api/routine/assistant — تغییرِ واقعیِ برنامه
   });
 });
 
-describe("POST /api/routine/assistant — سوال‌وجواب و ساعتِ خودکار", () => {
-  it("«امروز ورزش دارم» بدونِ ساعت ذخیره می‌شود", async () => {
+describe("POST /api/routine/assistant — سوال‌وجواب و ساعت خودکار", () => {
+  it("«امروز ورزش دارم» بدون ساعت ذخیره می‌شود", async () => {
     currentUserId = await makeUser();
     await setOccurrences(currentUserId, [SAT_CLASS]);
     nextPlan = { offTopic: false, reply: "", ops: [{ op: "add", name: "ورزش", days: [6] }], ask: null };
@@ -314,12 +314,12 @@ describe("POST /api/routine/assistant — سوال‌وجواب و ساعتِ خ
     const data = await res.json();
 
     expect(data.changed).toBe(true);
-    expect(data.reply).toContain("بدونِ ساعت");
+    expect(data.reply).toContain("بدون ساعت");
     const saved = await readOccurrences(currentUserId);
     expect(saved.find((o) => o.name === "ورزش").time).toBe("");
   });
 
-  it("برنامه‌ی بی‌ساعت حتی در روزِ کاملا پر هم ثبت می‌شود", async () => {
+  it("برنامه‌ی بی‌ساعت حتی در روز کاملا پر هم ثبت می‌شود", async () => {
     currentUserId = await makeUser();
     await setOccurrences(currentUserId, [{ id: "f", name: "پر", jsDay: 2, time: "۰۰:۰۰ – ۲۳:۵۹", startDate: "2026-01-01" }]);
     nextPlan = { offTopic: false, reply: "", ops: [{ op: "add", name: "خرید", days: [2] }], ask: null };
@@ -329,7 +329,7 @@ describe("POST /api/routine/assistant — سوال‌وجواب و ساعتِ خ
     expect(data.changed).toBe(true);
   });
 
-  it("سوالِ مدل با گزینه‌ها برمی‌گردد و هیچ تغییری نمی‌دهد", async () => {
+  it("سوال مدل با گزینه‌ها برمی‌گردد و هیچ تغییری نمی‌دهد", async () => {
     currentUserId = await makeUser();
     await setOccurrences(currentUserId, [SAT_CLASS]);
     nextPlan = {
@@ -347,7 +347,7 @@ describe("POST /api/routine/assistant — سوال‌وجواب و ساعتِ خ
     expect(await readOccurrences(currentUserId)).toHaveLength(1);
   });
 
-  it("تداخل، گزینه‌ی وقتِ آزاد را همراهِ پیام می‌فرستد", async () => {
+  it("تداخل، گزینه‌ی وقت آزاد را همراه پیام می‌فرستد", async () => {
     currentUserId = await makeUser();
     await setOccurrences(currentUserId, [SAT_CLASS]);
     nextPlan = {

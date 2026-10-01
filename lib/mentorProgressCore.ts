@@ -1,14 +1,14 @@
-// هسته‌ی خالصِ «پیشرفتِ خودکار»ی برنامه‌ی منتور — بدونِ دیتابیس، تا هم سرور
+// هسته‌ی خالص «پیشرفت خودکار»ی برنامه‌ی منتور — بدون دیتابیس، تا هم سرور
 // (lib/mentorProgress.ts) و هم تست‌ها و کلاینت از همین یک تعریف استفاده کنن.
 //
-// منبعِ حقیقت تیک‌های خودِ شاگرد در «روتین من»ـه (DailyEntry.completedItems،
-// کلید = idِ occurrence). برنامه‌ی منتور (ROUTINE و WORKOUT) با idهای قطعیِ
-// `mp-<programId>-<order>-<jsDay>` در روتینِ شاگرد آینه می‌شه؛ پس هر تیک مستقیم
-// به یک آیتم برمی‌گرده. occurrenceهایی که شاگرد ویرایش/جابه‌جا کرده idِ تصادفی
+// منبع حقیقت تیک‌های خود شاگرد در «روتین من»ـه (DailyEntry.completedItems،
+// کلید = id occurrence). برنامه‌ی منتور (ROUTINE و WORKOUT) با idهای قطعی
+// `mp-<programId>-<order>-<jsDay>` در روتین شاگرد آینه می‌شه؛ پس هر تیک مستقیم
+// به یک آیتم برمی‌گرده. occurrenceهایی که شاگرد ویرایش/جابه‌جا کرده id تصادفی
 // می‌گیرن ولی mentorProgramId (و از این به بعد mentorItemId) رو نگه می‌دارن.
 //
-// روزها رشته‌ی «YYYY-MM-DD» تقویمِ محلیِ شاگردن (همون کلیدِ DailyEntry)؛ روزِ
-// هفته با getUTCDay روی نیمه‌شبِ UTCِ همون تاریخ حساب می‌شه، پس DST و ساعتِ
+// روزها رشته‌ی «YYYY-MM-DD» تقویم محلی شاگردن (همون کلید DailyEntry)؛ روز
+// هفته با getUTCDay روی نیمه‌شب UTC همون تاریخ حساب می‌شه، پس DST و ساعت
 // سرور هیچ اثری ندارن.
 
 export type ProgressState = "done" | "partial" | "missed" | "upcoming" | "untracked";
@@ -26,10 +26,10 @@ export type MirrorOccurrenceLike = { id: string; name?: string; mentorProgramId?
 
 export type DerivedCell = { date: string; itemId: string; state: "done" | "missed" | "upcoming"; doneOn: string | null };
 
-// ارقام در کلِ سایت انگلیسی‌اند
+// ارقام در کل سایت انگلیسی‌اند
 const fa = (s: string | number) => String(s);
-// کلیدِ مقایسه‌ی اسم: occurrenceهای قدیمی با ارقامِ فارسی ذخیره شده‌اند («اسکوات · ۴×۸»)
-// و باید با اسمِ تازه‌ی لاتین («اسکوات · 4×8») جور دربیان.
+// کلید مقایسه‌ی اسم: occurrenceهای قدیمی با ارقام فارسی ذخیره شده‌اند («اسکوات · ۴×۸»)
+// و باید با اسم تازه‌ی لاتین («اسکوات · 4×8») جور دربیان.
 const nameKey = (s: string) => s.trim().replace(/[۰-۹]/g, (d) => String(d.charCodeAt(0) - 0x06f0));
 
 // ───────────────────────── تاریخ ─────────────────────────
@@ -44,7 +44,7 @@ export function jsDayOfIso(iso: string): number {
   return new Date(iso + "T00:00:00.000Z").getUTCDay();
 }
 
-/** شنبه‌ی هفته‌ی ایرانیِ حاویِ iso */
+/** شنبه‌ی هفته‌ی ایرانی حاوی iso */
 export function weekStartIso(iso: string): string {
   return isoAddDays(iso, -((jsDayOfIso(iso) + 1) % 7));
 }
@@ -64,7 +64,7 @@ export function mirrorOccurrenceId(programId: string, order: number, jsDay: numb
   return `mp-${programId}-${order}-${jsDay}`;
 }
 
-/** order و jsDay از idِ قطعیِ آینه؛ برای idِ برنامه‌ی دیگر یا idِ تصادفی null */
+/** order و jsDay از id قطعی آینه؛ برای id برنامه‌ی دیگر یا id تصادفی null */
 export function parseMirrorOccurrenceId(programId: string, occId: string): { order: number; jsDay: number } | null {
   const prefix = `mp-${programId}-`;
   if (!occId.startsWith(prefix)) return null;
@@ -72,15 +72,15 @@ export function parseMirrorOccurrenceId(programId: string, occId: string): { ord
   return m ? { order: Number(m[1]), jsDay: Number(m[2]) } : null;
 }
 
-/** اسمِ occurrenceِ آینه در روتینِ شاگرد — حرکتِ WORKOUT ست×تکرار رو هم کنارش داره */
+/** اسم occurrence آینه در روتین شاگرد — حرکت WORKOUT ست×تکرار رو هم کنارش داره */
 export function mirrorOccurrenceName(item: Pick<DeriveItem, "title" | "sets" | "reps">, type: "ROUTINE" | "WORKOUT"): string {
   if (type !== "WORKOUT" || !item.sets) return item.title;
   return `${item.title} · ${fa(item.sets)}${item.reps ? `×${fa(item.reps)}` : " ست"}`;
 }
 
 /**
- * idِ occurrence → idِ آیتم. ترتیبِ تشخیص: idِ قطعی → mentorItemId روی
- * occurrenceِ ویرایش‌شده → (occurrenceهای قدیمیِ بدونِ mentorItemId) اسمِ یکتا.
+ * id occurrence → id آیتم. ترتیب تشخیص: id قطعی → mentorItemId روی
+ * occurrence ویرایش‌شده → (occurrenceهای قدیمی بدون mentorItemId) اسم یکتا.
  */
 export function buildOccurrenceItemMap(
   programId: string,
@@ -93,7 +93,7 @@ export function buildOccurrenceItemMap(
   const byName = new Map<string, string | null>();
   for (const it of items) {
     for (const n of new Set([nameKey(it.title), nameKey(mirrorOccurrenceName(it, type))])) {
-      // اسمِ تکراری بینِ دو آیتم مبهمه — هیچ‌کدوم رو اعتبار نمی‌ده
+      // اسم تکراری بین دو آیتم مبهمه — هیچ‌کدوم رو اعتبار نمی‌ده
       byName.set(n, byName.has(n) && byName.get(n) !== it.id ? null : it.id);
     }
   }
@@ -117,32 +117,32 @@ export function buildOccurrenceItemMap(
 
 export type DeriveInput = {
   items: DeriveItem[];
-  /** اولین و آخرین روزِ برنامه در این محاسبه (شامل) */
+  /** اولین و آخرین روز برنامه در این محاسبه (شامل) */
   from: string;
   to: string;
   /**
-   * روزِ «باز»: قبل از آن هر روز قطعی است (انجام/انجام‌نشده)، خودِ آن روز فقط
-   * «انجام» یا «پیشِ رو»، و بعد از آن همه «پیشِ رو». برای برنامه‌ی فعال امروزِ شاگرد.
+   * روز «باز»: قبل از آن هر روز قطعی است (انجام/انجام‌نشده)، خود آن روز فقط
+   * «انجام» یا «پیش رو»، و بعد از آن همه «پیش رو». برای برنامه‌ی فعال امروز شاگرد.
    */
   openDay: string;
-  /** date → completedItemsِ DailyEntry */
+  /** date → completedItems DailyEntry */
   ticks: Map<string, Record<string, unknown>>;
   itemOf: (occId: string) => string | null;
 };
 
 /**
- * وضعیتِ هر آیتم در هر روزِ برنامه‌ریزی‌شده‌ی [from, to].
+ * وضعیت هر آیتم در هر روز برنامه‌ریزی‌شده‌ی [from, to].
  *
- * هر تیک حداکثر یک بار حساب می‌شه: اول تیکِ همون روز، بعد تیکِ روزِ دیگری از
- * *همان هفته* (شاگرد آیتم رو در روتینش جابه‌جا کرده) به زودترین روزِ
- * انجام‌نشده‌ی همان آیتم در همان هفته نسبت داده می‌شه — با doneOn = روزِ تیک.
+ * هر تیک حداکثر یک بار حساب می‌شه: اول تیک همون روز، بعد تیک روز دیگری از
+ * *همان هفته* (شاگرد آیتم رو در روتینش جابه‌جا کرده) به زودترین روز
+ * انجام‌نشده‌ی همان آیتم در همان هفته نسبت داده می‌شه — با doneOn = روز تیک.
  */
 export function deriveItemStates(input: DeriveInput): DerivedCell[] {
   const { items, from, to, openDay, ticks, itemOf } = input;
   if (to < from || items.length === 0) return [];
   const tickLast = minIso(to, openDay);
 
-  // itemId → (روز → تعدادِ occurrenceهای تیک‌خورده‌ی این آیتم در آن روز)؛ فقط تیکِ true و تا روزِ باز
+  // itemId → (روز → تعداد occurrenceهای تیک‌خورده‌ی این آیتم در آن روز)؛ فقط تیک true و تا روز باز
   const tickCounts = new Map<string, Map<string, number>>();
   ticks.forEach((rec, date) => {
     if (date < from || date > tickLast || !rec || typeof rec !== "object") return;
@@ -185,7 +185,7 @@ export function deriveItemStates(input: DeriveInput): DerivedCell[] {
           left.set(d, n - 1);
         }
       }
-      // تیک‌های باقی‌مانده (روزِ دیگر یا occurrenceِ دوم در همان روز) به ترتیبِ زمان
+      // تیک‌های باقی‌مانده (روز دیگر یا occurrence دوم در همان روز) به ترتیب زمان
       const leftovers: string[] = [];
       Array.from(left.keys())
         .sort()
@@ -208,7 +208,7 @@ export function deriveItemStates(input: DeriveInput): DerivedCell[] {
   return out.sort((a, b) => (a.date === b.date ? 0 : a.date < b.date ? -1 : 1));
 }
 
-/** بازه‌ی مؤثرِ برنامه برای یک شاگرد — همه به تقویمِ محلیِ خودِ او */
+/** بازه‌ی مؤثر برنامه برای یک شاگرد — همه به تقویم محلی خود او */
 export function programWindow(p: {
   startIso: string | null;
   endIso: string | null;
@@ -216,17 +216,17 @@ export function programWindow(p: {
   closeIso: string | null;
   todayIso: string;
 }): { from: string; to: string | null; openDay: string; lastFinal: string } {
-  // آینه از روزِ فعال‌سازی نوشته می‌شه (روزهای قبلش در روتینِ شاگرد نبوده)
+  // آینه از روز فعال‌سازی نوشته می‌شه (روزهای قبلش در روتین شاگرد نبوده)
   const from = p.startIso ? maxIso(p.startIso, p.activationIso) : p.activationIso;
   const openDay = p.closeIso ? minIso(p.closeIso, p.todayIso) : p.todayIso;
   let to = p.endIso;
   if (p.closeIso) to = to ? minIso(to, p.closeIso) : p.closeIso;
-  // آخرین روزی که وضعیتش (انجام/انجام‌نشده یا انجامِ امروز) نوشته می‌شه
+  // آخرین روزی که وضعیتش (انجام/انجام‌نشده یا انجام امروز) نوشته می‌شه
   const lastFinal = to && to < openDay ? to : openDay;
   return { from, to, openDay, lastFinal };
 }
 
-/** خلاصه‌ی یک روز از وضعیتِ آیتم‌هایش — برای ستونِ روز در نمای هفته */
+/** خلاصه‌ی یک روز از وضعیت آیتم‌هایش — برای ستون روز در نمای هفته */
 export function summarizeDay(states: ProgressState[]): ProgressState | null {
   const s = states.filter((x) => x !== "untracked");
   if (s.length === 0) return states.length ? "untracked" : null;

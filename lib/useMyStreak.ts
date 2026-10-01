@@ -15,7 +15,7 @@ export function useMyStreak(): number | null {
   const [removedOcc, setRemovedOcc] = useState<Set<string>>(new Set());
   const [customOcc, setCustomOcc] = useState<{ id: string; name: string; jsDay: number; time: string }[]>([]);
 
-  // دوباره‌خوانی با هر تغییرِ زنده (lib/liveSync.ts) — `version` محاسبه‌ی
+  // دوباره‌خوانی با هر تغییر زنده (lib/liveSync.ts) — `version` محاسبه‌ی
   // استریک رو هم وقتی فقط تیک‌ها (نه برنامه‌ها) عوض شدن دوباره راه می‌ندازه.
   const [version, setVersion] = useState(0);
   function loadOccurrences() {
@@ -37,7 +37,7 @@ export function useMyStreak(): number | null {
   useEffect(() => {
     let alive = true;
     // امروز هم خونده می‌شه: استریک همون لحظه‌ای که آخرین برنامه‌ی امروز تیک
-    // می‌خوره یکی بالا می‌ره (lib/routineStreak.ts — تعریفِ مشترک با داشبورد).
+    // می‌خوره یکی بالا می‌ره (lib/routineStreak.ts — تعریف مشترک با داشبورد).
     const now = new Date();
     const rangeStart = new Date(now); rangeStart.setDate(rangeStart.getDate() - STREAK_WINDOW);
     getDailyRange(isoLocal(rangeStart), isoLocal(now))

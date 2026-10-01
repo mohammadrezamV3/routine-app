@@ -46,12 +46,12 @@ function AccountsForMt() {
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.32, delay: Math.min(i, 8) * 0.045, ease: [0.22, 1, 0.36, 1] }}
         >
-          {/* طبقِ درخواستِ صریح هر حساب *یک خط* است: اسم و برچسب‌ها از راست،
-              وضعیتِ فعال/غیرفعال چپ‌چین در همان خط. */}
+          {/* طبق درخواست صریح هر حساب *یک خط* است: اسم و برچسب‌ها از راست،
+              وضعیت فعال/غیرفعال چپ‌چین در همان خط. */}
           <Link href={`/trade/metatrader/${a.id}`} prefetch className="trade-surface trade-mt-row">
             <div className="trade-account-title-row">
               <span className="trade-account-name">{a.name}</span>
-              {/* توپِ رنگی سمتِ چپِ اسم، نه گوشه‌ی مطلقِ کارت */}
+              {/* توپ رنگی سمت چپ اسم، نه گوشه‌ی مطلق کارت */}
               <span className="trade-account-dot" style={{ background: a.color }} />
               <span className="trade-account-type">{ACCOUNT_TYPE_LABELS[a.type]}</span>
             </div>

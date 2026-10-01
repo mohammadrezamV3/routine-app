@@ -13,8 +13,8 @@ const PAD = { top: 16, right: 14, bottom: 26, left: 30 };
 
 type Series = "overall" | AnalysisDomain;
 
-// مسیرِ خط با شکستگی روی هفته‌های بدونِ داده — null یعنی «نبود»، پس نباید
-// با یک خطِ صاف از روش رد بشیم (اون یعنی داده‌ی ساختگی).
+// مسیر خط با شکستگی روی هفته‌های بدون داده — null یعنی «نبود»، پس نباید
+// با یک خط صاف از روش رد بشیم (اون یعنی داده‌ی ساختگی).
 function buildPaths(pts: ({ x: number; y: number } | null)[], baseY: number) {
   const segments: { x: number; y: number }[][] = [];
   let cur: { x: number; y: number }[] = [];
@@ -31,8 +31,8 @@ function buildPaths(pts: ({ x: number; y: number } | null)[], baseY: number) {
   return { line, area };
 }
 
-// روندِ ۸ هفته‌ی اخیر — SVG خالص، هم‌عرضِ واقعیِ کارت (ResizeObserver) تا
-// متن‌ها کش نیان. محورِ زمان مثلِ نمودارِ کالری از چپ (قدیم) به راست (جدید).
+// روند ۸ هفته‌ی اخیر — SVG خالص، هم‌عرض واقعی کارت (ResizeObserver) تا
+// متن‌ها کش نیان. محور زمان مثل نمودار کالری از چپ (قدیم) به راست (جدید).
 export function WeeklyAnalysisTrend({ trend }: { trend: TrendPoint[] }) {
   const gradId = useId().replace(/:/g, "");
   const reduce = useReducedMotion();
@@ -147,7 +147,7 @@ export function WeeklyAnalysisTrend({ trend }: { trend: TrendPoint[] }) {
                 textAnchor={i === n - 1 ? "end" : "middle"}
                 className={cn("wa-trend-axis", i === n - 1 && "current")}
               >
-                {/* روی صفحه‌ی باریک یکی‌درمیون، با شمارش از آخر تا برچسبِ «این هفته» جا داشته باشه */}
+                {/* روی صفحه‌ی باریک یکی‌درمیون، با شمارش از آخر تا برچسب «این هفته» جا داشته باشه */}
                 {i === n - 1 ? "این هفته" : (w < 420 && (n - 1 - i) % 2 === 1) || (w < 420 && i === n - 2) ? "" : jalaliShort(t.weekStart)}
               </text>
             ))}

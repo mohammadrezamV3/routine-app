@@ -18,10 +18,10 @@ import {
   NewsAlertPrefs, newsEventWatchKey, normalizeNewsAlertPrefs,
 } from "@/lib/tradeNewsAlerts";
 
-// طبقِ درخواستِ صریح: خودِ جدولِ رویدادها (اسم و اعدادِ
-// Actual/Forecast/Previous) دقیقاً مثلِ فارکس‌فکتوریِ انگلیسی می‌ماند —
-// نگاه کن به lib/economicCalendar.ts. نوارِ بالای صفحه (استریپِ روزها +
-// تاریخچه/امروز/فیلتر) فارسی/شمسی است و با calSystem سراسریِ ماژولِ ترید
+// طبق درخواست صریح: خود جدول رویدادها (اسم و اعداد
+// Actual/Forecast/Previous) دقیقا مثل فارکس‌فکتوری انگلیسی می‌ماند —
+// نگاه کن به lib/economicCalendar.ts. نوار بالای صفحه (استریپ روزها +
+// تاریخچه/امروز/فیلتر) فارسی/شمسی است و با calSystem سراسری ماژول ترید
 // جابه‌جا می‌شود.
 const enTimeFmt = new Intl.DateTimeFormat("en-US", { hour: "2-digit", minute: "2-digit", hour12: false });
 
@@ -34,7 +34,7 @@ function addDays(d: Date, n: number): Date {
 function isSameDay(a: Date, b: Date): boolean {
   return a.getFullYear() === b.getFullYear() && a.getMonth() === b.getMonth() && a.getDate() === b.getDate();
 }
-/** «سه‌شنبه ۱۷ شهریور» یا معادلِ میلادی‌اش — طبقِ calSystemِ انتخابیِ کاربر */
+/** «سه‌شنبه ۱۷ شهریور» یا معادل میلادی‌اش — طبق calSystem انتخابی کاربر */
 function dayLabel(d: Date, calSystem: CalSystem): { weekday: string; date: string } {
   const weekday = FA_WEEKDAY[d.getDay()];
   if (calSystem === "jalali") {
@@ -52,40 +52,40 @@ const enWeekdayShort = new Intl.DateTimeFormat("en-US", { weekday: "short" });
 const WEEKDAY_HEADERS = Array.from({ length: 7 }, (_, i) => enWeekdayShort.format(addDays(startOfLocalDay(new Date()), i - new Date().getDay())));
 
 /**
- * تازه‌سازیِ بی‌صدا وقتی رویدادِ منتشرنشده‌ای روی همین صفحه هست.
- * نصفِ بودجه‌ی ۱۰ثانیه‌ایِ «انتشار → دیده‌شدن» است؛ نصفِ دیگرش سمتِ سرور
+ * تازه‌سازی بی‌صدا وقتی رویداد منتشرنشده‌ای روی همین صفحه هست.
+ * نصف بودجه‌ی ۱۰ثانیه‌ای «انتشار → دیده‌شدن» است؛ نصف دیگرش سمت سرور
  * (computeNextSyncDelayMs در lib/economicCalendar.ts).
  */
 const LIVE_POLL_MS = 5_000;
-/** پنجره‌ای که یک رویدادِ بی‌actual «در حالِ انتشار» حساب می‌شود */
+/** پنجره‌ای که یک رویداد بی‌actual «در حال انتشار» حساب می‌شود */
 const PENDING_BEFORE_MS = 2 * 60_000;
-// بعد از زمانِ رویداد، دقیقاً همان پنجره‌ای که سرور هم در آن دنبالِ actual
-// می‌گردد (lib/economicCalendar.ts). دو عددِ جدا یعنی کلاینت یا زودتر از
+// بعد از زمان رویداد، دقیقا همان پنجره‌ای که سرور هم در آن دنبال actual
+// می‌گردد (lib/economicCalendar.ts). دو عدد جدا یعنی کلاینت یا زودتر از
 // سرور دست می‌کشد (آپدیت را نمی‌بیند) یا دیرتر (بی‌فایده poll می‌زند).
 const PENDING_AFTER_MS = RELEASE_WATCH_WINDOW_MS;
 
 export function EconomicCalendarPanel() {
-  // مثلِ خودِ فارکس‌فکتوری: یک روز در یک لحظه.
+  // مثل خود فارکس‌فکتوری: یک روز در یک لحظه.
   const [date, setDate] = useState(() => startOfLocalDay(new Date()));
   const [monthPickerOpen, setMonthPickerOpen] = useState(false);
   const [calSystem, setCalSystem] = useState<CalSystem>("jalali");
   useEffect(() => { getSetting<CalSystem>(CAL_SYSTEM_KEY, "jalali").then(setCalSystem); }, []);
 
   const [events, setEvents] = useState<EconomicEventDto[]>([]);
-  /** مرزهای واقعیِ داده‌ای که داریم — از خودِ سرور، نه حدس */
+  /** مرزهای واقعی داده‌ای که داریم — از خود سرور، نه حدس */
   const [range, setRange] = useState<{ from: Date; to: Date } | null>(null);
   const [loading, setLoading] = useState(true);
   const [firstLoad, setFirstLoad] = useState(true);
   const [loadError, setLoadError] = useState<string | null>(null);
 
-  // ── فیلترها (همه داخلِ یک پنل، طبقِ شماتیک) ──
+  // ── فیلترها (همه داخل یک پنل، طبق شماتیک) ──
   const [filtersOpen, setFiltersOpen] = useState(false);
   const [currencies, setCurrencies] = useState<string[]>([]);
   const [otherCurrencies, setOtherCurrencies] = useState(false);
   const [impacts, setImpacts] = useState<EconomicImpact[]>([]);
-  // طبقِ درخواستِ صریح، جستجوی نامِ رویداد دیگر دکمه‌ی جدا ندارد — یک
-  // فیلدِ فیلتر مثلِ بقیه است و مثلِ آن‌ها روی همان روزِ انتخاب‌شده اعمال
-  // می‌شود (نه یک حالتِ جداگانه که کلِ صفحه را عوض کند).
+  // طبق درخواست صریح، جستجوی نام رویداد دیگر دکمه‌ی جدا ندارد — یک
+  // فیلد فیلتر مثل بقیه است و مثل آن‌ها روی همان روز انتخاب‌شده اعمال
+  // می‌شود (نه یک حالت جداگانه که کل صفحه را عوض کند).
   const [nameInput, setNameInput] = useState("");
   const [nameQuery, setNameQuery] = useState("");
   useEffect(() => {
@@ -96,7 +96,7 @@ export function EconomicCalendarPanel() {
   const activeFilterCount =
     currencies.length + impacts.length + (otherCurrencies ? 1 : 0) + (nameQuery ? 1 : 0);
 
-  // هشدارِ هر رویداد (ستونِ Alert) — تنظیماتِ کلی‌اش توی «تنظیمات › ترید» است.
+  // هشدار هر رویداد (ستون Alert) — تنظیمات کلی‌اش توی «تنظیمات › ترید» است.
   const [alerts, setAlerts] = useState<NewsAlertPrefs>(DEFAULT_NEWS_ALERT_PREFS);
   useEffect(() => {
     getSetting<unknown>(NEWS_ALERT_KEY, DEFAULT_NEWS_ALERT_PREFS).then((v) => setAlerts(normalizeNewsAlertPrefs(v)));
@@ -113,8 +113,8 @@ export function EconomicCalendarPanel() {
   }
 
   // هر درخواست یک شماره می‌گیرد و فقط تازه‌ترین اجازه‌ی نشستن روی state
-  // دارد. بدونِ این، تندتند عوض‌کردنِ روز می‌توانست پاسخِ روزِ قبلی را
-  // *بعدِ* پاسخِ روزِ جدید بنشاند — از بیرون دقیقاً «این روز داده‌ی روزِ
+  // دارد. بدون این، تندتند عوض‌کردن روز می‌توانست پاسخ روز قبلی را
+  // *بعد* پاسخ روز جدید بنشاند — از بیرون دقیقا «این روز داده‌ی روز
   // دیگری را نشان می‌دهد / لود نمی‌شود».
   const reqSeq = useRef(0);
 
@@ -124,8 +124,8 @@ export function EconomicCalendarPanel() {
     try {
       const iso = isoLocal(date);
       const qs = new URLSearchParams({ from: iso, to: iso });
-      // افستِ واقعیِ تایم‌زونِ مرورگر (دقیقه، شرقِ UTC مثبت) — سرور با این
-      // «روزِ محلی» را درست حساب می‌کند، نه روی نیمه‌شبِ UTC.
+      // افست واقعی تایم‌زون مرورگر (دقیقه، شرق UTC مثبت) — سرور با این
+      // «روز محلی» را درست حساب می‌کند، نه روی نیمه‌شب UTC.
       qs.set("tz", String(-new Date().getTimezoneOffset()));
       if (nameQuery) qs.set("q", nameQuery);
       if (currencies.length) qs.set("currencies", currencies.join(","));
@@ -164,9 +164,9 @@ export function EconomicCalendarPanel() {
 
   const today = startOfLocalDay(new Date());
 
-  // ── تازه‌سازیِ زنده ─────────────────────────────────────────────────────
-  // فقط وقتی واقعاً منتظرِ انتشارِ چیزی هستیم (رویدادِ بی‌actual که زمانش
-  // همین حالاست) هر ۵ثانیه بی‌صدا دوباره می‌خوانیم — نه یک polling دائمیِ
+  // ── تازه‌سازی زنده ─────────────────────────────────────────────────────
+  // فقط وقتی واقعا منتظر انتشار چیزی هستیم (رویداد بی‌actual که زمانش
+  // همین حالاست) هر ۵ثانیه بی‌صدا دوباره می‌خوانیم — نه یک polling دائمی
   // بی‌دلیل روی هر صفحه.
   const hasPending = useMemo(() => {
     const now = Date.now();
@@ -185,11 +185,11 @@ export function EconomicCalendarPanel() {
     return () => clearInterval(id);
   }, [hasPending, load]);
 
-  // برگشتن به تب هم باید تازه‌سازی کند — یک تبِ باز از دیروز نباید داده‌ی
+  // برگشتن به تب هم باید تازه‌سازی کند — یک تب باز از دیروز نباید داده‌ی
   // کهنه نشان بدهد.
-  // تبی که از دیروز باز مانده روی «دیروز» گیر می‌کرد: date فقط یک بار موقعِ
-  // mount روی امروز ست می‌شد، پس روزِ جدید هیچ‌وقت خودش نمی‌آمد. اگر کاربر
-  // روی «امروزِ آن موقع» بود، با عوض‌شدنِ روز به امروزِ جدید می‌رود.
+  // تبی که از دیروز باز مانده روی «دیروز» گیر می‌کرد: date فقط یک بار موقع
+  // mount روی امروز ست می‌شد، پس روز جدید هیچ‌وقت خودش نمی‌آمد. اگر کاربر
+  // روی «امروز آن موقع» بود، با عوض‌شدن روز به امروز جدید می‌رود.
   const dayAnchor = useRef(startOfLocalDay(new Date()).getTime());
   useEffect(() => {
     function onVisible() {
@@ -202,7 +202,7 @@ export function EconomicCalendarPanel() {
       }
       load({ silent: true });
     }
-    // بدونِ فوکوس/تغییرِ تب هم روزِ جدید باید برسد (صفحه‌ی باز روی مانیتور).
+    // بدون فوکوس/تغییر تب هم روز جدید باید برسد (صفحه‌ی باز روی مانیتور).
     const tick = setInterval(onVisible, 60_000);
     document.addEventListener("visibilitychange", onVisible);
     window.addEventListener("focus", onVisible);
@@ -213,11 +213,11 @@ export function EconomicCalendarPanel() {
     };
   }, [load, date]);
 
-  // ── نوارِ روزها ─────────────────────────────────────────────────────────
-  // موبایل: نوارِ آزادِ قابل‌کشیدن با شتاب (مشترک با «روتین من» —
-  // lib/useDayStrip.ts)، بدونِ فلش، روزها نزدیکِ هر لبه تنبل اضافه می‌شوند.
-  // دسکتاپ: طبقِ درخواستِ صریح، به رفتارِ قدیمی برمی‌گرده — کشیدنِ آزاد
-  // خاموش و دو فلشِ قبلی/بعدی همون نوار رو پیج می‌کنن.
+  // ── نوار روزها ─────────────────────────────────────────────────────────
+  // موبایل: نوار آزاد قابل‌کشیدن با شتاب (مشترک با «روتین من» —
+  // lib/useDayStrip.ts)، بدون فلش، روزها نزدیک هر لبه تنبل اضافه می‌شوند.
+  // دسکتاپ: طبق درخواست صریح، به رفتار قدیمی برمی‌گرده — کشیدن آزاد
+  // خاموش و دو فلش قبلی/بعدی همون نوار رو پیج می‌کنن.
   const [recenterKey, setRecenterKey] = useState(0);
   const { scrollRef: weekStripRef, days: dayStrip, pageBy: pageWeekStrip } = useDayStrip(isoLocal(date), recenterKey);
 
@@ -228,7 +228,7 @@ export function EconomicCalendarPanel() {
     setMonthPickerOpen(false);
   }
 
-  // پرشِ تاریخ از ماه‌شمار: نوار خودش بازه را دورِ این روز باز و وسط‌چینش می‌کند.
+  // پرش تاریخ از ماه‌شمار: نوار خودش بازه را دور این روز باز و وسط‌چینش می‌کند.
   function jumpToDate(d: Date) {
     setDate(startOfLocalDay(d));
     setMonthPickerOpen(false);
@@ -238,14 +238,14 @@ export function EconomicCalendarPanel() {
 
   return (
     <div>
-      {/* ── نوارِ روزها + سه دکمه، دقیقا هم‌چیدمانِ «روتین من»: روی دسکتاپ
-          کنارِ هم (دکمه‌ها سمتِ راست، نوار سمتِ چپ و flex-1)، روی موبایل
-          زیرِ هم — نگاه کن به app/weekly/page.tsx (DashDateSelector +
+      {/* ── نوار روزها + سه دکمه، دقیقا هم‌چیدمان «روتین من»: روی دسکتاپ
+          کنار هم (دکمه‌ها سمت راست، نوار سمت چپ و flex-1)، روی موبایل
+          زیر هم — نگاه کن به app/weekly/page.tsx (DashDateSelector +
           DashFilterButton، همون الگو). */}
       <div className="trade-cal-header-row flex flex-col gap-2.5 sm:gap-3 lg:flex-row lg:items-center lg:gap-4">
         <div className="trade-cal-week-strip lg:order-2 lg:flex-1">
-          {/* فلشِ قبلی/بعدی فقط دسکتاپ دیده می‌شن (globals.css) — پیج‌کردنِ
-              همون نوارِ روزها، نه یک پنجره‌ی جدا. */}
+          {/* فلش قبلی/بعدی فقط دسکتاپ دیده می‌شن (globals.css) — پیج‌کردن
+              همون نوار روزها، نه یک پنجره‌ی جدا. */}
           <button
             type="button"
             aria-label="روزهای قبل"
@@ -284,7 +284,7 @@ export function EconomicCalendarPanel() {
           </button>
         </div>
 
-        {/* ── سه دکمه، دقیقاً به همین ترتیب (راست به چپ): تاریخچه · امروز · فیلتر ── */}
+        {/* ── سه دکمه، دقیقا به همین ترتیب (راست به چپ): تاریخچه · امروز · فیلتر ── */}
         <div className="trade-cal-actions-row lg:order-1 lg:shrink-0 lg:flex-nowrap">
           <button type="button" className="trade-cal-pill-btn" onClick={() => setMonthPickerOpen((v) => !v)}>
             <History size={15} /> تاریخچه
@@ -306,20 +306,20 @@ export function EconomicCalendarPanel() {
         </div>
       </div>
 
-      {/* ── پنلِ فیلتر ── */}
+      {/* ── پنل فیلتر ── */}
       {filtersOpen && (
         <div className="trade-surface trade-cal-filters trade-cal-below">
           <label className="exercise-form-label">نام رویداد</label>
-          {/* ترتیبِ DOM عمدی‌ست: در RTL آخرین فرزند سمتِ چپ می‌نشیند، پس
-              ذره‌بین بعد از input می‌آید تا طبقِ درخواستِ صریح چپِ فیلد باشد. */}
+          {/* ترتیب DOM عمدی‌ست: در RTL آخرین فرزند سمت چپ می‌نشیند، پس
+              ذره‌بین بعد از input می‌آید تا طبق درخواست صریح چپ فیلد باشد. */}
           <div className="trade-cal-search">
             <input
               type="text"
               value={nameInput}
               onChange={(e) => setNameInput(e.target.value)}
               placeholder="مثلا CPI یا Non-Farm"
-              // متن از راست شروع شود (طبقِ درخواستِ صریح) ولی جهتِ نوشتن
-              // همچنان LTR بماند، چون نامِ رویدادها انگلیسی‌ست.
+              // متن از راست شروع شود (طبق درخواست صریح) ولی جهت نوشتن
+              // همچنان LTR بماند، چون نام رویدادها انگلیسی‌ست.
               className="ltr-inline"
               style={{ textAlign: "right" }}
             />
@@ -394,10 +394,10 @@ export function EconomicCalendarPanel() {
 
       {!firstLoad && !loadError && !loading && !events.length && (
         <div className="item-line empty trade-cal-below">
-          {/* توضیحِ صادقانه‌ی «چرا این روز خالیه»: یا منبع هنوز تا این تاریخ
-              نرسیده، یا فیلترها چیزی باقی نگذاشته‌اند، یا واقعاً رویدادی
-              نیست. قبلاً هر سه حالت یک پیام می‌گرفتند و روزهای بیرونِ بازه
-              شبیهِ «لود نشد» دیده می‌شدند. */}
+          {/* توضیح صادقانه‌ی «چرا این روز خالیه»: یا منبع هنوز تا این تاریخ
+              نرسیده، یا فیلترها چیزی باقی نگذاشته‌اند، یا واقعا رویدادی
+              نیست. قبلا هر سه حالت یک پیام می‌گرفتند و روزهای بیرون بازه
+              شبیه «لود نشد» دیده می‌شدند. */}
           {outOfRange && range
             ? `منبع فعلی فقط از ${fullDayLabel(range.from, calSystem)} تا ${fullDayLabel(range.to, calSystem)} داده دارد — این تاریخ هنوز منتشر نشده.`
             : activeFilterCount
@@ -406,7 +406,7 @@ export function EconomicCalendarPanel() {
         </div>
       )}
 
-      {/* طبقِ درخواستِ صریح، خودِ اخبار توی یک باکس‌اند — ولی تقویمِ
+      {/* طبق درخواست صریح، خود اخبار توی یک باکس‌اند — ولی تقویم
           بالای سرشان نه. */}
       {!firstLoad && !!events.length && (
         <div className="trade-surface trade-page-box trade-cal-table-box trade-cal-below" style={{ opacity: loading ? 0.55 : 1, transition: "opacity .2s ease" }}>
@@ -418,7 +418,7 @@ export function EconomicCalendarPanel() {
               const watched = alerts.watchedEventKeys.includes(newsEventWatchKey(e.currency, e.title));
               return (
                 <div key={e.id} className={`trade-cal-item${isPast ? " past" : ""}`}>
-                  {/* ردیفِ اول: زمان، حساسیت، ارز، نامِ رویداد، هشدار */}
+                  {/* ردیف اول: زمان، حساسیت، ارز، نام رویداد، هشدار */}
                   <div className="tc-line1">
                     <span className="tc-time mono">{enTimeFmt.format(occursAt)}</span>
                     <span
@@ -432,14 +432,14 @@ export function EconomicCalendarPanel() {
                       type="button"
                       className={`trade-cal-icon-btn tc-alert${watched ? " active" : ""}`}
                       onClick={() => toggleWatchEvent(e)}
-                      aria-label={watched ? "حذفِ هشدار برای این رویداد" : "هشدار برای این رویداد"}
+                      aria-label={watched ? "حذف هشدار برای این رویداد" : "هشدار برای این رویداد"}
                       title={watched ? "هشدار روشن است" : "هشدار بده"}
                     >
                       {watched ? <BellRing size={13} /> : <Bell size={13} />}
                     </button>
                   </div>
-                  {/* ردیفِ دوم: اکشوال، پریویوس، فورکست — با برچسب، چون
-                      بدونِ هدرِ ستونی سه عددِ لخت قابلِ تشخیص نیستند. */}
+                  {/* ردیف دوم: اکشوال، پریویوس، فورکست — با برچسب، چون
+                      بدون هدر ستونی سه عدد لخت قابل تشخیص نیستند. */}
                   <div className="tc-line2">
                     <span className="tc-stat">
                       <i>Actual</i>
@@ -463,10 +463,10 @@ export function EconomicCalendarPanel() {
   );
 }
 
-// دکمه‌ی «تاریخچه» یک ماه‌شمارِ کامل باز می‌کند — هم‌الگویِ ماه‌شمارِ
-// «روتین من» (cal-grid/cal-cell). روزهای بیرونِ بازه‌ی داده‌ی موجود عمداً
-// غیرفعال‌اند: قبلاً انتخاب‌شدنی بودند و بعد یک صفحه‌ی خالی می‌دادند، که
-// دقیقاً همان «بعضی روزها اصلاً لود نمی‌شن»ِ گزارش‌شده بود.
+// دکمه‌ی «تاریخچه» یک ماه‌شمار کامل باز می‌کند — هم‌الگوی ماه‌شمار
+// «روتین من» (cal-grid/cal-cell). روزهای بیرون بازه‌ی داده‌ی موجود عمدا
+// غیرفعال‌اند: قبلا انتخاب‌شدنی بودند و بعد یک صفحه‌ی خالی می‌دادند، که
+// دقیقا همان «بعضی روزها اصلا لود نمی‌شن» گزارش‌شده بود.
 function EconMonthPicker({
   date, range, onPick, onClose,
 }: { date: Date; range: { from: Date; to: Date } | null; onPick: (d: Date) => void; onClose: () => void }) {
@@ -496,9 +496,9 @@ function EconMonthPicker({
     );
   }
 
-  // createPortal چون هر جدِ دارایِ filter/backdrop-filter برای فرزندهای
+  // createPortal چون هر جد دارای filter/backdrop-filter برای فرزندهای
   // position:fixed یک containing-block جدید می‌سازد و پاپ‌آپ جای درستی
-  // نمی‌نشیند — همان ترفندِ TradeKebabMenu.
+  // نمی‌نشیند — همان ترفند TradeKebabMenu.
   return createPortal(
     <>
       <div className="trade-econ-monthpicker-backdrop" onClick={onClose} />

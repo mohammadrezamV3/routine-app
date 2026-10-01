@@ -13,7 +13,7 @@ export function DashWeeklyChartCard({ delay, refreshKey }: { delay?: number; ref
   const [stats, setStats] = useState<WeekDayStat[] | null>(null);
 
   useEffect(() => { getWeekStats().then(setStats); }, [refreshKey]);
-  // هر تیک/تغییرِ برنامه (از هرجا) همون لحظه نمودار رو از داده‌ی زنده حساب می‌کنه
+  // هر تیک/تغییر برنامه (از هرجا) همون لحظه نمودار رو از داده‌ی زنده حساب می‌کنه
   useLiveRefresh(["daily", "customOccurrences", "removedOccurrences"], () => { getWeekStats().then(setStats); });
 
   const rows = stats ?? [];
@@ -37,8 +37,8 @@ export function DashWeeklyChartCard({ delay, refreshKey }: { delay?: number; ref
                 <div key={s.iso} className="flex flex-1 flex-col items-center gap-1 sm:gap-1.5">
                   <span className={cn("text-[9px] font-semibold sm:text-[10px]", peak ? "text-dash-green" : "text-dash-muted")}>{s.pct}٪</span>
                   <div className="flex h-24 w-full items-end justify-center sm:h-28">
-                    {/* پرشدنِ نرم با CSS (scaleY، فقط کامپوزیت) نه framer — روی
-                        گوشیِ ضعیف MotionTuner انیمیشن‌های framer رو خاموش می‌کنه،
+                    {/* پرشدن نرم با CSS (scaleY، فقط کامپوزیت) نه framer — روی
+                        گوشی ضعیف MotionTuner انیمیشن‌های framer رو خاموش می‌کنه،
                         ولی این میله‌ها باید همه‌جا مثل دسکتاپ پر بشن. */}
                     <div
                       className="dash-bar-grow w-2 rounded-full sm:w-2.5"

@@ -7,8 +7,8 @@ import { checkRateLimit } from "@/lib/rateLimit";
 import { getWeeklyAnalysis } from "@/lib/weeklyAnalysis/service";
 
 // GET /api/analysis/weekly?offset=0 — محاسبه‌ی زنده‌ی آنالیز هفتگی (بدون
-// فراخوانیِ AI، سریع). offset: ۰ = هفته‌ی جاری، منفی = هفته‌های قبل.
-// حداکثر ۵۲ هفته به عقب (یک سال) — بازه‌ی بی‌نهایت یعنی اسکنِ بی‌سقفِ
+// فراخوانی AI، سریع). offset: ۰ = هفته‌ی جاری، منفی = هفته‌های قبل.
+// حداکثر ۵۲ هفته به عقب (یک سال) — بازه‌ی بی‌نهایت یعنی اسکن بی‌سقف
 // جدول‌های کاربر برای هر هفته‌ی دلخواه.
 const MAX_OFFSET_BACK = -52;
 
@@ -19,8 +19,8 @@ export async function GET(req: NextRequest) {
     { const off = await featureBlocked("weeklyAnalysis", guard.userId); if (off) return off; }
     const { userId, isSuperAdmin } = guard;
 
-    // سوپریوزر از سقفِ نرخ معافه (هم‌الگویِ بقیه‌ی روت‌های پولی/AI) — چون
-    // خودش تیمِ محصوله و باید بتونه پشتِ‌سرهم تست کنه.
+    // سوپریوزر از سقف نرخ معافه (هم‌الگوی بقیه‌ی روت‌های پولی/AI) — چون
+    // خودش تیم محصوله و باید بتونه پشت‌سرهم تست کنه.
     if (!isSuperAdmin && !(await checkRateLimit(`weekly-analysis:${userId}`, 60, 10 * 60 * 1000))) {
       return NextResponse.json({ error: "تعداد درخواست بیش از حد مجاز — کمی صبر کن" }, { status: 429 });
     }

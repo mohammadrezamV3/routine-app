@@ -56,10 +56,10 @@ export function jalaliToGregorianApprox(jy: number, jm: number, jd: number): Dat
 }
 
 /**
- * تبدیلِ *دقیقِ* جلالی → ISO محلی. `jalaliToGregorianApprox` نوروز را همیشه
+ * تبدیل *دقیق* جلالی → ISO محلی. `jalaliToGregorianApprox` نوروز را همیشه
  * ۲۱ مارس و اسفند را ۲۹ روزه فرض می‌کند، پس گاهی یک روز جابه‌جاست؛ این‌جا از
  * همان تقریب شروع می‌کنیم و با `toJalali` (که دقیق است) تا ±۲ روز اصلاحش
- * می‌کنیم. null یعنی چنین تاریخِ جلالی‌ای وجود ندارد (مثلا ۳۱ مهر).
+ * می‌کنیم. null یعنی چنین تاریخ جلالی‌ای وجود ندارد (مثلا ۳۱ مهر).
  */
 export function jalaliToIso(jy: number, jm: number, jd: number): string | null {
   if (!Number.isInteger(jy) || !Number.isInteger(jm) || !Number.isInteger(jd)) return null;

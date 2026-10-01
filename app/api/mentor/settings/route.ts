@@ -24,13 +24,13 @@ async function respond(userId: string) {
     countReservedSeats(userId),
   ]);
   if (!p) return forbidden("اول پروفایل مربی‌گری بساز");
-  // صندلی‌های رزروِ صفِ انتظار هم «پُر» حساب می‌شوند (lib/mentorWaitlistServer.ts)
+  // صندلی‌های رزرو صف انتظار هم «پر» حساب می‌شوند (lib/mentorWaitlistServer.ts)
   const availability = availabilityOf(p, active + reserved);
   return NextResponse.json({
     settings: {
       acceptingStudents: p.acceptingStudents,
       maxActiveStudents: p.maxActiveStudents,
-      // تاریخِ گذشته یعنی حالتِ عدمِ حضور تمام شده — به کلاینت «خاموش» نشان داده می‌شود
+      // تاریخ گذشته یعنی حالت عدم حضور تمام شده — به کلاینت «خاموش» نشان داده می‌شود
       awayUntil: availability.away ? dayIso(p.awayUntil) : null,
       awayMessage: availability.away ? p.awayMessage : null,
       awayPausesRequests: p.awayPausesRequests,
@@ -43,21 +43,21 @@ async function respond(userId: string) {
   });
 }
 
-// GET /api/mentor/settings → تنظیماتِ دسترس‌پذیری و پذیرشِ شاگرد + وضعیتِ محاسبه‌شده
+// GET /api/mentor/settings → تنظیمات دسترس‌پذیری و پذیرش شاگرد + وضعیت محاسبه‌شده
 export async function GET() {
   const g = await requireMentorsUser();
   if (!g.ok) return g.response;
   return respond(g.userId);
 }
 
-// PUT /api/mentor/settings → به‌روزرسانیِ جزئی؛ فقط فیلدهای فرستاده‌شده عوض می‌شوند.
+// PUT /api/mentor/settings → به‌روزرسانی جزئی؛ فقط فیلدهای فرستاده‌شده عوض می‌شوند.
 //   acceptingStudents: boolean
-//   maxActiveStudents: number | null            (۱ تا ۵۰۰؛ null = بدونِ سقف)
-//   awayUntil: "YYYY-MM-DD" | null              (null = پایانِ عدمِ حضور؛ پیامش هم پاک می‌شود)
+//   maxActiveStudents: number | null            (۱ تا ۵۰۰؛ null = بدون سقف)
+//   awayUntil: "YYYY-MM-DD" | null              (null = پایان عدم حضور؛ پیامش هم پاک می‌شود)
 //   awayMessage: string | null · awayPausesRequests: boolean
 //   responseTimeHours: 12 | 24 | 48 | 72 | null · welcomeMessage: string | null
 //   intakeQuestions: string[]                   (حداکثر ۵)
-// تعلیق این‌جا را نمی‌بندد: بستنِ پذیرش یا اعلامِ عدمِ حضور در حالِ تعلیق هم معنا دارد.
+// تعلیق این‌جا را نمی‌بندد: بستن پذیرش یا اعلام عدم حضور در حال تعلیق هم معنا دارد.
 export async function PUT(req: Request) {
   const g = await requireMentorsUser();
   if (!g.ok) return g.response;
@@ -129,7 +129,7 @@ export async function PUT(req: Request) {
   if (Object.keys(data).length > 0) {
     await prisma.mentorProfile.update({ where: { userId }, data });
     touchMentorActivity(userId);
-    // ظرفیتِ بیشتر / پذیرشِ دوباره / پایانِ عدمِ حضور → نوبت به نفرهای صف می‌رسد
+    // ظرفیت بیشتر / پذیرش دوباره / پایان عدم حضور → نوبت به نفرهای صف می‌رسد
     await advanceWaitlist(userId);
   }
   return respond(userId);

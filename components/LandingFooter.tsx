@@ -8,17 +8,17 @@ import { EnamadBadge } from "@/components/EnamadBadge";
 import { TelegramIcon, InstagramIcon } from "@/components/SocialIcons";
 import { SOCIAL, SUPPORT_EMAIL } from "@/lib/brand";
 
-// فوترِ صفحه‌ی لندینگ — بدونِ کارت و بدونِ بک‌گراند (طبق قانونِ پروژه: هیچ
-// عنصری خودسرانه بک‌گراند نمی‌گیرد)، فقط یک خطِ جداکننده و همان توکن‌های
-// رنگیِ بقیه‌ی لندینگ (useThemeTokens) — ولی حالا یک فوترِ واقعیِ چندستونه:
-// برند+توضیح، گروه‌های لینک، و یک ستونِ تماس/شبکه‌های اجتماعی (از همون
-// lib/brand.ts که صفحه‌ی «درباره ما» هم استفاده می‌کند — چیزِ جدیدی ساخته
-// نشده). روی دسکتاپ همه‌چیز راست‌چین (RTL) کنارِ هم می‌شینند، روی موبایل
-// دوستونه می‌شوند تا فهرستِ ۱۰تاییِ «امکانات» له نشود.
+// فوتر صفحه‌ی لندینگ — بدون کارت و بدون بک‌گراند (طبق قانون پروژه: هیچ
+// عنصری خودسرانه بک‌گراند نمی‌گیرد)، فقط یک خط جداکننده و همان توکن‌های
+// رنگی بقیه‌ی لندینگ (useThemeTokens) — ولی حالا یک فوتر واقعی چندستونه:
+// برند+توضیح، گروه‌های لینک، و یک ستون تماس/شبکه‌های اجتماعی (از همون
+// lib/brand.ts که صفحه‌ی «درباره ما» هم استفاده می‌کند — چیز جدیدی ساخته
+// نشده). روی دسکتاپ همه‌چیز راست‌چین (RTL) کنار هم می‌شینند، روی موبایل
+// دوستونه می‌شوند تا فهرست ۱۰تایی «امکانات» له نشود.
 //
-// همه‌ی لینک‌های فوترِ قبلی سرِ جایشان مانده‌اند: /about و /faq و /terms و
-// صفحه‌های فرودِ عمومی بدونِ این لینک‌ها برای کراولر یتیم‌اند (هیچ لینکِ
-// HTMLای از صفحه‌ی اصلی به آن‌ها نبود). فقط در سه گروهِ کوتاه چیده شده‌اند.
+// همه‌ی لینک‌های فوتر قبلی سر جایشان مانده‌اند: /about و /faq و /terms و
+// صفحه‌های فرود عمومی بدون این لینک‌ها برای کراولر یتیم‌اند (هیچ لینک
+// HTMLای از صفحه‌ی اصلی به آن‌ها نبود). فقط در سه گروه کوتاه چیده شده‌اند.
 const GROUPS: { title: string; links: { href: string; label: string }[] }[] = [
   {
     title: "امکانات",
@@ -51,7 +51,7 @@ const GROUPS: { title: string; links: { href: string; label: string }[] }[] = [
   },
 ];
 
-// سالِ شمسی از خودِ مرورگر/سرور — ثابتِ دستی هر نوروز کهنه می‌شد.
+// سال شمسی از خود مرورگر/سرور — ثابت دستی هر نوروز کهنه می‌شد.
 function jalaliYear(): string {
   try {
     return new Intl.DateTimeFormat("fa-IR-u-ca-persian-nu-latn", { year: "numeric" }).format(new Date());
@@ -70,7 +70,7 @@ export function LandingFooter() {
         <div className="max-w-[240px] shrink-0">
           <Link href="/" aria-label="آریون — صفحه‌ی اصلی" className="inline-flex items-center gap-2.5">
             <span className="relative h-8 w-8 shrink-0" aria-hidden="true">
-              {/* هر دو نسخه‌ی لوگو هم‌زمان‌اند و فقط opacity عوض می‌شود — مثلِ AuthBrandMark. */}
+              {/* هر دو نسخه‌ی لوگو هم‌زمان‌اند و فقط opacity عوض می‌شود — مثل AuthBrandMark. */}
               <Image
                 src="/images/logo-icon-dark-theme.png" alt="" fill sizes="32px"
                 className={`object-contain transition-opacity duration-150 ${t.isLight ? "opacity-0" : "opacity-100"}`}
@@ -105,8 +105,8 @@ export function LandingFooter() {
             </div>
           ))}
 
-          {/* ستونِ تماس/شبکه‌های اجتماعی — دقیقا همون دیتای واقعیِ
-              lib/brand.ts که صفحه‌ی «درباره ما» هم نشون می‌ده، لینکِ تازه‌ای
+          {/* ستون تماس/شبکه‌های اجتماعی — دقیقا همون دیتای واقعی
+              lib/brand.ts که صفحه‌ی «درباره ما» هم نشون می‌ده، لینک تازه‌ای
               ساخته نشده. */}
           <div>
             <div className={`text-[12px] font-bold ${t.heading}`}>تماس با ما</div>

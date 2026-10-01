@@ -20,9 +20,9 @@ const PANEL_META: Record<PanelKey, { label: string; icon: React.ReactNode }> = {
   friends: { label: "دوستان", icon: <Users /> },
 };
 
-// چهار کارتِ «یادآوری / یادآوری دارو / آمار هفتگی / دوستان» — طبقِ طرحِ
-// دستیِ کاربر: یک ردیفِ چهار باکسِ مربعیِ جدا (هرکدوم با آیکون و اسم، همون
-// ظاهرِ DashCard)، و زیرشون یک باکسِ بزرگ که محتوای بخشِ انتخاب‌شده رو با
+// چهار کارت «یادآوری / یادآوری دارو / آمار هفتگی / دوستان» — طبق طرح
+// دستی کاربر: یک ردیف چهار باکس مربعی جدا (هرکدوم با آیکون و اسم، همون
+// ظاهر DashCard)، و زیرشون یک باکس بزرگ که محتوای بخش انتخاب‌شده رو با
 // انیمیشن نشون می‌ده. نه SegmentedTabs/تاگل.
 export function DashQuickPanels({
   prefs,
@@ -34,7 +34,7 @@ export function DashQuickPanels({
   const enabled = useMemo<PanelKey[]>(() => {
     const list: PanelKey[] = [];
     if (prefs.showReminders) list.push("reminders");
-    // خواب بخشی از «روتین من» ـه و همیشه توی ردیفِ دکمه‌ها هست (خاموش‌شدنی نیست)
+    // خواب بخشی از «روتین من» ـه و همیشه توی ردیف دکمه‌ها هست (خاموش‌شدنی نیست)
     list.push("sleep");
     if (prefs.showMedications) list.push("medications");
     if (prefs.showChart) list.push("chart");
@@ -49,13 +49,13 @@ export function DashQuickPanels({
 
   return (
     <div className="dash-quick-panels flex flex-col gap-4 sm:gap-6">
-      {/* باکس‌های کوچیکِ فقط‌آیکون؛ انتخاب‌شده بزرگ‌تر می‌شه و اسمش ظاهر می‌شه. */}
+      {/* باکس‌های کوچیک فقط‌آیکون؛ انتخاب‌شده بزرگ‌تر می‌شه و اسمش ظاهر می‌شه. */}
       <div className="flex items-end justify-center gap-2.5 sm:gap-3.5" role="tablist" aria-label="بخش‌های روتین">
         {enabled.map((key) => {
           const on = key === current;
           return (
-            // دکمه‌ی ساده + ترنزیشنِ CSS (نه framer layout): layout روی بچه‌ها
-            // scale می‌انداخت و اسم موقعِ رفتن اول بزرگ می‌شد بعد محو.
+            // دکمه‌ی ساده + ترنزیشن CSS (نه framer layout): layout روی بچه‌ها
+            // scale می‌انداخت و اسم موقع رفتن اول بزرگ می‌شد بعد محو.
             <button
               key={key}
               type="button"

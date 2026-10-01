@@ -6,7 +6,7 @@ import { useThemeTokens } from "@/components/PlanShowcase";
 import { faNum } from "@/lib/jalali";
 import type { BlogPost } from "@/lib/blogPosts";
 
-/** فهرست مقاله‌ها — هر کارت خودش یک لینک با متنِ توصیفی (عنوان مقاله) است. */
+/** فهرست مقاله‌ها — هر کارت خودش یک لینک با متن توصیفی (عنوان مقاله) است. */
 export function BlogList({ posts, intro }: { posts: BlogPost[]; intro: string }) {
   const t = useThemeTokens();
   const card = `rounded-[24px] border ${t.cardBorder} ${t.cardBg} p-5 sm:p-7 ${t.shadow} backdrop-blur-xl`;

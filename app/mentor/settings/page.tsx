@@ -16,7 +16,7 @@ import type { MentorSettingsResponse, StudentLabel } from "@/lib/mentorTypes";
 
 const ic = (Icon: typeof UserRound, size: number) => <Icon size={size} strokeWidth={MI_STROKE} aria-hidden />;
 
-/** ردیفِ پروفایلِ منتوری با وضعیتِ انتشار و احراز هویت؛ ورود به /mentor/profile */
+/** ردیف پروفایل منتوری با وضعیت انتشار و احراز هویت؛ ورود به /mentor/profile */
 function MentorProfileLink() {
   const { profile } = useMentorSelf();
   if (!profile) return null;

@@ -41,8 +41,8 @@ export async function PATCH(req: NextRequest) {
     return NextResponse.json({ ok: true, nomoFreeUses: n });
   }
 
-  // { trialAiLimits: { FEATURE: n } } — سقفِ کلِ استفاده از هر فیچرِ AI در
-  // دوره‌ی آزمایشیِ حسابِ تازه (lib/trial.ts). جدا از نرخ هزینه ذخیره می‌شه.
+  // { trialAiLimits: { FEATURE: n } } — سقف کل استفاده از هر فیچر AI در
+  // دوره‌ی آزمایشی حساب تازه (lib/trial.ts). جدا از نرخ هزینه ذخیره می‌شه.
   if (body && typeof body === "object" && "trialAiLimits" in body) {
     const raw = (body as any).trialAiLimits;
     if (!raw || typeof raw !== "object") {
@@ -62,11 +62,11 @@ export async function PATCH(req: NextRequest) {
     return NextResponse.json({ ok: true, trialAiLimits: limits });
   }
 
-  // Number(null)/Number("") صفره — بدون این چک یه فیلدِ خالی بی‌صدا نرخ رو صفر می‌کرد
+  // Number(null)/Number("") صفره — بدون این چک یه فیلد خالی بی‌صدا نرخ رو صفر می‌کرد
   const parse = (v: unknown) => (v === null || v === undefined || (typeof v === "string" && !v.trim()) ? NaN : Number(v));
   const inputRate = parse(body?.inputPer1kUsdMicros);
   const outputRate = parse(body?.outputPer1kUsdMicros);
-  const MAX_RATE = 100_000_000; // ۱۰۰ دلار به‌ازای هر ۱۰۰۰ توکن — سقفِ منطقی برای جلوگیری از اشتباهِ تایپی
+  const MAX_RATE = 100_000_000; // ۱۰۰ دلار به‌ازای هر ۱۰۰۰ توکن — سقف منطقی برای جلوگیری از اشتباه تایپی
   const valid = (n: number) => Number.isFinite(n) && n >= 0 && n <= MAX_RATE;
   if (!valid(inputRate) || !valid(outputRate)) {
     return NextResponse.json({ error: "نرخ‌های وارد شده معتبر نیستند" }, { status: 400 });

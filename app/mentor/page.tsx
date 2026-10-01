@@ -7,9 +7,9 @@ import { useMentorSelf } from "@/components/MentorPanelNav";
 import { LoadingBlock } from "@/components/Spinner";
 
 /**
- * /mentor — بدون پروفایل منتوری: مراحلِ شروع (ساخت پروفایل، احراز هویت،
- * انتشار)؛ با پروفایل: داشبورد منتور. پروفایل از همان درخواستِ مشترکِ
- * نوارِ پنل خوانده می‌شود (useMentorSelf).
+ * /mentor — بدون پروفایل منتوری: مراحل شروع (ساخت پروفایل، احراز هویت،
+ * انتشار)؛ با پروفایل: داشبورد منتور. پروفایل از همان درخواست مشترک
+ * نوار پنل خوانده می‌شود (useMentorSelf).
  */
 function MentorHome() {
   const self = useMentorSelf();

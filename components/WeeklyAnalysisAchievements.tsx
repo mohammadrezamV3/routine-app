@@ -8,7 +8,7 @@ import { DashCard } from "./DashCard";
 
 const BURST = [0, 60, 120, 180, 240, 300];
 
-// جرقه‌ی کوچکِ جشن دورِ نشانِ باز‌شده — یک بار، موقعِ ظاهرشدن. با حرکتِ
+// جرقه‌ی کوچک جشن دور نشان باز‌شده — یک بار، موقع ظاهرشدن. با حرکت
 // کاهش‌یافته‌ی سیستم اصلا رندر نمی‌شه.
 function Burst({ delay }: { delay: number }) {
   return (
@@ -31,7 +31,7 @@ function Burst({ delay }: { delay: number }) {
 export function WeeklyAnalysisAchievements({ achievements }: { achievements: Achievement[] }) {
   const reduce = useReducedMotion();
   if (achievements.length === 0) return null;
-  // بازشده‌ها اول — ترتیبِ خودِ موتور بینِ هر گروه حفظ می‌شه
+  // بازشده‌ها اول — ترتیب خود موتور بین هر گروه حفظ می‌شه
   const sorted = [...achievements].sort((a, b) => Number(b.unlocked) - Number(a.unlocked));
   const unlocked = achievements.filter((a) => a.unlocked).length;
 

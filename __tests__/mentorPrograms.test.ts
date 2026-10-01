@@ -77,7 +77,7 @@ describe("برنامه — ساخت", () => {
     expect((await listPrograms(req("GET", "/api/mentor-programs"))).status).toBe(401);
   });
 
-  it("منتور روی رابطه‌ی ACTIVEِ خودش DRAFT می‌سازد؛ mass assignment بی‌اثر", async () => {
+  it("منتور روی رابطه‌ی ACTIVE خودش DRAFT می‌سازد؛ mass assignment بی‌اثر", async () => {
     const { m, s, ms } = await pair();
     const r = await createProgram(m, ms, { status: "ACTIVE", version: 9, studentId: "evil", sentAt: new Date().toISOString() });
     expect(r.status).toBe(200);
@@ -104,7 +104,7 @@ describe("برنامه — ساخت", () => {
     expect((await j(await getP(s, id))).program.note).toBe("یادداشت دوم");
   });
 
-  it("شاگرد (بدونِ پروفایل منتوری) نمی‌تواند بسازد ۴۰۳؛ منتورِ دیگر روی رابطه‌ی غیرِ خودش ۴۰۴", async () => {
+  it("شاگرد (بدون پروفایل منتوری) نمی‌تواند بسازد ۴۰۳؛ منتور دیگر روی رابطه‌ی غیر خودش ۴۰۴", async () => {
     const { s, ms } = await pair();
     expect((await createProgram(s, ms)).status).toBe(403);
     const other = await makeMentor();
@@ -124,8 +124,8 @@ describe("برنامه — ساخت", () => {
   });
 });
 
-describe("برنامه — ماشینِ حالت", () => {
-  it("send بدونِ آیتم ۴۰۰؛ شاگرد نمی‌تواند send کند؛ پیش‌نویسِ ارسال‌نشده برای شاگرد نامرئی", async () => {
+describe("برنامه — ماشین حالت", () => {
+  it("send بدون آیتم ۴۰۰؛ شاگرد نمی‌تواند send کند؛ پیش‌نویس ارسال‌نشده برای شاگرد نامرئی", async () => {
     const { m, s, ms } = await pair();
     const empty = await createProgramId(m, ms, { items: [] });
     expect((await transition(m, empty, "send")).status).toBe(400);
@@ -142,7 +142,7 @@ describe("برنامه — ماشینِ حالت", () => {
     expect((await list(m, "?role=mentor")).programs.map((x: any) => x.id)).toContain(draft);
     expect((await getP(m, draft)).status).toBe(200);
 
-    // بعد از send شاگرد می‌بیند و خودِ send برای شاگرد ممنوع
+    // بعد از send شاگرد می‌بیند و خود send برای شاگرد ممنوع
     expect((await transition(m, draft, "send")).status).toBe(200);
     expect((await list(s, "?role=student")).programs.map((x: any) => x.id)).toContain(draft);
     expect(await prisma.inAppNotification.count({ where: { userId: s, type: "program.new" } })).toBe(1);
@@ -167,17 +167,17 @@ describe("برنامه — ماشینِ حالت", () => {
     expect(mine[0].startDate).toBe(today());
     expect(await prisma.inAppNotification.count({ where: { userId: m, type: "program.accepted" } })).toBe(1);
 
-    // PUT روی غیرِ DRAFT ممنوع
+    // PUT روی غیر DRAFT ممنوع
     as(m);
     expect((await putProgram(req("PUT", `/api/mentor-programs/${id}`, { title: "x", items: [] }), p(id))).status).toBe(409);
     // accept دوباره ۴۰۹
     expect((await transition(s, id, "accept")).status).toBe(409);
-    // DELETE غیرِ پیش‌نویس ۴۰۹
+    // DELETE غیر پیش‌نویس ۴۰۹
     as(m);
     expect((await deleteProgram(req("DELETE", "/x"), p(id))).status).toBe(409);
   });
 
-  it("accept با startDateِ گذشته → فوراً ACTIVE؛ با startDateِ آینده → ACCEPTED، بعد activate → ACTIVE", async () => {
+  it("accept با startDate گذشته → فورا ACTIVE؛ با startDate آینده → ACCEPTED، بعد activate → ACTIVE", async () => {
     const { m, s, ms } = await pair();
     const past = await activeProgram(m, s, ms, { startDate: dayOffset(-3) });
     expect((await prisma.mentorProgram.findUnique({ where: { id: past } }))!.status).toBe("ACTIVE");
@@ -187,7 +187,7 @@ describe("برنامه — ماشینِ حالت", () => {
     const a = await transition(s, fut, "accept");
     expect((await j(a)).program.status).toBe("ACCEPTED");
     expect((await readOccurrences(s)).some((o) => o.mentorProgramId === fut)).toBe(false);
-    // یادداشتِ روز روی ACCEPTED ممنوع
+    // یادداشت روز روی ACCEPTED ممنوع
     expect((await log(s, fut, { date: today(), note: "x" })).status).toBe(409);
     // GET برنامه آن را زودتر از موعد فعال نمی‌کند
     expect((await j(await getP(s, fut))).program.status).toBe("ACCEPTED");
@@ -200,7 +200,7 @@ describe("برنامه — ماشینِ حالت", () => {
     expect(occ[0].startDate).toBe(dayOffset(5));
   });
 
-  it("ACCEPTED با startDateِ رسیده، با GET به‌صورت lazy فعال می‌شود", async () => {
+  it("ACCEPTED با startDate رسیده، با GET به‌صورت lazy فعال می‌شود", async () => {
     const { m, s, ms } = await pair();
     const id = await createProgramId(m, ms, { startDate: dayOffset(2) });
     await transition(m, id, "send");
@@ -224,7 +224,7 @@ describe("برنامه — ماشینِ حالت", () => {
     expect(await prisma.inAppNotification.count({ where: { userId: m, type: "program.rejected" } })).toBe(1);
   });
 
-  it("request_changes: note لازم؛ → DRAFT (هنوز برای شاگرد مرئی) → ویرایش → ارسالِ دوباره نسخه‌ی ۲", async () => {
+  it("request_changes: note لازم؛ → DRAFT (هنوز برای شاگرد مرئی) → ویرایش → ارسال دوباره نسخه‌ی ۲", async () => {
     const { m, s, ms } = await pair();
     const id = await createProgramId(m, ms);
     await transition(m, id, "send");
@@ -279,7 +279,7 @@ describe("برنامه — ماشینِ حالت", () => {
     expect((await transition(m, a, "activate")).status).toBe(409);
   });
 
-  it("اقدامِ نامعتبر ۴۰۰؛ منتورِ دیگر ۴۰۴؛ send روی رابطه‌ی پایان‌یافته ۴۰۹", async () => {
+  it("اقدام نامعتبر ۴۰۰؛ منتور دیگر ۴۰۴؛ send روی رابطه‌ی پایان‌یافته ۴۰۹", async () => {
     const { m, s, ms } = await pair();
     const id = await createProgramId(m, ms);
     expect((await transition(m, id, "constructor")).status).toBe(400);
@@ -294,7 +294,7 @@ describe("برنامه — ماشینِ حالت", () => {
     expect((await transition(m, id, "send")).status).toBe(409);
   });
 
-  it("DELETE فقط پیش‌نویسِ ارسال‌نشده", async () => {
+  it("DELETE فقط پیش‌نویس ارسال‌نشده", async () => {
     const { m, ms } = await pair();
     const id = await createProgramId(m, ms);
     as(m);
@@ -303,7 +303,7 @@ describe("برنامه — ماشینِ حالت", () => {
     expect(await prisma.mentorProgram.count({ where: { id } })).toBe(0);
   });
 
-  it("شاگردِ دیگر برنامه/لیستِ این شاگرد را نمی‌بیند", async () => {
+  it("شاگرد دیگر برنامه/لیست این شاگرد را نمی‌بیند", async () => {
     const { m, s, ms } = await pair();
     const id = await activeProgram(m, s, ms);
     const other = await makeUser();
@@ -315,7 +315,7 @@ describe("برنامه — ماشینِ حالت", () => {
     expect((await readFeedback(req("POST", "/x"), p(id))).status).toBe(404);
   });
 
-  it("فیلترِ status در لیست؛ status نامعتبر ۴۰۰", async () => {
+  it("فیلتر status در لیست؛ status نامعتبر ۴۰۰", async () => {
     const { m, s, ms } = await pair();
     const act = await activeProgram(m, s, ms);
     await createProgramId(m, ms);
@@ -327,8 +327,8 @@ describe("برنامه — ماشینِ حالت", () => {
 });
 
 describe("اجرا — لاگ‌ها (خودکار از روتین)", () => {
-  // جزئیاتِ مشتق‌سازی در __tests__/mentorProgress.test.ts
-  it("ثبتِ دستیِ وضعیت ۴۱۰؛ تیکِ روتین لاگِ AUTO می‌سازد که منتور می‌بیند؛ فیلترِ بازه", async () => {
+  // جزئیات مشتق‌سازی در __tests__/mentorProgress.test.ts
+  it("ثبت دستی وضعیت ۴۱۰؛ تیک روتین لاگ AUTO می‌سازد که منتور می‌بیند؛ فیلتر بازه", async () => {
     const { m, s, ms } = await pair();
     const id = await activeProgram(m, s, ms);
     const [item] = await items(s, id);
@@ -346,7 +346,7 @@ describe("اجرا — لاگ‌ها (خودکار از روتین)", () => {
     expect((await getP(m, id, "?from=bad&to=bad")).status).toBe(400);
   });
 
-  it("یادداشتِ روز بعد از پایانِ رابطه ۴۰۹", async () => {
+  it("یادداشت روز بعد از پایان رابطه ۴۰۹", async () => {
     const { m, s, ms } = await pair();
     const id = await activeProgram(m, s, ms);
     await prisma.mentorship.update({ where: { id: ms }, data: { status: "ENDED" } });
@@ -355,13 +355,13 @@ describe("اجرا — لاگ‌ها (خودکار از روتین)", () => {
 });
 
 describe("فیدبک", () => {
-  it("منتور با item/log معتبر فیدبک می‌دهد؛ اعتبارسنجیِ تعلق به برنامه؛ شاگرد read می‌کند", async () => {
+  it("منتور با item/log معتبر فیدبک می‌دهد؛ اعتبارسنجی تعلق به برنامه؛ شاگرد read می‌کند", async () => {
     const { m, s, ms } = await pair();
     const id = await activeProgram(m, s, ms, { startDate: dayOffset(-2), items: [{ title: "اسکوات", repeat: "DAILY" }, { title: "پلانک", repeat: "DAILY" }] });
     const other = await activeProgram(m, s, ms, { title: "دیگر" });
     const [i1, i2] = await items(s, id);
     const [foreignItem] = await items(s, other);
-    // اجراها از تیکِ روتین (DAILY → یک occurrence برای امروز)
+    // اجراها از تیک روتین (DAILY → یک occurrence برای امروز)
     await setDailyEntry(s, today(), { [mirrorOccurrenceId(id, 0, jsDayOf(today()))]: true, [mirrorOccurrenceId(other, 0, jsDayOf(today()))]: true });
     const l1 = (await j(await getP(m, id))).logs.find((l: any) => l.itemId === i1.id);
     const foreignLog = (await j(await getP(m, other))).logs[0];
@@ -371,7 +371,7 @@ describe("فیدبک", () => {
     expect((await feedback(m, id, { body: "x", logId: foreignLog.id })).status).toBe(404);
     expect((await feedback(m, id, { body: "x", itemId: i2.id, logId: l1.id })).status).toBe(400);
     expect((await feedback(m, id, { body: "x", itemId: 123 })).status).toBe(400);
-    // شاگرد و منتورِ دیگر نمی‌توانند فیدبک بدهند
+    // شاگرد و منتور دیگر نمی‌توانند فیدبک بدهند
     expect((await feedback(s, id, { body: "x" })).status).toBe(404);
     expect((await feedback(await makeMentor(), id, { body: "x" })).status).toBe(404);
 
@@ -403,8 +403,8 @@ describe("فیدبک", () => {
   });
 });
 
-describe("منتورِ تعلیق‌شده", () => {
-  it("پذیرشِ برنامه ۴۰۳، فیدبک ۴۰۳، ساختِ برنامه ۴۰۳، send ۴۰۳", async () => {
+describe("منتور تعلیق‌شده", () => {
+  it("پذیرش برنامه ۴۰۳، فیدبک ۴۰۳، ساخت برنامه ۴۰۳، send ۴۰۳", async () => {
     const { m, s, ms } = await pair();
     const pending = await createProgramId(m, ms);
     await transition(m, pending, "send");

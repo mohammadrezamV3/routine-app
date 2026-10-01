@@ -3,8 +3,8 @@ import { validateProgramInput, type ItemData } from "@/lib/mentorValidate";
 import { rangeDuration } from "@/lib/mentorProgramCopy";
 import { isoDate } from "@/lib/mentorServer";
 
-// قالبِ برنامه‌ی منتور — اعتبارسنجی و شکلِ پاسخ. محتوای قالب از همان
-// validateProgramInputِ برنامه رد می‌شود، پس قالب هرگز چیزی نگه نمی‌دارد که
+// قالب برنامه‌ی منتور — اعتبارسنجی و شکل پاسخ. محتوای قالب از همان
+// validateProgramInput برنامه رد می‌شود، پس قالب هرگز چیزی نگه نمی‌دارد که
 // برنامه‌ی واقعی نتواند بپذیرد.
 
 export const TEMPLATE_NAME_MAX = 80;
@@ -33,7 +33,7 @@ export function validateTemplateName(v: unknown): { ok: true; name: string } | {
   return { ok: true, name };
 }
 
-/** محتوای برنامه (همان بدنه‌ی POST برنامه) → داده‌ی ساختِ قالب */
+/** محتوای برنامه (همان بدنه‌ی POST برنامه) → داده‌ی ساخت قالب */
 export function templateDataFromBody(body: unknown): { ok: true; data: Omit<Prisma.MentorProgramTemplateUncheckedCreateInput, "profileId" | "name"> } | { ok: false; error: string } {
   const v = validateProgramInput(body);
   if (!v.ok) return v;
@@ -69,7 +69,7 @@ export function toTemplateRow(t: MentorProgramTemplate): TemplateRow {
   };
 }
 
-/** آیتم‌های ذخیره‌شده دوباره اعتبارسنجی می‌شوند؛ ردیفِ خراب نادیده گرفته می‌شود */
+/** آیتم‌های ذخیره‌شده دوباره اعتبارسنجی می‌شوند؛ ردیف خراب نادیده گرفته می‌شود */
 export function templateItems(t: MentorProgramTemplate): ItemData[] {
   const raw = Array.isArray(t.items) ? t.items : [];
   const v = validateProgramInput({ type: t.type, title: t.title || "قالب", items: raw });

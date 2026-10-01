@@ -20,7 +20,7 @@ export function HomeClient() {
   const router = useRouter();
 
   // مقصد: داشبورد اگه فلگش برای این کاربر روشنه (فعلا فقط ادمین‌ها)، وگرنه
-  // همون /weekly — lib/homePath.ts (با fallbackِ سریع به /weekly).
+  // همون /weekly — lib/homePath.ts (با fallback سریع به /weekly).
   useEffect(() => {
     if (status !== "authenticated") return;
     let alive = true;

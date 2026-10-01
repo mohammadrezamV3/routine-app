@@ -9,13 +9,13 @@ import { buildDashboard, resolveDay } from "@/lib/dashboardServer";
 export const dynamic = "force-dynamic";
 
 /**
- * GET /api/dashboard?date=YYYY-MM-DD&tz=<دقیقه شرقِ UTC>
+ * GET /api/dashboard?date=YYYY-MM-DD&tz=<دقیقه شرق UTC>
  *
- * همه‌ی خلاصه‌های داشبورد در یک درخواست (یک چکِ سشن + کوئری‌های موازی) —
- * همون منطقِ /api/bootstrap: تعدادِ درخواست گلوگاهه، نه دیتابیس.
- * پشتِ فلگِ `dashboard` (فعلا فقط ادمین‌ها). هر بخشِ پولی جدا با دسترسیِ
- * واقعیِ دیتابیسی گیت می‌شه و بدونِ دسترسی null برمی‌گرده (lib/dashboardServer.ts).
- * بارِ اول همین داده سمتِ سرور در خودِ صفحه رندر می‌شه (app/dashboard/page.tsx)؛
+ * همه‌ی خلاصه‌های داشبورد در یک درخواست (یک چک سشن + کوئری‌های موازی) —
+ * همون منطق /api/bootstrap: تعداد درخواست گلوگاهه، نه دیتابیس.
+ * پشت فلگ `dashboard` (فعلا فقط ادمین‌ها). هر بخش پولی جدا با دسترسی
+ * واقعی دیتابیسی گیت می‌شه و بدون دسترسی null برمی‌گرده (lib/dashboardServer.ts).
+ * بار اول همین داده سمت سرور در خود صفحه رندر می‌شه (app/dashboard/page.tsx)؛
  * این روت برای تازه‌سازی‌های بعدیه.
  */
 export async function GET(req: NextRequest) {

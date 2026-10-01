@@ -2,59 +2,59 @@
 
 /**
  * ============================================================
- * سیستمِ حرکتِ بخشِ منتورها (MentorMotion)
+ * سیستم حرکت بخش منتورها (MentorMotion)
  * ------------------------------------------------------------
- * هدف: حسِ اپِ واقعی، نه پرشِ صفحه‌به‌صفحه. آرام و کوتاه:
+ * هدف: حس اپ واقعی، نه پرش صفحه‌به‌صفحه. آرام و کوتاه:
  *   • مدت: 160 تا 320 میلی‌ثانیه (M_DUR.fast/base/slow)
  *   • منحنی: M_EASE = [0.22, 1, 0.36, 1] (ease-out)
- *   • فقط opacity + جابه‌جاییِ حداکثر 8px + scaleِ خیلی کم برای شیت
- *   • بدونِ فنر/پرش، بدونِ حرکتِ پیوسته، بدونِ تغییرِ layout در ورود
+ *   • فقط opacity + جابه‌جایی حداکثر 8px + scale خیلی کم برای شیت
+ *   • بدون فنر/پرش، بدون حرکت پیوسته، بدون تغییر layout در ورود
  *   • prefers-reduced-motion: MotionTuner در ریشه‌ی اپ (app/layout.tsx)
- *     `MotionConfig reducedMotion="user"` (و روی دستگاهِ ضعیف "always") را
- *     برای کلِ اپ می‌گذارد. یک MotionConfig تازه این‌جا تودرتو نکنید؛ آن
- *     حالتِ «دستگاه ضعیف» را بازنویسی می‌کند.
+ *     `MotionConfig reducedMotion="user"` (و روی دستگاه ضعیف "always") را
+ *     برای کل اپ می‌گذارد. یک MotionConfig تازه این‌جا تودرتو نکنید؛ آن
+ *     حالت «دستگاه ضعیف» را بازنویسی می‌کند.
  *
  * API (همه از "@/components/MentorMotion"):
  *
- *   ورودِ صفحه — خودکار است:
+ *   ورود صفحه — خودکار است:
  *     app/{mentor,mentors,mentorship,mentor-programs}/template.tsx همه
- *     `<MentorRouteTransition>` هستند؛ هر ناوبری بینِ صفحه‌های منتور یک
- *     fade + 6px بالاآمدن می‌گیرد. خودتان دوباره انیمیشنِ ورود نگذارید.
+ *     `<MentorRouteTransition>` هستند؛ هر ناوبری بین صفحه‌های منتور یک
+ *     fade + 6px بالاآمدن می‌گیرد. خودتان دوباره انیمیشن ورود نگذارید.
  *
  *   <MentorReveal [delay] [as="div"|"section"|"li"] [className]>
  *     برای محتوایی که پس از بارگذاری جای اسپینر می‌نشیند: نرم ظاهر شود.
  *     (MentorPage / MentorSection خودشان این را دارند.)
  *
  *   <MentorStagger> … <MentorStaggerItem> …
- *     ورودِ پله‌ای و کوتاهِ چند بخش/کارت (فاصله 40ms، حداکثر 8 پله).
- *     MentorStaggerItem دقیقاً یک المنت (پیش‌فرض div) می‌سازد؛ با `as`
- *     عوضش کنید. برای گریدِ کارت‌ها: <MentorStagger className="mentor-grid">.
+ *     ورود پله‌ای و کوتاه چند بخش/کارت (فاصله 40ms، حداکثر 8 پله).
+ *     MentorStaggerItem دقیقا یک المنت (پیش‌فرض div) می‌سازد؛ با `as`
+ *     عوضش کنید. برای گرید کارت‌ها: <MentorStagger className="mentor-grid">.
  *
  *   <MentorList> {items.map(x => <MentorListItem key={x.id}>…</MentorListItem>)} </MentorList>
- *     ورود/خروجِ آیتمِ لیست (AnimatePresence) + layout برای مرتب‌سازی/فیلتر.
- *     خودِ MentorList المنتی نمی‌سازد (فقط AnimatePresence، initial={false}
- *     تا بارِ اول کلِ لیست دوباره انیمیت نشود). MentorListItem یک div است؛
+ *     ورود/خروج آیتم لیست (AnimatePresence) + layout برای مرتب‌سازی/فیلتر.
+ *     خود MentorList المنتی نمی‌سازد (فقط AnimatePresence، initial={false}
+ *     تا بار اول کل لیست دوباره انیمیت نشود). MentorListItem یک div است؛
  *     کلاس‌های ردیف را روی آن نگذارید، MentorRow داخلش برود.
  *     برای ردیف‌هایی که `:last-child` لازم دارند مشکلی نیست: MentorListItem
- *     کلاسِ `mentor-li` دارد و CSS مرزِ آخرین ردیف را درست می‌کند.
+ *     کلاس `mentor-li` دارد و CSS مرز آخرین ردیف را درست می‌کند.
  *
  *   <MentorSwap swapKey={tab}> … </MentorSwap>
- *     cross-fade کوتاهِ محتوای تب/سگمنت (خروج 120ms، ورود 200ms).
+ *     cross-fade کوتاه محتوای تب/سگمنت (خروج 120ms، ورود 200ms).
  *
  *   <MentorCollapse open={bool}> … </MentorCollapse>
- *     باز/بسته‌شدنِ نرمِ ارتفاع (height:auto) + opacity. محتوا در حالتِ
+ *     باز/بسته‌شدن نرم ارتفاع (height:auto) + opacity. محتوا در حالت
  *     بسته unmount می‌شود.
  *
  *   <MentorSheet open onClose title? labelledBy? size="sm"|"md"|"lg" dismissible?>
- *     پاپ‌آپ: وسطِ صفحه در دسکتاپ، bottom sheet در موبایل (≤ 560px).
- *     پورتال به body، قفلِ اسکرول، Escape و کلیک روی پس‌زمینه = بستن
+ *     پاپ‌آپ: وسط صفحه در دسکتاپ، bottom sheet در موبایل (≤ 560px).
+ *     پورتال به body، قفل اسکرول، Escape و کلیک روی پس‌زمینه = بستن
  *     (مگر dismissible={false})، فوکوس به پنل. سطح همان .modal-panel سایت
- *     است (بک‌گراندِ تازه ندارد). فوترِ دکمه‌ها: <div className="trade-modal-actions">.
+ *     است (بک‌گراند تازه ندارد). فوتر دکمه‌ها: <div className="trade-modal-actions">.
  *
- *   فیدبکِ فشار: خودکار است. در mentor.css (بلوکِ «حرکت») دکمه‌های
+ *   فیدبک فشار: خودکار است. در mentor.css (بلوک «حرکت») دکمه‌های
  *   .mentor-btn / .trade-title-add-btn / .mentor-text-btn / a.mentor-row و
- *   تب‌های ناوبریِ پنل هنگامِ فشار scale(.97) می‌گیرند. برای المنتِ دیگری
- *   کلاسِ `m-press` بدهید. `pressProps` هم برای motion.* موجود است.
+ *   تب‌های ناوبری پنل هنگام فشار scale(.97) می‌گیرند. برای المنت دیگری
+ *   کلاس `m-press` بدهید. `pressProps` هم برای motion.* موجود است.
  *
  *   ثابت‌ها: M_EASE, M_DUR, mT(duration?) → transition، V_FADE_UP (variants)
  * ============================================================
@@ -75,10 +75,10 @@ export const V_FADE_UP: Variants = {
   show: { opacity: 1, y: 0, transition: mT(M_DUR.base) },
 };
 
-/** برای motion.* : فیدبکِ فشار (همان scaleِ کلاسِ m-press) */
+/** برای motion.* : فیدبک فشار (همان scale کلاس m-press) */
 export const pressProps = { whileTap: { scale: 0.97 }, transition: mT(M_DUR.fast) } as const;
 
-/* ── ورودِ صفحه (template.tsx) ─────────────────────────────── */
+/* ── ورود صفحه (template.tsx) ─────────────────────────────── */
 export function MentorRouteTransition({ children }: { children: React.ReactNode }) {
   return (
     <motion.div
@@ -92,7 +92,7 @@ export function MentorRouteTransition({ children }: { children: React.ReactNode 
   );
 }
 
-/* ── نمایشِ محتوای تازه‌بارگذاری‌شده ───────────────────────── */
+/* ── نمایش محتوای تازه‌بارگذاری‌شده ───────────────────────── */
 type RevealTag = "div" | "section" | "li" | "ul";
 export function MentorReveal({
   as = "div", delay = 0, className, children, id,
@@ -117,7 +117,7 @@ export function MentorReveal({
   );
 }
 
-/* ── ورودِ پله‌ای ────────────────────────────────────────────── */
+/* ── ورود پله‌ای ────────────────────────────────────────────── */
 const STAGGER_STEP = 0.04;
 const STAGGER_MAX = 8;
 
@@ -136,7 +136,7 @@ export function MentorStagger({
   );
 }
 
-/** یک پله داخلِ MentorStagger؛ `index` برای سقفِ تاخیر (پیش‌فرض ترتیبِ رندر نیست، پس بدهید) */
+/** یک پله داخل MentorStagger؛ `index` برای سقف تاخیر (پیش‌فرض ترتیب رندر نیست، پس بدهید) */
 export function MentorStaggerItem({
   as = "div", index = 0, className, children,
 }: {
@@ -185,7 +185,7 @@ export function MentorListItem({
   );
 }
 
-/* ── تعویضِ محتوای تب ───────────────────────────────────────── */
+/* ── تعویض محتوای تب ───────────────────────────────────────── */
 export function MentorSwap({
   swapKey, children, className,
 }: {
@@ -252,11 +252,11 @@ export function MentorSheet({
 }: {
   open: boolean;
   onClose: () => void;
-  /** عنوانِ سرِ شیت با دکمه‌ی بستن؛ بدونِ آن سر نمایش داده نمی‌شود */
+  /** عنوان سر شیت با دکمه‌ی بستن؛ بدون آن سر نمایش داده نمی‌شود */
   title?: string;
   labelledBy?: string;
   size?: "sm" | "md" | "lg";
-  /** false: کلیکِ پس‌زمینه و Escape نمی‌بندد (مثلاً هنگامِ ذخیره) */
+  /** false: کلیک پس‌زمینه و Escape نمی‌بندد (مثلا هنگام ذخیره) */
   dismissible?: boolean;
   role?: "dialog" | "alertdialog";
   children: React.ReactNode;

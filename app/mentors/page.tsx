@@ -35,11 +35,11 @@ const CATEGORY_OPTIONS = [{ value: "", label: "همه" }, ...MENTOR_CATEGORIES.m
 const RATING_OPTIONS = [{ value: "0", label: "همه" }, ...MIN_RATING_OPTIONS.map((r) => ({ value: String(r), label: `${faNum(r)} به بالا` }))];
 const RESPONSE_OPTIONS = [{ value: "0", label: "همه" }, ...MAX_RESPONSE_OPTIONS.map((h) => ({ value: String(h), label: `تا ${faNum(h)} ساعت` }))];
 
-// «پیدا کردن منتور»: جستجوی هوشمند (غلطِ املایی/هم‌معنی — lib/mentorSearch.ts)،
-// فیلترهای همیشه‌پیدا که در نشانیِ صفحه می‌نشینند (قابلِ اشتراک)، و تبِ
+// «پیدا کردن منتور»: جستجوی هوشمند (غلط املایی/هم‌معنی — lib/mentorSearch.ts)،
+// فیلترهای همیشه‌پیدا که در نشانی صفحه می‌نشینند (قابل اشتراک)، و تب
 // «ذخیره‌شده‌ها». در نمای پیش‌فرض (بی‌جستجو/فیلتر) ردیف‌های افقی می‌آیند:
 // محبوب، تازه و یک ردیف برای هر حوزه؛ «مشاهده همه»ی هر ردیف همان فهرست را
-// با فیلترِ متناظر (یا ?view=all برای همه‌ی منتورها) باز می‌کند.
+// با فیلتر متناظر (یا ?view=all برای همه‌ی منتورها) باز می‌کند.
 type View = "rows" | "all" | "saved";
 const categoryRowTitle = (c: MentorCategory) => `مربی‌های ${MENTOR_CATEGORY_META[c].label}`;
 
@@ -73,7 +73,7 @@ function Discovery() {
 
   const setFilters = useCallback((patch: Partial<MentorFilters>) => push({ ...filters, ...patch }), [push, filters]);
 
-  // جستجو با تاخیرِ کوتاه؛ متنِ فیلد محلی است و با نشانی (برگشت/جلو) هم‌گام می‌ماند
+  // جستجو با تاخیر کوتاه؛ متن فیلد محلی است و با نشانی (برگشت/جلو) هم‌گام می‌ماند
   const [qInput, setQInput] = useState(filters.q);
   const lastQ = useRef(filters.q);
   useEffect(() => {
@@ -127,9 +127,9 @@ function Discovery() {
   );
 }
 
-/** ناحیه‌ی فیلتر — جستجوِ همیشه‌پیدا + دکمه‌ی «فیلتر» (همان قرصِ تقویمِ اقتصادی،
- *  چپِ جستجو در RTL)؛ بقیه‌ی فیلترها داخلِ پنلِ جمع‌شونده: بخش/ترتیب/امتیاز/پاسخ
- *  فیلدِ کشویی، مدرک/پذیرش چک‌باکس، با دکمه‌ی «اعمال» که همه را یک‌جا می‌فرستد */
+/** ناحیه‌ی فیلتر — جستجو همیشه‌پیدا + دکمه‌ی «فیلتر» (همان قرص تقویم اقتصادی،
+ *  چپ جستجو در RTL)؛ بقیه‌ی فیلترها داخل پنل جمع‌شونده: بخش/ترتیب/امتیاز/پاسخ
+ *  فیلد کشویی، مدرک/پذیرش چک‌باکس، با دکمه‌ی «اعمال» که همه را یک‌جا می‌فرستد */
 function FilterPanel({
   filters, qInput, onQInput, onChange, onClear,
 }: {
@@ -150,7 +150,7 @@ function FilterPanel({
   const clearAll = () => { setDraft(DEFAULT_FILTERS); onClear(); };
 
   return (
-    <div className="trade-surface mentor-filters" role="search" aria-label="جستجو و فیلترِ مربی‌ها">
+    <div className="trade-surface mentor-filters" role="search" aria-label="جستجو و فیلتر مربی‌ها">
       <div className="mentor-search-row">
         <label className="mentor-search">
           <Search size={16} {...IC} />
@@ -162,8 +162,8 @@ function FilterPanel({
             value={qInput}
             maxLength={SEARCH_QUERY_MAX + 20}
             onChange={(e) => onQInput(e.target.value)}
-            placeholder="مثلاً کنکور، بدنسازی یا نام مربی"
-            aria-label="جستجوی نام، تخصص یا عنوانِ مربی"
+            placeholder="مثلا کنکور، بدنسازی یا نام مربی"
+            aria-label="جستجوی نام، تخصص یا عنوان مربی"
           />
           {qInput && (
             <button type="button" className="trade-icon-btn mentor-search-clear" onClick={() => onQInput("")} aria-label="پاک کردن جستجو">
@@ -339,7 +339,7 @@ function Results({ filters, allView, onClear, onBack }: { filters: MentorFilters
   );
 }
 
-/** نمای پیش‌فرض: ذخیره‌شده‌ها (اگر بود) اول، بعد ردیف‌های افقیِ محبوب، تازه و هر حوزه (MentorCarousel) */
+/** نمای پیش‌فرض: ذخیره‌شده‌ها (اگر بود) اول، بعد ردیف‌های افقی محبوب، تازه و هر حوزه (MentorCarousel) */
 function Rows({
   onPopular, onNew, onCategory, onSaved,
 }: {
@@ -369,7 +369,7 @@ function Rows({
         .then((d: MentorsListResponse) => setByCategory((prev) => ({ ...prev, [c]: d.mentors }))),
     );
     Promise.allSettled([popularReq, ...catReqs]).then((res) => {
-      // فقط وقتی هیچ ردیفی نیامد خطا؛ ردیفی که نیامد صرفاً پنهان می‌ماند
+      // فقط وقتی هیچ ردیفی نیامد خطا؛ ردیفی که نیامد صرفا پنهان می‌ماند
       if (res.every((r) => r.status === "rejected")) setFailed(true);
       setPopular((p) => p ?? []);
     });
@@ -424,13 +424,13 @@ function SavedView({ onBack }: { onBack: () => void }) {
         <MentorEmptyState
           icon={<Bookmark size={24} {...IC} />}
           title="هنوز مربی‌ای ذخیره نکرده‌ای"
-          text="با نشانکِ روی کارتِ هر مربی، او را این‌جا برای تصمیمِ بعدی نگه دار"
+          text="با نشانک روی کارت هر مربی، او را این‌جا برای تصمیم بعدی نگه دار"
         />
       ) : (
         <>
           <CardGrid mentors={cards} />
           {cards.length >= max && (
-            <p className="mentor-muted mentor-saved-full">به سقفِ {faNum(max)} مربیِ ذخیره‌شده رسیده‌ای؛ برای ذخیره‌ی مربیِ دیگر، یکی را بردار</p>
+            <p className="mentor-muted mentor-saved-full">به سقف {faNum(max)} مربی ذخیره‌شده رسیده‌ای؛ برای ذخیره‌ی مربی دیگر، یکی را بردار</p>
           )}
         </>
       )}

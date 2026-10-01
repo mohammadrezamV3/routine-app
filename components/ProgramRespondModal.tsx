@@ -26,7 +26,7 @@ const COPY: Record<RespondAction, {
     title: "رد برنامه",
     hint: "برنامه کنار گذاشته می‌شود و مربی دلیل رد را می‌بیند",
     label: "دلیل رد",
-    placeholder: "مثلاً «با ساعت کاری‌ام هماهنگ نیست»",
+    placeholder: "مثلا «با ساعت کاری‌ام هماهنگ نیست»",
     required: false,
     confirm: "رد برنامه",
     danger: true,
@@ -35,7 +35,7 @@ const COPY: Record<RespondAction, {
     title: "درخواست تغییر",
     hint: "برنامه برای اصلاح به مربی برمی‌گردد و نسخه‌ی تازه دوباره برایت فرستاده می‌شود",
     label: "چه چیزی تغییر کند",
-    placeholder: "مثلاً «روزهای تمرین را به 3 روز در هفته کم کن»",
+    placeholder: "مثلا «روزهای تمرین را به 3 روز در هفته کم کن»",
     required: true,
     confirm: "ارسال درخواست",
     danger: false,
@@ -51,9 +51,9 @@ const COPY: Record<RespondAction, {
 };
 
 /**
- * پاسخ به یک برنامه با یادداشت (رد / درخواستِ تغییر / لغو) —
+ * پاسخ به یک برنامه با یادداشت (رد / درخواست تغییر / لغو) —
  * POST /api/mentor-programs/[id]/transition. برای «درخواست تغییر» یادداشت
- * اجباری است و بدونش خطای زیرِ فیلد دیده می‌شود، نه درخواستِ بی‌فایده.
+ * اجباری است و بدونش خطای زیر فیلد دیده می‌شود، نه درخواست بی‌فایده.
  */
 export function ProgramRespondModal({
   programId,
@@ -71,7 +71,7 @@ export function ProgramRespondModal({
   const [busy, setBusy] = useState(false);
   const [fieldError, setFieldError] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
-  // بستن با انیمیشنِ شیت؛ والد پس از پایانِ آن باخبر می‌شود
+  // بستن با انیمیشن شیت؛ والد پس از پایان آن باخبر می‌شود
   const [open, setOpen] = useState(true);
   const close = () => { if (!busy) setOpen(false); };
   useEffect(() => {

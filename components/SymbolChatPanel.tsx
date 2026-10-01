@@ -12,12 +12,12 @@ import { pairLabel } from "@/lib/tradingView";
 import { useAsyncAction } from "@/lib/useAsyncAction";
 import { GoldenName } from "@/components/GoldenName";
 
-// چتِ گروهیِ یک نماد. هر نماد اتاقِ خودش را دارد و پیام‌ها بینِ همه‌ی
-// کاربرانِ دارای ماژولِ ترید مشترک است.
+// چت گروهی یک نماد. هر نماد اتاق خودش را دارد و پیام‌ها بین همه‌ی
+// کاربران دارای ماژول ترید مشترک است.
 //
-// چرا پولینگ و نه WebSocket: اپ روی یک instanceِ Next.js پشتِ Nginx اجرا
-// می‌شود و سوکتِ پایدار یعنی یک لایه‌ی زیرساختیِ تازه (و چسبندگیِ session).
-// برای اتاقی که چند پیام در دقیقه دارد، یک درخواستِ سبکِ «فقط جدیدترها»
+// چرا پولینگ و نه WebSocket: اپ روی یک instance Next.js پشت Nginx اجرا
+// می‌شود و سوکت پایدار یعنی یک لایه‌ی زیرساختی تازه (و چسبندگی session).
+// برای اتاقی که چند پیام در دقیقه دارد، یک درخواست سبک «فقط جدیدترها»
 // هر ۸ ثانیه هم ارزان‌تر است هم ساده‌تر. پولینگ وقتی تب پنهان است متوقف
 // می‌شود تا در پس‌زمینه بی‌دلیل به سرور نزند.
 const POLL_MS = 8_000;
@@ -32,9 +32,9 @@ export function SymbolChatPanel({ symbol }: { symbol: string }) {
   const [loading, setLoading] = useState(true);
   const [draft, setDraft] = useState("");
   const [reporting, setReporting] = useState<ChatMessageDto | null>(null);
-  // تا قوانین پذیرفته نشده، به‌جای فیلدِ نوشتن، خودِ قوانین دیده می‌شود.
+  // تا قوانین پذیرفته نشده، به‌جای فیلد نوشتن، خود قوانین دیده می‌شود.
   // `null` یعنی هنوز از سرور نخوانده‌ایم — در آن حالت هیچ‌کدام را نشان
-  // نمی‌دهیم تا فرمِ نوشتن یک لحظه بپرد و بعد جایش قوانین بیاید.
+  // نمی‌دهیم تا فرم نوشتن یک لحظه بپرد و بعد جایش قوانین بیاید.
   const [rulesAccepted, setRulesAccepted] = useState<boolean | null>(null);
   const [moderation, setModeration] = useState<ChatViewerModeration | null>(null);
   const [loadError, setLoadError] = useState<string | null>(null);
@@ -51,10 +51,10 @@ export function SymbolChatPanel({ symbol }: { symbol: string }) {
   const listRef = useRef<HTMLDivElement | null>(null);
   // آخرین زمانی که داریم — پولینگ فقط جدیدترها را می‌خواهد
   const sinceRef = useRef<string | null>(null);
-  // اگر کاربر بالا رفته و دارد پیام‌های قدیمی را می‌خواند، پیامِ تازه
+  // اگر کاربر بالا رفته و دارد پیام‌های قدیمی را می‌خواند، پیام تازه
   // نباید صفحه را زیر دستش بپراند. با column-reverse (پایین‌تر)، «پایین»
-  // همان scrollTopِ نزدیکِ صفر است — مرورگر خودش موقعیتِ اولیه را همان‌جا
-  // می‌گذارد، این‌جا فقط برایِ پیامِ *تازه‌رسیده* لازم است.
+  // همان scrollTop نزدیک صفر است — مرورگر خودش موقعیت اولیه را همان‌جا
+  // می‌گذارد، این‌جا فقط برای پیام *تازه‌رسیده* لازم است.
   const stickToBottom = useRef(true);
 
   const scrollToBottom = useCallback(() => {
@@ -67,9 +67,9 @@ export function SymbolChatPanel({ symbol }: { symbol: string }) {
     if (incremental && sinceRef.current) qs.set("since", sinceRef.current);
     const res = await fetch(`/api/trade/chat?${qs}`);
     if (!res.ok) {
-      // پولینگِ پس‌زمینه خطا نشان نمی‌دهد (یک شکستِ موقت نباید هر ۸ثانیه
-      // پیامِ خطا چشمک بزند) ولی بارگذاریِ اول باید — وگرنه اتاق «خالی» به
-      // نظر می‌رسد درحالی‌که واقعاً درخواست شکست خورده.
+      // پولینگ پس‌زمینه خطا نشان نمی‌دهد (یک شکست موقت نباید هر ۸ثانیه
+      // پیام خطا چشمک بزند) ولی بارگذاری اول باید — وگرنه اتاق «خالی» به
+      // نظر می‌رسد درحالی‌که واقعا درخواست شکست خورده.
       if (!incremental) { setLoading(false); setLoadError("اتاق بارگذاری نشد — اتصال یا دسترسی را چک کن"); }
       return;
     }
@@ -81,7 +81,7 @@ export function SymbolChatPanel({ symbol }: { symbol: string }) {
     setMessages((prev) => {
       if (!incremental) return incoming;
       if (!incoming.length) return prev;
-      // پیامِ خودمان را خوش‌بینانه اضافه کرده‌ایم؛ اگر پولینگ همان را هم
+      // پیام خودمان را خوش‌بینانه اضافه کرده‌ایم؛ اگر پولینگ همان را هم
       // بیاورد نباید دو بار دیده شود.
       const known = new Set(prev.map((m) => m.id));
       const fresh = incoming.filter((m) => !known.has(m.id));
@@ -104,7 +104,7 @@ export function SymbolChatPanel({ symbol }: { symbol: string }) {
     }
   }
 
-  // عوض‌شدنِ نماد یعنی اتاقِ دیگری — همه‌چیز از نو
+  // عوض‌شدن نماد یعنی اتاق دیگری — همه‌چیز از نو
   useEffect(() => {
     sinceRef.current = null;
     stickToBottom.current = true;
@@ -116,7 +116,7 @@ export function SymbolChatPanel({ symbol }: { symbol: string }) {
   useEffect(() => {
     const tick = () => { if (!document.hidden) load(true); };
     const id = setInterval(tick, POLL_MS);
-    // برگشتن به تب یعنی احتمالاً چند پیام عقبیم — فوراً به‌روز کن
+    // برگشتن به تب یعنی احتمالا چند پیام عقبیم — فورا به‌روز کن
     document.addEventListener("visibilitychange", tick);
     return () => { clearInterval(id); document.removeEventListener("visibilitychange", tick); };
   }, [load]);
@@ -185,8 +185,8 @@ export function SymbolChatPanel({ symbol }: { symbol: string }) {
         className="trade-chat-list thin-scroll"
         ref={listRef}
         onScroll={(e) => {
-          // با column-reverse، «پایین» (جدیدترین) نزدیکِ scrollTop=۰ است؛
-          // بالا رفتن یعنی scrollTop بزرگ‌تر می‌شود (برعکسِ chatِ عادی).
+          // با column-reverse، «پایین» (جدیدترین) نزدیک scrollTop=۰ است؛
+          // بالا رفتن یعنی scrollTop بزرگ‌تر می‌شود (برعکس chat عادی).
           stickToBottom.current = e.currentTarget.scrollTop < 60;
         }}
       >
@@ -200,19 +200,19 @@ export function SymbolChatPanel({ symbol }: { symbol: string }) {
 
         {!loading && !loadError && !!messages.length && (
           <div className="trade-chat-list-inner">
-            {/* طبقِ درخواستِ صریح، مثلِ تلگرام از پایین شروع می‌شود —
-                column-reverse یعنی اولین فرزندِ DOM پایین‌ترین (جدیدترین)
+            {/* طبق درخواست صریح، مثل تلگرام از پایین شروع می‌شود —
+                column-reverse یعنی اولین فرزند DOM پایین‌ترین (جدیدترین)
                 جا می‌گیرد، پس آرایه باید معکوس بشود (جدید→قدیم). */}
             {[...messages].reverse().map((m) => (
               <div key={m.id} className={`trade-chat-row${m.mine ? " mine" : ""}`}>
                 <div className="trade-chat-meta">
-                  {/* طبقِ درخواستِ صریح (مثلِ تلگرام): پیامِ خودت اسم نمی‌خواهد،
-                      فقط پیامِ بقیه authorName دارد. */}
+                  {/* طبق درخواست صریح (مثل تلگرام): پیام خودت اسم نمی‌خواهد،
+                      فقط پیام بقیه authorName دارد. */}
                   {!m.mine && <span className="trade-chat-author"><GoldenName golden={m.authorGolden}>{m.authorName}</GoldenName></span>}
                   <span className="trade-chat-time mono">{timeLabel(m.createdAt)}</span>
                 </div>
                 <div className="trade-chat-bubble">
-                  {/* متنِ خام رندر می‌شود، نه HTML — پیامِ کاربر هیچ‌وقت تفسیر نمی‌شود */}
+                  {/* متن خام رندر می‌شود، نه HTML — پیام کاربر هیچ‌وقت تفسیر نمی‌شود */}
                   <p className="trade-chat-body">{m.body}</p>
                   <div className="trade-chat-actions">
                     {m.mine ? (
@@ -250,7 +250,7 @@ export function SymbolChatPanel({ symbol }: { symbol: string }) {
         <div className="trade-chat-warning">
           <ShieldAlert size={15} />
           <span>
-            اخطار از سمتِ مدیریت{moderation.warning.note ? `: ${moderation.warning.note}` : "."}
+            اخطار از سمت مدیریت{moderation.warning.note ? `: ${moderation.warning.note}` : "."}
           </span>
           <button type="button" className="trade-chat-warning-dismiss" onClick={dismissWarning} disabled={warningDismissing} aria-label="متوجه شدم">
             <X size={13} />
@@ -261,7 +261,7 @@ export function SymbolChatPanel({ symbol }: { symbol: string }) {
       {moderation && (moderation.disabled || moderation.bannedUntil) ? (
         <div className="trade-chat-restricted">
           {moderation.disabled
-            ? "دسترسیِ تو به این گفت‌وگو توسط مدیریت غیرفعال شده است."
+            ? "دسترسی تو به این گفت‌وگو توسط مدیریت غیرفعال شده است."
             : `تا ${new Date(moderation.bannedUntil!).toLocaleString("fa-IR-u-nu-latn", { timeZone: "Asia/Tehran" })} از ارسال پیام محروم شده‌ای.`}
         </div>
       ) : (
@@ -298,9 +298,9 @@ export function SymbolChatPanel({ symbol }: { symbol: string }) {
                   placeholder="پیام خود را بنویسید…"
                   aria-label="متن پیام"
                 />
-                {/* طبقِ درخواستِ صریح: دیگر پاپ‌آپِ ایموجیِ سفارشی نیست —
-                    این دکمه فقط فوکوس می‌کند تا کیبوردِ خودِ دستگاه بیاید؛
-                    از همان‌جا کاربر با دکمه‌ی ایموجیِ خودِ کیبورد می‌نویسد. */}
+                {/* طبق درخواست صریح: دیگر پاپ‌آپ ایموجی سفارشی نیست —
+                    این دکمه فقط فوکوس می‌کند تا کیبورد خود دستگاه بیاید؛
+                    از همان‌جا کاربر با دکمه‌ی ایموجی خود کیبورد می‌نویسد. */}
                 <button
                   type="button" className="trade-chat-emoji-btn"
                   onClick={() => draftInputRef.current?.focus()} aria-label="ایموجی"

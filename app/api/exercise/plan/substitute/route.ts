@@ -58,5 +58,5 @@ async function handlePATCH(req: NextRequest) {
   return NextResponse.json({ ok: true, plan: updated });
 }
 
-// بعد از هر نوشتنِ موفق، بقیه‌ی دستگاه‌ها/تب‌های همین کاربر با WebSocket خبردار می‌شن (lib/realtime.ts)
+// بعد از هر نوشتن موفق، بقیه‌ی دستگاه‌ها/تب‌های همین کاربر با WebSocket خبردار می‌شن (lib/realtime.ts)
 export const PATCH = withLiveSync(["exercise"], handlePATCH);

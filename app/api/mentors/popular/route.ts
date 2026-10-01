@@ -7,11 +7,11 @@ import { loadNewcomerCards, loadPopularMentorCards } from "@/lib/mentorRankingSt
 const TOP_N = 12;
 const NEWCOMERS_N = 6;
 
-// GET /api/mentors/popular → دو ویترینِ جدا:
-//   mentors   «منتورهای محبوب»: فقط منتورهایی که حداقلِ نمونه، احرازِ هویت و
-//             سلامتِ کافی دارن، به ترتیبِ امتیازِ شایستگی (lib/mentorRanking.ts)
-//   newcomers «منتورهای تازه»: منتورِ تاییدشده با پروفایلِ کامل که هنوز نمونه‌ی
-//             کافی نداره — جایگاهِ جدا و برچسب‌دار، قاطیِ رتبه‌بندی نمی‌شه
+// GET /api/mentors/popular → دو ویترین جدا:
+//   mentors   «منتورهای محبوب»: فقط منتورهایی که حداقل نمونه، احراز هویت و
+//             سلامت کافی دارن، به ترتیب امتیاز شایستگی (lib/mentorRanking.ts)
+//   newcomers «منتورهای تازه»: منتور تاییدشده با پروفایل کامل که هنوز نمونه‌ی
+//             کافی نداره — جایگاه جدا و برچسب‌دار، قاطی رتبه‌بندی نمی‌شه
 // هر دو فقط کسانی که همین الان درخواست می‌پذیرن (پذیرش باز، ظرفیت خالی، در دسترس).
 export async function GET() {
   const g = await requireMentorsUser();

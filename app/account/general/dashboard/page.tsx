@@ -16,7 +16,7 @@ const DASHBOARD_PREFS: [keyof DashboardPrefs, string, string?][] = [
 ];
 
 
-// «تنظیمات › داشبورد» — نمایشِ کارت‌ها در داشبوردها
+// «تنظیمات › داشبورد» — نمایش کارت‌ها در داشبوردها
 export default function DashboardSettingsPage() {
   const [prefs, setPrefs] = useState<DashboardPrefs>(DEFAULT_DASHBOARD_PREFS);
 

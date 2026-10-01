@@ -17,12 +17,12 @@ import { MentorE2EEGate } from "./MentorE2EEGate";
 const ic = (Icon: typeof Pencil, size: number) => <Icon size={size} strokeWidth={MI_STROKE} aria-hidden />;
 
 /**
- * یادداشت‌های خصوصیِ منتور درباره‌ی یک شاگرد — فهرستِ زمان‌دار، تازه‌ترین
- * بالا. فقط خودِ منتور می‌بیند؛ شاگرد هیچ راهی به این داده ندارد.
+ * یادداشت‌های خصوصی منتور درباره‌ی یک شاگرد — فهرست زمان‌دار، تازه‌ترین
+ * بالا. فقط خود منتور می‌بیند؛ شاگرد هیچ راهی به این داده ندارد.
  *
- * رمزگذاریِ سرتاسری «فقط برای خودم» (agent D — lib/e2ee/notes.ts): متن روی همین
- * دستگاه با کلیدِ منتور رمز می‌شود و سرور فقط پاکتِ رمزشده می‌گیرد. تا کلید روی
- * دستگاه باز نشده، MentorE2EEGate فرمِ باز کردن را نشان می‌دهد.
+ * رمزگذاری سرتاسری «فقط برای خودم» (agent D — lib/e2ee/notes.ts): متن روی همین
+ * دستگاه با کلید منتور رمز می‌شود و سرور فقط پاکت رمزشده می‌گیرد. تا کلید روی
+ * دستگاه باز نشده، MentorE2EEGate فرم باز کردن را نشان می‌دهد.
  */
 export function MentorStudentNotes({ studentId, initial }: { studentId: string; initial: StudentNote[] }) {
   return (
@@ -43,7 +43,7 @@ function NotesBody({ identity, studentId, initial }: { identity: Identity; stude
   const [opened, setOpened] = useState<Record<string, OpenedNote>>({});
   const migrating = useRef(false);
 
-  // رمزگشاییِ یادداشت‌ها روی همین دستگاه
+  // رمزگشایی یادداشت‌ها روی همین دستگاه
   useEffect(() => {
     let cancelled = false;
     const todo = notes.filter((n) => !opened[n.id] || opened[n.id].kind === "failed");
@@ -57,7 +57,7 @@ function NotesBody({ identity, studentId, initial }: { identity: Identity; stude
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [notes, identity, studentId]);
 
-  // یادداشت‌های قدیمیِ متن‌ساده (پیش از رمزگذاری) بی‌صدا بازرمز می‌شوند
+  // یادداشت‌های قدیمی متن‌ساده (پیش از رمزگذاری) بی‌صدا بازرمز می‌شوند
   useEffect(() => {
     if (migrating.current) return;
     const legacy = notes.filter((n) => opened[n.id]?.kind === "legacy");
@@ -126,7 +126,7 @@ function NotesBody({ identity, studentId, initial }: { identity: Identity; stude
       <form onSubmit={add} noValidate className="mentor-form" style={{ gap: "var(--m-2)" }}>
         <textarea
           className="wsearch-newform-name trade-glass-field" rows={2} maxLength={NOTE_MAX + 50} aria-label="یادداشت جدید"
-          value={draft} placeholder="مثلاً «هفته‌ی امتحانات؛ حجم برنامه را کم کن»"
+          value={draft} placeholder="مثلا «هفته‌ی امتحانات؛ حجم برنامه را کم کن»"
           onChange={(e) => { setDraft(e.target.value); setError(null); }}
         />
         <div className="mentor-btn-group is-end">

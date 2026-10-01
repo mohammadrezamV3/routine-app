@@ -1,9 +1,9 @@
 import type { AnalysisDomain, Grade } from "./types";
 
-// امتیازدهیِ کلی — همه‌اش تابعِ خالص، بدون دیتابیس، تا تست‌پذیر بمونه.
+// امتیازدهی کلی — همه‌اش تابع خالص، بدون دیتابیس، تا تست‌پذیر بمونه.
 
-// وزنِ هر دامنه در امتیازِ کل. روتین کمی سنگین‌تره چون ستونِ اصلیِ اپه؛
-// یادگیری سبک‌تره چون امتیازش «پیشرفتِ تجمعیِ رودمپ»ه، نه کارِ همین هفته.
+// وزن هر دامنه در امتیاز کل. روتین کمی سنگین‌تره چون ستون اصلی اپه؛
+// یادگیری سبک‌تره چون امتیازش «پیشرفت تجمعی رودمپ»ه، نه کار همین هفته.
 export const DOMAIN_WEIGHTS: Record<AnalysisDomain, number> = {
   routine: 1.2,
   sleep: 1,
@@ -28,7 +28,7 @@ export function stdDev(xs: number[]): number | null {
   return Math.sqrt(xs.reduce((a, x) => a + (x - m) ** 2, 0) / xs.length);
 }
 
-/** میانگینِ وزن‌دارِ دامنه‌هایی که عدد دارن — «داده نداریم» صفر حساب نمی‌شه. */
+/** میانگین وزن‌دار دامنه‌هایی که عدد دارن — «داده نداریم» صفر حساب نمی‌شه. */
 export function weightedDomainScore(scores: Partial<Record<AnalysisDomain, number | null>>): number | null {
   let sum = 0;
   let w = 0;
@@ -41,14 +41,14 @@ export function weightedDomainScore(scores: Partial<Record<AnalysisDomain, numbe
   return w > 0 ? Math.round(sum / w) : null;
 }
 
-/** امتیازِ کل = میانگینِ وزن‌دارِ دامنه‌های دارای داده. */
+/** امتیاز کل = میانگین وزن‌دار دامنه‌های دارای داده. */
 export function overallScore(domains: { domain: AnalysisDomain; score: number | null }[]): number | null {
   return weightedDomainScore(Object.fromEntries(domains.map((d) => [d.domain, d.score])));
 }
 
 /**
- * امتیازِ هر روز (۷تایی) از روی daily همه‌ی دامنه‌ها — با همون وزن‌ها، تا
- * امتیازِ روزها و امتیازِ کل با یک منطق ساخته بشن.
+ * امتیاز هر روز (۷تایی) از روی daily همه‌ی دامنه‌ها — با همون وزن‌ها، تا
+ * امتیاز روزها و امتیاز کل با یک منطق ساخته بشن.
  */
 export function dayScores(domains: { domain: AnalysisDomain; daily: (number | null)[] }[]): (number | null)[] {
   return Array.from({ length: 7 }, (_, i) =>
@@ -77,9 +77,9 @@ export function confidenceFor(activeDays: number, daysElapsed = 7): "low" | "med
 }
 
 /**
- * یکنواختی: 100 منهای انحراف معیارِ نرمال‌شده. بیشترین انحراف معیارِ ممکن
+ * یکنواختی: 100 منهای انحراف معیار نرمال‌شده. بیشترین انحراف معیار ممکن
  * برای اعداد 0..100 عدد 50‌ه، پس std=50 → 0 و std=0 → 100. با کمتر از ۲
- * روزِ دارای امتیاز، معنایی نداره (null).
+ * روز دارای امتیاز، معنایی نداره (null).
  */
 export function consistencyFor(scores: (number | null)[]): number | null {
   const xs = scores.filter((s): s is number => s != null);
@@ -88,7 +88,7 @@ export function consistencyFor(scores: (number | null)[]): number | null {
   return Math.round(clamp(100 - (sd / 50) * 100));
 }
 
-/** طولانی‌ترین رشته‌ی روزهای پشتِ‌سرِهم با امتیاز ≥ threshold (null رشته رو می‌شکنه). */
+/** طولانی‌ترین رشته‌ی روزهای پشت‌سرهم با امتیاز ≥ threshold (null رشته رو می‌شکنه). */
 export function longestStreak(scores: (number | null)[], threshold = 70): number {
   let best = 0;
   let cur = 0;

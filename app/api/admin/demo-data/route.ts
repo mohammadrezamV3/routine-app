@@ -3,7 +3,7 @@ import { requireAdmin } from "@/lib/requireAdmin";
 import { writeAuditLog } from "@/lib/adminAnalytics";
 import { clearDemoData, getDemoStatus, seedDemoData, DEMO_DATA_SETTING_KEY } from "@/lib/demoData";
 
-// داده‌ی آزمایشی — فقط Owner. ادمینِ محدود حتی با دسترسیِ settings هم نه،
+// داده‌ی آزمایشی — فقط Owner. ادمین محدود حتی با دسترسی settings هم نه،
 // چون ساخت/حذف کاربر انجام می‌ده و Owner رو وارد داده می‌کنه.
 async function requireOwner() {
   const g = await requireAdmin();
@@ -27,14 +27,14 @@ async function exclusive(fn: () => Promise<NextResponse>): Promise<NextResponse>
 
 export const dynamic = "force-dynamic";
 
-// GET → وضعیت (ساخته شده؟ کِی؟ شمارش‌ها)
+// GET → وضعیت (ساخته شده؟ کی؟ شمارش‌ها)
 export async function GET() {
   const g = await requireOwner();
   if (!g.ok) return g.response;
   return NextResponse.json({ status: await getDemoStatus() });
 }
 
-// POST → ساختِ دوباره‌ی کلِ داده (اول پاک‌سازیِ قبلی)
+// POST → ساخت دوباره‌ی کل داده (اول پاک‌سازی قبلی)
 export async function POST() {
   const g = await requireOwner();
   if (!g.ok) return g.response;
@@ -45,7 +45,7 @@ export async function POST() {
   });
 }
 
-// DELETE → حذفِ همه‌ی داده‌ی آزمایشی
+// DELETE → حذف همه‌ی داده‌ی آزمایشی
 export async function DELETE() {
   const g = await requireOwner();
   if (!g.ok) return g.response;

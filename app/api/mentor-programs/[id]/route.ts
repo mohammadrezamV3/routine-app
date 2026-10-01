@@ -30,7 +30,7 @@ function validId(id: unknown): id is string {
   return typeof id === "string" && id.length > 0 && id.length <= 64;
 }
 
-/** برنامه‌ای که من منتور یا شاگردشم؛ پیش‌نویسِ هرگز-ارسال‌نشده برای شاگرد ۴۰۴ */
+/** برنامه‌ای که من منتور یا شاگردشم؛ پیش‌نویس هرگز-ارسال‌نشده برای شاگرد ۴۰۴ */
 async function loadVisibleProgram(id: string, me: string) {
   const p = await prisma.mentorProgram.findFirst({ where: { id, OR: [{ mentorId: me }, { studentId: me }] }, include: PROGRAM_WITH_USERS_INCLUDE });
   if (!p) return null;
@@ -39,8 +39,8 @@ async function loadVisibleProgram(id: string, me: string) {
 }
 
 // GET /api/mentor-programs/:id?from=&to= → برنامه + آیتم‌ها + لاگ‌ها + فیدبک + progressView.
-// منتور فقط برنامه‌های *خودش* رو می‌بینه (mentorId در where) — منتورِ دیگه هرگز.
-// پیشرفت خودکار از تیک‌های روتینِ شاگرد همگام می‌شه (lib/mentorProgress.ts) و
+// منتور فقط برنامه‌های *خودش* رو می‌بینه (mentorId در where) — منتور دیگه هرگز.
+// پیشرفت خودکار از تیک‌های روتین شاگرد همگام می‌شه (lib/mentorProgress.ts) و
 // برای منتور فقط وقتی شاگرد «نمایش پیشرفت» رو باز گذاشته برمی‌گرده.
 export async function GET(req: NextRequest, { params }: Ctx) {
   const g = await requireMentorsUser();
@@ -68,19 +68,19 @@ export async function GET(req: NextRequest, { params }: Ctx) {
     viewTo = isoDate(r.to);
   }
 
-  // منتوری که شاگرد بلاکش کرده، دیگه لاگ/یادداشتِ اجرای شاگرد رو نمی‌بینه؛
-  // و وقتی شاگرد «نمایش پیشرفت» رو بسته، وضعیتِ روزها هم برنمی‌گرده
+  // منتوری که شاگرد بلاکش کرده، دیگه لاگ/یادداشت اجرای شاگرد رو نمی‌بینه؛
+  // و وقتی شاگرد «نمایش پیشرفت» رو بسته، وضعیت روزها هم برنمی‌گرده
   let progressHidden = false;
   let accessClosed = false;
   if (p.mentorId === me) {
     const rel = await prisma.mentorship.findUnique({ where: { id: p.mentorshipId }, select: { status: true, showProgress: true } });
-    // منتورِ تعلیق‌شده هم مثلِ بلاک: دسترسی به داده‌ی اجرای شاگرد (حتی یادداشت‌ها) فوراً بسته
+    // منتور تعلیق‌شده هم مثل بلاک: دسترسی به داده‌ی اجرای شاگرد (حتی یادداشت‌ها) فورا بسته
     accessClosed = rel?.status === "BLOCKED" || (await isMentorSuspended(me));
     progressHidden = accessClosed || !rel?.showProgress;
     if (progressHidden) dateWhere = { id: "__none__" };
   }
 
-  // پیشرفتِ خودکار: WORKOUTِ قدیمیِ آینه‌نشده یک بار آینه می‌شه، بعد همگام‌سازی (بدونِ TTL)
+  // پیشرفت خودکار: WORKOUT قدیمی آینه‌نشده یک بار آینه می‌شه، بعد همگام‌سازی (بدون TTL)
   let studentTz: string | null = null;
   if (p.activatedAt && ["ACTIVE", "COMPLETED", "CANCELLED"].includes(p.status)) {
     studentTz = await userTimezone(p.studentId);
@@ -114,7 +114,7 @@ export async function GET(req: NextRequest, { params }: Ctx) {
   });
 }
 
-// PUT /api/mentor-programs/:id → ویرایشِ پیش‌نویس (فقط منتور، فقط DRAFT). آیتم‌ها کامل جایگزین می‌شن.
+// PUT /api/mentor-programs/:id → ویرایش پیش‌نویس (فقط منتور، فقط DRAFT). آیتم‌ها کامل جایگزین می‌شن.
 export async function PUT(req: Request, { params }: Ctx) {
   const g = await requireMentorsUser();
   if (!g.ok) return g.response;
@@ -136,7 +136,7 @@ export async function PUT(req: Request, { params }: Ctx) {
   const { items, ...fields } = v.data;
 
   const ok = await prisma.$transaction(async (tx) => {
-    // قفلِ خوش‌بینانه: اگه هم‌زمان ارسال شده باشه (دیگه DRAFT نیست) هیچ‌چیز نوشته نمی‌شه
+    // قفل خوش‌بینانه: اگه هم‌زمان ارسال شده باشه (دیگه DRAFT نیست) هیچ‌چیز نوشته نمی‌شه
     const res = await tx.mentorProgram.updateMany({ where: { id: current.id, mentorId: me, status: "DRAFT" }, data: fields });
     if (res.count === 0) return false;
     await tx.mentorProgramItem.deleteMany({ where: { programId: current.id } });

@@ -27,7 +27,7 @@ const TITLES: Record<ReportTargetType, string> = {
   PROGRAM: "گزارش برنامه",
 };
 
-/** دلیل + توضیح — مشترکِ گزارشِ تکی و گزارشِ گفت‌وگو */
+/** دلیل + توضیح — مشترک گزارش تکی و گزارش گفت‌وگو */
 function ReasonFields({
   kind, reason, details, reasonError, detailsError, onReason, onDetails,
 }: {
@@ -57,7 +57,7 @@ function ReasonFields({
           maxLength={1000}
           value={details}
           onChange={(e) => onDetails(e.target.value)}
-          placeholder="مثلاً «شماره‌ی تماس شخصی خواست»"
+          placeholder="مثلا «شماره‌ی تماس شخصی خواست»"
           aria-invalid={!!detailsError}
         />
       </MentorField>
@@ -78,8 +78,8 @@ function DoneBody({ onClose, text }: { onClose: () => void; text: string }) {
 }
 
 /**
- * گزارشِ تخلف (POST /api/mentor-reports). دلیل اجباری است، توضیح اختیاری
- * (برای «سایر» اجباری)؛ گزارشِ تکراری (۴۰۹) پیامِ مخصوصِ خودش را می‌گیرد.
+ * گزارش تخلف (POST /api/mentor-reports). دلیل اجباری است، توضیح اختیاری
+ * (برای «سایر» اجباری)؛ گزارش تکراری (۴۰۹) پیام مخصوص خودش را می‌گیرد.
  */
 export function MentorReportModal({
   targetType,
@@ -90,8 +90,8 @@ export function MentorReportModal({
   targetType: ReportTargetType;
   targetId: string;
   /**
-   * فقط برای پیامِ رمزگذاری‌شده: متن و کلیدِ فرانکینگِ همان پیام (از رمزگشاییِ
-   * روی همین دستگاه). سرور با تعهدِ ثبت‌شده‌ی فرستنده تطبیقش می‌دهد و فقط همین
+   * فقط برای پیام رمزگذاری‌شده: متن و کلید فرانکینگ همان پیام (از رمزگشایی
+   * روی همین دستگاه). سرور با تعهد ثبت‌شده‌ی فرستنده تطبیقش می‌دهد و فقط همین
    * یک پیام را برای ادمین نگه می‌دارد (docs/mentor-e2ee.md).
    */
   franking?: { text: string; frankingKey: string };
@@ -106,7 +106,7 @@ export function MentorReportModal({
   const [error, setError] = useState<string | null>(null);
   const [done, setDone] = useState(false);
 
-  // بستن با انیمیشن؛ والد پس از پایانِ آن باخبر می‌شود
+  // بستن با انیمیشن؛ والد پس از پایان آن باخبر می‌شود
   const close = () => { if (!busy) setOpen(false); };
   useEffect(() => {
     if (open) return;
@@ -125,7 +125,7 @@ export function MentorReportModal({
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ targetType, targetId, reason, details: details.trim() || undefined, ...(franking ? { franking } : {}) }),
       });
-      if (res.status === 409) { setError("این مورد را قبلاً گزارش داده‌ای و در صف بررسی ادمین‌های آریون است"); return; }
+      if (res.status === 409) { setError("این مورد را قبلا گزارش داده‌ای و در صف بررسی ادمین‌های آریون است"); return; }
       if (!res.ok) { setError(await readApiError(res, "گزارش ثبت نشد؛ دوباره تلاش کن")); return; }
       setDone(true);
     } catch {
@@ -173,18 +173,18 @@ export type ConversationReportCandidate = {
   mine: boolean;
   createdAt: string;
   text: string;
-  /** نبودنش = پیامِ قدیمیِ پیش از رمزگذاری (متن از سرور برداشته می‌شود) */
+  /** نبودنش = پیام قدیمی پیش از رمزگذاری (متن از سرور برداشته می‌شود) */
   frankingKey?: string;
 };
 
-/** پیش‌فرضِ پیوست: این تعداد پیامِ آخر؛ سقف ۵۰ (همان سقفِ سرور) */
+/** پیش‌فرض پیوست: این تعداد پیام آخر؛ سقف ۵۰ (همان سقف سرور) */
 const DEFAULT_PICK = 20;
 const MAX_PICK = 50;
 
 /**
  * «گزارش گفت‌وگو»: کاربر پیام‌هایی را که برای ادمین پیوست می‌شوند خودش
- * انتخاب می‌کند (پیش‌فرض ۲۰ پیامِ آخر، حداکثر ۵۰). هر پیام با کلیدِ فرانکینگِ
- * خودش فرستاده و سمتِ سرور جداگانه تایید می‌شود؛ پیام‌های انتخاب‌نشده
+ * انتخاب می‌کند (پیش‌فرض ۲۰ پیام آخر، حداکثر ۵۰). هر پیام با کلید فرانکینگ
+ * خودش فرستاده و سمت سرور جداگانه تایید می‌شود؛ پیام‌های انتخاب‌نشده
  * رمزگذاری‌شده می‌مانند. POST /api/mentorships/:id/report
  */
 export function MentorConversationReportSheet({
@@ -207,7 +207,7 @@ export function MentorConversationReportSheet({
   const [done, setDone] = useState(false);
   const list = useMemo(() => candidates.slice(-MAX_PICK), [candidates]);
 
-  // هر بار باز شدن: فرمِ تازه با ۲۰ پیامِ آخر
+  // هر بار باز شدن: فرم تازه با ۲۰ پیام آخر
   useEffect(() => {
     if (!open) return;
     setPicked(new Set(list.slice(-DEFAULT_PICK).map((c) => c.id)));
@@ -241,7 +241,7 @@ export function MentorConversationReportSheet({
           messages: chosen.map((c) => (c.frankingKey ? { id: c.id, text: c.text, frankingKey: c.frankingKey } : { id: c.id })),
         }),
       });
-      if (res.status === 409) { setError("این گفت‌وگو را قبلاً گزارش داده‌ای و در صف بررسی ادمین‌های آریون است"); return; }
+      if (res.status === 409) { setError("این گفت‌وگو را قبلا گزارش داده‌ای و در صف بررسی ادمین‌های آریون است"); return; }
       if (!res.ok) { setError(await readApiError(res, "گزارش ثبت نشد؛ دوباره تلاش کن")); return; }
       setDone(true);
     } catch {

@@ -17,7 +17,7 @@ afterAll(async () => {
   await cleanupUsers();
 });
 
-// حوزه‌ی رابطه: منتورِ روتین جدا از منتورِ بدنسازی؛ نوعِ برنامه از حوزه میاد
+// حوزه‌ی رابطه: منتور روتین جدا از منتور بدنسازی؛ نوع برنامه از حوزه میاد
 describe("حوزه‌ی رابطه (روتین / بدنسازی / تغذیه)", () => {
   it("شاگرد فقط حوزه‌ی «روتین» را انتخاب می‌کند → فقط برنامه‌ی ROUTINE مجاز است", async () => {
     const mentor = await makeMentor({}, { headline: "م", bio: "ب", categories: ["ROUTINE", "FITNESS"], published: true });
@@ -60,7 +60,7 @@ describe("حوزه‌ی رابطه (روتین / بدنسازی / تغذیه)", 
     expect(row.categories).toEqual(["NUTRITION"]);
     expect(row.initiatedBy).toBe("MENTOR");
     expect((await mentorshipAction(student, row.id, "accept")).status).toBe(200);
-    // تغذیه هنوز نوعِ برنامه‌ی خودش رو نداره → نه ROUTINE نه WORKOUT
+    // تغذیه هنوز نوع برنامه‌ی خودش رو نداره → نه ROUTINE نه WORKOUT
     expect((await createProgram(mentor, row.id)).status).toBe(400);
   });
 });

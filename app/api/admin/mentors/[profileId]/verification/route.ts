@@ -9,9 +9,9 @@ import { notifyUser } from "@/lib/inAppNotify";
 
 // POST /api/admin/mentors/:profileId/verification
 // بدنه { kind: IDENTITY|CERTIFICATE, category?, status, reason? }
-// تنها مسیری که وضعیتِ احراز رو می‌نویسه. هر تغییر: فیلدِ پروفایل/مدرک +
-// MentorVerificationEvent + AuditLog + اعلان به منتور. REJECTED بدونِ دلیل → ۴۰۰.
-// قفلِ خوش‌بینانه روی وضعیتِ قبلی: اگه همزمان (مثلا با ارسالِ مدرکِ تازه) عوض
+// تنها مسیری که وضعیت احراز رو می‌نویسه. هر تغییر: فیلد پروفایل/مدرک +
+// MentorVerificationEvent + AuditLog + اعلان به منتور. REJECTED بدون دلیل → ۴۰۰.
+// قفل خوش‌بینانه روی وضعیت قبلی: اگه همزمان (مثلا با ارسال مدرک تازه) عوض
 // شده باشه → ۴۰۹ تا ادمین روی داده‌ی کهنه تصمیم نگیره.
 
 const STATUSES: VerificationStatus[] = ["NOT_PROVIDED", "PENDING", "VERIFIED", "REJECTED"];
@@ -46,7 +46,7 @@ export async function POST(req: NextRequest, { params }: { params: { profileId: 
     select: { id: true, userId: true, identityStatus: true },
   });
   if (!profile) return NextResponse.json({ error: "مربی پیدا نشد" }, { status: 404 });
-  // قوانینِ «کی روی کی»: نه روی خودش (تضاد منافع — جز Owner که همه رو، حتی خودش رو، تایید می‌کنه)، نه روی Owner، روی ادمینِ دیگه فقط با admins.manage
+  // قوانین «کی روی کی»: نه روی خودش (تضاد منافع — جز Owner که همه رو، حتی خودش رو، تایید می‌کنه)، نه روی Owner، روی ادمین دیگه فقط با admins.manage
   try {
     await loadTarget(g, profile.userId, { destructive: !g.isSuperAdmin });
   } catch (e) {

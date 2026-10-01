@@ -5,7 +5,7 @@ import { SAVED_MENTORS_MAX, saveMentor, unsaveMentor, type SaveResult } from "@/
 
 type Ctx = { params: { mentorId: string } };
 
-// PUT    /api/mentors/:mentorId/saved → ذخیره (سقفِ ۱۰؛ عبور → ۴۰۹ با پیامِ روشن)
+// PUT    /api/mentors/:mentorId/saved → ذخیره (سقف ۱۰؛ عبور → ۴۰۹ با پیام روشن)
 // DELETE /api/mentors/:mentorId/saved → برداشتن
 // هر دو بی‌اثر در تکرار؛ پاسخ: { saved, count, max }
 function respond(r: SaveResult) {

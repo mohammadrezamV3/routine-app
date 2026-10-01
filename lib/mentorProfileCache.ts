@@ -1,8 +1,8 @@
 "use client";
 
-// پیش‌گرفتنِ پروفایلِ منتور: با لمس/هاورِ کارت (MentorCard) درخواستِ
+// پیش‌گرفتن پروفایل منتور: با لمس/هاور کارت (MentorCard) درخواست
 // /api/mentors/:id همون لحظه شروع می‌شه، هم‌زمان با ناوبری — نه بعدش.
-// صفحه‌ی پروفایل اولین بار همین درخواستِ درحال‌اجرا رو مصرف می‌کنه (یک‌بارمصرف،
+// صفحه‌ی پروفایل اولین بار همین درخواست درحال‌اجرا رو مصرف می‌کنه (یک‌بارمصرف،
 // ۳۰ ثانیه اعتبار)؛ بارگیری‌های بعدی (بعد از هر اقدام) همیشه تازه‌ان.
 
 type Result = { status: number; ok: boolean; res: Response };
@@ -21,7 +21,7 @@ export function prefetchMentorProfile(mentorId: string): void {
   pending.set(mentorId, { at: Date.now(), p });
 }
 
-/** پاسخِ پیش‌گرفته (اگه تازه باشه) یا یک درخواستِ تازه. */
+/** پاسخ پیش‌گرفته (اگه تازه باشه) یا یک درخواست تازه. */
 export function fetchMentorProfile(mentorId: string): Promise<Response> {
   const hit = pending.get(mentorId);
   pending.delete(mentorId);

@@ -34,7 +34,7 @@ body[data-theme="light"] h2.ls-title, body:not([data-theme="light"]) h2.ls-title
   font-size:clamp(24px,4.4vw,38px); font-weight:800; line-height:1.2; color:var(--accent);
   font-variant-numeric:tabular-nums; letter-spacing:-.01em;
 }
-/* متنِ غیرعددی (MT4·MT5) پهن‌تر از عدده و توی ستونِ باریک بریده می‌شد. */
+/* متن غیرعددی (MT4·MT5) پهن‌تر از عدده و توی ستون باریک بریده می‌شد. */
 .ls-stat-label{ margin-top:6px; font-size:12px; line-height:1.7; color:var(--muted); }
 
 /* ───── How it works ───── */
@@ -109,7 +109,7 @@ body[data-theme="light"] h2.ls-title, body:not([data-theme="light"]) h2.ls-title
 /* chat — MentorChat (lm-chat از landing-hero.css) */
 .ls-vis-chat{ direction:rtl; }
 
-/* phone — اعلانِ واقعیِ reminderPlan */
+/* phone — اعلان واقعی reminderPlan */
 .ls-vis-phone{ display:flex; justify-content:center; height:124px; overflow:hidden; }
 .ls-phone{
   position:relative; width:128px; padding:30px 10px 0; border-radius:20px 20px 0 0;
@@ -136,7 +136,7 @@ body[data-theme="light"] .ls-toast{ box-shadow:0 10px 24px rgba(107,79,61,.18); 
   90%,100%{ transform:translateY(-52px); opacity:0; }
 }
 
-/* streak — خودِ StreakFlame در هشت سطح */
+/* streak — خود StreakFlame در هشت سطح */
 .ls-vis-streak{ direction:rtl; }
 .ls-vis-streak .lm-tiers{ grid-template-columns:repeat(8, minmax(0,1fr)); gap:4px; }
 .ls-vis-streak .lm-tier{ padding:8px 0 7px; background:transparent; }
@@ -283,8 +283,8 @@ body[data-theme="light"] h2.ls-cta-title, body:not([data-theme="light"]) h2.ls-c
   .ls-quote-body, .ls-faq-panel, .ls-faq-chev, .ls-card, .ls-why-item{ transition:none; }
 }
 
-/* دسکتاپ: بخش‌های پایینی هم مثلِ هیرو/ویترین از ستونِ ۶۲۰پیکسلیِ .wrap
-   بیرون می‌زنن تا عرضِ صفحه یکدست باشه (FAQ عمداً باریک‌تر برای خوانایی). */
+/* دسکتاپ: بخش‌های پایینی هم مثل هیرو/ویترین از ستون ۶۲۰پیکسلی .wrap
+   بیرون می‌زنن تا عرض صفحه یکدست باشه (FAQ عمدا باریک‌تر برای خوانایی). */
 @media (min-width:1024px){
   #sec-landing-stats, #sec-landing-how, #sec-landing-bento, #sec-landing-allfeatures, #sec-landing-whyus, #sec-landing-trust, #sec-landing-cta{
     --ls-w: min(1180px, calc(100vw - 64px));
@@ -298,5 +298,5 @@ body[data-theme="light"] h2.ls-cta-title, body:not([data-theme="light"]) h2.ls-c
   }
 }
 
-/* بیرونِ دید: حلقه‌های بی‌پایانِ بنتو (شعله‌ها، اعلان، نشانِ زنده) متوقف */
+/* بیرون دید: حلقه‌های بی‌پایان بنتو (شعله‌ها، اعلان، نشان زنده) متوقف */
 .ls-bento.is-paused *, .ls-bento.is-paused *::before{ animation-play-state:paused !important; }

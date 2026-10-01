@@ -9,19 +9,19 @@ import { DashProgressCircle } from "@/components/DashProgressCircle";
 import { StreakFlame } from "@/components/StreakFlame";
 import { STREAK_MILESTONES } from "@/lib/streakTier";
 
-// ─── ماکت‌های لندینگ که «همون خودِ اپ» ـن ─────────────────────────────────
-// هر تکه این‌جا یا *خودِ* کامپوننتِ نمایشیِ اپ است (StreakFlame،
+// ─── ماکت‌های لندینگ که «همون خود اپ» ـن ─────────────────────────────────
+// هر تکه این‌جا یا *خود* کامپوننت نمایشی اپ است (StreakFlame،
 // DashProgressCircle، AgentAvatar، …) با دیتای نمونه‌ی ثابت، یا آینه‌ی
-// مو‌به‌موی مارک‌آپ/کلاس‌های کامپوننتِ واقعی (DashTaskRow، DashMedicationCard،
-// TradeAccountsPanel، MentorCard، MentorChat، …) وقتی خودِ کامپوننت fetch/
+// مو‌به‌موی مارک‌آپ/کلاس‌های کامپوننت واقعی (DashTaskRow، DashMedicationCard،
+// TradeAccountsPanel، MentorCard، MentorChat، …) وقتی خود کامپوننت fetch/
 // session/storage دارد. کلاس‌های سراسری (trade-*، rp-*، support-msg، …) از
-// globals.css می‌آیند، پس ظاهر با خودِ اپ یکی می‌ماند. هیچ Date/Math.random
-// در رندر نیست (بدون hydration mismatch). هیچ <button>ی نیست: کلِ ماکت
+// globals.css می‌آیند، پس ظاهر با خود اپ یکی می‌ماند. هیچ Date/Math.random
+// در رندر نیست (بدون hydration mismatch). هیچ <button>ی نیست: کل ماکت
 // تزئینی و aria-hidden است و نباید فوکوس بگیرد.
 
 export const INERT = { inert: "" } as object;
 
-// ارقام در کلِ سایت انگلیسی‌اند (مثلِ faNum ِ lib/jalali.ts)
+// ارقام در کل سایت انگلیسی‌اند (مثل faNum  lib/jalali.ts)
 export function fa(n: number | string) {
   return String(n);
 }
@@ -126,7 +126,7 @@ export function MockTaskRow({ task }: { task: MockTask }) {
   );
 }
 
-/** DashCard — همون قاب، بدونِ fade-in فریمر (که در SSR محتوا رو تا هیدریت پنهان می‌کرد) */
+/** DashCard — همون قاب، بدون fade-in فریمر (که در SSR محتوا رو تا هیدریت پنهان می‌کرد) */
 export function MockCard({ children, className = "" }: { children: React.ReactNode; className?: string }) {
   return <div className={`rounded-dash border border-dash-border bg-dash-card p-3.5 ${className}`}>{children}</div>;
 }
@@ -193,7 +193,7 @@ export function MockMedicationCard({ meds }: { meds: { name: string; every: stri
   );
 }
 
-/** نوارِ انتخابِ روز (DashDateSelector موبایل) — پنج روز در دید */
+/** نوار انتخاب روز (DashDateSelector موبایل) — پنج روز در دید */
 const STRIP = [
   { w: "شنبه", d: "4 مهر" }, { w: "یکشنبه", d: "5 مهر" }, { w: "دوشنبه", d: "6 مهر", on: true },
   { w: "سه‌شنبه", d: "7 مهر" }, { w: "چهارشنبه", d: "8 مهر" },
@@ -232,7 +232,7 @@ export function MockFilterButton({ label, icon, active }: { label: string; icon:
   );
 }
 
-/* ───────────── استریک: هر هشت سطحِ واقعی ───────────── */
+/* ───────────── استریک: هر هشت سطح واقعی ───────────── */
 const TIER_SHORT = ["شروع", "3 روزه", "هفتگی", "ماهانه", "60 روزه", "فصلی", "نیم‌ساله", "افسانه‌ای"];
 export function MockStreakTiers({ labels = true }: { labels?: boolean }) {
   return (
@@ -284,7 +284,7 @@ export function MockFriendsCard({ unit = "برنامه" }: { unit?: string }) {
   );
 }
 
-/* ───────────── ژورنال ترید: کارتِ حساب (TradeAccountsPanel → AccountRow) ───────────── */
+/* ───────────── ژورنال ترید: کارت حساب (TradeAccountsPanel → AccountRow) ───────────── */
 export type MockAccount = { name: string; color: string; balance: string; pct: string; up: boolean; trades: number; win: number; broker?: string; mt?: boolean };
 export function MockAccountCard({ a }: { a: MockAccount }) {
   return (
@@ -337,7 +337,7 @@ export function MockMentorCard({ name, line, rating, count, since }: { name: str
   );
 }
 
-/** MentorChat — ردیفِ سرویسِ رمزگذاری + حباب‌ها (support-msg همون کلاسِ سراسری) */
+/** MentorChat — ردیف سرویس رمزگذاری + حباب‌ها (support-msg همون کلاس سراسری) */
 export function MockMentorChat({ peer, msgs }: { peer: string; msgs: { mine?: boolean; text: string; time: string }[] }) {
   return (
     <div className="lm-chat">
@@ -356,7 +356,7 @@ export function MockMentorChat({ peer, msgs }: { peer: string; msgs: { mine?: bo
   );
 }
 
-/* ───────────── رودمپ: کارتِ فهرست + مرحله‌ها (app/roadmaps، RoadmapStageCard) ───────────── */
+/* ───────────── رودمپ: کارت فهرست + مرحله‌ها (app/roadmaps، RoadmapStageCard) ───────────── */
 export function MockRoadmapCard({ topic, title, desc, duration, stages, level, pct }: {
   topic: string; title: string; desc: string; duration: string; stages: number; level: string; pct: number;
 }) {

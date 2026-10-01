@@ -151,7 +151,7 @@ function sectionActive(pathname: string, section: NavSection): boolean {
 // کدوم زیرمنو فعاله — با query هم مقایسه می‌شه. قبلا فقط path چک می‌شد،
 // پس روی /admin/users هر شش زیرمنوی «کاربران» (و «تراکنش‌ها»/«بازپرداخت‌ها»)
 // هم‌زمان سبز می‌شدن. برگی که query داره فقط وقتی همه‌ی پارامترهاش با URL
-// یکی باشه فعاله؛ برگِ بدون query فقط وقتی هیچ برگِ خاص‌تری مطابق نباشه.
+// یکی باشه فعاله؛ برگ بدون query فقط وقتی هیچ برگ خاص‌تری مطابق نباشه.
 function activeLeafHref(pathname: string, search: URLSearchParams, leaves: Leaf[]): string | null {
   let best: { href: string; score: number } | null = null;
   for (const leaf of leaves) {
@@ -159,7 +159,7 @@ function activeLeafHref(pathname: string, search: URLSearchParams, leaves: Leaf[
     const q = leaf.href.split("?")[1];
     const params = q ? Array.from(new URLSearchParams(q).entries()) : [];
     if (!params.every(([k, v]) => search.get(k) === v)) continue;
-    // برگِ بدون query وقتی URL یه فیلترِ دیگه داره که برگی براش نیست، باز هم «همه» حساب می‌شه
+    // برگ بدون query وقتی URL یه فیلتر دیگه داره که برگی براش نیست، باز هم «همه» حساب می‌شه
     const score = params.length;
     if (!best || score > best.score) best = { href: leaf.href, score };
   }
@@ -204,8 +204,8 @@ function SidebarContent({ pathname, groups, access, onNavigate }: { pathname: st
   const activeSectionLabel = groups.flatMap((g) => g.sections).find((s) => s.children && sectionActive(pathname, s))?.label || null;
   const [expanded, setExpanded] = useState<string | null>(activeSectionLabel);
 
-  // سایدبارِ دسکتاپ بین صفحه‌ها unmount نمی‌شه — وقتی با میان‌بر/لینکِ داخلِ
-  // صفحه به یه بخشِ دیگه می‌ری، زیرمنوی همون بخش باید باز بشه (قبلا بسته می‌موند).
+  // سایدبار دسکتاپ بین صفحه‌ها unmount نمی‌شه — وقتی با میان‌بر/لینک داخل
+  // صفحه به یه بخش دیگه می‌ری، زیرمنوی همون بخش باید باز بشه (قبلا بسته می‌موند).
   useEffect(() => {
     if (activeSectionLabel) setExpanded(activeSectionLabel);
   }, [activeSectionLabel]);
@@ -308,8 +308,8 @@ export function AdminShell({ children, isSuperAdmin, permissions }: { children: 
   const groups = useMemo(() => visibleGroups(access), [access]);
   const allowed = hasPermission(access, permissionForPath(pathname) || undefined);
 
-  // کشوی موبایل: Esc می‌بنده، با عوض‌شدنِ مسیر (مثلا back) بسته می‌شه، و
-  // تا بازه اسکرولِ صفحه‌ی پشت قفله
+  // کشوی موبایل: Esc می‌بنده، با عوض‌شدن مسیر (مثلا back) بسته می‌شه، و
+  // تا بازه اسکرول صفحه‌ی پشت قفله
   useEffect(() => { setMobileOpen(false); }, [pathname]);
   useLockBodyScroll(mobileOpen);
   useEffect(() => {

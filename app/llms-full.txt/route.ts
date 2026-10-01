@@ -5,7 +5,7 @@ import { sortedPosts, type BlogBlock } from "@/lib/blogPosts";
 import { FAQS } from "@/lib/faqContent";
 
 // llms-full.txt — نسخه‌ی کامل llms.txt: توضیح بلندتر هر بخش، متن کامل
-// مقاله‌های بلاگ و همان سوال‌وجواب‌های واقعیِ صفحه‌ی /faq. هدف این است که
+// مقاله‌های بلاگ و همان سوال‌وجواب‌های واقعی صفحه‌ی /faq. هدف این است که
 // یک مدل زبانی بدون کراول‌کردن کل سایت، بتواند دقیق و صادقانه درباره‌ی
 // آریون جواب بدهد.
 export const dynamic = "force-static";

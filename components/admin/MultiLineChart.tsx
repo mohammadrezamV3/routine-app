@@ -11,7 +11,7 @@ type Point = { bucket: string; values: Record<string, number> };
 const H = 200, PAD_X = 14, PAD_T = 10, PAD_B = 24;
 
 // نمودار خطی چندسری‌ی خام SVG — بدون کتابخونه (پروژه هیچ chart library
-// نداره). عرضِ viewBox = عرضِ واقعیِ ظرف تا متن کش نیاد؛ نقطه‌ی hover/لمس
+// نداره). عرض viewBox = عرض واقعی ظرف تا متن کش نیاد؛ نقطه‌ی hover/لمس
 // روی هر سری مشخص می‌شه، و با یک نقطه‌ی داده هم خط (نقطه) دیده می‌شه.
 export function MultiLineChart({ data, series }: { data: Point[]; series: Series[] }) {
   const gradId = useId().replace(/:/g, "");

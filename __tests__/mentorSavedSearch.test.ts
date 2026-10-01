@@ -29,8 +29,8 @@ const unsave = (viewer: string, mentorId: string) => { as(viewer); return delete
 const saved = async (viewer: string) => { as(viewer); return j(await listSaved()); };
 const search = async (viewer: string, qs: string) => { as(viewer); const r = await discover(req("GET", `/api/mentors?${qs}`)); expect(r.status).toBe(200); return (await j(r)).mentors.map((c: any) => c.userId) as string[]; };
 
-describe("احرازِ هویتِ اجباریِ منتور", () => {
-  it("منتورِ بدونِ هویتِ تاییدشده در جستجو و پروفایلِ عمومی دیده نمی‌شود", async () => {
+describe("احراز هویت اجباری منتور", () => {
+  it("منتور بدون هویت تاییدشده در جستجو و پروفایل عمومی دیده نمی‌شود", async () => {
     const tag = uniqueTag();
     const verified = await makeMentor({ username: `${tag}v`.slice(0, 20) });
     const pending = await makeMentor({ username: `${tag}p`.slice(0, 20) }, undefined, { identity: false });
@@ -42,7 +42,7 @@ describe("احرازِ هویتِ اجباریِ منتور", () => {
     expect((await mentorProfile(req("GET", `/api/mentors/${verified}`), { params: { mentorId: verified } })).status).toBe(200);
   });
 
-  it("درخواستِ شاگرد به منتورِ تاییدنشده ۴۰۴؛ دعوتِ منتورِ تاییدنشده ۴۰۳", async () => {
+  it("درخواست شاگرد به منتور تاییدنشده ۴۰۴؛ دعوت منتور تاییدنشده ۴۰۳", async () => {
     const m = await makeMentor({}, undefined, { identity: false });
     const s = await makeUser({ username: `st${uniqueTag()}`.slice(0, 20) });
     expect((await requestMentorship(s, m)).status).toBe(404);
@@ -52,7 +52,7 @@ describe("احرازِ هویتِ اجباریِ منتور", () => {
     expect(inv.status).toBe(403);
   });
 
-  it("اگر هویت پس از درخواست لغو شد، پذیرشِ درخواست ۴۰۳ است", async () => {
+  it("اگر هویت پس از درخواست لغو شد، پذیرش درخواست ۴۰۳ است", async () => {
     const m = await makeMentor();
     const s = await makeUser();
     const r = await requestMentorship(s, m);
@@ -64,7 +64,7 @@ describe("احرازِ هویتِ اجباریِ منتور", () => {
 });
 
 describe("منتورهای ذخیره‌شده", () => {
-  it("ذخیره/برداشتن بی‌اثر در تکرار، فهرست و فلگِ پروفایل", async () => {
+  it("ذخیره/برداشتن بی‌اثر در تکرار، فهرست و فلگ پروفایل", async () => {
     const m = await makeMentor();
     const v = await makeUser();
     const a = await save(v, m);
@@ -80,7 +80,7 @@ describe("منتورهای ذخیره‌شده", () => {
     expect((await saved(v)).mentors).toEqual([]);
   });
 
-  it(`سقفِ ${SAVED_MENTORS_MAX} سمتِ سرور با پیامِ روشن`, async () => {
+  it(`سقف ${SAVED_MENTORS_MAX} سمت سرور با پیام روشن`, async () => {
     const v = await makeUser();
     const mentors: string[] = [];
     for (let i = 0; i <= SAVED_MENTORS_MAX; i++) mentors.push(await makeMentor());
@@ -98,7 +98,7 @@ describe("منتورهای ذخیره‌شده", () => {
     expect(await prisma.savedMentor.count({ where: { userId: v } })).toBeLessThanOrEqual(SAVED_MENTORS_MAX);
   });
 
-  it("ذخیره‌ای که منتورش دیگر قابلِ کشف نیست جای سقف را نمی‌گیرد و نمایش داده نمی‌شود", async () => {
+  it("ذخیره‌ای که منتورش دیگر قابل کشف نیست جای سقف را نمی‌گیرد و نمایش داده نمی‌شود", async () => {
     const v = await makeUser();
     const m1 = await makeMentor();
     const m2 = await makeMentor();
@@ -109,7 +109,7 @@ describe("منتورهای ذخیره‌شده", () => {
     expect(list.mentors.map((c: any) => c.userId)).toEqual([m1]);
   });
 
-  it("ضدِ IDOR و ورودیِ نامعتبر: خودت ۴۰۰، ناموجود/تاییدنشده ۴۰۴، ناشناس ۴۰۱، ذخیره‌ی دیگران دیده نمی‌شود", async () => {
+  it("ضد IDOR و ورودی نامعتبر: خودت ۴۰۰، ناموجود/تاییدنشده ۴۰۴، ناشناس ۴۰۱، ذخیره‌ی دیگران دیده نمی‌شود", async () => {
     const me = await makeMentor();
     expect((await save(me, me)).status).toBe(400);
     expect((await save(me, "nonexistent-id")).status).toBe(404);
@@ -122,14 +122,14 @@ describe("منتورهای ذخیره‌شده", () => {
     const m = await makeMentor();
     await save(other, m);
     expect((await saved(me)).mentors.map((c: any) => c.userId)).not.toContain(m);
-    // برداشتنِ من روی ذخیره‌ی دیگری اثری ندارد
+    // برداشتن من روی ذخیره‌ی دیگری اثری ندارد
     await unsave(me, m);
     expect(await prisma.savedMentor.count({ where: { userId: other, mentorUserId: m } })).toBe(1);
   });
 });
 
 describe("جستجوی هوشمند و فیلترها (روت)", () => {
-  it("غلطِ املایی و هم‌معنی پیدا می‌کنند؛ عبارتِ بی‌ربط هیچ", async () => {
+  it("غلط املایی و هم‌معنی پیدا می‌کنند؛ عبارت بی‌ربط هیچ", async () => {
     const tag = uniqueTag();
     const konkur = await makeMentor({ username: `${tag}k`.slice(0, 20), name: `کنکوری${tag}` }, {
       headline: `برنامه‌ریزی کنکور ${tag}`, bio: "مشاور تحصیلی", categories: ["ROUTINE"], published: true, specialties: ["آزمون آزمایشی"],
@@ -148,7 +148,7 @@ describe("جستجوی هوشمند و فیلترها (روت)", () => {
     expect(await search(v, `q=${encodeURIComponent(`آشپزی ${tag}`)}`)).toEqual([]);
   });
 
-  it("فیلترهای مدرک، پذیرش، امتیاز و زمانِ پاسخ", async () => {
+  it("فیلترهای مدرک، پذیرش، امتیاز و زمان پاسخ", async () => {
     const tag = uniqueTag();
     const base = { bio: "b", categories: ["FITNESS"], published: true };
     const certified = await makeMentor({ username: `${tag}c`.slice(0, 20) }, { ...base, headline: `h ${tag}` });
@@ -167,14 +167,14 @@ describe("جستجوی هوشمند و فیلترها (روت)", () => {
     expect(open).not.toContain(full);
     expect(await search(v, `${q}&rating=4.5`)).toEqual([closed]);
     expect(await search(v, `${q}&resp=24`)).toEqual([closed]);
-    // بدونِ عبارت و با پذیرشِ باز (مسیرِ حافظه‌ای بدونِ q) هم ظرفیتِ پر حذف می‌شود
+    // بدون عبارت و با پذیرش باز (مسیر حافظه‌ای بدون q) هم ظرفیت پر حذف می‌شود
     const noQ = await search(v, `open=1&sort=new&cat=FITNESS`);
     expect(noQ).not.toContain(full);
     expect(noQ).not.toContain(closed);
   });
 });
 
-// helper sanity: makeMentorProfile هنوز پروفایلِ تاییدنشده می‌سازد
+// helper sanity: makeMentorProfile هنوز پروفایل تاییدنشده می‌سازد
 describe("helper", () => {
   it("makeMentorProfile هویت را تایید نمی‌کند", async () => {
     const u = await makeUser();

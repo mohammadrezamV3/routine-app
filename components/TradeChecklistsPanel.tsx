@@ -34,7 +34,7 @@ export function TradeChecklistsPanel({
     if (!silent) setLoading(true);
     try {
       // پرانتز لازم است: بدون آن `takePreloaded(...) ?? await fetch(...)` یعنی
-      // اگر پیش‌درخواستی وجود داشت، خودِ Promise (نه مقدار resolve شده) توی
+      // اگر پیش‌درخواستی وجود داشت، خود Promise (نه مقدار resolve شده) توی
       // cRes می‌نشست و `cRes?.checklists` همیشه undefined می‌شد — یعنی لیست
       // با وجود داشتن داده، خالی نشان داده می‌شد.
       const cRes = await (takePreloaded("/api/trade/checklists") ?? fetch("/api/trade/checklists").then((r) => (r.ok ? r.json() : null)));
@@ -45,7 +45,7 @@ export function TradeChecklistsPanel({
   }, []);
 
   useEffect(() => { load(); }, [load]);
-  // زنده: ثبت/ویرایش/حذف از هرجا (مودال، تبِ دیگه، همگام‌سازیِ متاتریدر) → آمار همون لحظه
+  // زنده: ثبت/ویرایش/حذف از هرجا (مودال، تب دیگه، همگام‌سازی متاتریدر) → آمار همون لحظه
   useLiveRefresh("trade", () => { load(true); });
 
   async function duplicate(id: string) {
@@ -103,8 +103,8 @@ export function TradeChecklistsPanel({
               </div>
               <Link href={`/trade/checklists/${c.id}`} prefetch className="trade-checklist-row-main">
                 <span className="trade-account-name">{c.name}</span>
-                {/* توپِ رنگی سمتِ چپِ اسم (بلافاصله بعدش در RTL) — نه گوشه‌ی
-                    مطلقِ کارت. هم‌قاعده‌ی فهرستِ حساب‌های معاملاتی. */}
+                {/* توپ رنگی سمت چپ اسم (بلافاصله بعدش در RTL) — نه گوشه‌ی
+                    مطلق کارت. هم‌قاعده‌ی فهرست حساب‌های معاملاتی. */}
                 <span className="trade-account-dot" style={{ background: c.color }} />
                 {c.required && <span className="trade-account-type">الزامی</span>}
                 <span className="trade-checklist-row-count mono">{faNum(c.items.length)} مورد</span>

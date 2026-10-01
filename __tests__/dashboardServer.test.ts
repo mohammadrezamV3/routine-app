@@ -1,7 +1,7 @@
 import { describe, it, expect, vi } from "vitest";
 
 // dashboardServer.ts در import به prisma/تقویم اقتصادی می‌رسه؛ اینجا فقط
-// توابع خالصِ تاریخ تست می‌شن، پس هر دو mock می‌شن.
+// توابع خالص تاریخ تست می‌شن، پس هر دو mock می‌شن.
 vi.mock("@/lib/prisma", () => ({ prisma: {} }));
 vi.mock("@/lib/economicCalendar", () => ({ ensureFreshCalendar: vi.fn() }));
 
@@ -9,29 +9,29 @@ import { isoAdd, resolveDay } from "@/lib/dashboardServer";
 import { isoLocal } from "@/lib/jalali";
 
 describe("isoAdd", () => {
-  it("جمع و تفریقِ ساده", () => {
+  it("جمع و تفریق ساده", () => {
     expect(isoAdd("2026-09-30", 0)).toBe("2026-09-30");
     expect(isoAdd("2026-09-15", 1)).toBe("2026-09-16");
     expect(isoAdd("2026-09-15", 10)).toBe("2026-09-25");
   });
 
-  it("عبور از مرزِ ماه", () => {
+  it("عبور از مرز ماه", () => {
     expect(isoAdd("2026-09-30", 1)).toBe("2026-10-01");
     expect(isoAdd("2026-01-31", 1)).toBe("2026-02-01");
     expect(isoAdd("2026-02-28", 1)).toBe("2026-03-01");
   });
 
-  it("سالِ کبیسه", () => {
+  it("سال کبیسه", () => {
     expect(isoAdd("2028-02-28", 1)).toBe("2028-02-29");
     expect(isoAdd("2028-02-28", 2)).toBe("2028-03-01");
   });
 
-  it("عبور از مرزِ سال", () => {
+  it("عبور از مرز سال", () => {
     expect(isoAdd("2026-12-31", 1)).toBe("2027-01-01");
     expect(isoAdd("2026-12-31", 366)).toBe("2028-01-01");
   });
 
-  it("nِ منفی", () => {
+  it("n منفی", () => {
     expect(isoAdd("2026-10-01", -1)).toBe("2026-09-30");
     expect(isoAdd("2027-01-01", -1)).toBe("2026-12-31");
     expect(isoAdd("2026-03-01", -1)).toBe("2026-02-28");
@@ -43,7 +43,7 @@ describe("isoAdd", () => {
 describe("resolveDay", () => {
   const today = () => isoLocal(new Date());
 
-  it("تاریخِ معتبرِ امروز حفظ می‌شه", () => {
+  it("تاریخ معتبر امروز حفظ می‌شه", () => {
     const t = today();
     expect(resolveDay(t, "210").date).toBe(t);
   });
@@ -55,7 +55,7 @@ describe("resolveDay", () => {
     expect(resolveDay(tm, "0").date).toBe(tm);
   });
 
-  it("تاریخِ بدفرم → امروز", () => {
+  it("تاریخ بدفرم → امروز", () => {
     const t = today();
     expect(resolveDay("abc", "210").date).toBe(t);
     expect(resolveDay("2026-9-3", "210").date).toBe(t);
@@ -64,12 +64,12 @@ describe("resolveDay", () => {
     expect(resolveDay(null, "210").date).toBe(t);
   });
 
-  it("تاریخِ ناموجود (۳۱ فوریه) → امروز", () => {
+  it("تاریخ ناموجود (۳۱ فوریه) → امروز", () => {
     expect(resolveDay("2026-02-31", "210").date).toBe(today());
     expect(resolveDay("2026-13-01", "210").date).toBe(today());
   });
 
-  it("تاریخِ خیلی دور (گذشته/آینده) → امروز", () => {
+  it("تاریخ خیلی دور (گذشته/آینده) → امروز", () => {
     expect(resolveDay("2000-01-01", "210").date).toBe(today());
     expect(resolveDay(isoAdd(today(), -10), "210").date).toBe(today());
     expect(resolveDay(isoAdd(today(), 10), "210").date).toBe(today());
@@ -85,8 +85,8 @@ describe("resolveDay", () => {
     expect(resolveDay(null, "Infinity").tz).toBe(210);
   });
 
-  // باگِ منبع: Number(null) === 0 و Number("") === 0 عددِ صحیحِ معتبرن، پس نبودِ
-  // پارامترِ tz (searchParams.get → null) به‌جای پیش‌فرضِ ۲۱۰ (تهران) UTC می‌شه.
+  // باگ منبع: Number(null) === 0 و Number("") === 0 عدد صحیح معتبرن، پس نبود
+  // پارامتر tz (searchParams.get → null) به‌جای پیش‌فرض ۲۱۰ (تهران) UTC می‌شه.
   it("tz نبود (null) → 210", () => {
     expect(resolveDay(null, null).tz).toBe(210);
   });
@@ -94,7 +94,7 @@ describe("resolveDay", () => {
     expect(resolveDay(null, "").tz).toBe(210);
   });
 
-  it("tzِ معتبر (شاملِ مرزها) حفظ می‌شه", () => {
+  it("tz معتبر (شامل مرزها) حفظ می‌شه", () => {
     expect(resolveDay(null, "0").tz).toBe(0);
     expect(resolveDay(null, "-720").tz).toBe(-720);
     expect(resolveDay(null, "840").tz).toBe(840);

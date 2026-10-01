@@ -6,23 +6,23 @@ import { isoDate, isUniqueViolation } from "@/lib/mentorServer";
 import { mirrorOccurrenceId, mirrorOccurrenceName } from "@/lib/mentorProgressCore";
 import { syncProgramProgress } from "@/lib/mentorProgress";
 
-// آینه‌کردنِ برنامه‌ی فعالِ منتور (ROUTINE و WORKOUT) در «روتین من»ِ شاگرد.
+// آینه‌کردن برنامه‌ی فعال منتور (ROUTINE و WORKOUT) در «روتین من» شاگرد.
 //
-// روتین تنها ردیابِ روزانه‌ای‌ست که هر کاربرِ واردشده دارد (ماژولِ بدنسازی پولی
+// روتین تنها ردیاب روزانه‌ای‌ست که هر کاربر واردشده دارد (ماژول بدنسازی پولی
 // است و فقط یک برنامه‌ی فعال نگه می‌دارد)، پس WORKOUT هم همین‌جا آینه می‌شود:
-// هر حرکت در روزهای خودش یک occurrence (اسم + ست×تکرار). تیکِ شاگرد روی همین
-// occurrenceها منبعِ «پیشرفتِ خودکار» است (lib/mentorProgress.ts).
+// هر حرکت در روزهای خودش یک occurrence (اسم + ست×تکرار). تیک شاگرد روی همین
+// occurrenceها منبع «پیشرفت خودکار» است (lib/mentorProgress.ts).
 //
-// روتینِ شاگرد یک آرایه‌ی JSON در UserSetting("customOccurrences")ـه که خودِ
-// کلاینت هم کلِ آن را بازنویسی می‌کنه. پس:
-//   - هر occurrenceِ آینه‌شده `mentorProgramId` داره تا حذف/جایگزینی فقط
-//     همون‌ها رو هدف بگیره و به برنامه‌های خودِ شاگرد دست نزنه (مثلِ الگوی roadmapId).
-//   - idها قطعی‌ان (برنامه + ترتیبِ آیتم + روز) تا فعال‌سازیِ دوباره تیک‌های
-//     قبلیِ DailyEntry رو گم نکنه.
-//   - نوشتن read-modify-writeِ خوش‌بینانه‌ست: اگه بینِ خوندن و نوشتن ردیف
-//     عوض شده باشه (updatedAt فرق کنه) دوباره از نو خونده می‌شه، تا تغییرِ
-//     هم‌زمانِ کلاینت بی‌صدا پاک نشه.
-//   - سقفِ MAX_SETTING_VALUE_BYTES رعایت می‌شه؛ وگرنه PUTِ بعدیِ خودِ شاگرد
+// روتین شاگرد یک آرایه‌ی JSON در UserSetting("customOccurrences")ـه که خود
+// کلاینت هم کل آن را بازنویسی می‌کنه. پس:
+//   - هر occurrence آینه‌شده `mentorProgramId` داره تا حذف/جایگزینی فقط
+//     همون‌ها رو هدف بگیره و به برنامه‌های خود شاگرد دست نزنه (مثل الگوی roadmapId).
+//   - idها قطعی‌ان (برنامه + ترتیب آیتم + روز) تا فعال‌سازی دوباره تیک‌های
+//     قبلی DailyEntry رو گم نکنه.
+//   - نوشتن read-modify-write خوش‌بینانه‌ست: اگه بین خوندن و نوشتن ردیف
+//     عوض شده باشه (updatedAt فرق کنه) دوباره از نو خونده می‌شه، تا تغییر
+//     هم‌زمان کلاینت بی‌صدا پاک نشه.
+//   - سقف MAX_SETTING_VALUE_BYTES رعایت می‌شه؛ وگرنه PUT بعدی خود شاگرد
 //     روی /api/settings با ۴۱۳ می‌شکست و دیگه نمی‌تونست روتینش رو ویرایش کنه.
 
 export class MirrorTooLargeError extends Error {
@@ -49,14 +49,14 @@ function timeLabel(startTime: string | null, durationMin: number | null): string
   const start = normalizeTimeToFa(startTime);
   if (!durationMin) return start;
   const endMin = h * 60 + m + durationMin;
-  // عبور از نیمه‌شب در قالبِ روتین قابل‌نمایش نیست؛ فقط ساعتِ شروع می‌مونه
+  // عبور از نیمه‌شب در قالب روتین قابل‌نمایش نیست؛ فقط ساعت شروع می‌مونه
   if (endMin >= 24 * 60) return start;
   const end = normalizeTimeToFa(`${Math.floor(endMin / 60)}:${String(endMin % 60).padStart(2, "0")}`);
-  // همون قالبِ AddProgramForm: "۰۸:۰۰ – ۰۹:۰۰"
+  // همون قالب AddProgramForm: "۰۸:۰۰ – ۰۹:۰۰"
   return `${start} – ${end}`;
 }
 
-/** occurrenceهای روتینِ یک برنامه، از activationIso به بعد (روزهای گذشته یهو برنامه نمی‌گیرن) */
+/** occurrenceهای روتین یک برنامه، از activationIso به بعد (روزهای گذشته یهو برنامه نمی‌گیرن) */
 export function buildMirrorOccurrences(program: MirrorProgram, items: MirrorItem[], activationIso: string): StudentOccurrence[] {
   const programStart = program.startDate ? isoDate(program.startDate) : null;
   const startDate = programStart && programStart > activationIso ? programStart : activationIso;
@@ -75,7 +75,7 @@ export function buildMirrorOccurrences(program: MirrorProgram, items: MirrorItem
         ...(endDate ? { endDate } : {}),
         tag: program.title,
         mentorProgramId: program.id,
-        // پیوندِ occurrence به آیتم — بعد از ویرایش/جابه‌جایی (idِ تصادفی) هم تیک به همین آیتم می‌رسد
+        // پیوند occurrence به آیتم — بعد از ویرایش/جابه‌جایی (id تصادفی) هم تیک به همین آیتم می‌رسد
         ...(it.id ? { mentorItemId: it.id } : {}),
       });
     }
@@ -88,8 +88,8 @@ function byteSize(v: unknown): number {
 }
 
 /**
- * read-modify-writeِ خوش‌بینانه روی customOccurrencesِ یک کاربر.
- * mutate باید تابعِ خالص باشه (ممکنه چند بار صدا زده بشه). null یعنی تغییری لازم نیست.
+ * read-modify-write خوش‌بینانه روی customOccurrences یک کاربر.
+ * mutate باید تابع خالص باشه (ممکنه چند بار صدا زده بشه). null یعنی تغییری لازم نیست.
  */
 async function rewriteOccurrences(userId: string, mutate: (arr: unknown[]) => unknown[] | null): Promise<void> {
   const key = SETTING_KEYS.customOccurrences;
@@ -120,8 +120,8 @@ const isMirrorOf = (ids: Set<string>) => (o: unknown) =>
   !!o && typeof o === "object" && typeof (o as any).mentorProgramId === "string" && ids.has((o as any).mentorProgramId);
 
 /**
- * پیش‌بررسیِ ظرفیت قبل از تغییرِ وضعیت — تا برنامه‌ای که جا نمی‌شه اصلا ACTIVE
- * نشه (به‌جای فعال‌شدن و بعد شکستِ آینه).
+ * پیش‌بررسی ظرفیت قبل از تغییر وضعیت — تا برنامه‌ای که جا نمی‌شه اصلا ACTIVE
+ * نشه (به‌جای فعال‌شدن و بعد شکست آینه).
  */
 export async function mirrorFits(studentId: string, occurrences: StudentOccurrence[], programId: string): Promise<boolean> {
   const row = await prisma.userSetting.findUnique({
@@ -133,16 +133,16 @@ export async function mirrorFits(studentId: string, occurrences: StudentOccurren
   return byteSize([...kept, ...occurrences]) <= MAX_SETTING_VALUE_BYTES;
 }
 
-/** آیتم‌های برنامه (فقط ROUTINE) رو در روتینِ شاگرد می‌نویسه؛ نسخه‌ی قبلیِ همین برنامه جایگزین می‌شه */
+/** آیتم‌های برنامه (فقط ROUTINE) رو در روتین شاگرد می‌نویسه؛ نسخه‌ی قبلی همین برنامه جایگزین می‌شه */
 export async function writeProgramMirror(studentId: string, programId: string, occurrences: StudentOccurrence[]): Promise<void> {
   const own = isMirrorOf(new Set([programId]));
   await rewriteOccurrences(studentId, (arr) => [...arr.filter((o) => !own(o)), ...occurrences]);
 }
 
 /**
- * حذفِ آینه‌ی یک یا چند برنامه از روتینِ شاگرد (complete / cancel / پایانِ رابطه).
- * قبل از حذف، پیشرفتِ خودکار نهایی می‌شود: پیوندِ occurrenceهای ویرایش‌شده
- * (idِ تصادفی → آیتم) فقط تا وقتی آینه هست قابلِ خواندن است.
+ * حذف آینه‌ی یک یا چند برنامه از روتین شاگرد (complete / cancel / پایان رابطه).
+ * قبل از حذف، پیشرفت خودکار نهایی می‌شود: پیوند occurrenceهای ویرایش‌شده
+ * (id تصادفی → آیتم) فقط تا وقتی آینه هست قابل خواندن است.
  */
 export async function removeProgramMirrors(studentId: string, programIds: string[]): Promise<void> {
   if (programIds.length === 0) return;
@@ -168,8 +168,8 @@ export async function loadMirrorOccurrences(programId: string, activationIso: st
 }
 
 /**
- * برنامه‌ی WORKOUTی که قبل از آینه‌شدنِ تمرین فعال شده بود، هنوز در روتینِ
- * شاگرد نیست؛ یک بار (قبل از اولین همگام‌سازیِ پیشرفت) آینه می‌شود. شرطِ
+ * برنامه‌ی WORKOUTی که قبل از آینه‌شدن تمرین فعال شده بود، هنوز در روتین
+ * شاگرد نیست؛ یک بار (قبل از اولین همگام‌سازی پیشرفت) آینه می‌شود. شرط
  * progressSyncedAt = null یعنی اگر شاگرد بعدا آینه را از روتینش پاک کند، دوباره
  * برنمی‌گردد.
  */
@@ -189,10 +189,10 @@ export async function ensureLegacyWorkoutMirror(p: { id: string; type: string; s
 export type ActivationResult = "ok" | "conflict" | "too_large";
 
 /**
- * انتقال به ACTIVE (از PENDING در «قبول + شروعِ فوری»، یا از ACCEPTED) همراه با
- * آینه‌ی روتین. ظرفیت قبل از تغییرِ وضعیت چک می‌شه؛ اگه نوشتنِ آینه با این
- * حال شکست بخوره، وضعیت به حالتِ قبل برمی‌گرده تا برنامه‌ی «فعال» بدونِ
- * آیتم در روتینِ شاگرد نمونه.
+ * انتقال به ACTIVE (از PENDING در «قبول + شروع فوری»، یا از ACCEPTED) همراه با
+ * آینه‌ی روتین. ظرفیت قبل از تغییر وضعیت چک می‌شه؛ اگه نوشتن آینه با این
+ * حال شکست بخوره، وضعیت به حالت قبل برمی‌گرده تا برنامه‌ی «فعال» بدون
+ * آیتم در روتین شاگرد نمونه.
  */
 export async function activateWithMirror(opts: {
   programId: string;
@@ -227,8 +227,8 @@ export async function activateWithMirror(opts: {
 }
 
 /**
- * برنامه‌های ACCEPTED که تاریخِ شروعشون رسیده، بدونِ کلیکِ کسی فعال می‌شن
- * (lazy — موقعِ خوندنِ برنامه‌ها). فقط وقتی رابطه هنوز ACTIVEـه.
+ * برنامه‌های ACCEPTED که تاریخ شروعشون رسیده، بدون کلیک کسی فعال می‌شن
+ * (lazy — موقع خوندن برنامه‌ها). فقط وقتی رابطه هنوز ACTIVEـه.
  */
 export async function activateDuePrograms(
   programs: { id: string; studentId: string; status: string; startDate: Date | null; mentorshipId: string }[],

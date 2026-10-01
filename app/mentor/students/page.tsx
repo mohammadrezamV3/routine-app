@@ -25,7 +25,7 @@ export default function MentorStudentsPage() {
       {error ? <MentorDashError message={error} onRetry={load} /> : !data ? <LoadingBlock /> : (
         <>
           <MentorStudentsList data={data} />
-          {/* صفِ انتظار (lib/mentorWaitlistServer.ts) — خالی باشد چیزی نمی‌آید */}
+          {/* صف انتظار (lib/mentorWaitlistServer.ts) — خالی باشد چیزی نمی‌آید */}
           <MentorWaitlistSection />
         </>
       )}

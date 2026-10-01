@@ -49,7 +49,7 @@ export async function POST(req: NextRequest) {
     }
 
     // نسخه‌ی بین‌المللی طبق درخواست صریح کامل حذف شد؛ همه‌ی کاربرها بازار
-    // ایران‌اند، پس دیگر چکِ market لازم نیست.
+    // ایران‌اند، پس دیگر چک market لازم نیست.
     const user = await prisma.user.findUnique({ where: { id: userId }, select: { id: true } });
     if (!user) return NextResponse.json({ error: "not found" }, { status: 404 });
 

@@ -1,15 +1,15 @@
-// نگاشتِ نمادهای داخلی به نمادهای تریدینگ‌ویو.
+// نگاشت نمادهای داخلی به نمادهای تریدینگ‌ویو.
 //
-// چرا لازم است: کدهای ما سبکِ بروکرند («XAUUSD»، «US30») ولی تریدینگ‌ویو
-// نماد را با پیشوندِ صرافی/فیدر می‌خواهد («OANDA:XAUUSD»، «FX:EURUSD»).
-// بدونِ این نگاشت، چارت روی نیمی از نمادها خالی می‌ماند.
+// چرا لازم است: کدهای ما سبک بروکرند («XAUUSD»، «US30») ولی تریدینگ‌ویو
+// نماد را با پیشوند صرافی/فیدر می‌خواهد («OANDA:XAUUSD»، «FX:EURUSD»).
+// بدون این نگاشت، چارت روی نیمی از نمادها خالی می‌ماند.
 //
-// فیدرها عمداً همه رایگان و بدونِ نیاز به اشتراکِ تریدینگ‌ویو انتخاب شده‌اند.
+// فیدرها عمدا همه رایگان و بدون نیاز به اشتراک تریدینگ‌ویو انتخاب شده‌اند.
 
 import { TRADE_PAIRS } from "./tradePairs";
 
 const EXPLICIT: Record<string, string> = {
-  // فلزات و انرژی — OANDA و TVC پوششِ رایگانِ خوبی دارند
+  // فلزات و انرژی — OANDA و TVC پوشش رایگان خوبی دارند
   XAUUSD: "OANDA:XAUUSD",
   XAGUSD: "OANDA:XAGUSD",
   XPTUSD: "OANDA:XPTUSD",
@@ -27,7 +27,7 @@ const EXPLICIT: Record<string, string> = {
   JPN225: "TVC:NI225",
   FRA40: "TVC:CAC40",
 
-  // کریپتو — جفتِ اسپاتِ بایننس نقدشوندگیِ بیشتری دارد
+  // کریپتو — جفت اسپات بایننس نقدشوندگی بیشتری دارد
   BTCUSD: "BINANCE:BTCUSDT",
   ETHUSD: "BINANCE:ETHUSDT",
   XRPUSD: "BINANCE:XRPUSDT",
@@ -38,13 +38,13 @@ const EXPLICIT: Record<string, string> = {
   ADAUSD: "BINANCE:ADAUSDT",
 };
 
-/** کدِ داخلی → نمادِ تریدینگ‌ویو. پیش‌فرضِ فارکس `FX:` است. */
+/** کد داخلی → نماد تریدینگ‌ویو. پیش‌فرض فارکس `FX:` است. */
 export function tradingViewSymbol(code: string): string {
   const c = (code || "").toUpperCase().replace(/[^A-Z0-9]/g, "");
   return EXPLICIT[c] || `FX:${c}`;
 }
 
-/** تایم‌فریم‌های چارت — مقدارِ سمتِ راست همان چیزی است که تریدینگ‌ویو می‌خواهد */
+/** تایم‌فریم‌های چارت — مقدار سمت راست همان چیزی است که تریدینگ‌ویو می‌خواهد */
 export const CHART_INTERVALS = [
   { label: "1 دقیقه", short: "1m", tv: "1" },
   { label: "5 دقیقه", short: "5m", tv: "5" },

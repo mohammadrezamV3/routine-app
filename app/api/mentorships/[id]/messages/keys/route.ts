@@ -9,7 +9,7 @@ import { publicKeysFor } from "@/lib/e2ee/server";
 type Ctx = { params: { id: string } };
 const NUDGE_THROTTLE_MS = 24 * 60 * 60 * 1000;
 
-// GET /api/mentorships/:id/messages/keys → کلیدهای عمومیِ هر دو طرف (همه‌ی نسخه‌ها)
+// GET /api/mentorships/:id/messages/keys → کلیدهای عمومی هر دو طرف (همه‌ی نسخه‌ها)
 //   { mentorId, studentId, keys: { [userId]: { version, publicKey, current }[] } }
 export async function GET(_req: Request, { params }: Ctx) {
   const g = await requireMentorsUser();
@@ -21,8 +21,8 @@ export async function GET(_req: Request, { params }: Ctx) {
   return NextResponse.json({ mentorId: m.mentorId, studentId: m.studentId, keys });
 }
 
-// POST /api/mentorships/:id/messages/keys → به طرفِ مقابل اطلاع بده که پیام دارد. کلیدِ
-// رمزگذاری با اولین ورود/بازدیدش خودکار ساخته می‌شود (بدونِ کلیدِ او پیامی قابلِ ارسال نیست).
+// POST /api/mentorships/:id/messages/keys → به طرف مقابل اطلاع بده که پیام دارد. کلید
+// رمزگذاری با اولین ورود/بازدیدش خودکار ساخته می‌شود (بدون کلید او پیامی قابل ارسال نیست).
 // حداکثر یک اعلان در ۲۴ ساعت برای هر رابطه.
 export async function POST(_req: Request, { params }: Ctx) {
   const g = await requireMentorsUser();

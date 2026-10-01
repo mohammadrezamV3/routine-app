@@ -14,7 +14,7 @@ function occ(id: string, name: string, jsDay: number, time: string, extra: Recor
 const live = (r: { occurrences: any[] }) => r.occurrences.filter((o) => !o.endDate || o.endDate >= TODAY);
 
 describe("روز و تاریخ", () => {
-  it("نامِ فارسیِ روز را با هر نیم‌فاصله/کاراکترِ عربی می‌فهمد", () => {
+  it("نام فارسی روز را با هر نیم‌فاصله/کاراکتر عربی می‌فهمد", () => {
     expect(parseDay("شنبه")).toBe(6);
     expect(parseDay("سه‌شنبه")).toBe(2);
     expect(parseDay("سه شنبه")).toBe(2);
@@ -26,7 +26,7 @@ describe("روز و تاریخ", () => {
     expect(parseDay(7)).toBeNull();
   });
 
-  it("تاریخِ میلادی، جلالی و امروز/فردا را تبدیل می‌کند", () => {
+  it("تاریخ میلادی، جلالی و امروز/فردا را تبدیل می‌کند", () => {
     expect(parseDateInput("2026-09-10", TODAY)).toBe("2026-09-10");
     expect(parseDateInput("1405/07/01", TODAY)).toBe("2026-09-23");
     expect(parseDateInput("1405-06-14", TODAY)).toBe(TODAY);
@@ -37,14 +37,14 @@ describe("روز و تاریخ", () => {
     expect(parseDateInput("یه روزی", TODAY)).toBeNull();
   });
 
-  it("jalaliToIso با toJalali رفت‌وبرگشتِ دقیق دارد، حتی دورِ نوروز", () => {
+  it("jalaliToIso با toJalali رفت‌وبرگشت دقیق دارد، حتی دور نوروز", () => {
     expect(jalaliToIso(1405, 1, 1)).toBe("2026-03-21");
     expect(jalaliToIso(1404, 12, 29)).toBe("2026-03-20");
     expect(jalaliToIso(1403, 12, 30)).toBe("2025-03-20"); // 1403 کبیسه است
     expect(jalaliToIso(1404, 12, 30)).toBeNull();
   });
 
-  it("sameWeekIso داخلِ هفته‌ی شنبه‌شروع می‌ماند", () => {
+  it("sameWeekIso داخل هفته‌ی شنبه‌شروع می‌ماند", () => {
     expect(sameWeekIso("2026-09-05", 0)).toBe("2026-09-06"); // شنبه → یکشنبه‌ی بعدش
     expect(sameWeekIso("2026-09-10", 6)).toBe("2026-09-05"); // پنجشنبه → شنبه‌ی همان هفته
     expect(sameWeekIso("2026-09-10", 5)).toBe("2026-09-11"); // → جمعه
@@ -52,7 +52,7 @@ describe("روز و تاریخ", () => {
 });
 
 describe("add — تک‌روزه و دوره", () => {
-  it("date یعنی فقط همان روز، با روزِ هفته‌ی درست از خودِ تاریخ", () => {
+  it("date یعنی فقط همان روز، با روز هفته‌ی درست از خود تاریخ", () => {
     const r = applyOps([], [], [{ op: "add", name: "خرید", date: "2026-09-10", days: ["شنبه"] }], TODAY);
     expect(r.problems).toHaveLength(0);
     const o = r.occurrences[0];
@@ -62,12 +62,12 @@ describe("add — تک‌روزه و دوره", () => {
     expect(r.applied[0]).toContain("فقط");
   });
 
-  it("dates چند روزِ مشخص می‌سازد", () => {
+  it("dates چند روز مشخص می‌سازد", () => {
     const r = applyOps([], [], [{ op: "add", name: "آزمون", dates: ["فردا", "1405/06/20"] }], TODAY);
     expect(r.occurrences.map((o) => o.startDate)).toEqual(["2026-09-06", "2026-09-11"]);
   });
 
-  it("days با نامِ فارسی و دوره‌ی months", () => {
+  it("days با نام فارسی و دوره‌ی months", () => {
     const r = applyOps([], [], [{ op: "add", name: "ریاضی", days: ["یکشنبه", "سه‌شنبه"], months: 3 }], TODAY);
     expect(r.occurrences.map((o) => o.jsDay)).toEqual([0, 2]);
     expect(r.occurrences[0].startDate).toBe(TODAY);
@@ -82,14 +82,14 @@ describe("add — تک‌روزه و دوره", () => {
     expect(b.occurrences[0].endDate).toBe("2026-09-18");
   });
 
-  it("پایانِ قبل از شروع رد می‌شود", () => {
+  it("پایان قبل از شروع رد می‌شود", () => {
     const r = applyOps([], [], [{ op: "add", name: "غلط", days: [1], from: "2026-10-01", until: "2026-09-01" }], TODAY);
     expect(r.changed).toBe(false);
     expect(r.problems[0]).toContain("قبل از شروعش");
   });
 
   it("تداخل فقط وقتی است که دوره‌ها هم‌پوشانی داشته باشند", () => {
-    const ended = [occ("x", "کلاسِ تمام‌شده", 1, "۱۰:۰۰ – ۱۱:۰۰", { endDate: "2026-08-01" })];
+    const ended = [occ("x", "کلاس تمام‌شده", 1, "۱۰:۰۰ – ۱۱:۰۰", { endDate: "2026-08-01" })];
     const r = applyOps(ended, [], [{ op: "add", name: "جدید", days: [1], start: "10:00", end: "11:00" }], TODAY);
     expect(r.problems).toHaveLength(0);
     const oneOff = [occ("y", "یک‌بار", 1, "۱۰:۰۰ – ۱۱:۰۰", { startDate: "2026-09-21", endDate: "2026-09-21" })];
@@ -110,7 +110,7 @@ describe("فقط یک روز از یک برنامه‌ی تکراری", () => {
     expect(pieces.find((o) => o.id !== "b")!.startDate).toBe("2026-09-08");
   });
 
-  it("move با date → فقط همان روز به روزِ دیگرِ همان هفته", () => {
+  it("move با date → فقط همان روز به روز دیگر همان هفته", () => {
     const r = applyOps(BASE, [], [{ op: "move", ref: 1, date: TODAY, toDay: "یکشنبه" }], TODAY);
     expect(r.problems).toHaveLength(0);
     const moved = r.occurrences.find((o) => o.jsDay === 0)!;
@@ -121,7 +121,7 @@ describe("فقط یک روز از یک برنامه‌ی تکراری", () => {
     expect(r.occurrences.some((o) => o.jsDay === 6 && o.startDate === "2026-09-06")).toBe(true);
   });
 
-  it("retime با date فقط ساعتِ همان روز را عوض می‌کند", () => {
+  it("retime با date فقط ساعت همان روز را عوض می‌کند", () => {
     const r = applyOps(BASE, [], [{ op: "retime", ref: 1, date: "2026-09-12", start: "20:00", end: "21:00" }], TODAY);
     expect(r.problems).toHaveLength(0);
     const single = r.occurrences.find((o) => o.startDate === "2026-09-12" && o.endDate === "2026-09-12")!;
@@ -129,7 +129,7 @@ describe("فقط یک روز از یک برنامه‌ی تکراری", () => {
     expect(r.occurrences.find((o) => o.id === "a")!.endDate).toBe("2026-09-11");
   });
 
-  it("date‌ای که برنامه در آن نیست، پیامِ روشن می‌دهد", () => {
+  it("date‌ای که برنامه در آن نیست، پیام روشن می‌دهد", () => {
     const r = applyOps(BASE, [], [{ op: "delete", ref: 1, date: "2026-09-07" }], TODAY);
     expect(r.changed).toBe(false);
     expect(r.problems[0]).toContain("برنامه‌ای ندارد");
@@ -160,12 +160,12 @@ describe("update و زنجیره‌ی عملیات", () => {
     expect(o.endDate).toBe("2026-12-01");
   });
 
-  it("update بدونِ تغییر پیام می‌دهد", () => {
+  it("update بدون تغییر پیام می‌دهد", () => {
     const r = applyOps(BASE, [], [{ op: "update", ref: 1 }], TODAY);
     expect(r.problems[0]).toContain("تغییری نگفتی");
   });
 
-  it("retime و بعد update روی همان ref به ردیفِ تازه می‌رسد", () => {
+  it("retime و بعد update روی همان ref به ردیف تازه می‌رسد", () => {
     const r = applyOps(BASE, [], [
       { op: "retime", ref: 1, start: "07:00", end: "08:00" },
       { op: "update", ref: 1, name: "دویدن" },
@@ -183,7 +183,7 @@ describe("update و زنجیره‌ی عملیات", () => {
   });
 });
 
-describe("ساعتِ ساختگی", () => {
+describe("ساعت ساختگی", () => {
   it("نشانه‌های زمان را می‌شناسد", () => {
     expect(mentionsTime("ساعت 8 ورزش")).toBe(true);
     expect(mentionsTime("عصرها باشگاه")).toBe(true);

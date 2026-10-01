@@ -4,8 +4,8 @@ import { Spinner } from "./Spinner";
 
 /**
  * دایره‌ی لودینگ که با `done` به تیک تبدیل می‌شه: دایره دورش بسته می‌شه و
- * تیک با stroke-dashoffset کشیده می‌شه (فقط SVG، بدونِ بک‌گراند). برای دکمه‌ی
- * ورود — جای متنِ «در حال ورود…».
+ * تیک با stroke-dashoffset کشیده می‌شه (فقط SVG، بدون بک‌گراند). برای دکمه‌ی
+ * ورود — جای متن «در حال ورود…».
  */
 export function SpinnerCheck({ done, size = 20 }: { done: boolean; size?: number }) {
   if (!done) return <Spinner size={size} />;

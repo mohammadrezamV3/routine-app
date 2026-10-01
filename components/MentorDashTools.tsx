@@ -6,8 +6,8 @@ import { MI, MI_STROKE, MentorRow, MentorSection } from "./MentorUI";
 const ic = (Icon: typeof Wrench, size: number) => <Icon size={size} strokeWidth={MI_STROKE} aria-hidden />;
 
 /**
- * ورودیِ ابزارهای منتور در داشبورد — فقط ردیف‌های drill-down به صفحه‌ی خودِ
- * هر ابزار (گزارشِ هفتگی، قالب‌ها و پاسخ‌های آماده). هر ردیف مستقل حذف‌شدنی است.
+ * ورودی ابزارهای منتور در داشبورد — فقط ردیف‌های drill-down به صفحه‌ی خود
+ * هر ابزار (گزارش هفتگی، قالب‌ها و پاسخ‌های آماده). هر ردیف مستقل حذف‌شدنی است.
  */
 export function MentorDashTools() {
   return (

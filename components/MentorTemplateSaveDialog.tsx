@@ -9,9 +9,9 @@ import type { TemplateRow } from "@/lib/mentorToolsTypes";
 const NAME_MAX = 80;
 
 /**
- * «ذخیره به‌عنوان قالب» — نامِ قالب را می‌گیرد و از یک برنامه‌ی ذخیره‌شده
- * (`programId`) یا محتوای فعلیِ ویرایشگر (`program`) قالب می‌سازد. تاریخ‌ها
- * در قالب نمی‌مانند؛ فقط طولِ بازه.
+ * «ذخیره به‌عنوان قالب» — نام قالب را می‌گیرد و از یک برنامه‌ی ذخیره‌شده
+ * (`programId`) یا محتوای فعلی ویرایشگر (`program`) قالب می‌سازد. تاریخ‌ها
+ * در قالب نمی‌مانند؛ فقط طول بازه.
  */
 export function MentorTemplateSaveDialog({
   defaultName, programId, program, onClose, onSaved,
@@ -57,7 +57,7 @@ export function MentorTemplateSaveDialog({
         <MentorField label="نام قالب" htmlFor="tpl-save-name">
           <input
             id="tpl-save-name" type="text" className="wsearch-newform-name trade-glass-field" maxLength={NAME_MAX}
-            value={name} placeholder="مثلاً حجم 8 هفته‌ای مبتدی" autoFocus
+            value={name} placeholder="مثلا حجم 8 هفته‌ای مبتدی" autoFocus
             onChange={(e) => { setName(e.target.value); setError(null); }}
             onKeyDown={(e) => { if (e.key === "Enter") { e.preventDefault(); save(); } }}
           />

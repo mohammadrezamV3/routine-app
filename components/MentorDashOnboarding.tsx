@@ -10,7 +10,7 @@ import type { VerificationStatus } from "@/lib/mentorTypes";
 
 const ic = (Icon: typeof UserRound, size: number) => <Icon size={size} strokeWidth={MI_STROKE} aria-hidden />;
 
-/** شماره‌ی مرحله یا تیکِ انجام‌شده، جای آیکونِ ردیف */
+/** شماره‌ی مرحله یا تیک انجام‌شده، جای آیکون ردیف */
 function StepMark({ n, done }: { n: number; done: boolean }) {
   return (
     <span className={`mentor-step-mark${done ? " is-done" : ""}`} aria-hidden>
@@ -29,8 +29,8 @@ function identityChip(status: VerificationStatus) {
 }
 
 /**
- * مراحلِ فعال‌شدنِ منتور — احراز هویت اجباری است: تا تاییدِ مدرکِ شناسایی،
- * پروفایل در فهرست منتورها نمایش داده نمی‌شود و درخواستِ شاگرد پذیرفته
+ * مراحل فعال‌شدن منتور — احراز هویت اجباری است: تا تایید مدرک شناسایی،
+ * پروفایل در فهرست منتورها نمایش داده نمی‌شود و درخواست شاگرد پذیرفته
  * نمی‌شود (سرور همین را اعمال می‌کند). روی داشبورد تا کامل‌شدن دیده می‌شود.
  */
 export function MentorSetupSteps({

@@ -10,8 +10,8 @@ import { CONFIDENCE_LABELS, DeltaBadge, useCountUp } from "./WeeklyAnalysisShare
 const RING = 148;
 const STROKE = 11;
 
-// حلقه‌ی بزرگِ امتیازِ کل — همون الگوی DashProgressCircle (مسیرِ کم‌رنگ +
-// پرشدنِ نرم از صفر)، فقط بزرگ‌تر و با حرفِ رتبه وسطش.
+// حلقه‌ی بزرگ امتیاز کل — همون الگوی DashProgressCircle (مسیر کم‌رنگ +
+// پرشدن نرم از صفر)، فقط بزرگ‌تر و با حرف رتبه وسطش.
 function ScoreRing({ score, grade }: { score: number | null; grade: string | null }) {
   const shown = useCountUp(score);
   const pct = score === null ? 0 : Math.min(100, Math.max(0, score)) / 100;
@@ -48,7 +48,7 @@ function StatTile({ icon, label, children }: { icon: React.ReactNode; label: str
   );
 }
 
-// کارتِ اصلیِ بالای صفحه: امتیازِ کلِ هفته + خلاصه‌ی عددی + پیش‌بینیِ پایانِ هفته
+// کارت اصلی بالای صفحه: امتیاز کل هفته + خلاصه‌ی عددی + پیش‌بینی پایان هفته
 export function WeeklyAnalysisHero({ analysis }: { analysis: WeeklyAnalysis }) {
   const o = analysis.overall;
   const daysBase = analysis.isCurrentWeek ? analysis.daysElapsed : 7;

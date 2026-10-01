@@ -1,18 +1,18 @@
 // ─────────────────────────────────────────────────────────────────────────
-// قراردادِ مشترکِ WebSocket (بخشِ خالص — بدون Prisma/ws/pg، پس هم سرور و هم
+// قرارداد مشترک WebSocket (بخش خالص — بدون Prisma/ws/pg، پس هم سرور و هم
 // تست‌ها مستقیم importش می‌کنن).
 //
-// اصلِ امنیتی: رویدادها فقط «متادیتا»ن — نوع + شناسه/کلید. هیچ محتوای خصوصی
-// (متنِ پیام، عنوانِ اعلان، …) از WS رد نمی‌شه؛ کلاینت با گرفتنِ رویداد همون
-// APIِ مجاز و احراز‌هویت‌شده‌ی قبلی رو دوباره می‌خونه. یعنی WS هیچ سطحِ
-// دسترسیِ تازه‌ای باز نمی‌کنه — بدترین حالتِ نشت، «یه چیزی عوض شد»ـه.
+// اصل امنیتی: رویدادها فقط «متادیتا»ن — نوع + شناسه/کلید. هیچ محتوای خصوصی
+// (متن پیام، عنوان اعلان، …) از WS رد نمی‌شه؛ کلاینت با گرفتن رویداد همون
+// API مجاز و احراز‌هویت‌شده‌ی قبلی رو دوباره می‌خونه. یعنی WS هیچ سطح
+// دسترسی تازه‌ای باز نمی‌کنه — بدترین حالت نشت، «یه چیزی عوض شد»ـه.
 // ─────────────────────────────────────────────────────────────────────────
 
-/** کانالِ LISTEN/NOTIFYِ Postgres */
+/** کانال LISTEN/NOTIFY Postgres */
 export const REALTIME_CHANNEL = "arion_rt";
-/** مسیرِ upgrade روی همون origin/پورتِ سایت */
+/** مسیر upgrade روی همون origin/پورت سایت */
 export const REALTIME_PATH = "/ws";
-/** سقفِ payloadِ pg_notify ۸۰۰۰ بایته؛ با حاشیه‌ی امن */
+/** سقف payload pg_notify ۸۰۰۰ بایته؛ با حاشیه‌ی امن */
 export const MAX_NOTIFY_BYTES = 7500;
 /** حداکثر گیرنده در یک NOTIFY — بیشتر از این تکه‌تکه فرستاده می‌شه */
 export const MAX_USERS_PER_NOTIFY = 150;
@@ -26,11 +26,11 @@ export type ServerEventType =
   | "mentor.program";
 
 /**
- * شکلِ رویداد روی سیم — همونی که کلاینت به‌صورتِ
+ * شکل رویداد روی سیم — همونی که کلاینت به‌صورت
  * `CustomEvent("arion:server-event", { detail })` پخش می‌کنه (lib/liveSync.ts).
  *  • keys: دامنه‌های LIVE_DOMAINS (مثلا "trade"، "daily:2026-09-27"، "wakeSleepTimes")
  *  • data: فقط شناسه‌ها (mentorshipId/id)، هرگز محتوا
- *  • src:  شناسه‌ی تبِ نویسنده (هدرِ x-arion-client) تا همون تب اکوی خودش رو نادیده بگیره
+ *  • src:  شناسه‌ی تب نویسنده (هدر x-arion-client) تا همون تب اکوی خودش رو نادیده بگیره
  */
 export type ServerEvent = {
   type: ServerEventType;
@@ -54,7 +54,7 @@ export function isValidUserId(id: unknown): id is string {
   return typeof id === "string" && ID_RE.test(id);
 }
 
-/** رویداد رو تمیز می‌کنه: نوعِ مجاز، کلیدهای کوتاه، data فقط مقادیرِ ساده و کوتاه */
+/** رویداد رو تمیز می‌کنه: نوع مجاز، کلیدهای کوتاه، data فقط مقادیر ساده و کوتاه */
 export function sanitizeEvent(e: unknown): ServerEvent | null {
   if (!e || typeof e !== "object") return null;
   const src = e as Record<string, unknown>;
@@ -86,7 +86,7 @@ function byteLength(s: string): number {
 }
 
 /**
- * payload(های) NOTIFY رو می‌سازه: `{u:[userIds], e:event}`. اگه تعدادِ گیرنده‌ها
+ * payload(های) NOTIFY رو می‌سازه: `{u:[userIds], e:event}`. اگه تعداد گیرنده‌ها
  * زیاد باشه یا payload از سقف رد بشه، گیرنده‌ها تکه‌تکه می‌شن — هیچ‌وقت یک
  * NOTIFY بزرگ‌تر از ۸KB (که Postgres ردش می‌کنه) ساخته نمی‌شه.
  */
@@ -98,7 +98,7 @@ export function buildNotifyPayloads(userIds: readonly string[], event: ServerEve
   const out: string[] = [];
   let chunk: string[] = [];
   const encode = (u: string[]) => JSON.stringify({ u, e: clean });
-  if (byteLength(encode([ids[0]])) > MAX_NOTIFY_BYTES) return []; // خودِ رویداد بیش‌ازحد بزرگه
+  if (byteLength(encode([ids[0]])) > MAX_NOTIFY_BYTES) return []; // خود رویداد بیش‌ازحد بزرگه
   for (const id of ids) {
     const next = [...chunk, id];
     if (next.length > MAX_USERS_PER_NOTIFY || byteLength(encode(next)) > MAX_NOTIFY_BYTES) {
@@ -112,7 +112,7 @@ export function buildNotifyPayloads(userIds: readonly string[], event: ServerEve
   return out;
 }
 
-/** payloadِ رسیده از LISTEN رو پارس و اعتبارسنجی می‌کنه (هرچی بدشکل → null) */
+/** payload رسیده از LISTEN رو پارس و اعتبارسنجی می‌کنه (هرچی بدشکل → null) */
 export function parseNotifyPayload(raw: string | undefined | null): { userIds: string[]; event: ServerEvent } | null {
   if (!raw || raw.length > 8000) return null;
   let obj: unknown;
@@ -127,8 +127,8 @@ export function parseNotifyPayload(raw: string | undefined | null): { userIds: s
 }
 
 /**
- * fan-outِ محلی: از بینِ سوکت‌های همین worker فقط مالِ userIdهای مقصد.
- * جدا نگه داشته شده تا قابلِ تست باشه — «به کسِ دیگه نرسه» مهم‌ترین تضمینه.
+ * fan-out محلی: از بین سوکت‌های همین worker فقط مال userIdهای مقصد.
+ * جدا نگه داشته شده تا قابل تست باشه — «به کس دیگه نرسه» مهم‌ترین تضمینه.
  */
 export function selectRecipients<S>(socketsByUser: Map<string, Set<S>>, userIds: readonly string[]): S[] {
   const out: S[] = [];
@@ -139,7 +139,7 @@ export function selectRecipients<S>(socketsByUser: Map<string, Set<S>>, userIds:
   return out;
 }
 
-// ── احرازِ هویت/Origin روی upgrade ──────────────────────────────────────
+// ── احراز هویت/Origin روی upgrade ──────────────────────────────────────
 
 export function parseCookieHeader(header: string | undefined | null): Map<string, string> {
   const out = new Map<string, string>();
@@ -159,9 +159,9 @@ export function parseCookieHeader(header: string | undefined | null): Map<string
 export const SESSION_COOKIE_NAMES = ["__Secure-next-auth.session-token", "next-auth.session-token"] as const;
 
 /**
- * توکنِ نشستِ next-auth رو از کوکی‌ها درمیاره — شاملِ حالتِ تکه‌شده
+ * توکن نشست next-auth رو از کوکی‌ها درمیاره — شامل حالت تکه‌شده
  * (`name.0`, `name.1`, … وقتی JWT از ۴KB بزرگ‌تر بشه). هر دو اسم (با/بی
- * پیشوندِ __Secure-) امتحان می‌شن چون useSecureCookies این اپ به
+ * پیشوند __Secure-) امتحان می‌شن چون useSecureCookies این اپ به
  * AUTH_COOKIE_SECURE/NODE_ENV بستگی داره، نه فقط NEXTAUTH_URL.
  */
 export function pickSessionTokens(cookies: Map<string, string>): string[] {
@@ -192,7 +192,7 @@ export function allowedOriginHosts(env: Record<string, string | undefined> = pro
     const h = hostOf(u);
     if (!h) return;
     hosts.add(h);
-    // www و بدونِ www یک سایت‌ان
+    // www و بدون www یک سایت‌ان
     if (h.startsWith("www.")) hosts.add(h.slice(4));
     else if (h.includes(".") && !/^[\d.]+(:\d+)?$/.test(h)) hosts.add(`www.${h}`);
   };
@@ -203,11 +203,11 @@ export function allowedOriginHosts(env: Record<string, string | undefined> = pro
 }
 
 /**
- * ضدِ Cross-Site WebSocket Hijacking: مرورگر روی WS کوکی رو خودکار می‌فرسته،
- * پس بدونِ این چک هر سایتی می‌تونست به‌جای کاربر وصل بشه. Origin (که
- * جاوااسکریپت نمی‌تونه جعلش کنه) باید یا با Hostِ خودِ درخواست یکی باشه
- * (همون origin — nginx با `Host $host` پاسش می‌ده) یا توی لیستِ مجازِ env.
- * نبودِ Origin = رد (مرورگرها روی WS همیشه می‌فرستن).
+ * ضد Cross-Site WebSocket Hijacking: مرورگر روی WS کوکی رو خودکار می‌فرسته،
+ * پس بدون این چک هر سایتی می‌تونست به‌جای کاربر وصل بشه. Origin (که
+ * جاوااسکریپت نمی‌تونه جعلش کنه) باید یا با Host خود درخواست یکی باشه
+ * (همون origin — nginx با `Host $host` پاسش می‌ده) یا توی لیست مجاز env.
+ * نبود Origin = رد (مرورگرها روی WS همیشه می‌فرستن).
  */
 export function isOriginAllowed(
   origin: string | undefined | null,
@@ -222,7 +222,7 @@ export function isOriginAllowed(
   return allowed.has(oh);
 }
 
-/** پیامِ upgradeِ رد‌شده — پاسخِ HTTPِ خام روی سوکت، بعد بستن */
+/** پیام upgrade رد‌شده — پاسخ HTTP خام روی سوکت، بعد بستن */
 export function rejectResponse(status: 400 | 401 | 403 | 404 | 429 | 503): string {
   const text: Record<number, string> = {
     400: "Bad Request",
@@ -235,7 +235,7 @@ export function rejectResponse(status: 400 | 401 | 403 | 404 | 429 | 503): strin
   return `HTTP/1.1 ${status} ${text[status]}\r\nConnection: close\r\nContent-Type: text/plain\r\nContent-Length: 0\r\n\r\n`;
 }
 
-/** فقط `/ws` (با query دلخواه) — هرچیز دیگه (مثلا HMRِ نکست) دست‌نخورده رد می‌شه */
+/** فقط `/ws` (با query دلخواه) — هرچیز دیگه (مثلا HMR نکست) دست‌نخورده رد می‌شه */
 export function isRealtimePath(url: string | undefined | null): boolean {
   if (!url) return false;
   const path = url.split("?")[0];

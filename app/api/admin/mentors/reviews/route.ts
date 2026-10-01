@@ -4,7 +4,7 @@ import { prisma } from "@/lib/prisma";
 import { requireAdmin } from "@/lib/requireAdmin";
 
 // GET /api/admin/mentors/reviews?status=VISIBLE|HIDDEN|reported&page=
-// «reported» = نظرهایی که حداقل یک گزارشِ باز دارن (هر وضعیتی).
+// «reported» = نظرهایی که حداقل یک گزارش باز دارن (هر وضعیتی).
 
 const STATUSES = ["VISIBLE", "HIDDEN", "reported"] as const;
 type Status = (typeof STATUSES)[number];

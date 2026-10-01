@@ -4,9 +4,9 @@ import { requireAdmin } from "@/lib/requireAdmin";
 import { writeAuditLog } from "@/lib/adminAnalytics";
 import { clampText } from "@/lib/validate";
 
-// POST /api/admin/support/:id/messages — جوابِ ادمین روی هر تیکتی. تیکت
-// خودکار ANSWERED می‌شه (منتظرِ کاربر) — برخلافِ پیامِ کاربر که تیکت رو
-// OPEN می‌کنه (منتظرِ ادمین).
+// POST /api/admin/support/:id/messages — جواب ادمین روی هر تیکتی. تیکت
+// خودکار ANSWERED می‌شه (منتظر کاربر) — برخلاف پیام کاربر که تیکت رو
+// OPEN می‌کنه (منتظر ادمین).
 export async function POST(req: NextRequest, { params }: { params: { id: string } }) {
   const guard = await requireAdmin("support");
   if (!guard.ok) return guard.response;

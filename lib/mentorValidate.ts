@@ -1,12 +1,12 @@
 import type { MentorProgramType } from "@prisma/client";
 import { parseIsoDate, toEnglishDigits } from "@/lib/validate";
 
-// اعتبارسنجیِ بدنه‌ی ساخت/ویرایشِ برنامه‌ی منتور. خروجی فقط فیلدهای
+// اعتبارسنجی بدنه‌ی ساخت/ویرایش برنامه‌ی منتور. خروجی فقط فیلدهای
 // لیست‌شده‌ست — بدنه‌ی خام هیچ‌وقت به Prisma نمی‌رسه (mass assignment)، پس
 // مثلا status/version/sentAt/studentId از بدنه هرگز خونده نمی‌شن.
 
 export const MAX_PROGRAM_ITEMS = 100;
-export const PROGRAM_TITLE_MAX = 120; // هم‌اندازه‌ی سقفِ برچسبِ روتین در lib/mentorPrivacy.ts
+export const PROGRAM_TITLE_MAX = 120; // هم‌اندازه‌ی سقف برچسب روتین در lib/mentorPrivacy.ts
 export const PROGRAM_DESC_MAX = 2000;
 export const PROGRAM_NOTE_MAX = 1000;
 export const ROUTINE_ROLE_MAX = 60;
@@ -43,7 +43,7 @@ export type ProgramData = {
 
 type Result<T> = { ok: true; data: T } | { ok: false; error: string };
 
-/** "HH:mm" با پذیرشِ ارقامِ فارسی (کیبوردِ فارسی) — خروجی همیشه لاتین */
+/** "HH:mm" با پذیرش ارقام فارسی (کیبورد فارسی) — خروجی همیشه لاتین */
 export function parseHHmm(v: unknown): string | null {
   if (typeof v !== "string") return null;
   const t = toEnglishDigits(v).trim();
@@ -135,8 +135,8 @@ function validateItem(raw: any, idx: number, type: MentorProgramType): Result<It
 }
 
 /**
- * بدنه‌ی POST/PUT برنامه. `type` در ویرایش هم لازمه (همون بدنه‌ی POST بدونِ
- * mentorshipId)، ولی روتِ PUT می‌تونه نوعِ فعلیِ برنامه رو به‌عنوان پیش‌فرض بده.
+ * بدنه‌ی POST/PUT برنامه. `type` در ویرایش هم لازمه (همون بدنه‌ی POST بدون
+ * mentorshipId)، ولی روت PUT می‌تونه نوع فعلی برنامه رو به‌عنوان پیش‌فرض بده.
  */
 export function validateProgramInput(body: any, fallbackType?: MentorProgramType): Result<ProgramData> {
   if (!body || typeof body !== "object") return { ok: false, error: "بدنه‌ی درخواست نامعتبره" };
@@ -186,9 +186,9 @@ export function validateProgramInput(body: any, fallbackType?: MentorProgramType
 }
 
 /**
- * نقشِ منتور در حوزه‌ی روتین (مثلا «استاد ریاضی»، «مشاور کنکور»).
+ * نقش منتور در حوزه‌ی روتین (مثلا «استاد ریاضی»، «مشاور کنکور»).
  * null/"" یعنی پاک‌کردن. فاصله‌های تکراری یکی می‌شن؛ بیشتر از سقف رد می‌شه
- * (نه بریده‌شدنِ بی‌صدا) تا منتور بدونه متنش کامل ذخیره نشده.
+ * (نه بریده‌شدن بی‌صدا) تا منتور بدونه متنش کامل ذخیره نشده.
  */
 export function validateRoutineRole(v: unknown): Result<string | null> {
   if (v === undefined || v === null) return { ok: true, data: null };

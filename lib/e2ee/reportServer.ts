@@ -2,13 +2,13 @@ import { prisma } from "@/lib/prisma";
 import { verifyCommitment } from "./core";
 import { openAtRest, sealAtRest, verifyServerFrankingTag } from "./server";
 
-// گزارشِ پیامِ رمزشده با «فرانکینگ» (الگوی Messenger):
-//   فرستنده هنگامِ ارسال تعهد = HMAC(fk, زمینه‖متن) را کنارِ متنِ رمزشده می‌فرستد و
-//   fk را *داخلِ* متنِ رمزشده می‌گذارد؛ سرور تعهد را با برچسبِ خودش (فرستنده‌ی
+// گزارش پیام رمزشده با «فرانکینگ» (الگوی Messenger):
+//   فرستنده هنگام ارسال تعهد = HMAC(fk, زمینه‖متن) را کنار متن رمزشده می‌فرستد و
+//   fk را *داخل* متن رمزشده می‌گذارد؛ سرور تعهد را با برچسب خودش (فرستنده‌ی
 //   احرازشده + زمان) مهر می‌کند. گیرنده برای گزارش متن و fk را می‌فرستد؛ سرور
-//   (۱) برچسبِ خودش و (۲) تعهد را چک می‌کند. تنها در این صورت متنِ *همان یک پیام*
-//   (رمزشده در حالِ سکون) در گزارش ذخیره می‌شود. گزارشِ جعلی (متنی که فرستنده
-//   نفرستاده) با احتمالِ ناچیز پذیرفته می‌شود.
+//   (۱) برچسب خودش و (۲) تعهد را چک می‌کند. تنها در این صورت متن *همان یک پیام*
+//   (رمزشده در حال سکون) در گزارش ذخیره می‌شود. گزارش جعلی (متنی که فرستنده
+//   نفرستاده) با احتمال ناچیز پذیرفته می‌شود.
 
 export const REPORTED_TEXT_MAX = 2000;
 
@@ -19,8 +19,8 @@ export function reportedTextAad(messageId: string, reporterId: string): string[]
 }
 
 /**
- * مدرکِ گزارشِ یک پیام — یا خطا. پیش‌فرض: resolveTargetOwner قبلا تایید کرده
- * که پیام در گفت‌وگوی گزارش‌دهنده است و از طرفِ مقابل آمده.
+ * مدرک گزارش یک پیام — یا خطا. پیش‌فرض: resolveTargetOwner قبلا تایید کرده
+ * که پیام در گفت‌وگوی گزارش‌دهنده است و از طرف مقابل آمده.
  */
 export async function verifyMessageReport(
   messageId: string,
@@ -33,7 +33,7 @@ export async function verifyMessageReport(
   });
   if (!msg) return { ok: false, error: "پیام پیدا نشد" };
 
-  // پیامِ قدیمیِ پیش از رمزگذاری: متنش روی سرور هست؛ تاییدِ رمزنگاری ندارد
+  // پیام قدیمی پیش از رمزگذاری: متنش روی سرور هست؛ تایید رمزنگاری ندارد
   if (msg.legacyBody != null) {
     return { ok: true, evidence: { reportedText: msg.legacyBody.slice(0, REPORTED_TEXT_MAX), reportedMessageAt: msg.createdAt, reportVerified: false } };
   }

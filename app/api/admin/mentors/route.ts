@@ -4,8 +4,8 @@ import { prisma } from "@/lib/prisma";
 import { requireAdmin } from "@/lib/requireAdmin";
 
 // GET /api/admin/mentors?tab=pending|all|suspended&q=&page=
-// صفِ احراز (هویت یا هر مدرکی PENDING) + همه + تعلیق‌شده‌ها. فقط اطلاعاتِ
-// عمومیِ کاربر برمی‌گرده (هیچ ایمیل/شماره‌ای) و هیچ‌وقت بایت‌های مدرک.
+// صف احراز (هویت یا هر مدرکی PENDING) + همه + تعلیق‌شده‌ها. فقط اطلاعات
+// عمومی کاربر برمی‌گرده (هیچ ایمیل/شماره‌ای) و هیچ‌وقت بایت‌های مدرک.
 
 const TABS = ["pending", "all", "suspended"] as const;
 type Tab = (typeof TABS)[number];
@@ -49,7 +49,7 @@ export async function GET(req: NextRequest) {
   const [rows, total, pendingTotal, suspendedTotal, allTotal] = await Promise.all([
     prisma.mentorProfile.findMany({
       where,
-      // صفِ احراز: قدیمی‌ترین درخواست اول؛ بقیه: تازه‌ترین منتور اول
+      // صف احراز: قدیمی‌ترین درخواست اول؛ بقیه: تازه‌ترین منتور اول
       orderBy: tab === "pending" ? { updatedAt: "asc" } : { createdAt: "desc" },
       skip: (page - 1) * PAGE_SIZE,
       take: PAGE_SIZE,

@@ -6,11 +6,11 @@ import { PUBLIC_USER_SELECT } from "@/lib/mentorServer";
 import { checkWrapTargets, serverFrankingTag, type EncryptedInput } from "@/lib/e2ee/server";
 import type { EncryptedMessage } from "@/lib/e2ee/core";
 
-// منطقِ مشترکِ سمتِ سرورِ گفت‌وگوی رمزگذاری‌شده (ارسالِ تکی، ارسالِ گروهی،
-// بازرمزگذاریِ پیام‌های قدیمی). سرور متن را هرگز نمی‌بیند؛ فقط شکل، نسخه‌ی
-// کلیدها و یکتاییِ clientId را چک می‌کند و برچسبِ فرانکینگ می‌زند.
+// منطق مشترک سمت سرور گفت‌وگوی رمزگذاری‌شده (ارسال تکی، ارسال گروهی،
+// بازرمزگذاری پیام‌های قدیمی). سرور متن را هرگز نمی‌بیند؛ فقط شکل، نسخه‌ی
+// کلیدها و یکتایی clientId را چک می‌کند و برچسب فرانکینگ می‌زند.
 
-/** پیام‌های قدیمیِ متن‌ساده (پیش از رمزگذاری) بعد از این مدت پاک می‌شوند */
+/** پیام‌های قدیمی متن‌ساده (پیش از رمزگذاری) بعد از این مدت پاک می‌شوند */
 export const LEGACY_RETENTION_DAYS = 30;
 const MESSAGE_NOTIFY_THROTTLE_MS = 10 * 60 * 1000;
 
@@ -35,8 +35,8 @@ export const MESSAGE_SELECT = {
 type MessageRow = Prisma.MentorMessageGetPayload<{ select: typeof MESSAGE_SELECT }>;
 
 /**
- * شکلِ پیام برای کلاینت — فقط متنِ رمزشده (و برای ردیف‌های قدیمی، متنِ ساده‌ی خودِ دو طرف).
- * در scheme 2 فقط بسته‌بندی‌های *کلیدهای خودِ بیننده* فرستاده می‌شود.
+ * شکل پیام برای کلاینت — فقط متن رمزشده (و برای ردیف‌های قدیمی، متن ساده‌ی خود دو طرف).
+ * در scheme 2 فقط بسته‌بندی‌های *کلیدهای خود بیننده* فرستاده می‌شود.
  */
 export function serializeMessage(r: MessageRow, viewerId: string) {
   let enc: EncryptedMessage | null = null;
@@ -82,8 +82,8 @@ export const senderNoKey = () =>
   NextResponse.json({ error: "کلید رمزگذاری این دستگاه هنوز آماده نیست؛ صفحه را دوباره باز کن", code: "NO_KEY" }, { status: 409 });
 
 /**
- * بسته‌بندی‌های پیام باید دقیقا کلیدهای فعالِ *هر دو طرف* (همه‌ی دستگاه‌ها) را پوشش
- * دهند و از یکی از کلیدهای فعالِ فرستنده ساخته شده باشند؛ وگرنه ۴۰۹ با کد تا کلاینت
+ * بسته‌بندی‌های پیام باید دقیقا کلیدهای فعال *هر دو طرف* (همه‌ی دستگاه‌ها) را پوشش
+ * دهند و از یکی از کلیدهای فعال فرستنده ساخته شده باشند؛ وگرنه ۴۰۹ با کد تا کلاینت
  * کلیدها را تازه کند و دوباره رمز کند (docs/mentor-e2ee.md).
  */
 export async function checkSendKeys(senderId: string, recipientId: string, input: Pick<EncryptedInput, "from" | "wraps">): Promise<NextResponse | null> {
@@ -116,7 +116,7 @@ function messageColumns(m: Pick<Mentorship, "id">, senderId: string, input: Encr
   };
 }
 
-/** دادهِ یک ردیفِ پیامِ رمزشده (با بسته‌بندی‌ها)، با برچسبِ فرانکینگِ سرور */
+/** داده یک ردیف پیام رمزشده (با بسته‌بندی‌ها)، با برچسب فرانکینگ سرور */
 export function encryptedMessageData(
   m: Pick<Mentorship, "id">,
   senderId: string,
@@ -127,7 +127,7 @@ export function encryptedMessageData(
   return { ...messageColumns(m, senderId, input, now, broadcastId), wraps: { create: wrapRows(input) } };
 }
 
-/** همان، برای createManyِ دسته‌ای (داده‌ی آزمایشی): شناسه‌ی پیام از بیرون */
+/** همان، برای createMany دسته‌ای (داده‌ی آزمایشی): شناسه‌ی پیام از بیرون */
 export function encryptedMessageRows(
   m: Pick<Mentorship, "id">,
   senderId: string,
@@ -142,8 +142,8 @@ export function encryptedMessageRows(
 }
 
 /**
- * اعلانِ «پیام جدید» — بدونِ هیچ بخشی از متن (سرور متن را ندارد). اگه گیرنده
- * اعلانِ خوانده‌نشده‌ی همین گفت‌وگو را از ۱۰ دقیقه‌ی اخیر دارد، یکی دیگر نمی‌سازد.
+ * اعلان «پیام جدید» — بدون هیچ بخشی از متن (سرور متن را ندارد). اگه گیرنده
+ * اعلان خوانده‌نشده‌ی همین گفت‌وگو را از ۱۰ دقیقه‌ی اخیر دارد، یکی دیگر نمی‌سازد.
  */
 export async function notifyNewMessage(m: Pick<Mentorship, "id" | "mentorId" | "studentId">, senderId: string): Promise<void> {
   const recipient = m.mentorId === senderId ? m.studentId : m.mentorId;
@@ -157,7 +157,7 @@ export async function notifyNewMessage(m: Pick<Mentorship, "id" | "mentorId" | "
   await notifyUser(recipient, { type: "message.new", title: "پیام جدید", body: `${displayName(sender)} پیام تازه‌ای فرستاد`, url });
 }
 
-/** پاک‌کردنِ پیام‌های قدیمیِ متن‌ساده‌ی منقضی (یک گفت‌وگو یا همه) */
+/** پاک‌کردن پیام‌های قدیمی متن‌ساده‌ی منقضی (یک گفت‌وگو یا همه) */
 export async function purgeExpiredLegacyMessages(mentorshipId?: string): Promise<number> {
   const cutoff = new Date(Date.now() - LEGACY_RETENTION_DAYS * 86_400_000);
   const r = await prisma.mentorMessage.deleteMany({

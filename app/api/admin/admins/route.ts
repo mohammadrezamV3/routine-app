@@ -33,8 +33,8 @@ export async function POST(req: NextRequest) {
   const identifier = typeof body?.identifier === "string" ? body.identifier : "";
   const user = identifier ? await findUserByIdentifier(identifier) : null;
   if (!user || user.deletedAt) return NextResponse.json({ error: "کاربری با این شناسه پیدا نشد" }, { status: 404 });
-  // کلیدهای نامعتبر قبل از چکِ «خالی‌نبودن» حذف می‌شن — وگرنه ["x"] رد می‌شد
-  // و یه «admin.grant» با دسترسیِ خالی ثبت می‌شد
+  // کلیدهای نامعتبر قبل از چک «خالی‌نبودن» حذف می‌شن — وگرنه ["x"] رد می‌شد
+  // و یه «admin.grant» با دسترسی خالی ثبت می‌شد
   const permissions = sanitizePermissions(body?.permissions);
   const superAdmin = typeof body?.superAdmin === "boolean" ? body.superAdmin : undefined;
   if (superAdmin !== true && permissions.length === 0) {

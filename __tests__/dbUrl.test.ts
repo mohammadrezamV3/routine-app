@@ -2,8 +2,8 @@ import { describe, it, expect } from "vitest";
 import { tuneDatabaseUrl } from "@/lib/dbUrl";
 
 const EMPTY = {} as Record<string, string | undefined>;
-// تکِ-worker (بدونِ cluster.js) — یعنی همون بودجه‌ی کلِ قدیمی، بدونِ تقسیم؛
-// چون پیش‌فرض بدونِ WEB_CONCURRENCY به os.cpus() که بینِ ماشین‌ها فرق می‌کنه
+// تک-worker (بدون cluster.js) — یعنی همون بودجه‌ی کل قدیمی، بدون تقسیم؛
+// چون پیش‌فرض بدون WEB_CONCURRENCY به os.cpus() که بین ماشین‌ها فرق می‌کنه
 // وابسته‌ست، این عدد رو صریح می‌دیم تا تست‌ها همه‌جا یکسان نتیجه بدن.
 const ONE_WORKER = { WEB_CONCURRENCY: "1" } as Record<string, string | undefined>;
 
@@ -15,11 +15,11 @@ describe("tuneDatabaseUrl", () => {
     expect(out).toContain("&connect_timeout=10");
   });
 
-  it("پیش‌فرضِ connection_limit را بینِ workerهای cluster.js تقسیم می‌کند", () => {
+  it("پیش‌فرض connection_limit را بین workerهای cluster.js تقسیم می‌کند", () => {
     const out2 = tuneDatabaseUrl("postgresql://u:p@db:5432/routine", { WEB_CONCURRENCY: "2" })!;
     expect(out2).toContain("connection_limit=5");
     const out4 = tuneDatabaseUrl("postgresql://u:p@db:5432/routine", { WEB_CONCURRENCY: "4" })!;
-    expect(out4).toContain("connection_limit=3"); // Math.max(3, floor(10/4)=2) → حداقلِ ۳
+    expect(out4).toContain("connection_limit=3"); // Math.max(3, floor(10/4)=2) → حداقل ۳
   });
 
   it("وقتی URL از قبل query دارد با & ادامه می‌دهد (نه ?)", () => {
@@ -28,12 +28,12 @@ describe("tuneDatabaseUrl", () => {
     expect(out.match(/\?/g)).toHaveLength(1);
   });
 
-  it("مقدارِ صریحِ اپراتور را بازنویسی نمی‌کند", () => {
+  it("مقدار صریح اپراتور را بازنویسی نمی‌کند", () => {
     const raw = "postgresql://u:p@db:5432/routine?connection_limit=3&pool_timeout=5&connect_timeout=2";
     expect(tuneDatabaseUrl(raw, EMPTY)).toBe(raw);
   });
 
-  it("فقط پارامترِ جاافتاده را اضافه می‌کند", () => {
+  it("فقط پارامتر جاافتاده را اضافه می‌کند", () => {
     const out = tuneDatabaseUrl("postgresql://u:p@db:5432/r?connection_limit=25", EMPTY)!;
     expect(out).toContain("connection_limit=25");
     expect(out).not.toContain("connection_limit=10");
@@ -51,16 +51,16 @@ describe("tuneDatabaseUrl", () => {
     expect(out).toContain("connect_timeout=5");
   });
 
-  // مهم‌ترین تضمین: رمزِ دیتابیس داخلِ همین رشته‌ست. اگه روزی این تابع به
-  // `new URL(...).toString()` تغییر کنه، کاراکترهای خاصِ رمز دوباره encode
-  // می‌شن و اتصال بی‌صدا می‌شکنه — این تست دقیقاً جلوی همون رو می‌گیره.
-  it("رمزِ عبورِ دارای کاراکترِ خاص را دست‌نخورده نگه می‌دارد", () => {
+  // مهم‌ترین تضمین: رمز دیتابیس داخل همین رشته‌ست. اگه روزی این تابع به
+  // `new URL(...).toString()` تغییر کنه، کاراکترهای خاص رمز دوباره encode
+  // می‌شن و اتصال بی‌صدا می‌شکنه — این تست دقیقا جلوی همون رو می‌گیره.
+  it("رمز عبور دارای کاراکتر خاص را دست‌نخورده نگه می‌دارد", () => {
     const raw = "postgresql://routine:aB%23c%2Fd%3Ae!f@db:5432/routine";
     const out = tuneDatabaseUrl(raw, EMPTY)!;
     expect(out.startsWith(raw)).toBe(true);
   });
 
-  it("URLِ خالی/undefined را همان‌طور برمی‌گرداند", () => {
+  it("URL خالی/undefined را همان‌طور برمی‌گرداند", () => {
     expect(tuneDatabaseUrl(undefined, EMPTY)).toBeUndefined();
     expect(tuneDatabaseUrl("", EMPTY)).toBe("");
   });

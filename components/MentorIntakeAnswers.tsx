@@ -3,8 +3,8 @@
 import type { IntakeAnswer } from "@/lib/mentorTypes";
 
 /**
- * جواب‌های شاگرد به سؤال‌های پذیرشِ منتور — سؤال کم‌رنگ، جواب زیرش.
- * همه‌جا (ردیفِ درخواست، صفحه‌ی شاگرد) همین نمایش استفاده می‌شود.
+ * جواب‌های شاگرد به سؤال‌های پذیرش منتور — سؤال کم‌رنگ، جواب زیرش.
+ * همه‌جا (ردیف درخواست، صفحه‌ی شاگرد) همین نمایش استفاده می‌شود.
  */
 export function MentorIntakeAnswers({ answers }: { answers: IntakeAnswer[] | null | undefined }) {
   if (!answers || answers.length === 0) return null;

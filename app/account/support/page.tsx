@@ -31,11 +31,11 @@ function formatTicketDate(iso: string): string {
   return `${faNum(jd)} ${J_MONTHS[jm - 1]} ${faNum(jy)}، ${hh}:${mm}`;
 }
 
-// پشتیبانیِ در-سایت — طبق درخواستِ صریح («راه‌های ارتباطی راهِ پشتیبانی
+// پشتیبانی در-سایت — طبق درخواست صریح («راه‌های ارتباطی راه پشتیبانی
 // نیست، فقط توی سایت می‌تونه پشتیبانی صورت بگیره») ایمیل/تلگرام/اینستاگرام
-// قبلی کامل حذف شد؛ به‌جاش یک سیستمِ تیکتِ واقعی: هر کاربر تیکت می‌سازه،
+// قبلی کامل حذف شد؛ به‌جاش یک سیستم تیکت واقعی: هر کاربر تیکت می‌سازه،
 // روی همون تیکت با ادمین گفت‌وگو می‌کنه (SupportTicket/SupportMessage،
-// app/api/support/tickets). سمتِ ادمین: app/admin/support.
+// app/api/support/tickets). سمت ادمین: app/admin/support.
 export default function SupportPage() {
   const router = useRouter();
   const [tickets, setTickets] = useState<TicketRow[] | null>(null);
@@ -53,8 +53,8 @@ export default function SupportPage() {
     <section>
       <div className="acc-head">
         <AccountBackButton />
-        {/* طبقِ درخواستِ صریح: تایتل «پشتیبانی» هم‌ردیفِ دکمه‌ی «ایجاد تیکت»
-            (سمتِ چپ) — نه زیرِ هم مثلِ بقیه‌ی صفحه‌ها. */}
+        {/* طبق درخواست صریح: تایتل «پشتیبانی» هم‌ردیف دکمه‌ی «ایجاد تیکت»
+            (سمت چپ) — نه زیر هم مثل بقیه‌ی صفحه‌ها. */}
         <div className="support-head-row">
           <h1>پشتیبانی</h1>
           <button type="button" className="account-outline-btn support-new-btn" onClick={() => setCreating(true)}>

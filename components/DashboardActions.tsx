@@ -1,10 +1,10 @@
 "use client";
 
-// کارهای سریعِ داشبورد که به‌جای رفتن به یک صفحه‌ی دیگه، همون پاپ‌آپِ اصلیِ
-// اون بخش رو همین‌جا باز می‌کنن (درخواستِ صریح: «صفحه‌ی جدید لود نکنه»).
-// عمدا هیچ فرمِ تازه‌ای ساخته نشده — همون مودال‌هایی که خودِ /weekly،
+// کارهای سریع داشبورد که به‌جای رفتن به یک صفحه‌ی دیگه، همون پاپ‌آپ اصلی
+// اون بخش رو همین‌جا باز می‌کنن (درخواست صریح: «صفحه‌ی جدید لود نکنه»).
+// عمدا هیچ فرم تازه‌ای ساخته نشده — همون مودال‌هایی که خود /weekly،
 // کالری‌شمار و ژورنال استفاده می‌کنن، با همون API و همون قواعد (مثلا
-// snapshotِ چک‌لیستِ معامله سمتِ سرور). داشبورد خودش چیزی نمی‌نویسه.
+// snapshot چک‌لیست معامله سمت سرور). داشبورد خودش چیزی نمی‌نویسه.
 
 import { createContext, useCallback, useContext, useEffect, useMemo, useState } from "react";
 import { createPortal } from "react-dom";
@@ -22,7 +22,7 @@ export type DashAction = "program" | "food" | "trade";
 
 const Ctx = createContext<((a: DashAction) => void) | null>(null);
 
-/** null یعنی بیرون از داشبورد — دکمه‌ها به لینکِ معمولی برمی‌گردن */
+/** null یعنی بیرون از داشبورد — دکمه‌ها به لینک معمولی برمی‌گردن */
 export function useDashAction() {
   return useContext(Ctx);
 }
@@ -43,9 +43,9 @@ export function DashboardActionsProvider({
   children,
 }: {
   scheduleOpts: ScheduleOpts;
-  /** بعد از ثبتِ موفق — دیتای داشبورد تازه بشه */
+  /** بعد از ثبت موفق — دیتای داشبورد تازه بشه */
   onChanged: () => void;
-  /** وقتی پاپ‌آپ بی‌معناست (مثلا هنوز حسابِ معاملاتی نیست) → صفحه‌ی خودِ اون بخش */
+  /** وقتی پاپ‌آپ بی‌معناست (مثلا هنوز حساب معاملاتی نیست) → صفحه‌ی خود اون بخش */
   onNeedPage: (href: string) => void;
   children: React.ReactNode;
 }) {
@@ -58,7 +58,7 @@ export function DashboardActionsProvider({
   const openAction = useCallback((a: DashAction) => {
     if (a === "food") {
       setOpen("food");
-      // وعده‌های سفارشیِ کاربر (اگه تعریف کرده) — تا اون موقع پیش‌فرض‌ها
+      // وعده‌های سفارشی کاربر (اگه تعریف کرده) — تا اون موقع پیش‌فرض‌ها
       fetch("/api/calorie/target")
         .then((r) => (r.ok ? r.json() : null))
         .then((d) => {
@@ -69,7 +69,7 @@ export function DashboardActionsProvider({
       return;
     }
     if (a === "trade") {
-      // معامله همیشه زیرِ یک حسابه؛ بدونِ حساب، فرم معنا نداره → ساختِ حساب
+      // معامله همیشه زیر یک حسابه؛ بدون حساب، فرم معنا نداره → ساخت حساب
       Promise.all([
         fetch("/api/trade/accounts?archived=0").then((r) => (r.ok ? r.json() : null)),
         fetch("/api/trade/tags").then((r) => (r.ok ? r.json() : null)),

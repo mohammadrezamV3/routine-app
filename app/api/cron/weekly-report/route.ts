@@ -10,9 +10,9 @@ import { generateAiCoach, isAiAvailable } from "@/lib/weeklyAnalysis/ai";
 
 // POST /api/cron/weekly-report — نه چیزی که خود کاربر/کلاینت صداش بزنه،
 // یه crontab بیرونی (هر شنبه ساعت ۹، طبق راهنمای دیپلوی — نگاه کن به
-// deploy/cron.example) این‌جا رو می‌زنه. آدرسِ روت عمدا همون آدرسِ قدیمیِ
+// deploy/cron.example) این‌جا رو می‌زنه. آدرس روت عمدا همون آدرس قدیمی
 // «گزارش هفتگی» نگه داشته شده تا crontab سرورهای موجود نیازی به تغییر
-// نداشته باشه؛ محتوا الان مالِ «آنالیز هفتگی»ه.
+// نداشته باشه؛ محتوا الان مال «آنالیز هفتگی»ه.
 //
 // weekOffset=-1 یعنی هفته‌ای که همین الان تموم شده (اگه امروز شنبه‌ست،
 // هفته‌ی جاری تازه از امروز شروع شده — هفته‌ی قبل، شنبه‌تا‌جمعه‌ی گذشته،
@@ -61,7 +61,7 @@ export async function POST(req: NextRequest) {
       const ai = await generateAiCoach(analysis, user.id);
       if (!ai) {
         // مربی AI برنگشت (نامنتظره چون isAiAvailable() بالا true بود) — این کاربر شکست‌خورده حساب می‌شه
-        throw new Error("مربیِ AI چیزی برنگردوند");
+        throw new Error("مربی AI چیزی برنگردوند");
       }
 
       const { weekStart } = getWeekRange(timezone, WEEK_OFFSET);

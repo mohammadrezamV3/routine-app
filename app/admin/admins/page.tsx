@@ -90,7 +90,7 @@ export default function AdminAdminsPage() {
           onConfirm={async () => {
             try {
               const r = await adminFetch<{ user: { isSuperAdmin: boolean; adminPermissions: string[] } }>(`/api/admin/admins/${revoking.id}`, { method: "DELETE" });
-              // ادمینِ محدود فقط دسترسی‌هایی رو می‌گیره که خودش داره — بقیه سرِ جاشون می‌مونن
+              // ادمین محدود فقط دسترسی‌هایی رو می‌گیره که خودش داره — بقیه سر جاشون می‌مونن
               const left = sanitizePermissions(r.user?.adminPermissions);
               if (left.length) toast(`دسترسی‌های قابل‌گرفتن حذف شد؛ ${formatNumber(left.length)} دسترسی که خودت نداری باقی موند`, "err");
               else toast("نقش ادمین گرفته شد");
@@ -172,8 +172,8 @@ function AdminEditorModal({ target, meId, onClose, onSaved }: { target: AdminUse
     }
   }
 
-  // عوض‌شدنِ شناسه بعد از پیدا‌کردن → کاربرِ قبلی دیگه معتبر نیست
-  // (وگرنه «ادمین کن» روی کاربرِ قبلی اعمال می‌شد)
+  // عوض‌شدن شناسه بعد از پیدا‌کردن → کاربر قبلی دیگه معتبر نیست
+  // (وگرنه «ادمین کن» روی کاربر قبلی اعمال می‌شد)
   function onIdentifierChange(v: string) {
     setIdentifier(v);
     if (!target && found) { lookupSeq.current++; setFound(null); setLooking(false); }

@@ -9,8 +9,8 @@ import { useAdminAccess } from "@/components/admin/AdminAccess";
 const USERS_DEPENDENTS: AdminPermission[] = ["users.edit", "users.access", "users.delete"];
 
 // ویرایشگر دسترسی‌های ادمین — نقش‌های آماده (میان‌بر) + سوییچ جدا برای هر
-// کلید، گروه‌بندی‌شده. کلیدهایی که خود ادمینِ فعلی نداره قفلن و دست
-// نمی‌خورن — نه با سوییچ، نه با نقشِ آماده، نه با «پاک‌کردن» (سرور هم
+// کلید، گروه‌بندی‌شده. کلیدهایی که خود ادمین فعلی نداره قفلن و دست
+// نمی‌خورن — نه با سوییچ، نه با نقش آماده، نه با «پاک‌کردن» (سرور هم
 // همین رو اجبار می‌کنه: lib/adminUsers.ts → setAdminRole).
 export function PermissionEditor({
   value, onChange, disabled = false,
@@ -18,7 +18,7 @@ export function PermissionEditor({
   const { isSuperAdmin, can } = useAdminAccess();
   const set = new Set(value);
   const editable = (p: AdminPermission) => !disabled && (isSuperAdmin || can(p));
-  // دسترسی‌هایی که هدف داره ولی ادمینِ فعلی نمی‌تونه عوضشون کنه — همیشه حفظ می‌شن
+  // دسترسی‌هایی که هدف داره ولی ادمین فعلی نمی‌تونه عوضشون کنه — همیشه حفظ می‌شن
   const lockedHeld = value.filter((p) => !editable(p));
 
   function emit(next: Set<AdminPermission>) {

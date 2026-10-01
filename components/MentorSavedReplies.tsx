@@ -14,7 +14,7 @@ const TITLE_MAX = 40;
 const BODY_MAX = 2000;
 const MAX_REPLIES = 50;
 
-/** فرمِ افزودن/ویرایشِ یک پاسخِ آماده */
+/** فرم افزودن/ویرایش یک پاسخ آماده */
 function ReplyForm({
   initial, onCancel, onSaved,
 }: { initial?: SavedReply; onCancel: () => void; onSaved: (r: SavedReply) => void }) {
@@ -50,14 +50,14 @@ function ReplyForm({
       <MentorField label="عنوان" htmlFor={`rp-title-${id}`} error={errs.title} hint="فقط برای خودت در فهرست پاسخ‌ها دیده می‌شود">
         <input
           id={`rp-title-${id}`} type="text" className="wsearch-newform-name trade-glass-field" maxLength={TITLE_MAX} value={title}
-          placeholder="مثلاً یادآوری ثبت روزانه" autoFocus
+          placeholder="مثلا یادآوری ثبت روزانه" autoFocus
           onChange={(e) => { setTitle(e.target.value); setErrs((x) => ({ ...x, title: undefined })); }}
         />
       </MentorField>
       <MentorField label="متن پاسخ" htmlFor={`rp-body-${id}`} error={errs.body} hint={`${fa(body.length)} از ${fa(BODY_MAX)} نویسه`}>
         <textarea
           id={`rp-body-${id}`} className="wsearch-newform-name trade-glass-field" rows={3} maxLength={BODY_MAX} value={body}
-          placeholder="مثلاً «برنامه‌ی این هفته را دیدم؛ ست آخر را با وزنه‌ی سبک‌تر انجام بده»"
+          placeholder="مثلا «برنامه‌ی این هفته را دیدم؛ ست آخر را با وزنه‌ی سبک‌تر انجام بده»"
           onChange={(e) => { setBody(e.target.value); setErrs((x) => ({ ...x, body: undefined })); }}
         />
       </MentorField>
@@ -73,7 +73,7 @@ function ReplyForm({
 }
 
 /**
- * مدیریتِ پاسخ‌های آماده‌ی منتور (افزودن، ویرایش، حذف). درج در گفت‌وگو با
+ * مدیریت پاسخ‌های آماده‌ی منتور (افزودن، ویرایش، حذف). درج در گفت‌وگو با
  * `SavedRepliesPicker` انجام می‌شود.
  */
 export function MentorSavedRepliesManager() {
@@ -164,7 +164,7 @@ export function MentorSavedRepliesManager() {
       {confirm && (
         <MentorConfirmDialog
           message={`پاسخ «${confirm.title}» حذف شود؟`}
-          hint="پیام‌هایی که قبلاً با آن فرستاده‌ای تغییر نمی‌کنند"
+          hint="پیام‌هایی که قبلا با آن فرستاده‌ای تغییر نمی‌کنند"
           confirmLabel="حذف پاسخ"
           busy={delBusy}
           error={delError}
@@ -178,13 +178,13 @@ export function MentorSavedRepliesManager() {
 
 // ───────────────────────── انتخاب در گفت‌وگو ─────────────────────────
 
-// کشِ سبکِ همین نشست تا بازکردنِ دوباره‌ی فهرست در گفت‌وگو درخواستِ تازه نزند
+// کش سبک همین نشست تا بازکردن دوباره‌ی فهرست در گفت‌وگو درخواست تازه نزند
 let cache: SavedReply[] | null = null;
 function invalidateSavedReplies() { cache = null; }
 
 /**
- * دکمه‌ی «پاسخ آماده» برای کادرِ پیامِ منتور. با کلیک فهرستِ عنوان‌ها باز
- * می‌شود و انتخابِ هر کدام `onPick(body)` را صدا می‌زند؛ خودِ درج (و هر
+ * دکمه‌ی «پاسخ آماده» برای کادر پیام منتور. با کلیک فهرست عنوان‌ها باز
+ * می‌شود و انتخاب هر کدام `onPick(body)` را صدا می‌زند؛ خود درج (و هر
  * رمزنگاری/ارسال) با میزبان است. فقط برای منتور سوار شود.
  *
  *   <SavedRepliesPicker onPick={(text) => setDraft((d) => (d ? d + "\n" : "") + text)} />

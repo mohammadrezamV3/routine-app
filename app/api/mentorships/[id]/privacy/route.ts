@@ -23,8 +23,8 @@ function validId(id: unknown): id is string {
   return typeof id === "string" && id.length > 0 && id.length <= 64;
 }
 
-// GET /api/mentorships/:id/privacy → فقط شاگردِ همین رابطه. تنظیماتِ هر رابطه
-// جداست؛ تغییرِ دسترسیِ منتور A هیچ اثری روی منتور B نداره.
+// GET /api/mentorships/:id/privacy → فقط شاگرد همین رابطه. تنظیمات هر رابطه
+// جداست؛ تغییر دسترسی منتور A هیچ اثری روی منتور B نداره.
 export async function GET(_req: Request, { params }: Ctx) {
   const g = await requireMentorsUser();
   if (!g.ok) return g.response;

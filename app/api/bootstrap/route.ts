@@ -56,7 +56,7 @@ export async function GET(req: NextRequest) {
         email: true, username: true, phone: true, name: true, market: true,
         // lastName/birthDate هم لازم‌ن: صفحه‌ی پروفایل از همین پاسخ (از راه
         // lib/accountCache) می‌خونه و بدونشون «نام و نام خانوادگی» فقط نام
-        // رو نشون می‌داد و تاریخ تولدِ ذخیره‌شده هیچ‌وقت پر نمی‌شد.
+        // رو نشون می‌داد و تاریخ تولد ذخیره‌شده هیچ‌وقت پر نمی‌شد.
         lastName: true, birthDate: true, bio: true,
         createdAt: true, isSuperAdmin: true, avatarUrl: true, goldenSince: true,
         referralCode: { select: { code: true } },
@@ -99,7 +99,7 @@ export async function GET(req: NextRequest) {
   // رو از دست می‌ده (چون ModuleGate از همین پاسخ تصمیم می‌گیره).
   const moduleAccess = user.isSuperAdmin
     ? Object.values(ModuleKey).map((m) => ({ module: m, active: true, expiresAt: null }))
-    : user.moduleAccess; // «روتین من» هم مثلِ بقیه: تریالِ ۱۴روزه، بعد پلن (lib/modules.ts)
+    : user.moduleAccess; // «روتین من» هم مثل بقیه: تریال ۱۴روزه، بعد پلن (lib/modules.ts)
 
   const { avatarUrl, goldenSince, ...userRest } = user;
   return NextResponse.json({

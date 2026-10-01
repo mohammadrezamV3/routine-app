@@ -9,14 +9,14 @@ import {
   type LogLite, type SchedProgram,
 } from "@/lib/mentorAdherence";
 
-// گزارشِ هفتگیِ منتور، هشدارِ پایبندی و خروجیِ CSV. همه فقط روی برنامه‌های
-// *خودِ همین منتور* و رابطه‌ی ACTIVE (شاگردِ مسدود/حذف‌شده نه، منتورِ معلق نه).
-// ورودی لاگ‌های اجراست که سیستم از ردیابیِ خودِ شاگرد می‌سازد
+// گزارش هفتگی منتور، هشدار پایبندی و خروجی CSV. همه فقط روی برنامه‌های
+// *خود همین منتور* و رابطه‌ی ACTIVE (شاگرد مسدود/حذف‌شده نه، منتور معلق نه).
+// ورودی لاگ‌های اجراست که سیستم از ردیابی خود شاگرد می‌سازد
 // (lib/mentorProgress.ts)؛ این‌جا قبل از خواندن syncProgramProgress صدا زده
 // می‌شود و لاگ‌ها فقط جمع‌بندی می‌شوند. رابطه‌ای که شاگرد «پیشرفت» را در آن
 // مخفی کرده (showProgress=false) هیچ عددی نمی‌گیرد، هشدار نمی‌سازد و خروجی ندارد.
 
-/** سقفِ نگاه به عقب برای زنجیره‌ها (روز) */
+/** سقف نگاه به عقب برای زنجیره‌ها (روز) */
 const LOOKBACK_DAYS = 60;
 const MAX_STUDENTS = 500;
 
@@ -64,7 +64,7 @@ type LoadedProgram = SchedProgram & { studentId: string; title: string; status: 
 
 /**
  * برنامه‌هایی که در بازه اجرا داشته‌اند (فعال، یا تمام/لغوشده پس از فعال‌شدن)
- * با بازه‌ی مؤثرِ هر کدام به روزِ تقویمِ شاگرد.
+ * با بازه‌ی مؤثر هر کدام به روز تقویم شاگرد.
  */
 async function loadSchedPrograms(mentorId: string, rels: StudentRel[], sinceIso: string): Promise<LoadedProgram[]> {
   if (rels.length === 0) return [];
@@ -89,7 +89,7 @@ async function loadSchedPrograms(mentorId: string, rels: StudentRel[], sinceIso:
   });
   const now = new Date();
   return rows.flatMap((p) => {
-    // همان بازه‌ای که همگام‌سازِ پیشرفت (lib/mentorProgress.ts) با آن لاگ می‌سازد
+    // همان بازه‌ای که همگام‌ساز پیشرفت (lib/mentorProgress.ts) با آن لاگ می‌سازد
     const w = windowFor(p, tz.get(p.studentId) ?? null, now);
     if (!w) return [];
     return [{ id: p.id, studentId: p.studentId, title: p.title, status: p.status, fromIso: w.from, toIso: w.to, items: p.items }];
@@ -107,7 +107,7 @@ async function loadLogs(programIds: string[], fromIso: string, toIso: string): P
   return rows.map((l) => ({ programId: l.programId, itemId: l.itemId, date: isoDate(l.date), status: l.status, updatedAt: l.updatedAt }));
 }
 
-// ───────────────────────── گزارشِ هفتگی ─────────────────────────
+// ───────────────────────── گزارش هفتگی ─────────────────────────
 
 export type WeeklyStudentReport = {
   studentId: string;
@@ -115,7 +115,7 @@ export type WeeklyStudentReport = {
   name: string;
   avatarUrl: string | null;
   paused: boolean;
-  /** شاگرد نمایشِ پیشرفت را برای این منتور خاموش کرده؛ عددها صفر و بی‌معنا‌اند */
+  /** شاگرد نمایش پیشرفت را برای این منتور خاموش کرده؛ عددها صفر و بی‌معنا‌اند */
   progressHidden: boolean;
   from: string;
   to: string;
@@ -124,13 +124,13 @@ export type WeeklyStudentReport = {
   partial: number;
   missed: number;
   unlogged: number;
-  /** درصدِ انجام از کلِ آیتم‌های برنامه‌دارِ بازه (ناقص = نصف؛ ثبت‌نشده = انجام‌نشده) */
+  /** درصد انجام از کل آیتم‌های برنامه‌دار بازه (ناقص = نصف؛ ثبت‌نشده = انجام‌نشده) */
   rate: number;
   streak: number;
   idleDays: number;
-  /** آخرین روزی که حداقل یک آیتم انجام شد (تقویمِ شاگرد) */
+  /** آخرین روزی که حداقل یک آیتم انجام شد (تقویم شاگرد) */
   lastDoneDate: string | null;
-  /** آخرین پیامِ شاگرد در گفت‌وگو */
+  /** آخرین پیام شاگرد در گفت‌وگو */
   lastMessageAt: Date | null;
   missedItems: { title: string; count: number }[];
   activePrograms: number;
@@ -139,7 +139,7 @@ export type WeeklyStudentReport = {
 
 export type WeeklyReport = { offset: number; generatedAt: Date; students: WeeklyStudentReport[] };
 
-/** گزارشِ ۷ روزه‌ی هر شاگردِ فعال. offset=۰ یعنی ۷ روزِ منتهی به امروزِ هر شاگرد؛ ۱ یعنی هفته‌ی قبلش. */
+/** گزارش ۷ روزه‌ی هر شاگرد فعال. offset=۰ یعنی ۷ روز منتهی به امروز هر شاگرد؛ ۱ یعنی هفته‌ی قبلش. */
 export async function buildWeeklyReport(mentorId: string, offset = 0): Promise<WeeklyReport> {
   const rels = await activeRels(mentorId);
   const now = new Date();
@@ -215,14 +215,14 @@ export async function buildWeeklyReport(mentorId: string, offset = 0): Promise<W
   return { offset, generatedAt: now, students };
 }
 
-// ───────────────────────── هشدارِ پایبندی ─────────────────────────
+// ───────────────────────── هشدار پایبندی ─────────────────────────
 
 /**
- * هشدارِ «n روزِ برنامه‌دارِ پشت‌سرهم بدونِ انجام» برای منتور — lazy، موقعِ
- * لودِ داشبورد. برای هر رابطه یک ردیفِ MentorAdherenceAlert (یکتا روی رابطه
- * و روز) ساخته می‌شود؛ و تا وقتی همان دوره‌ی بی‌کاری ادامه دارد هشدارِ دوم
+ * هشدار «n روز برنامه‌دار پشت‌سرهم بدون انجام» برای منتور — lazy، موقع
+ * لود داشبورد. برای هر رابطه یک ردیف MentorAdherenceAlert (یکتا روی رابطه
+ * و روز) ساخته می‌شود؛ و تا وقتی همان دوره‌ی بی‌کاری ادامه دارد هشدار دوم
  * ساخته نمی‌شود (فقط وقتی شاگرد دوباره انجام داد و بعد باز n روز رها کرد).
- * برمی‌گرداند چند هشدارِ تازه ساخته شد. هرگز throw نمی‌کند.
+ * برمی‌گرداند چند هشدار تازه ساخته شد. هرگز throw نمی‌کند.
  */
 export async function runAdherenceAlerts(mentorId: string): Promise<number> {
   try {
@@ -250,7 +250,7 @@ export async function runAdherenceAlerts(mentorId: string): Promise<number> {
       const run = idleRun(days, today);
       if (run.days < n || !run.since) continue;
 
-      // همین دوره قبلاً هشدار گرفته؟
+      // همین دوره قبلا هشدار گرفته؟
       const prior = await prisma.mentorAdherenceAlert.findFirst({
         where: { mentorshipId: r.mentorshipId, day: { gte: dateFromIso(run.since) } },
         select: { id: true },
@@ -266,7 +266,7 @@ export async function runAdherenceAlerts(mentorId: string): Promise<number> {
       await notifyUser(mentorId, {
         type: "mentor.adherence",
         title: "پایبندی شاگرد",
-        body: `${r.name} ${faNum(run.days)} روزِ برنامه‌دارِ پشت‌سرهم هیچ آیتمی انجام نداده است.`,
+        body: `${r.name} ${faNum(run.days)} روز برنامه‌دار پشت‌سرهم هیچ آیتمی انجام نداده است.`,
         url: `/mentor/students/${r.studentId}`,
       });
     }
@@ -276,12 +276,12 @@ export async function runAdherenceAlerts(mentorId: string): Promise<number> {
   }
 }
 
-// ───────────────────────── خروجیِ CSV ─────────────────────────
+// ───────────────────────── خروجی CSV ─────────────────────────
 
 export const EXPORT_MAX_DAYS = 120;
 const STATUS_FA: Record<string, string> = { COMPLETED: "انجام شد", PARTIAL: "ناقص", MISSED: "انجام نشد" };
 
-/** یک خانه‌ی CSV — نقل‌قول در صورتِ نیاز و خنثی‌کردنِ فرمول (=, +, -, @) در اکسل */
+/** یک خانه‌ی CSV — نقل‌قول در صورت نیاز و خنثی‌کردن فرمول (=, +, -, @) در اکسل */
 export function csvCell(v: string | number | null | undefined): string {
   let s = v === null || v === undefined ? "" : String(v);
   if (/^[=+\-@\t\r]/.test(s)) s = "'" + s;
@@ -293,10 +293,10 @@ export function csvLine(cells: (string | number | null | undefined)[]): string {
 }
 
 /**
- * پیشرفتِ روزبه‌روزِ یک شاگرد در بازه: (۱) برنامه‌های همین منتور — همیشه
- * برای سازنده‌اش دیدنی؛ (۲) روتینِ خودِ شاگرد فقط از مسیرِ
- * projectRoutineForMentor، یعنی دقیقاً همان‌قدر که تنظیماتِ حریمِ خصوصیِ
- * این رابطه اجازه می‌دهد (برنامه‌ی مخفی، اسمِ مخفی و پیشرفتِ مخفی بیرون
+ * پیشرفت روزبه‌روز یک شاگرد در بازه: (۱) برنامه‌های همین منتور — همیشه
+ * برای سازنده‌اش دیدنی؛ (۲) روتین خود شاگرد فقط از مسیر
+ * projectRoutineForMentor، یعنی دقیقا همان‌قدر که تنظیمات حریم خصوصی
+ * این رابطه اجازه می‌دهد (برنامه‌ی مخفی، اسم مخفی و پیشرفت مخفی بیرون
  * نمی‌آید). null = رابطه‌ی فعالی نیست.
  */
 export async function buildProgressCsv(mentorId: string, studentId: string, fromIso: string, toIso: string): Promise<{ csv: string; name: string } | "hidden" | null> {
@@ -346,6 +346,6 @@ export async function buildProgressCsv(mentorId: string, studentId: string, from
 
   const head = lines[0];
   const body = lines.slice(1).sort();
-  // BOM تا اکسل متنِ فارسی را درست باز کند
+  // BOM تا اکسل متن فارسی را درست باز کند
   return { csv: "﻿" + [head, ...body].join("\r\n") + "\r\n", name: rel.name };
 }

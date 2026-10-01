@@ -49,16 +49,16 @@ export function ModuleGate({ module, children }: { module: GateModule; children:
   return <>{children}</>;
 }
 
-// «روتین من» (روتین/خواب) پیامِ خودش رو داره: دوره‌ی آزمایشی تموم شده + قیمتِ پلن
+// «روتین من» (روتین/خواب) پیام خودش رو داره: دوره‌ی آزمایشی تموم شده + قیمت پلن
 const ROUTINE_GATE = new Set<GateModule>(["ROUTINE", "SLEEP"]);
 
 function GateDenied({ module }: { module: GateModule }) {
   const router = useRouter();
   const routine = ROUTINE_GATE.has(module);
   const target = routine ? `/subscription/checkout?plan=${ROUTINE_PLAN_KEY}&duration=1` : "/subscription";
-  // این صفحه یک بن‌بست است: تنها کارِ ممکن زدنِ همان یک دکمه است. پس
+  // این صفحه یک بن‌بست است: تنها کار ممکن زدن همان یک دکمه است. پس
   // مقصدش را همین حالا آماده می‌کنیم، نه لحظه‌ی ضربه — وگرنه ضربه یعنی
-  // شروعِ دانلودِ صفحه از صفر و همان مکثِ گزارش‌شده («دیر می‌ره»).
+  // شروع دانلود صفحه از صفر و همان مکث گزارش‌شده («دیر می‌ره»).
   useEffect(() => { router.prefetch(target); }, [router, target]);
   return (
     <div className="module-gate">
@@ -77,7 +77,7 @@ function GateDenied({ module }: { module: GateModule }) {
           <svg viewBox="0 0 24 24" fill="none"><rect x="4.5" y="10.5" width="15" height="10" rx="2.2" stroke="currentColor" strokeWidth="1.7" /><path d="M8 10.5V7.8a4 4 0 0 1 8 0v2.7" stroke="currentColor" strokeWidth="1.7" strokeLinecap="round" /></svg>
         </span>
         <div className="module-gate-msg">
-          {routine ? `دوره‌ی ${ROUTINE_TRIAL_DAYS} روزه‌ی رایگانِ «روتین من» تموم شد` : "اشتراک این بخش رو نداری"}
+          {routine ? `دوره‌ی ${ROUTINE_TRIAL_DAYS} روزه‌ی رایگان «روتین من» تموم شد` : "اشتراک این بخش رو نداری"}
         </div>
         {routine && <div className="module-gate-sub">برای ادامه، پلن «روتین من» ماهانه {faNum(ROUTINE_PLAN_PRICE_TOMAN.toLocaleString("en-US"))} تومان</div>}
         <button

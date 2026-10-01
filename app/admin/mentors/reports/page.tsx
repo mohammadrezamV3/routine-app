@@ -75,8 +75,8 @@ function availableActions(r: Report): Action[] {
 }
 
 function TargetSnippet({ t }: { t: Target }) {
-  // پیامِ گفت‌وگو رمزگذاریِ سرتاسری دارد: متن فقط از خودِ گزارش می‌آید، پس حتی
-  // پس از حذفِ پیام هم نمایش داده می‌شود
+  // پیام گفت‌وگو رمزگذاری سرتاسری دارد: متن فقط از خود گزارش می‌آید، پس حتی
+  // پس از حذف پیام هم نمایش داده می‌شود
   if (!t.exists && t.kind !== "MESSAGE" && t.kind !== "CONVERSATION") return <div className="trade-row-sub">محتوای گزارش‌شده حذف شده است</div>;
   if (t.kind === "USER") return <div className="trade-row-main">{t.user ? displayName(t.user) : "—"}</div>;
   if (t.kind === "REVIEW") {
@@ -150,8 +150,8 @@ function TargetSnippet({ t }: { t: Target }) {
   );
 }
 
-// صفِ گزارش‌های اکوسیستم منتور — هر گزارش با خلاصه‌ی محتوای هدف (سمت
-// سرور ساخته می‌شه). مسدودکردنِ کلِ حساب از /admin/users انجام می‌شه.
+// صف گزارش‌های اکوسیستم منتور — هر گزارش با خلاصه‌ی محتوای هدف (سمت
+// سرور ساخته می‌شه). مسدودکردن کل حساب از /admin/users انجام می‌شه.
 export default function AdminMentorReportsPage() {
   const toast = useAdminToast();
   const { can } = useAdminAccess();

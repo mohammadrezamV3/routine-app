@@ -7,10 +7,10 @@ import { KDF_SALT_BYTES, PBKDF2_MAX_ITERATIONS, PBKDF2_MIN_ITERATIONS, isKeyBack
 import { b64ByteLength } from "@/lib/e2ee/encoding";
 import { keyChangedResponse } from "@/lib/e2ee/keyServer";
 
-// پشتیبانِ رمزشده‌ی کلیدِ SYNCED — فقط برای باز کردن روی دستگاهی که با رمزِ عبور وارد
-// شده. سرور نمی‌تواند بازش کند؛ امنیتش در برابرِ حدسِ آفلاین = قدرتِ رمزِ عبور + PBKDF2
-// (۶۰۰هزار دور، نمکِ اختصاصی). سقفِ دریافت جلوی جمع‌آوریِ خودکار با نشستِ دزدیده‌شده را
-// می‌گیرد (برای گرداننده‌ی سرور که خودِ جدول را دارد بی‌اثر است؛ docs/mentor-e2ee.md).
+// پشتیبان رمزشده‌ی کلید SYNCED — فقط برای باز کردن روی دستگاهی که با رمز عبور وارد
+// شده. سرور نمی‌تواند بازش کند؛ امنیتش در برابر حدس آفلاین = قدرت رمز عبور + PBKDF2
+// (۶۰۰هزار دور، نمک اختصاصی). سقف دریافت جلوی جمع‌آوری خودکار با نشست دزدیده‌شده را
+// می‌گیرد (برای گرداننده‌ی سرور که خود جدول را دارد بی‌اثر است؛ docs/mentor-e2ee.md).
 
 const FETCH_LIMIT = 20;
 const WINDOW_MS = 60 * 60 * 1000;
@@ -37,9 +37,9 @@ export async function GET() {
 }
 
 // PUT /api/e2ee/keys/backup
-//   { version, backup, backupKind: "PASSWORD", kdf? } → بسته‌بندیِ دوباره‌ی همان کلید با KEKِ رمزِ عبور:
-//       انتقال از «رمز گفت‌وگو»ی قدیمی (kdf = نمکِ فعلی)، یا تغییرِ رمزِ عبور (kdf = نمکِ تازه، اتمی با پشتیبان)
-//   { version, convertToDevice: true, label } → حسابِ بی‌رمز: کلیدِ قدیمیِ «رمز گفت‌وگو» کلیدِ همین دستگاه می‌شود و پشتیبان پاک
+//   { version, backup, backupKind: "PASSWORD", kdf? } → بسته‌بندی دوباره‌ی همان کلید با KEK رمز عبور:
+//       انتقال از «رمز گفت‌وگو»ی قدیمی (kdf = نمک فعلی)، یا تغییر رمز عبور (kdf = نمک تازه، اتمی با پشتیبان)
+//   { version, convertToDevice: true, label } → حساب بی‌رمز: کلید قدیمی «رمز گفت‌وگو» کلید همین دستگاه می‌شود و پشتیبان پاک
 export async function PUT(req: Request) {
   const g = await requireMentorsUser();
   if (!g.ok) return g.response;

@@ -12,7 +12,7 @@ type Entry = {
   actor: { id: string; name: string | null; lastName: string | null; username: string | null } | null;
 };
 
-// لاگ append-only همه‌ی اقدامات پنل — کی، چی‌کار، روی کی، کِی
+// لاگ append-only همه‌ی اقدامات پنل — کی، چی‌کار، روی کی، کی
 export default function AdminAuditPage() {
   const [page, setPage] = useState(1);
   const [data, setData] = useState<{ entries: Entry[]; total: number; pageSize: number } | null>(null);

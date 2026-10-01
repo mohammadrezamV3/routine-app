@@ -1,7 +1,7 @@
 "use client";
 
-// دادهِ روتینِ داشبورد — عمدا از lib/storage.ts (نه /api/dashboard) می‌خونه
-// تا قراردادِ persistence (مهمان → localStorage، کاربر → API) و همگام‌سازیِ
+// داده روتین داشبورد — عمدا از lib/storage.ts (نه /api/dashboard) می‌خونه
+// تا قرارداد persistence (مهمان → localStorage، کاربر → API) و همگام‌سازی
 // زنده با /weekly دقیقا همون بمونه: تیکی که این‌جا زده می‌شه همون لحظه در
 // برنامه‌ی هفتگی/هدر/استریک دیده می‌شه و برعکس (lib/liveSync.ts).
 
@@ -15,10 +15,10 @@ import { buildHeatmap, HeatCell } from "./dashboardCompute";
 import { checklistOf, isOccDone, itemKey, toggleTask } from "./routineChecklist";
 import { computeRoutineStreak } from "./routineStreak";
 
-// ۱۳ هفته عمدا: شروعِ نقشه (شنبه‌ی ۱۲ هفته قبل) حداکثر ۹۰ روز عقب می‌ره، یعنی
-// کاملا داخلِ بازه‌ی روزانه‌ای که bootstrap همراهِ صفحه می‌فرسته (امروز−۹۰..+۷)
-// — پس هیچ درخواستِ جدایی برای نقشه زده نمی‌شه. ۱۸ هفته‌ی قبلی یک /range اضافه
-// روی مسیرِ لود می‌ساخت.
+// ۱۳ هفته عمدا: شروع نقشه (شنبه‌ی ۱۲ هفته قبل) حداکثر ۹۰ روز عقب می‌ره، یعنی
+// کاملا داخل بازه‌ی روزانه‌ای که bootstrap همراه صفحه می‌فرسته (امروز−۹۰..+۷)
+// — پس هیچ درخواست جدایی برای نقشه زده نمی‌شه. ۱۸ هفته‌ی قبلی یک /range اضافه
+// روی مسیر لود می‌ساخت.
 export const HEAT_WEEKS = 13;
 
 export type TodayTask = {
@@ -30,7 +30,7 @@ export type TodayTask = {
   importance?: CustomOccurrence["importance"];
   tag?: string;
   href?: string;
-  /** برنامه‌ی لیستی — آیتم‌ها با تیکِ امروز */
+  /** برنامه‌ی لیستی — آیتم‌ها با تیک امروز */
   items?: { id: string; name: string; done: boolean }[];
 };
 
@@ -40,7 +40,7 @@ export function useDashboardRoutine() {
   const [daily, setDailyMap] = useState<Record<string, DailyRecord>>({});
   const [wakeSleep, setWakeSleep] = useState<WakeSleepTimes | null>(null);
   const [rangeLoaded, setRangeLoaded] = useState(false);
-  // روزِ جاری — اگه صفحه از نیمه‌شب رد بشه باید «امروز» جلو بره
+  // روز جاری — اگه صفحه از نیمه‌شب رد بشه باید «امروز» جلو بره
   const [todayIso, setTodayIso] = useState(() => isoLocal(new Date()));
   useEffect(() => {
     const t = setInterval(() => { const iso = isoLocal(new Date()); setTodayIso((p) => (p === iso ? p : iso)); }, 60_000);
@@ -64,8 +64,8 @@ export function useDashboardRoutine() {
   useEffect(() => { loadOcc(); loadWake(); }, [loadOcc, loadWake]);
   useEffect(() => { loadRange(); }, [loadRange, todayIso]);
 
-  // تیکِ خودمون (optimistic) رو دوباره از شبکه نمی‌خونیم — فقط تغییرِ
-  // تب/دستگاهِ دیگه (remote) یا کلیدهای برنامه/ساعتِ خواب.
+  // تیک خودمون (optimistic) رو دوباره از شبکه نمی‌خونیم — فقط تغییر
+  // تب/دستگاه دیگه (remote) یا کلیدهای برنامه/ساعت خواب.
   const pendingTicks = useRef(0);
   useLiveRefresh(["daily", "customOccurrences", "removedOccurrences", "wakeSleepTimes"], (changed, meta) => {
     const all = changed.includes("*");
@@ -103,7 +103,7 @@ export function useDashboardRoutine() {
 
   const stats = useMemo(() => computeDayStats(today, opts, todayRec), [today, opts, todayRec]);
   const heat: HeatCell[][] = useMemo(() => (custom ? buildHeatmap(today, HEAT_WEEKS, opts, daily) : []), [custom, today, opts, daily]);
-  // همون تعریفِ هدر (lib/routineStreak.ts) — امروز همون لحظه‌ی کامل‌شدن حساب می‌شه
+  // همون تعریف هدر (lib/routineStreak.ts) — امروز همون لحظه‌ی کامل‌شدن حساب می‌شه
   const streak = useMemo(() => (rangeLoaded && custom ? computeRoutineStreak(today, opts, daily, 90).streak : null), [rangeLoaded, custom, today, opts, daily]);
 
   const toggle = useCallback(async (id: string, itemId?: string) => {
@@ -126,7 +126,7 @@ export function useDashboardRoutine() {
     wakeSleep: wakeSleep ?? { wake: DEFAULT_WAKE, sleep: DEFAULT_SLEEP },
     hasWakeSleep: !!wakeSleep,
     toggle,
-    /** برای نقشه‌ی ثباتِ سالانه — برنامه + تیک‌های ۹۰ روزِ اخیر (با تیک‌های زنده‌ی امروز) */
+    /** برای نقشه‌ی ثبات سالانه — برنامه + تیک‌های ۹۰ روز اخیر (با تیک‌های زنده‌ی امروز) */
     opts,
     daily,
   };

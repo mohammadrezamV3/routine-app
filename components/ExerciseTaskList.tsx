@@ -62,7 +62,7 @@ export function ExerciseTaskList({
   onSessionEnd: () => void;
   onAddProgram: () => void;
   onActiveChange?: (active: boolean) => void;
-  /** «شروع تمرین» روی سرور ثبت شد — حالتِ «ماندن» با همین روز را گذرانده حساب می‌کند */
+  /** «شروع تمرین» روی سرور ثبت شد — حالت «ماندن» با همین روز را گذرانده حساب می‌کند */
   onStarted?: () => void;
   delay?: number;
 }) {
@@ -102,8 +102,8 @@ export function ExerciseTaskList({
 
   useEffect(() => { onActiveChange?.(active); }, [active, onActiveChange]);
 
-  // true = روی سرور نشست. خطا دیگه بی‌صدا بلعیده نمی‌شه: صدازننده تغییرِ
-  // optimistic رو برمی‌گردونه و پیامِ سراسری (LiveSyncToaster) نشون داده می‌شه.
+  // true = روی سرور نشست. خطا دیگه بی‌صدا بلعیده نمی‌شه: صدازننده تغییر
+  // optimistic رو برمی‌گردونه و پیام سراسری (LiveSyncToaster) نشون داده می‌شه.
   async function persist(nextChecked: Set<string>, completed: boolean): Promise<boolean> {
     const res = await fetch("/api/exercise/log", {
       method: "POST",
@@ -120,9 +120,9 @@ export function ExerciseTaskList({
     setActive(true);
     setEnded(false);
     setElapsed(0);
-    // ثبتِ «شروع» — بدونِ این، حالتِ «ماندن» (lib/exerciseProgression.ts) همین
+    // ثبت «شروع» — بدون این، حالت «ماندن» (lib/exerciseProgression.ts) همین
     // تمرین را فردا دوباره می‌آورد. شکستش جلسه را نمی‌بندد؛ اولین تیک/پایان
-    // هم لاگ می‌سازد و لاگِ دارای پیشرفت «شروع‌شده» حساب می‌شود.
+    // هم لاگ می‌سازد و لاگ دارای پیشرفت «شروع‌شده» حساب می‌شود.
     fetch("/api/exercise/log", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
@@ -141,7 +141,7 @@ export function ExerciseTaskList({
   }
 
   // optimistic: تیک همون لحظه می‌خوره؛ اگه سرور رد کرد همون حرکت برمی‌گرده.
-  // checkedRef تا چند تیکِ پشت‌سرهم قبل از رندرِ بعدی هم مجموعه‌ی کامل رو بفرستن.
+  // checkedRef تا چند تیک پشت‌سرهم قبل از رندر بعدی هم مجموعه‌ی کامل رو بفرستن.
   const checkedRef = useRef(checked);
   checkedRef.current = checked;
   function markItemDone(item: string) {
@@ -282,8 +282,8 @@ export function ExerciseTaskList({
               هنوز وقتش نرسیده
             </div>
           ) : ended && !active ? (
-            // تمرینِ این روز «تمام» ثبت شده (ExerciseLog.completed) — همون
-            // باکسِ وضعیتِ «هنوز وقتش نرسیده»، فقط با متن/رنگِ خودش.
+            // تمرین این روز «تمام» ثبت شده (ExerciseLog.completed) — همون
+            // باکس وضعیت «هنوز وقتش نرسیده»، فقط با متن/رنگ خودش.
             <div className="exercise-locked-box exercise-state-done mt-5 shrink-0">
               <Check size={14} strokeWidth={3} />
               انجام دادی

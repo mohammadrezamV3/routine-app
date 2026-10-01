@@ -1,16 +1,16 @@
-// خواب — منطقِ خالصِ مشترکِ کلاینت و سرور (بدونِ fetch/prisma).
+// خواب — منطق خالص مشترک کلاینت و سرور (بدون fetch/prisma).
 //
 // معماری:
-//   • هر شب یک SleepEntry با کلیدِ (userId, date)؛ date = روزِ *بیدارشدن*.
-//   • زمان‌ها ISO ِ کامل ذخیره می‌شن؛ کاربر فقط «ساعتِ خواب» و «ساعتِ بیداری»
-//     وارد می‌کنه و buildSleepTimes لحظه‌ی واقعی رو می‌سازه (خوابِ قبل از
-//     نیمه‌شب مالِ دیروزه).
-//   • هدف از همون wakeSleepTimes ِ «روتین من» میاد (یک منبع برای ساعتِ بیداری/خواب).
+//   • هر شب یک SleepEntry با کلید (userId, date)؛ date = روز *بیدارشدن*.
+//   • زمان‌ها ISO  کامل ذخیره می‌شن؛ کاربر فقط «ساعت خواب» و «ساعت بیداری»
+//     وارد می‌کنه و buildSleepTimes لحظه‌ی واقعی رو می‌سازه (خواب قبل از
+//     نیمه‌شب مال دیروزه).
+//   • هدف از همون wakeSleepTimes  «روتین من» میاد (یک منبع برای ساعت بیداری/خواب).
 //   • persistence از lib/storage.ts (مهمان → localStorage، کاربر → /api/sleep).
-//   • اچیومنت‌های خواب (lib/achievements.ts) از همین ردیف‌ها سمتِ سرور حساب می‌شن.
+//   • اچیومنت‌های خواب (lib/achievements.ts) از همین ردیف‌ها سمت سرور حساب می‌شن.
 
 export type SleepRecord = {
-  /** روزِ بیدارشدن YYYY-MM-DD */
+  /** روز بیدارشدن YYYY-MM-DD */
   date: string;
   sleptAt: string;
   wokeAt: string;
@@ -20,7 +20,7 @@ export type SleepRecord = {
 
 export const SLEEP_MIN_MIN = 30;
 export const SLEEP_MAX_MIN = 20 * 60;
-/** بازه‌ی سالم (دقیقه) — هم‌راستا با اچیومنتِ «خوابِ کافی» */
+/** بازه‌ی سالم (دقیقه) — هم‌راستا با اچیومنت «خواب کافی» */
 export const SLEEP_GOAL_MIN = 7 * 60;
 export const SLEEP_GOAL_MAX = 9 * 60;
 
@@ -32,8 +32,8 @@ function hm(v: string): [number, number] | null {
 }
 
 /**
- * از «روزِ بیداری» + ساعت‌های HH:mm، دو لحظه‌ی واقعی (محلی) می‌سازه. اگه ساعتِ
- * خواب از ساعتِ بیداری دیرتر باشه (مثلا 23:30 → 07:00) خواب مالِ شبِ قبله.
+ * از «روز بیداری» + ساعت‌های HH:mm، دو لحظه‌ی واقعی (محلی) می‌سازه. اگه ساعت
+ * خواب از ساعت بیداری دیرتر باشه (مثلا 23:30 → 07:00) خواب مال شب قبله.
  */
 export function buildSleepTimes(wakeDateIso: string, bed: string, wake: string): { sleptAt: Date; wokeAt: Date } | null {
   const b = hm(bed), w = hm(wake);
@@ -48,9 +48,9 @@ export function buildSleepTimes(wakeDateIso: string, bed: string, wake: string):
 }
 
 /**
- * جای میله‌ی «خواب→بیداری» روی محورِ عمودیِ نمودار (دقیقه از axisStart).
- * ساعتِ خوابِ بینِ 12:00 و axisStart (مثلا 18:00) «زودتر از شروعِ محور» حساب می‌شه،
- * نه «دیرتر از پایانِ محور» — وگرنه خوابِ زودهنگام ته نمودار گم می‌شد.
+ * جای میله‌ی «خواب→بیداری» روی محور عمودی نمودار (دقیقه از axisStart).
+ * ساعت خواب بین 12:00 و axisStart (مثلا 18:00) «زودتر از شروع محور» حساب می‌شه،
+ * نه «دیرتر از پایان محور» — وگرنه خواب زودهنگام ته نمودار گم می‌شد.
  */
 export function timelineSpan(bedMin: number, durMin: number, axisStart: number, axisSpan: number): { from: number; to: number } {
   let s = (((bedMin - axisStart) % 1440) + 1440) % 1440;
@@ -76,7 +76,7 @@ export function durationLabel(min: number): string {
   return m ? `${h} ساعت و ${m} دقیقه` : `${h} ساعت`;
 }
 
-/** میانگینِ دایره‌ایِ ساعت‌ها (میانگینِ 23:00 و 01:00 = 00:00، نه 12:00) */
+/** میانگین دایره‌ای ساعت‌ها (میانگین 23:00 و 01:00 = 00:00، نه 12:00) */
 export function circularMeanMinutes(mins: number[]): number | null {
   if (!mins.length) return null;
   let x = 0, y = 0;
@@ -99,11 +99,11 @@ export type SleepSummary = {
   avgMin: number | null;
   avgBed: string | null;
   avgWake: string | null;
-  /** درصدِ شب‌هایی که بینِ ۷ تا ۹ ساعت بوده */
+  /** درصد شب‌هایی که بین ۷ تا ۹ ساعت بوده */
   goalPct: number | null;
-  /** ۰..۱۰۰ — هرچی ساعتِ خواب ثابت‌تر، بالاتر (بر اساسِ انحرافِ دایره‌ای از میانگین) */
+  /** ۰..۱۰۰ — هرچی ساعت خواب ثابت‌تر، بالاتر (بر اساس انحراف دایره‌ای از میانگین) */
   consistency: number | null;
-  /** بدهیِ خواب نسبت به ۸ ساعت در همین بازه (دقیقه، ≥۰) */
+  /** بدهی خواب نسبت به ۸ ساعت در همین بازه (دقیقه، ≥۰) */
   debtMin: number;
 };
 

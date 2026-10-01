@@ -39,9 +39,9 @@ function toReview(r: { id: string; rating: number; body: string | null; createdA
   return { id: r.id, rating: r.rating, body: r.body, createdAt: r.createdAt, student: { name: displayName(r.student), avatarUrl: r.student.avatarUrl, golden: !!r.student.goldenSince } };
 }
 
-// POST /api/mentors/:mentorId/reviews → ثبتِ نظر (یکی به‌ازای هر شاگرد/منتور).
-// فقط شاگردی که رابطه‌اش واقعاً شروع شده — وگرنه هرکسی می‌تونست بدونِ
-// تجربه‌ی واقعی امتیازِ یک منتور رو بالا/پایین ببره.
+// POST /api/mentors/:mentorId/reviews → ثبت نظر (یکی به‌ازای هر شاگرد/منتور).
+// فقط شاگردی که رابطه‌اش واقعا شروع شده — وگرنه هرکسی می‌تونست بدون
+// تجربه‌ی واقعی امتیاز یک منتور رو بالا/پایین ببره.
 export async function POST(req: Request, { params }: Ctx) {
   const g = await requireMentorsUser();
   if (!g.ok) return g.response;
@@ -75,7 +75,7 @@ export async function POST(req: Request, { params }: Ctx) {
   return NextResponse.json({ review: toReview(review) });
 }
 
-// PUT /api/mentors/:mentorId/reviews → ویرایشِ نظرِ خودم. نظرِ پنهان‌شده توسطِ
+// PUT /api/mentors/:mentorId/reviews → ویرایش نظر خودم. نظر پنهان‌شده توسط
 // ادمین با ویرایش دوباره نمایان نمی‌شه (status دست نمی‌خوره).
 export async function PUT(req: Request, { params }: Ctx) {
   const g = await requireMentorsUser();
@@ -96,7 +96,7 @@ export async function PUT(req: Request, { params }: Ctx) {
   return NextResponse.json({ review: review ? toReview(review) : null });
 }
 
-// DELETE /api/mentors/:mentorId/reviews → حذفِ نظرِ خودم
+// DELETE /api/mentors/:mentorId/reviews → حذف نظر خودم
 export async function DELETE(_req: Request, { params }: Ctx) {
   const g = await requireMentorsUser();
   if (!g.ok) return g.response;

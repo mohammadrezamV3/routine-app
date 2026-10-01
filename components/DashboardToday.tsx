@@ -1,13 +1,13 @@
 "use client";
 
-// «برنامه‌های امروز» — خطِ زمانیِ زنده. هر برنامه یک گره روی ریلِ عمودیه
-// (خودِ گره دکمه‌ی تیکه) و یک کارتِ بوردری کنارش، با وضعیتِ لحظه‌ای:
-//   انجام‌شده · در جریان (با نوارِ گذشتِ زمان) · بعدی (با شمارشِ معکوس) ·
-//   عقب‌افتاده · پیشِ‌رو · بدونِ ساعت.
-// ریل تا «الان» رنگی پر می‌شه و نشانگرِ «الان» بینِ گذشته و آینده می‌شینه.
-// تیک همون setDaily ِ lib/storage.ts ـه، پس همون لحظه در /weekly، هدر و استریک
-// دیده می‌شه. فقط امروز قابلِ تیکه (هم‌قانونِ /weekly). بک‌گراندِ تازه‌ای اضافه
-// نشده: کارت‌ها فقط بوردر دارن و تاکیدِ «بعدی/در جریان» نورِ روی بوردره.
+// «برنامه‌های امروز» — خط زمانی زنده. هر برنامه یک گره روی ریل عمودیه
+// (خود گره دکمه‌ی تیکه) و یک کارت بوردری کنارش، با وضعیت لحظه‌ای:
+//   انجام‌شده · در جریان (با نوار گذشت زمان) · بعدی (با شمارش معکوس) ·
+//   عقب‌افتاده · پیش‌رو · بدون ساعت.
+// ریل تا «الان» رنگی پر می‌شه و نشانگر «الان» بین گذشته و آینده می‌شینه.
+// تیک همون setDaily  lib/storage.ts ـه، پس همون لحظه در /weekly، هدر و استریک
+// دیده می‌شه. فقط امروز قابل تیکه (هم‌قانون /weekly). بک‌گراند تازه‌ای اضافه
+// نشده: کارت‌ها فقط بوردر دارن و تاکید «بعدی/در جریان» نور روی بوردره.
 
 import Link from "next/link";
 import { TickButton } from "./TickButton";
@@ -22,7 +22,7 @@ import { DashIcon } from "./DashboardIcons";
 
 const MAX_ROWS = 7;
 const WEEK_SHORT = ["ش", "ی", "د", "س", "چ", "پ", "ج"];
-/** برنامه‌ی بدونِ ساعتِ پایان، تا این مدت بعد از شروع «در جریان» حساب می‌شه */
+/** برنامه‌ی بدون ساعت پایان، تا این مدت بعد از شروع «در جریان» حساب می‌شه */
 const DEFAULT_SPAN = 45;
 
 type State = "done" | "active" | "next" | "missed" | "upcoming" | "untimed";
@@ -32,8 +32,8 @@ const STATE_LABEL: Record<State, string> = {
   active: "در جریان",
   next: "بعدی",
   missed: "عقب افتاده",
-  upcoming: "پیشِ‌رو",
-  untimed: "بدونِ ساعت",
+  upcoming: "پیش‌رو",
+  untimed: "بدون ساعت",
 };
 
 function fmtIn(min: number) {
@@ -55,9 +55,9 @@ export function DashboardToday({ ready, tasks, stats, week, onToggle }: { ready:
     const t = setInterval(f, 20_000);
     return () => clearInterval(t);
   }, []);
-  // آخرین تیکی که «انجام» شد — برای انفجارِ ذرات روی همون گره
+  // آخرین تیکی که «انجام» شد — برای انفجار ذرات روی همون گره
   const [burst, setBurst] = useState<{ id: string; k: number } | null>(null);
-  // برنامه‌های لیستیِ بازشده (lib/routineChecklist.ts)
+  // برنامه‌های لیستی بازشده (lib/routineChecklist.ts)
   const [open, setOpen] = useState<Set<string>>(new Set());
   const flip = (id: string) => setOpen((s) => { const n = new Set(s); if (n.has(id)) n.delete(id); else n.add(id); return n; });
 
@@ -74,12 +74,12 @@ export function DashboardToday({ ready, tasks, stats, week, onToggle }: { ready:
       else if (!nextAssigned) { state = "next"; nextAssigned = true; }
       else state = "upcoming";
       const progress = state === "active" && t.startMin !== null && end ? (nm - t.startMin) / Math.max(1, end - t.startMin) : 0;
-      // ساعت‌ها با ارقامِ فارسی ذخیره شدن («۰۹:۳۰ – ۱۰:۳۰»)؛ برچسب از خودِ دقیقه‌ها ساخته می‌شه
+      // ساعت‌ها با ارقام فارسی ذخیره شدن («۰۹:۳۰ – ۱۰:۳۰»)؛ برچسب از خود دقیقه‌ها ساخته می‌شه
       return { ...t, end, state, progress, startLabel: t.startMin !== null ? hhmm(t.startMin) : toEnDigits(t.time), endLabel: end !== null && timeEndMinutes(t.time) !== null ? hhmm(end) : null };
     });
   }, [tasks, nowMin]);
 
-  // پنجره‌ای حولِ «الان» وقتی برنامه‌ها زیادن (نه فقط صبحِ زود)
+  // پنجره‌ای حول «الان» وقتی برنامه‌ها زیادن (نه فقط صبح زود)
   const visible = useMemo(() => {
     if (rows.length <= MAX_ROWS) return rows;
     const focus = rows.findIndex((r) => r.state === "active" || r.state === "next");
@@ -120,7 +120,7 @@ export function DashboardToday({ ready, tasks, stats, week, onToggle }: { ready:
               )}
             </div>
             <span className="db-tl-sum-text">
-              {allDone ? "روزِ کامل! همه انجام شد" : active ? <>الان: <b>{active.name}</b></> : next && nowMin !== null && next.startMin !== null ? <>بعدی <b>{next.name}</b> · {fmtIn(next.startMin - nowMin)}</> : missed ? `${faNum(missed)} برنامه عقب افتاده` : "برای امروز برنامه‌ی زمان‌داری نمونده"}
+              {allDone ? "روز کامل! همه انجام شد" : active ? <>الان: <b>{active.name}</b></> : next && nowMin !== null && next.startMin !== null ? <>بعدی <b>{next.name}</b> · {fmtIn(next.startMin - nowMin)}</> : missed ? `${faNum(missed)} برنامه عقب افتاده` : "برای امروز برنامه‌ی زمان‌داری نمونده"}
             </span>
           </div>
         </div>
@@ -130,7 +130,7 @@ export function DashboardToday({ ready, tasks, stats, week, onToggle }: { ready:
         {allDone && (
           <motion.div className="db-today-win" initial={{ opacity: 0, height: 0 }} animate={{ opacity: 1, height: "auto" }} exit={{ opacity: 0, height: 0 }} transition={{ duration: 0.4, ease: D_EASE }}>
             <span className="db-today-win-icon"><DashIcon name="trophy" className="dbi-live" /></span>
-            <span>روزِ کامل! همه‌ی برنامه‌های امروز انجام شد.</span>
+            <span>روز کامل! همه‌ی برنامه‌های امروز انجام شد.</span>
             <span className="db-burst" aria-hidden="true">{Array.from({ length: 8 }, (_, i) => <i key={i} style={{ ["--i" as any]: i }} />)}</span>
           </motion.div>
         )}
@@ -166,7 +166,7 @@ export function DashboardToday({ ready, tasks, stats, week, onToggle }: { ready:
                       onClick={() => toggle(r.id, r.done)}
                       whileTap={{ scale: 0.8 }}
                       aria-pressed={r.done}
-                      aria-label={`${r.done ? "برداشتنِ تیکِ" : "تیک‌زدنِ"} ${r.name}`}
+                      aria-label={`${r.done ? "برداشتن تیک" : "تیک‌زدن"} ${r.name}`}
                     >
                       <svg viewBox="0 0 24 24" aria-hidden="true">
                         <motion.path d="m7 12.5 3.3 3.2L17 9" fill="none" stroke="currentColor" strokeWidth={2.8} strokeLinecap="round" strokeLinejoin="round" initial={false} animate={{ pathLength: r.done ? 1 : 0, opacity: r.done ? 1 : 0 }} transition={{ duration: 0.35, ease: D_EASE }} />
@@ -188,13 +188,13 @@ export function DashboardToday({ ready, tasks, stats, week, onToggle }: { ready:
                         <button type="button" className="db-tl-name db-tl-name-btn" onClick={() => flip(r.id)} aria-expanded={open.has(r.id)}>{r.name}</button>
                       ) : <span className="db-tl-name">{r.name}</span>}
                       {!!r.items?.length && (
-                        <button type="button" className="checklist-chip" onClick={() => flip(r.id)} aria-expanded={open.has(r.id)} aria-label={open.has(r.id) ? "بستنِ لیست" : "بازکردنِ لیست"}>
+                        <button type="button" className="checklist-chip" onClick={() => flip(r.id)} aria-expanded={open.has(r.id)} aria-label={open.has(r.id) ? "بستن لیست" : "بازکردن لیست"}>
                           <span dir="ltr">{r.items.filter((i) => i.done).length}/{r.items.length}</span>
                           <svg viewBox="0 0 12 12" width="11" height="11" aria-hidden="true" style={{ transform: open.has(r.id) ? "rotate(180deg)" : undefined, transition: "transform .2s ease" }}><path d="m3 4.5 3 3 3-3" fill="none" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round" /></svg>
                         </button>
                       )}
                       {r.importance === "veryHigh" || r.importance === "high" ? (
-                        <span className={`db-tl-flag is-${r.importance}`} title={r.importance === "veryHigh" ? "اهمیتِ خیلی زیاد" : "اهمیتِ زیاد"}>
+                        <span className={`db-tl-flag is-${r.importance}`} title={r.importance === "veryHigh" ? "اهمیت خیلی زیاد" : "اهمیت زیاد"}>
                           <svg viewBox="0 0 12 12" aria-hidden="true"><path d="M3 11V1.6M3 2h6l-1.4 2.2L9 6.4H3" fill="none" stroke="currentColor" strokeWidth="1.4" strokeLinecap="round" strokeLinejoin="round" /></svg>
                         </span>
                       ) : null}
@@ -209,7 +209,7 @@ export function DashboardToday({ ready, tasks, stats, week, onToggle }: { ready:
                         <motion.ul className="db-tl-items" initial={{ height: 0, opacity: 0 }} animate={{ height: "auto", opacity: 1 }} exit={{ height: 0, opacity: 0 }} transition={{ duration: 0.28, ease: D_EASE }}>
                           {r.items.map((it) => (
                             <li key={it.id} className={it.done ? "is-done" : ""}>
-                              <TickButton checked={it.done} size={20} onToggle={() => onToggle(r.id, it.id)} label={`${it.done ? "برداشتنِ تیکِ" : "تیک‌زدنِ"} ${it.name}`} />
+                              <TickButton checked={it.done} size={20} onToggle={() => onToggle(r.id, it.id)} label={`${it.done ? "برداشتن تیک" : "تیک‌زدن"} ${it.name}`} />
                               <span>{it.name}</span>
                             </li>
                           ))}
@@ -217,7 +217,7 @@ export function DashboardToday({ ready, tasks, stats, week, onToggle }: { ready:
                       )}
                     </AnimatePresence>
                     {r.state === "active" && (
-                      <span className="db-tl-prog" aria-label="زمانِ سپری‌شده">
+                      <span className="db-tl-prog" aria-label="زمان سپری‌شده">
                         <motion.i initial={{ scaleX: 0 }} animate={{ scaleX: Math.min(1, Math.max(0.03, r.progress)) }} transition={{ duration: 0.9, ease: D_EASE }} />
                       </span>
                     )}
@@ -251,7 +251,7 @@ function NowMarker({ min }: { min: number }) {
   );
 }
 
-/** «این هفته» — درصدِ انجامِ هر روزِ هفته‌ی جاری (شنبه..جمعه)، پایینِ کارت */
+/** «این هفته» — درصد انجام هر روز هفته‌ی جاری (شنبه..جمعه)، پایین کارت */
 function WeekBars({ week }: { week: HeatCell[] }) {
   const past = week.filter((c) => !c.future && c.pct !== null);
   const avg = past.length ? Math.round(past.reduce((a, c) => a + (c.pct ?? 0), 0) / past.length) : null;
@@ -260,7 +260,7 @@ function WeekBars({ week }: { week: HeatCell[] }) {
       <span className="db-sub-head">این هفته{avg !== null && <span className="db-pill">میانگین {faNum(avg)}٪</span>}</span>
       <div className="db-weekbars-row">
         {week.map((c, i) => (
-          <span key={c.iso} className={`db-wbar${c.today ? " is-today" : ""}${c.future ? " is-future" : ""}`} title={c.pct === null ? "بدونِ برنامه" : `${faNum(c.pct)}٪`}>
+          <span key={c.iso} className={`db-wbar${c.today ? " is-today" : ""}${c.future ? " is-future" : ""}`} title={c.pct === null ? "بدون برنامه" : `${faNum(c.pct)}٪`}>
             <span className="db-wbar-track">
               <motion.i
                 className={c.pct === 100 ? "is-full" : ""}

@@ -45,9 +45,9 @@ export function ExerciseDashboard({
   const [logs, setLogs] = useState<ExerciseLogRange>({});
   const [selectedLog, setSelectedLog] = useState<{ completed: boolean; completedItems: string[] } | null>(null);
   const [refreshKey, setRefreshKey] = useState(0);
-  // زنده: لاگِ تمرین از تبِ دیگه/دستگاهِ دیگه یا برگشت به تب. نوشتن‌های همین
+  // زنده: لاگ تمرین از تب دیگه/دستگاه دیگه یا برگشت به تب. نوشتن‌های همین
   // تب عمدا نادیده گرفته می‌شن — ExerciseTaskList خودش optimisticه و
-  // دوباره‌خوانیِ پژواکِ هر تیک وسطِ تمرین تیک‌های بعدی رو یه لحظه برمی‌گردوند.
+  // دوباره‌خوانی پژواک هر تیک وسط تمرین تیک‌های بعدی رو یه لحظه برمی‌گردوند.
   useLiveRefresh("exercise", () => setRefreshKey((k) => k + 1), { remoteOnly: true });
 
   const [subbingItem, setSubbingItem] = useState<string | null>(null);
@@ -60,8 +60,8 @@ export function ExerciseDashboard({
   const [sessionActive, setSessionActive] = useState(false);
   const dashboardPrefs = useDashboardPrefs();
 
-  // «رد شدن»/«ماندن» برای روزِ جامانده (تنظیمات › بدنسازی). پیش‌فرض همان
-  // رفتارِ قبلی (رد شدن) است.
+  // «رد شدن»/«ماندن» برای روز جامانده (تنظیمات › بدنسازی). پیش‌فرض همان
+  // رفتار قبلی (رد شدن) است.
   const [missedPref, setMissedPref] = useState<MissedDayPref>(DEFAULT_MISSED_DAY_PREF);
   const [prefKey, setPrefKey] = useState(0);
   useLiveRefresh(SETTING_KEYS.exerciseMissedDay, () => setPrefKey((k) => k + 1));
@@ -81,7 +81,7 @@ export function ExerciseDashboard({
   }, [selectedIso]);
   const selectedDayName = FA_WEEKDAY[selectedDate.getDay()];
 
-  // نوارِ روزها خودش روزِ دور (از تقویمِ تاریخچه) را باز می‌کند و وسط می‌آورد.
+  // نوار روزها خودش روز دور (از تقویم تاریخچه) را باز می‌کند و وسط می‌آورد.
   function pickDate(iso: string) {
     setSelectedIso(iso);
   }
@@ -91,10 +91,10 @@ export function ExerciseDashboard({
     () => new Set(plan.planData.filter((d) => d.items.length > 0).map((d) => d.day)),
     [plan.planData]
   );
-  // در حالتِ «ماندن» لاگ از شروعِ نشانگر لازم است (نشانگر هر ~۶۰ روز جلو
+  // در حالت «ماندن» لاگ از شروع نشانگر لازم است (نشانگر هر ~۶۰ روز جلو
   // کشیده می‌شود، پس این بازه کوتاه می‌ماند)؛ وگرنه ۹۰ روز برای «این‌هفته» کافیه.
   const logsFrom = logsNeededFrom({ pref: missedPref, planId: plan.id, planDays, planStartIso, todayIso });
-  // نشانگر را فقط بعد از رسیدنِ *همین* بازه‌ی لاگ جلو می‌کشیم (وگرنه روزهای
+  // نشانگر را فقط بعد از رسیدن *همین* بازه‌ی لاگ جلو می‌کشیم (وگرنه روزهای
   // انجام‌شده «جامانده» حساب می‌شدند).
   const [logsLoadedFor, setLogsLoadedFor] = useState<string | null>(null);
   useEffect(() => {
@@ -115,7 +115,7 @@ export function ExerciseDashboard({
     () => ({ pref: missedPref, planId: plan.id, planDays, planStartIso, logs, todayIso }),
     [missedPref, plan.id, planDays, planStartIso, logs]
   );
-  // نشانگر را جلو می‌کشیم وقتی قدیمی شده یا مالِ پلنِ قبلی‌ست.
+  // نشانگر را جلو می‌کشیم وقتی قدیمی شده یا مال پلن قبلی‌ست.
   useEffect(() => {
     if (logsLoadedFor !== `${plan.id}|${logsFrom}`) return;
     const next = rebasedPref(progressCtx);
@@ -137,8 +137,8 @@ export function ExerciseDashboard({
     ),
     [plan.planData]
   );
-  // روزِ هفته‌ای که تمرینش واقعاً امروز/روزِ انتخاب‌شده نشان داده می‌شود —
-  // در «رد شدن» همان روزِ تقویم، در «ماندن» ممکن است تمرینِ جامانده باشد.
+  // روز هفته‌ای که تمرینش واقعا امروز/روز انتخاب‌شده نشان داده می‌شود —
+  // در «رد شدن» همان روز تقویم، در «ماندن» ممکن است تمرین جامانده باشد.
   const effectiveSelectedDay = effectiveDayName(progressCtx, selectedIso);
   const effectiveTodayDay = effectiveDayName(progressCtx, todayIso);
   const carriedFrom = effectiveSelectedDay !== selectedDayName && planDays.has(effectiveSelectedDay) ? effectiveSelectedDay : null;
@@ -150,9 +150,9 @@ export function ExerciseDashboard({
   const weekPct = weekProgressPct(plan.gymDays, logs, now);
   const todayLog = logs[todayIso];
 
-  // وضعیتِ هر روزِ باشگاهِ همین هفته (شنبه‌شروع) برای «برنامه هفتگی» پایین:
+  // وضعیت هر روز باشگاه همین هفته (شنبه‌شروع) برای «برنامه هفتگی» پایین:
   // «انجام دادی» اگه همون روز تمرین «تمام» ثبت شده، «وقتش گذشته» اگه روزش
-  // بی‌تمام‌شدن گذشته. امروزِ ناتمام هنوز وضعیتی نداره (تا آخرِ روز وقت هست).
+  // بی‌تمام‌شدن گذشته. امروز ناتمام هنوز وضعیتی نداره (تا آخر روز وقت هست).
   const weekDayStatus = useMemo(() => {
     const out: Record<string, "done" | "missed"> = {};
     const start = startOfWeek(now);
@@ -161,8 +161,8 @@ export function ExerciseDashboard({
       d.setDate(start.getDate() + i);
       const iso = isoLocal(d);
       if (missedPref.mode === "stay") {
-        // «ماندن»: تمرینِ جامانده «وقتش گذشته» نمی‌شود، فردا دوباره می‌آید —
-        // فقط «انجام دادی» روی همان تمرینی که آن روز واقعاً نشان داده شد.
+        // «ماندن»: تمرین جامانده «وقتش گذشته» نمی‌شود، فردا دوباره می‌آید —
+        // فقط «انجام دادی» روی همان تمرینی که آن روز واقعا نشان داده شد.
         const eff = effectiveDayName(progressCtx, iso);
         if (planDays.has(eff) && logs[iso]?.completed) out[eff] = "done";
         continue;

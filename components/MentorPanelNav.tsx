@@ -12,11 +12,11 @@ import { M_DUR, mT } from "./MentorMotion";
 import type { MentorSelf } from "@/lib/mentorTypes";
 
 /**
- * ناوبریِ خودِ پنلِ منتور (همه‌ی /mentor/*): یک نوارِ تبِ فشرده بالای پنل،
- * با همان ظاهرِ SegmentedTabs سایت (auth-tabs) ولی لینک و آیکون‌دار؛ نشانگرِ
- * فعال بینِ صفحه‌ها می‌لغزد چون این نوار در app/mentor/layout.tsx است و با
- * ناوبری دوباره mount نمی‌شود. فقط برای کسی که پروفایلِ منتوری دارد دیده
- * می‌شود؛ تا وقتی معلوم نیست، جایش رزرو است (بدونِ پرشِ layout).
+ * ناوبری خود پنل منتور (همه‌ی /mentor/*): یک نوار تب فشرده بالای پنل،
+ * با همان ظاهر SegmentedTabs سایت (auth-tabs) ولی لینک و آیکون‌دار؛ نشانگر
+ * فعال بین صفحه‌ها می‌لغزد چون این نوار در app/mentor/layout.tsx است و با
+ * ناوبری دوباره mount نمی‌شود. فقط برای کسی که پروفایل منتوری دارد دیده
+ * می‌شود؛ تا وقتی معلوم نیست، جایش رزرو است (بدون پرش layout).
  */
 
 export const MENTOR_PANEL_TABS = [
@@ -27,7 +27,7 @@ export const MENTOR_PANEL_TABS = [
   { href: "/mentor/settings", label: "تنظیمات", Icon: Settings, match: (p: string) => p.startsWith("/mentor/settings") || p.startsWith("/mentor/profile") },
 ] as const;
 
-/* ── پروفایلِ منتوریِ خودم: یک درخواست برای نوار و صفحه‌ها ────────── */
+/* ── پروفایل منتوری خودم: یک درخواست برای نوار و صفحه‌ها ────────── */
 type SelfState = { status: "unknown" | "loading" | "ready" | "error"; profile: MentorSelf | null; error?: string; code?: number };
 let selfState: SelfState = { status: "unknown", profile: null };
 let inflight: Promise<void> | null = null;
@@ -42,7 +42,7 @@ function emit(next: SelfState) {
   listeners.forEach((l) => l());
 }
 
-/** دوباره خواندنِ /api/mentors/me (مثلاً پس از ساختِ پروفایل) */
+/** دوباره خواندن /api/mentors/me (مثلا پس از ساخت پروفایل) */
 export function reloadMentorSelf(silent = false): Promise<void> {
   if (inflight) return inflight;
   if (!silent || selfState.status !== "ready") emit({ ...selfState, status: "loading" });
@@ -54,7 +54,7 @@ export function reloadMentorSelf(silent = false): Promise<void> {
   return inflight;
 }
 
-/** پس از ذخیره‌ی پروفایل: بدونِ درخواستِ تازه به‌روز کن */
+/** پس از ذخیره‌ی پروفایل: بدون درخواست تازه به‌روز کن */
 export function setMentorSelf(profile: MentorSelf | null) {
   emit({ status: "ready", profile });
 }
@@ -64,7 +64,7 @@ function subscribe(l: () => void) {
   return () => { listeners.delete(l); };
 }
 
-/** وضعیتِ پروفایلِ منتوری؛ بارِ اول خودش می‌خواند (یک درخواست برای همه). */
+/** وضعیت پروفایل منتوری؛ بار اول خودش می‌خواند (یک درخواست برای همه). */
 export function useMentorSelf() {
   const state = useSyncExternalStore(subscribe, () => selfState, () => selfState);
   useEffect(() => {
@@ -86,7 +86,7 @@ export function MentorPanelNav() {
   useEffect(() => setHint(readHint()), []);
 
   if (status === "unauthenticated") return null;
-  // معلوم: فقط با پروفایل. نامعلوم (در حالِ خواندن): طبقِ آخرین بار در همین
+  // معلوم: فقط با پروفایل. نامعلوم (در حال خواندن): طبق آخرین بار در همین
   // نشست، تا نوار نه بی‌دلیل ظاهر شود نه دیر بیاید و محتوا را هل بدهد.
   const show = self.status === "ready"
     ? !!self.profile

@@ -21,7 +21,7 @@ function daysLabel(it: TemplateItem): string {
   return WEEK_ORDER.filter((o) => it.days.includes(o.jsDay)).map((o) => FA_WEEKDAY[o.jsDay]).join("، ");
 }
 
-/** فهرستِ قالب‌های برنامه: ساختِ برنامه از قالب، دیدنِ آیتم‌ها، تغییرِ نام و حذف */
+/** فهرست قالب‌های برنامه: ساخت برنامه از قالب، دیدن آیتم‌ها، تغییر نام و حذف */
 export function MentorTemplatesList() {
   const [list, setList] = useState<TemplateRow[] | null>(null);
   const [error, setError] = useState<string | null>(null);

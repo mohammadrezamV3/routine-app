@@ -1,8 +1,8 @@
 "use client";
 
-// «بازار و اخبارِ اقتصادی» — جلسه‌های فارکس به‌صورتِ زنده (همون منطقِ DST-درستِ
-// lib/forexSessions.ts که صفحه‌ی ساعت استفاده می‌کنه) + شمارشِ معکوسِ نزدیک‌ترین
-// خبرِ مهم و فهرستِ رویدادهای پیشِ‌رو از جدولِ تقویمِ خودمون (نه سرویسِ بیرونی).
+// «بازار و اخبار اقتصادی» — جلسه‌های فارکس به‌صورت زنده (همون منطق DST-درست
+// lib/forexSessions.ts که صفحه‌ی ساعت استفاده می‌کنه) + شمارش معکوس نزدیک‌ترین
+// خبر مهم و فهرست رویدادهای پیش‌رو از جدول تقویم خودمون (نه سرویس بیرونی).
 // فقط شمارنده ثانیه‌ای رندر می‌شه؛ بقیه‌ی کارت دقیقه‌ای.
 
 import Link from "next/link";
@@ -49,8 +49,8 @@ export function DashboardMarket({ events, loading }: { events: DashEvent[] | nul
   const nextEvent = upcoming.find((e) => now && new Date(e.occursAt).getTime() > now.getTime() && e.impact === "HIGH") ?? upcoming.find((e) => now && new Date(e.occursAt).getTime() > now.getTime());
 
   return (
-    <BentoCard area="market" className="db-market" label="بازار و اخبارِ اقتصادی">
-      <CardHead icon="globeClock" title="بازار و اخبارِ اقتصادی" href="/trade/clock" hrefLabel="ساعتِ فارکس" />
+    <BentoCard area="market" className="db-market" label="بازار و اخبار اقتصادی">
+      <CardHead icon="globeClock" title="بازار و اخبار اقتصادی" href="/trade/clock" hrefLabel="ساعت فارکس" />
       <>
           <div className="db-sessions">
             {!now ? (
@@ -59,7 +59,7 @@ export function DashboardMarket({ events, loading }: { events: DashEvent[] | nul
               <>
                 <div className={`db-mkt-status${marketOpen ? " is-open" : ""}`}>
                   <span className="db-live-dot" />
-                  {!marketOpen ? "بازار فارکس تعطیله (آخرِ هفته)" : overlap ? `هم‌پوشانیِ ${overlap.label} — پرنوسان‌ترین ساعت‌ها` : arcs.some((a) => a.open) ? `${arcs.filter((a) => a.open).map((a) => SESSION_LABELS[a.key]).join(" و ")} باز است` : "بینِ جلسه‌ها"}
+                  {!marketOpen ? "بازار فارکس تعطیله (آخر هفته)" : overlap ? `هم‌پوشانی ${overlap.label} — پرنوسان‌ترین ساعت‌ها` : arcs.some((a) => a.open) ? `${arcs.filter((a) => a.open).map((a) => SESSION_LABELS[a.key]).join(" و ")} باز است` : "بین جلسه‌ها"}
                   {next && <span className="db-mkt-next">{SESSION_LABELS[next.key]} تا {fmtDur(next.at.getTime() - now.getTime())}</span>}
                 </div>
                 {arcs.map((a, i) => {
@@ -82,7 +82,7 @@ export function DashboardMarket({ events, loading }: { events: DashEvent[] | nul
 
           <div className="db-events">
             <span className="db-sub-head">
-              رویدادهای مهمِ پیشِ‌رو
+              رویدادهای مهم پیش‌رو
               <Link href="/trade/calendar" prefetch className="db-card-more db-card-more-sm">تقویم</Link>
             </span>
             {loading ? (
@@ -106,7 +106,7 @@ export function DashboardMarket({ events, loading }: { events: DashEvent[] | nul
                 </ul>
               </>
             ) : (
-              <p className="db-muted-line">در 7 روزِ آینده خبرِ مهمی ثبت نشده</p>
+              <p className="db-muted-line">در 7 روز آینده خبر مهمی ثبت نشده</p>
             )}
           </div>
       </>

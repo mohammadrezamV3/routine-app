@@ -2,15 +2,15 @@ import type { Mentorship } from "@prisma/client";
 import { prisma } from "@/lib/prisma";
 import { SETTING_KEYS } from "@/lib/userSettingKeys";
 
-// حریم خصوصیِ شاگرد در برابرِ هر منتور — *فقط* این‌جا تصمیم گرفته می‌شه و
-// روت‌ها خروجیِ این توابع رو برمی‌گردونن، نه داده‌ی خام. مخفی‌کردن سمت
+// حریم خصوصی شاگرد در برابر هر منتور — *فقط* این‌جا تصمیم گرفته می‌شه و
+// روت‌ها خروجی این توابع رو برمی‌گردونن، نه داده‌ی خام. مخفی‌کردن سمت
 // کلاینت کافی نیست: چیزی که منتور اجازه‌ش رو نداره اصلا از سرور خارج نمی‌شه.
 //
-// «برنامه»ی شاگرد در آریون = گروهِ occurrenceهای روتین با یک برچسب (tag)،
+// «برنامه»ی شاگرد در آریون = گروه occurrenceهای روتین با یک برچسب (tag)،
 // یا اگه برچسب نداشت، با یک اسم. به‌علاوه‌ی ماژول‌های بدنسازی و کالری.
 // کلیدها: "routine:<tag یا name>" | "module:EXERCISE" | "module:CALORIE".
-// برنامه‌هایی که خودِ منتور ساخته همیشه برای *همون* منتور قابل‌دیدنه و هیچ
-// منتورِ دیگه‌ای هرگز اون‌ها رو نمی‌بینه (این‌جا نیستن، با mentorId فیلتر می‌شن).
+// برنامه‌هایی که خود منتور ساخته همیشه برای *همون* منتور قابل‌دیدنه و هیچ
+// منتور دیگه‌ای هرگز اون‌ها رو نمی‌بینه (این‌جا نیستن، با mentorId فیلتر می‌شن).
 
 export const MODULE_SCOPES = [
   { key: "module:EXERCISE", label: "برنامه تمرینی (بدنسازی)" },
@@ -68,11 +68,11 @@ export async function loadStudentOccurrences(studentId: string): Promise<Student
   );
 }
 
-/** لیستِ برنامه‌هایی که شاگرد می‌تونه برای یک منتور تیک بزنه (فقط برای خودِ شاگرد) */
+/** لیست برنامه‌هایی که شاگرد می‌تونه برای یک منتور تیک بزنه (فقط برای خود شاگرد) */
 export async function listStudentScopes(studentId: string): Promise<{ key: string; label: string; kind: "routine" | "module" }[]> {
   const occ = await loadStudentOccurrences(studentId);
   const seen = new Map<string, string>();
-  // برنامه‌هایی که از برنامه‌ی یک منتور آینه شدن جزوِ «برنامه‌های خودِ شاگرد» نیستن
+  // برنامه‌هایی که از برنامه‌ی یک منتور آینه شدن جزو «برنامه‌های خود شاگرد» نیستن
   for (const o of occ) if (!o.mentorProgramId) seen.set(routineScopeKey(o), routineScopeKey(o).slice("routine:".length));
   return [
     ...Array.from(seen, ([key, label]) => ({ key, label, kind: "routine" as const })),
@@ -83,15 +83,15 @@ export async function listStudentScopes(studentId: string): Promise<{ key: strin
 export type MentorRoutineSlot = {
   jsDay: number;
   time: string;
-  program: string | null; // null = اسمِ برنامه مخفی
-  title: string; // «مشغول» وقتی اسمِ تسک مخفیه
+  program: string | null; // null = اسم برنامه مخفی
+  title: string; // «مشغول» وقتی اسم تسک مخفیه
   details: { importance?: string } | null;
   done: Record<string, boolean> | null; // dateIso → انجام‌شده؛ null = پیشرفت مخفی
 };
 
 /**
- * نمای روتینِ شاگرد برای یک منتور، در بازه‌ی [fromIso, toIso].
- * showSchedule=false → هیچ اسلاتی برنمی‌گرده (فقط اعلامِ مخفی‌بودن).
+ * نمای روتین شاگرد برای یک منتور، در بازه‌ی [fromIso, toIso].
+ * showSchedule=false → هیچ اسلاتی برنمی‌گرده (فقط اعلام مخفی‌بودن).
  */
 export async function projectRoutineForMentor(
   studentId: string,
@@ -123,8 +123,8 @@ export async function projectRoutineForMentor(
         done[d] = !!daily.get(d)?.[o.id];
       }
     }
-    // اسمِ برنامه وقتی برچسب نداره همون اسمِ تسکه — پس اگه اسمِ تسک مخفیه،
-    // نمایشِ «اسم برنامه» نباید از در پشتی اسمِ تسک رو لو بده.
+    // اسم برنامه وقتی برچسب نداره همون اسم تسکه — پس اگه اسم تسک مخفیه،
+    // نمایش «اسم برنامه» نباید از در پشتی اسم تسک رو لو بده.
     const hasTag = !!(o.tag && o.tag.trim());
     const program = p.showProgramName && (hasTag || p.showTaskName) ? routineScopeKey(o).slice("routine:".length) : null;
     return {

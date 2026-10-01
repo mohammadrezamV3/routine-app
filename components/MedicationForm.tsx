@@ -44,8 +44,8 @@ export function MedicationForm({
     initial ? isoToJalali(initial.startDate) : toJalali(now.getFullYear(), now.getMonth() + 1, now.getDate())
   );
   const [pickerOpen, setPickerOpen] = useState(false);
-  // طبقِ درخواستِ صریح، هر خطا زیرِ همون فیلدش نشان داده می‌شه (نه یک پیامِ
-  // کلیِ مشترک ته فرم) — تا مشخص باشه دقیقاً کدوم مقدار مشکل داره.
+  // طبق درخواست صریح، هر خطا زیر همون فیلدش نشان داده می‌شه (نه یک پیام
+  // کلی مشترک ته فرم) — تا مشخص باشه دقیقا کدوم مقدار مشکل داره.
   const [nameError, setNameError] = useState<string | null>(null);
   const [timesError, setTimesError] = useState<string | null>(null);
   const [durationError, setDurationError] = useState<string | null>(null);
@@ -95,7 +95,7 @@ export function MedicationForm({
     const [gy, gm, gd] = [startJalali[0], startJalali[1], startJalali[2]];
     const startDate = isoLocal(jalaliToGregorianApprox(gy, gm, gd));
 
-    // قبلاً onSave بدون try/catch صدا زده می‌شد: اگر ذخیره واقعاً شکست
+    // قبلا onSave بدون try/catch صدا زده می‌شد: اگر ذخیره واقعا شکست
     // می‌خورد (شبکه/سرور)، این تابع throw می‌کرد و setStatus("success")
     // هیچ‌وقت اجرا نمی‌شد — دکمه برای همیشه روی «در حال ثبت…» قفل می‌ماند،
     // بدون هیچ پیامی که بگوید مشکل چیست.

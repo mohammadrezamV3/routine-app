@@ -1,7 +1,7 @@
 "use client";
 
 // کارت‌های «تمرین» و «کالری» داشبورد. داده از /api/dashboard؛ هر نوشتنی
-// (شروعِ تمرین، ثبتِ غذا) در صفحه‌ی خودِ همون بخش انجام می‌شه و رویدادِ زنده
+// (شروع تمرین، ثبت غذا) در صفحه‌ی خود همون بخش انجام می‌شه و رویداد زنده
 // (exercise/calorie) این کارت‌ها رو خودکار تازه می‌کنه.
 
 import Link from "next/link";
@@ -21,7 +21,7 @@ export function DashboardExercise({ ex, loading }: { ex: DashExercise | null; lo
       {loading ? (
         <FitSkel />
       ) : !ex?.hasPlan ? (
-        <EmptyState icon="dumbbell" text="هنوز برنامه‌ی تمرینی نداری — با هوش مصنوعی در یک دقیقه بساز." href="/exercise?tab=exercise" cta="ساختِ برنامه" />
+        <EmptyState icon="dumbbell" text="هنوز برنامه‌ی تمرینی نداری — با هوش مصنوعی در یک دقیقه بساز." href="/exercise?tab=exercise" cta="ساخت برنامه" />
       ) : (
         <ExerciseBody ex={ex} />
       )}
@@ -31,10 +31,10 @@ export function DashboardExercise({ ex, loading }: { ex: DashExercise | null; lo
 
 function ExerciseBody({ ex }: { ex: DashExercise }) {
   const t = ex.today;
-  // حلقه از حرکت‌های واقعا تیک‌خورده ساخته می‌شه، نه از «پایانِ تمرین»
+  // حلقه از حرکت‌های واقعا تیک‌خورده ساخته می‌شه، نه از «پایان تمرین»
   const frac = t.itemCount ? t.doneItems / t.itemCount : t.done ? 1 : 0;
   const state = !t.isGymDay ? "rest" : t.done ? "done" : t.started ? "going" : "todo";
-  const cta = { rest: "مشاهده‌ی برنامه", done: "مرورِ تمرین", going: "ادامه‌ی تمرین", todo: "شروعِ تمرین" }[state];
+  const cta = { rest: "مشاهده‌ی برنامه", done: "مرور تمرین", going: "ادامه‌ی تمرین", todo: "شروع تمرین" }[state];
   return (
     <div className="db-fit">
       <div className="db-fit-top">
@@ -42,15 +42,15 @@ function ExerciseBody({ ex }: { ex: DashExercise }) {
           {state === "done" ? <DashIcon name="trophy" className="dbi-live db-fit-trophy" /> : t.isGymDay ? <b className="db-fit-ring-num">{faNum(t.doneItems)}<small>/{faNum(t.itemCount)}</small></b> : <DashIcon name="bed" className="dbi-live db-fit-rest" />}
         </Ring>
         <div className="db-fit-info">
-          <span className="db-fit-kicker">{t.isGymDay ? `امروز، ${t.dayName}` : "امروز روزِ استراحته"}</span>
-          <strong className="db-fit-title">{t.isGymDay ? (t.focus ?? "تمرینِ امروز") : "ریکاوری و خوابِ کافی"}</strong>
+          <span className="db-fit-kicker">{t.isGymDay ? `امروز، ${t.dayName}` : "امروز روز استراحته"}</span>
+          <strong className="db-fit-title">{t.isGymDay ? (t.focus ?? "تمرین امروز") : "ریکاوری و خواب کافی"}</strong>
           <span className="db-fit-sub">
-            <DashIcon name="flame" className="db-fit-flame" /> {faNum(ex.streak)} جلسه‌ی پشتِ‌سرهم · {faNum(ex.week.done)}/{faNum(ex.week.target)} این هفته
+            <DashIcon name="flame" className="db-fit-flame" /> {faNum(ex.streak)} جلسه‌ی پشت‌سرهم · {faNum(ex.week.done)}/{faNum(ex.week.target)} این هفته
           </span>
         </div>
       </div>
 
-      <div className="db-week-dots" aria-label="14 روزِ اخیر">
+      <div className="db-week-dots" aria-label="14 روز اخیر">
         {ex.last14.map((d, i) => {
           const [y, m, dd] = d.iso.split("-").map(Number);
           const wd = FA_WEEKDAY_SHORT[new Date(y, m - 1, dd).getDay()];
@@ -72,7 +72,7 @@ function ExerciseBody({ ex }: { ex: DashExercise }) {
               <span className="db-ex-name">{it.name}</span>
             </motion.li>
           ))}
-          {t.itemCount > t.items.length && <li className="db-ex-more">+{faNum(t.itemCount - t.items.length)} حرکتِ دیگه</li>}
+          {t.itemCount > t.items.length && <li className="db-ex-more">+{faNum(t.itemCount - t.items.length)} حرکت دیگه</li>}
         </ul>
       )}
 
@@ -92,7 +92,7 @@ export function DashboardCalorie({ cal, loading }: { cal: DashCalorie | null; lo
       {loading ? (
         <FitSkel />
       ) : !cal ? null : !cal.target ? (
-        <EmptyState icon="target" text="هدفِ کالریت رو تعیین کن تا پیشرفتِ روزانه‌ت این‌جا بیاد." href="/exercise?tab=calorie" cta="تعیینِ هدف" />
+        <EmptyState icon="target" text="هدف کالریت رو تعیین کن تا پیشرفت روزانه‌ت این‌جا بیاد." href="/exercise?tab=calorie" cta="تعیین هدف" />
       ) : (
         <CalorieBody cal={cal} />
       )}
@@ -132,7 +132,7 @@ function CalorieBody({ cal }: { cal: DashCalorie }) {
         ))}
       </div>
 
-      <div className="db-kbars" aria-label="7 روزِ اخیر">
+      <div className="db-kbars" aria-label="7 روز اخیر">
         {cal.week.map((w, i) => {
           const [y, m, d] = w.iso.split("-").map(Number);
           const wd = FA_WEEKDAY_SHORT[new Date(y, m - 1, d).getDay()];
@@ -152,18 +152,18 @@ function CalorieBody({ cal }: { cal: DashCalorie }) {
 
       {run ? (
         <button type="button" onClick={() => run("food")} className="account-outline-btn mentor-btn db-fit-cta">
-          <DashIcon name="plus" className="dbi-live" /> ثبتِ غذا
+          <DashIcon name="plus" className="dbi-live" /> ثبت غذا
         </button>
       ) : (
         <Link href="/exercise?tab=calorie" prefetch className="account-outline-btn mentor-btn db-fit-cta">
-          <DashIcon name="plus" className="dbi-live" /> ثبتِ غذا
+          <DashIcon name="plus" className="dbi-live" /> ثبت غذا
         </Link>
       )}
     </div>
   );
 }
 
-/** نیم‌دایره‌ی کالری — قوسِ ۲۴۰ درجه با گرادیانِ طول‌مسیر */
+/** نیم‌دایره‌ی کالری — قوس ۲۴۰ درجه با گرادیان طول‌مسیر */
 function Gauge({ value, over }: { value: number; over: boolean }) {
   const size = 150, stroke = 11, r = (size - stroke) / 2, c = size / 2;
   const a0 = (150 * Math.PI) / 180, a1 = (390 * Math.PI) / 180;

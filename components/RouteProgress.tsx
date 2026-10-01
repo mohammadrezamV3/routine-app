@@ -1,18 +1,18 @@
 "use client";
 
-// ناوبریِ نرم بینِ صفحه‌ها: همون لحظه‌ی کلیک روی یک لینکِ داخلی، یک نوارِ
-// پیشرفتِ باریک بالای صفحه راه می‌افته و صفحه‌ی فعلی کمی کم‌رنگ می‌شه (بازخوردِ
-// فوری — قبلا تا رسیدنِ صفحه‌ی بعد هیچ اتفاقی نمی‌افتاد و «نمی‌ره» حس می‌شد).
-// با عوض‌شدنِ مسیر نوار کامل می‌شه و محو می‌شه؛ ورودِ صفحه‌ی جدید با fade در
+// ناوبری نرم بین صفحه‌ها: همون لحظه‌ی کلیک روی یک لینک داخلی، یک نوار
+// پیشرفت باریک بالای صفحه راه می‌افته و صفحه‌ی فعلی کمی کم‌رنگ می‌شه (بازخورد
+// فوری — قبلا تا رسیدن صفحه‌ی بعد هیچ اتفاقی نمی‌افتاد و «نمی‌ره» حس می‌شد).
+// با عوض‌شدن مسیر نوار کامل می‌شه و محو می‌شه؛ ورود صفحه‌ی جدید با fade در
 // app/template.tsx. نوار با border کشیده می‌شه، نه بک‌گراند.
 //
-// چرا روی click در فازِ capture: <Link>ِ نکست خودش preventDefault می‌کنه، پس در
-// فازِ bubble نمی‌شه لینکِ واقعی رو از لینکی که کارِ دیگه‌ای می‌کنه تشخیص داد.
-// هر حالتی که ناوبری انجام نشه (پاپ‌آپ، دکمه‌ی داخلِ لینک، …) یا با تعاملِ بعدیِ
-// کاربر یا با سقفِ زمانی خودش جمع می‌شه — صفحه هیچ‌وقت کم‌رنگ نمی‌مونه.
+// چرا روی click در فاز capture: <Link> نکست خودش preventDefault می‌کنه، پس در
+// فاز bubble نمی‌شه لینک واقعی رو از لینکی که کار دیگه‌ای می‌کنه تشخیص داد.
+// هر حالتی که ناوبری انجام نشه (پاپ‌آپ، دکمه‌ی داخل لینک، …) یا با تعامل بعدی
+// کاربر یا با سقف زمانی خودش جمع می‌شه — صفحه هیچ‌وقت کم‌رنگ نمی‌مونه.
 //
-// کلاس‌ها عمدا rpg-* ان: کلاسِ سراسریِ .is-loading (globals.css) یک اسپینرِ ::before
-// اضافه می‌کنه که روی نوار می‌نشست، و .rp-done هم از قبل برای یک فهرستِ دیگه هست.
+// کلاس‌ها عمدا rpg-* ان: کلاس سراسری .is-loading (globals.css) یک اسپینر ::before
+// اضافه می‌کنه که روی نوار می‌نشست، و .rp-done هم از قبل برای یک فهرست دیگه هست.
 
 import { useEffect, useRef, useState } from "react";
 import { usePathname, useSearchParams } from "next/navigation";
@@ -26,7 +26,7 @@ export function RouteProgress() {
   const [phase, setPhase] = useState<Phase>("idle");
   const safety = useRef<ReturnType<typeof setTimeout> | null>(null);
   const hide = useRef<ReturnType<typeof setTimeout> | null>(null);
-  // تنها لیسنرِ «کاربر دوباره تعامل کرد» — همیشه قبل از ثبتِ بعدی برداشته می‌شه
+  // تنها لیسنر «کاربر دوباره تعامل کرد» — همیشه قبل از ثبت بعدی برداشته می‌شه
   const cancelRef = useRef<((e: Event) => void) | null>(null);
 
   function dropCancel() {
@@ -52,7 +52,7 @@ export function RouteProgress() {
     setPhase("loading");
     const html = document.documentElement;
     html.setAttribute(ATTR, "");
-    // از این به بعد صفحه‌های تازه با fade وارد می‌شن (نه لودِ کاملِ اول — LCP)
+    // از این به بعد صفحه‌های تازه با fade وارد می‌شن (نه لود کامل اول — LCP)
     html.setAttribute("data-navigated", "");
     safety.current = setTimeout(finish, 8_000);
     const armedAt = Date.now();
@@ -81,7 +81,7 @@ export function RouteProgress() {
       const t = e.target as Element | null;
       const a = t?.closest?.("a");
       if (!a || a.hasAttribute("download")) return;
-      // دکمه/فیلدِ داخلِ یک لینک (مثلا سطل‌زباله‌ی کارتِ رودمپ) ناوبری نمی‌کنه
+      // دکمه/فیلد داخل یک لینک (مثلا سطل‌زباله‌ی کارت رودمپ) ناوبری نمی‌کنه
       const ctl = t?.closest?.("button,[role=button],input,select,textarea,label");
       if (ctl && ctl !== a && a.contains(ctl)) return;
       const target = a.getAttribute("target");
@@ -94,7 +94,7 @@ export function RouteProgress() {
       if (url.pathname === window.location.pathname && url.search === window.location.search) return;
       start();
     }
-    // برگشت از bfcache: صفحه با همون حالتِ «در حالِ رفتن» ذخیره شده بود
+    // برگشت از bfcache: صفحه با همون حالت «در حال رفتن» ذخیره شده بود
     function onShow(e: PageTransitionEvent) {
       if (e.persisted) finish();
     }
