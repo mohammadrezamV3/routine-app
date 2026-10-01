@@ -43,8 +43,6 @@ const H = SHARE_H;
 type Palette = {
   bg: string; surface: string; line: string; accent: string; accentRgb: string;
   text: string; muted: string; loss: string; heat: string; heatHi: string; light: boolean;
-  /** رنگ‌های نورِ پشتِ شیشه — همون پالتِ حلقه‌های داشبورد */
-  glowA: string; glowB: string; glowC: string;
 };
 
 function readPalette(): Palette {
@@ -65,9 +63,6 @@ function readPalette(): Palette {
     heat: ds?.getPropertyValue("--ring-1a").trim() || (light ? "#0A9A70" : "#00C98D"),
     heatHi: ds?.getPropertyValue("--ring-1b").trim() || (light ? "#2ECB98" : "#7DF9CF"),
     light,
-    glowA: cs.getPropertyValue("--ring-2a").trim() || (light ? "#2F64E6" : "#3D7DFF"),
-    glowB: cs.getPropertyValue("--ring-2b").trim() || (light ? "#8A4DEB" : "#B06DFF"),
-    glowC: cs.getPropertyValue("--ring-3a").trim() || (light ? "#EE920C" : "#FFB547"),
   };
 }
 
@@ -140,14 +135,21 @@ function drawFlame(ctx: CanvasRenderingContext2D, x: number, y: number, size: nu
 // مرورگرها — از جمله سافاریِ قدیمی — یکسان و نرم دربیاد.
 type Orb = { x: number; y: number; r: number; color: string; a: number; soft: boolean };
 
+// فقط رنگ‌های برند: اکسنتِ تم (سبزِ آریون در شب، مسیِ گرم در روز) + رنگِ دومِ
+// لوگو (فیروزه‌ایِ نشان در شب، طلاییِ گرم در روز). کم و آرام — کارت باید «آریون»
+// به‌نظر بیاد، نه رنگین‌کمان؛ رنگِ داده‌ها (حلقه‌ها/نقشه) خودشون روی شیشه می‌درخشن.
 function sceneOrbs(p: Palette): Orb[] {
-  const k = p.light ? 0.55 : 1;
+  const brand2 = p.light ? "#E0A15E" : "#14D2DC";
+  if (p.light) {
+    return [
+      { x: 0.1, y: 0.06, r: 0.85, color: p.accent, a: 0.2, soft: true },
+      { x: 0.95, y: 0.95, r: 0.8, color: brand2, a: 0.22, soft: true },
+    ];
+  }
   return [
-    { x: 0.12, y: 0.1, r: 0.7, color: p.heat, a: 0.6 * k, soft: true },
-    { x: 0.92, y: 0.32, r: 0.62, color: p.glowA, a: 0.55 * k, soft: true },
-    { x: 0.1, y: 0.8, r: 0.6, color: p.glowC, a: 0.45 * k, soft: true },
-    { x: 0.88, y: 0.92, r: 0.62, color: p.glowB, a: 0.55 * k, soft: true },
-    { x: 0.5, y: 0.52, r: 0.5, color: p.heatHi, a: 0.16 * k, soft: true },
+    { x: 0.08, y: 0.05, r: 0.85, color: p.accent, a: 0.42, soft: true },
+    { x: 0.96, y: 0.96, r: 0.8, color: brand2, a: 0.24, soft: true },
+    { x: 0.55, y: 0.5, r: 0.55, color: p.accent, a: 0.07, soft: true },
   ];
 }
 
@@ -307,7 +309,9 @@ export async function renderShareCard(input: ShareCardInput): Promise<HTMLCanvas
 
   // حاشیه‌ی نوری: روشن بالا-چپ، محو پایین-راست + یه خطِ داخلیِ نازک
   const edge = ctx.createLinearGradient(CX, CY, CX + CW, CY + CH);
-  edge.addColorStop(0, p.light ? "rgba(255,255,255,.95)" : "rgba(255,255,255,.34)");
+  // لبه‌ی بالا-چپ ته‌رنگِ برند داره — همون نوری که از گوشه‌ی اکسنت میاد
+  edge.addColorStop(0, p.light ? rgba(p.accent, 0.55) : `rgba(${p.accentRgb},.6)`);
+  edge.addColorStop(0.18, p.light ? "rgba(255,255,255,.9)" : "rgba(255,255,255,.26)");
   edge.addColorStop(0.5, p.light ? "rgba(255,255,255,.35)" : "rgba(255,255,255,.08)");
   edge.addColorStop(1, p.light ? "rgba(255,255,255,.7)" : "rgba(255,255,255,.18)");
   roundRect(ctx, CX + 1, CY + 1, CW - 2, CH - 2, CR - 1);
