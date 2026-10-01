@@ -26,6 +26,8 @@ import { InviteRefCapture } from "@/components/InviteRefCapture";
 import { PopupExitAnimator } from "@/components/PopupExitAnimator";
 import { RouteProgress } from "@/components/RouteProgress";
 import { Suspense } from "react";
+import { BootSplash } from "@/components/BootSplash";
+import { BootSplashRelease } from "@/components/BootSplashRelease";
 
 // وزن variable به‌جای ۵ فایل فونت جدا برای هر وزن — همون طیف وزن‌ها رو از یک
 // فایل واحد می‌ده، حجم دانلود فونت رو به‌شدت کم می‌کنه (بزرگ‌ترین بخش payload).
@@ -234,6 +236,9 @@ export default async function RootLayout({ children }: { children: React.ReactNo
         {/* تشخیص دستگاه ضعیف — باید قبل از اولین پینت اجرا شود، وگرنه
             همان دستگاه اول نسخه‌ی سنگین را رندر می‌کند. */}
         <script dangerouslySetInnerHTML={{ __html: PERF_INIT_SCRIPT }} />
+        {/* اسپلش ورود — بعد از اسکریپت‌های تم/دستگاه تا از اولین پینت رنگ و
+            ردیف درست رو داشته باشه، و قبل از بقیه تا زودتر از هر چیزی دیده بشه */}
+        <BootSplash />
         {/* بازخورد کلیک/لمس روی هر باکس قابل‌کلیک — چه با موس چه با دست */}
         <script dangerouslySetInnerHTML={{ __html: TAP_FEEDBACK_INIT_SCRIPT }} />
         {/* باید *قبل* از PRELOAD_SCRIPT بیاید — آن اسکریپت همین تگ را
@@ -261,6 +266,7 @@ export default async function RootLayout({ children }: { children: React.ReactNo
                   استاتیک همه‌ی صفحه‌ها رو به کلاینت می‌کشوند */}
               <Suspense fallback={null}><RouteProgress /></Suspense>
               <div className="wrap">{children}</div>
+              <BootSplashRelease />
             </MotionTuner>
           </ThemeProvider>
         </AuthSessionProvider>
