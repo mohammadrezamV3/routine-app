@@ -57,21 +57,21 @@ export const PLANS_IRAN: PlanCard[] = [
     prices: { "1": "99,000 تومان", "3": "260,000 تومان", "6": "520,000 تومان", "12": "1,040,000 تومان" },
     originalPrices: { "3": "297,000 تومان", "6": "594,000 تومان", "12": "1,188,000 تومان" },
     amounts: { "1": 990000, "3": 2600000, "6": 5200000, "12": 10400000 },
-    features: ["برنامه‌ی هفتگی و روتین روزانه", "یادآوری برنامه‌ها و دارو", "ثبت خواب و استریک"],
+    features: ["روتین روزانه و برنامه‌ی هفتگی", "یادآوری برنامه‌ها و دارو", "ثبت خواب و پیوستگی روزها"],
   },
   {
     key: "exercise", nameFa: "پلن بدنسازی", icon: ICONS.exercise,
     prices: { "1": "150,000 تومان", "3": "394,000 تومان", "6": "788,000 تومان", "12": "1,575,000 تومان" },
     originalPrices: { "3": "450,000 تومان", "6": "900,000 تومان", "12": "1,800,000 تومان" },
     amounts: { "1": 1500000, "3": 3940000, "6": 7880000, "12": 15750000 },
-    features: ["برنامه‌ی بدنسازی با هوش مصنوعی — 3 بار در ماه", "شمارش و ردیابی کالری", "روتین روزانه"],
+    features: ["ساخت برنامه‌ی بدنسازی با هوش مصنوعی — 3 بار در ماه", "ثبت و پیگیری کالری و ماکروها", "روتین روزانه"],
   },
   {
     key: "trade", nameFa: "پلن ترید", icon: ICONS.trade,
     prices: { "1": "175,000 تومان", "3": "459,000 تومان", "6": "919,000 تومان", "12": "1,838,000 تومان" },
     originalPrices: { "3": "525,000 تومان", "6": "1,050,000 تومان", "12": "2,100,000 تومان" },
     amounts: { "1": 1750000, "3": 4590000, "6": 9190000, "12": 18380000 },
-    features: ["ژورنال و چک‌لیست ترید", "تقویم اقتصادی", "اتصال متاتریدر", "روتین روزانه"],
+    features: ["ژورنال ترید و چک‌لیست قبل از معامله", "تقویم اقتصادی", "ورود خودکار معاملات از MT4 و MT5", "روتین روزانه"],
   },
   {
     key: "max", nameFa: "پلن مکس", highlight: true, icon: <Sparkles size={16} />,
@@ -81,7 +81,7 @@ export const PLANS_IRAN: PlanCard[] = [
     // «تحلیل هوشمند» طبق درخواست صریح از فیچرهای پلن حذف شد (هنوز آماده
     // نیست — به بخش «به‌زودی»ی جدول جزئیات منتقل شده، COMPARE_ROWS_IRAN
     // پایین همین فایل)؛ جایگزینش «مدیربرنامه هوشمند» است.
-    features: ["برنامه‌ی بدنسازی با هوش مصنوعی — 5 بار در ماه", "شمارش و ردیابی کالری", "ژورنال و چک‌لیست ترید", "تقویم اقتصادی", "اتصال متاتریدر", "مدیر برنامه هوشمند (نومو) — ساخت و ویرایش برنامه با زبان طبیعی", "روتین روزانه"],
+    features: ["ساخت برنامه‌ی بدنسازی با هوش مصنوعی — 5 بار در ماه", "ثبت و پیگیری کالری و ماکروها", "ژورنال ترید و چک‌لیست قبل از معامله", "تقویم اقتصادی", "ورود خودکار معاملات از MT4 و MT5", "نومو، مدیر برنامه هوشمند — با جمله‌ی فارسی بساز و ویرایش کن", "روتین روزانه"],
   },
 ];
 
@@ -334,7 +334,7 @@ function PlanCardView({ p, mode, currentPlanKey, upgradeOffer, upgradeFromNameFa
             href={buyHref}
             className={`mt-2.5 flex w-full items-center justify-center gap-1.5 rounded-xl py-2.5 text-center text-[12.5px] font-bold transition active:scale-[0.98] ${p.highlight ? `text-white hover:brightness-105 ${t.secondaryBg}` : `border ${t.line} ${t.secondaryBtnBg} ${t.heading} ${t.accentHoverBorder}`}`}
           >
-            <ShoppingCart size={14} /> خرید اشتراک
+            <ShoppingCart size={14} /> {mode === "landing" ? "شروع با این پلن" : "خرید اشتراک"}
           </Link>
         </>
       )}
@@ -349,7 +349,7 @@ const isLatinLabel = (label: string) => /^[A-Za-z0-9 .,'&/-]+$/.test(label.trim(
 
 // گرید پلن‌ها + جدول مقایسه — از صفحه‌ی لندینگ و صفحه‌ی اشتراک داخل
 // حساب هردو استفاده می‌شه، فقط رفتار دکمه‌ها (mode) فرق می‌کنه.
-export function PlansSection({ mode, currentPlanKey, title = "پلن مناسب خودت را انتخاب کن", upgradeOffer }: { mode: "landing" | "account"; currentPlanKey?: string | null; title?: string; upgradeOffer?: UpgradeOffer | null }) {
+export function PlansSection({ mode, currentPlanKey, title = "از چیزی که لازم داری شروع کن.", upgradeOffer }: { mode: "landing" | "account"; currentPlanKey?: string | null; title?: string; upgradeOffer?: UpgradeOffer | null }) {
   const t = useThemeTokens();
   // توی صفحه‌ی اشتراک (mode="account") کارتِ پلنِ رایگان (اگه وجود داشته باشه) نشون داده نمی‌شه.
   // «روتین من» الان پولیه و این‌جا نشون داده می‌شه.
@@ -374,7 +374,7 @@ export function PlansSection({ mode, currentPlanKey, title = "پلن مناسب 
           همین متن رو توی یادداشتِ بالای خودش داره. متنِ ساده، بی‌بک‌گراند. */}
       {mode === "landing" && (
         <p className={`text-center text-[13px] font-bold ${t.muted}`} style={{ marginBottom: 18 }}>
-          از 14 روز رایگان شروع کن و بعد بر اساس نیازت، امکانات موردنظرت را انتخاب کن. هر حساب تازه: {TRIAL_COPY_FA}. دستیار «نومو» 10 پیام رایگان دارد و در پلن‌های پولی نامحدود است.
+          14 روز رایگان امتحان کن و بعد بر اساس نیازت، امکانات موردنظرت را انتخاب کن. هر حساب تازه: {TRIAL_COPY_FA}. «نومو» 10 پیام رایگان دارد و در پلن‌های پولی نامحدود است.
         </p>
       )}
 
