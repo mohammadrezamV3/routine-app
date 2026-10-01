@@ -26,9 +26,10 @@ export function faNum(n: number | string) {
   return String(n);
 }
 
-// خط چرخان تیتر: «برنامه‌هات را زندگی کن، / نه فقط بنویس» (متن صاحب محصول)؛
-// انیمیشن همونه، فقط کلمه‌ها فعل «نوشتن/چیدن» شدن و اولیش «بنویس» ـه.
-const ROT_WORDS = ["بنویس", "بچین", "لیست کن", "یادداشت کن"];
+// خط چرخان تیتر: «امروز یک تیک، / فردا یک …» — همون حلقه‌ی اصلی اپ: هر تیک
+// امروز (روتین، تمرین، خواب) فردا عادت، استریک، بدن قوی‌تر و روز کامل می‌سازه.
+// انیمیشن همونه؛ اولین کلمه («عادت») متن h1 برای سئو/صفحه‌خوان هم هست.
+const ROT_WORDS = ["عادت", "استریک", "بدن قوی‌تر", "روز کامل"];
 
 // «روتین من» (app/weekly) همون‌طور که روی گوشی دیده می‌شه — ردیف‌ها آینه‌ی
 // DashTaskRow ـن، ردیف آخر همون ردیف سنتتیک «برنامه تمرینی امروز» با دکمه‌ی
@@ -196,9 +197,9 @@ export function LandingHero() {
             <span className="lh-title-kicker">
               روتین اپ <span className="lh-brand">آریون</span>
             </span>
-            <span className="lh-title-main">برنامه‌هات را زندگی کن،</span>
+            <span className="lh-title-main">امروز یک تیک،</span>
             <span className="lh-title-main lh-title-rot">
-              نه فقط{" "}
+              فردا یک{" "}
               <span className="lh-rot" aria-hidden="true">
                 {ROT_WORDS.map((w, i) => (
                   <span
@@ -209,13 +210,13 @@ export function LandingHero() {
                   </span>
                 ))}
               </span>
-              <span className="lh-sr">بنویس</span>
+              <span className="lh-sr">عادت</span>
             </span>
           </h1>
 
           <p className={`lh-sub lh-rise ${t.muted}`} style={{ "--i": 2 } as React.CSSProperties}>
-            برنامه‌ریزی کن، اجرا کن و پیشرفتت را ببین؛ آریون همه ابزارهایی را که برای ساختن
-            یک مسیر منظم نیاز داری، یک‌جا در اختیارت می‌گذارد.
+            روتین، خواب، تمرین، تغذیه و ترید را یک‌جا پیش ببر؛ آریون از همین تیک‌های ساده
+            استریک، نقشه‌ی ثبات و دستاوردهایت را می‌سازد.
           </p>
 
           <div className="lh-ctas lh-rise" style={{ "--i": 3 } as React.CSSProperties}>

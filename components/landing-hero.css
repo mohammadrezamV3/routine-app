@@ -131,7 +131,7 @@ body[data-theme="light"] .lh-aurora-b{ background:radial-gradient(closest-side, 
   padding-bottom:.12em; margin-bottom:-.12em;
 }
 .lh-rot-word{
-  grid-area:1 / 1;
+  grid-area:1 / 1; white-space:nowrap;
   background:linear-gradient(100deg, var(--accent), var(--accent-soft));
   -webkit-background-clip:text; background-clip:text; color:transparent;
   -webkit-text-fill-color:transparent;
