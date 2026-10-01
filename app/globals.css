@@ -967,7 +967,9 @@
     padding:10px 12px; border-radius:16px; border:1px solid var(--line); background:rgba(255,255,255,.02);
   }
   .trade-goal-ring-wrap{ position:relative; width:56px; height:56px; flex-shrink:0; }
-  .trade-goal-ring{ width:100%; height:100%; }
+  /* GradientRing اندازه رو inline می‌ده (72)؛ اینجا اندازه رو قاب تعیین می‌کنه (46/58)
+     وگرنه حلقه از قاب بیرون می‌زد، بریده می‌شد و درصد از وسطش در می‌رفت */
+  .trade-goal-ring{ width:100% !important; height:100% !important; }
   .trade-goal-ring svg{ width:100%; height:100%; }
   .trade-goal-ring-fill{ transition:stroke-dashoffset .5s ease; }
   .trade-goal-ring-pct{
