@@ -37,6 +37,8 @@ export const SHARE_W = 1080;
 export const SHARE_H = 1350;
 /** تراکمِ پیکسلِ خروجی */
 const SHARE_DPR = 2;
+/** فتحه/کسره/ضمه/تنوین/تشدید/سکون و الفِ کوچک */
+const NO_DIACRITICS = /[\u064B-\u0652\u0670]/g;
 const W = SHARE_W;
 const H = SHARE_H;
 
@@ -265,7 +267,7 @@ export async function renderShareCard(input: ShareCardInput): Promise<HTMLCanvas
       try {
         await Promise.all([document.fonts.load(f(800, 56), "استریک روز"), document.fonts.load(f(600, 30), "Arion 0123")]);
         await document.fonts.ready;
-      } catch { /* فونتِ جایگزین هم قابلِ قبوله */ }
+      } catch { /* فونت جایگزین هم قابل قبوله */ }
     })(),
   ]);
 
@@ -286,8 +288,10 @@ export async function renderShareCard(input: ShareCardInput): Promise<HTMLCanvas
     ctx.textAlign = align;
     ctx.direction = dir;
     ctx.textBaseline = "alphabetic";
-    if (maxW) ctx.fillText(s, x, y, maxW);
-    else ctx.fillText(s, x, y);
+    // هیچ اِعرابی روی تصویر نمیاد (درخواستِ صاحبِ محصول) — حتی اگه ورودی داشته باشه
+    const plain = s.replace(NO_DIACRITICS, "");
+    if (maxW) ctx.fillText(plain, x, y, maxW);
+    else ctx.fillText(plain, x, y);
   };
 
   // ── صحنه‌ی نورانیِ پشت + کارتِ شیشه‌ی مات ──
@@ -372,14 +376,14 @@ export async function renderShareCard(input: ShareCardInput): Promise<HTMLCanvas
     const codeW = ctx.measureText(input.inviteCode).width;
     ctx.direction = "rtl";
     ctx.font = f(700, 24);
-    const labW = ctx.measureText("کدِ دعوت").width;
+    const labW = ctx.measureText("کد دعوت").width;
     const pillW = codeW + labW + 56, pillY = 254;
     roundRect(ctx, L, pillY, pillW, 46, 23);
     ctx.lineWidth = 2;
     ctx.strokeStyle = `rgba(${p.accentRgb},.55)`;
     ctx.stroke();
     text(input.inviteCode, L + 20, pillY + 32, f(800, 26), p.accent, "left", "ltr");
-    text("کدِ دعوت", L + pillW - 20, pillY + 31, f(700, 24), p.muted, "right");
+    text("کد دعوت", L + pillW - 20, pillY + 31, f(700, 24), p.muted, "right");
   }
   // عنوان هیچ‌وقت روی لوگو نمی‌افته — عرضش سقف داره
   text(input.title, R, 170, f(900, 58), p.text, "right", "rtl", 520);
@@ -603,6 +607,6 @@ export function downloadBlob(blob: Blob, name: string) {
 /** متنِ همراهِ تصویر — کدِ دعوت و آدرسِ سایت فقط این‌جا (نه روی خودِ تصویر) */
 export function shareText(lead: string, invite: { code: string | null; url: string; percent: number } | null): string {
   if (!invite) return lead;
-  const offer = invite.code ? ` با کدِ دعوتِ من (${invite.code}) ${faNum(invite.percent)}% تخفیف بگیر:` : "";
+  const offer = invite.code ? ` با کد دعوت من (${invite.code}) ${faNum(invite.percent)}% تخفیف بگیر:` : "";
   return `${lead}\nتو هم بیا روتینت رو بساز —${offer} ${invite.url}`;
 }

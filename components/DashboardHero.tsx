@@ -174,7 +174,7 @@ export function DashboardHero({
           {onShare && (
             <button type="button" className="db-chip db-chip-share" onClick={onShare} disabled={!routine.ready}>
               <DashIcon name="share" />
-              اشتراکِ موفقیت
+              اشتراک موفقیت
             </button>
           )}
           {data?.routineTrial && (

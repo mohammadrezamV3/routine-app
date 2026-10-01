@@ -82,7 +82,7 @@ export function StreakCelebration({ mode, from, to, todayDone, anchor, onClose }
     const t = setTimeout(() => {
       setLanded(true);
       setShown(to);
-      try { if (hapticsEnabled()) navigator.vibrate?.([18, 40, 28]); } catch { /* بدونِ هپتیک */ }
+      try { if (hapticsEnabled()) navigator.vibrate?.([18, 40, 28]); } catch { /* بدون هپتیک */ }
     }, LAND_MS);
     return () => clearTimeout(t);
   }, [mode, to]);
@@ -101,31 +101,31 @@ export function StreakCelebration({ mode, from, to, todayDone, anchor, onClose }
     try {
       const inv = invite ? { code: invite.code, url: invite.url, percent: REFERRAL_DISCOUNT_PERCENT } : null;
       const canvas = await renderShareCard({
-        title: "استریکِ من",
+        title: "استریک من",
         subtitle: tier.name,
-        body: { kind: "streak", streak: to, label: "روزِ پشتِ‌سرهم، همه‌ی برنامه‌ها کامل", week: { labels: WEEK, done: week.done, todayIdx: week.todayIdx } },
+        body: { kind: "streak", streak: to, label: "روز پشت‌سرهم، همه‌ی برنامه‌ها کامل", week: { labels: WEEK, done: week.done, todayIdx: week.todayIdx } },
         inviteCode: invite?.code ?? null,
       });
       const blob = await canvasToBlob(canvas);
-      const res = await shareImage(blob, `arion-streak-${to}.png`, "استریکِ من", shareText(`${faNum(to)} روزِ پشتِ‌سرهم روتینم رو کامل کردم 🔥`, inv));
+      const res = await shareImage(blob, `arion-streak-${to}.png`, "استریک من", shareText(`${faNum(to)} روز پشت‌سرهم روتینم رو کامل کردم 🔥`, inv));
       if (res === "downloaded") setShareMsg("تصویر ذخیره شد — حالا برای دوستات بفرستش");
     } catch {
-      setShareMsg("ساختِ تصویر ممکن نشد");
+      setShareMsg("ساخت تصویر ممکن نشد");
     } finally {
       setSharing(false);
     }
   }
 
-  const title = mode === "view" && !todayDone ? "امروز هنوز کامل نشده" : "روزِ استریک!";
+  const title = mode === "view" && !todayDone ? "امروز هنوز کامل نشده" : "روز استریک!";
   const sub =
     mode === "view" && !todayDone
       ? `همه‌ی برنامه‌های امروز رو تیک بزن تا شعله روشن بمونه و استریکت ${faNum(to + 1)} بشه.`
       : isMilestone
         ? `${tier.name} باز شد! شعله‌ت حالا یه سطح داغ‌تره.`
         : to === 1
-          ? "یه استریکِ تازه روشن شد. فردا هم کامل کن تا خاموش نشه!"
+          ? "یه استریک تازه روشن شد. فردا هم کامل کن تا خاموش نشه!"
           : "همه‌ی برنامه‌های امروز انجام شد. فردا هم بیا تا شعله خاموش نشه!";
-  const next = tier.nextMilestone ? `${faNum(tier.nextMilestone - to)} روزِ دیگه تا سطحِ بعدی` : null;
+  const next = tier.nextMilestone ? `${faNum(tier.nextMilestone - to)} روز دیگه تا سطح بعدی` : null;
 
   return createPortal(
     <motion.div
@@ -237,7 +237,7 @@ export function StreakCelebration({ mode, from, to, todayDone, anchor, onClose }
           </button>
           <p className="streak-cel-invite">
             {invite?.code
-              ? <>دوستات با کدِ دعوتت <b dir="ltr">{invite.code}</b> روی اولین اشتراک {faNum(REFERRAL_DISCOUNT_PERCENT)}٪ تخفیف می‌گیرن</>
+              ? <>دوستات با کد دعوتت <b dir="ltr">{invite.code}</b> روی اولین اشتراک {faNum(REFERRAL_DISCOUNT_PERCENT)}٪ تخفیف می‌گیرن</>
               : "استریکت رو بفرست و دوستات رو به چالش بکش"}
           </p>
           {shareMsg && <p className="streak-cel-msg">{shareMsg}</p>}

@@ -55,6 +55,9 @@ function resolveColor(v: string): string {
   return getComputedStyle(el).getPropertyValue(m[1]).trim() || "#00C98D";
 }
 
+/** بخشِ اشتراک هیچ اِعرابی نداره — برچسب‌های مشترک با هیرو (مثلِ «تمرینِ امروز») هم تمیز می‌شن */
+const plain = (t: string) => t.replace(/[\u064B-\u0652\u0670]/g, "");
+
 function isoOf(d: Date) {
   return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}-${String(d.getDate()).padStart(2, "0")}`;
 }
@@ -114,7 +117,7 @@ export function DashboardShare({
       // حلقه‌ها همیشه روی کارت می‌مونن؛ سوییچ فقط عددِ زیرِ هر حلقه رو پنهان می‌کنه
       .filter((r) => r.show)
       .map((r) => ({
-        label: r.label,
+        label: plain(r.label),
         value: r.value,
         display: !opts[r.key] ? null : r.key === "calorie" && cal?.target ? `${faNum(Math.round(cal.today.kcal))}/${faNum(Math.round(cal.target.kcal))}` : r.display,
         colors: [resolveColor(r.grad[0]), resolveColor(r.grad[1])] as [string, string],
@@ -127,7 +130,7 @@ export function DashboardShare({
     const [jy, jm, jd] = toJalali(y, m, d);
     const weekday = FA_WEEKDAY[new Date(y, m - 1, d).getDay()];
     const base = {
-      title: "فعالیتِ امروز",
+      title: "فعالیت امروز",
       subtitle: `${weekday} ${faNum(jd)} ${J_MONTHS[jm - 1]} ${faNum(jy)}`,
       inviteCode: opts.invite ? invite?.code ?? null : null,
     };
@@ -141,12 +144,12 @@ export function DashboardShare({
       body: {
         kind: "month",
         streak,
-        title: `نقشه‌ی ثباتِ ${J_MONTHS[tm - 1]} ${faNum(ty)}`,
+        title: `نقشه‌ی ثبات ${J_MONTHS[tm - 1]} ${faNum(ty)}`,
         lead: month.lead,
         cells: month.cells.map((c) => ({ jd: c.jd, level: heatLevel(c.pct), today: c.today, future: c.future })),
         stats: [
-          { label: "روزِ کامل", value: faNum(month.perfect) },
-          { label: "میانگینِ ماه", value: month.avg === null ? "—" : `${faNum(month.avg)}%` },
+          { label: "روز کامل", value: faNum(month.perfect) },
+          { label: "میانگین ماه", value: month.avg === null ? "—" : `${faNum(month.avg)}%` },
         ],
       },
     };
@@ -174,7 +177,7 @@ export function DashboardShare({
         previewRef.current = URL.createObjectURL(blob);
         setPreview(previewRef.current);
       } catch {
-        if (alive) setMsg("ساختِ تصویر ممکن نشد");
+        if (alive) setMsg("ساخت تصویر ممکن نشد");
       } finally {
         if (alive) setRendering(false);
       }
@@ -198,12 +201,12 @@ export function DashboardShare({
     try {
       const cached = blobRef.current;
       const blob = cached && cached.input === input ? cached.blob : await canvasToBlob(await renderShareCard(input));
-      const lead = streak ? `${faNum(streak)} روزِ پشتِ‌سرهم روتینم رو کامل کردم 🔥` : "امروزم توی آریون 💪";
+      const lead = streak ? `${faNum(streak)} روز پشت‌سرهم روتینم رو کامل کردم 🔥` : "امروزم توی آریون 💪";
       const inv = invite && opts.invite ? { code: invite.code, url: invite.url, percent: REFERRAL_DISCOUNT_PERCENT } : null;
-      const res = await shareImage(blob, `arion-${routine.todayIso}.png`, "فعالیتِ امروز", shareText(lead, inv));
+      const res = await shareImage(blob, `arion-${routine.todayIso}.png`, "فعالیت امروز", shareText(lead, inv));
       if (res === "downloaded") setMsg("تصویر ذخیره شد — حالا برای دوستات بفرستش");
     } catch {
-      setMsg("ساختِ تصویر ممکن نشد");
+      setMsg("ساخت تصویر ممکن نشد");
     } finally {
       setBusy(false);
     }
@@ -229,14 +232,14 @@ export function DashboardShare({
             className="db-share"
             role="dialog"
             aria-modal="true"
-            aria-label="اشتراکِ موفقیت"
+            aria-label="اشتراک موفقیت"
             initial={{ opacity: 0, y: 18, scale: 0.97 }}
             animate={{ opacity: 1, y: 0, scale: 1 }}
             exit={{ opacity: 0, y: 10, scale: 0.98 }}
             transition={{ duration: 0.28, ease: D_EASE }}
           >
             <div className="db-share-head">
-              <h2>اشتراکِ موفقیت</h2>
+              <h2>اشتراک موفقیت</h2>
               <button type="button" className="trade-icon-btn" onClick={onClose} aria-label="بستن"><X size={18} /></button>
             </div>
 
@@ -246,7 +249,7 @@ export function DashboardShare({
                   <p className="db-share-empty">هنوز حلقه‌ای برای امروز نیست</p>
                 ) : preview ? (
                   // eslint-disable-next-line @next/next/no-img-element
-                  <img src={preview} alt="پیش‌نمایشِ تصویرِ اشتراکی" className={rendering ? "is-dim" : undefined} />
+                  <img src={preview} alt="پیش‌نمایش تصویر اشتراکی" className={rendering ? "is-dim" : undefined} />
                 ) : (
                   <Spinner size={22} />
                 )}
@@ -263,16 +266,16 @@ export function DashboardShare({
 
                 {opts.kind === "rings" && (
                   <div className="db-share-group">
-                    <p className="db-share-label">عددِ زیرِ کدوم حلقه‌ها دیده بشه؟</p>
+                    <p className="db-share-label">عدد زیر کدوم حلقه‌ها دیده بشه؟</p>
                     <ul className="db-share-list">
                       {ringRows.map((r) => (
                         <li key={r.key}>
                           <span className="db-share-dot" style={{ background: `linear-gradient(135deg, ${r.grad[0]}, ${r.grad[1]})` }} aria-hidden="true" />
                           <span className="db-share-row-text">
-                            <span>{r.label}</span>
+                            <span>{plain(r.label)}</span>
                             <small dir="ltr">{r.display}</small>
                           </span>
-                          <ToggleSwitch checked={opts[r.key]} onChange={(v) => set(r.key, v)} label={`نمایشِ عددِ ${r.label}`} />
+                          <ToggleSwitch checked={opts[r.key]} onChange={(v) => set(r.key, v)} label={`نمایش عدد ${plain(r.label)}`} />
                         </li>
                       ))}
                     </ul>
@@ -284,10 +287,10 @@ export function DashboardShare({
                   <ul className="db-share-list">
                     <li>
                       <span className="db-share-row-text">
-                        <span>کدِ دعوت</span>
+                        <span>کد دعوت</span>
                         <small>{faNum(REFERRAL_DISCOUNT_PERCENT)}٪ تخفیف برای دوستت</small>
                       </span>
-                      <ToggleSwitch checked={opts.invite && !!invite?.code} onChange={(v) => set("invite", v)} label="کدِ دعوت" disabled={!invite?.code} />
+                      <ToggleSwitch checked={opts.invite && !!invite?.code} onChange={(v) => set("invite", v)} label="کد دعوت" disabled={!invite?.code} />
                     </li>
                   </ul>
                 </div>
@@ -299,7 +302,7 @@ export function DashboardShare({
                   {msg && <p className="db-share-msg" role="status">{msg}</p>}
                   <p className="db-share-invite">
                     {invite?.code
-                      ? <>هر دوستی که با کدِ <b dir="ltr">{invite.code}</b> بیاد، روی اولین اشتراکش {faNum(REFERRAL_DISCOUNT_PERCENT)}٪ تخفیف می‌گیره.</>
+                      ? <>هر دوستی که با کد <b dir="ltr">{invite.code}</b> بیاد، روی اولین اشتراکش {faNum(REFERRAL_DISCOUNT_PERCENT)}٪ تخفیف می‌گیره.</>
                       : "دوستات رو بیار و استریک‌هاتون رو با هم مقایسه کنید!"}
                   </p>
                 </div>

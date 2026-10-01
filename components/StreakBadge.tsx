@@ -11,7 +11,7 @@ function celebratedOn(iso: string): boolean {
   try { return localStorage.getItem(CELEBRATED_KEY) === iso; } catch { return false; }
 }
 function markCelebrated(iso: string) {
-  try { localStorage.setItem(CELEBRATED_KEY, iso); } catch { /* ذخیره‌سازیِ بسته */ }
+  try { localStorage.setItem(CELEBRATED_KEY, iso); } catch { /* ذخیره‌سازی بسته */ }
 }
 
 // شعله + عدد استریک خود کاربر — توی هدر استفاده می‌شه، پس همیشه compact.
@@ -54,7 +54,7 @@ export function StreakBadge({ className }: { className?: string }) {
         className={`streak-badge-hit${cel ? " is-away" : ""}${landing ? " is-landing" : ""}`}
         role="button"
         tabIndex={0}
-        aria-label="نمایشِ استریک"
+        aria-label="نمایش استریک"
         onClick={openView}
         onKeyDown={(e) => { if (e.key === "Enter" || e.key === " ") { e.preventDefault(); openView(); } }}
       >

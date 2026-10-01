@@ -257,7 +257,7 @@ export default function CheckoutPage() {
             </button>
           </div>
         </div>
-        {fromInvite && !discountResult && <div className="checkout-invite-hint">کدِ دعوتِ دوستت پر شده — «اعمال» رو بزن تا {faNum(REFERRAL_DISCOUNT_PERCENT)}٪ تخفیف بگیری</div>}
+        {fromInvite && !discountResult && <div className="checkout-invite-hint">کد دعوت دوستت پر شده — «اعمال» رو بزن تا {faNum(REFERRAL_DISCOUNT_PERCENT)}٪ تخفیف بگیری</div>}
         {discountResult?.ok && <div className="checkout-discount-success">کد تخفیف اعمال شد</div>}
         {discountResult && !discountResult.ok && <div className="field-error-msg" style={{ display: "block", marginTop: 7 }}>{discountResult.error}</div>}
       </div>
