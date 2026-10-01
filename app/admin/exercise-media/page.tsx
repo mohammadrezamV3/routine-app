@@ -1,7 +1,7 @@
 "use client";
 
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
-import { ImageOff, ImagePlus, Loader2, Search, Trash2, Upload, X } from "lucide-react";
+import { ImageOff, ImagePlus, Search, Trash2, Upload, X } from "lucide-react";
 import { EmptyState, ErrorState, LoadingState } from "@/components/admin/EmptyState";
 import { ConfirmModal } from "@/components/admin/AdminModal";
 import { adminFetch, useAdminToast } from "@/components/admin/useAdminToast";
@@ -9,6 +9,7 @@ import { formatDateTime } from "@/lib/adminFormat";
 import { EXERCISE_CATALOG } from "@/lib/exerciseCatalog";
 import { MAX_MEDIA_DATA_URL_LENGTH, MEDIA_MAX_EDGE, mediaKey } from "@/lib/exerciseMedia";
 import { normalizeFa } from "@/lib/utils";
+import { Spinner } from "@/components/Spinner";
 
 type Item = { nameKey: string; name: string; updatedAt: string };
 
@@ -309,7 +310,7 @@ export default function AdminExerciseMediaPage() {
                 />
                 <span className="admin-media-file-row">
                   <button type="button" className="admin-btn" onClick={() => fileRef.current?.click()} disabled={busy}>
-                    {compressing ? <Loader2 size={14} className="trade-spin" /> : <ImagePlus size={14} />}
+                    {compressing ? <Spinner size={13} /> : <ImagePlus size={14} />}
                     {dataUrl ? "انتخاب عکس دیگر" : "انتخاب عکس"}
                   </button>
                   <span className="admin-media-note">JPG، PNG یا WebP</span>
@@ -334,7 +335,7 @@ export default function AdminExerciseMediaPage() {
               </button>
             )}
             <button type="submit" className="admin-btn primary" disabled={!name || !dataUrl || busy}>
-              {saving ? <Loader2 size={14} className="trade-spin" /> : <Upload size={14} />}
+              {saving ? <Spinner size={13} /> : <Upload size={14} />}
               ثبت عکس
             </button>
           </div>

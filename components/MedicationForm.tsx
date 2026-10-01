@@ -13,6 +13,7 @@ import {
 } from "@/lib/medications";
 import { useLockBodyScroll } from "@/lib/useLockBodyScroll";
 import { focusNextOnEnter } from "@/lib/formNav";
+import { Spinner } from "./Spinner";
 
 const now = new Date();
 
@@ -195,7 +196,7 @@ export function MedicationForm({
           <div className="wsearch-newform-actions">
             <button type="button" className="wsearch-submit-btn" onClick={submit} disabled={status !== "idle"}>
               {status === "loading" ? (
-                <span className="wsearch-submit-spinner" />
+                <Spinner size={15} />
               ) : status === "success" ? "ثبت شد" : initial ? "ذخیره تغییرات" : "ثبت دارو"}
             </button>
           </div>

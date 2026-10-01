@@ -3,7 +3,7 @@
 import { useEffect, useMemo, useRef, useState } from "react";
 import { TickButton } from "./TickButton";
 import { createPortal } from "react-dom";
-import { AlertTriangle, Camera, ChevronDown, Info, Loader2, Smile, Tags, Trash2, Wand2, X } from "lucide-react";
+import { AlertTriangle, Camera, ChevronDown, Info, Smile, Tags, Trash2, Wand2, X } from "lucide-react";
 import { LockBodyScroll } from "./LockBodyScroll";
 import { SegmentedTabs } from "./SegmentedTabs";
 import { TradeTagField } from "./TradeTagField";
@@ -21,6 +21,7 @@ import {
 } from "@/lib/tradeTypes";
 import { localInputToIso, toLocalInputValue } from "@/lib/tradeDateTime";
 import { NumberInput } from "./NumberInput";
+import { Spinner } from "./Spinner";
 
 type ChecklistItem = { id: string; text: string; order: number };
 type Checklist = { id: string; name: string; color: string; required: boolean; archived: boolean; items: ChecklistItem[] };
@@ -548,7 +549,7 @@ export function TradeFormModal({
 
             {form.images.length < MAX_IMAGES_PER_TRADE && (
               <label className="trade-image-drop">
-                {compressing ? <Loader2 size={22} className="trade-spin" /> : <><Camera size={22} /><span>افزودن تصویر</span></>}
+                {compressing ? <Spinner size={20} /> : <><Camera size={22} /><span>افزودن تصویر</span></>}
                 <span className="trade-image-hint">{faNum(MAX_IMAGES_PER_TRADE - form.images.length)} باقی‌مانده — یا با Ctrl+V بچسبان</span>
                 <input className="wsearch-newform-name trade-glass-field"
                   type="file" accept="image/*" multiple hidden
@@ -632,7 +633,7 @@ export function TradeFormModal({
         <div className="trade-modal-actions">
           <button type="button" className="account-outline-btn" onClick={onClose}>لغو</button>
           <button type="button" className="trade-primary-btn" onClick={save} disabled={saving}>
-            {saving ? <Loader2 size={15} className="trade-spin" /> : entry ? "ذخیره تغییرات" : "ثبت معامله"}
+            {saving ? <Spinner size={14} /> : entry ? "ذخیره تغییرات" : "ثبت معامله"}
           </button>
         </div>
       </div>

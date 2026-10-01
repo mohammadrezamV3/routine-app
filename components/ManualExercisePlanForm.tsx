@@ -3,7 +3,7 @@
 import { useState } from "react";
 import { createPortal } from "react-dom";
 import { Reorder, useDragControls } from "framer-motion";
-import { ChevronRight, GripVertical, Loader2, Pencil, Plus, X } from "lucide-react";
+import { ChevronRight, GripVertical, Pencil, Plus, X } from "lucide-react";
 import { FA_WEEKDAY, CAL_WEEK_ORDER } from "@/lib/jalali";
 import type { ExerciseDay } from "@/lib/exercisePlans";
 import { computeDayFocus } from "@/lib/exerciseCatalogUtils";
@@ -15,6 +15,7 @@ import { DifficultyStars } from "./ExerciseCatalogModal";
 import { useLockBodyScroll } from "@/lib/useLockBodyScroll";
 import { NumberInput } from "./NumberInput";
 import { SegmentedTabs } from "./SegmentedTabs";
+import { Spinner } from "./Spinner";
 
 // نوع ورودی (زمان‌محور یا ست‌وتکرار) از روی الگوی حرکت خود حرکت تعیین
 // می‌شه، نه با یه سوال از کاربر — کاردیو/انعطاف‌پذیری زمانی‌ان، بقیه ست‌وتکراری.
@@ -344,7 +345,7 @@ export function ManualExercisePlanForm({
 
       <div className="manual-submit-row">
         <button type="button" onClick={submit} disabled={submitting || !hasAnyItems} className="manual-plan-submit-btn">
-          {submitting ? <Loader2 size={16} className="trade-spin" /> : "ثبت برنامه"}
+          {submitting ? <Spinner size={15} /> : "ثبت برنامه"}
         </button>
       </div>
     </div>

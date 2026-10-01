@@ -1,9 +1,10 @@
 "use client";
 
 import { useState } from "react";
-import { CalendarPlus, Check, Loader2 } from "lucide-react";
+import { CalendarPlus, Check } from "lucide-react";
 import { CustomOccurrence, getCustomOccurrences, setCustomOccurrences } from "@/lib/storage";
 import { isoLocal } from "@/lib/jalali";
+import { Spinner } from "./Spinner";
 
 const DAYS = [
   { jsDay: 6, label: "شنبه" }, { jsDay: 0, label: "یکشنبه" }, { jsDay: 1, label: "دوشنبه" },
@@ -94,7 +95,7 @@ export function RoadmapStepToProgram({ title, topic }: { title: string; topic: s
           <div className="rp-add-actions">
             <button type="button" className="account-outline-btn" onClick={() => setOpen(false)}>لغو</button>
             <button type="button" className="trade-primary-btn" onClick={save} disabled={saving}>
-              {saving ? <Loader2 size={14} className="trade-spin" /> : "افزودن"}
+              {saving ? <Spinner size={13} /> : "افزودن"}
             </button>
           </div>
         </div>
