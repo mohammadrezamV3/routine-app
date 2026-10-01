@@ -9,15 +9,11 @@ import Link from "next/link";
 import { User, AtSign, Lock, Phone } from "lucide-react";
 import { AuthField, useAuthFieldsStagger } from "@/components/AuthField";
 import { AuthBackButton, AuthBrandMark } from "@/components/AuthChrome";
-import { FREE_ROUTINE_COPY_FA, TRIAL_COPY_FA } from "@/lib/trial";
-import { fillPriceCopy } from "@/lib/planPricing";
-import { usePlanPricing } from "@/lib/usePlanPricing";
 import { PasswordVisibilityToggle } from "@/components/PasswordVisibilityToggle";
 import { isValidIranPhone, isValidUsername, validatePassword, isValidPersianName, digitsOnly } from "@/lib/validate";
 import { passwordTier, PASSWORD_TIER_LABELS, PASSWORD_TIER_ORDER, isPasswordAcceptable } from "@/lib/passwordStrength";
 import { loginAndRedirect } from "@/lib/loginRedirect";
-import { captureInviteRef, readInviteRef } from "@/lib/invite";
-import { REFERRAL_DISCOUNT_PERCENT } from "@/lib/referral";
+import { captureInviteRef } from "@/lib/invite";
 import { TickButton } from "@/components/TickButton";
 
 type FieldErrors = {
@@ -40,7 +36,6 @@ const RESEND_COOLDOWN_SECONDS = 120;
 // خود تایید کد هم موقع «ساخت حساب» نهایی، همراه با بقیه‌ی اطلاعات یک‌جا
 // چک می‌شه.
 export default function SignupPage() {
-  const { pricing } = usePlanPricing();
   const router = useRouter();
 
   const [firstName, setFirstName] = useState("");
@@ -58,8 +53,7 @@ export default function SignupPage() {
 
   const [fieldErrors, setFieldErrors] = useState<FieldErrors>({});
   // با لینک دعوت یه دوست اومده؟ (lib/invite.ts) — فقط یادآوری تخفیف؛ خود کد موقع خرید پر می‌شه
-  const [invited, setInvited] = useState(false);
-  useEffect(() => { captureInviteRef(); setInvited(!!readInviteRef()); }, []);
+  useEffect(() => { captureInviteRef(); }, []);
   const [error, setError] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
 
@@ -241,7 +235,7 @@ export default function SignupPage() {
   return (
     <form ref={formRef} onSubmit={submit} className="auth-box">
       <AuthBackButton />
-      <AuthBrandMark subtitle={"به آریون خوش اومدی!"} note={invited ? `${TRIAL_COPY_FA}. دوستت دعوتت کرده — روی اولین اشتراکت ${faNum(REFERRAL_DISCOUNT_PERCENT)}٪ تخفیف داری.` : `${TRIAL_COPY_FA}. ${fillPriceCopy(FREE_ROUTINE_COPY_FA, pricing)}`} />
+      <AuthBrandMark subtitle={"به آریون خوش اومدی!"} />
 
       <div className="auth-field-grid" ref={nameRef} style={{ marginTop: 20 }}>
         <AuthField id="firstName" label={"نام"} error={fieldErrors.name} icon={<User size={15} />}>
@@ -316,9 +310,6 @@ export default function SignupPage() {
 
       {otpSent && (
         <div className="auth-otp-reveal" ref={otpRef}>
-          <div className="auth-otp-hint">
-            {`کدی که به ${phone.trim()} پیامک شد رو وارد کن.`}
-          </div>
           <AuthField id="signupOtp" label={"کد 5 رقمی"} error={fieldErrors.otp}>
             <input
               id="signupOtp" type="tel" inputMode="numeric" autoComplete="one-time-code" autoCapitalize="none" autoCorrect="off" spellCheck={false} maxLength={5} className="wsearch-newform-name" value={otpCode} dir="ltr" style={{ textAlign: "right" }}
