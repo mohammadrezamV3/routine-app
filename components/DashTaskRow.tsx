@@ -6,7 +6,6 @@ import { motion, AnimatePresence } from "framer-motion";
 import { ChevronDown, MoreVertical, Pencil, Play, Trash2, CalendarClock } from "lucide-react";
 import { TickButton } from "./TickButton";
 import { cn } from "@/lib/utils";
-import { DashImportanceBadge } from "./DashImportanceBadge";
 import { Importance } from "@/lib/storage";
 import { toEnDigits } from "@/lib/schedule";
 
@@ -24,7 +23,7 @@ export type DashTaskItem = {
   items?: { id: string; name: string; done: boolean }[];
 };
 
-// بج اهمیت همیشه کنار اسم برنامه‌ست (نه زیرش). فقط کلیک روی خود متن اسم
+// تگ برنامه (اگه داشت) همیشه کنار اسم برنامه‌ست (نه زیرش). فقط کلیک روی خود متن اسم
 // برنامه (نه کل ردیف) کارت واقعی برنامه (ProgramCard، فقط‌نمایشی) رو باز
 // می‌کنه؛ سه‌نقطه یک منوی کوچیک (ویرایش/حذف) باز می‌کنه. چک‌باکس فقط برای
 // «امروز» فعاله.
@@ -209,14 +208,17 @@ export function DashTaskRow({
               <ChevronDown className={cn("h-3 w-3 transition-transform duration-200", expanded && "rotate-180")} />
             </button>
           )}
-          {task.tag && (
-            <span className="max-w-[64px] shrink-0 truncate rounded-full border border-dash-border bg-white/[0.03] px-2 py-0.5 text-center text-[9px] font-semibold text-dash-muted sm:max-w-[92px] sm:px-2.5 sm:py-1 sm:text-[11px]">
-              {task.tag}
+          {/* تگ برنامه به‌جای نشان اهمیت: بی‌پس‌زمینه، فقط بردر نازک و متن.
+              برنامه‌ی بی‌تگ هیچ چیپی نمی‌گیره. اهمیت فقط برای یادآوری‌ها در
+              داده می‌مونه و این‌جا نمایش داده نمی‌شه. */}
+          {task.tag?.trim() && (
+            <span
+              title={task.tag.trim()}
+              className="max-w-[72px] shrink-0 truncate whitespace-nowrap rounded-full border border-dash-border px-2 py-0.5 text-center text-[9.5px] font-semibold text-dash-muted sm:max-w-[110px] sm:px-2.5 sm:py-1 sm:text-[11px]"
+            >
+              {task.tag.trim()}
             </span>
           )}
-          {/* نشان اهمیت هم همین‌جا کنار نام می‌نشیند، نه چسبیده به ساعت.
-              سمت چپ ردیف فقط ساعت می‌ماند. */}
-          <DashImportanceBadge importance={task.importance} />
         </div>
 
         <div className="flex shrink-0 flex-col items-end gap-0.5">

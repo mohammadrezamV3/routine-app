@@ -15,6 +15,7 @@ import type { DashboardData } from "@/lib/dashboardTypes";
 import type { TodayTask } from "@/lib/useDashboardRoutine";
 import { DashIcon, type DashIconName } from "./DashboardIcons";
 import { GoldenName } from "./GoldenName";
+import { Spinner } from "./Spinner";
 import { ROUTINE_PLAN_KEY } from "@/lib/trial";
 import { CountUp, D_EASE, GradientArc, Skel } from "./DashboardKit";
 
@@ -172,8 +173,20 @@ export function DashboardHero({
             {routine.streak === null ? <Skel w={24} h={10} /> : <><b>{faNum(routine.streak)}</b> روز پشت‌سرهم</>}
           </Link>
           {onShare && (
-            <button type="button" className="db-chip db-chip-share" onClick={onShare} disabled={!routine.ready}>
-              <DashIcon name="share" />
+            // تا روتین امروز خونده نشده، کارت اشتراکی عدد درستی نداره — دکمه
+            // غیرفعاله و به‌جای آیکون دایره‌ی لودینگ نشون می‌ده (عرضش نمی‌پره)
+            <button
+              type="button"
+              className="db-chip db-chip-share"
+              onClick={onShare}
+              disabled={!routine.ready}
+              aria-haspopup="dialog"
+              aria-busy={!routine.ready || undefined}
+              aria-label="اشتراک موفقیت امروز با دوستات"
+            >
+              <span className="db-chip-share-ic" aria-hidden="true">
+                {routine.ready ? <DashIcon name="share" /> : <Spinner size={14} />}
+              </span>
               اشتراک موفقیت
             </button>
           )}

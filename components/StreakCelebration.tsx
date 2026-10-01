@@ -12,15 +12,16 @@
 import { useCallback, useEffect, useLayoutEffect, useMemo, useRef, useState } from "react";
 import { createPortal } from "react-dom";
 import { AnimatePresence, motion } from "framer-motion";
-import { Share2 } from "lucide-react";
+import { Check, Download, Share2 } from "lucide-react";
 import { faNum } from "@/lib/jalali";
 import { getStreakTier, STREAK_MILESTONES } from "@/lib/streakTier";
 import { flamePalette } from "@/lib/streakFlameShape";
 import { useLockBodyScroll } from "@/lib/useLockBodyScroll";
 import { hapticsEnabled } from "@/lib/haptics";
+import { useImageShare } from "@/lib/useImageShare";
 import { useMyInvite } from "@/lib/invite";
 import { REFERRAL_DISCOUNT_PERCENT } from "@/lib/referral";
-import { canvasToBlob, renderShareCard, shareImage, shareText } from "@/lib/shareCard";
+import { canvasToBlob, renderShareCard, shareText, type ShareCardInput } from "@/lib/shareCard";
 import { AnimatedStreakFlame } from "./AnimatedStreakFlame";
 import { Spinner } from "./Spinner";
 
@@ -52,8 +53,6 @@ export function StreakCelebration({ mode, from, to, todayDone, anchor, onClose }
   const [closing, setClosing] = useState(false);
   const [landed, setLanded] = useState(mode === "view");
   const [shown, setShown] = useState(mode === "extend" ? from : to);
-  const [sharing, setSharing] = useState(false);
-  const [shareMsg, setShareMsg] = useState<string | null>(null);
   const invite = useMyInvite();
   const tier = getStreakTier(to);
   const pal = flamePalette(to);
@@ -94,27 +93,52 @@ export function StreakCelebration({ mode, from, to, todayDone, anchor, onClose }
     return () => window.removeEventListener("keydown", onKey);
   }, [close]);
 
-  async function share() {
-    if (sharing) return;
-    setSharing(true);
-    setShareMsg(null);
-    try {
-      const inv = invite ? { code: invite.code, url: invite.url, percent: REFERRAL_DISCOUNT_PERCENT } : null;
-      const canvas = await renderShareCard({
-        title: "استریک من",
-        subtitle: tier.name,
-        body: { kind: "streak", streak: to, label: "روز پشت‌سرهم، همه‌ی برنامه‌ها کامل", week: { labels: WEEK, done: week.done, todayIdx: week.todayIdx } },
-        inviteCode: invite?.code ?? null,
-      });
-      const blob = await canvasToBlob(canvas);
-      const res = await shareImage(blob, `arion-streak-${to}.png`, "استریک من", shareText(`${faNum(to)} روز پشت‌سرهم روتینم رو کامل کردم 🔥`, inv));
-      if (res === "downloaded") setShareMsg("تصویر ذخیره شد — حالا برای دوستات بفرستش");
-    } catch {
-      setShareMsg("ساخت تصویر ممکن نشد");
-    } finally {
-      setSharing(false);
-    }
+  // تصویر استریک از قبل (بعد از فرود شعله، تا انیمیشن نلرزه) ساخته می‌شه تا تپ
+  // «اشتراک» بدون انتظار navigator.share رو صدا بزنه — سافاری iOS بیرون از
+  // حرکت کاربر اجازه‌ی اشتراک نمی‌ده.
+  const cardInput = useMemo<ShareCardInput>(() => ({
+    title: "استریک من",
+    subtitle: tier.name,
+    body: { kind: "streak", streak: to, label: "روز پشت‌سرهم، همه‌ی برنامه‌ها کامل", week: { labels: WEEK, done: week.done, todayIdx: week.todayIdx } },
+    inviteCode: invite?.code ?? null,
+  }), [tier.name, to, week, invite?.code]);
+  const [card, setCard] = useState<{ input: ShareCardInput; blob: Blob } | null>(null);
+  const [renderErr, setRenderErr] = useState(false);
+  const [attempt, setAttempt] = useState(0);
+  useEffect(() => {
+    let alive = true;
+    setRenderErr(false);
+    const t = setTimeout(async () => {
+      try {
+        const blob = await canvasToBlob(await renderShareCard(cardInput));
+        if (alive) setCard({ input: cardInput, blob });
+      } catch {
+        if (alive) setRenderErr(true);
+      }
+    }, mode === "extend" && attempt === 0 ? LAND_MS + 500 : 200);
+    return () => { alive = false; clearTimeout(t); };
+  }, [cardInput, mode, attempt]);
+  const ready = !!card && card.input === cardInput;
+  const { canShare, phase, result, share: shareBlob } = useImageShare();
+
+  function share() {
+    if (renderErr) { setAttempt((n) => n + 1); return; }
+    if (!ready || !card) return;
+    const inv = invite ? { code: invite.code, url: invite.url, percent: REFERRAL_DISCOUNT_PERCENT } : null;
+    shareBlob(card.blob, `arion-streak-${to}.png`, "استریک من", shareText(`${faNum(to)} روز پشت‌سرهم روتینم رو کامل کردم 🔥`, inv));
   }
+  const saveOnly = canShare === false;
+  const shareBusy = phase === "busy" || (!ready && !renderErr);
+  const shareLabel = phase === "done"
+    ? (result === "downloaded" ? "ذخیره شد" : "ارسال شد")
+    : renderErr ? "تلاش دوباره" : saveOnly ? "ذخیره تصویر" : "اشتراک با دوستام";
+  const shareMsg = renderErr
+    ? "ساخت تصویر ممکن نشد"
+    : phase === "error"
+      ? "اشتراک انجام نشد، دوباره بزن"
+      : result === "downloaded"
+        ? "تصویر ذخیره شد — حالا برای دوستات بفرستش"
+        : null;
 
   const title = mode === "view" && !todayDone ? "امروز هنوز کامل نشده" : "روز استریک!";
   const sub =
@@ -232,15 +256,32 @@ export function StreakCelebration({ mode, from, to, todayDone, anchor, onClose }
           transition={{ delay: mode === "extend" ? 1.4 : 0.4, duration: 0.4 }}
         >
           <button type="button" className="trade-primary-btn streak-cel-btn" onClick={close}>ادامه</button>
-          <button type="button" className="account-outline-btn streak-cel-btn" onClick={share} disabled={sharing}>
-            {sharing ? <Spinner size={14} /> : <><Share2 size={15} /> اشتراک با دوستام</>}
+          <button
+            type="button"
+            className="account-outline-btn streak-cel-btn"
+            onClick={share}
+            disabled={shareBusy}
+            aria-label={shareBusy ? "در حال آماده‌سازی تصویر" : shareLabel}
+            aria-busy={shareBusy || undefined}
+          >
+            {shareBusy ? <Spinner size={14} /> : (
+              <motion.span
+                key={phase === "done" ? "done" : "idle"}
+                className="streak-cel-btn-in"
+                initial={phase === "done" ? { scale: 0.6, opacity: 0 } : false}
+                animate={{ scale: 1, opacity: 1 }}
+                transition={{ type: "spring", stiffness: 420, damping: 18 }}
+              >
+                {phase === "done" ? <Check size={15} strokeWidth={3} /> : saveOnly ? <Download size={15} /> : <Share2 size={15} />} {shareLabel}
+              </motion.span>
+            )}
           </button>
           <p className="streak-cel-invite">
             {invite?.code
               ? <>دوستات با کد دعوتت <b dir="ltr">{invite.code}</b> روی اولین اشتراک {faNum(REFERRAL_DISCOUNT_PERCENT)}٪ تخفیف می‌گیرن</>
               : "استریکت رو بفرست و دوستات رو به چالش بکش"}
           </p>
-          {shareMsg && <p className="streak-cel-msg">{shareMsg}</p>}
+          <p className="streak-cel-msg" role="status" aria-live="polite">{shareMsg}</p>
         </motion.div>
       </div>
     </motion.div>,

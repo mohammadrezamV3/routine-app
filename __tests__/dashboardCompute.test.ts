@@ -7,6 +7,7 @@ import {
   heatLevel,
   streakFromHeatmap,
   sparkPath,
+  equityPoints,
   cumulative,
   durationParts,
   compactNumber,
@@ -321,6 +322,33 @@ describe("sparkPath", () => {
     const lastPoint = s.line.split(" ").slice(-2).map((v) => Number(v.replace(/^C/, "")));
     expect(lastPoint[0]).toBeCloseTo(s.last.x, 1);
     expect(lastPoint[1]).toBeCloseTo(s.last.y, 1);
+  });
+
+  it("منحنی مونوتون: روز صاف صاف می‌مونه و هیچ پاره‌ای از بازه‌ی دو سرش بیرون نمی‌زنه", () => {
+    // منحنی سرمایه‌ی واقعی: چند روز بی‌معامله، پرش، دوباره صاف، افت
+    const s = sparkPath([0, 0, 0, 120, 120, 120, 80, 80, 200], 160, 60, 4)!;
+    const nums = s.line.replace(/^M/, "").split(/ C| /).map(Number);
+    // [x0,y0, (c1x,c1y,c2x,c2y,px,py)*]
+    let px = nums[0], py = nums[1];
+    for (let i = 2; i + 5 < nums.length + 1; i += 6) {
+      const [, c1y, , c2y, x, y] = nums.slice(i, i + 6);
+      const lo = Math.min(py, y) - 0.01, hi = Math.max(py, y) + 0.01;
+      expect(c1y).toBeGreaterThanOrEqual(lo);
+      expect(c1y).toBeLessThanOrEqual(hi);
+      expect(c2y).toBeGreaterThanOrEqual(lo);
+      expect(c2y).toBeLessThanOrEqual(hi);
+      if (py === y) expect(c1y === y && c2y === y).toBe(true);
+      px = x; py = y;
+    }
+    expect(px).toBeCloseTo(160, 5);
+  });
+
+  it("روند پیوسته پله‌پله نمی‌شه: روی رشد یکنواخت شیب نقطه‌های میانی صفر نیست", () => {
+    const s = sparkPath([0, 10, 20, 30], 90, 60, 0)!;
+    const nums = s.line.replace(/^M/, "").split(/ C| /).map(Number);
+    // پاره‌ی دوم: نقطه‌ی شروعش (پایان پاره‌ی اول) و کنترل‌پوینت اولش
+    const startY = nums[7], c1y = nums[9];
+    expect(Math.abs(c1y - startY)).toBeGreaterThan(1);
   });
 
   it("کمینه روی h-pad و پدینگ پیش‌فرض ۴", () => {
@@ -728,5 +756,17 @@ describe("نقشه‌ی ثبات شمسی", () => {
       const last = jalaliToIso(1404, 12, 29)!;
       expect(jalaliYearRange(1404, last)!.to).toBe(last);
     });
+  });
+});
+
+describe("equityPoints", () => {
+  it("روزهای بی‌تغییر حذف می‌شن، شروع از صفر", () => {
+    expect(equityPoints([0, 0, 50, 0, -20, 0, 0, 30])).toEqual([0, 50, 30, 60]);
+  });
+  it("بدون هیچ معامله دو نقطه‌ی صفر (برای کشیدن خط)", () => {
+    expect(equityPoints([0, 0, 0])).toEqual([0, 0]);
+  });
+  it("سود و زیانی که هم رو خنثی کنن هم نقطه‌ی جدا دارن", () => {
+    expect(equityPoints([40, -40, 0, 10])).toEqual([0, 40, 0, 10]);
   });
 });

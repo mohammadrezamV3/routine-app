@@ -49,8 +49,8 @@ export function PreviewRoutine() {
       </div>
       <MockTaskList
         tasks={[
-          { name: "مدیتیشن صبحگاهی", time: "07:00", importance: "medium", done: true },
-          { name: "جلسه کاری", time: "11:00", importance: "veryHigh", missed: true },
+          { name: "مدیتیشن صبحگاهی", time: "07:00", importance: "medium", tag: "سلامتی", done: true },
+          { name: "جلسه کاری", time: "11:00", importance: "veryHigh", tag: "کار", missed: true },
           { name: "مطالعه‌ی کتاب", time: "21:30", importance: "high", tag: "یادگیری" },
           { name: "برنامه تمرینی امروز", exercise: true },
         ]}

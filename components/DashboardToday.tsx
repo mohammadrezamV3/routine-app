@@ -193,16 +193,12 @@ export function DashboardToday({ ready, tasks, stats, week, onToggle }: { ready:
                           <svg viewBox="0 0 12 12" width="11" height="11" aria-hidden="true" style={{ transform: open.has(r.id) ? "rotate(180deg)" : undefined, transition: "transform .2s ease" }}><path d="m3 4.5 3 3 3-3" fill="none" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round" /></svg>
                         </button>
                       )}
-                      {r.importance === "veryHigh" || r.importance === "high" ? (
-                        <span className={`db-tl-flag is-${r.importance}`} title={r.importance === "veryHigh" ? "اهمیت خیلی زیاد" : "اهمیت زیاد"}>
-                          <svg viewBox="0 0 12 12" aria-hidden="true"><path d="M3 11V1.6M3 2h6l-1.4 2.2L9 6.4H3" fill="none" stroke="currentColor" strokeWidth="1.4" strokeLinecap="round" strokeLinejoin="round" /></svg>
-                        </span>
-                      ) : null}
+                      {/* تگ برنامه جای پرچم اهمیت رو گرفته (اهمیت فقط برای یادآوری ذخیره می‌مونه) */}
+                      {r.tag?.trim() && <span className="db-tag db-tl-tag" title={r.tag.trim()}>{r.tag.trim()}</span>}
                     </div>
                     <div className="db-tl-meta">
                       <span className="db-tl-state"><i />{STATE_LABEL[r.state]}</span>
                       {r.state === "next" && nowMin !== null && r.startMin !== null && <span className="db-tl-in">{fmtIn(r.startMin - nowMin)}</span>}
-                      {r.tag && <span className="db-tag">{r.tag}</span>}
                     </div>
                     <AnimatePresence initial={false}>
                       {!!r.items?.length && open.has(r.id) && (
