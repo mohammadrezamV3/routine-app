@@ -9,6 +9,7 @@
 // • state="missed": بوردر خط‌چین نارنجی (همون «وقتش گذشته»ی داشبورد)
 // • shape="square": همون انیمیشن با گوشه‌ی گرد — برای چک‌باکس‌های تنظیمات/فرم
 // • as="span": فقط نمایش (داخل یک <label> یا دکمه‌ی دیگه) — کلیک رو والد می‌گیره
+// • tone="exercise": همون تیک با پالت تمرین (--ring-2، آبی→بنفش) برای حرکت‌های برنامه‌ی تمرین
 
 import { useEffect, useRef, useState } from "react";
 import { AnimatePresence, motion } from "framer-motion";
@@ -22,13 +23,15 @@ export type TickButtonProps = {
   size?: number;
   state?: "idle" | "missed";
   shape?: "circle" | "square";
+  /** پالت رنگ: روتین (سبز، پیش‌فرض) یا تمرین (آبی→بنفش) */
+  tone?: "routine" | "exercise";
   disabled?: boolean;
   label?: string;
   as?: "button" | "span";
   className?: string;
 };
 
-export function TickButton({ checked, onToggle, size = 26, state = "idle", shape = "circle", disabled = false, label, as = "button", className }: TickButtonProps) {
+export function TickButton({ checked, onToggle, size = 26, state = "idle", shape = "circle", tone = "routine", disabled = false, label, as = "button", className }: TickButtonProps) {
   // جرقه/موج فقط وقتی *همین الان* تیک خورد — نه موقع اولین رندر یک آیتم ازقبل‌تیک‌خورده
   const prev = useRef(checked);
   const [burst, setBurst] = useState(0);
@@ -40,6 +43,7 @@ export function TickButton({ checked, onToggle, size = 26, state = "idle", shape
   const cls = [
     "tick-btn",
     shape === "square" ? "is-square" : "",
+    tone === "exercise" ? "tick-exercise" : "",
     checked ? "is-checked" : state === "missed" ? "is-missed" : "",
     disabled ? "is-disabled" : "",
     className ?? "",

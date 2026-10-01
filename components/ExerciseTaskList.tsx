@@ -264,7 +264,7 @@ export function ExerciseTaskList({
                               شروع
                             </motion.button>
                           ) : (
-                            <TickButton as="span" size={24} checked={isChecked} state={showMiss ? "missed" : "idle"} />
+                            <TickButton as="span" tone="exercise" size={24} checked={isChecked} state={showMiss ? "missed" : "idle"} />
                           )}
                         </div>
                       </td>

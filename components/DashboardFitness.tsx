@@ -68,7 +68,7 @@ function ExerciseBody({ ex }: { ex: DashExercise }) {
         <ul className="db-ex-items" aria-label="حرکت‌های امروز">
           {t.items.map((it, i) => (
             <motion.li key={it.name + i} className={it.done ? "is-done" : t.done ? "is-missed" : ""} initial={{ opacity: 0, y: 4 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.35 + i * 0.04 }}>
-              <TickButton as="span" size={18} checked={!!it.done} state={!it.done && t.done ? "missed" : "idle"} />
+              <TickButton as="span" tone="exercise" size={18} checked={!!it.done} state={!it.done && t.done ? "missed" : "idle"} />
               <span className="db-ex-name">{it.name}</span>
             </motion.li>
           ))}
