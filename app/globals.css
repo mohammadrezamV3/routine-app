@@ -9608,32 +9608,54 @@ body[data-theme="light"] .golden-name{ --g1:#f7d774; --g2:#d9a21b; --g3:#9a5b06;
 
 /* ── تیک واحد اپ (components/TickButton.tsx) — کپی .db-tl-node  داشبورد ──
    عمدا بیرون .db-page تا همه‌جا یکسان باشه. بک‌گراند فقط در حالت تیک‌خورده
-   (همون گرادیان داشبورد)؛ حالت خالی کاملا شفافه و با ریست سراسری button{}
-   هم عوض نمی‌شه (background صریحا transparent). */
-.tick-btn{
-  --tick-size:26px;
+   (همون گرادیان داشبورد)؛ حالت خالی کاملا شفافه.
+
+   باگ «مربع داخل دایره» (ریشه):
+   (۱) گرادیان حالت تیک‌خورده با background-origin پیش‌فرض (padding-box) و
+       repeat کشیده می‌شد؛ با بوردر شفاف ۲px، کاشی گرادیان توی حلقه‌ی بوردر
+       تکرار می‌شد و لبه‌ی padding-box یک مربع روشن وسط دایره می‌ساخت — همه‌جا،
+       حتی داخل .dash-scope. حالا گرادیان صریحا border-box و no-repeat‌ه.
+   (۲) بیرون .dash-scope ریست سراسری button{} (لیکوئید گلس) backdrop-filter و
+       سایه‌ی inset می‌داد و در تم روشن body[data-theme="light"] button
+       (اسپسیفیسیتی 0,1,2) بک‌گراند شیشه‌ای/بوردر/سایه رو روی .tick-btn می‌نشوند.
+       برای همین همه‌ی قانون‌های تیک با پیشوند html body و کلاس دوبل
+       (0,2,2) نوشته شدن تا هیچ قانون سراسری (هاور/دیزیبل/تم روشن) بهشون نرسه.
+
+   رنگ: --tick-a / --tick-b (پیش‌فرض پالت روتین --ring-1)؛ .tick-exercise
+   همون تیک با پالت تمرین (--ring-2، آبی→بنفش) برای حرکت‌های برنامه‌ی تمرین. */
+.tick-btn{ --tick-size:26px; --tick-a:var(--ring-1a); --tick-b:var(--ring-1b); }
+.tick-btn.tick-exercise{ --tick-a:var(--ring-2a); --tick-b:var(--ring-2b); }
+html body .tick-btn.tick-btn{
   position:relative; width:var(--tick-size); height:var(--tick-size); min-width:var(--tick-size); border-radius:50%; flex-shrink:0;
   display:inline-flex; align-items:center; justify-content:center; padding:0; margin:0; color:#fff; cursor:pointer;
-  background:transparent; border:2px solid var(--muted2, var(--muted)); border-width:2px;
+  font:inherit; line-height:1;
+  background:transparent; border:2px solid var(--muted2, var(--muted));
+  box-shadow:none; backdrop-filter:none; -webkit-backdrop-filter:none;
   transition:border-color .25s ease, box-shadow .3s ease, background-color .25s ease;
   -webkit-tap-highlight-color:transparent;
 }
-.tick-btn.is-square{ border-radius:calc(var(--tick-size) * .3); }
+html body .tick-btn.tick-btn.is-square{ border-radius:calc(var(--tick-size) * .3); }
 .tick-btn svg{ width:calc(var(--tick-size) * .58); height:calc(var(--tick-size) * .58); position:relative; z-index:1; overflow:visible; }
-@media (hover:hover){ .tick-btn:not(.is-disabled):not(.is-checked):hover{ border-color:var(--ring-1a); box-shadow:0 0 0 4px color-mix(in srgb, var(--ring-1a) 16%, transparent); } }
-.tick-btn.is-checked{
-  border-color:transparent; background:linear-gradient(135deg, var(--ring-1a), var(--ring-1b));
-  box-shadow:0 0 14px color-mix(in srgb, var(--ring-1a) 55%, transparent);
+@media (hover:hover){
+  html body .tick-btn.tick-btn:not(.is-disabled):not(.is-checked):hover{
+    border-color:var(--tick-a); color:#fff; background:transparent;
+    box-shadow:0 0 0 4px color-mix(in srgb, var(--tick-a) 16%, transparent);
+  }
 }
-.tick-btn.is-missed{ border-color:var(--tl-warn, #F0A94B); border-style:dashed; }
-.tick-btn.is-disabled{ cursor:not-allowed; opacity:.5; }
-.tick-btn.is-disabled.is-checked, .tick-btn.is-disabled.is-missed{ opacity:.75; }
-.tick-btn:focus-visible{ outline:2px solid var(--ring-1a); outline-offset:2px; }
-.tick-ripple{ position:absolute; inset:-2px; border-radius:inherit; border:2px solid var(--ring-1b); pointer-events:none; }
+html body .tick-btn.tick-btn.is-checked{
+  border-color:transparent;
+  background:linear-gradient(135deg, var(--tick-a), var(--tick-b)) border-box no-repeat;
+  box-shadow:0 0 14px color-mix(in srgb, var(--tick-a) 55%, transparent);
+}
+html body .tick-btn.tick-btn.is-missed{ border-color:var(--tl-warn, #F0A94B); border-style:dashed; }
+html body .tick-btn.tick-btn.is-disabled{ cursor:not-allowed; opacity:.5; }
+html body .tick-btn.tick-btn.is-disabled.is-checked, html body .tick-btn.tick-btn.is-disabled.is-missed{ opacity:.75; }
+html body .tick-btn.tick-btn:focus-visible{ outline:2px solid var(--tick-a); outline-offset:2px; }
+.tick-ripple{ position:absolute; inset:-2px; border-radius:inherit; border:2px solid var(--tick-b); background:none; pointer-events:none; }
 .tick-spark{ position:absolute; left:50%; top:50%; pointer-events:none; }
 .tick-spark i{
   position:absolute; width:4px; height:4px; margin:-2px; border-radius:50%;
-  background:var(--ring-1b); animation:tick-burst .75s cubic-bezier(.22,1,.36,1) forwards;
+  background:var(--tick-b); animation:tick-burst .75s cubic-bezier(.22,1,.36,1) forwards;
   transform:rotate(calc(var(--i) * 45deg)) translateX(0);
 }
 .tick-spark i:nth-child(3n){ background:var(--ring-2b); }
