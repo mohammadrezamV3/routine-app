@@ -1,0 +1,77 @@
+import { BRAND_FA } from "@/lib/brand";
+
+// اسپلش ورود اپ: از اولین بایت HTML سرور (قبل از دانلود جاوااسکریپت) روی صفحه‌ست،
+// تا وقتی صفحه هم کامل لود شده (window load) و هم React هیدریت شده
+// (BootSplashRelease). بعد به بالا پخش می‌شه و کنار می‌ره. فقط روی لود کامل
+// صفحه دیده می‌شه، نه ناوبری داخلی (layout ریشه دوباره mount نمی‌شه).
+//
+// چرا حذف DOM نه: این نود مال React‌ه؛ اسکریپت فقط data-boot روی <html> رو
+// عوض می‌کنه (out ← خروج، done ← display:none) تا با reconcile تداخل نداشته باشه.
+// سقف زمانی: اسکریپت بعد از ۸ ثانیه به هر حال خارجش می‌کنه، و CSS بعد از ۱۲
+// ثانیه (حتی اگه اسکریپت اجرا نشه) خودش پنهانش می‌کنه؛ بدون جاوااسکریپت هم
+// noscript اصلا نشونش نمی‌ده.
+const PHRASES = ["روزت رو می‌چینیم", "عادت‌ها رو گرم می‌کنیم", "استریکت رو پیدا می‌کنیم", "تقریبا آماده‌ست"];
+
+const BOOT_SCRIPT = `(function(){try{
+var d=document.documentElement,t0=Date.now(),H=!!window.__appHydrated,L=document.readyState==="complete",done=false;d.setAttribute("data-boot","on");
+function go(){if(done||!H||!L)return;done=true;
+var w=Math.max(0,650-(Date.now()-t0));
+setTimeout(function(){d.setAttribute("data-boot","out");setTimeout(function(){d.setAttribute("data-boot","done")},950)},w)}
+window.addEventListener("load",function(){L=true;go()});
+window.addEventListener("app:hydrated",function(){H=true;go()});
+setTimeout(function(){H=L=true;go()},8000);
+go();
+}catch(e){document.documentElement.setAttribute("data-boot","done")}})();`;
+
+const RINGS = [
+  { r: 46, a: "var(--ring-1a)", b: "var(--ring-1b)" },
+  { r: 35, a: "var(--ring-2a)", b: "var(--ring-2b)" },
+  { r: 24, a: "var(--ring-3a)", b: "var(--ring-3b)" },
+];
+
+export function BootSplash() {
+  return (
+    <>
+      <noscript>
+        <style>{".boot-splash{display:none!important}"}</style>
+      </noscript>
+      <div className="boot-splash" role="status" aria-label="در حال بارگذاری" suppressHydrationWarning>
+        <div className="bs-glow" aria-hidden="true" />
+        <div className="bs-stage">
+          <div className="bs-mark">
+            <span className="bs-wave" aria-hidden="true" />
+            <span className="bs-wave bs-wave-2" aria-hidden="true" />
+            <svg className="bs-rings" viewBox="0 0 100 100" aria-hidden="true">
+              <defs>
+                {RINGS.map((g, i) => (
+                  <linearGradient key={i} id={`bs-g${i}`} x1="0" y1="0" x2="1" y2="1">
+                    <stop offset="0%" style={{ stopColor: g.a }} />
+                    <stop offset="100%" style={{ stopColor: g.b }} />
+                  </linearGradient>
+                ))}
+              </defs>
+              {RINGS.map((g, i) => (
+                <g key={i} className={`bs-ring bs-ring-${i + 1}`}>
+                  <circle className="bs-track" cx="50" cy="50" r={g.r} pathLength={100} stroke={`url(#bs-g${i})`} />
+                  <circle className="bs-arc" cx="50" cy="50" r={g.r} pathLength={100} stroke={`url(#bs-g${i})`} />
+                </g>
+              ))}
+            </svg>
+            {/* eslint-disable-next-line @next/next/no-img-element */}
+            <img src="/images/logo-icon-dark-theme.png" alt="" className="bs-logo is-dark" width={34} height={29} />
+            {/* eslint-disable-next-line @next/next/no-img-element */}
+            <img src="/images/logo-icon-light-theme.webp" alt="" className="bs-logo is-light" width={34} height={29} />
+          </div>
+          <div className="bs-brand">{BRAND_FA}</div>
+          <div className="bs-phrases" aria-hidden="true">
+            {PHRASES.map((p, i) => (
+              <span key={i} style={{ animationDelay: `${0.5 + i * 1.5}s` }}>{p}</span>
+            ))}
+          </div>
+          <div className="bs-progress" aria-hidden="true"><i /></div>
+        </div>
+      </div>
+      <script dangerouslySetInnerHTML={{ __html: BOOT_SCRIPT }} />
+    </>
+  );
+}
