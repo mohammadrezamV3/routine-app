@@ -2,7 +2,7 @@
 
 import { useState } from "react";
 import { createPortal } from "react-dom";
-import { Loader2, X } from "lucide-react";
+import { X } from "lucide-react";
 import { LockBodyScroll } from "./LockBodyScroll";
 import { SegmentedTabs } from "./SegmentedTabs";
 import { TradeTagField } from "./TradeTagField";
@@ -11,6 +11,7 @@ import {
   TradeAccount, TradeAccountType, TradeGoalType, TradeTag,
 } from "@/lib/tradeTypes";
 import { NumberInput } from "./NumberInput";
+import { Spinner } from "./Spinner";
 
 // ساخت/ویرایش حساب معاملاتی. همان یک فرم برای هر دو حالت است — تفاوتشان
 // فقط در متد درخواست (POST یا PATCH) و عنوان پاپ‌آپ است.
@@ -156,7 +157,7 @@ export function TradeAccountModal({
         <div className="trade-modal-actions">
           <button type="button" className="account-outline-btn" onClick={onClose}>لغو</button>
           <button type="button" className="trade-primary-btn" onClick={save} disabled={!name.trim() || saving}>
-            {saving ? <Loader2 size={15} className="trade-spin" /> : account ? "ذخیره" : "ایجاد حساب"}
+            {saving ? <Spinner size={14} /> : account ? "ذخیره" : "ایجاد حساب"}
           </button>
         </div>
       </div>

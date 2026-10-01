@@ -4,6 +4,7 @@ import { useEffect, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
 import { ChevronRight } from "lucide-react";
 import { HOURS_OPTIONS, LEVEL_OPTIONS, type HoursValue, type LevelValue } from "@/lib/roadmapPlan";
+import { Spinner } from "./Spinner";
 
 /**
  * ویزارد ساخت مسیر — سه گام کوتاه.
@@ -165,7 +166,7 @@ export function RoadmapWizard({
 
           {busy ? (
             <div className="rp-wiz-loading">
-              <span className="wsearch-submit-spinner rp-wiz-spinner" />
+              <Spinner size={22} className="rp-wiz-spinner" />
               <div className="rp-wiz-loading-title">«{topic.trim()}»</div>
               <ul className="rp-wiz-phases">
                 {BUILD_LINES.map((line, i) => (

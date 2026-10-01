@@ -3,11 +3,12 @@
 import { TickButton } from "./TickButton";
 import {
   AlertTriangle, BookOpen, Check, ChevronDown, ExternalLink, Flag, Hammer, ListChecks,
-  Loader2, Package, RefreshCw, Sparkles, Target, Wrench,
+  Package, RefreshCw, Sparkles, Target, Wrench,
 } from "lucide-react";
 import { faNum } from "@/lib/jalali";
 import { taskKey, type PlanStage } from "@/lib/roadmapPlan";
 import { RoadmapStepToProgram } from "@/components/RoadmapStepToProgram";
+import { Spinner } from "./Spinner";
 
 // منبعی که مدل لینک قابل اعتماد برایش نداده (سمت سرور فیلتر شده) به یک
 // جست‌وجوی واقعی وصل می‌شود، نه یک URL ساختگی.
@@ -88,7 +89,7 @@ export function RoadmapStageCard({
               <div className="rp-pending-box">
                 {stage.focus && <p>{stage.focus}</p>}
                 <button type="button" className="trade-primary-btn" onClick={onRegenerate} disabled={regenerating}>
-                  {regenerating ? <Loader2 size={14} className="trade-spin" /> : <Sparkles size={14} />}
+                  {regenerating ? <Spinner size={13} /> : <Sparkles size={14} />}
                   {regenerating ? "در حال ساخت…" : "ساخت جزئیات این مرحله"}
                 </button>
               </div>
@@ -218,7 +219,7 @@ export function RoadmapStageCard({
                   disabled={regenerating}
                   title="جزئیات این مرحله را دوباره بساز"
                 >
-                  {regenerating ? <Loader2 size={14} className="trade-spin" /> : <RefreshCw size={14} />}
+                  {regenerating ? <Spinner size={13} /> : <RefreshCw size={14} />}
                   {regenerating ? "در حال ساخت…" : "ساخت دوباره"}
                 </button>
               )}

@@ -10,6 +10,7 @@ import { formatJalali, isoLocal, jalaliToGregorianApprox, toJalali, JalaliDate }
 import { CustomOccurrence, Importance, setCustomOccurrences, setRemovedOccurrences } from "@/lib/storage";
 import { focusNextOnEnter } from "@/lib/formNav";
 import { useLockBodyScroll } from "@/lib/useLockBodyScroll";
+import { Spinner } from "./Spinner";
 
 type Occ = { dayName: string; jsDay: number; time: string; id: string; custom?: boolean; importance?: Importance; tag?: string };
 type ScheduleOpts = { removedOccurrences: Set<string>; customOccurrences: CustomOccurrence[] };
@@ -172,7 +173,7 @@ export function MoveOccurrenceModal({
               onClick={submit}
               aria-label="انتقال"
             >
-              <span className="wns-spinner" />
+              {status === "loading" && <span className="wns-spinner"><Spinner size={10} label={null} /></span>}
               <svg className="wns-check" viewBox="0 0 24 24" fill="none">
                 <path d="M5 13l4 4L19 7" stroke="currentColor" strokeWidth="2.4" strokeLinecap="round" strokeLinejoin="round" />
               </svg>
