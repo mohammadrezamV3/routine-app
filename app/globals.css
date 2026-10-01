@@ -9551,6 +9551,8 @@ html[data-logging-out]::after{
 .streak-cel-invite{ margin:4px 0 0; font-size:12px; line-height:1.8; color:var(--muted); }
 .streak-cel-invite b{ color:var(--accent); font-family:var(--font-latin), sans-serif; letter-spacing:.5px; }
 .streak-cel-msg{ margin:0; font-size:12px; font-weight:700; color:var(--accent); }
+.streak-cel-msg:empty{ display:none; }
+.streak-cel-btn-in{ display:inline-flex; align-items:center; gap:6px; }
 
 @media (max-height:640px){
   .streak-cel-num{ height:84px; }
