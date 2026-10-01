@@ -843,6 +843,11 @@ body[data-theme="light"] .db-share-root{ background:rgba(60,40,20,.28); }
 }
 .db-share-preview img{ display:block; width:100%; height:100%; object-fit:contain; transition:opacity .2s ease; }
 .db-share-preview img.is-dim{ opacity:.65; }
+/* پیش‌نمایش زنده مستقیم روی canvas (بدون encode/decode ِ PNG) — هم‌سلول با اسپینر */
+.db-share-preview > *{ grid-area:1 / 1; }
+.db-share-canvas{ display:block; width:100%; height:100%; object-fit:contain; transition:opacity .2s ease; }
+.db-share-canvas.is-hidden{ visibility:hidden; }
+.db-share-canvas.is-dim{ opacity:.65; }
 .db-share-empty{ padding:24px; text-align:center; font-size:13px; line-height:1.9; color:var(--muted); }
 .db-share-side{ display:flex; flex-direction:column; gap:20px; min-width:0; }
 .db-share-group{ display:flex; flex-direction:column; gap:8px; }

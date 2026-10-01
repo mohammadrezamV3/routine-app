@@ -342,7 +342,7 @@ export function MockMentorChat({ peer, msgs }: { peer: string; msgs: { mine?: bo
   return (
     <div className="lm-chat">
       <div className="lm-chat-service">
-        <span><Lock size={12} strokeWidth={1.75} /> پیام‌ها رمزگذاری سرتاسری دارند و فقط روی دستگاه تو و {peer} خوانده می‌شوند</span>
+        <span><Lock size={12} strokeWidth={1.75} /> چت‌ها سرتاسر رمزنگاری‌شده‌اند؛ فقط تو و {peer} پیام‌ها را می‌خوانید</span>
       </div>
       {msgs.map((m, i) => (
         <div key={i} className={`lm-chat-row${m.mine ? " is-mine" : ""}`}>

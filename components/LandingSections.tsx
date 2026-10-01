@@ -404,7 +404,7 @@ function VisFood() {
 }
 
 const BENTO = [
-  { key: "e2ee", cls: "ls-b-e2ee", icon: ShieldCheck, title: "حریم خصوصی، از ابتدا", body: "گفت‌وگوها، پیام‌های گروهی و یادداشت‌های خصوصی مربی‌ها رمزگذاری سرتاسری دارند؛ سرور و ادمین‌ها متن آن‌ها را نمی‌بینند.", vis: VisE2EE },
+  { key: "e2ee", cls: "ls-b-e2ee", icon: ShieldCheck, title: "حریم خصوصی، از ابتدا", body: "چت‌ها سرتاسر رمزنگاری‌شده‌اند؛ متنشان را جز خودتان کسی نمی‌بیند.", vis: VisE2EE },
   { key: "pwa", cls: "ls-b-pwa", icon: Smartphone, title: "چیزی از قلم نیفتد", body: "آریون را روی گوشی نصب کن و برای کارها و برنامه‌های مهمت یادآوری داشته باش.", vis: VisPwa },
   { key: "streak", cls: "ls-b-streak", icon: Flame, title: "پیوستگی، خودش یک دستاورد است", body: "روزهایی را که به برنامه‌ات عمل کرده‌ای ثبت کن و زنجیره پیشرفتت را ببین.", vis: VisStreak },
   { key: "friends", cls: "ls-b-friends", icon: Users, title: "با هم جلو بروید", body: "پیشرفت دوستانت را ببین و مسیرت را در کنار آن‌ها ادامه بده.", vis: VisFriends },
@@ -459,7 +459,7 @@ const FEATURES: { icon: LucideIcon; title: string; body: string; href?: string }
   { icon: CalendarClock, title: "تقویم اقتصادی", body: "رویدادهای 9 ارز اصلی با Actual، Forecast، Previous و هشدار خبر.", href: "/economic-calendar" },
   { icon: Clock, title: "ساعت سشن‌های فارکس", body: "پنج سشن اصلی به وقت خودت، با ساعت تابستانی واقعی.", href: "/forex-sessions" },
   { icon: Route, title: "رودمپ یادگیری", body: "هدف بزرگت را با هوش مصنوعی به مسیر مرحله‌به‌مرحله تبدیل کن.", href: "/learning-roadmap" },
-  { icon: GraduationCap, title: "مربی‌ها", body: "مربی احراز هویت‌شده، دریافت برنامه و گفت‌وگوی رمزگذاری‌شده.", href: "/mentors" },
+  { icon: GraduationCap, title: "مربی‌ها", body: "مربی احراز هویت‌شده، دریافت برنامه و چت‌های سرتاسر رمزنگاری‌شده.", href: "/mentors" },
   { icon: Users, title: "دوستان", body: "پیشرفت و استریک دوستانت را ببین و کنار هم ادامه بده." },
   { icon: Megaphone, title: "اعلان‌ها و اطلاعیه‌ها", body: "اطلاعیه‌های آریون و اعلان‌هایت در یک پنل." },
   { icon: Smartphone, title: "نصب روی گوشی", body: "وب‌اپ PWA؛ با «افزودن به صفحه‌ی اصلی» مثل یک اپ نصب می‌شود." },
@@ -498,7 +498,7 @@ export function LandingFeatureGrid() {
 /* ───────────────────────── 4) Why us ───────────────────────── */
 
 const WHY_US = [
-  { icon: ShieldCheck, color: "#22C55E", title: "امن و خصوصی", body: "رمز عبور با bcrypt ذخیره می‌شود، اطلاعاتت فروخته نمی‌شود و گفت‌وگوی مربی رمزگذاری سرتاسری دارد." },
+  { icon: ShieldCheck, color: "#22C55E", title: "امن و خصوصی", body: "رمز عبور با bcrypt ذخیره می‌شود، اطلاعاتت فروخته نمی‌شود و چت‌ها سرتاسر رمزنگاری‌شده‌اند." },
   { icon: TrendingUp, color: "#A855F7", title: "ساخته‌شده برای اجرا", body: "آریون فقط برای برنامه‌ریزی نیست؛ اجرای روزانه و پیشرفتت را هم دنبال می‌کند." },
   { icon: Headset, color: "#3B82F6", title: "پشتیبانی واقعی", body: "پیامت را خود تیم آریون پاسخ می‌دهد." },
   { icon: Lightbulb, color: "#F59E0B", title: "همه‌چیز کنار هم", body: "به‌جای پراکندگی بین چند ابزار، برنامه‌هایت را در یک سیستم مدیریت کن." },
