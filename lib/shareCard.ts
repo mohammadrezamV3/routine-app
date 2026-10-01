@@ -225,34 +225,6 @@ function loadImage(src: string): Promise<HTMLImageElement | null> {
 }
 // لوگوی هدر (نشان + اسمِ برند، همون فایلی که NavDrawer نشون می‌ده) — نسخه‌ی تمِ فعلی
 const loadLogo = (light: boolean) => loadImage(light ? "/images/logo-lockup-light-theme.webp" : "/images/logo-lockup-dark-theme.png");
-// فقط نشانِ «A» — برای واترمارک؛ تک‌رنگ می‌شه، پس نسخه‌ی تم مهم نیست
-const loadMark = () => loadImage("/images/logo-icon-dark-theme.png");
-
-/**
- * واترمارکِ نشانِ آریون: سیلوئتِ تک‌رنگِ «A»، خیلی بزرگ و کم‌رنگ، که از گوشه‌ی
- * پایین-چپ تا نیمه بیرون زده (قابِ کارت بُرشش می‌ده). یک لبه‌ی نوریِ نازک
- * (همون سیلوئت، کمی جابه‌جا و روشن‌تر) حجمِ شیشه‌ای بهش می‌ده.
- */
-function drawMarkWatermark(ctx: CanvasRenderingContext2D, mark: HTMLImageElement, x: number, y: number, h: number, p: Palette) {
-  const w = (mark.naturalWidth / mark.naturalHeight) * h;
-  const tint = (color: string) => {
-    const c = document.createElement("canvas");
-    c.width = Math.round(w);
-    c.height = Math.round(h);
-    const cc = c.getContext("2d");
-    if (!cc) return null;
-    cc.imageSmoothingQuality = "high";
-    cc.drawImage(mark, 0, 0, c.width, c.height);
-    cc.globalCompositeOperation = "source-in";
-    cc.fillStyle = color;
-    cc.fillRect(0, 0, c.width, c.height);
-    return c;
-  };
-  const body = tint(p.light ? rgba(p.accent, 0.11) : "rgba(255,255,255,.045)");
-  const rim = tint(p.light ? "rgba(255,255,255,.55)" : `rgba(${p.accentRgb},.16)`);
-  if (rim) ctx.drawImage(rim, x - 3, y - 3, w, h);
-  if (body) ctx.drawImage(body, x, y, w, h);
-}
 
 /** شبکه‌ی نقطه‌های ریز که از وسط به لبه‌ها محو می‌شه */
 function drawDotGrid(ctx: CanvasRenderingContext2D, x: number, y: number, w: number, h: number, p: Palette) {
@@ -285,9 +257,8 @@ export async function renderShareCard(input: ShareCardInput): Promise<HTMLCanvas
   const fonts = fontStack();
   const f = (weight: number, size: number) => `${weight} ${size}px ${fonts}`;
   const p = readPalette();
-  const [logo, mark] = await Promise.all([
+  const [logo] = await Promise.all([
     loadLogo(p.light),
-    loadMark(),
     (async () => {
       if (!document.fonts) return;
       try {
@@ -355,9 +326,8 @@ export async function renderShareCard(input: ShareCardInput): Promise<HTMLCanvas
   sheen.addColorStop(1, "rgba(255,255,255,0)");
   ctx.fillStyle = sheen;
   ctx.fillRect(CX, CY, CW, CH);
-  // طرح: شبکه‌ی نقطه‌ایِ محو + واترمارکِ نشانِ آریون (هر دو زیرِ محتوا)
+  // طرح: شبکه‌ی نقطه‌ایِ محو (زیرِ محتوا)
   drawDotGrid(ctx, CX, CY, CW, CH, p);
-  if (mark) drawMarkWatermark(ctx, mark, CX - 150, CY + CH - 520, 640, p);
   // دانه‌ی ریز
   const grain = grainPattern(ctx, p.light);
   if (grain) {
