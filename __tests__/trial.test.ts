@@ -25,13 +25,14 @@ describe("trial constants", () => {
 
   it("falls back to defaults for missing/invalid stored limits", () => {
     expect(normalizeTrialAiLimits(null)).toEqual(DEFAULT_TRIAL_AI_LIMITS);
-    expect(normalizeTrialAiLimits({ FOOD_SCAN: -1, EXERCISE_PLAN_GENERATION: "4" })).toEqual(DEFAULT_TRIAL_AI_LIMITS);
+    expect(normalizeTrialAiLimits({ EXERCISE_PLAN_GENERATION: "4" })).toEqual(DEFAULT_TRIAL_AI_LIMITS);
   });
 
   it("accepts valid overrides including 0 (closed) and drops unknown keys", () => {
-    const l = normalizeTrialAiLimits({ FOOD_SCAN: 0, EXERCISE_PLAN_GENERATION: 2, ROADMAP_GENERATION: 9 });
-    expect(l.FOOD_SCAN).toBe(0);
+    expect(normalizeTrialAiLimits({ EXERCISE_PLAN_GENERATION: 0 }).EXERCISE_PLAN_GENERATION).toBe(0);
+    const l = normalizeTrialAiLimits({ EXERCISE_PLAN_GENERATION: 2, ROADMAP_GENERATION: 9, FOOD_SCAN: 3 });
     expect(l.EXERCISE_PLAN_GENERATION).toBe(2);
+    expect("FOOD_SCAN" in l).toBe(false);
     expect("ROADMAP_GENERATION" in l).toBe(false);
   });
 });
