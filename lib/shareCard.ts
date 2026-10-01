@@ -95,6 +95,15 @@ function rgba(color: string, a: number): string {
   return c;
 }
 
+/** ترکیب دو رنگ (هگز یا rgb) — t=0 رنگ اول، t=1 رنگ دوم؛ مثل color-mix  سر قوس داشبورد */
+function mixColor(a: string, b: string, t: number): string {
+  const parse = (c: string) => rgba(c, 1).match(/^rgba\(([\d.]+),([\d.]+),([\d.]+),/)?.slice(1).map(Number) ?? null;
+  const x = parse(a), y = parse(b);
+  if (!x || !y) return t < 0.5 ? a : b;
+  const m = x.map((v, i) => Math.round(v + (y[i] - v) * t));
+  return `rgb(${m[0]},${m[1]},${m[2]})`;
+}
+
 function roundRect(ctx: CanvasRenderingContext2D, x: number, y: number, w: number, h: number, r: number) {
   const rr = Math.min(r, w / 2, h / 2);
   ctx.beginPath();
@@ -459,16 +468,47 @@ export async function renderShareCard(input: ShareCardInput, opts: RenderOpts = 
       ctx.stroke();
       const v = Math.max(0, Math.min(1, it.value));
       if (v > 0.001) {
+        const top0 = -Math.PI / 2;
+        // درخشش یک بار برای کل قوس (نه جدا برای هر نیمه — سایه‌ی نیمه‌ی دوم روی
+        // محل اتصال یک درز می‌انداخت)؛ خود قوس گرادیانی بدون سایه روش کشیده می‌شه
         ctx.save();
         ctx.shadowColor = rgba(it.colors[1], 0.55);
         ctx.shadowBlur = 24;
-        const g = ctx.createLinearGradient(cx - r, cy - r, cx + r, cy + r);
-        g.addColorStop(0, it.colors[0]);
-        g.addColorStop(1, it.colors[1]);
-        ctx.strokeStyle = g;
+        ctx.strokeStyle = mixColor(it.colors[0], it.colors[1], 0.5);
         ctx.beginPath();
-        ctx.arc(cx, cy, r, -Math.PI / 2, -Math.PI / 2 + Math.PI * 2 * v);
+        ctx.arc(cx, cy, r, top0, top0 + Math.PI * 2 * v);
         ctx.stroke();
+        ctx.restore();
+        ctx.save();
+        // گرادیان در طول قوس، عین GradientArc داشبورد: نیمه‌ی اول از رنگ اول تا
+        // میانه (بالا→پایین)، نیمه‌ی دوم از میانه تا رنگ دوم (پایین→بالا)
+        const mid = mixColor(it.colors[0], it.colors[1], 0.5);
+        const g1 = ctx.createLinearGradient(cx, cy - r, cx, cy + r);
+        g1.addColorStop(0, it.colors[0]);
+        g1.addColorStop(1, mid);
+        ctx.strokeStyle = g1;
+        ctx.beginPath();
+        ctx.arc(cx, cy, r, top0, top0 + Math.PI * 2 * Math.min(v, 0.5));
+        ctx.stroke();
+        if (v > 0.5) {
+          const g2 = ctx.createLinearGradient(cx, cy + r, cx, cy - r);
+          g2.addColorStop(0, mid);
+          g2.addColorStop(1, it.colors[1]);
+          ctx.strokeStyle = g2;
+          ctx.beginPath();
+          ctx.arc(cx, cy, r, Math.PI / 2, top0 + Math.PI * 2 * v);
+          ctx.stroke();
+        }
+        ctx.restore();
+        // سر قوس: دایره‌ی کامل با رنگ همون نقطه و سایه‌ی نرم — عین سر حلقه‌ی داشبورد (.db-arc-cap)
+        const end = -Math.PI / 2 + Math.PI * 2 * v;
+        ctx.save();
+        ctx.shadowColor = p.light ? "rgba(80,50,20,.35)" : "rgba(0,0,0,.45)";
+        ctx.shadowBlur = sw * 0.24;
+        ctx.fillStyle = mixColor(it.colors[0], it.colors[1], v);
+        ctx.beginPath();
+        ctx.arc(cx + r * Math.cos(end), cy + r * Math.sin(end), sw / 2, 0, Math.PI * 2);
+        ctx.fill();
         ctx.restore();
       }
     });
