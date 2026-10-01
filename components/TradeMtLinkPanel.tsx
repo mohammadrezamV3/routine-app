@@ -139,9 +139,11 @@ export function TradeMtLinkPanel({ accountId, calSystem, accountName }: { accoun
                 {mismatch ? (
                   <div className="trade-mt-note-warn">
                     موجودی ژورنال {fmt(Math.abs(recon.difference))} با موجودی متاتریدر اختلاف دارد. محتمل‌ترین دلیل‌ها:
-                    در متاتریدر 4 تب <b className="mono ltr-inline">Account History</b> باید روی <b className="mono ltr-inline">All History</b> باشد
-                    (راست‌کلیک روی تب و انتخاب <b className="mono ltr-inline">All History</b>) تا اکسپرت کل تاریخچه را ببیند.
-                    همچنین اکسپرت باید نسخه‌ی جدید (v1.30) باشد: آن را از همین صفحه دوباره دانلود کنید و جای فایل قبلی بگذارید.
+                    {link.platform === "MT4" && (<>
+                      {" "}در متاتریدر 4 تب <b className="mono ltr-inline">Account History</b> باید روی <b className="mono ltr-inline">All History</b> باشد
+                      (راست‌کلیک روی تب و انتخاب <b className="mono ltr-inline">All History</b>) تا اکسپرت کل تاریخچه را ببیند.
+                    </>)}
+                    {" "}اکسپرت باید نسخه‌ی جدید (v1.30) باشد: آن را از همین صفحه دوباره دانلود کنید و جای فایل قبلی بگذارید.
                     <div style={{ marginTop: 8 }}>
                       <a className="trade-mt-download" href={link.platform === "MT4" ? "/ea/Arion-MT4.mq4" : "/ea/Arion-MT5.mq5"} download>
                         <Download size={14} /> {link.platform === "MT4" ? "Arion-MT4.mq4" : "Arion-MT5.mq5"}
@@ -149,7 +151,7 @@ export function TradeMtLinkPanel({ accountId, calSystem, accountName }: { accoun
                     </div>
                   </div>
                 ) : (
-                  <div className="trade-mt-note" style={{ color: "var(--green, #2ecc71)" }}>
+                  <div className="trade-mt-note" style={{ color: "var(--pnl-win)" }}>
                     <Check size={12} style={{ verticalAlign: "-2px" }} /> موجودی‌ها یکی‌ان
                   </div>
                 )}
