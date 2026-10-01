@@ -9758,7 +9758,8 @@ html[data-boot="done"] .boot-splash{ display:none; }
 }
 .bs-wave-2{ animation-delay:1.8s; border-color:rgba(var(--secondary-rgb),.5); }
 @keyframes bs-wave{ from{ transform:scale(.6); opacity:.9; } to{ transform:scale(1.9); opacity:0; } }
-.bs-logo{ position:relative; width:34px; height:auto; animation:bs-logo-in .7s cubic-bezier(.2,.9,.25,1.3) .25s both, pl-breathe 2.2s ease-in-out 1s infinite; }
+.bs-logo{ position:relative; width:34px; height:auto; animation:bs-logo-in .7s cubic-bezier(.2,.9,.25,1.3) .25s both, bs-logo-breathe 2.2s ease-in-out 1s infinite; }
+@keyframes bs-logo-breathe{ 50%{ transform:scale(.9); } }
 @keyframes bs-logo-in{ from{ opacity:0; transform:translateY(14px) scale(.6); } }
 .bs-logo.is-light{ display:none; }
 body[data-theme="light"] .bs-logo.is-light{ display:block; }
@@ -9792,10 +9793,11 @@ body[data-theme="light"] .bs-logo.is-dark{ display:none; }
 @keyframes bs-progress{ 0%{ transform:scaleX(0); } 15%{ transform:scaleX(.4); } 100%{ transform:scaleX(.93); } }
 
 /* خروج — بالا رفتن و پخش‌شدن */
-html[data-boot="out"] .boot-splash{ animation:bs-out .6s ease .3s forwards; pointer-events:none; }
+html[data-boot="out"] .boot-splash{ animation:bs-out .55s ease .28s forwards; pointer-events:none; }
 @keyframes bs-out{ to{ opacity:0; } }
 html[data-boot="out"] .bs-progress i{ animation:none; transform:scaleX(1); transition:transform .25s ease; }
-html[data-boot="out"] .bs-stage{ animation:bs-lift .75s cubic-bezier(.5,0,.75,0) .12s forwards; }
+/* نشان و متن باید قبل از نیمه‌ی محوشدن پرده رفته باشن، وگرنه روی متن صفحه می‌افتن */
+html[data-boot="out"] .bs-stage{ animation:bs-lift .4s cubic-bezier(.2,.7,.3,1) forwards; }
 @keyframes bs-lift{ to{ transform:translateY(-46px); opacity:0; } }
 html[data-boot="out"] .bs-rings{ animation:bs-spread .8s cubic-bezier(.2,.7,.2,1) forwards; }
 @keyframes bs-spread{ to{ transform:rotate(-90deg) scale(2.6); opacity:0; } }

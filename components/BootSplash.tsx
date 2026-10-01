@@ -12,15 +12,22 @@ import { BRAND_FA } from "@/lib/brand";
 // noscript اصلا نشونش نمی‌ده.
 const PHRASES = ["روزت رو می‌چینیم", "عادت‌ها رو گرم می‌کنیم", "استریکت رو پیدا می‌کنیم", "تقریبا آماده‌ست"];
 
+// حداقل نمایش از اولین فریم (نه اجرای اسکریپت) حساب می‌شه تا انیمیشن ورود (~1.1s)
+// هیچ‌وقت نیمه‌کاره قطع نشه؛ done با پایان واقعی محوشدن پرده (animationend)،
+// با یک تایمر پشتیبان برای دستگاه کند.
 const BOOT_SCRIPT = `(function(){try{
-var d=document.documentElement,t0=Date.now(),H=!!window.__appHydrated,L=document.readyState==="complete",done=false;d.setAttribute("data-boot","on");
-function go(){if(done||!H||!L)return;done=true;
-var w=Math.max(0,650-(Date.now()-t0));
-setTimeout(function(){d.setAttribute("data-boot","out");setTimeout(function(){d.setAttribute("data-boot","done")},950)},w)}
+var d=document.documentElement,t0=0,H=!!window.__appHydrated,L=document.readyState==="complete",done=false;d.setAttribute("data-boot","on");
+requestAnimationFrame(function(){t0=Date.now();go()});
+function fin(){d.setAttribute("data-boot","done")}
+function go(){if(done||!H||!L||!t0)return;done=true;
+var w=Math.max(0,1150-(Date.now()-t0));
+setTimeout(function(){d.setAttribute("data-boot","out");
+var s=document.querySelector(".boot-splash");
+if(s)s.addEventListener("animationend",function(e){if(e.target===s&&e.animationName==="bs-out")fin()});
+setTimeout(fin,1300)},w)}
 window.addEventListener("load",function(){L=true;go()});
 window.addEventListener("app:hydrated",function(){H=true;go()});
-setTimeout(function(){H=L=true;go()},8000);
-go();
+setTimeout(function(){H=L=true;if(!t0)t0=1;go()},8000);
 }catch(e){document.documentElement.setAttribute("data-boot","done")}})();`;
 
 const RINGS = [
