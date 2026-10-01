@@ -1481,34 +1481,69 @@
   /* طبق درخواست صریح: پنل کاربری نباید فقط نیمه‌ی بالایی صفحه رو بگیره و
      زیرش خالی بمونه — باکس‌ها باید فول‌اسکرین باشن. */
   .account-shell{ position:relative; min-height:calc(100dvh - 140px); }
+  .account-body{ display:flex; flex-direction:column; align-items:stretch; }
+  .account-content{ flex:1; min-width:0; }
+
+  /* سایدبار فقط دسکتاپ (۱۰۲۴ به بالا) — همون مرزی که دکمه‌ی بازگشت پنهان
+     می‌شه و /account مستقیم به پروفایل می‌ره. زیر این عرض (تبلت/موبایل)
+     ناوبری از صفحه‌ی اول پنل و دکمه‌ی بازگشت انجام می‌شه. */
+  .account-sidebar{ display:none; }
+
+  /* ── چیدمان دسکتاپ پنل کاربری ─────────────────────────────────────
+     باگ گزارش‌شده («جای پنل روی دسکتاپ اصلا درست نیست»): سایدبار ۱۶۴
+     پیکسلی بی‌قاب کنار محتوا شناور بود، عنوانش جدا از لینک‌ها معلق بود و
+     محتوا هیچ زمینه‌ی مشترکی نداشت. حالا یک گرید دوستونه‌ی واقعی:
+     ستون اول (در RTL سمت راست) منو، ستون دوم محتوا — هرکدام روی یک پنل
+     شیشه‌ای هم‌زبان با هدر سایت (surface-glass + surface-line). طبق
+     درخواست صریح صاحب محصول، هم پشت منو و هم پشت محتوا یک بک‌گراند کلی
+     هست. منو sticky است و موقع اسکرول کنار محتوا می‌ماند. */
   @media (min-width:1024px){
     .account-shell{
-      /* باگ گزارش‌شده («جاش دسکتاپ خرابه»): فرمول قبلی لبه‌ی راست را با
-         margin-inline-end (بدون /۲) پین می‌کرد، نه واقعا وسط‌چین — نتیجه‌اش
-         محتوای چسبیده‌به‌راست با یک فاصله‌ی خالی بزرگ سمت چپ بود. حالا
-         دقیقا همون ترفند اثبات‌شده‌ی `.dash-breakout` (روتین من): وسط‌چینی
-         متقارن حول مرکز همون ستون ۶۲۰پیکسلی سایت، با margin-inline-start
-         مثبت/منفی محاسبه‌شده از calc(.../2) — نه پین‌کردن یک لبه.
-         سقف عرض هم کمی بزرگ‌تر شد (۹۶۶ → ۱۰۸۰، طبق درخواست صریح). */
-      --acc-w: min(1080px, calc(100vw - 64px));
+      /* وسط‌چینی متقارن حول مرکز ستون ۶۲۰پیکسلی سایت (همون ترفند
+         `.dash-breakout`)، با سقف عرض ۱۱۲۰. */
+      --acc-w: min(1120px, calc(100vw - 64px));
       width: var(--acc-w); max-width: var(--acc-w);
       margin-inline-start: calc((620px - var(--acc-w)) / 2);
     }
+    .account-body{
+      display:grid; grid-template-columns:240px minmax(0, 1fr); gap:20px; align-items:start;
+    }
+    .account-sidebar,
+    .account-content{
+      background:var(--surface-glass);
+      backdrop-filter:blur(22px) saturate(170%); -webkit-backdrop-filter:blur(22px) saturate(170%);
+      border:1px solid var(--surface-line); border-radius:24px;
+    }
+    .account-sidebar{
+      display:flex; flex-direction:column; gap:6px;
+      position:sticky; top:calc(92px + env(safe-area-inset-top));
+      max-height:calc(100dvh - 112px - env(safe-area-inset-top)); overflow-y:auto;
+      padding:16px 12px 12px;
+    }
+    .account-content{
+      padding:26px 28px 28px;
+      min-height:calc(100dvh - 112px - env(safe-area-inset-top));
+    }
   }
-  /* row (نه row-reverse) — توی dir="rtl" فرزند اول DOM (سایدبار/تایتل‌ها)
-     خودش سمت راست می‌شینه؛ row-reverse قبلا این رو برعکس می‌کرد و محتوا
-     (که خود عکس/آواتار پروفایل بالاشه) رو می‌برد سمت راست. */
-  .account-body{ display:flex; flex-direction:row; gap:22px; align-items:flex-start; }
-
-  .account-sidebar{
-    width:164px; flex-shrink:0; position:sticky; top:calc(88px + env(safe-area-inset-top));
-    display:flex; flex-direction:column; gap:18px;
+  @media (min-width:1024px){
+    /* حلقه‌ی بریدگی دور آواتار پروفایل حالا روی پنل شیشه‌ای می‌افتد نه
+       روی بک‌گراند صفحه، پس هم‌رنگ همان پنل می‌شود (surface-glass روی bg). */
+    .account-content .profile-hero-avatar-wrap{
+      outline-color:color-mix(in srgb, var(--surface-2) 72%, var(--bg));
+    }
   }
-  .account-sidebar-title{ font-size:11px; font-weight:700; color:var(--muted2); margin:0 6px; letter-spacing:.02em; }
-  .account-sidebar-links{ display:flex; flex-direction:column; gap:1px; }
+  @media (min-width:1280px){
+    .account-body{ grid-template-columns:260px minmax(0, 1fr); gap:24px; }
+    .account-content{ padding:30px 34px 34px; }
+  }
+  .account-sidebar-title{
+    font-size:12px; font-weight:800; color:var(--muted); letter-spacing:.02em;
+    padding:2px 10px 12px; margin-bottom:4px; border-bottom:1px solid var(--surface-line);
+  }
+  .account-sidebar-links{ display:flex; flex-direction:column; gap:2px; }
   .account-sidebar-link{
-    position:relative; display:flex; align-items:center; gap:10px; padding:9px 11px; border-radius:13px;
-    color:var(--muted); font-size:12.5px; font-weight:600; text-decoration:none;
+    position:relative; display:flex; align-items:center; gap:10px; padding:10px 12px; border-radius:14px;
+    color:var(--muted); font-size:13px; font-weight:600; text-decoration:none;
     background:none; border:none; box-shadow:none; backdrop-filter:none; -webkit-backdrop-filter:none;
     cursor:pointer; transition:color .18s ease; text-align:start; width:100%;
   }
@@ -1518,24 +1553,33 @@
   .account-sidebar-link.active{ color:var(--accent); }
   .account-sidebar-link > *:not(.account-sidebar-active-pill){ position:relative; z-index:1; }
   .account-sidebar-active-pill{
-    position:absolute; inset:0; border-radius:13px; background:var(--accent-dim); z-index:0;
+    position:absolute; inset:0; border-radius:14px; background:var(--accent-dim); z-index:0;
   }
   .account-sidebar-link-icon{
     display:flex; align-items:center; justify-content:center; flex-shrink:0;
-    width:26px; height:26px; border-radius:9px; background:rgba(255,255,255,.04); color:inherit;
+    width:28px; height:28px; border-radius:9px; background:rgba(255,255,255,.04); color:inherit;
     transition:background .18s ease;
   }
   .account-sidebar-link.active .account-sidebar-link-icon{ background:rgba(var(--accent-rgb),.14); }
+  /* خروج همیشه پایین پنل منو، با یک خط جداکننده */
   .account-sidebar-logout{
-    display:flex; align-items:center; gap:10px; padding:9px 11px; border-radius:13px;
+    display:flex; align-items:center; gap:10px; padding:10px 12px; border-radius:14px;
+    margin-top:8px; position:relative;
     color:#E05252; background:none; border:none; box-shadow:none;
-    font-size:12.5px; font-weight:600; text-align:start; width:100%; cursor:pointer;
+    font-size:13px; font-weight:600; text-align:start; width:100%; cursor:pointer;
     transition:background .18s ease;
   }
-  @media (hover:hover){.account-sidebar-logout:hover{ background:rgba(224,82,82,.08); box-shadow:none; }}
+  .account-sidebar-logout::before{
+    content:""; position:absolute; top:-5px; inset-inline:10px; height:1px; background:var(--surface-line); pointer-events:none;
+  }
+  body[data-theme="light"] .account-sidebar-logout,
+  body:not([data-theme="light"]) .account-sidebar-logout{ background:none; box-shadow:none; border:none; }
+  @media (hover:hover){
+    body[data-theme="light"] .account-sidebar-logout:hover,
+    body:not([data-theme="light"]) .account-sidebar-logout:hover{ background:rgba(224,82,82,.08); box-shadow:none; color:#E05252; }
+  }
   .account-sidebar-logout .account-sidebar-link-icon{ background:rgba(224,82,82,.1); }
 
-  .account-content{ flex:1; min-width:0; }
   .account-content > h1{ margin-bottom:3px; font-size:20px; letter-spacing:-.01em; }
   .account-content-hint{ font-size:12px; color:var(--muted); line-height:1.8; margin-bottom:20px; }
 
@@ -1717,11 +1761,13 @@
   }
   body[data-theme="light"] .profile-hero-avatar-wrap,
   body:not([data-theme="light"]) .profile-hero-avatar-wrap{ background:none; box-shadow:none; }
-  /* باگ گزارش‌شده («سایه‌ی ادیت روی عکس پروفایل جاش اشتباهه»): این هاله
-     inset:0 بود، یعنی حلقه‌ی ۶پیکسلی دور عکس را هم می‌پوشاند و یک لبه‌ی
-     تیره‌ی بیرون‌زده می‌ساخت. حالا دقیقا روی خود عکس می‌نشیند. */
+  /* باگ گزارش‌شده («سایه‌ی هاور روی عکس پروفایل جاش اشتباهه»): حلقه‌ی
+     دور عکس `outline` است که *بیرون* باکس کشیده می‌شه، نه داخلش — پس عکس
+     کل ۹۲px دکمه رو پر می‌کنه. هاله‌ی قبلی با inset:6px یک دایره‌ی
+     ۸۰پیکسلی وسط عکس می‌ساخت و یک نوار روشن از عکس دورش بیرون می‌موند.
+     حالا inset:0، یعنی دقیقا هم‌اندازه و هم‌مرکز خود دایره‌ی عکس. */
   .profile-hero-avatar-hint{
-    position:absolute; inset:6px; border-radius:50%; display:flex; align-items:center; justify-content:center;
+    position:absolute; inset:0; border-radius:50%; display:flex; align-items:center; justify-content:center;
     color:#fff; background:rgba(0,0,0,.45); opacity:0; transition:opacity .18s ease; pointer-events:none;
   }
   .profile-hero-avatar-wrap:focus-visible .profile-hero-avatar-hint, .profile-hero-avatar-wrap:disabled .profile-hero-avatar-hint{ opacity:1; }
@@ -1747,7 +1793,7 @@
     padding:56px 20px 14px; display:flex; justify-content:flex-end;
   }
 
-  /* پاپ‌آپ پیش‌نمایش/جابه‌جایی عکس پروفایل و بنر (ImageCropModal) —
+  /* پاپ‌آپ پیش‌نمایش/جابه‌جایی بنر (ImageCropModal) —
      خود پنل همون .modal-panel اپه؛ قاب فقط بوردر داره، بک‌گراند نه. */
   .crop-modal{ max-width:400px; }
   .crop-frame{
@@ -1756,7 +1802,6 @@
     user-select:none; -webkit-user-select:none;
   }
   .crop-frame:active{ cursor:grabbing; }
-  .crop-frame.is-circle{ border-radius:50%; max-width:260px; }
   .crop-img{ position:absolute; top:0; left:0; max-width:none; pointer-events:none; will-change:transform; }
   .crop-hint{ text-align:center; font-size:11.5px; color:var(--muted); margin:10px 0 4px; }
   .crop-zoom{ display:flex; align-items:center; gap:10px; color:var(--muted); margin:8px auto 0; max-width:340px; }
@@ -1970,7 +2015,6 @@
        همون دایره‌ی ۹۲پیکسلی از wrap ۷۸پیکسلی موبایل بیرون می‌زد. */
     .profile-hero-avatar-img{ width:78px !important; height:78px !important; }
     .profile-hero-avatar-wrap{ outline-width:5px; }
-    .profile-hero-avatar-hint{ inset:5px; }
     .profile-hero-meta{ padding:48px 16px 12px; }
     .profile-banner-btn{ padding:6px; }
   }
@@ -2157,17 +2201,6 @@
   }
 
   @media (max-width:700px){
-    /* باگ گزارش‌شده («فاصله‌ی چپ و راست پنل با لبه یکی نیست»): والد
-       `align-items:flex-start` دارد — روی محور عمودی row بی‌ضرر است، ولی
-       اینجا که ستونی می‌شود همان قانون محور *عرضی* را کنترل می‌کند و
-       `.account-content` به‌جای پرکردن عرض، به اندازه‌ی محتوایش جمع می‌شد و
-       در RTL به لبه‌ی راست می‌چسبید — یعنی تمام فضای اضافه سمت چپ می‌ماند. */
-    .account-body{ flex-direction:column; align-items:stretch; }
-    /* روی موبایل سایدبار جا نمی‌شود و طبق درخواست صریح، نوار منوی زیر
-       هدر هم حذف شد — ناوبری از صفحه‌ی اول پنل و دکمه‌ی «بازگشت» انجام
-       می‌شود. */
-    .account-sidebar{ display:none; }
-
     /* باگ گزارش‌شده («پنل کاربری جاهاش به‌هم‌ریخته‌ست و باکسش کرو نیست»):
        این کارت قبلا با ترفند breakout تا لبه‌های واقعی صفحه کشیده می‌شد و
        در نتیجه هم گوشه‌ی گردش را از دست می‌داد (border-radius:0) هم با

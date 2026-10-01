@@ -5,10 +5,11 @@ import { createPortal } from "react-dom";
 import { ZoomIn } from "lucide-react";
 import { useLockBodyScroll } from "@/lib/useLockBodyScroll";
 
-// پیش‌نمایش عکس پروفایل/بنر قبل از آپلود — قبلا عکس بی‌صدا از *وسط*
+// پیش‌نمایش بنر پروفایل قبل از آپلود (عکس پروفایل دیگه این مرحله رو نداره
+// و مستقیم با کراپ خودکار وسط آپلود می‌شه) — قبلا عکس بی‌صدا از *وسط*
 // کراپ می‌شد و کاربر نمی‌تونست انتخاب کنه کدوم قسمتش دیده بشه (همون
 // «جای پیش‌نمایش درست نیست»). حالا عکس داخل قابی با همون نسبت نهایی
-// (دایره برای پروفایل، ۳.۲:۱ برای بنر) نشون داده می‌شه، با کشیدن جابه‌جا و
+// (۳.۲:۱ برای بنر) نشون داده می‌شه، با کشیدن جابه‌جا و
 // با اسلایدر زوم می‌شه، و خروجی دقیقا همون چیزیه که داخل قاب دیده می‌شد.
 //
 // عکس با FileReader به data URL خونده می‌شه، نه URL.createObjectURL —
@@ -18,7 +19,6 @@ type Props = {
   file: File;
   outputW: number;
   outputH: number;
-  shape: "circle" | "rect";
   title: string;
   onCancel: () => void;
   onConfirm: (dataUrl: string) => void;
@@ -26,7 +26,7 @@ type Props = {
 
 const FRAME_MAX_W = 340;
 
-export function ImageCropModal({ file, outputW, outputH, shape, title, onCancel, onConfirm }: Props) {
+export function ImageCropModal({ file, outputW, outputH, title, onCancel, onConfirm }: Props) {
   useLockBodyScroll();
   const [mounted, setMounted] = useState(false);
   const [src, setSrc] = useState<string | null>(null);
@@ -144,7 +144,7 @@ export function ImageCropModal({ file, outputW, outputH, shape, title, onCancel,
           <>
             <div
               ref={frameRef}
-              className={`crop-frame${shape === "circle" ? " is-circle" : ""}`}
+              className="crop-frame"
               style={{ height: frameH }}
               onPointerDown={onPointerDown}
               onPointerMove={onPointerMove}
