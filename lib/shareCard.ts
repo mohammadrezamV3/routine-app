@@ -383,10 +383,10 @@ export async function renderShareCard(input: ShareCardInput): Promise<HTMLCanvas
   }
   // عنوان هیچ‌وقت روی لوگو نمی‌افته — عرضش سقف داره
   text(input.title, R, 170, f(900, 58), p.text, "right", "rtl", 520);
-  if (input.subtitle) text(input.subtitle, R, 226, f(500, 30), p.muted, "right", "rtl", 520);
+  if (input.subtitle) text(input.subtitle, R, 244, f(500, 30), p.muted, "right", "rtl", 520);
 
   // بدونِ کدِ دعوت، سربرگ کوتاه‌تره و فضا به محتوا می‌رسه
-  const top = input.inviteCode ? 334 : 276, bottom = CY + CH - 56;
+  const top = input.inviteCode ? 334 : 290, bottom = CY + CH - 56;
   ctx.strokeStyle = hair;
   ctx.lineWidth = 2;
   ctx.beginPath();
