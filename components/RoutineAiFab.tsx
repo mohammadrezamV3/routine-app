@@ -19,7 +19,7 @@ import {
 type Msg = { id: string; role: "user" | "bot"; text: string; tone?: "ok" | "warn" | "error" };
 type Quota = { unlimited: boolean; used: number; limit: number | null; remaining: number | null };
 
-const GREETING = "سلام! من آری‌ام. چطور می‌تونم کمکت کنم؟";
+const GREETING = "سلام! من نومو هستم، دستیار برنامه‌ات. بگو چی رو اضافه، جابه‌جا یا ویرایش کنم.";
 
 function newId() {
   return Math.random().toString(36).slice(2);
