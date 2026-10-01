@@ -19,6 +19,29 @@ import { prisma } from "@/lib/prisma";
 const CHECK_TTL_MS = 60 * 1000;
 const validCache = new Map<string, number>();
 
+/** حداقل فاصله‌ی دو نوشتن «آخرین بازدید» برای یک نشست */
+export const TOUCH_INTERVAL_MS = 60 * 1000;
+const touchedAt = new Map<string, number>();
+
+/** خالص: آیا الان وقت نوشتن دوباره‌ی lastSeenAt هست؟ */
+export function shouldTouch(last: number | undefined, now: number): boolean {
+  return last === undefined || now - last >= TOUCH_INTERVAL_MS;
+}
+
+/**
+ * ثبت «آخرین بازدید» با throttle (حداکثر یک نوشتن در دقیقه به‌ازای هر نشست).
+ * قبلا فقط وقتی کش اعتبار منقضی می‌شد نوشته می‌شد؛ حالا در هر بررسی
+ * (کش‌خورده یا نه) سنجیده می‌شود.
+ */
+function touchSession(sid: string): void {
+  const now = Date.now();
+  if (!shouldTouch(touchedAt.get(sid), now)) return;
+  touchedAt.set(sid, now);
+  prisma.session
+    .updateMany({ where: { sessionToken: sid, revokedAt: null }, data: { lastSeenAt: new Date(now) } })
+    .catch(() => { touchedAt.delete(sid); });
+}
+
 export function newSessionId(): string {
   return randomBytes(24).toString("hex");
 }
@@ -80,12 +103,16 @@ export async function createDeviceSession(input: {
     });
   }
   validCache.set(input.sid, Date.now() + CHECK_TTL_MS);
+  touchedAt.set(input.sid, Date.now());
 }
 
 /** آیا این توکن هنوز معتبره؟ نشست ابطال‌شده/پاک‌شده → false. */
 export async function isSessionLive(sid: string): Promise<boolean> {
   const until = validCache.get(sid);
-  if (until && until > Date.now()) return true;
+  if (until && until > Date.now()) {
+    touchSession(sid);
+    return true;
+  }
 
   const row = await prisma.session.findUnique({
     where: { sessionToken: sid },
@@ -94,11 +121,10 @@ export async function isSessionLive(sid: string): Promise<boolean> {
   const live = !!row && !row.revokedAt && row.expiresAt.getTime() > Date.now();
   if (live) {
     validCache.set(sid, Date.now() + CHECK_TTL_MS);
-    // «آخرین بازدید» فقط هم‌زمان با همین بررسی هر-۶۰-ثانیه به‌روز می‌شه، نه
-    // هر درخواست — وگرنه یک write به‌ازای هر request می‌شد.
-    prisma.session.update({ where: { sessionToken: sid }, data: { lastSeenAt: new Date() } }).catch(() => {});
+    touchSession(sid);
   } else {
     validCache.delete(sid);
+    touchedAt.delete(sid);
   }
   return live;
 }

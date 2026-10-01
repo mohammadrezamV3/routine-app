@@ -12,7 +12,7 @@ import { ConfirmModal } from "@/components/admin/AdminModal";
 import { UserAvatar, displayName } from "@/components/admin/UserAvatar";
 import { adminFetch, useAdminToast } from "@/components/admin/useAdminToast";
 import { useAdminAccess } from "@/components/admin/AdminAccess";
-import { formatDateShort, formatNumber } from "@/lib/adminFormat";
+import { formatDateShort, formatDateTime, formatNumber } from "@/lib/adminFormat";
 
 type UserRow = {
   id: string; name: string | null; lastName: string | null; email: string | null; phone: string | null; username: string | null;
@@ -248,7 +248,7 @@ function UsersInner() {
                         <td>{u.plan || <span className="admin-muted">رایگان</span>}</td>
                         <td><StatusBadges u={u} /></td>
                         <td className="admin-ltr">{formatDateShort(u.createdAt)}</td>
-                        <td className="admin-ltr">{u.lastActivityAt ? formatDateShort(u.lastActivityAt) : "—"}</td>
+                        <td className="admin-ltr">{u.lastActivityAt ? formatDateTime(u.lastActivityAt) : "—"}</td>
                         <td>
                           <Link href={`/admin/users/${u.id}`} className="admin-icon-btn" aria-label="جزئیات"><Eye size={15} /></Link>
                         </td>
