@@ -1,6 +1,8 @@
 import type { Metadata } from "next";
 import { breadcrumbJsonLd, pageMetadata } from "@/lib/seo";
 import { FAQS } from "@/lib/faqContent";
+import { fillPriceCopy } from "@/lib/planPricing";
+import { getPricingConfig } from "@/lib/planPricingServer";
 import Link from "next/link";
 
 export const metadata: Metadata = pageMetadata({
@@ -20,24 +22,27 @@ export const metadata: Metadata = pageMetadata({
 // کنن، نه یه متن تبلیغاتی پرکلمه. خود آرایه در lib/faqContent.ts است —
 // llms-full.txt هم از همون‌جا می‌خواند تا این دو از هم واگرا نشوند.
 
-const FAQ_JSON_LD = {
-  "@context": "https://schema.org",
-  "@type": "FAQPage",
-  mainEntity: FAQS.map((f) => ({
-    "@type": "Question",
-    name: f.q,
-    acceptedAnswer: { "@type": "Answer", text: f.a },
-  })),
-};
+// قیمت «روتین من» از پنل ادمین (/admin/pricing) پر می‌شه؛ ISR تا تغییر قیمت بدون دیپلوی برسه
+export const revalidate = 300;
 
-export default function FaqPage() {
+export default async function FaqPage() {
+  const faqs = fillPriceCopy(FAQS, await getPricingConfig());
+  const FAQ_JSON_LD = {
+    "@context": "https://schema.org",
+    "@type": "FAQPage",
+    mainEntity: faqs.map((f) => ({
+      "@type": "Question",
+      name: f.q,
+      acceptedAnswer: { "@type": "Answer", text: f.a },
+    })),
+  };
   return (
     <section>
       <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(breadcrumbJsonLd([{ name: "آریون", path: "/" }, { name: "سوالات متداول", path: "/faq" }])) }} />
       <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(FAQ_JSON_LD) }} />
       <h1>سوالات متداول</h1>
       <div className="about-list" style={{ marginTop: 12 }}>
-        {FAQS.map((f) => (
+        {faqs.map((f) => (
           <div key={f.q} style={{ marginTop: 20 }}>
             <h2 style={{ fontSize: 14 }}>{f.q}</h2>
             <div style={{ marginTop: 6, fontSize: 13.5, color: "var(--muted)", lineHeight: 1.9 }}>{f.a}</div>

@@ -5,7 +5,7 @@ import { ModuleKey } from "@prisma/client";
 //
 // تصمیم Owner: «روتین من» دیگه برای همیشه رایگان نیست — هر حساب تازه
 // ROUTINE_TRIAL_DAYS (۱۴) روز دسترسی آزمایشی می‌گیره و بعدش باید پلن «روتین
-// من» (ماهانه 99 هزار تومان) یا هر پلن پولی دیگه (که همه شامل این سه‌تان)
+// من» (قیمت از پنل ادمین /admin/pricing) یا هر پلن پولی دیگه (که همه شامل این سه‌تان)
 // خریده بشه. پس این ماژول‌ها دقیقا مثل بقیه‌ی ماژول‌ها از ردیف ModuleAccess
 // تصمیم گرفته می‌شن (requireModule / ModuleGate) و هیچ استثنایی ندارن.
 export const BASIC_MODULES: ModuleKey[] = [ModuleKey.ROUTINE, ModuleKey.SLEEP, ModuleKey.TASKS];

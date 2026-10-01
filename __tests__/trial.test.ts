@@ -71,7 +71,7 @@ describe("basic modules: 14-day trial, then paid", () => {
 describe("basic plan price", () => {
   it("is 99,000 toman monthly and purchasable", () => {
     const p = findPlanPricing("basic");
-    expect(p?.free).toBeUndefined();
+    expect(p).toBeDefined();
     expect(p?.amounts).toEqual({ "1": 990_000, "3": 2_600_000, "6": 5_200_000, "12": 10_400_000 });
   });
 });

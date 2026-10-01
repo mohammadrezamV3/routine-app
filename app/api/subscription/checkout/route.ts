@@ -3,13 +3,13 @@ import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
 import { checkRateLimit, getClientIp } from "@/lib/rateLimit";
-import { DURATIONS, Duration, findPlanPricing } from "@/lib/planPricing";
+import { DURATIONS, Duration, chargeAmountRial, durationMonths, findPlanPricing } from "@/lib/planPricing";
+import { getPricingConfig } from "@/lib/planPricingServer";
+import { signCheckoutParams } from "@/lib/checkoutSignature";
 import { zibalRequest } from "@/lib/zibal";
 import { getSiteUrl } from "@/lib/siteUrl";
 import { resolveDiscountCode } from "@/lib/discountValidation";
 import { findUpgradeSource, computeUpgradePricing, UPGRADE_TARGET_PLAN_KEY } from "@/lib/planUpgrade";
-
-const DURATION_MONTHS: Record<Duration, number> = { "1": 1, "3": 3, "6": 6, "12": 12 };
 
 // زرین‌پال طبق درخواست صریح کامل از پروژه حذف شد — زیبال تنها درگاهه.
 const GATEWAYS = ["zibal"] as const;
@@ -53,10 +53,18 @@ export async function POST(req: NextRequest) {
     const user = await prisma.user.findUnique({ where: { id: userId }, select: { id: true } });
     if (!user) return NextResponse.json({ error: "not found" }, { status: 404 });
 
-    const pricing = findPlanPricing(planKey);
-    if (!pricing || pricing.free || !pricing.amounts) {
+    // قیمت و تعداد ماه از پیکربندی پنل ادمین (/admin/pricing)، تازه از دیتابیس
+    // (نه کش) تا تغییر Owner فورا روی هر خرید جدید اعمال بشه.
+    const pricingConfig = await getPricingConfig({ fresh: true });
+    const pricing = findPlanPricing(planKey, pricingConfig);
+    if (!pricing) {
       return NextResponse.json({ error: "این پلن قابل خرید نیست" }, { status: 400 });
     }
+    const listAmount = chargeAmountRial(pricingConfig, planKey, duration);
+    if (listAmount == null) {
+      return NextResponse.json({ error: "این مدت فعلا برای خرید فعال نیست" }, { status: 400 });
+    }
+    const months = durationMonths(pricingConfig, duration);
 
     const plan = await prisma.plan.findUnique({ where: { key_market: { key: planKey, market: "IRAN" } } });
     if (!plan || !plan.isActive) {
@@ -93,11 +101,10 @@ export async function POST(req: NextRequest) {
     // واقعی انقضای پلن فعلی رو از دیتابیس بخونه و سقف مدت رو حساب کنه —
     // امنیتش این‌جوری تضمین می‌شه، نه با اعتماد به یه تاریخ توی query.
     let upgradeFromSubId: string | undefined;
-    let baseAmount = pricing.amounts[duration];
+    let baseAmount = listAmount;
     if (planKey === UPGRADE_TARGET_PLAN_KEY) {
       const upgradeSource = await findUpgradeSource(userId);
       if (upgradeSource) {
-        const months = DURATION_MONTHS[duration];
         const { amount } = computeUpgradePricing(baseAmount, upgradeSource, months);
         baseAmount = amount;
         upgradeFromSubId = upgradeSource.subscriptionId;
@@ -109,9 +116,12 @@ export async function POST(req: NextRequest) {
     // lib/siteUrl.ts. خلاصه‌اش: پشت nginx، origin می‌تواند http یا
     // localhost دربیاید و زیبال آدرس بازگشت نامعتبر را با کد ۱۰۶ رد می‌کند.
     const origin = getSiteUrl(req.nextUrl.origin);
-    const callbackUrl = `${origin}/api/subscription/verify?gateway=${gateway}&planKey=${encodeURIComponent(planKey)}&duration=${duration}&amount=${finalAmount}&discountPercent=${discountPercent}${referralUsageId ? `&referralUsageId=${referralUsageId}` : ""}${discountCodeId ? `&discountCodeId=${discountCodeId}` : ""}${upgradeFromSubId ? `&upgradeFromSubId=${upgradeFromSubId}` : ""}`;
+    // پلن/مدت/ماه/مبلغ با HMAC امضا می‌شن (lib/checkoutSignature.ts) تا
+    // verify به هیچ پارامتر دستکاری‌شده‌ای از URL بازگشت اعتماد نکنه.
+    const sig = signCheckoutParams({ userId, planKey, duration, months, amount: finalAmount, discountPercent, referralUsageId, discountCodeId, upgradeFromSubId });
+    const callbackUrl = `${origin}/api/subscription/verify?gateway=${gateway}&planKey=${encodeURIComponent(planKey)}&duration=${duration}&months=${months}&amount=${finalAmount}&discountPercent=${discountPercent}${referralUsageId ? `&referralUsageId=${referralUsageId}` : ""}${discountCodeId ? `&discountCodeId=${discountCodeId}` : ""}${upgradeFromSubId ? `&upgradeFromSubId=${upgradeFromSubId}` : ""}&sig=${sig}`;
 
-    const description = `خرید ${pricing.nameFa} — ${duration} ماهه`;
+    const description = `خرید ${pricing.nameFa} — ${months} ماهه`;
     const { paymentUrl } = await zibalRequest(finalAmount, callbackUrl, description);
     // پنل Owner › Funnel — «شروع خرید» فقط وقتی ثبت می‌شه که واقعا درخواست
     // پرداخت به درگاه با موفقیت ساخته شده باشه (نه هر کلیک فرانت)

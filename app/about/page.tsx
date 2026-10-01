@@ -2,6 +2,8 @@ import type { Metadata } from "next";
 import Link from "next/link";
 import { SOCIAL, SUPPORT_EMAIL, BRAND_FA } from "@/lib/brand";
 import { breadcrumbJsonLd, pageMetadata } from "@/lib/seo";
+import { fillPriceCopy } from "@/lib/planPricing";
+import { getPricingConfig } from "@/lib/planPricingServer";
 import { TelegramIcon, InstagramIcon } from "@/components/SocialIcons";
 import { EnamadBadge } from "@/components/EnamadBadge";
 
@@ -53,7 +55,7 @@ const SECTIONS: { title: string; body: string }[] = [
       "برای کسی که می‌خواهد روی روتین روزانه‌اش کنترل داشته باشد و پیشرفتش را ببیند، نه صرفا یک لیست کار " +
       "داشته باشد. اگر ورزش می‌کنی و می‌خواهی تمرین و تغذیه‌ات کنار برنامه‌ی روزانه‌ات باشد، یا معامله‌گری " +
       "که به یک ژورنال منظم فارسی نیاز دارد، آریون برای تو ساخته شده. اگر فقط یک بخش را لازم داری، " +
-      "«روتین من» 14 روز رایگان است و می‌توانی بدون هزینه شروع کنی؛ بعد از آن با پلن «روتین من» (ماهانه 99 هزار تومان) ادامه پیدا می‌کند. دستیار هوشمند «نومو» 10 پیام رایگان دارد و در پلن‌های پولی نامحدود است.",
+      "«روتین من» 14 روز رایگان است و می‌توانی بدون هزینه شروع کنی؛ بعد از آن با پلن «روتین من» ({{routine_monthly}}) ادامه پیدا می‌کند. دستیار هوشمند «نومو» 10 پیام رایگان دارد و در پلن‌های پولی نامحدود است.",
   },
   {
     title: "داده‌ها و حریم خصوصی",
@@ -64,7 +66,11 @@ const SECTIONS: { title: string; body: string }[] = [
   },
 ];
 
-export default function AboutPage() {
+// قیمت «روتین من» از پنل ادمین (/admin/pricing) پر می‌شه؛ ISR تا تغییر قیمت بدون دیپلوی برسه
+export const revalidate = 300;
+
+export default async function AboutPage() {
+  const sections = fillPriceCopy(SECTIONS, await getPricingConfig());
   const rows = [
     { label: "سازنده", value: BRAND_FA },
     { label: "ایمیل", value: SUPPORT_EMAIL, href: `mailto:${SUPPORT_EMAIL}` },
@@ -80,7 +86,7 @@ export default function AboutPage() {
         {`${BRAND_FA} — همه‌ی نظم زندگی‌ات، یک‌جا`}
       </div>
 
-      {SECTIONS.map((s) => (
+      {sections.map((s) => (
         <div key={s.title} style={{ marginTop: 20 }}>
           <h2>{s.title}</h2>
           <div style={{ marginTop: 6, fontSize: 13.5, color: "var(--muted)", lineHeight: 1.9 }}>{s.body}</div>

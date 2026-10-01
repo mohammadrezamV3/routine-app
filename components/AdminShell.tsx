@@ -9,7 +9,7 @@ import { logoutAndRedirect } from "@/lib/logout";
 import { motion, AnimatePresence } from "framer-motion";
 import {
   LayoutGrid, ToggleRight, Users, CreditCard, Coins, Boxes, Sparkles, LineChart, ServerCog, Settings, LogOut, ChevronDown,
-  Menu, X, Tag, CalendarClock, Flag, Headset, ShieldCheck, History, Home, Sun, Moon, Lock, GraduationCap, FlaskConical, Megaphone,
+  Menu, X, Tag, CalendarClock, Flag, Headset, ShieldCheck, History, Home, Sun, Moon, Lock, GraduationCap, FlaskConical, Megaphone, BadgeDollarSign,
 } from "lucide-react";
 import { useTheme } from "@/components/ThemeProvider";
 import { useLockBodyScroll } from "@/lib/useLockBodyScroll";
@@ -66,6 +66,7 @@ const GROUPS: NavGroup[] = [
         ],
       },
       { label: "کدهای تخفیف", icon: <Tag size={17} />, href: "/admin/discount-codes", perm: "discounts" },
+      { label: "قیمت پلن‌ها", icon: <BadgeDollarSign size={17} />, href: "/admin/pricing", perm: "pricing" },
     ],
   },
   {

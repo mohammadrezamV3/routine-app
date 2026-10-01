@@ -10,6 +10,8 @@ import { User, AtSign, Lock, Phone } from "lucide-react";
 import { AuthField, useAuthFieldsStagger } from "@/components/AuthField";
 import { AuthBackButton, AuthBrandMark } from "@/components/AuthChrome";
 import { FREE_ROUTINE_COPY_FA, TRIAL_COPY_FA } from "@/lib/trial";
+import { fillPriceCopy } from "@/lib/planPricing";
+import { usePlanPricing } from "@/lib/usePlanPricing";
 import { PasswordVisibilityToggle } from "@/components/PasswordVisibilityToggle";
 import { isValidIranPhone, isValidUsername, validatePassword, isValidPersianName, digitsOnly } from "@/lib/validate";
 import { passwordTier, PASSWORD_TIER_LABELS, PASSWORD_TIER_ORDER, isPasswordAcceptable } from "@/lib/passwordStrength";
@@ -38,6 +40,7 @@ const RESEND_COOLDOWN_SECONDS = 120;
 // خود تایید کد هم موقع «ساخت حساب» نهایی، همراه با بقیه‌ی اطلاعات یک‌جا
 // چک می‌شه.
 export default function SignupPage() {
+  const { pricing } = usePlanPricing();
   const router = useRouter();
 
   const [firstName, setFirstName] = useState("");
@@ -235,7 +238,7 @@ export default function SignupPage() {
   return (
     <form ref={formRef} onSubmit={submit} className="auth-box">
       <AuthBackButton />
-      <AuthBrandMark subtitle={"به آریون خوش اومدی!"} note={invited ? `${TRIAL_COPY_FA}. دوستت دعوتت کرده — روی اولین اشتراکت ${faNum(REFERRAL_DISCOUNT_PERCENT)}٪ تخفیف داری.` : `${TRIAL_COPY_FA}. ${FREE_ROUTINE_COPY_FA}`} />
+      <AuthBrandMark subtitle={"به آریون خوش اومدی!"} note={invited ? `${TRIAL_COPY_FA}. دوستت دعوتت کرده — روی اولین اشتراکت ${faNum(REFERRAL_DISCOUNT_PERCENT)}٪ تخفیف داری.` : `${TRIAL_COPY_FA}. ${fillPriceCopy(FREE_ROUTINE_COPY_FA, pricing)}`} />
 
       <div className="auth-field-grid" ref={nameRef} style={{ marginTop: 20 }}>
         <AuthField id="firstName" label={"نام"} error={fieldErrors.name} icon={<User size={15} />}>
