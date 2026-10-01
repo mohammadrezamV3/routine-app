@@ -246,6 +246,18 @@ export function TradeAccountView({ accountId }: { accountId: string }) {
           <span>بالانس اولیه</span>
           <b className="mono">{faNum(account.initialBalance.toFixed(2))} {sym}</b>
         </div>
+        {account.cashFunding ? (
+          <div className="trade-journal-idrow-balance">
+            <span>واریز/برداشت</span>
+            <b className="mono">{faNum(account.cashFunding.toFixed(2))} {sym}</b>
+          </div>
+        ) : null}
+        {account.cashCharges ? (
+          <div className="trade-journal-idrow-balance">
+            <span>هزینه‌های غیرمعاملاتی</span>
+            <b className="mono">{faNum(account.cashCharges.toFixed(2))} {sym}</b>
+          </div>
+        ) : null}
       </div>
 
       {(account.broker || account.leverage) && (
