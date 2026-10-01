@@ -865,45 +865,44 @@ body[data-theme="light"] .db-cmd{ box-shadow:0 30px 70px -20px rgba(80,50,20,.35
 }
 html[data-perf-weak] .db-page .dbi-live *, html[data-perf-weak] .db-ribbon-sun-core{ animation:none !important; }
 
-/* ── اشتراک موفقیت (components/DashboardShare.tsx) — پورتال روی body ── */
+/* ── اشتراک موفقیت (components/DashboardShare.tsx) — پورتال روی body ──
+   فقط خود تصویر کارت + یک دکمه‌ی اشتراک؛ بدون قاب، بوردر، بک‌گراند یا متن (درخواست صاحب محصول) */
 .db-share-root{
   position:fixed; inset:0; z-index:9000; display:flex; justify-content:center; align-items:center;
-  padding:calc(20px + env(safe-area-inset-top)) 20px calc(20px + env(safe-area-inset-bottom)); background:rgba(0,0,0,.55);
+  padding:calc(16px + env(safe-area-inset-top)) 16px calc(16px + env(safe-area-inset-bottom)); background:rgba(0,0,0,.55);
 }
 body[data-theme="light"] .db-share-root{ background:rgba(60,40,20,.28); }
 .db-share{
-  width:100%; max-width:900px; max-height:100%; display:flex; flex-direction:column; overflow:hidden;
-  border-radius:24px; background:var(--surface-2); border:1px solid var(--surface-line);
-  box-shadow:0 30px 80px -20px rgba(0,0,0,.6);
+  /* عرض = کوچک‌ترین بین 440px، عرض صفحه و ارتفاعی که تصویر 4:5 + دکمه + بستن جا بشن */
+  --share-w:min(440px, calc((100vh - 32px - 140px) * .8));
+  --share-w:min(440px, calc((100dvh - 32px - 140px - env(safe-area-inset-top) - env(safe-area-inset-bottom)) * .8));
+  width:100%; max-width:var(--share-w); display:flex; flex-direction:column; align-items:stretch; gap:12px;
 }
 .db-share:focus{ outline:none; }
-.db-share-grab{ display:none; }
-.db-share-head{ flex-shrink:0; display:flex; align-items:center; justify-content:space-between; gap:10px; padding:14px 20px; border-bottom:1px solid var(--surface-line); }
-.db-share-head h2{ margin:0; font-size:16px; font-weight:900; color:var(--text); }
-.db-share-head .trade-icon-btn{ width:40px; height:40px; }
-.db-share-body{
-  flex:1 1 auto; min-height:0;
-  display:grid; grid-template-columns:minmax(0, 1.05fr) minmax(0, 1fr); gap:28px; align-items:start;
-  padding:24px; overflow-y:auto; overscroll-behavior:contain;
-}
+.db-share-close{ align-self:flex-end; width:40px; height:40px; color:#fff; }
+body[data-theme="light"] .db-share-close{ color:var(--text); }
+/* فقط خود باکس کارت دیده می‌شه: حاشیه‌ی 48px رنگ پس‌زمینه‌ی دور کارت (CX/CY در
+   lib/shareCard.ts) با برش پنهان می‌شه و گوشه‌ها با شعاع خود کارت (CR=52) گرد می‌مونن.
+   نسبت‌ها: کارت 984×1254 داخل canvas  1080×1350 */
 .db-share-preview{
-  position:relative; display:grid; place-items:center; width:100%; aspect-ratio:1080/1350; border-radius:18px;
-  border:1px solid var(--surface-line); overflow:hidden;
+  position:relative; display:grid; place-items:center; width:100%; aspect-ratio:984/1254;
+  overflow:hidden; border-radius:5.28% / 4.15%;
 }
-.db-share-preview img{ display:block; width:100%; height:100%; object-fit:contain; transition:opacity .2s ease; }
-.db-share-preview img.is-dim{ opacity:.6; }
 /* پیش‌نمایش زنده مستقیم روی canvas (بدون encode/decode  PNG) */
-.db-share-canvas{ grid-area:1 / 1; display:block; width:100%; height:100%; object-fit:contain; transition:opacity .2s ease; }
+.db-share-canvas{
+  position:absolute; left:-4.878%; top:-3.828%; width:109.756%; height:107.656%;
+  display:block; transition:opacity .2s ease;
+}
 .db-share-canvas.is-hidden{ visibility:hidden; }
 .db-share-canvas.is-dim{ opacity:.6; }
 .db-share-preview-spin{ position:absolute; top:12px; left:12px; display:grid; place-items:center; pointer-events:none; }
-.db-share-empty{ padding:24px; text-align:center; font-size:13px; line-height:1.9; color:var(--muted); }
+.db-share-empty{ padding:24px; text-align:center; font-size:13px; line-height:1.9; color:#fff; }
 .db-share-fail{ display:flex; flex-direction:column; align-items:center; gap:12px; padding:24px; text-align:center; }
 .db-share-fail p{ margin:0; font-size:13px; font-weight:700; color:#E05252; }
 .db-share-fail button{ min-height:40px; padding:8px 18px; }
 
-/* اسکلت هم‌قواره‌ی کارت 1080×1350 — درصدی، تا با هر عرضی همون نسبت بمونه */
-.db-share-skel{ position:absolute; inset:0; display:flex; flex-direction:column; padding:9.6% 9.6% 7%; gap:5%; }
+/* اسکلت هم‌قواره‌ی باکس کارت — درصدی، تا با هر عرضی همون نسبت بمونه */
+.db-share-skel{ position:absolute; inset:0; display:flex; flex-direction:column; padding:5.7% 5.7% 4%; gap:5%; }
 .db-share-skel .db-skel{ border-radius:8px; }
 .db-share-skel-head{ display:flex; justify-content:space-between; align-items:center; }
 .db-share-skel-line{ display:block; border-top:1px solid var(--surface-line); }
@@ -913,54 +912,12 @@ body[data-theme="light"] .db-share-root{ background:rgba(60,40,20,.28); }
   border:clamp(8px, 3.4vw, 16px) solid rgba(var(--accent-rgb),.08); animation:db-share-pulse 1.4s ease-in-out infinite;
 }
 .db-share-skel-rings > .db-share-skel-ring{ width:min(78%, 100%); max-height:100%; }
-.db-share-skel-grid{ flex:1; display:grid; grid-template-columns:repeat(7, 1fr); gap:3%; align-content:center; }
-.db-share-skel-grid .db-skel{ aspect-ratio:1; border-radius:6px; }
 .db-share-skel-foot{ display:flex; justify-content:space-around; }
 @keyframes db-share-pulse{ 50%{ opacity:.45; } }
 
-.db-share-side{ display:flex; flex-direction:column; gap:20px; min-width:0; }
-.db-share-group{ display:flex; flex-direction:column; gap:8px; }
-.db-share-label{ margin:0; font-size:12px; font-weight:800; color:var(--muted); }
-.db-share-list{ list-style:none; margin:0; padding:0; display:flex; flex-direction:column; border:1px solid var(--surface-line); border-radius:16px; }
-.db-share-list li{ display:flex; align-items:center; gap:12px; padding:12px 14px; min-height:56px; }
-.db-share-list li + li{ border-top:1px solid var(--surface-line); }
-.db-share-dot{ width:12px; height:12px; border-radius:50%; flex-shrink:0; }
-.db-share-row-text{ flex:1; display:flex; flex-direction:column; align-items:flex-start; gap:2px; min-width:0; font-size:13.5px; font-weight:700; color:var(--text); }
-.db-share-row-text small{ font-size:11.5px; font-weight:600; color:var(--muted); }
-.db-share-invite{ margin:0; font-size:12px; line-height:1.9; color:var(--muted); text-align:center; }
-.db-share-invite b{ color:var(--accent); font-family:var(--font-latin), sans-serif; letter-spacing:.5px; }
-
-/* نوار پایین: تنها دکمه‌ی اشتراک همیشه دیده می‌شه (روی دسکتاپ زیر ستون تنظیمات) */
-.db-share-foot{
-  flex-shrink:0; display:grid; grid-template-columns:minmax(0, 1.05fr) minmax(0, 1fr); gap:28px;
-  padding:14px 24px 18px; border-top:1px solid var(--surface-line);
-}
-.db-share-actions{ grid-column:2; display:flex; flex-direction:column; gap:8px; }
-.db-share-actions .db-share-btn{ width:100%; min-height:50px; font-size:14.5px; font-weight:800; border-radius:15px; touch-action:manipulation; }
+.db-share .db-share-btn{ width:100%; min-height:50px; font-size:14.5px; font-weight:800; border-radius:15px; touch-action:manipulation; }
 .db-share-btn-in{ display:inline-flex; align-items:center; gap:8px; }
 .db-share-btn:focus-visible{ outline:2px solid var(--accent); outline-offset:3px; }
-.db-share-status{ margin:0; min-height:20px; font-size:12px; line-height:1.7; font-weight:700; color:var(--muted); text-align:center; }
-.db-share-status.is-error{ color:#E05252; }
-.db-share-status .db-share-retry{ padding:2px 8px; font-size:12px; font-weight:800; color:var(--accent); text-decoration:underline; text-underline-offset:3px; }
-
-@media (max-width:760px){
-  .db-share-root{ align-items:flex-end; padding:0; }
-  .db-share{
-    border-radius:24px 24px 0 0; border-bottom:none;
-    max-height:calc(100vh - 12px - env(safe-area-inset-top)); max-height:calc(100dvh - 12px - env(safe-area-inset-top));
-  }
-  /* دستگیره‌ی کشیدن — خطی کوتاه (بوردر، نه بک‌گراند) */
-  .db-share-grab{ display:flex; justify-content:center; padding:10px 0 2px; touch-action:none; cursor:grab; }
-  .db-share-grab span{ display:block; width:40px; border-top:4px solid var(--muted2); border-radius:4px; opacity:.55; }
-  .db-share-head{ padding:4px 16px 10px; touch-action:none; }
-  /* ستون فلکس (نه گرید): عرض درصدی پیش‌نمایش با aspect-ratio داخل ترک گرید
-     دوری حل می‌شد و ردیف کوتاه‌تر از تصویر می‌موند (روی کنترل‌ها می‌افتاد) */
-  .db-share-body{ display:flex; flex-direction:column; align-items:stretch; gap:20px; padding:16px; }
-  /* پیش‌نمایش حداکثر نصف ارتفاع صفحه — کنترل‌ها با کمی اسکرول در دسترسن */
-  .db-share-preview{ flex-shrink:0; align-self:center; width:min(100%, 320px, 40vh); width:min(100%, 320px, 40dvh); }
-  .db-share-foot{ display:block; padding:12px 16px calc(12px + env(safe-area-inset-bottom)); }
-  .db-share-status:empty{ display:none; }
-}
 
 
 /* برنامه‌ی لیستی در «برنامه‌های امروز» — آیتم‌ها با همون تیک داشبورد (TickButton) */
