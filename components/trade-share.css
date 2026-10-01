@@ -1,0 +1,36 @@
+/* اشتراک کارنامه‌ی ترید (components/TradeSharePanel.tsx) — روی همون پنجره‌ی
+   اشتراک داشبورد (.db-share-*، app/dashboard/dashboard.css) سوار می‌شه و فقط
+   ردیف انتخاب‌ها رو اضافه می‌کنه. هیچ بک‌گراند تازه‌ای نداره. */
+.ts-root{ overflow-y:auto; }
+.ts-share{
+  /* سه ردیف انتخاب (حدود 160px) بالای تصویر هم باید جا بشن */
+  --share-w:min(440px, max(250px, calc((100vh - 32px - 300px) * .8)));
+  --share-w:min(440px, max(250px, calc((100dvh - 32px - 300px - env(safe-area-inset-top) - env(safe-area-inset-bottom)) * .8)));
+  gap:10px; margin:auto 0;
+}
+.ts-share .db-share-close{ margin-bottom:-6px; }
+.ts-share .ts-tabs{ width:100%; margin:0; }
+
+.ts-nav{ display:flex; align-items:center; justify-content:space-between; gap:8px; min-height:40px; }
+.ts-nav-btn{ width:38px; height:38px; color:#fff; }
+body[data-theme="light"] .ts-nav-btn{ color:var(--text); }
+.ts-nav-label{
+  flex:1; min-width:0; text-align:center; font-size:13.5px; font-weight:800; color:#fff;
+  white-space:nowrap; overflow:hidden; text-overflow:ellipsis; transition:opacity .2s ease;
+}
+body[data-theme="light"] .ts-nav-label{ color:var(--text); }
+.ts-nav-label.is-dim{ opacity:.55; }
+.ts-nav-skel{ display:inline-block; width:46%; height:14px; border-radius:7px; vertical-align:middle; }
+
+.ts-acc-opt{ display:inline-flex; align-items:center; gap:6px; max-width:100%; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
+.ts-dot{ flex:none; width:8px; height:8px; border-radius:50%; }
+
+.ts-select-wrap .acc-select{ min-height:42px; }
+.ts-select-wrap.has-dot .acc-select{ padding-inline-start:30px; }
+.ts-select-dot{ position:absolute; inset-inline-start:13px; top:50%; transform:translateY(-50%); pointer-events:none; }
+
+.ts-skel{ padding:0; }
+.ts-skel .db-skel{ flex:1; border-radius:5.2% / 4.15%; }
+
+/* ورودی‌ها: آیکون بی‌بک‌گراند ته ردیف عنوان هاب */
+.trade-head-row .trade-hub-share{ margin-inline-start:auto; }
