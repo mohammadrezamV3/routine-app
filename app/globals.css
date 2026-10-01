@@ -4398,7 +4398,10 @@ body[data-theme="light"] .plan-duration-btn, body:not([data-theme="light"]) .pla
   font-family:var(--font-vazir), var(--font-latin), sans-serif; font-size:13px; padding:12px 14px; outline:none;
   min-height:96px; line-height:1.7; resize:none; text-align:start;
 }
-body:not([data-theme="light"]) .exercise-desc-textarea{ background:#0B0C0D; border:1px solid rgba(255,255,255,.08); }
+/* همون ظاهر شیشه‌ای فیلدهای فرم‌های بدنسازی (add-program-glass) — نه مشکی تخت */
+.exercise-desc-textarea{ backdrop-filter:blur(20px) saturate(160%); -webkit-backdrop-filter:blur(20px) saturate(160%); }
+body:not([data-theme="light"]) .exercise-desc-textarea{ background:rgba(255,255,255,.05); border:1px solid rgba(255,255,255,.1); }
+body[data-theme="light"] .exercise-desc-textarea{ background:rgba(255,255,255,.35); border:1px solid rgba(0,0,0,.08); }
 .exercise-desc-textarea:focus{ border-color:var(--accent); }
 .exercise-desc-textarea::placeholder{ color:var(--muted2); }
 
