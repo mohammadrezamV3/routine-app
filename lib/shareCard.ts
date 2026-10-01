@@ -33,23 +33,26 @@ export type ShareCardInput = {
 export const SHARE_W = 1080;
 export const SHARE_H = 1350;
 /** تراکم پیکسل خروجی */
-const SHARE_DPR = 2;
+export const SHARE_DPR = 2;
 /** فتحه/کسره/ضمه/تنوین/تشدید/سکون و الف کوچک */
 const NO_DIACRITICS = /[\u064B-\u0652\u0670]/g;
+/** هیچ اعرابی روی تصویرهای اشتراکی نمیاد — حتی اگه ورودی داشته باشه */
+export const stripDiacritics = (s: string) => s.replace(NO_DIACRITICS, "");
 const W = SHARE_W;
 const H = SHARE_H;
 // کل تصویر خود باکس کارته (بدون حاشیه، قاب یا گوشه‌ی شفاف — پیام‌رسان‌ها آلفا رو
 // سفید/سیاه می‌کنن). محتوا هنوز در مختصات قاب قدیمی (984×1254 از 48,48) چیده
 // می‌شه و با یک مقیاس یکنواخت (CS) وسط کل تصویر می‌شینه — همون تناسب‌ها، بدون برش.
-const CY = 48, CH = H - 96;
-const CS = Math.min(W / (W - 96), H / CH);
+// کارت‌های هم‌خانواده (مثل کارنامه‌ی ترید، lib/tradeShareCard.ts) همین مختصات رو دارن.
+export const CY = 48, CH = H - 96;
+export const CS = Math.min(W / (W - 96), H / CH);
 
-type Palette = {
+export type Palette = {
   bg: string; surface: string; line: string; accent: string; accentRgb: string;
   text: string; muted: string; light: boolean;
 };
 
-function readPalette(): Palette {
+export function readPalette(): Palette {
   const cs = getComputedStyle(document.body);
   const v = (name: string, fb: string) => cs.getPropertyValue(name).trim() || fb;
   const light = document.body.getAttribute("data-theme") === "light";
@@ -65,7 +68,7 @@ function readPalette(): Palette {
   };
 }
 
-function fontStack(): string {
+export function fontStack(): string {
   const cs = getComputedStyle(document.documentElement);
   const vazir = cs.getPropertyValue("--font-vazir").trim();
   const latin = cs.getPropertyValue("--font-latin").trim();
@@ -73,7 +76,7 @@ function fontStack(): string {
 }
 
 /** رنگ هگز یا rgb() → rgba با شفافیت دلخواه (توکن‌های تم هر دو شکل رو دارن) */
-function rgba(color: string, a: number): string {
+export function rgba(color: string, a: number): string {
   const c = color.trim();
   const hex = c.match(/^#?([0-9a-f]{6})$/i);
   if (hex) {
@@ -91,7 +94,7 @@ function rgba(color: string, a: number): string {
 }
 
 /** ترکیب دو رنگ (هگز یا rgb) — t=0 رنگ اول، t=1 رنگ دوم؛ مثل color-mix  سر قوس داشبورد */
-function mixColor(a: string, b: string, t: number): string {
+export function mixColor(a: string, b: string, t: number): string {
   const parse = (c: string) => rgba(c, 1).match(/^rgba\(([\d.]+),([\d.]+),([\d.]+),/)?.slice(1).map(Number) ?? null;
   const x = parse(a), y = parse(b);
   if (!x || !y) return t < 0.5 ? a : b;
@@ -99,7 +102,7 @@ function mixColor(a: string, b: string, t: number): string {
   return `rgb(${m[0]},${m[1]},${m[2]})`;
 }
 
-function roundRect(ctx: CanvasRenderingContext2D, x: number, y: number, w: number, h: number, r: number) {
+export function roundRect(ctx: CanvasRenderingContext2D, x: number, y: number, w: number, h: number, r: number) {
   const rr = Math.min(r, w / 2, h / 2);
   ctx.beginPath();
   ctx.moveTo(x + rr, y);
@@ -233,10 +236,10 @@ function loadImage(src: string): Promise<HTMLImageElement | null> {
   return hit;
 }
 // لوگوی هدر (نشان + اسم برند، همون فایلی که NavDrawer نشون می‌ده) — نسخه‌ی تم فعلی
-const loadLogo = (light: boolean) => loadImage(light ? "/images/logo-lockup-light-theme.webp" : "/images/logo-lockup-dark-theme.png");
+export const loadLogo = (light: boolean) => loadImage(light ? "/images/logo-lockup-light-theme.webp" : "/images/logo-lockup-dark-theme.png");
 
 /** شبکه‌ی نقطه‌های ریز که از وسط به لبه‌ها محو می‌شه */
-function drawDotGrid(ctx: CanvasRenderingContext2D, x: number, y: number, w: number, h: number, p: Palette) {
+export function drawDotGrid(ctx: CanvasRenderingContext2D, x: number, y: number, w: number, h: number, p: Palette) {
   const c = document.createElement("canvas");
   c.width = Math.round(w);
   c.height = Math.round(h);
@@ -267,7 +270,7 @@ function drawDotGrid(ctx: CanvasRenderingContext2D, x: number, y: number, w: num
 // نقطه‌ای، دانه) فقط به تم بستگی دارن نه به محتوا. قبلا با هر تغییر کوچک در
 // پیش‌نمایش از صفر ساخته می‌شدن؛ حالا یک بار برای هر تم/تراکم و بعد فقط کپی.
 const bgCache = new Map<string, HTMLCanvasElement>();
-function backgroundLayer(p: Palette, dpr: number): HTMLCanvasElement {
+export function backgroundLayer(p: Palette, dpr: number): HTMLCanvasElement {
   const key = [dpr, p.light ? 1 : 0, p.bg, p.accent, p.accentRgb].join("|");
   const hit = bgCache.get(key);
   if (hit) return hit;
@@ -326,26 +329,29 @@ export type RenderOpts = {
   target?: HTMLCanvasElement;
 };
 
-export async function renderShareCard(input: ShareCardInput, opts: RenderOpts = {}): Promise<HTMLCanvasElement> {
-  const fonts = fontStack();
-  const f = (weight: number, size: number) => `${weight} ${size}px ${fonts}`;
-  const p = readPalette();
-  const [logo] = await Promise.all([
-    loadLogo(p.light),
-    (async () => {
-      if (!document.fonts) return;
-      try {
-        await Promise.all([document.fonts.load(f(800, 56), "استریک روز"), document.fonts.load(f(600, 30), "Arion 0123")]);
-        await document.fonts.ready;
-      } catch { /* فونت جایگزین هم قابل قبوله */ }
-    })(),
-  ]);
+export type ShareFont = (weight: number, size: number) => string;
 
-  // خروجی با 2 برابر تراکم (2160×2700) — روی صفحه‌های رتینا و بعد از فشرده‌سازی
-  // پیام‌رسان‌ها هم لبه‌ی متن و شیشه تیز می‌مونه. همه‌ی مختصات منطقی (1080×1350).
-  // پیش‌نمایش زنده با dpr=1 رندر می‌شه (یک‌چهارم پیکسل‌ها) — همون صحنه، فقط کم‌تراکم‌تر.
-  const dpr = opts.dpr ?? SHARE_DPR;
-  const canvas = opts.target ?? document.createElement("canvas");
+/** سازنده‌ی رشته‌ی فونت canvas با استک فونت سایت (لاتین اول برای ارقام، بعد وزیرمتن) */
+export function shareFont(): ShareFont {
+  const fonts = fontStack();
+  return (weight: number, size: number) => `${weight} ${size}px ${fonts}`;
+}
+
+/** لود فونت‌ها پیش از کشیدن متن روی canvas؛ شکست لود قابل قبوله (فونت جایگزین) */
+export async function loadShareFonts(f: ShareFont, samples: [string, string] = ["استریک روز", "Arion 0123"]): Promise<void> {
+  if (!document.fonts) return;
+  try {
+    await Promise.all([document.fonts.load(f(800, 56), samples[0]), document.fonts.load(f(600, 30), samples[1])]);
+    await document.fonts.ready;
+  } catch { /* فونت جایگزین هم قابل قبوله */ }
+}
+
+/**
+ * canvas کارت + لایه‌ی پس‌زمینه‌ی شیشه‌ای (کش‌شده) + تبدیل مختصات: بعد از این،
+ * همه‌ی کشیدن‌ها در مختصات منطقی قاب قدیمی (1080×1350 با مقیاس CS حول مرکز).
+ */
+export function beginShareCanvas(p: Palette, dpr: number, target?: HTMLCanvasElement): { canvas: HTMLCanvasElement; ctx: CanvasRenderingContext2D } {
+  const canvas = target ?? document.createElement("canvas");
   if (canvas.width !== W * dpr) canvas.width = W * dpr;
   if (canvas.height !== H * dpr) canvas.height = H * dpr;
   const ctx = canvas.getContext("2d");
@@ -361,36 +367,57 @@ export async function renderShareCard(input: ShareCardInput, opts: RenderOpts = 
   ctx.translate(-W / 2, -H / 2);
   ctx.imageSmoothingEnabled = true;
   ctx.imageSmoothingQuality = "high";
+  return { canvas, ctx };
+}
 
-  const text = (s: string, x: number, y: number, font: string, color: string, align: CanvasTextAlign, dir: CanvasDirection = "rtl", maxW?: number) => {
+export type ShareTextFn = (s: string, x: number, y: number, font: string, color: string, align: CanvasTextAlign, dir?: CanvasDirection, maxW?: number) => void;
+
+/** کشیدن متن روی کارت — اعراب همیشه پاک می‌شه */
+export function shareTextFn(ctx: CanvasRenderingContext2D): ShareTextFn {
+  return (s, x, y, font, color, align, dir = "rtl", maxW) => {
     ctx.font = font;
     ctx.fillStyle = color;
     ctx.textAlign = align;
     ctx.direction = dir;
     ctx.textBaseline = "alphabetic";
     // هیچ اعرابی روی تصویر نمیاد (درخواست صاحب محصول) — حتی اگه ورودی داشته باشه
-    const plain = s.replace(NO_DIACRITICS, "");
+    const plain = stripDiacritics(s);
     if (maxW) ctx.fillText(plain, x, y, maxW);
     else ctx.fillText(plain, x, y);
   };
+}
 
-  // خط‌های داخل کارت روی شیشه — نیمه‌شفاف، نه رنگ ثابت خط سطح‌ها
-  const hair = p.light ? "rgba(0,0,0,.09)" : "rgba(255,255,255,.12)";
+/** خط‌های داخل کارت روی شیشه — نیمه‌شفاف، نه رنگ ثابت خط سطح‌ها */
+export const shareHair = (p: Palette) => (p.light ? "rgba(0,0,0,.09)" : "rgba(255,255,255,.12)");
 
-  // ── سربرگ: لوگو + آدرس (چپ)، عنوان + تاریخ (راست) ──
-  const PAD = 104, R = W - PAD, L = PAD;
+/** حاشیه‌ی افقی محتوای کارت (مختصات منطقی) و پایین ناحیه‌ی محتوا */
+export const SHARE_PAD = 104;
+export const SHARE_BOTTOM = CY + CH - 56;
+
+/**
+ * سربرگ مشترک کارت‌ها: لوگو + آدرس + کد دعوت (چپ)، عنوان + زیرعنوان (راست) و
+ * خط جداکننده. خروجی: y خط جداکننده (شروع ناحیه‌ی محتوا).
+ */
+export function drawShareHeader(
+  ctx: CanvasRenderingContext2D,
+  text: ShareTextFn,
+  f: ShareFont,
+  p: Palette,
+  logo: HTMLImageElement | null,
+  h: { title: string; subtitle?: string; inviteCode?: string | null; host: string },
+): number {
+  const PAD = SHARE_PAD, R = W - PAD, L = PAD;
   if (logo) {
     const lh = 66, lw = (logo.naturalWidth / logo.naturalHeight) * lh;
     ctx.drawImage(logo, L, 118, lw, lh);
   } else {
     text("ARION", L, 172, f(900, 52), p.accent, "left", "ltr");
   }
-  const host = typeof window !== "undefined" ? window.location.host.replace(/^www\./, "") : "";
-  text(host, L, 232, f(600, 28), p.muted, "left", "ltr");
-  if (input.inviteCode) {
+  text(h.host, L, 232, f(600, 28), p.muted, "left", "ltr");
+  if (h.inviteCode) {
     ctx.font = f(800, 26);
     ctx.direction = "ltr";
-    const codeW = ctx.measureText(input.inviteCode).width;
+    const codeW = ctx.measureText(h.inviteCode).width;
     ctx.direction = "rtl";
     ctx.font = f(700, 24);
     const labW = ctx.measureText("کد دعوت").width;
@@ -399,21 +426,102 @@ export async function renderShareCard(input: ShareCardInput, opts: RenderOpts = 
     ctx.lineWidth = 2;
     ctx.strokeStyle = `rgba(${p.accentRgb},.55)`;
     ctx.stroke();
-    text(input.inviteCode, L + 20, pillY + 32, f(800, 26), p.accent, "left", "ltr");
+    text(h.inviteCode, L + 20, pillY + 32, f(800, 26), p.accent, "left", "ltr");
     text("کد دعوت", L + pillW - 20, pillY + 31, f(700, 24), p.muted, "right");
   }
   // عنوان هیچ‌وقت روی لوگو نمی‌افته — عرضش سقف داره
-  text(input.title, R, 170, f(900, 58), p.text, "right", "rtl", 520);
-  if (input.subtitle) text(input.subtitle, R, 244, f(500, 30), p.muted, "right", "rtl", 520);
+  text(h.title, R, 170, f(900, 58), p.text, "right", "rtl", 520);
+  if (h.subtitle) text(h.subtitle, R, 244, f(500, 30), p.muted, "right", "rtl", 520);
 
   // بدون کد دعوت، سربرگ کوتاه‌تره و فضا به محتوا می‌رسه
-  const top = input.inviteCode ? 334 : 290, bottom = CY + CH - 56;
-  ctx.strokeStyle = hair;
+  const top = h.inviteCode ? 334 : 290;
+  ctx.strokeStyle = shareHair(p);
   ctx.lineWidth = 2;
   ctx.beginPath();
   ctx.moveTo(L, top);
   ctx.lineTo(R, top);
   ctx.stroke();
+  return top;
+}
+
+/** آدرس سایت روی کارت (بدون www) */
+export const shareHost = () => (typeof window !== "undefined" ? window.location.host.replace(/^www\./, "") : "");
+
+/**
+ * قوس گرادیانی حلقه — عین GradientArc داشبورد: ریل کم‌رنگ، قوس با درخشش، گرادیان
+ * در طول قوس (دو نیمه) و سر گرد با رنگ همون نقطه. v بین 0 و 1.
+ */
+export function drawGradientArc(ctx: CanvasRenderingContext2D, p: Palette, cx: number, cy: number, r: number, sw: number, value: number, colors: [string, string]) {
+  ctx.lineCap = "round";
+  ctx.lineWidth = sw;
+  ctx.strokeStyle = rgba(colors[0], 0.15);
+  ctx.beginPath();
+  ctx.arc(cx, cy, r, 0, Math.PI * 2);
+  ctx.stroke();
+  const v = Math.max(0, Math.min(1, value));
+  if (v > 0.001) {
+    const top0 = -Math.PI / 2;
+    // درخشش یک بار برای کل قوس (نه جدا برای هر نیمه — سایه‌ی نیمه‌ی دوم روی
+    // محل اتصال یک درز می‌انداخت)؛ خود قوس گرادیانی بدون سایه روش کشیده می‌شه
+    ctx.save();
+    ctx.shadowColor = rgba(colors[1], 0.55);
+    ctx.shadowBlur = 24;
+    ctx.strokeStyle = mixColor(colors[0], colors[1], 0.5);
+    ctx.beginPath();
+    ctx.arc(cx, cy, r, top0, top0 + Math.PI * 2 * v);
+    ctx.stroke();
+    ctx.restore();
+    ctx.save();
+    // گرادیان در طول قوس، عین GradientArc داشبورد: نیمه‌ی اول از رنگ اول تا
+    // میانه (بالا→پایین)، نیمه‌ی دوم از میانه تا رنگ دوم (پایین→بالا)
+    const mid = mixColor(colors[0], colors[1], 0.5);
+    const g1 = ctx.createLinearGradient(cx, cy - r, cx, cy + r);
+    g1.addColorStop(0, colors[0]);
+    g1.addColorStop(1, mid);
+    ctx.strokeStyle = g1;
+    ctx.beginPath();
+    ctx.arc(cx, cy, r, top0, top0 + Math.PI * 2 * Math.min(v, 0.5));
+    ctx.stroke();
+    if (v > 0.5) {
+      const g2 = ctx.createLinearGradient(cx, cy + r, cx, cy - r);
+      g2.addColorStop(0, mid);
+      g2.addColorStop(1, colors[1]);
+      ctx.strokeStyle = g2;
+      ctx.beginPath();
+      ctx.arc(cx, cy, r, Math.PI / 2, top0 + Math.PI * 2 * v);
+      ctx.stroke();
+    }
+    ctx.restore();
+    // سر قوس: دایره‌ی کامل با رنگ همون نقطه و سایه‌ی نرم — عین سر حلقه‌ی داشبورد (.db-arc-cap)
+    const end = -Math.PI / 2 + Math.PI * 2 * v;
+    ctx.save();
+    ctx.shadowColor = p.light ? "rgba(80,50,20,.35)" : "rgba(0,0,0,.45)";
+    ctx.shadowBlur = sw * 0.24;
+    ctx.fillStyle = mixColor(colors[0], colors[1], v);
+    ctx.beginPath();
+    ctx.arc(cx + r * Math.cos(end), cy + r * Math.sin(end), sw / 2, 0, Math.PI * 2);
+    ctx.fill();
+    ctx.restore();
+  }
+}
+
+export async function renderShareCard(input: ShareCardInput, opts: RenderOpts = {}): Promise<HTMLCanvasElement> {
+  const f = shareFont();
+  const p = readPalette();
+  const [logo] = await Promise.all([loadLogo(p.light), loadShareFonts(f)]);
+
+  // خروجی با 2 برابر تراکم (2160×2700) — روی صفحه‌های رتینا و بعد از فشرده‌سازی
+  // پیام‌رسان‌ها هم لبه‌ی متن و شیشه تیز می‌مونه. همه‌ی مختصات منطقی (1080×1350).
+  // پیش‌نمایش زنده با dpr=1 رندر می‌شه (یک‌چهارم پیکسل‌ها) — همون صحنه، فقط کم‌تراکم‌تر.
+  const dpr = opts.dpr ?? SHARE_DPR;
+  const { canvas, ctx } = beginShareCanvas(p, dpr, opts.target);
+  const text = shareTextFn(ctx);
+  const hair = shareHair(p);
+
+  // ── سربرگ: لوگو + آدرس (چپ)، عنوان + تاریخ (راست) ──
+  const R = W - SHARE_PAD, L = SHARE_PAD;
+  const top = drawShareHeader(ctx, text, f, p, logo, { title: input.title, subtitle: input.subtitle, inviteCode: input.inviteCode, host: shareHost() });
+  const bottom = SHARE_BOTTOM;
 
   const b = input.body;
 
@@ -427,57 +535,7 @@ export async function renderShareCard(input: ShareCardInput, opts: RenderOpts = 
     const cx = W / 2, cy = top + areaH / 2 + 10;
     b.items.forEach((it, i) => {
       const r = outer - sw / 2 - i * (sw + gap);
-      ctx.lineCap = "round";
-      ctx.lineWidth = sw;
-      ctx.strokeStyle = rgba(it.colors[0], 0.15);
-      ctx.beginPath();
-      ctx.arc(cx, cy, r, 0, Math.PI * 2);
-      ctx.stroke();
-      const v = Math.max(0, Math.min(1, it.value));
-      if (v > 0.001) {
-        const top0 = -Math.PI / 2;
-        // درخشش یک بار برای کل قوس (نه جدا برای هر نیمه — سایه‌ی نیمه‌ی دوم روی
-        // محل اتصال یک درز می‌انداخت)؛ خود قوس گرادیانی بدون سایه روش کشیده می‌شه
-        ctx.save();
-        ctx.shadowColor = rgba(it.colors[1], 0.55);
-        ctx.shadowBlur = 24;
-        ctx.strokeStyle = mixColor(it.colors[0], it.colors[1], 0.5);
-        ctx.beginPath();
-        ctx.arc(cx, cy, r, top0, top0 + Math.PI * 2 * v);
-        ctx.stroke();
-        ctx.restore();
-        ctx.save();
-        // گرادیان در طول قوس، عین GradientArc داشبورد: نیمه‌ی اول از رنگ اول تا
-        // میانه (بالا→پایین)، نیمه‌ی دوم از میانه تا رنگ دوم (پایین→بالا)
-        const mid = mixColor(it.colors[0], it.colors[1], 0.5);
-        const g1 = ctx.createLinearGradient(cx, cy - r, cx, cy + r);
-        g1.addColorStop(0, it.colors[0]);
-        g1.addColorStop(1, mid);
-        ctx.strokeStyle = g1;
-        ctx.beginPath();
-        ctx.arc(cx, cy, r, top0, top0 + Math.PI * 2 * Math.min(v, 0.5));
-        ctx.stroke();
-        if (v > 0.5) {
-          const g2 = ctx.createLinearGradient(cx, cy + r, cx, cy - r);
-          g2.addColorStop(0, mid);
-          g2.addColorStop(1, it.colors[1]);
-          ctx.strokeStyle = g2;
-          ctx.beginPath();
-          ctx.arc(cx, cy, r, Math.PI / 2, top0 + Math.PI * 2 * v);
-          ctx.stroke();
-        }
-        ctx.restore();
-        // سر قوس: دایره‌ی کامل با رنگ همون نقطه و سایه‌ی نرم — عین سر حلقه‌ی داشبورد (.db-arc-cap)
-        const end = -Math.PI / 2 + Math.PI * 2 * v;
-        ctx.save();
-        ctx.shadowColor = p.light ? "rgba(80,50,20,.35)" : "rgba(0,0,0,.45)";
-        ctx.shadowBlur = sw * 0.24;
-        ctx.fillStyle = mixColor(it.colors[0], it.colors[1], v);
-        ctx.beginPath();
-        ctx.arc(cx + r * Math.cos(end), cy + r * Math.sin(end), sw / 2, 0, Math.PI * 2);
-        ctx.fill();
-        ctx.restore();
-      }
+      drawGradientArc(ctx, p, cx, cy, r, sw, it.value, it.colors);
     });
     // مرکز: شعله + تعداد روزهای استریک
     const inner = outer - n * (sw + gap);
