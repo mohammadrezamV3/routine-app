@@ -34,7 +34,7 @@ import type { DailyRecord } from "@/lib/storage";
 import { useLockBodyScroll } from "@/lib/useLockBodyScroll";
 import { useMyInvite } from "@/lib/invite";
 import { REFERRAL_DISCOUNT_PERCENT } from "@/lib/referral";
-import { canvasToBlob, renderShareCard, shareText, type ShareCardInput } from "@/lib/shareCard";
+import { canvasToBlob, prepareShareBackground, renderShareCard, shareText, type ShareCardInput } from "@/lib/shareCard";
 import { useImageShare } from "@/lib/useImageShare";
 import { heroRings, type HeroRing } from "./DashboardHero";
 import { SegmentedTabs } from "./SegmentedTabs";
@@ -103,7 +103,8 @@ function PreviewSkeleton({ kind }: { kind: Kind }) {
   );
 }
 
-type Card = { key: string; blob: Blob; url: string };
+type FullCard = { key: string; blob: Blob };
+type IdleWindow = Window & { requestIdleCallback?: (cb: () => void, o?: { timeout: number }) => number; cancelIdleCallback?: (id: number) => void };
 
 export function DashboardShare({
   open,
@@ -216,47 +217,89 @@ export function DashboardShare({
   const inputRef = useRef(input);
   inputRef.current = input;
 
-  // پیش‌نمایش زنده — کمی تاخیر تا چند تغییر پشت‌سرهم یک رندر بشن. blob هر
-  // رندر با کلید همون ورودی نگه داشته می‌شه و همون می‌ره، نه یه ساخت تازه.
-  const [card, setCard] = useState<Card | null>(null);
-  const cardRef = useRef<Card | null>(null);
+  // ── کارایی ──
+  // قبلا هر تغییر کل کارت رو با تراکم 2 (2160×2700) از صفر می‌ساخت، بعد PNG
+  // چندمگابایتی encode و دوباره به‌صورت <img> decode می‌کرد — همه روی ترد اصلی،
+  // که مودال و سوییچ‌ها رو لگ می‌کرد. حالا:
+  //  • پیش‌نمایش مستقیم روی همین <canvas> با تراکم 1 (یک‌چهارم پیکسل، بدون encode/decode)
+  //  • پس‌زمینه‌ی شیشه‌ای سنگین یک بار برای هر تم کش می‌شه (lib/shareCard.ts)
+  //  • اولین رندر بعد از انیمیشن بازشدن، تا باز شدن نرم بمونه
+  //  • blob کامل 2× (که navigator.share باید از *قبل* داشته باشه) در دو نوبت بیکاری
+  //    جدا ساخته می‌شه — اول پس‌زمینه، بعد محتوا + PNG — و با کلید ورودی نگه داشته می‌شه
+  const canvasRef = useRef<HTMLCanvasElement | null>(null);
+  const openedAt = useRef(0);
+  const shownKey = useRef<string | null>(null);
+  const [previewKey, setPreviewKey] = useState<string | null>(null);
+  const fullRef = useRef<FullCard | null>(null);
+  const [full, setFull] = useState<FullCard | null>(null);
   const [renderErr, setRenderErr] = useState(false);
   const [attempt, setAttempt] = useState(0);
   useEffect(() => {
+    if (open) openedAt.current = performance.now();
+    else { shownKey.current = null; setPreviewKey(null); }
+  }, [open]);
+  // پس‌زمینه‌ی پیش‌نمایش (1×) از قبل، در زمان بیکاری بعد از لود داشبورد
+  useEffect(() => {
+    const w = window as IdleWindow;
+    const run = () => { try { prepareShareBackground(1); } catch { /* موقع باز شدن ساخته می‌شه */ } };
+    if (w.requestIdleCallback) { const id = w.requestIdleCallback(run, { timeout: 6000 }); return () => w.cancelIdleCallback?.(id); }
+    const t = window.setTimeout(run, 3000);
+    return () => clearTimeout(t);
+  }, []);
+  useEffect(() => {
     const inp = inputRef.current;
     if (!open || !inputKey || !inp) return;
-    if (cardRef.current?.key === inputKey) return; // همین الان آماده‌ست (مثلا بازکردن دوباره)
     let alive = true;
     setRenderErr(false);
+    const w = window as IdleWindow;
+    const later = (fn: () => void) => (w.requestIdleCallback ? w.requestIdleCallback(fn, { timeout: 500 }) : window.setTimeout(fn, 0));
+    // اولین بار: صبر تا انیمیشن مودال (280ms) تموم بشه؛ بعدش فقط کمی debounce
+    const wait = shownKey.current === null ? Math.max(0, 300 - (performance.now() - openedAt.current)) : 140;
     const t = setTimeout(async () => {
+      const target = canvasRef.current;
+      if (!target) return;
       try {
-        const blob = await canvasToBlob(await renderShareCard(inp));
+        await renderShareCard(inp, { dpr: 1, target });
         if (!alive) return;
-        const next = { key: inputKey, blob, url: URL.createObjectURL(blob) };
-        const prev = cardRef.current;
-        cardRef.current = next;
-        setCard(next);
-        // آدرس قبلی بعد از نشستن تصویر تازه آزاد می‌شه، نه قبلش
-        if (prev) setTimeout(() => URL.revokeObjectURL(prev.url), 500);
+        shownKey.current = inputKey;
+        setPreviewKey(inputKey);
       } catch {
-        if (alive) setRenderErr(true);
+        if (alive) { setRenderErr(true); shownKey.current = null; setPreviewKey(null); }
+        return;
       }
-    }, cardRef.current ? 140 : 0);
+      if (fullRef.current?.key === inputKey) return; // همین الان آماده‌ست (مثلا بازکردن دوباره)
+      later(() => {
+        if (!alive) return;
+        try { prepareShareBackground(); } catch { /* رندر کامل خودش می‌سازه */ }
+        later(async () => {
+          if (!alive) return;
+          try {
+            const blob = await canvasToBlob(await renderShareCard(inp));
+            if (!alive) return;
+            fullRef.current = { key: inputKey, blob };
+            setFull(fullRef.current);
+          } catch {
+            if (alive) setRenderErr(true);
+          }
+        });
+      });
+    }, wait);
     return () => { alive = false; clearTimeout(t); };
   }, [open, inputKey, attempt]);
-  useEffect(() => () => { if (cardRef.current) URL.revokeObjectURL(cardRef.current.url); }, []);
 
-  const ready = !!card && card.key === inputKey && !renderErr;
+  const ready = !!full && full.key === inputKey && !renderErr;
   const rendering = !!inputKey && !ready && !renderErr;
+  const shown = previewKey !== null;
+  const stale = shown && previewKey !== inputKey;
 
   const { canShare, phase, result, share, reset } = useImageShare();
   useEffect(() => { if (!open) reset(); }, [open, reset]);
 
   function doShare() {
-    if (!ready || !card) return;
+    if (!ready || !full) return;
     const lead = streak ? `${faNum(streak)} روز پشت‌سرهم روتینم رو کامل کردم 🔥` : "امروزم توی آریون 💪";
     const inv = invite && opts.invite ? { code: invite.code, url: invite.url, percent: REFERRAL_DISCOUNT_PERCENT } : null;
-    share(card.blob, `arion-${routine.todayIso}.png`, "فعالیت امروز", shareText(lead, inv));
+    share(full.blob, `arion-${routine.todayIso}.png`, "فعالیت امروز", shareText(lead, inv));
   }
 
   // ── موبایل: برگه‌ی پایینی با کشیدن به پایین بسته می‌شه ──
@@ -372,14 +415,17 @@ export function DashboardShare({
                     <p>ساخت تصویر ممکن نشد</p>
                     <button type="button" className="account-outline-btn" onClick={() => setAttempt((n) => n + 1)}>تلاش دوباره</button>
                   </div>
-                ) : card ? (
-                  <>
-                    {/* eslint-disable-next-line @next/next/no-img-element */}
-                    <img src={card.url} alt="پیش‌نمایش تصویر اشتراکی" className={rendering ? "is-dim" : undefined} />
-                    {rendering && <span className="db-share-preview-spin"><Spinner size={18} /></span>}
-                  </>
                 ) : (
-                  <PreviewSkeleton kind={opts.kind} />
+                  <>
+                    <canvas
+                      ref={canvasRef}
+                      className={`db-share-canvas${shown ? "" : " is-hidden"}${stale ? " is-dim" : ""}`}
+                      role="img"
+                      aria-label="پیش‌نمایش تصویر اشتراکی"
+                    />
+                    {!shown && <PreviewSkeleton kind={opts.kind} />}
+                    {stale && <span className="db-share-preview-spin"><Spinner size={18} /></span>}
+                  </>
                 )}
               </div>
 

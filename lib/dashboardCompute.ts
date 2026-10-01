@@ -138,7 +138,7 @@ export function sparkPath(values: number[], w: number, h: number, pad = 4): { li
   const y = (v: number) => pad + (h - pad * 2) * (1 - (v - min) / range);
   const pts = values.map((v, i) => ({ x: i * step, y: y(v) }));
   const r = (n: number) => Math.round(n * 100) / 100;
-  // منحنی مونوتون (Fritsch–Carlson، همون curveMonotoneX ِ d3): روزهای بی‌تغییر
+  // منحنی مونوتون (Fritsch–Carlson، همون curveMonotoneX  d3): روزهای بی‌تغییر
   // صاف می‌مونن و بین دو نقطه هیچ برآمدگی/فرورفتگی ساختگی نیست. قبلا هر پاره
   // یک S جدا بود (کنترل‌پوینت افقی وسط) و منحنی سرمایه با روزهای صاف و پرش‌های
   // ناگهانی پله‌پله و کج دیده می‌شد.

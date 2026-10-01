@@ -888,6 +888,10 @@ body[data-theme="light"] .db-share-root{ background:rgba(60,40,20,.28); }
 }
 .db-share-preview img{ display:block; width:100%; height:100%; object-fit:contain; transition:opacity .2s ease; }
 .db-share-preview img.is-dim{ opacity:.6; }
+/* پیش‌نمایش زنده مستقیم روی canvas (بدون encode/decode  PNG) */
+.db-share-canvas{ grid-area:1 / 1; display:block; width:100%; height:100%; object-fit:contain; transition:opacity .2s ease; }
+.db-share-canvas.is-hidden{ visibility:hidden; }
+.db-share-canvas.is-dim{ opacity:.6; }
 .db-share-preview-spin{ position:absolute; top:12px; left:12px; display:grid; place-items:center; pointer-events:none; }
 .db-share-empty{ padding:24px; text-align:center; font-size:13px; line-height:1.9; color:var(--muted); }
 .db-share-fail{ display:flex; flex-direction:column; align-items:center; gap:12px; padding:24px; text-align:center; }

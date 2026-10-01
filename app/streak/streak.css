@@ -80,13 +80,12 @@
 .stk-week{ display:grid; grid-template-columns:repeat(7, 1fr); gap:6px; }
 .stk-day{ display:flex; flex-direction:column; align-items:center; gap:4px; }
 .stk-day em{ font-style:normal; font-size:11px; font-weight:700; color:var(--muted); }
-.stk-day-icon{ width:34px; height:34px; border-radius:12px; display:flex; align-items:center; justify-content:center; border:1.5px solid color-mix(in srgb, var(--muted) 25%, transparent); }
+.stk-day-icon{ width:34px; height:34px; border-radius:50%; display:flex; align-items:center; justify-content:center; border:1.5px solid color-mix(in srgb, var(--muted) 25%, transparent); }
 .stk-day.is-done .stk-day-icon{ border-color:color-mix(in srgb, var(--stk-b) 60%, transparent); color:var(--stk-b); }
 .stk-day.is-done .stk-mini-flame{ width:18px; height:18px; filter:drop-shadow(0 0 6px var(--stk-b)); }
 .stk-day.is-today .stk-day-icon{ border-style:dashed; border-color:var(--stk-b); }
 .stk-day.is-miss .stk-day-icon{ border-color:color-mix(in srgb, #ef4444 40%, transparent); }
 .stk-day-rest{ width:8px; height:2px; border-radius:2px; background:color-mix(in srgb, var(--muted) 45%, transparent); }
-.stk-day-ring{ width:18px; height:18px; border-radius:50%; background:conic-gradient(var(--stk-b) calc(var(--p) * 1%), color-mix(in srgb, var(--muted) 22%, transparent) 0); -webkit-mask:radial-gradient(circle, transparent 5px, #000 5.5px); mask:radial-gradient(circle, transparent 5px, #000 5.5px); }
 
 /* ── ردیف کارت‌ها ── */
 .stk-grid{ display:grid; gap:var(--db-gap); grid-template-columns:1fr; }

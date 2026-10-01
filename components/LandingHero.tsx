@@ -236,8 +236,8 @@ export function LandingHero() {
           <ul className={`lh-trust lh-rise ${t.muted}`} style={{ "--i": 4 } as React.CSSProperties}>
             <li><Sparkles size={14} aria-hidden="true" /> 14 روز رایگان</li>
             <li><Sparkles size={14} aria-hidden="true" /> 3 روز بدنسازی، کالری‌شمار و ژورنال ترید</li>
-            <li><ShieldCheck size={15} aria-hidden="true" /> بدون ثبت‌نام هم می‌توانی امتحان کنی</li>
-            <li><Lock size={14} aria-hidden="true" /> گفت‌وگوی مربی با رمزگذاری سرتاسری</li>
+            <li><ShieldCheck size={15} aria-hidden="true" /> روی گوشی و کامپیوتر</li>
+            <li><Lock size={14} aria-hidden="true" /> چت‌های سرتاسر رمزنگاری‌شده</li>
           </ul>
 
           {/* لینک‌های داخلی به صفحه‌های دسته — هم برای بازدیدکننده، هم انتقال اعتبار صفحه‌ی اصلی */}
