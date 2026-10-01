@@ -15,6 +15,7 @@ import { focusNextOnEnter } from "@/lib/formNav";
 import { useLockBodyScroll } from "@/lib/useLockBodyScroll";
 import { TickOption } from "./TickOption";
 import { RoutineChecklistEditor } from "./RoutineChecklistEditor";
+import { RoutineTagField } from "./RoutineTagField";
 import type { ChecklistItem } from "@/lib/routineChecklist";
 
 const now = new Date();
@@ -431,9 +432,12 @@ export function AddProgramForm({
 
           {step === "details" && (
             <>
-              <label className="exercise-wizard-title">میزان اهمیت و تگ</label>
+              <label className="exercise-wizard-title">تگ و میزان اهمیت</label>
 
-              <label>میزان اهمیت</label>
+              <label htmlFor="addProgramTag">تگ (اختیاری)</label>
+              <RoutineTagField id="addProgramTag" value={tag} onChange={setTag} occurrences={scheduleOpts.customOccurrences} />
+
+              <label style={{ marginTop: 14, display: "block" }}>میزان اهمیت</label>
               <SegmentedTabs
                 active={importance}
                 onChange={setImportance}
@@ -442,16 +446,6 @@ export function AddProgramForm({
               <div className="section-note" style={{ marginTop: 8 }}>
                 نکته: فقط برنامه‌هایی که میزان اهمیت آن‌ها زیاد یا خیلی زیاد باشد توسط اعلان به شما اطلاع داده خواهد شد.
               </div>
-
-              <label htmlFor="addProgramTag" style={{ marginTop: 14, display: "block" }}>تگ (اختیاری)</label>
-              <input
-                id="addProgramTag"
-                type="text"
-                className="wsearch-newform-name"
-                placeholder="درس، ورزش، کار…"
-                value={tag}
-                onChange={(e) => setTag(e.target.value)}
-              />
 
               {/* دکمه‌ی ثبت طبق درخواست کاربر دیگه یه آیکون تیک دایره‌ای
                   نیست — یک دکمه‌ی تمام‌عرض متن‌دار با حالت لودینگ/موفقیت/خطا

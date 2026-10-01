@@ -429,10 +429,7 @@ body[data-theme="light"] .db-page .db-tl-item.is-done .db-tl-node{ background:li
 .db-tl-name{ flex:1; min-width:0; font-size:13.5px; font-weight:800; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
 a.db-tl-name{ text-decoration:underline dotted color-mix(in srgb, var(--ring-1a) 60%, transparent); text-underline-offset:4px; }
 .db-tl-item.is-done .db-tl-name{ text-decoration:line-through; text-decoration-color:color-mix(in srgb, var(--ring-1a) 70%, transparent); color:var(--muted); }
-.db-tl-flag{ display:inline-flex; flex-shrink:0; }
-.db-tl-flag svg{ width:13px; height:13px; }
-.db-tl-flag.is-veryHigh{ color:var(--ring-over); }
-.db-tl-flag.is-high{ color:var(--tl-warn); }
+.db-tl-tag{ flex-shrink:0; font-weight:700; background:transparent; }
 .db-tl-meta{ display:flex; align-items:center; gap:8px; flex-wrap:wrap; }
 .db-tl-state{ display:inline-flex; align-items:center; gap:5px; font-size:10.5px; font-weight:800; color:var(--muted); }
 .db-tl-state i{ width:6px; height:6px; border-radius:50%; background:var(--muted2); }
