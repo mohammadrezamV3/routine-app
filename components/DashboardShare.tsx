@@ -70,7 +70,7 @@ function resolveColor(v: string): string {
 }
 
 /** بخش اشتراک هیچ اعرابی نداره — برچسب‌های مشترک با هیرو (مثل «تمرین امروز») هم تمیز می‌شن */
-const plain = (t: string) => t.replace(/[ً-ْٰ]/g, "");
+const plain = (t: string) => t.replace(/[\u064B-\u0652\u0670]/g, "");
 
 function isoOf(d: Date) {
   return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}-${String(d.getDate()).padStart(2, "0")}`;
