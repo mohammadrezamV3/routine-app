@@ -12,7 +12,7 @@ import { getSetting } from "@/lib/storage";
 import { rowActivateProps } from "@/lib/rowActivate";
 import { CAL_SYSTEM_KEY, type CalSystem } from "@/lib/tradeTypes";
 import { TradeDetailDrawer } from "./TradeDetailDrawer";
-import { cumulative, compactNumber } from "@/lib/dashboardCompute";
+import { compactNumber, equityPoints } from "@/lib/dashboardCompute";
 import type { DashTrade } from "@/lib/dashboardTypes";
 import { BentoCard, CardHead, CountUp, EmptyState, Meter, Skel, Sparkline } from "./DashboardKit";
 
@@ -46,7 +46,7 @@ function TradeBody({ t }: { t: DashTrade }) {
     if (!openTrade) return;
     getSetting<CalSystem>(CAL_SYSTEM_KEY, "jalali").then(setCalSystem).catch(() => {});
   }, [openTrade]);
-  const equity = [0, ...cumulative(t.daily30)];
+  const equity = equityPoints(t.daily30);
   const flat = t.daily30.every((v) => v === 0);
   return (
     <div className="db-trade-body">
