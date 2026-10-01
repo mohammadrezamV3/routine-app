@@ -3,7 +3,7 @@
 import { useEffect, useRef, useState } from "react";
 import { faNum } from "@/lib/jalali";
 import { signIn, getSession } from "next-auth/react";
-import { PWA_OFFER_EVENT, PWA_OFFER_KEY } from "@/components/PwaProvider";
+import { PWA_OFFER_KEY } from "@/components/PwaProvider";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
 import { User, AtSign, Lock, Phone } from "lucide-react";
@@ -12,7 +12,7 @@ import { AuthBackButton, AuthBrandMark } from "@/components/AuthChrome";
 import { PasswordVisibilityToggle } from "@/components/PasswordVisibilityToggle";
 import { isValidIranPhone, isValidUsername, validatePassword, isValidPersianName, digitsOnly } from "@/lib/validate";
 import { passwordTier, PASSWORD_TIER_LABELS, PASSWORD_TIER_ORDER, isPasswordAcceptable } from "@/lib/passwordStrength";
-import { resolveHomePath } from "@/lib/homePath";
+import { loginAndRedirect } from "@/lib/loginRedirect";
 import { captureInviteRef } from "@/lib/invite";
 import { TickButton } from "@/components/TickButton";
 
@@ -215,18 +215,21 @@ export default function SignupPage() {
     // به خروجی signIn تنها اکتفا نکن — نشست واقعی را از سرور تایید کن.
     // (چرا: همان بازنویسی پاسخ با پروکسی که در صفحه‌ی ورود توضیح داده شده.)
     const session = await getSession();
-    setLoading(false);
-    // کلید رمزگذاری سرتاسری منتور از همان ابتدا، بی‌صدا (lib/e2ee/client.ts؛ رمز فقط روی دستگاه)
-    const newUserId = (session?.user as any)?.id;
-    if (newUserId) void import("@/lib/e2ee/client").then((m) => m.primeE2EEFromPassword(newUserId, password)).catch(() => {});
+    const newUserId = (session?.user as any)?.id as string | undefined;
+    if (!newUserId) {
+      setLoading(false);
+      router.push("/auth/login");
+      return;
+    }
     // تنها جایی که پیشنهاد نصب PWA مجاز است: بلافاصله بعد از ثبت‌نام.
-    // (PwaProvider فقط با دیدن همین کلید بنر را نشان می‌دهد و بعدش
-    // برای همیشه خاموش می‌شود — نگاه کن به components/PwaProvider.tsx.)
+    // (PwaProvider همین کلید را بعد از لود صفحه‌ی مقصد می‌بیند و بنر را نشان
+    // می‌دهد و بعدش برای همیشه خاموش می‌شود — نگاه کن به components/PwaProvider.tsx.)
     try {
       localStorage.setItem(PWA_OFFER_KEY, "1");
-      window.dispatchEvent(new Event(PWA_OFFER_EVENT));
     } catch { /* حالت ناشناس */ }
-    router.push((session?.user as any)?.id ? await resolveHomePath() : "/auth/login");
+    // پاک‌کردن کش‌های حالت مهمان، کلید رمزگذاری سرتاسری منتور (رمز فقط روی دستگاه)
+    // و ناوبری کامل تا سشن سمت سرور هم دیده بشه — lib/loginRedirect.ts
+    void loginAndRedirect({ userId: newUserId, password });
   }
 
   return (

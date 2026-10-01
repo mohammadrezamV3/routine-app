@@ -1,10 +1,10 @@
 "use client";
 
-import { useEffect } from "react";
+import { useEffect, useRef } from "react";
 import { SessionProvider, useSession } from "next-auth/react";
 import type { Session } from "next-auth";
 import { publishSessionState } from "@/lib/storage";
-import { setAuthHintCookie, clearAuthHintCookie } from "@/lib/preload";
+import { setAuthHintCookie, clearAuthHintCookie, AUTH_HINT_COOKIE } from "@/lib/preload";
 import { LiveSyncToaster } from "./LiveSyncToaster";
 
 // refetchOnWindowFocus خاموشه — این اپ نیازی به رفرش سشن با هر بار برگشتن
@@ -23,12 +23,33 @@ import { LiveSyncToaster } from "./LiveSyncToaster";
  *
  * چیزی رندر نمی‌کنه.
  */
+/**
+ * هویت این تب بدون ناوبری کامل عوض شده (ورود/خروج در یک تب دیگه که با پیام
+ * broadcast به next-auth این‌جا رسیده)؟ layout و صفحه‌های سرور هنوز با هویت قبلی
+ * رندر شدن، پس یک ریلود کامل — همون کاری که lib/loginRedirect.ts و lib/logout.ts
+ * برای خود تب انجام می‌دن. صفحه‌های /auth/* و وقتی خود این تب وسط ورود/خروجه
+ * مستثنان (اون‌ها خودشون ناوبری کامل می‌کنن).
+ */
+function identityHandledHere(): boolean {
+  if (location.pathname.startsWith("/auth/")) return true;
+  const el = document.documentElement;
+  return el.hasAttribute("data-logging-in") || el.hasAttribute("data-logging-out");
+}
+
 function SessionBridge() {
   const { status } = useSession();
+  // آخرین وضعیت حل‌شده (نه loading) — برای تشخیص عوض‌شدن هویت در همین تب
+  const lastAuthed = useRef<boolean | null>(null);
 
   useEffect(() => {
     if (status === "loading") return;
     const authed = status === "authenticated";
+    const prev = lastAuthed.current;
+    lastAuthed.current = authed;
+    if (prev !== null && prev !== authed && !identityHandledHere()) {
+      window.location.reload();
+      return;
+    }
     publishSessionState(authed);
     // کوکی راهنمای پیش‌درخواست رو با وضعیت واقعی سشن هم‌گام نگه می‌داره.
     // این‌جا (نه فقط توی دکمه‌های ورود/خروج) انجام می‌شه تا دو حالت لبه هم
@@ -38,6 +59,19 @@ function SessionBridge() {
     if (authed) setAuthHintCookie();
     else clearAuthHintCookie();
   }, [status]);
+
+  // برگشت از bfcache (دکمه‌ی «برگشت» بعد از ورود/خروج): صفحه‌ی منجمد با هویت
+  // قبلی زنده می‌شه بدون این‌که هیچ درخواستی بره. کوکی راهنما همیشه با ورود/خروج
+  // هم‌گامه، پس اگه با وضعیت این صفحه نخونه، صفحه از نو لود می‌شه.
+  useEffect(() => {
+    const onShow = (e: PageTransitionEvent) => {
+      if (!e.persisted || lastAuthed.current === null) return;
+      const hinted = document.cookie.split("; ").some((c) => c === `${AUTH_HINT_COOKIE}=1`);
+      if (hinted !== lastAuthed.current) window.location.reload();
+    };
+    window.addEventListener("pageshow", onShow);
+    return () => window.removeEventListener("pageshow", onShow);
+  }, []);
 
   return null;
 }

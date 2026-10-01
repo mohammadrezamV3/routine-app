@@ -33,7 +33,7 @@ type InstallPromptEvent = Event & {
  */
 export const PWA_OFFER_KEY = "arion-install-offer";
 
-/** ثبت‌نام بعد ست‌کردن کلید این را می‌فرستد (ناوبری کلاینتی mount نمی‌سازد). */
+/** هر جا کلید بدون ناوبری کامل ست شود این رویداد را بفرستد (ثبت‌نام الان با ناوبری کامل می‌رود و لازمش ندارد). */
 export const PWA_OFFER_EVENT = "arion-pwa-offer";
 
 export function PwaProvider() {

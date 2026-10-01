@@ -16,7 +16,9 @@
 // نام این فایل‌ها هش محتواست، پس برای همه‌ی کاربرها یکی‌ست و هیچ‌وقت
 // بیات نمی‌شود (فایل عوض‌شده اسم جدید می‌گیرد).
 
-const VERSION = "v1";
+// v2: صفحه‌هایی که سرور no-store/private فرستاده دیگه کش نمی‌شن؛ بالا بردن نسخه
+// کش صفحه‌های قبلی (که ممکن بود HTML حالت واردشده یا مهمان باشن) رو پاک می‌کنه.
+const VERSION = "v2";
 const SHELL_CACHE = `arion-shell-${VERSION}`;
 const ASSET_CACHE = `arion-assets-${VERSION}`;
 const PAGE_CACHE = `arion-pages-${VERSION}`;
@@ -93,7 +95,11 @@ self.addEventListener("fetch", (event) => {
 async function handleNavigation(request, url) {
   try {
     const response = await fetch(request);
-    if (response.ok && isPublicPage(url.pathname)) {
+    // HTML یک صفحه‌ی «عمومی» هم وقتی layout با کوکی رندر می‌شه برای هر کاربر فرق
+    // داره (سشن اولیه، داده‌ی inline کاربر)؛ سرور برای همین no-store/private
+    // می‌فرسته. کش‌کردنش یعنی بعدا نسخه‌ی حالت مهمان به کاربر واردشده (یا داده‌ی
+    // کاربر قبلی به نفر بعدی) نشون داده بشه — پس به هدر سرور احترام می‌ذاریم.
+    if (response.ok && isPublicPage(url.pathname) && isShareableResponse(response)) {
       const copy = response.clone();
       caches.open(PAGE_CACHE).then((c) => c.put(request, copy)).catch(() => {});
     }
@@ -109,6 +115,11 @@ async function handleNavigation(request, url) {
       headers: { "Content-Type": "text/plain; charset=utf-8" },
     });
   }
+}
+
+function isShareableResponse(response) {
+  const cc = (response.headers.get("cache-control") || "").toLowerCase();
+  return !/(?:^|[\s,])(?:no-store|private)(?:$|[\s,=])/.test(cc);
 }
 
 /** فایل ساکن: اول کش، بعد شبکه (و نتیجه را برای دفعه‌ی بعد نگه می‌دارد) */
