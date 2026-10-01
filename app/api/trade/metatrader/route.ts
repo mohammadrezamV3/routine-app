@@ -3,7 +3,7 @@ import { ModuleKey } from "@prisma/client";
 import { prisma } from "@/lib/prisma";
 import { requireModule } from "@/lib/moduleAccess";
 import {
-  MtPlatform, PAIRING_TTL_MS, generatePairingCode, hashSecret,
+  MtPlatform, PAIRING_TTL_MS, generatePairingCode, hashSecret, summarizeCashflows,
 } from "@/lib/metatrader";
 import { withLiveSync } from "@/lib/realtime";
 
@@ -49,7 +49,30 @@ export async function GET(req: NextRequest) {
   if (!link) return NextResponse.json({ link: null });
 
   const { tokenHash, ...rest } = link;
-  return NextResponse.json({ link: serialize(rest, !!tokenHash) });
+
+  // تطبیق موجودی: موجودی‌ای که ژورنال از روی داده‌های همگام‌شده می‌سازه (موجودی
+  // اولیه + واریز/برداشت + هزینه‌های غیرمعاملاتی + سود خالص معاملات بسته) در
+  // برابر موجودی واقعی که خود EA گزارش داده. اختلاف یعنی تاریخچه کامل نرسیده
+  // (مثلا MT4 با تب Account History غیر از «All History») یا EA قدیمیه.
+  const [acc, pnlAgg, cashRows] = await Promise.all([
+    prisma.tradeAccount.findUnique({ where: { id: accountId }, select: { initialBalance: true } }),
+    prisma.tradeEntry.aggregate({ where: { accountId, status: "CLOSED" }, _sum: { pnl: true } }),
+    prisma.tradeCashflow.groupBy({ by: ["kind"], where: { accountId }, _sum: { amount: true } }),
+  ]);
+  const cf = summarizeCashflows(cashRows.map((c) => ({ kind: c.kind, amount: c._sum.amount ?? 0 })));
+  const tradesPnl = Math.round((pnlAgg._sum.pnl ?? 0) * 100) / 100;
+  const journalBalance = Math.round(((acc?.initialBalance ?? 0) + cf.funding + cf.charges + tradesPnl) * 100) / 100;
+  const mtBalance = typeof link.balance === "number" ? link.balance : null;
+  const reconciliation = {
+    journalBalance,
+    mtBalance,
+    difference: mtBalance === null ? null : Math.round((mtBalance - journalBalance) * 100) / 100,
+    tradesPnl,
+    funding: cf.funding,
+    charges: cf.charges,
+    initialBalance: acc?.initialBalance ?? 0,
+  };
+  return NextResponse.json({ link: serialize(rest, !!tokenHash), reconciliation });
 }
 
 // POST /api/trade/metatrader  { accountId, platform }

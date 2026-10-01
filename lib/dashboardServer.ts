@@ -15,6 +15,7 @@ import { ROUTINE_TRIAL_MS } from "./trial";
 import { prisma } from "./prisma";
 import { FA_WEEKDAY, isoLocal } from "./jalali";
 import { computeExerciseStreak, exerciseDayDone, isRestDay, type ExerciseLogRange } from "./exerciseStats";
+import { summarizeCashflows } from "@/lib/metatrader";
 import { computeTradeStats } from "./tradeAnalytics";
 import { countRowProgress } from "./roadmapPlan";
 import { ensureFreshCalendar } from "./economicCalendar";
@@ -240,8 +241,13 @@ export async function buildTrade({ userId, date, tz }: Ctx): Promise<DashTrade> 
     if (!byAcc.has(r.accountId)) byAcc.set(r.accountId, []);
     byAcc.get(r.accountId)!.push({ status: r.status, pnl: r.pnl, rMultiple: r.rMultiple, openedAt: r.openedAt.toISOString() });
   }
+  // گردش پول متاتریدر (واریز/برداشت/هزینه‌ها) تا موجودی با صفحه‌ی حساب یکی باشه
+  const cashRows = top.length
+    ? await prisma.tradeCashflow.groupBy({ by: ["accountId", "kind"], where: { accountId: { in: top.map((a) => a.id) } }, _sum: { amount: true } })
+    : [];
   res.accounts = top.map((a) => {
-    const s = computeTradeStats((byAcc.get(a.id) ?? []) as any, a);
+    const cf = summarizeCashflows(cashRows.filter((c) => c.accountId === a.id).map((c) => ({ kind: c.kind, amount: c._sum.amount ?? 0 })));
+    const s = computeTradeStats((byAcc.get(a.id) ?? []) as any, { ...a, cashFunding: cf.funding, cashCharges: cf.charges });
     return { id: a.id, name: a.name, color: a.color, currency: a.currency, type: a.type, balance: s.balance, netPnl: s.netPnl, winRate: s.winRate, goalProgress: s.goalProgress };
   });
   return res;

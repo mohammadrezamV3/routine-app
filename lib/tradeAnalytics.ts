@@ -47,7 +47,15 @@ function byOpenedAt(a: StatEntry, b: StatEntry) {
   return new Date(a.openedAt).getTime() - new Date(b.openedAt).getTime();
 }
 
-export function computeTradeStats(entries: StatEntry[], account?: Pick<TradeAccount, "initialBalance" | "goalType" | "goalValue">): TradeStats {
+/** حساب برای آمار: گردش پول غیرمعاملاتی متاتریدر (lib/metatrader.ts → summarizeCashflows) اختیاریه */
+export type StatAccount = Pick<TradeAccount, "initialBalance" | "goalType" | "goalValue"> & {
+  /** واریز − برداشت + اعتبار + بونوس (از EA) */
+  cashFunding?: number | null;
+  /** هزینه/درآمد غیرمعاملاتی: مالیات، کمیسیون حساب، بهره، ... (از EA) */
+  cashCharges?: number | null;
+};
+
+export function computeTradeStats(entries: StatEntry[], account?: StatAccount): TradeStats {
   const closed = entries.filter((e) => e.status === "CLOSED").slice().sort(byOpenedAt);
   const wins = closed.filter((e) => e.pnl > 0);
   const losses = closed.filter((e) => e.pnl < 0);
@@ -73,8 +81,11 @@ export function computeTradeStats(entries: StatEntry[], account?: Pick<TradeAcco
   }
 
   const rValues = closed.map((e) => e.rMultiple).filter((r): r is number => r !== null && r !== undefined);
-  const initialBalance = account?.initialBalance ?? 0;
-  const balance = round2(initialBalance + netPnl);
+  // موجودی = موجودی اولیه‌ی کاربر + واریز/برداشت‌ها + هزینه‌های غیرمعاملاتی + سود
+  // خالص معاملات — همون فرمولی که خود متاتریدر موجودی رو باهاش می‌سازه. پایه‌ی
+  // هدف درصدی هم موجودی اولیه + واریزهاست (هزینه‌ها جزو سرمایه نیستن).
+  const initialBalance = (account?.initialBalance ?? 0) + (account?.cashFunding ?? 0);
+  const balance = round2(initialBalance + (account?.cashCharges ?? 0) + netPnl);
 
   const goalTarget =
     !account || !account.goalValue

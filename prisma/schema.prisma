@@ -239,6 +239,7 @@ model User {
   blockedByUsers         UserBlock[]        @relation("Blocked")
   tradeNotes             TradeNote[]
   tradeMtLinks           TradeMtLink[]
+  tradeCashflows         TradeCashflow[]
   tradeChatMessages      TradeChatMessage[]
   tradeChatReports       TradeChatReport[]  @relation("ChatReporter")
   supportTickets         SupportTicket[]
@@ -1114,6 +1115,7 @@ model TradeAccount {
   notes   TradeNote[]
   tags    TradeTag[]   @relation("TradeAccountTags")
   mtLink  TradeMtLink?
+  cashflows TradeCashflow[]
 
   @@index([userId, archived])
 }
@@ -2679,4 +2681,28 @@ model MentorReportMessage {
 
   @@unique([reportId, messageId])
   @@index([reportId, position])
+}
+
+// گردش پول غیرمعاملاتی یک حساب که EA متاتریدر می‌فرسته: واریز/برداشت/اعتبار/بونوس
+// و هزینه‌های بدون معامله (مالیات، کمیسیون روزانه/ماهانه، بهره، سود سهام، اصلاحیه).
+// بدون این‌ها موجودی ژورنال (موجودی اولیه + سود معاملات) با موجودی واقعی متاتریدر
+// نمی‌خوند. ضدتکرار با (accountId, externalId) مثل معاملات.
+model TradeCashflow {
+  id         String       @id @default(cuid())
+  userId     String
+  user       User         @relation(fields: [userId], references: [id], onDelete: Cascade)
+  accountId  String
+  account    TradeAccount @relation(fields: [accountId], references: [id], onDelete: Cascade)
+  externalId String
+  // DEPOSIT | WITHDRAWAL | CREDIT | BONUS | COMMISSION | FEE | TAX | INTEREST | DIVIDEND | SWAP | CORRECTION | OTHER
+  kind       String
+  // علامت‌دار، به ارز حساب: واریز مثبت، برداشت و هزینه منفی
+  amount     Float
+  occurredAt DateTime
+  comment    String?
+  createdAt  DateTime     @default(now())
+  updatedAt  DateTime     @updatedAt
+
+  @@unique([accountId, externalId])
+  @@index([accountId, occurredAt])
 }

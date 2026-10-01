@@ -6,7 +6,7 @@ import { clampText } from "@/lib/validate";
 import { sessionsAt } from "@/lib/forexSessions";
 import { computeR } from "@/lib/tradeSymbols";
 import {
-  hashSecret, mtTradeToEntryData, mtUpdateData, normalizeMtTrades, normalizeTzOffsetMs,
+  hashSecret, mtTradeToEntryData, mtUpdateData, normalizeMtCashflows, normalizeMtTrades, normalizeTzOffsetMs,
 } from "@/lib/metatrader";
 import { publishDataChanged } from "@/lib/realtime";
 
@@ -136,6 +136,47 @@ export async function POST(req: NextRequest) {
     }
   }
 
+  // ── گردش پول غیرمعاملاتی (واریز/برداشت/مالیات/کمیسیون حساب/...) — EA نسخه‌ی
+  // 1.30 به بعد. بدون این‌ها موجودی ژورنال با موجودی متاتریدر نمی‌خوند.
+  const cashflows = normalizeMtCashflows(body.cashflows);
+  let cashCreated = 0;
+  let cashUpdated = 0;
+  if (cashflows.length) {
+    const toUtc = (d: Date) => (tzOffsetMs ? new Date(d.getTime() - tzOffsetMs) : d);
+    const cfById = new Map(cashflows.map((c) => [c.externalId, c]));
+    const existingCf = await prisma.tradeCashflow.findMany({
+      where: { accountId: link.accountId, externalId: { in: Array.from(cfById.keys()) } },
+      select: { id: true, externalId: true, kind: true, amount: true },
+    });
+    const existingCfMap = new Map(existingCf.map((r) => [r.externalId, r]));
+    const newCf: Prisma.TradeCashflowCreateManyInput[] = [];
+    for (const c of Array.from(cfById.values())) {
+      const row = existingCfMap.get(c.externalId);
+      if (!row) {
+        newCf.push({
+          userId: link.userId, accountId: link.accountId, externalId: c.externalId,
+          kind: c.kind, amount: c.amount, occurredAt: toUtc(c.occurredAt), comment: c.comment,
+        });
+      } else if (row.amount !== c.amount || row.kind !== c.kind) {
+        try {
+          await prisma.tradeCashflow.update({ where: { id: row.id }, data: { kind: c.kind, amount: c.amount, comment: c.comment } });
+          cashUpdated++;
+        } catch (e) {
+          failed++;
+          console.error("[mt/sync] cashflow update failed", link.id, c.externalId, e);
+        }
+      }
+    }
+    if (newCf.length) {
+      try {
+        cashCreated = (await prisma.tradeCashflow.createMany({ data: newCf, skipDuplicates: true })).count;
+      } catch (e) {
+        failed += newCf.length;
+        console.error("[mt/sync] cashflow createMany failed", link.id, e);
+      }
+    }
+  }
+
   const skipped = rawCount - trades.length;
   if (skipped > 0) console.warn(`[mt/sync] ${link.id}: ${skipped} invalid row(s) skipped`);
 
@@ -153,7 +194,10 @@ export async function POST(req: NextRequest) {
   });
 
   // معامله‌ی تازه/به‌روزشده از EA → حساب/ژورنال باز کاربر (روی هر دستگاهی) همون لحظه
-  if (created > 0 || updated > 0) void publishDataChanged(link.userId, ["trade"]);
+  if (created > 0 || updated > 0 || cashCreated > 0 || cashUpdated > 0) void publishDataChanged(link.userId, ["trade"]);
 
-  return NextResponse.json({ ok: true, received: trades.length, created, updated, skipped, failed });
+  return NextResponse.json({
+    ok: true, received: trades.length, created, updated, skipped, failed,
+    cashflows: { received: cashflows.length, created: cashCreated, updated: cashUpdated },
+  });
 }
