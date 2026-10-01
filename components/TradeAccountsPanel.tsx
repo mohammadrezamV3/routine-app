@@ -310,7 +310,8 @@ function AccountRow({
   // سود/زیان حساب می‌شن، فقط خود عدد نمایشی عوض شد.
   const balance = a.summary?.balance ?? a.initialBalance;
   // درصد نسبت به بالانس اولیه — بدون بالانس اولیه معنایی ندارد، پس نشان داده نمی‌شود
-  const pnlPct = a.initialBalance > 0 ? Math.round((netPnl / a.initialBalance) * 1000) / 10 : null;
+  const pctBase = a.initialBalance + (a.cashFunding ?? 0);
+  const pnlPct = pctBase > 0 ? Math.round((netPnl / pctBase) * 1000) / 10 : null;
 
   return (
     <motion.div
