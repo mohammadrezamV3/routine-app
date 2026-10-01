@@ -254,6 +254,11 @@ body[data-theme="light"] .db-hero-phase:not(.is-night){ color:#D98A1E; }
 /* حلقه‌های روز */
 .db-hero-orbit{ grid-area:orbit; display:flex; align-items:center; gap:18px; }
 @media (min-width:640px){ .db-hero-orbit{ flex-direction:column; justify-content:center; gap:14px; } }
+/* تبلت/دسکتاپ: ستون حلقه‌ها دقیقا زیر دکمه‌ی اشتراک (گوشه‌ی بالا-چپ، فیزیکی)
+   می‌افتاد و حلقه‌ی بیرونی بهش می‌چسبید یا روش می‌رفت. فاصله‌ی چپ (فیزیکی، مثل
+   خود دکمه) حلقه‌ها رو از ستون دکمه بیرون می‌بره: 12 + 40 دکمه + فاصله‌ی امن. */
+@media (min-width:640px){ .db-page .db-hero-orbit{ padding-left:48px; } }
+@media (min-width:1024px){ .db-page .db-hero-orbit{ padding-left:42px; } }
 .db-orbit{ position:relative; flex-shrink:0; }
 @media (max-width:639px){ .db-orbit{ transform:scale(.8); transform-origin:right center; margin-inline-end:-30px; margin-block:-16px; } }
 .db-orbit svg{ display:block; overflow:visible; }
