@@ -73,11 +73,11 @@ export function DashboardHeatmap({ heat, streak, ready, memberSince }: { heat: H
       <CardHead icon="chart" title="نقشه‌ی ثبات" href="/weekly" hrefLabel="برنامه" />
 
       <div className="db-heat-body">
-        <div className="db-heat-wrap">
+        <div className="db-heat-wrap" style={{ ["--cols" as any]: heat.length || 13 }}>
           {!ready ? (
-            <Skel w={220} h={122} r={8} />
+            <Skel w="100%" h={150} r={10} />
           ) : (
-            <div className="db-heat-grid" onMouseLeave={() => setHover(null)} style={{ ["--cols" as any]: heat.length }}>
+            <div className="db-heat-grid" onMouseLeave={() => setHover(null)}>
               {monthMarks.map((m, ci) => (
                 <span key={`m${ci}`} className="db-heat-month" style={{ gridColumn: ci + 2 }}>{m}</span>
               ))}

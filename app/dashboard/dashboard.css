@@ -499,15 +499,24 @@ a.db-tl-name{ text-decoration:underline dotted color-mix(in srgb, var(--ring-1a)
 
 /* ── نقشه‌ی ثبات — شبکه‌ی ریز به سبک نمودار فعالیت گیت‌هاب ─────── */
 .db-page .db-heat{ container-type:inline-size; }
-.db-heat-body{ display:flex; align-items:center; justify-content:center; gap:16px; flex:1; }
-.db-heat-wrap{ flex:0 0 auto; display:flex; flex-direction:column; gap:8px; min-width:0; max-width:100%; }
+/* اندازه‌ی خانه‌ها سیال‌ه: شبکه کل عرض جای خودش رو پر می‌کنه (container query روی
+   .db-heat-wrap)، با کف 12px و سقف 30px تا روی کارت عریض هم بیش از حد درشت نشه.
+   آمار زیر شبکه‌ست و فقط روی کارت خیلی عریض کنارش می‌شینه. */
+.db-heat-body{ display:flex; flex-direction:column; align-items:stretch; gap:14px; flex:1; }
+.db-heat-wrap{ flex:1 1 auto; display:flex; flex-direction:column; align-items:center; gap:10px; min-width:0; width:100%; container-type:inline-size; }
+/* متغیرها روی فرزندهای wrap (نه خودش) چون cqi به نزدیک‌ترین container *بالادست* اشاره می‌کنه */
+.db-heat-wrap > *{
+  --gap:3px; --label:16px;
+  --cell:clamp(12px, calc((100cqi - var(--label) - var(--cols) * var(--gap)) / var(--cols)), 30px);
+}
 .db-heat-grid{
-  --cell:12px; --gap:3px;
   display:grid; direction:rtl; width:max-content;
-  grid-template-columns:auto repeat(var(--cols), var(--cell));
+  grid-template-columns:var(--label) repeat(var(--cols), var(--cell));
   grid-template-rows:auto repeat(7, var(--cell));
   gap:var(--gap);
 }
+@container (min-width:360px){ .db-heat-wrap > *{ --gap:4px; --label:18px; } .db-heat-grid .db-heat-cell{ border-radius:4px; } }
+@container (min-width:520px){ .db-heat-wrap > *{ --gap:5px; } .db-heat-grid .db-heat-cell{ border-radius:5px; } .db-heat-grid .db-heat-day{ font-size:11px; } .db-heat-grid .db-heat-month{ font-size:11.5px; } }
 .db-heat-month{ grid-row:1; font-size:10px; line-height:14px; font-weight:600; color:var(--muted); white-space:nowrap; width:var(--cell); overflow:visible; }
 .db-heat-day{ grid-column:1; font-size:9.5px; line-height:var(--cell); color:var(--muted); padding-inline-end:4px; text-align:start; }
 .db-heat-cell{
@@ -527,33 +536,28 @@ a.db-tl-name{ text-decoration:underline dotted color-mix(in srgb, var(--ring-1a)
 .db-heat-cell.is-future{ visibility:hidden; animation:none; }
 .db-heat-cell.is-today{ outline:1.5px solid var(--text); outline-offset:1px; }
 .db-heat-cell.is-on{ outline:1.5px solid var(--muted); outline-offset:1px; }
-.db-heat-foot{ display:flex; align-items:center; justify-content:space-between; gap:8px; font-size:10.5px; color:var(--muted); }
+.db-heat-foot{ display:flex; align-items:center; justify-content:space-between; gap:8px; width:calc(var(--label) + var(--cols) * (var(--cell) + var(--gap))); max-width:100%; font-size:11px; color:var(--muted); }
 .db-heat-hover{ font-weight:700; color:var(--text); white-space:nowrap; overflow:hidden; text-overflow:ellipsis; min-width:0; }
 .db-heat-legend{ display:inline-flex; align-items:center; gap:3px; flex:0 0 auto; }
 .db-heat-legend .db-heat-cell{ width:10px; height:10px; border-radius:2px; animation:none; cursor:default; }
 .db-heat-legend .db-heat-cell:first-child{ margin-inline-start:3px; }
 .db-heat-legend .db-heat-cell:last-child{ margin-inline-end:3px; }
 
-/* آمار کوچک کنار شبکه — بی‌بک‌گراند، فقط خط جداکننده */
+/* آمار — بی‌بک‌گراند، فقط خط جداکننده؛ زیر شبکه در یک ردیف */
 .db-heat-stats{
-  flex:0 1 300px; min-width:0; margin:0; align-self:stretch;
-  display:grid; grid-template-columns:minmax(0,1fr); align-content:center; gap:10px;
-  padding-inline-start:16px; border-inline-start:1px solid var(--box-line);
+  margin:0; min-width:0;
+  display:grid; grid-template-columns:repeat(4, minmax(0,1fr)); gap:6px;
+  padding:12px 0 0; border-top:1px solid var(--box-line); text-align:center;
 }
 .db-heat-stats > div{ min-width:0; }
 .db-heat-stats dt{ font-size:10px; font-weight:700; color:var(--muted); white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
-.db-heat-stats dd{ margin:1px 0 0; font-size:15px; font-weight:800; letter-spacing:-.01em; color:var(--text); line-height:1.3; }
+.db-heat-stats dd{ margin:1px 0 0; font-size:16px; font-weight:800; letter-spacing:-.01em; color:var(--text); line-height:1.3; }
 .db-heat-stats dd small{ font-size:10px; font-weight:600; color:var(--muted); }
-@container (min-width:480px){
-  .db-heat-body{ gap:28px; }
-  .db-heat-stats{ flex:0 0 auto; grid-template-columns:repeat(2, max-content); gap:18px 36px; padding-inline-start:28px; }
+/* کارت خیلی عریض: آمار کنار شبکه */
+@container (min-width:760px){
+  .db-heat-body{ flex-direction:row; align-items:center; gap:28px; }
+  .db-heat-stats{ flex:0 0 auto; grid-template-columns:repeat(2, max-content); gap:18px 36px; padding:0; padding-inline-start:28px; border-top:0; border-inline-start:1px solid var(--box-line); align-self:stretch; align-content:center; text-align:start; }
   .db-heat-stats dd{ font-size:18px; }
-}
-/* کارت خیلی باریک: آمار زیر شبکه در یک ردیف */
-@container (max-width:330px){
-  .db-heat-body{ flex-direction:column; align-items:center; gap:14px; }
-  .db-heat-stats{ flex:none; width:100%; grid-template-columns:repeat(4, minmax(0,1fr)); gap:6px; padding:12px 0 0; border-inline-start:0; border-top:1px solid var(--box-line); text-align:center; }
-  .db-heat-stats dt{ font-size:9.5px; }
 }
 
 /* ── تمرین / کالری ─────────────────────────────────────────── */

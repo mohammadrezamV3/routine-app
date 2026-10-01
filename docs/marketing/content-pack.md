@@ -20,7 +20,7 @@ https://arionapp.ir?utm_source=telegram&utm_medium=channel&utm_campaign=launch
 آریون یک اپلیکیشن وب فارسی برای مدیریت زندگی روزمره‌ست: روتین روزانه و هفتگی با تقویم شمسی، پیگیری عادت‌ها و استریک، مدیریت کارها و یادآوری دارو — این بخش‌ها همیشه رایگان‌اند.
 
 کنارش، برای کسایی که بخوان بیشتر برن جلو:
-🏋️ برنامه‌ی بدنسازی ساخته‌شده با هوش‌مصنوعی + کالری‌شمار با اسکن عکس غذا
+🏋️ برنامه‌ی بدنسازی ساخته‌شده با هوش‌مصنوعی + کالری‌شمار با کاتالوگ فارسی غذاها
 📓 ژورنال معاملاتی با آمار کامل، چک‌لیست ورود و اتصال به متاتریدر
 📅 تقویم اقتصادی و ساعت جلسه‌های بازار فارکس
 🤖 دستیار برنامه‌ریزی با زبان طبیعی + آنالیز هفتگی (بخشی از پلن‌های اشتراکی)
@@ -66,11 +66,11 @@ https://arionapp.ir/routine?utm_source=telegram&utm_medium=channel&utm_campaign=
 https://arionapp.ir/bodybuilding-program?utm_source=telegram&utm_medium=channel&utm_campaign=launch
 ```
 
-**هفته ۲ – پست ۴ (موضوع: کالری + اسکن غذا با AI)**
+**هفته ۲ – پست ۴ (موضوع: کالری‌شمار با کاتالوگ غذاهای ایرانی)**
 ```
 محاسبه‌ی کالری روزانه با فرمول Mifflin-St Jeor شروع می‌شه، بعد بر اساس تعداد روزهای تمرینت در هفته یه ضریب فعالیت روش اعمال می‌شه، و در آخر بر اساس هدفت (کاهش، حفظ یا افزایش وزن) تنظیم می‌شه — هیچ‌وقت هم زیر حداقل بالینی ایمن نمی‌ره.
 
-ثبت غذا هم لازم نیست دستی و خسته‌کننده باشه: یه عکس از غذات می‌گیری، آریون نام غذا، وزن تقریبی و کالری/پروتئین/کربوهیدرات/چربیش رو تخمین می‌زنه. اگه اندازه‌ی واقعی بشقاب فرق داشت، قبل از ثبت می‌تونی عددها رو اصلاح کنی.
+ثبت غذا هم ساده‌ست: توی کاتالوگ فارسی غذاها (از جمله غذاهای ایرانی) جست‌وجو می‌کنی، غذات رو انتخاب و مقدارش رو وارد می‌کنی، و آریون کالریش رو حساب می‌کنه. اگه خواستی، پروتئین/کربوهیدرات/چربی رو هم خودت وارد می‌کنی و همیشه می‌بینی امروز چقدر کالری باقی مونده.
 
 جزو ماژول‌های اشتراکیه، با دوره‌ی آزمایشی رایگان.
 
@@ -197,13 +197,13 @@ https://arionapp.ir?utm_source=telegram&utm_medium=channel&utm_campaign=launch
 #آریون #بدنسازی #برنامه_تمرینی #هوش_مصنوعی #فیتنس #باشگاه
 ```
 
-**پست ۴ — کالری و اسکن غذا**
+**پست ۴ — کالری‌شمار با غذاهای ایرانی**
 ```
-یک عکس از غذات بگیر، بقیه‌شو بسپار به آریون.
+قورمه‌سبزی، چلوکباب، آش رشته — تو کاتالوگ فارسی آریون پیداشون کن و ثبتشون کن.
 
-نام غذا، وزن تقریبی، کالری و پروتئین/کربوهیدرات/چربی — با هوش‌مصنوعی تخمین زده می‌شه. قبل از ثبت هم می‌تونی عددها رو اصلاح کنی.
+هدف کالری روزانه‌ت از قد، وزن، سن، جنسیت و سطح فعالیتت محاسبه می‌شه، پروتئین/کربوهیدرات/چربی رو اگه خواستی خودت وارد می‌کنی، و همیشه می‌بینی امروز چقدر کالری باقی مونده.
 
-#آریون #کالری_شمار #رژیم_غذایی #تغذیه #هوش_مصنوعی #کاهش_وزن
+#آریون #کالری_شمار #رژیم_غذایی #تغذیه #غذای_ایرانی #کاهش_وزن
 ```
 
 **پست ۵ — ژورنال ترید**
@@ -264,14 +264,14 @@ CTA: «روتینتو امروز با آریون بساز — لینک بایو�
 CTA: «برنامه‌تو بساز — لینک بایو»
 ```
 
-**ریل ۳ — کالری با اسکن عکس**
+**ریل ۳ — کالری‌شمار با غذاهای ایرانی**
 ```
-هوک: «کالری غذاتو با یه عکس بفهم»
-صحنه ۱: گرفتن عکس از یک بشقاب غذا.
-صحنه ۲: نتیجه‌ی هوش‌مصنوعی (نام غذا + کالری + ماکروها).
-صحنه ۳: اصلاح سریع عدد قبل از ثبت.
-صحنه ۴: نمودار هفتگی کالری دریافتی.
-CTA: «کالری‌شمار هوشمند — لینک بایو»
+هوک: «کالری غذای ایرانیتو راحت پیدا کن»
+صحنه ۱: جست‌وجوی یک غذای ایرانی (مثلا قورمه‌سبزی) توی کاتالوگ.
+صحنه ۲: انتخاب غذا و وارد کردن مقدار.
+صحنه ۳: دیدن کالری ثبت‌شده و کالری باقی‌مانده‌ی امروز.
+صحنه ۴: هدف کالری روزانه که از قد، وزن، سن و فعالیت محاسبه شده.
+CTA: «کالری‌شمار فارسی — لینک بایو»
 ```
 
 **ریل ۴ — ژورنال ترید**
@@ -454,7 +454,7 @@ BMR فقط انرژی حالت استراحت است. برای رسیدن به T
 
 آریون همین سه گام (BMR با فرمول Mifflin-St Jeor، ضریب فعالیت بر اساس روزهای واقعی تمرینت، و تنظیم بر اساس هدف) را خودکار انجام می‌دهد و هیچ‌وقت هدف روزانه را زیر کف ایمنی نمی‌برد.
 
-برای ثبت غذا هم لازم نیست دستی وزن‌کنی و جست‌وجو کنی: یک عکس از غذا کافی است — آریون نام غذا، وزن تقریبی، و کالری/پروتئین/کربوهیدرات/چربی را با هوش‌مصنوعی تخمین می‌زند. اگر اندازه‌ی واقعی بشقاب فرق داشت، قبل از ثبت نهایی می‌توانی عددها را اصلاح کنی؛ و اگر غذا اصلا قابل‌تشخیص نباشد، به‌جای یک حدس نادرست، همین موضوع به‌صراحت اعلام می‌شود.
+برای ثبت غذا هم کافی است در کاتالوگ فارسی غذاها (از جمله غذاهای ایرانی) جست‌وجو کنی، غذا و مقدارش را وارد کنی و کالری آن ثبت شود. اگر خواستی، پروتئین/کربوهیدرات/چربی را هم خودت وارد می‌کنی و در هر لحظه می‌بینی امروز چقدر کالری باقی مانده است.
 
 ## جمع‌بندی
 
@@ -479,14 +479,14 @@ BMR فقط انرژی حالت استراحت است. برای رسیدن به T
 
 **ویدیو ۲**
 ```
-عنوان: ساخت برنامه‌ی بدنسازی با هوش مصنوعی + کالری‌شمار با اسکن عکس غذا | آریون
+عنوان: ساخت برنامه‌ی بدنسازی با هوش مصنوعی + کالری‌شمار با کاتالوگ غذاهای ایرانی | آریون
 
 توضیحات:
-توی این ویدیو دو ماژول آریون رو با هم می‌بینیم: برنامه‌ساز بدنسازی که با متن آزاد خودت (نه فرم محدود) یه برنامه‌ی تمرینی کامل بر اساس هدف، سابقه و روزهای باشگاهت می‌سازه؛ و کالری‌شمار فارسی که با یه عکس از غذا، کالری و ماکروها رو تخمین می‌زنه. هر دو بخش اشتراکی آریون‌اند با دوره‌ی آزمایشی رایگان.
+توی این ویدیو دو ماژول آریون رو با هم می‌بینیم: برنامه‌ساز بدنسازی که با متن آزاد خودت (نه فرم محدود) یه برنامه‌ی تمرینی کامل بر اساس هدف، سابقه و روزهای باشگاهت می‌سازه؛ و کالری‌شمار فارسی که با کاتالوگ غذاهای ایرانی، هدف کالری روزانه و کالری باقی‌مونده‌ی امروز رو بهت نشون می‌ده. هر دو بخش اشتراکی آریون‌اند با دوره‌ی آزمایشی رایگان.
 
 بیشتر بدونید: https://arionapp.ir/bodybuilding-program?utm_source=youtube&utm_medium=video&utm_campaign=launch
 
-برچسب‌ها: آریون, برنامه بدنسازی, هوش مصنوعی, کالری شمار, اسکن غذا, فیتنس, تغذیه, رژیم غذایی, باشگاه
+برچسب‌ها: آریون, برنامه بدنسازی, هوش مصنوعی, کالری شمار, غذای ایرانی, فیتنس, تغذیه, رژیم غذایی, باشگاه
 ```
 
 **ویدیو ۳**
@@ -531,7 +531,7 @@ BMR فقط انرژی حالت استراحت است. برای رسیدن به T
 
 نکته‌ی مهم اینه که کسری‌های خیلی شدید معمولا با بازگشت وزن تموم می‌شن؛ بهتره کسری منطقی (۱۵-۲۰٪ زیر TDEE) رو انتخاب کنی و پروتئین کافی بگیری.
 
-(برای شفافیت: من سازنده‌ی آریون هستم، یه اپ فارسی که این محاسبه رو خودکار انجام می‌ده و اسکن عکس غذا هم داره. اگه مفیده: arionapp.ir/calorie-counter)
+(برای شفافیت: من سازنده‌ی آریون هستم، یه اپ فارسی که این محاسبه رو خودکار انجام می‌ده و کاتالوگ فارسی غذاها (با غذاهای ایرانی) هم داره. اگه مفیده: arionapp.ir/calorie-counter)
 ```
 
 ---
@@ -548,10 +548,10 @@ Tagline (60 chars max):
 Persian daily routine, fitness, and trading journal app
 
 Description (≤260 chars):
-Arion is a Persian-language (Farsi) web app for daily/weekly routines, habit streaks, AI-generated workout plans, AI food-photo calorie scanning, and a trading journal with MetaTrader sync and an economic calendar. Persian UI only, RTL, Jalali calendar.
+Arion is a Persian-language (Farsi) web app for daily/weekly routines, habit streaks, AI-generated workout plans, a calorie counter with a Persian food catalog, and a trading journal with MetaTrader sync and an economic calendar. Persian UI only, RTL, Jalali calendar.
 
 First maker comment (~150 words):
-Hey Product Hunt! I built Arion for Persian-speaking users who juggle a daily routine, a workout plan, and (for some of us) a trading journal — usually across three different apps that don't talk to each other. Arion puts all of it under one account: a free routine/habit/task module with streaks and a Jalali (Persian solar) calendar, plus optional paid modules for AI-generated workout plans, AI food-photo calorie scanning, and a full trading journal (multiple accounts, stats, an entry checklist snapshot per trade, and MetaTrader sync that never touches your account password). There's also a natural-language planning assistant and a limited AI weekly-analysis feature. One thing to be upfront about: the UI is Persian-only right now (RTL, Jalali dates) — this is built specifically for the Farsi-speaking market, not a general audience yet. Would love your feedback, especially from anyone building for a non-English-first user base.
+Hey Product Hunt! I built Arion for Persian-speaking users who juggle a daily routine, a workout plan, and (for some of us) a trading journal — usually across three different apps that don't talk to each other. Arion puts all of it under one account: a free routine/habit/task module with streaks and a Jalali (Persian solar) calendar, plus optional paid modules for AI-generated workout plans, a calorie counter with a Persian food catalog, and a full trading journal (multiple accounts, stats, an entry checklist snapshot per trade, and MetaTrader sync that never touches your account password). There's also a natural-language planning assistant and a limited AI weekly-analysis feature. One thing to be upfront about: the UI is Persian-only right now (RTL, Jalali dates) — this is built specifically for the Farsi-speaking market, not a general audience yet. Would love your feedback, especially from anyone building for a non-English-first user base.
 
 Topics: Productivity, Habit Tracking, Fitness, Trading, Personal Finance
 ```
@@ -561,7 +561,7 @@ Topics: Productivity, Habit Tracking, Fitness, Trading, Personal Finance
 نام: Arion
 دسته‌بندی: Productivity, Habit Tracking, Fitness Tracker, Trading Journal
 توضیح (بی‌طرفانه، سبک ویکی):
-Arion is a Persian-language (Farsi) web app for daily/weekly routine planning and habit tracking with a Jalali calendar. It also offers optional paid modules: an AI-generated workout plan builder, calorie tracking with AI food-photo scanning, and a trading journal with multi-account support, performance stats, an entry checklist, an economic calendar, and MetaTrader trade sync. The interface is Persian-only.
+Arion is a Persian-language (Farsi) web app for daily/weekly routine planning and habit tracking with a Jalali calendar. It also offers optional paid modules: an AI-generated workout plan builder, calorie tracking with a Persian food catalog (including Iranian foods), and a trading journal with multi-account support, performance stats, an entry checklist, an economic calendar, and MetaTrader trade sync. The interface is Persian-only.
 لینک: https://arionapp.ir?utm_source=alternativeto&utm_medium=directory&utm_campaign=launch
 Platform: Web, PWA
 Licensing: Freemium
@@ -572,7 +572,7 @@ Licensing: Freemium
 نام: Arion
 توضیح کوتاه: Persian routine, fitness, and trading-journal SaaS with AI-assisted planning.
 توضیح کامل:
-Arion is a Farsi-language productivity platform combining a free daily/weekly routine and habit tracker (with a Jalali calendar) with paid add-on modules: an AI workout-plan generator, AI food-photo calorie scanning, and a trading journal (multi-account, performance stats, entry checklist snapshotting, economic calendar, MetaTrader sync). A natural-language planning assistant and a limited AI weekly-analysis feature are also available on paid plans. UI is Persian-only, built as an installable PWA.
+Arion is a Farsi-language productivity platform combining a free daily/weekly routine and habit tracker (with a Jalali calendar) with paid add-on modules: an AI workout-plan generator, a calorie counter with a Persian food catalog, and a trading journal (multi-account, performance stats, entry checklist snapshotting, economic calendar, MetaTrader sync). A natural-language planning assistant and a limited AI weekly-analysis feature are also available on paid plans. UI is Persian-only, built as an installable PWA.
 وب‌سایت: https://arionapp.ir?utm_source=saashub&utm_medium=directory&utm_campaign=launch
 ```
 
@@ -580,7 +580,7 @@ Arion is a Farsi-language productivity platform combining a free daily/weekly ro
 ```
 عنوان: Arion — Persian routine, fitness & trading journal
 توضیح کوتاه:
-A Persian-language web app that combines daily routine/habit tracking (free) with optional paid modules for AI workout plans, AI food-photo calorie scanning, and a trading journal with MetaTrader sync — all under one account, with a Jalali calendar.
+A Persian-language web app that combines daily routine/habit tracking (free) with optional paid modules for AI workout plans, a calorie counter with a Persian food catalog, and a trading journal with MetaTrader sync — all under one account, with a Jalali calendar.
 لینک: https://arionapp.ir?utm_source=betalist&utm_medium=directory&utm_campaign=launch
 یادداشت صادقانه: Persian-only interface; built for the Farsi-speaking market.
 ```
@@ -590,7 +590,7 @@ A Persian-language web app that combines daily routine/habit tracking (free) wit
 نام ابزار: Arion
 دسته: Productivity / Health & Fitness / Finance
 توضیح:
-Arion uses AI for two specific tasks inside a Persian routine/fitness/trading app: generating a personalized workout plan from a free-text goal, and estimating calories/macros from a photo of a meal. Paid plans also include a natural-language schedule-editing assistant and a limited AI weekly progress analysis. The rest of the app (routine planning, habit streaks, trading journal, economic calendar) does not use AI. Interface is Persian-only.
+Arion uses AI for one specific task inside a Persian routine/fitness/trading app: generating a personalized workout plan from a free-text goal. Paid plans also include a natural-language schedule-editing assistant and a limited AI weekly progress analysis. The rest of the app (routine planning, habit streaks, trading journal, economic calendar) does not use AI. Interface is Persian-only.
 لینک: https://arionapp.ir?utm_source=taaft&utm_medium=directory&utm_campaign=launch
 ```
 
@@ -602,7 +602,7 @@ Show HN: Arion – Persian routine, fitness, and trading-journal web app
 بدنه:
 Hi HN, I built Arion, a Persian-language (Farsi) web app for people who want their daily routine, workout plan, and trading journal in one account instead of three separate apps.
 
-The free part is a daily/weekly routine planner with recurring tasks, habit streaks, task reminders, and sleep tracking, all on a Jalali (Persian solar) calendar. Paid modules add: an AI-generated workout plan builder (goal described in free text, not a fixed form), calorie tracking with AI food-photo scanning, and a trading journal — multiple trading accounts, full performance stats (win rate, average R, profit factor, drawdown), a customizable entry checklist that's snapshotted at trade time (not live-referenced, so it can't be retroactively "fixed"), an economic calendar (sourced from our own database, not a direct client-side call to a third-party feed), a forex session clock computed from real DST per city, and optional MetaTrader trade sync that never asks for or stores your trading account password (only a hashed connection code).
+The free part is a daily/weekly routine planner with recurring tasks, habit streaks, task reminders, and sleep tracking, all on a Jalali (Persian solar) calendar. Paid modules add: an AI-generated workout plan builder (goal described in free text, not a fixed form), calorie tracking with a Persian food catalog (including Iranian foods), and a trading journal — multiple trading accounts, full performance stats (win rate, average R, profit factor, drawdown), a customizable entry checklist that's snapshotted at trade time (not live-referenced, so it can't be retroactively "fixed"), an economic calendar (sourced from our own database, not a direct client-side call to a third-party feed), a forex session clock computed from real DST per city, and optional MetaTrader trade sync that never asks for or stores your trading account password (only a hashed connection code).
 
 Honest caveats: the UI is Persian-only right now (RTL, Jalali dates) — this is built for the Farsi-speaking market specifically, not a general audience. A learning-roadmap generator and a fuller AI weekly-analysis feature are still limited/internal and not fully public yet.
 
@@ -624,7 +624,7 @@ https://arionapp.ir?utm_source=hackernews&utm_medium=post&utm_campaign=launch
 من سازنده‌ی آریون (arionapp.ir) هستم — یک اپلیکیشن وب فارسی که چند بخش زندگی روزمره رو زیر یک حساب جمع می‌کنه:
 
 - روتین روزانه و هفتگی، پیگیری عادت‌ها با استریک، مدیریت کارها و یادآوری — این بخش‌ها همیشه رایگانن.
-- برنامه‌ی بدنسازی ساخته‌شده با هوش‌مصنوعی (بر اساس هدفی که کاربر با متن آزاد می‌نویسه) و کالری‌شمار با اسکن عکس غذا.
+- برنامه‌ی بدنسازی ساخته‌شده با هوش‌مصنوعی (بر اساس هدفی که کاربر با متن آزاد می‌نویسه) و کالری‌شمار با کاتالوگ فارسی غذاها.
 - ژورنال معاملاتی برای تریدرها: چند حساب جدا، آمار کامل، چک‌لیست ورود که در لحظه‌ی ثبت اسنپ‌شات می‌شه، تقویم اقتصادی، ساعت جلسه‌های فارکس و اتصال متاتریدر — بدون اینکه هیچ‌وقت رمز حساب معاملاتی گرفته یا ذخیره بشه.
 
 همه‌چیز با تقویم شمسی و برای مخاطب فارسی‌زبون ساخته شده.

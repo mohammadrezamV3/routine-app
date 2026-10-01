@@ -4,13 +4,12 @@ import { Beef, Droplet, Sparkles, Wheat } from "lucide-react";
 import { faNum } from "@/lib/jalali";
 import { DashCard } from "./DashCard";
 
-type Entry = { proteinG?: number | null; carbsG?: number | null; fatG?: number | null; aiScanned?: boolean };
+type Entry = { proteinG?: number | null; carbsG?: number | null; fatG?: number | null };
 
 // «جزئیات برنامه‌غذایی» — طبق طرح کاربر، سه باکس جداگانه‌ی پروتئین/کربوهیدرات/
 // چربی توی یک باکس واحد ادغام شدن. این بخش فقط وقتی عدد نشون می‌ده که
-// حداقل یک غذای این روز درشت‌مغذی ثبت‌شده داشته باشه — چه با اسکن AI، چه
-// با واردکردن دستی توی فرم افزودن غذا؛ چون کاتالوگ دستی درشت‌مغذی برای
-// هزاران غذا نداریم و این تنها دو راه داشتن عدد واقعی‌ان.
+// حداقل یک غذای این روز درشت‌مغذی ثبت‌شده داشته باشه (واردکردن دستی توی
+// فرم افزودن غذا)؛ چون کاتالوگ دستی درشت‌مغذی برای هزاران غذا نداریم.
 export function CalorieMacrosCard({
   entries,
   target,

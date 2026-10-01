@@ -153,7 +153,7 @@ body[data-theme="light"] .ls-toast{ box-shadow:0 10px 24px rgba(107,79,61,.18); 
 .ls-meta-cells{ display:grid; grid-template-columns:repeat(3, minmax(0,1fr)); gap:8px; }
 .ls-meta-cells .trade-detail-cell b{ font-size:12px; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
 
-/* food — نتیجه‌ی CalorieAiScanModal */
+/* food — هدف روزانه‌ی کالری و درشت‌مغذی‌ها */
 .ls-vis-food{ direction:rtl; display:flex; flex-direction:column; gap:10px; }
 .ls-food-grid{ display:grid; grid-template-columns:repeat(4, minmax(0,1fr)); gap:6px; }
 

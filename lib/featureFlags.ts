@@ -9,7 +9,7 @@
 
 export type FeatureMode = "on" | "admins" | "off";
 
-export const FEATURE_KEYS = ["roadmaps", "weeklyAnalysis", "tradeChat", "routineAssistant", "calorieScan", "mentors", "dashboard"] as const;
+export const FEATURE_KEYS = ["roadmaps", "weeklyAnalysis", "tradeChat", "routineAssistant", "mentors", "dashboard"] as const;
 export type FeatureKey = (typeof FEATURE_KEYS)[number];
 
 export const FEATURE_META: Record<FeatureKey, { label: string; hint: string; default: FeatureMode }> = {
@@ -17,7 +17,6 @@ export const FEATURE_META: Record<FeatureKey, { label: string; hint: string; def
   weeklyAnalysis: { label: "آنالیز هفتگی", hint: "صفحه‌ی /analysis/weekly و مربی AI (همچنان نیازمند ماژول AI Insight)", default: "off" },
   tradeChat: { label: "چت نمادها", hint: "گفتگوی کاربران زیر چارت هر نماد", default: "on" },
   routineAssistant: { label: "دستیار هوشمند روتین", hint: "دکمه‌ی AI در صفحه‌ی روتین", default: "on" },
-  calorieScan: { label: "اسکن غذا با AI", hint: "تشخیص غذا و کالری از روی عکس (تا الان «به‌زودی» بود)", default: "off" },
   mentors: { label: "مربی‌ها", hint: "اتصال مربی ↔ شاگرد، برنامه‌ها، چت و نظرات (/mentors)", default: "on" },
   // فعلا فقط برای ادمین‌ها (درخواست صریح) — روشن‌شدنش برای همه یعنی صفحه‌ی
   // اصلی بعد از ورود هم خودکار /dashboard می‌شه (HomeClient).

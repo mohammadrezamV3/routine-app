@@ -32,9 +32,9 @@ async function handlePOST(req: NextRequest) {
 
   const parsed = await readJsonBody(req);
   if (!parsed.ok) return NextResponse.json({ error: parsed.error }, { status: parsed.status });
-  const { customName, customCalories, grams, mealType, proteinG, carbsG, fatG, aiScanned } = parsed.body as {
+  const { customName, customCalories, grams, mealType, proteinG, carbsG, fatG } = parsed.body as {
     customName: string; customCalories: number; grams: number; mealType?: string;
-    proteinG?: number; carbsG?: number; fatG?: number; aiScanned?: boolean;
+    proteinG?: number; carbsG?: number; fatG?: number;
   };
 
   const date = parseIsoDate(parsed.body?.date);
@@ -52,7 +52,7 @@ async function handlePOST(req: NextRequest) {
     return NextResponse.json({ error: "نوع وعده نامعتبر است" }, { status: 400 });
   }
   // درشت‌مغذی‌ها فقط وقتی معتبرن که هر سه با هم بیان و عدد نامنفی باشن —
-  // یا هر سه ثبت می‌شن (نتیجه‌ی اسکن AI) یا هیچ‌کدوم (ثبت دستی/کاتالوگ معمولی).
+  // یا هر سه ثبت می‌شن یا هیچ‌کدوم.
   const hasMacros = proteinG !== undefined || carbsG !== undefined || fatG !== undefined;
   const macrosValid = [proteinG, carbsG, fatG].every((v) => typeof v === "number" && v >= 0 && v <= 2000);
   if (hasMacros && !macrosValid) {
@@ -62,7 +62,7 @@ async function handlePOST(req: NextRequest) {
   const entry = await prisma.foodLogEntry.create({
     data: {
       userId, date, customName: clampText(customName, 80), customCalories, grams, mealType: mealType || null,
-      ...(hasMacros && macrosValid ? { proteinG, carbsG, fatG, aiScanned: !!aiScanned } : {}),
+      ...(hasMacros && macrosValid ? { proteinG, carbsG, fatG } : {}),
     },
   });
   return NextResponse.json({ ok: true, entry });
