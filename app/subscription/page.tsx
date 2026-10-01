@@ -7,6 +7,8 @@ import { AuthGate } from "@/components/AuthGate";
 import { PlansSection, UpgradeOffer, BREAKOUT } from "@/components/PlanShowcase";
 import { PremiumUnlockCelebration } from "@/components/PremiumUnlockCelebration";
 import { FREE_ROUTINE_COPY_FA, TRIAL_COPY_FA } from "@/lib/trial";
+import { fillPriceCopy } from "@/lib/planPricing";
+import { usePlanPricing } from "@/lib/usePlanPricing";
 
 type SubscriptionInfo = { planId: string; status: string; currentPeriodEnd: string; plan: { key: string; nameFa: string } } | null;
 
@@ -16,6 +18,7 @@ type SubscriptionInfo = { planId: string; status: string; currentPeriodEnd: stri
 // به‌جای دکمه‌ی خرید یه نشان «پلن فعلی تو» می‌گیره.
 export default function SubscriptionPage() {
   const { status } = useSession();
+  const { pricing } = usePlanPricing();
   const [checkoutResult, setCheckoutResult] = useState<string | null>(null);
   const [subscription, setSubscription] = useState<SubscriptionInfo>(null);
   const [upgradeOffer, setUpgradeOffer] = useState<UpgradeOffer | null>(null);
@@ -88,7 +91,7 @@ export default function SubscriptionPage() {
           ? "دسترسی نامحدود داری — نیازی به اشتراک نداری"
           : subscription
           ? `پلن فعلی: ${subscription.plan.nameFa} — ${subscription.status === "TRIAL" ? "دوره آزمایشی" : "فعال"}`
-          : `هنوز پلن پولی فعالی نداری. ${FREE_ROUTINE_COPY_FA} هر حساب تازه: ${TRIAL_COPY_FA}؛ بعدش برای ادامه یکی از پلن‌ها رو انتخاب کن.`}
+          : `هنوز پلن پولی فعالی نداری. ${fillPriceCopy(FREE_ROUTINE_COPY_FA, pricing)} هر حساب تازه: ${TRIAL_COPY_FA}؛ بعدش برای ادامه یکی از پلن‌ها رو انتخاب کن.`}
       </div>
 
       {!loaded ? (

@@ -1,5 +1,7 @@
 import { SeoLanding, type SeoFaq } from "@/components/SeoLanding";
 import { BRAND_FA } from "@/lib/brand";
+import { fillPriceCopy } from "@/lib/planPricing";
+import { getPricingConfig } from "@/lib/planPricingServer";
 import { breadcrumbJsonLd, faqJsonLd, pageMetadata, softwareApplicationJsonLd } from "@/lib/seo";
 
 export const metadata = pageMetadata({
@@ -27,7 +29,7 @@ const FAQS: SeoFaq[] = [
   },
   {
     q: "آنالیز هفتگی رایگان است؟",
-    a: "آنالیز هفتگی هوشمند بخشی از ماژول تحلیل هوشمند (AI Insight) و جزو بخش‌های اشتراکی است. دستیار گفت‌وگویی روتین («نومو») برای کاربر بدون اشتراک 10 پیام رایگان دارد و در پلن‌های پولی نامحدود است؛ «روتین من» 14 روز رایگان است و بعد با پلن «روتین من» (ماهانه 99 هزار تومان) ادامه پیدا می‌کند.",
+    a: "آنالیز هفتگی هوشمند بخشی از ماژول تحلیل هوشمند (AI Insight) و جزو بخش‌های اشتراکی است. دستیار گفت‌وگویی روتین («نومو») برای کاربر بدون اشتراک 10 پیام رایگان دارد و در پلن‌های پولی نامحدود است؛ «روتین من» 14 روز رایگان است و بعد با پلن «روتین من» ({{routine_monthly}}) ادامه پیدا می‌کند.",
   },
   {
     q: "رودمپ یادگیری با هوش مصنوعی هم همین‌جاست؟",
@@ -44,13 +46,18 @@ const BREADCRUMB = [
   { name: "برنامه ریزی با هوش مصنوعی", path: "/ai-planner" },
 ];
 
-export default function AiPlannerPage() {
+
+// قیمت «روتین من» داخل FAQ از پنل ادمین (/admin/pricing) پر می‌شه؛ ISR تا تغییر قیمت بدون دیپلوی برسه
+export const revalidate = 300;
+
+export default async function AiPlannerPage() {
+  const faqs = fillPriceCopy(FAQS, await getPricingConfig());
   return (
     <>
       <script
         type="application/ld+json"
         dangerouslySetInnerHTML={{
-          __html: JSON.stringify([breadcrumbJsonLd(BREADCRUMB), faqJsonLd(FAQS), softwareApplicationJsonLd()]),
+          __html: JSON.stringify([breadcrumbJsonLd(BREADCRUMB), faqJsonLd(faqs), softwareApplicationJsonLd()]),
         }}
       />
       <SeoLanding
@@ -99,7 +106,7 @@ export default function AiPlannerPage() {
             ],
           },
         ]}
-        faqs={FAQS}
+        faqs={faqs}
         faqTitle="سوال‌های رایج درباره برنامه‌ریزی با هوش مصنوعی"
         related={[
           { href: "/routine", label: "روتین آریون", note: "برنامه‌ی روتین روزانه‌ای که دستیار هوش مصنوعی روی همان کار می‌کند." },

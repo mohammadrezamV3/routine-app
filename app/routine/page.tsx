@@ -1,5 +1,7 @@
 import { SeoLanding, type SeoFaq } from "@/components/SeoLanding";
 import { BRAND_CATEGORY_FA, BRAND_FA } from "@/lib/brand";
+import { fillPriceCopy } from "@/lib/planPricing";
+import { getPricingConfig } from "@/lib/planPricingServer";
 import { breadcrumbJsonLd, faqJsonLd, pageMetadata } from "@/lib/seo";
 
 /**
@@ -34,7 +36,7 @@ const FAQS: SeoFaq[] = [
   },
   {
     q: "آیا روتین در آریون رایگان است؟",
-    a: "«روتین من» (روتین و کارهای روزانه) 14 روز رایگان است و بعد با پلن «روتین من» (ماهانه 99 هزار تومان) ادامه پیدا می‌کند؛ دستیار هوشمند «نومو» 10 پیام رایگان دارد و در پلن‌های پولی نامحدود است. بخش‌های ورزش و تغذیه، ژورنال ترید و رودمپ یادگیری اشتراکی‌اند و هر حساب تازه 3 روز دسترسی به بدنسازی، کالری‌شمار و ژورنال ترید، با استفاده‌ی محدود از هوش مصنوعی می‌گیرد.",
+    a: "«روتین من» (روتین و کارهای روزانه) 14 روز رایگان است و بعد با پلن «روتین من» ({{routine_monthly}}) ادامه پیدا می‌کند؛ دستیار هوشمند «نومو» 10 پیام رایگان دارد و در پلن‌های پولی نامحدود است. بخش‌های ورزش و تغذیه، ژورنال ترید و رودمپ یادگیری اشتراکی‌اند و هر حساب تازه 3 روز دسترسی به بدنسازی، کالری‌شمار و ژورنال ترید، با استفاده‌ی محدود از هوش مصنوعی می‌گیرد.",
   },
   {
     q: "اگر یک روز روتینم را انجام ندهم چه می‌شود؟",
@@ -51,13 +53,18 @@ const BREADCRUMB = [
   { name: "روتین روزانه", path: "/routine" },
 ];
 
-export default function RoutinePage() {
+
+// قیمت «روتین من» داخل FAQ از پنل ادمین (/admin/pricing) پر می‌شه؛ ISR تا تغییر قیمت بدون دیپلوی برسه
+export const revalidate = 300;
+
+export default async function RoutinePage() {
+  const faqs = fillPriceCopy(FAQS, await getPricingConfig());
   return (
     <>
       <script
         type="application/ld+json"
         dangerouslySetInnerHTML={{
-          __html: JSON.stringify([breadcrumbJsonLd(BREADCRUMB), faqJsonLd(FAQS)]),
+          __html: JSON.stringify([breadcrumbJsonLd(BREADCRUMB), faqJsonLd(faqs)]),
         }}
       />
       <SeoLanding
@@ -107,7 +114,7 @@ export default function RoutinePage() {
             ],
           },
         ]}
-        faqs={FAQS}
+        faqs={faqs}
         faqTitle="سوال‌های رایج درباره روتین"
         related={[
           { href: "/habit-tracker", label: "پیگیری عادت‌ها در آریون", note: "چطور یک عادت جدید را تا جاافتادن دنبال کنیم و استریک را نگه داریم." },

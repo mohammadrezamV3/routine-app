@@ -4,9 +4,8 @@ import { authOptions } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
 import { zibalVerify } from "@/lib/zibal";
 import { getSiteUrl } from "@/lib/siteUrl";
-import type { Duration } from "@/lib/planPricing";
-
-const DURATION_MONTHS: Record<Duration, number> = { "1": 1, "3": 3, "6": 6, "12": 12 };
+import { isDuration, PRICING_LIMITS } from "@/lib/planPricing";
+import { verifyCheckoutSignature } from "@/lib/checkoutSignature";
 
 // پنل Owner › تراکنش‌ها/Funnel — تنها جایی که پرداخت ناموفق/رهاشده واقعا
 // جایی ثبت می‌شه؛ جدول Payment فقط پرداخت verify-شده‌ی موفق رو داره
@@ -60,7 +59,11 @@ export async function GET(req: NextRequest) {
   }
 
   const planKey = searchParams.get("planKey");
-  const duration = searchParams.get("duration") as Duration | null;
+  const durationRaw = searchParams.get("duration");
+  const duration = isDuration(durationRaw) ? durationRaw : null;
+  // تعداد ماه موقع پرداخت از پنل خونده و امضا شده — نه از پیکربندی فعلی، تا
+  // تغییر ادمین وسط پرداخت چیزی که کاربر پولش رو داده عوض نکنه.
+  const months = Number(searchParams.get("months"));
   const amount = Number(searchParams.get("amount"));
   const discountPercent = Number(searchParams.get("discountPercent") || 0);
   const referralUsageId = searchParams.get("referralUsageId") || undefined;
@@ -68,8 +71,13 @@ export async function GET(req: NextRequest) {
   const inviterRewardId = searchParams.get("inviterRewardId") || undefined;
   const upgradeFromSubId = searchParams.get("upgradeFromSubId") || undefined;
 
-  if (!planKey || !duration || !DURATION_MONTHS[duration] || !amount) {
-    return failRedirect("invalid_params", userId, planKey, duration);
+  if (!planKey || !duration || !amount || !Number.isInteger(months) || months < PRICING_LIMITS.minMonths || months > PRICING_LIMITS.maxMonths) {
+    return failRedirect("invalid_params", userId, planKey, durationRaw);
+  }
+  // پلن/مدت/مبلغ/تخفیف همه با امضای checkout مطابقت داده می‌شن؛ زیبال فقط
+  // مبلغ رو تضمین می‌کنه، نه این‌که این مبلغ قیمت کدوم پلن بوده.
+  if (!verifyCheckoutSignature({ userId, planKey, duration, months, amount, discountPercent, referralUsageId, discountCodeId, inviterRewardId, upgradeFromSubId }, searchParams.get("sig"))) {
+    return failRedirect("bad_signature", userId, planKey, duration);
   }
 
   let verified: { ok: boolean; refId?: string };
@@ -100,7 +108,6 @@ export async function GET(req: NextRequest) {
     return failRedirect("plan_not_found", userId, planKey, duration);
   }
 
-  const months = DURATION_MONTHS[duration];
   const currentPeriodEnd = new Date();
   currentPeriodEnd.setMonth(currentPeriodEnd.getMonth() + months);
 
@@ -120,7 +127,7 @@ export async function GET(req: NextRequest) {
       userId,
       planId: plan.id,
       status: "ACTIVE",
-      interval: duration === "12" ? "YEARLY" : "MONTHLY",
+      interval: months >= 12 ? "YEARLY" : "MONTHLY",
       currentPeriodEnd,
       discountPercent,
       appliedReferralUsageId: referralUsageId,

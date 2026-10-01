@@ -10,7 +10,9 @@ import { useRouter } from "next/navigation";
 import Link from "next/link";
 import { AuthGate } from "@/components/AuthGate";
 import { formatPriceAmount } from "@/lib/formatPrice";
-import { findPlanCard, formatJalaliLong, DURATION_LABELS, Duration, UpgradeOffer } from "@/components/PlanShowcase";
+import { findPlanCard, formatJalaliLong, UpgradeOffer } from "@/components/PlanShowcase";
+import { Duration, durationLabel, isDuration, isPaidPlanKey } from "@/lib/planPricing";
+import { usePlanPricing } from "@/lib/usePlanPricing";
 import { TickButton } from "@/components/TickButton";
 
 type Gateway = "zibal";
@@ -53,6 +55,8 @@ export default function CheckoutPage() {
   const planKey = query?.planKey || "";
   const duration = query?.duration || "1";
   const plan = query ? findPlanCard(planKey) : undefined;
+  // قیمت/مدت‌ها از همون پیکربندی پنل ادمین که سرور مبلغ واقعی رو باهاش حساب می‌کنه
+  const { pricing, ready: pricingReady } = usePlanPricing();
 
   const [discountCode, setDiscountCode] = useState("");
   const [fromInvite, setFromInvite] = useState(false);
@@ -83,7 +87,7 @@ export default function CheckoutPage() {
     fetch("/api/account/referral").then((r) => (r.ok ? r.json() : null)).then((d) => setInviterReward((d?.rewardsAvailable ?? 0) > 0)).catch(() => {});
   }, [status]);
 
-  if (!query) return null;
+  if (!query || !pricingReady) return null;
 
   if (status !== "authenticated") {
     return (
@@ -94,7 +98,8 @@ export default function CheckoutPage() {
     );
   }
 
-  if (!plan || plan.free || !plan.prices) {
+  const durationOk = isDuration(duration) && pricing.durations[duration].enabled;
+  if (!plan || plan.free || !isPaidPlanKey(planKey) || !durationOk) {
     return (
       <section className="checkout-page">
         <h1>پرداخت</h1>
@@ -104,13 +109,13 @@ export default function CheckoutPage() {
     );
   }
 
-  const labels = DURATION_LABELS;
-  const price = plan.prices[duration];
+  const baseAmount = pricing.plans[planKey][duration].price * 10;
+  const price = formatPriceAmount(baseAmount);
   const upgradeInfo = planKey === "max" ? upgradeOffer?.perDuration[duration] : undefined;
   // اعتبار ارتقا (اگه باشه) اول اعمال می‌شه، بعد اگه کد تخفیفی هم اعمال
   // شده باشه، درصدش روی همون قیمت اعتبارخورده حساب می‌شه — نه روی قیمت
   // خام اولیه.
-  const creditedBaseAmount = upgradeInfo ? upgradeInfo.amount : plan.amounts?.[duration];
+  const creditedBaseAmount = upgradeInfo ? upgradeInfo.amount : baseAmount;
   const codePercent = discountResult?.ok ? discountResult.percentOff : 0;
   const rewardWins = inviterReward && REFERRAL_INVITER_REWARD_PERCENT > codePercent;
   const effectivePercent = rewardWins ? REFERRAL_INVITER_REWARD_PERCENT : codePercent;
@@ -217,7 +222,7 @@ export default function CheckoutPage() {
         <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full checkout-summary-icon">{plan.icon}</span>
         <div className="checkout-summary-body">
           <div className="checkout-summary-name">{plan.nameFa}</div>
-          <div className="checkout-summary-duration">{labels[duration]}</div>
+          <div className="checkout-summary-duration">{durationLabel(pricing, duration)}</div>
         </div>
         <div className="checkout-summary-price">
           {discountedAmount != null && (

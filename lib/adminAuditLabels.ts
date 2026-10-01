@@ -14,6 +14,8 @@ export const AUDIT_ACTION_LABELS: Record<string, string> = {
   "admin.revoke": "گرفتن نقش ادمین",
   "setting.ai_cost_rate": "تغییر نرخ هزینه AI",
   "setting.feature_flags": "روشن/خاموش‌کردن قابلیت‌ها",
+  "setting.plan_pricing": "تغییر قیمت پلن‌ها",
+  "setting.plan_pricing_reset": "بازگشت قیمت پلن‌ها به پیش‌فرض",
   "chat.warning": "اخطار چت",
   "chat.ban_72h": "بن موقت چت",
   "chat.disable_chat": "غیرفعال‌کردن چت",

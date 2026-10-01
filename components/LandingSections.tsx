@@ -18,6 +18,8 @@ import { FRIENDS, INERT, MockMentorChat, MockStreakTiers } from "@/components/La
 import "@/components/landing-sections.css";
 import "@/components/landing-dashboard.css";
 import { FAQ_ITEMS } from "@/lib/landingFaq";
+import { fillPriceCopy } from "@/lib/planPricing";
+import { usePlanPricing } from "@/lib/usePlanPricing";
 import { STATS_BASE, type PublicStats } from "@/lib/publicStatsBase";
 
 const EASE = [0.22, 1, 0.36, 1] as const;
@@ -588,12 +590,14 @@ export function LandingTestimonialQuote() {
 
 export function LandingFAQ() {
   const [open, setOpen] = useState<number | null>(0);
+  const { pricing } = usePlanPricing();
+  const faqItems = fillPriceCopy(FAQ_ITEMS, pricing);
   return (
     <div>
       <SectionHead title="پرسش‌های" accent="پرتکرار" />
       <Reveal>
         <div className="ls-faq">
-          {FAQ_ITEMS.map((f, i) => {
+          {faqItems.map((f, i) => {
             const isOpen = open === i;
             return (
               <div key={f.q} className={`ls-faq-item${isOpen ? " is-open" : ""}`}>

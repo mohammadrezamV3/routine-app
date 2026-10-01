@@ -1,5 +1,7 @@
 import { SeoLanding, type SeoFaq } from "@/components/SeoLanding";
 import { BRAND_FA } from "@/lib/brand";
+import { fillPriceCopy } from "@/lib/planPricing";
+import { getPricingConfig } from "@/lib/planPricingServer";
 import { breadcrumbJsonLd, faqJsonLd, pageMetadata } from "@/lib/seo";
 
 export const metadata = pageMetadata({
@@ -31,7 +33,7 @@ const FAQS: SeoFaq[] = [
   },
   {
     q: "آیا ژورنال ترید رایگان است؟",
-    a: "بخش ترید جزو بخش‌های اشتراکی است. هر حساب تازه 3 روز دسترسی به بدنسازی، کالری‌شمار و ژورنال ترید، با استفاده‌ی محدود از هوش مصنوعی می‌گیرد. «روتین من» (روتین و کارهای روزانه) 14 روز رایگان است و بعد با پلن «روتین من» (ماهانه 99 هزار تومان) ادامه پیدا می‌کند.",
+    a: "بخش ترید جزو بخش‌های اشتراکی است. هر حساب تازه 3 روز دسترسی به بدنسازی، کالری‌شمار و ژورنال ترید، با استفاده‌ی محدود از هوش مصنوعی می‌گیرد. «روتین من» (روتین و کارهای روزانه) 14 روز رایگان است و بعد با پلن «روتین من» ({{routine_monthly}}) ادامه پیدا می‌کند.",
   },
 ];
 
@@ -40,12 +42,17 @@ const BREADCRUMB = [
   { name: "ژورنال معاملاتی", path: "/trading-journal" },
 ];
 
-export default function TradingJournalPage() {
+
+// قیمت «روتین من» داخل FAQ از پنل ادمین (/admin/pricing) پر می‌شه؛ ISR تا تغییر قیمت بدون دیپلوی برسه
+export const revalidate = 300;
+
+export default async function TradingJournalPage() {
+  const faqs = fillPriceCopy(FAQS, await getPricingConfig());
   return (
     <>
       <script
         type="application/ld+json"
-        dangerouslySetInnerHTML={{ __html: JSON.stringify([breadcrumbJsonLd(BREADCRUMB), faqJsonLd(FAQS)]) }}
+        dangerouslySetInnerHTML={{ __html: JSON.stringify([breadcrumbJsonLd(BREADCRUMB), faqJsonLd(faqs)]) }}
       />
       <SeoLanding
         breadcrumb={BREADCRUMB}
@@ -95,7 +102,7 @@ export default function TradingJournalPage() {
             ],
           },
         ]}
-        faqs={FAQS}
+        faqs={faqs}
         faqTitle="سوال‌های رایج درباره ژورنال معاملاتی"
         related={[
           { href: "/blog/what-is-a-trading-journal", label: "ژورنال معاملاتی چیست و چطور بنویسیم؟", note: "مقاله‌ی کامل درباره‌ی ساختن و مرورکردن ژورنال." },

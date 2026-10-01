@@ -1,6 +1,8 @@
 import { BRAND_EN, BRAND_FA } from "@/lib/brand";
 import { DESCRIPTION_FA, FACTS_FA, PUBLIC_PAGES } from "@/lib/llmsContent";
 import { absoluteUrl } from "@/lib/seo";
+import { fillPriceCopy } from "@/lib/planPricing";
+import { getPricingConfig } from "@/lib/planPricingServer";
 import { sortedPosts } from "@/lib/blogPosts";
 
 // llms.txt — کانونشن llmstxt.org: یک فایل متنی ساده و کوتاه که به مدل‌های
@@ -9,7 +11,8 @@ import { sortedPosts } from "@/lib/blogPosts";
 // ساخته می‌شود، نه یک متن هاردکد جدا — تا هیچ‌وقت با محتوای واقعی صفحه‌ها
 // واگرا نشود. توضیح کامل‌تر در /llms-full.txt است.
 export const dynamic = "force-static";
-export const revalidate = 86400;
+// قیمت داخل متن از پنل ادمین (/admin/pricing) پر می‌شه — هر ساعت تازه
+export const revalidate = 3600;
 
 function build(): string {
   const lines: string[] = [];
@@ -46,7 +49,7 @@ function build(): string {
 }
 
 export async function GET() {
-  return new Response(build(), {
+  return new Response(fillPriceCopy(build(), await getPricingConfig()), {
     headers: { "Content-Type": "text/plain; charset=utf-8" },
   });
 }
