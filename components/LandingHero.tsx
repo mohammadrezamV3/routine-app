@@ -26,10 +26,9 @@ export function faNum(n: number | string) {
   return String(n);
 }
 
-// خط چرخان تیتر: «امروز یک تیک، / فردا یک …» — همون حلقه‌ی اصلی اپ: هر تیک
-// امروز (روتین، تمرین، خواب) فردا عادت، استریک، بدن قوی‌تر و روز کامل می‌سازه.
-// انیمیشن همونه؛ اولین کلمه («عادت») متن h1 برای سئو/صفحه‌خوان هم هست.
-const ROT_WORDS = ["عادت", "استریک", "بدن قوی‌تر", "روز کامل"];
+// خط چرخان تیتر: «تمام روتینت یک‌جا / روتین، خواب، تمرین، ترید» (متن صاحب
+// محصول)؛ انیمیشن همونه. اولین کلمه («روتین») متن h1 برای سئو/صفحه‌خوان هم هست.
+const ROT_WORDS = ["روتین", "خواب", "تمرین", "ترید"];
 
 // «روتین من» (app/weekly) همون‌طور که روی گوشی دیده می‌شه — ردیف‌ها آینه‌ی
 // DashTaskRow ـن، ردیف آخر همون ردیف سنتتیک «برنامه تمرینی امروز» با دکمه‌ی
@@ -197,9 +196,8 @@ export function LandingHero() {
             <span className="lh-title-kicker">
               روتین اپ <span className="lh-brand">آریون</span>
             </span>
-            <span className="lh-title-main">امروز یک تیک،</span>
+            <span className="lh-title-main">تمام روتینت یک‌جا</span>
             <span className="lh-title-main lh-title-rot">
-              فردا یک{" "}
               <span className="lh-rot" aria-hidden="true">
                 {ROT_WORDS.map((w, i) => (
                   <span
@@ -210,7 +208,7 @@ export function LandingHero() {
                   </span>
                 ))}
               </span>
-              <span className="lh-sr">عادت</span>
+              <span className="lh-sr">روتین</span>
             </span>
           </h1>
 
