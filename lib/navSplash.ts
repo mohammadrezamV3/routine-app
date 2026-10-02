@@ -10,6 +10,8 @@
 // سریع چشمک نمی‌زنه)، و وقتی اومد حداقل MIN_VISIBLE_MS می‌مونه تا ورودش نصفه قطع نشه.
 // تا اسپلش لود کامل صفحه (BootSplash) تموم نشده، کاری نمی‌کنه.
 
+import { whenPageReady } from "./pageReady";
+
 const SHOW_DELAY_MS = 250;
 const MIN_VISIBLE_MS = 800;
 const OUT_MS = 1300;
@@ -84,13 +86,28 @@ function update() {
 }
 
 export function navSplashStart() {
+  if (readySignal) { readySignal.cancelled = true; readySignal = null; }
   navPending = true;
   update();
 }
 
+let readySignal: { cancelled: boolean } | null = null;
+
+/**
+ * مسیر عوض شد. اسپلش هنوز نمی‌ره: تا وقتی خود صفحه‌ی تازه اسپینر/اسکلت داده
+ * نشون می‌ده (lib/pageReady.ts) ناوبری «در جریان» حساب می‌شه، وگرنه کاربر بعد از
+ * اسپلش دوباره لودینگ می‌دید.
+ */
 export function navSplashEnd() {
-  navPending = false;
-  update();
+  if (readySignal) readySignal.cancelled = true;
+  const signal = { cancelled: false };
+  readySignal = signal;
+  void whenPageReady(8000, signal).then(() => {
+    if (signal.cancelled) return;
+    readySignal = null;
+    navPending = false;
+    update();
+  });
 }
 
 /** برای PageLoader: تا وقتی mount‌ه اسپلش رو نگه می‌داره؛ تابع برگشتی آزادش می‌کنه */
