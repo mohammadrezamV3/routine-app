@@ -20,6 +20,8 @@ export type CheckoutParams = {
   discountCodeId?: string;
   inviterRewardId?: string;
   upgradeFromSubId?: string;
+  /** پاداش اچیومنت (lib/achievementRewards.ts) — فقط وقتی هست ته رشته میاد */
+  achievementRewardId?: string;
 };
 
 function secret(): string {
@@ -41,6 +43,8 @@ function canonical(p: CheckoutParams): string {
     p.discountCodeId || "",
     p.inviterRewardId || "",
     p.upgradeFromSubId || "",
+    // فقط وقتی هست اضافه می‌شه تا امضای پرداخت‌های در جریان قبل از این تغییر معتبر بمونه
+    ...(p.achievementRewardId ? [`ach:${p.achievementRewardId}`] : []),
   ].join("|");
 }
 

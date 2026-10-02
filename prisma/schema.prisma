@@ -203,6 +203,7 @@ model User {
   dailyEntries           DailyEntry[]
   sleepEntries           SleepEntry[]
   achievements           UserAchievement[]
+  achievementRewards     AchievementReward[]
   announcementDismissals AnnouncementDismissal[]
   tasks                  Task[]
   exercisePlans          ExercisePlan[]
@@ -795,6 +796,25 @@ model UserAchievement {
   unlockedAt    DateTime @default(now())
 
   @@id([userId, achievementId])
+  @@index([userId])
+}
+
+// پاداش تخفیف اچیومنت‌ها (lib/achievementRewards.ts): با باز شدن 50٪ همه‌ی
+// اچیومنت‌ها یک بار 20٪ (tier=half) و با 100٪ یک بار 50٪ (tier=full) — فقط
+// روی گزینه‌ی یک‌ماهه. ردیف موقع رسیدن به آستانه ساخته می‌شه و دیگه پاک
+// نمی‌شه (حتی اگه کاتالوگ بزرگ‌تر بشه)؛ usedAt فقط در verify بعد از پرداخت
+// موفق ست می‌شه.
+model AchievementReward {
+  id             String    @id @default(cuid())
+  userId         String
+  user           User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  tier           String // "half" | "full"
+  percent        Int
+  unlockedAt     DateTime  @default(now())
+  usedAt         DateTime?
+  subscriptionId String?
+
+  @@unique([userId, tier])
   @@index([userId])
 }
 
