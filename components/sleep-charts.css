@@ -1,0 +1,112 @@
+/* نمودار شب‌ها + تقویم امتیاز خواب (SleepTrendChart / SleepMonthMap).
+   رنگ میله‌ها/خانه‌ها داده‌ست (توکن‌های --slp-* روی .sleep-scope)؛ هیچ
+   بک‌گراندی روی دکمه/کارت اضافه نمی‌شه. */
+
+/* ── نمودار ── */
+.slc-tabs{ min-width:150px; }
+.slc-wrap{ width:100%; min-width:0; direction:ltr; }
+.slc-svg{ display:block; max-width:100%; overflow:visible; font-family:inherit; }
+.slc-grid{ stroke:var(--line); stroke-width:1; }
+.slc-target{ stroke:var(--slp-ink); stroke-width:1.2; stroke-dasharray:4 4; opacity:.75; }
+.slc-goal-band{ fill:var(--slp-ink); fill-opacity:.07; }
+.slc-axis{ fill:var(--muted); font-size:9.5px; font-variant-numeric:tabular-nums; }
+.slc-day{ fill:var(--muted); font-size:10.5px; font-weight:700; }
+.slc-day.is-today{ fill:var(--text); }
+.slc-day-sub{ fill:var(--muted); font-size:9px; opacity:.8; font-variant-numeric:tabular-nums; }
+.slc-dot{ fill:var(--muted); opacity:.45; }
+.slc-empty{ fill:none; stroke:var(--line); stroke-width:1; stroke-dasharray:2 2; }
+.slc-b-great{ fill:var(--slp-great); }
+.slc-b-good{ fill:var(--slp-good); }
+.slc-b-fair{ fill:var(--slp-fair); }
+.slc-b-poor{ fill:var(--slp-poor); }
+.slc-cap-bar, .slc-dur-bar{ fill-opacity:.92; transform-box:fill-box; }
+.slc-cap-bar{ transform-origin:50% 50%; animation:slcCapIn .55s cubic-bezier(.2,.8,.2,1) both; animation-delay:var(--d,0ms); }
+.slc-dur-bar{ transform-origin:50% 100%; animation:slcBarIn .55s cubic-bezier(.2,.8,.2,1) both; animation-delay:var(--d,0ms); }
+@keyframes slcCapIn{ from{ transform:scaleY(0); opacity:0; } to{ transform:scaleY(1); opacity:1; } }
+@keyframes slcBarIn{ from{ transform:scaleY(0); } to{ transform:scaleY(1); } }
+.slc-avg{
+  fill:none; stroke:var(--slp-ink-2); stroke-width:2.2; stroke-linecap:round; stroke-linejoin:round;
+  stroke-dasharray:1; stroke-dashoffset:0; animation:slcDraw .9s ease-out .25s both; pointer-events:none;
+}
+@keyframes slcDraw{ from{ stroke-dashoffset:1; } to{ stroke-dashoffset:0; } }
+.slc-col{ cursor:pointer; outline:none; }
+.slc-hit{ fill:transparent; }
+.slc-sel{ fill:none; stroke:var(--slp-ink); stroke-width:1.2; opacity:0; transition:opacity .15s ease; }
+.slc-col.is-sel .slc-sel{ opacity:.9; }
+.slc-col:focus-visible .slc-sel{ opacity:1; stroke-width:2; }
+
+.slc-legend{ display:flex; flex-wrap:wrap; gap:6px 14px; font-size:11px; color:var(--muted); }
+.slc-legend span{ display:inline-flex; align-items:center; gap:5px; }
+.slc-sw{ display:inline-block; width:9px; height:9px; border-radius:50%; }
+.slc-sw-line{ width:14px; height:0; border-radius:0; border-top:1.5px dashed var(--slp-ink); }
+.slc-sw-avg{ width:14px; height:2px; border-radius:2px; background:var(--slp-ink-2); }
+.slc-sw-great{ background:var(--slp-great); }
+.slc-sw-good{ background:var(--slp-good); }
+.slc-sw-fair{ background:var(--slp-fair); }
+.slc-sw-poor{ background:var(--slp-poor); }
+
+.slc-read{
+  display:flex; flex-wrap:wrap; align-items:center; gap:6px 16px; padding:10px 12px;
+  border:1px solid var(--box-line); border-radius:16px; font-size:12.5px; min-height:44px;
+}
+.slc-read-date{ font-weight:800; font-size:13px; }
+.slc-read-item{ display:inline-flex; align-items:baseline; gap:5px; font-weight:700; font-variant-numeric:tabular-nums; }
+.slc-read-item em{ font-style:normal; font-weight:500; font-size:11px; color:var(--muted); }
+
+/* ── تقویم ماهانه ── */
+.slm-nav{ display:flex; align-items:center; gap:4px; }
+.slm-title{ font-size:13px; font-weight:800; min-width:96px; text-align:center; font-variant-numeric:tabular-nums; }
+.sleep-scope button.slm-arrow, body[data-theme="light"] .sleep-scope button.slm-arrow{
+  width:30px; height:30px; padding:0; display:inline-flex; align-items:center; justify-content:center;
+  background:none; border:none; box-shadow:none; backdrop-filter:none; -webkit-backdrop-filter:none; border-radius:10px; color:var(--text);
+}
+.sleep-scope button.slm-arrow svg{ width:18px; height:18px; }
+@media (hover:hover){
+  .sleep-scope button.slm-arrow:hover:not(:disabled), body[data-theme="light"] .sleep-scope button.slm-arrow:hover:not(:disabled){
+    background:none; border:none; box-shadow:none; color:var(--slp-ink);
+  }
+}
+.sleep-scope button.slm-arrow:disabled{ opacity:.25; }
+
+.slm-grid{ display:grid; grid-template-columns:repeat(7,minmax(0,1fr)); gap:5px; }
+@media (min-width:640px){ .slm-grid{ gap:7px; } }
+.slm-wd{ text-align:center; font-size:11px; font-weight:700; color:var(--muted); padding-bottom:2px; }
+.sleep-scope .slm-cell, body[data-theme="light"] .sleep-scope .slm-cell{
+  position:relative; aspect-ratio:1/1; width:100%; padding:0; border-radius:12px;
+  display:flex; align-items:center; justify-content:center; overflow:hidden;
+  background:none; border:1px solid var(--box-line); box-shadow:none; backdrop-filter:none; -webkit-backdrop-filter:none;
+  color:var(--text); font-size:12px; font-weight:700; font-variant-numeric:tabular-nums; transition:transform .15s ease, border-color .15s ease;
+}
+@media (hover:hover){
+  .sleep-scope button.slm-cell:hover, body[data-theme="light"] .sleep-scope button.slm-cell:hover{
+    background:none; box-shadow:none; color:var(--text); border-color:var(--slp-ink);
+  }
+}
+.sleep-scope button.slm-cell:active{ transform:scale(.94); }
+.sleep-scope .slm-cell.is-blank{ border:none; visibility:hidden; }
+.sleep-scope .slm-cell.is-future{ opacity:.35; cursor:default; }
+.sleep-scope .slm-cell.is-today, body[data-theme="light"] .sleep-scope .slm-cell.is-today{ border:2px solid var(--text); }
+.slm-fill{ position:absolute; inset:0; opacity:.9; animation:slmPop .45s cubic-bezier(.2,.8,.2,1) both; animation-delay:var(--d,0ms); }
+.slm-fill-great{ background:var(--slp-great); }
+.slm-fill-good{ background:var(--slp-good); }
+.slm-fill-fair{ background:var(--slp-fair); }
+.slm-fill-poor{ background:var(--slp-poor); }
+@keyframes slmPop{ from{ opacity:0; transform:scale(.6); } to{ opacity:.9; transform:scale(1); } }
+.slm-num{ position:relative; z-index:1; }
+.slm-cell.has-score .slm-num{ color:#fff; text-shadow:0 1px 2px rgba(0,0,0,.35); }
+.sleep-scope .slm-cell:focus-visible{ outline:2px solid var(--slp-ink); outline-offset:2px; }
+
+.slm-foot{ display:flex; flex-wrap:wrap; align-items:center; justify-content:space-between; gap:8px 14px; }
+.slm-legend{ display:flex; flex-wrap:wrap; gap:6px 12px; font-size:11px; color:var(--muted); }
+.slm-legend span{ display:inline-flex; align-items:center; gap:5px; }
+.slm-legend i{ display:inline-block; width:10px; height:10px; border-radius:4px; animation:none; position:static; }
+.slm-sum{ font-size:12px; color:var(--muted); }
+.slm-sum b{ color:var(--text); font-variant-numeric:tabular-nums; }
+.slm-sum b[class*="slp-c-"]{ color:inherit; }
+
+@media (prefers-reduced-motion:reduce){
+  .slc-cap-bar, .slc-dur-bar, .slc-avg, .slm-fill{ animation:none; }
+  .slc-sel{ transition:none; }
+}
+html[data-perf="low"] .slc-cap-bar, html[data-perf="low"] .slc-dur-bar,
+html[data-perf="low"] .slc-avg, html[data-perf="low"] .slm-fill{ animation:none; }
