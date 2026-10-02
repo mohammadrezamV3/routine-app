@@ -8,7 +8,8 @@
 // استریکش رو (همراه کد دعوتش) به اشتراک بذاره.
 //
 // این پاپ‌آپ *فقط* همون لحظه‌ی کامل‌شدن امروز باز می‌شه؛ زدن شعله‌ی هدر
-// مستقیم به /streak می‌ره و هیچ پاپ‌آپی نشون نمی‌ده.
+// مستقیم به /streak می‌ره و هیچ پاپ‌آپی نشون نمی‌ده. بستن پاپ‌آپ کاربر رو
+// همون صفحه‌ای که بود نگه می‌داره (کلیک‌ها به لینک هدر نمی‌رسن).
 
 import { useCallback, useEffect, useLayoutEffect, useMemo, useRef, useState } from "react";
 import { createPortal } from "react-dom";
@@ -156,6 +157,10 @@ export function StreakCelebration({ from, to, anchor, onClose }: StreakCelebrati
       animate={{ opacity: closing ? 0 : 1 }}
       transition={{ duration: closing ? 0.45 : 0.35, delay: closing ? 0.15 : 0 }}
       onAnimationComplete={() => { if (closing) onClose(); }}
+      // این پاپ‌آپ پورتاله ولی در درخت React زیر لینک /streak هدره
+      // (HeaderStreakClock)؛ کلیک‌های React از پورتال هم بالا می‌رن، پس بدون این
+      // هر کلیک (حتی «ادامه») کاربر رو به /streak می‌برد. بستن = موندن در همین صفحه.
+      onClick={(e) => e.stopPropagation()}
       style={{ ["--flame-rgb" as any]: pal.glow }}
     >
       <div className="streak-cel-rays" aria-hidden="true" />
