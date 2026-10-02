@@ -8,6 +8,8 @@ import { DashMedicationCard } from "./DashMedicationCard";
 import { DashFriendsCard } from "./DashFriendsCard";
 import { DashWeeklyChartCard } from "./DashWeeklyChartCard";
 import { DashboardPrefs } from "@/lib/dashboardPrefs";
+import { featureVisible } from "@/lib/featureFlags";
+import { useFeatures } from "@/lib/useFeatures";
 
 type PanelKey = "reminders" | "medications" | "chart" | "friends";
 
@@ -29,14 +31,17 @@ export function DashQuickPanels({
   prefs: DashboardPrefs;
   statsRefreshKey?: number;
 }) {
+  // دوستان فلگ پنل ادمین هم داره (/admin/features) — خاموش یعنی دکمه نیست
+  const features = useFeatures();
+  const friendsOn = featureVisible(features, "friends");
   const enabled = useMemo<PanelKey[]>(() => {
     const list: PanelKey[] = [];
     if (prefs.showReminders) list.push("reminders");
     if (prefs.showMedications) list.push("medications");
     if (prefs.showChart) list.push("chart");
-    if (prefs.showFriends) list.push("friends");
+    if (prefs.showFriends && friendsOn) list.push("friends");
     return list;
-  }, [prefs.showReminders, prefs.showMedications, prefs.showChart, prefs.showFriends]);
+  }, [prefs.showReminders, prefs.showMedications, prefs.showChart, prefs.showFriends, friendsOn]);
 
   const [active, setActive] = useState<PanelKey | null>(null);
   const current = active && enabled.includes(active) ? active : enabled[0] ?? null;

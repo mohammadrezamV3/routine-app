@@ -4,12 +4,14 @@ import { requireMentorsUser, badRequest } from "@/lib/mentorGuard";
 import { readJsonBody } from "@/lib/validate";
 import { activateDueForUser } from "@/lib/mentorSchedule";
 import { publishToUser } from "@/lib/realtime";
+import { sessionFeatureBlocked } from "@/lib/featureFlagsServer";
 
 const PAGE_SIZE = 30;
 const MAX_IDS = 100;
 
 // GET /api/notifications?before=<ISO> → اعلان‌های درون‌برنامه‌ای خودم (جدیدترین اول)
 export async function GET(req: NextRequest) {
+  { const off = await sessionFeatureBlocked("notifications"); if (off) return off; }
   const g = await requireMentorsUser();
   if (!g.ok) return g.response;
   const me = g.userId;
@@ -39,6 +41,7 @@ export async function GET(req: NextRequest) {
 
 // PATCH /api/notifications { ids?: string[], all?: true } → خوانده‌شده، فقط اعلان‌های خودم
 export async function PATCH(req: Request) {
+  { const off = await sessionFeatureBlocked("notifications"); if (off) return off; }
   const g = await requireMentorsUser();
   if (!g.ok) return g.response;
   const me = g.userId;

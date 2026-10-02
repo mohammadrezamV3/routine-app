@@ -1,6 +1,7 @@
 "use client";
 
-import { useRef, useState } from "react";
+import { useEffect, useRef, useState } from "react";
+import { useFeature } from "@/lib/useFeatures";
 import { motion } from "framer-motion";
 import { PenLine } from "lucide-react";
 import { AiSparkleIcon } from "./AiSparkleIcon";
@@ -39,6 +40,9 @@ export function AddExerciseProgramForm({
   const [error, setError] = useState<string | null>(null);
   const [submitting, setSubmitting] = useState(false);
   const formRef = useRef<HTMLDivElement>(null);
+  // ساخت با AI از پنل ادمین خاموشه (فلگ aiExercisePlan) → فقط مسیر دستی
+  const aiOn = useFeature("aiExercisePlan") !== false;
+  useEffect(() => { if (!aiOn && mode !== "manual") setMode("manual"); }, [aiOn, mode]);
 
   async function submitManual(days: ExerciseDay[]) {
     setSubmitting(true);
@@ -95,7 +99,7 @@ export function AddExerciseProgramForm({
             </div>
           )}
 
-          {mode === "ai" && (
+          {mode === "ai" && aiOn && (
             <AiExercisePlanWizard onCreated={onCreated} onCancel={() => setMode("choice")} onClose={onClose} />
           )}
 
@@ -103,7 +107,7 @@ export function AddExerciseProgramForm({
             <ManualExercisePlanForm
               submitting={submitting}
               onSubmit={submitManual}
-              onCancel={() => setMode("choice")}
+              onCancel={aiOn ? () => setMode("choice") : onClose}
               onClose={onClose}
             />
           )}

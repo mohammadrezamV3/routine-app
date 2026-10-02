@@ -4,7 +4,7 @@ import { authOptions } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
 import { getAppSetting, setAppSetting } from "@/lib/appSettings";
 import { getAdminFlags } from "@/lib/adminFlag";
-import { FeatureFlags, FeatureKey, featureAllowed, normalizeFlags } from "@/lib/featureFlags";
+import { FeatureFlags, FeatureKey, featureKeyAllowed, normalizeFlags, resolveFeatureMap } from "@/lib/featureFlags";
 
 const KEY = "feature_flags";
 
@@ -37,12 +37,26 @@ async function whoIs(userId: string | undefined) {
 /** وضعیت همه‌ی قابلیت‌ها برای این کاربر (true/false) — برای /api/features */
 export async function resolveFeaturesFor(userId: string | undefined): Promise<Record<FeatureKey, boolean>> {
   const [flags, who] = await Promise.all([getFeatureFlags(), whoIs(userId)]);
-  return Object.fromEntries(Object.entries(flags).map(([k, m]) => [k, featureAllowed(m, who)])) as Record<FeatureKey, boolean>;
+  return resolveFeatureMap(flags, who);
 }
 
 export async function isFeatureEnabled(key: FeatureKey, userId: string | undefined): Promise<boolean> {
   const [flags, who] = await Promise.all([getFeatureFlags(), whoIs(userId)]);
-  return featureAllowed(flags[key], who);
+  // زیربخش (مثلا تقویم اقتصادی) فقط وقتی مجازه که مادرش (ترید) هم مجاز باشه
+  return featureKeyAllowed(flags, key, who);
+}
+
+/**
+ * صفحه‌ی اصلی کاربر واردشده سمت سرور: داشبورد → روتین → پنل کاربری. ادمین
+ * می‌تونه هر دو بخش اول رو خاموش کنه؛ پنل کاربری هیچ‌وقت فلگ نداره، پس
+ * کاربر هیچ‌وقت پشت قفل نمی‌مونه.
+ */
+export async function serverHomePath(userId: string | undefined): Promise<string> {
+  if (!userId) return "/";
+  const m = await resolveFeaturesFor(userId);
+  if (m.dashboard) return "/dashboard";
+  if (m.routine) return "/weekly";
+  return "/account";
 }
 
 /** پاسخ ۴۰۳ اگه قابلیت برای این کاربر خاموشه، وگرنه null */
@@ -64,4 +78,15 @@ export async function requireFeature(key: FeatureKey): Promise<FeatureGuardResul
   const blocked = await featureBlocked(key, userId);
   if (blocked) return { ok: false, response: blocked };
   return { ok: true, userId, isSuperAdmin: !!(session!.user as any).isSuperAdmin };
+}
+
+/**
+ * گیت فلگ برای روت‌هایی که خودشون سشن رو جدا می‌خونن (یا با requireModule):
+ * اول هر هندلر صدا زده می‌شه و اگه بخش برای این کاربر خاموش باشه همون پاسخ
+ * ۴۰۳ «موقتا غیرفعال» رو می‌ده. کاربر واردنشده هم با نقش مهمان سنجیده می‌شه
+ * (حالت «فقط ادمین‌ها»/«خاموش» یعنی بسته)؛ احراز هویت خود روت بعدش میاد.
+ */
+export async function sessionFeatureBlocked(key: FeatureKey): Promise<NextResponse | null> {
+  const session = await getServerSession(authOptions);
+  return featureBlocked(key, (session?.user as any)?.id as string | undefined);
 }

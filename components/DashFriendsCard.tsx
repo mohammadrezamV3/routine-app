@@ -1,5 +1,6 @@
 "use client";
 
+import { useFeature } from "@/lib/useFeatures";
 import { useEffect, useLayoutEffect, useRef, useState } from "react";
 import { createPortal } from "react-dom";
 import { Check, ChevronRight, Plus, Star, Trash2, Users, X } from "lucide-react";
@@ -71,7 +72,15 @@ function writeFriendsCache(key: string, list: Friend[] | null) {
   } catch {}
 }
 
-export function DashFriendsCard({ delay, module, unitLabel = "برنامه" }: { delay?: number; module?: "exercise" | "calorie"; unitLabel?: string }) {
+// فلگ «دوستان» از پنل ادمین (/admin/features) — خاموش یعنی کارت اصلا رندر نمی‌شه
+// (روت‌های /api/friends هم سمت سرور همون ۴۰۳ رو می‌دن)
+export function DashFriendsCard(props: { delay?: number; module?: "exercise" | "calorie"; unitLabel?: string }) {
+  const on = useFeature("friends");
+  if (on === false) return null;
+  return <DashFriendsCardInner {...props} />;
+}
+
+function DashFriendsCardInner({ delay, module, unitLabel = "برنامه" }: { delay?: number; module?: "exercise" | "calorie"; unitLabel?: string }) {
   const { status } = useSession();
   const [friends, setFriends] = useState<Friend[] | null>(null);
   const [requests, setRequests] = useState<FriendRequest[]>([]);

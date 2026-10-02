@@ -7,6 +7,7 @@ import { checkRateLimit } from "@/lib/rateLimit";
 import { requireModule } from "@/lib/moduleAccess";
 import { ModuleKey } from "@prisma/client";
 import { withLiveSync } from "@/lib/realtime";
+import { sessionFeatureBlocked } from "@/lib/featureFlagsServer";
 
 // PATCH /api/exercise/plan/substitute { planId, day, oldItem, newItem? }
 // جایگزینی یک حرکت — چون تجهیزاتش توی باشگاه کاربر نیست. این «برنامه‌ی جدید»
@@ -14,6 +15,7 @@ import { withLiveSync } from "@/lib/realtime";
 // دو حالت: بدون newItem → فقط سه‌تا پیشنهاد برمی‌گردونه (بدون نوشتن توی
 // دیتابیس)؛ با newItem → همون گزینه‌ی انتخاب‌شده رو واقعا جایگزین می‌کنه.
 async function handlePATCH(req: NextRequest) {
+  { const off = await sessionFeatureBlocked("exercise"); if (off) return off; }
   const guard = await requireModule(ModuleKey.EXERCISE);
   if (!guard.ok) return guard.response;
   const userId = guard.userId;

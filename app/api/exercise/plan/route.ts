@@ -9,6 +9,7 @@ import { checkAndConsumeAiQuota } from "@/lib/aiQuota";
 import { FA_WEEKDAY } from "@/lib/jalali";
 import { withLiveSync } from "@/lib/realtime";
 import { validateUserSplit, type UserSplitDay } from "@/lib/exerciseSplit";
+import { sessionFeatureBlocked } from "@/lib/featureFlagsServer";
 
 const VALID_LEVELS: ExerciseLevel[] = ["beginner", "intermediate", "advanced"];
 const MAX_DESCRIPTION_LEN = 500;
@@ -19,6 +20,7 @@ const MAX_GOAL_LEN = 200;
 export const maxDuration = 60;
 
 export async function GET() {
+  { const off = await sessionFeatureBlocked("exercise"); if (off) return off; }
   const guard = await requireModule(ModuleKey.EXERCISE);
   if (!guard.ok) return guard.response;
   const userId = guard.userId;
@@ -39,6 +41,7 @@ export async function GET() {
 }
 
 async function handlePOST(req: NextRequest) {
+  { const off = await sessionFeatureBlocked("aiExercisePlan"); if (off) return off; }
   const guard = await requireModule(ModuleKey.EXERCISE);
   if (!guard.ok) return guard.response;
   const userId = guard.userId;

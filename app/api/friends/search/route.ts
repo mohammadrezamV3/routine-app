@@ -5,11 +5,13 @@ import { prisma } from "@/lib/prisma";
 import { NAME_STYLE_SELECT, nameFlags } from "@/lib/nameStyle";
 import { checkRateLimit, getClientIp } from "@/lib/rateLimit";
 import { clampQuery } from "@/lib/validate";
+import { sessionFeatureBlocked } from "@/lib/featureFlagsServer";
 
 // GET /api/friends/search?q=...  → جستجوی زنده‌ی کاربر با یوزرنیم/اسم، برای
 // تایپ‌آهد «افزودن دوست». برای هر نتیجه وضعیت فعلی رابطه رو هم برمی‌گردونه
 // تا سمت کلاینت بشه به‌جای دکمه‌ی ارسال، وضعیت «قبلا دوستید»/«در انتظار» رو نشون داد.
 export async function GET(req: NextRequest) {
+  { const off = await sessionFeatureBlocked("friends"); if (off) return off; }
   const session = await getServerSession(authOptions);
   const userId = (session?.user as any)?.id;
   if (!userId) return NextResponse.json({ error: "unauthorized" }, { status: 401 });

@@ -6,6 +6,7 @@ import { clampText } from "@/lib/validate";
 import { isHexColor } from "@/lib/tradeServer";
 import { MAX_CHECKLISTS, MAX_CHECKLIST_ITEMS, MIN_CHECKLIST_ITEMS } from "@/lib/tradeTypes";
 import { withLiveSync } from "@/lib/realtime";
+import { sessionFeatureBlocked } from "@/lib/featureFlagsServer";
 
 // چک‌لیست‌های نام‌دار کاربر. جایگزین /api/trade/checklist (تکی) شده — آن
 // نسخه یک لیست تخت واحد برای هر کاربر بود و امکان «هر معامله با چک‌لیست
@@ -41,6 +42,7 @@ function parseItems(raw: unknown): string[] {
 }
 
 export async function GET() {
+  { const off = await sessionFeatureBlocked("tradeChecklists"); if (off) return off; }
   const guard = await requireModule(ModuleKey.TRADE);
   if (!guard.ok) return guard.response;
   const userId = guard.userId;
@@ -85,6 +87,7 @@ export async function GET() {
 
 // POST { name, color?, required?, items?: string[], duplicateOf?: string }
 async function handlePOST(req: NextRequest) {
+  { const off = await sessionFeatureBlocked("tradeChecklists"); if (off) return off; }
   const guard = await requireModule(ModuleKey.TRADE);
   if (!guard.ok) return guard.response;
   const userId = guard.userId;
@@ -136,6 +139,7 @@ async function handlePOST(req: NextRequest) {
 // این کار هم ترتیب و هم افزودن/حذف را در یک درخواست حل می‌کند. اسنپ‌شات
 // معاملات قبلی از این تغییر اثر نمی‌گیرد (متنشان جداگانه ذخیره شده).
 async function handlePATCH(req: NextRequest) {
+  { const off = await sessionFeatureBlocked("tradeChecklists"); if (off) return off; }
   const guard = await requireModule(ModuleKey.TRADE);
   if (!guard.ok) return guard.response;
   const userId = guard.userId;
@@ -177,6 +181,7 @@ async function handlePATCH(req: NextRequest) {
 
 // DELETE ?id=...
 async function handleDELETE(req: NextRequest) {
+  { const off = await sessionFeatureBlocked("tradeChecklists"); if (off) return off; }
   const guard = await requireModule(ModuleKey.TRADE);
   if (!guard.ok) return guard.response;
   const id = req.nextUrl.searchParams.get("id");

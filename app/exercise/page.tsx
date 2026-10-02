@@ -7,6 +7,8 @@ import { CaloriePanel } from "@/components/CaloriePanel";
 import { ModuleGate } from "@/components/ModuleGate";
 import { PanelSkeleton } from "@/components/PanelSkeleton";
 import { ICONS } from "@/components/NavDrawer";
+import { featureVisible } from "@/lib/featureFlags";
+import { useFeatures } from "@/lib/useFeatures";
 
 // انتخاب برنامه‌ی تمرینی/غذایی دیگه تب روی صفحه نداره — طبق درخواست
 // صریح کاربر فقط از منوی «بدنسازی» ← «برنامه تمرینی»/«برنامه غذایی» ممکنه؛
@@ -17,7 +19,13 @@ import { ICONS } from "@/components/NavDrawer";
 // بعد ناوبری سمت کلاینت (بدون ریمانت شدن کامپوننت) واکنش نشون می‌ده.
 function BodybuildingTabContent() {
   const searchParams = useSearchParams();
-  const tab = searchParams.get("tab") === "calorie" ? "calorie" : "exercise";
+  const features = useFeatures();
+  const requested = searchParams.get("tab") === "calorie" ? "calorie" : "exercise";
+  // هر تب فلگ خودش رو داره (/admin/features)؛ تب خاموش → تب دیگه. اگه هر دو
+  // خاموش باشن خود layout سمت سرور پیام «موقتا غیرفعال» رو نشون داده.
+  const tab = requested === "exercise" && !featureVisible(features, "exercise") ? "calorie"
+    : requested === "calorie" && !featureVisible(features, "calorie") ? "exercise"
+    : requested;
 
   return (
     <div style={{ marginTop: 14 }}>

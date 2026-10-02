@@ -73,6 +73,8 @@ export function DashboardHero({
   onOpenCommand,
   onShare,
   routineLocked = false,
+  routineOff = false,
+  streakOn = true,
 }: {
   data: DashboardData | null;
   routine: {
@@ -87,6 +89,10 @@ export function DashboardHero({
   /** «اشتراک موفقیت» — پاپ‌آپ DashboardShare */
   onShare?: () => void;
   routineLocked?: boolean;
+  /** روتین از پنل ادمین خاموشه (فلگ routine) — حلقه‌ی روتین نیست، چیپ خرید هم نه */
+  routineOff?: boolean;
+  /** فلگ streak — چیپ استریک فقط وقتی /streak باز باشه لینک می‌شه */
+  streakOn?: boolean;
 }) {
   const now = useNow();
   const heroRef = useRef<HTMLElement>(null);
@@ -119,7 +125,7 @@ export function DashboardHero({
   }, [now]);
 
   // ── سه حلقه ──
-  const shownRings = heroRings(data, routine.stats, routineLocked).filter((r) => r.show);
+  const shownRings = heroRings(data, routine.stats, routineLocked || routineOff).filter((r) => r.show);
   const ex = data?.exercise;
   const cal = data?.calorie;
 
@@ -183,13 +189,13 @@ export function DashboardHero({
         <p className="db-hero-insight" aria-live="polite">{insight ?? <Skel w="70%" h={13} />}</p>
 
         <div className="db-hero-chips">
-          {data?.routineTrial && (
+          {data?.routineTrial && !routineOff && (
             <Link href={`/subscription/checkout?plan=${ROUTINE_PLAN_KEY}&duration=1`} prefetch={false} className={`db-chip db-chip-trial${data.routineTrial.daysLeft <= 3 ? " is-urgent" : ""}`}>
               <DashIcon name="routine" />
               روتین من: <b>{faNum(data.routineTrial.daysLeft)}</b> روز رایگان مونده
             </Link>
           )}
-          {routineLocked && (
+          {routineLocked && !routineOff && (
             <Link href={`/subscription/checkout?plan=${ROUTINE_PLAN_KEY}&duration=1`} prefetch={false} className="db-chip db-chip-trial is-urgent">
               <DashIcon name="lock" />
               خرید «روتین من»

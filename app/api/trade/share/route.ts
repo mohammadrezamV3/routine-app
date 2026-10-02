@@ -6,6 +6,7 @@ import { requireModule } from "@/lib/moduleAccess";
 import { checkRateLimit } from "@/lib/rateLimit";
 import { TRADE_SHARE_PERIODS, type TradeSharePeriod, type TradeShareResponse } from "@/lib/tradeShareTypes";
 import { computeTradeShare, isValidIsoDate, resolveTradeShareRange, tehranToday } from "@/lib/tradeShare";
+import { sessionFeatureBlocked } from "@/lib/featureFlagsServer";
 
 // کارنامه‌ی ترید برای اشتراک تصویر: یک روز/هفته/ماه شمسی، یک حساب یا همه.
 // فقط خواندن؛ محاسبه در lib/tradeShare.ts و قرارداد در lib/tradeShareTypes.ts.
@@ -20,6 +21,7 @@ function json(body: unknown, status = 200) {
 
 // GET /api/trade/share?period=day|week|month&date=YYYY-MM-DD&account=<id>|all
 export async function GET(req: NextRequest) {
+  { const off = await sessionFeatureBlocked("tradeShare"); if (off) return off; }
   const guard = await requireModule(ModuleKey.TRADE);
   if (!guard.ok) return guard.response;
   const userId = guard.userId;

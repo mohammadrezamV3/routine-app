@@ -4145,6 +4145,16 @@ body[data-theme="light"] .aurora-blob{ opacity:.45; }
 .module-gate-icon svg{ width:21px; height:21px; }
 .module-gate-msg{ font-size:13.5px; font-weight:700; color:var(--text); }
 .module-gate-sub{ font-size:12px; font-weight:600; color:var(--muted); }
+/* بخشی که از پنل ادمین (/admin/features) خاموشه — components/FeaturePageGate.tsx.
+   بدون بک‌گراند؛ فقط آیکون قفل + پیام + لینک برگشت با کلاس دکمه‌ی سایت */
+.feature-off{
+  display:flex; flex-direction:column; align-items:center; justify-content:center; gap:10px;
+  min-height:min(60vh, 420px); padding:24px 16px; text-align:center;
+}
+a.feature-off-link{
+  margin-top:4px; min-height:36px; padding:7px 18px; border:1px solid var(--accent); border-radius:11px;
+  font-size:12.5px; font-weight:700; text-decoration:none;
+}
 /* نوار «X روز از دوره‌ی رایگان روتین من مونده» — فقط حاشیه، بدون بک‌گراند */
 .routine-trial-strip{
   display:flex; align-items:center; justify-content:space-between; gap:10px; flex-wrap:wrap;
@@ -5496,6 +5506,21 @@ textarea.admin-input{ resize:vertical; font-family:inherit; }
 .admin-seg[data-active="off"] .auth-tab-indicator{ background:var(--adm-red); box-shadow:0 4px 14px rgba(224,82,82,.3); }
 .admin-seg .auth-tab:disabled{ opacity:.65; cursor:progress; }
 @media (max-width:700px){ .admin-feature-row{ flex-direction:column; align-items:stretch; } }
+/* دسته‌بندی بخش‌ها بر اساس حوزه + جست‌وجو (app/admin/features) — بدون بک‌گراند تازه */
+.admin-feature-toolbar{ display:flex; align-items:center; justify-content:space-between; gap:12px; flex-wrap:wrap; margin-bottom:12px; }
+.admin-feature-search{ flex:1 1 240px; max-width:360px; }
+.admin-feature-counts{ display:flex; gap:14px; font-size:12px; color:var(--adm-muted); font-weight:600; }
+.admin-feature-counts b{ color:var(--adm-text); font-weight:800; margin-left:3px; }
+.admin-feature-counts .is-off b{ color:var(--adm-red); }
+.admin-feature-grid{ display:grid; grid-template-columns:repeat(auto-fit, minmax(min(100%, 520px), 1fr)); gap:12px; align-items:start; }
+.admin-feature-card .admin-perm-group-title{ font-size:12.5px; margin-bottom:4px; }
+.admin-feature-text{ min-width:0; }
+.admin-feature-row.is-child .admin-feature-text{ padding-inline-start:12px; border-inline-start:2px solid var(--adm-border); }
+.admin-feature-note{ color:var(--adm-amber); }
+@media (max-width:700px){
+  .admin-feature-search{ max-width:none; }
+  .admin-feature-row .admin-feature-modes{ align-self:stretch; }
+}
 .admin-quick-grid{ display:grid; grid-template-columns:repeat(auto-fill, minmax(170px, 1fr)); gap:10px; margin-bottom:20px; }
 .admin-quick-link{ display:flex; align-items:center; gap:10px; padding:14px; text-decoration:none; color:var(--adm-text); font-size:13px; font-weight:700; transition:border-color .15s ease, color .15s ease; }
 @media (hover:hover){ .admin-quick-link:hover{ border-color:var(--adm-accent); color:var(--adm-accent); } }

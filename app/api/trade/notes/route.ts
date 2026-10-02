@@ -5,6 +5,7 @@ import { requireModule } from "@/lib/moduleAccess";
 import { clampText } from "@/lib/validate";
 import { isHexColor } from "@/lib/tradeServer";
 import { withLiveSync } from "@/lib/realtime";
+import { sessionFeatureBlocked } from "@/lib/featureFlagsServer";
 
 // یادداشت‌های ترید. جست‌وجو عمدا روی عنوان و متن با `contains` انجام
 // می‌شود (نه full-text index): حجم یادداشت‌های یک کاربر کوچک است و
@@ -42,6 +43,7 @@ function parseNote(body: any): string | { title: string; content: string; color:
 
 // GET /api/trade/notes?q=...&tags=id1,id2&accountId=...
 export async function GET(req: NextRequest) {
+  { const off = await sessionFeatureBlocked("tradeNotes"); if (off) return off; }
   const guard = await requireModule(ModuleKey.TRADE);
   if (!guard.ok) return guard.response;
   const userId = guard.userId;
@@ -72,6 +74,7 @@ export async function GET(req: NextRequest) {
 }
 
 async function handlePOST(req: NextRequest) {
+  { const off = await sessionFeatureBlocked("tradeNotes"); if (off) return off; }
   const guard = await requireModule(ModuleKey.TRADE);
   if (!guard.ok) return guard.response;
   const userId = guard.userId;
@@ -102,6 +105,7 @@ async function handlePOST(req: NextRequest) {
 }
 
 async function handlePATCH(req: NextRequest) {
+  { const off = await sessionFeatureBlocked("tradeNotes"); if (off) return off; }
   const guard = await requireModule(ModuleKey.TRADE);
   if (!guard.ok) return guard.response;
   const userId = guard.userId;
@@ -128,6 +132,7 @@ async function handlePATCH(req: NextRequest) {
 }
 
 async function handleDELETE(req: NextRequest) {
+  { const off = await sessionFeatureBlocked("tradeNotes"); if (off) return off; }
   const guard = await requireModule(ModuleKey.TRADE);
   if (!guard.ok) return guard.response;
   const id = req.nextUrl.searchParams.get("id");

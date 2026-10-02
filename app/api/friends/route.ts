@@ -9,6 +9,7 @@ import { isValidUsername } from "@/lib/validate";
 import { isoLocal, FA_WEEKDAY } from "@/lib/jalali";
 import { sessionsThisWeekTotal, sessionsThisWeekDone, weekProgressPct, computeExerciseStreak, ExerciseLogRange } from "@/lib/exerciseStats";
 import { sendPushToUser } from "@/lib/webPush";
+import { sessionFeatureBlocked } from "@/lib/featureFlagsServer";
 
 // پیشرفت «بدنسازی» یک دوست — بر خلاف statsForUser (که روزانه‌ست، چون
 // روتین هر روز تسک داره)، اینجا مبنا «جلسات این‌هفته» است، چون تمرین فقط
@@ -82,6 +83,7 @@ async function statsForUserCalorie(userId: string) {
 // هرکدوم؛ exercise یعنی پیشرفت بدنسازی، calorie یعنی روزهای موفق کالری،
 // وگرنه پیشرفت روتین روزانه (پیش‌فرض، برای داشبورد اصلی).
 export async function GET(req: NextRequest) {
+  { const off = await sessionFeatureBlocked("friends"); if (off) return off; }
   const session = await getServerSession(authOptions);
   const userId = (session?.user as any)?.id;
   if (!userId) return NextResponse.json({ error: "unauthorized" }, { status: 401 });
@@ -136,6 +138,7 @@ export async function GET(req: NextRequest) {
 // حالت userId برای نتیجه‌ی جستجوی زنده‌ست (کاربر از قبل با آیدی پیدا شده)؛
 // username برای سازگاری با ورودی مستقیم یوزرنیم.
 export async function POST(req: NextRequest) {
+  { const off = await sessionFeatureBlocked("friends"); if (off) return off; }
   const session = await getServerSession(authOptions);
   const userId = (session?.user as any)?.id;
   if (!userId) return NextResponse.json({ error: "unauthorized" }, { status: 401 });

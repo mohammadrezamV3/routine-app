@@ -3,7 +3,7 @@ import { redirect } from "next/navigation";
 import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
-import { isFeatureEnabled } from "@/lib/featureFlagsServer";
+import { isFeatureEnabled, serverHomePath } from "@/lib/featureFlagsServer";
 import { buildDashboard, dashboardKey, dayInTimezone } from "@/lib/dashboardServer";
 import { DashboardClient, type DashboardGate } from "@/components/DashboardClient";
 
@@ -30,7 +30,8 @@ export default async function DashboardPage() {
   // فلگ برای این کاربر خاموشه (ادمین عمدا خاموشش کرده) → صفحه‌ی اصلی قبلی، نه
   // صفحه‌ی قفل؛ چون /dashboard حالا مقصد پیش‌فرض بعد از ورود و fallback
   // lib/homePath.ts هم هست، کاربر هیچ‌وقت نباید این‌جا پشت قفل بمونه.
-  if (!(await isFeatureEnabled("dashboard", userId))) redirect("/weekly");
+  // روتین هم خاموش باشه → پنل کاربری (serverHomePath)
+  if (!(await isFeatureEnabled("dashboard", userId))) redirect(await serverHomePath(userId));
 
   let initial: { key: string; data: Awaited<ReturnType<typeof buildDashboard>> } | null = null;
   let gate: DashboardGate = "on";
