@@ -245,11 +245,18 @@ body[data-theme="light"] .db-hero-phase:not(.is-night){ color:#D98A1E; }
 @media (hover:hover){ .db-page .db-cmd-trigger:hover{ border-color:rgba(var(--accent-rgb),.55); color:var(--text); } }
 .db-cmd-trigger-keys{ display:none; gap:4px; }
 @media (hover:hover) and (pointer:fine){ .db-cmd-trigger-keys{ display:inline-flex; } }
+@media (hover:none), (pointer:coarse){ .db-cmd-trigger-keys{ display:none !important; } }
 .db-kbd{
   display:inline-flex; align-items:center; justify-content:center; min-width:22px; height:20px; padding:0 5px;
   border-radius:6px; border:1px solid var(--box-line); border-bottom-width:2px;
   font-family:var(--font-latin), sans-serif; font-size:10px; font-weight:700; color:var(--muted);
 }
+/* راهنمای کیبورد (Esc و پایین پالت) روی لمسی معنی نداره؛ بستن با زدن پس‌زمینه */
+@media (hover:none), (pointer:coarse){ .db-cmd-esc{ display:none; } }
+.db-cmd-foot{ display:none; gap:16px; padding:9px 16px; border-top:1px solid var(--surface-line); font-size:10.5px; color:var(--muted); }
+.db-cmd-foot span{ display:inline-flex; align-items:center; gap:4px; }
+@media (hover:hover) and (pointer:fine){ .db-cmd-foot{ display:flex; } }
+@media (hover:none), (pointer:coarse){ .db-cmd-foot{ display:none !important; } }
 
 /* حلقه‌های روز */
 .db-hero-orbit{ grid-area:orbit; display:flex; align-items:center; gap:18px; }
@@ -779,9 +786,6 @@ body[data-theme="light"] .db-cmd{ box-shadow:0 30px 70px -20px rgba(80,50,20,.35
 .db-cmd-enter{ font-size:12px; color:var(--muted); opacity:0; transition:opacity .12s ease; }
 .db-cmd-item.is-active .db-cmd-enter{ opacity:1; color:var(--accent); }
 .db-cmd-empty{ padding:28px; text-align:center; font-size:12.5px; color:var(--muted); }
-.db-cmd-foot{ display:none; gap:16px; padding:9px 16px; border-top:1px solid var(--surface-line); font-size:10.5px; color:var(--muted); }
-.db-cmd-foot span{ display:inline-flex; align-items:center; gap:4px; }
-@media (hover:hover) and (pointer:fine){ .db-cmd-foot{ display:flex; } }
 
 /* ============================================================
    حرکت‌های آیکون (components/DashboardIcons.tsx)
