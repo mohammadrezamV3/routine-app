@@ -139,7 +139,6 @@ export function DashboardHero({
     return parts.join(" · ");
   }, [routine.ready, routine.stats, ex, cal]);
 
-  const tier = getStreakTier(routine.streak);
 
   return (
     <motion.section ref={heroRef as any} className="db-hero" initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.55, ease: D_EASE }}>
@@ -184,10 +183,6 @@ export function DashboardHero({
         <p className="db-hero-insight" aria-live="polite">{insight ?? <Skel w="70%" h={13} />}</p>
 
         <div className="db-hero-chips">
-          <Link href="/streak" prefetch className={`db-chip db-chip-streak tier-${tier.tier}`} title={tier.name} aria-label={routine.streak === null ? "استریک" : `${faNum(routine.streak)} روز پشت‌سرهم`}>
-            <DashIcon name="flame" className="dbi-live" />
-            {routine.streak === null ? <Skel w={24} h={10} /> : <b>{faNum(routine.streak)}</b>}
-          </Link>
           {data?.routineTrial && (
             <Link href={`/subscription/checkout?plan=${ROUTINE_PLAN_KEY}&duration=1`} prefetch={false} className={`db-chip db-chip-trial${data.routineTrial.daysLeft <= 3 ? " is-urgent" : ""}`}>
               <DashIcon name="routine" />
@@ -206,12 +201,6 @@ export function DashboardHero({
               {data.plan.status === "TRIAL" ? "دوره‌ی آزمایشی" : data.plan.name}
               <span className="db-chip-sub">تا {daysLeft(data.plan.endsAt)} روز دیگه</span>
             </Link>
-          )}
-          {data && data.notifications.unread > 0 && (
-            <span className="db-chip db-chip-bell">
-              <DashIcon name="bell" className="dbi-live" />
-              <b>{faNum(data.notifications.unread)}</b> اعلان تازه
-            </span>
           )}
         </div>
 
