@@ -490,12 +490,6 @@
     display:flex; align-items:center; justify-content:center;
     background:var(--accent); color:var(--bg); border:2px solid var(--bg); cursor:pointer;
   }
-  .account-avatar-remove-btn{
-    display:flex; align-items:center; gap:5px; font-size:11px; font-weight:600; color:var(--muted);
-    background:none; border:none; cursor:pointer; transition:color .15s ease;
-  }
-  @media (hover:hover){.account-avatar-remove-btn:hover{ color:#E05252; }}
-
   .about-list{display:flex; flex-direction:column; gap:0; margin-top:8px;}
   .about-row{display:flex; align-items:center; justify-content:space-between; gap:14px; padding:14px 0; border-bottom:1px solid var(--line);}
   .about-row:last-child{border-bottom:none;}
@@ -1816,25 +1810,42 @@
     width:92px; height:92px; border-radius:50%; object-fit:cover; display:block;
     background:var(--surface-2);
   }
-  /* دیگر نام/آیدی این‌جا نیست؛ فقط دکمه‌ی حذف عکس. پدینگ بالا همچنان
-     باید از ۳۰پیکسل آویزان آواتار بیشتر باشد تا دکمه زیر عکس بیفتد. */
-  .profile-hero-meta{
-    padding:56px 20px 14px; display:flex; justify-content:flex-end;
+  /* پنجره‌ی عکس پروفایل (AvatarSheet): پیش‌نمایش بزرگ دایره‌ای + دو دکمه؛
+     حذف دو مرحله‌ای در همون ردیف. پنل همون .modal-panel‌ه، بک‌گراند اضافه نه. */
+  .avatar-sheet{ max-width:340px; text-align:center; }
+  .avatar-sheet-photo{
+    width:168px; height:168px; margin:6px auto 0; border-radius:50%; overflow:hidden;
+    outline:1px solid var(--surface-line); outline-offset:3px;
   }
+  .avatar-sheet-photo img{ width:100%; height:100%; object-fit:cover; display:block; }
+  .avatar-sheet-actions{ margin-top:22px; min-height:44px; }
+  .avatar-sheet-row{ display:flex; gap:10px; justify-content:center; }
+  .avatar-sheet-row > button{ flex:1; display:inline-flex; align-items:center; justify-content:center; gap:7px; }
+  .avatar-sheet-q{ font-size:13px; font-weight:700; color:var(--text); margin-bottom:12px; }
 
-  /* پاپ‌آپ پیش‌نمایش/جابه‌جایی بنر (ImageCropModal) —
-     خود پنل همون .modal-panel اپه؛ قاب فقط بوردر داره، بک‌گراند نه. */
+  /* پاپ‌آپ کراپ لمسی بنر و عکس پروفایل (ImageCropModal) —
+     خود پنل همون .modal-panel اپه؛ قاب فقط بوردر داره، بک‌گراند نه.
+     زوم/جابه‌جایی فقط با لمس و چرخ موس، هیچ اسلایدر یا دکمه‌ای نیست. */
   .crop-modal{ max-width:400px; }
   .crop-frame{
     position:relative; width:100%; max-width:340px; margin:0 auto; overflow:hidden;
     border-radius:16px; border:1px solid var(--surface-line); touch-action:none; cursor:grab;
-    user-select:none; -webkit-user-select:none;
+    user-select:none; -webkit-user-select:none; -webkit-touch-callout:none; overscroll-behavior:contain;
   }
   .crop-frame:active{ cursor:grabbing; }
-  .crop-img{ position:absolute; top:0; left:0; max-width:none; pointer-events:none; will-change:transform; }
-  .crop-hint{ text-align:center; font-size:11.5px; color:var(--muted); margin:10px 0 4px; }
-  .crop-zoom{ display:flex; align-items:center; gap:10px; color:var(--muted); margin:8px auto 0; max-width:340px; }
-  .crop-zoom input{ flex:1; accent-color:var(--accent); }
+  .crop-img{
+    position:absolute; top:0; left:0; max-width:none; pointer-events:none;
+    transform-origin:0 0; will-change:transform; backface-visibility:hidden;
+  }
+  .crop-img.is-easing{ transition:transform .26s cubic-bezier(.22,1,.36,1); }
+  /* قاب دایره‌ای عکس پروفایل: بیرون دایره تیره می‌شه تا دقیقا همون چیزی
+     که روی آواتار دیده می‌شه معلوم باشه */
+  .crop-frame.is-circle{ max-width:300px; border-radius:20px; }
+  .crop-ring{
+    position:absolute; inset:0; border-radius:50%; pointer-events:none;
+    box-shadow:0 0 0 999px rgba(0,0,0,.52), inset 0 0 0 1.5px rgba(255,255,255,.75);
+  }
+  .crop-hint{ text-align:center; font-size:11.5px; line-height:1.8; color:var(--muted); margin:12px auto 0; max-width:300px; }
   .crop-actions{ display:flex; justify-content:flex-end; gap:8px; margin-top:16px; }
 
   /* ── تیون دسکتاپ پنل کاربری ─────────────────────────────────────────

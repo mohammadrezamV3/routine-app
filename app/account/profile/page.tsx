@@ -16,9 +16,9 @@ import { getAccount, getAvatarUrl, invalidateAccountCache, AccountData } from "@
 import { getBodyMetrics, saveBodyMetrics } from "@/lib/bodyMetrics";
 import { isValidUsername, isValidPersianName } from "@/lib/validate";
 import { ImageCropModal } from "@/components/ImageCropModal";
+import { AvatarSheet } from "@/components/AvatarSheet";
 import { CUSTOM_REFERRAL_CODE_RE, REFERRAL_DISCOUNT_PERCENT, REFERRAL_INVITER_REWARD_PERCENT, normalizeReferralCode } from "@/lib/referral";
 import { faNum } from "@/lib/jalali";
-import { centerCropToDataUrl } from "@/lib/imageResize";
 import { Spinner } from "@/components/Spinner";
 
 type ProfileUser = {
@@ -126,9 +126,8 @@ export default function AccountProfilePage() {
     });
   }, []);
 
-  // ورودی هر دو تابع خود File نیست، dataURL کوچیک‌شده‌ست: آواتار از
-  // centerCropToDataUrl (کراپ خودکار وسط، بدون هیچ پاپ‌آپی) و بنر از
-  // ImageCropModal.
+  // ورودی هر دو تابع خود File نیست، dataURL کراپ‌شده از ImageCropModal‌ه
+  // (آواتار 256×256 با قاب دایره‌ای، بنر 1024×320).
   async function uploadAvatar(dataUrl: string) {
     setMediaError(null);
     setAvatarSaving(true);
@@ -155,11 +154,18 @@ export default function AccountProfilePage() {
 
   async function removeAvatar() {
     setAvatarSaving(true);
-    await fetch("/api/account/avatar", { method: "DELETE" });
-    setAvatarUrl(null);
-    invalidateAccountCache();
-    setAvatarSaving(false);
-    window.dispatchEvent(new Event("avatar-updated"));
+    try {
+      const res = await fetch("/api/account/avatar", { method: "DELETE" });
+      if (!res.ok) { setMediaError("حذف عکس ناموفق بود"); return; }
+      setAvatarUrl(null);
+      setAvatarSheet(false);
+      invalidateAccountCache();
+      window.dispatchEvent(new Event("avatar-updated"));
+    } catch {
+      setMediaError("حذف عکس ناموفق بود");
+    } finally {
+      setAvatarSaving(false);
+    }
   }
 
   async function uploadBanner(dataUrl: string) {
@@ -181,26 +187,21 @@ export default function AccountProfilePage() {
     }
   }
 
-  // بنر هنوز پاپ‌آپ جابه‌جایی (ImageCropModal) داره؛ عکس پروفایل نه.
-  const [cropping, setCropping] = useState<{ file: File; kind: "banner" } | null>(null);
+  // بنر و عکس پروفایل هر دو از ImageCropModal (زوم/جابه‌جایی فقط لمسی) رد می‌شن.
+  const [cropping, setCropping] = useState<{ file: File; kind: "banner" | "avatar" } | null>(null);
+  const [avatarSheet, setAvatarSheet] = useState(false);
 
-  // طبق درخواست صریح، عکس پروفایل هیچ مرحله‌ی ویرایش/جابه‌جایی نداره:
-  // عکس انتخاب‌شده همون لحظه با کراپ خودکار وسط (cover) به 256×256
-  // کوچیک و فشرده می‌شه و مستقیم آپلود می‌شه. اعتبارسنجی سمت سرور
-  // (/api/account/avatar) دست نخورده.
-  async function pickAvatarFile(file: File) {
+  // زدن آواتار: اگه عکس داره پنجره‌ی عکس (پیش‌نمایش/عکس جدید/حذف)، وگرنه مستقیم انتخاب فایل
+  function onAvatarTap() {
+    if (avatarUrl) setAvatarSheet(true);
+    else avatarInputRef.current?.click();
+  }
+
+  function pickAvatarFile(file: File) {
     setMediaError(null);
     if (!file.type.startsWith("image/")) { setMediaError("فایل انتخاب‌شده عکس نیست"); return; }
-    setAvatarSaving(true);
-    let dataUrl: string;
-    try {
-      dataUrl = await centerCropToDataUrl(file, 256, 256);
-    } catch {
-      setAvatarSaving(false);
-      setMediaError("این فرمت عکس پشتیبانی نمی‌شه (JPG یا PNG انتخاب کن)");
-      return;
-    }
-    await uploadAvatar(dataUrl);
+    setAvatarSheet(false);
+    setCropping({ file, kind: "avatar" });
   }
 
   function pickBannerFile(file: File) {
@@ -336,7 +337,7 @@ export default function AccountProfilePage() {
           {/* طبق درخواست صریح دکمه‌ی جدا ندارد — خود عکس کلیک‌پذیر است.
               آیکون دوربین فقط یک نشانه‌ی بصری است (pointer-events ندارد). */}
           <button
-            type="button" className="profile-hero-avatar-wrap" onClick={() => avatarInputRef.current?.click()}
+            type="button" className="profile-hero-avatar-wrap" onClick={onAvatarTap}
             disabled={avatarSaving} aria-label="تغییر عکس پروفایل"
           >
             {avatarUrl ? (
@@ -354,30 +355,33 @@ export default function AccountProfilePage() {
           />
         </div>
 
-        {/* طبق درخواست صریح، نام و آیدی زیر بنر نوشته نمی‌شوند — همان‌ها
-            پایین‌تر توی فیلدهای «پروفایل عمومی» هستند. این ردیف فقط جای
-            دکمه‌ی حذف عکس است و اگر عکسی نباشد اصلا رندر نمی‌شود. */}
-        {avatarUrl && (
-          <div className="profile-hero-meta">
-            <button type="button" className="account-avatar-remove-btn" onClick={removeAvatar} disabled={avatarSaving}>
-              <Trash2 size={13} /> حذف عکس پروفایل
-            </button>
-          </div>
-        )}
-
         {mediaError && <div className="field-error-msg" style={{ display: "block", padding: "0 16px 12px" }}>{mediaError}</div>}
       </motion.div>
 
+      {avatarSheet && avatarUrl && (
+        <AvatarSheet
+          avatarUrl={avatarUrl}
+          busy={avatarSaving}
+          onPickNew={() => avatarInputRef.current?.click()}
+          onDelete={removeAvatar}
+          onClose={() => setAvatarSheet(false)}
+        />
+      )}
+
       {cropping && (
         <ImageCropModal
+          key={cropping.kind}
           file={cropping.file}
-          outputW={1024}
-          outputH={320}
-          title="بنر"
+          outputW={cropping.kind === "avatar" ? 256 : 1024}
+          outputH={cropping.kind === "avatar" ? 256 : 320}
+          shape={cropping.kind === "avatar" ? "circle" : "rect"}
+          title={cropping.kind === "avatar" ? "عکس پروفایل" : "بنر"}
           onCancel={() => setCropping(null)}
           onConfirm={(dataUrl) => {
+            const kind = cropping.kind;
             setCropping(null);
-            uploadBanner(dataUrl);
+            if (kind === "avatar") uploadAvatar(dataUrl);
+            else uploadBanner(dataUrl);
           }}
         />
       )}
