@@ -9,7 +9,7 @@ import { whenPageReady } from "@/lib/pageReady";
 export function BootSplashRelease() {
   useEffect(() => {
     let alive = true;
-    void whenPageReady(9000).then(() => {
+    void whenPageReady(5000).then(() => {
       if (!alive) return;
       (window as unknown as { __appHydrated?: boolean }).__appHydrated = true;
       window.dispatchEvent(new Event("app:hydrated"));

@@ -17,7 +17,12 @@ const BUSY_SELECTOR = [
   ".tg-spinner",
 ].join(",");
 
-const SETTLE_MS = 220;
+const SETTLE_MS = 150;
+// لودری که بیشتر از این روی صفحه بمونه «گیرکرده/دائمی» حساب می‌شه (مثلا اسکلت
+// بخشی که برای این کاربر هیچ‌وقت داده نمی‌گیره) و دیگه اسپلش رو نگه نمی‌داره —
+// وگرنه اسپلش تا سقف کامل روی صفحه می‌موند و «خیلی طول می‌کشید».
+const STUCK_MS = 2500;
+const firstSeen = new WeakMap<Element, number>();
 
 function visible(el: Element): boolean {
   if (el.closest("button, a, [role=button], .tick-btn")) return false;
@@ -32,7 +37,14 @@ export function pageBusy(): boolean {
   if (typeof document === "undefined") return false;
   const root = document.querySelector(".wrap") || document.body;
   const nodes = root.querySelectorAll(BUSY_SELECTOR);
-  for (let i = 0; i < nodes.length; i++) if (visible(nodes[i])) return true;
+  const now = Date.now();
+  for (let i = 0; i < nodes.length; i++) {
+    const el = nodes[i];
+    if (!visible(el)) continue;
+    const seen = firstSeen.get(el);
+    if (seen === undefined) { firstSeen.set(el, now); return true; }
+    if (now - seen < STUCK_MS) return true;
+  }
   return false;
 }
 
@@ -53,8 +65,8 @@ export function whenPageReady(capMs = 8000, signal?: { cancelled: boolean }): Pr
       if (pageBusy()) quietSince = 0;
       else if (!quietSince) quietSince = now;
       else if (now - quietSince >= SETTLE_MS) return resolve();
-      // هر ~100ms یک بار؛ ارزون‌تر از MutationObserver روی کل درخت در وسط رندر سنگین
-      raf = window.setTimeout(tick, 100) as unknown as number;
+      // هر ~60ms یک بار؛ ارزون‌تر از MutationObserver روی کل درخت در وسط رندر سنگین
+      raf = window.setTimeout(tick, 60) as unknown as number;
     };
     tick();
     void raf;

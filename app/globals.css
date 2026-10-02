@@ -9957,20 +9957,20 @@ body[data-theme="light"] .bs-logo.is-dark{ display:none; }
 @keyframes bs-phrase-stay{ 0%{ opacity:0; transform:translateY(10px); filter:blur(4px); } 20%,100%{ opacity:1; transform:none; filter:blur(0); } }
 
 /* خروج: حلقه‌ها بسته می‌شن، بعد پخش می‌شن؛ متن بالا می‌ره و پرده محو می‌شه */
-html[data-boot="out"] .bs-arc{ animation:bs-close .32s cubic-bezier(.3,.7,.3,1) forwards; }
+html[data-boot="out"] .bs-arc{ animation:bs-close .2s cubic-bezier(.3,.7,.3,1) forwards; }
 @keyframes bs-close{ from{ stroke-dasharray:92 100; } to{ stroke-dasharray:100 100; } }
-html[data-boot="out"] .bs-rings{ animation:bs-spread .75s cubic-bezier(.2,.7,.2,1) .26s forwards; }
+html[data-boot="out"] .bs-rings{ animation:bs-spread .5s cubic-bezier(.2,.7,.2,1) .14s forwards; }
 @keyframes bs-spread{ to{ transform:rotate(-90deg) scale(2.4); opacity:0; } }
-html[data-boot="out"] .bs-halo{ animation:bs-halo-out .7s ease-out .2s forwards; }
+html[data-boot="out"] .bs-halo{ animation:bs-halo-out .5s ease-out .1s forwards; }
 @keyframes bs-halo-out{ to{ transform:scale(6); opacity:0; } }
-html[data-boot="out"] .bs-logo{ animation:bs-logo-out .45s ease .3s forwards; }
+html[data-boot="out"] .bs-logo{ animation:bs-logo-out .3s ease .15s forwards; }
 @keyframes bs-logo-out{ to{ transform:scale(1.25); opacity:0; } }
 /* متن قبل از نیمه‌ی محوشدن پرده می‌ره تا روی متن صفحه نیفته */
-html[data-boot="out"] .bs-brand, html[data-boot="out"] .bs-tagline, html[data-boot="out"] .bs-phrases{ animation:bs-lift .4s cubic-bezier(.2,.7,.3,1) forwards; }
+html[data-boot="out"] .bs-brand, html[data-boot="out"] .bs-tagline, html[data-boot="out"] .bs-phrases{ animation:bs-lift .28s cubic-bezier(.2,.7,.3,1) forwards; }
 @keyframes bs-lift{ to{ transform:translateY(-30px); opacity:0; } }
-html[data-boot="out"] .bs-aura, html[data-boot="out"] .bs-grid{ animation:bs-fade-out .6s ease .2s forwards; }
+html[data-boot="out"] .bs-aura, html[data-boot="out"] .bs-grid{ animation:bs-fade-out .4s ease .1s forwards; }
 @keyframes bs-fade-out{ to{ opacity:0; } }
-html[data-boot="out"] .boot-splash{ animation:bs-out .55s ease .42s forwards; pointer-events:none; }
+html[data-boot="out"] .boot-splash{ animation:bs-out .35s ease .25s forwards; pointer-events:none; }
 @keyframes bs-out{ to{ opacity:0; } }
 
 /* دستگاه ضعیف: بدون drop-shadow، چرخش و جابه‌جایی هاله */

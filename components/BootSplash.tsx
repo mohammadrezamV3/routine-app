@@ -21,14 +21,14 @@ var d=document.documentElement,t0=0,H=!!window.__appHydrated,L=document.readySta
 requestAnimationFrame(function(){t0=Date.now();go()});
 function fin(){d.setAttribute("data-boot","done")}
 function go(){if(done||!H||!L||!t0)return;done=true;
-var w=Math.max(0,1150-(Date.now()-t0));
+var w=Math.max(0,700-(Date.now()-t0));
 setTimeout(function(){d.setAttribute("data-boot","out");
 var s=document.querySelector(".boot-splash");
 if(s)s.addEventListener("animationend",function(e){if(e.target===s&&e.animationName==="bs-out")fin()});
-setTimeout(fin,1300)},w)}
+setTimeout(fin,800)},w)}
 window.addEventListener("load",function(){L=true;go()});
 window.addEventListener("app:hydrated",function(){H=true;go()});
-setTimeout(function(){H=L=true;if(!t0)t0=1;go()},10000);
+setTimeout(function(){H=L=true;if(!t0)t0=1;go()},7000);
 }catch(e){document.documentElement.setAttribute("data-boot","done")}})();`;
 
 const RINGS = [

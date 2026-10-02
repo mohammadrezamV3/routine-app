@@ -13,8 +13,8 @@
 import { whenPageReady } from "./pageReady";
 
 const SHOW_DELAY_MS = 250;
-const MIN_VISIBLE_MS = 800;
-const OUT_MS = 1300;
+const MIN_VISIBLE_MS = 450;
+const OUT_MS = 750;
 const MAX_VISIBLE_MS = 10_000;
 
 let navPending = false;
@@ -102,12 +102,17 @@ export function navSplashEnd() {
   if (readySignal) readySignal.cancelled = true;
   const signal = { cancelled: false };
   readySignal = signal;
-  void whenPageReady(8000, signal).then(() => {
+  void whenPageReady(3500, signal).then(() => {
     if (signal.cancelled) return;
     readySignal = null;
     navPending = false;
     update();
   });
+}
+
+/** اسپلش ناوبری الان روی صفحه‌ست؟ (RouteProgress زیرش لمس کاربر رو «لغو» حساب نمی‌کنه) */
+export function navSplashVisible(): boolean {
+  return visible;
 }
 
 /** برای PageLoader: تا وقتی mount‌ه اسپلش رو نگه می‌داره؛ تابع برگشتی آزادش می‌کنه */
