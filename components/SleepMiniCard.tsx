@@ -1,6 +1,6 @@
 "use client";
 
-import "@/app/sleep/sleep.css";
+import "./sleep.css";
 import { useCallback, useEffect, useState } from "react";
 import Link from "next/link";
 import { DashCard } from "./DashCard";
@@ -36,7 +36,7 @@ export function SleepMiniCard() {
 
   return (
     <DashCard className="!p-3 sm:!p-4">
-      <Link href="/sleep" prefetch={false} className="sl-mini">
+      <Link href="/weekly/sleep" prefetch={false} className="sl-mini">
         <span className="sl-mini-ic">{ICONS.sleep}</span>
         <span className="sl-mini-body">
           {rec ? (

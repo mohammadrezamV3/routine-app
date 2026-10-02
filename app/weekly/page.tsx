@@ -7,6 +7,7 @@ import { LockBodyScroll } from "@/components/LockBodyScroll";
 import { ModuleGate } from "@/components/ModuleGate";
 import { RoutineTrialBanner } from "@/components/RoutineTrialBanner";
 import { SleepMiniCard } from "@/components/SleepMiniCard";
+import { RoutineSectionTabs } from "@/components/RoutineSectionTabs";
 import { Calendar, Filter, History } from "lucide-react";
 import {
   WEEK_ORDER,
@@ -527,6 +528,7 @@ function WeeklyPageInner() {
       <section className="dash-breakout dash-scope pb-6 text-dash-text">
         <div className="flex flex-col gap-4 sm:gap-6">
           <DashHeader progress={todayStats.pct} />
+          <RoutineSectionTabs className="slp-section-tabs" />
           <RoutineTrialBanner />
 
           <div className="flex flex-col gap-2.5 sm:gap-3 lg:flex-row lg:items-center lg:gap-4">

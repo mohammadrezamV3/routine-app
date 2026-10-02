@@ -43,7 +43,7 @@ export const ANNOUNCEMENT_PAGE_PRESETS: { value: string; label: string }[] = [
   { value: "/exercise", label: "بدنسازی" },
   { value: "/trade", label: "ترید" },
   { value: "/roadmaps", label: "رودمپ‌ها" },
-  { value: "/sleep", label: "خواب" },
+  { value: "/weekly/sleep", label: "خواب" },
   { value: "/mentor", label: "منتور" },
 ];
 

@@ -17,7 +17,7 @@ type Item = { href: string; label: string; icon: DashIconName; module?: string; 
 
 const QUICK: Item[] = [
   { href: "/weekly?add=1", label: "برنامه‌ی جدید", icon: "plus", tone: "var(--accent)", action: "program" },
-  { href: "/sleep", label: "ثبت خواب", icon: "moon", module: "SLEEP", tone: "var(--moon)" },
+  { href: "/weekly/sleep", label: "ثبت خواب", icon: "moon", module: "SLEEP", tone: "var(--moon)" },
   { href: "/exercise?tab=exercise", label: "شروع تمرین", icon: "dumbbell", module: "EXERCISE", tone: "var(--secondary)" },
   { href: "/exercise?tab=calorie", label: "ثبت غذا", icon: "apple", module: "CALORIE", tone: "var(--sun)", action: "food" },
   { href: "/trade/journal", label: "ثبت معامله", icon: "journal", module: "TRADE", tone: "var(--pnl-win)", action: "trade" },

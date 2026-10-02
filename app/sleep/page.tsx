@@ -1,17 +1,7 @@
-import type { Metadata } from "next";
-import { ModuleGate } from "@/components/ModuleGate";
-import { SleepPanel } from "@/components/SleepPanel";
+import { redirect } from "next/navigation";
 
-// صفحه‌ی شخصیه، پس ایندکس نمی‌شه (هم‌الگوی /dashboard و بقیه‌ی صفحه‌های حساب).
-export const metadata: Metadata = {
-  title: "خواب",
-  robots: { index: false, follow: false },
-};
-
-export default function SleepPage() {
-  return (
-    <ModuleGate module="SLEEP">
-      <SleepPanel />
-    </ModuleGate>
-  );
+// آدرس قدیمی: خواب حالا بخشی از «روتین من»ه (/weekly/sleep). لینک‌های قدیمی،
+// اعلان‌ها و نشانک‌ها همچنان کار می‌کنن.
+export default function SleepRedirect() {
+  redirect("/weekly/sleep");
 }

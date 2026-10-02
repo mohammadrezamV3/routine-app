@@ -10080,3 +10080,6 @@ body[data-theme="light"] .ann-content-bar, body[data-theme="light"] .ann-content
 .ann-admin-preview-head{ display:flex; align-items:center; justify-content:space-between; gap:12px; flex-wrap:wrap; }
 .admin-seg.ann-seg{ max-width:100%; overflow-x:auto; scrollbar-width:none; }
 .admin-seg.ann-seg::-webkit-scrollbar{ display:none; }
+
+/* تب‌های «برنامه‌ها / خواب» بالای روتین من (components/RoutineSectionTabs.tsx) */
+.slp-section-tabs{ width:100%; max-width:340px; }

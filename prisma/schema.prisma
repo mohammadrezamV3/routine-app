@@ -781,6 +781,13 @@ model SleepEntry {
   quality Int? // ۱ تا ۵، اختیاری، خودارزیابی کاربر
   note    String? // یادداشت کوتاه اختیاری (خواب دیدم، بی‌خوابی، …)
 
+  // جزئیات اختیاری شب (بازسازی بخش خواب): زمان به خواب رفتن، دفعات بیدارشدن،
+  // چرت روز و برچسب‌های عوامل (کلیدها در lib/sleep.ts → SLEEP_TAGS)
+  latencyMin Int?
+  awakenings Int?
+  napMin     Int?
+  tags       String[] @default([])
+
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 
