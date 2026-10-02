@@ -42,6 +42,10 @@ export const ICONS: Record<string, JSX.Element> = {
     <svg viewBox="0 0 24 24" fill="none"><rect x="3.5" y="5" width="17" height="15" rx="2.2" stroke="currentColor" strokeWidth="1.7"/><path d="M3.5 9.5h17M8 3v3.4M16 3v3.4" stroke="currentColor" strokeWidth="1.7" strokeLinecap="round"/></svg>
   ),
   // خواب — هلال ماه
+  // دوستان — دو نفر کنار هم (هم‌خط با بقیه‌ی ست)
+  friends: (
+    <svg viewBox="0 0 24 24" fill="none"><circle cx="9" cy="8" r="3.2" stroke="currentColor" strokeWidth="1.7"/><path d="M3 19.5c1-3.3 3.3-5 6-5s5 1.7 6 5" stroke="currentColor" strokeWidth="1.7" strokeLinecap="round"/><circle cx="16.6" cy="8.6" r="2.6" stroke="currentColor" strokeWidth="1.6"/><path d="M16.2 13.9c2.4 0 4.2 1.6 4.8 4.3" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round"/></svg>
+  ),
   sleep: (
     <svg viewBox="0 0 24 24" fill="none"><path d="M20 14.2A8 8 0 0 1 9.8 4a8 8 0 1 0 10.2 10.2Z" stroke="currentColor" strokeWidth="1.7" strokeLinecap="round" strokeLinejoin="round"/></svg>
   ),
@@ -136,6 +140,7 @@ const LINKS: NavItem[] = [
   { href: "/dashboard", label: "داشبورد", icon: "dashboard", feature: "dashboard" },
   { href: "/weekly", label: "روتین", icon: "weekly" },
   { href: "/sleep", label: "خواب", icon: "sleep", module: "SLEEP" },
+  { href: "/friends", label: "دوستان", icon: "friends" },
   { href: "/roadmaps", label: "رودمپ‌ها", icon: "roadmaps", feature: "roadmaps" },
   // منتورها درست زیر رودمپ‌ها. گروه فقط صفحه‌های سمت شاگرد را دارد؛
   // «پنل منتور» (برای کسی که منتوری می‌کند) این‌جا نیست — در پاپ‌آپ پروفایل،

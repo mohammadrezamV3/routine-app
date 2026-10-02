@@ -42,6 +42,7 @@ export const COMMANDS: CommandItem[] = [
 
   { id: "p-weekly", group: "صفحه‌ها", label: "روتین و برنامه‌ی هفتگی", href: "/weekly", icon: "routine", keywords: "روتین هفتگی تقویم weekly" },
   { id: "p-streak", group: "صفحه‌ها", label: "استریک و اچیومنت‌ها", href: "/streak", icon: "flame", keywords: "استریک اچیومنت نشان رکورد streak achievement طلایی" },
+  { id: "p-friends", group: "صفحه‌ها", label: "دوستان و رتبه‌بندی", href: "/friends", icon: "friends", keywords: "دوست رفیق رتبه رقابت friends leaderboard" },
   { id: "p-sleep", group: "صفحه‌ها", label: "خواب", href: "/sleep", icon: "moon", keywords: "خواب بیداری sleep شب" },
   { id: "p-exercise", group: "صفحه‌ها", label: "برنامه‌ی تمرینی", href: "/exercise?tab=exercise", icon: "dumbbell", keywords: "بدنسازی ورزش", module: "EXERCISE" },
   { id: "p-calorie", group: "صفحه‌ها", label: "کالری‌شمار", href: "/exercise?tab=calorie", icon: "apple", keywords: "رژیم تغذیه ماکرو", module: "CALORIE" },

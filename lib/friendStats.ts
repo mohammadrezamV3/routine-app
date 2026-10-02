@@ -5,6 +5,7 @@ import { prisma } from "@/lib/prisma";
 import { computeDayStats, ScheduleOpts } from "@/lib/schedule";
 import { isoLocal } from "@/lib/jalali";
 import { computeRoutineStreak } from "@/lib/routineStreak";
+import { WEEK_DAYS, type WeekPcts } from "@/lib/friendsRank";
 
 // آمار روتین *همه‌ی* دوست‌ها با تعداد ثابتی کوئری.
 //
@@ -13,7 +14,9 @@ import { computeRoutineStreak } from "@/lib/routineStreak";
 // + ۹۰ روز DailyEntry). با ۲۰ دوست یعنی ~۱۰۰ کوئری برای یک بار باز کردن
 // داشبورد. حالا سه کوئری دسته‌ای می‌زنیم (`in:` روی کل لیست دوست‌ها) و
 // بقیه‌ی محاسبه در حافظه انجام می‌شه — منطق مو‌به‌مو همونه.
-export type RoutineStats = { completed: number; total: number; pct: number; streak: number };
+// week: درصد 7 روز اخیر (قدیمی → امروز، null = روز بی‌برنامه) برای رتبه‌بندی
+// هفتگی (lib/friendsRank.ts). از همون پنجره‌ی 21 روزه‌ی اول میاد — کوئری اضافه نداره.
+export type RoutineStats = { completed: number; total: number; pct: number; streak: number; week: WeekPcts };
 
 const STREAK_LOOKBACK_DAYS = 90;
 // پنجره‌ی اول استریک. استریک به محض اولین روز ناقص می‌شکنه، پس تقریبا
@@ -74,8 +77,15 @@ export async function routineStatsForUsers(userIds: string[]): Promise<Map<strin
     const today = entries[todayIso];
     const dayStats = computeDayStats(new Date(), opts, today ? { tasks: today.tasks } : undefined);
 
+    const week: WeekPcts = [];
+    for (let back = WEEK_DAYS - 1; back >= 0; back--) {
+      const d = new Date(now.getFullYear(), now.getMonth(), now.getDate() - back);
+      const s = back === 0 ? dayStats : computeDayStats(d, opts, entries[isoLocal(d)]);
+      week.push(s.total > 0 ? s.pct : null);
+    }
+
     const { streak, hitEdge } = countStreak(entries, opts, STREAK_FIRST_WINDOW_DAYS);
-    out.set(userId, { ...dayStats, streak });
+    out.set(userId, { ...dayStats, streak, week });
     // استریکش تا ته پنجره ادامه داشت؟ پس باید عمیق‌تر نگاه کنیم.
     if (hitEdge) needDeeper.push({ userId, opts });
   }

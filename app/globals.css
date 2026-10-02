@@ -7914,23 +7914,41 @@ body[data-theme="light"] .pls-line::after, body[data-theme="light"] .pls-card::a
 .friend-profile-banner-img{
   width:100%; height:100%; object-fit:cover; display:block; border-radius:24px 24px 0 0;
 }
-/* گوشه‌ها عمدا فیزیکی‌اند (left/right)، نه منطقی: «بالا-چپ» و «بالا-راست»
-   این‌جا گوشه‌ی واقعی کادرند، نه ابتدا/انتهای جهت متن. */
-.friend-profile-banner-kebab{ position:absolute; top:8px; right:8px; z-index:3; }
-.friend-profile-banner-kebab .trade-kebab-trigger{ color:#fff; background:rgba(0,0,0,.35); }
-.friend-profile-star-btn{
-  position:absolute; top:8px; left:8px; z-index:3;
-  display:inline-flex; align-items:center; justify-content:center;
-  width:28px; height:28px; padding:0; border-radius:999px; cursor:pointer;
-  color:#fff; background:rgba(0,0,0,.35); border:none; box-shadow:none;
-  backdrop-filter:none; -webkit-backdrop-filter:none;
-  transition:color .18s ease, background .18s ease;
+/* نوار بالای بنر: سه‌نقطه (بالا-راست) و ستاره (بالا-چپ) در *یک* ردیف flex —
+   هم‌اندازه (32px)، روی یک خط مرکز، و هر دو بی‌بک‌گراند (فقط سایه‌ی آیکون
+   برای خوانایی روی عکس بنر). ریشه‌ی باگ «جای ستاره درست نیست»: دو دکمه‌ی
+   جدا absolute بودن با اندازه‌ی متفاوت (28 در برابر 24) و فقط ستاره دایره‌ی
+   تیره داشت، چون قانون بک‌گراند سه‌نقطه به ریست سراسری button باخته بود؛
+   مرکز ستاره 2px پایین‌تر و حجمش سنگین‌تر از جفتش دیده می‌شد. پنل همیشه RTL
+   است، پس فرزند اول (سه‌نقطه) سمت راست و دومی (ستاره) سمت چپ می‌نشیند. */
+.friend-profile-banner-bar{
+  position:absolute; top:10px; left:10px; right:10px; z-index:3;
+  display:flex; align-items:center; justify-content:space-between; direction:rtl;
+  pointer-events:none;
 }
-body[data-theme="light"] .friend-profile-star-btn,
-body:not([data-theme="light"]) .friend-profile-star-btn{ background:rgba(0,0,0,.35); box-shadow:none; }
-.friend-profile-star-btn.on{ color:#F5C518; }
+.friend-profile-banner-bar > *{ pointer-events:auto; }
+.friend-profile-banner-kebab{ display:flex; align-items:center; line-height:0; }
+.friend-profile-banner-bar .trade-kebab-trigger,
+body[data-theme="light"] .friend-profile-banner-bar .trade-kebab-trigger,
+.friend-profile-star-btn,
+body[data-theme="light"] .friend-profile-star-btn{
+  display:inline-flex; align-items:center; justify-content:center;
+  width:32px; height:32px; padding:0; margin:0; border-radius:999px; cursor:pointer;
+  color:#fff; background:none; border:none; box-shadow:none;
+  backdrop-filter:none; -webkit-backdrop-filter:none;
+  filter:drop-shadow(0 1px 3px rgba(0,0,0,.55));
+  transition:color .18s ease, transform .15s ease;
+}
+.friend-profile-star-btn.on,
+body[data-theme="light"] .friend-profile-star-btn.on{ color:#F5C518; }
 .friend-profile-star-btn:disabled{ opacity:.55; cursor:default; }
-@media (hover:hover){ .friend-profile-star-btn:not(:disabled):hover{ color:#F5C518; background:rgba(0,0,0,.45); } }
+@media (hover:hover){
+  .friend-profile-star-btn:not(:disabled):hover,
+  body[data-theme="light"] .friend-profile-star-btn:not(:disabled):hover{ color:#F5C518; background:none; border:none; box-shadow:none; }
+  .friend-profile-banner-bar .trade-kebab-trigger:hover,
+  body[data-theme="light"] .friend-profile-banner-bar .trade-kebab-trigger:hover{ color:#fff; background:none; border:none; box-shadow:none; }
+}
+.friend-profile-star-btn:not(:disabled):active{ transform:scale(.88); }
 /* طبق درخواست صریح تازه، اسم فرد به‌جای گوشه‌ی مخالف، *سمت چپ* خود
    عکس پروفایل می‌نشیند (avatar right:20px تا right:92px، پس name از
    right:100px شروع می‌شود و به چپ رشد می‌کند) — نه دیگر گوشه‌ی دوردست. */
@@ -8003,6 +8021,24 @@ body[data-theme="light"] button.friend-profile-username{
 .friend-profile-stat-icon{ color:var(--accent); }
 .friend-profile-stat b{ font-size:15px; font-weight:800; color:var(--text); }
 .friend-profile-stat-star{ display:inline-flex; align-items:center; gap:5px; font-size:15px; font-weight:800; color:var(--text); }
+/* پیشرفت امروز دوست (فقط دوست تاییدشده): حلقه + خط وضعیت + نوار 7 روز */
+.friend-profile-today{
+  display:flex; align-items:center; gap:14px; margin-top:14px; padding-top:14px;
+  border-top:1px solid var(--surface-line);
+}
+.friend-profile-today .gring-center b{ font-size:14px; font-weight:900; color:var(--text); }
+.friend-profile-today .gring-center small{ font-size:9px; color:var(--muted); }
+.friend-profile-today-text{ display:flex; flex-direction:column; gap:4px; min-width:0; flex:1; }
+.friend-profile-today-text .friend-profile-section-label{ margin-bottom:0; }
+.friend-profile-today-line{ font-size:12.5px; font-weight:700; color:var(--text); }
+.friend-profile-week{ display:flex; align-items:center; gap:8px; flex-wrap:wrap; margin-top:2px; }
+.friend-profile-week-count{ font-size:10.5px; color:var(--muted2); font-weight:700; }
+.friend-profile-relation{
+  display:flex; align-items:center; justify-content:center; gap:8px; flex-wrap:wrap;
+  margin-top:14px; padding-top:14px; border-top:1px solid var(--surface-line);
+}
+.friend-profile-relation > button{ flex:1; min-width:120px; }
+.friend-profile-relation-note{ width:100%; text-align:center; font-size:11.5px; color:var(--muted); }
 .account-outline-btn.active{ background:rgba(245,197,24,.1); }
 
 /* ═══════════════════════════════════════════════════════════════════════

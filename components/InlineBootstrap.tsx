@@ -96,7 +96,7 @@ export async function InlineBootstrap() {
 
     const otherIds = friendRows.map((r) => (r.requesterId === userId ? r.addresseeId : r.requesterId));
     const stats = await routineStatsForUsers(otherIds);
-    const EMPTY = { completed: 0, total: 0, pct: 0, streak: 0 };
+    const EMPTY = { completed: 0, total: 0, pct: 0, streak: 0, week: [] as (number | null)[] };
     const friends = friendRows
       .map((r) => {
         const isRequester = r.requesterId === userId;

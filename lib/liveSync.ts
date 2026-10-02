@@ -32,6 +32,7 @@
 //   mentor                منتورشیپ. زیرکلیدها: `mentor:messages`,
 //                         `mentor:mentorship`, `mentor:program`
 //   account               حساب/پلن/ماژول‌ها
+//   friends               دوستی‌ها/درخواست‌ها/فیوریت (کارت دوستان و /friends)
 //
 // قاعده‌ی تطبیق: مشترک `daily` با انتشار `daily:2026-09-27` بیدار می‌شه و
 // مشترک `daily:2026-09-27` با انتشار `daily` هم (پیشوند در هر دو جهت).
@@ -64,6 +65,7 @@ export const LIVE_DOMAINS = {
   mentorProgram: "mentor:program",
   account: "account",
   sleep: "sleep",
+  friends: "friends",
 } as const;
 
 export const ALL = "*";
@@ -299,6 +301,7 @@ const MUTATION_DOMAINS: [RegExp, string[]][] = [
   [/^\/api\/roadmaps/, [LIVE_DOMAINS.roadmaps]],
   [/^\/api\/notifications/, [LIVE_DOMAINS.notifications]],
   [/^\/api\/account/, [LIVE_DOMAINS.account]],
+  [/^\/api\/friends/, [LIVE_DOMAINS.friends]],
 ];
 
 export function domainsForMutation(path: string): string[] {
