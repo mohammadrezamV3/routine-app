@@ -104,7 +104,7 @@ export async function GET(req: NextRequest) {
   // دوست کوئری می‌زنن، ولی هرکدوم فقط ۲ کوئری سبک‌ن و این دو تب خیلی کمتر
   // از داشبورد اصلی باز می‌شن — پس فعلا همون‌طور مونده.
   const routineStats = module === "exercise" || module === "calorie" ? null : await routineStatsForUsers(otherIds);
-  const EMPTY: RoutineStats = { completed: 0, total: 0, pct: 0, streak: 0 };
+  const EMPTY: RoutineStats = { completed: 0, total: 0, pct: 0, streak: 0, week: [] };
 
   const friends = await Promise.all(
     rows.map(async (r) => {

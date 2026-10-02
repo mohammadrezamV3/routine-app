@@ -56,8 +56,9 @@ export async function GET(req: NextRequest) {
     },
   });
 
+  const relationOf = (otherId: string) => relations.find((r) => r.requesterId === otherId || r.addresseeId === otherId);
   const statusFor = (otherId: string): "none" | "friends" | "pending_sent" | "pending_received" => {
-    const rel = relations.find((r) => r.requesterId === otherId || r.addresseeId === otherId);
+    const rel = relationOf(otherId);
     if (!rel) return "none";
     if (rel.status === "ACCEPTED") return "friends";
     return rel.requesterId === userId ? "pending_sent" : "pending_received";
@@ -68,8 +69,12 @@ export async function GET(req: NextRequest) {
       id: u.id,
       name: u.name || u.username || "کاربر",
       username: u.username,
+      // avatarUrl از اول select می‌شد ولی هیچ‌وقت برنمی‌گشت — نتایج همیشه آواتار پیش‌فرض داشتن
+      avatarUrl: u.avatarUrl,
       ...nameFlags(u),
       status: statusFor(u.id),
+      // شناسه‌ی رابطه‌ی خود کاربر با این نفر (اگه هست) — برای قبول/لغو مستقیم از نتیجه
+      friendshipId: relationOf(u.id)?.id ?? null,
     })),
   });
 }
