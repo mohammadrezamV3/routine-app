@@ -9,6 +9,7 @@ import {
   hashSecret, mtTradeToEntryData, mtUpdateData, normalizeMtCashflows, normalizeMtTrades, normalizeTzOffsetMs,
 } from "@/lib/metatrader";
 import { publishDataChanged } from "@/lib/realtime";
+import { attachPendingShots } from "@/lib/mtScreenshots";
 
 // POST /api/mt/sync — اندپوینتی که EA هر چند دقیقه صدا می‌زند.
 //   Authorization: Bearer <token>
@@ -136,6 +137,15 @@ export async function POST(req: NextRequest) {
     }
   }
 
+  // اسکرین‌هایی که اکسپرت قبل از خود معامله فرستاده بود، حالا که معامله ساخته شد
+  // وصل می‌شن. جدا محافظت می‌شه: خطای عکس هیچ‌وقت نباید sync معاملات رو 500 کنه.
+  let shotsAttached = 0;
+  try {
+    shotsAttached = await attachPendingShots(link.userId, link.accountId);
+  } catch (e) {
+    console.error("[mt/sync] attaching pending screenshots failed", link.id, e);
+  }
+
   // ── گردش پول غیرمعاملاتی (واریز/برداشت/مالیات/کمیسیون حساب/...) — EA نسخه‌ی
   // 1.30 به بعد. بدون این‌ها موجودی ژورنال با موجودی متاتریدر نمی‌خوند.
   const cashflows = normalizeMtCashflows(body.cashflows);
@@ -202,7 +212,7 @@ export async function POST(req: NextRequest) {
   });
 
   // معامله‌ی تازه/به‌روزشده از EA → حساب/ژورنال باز کاربر (روی هر دستگاهی) همون لحظه
-  if (created > 0 || updated > 0 || cashCreated > 0 || cashUpdated > 0) void publishDataChanged(link.userId, ["trade"]);
+  if (created > 0 || updated > 0 || cashCreated > 0 || cashUpdated > 0 || shotsAttached > 0) void publishDataChanged(link.userId, ["trade"]);
 
   return NextResponse.json({
     ok: true, received: trades.length, created, updated, skipped, failed,
