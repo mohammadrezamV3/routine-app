@@ -9,6 +9,8 @@ import { signCheckoutParams } from "@/lib/checkoutSignature";
 import { zibalRequest } from "@/lib/zibal";
 import { getSiteUrl } from "@/lib/siteUrl";
 import { resolveDiscountCode, findInviterRewards, REFERRAL_INVITER_REWARD_PERCENT } from "@/lib/discountValidation";
+import { findAchievementReward } from "@/lib/achievementsServer";
+import { isMonthlyOption, pickBestDiscount } from "@/lib/achievementRewards";
 import { findUpgradeSource, computeUpgradePricing, UPGRADE_TARGET_PLAN_KEY } from "@/lib/planUpgrade";
 
 // زرین‌پال طبق درخواست صریح کامل از پروژه حذف شد — زیبال تنها درگاهه.
@@ -75,6 +77,7 @@ export async function POST(req: NextRequest) {
     let referralUsageId: string | undefined;
     let discountCodeId: string | undefined;
     let inviterRewardId: string | undefined;
+    let achievementRewardId: string | undefined;
     let discountApplied = false;
     let resolution: Awaited<ReturnType<typeof resolveDiscountCode>> | null = null;
     if (discountCode?.trim()) {
@@ -85,11 +88,23 @@ export async function POST(req: NextRequest) {
         return NextResponse.json({ error: resolution.error }, { status: 400 });
       }
     }
-    // پاداش دعوت صاحب کد (lib/referral.ts) خودکار اعمال می‌شه؛ با کد تخفیف جمع
-    // نمی‌شه — هر کدوم بیشتر بود همون، و اونی که استفاده نشد مصرف هم نمی‌شه.
-    const reward = await findInviterRewards(userId);
-    const codePercent = resolution?.ok ? resolution.percent : 0;
-    if (reward.nextUsageId && REFERRAL_INVITER_REWARD_PERCENT > codePercent) {
+    // پاداش دعوت صاحب کد (lib/referral.ts) و پاداش اچیومنت‌ها (lib/achievementRewards.ts،
+    // فقط گزینه‌ی یک‌ماهه) خودکار اعمال می‌شن؛ هیچ‌کدوم با کد تخفیف جمع نمی‌شن —
+    // بیشترین درصد برنده‌ست و اونی که استفاده نشد مصرف هم نمی‌شه.
+    const [reward, achReward] = await Promise.all([
+      findInviterRewards(userId),
+      isMonthlyOption(months) ? findAchievementReward(userId) : Promise.resolve(null),
+    ]);
+    const best = pickBestDiscount([
+      { source: "code", percent: resolution?.ok ? resolution.percent : 0 },
+      { source: "inviter", percent: reward.nextUsageId ? REFERRAL_INVITER_REWARD_PERCENT : 0 },
+      { source: "achievement", percent: achReward?.percent ?? 0 },
+    ]);
+    if (best?.source === "achievement" && achReward) {
+      discountPercent = achReward.percent;
+      achievementRewardId = achReward.id;
+      discountApplied = true;
+    } else if (best?.source === "inviter" && reward.nextUsageId) {
       discountPercent = REFERRAL_INVITER_REWARD_PERCENT;
       inviterRewardId = reward.nextUsageId;
       discountApplied = true;
@@ -130,8 +145,8 @@ export async function POST(req: NextRequest) {
     const origin = getSiteUrl(req.nextUrl.origin);
     // پلن/مدت/ماه/مبلغ با HMAC امضا می‌شن (lib/checkoutSignature.ts) تا
     // verify به هیچ پارامتر دستکاری‌شده‌ای از URL بازگشت اعتماد نکنه.
-    const sig = signCheckoutParams({ userId, planKey, duration, months, amount: finalAmount, discountPercent, referralUsageId, discountCodeId, inviterRewardId, upgradeFromSubId });
-    const callbackUrl = `${origin}/api/subscription/verify?gateway=${gateway}&planKey=${encodeURIComponent(planKey)}&duration=${duration}&months=${months}&amount=${finalAmount}&discountPercent=${discountPercent}${referralUsageId ? `&referralUsageId=${referralUsageId}` : ""}${discountCodeId ? `&discountCodeId=${discountCodeId}` : ""}${inviterRewardId ? `&inviterRewardId=${inviterRewardId}` : ""}${upgradeFromSubId ? `&upgradeFromSubId=${upgradeFromSubId}` : ""}&sig=${sig}`;
+    const sig = signCheckoutParams({ userId, planKey, duration, months, amount: finalAmount, discountPercent, referralUsageId, discountCodeId, inviterRewardId, achievementRewardId, upgradeFromSubId });
+    const callbackUrl = `${origin}/api/subscription/verify?gateway=${gateway}&planKey=${encodeURIComponent(planKey)}&duration=${duration}&months=${months}&amount=${finalAmount}&discountPercent=${discountPercent}${referralUsageId ? `&referralUsageId=${referralUsageId}` : ""}${discountCodeId ? `&discountCodeId=${discountCodeId}` : ""}${inviterRewardId ? `&inviterRewardId=${inviterRewardId}` : ""}${achievementRewardId ? `&achievementRewardId=${achievementRewardId}` : ""}${upgradeFromSubId ? `&upgradeFromSubId=${upgradeFromSubId}` : ""}&sig=${sig}`;
 
     const description = `خرید ${pricing.nameFa} — ${months} ماهه`;
     const { paymentUrl } = await zibalRequest(finalAmount, callbackUrl, description);

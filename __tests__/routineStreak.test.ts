@@ -81,9 +81,11 @@ describe("computeAchievementMetrics", () => {
   it("کاتالوگ: شناسه‌ها یکتا، و همه‌ی متریک‌های بالا → همه باز", () => {
     expect(new Set(ACHIEVEMENTS.map((a) => a.id)).size).toBe(ACHIEVEMENTS.length);
     const max = {
-      currentStreak: 999, bestStreak: 999, perfectDays: 9999, totalTicks: 99999, activeDays: 9999, perfectWeeks: 99, perfectMonths: 9,
+      currentStreak: 999, bestStreak: 999, perfectDays: 9999, totalTicks: 99999, activeDays: 9999, perfectWeeks: 99, perfectMonths: 99,
       comeback: true, routineItems: 99, memberDays: 9999, perfectFridays: 99, earlyWakes: 999, sleepLogs: 999, sleepGoalNights: 999,
-      sleepConsistentRun: 99, best30Avg: 100,
+      sleepConsistentRun: 99, best30Avg: 100, comebacks: 9, earlyWakeRun: 99, sleepLogRun: 999, best90Avg: 100,
+      workoutSessions: 999, workoutWeekRun: 99, calorieLogDays: 999, calorieLogRun: 99, calorieOnTargetDays: 99,
+      tradesJournaled: 999, tradesChecklistFull: 999, tradePlanRun: 99, tradesReflected: 99, menteeProgramsDone: 9, mentorStudents: 9,
     };
     expect(allUnlocked(evaluateAchievements(max))).toBe(true);
     expect(allUnlocked(evaluateAchievements({ ...max, comeback: false }))).toBe(false);
