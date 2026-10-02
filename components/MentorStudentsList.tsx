@@ -110,7 +110,7 @@ export function MentorStudentsList({ data }: { data: StudentIndexResponse }) {
             <MentorRow
               href={`/mentor/students/${r.student.id}`}
               lead={<MentorUserAvatar avatarUrl={r.student.avatarUrl} name={name} size={36} />}
-              title={<GoldenName golden={r.student.golden}>{name}</GoldenName>}
+              title={<GoldenName golden={r.student.golden} staff={r.student.staff}>{name}</GoldenName>}
               sub={
                 <>
                   <span>{r.adherence === null ? "بدون ثبت در 7 روز" : `پایبندی ${pct(r.adherence)}`}</span>

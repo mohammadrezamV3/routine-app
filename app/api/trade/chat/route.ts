@@ -2,6 +2,7 @@ import { featureBlocked } from "@/lib/featureFlagsServer";
 import { NextRequest, NextResponse } from "next/server";
 import { ModuleKey, Prisma } from "@prisma/client";
 import { prisma } from "@/lib/prisma";
+import { NAME_STYLE_SELECT, isStaffUser } from "@/lib/nameStyle";
 import { requireModule } from "@/lib/moduleAccess";
 import { checkRateLimit } from "@/lib/rateLimit";
 import { clampText } from "@/lib/validate";
@@ -19,7 +20,7 @@ import {
 
 const MESSAGE_SELECT = {
   id: true, symbol: true, body: true, createdAt: true, userId: true,
-  user: { select: { name: true, username: true, goldenSince: true } },
+  user: { select: { name: true, username: true, ...NAME_STYLE_SELECT } },
 } as const;
 
 type MessageRow = Prisma.TradeChatMessageGetPayload<{ select: typeof MESSAGE_SELECT }>;
@@ -54,6 +55,7 @@ function serialize(m: MessageRow, viewerId: string, reportedIds: Set<string>): C
     // ایمیل/شماره هیچ‌وقت در پاسخ عمومی نمی‌آید.
     authorName: m.user.name?.trim() || m.user.username || "کاربر",
     authorGolden: !!m.user.goldenSince,
+    authorStaff: isStaffUser(m.user),
     mine: m.userId === viewerId,
     reported: reportedIds.has(m.id),
   };

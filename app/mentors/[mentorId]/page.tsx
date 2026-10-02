@@ -86,7 +86,7 @@ function MentorProfile() {
             <div className="mentor-hero-id">
               {role && <div className="rp-card-eyebrow">{role}</div>}
               <div className="mentor-hero-title">
-                <h1 className="mentor-hero-name"><GoldenName golden={mentor.golden}>{mentor.name}</GoldenName></h1>
+                <h1 className="mentor-hero-name"><GoldenName golden={mentor.golden} staff={mentor.staff}>{mentor.name}</GoldenName></h1>
                 <CertificateMark certifications={mentor.certifications} size={16} />
               </div>
               {mentor.headline && <p className="mentor-hero-headline">{mentor.headline}</p>}
@@ -199,7 +199,7 @@ function ReviewRow({ review, canReport, onReport }: { review: Review; canReport:
       <MentorUserAvatar name={review.student.name} avatarUrl={review.student.avatarUrl} size={36} />
       <div className="mentor-review-body">
         <div className="mentor-review-head">
-          <span className="mentor-review-name"><GoldenName golden={review.student.golden}>{review.student.name || "شاگرد"}</GoldenName></span>
+          <span className="mentor-review-name"><GoldenName golden={review.student.golden} staff={review.student.staff}>{review.student.name || "شاگرد"}</GoldenName></span>
           <RatingStars value={review.rating} />
           <span className="mentor-review-date">{fmtDate(review.createdAt)}</span>
         </div>

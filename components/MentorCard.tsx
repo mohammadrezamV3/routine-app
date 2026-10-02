@@ -42,7 +42,7 @@ export function MentorCard({ mentor }: { mentor: MentorCardData }) {
               onPointerDown={() => prefetchMentorProfile(mentor.userId)}
               onMouseEnter={() => prefetchMentorProfile(mentor.userId)}
             >
-              <GoldenName golden={mentor.golden}>{mentor.name}</GoldenName>
+              <GoldenName golden={mentor.golden} staff={mentor.staff}>{mentor.name}</GoldenName>
             </Link>
             <CertificateMark certifications={mentor.certifications} size={16} />
           </div>

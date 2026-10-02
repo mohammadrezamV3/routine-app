@@ -13,6 +13,7 @@
 import { ModuleKey, Prisma, SubscriptionStatus } from "@prisma/client";
 import { ROUTINE_TRIAL_MS } from "./trial";
 import { prisma } from "./prisma";
+import { NAME_STYLE_SELECT, nameFlags } from "./nameStyle";
 import { FA_WEEKDAY, isoLocal } from "./jalali";
 import { computeExerciseStreak, exerciseDayDone, isRestDay, type ExerciseLogRange } from "./exerciseStats";
 import { loadAccountMoney } from "@/lib/tradeCashflowServer";
@@ -375,7 +376,7 @@ export async function buildDashboard(userId: string, day: { date: string; tz: nu
     prisma.user.findUnique({
       where: { id: userId },
       select: {
-        isBlocked: true, name: true, lastName: true, username: true, avatarUrl: true, createdAt: true, goldenSince: true,
+        isBlocked: true, name: true, lastName: true, username: true, avatarUrl: true, createdAt: true, ...NAME_STYLE_SELECT,
         moduleAccess: { select: { module: true, active: true, expiresAt: true } },
         subscriptions: {
           where: { status: { in: [SubscriptionStatus.ACTIVE, SubscriptionStatus.TRIAL] }, currentPeriodEnd: { gt: new Date() } },
@@ -424,7 +425,7 @@ export async function buildDashboard(userId: string, day: { date: string; tz: nu
       isAdmin: !!flags?.isAdmin || isSuperAdmin,
       isSuperAdmin,
       memberSince: user.createdAt.toISOString(),
-      golden: !!user.goldenSince,
+      ...nameFlags(user),
     },
     routineTrial,
     plan: sub ? { name: sub.plan.nameFa, key: sub.plan.key, status: sub.status as "ACTIVE" | "TRIAL", endsAt: sub.currentPeriodEnd.toISOString() } : null,

@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
+import { nameFlags } from "@/lib/nameStyle";
 import { ModuleKey, SubscriptionStatus } from "@prisma/client";
 import { clampText, isValidPersianName, parseIsoDate } from "@/lib/validate";
 import { checkRateLimit, getClientIp } from "@/lib/rateLimit";
@@ -35,6 +36,7 @@ export async function GET() {
       createdAt: true,
       isSuperAdmin: true,
       goldenSince: true,
+      adminPermissions: true,
       referralCode: { select: { code: true } },
       moduleAccess: { select: { module: true, active: true, expiresAt: true } },
       // فقط اشتراک واقعا فعال — نه صرفا «آخرین ردیف ساخته‌شده». قبلا
@@ -59,8 +61,8 @@ export async function GET() {
 
   const fullName = [user.name, user.lastName].filter(Boolean).join(" ") || null;
 
-  const { goldenSince, ...userRest } = user;
-  return NextResponse.json({ user: { ...userRest, golden: !!goldenSince, firstName: user.name, name: fullName, moduleAccess } });
+  const { goldenSince, adminPermissions, ...userRest } = user;
+  return NextResponse.json({ user: { ...userRest, ...nameFlags({ goldenSince, isSuperAdmin: user.isSuperAdmin, adminPermissions }), firstName: user.name, name: fullName, moduleAccess } });
 }
 
 // PATCH /api/account  { name?, lastName?, birthDate?, gender?, discoverable?, sharePhone? }

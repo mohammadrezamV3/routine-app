@@ -1,6 +1,7 @@
 import { cookies } from "next/headers";
 import { getToken } from "next-auth/jwt";
 import { prisma } from "@/lib/prisma";
+import { NAME_STYLE_SELECT, nameFlags } from "@/lib/nameStyle";
 import { ModuleKey } from "@prisma/client";
 import { BOOTSTRAP_SETTING_KEYS } from "@/lib/userSettingKeys";
 import { AUTH_HINT_COOKIE, INLINE_BOOTSTRAP_ID } from "@/lib/preload";
@@ -60,7 +61,7 @@ export async function InlineBootstrap() {
         where: { id: userId },
         select: {
           email: true, username: true, phone: true, name: true, market: true,
-          createdAt: true, isSuperAdmin: true, avatarUrl: true, goldenSince: true,
+          createdAt: true, isSuperAdmin: true, avatarUrl: true, goldenSince: true, adminPermissions: true,
           referralCode: { select: { code: true } },
           moduleAccess: { select: { module: true, active: true, expiresAt: true } },
           subscriptions: {
@@ -98,13 +99,13 @@ export async function InlineBootstrap() {
       prisma.friendship.findMany({
         where: { status: "ACCEPTED", OR: [{ requesterId: userId }, { addresseeId: userId }] },
         include: {
-          requester: { select: { id: true, name: true, username: true, avatarUrl: true, goldenSince: true } },
-          addressee: { select: { id: true, name: true, username: true, avatarUrl: true, goldenSince: true } },
+          requester: { select: { id: true, name: true, username: true, avatarUrl: true, ...NAME_STYLE_SELECT } },
+          addressee: { select: { id: true, name: true, username: true, avatarUrl: true, ...NAME_STYLE_SELECT } },
         },
       }),
       prisma.friendship.findMany({
         where: { addresseeId: userId, status: "PENDING" },
-        include: { requester: { select: { id: true, name: true, username: true, avatarUrl: true, goldenSince: true } } },
+        include: { requester: { select: { id: true, name: true, username: true, avatarUrl: true, ...NAME_STYLE_SELECT } } },
         orderBy: { createdAt: "desc" },
       }),
     ]);
@@ -122,17 +123,17 @@ export async function InlineBootstrap() {
           name: other.name || other.username || "کاربر",
           username: other.username,
           avatarUrl: other.avatarUrl,
-          golden: !!other.goldenSince,
+          ...nameFlags(other),
           favorite: isRequester ? r.favoritedByRequester : r.favoritedByAddressee,
           ...(stats.get(other.id) ?? EMPTY),
         };
       })
       .sort((a, b) => Number(b.favorite) - Number(a.favorite));
 
-    const { avatarUrl, goldenSince, ...userRest } = user;
+    const { avatarUrl, goldenSince, adminPermissions, ...userRest } = user;
     payload = {
       settings,
-      account: { user: { ...userRest, golden: !!goldenSince, moduleAccess } },
+      account: { user: { ...userRest, ...nameFlags({ goldenSince, isSuperAdmin: user.isSuperAdmin, adminPermissions }), moduleAccess } },
       avatarUrl: avatarUrl ?? null,
       dailyRange: { from: iso(from), to: iso(to), entries },
       friends,
@@ -142,7 +143,7 @@ export async function InlineBootstrap() {
         name: r.requester.name || r.requester.username || "کاربر",
         username: r.requester.username,
         avatarUrl: r.requester.avatarUrl,
-        golden: !!r.requester.goldenSince,
+        ...nameFlags(r.requester),
       })),
     };
   } catch {

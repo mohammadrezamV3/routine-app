@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
+import { NAME_STYLE_SELECT, nameFlags } from "@/lib/nameStyle";
 import { checkRateLimit, getClientIp } from "@/lib/rateLimit";
 import { clampQuery } from "@/lib/validate";
 
@@ -39,7 +40,7 @@ export async function GET(req: NextRequest) {
         ],
       },
     },
-    select: { id: true, name: true, username: true, avatarUrl: true, goldenSince: true },
+    select: { id: true, name: true, username: true, avatarUrl: true, ...NAME_STYLE_SELECT },
     take: 12,
   });
   if (!users.length) return NextResponse.json({ users: [] });
@@ -65,7 +66,7 @@ export async function GET(req: NextRequest) {
       id: u.id,
       name: u.name || u.username || "کاربر",
       username: u.username,
-      golden: !!u.goldenSince,
+      ...nameFlags(u),
       status: statusFor(u.id),
     })),
   });
