@@ -346,3 +346,6 @@ export function summarizeCashflows(rows: { kind: string; amount: number }[]): Ca
   }
   return { funding: Math.round(funding * 100) / 100, charges: Math.round(charges * 100) / 100 };
 }
+
+/** کپشن ثابت اسکرین‌های خودکار اکسپرت (app/api/mt/screenshot) — با همین شناخته و جایگزین می‌شن */
+export const MT_SHOT_CAPTION = { entry: "اسکرین ورود (متاتریدر)", exit: "اسکرین خروج (متاتریدر)" } as const;

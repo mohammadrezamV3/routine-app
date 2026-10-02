@@ -21,12 +21,16 @@
 //
 #property copyright "Arion"
 #property link      "https://arionapp.ir"
-#property version   "1.30"
+#property version   "1.40"
 #property strict
 
 input string ArionUrl     = "https://arionapp.ir"; // آدرس سایت Arion
 input string PairingCode  = "";                     // کد اتصال (فقط بار اول)
 input int    SyncSeconds  = 60;                     // فاصله‌ی ارسال، به ثانیه
+input bool   SendScreenshots = true;                // اسکرین چارت لحظه‌ی ورود و خروج هر معامله
+input ENUM_TIMEFRAMES ShotTimeframe = PERIOD_M15;   // تایم‌فریم اسکرین
+input int    ShotWidth  = 1280;                     // عرض اسکرین (پیکسل)
+input int    ShotHeight = 720;                      // ارتفاع اسکرین (پیکسل)
 
 // حداکثر تعداد معامله‌ی بسته‌شده در هر درخواست — تاریخچه‌ی طولانی توی چند
 // درخواستِ پشتِ‌سرهم چانک می‌شه، نه یک درخواستِ غول‌پیکرِ تک.
@@ -71,11 +75,22 @@ string   g_cursorFile  = "arion_cursor_v13.txt";
 // چون معمولا کاربر همین چند دقیقه‌ی اول دارد تنظیمات را درست می‌کند.
 #define RETRY_SECONDS 10
 
+// ── اسکرین ورود/خروج (1.40) — سراسری‌ها باید قبل از OnTrade/OnTick تعریف بشن
+// صف آپلود: آرایه‌های موازی (ساختار با رشته در MQL4 کپی‌پذیر نیست)
+string   g_jobTicket[], g_jobKind[], g_jobFile[];
+int      g_jobTries[];
+string   g_shotDone  = "|";
+datetime g_shotSince = 0;
+string   g_shotFile  = "arion_shots_v1.txt";
+datetime g_lastCapture = 0;
+
+
 //+------------------------------------------------------------------+
 int OnInit()
   {
    g_token = LoadToken();
    LoadCursor();
+   if(SendScreenshots) LoadShotState();
    // تلاشِ اول همین‌جا، ولی *شکستش پایان کار نیست* — تایمر باز هم تلاش
    // می‌کند. باگِ نسخه‌ی قبلی همین بود: اگر این یک تلاش شکست می‌خورد
    // (WebRequest هنوز اجازه نداشت، یا کاربر کد را بعدا می‌گذاشت) اکسپرت
@@ -104,8 +119,22 @@ void OnTimer()
          Sync();
         }
      }
-   else Sync();
+   else
+     {
+      Sync();
+      CaptureShots();
+      UploadShots();
+     }
    ShowStatus();
+  }
+
+// MT4 رویداد معامله نداره — با هر تیک (حداکثر هر 2 ثانیه) معامله‌ی تازه چک می‌شه
+void OnTick()
+  {
+   if(!SendScreenshots || g_token == "") return;
+   if(TimeLocal() - g_lastCapture < 2) return;
+   g_lastCapture = TimeLocal();
+   CaptureShots();
   }
 
 //+------------------------------------------------------------------+
@@ -296,7 +325,7 @@ bool SendBatch(string itemsJson, bool cash)
    string body = "{\"balance\":" + Num(AccountBalance(), 2) +
                  ",\"equity\":" + Num(AccountEquity(), 2) +
                  ",\"currency\":\"" + JsonEscape(AccountCurrency()) + "\"" +
-                 ",\"eaVersion\":\"1.30\"";
+                 ",\"eaVersion\":\"1.40\"";
    int tz = BrokerTzOffsetMinutes();
    if(g_tzKnown) body += ",\"tzOffsetMinutes\":" + IntegerToString(tz);
    body += (cash ? ",\"trades\":[],\"cashflows\":[" : ",\"trades\":[") + itemsJson + "]}";
@@ -457,6 +486,184 @@ string TradeJson(bool closed)
       s += ",\"closed\":false}";
    return(s);
   }
+
+//+------------------------------------------------------------------+
+//| اسکرین چارت لحظه‌ی ورود و خروج (نسخه‌ی 1.40)                       |
+//| برای هر معامله‌ای که بعد از روشن‌شدن این قابلیت باز یا بسته بشه، یک  |
+//| چارت موقت از همون نماد باز می‌شه، روی زمان معامله می‌ره، ورود/خروج و |
+//| حدضرر/حدسود روش علامت می‌خوره، اسکرین گرفته می‌شه و چارت بسته می‌شه. |
+//| تصویر اول روی دیسک می‌مونه و بعد از sync به Arion فرستاده می‌شه (اگه  |
+//| معامله هنوز روی سرور نیست، دفعه‌ی بعد دوباره).                      |
+//+------------------------------------------------------------------+
+
+void LoadShotState()
+  {
+   g_shotDone = "|"; g_shotSince = 0;
+   int h = FileOpen(g_shotFile, FILE_READ|FILE_TXT|FILE_ANSI);
+   if(h != INVALID_HANDLE)
+     {
+      string head = FileReadString(h);
+      string p[];
+      if(StringSplit(head, '|', p) >= 2 && p[1] == IntegerToString(AccountNumber()))
+        {
+         g_shotSince = (datetime)StringToInteger(p[0]);
+         while(!FileIsEnding(h))
+           {
+            string k = FileReadString(h);
+            if(k != "") g_shotDone += k + "|";
+           }
+        }
+      FileClose(h);
+     }
+   if(g_shotSince == 0) { g_shotSince = TimeCurrent(); SaveShotState(); }
+  }
+
+void SaveShotState()
+  {
+   int h = FileOpen(g_shotFile, FILE_WRITE|FILE_TXT|FILE_ANSI);
+   if(h == INVALID_HANDLE) return;
+   FileWriteString(h, IntegerToString((long)g_shotSince) + "|" + IntegerToString(AccountNumber()) + "\r\n");
+   string keys[];
+   int n = StringSplit(g_shotDone, '|', keys);
+   // فقط 400 کلید آخر نگه داشته می‌شه تا فایل بی‌نهایت بزرگ نشه
+   for(int i = MathMax(0, n - 400); i < n; i++) if(keys[i] != "") FileWriteString(h, keys[i] + "\r\n");
+   FileClose(h);
+  }
+
+bool ShotDone(string key) { return(StringFind(g_shotDone, "|" + key + "|") >= 0); }
+void MarkShotDone(string key) { if(!ShotDone(key)) { g_shotDone += key + "|"; SaveShotState(); } }
+bool HasShotJob(string key)
+  {
+   for(int i = 0; i < ArraySize(g_jobTicket); i++) if(g_jobTicket[i] + ":" + g_jobKind[i] == key) return(true);
+   return(false);
+  }
+
+void ShotObjects(long ch, datetime t1, double p1, datetime t2, double p2, bool buy, double sl, double tp, bool closed)
+  {
+   color c = buy ? clrDodgerBlue : clrTomato;
+   ObjectCreate(ch, "arion_in", buy ? OBJ_ARROW_BUY : OBJ_ARROW_SELL, 0, t1, p1);
+   if(closed)
+     {
+      ObjectCreate(ch, "arion_out", OBJ_ARROW_STOP, 0, t2, p2);
+      ObjectSetInteger(ch, "arion_out", OBJPROP_COLOR, clrGold);
+      ObjectCreate(ch, "arion_line", OBJ_TREND, 0, t1, p1, t2, p2);
+      ObjectSetInteger(ch, "arion_line", OBJPROP_COLOR, c);
+      ObjectSetInteger(ch, "arion_line", OBJPROP_STYLE, STYLE_DOT);
+      ObjectSetInteger(ch, "arion_line", OBJPROP_RAY, false);
+     }
+   if(sl > 0) { ObjectCreate(ch, "arion_sl", OBJ_HLINE, 0, 0, sl); ObjectSetInteger(ch, "arion_sl", OBJPROP_COLOR, clrRed); ObjectSetInteger(ch, "arion_sl", OBJPROP_STYLE, STYLE_DASH); }
+   if(tp > 0) { ObjectCreate(ch, "arion_tp", OBJ_HLINE, 0, 0, tp); ObjectSetInteger(ch, "arion_tp", OBJPROP_COLOR, clrLimeGreen); ObjectSetInteger(ch, "arion_tp", OBJPROP_STYLE, STYLE_DASH); }
+  }
+
+//| چارت موقت → اسکرین → فایل. true یعنی فایل ساخته شد.                 |
+bool TakeShot(string symbol, datetime t1, double p1, datetime t2, double p2, bool buy,
+              double sl, double tp, bool closed, string file)
+  {
+   SymbolSelect(symbol, true);
+   // داده‌ی تایم‌فریم ممکنه هنوز دانلود نشده باشه — حداکثر 3 ثانیه صبر
+   MqlRates r[];
+   for(int k = 0; k < 30; k++)
+     {
+      if(CopyRates(symbol, ShotTimeframe, 0, 300, r) > 0) break;
+      Sleep(100);
+     }
+   long ch = ChartOpen(symbol, ShotTimeframe);
+   if(ch == 0) return(false);
+   ChartSetInteger(ch, CHART_AUTOSCROLL, false);
+   ChartSetInteger(ch, CHART_SHIFT, true);
+   ChartSetInteger(ch, CHART_MODE, CHART_CANDLES);
+   ChartSetInteger(ch, CHART_SHOW_GRID, false);
+   ShotObjects(ch, t1, p1, t2, p2, buy, sl, tp, closed);
+   // زمان معامله (برای بسته: خروج) نزدیک لبه‌ی راست با کمی فاصله
+   int shift = iBarShift(symbol, ShotTimeframe, closed ? t2 : t1, false);
+   ChartNavigate(ch, CHART_END, -(int)MathMax(0, shift - 12));
+   ChartRedraw(ch);
+   Sleep(400);
+   bool ok = ChartScreenShot(ch, file, ShotWidth, ShotHeight, ALIGN_RIGHT);
+   ChartClose(ch);
+   return(ok);
+  }
+
+void QueueShot(string ticket, string kind, string symbol, datetime t1, double p1, datetime t2, double p2,
+               bool buy, double sl, double tp, bool closed)
+  {
+   string key = ticket + ":" + kind;
+   if(ShotDone(key) || HasShotJob(key)) return;
+   string file = "arion_shot_" + ticket + "_" + kind + ".png";
+   if(!TakeShot(symbol, t1, p1, t2, p2, buy, sl, tp, closed, file)) { Print("Arion: اسکرین ناموفق ", key); return; }
+   int n = ArraySize(g_jobTicket);
+   ArrayResize(g_jobTicket, n + 1); ArrayResize(g_jobKind, n + 1); ArrayResize(g_jobFile, n + 1); ArrayResize(g_jobTries, n + 1);
+   g_jobTicket[n] = ticket; g_jobKind[n] = kind; g_jobFile[n] = file; g_jobTries[n] = 0;
+  }
+
+//| معاملات تازه‌ای که اسکرین ندارن → اسکرین (حداکثر 3 تا در هر بار)      |
+void CaptureShots()
+  {
+   if(!SendScreenshots || g_token == "" || g_shotSince == 0) return;
+   int made = 0;
+   // ورود: سفارش‌های باز که بعد از روشن‌شدن قابلیت باز شدن
+   for(int i = 0; i < OrdersTotal() && made < 3; i++)
+     {
+      if(!OrderSelect(i, SELECT_BY_POS, MODE_TRADES)) continue;
+      if(OrderType() > OP_SELL || OrderOpenTime() < g_shotSince) continue;
+      string id = IntegerToString(OrderTicket());
+      if(ShotDone(id + ":entry") || HasShotJob(id + ":entry")) continue;
+      QueueShot(id, "entry", OrderSymbol(), OrderOpenTime(), OrderOpenPrice(), 0, 0,
+                OrderType() == OP_BUY, OrderStopLoss(), OrderTakeProfit(), false);
+      made++;
+     }
+   // خروج: سفارش‌هایی که بعد از روشن‌شدن قابلیت بسته شدن
+   for(int j = OrdersHistoryTotal() - 1; j >= 0 && made < 3; j--)
+     {
+      if(!OrderSelect(j, SELECT_BY_POS, MODE_HISTORY)) continue;
+      if(OrderType() > OP_SELL || OrderCloseTime() < g_shotSince) continue;
+      string id = IntegerToString(OrderTicket());
+      if(ShotDone(id + ":exit") || HasShotJob(id + ":exit")) continue;
+      QueueShot(id, "exit", OrderSymbol(), OrderOpenTime(), OrderOpenPrice(), OrderCloseTime(), OrderClosePrice(),
+                OrderType() == OP_BUY, OrderStopLoss(), OrderTakeProfit(), true);
+      made++;
+     }
+  }
+
+//| فرستادن اسکرین‌های آماده به Arion                                    |
+void UploadShots()
+  {
+   if(g_token == "") return;
+   for(int i = ArraySize(g_jobTicket) - 1; i >= 0; i--)
+     {
+      string key = g_jobTicket[i] + ":" + g_jobKind[i];
+      int h = FileOpen(g_jobFile[i], FILE_READ|FILE_BIN);
+      bool drop = false;
+      if(h == INVALID_HANDLE) drop = true;
+      else
+        {
+         uchar data[], b64[], none[];
+         FileReadArray(h, data);
+         FileClose(h);
+         CryptEncode(CRYPT_BASE64, data, none, b64);
+         string body = "{\"ticket\":\"" + g_jobTicket[i] + "\",\"kind\":\"" + g_jobKind[i] +
+                       "\",\"image\":\"data:image/png;base64," + CharArrayToString(b64, 0, WHOLE_ARRAY, CP_ACP) + "\"}";
+         int status;
+         HttpPost(ArionUrl + "/api/mt/screenshot",
+                  "Content-Type: application/json\r\nAuthorization: Bearer " + g_token + "\r\n", body, status);
+         if(status == 200 || status == 400 || status == 413) { MarkShotDone(key); drop = true; }
+         else if(status == 401) return;
+         else if(++g_jobTries[i] >= 20) drop = true; // 404 (هنوز sync نشده) یا خطای شبکه → بعدا
+        }
+      if(drop)
+        {
+         FileDelete(g_jobFile[i]);
+         int last = ArraySize(g_jobTicket) - 1;
+         for(int k = i; k < last; k++)
+           {
+            g_jobTicket[k] = g_jobTicket[k + 1]; g_jobKind[k] = g_jobKind[k + 1];
+            g_jobFile[k] = g_jobFile[k + 1]; g_jobTries[k] = g_jobTries[k + 1];
+           }
+         ArrayResize(g_jobTicket, last); ArrayResize(g_jobKind, last); ArrayResize(g_jobFile, last); ArrayResize(g_jobTries, last);
+        }
+     }
+  }
+
 
 //+------------------------------------------------------------------+
 //| استخراج مقدار رشته‌ای از JSON — فقط برای پاسخ ساده‌ی /pair        |
