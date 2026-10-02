@@ -9640,11 +9640,12 @@ html[data-logging-out]::after{
 .streak-cel-flame-slot{ position:relative; flex-shrink:0; }
 .streak-cel-flame{ position:absolute; inset:0; transform-origin:50% 60%; will-change:transform; }
 
-/* شعله‌ی بزرگ (components/AnimatedStreakFlame.tsx) — همه‌ی حرکت با یک حلقه‌ی
-   rAF در خود کامپوننته (مسیر لایه‌ها، هاله، اخگرها)، نه keyframe؛ این‌جا فقط
-   حالت‌های ساکن و خاموش. */
-.streak-bigflame{ display:block; overflow:visible; pointer-events:none; --sbf-ember:var(--sbf-ember-dark); }
-body[data-theme="light"] .streak-bigflame{ --sbf-ember:var(--sbf-ember-light); }
+/* شعله‌ی بزرگ کارتونی (components/AnimatedStreakFlame.tsx) — همه‌ی حرکت با یک
+   حلقه‌ی rAF در خود کامپوننته (مسیر بدنه، هاله، جرقه‌ها)، نه keyframe؛ این‌جا
+   فقط حالت‌های ساکن و خاموش. روی تم روشن دورگیری سفید با یک سایه‌ی گرم نرم از
+   زمینه جدا می‌شه (مثل استیکر). */
+.streak-bigflame{ display:block; overflow:visible; pointer-events:none; }
+body[data-theme="light"] .streak-bigflame-outline{ filter:drop-shadow(0 3px 6px rgba(160,70,0,.22)); }
 .streak-bigflame.is-unlit{ filter:grayscale(1); opacity:.4; }
 
 .streak-cel-burst{ position:absolute; left:50%; top:58%; width:0; height:0; pointer-events:none; }
