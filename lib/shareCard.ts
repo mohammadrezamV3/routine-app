@@ -11,7 +11,7 @@
 // هم‌رنگ همون چیزی باشه که کاربر روی صفحه می‌بینه.
 
 import { faNum } from "./jalali";
-import { FLAME_BOX, FLAME_LAYERS, flamePalette, flamePath, layerFrame } from "./streakFlameShape";
+import { FLAME_BOX, flamePalette, toonFlameShape } from "./streakFlameShape";
 
 /** display=null یعنی عدد این حلقه پنهانه (مثلا کالری) — خود حلقه کشیده می‌شه، عددش نه */
 export type ShareRing = { label: string; value: number; display: string | null; colors: [string, string] };
@@ -113,7 +113,7 @@ export function roundRect(ctx: CanvasRenderingContext2D, x: number, y: number, w
   ctx.closePath();
 }
 
-/** شعله‌ی بزرگ (یک فریم همون شعله‌ی زنده) با مرکز پایه در (x, y) و عرض size */
+/** شعله‌ی بزرگ کارتونی (یک فریم همون شعله‌ی زنده) با مرکز پایه در (x, y) و عرض size */
 function drawFlame(ctx: CanvasRenderingContext2D, x: number, y: number, size: number, days: number, glow = true) {
   const pal = flamePalette(days);
   const s = size / FLAME_BOX.w;
@@ -127,14 +127,31 @@ function drawFlame(ctx: CanvasRenderingContext2D, x: number, y: number, size: nu
     ctx.fillStyle = g;
     ctx.fillRect(-40, -20, FLAME_BOX.w + 80, FLAME_BOX.h + 40);
   }
-  FLAME_LAYERS.forEach((l, li) => {
-    const lb = FLAME_BOX.by - li * 6;
-    const g = ctx.createLinearGradient(0, lb, 0, lb - l.base.h);
-    g.addColorStop(0, pal[l.key][1]);
-    g.addColorStop(1, pal[l.key][0]);
-    ctx.fillStyle = g;
-    ctx.fill(new Path2D(flamePath(FLAME_BOX.cx, lb, layerFrame(l, 1))));
-  });
+  // همون شعله‌ی کارتونی زنده در یک فریم: دورگیری سفید، بدنه، قطره، برق
+  const f = toonFlameShape(FLAME_BOX.cx, FLAME_BOX.by, 0.9);
+  const tn = pal.toon;
+  const body = new Path2D(f.body);
+  ctx.lineJoin = "round";
+  ctx.lineWidth = 30;
+  ctx.strokeStyle = "#fff";
+  ctx.fillStyle = "#fff";
+  ctx.stroke(body);
+  ctx.fill(body);
+  const bg = ctx.createLinearGradient(FLAME_BOX.cx - 60, 0, FLAME_BOX.cx + 75, 0);
+  bg.addColorStop(0, tn.body);
+  bg.addColorStop(0.62, tn.body);
+  bg.addColorStop(1, tn.shade);
+  ctx.fillStyle = bg;
+  ctx.fill(body);
+  const ig = ctx.createLinearGradient(0, FLAME_BOX.by - 110, 0, FLAME_BOX.by);
+  ig.addColorStop(0, tn.innerHi);
+  ig.addColorStop(1, tn.inner);
+  ctx.fillStyle = ig;
+  ctx.fill(new Path2D(f.inner));
+  ctx.globalAlpha = 0.55;
+  ctx.fillStyle = "#fff";
+  ctx.fill(new Path2D(f.shine));
+  ctx.globalAlpha = 1;
   ctx.restore();
 }
 
