@@ -875,7 +875,7 @@ body[data-theme="light"] .db-cmd{ box-shadow:0 30px 70px -20px rgba(80,50,20,.35
 html[data-perf-weak] .db-page .dbi-live *, html[data-perf-weak] .db-ribbon-sun-core{ animation:none !important; }
 
 /* ── اشتراک موفقیت (components/DashboardShare.tsx) — پورتال روی body ──
-   فقط خود تصویر کارت + یک دکمه‌ی اشتراک؛ بدون قاب، بوردر، بک‌گراند یا متن (درخواست صاحب محصول) */
+   تصویر کارت + ردیف انتخاب آیتم‌ها (TickOption، بی‌قاب) + یک دکمه‌ی اشتراک؛ بدون بک‌گراند یا متن توضیحی */
 .db-share-root{
   position:fixed; inset:0; z-index:9000; display:flex; justify-content:center; align-items:center;
   padding:calc(16px + env(safe-area-inset-top)) 16px calc(16px + env(safe-area-inset-bottom)); background:rgba(0,0,0,.55);
@@ -883,8 +883,8 @@ html[data-perf-weak] .db-page .dbi-live *, html[data-perf-weak] .db-ribbon-sun-c
 body[data-theme="light"] .db-share-root{ background:rgba(60,40,20,.28); }
 .db-share{
   /* عرض = کوچک‌ترین بین 440px، عرض صفحه و ارتفاعی که تصویر 4:5 + دکمه + بستن جا بشن */
-  --share-w:min(440px, calc((100vh - 32px - 140px) * .8));
-  --share-w:min(440px, calc((100dvh - 32px - 140px - env(safe-area-inset-top) - env(safe-area-inset-bottom)) * .8));
+  --share-w:min(440px, calc((100vh - 32px - 220px) * .8));
+  --share-w:min(440px, calc((100dvh - 32px - 220px - env(safe-area-inset-top) - env(safe-area-inset-bottom)) * .8));
   width:100%; max-width:var(--share-w); display:flex; flex-direction:column; align-items:stretch; gap:12px;
 }
 .db-share:focus{ outline:none; }
@@ -918,6 +918,14 @@ body[data-theme="light"] .db-share-close{ color:var(--text); }
 @keyframes db-share-pulse{ 50%{ opacity:.45; } }
 
 .db-share .db-share-btn{ width:100%; min-height:50px; font-size:14.5px; font-weight:800; border-radius:15px; touch-action:manipulation; }
+/* انتخاب آیتم‌ها: دو ستون فشرده زیر تصویر، بی‌قاب و بی‌بک‌گراند (فقط TickOption + متن) */
+.db-share-opts{ display:grid; grid-template-columns:repeat(2, minmax(0,1fr)); gap:0 14px; }
+/* اسپسیفیسیتی بالا تا ریست شیشه‌ای سراسری button{} (بوردر، سایه‌ی داخلی، بلور، هاور) روی این ردیف‌ها نشینه */
+html body .db-share-opts button.tick-option{
+  padding:5px 0; font-size:12.5px; color:#fff; border:none; border-radius:0; background:transparent;
+  box-shadow:none; backdrop-filter:none; -webkit-backdrop-filter:none;
+}
+html body[data-theme="light"] .db-share-opts button.tick-option{ color:var(--text); }
 .db-share-btn-in{ display:inline-flex; align-items:center; gap:8px; }
 .db-share-btn:focus-visible{ outline:2px solid var(--accent); outline-offset:3px; }
 
