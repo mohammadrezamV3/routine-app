@@ -18,6 +18,7 @@ import Link from "next/link";
 import { GradientRing } from "./GradientRing";
 import { AchievementIcon } from "./AchievementIcons";
 import { GoldenName } from "./GoldenName";
+import { AnimatedStreakFlame } from "./AnimatedStreakFlame";
 import { BentoCard, CardHead, CountUp, D_EASE, Skel, V_GRID } from "./DashboardKit";
 import { DashIcon } from "./DashboardIcons";
 import { useDashboardRoutine } from "@/lib/useDashboardRoutine";
@@ -152,7 +153,7 @@ function StreakHero({ routine, best }: { routine: ReturnType<typeof useDashboard
       <div className="stk-hero-main">
         <div className="stk-flame-wrap">
           <GradientRing value={streak === null ? 0 : Math.min(1, toNext)} size={188} stroke={10} grad={["var(--stk-a)", "var(--stk-b)"]} delay={0.2}>
-            <BigFlame tier={tier.tier} lit={s > 0} />
+            <AnimatedStreakFlame days={s} lit={s > 0} fill />
           </GradientRing>
         </div>
         <div className="stk-hero-info">
@@ -210,39 +211,6 @@ function MilestoneTrack({ streak }: { streak: number }) {
         );
       })}
     </ol>
-  );
-}
-
-/** شعله‌ی بزرگ چندلایه — رنگ و شدت حرکتش با سطح استریک زیاد می‌شه */
-function BigFlame({ tier, lit }: { tier: number; lit: boolean }) {
-  return (
-    <svg className={`stk-flame${lit ? " is-lit" : ""}`} viewBox="0 0 120 140" aria-hidden="true">
-      <defs>
-        <radialGradient id="stk-fl-outer" cx="50%" cy="78%" r="70%">
-          <stop offset="0%" stopColor="var(--stk-c)" />
-          <stop offset="55%" stopColor="var(--stk-b)" />
-          <stop offset="100%" stopColor="var(--stk-a)" />
-        </radialGradient>
-        <radialGradient id="stk-fl-inner" cx="50%" cy="80%" r="60%">
-          <stop offset="0%" stopColor="#fffbe6" />
-          <stop offset="60%" stopColor="var(--stk-c)" />
-          <stop offset="100%" stopColor="var(--stk-b)" />
-        </radialGradient>
-      </defs>
-      <g className="stk-fl-outer">
-        <path d="M60 6c6 22 30 34 34 62 5 34-15 62-34 62S21 108 26 76c3-19 15-26 17-44 10 10 11 21 11 21S66 36 60 6Z" fill="url(#stk-fl-outer)" />
-      </g>
-      <g className="stk-fl-inner">
-        <path d="M60 52c4 13 20 22 20 42 0 18-10 30-20 30s-20-12-20-28c0-12 7-17 9-28 6 6 6 13 6 13s7-12 5-29Z" fill="url(#stk-fl-inner)" />
-      </g>
-      {tier >= 3 && (
-        <g className="stk-fl-sparks">
-          <circle cx="30" cy="40" r="2.2" fill="var(--stk-c)" />
-          <circle cx="92" cy="34" r="1.8" fill="var(--stk-c)" />
-          <circle cx="78" cy="14" r="1.5" fill="#fffbe6" />
-        </g>
-      )}
-    </svg>
   );
 }
 
