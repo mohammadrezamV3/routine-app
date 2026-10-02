@@ -16,6 +16,7 @@
 
 import { useEffect, useRef, useState } from "react";
 import { usePathname, useSearchParams } from "next/navigation";
+import { navSplashEnd, navSplashStart } from "@/lib/navSplash";
 
 type Phase = "idle" | "loading" | "done";
 const ATTR = "data-route-loading";
@@ -40,6 +41,7 @@ export function RouteProgress() {
     if (safety.current) clearTimeout(safety.current);
     dropCancel();
     document.documentElement.removeAttribute(ATTR);
+    navSplashEnd();
     setPhase((p) => (p === "loading" ? "done" : p));
     if (hide.current) clearTimeout(hide.current);
     hide.current = setTimeout(() => setPhase("idle"), 450);
@@ -50,6 +52,8 @@ export function RouteProgress() {
     if (safety.current) clearTimeout(safety.current);
     dropCancel();
     setPhase("loading");
+    // اسپلش تمام‌صفحه اگه رفتن بیشتر از یک لحظه طول بکشه (lib/navSplash.ts)
+    navSplashStart();
     const html = document.documentElement;
     html.setAttribute(ATTR, "");
     // از این به بعد صفحه‌های تازه با fade وارد می‌شن (نه لود کامل اول — LCP)
@@ -69,7 +73,9 @@ export function RouteProgress() {
   // مسیر (یا کوئری) عوض شد → ناوبری تموم شد
   const routeKey = `${pathname}?${search?.toString() ?? ""}`;
   const first = useRef(true);
+  const lastKey = useRef(routeKey);
   useEffect(() => {
+    lastKey.current = routeKey;
     if (first.current) { first.current = false; return; }
     finish();
     // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -98,9 +104,21 @@ export function RouteProgress() {
     function onShow(e: PageTransitionEvent) {
       if (e.persisted) finish();
     }
+    // دکمه‌ی برگشت/جلوی مرورگر هم ناوبریه؛ با عوض‌شدن مسیر مثل کلیک تموم می‌شه
+    // روتر ممکنه مسیر جدید رو *قبل* از این لیسنر رندر کرده باشه (ناوبری از کش)؛ اون
+    // وقت پایان ناوبری قبل از شروعش ثبت شده و باید همین‌جا تمومش کرد، وگرنه اسپلش می‌مونه.
+    function onPop() {
+      start();
+      setTimeout(() => {
+        const cur = `${window.location.pathname}?${window.location.search.replace(/^\?/, "")}`;
+        if (lastKey.current === cur) finish();
+      }, 60);
+    }
     document.addEventListener("click", onClick, true);
     window.addEventListener("pageshow", onShow);
+    window.addEventListener("popstate", onPop);
     return () => {
+      window.removeEventListener("popstate", onPop);
       document.removeEventListener("click", onClick, true);
       window.removeEventListener("pageshow", onShow);
       dropCancel();
