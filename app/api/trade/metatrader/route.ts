@@ -16,6 +16,7 @@ const LINK_SELECT = {
   id: true, platform: true, brokerName: true, serverName: true, accountLogin: true,
   balance: true, equity: true, currency: true, tokenPrefix: true,
   connectedAt: true, lastSyncAt: true, revokedAt: true, pairingExpiresAt: true,
+  eaVersion: true, shotsEnabled: true, lastShotAt: true, shotError: true, shotErrorAt: true,
 } as const;
 
 function serialize(l: any, hasToken: boolean) {
@@ -26,6 +27,8 @@ function serialize(l: any, hasToken: boolean) {
     lastSyncAt: l.lastSyncAt?.toISOString() ?? null,
     revokedAt: l.revokedAt?.toISOString() ?? null,
     pairingExpiresAt: l.pairingExpiresAt?.toISOString() ?? null,
+    lastShotAt: l.lastShotAt?.toISOString() ?? null,
+    shotErrorAt: l.shotErrorAt?.toISOString() ?? null,
   };
 }
 

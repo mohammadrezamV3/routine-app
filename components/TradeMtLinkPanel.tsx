@@ -7,6 +7,7 @@ import { formatTradeDateTime } from "@/lib/tradeDateTime";
 import { SegmentedTabs } from "./SegmentedTabs";
 import { currencySymbol, type CalSystem } from "@/lib/tradeTypes";
 import { Spinner } from "./Spinner";
+import { EA_LATEST_VERSION, isEaOutdated, shotErrorIsCurrent, shotErrorLabel } from "@/lib/mtShotDiag";
 
 type Reconciliation = {
   journalBalance: number; mtBalance: number | null; difference: number | null;
@@ -19,6 +20,8 @@ type MtLink = {
   balance: number | null; equity: number | null; currency: string | null;
   tokenPrefix: string | null; connected: boolean;
   connectedAt: string | null; lastSyncAt: string | null; revokedAt: string | null;
+  eaVersion?: string | null; shotsEnabled?: boolean | null;
+  lastShotAt?: string | null; shotError?: string | null; shotErrorAt?: string | null;
 };
 
 // اتصال متاتریدر **همین حساب**. عمدا داخل صفحه‌ی حساب است نه یک صفحه‌ی
@@ -120,7 +123,42 @@ export function TradeMtLinkPanel({ accountId, calSystem, accountName }: { accoun
               <span>آخرین همگام‌سازی</span>
               <b>{link.lastSyncAt ? formatTradeDateTime(link.lastSyncAt, calSystem) : "هنوز انجام نشده"}</b>
             </div>
+            <div className="trade-detail-cell">
+              <span>نسخه‌ی اکسپرت</span>
+              <b className="mono">{link.eaVersion ? faNum(link.eaVersion) : "نامشخص"}</b>
+            </div>
+            <div className="trade-detail-cell">
+              <span>آخرین اسکرین</span>
+              <b>{link.lastShotAt ? formatTradeDateTime(link.lastShotAt, calSystem) : "هنوز نرسیده"}</b>
+            </div>
           </div>
+
+          {link.lastSyncAt && isEaOutdated(link.eaVersion) && (
+            <div className="trade-mt-note-warn" style={{ marginTop: 12 }}>
+              اکسپرت روی ترمینال {link.eaVersion ? `نسخه‌ی ${faNum(link.eaVersion)}` : "قدیمی"} است. برای اسکرین ورود و خروج
+              نسخه‌ی {faNum(EA_LATEST_VERSION)} را دانلود کنید، جای فایل قبلی بگذارید و در MetaEditor با{" "}
+              <b className="mono ltr-inline">F7</b> کامپایل کنید.
+              <div style={{ marginTop: 8 }}>
+                <a className="trade-mt-download" href={link.platform === "MT4" ? "/ea/Arion-MT4.mq4" : "/ea/Arion-MT5.mq5"} download>
+                  <Download size={14} /> {link.platform === "MT4" ? "Arion-MT4.mq4" : "Arion-MT5.mq5"}
+                </a>
+              </div>
+            </div>
+          )}
+          {link.shotsEnabled === false && (
+            <div className="trade-mt-note" style={{ marginTop: 12 }}>
+              اسکرین ورود و خروج در تنظیمات اکسپرت خاموش است (<b className="mono ltr-inline">SendScreenshots</b>).
+            </div>
+          )}
+          {link.shotError && shotErrorIsCurrent(link.shotErrorAt, link.lastShotAt) && (
+            <div className="trade-mt-note-warn" style={{ marginTop: 12 }}>
+              {shotErrorLabel(link.shotError)}
+              <div style={{ marginTop: 6, opacity: 0.8 }}>
+                <span className="mono ltr-inline">{link.shotError}</span>
+                {link.shotErrorAt && <> · {formatTradeDateTime(link.shotErrorAt, calSystem)}</>}
+              </div>
+            </div>
+          )}
 
           {recon && recon.mtBalance !== null && recon.difference !== null && (() => {
             const sym = currencySymbol(link.currency ?? "USD");
@@ -145,12 +183,15 @@ export function TradeMtLinkPanel({ accountId, calSystem, accountName }: { accoun
                       {" "}در متاتریدر 4 تب <b className="mono ltr-inline">Account History</b> باید روی <b className="mono ltr-inline">All History</b> باشد
                       (راست‌کلیک روی تب و انتخاب <b className="mono ltr-inline">All History</b>) تا اکسپرت کل تاریخچه را ببیند.
                     </>)}
-                    {" "}اکسپرت باید نسخه‌ی جدید (v1.41) باشد: آن را از همین صفحه دوباره دانلود کنید و جای فایل قبلی بگذارید.
-                    <div style={{ marginTop: 8 }}>
-                      <a className="trade-mt-download" href={link.platform === "MT4" ? "/ea/Arion-MT4.mq4" : "/ea/Arion-MT5.mq5"} download>
-                        <Download size={14} /> {link.platform === "MT4" ? "Arion-MT4.mq4" : "Arion-MT5.mq5"}
-                      </a>
-                    </div>
+                    {" "}اکسپرت باید نسخه‌ی جدید (v{faNum(EA_LATEST_VERSION)}) باشد: آن را از همین صفحه دوباره دانلود کنید و جای فایل قبلی بگذارید.
+                    {/* لینک دانلود فقط یک بار: اگه هشدار نسخه‌ی قدیمی بالا هست، همون کافیه */}
+                    {!(link.lastSyncAt && isEaOutdated(link.eaVersion)) && (
+                      <div style={{ marginTop: 8 }}>
+                        <a className="trade-mt-download" href={link.platform === "MT4" ? "/ea/Arion-MT4.mq4" : "/ea/Arion-MT5.mq5"} download>
+                          <Download size={14} /> {link.platform === "MT4" ? "Arion-MT4.mq4" : "Arion-MT5.mq5"}
+                        </a>
+                      </div>
+                    )}
                   </div>
                 ) : (
                   <div className="trade-mt-note" style={{ color: "var(--pnl-win)" }}>

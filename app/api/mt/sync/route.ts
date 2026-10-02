@@ -10,7 +10,8 @@ import {
   hashSecret, mtTradeToEntryData, mtUpdateData, normalizeMtCashflows, normalizeMtTrades, normalizeTzOffsetMs,
 } from "@/lib/metatrader";
 import { publishDataChanged } from "@/lib/realtime";
-import { attachPendingShots } from "@/lib/mtScreenshots";
+import { attachPendingShots, parseEaJson, recordShotDiag } from "@/lib/mtScreenshots";
+import { normalizeEaShotReport, normalizeEaVersion } from "@/lib/mtShotDiag";
 
 // POST /api/mt/sync — اندپوینتی که EA هر چند دقیقه صدا می‌زند.
 //   Authorization: Bearer <token>
@@ -52,7 +53,8 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ error: "too many requests" }, { status: 429 });
   }
 
-  const body = await req.json().catch(() => null);
+  // خام خونده می‌شه تا NUL/BOM پایانی بدنه‌ی اکسپرت کل sync رو 400 نکنه
+  const body = parseEaJson(await req.text().catch(() => ""));
   if (!body || typeof body !== "object") {
     return NextResponse.json({ error: "invalid json" }, { status: 400 });
   }
@@ -212,6 +214,15 @@ export async function POST(req: NextRequest) {
       ...(equity !== null ? { equity } : {}),
       ...(body.currency ? { currency: clampText(String(body.currency), 8) } : {}),
     },
+  });
+
+  // نسخه‌ی اکسپرت و گزارش اسکرینش (1.42 به بعد) — جدا و بی‌خطر، تا پنل اتصال بتونه
+  // بگه اکسپرت قدیمیه یا اسکرین سمت ترمینال شکست می‌خوره
+  const shotReport = normalizeEaShotReport(body.shots);
+  await recordShotDiag(link.id, {
+    eaVersion: normalizeEaVersion(body.eaVersion),
+    enabled: shotReport.enabled,
+    error: shotReport.error,
   });
 
   // معامله‌ی تازه/به‌روزشده از EA → حساب/ژورنال باز کاربر (روی هر دستگاهی) همون لحظه
