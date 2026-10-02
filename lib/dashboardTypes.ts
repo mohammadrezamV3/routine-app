@@ -105,6 +105,8 @@ export type DashboardData = {
     memberSince: string;
     /** همه‌ی اچیومنت‌ها باز شده → نام طلایی (lib/achievementsServer.ts) */
     golden: boolean;
+    /** Owner/ادمین (از دیتابیس) → نام بنفش سمی، بر طلایی مقدمه (lib/nameStyle.ts) */
+    staff: boolean;
   };
   /** «روتین من»: در دوره‌ی ۱۴ روزه‌ی رایگان → روزهای باقی‌مونده؛ null = خریده/سوپریوزر/تموم‌شده */
   routineTrial: { daysLeft: number } | null;

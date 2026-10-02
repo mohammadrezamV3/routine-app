@@ -2,15 +2,15 @@
 
 import { useEffect, useRef, useState } from "react";
 import { createPortal } from "react-dom";
-import { ZoomIn } from "lucide-react";
 import { useLockBodyScroll } from "@/lib/useLockBodyScroll";
+import { centeredView, clampView, sourceRect, zoomAt, type CropView, type Size } from "@/lib/cropMath";
 
-// پیش‌نمایش بنر پروفایل قبل از آپلود (عکس پروفایل دیگه این مرحله رو نداره
-// و مستقیم با کراپ خودکار وسط آپلود می‌شه) — قبلا عکس بی‌صدا از *وسط*
-// کراپ می‌شد و کاربر نمی‌تونست انتخاب کنه کدوم قسمتش دیده بشه (همون
-// «جای پیش‌نمایش درست نیست»). حالا عکس داخل قابی با همون نسبت نهایی
-// (۳.۲:۱ برای بنر) نشون داده می‌شه، با کشیدن جابه‌جا و
-// با اسلایدر زوم می‌شه، و خروجی دقیقا همون چیزیه که داخل قاب دیده می‌شد.
+// پیش‌نمایش و کراپ عکس قبل از آپلود (بنر و عکس پروفایل). طبق درخواست صریح
+// هیچ دکمه/اسلایدری برای زوم و جابه‌جایی نیست — همه‌چیز لمسی‌ه:
+// یک انگشت = جابه‌جایی، دو انگشت = بزرگ/کوچیک (حول وسط دو انگشت)،
+// دوبار زدن = زوم سریع/برگشت، و روی دسکتاپ چرخ موس = زوم حول نشانگر.
+// عکس همیشه کل قاب رو می‌پوشونه (lib/cropMath.ts) و خروجی دقیقا همون
+// چیزیه که داخل قاب دیده می‌شه.
 //
 // عکس با FileReader به data URL خونده می‌شه، نه URL.createObjectURL —
 // CSP پروداکشن img-src رو به 'self' data: https: محدود می‌کنه.
@@ -20,25 +20,34 @@ type Props = {
   outputW: number;
   outputH: number;
   title: string;
+  /** قاب دایره‌ای برای عکس پروفایل (خروجی همچنان مربعه) */
+  shape?: "rect" | "circle";
   onCancel: () => void;
   onConfirm: (dataUrl: string) => void;
 };
 
 const FRAME_MAX_W = 340;
+const DOUBLE_TAP_MS = 280;
 
-export function ImageCropModal({ file, outputW, outputH, title, onCancel, onConfirm }: Props) {
+export function ImageCropModal({ file, outputW, outputH, title, shape = "rect", onCancel, onConfirm }: Props) {
   useLockBodyScroll();
   const [mounted, setMounted] = useState(false);
   const [src, setSrc] = useState<string | null>(null);
-  const [natural, setNatural] = useState<{ w: number; h: number } | null>(null);
+  const [natural, setNatural] = useState<Size | null>(null);
   const [error, setError] = useState<string | null>(null);
-  const [zoom, setZoom] = useState(1);
-  const [pos, setPos] = useState({ x: 0, y: 0 }); // گوشه‌ی بالا-چپ عکس نسبت به قاب (px)
+  const [view, setView] = useState<CropView>({ zoom: 1, x: 0, y: 0 });
+  const [easing, setEasing] = useState(false);
   const frameRef = useRef<HTMLDivElement>(null);
   const [frameW, setFrameW] = useState(FRAME_MAX_W);
-  const drag = useRef<{ px: number; py: number; x: number; y: number } | null>(null);
-
   const frameH = Math.round((frameW * outputH) / outputW);
+  const frame: Size = { w: frameW, h: frameH };
+
+  // آخرین مقدارها برای هندلرهای native (wheel) و اشاره‌گرها
+  const viewRef = useRef(view);
+  viewRef.current = view;
+  const pointers = useRef(new Map<number, { x: number; y: number }>());
+  const gesture = useRef<{ view: CropView; dist: number; mid: { x: number; y: number } } | null>(null);
+  const lastTap = useRef(0);
 
   useEffect(() => setMounted(true), []);
 
@@ -68,46 +77,82 @@ export function ImageCropModal({ file, outputW, outputH, title, onCancel, onConf
     return () => window.removeEventListener("keydown", onKey);
   }, [onCancel]);
 
-  // مقیاسی که عکس در zoom=1 دقیقا قاب رو پر کنه (cover)
-  const baseScale = natural ? Math.max(frameW / natural.w, frameH / natural.h) : 1;
-  const scale = baseScale * zoom;
-  const dispW = natural ? natural.w * scale : 0;
-  const dispH = natural ? natural.h * scale : 0;
-
-  function clamp(p: { x: number; y: number }, w = dispW, h = dispH) {
-    return {
-      x: Math.min(0, Math.max(frameW - w, p.x)),
-      y: Math.min(0, Math.max(frameH - h, p.y)),
-    };
-  }
-
   // اولین بار و با تغییر اندازه‌ی قاب: وسط‌چین
   useEffect(() => {
-    if (!natural) return;
-    setPos({ x: (frameW - dispW) / 2, y: (frameH - dispH) / 2 });
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [natural, frameW]);
+    if (natural) setView(centeredView(natural, { w: frameW, h: frameH }));
+  }, [natural, frameW, frameH]);
 
-  function changeZoom(next: number) {
-    if (!natural) return;
-    const nextScale = baseScale * next;
-    // زوم حول مرکز قاب، نه گوشه‌ی عکس
-    const cx = frameW / 2, cy = frameH / 2;
-    const ratio = nextScale / scale;
-    const p = { x: cx - (cx - pos.x) * ratio, y: cy - (cy - pos.y) * ratio };
-    setZoom(next);
-    setPos(clamp(p, natural.w * nextScale, natural.h * nextScale));
+  // چرخ موس (دسکتاپ و پینچ ترک‌پد) — باید passive:false باشه تا صفحه اسکرول نشه
+  useEffect(() => {
+    const el = frameRef.current;
+    if (!el || !natural) return;
+    const onWheel = (e: WheelEvent) => {
+      e.preventDefault();
+      const r = el.getBoundingClientRect();
+      const f = { w: r.width, h: r.height };
+      const v = viewRef.current;
+      setEasing(false);
+      setView(zoomAt(v, v.zoom * Math.exp(-e.deltaY * 0.0022), e.clientX - r.left, e.clientY - r.top, natural, f));
+    };
+    el.addEventListener("wheel", onWheel, { passive: false });
+    return () => el.removeEventListener("wheel", onWheel);
+  }, [natural, src]);
+
+  function local(e: React.PointerEvent) {
+    const r = frameRef.current!.getBoundingClientRect();
+    return { x: e.clientX - r.left, y: e.clientY - r.top };
+  }
+
+  function startGesture() {
+    const pts = [...pointers.current.values()];
+    if (pts.length === 0) { gesture.current = null; return; }
+    const mid = pts.length > 1 ? { x: (pts[0].x + pts[1].x) / 2, y: (pts[0].y + pts[1].y) / 2 } : pts[0];
+    const dist = pts.length > 1 ? Math.hypot(pts[0].x - pts[1].x, pts[0].y - pts[1].y) : 0;
+    gesture.current = { view: viewRef.current, dist, mid };
   }
 
   function onPointerDown(e: React.PointerEvent) {
-    (e.target as HTMLElement).setPointerCapture?.(e.pointerId);
-    drag.current = { px: e.clientX, py: e.clientY, x: pos.x, y: pos.y };
+    if (!natural) return;
+    frameRef.current?.setPointerCapture?.(e.pointerId);
+    const p = local(e);
+    pointers.current.set(e.pointerId, p);
+    setEasing(false);
+    if (pointers.current.size === 1) {
+      const now = Date.now();
+      if (now - lastTap.current < DOUBLE_TAP_MS) {
+        lastTap.current = 0;
+        const v = viewRef.current;
+        setEasing(true);
+        setView(v.zoom > 1.05 ? centeredView(natural, frame) : zoomAt(v, 2.2, p.x, p.y, natural, frame));
+      } else {
+        lastTap.current = now;
+      }
+    }
+    startGesture();
   }
+
   function onPointerMove(e: React.PointerEvent) {
-    if (!drag.current) return;
-    setPos(clamp({ x: drag.current.x + e.clientX - drag.current.px, y: drag.current.y + e.clientY - drag.current.py }));
+    if (!natural || !pointers.current.has(e.pointerId) || !gesture.current) return;
+    pointers.current.set(e.pointerId, local(e));
+    const g = gesture.current;
+    const pts = [...pointers.current.values()];
+    if (pts.length > 1 && g.dist > 0) {
+      const mid = { x: (pts[0].x + pts[1].x) / 2, y: (pts[0].y + pts[1].y) / 2 };
+      const dist = Math.hypot(pts[0].x - pts[1].x, pts[0].y - pts[1].y);
+      // زوم حول وسط اولیه‌ی دو انگشت + جابه‌جایی همراه حرکت وسطشون
+      const zoomed = zoomAt(g.view, (g.view.zoom * dist) / g.dist, g.mid.x, g.mid.y, natural, frame);
+      setView(clampView({ ...zoomed, x: zoomed.x + mid.x - g.mid.x, y: zoomed.y + mid.y - g.mid.y }, natural, frame));
+    } else {
+      const p = pts[0];
+      setView(clampView({ ...g.view, x: g.view.x + p.x - g.mid.x, y: g.view.y + p.y - g.mid.y }, natural, frame));
+    }
   }
-  function onPointerUp() { drag.current = null; }
+
+  function onPointerUp(e: React.PointerEvent) {
+    pointers.current.delete(e.pointerId);
+    // با برداشتن یک انگشت از دو انگشت، ادامه‌ی حرکت از همون نقطه بدون پرش
+    startGesture();
+  }
 
   function confirm() {
     if (!src || !natural) return;
@@ -118,24 +163,23 @@ export function ImageCropModal({ file, outputW, outputH, title, onCancel, onConf
       canvas.height = outputH;
       const ctx = canvas.getContext("2d");
       if (!ctx) { setError("Canvas در دسترس نیست"); return; }
-      const sx = -pos.x / scale, sy = -pos.y / scale;
-      const sw = frameW / scale, sh = frameH / scale;
+      ctx.imageSmoothingQuality = "high";
+      const { sx, sy, sw, sh } = sourceRect(view, natural, frame);
       ctx.drawImage(img, sx, sy, sw, sh, 0, 0, outputW, outputH);
-      onConfirm(canvas.toDataURL("image/jpeg", 0.85));
+      onConfirm(canvas.toDataURL("image/jpeg", 0.88));
     };
     img.src = src;
   }
+
+  const scale = natural ? Math.max(frameW / natural.w, frameH / natural.h) * view.zoom : 1;
 
   if (!mounted) return null;
   return createPortal(
     <>
       <div className="modal-overlay open" onClick={onCancel} />
-      <div className="modal-panel open crop-modal" role="dialog" aria-modal="true" dir="rtl">
+      <div className="modal-panel open crop-modal" role="dialog" aria-modal="true" aria-label={title} dir="rtl">
         <div className="modal-head">
-          <div>
-            <div className="modal-eyebrow">پیش‌نمایش</div>
-            <div className="modal-title">{title}</div>
-          </div>
+          <div className="modal-title">{title}</div>
         </div>
 
         {error ? (
@@ -144,7 +188,7 @@ export function ImageCropModal({ file, outputW, outputH, title, onCancel, onConf
           <>
             <div
               ref={frameRef}
-              className="crop-frame"
+              className={`crop-frame${shape === "circle" ? " is-circle" : ""}`}
               style={{ height: frameH }}
               onPointerDown={onPointerDown}
               onPointerMove={onPointerMove}
@@ -154,16 +198,13 @@ export function ImageCropModal({ file, outputW, outputH, title, onCancel, onConf
               {src && natural && (
                 // eslint-disable-next-line @next/next/no-img-element
                 <img
-                  src={src} alt="" draggable={false} className="crop-img"
-                  style={{ width: dispW, height: dispH, transform: `translate(${pos.x}px, ${pos.y}px)` }}
+                  src={src} alt="" draggable={false} className={`crop-img${easing ? " is-easing" : ""}`}
+                  style={{ width: natural.w, height: natural.h, transform: `translate3d(${view.x}px, ${view.y}px, 0) scale(${scale})` }}
                 />
               )}
+              {shape === "circle" && <span className="crop-ring" aria-hidden="true" />}
             </div>
-            <div className="crop-hint">برای جابه‌جایی عکس رو بکش</div>
-            <label className="crop-zoom">
-              <ZoomIn size={15} />
-              <input type="range" min={1} max={3} step={0.01} value={zoom} onChange={(e) => changeZoom(Number(e.target.value))} aria-label="زوم" />
-            </label>
+            <div className="crop-hint">برای جابه‌جایی بکش، برای بزرگ و کوچیک کردن با دو انگشت باز و بسته کن</div>
           </>
         )}
 

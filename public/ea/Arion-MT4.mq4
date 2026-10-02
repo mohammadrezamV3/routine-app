@@ -21,7 +21,7 @@
 //
 #property copyright "Arion"
 #property link      "https://arionapp.ir"
-#property version   "1.40"
+#property version   "1.41"
 #property strict
 
 input string ArionUrl     = "https://arionapp.ir"; // آدرس سایت Arion
@@ -325,7 +325,7 @@ bool SendBatch(string itemsJson, bool cash)
    string body = "{\"balance\":" + Num(AccountBalance(), 2) +
                  ",\"equity\":" + Num(AccountEquity(), 2) +
                  ",\"currency\":\"" + JsonEscape(AccountCurrency()) + "\"" +
-                 ",\"eaVersion\":\"1.40\"";
+                 ",\"eaVersion\":\"1.41\"";
    int tz = BrokerTzOffsetMinutes();
    if(g_tzKnown) body += ",\"tzOffsetMinutes\":" + IntegerToString(tz);
    body += (cash ? ",\"trades\":[],\"cashflows\":[" : ",\"trades\":[") + itemsJson + "]}";
@@ -580,7 +580,10 @@ bool TakeShot(string symbol, datetime t1, double p1, datetime t2, double p2, boo
    ChartRedraw(ch);
    Sleep(400);
    bool ok = ChartScreenShot(ch, file, ShotWidth, ShotHeight, ALIGN_RIGHT);
+   // ذخیره‌ی فایل ممکنه کمی بعد تموم بشه؛ قبل از بستن چارت تا 3 ثانیه صبر
+   for(int w = 0; ok && w < 30 && !FileIsExist(file); w++) Sleep(100);
    ChartClose(ch);
+   if(ok && !FileIsExist(file)) ok = false;
    return(ok);
   }
 
@@ -641,8 +644,12 @@ void UploadShots()
          FileReadArray(h, data);
          FileClose(h);
          CryptEncode(CRYPT_BASE64, data, none, b64);
+         // base64 متاتریدر ممکنه خط‌شکن داشته باشه؛ خط‌شکن خام داخل رشته‌ی JSON نامعتبره
+         string img = CharArrayToString(b64, 0, WHOLE_ARRAY, CP_ACP);
+         StringReplace(img, "\r", "");
+         StringReplace(img, "\n", "");
          string body = "{\"ticket\":\"" + g_jobTicket[i] + "\",\"kind\":\"" + g_jobKind[i] +
-                       "\",\"image\":\"data:image/png;base64," + CharArrayToString(b64, 0, WHOLE_ARRAY, CP_ACP) + "\"}";
+                       "\",\"image\":\"data:image/png;base64," + img + "\"}";
          int status;
          HttpPost(ArionUrl + "/api/mt/screenshot",
                   "Content-Type: application/json\r\nAuthorization: Bearer " + g_token + "\r\n", body, status);

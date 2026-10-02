@@ -1131,11 +1131,12 @@ model TradeAccount {
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 
-  entries TradeEntry[]
-  notes   TradeNote[]
-  tags    TradeTag[]   @relation("TradeAccountTags")
-  mtLink  TradeMtLink?
-  cashflows TradeCashflow[]
+  entries      TradeEntry[]
+  notes        TradeNote[]
+  tags         TradeTag[]           @relation("TradeAccountTags")
+  mtLink       TradeMtLink?
+  cashflows    TradeCashflow[]
+  pendingShots TradeMtPendingShot[]
 
   @@index([userId, archived])
 }
@@ -1309,6 +1310,25 @@ model TradeImage {
   createdAt DateTime   @default(now())
 
   @@index([entryId])
+}
+
+// اسکرین اکسپرت که قبل از خود معامله رسیده (EA اسکرین رو همون لحظه‌ی ورود
+// می‌گیره ولی ممکنه sync اون معامله هنوز نرسیده باشه). به‌جای 404 و دور ریختن،
+// همین‌جا نگه داشته می‌شه و sync بعدی که معامله رو ساخت، وصلش می‌کنه
+// (lib/mtScreenshots.ts). هر (حساب، تیکت، نوع) فقط یک ردیف.
+model TradeMtPendingShot {
+  id         String       @id @default(cuid())
+  userId     String
+  accountId  String
+  account    TradeAccount @relation(fields: [accountId], references: [id], onDelete: Cascade)
+  externalId String
+  kind       String // entry | exit
+  dataUrl    String
+  createdAt  DateTime     @default(now())
+  updatedAt  DateTime     @updatedAt
+
+  @@unique([accountId, externalId, kind])
+  @@index([accountId, createdAt])
 }
 
 // ============================================================================

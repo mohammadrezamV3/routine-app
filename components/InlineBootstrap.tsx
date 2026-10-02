@@ -1,7 +1,8 @@
+import { accountUserSelect, toAccountUser } from "@/lib/accountPayload";
 import { cookies } from "next/headers";
 import { getToken } from "next-auth/jwt";
 import { prisma } from "@/lib/prisma";
-import { ModuleKey } from "@prisma/client";
+import { NAME_STYLE_SELECT, nameFlags } from "@/lib/nameStyle";
 import { BOOTSTRAP_SETTING_KEYS } from "@/lib/userSettingKeys";
 import { AUTH_HINT_COOKIE, INLINE_BOOTSTRAP_ID } from "@/lib/preload";
 import { routineStatsForUsers } from "@/lib/friendStats";
@@ -56,20 +57,7 @@ export async function InlineBootstrap() {
         where: { userId, key: { in: [...BOOTSTRAP_SETTING_KEYS] } },
         select: { key: true, value: true },
       }),
-      prisma.user.findUnique({
-        where: { id: userId },
-        select: {
-          email: true, username: true, phone: true, name: true, market: true,
-          createdAt: true, isSuperAdmin: true, avatarUrl: true, goldenSince: true,
-          referralCode: { select: { code: true } },
-          moduleAccess: { select: { module: true, active: true, expiresAt: true } },
-          subscriptions: {
-            orderBy: { createdAt: "desc" },
-            take: 1,
-            select: { status: true, currentPeriodEnd: true, plan: { select: { nameFa: true, key: true } } },
-          },
-        },
-      }),
+      prisma.user.findUnique({ where: { id: userId }, select: accountUserSelect() }),
       prisma.dailyEntry.findMany({
         where: { userId, date: { gte: new Date(iso(from)), lte: new Date(iso(to)) } },
         select: { date: true, completedItems: true, wakeUpAt: true },
@@ -88,9 +76,6 @@ export async function InlineBootstrap() {
       };
     }
 
-    const moduleAccess = user.isSuperAdmin
-      ? Object.values(ModuleKey).map((m) => ({ module: m, active: true, expiresAt: null }))
-      : user.moduleAccess;
 
     // کارت دوستان روی داشبوردها همیشه لود می‌شود، پس همین‌جا می‌آید —
     // همان منطق /api/friends، فقط بدون رفت‌وبرگشت شبکه.
@@ -98,13 +83,13 @@ export async function InlineBootstrap() {
       prisma.friendship.findMany({
         where: { status: "ACCEPTED", OR: [{ requesterId: userId }, { addresseeId: userId }] },
         include: {
-          requester: { select: { id: true, name: true, username: true, avatarUrl: true, goldenSince: true } },
-          addressee: { select: { id: true, name: true, username: true, avatarUrl: true, goldenSince: true } },
+          requester: { select: { id: true, name: true, username: true, avatarUrl: true, ...NAME_STYLE_SELECT } },
+          addressee: { select: { id: true, name: true, username: true, avatarUrl: true, ...NAME_STYLE_SELECT } },
         },
       }),
       prisma.friendship.findMany({
         where: { addresseeId: userId, status: "PENDING" },
-        include: { requester: { select: { id: true, name: true, username: true, avatarUrl: true, goldenSince: true } } },
+        include: { requester: { select: { id: true, name: true, username: true, avatarUrl: true, ...NAME_STYLE_SELECT } } },
         orderBy: { createdAt: "desc" },
       }),
     ]);
@@ -122,18 +107,17 @@ export async function InlineBootstrap() {
           name: other.name || other.username || "کاربر",
           username: other.username,
           avatarUrl: other.avatarUrl,
-          golden: !!other.goldenSince,
+          ...nameFlags(other),
           favorite: isRequester ? r.favoritedByRequester : r.favoritedByAddressee,
           ...(stats.get(other.id) ?? EMPTY),
         };
       })
       .sort((a, b) => Number(b.favorite) - Number(a.favorite));
 
-    const { avatarUrl, goldenSince, ...userRest } = user;
     payload = {
       settings,
-      account: { user: { ...userRest, golden: !!goldenSince, moduleAccess } },
-      avatarUrl: avatarUrl ?? null,
+      account: { user: toAccountUser(user) },
+      avatarUrl: user.avatarUrl ?? null,
       dailyRange: { from: iso(from), to: iso(to), entries },
       friends,
       friendRequests: requestRows.map((r) => ({
@@ -142,7 +126,7 @@ export async function InlineBootstrap() {
         name: r.requester.name || r.requester.username || "کاربر",
         username: r.requester.username,
         avatarUrl: r.requester.avatarUrl,
-        golden: !!r.requester.goldenSince,
+        ...nameFlags(r.requester),
       })),
     };
   } catch {

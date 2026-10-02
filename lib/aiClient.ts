@@ -13,6 +13,7 @@
 // lib/weeklyAnalysis/ai.ts هم دقیقا همین الگو رو برای مربی AI آنالیز
 // هفتگی استفاده کنه، بدون تکرار منطق تایم‌اوت/بودجه/ثبت مصرف.
 
+import { MUSCLE_LABELS, sameSplit, splitRuleIssues, toKeyedSplit, type SplitRuleOptions, type UserSplitDay } from "@/lib/exerciseSplit";
 import { AiFeatureKey } from "@prisma/client";
 import { prisma } from "@/lib/prisma";
 import { logError } from "@/lib/errorLog";
@@ -643,9 +644,16 @@ const EXERCISE_COACH_RULES = `تو یک مربی حرفه‌ای بدنسازی 
 - برای هر هدف از اصول مناسب همان هدف استفاده کن.
 - ابتدا ساختار هفتگی و تقسیم عضلات را مشخص کن، سپس هر جلسه را طراحی کن.
 - عضلات بدن را واقعا از هم تفکیک کن (مثلا سینه، پشت، شانه، جلوبازو، پشت‌بازو، چهارسر، پشت ران، سرینی،
-  ساق، شکم — نه یک دسته‌ی کلی «بالاتنه»). هر گروه عضلانی مستقل روی روز خودش برنامه‌ریزی شود؛ دو گروه
-  جداگانه (مثلا جلوبازو و پشت‌بازو) را در یک روز با هم نیاور، مگر این‌که خود کاربر صریحا در هدفش خواسته
-  باشد آن‌ها با هم ترکیب شوند.
+  ساق، شکم — نه یک دسته‌ی کلی «بالاتنه»). هر گروه عضلانی مستقل روی روز خودش برنامه‌ریزی شود.
+- قواعد قطعی تقسیم هفتگی (سرور همین‌ها را چک می‌کند و تقسیم ناقض را برای اصلاح برمی‌گرداند):
+  • جلوبازو و پشت‌بازو هرگز در یک روز نیایند.
+  • یک عضله‌ی بزرگ (سینه، پشت، سرشانه، چهارسر ران، پشت ران، سرینی) در دو روز پشت‌سرهم تقویمی نیاید؛
+    حداقل 48 ساعت ریکاوری برای همان عضله (جمعه و شنبه هم پشت‌سرهم حساب می‌شوند).
+  • با 3 روز تمرین یا بیشتر، سینه، پشت، سرشانه، چهارسر ران و پشت ران هر کدام حداقل یک بار در هفته بیایند.
+  • تعادل فشار/کشش و جلو/پشت ران: تعداد جلسه‌های هفتگی سینه و پشت (و چهارسر و پشت ران) حداکثر 1 اختلاف داشته باشد.
+  • در یک جلسه حداکثر 3 عضله‌ی بزرگ (پیشرفته 4)، و کلا حداکثر 5 گروه عضلانی برای مبتدی و 6 برای بقیه.
+  • عضله‌ی کوچک را کنار عضله‌ی بزرگ هم‌الگو بیاور (پشت‌بازو با سینه یا سرشانه، جلوبازو با پشت، ساق با پا)
+    تا Push و Pull و Legs متعادل بمانند.
 - برنامه‌ی پیش‌فرض باید «کامل‌ترین» نسخه‌ی اصولی باشد، نه حداقلی و نه سه‌حرکتی. هر عضله‌ی هدف هر روز
   را کامل کار کن و زاویه‌ها/الگوهای مختلفش را پوشش بده:
   • عضله‌های بزرگ (سینه، پشت، سرشانه، چهارسر ران، پشت ران، سرینی): حداقل 4 حرکت متمایز، معمولا 4 تا 6.
@@ -688,7 +696,6 @@ const EXERCISE_COACH_RULES = `تو یک مربی حرفه‌ای بدنسازی 
   ست‌های حرکت اول معمولا 3 تا 5، بقیه 2 تا 4. استراحت: چندمفصلی سنگین 2 تا 3 دقیقه، کمکی 90 ثانیه تا 2 دقیقه،
   تک‌مفصلی 60 تا 90 ثانیه. برای اولین حرکت هر جلسه در note بنویس «1-2 ست گرم‌کردن با وزن سبک قبل از ست‌های اصلی».
 - شدت با سطح: مبتدی RIR 2-3 و تمرکز روی فرم؛ متوسط RIR 1-2؛ پیشرفته RIR 0-2 روی تک‌مفصلی‌ها.
-- دو جلسه‌ی پشت‌سرهم نباید یک گروه عضلانی اصلی را سنگین کار کنند (حداقل 48 ساعت ریکاوری برای همان عضله).
 - اسم حرکت‌ها را همان اسم فارسی رایج بنویس و در یک روز هیچ حرکتی را دو بار نیاور.
 
 ## بررسی نهایی (در ذهنت، قبل از خروجی — هرکدام رد شد، برنامه را اصلاح کن)
@@ -765,6 +772,8 @@ export type ExercisePlanProfile = {
   limitationDetails?: string | null;
   description?: string | null;
   previousProgram?: unknown | null; // planData ماه قبل همین کاربر (اگه بود) — فقط برای زمینه‌ی پیشرفت
+  /** تقسیم هفتگی که خود کاربر در «تنظیمات پیشرفته» انتخاب کرده (اعتبارسنجی‌شده) — فاز ۱ رد می‌شود */
+  userSplit?: UserSplitDay[] | null;
 };
 
 export type GeneratedExerciseDay = { day: string; focus: string; items: string[] };
@@ -855,7 +864,7 @@ function muscleMatches(exMuscle: string, target: string): boolean {
 
 export type SplitDay = { day: string; focus: string; muscles: string[] };
 
-export function splitIssues(rawDays: unknown, gymDays: string[]): string[] {
+export function splitIssues(rawDays: unknown, gymDays: string[], opts: SplitRuleOptions = {}): string[] {
   const issues: string[] = [];
   if (!Array.isArray(rawDays)) return ["days آرایه نیست."];
   const seen = rawDays.map((d: any) => (typeof d?.day === "string" ? d.day.trim() : ""));
@@ -868,6 +877,8 @@ export function splitIssues(rawDays: unknown, gymDays: string[]): string[] {
   for (const d of rawDays as any[]) {
     if (!asStringArray(d?.muscles).length) issues.push(`روز ${d?.day || "?"} هیچ عضله‌ی هدفی ندارد.`);
   }
+  // قواعد برنامه‌نویسی (جلوبازو و پشت‌بازو جدا، ریکاوری 48 ساعته، تعادل و …) — lib/exerciseSplit.ts
+  issues.push(...splitRuleIssues(toKeyedSplit(rawDays), opts));
   return issues;
 }
 
@@ -943,7 +954,8 @@ async function generateSplit(profile: ExercisePlanProfile, profileText: string, 
     const message = typeof parsed?.message === "string" && parsed.message.trim() ? parsed.message.trim() : "این برنامه با مشخصاتی که وارد کردی قابل‌اجرا نیست.";
     return { feasible: false, message };
   }
-  const issues = splitIssues(parsed?.days, profile.gymDays);
+  const ruleOpts: SplitRuleOptions = { level: profile.level, relaxed: userAskedForLess(profile) };
+  const issues = splitIssues(parsed?.days, profile.gymDays, ruleOpts);
   if (issues.length && msLeft(deadline) > 30_000) {
     try {
       const repair = await callAiChat(
@@ -953,7 +965,7 @@ async function generateSplit(profile: ExercisePlanProfile, profileText: string, 
       );
       recordAiUsage(userId, AiFeatureKey.EXERCISE_PLAN_GENERATION, repair.usage, repair.durationMs, true);
       const fixed = parseJsonResponse(repair.text);
-      if (fixed?.feasible !== false && splitIssues(fixed?.days, profile.gymDays).length < issues.length) parsed = fixed;
+      if (fixed?.feasible !== false && splitIssues(fixed?.days, profile.gymDays, ruleOpts).length < issues.length) parsed = fixed;
     } catch (err: any) {
       logError("ai-gateway", `اصلاح تقسیم هفتگی شکست خورد: ${err?.message || err}`, { severity: "WARNING" as any, context: { feature: "EXERCISE_PLAN_GENERATION" } });
     }
@@ -1004,13 +1016,65 @@ async function generateDay(day: SplitDay, split: SplitDay[], profileText: string
   return norm;
 }
 
+/** تقسیم کلیدی کاربر → روزهای فاز ۲ با نام فارسی عضله‌ها */
+function userSplitToDays(split: UserSplitDay[]): SplitDay[] {
+  return split.map((d) => {
+    const muscles = d.muscles.map((m) => MUSCLE_LABELS[m]);
+    return { day: d.day, focus: muscles.join(" و "), muscles };
+  });
+}
+
+/**
+ * پیشنهاد مربی برای تقسیمی که کاربر خودش چیده و قواعد را نقض می‌کند: کمترین
+ * تغییر لازم برای رفع همان ایرادها. سهمیه‌ی ساخت برنامه را مصرف نمی‌کند؛
+ * خروجی دوباره با همان قواعد سنجیده می‌شود و اگر بهتر نبود null برمی‌گردد.
+ */
+export async function suggestSplitFix(
+  profile: Pick<ExercisePlanProfile, "level" | "gymDays" | "goalLabel" | "hasPhysicalLimitation">,
+  split: UserSplitDay[],
+  issues: string[],
+  userId: string,
+): Promise<UserSplitDay[] | null> {
+  const opts: SplitRuleOptions = { level: profile.level, relaxed: profile.hasPhysicalLimitation };
+  const userText = split.map((d) => `- ${d.day}: ${d.muscles.map((m) => MUSCLE_LABELS[m]).join("، ")}`).join("\n");
+  const ask = [
+    `سطح: ${LEVEL_LABELS_FA[profile.level]}`,
+    profile.goalLabel ? `هدف: ${profile.goalLabel}` : "",
+    `روزهای باشگاه: ${profile.gymDays.join("، ")}`,
+    "",
+    "کاربر خودش این تقسیم هفتگی را چیده:",
+    userText,
+    "",
+    "این ایرادها را دارد:",
+    ...issues.map((x, i) => `${i + 1}. ${x}`),
+    "",
+    "با کمترین تغییر ممکن (تا جای ممکن انتخاب‌های خود کاربر بماند) همه‌ی این ایرادها را رفع کن و تقسیم اصلاح‌شده را بده.",
+    `muscles فقط از همین نام‌ها: ${Object.values(MUSCLE_LABELS).join("، ")}. فقط JSON خام.`,
+  ].filter((l) => l !== null).join("\n");
+  try {
+    const res = await callAiChat(EXERCISE_SPLIT_PROMPT, ask, EXERCISE_SPLIT_MAX_TOKENS, AI_MODEL_NAME, 20_000);
+    recordAiUsage(userId, AiFeatureKey.EXERCISE_PLAN_GENERATION, res.usage, res.durationMs, true);
+    const parsed = parseJsonResponse(res.text);
+    const keyed = toKeyedSplit(parsed?.days).filter((d) => profile.gymDays.includes(d.day) && d.muscles.length);
+    if (keyed.length !== profile.gymDays.length) return null;
+    const ordered = profile.gymDays.map((day) => keyed.find((d) => d.day === day)!);
+    if (sameSplit(ordered, split)) return null;
+    return splitRuleIssues(ordered, opts).length < issues.length ? ordered : null;
+  } catch (err: any) {
+    logError("ai-gateway", `پیشنهاد اصلاح تقسیم شکست خورد: ${err?.message || err}`, { severity: "WARNING" as any, context: { feature: "EXERCISE_PLAN_GENERATION" } });
+    return null;
+  }
+}
+
 export async function generateExercisePlan(profile: ExercisePlanProfile, userId: string): Promise<ExercisePlanResult> {
   // کل کار (تقسیم + همه‌ی جلسه‌ها به‌صورت موازی + اصلاح‌ها) زیر همان بودجه‌ی
   // کلی AI می‌ماند تا nginx (۶۰ ثانیه) زودتر کانکشن را نبندد.
   const deadline = Date.now() + AI_TOTAL_BUDGET_MS;
   try {
     const profileText = exerciseProfileText(profile);
-    const split = await generateSplit(profile, profileText, userId, deadline);
+    const split = profile.userSplit?.length
+      ? { feasible: true as const, days: userSplitToDays(profile.userSplit) }
+      : await generateSplit(profile, profileText, userId, deadline);
     if (!split.feasible) return split;
     const relaxed = userAskedForLess(profile);
     const days = await Promise.all(split.days.map((d) => generateDay(d, split.days, profileText, relaxed, userId, deadline)));
@@ -1059,15 +1123,18 @@ const ROUTINE_ASSISTANT_PROMPT = `اسم تو «نومو» است و دستیا�
   برای «دوره» یا «برنامه‌ی کامل».
 - ساعت‌ها 24ساعته با رقم لاتین: "08:00"، "19:30". «عصر 5» یعنی "17:00".
 
-## روز و تاریخ
+## روز و تاریخ — هیچ‌وقت خودت تاریخ حساب نکن
 - روز هفته را با **نام فارسی** بنویس: "شنبه"، "یکشنبه"، "دوشنبه"،
   "سه‌شنبه"، "چهارشنبه"، "پنجشنبه"، "جمعه".
-- تاریخ را **فقط از جدول تاریخ‌ها** که بالای پیام آمده بردار (میلادی
-  YYYY-MM-DD). برای تاریخ‌های دورتر از جدول، تاریخ جلالی را به شکل
-  "1405/08/15" بنویس — خود سیستم تبدیل می‌کند. هیچ‌وقت روز هفته را از
-  تاریخ ذهنی حساب نکن؛ جدول را نگاه کن.
-- «امروز»، «فردا»، «این پنجشنبه»، «شنبه‌ی بعد» را با همان جدول به تاریخ
-  تبدیل کن.
+- اگر بالای پیام «تاریخ‌هایی که کاربر گفته» آمده، تاریخ همان‌جاست: همان
+  میلادی YYYY-MM-DD را عینا بنویس.
+- وگرنه تاریخ را از **جدول تاریخ‌ها** بردار: ردیفی را پیدا کن که روز و
+  **اسم ماه** جلالی‌اش («30 مهر») با گفته‌ی کاربر یکی است و ستون اول
+  همان ردیف را بنویس.
+- اگر تاریخ در جدول نبود، **عین عبارت کاربر** را بنویس ("30 مهر"،
+  "1 آبان 1406"، "شنبه بعد"، "فردا") — خود سیستم دقیق تبدیلش می‌کند.
+- ماه جلالی را هیچ‌وقت به ماه میلادی تبدیل نکن: «30 مهر» یعنی 30 مهر،
+  نه 30 اکتبر. روز هفته‌ی یک تاریخ را هم از ذهن حساب نکن.
 
 ## سه حالت تکرار — درست تشخیص بده
 1) **هر هفته** (پیش‌فرض): «شنبه‌ها کلاس دارم»، «هر روز ورزش» → days.
@@ -1087,7 +1154,7 @@ add — برنامه‌ی جدید:
 { "op": "add", "name": "ورزش", "days": ["شنبه","دوشنبه"],
   "start": "08:00", "end": "09:00",            ← فقط اگر کاربر ساعت گفت
   "date": "2026-09-26" | "dates": ["…","…"],   ← فقط برای روز مشخص بدون تکرار (به‌جای days)
-  "from": "2026-10-01", "until": "1405/09/20", ← دوره (اختیاری؛ from پیش‌فرض امروز)
+  "from": "2026-10-01", "until": "20 آذر",     ← دوره (اختیاری؛ from پیش‌فرض امروز)
   "weeks": 6 | "months": 3,                    ← به‌جای until
   "importance": "low|medium|high|veryHigh", "tag": "درس", "notify": false,
   "repeatEveryMin": 60, "repeatUntil": "22:00" } ← تکرار درون‌روزی («هر یک ساعت یک‌بار»)
@@ -1174,7 +1241,7 @@ export async function planRoutineChange(
   const userContent = [
     `امروز: ${todayLabel}`,
     "",
-    calendarText ? `جدول تاریخ‌ها (میلادی | روز | جلالی):\n${calendarText}\n` : "",
+    calendarText ? `${calendarText}\n` : "",
     historyText,
     "برنامه‌های فعلی کاربر:",
     scheduleText,

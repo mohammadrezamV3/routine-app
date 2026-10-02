@@ -1,5 +1,6 @@
 import { Prisma, type MentorProgramStatus, type MentorProgram, type MentorFeedback } from "@prisma/client";
 import { prisma } from "@/lib/prisma";
+import { NAME_STYLE_SELECT, nameFlags, type NameStyleRow } from "@/lib/nameStyle";
 import { openAtRest } from "@/lib/e2ee/server";
 import { displayName } from "@/lib/inAppNotify";
 import { effectiveCategories } from "@/lib/mentorCategories";
@@ -15,14 +16,14 @@ import { loadReservedSeats } from "@/lib/mentorWaitlistServer";
 // ───────────────────────── کاربر عمومی ─────────────────────────
 
 /** تنها فیلدهای کاربر که به طرف مقابل نشون داده می‌شه — هرگز ایمیل/شماره */
-export const PUBLIC_USER_SELECT = { id: true, name: true, lastName: true, username: true, avatarUrl: true, goldenSince: true } as const;
-/** ورودی toPublicUser (ردیف prisma با PUBLIC_USER_SELECT) — goldenSince خام هرگز به کلاینت نمی‌رسه */
-export type PublicUserRow = { id: string; name: string | null; lastName: string | null; username: string | null; avatarUrl: string | null; goldenSince?: Date | null };
-/** شکل خروجی: golden فقط یک بولینه (نام طلایی) */
-export type PublicUser = { id: string; name: string | null; lastName: string | null; username: string | null; avatarUrl: string | null; golden?: boolean };
+export const PUBLIC_USER_SELECT = { id: true, name: true, lastName: true, username: true, avatarUrl: true, ...NAME_STYLE_SELECT } as const;
+/** ورودی toPublicUser (ردیف prisma با PUBLIC_USER_SELECT) — goldenSince و فیلدهای ادمین خام هرگز به کلاینت نمی‌رسن */
+export type PublicUserRow = { id: string; name: string | null; lastName: string | null; username: string | null; avatarUrl: string | null } & NameStyleRow;
+/** شکل خروجی: golden و staff فقط بولین‌ان (نام طلایی / بنفش سمی) */
+export type PublicUser = { id: string; name: string | null; lastName: string | null; username: string | null; avatarUrl: string | null; golden?: boolean; staff?: boolean };
 
 export function toPublicUser(u: PublicUserRow): PublicUser {
-  return { id: u.id, name: u.name, lastName: u.lastName, username: u.username, avatarUrl: u.avatarUrl, golden: !!u.goldenSince };
+  return { id: u.id, name: u.name, lastName: u.lastName, username: u.username, avatarUrl: u.avatarUrl, ...nameFlags(u) };
 }
 
 // ───────────────────────── تاریخ ─────────────────────────
@@ -125,6 +126,7 @@ export type MentorCard = {
   name: string;
   avatarUrl: string | null;
   golden?: boolean;
+  staff?: boolean;
   headline: string | null;
   categories: string[];
   // فقط وقتی categories شامل ROUTINE باشه، وگرنه null
@@ -185,7 +187,7 @@ export function toMentorCard(p: CardProfile, stats: MentorStats | undefined): Me
     userId: p.userId,
     name: displayName(p.user),
     avatarUrl: p.user.avatarUrl,
-    golden: !!p.user.goldenSince,
+    ...nameFlags(p.user),
     headline: p.headline,
     categories: p.categories,
     routineRole: publicRoutineRole(p),

@@ -1,5 +1,6 @@
 import { NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
+import { isStaffUser, nameFlags } from "@/lib/nameStyle";
 import { requireMentorsUser } from "@/lib/mentorGuard";
 import { activateDueForUser } from "@/lib/mentorSchedule";
 import { runAdherenceAlerts } from "@/lib/mentorReports";
@@ -108,12 +109,13 @@ export async function GET() {
   // منتور تعلیق‌شده اسنیپت لاگ/پیام شاگردها رو نمی‌بینه (مثل /api/mentor/students)
   const suspended = !!profile?.suspendedAt;
   const recentActivity: Activity[] = [
-    ...groupLogActivity(suspended ? [] : recentLogs).map(({ student, ...g }) => ({ ...g, studentName: displayName(student), studentGolden: !!student.goldenSince })),
+    ...groupLogActivity(suspended ? [] : recentLogs).map(({ student, ...g }) => ({ ...g, studentName: displayName(student), studentGolden: !!student.goldenSince, studentStaff: isStaffUser(student) })),
     ...recentPrograms.map((p) => ({
       type: "program" as const,
       at: p.respondedAt!,
       studentName: displayName(p.student),
       studentGolden: !!p.student.goldenSince,
+      studentStaff: isStaffUser(p.student),
       text: `${p.title}: ${p.status === "DRAFT" ? "درخواست تغییر" : PROGRAM_STATUS_LABELS[p.status]}`,
       url: `/mentor-programs/${p.id}`,
     })),
@@ -122,6 +124,7 @@ export async function GET() {
       at: m.createdAt,
       studentName: displayName(m.sender),
       studentGolden: !!m.sender.goldenSince,
+      studentStaff: isStaffUser(m.sender),
       text: "پیام جدید",
       url: `/mentorship/${m.mentorshipId}`,
     })),
@@ -167,7 +170,7 @@ export async function GET() {
   const completion = visibleRels.map((r) => {
     const a = counts.get(r.studentId) ?? { c: 0, p: 0, m: 0 };
     const pr = progressFromCounts(a.c, a.p, a.m);
-    return { studentId: r.studentId, name: displayName(r.student), avatarUrl: r.student.avatarUrl, golden: !!r.student.goldenSince, ...pr };
+    return { studentId: r.studentId, name: displayName(r.student), avatarUrl: r.student.avatarUrl, ...nameFlags(r.student), ...pr };
   });
 
   const missedMap = new Map(missedOnActive.map((r) => [r.studentId, r._count._all]));
@@ -175,13 +178,13 @@ export async function GET() {
   const silentStudents = new Set(
     activePrograms.filter((p) => p.activatedAt && p.activatedAt <= activeBefore && !recentlyLogged.has(p.id)).map((p) => p.studentId)
   );
-  const attention: { studentId: string; name: string; avatarUrl: string | null; golden: boolean; reason: string }[] = [];
+  const attention: { studentId: string; name: string; avatarUrl: string | null; golden: boolean; staff: boolean; reason: string }[] = [];
   for (const r of visibleRels) {
     const missed = missedMap.get(r.studentId) ?? 0;
     let reason: string | null = null;
     if (missed >= MISSED_THRESHOLD) reason = `${faNum(missed)} آیتم انجام‌نشده در 7 روز اخیر`;
     else if (silentStudents.has(r.studentId)) reason = `${faNum(SILENT_DAYS)} روز است هیچ آیتمی از برنامه‌ی فعال انجام نشده`;
-    if (reason) attention.push({ studentId: r.studentId, name: displayName(r.student), avatarUrl: r.student.avatarUrl, golden: !!r.student.goldenSince, reason });
+    if (reason) attention.push({ studentId: r.studentId, name: displayName(r.student), avatarUrl: r.student.avatarUrl, ...nameFlags(r.student), reason });
   }
 
   return NextResponse.json({

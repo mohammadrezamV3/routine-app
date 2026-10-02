@@ -1,8 +1,8 @@
+import { accountUserSelect, toAccountUser } from "@/lib/accountPayload";
 import { NextRequest, NextResponse } from "next/server";
 import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
-import { ModuleKey, SubscriptionStatus } from "@prisma/client";
 import { clampText, isValidPersianName, parseIsoDate } from "@/lib/validate";
 import { checkRateLimit, getClientIp } from "@/lib/rateLimit";
 import { withLiveSync } from "@/lib/realtime";
@@ -14,53 +14,9 @@ export async function GET() {
   const userId = (session?.user as any)?.id;
   if (!userId) return NextResponse.json({ error: "unauthorized" }, { status: 401 });
 
-  const user = await prisma.user.findUnique({
-    where: { id: userId },
-    select: {
-      email: true,
-      username: true,
-      phone: true,
-      name: true,
-      lastName: true,
-      bio: true,
-      birthDate: true,
-      gender: true,
-      heightCm: true,
-      weightKg: true,
-      discoverable: true,
-      sharePhone: true,
-      twoFactorEnabled: true,
-      phoneVerifiedAt: true,
-      market: true,
-      createdAt: true,
-      isSuperAdmin: true,
-      goldenSince: true,
-      referralCode: { select: { code: true } },
-      moduleAccess: { select: { module: true, active: true, expiresAt: true } },
-      // فقط اشتراک واقعا فعال — نه صرفا «آخرین ردیف ساخته‌شده». قبلا
-      // با `orderBy: createdAt desc, take: 1` یک اشتراک منقضی/لغوشده هم
-      // برمی‌گشت و کارت بالای پنل کاربری همون رو «پلن فعلی» نشون می‌داد.
-      subscriptions: {
-        where: { status: { in: [SubscriptionStatus.ACTIVE, SubscriptionStatus.TRIAL] }, currentPeriodEnd: { gt: new Date() } },
-        orderBy: { currentPeriodEnd: "desc" },
-        take: 1,
-        select: { status: true, currentPeriodEnd: true, plan: { select: { nameFa: true, key: true } } },
-      },
-    },
-  });
-
+  const user = await prisma.user.findUnique({ where: { id: userId }, select: accountUserSelect() });
   if (!user) return NextResponse.json({ error: "not found" }, { status: 404 });
-
-  // سوپریوزر همیشه به همه ماژول‌ها دسترسی نامحدود داره — صرف‌نظر از این‌که
-  // جدول ModuleAccess چی می‌گه (که معمولا seed هم شده، ولی این تضمین اضافه‌ست)
-  const moduleAccess = user.isSuperAdmin
-    ? Object.values(ModuleKey).map((m) => ({ module: m, active: true, expiresAt: null }))
-    : user.moduleAccess; // «روتین من» هم مثل بقیه: تریال ۱۴روزه، بعد پلن (lib/modules.ts)
-
-  const fullName = [user.name, user.lastName].filter(Boolean).join(" ") || null;
-
-  const { goldenSince, ...userRest } = user;
-  return NextResponse.json({ user: { ...userRest, golden: !!goldenSince, firstName: user.name, name: fullName, moduleAccess } });
+  return NextResponse.json({ user: toAccountUser(user) });
 }
 
 // PATCH /api/account  { name?, lastName?, birthDate?, gender?, discoverable?, sharePhone? }

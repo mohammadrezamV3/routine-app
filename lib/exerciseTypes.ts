@@ -29,6 +29,10 @@ export type ExercisePlanFormValue = {
   limitationDetails: string;
   gymDays: string[];
   description: string;
+  /** «تنظیمات پیشرفته»: کاربر تقسیم عضله‌ها رو خودش انتخاب می‌کنه */
+  advancedSplit: boolean;
+  /** روز باشگاه → کلیدهای عضله (lib/exerciseSplit.ts) */
+  customSplit: Record<string, string[]>;
 };
 
 export const EMPTY_EXERCISE_FORM: ExercisePlanFormValue = {
@@ -42,4 +46,6 @@ export const EMPTY_EXERCISE_FORM: ExercisePlanFormValue = {
   limitationDetails: "",
   gymDays: [],
   description: "",
+  advancedSplit: false,
+  customSplit: {},
 };

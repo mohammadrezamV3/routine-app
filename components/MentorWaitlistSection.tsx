@@ -58,7 +58,7 @@ export function MentorWaitlistSection() {
               <MentorListItem key={e.id}>
                 <MentorRow
                   lead={<MentorUserAvatar avatarUrl={e.user.avatarUrl} name={name} size={36} />}
-                  title={<GoldenName golden={e.user.golden}>{name}</GoldenName>}
+                  title={<GoldenName golden={e.user.golden} staff={e.user.staff}>{name}</GoldenName>}
                   sub={
                     e.status === "OFFERED" && e.offerExpiresAt ? (
                       <span>نوبتش رسیده · {offerRemainingLabel(e.offerExpiresAt, new Date(), true)}</span>

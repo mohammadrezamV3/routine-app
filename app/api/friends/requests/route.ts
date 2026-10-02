@@ -2,6 +2,7 @@ import { NextResponse } from "next/server";
 import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
+import { NAME_STYLE_SELECT, nameFlags } from "@/lib/nameStyle";
 
 // GET /api/friends/requests → درخواست‌های دوستی دریافت‌شده و هنوز تاییدنشده
 export async function GET() {
@@ -11,7 +12,7 @@ export async function GET() {
 
   const rows = await prisma.friendship.findMany({
     where: { addresseeId: userId, status: "PENDING" },
-    include: { requester: { select: { id: true, name: true, username: true, avatarUrl: true, goldenSince: true } } },
+    include: { requester: { select: { id: true, name: true, username: true, avatarUrl: true, ...NAME_STYLE_SELECT } } },
     orderBy: { createdAt: "desc" },
   });
 
@@ -22,7 +23,7 @@ export async function GET() {
       name: r.requester.name || r.requester.username || "کاربر",
       username: r.requester.username,
       avatarUrl: r.requester.avatarUrl,
-      golden: !!r.requester.goldenSince,
+      ...nameFlags(r.requester),
     })),
   });
 }

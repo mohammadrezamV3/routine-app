@@ -490,12 +490,6 @@
     display:flex; align-items:center; justify-content:center;
     background:var(--accent); color:var(--bg); border:2px solid var(--bg); cursor:pointer;
   }
-  .account-avatar-remove-btn{
-    display:flex; align-items:center; gap:5px; font-size:11px; font-weight:600; color:var(--muted);
-    background:none; border:none; cursor:pointer; transition:color .15s ease;
-  }
-  @media (hover:hover){.account-avatar-remove-btn:hover{ color:#E05252; }}
-
   .about-list{display:flex; flex-direction:column; gap:0; margin-top:8px;}
   .about-row{display:flex; align-items:center; justify-content:space-between; gap:14px; padding:14px 0; border-bottom:1px solid var(--line);}
   .about-row:last-child{border-bottom:none;}
@@ -1816,25 +1810,42 @@
     width:92px; height:92px; border-radius:50%; object-fit:cover; display:block;
     background:var(--surface-2);
   }
-  /* دیگر نام/آیدی این‌جا نیست؛ فقط دکمه‌ی حذف عکس. پدینگ بالا همچنان
-     باید از ۳۰پیکسل آویزان آواتار بیشتر باشد تا دکمه زیر عکس بیفتد. */
-  .profile-hero-meta{
-    padding:56px 20px 14px; display:flex; justify-content:flex-end;
+  /* پنجره‌ی عکس پروفایل (AvatarSheet): پیش‌نمایش بزرگ دایره‌ای + دو دکمه؛
+     حذف دو مرحله‌ای در همون ردیف. پنل همون .modal-panel‌ه، بک‌گراند اضافه نه. */
+  .avatar-sheet{ max-width:340px; text-align:center; }
+  .avatar-sheet-photo{
+    width:168px; height:168px; margin:6px auto 0; border-radius:50%; overflow:hidden;
+    outline:1px solid var(--surface-line); outline-offset:3px;
   }
+  .avatar-sheet-photo img{ width:100%; height:100%; object-fit:cover; display:block; }
+  .avatar-sheet-actions{ margin-top:22px; min-height:44px; }
+  .avatar-sheet-row{ display:flex; gap:10px; justify-content:center; }
+  .avatar-sheet-row > button{ flex:1; display:inline-flex; align-items:center; justify-content:center; gap:7px; }
+  .avatar-sheet-q{ font-size:13px; font-weight:700; color:var(--text); margin-bottom:12px; }
 
-  /* پاپ‌آپ پیش‌نمایش/جابه‌جایی بنر (ImageCropModal) —
-     خود پنل همون .modal-panel اپه؛ قاب فقط بوردر داره، بک‌گراند نه. */
+  /* پاپ‌آپ کراپ لمسی بنر و عکس پروفایل (ImageCropModal) —
+     خود پنل همون .modal-panel اپه؛ قاب فقط بوردر داره، بک‌گراند نه.
+     زوم/جابه‌جایی فقط با لمس و چرخ موس، هیچ اسلایدر یا دکمه‌ای نیست. */
   .crop-modal{ max-width:400px; }
   .crop-frame{
     position:relative; width:100%; max-width:340px; margin:0 auto; overflow:hidden;
     border-radius:16px; border:1px solid var(--surface-line); touch-action:none; cursor:grab;
-    user-select:none; -webkit-user-select:none;
+    user-select:none; -webkit-user-select:none; -webkit-touch-callout:none; overscroll-behavior:contain;
   }
   .crop-frame:active{ cursor:grabbing; }
-  .crop-img{ position:absolute; top:0; left:0; max-width:none; pointer-events:none; will-change:transform; }
-  .crop-hint{ text-align:center; font-size:11.5px; color:var(--muted); margin:10px 0 4px; }
-  .crop-zoom{ display:flex; align-items:center; gap:10px; color:var(--muted); margin:8px auto 0; max-width:340px; }
-  .crop-zoom input{ flex:1; accent-color:var(--accent); }
+  .crop-img{
+    position:absolute; top:0; left:0; max-width:none; pointer-events:none;
+    transform-origin:0 0; will-change:transform; backface-visibility:hidden;
+  }
+  .crop-img.is-easing{ transition:transform .26s cubic-bezier(.22,1,.36,1); }
+  /* قاب دایره‌ای عکس پروفایل: بیرون دایره تیره می‌شه تا دقیقا همون چیزی
+     که روی آواتار دیده می‌شه معلوم باشه */
+  .crop-frame.is-circle{ max-width:300px; border-radius:20px; }
+  .crop-ring{
+    position:absolute; inset:0; border-radius:50%; pointer-events:none;
+    box-shadow:0 0 0 999px rgba(0,0,0,.52), inset 0 0 0 1.5px rgba(255,255,255,.75);
+  }
+  .crop-hint{ text-align:center; font-size:11.5px; line-height:1.8; color:var(--muted); margin:12px auto 0; max-width:300px; }
   .crop-actions{ display:flex; justify-content:flex-end; gap:8px; margin-top:16px; }
 
   /* ── تیون دسکتاپ پنل کاربری ─────────────────────────────────────────
@@ -4428,6 +4439,19 @@ body[data-theme="light"] .exercise-desc-textarea{ background:rgba(255,255,255,.3
 }
 body[data-theme="light"] .exercise-feasibility-reject{ background:rgba(255,255,255,.55); }
 .exercise-feasibility-reject-badge{ font-size:10.5px; font-weight:700; color:var(--accent); margin-bottom:6px; }
+/* ساخت برنامه با AI — توضیح سطح، «تنظیمات پیشرفته» (تقسیم دلخواه) و بررسی مربی */
+.ex-level-hint{ margin:8px 2px 0; font-size:11.5px; line-height:1.9; color:var(--muted); }
+.ex-adv-toggle{ margin-top:14px; }
+.ex-adv{ overflow:hidden; }
+.ex-adv-day{ margin-top:12px; }
+.ex-adv-day-name{ display:block; margin-bottom:6px; font-size:12px; font-weight:800; color:var(--text); }
+.ex-muscle-chips{ display:flex; flex-wrap:wrap; gap:6px; }
+.ex-muscle-chips .day-pill{ flex:0 0 auto; padding:7px 12px; font-size:12px; }
+.ex-review{ margin-top:14px; }
+.ex-review-issues{ margin:0; padding-inline-start:18px; display:flex; flex-direction:column; gap:6px; font-size:12px; line-height:1.9; }
+.ex-review-sub{ margin-top:10px; font-size:11.5px; font-weight:800; color:var(--accent); }
+.ex-review-split{ list-style:none; margin:4px 0 0; padding:0; display:flex; flex-direction:column; gap:4px; font-size:12px; line-height:1.8; }
+.ex-review-actions{ margin-top:12px; display:flex; flex-wrap:wrap; gap:8px; justify-content:flex-end; }
 
 /* بخش افزودن دستی حرکت — جستجو+لیست کاتالوگ، حالا توی پاپ‌آپ مستقل
    exercise-catalog-popup-panel رندر می‌شه، پس دیگه بک‌گراند/بوردر خودش رو
@@ -9750,6 +9774,32 @@ body[data-theme="light"] .golden-name{ --g1:#f7d774; --g2:#d9a21b; --g3:#9a5b06;
 @keyframes goldenFlow{ from{ background-position:0% 50%; } to{ background-position:200% 50%; } }
 @keyframes goldenGlow{ 0%,100%{ filter:drop-shadow(0 0 4px rgba(245,197,66,.25)); } 50%{ filter:drop-shadow(0 0 10px rgba(245,197,66,.55)); } }
 @media (prefers-reduced-motion: reduce){ .golden-name{ animation:none; background-position:30% 50%; } }
+
+/* ── نام بنفش سمی (components/GoldenName.tsx با staff) ─────────────
+   Owner و ادمین‌ها: همون تکنیک حلقه‌ی بی‌درز .golden-name (گرادیان افقی با
+   اول و آخر یک‌رنگ، کاشی 200%، جابه‌جایی خطی 0% → 200% = دقیقا یک کاشی؛
+   فریم آخر = فریم اول) ولی با پالت بنفش نئون: بنفش عمیق ↔ بنفش برقی با
+   برق یاسی-سرخابی اسیدی. درخشش با --tx-glow تا تم روشن رنگ تیره‌تر بگیره.
+   فقط background-clip:text — عنصر خودش هیچ بک‌گراندی نمی‌گیره. */
+.toxic-name{
+  --t1:#f3c9ff; --t2:#b44dff; --t3:#7a1fe0; --t4:#e15cff;
+  --tx-glow-lo:rgba(180,77,255,.3); --tx-glow-hi:rgba(200,90,255,.65);
+  background-image:linear-gradient(90deg, var(--t3) 0%, var(--t2) 13%, var(--t1) 25%, var(--t2) 37%, var(--t3) 50%, var(--t4) 63%, var(--t2) 76%, var(--t4) 88%, var(--t3) 100%);
+  background-size:200% 100%;
+  background-repeat:repeat-x;
+  background-position:0% 50%;
+  -webkit-background-clip:text; background-clip:text;
+  -webkit-text-fill-color:transparent; color:transparent;
+  filter:drop-shadow(0 0 6px var(--tx-glow-lo));
+  animation:goldenFlow 6s linear infinite, toxicGlow 2.6s ease-in-out infinite;
+  font-weight:800;
+}
+body[data-theme="light"] .toxic-name{
+  --t1:#b23cf0; --t2:#7b1fd6; --t3:#4a0f9e; --t4:#a51fc8;
+  --tx-glow-lo:rgba(123,31,214,.18); --tx-glow-hi:rgba(150,40,230,.38);
+}
+@keyframes toxicGlow{ 0%,100%{ filter:drop-shadow(0 0 4px var(--tx-glow-lo)); } 50%{ filter:drop-shadow(0 0 10px var(--tx-glow-hi)); } }
+@media (prefers-reduced-motion: reduce){ .toxic-name{ animation:none; background-position:30% 50%; } }
 
 /* ── تیک واحد اپ (components/TickButton.tsx) — کپی .db-tl-node  داشبورد ──
    عمدا بیرون .db-page تا همه‌جا یکسان باشه. بک‌گراند فقط در حالت تیک‌خورده

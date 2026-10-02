@@ -92,7 +92,7 @@ export function MentorChatHistorySettings({ index = 0, showEmpty = false }: { in
                   <div className="mentor-row mentor-history-row">
                     <span className="mentor-row-lead"><MentorUserAvatar name={name} avatarUrl={c.counterpart.avatarUrl} size={36} /></span>
                     <span className="mentor-row-body">
-                      <span className="mentor-row-title"><GoldenName golden={c.counterpart.golden}>{name}</GoldenName></span>
+                      <span className="mentor-row-title"><GoldenName golden={c.counterpart.golden} staff={c.counterpart.staff}>{name}</GoldenName></span>
                       <span className="mentor-row-sub">
                         <span>{c.role === "student" ? "مربی" : "شاگرد"}</span>
                         {c.messageCount > 0

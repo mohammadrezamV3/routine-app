@@ -63,6 +63,8 @@ export type ChatMessageDto = {
   authorId: string;
   authorName: string;
   authorGolden?: boolean;
+  /** Owner/ادمین — نام بنفش سمی (lib/nameStyle.ts) */
+  authorStaff?: boolean;
   /** پیام خود کاربر درخواست‌دهنده — برای چیدمان راست/چپ و دکمه‌ی حذف */
   mine: boolean;
   /** آیا همین کاربر قبلا گزارشش کرده — تا دکمه دوباره فعال نباشد */

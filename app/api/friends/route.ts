@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
+import { NAME_STYLE_SELECT, nameFlags } from "@/lib/nameStyle";
 import { routineStatsForUsers, RoutineStats } from "@/lib/friendStats";
 import { timeToMinutes, isWakeOnTime, DEFAULT_WAKE } from "@/lib/wakeSleep";
 import { isValidUsername } from "@/lib/validate";
@@ -90,8 +91,8 @@ export async function GET(req: NextRequest) {
   const rows = await prisma.friendship.findMany({
     where: { status: "ACCEPTED", OR: [{ requesterId: userId }, { addresseeId: userId }] },
     include: {
-      requester: { select: { id: true, name: true, username: true, avatarUrl: true, goldenSince: true } },
-      addressee: { select: { id: true, name: true, username: true, avatarUrl: true, goldenSince: true } },
+      requester: { select: { id: true, name: true, username: true, avatarUrl: true, ...NAME_STYLE_SELECT } },
+      addressee: { select: { id: true, name: true, username: true, avatarUrl: true, ...NAME_STYLE_SELECT } },
     },
   });
 
@@ -118,7 +119,7 @@ export async function GET(req: NextRequest) {
         name: other.name || other.username || "کاربر",
         username: other.username,
         avatarUrl: other.avatarUrl,
-        golden: !!other.goldenSince,
+        ...nameFlags(other),
         favorite: isRequester ? r.favoritedByRequester : r.favoritedByAddressee,
         ...stats,
       };
