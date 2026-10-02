@@ -418,10 +418,10 @@ body[data-theme="light"] .db-arc-cap{ filter:drop-shadow(0 0 2px rgba(80,50,20,.
 .db-page .db-tl-node svg{ width:15px; height:15px; position:relative; z-index:1; }
 @media (hover:hover){ .db-page .db-tl-node:hover{ border-color:var(--ring-1a); box-shadow:0 0 0 4px color-mix(in srgb, var(--ring-1a) 16%, transparent); } }
 .db-page .db-tl-item.is-done .db-tl-node{
-  border-color:transparent; background:linear-gradient(135deg, var(--ring-1a), var(--ring-1b));
+  border-color:transparent; background:linear-gradient(135deg, var(--ring-1a), var(--ring-1b)) border-box no-repeat;
   box-shadow:0 0 14px color-mix(in srgb, var(--ring-1a) 55%, transparent);
 }
-body[data-theme="light"] .db-page .db-tl-item.is-done .db-tl-node{ background:linear-gradient(135deg, var(--ring-1a), var(--ring-1b)); }
+body[data-theme="light"] .db-page .db-tl-item.is-done .db-tl-node{ background:linear-gradient(135deg, var(--ring-1a), var(--ring-1b)) border-box no-repeat; }
 .db-page .db-tl-item.is-active .db-tl-node{ border-color:var(--ring-1a); animation:db-node-pulse 2s ease-in-out infinite; }
 .db-page .db-tl-item.is-next .db-tl-node{ border-color:var(--ring-2a); box-shadow:0 0 0 3px color-mix(in srgb, var(--ring-2a) 18%, transparent); }
 .db-page .db-tl-item.is-missed .db-tl-node{ border-color:var(--tl-warn); border-style:dashed; }
@@ -594,7 +594,9 @@ a.db-tl-name{ text-decoration:underline dotted color-mix(in srgb, var(--ring-1a)
 .db-wdot{ display:flex; flex-direction:column; align-items:center; gap:3px; }
 .db-wdot i{ display:block; width:100%; max-width:16px; aspect-ratio:1; border-radius:6px; border:1.5px solid var(--box-line); }
 .db-wdot.is-planned i{ border-color:color-mix(in srgb, var(--ring-2a) 55%, transparent); border-style:dashed; }
-.db-wdot.is-done i{ background:linear-gradient(135deg, var(--ring-2a), var(--ring-2b)); border-color:transparent; }
+/* گرادیان از لبه‌ی بیرونی بوردر شروع می‌شه و تکرار نمی‌شه — وگرنه کاشی گرادیان
+   زیر بوردر شفاف تکرار می‌شد و یک «مربع داخل مربع» بنفش دیده می‌شد */
+.db-wdot.is-done i{ background:linear-gradient(135deg, var(--ring-2a), var(--ring-2b)) border-box no-repeat; border-color:transparent; }
 .db-wdot.is-today i{ outline:2px solid var(--text); outline-offset:1px; }
 .db-wdot em{ font-style:normal; font-size:9px; color:var(--muted); }
 
