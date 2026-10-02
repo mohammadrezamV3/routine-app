@@ -178,7 +178,7 @@ function MentorshipHome() {
             <MentorRow
               href={`/mentors/${r.counterpart.id}`}
               lead={avatar(r)}
-              title={<GoldenName golden={r.counterpart.golden}>{publicUserName(r.counterpart)}</GoldenName>}
+              title={<GoldenName golden={r.counterpart.golden} staff={r.counterpart.staff}>{publicUserName(r.counterpart)}</GoldenName>}
               sub={<>{catSpans(r)}<span>{fmtRelative(r.createdAt)}</span></>}
               below={
                 <>
@@ -222,7 +222,7 @@ function MentorshipHome() {
               key={r.id}
               href={`/mentorship/${r.id}`}
               lead={avatar(r)}
-              title={<GoldenName golden={r.counterpart.golden}>{publicUserName(r.counterpart)}</GoldenName>}
+              title={<GoldenName golden={r.counterpart.golden} staff={r.counterpart.staff}>{publicUserName(r.counterpart)}</GoldenName>}
               sub={
                 <>
                   {catSpans(r)}
@@ -248,7 +248,7 @@ function MentorshipHome() {
               key={r.id}
               href={`/mentors/${r.counterpart.id}`}
               lead={avatar(r)}
-              title={<GoldenName golden={r.counterpart.golden}>{publicUserName(r.counterpart)}</GoldenName>}
+              title={<GoldenName golden={r.counterpart.golden} staff={r.counterpart.staff}>{publicUserName(r.counterpart)}</GoldenName>}
               sub={<>{catSpans(r)}<span>ارسال {fmtRelative(r.createdAt)}</span></>}
               end={<MentorshipStatusBadge status="PENDING" />}
               below={
@@ -294,7 +294,7 @@ function MentorshipHome() {
                 sub={
                   <>
                     <span>{p.type === "WORKOUT" ? "برنامه‌ی تمرینی" : "برنامه‌ی روتین"}</span>
-                    <span><GoldenName golden={p.counterpart.golden}>{publicUserName(p.counterpart)}</GoldenName></span>
+                    <span><GoldenName golden={p.counterpart.golden} staff={p.counterpart.staff}>{publicUserName(p.counterpart)}</GoldenName></span>
                     {p.status === "ACTIVE" && <span>{faNum(Math.round(p.progress.rate))}٪ پایبندی</span>}
                   </>
                 }
@@ -312,7 +312,7 @@ function MentorshipHome() {
               key={r.id}
               href={r.status === "ENDED" ? `/mentorship/${r.id}` : `/mentors/${r.counterpart.id}`}
               lead={avatar(r)}
-              title={<GoldenName golden={r.counterpart.golden}>{publicUserName(r.counterpart)}</GoldenName>}
+              title={<GoldenName golden={r.counterpart.golden} staff={r.counterpart.staff}>{publicUserName(r.counterpart)}</GoldenName>}
               sub={
                 r.status === "ENDED" ? (
                   <>

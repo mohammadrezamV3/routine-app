@@ -26,6 +26,8 @@ export type PublicUser = {
   avatarUrl: string | null;
   /** نام طلایی — کسی که همه‌ی اچیومنت‌ها رو باز کرده */
   golden?: boolean;
+  /** Owner/ادمین — نام بنفش سمی (lib/nameStyle.ts) */
+  staff?: boolean;
 };
 
 export type Certification = { category: string; verified: boolean };
@@ -35,6 +37,7 @@ export type MentorCard = {
   name: string;
   avatarUrl: string | null;
   golden?: boolean;
+  staff?: boolean;
   headline: string | null;
   categories: string[];
   /** نقش منتور در حوزه‌ی روتین (مثلا «استاد ریاضی») — null وقتی ROUTINE جزو categories نیست یا پر نشده */
@@ -124,7 +127,7 @@ export type Review = {
   rating: number;
   body: string | null;
   createdAt: string;
-  student: { name: string | null; avatarUrl: string | null; golden?: boolean };
+  student: { name: string | null; avatarUrl: string | null; golden?: boolean; staff?: boolean };
 };
 
 export type MyMentorship = { id: string; status: MentorshipStatus; initiatedBy: MentorshipInitiator };
@@ -429,9 +432,9 @@ export type MentorDashboard = {
   stats: { students: number; activeStudents: number; pendingRequests: number; pendingPrograms: number; activePrograms: number };
   requests: MentorshipRow[];
   pendingPrograms: ProgramRow[];
-  recentActivity: { type: "log" | "program" | "message"; at: string; studentName: string; studentGolden?: boolean; text: string; url: string; day?: string }[];
-  completion: { studentId: string; name: string; avatarUrl: string | null; golden?: boolean; completed: number; partial: number; missed: number; rate: number }[];
-  attention: { studentId: string; name: string; avatarUrl: string | null; golden?: boolean; reason: string }[];
+  recentActivity: { type: "log" | "program" | "message"; at: string; studentName: string; studentGolden?: boolean; studentStaff?: boolean; text: string; url: string; day?: string }[];
+  completion: { studentId: string; name: string; avatarUrl: string | null; golden?: boolean; staff?: boolean; completed: number; partial: number; missed: number; rate: number }[];
+  attention: { studentId: string; name: string; avatarUrl: string | null; golden?: boolean; staff?: boolean; reason: string }[];
 };
 
 export type ApiError = { error: string };

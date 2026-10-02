@@ -173,7 +173,7 @@ export function DashboardHero({
           <div className="db-hero-titles">
             <h1 className="db-hero-title">
               {PHASE_GREETING[phase]}
-              {firstName ? <>، <GoldenName golden={data?.user.golden}><span className="db-hero-name">{firstName}</span></GoldenName></> : null}
+              {firstName ? <>، <GoldenName golden={data?.user.golden} staff={data?.user.staff}><span className="db-hero-name">{firstName}</span></GoldenName></> : null}
             </h1>
             <p className="db-hero-date">
               {dateLine || <Skel w={140} h={12} />}

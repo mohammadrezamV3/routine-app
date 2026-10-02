@@ -230,7 +230,7 @@ function ProgramView({ onHead, onFailed, cmd }: { onHead: (h: Head) => void; onF
           <div className="mentor-row-sub">
             <span>
               <MentorUserAvatar name={otherName} avatarUrl={other.avatarUrl} size={20} />
-              {isStudent ? "مربی" : "شاگرد"}: <GoldenName golden={other.golden}>{otherName}</GoldenName>
+              {isStudent ? "مربی" : "شاگرد"}: <GoldenName golden={other.golden} staff={other.staff}>{otherName}</GoldenName>
             </span>
             {program.startDate && <span><CalendarDays {...CHIP} /> شروع {fmtDay(program.startDate)}</span>}
             {program.endDate && <span><CalendarDays {...CHIP} /> پایان {fmtDay(program.endDate)}</span>}

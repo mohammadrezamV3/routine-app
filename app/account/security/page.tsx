@@ -10,7 +10,7 @@ import { formatTehranDateTime } from "@/lib/tehranTime";
 import { GoldenName } from "@/components/GoldenName";
 import { Spinner } from "@/components/Spinner";
 
-type BlockedUser = { id: string; name: string | null; username: string | null; avatarUrl: string | null; golden?: boolean };
+type BlockedUser = { id: string; name: string | null; username: string | null; avatarUrl: string | null; golden?: boolean; staff?: boolean };
 type DeviceSession = {
   id: string; provider: string | null; ip: string | null; userAgent: string | null;
   createdAt: string; lastSeenAt: string; current: boolean;
@@ -332,7 +332,7 @@ export default function SecurityPage() {
             <div style={{ display: "flex", flexDirection: "column", gap: 10, marginTop: 10 }}>
               {blocked.map((u) => (
                 <div key={u.id} style={{ display: "flex", alignItems: "center", justifyContent: "space-between", gap: 10 }}>
-                  <span style={{ fontSize: 12.5, color: "var(--text)" }}><GoldenName golden={u.golden}>{u.name || u.username || "کاربر"}</GoldenName></span>
+                  <span style={{ fontSize: 12.5, color: "var(--text)" }}><GoldenName golden={u.golden} staff={u.staff}>{u.name || u.username || "کاربر"}</GoldenName></span>
                   <button
                     type="button"
                     className="account-outline-btn"

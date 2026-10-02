@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
+import { NAME_STYLE_SELECT, nameFlags } from "@/lib/nameStyle";
 import { ModuleKey, SubscriptionStatus } from "@prisma/client";
 import { parseDateRange } from "@/lib/validate";
 import { BOOTSTRAP_SETTING_KEYS } from "@/lib/userSettingKeys";
@@ -58,7 +59,7 @@ export async function GET(req: NextRequest) {
         // lib/accountCache) می‌خونه و بدونشون «نام و نام خانوادگی» فقط نام
         // رو نشون می‌داد و تاریخ تولد ذخیره‌شده هیچ‌وقت پر نمی‌شد.
         lastName: true, birthDate: true, bio: true,
-        createdAt: true, isSuperAdmin: true, avatarUrl: true, goldenSince: true,
+        createdAt: true, isSuperAdmin: true, avatarUrl: true, goldenSince: true, adminPermissions: true,
         referralCode: { select: { code: true } },
         moduleAccess: { select: { module: true, active: true, expiresAt: true } },
         // فقط اشتراک واقعا فعال — عینا همون شرط /api/account. (قبلا
@@ -101,13 +102,13 @@ export async function GET(req: NextRequest) {
     ? Object.values(ModuleKey).map((m) => ({ module: m, active: true, expiresAt: null }))
     : user.moduleAccess; // «روتین من» هم مثل بقیه: تریال ۱۴روزه، بعد پلن (lib/modules.ts)
 
-  const { avatarUrl, goldenSince, ...userRest } = user;
+  const { avatarUrl, goldenSince, adminPermissions, ...userRest } = user;
   return NextResponse.json({
     settings,
     // شکل `user` عینا همونیه که /api/account می‌ده، تا lib/accountCache.ts
     // و ModuleGate بدون هیچ تغییری بتونن مصرفش کنن. سوپریوزر هم مثل اون‌جا
     // همه‌ی ماژول‌ها رو فعال می‌گیره — منطق دسترسی نباید بین دو مسیر فرق کنه.
-    account: { user: { ...userRest, golden: !!goldenSince, moduleAccess } },
+    account: { user: { ...userRest, ...nameFlags({ goldenSince, isSuperAdmin: user.isSuperAdmin, adminPermissions }), moduleAccess } },
     avatarUrl: avatarUrl ?? null,
     dailyRange: range ? { from: fromRaw, to: toRaw, entries } : null,
   });

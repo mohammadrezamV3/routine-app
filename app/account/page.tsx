@@ -11,7 +11,7 @@ import { getAccount, getAvatarUrl, AccountData } from "@/lib/accountCache";
 import { ACCOUNT_SECTIONS } from "@/components/accountSections";
 
 type IndexUser = {
-  golden?: boolean; name: string | null; lastName: string | null; username: string | null;
+  golden?: boolean; staff?: boolean; name: string | null; lastName: string | null; username: string | null;
   subscriptions: { status: string; plan: { key: string; nameFa: string } }[];
 };
 
@@ -58,7 +58,7 @@ export default function AccountIndexPage() {
     <section>
       {data && (
         <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.35, ease: [0.22, 1, 0.36, 1] }}>
-          <AccountHeroCard fullName={fullName} username={data.username} avatarUrl={avatarUrl} isPremium={isPremium} planNameFa={sub?.plan.nameFa ?? null} golden={data.golden} />
+          <AccountHeroCard fullName={fullName} username={data.username} avatarUrl={avatarUrl} isPremium={isPremium} planNameFa={sub?.plan.nameFa ?? null} golden={data.golden} staff={data.staff} />
         </motion.div>
       )}
 

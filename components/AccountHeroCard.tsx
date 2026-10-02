@@ -12,7 +12,7 @@ import { GoldenName } from "@/components/GoldenName";
 // قبلا نشان اشتراک بلافاصله کنار آواتار بود (نه لبه‌ی چپ) و نام هم زیرش
 // می‌افتاد؛ حالا `account-hero-info` با flex:1 فاصله رو پر می‌کنه و نشان به چپ می‌ره.
 export function AccountHeroCard({
-  fullName, username, avatarUrl, isPremium, planNameFa, golden,
+  fullName, username, avatarUrl, isPremium, planNameFa, golden, staff,
 }: {
   fullName: string;
   username: string | null;
@@ -20,6 +20,7 @@ export function AccountHeroCard({
   isPremium: boolean;
   planNameFa?: string | null;
   golden?: boolean;
+  staff?: boolean;
 }) {
   return (
     <div className="account-hero" dir="rtl">
@@ -32,7 +33,7 @@ export function AccountHeroCard({
       </div>
       <div className="account-hero-info">
         {/* اسم کامل نوشته می‌شه (بدون کوتاه‌شدن با «…») و اگه جا نشد به خط بعد می‌ره */}
-        <div className="account-hero-name"><GoldenName golden={golden}>{fullName}</GoldenName></div>
+        <div className="account-hero-name"><GoldenName golden={golden} staff={staff}>{fullName}</GoldenName></div>
         {username && <div className="account-hero-username mono" dir="ltr">@{username}</div>}
       </div>
       <span className={`account-hero-badge${isPremium ? " premium" : ""}`}>

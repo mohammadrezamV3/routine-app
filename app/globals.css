@@ -9751,6 +9751,32 @@ body[data-theme="light"] .golden-name{ --g1:#f7d774; --g2:#d9a21b; --g3:#9a5b06;
 @keyframes goldenGlow{ 0%,100%{ filter:drop-shadow(0 0 4px rgba(245,197,66,.25)); } 50%{ filter:drop-shadow(0 0 10px rgba(245,197,66,.55)); } }
 @media (prefers-reduced-motion: reduce){ .golden-name{ animation:none; background-position:30% 50%; } }
 
+/* ── نام بنفش سمی (components/GoldenName.tsx با staff) ─────────────
+   Owner و ادمین‌ها: همون تکنیک حلقه‌ی بی‌درز .golden-name (گرادیان افقی با
+   اول و آخر یک‌رنگ، کاشی 200%، جابه‌جایی خطی 0% → 200% = دقیقا یک کاشی؛
+   فریم آخر = فریم اول) ولی با پالت بنفش نئون: بنفش عمیق ↔ بنفش برقی با
+   برق یاسی-سرخابی اسیدی. درخشش با --tx-glow تا تم روشن رنگ تیره‌تر بگیره.
+   فقط background-clip:text — عنصر خودش هیچ بک‌گراندی نمی‌گیره. */
+.toxic-name{
+  --t1:#f3c9ff; --t2:#b44dff; --t3:#7a1fe0; --t4:#e15cff;
+  --tx-glow-lo:rgba(180,77,255,.3); --tx-glow-hi:rgba(200,90,255,.65);
+  background-image:linear-gradient(90deg, var(--t3) 0%, var(--t2) 13%, var(--t1) 25%, var(--t2) 37%, var(--t3) 50%, var(--t4) 63%, var(--t2) 76%, var(--t4) 88%, var(--t3) 100%);
+  background-size:200% 100%;
+  background-repeat:repeat-x;
+  background-position:0% 50%;
+  -webkit-background-clip:text; background-clip:text;
+  -webkit-text-fill-color:transparent; color:transparent;
+  filter:drop-shadow(0 0 6px var(--tx-glow-lo));
+  animation:goldenFlow 6s linear infinite, toxicGlow 2.6s ease-in-out infinite;
+  font-weight:800;
+}
+body[data-theme="light"] .toxic-name{
+  --t1:#b23cf0; --t2:#7b1fd6; --t3:#4a0f9e; --t4:#a51fc8;
+  --tx-glow-lo:rgba(123,31,214,.18); --tx-glow-hi:rgba(150,40,230,.38);
+}
+@keyframes toxicGlow{ 0%,100%{ filter:drop-shadow(0 0 4px var(--tx-glow-lo)); } 50%{ filter:drop-shadow(0 0 10px var(--tx-glow-hi)); } }
+@media (prefers-reduced-motion: reduce){ .toxic-name{ animation:none; background-position:30% 50%; } }
+
 /* ── تیک واحد اپ (components/TickButton.tsx) — کپی .db-tl-node  داشبورد ──
    عمدا بیرون .db-page تا همه‌جا یکسان باشه. بک‌گراند فقط در حالت تیک‌خورده
    (همون گرادیان داشبورد)؛ حالت خالی کاملا شفافه.

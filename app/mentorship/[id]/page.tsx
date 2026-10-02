@@ -62,7 +62,7 @@ export default function MentorshipPage() {
     <div className="mentor-head-custom">
       <MentorUserAvatar name={name} avatarUrl={rel.row.counterpart.avatarUrl} size={48} />
       <div className="mentor-rel-id">
-        <h1><GoldenName golden={rel.row.counterpart.golden}>{name}</GoldenName></h1>
+        <h1><GoldenName golden={rel.row.counterpart.golden} staff={rel.row.counterpart.staff}>{name}</GoldenName></h1>
         <div className="mentor-rel-sub">
           <span>{rel.role === "student" ? "مربی تو" : "شاگرد تو"}</span>
           <MentorshipStatusBadge status={rel.row.status} />

@@ -1,5 +1,6 @@
 import { NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
+import { NAME_STYLE_SELECT, nameFlags, type NameStyleRow } from "@/lib/nameStyle";
 import { requireMentorsUser, notFound } from "@/lib/mentorGuard";
 import { MENTOR_CARD_INCLUDE, loadMentorStats, toMentorCard, usersBlockEachOther } from "@/lib/mentorServer";
 import { displayName } from "@/lib/inAppNotify";
@@ -8,10 +9,10 @@ import { advanceWaitlist, countWaiting, loadMyWaitlist } from "@/lib/mentorWaitl
 
 const REVIEWS_LIMIT = 30;
 
-type ReviewRow = { id: string; rating: number; body: string | null; createdAt: Date; student: { name: string | null; lastName: string | null; username: string | null; avatarUrl: string | null; goldenSince: Date | null } };
+type ReviewRow = { id: string; rating: number; body: string | null; createdAt: Date; student: { name: string | null; lastName: string | null; username: string | null; avatarUrl: string | null } & NameStyleRow };
 
 function toReview(r: ReviewRow) {
-  return { id: r.id, rating: r.rating, body: r.body, createdAt: r.createdAt, student: { name: displayName(r.student), avatarUrl: r.student.avatarUrl, golden: !!r.student.goldenSince } };
+  return { id: r.id, rating: r.rating, body: r.body, createdAt: r.createdAt, student: { name: displayName(r.student), avatarUrl: r.student.avatarUrl, ...nameFlags(r.student) } };
 }
 
 // GET /api/mentors/:mentorId (mentorId = userId منتور) → پروفایل عمومی + نظرات.
@@ -49,13 +50,13 @@ export async function GET(_req: Request, { params }: { params: { mentorId: strin
       where: { mentorId, status: "VISIBLE" },
       orderBy: { createdAt: "desc" },
       take: REVIEWS_LIMIT,
-      select: { id: true, rating: true, body: true, createdAt: true, student: { select: { name: true, lastName: true, username: true, avatarUrl: true, goldenSince: true } } },
+      select: { id: true, rating: true, body: true, createdAt: true, student: { select: { name: true, lastName: true, username: true, avatarUrl: true, ...NAME_STYLE_SELECT } } },
     }),
     isSelf
       ? Promise.resolve(null)
       : prisma.mentorReview.findUnique({
           where: { mentorId_studentId: { mentorId, studentId: me } },
-          select: { id: true, rating: true, body: true, createdAt: true, student: { select: { name: true, lastName: true, username: true, avatarUrl: true, goldenSince: true } } },
+          select: { id: true, rating: true, body: true, createdAt: true, student: { select: { name: true, lastName: true, username: true, avatarUrl: true, ...NAME_STYLE_SELECT } } },
         }),
     isSelf ? Promise.resolve(false) : isMentorSaved(me, mentorId),
     isSelf ? Promise.resolve(null) : loadMyWaitlist(mentorId, me),

@@ -128,7 +128,7 @@ function ChatScreenBody({ id }: { id: string }) {
         </Link>
         {rel ? (
           <Link href={`/mentorship/${id}`} className="mc-pill mc-title" aria-label={`${name}؛ صفحه‌ی رابطه`}>
-            <b><GoldenName golden={rel?.row.counterpart.golden}>{name}</GoldenName></b>
+            <b><GoldenName golden={rel?.row.counterpart.golden} staff={rel?.row.counterpart.staff}>{name}</GoldenName></b>
             <span>
               {chatOpen && rel.row.status === "ACTIVE" && <Lock size={10} strokeWidth={2} aria-hidden />}
               {statusLine}
