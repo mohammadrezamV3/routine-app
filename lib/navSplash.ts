@@ -1,5 +1,5 @@
-// اسپلش تمام‌صفحه برای ناوبری داخلی (درخواست صاحب محصول: همون اسپلش ورود اپ روی
-// همه‌ی صفحه‌ها). از همون نود .boot-splash  layout ریشه استفاده می‌کنه و فقط
+// اسپلش تمام‌صفحه برای ناوبری داخلی (درخواست صاحب محصول: روی همه‌ی صفحه‌ها، ولی
+// ساده‌تر از اسپلش ورود اپ — data-boot-nav روی <html>، طرح در globals.css). از همون نود .boot-splash  layout ریشه استفاده می‌کنه و فقط
 // data-boot روی <html> رو عوض می‌کنه: on ← نمایش (انیمیشن‌های ورود چون از
 // display:none برمی‌گرده از اول اجرا می‌شن)، out ← خروج پخش‌شونده، done ← پنهان.
 //
@@ -14,7 +14,8 @@ import { whenPageReady } from "./pageReady";
 
 const SHOW_DELAY_MS = 250;
 const MIN_VISIBLE_MS = 450;
-const OUT_MS = 750;
+// نسخه‌ی ناوبری ساده‌تره و خروجش فقط یک محوشدن کوتاهه (globals.css → html[data-boot-nav])
+const OUT_MS = 300;
 const MAX_VISIBLE_MS = 10_000;
 
 let navPending = false;
@@ -50,6 +51,8 @@ function show() {
   outTimer = null;
   visible = true;
   shownAt = Date.now();
+  // نشانه‌ی «اسپلش ناوبری»: همون نود، ولی طرح ساده (فقط نشان + یک کمان چرخان)
+  d.setAttribute("data-boot-nav", "");
   d.setAttribute("data-boot", "on");
   clear(capTimer);
   // هیچ‌وقت بیشتر از سقف روی صفحه نمی‌مونه، حتی اگه یک hold آزاد نشه
@@ -67,7 +70,7 @@ function hide() {
   clear(outTimer);
   outTimer = setTimeout(() => {
     outTimer = null;
-    if (!visible) d.setAttribute("data-boot", "done");
+    if (!visible) { d.setAttribute("data-boot", "done"); d.removeAttribute("data-boot-nav"); }
   }, OUT_MS);
 }
 

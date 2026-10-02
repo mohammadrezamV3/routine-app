@@ -10039,6 +10039,50 @@ html[data-perf-weak] .bs-phrases span{ filter:none !important; }
   html[data-boot="out"] .boot-splash{ animation:bs-out .3s ease forwards; }
 }
 
+/* ── اسپلش ناوبری داخلی (lib/navSplash.ts → html[data-boot-nav]) ──────────
+   درخواست صاحب محصول: لودینگ بقیه‌ی اپ با اسپلش ورود اپ فرق کنه، سبک‌تر ولی
+   خوش‌ساخت. همون نود .boot-splash: پرده‌ی شیشه‌ای مات روی صفحه‌ی قبلی (نه سطح
+   تخت)، نشان برند که آروم نفس می‌کشه، هاله‌ی نرم تپنده، و سه کمان نازک به رنگ
+   حلقه‌های فعالیت که هر کدوم با سرعت و جهت خودش دور نشان می‌چرخه + اسم برند.
+   بدون شبکه، شعار، جمله‌ها و پرشدن حلقه‌ها. خروج: کمان‌ها کمی باز و محو می‌شن. */
+html[data-boot-nav] .boot-splash{
+  background:color-mix(in srgb, var(--bg) 93%, transparent);
+  -webkit-backdrop-filter:blur(26px) saturate(1.2); backdrop-filter:blur(26px) saturate(1.2);
+  animation:bs-nav-in .22s ease both;
+}
+@keyframes bs-nav-in{ from{ opacity:0; } to{ opacity:1; } }
+html[data-boot-nav] :is(.bs-aura, .bs-grid, .bs-tagline, .bs-phrases){ display:none; }
+html[data-boot-nav] .bs-stage{ animation:bs-nav-rise .35s cubic-bezier(.2,.8,.25,1) both; }
+@keyframes bs-nav-rise{ from{ opacity:0; transform:translateY(6px) scale(.96); } to{ opacity:1; transform:none; } }
+html[data-boot-nav] .bs-mark{ width:112px; height:112px; }
+html[data-boot-nav] .bs-halo{ animation:bs-nav-halo 1.8s ease-in-out infinite; }
+@keyframes bs-nav-halo{ 0%, 100%{ opacity:.55; transform:scale(.92); } 50%{ opacity:1; transform:scale(1.06); } }
+html[data-boot-nav] .bs-track{ stroke-width:5; opacity:.1; }
+html[data-boot-nav] .bs-arc{ animation:none; stroke-width:5; stroke-dasharray:24 100; filter:none; }
+html[data-boot-nav] .bs-ring-2 .bs-arc{ stroke-dasharray:18 100; }
+html[data-boot-nav] .bs-ring-3 .bs-arc{ stroke-dasharray:30 100; }
+html[data-boot-nav] .bs-ring-1{ animation:appSpin 1.1s cubic-bezier(.55,.15,.45,.85) infinite; }
+html[data-boot-nav] .bs-ring-2{ animation:appSpin 1.5s linear infinite reverse; }
+html[data-boot-nav] .bs-ring-3{ animation:appSpin .9s cubic-bezier(.45,.05,.55,.95) infinite; }
+html[data-boot-nav] .bs-logo{ width:32px; animation:bs-nav-breathe 1.8s ease-in-out infinite; }
+@keyframes bs-nav-breathe{ 0%, 100%{ transform:scale(1); } 50%{ transform:scale(1.08); } }
+html[data-boot-nav] .bs-brand{ margin-top:14px; font-size:15px; opacity:.85; animation:bs-nav-rise .4s ease .08s both; }
+/* تم روشن: نشان روشن رنگ‌های پاستلی داره و روی هاله‌ی مسی گم می‌شد */
+html[data-boot-nav] body[data-theme="light"] .bs-logo{ width:34px; filter:saturate(1.35) contrast(1.08) drop-shadow(0 1px 1.5px rgba(120,60,0,.35)); }
+html[data-boot-nav] body[data-theme="light"] .bs-halo{ background:radial-gradient(closest-side, rgba(var(--accent-rgb),.06), transparent 70%); }
+html[data-boot-nav] body[data-theme="light"] .bs-track{ opacity:.16; }
+/* خروج: کمان‌ها کمی باز می‌شن و همه با هم محو */
+html[data-boot-nav][data-boot="out"] .bs-arc{ animation:none; }
+html[data-boot-nav][data-boot="out"] .bs-rings{ animation:bs-nav-open .28s ease-out forwards; }
+@keyframes bs-nav-open{ to{ transform:rotate(-90deg) scale(1.18); opacity:0; } }
+html[data-boot-nav][data-boot="out"] :is(.bs-logo, .bs-halo, .bs-brand){ animation:bs-fade-out .22s ease forwards; }
+html[data-boot-nav][data-boot="out"] .boot-splash{ animation:bs-out .28s ease .04s forwards; pointer-events:none; }
+html[data-perf-weak][data-boot-nav] .boot-splash{ -webkit-backdrop-filter:none; backdrop-filter:none; background:var(--bg); }
+@media (prefers-reduced-motion: reduce){
+  html[data-boot-nav] :is(.boot-splash, .bs-stage, .bs-halo, .bs-logo, .bs-brand){ animation:none; }
+  html[data-boot-nav] :is(.bs-ring-1, .bs-ring-2, .bs-ring-3){ animation:appSpin 2.6s linear infinite; }
+}
+
 /* ── اطلاعیه‌ها: پاپ‌آپ، نوار و کارت گوشه (AnnouncementView/AnnouncementDelivery) ──
    سطح بنر/کارت همون سطح مودال سایته (--surface-2 + --surface-line) چون روی
    محتوای صفحه شناوره و بدون سطح خوانا نیست (درخواست صریح صاحب محصول برای
