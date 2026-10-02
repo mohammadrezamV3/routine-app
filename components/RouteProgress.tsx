@@ -16,7 +16,7 @@
 
 import { useEffect, useRef, useState } from "react";
 import { usePathname, useSearchParams } from "next/navigation";
-import { navSplashEnd, navSplashStart } from "@/lib/navSplash";
+import { navSplashEnd, navSplashStart, navSplashVisible } from "@/lib/navSplash";
 
 type Phase = "idle" | "loading" | "done";
 const ATTR = "data-route-loading";
@@ -62,6 +62,9 @@ export function RouteProgress() {
     const armedAt = Date.now();
     const cancel = () => {
       if (Date.now() - armedAt < 350) return;
+      // لمس روی اسپلش «لغو ناوبری» نیست؛ قبلا اسپلش رو کنار می‌زد و صفحه‌ی قبلی
+      // دوباره دیده می‌شد در حالی که صفحه‌ی بعد هنوز در راه بود.
+      if (navSplashVisible()) return;
       if (document.documentElement.hasAttribute(ATTR)) finish();
       else dropCancel();
     };
