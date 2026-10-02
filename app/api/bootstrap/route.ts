@@ -1,9 +1,8 @@
+import { accountUserSelect, toAccountUser } from "@/lib/accountPayload";
 import { NextRequest, NextResponse } from "next/server";
 import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
-import { NAME_STYLE_SELECT, nameFlags } from "@/lib/nameStyle";
-import { ModuleKey, SubscriptionStatus } from "@prisma/client";
 import { parseDateRange } from "@/lib/validate";
 import { BOOTSTRAP_SETTING_KEYS } from "@/lib/userSettingKeys";
 
@@ -51,28 +50,7 @@ export async function GET(req: NextRequest) {
       where: { userId, key: { in: [...BOOTSTRAP_SETTING_KEYS] } },
       select: { key: true, value: true },
     }),
-    prisma.user.findUnique({
-      where: { id: userId },
-      select: {
-        email: true, username: true, phone: true, name: true, market: true,
-        // lastName/birthDate هم لازم‌ن: صفحه‌ی پروفایل از همین پاسخ (از راه
-        // lib/accountCache) می‌خونه و بدونشون «نام و نام خانوادگی» فقط نام
-        // رو نشون می‌داد و تاریخ تولد ذخیره‌شده هیچ‌وقت پر نمی‌شد.
-        lastName: true, birthDate: true, bio: true,
-        createdAt: true, isSuperAdmin: true, avatarUrl: true, goldenSince: true, adminPermissions: true,
-        referralCode: { select: { code: true } },
-        moduleAccess: { select: { module: true, active: true, expiresAt: true } },
-        // فقط اشتراک واقعا فعال — عینا همون شرط /api/account. (قبلا
-        // «آخرین ردیف ساخته‌شده» می‌اومد و یه اشتراک منقضی هم به‌عنوان
-        // پلن فعلی نشون داده می‌شد.)
-        subscriptions: {
-          where: { status: { in: [SubscriptionStatus.ACTIVE, SubscriptionStatus.TRIAL] }, currentPeriodEnd: { gt: new Date() } },
-          orderBy: { currentPeriodEnd: "desc" },
-          take: 1,
-          select: { status: true, currentPeriodEnd: true, plan: { select: { nameFa: true, key: true } } },
-        },
-      },
-    }),
+    prisma.user.findUnique({ where: { id: userId }, select: accountUserSelect() }),
     range
       ? prisma.dailyEntry.findMany({
           where: { userId, date: { gte: range.from, lte: range.to } },
@@ -98,18 +76,13 @@ export async function GET(req: NextRequest) {
   // سوپریوزر همیشه همه‌ی ماژول‌ها رو داره — عینا همون منطق /api/account.
   // اگه این‌جا تکرار نشه، سوپریوزری که از مسیر bootstrap لود می‌شه دسترسیش
   // رو از دست می‌ده (چون ModuleGate از همین پاسخ تصمیم می‌گیره).
-  const moduleAccess = user.isSuperAdmin
-    ? Object.values(ModuleKey).map((m) => ({ module: m, active: true, expiresAt: null }))
-    : user.moduleAccess; // «روتین من» هم مثل بقیه: تریال ۱۴روزه، بعد پلن (lib/modules.ts)
-
-  const { avatarUrl, goldenSince, adminPermissions, ...userRest } = user;
   return NextResponse.json({
     settings,
     // شکل `user` عینا همونیه که /api/account می‌ده، تا lib/accountCache.ts
     // و ModuleGate بدون هیچ تغییری بتونن مصرفش کنن. سوپریوزر هم مثل اون‌جا
     // همه‌ی ماژول‌ها رو فعال می‌گیره — منطق دسترسی نباید بین دو مسیر فرق کنه.
-    account: { user: { ...userRest, ...nameFlags({ goldenSince, isSuperAdmin: user.isSuperAdmin, adminPermissions }), moduleAccess } },
-    avatarUrl: avatarUrl ?? null,
+    account: { user: toAccountUser(user) },
+    avatarUrl: user.avatarUrl ?? null,
     dailyRange: range ? { from: fromRaw, to: toRaw, entries } : null,
   });
 }
