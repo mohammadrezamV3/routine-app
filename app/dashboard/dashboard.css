@@ -880,9 +880,15 @@ html[data-perf-weak] .db-page .dbi-live *, html[data-perf-weak] .db-ribbon-sun-c
    تصویر کارت + ردیف انتخاب آیتم‌ها (TickOption، بی‌قاب) + یک دکمه‌ی اشتراک؛ بدون بک‌گراند یا متن توضیحی */
 .db-share-root{
   position:fixed; inset:0; z-index:9000; display:flex; justify-content:center; align-items:center;
-  padding:calc(16px + env(safe-area-inset-top)) 16px calc(16px + env(safe-area-inset-bottom)); background:rgba(0,0,0,.55);
+  padding:calc(16px + env(safe-area-inset-top)) 16px calc(16px + env(safe-area-inset-bottom)); background:rgba(0,0,0,.74);
+  /* پرده‌ی پشت پنجره غلیظ‌تر و مات: گزینه‌های انتخاب آیتم‌ها بی‌قاب‌ان و روی
+     صفحه‌ی داشبورد پشتشون خوانا نبودن */
+  -webkit-backdrop-filter:blur(10px); backdrop-filter:blur(10px);
 }
-body[data-theme="light"] .db-share-root{ background:rgba(60,40,20,.28); }
+body[data-theme="light"] .db-share-root{ background:color-mix(in srgb, var(--bg) 84%, transparent); }
+html[data-perf="low"] .db-share-root, html[data-perf-weak] .db-share-root{ -webkit-backdrop-filter:none; backdrop-filter:none; }
+html[data-perf="low"] body[data-theme="light"] .db-share-root, html[data-perf-weak] body[data-theme="light"] .db-share-root{ background:color-mix(in srgb, var(--bg) 95%, transparent); }
+html[data-perf="low"] body:not([data-theme="light"]) .db-share-root, html[data-perf-weak] body:not([data-theme="light"]) .db-share-root{ background:rgba(0,0,0,.88); }
 .db-share{
   /* عرض = کوچک‌ترین بین 440px، عرض صفحه و ارتفاعی که تصویر 4:5 + دکمه + بستن جا بشن */
   --share-w:min(440px, calc((100vh - 32px - 220px) * .8));
