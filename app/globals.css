@@ -4835,6 +4835,7 @@ body[data-theme="light"] .exercise-pictogram-stage{ background:rgba(255,255,255,
    جزئیات) میان، مارجین‌تاپ عمودی لازم نیست */
 .exercise-catalog-row-stars{ margin-top:0; flex-shrink:0; }
 .exercise-catalog-filters{ display:flex; gap:6px; overflow-x:auto; padding:12px 2px 2px; }
+.exercise-catalog-filters.exercise-catalog-filters-sub{ padding-top:6px; }
 .exercise-catalog-chip{
   flex-shrink:0; padding:6px 14px; border-radius:9999px; font-size:11px; font-weight:600;
   border:1px solid var(--line); color:var(--muted); background:transparent; transition:.15s;

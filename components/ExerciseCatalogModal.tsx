@@ -4,10 +4,21 @@ import { useEffect, useMemo, useRef, useState } from "react";
 import { createPortal } from "react-dom";
 import { AnimatePresence, motion } from "framer-motion";
 import { ImageOff, Star } from "lucide-react";
-import { EXERCISE_CATALOG, ExerciseCatalogEntry, MuscleKey, getExerciseDifficulty } from "@/lib/exerciseCatalog";
+import {
+  EXERCISE_CATALOG,
+  EQUIPMENT_LABEL,
+  ExerciseCatalogEntry,
+  ExerciseEquipment,
+  MuscleKey,
+  exerciseSearchText,
+  getExerciseDifficulty,
+  getExerciseEquipment,
+  matchesExerciseQuery,
+} from "@/lib/exerciseCatalog";
 import { mediaKey } from "@/lib/exerciseMedia";
 import { normalizeFa } from "@/lib/utils";
 import { useLockBodyScroll } from "@/lib/useLockBodyScroll";
+import { useProgressiveList } from "@/lib/useProgressiveList";
 
 const MUSCLE_LABEL: Record<MuscleKey, string> = {
   chest: "سینه",
@@ -29,9 +40,22 @@ const MUSCLE_LABEL: Record<MuscleKey, string> = {
 };
 
 const MUSCLE_FILTERS: MuscleKey[] = [
-  "chest", "back", "shoulders", "biceps", "triceps", "abs",
-  "quads", "hamstrings", "glutes", "calves", "cardio",
+  "chest", "back", "traps", "shoulders", "biceps", "triceps", "forearms", "abs", "obliques",
+  "quads", "hamstrings", "glutes", "calves", "cardio", "fullbody", "flexibility",
 ];
+
+const EQUIPMENT_FILTERS: ExerciseEquipment[] = [
+  "bodyweight", "dumbbell", "barbell", "cable", "machine", "smith", "kettlebell", "band", "suspension", "other",
+];
+
+// متن جستجو و تجهیزات هر حرکت یک بار برای کل کاتالوگ ساخته می‌شه (نه با هر
+// حرف تایپ‌شده) — با 700+ حرکت این فرق محسوسه.
+const INDEXED = EXERCISE_CATALOG.map((entry) => ({
+  entry,
+  text: exerciseSearchText(entry),
+  equipment: getExerciseEquipment(entry),
+  level: getExerciseDifficulty(entry),
+}));
 
 export function DifficultyStars({ level, className }: { level: number; className?: string }) {
   return (
@@ -51,6 +75,7 @@ export function ExerciseCatalogModal({ onClose }: { onClose: () => void }) {
   useLockBodyScroll();
   const [query, setQuery] = useState("");
   const [muscleFilter, setMuscleFilter] = useState<MuscleKey | null>(null);
+  const [equipmentFilter, setEquipmentFilter] = useState<ExerciseEquipment | null>(null);
   const [selected, setSelected] = useState<ExerciseCatalogEntry | null>(null);
   const [photo, setPhoto] = useState<string | null>(null);
 
@@ -92,15 +117,20 @@ export function ExerciseCatalogModal({ onClose }: { onClose: () => void }) {
     return () => { alive = false; };
   }, [selected, mediaKeys]);
 
-  const normalizedQuery = normalizeFa(query);
+  const normalizedQuery = normalizeFa(query).replace(/\s+/g, " ");
   const visible = useMemo(
     () =>
-      EXERCISE_CATALOG.filter(
-        (e) =>
-          (!normalizedQuery || normalizeFa(e.name).includes(normalizedQuery)) &&
-          (!muscleFilter || e.muscleKeys.includes(muscleFilter))
+      INDEXED.filter(
+        (x) =>
+          matchesExerciseQuery(x.text, normalizedQuery) &&
+          (!muscleFilter || x.entry.muscleKeys.includes(muscleFilter)) &&
+          (!equipmentFilter || x.equipment === equipmentFilter)
       ),
-    [normalizedQuery, muscleFilter]
+    [normalizedQuery, muscleFilter, equipmentFilter]
+  );
+  const { limit, onScroll, listRef } = useProgressiveList(
+    visible.length,
+    `${normalizedQuery}|${muscleFilter ?? ""}|${equipmentFilter ?? ""}`
   );
 
   return createPortal(
@@ -155,16 +185,29 @@ export function ExerciseCatalogModal({ onClose }: { onClose: () => void }) {
             ))}
           </div>
 
-          <div className="no-scrollbar exercise-catalog-list">
+          <div className="no-scrollbar exercise-catalog-filters exercise-catalog-filters-sub">
+            {EQUIPMENT_FILTERS.map((k) => (
+              <button
+                key={k}
+                type="button"
+                onClick={() => setEquipmentFilter((v) => (v === k ? null : k))}
+                className={`exercise-catalog-chip${equipmentFilter === k ? " active" : ""}`}
+              >
+                {EQUIPMENT_LABEL[k]}
+              </button>
+            ))}
+          </div>
+
+          <div ref={listRef} className="no-scrollbar exercise-catalog-list" onScroll={onScroll}>
             {visible.length === 0 ? (
               <div className="item-line empty">حرکتی پیدا نشد.</div>
             ) : (
-              visible.map((e) => (
+              visible.slice(0, limit).map(({ entry: e, level }) => (
                 <div key={e.name} onClick={() => setSelected(e)} className="exercise-catalog-row">
                   <div className="min-w-0 flex-1 truncate text-right text-[12.5px] font-semibold text-dash-text sm:text-[13.5px]">
                     {e.name}
                   </div>
-                  <DifficultyStars level={getExerciseDifficulty(e)} className="exercise-catalog-row-stars" />
+                  <DifficultyStars level={level} className="exercise-catalog-row-stars" />
                 </div>
               ))
             )}
@@ -217,6 +260,11 @@ export function ExerciseCatalogModal({ onClose }: { onClose: () => void }) {
                 <div className="tm-extra">
                   <div className="domain-sub exercise-detail-label">میزان سختی</div>
                   <DifficultyStars level={getExerciseDifficulty(selected)} />
+                </div>
+
+                <div className="tm-extra">
+                  <div className="domain-sub exercise-detail-label">تجهیزات</div>
+                  <div className="item-line">{EQUIPMENT_LABEL[getExerciseEquipment(selected)]}</div>
                 </div>
 
                 <div className="tm-extra">
