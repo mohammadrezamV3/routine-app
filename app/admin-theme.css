@@ -122,8 +122,13 @@ html[data-admin-theme="noir"] body:not([data-theme="light"]) :focus-visible{
 /* ── عکس‌ها: فقط لوگو و آواتار خاکستری (نه کل صفحه) ── */
 html[data-admin-theme="noir"] body:not([data-theme="light"]) .topbar-logo-lockup,
 html[data-admin-theme="noir"] body:not([data-theme="light"]) .account-avatar-img,
-html[data-admin-theme="noir"] body:not([data-theme="light"]) img[class*="avatar"]{
+html[data-admin-theme="noir"] body:not([data-theme="light"]) img[class*="avatar"],
+html[data-admin-theme="noir"] body:not([data-theme="light"]) canvas.agent-avatar{
   filter:grayscale(1) contrast(1.1);
+}
+/* نقطه‌ی اعلان قرمز نمی‌مونه: سفید با هاله‌ی نئونی */
+html[data-admin-theme="noir"] body:not([data-theme="light"]) .bell-dot{
+  background:#FFFFFF; box-shadow:0 0 0 2px var(--bg), 0 0 8px rgba(255,255,255,.7);
 }
 
 /* ── بافت فیلم نوآر: هر کدوم فقط یک لایه‌ی ثابت روی body ──
