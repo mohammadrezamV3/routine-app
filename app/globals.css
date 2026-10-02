@@ -9989,6 +9989,26 @@ html[data-perf-weak] .bs-phrases span{ filter:none !important; }
   html[data-boot="out"] .boot-splash{ animation:bs-out .3s ease forwards; }
 }
 
+/* ── اسپلش ناوبری داخلی: نسخه‌ی ساده (lib/navSplash.ts → html[data-boot-nav]) ──
+   درخواست صاحب محصول: لودینگ ورود به اپ با لودینگ بقیه‌ی اپ فرق کنه و ساده‌تر
+   باشه. همون نود .boot-splash، ولی فقط نشان برند + یک کمان نازک چرخان (هم‌خانواده‌ی
+   Spinner)؛ بدون هاله، شبکه، اسم/شعار، جمله‌ها و پخش‌شدن حلقه‌ها. ورود و خروج فقط
+   یک محوشدن کوتاه. */
+html[data-boot-nav] .boot-splash{ animation:bs-nav-in .18s ease both; }
+@keyframes bs-nav-in{ from{ opacity:0; } to{ opacity:1; } }
+html[data-boot-nav] :is(.bs-aura, .bs-grid, .bs-halo, .bs-brand, .bs-tagline, .bs-phrases, .bs-ring-2, .bs-ring-3){ display:none; }
+html[data-boot-nav] .bs-ring-1 .bs-track{ stroke-width:4; opacity:.12; }
+html[data-boot-nav] .bs-mark{ width:84px; height:84px; }
+html[data-boot-nav] .bs-ring-1{ animation:appSpin .9s linear infinite; }
+html[data-boot-nav] .bs-ring-1 .bs-arc{ animation:none; stroke-width:4; stroke-dasharray:22 100; filter:none; }
+html[data-boot-nav] .bs-logo{ width:30px; animation:none; }
+html[data-boot-nav][data-boot="out"] :is(.bs-arc, .bs-rings, .bs-logo){ animation:none; }
+html[data-boot-nav][data-boot="out"] .boot-splash{ animation:bs-out .25s ease forwards; pointer-events:none; }
+@media (prefers-reduced-motion: reduce){
+  html[data-boot-nav] .boot-splash{ animation:none; }
+  html[data-boot-nav] .bs-ring-1{ animation:appSpin 2.4s linear infinite; }
+}
+
 /* ── اطلاعیه‌ها: پاپ‌آپ، نوار و کارت گوشه (AnnouncementView/AnnouncementDelivery) ──
    سطح بنر/کارت همون سطح مودال سایته (--surface-2 + --surface-line) چون روی
    محتوای صفحه شناوره و بدون سطح خوانا نیست (درخواست صریح صاحب محصول برای
