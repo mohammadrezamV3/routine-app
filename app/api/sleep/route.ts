@@ -6,13 +6,22 @@ import { prisma } from "@/lib/prisma";
 import { requireModule } from "@/lib/moduleAccess";
 import { parseDateRange, parseIsoDate, readJsonBody } from "@/lib/validate";
 import { withLiveSync } from "@/lib/realtime";
-import { SLEEP_MAX_MIN, SLEEP_MIN_MIN, type SleepRecord } from "@/lib/sleep";
+import { AWAKENINGS_MAX, LATENCY_MAX, NAP_MAX, SLEEP_MAX_MIN, SLEEP_MIN_MIN, sanitizeTags, type SleepRecord } from "@/lib/sleep";
 
-// ثبت خواب — بخشی از «روتین من» (ماژول SLEEP). هر شب یک ردیف با کلید
+// ثبت خواب — سیستم جدای خواب (ماژول SLEEP، صفحه‌ی /sleep). هر شب یک ردیف با کلید
 // (userId, date) که date = روز *بیدارشدن* ـه (خواب شب ۱۰ → ۱۱ مال ۱۱ ـه).
 // زمان‌ها ISO  کامل (UTC) ذخیره می‌شن؛ ساعت محلی سمت کلاینت ساخته می‌شه.
 
-function toRecord(r: { date: Date; sleptAt: Date | null; wokeAt: Date | null; quality: number | null; note: string | null }): SleepRecord | null {
+type Row = {
+  date: Date; sleptAt: Date | null; wokeAt: Date | null; quality: number | null; note: string | null;
+  latencyMin: number | null; awakenings: number | null; napMin: number | null; tags: string[];
+};
+const ROW_SELECT = {
+  date: true, sleptAt: true, wokeAt: true, quality: true, note: true,
+  latencyMin: true, awakenings: true, napMin: true, tags: true,
+} as const;
+
+function toRecord(r: Row): SleepRecord | null {
   if (!r.sleptAt || !r.wokeAt) return null;
   const d = r.date;
   const pad = (n: number) => String(n).padStart(2, "0");
@@ -22,7 +31,16 @@ function toRecord(r: { date: Date; sleptAt: Date | null; wokeAt: Date | null; qu
     wokeAt: r.wokeAt.toISOString(),
     quality: r.quality,
     note: r.note,
+    latencyMin: r.latencyMin,
+    awakenings: r.awakenings,
+    napMin: r.napMin,
+    tags: r.tags ?? [],
   };
+}
+
+/** عدد صحیح در بازه یا null */
+function optInt(v: unknown, max: number): number | null {
+  return typeof v === "number" && Number.isInteger(v) && v >= 0 && v <= max ? v : null;
 }
 
 // GET /api/sleep?from=YYYY-MM-DD&to=YYYY-MM-DD — خوندن فقط سشن می‌خواد (مثل
@@ -37,7 +55,7 @@ export async function GET(req: NextRequest) {
   const rows = await prisma.sleepEntry.findMany({
     where: { userId, date: { gte: range.from, lte: range.to } },
     orderBy: { date: "asc" },
-    select: { date: true, sleptAt: true, wokeAt: true, quality: true, note: true },
+    select: ROW_SELECT,
   });
   return NextResponse.json({ entries: rows.map(toRecord).filter(Boolean) });
 }
@@ -48,7 +66,10 @@ async function handlePOST(req: NextRequest) {
   if (!guard.ok) return guard.response;
   const userId = guard.userId;
 
-  const parsed = await readJsonBody<{ date?: string; sleptAt?: string; wokeAt?: string; quality?: unknown; note?: unknown }>(req, 4096);
+  const parsed = await readJsonBody<{
+    date?: string; sleptAt?: string; wokeAt?: string; quality?: unknown; note?: unknown;
+    latencyMin?: unknown; awakenings?: unknown; napMin?: unknown; tags?: unknown;
+  }>(req, 4096);
   if (!parsed.ok) return NextResponse.json({ error: parsed.error }, { status: parsed.status });
   const b = parsed.body ?? {};
   const date = parseIsoDate(b.date);
@@ -70,12 +91,17 @@ async function handlePOST(req: NextRequest) {
   }
   const quality = typeof b.quality === "number" && Number.isInteger(b.quality) && b.quality >= 1 && b.quality <= 5 ? b.quality : null;
   const note = typeof b.note === "string" && b.note.trim() ? b.note.trim().slice(0, 200) : null;
+  const latencyMin = optInt(b.latencyMin, LATENCY_MAX);
+  const awakenings = optInt(b.awakenings, AWAKENINGS_MAX);
+  const napMin = optInt(b.napMin, NAP_MAX);
+  const tags = sanitizeTags(b.tags);
+  const data = { sleptAt, wokeAt, quality, note, latencyMin, awakenings, napMin, tags };
 
   const row = await prisma.sleepEntry.upsert({
     where: { userId_date: { userId, date } },
-    create: { userId, date, sleptAt, wokeAt, quality, note },
-    update: { sleptAt, wokeAt, quality, note },
-    select: { date: true, sleptAt: true, wokeAt: true, quality: true, note: true },
+    create: { userId, date, ...data },
+    update: data,
+    select: ROW_SELECT,
   });
   return NextResponse.json({ entry: toRecord(row) });
 }
