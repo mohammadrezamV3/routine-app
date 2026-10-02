@@ -1,7 +1,7 @@
 "use client";
 
 import { useFeatures } from "@/lib/useFeatures";
-import type { FeatureKey } from "@/lib/featureFlags";
+import { featureVisible, type FeatureKey } from "@/lib/featureFlags";
 import { useEffect, useRef, useState } from "react";
 import { createPortal } from "react-dom";
 import dynamic from "next/dynamic";
@@ -134,8 +134,8 @@ function isGroup(item: NavItem): item is NavGroup {
 const LINKS: NavItem[] = [
   // داشبورد — نمای کلی همه‌ی بخش‌ها و صفحه‌ی اصلی بعد از ورود؛ پشت فلگ `dashboard` (پیش‌فرض روشن برای همه)
   { href: "/dashboard", label: "داشبورد", icon: "dashboard", feature: "dashboard" },
-  { href: "/weekly", label: "روتین", icon: "weekly" },
-  { href: "/sleep", label: "خواب", icon: "sleep", module: "SLEEP" },
+  { href: "/weekly", label: "روتین", icon: "weekly", feature: "routine" },
+  { href: "/sleep", label: "خواب", icon: "sleep", module: "SLEEP", feature: "sleep" },
   { href: "/roadmaps", label: "رودمپ‌ها", icon: "roadmaps", feature: "roadmaps" },
   // منتورها درست زیر رودمپ‌ها. گروه فقط صفحه‌های سمت شاگرد را دارد؛
   // «پنل منتور» (برای کسی که منتوری می‌کند) این‌جا نیست — در پاپ‌آپ پروفایل،
@@ -151,15 +151,15 @@ const LINKS: NavItem[] = [
   {
     label: "بدنسازی", icon: "exercise",
     children: [
-      { href: "/exercise?tab=exercise", label: "برنامه تمرینی", icon: "exercise", module: "EXERCISE" },
-      { href: "/exercise?tab=calorie", label: "کالری‌شمار", icon: "food", module: "CALORIE" },
+      { href: "/exercise?tab=exercise", label: "برنامه تمرینی", icon: "exercise", module: "EXERCISE", feature: "exercise" },
+      { href: "/exercise?tab=calorie", label: "کالری‌شمار", icon: "food", module: "CALORIE", feature: "calorie" },
     ],
   },
   // ترید زیرمنو ندارد — با یک کلیک مستقیم می‌رود به هاب خودش، و انتخاب
   // بخش (ژورنال/چک‌لیست/تقویم/…) داخل همان صفحه انجام می‌شود.
-  { href: "/trade", label: "ترید", icon: "trade", module: "TRADE" },
+  { href: "/trade", label: "ترید", icon: "trade", module: "TRADE", feature: "trade" },
   { href: "/analysis/weekly", label: "آنالیز هفتگی", icon: "weeklyReport", module: "AI_INSIGHT", feature: "weeklyAnalysis" },
-  { href: "/about", label: "درباره ما", icon: "about" },
+  { href: "/about", label: "درباره ما", icon: "about", feature: "about" },
 ];
 
 // کش‌شده بیرون کامپوننت — مثل الگوی NotificationPanel/AccountPanel، تا
@@ -198,6 +198,13 @@ export function NavDrawer() {
   const { data: session, status } = useSession();
   const features = useFeatures();
   const authSlotRef = useRef<HTMLDivElement>(null);
+  // بخش‌هایی که از پنل ادمین (/admin/features) برای این کاربر خاموشن از منو
+  // حذف می‌شن؛ گروهی که همه‌ی زیرمجموعه‌هاش خاموشن هم کامل حذف می‌شه.
+  const visibleLinks = LINKS.filter((item) => {
+    if (item.feature && !featureVisible(features, item.feature)) return false;
+    if (isGroup(item)) return item.children.some((c) => !c.feature || featureVisible(features, c.feature));
+    return true;
+  });
   const profileBtnRef = useRef<HTMLButtonElement>(null);
   const bellBtnRef = useRef<HTMLButtonElement>(null);
   // صفحات ورود/ثبت‌نام هدر خودشونو دارن (فلش بازگشت + نشان برند) — هدر
@@ -484,7 +491,7 @@ export function NavDrawer() {
                     document.body
                   )}
                 </div>
-                <div className="bell-btn-wrap">
+                {featureVisible(features, "notifications") && <div className="bell-btn-wrap">
                   <button ref={bellBtnRef} className="bell-btn" aria-label="اعلان‌ها" onClick={handleBellClick}>
                     <svg viewBox="0 0 24 24" fill="none"><path d="M6 9.5a6 6 0 1 1 12 0c0 4 1.4 5.6 2 6.5H4c.6-.9 2-2.5 2-6.5Z" stroke="currentColor" strokeWidth="1.7" strokeLinecap="round" strokeLinejoin="round" /><path d="M9.5 19a2.6 2.6 0 0 0 5 0" stroke="currentColor" strokeWidth="1.7" strokeLinecap="round" /></svg>
                     {(notifCount > 0 || notifPermission !== "granted") && <span className="bell-dot" />}
@@ -493,8 +500,8 @@ export function NavDrawer() {
                     <NotificationPanel onClose={() => setNotifPanelOpen(false)} anchor={bellAnchor} />,
                     document.body
                   )}
-                </div>
-                <HeaderStreakClock />
+                </div>}
+                {featureVisible(features, "routine") && featureVisible(features, "streak") && <HeaderStreakClock />}
               </>
             ) : (
               <div ref={authSlotRef}>
@@ -537,7 +544,7 @@ export function NavDrawer() {
             <button onClick={() => setOpen(false)} className="nav-close" aria-label="بستن منو">×</button>
           </div>
 
-          {LINKS.filter((item) => !("feature" in item && item.feature) || features?.[item.feature] === true).map((item) => {
+          {visibleLinks.map((item) => {
             const isLocked = (m?: string) => !!m && activeModules !== null && !activeModules.has(m);
             if (isGroup(item)) {
               const isExpanded = expandedGroup === item.label;
@@ -567,7 +574,7 @@ export function NavDrawer() {
                   <div className={`nav-group-sub${isExpanded ? " open" : ""}`}>
                     <div className="nav-group-sub-inner">
                       <div className="nav-group-children">
-                        {item.children.map((c) => (
+                        {item.children.filter((c) => !c.feature || featureVisible(features, c.feature)).map((c) => (
                           <Link
                             key={c.href}
                             href={c.href}

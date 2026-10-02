@@ -3,6 +3,7 @@ import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
 import { checkRateLimit } from "@/lib/rateLimit";
+import { sessionFeatureBlocked } from "@/lib/featureFlagsServer";
 
 /** IANA timezone معتبر یا null — ورودی کلاینته، پس هم طول هم خود Intl چکش می‌کنن */
 function validTimezone(tz: unknown): string | null {
@@ -21,6 +22,7 @@ function validTimezone(tz: unknown): string | null {
 // روی همون می‌زنیم — اگه قبلا برای یه کاربر دیگه ثبت شده بود (مثلا همون
 // مرورگر قبلا با اکانت دیگه‌ای لاگین بوده) مالکیتش به کاربر فعلی منتقل می‌شه.
 export async function POST(req: NextRequest) {
+  { const off = await sessionFeatureBlocked("notifications"); if (off) return off; }
   const session = await getServerSession(authOptions);
   const userId = (session?.user as any)?.id;
   if (!userId) return NextResponse.json({ error: "unauthorized" }, { status: 401 });

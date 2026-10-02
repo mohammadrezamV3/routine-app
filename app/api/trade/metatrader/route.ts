@@ -7,6 +7,7 @@ import {
 } from "@/lib/metatrader";
 import { withLiveSync } from "@/lib/realtime";
 import { loadAccountMoney } from "@/lib/tradeCashflowServer";
+import { sessionFeatureBlocked } from "@/lib/featureFlagsServer";
 
 // مدیریت اتصال متاتریدر یک حساب، از سمت کاربر لاگین‌کرده.
 // (اندپوینت‌هایی که خود EA صدا می‌زند جدا هستند: /api/mt/pair و /api/mt/sync)
@@ -60,6 +61,7 @@ async function buildReconciliation(accountId: string, linkBalance: number | null
 
 // GET /api/trade/metatrader?accountId=...
 export async function GET(req: NextRequest) {
+  { const off = await sessionFeatureBlocked("metatrader"); if (off) return off; }
   const guard = await requireModule(ModuleKey.TRADE);
   if (!guard.ok) return guard.response;
 
@@ -92,6 +94,7 @@ export async function GET(req: NextRequest) {
 // یک کد اتصال تازه می‌سازد. کد فقط همین یک‌بار برگردانده می‌شود؛ در
 // دیتابیس فقط هشش می‌ماند، پس اگر کاربر گمش کرد باید کد جدید بگیرد.
 async function handlePOST(req: NextRequest) {
+  { const off = await sessionFeatureBlocked("metatrader"); if (off) return off; }
   const guard = await requireModule(ModuleKey.TRADE);
   if (!guard.ok) return guard.response;
   const userId = guard.userId;
@@ -122,6 +125,7 @@ async function handlePOST(req: NextRequest) {
 // DELETE /api/trade/metatrader?accountId=... — ابطال اتصال
 // معاملات همگام‌شده دست‌نخورده می‌مانند؛ فقط EA دیگر اجازه‌ی ارسال ندارد.
 async function handleDELETE(req: NextRequest) {
+  { const off = await sessionFeatureBlocked("metatrader"); if (off) return off; }
   const guard = await requireModule(ModuleKey.TRADE);
   if (!guard.ok) return guard.response;
 

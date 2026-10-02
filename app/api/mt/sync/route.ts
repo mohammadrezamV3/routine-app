@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { Prisma } from "@prisma/client";
 import { prisma } from "@/lib/prisma";
+import { featureBlocked } from "@/lib/featureFlagsServer";
 import { checkRateLimit, getClientIp } from "@/lib/rateLimit";
 import { clampText } from "@/lib/validate";
 import { sessionsAt } from "@/lib/forexSessions";
@@ -43,6 +44,8 @@ export async function POST(req: NextRequest) {
     select: { id: true, userId: true, accountId: true, revokedAt: true, platform: true },
   });
   if (!link || link.revokedAt) return NextResponse.json({ error: "unauthorized" }, { status: 401 });
+  // اتصال متاتریدر از پنل ادمین خاموشه (برای صاحب حساب) → اکسپرت همون ۴۰۳ رو می‌گیره
+  { const off = await featureBlocked("metatrader", link.userId); if (off) return off; }
 
   if (!(await checkRateLimit(`mt-sync-token:${link.id}`, SYNC_LIMIT_PER_TOKEN, SYNC_WINDOW_MS))) {
     return NextResponse.json({ error: "too many requests" }, { status: 429 });

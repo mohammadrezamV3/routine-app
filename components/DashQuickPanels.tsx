@@ -9,6 +9,8 @@ import { DashFriendsCard } from "./DashFriendsCard";
 import { DashWeeklyChartCard } from "./DashWeeklyChartCard";
 import { SleepMiniCard } from "./SleepMiniCard";
 import { DashboardPrefs } from "@/lib/dashboardPrefs";
+import { featureVisible } from "@/lib/featureFlags";
+import { useFeatures } from "@/lib/useFeatures";
 
 type PanelKey = "reminders" | "sleep" | "medications" | "chart" | "friends";
 
@@ -31,16 +33,20 @@ export function DashQuickPanels({
   prefs: DashboardPrefs;
   statsRefreshKey?: number;
 }) {
+  // خواب/دوستان فلگ پنل ادمین هم دارن (/admin/features) — خاموش یعنی دکمه نیست
+  const features = useFeatures();
+  const sleepOn = featureVisible(features, "sleep");
+  const friendsOn = featureVisible(features, "friends");
   const enabled = useMemo<PanelKey[]>(() => {
     const list: PanelKey[] = [];
     if (prefs.showReminders) list.push("reminders");
-    // خواب بخشی از «روتین من» ـه و همیشه توی ردیف دکمه‌ها هست (خاموش‌شدنی نیست)
-    list.push("sleep");
+    // خواب بخشی از «روتین من» ـه و همیشه توی ردیف دکمه‌ها هست (تنظیم کاربر خاموشش نمی‌کنه)
+    if (sleepOn) list.push("sleep");
     if (prefs.showMedications) list.push("medications");
     if (prefs.showChart) list.push("chart");
-    if (prefs.showFriends) list.push("friends");
+    if (prefs.showFriends && friendsOn) list.push("friends");
     return list;
-  }, [prefs.showReminders, prefs.showMedications, prefs.showChart, prefs.showFriends]);
+  }, [prefs.showReminders, prefs.showMedications, prefs.showChart, prefs.showFriends, sleepOn, friendsOn]);
 
   const [active, setActive] = useState<PanelKey | null>(null);
   const current = active && enabled.includes(active) ? active : enabled[0] ?? null;

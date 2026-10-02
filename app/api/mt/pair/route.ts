@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
+import { featureBlocked } from "@/lib/featureFlagsServer";
 import { checkRateLimit, getClientIp } from "@/lib/rateLimit";
 import { clampText } from "@/lib/validate";
 import { publishDataChanged } from "@/lib/realtime";
@@ -36,6 +37,8 @@ export async function POST(req: NextRequest) {
   if (!link || !link.pairingExpiresAt || link.pairingExpiresAt.getTime() < Date.now()) {
     return NextResponse.json({ error: "invalid or expired code" }, { status: 401 });
   }
+  // اتصال متاتریدر از پنل ادمین خاموشه (برای صاحب حساب) → اکسپرت همون ۴۰۳ رو می‌گیره
+  { const off = await featureBlocked("metatrader", link.userId); if (off) return off; }
 
   const token = generateEaToken();
 

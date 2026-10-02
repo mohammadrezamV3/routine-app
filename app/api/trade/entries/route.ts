@@ -5,6 +5,7 @@ import { requireModule } from "@/lib/moduleAccess";
 import { parseTradeInput, ENTRY_SELECT, serializeEntry } from "@/lib/tradeServer";
 import { parseDateRange } from "@/lib/validate";
 import { withLiveSync } from "@/lib/realtime";
+import { sessionFeatureBlocked } from "@/lib/featureFlagsServer";
 
 // معاملات یک حساب. برخلاف نسخه‌ی قبلی که همه‌ی معاملات کاربر را یکجا
 // می‌داد، این‌جا accountId اجباری است — چون کل UI حساب‌محور است و آمار دو
@@ -44,6 +45,7 @@ async function buildChecklistSnapshot(userId: string, checklistId: string | null
 
 // GET /api/trade/entries?accountId=...&from=YYYY-MM-DD&to=YYYY-MM-DD
 export async function GET(req: NextRequest) {
+  { const off = await sessionFeatureBlocked("tradeJournal"); if (off) return off; }
   const guard = await requireModule(ModuleKey.TRADE);
   if (!guard.ok) return guard.response;
   const userId = guard.userId;
@@ -75,6 +77,7 @@ export async function GET(req: NextRequest) {
 
 // POST /api/trade/entries
 async function handlePOST(req: NextRequest) {
+  { const off = await sessionFeatureBlocked("tradeJournal"); if (off) return off; }
   const guard = await requireModule(ModuleKey.TRADE);
   if (!guard.ok) return guard.response;
   const userId = guard.userId;
@@ -109,6 +112,7 @@ async function handlePOST(req: NextRequest) {
 // PATCH /api/trade/entries  { id, ...همه‌ی فیلدها }
 // فرم همیشه کل رکورد را می‌فرستد، پس این جایگزینی کامل است نه patch جزئی.
 async function handlePATCH(req: NextRequest) {
+  { const off = await sessionFeatureBlocked("tradeJournal"); if (off) return off; }
   const guard = await requireModule(ModuleKey.TRADE);
   if (!guard.ok) return guard.response;
   const userId = guard.userId;
@@ -157,6 +161,7 @@ async function handlePATCH(req: NextRequest) {
 
 // DELETE /api/trade/entries?id=...
 async function handleDELETE(req: NextRequest) {
+  { const off = await sessionFeatureBlocked("tradeJournal"); if (off) return off; }
   const guard = await requireModule(ModuleKey.TRADE);
   if (!guard.ok) return guard.response;
   const id = req.nextUrl.searchParams.get("id");

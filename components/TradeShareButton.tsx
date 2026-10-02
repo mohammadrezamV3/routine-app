@@ -9,6 +9,7 @@ import { useSession } from "next-auth/react";
 import { Share2 } from "lucide-react";
 import { activeModulesOf, getAccount } from "@/lib/accountCache";
 import { TradeSharePanel } from "./TradeSharePanel";
+import { useFeature } from "@/lib/useFeatures";
 
 export function TradeShareButton({ account = "all", deepLink = false, className, size = 17 }: {
   account?: string;
@@ -17,7 +18,10 @@ export function TradeShareButton({ account = "all", deepLink = false, className,
   size?: number;
 }) {
   const { status } = useSession();
-  const [allowed, setAllowed] = useState(false);
+  // فلگ tradeShare از پنل ادمین (/admin/features) — خاموش یعنی دکمه نیست
+  const flagOn = useFeature("tradeShare") === true;
+  const [moduleOk, setAllowed] = useState(false);
+  const allowed = moduleOk && flagOn;
   const [open, setOpen] = useState(false);
 
   useEffect(() => {

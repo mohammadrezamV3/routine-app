@@ -7,6 +7,7 @@ import { requireModule } from "@/lib/moduleAccess";
 import { parseDateRange, parseIsoDate, readJsonBody } from "@/lib/validate";
 import { withLiveSync } from "@/lib/realtime";
 import { SLEEP_MAX_MIN, SLEEP_MIN_MIN, type SleepRecord } from "@/lib/sleep";
+import { sessionFeatureBlocked } from "@/lib/featureFlagsServer";
 
 // ثبت خواب — بخشی از «روتین من» (ماژول SLEEP). هر شب یک ردیف با کلید
 // (userId, date) که date = روز *بیدارشدن* ـه (خواب شب ۱۰ → ۱۱ مال ۱۱ ـه).
@@ -28,6 +29,7 @@ function toRecord(r: { date: Date; sleptAt: Date | null; wokeAt: Date | null; qu
 // GET /api/sleep?from=YYYY-MM-DD&to=YYYY-MM-DD — خوندن فقط سشن می‌خواد (مثل
 // tasks/daily): بعد از پایان دوره‌ی رایگان هم تاریخچه گروگان نمی‌مونه؛ نوشتن پلن می‌خواد.
 export async function GET(req: NextRequest) {
+  { const off = await sessionFeatureBlocked("sleep"); if (off) return off; }
   const session = await getServerSession(authOptions);
   const userId = (session?.user as { id?: string } | undefined)?.id;
   if (!userId) return NextResponse.json({ error: "unauthorized" }, { status: 401 });
@@ -44,6 +46,7 @@ export async function GET(req: NextRequest) {
 
 // POST /api/sleep { date, sleptAt, wokeAt, quality?, note? }
 async function handlePOST(req: NextRequest) {
+  { const off = await sessionFeatureBlocked("sleep"); if (off) return off; }
   const guard = await requireModule(ModuleKey.SLEEP);
   if (!guard.ok) return guard.response;
   const userId = guard.userId;
@@ -82,6 +85,7 @@ async function handlePOST(req: NextRequest) {
 
 // DELETE /api/sleep?date=YYYY-MM-DD
 async function handleDELETE(req: NextRequest) {
+  { const off = await sessionFeatureBlocked("sleep"); if (off) return off; }
   const guard = await requireModule(ModuleKey.SLEEP);
   if (!guard.ok) return guard.response;
   const date = parseIsoDate(req.nextUrl.searchParams.get("date"));

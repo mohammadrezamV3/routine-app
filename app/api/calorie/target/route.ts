@@ -5,11 +5,13 @@ import { ModuleKey } from "@prisma/client";
 import { calcAge, calcDailyTargetKcal, splitMeals, CalorieGoal, Sex } from "@/lib/calorieCalc";
 import { clampText } from "@/lib/validate";
 import { withLiveSync } from "@/lib/realtime";
+import { sessionFeatureBlocked } from "@/lib/featureFlagsServer";
 
 const VALID_GOALS: CalorieGoal[] = ["lose", "maintain", "gain"];
 const VALID_SEX: Sex[] = ["male", "female"];
 
 export async function GET() {
+  { const off = await sessionFeatureBlocked("calorie"); if (off) return off; }
   const guard = await requireModule(ModuleKey.CALORIE);
   if (!guard.ok) return guard.response;
   const userId = guard.userId;
@@ -26,6 +28,7 @@ export async function GET() {
 // هدف روزانه رو با فرمول Mifflin-St Jeor حساب می‌کنه (نه هوش مصنوعی — این یک
 // محاسبه‌ی قطعی تغذیه‌ایه) و بین تعداد وعده‌های خواسته‌شده تقسیم می‌کنه.
 async function handlePOST(req: NextRequest) {
+  { const off = await sessionFeatureBlocked("calorie"); if (off) return off; }
   const guard = await requireModule(ModuleKey.CALORIE);
   if (!guard.ok) return guard.response;
   const userId = guard.userId;
@@ -95,6 +98,7 @@ async function handlePOST(req: NextRequest) {
 // جایگزین تقسیم خودکار splitMeals می‌شه؛ کالری روزانه هم برابر جمع همین
 // وعده‌ها می‌شه تا نوار پیشرفت بالای صفحه با «سهم هر وعده» ناسازگار نباشه.
 async function handlePATCH(req: NextRequest) {
+  { const off = await sessionFeatureBlocked("calorie"); if (off) return off; }
   const guard = await requireModule(ModuleKey.CALORIE);
   if (!guard.ok) return guard.response;
   const userId = guard.userId;

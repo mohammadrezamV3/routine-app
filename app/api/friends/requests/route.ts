@@ -2,9 +2,11 @@ import { NextResponse } from "next/server";
 import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
+import { sessionFeatureBlocked } from "@/lib/featureFlagsServer";
 
 // GET /api/friends/requests → درخواست‌های دوستی دریافت‌شده و هنوز تاییدنشده
 export async function GET() {
+  { const off = await sessionFeatureBlocked("friends"); if (off) return off; }
   const session = await getServerSession(authOptions);
   const userId = (session?.user as any)?.id;
   if (!userId) return NextResponse.json({ error: "unauthorized" }, { status: 401 });

@@ -399,13 +399,15 @@ export async function buildDashboard(userId: string, day: { date: string; tz: nu
   const none = Promise.resolve(null);
 
   const [exercise, calorie, trade, calendar, roadmaps, mentors, notifications, announcements] = await Promise.all([
-    has(ModuleKey.EXERCISE) ? safe("exercise", errors, () => buildExercise(ctx)) : none,
-    has(ModuleKey.CALORIE) ? safe("calorie", errors, () => buildCalorie(ctx)) : none,
-    has(ModuleKey.TRADE) ? safe("trade", errors, () => buildTrade(ctx)) : none,
-    has(ModuleKey.TRADE) ? safe("calendar", errors, () => buildCalendar()) : none,
+    // هر بخش هم ماژول پولی خودش رو می‌خواد هم فلگ پنل ادمین (/admin/features)؛
+    // فلگ خاموش → null، درست مثل ماژول خریده‌نشده
+    has(ModuleKey.EXERCISE) && features.exercise ? safe("exercise", errors, () => buildExercise(ctx)) : none,
+    has(ModuleKey.CALORIE) && features.calorie ? safe("calorie", errors, () => buildCalorie(ctx)) : none,
+    has(ModuleKey.TRADE) && features.tradeJournal ? safe("trade", errors, () => buildTrade(ctx)) : none,
+    has(ModuleKey.TRADE) && features.economicCalendar ? safe("calendar", errors, () => buildCalendar()) : none,
     has(ModuleKey.ROADMAP) && features.roadmaps ? safe("roadmaps", errors, () => buildRoadmaps(ctx)) : none,
     features.mentors ? safe("mentors", errors, () => buildMentors(ctx)) : none,
-    safe("notifications", errors, () => buildNotifications(ctx)),
+    features.notifications ? safe("notifications", errors, () => buildNotifications(ctx)) : none,
     safe("announcements", errors, () => buildAnnouncements(ctx)),
   ]);
 

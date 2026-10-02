@@ -8,6 +8,8 @@ import { AiExercisePlanWizard } from "./AiExercisePlanWizard";
 import { ExerciseDashboard } from "./ExerciseDashboard";
 import { ExercisePlan } from "@/lib/exerciseTypes";
 import { takePreloaded } from "@/lib/preload";
+import { useFeature } from "@/lib/useFeatures";
+import { AddExerciseProgramForm } from "./AddExerciseProgramForm";
 
 export function ExercisePanel() {
   const { status } = useSession();
@@ -15,6 +17,7 @@ export function ExercisePanel() {
   // طبق درخواست صریح، اولین ورود دیگر مستقیم داخل ویزارد ساخت برنامه
   // نمی‌افتد — کاربر اول صفحه‌ی خالی را می‌بیند و خودش تصمیم می‌گیرد.
   const [wizardOpen, setWizardOpen] = useState(false);
+  const aiOn = useFeature("aiExercisePlan") !== false;
 
   useEffect(() => {
     // status اولش "loading"ه (نه "authenticated" نه "unauthenticated") تا
@@ -57,6 +60,10 @@ export function ExercisePanel() {
           </div>
         </div>
       );
+    }
+    // ساخت با AI خاموشه (فلگ aiExercisePlan) → همون فرم «وارد کردن برنامه‌ی خودم»
+    if (!aiOn) {
+      return <AddExerciseProgramForm onClose={() => setWizardOpen(false)} onCreated={(p) => { setPlan(p); setWizardOpen(false); }} />;
     }
     return (
       <div>
