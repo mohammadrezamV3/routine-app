@@ -165,6 +165,8 @@ export type TradeAccount = {
   /** گردش پول غیرمعاملاتی از EA متاتریدر: واریز/برداشت و هزینه‌های بدون معامله */
   cashFunding?: number;
   cashCharges?: number;
+  /** true یعنی initialBalance همون اولین واریز متاتریدره، نه عدد دستی (lib/tradeCashflowServer.ts) */
+  initialFromMt?: boolean;
 };
 
 export type TradeAccountSummary = {

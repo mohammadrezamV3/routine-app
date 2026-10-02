@@ -141,39 +141,47 @@ export async function POST(req: NextRequest) {
   const cashflows = normalizeMtCashflows(body.cashflows);
   let cashCreated = 0;
   let cashUpdated = 0;
+  // کل این بخش جدا محافظت می‌شه: اگه جدول TradeCashflow نباشه (مایگریشن روی
+  // سرور اجرا نشده) یا هر خطای دیگه، معاملات و بالانس همچنان همگام می‌شن و
+  // اتصال «فعال» می‌مونه — قبلا کل درخواست 500 می‌داد و EA هیچ‌وقت وصل نمی‌شد.
   if (cashflows.length) {
-    const toUtc = (d: Date) => (tzOffsetMs ? new Date(d.getTime() - tzOffsetMs) : d);
-    const cfById = new Map(cashflows.map((c) => [c.externalId, c]));
-    const existingCf = await prisma.tradeCashflow.findMany({
-      where: { accountId: link.accountId, externalId: { in: Array.from(cfById.keys()) } },
-      select: { id: true, externalId: true, kind: true, amount: true },
-    });
-    const existingCfMap = new Map(existingCf.map((r) => [r.externalId, r]));
-    const newCf: Prisma.TradeCashflowCreateManyInput[] = [];
-    for (const c of Array.from(cfById.values())) {
-      const row = existingCfMap.get(c.externalId);
-      if (!row) {
-        newCf.push({
-          userId: link.userId, accountId: link.accountId, externalId: c.externalId,
-          kind: c.kind, amount: c.amount, occurredAt: toUtc(c.occurredAt), comment: c.comment,
-        });
-      } else if (row.amount !== c.amount || row.kind !== c.kind) {
-        try {
-          await prisma.tradeCashflow.update({ where: { id: row.id }, data: { kind: c.kind, amount: c.amount, comment: c.comment } });
-          cashUpdated++;
-        } catch (e) {
-          failed++;
-          console.error("[mt/sync] cashflow update failed", link.id, c.externalId, e);
+    try {
+      const toUtc = (d: Date) => (tzOffsetMs ? new Date(d.getTime() - tzOffsetMs) : d);
+      const cfById = new Map(cashflows.map((c) => [c.externalId, c]));
+      const existingCf = await prisma.tradeCashflow.findMany({
+        where: { accountId: link.accountId, externalId: { in: Array.from(cfById.keys()) } },
+        select: { id: true, externalId: true, kind: true, amount: true },
+      });
+      const existingCfMap = new Map(existingCf.map((r) => [r.externalId, r]));
+      const newCf: Prisma.TradeCashflowCreateManyInput[] = [];
+      for (const c of Array.from(cfById.values())) {
+        const row = existingCfMap.get(c.externalId);
+        if (!row) {
+          newCf.push({
+            userId: link.userId, accountId: link.accountId, externalId: c.externalId,
+            kind: c.kind, amount: c.amount, occurredAt: toUtc(c.occurredAt), comment: c.comment,
+          });
+        } else if (row.amount !== c.amount || row.kind !== c.kind) {
+          try {
+            await prisma.tradeCashflow.update({ where: { id: row.id }, data: { kind: c.kind, amount: c.amount, comment: c.comment } });
+            cashUpdated++;
+          } catch (e) {
+            failed++;
+            console.error("[mt/sync] cashflow update failed", link.id, c.externalId, e);
+          }
         }
       }
-    }
-    if (newCf.length) {
-      try {
-        cashCreated = (await prisma.tradeCashflow.createMany({ data: newCf, skipDuplicates: true })).count;
-      } catch (e) {
-        failed += newCf.length;
-        console.error("[mt/sync] cashflow createMany failed", link.id, e);
+      if (newCf.length) {
+        try {
+          cashCreated = (await prisma.tradeCashflow.createMany({ data: newCf, skipDuplicates: true })).count;
+        } catch (e) {
+          failed += newCf.length;
+          console.error("[mt/sync] cashflow createMany failed", link.id, e);
+        }
       }
+    } catch (e) {
+      failed += cashflows.length;
+      console.error("[mt/sync] cashflows failed", link.id, e);
     }
   }
 

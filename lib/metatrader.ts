@@ -347,5 +347,29 @@ export function summarizeCashflows(rows: { kind: string; amount: number }[]): Ca
   return { funding: Math.round(funding * 100) / 100, charges: Math.round(charges * 100) / 100 };
 }
 
+export type AccountMoney = {
+  /** بالانس اولیه‌ی موثر */
+  initialBalance: number;
+  /** واریز/برداشت بعد از بالانس اولیه */
+  cashFunding: number;
+  cashCharges: number;
+  /** true یعنی بالانس اولیه از اولین واریز متاتریدر اومده، نه عدد دستی کاربر */
+  initialFromMt: boolean;
+};
+
+/**
+ * پول حساب با یک قاعده: اگه متاتریدر واریز فرستاده، تاریخچه‌ی خود حساب از صفر
+ * شروع می‌شه و *اولین واریز همون بالانس اولیه‌ست* — عدد دستی کاربر دیگه روش جمع
+ * زده نمی‌شه (قبلا بالانس اولیه دو بار حساب می‌شد: یک بار دستی، یک بار واریز).
+ * بدون واریز متاتریدر همون عدد دستی می‌مونه.
+ */
+export function effectiveAccountMoney(manualInitial: number, cf: CashflowSummary, firstDeposit: number | null): AccountMoney {
+  const r2 = (n: number) => Math.round(n * 100) / 100;
+  if (firstDeposit !== null && firstDeposit > 0) {
+    return { initialBalance: r2(firstDeposit), cashFunding: r2(cf.funding - firstDeposit), cashCharges: cf.charges, initialFromMt: true };
+  }
+  return { initialBalance: manualInitial || 0, cashFunding: cf.funding, cashCharges: cf.charges, initialFromMt: false };
+}
+
 /** کپشن ثابت اسکرین‌های خودکار اکسپرت (app/api/mt/screenshot) — با همین شناخته و جایگزین می‌شن */
 export const MT_SHOT_CAPTION = { entry: "اسکرین ورود (متاتریدر)", exit: "اسکرین خروج (متاتریدر)" } as const;

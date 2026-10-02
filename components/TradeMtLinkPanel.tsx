@@ -35,8 +35,10 @@ export function TradeMtLinkPanel({ accountId, calSystem, accountName }: { accoun
   const [error, setError] = useState<string | null>(null);
 
   const load = useCallback(async () => {
-    const res = await fetch(`/api/trade/metatrader?accountId=${accountId}`);
-    if (!res.ok) return;
+    const res = await fetch(`/api/trade/metatrader?accountId=${accountId}`).catch(() => null);
+    // قبلا خطا بی‌صدا رد می‌شد و پنل «غیرفعال» می‌موند بدون هیچ توضیحی
+    if (!res || !res.ok) { setError("وضعیت اتصال خوانده نشد. چند لحظه بعد «بررسی اتصال» رو بزنید."); return; }
+    setError(null);
     const data = await res.json();
     setLink(data.link);
     setRecon(data.reconciliation ?? null);

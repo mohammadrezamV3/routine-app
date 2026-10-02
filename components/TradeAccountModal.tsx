@@ -121,7 +121,9 @@ export function TradeAccountModal({
         <div className="trade-field-row">
           <div>
             <label className="exercise-form-label">بالانس اولیه</label>
-            <NumberInput decimal className="wsearch-newform-name trade-glass-field" value={initialBalance} onChange={(v) => setInitialBalance(v)} placeholder="0" />
+            <NumberInput decimal className="wsearch-newform-name trade-glass-field" value={initialBalance} onChange={(v) => setInitialBalance(v)} placeholder="0" disabled={!!account?.initialFromMt} />
+            {/* با واریزهای متاتریدر، اولین واریز خودش بالانس اولیه‌ست و عدد دستی جمع زده نمی‌شه */}
+            {account?.initialFromMt && <span className="trade-mt-note">از اولین واریز متاتریدر</span>}
           </div>
           <div>
             <label className="exercise-form-label">اهرم</label>
