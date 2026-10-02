@@ -9848,13 +9848,13 @@ html body .tick-btn.tick-btn:focus-visible{ outline:2px solid var(--tick-a); out
 .day-task-items li{ display:flex; align-items:center; gap:9px; font-size:12.5px; font-weight:600; }
 .day-task-items li.is-done span{ color:var(--muted); text-decoration:line-through; }
 
-/* ── اسپلش ورود اپ (components/BootSplash.tsx) ──────────────────────────
-   ورود: نشان و حلقه‌ها از پایین بالا میان و حلقه‌ها پله‌پله کشیده می‌شن. انتظار:
-   سه کمان روتین/تمرین/کالری با سرعت‌های متفاوت می‌چرخن و طولشون نفس می‌کشه،
-   موج از نشان پخش می‌شه، جمله‌ها عوض می‌شن و نوار پیشرفت آهسته‌آهسته جلو می‌ره
-   (هیچ‌وقت ساکن نمی‌مونه تا گذر زمان حس نشه). خروج (data-boot="out"): نوار پر
-   می‌شه، حلقه‌ها به بیرون پخش و محو می‌شن، نشان بالا می‌ره و پرده کنار می‌ره.
-   فقط transform/opacity (بدون blur) تا روی گوشی ضعیف هم روان باشه. */
+/* ── اسپلش ورود اپ (components/BootSplash.tsx، ناوبری: lib/navSplash.ts) ─────────
+   طرح: سه حلقه‌ی فعالیت به سبک حلقه‌های داشبورد که *پیشرفت* رو نشون می‌دن (پر
+   شدن آهسته و کندشونده، هیچ‌وقت کامل نه) — وقتی صفحه آماده شد (data-boot="out")
+   هر سه با هم «بسته» می‌شن و بعد به بیرون پخش می‌شن. پشتش هاله‌ی شیشه‌ای با رنگ‌های
+   برند و شبکه‌ی نقطه‌ای محو (همون زبان کارت اشتراک)، زیرش اسم برند + شعار و یک خط
+   متن که با محوشدن نرم عوض می‌شه. فقط transform/opacity/stroke؛ سقف 12 ثانیه حتی
+   بدون اسکریپت. */
 .boot-splash{
   position:fixed; inset:0; z-index:100000;
   display:flex; align-items:center; justify-content:center;
@@ -9863,102 +9863,128 @@ html body .tick-btn.tick-btn:focus-visible{ outline:2px solid var(--tick-a); out
 }
 html[data-boot="done"] .boot-splash{ display:none; }
 @keyframes bs-failsafe{ to{ visibility:hidden; opacity:0; pointer-events:none; } }
-.bs-glow{
-  position:absolute; left:50%; top:50%; width:min(140vw,900px); aspect-ratio:1;
-  translate:-50% -50%; border-radius:50%; pointer-events:none;
-  background:
-    radial-gradient(closest-side at 38% 40%, rgba(var(--accent-rgb),.22), transparent 70%),
-    radial-gradient(closest-side at 64% 62%, rgba(var(--secondary-rgb),.18), transparent 70%);
-  animation:bs-glow-in 1.1s ease both, appSpin 18s linear infinite;
+html[data-boot="on"] body{ overflow:hidden; }
+
+/* هاله‌ی برند: دو لکه‌ی نرم که آهسته جابه‌جا می‌شن */
+.bs-aura{ position:absolute; inset:-20%; pointer-events:none; animation:bs-fade-in 1s ease both; }
+.bs-aura::before, .bs-aura::after{
+  content:""; position:absolute; width:min(90vw,620px); aspect-ratio:1; border-radius:50%;
+  left:50%; top:50%; translate:-50% -50%;
 }
-@keyframes bs-glow-in{ from{ opacity:0; scale:.6; } }
+.bs-aura::before{
+  background:radial-gradient(closest-side, rgba(var(--accent-rgb),.26), transparent 72%);
+  animation:bs-drift-a 9s ease-in-out infinite alternate;
+}
+.bs-aura::after{
+  background:radial-gradient(closest-side, rgba(var(--secondary-rgb),.20), transparent 72%);
+  animation:bs-drift-b 11s ease-in-out infinite alternate;
+}
+@keyframes bs-drift-a{ from{ transform:translate(-14%,-10%) scale(1); } to{ transform:translate(10%,6%) scale(1.15); } }
+@keyframes bs-drift-b{ from{ transform:translate(14%,12%) scale(1.1); } to{ transform:translate(-8%,-6%) scale(.95); } }
+/* شبکه‌ی نقطه‌ای محو، فقط وسط صفحه دیده می‌شه */
+.bs-grid{
+  position:absolute; inset:0; pointer-events:none; opacity:.55;
+  background-image:radial-gradient(rgba(var(--accent-rgb),.22) 1px, transparent 1.4px);
+  background-size:22px 22px;
+  -webkit-mask-image:radial-gradient(circle at 50% 50%, #000 0, transparent 46%);
+          mask-image:radial-gradient(circle at 50% 50%, #000 0, transparent 46%);
+  animation:bs-fade-in 1.2s ease .1s both;
+}
+@keyframes bs-fade-in{ from{ opacity:0; } }
+
 .bs-stage{
   position:relative; display:flex; flex-direction:column; align-items:center;
-  animation:bs-rise .8s cubic-bezier(.2,.9,.25,1.15) both;
+  animation:bs-rise .8s cubic-bezier(.2,.9,.25,1.12) both;
 }
-@keyframes bs-rise{ from{ opacity:0; transform:translateY(38px) scale(.94); } }
-.bs-mark{ position:relative; width:132px; height:132px; display:flex; align-items:center; justify-content:center; }
+@keyframes bs-rise{ from{ opacity:0; transform:translateY(34px) scale(.94); } }
+
+.bs-mark{ position:relative; width:148px; height:148px; display:flex; align-items:center; justify-content:center; }
+/* هاله‌ی نرم پشت حلقه‌ها که آهسته نفس می‌کشه */
+.bs-halo{
+  position:absolute; inset:-18px; border-radius:50%; pointer-events:none;
+  background:radial-gradient(closest-side, rgba(var(--accent-rgb),.22), transparent 70%);
+  animation:bs-halo 2.8s ease-in-out infinite;
+}
+@keyframes bs-halo{ 50%{ transform:scale(1.12); opacity:.55; } }
+/* تم روشن: هاله‌ی رنگی پشت نشان، نشان کرمی رو کم‌رنگ می‌کرد */
+body[data-theme="light"] .bs-halo{ background:radial-gradient(closest-side, rgba(var(--accent-rgb),.10), transparent 70%); }
+body[data-theme="light"] .bs-logo{ filter:drop-shadow(0 1px 2px rgba(0,0,0,.18)); }
 .bs-rings{ position:absolute; inset:0; width:100%; height:100%; overflow:visible; transform:rotate(-90deg); }
-.bs-ring{ transform-origin:50px 50px; transform-box:view-box; }
-.bs-track, .bs-arc{ fill:none; stroke-width:7.5; stroke-linecap:round; }
-.bs-track{ opacity:.13; }
+.bs-track, .bs-arc{ fill:none; stroke-width:7.6; stroke-linecap:round; }
+.bs-track{ opacity:.14; }
+/* پیشرفت: آهسته و کندشونده تا 92٪، هیچ‌وقت کامل — کامل‌شدن فقط با data-boot="out" */
 .bs-arc{
-  stroke-dasharray:0 100;
-  animation:bs-draw .9s cubic-bezier(.3,.8,.3,1) both, bs-breath 2.6s ease-in-out .9s infinite;
+  stroke-dasharray:92 100;
+  animation:bs-fill 6.5s cubic-bezier(.12,.72,.22,1) both;
+  filter:drop-shadow(0 0 3px rgba(var(--accent-rgb),.35));
 }
-.bs-ring-1{ animation:appSpin 2.4s linear infinite; }
-.bs-ring-2{ animation:appSpin 1.9s linear infinite reverse; }
-.bs-ring-3{ animation:appSpin 1.5s linear infinite; }
-.bs-ring-2 .bs-arc{ animation-delay:.12s, 1.02s; }
-.bs-ring-3 .bs-arc{ animation-delay:.24s, 1.14s; }
-@keyframes bs-draw{ to{ stroke-dasharray:62 100; } }
-@keyframes bs-breath{ 0%,100%{ stroke-dasharray:62 100; } 50%{ stroke-dasharray:26 100; } }
-.bs-wave{
-  position:absolute; inset:14px; border-radius:50%;
-  border:1.5px solid rgba(var(--accent-rgb),.55);
-  animation:bs-wave 2.4s cubic-bezier(.2,.6,.3,1) .6s infinite both;
-}
-.bs-wave-2{ animation-delay:1.8s; border-color:rgba(var(--secondary-rgb),.5); }
-@keyframes bs-wave{ from{ transform:scale(.6); opacity:.9; } to{ transform:scale(1.9); opacity:0; } }
-.bs-logo{ position:relative; width:34px; height:auto; animation:bs-logo-in .7s cubic-bezier(.2,.9,.25,1.3) .25s both, bs-logo-breathe 2.2s ease-in-out 1s infinite; }
-@keyframes bs-logo-breathe{ 50%{ transform:scale(.9); } }
-@keyframes bs-logo-in{ from{ opacity:0; transform:translateY(14px) scale(.6); } }
+.bs-ring-2 .bs-arc{ animation-delay:.18s; animation-duration:7.2s; }
+.bs-ring-3 .bs-arc{ animation-delay:.36s; animation-duration:7.9s; }
+@keyframes bs-fill{ from{ stroke-dasharray:0 100; } to{ stroke-dasharray:92 100; } }
+/* چرخش خیلی آهسته‌ی کل حلقه‌ها تا هیچ‌وقت ساکن به‌نظر نیاد */
+.bs-ring{ transform-origin:50px 50px; transform-box:view-box; animation:appSpin 14s linear infinite; }
+.bs-ring-2{ animation-duration:18s; animation-direction:reverse; }
+.bs-ring-3{ animation-duration:22s; }
+
+.bs-logo{ position:relative; width:36px; height:auto; animation:bs-logo-in .7s cubic-bezier(.2,.9,.25,1.3) .25s both, bs-float 3s ease-in-out 1s infinite; }
+@keyframes bs-logo-in{ from{ opacity:0; transform:translateY(12px) scale(.6); } }
+@keyframes bs-float{ 50%{ transform:translateY(-3px) scale(.96); } }
 .bs-logo.is-light{ display:none; }
 body[data-theme="light"] .bs-logo.is-light{ display:block; }
 body[data-theme="light"] .bs-logo.is-dark{ display:none; }
+
 .bs-brand{
-  margin-top:26px; font-size:22px; font-weight:800; letter-spacing:-.2px;
+  margin-top:28px; font-size:24px; font-weight:800; letter-spacing:-.2px;
   animation:bs-fade-up .6s ease .35s both;
 }
+.bs-tagline{
+  margin-top:4px; font-family:var(--font-latin), var(--font-vazir), sans-serif; direction:ltr;
+  font-size:10px; font-weight:600; letter-spacing:.32em; color:var(--muted);
+  animation:bs-fade-up .6s ease .45s both;
+}
 @keyframes bs-fade-up{ from{ opacity:0; transform:translateY(10px); } }
-.bs-phrases{ position:relative; height:22px; width:240px; margin-top:6px; overflow:hidden; text-align:center; }
+.bs-phrases{ position:relative; height:22px; width:260px; margin-top:20px; overflow:hidden; text-align:center; }
 .bs-phrases span{
   position:absolute; inset:0; font-size:13.5px; color:var(--muted); opacity:0;
-  animation:bs-phrase 1.5s ease both;
+  animation:bs-phrase 1.6s ease both;
 }
 .bs-phrases span:last-child{ animation-name:bs-phrase-stay; }
 @keyframes bs-phrase{
-  0%{ opacity:0; transform:translateY(12px); }
-  18%,78%{ opacity:1; transform:none; }
-  100%{ opacity:0; transform:translateY(-12px); }
+  0%{ opacity:0; transform:translateY(10px); filter:blur(4px); }
+  20%,78%{ opacity:1; transform:none; filter:blur(0); }
+  100%{ opacity:0; transform:translateY(-10px); filter:blur(4px); }
 }
-@keyframes bs-phrase-stay{ 0%{ opacity:0; transform:translateY(12px); } 18%,100%{ opacity:1; transform:none; } }
-.bs-progress{
-  position:relative; width:150px; height:3px; margin-top:22px; border-radius:3px; overflow:hidden;
-  background:rgba(var(--accent-rgb),.12); animation:bs-fade-up .6s ease .45s both;
-}
-.bs-progress i{
-  position:absolute; inset:0; border-radius:inherit; transform-origin:right; transform:scaleX(0);
-  background:linear-gradient(270deg, var(--ring-1a), var(--ring-2a), var(--ring-3a));
-  animation:bs-progress 7s cubic-bezier(.1,.75,.25,1) .4s forwards;
-}
-@keyframes bs-progress{ 0%{ transform:scaleX(0); } 15%{ transform:scaleX(.4); } 100%{ transform:scaleX(.93); } }
+@keyframes bs-phrase-stay{ 0%{ opacity:0; transform:translateY(10px); filter:blur(4px); } 20%,100%{ opacity:1; transform:none; filter:blur(0); } }
 
-/* خروج — بالا رفتن و پخش‌شدن */
-html[data-boot="out"] .boot-splash{ animation:bs-out .55s ease .28s forwards; pointer-events:none; }
+/* خروج: حلقه‌ها بسته می‌شن، بعد پخش می‌شن؛ متن بالا می‌ره و پرده محو می‌شه */
+html[data-boot="out"] .bs-arc{ animation:bs-close .32s cubic-bezier(.3,.7,.3,1) forwards; }
+@keyframes bs-close{ from{ stroke-dasharray:92 100; } to{ stroke-dasharray:100 100; } }
+html[data-boot="out"] .bs-rings{ animation:bs-spread .75s cubic-bezier(.2,.7,.2,1) .26s forwards; }
+@keyframes bs-spread{ to{ transform:rotate(-90deg) scale(2.4); opacity:0; } }
+html[data-boot="out"] .bs-halo{ animation:bs-halo-out .7s ease-out .2s forwards; }
+@keyframes bs-halo-out{ to{ transform:scale(6); opacity:0; } }
+html[data-boot="out"] .bs-logo{ animation:bs-logo-out .45s ease .3s forwards; }
+@keyframes bs-logo-out{ to{ transform:scale(1.25); opacity:0; } }
+/* متن قبل از نیمه‌ی محوشدن پرده می‌ره تا روی متن صفحه نیفته */
+html[data-boot="out"] .bs-brand, html[data-boot="out"] .bs-tagline, html[data-boot="out"] .bs-phrases{ animation:bs-lift .4s cubic-bezier(.2,.7,.3,1) forwards; }
+@keyframes bs-lift{ to{ transform:translateY(-30px); opacity:0; } }
+html[data-boot="out"] .bs-aura, html[data-boot="out"] .bs-grid{ animation:bs-fade-out .6s ease .2s forwards; }
+@keyframes bs-fade-out{ to{ opacity:0; } }
+html[data-boot="out"] .boot-splash{ animation:bs-out .55s ease .42s forwards; pointer-events:none; }
 @keyframes bs-out{ to{ opacity:0; } }
-html[data-boot="out"] .bs-progress i{ animation:none; transform:scaleX(1); transition:transform .25s ease; }
-/* نشان و متن باید قبل از نیمه‌ی محوشدن پرده رفته باشن، وگرنه روی متن صفحه می‌افتن */
-html[data-boot="out"] .bs-stage{ animation:bs-lift .4s cubic-bezier(.2,.7,.3,1) forwards; }
-@keyframes bs-lift{ to{ transform:translateY(-46px); opacity:0; } }
-html[data-boot="out"] .bs-rings{ animation:bs-spread .8s cubic-bezier(.2,.7,.2,1) forwards; }
-@keyframes bs-spread{ to{ transform:rotate(-90deg) scale(2.6); opacity:0; } }
-html[data-boot="out"] .bs-wave{ animation:bs-wave-out .8s ease-out forwards; }
-@keyframes bs-wave-out{ from{ transform:scale(1); opacity:.9; } to{ transform:scale(9); opacity:0; } }
-html[data-boot="out"] .bs-glow{ animation:bs-glow-out .9s ease forwards; }
-@keyframes bs-glow-out{ to{ scale:1.8; opacity:0; } }
-/* تا اسپلش هست، صفحه زیرش اسکرول نخوره */
-html[data-boot="on"] body{ overflow:hidden; }
 
-html[data-perf-weak] .bs-glow{ animation:bs-glow-in 1.1s ease both; }
+/* دستگاه ضعیف: بدون drop-shadow، چرخش و جابه‌جایی هاله */
+html[data-perf-weak] .bs-arc{ filter:none; }
+html[data-perf-weak] .bs-ring, html[data-perf-weak] .bs-aura::before, html[data-perf-weak] .bs-aura::after, html[data-perf-weak] .bs-halo{ animation:none; }
+html[data-perf-weak] .bs-phrases span{ filter:none !important; }
 @media (prefers-reduced-motion:reduce){
-  .bs-glow, .bs-stage, .bs-ring, .bs-arc, .bs-wave, .bs-logo, .bs-brand, .bs-progress, .bs-progress i{ animation:none; }
-  .bs-arc{ stroke-dasharray:62 100; }
-  .bs-wave{ display:none; }
-  .bs-progress i{ transform:scaleX(.6); }
+  .bs-aura, .bs-aura::before, .bs-aura::after, .bs-grid, .bs-stage, .bs-ring, .bs-halo, .bs-logo, .bs-brand, .bs-tagline{ animation:none; }
+  .bs-arc{ animation:none; stroke-dasharray:70 100; filter:none; }
   .bs-phrases span{ animation:none; }
   .bs-phrases span:last-child{ opacity:1; }
-  html[data-boot="out"] .bs-stage, html[data-boot="out"] .bs-rings, html[data-boot="out"] .bs-glow{ animation:none; }
+  html[data-boot="out"] .bs-arc, html[data-boot="out"] .bs-rings, html[data-boot="out"] .bs-halo, html[data-boot="out"] .bs-logo,
+  html[data-boot="out"] .bs-brand, html[data-boot="out"] .bs-tagline, html[data-boot="out"] .bs-phrases,
+  html[data-boot="out"] .bs-aura, html[data-boot="out"] .bs-grid{ animation:none; }
   html[data-boot="out"] .boot-splash{ animation:bs-out .3s ease forwards; }
 }
 

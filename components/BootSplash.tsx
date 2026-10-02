@@ -28,7 +28,7 @@ if(s)s.addEventListener("animationend",function(e){if(e.target===s&&e.animationN
 setTimeout(fin,1300)},w)}
 window.addEventListener("load",function(){L=true;go()});
 window.addEventListener("app:hydrated",function(){H=true;go()});
-setTimeout(function(){H=L=true;if(!t0)t0=1;go()},8000);
+setTimeout(function(){H=L=true;if(!t0)t0=1;go()},10000);
 }catch(e){document.documentElement.setAttribute("data-boot","done")}})();`;
 
 const RINGS = [
@@ -44,11 +44,11 @@ export function BootSplash() {
         <style>{".boot-splash{display:none!important}"}</style>
       </noscript>
       <div className="boot-splash" role="status" aria-label="در حال بارگذاری" suppressHydrationWarning>
-        <div className="bs-glow" aria-hidden="true" />
+        <div className="bs-aura" aria-hidden="true" />
+        <div className="bs-grid" aria-hidden="true" />
         <div className="bs-stage">
           <div className="bs-mark">
-            <span className="bs-wave" aria-hidden="true" />
-            <span className="bs-wave bs-wave-2" aria-hidden="true" />
+            <span className="bs-halo" aria-hidden="true" />
             <svg className="bs-rings" viewBox="0 0 100 100" aria-hidden="true">
               <defs>
                 {RINGS.map((g, i) => (
@@ -66,17 +66,17 @@ export function BootSplash() {
               ))}
             </svg>
             {/* eslint-disable-next-line @next/next/no-img-element */}
-            <img src="/images/logo-icon-dark-theme.png" alt="" className="bs-logo is-dark" width={34} height={29} />
+            <img src="/images/logo-icon-dark-theme.png" alt="" className="bs-logo is-dark" width={36} height={31} />
             {/* eslint-disable-next-line @next/next/no-img-element */}
-            <img src="/images/logo-icon-light-theme.webp" alt="" className="bs-logo is-light" width={34} height={29} />
+            <img src="/images/logo-icon-light-theme.webp" alt="" className="bs-logo is-light" width={36} height={31} />
           </div>
           <div className="bs-brand">{BRAND_FA}</div>
+          <div className="bs-tagline" aria-hidden="true">PLAN · FOCUS · ACHIEVE</div>
           <div className="bs-phrases" aria-hidden="true">
             {PHRASES.map((p, i) => (
-              <span key={i} style={{ animationDelay: `${0.5 + i * 1.5}s` }}>{p}</span>
+              <span key={i} style={{ animationDelay: `${0.55 + i * 1.6}s` }}>{p}</span>
             ))}
           </div>
-          <div className="bs-progress" aria-hidden="true"><i /></div>
         </div>
       </div>
       <script dangerouslySetInnerHTML={{ __html: BOOT_SCRIPT }} />
