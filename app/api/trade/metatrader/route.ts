@@ -32,6 +32,31 @@ async function ownedAccount(userId: string, accountId: string) {
   return prisma.tradeAccount.findFirst({ where: { id: accountId, userId }, select: { id: true } });
 }
 
+// تطبیق موجودی: موجودی‌ای که ژورنال از روی داده‌های همگام‌شده می‌سازه (موجودی
+// اولیه + واریز/برداشت + هزینه‌های غیرمعاملاتی + سود خالص معاملات بسته) در
+// برابر موجودی واقعی که خود EA گزارش داده. اختلاف یعنی تاریخچه کامل نرسیده
+// (مثلا MT4 با تب Account History غیر از «All History») یا EA قدیمیه.
+async function buildReconciliation(accountId: string, linkBalance: number | null) {
+  const [acc, pnlAgg, cashRows] = await Promise.all([
+    prisma.tradeAccount.findUnique({ where: { id: accountId }, select: { initialBalance: true } }),
+    prisma.tradeEntry.aggregate({ where: { accountId, status: "CLOSED" }, _sum: { pnl: true } }),
+    prisma.tradeCashflow.groupBy({ by: ["kind"], where: { accountId }, _sum: { amount: true } }),
+  ]);
+  const cf = summarizeCashflows(cashRows.map((c) => ({ kind: c.kind, amount: c._sum.amount ?? 0 })));
+  const tradesPnl = Math.round((pnlAgg._sum.pnl ?? 0) * 100) / 100;
+  const journalBalance = Math.round(((acc?.initialBalance ?? 0) + cf.funding + cf.charges + tradesPnl) * 100) / 100;
+  const mtBalance = typeof linkBalance === "number" ? linkBalance : null;
+  return {
+    journalBalance,
+    mtBalance,
+    difference: mtBalance === null ? null : Math.round((mtBalance - journalBalance) * 100) / 100,
+    tradesPnl,
+    funding: cf.funding,
+    charges: cf.charges,
+    initialBalance: acc?.initialBalance ?? 0,
+  };
+}
+
 // GET /api/trade/metatrader?accountId=...
 export async function GET(req: NextRequest) {
   const guard = await requireModule(ModuleKey.TRADE);
@@ -50,28 +75,15 @@ export async function GET(req: NextRequest) {
 
   const { tokenHash, ...rest } = link;
 
-  // تطبیق موجودی: موجودی‌ای که ژورنال از روی داده‌های همگام‌شده می‌سازه (موجودی
-  // اولیه + واریز/برداشت + هزینه‌های غیرمعاملاتی + سود خالص معاملات بسته) در
-  // برابر موجودی واقعی که خود EA گزارش داده. اختلاف یعنی تاریخچه کامل نرسیده
-  // (مثلا MT4 با تب Account History غیر از «All History») یا EA قدیمیه.
-  const [acc, pnlAgg, cashRows] = await Promise.all([
-    prisma.tradeAccount.findUnique({ where: { id: accountId }, select: { initialBalance: true } }),
-    prisma.tradeEntry.aggregate({ where: { accountId, status: "CLOSED" }, _sum: { pnl: true } }),
-    prisma.tradeCashflow.groupBy({ by: ["kind"], where: { accountId }, _sum: { amount: true } }),
-  ]);
-  const cf = summarizeCashflows(cashRows.map((c) => ({ kind: c.kind, amount: c._sum.amount ?? 0 })));
-  const tradesPnl = Math.round((pnlAgg._sum.pnl ?? 0) * 100) / 100;
-  const journalBalance = Math.round(((acc?.initialBalance ?? 0) + cf.funding + cf.charges + tradesPnl) * 100) / 100;
-  const mtBalance = typeof link.balance === "number" ? link.balance : null;
-  const reconciliation = {
-    journalBalance,
-    mtBalance,
-    difference: mtBalance === null ? null : Math.round((mtBalance - journalBalance) * 100) / 100,
-    tradesPnl,
-    funding: cf.funding,
-    charges: cf.charges,
-    initialBalance: acc?.initialBalance ?? 0,
-  };
+  // تطبیق موجودی فرعیه: اگه شکست بخوره (مثلا مایگریشن TradeCashflow روی سرور
+  // اجرا نشده) وضعیت اتصال باید همچنان برگرده، وگرنه پنل برای همیشه «غیرفعال»
+  // نشون می‌داد و کاربر هیچ راهی برای فعال‌کردن نداشت.
+  let reconciliation: Awaited<ReturnType<typeof buildReconciliation>> | null = null;
+  try {
+    reconciliation = await buildReconciliation(accountId, link.balance);
+  } catch (e) {
+    console.error("[trade/metatrader] reconciliation failed", accountId, e);
+  }
   return NextResponse.json({ link: serialize(rest, !!tokenHash), reconciliation });
 }
 
