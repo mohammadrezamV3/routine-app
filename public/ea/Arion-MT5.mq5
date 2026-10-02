@@ -18,8 +18,10 @@
 //
 #property copyright "Arion"
 #property link      "https://arionapp.ir"
-#property version   "1.41"
+#property version   "1.42"
 #property strict
+
+#define EA_VERSION "1.42"
 
 input string ArionUrl    = "https://arionapp.ir"; // آدرس سایت Arion
 input string PairingCode = "";                     // کد اتصال (فقط بار اول)
@@ -29,15 +31,15 @@ input ENUM_TIMEFRAMES ShotTimeframe = PERIOD_M15;  // تایم‌فریم اسک
 input int    ShotWidth  = 1280;                    // عرض اسکرین (پیکسل)
 input int    ShotHeight = 720;                     // ارتفاع اسکرین (پیکسل)
 
-// حداکثر تعداد معامله در هر درخواست — تاریخچه‌ی طولانی توی چند درخواستِ
-// پشتِ‌سرهم چانک می‌شه. کوچک‌تر از قبل (۳۰۰) تا هر درخواست زیرِ timeout بمونه.
+// حداکثر تعداد معامله در هر درخواست — تاریخچه‌ی طولانی توی چند درخواست
+// پشت‌سرهم چانک می‌شه. کوچک‌تر از قبل (۳۰۰) تا هر درخواست زیر timeout بمونه.
 #define MT_CHUNK_SIZE 200
-// timeoutِ WebRequest (میلی‌ثانیه). ۱۰ ثانیه برای دسته‌ی بزرگِ بک‌فیل کم بود و
+// timeout WebRequest (میلی‌ثانیه). ۱۰ ثانیه برای دسته‌ی بزرگ بک‌فیل کم بود و
 // درخواست با خطای ۵۲۰۳ قطع می‌شد — یعنی آن دسته و همه‌ی بعدی‌ها هرگز نمی‌رسید.
 #define HTTP_TIMEOUT_MS 30000
-// هر سینکِ افزایشی این مقدار (ثانیه) به عقب هم نگاه می‌کند. معامله‌ای که در
-// همان ثانیه‌ی کِرسر یا کمی قبلش بسته شده ولی دیرتر در تاریخچه ظاهر شده، دیگر
-// جا نمی‌ماند؛ ارسالِ تکراری بی‌خطر است (سرور با شناسه‌ی پوزیشن ضدتکرار است).
+// هر سینک افزایشی این مقدار (ثانیه) به عقب هم نگاه می‌کند. معامله‌ای که در
+// همان ثانیه‌ی کرسر یا کمی قبلش بسته شده ولی دیرتر در تاریخچه ظاهر شده، دیگر
+// جا نمی‌ماند؛ ارسال تکراری بی‌خطر است (سرور با شناسه‌ی پوزیشن ضدتکرار است).
 #define CURSOR_OVERLAP 3600
 
 string   g_token     = "";
@@ -48,11 +50,11 @@ string   g_tokenFile = "arion_token.txt";
 int      g_tzMinutes = 0;
 bool     g_tzKnown   = false;
 
-// زمانِ آخرین dealی که با موفقیت فرستاده شده + تعدادِ کلِ dealهای تاریخچه
-// در آن لحظه. اگر تعدادِ کل بیشتر از dealهای تازه‌ی بعد از کِرسر زیاد شد،
-// یعنی تاریخچه‌ی قدیمی‌تری تازه لود شده (مثلا EA لحظه‌ی باز شدنِ ترمینال،
-// قبل از دانلودِ کاملِ تاریخچه، اجرا شده بود) → کلِ تاریخچه دوباره فرستاده
-// می‌شود. قبلا کِرسر همان اول روی آخرین معامله می‌پرید و بقیه‌ی تاریخچه
+// زمان آخرین dealی که با موفقیت فرستاده شده + تعداد کل dealهای تاریخچه
+// در آن لحظه. اگر تعداد کل بیشتر از dealهای تازه‌ی بعد از کرسر زیاد شد،
+// یعنی تاریخچه‌ی قدیمی‌تری تازه لود شده (مثلا EA لحظه‌ی باز شدن ترمینال،
+// قبل از دانلود کامل تاریخچه، اجرا شده بود) → کل تاریخچه دوباره فرستاده
+// می‌شود. قبلا کرسر همان اول روی آخرین معامله می‌پرید و بقیه‌ی تاریخچه
 // هرگز فرستاده نمی‌شد (ریشه‌ی «فقط ۲ تا از ۱۰ معامله رسید»).
 datetime g_cursorTime = 0;
 long     g_knownTotal = 0;
@@ -68,7 +70,17 @@ string   g_jobTicket[], g_jobKind[], g_jobFile[];
 int      g_jobTries[];
 string   g_shotDone  = "|";
 datetime g_shotSince = 0;
-string   g_shotFile  = "arion_shots_v1.txt";
+// 1.42: فایل وضعیت تازه. نسخه‌ی 1.40 اسکرین‌هایی رو که سرور رد کرده بود (400) هم
+// «انجام‌شده» ثبت می‌کرد و دیگه هیچ‌وقت دوباره نمی‌گرفت؛ با فایل تازه همون معاملات
+// (از همون زمان شروع قبلی) یک بار دیگه اسکرین می‌گیرن.
+string   g_shotFile  = "arion_shots_v2.txt";
+string   g_shotFileOld = "arion_shots_v1.txt";
+// اسکرین‌هایی که سرور به‌خاطر حجم (413) رد کرد و با اندازه‌ی کوچک‌تر دوباره گرفته می‌شن
+string   g_shotSmall = "|";
+// عیب‌یابی: آخرین خطای اسکرین (همراه sync به Arion می‌ره و در پنل اتصال دیده می‌شه)
+string   g_shotErr   = "";
+int      g_shotOk    = 0;
+int      g_httpErr   = 0;
 datetime g_lastCapture = 0;
 
 
@@ -77,7 +89,7 @@ int OnInit()
   {
    g_token = LoadToken();
    LoadCursor();
-   if(SendScreenshots) LoadShotState();
+   if(SendScreenshots) { LoadShotState(); RestoreShotJobs(); }
    if(g_token == "") Pair();
    EventSetTimer(g_token == "" ? RETRY_SECONDS : (int)MathMax(15, SyncSeconds));
    if(g_token != "") Sync();
@@ -123,11 +135,20 @@ void ShowStatus()
    string line2 = (g_lastSync > 0 ? "آخرین ارسال: " + TimeToString(g_lastSync, TIME_MINUTES|TIME_SECONDS)
                                   : "هنوز چیزی ارسال نشده");
    Comment("Arion — ", (g_token == "" ? "متصل نیست" : "متصل"), "\n",
-           g_status, "\n", line2);
+           g_status, "\n", line2, "\n", ShotStatusLine());
+  }
+
+string ShotStatusLine()
+  {
+   if(!SendScreenshots) return("اسکرین: خاموش");
+   string s = "اسکرین: " + IntegerToString(g_shotOk) + " فرستاده شد";
+   if(ArraySize(g_jobTicket) > 0) s += "، " + IntegerToString(ArraySize(g_jobTicket)) + " در صف";
+   if(g_shotErr != "") s += " — آخرین خطا: " + g_shotErr;
+   return(s);
   }
 
 //+------------------------------------------------------------------+
-//| فرار دادنِ کاراکترهای خاصِ JSON                                    |
+//| فرار دادن کاراکترهای خاص JSON                                    |
 //+------------------------------------------------------------------+
 string JsonEscape(string s)
   {
@@ -145,8 +166,8 @@ string JsonEscape(string s)
   }
 
 //+------------------------------------------------------------------+
-//| عدد → JSON. NaN/Inf در JSON معتبر نیست و قبلا کلِ دسته را ۴۰۰ می‌کرد  |
-//| (یعنی یک معامله‌ی عجیب همه‌ی معاملاتِ همان دسته را می‌انداخت).       |
+//| عدد → JSON. NaN/Inf در JSON معتبر نیست و قبلا کل دسته را ۴۰۰ می‌کرد  |
+//| (یعنی یک معامله‌ی عجیب همه‌ی معاملات همان دسته را می‌انداخت).       |
 //+------------------------------------------------------------------+
 string Num(double v, int digits)
   {
@@ -155,12 +176,12 @@ string Num(double v, int digits)
   }
 
 //+------------------------------------------------------------------+
-//| اختلافِ ساعتِ سرورِ بروکر با UTC، به دقیقه                          |
+//| اختلاف ساعت سرور بروکر با UTC، به دقیقه                          |
 //+------------------------------------------------------------------+
 int BrokerTzOffsetMinutes()
   {
-   // TimeTradeServer() برخلافِ TimeCurrent() (زمانِ آخرین تیک) آخرِ هفته و
-   // روی بازارِ بسته هم درست است. به نزدیک‌ترین ۱۵ دقیقه گرد می‌شود.
+   // TimeTradeServer() برخلاف TimeCurrent() (زمان آخرین تیک) آخر هفته و
+   // روی بازار بسته هم درست است. به نزدیک‌ترین ۱۵ دقیقه گرد می‌شود.
    long diff = (long)(TimeTradeServer() - TimeGMT());
    int mins = (int)(MathRound(diff / 900.0) * 15);
    if(MathAbs(mins) <= 14 * 60) { g_tzMinutes = mins; g_tzKnown = true; }
@@ -176,12 +197,12 @@ string LoadToken()
    FileClose(h);
 
    int sep = StringFind(line, "|");
-   if(sep < 0) return("");          // فرمتِ قدیمی/ناقص — نادیده
+   if(sep < 0) return("");          // فرمت قدیمی/ناقص — نادیده
    string tok = StringSubstr(line, 0, sep);
    string acc = StringSubstr(line, sep + 1);
    if(acc != IntegerToString(AccountInfoInteger(ACCOUNT_LOGIN)))
      {
-      g_status = "توکنِ ذخیره‌شده برای حسابِ دیگری‌ست — کد اتصالِ جدید بگذارید";
+      g_status = "توکن ذخیره‌شده برای حساب دیگری‌ست — کد اتصال جدید بگذارید";
       return("");
      }
    return(tok);
@@ -195,9 +216,9 @@ void SaveToken(string token)
    FileClose(h);
   }
 
-// فرمت: «cursor|knownTotal|login». فایلِ نسخه‌ی قبل فقط cursor داشت →
-// knownTotal=0 → یک‌بار کلِ تاریخچه دوباره فرستاده می‌شود (عمدا). کِرسرِ یک
-// حسابِ دیگر هم نادیده گرفته می‌شود.
+// فرمت: «cursor|knownTotal|login». فایل نسخه‌ی قبل فقط cursor داشت →
+// knownTotal=0 → یک‌بار کل تاریخچه دوباره فرستاده می‌شود (عمدا). کرسر یک
+// حساب دیگر هم نادیده گرفته می‌شود.
 void LoadCursor()
   {
    g_cursorTime = 0; g_knownTotal = 0;
@@ -226,7 +247,7 @@ string HttpPost(string url, string headers, string body, int &status)
   {
    char post[], result[];
    string resultHeaders;
-   // اندازه‌ی واقعیِ آرایه‌ی بایت‌های UTF-8 ملاک است، نه StringLen
+   // اندازه‌ی واقعی آرایه‌ی بایت‌های UTF-8 ملاک است، نه StringLen
    int len = StringToCharArray(body, post, 0, WHOLE_ARRAY, CP_UTF8) - 1;
    if(len < 0) len = 0;
    ArrayResize(post, len);
@@ -235,6 +256,7 @@ string HttpPost(string url, string headers, string body, int &status)
    if(status == -1)
      {
       int err = GetLastError();
+      g_httpErr = err;
       if(err == 4014)
          g_status = "WebRequest اجازه ندارد — آدرس «" + ArionUrl + "» را در Tools → Options → Expert Advisors اضافه کنید";
       else
@@ -280,9 +302,9 @@ void Pair()
 
    g_token = token;
    SaveToken(token);
-   g_knownTotal = 0; // اتصالِ تازه → کلِ تاریخچه
+   g_knownTotal = 0; // اتصال تازه → کل تاریخچه
    g_status = "اتصال برقرار شد";
-   Print("Arion: اتصال برقرار شد — در حال گرفتنِ کل تاریخچه‌ی حساب…");
+   Print("Arion: اتصال برقرار شد — در حال گرفتن کل تاریخچه‌ی حساب…");
   }
 
 //+------------------------------------------------------------------+
@@ -293,9 +315,13 @@ bool SendBatch(string itemsJson, bool cash)
    string body = "{\"balance\":" + Num(AccountInfoDouble(ACCOUNT_BALANCE), 2) +
                  ",\"equity\":" + Num(AccountInfoDouble(ACCOUNT_EQUITY), 2) +
                  ",\"currency\":\"" + JsonEscape(AccountInfoString(ACCOUNT_CURRENCY)) + "\"" +
-                 ",\"eaVersion\":\"1.41\"";
+                 ",\"eaVersion\":\"" + EA_VERSION + "\"";
    int tz = BrokerTzOffsetMinutes();
    if(g_tzKnown) body += ",\"tzOffsetMinutes\":" + IntegerToString(tz);
+   body += ",\"shots\":{\"on\":" + (SendScreenshots ? "true" : "false") +
+           ",\"ok\":" + IntegerToString(g_shotOk) +
+           ",\"queue\":" + IntegerToString(ArraySize(g_jobTicket)) +
+           ",\"err\":\"" + JsonEscape(g_shotErr) + "\"}";
    body += (cash ? ",\"trades\":[],\"cashflows\":[" : ",\"trades\":[") + itemsJson + "]}";
 
    int status;
@@ -326,7 +352,7 @@ bool SendBatch(string itemsJson, bool cash)
    long skipped = JsonInt(res, "skipped");
    long failed  = JsonInt(res, "failed");
    if(skipped > 0 || failed > 0)
-      Print("Arion: سرور ", skipped, " ردیفِ نامعتبر و ", failed, " ردیفِ ناموفق گزارش داد");
+      Print("Arion: سرور ", skipped, " ردیف نامعتبر و ", failed, " ردیف ناموفق گزارش داد");
    g_failCount = 0;
    return(true);
   }
@@ -348,25 +374,25 @@ bool SendAll(string &items[], bool cash = false)
          if(k > sent) chunk += ",";
          chunk += items[k];
         }
-      // دسته‌ی ناموفق → توقف؛ کِرسر جلو نرفته، پس دفعه‌ی بعد تکرار می‌شود
+      // دسته‌ی ناموفق → توقف؛ کرسر جلو نرفته، پس دفعه‌ی بعد تکرار می‌شود
       if(!SendBatch(chunk, cash)) return(false);
       sent = end;
-      if(sent < total) Sleep(500); // زیرِ سقفِ نرخِ سرور می‌ماند
+      if(sent < total) Sleep(500); // زیر سقف نرخ سرور می‌ماند
      }
    return(true);
   }
 
 //+------------------------------------------------------------------+
-//| جمع‌بندیِ یک پوزیشن از روی همه‌ی dealهایش.                           |
+//| جمع‌بندی یک پوزیشن از روی همه‌ی dealهایش.                           |
 //| - کمیسیون/سواپ/سود روی همه‌ی dealها (ورود + همه‌ی خروج‌ها) جمع می‌شود؛ |
-//|   بعضی بروکرها کمیسیون را روی dealِ ورود می‌زنند.                     |
+//|   بعضی بروکرها کمیسیون را روی deal ورود می‌زنند.                     |
 //| - partial close: همه‌ی خروج‌ها یک DEAL_POSITION_ID دارند و در Arion یک   |
-//|   ردیف‌اند. قبلا فقط آخرین خروج (حجم/سودِ همان تکه) فرستاده می‌شد و     |
-//|   سودِ تکه‌های قبلی گم می‌شد؛ حالا جمعِ همه با قیمتِ خروجِ میانگین.      |
-//| - زمان/قیمتِ ورود و SL/TP از dealِ ورود؛ قبلا برای معامله‌ی بسته اصلا    |
-//|   فرستاده نمی‌شد و openTime همان زمانِ بستن بود.                       |
-//| HistorySelectByPosition انتخابِ تاریخچه را عوض می‌کند، پس فقط بعد از    |
-//| جمع‌کردنِ شناسه‌ها صدا زده می‌شود.                                     |
+//|   ردیف‌اند. قبلا فقط آخرین خروج (حجم/سود همان تکه) فرستاده می‌شد و     |
+//|   سود تکه‌های قبلی گم می‌شد؛ حالا جمع همه با قیمت خروج میانگین.      |
+//| - زمان/قیمت ورود و SL/TP از deal ورود؛ قبلا برای معامله‌ی بسته اصلا    |
+//|   فرستاده نمی‌شد و openTime همان زمان بستن بود.                       |
+//| HistorySelectByPosition انتخاب تاریخچه را عوض می‌کند، پس فقط بعد از    |
+//| جمع‌کردن شناسه‌ها صدا زده می‌شود.                                     |
 //+------------------------------------------------------------------+
 string PositionJson(long posId, bool closed, string openSymbol, double openVolume,
                     double openSl, double openTp, double floating)
@@ -403,7 +429,7 @@ string PositionJson(long posId, bool closed, string openSymbol, double openVolum
             if(sl == 0) sl = HistoryDealGetDouble(d, DEAL_SL);
             if(tp == 0) tp = HistoryDealGetDouble(d, DEAL_TP);
            }
-         else // OUT، OUT_BY (close by) و INOUT (برگشتِ پوزیشن در حسابِ netting)
+         else // OUT، OUT_BY (close by) و INOUT (برگشت پوزیشن در حساب netting)
            {
             if(dir < 0) dir = (type == DEAL_TYPE_SELL ? DEAL_TYPE_BUY : DEAL_TYPE_SELL);
             if(t > closeTime) closeTime = t;
@@ -416,7 +442,7 @@ string PositionJson(long posId, bool closed, string openSymbol, double openVolum
 
    if(!closed)
      {
-      // پوزیشنِ باز: سودِ شناور + سودِ تکه‌های partial-close تا این لحظه
+      // پوزیشن باز: سود شناور + سود تکه‌های partial-close تا این لحظه
       profit = floating + profit;
       if(openSl > 0) sl = openSl;
       if(openTp > 0) tp = openTp;
@@ -486,8 +512,8 @@ void Sync()
      }
    if(!SendAll(openItems)) return;
 
-   // ── پوزیشن‌های بسته. کلِ تاریخچه انتخاب می‌شود (تا یک روز جلوتر، چون
-   //    TimeCurrent زمانِ آخرین تیک است و ممکن است از زمانِ آخرین deal عقب باشد)
+   // ── پوزیشن‌های بسته. کل تاریخچه انتخاب می‌شود (تا یک روز جلوتر، چون
+   //    TimeCurrent زمان آخرین تیک است و ممکن است از زمان آخرین deal عقب باشد)
    HistorySelect(0, TimeCurrent() + 86400);
    int deals = HistoryDealsTotal();
    long newAll = 0;
@@ -496,7 +522,7 @@ void Sync()
       ulong d = HistoryDealGetTicket(j);
       if(d != 0 && (datetime)HistoryDealGetInteger(d, DEAL_TIME) > g_cursorTime) newAll++;
      }
-   // اولین بار، یا تاریخچه‌ی قدیمی‌تر از کِرسر تازه پیدا شده → ارسالِ کامل
+   // اولین بار، یا تاریخچه‌ی قدیمی‌تر از کرسر تازه پیدا شده → ارسال کامل
    bool full = (g_knownTotal <= 0 || g_cursorTime == 0 || deals - g_knownTotal > newAll);
    datetime since = full ? 0 : g_cursorTime - CURSOR_OVERLAP;
 
@@ -534,8 +560,8 @@ void Sync()
       if(!full && dealTime < since) continue;
       long posId = HistoryDealGetInteger(deal, DEAL_POSITION_ID);
       if(posId == 0) continue;
-      // هنوز باز است (partial close) — ردیفِ بازش همین بالا فرستاده شد؛ با
-      // بسته شدنِ کامل، همه‌ی تکه‌ها با هم جمع می‌شوند.
+      // هنوز باز است (partial close) — ردیف بازش همین بالا فرستاده شد؛ با
+      // بسته شدن کامل، همه‌ی تکه‌ها با هم جمع می‌شوند.
       if(InList(posId, openIds) || InList(posId, posIds)) continue;
       Push(posId, posIds);
      }
@@ -557,7 +583,7 @@ void Sync()
    g_lastSync = TimeCurrent();
    g_status = "ارسال شد: " + IntegerToString(ArraySize(openItems)) + " باز، " +
               IntegerToString(ArraySize(closedItems)) + " بسته، " +
-              IntegerToString(ArraySize(cashItems)) + " واریز/هزینه" + (full ? " (کلِ تاریخچه)" : "");
+              IntegerToString(ArraySize(cashItems)) + " واریز/هزینه" + (full ? " (کل تاریخچه)" : "");
   }
 
 //+------------------------------------------------------------------+
@@ -588,7 +614,49 @@ void LoadShotState()
         }
       FileClose(h);
      }
-   if(g_shotSince == 0) { g_shotSince = TimeCurrent(); SaveShotState(); }
+   else
+     {
+      // اولین اجرای 1.42: زمان شروع از فایل قبلی، ولی فهرست «انجام‌شده» نه
+      int o = FileOpen(g_shotFileOld, FILE_READ|FILE_TXT|FILE_ANSI);
+      if(o != INVALID_HANDLE)
+        {
+         string head = FileReadString(o);
+         FileClose(o);
+         string p[];
+         if(StringSplit(head, '|', p) >= 2 && p[1] == IntegerToString(AccountInfoInteger(ACCOUNT_LOGIN)))
+            g_shotSince = (datetime)StringToInteger(p[0]);
+        }
+     }
+   // TimeCurrent() موقع باز شدن ترمینال (قبل از اولین اتصال) می‌تونه صفر باشه؛
+   // اون موقع CaptureShots خودش بعدا زمان شروع رو ست می‌کنه (قبلا صفر ذخیره می‌شد
+   // و قابلیت تا همیشه خاموش می‌موند)
+   if(g_shotSince == 0 && TimeCurrent() > 0) g_shotSince = TimeCurrent();
+   if(g_shotSince > 0) SaveShotState();
+  }
+
+// فایل‌های arion_shot_<ticket>_<kind>.png که قبل از ری‌استارت فرستاده نشده بودن دوباره صف می‌شن
+void RestoreShotJobs()
+  {
+   string name;
+   long fh = FileFindFirst("arion_shot_*.png", name);
+   if(fh == INVALID_HANDLE) return;
+   do
+     {
+      string core = StringSubstr(name, 11, StringLen(name) - 11 - 4);
+      int us = -1;
+      for(int i = StringLen(core) - 1; i >= 0; i--) if(StringGetCharacter(core, i) == '_') { us = i; break; }
+      if(us <= 0) continue;
+      string ticket = StringSubstr(core, 0, us);
+      string kind = StringSubstr(core, us + 1);
+      if(kind != "entry" && kind != "exit") continue;
+      string key = ticket + ":" + kind;
+      if(ShotDone(key) || HasShotJob(key)) { FileDelete(name); continue; }
+      int n = ArraySize(g_jobTicket);
+      ArrayResize(g_jobTicket, n + 1); ArrayResize(g_jobKind, n + 1); ArrayResize(g_jobFile, n + 1); ArrayResize(g_jobTries, n + 1);
+      g_jobTicket[n] = ticket; g_jobKind[n] = kind; g_jobFile[n] = name; g_jobTries[n] = 0;
+     }
+   while(FileFindNext(fh, name));
+   FileFindClose(fh);
   }
 
 void SaveShotState()
@@ -630,7 +698,7 @@ void ShotObjects(long ch, datetime t1, double p1, datetime t2, double p2, bool b
 
 //| چارت موقت → اسکرین → فایل. true یعنی فایل ساخته شد.                 |
 bool TakeShot(string symbol, datetime t1, double p1, datetime t2, double p2, bool buy,
-              double sl, double tp, bool closed, string file)
+              double sl, double tp, bool closed, string file, int width, int height)
   {
    SymbolSelect(symbol, true);
    // داده‌ی تایم‌فریم ممکنه هنوز دانلود نشده باشه — حداکثر 3 ثانیه صبر
@@ -640,8 +708,9 @@ bool TakeShot(string symbol, datetime t1, double p1, datetime t2, double p2, boo
       if(CopyRates(symbol, ShotTimeframe, 0, 300, r) > 0 && SeriesInfoInteger(symbol, ShotTimeframe, SERIES_SYNCHRONIZED)) break;
       Sleep(100);
      }
+   ResetLastError();
    long ch = ChartOpen(symbol, ShotTimeframe);
-   if(ch == 0) return(false);
+   if(ch == 0) { g_shotErr = "chart_open:" + symbol + ":" + IntegerToString(GetLastError()); return(false); }
    ChartSetInteger(ch, CHART_AUTOSCROLL, false);
    ChartSetInteger(ch, CHART_SHIFT, true);
    ChartSetInteger(ch, CHART_MODE, CHART_CANDLES);
@@ -652,11 +721,23 @@ bool TakeShot(string symbol, datetime t1, double p1, datetime t2, double p2, boo
    ChartNavigate(ch, CHART_END, -(int)MathMax(0, shift - 12));
    ChartRedraw(ch);
    Sleep(400);
-   bool ok = ChartScreenShot(ch, file, ShotWidth, ShotHeight, ALIGN_RIGHT);
+   FileDelete(file);
+   ResetLastError();
+   bool ok = ChartScreenShot(ch, file, width, height, ALIGN_RIGHT);
+   if(!ok)
+     {
+      // چارت تازه گاهی هنوز رسم نشده؛ یک تلاش دیگه بعد از رسم دوباره
+      int e1 = GetLastError();
+      ChartRedraw(ch);
+      Sleep(800);
+      ResetLastError();
+      ok = ChartScreenShot(ch, file, width, height, ALIGN_RIGHT);
+      if(!ok) g_shotErr = "screenshot:" + IntegerToString(e1) + "/" + IntegerToString(GetLastError());
+     }
    // ذخیره‌ی فایل ممکنه کمی بعد تموم بشه؛ قبل از بستن چارت تا 3 ثانیه صبر
    for(int w = 0; ok && w < 30 && !FileIsExist(file); w++) Sleep(100);
    ChartClose(ch);
-   if(ok && !FileIsExist(file)) ok = false;
+   if(ok && !FileIsExist(file)) { ok = false; g_shotErr = "file_missing:" + file; }
    return(ok);
   }
 
@@ -666,7 +747,10 @@ void QueueShot(string ticket, string kind, string symbol, datetime t1, double p1
    string key = ticket + ":" + kind;
    if(ShotDone(key) || HasShotJob(key)) return;
    string file = "arion_shot_" + ticket + "_" + kind + ".png";
-   if(!TakeShot(symbol, t1, p1, t2, p2, buy, sl, tp, closed, file)) { Print("Arion: اسکرین ناموفق ", key); return; }
+   bool small = (StringFind(g_shotSmall, "|" + key + "|") >= 0);
+   int w = small ? (int)MathMax(480, ShotWidth / 2) : ShotWidth;
+   int h = small ? (int)MathMax(270, ShotHeight / 2) : ShotHeight;
+   if(!TakeShot(symbol, t1, p1, t2, p2, buy, sl, tp, closed, file, w, h)) { Print("Arion: اسکرین ناموفق ", key, " ", g_shotErr); return; }
    int n = ArraySize(g_jobTicket);
    ArrayResize(g_jobTicket, n + 1); ArrayResize(g_jobKind, n + 1); ArrayResize(g_jobFile, n + 1); ArrayResize(g_jobTries, n + 1);
    g_jobTicket[n] = ticket; g_jobKind[n] = kind; g_jobFile[n] = file; g_jobTries[n] = 0;
@@ -675,7 +759,13 @@ void QueueShot(string ticket, string kind, string symbol, datetime t1, double p1
 //| معاملات تازه‌ای که اسکرین ندارن → اسکرین (حداکثر 3 تا در هر بار)      |
 void CaptureShots()
   {
-   if(!SendScreenshots || g_token == "" || g_shotSince == 0) return;
+   if(!SendScreenshots || g_token == "") return;
+   if(g_shotSince == 0)
+     {
+      if(TimeCurrent() == 0) return;
+      g_shotSince = TimeCurrent();
+      SaveShotState();
+     }
    int made = 0;
    // ورود: پوزیشن‌های باز که بعد از روشن‌شدن قابلیت باز شدن
    for(int i = 0; i < PositionsTotal() && made < 3; i++)
@@ -733,6 +823,18 @@ void CaptureShots()
   }
 
 //| فرستادن اسکرین‌های آماده به Arion                                    |
+void DropShotJob(int i)
+  {
+   FileDelete(g_jobFile[i]);
+   int last = ArraySize(g_jobTicket) - 1;
+   for(int k = i; k < last; k++)
+     {
+      g_jobTicket[k] = g_jobTicket[k + 1]; g_jobKind[k] = g_jobKind[k + 1];
+      g_jobFile[k] = g_jobFile[k + 1]; g_jobTries[k] = g_jobTries[k + 1];
+     }
+   ArrayResize(g_jobTicket, last); ArrayResize(g_jobKind, last); ArrayResize(g_jobFile, last); ArrayResize(g_jobTries, last);
+  }
+
 void UploadShots()
   {
    if(g_token == "") return;
@@ -740,37 +842,56 @@ void UploadShots()
      {
       string key = g_jobTicket[i] + ":" + g_jobKind[i];
       int h = FileOpen(g_jobFile[i], FILE_READ|FILE_BIN);
-      bool drop = false;
-      if(h == INVALID_HANDLE) drop = true;
+      if(h == INVALID_HANDLE)
+        {
+         g_shotErr = "file_open:" + IntegerToString(GetLastError());
+         if(++g_jobTries[i] >= 5) DropShotJob(i); // فایل واقعا نیست → اسکرین دوباره گرفته می‌شه
+         continue;
+        }
+      uchar data[], b64[], none[];
+      int size = (int)FileReadArray(h, data);
+      FileClose(h);
+      if(size <= 0)
+        {
+         // فایل هنوز کامل نوشته نشده — دفعه‌ی بعد
+         g_shotErr = "file_empty";
+         if(++g_jobTries[i] >= 20) DropShotJob(i);
+         continue;
+        }
+      if(CryptEncode(CRYPT_BASE64, data, none, b64) <= 0) { g_shotErr = "encode:" + IntegerToString(GetLastError()); DropShotJob(i); continue; }
+      // base64 متاتریدر ممکنه خط‌شکن داشته باشه؛ خط‌شکن خام داخل رشته‌ی JSON نامعتبره
+      string img = CharArrayToString(b64, 0, WHOLE_ARRAY, CP_ACP);
+      StringReplace(img, "\r", "");
+      StringReplace(img, "\n", "");
+      string body = "{\"ticket\":\"" + g_jobTicket[i] + "\",\"kind\":\"" + g_jobKind[i] +
+                    "\",\"image\":\"data:image/png;base64," + img + "\"}";
+      int status;
+      string res = HttpPost(ArionUrl + "/api/mt/screenshot",
+                            "Content-Type: application/json\r\nAuthorization: Bearer " + g_token + "\r\n", body, status);
+      if(status == 200)
+        {
+         MarkShotDone(key); DropShotJob(i);
+         g_shotOk++; g_shotErr = "";
+        }
+      else if(status == 413 && StringFind(g_shotSmall, "|" + key + "|") < 0)
+        {
+         // حجم زیاد: این بار علامت «انجام‌شده» نمی‌خوره؛ CaptureShots با اندازه‌ی نصف دوباره می‌گیره
+         g_shotSmall += key + "|";
+         g_shotErr = "upload:413:" + IntegerToString(size);
+         DropShotJob(i);
+        }
+      else if(status == 400 || status == 413)
+        {
+         // تکرار همین بدنه همون جواب رو می‌گیره؛ دلیل در پنل اتصال Arion ثبت می‌شه
+         g_shotErr = "upload:" + IntegerToString(status) + ":" + JsonValue(res, "error");
+         Print("Arion: سرور اسکرین ", key, " را رد کرد (", status, ") ", res);
+         MarkShotDone(key); DropShotJob(i);
+        }
+      else if(status == 401) return;
       else
         {
-         uchar data[], b64[], none[];
-         FileReadArray(h, data);
-         FileClose(h);
-         CryptEncode(CRYPT_BASE64, data, none, b64);
-         // base64 متاتریدر ممکنه خط‌شکن داشته باشه؛ خط‌شکن خام داخل رشته‌ی JSON نامعتبره
-         string img = CharArrayToString(b64, 0, WHOLE_ARRAY, CP_ACP);
-         StringReplace(img, "\r", "");
-         StringReplace(img, "\n", "");
-         string body = "{\"ticket\":\"" + g_jobTicket[i] + "\",\"kind\":\"" + g_jobKind[i] +
-                       "\",\"image\":\"data:image/png;base64," + img + "\"}";
-         int status;
-         HttpPost(ArionUrl + "/api/mt/screenshot",
-                  "Content-Type: application/json\r\nAuthorization: Bearer " + g_token + "\r\n", body, status);
-         if(status == 200 || status == 400 || status == 413) { MarkShotDone(key); drop = true; }
-         else if(status == 401) return;
-         else if(++g_jobTries[i] >= 20) drop = true; // 404 (هنوز sync نشده) یا خطای شبکه → بعدا
-        }
-      if(drop)
-        {
-         FileDelete(g_jobFile[i]);
-         int last = ArraySize(g_jobTicket) - 1;
-         for(int k = i; k < last; k++)
-           {
-            g_jobTicket[k] = g_jobTicket[k + 1]; g_jobKind[k] = g_jobKind[k + 1];
-            g_jobFile[k] = g_jobFile[k + 1]; g_jobTries[k] = g_jobTries[k + 1];
-           }
-         ArrayResize(g_jobTicket, last); ArrayResize(g_jobKind, last); ArrayResize(g_jobFile, last); ArrayResize(g_jobTries, last);
+         g_shotErr = (status == -1 ? "upload:-1:" + IntegerToString(g_httpErr) : "upload:" + IntegerToString(status));
+         if(++g_jobTries[i] >= 20) DropShotJob(i); // خطای شبکه/سرور → بعدا دوباره
         }
      }
   }
