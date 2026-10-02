@@ -3,9 +3,10 @@ import { ModuleKey } from "@prisma/client";
 import { prisma } from "@/lib/prisma";
 import { requireModule } from "@/lib/moduleAccess";
 import {
-  MtPlatform, PAIRING_TTL_MS, generatePairingCode, hashSecret, summarizeCashflows,
+  MtPlatform, PAIRING_TTL_MS, generatePairingCode, hashSecret,
 } from "@/lib/metatrader";
 import { withLiveSync } from "@/lib/realtime";
+import { loadAccountMoney } from "@/lib/tradeCashflowServer";
 
 // مدیریت اتصال متاتریدر یک حساب، از سمت کاربر لاگین‌کرده.
 // (اندپوینت‌هایی که خود EA صدا می‌زند جدا هستند: /api/mt/pair و /api/mt/sync)
@@ -33,18 +34,18 @@ async function ownedAccount(userId: string, accountId: string) {
 }
 
 // تطبیق موجودی: موجودی‌ای که ژورنال از روی داده‌های همگام‌شده می‌سازه (موجودی
-// اولیه + واریز/برداشت + هزینه‌های غیرمعاملاتی + سود خالص معاملات بسته) در
+// اولیه‌ی موثر + واریز/برداشت + هزینه‌های غیرمعاملاتی + سود خالص معاملات بسته) در
 // برابر موجودی واقعی که خود EA گزارش داده. اختلاف یعنی تاریخچه کامل نرسیده
 // (مثلا MT4 با تب Account History غیر از «All History») یا EA قدیمیه.
 async function buildReconciliation(accountId: string, linkBalance: number | null) {
-  const [acc, pnlAgg, cashRows] = await Promise.all([
-    prisma.tradeAccount.findUnique({ where: { id: accountId }, select: { initialBalance: true } }),
+  const [acc, pnlAgg] = await Promise.all([
+    prisma.tradeAccount.findUnique({ where: { id: accountId }, select: { id: true, initialBalance: true } }),
     prisma.tradeEntry.aggregate({ where: { accountId, status: "CLOSED" }, _sum: { pnl: true } }),
-    prisma.tradeCashflow.groupBy({ by: ["kind"], where: { accountId }, _sum: { amount: true } }),
   ]);
-  const cf = summarizeCashflows(cashRows.map((c) => ({ kind: c.kind, amount: c._sum.amount ?? 0 })));
+  const m = (await loadAccountMoney(acc ? [acc] : [])).get(accountId) ?? { initialBalance: 0, cashFunding: 0, cashCharges: 0, initialFromMt: false };
+  const cf = { funding: m.cashFunding, charges: m.cashCharges };
   const tradesPnl = Math.round((pnlAgg._sum.pnl ?? 0) * 100) / 100;
-  const journalBalance = Math.round(((acc?.initialBalance ?? 0) + cf.funding + cf.charges + tradesPnl) * 100) / 100;
+  const journalBalance = Math.round((m.initialBalance + cf.funding + cf.charges + tradesPnl) * 100) / 100;
   const mtBalance = typeof linkBalance === "number" ? linkBalance : null;
   return {
     journalBalance,
@@ -53,7 +54,7 @@ async function buildReconciliation(accountId: string, linkBalance: number | null
     tradesPnl,
     funding: cf.funding,
     charges: cf.charges,
-    initialBalance: acc?.initialBalance ?? 0,
+    initialBalance: m.initialBalance,
   };
 }
 

@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { ModuleKey } from "@prisma/client";
 import { prisma } from "@/lib/prisma";
+import { loadAccountMoney } from "@/lib/tradeCashflowServer";
 import { requireModule } from "@/lib/moduleAccess";
 import { checkRateLimit } from "@/lib/rateLimit";
 import { TRADE_SHARE_PERIODS, type TradeSharePeriod, type TradeShareResponse } from "@/lib/tradeShareTypes";
@@ -81,17 +82,25 @@ export async function GET(req: NextRequest) {
   for (const p of prior) priorPnlByAccount[p.accountId] = p._sum.pnl ?? 0;
   // موجودی ابتدای بازه گردش پول متاتریدر قبل از شروع بازه (واریز/برداشت/هزینه) رو هم داره
   if (ids.length) {
-    const priorCash = await prisma.tradeCashflow.groupBy({
-      by: ["accountId"],
-      where: { userId, accountId: { in: ids }, occurredAt: { lt: start } },
-      _sum: { amount: true },
-    });
-    for (const c of priorCash) priorPnlByAccount[c.accountId] = (priorPnlByAccount[c.accountId] ?? 0) + (c._sum.amount ?? 0);
+    try {
+      const priorCash = await prisma.tradeCashflow.groupBy({
+        by: ["accountId"],
+        where: { userId, accountId: { in: ids }, occurredAt: { lt: start } },
+        _sum: { amount: true },
+      });
+      for (const c of priorCash) priorPnlByAccount[c.accountId] = (priorPnlByAccount[c.accountId] ?? 0) + (c._sum.amount ?? 0);
+    } catch (e) {
+      console.error("[trade/share] cashflows failed", e);
+    }
   }
+  // اگه بالانس اولیه از اولین واریز متاتریدر میاد (lib/tradeCashflowServer.ts)،
+  // همون واریز بالا جزو گردش پول قبل از بازه حساب شده؛ عدد دستی دوباره جمع نمی‌شه
+  const money = await loadAccountMoney(selected);
+  const base = selected.map((a) => (money.get(a.id)?.initialFromMt ? { ...a, initialBalance: 0 } : a));
 
   const data = computeTradeShare(
     entries,
-    selected,
+    base,
     period,
     range,
     priorPnlByAccount,
