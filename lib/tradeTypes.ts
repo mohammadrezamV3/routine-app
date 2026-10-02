@@ -162,6 +162,9 @@ export type TradeAccount = {
   /** وضعیت اتصال متاتریدر همین حساب — در همان درخواست حساب‌ها می‌آید */
   mtConnected?: boolean;
   mtLastSyncAt?: string | null;
+  /** گردش پول غیرمعاملاتی از EA متاتریدر: واریز/برداشت و هزینه‌های بدون معامله */
+  cashFunding?: number;
+  cashCharges?: number;
 };
 
 export type TradeAccountSummary = {

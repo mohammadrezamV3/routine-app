@@ -18,7 +18,7 @@
 //
 #property copyright "Arion"
 #property link      "https://arionapp.ir"
-#property version   "1.20"
+#property version   "1.30"
 #property strict
 
 input string ArionUrl    = "https://arionapp.ir"; // آدرس سایت Arion
@@ -52,7 +52,9 @@ bool     g_tzKnown   = false;
 // هرگز فرستاده نمی‌شد (ریشه‌ی «فقط ۲ تا از ۱۰ معامله رسید»).
 datetime g_cursorTime = 0;
 long     g_knownTotal = 0;
-string   g_cursorFile = "arion_cursor.txt";
+string   g_cursorFile = "arion_cursor_v13.txt";
+// نسخه‌ی 1.30: فایل کرسر جدید تا اولین اجرا بعد از آپدیت یک‌بار کل تاریخچه (همراه
+// واریز/برداشت و هزینه‌هایی که نسخه‌های قبل نمی‌فرستادن) دوباره فرستاده بشه.
 
 #define RETRY_SECONDS 10
 
@@ -257,15 +259,15 @@ void Pair()
 //+------------------------------------------------------------------+
 //| یک دسته از معاملات را می‌فرستد (بالانس/اکوئیتی همیشه همراهش می‌رود)  |
 //+------------------------------------------------------------------+
-bool SendBatch(string tradesJson)
+bool SendBatch(string itemsJson, bool cash)
   {
    string body = "{\"balance\":" + Num(AccountInfoDouble(ACCOUNT_BALANCE), 2) +
                  ",\"equity\":" + Num(AccountInfoDouble(ACCOUNT_EQUITY), 2) +
                  ",\"currency\":\"" + JsonEscape(AccountInfoString(ACCOUNT_CURRENCY)) + "\"" +
-                 ",\"eaVersion\":\"1.20\"";
+                 ",\"eaVersion\":\"1.30\"";
    int tz = BrokerTzOffsetMinutes();
    if(g_tzKnown) body += ",\"tzOffsetMinutes\":" + IntegerToString(tz);
-   body += ",\"trades\":[" + tradesJson + "]}";
+   body += (cash ? ",\"trades\":[],\"cashflows\":[" : ",\"trades\":[") + itemsJson + "]}";
 
    int status;
    string res = HttpPost(ArionUrl + "/api/mt/sync",
@@ -303,10 +305,10 @@ bool SendBatch(string tradesJson)
 //+------------------------------------------------------------------+
 //| فهرستی از رشته‌ها را در دسته‌های MT_CHUNK_SIZE تایی می‌فرستد.        |
 //+------------------------------------------------------------------+
-bool SendAll(string &items[])
+bool SendAll(string &items[], bool cash = false)
   {
    int total = ArraySize(items);
-   if(total == 0) return(SendBatch(""));
+   if(total == 0) return(cash ? true : SendBatch("", false));
    int sent = 0;
    while(sent < total)
      {
@@ -318,7 +320,7 @@ bool SendAll(string &items[])
          chunk += items[k];
         }
       // دسته‌ی ناموفق → توقف؛ کِرسر جلو نرفته، پس دفعه‌ی بعد تکرار می‌شود
-      if(!SendBatch(chunk)) return(false);
+      if(!SendBatch(chunk, cash)) return(false);
       sent = end;
       if(sent < total) Sleep(500); // زیرِ سقفِ نرخِ سرور می‌ماند
      }
@@ -358,7 +360,8 @@ string PositionJson(long posId, bool closed, string openSymbol, double openVolum
          double vol = HistoryDealGetDouble(d, DEAL_VOLUME);
          double px  = HistoryDealGetDouble(d, DEAL_PRICE);
          datetime t = (datetime)HistoryDealGetInteger(d, DEAL_TIME);
-         commission += HistoryDealGetDouble(d, DEAL_COMMISSION);
+         // DEAL_FEE: کارمزدی که بعضی بروکرها جدا از کمیسیون ثبت می‌کنن — قبلا جا می‌موند
+         commission += HistoryDealGetDouble(d, DEAL_COMMISSION) + HistoryDealGetDouble(d, DEAL_FEE);
          swap       += HistoryDealGetDouble(d, DEAL_SWAP);
          profit     += HistoryDealGetDouble(d, DEAL_PROFIT);
          if(type != DEAL_TYPE_BUY && type != DEAL_TYPE_SELL) continue;
@@ -469,6 +472,7 @@ void Sync()
    datetime since = full ? 0 : g_cursorTime - CURSOR_OVERLAP;
 
    long posIds[]; ArrayResize(posIds, 0);
+   string cashItems[]; ArrayResize(cashItems, 0);
    datetime newCursor = g_cursorTime;
    for(int j = 0; j < deals; j++)
      {
@@ -476,6 +480,24 @@ void Sync()
       if(deal == 0) continue;
       datetime dealTime = (datetime)HistoryDealGetInteger(deal, DEAL_TIME);
       if(dealTime > newCursor) newCursor = dealTime;
+      long dType = HistoryDealGetInteger(deal, DEAL_TYPE);
+      // گردش پول غیرمعاملاتی: واریز/برداشت/اعتبار/بونوس/مالیات/کمیسیون حساب/بهره/...
+      // قبلا کلا نادیده گرفته می‌شد و موجودی ژورنال با متاتریدر نمی‌خوند.
+      if(dType != DEAL_TYPE_BUY && dType != DEAL_TYPE_SELL &&
+         dType != DEAL_TYPE_BUY_CANCELED && dType != DEAL_TYPE_SELL_CANCELED)
+        {
+         if(!full && dealTime < since) continue;
+         double amt = HistoryDealGetDouble(deal, DEAL_PROFIT) + HistoryDealGetDouble(deal, DEAL_COMMISSION) +
+                      HistoryDealGetDouble(deal, DEAL_SWAP) + HistoryDealGetDouble(deal, DEAL_FEE);
+         if(amt == 0) continue;
+         string cj = "{\"ticket\":\"" + IntegerToString((long)deal) + "\"" +
+                     ",\"type\":\"" + EnumToString((ENUM_DEAL_TYPE)dType) + "\"" +
+                     ",\"amount\":" + Num(amt, 2) +
+                     ",\"time\":" + IntegerToString((long)dealTime) +
+                     ",\"comment\":\"" + JsonEscape(HistoryDealGetString(deal, DEAL_COMMENT)) + "\"}";
+         int cn = ArraySize(cashItems); ArrayResize(cashItems, cn + 1); cashItems[cn] = cj;
+         continue;
+        }
       long entry = HistoryDealGetInteger(deal, DEAL_ENTRY);
       if(entry != DEAL_ENTRY_OUT && entry != DEAL_ENTRY_OUT_BY && entry != DEAL_ENTRY_INOUT) continue;
       long dealType = HistoryDealGetInteger(deal, DEAL_TYPE);
@@ -498,13 +520,15 @@ void Sync()
      }
 
    if(ArraySize(closedItems) > 0 && !SendAll(closedItems)) return;
+   if(ArraySize(cashItems) > 0 && !SendAll(cashItems, true)) return;
 
    g_cursorTime = newCursor;
    g_knownTotal = deals;
    SaveCursor();
    g_lastSync = TimeCurrent();
    g_status = "ارسال شد: " + IntegerToString(ArraySize(openItems)) + " باز، " +
-              IntegerToString(ArraySize(closedItems)) + " بسته" + (full ? " (کلِ تاریخچه)" : "");
+              IntegerToString(ArraySize(closedItems)) + " بسته، " +
+              IntegerToString(ArraySize(cashItems)) + " واریز/هزینه" + (full ? " (کلِ تاریخچه)" : "");
   }
 
 //+------------------------------------------------------------------+

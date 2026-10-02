@@ -79,6 +79,15 @@ export async function GET(req: NextRequest) {
 
   const priorPnlByAccount: Record<string, number> = {};
   for (const p of prior) priorPnlByAccount[p.accountId] = p._sum.pnl ?? 0;
+  // موجودی ابتدای بازه گردش پول متاتریدر قبل از شروع بازه (واریز/برداشت/هزینه) رو هم داره
+  if (ids.length) {
+    const priorCash = await prisma.tradeCashflow.groupBy({
+      by: ["accountId"],
+      where: { userId, accountId: { in: ids }, occurredAt: { lt: start } },
+      _sum: { amount: true },
+    });
+    for (const c of priorCash) priorPnlByAccount[c.accountId] = (priorPnlByAccount[c.accountId] ?? 0) + (c._sum.amount ?? 0);
+  }
 
   const data = computeTradeShare(
     entries,

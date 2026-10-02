@@ -5,8 +5,13 @@ import { Check, Copy, Download, Link2Off, RefreshCw } from "lucide-react";
 import { faNum } from "@/lib/jalali";
 import { formatTradeDateTime } from "@/lib/tradeDateTime";
 import { SegmentedTabs } from "./SegmentedTabs";
-import type { CalSystem } from "@/lib/tradeTypes";
+import { currencySymbol, type CalSystem } from "@/lib/tradeTypes";
 import { Spinner } from "./Spinner";
+
+type Reconciliation = {
+  journalBalance: number; mtBalance: number | null; difference: number | null;
+  tradesPnl: number; funding: number; charges: number; initialBalance: number;
+};
 
 type MtLink = {
   id: string; platform: "MT4" | "MT5";
@@ -20,6 +25,7 @@ type MtLink = {
 // سراسری: هر کاربر ده‌ها حساب دارد و هرکدام ترمینال و لاگین خودش را دارد.
 export function TradeMtLinkPanel({ accountId, calSystem, accountName }: { accountId: string; calSystem: CalSystem; accountName?: string }) {
   const [link, setLink] = useState<MtLink | null>(null);
+  const [recon, setRecon] = useState<Reconciliation | null>(null);
   const [platform, setPlatform] = useState<"MT4" | "MT5">("MT4");
   const [code, setCode] = useState<string | null>(null);
   const [codeExpires, setCodeExpires] = useState<string | null>(null);
@@ -33,6 +39,7 @@ export function TradeMtLinkPanel({ accountId, calSystem, accountName }: { accoun
     if (!res.ok) return;
     const data = await res.json();
     setLink(data.link);
+    setRecon(data.reconciliation ?? null);
     if (data.link?.platform) setPlatform(data.link.platform);
   }, [accountId]);
 
@@ -112,6 +119,45 @@ export function TradeMtLinkPanel({ accountId, calSystem, accountName }: { accoun
               <b>{link.lastSyncAt ? formatTradeDateTime(link.lastSyncAt, calSystem) : "هنوز انجام نشده"}</b>
             </div>
           </div>
+
+          {recon && recon.mtBalance !== null && recon.difference !== null && (() => {
+            const sym = currencySymbol(link.currency ?? "USD");
+            const fmt = (n: number) => `${faNum(n.toFixed(2))} ${sym}`;
+            const mismatch = Math.abs(recon.difference) > 0.01;
+            return (
+              <div style={{ marginTop: 14 }}>
+                <div className="domain-sub" style={{ marginBottom: 6 }}>تطبیق موجودی</div>
+                <div className="trade-detail-grid">
+                  <div className="trade-detail-cell"><span>موجودی متاتریدر</span><b className="mono">{fmt(recon.mtBalance)}</b></div>
+                  <div className="trade-detail-cell"><span>موجودی ژورنال</span><b className="mono">{fmt(recon.journalBalance)}</b></div>
+                </div>
+                <div className="trade-mt-note">
+                  سود خالص معاملات: <b className="mono">{fmt(recon.tradesPnl)}</b>
+                  {" · "}واریز و برداشت: <b className="mono">{fmt(recon.funding)}</b>
+                  {" · "}هزینه‌های غیرمعاملاتی: <b className="mono">{fmt(recon.charges)}</b>
+                </div>
+                {mismatch ? (
+                  <div className="trade-mt-note-warn">
+                    موجودی ژورنال {fmt(Math.abs(recon.difference))} با موجودی متاتریدر اختلاف دارد. محتمل‌ترین دلیل‌ها:
+                    {link.platform === "MT4" && (<>
+                      {" "}در متاتریدر 4 تب <b className="mono ltr-inline">Account History</b> باید روی <b className="mono ltr-inline">All History</b> باشد
+                      (راست‌کلیک روی تب و انتخاب <b className="mono ltr-inline">All History</b>) تا اکسپرت کل تاریخچه را ببیند.
+                    </>)}
+                    {" "}اکسپرت باید نسخه‌ی جدید (v1.30) باشد: آن را از همین صفحه دوباره دانلود کنید و جای فایل قبلی بگذارید.
+                    <div style={{ marginTop: 8 }}>
+                      <a className="trade-mt-download" href={link.platform === "MT4" ? "/ea/Arion-MT4.mq4" : "/ea/Arion-MT5.mq5"} download>
+                        <Download size={14} /> {link.platform === "MT4" ? "Arion-MT4.mq4" : "Arion-MT5.mq5"}
+                      </a>
+                    </div>
+                  </div>
+                ) : (
+                  <div className="trade-mt-note" style={{ color: "var(--pnl-win)" }}>
+                    <Check size={12} style={{ verticalAlign: "-2px" }} /> موجودی‌ها یکی‌ان
+                  </div>
+                )}
+              </div>
+            );
+          })()}
 
           <div className="trade-mt-note" style={{ marginTop: 12 }}>
             توجه: برای همگام‌سازی، هر بار باید هم متاتریدر (با اکسپرت روشن روی چارت) و هم سایت هر دو روشن باشند.
@@ -206,6 +252,14 @@ export function TradeMtLinkPanel({ accountId, calSystem, accountName }: { accoun
                 <b className="mono ltr-inline">OK</b> را بزنید.
               </span>
             </li>
+            {platform === "MT4" && (
+              <li>
+                <span>
+                  در پایین متاتریدر تب <b className="mono ltr-inline">Account History</b> را باز کنید، راست‌کلیک کنید و{" "}
+                  <b className="mono ltr-inline">All History</b> را بزنید تا اکسپرت کل تاریخچه را ببیند.
+                </span>
+              </li>
+            )}
             <li>
               <span>
                 دکمه‌ی <b className="mono ltr-inline">{platform === "MT4" ? "AutoTrading" : "Algo Trading"}</b> را روشن کنید. پس از اتصال، وضعیت این صفحه «فعال» می‌شود
@@ -216,6 +270,9 @@ export function TradeMtLinkPanel({ accountId, calSystem, accountName }: { accoun
 
           <div className="trade-mt-note" style={{ marginTop: 12 }}>
             توجه: برای همگام‌سازی، هر بار باید هم متاتریدر (با اکسپرت روشن روی چارت) و هم سایت هر دو روشن باشند.
+          </div>
+          <div className="trade-mt-note" style={{ marginTop: 10 }}>
+            نسخه‌ی فعلی اکسپرت v1.30 است. اگر قبلا نسخه‌ی قدیمی را نصب کرده‌اید، فایل را دوباره دانلود کنید و جایگزین کنید.
           </div>
           <div className="trade-mt-note" style={{ marginTop: 14 }}>
             رمز حساب معاملاتی هیچ‌گاه درخواست یا ذخیره نمی‌شود. اکسپرت فقط اطلاعات معاملات را ارسال می‌کند

@@ -4,6 +4,7 @@ import { prisma } from "@/lib/prisma";
 import { requireModule } from "@/lib/moduleAccess";
 import { parseAccountInput } from "@/lib/tradeServer";
 import { computeTradeStats } from "@/lib/tradeAnalytics";
+import { summarizeCashflows } from "@/lib/metatrader";
 import { MAX_ACCOUNTS } from "@/lib/tradeTypes";
 import { withLiveSync } from "@/lib/realtime";
 
@@ -44,6 +45,18 @@ export async function GET(req: NextRequest) {
     take: 20_000,
   });
 
+  // گردش پول غیرمعاملاتی متاتریدر (واریز/برداشت/مالیات/...) — یک groupBy برای همه
+  const cash = await prisma.tradeCashflow.groupBy({
+    by: ["accountId", "kind"],
+    where: { userId, accountId: { in: accounts.map((a) => a.id) } },
+    _sum: { amount: true },
+  });
+  const cashByAccount = new Map<string, { kind: string; amount: number }[]>();
+  for (const c of cash) {
+    if (!cashByAccount.has(c.accountId)) cashByAccount.set(c.accountId, []);
+    cashByAccount.get(c.accountId)!.push({ kind: c.kind, amount: c._sum.amount ?? 0 });
+  }
+
   const byAccount = new Map<string, typeof stats>();
   for (const s of stats) {
     if (!byAccount.has(s.accountId)) byAccount.set(s.accountId, []);
@@ -55,9 +68,12 @@ export async function GET(req: NextRequest) {
     const list = (byAccount.get(a.id) || []).map((e) => ({
       status: e.status, pnl: e.pnl, rMultiple: e.rMultiple, openedAt: e.openedAt.toISOString(),
     }));
-    const s = computeTradeStats(list, a);
+    const cf = summarizeCashflows(cashByAccount.get(a.id) || []);
+    const s = computeTradeStats(list, { ...a, cashFunding: cf.funding, cashCharges: cf.charges });
     return {
       ...a,
+      cashFunding: cf.funding,
+      cashCharges: cf.charges,
       // هش توکن عمدا بیرون داده نمی‌شود — فقط «متصل هست یا نه»
       mtConnected: !!mtLink?.tokenHash && !mtLink.revokedAt,
       mtLastSyncAt: mtLink?.lastSyncAt ? mtLink.lastSyncAt.toISOString() : null,

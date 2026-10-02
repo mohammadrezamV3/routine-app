@@ -253,3 +253,96 @@ export function mtUpdateData(data: MtTradeData, t: MtTradeInput): Partial<MtTrad
   if (t.openPrice === null) delete out.openedAt;
   return out;
 }
+
+// ── گردش پول غیرمعاملاتی (واریز/برداشت/هزینه/مالیات/...) ───────────────
+
+export const MT_CASHFLOW_KINDS = [
+  "DEPOSIT", "WITHDRAWAL", "CREDIT", "BONUS",
+  "COMMISSION", "FEE", "TAX", "INTEREST", "DIVIDEND", "SWAP", "CORRECTION", "OTHER",
+] as const;
+export type MtCashflowKind = (typeof MT_CASHFLOW_KINDS)[number];
+
+/** واریز/برداشت/اعتبار/بونوس = پول وارد/خارج‌شده؛ بقیه هزینه/درآمد غیرمعاملاتی‌ان */
+export const MT_FUNDING_KINDS: readonly MtCashflowKind[] = ["DEPOSIT", "WITHDRAWAL", "CREDIT", "BONUS"];
+
+export type MtCashflowInput = {
+  externalId: string;
+  kind: MtCashflowKind;
+  amount: number;
+  occurredAt: Date;
+  comment: string | null;
+};
+
+/**
+ * نوع یک ردیف گردش پول. EA نوع خام پلتفرم رو می‌فرسته (MT5: اسم DEAL_TYPE مثل
+ * «TAX»/«COMMISSION_DAILY»/«BALANCE»؛ MT4: «BALANCE»/«CREDIT» چون MT4 همه‌چیز رو
+ * با نوع ۶ ثبت می‌کنه). ردیف «BALANCE» با کامنت بروکر دقیق‌تر می‌شه (خیلی از
+ * بروکرها مالیات/کمیسیون/سواپ رو با همین نوع و یک کامنت ثبت می‌کنن)، وگرنه
+ * با علامت مبلغ واریز یا برداشت حساب می‌شه.
+ */
+export function classifyMtCashflow(rawType: unknown, amount: number, comment: string | null): MtCashflowKind {
+  const t = String(rawType ?? "").toUpperCase().replace(/^DEAL_TYPE_|^DEAL_/, "");
+  const c = (comment || "").toLowerCase();
+  if (t.includes("TAX")) return "TAX";
+  if (t.includes("COMMISSION")) return "COMMISSION";
+  if (t.includes("INTEREST")) return "INTEREST";
+  if (t.includes("DIVIDEND")) return "DIVIDEND";
+  if (t.includes("BONUS")) return "BONUS";
+  if (t.includes("CREDIT")) return "CREDIT";
+  if (t.includes("CORRECTION")) return "CORRECTION";
+  if (t.includes("CHARGE") || t.includes("FEE")) return "FEE";
+  if (t === "BALANCE" || t === "6" || t === "") {
+    if (/\btax|withholding|vat\b/.test(c)) return "TAX";
+    if (/commission|comm\b/.test(c)) return "COMMISSION";
+    if (/swap|rollover|overnight/.test(c)) return "SWAP";
+    if (/interest/.test(c)) return "INTEREST";
+    if (/dividend/.test(c)) return "DIVIDEND";
+    if (/\bfee|charge|inactivity/.test(c)) return "FEE";
+    if (/bonus/.test(c)) return "BONUS";
+    return amount >= 0 ? "DEPOSIT" : "WITHDRAWAL";
+  }
+  if (t === "7") return "CREDIT";
+  return "OTHER";
+}
+
+/** ردیف‌های خام گردش پول EA → شکل داخلی؛ ردیف بدشکل بی‌صدا کنار گذاشته می‌شه */
+export function normalizeMtCashflows(raw: unknown): MtCashflowInput[] {
+  if (!Array.isArray(raw)) return [];
+  const out: MtCashflowInput[] = [];
+  for (const item of raw.slice(0, MT_MAX_TRADES_PER_REQUEST)) {
+    if (!item || typeof item !== "object") continue;
+    const r = item as Record<string, unknown>;
+    const externalId = String(r.ticket ?? r.id ?? "").trim().slice(0, 40);
+    if (!externalId || externalId === "0") continue;
+    const amount = num(r.amount);
+    if (amount === null || amount === 0) continue;
+    const occurredAt = parseTime(r.time);
+    if (!occurredAt) continue;
+    const comment = r.comment ? String(r.comment).replace(/[\u0000-\u001f\u007f]/g, " ").trim().slice(0, 120) || null : null;
+    out.push({
+      externalId,
+      kind: classifyMtCashflow(r.type, amount, comment),
+      amount: Math.round(amount * 100) / 100,
+      occurredAt,
+      comment,
+    });
+  }
+  return out;
+}
+
+export type CashflowSummary = {
+  /** واریز − برداشت + اعتبار + بونوس */
+  funding: number;
+  /** هزینه/درآمد غیرمعاملاتی (مالیات، کمیسیون حساب، بهره، سود سهام، اصلاحیه، ...) */
+  charges: number;
+};
+
+export function summarizeCashflows(rows: { kind: string; amount: number }[]): CashflowSummary {
+  let funding = 0;
+  let charges = 0;
+  for (const r of rows) {
+    if ((MT_FUNDING_KINDS as readonly string[]).includes(r.kind)) funding += r.amount;
+    else charges += r.amount;
+  }
+  return { funding: Math.round(funding * 100) / 100, charges: Math.round(charges * 100) / 100 };
+}
