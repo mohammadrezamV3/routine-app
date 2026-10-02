@@ -1,0 +1,123 @@
+/* ============================================================
+   تم آزمایشی «برفی نئونی» — فقط برای ادمین، فقط روی همین دستگاه
+   ------------------------------------------------------------
+   فعال‌سازی: lib/adminTheme.ts (کلید localStorage و اتریبیوت
+   data-admin-theme روی html). همه‌ی قانون‌ها فقط وقتی اعمال می‌شن که
+   اتریبیوت snow روی html باشه و تم روشن فعال باشه؛ در تم تیره هیچ چیز
+   عوض نمی‌شه. این فایل فقط توکن‌های تم روشن رو بازنویسی می‌کنه و چند
+   افکت نئونی اضافه می‌کنه، هیچ کامپوننتی ازش خبر نداره.
+   ============================================================ */
+
+html[data-admin-theme="snow"][data-theme="light"]{ background:#F8FBFF; }
+
+html[data-admin-theme="snow"] body[data-theme="light"]{
+  --bg:#F8FBFF;
+  --bg-rgb:248,251,255;
+  --surface-rgb:255,255,255;
+  --text:#0B0B0B;
+  --muted:#5B6470;
+  --muted2:#8A93A0;
+  --accent:#0B0B0B;
+  --accent-rgb:11,11,11;
+  --accent-dim:rgba(11,11,11,.08);
+  --accent-soft:#2A2A2A;
+  --accent-deep:#000000;
+  --card-bg:#FFFFFF;
+  --input-bg:#F1F6FC;
+  --line:#DCE5EF;
+  --surface-1:#FFFFFF;
+  --surface-2:#FFFFFF;
+  --surface-glass:rgba(255,255,255,.78);
+  --surface-line:#D5DFEA;
+  --box-bg:#FFFFFF;
+  --box-line:#D5DFEA;
+  --sun:#0B0B0B;
+  --moon:#0B0B0B;
+  --secondary:#2A2A2A;
+  --secondary-rgb:42,42,42;
+  --secondary-dim:rgba(42,42,42,.12);
+  /* حلقه‌ها: خاکستری، از روشن به تیره */
+  --ring-1a:#2B2B2B; --ring-1b:#7A7F86;
+  --ring-2a:#4A4F55; --ring-2b:#9AA0A8;
+  --ring-3a:#6B7078; --ring-3b:#B4BAC2;
+  --ring-over:#0B0B0B;
+  /* پنل ادمین و صفحه‌ی درباره */
+  --adm-panel:#FFFFFF;
+  --adm-panel-2:rgba(241,246,252,.9);
+  --adm-border-strong:rgba(11,11,11,.16);
+  --ab-card:rgba(255,255,255,.85);
+  --ab-line:rgba(11,11,11,.12);
+  --ab-line-hi:rgba(11,11,11,.22);
+  --ab-shadow:0 18px 48px -26px rgba(0,229,255,.35);
+  /* گوی دستیار */
+  --orb-bg:#F1F6FC;
+  --orb-c1:#0B0B0B; --orb-c2:#6B7078; --orb-c3:#00E5FF; --orb-c4:#C9D2DC;
+  --neon:0 0 0 1px #0B0B0B, 0 0 14px rgba(0,229,255,.35);
+  --neon-soft:0 0 0 1px rgba(11,11,11,.55), 0 0 10px rgba(0,229,255,.22);
+}
+
+/* ── نور نئونی دور باکس‌ها (همان فهرست باکس‌های نور هاور) ── */
+html[data-admin-theme="snow"] body[data-theme="light"] :where(
+  .trade-surface:not(.trade-econ-monthpicker), .rp-card, .account-card, .acc-block-body, .auth-box,
+  .fx-card, .tv-chart-box, .trade-chart-side, .trade-chat-panel, .trade-cal-card,
+  .exercise-rules-box, .exercise-locked-box, .admin-card, .admin-kpi-tile, .admin-chart-card,
+  .admin-role-card, .cal-cell:not(.empty), .sl-card, .sl-stat, .trade-stat-tile, .wa-stat-tile,
+  .stk-ach-item, .mentor-note-box, .ls-card, .db-card, .db-hero,
+  :is(div, section, article).rounded-dash.border-dash-border.bg-dash-card
+){
+  border-color:rgba(11,11,11,.7);
+  box-shadow:0 0 0 1px rgba(11,11,11,.06), 0 0 12px rgba(0,229,255,.22);
+}
+
+/* ── دکمه‌ی اصلی: مشکی با متن سفید و هاله‌ی فیروزه‌ای ── */
+html[data-admin-theme="snow"] body[data-theme="light"] .admin-btn.primary,
+html[data-admin-theme="snow"] body[data-theme="light"] .trade-primary-btn{
+  background:#0B0B0B; border-color:#0B0B0B; color:#FFFFFF;
+  box-shadow:var(--neon);
+}
+@media (hover:hover){
+  html[data-admin-theme="snow"] body[data-theme="light"] .admin-btn.primary:hover:not(:disabled),
+  html[data-admin-theme="snow"] body[data-theme="light"] .trade-primary-btn:hover:not(:disabled){
+    background:#0B0B0B; border-color:#0B0B0B; color:#FFFFFF;
+    box-shadow:0 0 0 1px #0B0B0B, 0 0 20px rgba(0,229,255,.55);
+  }
+}
+
+/* ── فوکوس فیلدها: هاله‌ی نئونی ── */
+html[data-admin-theme="snow"] body[data-theme="light"] input:focus,
+html[data-admin-theme="snow"] body[data-theme="light"] textarea:focus,
+html[data-admin-theme="snow"] body[data-theme="light"] select:focus{
+  border-color:#0B0B0B;
+  box-shadow:0 0 0 1px #0B0B0B, 0 0 12px rgba(0,229,255,.4);
+  outline:none;
+}
+html[data-admin-theme="snow"] body[data-theme="light"] :focus-visible{
+  outline:2px solid #0B0B0B; outline-offset:2px;
+}
+
+/* ── بارش برف: فقط یک لایه‌ی ثابت، فقط transform ──
+   چهار لایه‌ی نقطه با دوره‌ی 120/160/240/480 پیکسل؛ کل عنصر دقیقا یک
+   دوره‌ی بزرگ (480px) پایین می‌ره و بعد از اون خودش رو تکرار می‌کنه، پس
+   حلقه بدون پرش دیده می‌شه. بالای بک‌گراند و زیر محتوا/هدر/مودال‌ها. */
+html[data-admin-theme="snow"] body[data-theme="light"]::before{
+  content:""; position:fixed; left:0; right:0; top:-480px; height:calc(100% + 480px);
+  z-index:1; pointer-events:none;
+  background-image:
+    radial-gradient(circle at 30% 40%, rgba(70,150,205,.55) 0 1.6px, transparent 2.6px),
+    radial-gradient(circle at 70% 75%, rgba(110,175,225,.45) 0 1.3px, transparent 2.2px),
+    radial-gradient(circle at 20% 80%, rgba(0,200,235,.40) 0 2px, transparent 3px),
+    radial-gradient(circle at 60% 20%, rgba(40,110,170,.35) 0 2.4px, transparent 3.6px);
+  background-size:120px 120px, 160px 160px, 240px 240px, 480px 480px;
+  opacity:.6;
+  will-change:transform;
+  animation:admin-snow-fall 24s linear infinite;
+}
+@keyframes admin-snow-fall{
+  from{ transform:translate3d(0,0,0); }
+  to{ transform:translate3d(0,480px,0); }
+}
+@media (prefers-reduced-motion:reduce){
+  html[data-admin-theme="snow"] body[data-theme="light"]::before{ display:none; }
+}
+html[data-perf="low"][data-admin-theme="snow"] body[data-theme="light"]::before,
+html[data-perf-weak][data-admin-theme="snow"] body[data-theme="light"]::before{ display:none; }
