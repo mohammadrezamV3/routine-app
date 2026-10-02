@@ -8,6 +8,7 @@ import { generateExercisePlan } from "@/lib/aiClient";
 import { checkAndConsumeAiQuota } from "@/lib/aiQuota";
 import { FA_WEEKDAY } from "@/lib/jalali";
 import { withLiveSync } from "@/lib/realtime";
+import { validateUserSplit, type UserSplitDay } from "@/lib/exerciseSplit";
 
 const VALID_LEVELS: ExerciseLevel[] = ["beginner", "intermediate", "advanced"];
 const MAX_DESCRIPTION_LEN = 500;
@@ -43,7 +44,7 @@ async function handlePOST(req: NextRequest) {
   const userId = guard.userId;
 
   const body = await req.json();
-  const { level, heightCm, weightKg, goal, trainingMonth, equipment, hasPhysicalLimitation, limitationDetails, gymDays, description, rulesAccepted } = body as {
+  const { level, heightCm, weightKg, goal, trainingMonth, equipment, hasPhysicalLimitation, limitationDetails, gymDays, description, rulesAccepted, customSplit } = body as {
     level: ExerciseLevel;
     heightCm?: number;
     weightKg?: number;
@@ -55,6 +56,8 @@ async function handlePOST(req: NextRequest) {
     gymDays: string[];
     description?: string;
     rulesAccepted: boolean;
+    /** «تنظیمات پیشرفته»: تقسیم هفتگی خود کاربر [{ day, muscles: MuscleKey[] }] */
+    customSplit?: unknown;
   };
 
   if (!level || !VALID_LEVELS.includes(level)) {
@@ -89,6 +92,13 @@ async function handlePOST(req: NextRequest) {
   }
 
   const uniqueDays = [...new Set(gymDays)];
+  // تقسیم دلخواه کاربر — فقط روزهای باشگاه خودش و عضله‌های شناخته‌شده
+  let userSplit: UserSplitDay[] | null = null;
+  if (customSplit !== undefined && customSplit !== null) {
+    const v = validateUserSplit(customSplit, uniqueDays);
+    if (!v.ok) return NextResponse.json({ error: v.error }, { status: 400 });
+    userSplit = v.days;
+  }
   const cleanGoal = goal.trim();
   const cleanEquipment = equipment.trim();
   const cleanDescription = description?.trim() || null;
@@ -117,6 +127,7 @@ async function handlePOST(req: NextRequest) {
       trainingMonth: trainingMonth || null, equipment: cleanEquipment,
       hasPhysicalLimitation: !!hasPhysicalLimitation, limitationDetails: cleanLimitationDetails, description: cleanDescription,
       previousProgram: previousPlan?.planData ?? null,
+      userSplit,
     }, userId);
     if (!result.feasible) {
       return NextResponse.json({ ok: false, feasible: false, message: result.message });

@@ -213,8 +213,12 @@ export function ExerciseTaskList({
         <>
           <div className="mt-1 shrink-0 text-[11px] text-dash-muted sm:text-[12.5px]">{todayPlan.focus}</div>
 
-          <div className="mt-4 min-h-0 flex-1" dir="ltr" style={{ maxHeight: 360 }}>
-          <div className="thin-scroll h-full overflow-y-auto overflow-x-hidden px-1" dir="rtl">
+          {/* لیست با تعداد حرکت‌ها رشد می‌کند و کارت هم با آن بلند می‌شود.
+              قبلا یک قاب با max-height ثابت داشت که اسکرولر داخلش h-full
+              بود؛ درصد ارتفاع روی max-height حل نمی‌شود، پس اسکرولر هیچ‌وقت
+              اسکرول نمی‌کرد و از روز نهم به بعد ردیف‌ها از زیر کارت بیرون
+              می‌زدند و باکس «انجام دادی» روی لیست می‌افتاد. */}
+          <div className="mt-4 flex-1 px-1">
             <table className="exercise-plan-table">
               {active && (
                 <thead>
@@ -278,7 +282,6 @@ export function ExerciseTaskList({
                 })}
               </tbody>
             </table>
-          </div>
           </div>
 
           {isFutureDay ? (

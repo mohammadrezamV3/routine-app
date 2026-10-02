@@ -4428,6 +4428,19 @@ body[data-theme="light"] .exercise-desc-textarea{ background:rgba(255,255,255,.3
 }
 body[data-theme="light"] .exercise-feasibility-reject{ background:rgba(255,255,255,.55); }
 .exercise-feasibility-reject-badge{ font-size:10.5px; font-weight:700; color:var(--accent); margin-bottom:6px; }
+/* ساخت برنامه با AI — توضیح سطح، «تنظیمات پیشرفته» (تقسیم دلخواه) و بررسی مربی */
+.ex-level-hint{ margin:8px 2px 0; font-size:11.5px; line-height:1.9; color:var(--muted); }
+.ex-adv-toggle{ margin-top:14px; }
+.ex-adv{ overflow:hidden; }
+.ex-adv-day{ margin-top:12px; }
+.ex-adv-day-name{ display:block; margin-bottom:6px; font-size:12px; font-weight:800; color:var(--text); }
+.ex-muscle-chips{ display:flex; flex-wrap:wrap; gap:6px; }
+.ex-muscle-chips .day-pill{ flex:0 0 auto; padding:7px 12px; font-size:12px; }
+.ex-review{ margin-top:14px; }
+.ex-review-issues{ margin:0; padding-inline-start:18px; display:flex; flex-direction:column; gap:6px; font-size:12px; line-height:1.9; }
+.ex-review-sub{ margin-top:10px; font-size:11.5px; font-weight:800; color:var(--accent); }
+.ex-review-split{ list-style:none; margin:4px 0 0; padding:0; display:flex; flex-direction:column; gap:4px; font-size:12px; line-height:1.8; }
+.ex-review-actions{ margin-top:12px; display:flex; flex-wrap:wrap; gap:8px; justify-content:flex-end; }
 
 /* بخش افزودن دستی حرکت — جستجو+لیست کاتالوگ، حالا توی پاپ‌آپ مستقل
    exercise-catalog-popup-panel رندر می‌شه، پس دیگه بک‌گراند/بوردر خودش رو
