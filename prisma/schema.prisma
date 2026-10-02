@@ -781,6 +781,13 @@ model SleepEntry {
   quality Int? // ۱ تا ۵، اختیاری، خودارزیابی کاربر
   note    String? // یادداشت کوتاه اختیاری (خواب دیدم، بی‌خوابی، …)
 
+  // جزئیات اختیاری شب (بازسازی بخش خواب): زمان به خواب رفتن، دفعات بیدارشدن،
+  // چرت روز و برچسب‌های عوامل (کلیدها در lib/sleep.ts → SLEEP_TAGS)
+  latencyMin Int?
+  awakenings Int?
+  napMin     Int?
+  tags       String[] @default([])
+
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 
@@ -1131,11 +1138,12 @@ model TradeAccount {
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 
-  entries TradeEntry[]
-  notes   TradeNote[]
-  tags    TradeTag[]   @relation("TradeAccountTags")
-  mtLink  TradeMtLink?
-  cashflows TradeCashflow[]
+  entries      TradeEntry[]
+  notes        TradeNote[]
+  tags         TradeTag[]           @relation("TradeAccountTags")
+  mtLink       TradeMtLink?
+  cashflows    TradeCashflow[]
+  pendingShots TradeMtPendingShot[]
 
   @@index([userId, archived])
 }
@@ -1309,6 +1317,25 @@ model TradeImage {
   createdAt DateTime   @default(now())
 
   @@index([entryId])
+}
+
+// اسکرین اکسپرت که قبل از خود معامله رسیده (EA اسکرین رو همون لحظه‌ی ورود
+// می‌گیره ولی ممکنه sync اون معامله هنوز نرسیده باشه). به‌جای 404 و دور ریختن،
+// همین‌جا نگه داشته می‌شه و sync بعدی که معامله رو ساخت، وصلش می‌کنه
+// (lib/mtScreenshots.ts). هر (حساب، تیکت، نوع) فقط یک ردیف.
+model TradeMtPendingShot {
+  id         String       @id @default(cuid())
+  userId     String
+  accountId  String
+  account    TradeAccount @relation(fields: [accountId], references: [id], onDelete: Cascade)
+  externalId String
+  kind       String // entry | exit
+  dataUrl    String
+  createdAt  DateTime     @default(now())
+  updatedAt  DateTime     @updatedAt
+
+  @@unique([accountId, externalId, kind])
+  @@index([accountId, createdAt])
 }
 
 // ============================================================================

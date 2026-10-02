@@ -355,7 +355,7 @@ describe("کشف منتور", () => {
     }
     const card = (await j(await discover(req("GET", `/api/mentors?q=${tag}`)))).mentors[0];
     expect(Object.keys(card).sort()).toEqual(
-      ["acceptingStudents", "activeStudents", "availability", "avatarUrl", "awayUntil", "categories", "certifications", "golden", "headline", "identityVerified", "memberSince", "name", "ratingAvg", "ratingCount", "responseTimeHours", "routineRole", "totalStudents", "userId"].sort()
+      ["acceptingStudents", "activeStudents", "availability", "avatarUrl", "awayUntil", "categories", "certifications", "golden", "headline", "identityVerified", "memberSince", "name", "ratingAvg", "ratingCount", "responseTimeHours", "routineRole", "staff", "totalStudents", "userId"].sort()
     );
     expect(unpublished && suspended).toBeTruthy();
   });

@@ -30,7 +30,7 @@ const SPLIT = {
   feasible: true,
   split: "PPL",
   days: [
-    { day: "شنبه", focus: "سینه و پشت‌بازو", muscles: ["سینه", "پشت‌بازو"] },
+    { day: "شنبه", focus: "سینه، سرشانه و پشت‌بازو", muscles: ["سینه", "سرشانه", "پشت‌بازو"] },
     { day: "دوشنبه", focus: "پشت و جلوبازو", muscles: ["پشت", "جلوبازو"] },
     { day: "چهارشنبه", focus: "پا", muscles: ["چهارسر ران", "پشت ران", "ساق"] },
   ],
@@ -99,7 +99,7 @@ describe("generateExercisePlan — دوفازی", () => {
     expect(res.feasible).toBe(true);
     if (!res.feasible) return;
     expect(res.days.map((d) => d.day)).toEqual(["شنبه", "دوشنبه", "چهارشنبه"]);
-    expect(res.days[0].items).toHaveLength(5 + 4); // سینه 5 + پشت‌بازو 4
+    expect(res.days[0].items).toHaveLength(5 + 5 + 4); // سینه 5 + سرشانه 5 + پشت‌بازو 4
     expect(res.days[2].items).toHaveLength(5 + 5 + 4);
     // یک فراخوانی تقسیم + یک فراخوانی برای هر روز
     expect(fetchMock).toHaveBeenCalledTimes(4);
@@ -111,13 +111,13 @@ describe("generateExercisePlan — دوفازی", () => {
       if (isSplit(init)) return reply(SPLIT);
       const day = dayOf(init);
       seen[day] = (seen[day] || 0) + 1;
-      if (day === "شنبه" && seen[day] === 1) return reply({ exercises: [...many("سینه", 3), ...many("پشت‌بازو", 3)] });
+      if (day === "شنبه" && seen[day] === 1) return reply({ exercises: [...many("سینه", 3), ...many("سرشانه", 4), ...many("پشت‌بازو", 3)] });
       return reply({ exercises: fullDay(day) });
     });
     const res = await generateExercisePlan(PROFILE, "u1");
     if (!res.feasible) throw new Error("feasible expected");
     expect(seen["شنبه"]).toBe(2);
-    expect(res.days[0].items.length).toBe(9);
+    expect(res.days[0].items.length).toBe(14);
   });
 
   it("خروجی بریده‌شده (سقف توکن) با سقف بالاتر دوباره گرفته می‌شود", async () => {
@@ -156,5 +156,33 @@ describe("generateExercisePlan — دوفازی", () => {
     await generateExercisePlan({ ...PROFILE, hasPhysicalLimitation: true, limitationDetails: "درد زانو" }, "u1");
     expect(users[0]).toContain("کاربر خودش محدودیت نوشته");
     expect(users.find((u) => u.includes("جلسه‌ی روز"))).toContain("حداقل 1 حرکت");
+  });
+});
+
+describe("تقسیم دلخواه کاربر (تنظیمات پیشرفته)", () => {
+  it("با userSplit فاز تقسیم رد می‌شه و همون عضله‌ها ساخته می‌شن", async () => {
+    const users: string[] = [];
+    fetchMock.mockImplementation(async (_u: string, init: any) => {
+      users.push(userOf(init));
+      if (isSplit(init)) throw new Error("فاز تقسیم نباید صدا زده بشه");
+      const day = dayOf(init);
+      const muscles = day === "شنبه" ? ["چهارسر ران", "پشت ران"] : ["سینه", "جلوبازو"];
+      return reply({ exercises: muscles.flatMap((m) => many(m, 5)) });
+    });
+    const res = await generateExercisePlan({ ...PROFILE, gymDays: ["شنبه", "یکشنبه"], userSplit: [
+      { day: "شنبه", muscles: ["quads", "hamstrings"] },
+      { day: "یکشنبه", muscles: ["chest", "biceps"] },
+    ] }, "u1");
+    if (!res.feasible) throw new Error("feasible expected");
+    expect(res.days.map((d) => d.focus)).toEqual(["چهارسر ران و پشت ران", "سینه و جلوبازو"]);
+    expect(fetchMock).toHaveBeenCalledTimes(2);
+    expect(users[0]).toContain("عضله‌های هدف این روز");
+  });
+
+  it("تقسیم AI که جلوبازو و پشت‌بازو رو هم‌روز کرده ایراد می‌گیره", () => {
+    const issues = splitIssues([
+      { day: "شنبه", muscles: ["جلوبازو", "پشت‌بازو"] },
+    ], ["شنبه"]);
+    expect(issues.join(" ")).toContain("جلوبازو و پشت‌بازو");
   });
 });

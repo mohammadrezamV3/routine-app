@@ -209,7 +209,7 @@ export function SymbolChatPanel({ symbol }: { symbol: string }) {
                 <div className="trade-chat-meta">
                   {/* طبق درخواست صریح (مثل تلگرام): پیام خودت اسم نمی‌خواهد،
                       فقط پیام بقیه authorName دارد. */}
-                  {!m.mine && <span className="trade-chat-author"><GoldenName golden={m.authorGolden}>{m.authorName}</GoldenName></span>}
+                  {!m.mine && <span className="trade-chat-author"><GoldenName golden={m.authorGolden} staff={m.authorStaff}>{m.authorName}</GoldenName></span>}
                   <span className="trade-chat-time mono">{timeLabel(m.createdAt)}</span>
                 </div>
                 <div className="trade-chat-bubble">

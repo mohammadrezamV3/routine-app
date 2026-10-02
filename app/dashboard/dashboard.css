@@ -214,9 +214,6 @@ body[data-theme="light"] .db-hero-phase:not(.is-night){ color:#D98A1E; }
 .db-chip b{ color:var(--accent); font-weight:900; }
 .db-chip-sub{ color:var(--muted); font-weight:600; }
 @media (hover:hover){ a.db-chip:hover{ border-color:rgba(var(--accent-rgb),.55); transform:translateY(-1px); } }
-.db-chip-streak svg{ color:#FF8A3D; }
-.db-chip-streak.tier-0 svg{ color:var(--muted); }
-.db-chip-bell svg{ color:var(--secondary); }
 /* اشتراک موفقیت — فقط آیکون، گوشه‌ی بالا-چپ هیرو (فیزیکی چپ، مستقل از RTL).
    بی‌بک‌گراند (ریست :where(.dash-scope) button)، هدف لمسی ۴۰ پیکسلی. */
 .db-page .db-hero-share{

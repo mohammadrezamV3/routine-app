@@ -1,5 +1,6 @@
 import { NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
+import { NAME_STYLE_SELECT, nameFlags, type NameStyleRow } from "@/lib/nameStyle";
 import { requireMentorsUser, notFound, forbidden, conflict, badRequest } from "@/lib/mentorGuard";
 import { readJsonBody } from "@/lib/validate";
 import { checkRateLimit } from "@/lib/rateLimit";
@@ -32,11 +33,11 @@ const REVIEW_SELECT = {
   rating: true,
   body: true,
   createdAt: true,
-  student: { select: { name: true, lastName: true, username: true, avatarUrl: true, goldenSince: true } },
+  student: { select: { name: true, lastName: true, username: true, avatarUrl: true, ...NAME_STYLE_SELECT } },
 } as const;
 
-function toReview(r: { id: string; rating: number; body: string | null; createdAt: Date; student: { name: string | null; lastName: string | null; username: string | null; avatarUrl: string | null; goldenSince: Date | null } }) {
-  return { id: r.id, rating: r.rating, body: r.body, createdAt: r.createdAt, student: { name: displayName(r.student), avatarUrl: r.student.avatarUrl, golden: !!r.student.goldenSince } };
+function toReview(r: { id: string; rating: number; body: string | null; createdAt: Date; student: { name: string | null; lastName: string | null; username: string | null; avatarUrl: string | null } & NameStyleRow }) {
+  return { id: r.id, rating: r.rating, body: r.body, createdAt: r.createdAt, student: { name: displayName(r.student), avatarUrl: r.student.avatarUrl, ...nameFlags(r.student) } };
 }
 
 // POST /api/mentors/:mentorId/reviews → ثبت نظر (یکی به‌ازای هر شاگرد/منتور).

@@ -145,7 +145,7 @@ export function TradeMtLinkPanel({ accountId, calSystem, accountName }: { accoun
                       {" "}در متاتریدر 4 تب <b className="mono ltr-inline">Account History</b> باید روی <b className="mono ltr-inline">All History</b> باشد
                       (راست‌کلیک روی تب و انتخاب <b className="mono ltr-inline">All History</b>) تا اکسپرت کل تاریخچه را ببیند.
                     </>)}
-                    {" "}اکسپرت باید نسخه‌ی جدید (v1.40) باشد: آن را از همین صفحه دوباره دانلود کنید و جای فایل قبلی بگذارید.
+                    {" "}اکسپرت باید نسخه‌ی جدید (v1.41) باشد: آن را از همین صفحه دوباره دانلود کنید و جای فایل قبلی بگذارید.
                     <div style={{ marginTop: 8 }}>
                       <a className="trade-mt-download" href={link.platform === "MT4" ? "/ea/Arion-MT4.mq4" : "/ea/Arion-MT5.mq5"} download>
                         <Download size={14} /> {link.platform === "MT4" ? "Arion-MT4.mq4" : "Arion-MT5.mq5"}
@@ -274,7 +274,7 @@ export function TradeMtLinkPanel({ accountId, calSystem, accountName }: { accoun
             توجه: برای همگام‌سازی، هر بار باید هم متاتریدر (با اکسپرت روشن روی چارت) و هم سایت هر دو روشن باشند.
           </div>
           <div className="trade-mt-note" style={{ marginTop: 10 }}>
-            نسخه‌ی فعلی اکسپرت v1.40 است. اگر قبلا نسخه‌ی قدیمی را نصب کرده‌اید، فایل را دوباره دانلود کنید و جایگزین کنید. این نسخه برای هر معامله‌ی تازه از چارت همون نماد در لحظه‌ی ورود و خروج اسکرین می‌گیره و به معامله‌ی ژورنال وصل می‌کنه (موقع اسکرین یک چارت لحظه‌ای باز و بسته می‌شه؛ از تنظیمات اکسپرت با SendScreenshots خاموش می‌شه).
+            نسخه‌ی فعلی اکسپرت v1.41 است. اگر قبلا نسخه‌ی قدیمی را نصب کرده‌اید، فایل را دوباره دانلود کنید و جایگزین کنید. این نسخه برای هر معامله‌ی تازه از چارت همون نماد در لحظه‌ی ورود و خروج اسکرین می‌گیره و به معامله‌ی ژورنال وصل می‌کنه (موقع اسکرین یک چارت لحظه‌ای باز و بسته می‌شه؛ از تنظیمات اکسپرت با SendScreenshots خاموش می‌شه).
           </div>
           <div className="trade-mt-note" style={{ marginTop: 14 }}>
             رمز حساب معاملاتی هیچ‌گاه درخواست یا ذخیره نمی‌شود. اکسپرت فقط اطلاعات معاملات را ارسال می‌کند

@@ -213,8 +213,13 @@ export function ExerciseTaskList({
         <>
           <div className="mt-1 shrink-0 text-[11px] text-dash-muted sm:text-[12.5px]">{todayPlan.focus}</div>
 
-          <div className="mt-4 min-h-0 flex-1" dir="ltr" style={{ maxHeight: 360 }}>
-          <div className="thin-scroll h-full overflow-y-auto overflow-x-hidden px-1" dir="rtl">
+          {/* کارت با تعداد حرکت‌ها بزرگ نمی‌شه (درخواست صریح) — خود لیست
+              سقف ارتفاع داره و داخلش اسکرول می‌شه. باگ قبلی: سقف روی قاب بیرونی
+              بود و اسکرولر h-full داشت؛ درصد ارتفاع روی max-height حل نمی‌شه،
+              پس اسکرولر هیچ‌وقت اسکرول نمی‌کرد و ردیف‌ها از کارت بیرون می‌زدن.
+              حالا max-height مستقیم روی خود عنصر overflow نشسته. */}
+          <div className="mt-4 shrink-0" dir="ltr">
+          <div className="exercise-list-scroll thin-scroll overflow-y-auto overflow-x-hidden px-1" dir="rtl" style={{ maxHeight: 360 }}>
             <table className="exercise-plan-table">
               {active && (
                 <thead>
