@@ -213,12 +213,13 @@ export function ExerciseTaskList({
         <>
           <div className="mt-1 shrink-0 text-[11px] text-dash-muted sm:text-[12.5px]">{todayPlan.focus}</div>
 
-          {/* لیست با تعداد حرکت‌ها رشد می‌کند و کارت هم با آن بلند می‌شود.
-              قبلا یک قاب با max-height ثابت داشت که اسکرولر داخلش h-full
-              بود؛ درصد ارتفاع روی max-height حل نمی‌شود، پس اسکرولر هیچ‌وقت
-              اسکرول نمی‌کرد و از روز نهم به بعد ردیف‌ها از زیر کارت بیرون
-              می‌زدند و باکس «انجام دادی» روی لیست می‌افتاد. */}
-          <div className="mt-4 flex-1 px-1">
+          {/* کارت با تعداد حرکت‌ها بزرگ نمی‌شه (درخواست صریح) — خود لیست
+              سقف ارتفاع داره و داخلش اسکرول می‌شه. باگ قبلی: سقف روی قاب بیرونی
+              بود و اسکرولر h-full داشت؛ درصد ارتفاع روی max-height حل نمی‌شه،
+              پس اسکرولر هیچ‌وقت اسکرول نمی‌کرد و ردیف‌ها از کارت بیرون می‌زدن.
+              حالا max-height مستقیم روی خود عنصر overflow نشسته. */}
+          <div className="mt-4 shrink-0" dir="ltr">
+          <div className="exercise-list-scroll thin-scroll overflow-y-auto overflow-x-hidden px-1" dir="rtl" style={{ maxHeight: 360 }}>
             <table className="exercise-plan-table">
               {active && (
                 <thead>
@@ -282,6 +283,7 @@ export function ExerciseTaskList({
                 })}
               </tbody>
             </table>
+          </div>
           </div>
 
           {isFutureDay ? (
