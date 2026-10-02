@@ -636,6 +636,32 @@
      `.streak-flame-compact .streak-flame` پایین‌تر) هم‌تخصیص سلکتور
      `.streak-flame-tierN` هستن ولی بعدش تعریف شدن، پس رشد اندازه‌ی سطح
      رو override می‌کنن — فقط رنگ/گلو/انیمیشن سطح باقی می‌مونه، نه اندازه. */
+  /* آیکون سه‌لایه (components/StreakFlame.tsx): بدنه = رنگ سطح، میانه و
+     هسته = همون رنگ که به طلایی/سفید داغ میل می‌کنه — با چرخش رنگ سطح‌های
+     بالا (flameColorN) هر سه لایه با هم عوض می‌شن. لایه‌های داخلی ریتم
+     جدای خودشون رو دارن (دوره‌های نامتوافق) و از پایه کش میان، پس زبانه
+     واقعا «می‌سوزه» نه اینکه کل آیکون یکجا تکون بخوره. */
+  .streak-flame{ transform-origin:50% 88%; }
+  .streak-flame .streak-flame-mid{ fill:color-mix(in srgb, currentColor 42%, #FFD36B); }
+  .streak-flame .streak-flame-core{ fill:color-mix(in srgb, currentColor 10%, #FFF8E4); }
+  .streak-flame .streak-flame-mid, .streak-flame .streak-flame-core{ transform-box:fill-box; transform-origin:50% 100%; }
+  .streak-flame-tier0 .streak-flame-mid{ fill:color-mix(in srgb, currentColor 72%, #fff); }
+  .streak-flame-tier0 .streak-flame-core{ fill:color-mix(in srgb, currentColor 45%, #fff); }
+  /* آبی و بنفش با طلایی خاکستری می‌شن — لایه‌های داخلیشون به سفید میل می‌کنن */
+  .streak-flame-tier6 .streak-flame-mid, .streak-flame-tier7 .streak-flame-mid{ fill:color-mix(in srgb, currentColor 55%, #fff); }
+  .streak-flame-tier6 .streak-flame-core, .streak-flame-tier7 .streak-flame-core{ fill:color-mix(in srgb, currentColor 12%, #fff); }
+  .streak-flame:not(.streak-flame-tier0) .streak-flame-mid{ animation:flameInnerA 1.73s ease-in-out infinite; }
+  .streak-flame:not(.streak-flame-tier0) .streak-flame-core{ animation:flameInnerB 1.19s ease-in-out infinite; }
+  @keyframes flameInnerA{
+    0%, 100%{ transform:scale(1, 1) skewX(0deg); }
+    30%{ transform:scale(.94, 1.1) skewX(-4deg); }
+    65%{ transform:scale(1.04, .94) skewX(3deg); }
+  }
+  @keyframes flameInnerB{
+    0%, 100%{ transform:scale(1, 1); opacity:1; }
+    40%{ transform:scale(.9, 1.16); opacity:.85; }
+    75%{ transform:scale(1.06, .92); opacity:1; }
+  }
   .streak-flame-tier0{ color:var(--muted2); }
   .streak-flame-tier1{
     width:13px; height:13px; color:#D98A4A;
@@ -763,6 +789,7 @@
       animation:none;
     }
     .streak-flame-particle{ animation:none; opacity:0; }
+    .streak-flame .streak-flame-mid, .streak-flame .streak-flame-core{ animation:none !important; }
   }
 
   /* روی موبایل باریک، این لوگو+شعار کنار زنگوله جا داره؛ کوچیک‌تر نگه‌ش
@@ -5866,6 +5893,8 @@ html[data-perf="low"] .streak-flame-tier6,
 html[data-perf="low"] .streak-flame-tier7,
 html[data-perf="low"] .streak-flame-tier8,
 html[data-perf="low"] .streak-flame-particle,
+html[data-perf="low"] .streak-flame .streak-flame-mid,
+html[data-perf="low"] .streak-flame .streak-flame-core,
 html[data-perf="low"] .wbox-blob,
 html[data-perf="low"] .wbox-glowblob,
 html[data-perf="low"] .ai-sparkle-twinkle,
@@ -9611,20 +9640,12 @@ html[data-logging-out]::after{
 .streak-cel-flame-slot{ position:relative; flex-shrink:0; }
 .streak-cel-flame{ position:absolute; inset:0; transform-origin:50% 60%; will-change:transform; }
 
-.streak-bigflame{ display:block; overflow:visible; }
-.streak-bigflame-glow{ transform-origin:50% 60%; animation:streakGlow 1.6s ease-in-out infinite; }
-@keyframes streakGlow{ 0%,100%{ opacity:.75; transform:scale(1); } 50%{ opacity:1; transform:scale(1.08); } }
-.streak-bigflame-body{ transform-origin:50% 96%; animation:streakBreath 2.4s ease-in-out infinite; }
-@keyframes streakBreath{ 0%,100%{ transform:scale(1,1); } 50%{ transform:scale(1.03,.97); } }
-.streak-bigflame-embers circle{ opacity:0; transform-box:fill-box; transform-origin:center; animation-name:streakEmber; animation-timing-function:ease-out; animation-iteration-count:infinite; }
-@keyframes streakEmber{
-  0%{ opacity:0; transform:translate(0,0) scale(1); }
-  15%{ opacity:1; }
-  100%{ opacity:0; transform:translate(var(--ex, 6px),-170px) scale(.3); }
-}
-.streak-bigflame-embers circle:nth-child(odd){ --ex:-10px; }
-.streak-bigflame.is-still .streak-bigflame-glow,
-.streak-bigflame.is-still .streak-bigflame-body{ animation:none; }
+/* شعله‌ی بزرگ (components/AnimatedStreakFlame.tsx) — همه‌ی حرکت با یک حلقه‌ی
+   rAF در خود کامپوننته (مسیر لایه‌ها، هاله، اخگرها)، نه keyframe؛ این‌جا فقط
+   حالت‌های ساکن و خاموش. */
+.streak-bigflame{ display:block; overflow:visible; pointer-events:none; --sbf-ember:var(--sbf-ember-dark); }
+body[data-theme="light"] .streak-bigflame{ --sbf-ember:var(--sbf-ember-light); }
+.streak-bigflame.is-unlit{ filter:grayscale(1); opacity:.4; }
 
 .streak-cel-burst{ position:absolute; left:50%; top:58%; width:0; height:0; pointer-events:none; }
 .streak-cel-burst i{
@@ -9677,7 +9698,7 @@ html[data-logging-out]::after{
   .streak-cel-week{ margin-top:12px; }
 }
 @media (prefers-reduced-motion:reduce){
-  .streak-cel-rays, .streak-bigflame-glow, .streak-bigflame-body, .streak-badge-hit.is-landing .streak-flame{ animation:none; }
+  .streak-cel-rays, .streak-badge-hit.is-landing .streak-flame{ animation:none; }
   .streak-cel-burst{ display:none; }
 }
 html[data-perf-weak] .streak-cel-rays{ animation:none; }
@@ -9703,20 +9724,29 @@ body[data-theme="light"]{
 body[data-theme="light"] .gring-cap{ filter:drop-shadow(0 0 2px rgba(80,50,20,.35)); }
 
 /* ── نام طلایی (components/GoldenName.tsx) ─────────────────────────
-   دو طلای متفاوت (روشن لیمویی و عسلی گرم) که روی حروف جریان دارن + یک برق
-   کوتاه. فقط background-clip:text — عنصر خودش هیچ بک‌گراندی نمی‌گیره. */
+   دو طلای متفاوت (روشن لیمویی و عسلی گرم) که روی حروف جریان دارن؛ برق
+   روشن (--g1) جزو خود گرادیانه، پس جاروی جدایی که قطع/وصل بشه نداره.
+   فقط background-clip:text — عنصر خودش هیچ بک‌گراندی نمی‌گیره.
+
+   حلقه‌ی بی‌درز: گرادیان افقی (90deg، تا لبه‌ی کاشی‌ها کج نیفتن) که اول و
+   آخرش یک رنگه، پس کاشی تکرارشونده (repeat-x) بی‌درزه. عرض کاشی = 200%
+   عنصر، و جابه‌جایی 0% → 200% با این اندازه دقیقا یک کاشی کامله
+   ((W - 2W) × 2 = -2W)؛ پس فریم آخر پیکسل‌به‌پیکسل همون فریم اوله و با
+   timing خطی هیچ پرش یا مکثی دیده نمی‌شه. */
 .golden-name{
   --g1:#fff3b0; --g2:#f5c542; --g3:#d4891a; --g4:#ffe27a;
-  background-image:linear-gradient(100deg, var(--g3) 0%, var(--g2) 18%, var(--g1) 32%, var(--g2) 46%, var(--g3) 60%, var(--g4) 76%, var(--g3) 100%);
-  background-size:220% 100%;
+  background-image:linear-gradient(90deg, var(--g3) 0%, var(--g2) 13%, var(--g1) 25%, var(--g2) 37%, var(--g3) 50%, var(--g4) 63%, var(--g2) 76%, var(--g4) 88%, var(--g3) 100%);
+  background-size:200% 100%;
+  background-repeat:repeat-x;
+  background-position:0% 50%;
   -webkit-background-clip:text; background-clip:text;
   -webkit-text-fill-color:transparent; color:transparent;
   filter:drop-shadow(0 0 6px rgba(245,197,66,.35));
-  animation:goldenFlow 4.5s linear infinite, goldenGlow 2.6s ease-in-out infinite;
+  animation:goldenFlow 6s linear infinite, goldenGlow 2.6s ease-in-out infinite;
   font-weight:800;
 }
 body[data-theme="light"] .golden-name{ --g1:#f7d774; --g2:#d9a21b; --g3:#9a5b06; --g4:#e8b830; filter:drop-shadow(0 0 4px rgba(217,162,27,.3)); }
-@keyframes goldenFlow{ from{ background-position:0% 50%; } to{ background-position:220% 50%; } }
+@keyframes goldenFlow{ from{ background-position:0% 50%; } to{ background-position:200% 50%; } }
 @keyframes goldenGlow{ 0%,100%{ filter:drop-shadow(0 0 4px rgba(245,197,66,.25)); } 50%{ filter:drop-shadow(0 0 10px rgba(245,197,66,.55)); } }
 @media (prefers-reduced-motion: reduce){ .golden-name{ animation:none; background-position:30% 50%; } }
 
