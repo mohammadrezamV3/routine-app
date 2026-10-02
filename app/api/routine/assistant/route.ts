@@ -12,9 +12,10 @@ import { SETTING_KEYS, ROUTINE_ASSISTANT_USES_KEY } from "@/lib/userSettingKeys"
 import { toJalali, faNum, J_MONTHS } from "@/lib/jalali";
 import {
   applyOps, describeSchedule, sortOccurrences, stripInventedTimes,
+  buildCalendarTable, describeMentions, extractDateMentions, invalidDateMessage, reconcileOpDates,
   DAY_NAME_FA, DEFAULT_AWAKE, type AwakeWindow,
 } from "@/lib/routineAssistant";
-import { addDaysIso, jsDayOfIso } from "@/lib/schedule";
+import { addDaysIso } from "@/lib/schedule";
 import type { CustomOccurrence } from "@/lib/storage";
 import { publishDataChanged, clientTabId } from "@/lib/realtime";
 
@@ -151,24 +152,6 @@ function jalaliLabel(iso: string, withWeekday = true): string {
   return withWeekday ? `${DAY_NAME_FA[d.getDay()]} ${text}` : text;
 }
 
-/**
- * جدول سه هفته‌ی پیش‌رو برای مدل: مدل روز هفته‌ی یک تاریخ را از حافظه
- * حساب نمی‌کند (همان‌جا بود که «این پنجشنبه» روز اشتباه می‌خورد)، از این
- * جدول برمی‌دارد.
- */
-function calendarTable(todayIso: string, days = 21): string {
-  const lines: string[] = [];
-  for (let i = 0; i < days; i++) {
-    const iso = addDaysIso(todayIso, i);
-    const d = new Date(iso + "T00:00:00");
-    const j = toJalali(d.getFullYear(), d.getMonth() + 1, d.getDate());
-    const jal = `${j[0]}/${String(j[1]).padStart(2, "0")}/${String(j[2]).padStart(2, "0")}`;
-    const tag = i === 0 ? " (امروز)" : i === 1 ? " (فردا)" : "";
-    lines.push(`${iso} | ${DAY_NAME_FA[jsDayOfIso(iso)]} | ${jal}${tag}`);
-  }
-  return lines.join("\n");
-}
-
 export async function POST(req: NextRequest) {
   // ROUTINE ماژول پایه و همیشه رایگان است؛ این نگهبان این‌جا برای دسترسی
   // نیست، برای همان سه کار دیگری است که می‌کند: ۴۰۱ برای مهمان، بلاک
@@ -203,6 +186,29 @@ export async function POST(req: NextRequest) {
     );
   }
 
+  // ---------- تاریخ‌های پیام کاربر ----------
+  // تاریخ‌ها سمت سرور حل می‌شوند، نه با حساب ذهنی مدل (باگ «30 مهر → 8
+  // آبان»). جواب کوتاه به سوال قبلی دستیار («آره همون») تاریخ ندارد، پس
+  // آن‌وقت تاریخ‌های آخرین پیام قبلی کاربر ملاک‌اند.
+  const history = parseHistory(parsed.body?.history);
+  const todayIso = resolveToday(parsed.body?.today);
+  let mentions = extractDateMentions(message, todayIso);
+  if (!mentions.length) {
+    const prevUser = history.filter((t) => t.role === "user").slice(-1)[0];
+    if (prevUser) mentions = extractDateMentions(prevUser.text, todayIso);
+  }
+  // تاریخی که وجود ندارد («31 مهر») قبل از مصرف سهمیه و بدون حدس جواب می‌گیرد
+  const badMention = extractDateMentions(message, todayIso).find((m) => !m.iso);
+  if (badMention) {
+    return NextResponse.json({
+      reply: invalidDateMessage(badMention),
+      applied: [],
+      problems: [invalidDateMessage(badMention)],
+      options: [],
+      changed: false,
+    });
+  }
+
   // ---------- دسترسی و سهمیه ----------
   const { unlimited, freeLimit } = await assistantAccess(userId, isSuperAdmin);
   let usesBefore = 0;
@@ -231,7 +237,6 @@ export async function POST(req: NextRequest) {
   }
 
   // ---------- وضعیت فعلی برنامه‌ها ----------
-  const history = parseHistory(parsed.body?.history);
   const rawOcc = await readOccurrences(userId, SETTING_KEYS.customOccurrences);
   const occurrences: CustomOccurrence[] = Array.isArray(rawOcc) ? (rawOcc as CustomOccurrence[]) : [];
   const rawRemoved = await readOccurrences(userId, SETTING_KEYS.removedOccurrences);
@@ -239,7 +244,7 @@ export async function POST(req: NextRequest) {
   const awake = awakeWindow(await readOccurrences(userId, SETTING_KEYS.wakeSleepTimes));
 
   const ordered = sortOccurrences(occurrences);
-  const todayIso = resolveToday(parsed.body?.today);
+  const mentionText = describeMentions(mentions);
 
   // ---------- فراخوانی مدل ----------
   let plan;
@@ -250,7 +255,8 @@ export async function POST(req: NextRequest) {
       jalaliLabel(todayIso),
       userId,
       history,
-      calendarTable(todayIso)
+      (mentionText ? `تاریخ‌هایی که کاربر گفته (سیستم دقیق حساب کرده — همین‌ها را بنویس):\n${mentionText}\n\n` : "") +
+        `جدول تاریخ‌ها (میلادی | روز هفته و تاریخ جلالی):\n${buildCalendarTable(todayIso)}`
     );
   } catch (err: any) {
     await refundQuota();
@@ -313,7 +319,9 @@ export async function POST(req: NextRequest) {
   // ساعتی که کاربر اصلا نگفته، دور ریخته می‌شود — آخرین پیام کاربر و دو
   // پیام قبلی‌اش (برای جواب‌های کوتاه به سوال دستیار) ملاک‌اند.
   const userTexts = [message, ...history.filter((t) => t.role === "user").slice(-2).map((t) => t.text)];
-  const { ops } = stripInventedTimes(plan.ops, userTexts);
+  const { ops: timedOps } = stripInventedTimes(plan.ops, userTexts);
+  // تاریخی که مدل نوشته ولی با گفته‌ی کاربر نمی‌خواند، با تاریخ واقعی عوض می‌شود
+  const { ops } = reconcileOpDates(timedOps, mentions, todayIso);
   const outcome = applyOps(ordered, removed, ops, todayIso, awake);
 
   if (outcome.changed) {

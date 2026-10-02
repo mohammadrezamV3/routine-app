@@ -195,13 +195,276 @@ export function parseDateInput(v: unknown, todayIso: string): string | null {
   if (t === "فردا" || t.toLowerCase() === "tomorrow") return addDaysIso(todayIso, 1);
   if (t === "پسفردا" || t === "پس فردا") return addDaysIso(todayIso, 2);
   const m = /^(\d{4})[-/.](\d{1,2})[-/.](\d{1,2})$/.exec(t);
-  if (!m) return null;
+  if (!m) {
+    // عبارت فارسی‌ای که مدل عینا از پیام کاربر کپی کرده («30 مهر»، «شنبه بعد»)
+    const mentions = extractDateMentions(v, todayIso);
+    return mentions.length === 1 ? mentions[0].iso : null;
+  }
   const y = Number(m[1]), mo = Number(m[2]), d = Number(m[3]);
   if (y >= 1300 && y <= 1500) return jalaliToIso(y, mo, d);
   if (y < 1900 || y > 2200) return null;
   const date = new Date(y, mo - 1, d);
   if (date.getFullYear() !== y || date.getMonth() !== mo - 1 || date.getDate() !== d) return null;
   return isoLocal(date);
+}
+
+// ─────────────────────────────────────────────────────────────────────────
+// تاریخ‌هایی که کاربر به زبان خودش گفته — سمت سرور، بدون حساب ذهنی مدل
+//
+// ریشه‌ی باگ «30 مهر → 8 آبان»: مدل برای «30 مهر» تاریخ میلادی می‌نوشت و
+// ماه مهر را با اکتبر یکی می‌گرفت (2026-10-30 = 8 آبان). جدول تاریخ‌ها
+// فقط 21 روز بود و ماه جلالی را عددی (1405/07/30) نشان می‌داد، پس هر
+// تاریخی بیرون از جدول به حدس مدل می‌افتاد. حالا:
+//   1) هر تاریخی که در پیام کاربر هست همین‌جا به ISO تبدیل می‌شود و
+//      جواب آماده به مدل داده می‌شود؛
+//   2) مدل می‌تواند خود عبارت کاربر را بنویسد («30 مهر») و parseDateInput
+//      آن را دقیق تبدیل می‌کند؛
+//   3) اگر مدل باز هم تاریخی نوشت که با گفته‌ی کاربر نمی‌خواند،
+//      reconcileOpDates آن را با تاریخ واقعی کاربر عوض می‌کند.
+// ─────────────────────────────────────────────────────────────────────────
+
+const FA_LETTER = "\\u0600-\\u06FF";
+const MONTH_ALIASES: [string, number][] = [
+  ["فروردین", 1], ["اردیبهشت", 2], ["خرداد", 3], ["تیر", 4], ["امرداد", 5], ["مرداد", 5],
+  ["شهریور", 6], ["مهر", 7], ["آبان", 8], ["آذر", 9], ["دی", 10], ["بهمن", 11], ["اسفند", 12],
+];
+const MONTH_RE = MONTH_ALIASES.map(([n]) => n).join("|");
+const ORDINAL_WORDS: Record<string, number> = { "اول": 1, "یکم": 1, "دوم": 2, "سوم": 3 };
+const WEEKDAY_RE = "(?:(?:یک|دو|سه|چهار|پنج)\\s?)?شنبه|جمعه";
+
+/** «سه شنبه»، «پنج‌شنبه» → jsDay */
+function weekdayOf(word: string): number | null {
+  return parseDay(word.replace(/\s/g, ""));
+}
+
+/**
+ * نزدیک‌ترین وقوع «روز/ماه جلالی» به امروز (سال قبل، امسال، سال بعد).
+ * «5 فروردین» در اسفند یعنی فروردین سال بعد؛ «5 مهر» در 10 مهر یعنی همین
+ * پنج روز پیش، نه مهر سال بعد. null یعنی چنین روزی در آن ماه نیست (31 مهر).
+ */
+export function resolveJalaliDayMonth(day: number, month: number, year: number | null, todayIso: string): string | null {
+  if (year !== null) return jalaliToIso(year, month, day);
+  const t = new Date(todayIso + "T00:00:00");
+  const jy = toJalali(t.getFullYear(), t.getMonth() + 1, t.getDate())[0];
+  const today = t.getTime();
+  let best: { iso: string; dist: number } | null = null;
+  for (const y of [jy, jy + 1, jy - 1]) {
+    const iso = jalaliToIso(y, month, day);
+    if (!iso) continue;
+    const diff = (new Date(iso + "T00:00:00").getTime() - today) / 86_400_000;
+    // نزدیک‌ترین؛ در تساوی، آینده برنده است
+    const dist = Math.abs(diff) + (diff < 0 ? 0.5 : 0);
+    if (!best || dist < best.dist) best = { iso, dist };
+  }
+  return best?.iso ?? null;
+}
+
+export type DateMention = {
+  /** همان تکه‌ای از متن که تاریخ را گفته */
+  text: string;
+  /** null یعنی چنین تاریخی وجود ندارد («31 مهر») */
+  iso: string | null;
+  /** روز و ماه صریح («30 مهر») — در برابر نسبی («فردا»، «شنبه بعد») */
+  explicit: boolean;
+  /** برای explicit: [ماه، روز] جلالی که کاربر گفت */
+  jalali?: [number, number];
+};
+
+function normalizeFa(text: string): string {
+  return toEnDigits(text)
+    .replace(/ي/g, "ی").replace(/ك/g, "ک")
+    .replace(/[‌‏‎]/g, " ")
+    .replace(/[ \t]+/g, " ");
+}
+
+/**
+ * همه‌ی تاریخ‌های یک متن کاربر، به‌ترتیب ظاهرشدن. روز هفته‌ی تنها
+ * («شنبه‌ها»، «شنبه») تاریخ نیست — یعنی تکرار هفتگی — و برگردانده نمی‌شود.
+ */
+export function extractDateMentions(text: string, todayIso: string): DateMention[] {
+  const src = normalizeFa(text);
+  const out: { at: number; m: DateMention }[] = [];
+  const taken: [number, number][] = [];
+  const free = (s: number, e: number) => taken.every(([a, b]) => e <= a || s >= b);
+  const nb = `(?![${FA_LETTER}])`; // پایان کلمه
+  const sb = `(?<![${FA_LETTER}\\d])`; // شروع کلمه
+
+  function scan(re: RegExp, make: (m: RegExpExecArray) => DateMention | null) {
+    for (const m of Array.from(src.matchAll(re))) {
+      const s = m.index ?? 0, e = s + m[0].length;
+      if (!free(s, e)) continue;
+      const dm = make(m as RegExpExecArray);
+      if (!dm) continue;
+      taken.push([s, e]);
+      out.push({ at: s, m: { ...dm, text: m[0].trim() } });
+    }
+  }
+
+  // 1405/07/30 یا 2026-10-22 داخل متن
+  scan(/(?<!\d)(\d{4})[-/.](\d{1,2})[-/.](\d{1,2})(?!\d)/g, (m) => {
+    const y = Number(m[1]);
+    const iso = parseDateInput(`${m[1]}-${m[2]}-${m[3]}`, todayIso);
+    const jal = y >= 1300 && y <= 1500 ? ([Number(m[2]), Number(m[3])] as [number, number]) : undefined;
+    return { text: "", iso, explicit: true, jalali: jal };
+  });
+
+  // «30 مهر»، «30ام مهر»، «30 مهر 1405»، «اول آبان»، «آخر اسفند»
+  const dayPart = `(\\d{1,2})\\s?(?:ام|م)?|${Object.keys(ORDINAL_WORDS).join("|")}|آخر`;
+  scan(new RegExp(`${sb}(${dayPart})\\s?(?:ی\\s)?(?:ماه\\s)?(${MONTH_RE})${nb}(?:\\s?(?:ماه\\s?)?(?:سال\\s?)?(1[34]\\d\\d)(?!\\d))?`, "g"), (m) => {
+    const month = MONTH_ALIASES.find(([n]) => n === m[3])![1];
+    const year = m[4] ? Number(m[4]) : null;
+    let day: number;
+    if (m[2]) day = Number(m[2]);
+    else if (m[1] === "آخر") {
+      // اول سال درست را با روز 1 همان ماه پیدا می‌کنیم، بعد آخرین روز واقعی
+      // همان ماه در همان سال (اسفند کبیسه 30 روزه است)
+      const first = resolveJalaliDayMonth(1, month, year, todayIso);
+      if (!first) return null;
+      const f = new Date(first + "T00:00:00");
+      const y = toJalali(f.getFullYear(), f.getMonth() + 1, f.getDate())[0];
+      day = [31, 30, 29].find((d) => jalaliToIso(y, month, d)) ?? 29;
+      return { text: "", iso: jalaliToIso(y, month, day), explicit: true, jalali: [month, day] };
+    } else day = ORDINAL_WORDS[m[1]];
+    if (day < 1 || day > 31) return { text: "", iso: null, explicit: true, jalali: [month, day] };
+    return { text: "", iso: resolveJalaliDayMonth(day, month, year, todayIso), explicit: true, jalali: [month, day] };
+  });
+
+  // «شنبه بعد»، «شنبه‌ی هفته‌ی بعد»، «دوشنبه آینده»
+  scan(new RegExp(`${sb}(${WEEKDAY_RE})\\s?(?:ی\\s)?(?:هفته\\s?(?:ی\\s)?)?(?:بعد|بعدی|آینده|دیگه|دیگر)${nb}(?!\\s?از${nb})`, "g"), (m) => {
+    const wd = weekdayOf(m[1]);
+    if (wd === null) return null;
+    return { text: "", iso: sameWeekIso(addDaysIso(todayIso, 7), wd), explicit: false };
+  });
+
+  // «این شنبه»، «همین جمعه»، «پنجشنبه این هفته» → نزدیک‌ترین همان روز از امروز به بعد
+  const upcoming = (wd: number) => addDaysIso(todayIso, (wd - jsDayOfIso(todayIso) + 7) % 7);
+  scan(new RegExp(`${sb}(?:این|همین)\\s(${WEEKDAY_RE})${nb}`, "g"), (m) => {
+    const wd = weekdayOf(m[1]);
+    return wd === null ? null : { text: "", iso: upcoming(wd), explicit: false };
+  });
+  scan(new RegExp(`${sb}(${WEEKDAY_RE})\\s?(?:ی\\s)?(?:این|همین)\\sهفته${nb}`, "g"), (m) => {
+    const wd = weekdayOf(m[1]);
+    return wd === null ? null : { text: "", iso: upcoming(wd), explicit: false };
+  });
+
+  // «3 روز دیگه»
+  scan(new RegExp(`${sb}(\\d{1,2})\\sروز\\s(?:دیگه|دیگر|بعد)${nb}`, "g"), (m) => {
+    const n = Number(m[1]);
+    return n >= 1 && n <= 60 ? { text: "", iso: addDaysIso(todayIso, n), explicit: false } : null;
+  });
+
+  scan(new RegExp(`${sb}پس\\s?فردا${nb}`, "g"), () => ({ text: "", iso: addDaysIso(todayIso, 2), explicit: false }));
+  scan(new RegExp(`${sb}فردا${nb}`, "g"), () => ({ text: "", iso: addDaysIso(todayIso, 1), explicit: false }));
+  scan(new RegExp(`${sb}امروز${nb}`, "g"), () => ({ text: "", iso: todayIso, explicit: false }));
+
+  return out.sort((a, b) => a.at - b.at).map((x) => x.m);
+}
+
+/** پیام روشن برای تاریخی که وجود ندارد («31 مهر») */
+export function invalidDateMessage(m: DateMention): string {
+  if (m.jalali) {
+    const [month] = m.jalali;
+    const len = month <= 6 ? 31 : month <= 11 ? 30 : 29;
+    return `«${m.text}» وجود ندارد — ${J_MONTHS[month - 1]} ${len} روز دارد${month === 12 ? " (در سال کبیسه 30)" : ""}. کدام روز را می‌گویی؟`;
+  }
+  return `تاریخ «${m.text}» را نفهمیدم.`;
+}
+
+/** خلاصه‌ی تاریخ‌های حل‌شده برای مدل: «30 مهر» = 2026-10-22 (چهارشنبه 30 مهر 1405) */
+export function describeMentions(mentions: DateMention[]): string {
+  return mentions
+    .filter((m) => m.iso)
+    .map((m) => `«${m.text}» = ${m.iso} (${jalaliLongLabel(m.iso!)})`)
+    .join("\n");
+}
+
+function jalaliLongLabel(iso: string): string {
+  const d = new Date(iso + "T00:00:00");
+  const j = toJalali(d.getFullYear(), d.getMonth() + 1, d.getDate());
+  return `${DAY_NAME_FA[d.getDay()]} ${j[2]} ${J_MONTHS[j[1] - 1]} ${j[0]}`;
+}
+
+/**
+ * جدول روزهای پیش‌رو برای مدل: ISO | روز هفته | تاریخ جلالی با *اسم* ماه.
+ * اسم ماه عمدا نوشته می‌شود (نه 1405/07/30): مدل باید «30 مهر» کاربر را
+ * عینا در جدول پیدا کند، نه این‌که مهر را به عدد ماه یا به اکتبر برگرداند.
+ */
+export function buildCalendarTable(todayIso: string, days = 60): string {
+  const lines: string[] = [];
+  for (let i = 0; i < days; i++) {
+    const iso = addDaysIso(todayIso, i);
+    const tag = i === 0 ? " (امروز)" : i === 1 ? " (فردا)" : i === 2 ? " (پس‌فردا)" : "";
+    lines.push(`${iso} | ${jalaliLongLabel(iso)}${tag}`);
+  }
+  return lines.join("\n");
+}
+
+type DateSlot = { op: RawOp; field: "date" | "dates" | "toDate" | "from" | "until"; index?: number; raw: unknown; iso: string | null };
+
+/**
+ * تاریخ‌های نقشه‌ی مدل را با تاریخ‌هایی که کاربر واقعا گفته تطبیق می‌دهد.
+ *
+ * فقط فیلدهای «مقصد» اصلاح می‌شوند (add: date/dates/from/until، move:
+ * toDate، update: from/until) — `date` در retime/move/delete یعنی کدام
+ * وقوع برنامه، و ممکن است از روی یک روز هفته‌ی بی‌تاریخ آمده باشد.
+ * هر تاریخ کاربر فقط یک بار جای یک تاریخ اشتباه را می‌گیرد:
+ *   1) اگر روز ماه تاریخ اشتباه با روز جلالی دقیقا یک تاریخ استفاده‌نشده‌ی
+ *      کاربر یکی باشد (اشتباه کلاسیک «30 مهر» → «2026-10-30»)؛
+ *   2) وگرنه اگر فقط یک جای اشتباه و یک تاریخ استفاده‌نشده مانده باشد.
+ * هر چیز مبهم دیگری دست نمی‌خورد.
+ */
+export function reconcileOpDates(ops: RawOp[], mentions: DateMention[], todayIso: string): { ops: RawOp[]; corrected: number } {
+  const known = mentions.filter((m) => m.iso);
+  if (!known.length) return { ops, corrected: 0 };
+  const mentionIsos = Array.from(new Set(known.map((m) => m.iso!)));
+  const out = ops.map((o) => (o && typeof o === "object" ? { ...o, ...(Array.isArray(o.dates) ? { dates: [...o.dates] } : {}) } : o));
+
+  const used = new Set<string>();
+  const slots: DateSlot[] = [];
+  for (const o of out) {
+    if (!o || typeof o !== "object") continue;
+    const fields: DateSlot["field"][] =
+      o.op === "add" ? ["date", "dates", "from", "until"] :
+      o.op === "move" ? ["toDate", "date"] :
+      o.op === "update" ? ["from", "until"] :
+      ["date", "from"];
+    for (const f of fields) {
+      const vals = f === "dates" ? (Array.isArray(o.dates) ? o.dates : []) : isBlank(o[f]) ? [] : [o[f]];
+      vals.forEach((raw, i) => {
+        const iso = parseDateInput(raw, todayIso);
+        if (iso && mentionIsos.includes(iso)) { used.add(iso); return; }
+        // فقط فیلدهای مقصد قابل اصلاح‌اند
+        const correctable = o.op === "add" || o.op === "update" || (o.op === "move" && f === "toDate");
+        if (!correctable) return;
+        // from پیش‌فرض امروز است، وقتی کاربر چیزی درباره‌ی شروع نگفته
+        if (f === "from" && iso === todayIso) return;
+        slots.push({ op: o, field: f, index: f === "dates" ? i : undefined, raw, iso });
+      });
+    }
+  }
+  let unused = known.filter((m) => !used.has(m.iso!));
+  // تکراری‌ها را یکی کن
+  unused = unused.filter((m, i) => unused.findIndex((x) => x.iso === m.iso) === i);
+  if (!slots.length || !unused.length) return { ops: out, corrected: 0 };
+
+  let corrected = 0;
+  const assign = (s: DateSlot, iso: string) => {
+    if (s.field === "dates") (s.op.dates as unknown[])[s.index!] = iso;
+    else (s.op as any)[s.field] = iso;
+    corrected++;
+  };
+  const remaining: DateSlot[] = [];
+  for (const s of slots) {
+    const dom = typeof s.raw === "string" ? /^\s*\d{4}[-/.]\d{1,2}[-/.](\d{1,2})\s*$/.exec(toEnDigits(s.raw))?.[1] : undefined;
+    const domN = dom ? Number(dom) : null;
+    const hits = domN === null ? [] : unused.filter((m) => m.jalali && m.jalali[1] === domN);
+    if (hits.length === 1) {
+      assign(s, hits[0].iso!);
+      unused = unused.filter((m) => m !== hits[0]);
+    } else remaining.push(s);
+  }
+  if (remaining.length === 1 && unused.length === 1) assign(remaining[0], unused[0].iso!);
+  return { ops: out, corrected };
 }
 
 /** «۵ مهر» — برچسب کوتاه تاریخ برای پیام‌ها */
