@@ -58,7 +58,7 @@ export async function computeUserAchievements(userId: string): Promise<Achieveme
 
   const [settings, dailyRows, sleepRows, stored, workoutRows, foodRows, targetRows, tradeRows, menteeProgramsDone, mentorStudents, rewardRows] = await Promise.all([
     prisma.userSetting.findMany({
-      where: { userId, key: { in: ["customOccurrences", "removedOccurrences", "wakeSleepTimes"] } },
+      where: { userId, key: { in: ["customOccurrences", "removedOccurrences", "wakeSleepTimes", "sleepGoal"] } },
       select: { key: true, value: true },
     }),
     prisma.dailyEntry.findMany({ where: { userId }, select: { date: true, completedItems: true, wakeUpAt: true } }),
@@ -83,6 +83,8 @@ export async function computeUserAchievements(userId: string): Promise<Achieveme
   const custom = (Array.isArray(set.get("customOccurrences")) ? set.get("customOccurrences") : []) as ScheduleOpts["customOccurrences"];
   const removed = (Array.isArray(set.get("removedOccurrences")) ? set.get("removedOccurrences") : []) as string[];
   const ws = (set.get("wakeSleepTimes") ?? {}) as { wake?: string; sleep?: string };
+  // ساعت خواب هدف: اول هدف سیستم خواب (lib/sleepGoal.ts)، بعد ساعت روتین
+  const sg = (set.get("sleepGoal") ?? {}) as { wake?: string; sleep?: string };
 
   const daily: Record<string, { tasks: Record<string, boolean>; wakeMin: number | null }> = {};
   for (const r of dailyRows) {
@@ -100,7 +102,7 @@ export async function computeUserAchievements(userId: string): Promise<Achieveme
     opts: { customOccurrences: custom, removedOccurrences: new Set(removed) },
     daily,
     wakeTargetMin: hhmmToMin(ws.wake, DEFAULT_WAKE),
-    sleepTargetMin: hhmmToMin(ws.sleep, DEFAULT_SLEEP),
+    sleepTargetMin: hhmmToMin(sg.sleep || ws.sleep, DEFAULT_SLEEP),
     sleeps,
     routineItems: custom.length,
     workoutDates: workoutRows.map((r) => dbDayIso(r.date)),

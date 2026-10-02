@@ -27,6 +27,8 @@ export const SETTING_KEYS = {
   customOccurrences: "customOccurrences",
   medications: "medications",
   wakeSleepTimes: "wakeSleepTimes",
+  // هدف خواب سیستم جدای خواب (lib/sleepGoal.ts) — مستقل از ساعت‌های روتین
+  sleepGoal: "sleepGoal",
   outingDates: "outingDates",
   dashboardPrefs: "dashboardPrefs",
   notifPrefs: "notifPrefs",

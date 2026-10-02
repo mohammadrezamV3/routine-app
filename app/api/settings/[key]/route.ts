@@ -41,6 +41,10 @@ async function handlePOST(req: NextRequest, { params }: { params: { key: string 
     const guard = await requireModule(ModuleKey.ROUTINE);
     if (!guard.ok) return guard.response;
   }
+  if (params.key === "sleepGoal") {
+    const guard = await requireModule(ModuleKey.SLEEP);
+    if (!guard.ok) return guard.response;
+  }
 
   const parsed = await readJsonBody<{ value?: unknown }>(req, MAX_SETTING_VALUE_BYTES);
   if (!parsed.ok) return NextResponse.json({ error: parsed.error }, { status: parsed.status });

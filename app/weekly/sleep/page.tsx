@@ -1,18 +1,6 @@
-import type { Metadata } from "next";
-import { ModuleGate } from "@/components/ModuleGate";
-import { SleepHub } from "@/components/SleepHub";
+import { redirect } from "next/navigation";
 
-// خواب بخشی از «روتین من»ه (نه یک آیتم جدا در منو): زیر /weekly با تب‌های
-// «برنامه‌ها / خواب» (RoutineSectionTabs). صفحه‌ی شخصیه و ایندکس نمی‌شه.
-export const metadata: Metadata = {
-  title: "خواب",
-  robots: { index: false, follow: false },
-};
-
-export default function RoutineSleepPage() {
-  return (
-    <ModuleGate module="SLEEP">
-      <SleepHub />
-    </ModuleGate>
-  );
+// آدرس موقت قبلی خواب. خواب صفحه و سیستم خودش رو داره (/sleep).
+export default function WeeklySleepRedirect() {
+  redirect("/sleep");
 }

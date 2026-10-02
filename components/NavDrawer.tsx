@@ -134,8 +134,14 @@ function isGroup(item: NavItem): item is NavGroup {
 const LINKS: NavItem[] = [
   // داشبورد — نمای کلی همه‌ی بخش‌ها و صفحه‌ی اصلی بعد از ورود؛ پشت فلگ `dashboard` (پیش‌فرض روشن برای همه)
   { href: "/dashboard", label: "داشبورد", icon: "dashboard", feature: "dashboard" },
-  // خواب آیتم جدا نیست: بخشی از «روتین من»ه (/weekly/sleep، تب‌های RoutineSectionTabs)
-  { href: "/weekly", label: "روتین", icon: "weekly" },
+  // «روتین من»: برنامه‌ی روزانه و خواب دو صفحه و سیستم کاملا جدا، فقط در منو کنار هم
+  {
+    label: "روتین من", icon: "weekly",
+    children: [
+      { href: "/weekly", label: "برنامه روزانه", icon: "weekly" },
+      { href: "/sleep", label: "خواب", icon: "sleep", module: "SLEEP" },
+    ],
+  },
   { href: "/roadmaps", label: "رودمپ‌ها", icon: "roadmaps", feature: "roadmaps" },
   // منتورها درست زیر رودمپ‌ها. گروه فقط صفحه‌های سمت شاگرد را دارد؛
   // «پنل منتور» (برای کسی که منتوری می‌کند) این‌جا نیست — در پاپ‌آپ پروفایل،

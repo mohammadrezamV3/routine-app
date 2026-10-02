@@ -6,8 +6,6 @@ import { useSession } from "next-auth/react";
 import { LockBodyScroll } from "@/components/LockBodyScroll";
 import { ModuleGate } from "@/components/ModuleGate";
 import { RoutineTrialBanner } from "@/components/RoutineTrialBanner";
-import { SleepMiniCard } from "@/components/SleepMiniCard";
-import { RoutineSectionTabs } from "@/components/RoutineSectionTabs";
 import { Calendar, Filter, History } from "lucide-react";
 import {
   WEEK_ORDER,
@@ -528,7 +526,6 @@ function WeeklyPageInner() {
       <section className="dash-breakout dash-scope pb-6 text-dash-text">
         <div className="flex flex-col gap-4 sm:gap-6">
           <DashHeader progress={todayStats.pct} />
-          <RoutineSectionTabs className="slp-section-tabs" />
           <RoutineTrialBanner />
 
           <div className="flex flex-col gap-2.5 sm:gap-3 lg:flex-row lg:items-center lg:gap-4">
@@ -573,8 +570,7 @@ function WeeklyPageInner() {
                 ? hasMiddleColumn
                   ? "flex flex-col gap-4 sm:gap-6 lg:grid lg:grid-cols-[2.5fr_0.8fr_1fr] lg:items-stretch lg:gap-6"
                   : "flex flex-col gap-4 sm:gap-6 lg:grid lg:grid-cols-[2.5fr_1fr] lg:items-stretch lg:gap-6"
-                : // ردیف دکمه‌ها همیشه هست (خواب خاموش‌شدنی نیست)
-                  "flex flex-col gap-4 sm:gap-6 lg:grid lg:grid-cols-[2.5fr_1fr] lg:items-stretch lg:gap-6"
+                : "flex flex-col gap-4 sm:gap-6 lg:grid lg:grid-cols-[2.5fr_1fr] lg:items-stretch lg:gap-6"
             }
           >
             {status === "unauthenticated" ? (
@@ -592,8 +588,6 @@ function WeeklyPageInner() {
                 onMoveTask={moveTaskFromDash}
                 onStartExercise={startExercise}
                 delay={0.05}
-                // دسکتاپ: دو ردیف ارتفاع می‌گیره (کنار ستون‌ها + کارت خواب زیرشون) تا بلندتر بشه
-                className="lg:row-span-2"
               />
             )}
 
@@ -606,10 +600,6 @@ function WeeklyPageInner() {
                   </div>
                 )}
                 <DashSidebar statsRefreshKey={statsRefreshKey} />
-                {/* خواب زیر ستون‌های سمت چپ، هم‌عرض هر دوشون */}
-                <div className={hasMiddleColumn ? "lg:col-span-2" : ""}>
-                  <SleepMiniCard />
-                </div>
               </>
             ) : (
               <DashQuickPanels prefs={dashboardPrefs} statsRefreshKey={statsRefreshKey} />

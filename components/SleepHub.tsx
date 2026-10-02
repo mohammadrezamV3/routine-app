@@ -3,7 +3,6 @@
 import "./sleep.css";
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { DashHeader } from "./DashHeader";
-import { RoutineSectionTabs } from "./RoutineSectionTabs";
 import { RoutineTrialBanner } from "./RoutineTrialBanner";
 import { SleepHero } from "./SleepHero";
 import { SleepLogSheet, type SleepLogSheetProps } from "./SleepLogSheet";
@@ -13,13 +12,15 @@ import { SleepInsightsPanel } from "./SleepInsightsPanel";
 import { SleepCycleCalc } from "./SleepCycleCalc";
 import { SleepHistoryList } from "./SleepHistoryList";
 import { getSleepRange } from "@/lib/storage";
-import { DEFAULT_SLEEP, DEFAULT_WAKE, getWakeSleepTimes } from "@/lib/wakeSleep";
+import { DEFAULT_SLEEP, DEFAULT_WAKE } from "@/lib/wakeSleep";
+import { getSleepGoal } from "@/lib/sleepGoal";
+import { SleepGoalCard } from "./SleepGoalCard";
 import { useLiveRefresh } from "@/lib/liveSync";
 import { isoLocal } from "@/lib/jalali";
 import { addDaysIso, sleepInsights, sleepMinutes, type SleepRecord } from "@/lib/sleep";
 import { getTracking, stopTracking, draftFromTracking, TRACKER_EVENT, type SleepTracking } from "@/lib/sleepTracker";
 
-// بخش خواب «روتین من» (/weekly/sleep). این فایل فقط داده رو می‌خونه و بخش‌ها رو
+// بخش خواب (/sleep) — صفحه و سیستم جدای خودش، نه داخل صفحه‌ی روتین. این فایل فقط داده رو می‌خونه و بخش‌ها رو
 // کنار هم می‌چینه؛ هر بخش کامپوننت خودشه:
 //   SleepHero (وضعیت لحظه‌ای + ردیاب زنده) · SleepLogSheet (ثبت/ویرایش) ·
 //   SleepTrendChart (نمودار) · SleepMonthMap (تقویم امتیاز) ·
@@ -37,6 +38,7 @@ export function SleepHub() {
   const [entries, setEntries] = useState<SleepRecord[]>([]);
   const [loaded, setLoaded] = useState(false);
   const [target, setTarget] = useState({ wake: DEFAULT_WAKE, sleep: DEFAULT_SLEEP });
+  const [goalCustom, setGoalCustom] = useState(false);
   const [tracking, setTracking] = useState<SleepTracking | null>(null);
   const [sheet, setSheet] = useState<SheetState>(null);
 
@@ -48,17 +50,18 @@ export function SleepHub() {
 
   const load = useCallback(async () => {
     const today = isoLocal(new Date());
-    const [list, ws] = await Promise.all([
+    const [list, g] = await Promise.all([
       getSleepRange(addDaysIso(today, -(SLEEP_LOAD_DAYS - 1)), today).catch(() => [] as SleepRecord[]),
-      getWakeSleepTimes().catch(() => null),
+      getSleepGoal(),
     ]);
     setEntries(list.filter((e) => sleepMinutes(e) > 0).sort((a, b) => a.date.localeCompare(b.date)));
-    setTarget({ wake: ws?.wake || DEFAULT_WAKE, sleep: ws?.sleep || DEFAULT_SLEEP });
+    setTarget(g.goal);
+    setGoalCustom(g.custom);
     setLoaded(true);
   }, []);
 
   useEffect(() => { load(); }, [load]);
-  useLiveRefresh(["sleep", "wakeSleepTimes"], () => { load(); });
+  useLiveRefresh(["sleep", "sleepGoal", "wakeSleepTimes"], () => { load(); });
 
   useEffect(() => {
     const sync = () => setTracking(getTracking());
@@ -92,12 +95,11 @@ export function SleepHub() {
     <section className="dash-breakout dash-scope sleep-scope pb-6 text-dash-text">
       <div className="flex flex-col gap-4 sm:gap-6">
         <DashHeader
-          title="روتین من"
+          title="خواب"
           subtitle="خواب، انرژی و ریتم بدنت"
           progress={insights.avgScore ?? 0}
           progressLabel="امتیاز خواب"
         />
-        <RoutineSectionTabs className="slp-section-tabs" />
         <RoutineTrialBanner />
       </div>
 
@@ -118,6 +120,7 @@ export function SleepHub() {
         </div>
         <div className="slp-col">
           <SleepMonthMap insights={insights} todayIso={todayIso} onPick={openDate} />
+          <SleepGoalCard goal={target} custom={goalCustom} goalMin={insights.goalMin} onSaved={load} />
           <SleepCycleCalc target={target} />
           <SleepHistoryList entries={entries} insights={insights} onEdit={(rec) => setSheet({ initial: rec, existing: true })} />
         </div>

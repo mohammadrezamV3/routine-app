@@ -8,7 +8,7 @@ import { parseDateRange, parseIsoDate, readJsonBody } from "@/lib/validate";
 import { withLiveSync } from "@/lib/realtime";
 import { AWAKENINGS_MAX, LATENCY_MAX, NAP_MAX, SLEEP_MAX_MIN, SLEEP_MIN_MIN, sanitizeTags, type SleepRecord } from "@/lib/sleep";
 
-// ثبت خواب — بخشی از «روتین من» (ماژول SLEEP، صفحه‌ی /weekly/sleep). هر شب یک ردیف با کلید
+// ثبت خواب — سیستم جدای خواب (ماژول SLEEP، صفحه‌ی /sleep). هر شب یک ردیف با کلید
 // (userId, date) که date = روز *بیدارشدن* ـه (خواب شب ۱۰ → ۱۱ مال ۱۱ ـه).
 // زمان‌ها ISO  کامل (UTC) ذخیره می‌شن؛ ساعت محلی سمت کلاینت ساخته می‌شه.
 
