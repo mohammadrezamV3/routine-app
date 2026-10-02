@@ -589,7 +589,7 @@ describe("computeTradeStats balance with cashflows", () => {
         status: "CLOSED" as const,
         pnl: 100,
         rMultiple: null,
-        openedAt: new Date("2026-01-01"),
+        openedAt: "2026-01-01",
       },
     ];
     const result = computeTradeStats(entries, account);
@@ -608,7 +608,7 @@ describe("computeTradeStats balance with cashflows", () => {
         status: "CLOSED" as const,
         pnl: 150,
         rMultiple: null,
-        openedAt: new Date("2026-01-01"),
+        openedAt: "2026-01-01",
       },
     ];
     const result = computeTradeStats(entries, account);
@@ -629,10 +629,10 @@ describe("computeTradeStats balance with cashflows", () => {
     expect(result.goalTarget).toBe(150);
   });
 
-  it("calculates goalTarget correctly with ABSOLUTE goalType", () => {
+  it("calculates goalTarget correctly with AMOUNT goalType", () => {
     const account: StatAccount = {
       initialBalance: 1000,
-      goalType: "ABSOLUTE",
+      goalType: "AMOUNT",
       goalValue: 200,
     };
     const entries: StatEntry[] = [];
@@ -660,10 +660,10 @@ describe("computeTradeStats balance with cashflows", () => {
       cashCharges: -100,
     };
     const entries: StatEntry[] = [
-      { status: "CLOSED" as const, pnl: 250, rMultiple: null, openedAt: new Date("2026-01-01") },
-      { status: "CLOSED" as const, pnl: -100, rMultiple: null, openedAt: new Date("2026-01-05") },
-      { status: "CLOSED" as const, pnl: 75, rMultiple: null, openedAt: new Date("2026-01-10") },
-      { status: "OPEN" as const, pnl: 50, rMultiple: null, openedAt: new Date("2026-01-15") },
+      { status: "CLOSED" as const, pnl: 250, rMultiple: null, openedAt: "2026-01-01" },
+      { status: "CLOSED" as const, pnl: -100, rMultiple: null, openedAt: "2026-01-05" },
+      { status: "CLOSED" as const, pnl: 75, rMultiple: null, openedAt: "2026-01-10" },
+      { status: "OPEN" as const, pnl: 50, rMultiple: null, openedAt: "2026-01-15" },
     ];
     const result = computeTradeStats(entries, account);
     // netPnl = 250 - 100 + 75 = 225
@@ -688,7 +688,7 @@ describe("computeTradeStats balance with cashflows", () => {
       cashCharges: -50.789,
     };
     const entries: StatEntry[] = [
-      { status: "CLOSED" as const, pnl: 123.456, rMultiple: null, openedAt: new Date("2026-01-01") },
+      { status: "CLOSED" as const, pnl: 123.456, rMultiple: null, openedAt: "2026-01-01" },
     ];
     const result = computeTradeStats(entries, account);
     // balance = 1000.123 + 500.456 + (-50.789) + 123.456 = 1573.246 → 1573.25
@@ -704,7 +704,7 @@ describe("computeTradeStats balance with cashflows", () => {
       cashCharges: -150, // fees and taxes
     };
     const entries: StatEntry[] = [
-      { status: "CLOSED" as const, pnl: 100, rMultiple: null, openedAt: new Date("2026-01-01") },
+      { status: "CLOSED" as const, pnl: 100, rMultiple: null, openedAt: "2026-01-01" },
     ];
     const result = computeTradeStats(entries, account);
     // balance = 1000 + 500 + (-150) + 100 = 1450
