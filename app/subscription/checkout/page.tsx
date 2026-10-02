@@ -14,6 +14,7 @@ import { findPlanCard, formatJalaliLong, UpgradeOffer } from "@/components/PlanS
 import { Duration, durationLabel, isDuration, isPaidPlanKey } from "@/lib/planPricing";
 import { usePlanPricing } from "@/lib/usePlanPricing";
 import { TickButton } from "@/components/TickButton";
+import { isMonthlyOption, pickBestDiscount } from "@/lib/achievementRewards";
 
 type Gateway = "zibal";
 
@@ -81,10 +82,14 @@ export default function CheckoutPage() {
   // پاداش دعوت صاحب کد (lib/referral.ts): خودکار، با کد تخفیف جمع نمی‌شه — هر کدوم
   // بیشتر بود؛ همون قاعده‌ی سمت سرور (api/subscription/checkout)، این فقط پیش‌نمایشه.
   const [inviterReward, setInviterReward] = useState(false);
+  // پاداش اچیومنت‌ها (20٪ با نصف، 50٪ با همه) — فقط روی گزینه‌ی یک‌ماهه؛ پیش‌نمایش،
+  // تصمیم واقعی همیشه سمت سرور.
+  const [achReward, setAchReward] = useState<{ tier: "half" | "full"; percent: number } | null>(null);
   useEffect(() => {
     if (status !== "authenticated") return;
     fetch("/api/plans").then((r) => r.json()).then((data) => setUpgradeOffer(data.upgradeOffer || null)).catch(() => {});
     fetch("/api/account/referral").then((r) => (r.ok ? r.json() : null)).then((d) => setInviterReward((d?.rewardsAvailable ?? 0) > 0)).catch(() => {});
+    fetch("/api/achievements/reward", { cache: "no-store" }).then((r) => (r.ok ? r.json() : null)).then((d) => setAchReward(d?.reward ?? null)).catch(() => {});
   }, [status]);
 
   if (!query || !pricingReady) return null;
@@ -117,8 +122,16 @@ export default function CheckoutPage() {
   // خام اولیه.
   const creditedBaseAmount = upgradeInfo ? upgradeInfo.amount : baseAmount;
   const codePercent = discountResult?.ok ? discountResult.percentOff : 0;
-  const rewardWins = inviterReward && REFERRAL_INVITER_REWARD_PERCENT > codePercent;
-  const effectivePercent = rewardWins ? REFERRAL_INVITER_REWARD_PERCENT : codePercent;
+  const monthly = isMonthlyOption(pricing.durations[duration].months);
+  const achPercent = monthly && achReward ? achReward.percent : 0;
+  const best = pickBestDiscount([
+    { source: "code", percent: codePercent },
+    { source: "inviter", percent: inviterReward ? REFERRAL_INVITER_REWARD_PERCENT : 0 },
+    { source: "achievement", percent: achPercent },
+  ]);
+  const rewardWins = best?.source === "inviter";
+  const achWins = best?.source === "achievement";
+  const effectivePercent = best?.percent ?? 0;
   const discountedAmount = effectivePercent > 0 && creditedBaseAmount != null
     ? Math.round((creditedBaseAmount * (100 - effectivePercent)) / 100)
     : upgradeInfo
@@ -271,7 +284,13 @@ export default function CheckoutPage() {
         </div>
         {fromInvite && !discountResult && <div className="checkout-invite-hint">کد دعوت دوستت پر شده — «اعمال» رو بزن تا {faNum(REFERRAL_DISCOUNT_PERCENT)}٪ تخفیف بگیری</div>}
         {rewardWins && <div className="checkout-discount-success">{faNum(REFERRAL_INVITER_REWARD_PERCENT)}٪ تخفیف پاداش دعوت دوستت خودکار اعمال شد{discountResult?.ok ? " (از کد تخفیف بیشتره، پس اون مصرف نمی‌شه)" : ""}</div>}
-        {discountResult?.ok && !rewardWins && <div className="checkout-discount-success">کد تخفیف اعمال شد</div>}
+        {achWins && achReward && (
+          <div className="checkout-discount-success">
+            {faNum(achReward.percent)}٪ تخفیف پاداش اچیومنت‌ها ({achReward.tier === "full" ? "باز کردن همه‌ی اچیومنت‌ها" : "باز کردن نیمی از اچیومنت‌ها"}) خودکار اعمال شد{discountResult?.ok ? " (از کد تخفیف بیشتره، پس اون مصرف نمی‌شه)" : ""}
+          </div>
+        )}
+        {achReward && !monthly && <div className="checkout-invite-hint">پاداش {faNum(achReward.percent)}٪ اچیومنت‌ها فقط روی گزینه‌ی یک‌ماهه اعمال می‌شه</div>}
+        {discountResult?.ok && !rewardWins && !achWins && <div className="checkout-discount-success">کد تخفیف اعمال شد</div>}
         {discountResult && !discountResult.ok && <div className="field-error-msg" style={{ display: "block", marginTop: 7 }}>{discountResult.error}</div>}
       </div>
 

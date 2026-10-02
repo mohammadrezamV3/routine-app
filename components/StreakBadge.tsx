@@ -15,8 +15,9 @@ function markCelebrated(iso: string) {
 }
 
 // شعله + عدد استریک خود کاربر — توی هدر استفاده می‌شه، پس همیشه compact.
-// لحظه‌ای که امروز (با تیک همین تب) کامل می‌شه، جشن دوالینگویی از همین
-// شعله بیرون می‌پره (StreakCelebration)؛ زدن شعله هم همون صفحه رو نشون می‌ده.
+// خودش هیچ کلیکی نداره: لینک دورش (HeaderStreakClock) مستقیم به /streak
+// می‌ره، بدون هیچ پاپ‌آپی. جشن دوالینگویی (StreakCelebration) *فقط* لحظه‌ای
+// از همین شعله بیرون می‌پره که امروز با تیک همین تب کامل بشه.
 export function StreakBadge({ className }: { className?: string }) {
   const { streak, todayDone, todayIso, cause } = useMyStreak();
   const anchorRef = useRef<HTMLSpanElement>(null);
@@ -30,14 +31,9 @@ export function StreakBadge({ className }: { className?: string }) {
     prevDone.current = todayDone;
     if (was === false && todayDone && cause === "local" && !celebratedOn(todayIso)) {
       markCelebrated(todayIso);
-      setCel({ mode: "extend", from: Math.max(0, streak - 1), to: streak, todayDone: true });
+      setCel({ from: Math.max(0, streak - 1), to: streak });
     }
   }, [streak, todayDone, todayIso, cause]);
-
-  function openView() {
-    if (streak === null || cel) return;
-    setCel({ mode: "view", from: streak, to: streak, todayDone });
-  }
 
   function onClose() {
     setCel(null);
@@ -49,15 +45,7 @@ export function StreakBadge({ className }: { className?: string }) {
 
   return (
     <>
-      <span
-        ref={anchorRef}
-        className={`streak-badge-hit${cel ? " is-away" : ""}${landing ? " is-landing" : ""}`}
-        role="button"
-        tabIndex={0}
-        aria-label="نمایش استریک"
-        onClick={openView}
-        onKeyDown={(e) => { if (e.key === "Enter" || e.key === " ") { e.preventDefault(); openView(); } }}
-      >
+      <span ref={anchorRef} className={`streak-badge-hit${cel ? " is-away" : ""}${landing ? " is-landing" : ""}`}>
         <StreakFlame streak={streak} className={className} compact />
       </span>
       {cel && <StreakCelebration {...cel} anchor={anchor ?? null} onClose={onClose} />}

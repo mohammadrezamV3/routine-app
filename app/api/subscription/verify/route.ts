@@ -6,6 +6,8 @@ import { zibalVerify } from "@/lib/zibal";
 import { getSiteUrl } from "@/lib/siteUrl";
 import { isDuration, PRICING_LIMITS } from "@/lib/planPricing";
 import { verifyCheckoutSignature } from "@/lib/checkoutSignature";
+import { consumeAchievementReward } from "@/lib/achievementsServer";
+import { isMonthlyOption } from "@/lib/achievementRewards";
 
 // پنل Owner › تراکنش‌ها/Funnel — تنها جایی که پرداخت ناموفق/رهاشده واقعا
 // جایی ثبت می‌شه؛ جدول Payment فقط پرداخت verify-شده‌ی موفق رو داره
@@ -70,13 +72,14 @@ export async function GET(req: NextRequest) {
   const discountCodeId = searchParams.get("discountCodeId") || undefined;
   const inviterRewardId = searchParams.get("inviterRewardId") || undefined;
   const upgradeFromSubId = searchParams.get("upgradeFromSubId") || undefined;
+  const achievementRewardId = searchParams.get("achievementRewardId") || undefined;
 
   if (!planKey || !duration || !amount || !Number.isInteger(months) || months < PRICING_LIMITS.minMonths || months > PRICING_LIMITS.maxMonths) {
     return failRedirect("invalid_params", userId, planKey, durationRaw);
   }
   // پلن/مدت/مبلغ/تخفیف همه با امضای checkout مطابقت داده می‌شن؛ زیبال فقط
   // مبلغ رو تضمین می‌کنه، نه این‌که این مبلغ قیمت کدوم پلن بوده.
-  if (!verifyCheckoutSignature({ userId, planKey, duration, months, amount, discountPercent, referralUsageId, discountCodeId, inviterRewardId, upgradeFromSubId }, searchParams.get("sig"))) {
+  if (!verifyCheckoutSignature({ userId, planKey, duration, months, amount, discountPercent, referralUsageId, discountCodeId, inviterRewardId, upgradeFromSubId, achievementRewardId }, searchParams.get("sig"))) {
     return failRedirect("bad_signature", userId, planKey, duration);
   }
 
@@ -178,6 +181,12 @@ export async function GET(req: NextRequest) {
       where: { id: inviterRewardId, status: "REWARDED", inviterRewardApplied: false, referralCode: { userId } },
       data: { inviterRewardApplied: true },
     }).catch(() => {});
+  }
+
+  // مصرف پاداش اچیومنت — فقط بعد از پرداخت موفق، فقط روی خرید یک‌ماهه و فقط
+  // پاداشی که مال همین کاربره و هنوز مصرف نشده (اجرای دوباره‌ی verify اثری نداره)
+  if (achievementRewardId && isMonthlyOption(months)) {
+    await consumeAchievementReward(achievementRewardId, userId, subscription.id).catch(() => {});
   }
 
   // مصرف کد تخفیف عمومی (DiscountCode) فقط اینجا، بعد verify شدن واقعی

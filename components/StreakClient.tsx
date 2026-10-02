@@ -14,16 +14,17 @@ import { useSession } from "next-auth/react";
 import { AnimatePresence, MotionConfig, motion, useReducedMotion } from "framer-motion";
 import { AuthGate } from "./AuthGate";
 import { ModuleGate } from "./ModuleGate";
-import { SegmentedTabs } from "./SegmentedTabs";
+import Link from "next/link";
 import { GradientRing } from "./GradientRing";
 import { AchievementIcon } from "./AchievementIcons";
 import { GoldenName } from "./GoldenName";
+import { AnimatedStreakFlame } from "./AnimatedStreakFlame";
 import { BentoCard, CardHead, CountUp, D_EASE, Skel, V_GRID } from "./DashboardKit";
 import { DashIcon } from "./DashboardIcons";
 import { useDashboardRoutine } from "@/lib/useDashboardRoutine";
 import { useLiveRefresh, keyMatches } from "@/lib/liveSync";
 import { getStreakTier, STREAK_MILESTONES } from "@/lib/streakTier";
-import { ACHIEVEMENTS, ACHIEVEMENT_BY_ID, ACHIEVEMENT_CATEGORIES, type AchievementCategory } from "@/lib/achievements";
+import { ACHIEVEMENTS, ACHIEVEMENT_BY_ID } from "@/lib/achievements";
 import type { AchievementsPayload } from "@/lib/achievementsServer";
 import { FA_WEEKDAY_SHORT, J_MONTHS, toJalali } from "@/lib/jalali";
 
@@ -43,7 +44,21 @@ export function StreakClient() {
   );
 }
 
-type Filter = "all" | "unlocked" | AchievementCategory;
+/** عدد هدفی که هنوز نرسیده نشون داده نمی‌شه — کنجکاوی، نه شمارش معکوس */
+const HIDDEN = "??";
+
+/** اسم اچیومنت (انگلیسی) — با هر دو شکل کاتالوگ (name یا title) کار می‌کنه */
+function achName(a: unknown): string {
+  const r = a as { name?: string; title?: string } | undefined;
+  return r?.name ?? r?.title ?? "";
+}
+
+/** توضیح اچیومنت: نشانه‌ی {n} = عدد هدف وقتی باز شده، وگرنه ?? */
+function achDesc(desc: string, goal: number, unlocked: boolean): string {
+  return desc.split("{n}").join(unlocked ? String(goal) : HIDDEN);
+}
+
+type Reward = { tier: "half" | "full"; percent: number; unlocked: boolean; used: boolean; usedAt: string | null };
 
 function useAchievements() {
   const [data, setData] = useState<AchievementsPayload | null>(null);
@@ -69,7 +84,6 @@ function StreakBody() {
   const routine = useDashboardRoutine();
   const { data: session } = useSession();
   const ach = useAchievements();
-  const [filter, setFilter] = useState<Filter>("all");
   const [celebrate, setCelebrate] = useState<string[]>([]);
 
   useEffect(() => {
@@ -80,12 +94,14 @@ function StreakBody() {
 
   return (
     <>
-      <StreakHero routine={routine} best={ach.data?.metrics.bestStreak ?? null} />
-
-      <motion.div className="stk-grid" variants={V_GRID} initial="hidden" animate="show">
-        <GoldenCard data={ach.data} name={name} />
-        <StatsCard data={ach.data} streak={routine.streak} />
-      </motion.div>
+      <div className="stk-top">
+        <StreakHero routine={routine} best={ach.data?.metrics.bestStreak ?? null} />
+        <motion.div className="stk-side" variants={V_GRID} initial="hidden" animate="show">
+          <GoldenCard data={ach.data} name={name} />
+          <StatsCard data={ach.data} streak={routine.streak} />
+          <RewardsCard data={ach.data} />
+        </motion.div>
+      </div>
 
       <BentoCard className="stk-ach" label="اچیومنت‌ها">
         <CardHead
@@ -93,25 +109,13 @@ function StreakBody() {
           title="اچیومنت‌ها"
           extra={ach.data ? <span className="stk-ach-count"><b>{ach.data.unlockedCount}</b>/{ach.data.total}</span> : null}
         />
-        <div className="stk-filter">
-          <SegmentedTabs<Filter>
-            ariaLabel="دسته‌ی اچیومنت‌ها"
-            active={filter}
-            onChange={setFilter}
-            options={[
-              { value: "all", label: "همه" },
-              { value: "unlocked", label: "باز شده" },
-              ...(Object.keys(ACHIEVEMENT_CATEGORIES) as AchievementCategory[]).map((c) => ({ value: c as Filter, label: ACHIEVEMENT_CATEGORIES[c] })),
-            ]}
-          />
-        </div>
         {ach.error && !ach.data ? (
           <div className="db-empty">
             <p>دریافت اچیومنت‌ها ناموفق بود.</p>
             <button type="button" className="account-outline-btn mentor-btn is-sm" onClick={ach.reload}>تلاش دوباره</button>
           </div>
         ) : (
-          <AchievementGrid data={ach.data} filter={filter} />
+          <AchievementGrid data={ach.data} />
         )}
       </BentoCard>
 
@@ -143,13 +147,13 @@ function StreakHero({ routine, best }: { routine: ReturnType<typeof useDashboard
         : `${total - completed} برنامه‌ی دیگه تا اضافه‌شدن امروز به استریک`;
 
   return (
-    <motion.div variants={V_GRID} initial="hidden" animate="show">
+    <motion.div className="stk-hero-col" variants={V_GRID} initial="hidden" animate="show">
     <BentoCard className={`stk-hero tier-${tier.tier}${todayDone ? " is-lit" : ""}`} label="استریک">
       <span className="stk-hero-aura" aria-hidden="true" />
       <div className="stk-hero-main">
         <div className="stk-flame-wrap">
           <GradientRing value={streak === null ? 0 : Math.min(1, toNext)} size={188} stroke={10} grad={["var(--stk-a)", "var(--stk-b)"]} delay={0.2}>
-            <BigFlame tier={tier.tier} lit={s > 0} />
+            <AnimatedStreakFlame days={s} lit={s > 0} fill />
           </GradientRing>
         </div>
         <div className="stk-hero-info">
@@ -163,7 +167,7 @@ function StreakHero({ routine, best }: { routine: ReturnType<typeof useDashboard
           </p>
           <div className="stk-hero-meta">
             <span><DashIcon name="trophy" /> بهترین رکورد: <b>{best === null ? "…" : Math.max(best, s)}</b> روز</span>
-            {next && <span><DashIcon name="target" /> مایلستون بعدی: <b>{next}</b> روز ({next - s} روز دیگه)</span>}
+            {next && <span><DashIcon name="target" /> مایلستون بعدی: <b dir="ltr">{HIDDEN}</b> روز</span>}
           </div>
         </div>
       </div>
@@ -202,44 +206,11 @@ function MilestoneTrack({ streak }: { streak: number }) {
             <motion.span className="stk-mile-node" initial={{ scale: 0 }} animate={{ scale: 1 }} transition={{ delay: 0.3 + i * 0.06, type: "spring", stiffness: 420, damping: 18 }}>
               {reached ? <MiniFlame /> : null}
             </motion.span>
-            <span className="stk-mile-label">{m}</span>
+            <span className="stk-mile-label" dir="ltr">{reached ? m : HIDDEN}</span>
           </li>
         );
       })}
     </ol>
-  );
-}
-
-/** شعله‌ی بزرگ چندلایه — رنگ و شدت حرکتش با سطح استریک زیاد می‌شه */
-function BigFlame({ tier, lit }: { tier: number; lit: boolean }) {
-  return (
-    <svg className={`stk-flame${lit ? " is-lit" : ""}`} viewBox="0 0 120 140" aria-hidden="true">
-      <defs>
-        <radialGradient id="stk-fl-outer" cx="50%" cy="78%" r="70%">
-          <stop offset="0%" stopColor="var(--stk-c)" />
-          <stop offset="55%" stopColor="var(--stk-b)" />
-          <stop offset="100%" stopColor="var(--stk-a)" />
-        </radialGradient>
-        <radialGradient id="stk-fl-inner" cx="50%" cy="80%" r="60%">
-          <stop offset="0%" stopColor="#fffbe6" />
-          <stop offset="60%" stopColor="var(--stk-c)" />
-          <stop offset="100%" stopColor="var(--stk-b)" />
-        </radialGradient>
-      </defs>
-      <g className="stk-fl-outer">
-        <path d="M60 6c6 22 30 34 34 62 5 34-15 62-34 62S21 108 26 76c3-19 15-26 17-44 10 10 11 21 11 21S66 36 60 6Z" fill="url(#stk-fl-outer)" />
-      </g>
-      <g className="stk-fl-inner">
-        <path d="M60 52c4 13 20 22 20 42 0 18-10 30-20 30s-20-12-20-28c0-12 7-17 9-28 6 6 6 13 6 13s7-12 5-29Z" fill="url(#stk-fl-inner)" />
-      </g>
-      {tier >= 3 && (
-        <g className="stk-fl-sparks">
-          <circle cx="30" cy="40" r="2.2" fill="var(--stk-c)" />
-          <circle cx="92" cy="34" r="1.8" fill="var(--stk-c)" />
-          <circle cx="78" cy="14" r="1.5" fill="#fffbe6" />
-        </g>
-      )}
-    </svg>
   );
 }
 
@@ -304,50 +275,81 @@ function StatsCard({ data, streak }: { data: AchievementsPayload | null; streak:
 }
 
 // ── شبکه‌ی اچیومنت‌ها ─────────────────────────────────────────
-function AchievementGrid({ data, filter }: { data: AchievementsPayload | null; filter: Filter }) {
+// بدون فیلتر و بدون layout animation: یک شبکه‌ی ثابت (بازشده‌ها اول). ورود
+// فقط یک fade کوتاه با بالا آمدن 6px و تاخیر پله‌ای سقف‌دار — هیچ کارتی از
+// جای خودش بیرون نمی‌پره و هیچ سرریز افقی ساخته نمی‌شه.
+const V_ACH_LIST = { hidden: {}, show: { transition: { staggerChildren: 0.03, delayChildren: 0.05 } } };
+const V_ACH_ITEM = {
+  hidden: { opacity: 0, y: 6 },
+  show: { opacity: 1, y: 0, transition: { duration: 0.32, ease: D_EASE } },
+};
+
+function AchievementGrid({ data }: { data: AchievementsPayload | null }) {
   const reduced = !!useReducedMotion();
   if (!data) {
     return <div className="stk-ach-grid">{Array.from({ length: 8 }, (_, i) => <Skel key={i} w="100%" h={148} r={18} />)}</div>;
   }
   const byId = new Map(data.items.map((i) => [i.id, i]));
-  const list = ACHIEVEMENTS.filter((a) => {
-    const st = byId.get(a.id);
-    if (filter === "all") return true;
-    if (filter === "unlocked") return !!st?.unlocked;
-    return a.category === filter;
-  }).sort((a, b) => Number(!!byId.get(b.id)?.unlocked) - Number(!!byId.get(a.id)?.unlocked));
-
-  if (!list.length) return <div className="db-empty"><p>هنوز اچیومنتی این‌جا باز نشده — ادامه بده!</p></div>;
+  const list = ACHIEVEMENTS.filter((a) => byId.has(a.id))
+    .map((a, idx) => ({ a, st: byId.get(a.id)!, idx }))
+    .sort((x, y) => Number(y.st.unlocked) - Number(x.st.unlocked) || x.idx - y.idx);
 
   return (
-    <motion.ul className="stk-ach-grid" layout>
-      {list.map((a, i) => {
-        const st = byId.get(a.id)!;
-        const pct = st.goal ? st.value / st.goal : 0;
+    <motion.ul className="stk-ach-grid" variants={V_ACH_LIST} initial={reduced ? false : "hidden"} animate="show">
+      {list.map(({ a, st }) => {
+        const pct = st.goal ? Math.min(1, st.value / st.goal) : 0;
+        const desc = achDesc(a.desc, st.goal, st.unlocked);
         return (
-          <motion.li
-            key={a.id}
-            layout
-            className={`stk-ach-item rarity-${a.rarity}${st.unlocked ? " is-unlocked" : ""}`}
-            initial={{ opacity: 0, y: 8 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ delay: Math.min(i, 16) * 0.025, duration: 0.35, ease: D_EASE }}
-          >
+          <motion.li key={a.id} variants={V_ACH_ITEM} className={`stk-ach-item rarity-${a.rarity}${st.unlocked ? " is-unlocked" : ""}`}>
             <AchievementIcon id={a.id} unlocked={st.unlocked} rarity={a.rarity} size={64} reduced={reduced} />
-            <strong className="stk-ach-title">{a.title}</strong>
-            <span className="stk-ach-desc">{a.desc}</span>
+            <strong className="stk-ach-title" dir="ltr">{achName(a)}</strong>
+            <span className="stk-ach-desc">{desc}</span>
             {st.unlocked ? (
               <span className="stk-ach-date">{st.unlockedAt ? jDate(st.unlockedAt) : "باز شده"}</span>
             ) : (
-              <span className="stk-ach-prog" aria-label={`${st.value} از ${st.goal}`}>
-                <span className="stk-ach-bar"><motion.i initial={{ scaleX: 0 }} animate={{ scaleX: pct }} transition={{ duration: 0.9, ease: D_EASE, delay: 0.2 }} /></span>
-                <em>{st.value}/{st.goal}</em>
+              <span className="stk-ach-prog" aria-label={`${st.value} از ${HIDDEN}`}>
+                <span className="stk-ach-bar"><i style={{ transform: `scaleX(${pct})` }} /></span>
+                <em dir="ltr">{st.value}/{HIDDEN}</em>
               </span>
             )}
           </motion.li>
         );
       })}
     </motion.ul>
+  );
+}
+
+// ── پاداش‌ها (50٪ و 100٪ اچیومنت‌ها) ─────────────────────────
+function RewardsCard({ data }: { data: AchievementsPayload | null }) {
+  const rewards = (data as (AchievementsPayload & { rewards?: Reward[] }) | null)?.rewards;
+  if (!rewards?.length) return null;
+  const order: Reward["tier"][] = ["half", "full"];
+  const sorted = [...rewards].sort((a, b) => order.indexOf(a.tier) - order.indexOf(b.tier));
+  return (
+    <BentoCard className="stk-rewards" label="پاداش‌ها">
+      <CardHead icon="card" title="پاداش اچیومنت‌ها" />
+      <ul className="stk-reward-list">
+        {sorted.map((r) => {
+          const state = r.used ? "used" : r.unlocked ? "ready" : "locked";
+          return (
+            <li key={r.tier} className={`stk-reward is-${state}`}>
+              <span className="stk-reward-pct" dir="ltr">{r.percent}%</span>
+              <span className="stk-reward-text">
+                <strong>{r.percent}% تخفیف اشتراک یک‌ماهه</strong>
+                <small>{r.tier === "half" ? "با باز کردن نیمی از اچیومنت‌ها" : "با باز کردن همه‌ی اچیومنت‌ها"}</small>
+              </span>
+              {state === "ready" ? (
+                <Link href="/subscription" prefetch className="account-outline-btn mentor-btn is-sm stk-reward-cta">دریافت</Link>
+              ) : state === "used" ? (
+                <span className="stk-reward-state">استفاده شد</span>
+              ) : (
+                <span className="stk-reward-state"><DashIcon name="lock" /></span>
+              )}
+            </li>
+          );
+        })}
+      </ul>
+    </BentoCard>
   );
 }
 
@@ -375,7 +377,7 @@ function UnlockToast({ ids, onDone }: { ids: string[]; onDone: () => void }) {
       <AchievementIcon id={first.id} unlocked rarity={first.rarity} size={52} />
       <div>
         <span className="stk-toast-kicker">اچیومنت تازه{ids.length > 1 ? ` (+${ids.length - 1})` : ""}</span>
-        <strong>{first.title}</strong>
+        <strong dir="ltr" className="stk-toast-name">{achName(first)}</strong>
       </div>
     </motion.div>
   );

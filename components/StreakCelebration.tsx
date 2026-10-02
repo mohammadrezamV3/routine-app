@@ -7,7 +7,8 @@
 // «ادامه» شعله دوباره برمی‌گرده سر جاش توی هدر. از همین‌جا کاربر می‌تونه
 // استریکش رو (همراه کد دعوتش) به اشتراک بذاره.
 //
-// همین پاپ‌آپ با زدن شعله‌ی هدر در حالت «view» هم باز می‌شه (بدون غلتیدن عدد).
+// این پاپ‌آپ *فقط* همون لحظه‌ی کامل‌شدن امروز باز می‌شه؛ زدن شعله‌ی هدر
+// مستقیم به /streak می‌ره و هیچ پاپ‌آپی نشون نمی‌ده.
 
 import { useCallback, useEffect, useLayoutEffect, useMemo, useRef, useState } from "react";
 import { createPortal } from "react-dom";
@@ -30,34 +31,31 @@ const FLAME = 176;
 const LAND_MS = 950;
 
 export type StreakCelebrationProps = {
-  mode: "extend" | "view";
   from: number;
   to: number;
-  todayDone: boolean;
   anchor: HTMLElement | null;
   onClose: () => void;
 };
 
-function weekRow(streak: number, todayDone: boolean) {
-  const todayIdx = (new Date().getDay() + 1) % 7; // شنبه = ۰
-  // روزهای کامل: از امروز (اگه کامل شده) یا دیروز، `streak` روز به عقب — تقریب
+function weekRow(streak: number) {
+  const todayIdx = (new Date().getDay() + 1) % 7; // شنبه = 0
+  // روزهای کامل: از امروز (که همین الان کامل شد) `streak` روز به عقب — تقریب
   // بصری؛ روز بی‌برنامه‌ای که وسط استریک رد شده این‌جا هم پر دیده می‌شه.
-  const last = todayDone ? todayIdx : todayIdx - 1;
-  return { todayIdx, done: WEEK.map((_, i) => i <= last && last - i < streak) };
+  return { todayIdx, done: WEEK.map((_, i) => i <= todayIdx && todayIdx - i < streak) };
 }
 
-export function StreakCelebration({ mode, from, to, todayDone, anchor, onClose }: StreakCelebrationProps) {
+export function StreakCelebration({ from, to, anchor, onClose }: StreakCelebrationProps) {
   useLockBodyScroll();
   const slotRef = useRef<HTMLDivElement>(null);
   const [delta, setDelta] = useState<{ x: number; y: number; s: number } | null>(null);
   const [closing, setClosing] = useState(false);
-  const [landed, setLanded] = useState(mode === "view");
-  const [shown, setShown] = useState(mode === "extend" ? from : to);
+  const [landed, setLanded] = useState(false);
+  const [shown, setShown] = useState(from);
   const invite = useMyInvite();
   const tier = getStreakTier(to);
   const pal = flamePalette(to);
-  const isMilestone = mode === "extend" && (STREAK_MILESTONES as readonly number[]).includes(to);
-  const week = useMemo(() => weekRow(to, todayDone), [to, todayDone]);
+  const isMilestone = (STREAK_MILESTONES as readonly number[]).includes(to);
+  const week = useMemo(() => weekRow(to), [to]);
 
   // فاصله‌ی شعله‌ی هدر تا جای شعله‌ی بزرگ — نقطه‌ی شروع پرواز (و مقصد برگشت)
   useLayoutEffect(() => {
@@ -77,14 +75,13 @@ export function StreakCelebration({ mode, from, to, todayDone, anchor, onClose }
 
   // بعد از فرود: عدد می‌غلته + لرزش کوتاه
   useEffect(() => {
-    if (mode !== "extend") return;
     const t = setTimeout(() => {
       setLanded(true);
       setShown(to);
       try { if (hapticsEnabled()) navigator.vibrate?.([18, 40, 28]); } catch { /* بدون هپتیک */ }
     }, LAND_MS);
     return () => clearTimeout(t);
-  }, [mode, to]);
+  }, [to]);
 
   const close = useCallback(() => { if (!closing) setClosing(true); }, [closing]);
   useEffect(() => {
@@ -115,9 +112,9 @@ export function StreakCelebration({ mode, from, to, todayDone, anchor, onClose }
       } catch {
         if (alive) setRenderErr(true);
       }
-    }, mode === "extend" && attempt === 0 ? LAND_MS + 500 : 200);
+    }, attempt === 0 ? LAND_MS + 500 : 200);
     return () => { alive = false; clearTimeout(t); };
-  }, [cardInput, mode, attempt]);
+  }, [cardInput, attempt]);
   const ready = !!card && card.input === cardInput;
   const { canShare, phase, result, share: shareBlob } = useImageShare();
 
@@ -140,16 +137,14 @@ export function StreakCelebration({ mode, from, to, todayDone, anchor, onClose }
         ? "تصویر ذخیره شد — حالا برای دوستات بفرستش"
         : null;
 
-  const title = mode === "view" && !todayDone ? "امروز هنوز کامل نشده" : "روز استریک!";
-  const sub =
-    mode === "view" && !todayDone
-      ? `همه‌ی برنامه‌های امروز رو تیک بزن تا شعله روشن بمونه و استریکت ${faNum(to + 1)} بشه.`
-      : isMilestone
-        ? `${tier.name} باز شد! شعله‌ت حالا یه سطح داغ‌تره.`
-        : to === 1
-          ? "یه استریک تازه روشن شد. فردا هم کامل کن تا خاموش نشه!"
-          : "همه‌ی برنامه‌های امروز انجام شد. فردا هم بیا تا شعله خاموش نشه!";
-  const next = tier.nextMilestone ? `${faNum(tier.nextMilestone - to)} روز دیگه تا سطح بعدی` : null;
+  const title = "روز استریک!";
+  const sub = isMilestone
+    ? `${tier.name} باز شد! شعله‌ت حالا یه سطح داغ‌تره.`
+    : to === 1
+      ? "یه استریک تازه روشن شد. فردا هم کامل کن تا خاموش نشه!"
+      : "همه‌ی برنامه‌های امروز انجام شد. فردا هم بیا تا شعله خاموش نشه!";
+  // مایلستون بعدی عمدا عدد نداره (قرارداد: هدف قفل‌شده = ??)
+  const next = !!tier.nextMilestone;
 
   return createPortal(
     <motion.div
@@ -169,7 +164,7 @@ export function StreakCelebration({ mode, from, to, todayDone, anchor, onClose }
           {delta && (
             <motion.div
               className="streak-cel-flame"
-              initial={mode === "extend" ? { x: delta.x, y: delta.y, scale: delta.s, rotate: -18 } : { scale: 0.6, opacity: 0 }}
+              initial={{ x: delta.x, y: delta.y, scale: delta.s, rotate: -18 }}
               animate={
                 closing
                   ? { x: delta.x, y: delta.y, scale: delta.s, rotate: 12, opacity: 0.9 }
@@ -178,13 +173,11 @@ export function StreakCelebration({ mode, from, to, todayDone, anchor, onClose }
               transition={
                 closing
                   ? { duration: 0.5, ease: [0.55, 0, 0.75, 0.2] }
-                  : mode === "extend"
-                    ? { x: { type: "spring", stiffness: 70, damping: 13 }, y: { type: "spring", stiffness: 90, damping: 11 }, scale: { type: "spring", stiffness: 110, damping: 12 }, rotate: { duration: 0.8 } }
-                    : { type: "spring", stiffness: 220, damping: 16 }
+                  : { x: { type: "spring", stiffness: 70, damping: 13 }, y: { type: "spring", stiffness: 90, damping: 11 }, scale: { type: "spring", stiffness: 110, damping: 12 }, rotate: { duration: 0.8 } }
               }
             >
               <AnimatedStreakFlame days={to} size={FLAME} />
-              {landed && mode === "extend" && !closing && (
+              {landed && !closing && (
                 <span className="streak-cel-burst" aria-hidden="true">
                   {Array.from({ length: 10 }, (_, i) => (
                     <i key={i} style={{ ["--a" as any]: `${i * 36}deg` }} />
@@ -213,7 +206,7 @@ export function StreakCelebration({ mode, from, to, todayDone, anchor, onClose }
           className="streak-cel-text"
           initial={{ opacity: 0, y: 12 }}
           animate={{ opacity: 1, y: 0 }}
-          transition={{ delay: mode === "extend" ? 1.1 : 0.2, duration: 0.4 }}
+          transition={{ delay: 1.1, duration: 0.4 }}
         >
           <h2 className="streak-cel-title">{title}</h2>
           <p className="streak-cel-sub">{sub}</p>
@@ -223,11 +216,11 @@ export function StreakCelebration({ mode, from, to, todayDone, anchor, onClose }
           className="streak-cel-week"
           initial={{ opacity: 0, y: 12 }}
           animate={{ opacity: 1, y: 0 }}
-          transition={{ delay: mode === "extend" ? 1.25 : 0.3, duration: 0.4 }}
+          transition={{ delay: 1.25, duration: 0.4 }}
         >
           {WEEK.map((d, i) => {
             const isToday = i === week.todayIdx;
-            const done = week.done[i] && (!(isToday && mode === "extend") || landed);
+            const done = week.done[i] && (!isToday || landed);
             return (
               <div key={d} className={`streak-cel-day${isToday ? " is-today" : ""}`}>
                 <span className="streak-cel-day-name">{d}</span>
@@ -235,7 +228,7 @@ export function StreakCelebration({ mode, from, to, todayDone, anchor, onClose }
                   {done && (
                     <motion.svg
                       viewBox="0 0 24 24"
-                      initial={isToday && mode === "extend" ? { scale: 0, rotate: -45 } : false}
+                      initial={isToday ? { scale: 0, rotate: -45 } : false}
                       animate={{ scale: 1, rotate: 0 }}
                       transition={{ type: "spring", stiffness: 400, damping: 14, delay: isToday ? 0.35 : 0 }}
                     >
@@ -246,14 +239,14 @@ export function StreakCelebration({ mode, from, to, todayDone, anchor, onClose }
               </div>
             );
           })}
-          {next && <span className="streak-cel-next">{next}</span>}
+          {next && <span className="streak-cel-next" dir="rtl"><bdi dir="ltr">??</bdi> روز دیگه تا سطح بعدی</span>}
         </motion.div>
 
         <motion.div
           className="streak-cel-actions"
           initial={{ opacity: 0, y: 12 }}
           animate={{ opacity: 1, y: 0 }}
-          transition={{ delay: mode === "extend" ? 1.4 : 0.4, duration: 0.4 }}
+          transition={{ delay: 1.4, duration: 0.4 }}
         >
           <button type="button" className="trade-primary-btn streak-cel-btn" onClick={close}>ادامه</button>
           <button

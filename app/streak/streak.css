@@ -29,15 +29,6 @@
 .stk-flame-wrap{ flex-shrink:0; margin-inline:auto; }
 @media (min-width:640px){ .stk-flame-wrap{ margin-inline:0; } }
 .stk-flame-wrap .gring-center{ inset:22px; }
-.stk-flame{ width:100%; height:100%; overflow:visible; filter:drop-shadow(0 6px 18px color-mix(in srgb, var(--stk-a) 55%, transparent)); }
-.stk-flame:not(.is-lit){ opacity:.4; filter:grayscale(1); }
-.stk-flame.is-lit .stk-fl-outer{ transform-origin:50% 95%; animation:stkFlicker 1.8s ease-in-out infinite; }
-.stk-flame.is-lit .stk-fl-inner{ transform-origin:50% 95%; animation:stkFlicker 1.2s ease-in-out infinite reverse; }
-.stk-flame.is-lit .stk-fl-sparks circle{ animation:stkSpark 2.4s ease-in infinite; }
-.stk-flame.is-lit .stk-fl-sparks circle:nth-child(2){ animation-delay:.8s; }
-.stk-flame.is-lit .stk-fl-sparks circle:nth-child(3){ animation-delay:1.5s; }
-@keyframes stkFlicker{ 0%,100%{ transform:scale(1,1) skewX(0deg); } 30%{ transform:scale(.97,1.04) skewX(-1.5deg); } 60%{ transform:scale(1.02,.97) skewX(1.5deg); } }
-@keyframes stkSpark{ 0%{ transform:translateY(0); opacity:0; } 20%{ opacity:1; } 100%{ transform:translateY(-26px); opacity:0; } }
 
 .stk-hero-info{ flex:1; min-width:220px; display:flex; flex-direction:column; gap:8px; }
 .stk-kicker{ font-size:12px; font-weight:800; letter-spacing:.02em; color:var(--stk-b); }
@@ -87,9 +78,17 @@
 .stk-day.is-miss .stk-day-icon{ border-color:color-mix(in srgb, #ef4444 40%, transparent); }
 .stk-day-rest{ width:8px; height:2px; border-radius:2px; background:color-mix(in srgb, var(--muted) 45%, transparent); }
 
-/* ── ردیف کارت‌ها ── */
-.stk-grid{ display:grid; gap:var(--db-gap); grid-template-columns:1fr; }
-@media (min-width:900px){ .stk-grid{ grid-template-columns:1fr 1fr; } }
+/* ── چیدمان بالای صفحه: موبایل ستونی؛ دسکتاپ دو ستون تا باکس استریک کل عرض
+   رو نگیره (ستون استریک سقف عرض داره، کارت‌های کناری کنارش) ── */
+.stk-top{ display:grid; gap:var(--db-gap); grid-template-columns:minmax(0,1fr); }
+.stk-side{ display:grid; gap:var(--db-gap); grid-template-columns:minmax(0,1fr); align-content:start; }
+.stk-hero-col{ min-width:0; }
+@media (min-width:760px) and (max-width:1099px){ .stk-side{ grid-template-columns:repeat(2, minmax(0,1fr)); } .stk-side .stk-rewards{ grid-column:1 / -1; } }
+@media (min-width:1100px){
+  .stk-top{ grid-template-columns:minmax(0,560px) minmax(0,1fr); align-items:start; }
+  .stk-hero-main{ flex-wrap:nowrap; }
+  .stk-hero-info{ min-width:0; }
+}
 .stk-golden-body{ display:flex; align-items:center; gap:16px; }
 .stk-golden-pct{ font-size:17px; font-weight:900; font-variant-numeric:tabular-nums; }
 .stk-golden-text{ display:flex; flex-direction:column; gap:5px; min-width:0; }
@@ -103,11 +102,11 @@
 /* ── اچیومنت‌ها ── */
 .stk-ach-count{ font-size:12px; font-weight:700; color:var(--muted); font-variant-numeric:tabular-nums; }
 .stk-ach-count b{ color:var(--text); font-size:14px; }
-.stk-filter{ overflow-x:auto; scrollbar-width:none; margin-inline:-4px; padding-inline:4px; }
-.stk-filter::-webkit-scrollbar{ display:none; }
 .stk-ach-grid{ list-style:none; margin:0; padding:0; display:grid; gap:10px; grid-template-columns:repeat(2, minmax(0,1fr)); }
 @media (min-width:640px){ .stk-ach-grid{ grid-template-columns:repeat(3, minmax(0,1fr)); } }
-@media (min-width:1024px){ .stk-ach-grid{ grid-template-columns:repeat(5, minmax(0,1fr)); } }
+@media (min-width:1024px){ .stk-ach-grid{ grid-template-columns:repeat(4, minmax(0,1fr)); } }
+@media (min-width:1280px){ .stk-ach-grid{ grid-template-columns:repeat(5, minmax(0,1fr)); } }
+.stk-ach{ overflow:hidden; }
 .stk-ach-item{
   display:flex; flex-direction:column; align-items:center; text-align:center; gap:6px;
   padding:14px 10px 12px; border-radius:18px; border:1px solid var(--box-line); min-width:0;
@@ -118,13 +117,33 @@
 .stk-ach-item.is-unlocked.rarity-3{ border-color:color-mix(in srgb, #f5c542 45%, var(--box-line)); }
 .stk-ach-item.is-unlocked.rarity-4{ border-color:color-mix(in srgb, #a78bfa 55%, var(--box-line)); box-shadow:0 0 22px -8px #a78bfa; }
 @media (hover:hover){ .stk-ach-item:hover{ transform:translateY(-2px); } }
-.stk-ach-title{ font-size:13px; font-weight:800; }
+/* اسم‌ها انگلیسی‌ان (LTR داخل صفحه‌ی RTL) */
+.stk-ach-title{
+  font-size:13px; font-weight:800; letter-spacing:.015em; line-height:1.35; unicode-bidi:isolate;
+  max-width:100%; overflow-wrap:anywhere; font-feature-settings:"kern" 1;
+}
+.stk-ach-item.is-unlocked.rarity-3 .stk-ach-title, .stk-ach-item.is-unlocked.rarity-4 .stk-ach-title{ letter-spacing:.03em; }
 .stk-ach-desc{ font-size:11px; color:var(--muted); line-height:1.7; min-height:3.4em; }
 .stk-ach-date{ font-size:10.5px; font-weight:700; color:var(--accent); }
 .stk-ach-prog{ display:flex; align-items:center; gap:6px; width:100%; }
 .stk-ach-bar{ flex:1; height:5px; border-radius:5px; overflow:hidden; background:color-mix(in srgb, var(--muted) 18%, transparent); }
-.stk-ach-bar i{ display:block; height:100%; transform-origin:right; border-radius:inherit; background:linear-gradient(270deg, var(--ring-1a), var(--ring-1b)); }
-.stk-ach-prog em{ font-style:normal; font-size:10.5px; font-weight:700; color:var(--muted); font-variant-numeric:tabular-nums; }
+.stk-ach-bar i{ display:block; transition:transform .9s cubic-bezier(.22,1,.36,1); height:100%; transform-origin:right; border-radius:inherit; background:linear-gradient(270deg, var(--ring-1a), var(--ring-1b)); }
+.stk-ach-prog em{ font-style:normal; unicode-bidi:isolate; font-size:10.5px; font-weight:700; color:var(--muted); font-variant-numeric:tabular-nums; }
+
+/* ── پاداش‌ها ── */
+.stk-reward-list{ list-style:none; margin:0; padding:0; display:flex; flex-direction:column; gap:10px; }
+.stk-reward{ display:flex; align-items:center; gap:12px; padding:10px 12px; border-radius:14px; border:1px solid var(--box-line); min-width:0; }
+.stk-reward-pct{ font-size:18px; font-weight:900; min-width:48px; text-align:center; font-variant-numeric:tabular-nums; color:var(--muted); }
+.stk-reward-text{ flex:1; min-width:0; display:flex; flex-direction:column; gap:2px; }
+.stk-reward-text strong{ font-size:13px; font-weight:800; }
+.stk-reward-text small{ font-size:11px; color:var(--muted); }
+.stk-reward-state{ font-size:11.5px; font-weight:700; color:var(--muted); display:inline-flex; }
+.stk-reward-state svg{ width:16px; height:16px; }
+.stk-reward-cta{ flex-shrink:0; }
+.stk-reward.is-locked{ opacity:.7; }
+.stk-reward.is-ready{ border-color:color-mix(in srgb, #f5c542 50%, var(--box-line)); }
+.stk-reward.is-ready .stk-reward-pct{ color:#f5c542; }
+.stk-reward.is-used .stk-reward-text strong{ text-decoration:line-through; text-decoration-color:color-mix(in srgb, var(--muted) 60%, transparent); }
 
 /* ── جشن اچیومنت تازه ── */
 .stk-toast{
@@ -136,8 +155,10 @@
 .stk-toast div{ display:flex; flex-direction:column; gap:2px; }
 .stk-toast-kicker{ font-size:11px; font-weight:700; color:#f5c542; }
 .stk-toast strong{ font-size:14px; font-weight:800; }
+.stk-toast-name{ letter-spacing:.02em; unicode-bidi:isolate; text-align:start; }
 
 @media (prefers-reduced-motion: reduce){
-  .stk-flame .stk-fl-outer, .stk-flame .stk-fl-inner, .stk-fl-sparks circle, .stk-hero-aura, .stk-miles li.is-next .stk-mile-node{ animation:none !important; }
+  .stk-hero-aura, .stk-miles li.is-next .stk-mile-node{ animation:none !important; }
+  .stk-ach-bar i{ transition:none; }
 }
 html[data-perf="low"] .stk-hero-aura{ display:none; }

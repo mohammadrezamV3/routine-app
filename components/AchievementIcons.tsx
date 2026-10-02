@@ -447,7 +447,357 @@ const GLYPHS: Record<string, (c: Ink) => ReactNode> = {
       <path d="M0 16 Q-4 16.5 -9 16 M0 16 Q4 16.5 9 16" {...S(c.ink, 1.8)} />
     </>
   ),
+  mentee_program_1: (c) => (
+    <>
+      <path d="M-12 -12 H10 Q14 -12 14 -8 V12 H-8 Q-12 12 -12 8 Z" fill={c.acc} fillOpacity={0.22} {...S(c.ink, 1.9)} />
+      <path d="M-12 8 Q-12 4 -8 4 Q-4 4 -4 8 Q-4 12 -8 12" {...S(c.ink, 1.6)} />
+      <path d="M-4 -6 H8 M-4 -1 H8" {...S(c.ink, 1.5)} />
+      <circle cx="8" cy="7" r="4" fill={c.acc} fillOpacity={0.6} {...S(c.ink, 1.6)} />
+      <path d="M6 10.5 L5 16 L8 14 L11 16 L10 10.5" {...S(c.ink, 1.4)} />
+    </>
+  ),
+  mentee_program_3: (c) => (
+    <>
+      <path d="M-17 -4 L0 -12 L17 -4 L0 4 Z" fill={c.acc} fillOpacity={0.4} {...S(c.ink, 2)} />
+      <path d="M-10 0 V8 Q0 14 10 8 V0" {...S(c.ink, 2)} />
+      <path d="M14 -2.5 V8" {...S(c.ink, 1.6)} />
+      <circle cx="14" cy="10" r="1.8" fill={c.ink} />
+    </>
+  ),
+  mentor_students_5: (c) => (
+    <>
+      <Star x={0} y={-5} R={10} r={4.2} c={c} />
+      {[130, 155, 180, 205, 230].map((a) => {
+        const [x, y] = pol(15, a);
+        return <circle key={a} cx={f(x)} cy={f(y - 1)} r="2.2" fill={c.acc} fillOpacity={0.6} {...S(c.ink, 1.3)} />;
+      })}
+      <path d="M0 6 V9" {...S(c.ink, 1.4)} opacity={0.6} />
+    </>
+  ),
+
+  // ── استریک (بالاتر) ──
+  streak_500: (c) => (
+    <>
+      <Flame x={0} y={-3} s={0.78} c={c} />
+      <path d="M0 13 C-3 9 -10 9 -10 13 C-10 17 -3 17 0 13 C3 9 10 9 10 13 C10 17 3 17 0 13Z" fill={c.acc} fillOpacity={0.3} {...S(c.ink, 1.9)} />
+    </>
+  ),
+
+  // ── روزهای کامل (بالاتر) ──
+  perfect_500: (c) => (
+    <>
+      <Star x={0} y={-5} R={10} r={4.2} c={c} />
+      <path d="M-14 7 H14 L11 11 H5 L6 16 H-6 L-5 11 H-11 Z" fill={c.acc} fillOpacity={0.3} {...S(c.ink, 1.9)} />
+      <circle cx="-12" cy="-11" r="1" fill={c.ink} />
+      <circle cx="12" cy="-12" r="1" fill={c.ink} />
+    </>
+  ),
+  perfect_1000: (c) => (
+    <>
+      <circle r="6.5" fill={c.acc} fillOpacity={0.45} {...S(c.ink, 2)} />
+      {Array.from({ length: 8 }, (_, i) => {
+        const [x0, y0] = pol(9.5, i * 45);
+        const [x1, y1] = pol(12.5, i * 45);
+        return <path key={i} d={`M${f(x0)} ${f(y0)} L${f(x1)} ${f(y1)}`} {...S(c.ink, 1.8)} />;
+      })}
+      {[22.5, 112.5, 202.5, 292.5].map((a) => {
+        const [x, y] = pol(15.5, a);
+        return <path key={a} d={starPath(2.6, 0.9, 4, x, y)} fill={c.ink} />;
+      })}
+    </>
+  ),
+  week_26: (c) => (
+    <>
+      <SegRing r={16} n={26} gap={5} ink={c.ink} w={1.8} />
+      <path d="M0 -9 A9 9 0 0 1 0 9 Z" fill={c.acc} fillOpacity={0.45} stroke="none" />
+      <circle r="9" {...S(c.ink, 1.8)} />
+      <path d="M0 -9 V9" {...S(c.ink, 1.4)} />
+    </>
+  ),
+  week_52: (c) => (
+    <>
+      <SegRing r={16} n={52} gap={3} ink={c.ink} w={1.6} />
+      <path d="M-8 5 L-8 -4 L-4 0 L0 -7 L4 0 L8 -4 L8 5 Z" fill={c.acc} fillOpacity={0.45} {...S(c.ink, 1.9)} />
+      <path d="M-8 8.5 H8" {...S(c.ink, 1.8)} />
+    </>
+  ),
+  month_3: (c) => (
+    <>
+      <Moon x={-10} y={2} s={0.42} c={c} />
+      <Moon x={0} y={-4} s={0.52} c={c} />
+      <Moon x={10} y={2} s={0.42} c={c} />
+      <path d="M-14 13 Q0 18 14 13" {...S(c.ink, 1.6)} />
+    </>
+  ),
+  month_6: (c) => (
+    <Calendar c={c}>
+      {[-8, 0, 8].flatMap((x) => [3, 11].map((y) => <Moon key={`${x}-${y}`} x={x - 0.5} y={y} s={0.22} c={c} />))}
+    </Calendar>
+  ),
+  month_12: (c) => (
+    <>
+      {Array.from({ length: 12 }, (_, i) => {
+        const [x, y] = pol(15, i * 30);
+        return <circle key={i} cx={f(x)} cy={f(y)} r="1.9" fill={i % 3 === 0 ? c.acc : "none"} {...S(c.ink, 1.2)} />;
+      })}
+      <Star x={0} y={0.5} R={9} r={3.8} c={c} />
+    </>
+  ),
+
+  // ── تیک‌ها (بالاتر) ──
+  ticks_10000: (c) => (
+    <>
+      {[-10, 0, 10].flatMap((y) =>
+        [-10, 0, 10].map((x) => <path key={`${x}-${y}`} d={`M${x - 3.6} ${y} l2.4 2.4 l4.8 -5`} {...S(c.ink, x === 0 && y === 0 ? 2.6 : 1.8)} opacity={x === 0 && y === 0 ? 1 : 0.75} />),
+      )}
+      <circle r="5.4" fill={c.acc} fillOpacity={0.25} stroke="none" />
+    </>
+  ),
+
+  // ── ثبات (بالاتر) ──
+  avg90_85: (c) => (
+    <>
+      <path d={arcPath(15, -120, 120)} {...S(c.ink, 2.2)} />
+      <path d={arcPath(15, 60, 120)} {...S(c.acc, 3.4)} />
+      {[-120, -60, 0, 60, 120].map((a) => {
+        const [x0, y0] = pol(10.5, a);
+        const [x1, y1] = pol(12.5, a);
+        return <path key={a} d={`M${f(x0)} ${f(y0)} L${f(x1)} ${f(y1)}`} {...S(c.ink, 1.4)} />;
+      })}
+      <path d={`M0 0 L${f(pol(10, 84)[0])} ${f(pol(10, 84)[1])}`} {...S(c.ink, 2.4)} />
+      <circle r="2.6" fill={c.acc} {...S(c.ink, 1.4)} />
+      <path d="M-6 12 H6" {...S(c.ink, 1.8)} />
+    </>
+  ),
+  comeback_3: (c) => (
+    <>
+      <path d="M-11 14 L0 6 L11 14" {...S(c.ink, 2.4)} opacity={0.5} />
+      <path d="M-11 5 L0 -3 L11 5" {...S(c.ink, 2.4)} opacity={0.75} />
+      <path d="M-11 -4 L0 -12 L11 -4" {...S(c.ink, 2.6)} />
+      <Star x={0} y={-16} R={3.2} r={1.1} n={4} c={c} w={1.2} fill={0.7} />
+    </>
+  ),
+  early_100: (c) => (
+    <>
+      <circle cx="0" cy="-1" r="7" fill={c.acc} fillOpacity={0.45} {...S(c.ink, 2)} />
+      {Array.from({ length: 12 }, (_, i) => {
+        const [x0, y0] = pol(10, i * 30);
+        const [x1, y1] = pol(i % 2 ? 12.5 : 14.5, i * 30);
+        return <path key={i} d={`M${f(x0)} ${f(-1 + y0)} L${f(x1)} ${f(-1 + y1)}`} {...S(c.ink, 1.7)} />;
+      })}
+      <path d="M-15 16 H15" {...S(c.ink, 1.8)} />
+    </>
+  ),
+  early_run_14: (c) => (
+    <Calendar c={c}>
+      <path d="M-7 12 A7 7 0 0 1 7 12 Z" fill={c.acc} fillOpacity={0.45} {...S(c.ink, 1.7)} />
+      {[-60, -20, 20, 60].map((a) => {
+        const [x0, y0] = pol(9, a);
+        const [x1, y1] = pol(11.5, a);
+        return <path key={a} d={`M${f(x0)} ${f(12 + y0)} L${f(x1)} ${f(12 + y1)}`} {...S(c.ink, 1.4)} />;
+      })}
+    </Calendar>
+  ),
+
+  // ── خواب (بالاتر) ──
+  sleep_100: (c) => (
+    <>
+      {Array.from({ length: 12 }, (_, i) => {
+        const [x, y] = pol(15.5, i * 30);
+        return <circle key={i} cx={f(x)} cy={f(y)} r="1.1" fill={c.ink} />;
+      })}
+      <Moon x={-1.5} y={0.5} s={0.68} c={c} />
+    </>
+  ),
+  sleep_365: (c) => (
+    <>
+      <circle r="15.5" {...S(c.ink, 1.8)} strokeDasharray="2.6 5.2" />
+      <Moon x={-2} y={1} s={0.62} c={c} />
+      <Star x={7} y={-6} R={3.6} r={1.3} n={4} c={c} w={1.3} fill={0.7} />
+    </>
+  ),
+  sleep_log_run_30: (c) => (
+    <>
+      <Moon x={-11} y={-1} s={0.36} c={c} />
+      <Moon x={0} y={-1} s={0.36} c={c} />
+      <Moon x={11} y={-1} s={0.36} c={c} />
+      <path d="M-15 11 H15" {...S(c.ink, 1.8)} />
+      {[-11, 0, 11].map((x) => (
+        <circle key={x} cx={x} cy="11" r="1.8" fill={c.acc} {...S(c.ink, 1.2)} />
+      ))}
+    </>
+  ),
+  sleep_goal_100: (c) => (
+    <>
+      <path d="M-15 -2 V15 M-15 9 H16 M16 9 V15" {...S(c.ink, 2)} />
+      <rect x="-13" y="2" width="8" height="5" rx="2.2" {...S(c.ink, 1.7)} />
+      <path d="M-3 2 H12 Q16 2 16 5 V9 H-3 Z" fill={c.acc} fillOpacity={0.4} {...S(c.ink, 1.7)} />
+      <path d="M-6 -6 L-6 -13 L-2 -9 L1 -15 L4 -9 L8 -13 L8 -6 Z" fill={c.acc} fillOpacity={0.5} {...S(c.ink, 1.6)} />
+    </>
+  ),
+  sleep_steady_30: (c) => (
+    <>
+      <Clock x={0} y={0} r={15} c={c} />
+      <SegRing r={10.5} n={30} gap={4} ink={c.ink} w={1.2} />
+      <Moon x={-0.5} y={0} s={0.36} c={c} />
+    </>
+  ),
+
+  // ── بدن و تغذیه ──
+  workout_10: (c) => <Dumbbell x={0} y={0} rot={-24} s={1} c={c} />,
+  workout_50: (c) => (
+    <>
+      <Dumbbell x={0} y={6} rot={0} s={0.9} c={c} />
+      <Star x={-7} y={-8} R={3.6} r={1.2} n={4} c={c} w={1.3} fill={0.7} />
+      <Star x={6} y={-12} R={4.4} r={1.5} n={4} c={c} w={1.3} fill={0.7} />
+      <path d="M0 -4 V-1 M-4 -3 L-2.6 -0.8 M4 -3 L2.6 -0.8" {...S(c.ink, 1.4)} />
+    </>
+  ),
+  workout_150: (c) => (
+    <>
+      <Dumbbell x={0} y={0} rot={45} s={0.9} c={c} />
+      <Dumbbell x={0} y={0} rot={-45} s={0.9} c={c} />
+    </>
+  ),
+  workout_365: (c) => (
+    <>
+      <path d="M-11 -2 L-11 -12 L-5.5 -7 L0 -14 L5.5 -7 L11 -12 L11 -2 Z" fill={c.acc} fillOpacity={0.45} {...S(c.ink, 1.9)} />
+      <Dumbbell x={0} y={9} rot={0} s={0.95} c={c} />
+    </>
+  ),
+  workout_weeks_4: (c) => (
+    <>
+      <SegRing r={16} n={4} gap={14} ink={c.ink} w={2.4} />
+      <Dumbbell x={0} y={0} rot={-24} s={0.68} c={c} />
+    </>
+  ),
+  workout_weeks_12: (c) => (
+    <>
+      <SegRing r={16} n={12} gap={7} ink={c.ink} w={2.2} />
+      <Dumbbell x={0} y={0} rot={-24} s={0.68} c={c} />
+    </>
+  ),
+  cal_days_30: (c) => (
+    <>
+      <circle cx="0" cy="0" r="10.5" fill={c.acc} fillOpacity={0.2} {...S(c.ink, 2)} />
+      <circle cx="0" cy="0" r="6.5" {...S(c.ink, 1.4)} />
+      <path d="M-15.5 -12 V-6 Q-15.5 -3 -14 -3 Q-12.5 -3 -12.5 -6 V-12 M-14 -3 V13" {...S(c.ink, 1.6)} />
+      <path d="M14 13 V-12 Q17 -8 16.5 -1 H14" {...S(c.ink, 1.6)} />
+    </>
+  ),
+  cal_days_100: (c) => (
+    <>
+      <path d="M-11 12 C-12 -4 1 -13 13 -13 C13 1 5 13 -11 12Z" fill={c.acc} fillOpacity={0.4} {...S(c.ink, 2)} />
+      <path d="M-11 12 L7 -6 M-3 4 L-3 -2 M2 -1 L7 -1" {...S(c.ink, 1.5)} />
+      <Star x={-10} y={-10} R={3.6} r={1.2} n={4} c={c} w={1.2} fill={0.7} />
+    </>
+  ),
+  cal_run_7: (c) => (
+    <>
+      <SegRing r={16} n={7} gap={14} ink={c.ink} w={2.4} />
+      <g transform="translate(0 1.5) scale(0.72)">
+        <Apple c={c} />
+      </g>
+    </>
+  ),
+  cal_run_30: (c) => (
+    <>
+      <circle r="15.5" {...S(c.ink, 1.6)} strokeDasharray="1 2.35" />
+      <path d="M2.5 -12 L-7 1.5 H-0.5 L-2.5 12 L7 -1.5 H0.5 Z" fill={c.acc} fillOpacity={0.5} {...S(c.ink, 1.9)} />
+    </>
+  ),
+  cal_target_30: (c) => (
+    <>
+      <path d="M0 -13 V13 M-7 15 H7 M-14 -8 H14" {...S(c.ink, 2)} />
+      <circle cx="0" cy="-13" r="1.6" fill={c.ink} />
+      <path d="M-11 -8 L-15.5 3 M-11 -8 L-6.5 3 M11 -8 L6.5 3 M11 -8 L15.5 3" {...S(c.ink, 1.3)} />
+      <path d="M-16.5 3 A5.5 5.5 0 0 0 -5.5 3 Z M5.5 3 A5.5 5.5 0 0 0 16.5 3 Z" fill={c.acc} fillOpacity={0.45} {...S(c.ink, 1.7)} />
+    </>
+  ),
+
+  // ── ترید ──
+  trade_50: (c) => (
+    <>
+      <Candle x={-9} y={6} h={8} c={c} />
+      <Candle x={0} y={1} h={10} c={c} />
+      <Candle x={9} y={-4} h={12} c={c} />
+      <path d="M-16 16 H16" {...S(c.ink, 1.6)} />
+    </>
+  ),
+  trade_250: (c) => (
+    <>
+      <path d="M0 -10 Q-8 -14 -16 -11 V13 Q-8 10 0 14 Q8 10 16 13 V-11 Q8 -14 0 -10 Z" fill={c.acc} fillOpacity={0.2} {...S(c.ink, 1.9)} />
+      <path d="M0 -10 V14" {...S(c.ink, 1.5)} />
+      <path d="M-13 6 L-9 1 L-6 3 L-3 -3" {...S(c.ink, 1.5)} />
+      <Candle x={6} y={2} h={7} c={c} w={3.4} />
+      <Candle x={11.5} y={-1} h={8} c={c} w={3.4} />
+    </>
+  ),
+  trade_check_25: (c) => (
+    <>
+      <rect x="-12" y="-12" width="24" height="28" rx="3.5" {...S(c.ink, 2)} />
+      <rect x="-5.5" y="-15" width="11" height="6" rx="2" fill={c.acc} fillOpacity={0.5} {...S(c.ink, 1.6)} />
+      <Check d="M-7 -2 L-5 0 L-1.5 -4" c={c} w={1.7} />
+      <Check d="M-7 6 L-5 8 L-1.5 4" c={c} w={1.7} />
+      <path d="M2 -2 H8 M2 6 H8" {...S(c.ink, 1.5)} />
+    </>
+  ),
+  trade_check_100: (c) => (
+    <>
+      <path d="M0 -16 L14 -11 V0 C14 8 8 13 0 16 C-8 13 -14 8 -14 0 V-11 Z" fill={c.acc} fillOpacity={0.3} {...S(c.ink, 2)} />
+      <Check d="M-6 0 L-1.5 4.5 L7 -5" c={c} w={2.8} />
+    </>
+  ),
+  trade_plan_20: (c) => (
+    <>
+      {[0, 60, 120, 180, 240, 300].map((a) => (
+        <g key={a} transform={`rotate(${a})`}>
+          <path d="M0 0 V-15 M0 -10 L-4 -13.5 M0 -10 L4 -13.5 M0 -5 L-3 -7.5 M0 -5 L3 -7.5" {...S(c.ink, 1.7)} />
+        </g>
+      ))}
+      <circle r="2.6" fill={c.acc} {...S(c.ink, 1.3)} />
+    </>
+  ),
+  trade_reflect_50: (c) => (
+    <>
+      <path d="M-16 0 Q0 -13 16 0 Q0 13 -16 0 Z" fill={c.acc} fillOpacity={0.18} {...S(c.ink, 2)} />
+      <circle r="6.5" {...S(c.ink, 1.8)} />
+      <Candle x={0} y={0} h={6} c={c} w={3} />
+      <path d="M-11 -11 L-9 -8 M0 -15 V-12 M11 -11 L9 -8" {...S(c.ink, 1.5)} />
+    </>
+  ),
 };
+
+// ── گلیف‌های کمکی بخش بدن/ترید ──
+function Dumbbell({ x, y, rot, s, c }: { x: number; y: number; rot: number; s: number; c: Ink }) {
+  return (
+    <g transform={`translate(${x} ${y}) rotate(${rot}) scale(${s})`}>
+      <path d="M-9 0 H9" {...S(c.ink, 2.6 / s)} />
+      <rect x="-13.5" y="-6.5" width="4.5" height="13" rx="1.4" fill={c.acc} fillOpacity={0.45} {...S(c.ink, 1.8 / s)} />
+      <rect x="9" y="-6.5" width="4.5" height="13" rx="1.4" fill={c.acc} fillOpacity={0.45} {...S(c.ink, 1.8 / s)} />
+      <path d="M-15.5 -3 V3 M15.5 -3 V3" {...S(c.ink, 2.4 / s)} />
+    </g>
+  );
+}
+
+function Apple({ c }: { c: Ink }) {
+  return (
+    <>
+      <path d="M0 -5 C-4 -9 -12 -7 -12 1 C-12 9 -5 14 0 11 C5 14 12 9 12 1 C12 -7 4 -9 0 -5Z" fill={c.acc} fillOpacity={0.4} {...S(c.ink, 2.4)} />
+      <path d="M0 -5 Q0.5 -10 4 -13" {...S(c.ink, 2.2)} />
+      <path d="M1 -9 Q6 -12 8 -8 Q4 -6 1 -9Z" fill={c.acc} fillOpacity={0.6} {...S(c.ink, 1.6)} />
+    </>
+  );
+}
+
+function Candle({ x, y, h, c, w = 4.4 }: { x: number; y: number; h: number; c: Ink; w?: number }) {
+  return (
+    <g transform={`translate(${x} ${y})`}>
+      <path d={`M0 ${-h / 2 - 3} V${h / 2 + 3}`} {...S(c.ink, 1.4)} />
+      <rect x={-w / 2} y={-h / 2} width={w} height={h} rx="1" fill={c.acc} fillOpacity={0.55} {...S(c.ink, 1.6)} />
+    </g>
+  );
+}
 
 const FALLBACK_GLYPH = (c: Ink) => (
   <>
