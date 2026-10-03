@@ -14,12 +14,15 @@ export function SleepGoalCard({
   custom,
   goalMin,
   onSaved,
+  bare = false,
 }: {
   goal: SleepGoal;
   /** false یعنی هنوز از ساعت‌های روتین میاد */
   custom: boolean;
   goalMin: number;
   onSaved: () => void;
+  /** داخل پنجره (SleepGoalSheet) بدون قاب کارت */
+  bare?: boolean;
 }) {
   const [bed, setBed] = useState(goal.sleep);
   const [wake, setWake] = useState(goal.wake);
@@ -49,9 +52,9 @@ export function SleepGoalCard({
   }
 
   return (
-    <div className="sl-card">
+    <div className={bare ? "slp-goal-bare" : "sl-card"}>
       <div className="sl-head-row">
-        <h3 className="sl-card-title"><Target aria-hidden="true" /> هدف خواب</h3>
+        {!bare && <h3 className="sl-card-title"><Target aria-hidden="true" /> هدف خواب</h3>}
         <span className="sl-sub">{durationLabel(dirty ? preview : goalMin)} هر شب</span>
       </div>
       <div className="slp-goal-fields">

@@ -15,13 +15,19 @@ body[data-theme="light"] .sleep-scope{
 }
 .sleep-scope, .sleep-scope *{ box-sizing:border-box; }
 
-/* لایه‌بندی صفحه: موبایل یک ستون، دسکتاپ دو ستون (راست اصلی، چپ ابزارها) */
+/* لایه‌بندی صفحه: یک ستون خلوت، روی دسکتاپ هم باریک و وسط (درخواست صریح:
+   شلوغ نباشه؛ نمودارها و تحلیل‌ها رفتن به آنالیز هفتگی) */
+.slp-page{ max-width:640px; margin-inline:auto; }
 .slp-hub{ display:flex; flex-direction:column; gap:14px; margin-top:14px; }
-@media (min-width:1024px){
-  .slp-hub{ display:grid; grid-template-columns:minmax(0,1.6fr) minmax(0,1fr); align-items:start; gap:18px; }
-  .slp-col{ display:flex; flex-direction:column; gap:18px; min-width:0; }
-}
+@media (min-width:1024px){ .slp-hub{ gap:16px; } }
 .slp-col{ display:flex; flex-direction:column; gap:14px; min-width:0; }
+
+/* لینک «آمار» کنار عنوان صفحه → /analysis/weekly#sleep — بی‌بک‌گراند */
+.slp-stats-link{
+  margin-inline-start:auto; display:inline-flex; align-items:center; gap:6px;
+  color:var(--accent); font-size:13px; font-weight:700; text-decoration:none;
+}
+.slp-stats-link svg{ width:17px; height:17px; flex:none; }
 
 /* کارت پایه */
 .sl-card{
@@ -48,56 +54,23 @@ body[data-theme="light"] .sleep-scope{
 .slp-c-fair{ color:var(--slp-fair); }
 .slp-c-poor{ color:var(--slp-poor); }
 
-/* ── هیرو ─────────────────────────────────────────────── */
-.slp-hero{ overflow:hidden; gap:16px; }
-.slp-hero-sky{ position:absolute; inset:0; pointer-events:none; overflow:hidden; border-radius:inherit; }
-.slp-star{
-  position:absolute; width:2px; height:2px; border-radius:50%; background:currentColor;
-  color:var(--slp-moon); opacity:.0; animation:slpTwinkle 4.2s ease-in-out infinite;
-}
-@keyframes slpTwinkle{ 0%, 100%{ opacity:.08; transform:scale(.8); } 50%{ opacity:.75; transform:scale(1.25); } }
-.slp-hero-top{ position:relative; display:flex; align-items:center; gap:16px; }
-.slp-moon{ flex:none; width:58px; height:58px; filter:drop-shadow(0 0 14px color-mix(in srgb, var(--slp-moon) 45%, transparent)); }
-.slp-moon-float{ animation:slpFloat 6s ease-in-out infinite; }
-@keyframes slpFloat{ 0%, 100%{ transform:translateY(0) rotate(-4deg); } 50%{ transform:translateY(-5px) rotate(3deg); } }
-.slp-hero-text{ flex:1; min-width:0; display:flex; flex-direction:column; gap:3px; }
-.slp-hero-kicker{ font-size:12px; color:var(--muted); font-weight:700; }
-.slp-hero-title{ font-size:20px; font-weight:900; line-height:1.5; margin:0; }
-@media (min-width:640px){ .slp-hero-title{ font-size:23px; } }
-.slp-hero-sub{ font-size:12.5px; color:var(--muted); line-height:1.9; }
-.slp-hero-body{ position:relative; display:flex; align-items:center; gap:18px; flex-wrap:wrap; }
-.slp-score{ display:flex; flex-direction:column; align-items:center; line-height:1.1; }
-.slp-score b{ font-size:26px; font-weight:900; font-variant-numeric:tabular-nums; }
-.slp-score small{ font-size:10.5px; color:var(--muted); font-weight:700; }
-.slp-hero-facts{ flex:1 1 170px; min-width:0; display:grid; grid-template-columns:repeat(2, minmax(0,1fr)); gap:12px 10px; }
-.slp-fact{ display:flex; flex-direction:column; gap:2px; min-width:0; }
-.slp-fact span{ font-size:11px; color:var(--muted); }
-.slp-fact b{ font-size:14.5px; font-weight:800; font-variant-numeric:tabular-nums; line-height:1.5; overflow-wrap:anywhere; }
-.slp-wake-opts{ flex:1 1 100%; display:grid; grid-template-columns:repeat(3, minmax(0,1fr)); gap:8px; }
-.slp-wake-opt{
-  display:flex; flex-direction:column; align-items:center; gap:2px; min-width:0; text-align:center;
-  padding:10px 4px; border-radius:16px; border:1px solid var(--box-line);
-}
-.slp-wake-opt span{ font-size:11px; color:var(--muted); line-height:1.5; }
-.slp-wake-clock{ font-size:19px; font-weight:900; font-variant-numeric:tabular-nums; letter-spacing:.3px; }
-.slp-countdown{ font-size:30px; font-weight:900; letter-spacing:.5px; font-variant-numeric:tabular-nums; direction:ltr; }
-.slp-hero-actions{ position:relative; display:flex; gap:10px; flex-wrap:wrap; }
-.slp-hero-actions > *{ flex:1 1 150px; }
-.slp-tracking{ display:flex; align-items:center; gap:10px; font-size:12.5px; color:var(--muted); }
-.slp-tracking-dot{ width:8px; height:8px; border-radius:50%; background:var(--slp-ink); box-shadow:0 0 0 0 var(--slp-ink); animation:slpPulse 1.8s ease-out infinite; }
-@keyframes slpPulse{ 0%{ box-shadow:0 0 0 0 color-mix(in srgb, var(--slp-ink) 60%, transparent); } 100%{ box-shadow:0 0 0 10px transparent; } }
-
-@media (prefers-reduced-motion: reduce){
-  .slp-star, .slp-moon-float, .slp-tracking-dot{ animation:none !important; }
-  .slp-star{ opacity:.35; }
-}
-html[data-perf="low"] .slp-star{ animation:none; opacity:.35; }
-
 /* ── هدف خواب (components/SleepGoalCard.tsx) ─────────────── */
 .slp-goal-fields{ display:grid; grid-template-columns:1fr 1fr; gap:12px; }
 .slp-goal-field{ display:flex; flex-direction:column; gap:6px; min-width:0; }
 .slp-goal-field span{ font-size:12px; font-weight:700; color:var(--muted); }
+.slp-goal-bare{ display:flex; flex-direction:column; gap:14px; }
+.slp-goal-panel{ max-width:420px; }
 .slp-goal-field input{ width:100%; text-align:center; direction:ltr; }
+
+/* ── آمار خواب در آنالیز هفتگی (components/WeeklyAnalysisSleep.tsx) ── */
+.wa-sleep{ margin-top:22px; scroll-margin-top:110px; display:flex; flex-direction:column; gap:14px; }
+.wa-sleep-title{ display:flex; align-items:center; gap:8px; margin:0; font-size:17px; font-weight:800; }
+.wa-sleep-title svg{ width:19px; height:19px; color:var(--slp-ink); }
+.wa-sleep-grid{ display:flex; flex-direction:column; gap:14px; }
+@media (min-width:1024px){
+  .wa-sleep-grid{ display:grid; grid-template-columns:minmax(0,1fr) minmax(0,1fr); align-items:start; gap:18px; }
+  .wa-sleep-wide{ grid-column:1 / -1; }
+}
 
 /* دکمه‌ی خطی داخل هیرو/پنجره: .account-outline-btn فقط داخل پنل کاربری شکل کامل داره،
    این‌جا قالب دکمه‌ی خطی سایت (هم‌اندازه‌ی trade-primary-btn) صریح داده می‌شه؛ بی‌بک‌گراند. */
@@ -106,16 +79,3 @@ html[data-perf="low"] .slp-star{ animation:none; opacity:.35; }
 }
 .sleep-scope .account-outline-btn.slg-danger{ border-color:var(--slp-poor); }
 
-/* فیلدهای شیشه‌ای خواب: بک‌گراند پایه‌ی wsearch-newform-name در تم تیره مشکی تخت (#0B0C0D)ه؛
-   همون ترکیب شیشه‌ای فیلدهای پنل کاربری (گرد، نیمه‌شفاف) این‌جا هم می‌شینه. */
-.sleep-scope .wsearch-newform-name, .sleep-scope .sli-time-input{
-  border-radius:14px; padding-inline:14px; box-shadow:none;
-  backdrop-filter:blur(18px) saturate(160%); -webkit-backdrop-filter:blur(18px) saturate(160%);
-}
-body:not([data-theme="light"]) .sleep-scope .wsearch-newform-name, body:not([data-theme="light"]) .sleep-scope .sli-time-input{
-  background:rgba(255,255,255,.05); border:1px solid rgba(255,255,255,.1);
-}
-body[data-theme="light"] .sleep-scope .wsearch-newform-name, body[data-theme="light"] .sleep-scope .sli-time-input{
-  background:rgba(255,255,255,.35); border:1px solid rgba(0,0,0,.08);
-}
-.sleep-scope .wsearch-newform-name:focus, .sleep-scope .sli-time-input:focus{ border-color:var(--accent); }

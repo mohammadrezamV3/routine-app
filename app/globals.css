@@ -284,14 +284,14 @@
      بدون این خط به فونت خام سیستم/مرورگر سقوط می‌کنه (دقیقا همون باگ
      «توی چارت‌ها یه فونت دیگه دیده می‌شه»، مخصوصا روی چارت‌های دسکتاپ ادمین/
      کالری که برچسب‌هاشون با <text> خام SVG رسم می‌شن، نه یه عنصر HTML). */
-  svg text{ font-family:var(--font-vazir), var(--font-latin), sans-serif; }
+  svg text{ font-family:var(--font-latin), var(--font-vazir), sans-serif; }
   /* اسکرول‌بار سراسری صفحه هیچ‌وقت نباید دیده بشه — طبق درخواست صریح
      کاربر، نه فقط داخل پاپ‌آپ‌ها (که .no-scrollbar از قبل روشون بود). */
   html{ scrollbar-width:none; -ms-overflow-style:none; }
   html::-webkit-scrollbar{ display:none; width:0; height:0; }
   body{
     background:var(--bg); color:var(--text);
-    font-family:var(--font-vazir), sans-serif;
+    font-family:var(--font-latin), var(--font-vazir), sans-serif;
     font-weight:400;
     line-height:1.6;
     padding:calc(118px + env(safe-area-inset-top)) calc(20px + env(safe-area-inset-right))
@@ -318,7 +318,7 @@
   .account-content section{ padding:0; border-top:none; }
 
   .eyebrow{
-    font-family:var(--font-vazir), var(--font-latin), sans-serif; font-size:11px; letter-spacing:.12em;
+    font-family:var(--font-latin), var(--font-vazir), sans-serif; font-size:11px; letter-spacing:.12em;
     color:var(--accent); text-transform:uppercase; margin-bottom:10px; font-weight:600;
   }
   h1{font-size:23px; font-weight:800; letter-spacing:-.01em; margin-bottom:6px;}
@@ -333,12 +333,12 @@
   .landing-section-title{font-size:22px; font-weight:800; letter-spacing:-.01em; margin:0;}
   .dateline{color:var(--muted); font-size:13.5px; display:flex; gap:12px; flex-wrap:wrap; align-items:center;}
   .dateline .mono{color:var(--muted2);}
-  .home-stats{font-size:12px; color:var(--muted); margin-top:10px; font-family:var(--font-vazir), var(--font-latin), sans-serif; display:inline-flex; align-items:center; gap:5px;}
+  .home-stats{font-size:12px; color:var(--muted); margin-top:10px; font-family:var(--font-latin), var(--font-vazir), sans-serif; display:inline-flex; align-items:center; gap:5px;}
   .home-stats b{color:var(--secondary); font-weight:600;}
   .streak-flame{width:13px; height:13px; color:var(--secondary); flex-shrink:0;}
 
   h2{font-size:14px; font-weight:700; margin-bottom:4px;}
-  .section-note{font-size:11.5px; color:var(--accent-soft); font-family:var(--font-vazir), var(--font-latin), sans-serif; margin-bottom:18px;}
+  .section-note{font-size:11.5px; color:var(--accent-soft); font-family:var(--font-latin), var(--font-vazir), sans-serif; margin-bottom:18px;}
   /* تم روشن: هیچ فونتی نباید کرمی/طلایی باشه — عنوان‌ها نارنجی (accent)،
      متن‌های توضیحی قهوه‌ای (muted) به‌جای accent-soft که رنگش لایت-نارنجی/طلایی‌مانند بود */
   body[data-theme="light"] h1,
@@ -372,7 +372,7 @@
   .task-state.missed{color:#E05252;}
   .task-name{font-size:14.5px;}
   .task-name.done{color:var(--muted2); text-decoration:line-through;}
-  .task-time{font-size:11.5px; color:var(--muted2); font-family:var(--font-vazir), var(--font-latin), sans-serif; margin-top:3px;}
+  .task-time{font-size:11.5px; color:var(--muted2); font-family:var(--font-latin), var(--font-vazir), sans-serif; margin-top:3px;}
 
   .stat-toggle-row{
     display:flex; align-items:center; justify-content:space-between; gap:10px;
@@ -383,14 +383,14 @@
 
   .wake{display:flex; align-items:center; justify-content:space-between; padding-top:16px; margin-top:6px; gap:12px; flex-wrap:wrap;}
   .wake-text{font-size:13px; color:var(--muted);}
-  .wake-text b{color:var(--text); font-family:var(--font-vazir), var(--font-latin), sans-serif; font-weight:600;}
+  .wake-text b{color:var(--text); font-family:var(--font-latin), var(--font-vazir), sans-serif; font-weight:600;}
 
   /* دکمه‌ها به‌سبک Liquid Glass اپل — شیشه‌ای/تار به‌جای پرشدن تخت سبز.
      چون این قانون پایه روی همه‌ی <button>هاست، دکمه‌هایی که فقط رنگ لبه/متن
      رو inline به سبز ست می‌کنن (سراسر اپ) به‌طور خودکار پس‌زمینه شیشه‌ای هم
      می‌گیرن، بدون این‌که لازم باشه تک‌تک‌شون رو دستی عوض کنیم. */
   button{
-    font-family:var(--font-vazir), sans-serif; font-weight:600; font-size:12.5px; cursor:pointer;
+    font-family:var(--font-latin), var(--font-vazir), sans-serif; font-weight:600; font-size:12.5px; cursor:pointer;
     color:var(--text); padding:8px 16px; border-radius:11px;
     border:1px solid rgba(255,255,255,.14);
     background:rgba(255,255,255,.05);
@@ -444,7 +444,7 @@
   .outing-box:active{transform:scale(.96);}
   .outing-box.on{background:var(--accent); border-color:var(--accent);}
   .outing-box .ob-num{
-    font-family:var(--font-vazir), var(--font-latin), sans-serif; font-size:16px; font-weight:700; color:var(--muted);
+    font-family:var(--font-latin), var(--font-vazir), sans-serif; font-size:16px; font-weight:700; color:var(--muted);
     transition:opacity .15s ease, transform .15s ease;
   }
   .outing-box.on .ob-num{opacity:0; transform:scale(.6);}
@@ -496,7 +496,7 @@
   .about-label{font-size:13px; color:var(--muted);}
 
   dl.notes{display:flex; flex-direction:column; gap:16px;}
-  .footer{color:var(--muted2); font-size:11px; font-family:var(--font-vazir), var(--font-latin), sans-serif; text-align:end; padding-top:30px;}
+  .footer{color:var(--muted2); font-size:11px; font-family:var(--font-latin), var(--font-vazir), sans-serif; text-align:end; padding-top:30px;}
 
   /* هدر شیشه‌ای — علاوه بر لبه‌ی نازک liquidGlassFilter دورش، خود بدنه هم
      یک پر لیکوئید گلس واقعی داره (بلور + شفافیت کم)، نه فقط بک‌گراند خالی */
@@ -900,7 +900,7 @@
     background:rgba(var(--accent-rgb),.14);
   }
   .nav-title{
-    font-family:var(--font-vazir), var(--font-latin), sans-serif; font-size:11px; letter-spacing:.1em; color:var(--muted2);
+    font-family:var(--font-latin), var(--font-vazir), sans-serif; font-size:11px; letter-spacing:.1em; color:var(--muted2);
     text-transform:uppercase; margin-bottom:14px; display:flex; align-items:center; justify-content:space-between;
   }
   .nav-close{
@@ -960,7 +960,7 @@
   /* tips / extra lists */
   .tm-extra{margin-top:22px;}
   .domain-sub{
-    font-family:var(--font-vazir), var(--font-latin), sans-serif; font-size:10.5px; letter-spacing:.08em; color:var(--muted2);
+    font-family:var(--font-latin), var(--font-vazir), sans-serif; font-size:10.5px; letter-spacing:.08em; color:var(--muted2);
     text-transform:uppercase; margin:14px 0 8px;
   }
   .domain-sub:first-child{margin-top:0;}
@@ -1093,7 +1093,7 @@
   body[data-theme="light"] .bg-dash-card{ background:rgba(255,255,255,.16); }
   .trade-stat-label{
     display:flex; align-items:center; gap:4px; font-size:9.5px; font-weight:700; color:var(--muted2);
-    font-family:var(--font-vazir), var(--font-latin), sans-serif; text-transform:uppercase; letter-spacing:.05em;
+    font-family:var(--font-latin), var(--font-vazir), sans-serif; text-transform:uppercase; letter-spacing:.05em;
   }
   .trade-stat-label svg{ flex-shrink:0; opacity:.75; }
   .trade-stat-value{ font-size:16px; font-weight:800; margin-top:4px; font-variant-numeric:proportional-nums; }
@@ -1361,7 +1361,7 @@
     .cal-label{position:absolute; inset-inline-end:50%; top:50%; transform:translate(-50%,-50%); min-width:0;}
   }
   .cal-grid{display:grid; grid-template-columns:repeat(7,1fr); gap:7px;}
-  .cal-weekday{font-family:var(--font-vazir), var(--font-latin), sans-serif; font-size:13.5px; font-weight:700; color:var(--accent); text-align:center; padding-bottom:6px;}
+  .cal-weekday{font-family:var(--font-latin), var(--font-vazir), sans-serif; font-size:13.5px; font-weight:700; color:var(--accent); text-align:center; padding-bottom:6px;}
   .cal-cell{
     aspect-ratio:1; border:1px solid var(--line); border-radius:13px; display:flex; flex-direction:column; align-items:center; justify-content:center; gap:4px;
     cursor:pointer; transition:transform .15s ease, border-color .15s ease, background .2s ease; position:relative;
@@ -1384,7 +1384,7 @@
     background:linear-gradient(155deg, rgba(224,82,82,.18), rgba(224,82,82,.05));
     border-color:rgba(224,82,82,.5);
   }
-  .cal-daynum{font-family:var(--font-vazir), var(--font-latin), sans-serif; font-size:12.5px; color:var(--text); transition:color .15s ease;}
+  .cal-daynum{font-family:var(--font-latin), var(--font-vazir), sans-serif; font-size:12.5px; color:var(--text); transition:color .15s ease;}
   .cal-status-dot{
     width:6px; height:6px; border-radius:50%; background:var(--accent);
     box-shadow:0 0 6px rgba(var(--accent-rgb),.5);
@@ -1473,7 +1473,7 @@
      .app-topbar (هدر سایت)، نه گرادیان تقریبا توپر قبلی. */
   .modal-panel.liquid-glass-panel{ overflow-x:hidden; background:var(--surface-2); }
   .modal-head{display:flex; align-items:flex-start; justify-content:space-between; margin-bottom:14px;}
-  .modal-eyebrow{font-size:12px; color:var(--muted2); font-family:var(--font-vazir), var(--font-latin), sans-serif;}
+  .modal-eyebrow{font-size:12px; color:var(--muted2); font-family:var(--font-latin), var(--font-vazir), sans-serif;}
   .modal-title{font-size:16px; font-weight:700; margin-top:3px;}
 
 
@@ -1966,7 +1966,7 @@
      تا پنل با بقیه‌ی اپ یکی به‌نظر برسد. */
   .account-shell .wsearch-newform-name,
   .account-shell .jdate-btn{
-    border-radius:14px; padding-inline-start:14px; padding-inline-end:14px;
+    padding-inline-start:16px; padding-inline-end:16px;
     backdrop-filter:blur(18px) saturate(160%); -webkit-backdrop-filter:blur(18px) saturate(160%);
   }
   body:not([data-theme="light"]) .account-shell .wsearch-newform-name,
@@ -2312,13 +2312,9 @@
     width:100%; box-sizing:border-box; border-radius:999px; padding:10px 16px; padding-inline-end:104px;
     backdrop-filter:blur(16px) saturate(160%); -webkit-backdrop-filter:blur(16px) saturate(160%);
   }
-  /* بک‌گراند پایه‌ی wsearch-newform-name توی تم تیره یه مشکی تخت
-     هاردکدشده‌ست (#0B0C0D) که با ظاهر شیشه‌ای باکس‌های همین صفحه (مثل
-     checkout-summary که rgba(surface-rgb) استفاده می‌کنه) هم‌خونی نداشت؛
-     برای غلبه روی اون قانون (body:not([data-theme="light"]) .wsearch-newform-name)
-     باید هم‌سطح یا اسپسیفیک‌تر باشه — با کلاس ولد هم‌رده می‌کنیم. */
+  /* همون شیشه‌ی استاندارد فیلدهای سایت (بلاک «فیلد استاندارد سایت» ته فایل) */
   body:not([data-theme="light"]) .checkout-discount-field-wrap .checkout-discount-input{
-    background:rgba(var(--surface-rgb), .3);
+    background:rgba(255,255,255,.05);
   }
   body[data-theme="light"] .checkout-discount-field-wrap .checkout-discount-input{
     background:rgba(var(--surface-rgb), .55);
@@ -2483,7 +2479,7 @@
     display:flex; align-items:center; justify-content:center; gap:8px; width:100%;
     margin-top:10px; padding:11px 0; border-radius:14px;
     border:1px solid var(--line); background:rgba(var(--surface-rgb),.05); color:var(--text);
-    font-family:var(--font-vazir), var(--font-latin), sans-serif; font-size:13px; font-weight:600; cursor:pointer;
+    font-family:var(--font-latin), var(--font-vazir), sans-serif; font-size:13px; font-weight:600; cursor:pointer;
     backdrop-filter:blur(20px) saturate(160%); -webkit-backdrop-filter:blur(20px) saturate(160%);
     box-shadow:inset 0 1px 0 rgba(255,255,255,.05); transition:border-color .2s ease, transform .15s ease;
   }
@@ -2517,7 +2513,7 @@
   .tc-drag-handle svg{ width:16px; height:16px; }
   .tc-edit-input{
     flex:1; min-width:0; background:none; border:none; color:var(--text);
-    font-family:var(--font-vazir), var(--font-latin), sans-serif; font-size:14px; padding:6px 0; outline:none;
+    font-family:var(--font-latin), var(--font-vazir), sans-serif; font-size:14px; padding:6px 0; outline:none;
   }
   .tc-delete-btn{
     flex-shrink:0; width:26px; height:26px; padding:0; border-radius:8px; border:none;
@@ -2534,7 +2530,7 @@
     padding:0; border:1px solid var(--accent); color:var(--accent); background:none;
   }
   .tc-add-btn:disabled{ opacity:.4; }
-  .trade-checklist-count{ text-align:end; font-size:11px; color:var(--muted2); font-family:var(--font-vazir), var(--font-latin), sans-serif; padding:4px 4px 2px; }
+  .trade-checklist-count{ text-align:end; font-size:11px; color:var(--muted2); font-family:var(--font-latin), var(--font-vazir), sans-serif; padding:4px 4px 2px; }
   /* یک باکس شیشه‌ای عمومی و ساده — برای جعبه‌های کوچیک مثل وضعیت لودینگ رودمپ‌ساز */
   .glass-box{
     background:rgba(var(--surface-rgb), .13); border:1px solid var(--line); border-radius:16px;
@@ -2578,7 +2574,7 @@
     content:''; position:absolute; top:34px; width:1px; height:12px; background:var(--muted2);
   }
   .wt-marker-col{display:flex; flex-direction:column; align-items:center; height:33px; justify-content:flex-end; position:relative;}
-  .wt-time-above{font-size:9px; color:var(--muted2); white-space:nowrap; margin-bottom:6px; font-family:var(--font-vazir), var(--font-latin), sans-serif;}
+  .wt-time-above{font-size:9px; color:var(--muted2); white-space:nowrap; margin-bottom:6px; font-family:var(--font-latin), var(--font-vazir), sans-serif;}
   /* هر برنامه یه ضربدر رو خط تایم‌لاینه — تا نگذشته رنگ اصلی‌شو داره،
      بعد از گذشتنش (انجام‌شده) دایره‌ش سبز پر می‌شه و ضربدر رنگ پس‌زمینه می‌گیره */
   .wt-dot{
@@ -2593,7 +2589,7 @@
   .wt-dot-missed{background:#E05252; border-color:#E05252; color:#fff; box-shadow:0 0 6px rgba(224,82,82,.55);}
   .wt-dot svg{width:9px; height:9px; display:block;}
   .wt-content{padding-top:14px; min-width:0; text-align:center; position:relative;}
-  .wt-range{font-size:9.5px; color:var(--muted2); font-family:var(--font-vazir), var(--font-latin), sans-serif; margin-bottom:3px; white-space:nowrap;}
+  .wt-range{font-size:9.5px; color:var(--muted2); font-family:var(--font-latin), var(--font-vazir), sans-serif; margin-bottom:3px; white-space:nowrap;}
   /* اسم خیلی بلند (مثلا «مسیر یادگیری Bug Bounty با تمرکز بر OWASP») قبلا
      بدون سقف تعداد خط رشد می‌کرد و می‌رفت روی خط جداکننده‌ی روز بعدی —
      حالا حداکثر ۲ خط و بقیه‌ش «...» می‌شه. */
@@ -2611,7 +2607,7 @@
   .wt-item.wt-endpoint .wt-marker-col{height:42px;}
   .wt-item.wt-endpoint .wt-time-above{margin-bottom:20px;}
   .wt-untimed-item{min-width:0; max-width:120px;}
-  .wt-untimed-item .wt-range{font-size:10.5px; color:var(--muted2); font-family:var(--font-vazir), var(--font-latin), sans-serif; margin-bottom:3px;}
+  .wt-untimed-item .wt-range{font-size:10.5px; color:var(--muted2); font-family:var(--font-latin), var(--font-vazir), sans-serif; margin-bottom:3px;}
   .wt-untimed-item .wt-name{
     font-size:12.5px; color:var(--text); line-height:1.4;
     display:-webkit-box; -webkit-box-orient:vertical; -webkit-line-clamp:2; overflow:hidden; word-break:break-word;
@@ -2717,11 +2713,11 @@
   @media (hover:hover){body[data-theme="light"] .pcard-close:hover, body:not([data-theme="light"]) .pcard-close:hover{
     background:none;
   }}
-  .pcard-back-eyebrow{font-family:var(--font-vazir), var(--font-latin), sans-serif; font-size:12.5px; letter-spacing:0; color:var(--accent); font-weight:600; margin-bottom:14px;}
+  .pcard-back-eyebrow{font-family:var(--font-latin), var(--font-vazir), sans-serif; font-size:12.5px; letter-spacing:0; color:var(--accent); font-weight:600; margin-bottom:14px;}
   .pcard-back-lesson{font-size:22px; font-weight:800; line-height:1.4;}
-  .pcard-back-hint{margin-top:18px; font-size:11px; color:var(--muted2); font-family:var(--font-vazir), var(--font-latin), sans-serif;}
+  .pcard-back-hint{margin-top:18px; font-size:11px; color:var(--muted2); font-family:var(--font-latin), var(--font-vazir), sans-serif;}
   .pcard-combined-stat{
-    font-size:13px; font-weight:700; font-family:var(--font-vazir), var(--font-latin), sans-serif; color:var(--accent);
+    font-size:13px; font-weight:700; font-family:var(--font-latin), var(--font-vazir), sans-serif; color:var(--accent);
     margin-top:26px; margin-bottom:12px; flex-shrink:0;
   }
   .pcard-times-list{
@@ -2745,7 +2741,7 @@
   .pcard-icon-btn svg{width:13px; height:13px; display:block;}
   @media (hover:hover){.pcard-trash-btn:hover{border-color:#E05252; color:#E05252; background:rgba(224,82,82,.12);}}
   @media (hover:hover){.pcard-edit-btn:hover{border-color:var(--accent); color:var(--accent); background:var(--accent-dim);}}
-  .pcard-front-hint{margin-top:10px; font-size:10.5px; color:var(--muted2); font-family:var(--font-vazir), var(--font-latin), sans-serif; flex-shrink:0;}
+  .pcard-front-hint{margin-top:10px; font-size:10.5px; color:var(--muted2); font-family:var(--font-latin), var(--font-vazir), sans-serif; flex-shrink:0;}
 
   /* هم دسکتاپ هم موبایل: تایم‌لاین افقی یکسان (بیداری راست، خواب چپ، نقطه‌ها
      روی یه خط افقی) — موبایل فقط یه‌پله کوچیک‌تر می‌شه، ساختارش عوض نمی‌شه.
@@ -2793,12 +2789,9 @@
   .wsearch-input-wrap{position:relative; margin:14px 0 8px; flex-shrink:0;}
   .wsearch-input-icon{position:absolute; top:50%; inset-inline-start:13px; transform:translateY(-50%); width:15px; height:15px; pointer-events:none;}
   .wsearch-input{
-    width:100%; background:rgba(var(--bg-rgb), .5); border:1px solid var(--line); border-radius:10px;
-    padding:10px 38px 10px 14px; font-family:var(--font-vazir), var(--font-latin), sans-serif; font-weight:500; font-size:13.5px; color:var(--text);
+    width:100%; border:1px solid var(--line); border-radius:var(--field-radius);
+    padding:10px 38px 10px 14px; font-family:var(--font-latin), var(--font-vazir), sans-serif; font-weight:500; font-size:13.5px; color:var(--text);
     outline:none; transition:border-color .15s ease, background .15s ease;
-  }
-  body:not([data-theme="light"]) .wsearch-input{
-    background:#0B0C0D; border:1px solid rgba(255,255,255,.08);
   }
   .wsearch-input:focus{border-color:var(--accent);}
   .wsearch-input::placeholder{color:var(--muted2);}
@@ -2810,7 +2803,7 @@
   .wsearch-box{
     aspect-ratio:1; padding:10px; border-radius:14px; text-align:center; line-height:1.35;
     border:1px solid var(--line); background:rgba(var(--surface-rgb), .68); color:#fff;
-    font-family:var(--font-vazir), var(--font-latin), sans-serif; font-size:12.5px; font-weight:700; cursor:pointer;
+    font-family:var(--font-latin), var(--font-vazir), sans-serif; font-size:12.5px; font-weight:700; cursor:pointer;
     display:flex; align-items:center; justify-content:center; overflow:hidden;
     backdrop-filter:blur(18px) saturate(150%); -webkit-backdrop-filter:blur(18px) saturate(150%);
     position:relative; z-index:1;
@@ -2876,23 +2869,21 @@
   @media (hover:hover){.wsearch-add-btn:hover{border-color:var(--accent); color:var(--accent);}}
   .wsearch-add-row{display:flex; flex-wrap:wrap; gap:8px; padding-top:10px;}
   .wsearch-add-time{
-    background:rgba(var(--bg-rgb), .5); border:1px solid var(--line); border-radius:8px; color:var(--text);
-    font-family:var(--font-vazir), var(--font-latin), sans-serif; font-size:12.5px; padding:8px 10px; outline:none;
+    border:1px solid var(--line); border-radius:var(--field-radius); color:var(--text);
+    font-family:var(--font-latin), var(--font-vazir), sans-serif; font-size:12.5px; padding:8px 10px; outline:none;
   }
-  body:not([data-theme="light"]) .wsearch-add-time{ background:#0B0C0D; border:1px solid rgba(255,255,255,.08); }
   .wsearch-add-row > .wsearch-add-time{flex:1 1 calc(50% - 4px); min-width:0;}
   .time-field .wsearch-add-time{width:100%;}
   .wsearch-add-time:focus{border-color:var(--accent);}
   .wsearch-date-row{display:flex; flex-wrap:wrap; gap:8px; margin-top:10px;}
   .jdate-btn{
-    width:100%; background:rgba(var(--bg-rgb), .5); border:1px solid var(--line); border-radius:8px; color:var(--text);
-    font-family:var(--font-vazir), var(--font-latin), sans-serif; font-size:12.5px; padding:8px 10px; outline:none; cursor:pointer; text-align:center;
+    width:100%; border:1px solid var(--line); border-radius:var(--field-radius); color:var(--text);
+    font-family:var(--font-latin), var(--font-vazir), sans-serif; font-size:12.5px; padding:8px 10px; outline:none; cursor:pointer; text-align:center;
     direction:ltr;
   }
-  body:not([data-theme="light"]) .jdate-btn{ background:#0B0C0D; border:1px solid rgba(255,255,255,.08); }
   .jdate-btn:focus{border-color:var(--accent);}
   @media (hover:hover){.jdate-btn:hover{border-color:var(--accent);}}
-  .jdate-btn.placeholder{color:var(--muted2); font-family:var(--font-vazir), var(--font-latin), sans-serif; direction:rtl;}
+  .jdate-btn.placeholder{color:var(--muted2); font-family:var(--font-latin), var(--font-vazir), sans-serif; direction:rtl;}
 
   /* دکمه‌ی تاریخ «ثبت معامله جدید» توی ژورنال ترید — کوچیک‌تر، گرد کامل،
      لیکوئید گلس؛ فقط همین‌جا (نه بقیه‌ی جاهایی که از jdate-btn استفاده می‌کنن) */
@@ -2936,7 +2927,7 @@
   .jdate-mini-btn{
     display:flex; align-items:center; gap:4px; padding:6px 12px; border-radius:10px;
     background:var(--accent-dim); border:1px solid var(--accent); color:var(--accent);
-    font-family:var(--font-vazir), var(--font-latin), sans-serif; font-size:12.5px; font-weight:700; cursor:pointer;
+    font-family:var(--font-latin), var(--font-vazir), sans-serif; font-size:12.5px; font-weight:700; cursor:pointer;
     transition:opacity .15s ease;
   }
   @media (hover:hover){.jdate-mini-btn:hover{ opacity:.82; }}
@@ -2951,7 +2942,7 @@
     background:rgba(255,255,255,.98); border-color:var(--line); box-shadow:0 12px 30px rgba(0,0,0,.15);
   }
   .jdate-mini-item{
-    padding:8px 10px; border-radius:8px; font-size:12.5px; font-family:var(--font-vazir), var(--font-latin), sans-serif;
+    padding:8px 10px; border-radius:8px; font-size:12.5px; font-family:var(--font-latin), var(--font-vazir), sans-serif;
     text-align:center; cursor:pointer; color:var(--text); transition:background .12s ease;
   }
   @media (hover:hover){.jdate-mini-item:hover{ background:rgba(var(--bg-rgb),.4); }}
@@ -2965,11 +2956,11 @@
     background:none;
   }}
   .jdate-weekdays{display:grid; grid-template-columns:repeat(7,1fr); gap:4px; margin-bottom:6px;}
-  .jdate-weekday{font-size:10px; text-align:center; color:var(--accent); font-family:var(--font-vazir), var(--font-latin), sans-serif;}
+  .jdate-weekday{font-size:10px; text-align:center; color:var(--accent); font-family:var(--font-latin), var(--font-vazir), sans-serif;}
   .jdate-grid{display:grid; grid-template-columns:repeat(7,1fr); gap:4px;}
   .jdate-cell{
     aspect-ratio:1; display:flex; align-items:center; justify-content:center; border-radius:8px; font-size:12px;
-    font-family:var(--font-vazir), var(--font-latin), sans-serif; cursor:pointer; color:var(--text); transition:.15s; border:1px solid transparent;
+    font-family:var(--font-latin), var(--font-vazir), sans-serif; cursor:pointer; color:var(--text); transition:.15s; border:1px solid transparent;
   }
   @media (hover:hover){.jdate-cell:hover{border-color:var(--accent);}}
   .jdate-cell.empty{cursor:default; visibility:hidden;}
@@ -2990,7 +2981,7 @@
   .day-pill{
     flex:1 1 0; min-width:0; text-align:center; padding:9px 0; border-radius:10px;
     border:1px solid var(--line); background:rgba(var(--bg-rgb), .5); color:var(--muted);
-    font-family:var(--font-vazir), var(--font-latin), sans-serif; font-size:12.5px; font-weight:700; cursor:pointer;
+    font-family:var(--font-latin), var(--font-vazir), sans-serif; font-size:12.5px; font-weight:700; cursor:pointer;
     position:relative; z-index:1;
     transition:border-color .15s ease, background .15s ease, color .15s ease, transform .1s ease;
   }
@@ -3092,7 +3083,7 @@
   .add-program-glass .wsearch-add-btn{
     width:auto; height:auto; border-radius:999px; border:none; background:none;
     display:inline-flex; align-items:center; gap:6px; padding:4px 2px;
-    font-family:var(--font-vazir), var(--font-latin), sans-serif; font-size:12.5px; font-weight:700; color:var(--accent);
+    font-family:var(--font-latin), var(--font-vazir), sans-serif; font-size:12.5px; font-weight:700; color:var(--accent);
   }
   @media (hover:hover){.add-program-glass .wsearch-add-btn:hover{ color:var(--accent); opacity:.8; }}
   .add-program-glass .wsearch-add-btn-icon{
@@ -3305,11 +3296,11 @@
   .wsearch-newform-title{font-size:13px; font-weight:700;}
   .wsearch-newform-title.accent{color:var(--accent);}
   .time-field{position:relative; flex:1 1 calc(50% - 4px); min-width:0; display:flex; flex-direction:column; gap:3px;}
-  .time-field-label{font-size:9.5px; color:var(--muted2); font-family:var(--font-vazir), var(--font-latin), sans-serif; text-align:start; padding-inline-start:2px;}
-  .wsearch-newform label{display:block; font-size:11px; color:var(--muted2); margin:8px 0 5px; font-family:var(--font-vazir), var(--font-latin), sans-serif;}
+  .time-field-label{font-size:9.5px; color:var(--muted2); font-family:var(--font-latin), var(--font-vazir), sans-serif; text-align:start; padding-inline-start:2px;}
+  .wsearch-newform label{display:block; font-size:11px; color:var(--muted2); margin:8px 0 5px; font-family:var(--font-latin), var(--font-vazir), sans-serif;}
   .wsearch-newform-name{
-    width:100%; background:rgba(var(--bg-rgb), .5); border:1px solid var(--line); border-radius:8px; color:var(--text);
-    font-family:var(--font-vazir), var(--font-latin), sans-serif; font-size:13px; padding:9px 11px; outline:none;
+    width:100%; border:1px solid var(--line); border-radius:var(--field-radius); color:var(--text);
+    font-family:var(--font-latin), var(--font-vazir), sans-serif; font-size:13px; padding:9px 16px; outline:none;
   }
   /* زیر ۱۶px، سافاری موبایل موقع فوکوس‌شدن فیلد خودکار زوم می‌کنه —
      این رفتار مستقل از userScalable:false توی viewport meta‌ست، فقط با
@@ -3317,7 +3308,6 @@
   @media (max-width:640px){
     .wsearch-newform-name{ font-size:16px; }
   }
-  body:not([data-theme="light"]) .wsearch-newform-name{ background:#0B0C0D; border:1px solid rgba(255,255,255,.08); }
   .wsearch-newform-name:focus{border-color:var(--accent);}
   .wsearch-newform-name::placeholder{color:var(--muted2);}
 
@@ -3327,7 +3317,6 @@
      دقیقا همون دستور شیشه‌ای auth-tabs رو می‌ذاره، به‌علاوه‌ی گردی بیشتر
      که با بقیه‌ی عناصر rounded-2xl این پاپ‌آپ‌ها جفت‌وجور باشه. */
   .calorie-glass-field{
-    border-radius:14px;
     backdrop-filter:blur(20px) saturate(160%); -webkit-backdrop-filter:blur(20px) saturate(160%);
   }
   body:not([data-theme="light"]) .calorie-glass-field{ background:rgba(255,255,255,.03); border-color:var(--line); }
@@ -3376,7 +3365,7 @@
   /* نمایش فقط‌خواندنی سود/زیان محاسبه‌شده — همون قاب/سایز فیلدهای شیشه‌ای
      ژورنال، ولی متن وسط‌چین و رنگش بسته به مثبت/منفی بودن سبز یا قرمزه */
   .trade-pnl-readout{
-    width:100%; border-radius:8px; padding:9px 11px; font-size:13px; font-weight:700;
+    width:100%; border-radius:var(--field-radius); padding:9px 11px; font-size:13px; font-weight:700;
     text-align:center; border:1px solid var(--line);
     backdrop-filter:blur(24px) saturate(180%); -webkit-backdrop-filter:blur(24px) saturate(180%);
   }
@@ -3421,7 +3410,7 @@
   body:not([data-theme="light"]) .field-toggle-visibility-btn{ background:none; box-shadow:none; }
 
   .field-error-wrap.has-icon.has-end-action input{padding-inline-start:34px; padding-inline-end:38px;}
-  .field-error-msg{font-size:10.5px; color:#E05252; font-family:var(--font-vazir), var(--font-latin), sans-serif; margin-top:3px; display:none;}
+  .field-error-msg{font-size:10.5px; color:#E05252; font-family:var(--font-latin), var(--font-vazir), sans-serif; margin-top:3px; display:none;}
   .field-error .field-error-msg{display:block;}
   .name-field-wrap{position:relative;}
   .name-field-wrap label{
@@ -3451,7 +3440,7 @@
   .wsearch-newrow-remove-text{
     order:3; flex:1 1 100%; display:flex; justify-content:flex-start; align-items:center; gap:4px;
     background:none; border:none; padding:6px 2px 0; margin-top:2px; cursor:pointer;
-    color:#E05252; font-family:var(--font-vazir), var(--font-latin), sans-serif; font-size:11.5px; font-weight:700;
+    color:#E05252; font-family:var(--font-latin), var(--font-vazir), sans-serif; font-size:11.5px; font-weight:700;
     transition:opacity .15s ease;
   }
   .wsearch-newrow-remove-text svg{ flex-shrink:0; }
@@ -3671,7 +3660,7 @@ body[data-theme="light"] .nav-link-sub-item{ color:#7A5230; }
   background:rgba(var(--accent-rgb),.09);
   backdrop-filter:blur(10px) saturate(160%); -webkit-backdrop-filter:blur(10px) saturate(160%);
   box-shadow:inset 0 1px 0 rgba(255,255,255,.18), inset 0 0 0 1px rgba(var(--accent-rgb),.12);
-  font-family:var(--font-vazir), var(--font-latin), sans-serif; font-size:12.5px; font-weight:700;
+  font-family:var(--font-latin), var(--font-vazir), sans-serif; font-size:12.5px; font-weight:700;
   cursor:pointer; white-space:nowrap;
   transition:background .2s ease, color .2s ease, box-shadow .2s ease, transform .15s ease;
 }
@@ -3846,7 +3835,7 @@ body[data-theme="light"] .auth-tabs{ background:rgba(255,255,255,.06); }
   position:relative; z-index:1; flex:1 1 0; min-width:0; text-align:center; padding:10px 0;
   border:none; background:none; border-radius:999px; box-shadow:none;
   backdrop-filter:none; -webkit-backdrop-filter:none;
-  font-family:var(--font-vazir), var(--font-latin), sans-serif; font-size:11.5px; font-weight:700; color:var(--muted);
+  font-family:var(--font-latin), var(--font-vazir), sans-serif; font-size:11.5px; font-weight:700; color:var(--muted);
   cursor:pointer; transition:color .25s ease;
 }
 /* body[data-theme="light"] button سراسری با اسپسیفیسیتی بالاتر (body+button)
@@ -3903,7 +3892,7 @@ html[data-perf="low"] .auth-tab-indicator{ transition:none; }
 .auth-full-btn{
   width:100%; margin-top:18px; border-radius:999px; padding:12px 0;
   border:1px solid var(--accent); color:var(--bg); background:var(--accent);
-  font-family:var(--font-vazir), var(--font-latin), sans-serif; font-size:14px; font-weight:700; cursor:pointer;
+  font-family:var(--font-latin), var(--font-vazir), sans-serif; font-size:14px; font-weight:700; cursor:pointer;
   box-shadow:none; backdrop-filter:none; -webkit-backdrop-filter:none;
   transition:filter .15s ease, transform .12s ease;
 }
@@ -4168,7 +4157,7 @@ a.feature-off-link{
 
 .module-gate-cta{
   margin-top:6px; padding:11px 26px; border-radius:999px; border:none; cursor:pointer;
-  background:var(--accent); color:var(--bg); font-family:var(--font-vazir), var(--font-latin), sans-serif;
+  background:var(--accent); color:var(--bg); font-family:var(--font-latin), var(--font-vazir), sans-serif;
   font-size:13px; font-weight:700;
   animation:mgPulse 2.2s ease-in-out infinite;
 }
@@ -4280,7 +4269,7 @@ body[data-theme="light"] .plan-duration-btn, body:not([data-theme="light"]) .pla
   display:flex; align-items:center; justify-content:center; gap:8px;
   padding:10px 16px; border-radius:12px; border:1px dashed var(--line);
   background:rgba(var(--bg-rgb),.05); color:var(--muted);
-  font-family:var(--font-vazir), var(--font-latin), sans-serif; font-size:12.5px; font-weight:600; cursor:pointer;
+  font-family:var(--font-latin), var(--font-vazir), sans-serif; font-size:12.5px; font-weight:600; cursor:pointer;
   transition:border-color .15s ease, color .15s ease;
 }
 @media (hover:hover){.trade-shot-btn:hover{ border-color:var(--accent); color:var(--accent); }}
@@ -4302,7 +4291,7 @@ body[data-theme="light"] .plan-duration-btn, body:not([data-theme="light"]) .pla
 .trade-day-card:last-child{ margin-bottom:0; }
 .trade-day-card-head{ display:flex; align-items:center; justify-content:space-between; gap:10px; }
 .trade-day-pnl-wrap{ display:flex; flex-direction:column; align-items:flex-end; gap:1px; }
-.trade-day-pnl-label{ font-size:9.5px; color:var(--muted2); font-family:var(--font-vazir), var(--font-latin), sans-serif; text-transform:uppercase; letter-spacing:.05em; }
+.trade-day-pnl-label{ font-size:9.5px; color:var(--muted2); font-family:var(--font-latin), var(--font-vazir), sans-serif; text-transform:uppercase; letter-spacing:.05em; }
 .trade-day-pnl{ font-size:14px; font-weight:800; }
 
 /* عکس معامله پشت یک دکمه‌ست — با کلیک توی لایت‌باکس بزرگ باز می‌شه */
@@ -4430,9 +4419,9 @@ body[data-theme="light"] .plan-duration-btn, body:not([data-theme="light"]) .pla
    .add-program-glass به‌شکل پیل گرد نشه (برای فیلدهای تک‌خطی مناسبه، نه
    برای یه Textarea چندخطی)؛ بدون دستگیره‌ی ریسایز، راست‌چین. */
 .exercise-desc-textarea{
-  width:100%; background:rgba(var(--bg-rgb), .5); border:1px solid var(--line); border-radius:12px; color:var(--text);
-  font-family:var(--font-vazir), var(--font-latin), sans-serif; font-size:13px; padding:12px 14px; outline:none;
-  min-height:96px; line-height:1.7; resize:none; text-align:start;
+  width:100%; border:1px solid var(--line); color:var(--text);
+  font-family:var(--font-latin), var(--font-vazir), sans-serif; font-size:13px; padding:12px 14px; outline:none;
+  min-height:96px; line-height:1.7; resize:none; text-align:start; border-radius:var(--field-radius-multi);
 }
 /* همون ظاهر شیشه‌ای فیلدهای فرم‌های بدنسازی (add-program-glass) — نه مشکی تخت */
 .exercise-desc-textarea{ backdrop-filter:blur(20px) saturate(160%); -webkit-backdrop-filter:blur(20px) saturate(160%); }
@@ -4472,7 +4461,7 @@ body[data-theme="light"] .exercise-feasibility-reject{ background:rgba(255,255,2
 .manual-exercise-picker-search{
   display:block; width:100%; margin:2px 0 12px; border:none; outline:none;
   border-radius:9999px; padding:11px 18px; text-align:start;
-  color:var(--text); font-family:var(--font-vazir), var(--font-latin), sans-serif; font-size:12.5px;
+  color:var(--text); font-family:var(--font-latin), var(--font-vazir), sans-serif; font-size:12.5px;
   background:rgba(255,255,255,.04);
   backdrop-filter:blur(22px) saturate(160%); -webkit-backdrop-filter:blur(22px) saturate(160%);
 }
@@ -4596,7 +4585,7 @@ body[data-theme="light"] .manual-day-exercises-box{ background:rgba(255,255,255,
 }
 .manual-meal-row-input{
   background:transparent; border:none; outline:none; color:var(--text); min-width:0;
-  font-family:var(--font-vazir), var(--font-latin), sans-serif; font-size:12.5px; padding:0; text-align:start;
+  font-family:var(--font-latin), var(--font-vazir), sans-serif; font-size:12.5px; padding:0; text-align:start;
 }
 .manual-meal-row-input::placeholder{ color:var(--muted2); }
 .manual-meal-kcal-input{ width:38px; flex-shrink:0; text-align:center; font-weight:800; font-size:13.5px; }
@@ -5267,7 +5256,7 @@ body[data-theme="light"] .admin-btn.danger, body:not([data-theme="light"]) .admi
 .admin-btn:disabled, body .admin-btn:disabled{ opacity:.5; cursor:not-allowed; transform:none; }
 
 .admin-input{
-  font-family:var(--font-vazir), var(--font-latin), sans-serif;
+  font-family:var(--font-latin), var(--font-vazir), sans-serif;
   background:rgba(255,255,255,.05); border:1px solid rgba(255,255,255,.10); border-radius:14px; padding:10px 13px;
   color:var(--text); font-size:13px; line-height:1.5; outline:none; min-width:0;
   backdrop-filter:blur(24px) saturate(180%); -webkit-backdrop-filter:blur(24px) saturate(180%);
@@ -5328,7 +5317,7 @@ body[data-theme="light"] .admin-mobile-close, body:not([data-theme="light"]) .ad
 /* استک دوفونتی استاندارد بقیه‌ی سایت (لاتین اول برای اعداد، وضیرمتن به‌عنوان
    فال‌بک) — اگه لیبلی حرف فارسی داشت (نه فقط عدد/تاریخ لاتین)، نباید به
    فونت سیستمی خام مرورگر سقوط کنه. */
-.admin-svg-chart .axis-label{ fill:var(--adm-muted-2); font-size:10px; font-family:var(--font-vazir), var(--font-latin), sans-serif; }
+.admin-svg-chart .axis-label{ fill:var(--adm-muted-2); font-size:10px; font-family:var(--font-latin), var(--font-vazir), sans-serif; }
 .admin-svg-chart .line-path{ fill:none; stroke:var(--adm-accent); stroke-width:2; stroke-linecap:round; stroke-linejoin:round; }
 .admin-svg-chart .area-fill{ fill:url(#admChartGradient); opacity:.5; }
 .admin-svg-chart .bar-rect{ fill:var(--adm-accent); opacity:.85; rx:3; }
@@ -6249,7 +6238,7 @@ body[data-theme="light"] .trade-ghost-btn, body:not([data-theme="light"]) .trade
 .trade-field-row > div{ min-width:0; }
 
 /* فیلدهای ترید کمی گردتر از پیش‌فرض ۸px — هم‌اندازه‌ی .calorie-glass-field */
-.wsearch-newform-name.trade-glass-field{ border-radius:14px; padding:11px 13px; }
+.wsearch-newform-name.trade-glass-field{ border-radius:var(--field-radius); padding:11px 16px; }
 textarea.wsearch-newform-name{ resize:vertical; line-height:1.9; }
 select.wsearch-newform-name{ cursor:pointer; }
 
@@ -6737,7 +6726,7 @@ body[data-theme="light"] .trade-search input.wsearch-newform-name.trade-glass-fi
   border:none; background:none; box-shadow:none;
   backdrop-filter:none; -webkit-backdrop-filter:none;
   padding:11px 0; flex:1; min-width:0; width:auto; outline:none;
-  color:var(--text); font-family:var(--font-vazir), sans-serif; font-size:13px;
+  color:var(--text); font-family:var(--font-latin), var(--font-vazir), sans-serif; font-size:13px;
 }
 @media (max-width:640px){ .trade-search input.trade-glass-field{ font-size:16px; } }
 .trade-search input::placeholder{ color:var(--muted2); }
@@ -7247,7 +7236,7 @@ body[data-theme="light"] .trade-mt-panel-head .domain-sub{ color:var(--text); }
   content:counter(mtstep); position:absolute; inset-inline-start:0; top:-1px;
   width:22px; height:22px; border-radius:50%; display:flex; align-items:center; justify-content:center;
   font-size:11px; font-weight:800; color:var(--accent); border:1px solid var(--accent); background:var(--accent-dim);
-  font-family:var(--font-vazir), var(--font-latin), sans-serif;
+  font-family:var(--font-latin), var(--font-vazir), sans-serif;
 }
 .trade-mt-steps b{ color:var(--text); }
 .ltr-inline{ unicode-bidi:isolate; direction:ltr; }
@@ -10230,7 +10219,7 @@ html[data-perf-weak][data-boot-nav] .boot-splash{ -webkit-backdrop-filter:none; 
 .ann-tone-warning{ --ann-tone:var(--ring-3a); }
 .ann-tone-promo{ --ann-tone:var(--ring-2b); }
 
-.ann-content{ font-family:var(--font-vazir), var(--font-latin), sans-serif; color:var(--text); }
+.ann-content{ font-family:var(--font-latin), var(--font-vazir), sans-serif; color:var(--text); }
 .ann-title{ font-size:14px; font-weight:800; line-height:1.6; }
 .ann-body{ margin:2px 0 0; font-size:12.5px; line-height:1.85; color:var(--muted); white-space:pre-line; overflow-wrap:anywhere; }
 .ann-cta{ text-decoration:none; white-space:nowrap; flex-shrink:0; }
@@ -10312,3 +10301,31 @@ body[data-theme="light"] .ann-content-bar, body[data-theme="light"] .ann-content
 .ann-admin-preview-head{ display:flex; align-items:center; justify-content:space-between; gap:12px; flex-wrap:wrap; }
 .admin-seg.ann-seg{ max-width:100%; overflow-x:auto; scrollbar-width:none; }
 .admin-seg.ann-seg::-webkit-scrollbar{ display:none; }
+
+/* ── فیلد استاندارد سایت (یک قانون برای همه‌جا) ─────────────────────
+   درخواست صریح: بک‌گراند هیچ فیلدی مشکی نباشه و گردی همه‌ی فیلدها یکی باشه.
+   همه‌ی فیلدهای اپ (wsearch-newform-name، wsearch-add-time / TimeInput،
+   jdate-btn، wsearch-input) همون سطح شیشه‌ای نیمه‌شفاف و گردی کامل (پیل)
+   رو دارن؛ textarea چندخطی گردی 18px می‌گیره چون پیل روی متن چندخطی
+   گوشه‌ها رو می‌بره. فیلد جدید با همین کلاس‌ها بساز، بک‌گراند/گردی جدا نده. */
+:root{ --field-radius:999px; --field-radius-multi:18px; }
+.wsearch-newform-name, .wsearch-add-time, .jdate-btn, .wsearch-input{
+  backdrop-filter:blur(18px) saturate(160%); -webkit-backdrop-filter:blur(18px) saturate(160%);
+}
+body:not([data-theme="light"]) .wsearch-newform-name,
+body:not([data-theme="light"]) .wsearch-add-time,
+body:not([data-theme="light"]) .jdate-btn,
+body:not([data-theme="light"]) .wsearch-input{
+  background:rgba(255,255,255,.05); border-color:rgba(255,255,255,.1);
+}
+body[data-theme="light"] .wsearch-newform-name,
+body[data-theme="light"] .wsearch-add-time,
+body[data-theme="light"] .jdate-btn,
+body[data-theme="light"] .wsearch-input{
+  background:rgba(255,255,255,.35); border-color:rgba(0,0,0,.08);
+}
+textarea.wsearch-newform-name,
+.account-shell textarea.wsearch-newform-name,
+.bodybuilding-glass textarea.wsearch-newform-name,
+.add-program-glass textarea.wsearch-newform-name,
+.auth-box textarea.wsearch-newform-name{ border-radius:var(--field-radius-multi); }

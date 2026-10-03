@@ -30,7 +30,7 @@ export const DOMAIN_ICONS: Record<AnalysisDomain, LucideIcon> = {
 // مقصد «برو ثبت کن» برای هر دامنه — همون روت‌های واقعی NavDrawer
 export const DOMAIN_HREFS: Record<AnalysisDomain, string> = {
   routine: "/weekly",
-  sleep: "/weekly",
+  sleep: "/sleep",
   tasks: "/weekly",
   fitness: "/exercise",
   nutrition: "/exercise?tab=calorie",

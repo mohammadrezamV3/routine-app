@@ -2,31 +2,29 @@
 
 import "./sleep.css";
 import { useCallback, useEffect, useMemo, useState } from "react";
-import { DashHeader } from "./DashHeader";
+import Link from "next/link";
+import { BarChart3 } from "lucide-react";
+import { ICONS } from "./NavDrawer";
 import { RoutineTrialBanner } from "./RoutineTrialBanner";
-import { SleepHero } from "./SleepHero";
+import { SleepDial } from "./SleepDial";
+import { SleepWeek } from "./SleepWeek";
+import { SleepGoalSheet } from "./SleepGoalSheet";
 import { SleepLogSheet, type SleepLogSheetProps } from "./SleepLogSheet";
-import { SleepTrendChart } from "./SleepTrendChart";
-import { SleepMonthMap } from "./SleepMonthMap";
-import { SleepInsightsPanel } from "./SleepInsightsPanel";
-import { SleepCycleCalc } from "./SleepCycleCalc";
-import { SleepHistoryList } from "./SleepHistoryList";
 import { getSleepRange } from "@/lib/storage";
 import { DEFAULT_SLEEP, DEFAULT_WAKE } from "@/lib/wakeSleep";
 import { getSleepGoal } from "@/lib/sleepGoal";
-import { SleepGoalCard } from "./SleepGoalCard";
 import { useLiveRefresh } from "@/lib/liveSync";
+import { useFeature } from "@/lib/useFeatures";
 import { isoLocal } from "@/lib/jalali";
 import { addDaysIso, sleepInsights, sleepMinutes, type SleepRecord } from "@/lib/sleep";
 import { getTracking, stopTracking, draftFromTracking, TRACKER_EVENT, type SleepTracking } from "@/lib/sleepTracker";
 
-// بخش خواب (/sleep) — صفحه و سیستم جدای خودش، نه داخل صفحه‌ی روتین. این فایل فقط داده رو می‌خونه و بخش‌ها رو
-// کنار هم می‌چینه؛ هر بخش کامپوننت خودشه:
-//   SleepHero (وضعیت لحظه‌ای + ردیاب زنده) · SleepLogSheet (ثبت/ویرایش) ·
-//   SleepTrendChart (نمودار) · SleepMonthMap (تقویم امتیاز) ·
-//   SleepInsightsPanel (تحلیل‌ها) · SleepCycleCalc (چرخه‌ها) · SleepHistoryList.
-// همه‌ی محاسبه‌ها خالص در lib/sleep.ts (sleepInsights)؛ persistence از
-// lib/storage.ts با همون قرارداد مهمان/کاربر.
+// بخش خواب (/sleep) — صفحه و سیستم جدای خودش، نه داخل صفحه‌ی روتین. طبق
+// درخواست صریح ساده و خلوته و فقط دو بخش داره: صفحه‌ی ساعت 24 ساعته (SleepDial:
+// هدف، دیشب، الان، دکمه‌ی اصلی؛ زدن ساعت‌های هدف = SleepGoalSheet) و هفت شب
+// اخیر (SleepWeek). نمودار، تقویم امتیاز و تحلیل‌ها در آنالیز هفتگی‌ان
+// (WeeklyAnalysisSleep در /analysis/weekly) و این‌جا فقط لینک «آمار خواب» هست.
+// محاسبه‌ها خالص در lib/sleep.ts؛ persistence از lib/storage.ts.
 
 /** چند شب به عقب خونده می‌شه (تحلیل‌ها و تقویم ماهانه) */
 export const SLEEP_LOAD_DAYS = 120;
@@ -41,6 +39,7 @@ export function SleepHub() {
   const [goalCustom, setGoalCustom] = useState(false);
   const [tracking, setTracking] = useState<SleepTracking | null>(null);
   const [sheet, setSheet] = useState<SheetState>(null);
+  const [goalOpen, setGoalOpen] = useState(false);
 
   // امروز با گذشتن نیمه‌شب (صفحه‌ی باز) عوض می‌شه
   useEffect(() => {
@@ -88,43 +87,57 @@ export function SleepHub() {
     setSheet({ initial: { ...(existing ?? {}), ...draft }, existing: !!existing, fromTracker: true });
   }, [tracking, byDate]);
 
+  // لینک از آنالیز هفتگی (/sleep?date=YYYY-MM-DD) همون شب رو برای ویرایش باز می‌کنه
+  useEffect(() => {
+    if (!loaded) return;
+    const d = new URLSearchParams(window.location.search).get("date");
+    if (!d || !/^\d{4}-\d{2}-\d{2}$/.test(d) || d > todayIso) return;
+    openDate(d);
+    const url = new URL(window.location.href);
+    url.searchParams.delete("date");
+    window.history.replaceState(window.history.state, "", url.toString());
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [loaded]);
+
+  const statsOn = useFeature("weeklyAnalysis") === true;
   const lastNight = byDate.get(todayIso) ?? null;
   const lastScore = lastNight ? insights.scores.find((s) => s.date === lastNight.date)?.score ?? null : null;
 
   return (
-    <section className="dash-breakout dash-scope sleep-scope pb-6 text-dash-text">
-      <div className="flex flex-col gap-4 sm:gap-6">
-        <DashHeader
-          title="خواب"
-          subtitle="خواب، انرژی و ریتم بدنت"
-          progress={insights.avgScore ?? 0}
-          progressLabel="امتیاز خواب"
-        />
-        <RoutineTrialBanner />
+    <section className="sleep-scope slp-page">
+      <div className="trade-head-row" style={{ justifyContent: "flex-start" }}>
+        <span className="page-title-icon">{ICONS.sleep}</span>
+        <h1>خواب</h1>
+        {statsOn && (
+          <Link href="/analysis/weekly#sleep" prefetch={false} className="slp-stats-link">
+            <BarChart3 aria-hidden /> آمار خواب
+          </Link>
+        )}
       </div>
+      <RoutineTrialBanner />
 
       <div className="slp-hub">
-        <div className="slp-col">
-          <SleepHero
-            loaded={loaded}
-            target={target}
-            insights={insights}
-            lastNight={lastNight}
-            lastScore={lastScore}
-            tracking={tracking}
-            onLog={() => openDate(todayIso)}
-            onWakeUp={wakeUp}
-          />
-          <SleepTrendChart entries={entries} insights={insights} target={target} todayIso={todayIso} onPick={openDate} />
-          <SleepInsightsPanel insights={insights} target={target} />
-        </div>
-        <div className="slp-col">
-          <SleepMonthMap insights={insights} todayIso={todayIso} onPick={openDate} />
-          <SleepGoalCard goal={target} custom={goalCustom} goalMin={insights.goalMin} onSaved={load} />
-          <SleepCycleCalc target={target} />
-          <SleepHistoryList entries={entries} insights={insights} onEdit={(rec) => setSheet({ initial: rec, existing: true })} />
-        </div>
+        <SleepDial
+          loaded={loaded}
+          target={target}
+          lastNight={lastNight}
+          lastScore={lastScore}
+          tracking={tracking}
+          onLog={() => openDate(todayIso)}
+          onWakeUp={wakeUp}
+          onEditGoal={() => setGoalOpen(true)}
+        />
+        <SleepWeek entries={entries} insights={insights} todayIso={todayIso} onPick={openDate} />
       </div>
+
+      <SleepGoalSheet
+        open={goalOpen}
+        goal={target}
+        custom={goalCustom}
+        goalMin={insights.goalMin}
+        onClose={() => setGoalOpen(false)}
+        onSaved={load}
+      />
 
       <SleepLogSheet
         open={!!sheet}

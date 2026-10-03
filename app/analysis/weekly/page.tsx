@@ -22,6 +22,7 @@ import { WeeklyAnalysisReflection } from "@/components/WeeklyAnalysisReflection"
 import { WeeklyAnalysisShare } from "@/components/WeeklyAnalysisShare";
 import { WeeklyAnalysisEmpty } from "@/components/WeeklyAnalysisEmpty";
 import { waFetch } from "@/components/WeeklyAnalysisShared";
+import { WeeklyAnalysisSleep } from "@/components/WeeklyAnalysisSleep";
 
 // اگه از یه لینک مشخص باز شده باشه (مثلا نوتیف «آنالیز هفته‌ی قبلت آماده‌ست»
 // با ?offset=-1)، همون هفته باز می‌شه. از window.location مستقیم می‌خونیم
@@ -161,6 +162,8 @@ export default function WeeklyAnalysisPage() {
         <ModuleGate module="AI_INSIGHT">
           <WeeklyAnalysisContent />
         </ModuleGate>
+        {/* آمار خواب بیرون از گیت AI Insight: خوندن تاریخچه‌ی خواب آزاده */}
+        <section className="wa-page wa-page-sleep"><WeeklyAnalysisSleep /></section>
       </FeatureGate>
     );
   }

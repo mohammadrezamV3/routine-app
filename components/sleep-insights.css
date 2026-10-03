@@ -1,4 +1,4 @@
-/* تحلیل خواب + ماشین‌حساب چرخه. بدون هیچ بک‌گراند تازه؛ فقط بوردر و رنگ متن.
+/* تحلیل خواب (در آنالیز هفتگی). بدون هیچ بک‌گراند تازه؛ فقط بوردر و رنگ متن.
    میله‌ها با border-top رنگی کشیده می‌شن (نه بک‌گراند). */
 .sli-ltr{ direction:ltr; unicode-bidi:isolate; font-variant-numeric:tabular-nums; }
 
@@ -48,23 +48,3 @@
 .sli-empty-body{ display:flex; align-items:center; gap:16px; }
 .sli-empty-n{ font-size:13px; font-weight:900; font-variant-numeric:tabular-nums; direction:ltr; }
 .sli-empty-body .sl-sub{ margin:0; flex:1; min-width:0; }
-
-/* ماشین‌حساب چرخه */
-.sli-wake{ display:flex; align-items:center; gap:10px; font-size:12.5px; color:var(--muted); }
-.sli-time-input{
-  width:96px; text-align:center; direction:ltr; font-size:16px; font-weight:800;
-  font-variant-numeric:tabular-nums; color:var(--text); border:1px solid var(--box-line);
-  border-radius:12px; padding:8px 10px; outline:none;
-}
-.sli-time-input:focus{ border-color:var(--accent); }
-.sli-opts{ list-style:none; margin:0; padding:0; display:grid; grid-template-columns:repeat(3, minmax(0,1fr)); gap:8px; }
-.sli-opt{
-  position:relative; display:flex; flex-direction:column; align-items:center; gap:3px;
-  padding:14px 4px 10px; border-radius:16px; border:1px solid var(--box-line); min-width:0; text-align:center;
-}
-.sli-opt.is-best{ border:2px solid var(--accent); padding:13px 3px 9px; }
-.sli-opt-clock{ font-size:22px; font-weight:900; font-variant-numeric:tabular-nums; letter-spacing:.3px; }
-.sli-opt.is-best .sli-opt-clock{ color:var(--accent); }
-.sli-opt-meta{ font-size:11px; color:var(--muted); line-height:1.5; }
-.sli-opt-badge{ font-style:normal; font-size:10.5px; font-weight:800; color:var(--accent); margin-top:2px; }
-@media (max-width:380px){ .sli-opt-clock{ font-size:19px; } .sli-opt-meta{ font-size:10.5px; } }
