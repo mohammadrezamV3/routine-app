@@ -5,15 +5,31 @@ import { adminFetch, useAdminToast } from "@/components/admin/useAdminToast";
 import { ConfirmModal } from "@/components/admin/AdminModal";
 import { EventThemeIcon } from "@/components/EventThemeGreeting";
 import { Spinner } from "@/components/Spinner";
+import { TickOption } from "@/components/TickOption";
 import { J_MONTHS, formatJalali, toJalali } from "@/lib/jalali";
 import { EVENT_PREVIEW_KEY, type EventThemeState, type TimelineItem } from "@/lib/eventThemeState";
-import type { EventTheme } from "@/lib/eventThemes";
+import type { EventOccurrence, EventTheme } from "@/lib/eventThemes";
+
+type DiscountStatus = "pending" | "active" | "stopped" | "expired" | "deleted";
+type DiscountItem = {
+  themeId: string; occurrence: EventOccurrence; key: string; code: string; percent: number;
+  live: boolean; generatedCode: string | null; status: DiscountStatus;
+};
 
 type Payload = {
   state: EventThemeState;
   activeId: string | null;
   catalog: EventTheme[];
   timeline: TimelineItem[];
+  discount: { enabled: boolean; percent: number; schedule: DiscountItem[] };
+};
+
+const DISCOUNT_BADGE: Record<DiscountStatus, { label: string; cls: string }> = {
+  pending: { label: "ساخته نشده", cls: "amber" },
+  active: { label: "فعال", cls: "green" },
+  stopped: { label: "قطع‌شده", cls: "gray" },
+  expired: { label: "منقضی‌شده", cls: "gray" },
+  deleted: { label: "حذف‌شده", cls: "gray" },
 };
 
 const STATUS_BADGE: Record<TimelineItem["status"], { label: string; cls: string }> = {
@@ -55,7 +71,7 @@ export default function AdminEventThemesPage() {
   const [data, setData] = useState<Payload | null>(null);
   const [failed, setFailed] = useState(false);
   const [preview, setPreview] = useState<string | null>(null);
-  const [confirm, setConfirm] = useState<null | { kind: "release"; theme: EventTheme; windowed: boolean } | { kind: "reset" }>(null);
+  const [confirm, setConfirm] = useState<null | { kind: "release"; theme: EventTheme; windowed: boolean } | { kind: "reset" } | { kind: "discount_delete"; item: DiscountItem }>(null);
 
   const load = useCallback(() => {
     setFailed(false);
@@ -81,6 +97,16 @@ export default function AdminEventThemesPage() {
     // اگه پیش‌نمایشی نیست، همین صفحه هم تم زنده‌ی جدید رو نشون بده
     if (!readPreview()) applyPreview(null, d.activeId);
     toast(body.action === "reset" ? "به حالت عادی برگشت" : "تم برای همه منتشر شد");
+  }
+
+  async function postDiscount(body: { action: "discount_enabled"; enabled: boolean } | { action: "discount_set_active"; key: string; active: boolean } | { action: "discount_delete"; key: string }, okMsg: string) {
+    try {
+      const d = await adminFetch<Payload>("/api/admin/event-theme", { method: "POST", json: body });
+      setData(d);
+      toast(okMsg);
+    } catch (e: any) {
+      toast(e.message, "err");
+    }
   }
 
   const groups = useMemo(() => {
@@ -149,6 +175,62 @@ export default function AdminEventThemesPage() {
                 <button type="button" className="admin-btn sm" onClick={() => setPreviewValue("none")}>پیش‌نمایش بدون تم</button>
               </div>
             )}
+          </div>
+
+          <div className="admin-chart-card">
+            <div className="admin-perm-label" style={{ marginBottom: 6 }}>تخفیف خودکار مناسبت‌ها</div>
+            <TickOption
+              checked={data.discount.enabled}
+              onChange={(v) => postDiscount({ action: "discount_enabled", enabled: v }, v ? "ساخت خودکار کد روشن شد" : "ساخت خودکار کد خاموش شد")}
+            >
+              ساخت خودکار کد {data.discount.percent}٪ برای هر مناسبت
+            </TickOption>
+            <div className="admin-perm-group" style={{ marginTop: 10 }}>
+              {data.discount.schedule.map((it) => {
+                const t = byId.get(it.themeId);
+                const st = DISCOUNT_BADGE[it.status];
+                const manageable = it.status === "active" || it.status === "stopped";
+                return (
+                  <div key={it.key} className="admin-perm-row" style={{ flexWrap: "wrap" }}>
+                    <div style={{ minWidth: 200, flex: 1 }}>
+                      <div style={{ ...rowStyle, gap: 8 }}>
+                        <span className="admin-perm-label">{t?.name ?? it.themeId}</span>
+                        <span className={`admin-badge ${st.cls}`}>{st.label}</span>
+                      </div>
+                      <div className="admin-perm-hint">
+                        {isoToJalali(it.occurrence.start)} تا {isoToJalali(it.occurrence.end)}
+                      </div>
+                    </div>
+                    {it.generatedCode ? (
+                      <div style={{ ...rowStyle, gap: 8 }}>
+                        <span className="mono admin-ltr" dir="ltr">{it.generatedCode}</span>
+                        <span className="admin-ltr">{it.percent}%</span>
+                        {manageable && (
+                          <>
+                            <button
+                              type="button"
+                              className="admin-btn sm"
+                              onClick={() => postDiscount(
+                                { action: "discount_set_active", key: it.key, active: it.status === "stopped" },
+                                it.status === "stopped" ? "کد وصل شد" : "کد قطع شد",
+                              )}
+                            >
+                              {it.status === "stopped" ? "وصل" : "قطع"}
+                            </button>
+                            <button type="button" className="admin-btn danger sm" onClick={() => setConfirm({ kind: "discount_delete", item: it })}>حذف</button>
+                          </>
+                        )}
+                      </div>
+                    ) : (
+                      <div className="admin-perm-hint">
+                        <span className="mono admin-ltr" dir="ltr">{it.code}</span>
+                        {" · "}از شروع مناسبت ساخته می‌شه
+                      </div>
+                    )}
+                  </div>
+                );
+              })}
+            </div>
           </div>
 
           {groups.length === 0 ? (
@@ -221,6 +303,15 @@ export default function AdminEventThemesPage() {
           }
           onClose={() => setConfirm(null)}
           onConfirm={async () => { await post({ action: "release", id: confirm.theme.id }); setConfirm(null); }}
+        />
+      )}
+      {confirm?.kind === "discount_delete" && (
+        <ConfirmModal
+          title="حذف کد مناسبت"
+          confirmLabel="حذف کد"
+          message={<>کد <b className="mono">{confirm.item.generatedCode}</b> برای همیشه حذف می‌شه و برای این وقوع دوباره ساخته نمی‌شه.</>}
+          onClose={() => setConfirm(null)}
+          onConfirm={async () => { await postDiscount({ action: "discount_delete", key: confirm.item.key }, "کد حذف شد"); setConfirm(null); }}
         />
       )}
       {confirm?.kind === "reset" && (

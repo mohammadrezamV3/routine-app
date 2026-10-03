@@ -16,12 +16,16 @@ export function EventThemeIcon({ name, size = 18 }: { name: string; size?: numbe
 }
 
 const SHOW_MS = 6000;
+const SHOW_MS_WITH_CODE = 10000;
+
+type LiveCode = { code: string; percent: number };
 
 // تبریک مناسبت: یک بار برای هر وقوع (سال) روی هر دستگاه، یک قرص کوچک زیر هدر
 export function EventThemeGreeting() {
   const pathname = usePathname();
   const [theme, setTheme] = useState<EventTheme | null>(null);
   const [open, setOpen] = useState(false);
+  const [offer, setOffer] = useState<LiveCode | null>(null);
   const inAdmin = !!pathname && pathname.startsWith("/admin");
 
   useEffect(() => {
@@ -38,11 +42,24 @@ export function EventThemeGreeting() {
     } catch { /* localStorage ممکنه در دسترس نباشه */ }
   }, [inAdmin]);
 
+  // کد تخفیف زنده‌ی مناسبت؛ هر خطایی = فقط تبریک ساده
+  useEffect(() => {
+    if (!theme) return;
+    let cancelled = false;
+    fetch(`/api/event-discount?theme=${encodeURIComponent(theme.id)}`, { cache: "no-store" })
+      .then((r) => (r.ok ? r.json() : null))
+      .then((d) => {
+        if (!cancelled && d && typeof d.code === "string" && Number.isFinite(d.percent)) setOffer({ code: d.code, percent: d.percent });
+      })
+      .catch(() => {});
+    return () => { cancelled = true; };
+  }, [theme]);
+
   useEffect(() => {
     if (!open) return;
-    const t = setTimeout(() => setOpen(false), SHOW_MS);
+    const t = setTimeout(() => setOpen(false), offer ? SHOW_MS_WITH_CODE : SHOW_MS);
     return () => clearTimeout(t);
-  }, [open]);
+  }, [open, offer]);
 
   if (!theme || !open || inAdmin) return null;
 
@@ -63,7 +80,7 @@ export function EventThemeGreeting() {
         alignItems: "center",
         gap: 10,
         padding: "8px 8px 8px 14px",
-        borderRadius: 999,
+        borderRadius: offer ? 22 : 999,
         background: "var(--box-bg)",
         border: "1px solid var(--surface-line)",
         color: "var(--text)",
@@ -77,7 +94,14 @@ export function EventThemeGreeting() {
       <span style={{ display: "inline-flex", color: theme.swatch[0] }}>
         <EventThemeIcon name={theme.icon} size={18} />
       </span>
-      <span>{theme.greeting}</span>
+      <span style={{ display: "flex", flexDirection: "column", gap: 2 }}>
+        <span>{theme.greeting}</span>
+        {offer && (
+          <span style={{ fontSize: 12, fontWeight: 500 }}>
+            کد <span dir="ltr" style={{ fontFamily: "monospace", fontWeight: 700 }}>{offer.code}</span>: {offer.percent}٪ تخفیف روی همه‌ی پلن‌ها
+          </span>
+        )}
+      </span>
       <button
         type="button"
         aria-label="بستن"

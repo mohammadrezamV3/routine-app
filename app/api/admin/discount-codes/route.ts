@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { requireAdmin } from "@/lib/requireAdmin";
 import { prisma } from "@/lib/prisma";
 import { writeAuditLog } from "@/lib/adminAnalytics";
+import { ensureEventDiscounts, getEventDiscountState } from "@/lib/eventDiscountServer";
 
 // GET → لیست همه‌ی کدهای تخفیف + لیست پلن‌های ایران (برای پرکردن سلکت
 // «کدوم پکیج») یک‌جا برمی‌گرده تا صفحه‌ی ادمین با یک درخواست کامل رندر بشه.
@@ -9,11 +10,15 @@ export async function GET() {
   const guard = await requireAdmin("discounts");
   if (!guard.ok) return guard.response;
 
-  const [codes, plans] = await Promise.all([
+  await ensureEventDiscounts();
+  const [codes, plans, evState] = await Promise.all([
     prisma.discountCode.findMany({ orderBy: { createdAt: "desc" } }),
     prisma.plan.findMany({ where: { market: "IRAN" }, orderBy: { sortOrder: "asc" }, select: { key: true, nameFa: true } }),
+    getEventDiscountState(),
   ]);
-  return NextResponse.json({ codes, plans });
+  // کدهای ساخته‌شده‌ی خودکار مناسبت‌ها (برای نشان «مناسبت» در لیست)
+  const eventCodes = Array.from(new Set(Object.values(evState.generated)));
+  return NextResponse.json({ codes, plans, eventCodes });
 }
 
 // POST → ساخت کد تخفیف جدید. عمدا هیچ‌جا انقضا/پلن رو اجباری نمی‌کنه —
