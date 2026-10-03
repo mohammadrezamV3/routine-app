@@ -1,4 +1,4 @@
-/* پنجره‌ی ثبت خواب (SleepLogSheet) و فهرست شب‌ها (SleepHistoryList).
+/* پنجره‌ی ثبت خواب (SleepLogSheet).
    هیچ بک‌گراندی به عنصری اضافه نشده؛ دکمه‌های بی‌بک‌گراند با دو سلکتور
    تم (همون الگوی بقیه‌ی سایت) قانون سراسری button{} رو خنثی می‌کنن. */
 
@@ -9,15 +9,13 @@
 
 body[data-theme="light"] .slg-nav, body:not([data-theme="light"]) .slg-nav,
 body[data-theme="light"] .slg-clear, body:not([data-theme="light"]) .slg-clear,
-body[data-theme="light"] .slg-more-toggle, body:not([data-theme="light"]) .slg-more-toggle,
-body[data-theme="light"] .slh-row, body:not([data-theme="light"]) .slh-row{
+body[data-theme="light"] .slg-more-toggle, body:not([data-theme="light"]) .slg-more-toggle{
   background:none; box-shadow:none; backdrop-filter:none; -webkit-backdrop-filter:none; border:none;
 }
 @media (hover:hover){
   body[data-theme="light"] .slg-nav:hover:not(:disabled), body:not([data-theme="light"]) .slg-nav:hover:not(:disabled),
   body[data-theme="light"] .slg-clear:hover, body:not([data-theme="light"]) .slg-clear:hover,
-  body[data-theme="light"] .slg-more-toggle:hover, body:not([data-theme="light"]) .slg-more-toggle:hover,
-  body[data-theme="light"] .slh-row:hover, body:not([data-theme="light"]) .slh-row:hover{
+  body[data-theme="light"] .slg-more-toggle:hover, body:not([data-theme="light"]) .slg-more-toggle:hover{
     background:none; box-shadow:none; border:none;
   }
 }
@@ -88,25 +86,3 @@ body[data-theme="light"] .slg-tags .tick-option, body:not([data-theme="light"]) 
   .slg-danger:hover:not(:disabled){ color:var(--slp-poor); border-color:var(--slp-poor); }
 }
 
-/* ── فهرست شب‌ها ── */
-.slh-empty{ margin:0; }
-.slh-list{ display:flex; flex-direction:column; }
-.slh-row{
-  display:flex; align-items:center; gap:12px; width:100%; padding:10px 2px; text-align:start;
-  border-radius:0; color:var(--text); font-size:inherit; font-weight:inherit;
-}
-body[data-theme="light"] .slh-row, body:not([data-theme="light"]) .slh-row{ border-bottom:1px solid var(--box-line); }
-.slh-row:last-child{ border-bottom:none !important; }
-@media (hover:hover){
-  body[data-theme="light"] .slh-row:hover, body:not([data-theme="light"]) .slh-row:hover{ border-bottom:1px solid var(--box-line); color:var(--accent); }
-  .slh-row:last-child:hover{ border-bottom:none !important; }
-}
-.slh-date{ display:flex; flex-direction:column; gap:1px; flex:none; width:84px; }
-.slh-date b{ font-size:13.5px; font-weight:800; white-space:nowrap; }
-.slh-date small{ font-size:11px; color:var(--muted); font-weight:600; }
-.slh-mid{ flex:1; min-width:0; display:flex; flex-direction:column; gap:3px; }
-.slh-clocks{ font-size:13px; font-weight:700; font-variant-numeric:tabular-nums; text-align:start; }
-.slh-meta{ display:flex; align-items:center; flex-wrap:wrap; gap:4px 10px; font-size:11.5px; color:var(--muted); }
-.slh-ic{ display:inline-flex; align-items:center; gap:3px; }
-.slh-score{ flex:none; min-width:34px; text-align:center; font-size:20px; font-weight:900; font-variant-numeric:tabular-nums; }
-.slh-more{ align-self:center; }

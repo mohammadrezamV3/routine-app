@@ -54,50 +54,12 @@ body[data-theme="light"] .sleep-scope{
 .slp-c-fair{ color:var(--slp-fair); }
 .slp-c-poor{ color:var(--slp-poor); }
 
-/* ── هیرو ─────────────────────────────────────────────── */
-.slp-hero{ overflow:hidden; gap:16px; }
-.slp-hero-sky{ position:absolute; inset:0; pointer-events:none; overflow:hidden; border-radius:inherit; }
-.slp-star{
-  position:absolute; width:2px; height:2px; border-radius:50%; background:currentColor;
-  color:var(--slp-moon); opacity:.0; animation:slpTwinkle 4.2s ease-in-out infinite;
-}
-@keyframes slpTwinkle{ 0%, 100%{ opacity:.08; transform:scale(.8); } 50%{ opacity:.75; transform:scale(1.25); } }
-.slp-hero-top{ position:relative; display:flex; align-items:center; gap:16px; }
-.slp-moon{ flex:none; width:58px; height:58px; filter:drop-shadow(0 0 14px color-mix(in srgb, var(--slp-moon) 45%, transparent)); }
-.slp-moon-float{ animation:slpFloat 6s ease-in-out infinite; }
-@keyframes slpFloat{ 0%, 100%{ transform:translateY(0) rotate(-4deg); } 50%{ transform:translateY(-5px) rotate(3deg); } }
-.slp-hero-text{ flex:1; min-width:0; display:flex; flex-direction:column; gap:3px; }
-.slp-hero-kicker{ font-size:12px; color:var(--muted); font-weight:700; }
-.slp-hero-title{ font-size:20px; font-weight:900; line-height:1.5; margin:0; }
-@media (min-width:640px){ .slp-hero-title{ font-size:23px; } }
-.slp-hero-sub{ font-size:12.5px; color:var(--muted); line-height:1.9; }
-.slp-hero-body{ position:relative; display:flex; align-items:center; gap:18px; flex-wrap:wrap; }
-.slp-score{ display:flex; flex-direction:column; align-items:center; line-height:1.1; }
-.slp-score b{ font-size:26px; font-weight:900; font-variant-numeric:tabular-nums; }
-.slp-score small{ font-size:10.5px; color:var(--muted); font-weight:700; }
-.slp-hero-facts{ flex:1; min-width:160px; display:grid; grid-template-columns:repeat(2, minmax(0,1fr)); gap:10px; }
-.slp-hero-facts-3{ grid-template-columns:repeat(3, minmax(0,1fr)); }
-.slp-hero-facts-3 .slp-fact span{ white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
-.slp-fact{ display:flex; flex-direction:column; gap:2px; min-width:0; }
-.slp-fact span{ font-size:11px; color:var(--muted); }
-.slp-fact b{ font-size:14.5px; font-weight:800; font-variant-numeric:tabular-nums; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
-.slp-countdown{ font-size:30px; font-weight:900; letter-spacing:.5px; font-variant-numeric:tabular-nums; direction:ltr; }
-.slp-hero-actions{ position:relative; display:flex; gap:10px; flex-wrap:wrap; }
-.slp-hero-actions > *{ flex:1 1 150px; }
-.slp-tracking{ display:flex; align-items:center; gap:10px; font-size:12.5px; color:var(--muted); }
-.slp-tracking-dot{ width:8px; height:8px; border-radius:50%; background:var(--slp-ink); box-shadow:0 0 0 0 var(--slp-ink); animation:slpPulse 1.8s ease-out infinite; }
-@keyframes slpPulse{ 0%{ box-shadow:0 0 0 0 color-mix(in srgb, var(--slp-ink) 60%, transparent); } 100%{ box-shadow:0 0 0 10px transparent; } }
-
-@media (prefers-reduced-motion: reduce){
-  .slp-star, .slp-moon-float, .slp-tracking-dot{ animation:none !important; }
-  .slp-star{ opacity:.35; }
-}
-html[data-perf="low"] .slp-star{ animation:none; opacity:.35; }
-
 /* ── هدف خواب (components/SleepGoalCard.tsx) ─────────────── */
 .slp-goal-fields{ display:grid; grid-template-columns:1fr 1fr; gap:12px; }
 .slp-goal-field{ display:flex; flex-direction:column; gap:6px; min-width:0; }
 .slp-goal-field span{ font-size:12px; font-weight:700; color:var(--muted); }
+.slp-goal-bare{ display:flex; flex-direction:column; gap:14px; }
+.slp-goal-panel{ max-width:420px; }
 .slp-goal-field input{ width:100%; text-align:center; direction:ltr; }
 
 /* ── آمار خواب در آنالیز هفتگی (components/WeeklyAnalysisSleep.tsx) ── */

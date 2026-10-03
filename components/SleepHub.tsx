@@ -6,13 +6,13 @@ import Link from "next/link";
 import { BarChart3 } from "lucide-react";
 import { ICONS } from "./NavDrawer";
 import { RoutineTrialBanner } from "./RoutineTrialBanner";
-import { SleepHero } from "./SleepHero";
+import { SleepDial } from "./SleepDial";
+import { SleepWeek } from "./SleepWeek";
+import { SleepGoalSheet } from "./SleepGoalSheet";
 import { SleepLogSheet, type SleepLogSheetProps } from "./SleepLogSheet";
-import { SleepHistoryList } from "./SleepHistoryList";
 import { getSleepRange } from "@/lib/storage";
 import { DEFAULT_SLEEP, DEFAULT_WAKE } from "@/lib/wakeSleep";
 import { getSleepGoal } from "@/lib/sleepGoal";
-import { SleepGoalCard } from "./SleepGoalCard";
 import { useLiveRefresh } from "@/lib/liveSync";
 import { useFeature } from "@/lib/useFeatures";
 import { isoLocal } from "@/lib/jalali";
@@ -20,9 +20,10 @@ import { addDaysIso, sleepInsights, sleepMinutes, type SleepRecord } from "@/lib
 import { getTracking, stopTracking, draftFromTracking, TRACKER_EVENT, type SleepTracking } from "@/lib/sleepTracker";
 
 // بخش خواب (/sleep) — صفحه و سیستم جدای خودش، نه داخل صفحه‌ی روتین. طبق
-// درخواست صریح ساده و خلوته: فقط کارهای روزمره (وضعیت الان + ثبت، شب‌های اخیر،
-// هدف خواب). نمودار، تقویم امتیاز و تحلیل‌ها در آنالیز هفتگی‌ان
-// (WeeklyAnalysisSleep در /analysis/weekly) و این‌جا فقط یک لینک بهشون هست.
+// درخواست صریح ساده و خلوته و فقط دو بخش داره: صفحه‌ی ساعت 24 ساعته (SleepDial:
+// هدف، دیشب، الان، دکمه‌ی اصلی؛ زدن ساعت‌های هدف = SleepGoalSheet) و هفت شب
+// اخیر (SleepWeek). نمودار، تقویم امتیاز و تحلیل‌ها در آنالیز هفتگی‌ان
+// (WeeklyAnalysisSleep در /analysis/weekly) و این‌جا فقط لینک «آمار خواب» هست.
 // محاسبه‌ها خالص در lib/sleep.ts؛ persistence از lib/storage.ts.
 
 /** چند شب به عقب خونده می‌شه (تحلیل‌ها و تقویم ماهانه) */
@@ -38,6 +39,7 @@ export function SleepHub() {
   const [goalCustom, setGoalCustom] = useState(false);
   const [tracking, setTracking] = useState<SleepTracking | null>(null);
   const [sheet, setSheet] = useState<SheetState>(null);
+  const [goalOpen, setGoalOpen] = useState(false);
 
   // امروز با گذشتن نیمه‌شب (صفحه‌ی باز) عوض می‌شه
   useEffect(() => {
@@ -115,19 +117,27 @@ export function SleepHub() {
       <RoutineTrialBanner />
 
       <div className="slp-hub">
-        <SleepHero
+        <SleepDial
           loaded={loaded}
           target={target}
-          insights={insights}
           lastNight={lastNight}
           lastScore={lastScore}
           tracking={tracking}
           onLog={() => openDate(todayIso)}
           onWakeUp={wakeUp}
+          onEditGoal={() => setGoalOpen(true)}
         />
-        <SleepHistoryList entries={entries} insights={insights} onEdit={(rec) => setSheet({ initial: rec, existing: true })} />
-        <SleepGoalCard goal={target} custom={goalCustom} goalMin={insights.goalMin} onSaved={load} />
+        <SleepWeek entries={entries} insights={insights} todayIso={todayIso} onPick={openDate} />
       </div>
+
+      <SleepGoalSheet
+        open={goalOpen}
+        goal={target}
+        custom={goalCustom}
+        goalMin={insights.goalMin}
+        onClose={() => setGoalOpen(false)}
+        onSaved={load}
+      />
 
       <SleepLogSheet
         open={!!sheet}
