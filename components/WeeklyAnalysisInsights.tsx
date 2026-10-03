@@ -6,7 +6,7 @@ import {
   AlertTriangle, CalendarDays, Flame, Lightbulb, Link2, TrendingDown, TrendingUp, Trophy, Zap, type LucideIcon,
 } from "lucide-react";
 import { ANALYSIS_DOMAIN_LABELS, type Insight } from "@/lib/weeklyAnalysis/types";
-import { V_WK_CARD, toneColor } from "./WeeklyAnalysisKit";
+import { SectionHead, V_WK_CARD, toneColor } from "./WeeklyAnalysisKit";
 
 const INSIGHT_ICONS: Record<Insight["icon"], LucideIcon> = {
   link: Link2,
@@ -24,9 +24,7 @@ const INSIGHT_ICONS: Record<Insight["icon"], LucideIcon> = {
 export function WeeklyAnalysisInsights({ insights }: { insights: Insight[] }) {
   return (
     <motion.section className="wk-card wk-insights" variants={V_WK_CARD} aria-label="بینش‌های این هفته">
-      <header className="wk-card-head">
-        <h2 className="wk-card-title"><Lightbulb size={16} className="wk-title-icon" />بینش‌های این هفته</h2>
-      </header>
+      <SectionHead icon={<Lightbulb size={15} />} title="بینش‌های این هفته" />
       {insights.length === 0 ? (
         <div className="wk-empty-inline">هنوز الگوی قابل‌اتکایی پیدا نشده — با چند روز داده‌ی بیشتر، بینش‌ها ظاهر می‌شن.</div>
       ) : (

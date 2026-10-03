@@ -130,7 +130,7 @@ export function WeeklyAnalysisDaySheet({
   return createPortal(
     <AnimatePresence>
       {open && day && index !== null && (
-        <div className={`wk-sheet-wrap${narrow ? " is-bottom" : ""}`} key="wk-sheet">
+        <div className={`wk-sheet-wrap wk-scope${narrow ? " is-bottom" : ""}`} key="wk-sheet">
           <LockBodyScroll />
           <motion.div
             className="wk-sheet-backdrop"

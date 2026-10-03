@@ -1,8 +1,8 @@
 "use client";
 
 import "./weekly-analysis.css";
-import { useEffect, useRef, useState } from "react";
-import { animate, useInView, useReducedMotion, type Variants } from "framer-motion";
+import { useEffect, useRef, useState, type ReactNode } from "react";
+import { animate, motion, useInView, useReducedMotion, type Variants } from "framer-motion";
 import {
   Apple, ArrowDownRight, ArrowUpRight, CandlestickChart, CheckCheck, Dumbbell, GraduationCap, Minus, Moon, Repeat,
   type LucideIcon,
@@ -17,15 +17,31 @@ import { J_MONTHS, toJalali } from "@/lib/jalali";
 
 export const WK_EASE = [0.22, 1, 0.36, 1] as const;
 
-// ورود پله‌ای کارت‌ها — همون الگوی داشبورد (V_GRID/V_CARD) ولی کوتاه‌تر
+// ورود پله‌ای بخش‌های بالای صفحه (بنر، هیرو، هایلایت‌ها، کارت‌های دامنه) —
+// کل رقص ورود زیر ~1.2 ثانیه می‌مونه. کارت‌های پایین‌تر با Reveal (اسکرول) میان.
 export const V_WK_GRID: Variants = {
   hidden: {},
-  show: { transition: { staggerChildren: 0.05, delayChildren: 0.04 } },
+  show: { transition: { staggerChildren: 0.07, delayChildren: 0.16 } },
 };
 export const V_WK_CARD: Variants = {
   hidden: { opacity: 0, y: 14 },
   show: { opacity: 1, y: 0, transition: { duration: 0.5, ease: WK_EASE } },
 };
+
+// کارت‌های زیر صفحه: یک بار، وقتی وارد دید شدن (نه همه با هم موقع لود).
+// خود کارت همون V_WK_CARD رو دنبال می‌کنه، فقط کنترل‌کننده‌اش این پوسته‌ست.
+export function Reveal({ className, children }: { className?: string; children: ReactNode }) {
+  return (
+    <motion.div
+      className={className}
+      initial="hidden"
+      whileInView="show"
+      viewport={{ once: true, margin: "0px 0px -60px 0px" }}
+    >
+      {children}
+    </motion.div>
+  );
+}
 
 export const DOMAIN_ICONS: Record<AnalysisDomain, LucideIcon> = {
   routine: Repeat,
@@ -54,11 +70,31 @@ export function domainGrad(d: AnalysisDomain): RingGrad {
 }
 export const domainColor = (d: AnalysisDomain) => `var(--wk-d-${d}-a)`;
 
-// حلقه‌ی امتیاز کل: بالای 60 سبز، 40 تا 60 کهربایی، پایین‌تر مرجانی/صورتی
+// نمره‌ی حرفی از روی امتیاز — همون آستانه‌های موتور (lib/weeklyAnalysis/score.ts
+// gradeFor)؛ این‌جا کپی می‌شه چون امتیاز روزها/دامنه‌ها هم باید هم‌رنگ نمره‌ی
+// هفته بشن و ماژول موتور سمت سرور نیست.
+export type GradeKey = "S" | "A" | "B" | "C" | "D";
+export function gradeOfScore(score: number | null): GradeKey | null {
+  if (score === null) return null;
+  if (score >= 90) return "S";
+  if (score >= 80) return "A";
+  if (score >= 65) return "B";
+  if (score >= 50) return "C";
+  return "D";
+}
+
+// رنگ هر نمره: S/A سبز، B فیروزه‌ای، C کهربایی، D مرجانی (توکن‌ها در CSS؛
+// همین جفت‌ها برای هاله و عدد هیرو هم هستن تا حلقه/عدد/مهر یکی بمونن)
+const GRADE_GRADS: Record<GradeKey, RingGrad> = {
+  S: ["var(--ring-1a)", "var(--ring-1b)"],
+  A: ["var(--ring-1a)", "var(--ring-1b)"],
+  B: ["var(--wk-d-tasks-a)", "var(--wk-d-tasks-b)"],
+  C: ["var(--ring-3a)", "var(--ring-3b)"],
+  D: ["var(--ring-over)", "var(--ring-3b)"],
+};
 export function scoreGrad(score: number | null): RingGrad {
-  if (score === null || score >= 60) return ["var(--ring-1a)", "var(--ring-1b)"];
-  if (score >= 40) return ["var(--ring-3a)", "var(--ring-3b)"];
-  return ["var(--ring-over)", "var(--ring-3b)"];
+  const g = gradeOfScore(score);
+  return g ? GRADE_GRADS[g] : GRADE_GRADS.A;
 }
 
 // خوب/بد با همون قرارداد جهانی سود/زیان (بیرون پالت تم)
@@ -129,6 +165,18 @@ export function useMounted(): boolean {
   return m;
 }
 
+/**
+ * true وقتی عنصر (بعد از mount) برای اولین بار وارد دید شد — برای انیمیشن‌های
+ * ورود کارت‌های پایین صفحه (پر شدن ستون‌ها، موج نقشه) که باید هنگام دیده‌شدن
+ * پخش بشن، نه موقع لود وقتی هنوز بیرون از صفحه‌ان.
+ */
+export function useSeen<T extends Element>(margin = "0px 0px -80px 0px"): [React.RefObject<T>, boolean] {
+  const ref = useRef<T>(null);
+  const inView = useInView(ref, { once: true, margin: margin as never });
+  const mounted = useMounted();
+  return [ref, inView && mounted];
+}
+
 /** حرکت کاهش‌یافته‌ی سیستم یا دستگاه ضعیف → بدون انیمیشن عددی */
 export function useCalmMotion(): boolean {
   const reduce = useReducedMotion();
@@ -142,7 +190,7 @@ export function useCalmMotion(): boolean {
 // عدد رو نرم تغییر می‌ده. مقدار مستقیم روی textContent نوشته می‌شه (صفر رندر
 // React حین انیمیشن). اولین بار تا وقتی کارت دیده نشده صفر می‌مونه.
 export function Num({
-  value, decimals = 0, className, duration = 0.9, empty = "—", suffix = "", signed = false,
+  value, decimals = 0, className, duration = 0.9, empty = "—", suffix = "", signed = false, delay = 0,
 }: {
   value: number | null;
   decimals?: number;
@@ -151,6 +199,7 @@ export function Num({
   empty?: string;
   suffix?: string;
   signed?: boolean;
+  delay?: number;
 }) {
   const ref = useRef<HTMLSpanElement>(null);
   const cur = useRef(0);
@@ -168,9 +217,11 @@ export function Num({
     if (value === null) { el.textContent = empty; cur.current = 0; return; }
     if (calm) { el.textContent = fmt(value); cur.current = value; started.current = true; return; }
     if (!started.current && !inView) { el.textContent = fmt(0); return; }
+    const firstRun = !started.current;
     started.current = true;
     const ctrl = animate(cur.current, value, {
       duration,
+      delay: firstRun ? delay : 0,
       ease: [...WK_EASE],
       onUpdate: (v) => { cur.current = v; el.textContent = fmt(v); },
       onComplete: () => { cur.current = value; el.textContent = fmt(value); },
@@ -180,6 +231,26 @@ export function Num({
   }, [value, inView, calm, decimals]);
   // متن اولیه (SSR) = مقدار نهایی؛ بدون جاوااسکریپت هم عدد درست دیده می‌شه
   return <span ref={ref} className={`wk-num${className ? ` ${className}` : ""}`}>{value === null ? empty : fmt(value)}</span>;
+}
+
+/**
+ * سربرگ یک‌دست همه‌ی کارت‌ها: آیکون داخل حلقه‌ی نازک + عنوان + خط گرادیانی
+ * که وقتی کارت وارد دید شد از راست کشیده می‌شه (scaleX). aside = چیزی کنار
+ * عنوان (دکمه، شمارنده). عنوان همچنان h2 می‌مونه.
+ */
+export function SectionHead({ icon, title, aside }: { icon: ReactNode; title: string; aside?: ReactNode }) {
+  const ref = useRef<HTMLElement>(null);
+  const seen = useInView(ref, { once: true, margin: "0px 0px -30px 0px" });
+  return (
+    <header ref={ref} className="wk-card-head wk-sh">
+      <h2 className="wk-card-title">
+        <span className="wk-sh-ic" aria-hidden="true">{icon}</span>
+        {title}
+      </h2>
+      {aside}
+      <i className={`wk-sh-rule${seen ? " on" : ""}`} aria-hidden="true" />
+    </header>
+  );
 }
 
 /** «34/40» یا «7.4» → قابل شمارش؛ هر چیز دیگه (مثلا «+45$») ثابت می‌مونه */

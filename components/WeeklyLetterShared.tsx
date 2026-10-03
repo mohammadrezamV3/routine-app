@@ -3,18 +3,19 @@
 // کمک‌ابزارهای مشترک خواننده و آرشیو هفته‌نامه: آیکون/رنگ هر دامنه، فچ،
 // ورودی‌های حرکتی (reveal، شمارنده، حلقه‌ی تنبل) و گیت صفحه. همه‌ی حرکت‌ها
 // فقط transform/opacity و روی «کاهش حرکت» و html[data-perf="low"] ساده می‌شن.
-import { useEffect, useRef, useState, type ReactNode } from "react";
+import { useEffect, useId, useRef, useState, type ReactNode } from "react";
 import { animate, motion, useInView, useReducedMotion } from "framer-motion";
 import { useSession } from "next-auth/react";
 import {
   Apple, CandlestickChart, CheckCheck, Dumbbell, GraduationCap, Moon, Repeat, type LucideIcon,
 } from "lucide-react";
-import type { AnalysisDomain } from "@/lib/weeklyAnalysis/types";
+import type { AnalysisDomain, Grade } from "@/lib/weeklyAnalysis/types";
 import { AuthGate } from "@/components/AuthGate";
 import { FeatureGate } from "@/components/FeatureGate";
 import { ModuleGate } from "@/components/ModuleGate";
 import { GradientRing } from "@/components/GradientRing";
 import { parseCountable } from "./WeeklyLetterUtils";
+import { gradeAccent } from "./WeeklyLetterStoriesData";
 import "./weekly-letter.css";
 
 export const WL_EASE = [0.22, 1, 0.36, 1] as const;
@@ -150,17 +151,60 @@ export function LazyRing({
   );
 }
 
-/** سرفصل یک فصل: شماره‌ی دو رقمی + عنوان بزرگ + خط محو. id هدف لنگر فهرست چسبانه. */
-export function Chapter({ id, no, title, children }: { id: string; no: number; title: string; children: ReactNode }) {
+/** سرفصل یک فصل: آیکون در حلقه + شماره‌ی کوچک، «فصل 03»، عنوان بزرگ و خط گرادیانی که با دیده‌شدن کشیده می‌شه. id هدف لنگر فهرست چسبانه. */
+export function Chapter({ id, no, title, icon: Icon, children }: { id: string; no: number; title: string; icon?: LucideIcon; children: ReactNode }) {
+  const lite = useLite();
   return (
     <section id={id} className="wl-ch">
       <Reveal className="wl-ch-head">
-        <span className="wl-ch-no" aria-hidden="true">{String(no).padStart(2, "0")}</span>
-        <h2 className="wl-ch-title">{title}</h2>
-        <span className="wl-ch-line" aria-hidden="true" />
+        <span className="wl-ch-badge" aria-hidden="true">
+          {Icon ? <Icon size={19} /> : <b>{String(no).padStart(2, "0")}</b>}
+        </span>
+        <span className="wl-ch-txt">
+          <span className="wl-ch-k" aria-hidden="true">فصل {String(no).padStart(2, "0")}</span>
+          <h2 className="wl-ch-title">{title}</h2>
+        </span>
+        <motion.span
+          className="wl-ch-line"
+          aria-hidden="true"
+          initial={{ scaleX: lite ? 1 : 0, opacity: lite ? 0 : 1 }}
+          whileInView={{ scaleX: 1, opacity: 1 }}
+          viewport={{ once: true, margin: "0px 0px -8% 0px" }}
+          transition={{ duration: lite ? 0.25 : 1.1, ease: WL_EASE as never, delay: lite ? 0 : 0.25 }}
+        />
       </Reveal>
       {children}
     </section>
+  );
+}
+
+/** مهر درجه: حلقه‌ی دوخطی با متن دور دایره و حرف درجه؛ یک بار با ضربه (بزرگ‌تر + چرخش) می‌نشینه. */
+export function GradeStamp({ grade, size = 84, delay = 1, className }: { grade: Grade; size?: number; delay?: number; className?: string }) {
+  const uid = useId().replace(/:/g, "");
+  const lite = useLite();
+  return (
+    <motion.span
+      className={`wl-stamp ${gradeAccent(grade)}${className ? ` ${className}` : ""}`}
+      style={{ width: size, height: size }}
+      role="img"
+      aria-label={`درجه ${grade}`}
+      initial={lite ? { opacity: 0, rotate: -12 } : { opacity: 0, scale: 1.6, rotate: -36 }}
+      animate={{ opacity: 1, scale: 1, rotate: -12 }}
+      transition={lite ? { duration: 0.3, delay } : { delay, type: "spring", stiffness: 240, damping: 13, mass: 0.9 }}
+    >
+      <svg viewBox="0 0 100 100" width={size} height={size} aria-hidden="true">
+        <defs>
+          <path id={`sp${uid}`} d="M50 50 m-36.5 0 a36.5 36.5 0 1 1 73 0 a36.5 36.5 0 1 1 -73 0" />
+        </defs>
+        <circle className="wl-stamp-face" cx="50" cy="50" r="47" />
+        <circle className="wl-stamp-hair" cx="50" cy="50" r="42" />
+        <text className="wl-stamp-ring">
+          <textPath href={`#sp${uid}`} textLength="228" lengthAdjust="spacing">ARION • WEEKLY • ARION • WEEKLY •</textPath>
+        </text>
+        <circle className="wl-stamp-hair" cx="50" cy="50" r="29" />
+        <text className="wl-stamp-g" x="50" y="51" textAnchor="middle" dominantBaseline="central">{grade}</text>
+      </svg>
+    </motion.span>
   );
 }
 

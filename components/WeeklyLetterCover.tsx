@@ -3,14 +3,15 @@
 // جلد هفته‌نامه: سرصفحه‌ی مجله‌ای (شماره / عنوان / هفته)، حلقه‌ی بزرگ امتیاز،
 // تیتر کلمه‌به‌کلمه، تیپ هفته، سلام و مقدمه. ورود پله‌ای فقط با transform/opacity.
 import { Fragment } from "react";
-import { motion, type Variants } from "framer-motion";
+import { motion, useScroll, useTransform, type Variants } from "framer-motion";
 import {
-  Activity, Anchor, Crown, Feather, Hammer, Scale, Trophy, TrendingDown, TrendingUp, Undo2, Zap, type LucideIcon,
+  Activity, Anchor, Crown, Feather, Hammer, Play, Scale, Trophy, TrendingDown, TrendingUp, Undo2, Zap, type LucideIcon,
 } from "lucide-react";
 import type { WeekArchetypeKey } from "@/lib/weeklyAnalysis/types";
 import type { WeeklyLetterData } from "@/lib/weeklyLetter/types";
-import { CountText, WL_EASE, useLite } from "./WeeklyLetterShared";
+import { CountText, DOM_GRAD, GradeStamp, WL_EASE, useLite } from "./WeeklyLetterShared";
 import { GradientRing } from "./GradientRing";
+import { gradeAccent } from "./WeeklyLetterStoriesData";
 import { letterYear } from "./WeeklyLetterUtils";
 
 export const ARCH_ICONS: Record<WeekArchetypeKey, LucideIcon> = {
@@ -25,7 +26,7 @@ export const ARCH_ICONS: Record<WeekArchetypeKey, LucideIcon> = {
   building: Hammer,
 };
 
-function BrandMark() {
+export function BrandMark() {
   return (
     <span className="wl-brand" aria-hidden="true">
       {/* eslint-disable-next-line @next/next/no-img-element */}
@@ -36,8 +37,11 @@ function BrandMark() {
   );
 }
 
-export function WeeklyLetterCover({ letter }: { letter: WeeklyLetterData }) {
+export function WeeklyLetterCover({ letter, storyCount = 0, onPlayStory }: { letter: WeeklyLetterData; storyCount?: number; onPlayStory?: () => void }) {
   const lite = useLite();
+  // شماره‌ی بزرگ پشت جلد با اسکرول کمی بالا می‌ره (فقط transform)
+  const { scrollY } = useScroll();
+  const markY = useTransform(scrollY, [0, 800], [0, lite ? 0 : -70]);
   const o = letter.overall;
   const score = o.score;
   const pct = score === null ? 0 : Math.min(100, Math.max(0, score)) / 100;
@@ -66,7 +70,7 @@ export function WeeklyLetterCover({ letter }: { letter: WeeklyLetterData }) {
     <motion.header className="wl-cover" initial="hidden" animate="show" variants={group} aria-labelledby="wl-headline">
       <span className="wl-cover-edge" aria-hidden="true" />
       <div className="wl-cover-watermark" aria-hidden="true">
-        <span>{letter.issueNo || ""}</span>
+        <motion.span style={{ y: markY }}>{letter.issueNo || ""}</motion.span>
       </div>
 
       <motion.div className="wl-mast" variants={item}>
@@ -87,30 +91,21 @@ export function WeeklyLetterCover({ letter }: { letter: WeeklyLetterData }) {
 
       <div className="wl-cover-body">
         <motion.div className="wl-cover-score" variants={item}>
-          <div className="wl-score-ring">
-            <GradientRing value={pct} size={176} stroke={13} delay={0.35}>
+          <div className={`wl-score-ring ${gradeAccent(o.grade)}`}>
+            <span className="wl-cover-aura" aria-hidden="true" />
+            <GradientRing value={pct} size={176} stroke={13} delay={0.35} grad={o.grade ? DOM_GRAD : undefined}>
               <span className="wl-score-center">
                 {score === null ? (
                   <span className="wl-score-none">بدون داده</span>
                 ) : (
                   <>
-                    <CountText value={String(Math.round(score))} className="wl-score-num" duration={1.4} />
+                    <CountText value={String(Math.round(score))} className="wl-score-num wl-grad-text" duration={1.4} />
                     <span className="wl-score-of">از 100</span>
                   </>
                 )}
               </span>
             </GradientRing>
-            {o.grade && (
-              <motion.span
-                className="wl-grade"
-                initial={lite ? false : { scale: 0.4, opacity: 0 }}
-                animate={{ scale: 1, opacity: 1 }}
-                transition={{ delay: lite ? 0 : 1.1, type: "spring", stiffness: 320, damping: 18 }}
-                aria-label={`درجه ${o.grade}`}
-              >
-                {o.grade}
-              </motion.span>
-            )}
+            {o.grade && <GradeStamp grade={o.grade} size={86} delay={lite ? 0 : 1.15} className="wl-cover-stamp" />}
           </div>
           <div className="wl-chips">
             {o.delta !== null && (
@@ -130,6 +125,14 @@ export function WeeklyLetterCover({ letter }: { letter: WeeklyLetterData }) {
               <b>{o.activeDays}</b> از 7 روز فعال
             </span>
           </div>
+          {onPlayStory && storyCount >= 3 && (
+            <motion.div className="wl-story-cta" variants={item}>
+              <button type="button" className="trade-primary-btn wl-cta-btn wl-story-play" onClick={onPlayStory}>
+                <Play size={16} fill="currentColor" />پخش داستان هفته
+              </button>
+              <span className="wl-story-meta">{storyCount} اسلاید، کمتر از یک دقیقه</span>
+            </motion.div>
+          )}
         </motion.div>
 
         <div className="wl-cover-text">

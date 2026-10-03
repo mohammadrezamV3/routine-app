@@ -11,6 +11,7 @@ import { AuthGate } from "./AuthGate";
 import { Spinner } from "./Spinner";
 import { WeeklyAnalysisNav, MIN_OFFSET } from "./WeeklyAnalysisNav";
 import { WeeklyAnalysisHero } from "./WeeklyAnalysisHero";
+import { WeeklyAnalysisHighlights } from "./WeeklyAnalysisHighlights";
 import { WeeklyAnalysisDomains } from "./WeeklyAnalysisDomains";
 import { WeeklyAnalysisRhythm } from "./WeeklyAnalysisRhythm";
 import { WeeklyAnalysisDaySheet } from "./WeeklyAnalysisDaySheet";
@@ -25,7 +26,7 @@ import { WeeklyAnalysisReflection } from "./WeeklyAnalysisReflection";
 import { WeeklyAnalysisShare } from "./WeeklyAnalysisShare";
 import { WeeklyAnalysisEmpty } from "./WeeklyAnalysisEmpty";
 import { WeeklyAnalysisSleep } from "./WeeklyAnalysisSleep";
-import { V_WK_CARD, V_WK_GRID, WK_EASE, normalizeAnalysis, waFetch } from "./WeeklyAnalysisKit";
+import { Reveal, V_WK_CARD, V_WK_GRID, WK_EASE, normalizeAnalysis, waFetch } from "./WeeklyAnalysisKit";
 
 export type WeeklyGate = "guest" | "on";
 
@@ -305,23 +306,24 @@ function WeeklyAnalysisBody({ initial }: { initial: WeeklyAnalysis | null }) {
               {hasAnyData ? (
                 <>
                   <div className="wk-span-12 wk-pass"><WeeklyAnalysisHero analysis={analysis} /></div>
+                  <div className="wk-span-12 wk-pass"><WeeklyAnalysisHighlights analysis={analysis} /></div>
                   <div className="wk-span-12 wk-pass"><WeeklyAnalysisDomains domains={analysis.domains} days={analysis.days} /></div>
-                  <div className="wk-span-7 wk-pass">
+                  <Reveal className="wk-span-7 wk-pass">
                     <WeeklyAnalysisRhythm days={analysis.days} prevDays={analysis.prevDays} selected={day} onPick={setDay} />
-                  </div>
-                  <div className="wk-span-5 wk-pass">
+                  </Reveal>
+                  <Reveal className="wk-span-5 wk-pass">
                     <WeeklyAnalysisHeatmap domains={analysis.domains} days={analysis.days} onPickDay={setDay} />
-                  </div>
-                  <div className={`${analysis.numbers.length ? "wk-span-7" : "wk-span-12"} wk-pass`}>
+                  </Reveal>
+                  <Reveal className={`${analysis.numbers.length ? "wk-span-7" : "wk-span-12"} wk-pass`}>
                     <WeeklyAnalysisTrend trend={analysis.trend} offset={analysis.offset} onJump={go} />
-                  </div>
+                  </Reveal>
                   {analysis.numbers.length > 0 && (
-                    <div className="wk-span-5 wk-pass"><WeeklyAnalysisNumbers numbers={analysis.numbers} /></div>
+                    <Reveal className="wk-span-5 wk-pass"><WeeklyAnalysisNumbers numbers={analysis.numbers} /></Reveal>
                   )}
                   {/* مربی وقتی نه نتیجه‌ی کش‌شده داره نه AI در دسترسه، کارت خالی‌ای نمی‌سازه */}
-                  <div className={`${showCoach ? "wk-span-6" : "wk-span-12"} wk-pass`}><WeeklyAnalysisInsights insights={analysis.insights} /></div>
+                  <Reveal className={`${showCoach ? "wk-span-6" : "wk-span-12"} wk-pass`}><WeeklyAnalysisInsights insights={analysis.insights} /></Reveal>
                   {showCoach && (
-                    <div className="wk-span-6 wk-pass">
+                    <Reveal className="wk-span-6 wk-pass">
                       <WeeklyAnalysisCoach
                         offset={analysis.offset}
                         ai={analysis.ai}
@@ -330,14 +332,14 @@ function WeeklyAnalysisBody({ initial }: { initial: WeeklyAnalysis | null }) {
                         onAi={onAi}
                         onAddGoal={onAddGoalFromCoach}
                       />
-                    </div>
+                    </Reveal>
                   )}
-                  <div className="wk-span-12 wk-pass"><WeeklyAnalysisAchievements achievements={analysis.achievements} /></div>
+                  <Reveal className="wk-span-12 wk-pass"><WeeklyAnalysisAchievements achievements={analysis.achievements} /></Reveal>
                 </>
               ) : (
                 <div className="wk-span-12 wk-pass"><WeeklyAnalysisEmpty domains={analysis.domains} isCurrentWeek={analysis.isCurrentWeek} /></div>
               )}
-              <div className={`${hasAnyData ? "wk-span-6" : "wk-span-6"} wk-pass`}>
+              <Reveal className="wk-span-6 wk-pass">
                 <WeeklyAnalysisGoals
                   offset={analysis.offset}
                   goals={analysis.goals}
@@ -347,15 +349,15 @@ function WeeklyAnalysisBody({ initial }: { initial: WeeklyAnalysis | null }) {
                   onAdded={onGoalAdded}
                   onDeleted={onGoalDeleted}
                 />
-              </div>
-              <div className="wk-span-6 wk-pass">
+              </Reveal>
+              <Reveal className="wk-span-6 wk-pass">
                 <WeeklyAnalysisReflection
                   key={analysis.weekStart}
                   offset={analysis.offset}
                   reflection={analysis.reflection}
                   onSaved={onReflection}
                 />
-              </div>
+              </Reveal>
             </motion.div>
           </motion.div>
         </div>

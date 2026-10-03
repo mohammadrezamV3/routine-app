@@ -8,7 +8,7 @@ import {
 } from "@/lib/weeklyAnalysis/types";
 import { Spinner } from "./Spinner";
 import { TickOption } from "./TickOption";
-import { Num, V_WK_CARD, WK_EASE, waFetch } from "./WeeklyAnalysisKit";
+import { Num, SectionHead, V_WK_CARD, WK_EASE, waFetch } from "./WeeklyAnalysisKit";
 
 export type GoalDraft = { domain: AnalysisDomain | null; title: string; nonce: number };
 
@@ -142,9 +142,7 @@ export function WeeklyAnalysisGoals({
 
   return (
     <motion.section id="goals" ref={rootRef} className="wk-card wk-goals" variants={V_WK_CARD} aria-label="اهداف">
-      <header className="wk-card-head">
-        <h2 className="wk-card-title"><Target size={16} className="wk-title-icon" />اهداف</h2>
-      </header>
+      <SectionHead icon={<Target size={15} />} title="اهداف" />
 
       <div className="wk-sub-title">اهداف این هفته</div>
       {goals.length === 0 ? (

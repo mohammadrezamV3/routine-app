@@ -6,7 +6,7 @@ import { Plus, RotateCw } from "lucide-react";
 import { ANALYSIS_DOMAIN_LABELS, type AiCoach, type AnalysisDomain } from "@/lib/weeklyAnalysis/types";
 import { AiSparkleIcon } from "./AiSparkleIcon";
 import { Spinner } from "./Spinner";
-import { V_WK_CARD, WK_EASE, waFetch } from "./WeeklyAnalysisKit";
+import { SectionHead, V_WK_CARD, WK_EASE, waFetch } from "./WeeklyAnalysisKit";
 
 type Rec = NonNullable<AiCoach>["recommendations"][number];
 
@@ -49,14 +49,15 @@ export function WeeklyAnalysisCoach({
 
   return (
     <motion.section className="wk-card wk-coach" variants={V_WK_CARD} aria-label="مربی هوشمند">
-      <header className="wk-card-head">
-        <h2 className="wk-card-title"><AiSparkleIcon size={17} still />مربی هوشمند</h2>
-        {ai && aiAvailable && (
+      <SectionHead
+        icon={<AiSparkleIcon size={15} still />}
+        title="مربی هوشمند"
+        aside={ai && aiAvailable ? (
           <button type="button" className="account-outline-btn muted wk-small-btn" onClick={generate} disabled={busy} aria-label="بازسازی تحلیل مربی">
             {busy ? <Spinner size={13} label={null} /> : <><RotateCw size={13} />بازسازی</>}
           </button>
-        )}
-      </header>
+        ) : undefined}
+      />
 
       {busy && !ai ? (
         <div className="wk-coach-wait" role="status" aria-label="در حال ساخت تحلیل">

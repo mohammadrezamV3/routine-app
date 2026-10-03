@@ -2,7 +2,7 @@
 
 // فصل «روزبه‌روز»: خط زمانی عمودی هفت‌روزه. هر روز: امتیاز، نشان بهترین/ضعیف‌ترین
 // و تک‌تک جزئیات ثبت‌شده‌ی دامنه‌ها (DayDetails) با آیکون و متن فارسی.
-import { Minus, TrendingDown, Trophy } from "lucide-react";
+import { Crown, Minus, TrendingDown } from "lucide-react";
 import type { WeeklyLetterData } from "@/lib/weeklyLetter/types";
 import { DOMAIN_ICONS, MeterBar, Reveal, domainClass } from "./WeeklyLetterShared";
 import { BAND_COLOR, bestWorstIndex, dayRows, jalaliDayMonth, scoreBand } from "./WeeklyLetterUtils";
@@ -23,8 +23,9 @@ export function WeeklyLetterTimeline({ days, domains }: { days: WeeklyLetterData
         const color = BAND_COLOR[band];
         return (
           <li key={d.date || i} className={`wl-tl-item${d.isFuture ? " is-future" : ""}${d.isToday ? " is-today" : ""}${i === days.length - 1 ? " is-last" : ""}`} style={{ ["--c" as string]: color } as React.CSSProperties}>
-            <span className="wl-tl-node" aria-hidden="true">
-              {i === best ? <Trophy size={13} /> : i === worst ? <TrendingDown size={13} /> : <i />}
+            <span className={`wl-tl-node${i === best ? " is-best" : i === worst ? " is-worst" : ""}`} aria-hidden="true">
+              {i === best && <Crown className="wl-tl-crown" size={18} />}
+              {i === worst ? <TrendingDown size={13} /> : <i />}
             </span>
             <Reveal className={`wl-card wl-day${i === best ? " is-best" : ""}${i === worst ? " is-worst" : ""}`} delay={0.04}>
               <div className="wl-day-head">
@@ -33,7 +34,7 @@ export function WeeklyLetterTimeline({ days, domains }: { days: WeeklyLetterData
                   <span>{d.date ? jalaliDayMonth(d.date) : ""}</span>
                 </div>
                 <div className="wl-day-marks">
-                  {i === best && <span className="wl-mark is-good"><Trophy size={12} />بهترین روز</span>}
+                  {i === best && <span className="wl-mark is-good"><Crown size={12} />بهترین روز</span>}
                   {i === worst && <span className="wl-mark is-bad"><TrendingDown size={12} />ضعیف‌ترین روز</span>}
                   {d.isToday && <span className="wl-mark">امروز</span>}
                   <span className="wl-pill" aria-label={d.score === null ? "بدون امتیاز" : `امتیاز ${Math.round(d.score)}`}>

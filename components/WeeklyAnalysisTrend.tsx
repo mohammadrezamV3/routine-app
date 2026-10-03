@@ -5,7 +5,7 @@ import { motion, useReducedMotion } from "framer-motion";
 import { ArrowLeft, LineChart } from "lucide-react";
 import { ANALYSIS_DOMAIN_LABELS, ANALYSIS_DOMAINS, type AnalysisDomain, type TrendPoint } from "@/lib/weeklyAnalysis/types";
 import { SegmentedTabs } from "./SegmentedTabs";
-import { V_WK_CARD, jalaliShort } from "./WeeklyAnalysisKit";
+import { SectionHead, V_WK_CARD, jalaliShort } from "./WeeklyAnalysisKit";
 import { MIN_OFFSET } from "./WeeklyAnalysisNav";
 
 const MIN_H = 210;
@@ -126,9 +126,7 @@ export function WeeklyAnalysisTrend({
 
   return (
     <motion.section className="wk-card wk-trend" variants={V_WK_CARD} aria-label="روند هشت هفته‌ی اخیر">
-      <header className="wk-card-head">
-        <h2 className="wk-card-title"><LineChart size={16} className="wk-title-icon" />روند 8 هفته‌ی اخیر</h2>
-      </header>
+      <SectionHead icon={<LineChart size={15} />} title="روند 8 هفته‌ی اخیر" />
 
       {availableDomains.length > 0 && (
         <div className="wk-tabs-scroll" data-noswipe>
@@ -183,7 +181,7 @@ export function WeeklyAnalysisTrend({
               const skip = w < 420 && (n - 1 - i) % 2 === 1;
               return skip ? null : (
                 <text key={t.weekStart} x={xAt(i)} y={H - 8} textAnchor="middle" className={`wk-axis${i === n - 1 ? " is-cur" : ""}${hover === i ? " is-hov" : ""}`}>
-                  {i === n - 1 ? "این هفته" : jalaliShort(t.weekStart)}
+                  {i === n - 1 && offset === 0 ? "این هفته" : jalaliShort(t.weekStart)}
                 </text>
               );
             })}
@@ -240,7 +238,7 @@ export function WeeklyAnalysisTrend({
 
         {hover !== null && trend[hover] && (
           <div className="wk-tooltip" style={{ transform: `translate3d(${tipX}px,0,0) translateX(-50%)` }} dir="rtl">
-            <div className="wk-tooltip-title">{hover === n - 1 ? "این هفته" : `هفته‌ی ${jalaliShort(trend[hover].weekStart)}`}</div>
+            <div className="wk-tooltip-title">{hover === n - 1 && offset === 0 ? "این هفته" : `هفته‌ی ${jalaliShort(trend[hover].weekStart)}`}</div>
             <div>
               {active === "overall" ? "کل" : ANALYSIS_DOMAIN_LABELS[active]}: <b className="wk-num">{hv === null ? "—" : Math.round(hv)}</b>
             </div>

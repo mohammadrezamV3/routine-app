@@ -1,9 +1,10 @@
 "use client";
 
 import { motion } from "framer-motion";
-import { Activity } from "lucide-react";
+import { useMemo } from "react";
+import { Activity, Crown } from "lucide-react";
 import type { DayCell } from "@/lib/weeklyAnalysis/types";
-import { Liquid, Num, V_WK_CARD, jalaliShort, scoreGrad, useMounted, weekdayLetter } from "./WeeklyAnalysisKit";
+import { Liquid, Num, SectionHead, V_WK_CARD, jalaliShort, scoreGrad, useSeen, weekdayLetter } from "./WeeklyAnalysisKit";
 
 // ریتم هفته: هفت ستون مایع (شنبه سمت راست) با امتیاز روز. نشانگر توخالی هر
 // ستون = امتیاز همون روز در هفته‌ی قبل (prevDays). امروز یک نقطه‌ی ضربان
@@ -11,19 +12,31 @@ import { Liquid, Num, V_WK_CARD, jalaliShort, scoreGrad, useMounted, weekdayLett
 export function WeeklyAnalysisRhythm({
   days, prevDays, selected, onPick,
 }: { days: DayCell[]; prevDays: (number | null)[]; selected: number | null; onPick: (i: number) => void }) {
-  const ready = useMounted();
+  const [seenRef, ready] = useSeen<HTMLDivElement>();
   const hasPrev = prevDays.some((v) => v !== null);
+  // بهترین روز (تاج بالای عددش): فقط وقتی حداقل دو روز امتیاز دارن و برنده یکتاست
+  const bestIdx = useMemo(() => {
+    let best = -1;
+    let count = 0;
+    days.forEach((d, i) => {
+      if (d.isFuture || d.score === null) return;
+      count++;
+      if (best < 0 || d.score > (days[best].score as number)) best = i;
+    });
+    if (count < 2 || best < 0) return -1;
+    const top = days[best].score as number;
+    return days.filter((d) => !d.isFuture && d.score === top).length === 1 ? best : -1;
+  }, [days]);
 
   return (
     <motion.section className="wk-card wk-rhythm" variants={V_WK_CARD} aria-label="ریتم هفته">
-      <header className="wk-card-head">
-        <h2 className="wk-card-title"><Activity size={16} className="wk-title-icon" />ریتم هفته</h2>
-        {hasPrev && (
-          <span className="wk-legend"><i className="wk-legend-ghost" />همین روز هفته‌ی قبل</span>
-        )}
-      </header>
+      <SectionHead
+        icon={<Activity size={15} />}
+        title="ریتم هفته"
+        aside={hasPrev ? <span className="wk-legend"><i className="wk-legend-ghost" />همین روز هفته‌ی قبل</span> : undefined}
+      />
 
-      <div className="wk-rh-chart" role="group" aria-label="امتیاز روزهای هفته">
+      <div ref={seenRef} className="wk-rh-chart" role="group" aria-label="امتیاز روزهای هفته">
         <div className="wk-rh-grid" aria-hidden="true">
           <span style={{ ["--g" as string]: 100 }}>100</span>
           <span style={{ ["--g" as string]: 50 }}>50</span>
@@ -38,11 +51,12 @@ export function WeeklyAnalysisRhythm({
               <button
                 key={d.date}
                 type="button"
-                className={`wk-ghost wk-rh-col${d.isToday ? " is-today" : ""}${d.isFuture ? " is-future" : ""}${selected === i ? " is-sel" : ""}`}
+                className={`wk-ghost wk-rh-col${bestIdx === i ? " is-best" : ""}${d.isToday ? " is-today" : ""}${d.isFuture ? " is-future" : ""}${selected === i ? " is-sel" : ""}`}
                 onClick={() => onPick(i)}
                 aria-label={`${d.weekday} ${jalaliShort(d.date)}: ${label}`}
                 aria-pressed={selected === i}
               >
+                {bestIdx === i && <Crown size={14} className="wk-rh-crown" aria-label="بهترین روز" />}
                 <span className="wk-rh-val">{score === null ? <span className="wk-muted-sm">—</span> : <Num value={Math.round(score)} duration={0.7} />}</span>
                 <span className="wk-rh-plot">
                   <Liquid pct={score} grad={scoreGrad(score)} ready={ready} delay={i * 50} className={`wk-rh-liquid${d.isFuture ? " is-future" : ""}`} />

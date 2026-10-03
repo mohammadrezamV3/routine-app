@@ -63,7 +63,7 @@ function DomainCard({
     <motion.div
       variants={V_WK_CARD}
       className={`wk-card wk-domain${expanded ? " is-open" : ""}${d.hasData ? "" : " is-empty"}`}
-      style={{ ["--wk-dc" as string]: `var(--wk-d-${d.domain}-a)` }}
+      style={{ ["--wk-dc" as string]: grad[0], ["--wk-dc2" as string]: grad[1] }}
     >
       <button
         type="button"

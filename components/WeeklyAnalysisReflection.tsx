@@ -6,7 +6,7 @@ import { Check, NotebookPen } from "lucide-react";
 import type { ReflectionDto } from "@/lib/weeklyAnalysis/types";
 import { SegmentedTabs } from "./SegmentedTabs";
 import { Spinner } from "./Spinner";
-import { V_WK_CARD, waFetch } from "./WeeklyAnalysisKit";
+import { SectionHead, V_WK_CARD, waFetch } from "./WeeklyAnalysisKit";
 
 const MOODS = [
   { value: "1", label: "😞" },
@@ -88,12 +88,15 @@ export function WeeklyAnalysisReflection({
 
   return (
     <motion.section id="reflection" className="wk-card wk-reflection" variants={V_WK_CARD} aria-label="مرور هفته">
-      <header className="wk-card-head">
-        <h2 className="wk-card-title"><NotebookPen size={16} className="wk-title-icon" />مرور هفته</h2>
-        <span className={`wk-save-state ${state}`} aria-live="polite">
-          {state === "saving" ? <Spinner size={12} label={null} /> : state === "saved" ? <><Check size={12} />ذخیره شد</> : state === "error" ? "ذخیره نشد" : null}
-        </span>
-      </header>
+      <SectionHead
+        icon={<NotebookPen size={15} />}
+        title="مرور هفته"
+        aside={
+          <span className={`wk-save-state ${state}`} aria-live="polite">
+            {state === "saving" ? <Spinner size={12} label={null} /> : state === "saved" ? <><Check size={12} />ذخیره شد</> : state === "error" ? "ذخیره نشد" : null}
+          </span>
+        }
+      />
 
       <div className="wk-reflection-grid">
         <label className="wk-field">

@@ -4,7 +4,7 @@ import { motion } from "framer-motion";
 import { Award, Lock } from "lucide-react";
 import type { Achievement } from "@/lib/weeklyAnalysis/types";
 import { GradientRing } from "./GradientRing";
-import { LazyRing, V_WK_CARD } from "./WeeklyAnalysisKit";
+import { LazyRing, SectionHead, V_WK_CARD } from "./WeeklyAnalysisKit";
 
 // دستاوردهای همین هفته — حلقه‌ی دور هر نشان: بازشده = پر (گرادیان سبز)،
 // قفل = به نسبت پیشرفت (کهربایی). بازشده‌ها اول؛ ترتیب موتور حفظ می‌شه.
@@ -15,10 +15,11 @@ export function WeeklyAnalysisAchievements({ achievements }: { achievements: Ach
 
   return (
     <motion.section className="wk-card wk-ach" variants={V_WK_CARD} aria-label="دستاوردهای هفته">
-      <header className="wk-card-head">
-        <h2 className="wk-card-title"><Award size={16} className="wk-title-icon" />دستاوردهای هفته</h2>
-        <span className="wk-muted-sm"><span className="wk-num">{unlocked}/{achievements.length}</span> باز شده</span>
-      </header>
+      <SectionHead
+        icon={<Award size={15} />}
+        title="دستاوردهای هفته"
+        aside={<span className="wk-muted-sm"><span className="wk-num">{unlocked}/{achievements.length}</span> باز شده</span>}
+      />
       <ul className="wk-ach-grid">
         {sorted.map((a, i) => {
           const ratio = a.unlocked ? 1 : a.progress && a.progress.target > 0 ? Math.min(1, a.progress.current / a.progress.target) : 0;

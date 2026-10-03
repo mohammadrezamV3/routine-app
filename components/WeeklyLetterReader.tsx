@@ -6,7 +6,10 @@
 import { useCallback, useEffect, useMemo, useState } from "react";
 import Link from "next/link";
 import { MotionConfig, motion, useScroll, useSpring } from "framer-motion";
-import { ArrowLeft, ArrowRight, Newspaper } from "lucide-react";
+import {
+  ArrowLeft, ArrowRight, Award, CalendarDays, Compass, LayoutGrid, Lightbulb, Newspaper, PenLine, Sparkles, Target, Trophy, BarChart3,
+  type LucideIcon,
+} from "lucide-react";
 import type { WeeklyLetterData } from "@/lib/weeklyLetter/types";
 import { weekLabelFa } from "@/lib/weeklyAnalysis/week";
 import { Chapter, Reveal, WeeklyLetterGate, WlError, wlFetch } from "./WeeklyLetterShared";
@@ -18,7 +21,14 @@ import { WeeklyLetterDomains } from "./WeeklyLetterDomains";
 import {
   WeeklyLetterAchievements, WeeklyLetterCoach, WeeklyLetterGoals, WeeklyLetterInsights, WeeklyLetterNext, WeeklyLetterReflection, WeeklyLetterWins,
 } from "./WeeklyLetterStory";
+import { WeeklyLetterStories } from "./WeeklyLetterStories";
+import { buildStorySlides } from "./WeeklyLetterStoriesData";
 import { normalizeLetter, offsetOfWeek } from "./WeeklyLetterUtils";
+
+const CH_ICONS: Record<string, LucideIcon> = {
+  "wl-numbers": BarChart3, "wl-days": CalendarDays, "wl-domains": LayoutGrid, "wl-insights": Lightbulb, "wl-wins": Trophy,
+  "wl-goals": Target, "wl-ach": Award, "wl-coach": Sparkles, "wl-refl": PenLine, "wl-next": Compass,
+};
 
 type Payload = { letter: WeeklyLetterData; prev: string | null; next: string | null };
 
@@ -68,6 +78,8 @@ function IssueNav({ prev, next }: { prev: string | null; next: string | null }) 
 function LetterBody({ data }: { data: Payload }) {
   const { letter, prev, next } = data;
   const offset = useMemo(() => offsetOfWeek(letter.weekStart), [letter.weekStart]);
+  const [storyOpen, setStoryOpen] = useState(false);
+  const slides = useMemo(() => buildStorySlides(letter), [letter]);
 
   const chapters = useMemo(() => {
     const c: (TocItem & { show: boolean })[] = [
@@ -92,56 +104,57 @@ function LetterBody({ data }: { data: Payload }) {
       <div className="wl-top">
         <Link href="/analysis/weekly/letters" className="wl-back"><ArrowRight size={16} />همه‌ی شماره‌ها</Link>
       </div>
-      <WeeklyLetterCover letter={letter} />
+      <WeeklyLetterCover letter={letter} storyCount={slides.length} onPlayStory={() => setStoryOpen(true)} />
+      <WeeklyLetterStories open={storyOpen} onClose={() => setStoryOpen(false)} letter={letter} slides={slides} offset={offset} />
       <WeeklyLetterToc items={chapters} />
 
       <div className="wl-chapters">
         {chapters.some((c) => c.id === "wl-numbers") && (
-          <Chapter id="wl-numbers" no={no("wl-numbers")} title="خلاصه در اعداد">
+          <Chapter id="wl-numbers" no={no("wl-numbers")} icon={CH_ICONS["wl-numbers"]} title="خلاصه در اعداد">
             <WeeklyLetterNumbers numbers={letter.numbers} trend={letter.trend} />
           </Chapter>
         )}
         {letter.days.length > 0 && (
-          <Chapter id="wl-days" no={no("wl-days")} title="روزبه‌روز">
+          <Chapter id="wl-days" no={no("wl-days")} icon={CH_ICONS["wl-days"]} title="روزبه‌روز">
             <WeeklyLetterTimeline days={letter.days} domains={letter.domains} />
           </Chapter>
         )}
         {letter.domains.length > 0 && (
-          <Chapter id="wl-domains" no={no("wl-domains")} title="فصل‌ها">
+          <Chapter id="wl-domains" no={no("wl-domains")} icon={CH_ICONS["wl-domains"]} title="فصل‌ها">
             <WeeklyLetterDomains domains={letter.domains} />
           </Chapter>
         )}
         {letter.insights.length > 0 && (
-          <Chapter id="wl-insights" no={no("wl-insights")} title="بینش‌ها">
+          <Chapter id="wl-insights" no={no("wl-insights")} icon={CH_ICONS["wl-insights"]} title="بینش‌ها">
             <WeeklyLetterInsights insights={letter.insights} />
           </Chapter>
         )}
         {(letter.wins.length > 0 || letter.improve.length > 0) && (
-          <Chapter id="wl-wins" no={no("wl-wins")} title="بردها و جای پیشرفت">
+          <Chapter id="wl-wins" no={no("wl-wins")} icon={CH_ICONS["wl-wins"]} title="بردها و جای پیشرفت">
             <WeeklyLetterWins wins={letter.wins} improve={letter.improve} />
           </Chapter>
         )}
         {letter.goals.length > 0 && (
-          <Chapter id="wl-goals" no={no("wl-goals")} title="اهداف">
+          <Chapter id="wl-goals" no={no("wl-goals")} icon={CH_ICONS["wl-goals"]} title="اهداف">
             <WeeklyLetterGoals goals={letter.goals} />
           </Chapter>
         )}
         {(letter.achievements.length > 0 || letter.streak) && (
-          <Chapter id="wl-ach" no={no("wl-ach")} title="دستاوردها">
+          <Chapter id="wl-ach" no={no("wl-ach")} icon={CH_ICONS["wl-ach"]} title="دستاوردها">
             <WeeklyLetterAchievements achievements={letter.achievements} streak={letter.streak} />
           </Chapter>
         )}
         {letter.ai && (
-          <Chapter id="wl-coach" no={no("wl-coach")} title="حرف مربی">
+          <Chapter id="wl-coach" no={no("wl-coach")} icon={CH_ICONS["wl-coach"]} title="حرف مربی">
             <WeeklyLetterCoach ai={letter.ai} />
           </Chapter>
         )}
         {letter.reflection && (
-          <Chapter id="wl-refl" no={no("wl-refl")} title="یادداشت خودت">
+          <Chapter id="wl-refl" no={no("wl-refl")} icon={CH_ICONS["wl-refl"]} title="یادداشت خودت">
             <WeeklyLetterReflection reflection={letter.reflection} />
           </Chapter>
         )}
-        <Chapter id="wl-next" no={no("wl-next")} title="هفته‌ی بعد">
+        <Chapter id="wl-next" no={no("wl-next")} icon={CH_ICONS["wl-next"]} title="هفته‌ی بعد">
           <WeeklyLetterNext letter={letter} offset={offset} />
         </Chapter>
       </div>
