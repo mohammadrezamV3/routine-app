@@ -707,7 +707,7 @@ a.db-tl-name{ text-decoration:underline dotted color-mix(in srgb, var(--ring-1a)
 .db-cd-clock{ display:flex; gap:5px; flex-shrink:0; }
 .db-cd-cell{ display:flex; flex-direction:column; align-items:center; min-width:38px; padding:6px 4px; border-radius:11px; border:1px solid var(--box-line); }
 .db-cd-cell b{ font-family:var(--font-latin), sans-serif; font-size:17px; font-weight:800; font-variant-numeric:tabular-nums; }
-.db-cd-cell em{ font-style:normal; font-size:9px; color:var(--muted); font-family:var(--font-vazir), sans-serif; }
+.db-cd-cell em{ font-style:normal; font-size:9px; color:var(--muted); font-family:var(--font-latin), var(--font-vazir), sans-serif; }
 .db-ev-list{ list-style:none; display:flex; flex-direction:column; margin-top:6px; }
 .db-ev{ display:grid; grid-template-columns:auto auto 1fr auto; align-items:center; gap:8px; padding:7px 2px; border-bottom:1px solid var(--box-line); font-size:11.5px; }
 .db-ev:last-child{ border-bottom:none; }
