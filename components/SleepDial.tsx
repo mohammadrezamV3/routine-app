@@ -1,7 +1,7 @@
 "use client";
 
 import "./sleep-dial.css";
-import { useEffect, useId, useState } from "react";
+import { useEffect, useId, useMemo, useState } from "react";
 import { motion, useReducedMotion } from "framer-motion";
 import { Moon, Sun } from "lucide-react";
 import { faNum } from "@/lib/jalali";
@@ -10,6 +10,8 @@ import {
   sleepMinutes, sleepPhase, wakeTimesFor, type SleepRecord,
 } from "@/lib/sleep";
 import { arcPath, hhmmToMin, minuteToAngle, pointAt } from "@/lib/sleepDial";
+import { cycleBoundaries } from "@/lib/sleepCycles";
+import { SleepCycleButton } from "./SleepCycleButton";
 import { startTracking, stopTracking, type SleepTracking } from "@/lib/sleepTracker";
 
 // هیروی بخش خواب: صفحه‌ی ساعت 24 ساعته (نیمه‌شب بالا). قوس پهن = پنجره‌ی هدف
@@ -45,6 +47,9 @@ export function SleepDial({
   onLog,
   onWakeUp,
   onEditGoal,
+  latency = 15,
+  onOpenCycles,
+  onPreloadCycles,
 }: {
   loaded: boolean;
   target: { wake: string; sleep: string };
@@ -54,6 +59,10 @@ export function SleepDial({
   onLog: () => void;
   onWakeUp: () => void;
   onEditGoal: () => void;
+  /** زمان به خواب رفتن (دقیقه) برای مرز چرخه‌ها */
+  latency?: number;
+  onOpenCycles?: () => void;
+  onPreloadCycles?: () => void;
 }) {
   const uid = useId().replace(/:/g, "");
   const reduce = useReducedMotion();
@@ -113,13 +122,14 @@ export function SleepDial({
 
   // یک خط راهنما فقط شب: بهترین ساعت‌های بیداری اگه همین الان بخوابی
   const wakeHint = !tracking && (phase === "bedtime" || phase === "night" || phase === "winddown") && nowMin !== null
-    ? wakeTimesFor(Math.floor(nowMin)).slice(0, 2).reverse().map((w) => w.clock)
+    ? wakeTimesFor(Math.floor(nowMin), latency).slice(0, 2).reverse().map((w) => w.clock)
     : null;
 
   const nowAngle = nowMin !== null ? minuteToAngle(nowMin) : 0;
   const nowPt = pointAt(C, R_GOAL, nowAngle);
   const bedPt = pointAt(C, R_GOAL, minuteToAngle(bedMin));
   const wakePt = pointAt(C, R_GOAL, minuteToAngle(wakeMin));
+  const cycleDots = useMemo(() => cycleBoundaries(bedMin, wakeMin, latency).map((m) => pointAt(C, R_GOAL, minuteToAngle(m))), [bedMin, wakeMin, latency]);
   const draw = reduce ? { duration: 0 } : { duration: 1.2, ease: EASE };
 
   return (
@@ -156,6 +166,16 @@ export function SleepDial({
             animate={{ pathLength: 1 }}
             transition={draw}
           />
+
+          {/* مرز چرخه‌های 90 دقیقه‌ای روی قوس هدف */}
+          <motion.g
+            aria-hidden="true"
+            initial={{ opacity: reduce ? 1 : 0 }}
+            animate={{ opacity: 1 }}
+            transition={reduce ? { duration: 0 } : { duration: 0.6, delay: 1 }}
+          >
+            {cycleDots.map((p, i) => <circle key={i} cx={p.x} cy={p.y} r={2.2} className="sld-cyc" />)}
+          </motion.g>
 
           {/* خواب واقعی دیشب یا ردیاب زنده */}
           {loaded && tracking && nowMin !== null && (
@@ -210,6 +230,8 @@ export function SleepDial({
           اگه الان بخوابی، بهترین ساعت بیداری: <b>{wakeHint[0]}</b> یا <b>{wakeHint[1]}</b>
         </p>
       )}
+
+      {onOpenCycles && <SleepCycleButton onClick={onOpenCycles} onPreload={onPreloadCycles} />}
 
       <div className="sld-actions">
         {tracking ? (

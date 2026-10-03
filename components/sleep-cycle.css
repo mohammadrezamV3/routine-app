@@ -1,0 +1,93 @@
+/* چرخه‌های خواب: چیپ ورودی روی صفحه‌ی ساعت + پنجره‌ی SleepCycleSheet.
+   هیچ بک‌گراندی به عنصری اضافه نشده: فقط بوردر و رنگ متن؛ نشانه‌های ریز SVG‌ان. */
+
+body[data-theme="light"] .slc-chip, body:not([data-theme="light"]) .slc-chip{
+  background:none; box-shadow:none; backdrop-filter:none; -webkit-backdrop-filter:none;
+}
+@media (hover:hover){
+  body[data-theme="light"] .slc-chip:hover, body:not([data-theme="light"]) .slc-chip:hover{ background:none; box-shadow:none; }
+}
+.slc-chip{
+  align-self:center; display:inline-flex; align-items:center; gap:6px; padding:6px 10px; border:none;
+  color:var(--accent); font-size:13px; font-weight:700; cursor:pointer;
+}
+.slc-chip svg{ width:17px; height:17px; flex:none; }
+
+.slc-panel{ max-width:460px; display:flex; flex-direction:column; gap:12px; padding-block:18px; }
+.slc-panel .modal-head{ margin:0; }
+.slc-intro{ margin:0; font-size:12.5px; line-height:1.9; color:var(--muted); }
+.slc-tabs{ width:100%; }
+.slc-section{ display:flex; flex-direction:column; gap:12px; }
+.slc-q{ margin:0; font-size:14px; font-weight:800; line-height:1.8; }
+.slc-q [dir="ltr"]{ font-variant-numeric:tabular-nums; }
+.slc-hint{ margin:0; font-size:12.5px; line-height:1.9; color:var(--muted); }
+
+/* انتخاب ساعت: جمله‌ی دو تکه با فیلد استاندارد وسطش */
+.slc-field{ display:flex; align-items:center; flex-wrap:wrap; gap:8px; font-size:13px; font-weight:700; }
+.slc-field > span{ white-space:nowrap; }
+.slc-field input{ width:92px; flex:none; text-align:center; direction:ltr; font-variant-numeric:tabular-nums; }
+
+/* فهرست گزینه‌ها */
+.slc-list{ list-style:none; margin:0; padding:0; display:flex; flex-direction:column; gap:8px; }
+.slc-row{
+  position:relative; display:grid; grid-template-columns:auto 1fr auto; align-items:center; gap:12px;
+  padding:10px 14px; border-radius:16px; border:1px solid var(--box-line); min-width:0;
+}
+.slc-row.is-best{ border-color:color-mix(in srgb, var(--slp-ink) 70%, var(--box-line)); }
+.slc-clock{ font-size:22px; font-weight:900; font-variant-numeric:tabular-nums; letter-spacing:.3px; min-width:64px; }
+.slc-meta{ display:flex; flex-direction:column; line-height:1.4; min-width:0; }
+.slc-cyc{ font-size:13px; font-weight:800; }
+.slc-meta small{ font-size:11.5px; color:var(--muted); font-weight:600; }
+.slc-pips{ width:46px; height:6px; display:block; color:var(--slp-ink); }
+.slc-pips .on{ fill:currentColor; }
+.slc-pips .off{ fill:currentColor; opacity:.18; }
+.slc-badge{
+  position:absolute; inset-block-start:-9px; inset-inline-end:12px; padding:0 8px; font-size:10.5px; font-weight:800;
+  line-height:18px; color:var(--slp-ink); border-radius:9px;
+}
+.slc-row.is-best{ margin-top:2px; }
+.slc-badge{ border:1px solid color-mix(in srgb, var(--slp-ink) 60%, transparent); }
+
+/* دیشب */
+.slc-last-head{ display:flex; align-items:baseline; justify-content:space-between; gap:10px; flex-wrap:wrap; }
+.slc-last-big{ font-size:22px; font-weight:900; }
+.slc-last-big [dir="ltr"]{ font-variant-numeric:tabular-nums; display:inline-block; }
+.slc-last-head small{ font-size:12px; color:var(--muted); font-weight:600; }
+.slc-verdict{
+  display:flex; flex-direction:column; gap:2px; padding:10px 14px; border-radius:16px;
+  border:1px solid var(--box-line); border-inline-start-width:3px;
+}
+.slc-verdict b{ font-size:13px; font-weight:800; }
+.slc-verdict span{ font-size:12px; line-height:1.8; color:var(--muted); }
+.slc-verdict.is-good{ border-inline-start-color:var(--slp-great); }
+.slc-verdict.is-good b{ color:var(--slp-great); }
+.slc-verdict.is-ok{ border-inline-start-color:var(--slp-good); }
+.slc-verdict.is-ok b{ color:var(--slp-good); }
+.slc-verdict.is-groggy{ border-inline-start-color:var(--slp-fair); }
+.slc-verdict.is-groggy b{ color:var(--slp-fair); }
+.slc-hypno-head{ display:flex; align-items:center; justify-content:space-between; font-size:12.5px; font-weight:700; }
+.slc-hypno-head em{ font-style:normal; font-size:11px; color:var(--muted); border:1px solid var(--box-line); border-radius:9px; padding:0 8px; line-height:18px; }
+
+.slc-hypno{ display:flex; flex-direction:column; gap:4px; }
+.slc-hypno-body{ display:grid; grid-template-columns:34px minmax(0,1fr); gap:6px; align-items:stretch; }
+.slc-hypno-labels{ position:relative; }
+.slc-hypno-labels span{ position:absolute; inset-inline-start:0; transform:translateY(-50%); font-size:10px; font-weight:700; color:var(--muted); line-height:1; white-space:nowrap; }
+.slc-hypno-svg{ display:block; width:100%; height:auto; overflow:visible; }
+.slc-hypno-grid{ stroke:var(--box-line); stroke-width:1; }
+.slc-hypno-cut{ stroke:var(--muted); stroke-width:1; stroke-dasharray:2 4; opacity:.35; }
+.slc-hypno-line{ fill:none; stroke-width:2.5; stroke-linecap:round; stroke-linejoin:round; }
+.slc-hypno-axis{ display:flex; justify-content:space-between; padding-inline-start:40px; font-size:11px; color:var(--muted); font-variant-numeric:tabular-nums; font-weight:600; }
+
+/* زمان به خواب رفتن */
+.slc-latency{ display:flex; flex-direction:column; gap:8px; padding-top:12px; border-top:1px solid var(--box-line); }
+.slc-latency-title{ font-size:12.5px; font-weight:700; color:var(--muted); }
+.slc-latency-tabs{ width:100%; }
+
+@media (max-width:360px){
+  .slc-row{ gap:8px; padding-inline:10px; }
+  .slc-clock{ font-size:20px; min-width:56px; }
+  .slc-pips{ width:38px; }
+}
+
+/* مرز چرخه‌ها روی قوس هدف صفحه‌ی ساعت */
+.sld-cyc{ fill:#fff; opacity:.85; }
