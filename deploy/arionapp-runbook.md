@@ -109,6 +109,8 @@ crontab -e
 
 ```cron
 30 5 * * 6 curl -fsS -X POST -H "Authorization: Bearer <CRON_SECRET>" https://arionapp.ir/api/cron/weekly-report >/dev/null 2>&1
+# هفته‌نامه (weekly-report) هم الان با زمان‌بند داخلی ساخته می‌شه (هر ۱۰ دقیقه، از شنبه
+# ۸ صبح به وقت هر کاربر)؛ خط بالا فقط پشتیبانه و دوباره‌زدنش شماره‌ی تکراری نمی‌سازه.
 # یادآوری‌ها (send-reminders) و هشدار اخبار (economic-alerts) دیگه کران نمی‌خوان —
 # خود سرور هر ۳۰ ثانیه می‌فرسته (lib/pushScheduler.ts).
 0 4 * * * cd /opt/routine-app && docker compose exec -T db pg_dump -U routine -Fc routine > ~/backups/arion-$(date +\%F).dump 2>/dev/null && find ~/backups -name 'arion-*.dump' -mtime +14 -delete

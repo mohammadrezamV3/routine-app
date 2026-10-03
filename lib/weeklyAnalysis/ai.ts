@@ -17,10 +17,11 @@ import {
   WEEKLY_ANALYSIS_AI_MODEL,
 } from "@/lib/aiClient";
 import { logError } from "@/lib/errorLog";
-import { ANALYSIS_DOMAIN_LABELS, AnalysisDomain, AiCoach, WeeklyAnalysis } from "@/lib/weeklyAnalysis/types";
+import { ANALYSIS_DOMAIN_LABELS, AnalysisDomain, AiCoach } from "@/lib/weeklyAnalysis/types";
+import type { WeeklyAnalysisBase } from "@/lib/weeklyAnalysis/compute";
 
 /** ورودی کافی برای مربی AI — همون WeeklyAnalysis منهای چیزهایی که خود AI قراره پر کنه. */
-export type WeeklyAnalysisForAi = Omit<WeeklyAnalysis, "ai" | "aiAvailable" | "goals" | "nextWeekGoals" | "reflection">;
+export type WeeklyAnalysisForAi = WeeklyAnalysisBase;
 
 /** true یعنی گیت‌وی AI تنظیم شده — بدونش این فیچر اصلا فراخوانی نمی‌شه. */
 export function isAiAvailable(): boolean {

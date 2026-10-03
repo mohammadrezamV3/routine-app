@@ -109,6 +109,7 @@ function cells(scores: (number | null)[], future = 0): DayCell[] {
     score: i >= 7 - future ? null : s,
     isToday: false,
     isFuture: i >= 7 - future,
+    details: {},
   }));
 }
 
@@ -211,19 +212,81 @@ describe("domain helpers", () => {
   const env = { timezone: "UTC", todayIso: "2026-09-21" };
   const weeks = [{ weekStartIso: "2026-09-19", days: daysOfWeekIso("2026-09-19") }];
 
-  it("روتین: روز آینده null، امروز بی‌تیک null", () => {
+  // هر روز هفته دو برنامه (a, b) با شناسه‌ی جدا؛ jsDay: شنبه=6 ... جمعه=5
+  const custom = [6, 0, 1, 2, 3, 4, 5].flatMap((jsDay) => [
+    { id: `a${jsDay}`, name: "الف", jsDay, time: "10:00" },
+    { id: `b${jsDay}`, name: "ب", jsDay, time: "11:00" },
+  ]);
+  const base = { custom, removed: new Set<string>(), createdIso: null as string | null };
+
+  it("روتین: درصد = تیک‌خورده ÷ برنامه‌های زمان‌بندی‌شده؛ روز آینده null، امروز بی‌تیک null", () => {
     const [w] = routineWeeks(
-      [
-        { date: new Date("2026-09-19T00:00:00Z"), completedItems: { a: true, b: true } },
-        { date: new Date("2026-09-20T00:00:00Z"), completedItems: { a: true, b: false } },
-        { date: new Date("2026-09-21T00:00:00Z"), completedItems: { a: false, b: false } },
-      ],
+      {
+        ...base,
+        rows: [
+          { date: new Date("2026-09-19T00:00:00Z"), completedItems: { a6: true, b6: true } },
+          { date: new Date("2026-09-20T00:00:00Z"), completedItems: { a0: true, b0: false } },
+          { date: new Date("2026-09-21T00:00:00Z"), completedItems: {} },
+        ],
+      },
       weeks,
       env
     );
     expect(w.result.daily).toEqual([100, 50, null, null, null, null, null]);
     expect(w.result.score).toBe(75);
     expect(w.meta.perfectDays).toBe(1);
+    expect(w.details[0].routine).toEqual({ done: 2, total: 2 });
+    // امروز: امتیاز نداره ولی جزئیاتش (0 از 2) هست
+    expect(w.details[2].routine).toEqual({ done: 0, total: 2 });
+  });
+
+  it("روتین: روز گذشته با برنامه و بدون هیچ ردیفی صفره (باگ قدیمی: null)", () => {
+    const [w] = routineWeeks({ ...base, rows: [] }, weeks, { timezone: "UTC", todayIso: "2026-09-22" });
+    expect(w.result.daily.slice(0, 4)).toEqual([0, 0, 0, null]); // شنبه تا دوشنبه صفر، امروز (سه‌شنبه) بی‌تیک null
+    expect(w.result.hasData).toBe(true);
+    expect(w.result.score).toBe(0);
+  });
+
+  it("روتین: برنامه‌ی حذف‌شده، روز بی‌برنامه و قبل از ساخت حساب حساب نمی‌شن", () => {
+    const [w] = routineWeeks(
+      {
+        rows: [{ date: new Date("2026-09-20T00:00:00Z"), completedItems: { a0: true } }],
+        custom: [
+          { id: "a0", name: "الف", jsDay: 0, time: "10:00" },
+          { id: "b0", name: "ب", jsDay: 0, time: "11:00" },
+          { id: "x6", name: "فقط شنبه", jsDay: 6, time: "09:00" },
+        ],
+        removed: new Set(["b0|0"]),
+        createdIso: "2026-09-20",
+      },
+      weeks,
+      { timezone: "UTC", todayIso: "2026-09-23" }
+    );
+    // شنبه قبل از ساخت حساب، یکشنبه فقط a0 (b0 حذف شده) و تیک خورده، بقیه روزها برنامه ندارن
+    expect(w.result.daily).toEqual([null, 100, null, null, null, null, null]);
+  });
+
+  it("روتین: تیک زودتر از ساخت حساب (داده‌ی منتقل‌شده‌ی مهمان) شروع واقعی رو جلو می‌بره", () => {
+    const [w] = routineWeeks(
+      { ...base, rows: [{ date: new Date("2026-09-19T00:00:00Z"), completedItems: { a6: true, b6: true } }], createdIso: "2026-09-21" },
+      weeks,
+      { timezone: "UTC", todayIso: "2026-09-22" }
+    );
+    expect(w.result.daily.slice(0, 3)).toEqual([100, 0, 0]);
+  });
+
+  it("روتین: برنامه‌ی لیستی با کلید خود برنامه (همه‌ی آیتم‌ها) شمرده می‌شه", () => {
+    const [w] = routineWeeks(
+      {
+        rows: [{ date: new Date("2026-09-19T00:00:00Z"), completedItems: { l6: true, "l6~i1": true, "l6~i2": true } }],
+        custom: [{ id: "l6", name: "خرید", jsDay: 6, time: "10:00", items: [{ id: "i1", name: "نون" }, { id: "i2", name: "شیر" }] } as any],
+        removed: new Set(),
+        createdIso: null,
+      },
+      weeks,
+      env
+    );
+    expect(w.result.daily[0]).toBe(100);
   });
 
   it("کارها: عقب‌افتاده و انجام دیرهنگام", () => {
