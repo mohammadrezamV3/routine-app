@@ -29,7 +29,7 @@ export const DEFAULT_EVENT_DISCOUNT_STATE: EventDiscountState = {
   generated: {},
 };
 
-/** پیشوند کد هر مناسبت؛ کد = پیشوند + سال شمسی شروع وقوع (مثلا NOWRUZ1406) */
+/** پیشوند کد هر مناسبت؛ کد = پیشوند + سال شمسی روز پایان وقوع (مثلا NOWRUZ1406) */
 export const EVENT_CODE_PREFIX: Record<string, string> = {
   mehregan: "MEHREGAN",
   halloween: "HALLOWEEN",
@@ -82,11 +82,11 @@ export function occurrenceKey(themeId: string, occ: EventOccurrence): string {
 
 /**
  * اسم کد یک وقوع: EVENT_CODE_PREFIX (یا شناسه‌ی تم با حروف بزرگ و بدون
- * کاراکتر غیر A-Z0-9) + سال شمسی روز start. همیشه با /^[A-Z0-9_-]{3,32}$/ می‌خونه.
+ * کاراکتر غیر A-Z0-9) + سال شمسی روز end (نوروزی که از اسفند شروع می‌شه کد سال نو می‌گیره). همیشه با /^[A-Z0-9_-]{3,32}$/ می‌خونه.
  */
 export function eventDiscountCode(theme: EventTheme, occ: EventOccurrence): string {
   const prefix = EVENT_CODE_PREFIX[theme.id] ?? (theme.id.toUpperCase().replace(/[^A-Z0-9]/g, "") || "EVENT");
-  const [y, m, d] = occ.start.split("-").map(Number);
+  const [y, m, d] = occ.end.split("-").map(Number);
   const jy = toJalali(y, m, d)[0];
   return `${prefix}${jy}`;
 }

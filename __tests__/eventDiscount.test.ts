@@ -91,7 +91,7 @@ describe("تخفیف مناسبت‌ها - pending", () => {
     const [p] = pendingEventDiscounts(st({ percent: 30 }), nowruz, at("2027-03-20T08:00:00Z"));
     expect(p.themeId).toBe("nowruz");
     expect(p.key).toBe("nowruz:2027-03-18");
-    expect(p.code).toBe("NOWRUZ1405"); // 18 مارس هنوز اسفند 1405 است
+    expect(p.code).toBe("NOWRUZ1406"); // شروع اسفند 1405، پایان فروردین 1406 → سال پایان
     expect(p.percent).toBe(30);
     expect(p.expiresAt.toISOString()).toBe("2027-04-01T20:29:59.999Z");
   });
