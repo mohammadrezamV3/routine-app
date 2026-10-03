@@ -54,3 +54,15 @@ describe("summarizeSleep", () => {
     expect(s.debtMin).toBe(0);
   });
 });
+
+import { isFutureWake } from "@/lib/sleep";
+describe("isFutureWake", () => {
+  const now = new Date(2026, 9, 3, 3, 0);
+  it("flags a wake time well after now", () => {
+    expect(isFutureWake(new Date(2026, 9, 3, 7, 0), now)).toBe(true);
+  });
+  it("allows past and near-now wake times", () => {
+    expect(isFutureWake(new Date(2026, 9, 3, 2, 0), now)).toBe(false);
+    expect(isFutureWake(new Date(2026, 9, 3, 3, 4), now)).toBe(false);
+  });
+});

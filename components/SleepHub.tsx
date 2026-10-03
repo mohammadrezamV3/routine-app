@@ -32,7 +32,7 @@ export const SLEEP_LOAD_DAYS = 120;
 type SheetState = { initial: SleepLogSheetProps["initial"]; existing: boolean; fromTracker?: boolean } | null;
 
 export function SleepHub() {
-  const [todayIso, setTodayIso] = useState(() => isoLocal(new Date()));
+  const [todayIso, setTodayIso] = useState("");
   const [entries, setEntries] = useState<SleepRecord[]>([]);
   const [loaded, setLoaded] = useState(false);
   const [target, setTarget] = useState({ wake: DEFAULT_WAKE, sleep: DEFAULT_SLEEP });
@@ -43,6 +43,7 @@ export function SleepHub() {
 
   // امروز با گذشتن نیمه‌شب (صفحه‌ی باز) عوض می‌شه
   useEffect(() => {
+    setTodayIso(isoLocal(new Date()));
     const t = setInterval(() => setTodayIso((p) => { const n = isoLocal(new Date()); return n === p ? p : n; }), 30_000);
     return () => clearInterval(t);
   }, []);
@@ -70,7 +71,7 @@ export function SleepHub() {
     return () => { window.removeEventListener(TRACKER_EVENT, sync); window.removeEventListener("storage", sync); };
   }, []);
 
-  const insights = useMemo(() => sleepInsights(entries, target, todayIso), [entries, target, todayIso]);
+  const insights = useMemo(() => sleepInsights(entries, target, todayIso || isoLocal(new Date())), [entries, target, todayIso]);
   const byDate = useMemo(() => new Map(entries.map((e) => [e.date, e])), [entries]);
 
   const openDate = useCallback((dateIso: string) => {
@@ -91,13 +92,13 @@ export function SleepHub() {
   useEffect(() => {
     if (!loaded) return;
     const d = new URLSearchParams(window.location.search).get("date");
-    if (!d || !/^\d{4}-\d{2}-\d{2}$/.test(d) || d > todayIso) return;
+    if (!todayIso || !d || !/^\d{4}-\d{2}-\d{2}$/.test(d) || d > todayIso) return;
     openDate(d);
     const url = new URL(window.location.href);
     url.searchParams.delete("date");
     window.history.replaceState(window.history.state, "", url.toString());
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [loaded]);
+  }, [loaded, !!todayIso]);
 
   const statsOn = useFeature("weeklyAnalysis") === true;
   const lastNight = byDate.get(todayIso) ?? null;
@@ -123,11 +124,11 @@ export function SleepHub() {
           lastNight={lastNight}
           lastScore={lastScore}
           tracking={tracking}
-          onLog={() => openDate(todayIso)}
+          onLog={() => openDate(todayIso || isoLocal(new Date()))}
           onWakeUp={wakeUp}
           onEditGoal={() => setGoalOpen(true)}
         />
-        <SleepWeek entries={entries} insights={insights} todayIso={todayIso} onPick={openDate} />
+        {todayIso && <SleepWeek entries={entries} insights={insights} todayIso={todayIso} onPick={openDate} />}
       </div>
 
       <SleepGoalSheet
