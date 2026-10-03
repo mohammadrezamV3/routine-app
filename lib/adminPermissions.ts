@@ -97,6 +97,7 @@ const ROUTE_PERMISSIONS: [string, AdminPermission | null][] = [
   ["/admin/ai-usage", "ai_usage"],
   ["/admin/system", "system"],
   ["/admin/features", "settings"],
+  ["/admin/event-themes", "settings"],
   ["/admin/settings", "settings"],
   ["/admin/audit", "audit"],
 ];

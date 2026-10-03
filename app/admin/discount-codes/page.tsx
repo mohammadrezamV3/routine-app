@@ -13,7 +13,7 @@ type DiscountCodeRow = {
   expiresAt: string | null; active: boolean; createdAt: string; maxUsesPerUser: number | null;
 };
 type PlanOption = { key: string; nameFa: string };
-type Resp = { codes: DiscountCodeRow[]; plans: PlanOption[] };
+type Resp = { codes: DiscountCodeRow[]; plans: PlanOption[]; eventCodes?: string[] };
 
 const CODE_RE = /^[A-Z0-9_-]{3,32}$/;
 
@@ -86,6 +86,16 @@ export default function AdminDiscountCodesPage() {
     }
   }
 
+  async function toggle(row: DiscountCodeRow) {
+    try {
+      await adminFetch(`/api/admin/discount-codes/${row.id}`, { method: "PATCH", json: { active: !row.active } });
+      toast(row.active ? `کد ${row.code} قطع شد` : `کد ${row.code} وصل شد`);
+      load();
+    } catch (e: any) {
+      toast(e.message, "err");
+    }
+  }
+
   async function remove(row: DiscountCodeRow) {
     try {
       await adminFetch(`/api/admin/discount-codes/${row.id}`, { method: "DELETE" });
@@ -98,6 +108,7 @@ export default function AdminDiscountCodesPage() {
   }
 
   const plans = data?.plans || [];
+  const eventCodes = new Set(data?.eventCodes || []);
 
   return (
     <section>
@@ -159,7 +170,10 @@ export default function AdminDiscountCodesPage() {
                   const expired = c.expiresAt ? new Date(c.expiresAt).getTime() < Date.now() : false;
                   return (
                     <tr key={c.id}>
-                      <td className="mono admin-ltr">{c.code}</td>
+                      <td className="mono admin-ltr">
+                        {c.code}
+                        {eventCodes.has(c.code) && <span className="admin-badge gray" style={{ marginInlineStart: 8 }}>مناسبت</span>}
+                      </td>
                       <td className="admin-ltr">{c.percentOff}%</td>
                       <td>{c.planKey ? (plans.find((p) => p.key === c.planKey)?.nameFa || c.planKey) : "همه‌ی پکیج‌ها"}</td>
                       <td className={c.expiresAt ? "admin-ltr" : "admin-muted"}>{c.expiresAt ? formatDateTime(c.expiresAt) : "بدون انقضا"}</td>
@@ -171,6 +185,7 @@ export default function AdminDiscountCodesPage() {
                       </td>
                       <td className="admin-ltr">{formatDateTime(c.createdAt)}</td>
                       <td className="admin-cell-actions">
+                        <button type="button" className="admin-btn sm" onClick={() => toggle(c)}>{c.active ? "قطع" : "وصل"}</button>
                         <button type="button" className="admin-btn danger sm" onClick={() => setPendingDelete(c)} aria-label={`حذف ${c.code}`} title="حذف">
                           <Trash2 size={14} />
                         </button>

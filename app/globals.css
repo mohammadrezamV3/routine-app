@@ -9723,11 +9723,16 @@ body select option:disabled{ color:var(--muted2); }
 
 /* میله‌های «آمار هفتگی» (DashWeeklyChartCard): پرشدن نرم از پایین روی همه‌ی
    دستگاه‌ها — فقط transform، بدون reflow. */
-.dash-bar-grow{
-  transform-origin:bottom;
-  animation:dashBarGrow .75s cubic-bezier(.22,1,.36,1) both;
-}
+.dash-bar-grow, .dash-bar-hold{ transform-origin:bottom; }
+/* پیش از دیده‌شدن (اسپلش هنوز هست یا کارت بیرون از صفحه) صفر می‌مونه؛
+   DashWeeklyChartCard با رسیدن لحظه‌ی دیده‌شدن کلاس رو به grow عوض می‌کنه. */
+.dash-bar-hold{ transform:scaleY(0); }
+.dash-bar-grow{ animation:dashBarGrow .75s cubic-bezier(.22,1,.36,1) both; }
 @keyframes dashBarGrow{ from{ transform:scaleY(0); } to{ transform:scaleY(1); } }
+@media (prefers-reduced-motion:reduce){
+  .dash-bar-hold{ transform:none; }
+  .dash-bar-grow{ animation:none; }
+}
 
 /* خروج از حساب (lib/logout.ts): پرده‌ی تار فوری روی کل صفحه تا ریدایرکت —
    فقط بلور (بدون رنگ پس‌زمینه) و بلاک کلیک‌های دوباره. */

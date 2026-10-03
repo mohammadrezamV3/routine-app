@@ -1,6 +1,7 @@
 import type { Metadata, Viewport } from "next";
 import { Vazirmatn, Inter } from "next/font/google";
 import "./globals.css";
+import "./event-themes.css";
 import "./admin-theme.css";
 import { ThemeProvider } from "@/components/ThemeProvider";
 import { NavDrawer } from "@/components/NavDrawer";
@@ -32,6 +33,13 @@ import { RouteProgress } from "@/components/RouteProgress";
 import { Suspense } from "react";
 import { BootSplash } from "@/components/BootSplash";
 import { BootSplashRelease } from "@/components/BootSplashRelease";
+import { EventThemeGreeting } from "@/components/EventThemeGreeting";
+import { getActiveEventThemeId } from "@/lib/eventThemeServer";
+import { EVENT_PREVIEW_KEY } from "@/lib/eventThemeState";
+
+// پیش‌نمایش تم مناسبتی فقط روی دستگاه ادمین: شناسه = اعمال همون تم، "none" = بدون تم.
+// قبل از اولین پینت اجرا می‌شه و تم زنده‌ی سرور رو فقط روی همین دستگاه override می‌کنه.
+const EVENT_PREVIEW_SCRIPT = `try{var v=localStorage.getItem(${JSON.stringify(EVENT_PREVIEW_KEY)});if(v){var h=document.documentElement;if(v==="none")h.removeAttribute("data-event-theme");else if(/^[a-z0-9-]+$/.test(v))h.setAttribute("data-event-theme",v)}}catch(e){}`;
 
 // وزن variable به‌جای ۵ فایل فونت جدا برای هر وزن — همون طیف وزن‌ها رو از یک
 // فایل واحد می‌ده، حجم دانلود فونت رو به‌شدت کم می‌کنه (بزرگ‌ترین بخش payload).
@@ -205,6 +213,9 @@ export default async function RootLayout({ children }: { children: React.ReactNo
   // آزمایشی با کوکی dark و تم حساب light. یک findUnique روی کلید یکتای
   // (userId, key)؛ فقط برای کاربر لاگین‌کرده.
   const { theme, fromAccount } = await resolveInitialTheme((session?.user as { id?: string } | undefined)?.id);
+  // تم مناسبتی زنده برای همه — از همون اولین بایت HTML (بدون فلش)
+  let eventThemeId: string | null = null;
+  try { eventThemeId = await getActiveEventThemeId(); } catch { eventThemeId = null; }
   return (
     // data-theme روی html هم هست (نه فقط body): پس‌زمینه‌ی خود <html> همونیه
     // که سافاری توی ناحیه‌ی امن (زیر ناچ / بالای نوار خانه) و موقع اورراسکرول
@@ -217,6 +228,7 @@ export default async function RootLayout({ children }: { children: React.ReactNo
       // «account» = تم از حساب آمده و اسکریپت inline نباید با کوکی بازنویسی‌اش
       // کند (برعکس: کوکی را با آن هم‌گام می‌کند) — lib/themeColor.ts
       data-theme-src={fromAccount ? "account" : undefined}
+      data-event-theme={eventThemeId ?? undefined}
       suppressHydrationWarning
       className={`${vazir.variable} ${latin.variable}`}
     >
@@ -226,6 +238,7 @@ export default async function RootLayout({ children }: { children: React.ReactNo
             دلیلش lib/themeColor.ts)، پس دوباره‌تزریق نمی‌شه و
             syncThemeColorMeta همین یکی رو آپدیت می‌کنه. */}
         <meta name="theme-color" content={THEME_COLORS[theme]} />
+        <script dangerouslySetInnerHTML={{ __html: EVENT_PREVIEW_SCRIPT }} />
         {/* تم آزمایشی ادمین (lib/adminTheme.ts) — قبل از اولین پینت */}
         <script dangerouslySetInnerHTML={{ __html: ADMIN_THEME_INIT_SCRIPT }} />
       </head>
@@ -277,6 +290,7 @@ export default async function RootLayout({ children }: { children: React.ReactNo
               <Suspense fallback={null}><RouteProgress /></Suspense>
               <div className="wrap">{children}</div>
               <BootSplashRelease />
+              <EventThemeGreeting />
             </MotionTuner>
           </ThemeProvider>
         </AuthSessionProvider>
