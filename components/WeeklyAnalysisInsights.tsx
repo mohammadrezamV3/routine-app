@@ -1,12 +1,12 @@
 "use client";
 
+import "./weekly-analysis.css";
 import { motion } from "framer-motion";
 import {
   AlertTriangle, CalendarDays, Flame, Lightbulb, Link2, TrendingDown, TrendingUp, Trophy, Zap, type LucideIcon,
 } from "lucide-react";
 import { ANALYSIS_DOMAIN_LABELS, type Insight } from "@/lib/weeklyAnalysis/types";
-import { DashCard } from "./DashCard";
-import { toneColor } from "./WeeklyAnalysisShared";
+import { V_WK_CARD, toneColor } from "./WeeklyAnalysisKit";
 
 const INSIGHT_ICONS: Record<Insight["icon"], LucideIcon> = {
   link: Link2,
@@ -19,43 +19,36 @@ const INSIGHT_ICONS: Record<Insight["icon"], LucideIcon> = {
   zap: Zap,
 };
 
-// بینش‌های قطعی موتور محاسبه (نه AI) — هرکدوم با رنگ لحن خودش
+// بینش‌های قطعی موتور محاسبه (نه AI) — هرکدوم با رنگ لحن خودش. ورود پله‌ای
+// با CSS (تاخیر هر ردیف از --i) تا با عوض‌شدن هفته هم دوباره نرم بیاد.
 export function WeeklyAnalysisInsights({ insights }: { insights: Insight[] }) {
   return (
-    <DashCard className="wa-insights-card">
-      <div className="wa-card-head">
-        <h2 className="wa-card-title"><Lightbulb size={16} className="wa-title-icon" />بینش‌های این هفته</h2>
-      </div>
+    <motion.section className="wk-card wk-insights" variants={V_WK_CARD} aria-label="بینش‌های این هفته">
+      <header className="wk-card-head">
+        <h2 className="wk-card-title"><Lightbulb size={16} className="wk-title-icon" />بینش‌های این هفته</h2>
+      </header>
       {insights.length === 0 ? (
-        <div className="wa-empty-inline">هنوز الگوی قابل‌اتکایی پیدا نشده — با چند روز داده‌ی بیشتر، بینش‌ها ظاهر می‌شن.</div>
+        <div className="wk-empty-inline">هنوز الگوی قابل‌اتکایی پیدا نشده — با چند روز داده‌ی بیشتر، بینش‌ها ظاهر می‌شن.</div>
       ) : (
-        <ul className="wa-insight-list">
+        <ul className="wk-insight-list">
           {insights.map((ins, i) => {
             const Icon = INSIGHT_ICONS[ins.icon] ?? Lightbulb;
             const color = toneColor(ins.tone);
             return (
-              <motion.li
-                key={ins.id}
-                className="wa-insight"
-                initial={{ opacity: 0, x: 10 }}
-                animate={{ opacity: 1, x: 0 }}
-                transition={{ duration: 0.35, delay: Math.min(i * 0.06, 0.36) }}
-              >
-                <span className="wa-insight-icon" style={{ color, borderColor: color }}>
-                  <Icon size={15} />
-                </span>
-                <div className="min-w-0 flex-1">
-                  <div className="wa-insight-title">
+              <li key={ins.id} className="wk-insight" style={{ ["--i" as string]: i }}>
+                <span className="wk-insight-icon" style={{ color, borderColor: color }}><Icon size={15} /></span>
+                <div className="wk-insight-text">
+                  <div className="wk-insight-title">
                     {ins.title}
-                    {ins.domain && <span className="wa-tag">{ANALYSIS_DOMAIN_LABELS[ins.domain]}</span>}
+                    {ins.domain && <span className="wk-chip">{ANALYSIS_DOMAIN_LABELS[ins.domain]}</span>}
                   </div>
-                  <div className="wa-insight-body">{ins.body}</div>
+                  <div className="wk-insight-body">{ins.body}</div>
                 </div>
-              </motion.li>
+              </li>
             );
           })}
         </ul>
       )}
-    </DashCard>
+    </motion.section>
   );
 }

@@ -546,7 +546,450 @@ body[data-theme="light"] .lsc-push{ box-shadow:0 18px 36px -16px rgba(107,79,61,
 .lsc-push span{ font-size:10.5px; color:var(--muted); }
 
 /* آنالیز — WeeklyAnalysisHero در عرض کم پیش‌نمایش */
-.lsc-pv-wa .wa-hero, .lsc-pv-wa .wa-insights-card{ padding:14px; }
+.lsc-pv-wa .wk-hero, .lsc-pv-wa .wk-insights{ padding:14px; }
+
+/* نومو */
+.lh-pos-ai{ bottom:14px; right:0; transform-origin:100% 100%; }
+.lh-card-ai{ width:196px; display:flex; flex-direction:column; gap:7px; }
+.lh-ai-title{ font-size:12px; font-weight:800; gap:6px; }
+.lh-ai-bubble{ max-width:92%; padding:6px 10px; border-radius:14px; font-size:10.5px; line-height:1.85; font-weight:500; }
+.lh-ai-user{ align-self:flex-start; border-bottom-right-radius:5px; }
+.lh-ai-bot{ align-self:flex-end; border-bottom-left-radius:5px; border-color:rgba(0,168,107,.55); }
+
+/* مربی — خود کارت MentorCard، روی سطح توپر */
+.lh-pos-mentor{ bottom:14px; left:0; transform-origin:0 100%; }
+.lh-card-mentor{ width:224px; }
+.lh-card-mentor .lm-mentor-card{
+  background:var(--surface-2);
+  box-shadow:0 22px 44px -16px rgba(0,0,0,.5), 0 2px 6px rgba(0,0,0,.18);
+}
+body[data-theme="light"] .lh-card-mentor .lm-mentor-card{ box-shadow:0 22px 44px -18px rgba(107,79,61,.35), 0 2px 6px rgba(107,79,61,.08); }
+
+/* موبایل: کارت‌ها کوچک‌تر تا گوشی (و تیک‌های لیست برنامه) زیرشان گم نشود
+   (zoom روی خود کارت؛ لایه‌ی بیرونی با همون گوشه‌ی لنگر کوچک می‌شه) */
+@media (max-width:1023px){
+  .lh-layer > .lh-float{ zoom:.8; }
+  @supports not (zoom:1){
+    .lh-pos-trade, .lh-pos-cal, .lh-pos-ai, .lh-pos-mentor{ scale:.8; }
+  }
+}
+@media (min-width:1024px){
+  .lh-phone{ zoom:1; }
+  @supports not (zoom:1){ .lh-phone{ transform:none; } }
+  .lh-pos-trade{ top:40px; }
+  .lh-pos-cal{ top:128px; }
+  .lh-pos-ai{ bottom:10px; }
+  .lh-pos-mentor{ bottom:10px; }
+}
+@keyframes lh-grow{ from{ transform:scaleX(0); } }
+
+/* ================================================================
+   اجزای مشترک ماکت‌ها (LandingMockups)
+   ================================================================ */
+/* پاپ تیک — جای اسپرینگ فریمر DashTaskRow (فقط transform/opacity) */
+.lm-pop{ animation:lm-pop .38s cubic-bezier(.34,1.56,.64,1) both; }
+@keyframes lm-pop{ from{ opacity:0; transform:scale(0) rotate(-45deg); } to{ opacity:1; transform:none; } }
+
+.lm-tiers{ display:grid; grid-template-columns:repeat(4, 1fr); gap:6px; }
+.lm-tier{
+  display:flex; flex-direction:column; align-items:center; gap:4px; padding:9px 2px 8px;
+  border-radius:14px; border:1px solid var(--surface-line); background:var(--surface-2);
+}
+.lm-tier .header-streak-clock-streak{ flex-direction:column; gap:3px; font-size:12px; }
+/* شعله‌ی واقعی هر سطح، فقط بزرگ‌نمایی (scale جدا از transform انیمیشن فلیکر) */
+.lm-tier .streak-flame{ scale:1.5; margin:5px 0 4px; }
+.lm-tier small{ font-size:9.5px; color:var(--muted); font-weight:600; white-space:nowrap; }
+
+/* MentorCard (mentor.css سنگین است؛ فقط همین چند قانون کارت آینه شده) */
+.lm-mentor-card{ gap:10px; padding:13px 14px; }
+.lm-mentor-head{ display:flex; align-items:center; gap:10px; min-width:0; }
+.lm-mentor-id{ flex:1; min-width:0; display:flex; flex-direction:column; gap:2px; }
+.lm-mentor-name-row{ display:flex; align-items:center; gap:4px; min-width:0; }
+.lm-mentor-name{ font-size:14px; font-weight:800; line-height:1.6; color:var(--text); overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
+.lm-cert{ display:inline-flex; color:#D9A21B; flex-shrink:0; }
+body[data-theme="light"] .lm-cert{ color:#B7860B; }
+.lm-mentor-line{ font-size:11.5px; color:var(--muted); line-height:1.7; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+.lm-mentor-save{ flex-shrink:0; align-self:flex-start; color:var(--muted); }
+.lm-mentor-foot{ padding-top:0; gap:10px; font-size:11px; }
+.lm-rating{ display:inline-flex; align-items:center; gap:3px; color:var(--muted); white-space:nowrap; }
+.lm-rating svg{ color:var(--sun); flex-shrink:0; }
+.lm-rating b{ font-size:11.5px; font-weight:800; color:var(--text); }
+.lm-since{ display:inline-flex; align-items:center; gap:4px; color:var(--muted); white-space:nowrap; flex:1; min-width:0; }
+
+/* MentorChat — ردیف سرویس + حباب‌های support-msg */
+.lm-chat{ display:flex; flex-direction:column; gap:6px; }
+.lm-chat-service{ display:flex; justify-content:center; margin-bottom:4px; }
+.lm-chat-service span{
+  display:inline-flex; align-items:center; gap:5px; padding:5px 11px; border-radius:12px;
+  font-size:10.5px; line-height:1.7; color:var(--muted); text-align:center;
+  border:1px solid var(--surface-line);
+}
+.lm-chat-service svg{ flex-shrink:0; }
+.lm-chat-row{ display:flex; justify-content:flex-end; }
+.lm-chat-row.is-mine{ justify-content:flex-start; }
+.lm-chat-bubble{ display:flex; flex-direction:column; font-size:12px; padding:8px 12px; }
+.lm-chat-time{ align-self:flex-end; margin-top:2px; font-size:9.5px; opacity:.7; }
+.lm-rp-sec{ margin-top:4px; }
+.lm-kebab{ display:flex; padding:6px; color:var(--muted); }
+
+/* مکث: وقتی هیرو/ویترین بیرون دید است، همه‌ی حلقه‌های CSS متوقف می‌شوند */
+.lh.is-paused *, .lh.is-paused *::before,
+.lsc.is-paused *, .lsc.is-paused *::before{ animation-play-state:paused !important; }
+
+/* دستگاه لمسی ضعیف: شفق و هاله ساکن */
+html[data-perf-weak] .lh-aurora > span{ animation:none; }
+
+/* ================================================================
+   ویترین قابلیت‌ها
+   ================================================================ */
+.lsc-head{ display:flex; flex-direction:column; align-items:flex-start; gap:12px; }
+.lsc-title{
+  font-size:clamp(26px, 6.6vw, 32px); font-weight:900; line-height:1.35; letter-spacing:-.02em;
+}
+@media (min-width:1024px){ .lsc-title{ font-size:clamp(34px, 3vw, 42px); } }
+
+.lsc-tabs-scroll{
+  margin:22px -16px 0; padding:4px 16px 6px;
+  overflow-x:auto; overflow-y:hidden; overscroll-behavior-x:contain;
+  scrollbar-width:none;
+}
+.lsc-tabs-scroll::-webkit-scrollbar{ display:none; }
+.lsc-tabs-scroll .auth-tabs{ margin-top:0; width:max-content; min-width:100%; }
+.lsc-tabs-scroll .auth-tab{ flex:1 0 auto; padding:9px 14px; font-size:12.5px; white-space:nowrap; }
+@media (min-width:1024px){
+  .lsc-tabs-scroll{ margin-inline:0; padding-inline:0; }
+  .lsc-tabs-scroll .auth-tab{ padding:11px 16px; font-size:13.5px; }
+}
+.lsc-tab-label{ display:inline-flex; align-items:center; gap:6px; }
+
+.lsc-card{
+  position:relative; margin-top:16px; border-radius:28px; overflow:hidden;
+  backdrop-filter:blur(20px) saturate(150%); -webkit-backdrop-filter:blur(20px) saturate(150%);
+}
+.lsc-progress{
+  position:absolute; top:0; inset-inline:28px; height:3px; z-index:2;
+  border-radius:0 0 3px 3px; background:rgba(var(--accent-rgb),.14); overflow:hidden;
+}
+.lsc-progress-fill{
+  display:block; width:100%; height:100%; background:var(--accent);
+  transform-origin:100% 50%; transform:scaleX(0);
+  animation-name:lsc-progress; animation-timing-function:linear; animation-fill-mode:forwards;
+}
+@keyframes lsc-progress{ from{ transform:scaleX(0); } to{ transform:scaleX(1); } }
+
+.lsc-body{ display:grid; grid-template-columns:1fr; }
+@media (min-width:860px){
+  .lsc-body{ grid-template-columns:minmax(0,1.1fr) minmax(0,1fr); }
+}
+
+.lsc-stage{
+  position:relative; height:420px; overflow:hidden;
+  margin:12px 12px 0; border-radius:22px;
+  border:1px solid var(--surface-line);
+  background:rgba(var(--accent-rgb),.035);
+}
+@media (max-width:859px){ .lsc-stage-in{ padding:12px 8px 0; } }
+@media (min-width:860px){
+  .lsc-stage{ height:480px; margin:14px 14px 14px 0; }
+}
+.lsc-stage-glow{
+  position:absolute; inset:-30%; pointer-events:none;
+  background:radial-gradient(closest-side at 70% 30%, rgba(var(--accent-rgb),.16), rgba(var(--accent-rgb),0));
+  animation:lh-breathe 8s ease-in-out infinite;
+}
+/* برش مثل یک صفحه‌ی اسکرول‌شدنی: از بالا شروع می‌شود و پایینش محو */
+.lsc-stage-in{
+  position:relative; height:100%; display:flex; align-items:flex-start; justify-content:center;
+  padding:16px 14px 0; overflow:hidden;
+  -webkit-mask-image:linear-gradient(to bottom, #000 80%, transparent);
+  mask-image:linear-gradient(to bottom, #000 80%, transparent);
+}
+
+.lsc-text{
+  display:flex; flex-direction:column; padding:22px 22px 26px; min-width:0;
+  animation:lsc-in .5s cubic-bezier(.2,.8,.2,1) both;
+}
+@media (min-width:860px){ .lsc-text{ padding:40px 36px 36px; justify-content:center; } }
+.lsc-text-top{ display:flex; align-items:center; justify-content:space-between; }
+.lsc-icon{
+  width:44px; height:44px; border-radius:14px; display:flex; align-items:center; justify-content:center;
+  color:var(--accent); background:rgba(var(--accent-rgb),.12);
+}
+.lsc-count{ font-size:12px; font-weight:800; letter-spacing:.04em; }
+.lsc-mod-title{ margin-top:16px; font-size:24px; font-weight:900; line-height:1.35; letter-spacing:-.02em; }
+@media (min-width:860px){ .lsc-mod-title{ font-size:28px; } }
+.lsc-hook{ margin-top:4px; font-size:15px; font-weight:700; color:var(--accent); }
+.lsc-bullets{ margin:18px 0 22px; padding:0; list-style:none; display:flex; flex-direction:column; gap:11px; }
+.lsc-bullets li{ display:flex; align-items:flex-start; gap:10px; font-size:14px; line-height:1.85; font-weight:500; }
+.lsc-bullet-ic{
+  margin-top:4px; width:20px; height:20px; flex-shrink:0; border-radius:50%;
+  display:flex; align-items:center; justify-content:center; color:#fff; background:var(--accent);
+}
+
+/* ورود پله‌ای پیش‌نمایش */
+@keyframes lsc-in{ from{ opacity:0; transform:translate3d(0,14px,0); } to{ opacity:1; transform:none; } }
+.lsc-pv > *{
+  animation:lsc-in .55s cubic-bezier(.2,.8,.2,1) both;
+  animation-delay:calc(var(--i,0) * 110ms + 60ms);
+}
+.lsc-pv > *:nth-child(2){ --i:1; } .lsc-pv > *:nth-child(3){ --i:2; } .lsc-pv > *:nth-child(4){ --i:3; }
+
+.lsc-actions{ display:flex; flex-wrap:wrap; align-items:center; gap:10px; }
+.lsc-more{ font-size:12.5px; padding:7px 14px; }
+
+/* ─── برش‌های اپ ─── */
+.lsc-pv{
+  width:100%; max-width:420px; display:flex; flex-direction:column; gap:12px;
+  font-size:12px; text-align:right;
+}
+
+/* روتین: اعلان پوش — بالای برش، روی هیچ ردیفی نمی‌افتد */
+.lsc-pv-routine{ padding-top:64px; }
+.lsc-push{
+  position:absolute; top:12px; left:0; right:0; margin-inline:auto; z-index:3; width:min(270px, calc(100% - 28px));
+  display:flex; align-items:flex-start; gap:9px; padding:9px 11px; border-radius:16px;
+  background:var(--surface-2); border:1px solid var(--surface-line);
+  box-shadow:0 18px 36px -14px rgba(0,0,0,.55);
+  animation:lsc-drop .6s cubic-bezier(.2,.8,.2,1) .9s both !important;
+}
+body[data-theme="light"] .lsc-push{ box-shadow:0 18px 36px -16px rgba(107,79,61,.4); }
+@keyframes lsc-drop{ from{ opacity:0; transform:translate3d(0,-16px,0) scale(.96); } to{ opacity:1; transform:none; } }
+.lsc-push-ic{ width:28px; height:28px; border-radius:8px; flex-shrink:0; }
+.lsc-push div{ display:flex; flex-direction:column; line-height:1.6; }
+.lsc-push b{ font-size:11.5px; font-weight:800; }
+.lsc-push span{ font-size:10.5px; color:var(--muted); }
+
+/* آنالیز — WeeklyAnalysisHero در عرض کم پیش‌نمایش */
+.lsc-pv-wa .wk-hero, .lsc-pv-wa .wk-insights{ padding:14px; }
+.lsc-pv-wa .wk-hero{ display:flex; flex-direction:column; gap:14px; }
+.lsc-pv-wa .wk-hero-main{ flex-direction:column; align-items:center; text-align:center; gap:14px; }
+.lsc-pv-wa .wk-hero-body, .lsc-pv-wa .wk-hero-eyebrow, .lsc-pv-wa .wk-hero-delta{ align-items:center; justify-content:center; }
+.lsc-pv-wa .wk-hero > .wk-mini-grid{
+  grid-template-columns:repeat(2, minmax(0,1fr)); row-gap:14px; column-gap:12px;
+  padding-top:14px; padding-inline-start:0; border-top:1px solid var(--box-line); border-inline-start:none;
+}
+.lsc-pv-wa .wk-prediction{ flex-direction:column; align-items:stretch; gap:12px; }
+.lsc-pv-wa .wk-band{ width:100%; }
+
+/* نومو */
+.lh-pos-ai{ bottom:14px; right:0; transform-origin:100% 100%; }
+.lh-card-ai{ width:196px; display:flex; flex-direction:column; gap:7px; }
+.lh-ai-title{ font-size:12px; font-weight:800; gap:6px; }
+.lh-ai-bubble{ max-width:92%; padding:6px 10px; border-radius:14px; font-size:10.5px; line-height:1.85; font-weight:500; }
+.lh-ai-user{ align-self:flex-start; border-bottom-right-radius:5px; }
+.lh-ai-bot{ align-self:flex-end; border-bottom-left-radius:5px; border-color:rgba(0,168,107,.55); }
+
+/* مربی — خود کارت MentorCard، روی سطح توپر */
+.lh-pos-mentor{ bottom:14px; left:0; transform-origin:0 100%; }
+.lh-card-mentor{ width:224px; }
+.lh-card-mentor .lm-mentor-card{
+  background:var(--surface-2);
+  box-shadow:0 22px 44px -16px rgba(0,0,0,.5), 0 2px 6px rgba(0,0,0,.18);
+}
+body[data-theme="light"] .lh-card-mentor .lm-mentor-card{ box-shadow:0 22px 44px -18px rgba(107,79,61,.35), 0 2px 6px rgba(107,79,61,.08); }
+
+/* موبایل: کارت‌ها کوچک‌تر تا گوشی (و تیک‌های لیست برنامه) زیرشان گم نشود
+   (zoom روی خود کارت؛ لایه‌ی بیرونی با همون گوشه‌ی لنگر کوچک می‌شه) */
+@media (max-width:1023px){
+  .lh-layer > .lh-float{ zoom:.8; }
+  @supports not (zoom:1){
+    .lh-pos-trade, .lh-pos-cal, .lh-pos-ai, .lh-pos-mentor{ scale:.8; }
+  }
+}
+@media (min-width:1024px){
+  .lh-phone{ zoom:1; }
+  @supports not (zoom:1){ .lh-phone{ transform:none; } }
+  .lh-pos-trade{ top:40px; }
+  .lh-pos-cal{ top:128px; }
+  .lh-pos-ai{ bottom:10px; }
+  .lh-pos-mentor{ bottom:10px; }
+}
+@keyframes lh-grow{ from{ transform:scaleX(0); } }
+
+/* ================================================================
+   اجزای مشترک ماکت‌ها (LandingMockups)
+   ================================================================ */
+/* پاپ تیک — جای اسپرینگ فریمر DashTaskRow (فقط transform/opacity) */
+.lm-pop{ animation:lm-pop .38s cubic-bezier(.34,1.56,.64,1) both; }
+@keyframes lm-pop{ from{ opacity:0; transform:scale(0) rotate(-45deg); } to{ opacity:1; transform:none; } }
+
+.lm-tiers{ display:grid; grid-template-columns:repeat(4, 1fr); gap:6px; }
+.lm-tier{
+  display:flex; flex-direction:column; align-items:center; gap:4px; padding:9px 2px 8px;
+  border-radius:14px; border:1px solid var(--surface-line); background:var(--surface-2);
+}
+.lm-tier .header-streak-clock-streak{ flex-direction:column; gap:3px; font-size:12px; }
+/* شعله‌ی واقعی هر سطح، فقط بزرگ‌نمایی (scale جدا از transform انیمیشن فلیکر) */
+.lm-tier .streak-flame{ scale:1.5; margin:5px 0 4px; }
+.lm-tier small{ font-size:9.5px; color:var(--muted); font-weight:600; white-space:nowrap; }
+
+/* MentorCard (mentor.css سنگین است؛ فقط همین چند قانون کارت آینه شده) */
+.lm-mentor-card{ gap:10px; padding:13px 14px; }
+.lm-mentor-head{ display:flex; align-items:center; gap:10px; min-width:0; }
+.lm-mentor-id{ flex:1; min-width:0; display:flex; flex-direction:column; gap:2px; }
+.lm-mentor-name-row{ display:flex; align-items:center; gap:4px; min-width:0; }
+.lm-mentor-name{ font-size:14px; font-weight:800; line-height:1.6; color:var(--text); overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
+.lm-cert{ display:inline-flex; color:#D9A21B; flex-shrink:0; }
+body[data-theme="light"] .lm-cert{ color:#B7860B; }
+.lm-mentor-line{ font-size:11.5px; color:var(--muted); line-height:1.7; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+.lm-mentor-save{ flex-shrink:0; align-self:flex-start; color:var(--muted); }
+.lm-mentor-foot{ padding-top:0; gap:10px; font-size:11px; }
+.lm-rating{ display:inline-flex; align-items:center; gap:3px; color:var(--muted); white-space:nowrap; }
+.lm-rating svg{ color:var(--sun); flex-shrink:0; }
+.lm-rating b{ font-size:11.5px; font-weight:800; color:var(--text); }
+.lm-since{ display:inline-flex; align-items:center; gap:4px; color:var(--muted); white-space:nowrap; flex:1; min-width:0; }
+
+/* MentorChat — ردیف سرویس + حباب‌های support-msg */
+.lm-chat{ display:flex; flex-direction:column; gap:6px; }
+.lm-chat-service{ display:flex; justify-content:center; margin-bottom:4px; }
+.lm-chat-service span{
+  display:inline-flex; align-items:center; gap:5px; padding:5px 11px; border-radius:12px;
+  font-size:10.5px; line-height:1.7; color:var(--muted); text-align:center;
+  border:1px solid var(--surface-line);
+}
+.lm-chat-service svg{ flex-shrink:0; }
+.lm-chat-row{ display:flex; justify-content:flex-end; }
+.lm-chat-row.is-mine{ justify-content:flex-start; }
+.lm-chat-bubble{ display:flex; flex-direction:column; font-size:12px; padding:8px 12px; }
+.lm-chat-time{ align-self:flex-end; margin-top:2px; font-size:9.5px; opacity:.7; }
+.lm-rp-sec{ margin-top:4px; }
+.lm-kebab{ display:flex; padding:6px; color:var(--muted); }
+
+/* مکث: وقتی هیرو/ویترین بیرون دید است، همه‌ی حلقه‌های CSS متوقف می‌شوند */
+.lh.is-paused *, .lh.is-paused *::before,
+.lsc.is-paused *, .lsc.is-paused *::before{ animation-play-state:paused !important; }
+
+/* دستگاه لمسی ضعیف: شفق و هاله ساکن */
+html[data-perf-weak] .lh-aurora > span{ animation:none; }
+
+/* ================================================================
+   ویترین قابلیت‌ها
+   ================================================================ */
+.lsc-head{ display:flex; flex-direction:column; align-items:flex-start; gap:12px; }
+.lsc-title{
+  font-size:clamp(26px, 6.6vw, 32px); font-weight:900; line-height:1.35; letter-spacing:-.02em;
+}
+@media (min-width:1024px){ .lsc-title{ font-size:clamp(34px, 3vw, 42px); } }
+
+.lsc-tabs-scroll{
+  margin:22px -16px 0; padding:4px 16px 6px;
+  overflow-x:auto; overflow-y:hidden; overscroll-behavior-x:contain;
+  scrollbar-width:none;
+}
+.lsc-tabs-scroll::-webkit-scrollbar{ display:none; }
+.lsc-tabs-scroll .auth-tabs{ margin-top:0; width:max-content; min-width:100%; }
+.lsc-tabs-scroll .auth-tab{ flex:1 0 auto; padding:9px 14px; font-size:12.5px; white-space:nowrap; }
+@media (min-width:1024px){
+  .lsc-tabs-scroll{ margin-inline:0; padding-inline:0; }
+  .lsc-tabs-scroll .auth-tab{ padding:11px 16px; font-size:13.5px; }
+}
+.lsc-tab-label{ display:inline-flex; align-items:center; gap:6px; }
+
+.lsc-card{
+  position:relative; margin-top:16px; border-radius:28px; overflow:hidden;
+  backdrop-filter:blur(20px) saturate(150%); -webkit-backdrop-filter:blur(20px) saturate(150%);
+}
+.lsc-progress{
+  position:absolute; top:0; inset-inline:28px; height:3px; z-index:2;
+  border-radius:0 0 3px 3px; background:rgba(var(--accent-rgb),.14); overflow:hidden;
+}
+.lsc-progress-fill{
+  display:block; width:100%; height:100%; background:var(--accent);
+  transform-origin:100% 50%; transform:scaleX(0);
+  animation-name:lsc-progress; animation-timing-function:linear; animation-fill-mode:forwards;
+}
+@keyframes lsc-progress{ from{ transform:scaleX(0); } to{ transform:scaleX(1); } }
+
+.lsc-body{ display:grid; grid-template-columns:1fr; }
+@media (min-width:860px){
+  .lsc-body{ grid-template-columns:minmax(0,1.1fr) minmax(0,1fr); }
+}
+
+.lsc-stage{
+  position:relative; height:420px; overflow:hidden;
+  margin:12px 12px 0; border-radius:22px;
+  border:1px solid var(--surface-line);
+  background:rgba(var(--accent-rgb),.035);
+}
+@media (max-width:859px){ .lsc-stage-in{ padding:12px 8px 0; } }
+@media (min-width:860px){
+  .lsc-stage{ height:480px; margin:14px 14px 14px 0; }
+}
+.lsc-stage-glow{
+  position:absolute; inset:-30%; pointer-events:none;
+  background:radial-gradient(closest-side at 70% 30%, rgba(var(--accent-rgb),.16), rgba(var(--accent-rgb),0));
+  animation:lh-breathe 8s ease-in-out infinite;
+}
+/* برش مثل یک صفحه‌ی اسکرول‌شدنی: از بالا شروع می‌شود و پایینش محو */
+.lsc-stage-in{
+  position:relative; height:100%; display:flex; align-items:flex-start; justify-content:center;
+  padding:16px 14px 0; overflow:hidden;
+  -webkit-mask-image:linear-gradient(to bottom, #000 80%, transparent);
+  mask-image:linear-gradient(to bottom, #000 80%, transparent);
+}
+
+.lsc-text{
+  display:flex; flex-direction:column; padding:22px 22px 26px; min-width:0;
+  animation:lsc-in .5s cubic-bezier(.2,.8,.2,1) both;
+}
+@media (min-width:860px){ .lsc-text{ padding:40px 36px 36px; justify-content:center; } }
+.lsc-text-top{ display:flex; align-items:center; justify-content:space-between; }
+.lsc-icon{
+  width:44px; height:44px; border-radius:14px; display:flex; align-items:center; justify-content:center;
+  color:var(--accent); background:rgba(var(--accent-rgb),.12);
+}
+.lsc-count{ font-size:12px; font-weight:800; letter-spacing:.04em; }
+.lsc-mod-title{ margin-top:16px; font-size:24px; font-weight:900; line-height:1.35; letter-spacing:-.02em; }
+@media (min-width:860px){ .lsc-mod-title{ font-size:28px; } }
+.lsc-hook{ margin-top:4px; font-size:15px; font-weight:700; color:var(--accent); }
+.lsc-bullets{ margin:18px 0 22px; padding:0; list-style:none; display:flex; flex-direction:column; gap:11px; }
+.lsc-bullets li{ display:flex; align-items:flex-start; gap:10px; font-size:14px; line-height:1.85; font-weight:500; }
+.lsc-bullet-ic{
+  margin-top:4px; width:20px; height:20px; flex-shrink:0; border-radius:50%;
+  display:flex; align-items:center; justify-content:center; color:#fff; background:var(--accent);
+}
+
+/* ورود پله‌ای پیش‌نمایش */
+@keyframes lsc-in{ from{ opacity:0; transform:translate3d(0,14px,0); } to{ opacity:1; transform:none; } }
+.lsc-pv > *{
+  animation:lsc-in .55s cubic-bezier(.2,.8,.2,1) both;
+  animation-delay:calc(var(--i,0) * 110ms + 60ms);
+}
+.lsc-pv > *:nth-child(2){ --i:1; } .lsc-pv > *:nth-child(3){ --i:2; } .lsc-pv > *:nth-child(4){ --i:3; }
+
+.lsc-actions{ display:flex; flex-wrap:wrap; align-items:center; gap:10px; }
+.lsc-more{ font-size:12.5px; padding:7px 14px; }
+
+/* ─── برش‌های اپ ─── */
+.lsc-pv{
+  width:100%; max-width:420px; display:flex; flex-direction:column; gap:12px;
+  font-size:12px; text-align:right;
+}
+
+/* روتین: اعلان پوش — بالای برش، روی هیچ ردیفی نمی‌افتد */
+.lsc-pv-routine{ padding-top:64px; }
+.lsc-push{
+  position:absolute; top:12px; left:0; right:0; margin-inline:auto; z-index:3; width:min(270px, calc(100% - 28px));
+  display:flex; align-items:flex-start; gap:9px; padding:9px 11px; border-radius:16px;
+  background:var(--surface-2); border:1px solid var(--surface-line);
+  box-shadow:0 18px 36px -14px rgba(0,0,0,.55);
+  animation:lsc-drop .6s cubic-bezier(.2,.8,.2,1) .9s both !important;
+}
+body[data-theme="light"] .lsc-push{ box-shadow:0 18px 36px -16px rgba(107,79,61,.4); }
+@keyframes lsc-drop{ from{ opacity:0; transform:translate3d(0,-16px,0) scale(.96); } to{ opacity:1; transform:none; } }
+.lsc-push-ic{ width:28px; height:28px; border-radius:8px; flex-shrink:0; }
+.lsc-push div{ display:flex; flex-direction:column; line-height:1.6; }
+.lsc-push b{ font-size:11.5px; font-weight:800; }
+.lsc-push span{ font-size:10.5px; color:var(--muted); }
+
+/* آنالیز — WeeklyAnalysisHero در عرض کم پیش‌نمایش */
+.lsc-pv-wa .wk-hero, .lsc-pv-wa .wk-insights{ padding:14px; }
+.lsc-pv-wa .wk-hero{ gap:14px; }
+.lsc-pv-wa .wk-hero-main{ flex-direction:column; align-items:center; text-align:center; gap:14px; }
+.lsc-pv-wa .wk-hero-body, .lsc-pv-wa .wk-hero-eyebrow, .lsc-pv-wa .wk-hero-delta{ align-items:center; justify-content:center; }
+.lsc-pv-wa .wk-mini-grid{ grid-template-columns:repeat(2, minmax(0,1fr)); }
+.lsc-pv-wa .wk-prediction{ flex-direction:column; align-items:stretch; gap:12px; }
+.lsc-pv-wa .wk-band{ width:100%; }
 
 /* نومو */
 .lsc-numo-panel{

@@ -4,6 +4,7 @@
 // چیزهایی رو می‌گیره که توی خود آنالیز نیست: استریک پایان هفته، اچیومنت‌های دائمی
 // که همون هفته باز شدن و اسم کوچک کاربر.
 import { prisma } from "@/lib/prisma";
+import { isolateAll, isolateNumbers } from "@/lib/weeklyAnalysis/bidi";
 import { ACHIEVEMENT_BY_ID, achievementDesc, type AchievementCategory, type AchievementMetrics } from "@/lib/achievements";
 import { computeRoutineStreak, type DailyTicks } from "@/lib/routineStreak";
 import { addDaysIso, isoToUtcDate, localIso, safeTimezone } from "@/lib/weeklyAnalysis/week";
@@ -35,7 +36,7 @@ export function buildLetterData(a: WeeklyAnalysis, x: LetterExtras): WeeklyLette
   const rank = rankAmongTrend(a.trend);
   const domains: LetterDomain[] = a.domains.map((d) => {
     const bw = domainBestWorst(d, a.days);
-    return { ...d, note: domainNote(d, facts), bestDay: bw.best, worstDay: bw.worst };
+    return { ...d, note: isolateNumbers(domainNote(d, facts)), bestDay: bw.best, worstDay: bw.worst };
   });
   const { wins, improve } = buildWinsAndImprove({
     score: a.overall.score,
@@ -58,7 +59,7 @@ export function buildLetterData(a: WeeklyAnalysis, x: LetterExtras): WeeklyLette
     generatedAt: x.now.toISOString(),
     greetingName: x.greetingName,
     headline: a.headline,
-    intro: buildIntro({
+    intro: isolateNumbers(buildIntro({
       weekLabel: a.weekLabel,
       score: a.overall.score,
       grade: a.overall.grade,
@@ -68,7 +69,7 @@ export function buildLetterData(a: WeeklyAnalysis, x: LetterExtras): WeeklyLette
       domains: a.domains,
       rank,
       archetype: a.archetype,
-    }),
+    })),
     archetype: a.archetype,
     overall: {
       score: a.overall.score,
@@ -84,14 +85,17 @@ export function buildLetterData(a: WeeklyAnalysis, x: LetterExtras): WeeklyLette
     numbers: a.numbers,
     trend: a.trend,
     insights: a.insights,
-    wins,
-    improve,
+    wins: isolateAll(wins),
+    improve: isolateAll(improve),
     achievements: [...weekly, ...x.globalAchievements],
     streak: x.streak,
     goals: a.goals,
     reflection: a.reflection,
     ai: a.ai,
-    nextWeek: buildNextWeek({ score: a.overall.score, domains: a.domains, days: a.days }),
+    nextWeek: (() => {
+      const nw = buildNextWeek({ score: a.overall.score, domains: a.domains, days: a.days });
+      return { ...nw, focusText: isolateNumbers(nw.focusText) };
+    })(),
   };
 }
 

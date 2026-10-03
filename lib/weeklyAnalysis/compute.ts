@@ -1,4 +1,5 @@
 import { prisma } from "@/lib/prisma";
+import { isolateNumbers } from "./bidi";
 import {
   ANALYSIS_DOMAINS, ANALYSIS_DOMAIN_MODULE,
   type AnalysisDomain, type DayCell, type DayDetails, type DomainResult, type TrendPoint, type WeeklyAnalysis,
@@ -126,11 +127,16 @@ export async function computeWeeklyAnalysis(
   const elapsed = daysElapsedFor(tz, week.weekStartIso, now);
   const isCurrent = offset === 0;
   const score = trend[cur].score;
-  const prevScore = trend[cur - 1].score;
-  const grade = gradeFor(score);
+  // هفته‌ی جاری که هنوز 3 روزش نگذشته با یک هفته‌ی کامل مقایسه نمی‌شه: شنبه صبح
+  // با یک روز داده «61- نسبت به هفته‌ی قبل» و نمره‌ی D منصفانه نیست. پس تا
+  // اون موقع اختلاف‌ها، نمره و مقایسه‌های عددی خاموشن (امتیاز خودش می‌مونه).
+  const comparable = !isCurrent || elapsed >= 3;
+  const prevScore = comparable ? trend[cur - 1].score : null;
+  const grade = comparable ? gradeFor(score) : null;
+  const shownDomains: DomainResult[] = comparable ? domainResults : domainResults.map((r) => ({ ...r, delta: null }));
 
   const insights = buildInsights({
-    domains: domainResults,
+    domains: shownDomains,
     days,
     overallScore: score,
     prevOverallScore: prevScore,
@@ -163,9 +169,9 @@ export async function computeWeeklyAnalysis(
 
   const numbers = buildNumbers({
     cur: curFacts,
-    prev: prevFacts,
+    prev: comparable ? prevFacts : null,
     activeDays,
-    prevActiveDays: prevFacts.routine || prevFacts.sleep || prevFacts.tasks || prevFacts.fitness || prevFacts.nutrition || prevFacts.trading ? prevActiveDays : null,
+    prevActiveDays: !comparable ? null : prevFacts.routine || prevFacts.sleep || prevFacts.tasks || prevFacts.fitness || prevFacts.nutrition || prevFacts.trading ? prevActiveDays : null,
     learning: learningMeta ? { done: learningMeta.done ?? 0, total: learningMeta.total ?? 0, activeDays: learningMeta.activeDays ?? 0 } : null,
   });
   const headline = buildHeadline({
@@ -175,7 +181,7 @@ export async function computeWeeklyAnalysis(
     prevScore,
     activeDays,
     dayScores: days.map((d) => d.score),
-    domains: domainResults.map((r) => ({ domain: r.domain, delta: r.delta })),
+    domains: shownDomains.map((r) => ({ domain: r.domain, delta: r.delta })),
     sleepHours: { cur: curFacts.sleep?.avgHours ?? null, prev: prevFacts.sleep?.avgHours ?? null },
   });
   const consistency = consistencyFor(days.map((d) => d.score));
@@ -217,16 +223,17 @@ export async function computeWeeklyAnalysis(
       bestDay,
       worstDay,
     },
-    domains: domainResults,
+    // متن‌های نمایشی فقط همین آخر کار bidi-امن می‌شن (lib/weeklyAnalysis/bidi.ts)
+    domains: shownDomains.map((d) => ({ ...d, stats: d.stats.map((st) => ({ ...st, value: isolateNumbers(st.value) })) })),
     days,
     trend,
-    insights,
+    insights: insights.map((it) => ({ ...it, title: isolateNumbers(it.title), body: isolateNumbers(it.body) })),
     achievements,
-    prediction,
-    headline,
-    archetype,
+    prediction: prediction ? { ...prediction, message: isolateNumbers(prediction.message) } : prediction,
+    headline: isolateNumbers(headline),
+    archetype: archetype ? { ...archetype, description: isolateNumbers(archetype.description) } : archetype,
     prevDays,
-    numbers,
+    numbers: numbers.map((n) => ({ ...n, value: isolateNumbers(n.value), hint: n.hint ? isolateNumbers(n.hint) : n.hint })),
   };
 }
 

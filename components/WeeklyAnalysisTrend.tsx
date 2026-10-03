@@ -2,49 +2,73 @@
 
 import { useEffect, useId, useMemo, useRef, useState } from "react";
 import { motion, useReducedMotion } from "framer-motion";
-import { LineChart } from "lucide-react";
+import { ArrowLeft, LineChart } from "lucide-react";
 import { ANALYSIS_DOMAIN_LABELS, ANALYSIS_DOMAINS, type AnalysisDomain, type TrendPoint } from "@/lib/weeklyAnalysis/types";
-import { cn } from "@/lib/utils";
-import { DashCard } from "./DashCard";
-import { jalaliShort } from "./WeeklyAnalysisShared";
+import { SegmentedTabs } from "./SegmentedTabs";
+import { V_WK_CARD, jalaliShort } from "./WeeklyAnalysisKit";
+import { MIN_OFFSET } from "./WeeklyAnalysisNav";
 
-const H = 190;
-const PAD = { top: 16, right: 14, bottom: 26, left: 30 };
+const MIN_H = 210;
+const PAD = { top: 18, right: 34, bottom: 30, left: 14 };
 
 type Series = "overall" | AnalysisDomain;
+type Pt = { x: number; y: number };
 
-// مسیر خط با شکستگی روی هفته‌های بدون داده — null یعنی «نبود»، پس نباید
-// با یک خط صاف از روش رد بشیم (اون یعنی داده‌ی ساختگی).
-function buildPaths(pts: ({ x: number; y: number } | null)[], baseY: number) {
-  const segments: { x: number; y: number }[][] = [];
-  let cur: { x: number; y: number }[] = [];
+// مسیر خط نرم (منحنی کاتمول-رام→بزیه) با شکستگی روی هفته‌های بدون داده —
+// null یعنی «نبود»، پس نباید با یک خط صاف از روش رد بشیم.
+function smooth(seg: Pt[]): string {
+  if (seg.length === 1) return `M${seg[0].x.toFixed(1)},${seg[0].y.toFixed(1)}`;
+  let d = `M${seg[0].x.toFixed(1)},${seg[0].y.toFixed(1)}`;
+  for (let i = 0; i < seg.length - 1; i++) {
+    const p0 = seg[i - 1] ?? seg[i];
+    const p1 = seg[i];
+    const p2 = seg[i + 1];
+    const p3 = seg[i + 2] ?? p2;
+    const c1x = p1.x + (p2.x - p0.x) / 6;
+    const c1y = p1.y + (p2.y - p0.y) / 6;
+    const c2x = p2.x - (p3.x - p1.x) / 6;
+    const c2y = p2.y - (p3.y - p1.y) / 6;
+    d += `C${c1x.toFixed(1)},${c1y.toFixed(1)} ${c2x.toFixed(1)},${c2y.toFixed(1)} ${p2.x.toFixed(1)},${p2.y.toFixed(1)}`;
+  }
+  return d;
+}
+
+function buildPaths(pts: (Pt | null)[], baseY: number) {
+  const segs: Pt[][] = [];
+  let cur: Pt[] = [];
   for (const p of pts) {
     if (p) cur.push(p);
-    else if (cur.length) { segments.push(cur); cur = []; }
+    else if (cur.length) { segs.push(cur); cur = []; }
   }
-  if (cur.length) segments.push(cur);
-  const line = segments.map((s) => s.map((p, i) => `${i ? "L" : "M"}${p.x.toFixed(1)},${p.y.toFixed(1)}`).join("")).join("");
-  const area = segments
+  if (cur.length) segs.push(cur);
+  const line = segs.map(smooth).join("");
+  const area = segs
     .filter((s) => s.length > 1)
-    .map((s) => `M${s[0].x.toFixed(1)},${baseY}` + s.map((p) => `L${p.x.toFixed(1)},${p.y.toFixed(1)}`).join("") + `L${s[s.length - 1].x.toFixed(1)},${baseY}Z`)
+    .map((s) => `${smooth(s)}L${s[s.length - 1].x.toFixed(1)},${baseY}L${s[0].x.toFixed(1)},${baseY}Z`)
     .join("");
   return { line, area };
 }
 
-// روند ۸ هفته‌ی اخیر — SVG خالص، هم‌عرض واقعی کارت (ResizeObserver) تا
-// متن‌ها کش نیان. محور زمان مثل نمودار کالری از چپ (قدیم) به راست (جدید).
-export function WeeklyAnalysisTrend({ trend }: { trend: TrendPoint[] }) {
-  const gradId = useId().replace(/:/g, "");
+// روند 8 هفته‌ی اخیر — SVG خالص با عرض واقعی کارت (ResizeObserver). محور
+// زمان از راست (قدیمی) به چپ (جدید)، عین جهت خواندن. با نگه‌داشتن/کشیدن
+// روی نمودار مقدار هر هفته نشون داده می‌شه؛ زدن دوباره روی همون هفته (یا
+// کلیک ماوس) اون هفته رو باز می‌کنه.
+export function WeeklyAnalysisTrend({
+  trend, offset, onJump,
+}: { trend: TrendPoint[]; offset: number; onJump: (offset: number) => void }) {
+  const uid = useId().replace(/:/g, "");
   const reduce = useReducedMotion();
   const boxRef = useRef<HTMLDivElement>(null);
   const [w, setW] = useState(0);
+  const [boxH, setBoxH] = useState(MIN_H);
   const [series, setSeries] = useState<Series>("overall");
   const [hover, setHover] = useState<number | null>(null);
+  const downSel = useRef<number | null>(null);
 
   useEffect(() => {
     const el = boxRef.current;
     if (!el) return;
-    const update = () => setW(el.clientWidth);
+    const update = () => { setW(el.clientWidth); setBoxH(Math.max(MIN_H, Math.min(380, el.clientHeight))); };
     update();
     if (typeof ResizeObserver === "undefined") return;
     const ro = new ResizeObserver(update);
@@ -52,143 +76,157 @@ export function WeeklyAnalysisTrend({ trend }: { trend: TrendPoint[] }) {
     return () => ro.disconnect();
   }, []);
 
-  // فقط دامنه‌هایی که توی این ۸ هفته حداقل یک عدد دارن چیپ می‌گیرن
   const availableDomains = useMemo(
     () => ANALYSIS_DOMAINS.filter((d) => trend.some((t) => typeof t.domains?.[d] === "number")),
     [trend]
   );
+  // دامنه‌ی انتخاب‌شده اگه با عوض‌شدن داده ناپدید شد، برمی‌گردیم روی «کل»
+  const active: Series = series !== "overall" && !availableDomains.includes(series) ? "overall" : series;
 
-  const valuesOf = (s: Series) => trend.map((t) => (s === "overall" ? t.score : t.domains?.[s] ?? null));
-  const main = valuesOf(series);
-  const overall = valuesOf("overall");
-  const hasAny = main.some((v) => v !== null);
-
+  const H = boxH;
+  const n = trend.length;
   const innerW = Math.max(0, w - PAD.left - PAD.right);
   const innerH = H - PAD.top - PAD.bottom;
-  const n = trend.length;
-  const xAt = (i: number) => PAD.left + (n <= 1 ? innerW / 2 : (innerW * i) / (n - 1));
-  const yAt = (v: number) => PAD.top + innerH * (1 - Math.min(100, Math.max(0, v)) / 100);
   const baseY = PAD.top + innerH;
+  // i=0 قدیمی‌ترین → سمت راست
+  const xAt = (i: number) => PAD.left + (n <= 1 ? innerW / 2 : (innerW * (n - 1 - i)) / (n - 1));
+  const yAt = (v: number) => PAD.top + innerH * (1 - Math.min(100, Math.max(0, v)) / 100);
 
-  const mainPts = main.map((v, i) => (v === null ? null : { x: xAt(i), y: yAt(v) }));
-  const { line, area } = buildPaths(mainPts, baseY);
-  const ghost = series !== "overall" ? buildPaths(overall.map((v, i) => (v === null ? null : { x: xAt(i), y: yAt(v) })), baseY).line : "";
+  const valuesOf = (s: Series) => trend.map((t) => (s === "overall" ? t.score : t.domains?.[s] ?? null));
+  const main = useMemo(() => valuesOf(active), [trend, active]); // eslint-disable-line react-hooks/exhaustive-deps
+  const overall = useMemo(() => valuesOf("overall"), [trend]); // eslint-disable-line react-hooks/exhaustive-deps
+  const hasAny = main.some((v) => v !== null);
 
-  function pickIndex(clientX: number) {
+  const geo = useMemo(() => {
+    const pts = main.map((v, i) => (v === null ? null : { x: xAt(i), y: yAt(v) }));
+    const ghostPts = overall.map((v, i) => (v === null ? null : { x: xAt(i), y: yAt(v) }));
+    return { pts, ...buildPaths(pts, baseY), ghost: active !== "overall" ? buildPaths(ghostPts, baseY).line : "" };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [main, overall, w, active]);
+
+  function pickIndex(clientX: number): number | null {
     const el = boxRef.current;
-    if (!el || n === 0) return;
-    const rect = el.getBoundingClientRect();
-    const x = clientX - rect.left;
+    if (!el || n === 0) return null;
+    const x = clientX - el.getBoundingClientRect().left;
     let best = 0;
     let bestD = Infinity;
     for (let i = 0; i < n; i++) {
       const d = Math.abs(xAt(i) - x);
       if (d < bestD) { bestD = d; best = i; }
     }
-    setHover(best);
+    return best;
   }
 
+  const offsetOf = (i: number) => offset - (n - 1 - i);
+  const jumpable = (i: number) => i !== n - 1 && offsetOf(i) >= MIN_OFFSET;
   const hv = hover !== null ? main[hover] : null;
-  const tipLeft = hover !== null ? Math.min(Math.max(xAt(hover), 60), Math.max(60, w - 60)) : 0;
+  const tipX = hover !== null ? Math.min(Math.max(xAt(hover), 74), Math.max(74, w - 74)) : 0;
+  const color = active === "overall" ? "var(--accent)" : `var(--wk-d-${active}-a)`;
+  const color2 = active === "overall" ? "var(--accent)" : `var(--wk-d-${active}-b)`;
 
   return (
-    <DashCard className="wa-trend-card">
-      <div className="wa-card-head">
-        <h2 className="wa-card-title"><LineChart size={16} className="wa-title-icon" />روند 8 هفته‌ی اخیر</h2>
-      </div>
+    <motion.section className="wk-card wk-trend" variants={V_WK_CARD} aria-label="روند هشت هفته‌ی اخیر">
+      <header className="wk-card-head">
+        <h2 className="wk-card-title"><LineChart size={16} className="wk-title-icon" />روند 8 هفته‌ی اخیر</h2>
+      </header>
 
       {availableDomains.length > 0 && (
-        <div className="wa-chip-row" role="tablist">
-          {(["overall", ...availableDomains] as Series[]).map((s) => (
-            <button
-              key={s}
-              type="button"
-              role="tab"
-              aria-selected={series === s}
-              className={cn("wa-ghost wa-chip", series === s && "active")}
-              onClick={() => { setSeries(s); setHover(null); }}
-            >
-              {s === "overall" ? "کل" : ANALYSIS_DOMAIN_LABELS[s]}
-            </button>
-          ))}
+        <div className="wk-tabs-scroll" data-noswipe>
+          <SegmentedTabs<Series>
+            className="wk-seg"
+            ariaLabel="نمایش روند"
+            active={active}
+            onChange={(s) => { setSeries(s); setHover(null); }}
+            options={[{ value: "overall", label: "کل" }, ...availableDomains.map((d) => ({ value: d as Series, label: ANALYSIS_DOMAIN_LABELS[d] }))]}
+          />
         </div>
       )}
 
       <div
         ref={boxRef}
+        className="wk-trend-box"
+        data-noswipe
         dir="ltr"
-        className="wa-trend-box"
-        style={{ height: H }}
-        onPointerMove={(e) => pickIndex(e.clientX)}
-        onPointerDown={(e) => pickIndex(e.clientX)}
+        
+        onPointerMove={(e) => { const i = pickIndex(e.clientX); if (i !== null) setHover(i); }}
+        onPointerDown={(e) => { downSel.current = hover; const i = pickIndex(e.clientX); if (i !== null) setHover(i); }}
         onPointerLeave={(e) => { if (e.pointerType === "mouse") setHover(null); }}
+        onClick={(e) => {
+          const i = pickIndex(e.clientX);
+          if (i === null || !jumpable(i)) return;
+          // لمس: بار اول فقط انتخاب، بار دوم روی همون هفته = پرش
+          if (downSel.current === i || (e as unknown as { pointerType?: string }).pointerType === "mouse") onJump(offsetOf(i));
+        }}
       >
         {w > 0 && (
-          <svg width={w} height={H} viewBox={`0 0 ${w} ${H}`} className="block" role="img" aria-label="نمودار روند امتیاز هفته‌ها">
+          <svg width={w} height={H} viewBox={`0 0 ${w} ${H}`} className="wk-trend-svg" role="img" aria-label="نمودار روند امتیاز هفته‌ها">
             <defs>
-              <linearGradient id={gradId} x1="0" y1="0" x2="0" y2="1">
-                <stop offset="0%" stopColor="var(--accent)" stopOpacity={0.32} />
-                <stop offset="100%" stopColor="var(--accent)" stopOpacity={0} />
+              <linearGradient id={`ar${uid}`} x1="0" y1="0" x2="0" y2="1">
+                <stop offset="0%" stopColor={color} stopOpacity={0.34} />
+                <stop offset="100%" stopColor={color} stopOpacity={0} />
+              </linearGradient>
+              <linearGradient id={`ln${uid}`} x1="1" y1="0" x2="0" y2="0">
+                <stop offset="0%" stopColor={color} />
+                <stop offset="100%" stopColor={color2} />
               </linearGradient>
             </defs>
 
             {[0, 50, 100].map((g) => (
               <g key={g}>
-                <line x1={PAD.left} x2={w - PAD.right} y1={yAt(g)} y2={yAt(g)} stroke="var(--line)" strokeDasharray={g === 0 ? undefined : "3 4"} strokeWidth={1} />
-                <text x={PAD.left - 8} y={yAt(g) + 3.5} textAnchor="end" className="wa-trend-axis">{g}</text>
+                <line x1={PAD.left} x2={w - PAD.right + 6} y1={yAt(g)} y2={yAt(g)} stroke="var(--box-line)" strokeDasharray={g === 0 ? undefined : "3 5"} strokeWidth={1} />
+                <text x={w - PAD.right + 12} y={yAt(g) + 3.5} className="wk-axis">{g}</text>
               </g>
             ))}
 
-            {trend.map((t, i) => (
-              <text
-                key={t.weekStart}
-                x={i === n - 1 ? w - PAD.right + 6 : xAt(i)}
-                y={H - 7}
-                textAnchor={i === n - 1 ? "end" : "middle"}
-                className={cn("wa-trend-axis", i === n - 1 && "current")}
-              >
-                {/* روی صفحه‌ی باریک یکی‌درمیون، با شمارش از آخر تا برچسب «این هفته» جا داشته باشه */}
-                {i === n - 1 ? "این هفته" : (w < 420 && (n - 1 - i) % 2 === 1) || (w < 420 && i === n - 2) ? "" : jalaliShort(t.weekStart)}
-              </text>
-            ))}
+            {trend.map((t, i) => {
+              // روی صفحه‌ی باریک یکی‌درمیون، با شمارش از جدیدترین
+              const skip = w < 420 && (n - 1 - i) % 2 === 1;
+              return skip ? null : (
+                <text key={t.weekStart} x={xAt(i)} y={H - 8} textAnchor="middle" className={`wk-axis${i === n - 1 ? " is-cur" : ""}${hover === i ? " is-hov" : ""}`}>
+                  {i === n - 1 ? "این هفته" : jalaliShort(t.weekStart)}
+                </text>
+              );
+            })}
 
             {hover !== null && (
-              <line x1={xAt(hover)} x2={xAt(hover)} y1={PAD.top} y2={baseY} stroke="rgba(var(--accent-rgb),.45)" strokeWidth={1} />
+              <line x1={xAt(hover)} x2={xAt(hover)} y1={PAD.top - 4} y2={baseY} stroke="var(--accent)" strokeOpacity={0.5} strokeWidth={1} />
             )}
 
-            {ghost && <path d={ghost} fill="none" stroke="var(--muted2)" strokeWidth={1.5} strokeDasharray="4 4" />}
+            {geo.ghost && <path d={geo.ghost} fill="none" stroke="var(--muted2)" strokeWidth={1.5} strokeDasharray="4 5" />}
 
             {hasAny && (
               <>
                 <motion.path
-                  key={`area-${series}`}
-                  d={area}
-                  fill={`url(#${gradId})`}
+                  key={`a-${active}-${w > 0}`}
+                  d={geo.area}
+                  fill={`url(#ar${uid})`}
                   initial={{ opacity: reduce ? 1 : 0 }}
                   animate={{ opacity: 1 }}
-                  transition={{ duration: 0.5 }}
+                  transition={{ duration: 0.7, delay: reduce ? 0 : 0.35 }}
                 />
                 <motion.path
-                  key={`line-${series}`}
-                  d={line}
+                  key={`l-${active}-${w > 0}`}
+                  d={geo.line}
                   fill="none"
-                  stroke="var(--accent)"
-                  strokeWidth={2.4}
+                  stroke={`url(#ln${uid})`}
+                  strokeWidth={2.6}
                   strokeLinecap="round"
                   strokeLinejoin="round"
                   initial={{ pathLength: reduce ? 1 : 0 }}
                   animate={{ pathLength: 1 }}
-                  transition={{ duration: reduce ? 0 : 0.9, ease: "easeOut" }}
+                  transition={{ duration: reduce ? 0 : 1, ease: [0.22, 1, 0.36, 1] }}
                 />
-                {mainPts.map((p, i) =>
+                {geo.pts.map((p, i) =>
                   p ? (
-                    <circle
-                      key={i}
+                    <motion.circle
+                      key={`${active}-${i}`}
                       cx={p.x}
                       cy={p.y}
-                      r={i === n - 1 || hover === i ? 5 : 3.2}
-                      fill={i === n - 1 || hover === i ? "var(--accent)" : "var(--bg)"}
-                      stroke="var(--accent)"
+                      initial={{ opacity: reduce ? 1 : 0, r: 3.4 }}
+                      animate={{ opacity: 1, r: i === n - 1 || hover === i ? 5.5 : 3.4 }}
+                      transition={{ duration: 0.25, delay: reduce ? 0 : 0.25 + 0.07 * (n - 1 - i) }}
+                      fill={i === n - 1 || hover === i ? color : "var(--box-bg)"}
+                      stroke={color}
                       strokeWidth={2}
                     />
                   ) : null
@@ -198,20 +236,21 @@ export function WeeklyAnalysisTrend({ trend }: { trend: TrendPoint[] }) {
           </svg>
         )}
 
-        {!hasAny && w > 0 && <div className="wa-trend-empty">هنوز داده‌ای برای این روند نیست</div>}
+        {!hasAny && w > 0 && <div className="wk-trend-empty">هنوز داده‌ای برای این روند نیست</div>}
 
         {hover !== null && trend[hover] && (
-          <div className="wa-tooltip" style={{ left: tipLeft }} dir="rtl">
-            <div className="wa-tooltip-title">{hover === n - 1 ? "این هفته" : `هفته‌ی ${jalaliShort(trend[hover].weekStart)}`}</div>
+          <div className="wk-tooltip" style={{ transform: `translate3d(${tipX}px,0,0) translateX(-50%)` }} dir="rtl">
+            <div className="wk-tooltip-title">{hover === n - 1 ? "این هفته" : `هفته‌ی ${jalaliShort(trend[hover].weekStart)}`}</div>
             <div>
-              {series === "overall" ? "کل" : ANALYSIS_DOMAIN_LABELS[series]}: <b className="mono">{hv === null ? "—" : Math.round(hv)}</b>
+              {active === "overall" ? "کل" : ANALYSIS_DOMAIN_LABELS[active]}: <b className="wk-num">{hv === null ? "—" : Math.round(hv)}</b>
             </div>
-            {series !== "overall" && (
-              <div className="wa-muted-sm">کل: <span className="mono">{overall[hover] === null ? "—" : Math.round(overall[hover] as number)}</span></div>
+            {active !== "overall" && (
+              <div className="wk-muted-sm">کل: <span className="wk-num">{overall[hover] === null ? "—" : Math.round(overall[hover] as number)}</span></div>
             )}
+            {jumpable(hover) && <div className="wk-tooltip-go">بازکردن این هفته<ArrowLeft size={11} /></div>}
           </div>
         )}
       </div>
-    </DashCard>
+    </motion.section>
   );
 }

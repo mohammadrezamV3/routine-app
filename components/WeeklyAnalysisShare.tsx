@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import "./weekly-analysis.css";
 import { Share2 } from "lucide-react";
 import { ANALYSIS_DOMAIN_LABELS, type WeeklyAnalysis } from "@/lib/weeklyAnalysis/types";
 import { BRAND_EN, BRAND_FA } from "@/lib/brand";
@@ -203,11 +204,11 @@ export function WeeklyAnalysisShare({ analysis }: { analysis: WeeklyAnalysis | n
   }
 
   return (
-    <div className="wa-share">
-      <button type="button" className="account-outline-btn wa-small-btn" onClick={share} disabled={!analysis || busy}>
-        {busy ? <Spinner size={13} /> : <><Share2 size={14} />اشتراک‌گذاری</>}
+    <div className="wk-share">
+      <button type="button" className="account-outline-btn wk-small-btn" onClick={share} disabled={!analysis || busy}>
+        {busy ? <Spinner size={13} label={null} /> : <><Share2 size={14} />اشتراک‌گذاری</>}
       </button>
-      {error && <span className="wa-error-inline">{error}</span>}
+      {error && <span className="wk-error-inline">{error}</span>}
     </div>
   );
 }
