@@ -10,7 +10,6 @@ import { buildIntro, buildNextWeek, buildWinsAndImprove, domainBestWorst, domain
 import { greetingNameOf, rankAmongTrend } from "@/lib/weeklyLetter/build";
 import { letterDue } from "@/lib/weeklyLetter/dispatch";
 import { rowToSummary, summaryOf } from "@/lib/weeklyLetter/summary";
-import { normalizePrefs } from "@/lib/weeklyLetter/prefs";
 
 // هفته‌نامه و بخش‌های تازه‌ی موتور آنالیز — فقط توابع خالص.
 
@@ -391,12 +390,6 @@ describe("ساخت هفته‌نامه — بخش‌های خالص", () => {
     expect(rowToSummary(row)).toMatchObject({ weekStart: "2026-09-19", issueNo: 4, score: 71, grade: "B", headline: "تیتر", read: false });
     expect(rowToSummary({ ...row, summary: null }, data)?.headline).toBe("تیتر");
     expect(rowToSummary({ ...row, summary: null })).toBeNull();
-  });
-
-  it("ترجیح ایمیل پیش‌فرض روشنه", () => {
-    expect(normalizePrefs(undefined)).toEqual({ email: true });
-    expect(normalizePrefs({ email: false })).toEqual({ email: false });
-    expect(normalizePrefs({ email: "x" })).toEqual({ email: true });
   });
 });
 

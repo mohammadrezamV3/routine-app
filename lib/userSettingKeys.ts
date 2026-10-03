@@ -48,8 +48,6 @@ export const SETTING_KEYS = {
   tradeChatRulesAccepted: "tradeChatRulesAccepted",
   // رفتار برنامه‌ی تمرینی با روز جامانده («رد شدن»/«ماندن») + نشانگر پیشرفت — lib/exerciseProgression.ts
   exerciseMissedDay: "exerciseMissedDay",
-  // ترجیح دریافت «هفته‌نامه» (آنالیز هفتگی) با ایمیل: { email: boolean }، پیش‌فرض روشن — lib/weeklyLetter/prefs.ts
-  weeklyLetterPrefs: "weeklyLetterPrefs",
 } as const;
 
 /** شمارنده‌ی سرور-مدیریت استفاده از دستیار روتین (سهمیه‌ی رایگان) */

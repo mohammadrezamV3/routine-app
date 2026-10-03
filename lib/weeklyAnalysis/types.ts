@@ -203,5 +203,4 @@ export type WeeklyAnalysis = {
 // PUT    /api/analysis/weekly/reflection { offset, wentWell, improve, mood } → { reflection }
 // GET    /api/analysis/letters                    → { letters: LetterSummary[], unread: number }  (تازه‌ترین اول)
 // GET    /api/analysis/letters/[week]             → { letter: WeeklyLetterData, prev: string|null, next: string|null } (خوانده‌شده علامت می‌خوره)
-// GET/PUT /api/analysis/letters/prefs { email }     → { email: boolean }  (ارسال ایمیلی هفته‌نامه)
 // خطاها همیشه JSON: { error: string } با status مناسب. گیت: requireModule("AI_INSIGHT").

@@ -3,7 +3,7 @@ import { isValidCronRequest } from "@/lib/cronAuth";
 import { runWeeklyLetters } from "@/lib/weeklyLetter/dispatch";
 
 // POST /api/cron/weekly-report — ساخت و تحویل «هفته‌نامه»ی همه‌ی کاربرهای واجد
-// شرایط (اعلان درون‌برنامه‌ای + ایمیل). نه چیزی که کاربر/کلاینت صداش بزنه.
+// شرایط (اعلان درون‌برنامه‌ای + پوش). نه چیزی که کاربر/کلاینت صداش بزنه.
 //
 // دیگه لازم نیست crontab بیرونی این‌جا رو بزنه: زمان‌بند داخلی
 // (lib/pushScheduler.ts) هر ۱۰ دقیقه همین منطق رو اجرا می‌کنه و هر کاربر رو

@@ -2780,7 +2780,6 @@ model WeeklyLetter {
   data      Json
   summary   Json?
   readAt    DateTime?
-  emailedAt DateTime?
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 

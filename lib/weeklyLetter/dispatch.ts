@@ -1,5 +1,5 @@
 // ارسال «هفته‌نامه» — هر شنبه برای هفته‌ی تموم‌شده‌ی هر کاربر یک شماره می‌سازه
-// و تحویل می‌ده (اعلان درون‌برنامه‌ای + ایمیل). از سه جا صدا زده می‌شه:
+// و تحویل می‌ده (اعلان درون‌برنامه‌ای + پوش). از سه جا صدا زده می‌شه:
 //   ۱) زمان‌بند داخلی (lib/pushScheduler.ts، هر ۱۰ دقیقه) — مسیر اصلی؛
 //   ۲) /api/cron/weekly-report — برای crontab بیرونی قدیمی؛
 //   ۳) تنبل، موقع باز شدن آرشیو (ensureLetterForUser) — اگه زمان‌بند خاموش بود.
@@ -14,19 +14,16 @@ import { getFeatureFlags } from "@/lib/featureFlagsServer";
 import { featureKeyAllowed } from "@/lib/featureFlags";
 import { notifyUser } from "@/lib/inAppNotify";
 import { logError } from "@/lib/errorLog";
-import { sendWeeklyLetterEmail } from "@/lib/email";
 import { getWeeklyAnalysis } from "@/lib/weeklyAnalysis/service";
 import { generateAiCoach, isAiAvailable } from "@/lib/weeklyAnalysis/ai";
 import { getWeekRange, isoToUtcDate, localMinuteOfDay, safeTimezone, todayIso } from "@/lib/weeklyAnalysis/week";
 import { buildLetterData, gatherLetterExtras } from "./build";
-import { getLetterPrefs } from "./prefs";
 import { summaryOf } from "./summary";
 
 const CONCURRENCY = 3;
 const DEFAULT_MAX_USERS = 40;
 const PAGE_SIZE = 100;
 const STALE_PENDING_MS = 15 * 60_000;
-const EMAIL_TIMEOUT_MS = 25_000;
 const DUE_MINUTE = 8 * 60; // شنبه ساعت ۸ صبح به وقت کاربر
 
 export type RunOptions = {
@@ -34,8 +31,6 @@ export type RunOptions = {
   userId?: string;
   /** false = برای ساخت مربی AI گیت‌وی صدا زده نشه (مسیر تنبل: کاربر منتظر نمی‌مونه) */
   ai?: boolean;
-  /** false = ایمیل نره */
-  email?: boolean;
   /** سقف کاربرهایی که توی یک اجرا واقعا پردازش می‌شن */
   maxUsers?: number;
 };
@@ -46,7 +41,6 @@ export type RunResult = {
   skipped: number;
   failed: number;
   notified: number;
-  emailed: number;
   /** فلگ آنالیز هفتگی برای همه خاموشه (فقط Owner مجازه) */
   flagOff: boolean;
 };
@@ -54,8 +48,6 @@ export type RunResult = {
 type Candidate = {
   id: string;
   timezone: string | null;
-  email: string | null;
-  emailVerifiedAt: Date | null;
   isSuperAdmin: boolean;
   adminPermissions: string[];
 };
@@ -86,35 +78,13 @@ function skipCache(): Map<string, true> {
 
 type Outcome = "created" | "skipped" | "exists" | "busy" | "failed" | "not_due";
 
-async function deliver(
-  u: Candidate,
-  data: Awaited<ReturnType<typeof buildLetterData>>,
-  letterId: string,
-  opts: RunOptions,
-  res: RunResult
-) {
+async function deliver(u: Candidate, data: Awaited<ReturnType<typeof buildLetterData>>, res: RunResult) {
   const url = `/analysis/weekly/letters/${data.weekStart}`;
   try {
     await notifyUser(u.id, { type: "weekly.letter", title: `هفته‌نامه‌ی شماره ${data.issueNo} رسید`, body: data.headline, url });
     res.notified++;
   } catch {
     // اعلان نباید ساخت شماره رو خراب کنه
-  }
-  if (opts.email === false || !u.email || !u.emailVerifiedAt) return;
-  try {
-    const prefs = await getLetterPrefs(u.id);
-    if (!prefs.email) return;
-    // SMTP کند/گیرکرده نباید کل اجرا (و بقیه‌ی کاربرها) رو معلق نگه داره
-    const r = await Promise.race([
-      sendWeeklyLetterEmail(u.email, data, url),
-      new Promise<{ ok: false; simulated: false }>((resolve) => setTimeout(() => resolve({ ok: false, simulated: false }), EMAIL_TIMEOUT_MS).unref?.()),
-    ]);
-    if (r.ok && !r.simulated) {
-      await prisma.weeklyLetter.update({ where: { id: letterId }, data: { emailedAt: new Date() } });
-      res.emailed++;
-    }
-  } catch (err: any) {
-    logError("weekly-letter", `ارسال ایمیل هفته‌نامه شکست خورد: ${err?.message || err}`, { context: { userId: u.id } });
   }
 }
 
@@ -193,7 +163,7 @@ async function processUser(u: Candidate, now: Date, opts: RunOptions, res: RunRe
       data: { status: "READY", issueNo, data: data as unknown as Prisma.InputJsonValue, summary: summaryOf(data) as unknown as Prisma.InputJsonValue },
     });
     res.created++;
-    await deliver(u, data, letterId, opts, res);
+    await deliver(u, data, res);
     return "created";
   } catch (err: any) {
     // PENDING می‌مونه و بعد از ۱۵ دقیقه دوباره امتحان می‌شه
@@ -207,7 +177,7 @@ async function inBatches<T>(items: T[], size: number, fn: (item: T) => Promise<v
 }
 
 export async function runWeeklyLetters(now: Date = new Date(), opts: RunOptions = {}): Promise<RunResult> {
-  const res: RunResult = { considered: 0, created: 0, skipped: 0, failed: 0, notified: 0, emailed: 0, flagOff: false };
+  const res: RunResult = { considered: 0, created: 0, skipped: 0, failed: 0, notified: 0, flagOff: false };
   try {
     const flags = await getFeatureFlags();
     res.flagOff = flags.weeklyAnalysis === "off";
@@ -236,7 +206,7 @@ export async function runWeeklyLetters(now: Date = new Date(), opts: RunOptions 
         orderBy: { id: "asc" },
         take: PAGE_SIZE,
         ...(cursor ? { skip: 1, cursor: { id: cursor } } : {}),
-        select: { id: true, timezone: true, email: true, emailVerifiedAt: true, isSuperAdmin: true, adminPermissions: true },
+        select: { id: true, timezone: true, isSuperAdmin: true, adminPermissions: true },
       });
       if (!page.length) break;
       cursor = page[page.length - 1].id;

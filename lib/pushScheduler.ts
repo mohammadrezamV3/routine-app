@@ -21,7 +21,7 @@ const PRUNE_EVERY_MS = 60 * 60 * 1000;
 // اعلان درون‌برنامه‌ای بدون پوش هم ارزش دارد. چند worker هم‌زمان امن است.
 const WAITLIST_EVERY_MS = 5 * 60 * 1000;
 // «هفته‌نامه» (lib/weeklyLetter/dispatch.ts): هر شنبه صبح برای هفته‌ی تموم‌شده.
-// اعلان درون‌برنامه‌ای و ایمیل VAPID لازم ندارن، پس مثل waitlist قبل از چک
+// اعلان درون‌برنامه‌ای VAPID لازم نداره، پس مثل waitlist قبل از چک
 // isPushConfigured اجرا می‌شه. ضدتکرار با ردیف PENDING یکتاست، چند worker امنه.
 const LETTERS_EVERY_MS = 10 * 60 * 1000;
 
