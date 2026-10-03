@@ -1966,7 +1966,7 @@
      تا پنل با بقیه‌ی اپ یکی به‌نظر برسد. */
   .account-shell .wsearch-newform-name,
   .account-shell .jdate-btn{
-    border-radius:14px; padding-inline-start:14px; padding-inline-end:14px;
+    padding-inline-start:16px; padding-inline-end:16px;
     backdrop-filter:blur(18px) saturate(160%); -webkit-backdrop-filter:blur(18px) saturate(160%);
   }
   body:not([data-theme="light"]) .account-shell .wsearch-newform-name,
@@ -2312,13 +2312,9 @@
     width:100%; box-sizing:border-box; border-radius:999px; padding:10px 16px; padding-inline-end:104px;
     backdrop-filter:blur(16px) saturate(160%); -webkit-backdrop-filter:blur(16px) saturate(160%);
   }
-  /* بک‌گراند پایه‌ی wsearch-newform-name توی تم تیره یه مشکی تخت
-     هاردکدشده‌ست (#0B0C0D) که با ظاهر شیشه‌ای باکس‌های همین صفحه (مثل
-     checkout-summary که rgba(surface-rgb) استفاده می‌کنه) هم‌خونی نداشت؛
-     برای غلبه روی اون قانون (body:not([data-theme="light"]) .wsearch-newform-name)
-     باید هم‌سطح یا اسپسیفیک‌تر باشه — با کلاس ولد هم‌رده می‌کنیم. */
+  /* همون شیشه‌ی استاندارد فیلدهای سایت (بلاک «فیلد استاندارد سایت» ته فایل) */
   body:not([data-theme="light"]) .checkout-discount-field-wrap .checkout-discount-input{
-    background:rgba(var(--surface-rgb), .3);
+    background:rgba(255,255,255,.05);
   }
   body[data-theme="light"] .checkout-discount-field-wrap .checkout-discount-input{
     background:rgba(var(--surface-rgb), .55);
@@ -2793,12 +2789,9 @@
   .wsearch-input-wrap{position:relative; margin:14px 0 8px; flex-shrink:0;}
   .wsearch-input-icon{position:absolute; top:50%; inset-inline-start:13px; transform:translateY(-50%); width:15px; height:15px; pointer-events:none;}
   .wsearch-input{
-    width:100%; background:rgba(var(--bg-rgb), .5); border:1px solid var(--line); border-radius:10px;
+    width:100%; border:1px solid var(--line); border-radius:var(--field-radius);
     padding:10px 38px 10px 14px; font-family:var(--font-vazir), var(--font-latin), sans-serif; font-weight:500; font-size:13.5px; color:var(--text);
     outline:none; transition:border-color .15s ease, background .15s ease;
-  }
-  body:not([data-theme="light"]) .wsearch-input{
-    background:#0B0C0D; border:1px solid rgba(255,255,255,.08);
   }
   .wsearch-input:focus{border-color:var(--accent);}
   .wsearch-input::placeholder{color:var(--muted2);}
@@ -2876,20 +2869,18 @@
   @media (hover:hover){.wsearch-add-btn:hover{border-color:var(--accent); color:var(--accent);}}
   .wsearch-add-row{display:flex; flex-wrap:wrap; gap:8px; padding-top:10px;}
   .wsearch-add-time{
-    background:rgba(var(--bg-rgb), .5); border:1px solid var(--line); border-radius:8px; color:var(--text);
+    border:1px solid var(--line); border-radius:var(--field-radius); color:var(--text);
     font-family:var(--font-vazir), var(--font-latin), sans-serif; font-size:12.5px; padding:8px 10px; outline:none;
   }
-  body:not([data-theme="light"]) .wsearch-add-time{ background:#0B0C0D; border:1px solid rgba(255,255,255,.08); }
   .wsearch-add-row > .wsearch-add-time{flex:1 1 calc(50% - 4px); min-width:0;}
   .time-field .wsearch-add-time{width:100%;}
   .wsearch-add-time:focus{border-color:var(--accent);}
   .wsearch-date-row{display:flex; flex-wrap:wrap; gap:8px; margin-top:10px;}
   .jdate-btn{
-    width:100%; background:rgba(var(--bg-rgb), .5); border:1px solid var(--line); border-radius:8px; color:var(--text);
+    width:100%; border:1px solid var(--line); border-radius:var(--field-radius); color:var(--text);
     font-family:var(--font-vazir), var(--font-latin), sans-serif; font-size:12.5px; padding:8px 10px; outline:none; cursor:pointer; text-align:center;
     direction:ltr;
   }
-  body:not([data-theme="light"]) .jdate-btn{ background:#0B0C0D; border:1px solid rgba(255,255,255,.08); }
   .jdate-btn:focus{border-color:var(--accent);}
   @media (hover:hover){.jdate-btn:hover{border-color:var(--accent);}}
   .jdate-btn.placeholder{color:var(--muted2); font-family:var(--font-vazir), var(--font-latin), sans-serif; direction:rtl;}
@@ -3308,8 +3299,8 @@
   .time-field-label{font-size:9.5px; color:var(--muted2); font-family:var(--font-vazir), var(--font-latin), sans-serif; text-align:start; padding-inline-start:2px;}
   .wsearch-newform label{display:block; font-size:11px; color:var(--muted2); margin:8px 0 5px; font-family:var(--font-vazir), var(--font-latin), sans-serif;}
   .wsearch-newform-name{
-    width:100%; background:rgba(var(--bg-rgb), .5); border:1px solid var(--line); border-radius:8px; color:var(--text);
-    font-family:var(--font-vazir), var(--font-latin), sans-serif; font-size:13px; padding:9px 11px; outline:none;
+    width:100%; border:1px solid var(--line); border-radius:var(--field-radius); color:var(--text);
+    font-family:var(--font-vazir), var(--font-latin), sans-serif; font-size:13px; padding:9px 16px; outline:none;
   }
   /* زیر ۱۶px، سافاری موبایل موقع فوکوس‌شدن فیلد خودکار زوم می‌کنه —
      این رفتار مستقل از userScalable:false توی viewport meta‌ست، فقط با
@@ -3317,7 +3308,6 @@
   @media (max-width:640px){
     .wsearch-newform-name{ font-size:16px; }
   }
-  body:not([data-theme="light"]) .wsearch-newform-name{ background:#0B0C0D; border:1px solid rgba(255,255,255,.08); }
   .wsearch-newform-name:focus{border-color:var(--accent);}
   .wsearch-newform-name::placeholder{color:var(--muted2);}
 
@@ -3327,7 +3317,6 @@
      دقیقا همون دستور شیشه‌ای auth-tabs رو می‌ذاره، به‌علاوه‌ی گردی بیشتر
      که با بقیه‌ی عناصر rounded-2xl این پاپ‌آپ‌ها جفت‌وجور باشه. */
   .calorie-glass-field{
-    border-radius:14px;
     backdrop-filter:blur(20px) saturate(160%); -webkit-backdrop-filter:blur(20px) saturate(160%);
   }
   body:not([data-theme="light"]) .calorie-glass-field{ background:rgba(255,255,255,.03); border-color:var(--line); }
@@ -3376,7 +3365,7 @@
   /* نمایش فقط‌خواندنی سود/زیان محاسبه‌شده — همون قاب/سایز فیلدهای شیشه‌ای
      ژورنال، ولی متن وسط‌چین و رنگش بسته به مثبت/منفی بودن سبز یا قرمزه */
   .trade-pnl-readout{
-    width:100%; border-radius:8px; padding:9px 11px; font-size:13px; font-weight:700;
+    width:100%; border-radius:var(--field-radius); padding:9px 11px; font-size:13px; font-weight:700;
     text-align:center; border:1px solid var(--line);
     backdrop-filter:blur(24px) saturate(180%); -webkit-backdrop-filter:blur(24px) saturate(180%);
   }
@@ -4430,9 +4419,9 @@ body[data-theme="light"] .plan-duration-btn, body:not([data-theme="light"]) .pla
    .add-program-glass به‌شکل پیل گرد نشه (برای فیلدهای تک‌خطی مناسبه، نه
    برای یه Textarea چندخطی)؛ بدون دستگیره‌ی ریسایز، راست‌چین. */
 .exercise-desc-textarea{
-  width:100%; background:rgba(var(--bg-rgb), .5); border:1px solid var(--line); border-radius:12px; color:var(--text);
+  width:100%; border:1px solid var(--line); color:var(--text);
   font-family:var(--font-vazir), var(--font-latin), sans-serif; font-size:13px; padding:12px 14px; outline:none;
-  min-height:96px; line-height:1.7; resize:none; text-align:start;
+  min-height:96px; line-height:1.7; resize:none; text-align:start; border-radius:var(--field-radius-multi);
 }
 /* همون ظاهر شیشه‌ای فیلدهای فرم‌های بدنسازی (add-program-glass) — نه مشکی تخت */
 .exercise-desc-textarea{ backdrop-filter:blur(20px) saturate(160%); -webkit-backdrop-filter:blur(20px) saturate(160%); }
@@ -6249,7 +6238,7 @@ body[data-theme="light"] .trade-ghost-btn, body:not([data-theme="light"]) .trade
 .trade-field-row > div{ min-width:0; }
 
 /* فیلدهای ترید کمی گردتر از پیش‌فرض ۸px — هم‌اندازه‌ی .calorie-glass-field */
-.wsearch-newform-name.trade-glass-field{ border-radius:14px; padding:11px 13px; }
+.wsearch-newform-name.trade-glass-field{ border-radius:var(--field-radius); padding:11px 16px; }
 textarea.wsearch-newform-name{ resize:vertical; line-height:1.9; }
 select.wsearch-newform-name{ cursor:pointer; }
 
@@ -10307,3 +10296,31 @@ body[data-theme="light"] .ann-content-bar, body[data-theme="light"] .ann-content
 .ann-admin-preview-head{ display:flex; align-items:center; justify-content:space-between; gap:12px; flex-wrap:wrap; }
 .admin-seg.ann-seg{ max-width:100%; overflow-x:auto; scrollbar-width:none; }
 .admin-seg.ann-seg::-webkit-scrollbar{ display:none; }
+
+/* ── فیلد استاندارد سایت (یک قانون برای همه‌جا) ─────────────────────
+   درخواست صریح: بک‌گراند هیچ فیلدی مشکی نباشه و گردی همه‌ی فیلدها یکی باشه.
+   همه‌ی فیلدهای اپ (wsearch-newform-name، wsearch-add-time / TimeInput،
+   jdate-btn، wsearch-input) همون سطح شیشه‌ای نیمه‌شفاف و گردی کامل (پیل)
+   رو دارن؛ textarea چندخطی گردی 18px می‌گیره چون پیل روی متن چندخطی
+   گوشه‌ها رو می‌بره. فیلد جدید با همین کلاس‌ها بساز، بک‌گراند/گردی جدا نده. */
+:root{ --field-radius:999px; --field-radius-multi:18px; }
+.wsearch-newform-name, .wsearch-add-time, .jdate-btn, .wsearch-input{
+  backdrop-filter:blur(18px) saturate(160%); -webkit-backdrop-filter:blur(18px) saturate(160%);
+}
+body:not([data-theme="light"]) .wsearch-newform-name,
+body:not([data-theme="light"]) .wsearch-add-time,
+body:not([data-theme="light"]) .jdate-btn,
+body:not([data-theme="light"]) .wsearch-input{
+  background:rgba(255,255,255,.05); border-color:rgba(255,255,255,.1);
+}
+body[data-theme="light"] .wsearch-newform-name,
+body[data-theme="light"] .wsearch-add-time,
+body[data-theme="light"] .jdate-btn,
+body[data-theme="light"] .wsearch-input{
+  background:rgba(255,255,255,.35); border-color:rgba(0,0,0,.08);
+}
+textarea.wsearch-newform-name,
+.account-shell textarea.wsearch-newform-name,
+.bodybuilding-glass textarea.wsearch-newform-name,
+.add-program-glass textarea.wsearch-newform-name,
+.auth-box textarea.wsearch-newform-name{ border-radius:var(--field-radius-multi); }
