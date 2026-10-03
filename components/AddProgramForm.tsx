@@ -1,15 +1,21 @@
 "use client";
 
-import { useRef, useState } from "react";
-import { ChevronRight, Minus } from "lucide-react";
-import { WEEK_ORDER, jsDayOfIso } from "@/lib/schedule";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import { createPortal } from "react-dom";
+import { AnimatePresence, motion, useReducedMotion } from "framer-motion";
+import {
+  X, Sparkles, Dumbbell, BookOpen, Book, Briefcase, Coffee, Utensils, Moon, Sun, Music, Brain, Heart,
+  Languages, Code, Users, ShoppingCart, GraduationCap, Footprints, Droplets, Bed, Bike, PenLine, Laptop,
+  Phone, Home, Car, Pill, Pencil, Clock, Target, Star, Smile, Palette, Wallet, Bath, Shirt, Plane,
+  Trophy, Leaf, Salad, Calculator, FlaskConical, Mic, Camera, Gamepad2, Tv, Wrench, Flame, Timer,
+  type LucideIcon,
+} from "lucide-react";
+import { jsDayOfIso, timeStartMinutes } from "@/lib/schedule";
 import { normalizeTimeToFa } from "@/lib/timeUtils";
-import { timeStartMinutes } from "@/lib/schedule";
 import { findConflictOnDate, findScheduleConflict, rangesOverlap } from "@/lib/conflict";
-import { TimeInput } from "./TimeInput";
 import { JalaliDatePicker } from "./JalaliDatePicker";
 import { formatJalali, isoLocal, jalaliToIso, JalaliDate, toJalali } from "@/lib/jalali";
-import { CustomOccurrence, Importance, IMPORTANCE_LABELS, setCustomOccurrences } from "@/lib/storage";
+import { CustomOccurrence, setCustomOccurrences } from "@/lib/storage";
 import { SegmentedTabs } from "./SegmentedTabs";
 import { focusNextOnEnter } from "@/lib/formNav";
 import { useLockBodyScroll } from "@/lib/useLockBodyScroll";
@@ -18,28 +24,38 @@ import { RoutineChecklistEditor } from "./RoutineChecklistEditor";
 import { RoutineTagField } from "./RoutineTagField";
 import type { ChecklistItem } from "@/lib/routineChecklist";
 import { Spinner } from "./Spinner";
-
-const now = new Date();
+import { ProgramTimeRows, type RowError } from "./ProgramTimeRows";
+import {
+  PROGRAM_TEMPLATES,
+  addMinutesToTime,
+  describeSchedule,
+  newTimeRow,
+  type ProgramKind,
+  type ProgramTemplate,
+  type TimeRow,
+} from "@/lib/programForm";
+import "./add-program.css";
 
 type ScheduleOpts = { removedOccurrences: Set<string>; customOccurrences: CustomOccurrence[] };
-// یک ردیف می‌تونه چند روز هم‌زمان داشته باشه (یه ساعت واحد برای همه‌شون) —
-// موقع ثبت، یک occurrence جدا برای هر روز انتخاب‌شده ساخته می‌شه. id
-// ثابت (نه index آرایه) لازمه تا React موقع افزودن/حذف یک ردیف، بقیه‌ی
-// ردیف‌ها رو دوباره از صفر نسازه و مقدار فیلدهاشون جابه‌جا نشه.
-type NewRow = { id: string; jsDays: number[]; start: string; end: string };
-function newRowId(): string {
-  return "row-" + Date.now().toString(36) + Math.random().toString(36).slice(2, 7);
-}
-type Step = "info" | "details";
 
-// فرم مستقل «افزودن برنامه جدید» — دو مرحله‌ای: اول اسم/روزها/ساعت‌ها/دوره،
-// بعدش میزان اهمیت و تگ. اعتبارسنجی هر مرحله جدا انجام می‌شه؛ دکمه‌ی «بعدی»
-// اگه چیزی ناقصه یه لرزش خیلی ملایم می‌خوره تا کاربر بفهمه مشکلی هست.
+// آیکون الگوها از روی اسم lucide انتخاب می‌شه (فهرست محدود تا باندل بزرگ نشه)
+const TEMPLATE_ICONS: Record<string, LucideIcon> = {
+  Sparkles, Dumbbell, BookOpen, Book, Briefcase, Coffee, Utensils, Moon, Sun, Music, Brain, Heart,
+  Languages, Code, Users, ShoppingCart, GraduationCap, Footprints, Droplets, Bed, Bike, PenLine, Laptop,
+  Phone, Home, Car, Pill, Pencil, Clock, Target, Star, Smile, Palette, Wallet, Bath, Shirt, Plane,
+  Trophy, Leaf, Salad, Calculator, FlaskConical, Mic, Camera, Gamepad2, Tv, Wrench, Flame, Timer,
+};
+
 function isoToJalali(iso: string): JalaliDate {
   const d = new Date(iso + "T00:00:00");
   return toJalali(d.getFullYear(), d.getMonth() + 1, d.getDate());
 }
 
+const EASE = [0.22, 1, 0.36, 1] as const;
+
+// فرم «افزودن برنامه جدید» — یک صفحه (بدون ویزارد): روی موبایل باتم‌شیت،
+// روی صفحه‌ی بزرگ مودال وسط. پاورقی چسبان خلاصه‌ی برنامه و دکمه‌ها رو همیشه
+// نشون می‌ده. خطاها همه داخل خود فرمه (نه بنر بالای صفحه).
 export function AddProgramForm({
   scheduleOpts,
   onClose,
@@ -49,136 +65,88 @@ export function AddProgramForm({
   scheduleOpts: ScheduleOpts;
   onClose: () => void;
   onChanged: () => void;
-  /** روزی که کاربر در صفحه انتخاب کرده — پیش‌فرض گزینه‌ی «فقط برای یک روز» */
+  /** روزی که کاربر در صفحه انتخاب کرده — پیش‌فرض تاریخ «یک روز» */
   defaultDateIso?: string;
 }) {
   useLockBodyScroll();
-  const [step, setStep] = useState<Step>("info");
+  const reduceMotion = useReducedMotion();
+  const [mounted, setMounted] = useState(false);
+  const [show, setShow] = useState(true);
+  const [isMobile, setIsMobile] = useState(true);
+
   const [name, setName] = useState("");
   const [tag, setTag] = useState("");
-  const [importance, setImportance] = useState<Importance>("medium");
-  const [isPeriod, setIsPeriod] = useState(false);
-  // برنامه‌ی «لیستی»: چند آیتم جدا که تک‌تک تیک می‌خورن (lib/routineChecklist.ts)
+  // اعلان: روشن = importance "high" (فقط فلگ داخلی اعلان)، خاموش = "medium"
+  const [notify, setNotify] = useState(false);
+  const [kind, setKind] = useState<ProgramKind>("weekly");
   const [isList, setIsList] = useState(false);
   const [items, setItems] = useState<ChecklistItem[]>([]);
   const [itemsError, setItemsError] = useState(false);
-  // «فقط برای یک روز»: برنامه روی همان یک تاریخ ثبت می‌شود (startDate =
-  // endDate) و هفته‌های بعد تکرار نمی‌شود. با «دوره» هم‌زمان نمی‌شود.
-  const [isOnce, setIsOnce] = useState(false);
-  const [onceJalali, setOnceJalali] = useState<JalaliDate>(() => isoToJalali(defaultDateIso || isoLocal(now)));
+  const [onceJalali, setOnceJalali] = useState<JalaliDate>(() => isoToJalali(defaultDateIso || isoLocal(new Date())));
   const [startJalali, setStartJalali] = useState<JalaliDate | null>(null);
   const [endJalali, setEndJalali] = useState<JalaliDate | null>(null);
   const [pickerFor, setPickerFor] = useState<"start" | "end" | "once" | null>(null);
-  const [rows, setRows] = useState<NewRow[]>([{ id: newRowId(), jsDays: [], start: "", end: "" }]);
+  const [rows, setRows] = useState<TimeRow[]>(() => [newTimeRow()]);
   const [status, setStatus] = useState<"idle" | "loading" | "success" | "error">("idle");
-  // پیام خطا عمدا *داخل همین فرم* نشان داده می‌شود، نه با بنر بالای صفحه:
-  // درخواست صریح کاربر بود که آن بنرها حذف شوند. جایی که کاربر دارد نگاه
-  // می‌کند همین‌جاست، پس پیام هم باید همین‌جا باشد.
   const [formError, setFormError] = useState<string | null>(null);
   const [nameError, setNameError] = useState(false);
-  const [rowErrors, setRowErrors] = useState<Record<number, { start?: boolean; end?: boolean; days?: boolean; order?: boolean }>>({});
+  const [rowErrors, setRowErrors] = useState<Record<string, RowError>>({});
   const [periodError, setPeriodError] = useState<null | "missing" | "order">(null);
-  const [shakeNext, setShakeNext] = useState(false);
-  const formRef = useRef<HTMLDivElement>(null);
+  const [shake, setShake] = useState(false);
+  const [templateName, setTemplateName] = useState<string | null>(null);
+  // مدت الگوی انتخاب‌شده؛ وقتی کاربر ساعت شروع یک ردیف خالی از پایان رو
+  // می‌زنه یک بار پایان خودکار پر می‌شه
+  const tplMinutes = useRef<number | null>(null);
+  const autoFilled = useRef<Set<string>>(new Set());
+  const bodyRef = useRef<HTMLDivElement>(null);
 
-  function addRow() {
-    setRows((r) => [...r, { id: newRowId(), jsDays: [], start: "", end: "" }]);
-  }
-  function removeRow(i: number) {
-    setRows((r) => r.filter((_, idx) => idx !== i));
-  }
-  // خطای یک ردیف به‌محض اینکه کاربر دوباره دستش رو روی همون ردیف می‌ذاره
-  // پاک می‌شه — نه اینکه تا زدن دوباره‌ی «بعدی» قرمز بمونه.
-  function clearRowError(i: number) {
-    setRowErrors((prev) => {
-      if (!prev[i]) return prev;
-      const next = { ...prev };
-      delete next[i];
-      return next;
-    });
-  }
-  function updateRow(i: number, patch: Partial<NewRow>) {
-    setRows((r) => r.map((row, idx) => (idx === i ? { ...row, ...patch } : row)));
-  }
-  function toggleRowDay(i: number, jsDay: number) {
-    setRows((r) =>
-      r.map((row, idx) => {
-        if (idx !== i) return row;
-        const has = row.jsDays.includes(jsDay);
-        // همیشه باید حداقل یک روز انتخاب‌شده بمونه — دی‌سلکت‌کردن آخرین
-        // روز باقی‌مونده نادیده گرفته می‌شه، وگرنه یه ردیف بدون هیچ روزی
-        // می‌شد که هیچ occurrence‌ای ازش قابل ساختن نیست.
-        if (has && row.jsDays.length === 1) return row;
-        const next = has ? row.jsDays.filter((d) => d !== jsDay) : [...row.jsDays, jsDay];
-        return { ...row, jsDays: next };
-      })
-    );
-  }
+  useEffect(() => setMounted(true), []);
+  useEffect(() => {
+    const mq = window.matchMedia("(min-width: 640px)");
+    const sync = () => setIsMobile(!mq.matches);
+    sync();
+    mq.addEventListener("change", sync);
+    return () => mq.removeEventListener("change", sync);
+  }, []);
 
-  function validateInfoStep(): boolean {
-    let hasError = false;
-    const nErr = !name.trim();
-    setNameError(nErr);
-    if (nErr) hasError = true;
+  const requestClose = useCallback(() => setShow(false), []);
+  useEffect(() => {
+    const onKey = (e: KeyboardEvent) => {
+      if (e.key === "Escape" && !pickerFor) requestClose();
+    };
+    window.addEventListener("keydown", onKey);
+    return () => window.removeEventListener("keydown", onKey);
+  }, [requestClose, pickerFor]);
 
-    const iErr = isList && !items.some((i) => i.name.trim());
-    setItemsError(iErr);
-    if (iErr) hasError = true;
+  const onceIso = kind === "once" ? jalaliToIso(...onceJalali) : null;
+  const periodFromIso = kind === "period" && startJalali ? jalaliToIso(...startJalali) : null;
+  const periodToIso = kind === "period" && endJalali ? jalaliToIso(...endJalali) : null;
+  const usedRows = kind === "once" ? rows.slice(0, 1) : rows;
 
-    const rErrs: typeof rowErrors = {};
-    rows.forEach((r, i) => {
-      const e: { start?: boolean; end?: boolean; days?: boolean; order?: boolean } = {};
-      if (!isOnce && !r.jsDays.length) { e.days = true; hasError = true; }
-      if (!r.start.trim()) { e.start = true; hasError = true; }
-      if (!r.end.trim()) { e.end = true; hasError = true; }
-      // ساعت پایان نمی‌تونه زودتر (یا برابر) ساعت شروع باشه — بازه‌ی
-      // معکوس/صفر یعنی برنامه‌ای که هیچ‌وقت اتفاق نمی‌افته و همه‌ی
-      // محاسبه‌های خط زمان/تداخل رو هم بهم می‌ریزه.
-      if (!e.start && !e.end) {
-        const sMin = timeStartMinutes(normalizeTimeToFa(r.start));
-        const eMin = timeStartMinutes(normalizeTimeToFa(r.end));
-        if (sMin !== null && eMin !== null && eMin <= sMin) { e.order = true; hasError = true; }
-      }
-      if (e.start || e.end || e.days || e.order) rErrs[i] = e;
-    });
-    setRowErrors(rErrs);
-
-    let pErr: typeof periodError = null;
-    if (isPeriod) {
-      if (!startJalali || !endJalali) pErr = "missing";
-      else if ((jalaliToIso(...endJalali) ?? "") < (jalaliToIso(...startJalali) ?? "")) pErr = "order";
-    }
-    setPeriodError(pErr);
-    if (pErr) hasError = true;
-
-    return !hasError;
-  }
-
-  function goNext() {
-    if (validateInfoStep()) {
-      setStep("details");
-      return;
-    }
-    setShakeNext(true);
-    setTimeout(() => setShakeNext(false), 350);
-  }
-
-  async function submitNew() {
-    if (status !== "idle") return;
-    if (!validateInfoStep()) { setStep("info"); return; }
-
-    const today = isoLocal(now);
-    const onceIso = isOnce ? jalaliToIso(...onceJalali) : null;
-    const periodStart = isPeriod && startJalali ? jalaliToIso(...startJalali) : null;
-    const periodEnd = isPeriod && endJalali ? jalaliToIso(...endJalali) : null;
-    // تاریخ ثبت: تک‌روزه → همان روز؛ دوره → بازه‌ی انتخاب‌شده؛ هفتگی → از امروز
-    const dates: { startDate: string; endDate?: string } = onceIso
+  // تاریخ ثبت: یک روز → همان روز؛ دوره → بازه‌ی انتخاب‌شده؛ هفتگی → از امروز
+  function computeDates(today: string): { startDate: string; endDate?: string } {
+    return onceIso
       ? { startDate: onceIso, endDate: onceIso }
-      : periodStart && periodEnd
-        ? { startDate: periodStart, endDate: periodEnd }
+      : periodFromIso && periodToIso
+        ? { startDate: periodFromIso, endDate: periodToIso }
         : { startDate: today };
+  }
 
-    /** اولین وقوع واقعی این روز هفته — تداخل باید همان‌جا سنجیده شود، نه لزوما این هفته */
+  // تداخل هر ردیف (همون منطق سنجش زمان ثبت): با برنامه‌های موجود و با
+  // ردیف‌های دیگه‌ی همین فرم در همون روز. عمدا هیچ قفلی روی «این ساعت امروز
+  // گذشته» نیست: کاربر باید بتونه برنامه‌ی همین امروز رو هم ثبت کنه.
+  const computeConflicts = useCallback((): Record<string, string | null> => {
+    const out: Record<string, string | null> = {};
+    const now = new Date();
+    const today = isoLocal(now);
+    const dates = computeDates(today);
+    const useDates = kind === "once" || kind === "period";
+    const norm = usedRows.map((r) => {
+      const startFa = normalizeTimeToFa(r.start);
+      const endFa = normalizeTimeToFa(r.end);
+      return { row: r, startMin: timeStartMinutes(startFa), endMin: timeStartMinutes(endFa) };
+    });
+    // اولین وقوع واقعی این روز هفته — تداخل باید همان‌جا سنجیده شود
     function firstOccurrence(jsDay: number): Date | null {
       const from = dates.startDate > today ? dates.startDate : today;
       const d = new Date(from + "T00:00:00");
@@ -186,39 +154,162 @@ export function AddProgramForm({
       if (dates.endDate && isoLocal(d) > dates.endDate) return null;
       return d;
     }
-
-    const normalizedRows: { jsDay: number; start: string; end: string; startMin: number | null; endMin: number | null }[] = [];
-    let conflictMsg: string | null = null;
-    outer: for (const r of (isOnce ? rows.slice(0, 1) : rows)) {
-      const startFa = normalizeTimeToFa(r.start);
-      const endFa = normalizeTimeToFa(r.end);
-      const startMin = timeStartMinutes(startFa);
-      const endMin = timeStartMinutes(endFa);
-
-      for (const jsDay of (onceIso ? [jsDayOfIso(onceIso)] : r.jsDays)) {
-        // عمدا هیچ قفلی روی «این ساعت امروز گذشته» نیست: کاربر باید بتواند
-        // برنامه‌ی همین امروز را هم ثبت کند، حتی اگر ساعتش رد شده باشد.
-        const at = onceIso || isPeriod ? firstOccurrence(jsDay) : null;
-        let conflict = onceIso || isPeriod
-          ? (at ? findConflictOnDate(at, startMin, endMin, scheduleOpts) : null)
-          : findScheduleConflict(jsDay, startMin, endMin, now, scheduleOpts);
+    const daysOf = (r: TimeRow) => (onceIso ? [jsDayOfIso(onceIso)] : r.jsDays);
+    for (const a of norm) {
+      out[a.row.id] = null;
+      if (a.startMin === null || a.endMin === null || a.endMin <= a.startMin) continue;
+      // دوره بدون تاریخ کامل هنوز قابل سنجش نیست
+      if (kind === "period" && !(periodFromIso && periodToIso)) continue;
+      for (const jsDay of daysOf(a.row)) {
+        let conflict: { name: string } | null = null;
+        if (useDates) {
+          const at = firstOccurrence(jsDay);
+          conflict = at ? findConflictOnDate(at, a.startMin, a.endMin, scheduleOpts) : null;
+        } else {
+          conflict = findScheduleConflict(jsDay, a.startMin, a.endMin, now, scheduleOpts);
+        }
         if (!conflict) {
-          for (const other of normalizedRows) {
-            if (other.jsDay === jsDay && rangesOverlap(startMin!, endMin, other.startMin!, other.endMin)) {
-              conflict = { id: "self", name } as any;
+          for (const b of norm) {
+            if (b === a || b.startMin === null || b.endMin === null) continue;
+            if (!daysOf(b.row).includes(jsDay)) continue;
+            if (rangesOverlap(a.startMin, a.endMin, b.startMin, b.endMin)) {
+              conflict = { name: "ردیف دیگر همین برنامه" };
               break;
             }
           }
         }
-        if (conflict) { conflictMsg = `تداخل زمانی با «${conflict.name}» — این برنامه اضافه نشد`; break outer; }
-        normalizedRows.push({ jsDay, start: startFa, end: endFa, startMin, endMin });
+        if (conflict) { out[a.row.id] = conflict.name; break; }
       }
     }
+    return out;
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [kind, rows, onceIso, periodFromIso, periodToIso, scheduleOpts]);
 
-    if (conflictMsg) {
+  const conflicts = useMemo(computeConflicts, [computeConflicts]);
+
+  const summary = useMemo(
+    () => describeSchedule(kind, usedRows, { onceIso, periodFromIso, periodToIso }),
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+    [kind, rows, onceIso, periodFromIso, periodToIso]
+  );
+
+  function changeRows(next: TimeRow[]) {
+    // پایان خودکار از مدت الگو: فقط یک بار برای هر ردیف
+    const mins = tplMinutes.current;
+    const withAuto = mins == null ? next : next.map((r) => {
+      const prev = rows.find((p) => p.id === r.id);
+      if (!prev || prev.start === r.start || !r.start.trim() || r.end.trim() || autoFilled.current.has(r.id)) return r;
+      const end = addMinutesToTime(normalizeDigits(r.start), mins);
+      if (!end) return r;
+      autoFilled.current.add(r.id);
+      return { ...r, end };
+    });
+    setRows(withAuto);
+  }
+  function normalizeDigits(s: string): string {
+    return s.replace(/[۰-۹]/g, (c) => String(c.charCodeAt(0) - 1776)).replace(/[٠-٩]/g, (c) => String(c.charCodeAt(0) - 1632)).trim();
+  }
+  const clearRowError = useCallback((rowId: string) => {
+    setRowErrors((prev) => {
+      if (!prev[rowId]) return prev;
+      const next = { ...prev };
+      delete next[rowId];
+      return next;
+    });
+  }, []);
+
+  function applyTemplate(t: ProgramTemplate) {
+    setTemplateName(t.name);
+    setName(t.name);
+    setNameError(false);
+    if (!tag.trim() && t.tag) setTag(t.tag);
+    tplMinutes.current = t.minutes;
+    const first = rows[0];
+    if (first && first.start.trim() && !first.end.trim()) {
+      const end = addMinutesToTime(normalizeDigits(first.start), t.minutes);
+      if (end) {
+        autoFilled.current.add(first.id);
+        setRows((rs) => rs.map((r, i) => (i === 0 ? { ...r, end } : r)));
+      }
+    }
+  }
+
+  function changeKind(k: ProgramKind) {
+    setKind(k);
+    if (k === "once") {
+      // یک روز: یک ردیف ساعت دارد و روزش از تاریخ می‌آید
+      setRows((r) => r.slice(0, 1));
+      setRowErrors({});
+    }
+    if (k !== "period") setPeriodError(null);
+  }
+
+  function validate(): { ok: boolean; first: "name" | "list" | "period" | "rows" | null } {
+    let first: "name" | "list" | "period" | "rows" | null = null;
+    const nErr = !name.trim();
+    setNameError(nErr);
+    if (nErr) first = first ?? "name";
+
+    const iErr = isList && !items.some((i) => i.name.trim());
+    setItemsError(iErr);
+    if (iErr) first = first ?? "list";
+
+    let pErr: typeof periodError = null;
+    if (kind === "period") {
+      if (!startJalali || !endJalali) pErr = "missing";
+      else if ((jalaliToIso(...endJalali) ?? "") < (jalaliToIso(...startJalali) ?? "")) pErr = "order";
+    }
+    setPeriodError(pErr);
+    if (pErr) first = first ?? "period";
+
+    const rErrs: Record<string, RowError> = {};
+    usedRows.forEach((r) => {
+      const e: RowError = {};
+      if (kind !== "once" && !r.jsDays.length) e.days = true;
+      if (!r.start.trim()) e.start = true;
+      if (!r.end.trim()) e.end = true;
+      // ساعت پایان نمی‌تونه زودتر (یا برابر) ساعت شروع باشه — بازه‌ی معکوس/صفر
+      // یعنی برنامه‌ای که هیچ‌وقت اتفاق نمی‌افته و محاسبه‌ی تداخل رو بهم می‌ریزه.
+      if (!e.start && !e.end) {
+        const sMin = timeStartMinutes(normalizeTimeToFa(r.start));
+        const eMin = timeStartMinutes(normalizeTimeToFa(r.end));
+        if (sMin !== null && eMin !== null && eMin <= sMin) e.order = true;
+      }
+      if (e.days || e.start || e.end || e.order) rErrs[r.id] = e;
+    });
+    setRowErrors(rErrs);
+    if (Object.keys(rErrs).length) first = first ?? "rows";
+    return { ok: !first, first };
+  }
+
+  function failFeedback(first: "name" | "list" | "period" | "rows" | null) {
+    setShake(true);
+    setTimeout(() => setShake(false), 350);
+    if (!first) return;
+    setTimeout(() => {
+      const el = bodyRef.current?.querySelector(`[data-apf-field="${first}"]`);
+      el?.scrollIntoView({ behavior: reduceMotion ? "auto" : "smooth", block: "center" });
+    }, 30);
+  }
+
+  async function submitNew() {
+    if (status !== "idle") return;
+    const v = validate();
+    if (!v.ok) {
       setFormError(null);
+      failFeedback(v.first);
+      return;
+    }
+
+    const today = isoLocal(new Date());
+    const dates = computeDates(today);
+
+    // تداخل: همون سنجش زنده، این‌بار مسدودکننده
+    const live = computeConflicts();
+    const hit = usedRows.map((r) => live[r.id]).find((c) => c);
+    if (hit) {
+      setFormError(`تداخل زمانی با «${hit}» — این برنامه اضافه نشد`);
       setStatus("error");
-      setFormError(conflictMsg);
       setTimeout(() => setStatus("idle"), 900);
       return;
     }
@@ -226,249 +317,212 @@ export function AddProgramForm({
     setFormError(null);
     setStatus("loading");
 
-    // دیگه هیچ تاخیر مصنوعی‌ای قبل از نوشتن نیست — طبق درخواست صریح، برنامه
-    // باید همون لحظه‌ای که واقعا ذخیره شد توی بقیه‌ی اپ هم دیده بشه، نه
-    // بعد از یک لودینگ ساختگی که فقط برای نمایش بود.
     const trimmedTag = tag.trim();
-    // همه‌ی روزهای این برنامه همون آیتم‌ها رو دارن (کلید تیک با id  هر occurrence جداست)
+    // همه‌ی روزهای این برنامه همون آیتم‌ها رو دارن (کلید تیک با id هر occurrence جداست)
     const cleanItems = isList ? items.map((i) => ({ id: i.id, name: i.name.trim() })).filter((i) => i.name) : [];
-    const additions: CustomOccurrence[] = normalizedRows.map((r) => ({
-      id: "custom-" + Date.now().toString(36) + Math.random().toString(36).slice(2, 7),
-      name,
-      jsDay: r.jsDay,
-      time: r.end ? `${r.start} – ${r.end}` : r.start,
-      // هفتگی: از همین امروز به بعد — چهارشنبه‌های گذشته نباید یهو این
-      // برنامه رو داشته باشن. دوره/تک‌روزه: دقیقا بازه‌ای که کاربر انتخاب
-      // کرد (قبلا تاریخ‌های دوره گرفته می‌شد ولی هیچ‌وقت ذخیره نمی‌شد).
-      ...dates,
-      importance,
-      ...(trimmedTag ? { tag: trimmedTag } : {}),
-      ...(cleanItems.length ? { items: cleanItems } : {}),
-    }));
+    const additions: CustomOccurrence[] = [];
+    for (const r of usedRows) {
+      const startFa = normalizeTimeToFa(r.start);
+      const endFa = normalizeTimeToFa(r.end);
+      for (const jsDay of onceIso ? [jsDayOfIso(onceIso)] : r.jsDays) {
+        additions.push({
+          id: "custom-" + Date.now().toString(36) + Math.random().toString(36).slice(2, 7),
+          name,
+          jsDay,
+          time: endFa ? `${startFa} – ${endFa}` : startFa,
+          // هفتگی: از همین امروز به بعد؛ یک روز/دوره: دقیقا بازه‌ی انتخاب‌شده
+          ...dates,
+          importance: notify ? "high" : "medium",
+          ...(trimmedTag ? { tag: trimmedTag } : {}),
+          ...(cleanItems.length ? { items: cleanItems } : {}),
+        });
+      }
+    }
     await setCustomOccurrences([...scheduleOpts.customOccurrences, ...additions]);
     if (navigator.vibrate) navigator.vibrate(15);
     setStatus("success");
     onChanged();
-    setTimeout(onClose, 480);
+    setTimeout(requestClose, 480);
   }
 
-  return (
+  if (!mounted) return null;
+
+  const dur = reduceMotion ? 0 : 0.34;
+  const panelMotion = isMobile
+    ? { initial: { y: "100%" }, animate: { y: 0 }, exit: { y: "100%" } }
+    : { initial: { opacity: 0, scale: 0.96, y: 14 }, animate: { opacity: 1, scale: 1, y: 0 }, exit: { opacity: 0, scale: 0.97, y: 8 } };
+
+  return createPortal(
     <>
-      <div className="wsearch-newform-overlay strong-blur open" onClick={onClose} />
-      <div className="wsearch-newform dash-scope open">
-        <div className="relative z-[1] add-program-glass" ref={formRef} onKeyDown={(e) => focusNextOnEnter(e, formRef)}>
-          {step === "info" ? (
-            <div className="wsearch-newform-head">
-              <div className="wsearch-newform-title accent">افزودن برنامه جدید</div>
-              <button className="nav-close" onClick={onClose} aria-label="بستن">×</button>
-            </div>
-          ) : (
-            <div className="exercise-wizard-head">
-              <button type="button" className="exercise-catalog-back-btn" onClick={() => setStep("info")} aria-label="بازگشت">
-                <ChevronRight size={20} />
-              </button>
-              <button type="button" className="nav-close" onClick={onClose} aria-label="بستن">×</button>
-            </div>
-          )}
-
-          {step === "info" && (
-            <>
-              <label htmlFor="addProgramName">اسم برنامه</label>
-              <div className={`name-field-wrap${nameError ? " field-error" : ""}`}>
-                <input
-                  id="addProgramName"
-                  type="text"
-                  className="wsearch-newform-name"
-                  placeholder="ریاضی، باشگاه، جلسه کاری…"
-                  value={name}
-                  onChange={(e) => { setName(e.target.value); if (e.target.value.trim()) setNameError(false); }}
-                />
+      <AnimatePresence onExitComplete={onClose}>
+        {show && (
+          <div className="apf-root dash-scope" dir="rtl" role="dialog" aria-modal="true" aria-label="برنامه‌ی جدید">
+            <motion.div
+              className="apf-backdrop"
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+              transition={{ duration: reduceMotion ? 0 : 0.22 }}
+              onClick={requestClose}
+            />
+            <motion.div
+              className="apf-panel"
+              {...panelMotion}
+              transition={{ duration: dur, ease: EASE }}
+              onKeyDown={(e) => focusNextOnEnter(e, bodyRef)}
+            >
+              <div className="apf-handle" aria-hidden="true" />
+              <div className="apf-head">
+                <div className="apf-title">برنامه‌ی جدید</div>
+                <button type="button" className="apf-close" onClick={requestClose} aria-label="بستن">
+                  <X size={20} />
+                </button>
               </div>
-              {nameError && <div className="field-error-msg" style={{ display: "block", marginTop: 6 }}>اسم برنامه رو وارد کن</div>}
 
-              <TickOption checked={isList} onChange={(on) => { setIsList(on); if (!on) setItemsError(false); }} className="mt-3.5">
-                این برنامه یک لیسته (چند آیتم که تک‌تک تیک می‌خورن)
-              </TickOption>
-              {isList && (
-                <>
-                  <RoutineChecklistEditor items={items} onChange={(v) => { setItems(v); if (v.some((i) => i.name.trim())) setItemsError(false); }} error={itemsError} />
-                  {itemsError && <div className="field-error-msg" style={{ display: "block", marginTop: 6 }}>حداقل یک آیتم به لیست اضافه کن</div>}
-                </>
-              )}
-
-              <TickOption
-                checked={isOnce}
-                className="mt-2"
-                onChange={(on) => {
-                    setIsOnce(on);
-                    if (on) {
-                      // تک‌روزه یک ردیف ساعت دارد و روزش از تاریخ می‌آید
-                      setIsPeriod(false);
-                      setPeriodError(null);
-                      setRows((r) => r.slice(0, 1));
-                      setRowErrors({});
-                    }
-                  }}
-              >
-                فقط برای یک روز (تکرار نشه)
-              </TickOption>
-
-              {isOnce && (
-                <div className="wsearch-date-row">
-                  <div className="time-field">
-                    <span className="time-field-label">تاریخ</span>
-                    <button type="button" className="jdate-btn" onClick={() => setPickerFor("once")}>
-                      {formatJalali(onceJalali)}
-                    </button>
+              <div className="apf-body" ref={bodyRef}>
+                <div className="apf-section" data-apf-field="name">
+                  <div className={`apf-name-wrap${nameError ? " apf-invalid" : ""}`}>
+                    <input
+                      id="addProgramName"
+                      type="text"
+                      className="wsearch-newform-name"
+                      aria-label="اسم برنامه"
+                      placeholder="اسم برنامه، مثلا ورزش یا مطالعه"
+                      value={name}
+                      onChange={(e) => {
+                        setName(e.target.value);
+                        if (e.target.value.trim()) setNameError(false);
+                        if (templateName && e.target.value !== templateName) setTemplateName(null);
+                      }}
+                    />
                   </div>
-                </div>
-              )}
-
-              <div className="wsearch-newrow-list">
-                {(isOnce ? rows.slice(0, 1) : rows).map((r, ri) => {
-                  const err = rowErrors[ri];
-                  const rowErrMsgs: string[] = [];
-                  if (err?.days) rowErrMsgs.push("حداقل یک روز رو انتخاب کن");
-                  if (err?.start) rowErrMsgs.push("ساعت شروع رو وارد کن");
-                  if (err?.end) rowErrMsgs.push("ساعت پایان رو وارد کن");
-                  if (err?.order) rowErrMsgs.push("ساعت پایان باید بعد از ساعت شروع باشه");
-                  return (
-                    <div key={r.id} className="wsearch-newrow-anim">
-                      <div className="wsearch-newrow">
-                        {!isOnce && (
-                        <div className="wsearch-newrow-daywrap">
-                          <div className={`day-picker${err?.days ? " field-error" : ""}`}>
-                            {WEEK_ORDER.map((o) => (
-                              <span
-                                key={o.jsDay}
-                                className={`day-pill${r.jsDays.includes(o.jsDay) ? " on" : ""}`}
-                                onClick={() => toggleRowDay(ri, o.jsDay)}
-                              >
-                                {o.short}
-                              </span>
-                            ))}
-                          </div>
-                        </div>
-                        )}
-                        <div className={`time-field${err?.start || err?.order ? " field-error" : ""}`}>
-                          <span className="time-field-label">ساعت شروع</span>
-                          <div className="field-error-wrap">
-                            <TimeInput value={r.start} onChange={(v) => { updateRow(ri, { start: v }); clearRowError(ri); }} />
-                          </div>
-                        </div>
-                        <div className={`time-field${err?.end || err?.order ? " field-error" : ""}`}>
-                          <span className="time-field-label">ساعت پایان</span>
-                          <div className="field-error-wrap">
-                            <TimeInput value={r.end} onChange={(v) => { updateRow(ri, { end: v }); clearRowError(ri); }} />
-                          </div>
-                        </div>
-                        {rows.length > 1 && (
-                          <button type="button" className="wsearch-newrow-remove-text" onClick={() => removeRow(ri)}>
-                            <Minus size={12} />
-                            حذف این روز
+                  {nameError && <span className="apf-msg">اسم برنامه رو وارد کن</span>}
+                  {PROGRAM_TEMPLATES.length > 0 && (
+                    <div className="apf-chips">
+                      {PROGRAM_TEMPLATES.map((t) => {
+                        const Icon = TEMPLATE_ICONS[t.icon] ?? Sparkles;
+                        return (
+                          <button
+                            key={t.name}
+                            type="button"
+                            className={`apf-chip${templateName === t.name ? " on" : ""}`}
+                            onClick={() => applyTemplate(t)}
+                          >
+                            <Icon size={14} />
+                            {t.name}
                           </button>
-                        )}
+                        );
+                      })}
+                    </div>
+                  )}
+                </div>
+
+                <div className="apf-section">
+                  <SegmentedTabs<ProgramKind>
+                    active={kind}
+                    onChange={changeKind}
+                    ariaLabel="نوع برنامه"
+                    options={[
+                      { value: "weekly", label: "هفتگی" },
+                      { value: "once", label: "یک روز" },
+                      { value: "period", label: "دوره" },
+                    ]}
+                  />
+                  {kind === "once" && (
+                    <div className="apf-dates">
+                      <div className="apf-date-field">
+                        <span className="apf-date-label">تاریخ</span>
+                        <button type="button" className="jdate-btn" onClick={() => setPickerFor("once")}>
+                          {formatJalali(onceJalali)}
+                        </button>
                       </div>
-                      {!!rowErrMsgs.length && (
-                        <div className="field-error-msg" style={{ display: "block", marginTop: -4, marginBottom: 4 }}>
-                          {rowErrMsgs.join(" — ")}
+                    </div>
+                  )}
+                  {kind === "period" && (
+                    <div data-apf-field="period">
+                      <div className={`apf-dates two${periodError ? " apf-invalid" : ""}`}>
+                        <div className="apf-date-field">
+                          <span className="apf-date-label">شروع دوره</span>
+                          <button type="button" className={`jdate-btn${startJalali ? "" : " placeholder"}`} onClick={() => setPickerFor("start")}>
+                            {startJalali ? formatJalali(startJalali) : "روز / ماه / سال"}
+                          </button>
                         </div>
+                        <div className="apf-date-field">
+                          <span className="apf-date-label">پایان دوره</span>
+                          <button type="button" className={`jdate-btn${endJalali ? "" : " placeholder"}`} onClick={() => setPickerFor("end")}>
+                            {endJalali ? formatJalali(endJalali) : "روز / ماه / سال"}
+                          </button>
+                        </div>
+                      </div>
+                      {periodError && (
+                        <span className="apf-msg">
+                          {periodError === "order" ? "تاریخ پایان دوره باید بعد از تاریخ شروع باشه" : "تاریخ شروع و پایان دوره رو انتخاب کن"}
+                        </span>
                       )}
                     </div>
-                  );
-                })}
-              </div>
-
-              {!isOnce && (
-                <button type="button" className="wsearch-add-btn" onClick={addRow}>
-                  افزودن روز دیگر
-                  <span className="wsearch-add-btn-icon">+</span>
-                </button>
-              )}
-
-              <TickOption
-                checked={isPeriod}
-                className="mt-4"
-                onChange={(on) => {
-                  setIsPeriod(on);
-                  if (on) setIsOnce(false);
-                  else setPeriodError(null);
-                }}
-              >
-                این یک دوره است
-              </TickOption>
-
-              {isPeriod && (
-                <div className={`wsearch-date-row${periodError ? " field-error" : ""}`}>
-                  <div className="time-field">
-                    <span className="time-field-label">تاریخ شروع دوره</span>
-                    <button type="button" className={`jdate-btn${startJalali ? "" : " placeholder"}`} onClick={() => setPickerFor("start")}>
-                      {startJalali ? formatJalali(startJalali) : "روز / ماه / سال"}
-                    </button>
-                  </div>
-                  <div className="time-field">
-                    <span className="time-field-label">تاریخ پایان دوره</span>
-                    <button type="button" className={`jdate-btn${endJalali ? "" : " placeholder"}`} onClick={() => setPickerFor("end")}>
-                      {endJalali ? formatJalali(endJalali) : "روز / ماه / سال"}
-                    </button>
-                  </div>
+                  )}
                 </div>
-              )}
-              {periodError && (
-                <div className="field-error-msg" style={{ display: "block", marginTop: 6 }}>
-                  {periodError === "order" ? "تاریخ پایان دوره باید بعد از تاریخ شروع باشه" : "تاریخ شروع و پایان دوره رو انتخاب کن"}
+
+                <div className="apf-rows" data-apf-field="rows">
+                  <ProgramTimeRows
+                    kind={kind}
+                    rows={usedRows}
+                    onChange={changeRows}
+                    errors={rowErrors}
+                    conflicts={conflicts}
+                    onClearError={clearRowError}
+                  />
                 </div>
-              )}
 
-              <button
-                type="button"
-                className={`exercise-wizard-next-btn wide${shakeNext ? " shake" : ""}`}
-                style={{ marginTop: 18 }}
-                onClick={goNext}
-              >
-                بعدی
-              </button>
-            </>
-          )}
+                <div className="apf-section" data-apf-field="list">
+                  <TickOption checked={isList} onChange={(on) => { setIsList(on); if (!on) setItemsError(false); }}>
+                    این برنامه یک لیسته (چند آیتم که تک‌تک تیک می‌خورن)
+                  </TickOption>
+                  {isList && (
+                    <>
+                      <RoutineChecklistEditor
+                        items={items}
+                        onChange={(v) => { setItems(v); if (v.some((i) => i.name.trim())) setItemsError(false); }}
+                        error={itemsError}
+                      />
+                      {itemsError && <span className="apf-msg">حداقل یک آیتم به لیست اضافه کن</span>}
+                    </>
+                  )}
+                </div>
 
-          {step === "details" && (
-            <>
-              <label className="exercise-wizard-title">تگ و میزان اهمیت</label>
+                <div className="apf-section">
+                  <label className="apf-label" htmlFor="addProgramTag">تگ (اختیاری)</label>
+                  <RoutineTagField id="addProgramTag" value={tag} onChange={setTag} occurrences={scheduleOpts.customOccurrences} />
+                </div>
 
-              <label htmlFor="addProgramTag">تگ (اختیاری)</label>
-              <RoutineTagField id="addProgramTag" value={tag} onChange={setTag} occurrences={scheduleOpts.customOccurrences} />
-
-              <label style={{ marginTop: 14, display: "block" }}>میزان اهمیت</label>
-              <SegmentedTabs
-                active={importance}
-                onChange={setImportance}
-                options={(Object.keys(IMPORTANCE_LABELS) as Importance[]).map((k) => ({ value: k, label: IMPORTANCE_LABELS[k] }))}
-              />
-              <div className="section-note" style={{ marginTop: 8 }}>
-                نکته: فقط برنامه‌هایی که میزان اهمیت آن‌ها زیاد یا خیلی زیاد باشد توسط اعلان به شما اطلاع داده خواهد شد.
+                <div className="apf-section">
+                  <TickOption checked={notify} onChange={setNotify}>
+                    برای این برنامه اعلان بفرست
+                  </TickOption>
+                </div>
               </div>
 
-              {/* دکمه‌ی ثبت طبق درخواست کاربر دیگه یه آیکون تیک دایره‌ای
-                  نیست — یک دکمه‌ی تمام‌عرض متن‌دار با حالت لودینگ/موفقیت/خطا
-                  روی خودش، تا مشخص باشه داره ثبت می‌شه. */}
-              {formError && <div className="form-inline-error">{formError}</div>}
-
-              <div className="wsearch-newform-actions">
-                <button
-                  type="button"
-                  className={`wsearch-submit-btn${status !== "idle" ? " " + status : ""}`}
-                  onClick={submitNew}
-                  disabled={status !== "idle"}
-                >
-                  {status === "loading" ? (
-                    <Spinner size={15} />
-                  ) : status === "success" ? "ثبت شد" : status === "error" ? "ثبت نشد" : "ثبت"}
-                </button>
+              <div className="apf-foot">
+                {summary && <div className="apf-summary">{summary}</div>}
+                {formError && <div className="apf-error">{formError}</div>}
+                <div className="apf-actions">
+                  <button
+                    type="button"
+                    className={`trade-primary-btn apf-submit${shake ? " shake" : ""}`}
+                    onClick={submitNew}
+                    disabled={status === "loading" || status === "success"}
+                  >
+                    {status === "loading" ? <Spinner size={15} /> : status === "success" ? "اضافه شد ✓" : status === "error" ? "اضافه نشد" : "افزودن برنامه"}
+                  </button>
+                  <button type="button" className="account-outline-btn apf-cancel" onClick={requestClose}>
+                    انصراف
+                  </button>
+                </div>
               </div>
-            </>
-          )}
-        </div>
-      </div>
+            </motion.div>
+          </div>
+        )}
+      </AnimatePresence>
 
       {pickerFor && (
         <JalaliDatePicker
@@ -477,11 +531,12 @@ export function AddProgramForm({
           onClose={() => setPickerFor(null)}
           onPick={(d) => {
             if (pickerFor === "once") { setOnceJalali(d); setPickerFor(null); }
-            else if (pickerFor === "start") { setStartJalali(d); setPickerFor("end"); }
-            else { setEndJalali(d); setPickerFor(null); }
+            else if (pickerFor === "start") { setStartJalali(d); setPeriodError(null); setPickerFor("end"); }
+            else { setEndJalali(d); setPeriodError(null); setPickerFor(null); }
           }}
         />
       )}
-    </>
+    </>,
+    document.body
   );
 }
