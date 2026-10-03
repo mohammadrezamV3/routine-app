@@ -251,6 +251,25 @@ export const DI = {
       <path d="M8 10.5V7.8a4 4 0 0 1 8 0v2.7" {...s} />
     </svg>
   ),
+  // دوستان — دو نفر کنار هم؛ نفر دوم با هاور کارت سر تکان می‌ده (همون dbi-nod منتورها)
+  friends: (p: P) => (
+    <svg {...base} {...p}>
+      <circle cx="9" cy="8" r="3.2" {...s} />
+      <path d="M3 19.5c1-3.3 3.3-5 6-5s5 1.7 6 5" {...s} />
+      <g className="dbi-nod">
+        <circle cx="16.6" cy="8.6" r="2.6" {...s} strokeWidth={1.6} />
+        <path d="M16.2 13.9c2.4 0 4.2 1.6 4.8 4.3" {...s} strokeWidth={1.6} />
+      </g>
+    </svg>
+  ),
+  // افزودن دوست — یک نفر و علامت +
+  userPlus: (p: P) => (
+    <svg {...base} {...p}>
+      <circle cx="10" cy="8" r="3.3" {...s} />
+      <path d="M3.5 19.5c1.2-3.3 3.6-5 6.5-5s5.3 1.7 6.5 5" {...s} />
+      <path className="dbi-twinkle" d="M19 6.5v5M16.5 9h5" {...s} />
+    </svg>
+  ),
   user: (p: P) => (
     <svg {...base} {...p}>
       <circle cx="12" cy="8" r="3.3" {...s} />

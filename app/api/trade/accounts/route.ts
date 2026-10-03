@@ -7,6 +7,7 @@ import { computeTradeStats } from "@/lib/tradeAnalytics";
 import { loadAccountMoney } from "@/lib/tradeCashflowServer";
 import { MAX_ACCOUNTS } from "@/lib/tradeTypes";
 import { withLiveSync } from "@/lib/realtime";
+import { sessionFeatureBlocked } from "@/lib/featureFlagsServer";
 
 // حساب‌های معاملاتی کاربر. ورودی صفحه‌ی «ژورنال‌نویسی» همین است: اول
 // حساب‌ها، بعد با انتخاب حساب می‌رویم داخل آمار و معاملاتش.
@@ -24,6 +25,7 @@ const ACCOUNT_SELECT = {
 
 // GET /api/trade/accounts?archived=1
 export async function GET(req: NextRequest) {
+  { const off = await sessionFeatureBlocked("trade"); if (off) return off; }
   const guard = await requireModule(ModuleKey.TRADE);
   if (!guard.ok) return guard.response;
   const userId = guard.userId;
@@ -87,6 +89,7 @@ export async function GET(req: NextRequest) {
 
 // POST /api/trade/accounts
 async function handlePOST(req: NextRequest) {
+  { const off = await sessionFeatureBlocked("tradeJournal"); if (off) return off; }
   const guard = await requireModule(ModuleKey.TRADE);
   if (!guard.ok) return guard.response;
   const userId = guard.userId;
@@ -120,6 +123,7 @@ async function handlePOST(req: NextRequest) {
 
 // PATCH /api/trade/accounts  { id, ...fields }
 async function handlePATCH(req: NextRequest) {
+  { const off = await sessionFeatureBlocked("tradeJournal"); if (off) return off; }
   const guard = await requireModule(ModuleKey.TRADE);
   if (!guard.ok) return guard.response;
   const userId = guard.userId;
@@ -155,6 +159,7 @@ async function handlePATCH(req: NextRequest) {
 // ماژول است و پاک‌کردنش با یک کلیک برگشت‌ناپذیر خواهد بود. حذف کامل فقط
 // وقتی انجام می‌شود که کلاینت صریحا mode=purge بفرستد (پشت تایید تایپی).
 async function handleDELETE(req: NextRequest) {
+  { const off = await sessionFeatureBlocked("tradeJournal"); if (off) return off; }
   const guard = await requireModule(ModuleKey.TRADE);
   if (!guard.ok) return guard.response;
   const userId = guard.userId;

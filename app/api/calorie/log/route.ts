@@ -5,9 +5,11 @@ import { ModuleKey } from "@prisma/client";
 import { clampText } from "@/lib/validate";
 import { parseIsoDate, readJsonBody } from "@/lib/validate";
 import { withLiveSync } from "@/lib/realtime";
+import { sessionFeatureBlocked } from "@/lib/featureFlagsServer";
 
 // GET /api/calorie/log?date=2026-07-25
 export async function GET(req: NextRequest) {
+  { const off = await sessionFeatureBlocked("calorie"); if (off) return off; }
   const guard = await requireModule(ModuleKey.CALORIE);
   if (!guard.ok) return guard.response;
   const userId = guard.userId;
@@ -26,6 +28,7 @@ export async function GET(req: NextRequest) {
 // customCalories اینجا کالری کل همون مقدار ثبت‌شده است (نه به‌ازای هر ۱۰۰ گرم) —
 // محاسبه‌اش سمت کلاینت انجام می‌شه تا از دوباره‌کاری منطق جلوگیری بشه.
 async function handlePOST(req: NextRequest) {
+  { const off = await sessionFeatureBlocked("calorie"); if (off) return off; }
   const guard = await requireModule(ModuleKey.CALORIE);
   if (!guard.ok) return guard.response;
   const userId = guard.userId;
@@ -70,6 +73,7 @@ async function handlePOST(req: NextRequest) {
 
 // DELETE /api/calorie/log?id=...
 async function handleDELETE(req: NextRequest) {
+  { const off = await sessionFeatureBlocked("calorie"); if (off) return off; }
   const guard = await requireModule(ModuleKey.CALORIE);
   if (!guard.ok) return guard.response;
   const userId = guard.userId;

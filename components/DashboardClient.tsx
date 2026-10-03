@@ -17,6 +17,7 @@ import { MotionConfig, motion } from "framer-motion";
 import { AuthGate } from "./AuthGate";
 import { SuperAdminGate } from "./SuperAdminGate";
 import { useFeatures } from "@/lib/useFeatures";
+import { FEATURE_KEYS, featureVisible, type FeatureKey } from "@/lib/featureFlags";
 import { useDashboardData } from "@/lib/useDashboardData";
 import { useDashboardRoutine } from "@/lib/useDashboardRoutine";
 import type { DashboardData } from "@/lib/dashboardTypes";
@@ -72,18 +73,25 @@ function bentoAreas(has: Set<Area>) {
   };
   const fitness = (["ex", "cal"] as Area[]).filter((a) => has.has(a));
   const bottom = (["mentor", "road", "inbox"] as Area[]).filter((a) => has.has(a));
+  // روتین از پنل ادمین خاموش (فلگ routine) → کارت‌های امروز/نقشه‌ی ثبات نیستن
+  const routine = has.has("today");
+  const tradeRow = (["trade", "market"] as Area[]).filter((a) => has.has(a));
   // «دوستان» و «همه‌ی بخش‌ها» به درخواست صریح از پایین داشبورد برداشته شدن؛
   // آخرین ردیف همون کارت‌های کوتاه مربی/رودمپ/اعلان‌هاست.
-  const lg: string[] = [q(["today", "heat", "heat"])];
-  if (fitness.length) lg.push(q(["today", ...fit(fitness, 2)]));
-  if (has.has("trade")) lg.push(q(["trade", "trade", "market"]));
+  const lg: string[] = [];
+  if (routine) lg.push(q(["today", "heat", "heat"]));
+  if (fitness.length) lg.push(q(routine ? ["today", ...fit(fitness, 2)] : fit(fitness, 3)));
+  if (tradeRow.length === 2) lg.push(q(["trade", "trade", "market"]));
+  else if (tradeRow.length === 1) lg.push(q(fit(tradeRow, 3)));
   if (bottom.length) lg.push(q(fit(bottom, 3)));
 
-  const md: string[] = [q(["heat", "heat"])];
-  if (fitness.length === 2) md.push(q(["today", "ex"]), q(["today", "cal"]));
-  else if (fitness.length === 1) md.push(q(["today", fitness[0]]));
-  else md.push(q(["today", "today"]));
-  if (has.has("trade")) md.push(q(["trade", "trade"]), q(["market", "market"]));
+  const md: string[] = [];
+  if (routine) md.push(q(["heat", "heat"]));
+  if (routine && fitness.length === 2) md.push(q(["today", "ex"]), q(["today", "cal"]));
+  else if (routine && fitness.length === 1) md.push(q(["today", fitness[0]]));
+  else if (routine) md.push(q(["today", "today"]));
+  else if (fitness.length) md.push(q(fit(fitness, 2)));
+  for (const a of tradeRow) md.push(q([a, a]));
   for (let i = 0; i < bottom.length; i += 2) md.push(q(bottom[i + 1] ? [bottom[i], bottom[i + 1]] : [bottom[i], bottom[i]]));
 
   const order: Area[] = ["today", "ex", "cal", "heat", "trade", "market", "mentor", "road", "inbox"];
@@ -111,18 +119,23 @@ function DashboardBody({ initial }: { initial: { key: string; data: DashboardDat
   // هر بخش ماژول پولی فقط با خرید همون بخش به داشبورد اضافه می‌شه (نه کارت
   // قفل برای همه). بخش‌های چندبخشی (هیرو، کارهای سریع، همه‌ی بخش‌ها، جست‌وجو)
   // می‌مونن ولی داده‌ی ماژول خریده‌نشده رو نمی‌گیرن (سرور براش null می‌ده).
+  // فلگ‌های پنل ادمین (/admin/features): بخش خاموش اصلا کارت نمی‌گیره
   const owns = (m: string) => !!modules && modules.has(m);
-  const showMentors = features?.mentors !== false;
+  const on = (k: FeatureKey) => featureVisible(features, k);
+  const flagSig = FEATURE_KEYS.map((k) => (on(k) ? 1 : 0)).join("");
+  const routineOn = on("routine");
   const has = useMemo(() => {
-    const set = new Set<Area>(["today", "heat", "inbox"]);
-    if (owns("EXERCISE")) set.add("ex");
-    if (owns("CALORIE")) set.add("cal");
-    if (owns("TRADE")) { set.add("trade"); set.add("market"); }
-    if (showMentors) set.add("mentor");
+    const set = new Set<Area>(["inbox"]);
+    if (routineOn) { set.add("today"); set.add("heat"); }
+    if (owns("EXERCISE") && on("exercise")) set.add("ex");
+    if (owns("CALORIE") && on("calorie")) set.add("cal");
+    if (owns("TRADE") && on("tradeJournal")) set.add("trade");
+    if (owns("TRADE") && on("economicCalendar")) set.add("market");
+    if (on("mentors")) set.add("mentor");
     if (owns("ROADMAP") && features?.roadmaps === true) set.add("road");
     return set;
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [modules, showMentors, features?.roadmaps]);
+  }, [modules, flagSig, features?.roadmaps]);
   const areas = useMemo(() => bentoAreas(has), [has]);
   // «روتین من» بعد از ۱۴ روز رایگان پلن می‌خواد — تا وقتی ماژول‌ها معلوم نشدن
   // (modules=null) قفل نشون داده نمی‌شه که صفحه‌ی خریده‌شده یک لحظه قفل نپره.
@@ -135,7 +148,7 @@ function DashboardBody({ initial }: { initial: { key: string; data: DashboardDat
   return (
     <MotionConfig reducedMotion="user">
       <DashboardActionsProvider scheduleOpts={routine.opts} onChanged={refreshNow} onNeedPage={goTo}>
-      <DashboardHero data={data} routine={routine} routineLocked={routineLocked} onOpenCommand={() => setCmdOpen(true)} onShare={() => setShareOpen(true)} />
+      <DashboardHero data={data} routine={routine} routineLocked={routineLocked} routineOff={!routineOn} streakOn={on("streak")} onOpenCommand={() => setCmdOpen(true)} onShare={on("shareCards") ? () => setShareOpen(true) : undefined} />
       <DashboardQuickActions features={features} modules={modules} />
 
       {status === "error" && !data && (
@@ -146,7 +159,7 @@ function DashboardBody({ initial }: { initial: { key: string; data: DashboardDat
       )}
 
       <motion.div className="db-bento" style={areas} variants={V_GRID} initial="hidden" animate="show">
-        {routineLocked ? (
+        {!routineOn ? null : routineLocked ? (
           <>
             <DashboardRoutineLock area="today" />
             <DashboardRoutineLock area="heat" />

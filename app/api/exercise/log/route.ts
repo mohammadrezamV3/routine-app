@@ -4,9 +4,11 @@ import { requireModule } from "@/lib/moduleAccess";
 import { ModuleKey } from "@prisma/client";
 import { parseIsoDate, readJsonBody } from "@/lib/validate";
 import { withLiveSync } from "@/lib/realtime";
+import { sessionFeatureBlocked } from "@/lib/featureFlagsServer";
 
 // GET /api/exercise/log?planId=...&date=2026-07-25
 export async function GET(req: NextRequest) {
+  { const off = await sessionFeatureBlocked("exercise"); if (off) return off; }
   const guard = await requireModule(ModuleKey.EXERCISE);
   if (!guard.ok) return guard.response;
   const userId = guard.userId;
@@ -28,6 +30,7 @@ export async function GET(req: NextRequest) {
 // POST /api/exercise/log { planId, date, completed, completedItems? }
 //   یا فقط { planId, date, started: true } — ثبت «شروع تمرین» بدون دست‌زدن به completed
 async function handlePOST(req: NextRequest) {
+  { const off = await sessionFeatureBlocked("exercise"); if (off) return off; }
   const guard = await requireModule(ModuleKey.EXERCISE);
   if (!guard.ok) return guard.response;
   const userId = guard.userId;

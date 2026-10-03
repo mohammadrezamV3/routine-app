@@ -1387,6 +1387,15 @@ model TradeMtLink {
   equity       Float?
   currency     String?
 
+  // عیب‌یابی اسکرین ورود/خروج: نسخه‌ی اکسپرتی که واقعا وصله، آخرین اسکرینی که
+  // رسید، و آخرین خطای اسکرین (چه سمت ترمینال که اکسپرت گزارش می‌ده، چه ردی که
+  // سرور داده). بدون این‌ها «عکس نمیاد» از هیچ‌جا قابل تشخیص نبود.
+  eaVersion    String?
+  shotsEnabled Boolean?
+  lastShotAt   DateTime?
+  shotError    String?
+  shotErrorAt  DateTime?
+
   connectedAt DateTime?
   lastSyncAt  DateTime?
   revokedAt   DateTime?

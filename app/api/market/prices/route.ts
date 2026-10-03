@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/auth";
 import { checkRateLimit } from "@/lib/rateLimit";
+import { sessionFeatureBlocked } from "@/lib/featureFlagsServer";
 
 // پروکسی سمت سرور برای قیمت لحظه‌ای بازار — هیچ سرویس رسمی/کلیددار برای این
 // پروژه تنظیم نشده، پس از endpoint عمومی (و غیررسمی) یاهو فایننس استفاده
@@ -71,6 +72,7 @@ async function fetchQuote(symbol: string): Promise<Quote | null> {
 
 // GET /api/market/prices?symbols=SPY,QQQ,^VIX
 export async function GET(req: NextRequest) {
+  { const off = await sessionFeatureBlocked("tradeChart"); if (off) return off; }
   // قبلا کاملا باز بود: هرکسی بدون حساب می‌تونست از این سرور به‌عنوان یه
   // پروکسی رایگان یاهو استفاده کنه (هزینه‌ی پهنای‌باند و ریسک بلاک‌شدن IP
   // سرور). حالا هم لاگین لازمه هم سقف نرخ داره.

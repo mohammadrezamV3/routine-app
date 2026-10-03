@@ -6,6 +6,7 @@ import { clampText } from "@/lib/validate";
 import { isHexColor } from "@/lib/tradeServer";
 import { MAX_TAGS } from "@/lib/tradeTypes";
 import { withLiveSync } from "@/lib/realtime";
+import { sessionFeatureBlocked } from "@/lib/featureFlagsServer";
 
 // برچسب‌های کاربر — یک لیست واحد که هم روی حساب استفاده می‌شود هم روی
 // معامله. نام برچسب برای هر کاربر یکتاست (ایندکس userId+name)، پس تکراری
@@ -14,6 +15,7 @@ import { withLiveSync } from "@/lib/realtime";
 const TAG_SELECT = { id: true, name: true, color: true } as const;
 
 export async function GET() {
+  { const off = await sessionFeatureBlocked("tradeJournal"); if (off) return off; }
   const guard = await requireModule(ModuleKey.TRADE);
   if (!guard.ok) return guard.response;
   const tags = await prisma.tradeTag.findMany({
@@ -25,6 +27,7 @@ export async function GET() {
 }
 
 async function handlePOST(req: NextRequest) {
+  { const off = await sessionFeatureBlocked("tradeJournal"); if (off) return off; }
   const guard = await requireModule(ModuleKey.TRADE);
   if (!guard.ok) return guard.response;
   const userId = guard.userId;
@@ -45,6 +48,7 @@ async function handlePOST(req: NextRequest) {
 }
 
 async function handlePATCH(req: NextRequest) {
+  { const off = await sessionFeatureBlocked("tradeJournal"); if (off) return off; }
   const guard = await requireModule(ModuleKey.TRADE);
   if (!guard.ok) return guard.response;
   const userId = guard.userId;
@@ -65,6 +69,7 @@ async function handlePATCH(req: NextRequest) {
 }
 
 async function handleDELETE(req: NextRequest) {
+  { const off = await sessionFeatureBlocked("tradeJournal"); if (off) return off; }
   const guard = await requireModule(ModuleKey.TRADE);
   if (!guard.ok) return guard.response;
   const id = req.nextUrl.searchParams.get("id");

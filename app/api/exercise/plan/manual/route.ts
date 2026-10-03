@@ -5,11 +5,13 @@ import { ModuleKey } from "@prisma/client";
 import { FA_WEEKDAY } from "@/lib/jalali";
 import { ExerciseDay } from "@/lib/exercisePlans";
 import { withLiveSync } from "@/lib/realtime";
+import { sessionFeatureBlocked } from "@/lib/featureFlagsServer";
 
 // POST /api/exercise/plan/manual — برنامه‌ای که خود کاربر دستی وارد کرده
 // (بدون هوش مصنوعی/قالب آماده)، جایگزین /api/exercise/plan (که فقط
 // AI-یا-fallback می‌سازه) برای وقتی کاربر برنامه‌ی شخصی خودشو داره.
 async function handlePOST(req: NextRequest) {
+  { const off = await sessionFeatureBlocked("exercise"); if (off) return off; }
   const guard = await requireModule(ModuleKey.EXERCISE);
   if (!guard.ok) return guard.response;
   const userId = guard.userId;

@@ -5,6 +5,7 @@ import { requireModule } from "@/lib/moduleAccess";
 import { checkRateLimit } from "@/lib/rateLimit";
 import { clampText } from "@/lib/validate";
 import { isChatReportReason } from "@/lib/tradeChat";
+import { sessionFeatureBlocked } from "@/lib/featureFlagsServer";
 
 // POST /api/trade/chat/report  { messageId, reason, note? }
 //
@@ -19,6 +20,7 @@ import { isChatReportReason } from "@/lib/tradeChat";
 // گزارش‌ها با متن کامل پیام در صف ادمین باقی می‌مانند — سوءاستفاده‌ی
 // مکرر همان‌جا دیده و اکانت گزارش‌دهنده هم قابل تنبیه است.
 export async function POST(req: NextRequest) {
+  { const off = await sessionFeatureBlocked("tradeChat"); if (off) return off; }
   const guard = await requireModule(ModuleKey.TRADE);
   if (!guard.ok) return guard.response;
 

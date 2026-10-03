@@ -6,7 +6,7 @@ import { EmptyState, ErrorState, LoadingState } from "@/components/admin/EmptySt
 import { ConfirmModal } from "@/components/admin/AdminModal";
 import { adminFetch, useAdminToast } from "@/components/admin/useAdminToast";
 import { formatDateTime } from "@/lib/adminFormat";
-import { EXERCISE_CATALOG } from "@/lib/exerciseCatalog";
+import { EXERCISE_CATALOG, exerciseSearchText, matchesExerciseQuery } from "@/lib/exerciseCatalog";
 import { MAX_MEDIA_DATA_URL_LENGTH, MEDIA_MAX_EDGE, mediaKey } from "@/lib/exerciseMedia";
 import { normalizeFa } from "@/lib/utils";
 import { Spinner } from "@/components/Spinner";
@@ -95,9 +95,9 @@ export default function AdminExerciseMediaPage() {
   // فقط وقتی کاربر چیزی تایپ کرده پیشنهاد می‌دهیم — رندر هر ~۳۰۰ حرکت
   // به‌صورت پیش‌فرض نه مفید است نه سریع.
   const suggestions = useMemo(() => {
-    const q = normalizeFa(query);
+    const q = normalizeFa(query).replace(/\s+/g, " ");
     if (!q) return [];
-    return EXERCISE_CATALOG.filter((e) => normalizeFa(e.name).includes(q)).slice(0, 8);
+    return EXERCISE_CATALOG.filter((e) => matchesExerciseQuery(exerciseSearchText(e), q)).slice(0, 8);
   }, [query]);
   const showSuggest = suggestOpen && !name && suggestions.length > 0;
 

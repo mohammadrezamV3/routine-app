@@ -508,8 +508,8 @@
        بود که فقط با بلور دیده می‌شد، و روی موبایل یه اورراید جدا اون رو به
        یه قرص نزدیک‌به‌سیاه تبدیل می‌کرد — یعنی ظاهر هدر بین دسکتاپ و
        موبایل دو چیز متفاوت بود («یه بار اینه یه بار اصلی»). */
-    background:var(--surface-glass);
-    backdrop-filter:blur(22px) saturate(170%); -webkit-backdrop-filter:blur(22px) saturate(170%);
+    background:color-mix(in srgb, var(--surface-2) 86%, transparent);
+    backdrop-filter:blur(12px); -webkit-backdrop-filter:blur(12px);
     border:1px solid var(--surface-line);
     /* سافاری موبایل حین انیمیشن جمع‌شدن نوار آدرس (اسکرول) گاهی
        عنصر position:fixed رو از بقیه‌ی صفحه جدا رندر می‌کنه (یه فریم
@@ -533,8 +533,8 @@
   .app-topbar-statusbar-blur{
     position:fixed; top:0; left:0; right:0; z-index:39;
     height:env(safe-area-inset-top);
-    background:var(--surface-glass);
-    backdrop-filter:blur(14px) saturate(170%); -webkit-backdrop-filter:blur(14px) saturate(170%);
+    background:color-mix(in srgb, var(--surface-2) 86%, transparent);
+    backdrop-filter:blur(10px); -webkit-backdrop-filter:blur(10px);
     pointer-events:none;
   }
   /* توجه: بدون transform برای وسط‌چین عمودی — چون transform روی این
@@ -4145,6 +4145,16 @@ body[data-theme="light"] .aurora-blob{ opacity:.45; }
 .module-gate-icon svg{ width:21px; height:21px; }
 .module-gate-msg{ font-size:13.5px; font-weight:700; color:var(--text); }
 .module-gate-sub{ font-size:12px; font-weight:600; color:var(--muted); }
+/* بخشی که از پنل ادمین (/admin/features) خاموشه — components/FeaturePageGate.tsx.
+   بدون بک‌گراند؛ فقط آیکون قفل + پیام + لینک برگشت با کلاس دکمه‌ی سایت */
+.feature-off{
+  display:flex; flex-direction:column; align-items:center; justify-content:center; gap:10px;
+  min-height:min(60vh, 420px); padding:24px 16px; text-align:center;
+}
+a.feature-off-link{
+  margin-top:4px; min-height:36px; padding:7px 18px; border:1px solid var(--accent); border-radius:11px;
+  font-size:12.5px; font-weight:700; text-decoration:none;
+}
 /* نوار «X روز از دوره‌ی رایگان روتین من مونده» — فقط حاشیه، بدون بک‌گراند */
 .routine-trial-strip{
   display:flex; align-items:center; justify-content:space-between; gap:10px; flex-wrap:wrap;
@@ -4825,6 +4835,7 @@ body[data-theme="light"] .exercise-pictogram-stage{ background:rgba(255,255,255,
    جزئیات) میان، مارجین‌تاپ عمودی لازم نیست */
 .exercise-catalog-row-stars{ margin-top:0; flex-shrink:0; }
 .exercise-catalog-filters{ display:flex; gap:6px; overflow-x:auto; padding:12px 2px 2px; }
+.exercise-catalog-filters.exercise-catalog-filters-sub{ padding-top:6px; }
 .exercise-catalog-chip{
   flex-shrink:0; padding:6px 14px; border-radius:9999px; font-size:11px; font-weight:600;
   border:1px solid var(--line); color:var(--muted); background:transparent; transition:.15s;
@@ -5022,7 +5033,7 @@ body[data-theme="light"] .exercise-substitute-option{ background:rgba(255,255,25
    دسکتاپ (pointer:fine) هیچ تغییری نمی‌کنه.
    اگه خواستی برگرده به حالت قبل، کافیه کل همین بلاک @media رو حذف کنی. */
 @media (pointer: coarse){
-  .app-topbar{ backdrop-filter:blur(10px) saturate(160%); -webkit-backdrop-filter:blur(10px) saturate(160%); }
+  .app-topbar{ backdrop-filter:blur(8px); -webkit-backdrop-filter:blur(8px); }
   .notif-panel{ backdrop-filter:blur(13px) saturate(180%); -webkit-backdrop-filter:blur(13px) saturate(180%); }
   .nav-drawer-glass{ backdrop-filter:blur(13px) saturate(180%); -webkit-backdrop-filter:blur(13px) saturate(180%); }
   .cal-cell{ backdrop-filter:blur(13px) saturate(180%); -webkit-backdrop-filter:blur(13px) saturate(180%); }
@@ -5496,6 +5507,21 @@ textarea.admin-input{ resize:vertical; font-family:inherit; }
 .admin-seg[data-active="off"] .auth-tab-indicator{ background:var(--adm-red); box-shadow:0 4px 14px rgba(224,82,82,.3); }
 .admin-seg .auth-tab:disabled{ opacity:.65; cursor:progress; }
 @media (max-width:700px){ .admin-feature-row{ flex-direction:column; align-items:stretch; } }
+/* دسته‌بندی بخش‌ها بر اساس حوزه + جست‌وجو (app/admin/features) — بدون بک‌گراند تازه */
+.admin-feature-toolbar{ display:flex; align-items:center; justify-content:space-between; gap:12px; flex-wrap:wrap; margin-bottom:12px; }
+.admin-feature-search{ flex:1 1 240px; max-width:360px; }
+.admin-feature-counts{ display:flex; gap:14px; font-size:12px; color:var(--adm-muted); font-weight:600; }
+.admin-feature-counts b{ color:var(--adm-text); font-weight:800; margin-left:3px; }
+.admin-feature-counts .is-off b{ color:var(--adm-red); }
+.admin-feature-grid{ display:grid; grid-template-columns:repeat(auto-fit, minmax(min(100%, 520px), 1fr)); gap:12px; align-items:start; }
+.admin-feature-card .admin-perm-group-title{ font-size:12.5px; margin-bottom:4px; }
+.admin-feature-text{ min-width:0; }
+.admin-feature-row.is-child .admin-feature-text{ padding-inline-start:12px; border-inline-start:2px solid var(--adm-border); }
+.admin-feature-note{ color:var(--adm-amber); }
+@media (max-width:700px){
+  .admin-feature-search{ max-width:none; }
+  .admin-feature-row .admin-feature-modes{ align-self:stretch; }
+}
 .admin-quick-grid{ display:grid; grid-template-columns:repeat(auto-fill, minmax(170px, 1fr)); gap:10px; margin-bottom:20px; }
 .admin-quick-link{ display:flex; align-items:center; gap:10px; padding:14px; text-decoration:none; color:var(--adm-text); font-size:13px; font-weight:700; transition:border-color .15s ease, color .15s ease; }
 @media (hover:hover){ .admin-quick-link:hover{ border-color:var(--adm-accent); color:var(--adm-accent); } }
@@ -5872,6 +5898,21 @@ html[data-perf="low"] .trade-econ-monthpicker,
 html[data-perf="low"] .tv-surface{
   backdrop-filter:none !important;
   -webkit-backdrop-filter:none !important;
+}
+
+/* هدر روی دستگاه ضعیف یا با «شفافیت کمتر» سیستم: بدون blur، سطح تقریبا توپر */
+html[data-perf="low"] :is(.app-topbar, .app-topbar-statusbar-blur),
+html[data-perf-weak] :is(.app-topbar, .app-topbar-statusbar-blur){
+  background:color-mix(in srgb, var(--surface-2) 96%, transparent);
+  backdrop-filter:none !important; -webkit-backdrop-filter:none !important;
+}
+@media (prefers-reduced-transparency:reduce){
+  .app-topbar,
+  .app-topbar-statusbar-blur{
+    background:color-mix(in srgb, var(--surface-2) 96%, transparent);
+    backdrop-filter:none !important;
+    -webkit-backdrop-filter:none !important;
+  }
 }
 
 /* will-change به مرورگر می‌گوید «برای این عنصر یک لایه‌ی جدا روی GPU
@@ -6251,6 +6292,24 @@ select.wsearch-newform-name{ cursor:pointer; }
 
 /* ── فرم تب‌دار معامله ────────────────────────────────────── */
 .trade-form-panel{ max-width:600px; width:94%; }
+.trade-form-tabs-wrap{ display:flex; align-items:flex-start; gap:2px; min-width:0; }
+.trade-form-tabs-wrap .trade-form-tabs{ flex:1; min-width:0; }
+/* پیکان‌های پیمایش تب‌ها: فقط موس؛ بدون بک‌گراند، فقط آیکون */
+.trade-tabs-arrow{
+  display:none; flex-shrink:0; align-items:center; justify-content:center;
+  width:30px; height:32px; padding:0; border:0; border-radius:50%;
+  color:var(--muted); background:none; box-shadow:none;
+  backdrop-filter:none; -webkit-backdrop-filter:none;
+  transition:color .18s ease, opacity .18s ease;
+}
+@media (hover:hover) and (pointer:fine){
+  .trade-tabs-arrow{ display:inline-flex; }
+  .trade-tabs-arrow[hidden]{ display:none; }
+  .trade-tabs-arrow:hover{ color:var(--accent); background:none; box-shadow:none; }
+}
+.trade-form-stepper{ display:flex; gap:9px; margin-top:16px; }
+.trade-form-stepper button{ flex:1; min-width:0; }
+.trade-form-stepper button:disabled{ opacity:.45; cursor:default; }
 .trade-form-tabs{
   display:flex; gap:6px; overflow-x:auto; padding-bottom:8px; margin-bottom:14px;
   border-bottom:1px solid var(--line);
@@ -6318,7 +6377,39 @@ body[data-theme="light"] .trade-toggle, body:not([data-theme="light"]) .trade-to
 .trade-choice-grid.readonly .trade-choice{ cursor:default; }
 .trade-choice-grid.readonly .trade-choice:active{ transform:none; }
 
-.trade-range{ width:100%; accent-color:var(--accent); }
+/* --val (0 تا 1) را کامپوننت می‌دهد؛ پر شدن مسیر همراه شست‌ی روان حرکت می‌کند */
+.trade-range{
+  --tr-thumb:18px;
+  --tr-pos:calc(var(--val, .44) * (100% - var(--tr-thumb)) + var(--tr-thumb) / 2);
+  width:100%; height:26px; margin:6px 0; accent-color:var(--accent);
+  -webkit-appearance:none; appearance:none; background:transparent; cursor:pointer;
+}
+.trade-range:focus{ outline:none; }
+.trade-range::-webkit-slider-runnable-track{
+  height:4px; border-radius:999px;
+  background:linear-gradient(to right, var(--accent) var(--tr-pos), var(--line) var(--tr-pos));
+}
+.trade-range::-moz-range-track{
+  height:4px; border-radius:999px;
+  background:linear-gradient(to right, var(--accent) var(--tr-pos), var(--line) var(--tr-pos));
+}
+.trade-range:dir(rtl)::-webkit-slider-runnable-track{
+  background:linear-gradient(to left, var(--accent) var(--tr-pos), var(--line) var(--tr-pos));
+}
+.trade-range:dir(rtl)::-moz-range-track{
+  background:linear-gradient(to left, var(--accent) var(--tr-pos), var(--line) var(--tr-pos));
+}
+.trade-range::-webkit-slider-thumb{
+  -webkit-appearance:none; appearance:none; width:var(--tr-thumb); height:var(--tr-thumb);
+  margin-top:-7px; border:0; border-radius:50%; background:var(--accent);
+  transition:transform .15s ease;
+}
+.trade-range::-moz-range-thumb{
+  width:var(--tr-thumb); height:var(--tr-thumb); border:0; border-radius:50%; background:var(--accent);
+}
+.trade-range:active::-webkit-slider-thumb{ transform:scale(1.12); }
+.trade-range:focus-visible::-webkit-slider-thumb{ box-shadow:0 0 0 4px rgba(var(--accent-rgb),.25); }
+@media (prefers-reduced-motion:reduce){ .trade-range::-webkit-slider-thumb{ transition:none; } }
 
 /* ── چک‌لیست ──────────────────────────────────────────────── */
 .trade-checklist-progress{
@@ -7914,23 +8005,41 @@ body[data-theme="light"] .pls-line::after, body[data-theme="light"] .pls-card::a
 .friend-profile-banner-img{
   width:100%; height:100%; object-fit:cover; display:block; border-radius:24px 24px 0 0;
 }
-/* گوشه‌ها عمدا فیزیکی‌اند (left/right)، نه منطقی: «بالا-چپ» و «بالا-راست»
-   این‌جا گوشه‌ی واقعی کادرند، نه ابتدا/انتهای جهت متن. */
-.friend-profile-banner-kebab{ position:absolute; top:8px; right:8px; z-index:3; }
-.friend-profile-banner-kebab .trade-kebab-trigger{ color:#fff; background:rgba(0,0,0,.35); }
-.friend-profile-star-btn{
-  position:absolute; top:8px; left:8px; z-index:3;
-  display:inline-flex; align-items:center; justify-content:center;
-  width:28px; height:28px; padding:0; border-radius:999px; cursor:pointer;
-  color:#fff; background:rgba(0,0,0,.35); border:none; box-shadow:none;
-  backdrop-filter:none; -webkit-backdrop-filter:none;
-  transition:color .18s ease, background .18s ease;
+/* نوار بالای بنر: سه‌نقطه (بالا-راست) و ستاره (بالا-چپ) در *یک* ردیف flex —
+   هم‌اندازه (32px)، روی یک خط مرکز، و هر دو بی‌بک‌گراند (فقط سایه‌ی آیکون
+   برای خوانایی روی عکس بنر). ریشه‌ی باگ «جای ستاره درست نیست»: دو دکمه‌ی
+   جدا absolute بودن با اندازه‌ی متفاوت (28 در برابر 24) و فقط ستاره دایره‌ی
+   تیره داشت، چون قانون بک‌گراند سه‌نقطه به ریست سراسری button باخته بود؛
+   مرکز ستاره 2px پایین‌تر و حجمش سنگین‌تر از جفتش دیده می‌شد. پنل همیشه RTL
+   است، پس فرزند اول (سه‌نقطه) سمت راست و دومی (ستاره) سمت چپ می‌نشیند. */
+.friend-profile-banner-bar{
+  position:absolute; top:10px; left:10px; right:10px; z-index:3;
+  display:flex; align-items:center; justify-content:space-between; direction:rtl;
+  pointer-events:none;
 }
-body[data-theme="light"] .friend-profile-star-btn,
-body:not([data-theme="light"]) .friend-profile-star-btn{ background:rgba(0,0,0,.35); box-shadow:none; }
-.friend-profile-star-btn.on{ color:#F5C518; }
+.friend-profile-banner-bar > *{ pointer-events:auto; }
+.friend-profile-banner-kebab{ display:flex; align-items:center; line-height:0; }
+.friend-profile-banner-bar .trade-kebab-trigger,
+body[data-theme="light"] .friend-profile-banner-bar .trade-kebab-trigger,
+.friend-profile-star-btn,
+body[data-theme="light"] .friend-profile-star-btn{
+  display:inline-flex; align-items:center; justify-content:center;
+  width:32px; height:32px; padding:0; margin:0; border-radius:999px; cursor:pointer;
+  color:#fff; background:none; border:none; box-shadow:none;
+  backdrop-filter:none; -webkit-backdrop-filter:none;
+  filter:drop-shadow(0 1px 3px rgba(0,0,0,.55));
+  transition:color .18s ease, transform .15s ease;
+}
+.friend-profile-star-btn.on,
+body[data-theme="light"] .friend-profile-star-btn.on{ color:#F5C518; }
 .friend-profile-star-btn:disabled{ opacity:.55; cursor:default; }
-@media (hover:hover){ .friend-profile-star-btn:not(:disabled):hover{ color:#F5C518; background:rgba(0,0,0,.45); } }
+@media (hover:hover){
+  .friend-profile-star-btn:not(:disabled):hover,
+  body[data-theme="light"] .friend-profile-star-btn:not(:disabled):hover{ color:#F5C518; background:none; border:none; box-shadow:none; }
+  .friend-profile-banner-bar .trade-kebab-trigger:hover,
+  body[data-theme="light"] .friend-profile-banner-bar .trade-kebab-trigger:hover{ color:#fff; background:none; border:none; box-shadow:none; }
+}
+.friend-profile-star-btn:not(:disabled):active{ transform:scale(.88); }
 /* طبق درخواست صریح تازه، اسم فرد به‌جای گوشه‌ی مخالف، *سمت چپ* خود
    عکس پروفایل می‌نشیند (avatar right:20px تا right:92px، پس name از
    right:100px شروع می‌شود و به چپ رشد می‌کند) — نه دیگر گوشه‌ی دوردست. */
@@ -8003,6 +8112,24 @@ body[data-theme="light"] button.friend-profile-username{
 .friend-profile-stat-icon{ color:var(--accent); }
 .friend-profile-stat b{ font-size:15px; font-weight:800; color:var(--text); }
 .friend-profile-stat-star{ display:inline-flex; align-items:center; gap:5px; font-size:15px; font-weight:800; color:var(--text); }
+/* پیشرفت امروز دوست (فقط دوست تاییدشده): حلقه + خط وضعیت + نوار 7 روز */
+.friend-profile-today{
+  display:flex; align-items:center; gap:14px; margin-top:14px; padding-top:14px;
+  border-top:1px solid var(--surface-line);
+}
+.friend-profile-today .gring-center b{ font-size:14px; font-weight:900; color:var(--text); }
+.friend-profile-today .gring-center small{ font-size:9px; color:var(--muted); }
+.friend-profile-today-text{ display:flex; flex-direction:column; gap:4px; min-width:0; flex:1; }
+.friend-profile-today-text .friend-profile-section-label{ margin-bottom:0; }
+.friend-profile-today-line{ font-size:12.5px; font-weight:700; color:var(--text); }
+.friend-profile-week{ display:flex; align-items:center; gap:8px; flex-wrap:wrap; margin-top:2px; }
+.friend-profile-week-count{ font-size:10.5px; color:var(--muted2); font-weight:700; }
+.friend-profile-relation{
+  display:flex; align-items:center; justify-content:center; gap:8px; flex-wrap:wrap;
+  margin-top:14px; padding-top:14px; border-top:1px solid var(--surface-line);
+}
+.friend-profile-relation > button{ flex:1; min-width:120px; }
+.friend-profile-relation-note{ width:100%; text-align:center; font-size:11.5px; color:var(--muted); }
 .account-outline-btn.active{ background:rgba(245,197,24,.1); }
 
 /* ═══════════════════════════════════════════════════════════════════════
@@ -9766,39 +9893,45 @@ body[data-theme="light"] .gring-cap{ filter:drop-shadow(0 0 2px rgba(80,50,20,.3
   background-position:0% 50%;
   -webkit-background-clip:text; background-clip:text;
   -webkit-text-fill-color:transparent; color:transparent;
-  filter:drop-shadow(0 0 6px rgba(245,197,66,.35));
-  animation:goldenFlow 6s linear infinite, goldenGlow 2.6s ease-in-out infinite;
+  animation:goldenFlow 6s linear infinite;
   font-weight:800;
 }
-body[data-theme="light"] .golden-name{ --g1:#f7d774; --g2:#d9a21b; --g3:#9a5b06; --g4:#e8b830; filter:drop-shadow(0 0 4px rgba(217,162,27,.3)); }
+body[data-theme="light"] .golden-name{ --g1:#f7d774; --g2:#d9a21b; --g3:#9a5b06; --g4:#e8b830; }
+/* درخشش (GoldenName): کپی شفاف متن با text-shadow زیر حروف گرادیانی، بدون
+   filter — drop-shadow داخل کارت‌های شیشه‌ای مستطیل کم‌رنگ پشت اسم می‌انداخت */
+.name-glow{ position:relative; font-weight:800; --name-glow:rgba(245,197,66,.45); }
+.name-glow > span{ position:relative; }
+.name-glow[data-text]::before{
+  content:attr(data-text); position:absolute; inset:0; pointer-events:none;
+  color:transparent; -webkit-text-fill-color:transparent; white-space:inherit;
+  text-shadow:0 0 8px var(--name-glow);
+}
+body[data-theme="light"] .golden-name-glow{ --name-glow:rgba(217,162,27,.32); }
 @keyframes goldenFlow{ from{ background-position:0% 50%; } to{ background-position:200% 50%; } }
-@keyframes goldenGlow{ 0%,100%{ filter:drop-shadow(0 0 4px rgba(245,197,66,.25)); } 50%{ filter:drop-shadow(0 0 10px rgba(245,197,66,.55)); } }
 @media (prefers-reduced-motion: reduce){ .golden-name{ animation:none; background-position:30% 50%; } }
 
 /* ── نام بنفش سمی (components/GoldenName.tsx با staff) ─────────────
    Owner و ادمین‌ها: همون تکنیک حلقه‌ی بی‌درز .golden-name (گرادیان افقی با
    اول و آخر یک‌رنگ، کاشی 200%، جابه‌جایی خطی 0% → 200% = دقیقا یک کاشی؛
    فریم آخر = فریم اول) ولی با پالت بنفش نئون: بنفش عمیق ↔ بنفش برقی با
-   برق یاسی-سرخابی اسیدی. درخشش با --tx-glow تا تم روشن رنگ تیره‌تر بگیره.
+   برق یاسی-سرخابی اسیدی. درخشش با --name-glow روی .toxic-name-glow.
    فقط background-clip:text — عنصر خودش هیچ بک‌گراندی نمی‌گیره. */
 .toxic-name{
   --t1:#f3c9ff; --t2:#b44dff; --t3:#7a1fe0; --t4:#e15cff;
-  --tx-glow-lo:rgba(180,77,255,.3); --tx-glow-hi:rgba(200,90,255,.65);
   background-image:linear-gradient(90deg, var(--t3) 0%, var(--t2) 13%, var(--t1) 25%, var(--t2) 37%, var(--t3) 50%, var(--t4) 63%, var(--t2) 76%, var(--t4) 88%, var(--t3) 100%);
   background-size:200% 100%;
   background-repeat:repeat-x;
   background-position:0% 50%;
   -webkit-background-clip:text; background-clip:text;
   -webkit-text-fill-color:transparent; color:transparent;
-  filter:drop-shadow(0 0 6px var(--tx-glow-lo));
-  animation:goldenFlow 6s linear infinite, toxicGlow 2.6s ease-in-out infinite;
+  animation:goldenFlow 6s linear infinite;
   font-weight:800;
 }
+.toxic-name-glow{ --name-glow:rgba(190,80,255,.55); }
+body[data-theme="light"] .toxic-name-glow{ --name-glow:rgba(140,40,225,.3); }
 body[data-theme="light"] .toxic-name{
   --t1:#b23cf0; --t2:#7b1fd6; --t3:#4a0f9e; --t4:#a51fc8;
-  --tx-glow-lo:rgba(123,31,214,.18); --tx-glow-hi:rgba(150,40,230,.38);
 }
-@keyframes toxicGlow{ 0%,100%{ filter:drop-shadow(0 0 4px var(--tx-glow-lo)); } 50%{ filter:drop-shadow(0 0 10px var(--tx-glow-hi)); } }
 @media (prefers-reduced-motion: reduce){ .toxic-name{ animation:none; background-position:30% 50%; } }
 
 /* ── تیک واحد اپ (components/TickButton.tsx) — کپی .db-tl-node  داشبورد ──

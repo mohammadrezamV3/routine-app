@@ -3,9 +3,11 @@ import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
 import { sendPushToUser } from "@/lib/webPush";
+import { sessionFeatureBlocked } from "@/lib/featureFlagsServer";
 
 // PATCH /api/friends/:id → قبول‌کردن یک درخواست دوستی در انتظار (فقط addressee)
 export async function PATCH(req: NextRequest, { params }: { params: { id: string } }) {
+  { const off = await sessionFeatureBlocked("friends"); if (off) return off; }
   const session = await getServerSession(authOptions);
   const userId = (session?.user as any)?.id;
   if (!userId) return NextResponse.json({ error: "unauthorized" }, { status: 401 });
@@ -33,6 +35,7 @@ export async function PATCH(req: NextRequest, { params }: { params: { id: string
 
 // DELETE /api/friends/:id → رد‌کردن درخواست، لغو درخواست ارسالی، یا حذف یک دوستی تاییدشده
 export async function DELETE(req: NextRequest, { params }: { params: { id: string } }) {
+  { const off = await sessionFeatureBlocked("friends"); if (off) return off; }
   const session = await getServerSession(authOptions);
   const userId = (session?.user as any)?.id;
   if (!userId) return NextResponse.json({ error: "unauthorized" }, { status: 401 });

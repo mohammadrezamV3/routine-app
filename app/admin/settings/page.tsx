@@ -7,6 +7,9 @@ import { adminFetch, useAdminToast } from "@/components/admin/useAdminToast";
 import { useAdminAccess } from "@/components/admin/AdminAccess";
 import { formatDateTime, formatNumber } from "@/lib/adminFormat";
 import { NumberInput } from "@/components/NumberInput";
+import { TickOption } from "@/components/TickOption";
+import { useTheme } from "@/components/ThemeProvider";
+import { readAdminNoir, writeAdminNoir } from "@/lib/adminTheme";
 import { MAX_TRIAL_AI_LIMIT, TRIAL_AI_FEATURES, TRIAL_AI_FEATURE_LABELS_FA, TRIAL_DAYS, type TrialAiFeature, type TrialAiLimits } from "@/lib/trial";
 
 type Rate = { inputPer1kUsdMicros: number; outputPer1kUsdMicros: number };
@@ -37,6 +40,15 @@ export default function AdminSettingsPage() {
   const [nomoDraft, setNomoDraft] = useState("");
   const [nomoSaving, setNomoSaving] = useState(false);
   const [nomoError, setNomoError] = useState<string | null>(null);
+  const { theme, toggle: toggleTheme } = useTheme();
+  const [noir, setNoir] = useState(false);
+  useEffect(() => { setNoir(readAdminNoir()); }, []);
+  function changeNoir(on: boolean) {
+    setNoir(on);
+    writeAdminNoir(on);
+    // این تم فقط روی تم تیره اعمال می‌شه؛ با همون مکانیزم تم خود اپ
+    if (on && theme !== "dark") toggleTheme();
+  }
   const [indexNowBusy, setIndexNowBusy] = useState(false);
   const [indexNowMsg, setIndexNowMsg] = useState<{ text: string; tone: "ok" | "err" } | null>(null);
 
@@ -204,6 +216,12 @@ export default function AdminSettingsPage() {
             </div>
           </form>
         )}
+      </div>
+
+      <div className="admin-chart-card">
+        <div className="admin-chart-head"><span className="admin-chart-title">تم آزمایشی (فقط برای خودت)</span></div>
+        <TickOption checked={noir} onChange={changeNoir}>تم نوآر سیاه و سفید</TickOption>
+        <div className="admin-section-hint admin-settings-hint">فقط روی همین دستگاه ذخیره می‌شود و روی تم تیره اعمال می‌شود.</div>
       </div>
 
       <div className="admin-chart-card">

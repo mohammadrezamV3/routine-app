@@ -1,13 +1,14 @@
 "use client";
 
-import { useState } from "react";
+import { useMemo, useState } from "react";
 import { createPortal } from "react-dom";
 import { Reorder, useDragControls } from "framer-motion";
 import { ChevronRight, GripVertical, Pencil, Plus, X } from "lucide-react";
 import { FA_WEEKDAY, CAL_WEEK_ORDER } from "@/lib/jalali";
 import type { ExerciseDay } from "@/lib/exercisePlans";
 import { computeDayFocus } from "@/lib/exerciseCatalogUtils";
-import { EXERCISE_CATALOG, ExerciseCatalogEntry, getExerciseDifficulty } from "@/lib/exerciseCatalog";
+import { EXERCISE_CATALOG, ExerciseCatalogEntry, exerciseSearchText, getExerciseDifficulty, matchesExerciseQuery } from "@/lib/exerciseCatalog";
+import { useProgressiveList } from "@/lib/useProgressiveList";
 import { stripSetSuffix } from "@/lib/exerciseSets";
 import { normalizeFa } from "@/lib/utils";
 import { toEnDigits } from "@/lib/schedule";
@@ -93,6 +94,9 @@ function ManualQuantityPrompt({
   );
 }
 
+// متن جستجوی هر حرکت (اسم + اسم‌های دیگه + عضلات) یک بار ساخته می‌شه.
+const SEARCH_INDEX = EXERCISE_CATALOG.map((entry) => ({ entry, text: exerciseSearchText(entry) }));
+
 // پاپ‌آپ مستقل «افزودن حرکت» — قبلا این جستجو/لیست همون‌جا توی نمای روز
 // اینلاین رندر می‌شد و صفحه رو شلوغ می‌کرد؛ حالا مثل ExerciseCatalogModal یه
 // پاپ‌آپ پورتال‌شده‌ست، مستقل از باکس «حرکات این روز» زیرش.
@@ -109,10 +113,12 @@ function ManualExerciseAddPopup({
   const [query, setQuery] = useState("");
   const [adding, setAdding] = useState<ExerciseCatalogEntry | null>(null);
 
-  const normalizedQuery = normalizeFa(query);
-  const visible = EXERCISE_CATALOG.filter(
-    (e) => !excludeNames.has(e.name) && (!normalizedQuery || normalizeFa(e.name).includes(normalizedQuery))
+  const normalizedQuery = normalizeFa(query).replace(/\s+/g, " ");
+  const visible = useMemo(
+    () => SEARCH_INDEX.filter((x) => !excludeNames.has(x.entry.name) && matchesExerciseQuery(x.text, normalizedQuery)).map((x) => x.entry),
+    [excludeNames, normalizedQuery]
   );
+  const { limit, onScroll, listRef } = useProgressiveList(visible.length, normalizedQuery);
 
   return createPortal(
     <div className="exercise-catalog-popup-wrap manual-exercise-popup-wrap" onClick={onClose}>
@@ -140,11 +146,11 @@ function ManualExerciseAddPopup({
               autoFocus
             />
 
-            <div className="no-scrollbar manual-exercise-picker-list">
+            <div ref={listRef} className="no-scrollbar manual-exercise-picker-list" onScroll={onScroll}>
               {visible.length === 0 ? (
                 <div className="item-line empty">حرکتی پیدا نشد.</div>
               ) : (
-                visible.map((e) => (
+                visible.slice(0, limit).map((e) => (
                   <div key={e.name} className="exercise-catalog-row">
                     <div className="min-w-0 flex-1 truncate text-right text-[12.5px] font-semibold text-dash-text sm:text-[13.5px]">
                       {e.name}

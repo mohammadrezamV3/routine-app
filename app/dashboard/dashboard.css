@@ -242,11 +242,18 @@ body[data-theme="light"] .db-hero-phase:not(.is-night){ color:#D98A1E; }
 @media (hover:hover){ .db-page .db-cmd-trigger:hover{ border-color:rgba(var(--accent-rgb),.55); color:var(--text); } }
 .db-cmd-trigger-keys{ display:none; gap:4px; }
 @media (hover:hover) and (pointer:fine){ .db-cmd-trigger-keys{ display:inline-flex; } }
+@media (hover:none), (pointer:coarse){ .db-cmd-trigger-keys{ display:none !important; } }
 .db-kbd{
   display:inline-flex; align-items:center; justify-content:center; min-width:22px; height:20px; padding:0 5px;
   border-radius:6px; border:1px solid var(--box-line); border-bottom-width:2px;
   font-family:var(--font-latin), sans-serif; font-size:10px; font-weight:700; color:var(--muted);
 }
+/* راهنمای کیبورد (Esc و پایین پالت) روی لمسی معنی نداره؛ بستن با زدن پس‌زمینه */
+@media (hover:none), (pointer:coarse){ .db-cmd-esc{ display:none; } }
+.db-cmd-foot{ display:none; gap:16px; padding:9px 16px; border-top:1px solid var(--surface-line); font-size:10.5px; color:var(--muted); }
+.db-cmd-foot span{ display:inline-flex; align-items:center; gap:4px; }
+@media (hover:hover) and (pointer:fine){ .db-cmd-foot{ display:flex; } }
+@media (hover:none), (pointer:coarse){ .db-cmd-foot{ display:none !important; } }
 
 /* حلقه‌های روز */
 .db-hero-orbit{ grid-area:orbit; display:flex; align-items:center; gap:18px; }
@@ -408,10 +415,10 @@ body[data-theme="light"] .db-arc-cap{ filter:drop-shadow(0 0 2px rgba(80,50,20,.
 .db-page .db-tl-node svg{ width:15px; height:15px; position:relative; z-index:1; }
 @media (hover:hover){ .db-page .db-tl-node:hover{ border-color:var(--ring-1a); box-shadow:0 0 0 4px color-mix(in srgb, var(--ring-1a) 16%, transparent); } }
 .db-page .db-tl-item.is-done .db-tl-node{
-  border-color:transparent; background:linear-gradient(135deg, var(--ring-1a), var(--ring-1b));
+  border-color:transparent; background:linear-gradient(135deg, var(--ring-1a), var(--ring-1b)) border-box no-repeat;
   box-shadow:0 0 14px color-mix(in srgb, var(--ring-1a) 55%, transparent);
 }
-body[data-theme="light"] .db-page .db-tl-item.is-done .db-tl-node{ background:linear-gradient(135deg, var(--ring-1a), var(--ring-1b)); }
+body[data-theme="light"] .db-page .db-tl-item.is-done .db-tl-node{ background:linear-gradient(135deg, var(--ring-1a), var(--ring-1b)) border-box no-repeat; }
 .db-page .db-tl-item.is-active .db-tl-node{ border-color:var(--ring-1a); animation:db-node-pulse 2s ease-in-out infinite; }
 .db-page .db-tl-item.is-next .db-tl-node{ border-color:var(--ring-2a); box-shadow:0 0 0 3px color-mix(in srgb, var(--ring-2a) 18%, transparent); }
 .db-page .db-tl-item.is-missed .db-tl-node{ border-color:var(--tl-warn); border-style:dashed; }
@@ -584,7 +591,9 @@ a.db-tl-name{ text-decoration:underline dotted color-mix(in srgb, var(--ring-1a)
 .db-wdot{ display:flex; flex-direction:column; align-items:center; gap:3px; }
 .db-wdot i{ display:block; width:100%; max-width:16px; aspect-ratio:1; border-radius:6px; border:1.5px solid var(--box-line); }
 .db-wdot.is-planned i{ border-color:color-mix(in srgb, var(--ring-2a) 55%, transparent); border-style:dashed; }
-.db-wdot.is-done i{ background:linear-gradient(135deg, var(--ring-2a), var(--ring-2b)); border-color:transparent; }
+/* گرادیان از لبه‌ی بیرونی بوردر شروع می‌شه و تکرار نمی‌شه — وگرنه کاشی گرادیان
+   زیر بوردر شفاف تکرار می‌شد و یک «مربع داخل مربع» بنفش دیده می‌شد */
+.db-wdot.is-done i{ background:linear-gradient(135deg, var(--ring-2a), var(--ring-2b)) border-box no-repeat; border-color:transparent; }
 .db-wdot.is-today i{ outline:2px solid var(--text); outline-offset:1px; }
 .db-wdot em{ font-style:normal; font-size:9px; color:var(--muted); }
 
@@ -776,9 +785,6 @@ body[data-theme="light"] .db-cmd{ box-shadow:0 30px 70px -20px rgba(80,50,20,.35
 .db-cmd-enter{ font-size:12px; color:var(--muted); opacity:0; transition:opacity .12s ease; }
 .db-cmd-item.is-active .db-cmd-enter{ opacity:1; color:var(--accent); }
 .db-cmd-empty{ padding:28px; text-align:center; font-size:12.5px; color:var(--muted); }
-.db-cmd-foot{ display:none; gap:16px; padding:9px 16px; border-top:1px solid var(--surface-line); font-size:10.5px; color:var(--muted); }
-.db-cmd-foot span{ display:inline-flex; align-items:center; gap:4px; }
-@media (hover:hover) and (pointer:fine){ .db-cmd-foot{ display:flex; } }
 
 /* ============================================================
    حرکت‌های آیکون (components/DashboardIcons.tsx)
@@ -868,16 +874,22 @@ body[data-theme="light"] .db-cmd{ box-shadow:0 30px 70px -20px rgba(80,50,20,.35
 html[data-perf-weak] .db-page .dbi-live *, html[data-perf-weak] .db-ribbon-sun-core{ animation:none !important; }
 
 /* ── اشتراک موفقیت (components/DashboardShare.tsx) — پورتال روی body ──
-   فقط خود تصویر کارت + یک دکمه‌ی اشتراک؛ بدون قاب، بوردر، بک‌گراند یا متن (درخواست صاحب محصول) */
+   تصویر کارت + ردیف انتخاب آیتم‌ها (TickOption، بی‌قاب) + یک دکمه‌ی اشتراک؛ بدون بک‌گراند یا متن توضیحی */
 .db-share-root{
   position:fixed; inset:0; z-index:9000; display:flex; justify-content:center; align-items:center;
-  padding:calc(16px + env(safe-area-inset-top)) 16px calc(16px + env(safe-area-inset-bottom)); background:rgba(0,0,0,.55);
+  padding:calc(16px + env(safe-area-inset-top)) 16px calc(16px + env(safe-area-inset-bottom)); background:rgba(0,0,0,.74);
+  /* پرده‌ی پشت پنجره غلیظ‌تر و مات: گزینه‌های انتخاب آیتم‌ها بی‌قاب‌ان و روی
+     صفحه‌ی داشبورد پشتشون خوانا نبودن */
+  -webkit-backdrop-filter:blur(10px); backdrop-filter:blur(10px);
 }
-body[data-theme="light"] .db-share-root{ background:rgba(60,40,20,.28); }
+body[data-theme="light"] .db-share-root{ background:color-mix(in srgb, var(--bg) 84%, transparent); }
+html[data-perf="low"] .db-share-root, html[data-perf-weak] .db-share-root{ -webkit-backdrop-filter:none; backdrop-filter:none; }
+html[data-perf="low"] body[data-theme="light"] .db-share-root, html[data-perf-weak] body[data-theme="light"] .db-share-root{ background:color-mix(in srgb, var(--bg) 95%, transparent); }
+html[data-perf="low"] body:not([data-theme="light"]) .db-share-root, html[data-perf-weak] body:not([data-theme="light"]) .db-share-root{ background:rgba(0,0,0,.88); }
 .db-share{
   /* عرض = کوچک‌ترین بین 440px، عرض صفحه و ارتفاعی که تصویر 4:5 + دکمه + بستن جا بشن */
-  --share-w:min(440px, calc((100vh - 32px - 140px) * .8));
-  --share-w:min(440px, calc((100dvh - 32px - 140px - env(safe-area-inset-top) - env(safe-area-inset-bottom)) * .8));
+  --share-w:min(440px, calc((100vh - 32px - 220px) * .8));
+  --share-w:min(440px, calc((100dvh - 32px - 220px - env(safe-area-inset-top) - env(safe-area-inset-bottom)) * .8));
   width:100%; max-width:var(--share-w); display:flex; flex-direction:column; align-items:stretch; gap:12px;
 }
 .db-share:focus{ outline:none; }
@@ -911,6 +923,14 @@ body[data-theme="light"] .db-share-close{ color:var(--text); }
 @keyframes db-share-pulse{ 50%{ opacity:.45; } }
 
 .db-share .db-share-btn{ width:100%; min-height:50px; font-size:14.5px; font-weight:800; border-radius:15px; touch-action:manipulation; }
+/* انتخاب آیتم‌ها: دو ستون فشرده زیر تصویر، بی‌قاب و بی‌بک‌گراند (فقط TickOption + متن) */
+.db-share-opts{ display:grid; grid-template-columns:repeat(2, minmax(0,1fr)); gap:0 14px; }
+/* اسپسیفیسیتی بالا تا ریست شیشه‌ای سراسری button{} (بوردر، سایه‌ی داخلی، بلور، هاور) روی این ردیف‌ها نشینه */
+html body .db-share-opts button.tick-option{
+  padding:5px 0; font-size:12.5px; color:#fff; border:none; border-radius:0; background:transparent;
+  box-shadow:none; backdrop-filter:none; -webkit-backdrop-filter:none;
+}
+html body[data-theme="light"] .db-share-opts button.tick-option{ color:var(--text); }
 .db-share-btn-in{ display:inline-flex; align-items:center; gap:8px; }
 .db-share-btn:focus-visible{ outline:2px solid var(--accent); outline-offset:3px; }
 
