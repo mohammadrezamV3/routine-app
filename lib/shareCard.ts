@@ -18,7 +18,7 @@ export type ShareRing = { label: string; value: number; display: string | null; 
 
 /** محتوای اصلی کارت — هر کارت دقیقا *یکی* از این‌هاست */
 export type ShareBody =
-  | { kind: "rings"; streak: number; items: ShareRing[] }
+  | { kind: "rings"; streak: number; center: "streak" | "percent"; percent: number; items: ShareRing[] }
   | { kind: "streak"; streak: number; label: string; week: { labels: string[]; done: boolean[]; todayIdx: number } };
 
 export type ShareCardInput = {
@@ -554,12 +554,17 @@ export async function renderShareCard(input: ShareCardInput, opts: RenderOpts = 
       const r = outer - sw / 2 - i * (sw + gap);
       drawGradientArc(ctx, p, cx, cy, r, sw, it.value, it.colors);
     });
-    // مرکز: شعله + تعداد روزهای استریک
+    // مرکز: شعله + تعداد روزهای استریک، یا درصد تکمیل امروز (انتخاب کاربر)
     const inner = outer - n * (sw + gap);
     const k = Math.max(0.55, Math.min(1, inner / 170));
-    drawFlame(ctx, cx, cy - 34 * k, 78 * k, b.streak, false);
-    text(faNum(b.streak), cx, cy + 62 * k, f(900, 92 * k), p.text, "center", "ltr");
-    text("روز استریک", cx, cy + 106 * k, f(700, 28 * k), p.muted, "center");
+    if (b.center === "percent") {
+      text(`${faNum(Math.max(0, Math.min(100, Math.round(b.percent))))}%`, cx, cy + 14 * k, f(900, 92 * k), p.text, "center", "ltr");
+      text("تکمیل امروز", cx, cy + 58 * k, f(700, 28 * k), p.muted, "center");
+    } else {
+      drawFlame(ctx, cx, cy - 34 * k, 78 * k, b.streak, false);
+      text(faNum(b.streak), cx, cy + 62 * k, f(900, 92 * k), p.text, "center", "ltr");
+      text("روز استریک", cx, cy + 106 * k, f(700, 28 * k), p.muted, "center");
+    }
 
     // لیجند: یک ستون برای هر حلقه
     if (n) {

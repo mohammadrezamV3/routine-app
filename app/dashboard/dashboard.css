@@ -924,6 +924,7 @@ body[data-theme="light"] .db-share-close{ color:var(--text); }
 
 .db-share .db-share-btn{ width:100%; min-height:50px; font-size:14.5px; font-weight:800; border-radius:15px; touch-action:manipulation; }
 /* انتخاب آیتم‌ها: دو ستون فشرده زیر تصویر، بی‌قاب و بی‌بک‌گراند (فقط TickOption + متن) */
+.db-share-center{ width:100%; max-width:100%; margin:0 0 8px; }
 .db-share-opts{ display:grid; grid-template-columns:repeat(2, minmax(0,1fr)); gap:0 14px; }
 /* اسپسیفیسیتی بالا تا ریست شیشه‌ای سراسری button{} (بوردر، سایه‌ی داخلی، بلور، هاور) روی این ردیف‌ها نشینه */
 html body .db-share-opts button.tick-option{
