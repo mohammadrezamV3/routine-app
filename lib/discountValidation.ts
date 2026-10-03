@@ -1,4 +1,5 @@
 import { prisma } from "@/lib/prisma";
+import { ensureEventDiscounts } from "@/lib/eventDiscountServer";
 import { REFERRAL_DISCOUNT_PERCENT, REFERRAL_INVITER_REWARD_PERCENT } from "@/lib/referral";
 
 export { REFERRAL_DISCOUNT_PERCENT, REFERRAL_INVITER_REWARD_PERCENT };
@@ -23,6 +24,9 @@ async function hasPaidBefore(userId: string): Promise<boolean> {
 export async function resolveDiscountCode(rawCode: string, userId: string, planKey: string): Promise<DiscountResolution> {
   const normalizedCode = rawCode.trim().toUpperCase();
   if (!normalizedCode) return { ok: false, error: "کد تخفیف را وارد کن" };
+
+  // کد مناسبت جاری اگه هنوز ساخته نشده، همین‌جا (با throttle) ساخته می‌شه
+  await ensureEventDiscounts();
 
   const promo = await prisma.discountCode.findUnique({ where: { code: normalizedCode } });
   const promoValid = promo && promo.active && (!promo.expiresAt || promo.expiresAt > new Date())

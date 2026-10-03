@@ -26,3 +26,22 @@ export async function DELETE(_req: NextRequest, { params }: { params: { id: stri
   await writeAuditLog(guard.userId, "discount_code.delete", "DiscountCode", existing.id, { code: existing.code });
   return NextResponse.json({ ok: true });
 }
+
+// PATCH { active: boolean } → قطع/وصل کد بدون حذف
+export async function PATCH(req: NextRequest, { params }: { params: { id: string } }) {
+  const guard = await requireAdmin("discounts");
+  if (!guard.ok) return guard.response;
+
+  const body = await req.json().catch(() => null);
+  if (!body || typeof body !== "object" || typeof (body as any).active !== "boolean") {
+    return NextResponse.json({ error: "ورودی نامعتبر است" }, { status: 400 });
+  }
+  const active = (body as { active: boolean }).active;
+
+  const existing = await prisma.discountCode.findUnique({ where: { id: params.id }, select: { id: true, code: true } });
+  if (!existing) return NextResponse.json({ error: "کد تخفیف پیدا نشد" }, { status: 404 });
+
+  await prisma.discountCode.update({ where: { id: existing.id }, data: { active } });
+  await writeAuditLog(guard.userId, "discount_code.toggle", "DiscountCode", existing.id, { code: existing.code, active });
+  return NextResponse.json({ ok: true, active });
+}
