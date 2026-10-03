@@ -173,7 +173,7 @@ export function DashboardCommand({
                 autoComplete="off"
                 spellCheck={false}
               />
-              <kbd className="db-kbd">Esc</kbd>
+              <kbd className="db-kbd db-cmd-esc">Esc</kbd>
             </div>
             <div className="db-cmd-list thin-scroll" id="db-cmd-list" role="listbox" ref={listRef}>
               {results.length === 0 && <p className="db-cmd-empty">چیزی پیدا نشد</p>}

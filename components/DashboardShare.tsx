@@ -1,11 +1,12 @@
 "use client";
 
 // «اشتراک موفقیت» از داشبورد. پنجره فقط خود تصویر کارت رو نشون می‌ده و یک دکمه‌ی
-// «اشتراک‌گذاری» زیرش — بدون قاب، بدون تنظیمات و بدون هیچ متنی زیر تصویر
-// (درخواست صاحب محصول). محتوای کارت ثابته: حلقه‌های امروز، وسطشون تعداد روزهای
-// استریک، عدد زیر حلقه‌ی روتین و تمرین دیده می‌شه و کالری پنهانه، و کد دعوت
-// کاربر (اگه داشته باشه) بالای کارت. تصویر فقط با زدن دکمه از دستگاه بیرون
-// می‌ره — هیچ‌چیز به سرور نمی‌ره.
+// «اشتراک‌گذاری» زیرش — بدون قاب و بدون متن توضیحی. فقط انتخاب آیتم‌ها برگشته
+// (درخواست صاحب محصول): یک ردیف فشرده از TickOption زیر تصویر برای «نمایش عدد»
+// هر حلقه و «کد دعوت». پیش‌فرض‌ها: عدد روتین و تمرین دیده می‌شه، کالری پنهانه،
+// و کد دعوت روشنه (اگه کاربر کد نداشته باشه غیرفعاله). وسط حلقه‌ها همیشه تعداد
+// روزهای استریکه. تصویر فقط با زدن دکمه از دستگاه بیرون می‌ره — هیچ‌چیز به
+// سرور نمی‌ره.
 //
 // راحتی کار:
 //  - تصویر از قبل (پشت پیش‌نمایش) ساخته می‌شه؛ تپ روی دکمه بدون هیچ انتظاری
@@ -30,10 +31,12 @@ import { canvasToBlob, prepareShareBackground, renderShareCard, shareText, type 
 import { useImageShare } from "@/lib/useImageShare";
 import { heroRings, type HeroRing } from "./DashboardHero";
 import { Spinner } from "./Spinner";
+import { TickOption } from "./TickOption";
 import { D_EASE } from "./DashboardKit";
 
-/** عدد زیر کدوم حلقه‌ها روی کارت میاد — کالری عدد شخصی‌تریه و پنهان می‌مونه */
+/** پیش‌فرض عدد زیر هر حلقه — کالری عدد شخصی‌تریه و پنهان می‌مونه */
 const SHOW_VALUE: Record<HeroRing["key"], boolean> = { routine: true, exercise: true, calorie: false };
+const VALUE_LABEL: Record<HeroRing["key"], string> = { routine: "روتین", exercise: "تمرین", calorie: "کالری" };
 const FOCUSABLE = 'button:not([disabled]), [href], input:not([disabled]), [tabindex]:not([tabindex="-1"])';
 
 /** رنگ حلقه‌ها توکن‌های --ring-*  داشبوردن؛ canvas مقدار واقعی‌شون رو لازم داره */
@@ -105,6 +108,10 @@ export function DashboardShare({
   const rings = useMemo(() => heroRings(data, routine.stats, routineLocked), [data, routine.stats, routineLocked]);
   const streak = routine.streak ?? 0;
 
+  // انتخاب کاربر برای همین بار باز بودن پنجره (بدون ذخیره)
+  const [showValue, setShowValue] = useState<Record<HeroRing["key"], boolean>>(SHOW_VALUE);
+  const [showInvite, setShowInvite] = useState(true);
+
   // مقدار نمایشی هر حلقه روی کارت — کالری با هدفش، نه فقط یه عدد تنها
   const cardRings = useMemo(() => {
     if (typeof document === "undefined") return [];
@@ -113,14 +120,15 @@ export function DashboardShare({
       // حلقه‌ها همیشه روی کارت می‌مونن؛ فقط عدد زیر بعضی‌هاشون پنهانه (SHOW_VALUE)
       .filter((r) => r.show)
       .map((r) => ({
+        key: r.key,
         label: plain(r.label),
         value: r.value,
-        display: !SHOW_VALUE[r.key] ? null : r.key === "calorie" && cal?.target ? `${faNum(Math.round(cal.today.kcal))}/${faNum(Math.round(cal.target.kcal))}` : r.display,
+        display: !showValue[r.key] ? null : r.key === "calorie" && cal?.target ? `${faNum(Math.round(cal.today.kcal))}/${faNum(Math.round(cal.target.kcal))}` : r.display,
         colors: [resolveColor(r.grad[0]), resolveColor(r.grad[1])] as [string, string],
       }));
     // rings خودش data رو پوشش می‌ده؛ فقط کالری مستقیم خونده می‌شه
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [rings, data?.calorie, theme]);
+  }, [rings, data?.calorie, theme, showValue]);
 
   const input = useMemo<ShareCardInput | null>(() => {
     if (!cardRings.length) return null;
@@ -130,10 +138,10 @@ export function DashboardShare({
     return {
       title: "فعالیت امروز",
       subtitle: `${weekday} ${faNum(jd)} ${J_MONTHS[jm - 1]} ${faNum(jy)}`,
-      inviteCode: invite?.code ?? null,
+      inviteCode: showInvite ? (invite?.code ?? null) : null,
       body: { kind: "rings", streak, items: cardRings },
     };
-  }, [invite?.code, routine.todayIso, cardRings, streak]);
+  }, [invite?.code, showInvite, routine.todayIso, cardRings, streak]);
 
   // کلید محتوایی ورودی — هویت شیء با هر رندر والد (مثلا stats تازه با همون
   // اعداد) عوض می‌شد و پیش‌نمایش بی‌دلیل دوباره ساخته و دکمه لحظه‌ای غیرفعال می‌شد
@@ -222,7 +230,7 @@ export function DashboardShare({
   function doShare() {
     if (!ready || !full) return;
     const lead = streak ? `${faNum(streak)} روز پشت‌سرهم روتینم رو کامل کردم 🔥` : "امروزم توی آریون 💪";
-    const inv = invite ? { code: invite.code, url: invite.url, percent: REFERRAL_DISCOUNT_PERCENT } : null;
+    const inv = invite && showInvite ? { code: invite.code, url: invite.url, percent: REFERRAL_DISCOUNT_PERCENT } : null;
     share(full.blob, `arion-${routine.todayIso}.png`, "فعالیت امروز", shareText(lead, inv));
   }
 
@@ -325,6 +333,17 @@ export function DashboardShare({
                 </>
               )}
             </div>
+
+            {input && (
+              <div className="db-share-opts" role="group" aria-label="آیتم‌های تصویر">
+                {cardRings.map((r) => (
+                  <TickOption key={r.key} checked={showValue[r.key]} onChange={(v) => setShowValue((o) => ({ ...o, [r.key]: v }))}>
+                    نمایش عدد {VALUE_LABEL[r.key]}
+                  </TickOption>
+                ))}
+                <TickOption checked={showInvite && !!invite?.code} onChange={setShowInvite} disabled={!invite?.code}>کد دعوت</TickOption>
+              </div>
+            )}
 
             <button
               type="button"

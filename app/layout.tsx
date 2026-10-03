@@ -1,6 +1,7 @@
 import type { Metadata, Viewport } from "next";
 import { Vazirmatn, Inter } from "next/font/google";
 import "./globals.css";
+import "./admin-theme.css";
 import { ThemeProvider } from "@/components/ThemeProvider";
 import { NavDrawer } from "@/components/NavDrawer";
 import { BackgroundCanvasLoader } from "@/components/BackgroundCanvasLoader";
@@ -15,6 +16,7 @@ import { THEME_INIT_SCRIPT, THEME_COLORS, THEME_COOKIE } from "@/lib/themeColor"
 import { cookies } from "next/headers";
 import { prisma } from "@/lib/prisma";
 import { PERF_INIT_SCRIPT } from "@/lib/perfTier";
+import { ADMIN_THEME_INIT_SCRIPT } from "@/lib/adminTheme";
 import { TAP_FEEDBACK_INIT_SCRIPT } from "@/lib/tapFeedback";
 import { BRAND_FA, BRAND_EN, BRAND_CATEGORY_FA, BRAND_TITLE, BRAND_DESC, OG_BASE } from "@/lib/brand";
 import { SITE_URL, organizationJsonLd, websiteJsonLd, softwareApplicationJsonLd, siteNavigationJsonLd } from "@/lib/seo";
@@ -224,6 +226,8 @@ export default async function RootLayout({ children }: { children: React.ReactNo
             دلیلش lib/themeColor.ts)، پس دوباره‌تزریق نمی‌شه و
             syncThemeColorMeta همین یکی رو آپدیت می‌کنه. */}
         <meta name="theme-color" content={THEME_COLORS[theme]} />
+        {/* تم آزمایشی ادمین (lib/adminTheme.ts) — قبل از اولین پینت */}
+        <script dangerouslySetInnerHTML={{ __html: ADMIN_THEME_INIT_SCRIPT }} />
       </head>
       {/* suppressHydrationWarning لازمه چون اسکریپت بالا ممکنه data-theme رو
           قبل از این‌که React هیدریت کنه عوض کرده باشه — یعنی یه mismatch

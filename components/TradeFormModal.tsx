@@ -3,7 +3,7 @@
 import { useEffect, useMemo, useRef, useState } from "react";
 import { TickButton } from "./TickButton";
 import { createPortal } from "react-dom";
-import { AlertTriangle, Camera, ChevronDown, Info, Smile, Tags, Trash2, Wand2, X } from "lucide-react";
+import { AlertTriangle, Camera, ChevronDown, ChevronLeft, ChevronRight, Info, Smile, Tags, Trash2, Wand2, X } from "lucide-react";
 import { LockBodyScroll } from "./LockBodyScroll";
 import { SegmentedTabs } from "./SegmentedTabs";
 import { TradeTagField } from "./TradeTagField";
@@ -91,6 +91,81 @@ export function TradeFormModal({
   const [compressing, setCompressing] = useState(false);
 
   function patch(p: Partial<TradeFormState>) { setForm((f) => ({ ...f, ...p })); }
+
+  // ── ناوبری بین بخش‌های فرم ──
+  const tabsRef = useRef<HTMLDivElement>(null);
+  const [tabsRtl, setTabsRtl] = useState(true);
+  const [canStart, setCanStart] = useState(false);
+  const [canEnd, setCanEnd] = useState(false);
+  const tabIndex = TABS.findIndex((t) => t.key === tab);
+
+  useEffect(() => {
+    const el = tabsRef.current;
+    if (!el) return;
+    const update = () => {
+      const max = el.scrollWidth - el.clientWidth;
+      const pos = Math.abs(el.scrollLeft);
+      setTabsRtl(getComputedStyle(el).direction === "rtl");
+      setCanStart(max > 2 && pos > 2);
+      setCanEnd(max > 2 && pos < max - 2);
+    };
+    update();
+    el.addEventListener("scroll", update, { passive: true });
+    const ro = new ResizeObserver(update);
+    ro.observe(el);
+    return () => { el.removeEventListener("scroll", update); ro.disconnect(); };
+  }, []);
+
+  // سمت «شروع» در راست‌به‌چپ یعنی راست؛ scrollLeft آنجا منفی می‌شود
+  function scrollTabs(toStart: boolean) {
+    const el = tabsRef.current;
+    if (!el) return;
+    const rtl = getComputedStyle(el).direction === "rtl";
+    const amount = el.clientWidth * 0.7;
+    const sign = (toStart ? -1 : 1) * (rtl ? -1 : 1);
+    el.scrollBy({ left: sign * amount, behavior: "smooth" });
+  }
+
+  function goTab(i: number) {
+    const next = TABS[i];
+    if (!next) return;
+    setTab(next.key);
+    const el = tabsRef.current;
+    const btn = el?.querySelectorAll<HTMLElement>(".trade-form-tab")[i];
+    if (el && btn) {
+      const er = el.getBoundingClientRect();
+      const br = btn.getBoundingClientRect();
+      const pad = 28;
+      let dx = 0;
+      if (br.left < er.left + pad) dx = br.left - er.left - pad;
+      else if (br.right > er.right - pad) dx = br.right - er.right + pad;
+      if (dx) el.scrollBy({ left: dx, behavior: "smooth" });
+    }
+  }
+
+  // ── میزان اطمینان: حرکت پیوسته، ذخیره‌ی عدد صحیح ۱ تا ۱۰ ──
+  const [confDraft, setConfDraft] = useState<number | null>(null);
+  const confAnim = useRef<number | null>(null);
+  useEffect(() => () => { if (confAnim.current) cancelAnimationFrame(confAnim.current); }, []);
+
+  function confCommit(raw: number) {
+    const target = Math.min(10, Math.max(1, Math.round(raw)));
+    patch({ confidence: String(target) });
+    if (confAnim.current) cancelAnimationFrame(confAnim.current);
+    const reduce = typeof window !== "undefined" && window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+    if (reduce || Math.abs(raw - target) < 0.005) { setConfDraft(null); return; }
+    const from = raw;
+    const t0 = performance.now();
+    const dur = 150;
+    const step = (now: number) => {
+      const k = Math.min(1, (now - t0) / dur);
+      const e = 1 - Math.pow(1 - k, 3);
+      setConfDraft(from + (target - from) * e);
+      if (k < 1) confAnim.current = requestAnimationFrame(step);
+      else { confAnim.current = null; setConfDraft(null); }
+    };
+    confAnim.current = requestAnimationFrame(step);
+  }
 
   useEffect(() => {
     // اگر اسکریپت inline preload از قبل همین URL را گرفته، دوباره فچ نمی‌شود
@@ -235,19 +310,29 @@ export function TradeFormModal({
           <button type="button" className="trade-icon-btn" onClick={onClose} aria-label="بستن"><X size={16} /></button>
         </div>
 
-        <div className="trade-form-tabs no-scrollbar">
-          {TABS.map((t) => (
-            <button
-              key={t.key}
-              type="button"
-              className={`trade-form-tab${tab === t.key ? " active" : ""}`}
-              onClick={() => setTab(t.key)}
-            >
-              {t.icon}
-              {t.label}
-              {t.key === "checklist" && checklistIncomplete && <span className="trade-tab-warn" />}
-            </button>
-          ))}
+        <div className="trade-form-tabs-wrap">
+          <button type="button" className="trade-tabs-arrow" aria-label="بخش‌های قبلی"
+            hidden={!canStart} onClick={() => scrollTabs(true)}>
+            {tabsRtl ? <ChevronRight size={16} /> : <ChevronLeft size={16} />}
+          </button>
+          <div className="trade-form-tabs no-scrollbar" ref={tabsRef}>
+            {TABS.map((t, i) => (
+              <button
+                key={t.key}
+                type="button"
+                className={`trade-form-tab${tab === t.key ? " active" : ""}`}
+                onClick={() => goTab(i)}
+              >
+                {t.icon}
+                {t.label}
+                {t.key === "checklist" && checklistIncomplete && <span className="trade-tab-warn" />}
+              </button>
+            ))}
+          </div>
+          <button type="button" className="trade-tabs-arrow" aria-label="بخش‌های بعدی"
+            hidden={!canEnd} onClick={() => scrollTabs(false)}>
+            {tabsRtl ? <ChevronLeft size={16} /> : <ChevronRight size={16} />}
+          </button>
         </div>
 
         {tab === "core" && (
@@ -585,15 +670,32 @@ export function TradeFormModal({
               ))}
             </div>
 
-            <label className="exercise-form-label">
-              میزان اطمینان {form.confidence ? `— ${faNum(form.confidence)}` : ""}
-            </label>
-            <input
-              type="range" min={1} max={10} step={1}
-              value={form.confidence || 5}
-              onChange={(e) => patch({ confidence: e.target.value })}
-              className="trade-range"
-            />
+            {(() => {
+              const live = confDraft ?? (form.confidence ? Number(form.confidence) : 5);
+              const shown = Math.min(10, Math.max(1, Math.round(live)));
+              return (
+                <>
+                  <label className="exercise-form-label">
+                    میزان اطمینان {form.confidence || confDraft !== null ? `— ${faNum(shown)}` : ""}
+                  </label>
+                  <input
+                    type="range" min={1} max={10} step="any"
+                    value={live}
+                    style={{ "--val": (live - 1) / 9 } as React.CSSProperties}
+                    onChange={(e) => {
+                      if (confAnim.current) { cancelAnimationFrame(confAnim.current); confAnim.current = null; }
+                      setConfDraft(Number(e.target.value));
+                    }}
+                    onPointerUp={(e) => confCommit(Number((e.target as HTMLInputElement).value))}
+                    onPointerCancel={(e) => confCommit(Number((e.target as HTMLInputElement).value))}
+                    onKeyUp={(e) => { if (/^(Arrow|Page|Home|End)/.test(e.key)) confCommit(Number((e.target as HTMLInputElement).value)); }}
+                    onBlur={(e) => { if (confDraft !== null) confCommit(Number(e.target.value)); }}
+                    className="trade-range"
+                    aria-valuetext={String(shown)}
+                  />
+                </>
+              );
+            })()}
 
             <label className="exercise-form-label">حال من بعد از معامله</label>
             <div className="trade-choice-grid">
@@ -629,6 +731,13 @@ export function TradeFormModal({
         )}
 
         {error && <div className="trade-form-error">{error}</div>}
+
+        <div className="trade-form-stepper">
+          <button type="button" className="account-outline-btn" disabled={tabIndex <= 0}
+            onClick={() => goTab(tabIndex - 1)}>بخش قبل</button>
+          <button type="button" className="account-outline-btn" disabled={tabIndex >= TABS.length - 1}
+            onClick={() => goTab(tabIndex + 1)}>بخش بعد</button>
+        </div>
 
         <div className="trade-modal-actions">
           <button type="button" className="account-outline-btn" onClick={onClose}>لغو</button>

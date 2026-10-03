@@ -508,8 +508,8 @@
        بود که فقط با بلور دیده می‌شد، و روی موبایل یه اورراید جدا اون رو به
        یه قرص نزدیک‌به‌سیاه تبدیل می‌کرد — یعنی ظاهر هدر بین دسکتاپ و
        موبایل دو چیز متفاوت بود («یه بار اینه یه بار اصلی»). */
-    background:var(--surface-glass);
-    backdrop-filter:blur(22px) saturate(170%); -webkit-backdrop-filter:blur(22px) saturate(170%);
+    background:color-mix(in srgb, var(--surface-2) 86%, transparent);
+    backdrop-filter:blur(12px); -webkit-backdrop-filter:blur(12px);
     border:1px solid var(--surface-line);
     /* سافاری موبایل حین انیمیشن جمع‌شدن نوار آدرس (اسکرول) گاهی
        عنصر position:fixed رو از بقیه‌ی صفحه جدا رندر می‌کنه (یه فریم
@@ -533,8 +533,8 @@
   .app-topbar-statusbar-blur{
     position:fixed; top:0; left:0; right:0; z-index:39;
     height:env(safe-area-inset-top);
-    background:var(--surface-glass);
-    backdrop-filter:blur(14px) saturate(170%); -webkit-backdrop-filter:blur(14px) saturate(170%);
+    background:color-mix(in srgb, var(--surface-2) 86%, transparent);
+    backdrop-filter:blur(10px); -webkit-backdrop-filter:blur(10px);
     pointer-events:none;
   }
   /* توجه: بدون transform برای وسط‌چین عمودی — چون transform روی این
@@ -5033,7 +5033,7 @@ body[data-theme="light"] .exercise-substitute-option{ background:rgba(255,255,25
    دسکتاپ (pointer:fine) هیچ تغییری نمی‌کنه.
    اگه خواستی برگرده به حالت قبل، کافیه کل همین بلاک @media رو حذف کنی. */
 @media (pointer: coarse){
-  .app-topbar{ backdrop-filter:blur(10px) saturate(160%); -webkit-backdrop-filter:blur(10px) saturate(160%); }
+  .app-topbar{ backdrop-filter:blur(8px); -webkit-backdrop-filter:blur(8px); }
   .notif-panel{ backdrop-filter:blur(13px) saturate(180%); -webkit-backdrop-filter:blur(13px) saturate(180%); }
   .nav-drawer-glass{ backdrop-filter:blur(13px) saturate(180%); -webkit-backdrop-filter:blur(13px) saturate(180%); }
   .cal-cell{ backdrop-filter:blur(13px) saturate(180%); -webkit-backdrop-filter:blur(13px) saturate(180%); }
@@ -5900,6 +5900,21 @@ html[data-perf="low"] .tv-surface{
   -webkit-backdrop-filter:none !important;
 }
 
+/* هدر روی دستگاه ضعیف یا با «شفافیت کمتر» سیستم: بدون blur، سطح تقریبا توپر */
+html[data-perf="low"] :is(.app-topbar, .app-topbar-statusbar-blur),
+html[data-perf-weak] :is(.app-topbar, .app-topbar-statusbar-blur){
+  background:color-mix(in srgb, var(--surface-2) 96%, transparent);
+  backdrop-filter:none !important; -webkit-backdrop-filter:none !important;
+}
+@media (prefers-reduced-transparency:reduce){
+  .app-topbar,
+  .app-topbar-statusbar-blur{
+    background:color-mix(in srgb, var(--surface-2) 96%, transparent);
+    backdrop-filter:none !important;
+    -webkit-backdrop-filter:none !important;
+  }
+}
+
 /* will-change به مرورگر می‌گوید «برای این عنصر یک لایه‌ی جدا روی GPU
    نگه دار». روی دستگاهی با حافظه‌ی گرافیکی کم، چند لایه‌ی همیشگی خودش
    به تنهایی باعث کندی و حتی خالی‌شدن لایه‌ها (layer thrashing) می‌شود. */
@@ -6277,6 +6292,24 @@ select.wsearch-newform-name{ cursor:pointer; }
 
 /* ── فرم تب‌دار معامله ────────────────────────────────────── */
 .trade-form-panel{ max-width:600px; width:94%; }
+.trade-form-tabs-wrap{ display:flex; align-items:flex-start; gap:2px; min-width:0; }
+.trade-form-tabs-wrap .trade-form-tabs{ flex:1; min-width:0; }
+/* پیکان‌های پیمایش تب‌ها: فقط موس؛ بدون بک‌گراند، فقط آیکون */
+.trade-tabs-arrow{
+  display:none; flex-shrink:0; align-items:center; justify-content:center;
+  width:30px; height:32px; padding:0; border:0; border-radius:50%;
+  color:var(--muted); background:none; box-shadow:none;
+  backdrop-filter:none; -webkit-backdrop-filter:none;
+  transition:color .18s ease, opacity .18s ease;
+}
+@media (hover:hover) and (pointer:fine){
+  .trade-tabs-arrow{ display:inline-flex; }
+  .trade-tabs-arrow[hidden]{ display:none; }
+  .trade-tabs-arrow:hover{ color:var(--accent); background:none; box-shadow:none; }
+}
+.trade-form-stepper{ display:flex; gap:9px; margin-top:16px; }
+.trade-form-stepper button{ flex:1; min-width:0; }
+.trade-form-stepper button:disabled{ opacity:.45; cursor:default; }
 .trade-form-tabs{
   display:flex; gap:6px; overflow-x:auto; padding-bottom:8px; margin-bottom:14px;
   border-bottom:1px solid var(--line);
@@ -6344,7 +6377,39 @@ body[data-theme="light"] .trade-toggle, body:not([data-theme="light"]) .trade-to
 .trade-choice-grid.readonly .trade-choice{ cursor:default; }
 .trade-choice-grid.readonly .trade-choice:active{ transform:none; }
 
-.trade-range{ width:100%; accent-color:var(--accent); }
+/* --val (0 تا 1) را کامپوننت می‌دهد؛ پر شدن مسیر همراه شست‌ی روان حرکت می‌کند */
+.trade-range{
+  --tr-thumb:18px;
+  --tr-pos:calc(var(--val, .44) * (100% - var(--tr-thumb)) + var(--tr-thumb) / 2);
+  width:100%; height:26px; margin:6px 0; accent-color:var(--accent);
+  -webkit-appearance:none; appearance:none; background:transparent; cursor:pointer;
+}
+.trade-range:focus{ outline:none; }
+.trade-range::-webkit-slider-runnable-track{
+  height:4px; border-radius:999px;
+  background:linear-gradient(to right, var(--accent) var(--tr-pos), var(--line) var(--tr-pos));
+}
+.trade-range::-moz-range-track{
+  height:4px; border-radius:999px;
+  background:linear-gradient(to right, var(--accent) var(--tr-pos), var(--line) var(--tr-pos));
+}
+.trade-range:dir(rtl)::-webkit-slider-runnable-track{
+  background:linear-gradient(to left, var(--accent) var(--tr-pos), var(--line) var(--tr-pos));
+}
+.trade-range:dir(rtl)::-moz-range-track{
+  background:linear-gradient(to left, var(--accent) var(--tr-pos), var(--line) var(--tr-pos));
+}
+.trade-range::-webkit-slider-thumb{
+  -webkit-appearance:none; appearance:none; width:var(--tr-thumb); height:var(--tr-thumb);
+  margin-top:-7px; border:0; border-radius:50%; background:var(--accent);
+  transition:transform .15s ease;
+}
+.trade-range::-moz-range-thumb{
+  width:var(--tr-thumb); height:var(--tr-thumb); border:0; border-radius:50%; background:var(--accent);
+}
+.trade-range:active::-webkit-slider-thumb{ transform:scale(1.12); }
+.trade-range:focus-visible::-webkit-slider-thumb{ box-shadow:0 0 0 4px rgba(var(--accent-rgb),.25); }
+@media (prefers-reduced-motion:reduce){ .trade-range::-webkit-slider-thumb{ transition:none; } }
 
 /* ── چک‌لیست ──────────────────────────────────────────────── */
 .trade-checklist-progress{
