@@ -122,7 +122,7 @@ function buildCards(ins: SleepInsights): Smart[] {
           {tags.map((t) => (
             <li key={t.key} className="sli-tag">
               <span className="sli-tag-name">{t.label}</span>
-              <span className="sli-div" dir="ltr" aria-hidden="true">
+              <span className="sli-div" aria-hidden="true">
                 <span className="sli-div-half sli-div-neg">
                   {t.delta < 0 && <i className="sli-bar sli-bar-neg" style={{ width: `${(Math.abs(t.delta) / max) * 100}%` }} />}
                 </span>
@@ -130,7 +130,7 @@ function buildCards(ins: SleepInsights): Smart[] {
                   {t.delta > 0 && <i className="sli-bar sli-bar-pos" style={{ width: `${(t.delta / max) * 100}%` }} />}
                 </span>
               </span>
-              <b className={t.delta > 0 ? "sli-pos" : "sli-neg"} dir="ltr">{t.delta > 0 ? "+" : "-"}{faNum(Math.abs(t.delta))}</b>
+              <b className={`sli-val ${t.delta > 0 ? "sli-pos" : "sli-neg"}`} dir="ltr">{t.delta > 0 ? "+" : "\u2212"}{faNum(Math.abs(t.delta))}</b>
             </li>
           ))}
         </ul>

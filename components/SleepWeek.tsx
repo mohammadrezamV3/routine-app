@@ -2,6 +2,7 @@
 
 import "./sleep-dial.css";
 import { useMemo } from "react";
+import { Plus } from "lucide-react";
 import { motion, useReducedMotion } from "framer-motion";
 import { FA_WEEKDAY_SHORT, faNum } from "@/lib/jalali";
 import { addDaysIso, scoreBand, sleepMinutes, type SleepInsights, type SleepRecord } from "@/lib/sleep";
@@ -59,7 +60,7 @@ export function SleepWeek({
               onClick={() => onPick(iso)}
               aria-label={rec ? `${wd}: ${hm(min)} خواب${score != null ? `، امتیاز ${score}` : ""}` : `${wd}: ثبت نشده`}
             >
-              <span className="slw-val">{rec ? faNum(hm(min)) : "+"}</span>
+              <span className="slw-val">{rec ? faNum(hm(min)) : <Plus aria-hidden />}</span>
               <svg className="slw-bar" width={BAR_W} height={BAR_H} viewBox={`0 0 ${BAR_W} ${BAR_H}`} aria-hidden="true">
                 <rect x={0} y={0} width={BAR_W} height={BAR_H} rx={BAR_W / 2} className="slw-slot" />
                 {rec && (

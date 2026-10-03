@@ -87,7 +87,7 @@ export function SleepDial({
     kicker = "در حال خواب";
     big = now ? hms((now.getTime() - new Date(tracking.startedAt).getTime()) / 1000) : "00:00:00";
     caption = `از ${clockOf(tracking.startedAt)}`;
-    bigCls = "is-clock";
+    bigCls = "is-clock is-hms";
   } else if (showLast && band) {
     kicker = "امتیاز دیشب";
     big = faNum(lastScore!);
@@ -108,7 +108,7 @@ export function SleepDial({
     const toBed = minutesUntil(Math.floor(nowMin ?? 0), target.sleep) ?? 0;
     big = now ? hms(toBed * 60 - now.getSeconds()) : "--:--:--";
     caption = `ساعت ${target.sleep}`;
-    bigCls = "is-clock";
+    bigCls = "is-clock is-hms";
   }
 
   // یک خط راهنما فقط شب: بهترین ساعت‌های بیداری اگه همین الان بخوابی

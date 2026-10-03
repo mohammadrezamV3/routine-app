@@ -34,11 +34,12 @@
 .sli-tags{ list-style:none; margin:6px 0 0; padding:0; display:flex; flex-direction:column; gap:8px; }
 .sli-tag{ display:grid; grid-template-columns:minmax(70px,auto) minmax(0,1fr) 34px; align-items:center; gap:8px; font-size:12px; }
 .sli-tag-name{ white-space:nowrap; }
-.sli-tag b{ font-size:12px; font-weight:800; text-align:left; font-variant-numeric:tabular-nums; }
+.sli-tag b.sli-val{ font-size:12px; font-weight:800; text-align:left; unicode-bidi:isolate; font-variant-numeric:tabular-nums; white-space:nowrap; }
 .sli-div{ display:flex; height:10px; min-width:0; }
 .sli-div-half{ flex:1; display:flex; align-items:center; min-width:0; }
-.sli-div-neg{ justify-content:flex-end; border-right:1px solid var(--box-line); }
-.sli-div-pos{ justify-content:flex-start; border-left:1px solid var(--box-line); }
+/* جهت RTL: بد (منفی) سمت راست مرکز، خوب (مثبت) سمت چپ؛ هم‌جهت با نمودارهای RTL اپ (جلوتر = چپ‌تر) */
+.sli-div-neg{ justify-content:flex-end; border-left:1px solid var(--box-line); }
+.sli-div-pos{ justify-content:flex-start; border-right:1px solid var(--box-line); }
 .sli-bar{ display:block; height:0; border-top:7px solid currentColor; border-radius:4px; min-width:4px; }
 .sli-bar-neg{ color:var(--slp-poor); }
 .sli-bar-pos{ color:var(--slp-great); }
