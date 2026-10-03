@@ -35,7 +35,7 @@
 .slc-col.is-sel .slc-sel{ opacity:.9; }
 .slc-col:focus-visible .slc-sel{ opacity:1; stroke-width:2; }
 
-.slc-legend{ display:flex; flex-wrap:wrap; gap:6px 14px; font-size:11px; color:var(--muted); }
+.slc-legend{ display:flex; flex-wrap:wrap; gap:6px 10px; font-size:11px; color:var(--muted); }
 .slc-legend span{ display:inline-flex; align-items:center; gap:5px; }
 .slc-sw{ display:inline-block; width:9px; height:9px; border-radius:50%; }
 .slc-sw-line{ width:14px; height:0; border-radius:0; border-top:1.5px dashed var(--slp-ink); }

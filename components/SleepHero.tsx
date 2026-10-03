@@ -153,11 +153,12 @@ export function SleepHero({
               <b className="slp-countdown">{hms(toBedSec)}</b>
             </div>
           ) : phase === "bedtime" || phase === "night" ? (
-            <div className="slp-hero-facts">
+            <div className="slp-wake-opts">
               {wakeOptions.map((w) => (
-                <div key={w.cycles} className="slp-fact">
-                  <span>{faNum(w.cycles)} چرخه · {durationLabel(w.sleepMin)}</span>
-                  <b className="mono">{w.clock}</b>
+                <div key={w.cycles} className="slp-wake-opt">
+                  <b className="slp-wake-clock" dir="ltr">{w.clock}</b>
+                  <span>{faNum(w.cycles)} چرخه</span>
+                  <span>{durationLabel(w.sleepMin)}</span>
                 </div>
               ))}
             </div>
