@@ -8,8 +8,8 @@
 /* روی همه‌ی عرض‌ها پاپ‌آپ وسط: اطراف همیشه بک‌دراپ دیده می‌شه (نه تمام‌صفحه،
    نه باتم‌شیت). اسکرول به بدنه‌ی داخلی منتقل می‌شه تا پاورقی همیشه دیده بشه. */
 .wsearch-newform.apf-popup:has(.add-program-glass){
-  width:min(560px, calc(100vw - 32px)); max-width:min(560px, calc(100vw - 32px));
-  max-height:85vh; max-height:85dvh;
+  width:min(480px, calc(100vw - 48px)); max-width:min(480px, calc(100vw - 48px));
+  max-height:78vh; max-height:78dvh;
   overflow:hidden; padding:0;
   display:flex; flex-direction:column;
 }
