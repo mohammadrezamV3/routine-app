@@ -32,6 +32,7 @@ import { useImageShare } from "@/lib/useImageShare";
 import { heroRings, type HeroRing } from "./DashboardHero";
 import { Spinner } from "./Spinner";
 import { TickOption } from "./TickOption";
+import { SegmentedTabs } from "./SegmentedTabs";
 import { D_EASE } from "./DashboardKit";
 
 /** پیش‌فرض عدد زیر هر حلقه — کالری عدد شخصی‌تریه و پنهان می‌مونه */
@@ -111,6 +112,17 @@ export function DashboardShare({
   // انتخاب کاربر برای همین بار باز بودن پنجره (بدون ذخیره)
   const [showValue, setShowValue] = useState<Record<HeroRing["key"], boolean>>(SHOW_VALUE);
   const [showInvite, setShowInvite] = useState(true);
+  // وسط حلقه‌ها: استریک یا درصد تکمیل — انتخاب روی همین دستگاه می‌مونه
+  const [center, setCenterState] = useState<"streak" | "percent">("streak");
+  useEffect(() => {
+    try {
+      if (localStorage.getItem("arion:shareCenter") === "percent") setCenterState("percent");
+    } catch {}
+  }, []);
+  const setCenter = (v: "streak" | "percent") => {
+    setCenterState(v);
+    try { localStorage.setItem("arion:shareCenter", v); } catch {}
+  };
 
   // مقدار نمایشی هر حلقه روی کارت — کالری با هدفش، نه فقط یه عدد تنها
   const cardRings = useMemo(() => {
@@ -130,6 +142,13 @@ export function DashboardShare({
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [rings, data?.calorie, theme, showValue]);
 
+  // درصد امروز = میانگین گرد‌شده‌ی همین حلقه‌هایی که روی کارت دیده می‌شن
+  const percent = useMemo(() => {
+    if (!cardRings.length) return 0;
+    const sum = cardRings.reduce((a, r) => a + Math.max(0, Math.min(1, r.value)), 0);
+    return Math.round((sum / cardRings.length) * 100);
+  }, [cardRings]);
+
   const input = useMemo<ShareCardInput | null>(() => {
     if (!cardRings.length) return null;
     const [y, m, d] = routine.todayIso.split("-").map(Number);
@@ -139,9 +158,9 @@ export function DashboardShare({
       title: "فعالیت امروز",
       subtitle: `${weekday} ${faNum(jd)} ${J_MONTHS[jm - 1]} ${faNum(jy)}`,
       inviteCode: showInvite ? (invite?.code ?? null) : null,
-      body: { kind: "rings", streak, items: cardRings },
+      body: { kind: "rings", streak, center, percent, items: cardRings },
     };
-  }, [invite?.code, showInvite, routine.todayIso, cardRings, streak]);
+  }, [invite?.code, showInvite, routine.todayIso, cardRings, streak, center, percent]);
 
   // کلید محتوایی ورودی — هویت شیء با هر رندر والد (مثلا stats تازه با همون
   // اعداد) عوض می‌شد و پیش‌نمایش بی‌دلیل دوباره ساخته و دکمه لحظه‌ای غیرفعال می‌شد
@@ -229,7 +248,7 @@ export function DashboardShare({
 
   function doShare() {
     if (!ready || !full) return;
-    const lead = streak ? `${faNum(streak)} روز پشت‌سرهم روتینم رو کامل کردم 🔥` : "امروزم توی آریون 💪";
+    const lead = center === "percent" ? `امروز ${faNum(percent)}% برنامه‌هام رو کامل کردم 💪` : streak ? `${faNum(streak)} روز پشت‌سرهم روتینم رو کامل کردم 🔥` : "امروزم توی آریون 💪";
     const inv = invite && showInvite ? { code: invite.code, url: invite.url, percent: REFERRAL_DISCOUNT_PERCENT } : null;
     share(full.blob, `arion-${routine.todayIso}.png`, "فعالیت امروز", shareText(lead, inv));
   }
@@ -333,6 +352,19 @@ export function DashboardShare({
                 </>
               )}
             </div>
+
+            {input && (
+              <SegmentedTabs<"streak" | "percent">
+                className="db-share-center"
+                active={center}
+                onChange={setCenter}
+                ariaLabel="وسط حلقه‌ها"
+                options={[
+                  { value: "streak", label: "استریک" },
+                  { value: "percent", label: "درصد تکمیل" },
+                ]}
+              />
+            )}
 
             {input && (
               <div className="db-share-opts" role="group" aria-label="آیتم‌های تصویر">
