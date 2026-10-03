@@ -291,7 +291,7 @@ export function ExerciseDashboard({
 
         {!sessionActive && (
           <div className="order-2 flex flex-col gap-4 sm:gap-6 lg:order-3">
-            {dashboardPrefs.showFriends && <DashFriendsCard delay={0.15} module="exercise" unitLabel="جلسه" />}
+            {dashboardPrefs.showFriends && <DashFriendsCard delay={0.15} module="exercise" />}
             <ExerciseStatsCard sessionsDone={sessionsDone} sessionsTotal={sessionsTotal} todayPct={todayPct} weekPct={weekPct} delay={0.2} />
           </div>
         )}

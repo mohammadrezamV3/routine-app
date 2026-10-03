@@ -1,8 +1,9 @@
-/* بخش دوستان — کارت دوستان (DashFriendsCard)، صفحه‌ی /friends (FriendsClient)
-   و ردیف مشترک رتبه‌بندی (FriendRankRow). هیچ بک‌گراند تازه‌ای به دکمه/ردیف
-   اضافه نشده: باکس‌ها همون کارت‌های موجود سایت‌ان (DashCard / .db-card)،
-   ردیف‌ها فقط خط جداکننده دارن، و دکمه‌های شفاف این‌جا صریحا از ریست شیشه‌ای
-   سراسری button{} بیرون کشیده شدن تا هیچ‌جا قرص/بک‌گراند نگیرن. */
+/* بخش دوستان — کارت دوستان (DashFriendsCard)، ردیف ساده‌ی دوست (FriendRow)،
+   پنجره‌ی مدیریت (FriendsManageSheet) و نوار هفته‌ی پروفایل. رتبه‌بندی و
+   صفحه‌ی جدا وجود نداره. هیچ بک‌گراند تازه‌ای به دکمه/ردیف اضافه نشده:
+   باکس‌ها همون کارت‌های موجود سایت‌ان (DashCard / .db-card)، ردیف‌ها فقط
+   خط جداکننده دارن، و دکمه‌های شفاف این‌جا صریحا از ریست شیشه‌ای سراسری
+   button{} بیرون کشیده شدن تا هیچ‌جا قرص/بک‌گراند نگیرن. */
 
 .fr-list{ list-style:none; margin:0; padding:0; display:flex; flex-direction:column; }
 .fr-row{
@@ -10,14 +11,6 @@
   padding:9px 2px; border-bottom:1px solid var(--surface-line);
 }
 .fr-row:last-child{ border-bottom:none; }
-
-.fr-rank{
-  width:18px; flex-shrink:0; text-align:center;
-  font-size:12px; font-weight:800; color:var(--muted2);
-}
-.fr-rank.is-medal-1{ color:#E8B10E; }
-.fr-rank.is-medal-2{ color:#9AA3AE; }
-.fr-rank.is-medal-3{ color:#C77B3A; }
 
 /* بخش کلیک‌پذیر (آواتار + اسم) — دکمه‌ی کاملا شفاف */
 .fr-who{ display:flex; align-items:center; gap:10px; flex:1; min-width:0; text-align:right; color:inherit; }
@@ -48,27 +41,14 @@ body button.fr-who:focus-visible{ outline:2px solid rgba(var(--accent-rgb),.5); 
 .fr-flame{ font-size:11px; flex-shrink:0; }
 .fr-flame .streak-flame{ width:13px; height:13px; }
 .fr-sub{ font-size:11px; color:var(--muted); white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
-.fr-sub.is-done{ color:var(--accent); font-weight:700; }
-
-.fr-score{
-  flex-shrink:0; font-size:15px; font-weight:800; color:var(--text);
-  font-variant-numeric:tabular-nums; min-width:42px; text-align:left;
-}
-.fr-score small{ font-size:10px; font-weight:700; color:var(--muted); margin-inline-start:1px; }
-.fr-row.is-done .fr-score{ color:var(--accent); }
 .fr-actions{ display:inline-flex; align-items:center; flex-shrink:0; }
-
-/* ردیف خود کاربر — فقط یک خط عمودی اکسنت کنار رتبه، بدون پرکردن ردیف */
-.fr-row.is-me .fr-rank{ color:var(--accent); }
-.fr-row.is-me .fr-name{ color:var(--accent); }
-.fr-row.is-me{ box-shadow:inset -2px 0 0 rgba(var(--accent-rgb),.7); padding-inline-start:8px; }
 
 @media (min-width:640px){
   .fr-name{ font-size:13.5px; }
   .fr-sub{ font-size:11.5px; }
 }
 
-/* نوار 7 روز */
+/* نوار 7 روز (پروفایل دوست) */
 .fr-week{ display:inline-flex; align-items:flex-start; gap:4px; }
 .fr-week-day{ display:inline-flex; flex-direction:column; align-items:center; gap:3px; }
 .fr-week-day.is-rest{ opacity:.45; }
@@ -85,19 +65,12 @@ body button.fr-who:focus-visible{ outline:2px solid rgba(var(--accent-rgb),.5); 
   border-radius:99px; font-size:10px; font-weight:800; color:var(--accent);
   border:1px solid rgba(var(--accent-rgb),.55);
 }
-.fr-more{
-  display:inline-flex; align-items:center; gap:2px; font-size:11.5px; font-weight:700;
-  color:var(--muted) !important; text-decoration:none !important; transition:color .18s ease;
+.fr-manage-btn{ position:relative; }
+.fr-manage-dot{
+  position:absolute; top:4px; inset-inline-end:4px; width:7px; height:7px; border-radius:50%;
+  background:var(--accent);
 }
-.fr-more svg{ transition:transform .2s ease; }
-@media (hover:hover){ .fr-more:hover{ color:var(--accent) !important; } .fr-more:hover svg{ transform:translateX(-3px); } }
 .fr-card-body{ margin-top:10px; max-height:262px; overflow-y:auto; }
-.fr-card-note{
-  display:flex; align-items:center; justify-content:space-between; gap:8px;
-  margin-top:8px; padding-top:10px; border-top:1px solid var(--surface-line);
-  font-size:11.5px; color:var(--muted);
-}
-.fr-card-note a{ color:var(--accent) !important; font-weight:700; text-decoration:none !important; }
 
 /* حالت خالی */
 .fr-empty{ display:flex; flex-direction:column; align-items:center; gap:10px; padding:12px 4px 6px; text-align:center; }
@@ -106,74 +79,9 @@ body button.fr-who:focus-visible{ outline:2px solid rgba(var(--accent-rgb),.5); 
 .fr-empty-stack > *:first-child{ margin-inline-start:0; }
 .fr-empty p{ margin:0; font-size:12px; color:var(--muted); line-height:1.9; }
 
-/* ── صفحه‌ی /friends ───────────────────────────────────── */
-.fr-page{ display:flex; flex-direction:column; gap:var(--db-gap); }
-.fr-top{ display:flex; align-items:center; justify-content:space-between; gap:12px; flex-wrap:wrap; }
-.fr-top h1{ font-size:22px; font-weight:900; letter-spacing:-.02em; }
-.fr-module-tabs{ width:min(100%, 280px); margin:0; }
-.fr-mode-tabs{ width:170px; margin:0; flex-shrink:0; }
-.fr-module-tabs .auth-tab, .fr-mode-tabs .auth-tab{ white-space:nowrap; padding:8px 0; }
-@media (max-width:639px){ .fr-top{ flex-direction:column; align-items:stretch; } .fr-module-tabs{ width:100%; } .fr-mode-tabs{ width:150px; } }
-.fr-grid{ display:grid; grid-template-columns:1fr; gap:var(--db-gap); align-items:start; }
-@media (min-width:1024px){
-  .fr-module-tabs{ width:min(100%, 280px); margin:0; }
-.fr-mode-tabs{ width:170px; margin:0; flex-shrink:0; }
-.fr-module-tabs .auth-tab, .fr-mode-tabs .auth-tab{ white-space:nowrap; padding:8px 0; }
-@media (max-width:639px){ .fr-top{ flex-direction:column; align-items:stretch; } .fr-module-tabs{ width:100%; } .fr-mode-tabs{ width:150px; } }
-.fr-grid{ grid-template-columns:minmax(0,1fr) 380px; }
-  .fr-side{ position:sticky; top:84px; }
-}
-.fr-main{ min-width:0; display:flex; flex-direction:column; gap:var(--db-gap); }
-.fr-actions-spacer{ display:inline-block; width:24px; }
-.fr-side{ display:flex; flex-direction:column; gap:var(--db-gap); min-width:0; }
-
-/* سکوی سه نفر اول */
-.fr-podium{
-  display:grid; grid-template-columns:1fr 1.15fr 1fr; align-items:end; gap:8px;
-  padding:6px 0 4px;
-}
-.fr-podium-slot{
-  display:flex; flex-direction:column; align-items:center; gap:6px; min-width:0; text-align:center;
-}
-body button.fr-podium-slot,
-body[data-theme="light"] button.fr-podium-slot{
-  padding:0; border:none; border-radius:0; background:none; box-shadow:none;
-  backdrop-filter:none; -webkit-backdrop-filter:none; color:inherit; cursor:pointer; font:inherit;
-}
-@media (hover:hover){
-  body button.fr-podium-slot:hover,
-  body[data-theme="light"] button.fr-podium-slot:hover{ background:none; border:none; box-shadow:none; color:inherit; }
-}
-body button.fr-podium-slot:active{ transform:none; }
-.fr-podium-col{ min-width:0; display:flex; }
-.fr-podium-col > .fr-podium-slot{ width:100%; }
-.fr-podium-col.is-1{ order:2; }
-.fr-podium-col.is-2{ order:1; padding-top:22px; }
-.fr-podium-col.is-3{ order:3; padding-top:34px; }
-.fr-podium-crown{ color:#E8B10E; height:18px; display:flex; align-items:flex-end; }
-.fr-podium-crown svg{ filter:drop-shadow(0 2px 6px rgba(232,177,14,.45)); }
-.fr-podium-name{
-  font-size:12.5px; font-weight:800; color:var(--text); max-width:100%;
-  overflow:hidden; text-overflow:ellipsis; white-space:nowrap;
-}
-.fr-podium-col.is-me .fr-podium-name{ color:var(--accent); }
-.fr-podium-score{ font-size:18px; font-weight:900; font-variant-numeric:tabular-nums; color:var(--text); line-height:1; }
-.fr-podium-col.is-1 .fr-podium-score{ font-size:22px; }
-.fr-podium-score small{ font-size:11px; color:var(--muted); font-weight:700; }
-.fr-podium-place{
-  font-size:10.5px; font-weight:800; letter-spacing:.02em; color:var(--muted2);
-  width:100%; padding-top:6px; border-top:2px solid var(--surface-line);
-}
-.fr-podium-col.rank-1 .fr-podium-place{ color:#E8B10E; border-top-color:rgba(232,177,14,.6); }
-.fr-podium-col.rank-2 .fr-podium-place{ color:#9AA3AE; border-top-color:rgba(154,163,174,.6); }
-.fr-podium-col.rank-3 .fr-podium-place{ color:#C77B3A; border-top-color:rgba(199,123,58,.6); }
-
-.fr-board-meta{ display:flex; align-items:center; justify-content:space-between; gap:10px; flex-wrap:wrap; }
-.fr-board-hint{ font-size:11.5px; color:var(--muted); }
-.fr-board-hint b{ color:var(--text); font-weight:800; }
-
-/* درخواست‌ها و جست‌وجو */
-.fr-section-label{ font-size:11px; font-weight:800; color:var(--muted2); margin:2px 0 -4px; }
+/* ── پنجره‌ی مدیریت دوستان ──────────────────────────────── */
+.fr-sheet{ display:flex; flex-direction:column; gap:14px; max-height:min(86dvh, 720px); overflow-y:auto; }
+.fr-section-label{ font-size:11px; font-weight:800; color:var(--muted2); margin:2px 0 2px; }
 .fr-person{
   display:flex; align-items:center; gap:10px; min-width:0;
   padding:9px 0; border-bottom:1px solid var(--surface-line);
@@ -187,7 +95,3 @@ body button.fr-podium-slot:active{ transform:none; }
 .fr-person-status{ font-size:11px; font-weight:700; color:var(--muted); white-space:nowrap; }
 .fr-search-field{ width:100%; }
 .fr-search-state{ font-size:12px; color:var(--muted); padding:10px 0 2px; display:flex; align-items:center; gap:8px; }
-
-@media (prefers-reduced-motion:reduce){
-  .fr-more svg{ transition:none; }
-}

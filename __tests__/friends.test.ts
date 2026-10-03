@@ -11,7 +11,7 @@ vi.mock("@/lib/webPush", () => ({ sendPushToUser: vi.fn(async () => ({ sent: 0, 
 
 import { prisma } from "@/lib/prisma";
 import { isoLocal } from "@/lib/jalali";
-import { rankFriends, weekScore, fullDays, isTodayComplete, weekIsos } from "@/lib/friendsRank";
+import { fullDays, weekIsos } from "@/lib/friendWeek";
 import { GET as listFriends, POST as addFriend } from "@/app/api/friends/route";
 import { PATCH as acceptFriend } from "@/app/api/friends/[id]/route";
 import { GET as listRequests } from "@/app/api/friends/requests/route";
@@ -23,41 +23,10 @@ afterAll(async () => {
   await cleanupUsers();
 });
 
-describe("رتبه‌بندی دوستان (lib/friendsRank)", () => {
-  const base = { total: 3, completed: 0 };
-  it("امروز: درصد بیشتر جلوتر، برابری با استریک، رتبه‌ی مساوی مشترک", () => {
-    const r = rankFriends(
-      [
-        { ...base, id: "a", name: "الف", pct: 50, streak: 1 },
-        { ...base, id: "b", name: "ب", pct: 100, streak: 0 },
-        { ...base, id: "c", name: "پ", pct: 50, streak: 1 },
-        { ...base, id: "d", name: "ت", pct: 50, streak: 4 },
-      ],
-      "today",
-    );
-    expect(r.map((x) => x.id)).toEqual(["b", "d", "a", "c"]);
-    expect(r.map((x) => x.rank)).toEqual([1, 2, 3, 3]);
-  });
-
-  it("هفته: میانگین فقط روزهای دارای برنامه (null حساب نمی‌شه)", () => {
-    expect(weekScore([100, null, 50, null, null, null, 0])).toBe(50);
-    expect(weekScore([null, null])).toBe(0);
-    expect(weekScore(undefined)).toBe(0);
+describe("نوار هفته‌ی دوستان (lib/friendWeek)", () => {
+  it("روزهای کامل شمرده می‌شن و برچسب روزها 7 تا و به امروز ختم می‌شه", () => {
     expect(fullDays([100, 100, null, 30])).toBe(2);
-    const r = rankFriends(
-      [
-        { ...base, id: "a", name: "a", pct: 100, streak: 0, week: [0, 0, 0, 0, 0, 0, 100] },
-        { ...base, id: "b", name: "b", pct: 0, streak: 0, week: [100, 100, 100, 100, 100, 100, 0] },
-      ],
-      "week",
-    );
-    expect(r[0].id).toBe("b");
-    expect(r[0].score).toBe(86);
-  });
-
-  it("روز بی‌برنامه «کامل» حساب نمی‌شه و برچسب روزها 7 تا و به امروز ختم می‌شه", () => {
-    expect(isTodayComplete({ pct: 100, total: 0 })).toBe(false);
-    expect(isTodayComplete({ pct: 100, total: 2 })).toBe(true);
+    expect(fullDays(undefined)).toBe(0);
     const isos = weekIsos("2026-10-02");
     expect(isos).toHaveLength(7);
     expect(isos[6]).toBe("2026-10-02");
