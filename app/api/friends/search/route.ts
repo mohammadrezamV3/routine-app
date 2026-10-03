@@ -5,11 +5,13 @@ import { prisma } from "@/lib/prisma";
 import { NAME_STYLE_SELECT, nameFlags } from "@/lib/nameStyle";
 import { checkRateLimit, getClientIp } from "@/lib/rateLimit";
 import { clampQuery } from "@/lib/validate";
+import { sessionFeatureBlocked } from "@/lib/featureFlagsServer";
 
 // GET /api/friends/search?q=...  → جستجوی زنده‌ی کاربر با یوزرنیم/اسم، برای
 // تایپ‌آهد «افزودن دوست». برای هر نتیجه وضعیت فعلی رابطه رو هم برمی‌گردونه
 // تا سمت کلاینت بشه به‌جای دکمه‌ی ارسال، وضعیت «قبلا دوستید»/«در انتظار» رو نشون داد.
 export async function GET(req: NextRequest) {
+  { const off = await sessionFeatureBlocked("friends"); if (off) return off; }
   const session = await getServerSession(authOptions);
   const userId = (session?.user as any)?.id;
   if (!userId) return NextResponse.json({ error: "unauthorized" }, { status: 401 });
@@ -54,8 +56,9 @@ export async function GET(req: NextRequest) {
     },
   });
 
+  const relationOf = (otherId: string) => relations.find((r) => r.requesterId === otherId || r.addresseeId === otherId);
   const statusFor = (otherId: string): "none" | "friends" | "pending_sent" | "pending_received" => {
-    const rel = relations.find((r) => r.requesterId === otherId || r.addresseeId === otherId);
+    const rel = relationOf(otherId);
     if (!rel) return "none";
     if (rel.status === "ACCEPTED") return "friends";
     return rel.requesterId === userId ? "pending_sent" : "pending_received";
@@ -66,8 +69,12 @@ export async function GET(req: NextRequest) {
       id: u.id,
       name: u.name || u.username || "کاربر",
       username: u.username,
+      // avatarUrl از اول select می‌شد ولی هیچ‌وقت برنمی‌گشت — نتایج همیشه آواتار پیش‌فرض داشتن
+      avatarUrl: u.avatarUrl,
       ...nameFlags(u),
       status: statusFor(u.id),
+      // شناسه‌ی رابطه‌ی خود کاربر با این نفر (اگه هست) — برای قبول/لغو مستقیم از نتیجه
+      friendshipId: relationOf(u.id)?.id ?? null,
     })),
   });
 }

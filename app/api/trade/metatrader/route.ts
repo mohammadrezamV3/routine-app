@@ -7,6 +7,7 @@ import {
 } from "@/lib/metatrader";
 import { withLiveSync } from "@/lib/realtime";
 import { loadAccountMoney } from "@/lib/tradeCashflowServer";
+import { sessionFeatureBlocked } from "@/lib/featureFlagsServer";
 
 // مدیریت اتصال متاتریدر یک حساب، از سمت کاربر لاگین‌کرده.
 // (اندپوینت‌هایی که خود EA صدا می‌زند جدا هستند: /api/mt/pair و /api/mt/sync)
@@ -15,6 +16,7 @@ const LINK_SELECT = {
   id: true, platform: true, brokerName: true, serverName: true, accountLogin: true,
   balance: true, equity: true, currency: true, tokenPrefix: true,
   connectedAt: true, lastSyncAt: true, revokedAt: true, pairingExpiresAt: true,
+  eaVersion: true, shotsEnabled: true, lastShotAt: true, shotError: true, shotErrorAt: true,
 } as const;
 
 function serialize(l: any, hasToken: boolean) {
@@ -25,6 +27,8 @@ function serialize(l: any, hasToken: boolean) {
     lastSyncAt: l.lastSyncAt?.toISOString() ?? null,
     revokedAt: l.revokedAt?.toISOString() ?? null,
     pairingExpiresAt: l.pairingExpiresAt?.toISOString() ?? null,
+    lastShotAt: l.lastShotAt?.toISOString() ?? null,
+    shotErrorAt: l.shotErrorAt?.toISOString() ?? null,
   };
 }
 
@@ -60,6 +64,7 @@ async function buildReconciliation(accountId: string, linkBalance: number | null
 
 // GET /api/trade/metatrader?accountId=...
 export async function GET(req: NextRequest) {
+  { const off = await sessionFeatureBlocked("metatrader"); if (off) return off; }
   const guard = await requireModule(ModuleKey.TRADE);
   if (!guard.ok) return guard.response;
 
@@ -92,6 +97,7 @@ export async function GET(req: NextRequest) {
 // یک کد اتصال تازه می‌سازد. کد فقط همین یک‌بار برگردانده می‌شود؛ در
 // دیتابیس فقط هشش می‌ماند، پس اگر کاربر گمش کرد باید کد جدید بگیرد.
 async function handlePOST(req: NextRequest) {
+  { const off = await sessionFeatureBlocked("metatrader"); if (off) return off; }
   const guard = await requireModule(ModuleKey.TRADE);
   if (!guard.ok) return guard.response;
   const userId = guard.userId;
@@ -122,6 +128,7 @@ async function handlePOST(req: NextRequest) {
 // DELETE /api/trade/metatrader?accountId=... — ابطال اتصال
 // معاملات همگام‌شده دست‌نخورده می‌مانند؛ فقط EA دیگر اجازه‌ی ارسال ندارد.
 async function handleDELETE(req: NextRequest) {
+  { const off = await sessionFeatureBlocked("metatrader"); if (off) return off; }
   const guard = await requireModule(ModuleKey.TRADE);
   if (!guard.ok) return guard.response;
 

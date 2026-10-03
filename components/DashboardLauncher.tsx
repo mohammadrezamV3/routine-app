@@ -8,7 +8,7 @@
 
 import Link from "next/link";
 import { motion } from "framer-motion";
-import type { FeatureKey } from "@/lib/featureFlags";
+import { featureVisible, type FeatureKey } from "@/lib/featureFlags";
 import { DashIcon, type DashIconName } from "./DashboardIcons";
 import { D_EASE } from "./DashboardKit";
 import { useDashAction, type DashAction } from "./DashboardActions";
@@ -16,19 +16,19 @@ import { useDashAction, type DashAction } from "./DashboardActions";
 type Item = { href: string; label: string; icon: DashIconName; module?: string; feature?: FeatureKey; tone?: string; action?: DashAction };
 
 const QUICK: Item[] = [
-  { href: "/weekly?add=1", label: "برنامه‌ی جدید", icon: "plus", tone: "var(--accent)", action: "program" },
-  { href: "/sleep", label: "ثبت خواب", icon: "moon", module: "SLEEP", tone: "var(--moon)" },
-  { href: "/exercise?tab=exercise", label: "شروع تمرین", icon: "dumbbell", module: "EXERCISE", tone: "var(--secondary)" },
-  { href: "/exercise?tab=calorie", label: "ثبت غذا", icon: "apple", module: "CALORIE", tone: "var(--sun)", action: "food" },
-  { href: "/trade/journal", label: "ثبت معامله", icon: "journal", module: "TRADE", tone: "var(--pnl-win)", action: "trade" },
-  { href: "/trade/calendar", label: "تقویم اقتصادی", icon: "calendarBolt", module: "TRADE", tone: "var(--pnl-loss)" },
-  { href: "/trade/chart", label: "چارت", icon: "chart", module: "TRADE", tone: "var(--accent-soft)" },
+  { href: "/weekly?add=1", label: "برنامه‌ی جدید", icon: "plus", feature: "routine", tone: "var(--accent)", action: "program" },
+  { href: "/sleep", label: "ثبت خواب", icon: "moon", module: "SLEEP", feature: "sleep", tone: "var(--moon)" },
+  { href: "/exercise?tab=exercise", label: "شروع تمرین", icon: "dumbbell", module: "EXERCISE", feature: "exercise", tone: "var(--secondary)" },
+  { href: "/exercise?tab=calorie", label: "ثبت غذا", icon: "apple", module: "CALORIE", feature: "calorie", tone: "var(--sun)", action: "food" },
+  { href: "/trade/journal", label: "ثبت معامله", icon: "journal", module: "TRADE", feature: "tradeJournal", tone: "var(--pnl-win)", action: "trade" },
+  { href: "/trade/calendar", label: "تقویم اقتصادی", icon: "calendarBolt", module: "TRADE", feature: "economicCalendar", tone: "var(--pnl-loss)" },
+  { href: "/trade/chart", label: "چارت", icon: "chart", module: "TRADE", feature: "tradeChart", tone: "var(--accent-soft)" },
   { href: "/mentors", label: "مربی‌ها", icon: "mentors", feature: "mentors", tone: "var(--moon)" },
   { href: "/roadmaps/new", label: "رودمپ AI", icon: "spark", feature: "roadmaps", tone: "var(--orb-c2)" },
 ];
 
 function visible(items: Item[], features: Partial<Record<FeatureKey, boolean>> | null) {
-  return items.filter((i) => !i.feature || features?.[i.feature] === true);
+  return items.filter((i) => !i.feature || featureVisible(features, i.feature));
 }
 
 export function DashboardQuickActions({ features, modules }: { features: Partial<Record<FeatureKey, boolean>> | null; modules: Set<string> | null }) {

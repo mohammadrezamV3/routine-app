@@ -6,12 +6,14 @@ import { parseIsoDate, readJsonBody } from "@/lib/validate";
 import { withLiveSync } from "@/lib/realtime";
 import { ModuleKey } from "@prisma/client";
 import { requireModule } from "@/lib/moduleAccess";
+import { sessionFeatureBlocked } from "@/lib/featureFlagsServer";
 
 // سقف تعداد کلید «انجام‌شده»ی یک روز — از هر برنامه‌ی واقعی خیلی بیشتره
 const MAX_DAILY_TASK_KEYS = 500;
 
 // GET /api/tasks/daily?date=2026-07-24
 export async function GET(req: NextRequest) {
+  { const off = await sessionFeatureBlocked("routine"); if (off) return off; }
   const session = await getServerSession(authOptions);
   const userId = (session?.user as any)?.id;
   if (!userId) return NextResponse.json({ error: "unauthorized" }, { status: 401 });
@@ -35,6 +37,7 @@ export async function GET(req: NextRequest) {
 // تیک‌زدن = استفاده از «روتین من» → بعد از ۱۴ روز آزمایشی نیاز به پلن داره
 // (سمت سرور، نه فقط ModuleGate). خوندن آزاده تا تاریخچه گروگان نمونه.
 async function handlePOST(req: NextRequest) {
+  { const off = await sessionFeatureBlocked("routine"); if (off) return off; }
   const guard = await requireModule(ModuleKey.ROUTINE);
   if (!guard.ok) return guard.response;
   const userId = guard.userId;

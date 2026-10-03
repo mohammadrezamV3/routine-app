@@ -2,6 +2,7 @@ import { NextResponse } from "next/server";
 import { ModuleKey } from "@prisma/client";
 import { prisma } from "@/lib/prisma";
 import { requireModule } from "@/lib/moduleAccess";
+import { sessionFeatureBlocked } from "@/lib/featureFlagsServer";
 
 // خواندن سبک «چه روزهایی برنامه‌ی تمرینی دارم» — برای نمایش ردیف
 // «برنامه تمرینی امروز» توی «روتین من». عمدا از GET /api/exercise/plan
@@ -11,6 +12,7 @@ import { requireModule } from "@/lib/moduleAccess";
 // ساخت برنامه را می‌خورد. این‌جا فقط یک ردیف سبک خوانده می‌شود، بدون
 // نیاز به سقف.
 export async function GET() {
+  { const off = await sessionFeatureBlocked("exercise"); if (off) return off; }
   const guard = await requireModule(ModuleKey.EXERCISE);
   if (!guard.ok) return guard.response;
 

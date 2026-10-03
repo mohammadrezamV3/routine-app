@@ -3,6 +3,7 @@ import { ModuleKey } from "@prisma/client";
 import { prisma } from "@/lib/prisma";
 import { requireModule } from "@/lib/moduleAccess";
 import { withLiveSync } from "@/lib/realtime";
+import { sessionFeatureBlocked } from "@/lib/featureFlagsServer";
 
 // PATCH /api/trade/checklists/[id]/items  { itemId, checked } | { resetAll: true }
 //
@@ -14,6 +15,7 @@ import { withLiveSync } from "@/lib/realtime";
 // resetAll برای شروع یک اجرای تازه (بعد ثبت معامله) است — چک‌لیست همان
 // روز قبل نباید از قبل تیک‌خورده به‌نظر برسد.
 async function handlePATCH(req: NextRequest, { params }: { params: { id: string } }) {
+  { const off = await sessionFeatureBlocked("tradeChecklists"); if (off) return off; }
   const guard = await requireModule(ModuleKey.TRADE);
   if (!guard.ok) return guard.response;
 

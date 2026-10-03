@@ -3,6 +3,7 @@
 // هر دو از همین‌جا استفاده می‌کنن تا قاعده‌ی «یک تصویر خودکار برای هر نوع، تصویر
 // دستی کاربر هیچ‌وقت جایگزین نمی‌شه، سقف MAX_IMAGES_PER_TRADE» یک جا بمونه.
 
+import type { Prisma } from "@prisma/client";
 import { prisma } from "./prisma";
 import { MT_SHOT_CAPTION } from "./metatrader";
 import { MAX_IMAGE_DATA_URL_LEN } from "./tradeServer";
@@ -29,13 +30,23 @@ export type ParsedShot = { ticket: string; kind: MtShotKind; image: string };
  * ریشه‌ی «هیچ معامله‌ای عکس نداره». JSON معتبر هیچ‌وقت CR/LF خام داخل رشته
  * نداره و بیرون رشته هم فقط فاصله‌ست، پس حذفشون قبل از پارس همیشه امنه.
  */
-export function parseMtShotBody(raw: string): ParsedShot | "invalid" | "invalid image" | "too large" {
-  let body: any;
+/**
+ * بدنه‌ی خام اکسپرت → JSON (یا null). بایت صفر پایانی (StringToCharArray در MQL
+ * یک NUL ته آرایه می‌ذاره و اکسپرتی که اندازه رو کم نکنه همون رو هم می‌فرسته)،
+ * BOM، و خط‌شکن خام (base64 سبک MIME) داخل JSON معتبر معنایی ندارن و پاک می‌شن.
+ */
+export function parseEaJson(raw: string): any | null {
   try {
-    body = JSON.parse(raw.replace(/[\r\n]+/g, ""));
+    const parsed = JSON.parse(raw.replace(/^\uFEFF/, "").replace(/\u0000+$/g, "").replace(/[\r\n]+/g, ""));
+    return parsed && typeof parsed === "object" ? parsed : null;
   } catch {
-    return "invalid";
+    return null;
   }
+}
+
+export function parseMtShotBody(raw: string): ParsedShot | "invalid" | "invalid image" | "too large" {
+  const body = parseEaJson(raw);
+  if (body === null) return "invalid";
   const ticket = String(body?.ticket ?? "").trim().slice(0, 40);
   const kind: MtShotKind | null = body?.kind === "exit" ? "exit" : body?.kind === "entry" ? "entry" : null;
   if (!ticket || ticket === "0" || !kind) return "invalid";
@@ -124,4 +135,25 @@ export async function attachPendingShots(userId: string, accountId: string): Pro
     await prisma.tradeMtPendingShot.delete({ where: { id: p.id } }).catch(() => {});
   }
   return attached;
+}
+
+/**
+ * ثبت عیب‌یابی اسکرین روی اتصال (lib/mtShotDiag.ts). هیچ‌وقت خطا پرت نمی‌کنه:
+ * ثبت عیب‌یابی نباید خود sync یا اسکرین رو بشکنه (مثلا وقتی مایگریشن ستون‌ها
+ * هنوز روی سرور اجرا نشده).
+ */
+export async function recordShotDiag(
+  linkId: string,
+  diag: { received?: boolean; error?: string | null; eaVersion?: string | null; enabled?: boolean | null },
+): Promise<void> {
+  const now = new Date();
+  const data: Prisma.TradeMtLinkUpdateInput = {};
+  if (diag.received) data.lastShotAt = now;
+  if (diag.error) { data.shotError = diag.error; data.shotErrorAt = now; }
+  if (diag.eaVersion) data.eaVersion = diag.eaVersion;
+  if (typeof diag.enabled === "boolean") data.shotsEnabled = diag.enabled;
+  if (!Object.keys(data).length) return;
+  await prisma.tradeMtLink.update({ where: { id: linkId }, data }).catch((e) => {
+    console.error("[mt] recording screenshot diagnostics failed", linkId, e);
+  });
 }

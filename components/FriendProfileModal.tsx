@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from "react";
 import { createPortal } from "react-dom";
-import { Ban, Map, Phone, Star, User as UserIcon } from "lucide-react";
+import { Ban, Map, Phone, Star, User as UserIcon, UserMinus } from "lucide-react";
 import { AgentAvatar } from "./AgentAvatar";
 import { StreakFlame } from "./StreakFlame";
 import { LockBodyScroll } from "./LockBodyScroll";
@@ -10,6 +10,11 @@ import { TradeKebabMenu } from "./TradeKebabMenu";
 import { faNum } from "@/lib/jalali";
 import { GoldenName } from "./GoldenName";
 import { Spinner } from "./Spinner";
+import { GradientRing } from "./GradientRing";
+import { FriendWeekStrip } from "./FriendWeekStrip";
+import { fullDays, type WeekPcts } from "@/lib/friendsRank";
+
+type Relation = "none" | "friends" | "pending_sent" | "pending_received";
 
 type Profile = {
   id: string;
@@ -28,6 +33,10 @@ type Profile = {
   roadmapsCompleted: number;
   plansCompleted: number;
   planName: string | null;
+  relation: Relation;
+  friendshipId: string | null;
+  today: { completed: number; total: number; pct: number } | null;
+  week: WeekPcts | null;
 };
 
 // پاپ‌آپ پروفایل یک کاربر — با کلیک روی اسم دوست (لیست/پنل دوستان، و
@@ -35,15 +44,15 @@ type Profile = {
 // درخواست صریح: وسط بالای صفحه (نه وسط عمودی معمول بقیه‌ی پاپ‌آپ‌ها).
 export function FriendProfileModal({
   userId,
-  canStar = true,
   onClose,
   onBlocked,
+  onChanged,
 }: {
   userId: string;
-  /** دکمه‌ی استار فقط بین دوستان تاییدشده معنا دارد؛ بلاک همیشه ممکن است (مستقل از دوستی). */
-  canStar?: boolean;
   onClose: () => void;
   onBlocked?: () => void;
+  /** رابطه عوض شد (درخواست/قبول/لغو/حذف) — والد لیستش رو تازه کنه */
+  onChanged?: () => void;
 }) {
   const [profile, setProfile] = useState<Profile | null>(null);
   const [notFound, setNotFound] = useState(false);
@@ -51,6 +60,10 @@ export function FriendProfileModal({
   const [confirmBlock, setConfirmBlock] = useState(false);
   const [blockBusy, setBlockBusy] = useState(false);
   const [copied, setCopied] = useState(false);
+  const [relBusy, setRelBusy] = useState(false);
+  const [confirmRemove, setConfirmRemove] = useState(false);
+  // استار فقط بین دوستان تاییدشده (سرور هم همین رو چک می‌کنه — /api/users/:id/star)
+  const canStar = profile?.relation === "friends";
 
   useEffect(() => {
     let cancelled = false;
@@ -104,6 +117,30 @@ export function FriendProfileModal({
     }
   }
 
+  // رابطه‌ی دوستی از داخل خود پاپ‌آپ: درخواست، لغو، قبول/رد و حذف. هر حالت
+  // بعد از پاسخ دوباره از سرور خونده می‌شه (منبع حقیقت سرور، نه حدس کلاینت).
+  async function reload() {
+    const r = await fetch(`/api/users/${userId}/profile`, { cache: "no-store" });
+    const d = r.ok ? await r.json() : null;
+    if (d?.profile) setProfile(d.profile);
+  }
+  async function relationAction(kind: "add" | "cancel" | "accept" | "decline" | "remove") {
+    if (!profile || relBusy) return;
+    setRelBusy(true);
+    try {
+      if (kind === "add") {
+        await fetch("/api/friends", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ userId }) });
+      } else if (profile.friendshipId) {
+        await fetch(`/api/friends/${profile.friendshipId}`, { method: kind === "accept" ? "PATCH" : "DELETE" });
+      }
+      await reload();
+      onChanged?.();
+    } finally {
+      setRelBusy(false);
+      setConfirmRemove(false);
+    }
+  }
+
   async function block() {
     if (blockBusy) return;
     setBlockBusy(true);
@@ -134,23 +171,33 @@ export function FriendProfileModal({
             <div className="friend-profile-banner">
               {profile.bannerUrl && <img src={profile.bannerUrl} alt="" className="friend-profile-banner-img" />}
 
-              <div className="friend-profile-banner-kebab">
-                <TradeKebabMenu
-                  label={`گزینه‌های ${profile.name}`}
-                  actions={[{ label: "بلاک کردن", icon: <Ban size={14} />, danger: true, onClick: () => setConfirmBlock(true) }]}
-                />
+              {/* ستاره و سه‌نقطه یک نوار مشترک دارن (flex، یک خط مرکز، یک اندازه
+                  و هر دو بی‌بک‌گراند). قبلا هرکدوم جدا absolute بودن: ستاره 28px با
+                  دایره‌ی تیره و سه‌نقطه 24px بی‌دایره (قانون بک‌گراندش به ریست
+                  سراسری button باخته بود) — یعنی نه هم‌اندازه، نه هم‌خط. */}
+              <div className="friend-profile-banner-bar">
+                <div className="friend-profile-banner-kebab">
+                  <TradeKebabMenu
+                    label={`گزینه‌های ${profile.name}`}
+                    actions={[
+                      ...(profile.relation === "friends" && profile.friendshipId
+                        ? [{ label: "حذف از دوستان", icon: <UserMinus size={14} />, danger: true, onClick: () => setConfirmRemove(true) }]
+                        : []),
+                      { label: "بلاک کردن", icon: <Ban size={14} />, danger: true, onClick: () => setConfirmBlock(true) },
+                    ]}
+                  />
+                </div>
+                <button
+                  type="button"
+                  className={`friend-profile-star-btn${profile.starredByMe ? " on" : ""}`}
+                  onClick={toggleStar}
+                  disabled={starBusy || !canStar}
+                  title={canStar ? (profile.starredByMe ? "استار داده شد" : "دادن استار") : "بعد از دوست‌شدن می‌توانی استار بدهی"}
+                  aria-label={profile.starredByMe ? "برداشتن استار" : "دادن استار"}
+                >
+                  <Star size={17} fill={profile.starredByMe ? "currentColor" : "none"} />
+                </button>
               </div>
-
-              <button
-                type="button"
-                className={`friend-profile-star-btn${profile.starredByMe ? " on" : ""}`}
-                onClick={toggleStar}
-                disabled={starBusy || !canStar}
-                title={canStar ? (profile.starredByMe ? "استار داده شد" : "دادن استار") : "بعد از دوست‌شدن می‌توانی استار بدهی"}
-                aria-label={profile.starredByMe ? "برداشتن استار" : "دادن استار"}
-              >
-                <Star size={16} fill={profile.starredByMe ? "currentColor" : "none"} />
-              </button>
 
               <div className="friend-profile-banner-name"><GoldenName golden={profile.golden} staff={profile.staff}>{profile.name}</GoldenName></div>
 
@@ -204,6 +251,57 @@ export function FriendProfileModal({
               )}
             </div>
 
+            {/* پیشرفت امروز و 7 روز اخیر — فقط دوست تاییدشده (سرور برای بقیه null می‌ده) */}
+            {profile.today && (
+              <div className="friend-profile-today">
+                <GradientRing value={profile.today.pct / 100} size={58} stroke={5}>
+                  <b className="mono">{faNum(profile.today.pct)}<small>%</small></b>
+                </GradientRing>
+                <div className="friend-profile-today-text">
+                  <span className="friend-profile-section-label">امروز</span>
+                  <span className="friend-profile-today-line">
+                    {profile.today.total > 0
+                      ? profile.today.pct >= 100
+                        ? "همه‌ی برنامه‌های امروز انجام شد"
+                        : `${faNum(profile.today.completed)} از ${faNum(profile.today.total)} برنامه`
+                      : "امروز برنامه‌ای نداره"}
+                  </span>
+                  {profile.week && (
+                    <span className="friend-profile-week">
+                      <FriendWeekStrip week={profile.week} size={16} labels />
+                      <span className="friend-profile-week-count">{faNum(fullDays(profile.week))} روز کامل</span>
+                    </span>
+                  )}
+                </div>
+              </div>
+            )}
+
+            {profile.relation !== "friends" && (
+              <div className="friend-profile-relation">
+                {profile.relation === "none" && (
+                  <button type="button" className="trade-primary-btn" onClick={() => relationAction("add")} disabled={relBusy}>
+                    {relBusy ? <Spinner size={13} /> : "افزودن دوست"}
+                  </button>
+                )}
+                {profile.relation === "pending_sent" && (
+                  <>
+                    <span className="friend-profile-relation-note">درخواست دوستی فرستادی</span>
+                    <button type="button" className="account-outline-btn" onClick={() => relationAction("cancel")} disabled={relBusy}>
+                      {relBusy ? <Spinner size={13} /> : "لغو درخواست"}
+                    </button>
+                  </>
+                )}
+                {profile.relation === "pending_received" && (
+                  <>
+                    <button type="button" className="account-outline-btn" onClick={() => relationAction("decline")} disabled={relBusy}>رد</button>
+                    <button type="button" className="trade-primary-btn" onClick={() => relationAction("accept")} disabled={relBusy}>
+                      {relBusy ? <Spinner size={13} /> : "قبول درخواست"}
+                    </button>
+                  </>
+                )}
+              </div>
+            )}
+
             {/* از راست به چپ: استارها · استریک فعلی · بیشترین استریک */}
             <div className="friend-profile-stats">
               <div className="friend-profile-stat">
@@ -238,6 +336,27 @@ export function FriendProfileModal({
           </>
         )}
       </div>
+
+      {confirmRemove && (
+        <>
+          <div className="modal-overlay open" onClick={() => !relBusy && setConfirmRemove(false)} style={{ zIndex: 90 }} />
+          <div className="modal-panel open" role="dialog" aria-modal="true" style={{ zIndex: 91, maxWidth: 340 }}>
+            <div className="modal-body" style={{ paddingTop: 4, textAlign: "center" }}>
+              <div className="text-[13px] font-bold" style={{ color: "var(--text)" }}>
+                «{profile?.name}» از دوستات حذف بشه؟
+              </div>
+              <div className="trade-modal-actions">
+                <button type="button" className="account-outline-btn" onClick={() => setConfirmRemove(false)} disabled={relBusy}>
+                  انصراف
+                </button>
+                <button type="button" className="trade-danger-btn" onClick={() => relationAction("remove")} disabled={relBusy}>
+                  {relBusy ? <Spinner size={13} /> : "حذف کن"}
+                </button>
+              </div>
+            </div>
+          </div>
+        </>
+      )}
 
       {confirmBlock && (
         <>

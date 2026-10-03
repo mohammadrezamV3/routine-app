@@ -4,6 +4,7 @@ import { prisma } from "@/lib/prisma";
 import { requireModule } from "@/lib/moduleAccess";
 import { parseDateRange, clampQuery } from "@/lib/validate";
 import { CALENDAR_CURRENCIES, ensureFreshCalendar } from "@/lib/economicCalendar";
+import { sessionFeatureBlocked } from "@/lib/featureFlagsServer";
 
 // جستجو («سرچ یک ایونت خاص») بازه‌ی تاریخ خیلی وسیع‌تری لازم دارد (چند
 // ماه قبل/بعد، نه فقط یک روز/هفته) — سقف معمولی ۶۰ روز برای حالت
@@ -18,6 +19,7 @@ const KNOWN_CURRENCY_CODES = CALENDAR_CURRENCIES.map((c) => c.code);
 // رویدادهای اقتصادی برای کاربر ترید — فقط خواندنی. نوشتن از پنل ادمین
 // (/api/admin/economic-events) یا کران همگام‌سازی انجام می‌شود.
 export async function GET(req: NextRequest) {
+  { const off = await sessionFeatureBlocked("economicCalendar"); if (off) return off; }
   const guard = await requireModule(ModuleKey.TRADE);
   if (!guard.ok) return guard.response;
 

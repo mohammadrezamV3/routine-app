@@ -12,7 +12,7 @@ import { useRouter } from "next/navigation";
 import { AnimatePresence, motion } from "framer-motion";
 import { normalizeFa } from "@/lib/utils";
 import { useLockBodyScroll } from "@/lib/useLockBodyScroll";
-import type { FeatureKey } from "@/lib/featureFlags";
+import { featureVisible, type FeatureKey } from "@/lib/featureFlags";
 import { DashIcon, type DashIconName } from "./DashboardIcons";
 import { D_EASE } from "./DashboardKit";
 import { useDashAction, type DashAction } from "./DashboardActions";
@@ -34,34 +34,35 @@ export type CommandItem = {
 
 export const COMMANDS: CommandItem[] = [
   // کارهای سریع — مستقیم به فرم/تب مربوط
-  { id: "a-program", group: "کار سریع", label: "افزودن برنامه به روتین", hint: "روتین", href: "/weekly?add=1", icon: "plus", keywords: "برنامه جدید تسک کار add", action: "program" },
-  { id: "a-workout", group: "کار سریع", label: "شروع تمرین امروز", hint: "بدنسازی", href: "/exercise?tab=exercise", icon: "dumbbell", keywords: "ورزش باشگاه workout gym", module: "EXERCISE" },
-  { id: "a-food", group: "کار سریع", label: "ثبت غذا", hint: "کالری‌شمار", href: "/exercise?tab=calorie", icon: "apple", keywords: "کالری غذا وعده food", module: "CALORIE", action: "food" },
-  { id: "a-trade", group: "کار سریع", label: "ثبت معامله", hint: "ژورنال", href: "/trade/journal", icon: "journal", keywords: "ترید معامله پوزیشن trade", module: "TRADE", action: "trade" },
+  { id: "a-program", group: "کار سریع", label: "افزودن برنامه به روتین", hint: "روتین", href: "/weekly?add=1", icon: "plus", keywords: "برنامه جدید تسک کار add", action: "program", feature: "routine" },
+  { id: "a-workout", group: "کار سریع", label: "شروع تمرین امروز", hint: "بدنسازی", href: "/exercise?tab=exercise", icon: "dumbbell", keywords: "ورزش باشگاه workout gym", module: "EXERCISE", feature: "exercise" },
+  { id: "a-food", group: "کار سریع", label: "ثبت غذا", hint: "کالری‌شمار", href: "/exercise?tab=calorie", icon: "apple", keywords: "کالری غذا وعده food", module: "CALORIE", action: "food", feature: "calorie" },
+  { id: "a-trade", group: "کار سریع", label: "ثبت معامله", hint: "ژورنال", href: "/trade/journal", icon: "journal", keywords: "ترید معامله پوزیشن trade", module: "TRADE", action: "trade", feature: "tradeJournal" },
   { id: "a-roadmap", group: "کار سریع", label: "ساخت رودمپ یادگیری با AI", hint: "رودمپ", href: "/roadmaps/new", icon: "spark", keywords: "یادگیری هوش مصنوعی roadmap", feature: "roadmaps" },
 
-  { id: "p-weekly", group: "صفحه‌ها", label: "روتین و برنامه‌ی هفتگی", href: "/weekly", icon: "routine", keywords: "روتین هفتگی تقویم weekly" },
-  { id: "p-streak", group: "صفحه‌ها", label: "استریک و اچیومنت‌ها", href: "/streak", icon: "flame", keywords: "استریک اچیومنت نشان رکورد streak achievement طلایی" },
-  { id: "p-sleep", group: "صفحه‌ها", label: "خواب", href: "/sleep", icon: "moon", keywords: "خواب بیداری sleep شب" },
-  { id: "p-exercise", group: "صفحه‌ها", label: "برنامه‌ی تمرینی", href: "/exercise?tab=exercise", icon: "dumbbell", keywords: "بدنسازی ورزش", module: "EXERCISE" },
-  { id: "p-calorie", group: "صفحه‌ها", label: "کالری‌شمار", href: "/exercise?tab=calorie", icon: "apple", keywords: "رژیم تغذیه ماکرو", module: "CALORIE" },
+  { id: "p-weekly", group: "صفحه‌ها", label: "روتین و برنامه‌ی هفتگی", href: "/weekly", icon: "routine", keywords: "روتین هفتگی تقویم weekly", feature: "routine" },
+  { id: "p-streak", group: "صفحه‌ها", label: "استریک و اچیومنت‌ها", href: "/streak", icon: "flame", keywords: "استریک اچیومنت نشان رکورد streak achievement طلایی", feature: "streak" },
+  { id: "p-friends", group: "صفحه‌ها", label: "دوستان و رتبه‌بندی", href: "/friends", icon: "friends", keywords: "دوست رفیق رتبه رقابت friends leaderboard", feature: "friends" },
+  { id: "p-sleep", group: "صفحه‌ها", label: "خواب", href: "/sleep", icon: "moon", keywords: "خواب بیداری sleep شب", feature: "sleep" },
+  { id: "p-exercise", group: "صفحه‌ها", label: "برنامه‌ی تمرینی", href: "/exercise?tab=exercise", icon: "dumbbell", keywords: "بدنسازی ورزش", module: "EXERCISE", feature: "exercise" },
+  { id: "p-calorie", group: "صفحه‌ها", label: "کالری‌شمار", href: "/exercise?tab=calorie", icon: "apple", keywords: "رژیم تغذیه ماکرو", module: "CALORIE", feature: "calorie" },
   { id: "p-roadmaps", group: "صفحه‌ها", label: "رودمپ‌ها", href: "/roadmaps", icon: "roadmap", keywords: "یادگیری مسیر", feature: "roadmaps" },
   { id: "p-mentors", group: "صفحه‌ها", label: "پیدا کردن مربی", href: "/mentors", icon: "mentors", keywords: "منتور مربی استاد", feature: "mentors" },
   { id: "p-mentorship", group: "صفحه‌ها", label: "مربی‌های من", href: "/mentorship", icon: "chat", keywords: "منتور گفتگو پیام", feature: "mentors" },
   { id: "p-analysis", group: "صفحه‌ها", label: "آنالیز هفتگی", href: "/analysis/weekly", icon: "analysis", keywords: "گزارش تحلیل هوش مصنوعی", module: "AI_INSIGHT", feature: "weeklyAnalysis" },
 
-  { id: "t-hub", group: "ترید", label: "هاب ترید", href: "/trade", icon: "candles", keywords: "ترید فارکس", module: "TRADE" },
-  { id: "t-chart", group: "ترید", label: "چارت", href: "/trade/chart", icon: "chart", keywords: "تریدینگ ویو نمودار", module: "TRADE" },
-  { id: "t-journal", group: "ترید", label: "حساب‌های معاملاتی", href: "/trade/journal", icon: "journal", keywords: "ژورنال حساب", module: "TRADE" },
-  { id: "t-check", group: "ترید", label: "چک‌لیست‌ها", href: "/trade/checklists", icon: "checklist", keywords: "چک لیست شرط ورود", module: "TRADE" },
-  { id: "t-cal", group: "ترید", label: "تقویم اقتصادی", href: "/trade/calendar", icon: "calendarBolt", keywords: "اخبار خبر رویداد news", module: "TRADE" },
-  { id: "t-clock", group: "ترید", label: "ساعت فارکس", href: "/trade/clock", icon: "globeClock", keywords: "سشن جلسه لندن نیویورک", module: "TRADE" },
-  { id: "t-notes", group: "ترید", label: "یادداشت‌های ترید", href: "/trade/notes", icon: "notes", keywords: "نوت تحلیل", module: "TRADE" },
-  { id: "t-mt", group: "ترید", label: "اتصال متاتریدر", href: "/trade/metatrader", icon: "link", keywords: "متاتریدر mt4 mt5 اکسپرت", module: "TRADE" },
+  { id: "t-hub", group: "ترید", label: "هاب ترید", href: "/trade", icon: "candles", keywords: "ترید فارکس", module: "TRADE", feature: "trade" },
+  { id: "t-chart", group: "ترید", label: "چارت", href: "/trade/chart", icon: "chart", keywords: "تریدینگ ویو نمودار", module: "TRADE", feature: "tradeChart" },
+  { id: "t-journal", group: "ترید", label: "حساب‌های معاملاتی", href: "/trade/journal", icon: "journal", keywords: "ژورنال حساب", module: "TRADE", feature: "tradeJournal" },
+  { id: "t-check", group: "ترید", label: "چک‌لیست‌ها", href: "/trade/checklists", icon: "checklist", keywords: "چک لیست شرط ورود", module: "TRADE", feature: "tradeChecklists" },
+  { id: "t-cal", group: "ترید", label: "تقویم اقتصادی", href: "/trade/calendar", icon: "calendarBolt", keywords: "اخبار خبر رویداد news", module: "TRADE", feature: "economicCalendar" },
+  { id: "t-clock", group: "ترید", label: "ساعت فارکس", href: "/trade/clock", icon: "globeClock", keywords: "سشن جلسه لندن نیویورک", module: "TRADE", feature: "forexClock" },
+  { id: "t-notes", group: "ترید", label: "یادداشت‌های ترید", href: "/trade/notes", icon: "notes", keywords: "نوت تحلیل", module: "TRADE", feature: "tradeNotes" },
+  { id: "t-mt", group: "ترید", label: "اتصال متاتریدر", href: "/trade/metatrader", icon: "link", keywords: "متاتریدر mt4 mt5 اکسپرت", module: "TRADE", feature: "metatrader" },
 
   { id: "c-account", group: "حساب", label: "پنل کاربری", href: "/account", icon: "user", keywords: "پروفایل تنظیمات حساب" },
   { id: "c-sub", group: "حساب", label: "اشتراک و پلن‌ها", href: "/subscription", icon: "card", keywords: "خرید پلن اشتراک پرداخت" },
-  { id: "c-notif", group: "حساب", label: "تنظیمات اعلان‌ها", href: "/account/notifications", icon: "bell", keywords: "نوتیفیکیشن یادآوری" },
+  { id: "c-notif", group: "حساب", label: "تنظیمات اعلان‌ها", href: "/account/notifications", icon: "bell", keywords: "نوتیفیکیشن یادآوری", feature: "notifications" },
   { id: "c-admin", group: "حساب", label: "پنل ادمین", href: "/admin", icon: "shield", keywords: "مدیریت ادمین admin", adminOnly: true },
 ];
 
@@ -87,7 +88,7 @@ export function DashboardCommand({
   useLockBodyScroll(open);
 
   const visible = useMemo(
-    () => COMMANDS.filter((c) => (!c.feature || features?.[c.feature] === true) && (!c.adminOnly || isAdmin)),
+    () => COMMANDS.filter((c) => (!c.feature || featureVisible(features, c.feature)) && (!c.adminOnly || isAdmin)),
     [features, isAdmin]
   );
   const results = useMemo(() => {

@@ -1,7 +1,7 @@
 "use client";
 
 import { useFeatures } from "@/lib/useFeatures";
-import type { FeatureKey } from "@/lib/featureFlags";
+import { featureVisible, type FeatureKey } from "@/lib/featureFlags";
 import { useEffect, useRef, useState } from "react";
 import { createPortal } from "react-dom";
 import dynamic from "next/dynamic";
@@ -42,6 +42,10 @@ export const ICONS: Record<string, JSX.Element> = {
     <svg viewBox="0 0 24 24" fill="none"><rect x="3.5" y="5" width="17" height="15" rx="2.2" stroke="currentColor" strokeWidth="1.7"/><path d="M3.5 9.5h17M8 3v3.4M16 3v3.4" stroke="currentColor" strokeWidth="1.7" strokeLinecap="round"/></svg>
   ),
   // خواب — هلال ماه
+  // دوستان — دو نفر کنار هم (هم‌خط با بقیه‌ی ست)
+  friends: (
+    <svg viewBox="0 0 24 24" fill="none"><circle cx="9" cy="8" r="3.2" stroke="currentColor" strokeWidth="1.7"/><path d="M3 19.5c1-3.3 3.3-5 6-5s5 1.7 6 5" stroke="currentColor" strokeWidth="1.7" strokeLinecap="round"/><circle cx="16.6" cy="8.6" r="2.6" stroke="currentColor" strokeWidth="1.6"/><path d="M16.2 13.9c2.4 0 4.2 1.6 4.8 4.3" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round"/></svg>
+  ),
   sleep: (
     <svg viewBox="0 0 24 24" fill="none"><path d="M20 14.2A8 8 0 0 1 9.8 4a8 8 0 1 0 10.2 10.2Z" stroke="currentColor" strokeWidth="1.7" strokeLinecap="round" strokeLinejoin="round"/></svg>
   ),
@@ -138,10 +142,11 @@ const LINKS: NavItem[] = [
   {
     label: "روتین من", icon: "weekly",
     children: [
-      { href: "/weekly", label: "برنامه روزانه", icon: "weekly" },
-      { href: "/sleep", label: "خواب", icon: "sleep", module: "SLEEP" },
+      { href: "/weekly", label: "برنامه روزانه", icon: "weekly", feature: "routine" },
+      { href: "/sleep", label: "خواب", icon: "sleep", module: "SLEEP", feature: "sleep" },
     ],
   },
+  { href: "/friends", label: "دوستان", icon: "friends", feature: "friends" },
   { href: "/roadmaps", label: "رودمپ‌ها", icon: "roadmaps", feature: "roadmaps" },
   // منتورها درست زیر رودمپ‌ها. گروه فقط صفحه‌های سمت شاگرد را دارد؛
   // «پنل منتور» (برای کسی که منتوری می‌کند) این‌جا نیست — در پاپ‌آپ پروفایل،
@@ -157,15 +162,15 @@ const LINKS: NavItem[] = [
   {
     label: "بدنسازی", icon: "exercise",
     children: [
-      { href: "/exercise?tab=exercise", label: "برنامه تمرینی", icon: "exercise", module: "EXERCISE" },
-      { href: "/exercise?tab=calorie", label: "کالری‌شمار", icon: "food", module: "CALORIE" },
+      { href: "/exercise?tab=exercise", label: "برنامه تمرینی", icon: "exercise", module: "EXERCISE", feature: "exercise" },
+      { href: "/exercise?tab=calorie", label: "کالری‌شمار", icon: "food", module: "CALORIE", feature: "calorie" },
     ],
   },
   // ترید زیرمنو ندارد — با یک کلیک مستقیم می‌رود به هاب خودش، و انتخاب
   // بخش (ژورنال/چک‌لیست/تقویم/…) داخل همان صفحه انجام می‌شود.
-  { href: "/trade", label: "ترید", icon: "trade", module: "TRADE" },
+  { href: "/trade", label: "ترید", icon: "trade", module: "TRADE", feature: "trade" },
   { href: "/analysis/weekly", label: "آنالیز هفتگی", icon: "weeklyReport", module: "AI_INSIGHT", feature: "weeklyAnalysis" },
-  { href: "/about", label: "درباره ما", icon: "about" },
+  { href: "/about", label: "درباره ما", icon: "about", feature: "about" },
 ];
 
 // کش‌شده بیرون کامپوننت — مثل الگوی NotificationPanel/AccountPanel، تا
@@ -204,6 +209,13 @@ export function NavDrawer() {
   const { data: session, status } = useSession();
   const features = useFeatures();
   const authSlotRef = useRef<HTMLDivElement>(null);
+  // بخش‌هایی که از پنل ادمین (/admin/features) برای این کاربر خاموشن از منو
+  // حذف می‌شن؛ گروهی که همه‌ی زیرمجموعه‌هاش خاموشن هم کامل حذف می‌شه.
+  const visibleLinks = LINKS.filter((item) => {
+    if (item.feature && !featureVisible(features, item.feature)) return false;
+    if (isGroup(item)) return item.children.some((c) => !c.feature || featureVisible(features, c.feature));
+    return true;
+  });
   const profileBtnRef = useRef<HTMLButtonElement>(null);
   const bellBtnRef = useRef<HTMLButtonElement>(null);
   // صفحات ورود/ثبت‌نام هدر خودشونو دارن (فلش بازگشت + نشان برند) — هدر
@@ -490,7 +502,7 @@ export function NavDrawer() {
                     document.body
                   )}
                 </div>
-                <div className="bell-btn-wrap">
+                {featureVisible(features, "notifications") && <div className="bell-btn-wrap">
                   <button ref={bellBtnRef} className="bell-btn" aria-label="اعلان‌ها" onClick={handleBellClick}>
                     <svg viewBox="0 0 24 24" fill="none"><path d="M6 9.5a6 6 0 1 1 12 0c0 4 1.4 5.6 2 6.5H4c.6-.9 2-2.5 2-6.5Z" stroke="currentColor" strokeWidth="1.7" strokeLinecap="round" strokeLinejoin="round" /><path d="M9.5 19a2.6 2.6 0 0 0 5 0" stroke="currentColor" strokeWidth="1.7" strokeLinecap="round" /></svg>
                     {(notifCount > 0 || notifPermission !== "granted") && <span className="bell-dot" />}
@@ -499,8 +511,8 @@ export function NavDrawer() {
                     <NotificationPanel onClose={() => setNotifPanelOpen(false)} anchor={bellAnchor} />,
                     document.body
                   )}
-                </div>
-                <HeaderStreakClock />
+                </div>}
+                {featureVisible(features, "routine") && featureVisible(features, "streak") && <HeaderStreakClock />}
               </>
             ) : (
               <div ref={authSlotRef}>
@@ -543,7 +555,7 @@ export function NavDrawer() {
             <button onClick={() => setOpen(false)} className="nav-close" aria-label="بستن منو">×</button>
           </div>
 
-          {LINKS.filter((item) => !("feature" in item && item.feature) || features?.[item.feature] === true).map((item) => {
+          {visibleLinks.map((item) => {
             const isLocked = (m?: string) => !!m && activeModules !== null && !activeModules.has(m);
             if (isGroup(item)) {
               const isExpanded = expandedGroup === item.label;
@@ -573,7 +585,7 @@ export function NavDrawer() {
                   <div className={`nav-group-sub${isExpanded ? " open" : ""}`}>
                     <div className="nav-group-sub-inner">
                       <div className="nav-group-children">
-                        {item.children.map((c) => (
+                        {item.children.filter((c) => !c.feature || featureVisible(features, c.feature)).map((c) => (
                           <Link
                             key={c.href}
                             href={c.href}

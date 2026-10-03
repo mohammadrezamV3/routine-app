@@ -12,11 +12,13 @@ import { refreshFeatures } from "./useFeatures";
 export const DEFAULT_HOME = "/dashboard";
 export const DASHBOARD_HOME = "/dashboard";
 export const FALLBACK_HOME = "/weekly";
+// داشبورد و روتین هر دو از پنل ادمین خاموش → پنل کاربری (هیچ‌وقت فلگ نداره)
+export const ACCOUNT_HOME = "/account";
 
 export async function resolveHomePath(): Promise<string> {
   const timeout = new Promise<string>((r) => setTimeout(() => r(DEFAULT_HOME), 1500));
   const fetched = refreshFeatures()
-    .then((m) => (m && m.dashboard === false ? FALLBACK_HOME : DASHBOARD_HOME))
+    .then((m) => (m && m.dashboard === false ? (m.routine === false ? ACCOUNT_HOME : FALLBACK_HOME) : DASHBOARD_HOME))
     .catch(() => DEFAULT_HOME);
   return Promise.race([fetched, timeout]);
 }

@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 import { requireModule } from "@/lib/moduleAccess";
 import { mediaKey } from "@/lib/exerciseMedia";
+import { sessionFeatureBlocked } from "@/lib/featureFlagsServer";
 
 // خواندن عکس حرکات برای خود کاربر (کاتالوگ «مشاهده حرکات»).
 //
@@ -13,6 +14,7 @@ import { mediaKey } from "@/lib/exerciseMedia";
 // فرستادن همه‌ی عکس‌ها در یک پاسخ ده‌ها مگابایت می‌شد.
 
 export async function GET(req: NextRequest) {
+  { const off = await sessionFeatureBlocked("exercise"); if (off) return off; }
   const guard = await requireModule("EXERCISE");
   if (!guard.ok) return guard.response;
 

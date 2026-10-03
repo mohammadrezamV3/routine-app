@@ -15,7 +15,6 @@ import { MentorConfirmDialog } from "./MentorConfirmDialog";
 import { MentorTemplateSaveDialog } from "./MentorTemplateSaveDialog";
 import { fa, mentorApi } from "./MentorDashKit";
 import { MI, MI_STROKE, MentorEmpty, MentorField, MentorNotice, MentorSection } from "./MentorUI";
-import { EXERCISE_CATALOG } from "@/lib/exerciseCatalog";
 import { WEEK_ORDER, toEnDigits } from "@/lib/schedule";
 import { FA_WEEKDAY, JalaliDate, formatJalali, jalaliToIso, toJalali } from "@/lib/jalali";
 import type { Item, ItemInput, Program, ProgramType, PublicUser } from "@/lib/mentorTypes";
@@ -191,7 +190,17 @@ export function MentorProgramEditor(props: MentorProgramEditorProps) {
 
   const neverSent = !initialProgram?.sentAt;
   const student = props.student;
-  const exerciseNames = useMemo(() => (type === "WORKOUT" ? Array.from(new Set(EXERCISE_CATALOG.map((e) => e.name))) : []), [type]);
+  // پیشنهاد اسم حرکات (datalist) — کاتالوگ 700+ حرکتی فقط وقتی برنامه از نوع
+  // تمرینی باشه و با dynamic import لود می‌شه، نه توی باندل اولیه‌ی صفحه.
+  const [exerciseNames, setExerciseNames] = useState<string[]>([]);
+  useEffect(() => {
+    if (type !== "WORKOUT" || exerciseNames.length) return;
+    let alive = true;
+    import("@/lib/exerciseCatalog")
+      .then((m) => { if (alive) setExerciseNames(Array.from(new Set(m.EXERCISE_CATALOG.map((e) => e.name)))); })
+      .catch(() => {});
+    return () => { alive = false; };
+  }, [type, exerciseNames.length]);
   const itemWord = type === "WORKOUT" ? "حرکت" : "آیتم";
 
   // حالت «ذخیره شد» روی دکمه چند ثانیه می‌ماند

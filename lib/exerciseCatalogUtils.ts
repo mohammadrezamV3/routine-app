@@ -1,12 +1,39 @@
-// توابعی که به کاتالوگ کامل حرکات (`lib/exerciseCatalog.ts`، ~۸۵KB دیتا)
+// توابعی که به کاتالوگ کامل حرکات (`lib/exerciseCatalog.ts`، 700+ حرکت)
 // نیاز دارن. عمدا از `lib/exercisePlans.ts` جدا شدن: اون ماژول typeهای
 // سبکی مثل `ExerciseDay` رو صادر می‌کنه که چندین کامپوننت کلاینتی وارد
-// می‌کنن — تا وقتی کاتالوگ اون‌جا import می‌شد، کل اون ۸۵KB توی باندل
+// می‌کنن — تا وقتی کاتالوگ اون‌جا import می‌شد، کل دیتا توی باندل
 // صفحه‌ی /exercise می‌نشست، حتی برای کاربری که هیچ‌وقت لیست حرکات یا فرم
 // ساخت دستی رو باز نمی‌کنه.
 
-import { EXERCISE_CATALOG, MuscleKey } from "./exerciseCatalog";
+import { EXERCISE_CATALOG, ExerciseCatalogEntry, MuscleKey, exerciseNameKey } from "./exerciseCatalog";
 import { stripSetSuffix } from "./exerciseSets";
+
+// ایندکس تطبیق اسم: اسم اصلی و همه‌ی اسم‌های دیگه (انگلیسی/فارسی رایج) با
+// کلید نرمال‌شده (ی/ک، فاصله، نیم‌فاصله، خط تیره، حروف کوچک). اسم اصلی همیشه
+// برنده‌ست — اسم دیگه‌ای که با اسم اصلی یه حرکت دیگه یکی باشه نادیده گرفته می‌شه.
+let nameIndex: Map<string, ExerciseCatalogEntry> | null = null;
+function getNameIndex(): Map<string, ExerciseCatalogEntry> {
+  if (nameIndex) return nameIndex;
+  const idx = new Map<string, ExerciseCatalogEntry>();
+  for (const e of EXERCISE_CATALOG) idx.set(exerciseNameKey(e.name), e);
+  for (const e of EXERCISE_CATALOG) {
+    for (const a of e.aliases ?? []) {
+      const k = exerciseNameKey(a);
+      if (!idx.has(k)) idx.set(k, e);
+    }
+  }
+  nameIndex = idx;
+  return idx;
+}
+
+/** حرکت کاتالوگ برای یک اسم (با یا بدون پسوند ست/تکرار/زمان): اول تطابق
+ * دقیق، بعد اسم نرمال‌شده و اسم‌های دیگه (مثلا اسم انگلیسی‌ای که AI داده). */
+export function findCatalogEntry(item: string): ExerciseCatalogEntry | undefined {
+  const base = stripSetSuffix(item);
+  const exact = EXERCISE_CATALOG.find((e) => e.name === base);
+  if (exact) return exact;
+  return getNameIndex().get(exerciseNameKey(base));
+}
 
 // سه حرکت جایگزین آماده (بدون هوش‌مصنوعی) — از کاتالوگ حرکات
 // (lib/exerciseCatalog.ts) حرکاتی با همون الگوی حرکتی (اولویت) یا هم‌پوشانی
@@ -21,7 +48,7 @@ const CORE_KEYS: MuscleKey[] = ["abs", "obliques"];
 export function computeDayFocus(items: string[]): string {
   const cats = new Set<"upper" | "lower" | "core" | "cardio" | "flex" | "full">();
   for (const item of items) {
-    const entry = EXERCISE_CATALOG.find((e) => e.name === stripSetSuffix(item));
+    const entry = findCatalogEntry(item);
     if (!entry) continue;
     if (entry.muscleKeys.includes("fullbody")) cats.add("full");
     if (entry.muscleKeys.some((k) => UPPER_KEYS.includes(k))) cats.add("upper");
@@ -62,10 +89,10 @@ function broadGroupOf(keys: MuscleKey[]): MuscleKey[] {
 export function getCatalogSubstitutes(item: string, max = 3, excludeNames: string[] = []): string[] {
   const baseName = stripSetSuffix(item);
   const suffix = item.startsWith(baseName) ? item.slice(baseName.length) : "";
-  const source = EXERCISE_CATALOG.find((e) => e.name === baseName);
+  const source = findCatalogEntry(baseName);
   if (!source) return [];
 
-  const excluded = new Set([baseName, ...excludeNames]);
+  const excluded = new Set([baseName, source.name, ...excludeNames]);
   const picked: string[] = [];
 
   const tier1 = EXERCISE_CATALOG

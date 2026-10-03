@@ -16,9 +16,14 @@ export function GoldenName({ golden, staff, children, className }: { golden?: bo
   const style = resolveNameStyle({ golden, staff });
   if (!style) return <>{children}</>;
   const cls = style === "toxic" ? "toxic-name" : "golden-name";
+  // درخشش بدون filter: drop-shadow روی متن background-clip:text داخل کارت‌های
+  // شیشه‌ای (backdrop-filter) در کروم یک مستطیل کم‌رنگ هم‌اندازه‌ی اسم پشتش
+  // می‌انداخت. حالا یک کپی شفاف همون متن (::before، فقط text-shadow) زیر
+  // حروف گرادیانی می‌شینه — هیچ بک‌گراند و هیچ filter‌ای در کار نیست.
+  const text = typeof children === "string" || typeof children === "number" ? String(children) : undefined;
   return (
-    <span className={`${cls}${className ? ` ${className}` : ""}`} title={style === "toxic" ? "تیم آریون" : "همه‌ی اچیومنت‌ها باز شده"}>
-      {children}
+    <span className={`name-glow ${cls}-glow${className ? ` ${className}` : ""}`} data-text={text} title={style === "toxic" ? "تیم آریون" : "همه‌ی اچیومنت‌ها باز شده"}>
+      <span className={cls}>{children}</span>
     </span>
   );
 }
