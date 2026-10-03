@@ -4,10 +4,7 @@ import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { createPortal } from "react-dom";
 import { AnimatePresence, motion, useReducedMotion } from "framer-motion";
 import {
-  X, Sparkles, Dumbbell, BookOpen, Book, Briefcase, Coffee, Utensils, Moon, Sun, Music, Brain, Heart,
-  Languages, Code, Users, ShoppingCart, GraduationCap, Footprints, Droplets, Bed, Bike, PenLine, Laptop,
-  Phone, Home, Car, Pill, Pencil, Clock, Target, Star, Smile, Palette, Wallet, Bath, Shirt, Plane,
-  Trophy, Leaf, Salad, Calculator, FlaskConical, Mic, Camera, Gamepad2, Tv, Wrench, Flame, Timer,
+  X, Sparkles, Dumbbell, BookOpen, Brain, BookMarked, Languages, Footprints, ListChecks,
   type LucideIcon,
 } from "lucide-react";
 import { jsDayOfIso, timeStartMinutes } from "@/lib/schedule";
@@ -15,7 +12,7 @@ import { normalizeTimeToFa } from "@/lib/timeUtils";
 import { findConflictOnDate, findScheduleConflict, rangesOverlap } from "@/lib/conflict";
 import { JalaliDatePicker } from "./JalaliDatePicker";
 import { formatJalali, isoLocal, jalaliToIso, JalaliDate, toJalali } from "@/lib/jalali";
-import { CustomOccurrence, setCustomOccurrences } from "@/lib/storage";
+import { CustomOccurrence, setSettingChecked } from "@/lib/storage";
 import { SegmentedTabs } from "./SegmentedTabs";
 import { focusNextOnEnter } from "@/lib/formNav";
 import { useLockBodyScroll } from "@/lib/useLockBodyScroll";
@@ -39,11 +36,10 @@ import "./add-program.css";
 type ScheduleOpts = { removedOccurrences: Set<string>; customOccurrences: CustomOccurrence[] };
 
 // آیکون الگوها از روی اسم lucide انتخاب می‌شه (فهرست محدود تا باندل بزرگ نشه)
+// فقط آیکون‌هایی که PROGRAM_TEMPLATES (lib/programForm.ts) استفاده می‌کنه — نه یک
+// فهرست بزرگ که بی‌دلیل به باندل اضافه بشه؛ قالب تازه = آیکونش همین‌جا اضافه بشه
 const TEMPLATE_ICONS: Record<string, LucideIcon> = {
-  Sparkles, Dumbbell, BookOpen, Book, Briefcase, Coffee, Utensils, Moon, Sun, Music, Brain, Heart,
-  Languages, Code, Users, ShoppingCart, GraduationCap, Footprints, Droplets, Bed, Bike, PenLine, Laptop,
-  Phone, Home, Car, Pill, Pencil, Clock, Target, Star, Smile, Palette, Wallet, Bath, Shirt, Plane,
-  Trophy, Leaf, Salad, Calculator, FlaskConical, Mic, Camera, Gamepad2, Tv, Wrench, Flame, Timer,
+  Sparkles, Dumbbell, BookOpen, Brain, BookMarked, Languages, Footprints, ListChecks,
 };
 
 function isoToJalali(iso: string): JalaliDate {
@@ -199,12 +195,21 @@ export function AddProgramForm({
     const withAuto = mins == null ? next : next.map((r) => {
       const prev = rows.find((p) => p.id === r.id);
       if (!prev || prev.start === r.start || !r.start.trim() || r.end.trim() || autoFilled.current.has(r.id)) return r;
-      const end = addMinutesToTime(normalizeDigits(r.start), mins);
+      const end = autoEnd(r.start, mins);
       if (!end) return r;
       autoFilled.current.add(r.id);
       return { ...r, end };
     });
     setRows(withAuto);
+  }
+  /** پایان خودکار از مدت الگو؛ اگه از نیمه‌شب رد می‌شد همون 23:59 (برنامه‌ی روتین از نیمه‌شب رد نمی‌شه) */
+  function autoEnd(start: string, mins: number): string {
+    const st = normalizeDigits(start);
+    if (!/^\d{1,2}:\d{2}$/.test(st)) return "";
+    const end = addMinutesToTime(st, mins);
+    if (!end) return "";
+    const toMin = (v: string) => { const [h, m] = v.split(":").map(Number); return h * 60 + m; };
+    return toMin(end) <= toMin(st) ? "23:59" : end;
   }
   function normalizeDigits(s: string): string {
     return s.replace(/[۰-۹]/g, (c) => String(c.charCodeAt(0) - 1776)).replace(/[٠-٩]/g, (c) => String(c.charCodeAt(0) - 1632)).trim();
@@ -226,7 +231,7 @@ export function AddProgramForm({
     tplMinutes.current = t.minutes;
     const first = rows[0];
     if (first && first.start.trim() && !first.end.trim()) {
-      const end = addMinutesToTime(normalizeDigits(first.start), t.minutes);
+      const end = autoEnd(first.start, t.minutes);
       if (end) {
         autoFilled.current.add(first.id);
         setRows((rs) => rs.map((r, i) => (i === 0 ? { ...r, end } : r)));
@@ -338,7 +343,15 @@ export function AddProgramForm({
         });
       }
     }
-    await setCustomOccurrences([...scheduleOpts.customOccurrences, ...additions]);
+    // نتیجه‌ی ذخیره بررسی می‌شه (مثلا پایان دوره‌ی آزمایشی روتین = 403)؛ قبلا خطا
+    // دکمه رو برای همیشه در حالت لودینگ نگه می‌داشت
+    const saved = await setSettingChecked("customOccurrences", [...scheduleOpts.customOccurrences, ...additions]).catch(() => ({ ok: false as const, error: "اتصال برقرار نشد" }));
+    if (!saved.ok) {
+      setFormError(saved.error || "ذخیره نشد، دوباره امتحان کن");
+      setStatus("error");
+      setTimeout(() => setStatus("idle"), 1400);
+      return;
+    }
     if (navigator.vibrate) navigator.vibrate(15);
     setStatus("success");
     onChanged();
