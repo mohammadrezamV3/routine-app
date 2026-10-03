@@ -1,28 +1,17 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import type { ComponentType } from "react";
 import { usePathname } from "next/navigation";
-import { X } from "lucide-react";
+import { X, Leaf, Ghost, Flame, TreePine, Heart, Flower2, MoonStar, Sprout, PartyPopper, type LucideIcon } from "lucide-react";
 import { eventThemeById, type EventTheme } from "@/lib/eventThemes";
 
-type IconComp = ComponentType<{ size?: number; strokeWidth?: number; className?: string; "aria-hidden"?: boolean }>;
+// فقط آیکون‌هایی که کاتالوگ (lib/eventThemes.ts) استفاده می‌کنه — نه import پویای کل
+// lucide-react که یک chunk خیلی بزرگ روی همه‌ی صفحه‌ها اضافه می‌کرد. تم تازه با
+// آیکون تازه = همین‌جا اضافه بشه.
+const EVENT_ICONS: Record<string, LucideIcon> = { Leaf, Ghost, Flame, TreePine, Heart, Flower2, MoonStar, Sprout };
 
-// آیکون تم از روی اسم lucide؛ کل کتابخونه فقط وقتی تم فعاله و تازه بعد از
-// mount لود می‌شه (chunk جدا) تا باندل صفحه‌های عادی بزرگ نشه.
 export function EventThemeIcon({ name, size = 18 }: { name: string; size?: number }) {
-  const [Icon, setIcon] = useState<IconComp | null>(null);
-  useEffect(() => {
-    let alive = true;
-    import("lucide-react")
-      .then((m) => {
-        const found = (m.icons as Record<string, IconComp>)[name];
-        if (alive && found) setIcon(() => found);
-      })
-      .catch(() => {});
-    return () => { alive = false; };
-  }, [name]);
-  if (!Icon) return <span style={{ width: size, height: size, display: "inline-block" }} aria-hidden />;
+  const Icon = EVENT_ICONS[name] ?? PartyPopper;
   return <Icon size={size} aria-hidden />;
 }
 
