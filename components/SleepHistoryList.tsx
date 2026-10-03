@@ -6,7 +6,7 @@ import { History, Star, Tag } from "lucide-react";
 import { FA_WEEKDAY, J_MONTHS, faNum, toJalali } from "@/lib/jalali";
 import { clockOf, durationLabel, scoreBand, sleepMinutes, type SleepInsights, type SleepRecord } from "@/lib/sleep";
 
-// فهرست شب‌های ثبت‌شده: تازه‌ترین بالا، ده‌تا ده‌تا باز می‌شه؛ کلیک روی هر
+// فهرست شب‌های ثبت‌شده: تازه‌ترین بالا، هفت‌تا هفت‌تا باز می‌شه؛ کلیک روی هر
 // ردیف همون شب رو برای ویرایش باز می‌کنه. ردیف‌ها دکمه‌ی بی‌بک‌گراندن.
 
 export type SleepHistoryListProps = {
@@ -16,7 +16,7 @@ export type SleepHistoryListProps = {
   onEdit: (rec: SleepRecord) => void;
 };
 
-const PAGE = 10;
+const PAGE = 7;
 
 function jalaliLabel(iso: string): { day: string; weekday: string } {
   const [y, m, d] = iso.split("-").map(Number);
@@ -37,12 +37,12 @@ export function SleepHistoryList({ entries, insights, onEdit }: SleepHistoryList
   return (
     <section className="sl-card sleep-scope slh">
       <div className="sl-head-row">
-        <h3 className="sl-card-title"><History aria-hidden /> شب‌های ثبت‌شده</h3>
+        <h3 className="sl-card-title"><History aria-hidden /> شب‌های اخیر</h3>
         {rows.length > 0 && <span className="sl-sub">{faNum(rows.length)} شب</span>}
       </div>
 
       {rows.length === 0 ? (
-        <p className="sl-sub slh-empty">هنوز شبی ثبت نشده؛ اولین خوابت رو ثبت کن تا امتیاز و تحلیل‌ها اینجا بیان.</p>
+        <p className="sl-sub slh-empty">هنوز شبی ثبت نشده؛ اولین خوابت رو ثبت کن.</p>
       ) : (
         <div className="slh-list">
           {visible.map((rec) => {

@@ -12,7 +12,8 @@ import { startTracking, stopTracking, type SleepTracking } from "@/lib/sleepTrac
 // هیروی بخش خواب: بر اساس ساعت الان و ساعت‌های هدف روتین حالتش عوض می‌شه —
 // صبح (ثبت دیشب / امتیاز دیشب)، روز، آماده‌شدن برای خواب (شمارش معکوس)، وقت
 // خواب و شب (ردیاب زنده و ساعت‌های خوب بیداری). ماه گوشه‌ی هیرو فاز واقعی
-// امشب رو نشون می‌ده.
+// امشب رو نشون می‌ده. آمار (بدهی خواب، میانگین، پیاپی‌ها) این‌جا نیست، در
+// آنالیز هفتگی‌ه — هیرو فقط «الان چی کار کنم».
 
 const BAND_RING: Record<ScoreBand, RingGrad> = { great: RING_GREEN, good: RING_BLUE, fair: RING_AMBER, poor: RING_OVER };
 
@@ -93,7 +94,7 @@ export function SleepHero({
   } else if (lastNight && band && (phase === "morning" || phase === "day")) {
     kicker = "دیشب";
     title = `خوابت ${SCORE_BAND_LABEL[band]} بود`;
-    sub = `${durationLabel(sleepMinutes(lastNight))} · از ${clockOf(lastNight.sleptAt)} تا ${clockOf(lastNight.wokeAt)}`;
+    sub = `از ${clockOf(lastNight.sleptAt)} تا ${clockOf(lastNight.wokeAt)}`;
   } else if (phase === "morning" || phase === "day") {
     kicker = phase === "morning" ? "صبح بخیر" : "خواب دیشب";
     title = "دیشب چطور خوابیدی؟";
@@ -140,11 +141,9 @@ export function SleepHero({
                   <small>امتیاز</small>
                 </span>
               </GradientRing>
-              <div className="slp-hero-facts">
+              <div className="slp-hero-facts slp-hero-facts-1">
+                <div className="slp-fact"><span>مدت خواب</span><b>{durationLabel(sleepMinutes(lastNight))}</b></div>
                 <div className="slp-fact"><span>هدف هر شب</span><b>{durationLabel(insights.goalMin)}</b></div>
-                <div className="slp-fact"><span>بدهی خواب این هفته</span><b>{insights.debt7Min ? durationLabel(insights.debt7Min) : "صفر"}</b></div>
-                <div className="slp-fact"><span>شب‌های پیاپی در هدف</span><b>{faNum(insights.goalStreak)}</b></div>
-                <div className="slp-fact"><span>میانگین امتیاز</span><b>{insights.avgScore === null ? "-" : faNum(insights.avgScore)}</b></div>
               </div>
             </>
           ) : phase === "winddown" || phase === "day" ? (
@@ -153,7 +152,7 @@ export function SleepHero({
               <b className="slp-countdown">{hms(toBedSec)}</b>
             </div>
           ) : phase === "bedtime" || phase === "night" ? (
-            <div className="slp-hero-facts">
+            <div className="slp-hero-facts slp-hero-facts-3">
               {wakeOptions.map((w) => (
                 <div key={w.cycles} className="slp-fact">
                   <span>{faNum(w.cycles)} چرخه · {durationLabel(w.sleepMin)}</span>
