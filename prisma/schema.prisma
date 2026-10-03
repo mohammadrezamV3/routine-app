@@ -218,6 +218,7 @@ model User {
   weeklyAnalysisAi       WeeklyAnalysisAi[]
   weeklyAnalysisGoals    WeeklyAnalysisGoal[]
   weeklyReflections      WeeklyReflection[]
+  weeklyLetters          WeeklyLetter[]
 
   userSettings      UserSetting[]
   exportRequests    ExportRequest[]
@@ -2761,4 +2762,28 @@ model TradeCashflow {
 
   @@unique([accountId, externalId])
   @@index([accountId, occurredAt])
+}
+
+// «هفته‌نامه» — snapshot هر شماره (lib/weeklyLetter/types.ts). هر شنبه برای
+// هفته‌ی تموم‌شده یک بار ساخته می‌شه و دیگه تغییر نمی‌کنه. ردیف PENDING یعنی
+// یک worker داره می‌سازدش (کلید یکتای [userId, weekStart] جلوی ساخت تکراری
+// بین workerها رو می‌گیره؛ PENDING قدیمی‌تر از ۱۵ دقیقه دوباره ادعا می‌شه).
+// summary خلاصه‌ی سبک برای آرشیو/بنر است تا لیست کردن کل data (چند ده کیلوبایت
+// برای هر شماره) لازم نباشه.
+model WeeklyLetter {
+  id        String   @id @default(cuid())
+  userId    String
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  weekStart DateTime @db.Date // شنبه‌ی هفته‌ای که این شماره درباره‌ی اونه
+  issueNo   Int
+  status    String   @default("READY") // PENDING | READY
+  data      Json
+  summary   Json?
+  readAt    DateTime?
+  emailedAt DateTime?
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@unique([userId, weekStart])
+  @@index([userId, createdAt])
 }

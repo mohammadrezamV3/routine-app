@@ -5,9 +5,10 @@
 
 import { prisma } from "@/lib/prisma";
 import { computeWeeklyAnalysis, computeDomainScoresForWeek } from "@/lib/weeklyAnalysis/compute";
+import { rowToSummary } from "@/lib/weeklyLetter/summary";
 import { getWeekRange } from "@/lib/weeklyAnalysis/week";
 import { isAiAvailable } from "@/lib/weeklyAnalysis/ai";
-import { AiCoach, AnalysisDomain, ReflectionDto, WeeklyAnalysis, WeeklyGoalDto, WeeklyGoalStatus } from "@/lib/weeklyAnalysis/types";
+import { AiCoach, AnalysisDomain, LetterSummary, ReflectionDto, WeeklyAnalysis, WeeklyGoalDto, WeeklyGoalStatus } from "@/lib/weeklyAnalysis/types";
 
 const MS_PER_WEEK = 7 * 86_400_000;
 
@@ -51,8 +52,8 @@ function mapReflection(row: { wentWell: string; improve: string; mood: number | 
  * هنوز داده‌ی کافی نداره (score=null) هم دست‌نخورده می‌مونه — دفعه‌ی بعد
  * دوباره امتحان می‌شه.
  */
-async function resolveExpiredGoals(userId: string, timezone: string, isSuperAdmin: boolean): Promise<void> {
-  const { weekStart: currentWeekStart } = getWeekRange(timezone, 0);
+async function resolveExpiredGoals(userId: string, timezone: string, isSuperAdmin: boolean, now: Date = new Date()): Promise<void> {
+  const { weekStart: currentWeekStart } = getWeekRange(timezone, 0, now);
 
   const expired = await prisma.weeklyAnalysisGoal.findMany({
     where: { userId, status: "ACTIVE", weekStart: { lt: currentWeekStart } },
@@ -65,7 +66,7 @@ async function resolveExpiredGoals(userId: string, timezone: string, isSuperAdmi
     const offsetForWeek = Math.round((goal.weekStart.getTime() - currentWeekStart.getTime()) / MS_PER_WEEK);
     let scores: Partial<Record<AnalysisDomain, number | null>>;
     try {
-      scores = await computeDomainScoresForWeek(userId, timezone, offsetForWeek, isSuperAdmin);
+      scores = await computeDomainScoresForWeek(userId, timezone, offsetForWeek, isSuperAdmin, now);
     } catch {
       continue; // خطای محاسبه نباید کل درخواست آنالیز رو بترکونه — دفعه‌ی بعد دوباره امتحان می‌شه
     }
@@ -85,24 +86,48 @@ async function resolveExpiredGoals(userId: string, timezone: string, isSuperAdmi
   );
 }
 
-export type WeeklyAnalysisOptions = { timezone: string; offset: number; isSuperAdmin: boolean };
+/** تازه‌ترین هفته‌نامه‌ی آماده‌ی خوانده‌نشده (بنر بالای صفحه) — یک کوئری سبک روی summary. */
+export async function getUnreadLetterSummary(userId: string): Promise<LetterSummary | null> {
+  const row = await prisma.weeklyLetter.findFirst({
+    where: { userId, status: "READY", readAt: null },
+    orderBy: { weekStart: "desc" },
+    select: { weekStart: true, issueNo: true, summary: true, readAt: true, createdAt: true },
+  });
+  if (!row) return null;
+  if (row.summary) return rowToSummary(row);
+  // ردیف بدون summary (نباید پیش بیاد) — از خود data
+  const full = await prisma.weeklyLetter.findFirst({ where: { userId, weekStart: row.weekStart }, select: { data: true } });
+  return rowToSummary(row, full?.data);
+}
+
+export type WeeklyAnalysisOptions = {
+  timezone: string;
+  offset: number;
+  isSuperAdmin: boolean;
+  /** برای تست/ساخت هفته‌نامه — پیش‌فرض الان */
+  now?: Date;
+  /** false = کوئری هفته‌نامه‌ی خوانده‌نشده رد می‌شه (ساخت هفته‌نامه به‌اش نیاز نداره) */
+  withUnreadLetter?: boolean;
+};
 
 export async function getWeeklyAnalysis(userId: string, opts: WeeklyAnalysisOptions): Promise<WeeklyAnalysis> {
   const { timezone, offset, isSuperAdmin } = opts;
+  const now = opts.now ?? new Date();
 
   // قفل‌کردن اهداف منقضی قبل از خوندن لیست، تا وضعیت نمایش‌داده‌شده
   // همیشه تازه باشه (نه یک ACTIVE قدیمی که هفته‌هاست تموم شده).
-  await resolveExpiredGoals(userId, timezone, isSuperAdmin);
+  await resolveExpiredGoals(userId, timezone, isSuperAdmin, now);
 
-  const weekRange = getWeekRange(timezone, offset);
-  const nextWeekRange = getWeekRange(timezone, offset + 1);
+  const weekRange = getWeekRange(timezone, offset, now);
+  const nextWeekRange = getWeekRange(timezone, offset + 1, now);
 
-  const [base, aiRow, reflectionRow, goalRows, nextGoalRows] = await Promise.all([
-    computeWeeklyAnalysis(userId, { timezone, offset, isSuperAdmin }),
+  const [base, aiRow, reflectionRow, goalRows, nextGoalRows, unreadLetter] = await Promise.all([
+    computeWeeklyAnalysis(userId, { timezone, offset, isSuperAdmin, now }),
     prisma.weeklyAnalysisAi.findUnique({ where: { userId_weekStart: { userId, weekStart: weekRange.weekStart } } }),
     prisma.weeklyReflection.findUnique({ where: { userId_weekStart: { userId, weekStart: weekRange.weekStart } } }),
     prisma.weeklyAnalysisGoal.findMany({ where: { userId, weekStart: weekRange.weekStart }, orderBy: { createdAt: "asc" } }),
     prisma.weeklyAnalysisGoal.findMany({ where: { userId, weekStart: nextWeekRange.weekStart }, orderBy: { createdAt: "asc" } }),
+    opts.withUnreadLetter === false ? Promise.resolve(null) : getUnreadLetterSummary(userId).catch(() => null),
   ]);
 
   return {
@@ -112,5 +137,6 @@ export async function getWeeklyAnalysis(userId: string, opts: WeeklyAnalysisOpti
     goals: goalRows.map(mapGoal),
     nextWeekGoals: nextGoalRows.map(mapGoal),
     reflection: mapReflection(reflectionRow),
+    unreadLetter,
   };
 }

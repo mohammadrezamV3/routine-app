@@ -1,6 +1,7 @@
 import { isPushConfigured } from "@/lib/webPush";
 import { pruneReminderLog, runDueReminders, runEconomicAlerts } from "@/lib/pushReminders";
 import { sweepWaitlists } from "@/lib/mentorWaitlistServer";
+import { runWeeklyLetters } from "@/lib/weeklyLetter/dispatch";
 
 // زمان‌بند داخلی یادآوری‌ها — از instrumentation.ts یک‌بار موقع بالا
 // آمدن هر پروسه‌ی سرور (next dev / next start / هر worker cluster.js) شروع
@@ -19,6 +20,10 @@ const PRUNE_EVERY_MS = 60 * 60 * 1000;
 // که بدون مسیر خواندن آزاد شده‌اند (حذف حساب، اقدام ادمین). مستقل از VAPID —
 // اعلان درون‌برنامه‌ای بدون پوش هم ارزش دارد. چند worker هم‌زمان امن است.
 const WAITLIST_EVERY_MS = 5 * 60 * 1000;
+// «هفته‌نامه» (lib/weeklyLetter/dispatch.ts): هر شنبه صبح برای هفته‌ی تموم‌شده.
+// اعلان درون‌برنامه‌ای و ایمیل VAPID لازم ندارن، پس مثل waitlist قبل از چک
+// isPushConfigured اجرا می‌شه. ضدتکرار با ردیف PENDING یکتاست، چند worker امنه.
+const LETTERS_EVERY_MS = 10 * 60 * 1000;
 
 export function startPushScheduler(): void {
   const g = globalThis as unknown as { __arionPushScheduler?: boolean };
@@ -35,6 +40,8 @@ export function startPushScheduler(): void {
   let running = false;
   let lastPrune = 0;
   let lastWaitlist = 0;
+  let lastLetters = 0;
+  let lettersRunning = false;
   // هر worker کمی جابه‌جا تا همه دقیقا هم‌زمان به دیتابیس نخورن
   const jitterMs = 1000 + Math.floor(Math.random() * 1500);
 
@@ -46,6 +53,17 @@ export function startPushScheduler(): void {
       if (now.getTime() - lastWaitlist > WAITLIST_EVERY_MS) {
         lastWaitlist = now.getTime();
         await sweepWaitlists(now).catch((err: any) => console.error(`[waitlist] sweep failed: ${err?.message || err}`));
+      }
+      // بدون await: مربی AI هر کاربر تا ~۵۵ ثانیه می‌تونه طول بکشه و نباید یادآوری‌ها
+      // رو عقب بندازه. فقط یک اجرا هم‌زمان (lettersRunning).
+      if (!lettersRunning && now.getTime() - lastLetters > LETTERS_EVERY_MS) {
+        lastLetters = now.getTime();
+        lettersRunning = true;
+        void runWeeklyLetters(now)
+          .catch((err: any) => console.error(`[letters] run failed: ${err?.message || err}`))
+          .finally(() => {
+            lettersRunning = false;
+          });
       }
       if (!isPushConfigured()) return;
       await runDueReminders(now);

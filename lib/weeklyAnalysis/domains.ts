@@ -1,9 +1,10 @@
 import { prisma } from "@/lib/prisma";
 import { countRowProgress } from "@/lib/roadmapPlan";
-import type { AnalysisDomain, DomainResult } from "./types";
+import type { AnalysisDomain, DayDetails, DomainResult } from "./types";
 import { clamp, mean } from "./score";
 import { addDaysIso, isoToUtcDate, isoWeekday, localIso, localMinuteOfDay, utcIso } from "./week";
 import { FA_WEEKDAY } from "@/lib/jalali";
+import { tasksForDate } from "@/lib/schedule";
 
 // محاسبه‌ی امتیاز هر دامنه از داده‌ی واقعی.
 //
@@ -19,7 +20,9 @@ export type DomainEnv = { timezone: string; todayIso: string };
 export type DomainBase = Omit<DomainResult, "prevScore" | "delta">;
 // اعداد خام هر دامنه برای achievements — توی خروجی API نمی‌ره.
 export type DomainMeta = Record<string, number>;
-export type DomainWeek = { result: DomainBase; meta: DomainMeta };
+// details: جزئیات خام هر روز (۷تایی، شنبه..جمعه) برای DayCell.details — کلیدی
+// که نیست یعنی اون روز در این دامنه داده‌ای نبوده.
+export type DomainWeek = { result: DomainBase; meta: DomainMeta; details: Partial<DayDetails>[] };
 
 type DayState = "past" | "today" | "future";
 function dayState(iso: string, env: DomainEnv): DayState {
@@ -28,6 +31,22 @@ function dayState(iso: string, env: DomainEnv): DayState {
 
 const r0 = (n: number) => Math.round(n);
 const r1 = (n: number) => Math.round(n * 10) / 10;
+
+/** دقیقه از نیمه‌شب → «HH:mm» */
+export function hhmm(min: number): string {
+  const m = ((Math.round(min) % 1440) + 1440) % 1440;
+  return `${String(Math.floor(m / 60)).padStart(2, "0")}:${String(m % 60).padStart(2, "0")}`;
+}
+
+/**
+ * Date ظهر همون روز تقویمی به وقت *پروسه* — tasksForDate با getDay()/isoLocal
+ * کار می‌کنه، پس ساعت ۱۲ تضمین می‌کنه روز مقصود بدون توجه به TZ سرور (و
+ * جابه‌جایی DST) درست خونده بشه.
+ */
+export function noonOfIso(iso: string): Date {
+  const [y, m, d] = iso.split("-").map(Number);
+  return new Date(y, m - 1, d, 12);
+}
 
 function spanOf(weeks: WeekSpec[]) {
   const startIso = weeks[0].weekStartIso;
@@ -49,7 +68,8 @@ function finalize(
   daily: (number | null)[],
   stats: DomainBase["stats"],
   meta: DomainMeta,
-  override?: { score: number | null; hasData?: boolean; daysWithData?: number }
+  override?: { score: number | null; hasData?: boolean; daysWithData?: number },
+  details: Partial<DayDetails>[] = []
 ): DomainWeek {
   const vals = daily.filter((v): v is number => v != null);
   const daysWithData = override?.daysWithData ?? vals.length;
@@ -66,6 +86,7 @@ function finalize(
       stats,
     },
     meta,
+    details: Array.from({ length: 7 }, (_, i) => details[i] ?? {}),
   };
 }
 
@@ -82,27 +103,54 @@ function groupBy<T>(rows: T[], key: (r: T) => string | null): Map<string, T[]> {
 }
 
 // ════════════════════════════════════════════════════════════════════
-// روتین — DailyEntry.completedItems کل چک‌لیست همون روز رو با true/false
-// نگه می‌داره؛ درصد روز = تیک‌خورده ÷ کل.
+// روتین — همون تعریف داشبورد و استریک: برنامه‌های *زمان‌بندی‌شده‌ی* هر روز
+// (customOccurrences منهای removedOccurrences، با tasksForDate) در برابر
+// تیک‌های DailyEntry.completedItems (کلید برنامه = انجام شده؛ برای برنامه‌ی
+// لیستی هم کلید خود برنامه یعنی «همه‌ی آیتم‌ها»، lib/routineChecklist.ts).
+// پس درصد روز = برنامه‌های تیک‌خورده ÷ برنامه‌های اون روز، نه ÷ کلیدهای
+// ثبت‌شده — روزی که برنامه داشته و هیچی تیک نخورده صفره، نه «بدون داده».
+// روز بدون برنامه null؛ روز قبل از ساخت حساب null؛ امروز بدون تیک null.
 // ════════════════════════════════════════════════════════════════════
 export type RoutineRow = { date: Date; completedItems: unknown };
+export type OccLike = { id: string; name: string; jsDay: number; time: string; startDate?: string; endDate?: string };
+export type RoutineData = {
+  rows: RoutineRow[];
+  custom: OccLike[];
+  removed: Set<string>;
+  /**
+   * تاریخ ساخت حساب به وقت محلی (YYYY-MM-DD) — روزهای قبلش امتیاز نمی‌گیرن،
+   * مگر اینکه خود ردیف‌های تیک زودتر از اون وجود داشته باشن (مثلا داده‌ی مهمان
+   * که بعد از ثبت‌نام منتقل شده): اولین تیک ثبت‌شده شروع واقعی حساب‌کتابه.
+   */
+  createdIso: string | null;
+};
 
-export function routineWeeks(rows: RoutineRow[], weeks: WeekSpec[], env: DomainEnv): DomainWeek[] {
-  const byDate = new Map(rows.map((r) => [utcIso(r.date), r.completedItems]));
+export function routineWeeks(data: RoutineData, weeks: WeekSpec[], env: DomainEnv): DomainWeek[] {
+  const byDate = new Map(data.rows.map((r) => [utcIso(r.date), r.completedItems]));
+  const sched = { customOccurrences: data.custom, removedOccurrences: data.removed };
+  const firstTick = data.rows.length ? data.rows.map((r) => utcIso(r.date)).sort()[0] : null;
+  const startIso = data.createdIso && firstTick ? (firstTick < data.createdIso ? firstTick : data.createdIso) : data.createdIso ?? firstTick;
   return weeks.map((w) => {
     let perfectDays = 0;
-    const daily = w.days.map((iso) => {
+    let doneTotal = 0;
+    let schedTotal = 0;
+    const details: Partial<DayDetails>[] = [];
+    const daily = w.days.map((iso, i) => {
       const st = dayState(iso, env);
       if (st === "future") return null;
-      const items = byDate.get(iso);
-      if (!items || typeof items !== "object" || Array.isArray(items)) return null;
-      const vals = Object.values(items as Record<string, unknown>);
-      if (!vals.length) return null;
-      const done = vals.filter((v) => v === true).length;
+      if (startIso && iso < startIso) return null;
+      const expected = tasksForDate(noonOfIso(iso), sched);
+      if (!expected.length) return null;
+      const raw = byDate.get(iso);
+      const ticks = raw && typeof raw === "object" && !Array.isArray(raw) ? (raw as Record<string, unknown>) : {};
+      const done = expected.filter((t) => ticks[t.id] === true).length;
+      details[i] = { routine: { done, total: expected.length } };
       // امروز با صفر تیک هنوز «شروع‌نشده»ست، نه «صفر»
       if (st === "today" && done === 0) return null;
-      const pct = (done / vals.length) * 100;
-      if (pct >= 100) perfectDays++;
+      doneTotal += done;
+      schedTotal += expected.length;
+      const pct = (done / expected.length) * 100;
+      if (done === expected.length) perfectDays++;
       return pct;
     });
     const vals = daily.filter((v): v is number => v != null);
@@ -113,19 +161,36 @@ export function routineWeeks(rows: RoutineRow[], weeks: WeekSpec[], env: DomainE
       [
         { label: "میانگین انجام", value: avg == null ? "-" : `${r0(avg)}%`, tone: avg == null ? "neutral" : avg >= 70 ? "good" : avg < 40 ? "bad" : "neutral" },
         { label: "روزهای کامل", value: `${perfectDays}`, tone: perfectDays > 0 ? "good" : "neutral" },
-        { label: "روزهای ثبت‌شده", value: `${vals.length}/7` },
+        { label: "برنامه‌های انجام‌شده", value: schedTotal ? `${doneTotal}/${schedTotal}` : "-" },
       ],
-      { perfectDays, maxDay: vals.length ? Math.max(...vals) : 0 }
+      { perfectDays, maxDay: vals.length ? Math.max(...vals) : 0, doneTotal, schedTotal },
+      undefined,
+      details
     );
   });
 }
 
-async function loadRoutine(userId: string, weeks: WeekSpec[]) {
+async function loadRoutine(userId: string, weeks: WeekSpec[], env: DomainEnv): Promise<RoutineData> {
   const s = spanOf(weeks);
-  return prisma.dailyEntry.findMany({
-    where: { userId, date: { gte: s.start, lte: s.end } },
-    select: { date: true, completedItems: true },
-  });
+  const [rows, settings, user] = await Promise.all([
+    prisma.dailyEntry.findMany({
+      where: { userId, date: { gte: s.start, lte: s.end } },
+      select: { date: true, completedItems: true },
+    }),
+    prisma.userSetting.findMany({
+      where: { userId, key: { in: ["customOccurrences", "removedOccurrences"] } },
+      select: { key: true, value: true },
+    }),
+    prisma.user.findUnique({ where: { id: userId }, select: { createdAt: true } }),
+  ]);
+  const by = new Map(settings.map((x) => [x.key, x.value]));
+  const custom = (Array.isArray(by.get("customOccurrences")) ? (by.get("customOccurrences") as unknown[]) : []).filter(
+    (c): c is OccLike => !!c && typeof (c as OccLike).id === "string" && typeof (c as OccLike).jsDay === "number"
+  );
+  const removed = new Set<string>(
+    (Array.isArray(by.get("removedOccurrences")) ? (by.get("removedOccurrences") as unknown[]) : []).filter((x): x is string => typeof x === "string")
+  );
+  return { rows, custom, removed, createdIso: user ? localIso(env.timezone, user.createdAt) : null };
 }
 
 // ════════════════════════════════════════════════════════════════════
@@ -169,12 +234,15 @@ export function sleepWeeks(rows: SleepRow[], weeks: WeekSpec[], env: DomainEnv):
     const wakeDevs: number[] = [];
     let days7h = 0;
 
-    const daily = entries.map((e) => {
+    const details: Partial<DayDetails>[] = [];
+    const daily = entries.map((e, i) => {
       if (!e) return null;
       const parts: { v: number; w: number }[] = [];
+      let nightHours: number | null = null;
       if (e.sleptAt && e.wokeAt) {
         const h = (e.wokeAt.getTime() - e.sleptAt.getTime()) / 3_600_000;
         if (h > 0 && h <= 16) {
+          nightHours = r1(h);
           let target: number | null = null;
           if (e.targetSleptAt && e.targetWokeAt) {
             const t = ((localMinuteOfDay(tz, e.targetWokeAt) - localMinuteOfDay(tz, e.targetSleptAt) + 1440) % 1440) / 60;
@@ -198,6 +266,14 @@ export function sleepWeeks(rows: SleepRow[], weeks: WeekSpec[], env: DomainEnv):
         qualities.push(e.quality);
         parts.push({ v: ((e.quality - 1) / 4) * 100, w: 0.25 });
       }
+      details[i] = {
+        sleep: {
+          hours: nightHours,
+          sleptAt: e.sleptAt ? hhmm(localMinuteOfDay(tz, e.sleptAt)) : null,
+          wokeAt: e.wokeAt ? hhmm(localMinuteOfDay(tz, e.wokeAt)) : null,
+          quality: e.quality != null && e.quality >= 1 && e.quality <= 5 ? e.quality : null,
+        },
+      };
       if (!parts.length) return null;
       const tw = parts.reduce((a, p) => a + p.w, 0);
       return parts.reduce((a, p) => a + p.v * p.w, 0) / tw;
@@ -211,7 +287,7 @@ export function sleepWeeks(rows: SleepRow[], weeks: WeekSpec[], env: DomainEnv):
       { label: "کیفیت خواب", value: avgQ == null ? "-" : `${r1(avgQ)} از 5`, tone: avgQ == null ? "neutral" : avgQ >= 4 ? "good" : avgQ < 2.5 ? "bad" : "neutral" },
       { label: "نظم بیداری", value: avgDev == null ? "-" : `±${r0(avgDev)} دقیقه`, tone: avgDev == null ? "neutral" : avgDev <= 30 ? "good" : avgDev > 75 ? "bad" : "neutral" },
     ];
-    return finalize("sleep", daily, stats, { days7h, avgHours: avgH ?? 0 });
+    return finalize("sleep", daily, stats, { days7h, avgHours: avgH ?? 0 }, undefined, details);
   });
 }
 
@@ -242,10 +318,12 @@ export function tasksWeeks(rows: TaskRow[], weeks: WeekSpec[], env: DomainEnv): 
     let overdue = 0;
     let dueCount = 0;
     let onTime = 0;
-    const daily = w.days.map((iso) => {
+    const details: Partial<DayDetails>[] = [];
+    const daily = w.days.map((iso, i) => {
       const st = dayState(iso, env);
       const due = byDue.get(iso) ?? [];
       if (st === "future" || !due.length) return null;
+      details[i] = { tasks: { done: due.filter((t) => t.done).length, due: due.length } };
       let credit = 0;
       let doneN = 0;
       for (const t of due) {
@@ -268,7 +346,9 @@ export function tasksWeeks(rows: TaskRow[], weeks: WeekSpec[], env: DomainEnv): 
         { label: "عقب‌افتاده", value: `${overdue}`, tone: overdue > 0 ? "bad" : "good" },
         { label: "به‌موقع", value: onTimePct == null ? "-" : `${onTimePct}%`, tone: onTimePct == null ? "neutral" : onTimePct >= 80 ? "good" : onTimePct < 50 ? "bad" : "neutral" },
       ],
-      { completed, overdue, dueCount }
+      { completed, overdue, dueCount },
+      undefined,
+      details
     );
   });
 }
@@ -326,7 +406,8 @@ export function fitnessWeeks(
     let done = 0;
     let extra = 0;
     let hasLog = false;
-    const daily = w.days.map((iso): number | null => {
+    const details: Partial<DayDetails>[] = [];
+    const daily = w.days.map((iso, i): number | null => {
       const st = dayState(iso, env);
       const planDay = isPlanned(iso);
       if (planDay) planned++;
@@ -338,10 +419,21 @@ export function fitnessWeeks(
       if (completed) {
         if (planDay) done++;
         else extra++;
+        details[i] = { fitness: { status: planDay ? "done" : "extra" } };
         return 100;
       }
-      if (partial) return 50;
-      if (planDay && st === "past" && engaged) return 0;
+      if (partial) {
+        details[i] = { fitness: { status: "partial" } };
+        return 50;
+      }
+      if (planDay && st === "past" && engaged) {
+        details[i] = { fitness: { status: "missed" } };
+        return 0;
+      }
+      // روز استراحت برنامه: فقط برای کسی که واقعا تمرین ثبت می‌کنه و پلنی اون روز داشته
+      if (!planDay && engaged && st === "past" && plans.some((pl) => pl.start <= iso && (pl.until == null || pl.until >= iso))) {
+        details[i] = { fitness: { status: "rest" } };
+      }
       return null;
     });
     const hasData = hasLog || (engaged && daily.some((v) => v != null));
@@ -354,7 +446,8 @@ export function fitnessWeeks(
         { label: "جلسه‌ی اضافه", value: `${extra}`, tone: extra > 0 ? "good" : "neutral" },
       ],
       { planned, done, extra },
-      { score: hasData && vals.length ? r0(mean(vals)!) : null, hasData: hasData && vals.length > 0 }
+      { score: hasData && vals.length ? r0(mean(vals)!) : null, hasData: hasData && vals.length > 0 },
+      details
     );
   });
 }
@@ -427,11 +520,18 @@ export function nutritionWeeks(
     let onTargetDays = 0;
     let elapsed = 0;
     let target: number | null = null;
-    const daily = w.days.map((iso) => {
-      if (dayState(iso, env) !== "past") return null;
+    const details: Partial<DayDetails>[] = [];
+    const daily = w.days.map((iso, i) => {
+      const st = dayState(iso, env);
+      // امروز امتیاز نمی‌گیره ولی کالری ثبت‌شده‌اش توی جزئیات دیده می‌شه
+      if (st === "today" && kcalBy.has(iso)) {
+        details[i] = { nutrition: { kcal: r0(kcalBy.get(iso)!), target: targetFor(iso), protein: protBy.has(iso) ? r0(protBy.get(iso)!) : null } };
+      }
+      if (st !== "past") return null;
       elapsed++;
       const kcal = kcalBy.get(iso);
       if (kcal == null) return null;
+      details[i] = { nutrition: { kcal: r0(kcal), target: targetFor(iso), protein: protBy.has(iso) ? r0(protBy.get(iso)!) : null } };
       kcals.push(kcal);
       const p = protBy.get(iso);
       if (p != null) prots.push(p);
@@ -456,9 +556,9 @@ export function nutritionWeeks(
         score: r0((kcals.length / Math.max(elapsed, 1)) * 100),
         hasData: true,
         daysWithData: kcals.length,
-      });
+      }, details);
     }
-    return finalize("nutrition", daily, stats, meta);
+    return finalize("nutrition", daily, stats, meta, undefined, details);
   });
 }
 
@@ -528,11 +628,26 @@ export function tradingWeeks(rows: TradeRow[], weeks: WeekSpec[], env: DomainEnv
   const byDay = groupBy(rows, (t) => localIso(tz, t.openedAt));
   return weeks.map((w) => {
     const weekTrades: TradeRow[] = [];
-    const daily = w.days.map((iso) => {
+    const details: Partial<DayDetails>[] = [];
+    const daily = w.days.map((iso, i) => {
       if (dayState(iso, env) === "future") return null;
       const trades = byDay.get(iso) ?? [];
       if (!trades.length) return null;
       weekTrades.push(...trades);
+      const realDay = trades.filter((t) => t.status !== "CANCELED");
+      if (realDay.length) {
+        const closedDay = realDay.filter((t) => t.status === "CLOSED");
+        const curs = new Set(closedDay.map((t) => t.account.currency));
+        details[i] = {
+          trading: {
+            count: realDay.length,
+            wins: closedDay.filter((t) => t.result === "PROFIT").length,
+            losses: closedDay.filter((t) => t.result === "LOSS").length,
+            net: closedDay.length ? Math.round(closedDay.reduce((a, t) => a + t.pnl, 0) * 100) / 100 : null,
+            currency: curs.size === 1 ? [...curs][0] : null,
+          },
+        };
+      }
       const avg = mean(trades.map(tradeDisciplineScore))!;
       // اورترید: بیشتر از ۵ معامله‌ی واقعی در یک روز، هرکدوم ۵ امتیاز کم
       const real = trades.filter((t) => t.status !== "CANCELED").length;
@@ -571,7 +686,7 @@ export function tradingWeeks(rows: TradeRow[], weeks: WeekSpec[], env: DomainEnv
       withChecklist: withChecklist.length,
       fullChecklist,
       winRate: winRate ?? -1,
-    });
+    }, undefined, details);
   });
 }
 
@@ -617,9 +732,12 @@ export function learningWeeks(rows: RoadmapRow[], weeks: WeekSpec[], env: Domain
       { label: "مراحل انجام‌شده", value: `${done}/${total}` },
       { label: "فعالیت این هفته", value: activeDays ? `${activeDays} روز` : "ندارد", tone: activeDays ? "good" : "neutral" },
     ];
+    // امتیاز یادگیری پیشرفت تجمعی رودمپه، نه کار همین هفته؛ پس فقط هفته‌ای
+    // حساب می‌شه که واقعا روی رودمپ کار شده. وگرنه هفته‌ی کاملا خالی هم با
+    // همین عدد قدیمی امتیاز کل می‌گرفت.
     return finalize("learning", daily, stats, { activeDays, done, total }, {
-      score: total ? r0((done / total) * 100) : null,
-      hasData: total > 0,
+      score: total && activeDays ? r0((done / total) * 100) : null,
+      hasData: total > 0 && activeDays > 0,
       daysWithData: activeDays,
     });
   });
@@ -644,7 +762,7 @@ export async function computeDomainWeeks(
 ): Promise<DomainWeek[]> {
   switch (domain) {
     case "routine":
-      return routineWeeks(await loadRoutine(userId, weeks), weeks, env);
+      return routineWeeks(await loadRoutine(userId, weeks, env), weeks, env);
     case "sleep":
       return sleepWeeks(await loadSleep(userId, weeks), weeks, env);
     case "tasks":

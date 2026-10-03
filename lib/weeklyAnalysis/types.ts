@@ -46,12 +46,63 @@ export type DomainResult = {
   stats: { label: string; value: string; tone?: "good" | "bad" | "neutral" }[];
 };
 
+// جزئیات خام هر روز برای «روزبه‌روز» (برگه‌ی روز در صفحه + هفته‌نامه). کلیدی
+// که نیست یعنی اون روز در اون دامنه داده‌ای نبوده (نه صفر). زمان‌ها HH:mm
+// به وقت محلی کاربر، اعداد لاتین.
+export type DayDetails = {
+  routine?: { done: number; total: number };
+  sleep?: { hours: number | null; sleptAt: string | null; wokeAt: string | null; quality: number | null };
+  // done = طبق برنامه تمرین شد، extra = روز غیرباشگاه تمرین کرد، rest = روز
+  // استراحت برنامه، missed = روز باشگاه بدون تمرین، partial = نیمه‌کاره
+  fitness?: { status: "done" | "extra" | "rest" | "missed" | "partial" };
+  nutrition?: { kcal: number; target: number | null; protein: number | null };
+  trading?: { count: number; wins: number; losses: number; net: number | null; currency: string | null };
+  tasks?: { done: number; due: number };
+  learning?: { steps: number };
+};
+
 export type DayCell = {
   date: string; // YYYY-MM-DD محلی
   weekday: string; // «شنبه» ...
   score: number | null; // میانگین دامنه‌های دارای داده در اون روز
   isToday: boolean;
   isFuture: boolean;
+  details: DayDetails;
+};
+
+// «تیپ هفته» — برچسب قطعی (بدون AI) از الگوی امتیاز روزها، lib/weeklyAnalysis/archetype.ts
+export type WeekArchetypeKey =
+  | "perfect" | "steady" | "comeback" | "fast_start" | "rollercoaster" | "rising" | "quiet" | "balanced" | "building";
+
+export type WeekArchetype = {
+  key: WeekArchetypeKey;
+  title: string; // کوتاه، مثلا «ثابت‌قدم»
+  description: string; // یک جمله با عدد واقعی
+  tone: "good" | "bad" | "neutral";
+};
+
+// «اعداد هفته» — کاشی‌های عددی آماده‌ی نمایش (صفحه و هفته‌نامه هر دو)
+export type WeekNumber = {
+  key: string; // یکتا، مثلا "routine_done"
+  label: string; // «برنامه‌های انجام‌شده»
+  value: string; // آماده‌ی نمایش، اعداد لاتین: "34/40" یا "7.4"
+  unit?: string; // «ساعت»، «kcal»، ...
+  domain: AnalysisDomain | null;
+  tone?: "good" | "bad" | "neutral";
+  hint?: string; // جمله‌ی کوتاه زیر عدد، مثلا «4 بیشتر از هفته‌ی قبل»
+};
+
+// خلاصه‌ی یک شماره‌ی هفته‌نامه — برای آرشیو و بنر «هفته‌نامه رسید»
+export type LetterSummary = {
+  weekStart: string; // YYYY-MM-DD، شنبه‌ی همون هفته (شناسه‌ی آدرس)
+  issueNo: number;
+  weekLabel: string;
+  score: number | null;
+  grade: Grade | null;
+  headline: string;
+  archetype: WeekArchetype | null;
+  read: boolean;
+  createdAt: string; // ISO
 };
 
 export type TrendPoint = { weekStart: string; score: number | null; domains: Partial<Record<AnalysisDomain, number | null>> };
@@ -136,6 +187,12 @@ export type WeeklyAnalysis = {
   goals: WeeklyGoalDto[]; // اهداف *همین* هفته (که هفته‌ی قبل تعیین شدن)
   nextWeekGoals: WeeklyGoalDto[]; // اهدافی که برای هفته‌ی بعد تعیین شده
   reflection: ReflectionDto;
+
+  headline: string; // تیتر یک‌خطی هفته با عدد واقعی، قطعی (بدون AI)
+  archetype: WeekArchetype | null; // null وقتی داده‌ی کافی نیست
+  prevDays: (number | null)[]; // ۷تایی امتیاز روزهای هفته‌ی قبل، برای مقایسه‌ی روزبه‌روز
+  numbers: WeekNumber[]; // «اعداد هفته»، مهم‌ترین اول، حداکثر ۱۲
+  unreadLetter: LetterSummary | null; // تازه‌ترین هفته‌نامه‌ی خوانده‌نشده (بنر بالای صفحه)
 };
 
 // ---- API ----
@@ -144,4 +201,7 @@ export type WeeklyAnalysis = {
 // POST   /api/analysis/weekly/goals { domain, title, target } → { goal }         (برای هفته‌ی بعد هفته‌ی جاری؛ حداکثر ۳)
 // DELETE /api/analysis/weekly/goals?id=            → { ok }
 // PUT    /api/analysis/weekly/reflection { offset, wentWell, improve, mood } → { reflection }
+// GET    /api/analysis/letters                    → { letters: LetterSummary[], unread: number }  (تازه‌ترین اول)
+// GET    /api/analysis/letters/[week]             → { letter: WeeklyLetterData, prev: string|null, next: string|null } (خوانده‌شده علامت می‌خوره)
+// GET/PUT /api/analysis/letters/prefs { email }     → { email: boolean }  (ارسال ایمیلی هفته‌نامه)
 // خطاها همیشه JSON: { error: string } با status مناسب. گیت: requireModule("AI_INSIGHT").

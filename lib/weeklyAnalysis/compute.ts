@@ -1,13 +1,17 @@
 import { prisma } from "@/lib/prisma";
 import {
   ANALYSIS_DOMAINS, ANALYSIS_DOMAIN_MODULE,
-  type AnalysisDomain, type DayCell, type DomainResult, type TrendPoint, type WeeklyAnalysis,
+  type AnalysisDomain, type DayCell, type DayDetails, type DomainResult, type TrendPoint, type WeeklyAnalysis,
 } from "./types";
 import { computeDomainWeeks, type DomainEnv, type DomainWeek, type WeekSpec } from "./domains";
 import { confidenceFor, consistencyFor, dayScores, gradeFor, overallScore } from "./score";
 import { buildInsights } from "./insights";
 import { buildAchievements } from "./achievements";
 import { predictWeek } from "./prediction";
+import { detectArchetype } from "./archetype";
+import { buildHeadline } from "./headline";
+import { buildNumbers } from "./numbers";
+import { weekFacts, type FactDay } from "./facts";
 import {
   daysElapsed as daysElapsedFor, daysOfWeekIso, getWeekRange, safeTimezone, todayIso, weekLabelFa, weekdayFa,
 } from "./week";
@@ -47,11 +51,14 @@ function normOffset(offset: number): number {
   return Math.min(0, Math.max(-520, o)); // هفته‌ی آینده معنا نداره
 }
 
+/** بخش محاسبه‌شده‌ی آنالیز — هرچی لایه‌ی service بعدا اضافه می‌کنه (AI، اهداف، ریفلکشن، هفته‌نامه‌ی خوانده‌نشده) بیرونه. */
+export type WeeklyAnalysisBase = Omit<WeeklyAnalysis, "ai" | "aiAvailable" | "goals" | "nextWeekGoals" | "reflection" | "unreadLetter">;
+
 export async function computeWeeklyAnalysis(
   userId: string,
-  opts: { timezone: string; offset: number; isSuperAdmin: boolean }
-): Promise<Omit<WeeklyAnalysis, "ai" | "aiAvailable" | "goals" | "nextWeekGoals" | "reflection">> {
-  const now = new Date();
+  opts: { timezone: string; offset: number; isSuperAdmin: boolean; now?: Date }
+): Promise<WeeklyAnalysisBase> {
+  const now = opts.now ?? new Date();
   const tz = safeTimezone(opts.timezone);
   const offset = normOffset(opts.offset);
   const env: DomainEnv = { timezone: tz, todayIso: todayIso(tz, now) };
@@ -93,14 +100,19 @@ export async function computeWeeklyAnalysis(
   const dScores = dayScores(domainResults);
   const days: DayCell[] = week.days.map((iso, i) => {
     const isFuture = iso > env.todayIso;
+    // جزئیات خام همه‌ی دامنه‌های نمایش‌داده‌شده برای این روز (بدون کلید = بدون داده)
+    const details: DayDetails = Object.assign({}, ...shown.map((d) => all.get(d)![cur].details[i]));
     return {
       date: iso,
       weekday: weekdayFa(iso),
       score: isFuture ? null : dScores[i],
       isToday: iso === env.todayIso,
       isFuture,
+      details,
     };
   });
+  // امتیاز روزهای هفته‌ی قبل — برای مقایسه‌ی روزبه‌روز (سایه‌ی هفته‌ی قبل در نمودار)
+  const prevDays = dayScores(shown.map((d) => ({ domain: d, daily: all.get(d)![cur - 1].result.daily })));
   const scoredDays = days.filter((d) => d.score != null);
   const activeDays = week.days.filter((_, i) => domainResults.some((r) => r.daily[i] != null)).length;
   let bestDay: DayCell | null = null;
@@ -137,6 +149,48 @@ export async function computeWeeklyAnalysis(
     activeDays,
   });
 
+  // ── واقعیت‌های هفته → اعداد، تیتر، تیپ ──
+  const factDays = (wk: number): FactDay[] =>
+    weeks[wk].days.map((iso, i) => ({
+      details: Object.assign({}, ...shown.map((d) => all.get(d)![wk].details[i])),
+      closed: iso < env.todayIso,
+    }));
+  const curFacts = weekFacts(factDays(cur));
+  const prevFacts = weekFacts(factDays(cur - 1));
+  const prevActiveDays = weeks[cur - 1].days.filter((_, i) => shown.some((d) => all.get(d)![cur - 1].result.daily[i] != null)).length;
+  const learningMeta = shown.includes("learning") && all.get("learning")![cur].result.hasData ? all.get("learning")![cur].meta : null;
+  const effElapsed = isCurrent ? elapsed : 7;
+
+  const numbers = buildNumbers({
+    cur: curFacts,
+    prev: prevFacts,
+    activeDays,
+    prevActiveDays: prevFacts.routine || prevFacts.sleep || prevFacts.tasks || prevFacts.fitness || prevFacts.nutrition || prevFacts.trading ? prevActiveDays : null,
+    learning: learningMeta ? { done: learningMeta.done ?? 0, total: learningMeta.total ?? 0, activeDays: learningMeta.activeDays ?? 0 } : null,
+  });
+  const headline = buildHeadline({
+    isCurrentWeek: isCurrent,
+    daysElapsed: effElapsed,
+    score,
+    prevScore,
+    activeDays,
+    dayScores: days.map((d) => d.score),
+    domains: domainResults.map((r) => ({ domain: r.domain, delta: r.delta })),
+    sleepHours: { cur: curFacts.sleep?.avgHours ?? null, prev: prevFacts.sleep?.avgHours ?? null },
+  });
+  const consistency = consistencyFor(days.map((d) => d.score));
+  const archetype = detectArchetype({
+    isCurrentWeek: isCurrent,
+    daysElapsed: effElapsed,
+    score,
+    prevScore,
+    consistency,
+    activeDays,
+    dayScores: days.map((d) => d.score),
+    dayNames: days.map((d) => d.weekday),
+    domains: domainResults.map((r) => ({ domain: r.domain, score: r.score })),
+  });
+
   const prediction = predictWeek({
     isCurrentWeek: isCurrent,
     daysElapsed: elapsed,
@@ -158,7 +212,7 @@ export async function computeWeeklyAnalysis(
       delta: score != null && prevScore != null ? score - prevScore : null,
       grade,
       confidence: confidenceFor(activeDays, isCurrent ? elapsed : 7),
-      consistency: consistencyFor(days.map((d) => d.score)),
+      consistency,
       activeDays,
       bestDay,
       worstDay,
@@ -169,6 +223,10 @@ export async function computeWeeklyAnalysis(
     insights,
     achievements,
     prediction,
+    headline,
+    archetype,
+    prevDays,
+    numbers,
   };
 }
 
@@ -177,9 +235,9 @@ export async function computeDomainScoresForWeek(
   userId: string,
   timezone: string,
   offset: number,
-  isSuperAdmin: boolean
+  isSuperAdmin: boolean,
+  now: Date = new Date()
 ): Promise<Partial<Record<AnalysisDomain, number | null>>> {
-  const now = new Date();
   const tz = safeTimezone(timezone);
   const env: DomainEnv = { timezone: tz, todayIso: todayIso(tz, now) };
   const weeks = weekSpecs(tz, normOffset(offset), 1, now);
