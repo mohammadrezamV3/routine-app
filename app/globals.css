@@ -9901,6 +9901,21 @@ body[data-theme="light"] .golden-name{ --g1:#f7d774; --g2:#d9a21b; --g3:#9a5b06;
   text-shadow:0 0 8px var(--name-glow);
 }
 body[data-theme="light"] .golden-name-glow{ --name-glow:rgba(217,162,27,.32); }
+/* ظرف اسم با سه‌نقطه (.name-clip): درخشش GoldenName بیرون از جعبه‌ی متن
+   می‌زنه و overflow:hidden اون رو لبه‌ی صاف می‌بره (همون «مستطیل کم‌رنگ»).
+   راه‌حل عمومی: ظرف به اندازه‌ی شعاع درخشش از هر طرف پدینگ می‌گیره و همون
+   مقدار margin منفی، پس چیدمان دست نمی‌خوره ولی برش خیلی بیرون‌تر از
+   درخششه و text-overflow:ellipsis همون‌طور کار می‌کنه (بدون هیچ بک‌گراند).
+   ظرف جدید اسم‌دار با overflow:hidden باید این کلاس رو بگیره یا به این
+   فهرست اضافه بشه. */
+.name-clip, .fr-name, .friend-profile-banner-name, .mentor-row-title, .mentor-card-name{
+  padding:10px 16px; margin:-10px -16px;
+  /* درخشش کپی نابریده‌ی اسم بلند هم تا لبه‌ی ظرف می‌رسه؛ محو شدن افقی توی
+     پدینگ جلوی لبه‌ی صاف همون برش رو می‌گیره (متن داخل جعبه‌ی محتواست). */
+  -webkit-mask-image:linear-gradient(to right, transparent 0, #000 14px, #000 calc(100% - 14px), transparent 100%);
+  mask-image:linear-gradient(to right, transparent 0, #000 14px, #000 calc(100% - 14px), transparent 100%);
+}
+.name-clip{ overflow:hidden; text-overflow:ellipsis; white-space:nowrap; min-width:0; }
 @keyframes goldenFlow{ from{ background-position:0% 50%; } to{ background-position:200% 50%; } }
 @media (prefers-reduced-motion: reduce){ .golden-name{ animation:none; background-position:30% 50%; } }
 
