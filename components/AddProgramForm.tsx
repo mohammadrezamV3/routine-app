@@ -2,9 +2,9 @@
 
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { createPortal } from "react-dom";
-import { AnimatePresence, motion, useReducedMotion } from "framer-motion";
+import { useReducedMotion } from "framer-motion";
 import {
-  X, Sparkles, Dumbbell, BookOpen, Brain, BookMarked, Languages, Footprints, ListChecks,
+  Sparkles, Dumbbell, BookOpen, Brain, BookMarked, Languages, Footprints, ListChecks,
   type LucideIcon,
 } from "lucide-react";
 import { jsDayOfIso, timeStartMinutes } from "@/lib/schedule";
@@ -47,11 +47,9 @@ function isoToJalali(iso: string): JalaliDate {
   return toJalali(d.getFullYear(), d.getMonth() + 1, d.getDate());
 }
 
-const EASE = [0.22, 1, 0.36, 1] as const;
-
-// فرم «افزودن برنامه جدید» — یک صفحه (بدون ویزارد): روی موبایل باتم‌شیت،
-// روی صفحه‌ی بزرگ مودال وسط. پاورقی چسبان خلاصه‌ی برنامه و دکمه‌ها رو همیشه
-// نشون می‌ده. خطاها همه داخل خود فرمه (نه بنر بالای صفحه).
+// فرم «افزودن برنامه جدید» — یک صفحه (بدون ویزارد)، پاپ‌آپ وسط روی همه‌ی
+// عرض‌ها با همون پوسته‌ی EditOccurrenceForm. پاورقی خلاصه‌ی برنامه و دکمه‌ها
+// رو همیشه پایین پاپ‌آپ نشون می‌ده. خطاها همه داخل خود فرمه (نه بنر بالای صفحه).
 export function AddProgramForm({
   scheduleOpts,
   onClose,
@@ -68,7 +66,6 @@ export function AddProgramForm({
   const reduceMotion = useReducedMotion();
   const [mounted, setMounted] = useState(false);
   const [show, setShow] = useState(true);
-  const [isMobile, setIsMobile] = useState(true);
 
   const [name, setName] = useState("");
   const [tag, setTag] = useState("");
@@ -97,15 +94,15 @@ export function AddProgramForm({
   const bodyRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => setMounted(true), []);
-  useEffect(() => {
-    const mq = window.matchMedia("(min-width: 640px)");
-    const sync = () => setIsMobile(!mq.matches);
-    sync();
-    mq.addEventListener("change", sync);
-    return () => mq.removeEventListener("change", sync);
-  }, []);
 
-  const requestClose = useCallback(() => setShow(false), []);
+  // بستن: اول کلاس open برداشته می‌شه (محو شدن)، بعد از انیمیشن آنمونت
+  const closing = useRef(false);
+  const requestClose = useCallback(() => {
+    if (closing.current) return;
+    closing.current = true;
+    setShow(false);
+    setTimeout(onClose, reduceMotion ? 0 : 260);
+  }, [onClose, reduceMotion]);
   useEffect(() => {
     const onKey = (e: KeyboardEvent) => {
       if (e.key === "Escape" && !pickerFor) requestClose();
@@ -360,37 +357,21 @@ export function AddProgramForm({
 
   if (!mounted) return null;
 
-  const dur = reduceMotion ? 0 : 0.34;
-  const panelMotion = isMobile
-    ? { initial: { y: "100%" }, animate: { y: 0 }, exit: { y: "100%" } }
-    : { initial: { opacity: 0, scale: 0.96, y: 14 }, animate: { opacity: 1, scale: 1, y: 0 }, exit: { opacity: 0, scale: 0.97, y: 8 } };
-
   return createPortal(
     <>
-      <AnimatePresence onExitComplete={onClose}>
-        {show && (
-          <div className="apf-root dash-scope" dir="rtl" role="dialog" aria-modal="true" aria-label="برنامه‌ی جدید">
-            <motion.div
-              className="apf-backdrop"
-              initial={{ opacity: 0 }}
-              animate={{ opacity: 1 }}
-              exit={{ opacity: 0 }}
-              transition={{ duration: reduceMotion ? 0 : 0.22 }}
-              onClick={requestClose}
-            />
-            <motion.div
-              className="apf-panel"
-              {...panelMotion}
-              transition={{ duration: dur, ease: EASE }}
-              onKeyDown={(e) => focusNextOnEnter(e, bodyRef)}
-            >
-              <div className="apf-handle" aria-hidden="true" />
-              <div className="apf-head">
-                <div className="apf-title">برنامه‌ی جدید</div>
-                <button type="button" className="apf-close" onClick={requestClose} aria-label="بستن">
-                  <X size={20} />
-                </button>
-              </div>
+      <div className={`wsearch-newform-overlay strong-blur${show ? " open" : ""}`} onClick={requestClose} />
+      <div
+        className={`wsearch-newform apf-popup dash-scope${show ? " open" : ""}`}
+        dir="rtl"
+        role="dialog"
+        aria-modal="true"
+        aria-label="برنامه‌ی جدید"
+      >
+        <div className="relative z-[1] add-program-glass apf-glass" onKeyDown={(e) => focusNextOnEnter(e, bodyRef)}>
+          <div className="wsearch-newform-head">
+            <div className="wsearch-newform-title accent">برنامه‌ی جدید</div>
+            <button type="button" className="nav-close" onClick={requestClose} aria-label="بستن">×</button>
+          </div>
 
               <div className="apf-body" ref={bodyRef}>
                 <div className="apf-section" data-apf-field="name">
@@ -504,7 +485,7 @@ export function AddProgramForm({
                 </div>
 
                 <div className="apf-section">
-                  <label className="apf-label" htmlFor="addProgramTag">تگ (اختیاری)</label>
+                  <label htmlFor="addProgramTag">تگ (اختیاری)</label>
                   <RoutineTagField id="addProgramTag" value={tag} onChange={setTag} occurrences={scheduleOpts.customOccurrences} />
                 </div>
 
@@ -521,7 +502,7 @@ export function AddProgramForm({
                 <div className="apf-actions">
                   <button
                     type="button"
-                    className={`trade-primary-btn apf-submit${shake ? " shake" : ""}`}
+                    className={`wsearch-submit-btn apf-submit${shake ? " shake" : ""}${status !== "idle" ? " " + status : ""}`}
                     onClick={submitNew}
                     disabled={status === "loading" || status === "success"}
                   >
@@ -532,10 +513,8 @@ export function AddProgramForm({
                   </button>
                 </div>
               </div>
-            </motion.div>
-          </div>
-        )}
-      </AnimatePresence>
+        </div>
+      </div>
 
       {pickerFor && (
         <JalaliDatePicker

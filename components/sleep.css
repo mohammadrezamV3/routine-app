@@ -69,10 +69,17 @@ body[data-theme="light"] .sleep-scope{
 .slp-score{ display:flex; flex-direction:column; align-items:center; line-height:1.1; }
 .slp-score b{ font-size:26px; font-weight:900; font-variant-numeric:tabular-nums; }
 .slp-score small{ font-size:10.5px; color:var(--muted); font-weight:700; }
-.slp-hero-facts{ flex:1; min-width:180px; display:grid; grid-template-columns:repeat(2, minmax(0,1fr)); gap:10px; }
+.slp-hero-facts{ flex:1 1 170px; min-width:0; display:grid; grid-template-columns:repeat(2, minmax(0,1fr)); gap:12px 10px; }
 .slp-fact{ display:flex; flex-direction:column; gap:2px; min-width:0; }
 .slp-fact span{ font-size:11px; color:var(--muted); }
-.slp-fact b{ font-size:14.5px; font-weight:800; font-variant-numeric:tabular-nums; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+.slp-fact b{ font-size:14.5px; font-weight:800; font-variant-numeric:tabular-nums; line-height:1.5; overflow-wrap:anywhere; }
+.slp-wake-opts{ flex:1 1 100%; display:grid; grid-template-columns:repeat(3, minmax(0,1fr)); gap:8px; }
+.slp-wake-opt{
+  display:flex; flex-direction:column; align-items:center; gap:2px; min-width:0; text-align:center;
+  padding:10px 4px; border-radius:16px; border:1px solid var(--box-line);
+}
+.slp-wake-opt span{ font-size:11px; color:var(--muted); line-height:1.5; }
+.slp-wake-clock{ font-size:19px; font-weight:900; font-variant-numeric:tabular-nums; letter-spacing:.3px; }
 .slp-countdown{ font-size:30px; font-weight:900; letter-spacing:.5px; font-variant-numeric:tabular-nums; direction:ltr; }
 .slp-hero-actions{ position:relative; display:flex; gap:10px; flex-wrap:wrap; }
 .slp-hero-actions > *{ flex:1 1 150px; }
@@ -91,3 +98,24 @@ html[data-perf="low"] .slp-star{ animation:none; opacity:.35; }
 .slp-goal-field{ display:flex; flex-direction:column; gap:6px; min-width:0; }
 .slp-goal-field span{ font-size:12px; font-weight:700; color:var(--muted); }
 .slp-goal-field input{ width:100%; text-align:center; direction:ltr; }
+
+/* دکمه‌ی خطی داخل هیرو/پنجره: .account-outline-btn فقط داخل پنل کاربری شکل کامل داره،
+   این‌جا قالب دکمه‌ی خطی سایت (هم‌اندازه‌ی trade-primary-btn) صریح داده می‌شه؛ بی‌بک‌گراند. */
+.sleep-scope .account-outline-btn{
+  padding:10px 20px; border:1px solid var(--accent); border-radius:13px; font-size:12.5px; font-weight:700;
+}
+.sleep-scope .account-outline-btn.slg-danger{ border-color:var(--slp-poor); }
+
+/* فیلدهای شیشه‌ای خواب: بک‌گراند پایه‌ی wsearch-newform-name در تم تیره مشکی تخت (#0B0C0D)ه؛
+   همون ترکیب شیشه‌ای فیلدهای پنل کاربری (گرد، نیمه‌شفاف) این‌جا هم می‌شینه. */
+.sleep-scope .wsearch-newform-name, .sleep-scope .sli-time-input{
+  border-radius:14px; padding-inline:14px; box-shadow:none;
+  backdrop-filter:blur(18px) saturate(160%); -webkit-backdrop-filter:blur(18px) saturate(160%);
+}
+body:not([data-theme="light"]) .sleep-scope .wsearch-newform-name, body:not([data-theme="light"]) .sleep-scope .sli-time-input{
+  background:rgba(255,255,255,.05); border:1px solid rgba(255,255,255,.1);
+}
+body[data-theme="light"] .sleep-scope .wsearch-newform-name, body[data-theme="light"] .sleep-scope .sli-time-input{
+  background:rgba(255,255,255,.35); border:1px solid rgba(0,0,0,.08);
+}
+.sleep-scope .wsearch-newform-name:focus, .sleep-scope .sli-time-input:focus{ border-color:var(--accent); }

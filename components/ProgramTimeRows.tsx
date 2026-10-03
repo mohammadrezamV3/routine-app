@@ -75,14 +75,16 @@ export function ProgramTimeRows({ kind, rows, onChange, errors, conflicts, onCle
             <motion.div key={row.id} className="ptr-item" {...motionProps}>
               <div className={"ptr-card" + (canRemove ? " has-remove" : "")}>
                 {canRemove && (
-                  <button
-                    type="button"
-                    className="ptr-remove"
-                    aria-label="حذف این ساعت"
-                    onClick={() => onChange(rows.filter((r) => r.id !== row.id))}
-                  >
-                    <Trash2 size={17} />
-                  </button>
+                  <div className="ptr-head">
+                    <button
+                      type="button"
+                      className="ptr-remove"
+                      aria-label="حذف این ساعت"
+                      onClick={() => onChange(rows.filter((r) => r.id !== row.id))}
+                    >
+                      <Trash2 size={17} />
+                    </button>
+                  </div>
                 )}
 
                 {!once && (
