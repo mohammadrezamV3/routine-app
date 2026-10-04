@@ -7,6 +7,7 @@ import dynamic from "next/dynamic";
 import { BarChart3 } from "lucide-react";
 import { ICONS } from "./NavDrawer";
 import { RoutineTrialBanner } from "./RoutineTrialBanner";
+import { PanelSkeleton } from "./PanelSkeleton";
 import { SleepDial } from "./SleepDial";
 import { SleepWeek } from "./SleepWeek";
 import { SleepGoalSheet } from "./SleepGoalSheet";
@@ -22,12 +23,12 @@ import { isoLocal } from "@/lib/jalali";
 import { addDaysIso, sleepInsights, sleepMinutes, type SleepRecord } from "@/lib/sleep";
 import { getTracking, stopTracking, draftFromTracking, TRACKER_EVENT, type SleepTracking } from "@/lib/sleepTracker";
 
-// بخش خواب (/sleep) — صفحه و سیستم جدای خودش، نه داخل صفحه‌ی روتین. طبق
-// درخواست صریح ساده و خلوته و فقط دو بخش داره: صفحه‌ی ساعت 24 ساعته (SleepDial:
-// هدف، دیشب، الان، دکمه‌ی اصلی؛ زدن ساعت‌های هدف = SleepGoalSheet) و هفت شب
-// اخیر (SleepWeek). نمودار، تقویم امتیاز و تحلیل‌ها در آنالیز هفتگی‌ان
-// (WeeklyAnalysisSleep در /analysis/weekly) و این‌جا فقط لینک «آمار خواب» هست.
-// محاسبه‌ها خالص در lib/sleep.ts؛ persistence از lib/storage.ts.
+// بخش خواب (/sleep) — صفحه و سیستم جدای خودش، نه داخل صفحه‌ی روتین. دو کارت
+// اصلی: صفحه‌ی ساعت 24 ساعته (SleepDial: هدف، دیشب، الان، دکمه‌ی اصلی؛ زدن
+// ساعت‌های هدف = SleepGoalSheet) و هفت شب اخیر (SleepWeek). زیرشون آمار خواب
+// با ردیف باکس‌های آیکونی (SleepStatsPanels: تقویم، روند، تحلیل) میاد و زدن
+// هر شب همون شب رو برای ویرایش باز می‌کنه. لینک «آمار خواب» به آنالیز هفتگی
+// هم می‌مونه. محاسبه‌ها خالص در lib/sleep.ts؛ persistence از lib/storage.ts.
 
 /** چند شب به عقب خونده می‌شه (تحلیل‌ها و تقویم ماهانه) */
 export const SLEEP_LOAD_DAYS = 120;
@@ -35,6 +36,11 @@ export const SLEEP_LOAD_DAYS = 120;
 // پنجره‌ی چرخه‌های خواب فقط بعد از زدن چیپ روی صفحه‌ی ساعت لود می‌شه
 const loadCycleSheet = () => import("./SleepCycleSheet");
 const SleepCycleSheet = dynamic(loadCycleSheet, { ssr: false });
+// پنل‌های آمار سنگین‌ترن؛ جدا از اولین رندر لود می‌شن (جاگیر سبک تا آماده شدن)
+const SleepStatsPanels = dynamic(() => import("./SleepStatsPanels").then((m) => m.SleepStatsPanels), {
+  ssr: false,
+  loading: () => <PanelSkeleton rows={3} />,
+});
 
 type SheetState = { initial: SleepLogSheetProps["initial"]; existing: boolean; fromTracker?: boolean } | null;
 
@@ -151,6 +157,9 @@ export function SleepHub() {
           onPreloadCycles={preloadCycles}
         />
         {todayIso && <SleepWeek entries={entries} insights={insights} todayIso={todayIso} onPick={openDate} />}
+        {todayIso && loaded && (
+          <SleepStatsPanels entries={entries} insights={insights} target={target} todayIso={todayIso} onPick={openDate} />
+        )}
       </div>
 
       {cyclesOpen && (
