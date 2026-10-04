@@ -174,7 +174,7 @@ function LetterBody({ data }: { data: Payload }) {
         </Chapter>
       </div>
 
-      <Reveal>
+      <Reveal className="wl-nav-wrap">
         <IssueNav prev={prev} next={next} />
       </Reveal>
     </>
