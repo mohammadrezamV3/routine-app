@@ -7,7 +7,7 @@
 // می‌شه؛ idها دست نمی‌خورن و ترتیب همون ترتیب items ذخیره‌شده‌ست.
 
 import { useState } from "react";
-import { GripVertical, Minus, Plus } from "lucide-react";
+import { GripVertical, Plus, X } from "lucide-react";
 import { Reorder, useDragControls } from "framer-motion";
 import { MAX_CHECKLIST_ITEMS, newItemId, type ChecklistItem } from "@/lib/routineChecklist";
 
@@ -46,8 +46,7 @@ function ItemRow({ item, index, count, onRename, onRemove, onMove }: {
         onChange={(e) => onRename(e.target.value)}
       />
       <button type="button" className="wsearch-newrow-remove-text" onClick={onRemove} aria-label={`حذف ${item.name}`}>
-        <Minus size={12} />
-        حذف
+        <X size={14} />
       </button>
     </Reorder.Item>
   );
@@ -96,9 +95,8 @@ export function RoutineChecklistEditor({ items, onChange, error }: { items: Chec
             onKeyDown={(e) => { if (e.key === "Enter") { e.preventDefault(); e.stopPropagation(); add(); } }}
             onChange={(e) => setDraft(e.target.value)}
           />
-          <button type="button" className="wsearch-add-btn checklist-editor-add" onClick={add} disabled={!draft.trim()}>
-            <Plus size={14} />
-            افزودن
+          <button type="button" className="wsearch-add-btn checklist-editor-add" onClick={add} disabled={!draft.trim()} aria-label="افزودن آیتم">
+            <Plus size={16} />
           </button>
         </div>
       )}

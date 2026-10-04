@@ -48,7 +48,6 @@ export function AddExerciseProgramForm({
   const aiOn = useFeature("aiExercisePlan") !== false;
   useEffect(() => { if (!aiOn && mode !== "manual") setMode("manual"); }, [aiOn, mode]);
 
-  const [confirmDel, setConfirmDel] = useState(false);
   const [deleting, setDeleting] = useState(false);
 
   async function deletePlan() {
@@ -58,13 +57,11 @@ export function AddExerciseProgramForm({
       if (!res.ok) {
         const d = await res.json().catch(() => null);
         setError(d?.error || "حذف برنامه انجام نشد");
-        setConfirmDel(false);
         return;
       }
       onDeleted?.();
     } catch {
       setError("حذف برنامه انجام نشد");
-      setConfirmDel(false);
     } finally {
       setDeleting(false);
     }
@@ -127,19 +124,9 @@ export function AddExerciseProgramForm({
 
           {mode === "choice" && onDeleted && (
             <div style={{ display: "flex", justifyContent: "center", alignItems: "center", gap: 10, flexWrap: "wrap", marginTop: 16 }}>
-              {confirmDel ? (
-                <>
-                  <span className="section-note" style={{ margin: 0 }}>برنامه‌ی فعلی حذف بشه؟ تاریخچه‌ی تمرین‌هات می‌مونه.</span>
-                  <button type="button" className="account-outline-btn muted" onClick={() => setConfirmDel(false)} disabled={deleting}>نه</button>
-                  <button type="button" className="account-outline-btn trade-danger-btn" onClick={deletePlan} disabled={deleting}>
-                    {deleting ? <Spinner size={14} /> : <Trash2 size={14} />} حذف کن
-                  </button>
-                </>
-              ) : (
-                <button type="button" className="account-outline-btn trade-danger-btn" onClick={() => setConfirmDel(true)}>
-                  <Trash2 size={14} /> حذف برنامه‌ی فعلی
-                </button>
-              )}
+              <button type="button" className="account-outline-btn trade-danger-btn" onClick={deletePlan} disabled={deleting}>
+                {deleting ? <Spinner size={14} /> : <Trash2 size={14} />} حذف برنامه‌ی فعلی
+              </button>
             </div>
           )}
 

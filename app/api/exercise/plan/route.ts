@@ -14,6 +14,8 @@ import { sessionFeatureBlocked } from "@/lib/featureFlagsServer";
 const VALID_LEVELS: ExerciseLevel[] = ["beginner", "intermediate", "advanced"];
 const MAX_DESCRIPTION_LEN = 500;
 const MAX_GOAL_LEN = 200;
+// تاریخچه‌ی تمرین برنامه‌های حذف‌شده تا این مدت نگه داشته می‌شه
+const HISTORY_KEEP_MONTHS = 12;
 
 // AI ممکنه تا AI_TOTAL_BUDGET_MS طول بکشه — بدون این export، هاست
 // سرورلس ممکنه زودتر از اون قطعش کنه.
@@ -180,7 +182,18 @@ async function handleDELETE() {
   { const off = await sessionFeatureBlocked("exercise"); if (off) return off; }
   const guard = await requireModule(ModuleKey.EXERCISE);
   if (!guard.ok) return guard.response;
-  await prisma.exercisePlan.updateMany({ where: { userId: guard.userId, isActive: true }, data: { isActive: false } });
+  const userId = guard.userId;
+  // حذف برنامه فقط غیرفعالش می‌کنه؛ تاریخچه‌ی تمرین (لاگ‌ها) می‌مونه و فقط
+  // بخشی که بیشتر از 12 ماه از تاریخش گذشته (و مال برنامه‌ی فعال نیست) پاک می‌شه
+  await prisma.exercisePlan.updateMany({ where: { userId, isActive: true }, data: { isActive: false } });
+  const cutoff = new Date();
+  cutoff.setMonth(cutoff.getMonth() - HISTORY_KEEP_MONTHS);
+  await prisma.exerciseLog.deleteMany({
+    where: { userId, date: { lt: cutoff }, OR: [{ planId: null }, { plan: { isActive: false } }] },
+  });
+  await prisma.exercisePlan.deleteMany({
+    where: { userId, isActive: false, updatedAt: { lt: cutoff }, logs: { none: {} } },
+  });
   return NextResponse.json({ ok: true });
 }
 export const DELETE = withLiveSync(["exercise"], handleDELETE);
