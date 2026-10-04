@@ -2,7 +2,9 @@
 
 import { useEffect, useMemo, useState } from "react";
 import { TickButton } from "./TickButton";
-import { ClipboardCheck, NotebookPen } from "lucide-react";
+import { Calculator, ClipboardCheck, NotebookPen } from "lucide-react";
+import { useFeature } from "@/lib/useFeatures";
+import { RiskCalculator } from "./RiskCalculator";
 import { TradeAccount, TradeTag, CalSystem } from "@/lib/tradeTypes";
 import { pairLabel } from "@/lib/tradingView";
 import { TradeFormModal } from "./TradeFormModal";
@@ -11,8 +13,22 @@ import "./risk-calc.css";
 type ChecklistItem = { id: string; text: string; order: number };
 type Checklist = { id: string; name: string; color: string; required: boolean; archived: boolean; items: ChecklistItem[] };
 
+type ToolKey = "journal" | "checklist" | "risk";
+
+const TOOL_META: Record<ToolKey, { label: string; icon: React.ReactNode }> = {
+  journal: { label: "ژورنال", icon: <NotebookPen /> },
+  checklist: { label: "چک‌لیست", icon: <ClipboardCheck /> },
+  risk: { label: "ریسک و سود", icon: <Calculator /> },
+};
+
 /**
- * پنل کنار چارت: چک‌لیست پیش از ورود + دکمه‌ی ثبت معامله.
+ * پنل ابزارهای کنار چارت: ثبت معامله، چک‌لیست پیش از ورود و ریسک و سود.
+ *
+ * سه ابزار یک بخش گروه‌شده‌اند، مثل DashQuickPanels: یک ردیف باکس کوچیک
+ * فقط‌آیکون (انتخاب‌شده بزرگ می‌شه و اسمش ظاهر می‌شه) و زیرش یک باکس با
+ * محتوای ابزار انتخاب‌شده. هر سه پنل همیشه mount می‌مونن و فقط پنهان
+ * می‌شن تا تیک‌ها، حساب انتخابی و ورودی‌های ماشین‌حساب با عوض‌کردن ابزار
+ * گم نشن؛ انیمیشن ورود با CSS روی پنل فعال اجرا می‌شه.
  *
  * چرا این‌جا یک فرم ثبت جداگانه ساخته نشده و همان `TradeFormModal` باز
  * می‌شود: معامله همیشه زیر یک حساب ثبت می‌شود و وضعیت چک‌لیست در لحظه‌ی
@@ -23,9 +39,8 @@ type Checklist = { id: string; name: string; color: string; required: boolean; a
  * تیک‌های این چک‌لیست عمدا حالت محلی‌اند: یک یادآور پیش از ورود‌ند، نه
  * داده‌ی ذخیره‌شده. چیزی که ذخیره می‌شود همان snapshot داخل فرم ثبت است.
  *
- * دو کارت جدا برمی‌گرداند (نه یک کارت با خط‌جداکننده) چون در چیدمان
- * دسکتاپ هرکدام یک خانه‌ی مستقل گرید است: چک‌لیست بالا، ثبت معامله پایین.
- * پس اینجا فقط یک Fragment است و جای‌گیری با گرید تصمیم گرفته می‌شود.
+ * یک خانه‌ی گرید (`.tv-cell-tools`) برمی‌گرداند و جای‌گیری با گرید
+ * تصمیم گرفته می‌شود.
  */
 export function ChartTradePanel({
   symbol,
@@ -45,6 +60,10 @@ export function ChartTradePanel({
   onTagCreated: (t: TradeTag) => void;
   onSaved: () => void;
 }) {
+  const riskOn = useFeature("tradeRisk") === true;
+  const [tool, setTool] = useState<ToolKey>(initialChecklistId ? "checklist" : "journal");
+  const tools: ToolKey[] = riskOn ? ["journal", "checklist", "risk"] : ["journal", "checklist"];
+  const currentTool = tools.includes(tool) ? tool : "journal";
   const [checklists, setChecklists] = useState<Checklist[]>([]);
   // طبق درخواست صریح، چک‌لیست قابل عوض‌کردن است — قبلا همیشه اولین
   // چک‌لیست بود و هیچ راهی برای انتخاب بقیه نبود.
@@ -90,8 +109,30 @@ export function ChartTradePanel({
   const selectedAccount = active.find((a) => a.id === accountId) || null;
 
   return (
-    <>
-      <div className="trade-surface trade-chart-side tv-cell-check">
+    <div className="tv-cell-tools">
+      <div className="tv-tools-row" role="tablist" aria-label="ابزارهای معامله">
+        {tools.map((key) => {
+          const on = key === currentTool;
+          return (
+            <button
+              key={key}
+              type="button"
+              role="tab"
+              aria-selected={on}
+              aria-label={TOOL_META[key].label}
+              title={TOOL_META[key].label}
+              onClick={() => setTool(key)}
+              className={`dash-quick-tile rounded-dash border bg-dash-card backdrop-blur-xl${on ? " is-on" : ""}`}
+            >
+              <span className="dash-quick-tile-icon">{TOOL_META[key].icon}</span>
+              <span className="dash-quick-tile-label" aria-hidden={!on}>{TOOL_META[key].label}</span>
+            </button>
+          );
+        })}
+      </div>
+
+      <div className="trade-surface trade-chart-side">
+      <div className="tv-tool-pane" hidden={currentTool !== "checklist"} role="tabpanel">
         <div className="trade-panel-head">
           <span className="trade-panel-title">
             <ClipboardCheck size={16} /> چک‌لیست معامله
@@ -138,7 +179,7 @@ export function ChartTradePanel({
         )}
       </div>
 
-      <div className="trade-surface trade-chart-side tv-cell-entry">
+      <div className="tv-tool-pane" hidden={currentTool !== "journal"} role="tabpanel">
         <div className="trade-panel-head">
           <span className="trade-panel-title">
             <NotebookPen size={16} /> ثبت معامله
@@ -180,6 +221,22 @@ export function ChartTradePanel({
             </>
           )}
         </div>
+      </div>
+
+      {riskOn && (
+        <div className="tv-tool-pane" hidden={currentTool !== "risk"} role="tabpanel">
+          <div className="trade-panel-head">
+            <span className="trade-panel-title">
+              <Calculator size={16} /> ریسک و سود
+            </span>
+            <span className="trade-chat-room mono"><bdi dir="ltr">{symbol}</bdi></span>
+          </div>
+          <div className="tv-cell-scroll thin-scroll">
+            <RiskCalculator accounts={accounts} symbol={symbol} compact />
+          </div>
+        </div>
+      )}
+      </div>
 
         {formOpen && selectedAccount && (
           <TradeFormModal
@@ -194,7 +251,6 @@ export function ChartTradePanel({
             onSaved={() => { setFormOpen(false); setSavedAt(Date.now()); onSaved(); }}
           />
         )}
-      </div>
-    </>
+    </div>
   );
 }

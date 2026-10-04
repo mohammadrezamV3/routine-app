@@ -12,9 +12,6 @@ import { ChartCalendarPanel } from "./ChartCalendarPanel";
 import { SymbolChatPanel } from "./SymbolChatPanel";
 import { PanelSkeleton } from "./PanelSkeleton";
 import { useLiveRefresh } from "@/lib/liveSync";
-import { RiskCalculator } from "./RiskCalculator";
-import { Calculator, X } from "lucide-react";
-import { createPortal } from "react-dom";
 
 const SYMBOL_KEY = SETTING_KEYS.tradeChartSymbol;
 
@@ -25,15 +22,21 @@ const SYMBOL_KEY = SETTING_KEYS.tradeChartSymbol;
  * می‌گیرد و **اسکرول نمی‌شود**؛ هر خانه خودش داخلش اسکرول دارد:
  *
  *     ┌──────────────────────────┬──────────┐
- *     │          چارت            │ چک‌لیست  │
- *     ├─────────────┬────────────┤──────────┤
- *     │  گفت‌وگو     │ اخبار      │ ثبت معامله│
+ *     │                          │ ردیف     │
+ *     │          چارت            │ باکس‌ها  │
+ *     │                          ├──────────┤
+ *     ├─────────────┬────────────┤ ژورنال / │
+ *     │  گفت‌وگو     │ اخبار      │ چک‌لیست /│
+ *     │             │            │ ریسک و سود│
  *     └─────────────┴────────────┴──────────┘
  *
- * موبایل: تک‌ستونه، به ترتیب چارت → گفت‌وگو → چک‌لیست → ثبت معامله →
- * اخبار اقتصادی، و صفحه مثل قبل اسکرول می‌شود.
+ * ستون سمت چپ یک خانه‌ی ابزارهاست: ردیف باکس‌های کوچیک فقط‌آیکون و زیرش
+ * یک باکس با محتوای ابزار انتخاب‌شده (مثل DashQuickPanels).
  *
- * هر پنج خانه مستقیما بچه‌ی همین گریدند (نه داخل یک ستون واسط) — وگرنه
+ * موبایل: تک‌ستونه، به ترتیب چارت → گفت‌وگو → ابزارها → اخبار اقتصادی،
+ * و صفحه مثل قبل اسکرول می‌شود.
+ *
+ * هر چهار خانه مستقیما بچه‌ی همین گریدند (نه داخل یک ستون واسط) — وگرنه
  * خانه‌ها نمی‌توانستند در دو محور جدا از هم جا بگیرند.
  *
  * نماد یک انتخاب سراسری صفحه است: هر سه بخش (چارت، ثبت معامله، اتاق
@@ -51,18 +54,6 @@ const SYMBOL_KEY = SETTING_KEYS.tradeChartSymbol;
  */
 export function TradeChartView() {
   const chatOn = useFeature("tradeChat") === true;
-  const riskOn = useFeature("tradeRisk") === true;
-  const [riskOpen, setRiskOpen] = useState(false);
-  // دسکتاپ: پنل کنار چارت (چارت باریک‌تر می‌شود، چیزی پوشانده نمی‌شود)؛
-  // موبایل: برگه‌ی پایین. فقط یکی رندر می‌شود تا حالت فرم دوبل نشود.
-  const [wide, setWide] = useState(false);
-  useEffect(() => {
-    const mq = window.matchMedia("(min-width:1024px)");
-    const on = () => setWide(mq.matches);
-    on();
-    mq.addEventListener("change", on);
-    return () => mq.removeEventListener("change", on);
-  }, []);
   // وقتی از صفحه‌ی یک چک‌لیست کامل («همه‌ی تیک‌ها خورده») اینجا می‌آییم
   // (?checklist=id)، همون چک‌لیست باید از پیش انتخاب شده باشه — طبق قاعده‌ی
   // پروژه (خوندن مستقیم window.location به‌جای useSearchParams+Suspense،
@@ -132,34 +123,19 @@ export function TradeChartView() {
   if (loading) return <PanelSkeleton />;
 
   return (
-    <>
     <div className="tv-page" ref={pageRef}>
       {/* عنوان «چارت» دیگر این‌جا نیست — عنوان خود صفحه شد
           (app/trade/chart/page.tsx)، بالای باکس و زیر لینک بازگشت. */}
       <div className="tv-chart-card">
         <div className="tv-chart-box">
-          {riskOn && (
-            <div className="rk-toolbar">
-              <button type="button" className="account-outline-btn rk-chart-btn" onClick={() => setRiskOpen((v) => !v)} aria-expanded={riskOpen}>
-                <Calculator size={15} /> ریسک و سود
-              </button>
-            </div>
-          )}
-          <div className="rk-chart-row">
-            <div className="rk-chart-main"><TradingViewChart symbol={symbol} /></div>
-            {riskOn && riskOpen && wide && (
-              <aside className="rk-dock thin-scroll" aria-label="ریسک و سود">
-                <RiskCalculator accounts={accounts} symbol={symbol} compact />
-              </aside>
-            )}
-          </div>
+          <TradingViewChart symbol={symbol} />
         </div>
       </div>
 
       {chatOn && <SymbolChatPanel symbol={symbol} />}
       <ChartCalendarPanel />
 
-      {/* دو کارت جدا برمی‌گرداند: چک‌لیست و ثبت معامله */}
+      {/* یک خانه‌ی ابزارها: ثبت معامله، چک‌لیست و ریسک و سود */}
       <ChartTradePanel
         symbol={symbol}
         accounts={accounts}
@@ -170,18 +146,5 @@ export function TradeChartView() {
         onSaved={() => load(true)}
       />
     </div>
-      {riskOn && riskOpen && !wide && typeof document !== "undefined" && createPortal(
-        <div className="rk-drawer" role="dialog" aria-label="ریسک و سود">
-          <div className="rk-drawer-head">
-            <span>ریسک و سود — <bdi dir="ltr">{symbol}</bdi></span>
-            <button type="button" className="trade-icon-btn" onClick={() => setRiskOpen(false)} aria-label="بستن"><X size={16} /></button>
-          </div>
-          <div className="rk-drawer-body thin-scroll">
-            <RiskCalculator accounts={accounts} symbol={symbol} compact />
-          </div>
-        </div>,
-        document.body
-      )}
-    </>
   );
 }
