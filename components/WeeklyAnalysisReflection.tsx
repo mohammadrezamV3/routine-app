@@ -1,20 +1,15 @@
 "use client";
 
+import "./wa-cards.css";
 import { useEffect, useRef, useState } from "react";
-import { motion } from "framer-motion";
+import { AnimatePresence, motion } from "framer-motion";
 import { Check, NotebookPen } from "lucide-react";
 import type { ReflectionDto } from "@/lib/weeklyAnalysis/types";
 import { SegmentedTabs } from "./SegmentedTabs";
 import { Spinner } from "./Spinner";
-import { SectionHead, V_WK_CARD, waFetch } from "./WeeklyAnalysisKit";
+import { SectionHead, V_WK_CARD, WK_EASE, useCalmMotion, waFetch } from "./WeeklyAnalysisKit";
 
-const MOODS = [
-  { value: "1", label: "😞" },
-  { value: "2", label: "😕" },
-  { value: "3", label: "😐" },
-  { value: "4", label: "🙂" },
-  { value: "5", label: "😄" },
-];
+const FACES = ["", "😞", "😕", "😐", "🙂", "😄"];
 const MOOD_NAMES = ["", "خیلی بد", "بد", "معمولی", "خوب", "عالی"];
 
 const DEBOUNCE_MS = 900;
@@ -33,6 +28,7 @@ export function WeeklyAnalysisReflection({
     mood: reflection?.mood ?? null,
   });
   const [state, setState] = useState<SaveState>("idle");
+  const calm = useCalmMotion();
   const [error, setError] = useState<string | null>(null);
   const pending = useRef<Draft | null>(null);
   const timer = useRef<ReturnType<typeof setTimeout> | null>(null);
@@ -87,7 +83,7 @@ export function WeeklyAnalysisReflection({
   }, [offset]);
 
   return (
-    <motion.section id="reflection" className="wk-card wk-reflection" variants={V_WK_CARD} aria-label="مرور هفته">
+    <motion.section id="reflection" className="wk-card wc-journal" variants={V_WK_CARD} aria-label="مرور هفته">
       <SectionHead
         icon={<NotebookPen size={15} />}
         title="مرور هفته"
@@ -98,8 +94,8 @@ export function WeeklyAnalysisReflection({
         }
       />
 
-      <div className="wk-reflection-grid">
-        <label className="wk-field">
+      <div className="wc-journal-grid">
+        <label className="wc-field">
           <span className="exercise-form-label">چی خوب پیش رفت؟</span>
           <textarea
             className="wsearch-newform-name"
@@ -110,7 +106,7 @@ export function WeeklyAnalysisReflection({
             placeholder="یه چیز کوچیک هم حسابه…"
           />
         </label>
-        <label className="wk-field">
+        <label className="wc-field">
           <span className="exercise-form-label">چی رو بهتر کنم؟</span>
           <textarea
             className="wsearch-newform-name"
@@ -123,17 +119,35 @@ export function WeeklyAnalysisReflection({
         </label>
       </div>
 
-      <div className="wk-field">
+      <div className="wc-field" style={{ marginTop: 14 }}>
         <span className="exercise-form-label">
           حال کلی این هفته{draft.mood ? <span className="wk-muted-sm"> · {MOOD_NAMES[draft.mood]}</span> : null}
         </span>
-        <SegmentedTabs
-          className="wk-seg wk-mood-seg seg-flush"
-          ariaLabel="حال کلی این هفته"
-          active={draft.mood ? String(draft.mood) : null}
-          onChange={(v) => update({ mood: Number(v) })}
-          options={MOODS}
-        />
+        <div className="wc-mood">
+          <span className="wc-mood-big" aria-hidden="true">
+            <AnimatePresence mode="wait" initial={false}>
+              {draft.mood && (
+                <motion.span
+                  key={draft.mood}
+                  initial={calm ? false : { opacity: 0, scale: 0.4, rotate: -12 }}
+                  animate={{ opacity: 1, scale: 1, rotate: 0 }}
+                  exit={calm ? { opacity: 0 } : { opacity: 0, scale: 0.4 }}
+                  transition={{ duration: 0.25, ease: WK_EASE }}
+                >{FACES[draft.mood]}</motion.span>
+              )}
+            </AnimatePresence>
+          </span>
+          <SegmentedTabs
+            className="wk-seg wk-mood-seg wc-mood-seg seg-flush"
+            ariaLabel="حال کلی این هفته"
+            active={draft.mood ? String(draft.mood) : null}
+            onChange={(v) => update({ mood: Number(v) })}
+            options={[1, 2, 3, 4, 5].map((n) => ({
+              value: String(n),
+              label: <span className={`wc-mood-face${draft.mood === n ? " on" : ""}`}>{FACES[n]}</span>,
+            }))}
+          />
+        </div>
       </div>
 
       {error && <div className="wk-error-inline">{error}</div>}
