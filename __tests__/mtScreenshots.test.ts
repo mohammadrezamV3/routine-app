@@ -49,11 +49,12 @@ describe("parseMtShotBody — بایت‌های اضافه‌ی ترمینال",
 
 describe("mtShotDiag", () => {
   it("مقایسه‌ی نسخه و نرمال‌سازی", () => {
-    expect(EA_LATEST_VERSION).toBe("1.42");
+    expect(EA_LATEST_VERSION).toBe("1.43");
     expect(isEaOutdated(null)).toBe(true);
     expect(isEaOutdated("1.41")).toBe(true);
     expect(isEaOutdated("1.9")).toBe(true);
-    expect(isEaOutdated("1.42")).toBe(false);
+    expect(isEaOutdated("1.42")).toBe(true);
+    expect(isEaOutdated("1.43")).toBe(false);
     expect(isEaOutdated("2.0")).toBe(false);
     expect(normalizeEaVersion("1.42")).toBe("1.42");
     expect(normalizeEaVersion("<b>")).toBeNull();

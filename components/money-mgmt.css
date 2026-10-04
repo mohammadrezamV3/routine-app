@@ -1,0 +1,21 @@
+/* مدیریت سرمایه (/trade/money) — فقط چیدمان؛ بدون بک‌گراند تازه */
+.mm-root { display: flex; flex-direction: column; gap: 18px; max-width: 720px; margin: 0 auto; }
+.mm-badge { display: inline-block; font-size: 11px; font-weight: 700; padding: 2px 10px; border-radius: 999px; border: 1px solid currentColor; opacity: .75; align-self: flex-start; }
+.mm-section { display: flex; flex-direction: column; gap: 10px; padding: 14px 0; border-top: 1px solid var(--border, rgba(128,128,128,.25)); }
+.mm-section:first-of-type { border-top: 0; }
+.mm-section-title { font-weight: 700; font-size: 14px; }
+.mm-grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 12px; }
+@media (max-width: 560px) { .mm-grid { grid-template-columns: minmax(0, 1fr); } }
+.mm-field { display: flex; flex-direction: column; gap: 4px; min-width: 0; }
+.mm-hint { font-size: 12px; opacity: .65; line-height: 1.7; }
+.mm-ltr { direction: ltr; text-align: left; }
+.mm-actions { display: flex; align-items: center; gap: 12px; flex-wrap: wrap; }
+.mm-msg { font-size: 13px; }
+.mm-msg.is-error { color: var(--danger, #e5484d); }
+.mm-warn { font-size: 13px; line-height: 1.8; }
+.mm-warn a { text-decoration: underline; }
+.mm-log { display: flex; flex-direction: column; gap: 6px; list-style: none; margin: 0; padding: 0; }
+.mm-log li { display: flex; flex-wrap: wrap; gap: 4px 12px; font-size: 13px; padding: 6px 0; border-top: 1px solid var(--border, rgba(128,128,128,.2)); }
+.mm-log li:first-child { border-top: 0; }
+.mm-log-time { opacity: .6; direction: ltr; }
+.mm-log-detail { opacity: .7; direction: ltr; unicode-bidi: plaintext; }

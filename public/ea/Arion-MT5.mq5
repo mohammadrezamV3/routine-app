@@ -3,8 +3,10 @@
 //|            اکسپرت اتصال حساب متاتریدر ۵ به ژورنال ترید Arion       |
 //+------------------------------------------------------------------+
 //
-// این اکسپرت فقط اطلاعات معاملات را می‌خواند و به Arion می‌فرستد.
-// هیچ سفارشی باز یا بسته نمی‌کند و هیچ دستوری از سرور نمی‌گیرد.
+// این اکسپرت اطلاعات معاملات را می‌خواند و به Arion می‌فرستد. هیچ سفارشی باز
+// نمی‌کند. فقط اگر خودتان در Arion «مدیریت سرمایه» را برای همین حساب روشن کرده
+// باشید، قوانین همان‌جا را روی پوزیشن‌های همین حساب اجرا می‌کند (بستن/کم‌کردن
+// حجم/جابه‌جایی حد ضرر). با ورودی EnableMoneyManagement=false کاملا خاموش می‌شود.
 // رمز حساب معاملاتی شما هیچ‌جا استفاده یا ذخیره نمی‌شود.
 //
 // نصب:
@@ -18,10 +20,12 @@
 //
 #property copyright "Arion"
 #property link      "https://arionapp.ir"
-#property version   "1.42"
+#property version   "1.43"
 #property strict
 
-#define EA_VERSION "1.42"
+#define EA_VERSION "1.43"
+
+#include <Trade\Trade.mqh>
 
 input string ArionUrl    = "https://arionapp.ir"; // آدرس سایت Arion
 input string PairingCode = "";                     // کد اتصال (فقط بار اول)
@@ -30,6 +34,7 @@ input bool   SendScreenshots = true;               // اسکرین چارت لح
 input ENUM_TIMEFRAMES ShotTimeframe = PERIOD_M15;  // تایم‌فریم اسکرین
 input int    ShotWidth  = 1280;                    // عرض اسکرین (پیکسل)
 input int    ShotHeight = 720;                     // ارتفاع اسکرین (پیکسل)
+input bool   EnableMoneyManagement = true;         // اجرای قوانین مدیریت سرمایه‌ی Arion (اگر در سایت روشن باشد)
 
 // حداکثر تعداد معامله در هر درخواست — تاریخچه‌ی طولانی توی چند درخواست
 // پشت‌سرهم چانک می‌شه. کوچک‌تر از قبل (۳۰۰) تا هر درخواست زیر timeout بمونه.
@@ -82,6 +87,33 @@ string   g_shotErr   = "";
 int      g_shotOk    = 0;
 int      g_httpErr   = 0;
 datetime g_lastCapture = 0;
+CTrade   g_trade;
+
+// ── مدیریت سرمایه (1.43) ────────────────────────────────────────────────
+// قوانین از پاسخ sync (کلید mm) می‌آیند و فقط وقتی کاربر در Arion روشنشان کرده.
+// با EnableMoneyManagement=false این بخش روی این ترمینال کاملا خاموش می‌ماند.
+#define MM_EVENTS_MAX 100
+bool     g_mmOn = false;
+double   g_mmRiskPct = 0, g_mmAutoSL = 0, g_mmMaxLoss = 0, g_mmTarget = 0, g_mmBeR = 0, g_mmTrStart = 0, g_mmTrDist = 0;
+bool     g_mmReqSL = false, g_mmLockT = false;
+int      g_mmGrace = 60, g_mmMaxOpen = 0, g_mmMaxDaily = 0, g_mmBeOff = 0;
+// وضعیت روز سرور
+long     g_mmDay = -1;
+double   g_mmDayBal = 0, g_mmClosed = 0;
+int      g_mmLock = 0;          // 0 آزاد، 1 قفل ضرر روزانه، 2 قفل هدف سود
+int      g_mmKilled = 0;        // پوزیشن‌هایی که امروز با سقف روزانه بسته شدن
+int      g_mmOpenedToday = 0, g_mmLastCnt = -1;
+datetime g_mmStatsAt = 0;
+uint     g_mmLastRun = 0;
+datetime g_lastWork = 0;
+string   g_mmLastErr = "";
+datetime g_mmLastErrAt = 0;
+// بافر رویدادها (در sync بعدی به صورت mmEvents می‌ره)
+string   g_evT[], g_evAct[], g_evTk[], g_evDet[];
+// فاصله‌ی ریسک اولیه‌ی هر پوزیشن (برای R) و زمان اولین دیدن پوزیشن بدون SL
+long     g_pId[];  double g_pDist[];
+long     g_nsId[]; datetime g_nsAt[];
+string   g_trailLogged = "|";
 
 
 //+------------------------------------------------------------------+
@@ -89,10 +121,12 @@ int OnInit()
   {
    g_token = LoadToken();
    LoadCursor();
+   MmLoadRules(); MmLoadDay(); MmLoadDist();
+   g_trade.SetDeviationInPoints(50);
    if(SendScreenshots) { LoadShotState(); RestoreShotJobs(); }
    if(g_token == "") Pair();
-   EventSetTimer(g_token == "" ? RETRY_SECONDS : (int)MathMax(15, SyncSeconds));
-   if(g_token != "") Sync();
+   ApplyTimer();
+   if(g_token != "") { g_lastWork = TimeLocal(); Sync(); }
    ShowStatus();
    return(INIT_SUCCEEDED);
   }
@@ -106,23 +140,33 @@ void OnTimer()
       Pair();
       if(g_token != "")
         {
-         EventKillTimer();
-         EventSetTimer((int)MathMax(15, SyncSeconds));
+         ApplyTimer();
+         g_lastWork = TimeLocal();
          Sync();
         }
      }
    else
      {
-      Sync();
-      CaptureShots();
-      UploadShots();
+      // قوانین مدیریت سرمایه هر ثانیه؛ sync و اسکرین با فاصله‌ی عادی
+      MmRun();
+      if(g_lastWork == 0 || TimeLocal() - g_lastWork >= MathMax(15, SyncSeconds) - 1)
+        {
+         g_lastWork = TimeLocal();
+         Sync();
+         CaptureShots();
+         UploadShots();
+        }
      }
    ShowStatus();
   }
 
+// تیک تازه → همان قوانین (با همان محدودیت یک بار در ثانیه)
+void OnTick() { MmRun(); }
+
 // معامله باز یا بسته شد → اسکرین همون لحظه (فرستادن در sync بعدی)
 void OnTrade()
   {
+   MmRun(true);
    if(!SendScreenshots || g_token == "") return;
    if(TimeLocal() - g_lastCapture < 2) return;
    g_lastCapture = TimeLocal();
@@ -135,7 +179,7 @@ void ShowStatus()
    string line2 = (g_lastSync > 0 ? "آخرین ارسال: " + TimeToString(g_lastSync, TIME_MINUTES|TIME_SECONDS)
                                   : "هنوز چیزی ارسال نشده");
    Comment("Arion — ", (g_token == "" ? "متصل نیست" : "متصل"), "\n",
-           g_status, "\n", line2, "\n", ShotStatusLine());
+           g_status, "\n", line2, "\n", ShotStatusLine(), "\n", MmStatusLine());
   }
 
 string ShotStatusLine()
@@ -322,6 +366,8 @@ bool SendBatch(string itemsJson, bool cash)
            ",\"ok\":" + IntegerToString(g_shotOk) +
            ",\"queue\":" + IntegerToString(ArraySize(g_jobTicket)) +
            ",\"err\":\"" + JsonEscape(g_shotErr) + "\"}";
+   int mmSent = 0;
+   if(ArraySize(g_evAct) > 0) body += ",\"mmEvents\":" + MmEventsJson(mmSent);
    body += (cash ? ",\"trades\":[],\"cashflows\":[" : ",\"trades\":[") + itemsJson + "]}";
 
    int status;
@@ -336,8 +382,7 @@ bool SendBatch(string itemsJson, bool cash)
       SaveToken("");
       g_status = "توکن باطل شده — از Arion کد اتصال جدید بگیرید";
       Print("Arion: ", g_status);
-      EventKillTimer();
-      EventSetTimer(RETRY_SECONDS);
+      ApplyTimer();
       return(false);
      }
    if(status != 200)
@@ -354,6 +399,8 @@ bool SendBatch(string itemsJson, bool cash)
    if(skipped > 0 || failed > 0)
       Print("Arion: سرور ", skipped, " ردیف نامعتبر و ", failed, " ردیف ناموفق گزارش داد");
    g_failCount = 0;
+   MmDropEvents(mmSent);
+   MmApplyResponse(res);
    return(true);
   }
 
@@ -916,3 +963,557 @@ long JsonInt(string json, string key)
    return(StringToInteger(StringSubstr(json, start + StringLen(needle), 12)));
   }
 //+------------------------------------------------------------------+
+
+//+------------------------------------------------------------------+
+//| ── مدیریت سرمایه ─────────────────────────────────────────────── |
+//+------------------------------------------------------------------+
+bool MmWanted() { return(EnableMoneyManagement && g_mmOn); }
+
+// تایمر: بدون ثبت پیش‌فرض 15+ ثانیه؛ با قوانین فعال هر ثانیه (sync جدا با g_lastWork کنترل می‌شه)
+void ApplyTimer()
+  {
+   EventKillTimer();
+   if(g_token == "") EventSetTimer(RETRY_SECONDS);
+   else EventSetTimer(MmWanted() ? 1 : (int)MathMax(15, SyncSeconds));
+  }
+
+string MmFile(string kind) { return("arion_mm" + kind + "_" + IntegerToString(AccountInfoInteger(ACCOUNT_LOGIN)) + ".txt"); }
+
+void MmLog(string action, ulong ticket, string detail)
+  {
+   int n = ArraySize(g_evAct);
+   if(n >= MM_EVENTS_MAX)
+     {
+      for(int i = 1; i < n; i++) { g_evT[i-1] = g_evT[i]; g_evAct[i-1] = g_evAct[i]; g_evTk[i-1] = g_evTk[i]; g_evDet[i-1] = g_evDet[i]; }
+      n--;
+     }
+   ArrayResize(g_evT, n + 1); ArrayResize(g_evAct, n + 1); ArrayResize(g_evTk, n + 1); ArrayResize(g_evDet, n + 1);
+   g_evT[n] = IntegerToString((long)TimeGMT());
+   g_evAct[n] = action;
+   g_evTk[n] = ticket > 0 ? IntegerToString((long)ticket) : "";
+   g_evDet[n] = detail;
+   Print("Arion MM: ", action, " ", g_evTk[n], " ", detail);
+  }
+
+void MmLogError(ulong ticket, string what)
+  {
+   // همان خطا برای یک پوزیشن هر ۶۰ ثانیه یک بار ثبت می‌شه
+   string key = IntegerToString((long)ticket) + what;
+   if(key == g_mmLastErr && TimeLocal() - g_mmLastErrAt < 60) return;
+   g_mmLastErr = key; g_mmLastErrAt = TimeLocal();
+   MmLog("error", ticket, what);
+  }
+
+// رویدادهای ثبت‌شده → آرایه‌ی JSON؛ count تعداد ارسالی (بعد از موفقیت sync حذفشان می‌کنیم)
+string MmEventsJson(int &count)
+  {
+   count = ArraySize(g_evAct);
+   if(count > 20) count = 20;
+   string s = "[";
+   for(int i = 0; i < count; i++)
+     {
+      if(i > 0) s += ",";
+      s += "{\"t\":\"" + g_evT[i] + "\",\"action\":\"" + JsonEscape(g_evAct[i]) + "\",\"ticket\":\"" + JsonEscape(g_evTk[i]) +
+           "\",\"detail\":\"" + JsonEscape(g_evDet[i]) + "\"}";
+     }
+   return(s + "]");
+  }
+
+void MmDropEvents(int count)
+  {
+   int n = ArraySize(g_evAct);
+   if(count <= 0) return;
+   if(count >= n) { ArrayResize(g_evT, 0); ArrayResize(g_evAct, 0); ArrayResize(g_evTk, 0); ArrayResize(g_evDet, 0); return; }
+   for(int i = count; i < n; i++) { g_evT[i-count] = g_evT[i]; g_evAct[i-count] = g_evAct[i]; g_evTk[i-count] = g_evTk[i]; g_evDet[i-count] = g_evDet[i]; }
+   int m = n - count;
+   ArrayResize(g_evT, m); ArrayResize(g_evAct, m); ArrayResize(g_evTk, m); ArrayResize(g_evDet, m);
+  }
+
+//--- خواندن شیء ساده‌ی "mm":{...} از پاسخ سرور
+string JsonObj(string json, string key)
+  {
+   string needle = "\"" + key + "\":{";
+   int start = StringFind(json, needle);
+   if(start < 0) return("");
+   start += StringLen(needle);
+   int end = StringFind(json, "}", start);
+   if(end < 0) return("");
+   return(StringSubstr(json, start, end - start));
+  }
+
+double JsonNum(string json, string key)
+  {
+   string needle = "\"" + key + "\":";
+   int start = StringFind(json, needle);
+   if(start < 0) return(0);
+   start += StringLen(needle);
+   int end = start;
+   int n = StringLen(json);
+   while(end < n)
+     {
+      ushort c = StringGetCharacter(json, end);
+      if(c == ',' || c == '}') break;
+      end++;
+     }
+   return(StringToDouble(StringSubstr(json, start, end - start)));
+  }
+
+void MmSaveRules()
+  {
+   int h = FileOpen(MmFile("rules"), FILE_WRITE|FILE_TXT|FILE_ANSI);
+   if(h == INVALID_HANDLE) return;
+   string s = "0";
+   if(g_mmOn)
+      s = "1|" + DoubleToString(g_mmRiskPct, 2) + "|" + (g_mmReqSL ? "1" : "0") + "|" + DoubleToString(g_mmAutoSL, 2) +
+          "|" + IntegerToString(g_mmGrace) + "|" + IntegerToString(g_mmMaxOpen) + "|" + IntegerToString(g_mmMaxDaily) +
+          "|" + DoubleToString(g_mmMaxLoss, 2) + "|" + DoubleToString(g_mmTarget, 2) + "|" + (g_mmLockT ? "1" : "0") +
+          "|" + DoubleToString(g_mmBeR, 2) + "|" + IntegerToString(g_mmBeOff) + "|" + DoubleToString(g_mmTrStart, 2) +
+          "|" + DoubleToString(g_mmTrDist, 2);
+   FileWriteString(h, s);
+   FileClose(h);
+  }
+
+void MmLoadRules()
+  {
+   g_mmOn = false;
+   int h = FileOpen(MmFile("rules"), FILE_READ|FILE_TXT|FILE_ANSI);
+   if(h == INVALID_HANDLE) return;
+   string s = FileReadString(h);
+   FileClose(h);
+   string p[];
+   if(StringSplit(s, '|', p) < 14 || p[0] != "1") return;
+   g_mmRiskPct = StringToDouble(p[1]); g_mmReqSL = (p[2] == "1"); g_mmAutoSL = StringToDouble(p[3]);
+   g_mmGrace = (int)StringToInteger(p[4]); g_mmMaxOpen = (int)StringToInteger(p[5]); g_mmMaxDaily = (int)StringToInteger(p[6]);
+   g_mmMaxLoss = StringToDouble(p[7]); g_mmTarget = StringToDouble(p[8]); g_mmLockT = (p[9] == "1");
+   g_mmBeR = StringToDouble(p[10]); g_mmBeOff = (int)StringToInteger(p[11]);
+   g_mmTrStart = StringToDouble(p[12]); g_mmTrDist = StringToDouble(p[13]);
+   g_mmOn = true;
+  }
+
+// پاسخ موفق sync: کلید mm نبود → قوانین خاموش (کاربر خاموشش کرده یا فلگ سرور بسته‌ست)
+void MmApplyResponse(string res)
+  {
+   string o = JsonObj(res, "mm");
+   bool was = g_mmOn;
+   if(o == "")
+     {
+      if(g_mmOn) { g_mmOn = false; MmSaveRules(); }
+     }
+   else
+     {
+      g_mmRiskPct = JsonNum(o, "riskPct");     g_mmReqSL = (JsonNum(o, "requireSL") > 0.5);
+      g_mmAutoSL = JsonNum(o, "autoSLPct");    g_mmGrace = (int)JsonNum(o, "slGraceSec");
+      g_mmMaxOpen = (int)JsonNum(o, "maxOpen"); g_mmMaxDaily = (int)JsonNum(o, "maxDaily");
+      g_mmMaxLoss = JsonNum(o, "maxLossPct");  g_mmTarget = JsonNum(o, "targetPct");
+      g_mmLockT = (JsonNum(o, "lockOnTarget") > 0.5);
+      g_mmBeR = JsonNum(o, "beR");             g_mmBeOff = (int)JsonNum(o, "beOffset");
+      g_mmTrStart = JsonNum(o, "trailStartR"); g_mmTrDist = JsonNum(o, "trailDistR");
+      if(g_mmGrace < 10) g_mmGrace = 10;
+      g_mmOn = true;
+      MmSaveRules();
+     }
+   if(was != g_mmOn && g_token != "") ApplyTimer();
+  }
+
+void MmSaveDay()
+  {
+   int h = FileOpen(MmFile("day"), FILE_WRITE|FILE_TXT|FILE_ANSI);
+   if(h == INVALID_HANDLE) return;
+   FileWriteString(h, IntegerToString(g_mmDay) + "|" + DoubleToString(g_mmDayBal, 2) + "|" + IntegerToString(g_mmLock) +
+                      "|" + IntegerToString(g_mmKilled));
+   FileClose(h);
+  }
+
+void MmLoadDay()
+  {
+   int h = FileOpen(MmFile("day"), FILE_READ|FILE_TXT|FILE_ANSI);
+   if(h == INVALID_HANDLE) return;
+   string s = FileReadString(h);
+   FileClose(h);
+   string p[];
+   if(StringSplit(s, '|', p) < 4) return;
+   if((long)StringToInteger(p[0]) != (long)(TimeTradeServer() / 86400)) return;   // روز قدیمی
+   g_mmDay = (long)StringToInteger(p[0]); g_mmDayBal = StringToDouble(p[1]);
+   g_mmLock = (int)StringToInteger(p[2]); g_mmKilled = (int)StringToInteger(p[3]);
+  }
+
+// فاصله‌ی ریسک اولیه: ذخیره در حافظه + فایل تا با ری‌استارت گم نشه
+void MmSaveDist()
+  {
+   int h = FileOpen(MmFile("dist"), FILE_WRITE|FILE_TXT|FILE_ANSI);
+   if(h == INVALID_HANDLE) return;
+   string s = "";
+   for(int i = 0; i < ArraySize(g_pId); i++) s += IntegerToString(g_pId[i]) + ":" + DoubleToString(g_pDist[i], 8) + ";";
+   FileWriteString(h, s);
+   FileClose(h);
+  }
+
+void MmLoadDist()
+  {
+   ArrayResize(g_pId, 0); ArrayResize(g_pDist, 0);
+   int h = FileOpen(MmFile("dist"), FILE_READ|FILE_TXT|FILE_ANSI);
+   if(h == INVALID_HANDLE) return;
+   string s = FileReadString(h);
+   FileClose(h);
+   string items[];
+   int n = StringSplit(s, ';', items);
+   for(int i = 0; i < n; i++)
+     {
+      string kv[];
+      if(StringSplit(items[i], ':', kv) != 2) continue;
+      int k = ArraySize(g_pId);
+      ArrayResize(g_pId, k + 1); ArrayResize(g_pDist, k + 1);
+      g_pId[k] = StringToInteger(kv[0]); g_pDist[k] = StringToDouble(kv[1]);
+     }
+  }
+
+double MmGetDist(long id)
+  {
+   for(int i = 0; i < ArraySize(g_pId); i++) if(g_pId[i] == id) return(g_pDist[i]);
+   return(0);
+  }
+
+void MmSetDist(long id, double d)
+  {
+   for(int i = 0; i < ArraySize(g_pId); i++) if(g_pId[i] == id) return;
+   int k = ArraySize(g_pId);
+   ArrayResize(g_pId, k + 1); ArrayResize(g_pDist, k + 1);
+   g_pId[k] = id; g_pDist[k] = d;
+   MmSaveDist();
+  }
+
+// شناسه‌هایی که دیگر باز نیستند از حافظه پاک می‌شن
+void MmPrune(long &liveIds[])
+  {
+   bool changed = false;
+   for(int i = ArraySize(g_pId) - 1; i >= 0; i--)
+     {
+      if(InList(g_pId[i], liveIds)) continue;
+      for(int j = i; j < ArraySize(g_pId) - 1; j++) { g_pId[j] = g_pId[j+1]; g_pDist[j] = g_pDist[j+1]; }
+      ArrayResize(g_pId, ArraySize(g_pId) - 1); ArrayResize(g_pDist, ArraySize(g_pDist) - 1);
+      changed = true;
+     }
+   for(int i = ArraySize(g_nsId) - 1; i >= 0; i--)
+     {
+      if(InList(g_nsId[i], liveIds)) continue;
+      for(int j = i; j < ArraySize(g_nsId) - 1; j++) { g_nsId[j] = g_nsId[j+1]; g_nsAt[j] = g_nsAt[j+1]; }
+      ArrayResize(g_nsId, ArraySize(g_nsId) - 1); ArrayResize(g_nsAt, ArraySize(g_nsAt) - 1);
+     }
+   if(changed) MmSaveDist();
+  }
+
+datetime MmNoSlSince(long id)
+  {
+   for(int i = 0; i < ArraySize(g_nsId); i++) if(g_nsId[i] == id) return(g_nsAt[i]);
+   int k = ArraySize(g_nsId);
+   ArrayResize(g_nsId, k + 1); ArrayResize(g_nsAt, k + 1);
+   g_nsId[k] = id; g_nsAt[k] = TimeLocal();
+   return(g_nsAt[k]);
+  }
+
+void MmClearNoSl(long id)
+  {
+   for(int i = 0; i < ArraySize(g_nsId); i++)
+      if(g_nsId[i] == id)
+        {
+         for(int j = i; j < ArraySize(g_nsId) - 1; j++) { g_nsId[j] = g_nsId[j+1]; g_nsAt[j] = g_nsAt[j+1]; }
+         ArrayResize(g_nsId, ArraySize(g_nsId) - 1); ArrayResize(g_nsAt, ArraySize(g_nsAt) - 1);
+         return;
+        }
+  }
+
+//--- سود/ضرر بسته‌شده‌ی امروز (روز سرور) و تعداد پوزیشن‌های بازشده‌ی امروز
+void MmRefreshStats()
+  {
+   datetime dayStart = (datetime)((TimeTradeServer() / 86400) * 86400);
+   double closed = 0; int opened = 0;
+   if(HistorySelect(dayStart, TimeTradeServer() + 86400))
+     {
+      int n = HistoryDealsTotal();
+      for(int i = 0; i < n; i++)
+        {
+         ulong d = HistoryDealGetTicket(i);
+         if(d == 0) continue;
+         long type = HistoryDealGetInteger(d, DEAL_TYPE);
+         if(type != DEAL_TYPE_BUY && type != DEAL_TYPE_SELL) continue;   // واریز/برداشت و... نه
+         closed += HistoryDealGetDouble(d, DEAL_PROFIT) + HistoryDealGetDouble(d, DEAL_COMMISSION) +
+                   HistoryDealGetDouble(d, DEAL_SWAP) + HistoryDealGetDouble(d, DEAL_FEE);
+         if(HistoryDealGetInteger(d, DEAL_ENTRY) == DEAL_ENTRY_IN) opened++;
+        }
+     }
+   g_mmClosed = closed; g_mmOpenedToday = opened; g_mmStatsAt = TimeLocal();
+  }
+
+//--- پول از دست رفته به ازای یک واحد حرکت قیمت برای حجم vol
+double MmMoneyPerUnit(string sym, double vol)
+  {
+   double tv = SymbolInfoDouble(sym, SYMBOL_TRADE_TICK_VALUE_LOSS);
+   if(tv <= 0) tv = SymbolInfoDouble(sym, SYMBOL_TRADE_TICK_VALUE);
+   double ts = SymbolInfoDouble(sym, SYMBOL_TRADE_TICK_SIZE);
+   if(tv <= 0 || ts <= 0) return(0);
+   return(vol * tv / ts);
+  }
+
+bool MmRetOk(uint rc) { return(rc == TRADE_RETCODE_DONE || rc == TRADE_RETCODE_DONE_PARTIAL || rc == TRADE_RETCODE_PLACED); }
+
+bool MmClose(ulong ticket, string action, string detail)
+  {
+   if(!PositionSelectByTicket(ticket)) return(false);
+   g_trade.SetTypeFillingBySymbol(PositionGetString(POSITION_SYMBOL));
+   bool ok = g_trade.PositionClose(ticket);
+   if(ok && MmRetOk(g_trade.ResultRetcode())) { MmLog(action, ticket, detail); return(true); }
+   MmLogError(ticket, "close failed rc=" + IntegerToString((int)g_trade.ResultRetcode()));
+   return(false);
+  }
+
+// آیا SL پیشنهادی از نظر حداقل فاصله‌ی بروکر (stops level) معتبره؟
+bool MmStopsOk(string sym, bool buy, double sl)
+  {
+   double pt = SymbolInfoDouble(sym, SYMBOL_POINT);
+   long lvl = MathMax(SymbolInfoInteger(sym, SYMBOL_TRADE_STOPS_LEVEL), SymbolInfoInteger(sym, SYMBOL_TRADE_FREEZE_LEVEL));
+   double minD = lvl * pt;
+   if(buy) return(sl <= SymbolInfoDouble(sym, SYMBOL_BID) - minD);
+   return(sl >= SymbolInfoDouble(sym, SYMBOL_ASK) + minD);
+  }
+
+bool MmModifySL(ulong ticket, double sl, string action, string detail)
+  {
+   if(!PositionSelectByTicket(ticket)) return(false);
+   string sym = PositionGetString(POSITION_SYMBOL);
+   sl = NormalizeDouble(sl, (int)SymbolInfoInteger(sym, SYMBOL_DIGITS));
+   bool ok = g_trade.PositionModify(ticket, sl, PositionGetDouble(POSITION_TP));
+   if(ok && MmRetOk(g_trade.ResultRetcode()))
+     {
+      if(action != "") MmLog(action, ticket, detail);
+      return(true);
+     }
+   MmLogError(ticket, "modify failed rc=" + IntegerToString((int)g_trade.ResultRetcode()));
+   return(false);
+  }
+
+//+------------------------------------------------------------------+
+//| اجرای قوانین روی پوزیشن‌های این حساب (حداکثر هر ثانیه یک بار)      |
+//+------------------------------------------------------------------+
+void MmRun(bool force = false)
+  {
+   if(!MmWanted()) return;
+   uint nowMs = GetTickCount();
+   if(!force && nowMs - g_mmLastRun < 1000) return;
+   g_mmLastRun = nowMs;
+   if(!TerminalInfoInteger(TERMINAL_TRADE_ALLOWED) || !MQLInfoInteger(MQL_TRADE_ALLOWED))
+     {
+      MmLogError(0, "trading not allowed (AutoTrading off)");
+      return;
+     }
+
+   // روز سرور جدید → ریست؛ بالانس شروع روز = بالانس فعلی منهای سود بسته‌شده‌ی امروز
+   long dayKey = (long)(TimeTradeServer() / 86400);
+   datetime dayStart = (datetime)(dayKey * 86400);
+   int total = PositionsTotal();
+   if(dayKey != g_mmDay)
+     {
+      MmRefreshStats();
+      g_mmDay = dayKey;
+      g_mmDayBal = AccountInfoDouble(ACCOUNT_BALANCE) - g_mmClosed;
+      g_mmLock = 0; g_mmKilled = 0;
+      MmSaveDay();
+     }
+   else if(total != g_mmLastCnt || TimeLocal() - g_mmStatsAt >= 3) MmRefreshStats();
+   g_mmLastCnt = total;
+
+   // پوزیشن‌ها به ترتیب زمان باز شدن (قدیمی اول)
+   ulong tk[]; datetime tm[]; bool gone[];
+   int cnt = 0;
+   double floating = 0;
+   for(int i = 0; i < total; i++)
+     {
+      ulong t = PositionGetTicket(i);
+      if(t == 0) continue;
+      ArrayResize(tk, cnt + 1); ArrayResize(tm, cnt + 1); ArrayResize(gone, cnt + 1);
+      tk[cnt] = t; tm[cnt] = (datetime)PositionGetInteger(POSITION_TIME); gone[cnt] = false;
+      floating += PositionGetDouble(POSITION_PROFIT) + PositionGetDouble(POSITION_SWAP);
+      cnt++;
+     }
+   for(int a = 1; a < cnt; a++)
+     {
+      ulong kt = tk[a]; datetime km = tm[a]; int b = a - 1;
+      while(b >= 0 && tm[b] > km) { tk[b+1] = tk[b]; tm[b+1] = tm[b]; b--; }
+      tk[b+1] = kt; tm[b+1] = km;
+     }
+   long ids[]; ArrayResize(ids, cnt);
+   for(int i = 0; i < cnt; i++) ids[i] = PositionSelectByTicket(tk[i]) ? PositionGetInteger(POSITION_IDENTIFIER) : 0;
+   MmPrune(ids);
+
+   // قفل ضرر / هدف سود روزانه
+   if(g_mmLock == 0 && g_mmDayBal > 0)
+     {
+      double pnl = g_mmClosed + floating;
+      if(g_mmMaxLoss > 0 && pnl <= -g_mmMaxLoss / 100.0 * g_mmDayBal)
+        {
+         g_mmLock = 1; MmSaveDay();
+         MmLog("lock_loss", 0, "day pnl " + DoubleToString(pnl, 2) + " limit -" + DoubleToString(g_mmMaxLoss, 2) + "%");
+        }
+      else if(g_mmTarget > 0 && g_mmLockT && pnl >= g_mmTarget / 100.0 * g_mmDayBal)
+        {
+         g_mmLock = 2; MmSaveDay();
+         MmLog("lock_target", 0, "day pnl " + DoubleToString(pnl, 2) + " target " + DoubleToString(g_mmTarget, 2) + "%");
+        }
+     }
+   if(g_mmLock > 0)
+     {
+      for(int i = cnt - 1; i >= 0; i--) MmClose(tk[i], "close_locked", g_mmLock == 1 ? "daily loss lock" : "daily target lock");
+      return;
+     }
+
+   // سقف تعداد پوزیشن باز: جدیدترین‌ها اول بسته می‌شن
+   if(g_mmMaxOpen > 0)
+     {
+      int live = cnt;
+      for(int i = cnt - 1; i >= 0 && live > g_mmMaxOpen; i--)
+         if(MmClose(tk[i], "close_maxopen", "max open " + IntegerToString(g_mmMaxOpen))) { gone[i] = true; live--; }
+     }
+   // سقف تعداد معامله‌ی روزانه
+   if(g_mmMaxDaily > 0)
+     {
+      int excess = (g_mmOpenedToday - g_mmKilled) - g_mmMaxDaily;
+      for(int i = cnt - 1; i >= 0 && excess > 0; i--)
+        {
+         if(gone[i] || tm[i] < dayStart) continue;
+         if(MmClose(tk[i], "close_maxdaily", "max daily " + IntegerToString(g_mmMaxDaily)))
+           { gone[i] = true; excess--; g_mmKilled++; MmSaveDay(); }
+        }
+     }
+
+   double balance = AccountInfoDouble(ACCOUNT_BALANCE);
+   for(int i = 0; i < cnt; i++)
+     {
+      if(gone[i]) continue;
+      ulong t = tk[i];
+      if(!PositionSelectByTicket(t)) continue;
+      string sym = PositionGetString(POSITION_SYMBOL);
+      bool buy = (PositionGetInteger(POSITION_TYPE) == POSITION_TYPE_BUY);
+      long id = PositionGetInteger(POSITION_IDENTIFIER);
+      double vol = PositionGetDouble(POSITION_VOLUME);
+      double open = PositionGetDouble(POSITION_PRICE_OPEN);
+      double sl = PositionGetDouble(POSITION_SL);
+      double pt = SymbolInfoDouble(sym, SYMBOL_POINT);
+      int digits = (int)SymbolInfoInteger(sym, SYMBOL_DIGITS);
+      if(pt <= 0) continue;
+
+      // 1) حد ضرر اجباری
+      if(sl <= 0 && g_mmReqSL)
+        {
+         bool fixedSl = false;
+         double perUnit = MmMoneyPerUnit(sym, vol);
+         if(g_mmAutoSL > 0 && perUnit > 0 && balance > 0)
+           {
+            double dist = (balance * g_mmAutoSL / 100.0) / perUnit;
+            long lvl = MathMax(SymbolInfoInteger(sym, SYMBOL_TRADE_STOPS_LEVEL), SymbolInfoInteger(sym, SYMBOL_TRADE_FREEZE_LEVEL));
+            double minD = (lvl + 2) * pt;
+            double cur = buy ? SymbolInfoDouble(sym, SYMBOL_BID) : SymbolInfoDouble(sym, SYMBOL_ASK);
+            double slPx = buy ? open - dist : open + dist;
+            // نزدیک‌تر از حداقل فاصله‌ی بروکر مجاز نیست؛ ریسک هر معامله بعدش حجم رو تنظیم می‌کنه
+            if(buy && slPx > cur - minD) slPx = cur - minD;
+            if(!buy && slPx < cur + minD) slPx = cur + minD;
+            slPx = NormalizeDouble(slPx, digits);
+            if(slPx > 0 && MmModifySL(t, slPx, "sl_set", "auto SL " + DoubleToString(slPx, digits) + " risk " + DoubleToString(g_mmAutoSL, 2) + "%"))
+              { fixedSl = true; sl = slPx; }
+           }
+         if(!fixedSl)
+           {
+            datetime since = MmNoSlSince(id);
+            if(TimeLocal() - since >= g_mmGrace)
+              {
+               if(MmClose(t, "close_nosl", "no SL after " + IntegerToString(g_mmGrace) + "s")) continue;
+              }
+            continue;   // بدون SL قانون‌های ریسک/BE/تریلینگ معنی ندارن
+           }
+        }
+      if(sl > 0) MmClearNoSl(id);
+      if(sl <= 0) continue;
+      if(!PositionSelectByTicket(t)) continue;
+      sl = PositionGetDouble(POSITION_SL);
+
+      // فاصله‌ی ریسک اولیه (SL سمت ضرر) — پایه‌ی محاسبه‌ی R
+      if(MmGetDist(id) <= 0)
+        {
+         double d0 = buy ? open - sl : sl - open;
+         if(d0 > 0) MmSetDist(id, d0);
+        }
+
+      // 2) ریسک هر معامله: حجم اضافه بسته می‌شه
+      if(g_mmRiskPct > 0 && balance > 0)
+        {
+         double riskDist = buy ? open - sl : sl - open;       // منفی یعنی SL روی سود
+         double perUnit = MmMoneyPerUnit(sym, vol);
+         double risk = riskDist > 0 ? riskDist * perUnit : 0;
+         double limit = balance * g_mmRiskPct / 100.0;
+         if(risk > limit * 1.02 && perUnit > 0)
+           {
+            double step = SymbolInfoDouble(sym, SYMBOL_VOLUME_STEP);
+            double minV = SymbolInfoDouble(sym, SYMBOL_VOLUME_MIN);
+            if(step <= 0) step = minV;
+            double newVol = MathFloor(vol * limit / risk / step + 1e-9) * step;
+            if(newVol < minV)
+              {
+               if(MmClose(t, "close_risk", "risk " + DoubleToString(risk, 2) + " > limit " + DoubleToString(limit, 2))) continue;
+              }
+            else
+              {
+               double cv = NormalizeDouble(vol - newVol, 8);
+               if(cv >= minV)
+                 {
+                  g_trade.SetTypeFillingBySymbol(sym);
+                  bool ok = g_trade.PositionClosePartial(t, cv);
+                  if(ok && MmRetOk(g_trade.ResultRetcode()))
+                    {
+                     MmLog("partial_risk", t, "closed " + DoubleToString(cv, 2) + " lot, left " + DoubleToString(newVol, 2) + ", limit " + DoubleToString(limit, 2));
+                     if(!PositionSelectByTicket(t)) continue;   // netting: تیکت ممکنه عوض شده باشه
+                     vol = PositionGetDouble(POSITION_VOLUME);
+                    }
+                  else MmLogError(t, "partial close failed rc=" + IntegerToString((int)g_trade.ResultRetcode()));
+                 }
+              }
+           }
+        }
+
+      // 3) سر به سر و 4) تریلینگ — بر پایه‌ی R
+      double dist = MmGetDist(id);
+      if(dist <= 0) continue;
+      if(!PositionSelectByTicket(t)) continue;
+      sl = PositionGetDouble(POSITION_SL);
+      double cur = buy ? SymbolInfoDouble(sym, SYMBOL_BID) : SymbolInfoDouble(sym, SYMBOL_ASK);
+      double prof = buy ? cur - open : open - cur;
+      if(g_mmBeR > 0 && prof >= g_mmBeR * dist)
+        {
+         double target = NormalizeDouble(buy ? open + g_mmBeOff * pt : open - g_mmBeOff * pt, digits);
+         bool need = buy ? (sl < target - pt * 0.5) : (sl > target + pt * 0.5);
+         if(need && MmStopsOk(sym, buy, target))
+           {
+            if(MmModifySL(t, target, "breakeven", "SL to " + DoubleToString(target, digits))) sl = target;
+           }
+        }
+      if(g_mmTrStart > 0 && g_mmTrDist > 0 && prof >= g_mmTrStart * dist)
+        {
+         double nsl = NormalizeDouble(buy ? cur - g_mmTrDist * dist : cur + g_mmTrDist * dist, digits);
+         double minGain = MathMax(pt * 5, 0.05 * dist);
+         bool better = buy ? (nsl > sl + minGain) : (sl <= 0 || nsl < sl - minGain);
+         if(better && MmStopsOk(sym, buy, nsl))
+           {
+            bool first = (StringFind(g_trailLogged, "|" + IntegerToString(id) + "|") < 0);
+            if(MmModifySL(t, nsl, first ? "trail" : "", "SL to " + DoubleToString(nsl, digits)) && first)
+               g_trailLogged += IntegerToString(id) + "|";
+           }
+        }
+     }
+  }
+
+string MmStatusLine()
+  {
+   if(!EnableMoneyManagement) return("مدیریت سرمایه: خاموش (ورودی اکسپرت)");
+   if(!g_mmOn) return("مدیریت سرمایه: غیرفعال");
+   string s = "مدیریت سرمایه: فعال";
+   if(g_mmLock == 1) s += " — قفل ضرر روزانه";
+   else if(g_mmLock == 2) s += " — قفل هدف سود روزانه";
+   return(s);
+  }
