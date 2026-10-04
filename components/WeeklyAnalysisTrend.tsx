@@ -2,10 +2,11 @@
 
 import { useEffect, useId, useMemo, useRef, useState } from "react";
 import { motion, useReducedMotion } from "framer-motion";
-import { ArrowLeft, LineChart } from "lucide-react";
+import { ArrowLeft } from "lucide-react";
 import { ANALYSIS_DOMAIN_LABELS, ANALYSIS_DOMAINS, type AnalysisDomain, type TrendPoint } from "@/lib/weeklyAnalysis/types";
 import { SegmentedTabs } from "./SegmentedTabs";
-import { SectionHead, V_WK_CARD, jalaliShort } from "./WeeklyAnalysisKit";
+import "./wa-viz.css";
+import { jalaliShort } from "./WeeklyAnalysisKit";
 import { MIN_OFFSET } from "./WeeklyAnalysisNav";
 
 const MIN_H = 210;
@@ -126,8 +127,7 @@ export function WeeklyAnalysisTrend({
   const color2 = "var(--ring-1b)";
 
   return (
-    <motion.section className="wk-card wk-trend" variants={V_WK_CARD} aria-label="روند هشت هفته‌ی اخیر">
-      <SectionHead icon={<LineChart size={15} />} title="روند 8 هفته‌ی اخیر" />
+    <div className="wk-trend wkv-trend" aria-label="روند هشت هفته‌ی اخیر">
 
       {availableDomains.length > 0 && (
         <div className="wk-tabs-scroll" data-noswipe>
@@ -218,17 +218,30 @@ export function WeeklyAnalysisTrend({
                 />
                 {geo.pts.map((p, i) =>
                   p ? (
-                    <motion.circle
-                      key={`${active}-${i}`}
-                      cx={p.x}
-                      cy={p.y}
-                      initial={{ opacity: reduce ? 1 : 0, r: 3.4 }}
-                      animate={{ opacity: 1, r: i === n - 1 || hover === i ? 5.5 : 3.4 }}
-                      transition={{ duration: 0.25, delay: reduce ? 0 : 0.25 + 0.07 * (n - 1 - i) }}
-                      fill={i === n - 1 || hover === i ? color : "var(--box-bg)"}
-                      stroke={color}
-                      strokeWidth={2}
-                    />
+                    <g key={`${active}-${i}`}>
+                      {!reduce && (i === n - 1 || hover === i) && (
+                        <motion.circle
+                          cx={p.x}
+                          cy={p.y}
+                          fill="none"
+                          stroke={color}
+                          strokeWidth={1.5}
+                          initial={{ r: 5.5, opacity: 0.7 }}
+                          animate={{ r: 14, opacity: 0 }}
+                          transition={{ duration: 1.6, repeat: Infinity, ease: "easeOut" }}
+                        />
+                      )}
+                      <motion.circle
+                        cx={p.x}
+                        cy={p.y}
+                        initial={{ opacity: reduce ? 1 : 0, r: reduce ? 3.4 : 0 }}
+                        animate={{ opacity: 1, r: i === n - 1 || hover === i ? 5.5 : 3.4 }}
+                        transition={reduce ? { duration: 0 } : { type: "spring", stiffness: 380, damping: 16, delay: hover === null ? 0.35 + 0.08 * (n - 1 - i) : 0 }}
+                        fill={i === n - 1 || hover === i ? color : "var(--box-bg)"}
+                        stroke={color}
+                        strokeWidth={2}
+                      />
+                    </g>
                   ) : null
                 )}
               </>
@@ -251,6 +264,6 @@ export function WeeklyAnalysisTrend({
           </div>
         )}
       </div>
-    </motion.section>
+    </div>
   );
 }

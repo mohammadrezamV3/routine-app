@@ -1,29 +1,23 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import "./wa-viz.css";
+import { useState } from "react";
 import { motion } from "framer-motion";
-import { Grid3x3 } from "lucide-react";
 import { ANALYSIS_DOMAIN_LABELS, type DayCell, type DomainResult } from "@/lib/weeklyAnalysis/types";
-import { SectionHead, V_WK_CARD, heatPct, jalaliShort, useSeen, weekdayLetter } from "./WeeklyAnalysisKit";
+import { WK_EASE, heatPct, jalaliShort, useCalmMotion, useSeen, weekdayLetter } from "./WeeklyAnalysisKit";
 
 type Row = { key: string; label: string; values: (number | null)[]; total?: boolean };
 
-// نقشه‌ی حرارتی 7 روز × دامنه (شنبه سمت راست). شدت رنگ هر خانه = امتیاز،
-// همه با یک رنگ (دامنه‌ها فقط با اسم ردیف شناخته می‌شن). خانه‌ی بدون داده فقط قاب خط‌چینه (نه رنگ صفر)، روز آینده
-// کم‌رنگ و ستون امروز قاب دارد. ورود: موج مورب (تاخیر هر خانه از ردیف+ستون)
-// فقط با opacity/transform. زدن عنوان ستون = برگه‌ی جزئیات همون روز.
+// نقشه‌ی حرارتی 7 روز × بخش (پنل داخل «الگوهای هفته»، شنبه سمت راست). شدت رنگ
+// هر خانه = امتیاز. خانه‌ها با موج مورب (تاخیر = ردیف + ستون) pop می‌کنن و
+// هاور (فقط ماوس) کمی بزرگشون می‌کنه. خانه‌ی بدون داده فقط قاب خط‌چینه. زدن
+// عنوان ستون = برگه‌ی جزئیات همون روز.
 export function WeeklyAnalysisHeatmap({
   domains, days, onPickDay,
 }: { domains: DomainResult[]; days: DayCell[]; onPickDay: (i: number) => void }) {
   const [sel, setSel] = useState<{ row: number; col: number } | null>(null);
   const [seenRef, ready] = useSeen<HTMLDivElement>();
-  // بعد از پایان موج ورود، تاخیر هر خانه صفر می‌شه تا هاور/خاموش‌شدن فوری باشه
-  const [done, setDone] = useState(false);
-  useEffect(() => {
-    if (!ready) return;
-    const t = setTimeout(() => setDone(true), 1800);
-    return () => clearTimeout(t);
-  }, [ready]);
+  const calm = useCalmMotion();
 
   const rows: Row[] = [
     ...domains.map((d) => ({ key: d.domain, label: ANALYSIS_DOMAIN_LABELS[d.domain], values: d.daily })),
@@ -35,9 +29,7 @@ export function WeeklyAnalysisHeatmap({
   const selVal = sel && selRow ? selRow.values[sel.col] : null;
 
   return (
-    <motion.section className="wk-card wk-heat-card" variants={V_WK_CARD} aria-label="نقشه‌ی حرارتی هفته">
-      <SectionHead icon={<Grid3x3 size={15} />} title="نقشه‌ی حرارتی" />
-
+    <div className="wkv-heat-wrap">
       <div className="wk-heat-readout" aria-live="polite">
         {selRow && selDay ? (
           <>
@@ -51,19 +43,19 @@ export function WeeklyAnalysisHeatmap({
 
       <div
         ref={seenRef}
-        className={`wk-heat${ready ? " is-on" : ""}${done ? " is-done" : ""}${sel ? " has-sel" : ""}`}
+        className="wkv-heat"
         role="grid"
         aria-label="امتیاز هر بخش در هر روز"
         onPointerLeave={(e) => { if (e.pointerType === "mouse") setSel(null); }}
       >
-        <div className="wk-heat-row is-head" role="row">
-          <span className="wk-heat-label" />
+        <div className="wkv-heat-row is-head" role="row">
+          <span className="wkv-heat-label" />
           {days.map((d, ci) => (
             <button
               key={d.date}
               type="button"
               role="columnheader"
-              className={`wk-ghost wk-heat-day${d.isToday ? " is-today" : ""}${sel?.col === ci ? " is-hl" : ""}`}
+              className={`wk-ghost wkv-heat-day${d.isToday ? " is-today" : ""}${sel?.col === ci ? " is-hl" : ""}`}
               onClick={() => onPickDay(ci)}
               aria-label={`جزئیات ${d.weekday}`}
             >
@@ -72,23 +64,25 @@ export function WeeklyAnalysisHeatmap({
           ))}
         </div>
         {rows.map((r, ri) => (
-          <div key={r.key} className={`wk-heat-row${r.total ? " is-total" : ""}${sel?.row === ri ? " is-hl" : ""}`} role="row">
-            <span className="wk-heat-label" role="rowheader">{r.label}</span>
+          <div key={r.key} className={`wkv-heat-row${r.total ? " is-total" : ""}${sel?.row === ri ? " is-hl" : ""}`} role="row">
+            <span className="wkv-heat-label" role="rowheader">{r.label}</span>
             {r.values.map((v, ci) => {
               const day = days[ci];
               const future = !!day?.isFuture;
               const active = sel?.row === ri && sel?.col === ci;
               const pct = v === null ? 0 : heatPct(v);
+              const dim = !!sel && !active && sel.row !== ri && sel.col !== ci;
               return (
-                <button
+                <motion.button
                   key={ci}
                   type="button"
                   role="gridcell"
-                  className={`wk-ghost wk-heat-cell${v === null ? " is-empty" : ""}${future ? " is-future" : ""}${day?.isToday ? " is-today" : ""}${active ? " is-active" : ""}${!active && sel && (sel.row === ri || sel.col === ci) ? " is-rc" : ""}`}
-                  style={{
-                    ["--hc" as string]: v === null ? "transparent" : `color-mix(in srgb, var(--ring-1a) ${pct}%, transparent)`,
-                    ["--hd" as string]: `${120 + (ri + ci) * 55}ms`,
-                  }}
+                  className={`wk-ghost wkv-heat-cell${v === null ? " is-empty" : ""}${future ? " is-future" : ""}${day?.isToday ? " is-today" : ""}${active ? " is-active" : ""}${dim ? " is-dim" : ""}`}
+                  style={{ ["--hc" as string]: v === null ? "transparent" : `color-mix(in srgb, var(--ring-1a) ${pct}%, transparent)` }}
+                  initial={calm ? false : { opacity: 0, scale: 0.35 }}
+                  animate={calm || ready ? { opacity: 1, scale: 1 } : { opacity: 0, scale: 0.35 }}
+                  transition={{ duration: 0.45, delay: calm ? 0 : 0.08 + (ri + ci) * 0.045, ease: WK_EASE }}
+                  whileHover={calm ? undefined : { scale: 1.14, transition: { duration: 0.15, delay: 0 } }}
                   onClick={() => setSel(active ? null : { row: ri, col: ci })}
                   onPointerEnter={(e) => { if (e.pointerType === "mouse") setSel({ row: ri, col: ci }); }}
                   aria-label={`${day?.weekday ?? ""} ${r.label}: ${v === null ? "بدون داده" : Math.round(v)}`}
@@ -108,6 +102,6 @@ export function WeeklyAnalysisHeatmap({
         <i className="is-empty" />
         <span>بدون داده</span>
       </div>
-    </motion.section>
+    </div>
   );
 }
