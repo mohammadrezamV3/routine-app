@@ -1,8 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { Prisma } from "@prisma/client";
 import { prisma } from "@/lib/prisma";
-import { featureBlocked, isFeatureEnabled } from "@/lib/featureFlagsServer";
-import { appendMmLog, normalizeMmEvents, readStoredRules, rulesForEa } from "@/lib/moneyMgmt";
+import { featureBlocked } from "@/lib/featureFlagsServer";
 import { checkRateLimit, getClientIp } from "@/lib/rateLimit";
 import { clampText } from "@/lib/validate";
 import { sessionsAt } from "@/lib/forexSessions";
@@ -44,7 +43,7 @@ export async function POST(req: NextRequest) {
 
   const link = await prisma.tradeMtLink.findUnique({
     where: { tokenHash },
-    select: { id: true, userId: true, accountId: true, revokedAt: true, platform: true, moneyRules: true, mmLog: true },
+    select: { id: true, userId: true, accountId: true, revokedAt: true, platform: true },
   });
   if (!link || link.revokedAt) return NextResponse.json({ error: "unauthorized" }, { status: 401 });
   // اتصال متاتریدر از پنل ادمین خاموشه (برای صاحب حساب) → اکسپرت همون ۴۰۳ رو می‌گیره
@@ -226,32 +225,11 @@ export async function POST(req: NextRequest) {
     error: shotReport.error,
   });
 
-  // مدیریت سرمایه (EA 1.43+): رویدادهای اجرای قوانین به لاگ حساب اضافه می‌شن و قوانین
-  // فقط وقتی روشن باشن و فلگ برای صاحب حساب باز باشه به EA برمی‌گردن. کل بخش
-  // جدا محافظت می‌شه؛ EA قدیمی بدون این فیلدها دقیقا مثل قبل کار می‌کنه.
-  let mm: Record<string, number> | null = null;
-  try {
-    const evs = normalizeMmEvents(body.mmEvents);
-    if (evs.length) {
-      await prisma.tradeMtLink.update({
-        where: { id: link.id },
-        data: { mmLog: appendMmLog(link.mmLog, evs) as unknown as Prisma.InputJsonValue },
-      });
-    }
-    if (link.moneyRules && (await isFeatureEnabled("tradeMoneyMgmt", link.userId))) {
-      const rules = readStoredRules(link.moneyRules);
-      if (rules.enabled) mm = rulesForEa(rules);
-    }
-  } catch (e) {
-    console.error("[mt/sync] money management failed", link.id, e);
-  }
-
   // معامله‌ی تازه/به‌روزشده از EA → حساب/ژورنال باز کاربر (روی هر دستگاهی) همون لحظه
   if (created > 0 || updated > 0 || cashCreated > 0 || cashUpdated > 0 || shotsAttached > 0) void publishDataChanged(link.userId, ["trade"]);
 
   return NextResponse.json({
     ok: true, received: trades.length, created, updated, skipped, failed,
     cashflows: { received: cashflows.length, created: cashCreated, updated: cashUpdated },
-    ...(mm ? { mm } : {}),
   });
 }

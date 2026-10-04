@@ -1396,10 +1396,6 @@ model TradeMtLink {
   shotError    String?
   shotErrorAt  DateTime?
 
-  // مدیریت سرمایه روی اکسپرت (lib/moneyMgmt.ts): قوانین هر حساب + آخرین اقدام‌های اکسپرت
-  moneyRules Json?
-  mmLog      Json?
-
   connectedAt DateTime?
   lastSyncAt  DateTime?
   revokedAt   DateTime?

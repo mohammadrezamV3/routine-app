@@ -7,7 +7,7 @@
 // ثبت می‌کنه، و نسخه‌ی اکسپرت ذخیره می‌شه تا پنل بگه «اکسپرتت قدیمیه».
 
 /** آخرین نسخه‌ی اکسپرت قابل دانلود (public/ea) — با #property version هر دو فایل یکی بمونه */
-export const EA_LATEST_VERSION = "1.43";
+export const EA_LATEST_VERSION = "1.42";
 
 /** نسخه‌ای که اکسپرت گزارش می‌ده → «1.42» یا null */
 export function normalizeEaVersion(v: unknown): string | null {
