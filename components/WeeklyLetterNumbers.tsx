@@ -6,13 +6,13 @@ import { motion, useInView } from "framer-motion";
 import { Activity } from "lucide-react";
 import type { WeeklyLetterData } from "@/lib/weeklyLetter/types";
 import type { TrendPoint } from "@/lib/weeklyAnalysis/types";
-import { CountText, DOMAIN_ICONS, Reveal, WL_EASE, domainClass, useLite } from "./WeeklyLetterShared";
-import { jalaliDayMonth } from "./WeeklyLetterUtils";
+import { CountText, DOMAIN_ICONS, Reveal, WL_EASE, useLite } from "./WeeklyLetterShared";
+import { jalaliDayMonth, smoothPath } from "./WeeklyLetterUtils";
 
 function NumberTile({ n, i }: { n: WeeklyLetterData["numbers"][number]; i: number }) {
   const Icon = n.domain ? DOMAIN_ICONS[n.domain] : Activity;
   return (
-    <Reveal className={`wl-card wl-num ${domainClass(n.domain)}`} delay={(i % 3) * 0.06}>
+    <Reveal className="wl-card wl-num" delay={(i % 3) * 0.06}>
       <span className="wl-num-ico"><Icon size={16} /></span>
       <span className="wl-num-label">{n.label}</span>
       <span className="wl-num-val">
@@ -22,24 +22,6 @@ function NumberTile({ n, i }: { n: WeeklyLetterData["numbers"][number]; i: numbe
       {n.hint && <span className={`wl-num-hint is-${n.tone ?? "neutral"}`}>{n.hint}</span>}
     </Reveal>
   );
-}
-
-// منحنی نرم از نقاط (Catmull-Rom → Bézier)
-function smooth(pts: { x: number; y: number }[]): string {
-  if (pts.length < 2) return pts.length ? `M${pts[0].x} ${pts[0].y}` : "";
-  let d = `M${pts[0].x} ${pts[0].y}`;
-  for (let i = 0; i < pts.length - 1; i++) {
-    const p0 = pts[i - 1] ?? pts[i];
-    const p1 = pts[i];
-    const p2 = pts[i + 1];
-    const p3 = pts[i + 2] ?? p2;
-    const c1x = p1.x + (p2.x - p0.x) / 6;
-    const c1y = p1.y + (p2.y - p0.y) / 6;
-    const c2x = p2.x - (p3.x - p1.x) / 6;
-    const c2y = p2.y - (p3.y - p1.y) / 6;
-    d += ` C${c1x.toFixed(1)} ${c1y.toFixed(1)} ${c2x.toFixed(1)} ${c2y.toFixed(1)} ${p2.x} ${p2.y}`;
-  }
-  return d;
 }
 
 const H = 132;
@@ -100,8 +82,8 @@ function TrendCard({ trend }: { trend: TrendPoint[] }) {
       {W > 0 && <svg viewBox={`0 0 ${W} ${H + 18}`} width={W} height={H + 18} className="wl-trend-svg" role="img" aria-label="نمودار امتیاز هفته‌ها">
         <defs>
           <linearGradient id={`tg${uid}`} x1="0" x2="0" y1="0" y2="1">
-            <stop offset="0%" stopColor="var(--accent)" stopOpacity=".32" />
-            <stop offset="100%" stopColor="var(--accent)" stopOpacity="0" />
+            <stop offset="0%" stopColor="var(--ring-1a)" stopOpacity=".34" />
+            <stop offset="100%" stopColor="var(--ring-1a)" stopOpacity="0" />
           </linearGradient>
         </defs>
         {[25, 50, 75].map((g) => {
@@ -110,7 +92,7 @@ function TrendCard({ trend }: { trend: TrendPoint[] }) {
         })}
         {model.segs.map((seg, i) => {
           if (seg.length < 2) return null;
-          const line = smooth(seg);
+          const line = smoothPath(seg);
           const area = `${line} L${seg[seg.length - 1].x} ${bottom} L${seg[0].x} ${bottom} Z`;
           return (
             <g key={i}>
@@ -124,8 +106,8 @@ function TrendCard({ trend }: { trend: TrendPoint[] }) {
               <motion.path
                 d={line}
                 fill="none"
-                stroke="var(--accent)"
-                strokeWidth={2.4}
+                stroke="var(--ring-1a)"
+                strokeWidth={2.6}
                 strokeLinecap="round"
                 strokeLinejoin="round"
                 initial={{ pathLength: lite ? 1 : 0 }}

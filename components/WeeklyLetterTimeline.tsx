@@ -4,7 +4,7 @@
 // و تک‌تک جزئیات ثبت‌شده‌ی دامنه‌ها (DayDetails) با آیکون و متن فارسی.
 import { Crown, Minus, TrendingDown } from "lucide-react";
 import type { WeeklyLetterData } from "@/lib/weeklyLetter/types";
-import { DOMAIN_ICONS, MeterBar, Reveal, domainClass } from "./WeeklyLetterShared";
+import { DOMAIN_ICONS, MeterBar, Reveal } from "./WeeklyLetterShared";
 import { BAND_COLOR, bestWorstIndex, dayRows, jalaliDayMonth, scoreBand } from "./WeeklyLetterUtils";
 
 export function WeeklyLetterTimeline({ days, domains }: { days: WeeklyLetterData["days"]; domains: WeeklyLetterData["domains"] }) {
@@ -48,7 +48,7 @@ export function WeeklyLetterTimeline({ days, domains }: { days: WeeklyLetterData
                     const Icon = DOMAIN_ICONS[r.domain];
                     const sc = dailyOf(r.domain, i);
                     return (
-                      <li key={r.domain} className={`wl-day-row ${domainClass(r.domain)}`}>
+                      <li key={r.domain} className="wl-day-row">
                         <span className="wl-day-ico"><Icon size={15} /></span>
                         <span className="wl-day-txt">
                           <span className={`wl-day-main is-${r.tone ?? "neutral"}`}>{r.text}</span>

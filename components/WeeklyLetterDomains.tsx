@@ -8,7 +8,8 @@ import { motion, useInView } from "framer-motion";
 import { ArrowLeft, TrendingDown, TrendingUp } from "lucide-react";
 import { ANALYSIS_DOMAIN_LABELS } from "@/lib/weeklyAnalysis/types";
 import type { LetterDomain } from "@/lib/weeklyLetter/types";
-import { DOMAIN_HREFS, DOMAIN_ICONS, DOM_GRAD, LazyRing, Reveal, WL_EASE, domainClass, useLite } from "./WeeklyLetterShared";
+import { DOMAIN_HREFS, DOMAIN_ICONS, DOM_GRAD, LazyRing, Reveal, WL_EASE, useLite } from "./WeeklyLetterShared";
+import { scoreIntensity } from "./WeeklyLetterUtils";
 
 const DAY_LETTERS = ["ش", "ی", "د", "س", "چ", "پ", "ج"];
 const DAY_NAMES = ["شنبه", "یکشنبه", "دوشنبه", "سه‌شنبه", "چهارشنبه", "پنجشنبه", "جمعه"];
@@ -31,7 +32,7 @@ function MicroBars({ daily, best, worst }: { daily: (number | null)[]; best: str
               ) : (
                 <motion.i
                   className="wl-bar-fill"
-                  style={{ transformOrigin: "bottom", height: `${Math.max(6, v)}%` }}
+                  style={{ transformOrigin: "bottom", height: `${Math.max(6, v)}%`, opacity: isBest ? 1 : scoreIntensity(v) }}
                   initial={{ scaleY: lite ? 1 : 0 }}
                   animate={{ scaleY: inView || lite ? 1 : 0 }}
                   transition={{ duration: lite ? 0.2 : 0.7, ease: WL_EASE as never, delay: lite ? 0 : 0.2 + i * 0.05 }}
@@ -52,7 +53,7 @@ function DomainCard({ d, i }: { d: LetterDomain; i: number }) {
   const has = d.hasData && d.score !== null;
   const delta = d.delta;
   return (
-    <Reveal className={`wl-card wl-dom ${domainClass(d.domain)}${has ? "" : " is-empty"}`} delay={(i % 2) * 0.08}>
+    <Reveal className={`wl-card wl-dom${has ? "" : " is-empty"}`} delay={(i % 2) * 0.08} style={{ "--wl-k": scoreIntensity(d.score) } as React.CSSProperties}>
       <div className="wl-dom-head">
         <span className="wl-dom-ico"><Icon size={18} /></span>
         <h3 className="wl-dom-name">{label}</h3>

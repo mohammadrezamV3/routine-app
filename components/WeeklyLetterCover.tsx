@@ -11,8 +11,7 @@ import type { WeekArchetypeKey } from "@/lib/weeklyAnalysis/types";
 import type { WeeklyLetterData } from "@/lib/weeklyLetter/types";
 import { CountText, DOM_GRAD, GradeStamp, WL_EASE, useLite } from "./WeeklyLetterShared";
 import { GradientRing } from "./GradientRing";
-import { gradeAccent } from "./WeeklyLetterStoriesData";
-import { letterYear } from "./WeeklyLetterUtils";
+import { letterYear, scoreIntensity } from "./WeeklyLetterUtils";
 
 export const ARCH_ICONS: Record<WeekArchetypeKey, LucideIcon> = {
   perfect: Crown,
@@ -37,7 +36,7 @@ export function BrandMark() {
   );
 }
 
-export function WeeklyLetterCover({ letter, storyCount = 0, onPlayStory }: { letter: WeeklyLetterData; storyCount?: number; onPlayStory?: () => void }) {
+export function WeeklyLetterCover({ letter, storyCount = 0, storySeconds = 0, onPlayStory }: { letter: WeeklyLetterData; storyCount?: number; storySeconds?: number; onPlayStory?: () => void }) {
   const lite = useLite();
   // شماره‌ی بزرگ پشت جلد با اسکرول کمی بالا می‌ره (فقط transform)
   const { scrollY } = useScroll();
@@ -91,9 +90,9 @@ export function WeeklyLetterCover({ letter, storyCount = 0, onPlayStory }: { let
 
       <div className="wl-cover-body">
         <motion.div className="wl-cover-score" variants={item}>
-          <div className={`wl-score-ring ${gradeAccent(o.grade)}`}>
+          <div className="wl-score-ring" style={{ "--wl-k": scoreIntensity(score) } as React.CSSProperties}>
             <span className="wl-cover-aura" aria-hidden="true" />
-            <GradientRing value={pct} size={176} stroke={13} delay={0.35} grad={o.grade ? DOM_GRAD : undefined}>
+            <GradientRing value={pct} size={176} stroke={13} delay={0.35} grad={DOM_GRAD}>
               <span className="wl-score-center">
                 {score === null ? (
                   <span className="wl-score-none">بدون داده</span>
@@ -130,7 +129,7 @@ export function WeeklyLetterCover({ letter, storyCount = 0, onPlayStory }: { let
               <button type="button" className="trade-primary-btn wl-cta-btn wl-story-play" onClick={onPlayStory}>
                 <Play size={16} fill="currentColor" />پخش داستان هفته
               </button>
-              <span className="wl-story-meta">{storyCount} اسلاید، کمتر از یک دقیقه</span>
+              <span className="wl-story-meta">{storyCount} اسلاید، {storySeconds > 0 && storySeconds < 60 ? `حدود ${storySeconds} ثانیه` : "حدود یک دقیقه"}</span>
             </motion.div>
           )}
         </motion.div>

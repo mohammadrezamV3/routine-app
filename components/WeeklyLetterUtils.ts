@@ -68,13 +68,45 @@ export function scoreBand(score: number | null | undefined): ScoreBand | "none" 
   return "low";
 }
 
+/** رنگ شدت امتیاز: همیشه همون یک رنگ داده (ring-1)؛ امتیاز کمتر = کم‌رنگ‌تر (نه رنگ دیگه). */
 export const BAND_COLOR: Record<ScoreBand | "none", string> = {
-  great: "var(--wl-good)",
-  good: "var(--accent)",
-  mid: "var(--ring-3a)",
-  low: "var(--wl-bad)",
+  great: "var(--ring-1a)",
+  good: "color-mix(in srgb, var(--ring-1a) 80%, var(--muted2))",
+  mid: "color-mix(in srgb, var(--ring-1a) 56%, var(--muted2))",
+  low: "color-mix(in srgb, var(--ring-1a) 36%, var(--muted2))",
   none: "var(--muted2)",
 };
+
+/** شدت بصری 0.4 تا 1 از روی امتیاز (برای شفافیت میله/هاله/حلقه)؛ بی‌امتیاز = 0.4 */
+export function scoreIntensity(score: number | null | undefined): number {
+  if (score === null || score === undefined || !Number.isFinite(score)) return 0.4;
+  return Math.round((0.4 + 0.6 * Math.min(1, Math.max(0, score / 100))) * 100) / 100;
+}
+
+export type OdoCell = { kind: "digit"; digit: number } | { kind: "char"; ch: string };
+
+/** رشته‌ی عدد → سلول‌های اودومتر: هر رقم جدا می‌چرخه، بقیه‌ی نویسه‌ها (/ . % + −) ثابت می‌مونن. */
+export function odometerCells(value: string): OdoCell[] {
+  return Array.from(value).map((ch) => (ch >= "0" && ch <= "9" ? { kind: "digit", digit: ch.charCodeAt(0) - 48 } : { kind: "char", ch }));
+}
+
+/** منحنی نرم از نقاط (Catmull-Rom به Bézier) — مشترک نمودار خواننده و اسلاید مسیر */
+export function smoothPath(pts: { x: number; y: number }[]): string {
+  if (pts.length < 2) return pts.length ? `M${pts[0].x} ${pts[0].y}` : "";
+  let d = `M${pts[0].x} ${pts[0].y}`;
+  for (let i = 0; i < pts.length - 1; i++) {
+    const p0 = pts[i - 1] ?? pts[i];
+    const p1 = pts[i];
+    const p2 = pts[i + 1];
+    const p3 = pts[i + 2] ?? p2;
+    const c1x = p1.x + (p2.x - p0.x) / 6;
+    const c1y = p1.y + (p2.y - p0.y) / 6;
+    const c2x = p2.x - (p3.x - p1.x) / 6;
+    const c2y = p2.y - (p3.y - p1.y) / 6;
+    d += ` C${c1x.toFixed(1)} ${c1y.toFixed(1)} ${c2x.toFixed(1)} ${c2y.toFixed(1)} ${p2.x} ${p2.y}`;
+  }
+  return d;
+}
 
 export function fmtInt(n: number): string {
   return Math.round(n).toLocaleString("en-US");

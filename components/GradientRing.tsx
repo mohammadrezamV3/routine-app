@@ -23,7 +23,9 @@ export function GradientArc({ c, r, stroke, value, from, to, delay = 0, trackOpa
   const mv = useMotionValue(0);
   useEffect(() => {
     const v = Math.max(0, Math.min(1, value));
-    if (reduce) { mv.set(v); return; }
+    // با حرکت‌کاهی هم از animate (بی‌مدت) رد می‌شه نه mv.set: set مستقیم
+    // روی بعضی mountها به useTransform نمی‌رسید و قوس خالی می‌موند
+    if (reduce) { const c0 = animate(mv, v, { duration: 0 }); return () => c0.stop(); }
     const ctrl = animate(mv, v, { duration: 1.4, ease: EASE as any, delay });
     return () => ctrl.stop();
   }, [value, reduce, delay, mv]);

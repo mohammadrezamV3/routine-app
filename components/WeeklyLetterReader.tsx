@@ -22,13 +22,15 @@ import {
   WeeklyLetterAchievements, WeeklyLetterCoach, WeeklyLetterGoals, WeeklyLetterInsights, WeeklyLetterNext, WeeklyLetterReflection, WeeklyLetterWins,
 } from "./WeeklyLetterStory";
 import { WeeklyLetterStories } from "./WeeklyLetterStories";
-import { buildStorySlides } from "./WeeklyLetterStoriesData";
+import { buildStorySlides, storySeconds } from "./WeeklyLetterStoriesData";
 import { normalizeLetter, offsetOfWeek } from "./WeeklyLetterUtils";
 
 const CH_ICONS: Record<string, LucideIcon> = {
   "wl-numbers": BarChart3, "wl-days": CalendarDays, "wl-domains": LayoutGrid, "wl-insights": Lightbulb, "wl-wins": Trophy,
   "wl-goals": Target, "wl-ach": Award, "wl-coach": Sparkles, "wl-refl": PenLine, "wl-next": Compass,
 };
+
+const STORY_MIN = 3;
 
 type Payload = { letter: WeeklyLetterData; prev: string | null; next: string | null };
 
@@ -81,6 +83,19 @@ function LetterBody({ data }: { data: Payload }) {
   const [storyOpen, setStoryOpen] = useState(false);
   const slides = useMemo(() => buildStorySlides(letter), [letter]);
 
+  // ورودی از بنر صفحه‌ی آنالیز: /analysis/weekly/letters/<week>?story=1 داستان رو خودکار باز می‌کنه
+  // و پارامتر رو از آدرس برمی‌داره (تا ریلود/برگشت دوباره باز نکنه). فقط وقتی داستان قابل پخشه.
+  useEffect(() => {
+    let params: URLSearchParams;
+    try { params = new URLSearchParams(window.location.search); } catch { return; }
+    if (params.get("story") !== "1") return;
+    params.delete("story");
+    const qs = params.toString();
+    try { window.history.replaceState(window.history.state, "", `${window.location.pathname}${qs ? `?${qs}` : ""}${window.location.hash}`); } catch { /* آدرس همون می‌مونه */ }
+    if (slides.length >= STORY_MIN) setStoryOpen(true);
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
   const chapters = useMemo(() => {
     const c: (TocItem & { show: boolean })[] = [
       { id: "wl-numbers", label: "خلاصه در اعداد", show: letter.numbers.length > 0 || letter.trend.length > 1 },
@@ -104,7 +119,7 @@ function LetterBody({ data }: { data: Payload }) {
       <div className="wl-top">
         <Link href="/analysis/weekly/letters" className="wl-back"><ArrowRight size={16} />همه‌ی شماره‌ها</Link>
       </div>
-      <WeeklyLetterCover letter={letter} storyCount={slides.length} onPlayStory={() => setStoryOpen(true)} />
+      <WeeklyLetterCover letter={letter} storyCount={slides.length} storySeconds={storySeconds(slides)} onPlayStory={() => setStoryOpen(true)} />
       <WeeklyLetterStories open={storyOpen} onClose={() => setStoryOpen(false)} letter={letter} slides={slides} offset={offset} />
       <WeeklyLetterToc items={chapters} />
 

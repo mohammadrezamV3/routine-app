@@ -10,9 +10,9 @@ import {
 } from "lucide-react";
 import { ANALYSIS_DOMAIN_LABELS, type Insight } from "@/lib/weeklyAnalysis/types";
 import type { WeeklyLetterData } from "@/lib/weeklyLetter/types";
-import { CountText, DOMAIN_ICONS, MeterBar, Reveal, domainClass } from "./WeeklyLetterShared";
+import { CountText, DOMAIN_ICONS, MeterBar, Reveal } from "./WeeklyLetterShared";
 
-const INSIGHT_ICONS: Record<Insight["icon"], LucideIcon> = {
+export const INSIGHT_ICONS: Record<Insight["icon"], LucideIcon> = {
   link: Link2, flame: Flame, trophy: Trophy, alert: AlertTriangle, trend_up: TrendingUp, trend_down: TrendingDown, calendar: CalendarDays, zap: Zap,
 };
 
@@ -22,7 +22,7 @@ export function WeeklyLetterInsights({ insights }: { insights: Insight[] }) {
       {insights.map((n, i) => {
         const Icon = INSIGHT_ICONS[n.icon] ?? Zap;
         return (
-          <Reveal key={n.id} className={`wl-card wl-ins is-${n.tone} ${domainClass(n.domain)}`} delay={(i % 2) * 0.07}>
+          <Reveal key={n.id} className={`wl-card wl-ins is-${n.tone}`} delay={(i % 2) * 0.07}>
             <span className="wl-ins-ico"><Icon size={18} /></span>
             <div className="wl-ins-body">
               <h3>{n.title}</h3>
@@ -74,7 +74,7 @@ export function WeeklyLetterGoals({ goals }: { goals: WeeklyLetterData["goals"] 
         const Icon = g.domain ? DOMAIN_ICONS[g.domain] : Target;
         const ratio = g.target && g.achievedScore !== null ? Math.min(1, Math.max(0, g.achievedScore / g.target)) : null;
         return (
-          <Reveal key={g.id} className={`wl-card wl-goal ${domainClass(g.domain)}`} delay={(i % 3) * 0.06}>
+          <Reveal key={g.id} className="wl-card wl-goal" delay={(i % 3) * 0.06}>
             <span className="wl-goal-ico"><Icon size={17} /></span>
             <div className="wl-goal-body">
               <h3>{g.title}</h3>
@@ -146,7 +146,7 @@ export function WeeklyLetterCoach({ ai }: { ai: NonNullable<WeeklyLetterData["ai
       {ai.recommendations.length > 0 && (
         <ol className="wl-rec-list">
           {ai.recommendations.map((r, i) => (
-            <Reveal key={i} as="li" className={`wl-card wl-rec is-${r.priority} ${domainClass(r.domain)}`} delay={0.05 * (i % 3)}>
+            <Reveal key={i} as="li" className={`wl-card wl-rec is-${r.priority}`} delay={0.05 * (i % 3)}>
               <span className="wl-rec-no" aria-hidden="true">{i + 1}</span>
               <div>
                 <h3>{r.title}</h3>
@@ -164,8 +164,8 @@ export function WeeklyLetterCoach({ ai }: { ai: NonNullable<WeeklyLetterData["ai
   );
 }
 
-const MOODS = ["😞", "🙁", "😐", "🙂", "😄"];
-const MOOD_LABELS = ["خیلی بد", "بد", "معمولی", "خوب", "عالی"];
+export const MOODS = ["😞", "🙁", "😐", "🙂", "😄"];
+export const MOOD_LABELS = ["خیلی بد", "بد", "معمولی", "خوب", "عالی"];
 
 export function WeeklyLetterReflection({ reflection }: { reflection: NonNullable<WeeklyLetterData["reflection"]> }) {
   const mood = reflection.mood && reflection.mood >= 1 && reflection.mood <= 5 ? reflection.mood : null;
@@ -204,7 +204,7 @@ export function WeeklyLetterNext({ letter, offset }: { letter: WeeklyLetterData;
   const nw = letter.nextWeek;
   const Icon = nw.focusDomain ? DOMAIN_ICONS[nw.focusDomain] : Target;
   return (
-    <Reveal className={`wl-card wl-next ${domainClass(nw.focusDomain)}`}>
+    <Reveal className="wl-card wl-next">
       <div className="wl-next-top">
         <span className="wl-next-ico"><Icon size={22} /></span>
         <div className="wl-next-text">

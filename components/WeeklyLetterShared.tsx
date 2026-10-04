@@ -3,7 +3,7 @@
 // کمک‌ابزارهای مشترک خواننده و آرشیو هفته‌نامه: آیکون/رنگ هر دامنه، فچ،
 // ورودی‌های حرکتی (reveal، شمارنده، حلقه‌ی تنبل) و گیت صفحه. همه‌ی حرکت‌ها
 // فقط transform/opacity و روی «کاهش حرکت» و html[data-perf="low"] ساده می‌شن.
-import { useEffect, useId, useRef, useState, type ReactNode } from "react";
+import { useEffect, useId, useRef, useState, type CSSProperties, type ReactNode } from "react";
 import { animate, motion, useInView, useReducedMotion } from "framer-motion";
 import { useSession } from "next-auth/react";
 import {
@@ -13,9 +13,8 @@ import type { AnalysisDomain, Grade } from "@/lib/weeklyAnalysis/types";
 import { AuthGate } from "@/components/AuthGate";
 import { FeatureGate } from "@/components/FeatureGate";
 import { ModuleGate } from "@/components/ModuleGate";
-import { GradientRing } from "@/components/GradientRing";
+import { GradientRing, RING_GREEN } from "@/components/GradientRing";
 import { parseCountable } from "./WeeklyLetterUtils";
-import { gradeAccent } from "./WeeklyLetterStoriesData";
 import "./weekly-letter.css";
 
 export const WL_EASE = [0.22, 1, 0.36, 1] as const;
@@ -41,11 +40,8 @@ export const DOMAIN_HREFS: Record<AnalysisDomain, string> = {
   learning: "/roadmaps",
 };
 
-export function domainClass(d: AnalysisDomain | null | undefined): string {
-  return d ? `wl-dom-${d}` : "wl-dom-none";
-}
-
-export const DOM_GRAD: [string, string] = ["var(--wl-da)", "var(--wl-db)"];
+// v3: فقط یک رنگ داده (گرادیان حلقه‌ی برند) — حلقه‌های خواننده و داستان همیشه همین
+export const DOM_GRAD = RING_GREEN;
 
 // ---- فچ ----
 export class WlError extends Error {
@@ -80,12 +76,13 @@ export function useLite(): boolean {
   return !!reduce || low;
 }
 
-export function Reveal({ children, className, delay = 0, y = 18, as = "div" }: { children: ReactNode; className?: string; delay?: number; y?: number; as?: "div" | "li" | "section" | "article" }) {
+export function Reveal({ children, className, delay = 0, y = 18, as = "div", style }: { children: ReactNode; className?: string; delay?: number; y?: number; as?: "div" | "li" | "section" | "article"; style?: CSSProperties }) {
   const lite = useLite();
   const Cmp = as === "li" ? motion.li : as === "section" ? motion.section : as === "article" ? motion.article : motion.div;
   return (
     <Cmp
       className={className}
+      style={style}
       initial={{ opacity: 0, y: lite ? 0 : y }}
       whileInView={{ opacity: 1, y: 0 }}
       viewport={{ once: true, margin: "0px 0px -8% 0px" }}
@@ -184,7 +181,7 @@ export function GradeStamp({ grade, size = 84, delay = 1, className }: { grade: 
   const lite = useLite();
   return (
     <motion.span
-      className={`wl-stamp ${gradeAccent(grade)}${className ? ` ${className}` : ""}`}
+      className={`wl-stamp${className ? ` ${className}` : ""}`}
       style={{ width: size, height: size }}
       role="img"
       aria-label={`درجه ${grade}`}
