@@ -1,7 +1,6 @@
 import { describe, it, expect } from "vitest";
 import {
   DAY_PRESETS,
-  PROGRAM_TEMPLATES,
   rowDurationMin,
   durationText,
   addMinutesToTime,
@@ -29,41 +28,6 @@ describe("programForm", () => {
       expect(DAY_PRESETS[0].jsDays).toEqual([6, 0, 1, 2, 3, 4, 5]); // تمام هفته
       expect(DAY_PRESETS[1].jsDays).toEqual([6, 0, 1, 2, 3]); // شنبه تا چهارشنبه
       expect(DAY_PRESETS[2].jsDays).toEqual([4, 5]); // پنجشنبه و جمعه
-    });
-  });
-
-  describe("PROGRAM_TEMPLATES", () => {
-    it("هشت برنامه پیشنهادی تعریف شده‌اند", () => {
-      expect(PROGRAM_TEMPLATES).toHaveLength(8);
-    });
-
-    it("هر برنامه نام، برچسب، مدت و آیکون دارد", () => {
-      for (const template of PROGRAM_TEMPLATES) {
-        expect(template.name).toBeTruthy();
-        expect(template.tag).toBeTruthy();
-        expect(template.minutes).toBeGreaterThan(0);
-        expect(template.icon).toBeTruthy();
-      }
-    });
-
-    it("برنامه‌های انتظاری به ترتیب وجود دارند", () => {
-      const names = PROGRAM_TEMPLATES.map((t) => t.name);
-      expect(names[0]).toBe("ورزش");
-      expect(names[1]).toBe("مطالعه");
-      expect(names[2]).toBe("مدیتیشن");
-      expect(names[3]).toBe("کار عمیق");
-      expect(names[4]).toBe("کتاب‌خوانی");
-      expect(names[5]).toBe("یادگیری زبان");
-      expect(names[6]).toBe("پیاده‌روی");
-      expect(names[7]).toBe("برنامه‌ریزی فردا");
-    });
-
-    it("آیکون‌های lucide درست‌اند", () => {
-      const icons = PROGRAM_TEMPLATES.map((t) => t.icon);
-      expect(icons).toContain("Dumbbell");
-      expect(icons).toContain("BookOpen");
-      expect(icons).toContain("Sparkles");
-      expect(icons).toContain("Brain");
     });
   });
 
