@@ -2,11 +2,56 @@
 
 // ویرایشگر آیتم‌های برنامه‌ی لیستی (lib/routineChecklist.ts) — داخل فرم
 // افزودن/ویرایش برنامه. هر آیتم یک اسم داره؛ Enter روی فیلد پایین آیتم تازه
-// اضافه می‌کنه. همون کلاس‌های فیلد/دکمه‌ی خود فرم.
+// اضافه می‌کنه. همون کلاس‌های فیلد/دکمه‌ی خود فرم. جای آیتم‌ها با درگ و دراپ
+// از دستگیره‌ی سمت راست (ماوس و لمس) یا با ArrowUp/ArrowDown روی دستگیره عوض
+// می‌شه؛ idها دست نمی‌خورن و ترتیب همون ترتیب items ذخیره‌شده‌ست.
 
 import { useState } from "react";
-import { Minus } from "lucide-react";
+import { GripVertical, Minus, Plus } from "lucide-react";
+import { Reorder, useDragControls } from "framer-motion";
 import { MAX_CHECKLIST_ITEMS, newItemId, type ChecklistItem } from "@/lib/routineChecklist";
+
+function ItemRow({ item, index, count, onRename, onRemove, onMove }: {
+  item: ChecklistItem; index: number; count: number;
+  onRename: (v: string) => void; onRemove: () => void; onMove: (delta: -1 | 1) => void;
+}) {
+  const controls = useDragControls();
+  return (
+    <Reorder.Item
+      value={item}
+      as="div"
+      className="checklist-editor-row"
+      dragListener={false}
+      dragControls={controls}
+      whileDrag={{ scale: 1.02, zIndex: 5 }}
+    >
+      <button
+        type="button"
+        className="checklist-editor-grip"
+        aria-label={`جابه‌جایی آیتم ${index + 1}`}
+        onPointerDown={(e) => { e.preventDefault(); controls.start(e); }}
+        onKeyDown={(e) => {
+          if (e.key === "ArrowUp" && index > 0) { e.preventDefault(); e.stopPropagation(); onMove(-1); }
+          else if (e.key === "ArrowDown" && index < count - 1) { e.preventDefault(); e.stopPropagation(); onMove(1); }
+        }}
+      >
+        <GripVertical size={16} />
+      </button>
+      <input
+        type="text"
+        className="wsearch-newform-name"
+        value={item.name}
+        maxLength={80}
+        aria-label={`آیتم ${index + 1}`}
+        onChange={(e) => onRename(e.target.value)}
+      />
+      <button type="button" className="wsearch-newrow-remove-text" onClick={onRemove} aria-label={`حذف ${item.name}`}>
+        <Minus size={12} />
+        حذف
+      </button>
+    </Reorder.Item>
+  );
+}
 
 export function RoutineChecklistEditor({ items, onChange, error }: { items: ChecklistItem[]; onChange: (items: ChecklistItem[]) => void; error?: boolean }) {
   const [draft, setDraft] = useState("");
@@ -21,26 +66,26 @@ export function RoutineChecklistEditor({ items, onChange, error }: { items: Chec
 
   return (
     <div className={`checklist-editor${error ? " field-error" : ""}`}>
-      {items.map((it, i) => (
-        <div key={it.id} className="checklist-editor-row">
-          <span className="checklist-editor-num">{i + 1}</span>
-          <input
-            type="text"
-            className="wsearch-newform-name"
-            value={it.name}
-            maxLength={80}
-            aria-label={`آیتم ${i + 1}`}
-            onChange={(e) => onChange(items.map((x) => (x.id === it.id ? { ...x, name: e.target.value } : x)))}
+      <Reorder.Group axis="y" as="div" values={items} onReorder={onChange} className="checklist-editor-list">
+        {items.map((it, i) => (
+          <ItemRow
+            key={it.id}
+            item={it}
+            index={i}
+            count={items.length}
+            onRename={(v) => onChange(items.map((x) => (x.id === it.id ? { ...x, name: v } : x)))}
+            onRemove={() => onChange(items.filter((x) => x.id !== it.id))}
+            onMove={(d) => {
+              const next = [...items];
+              [next[i], next[i + d]] = [next[i + d], next[i]];
+              onChange(next);
+            }}
           />
-          <button type="button" className="wsearch-newrow-remove-text" onClick={() => onChange(items.filter((x) => x.id !== it.id))} aria-label={`حذف ${it.name}`}>
-            <Minus size={12} />
-            حذف
-          </button>
-        </div>
-      ))}
+        ))}
+      </Reorder.Group>
       {!full && (
         <div className="checklist-editor-row">
-          <span className="checklist-editor-num">+</span>
+          <span className="checklist-editor-spacer" aria-hidden="true" />
           <input
             type="text"
             className="wsearch-newform-name"
@@ -52,8 +97,8 @@ export function RoutineChecklistEditor({ items, onChange, error }: { items: Chec
             onChange={(e) => setDraft(e.target.value)}
           />
           <button type="button" className="wsearch-add-btn checklist-editor-add" onClick={add} disabled={!draft.trim()}>
+            <Plus size={14} />
             افزودن
-            <span className="wsearch-add-btn-icon">+</span>
           </button>
         </div>
       )}

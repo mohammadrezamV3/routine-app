@@ -10011,7 +10011,19 @@ html body .tick-btn.tick-btn:focus-visible{ outline:2px solid var(--tick-a); out
 .checklist-editor{ display:flex; flex-direction:column; gap:8px; margin-top:8px; }
 .checklist-editor-row{ display:flex; align-items:center; gap:8px; }
 .checklist-editor-row input{ flex:1; min-width:0; margin:0; }
-.checklist-editor-num{ width:20px; flex-shrink:0; text-align:center; font-size:12px; font-weight:800; color:var(--muted); font-variant-numeric:tabular-nums; }
+.checklist-editor-list{ display:flex; flex-direction:column; gap:8px; }
+.checklist-editor-spacer{ width:28px; flex-shrink:0; }
+/* دستگیره‌ی درگ: بی‌بک‌گراند (ریست شیشه‌ای سراسری button{} با اسپسیفیسیتی بالاتر) و touch-action:none تا لمس درگ رو نبره */
+html body .checklist-editor-grip{
+  flex:none; width:28px; height:36px; padding:0; border:none; border-radius:10px;
+  background:none; background-image:none; box-shadow:none; backdrop-filter:none; -webkit-backdrop-filter:none;
+  color:var(--muted2); display:flex; align-items:center; justify-content:center;
+  cursor:grab; touch-action:none; user-select:none; -webkit-user-select:none; -webkit-tap-highlight-color:transparent;
+  transition:color .15s ease;
+}
+html body .checklist-editor-grip:hover,
+html body .checklist-editor-grip:focus-visible{ background:none; box-shadow:none; color:var(--accent); }
+html body .checklist-editor-grip:active{ cursor:grabbing; color:var(--accent); background:none; box-shadow:none; }
 .checklist-editor-add{ width:auto; flex-shrink:0; margin:0; }
 /* دکمه‌ی «حذف»  ردیف‌های ساعت flex:1 1 100% داره — این‌جا نباید فیلد رو له کنه */
 .checklist-editor-row .wsearch-newrow-remove-text{ order:0; flex:0 0 auto; width:auto; padding:0 2px; margin:0; }

@@ -3,10 +3,6 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { createPortal } from "react-dom";
 import { useReducedMotion } from "framer-motion";
-import {
-  Sparkles, Dumbbell, BookOpen, Brain, BookMarked, Languages, Footprints, ListChecks,
-  type LucideIcon,
-} from "lucide-react";
 import { jsDayOfIso, timeStartMinutes } from "@/lib/schedule";
 import { normalizeTimeToFa } from "@/lib/timeUtils";
 import { findConflictOnDate, findScheduleConflict, rangesOverlap } from "@/lib/conflict";
@@ -23,24 +19,14 @@ import type { ChecklistItem } from "@/lib/routineChecklist";
 import { Spinner } from "./Spinner";
 import { ProgramTimeRows, type RowError } from "./ProgramTimeRows";
 import {
-  PROGRAM_TEMPLATES,
-  addMinutesToTime,
   describeSchedule,
   newTimeRow,
   type ProgramKind,
-  type ProgramTemplate,
   type TimeRow,
 } from "@/lib/programForm";
 import "./add-program.css";
 
 type ScheduleOpts = { removedOccurrences: Set<string>; customOccurrences: CustomOccurrence[] };
-
-// آیکون الگوها از روی اسم lucide انتخاب می‌شه (فهرست محدود تا باندل بزرگ نشه)
-// فقط آیکون‌هایی که PROGRAM_TEMPLATES (lib/programForm.ts) استفاده می‌کنه — نه یک
-// فهرست بزرگ که بی‌دلیل به باندل اضافه بشه؛ قالب تازه = آیکونش همین‌جا اضافه بشه
-const TEMPLATE_ICONS: Record<string, LucideIcon> = {
-  Sparkles, Dumbbell, BookOpen, Brain, BookMarked, Languages, Footprints, ListChecks,
-};
 
 function isoToJalali(iso: string): JalaliDate {
   const d = new Date(iso + "T00:00:00");
@@ -86,11 +72,6 @@ export function AddProgramForm({
   const [rowErrors, setRowErrors] = useState<Record<string, RowError>>({});
   const [periodError, setPeriodError] = useState<null | "missing" | "order">(null);
   const [shake, setShake] = useState(false);
-  const [templateName, setTemplateName] = useState<string | null>(null);
-  // مدت الگوی انتخاب‌شده؛ وقتی کاربر ساعت شروع یک ردیف خالی از پایان رو
-  // می‌زنه یک بار پایان خودکار پر می‌شه
-  const tplMinutes = useRef<number | null>(null);
-  const autoFilled = useRef<Set<string>>(new Set());
   const bodyRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => setMounted(true), []);
@@ -186,31 +167,6 @@ export function AddProgramForm({
     [kind, rows, onceIso, periodFromIso, periodToIso]
   );
 
-  function changeRows(next: TimeRow[]) {
-    // پایان خودکار از مدت الگو: فقط یک بار برای هر ردیف
-    const mins = tplMinutes.current;
-    const withAuto = mins == null ? next : next.map((r) => {
-      const prev = rows.find((p) => p.id === r.id);
-      if (!prev || prev.start === r.start || !r.start.trim() || r.end.trim() || autoFilled.current.has(r.id)) return r;
-      const end = autoEnd(r.start, mins);
-      if (!end) return r;
-      autoFilled.current.add(r.id);
-      return { ...r, end };
-    });
-    setRows(withAuto);
-  }
-  /** پایان خودکار از مدت الگو؛ اگه از نیمه‌شب رد می‌شد همون 23:59 (برنامه‌ی روتین از نیمه‌شب رد نمی‌شه) */
-  function autoEnd(start: string, mins: number): string {
-    const st = normalizeDigits(start);
-    if (!/^\d{1,2}:\d{2}$/.test(st)) return "";
-    const end = addMinutesToTime(st, mins);
-    if (!end) return "";
-    const toMin = (v: string) => { const [h, m] = v.split(":").map(Number); return h * 60 + m; };
-    return toMin(end) <= toMin(st) ? "23:59" : end;
-  }
-  function normalizeDigits(s: string): string {
-    return s.replace(/[۰-۹]/g, (c) => String(c.charCodeAt(0) - 1776)).replace(/[٠-٩]/g, (c) => String(c.charCodeAt(0) - 1632)).trim();
-  }
   const clearRowError = useCallback((rowId: string) => {
     setRowErrors((prev) => {
       if (!prev[rowId]) return prev;
@@ -219,22 +175,6 @@ export function AddProgramForm({
       return next;
     });
   }, []);
-
-  function applyTemplate(t: ProgramTemplate) {
-    setTemplateName(t.name);
-    setName(t.name);
-    setNameError(false);
-    if (!tag.trim() && t.tag) setTag(t.tag);
-    tplMinutes.current = t.minutes;
-    const first = rows[0];
-    if (first && first.start.trim() && !first.end.trim()) {
-      const end = autoEnd(first.start, t.minutes);
-      if (end) {
-        autoFilled.current.add(first.id);
-        setRows((rs) => rs.map((r, i) => (i === 0 ? { ...r, end } : r)));
-      }
-    }
-  }
 
   function changeKind(k: ProgramKind) {
     setKind(k);
@@ -370,7 +310,6 @@ export function AddProgramForm({
         <div className="relative z-[1] add-program-glass apf-glass" onKeyDown={(e) => focusNextOnEnter(e, bodyRef)}>
           <div className="wsearch-newform-head">
             <div className="wsearch-newform-title accent">برنامه‌ی جدید</div>
-            <button type="button" className="nav-close" onClick={requestClose} aria-label="بستن">×</button>
           </div>
 
               <div className="apf-body" ref={bodyRef}>
@@ -386,29 +325,10 @@ export function AddProgramForm({
                       onChange={(e) => {
                         setName(e.target.value);
                         if (e.target.value.trim()) setNameError(false);
-                        if (templateName && e.target.value !== templateName) setTemplateName(null);
                       }}
                     />
                   </div>
                   {nameError && <span className="apf-msg">اسم برنامه رو وارد کن</span>}
-                  {PROGRAM_TEMPLATES.length > 0 && (
-                    <div className="apf-chips">
-                      {PROGRAM_TEMPLATES.map((t) => {
-                        const Icon = TEMPLATE_ICONS[t.icon] ?? Sparkles;
-                        return (
-                          <button
-                            key={t.name}
-                            type="button"
-                            className={`apf-chip${templateName === t.name ? " on" : ""}`}
-                            onClick={() => applyTemplate(t)}
-                          >
-                            <Icon size={14} />
-                            {t.name}
-                          </button>
-                        );
-                      })}
-                    </div>
-                  )}
                 </div>
 
                 <div className="apf-section">
@@ -461,27 +381,11 @@ export function AddProgramForm({
                   <ProgramTimeRows
                     kind={kind}
                     rows={usedRows}
-                    onChange={changeRows}
+                    onChange={setRows}
                     errors={rowErrors}
                     conflicts={conflicts}
                     onClearError={clearRowError}
                   />
-                </div>
-
-                <div className="apf-section" data-apf-field="list">
-                  <TickOption checked={isList} onChange={(on) => { setIsList(on); if (!on) setItemsError(false); }}>
-                    این برنامه یک لیسته (چند آیتم که تک‌تک تیک می‌خورن)
-                  </TickOption>
-                  {isList && (
-                    <>
-                      <RoutineChecklistEditor
-                        items={items}
-                        onChange={(v) => { setItems(v); if (v.some((i) => i.name.trim())) setItemsError(false); }}
-                        error={itemsError}
-                      />
-                      {itemsError && <span className="apf-msg">حداقل یک آیتم به لیست اضافه کن</span>}
-                    </>
-                  )}
                 </div>
 
                 <div className="apf-section">
@@ -489,7 +393,20 @@ export function AddProgramForm({
                   <RoutineTagField id="addProgramTag" value={tag} onChange={setTag} occurrences={scheduleOpts.customOccurrences} />
                 </div>
 
-                <div className="apf-section">
+                <div className="apf-ticks" data-apf-field="list">
+                  <TickOption checked={isList} onChange={(on) => { setIsList(on); if (!on) setItemsError(false); }}>
+                    این برنامه یک لیسته (چند آیتم که تک‌تک تیک می‌خورن)
+                  </TickOption>
+                  {isList && (
+                    <div className="apf-ticks-list">
+                      <RoutineChecklistEditor
+                        items={items}
+                        onChange={(v) => { setItems(v); if (v.some((i) => i.name.trim())) setItemsError(false); }}
+                        error={itemsError}
+                      />
+                      {itemsError && <span className="apf-msg">حداقل یک آیتم به لیست اضافه کن</span>}
+                    </div>
+                  )}
                   <TickOption checked={notify} onChange={setNotify}>
                     برای این برنامه اعلان بفرست
                   </TickOption>
@@ -500,6 +417,9 @@ export function AddProgramForm({
                 {summary && <div className="apf-summary">{summary}</div>}
                 {formError && <div className="apf-error">{formError}</div>}
                 <div className="apf-actions">
+                  <button type="button" className="account-outline-btn apf-cancel" onClick={requestClose}>
+                    انصراف
+                  </button>
                   <button
                     type="button"
                     className={`wsearch-submit-btn apf-submit${shake ? " shake" : ""}${status !== "idle" ? " " + status : ""}`}
@@ -507,9 +427,6 @@ export function AddProgramForm({
                     disabled={status === "loading" || status === "success"}
                   >
                     {status === "loading" ? <Spinner size={15} /> : status === "success" ? "اضافه شد ✓" : status === "error" ? "اضافه نشد" : "افزودن برنامه"}
-                  </button>
-                  <button type="button" className="account-outline-btn apf-cancel" onClick={requestClose}>
-                    انصراف
                   </button>
                 </div>
               </div>
