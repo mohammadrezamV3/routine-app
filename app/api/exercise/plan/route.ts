@@ -174,3 +174,13 @@ async function handlePOST(req: NextRequest) {
 
 // بعد از هر نوشتن موفق، بقیه‌ی دستگاه‌ها/تب‌های همین کاربر با WebSocket خبردار می‌شن (lib/realtime.ts)
 export const POST = withLiveSync(["exercise"], handlePOST);
+
+// حذف برنامه‌ی فعال: غیرفعال می‌شه (نه پاک‌کردن)، تا تاریخچه‌ی تمرین‌ها بمونه — همون کاری که ساخت برنامه‌ی جدید با قبلی می‌کنه
+async function handleDELETE() {
+  { const off = await sessionFeatureBlocked("exercise"); if (off) return off; }
+  const guard = await requireModule(ModuleKey.EXERCISE);
+  if (!guard.ok) return guard.response;
+  await prisma.exercisePlan.updateMany({ where: { userId: guard.userId, isActive: true }, data: { isActive: false } });
+  return NextResponse.json({ ok: true });
+}
+export const DELETE = withLiveSync(["exercise"], handleDELETE);

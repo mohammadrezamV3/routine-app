@@ -83,7 +83,7 @@ export function ExercisePanel() {
   return (
     <div>
       <div className="dash-scope">
-        <ExerciseDashboard plan={plan} onPlanChange={setPlan} />
+        <ExerciseDashboard plan={plan} onPlanChange={setPlan} onPlanDeleted={() => { setPlan(null); setWizardOpen(false); }} />
       </div>
       <div className="disclaimer-note">
         <span className="disclaimer-warn">توجه: </span>

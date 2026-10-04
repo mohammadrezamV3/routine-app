@@ -3,7 +3,8 @@
 import { useEffect, useRef, useState } from "react";
 import { useFeature } from "@/lib/useFeatures";
 import { motion } from "framer-motion";
-import { PenLine } from "lucide-react";
+import { PenLine, Trash2 } from "lucide-react";
+import { Spinner } from "./Spinner";
 import { AiSparkleIcon } from "./AiSparkleIcon";
 import { AiExercisePlanWizard } from "./AiExercisePlanWizard";
 import dynamic from "next/dynamic";
@@ -31,9 +32,12 @@ type Mode = "choice" | "ai" | "manual";
 export function AddExerciseProgramForm({
   onClose,
   onCreated,
+  onDeleted,
 }: {
   onClose: () => void;
   onCreated: (plan: ExercisePlan) => void;
+  /** اگه داده بشه (یعنی کاربر برنامه‌ی فعال داره)، دکمه‌ی «حذف برنامه‌ی فعلی» نشون داده می‌شه */
+  onDeleted?: () => void;
 }) {
   useLockBodyScroll();
   const [mode, setMode] = useState<Mode>("choice");
@@ -43,6 +47,28 @@ export function AddExerciseProgramForm({
   // ساخت با AI از پنل ادمین خاموشه (فلگ aiExercisePlan) → فقط مسیر دستی
   const aiOn = useFeature("aiExercisePlan") !== false;
   useEffect(() => { if (!aiOn && mode !== "manual") setMode("manual"); }, [aiOn, mode]);
+
+  const [confirmDel, setConfirmDel] = useState(false);
+  const [deleting, setDeleting] = useState(false);
+
+  async function deletePlan() {
+    setDeleting(true);
+    try {
+      const res = await fetch("/api/exercise/plan", { method: "DELETE" });
+      if (!res.ok) {
+        const d = await res.json().catch(() => null);
+        setError(d?.error || "حذف برنامه انجام نشد");
+        setConfirmDel(false);
+        return;
+      }
+      onDeleted?.();
+    } catch {
+      setError("حذف برنامه انجام نشد");
+      setConfirmDel(false);
+    } finally {
+      setDeleting(false);
+    }
+  }
 
   async function submitManual(days: ExerciseDay[]) {
     setSubmitting(true);
@@ -96,6 +122,24 @@ export function AddExerciseProgramForm({
                 <PenLine size={22} />
                 <span>وارد کردن برنامه‌ی خودم</span>
               </motion.button>
+            </div>
+          )}
+
+          {mode === "choice" && onDeleted && (
+            <div style={{ display: "flex", justifyContent: "center", alignItems: "center", gap: 10, flexWrap: "wrap", marginTop: 16 }}>
+              {confirmDel ? (
+                <>
+                  <span className="section-note" style={{ margin: 0 }}>برنامه‌ی فعلی حذف بشه؟ تاریخچه‌ی تمرین‌هات می‌مونه.</span>
+                  <button type="button" className="account-outline-btn muted" onClick={() => setConfirmDel(false)} disabled={deleting}>نه</button>
+                  <button type="button" className="account-outline-btn trade-danger-btn" onClick={deletePlan} disabled={deleting}>
+                    {deleting ? <Spinner size={14} /> : <Trash2 size={14} />} حذف کن
+                  </button>
+                </>
+              ) : (
+                <button type="button" className="account-outline-btn trade-danger-btn" onClick={() => setConfirmDel(true)}>
+                  <Trash2 size={14} /> حذف برنامه‌ی فعلی
+                </button>
+              )}
             </div>
           )}
 

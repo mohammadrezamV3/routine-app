@@ -35,9 +35,11 @@ const todayIso = isoLocal(now);
 export function ExerciseDashboard({
   plan,
   onPlanChange,
+  onPlanDeleted,
 }: {
   plan: ExercisePlan;
   onPlanChange: (plan: ExercisePlan) => void;
+  onPlanDeleted?: () => void;
 }) {
   const [selectedIso, setSelectedIso] = useState(todayIso);
   const [recenterKey, setRecenterKey] = useState(0);
@@ -318,6 +320,7 @@ export function ExerciseDashboard({
       {addProgramOpen && (
         <AddExerciseProgramForm
           onClose={() => setAddProgramOpen(false)}
+          onDeleted={onPlanDeleted ? () => { setAddProgramOpen(false); onPlanDeleted(); } : undefined}
           onCreated={(newPlan) => { onPlanChange(newPlan); setAddProgramOpen(false); setRefreshKey((k) => k + 1); }}
         />
       )}
