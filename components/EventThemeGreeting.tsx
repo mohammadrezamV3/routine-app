@@ -98,7 +98,7 @@ export function EventThemeGreeting() {
         <span>{theme.greeting}</span>
         {offer && (
           <span style={{ fontSize: 12, fontWeight: 500 }}>
-            کد <span dir="ltr" style={{ fontFamily: "monospace", fontWeight: 700 }}>{offer.code}</span>: {offer.percent}٪ تخفیف روی همه‌ی پلن‌ها
+            کد <span dir="ltr" style={{ fontWeight: 700 }}>{offer.code}</span>: {offer.percent}٪ تخفیف روی همه‌ی پلن‌ها
           </span>
         )}
       </span>

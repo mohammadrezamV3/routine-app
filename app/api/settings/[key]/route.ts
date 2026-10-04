@@ -44,7 +44,7 @@ async function handlePOST(req: NextRequest, { params }: { params: { key: string 
     const off = await featureBlocked("routine", userId);
     if (off) return off;
   }
-  if (params.key === "sleepGoal") {
+  if (params.key === "sleepGoal" || params.key === "sleepLatency") {
     const guard = await requireModule(ModuleKey.SLEEP);
     if (!guard.ok) return guard.response;
   }

@@ -7,6 +7,11 @@ const config: Config = {
   content: ["./app/**/*.{ts,tsx}", "./components/**/*.{ts,tsx}"],
   theme: {
     extend: {
+      // فونت سایت، نه فونت سیستم: font-sans و font-mono هم همون استک اصلی رو می‌دن
+      fontFamily: {
+        sans: ["var(--font-latin)", "var(--font-vazir)", "sans-serif"],
+        mono: ["var(--font-latin)", "var(--font-vazir)", "monospace"],
+      },
       colors: {
         // پالت داشبورد — namespace جدا (dash-*) فقط برای اینکه اسم کلاس‌ها
         // خوانا بمونه، ولی مقدار هرکدوم مستقیما روی متغیرهای CSS تم اصلی

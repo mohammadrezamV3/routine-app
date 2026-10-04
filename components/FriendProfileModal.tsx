@@ -12,7 +12,7 @@ import { GoldenName } from "./GoldenName";
 import { Spinner } from "./Spinner";
 import { GradientRing } from "./GradientRing";
 import { FriendWeekStrip } from "./FriendWeekStrip";
-import { fullDays, type WeekPcts } from "@/lib/friendsRank";
+import { fullDays, type WeekPcts } from "@/lib/friendWeek";
 
 type Relation = "none" | "friends" | "pending_sent" | "pending_received";
 

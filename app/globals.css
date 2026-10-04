@@ -284,7 +284,19 @@
      بدون این خط به فونت خام سیستم/مرورگر سقوط می‌کنه (دقیقا همون باگ
      «توی چارت‌ها یه فونت دیگه دیده می‌شه»، مخصوصا روی چارت‌های دسکتاپ ادمین/
      کالری که برچسب‌هاشون با <text> خام SVG رسم می‌شن، نه یه عنصر HTML). */
-  svg text{ font-family:var(--font-latin), var(--font-vazir), sans-serif; }
+  svg text, svg tspan{ font-family:var(--font-latin), var(--font-vazir), sans-serif; }
+  /* فونت همیشه از خود سایت (وزیرمتن/Inter با next/font) نه فونت دستگاه:
+     کنترل‌های فرم به‌طور پیش‌فرض فونت سیستم می‌گیرن و ارث نمی‌برن، و پریفلایت
+     تیلویند روی html استک سیستمی می‌ذاره. این قاعده‌ها فقط family/letter-spacing
+     رو ارث می‌دن (نه اندازه) تا چیدمان تغییر نکنه. */
+  html{ font-family:var(--font-latin), var(--font-vazir), sans-serif; }
+  button, input, textarea, select, optgroup, option{ font-family:inherit; letter-spacing:inherit; }
+  input::placeholder, textarea::placeholder{ font-family:inherit; }
+  input::-webkit-datetime-edit, input::-webkit-datetime-edit-fields-wrapper,
+  input::-webkit-datetime-edit-text, input::-webkit-datetime-edit-day-field,
+  input::-webkit-datetime-edit-month-field, input::-webkit-datetime-edit-year-field,
+  input::-webkit-datetime-edit-hour-field, input::-webkit-datetime-edit-minute-field{ font-family:inherit; }
+  code, kbd, samp, pre{ font-family:var(--font-latin), var(--font-vazir), monospace; }
   /* اسکرول‌بار سراسری صفحه هیچ‌وقت نباید دیده بشه — طبق درخواست صریح
      کاربر، نه فقط داخل پاپ‌آپ‌ها (که .no-scrollbar از قبل روشون بود). */
   html{ scrollbar-width:none; -ms-overflow-style:none; }
@@ -5805,7 +5817,7 @@ tr.is-open .admin-expand-icon{ transform:rotate(180deg); }
 .admin-table tr.admin-log-detail td{ white-space:normal; }
 .admin-log-context{
   margin:0; max-height:320px; overflow:auto; direction:ltr; text-align:left; white-space:pre-wrap; overflow-wrap:anywhere;
-  font-size:11px; line-height:1.7; color:var(--adm-muted); font-family:ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+  font-size:11px; line-height:1.7; color:var(--adm-muted); font-family:var(--font-latin), var(--font-vazir), monospace;
 }
 
 /* وضعیت سیستم */
@@ -7458,7 +7470,7 @@ body:not([data-theme="light"]) button.trade-pair-suggest-item{ box-shadow:none; 
        کوچیک‌تر» این‌جا برعکس شده، بدون این‌که چارت آن‌قدر کوچک شود که
        غیرقابل‌استفاده باشد. */
     grid-template-columns:minmax(0,1fr) minmax(0,1fr) 380px;
-    grid-template-rows:minmax(0,.95fr) minmax(0,.95fr) minmax(0,.85fr);
+    grid-template-rows:minmax(0,.95fr) minmax(0,.95fr) minmax(236px,.85fr);
     /* باگ: «ثبت معامله» (فقط انتخاب حساب+دکمه) دو ردیف می‌گرفت و بیشترش
        خالی می‌ماند، درحالی‌که «چک‌لیست» (لیست بلند آیتم‌ها) فقط یک ردیف
        کوچیک داشت. جاشون عوض شد: چک‌لیست حالا هم‌قد چارت (دو ردیف)، ثبت
@@ -7866,10 +7878,6 @@ body:not([data-theme="light"]) .fx-hub-dot{ fill:#101820; }
    تا LCP عقب نیفته. fill-mode backwards چون حالت پایانی همون استایل پایه‌ست. */
 html[data-navigated] .page-enter{ animation:page-enter .38s cubic-bezier(.22,1,.36,1) backwards; }
 @keyframes page-enter{ from{ opacity:0; } }
-/* صفحه‌ی فعلی همون لحظه‌ی کلیک کمی کم‌رنگ می‌شه — با تاخیر کوتاه تا ناوبری‌های
-   آنی (از کش) چشمک نزنن */
-.wrap{ transition:opacity .25s ease; }
-html[data-route-loading] .wrap{ opacity:.55; transition-delay:.12s; }
 .route-progress{
   position:fixed; top:0; left:0; right:0; z-index:10000; pointer-events:none;
   height:0; border-top:2.5px solid var(--accent);
@@ -7881,24 +7889,14 @@ html[data-route-loading] .wrap{ opacity:.55; transition-delay:.12s; }
 @keyframes rp-grow{ 0%{ transform:scaleX(0); } 10%{ transform:scaleX(.35); } 100%{ transform:scaleX(.92); } }
 @media (prefers-reduced-motion:reduce){ html[data-navigated] .page-enter{ animation:none; } .route-progress.rpg-loading{ animation:none; transform:scaleX(.6); } }
 
-/* ── لودینگ تمام‌صفحه (components/PageLoader.tsx) ─────────────────────── */
+/* ── جاگیر سبک داخل صفحه (components/PageLoader.tsx) ─────────────────────
+   فقط یک اسکلت ساده داخل محتوا (زیر هدر، بدون پرده و بدون لوگو). تا 200ms هیچی
+   دیده نمی‌شه (animation-delay)، پس ناوبری سریع هیچ چشمک و لودینگی نداره. */
 .page-loader{
-  display:flex; flex-direction:column; align-items:center; gap:34px;
-  min-height:calc(100dvh - 230px); padding:6vh 0 24px;
-  animation:pl-in .35s ease both;
+  width:100%; display:flex; flex-direction:column; gap:12px; padding:8px 0 24px;
+  opacity:0; animation:pl-in .3s ease .2s forwards;
 }
-@keyframes pl-in{ from{ opacity:0; } }
-.page-loader-mark{ position:relative; width:104px; height:104px; display:flex; align-items:center; justify-content:center; }
-.page-loader-ring, .page-loader-orbit{ position:absolute; inset:0; width:100%; height:100%; }
-.page-loader-ring{ animation:appSpin .9s linear infinite; }
-.page-loader-track{ stroke:rgba(var(--accent-rgb),.12); }
-.page-loader-orbit{ inset:-10px; width:calc(100% + 20px); height:calc(100% + 20px); animation:appSpin 7s linear infinite reverse; }
-.page-loader-orbit circle{ stroke:rgba(var(--accent-rgb),.45); }
-.page-loader-logo{ width:40px; height:auto; animation:pl-breathe 1.8s ease-in-out infinite; }
-.page-loader-logo.is-light{ display:none; }
-body[data-theme="light"] .page-loader-logo.is-light{ display:block; }
-body[data-theme="light"] .page-loader-logo.is-dark{ display:none; }
-@keyframes pl-breathe{ 50%{ transform:scale(.9); opacity:.75; } }
+@keyframes pl-in{ to{ opacity:1; } }
 .page-loader-skel{ width:100%; display:flex; flex-direction:column; gap:12px; }
 .pls-line, .pls-card{ display:block; position:relative; overflow:hidden; border-radius:10px; background:rgba(var(--accent-rgb),.07); }
 .pls-line{ height:16px; }
@@ -7913,7 +7911,7 @@ body[data-theme="light"] .page-loader-logo.is-dark{ display:none; }
 }
 body[data-theme="light"] .pls-line::after, body[data-theme="light"] .pls-card::after{ background:linear-gradient(90deg, transparent, rgba(255,255,255,.6), transparent); }
 @keyframes pl-shimmer{ to{ transform:translateX(-100%); } }
-@media (prefers-reduced-motion:reduce){ .page-loader-orbit, .page-loader-logo, .pls-line::after, .pls-card::after{ animation:none; } .page-loader-ring{ animation-duration:1.8s; } }
+@media (prefers-reduced-motion:reduce){ .pls-line::after, .pls-card::after{ animation:none; } }
 
 .app-loading-block{
   display:flex; flex-direction:column; align-items:center; justify-content:center; gap:11px;
@@ -9507,7 +9505,7 @@ body[data-theme="light"] .streak-bigflame-outline{ filter:drop-shadow(0 3px 6px 
 .streak-cel-actions{ margin-top:22px; width:100%; display:flex; flex-direction:column; gap:10px; }
 .streak-cel-btn{ width:100%; min-height:46px; font-size:14px; }
 .streak-cel-invite{ margin:4px 0 0; font-size:12px; line-height:1.8; color:var(--muted); }
-.streak-cel-invite b{ color:var(--accent); font-family:var(--font-latin), sans-serif; letter-spacing:.5px; }
+.streak-cel-invite b{ color:var(--accent); font-family:var(--font-latin), var(--font-vazir), sans-serif; letter-spacing:.5px; }
 .streak-cel-msg{ margin:0; font-size:12px; font-weight:700; color:var(--accent); }
 .streak-cel-msg:empty{ display:none; }
 .streak-cel-btn-in{ display:inline-flex; align-items:center; gap:6px; }
@@ -9575,6 +9573,21 @@ body[data-theme="light"] .golden-name{ --g1:#f7d774; --g2:#d9a21b; --g3:#9a5b06;
   text-shadow:0 0 8px var(--name-glow);
 }
 body[data-theme="light"] .golden-name-glow{ --name-glow:rgba(217,162,27,.32); }
+/* ظرف اسم با سه‌نقطه (.name-clip): درخشش GoldenName بیرون از جعبه‌ی متن
+   می‌زنه و overflow:hidden اون رو لبه‌ی صاف می‌بره (همون «مستطیل کم‌رنگ»).
+   راه‌حل عمومی: ظرف به اندازه‌ی شعاع درخشش از هر طرف پدینگ می‌گیره و همون
+   مقدار margin منفی، پس چیدمان دست نمی‌خوره ولی برش خیلی بیرون‌تر از
+   درخششه و text-overflow:ellipsis همون‌طور کار می‌کنه (بدون هیچ بک‌گراند).
+   ظرف جدید اسم‌دار با overflow:hidden باید این کلاس رو بگیره یا به این
+   فهرست اضافه بشه. */
+.name-clip, .fr-name, .friend-profile-banner-name, .mentor-row-title, .mentor-card-name{
+  padding:10px 16px; margin:-10px -16px;
+  /* درخشش کپی نابریده‌ی اسم بلند هم تا لبه‌ی ظرف می‌رسه؛ محو شدن افقی توی
+     پدینگ جلوی لبه‌ی صاف همون برش رو می‌گیره (متن داخل جعبه‌ی محتواست). */
+  -webkit-mask-image:linear-gradient(to right, transparent 0, #000 14px, #000 calc(100% - 14px), transparent 100%);
+  mask-image:linear-gradient(to right, transparent 0, #000 14px, #000 calc(100% - 14px), transparent 100%);
+}
+.name-clip{ overflow:hidden; text-overflow:ellipsis; white-space:nowrap; min-width:0; }
 @keyframes goldenFlow{ from{ background-position:0% 50%; } to{ background-position:200% 50%; } }
 @media (prefers-reduced-motion: reduce){ .golden-name{ animation:none; background-position:30% 50%; } }
 
@@ -9672,7 +9685,19 @@ html body .tick-btn.tick-btn:focus-visible{ outline:2px solid var(--tick-a); out
 .checklist-editor{ display:flex; flex-direction:column; gap:8px; margin-top:8px; }
 .checklist-editor-row{ display:flex; align-items:center; gap:8px; }
 .checklist-editor-row input{ flex:1; min-width:0; margin:0; }
-.checklist-editor-num{ width:20px; flex-shrink:0; text-align:center; font-size:12px; font-weight:800; color:var(--muted); font-variant-numeric:tabular-nums; }
+.checklist-editor-list{ display:flex; flex-direction:column; gap:8px; }
+.checklist-editor-spacer{ width:28px; flex-shrink:0; }
+/* دستگیره‌ی درگ: بی‌بک‌گراند (ریست شیشه‌ای سراسری button{} با اسپسیفیسیتی بالاتر) و touch-action:none تا لمس درگ رو نبره */
+html body .checklist-editor-grip{
+  flex:none; width:28px; height:36px; padding:0; border:none; border-radius:10px;
+  background:none; background-image:none; box-shadow:none; backdrop-filter:none; -webkit-backdrop-filter:none;
+  color:var(--muted2); display:flex; align-items:center; justify-content:center;
+  cursor:grab; touch-action:none; user-select:none; -webkit-user-select:none; -webkit-tap-highlight-color:transparent;
+  transition:color .15s ease;
+}
+html body .checklist-editor-grip:hover,
+html body .checklist-editor-grip:focus-visible{ background:none; box-shadow:none; color:var(--accent); }
+html body .checklist-editor-grip:active{ cursor:grabbing; color:var(--accent); background:none; box-shadow:none; }
 .checklist-editor-add{ width:auto; flex-shrink:0; margin:0; }
 /* دکمه‌ی «حذف»  ردیف‌های ساعت flex:1 1 100% داره — این‌جا نباید فیلد رو له کنه */
 .checklist-editor-row .wsearch-newrow-remove-text{ order:0; flex:0 0 auto; width:auto; padding:0 2px; margin:0; }
@@ -9700,7 +9725,7 @@ html body .tick-btn.tick-btn:focus-visible{ outline:2px solid var(--tick-a); out
 .day-task-items li{ display:flex; align-items:center; gap:9px; font-size:12.5px; font-weight:600; }
 .day-task-items li.is-done span{ color:var(--muted); text-decoration:line-through; }
 
-/* ── اسپلش ورود اپ (components/BootSplash.tsx، ناوبری: lib/navSplash.ts) ─────────
+/* ── اسپلش ورود اپ (components/BootSplash.tsx، فقط لود کامل اول) ─────────
    طرح: سه حلقه‌ی فعالیت به سبک حلقه‌های داشبورد که *پیشرفت* رو نشون می‌دن (پر
    شدن آهسته و کندشونده، هیچ‌وقت کامل نه) — وقتی صفحه آماده شد (data-boot="out")
    هر سه با هم «بسته» می‌شن و بعد به بیرون پخش می‌شن. پشتش هاله‌ی شیشه‌ای با رنگ‌های
@@ -9840,50 +9865,6 @@ html[data-perf-weak] .bs-phrases span{ filter:none !important; }
   html[data-boot="out"] .boot-splash{ animation:bs-out .3s ease forwards; }
 }
 
-/* ── اسپلش ناوبری داخلی (lib/navSplash.ts → html[data-boot-nav]) ──────────
-   درخواست صاحب محصول: لودینگ بقیه‌ی اپ با اسپلش ورود اپ فرق کنه، سبک‌تر ولی
-   خوش‌ساخت. همون نود .boot-splash: پرده‌ی شیشه‌ای مات روی صفحه‌ی قبلی (نه سطح
-   تخت)، نشان برند که آروم نفس می‌کشه، هاله‌ی نرم تپنده، و سه کمان نازک به رنگ
-   حلقه‌های فعالیت که هر کدوم با سرعت و جهت خودش دور نشان می‌چرخه + اسم برند.
-   بدون شبکه، شعار، جمله‌ها و پرشدن حلقه‌ها. خروج: کمان‌ها کمی باز و محو می‌شن. */
-html[data-boot-nav] .boot-splash{
-  background:color-mix(in srgb, var(--bg) 93%, transparent);
-  -webkit-backdrop-filter:blur(26px) saturate(1.2); backdrop-filter:blur(26px) saturate(1.2);
-  animation:bs-nav-in .22s ease both;
-}
-@keyframes bs-nav-in{ from{ opacity:0; } to{ opacity:1; } }
-html[data-boot-nav] :is(.bs-aura, .bs-grid, .bs-tagline, .bs-phrases){ display:none; }
-html[data-boot-nav] .bs-stage{ animation:bs-nav-rise .35s cubic-bezier(.2,.8,.25,1) both; }
-@keyframes bs-nav-rise{ from{ opacity:0; transform:translateY(6px) scale(.96); } to{ opacity:1; transform:none; } }
-html[data-boot-nav] .bs-mark{ width:112px; height:112px; }
-html[data-boot-nav] .bs-halo{ animation:bs-nav-halo 1.8s ease-in-out infinite; }
-@keyframes bs-nav-halo{ 0%, 100%{ opacity:.55; transform:scale(.92); } 50%{ opacity:1; transform:scale(1.06); } }
-html[data-boot-nav] .bs-track{ stroke-width:5; opacity:.1; }
-html[data-boot-nav] .bs-arc{ animation:none; stroke-width:5; stroke-dasharray:24 100; filter:none; }
-html[data-boot-nav] .bs-ring-2 .bs-arc{ stroke-dasharray:18 100; }
-html[data-boot-nav] .bs-ring-3 .bs-arc{ stroke-dasharray:30 100; }
-html[data-boot-nav] .bs-ring-1{ animation:appSpin 1.1s cubic-bezier(.55,.15,.45,.85) infinite; }
-html[data-boot-nav] .bs-ring-2{ animation:appSpin 1.5s linear infinite reverse; }
-html[data-boot-nav] .bs-ring-3{ animation:appSpin .9s cubic-bezier(.45,.05,.55,.95) infinite; }
-html[data-boot-nav] .bs-logo{ width:32px; animation:bs-nav-breathe 1.8s ease-in-out infinite; }
-@keyframes bs-nav-breathe{ 0%, 100%{ transform:scale(1); } 50%{ transform:scale(1.08); } }
-html[data-boot-nav] .bs-brand{ margin-top:14px; font-size:15px; opacity:.85; animation:bs-nav-rise .4s ease .08s both; }
-/* تم روشن: نشان روشن رنگ‌های پاستلی داره و روی هاله‌ی مسی گم می‌شد */
-html[data-boot-nav] body[data-theme="light"] .bs-logo{ width:34px; filter:saturate(1.35) contrast(1.08) drop-shadow(0 1px 1.5px rgba(120,60,0,.35)); }
-html[data-boot-nav] body[data-theme="light"] .bs-halo{ background:radial-gradient(closest-side, rgba(var(--accent-rgb),.06), transparent 70%); }
-html[data-boot-nav] body[data-theme="light"] .bs-track{ opacity:.16; }
-/* خروج: کمان‌ها کمی باز می‌شن و همه با هم محو */
-html[data-boot-nav][data-boot="out"] .bs-arc{ animation:none; }
-html[data-boot-nav][data-boot="out"] .bs-rings{ animation:bs-nav-open .28s ease-out forwards; }
-@keyframes bs-nav-open{ to{ transform:rotate(-90deg) scale(1.18); opacity:0; } }
-html[data-boot-nav][data-boot="out"] :is(.bs-logo, .bs-halo, .bs-brand){ animation:bs-fade-out .22s ease forwards; }
-html[data-boot-nav][data-boot="out"] .boot-splash{ animation:bs-out .28s ease .04s forwards; pointer-events:none; }
-html[data-perf-weak][data-boot-nav] .boot-splash{ -webkit-backdrop-filter:none; backdrop-filter:none; background:var(--bg); }
-@media (prefers-reduced-motion: reduce){
-  html[data-boot-nav] :is(.boot-splash, .bs-stage, .bs-halo, .bs-logo, .bs-brand){ animation:none; }
-  html[data-boot-nav] :is(.bs-ring-1, .bs-ring-2, .bs-ring-3){ animation:appSpin 2.6s linear infinite; }
-}
-
 /* ── اطلاعیه‌ها: پاپ‌آپ، نوار و کارت گوشه (AnnouncementView/AnnouncementDelivery) ──
    سطح بنر/کارت همون سطح مودال سایته (--surface-2 + --surface-line) چون روی
    محتوای صفحه شناوره و بدون سطح خوانا نیست (درخواست صریح صاحب محصول برای
@@ -10003,3 +9984,6 @@ textarea.wsearch-newform-name,
 .bodybuilding-glass textarea.wsearch-newform-name,
 .add-program-glass textarea.wsearch-newform-name,
 .auth-box textarea.wsearch-newform-name{ border-radius:var(--field-radius-multi); }
+
+/* تصویر کوچک عضو تیم در /admin/team */
+.admin-team-thumb{ border-radius:50%; object-fit:cover; display:block; flex:none; }

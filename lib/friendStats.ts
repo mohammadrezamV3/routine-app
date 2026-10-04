@@ -5,7 +5,7 @@ import { prisma } from "@/lib/prisma";
 import { computeDayStats, ScheduleOpts } from "@/lib/schedule";
 import { isoLocal } from "@/lib/jalali";
 import { computeRoutineStreak } from "@/lib/routineStreak";
-import { WEEK_DAYS, type WeekPcts } from "@/lib/friendsRank";
+import { WEEK_DAYS, type WeekPcts } from "@/lib/friendWeek";
 
 // آمار روتین *همه‌ی* دوست‌ها با تعداد ثابتی کوئری.
 //
@@ -14,8 +14,8 @@ import { WEEK_DAYS, type WeekPcts } from "@/lib/friendsRank";
 // + ۹۰ روز DailyEntry). با ۲۰ دوست یعنی ~۱۰۰ کوئری برای یک بار باز کردن
 // داشبورد. حالا سه کوئری دسته‌ای می‌زنیم (`in:` روی کل لیست دوست‌ها) و
 // بقیه‌ی محاسبه در حافظه انجام می‌شه — منطق مو‌به‌مو همونه.
-// week: درصد 7 روز اخیر (قدیمی → امروز، null = روز بی‌برنامه) برای رتبه‌بندی
-// هفتگی (lib/friendsRank.ts). از همون پنجره‌ی 21 روزه‌ی اول میاد — کوئری اضافه نداره.
+// week: درصد 7 روز اخیر (قدیمی → امروز، null = روز بی‌برنامه) برای نوار پروفایل
+// (lib/friendWeek.ts). از همون پنجره‌ی 21 روزه‌ی اول میاد — کوئری اضافه نداره.
 export type RoutineStats = { completed: number; total: number; pct: number; streak: number; week: WeekPcts };
 
 const STREAK_LOOKBACK_DAYS = 90;

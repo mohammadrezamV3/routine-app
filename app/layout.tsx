@@ -47,6 +47,8 @@ const vazir = Vazirmatn({
   subsets: ["arabic", "latin"],
   weight: "variable",
   variable: "--font-vazir",
+  display: "block",
+  adjustFontFallback: false,
 });
 
 // وضیرمتن هرچند subset لاتین هم داره، ولی گلیف‌های لاتین خودش (طراحی‌شده
@@ -60,6 +62,7 @@ const latin = Inter({
   subsets: ["latin"],
   weight: "variable",
   variable: "--font-latin",
+  display: "block",
 });
 
 // وریفیکیشن موتورهای جست‌وجو/نقشه — فقط وقتی env مقدار داره اضافه می‌شه؛

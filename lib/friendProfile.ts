@@ -5,7 +5,7 @@ import { prisma } from "@/lib/prisma";
 import { NAME_STYLE_SELECT, nameFlags } from "@/lib/nameStyle";
 import { countRowProgress } from "@/lib/roadmapPlan";
 import { routineStatsForUsers } from "@/lib/friendStats";
-import type { WeekPcts } from "@/lib/friendsRank";
+import type { WeekPcts } from "@/lib/friendWeek";
 
 export type FriendRelation = "none" | "friends" | "pending_sent" | "pending_received";
 

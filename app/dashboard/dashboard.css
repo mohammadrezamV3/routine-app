@@ -246,7 +246,7 @@ body[data-theme="light"] .db-hero-phase:not(.is-night){ color:#D98A1E; }
 .db-kbd{
   display:inline-flex; align-items:center; justify-content:center; min-width:22px; height:20px; padding:0 5px;
   border-radius:6px; border:1px solid var(--box-line); border-bottom-width:2px;
-  font-family:var(--font-latin), sans-serif; font-size:10px; font-weight:700; color:var(--muted);
+  font-family:var(--font-latin), var(--font-vazir), sans-serif; font-size:10px; font-weight:700; color:var(--muted);
 }
 /* راهنمای کیبورد (Esc و پایین پالت) روی لمسی معنی نداره؛ بستن با زدن پس‌زمینه */
 @media (hover:none), (pointer:coarse){ .db-cmd-esc{ display:none; } }
@@ -298,7 +298,7 @@ body[data-theme="light"] .db-arc-cap{ filter:drop-shadow(0 0 2px rgba(80,50,20,.
 .db-ribbon-end{ display:inline-flex; align-items:center; gap:5px; font-weight:700; font-family:var(--font-latin), var(--font-vazir), sans-serif; }
 .db-ribbon-end svg{ width:15px; height:15px; }
 .db-ribbon-left{ display:inline-flex; flex-direction:column; align-items:center; gap:2px; font-weight:700; color:var(--text); text-align:center; }
-.db-ribbon-clock{ direction:ltr; font-family:var(--font-latin), sans-serif; font-size:17px; font-weight:800; letter-spacing:.04em; font-variant-numeric:tabular-nums; color:var(--text); line-height:1.2; }
+.db-ribbon-clock{ direction:ltr; font-family:var(--font-latin), var(--font-vazir), sans-serif; font-size:17px; font-weight:800; letter-spacing:.04em; font-variant-numeric:tabular-nums; color:var(--text); line-height:1.2; }
 .db-ribbon-clock i{ font-style:normal; opacity:.4; margin-inline:1px; }
 .db-ribbon-clock .s{ font-size:13px; opacity:.55; }
 .db-ribbon-set{ color:var(--accent) !important; font-weight:700; }
@@ -399,7 +399,7 @@ body[data-theme="light"] .db-arc-cap{ filter:drop-shadow(0 0 2px rgba(80,50,20,.
 .db-tl-item.is-now::before{ top:0; bottom:0; background:linear-gradient(180deg, var(--ring-1b) 0 50%, transparent 50%); }
 .db-tl-item.is-tail::before{ display:none; }
 
-.db-tl-time{ display:flex; flex-direction:column; align-items:flex-end; padding-top:calc(var(--tl-top) + 3px); font-family:var(--font-latin), sans-serif; font-variant-numeric:tabular-nums; }
+.db-tl-time{ display:flex; flex-direction:column; align-items:flex-end; padding-top:calc(var(--tl-top) + 3px); font-family:var(--font-latin), var(--font-vazir), sans-serif; font-variant-numeric:tabular-nums; }
 .db-tl-time b{ font-size:12.5px; font-weight:800; color:var(--text); }
 .db-tl-time span{ font-size:10px; font-weight:600; color:var(--muted); }
 .db-tl-item.is-done .db-tl-time b{ color:var(--muted); }
@@ -474,7 +474,7 @@ a.db-tl-name{ text-decoration:underline dotted color-mix(in srgb, var(--ring-1a)
 
 /* نشانگر «الان» */
 .db-tl-now{ display:grid; grid-template-columns:var(--tl-time) var(--tl-rail) auto minmax(0,1fr); gap:0 var(--tl-gap); align-items:center; margin:2px 0 12px; }
-.db-tl-now-time{ justify-self:end; font-family:var(--font-latin), sans-serif; font-size:10.5px; font-weight:800; color:var(--pnl-loss); padding:1px 6px; border-radius:7px; border:1px solid rgba(var(--pnl-loss-rgb),.5); font-variant-numeric:tabular-nums; }
+.db-tl-now-time{ justify-self:end; font-family:var(--font-latin), var(--font-vazir), sans-serif; font-size:10.5px; font-weight:800; color:var(--pnl-loss); padding:1px 6px; border-radius:7px; border:1px solid rgba(var(--pnl-loss-rgb),.5); font-variant-numeric:tabular-nums; }
 .db-tl-now-dot{ justify-self:center; width:10px; height:10px; border-radius:50%; background:var(--pnl-loss); box-shadow:0 0 0 3px rgba(var(--pnl-loss-rgb),.22); animation:db-live 2s ease-in-out infinite; position:relative; z-index:1; }
 .db-tl-now-line{ grid-column:4; grid-row:1; height:1px; background:linear-gradient(270deg, var(--pnl-loss), transparent); }
 .db-tl-now-label{ grid-column:3; grid-row:1; font-size:10px; font-weight:900; color:var(--pnl-loss); }
@@ -660,7 +660,7 @@ a.db-tl-name{ text-decoration:underline dotted color-mix(in srgb, var(--ring-1a)
 @media (hover:hover){ .db-acc:hover{ transform:translateX(-3px); } }
 .db-acc-dot{ width:10px; height:10px; border-radius:4px; }
 .db-acc-name{ font-size:12.5px; font-weight:700; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
-.db-acc-pnl{ font-size:12px; font-weight:800; font-family:var(--font-latin), sans-serif; }
+.db-acc-pnl{ font-size:12px; font-weight:800; font-family:var(--font-latin), var(--font-vazir), sans-serif; }
 .db-acc-goal{ grid-column:2 / 4; }
 .db-acc-goal .db-meter{ height:4px; }
 .db-trow{ display:flex; align-items:center; gap:9px; padding:7px 6px; border-bottom:1px solid var(--box-line); }
@@ -673,8 +673,8 @@ a.db-tl-name{ text-decoration:underline dotted color-mix(in srgb, var(--ring-1a)
 .db-dir svg{ width:11px; height:11px; }
 .db-dir.is-buy{ color:var(--pnl-win); border:1px solid rgba(var(--pnl-win-rgb),.45); }
 .db-dir.is-sell{ color:var(--pnl-loss); border:1px solid rgba(var(--pnl-loss-rgb),.45); }
-.db-trow-sym{ flex:1; font-family:var(--font-latin), sans-serif; font-weight:800; font-size:12.5px; text-align:start; }
-.db-trow-pnl{ font-family:var(--font-latin), sans-serif; font-weight:800; font-size:12.5px; }
+.db-trow-sym{ flex:1; font-family:var(--font-latin), var(--font-vazir), sans-serif; font-weight:800; font-size:12.5px; text-align:start; }
+.db-trow-pnl{ font-family:var(--font-latin), var(--font-vazir), sans-serif; font-weight:800; font-size:12.5px; }
 
 /* ── بازار و اخبار اقتصادی ────────────────────────────────────────────── */
 .db-sessions{ display:flex; flex-direction:column; gap:8px; }
@@ -689,7 +689,7 @@ a.db-tl-name{ text-decoration:underline dotted color-mix(in srgb, var(--ring-1a)
 .db-sess-name{ font-size:12px; font-weight:700; }
 .db-sess-bar{ position:relative; height:6px; border-radius:99px; background:rgba(var(--accent-rgb),.1); overflow:hidden; }
 .db-sess-bar i{ position:absolute; inset:0; transform-origin:right; border-radius:inherit; background:linear-gradient(270deg, rgba(var(--pnl-win-rgb),.35), var(--pnl-win)); }
-.db-sess-time{ font-family:var(--font-latin), sans-serif; font-size:10.5px; color:var(--muted); font-weight:700; font-variant-numeric:tabular-nums; }
+.db-sess-time{ font-family:var(--font-latin), var(--font-vazir), sans-serif; font-size:10.5px; color:var(--muted); font-weight:700; font-variant-numeric:tabular-nums; }
 
 .db-events{ border-top:1px dashed var(--box-line); padding-top:12px; }
 .db-countdown{
@@ -703,19 +703,19 @@ a.db-tl-name{ text-decoration:underline dotted color-mix(in srgb, var(--ring-1a)
 .db-cd-kicker{ display:inline-flex; align-items:center; gap:6px; font-size:10.5px; font-weight:800; color:var(--muted); font-family:var(--font-latin), var(--font-vazir), sans-serif; }
 .db-cd-title{ font-size:12.5px; font-weight:800; direction:ltr; text-align:right; unicode-bidi:plaintext; overflow:hidden; text-overflow:ellipsis; display:-webkit-box; -webkit-line-clamp:2; -webkit-box-orient:vertical; }
 .db-cd-meta{ font-size:10.5px; color:var(--muted); }
-.db-cd-meta b{ color:var(--text); font-family:var(--font-latin), sans-serif; }
+.db-cd-meta b{ color:var(--text); font-family:var(--font-latin), var(--font-vazir), sans-serif; }
 .db-cd-clock{ display:flex; gap:5px; flex-shrink:0; }
 .db-cd-cell{ display:flex; flex-direction:column; align-items:center; min-width:38px; padding:6px 4px; border-radius:11px; border:1px solid var(--box-line); }
-.db-cd-cell b{ font-family:var(--font-latin), sans-serif; font-size:17px; font-weight:800; font-variant-numeric:tabular-nums; }
+.db-cd-cell b{ font-family:var(--font-latin), var(--font-vazir), sans-serif; font-size:17px; font-weight:800; font-variant-numeric:tabular-nums; }
 .db-cd-cell em{ font-style:normal; font-size:9px; color:var(--muted); font-family:var(--font-latin), var(--font-vazir), sans-serif; }
 .db-ev-list{ list-style:none; display:flex; flex-direction:column; margin-top:6px; }
 .db-ev{ display:grid; grid-template-columns:auto auto 1fr auto; align-items:center; gap:8px; padding:7px 2px; border-bottom:1px solid var(--box-line); font-size:11.5px; }
 .db-ev:last-child{ border-bottom:none; }
 .db-ev-imp{ width:7px; height:7px; border-radius:50%; background:#E0A452; display:inline-block; }
 .imp-HIGH .db-ev-imp{ background:var(--pnl-loss); box-shadow:0 0 0 3px rgba(var(--pnl-loss-rgb),.18); }
-.db-ev-cur{ font-family:var(--font-latin), sans-serif; font-weight:800; font-size:10.5px; color:var(--muted); }
+.db-ev-cur{ font-family:var(--font-latin), var(--font-vazir), sans-serif; font-weight:800; font-size:10.5px; color:var(--muted); }
 .db-ev-title{ direction:ltr; text-align:right; unicode-bidi:plaintext; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; font-weight:600; }
-.db-ev-time{ font-family:var(--font-latin), sans-serif; font-weight:700; color:var(--muted); font-variant-numeric:tabular-nums; }
+.db-ev-time{ font-family:var(--font-latin), var(--font-vazir), sans-serif; font-weight:700; color:var(--muted); font-variant-numeric:tabular-nums; }
 
 /* ── مربی / رودمپ / اعلان / لانچر ─────────────────────────── */
 .db-mentor-body{ display:flex; flex-direction:column; gap:12px; }

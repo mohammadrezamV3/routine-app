@@ -4,7 +4,7 @@ import "./friends.css";
 import { GradientRing } from "./GradientRing";
 import { FA_WEEKDAY_SHORT, isoLocal } from "@/lib/jalali";
 import { jsDayOfIso } from "@/lib/schedule";
-import { weekIsos, type WeekPcts } from "@/lib/friendsRank";
+import { weekIsos, type WeekPcts } from "@/lib/friendWeek";
 
 // نوار 7 روز اخیر — هر روز یک حلقه‌ی کوچک (GradientRing، تنها حلقه‌ی مجاز
 // اپ). روز بی‌برنامه (null) حلقه‌ی خالی کم‌رنگه، نه «شکست». با `labels` حرف

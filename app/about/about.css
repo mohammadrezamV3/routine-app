@@ -483,3 +483,25 @@ body[data-theme="light"] .ab-root h2.ab-final-title, body:not([data-theme="light
   .ab-value, .ab-tile, .ab-contact-card{ transition:none; }
 }
 html[data-perf-weak] .ab-mesh > span, html[data-perf-weak] .ab-final-ring, html[data-perf-weak] .ab-core::after{ animation:none; }
+
+/* ─── اعضای تیم (کارت سازنده باز می‌شه) ─── */
+button.ab-team-toggle{ cursor:pointer; width:100%; text-align:right; font:inherit; }
+button.ab-team-toggle:focus-visible{ outline:2px solid var(--accent); outline-offset:3px; }
+.ab-team-toggle .ab-contact-value{ display:flex; align-items:center; justify-content:space-between; gap:8px; color:var(--accent); }
+.ab-team-chev{ transition:transform .35s cubic-bezier(.2,.8,.2,1); flex:none; }
+.ab-team-toggle[aria-expanded="true"] .ab-team-chev{ transform:rotate(180deg); }
+@media (hover:hover) and (pointer:fine){ button.ab-team-toggle:hover{ border-color:rgba(var(--accent-rgb),.4); transform:translateY(-3px); } }
+.ab-team-wrap{ overflow:hidden; }
+.ab-team{ list-style:none; margin:0; padding:14px 0 2px; display:grid; gap:12px; grid-template-columns:minmax(0,1fr); }
+@media (min-width:640px){ .ab-team{ grid-template-columns:repeat(2,minmax(0,1fr)); } }
+@media (min-width:1024px){ .ab-team{ grid-template-columns:repeat(4,minmax(0,1fr)); gap:16px; } }
+.ab-team-card{ align-items:center; text-align:center; gap:6px; }
+.ab-team-photo{ border-radius:50%; object-fit:cover; display:block; margin-bottom:6px; border:1px solid rgba(var(--accent-rgb),.28); }
+.ab-team-name{ font-family:var(--font-latin), var(--font-vazir); font-size:15px; font-weight:800; color:var(--text); }
+.ab-team-role{ font-size:12.5px; font-weight:700; color:var(--accent); }
+.ab-team-bio{ margin:2px 0 0; font-size:12.5px; line-height:1.9; color:var(--muted); }
+.ab-team-links{ display:flex; gap:8px; justify-content:center; margin-top:6px; }
+.ab-team-link{ width:34px; height:34px; border-radius:50%; display:inline-flex; align-items:center; justify-content:center; color:var(--text); border:1px solid var(--ab-line-hi); text-decoration:none; transition:color .2s ease, border-color .2s ease; }
+.ab-team-link:focus-visible{ outline:2px solid var(--accent); outline-offset:2px; }
+@media (hover:hover){ .ab-team-link:hover{ color:var(--accent); border-color:rgba(var(--accent-rgb),.45); } }
+@media (prefers-reduced-motion:reduce){ .ab-team-chev{ transition:none; } button.ab-team-toggle{ transition:none; } }

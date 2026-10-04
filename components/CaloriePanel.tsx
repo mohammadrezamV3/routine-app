@@ -385,7 +385,7 @@ export function CaloriePanel() {
               </div>
 
               <div className="calorie-col-side">
-                {dashboardPrefs.showFriends && <DashFriendsCard delay={0.12} module="calorie" unitLabel="روز موفق" />}
+                {dashboardPrefs.showFriends && <DashFriendsCard delay={0.12} module="calorie" />}
                 <CalorieStreakCard rangeEntries={historyEntries} targetKcal={target.dailyTargetKcal} delay={0.1} />
                 {dashboardPrefs.showChart && <CalorieChartCard rangeEntries={historyEntries} targetKcal={target.dailyTargetKcal} delay={0.22} />}
               </div>

@@ -3,6 +3,7 @@
 import "./sleep.css";
 import { useCallback, useEffect, useMemo, useState } from "react";
 import Link from "next/link";
+import dynamic from "next/dynamic";
 import { BarChart3 } from "lucide-react";
 import { ICONS } from "./NavDrawer";
 import { RoutineTrialBanner } from "./RoutineTrialBanner";
@@ -13,6 +14,8 @@ import { SleepLogSheet, type SleepLogSheetProps } from "./SleepLogSheet";
 import { getSleepRange } from "@/lib/storage";
 import { DEFAULT_SLEEP, DEFAULT_WAKE } from "@/lib/wakeSleep";
 import { getSleepGoal } from "@/lib/sleepGoal";
+import { getSleepLatency, setSleepLatency } from "@/lib/sleepLatency";
+import { DEFAULT_LATENCY } from "@/lib/sleepCycles";
 import { useLiveRefresh } from "@/lib/liveSync";
 import { useFeature } from "@/lib/useFeatures";
 import { isoLocal } from "@/lib/jalali";
@@ -29,10 +32,14 @@ import { getTracking, stopTracking, draftFromTracking, TRACKER_EVENT, type Sleep
 /** چند شب به عقب خونده می‌شه (تحلیل‌ها و تقویم ماهانه) */
 export const SLEEP_LOAD_DAYS = 120;
 
+// پنجره‌ی چرخه‌های خواب فقط بعد از زدن چیپ روی صفحه‌ی ساعت لود می‌شه
+const loadCycleSheet = () => import("./SleepCycleSheet");
+const SleepCycleSheet = dynamic(loadCycleSheet, { ssr: false });
+
 type SheetState = { initial: SleepLogSheetProps["initial"]; existing: boolean; fromTracker?: boolean } | null;
 
 export function SleepHub() {
-  const [todayIso, setTodayIso] = useState(() => isoLocal(new Date()));
+  const [todayIso, setTodayIso] = useState("");
   const [entries, setEntries] = useState<SleepRecord[]>([]);
   const [loaded, setLoaded] = useState(false);
   const [target, setTarget] = useState({ wake: DEFAULT_WAKE, sleep: DEFAULT_SLEEP });
@@ -40,19 +47,24 @@ export function SleepHub() {
   const [tracking, setTracking] = useState<SleepTracking | null>(null);
   const [sheet, setSheet] = useState<SheetState>(null);
   const [goalOpen, setGoalOpen] = useState(false);
+  const [cyclesOpen, setCyclesOpen] = useState(false);
+  const [latency, setLatency] = useState<number>(DEFAULT_LATENCY);
 
   // امروز با گذشتن نیمه‌شب (صفحه‌ی باز) عوض می‌شه
   useEffect(() => {
+    setTodayIso(isoLocal(new Date()));
     const t = setInterval(() => setTodayIso((p) => { const n = isoLocal(new Date()); return n === p ? p : n; }), 30_000);
     return () => clearInterval(t);
   }, []);
 
   const load = useCallback(async () => {
     const today = isoLocal(new Date());
-    const [list, g] = await Promise.all([
+    const [list, g, lat] = await Promise.all([
       getSleepRange(addDaysIso(today, -(SLEEP_LOAD_DAYS - 1)), today).catch(() => [] as SleepRecord[]),
       getSleepGoal(),
+      getSleepLatency(),
     ]);
+    setLatency(lat);
     setEntries(list.filter((e) => sleepMinutes(e) > 0).sort((a, b) => a.date.localeCompare(b.date)));
     setTarget(g.goal);
     setGoalCustom(g.custom);
@@ -60,7 +72,7 @@ export function SleepHub() {
   }, []);
 
   useEffect(() => { load(); }, [load]);
-  useLiveRefresh(["sleep", "sleepGoal", "wakeSleepTimes"], () => { load(); });
+  useLiveRefresh(["sleep", "sleepGoal", "sleepLatency", "wakeSleepTimes"], () => { load(); });
 
   useEffect(() => {
     const sync = () => setTracking(getTracking());
@@ -70,7 +82,15 @@ export function SleepHub() {
     return () => { window.removeEventListener(TRACKER_EVENT, sync); window.removeEventListener("storage", sync); };
   }, []);
 
-  const insights = useMemo(() => sleepInsights(entries, target, todayIso), [entries, target, todayIso]);
+  const changeLatency = useCallback((min: number) => {
+    setLatency(min);
+    setSleepLatency(min).catch(() => {});
+  }, []);
+  const openCycles = useCallback(() => setCyclesOpen(true), []);
+  const closeCycles = useCallback(() => setCyclesOpen(false), []);
+  const preloadCycles = useCallback(() => { loadCycleSheet(); }, []);
+
+  const insights = useMemo(() => sleepInsights(entries, target, todayIso || isoLocal(new Date())), [entries, target, todayIso]);
   const byDate = useMemo(() => new Map(entries.map((e) => [e.date, e])), [entries]);
 
   const openDate = useCallback((dateIso: string) => {
@@ -91,13 +111,13 @@ export function SleepHub() {
   useEffect(() => {
     if (!loaded) return;
     const d = new URLSearchParams(window.location.search).get("date");
-    if (!d || !/^\d{4}-\d{2}-\d{2}$/.test(d) || d > todayIso) return;
+    if (!todayIso || !d || !/^\d{4}-\d{2}-\d{2}$/.test(d) || d > todayIso) return;
     openDate(d);
     const url = new URL(window.location.href);
     url.searchParams.delete("date");
     window.history.replaceState(window.history.state, "", url.toString());
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [loaded]);
+  }, [loaded, !!todayIso]);
 
   const statsOn = useFeature("weeklyAnalysis") === true;
   const lastNight = byDate.get(todayIso) ?? null;
@@ -123,12 +143,27 @@ export function SleepHub() {
           lastNight={lastNight}
           lastScore={lastScore}
           tracking={tracking}
-          onLog={() => openDate(todayIso)}
+          onLog={() => openDate(todayIso || isoLocal(new Date()))}
           onWakeUp={wakeUp}
           onEditGoal={() => setGoalOpen(true)}
+          latency={latency}
+          onOpenCycles={openCycles}
+          onPreloadCycles={preloadCycles}
         />
-        <SleepWeek entries={entries} insights={insights} todayIso={todayIso} onPick={openDate} />
+        {todayIso && <SleepWeek entries={entries} insights={insights} todayIso={todayIso} onPick={openDate} />}
       </div>
+
+      {cyclesOpen && (
+        <SleepCycleSheet
+          open
+          onClose={closeCycles}
+          target={target}
+          goalMin={insights.goalMin}
+          latency={latency}
+          onLatencyChange={changeLatency}
+          lastNight={lastNight}
+        />
+      )}
 
       <SleepGoalSheet
         open={goalOpen}

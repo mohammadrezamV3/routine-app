@@ -1,8 +1,8 @@
 "use client";
 
 // ناوبری نرم بین صفحه‌ها: همون لحظه‌ی کلیک روی یک لینک داخلی، یک نوار
-// پیشرفت باریک بالای صفحه راه می‌افته و صفحه‌ی فعلی کمی کم‌رنگ می‌شه (بازخورد
-// فوری — قبلا تا رسیدن صفحه‌ی بعد هیچ اتفاقی نمی‌افتاد و «نمی‌ره» حس می‌شد).
+// پیشرفت باریک بالای صفحه راه می‌افته (بازخورد فوری و غیرمسدودکننده). هیچ
+// اسپلش یا پرده‌ی تمام‌صفحه‌ای برای ناوبری نیست؛ اسپلش فقط لود کامل اوله.
 // با عوض‌شدن مسیر نوار کامل می‌شه و محو می‌شه؛ ورود صفحه‌ی جدید با fade در
 // app/template.tsx. نوار با border کشیده می‌شه، نه بک‌گراند.
 //
@@ -16,7 +16,6 @@
 
 import { useEffect, useRef, useState } from "react";
 import { usePathname, useSearchParams } from "next/navigation";
-import { navSplashEnd, navSplashStart, navSplashVisible } from "@/lib/navSplash";
 
 type Phase = "idle" | "loading" | "done";
 const ATTR = "data-route-loading";
@@ -41,7 +40,6 @@ export function RouteProgress() {
     if (safety.current) clearTimeout(safety.current);
     dropCancel();
     document.documentElement.removeAttribute(ATTR);
-    navSplashEnd();
     setPhase((p) => (p === "loading" ? "done" : p));
     if (hide.current) clearTimeout(hide.current);
     hide.current = setTimeout(() => setPhase("idle"), 450);
@@ -52,8 +50,6 @@ export function RouteProgress() {
     if (safety.current) clearTimeout(safety.current);
     dropCancel();
     setPhase("loading");
-    // اسپلش تمام‌صفحه اگه رفتن بیشتر از یک لحظه طول بکشه (lib/navSplash.ts)
-    navSplashStart();
     const html = document.documentElement;
     html.setAttribute(ATTR, "");
     // از این به بعد صفحه‌های تازه با fade وارد می‌شن (نه لود کامل اول — LCP)
@@ -62,9 +58,6 @@ export function RouteProgress() {
     const armedAt = Date.now();
     const cancel = () => {
       if (Date.now() - armedAt < 350) return;
-      // لمس روی اسپلش «لغو ناوبری» نیست؛ قبلا اسپلش رو کنار می‌زد و صفحه‌ی قبلی
-      // دوباره دیده می‌شد در حالی که صفحه‌ی بعد هنوز در راه بود.
-      if (navSplashVisible()) return;
       if (document.documentElement.hasAttribute(ATTR)) finish();
       else dropCancel();
     };

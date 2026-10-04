@@ -18,26 +18,6 @@ export const DAY_PRESETS: { key: DayPresetKey; label: string; jsDays: number[] }
   { key: "weekend", label: "آخر هفته", jsDays: [4, 5] },
 ];
 
-export type ProgramTemplate = {
-  name: string;
-  tag: string;
-  /** مدت پیشنهادی به دقیقه */
-  minutes: number;
-  /** اسم آیکون lucide-react (مثلا "Dumbbell") */
-  icon: string;
-};
-/** پیشنهادهای سریع اسم برنامه */
-export const PROGRAM_TEMPLATES: ProgramTemplate[] = [
-  { name: "ورزش", tag: "ورزش", minutes: 60, icon: "Dumbbell" },
-  { name: "مطالعه", tag: "درس", minutes: 90, icon: "BookOpen" },
-  { name: "مدیتیشن", tag: "ذهن", minutes: 15, icon: "Sparkles" },
-  { name: "کار عمیق", tag: "کار", minutes: 120, icon: "Brain" },
-  { name: "کتاب‌خوانی", tag: "مطالعه", minutes: 30, icon: "BookMarked" },
-  { name: "یادگیری زبان", tag: "درس", minutes: 45, icon: "Languages" },
-  { name: "پیاده‌روی", tag: "سلامت", minutes: 30, icon: "Footprints" },
-  { name: "برنامه‌ریزی فردا", tag: "برنامه‌ریزی", minutes: 15, icon: "ListChecks" },
-];
-
 export function newTimeRow(jsDays: number[] = []): TimeRow {
   return { id: "row-" + Math.random().toString(36).slice(2, 9), jsDays, start: "", end: "" };
 }

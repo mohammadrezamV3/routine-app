@@ -29,6 +29,8 @@ export const SETTING_KEYS = {
   wakeSleepTimes: "wakeSleepTimes",
   // هدف خواب سیستم جدای خواب (lib/sleepGoal.ts) — مستقل از ساعت‌های روتین
   sleepGoal: "sleepGoal",
+  // زمان به خواب رفتن شخصی برای چرخه‌های خواب (lib/sleepLatency.ts)
+  sleepLatency: "sleepLatency",
   outingDates: "outingDates",
   dashboardPrefs: "dashboardPrefs",
   notifPrefs: "notifPrefs",

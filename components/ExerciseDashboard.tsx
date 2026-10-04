@@ -35,9 +35,11 @@ const todayIso = isoLocal(now);
 export function ExerciseDashboard({
   plan,
   onPlanChange,
+  onPlanDeleted,
 }: {
   plan: ExercisePlan;
   onPlanChange: (plan: ExercisePlan) => void;
+  onPlanDeleted?: () => void;
 }) {
   const [selectedIso, setSelectedIso] = useState(todayIso);
   const [recenterKey, setRecenterKey] = useState(0);
@@ -291,7 +293,7 @@ export function ExerciseDashboard({
 
         {!sessionActive && (
           <div className="order-2 flex flex-col gap-4 sm:gap-6 lg:order-3">
-            {dashboardPrefs.showFriends && <DashFriendsCard delay={0.15} module="exercise" unitLabel="جلسه" />}
+            {dashboardPrefs.showFriends && <DashFriendsCard delay={0.15} module="exercise" />}
             <ExerciseStatsCard sessionsDone={sessionsDone} sessionsTotal={sessionsTotal} todayPct={todayPct} weekPct={weekPct} delay={0.2} />
           </div>
         )}
@@ -318,6 +320,7 @@ export function ExerciseDashboard({
       {addProgramOpen && (
         <AddExerciseProgramForm
           onClose={() => setAddProgramOpen(false)}
+          onDeleted={onPlanDeleted ? () => { setAddProgramOpen(false); onPlanDeleted(); } : undefined}
           onCreated={(newPlan) => { onPlanChange(newPlan); setAddProgramOpen(false); setRefreshKey((k) => k + 1); }}
         />
       )}

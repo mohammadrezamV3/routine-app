@@ -423,3 +423,8 @@ export function moonPhase(date: Date): number {
   const p = ((date.getTime() - ref) / syn) % 1;
   return p < 0 ? p + 1 : p;
 }
+
+/** ساعت بیداری ثبت‌شده از الان جلوتره (بیش از 5 دقیقه): ثبت خواب آینده معنی نداره */
+export function isFutureWake(wokeAt: Date | string, now: Date = new Date()): boolean {
+  return new Date(wokeAt).getTime() > now.getTime() + 5 * 60000;
+}

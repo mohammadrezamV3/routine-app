@@ -17,7 +17,7 @@ import { deleteSleep, saveSleep, SleepSaveError } from "@/lib/storage";
 import { ROUTINE_PLAN_KEY } from "@/lib/trial";
 import {
   AWAKENINGS_MAX, LATENCY_MAX, NAP_MAX, SCORE_BAND_LABEL, SLEEP_MAX_MIN, SLEEP_MIN_MIN, SLEEP_TAGS,
-  addDaysIso, buildSleepTimes, clockOf, durationLabel, goalFromTargets, scoreBand, sleepScore,
+  addDaysIso, buildSleepTimes, isFutureWake, clockOf, durationLabel, goalFromTargets, scoreBand, sleepScore,
   type ScoreBand, type SleepRecord,
 } from "@/lib/sleep";
 
@@ -137,6 +137,7 @@ function SheetBody({ initial, target, existing, onClose, onChanged }: SleepLogSh
   async function onSave() {
     if (saving) return;
     if (!range || !durOk) { setErr("ساعت‌ها را درست وارد کن (خواب 30 دقیقه تا 20 ساعت)"); return; }
+    if (isFutureWake(range.wokeAt)) { setErr("ساعت بیداری هنوز نرسیده؛ ساعت یا روز رو درست کن"); return; }
     setSaving(true); setErr(null); setPurchase(false);
     try {
       await saveSleep({

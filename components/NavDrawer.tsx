@@ -146,7 +146,6 @@ const LINKS: NavItem[] = [
       { href: "/sleep", label: "خواب", icon: "sleep", module: "SLEEP", feature: "sleep" },
     ],
   },
-  { href: "/friends", label: "دوستان", icon: "friends", feature: "friends" },
   { href: "/roadmaps", label: "رودمپ‌ها", icon: "roadmaps", feature: "roadmaps" },
   // منتورها درست زیر رودمپ‌ها. گروه فقط صفحه‌های سمت شاگرد را دارد؛
   // «پنل منتور» (برای کسی که منتوری می‌کند) این‌جا نیست — در پاپ‌آپ پروفایل،
