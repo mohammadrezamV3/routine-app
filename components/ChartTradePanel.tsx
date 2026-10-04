@@ -6,6 +6,7 @@ import { ClipboardCheck, NotebookPen } from "lucide-react";
 import { TradeAccount, TradeTag, CalSystem } from "@/lib/tradeTypes";
 import { pairLabel } from "@/lib/tradingView";
 import { TradeFormModal } from "./TradeFormModal";
+import "./risk-calc.css";
 
 type ChecklistItem = { id: string; text: string; order: number };
 type Checklist = { id: string; name: string; color: string; required: boolean; archived: boolean; items: ChecklistItem[] };
@@ -51,6 +52,13 @@ export function ChartTradePanel({
   const [checked, setChecked] = useState<Record<string, boolean>>({});
   const [accountId, setAccountId] = useState<string>("");
   const [formOpen, setFormOpen] = useState(false);
+  // بعد از ثبت موفق، مودال می‌بندد و بدون این پیام کاربر نمی‌فهمید معامله ثبت شد
+  const [savedAt, setSavedAt] = useState<number | null>(null);
+  useEffect(() => {
+    if (!savedAt) return;
+    const t = setTimeout(() => setSavedAt(null), 4000);
+    return () => clearTimeout(t);
+  }, [savedAt]);
 
   useEffect(() => {
     fetch("/api/trade/checklists")
@@ -159,6 +167,7 @@ export function ChartTradePanel({
                 نماد: <b className="mono">{symbol}</b> <span>({pairLabel(symbol)})</span>
               </div>
 
+              {savedAt && <div className="trade-chart-saved" role="status">معامله ثبت شد</div>}
               <button
                 type="button"
                 className="account-outline-btn"
@@ -182,7 +191,7 @@ export function ChartTradePanel({
             presetChecklistId={checklist?.id ?? null}
             onTagCreated={onTagCreated}
             onClose={() => setFormOpen(false)}
-            onSaved={() => { setFormOpen(false); onSaved(); }}
+            onSaved={() => { setFormOpen(false); setSavedAt(Date.now()); onSaved(); }}
           />
         )}
       </div>
