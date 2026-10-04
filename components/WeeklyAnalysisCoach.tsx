@@ -1,5 +1,6 @@
 "use client";
 
+import "./wa-cards.css";
 import { useState } from "react";
 import { AnimatePresence, motion } from "framer-motion";
 import { Plus, RotateCw } from "lucide-react";
@@ -47,6 +48,10 @@ export function WeeklyAnalysisCoach({
     }
   }
 
+  const typing = (
+    <span className="wc-typing" aria-hidden="true"><i /><i /><i /></span>
+  );
+
   return (
     <motion.section className="wk-card wk-coach" variants={V_WK_CARD} aria-label="مربی هوشمند">
       <SectionHead
@@ -59,59 +64,68 @@ export function WeeklyAnalysisCoach({
         ) : undefined}
       />
 
-      {busy && !ai ? (
-        <div className="wk-coach-wait" role="status" aria-label="در حال ساخت تحلیل">
-          <span className="wk-skel" style={{ width: "92%" }} />
-          <span className="wk-skel" style={{ width: "78%" }} />
-          <span className="wk-skel" style={{ width: "64%" }} />
-          <span className="wk-coach-wait-note"><Spinner size={13} label={null} />مربی داره اعداد هفته رو می‌خونه…</span>
-        </div>
-      ) : !ai ? (
-        aiAvailable ? (
-          <div className="wk-coach-empty">
-            <p>مربی هوشمند اعداد همین هفته رو می‌خونه و یه جمع‌بندی کوتاه با چند پیشنهاد عملی برای هفته‌ی بعد می‌ده.</p>
-            <button type="button" className="account-outline-btn wk-coach-cta" onClick={generate} disabled={busy}>
-              <AiSparkleIcon size={15} still />ساخت تحلیل مربی
-            </button>
+      <div className="wc-chat">
+        {busy && !ai ? (
+          <div className="wc-row" role="status" aria-label="در حال ساخت تحلیل">
+            <span className="wc-avatar"><AiSparkleIcon size={16} still /></span>
+            <div className="wc-stack">
+              <div className="wc-bubble">{typing}</div>
+              <span className="wc-note">مربی داره اعداد هفته رو می‌خونه…</span>
+            </div>
           </div>
+        ) : !ai ? (
+          aiAvailable ? (
+            <div className="wc-row">
+              <span className="wc-avatar"><AiSparkleIcon size={16} still /></span>
+              <div className="wc-stack">
+                <div className="wc-bubble">مربی هوشمند اعداد همین هفته رو می‌خونه و یه جمع‌بندی کوتاه با چند پیشنهاد عملی برای هفته‌ی بعد می‌ده.</div>
+                <div className="wc-cta">
+                  <button type="button" className="account-outline-btn wk-coach-cta" onClick={generate} disabled={busy}>
+                    <AiSparkleIcon size={15} still />ساخت تحلیل مربی
+                  </button>
+                </div>
+              </div>
+            </div>
+          ) : (
+            <div className="wk-empty-inline">تحلیل مربی هوشمند فعلا در دسترس نیست.</div>
+          )
         ) : (
-          <div className="wk-empty-inline">تحلیل مربی هوشمند فعلا در دسترس نیست.</div>
-        )
-      ) : (
-        <motion.div initial={{ opacity: 0 }} animate={{ opacity: busy ? 0.5 : 1 }} transition={{ duration: 0.35 }}>
-          <p className="wk-coach-summary">{ai.summary}</p>
-          {ai.recommendations.length > 0 && (
-            <ul className="wk-rec-list">
+          <motion.div className="wc-row" initial={{ opacity: 0 }} animate={{ opacity: busy ? 0.55 : 1 }} transition={{ duration: 0.35 }}>
+            <span className="wc-avatar"><AiSparkleIcon size={16} still /></span>
+            <div className="wc-stack">
+              <div className="wc-bubble is-sum" style={{ ["--i" as string]: 0 }}>{ai.summary}</div>
               <AnimatePresence initial={false}>
                 {ai.recommendations.map((r, i) => (
-                  <motion.li
+                  <motion.div
                     key={`${r.title}-${i}`}
-                    className="wk-rec"
-                    initial={{ opacity: 0, y: 8 }}
-                    animate={{ opacity: 1, y: 0 }}
-                    transition={{ duration: 0.35, delay: 0.06 * i, ease: WK_EASE }}
+                    className="wc-bubble"
+                    style={{ animation: "none" }}
+                    initial={{ opacity: 0, y: 10, scale: 0.97 }}
+                    animate={{ opacity: 1, y: 0, scale: 1 }}
+                    transition={{ duration: 0.35, delay: 0.08 * (i + 1), ease: WK_EASE }}
                   >
-                    <div className="wk-rec-head">
-                      <span className="wk-rec-title">{r.title}</span>
+                    <div className="wc-bubble-head">
+                      <span className="wc-bubble-title">{r.title}</span>
                       <span className={`wk-priority ${r.priority}`}>{PRIORITY_LABELS[r.priority]}</span>
                     </div>
-                    <div className="wk-rec-desc">{r.description}</div>
-                    <div className="wk-rec-foot">
-                      {r.domain ? <span className="wk-chip">{ANALYSIS_DOMAIN_LABELS[r.domain]}</span> : <span />}
+                    <div className="wc-bubble-desc">{r.description}</div>
+                    <div className="wc-chips">
+                      {r.domain && <span className="wk-chip">{ANALYSIS_DOMAIN_LABELS[r.domain]}</span>}
                       {canAddGoal && (
-                        <button type="button" className="wk-ghost wk-link-btn" onClick={() => onAddGoal({ domain: r.domain, title: r.title })}>
-                          <Plus size={13} />افزودن به اهداف
+                        <button type="button" className="wk-ghost wc-chip-btn" onClick={() => onAddGoal({ domain: r.domain, title: r.title })}>
+                          <Plus size={12} />افزودن به اهداف
                         </button>
                       )}
                     </div>
-                  </motion.li>
+                  </motion.div>
                 ))}
               </AnimatePresence>
-            </ul>
-          )}
-          {ai.generatedAt && <div className="wk-muted-sm wk-coach-meta">ساخته‌شده ساعت <span className="wk-num">{formatGeneratedAt(ai.generatedAt)}</span></div>}
-        </motion.div>
-      )}
+              {busy && <div className="wc-bubble">{typing}</div>}
+              {ai.generatedAt && <div className="wc-note">ساخته‌شده ساعت <span className="wk-num">{formatGeneratedAt(ai.generatedAt)}</span></div>}
+            </div>
+          </motion.div>
+        )}
+      </div>
 
       {error && <div className="wk-error-inline">{error}</div>}
     </motion.section>
