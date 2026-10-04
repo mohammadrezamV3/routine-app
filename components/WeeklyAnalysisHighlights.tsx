@@ -4,7 +4,8 @@ import { useMemo } from "react";
 import { motion, type Variants } from "framer-motion";
 import { CalendarCheck, Flame, Medal, Trophy, TrendingDown, TrendingUp, type LucideIcon } from "lucide-react";
 import { ANALYSIS_DOMAIN_LABELS, type AnalysisDomain, type WeeklyAnalysis } from "@/lib/weeklyAnalysis/types";
-import { CountText, Num, V_WK_CARD, jalaliShort } from "./WeeklyAnalysisKit";
+import { CountText, Num, WK_EASE, jalaliShort, useCalmMotion } from "./WeeklyAnalysisKit";
+import "./wa-shell.css";
 
 type Spot = {
   key: string;
@@ -18,40 +19,78 @@ type Spot = {
   sub: string;
   sub2?: string;
   tone?: "good" | "bad"; // فقط رنگ آیکون کوچک (عدد همیشه خنثیه)
+  spark?: (number | null)[]; // نقاط خط ریز کنار عدد (اگه داده باشه)
 };
 
-const V_STRIP: Variants = { hidden: {}, show: { transition: { staggerChildren: 0.08 } } };
+const V_STRIP: Variants = { hidden: {}, show: { transition: { staggerChildren: 0.06 } } };
+const V_TILE: Variants = {
+  hidden: { opacity: 0, y: 12 },
+  show: { opacity: 1, y: 0, transition: { duration: 0.45, ease: WK_EASE } },
+};
+
+// خط ریز: فقط نقطه‌های دارای داده، کشیده‌شدن با pathLength؛ بدون داده کافی (کمتر از 2) هیچ
+function Spark({ points, delay }: { points: (number | null)[]; delay: number }) {
+  const calm = useCalmMotion();
+  const pts = points.map((v, i) => ({ v, i })).filter((p): p is { v: number; i: number } => p.v !== null);
+  if (pts.length < 2) return null;
+  const W = 100, H = 30, PAD = 3;
+  const lo = Math.min(...pts.map((p) => p.v));
+  const hi = Math.max(...pts.map((p) => p.v));
+  const span = hi - lo || 1;
+  const n = Math.max(1, points.length - 1);
+  const xy = pts.map((p) => [(p.i / n) * W, H - PAD - ((p.v - lo) / span) * (H - PAD * 2)] as const);
+  const d = xy.map(([x, y], k) => `${k ? "L" : "M"}${x.toFixed(1)} ${y.toFixed(1)}`).join(" ");
+  const last = xy[xy.length - 1];
+  return (
+    <svg className="wa-spark" viewBox={`0 0 ${W} ${H}`} preserveAspectRatio="none" aria-hidden="true">
+      <motion.path
+        d={d}
+        fill="none"
+        stroke="currentColor"
+        strokeWidth={1.8}
+        strokeLinecap="round"
+        strokeLinejoin="round"
+        vectorEffect="non-scaling-stroke"
+        initial={calm ? false : { pathLength: 0, opacity: 0 }}
+        animate={{ pathLength: 1, opacity: 1 }}
+        transition={{ duration: 0.9, delay, ease: WK_EASE }}
+      />
+      <circle cx={last[0]} cy={last[1]} r={2.2} fill="currentColor" vectorEffect="non-scaling-stroke" />
+    </svg>
+  );
+}
 
 // رکورد هفته: اولین چیز قابل‌افتخار که از «اعداد هفته» پیدا بشه — روزهای کامل
 // روتین، بعد میانگین خواب، بعد جلسه‌های تمرین؛ وگرنه روزهای فعال.
 function pickRecord(a: WeeklyAnalysis): Spot | null {
+  const spark = a.days.map((d) => (d.isFuture ? null : d.score));
   const byKey = (k: string) => a.numbers.find((n) => n.key === k);
   const perfect = byKey("routine_perfect");
   if (perfect && Number(perfect.value) > 0) {
     return {
       key: "record", icon: Medal, label: "روزهای کامل روتین",
-      text: perfect.value, unit: perfect.unit ?? "روز", sub: perfect.hint ?? "همه‌ی برنامه‌ها انجام شد",
+      text: perfect.value, unit: perfect.unit ?? "روز", sub: perfect.hint ?? "همه‌ی برنامه‌ها انجام شد", spark,
     };
   }
   const sleep = byKey("sleep_avg");
   if (sleep) {
     return {
       key: "record", icon: Medal, label: "میانگین خواب",
-      text: sleep.value, unit: sleep.unit ?? "ساعت", sub: sleep.hint ?? "در شب‌های ثبت‌شده",
+      text: sleep.value, unit: sleep.unit ?? "ساعت", sub: sleep.hint ?? "در شب‌های ثبت‌شده", spark,
     };
   }
   const fit = byKey("fitness_sessions");
   if (fit) {
     return {
       key: "record", icon: Medal, label: "جلسه‌های تمرین",
-      text: fit.value, unit: fit.unit, sub: fit.hint ?? "طبق برنامه‌ی این هفته",
+      text: fit.value, unit: fit.unit, sub: fit.hint ?? "طبق برنامه‌ی این هفته", spark,
     };
   }
   const days = a.isCurrentWeek ? a.daysElapsed : 7;
   if (a.overall.activeDays > 0) {
     return {
       key: "record", icon: CalendarCheck, label: "روزهای فعال",
-      text: `${a.overall.activeDays}/${days}`, sub: "روزهایی که چیزی ثبت کردی",
+      text: `${a.overall.activeDays}/${days}`, sub: "روزهایی که چیزی ثبت کردی", spark,
     };
   }
   return null;
@@ -73,7 +112,7 @@ function buildSpots(a: WeeklyAnalysis): Spot[] {
     }
     out.push({
       key: "best", icon: Trophy, label: "بهترین روز هفته",
-      value: Math.round(best.score),
+      value: Math.round(best.score), spark: a.days.map((d) => (d.isFuture ? null : d.score)),
       sub: `${best.weekday}${best.date ? ` · ${jalaliShort(best.date)}` : ""}`,
       sub2: top ? `بهترین بخش: ${ANALYSIS_DOMAIN_LABELS[top.domain]} ${Math.round(top.v)}` : undefined,
     });
@@ -90,7 +129,7 @@ function buildSpots(a: WeeklyAnalysis): Spot[] {
     out.push({
       key: "mover", icon: up ? TrendingUp : TrendingDown,
       label: up ? "بیشترین پیشرفت" : "بیشترین افت",
-      value: Math.round(m.delta as number), signed: true, tone: up ? "good" : "bad",
+      value: Math.round(m.delta as number), signed: true, tone: up ? "good" : "bad", spark: m.daily,
       sub: ANALYSIS_DOMAIN_LABELS[m.domain],
       sub2: m.prevScore !== null && m.score !== null ? `از ${Math.round(m.prevScore)} به ${Math.round(m.score)}` : undefined,
     });
@@ -99,7 +138,7 @@ function buildSpots(a: WeeklyAnalysis): Spot[] {
     if (strong.length) {
       const m = strong.reduce((x, y) => ((y.score as number) > (x.score as number) ? y : x));
       out.push({
-        key: "mover", icon: Flame, label: "قوی‌ترین بخش", value: Math.round(m.score as number),
+        key: "mover", icon: Flame, label: "قوی‌ترین بخش", value: Math.round(m.score as number), spark: m.daily,
         sub: ANALYSIS_DOMAIN_LABELS[m.domain], sub2: `${m.daysWithData} روز داده`,
       });
     }
@@ -111,37 +150,34 @@ function buildSpots(a: WeeklyAnalysis): Spot[] {
   return out;
 }
 
-// «هایلایت‌های هفته»: سه کاشی بزرگ، همه از همون داده‌ی صفحه (بدون API تازه).
-// روی دسکتاپ سه ستون، روی موبایل نوار افقی با snap (data-noswipe تا کشیدنش
-// هفته رو عوض نکنه).
+// «ریبون آمار هفته»: ردیف باز (بدون قاب) از آمارهای کوچک، همه از همون داده‌ی
+// صفحه. دسکتاپ یک ردیف تمام‌عرض با خط جداکننده، موبایل نوار افقی با snap
+// (data-noswipe تا کشیدنش هفته رو عوض نکنه).
 export function WeeklyAnalysisHighlights({ analysis }: { analysis: WeeklyAnalysis }) {
   const spots = useMemo(() => buildSpots(analysis), [analysis]);
   if (spots.length === 0) return null;
   return (
-    <motion.div className="wk-spot-strip" variants={V_STRIP} data-noswipe role="list" aria-label="هایلایت‌های هفته">
+    <motion.div className="wa-ribbon" variants={V_STRIP} data-noswipe role="list" aria-label="هایلایت‌های هفته">
       {spots.map((s, i) => {
         const Icon = s.icon;
         return (
-          <motion.article
-            key={s.key}
-            role="listitem"
-            variants={V_WK_CARD}
-            className={`wk-card wk-spot${s.tone === "bad" ? " is-down" : ""}`}
-          >
-            <span className="wk-spot-shine" aria-hidden="true" />
-            <div className="wk-spot-top">
-              <span className="wk-spot-ic" aria-hidden="true" style={s.tone === "bad" ? { ["--wk-ic" as string]: "var(--pnl-loss)" } : undefined}><Icon size={17} /></span>
-              <span className="wk-spot-label">{s.label}</span>
+          <motion.article key={s.key} role="listitem" variants={V_TILE} className={`wa-stat${s.tone === "bad" ? " is-down" : ""}`}>
+            <div className="wa-stat-top">
+              <span className="wa-stat-ic" aria-hidden="true"><Icon size={15} /></span>
+              <span className="wa-stat-label">{s.label}</span>
             </div>
-            <div className="wk-spot-value">
-              {s.value !== undefined ? (
-                <Num value={s.value} signed={s.signed} duration={1.1} delay={0.5 + i * 0.1} />
-              ) : (
-                <CountText text={s.text ?? "—"} />
-              )}
-              {s.unit && <small>{s.unit}</small>}
+            <div className="wa-stat-main">
+              <div className="wa-stat-value">
+                {s.value !== undefined ? (
+                  <Num value={s.value} signed={s.signed} duration={1.1} delay={0.5 + i * 0.1} />
+                ) : (
+                  <CountText text={s.text ?? "—"} />
+                )}
+                {s.unit && <small>{s.unit}</small>}
+              </div>
+              {s.spark && <Spark points={s.spark} delay={0.6 + i * 0.1} />}
             </div>
-            <div className="wk-spot-sub">
+            <div className="wa-stat-sub">
               <b>{s.sub}</b>
               {s.sub2 && <span>{s.sub2}</span>}
             </div>
