@@ -9,7 +9,7 @@ import { EmptyState, ErrorState, LoadingState } from "@/components/admin/EmptySt
 import { useAdminData } from "@/components/admin/useAdminData";
 import { formatCurrencyAmount, formatNumber, formatPercent } from "@/lib/adminFormat";
 import Link from "next/link";
-import { Users, ShieldCheck, Headset, Tag, History, Flag, CalendarClock, Settings, Megaphone } from "lucide-react";
+import { Users, ShieldCheck, Headset, Tag, History, Flag, CalendarClock, Settings, Megaphone, UsersRound } from "lucide-react";
 import { useAdminAccess } from "@/components/admin/AdminAccess";
 import { AdminPermission } from "@/lib/adminPermissions";
 
@@ -22,6 +22,7 @@ const QUICK_LINKS: { label: string; href: string; perm: AdminPermission; icon: R
   { label: "اطلاعیه‌ها", href: "/admin/announcements", perm: "content", icon: <Megaphone size={18} /> },
   { label: "تقویم اقتصادی", href: "/admin/economic-calendar", perm: "content", icon: <CalendarClock size={18} /> },
   { label: "لاگ فعالیت", href: "/admin/audit", perm: "audit", icon: <History size={18} /> },
+  { label: "تیم Arion Group", href: "/admin/team", perm: "settings", icon: <UsersRound size={18} /> },
   { label: "تنظیمات", href: "/admin/settings", perm: "settings", icon: <Settings size={18} /> },
 ];
 

@@ -10298,3 +10298,6 @@ textarea.wsearch-newform-name,
 .bodybuilding-glass textarea.wsearch-newform-name,
 .add-program-glass textarea.wsearch-newform-name,
 .auth-box textarea.wsearch-newform-name{ border-radius:var(--field-radius-multi); }
+
+/* تصویر کوچک عضو تیم در /admin/team */
+.admin-team-thumb{ border-radius:50%; object-fit:cover; display:block; flex:none; }

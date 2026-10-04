@@ -6,7 +6,7 @@ import { motion, useInView, useReducedMotion, useScroll, useTransform, type Moti
 import {
   Apple, ArrowLeft, Bot, CalendarCheck, CandlestickChart, Check, Dumbbell, FileSpreadsheet, Flame, GraduationCap,
   Headset, Heart, KeyRound, Languages, Layers, Lock, Mail, Moon, ShieldCheck, Smartphone, Sparkles, Target, UserRound,
-  UtensilsCrossed, CalendarDays,
+  UtensilsCrossed, CalendarDays, ChevronDown,
 } from "lucide-react";
 import type { LucideIcon } from "lucide-react";
 import { SOCIAL, SUPPORT_EMAIL, BRAND_FA } from "@/lib/brand";
@@ -14,6 +14,8 @@ import { TelegramIcon, InstagramIcon } from "@/components/SocialIcons";
 import { EnamadBadge } from "@/components/EnamadBadge";
 import { LandingStats } from "@/components/LandingSections";
 import { AboutBrandLogo } from "@/components/AboutHero";
+import { AboutTeamPanel } from "@/components/AboutTeam";
+import type { TeamMember } from "@/lib/teamMembers";
 import {
   AboutMockCalorie, AboutMockMentor, AboutMockNumo, AboutMockRoutine, AboutMockSleep, AboutMockStreak, AboutMockTrade,
   AboutMockWorkout,
@@ -363,9 +365,11 @@ const MORE_LINKS = [
   { href: "/terms", label: "قوانین و مقررات" },
 ];
 
-export function AboutContact() {
+export function AboutContact({ team = [] }: { team?: TeamMember[] }) {
+  const [teamOpen, setTeamOpen] = useState(false);
+  const hasTeam = team.length > 0;
   const cards: { label: string; value: string; href?: string; icon: React.ReactNode }[] = [
-    { label: "سازنده", value: BRAND_FA, icon: <Sparkles size={18} /> },
+    { label: "سازنده", value: "Arion Group", icon: <Sparkles size={18} /> },
     { label: "ایمیل", value: SUPPORT_EMAIL, href: `mailto:${SUPPORT_EMAIL}`, icon: <Mail size={18} /> },
     { label: "تلگرام", value: SOCIAL.telegram.handle, href: SOCIAL.telegram.url, icon: <TelegramIcon size={18} /> },
     { label: "اینستاگرام", value: SOCIAL.instagram.handle, href: SOCIAL.instagram.url, icon: <InstagramIcon size={18} /> },
@@ -385,6 +389,26 @@ export function AboutContact() {
               <span className="ab-contact-value ab-mono" dir={c.href ? "ltr" : undefined} style={c.href ? { textAlign: "right" } : undefined}>{c.value}</span>
             </>
           );
+          if (c.label === "سازنده" && hasTeam) {
+            return (
+              <Reveal key={c.label} delay={i * 0.06}>
+                <button
+                  type="button"
+                  className="ab-contact-card ab-team-toggle"
+                  aria-expanded={teamOpen}
+                  aria-controls="ab-team-panel"
+                  onClick={() => setTeamOpen((v) => !v)}
+                >
+                  <span className="ab-contact-ic">{c.icon}</span>
+                  <span className="ab-contact-label">{c.label}</span>
+                  <span className="ab-contact-value ab-mono" dir="ltr">
+                    {c.value}
+                    <ChevronDown size={15} className="ab-team-chev" aria-hidden="true" />
+                  </span>
+                </button>
+              </Reveal>
+            );
+          }
           return (
             <Reveal key={c.label} delay={i * 0.06}>
               {c.href ? (
@@ -402,6 +426,7 @@ export function AboutContact() {
           );
         })}
       </div>
+      {hasTeam && <AboutTeamPanel id="ab-team-panel" open={teamOpen} members={team} />}
       <Reveal className="ab-more">
         <div className="ab-more-title">بیشتر بخوان</div>
         <nav className="ab-more-links" aria-label="صفحه‌های بیشتر">

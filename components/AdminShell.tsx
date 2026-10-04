@@ -9,7 +9,7 @@ import { logoutAndRedirect } from "@/lib/logout";
 import { motion, AnimatePresence } from "framer-motion";
 import {
   LayoutGrid, ToggleRight, Users, CreditCard, Coins, Boxes, Sparkles, LineChart, ServerCog, Settings, LogOut, ChevronDown,
-  Menu, X, Tag, CalendarClock, Flag, Headset, ShieldCheck, History, Home, Sun, Moon, Lock, GraduationCap, FlaskConical, Megaphone, BadgeDollarSign, PartyPopper,
+  Menu, X, Tag, CalendarClock, Flag, Headset, ShieldCheck, History, Home, Sun, Moon, Lock, GraduationCap, FlaskConical, Megaphone, BadgeDollarSign, PartyPopper, UsersRound,
 } from "lucide-react";
 import { useTheme } from "@/components/ThemeProvider";
 import { useLockBodyScroll } from "@/lib/useLockBodyScroll";
@@ -120,6 +120,7 @@ const GROUPS: NavGroup[] = [
       },
       { label: "قابلیت‌ها", icon: <ToggleRight size={17} />, href: "/admin/features", perm: "settings" },
       { label: "تم‌های مناسبتی", icon: <PartyPopper size={17} />, href: "/admin/event-themes", perm: "settings" },
+      { label: "تیم Arion Group", icon: <UsersRound size={17} />, href: "/admin/team", perm: "settings" },
       { label: "تنظیمات", icon: <Settings size={17} />, href: "/admin/settings", perm: "settings" },
       { label: "داده‌ی آزمایشی", icon: <FlaskConical size={17} />, href: "/admin/demo-data", ownerOnly: true },
     ],
