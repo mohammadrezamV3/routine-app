@@ -7,9 +7,9 @@ import { AnimatePresence, motion } from "framer-motion";
 import { ChevronLeft, ChevronRight, X } from "lucide-react";
 import { ANALYSIS_DOMAIN_LABELS, type AnalysisDomain, type DomainResult, type WeeklyAnalysis } from "@/lib/weeklyAnalysis/types";
 import { LockBodyScroll } from "./LockBodyScroll";
-import { GradientRing } from "./GradientRing";
+import { GradientRing, RING_GREEN } from "./GradientRing";
 import {
-  DOMAIN_HREFS, DOMAIN_ICONS, DeltaChip, Liquid, WK_EASE, domainGrad, formatDayDetail, jalaliShort, scoreGrad, useMounted,
+  DOMAIN_HREFS, DOMAIN_ICONS, DeltaChip, Liquid, WK_EASE, formatDayDetail, jalaliShort, scoreGrad, useMounted,
 } from "./WeeklyAnalysisKit";
 
 function useIsNarrow(): boolean {
@@ -39,7 +39,7 @@ function DayBody({ analysis, index }: { analysis: WeeklyAnalysis; index: number 
   return (
     <div className="wk-sheet-body">
       <div className="wk-sheet-hero">
-        <GradientRing key={day.date} value={(day.score ?? 0) / 100} size={72} stroke={8} grad={scoreGrad(day.score)}>
+        <GradientRing key={day.date} value={(day.score ?? 0) / 100} size={72} stroke={8} grad={RING_GREEN}>
           <span className="wk-sheet-score wk-num">{day.score === null ? "—" : Math.round(day.score)}</span>
         </GradientRing>
         <div className="wk-sheet-hero-text">
@@ -69,13 +69,13 @@ function DayBody({ analysis, index }: { analysis: WeeklyAnalysis; index: number 
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ duration: 0.3, delay: 0.04 * i, ease: WK_EASE }}
               >
-                <span className="wk-sheet-ic" style={{ color: `var(--wk-d-${d.domain}-a)` }}><Icon size={16} /></span>
+                <span className="wk-sheet-ic"><Icon size={16} /></span>
                 <span className="wk-sheet-row-main">
                   <span className="wk-sheet-row-top">
                     <span className="wk-sheet-dname">{ANALYSIS_DOMAIN_LABELS[d.domain]}</span>
                     <span className="wk-sheet-dscore wk-num">{v === null ? "—" : Math.round(v)}</span>
                   </span>
-                  <Liquid pct={v} grad={domainGrad(d.domain)} ready={ready} delay={60 * i} className="is-h wk-sheet-bar" />
+                  <Liquid pct={v} grad={scoreGrad(v)} ready={ready} delay={60 * i} className="is-h wk-sheet-bar" />
                   {text && <span className="wk-sheet-text wk-num">{text}</span>}
                 </span>
               </motion.li>

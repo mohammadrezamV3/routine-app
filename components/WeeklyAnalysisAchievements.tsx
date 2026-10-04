@@ -3,11 +3,13 @@
 import { motion } from "framer-motion";
 import { Award, Lock } from "lucide-react";
 import type { Achievement } from "@/lib/weeklyAnalysis/types";
-import { GradientRing } from "./GradientRing";
+import { GradientRing, RING_GREEN } from "./GradientRing";
 import { LazyRing, SectionHead, V_WK_CARD } from "./WeeklyAnalysisKit";
 
-// دستاوردهای همین هفته — حلقه‌ی دور هر نشان: بازشده = پر (گرادیان سبز)،
-// قفل = به نسبت پیشرفت (کهربایی). بازشده‌ها اول؛ ترتیب موتور حفظ می‌شه.
+// دستاوردهای همین هفته — حلقه‌ی دور هر نشان: بازشده = پر (رنگ داده)،
+// قفل = به نسبت پیشرفت با رنگ خاموش (muted). بازشده‌ها اول؛ ترتیب موتور حفظ می‌شه.
+const ACH_LOCKED: [string, string] = ["var(--muted)", "var(--muted)"];
+
 export function WeeklyAnalysisAchievements({ achievements }: { achievements: Achievement[] }) {
   if (achievements.length === 0) return null;
   const sorted = [...achievements].sort((a, b) => Number(b.unlocked) - Number(a.unlocked));
@@ -31,7 +33,7 @@ export function WeeklyAnalysisAchievements({ achievements }: { achievements: Ach
                     value={seen ? ratio : 0}
                     size={54}
                     stroke={5}
-                    grad={a.unlocked ? ["var(--ring-1a)", "var(--ring-1b)"] : ["var(--ring-3a)", "var(--ring-3b)"]}
+                    grad={a.unlocked ? RING_GREEN : ACH_LOCKED}
                     delay={Math.min(i * 0.05, 0.3)}
                   >
                     <span className="wk-ach-emoji" aria-hidden="true">{a.emoji}</span>

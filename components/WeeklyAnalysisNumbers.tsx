@@ -3,7 +3,7 @@
 import { motion } from "framer-motion";
 import { Hash } from "lucide-react";
 import type { WeekNumber } from "@/lib/weeklyAnalysis/types";
-import { CountText, DOMAIN_ICONS, SectionHead, V_WK_CARD, WK_EASE, domainGrad, toneColor } from "./WeeklyAnalysisKit";
+import { CountText, DOMAIN_ICONS, SectionHead, V_WK_CARD, WK_EASE, toneColor } from "./WeeklyAnalysisKit";
 
 // «اعداد هفته» — کاشی‌های عددی آماده‌ی موتور (قطعی). عدد قابل‌شمارش از مقدار
 // قبلی می‌شمره؛ مقدارهایی مثل «+45$» ثابت می‌مونن. هیچ داده‌ای نداریم → کارت نمی‌آد.
@@ -15,12 +15,10 @@ export function WeeklyAnalysisNumbers({ numbers }: { numbers: WeekNumber[] }) {
       <ul className="wk-num-grid">
         {numbers.slice(0, 12).map((n, i) => {
           const Icon = n.domain ? DOMAIN_ICONS[n.domain] : null;
-          const grad = n.domain ? domainGrad(n.domain) : null;
           return (
             <motion.li
               key={n.key}
               className="wk-tile"
-              style={grad ? { ["--wk-dc" as string]: grad[0], ["--wk-dc2" as string]: grad[1] } : undefined}
               initial={{ opacity: 0, y: 12 }}
               whileInView={{ opacity: 1, y: 0 }}
               viewport={{ once: true, margin: "0px 0px -30px 0px" }}

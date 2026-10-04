@@ -4,7 +4,7 @@ import Link from "next/link";
 import { motion } from "framer-motion";
 import { ChevronLeft, Inbox } from "lucide-react";
 import { ANALYSIS_DOMAIN_LABELS, ANALYSIS_DOMAINS, type AnalysisDomain, type DomainResult } from "@/lib/weeklyAnalysis/types";
-import { DOMAIN_HREFS, DOMAIN_ICONS, V_WK_CARD, domainColor } from "./WeeklyAnalysisKit";
+import { DOMAIN_HREFS, DOMAIN_ICONS, V_WK_CARD } from "./WeeklyAnalysisKit";
 
 // هفته‌ای که هیچ دامنه‌ای توش داده نداره — به‌جای یه صفحه‌ی پر از خط‌تیره،
 // مستقیم به بخش‌هایی که کاربر بهشون دسترسی داره لینک می‌ده.
@@ -33,7 +33,7 @@ export function WeeklyAnalysisEmpty({ domains, isCurrentWeek }: { domains: Domai
             const same = list.filter((x) => DOMAIN_HREFS[x] === DOMAIN_HREFS[d]).map((x) => ANALYSIS_DOMAIN_LABELS[x]);
             return (
               <Link key={d} href={DOMAIN_HREFS[d]} className="wk-empty-link" prefetch={false}>
-                <Icon size={15} style={{ color: domainColor(d) }} />
+                <Icon size={15} />
                 <span>{same.join(" / ")}</span>
                 <ChevronLeft size={14} className="wk-empty-chev" />
               </Link>

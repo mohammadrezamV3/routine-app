@@ -6,15 +6,14 @@ import { useMemo, useState } from "react";
 import { AnimatePresence, motion } from "framer-motion";
 import { ChevronDown, ChevronLeft } from "lucide-react";
 import { ANALYSIS_DOMAIN_LABELS, type DayCell, type DomainResult } from "@/lib/weeklyAnalysis/types";
-import { GradientRing } from "./GradientRing";
+import { GradientRing, RING_GREEN } from "./GradientRing";
 import {
-  DOMAIN_HREFS, DOMAIN_ICONS, DeltaChip, Liquid, Num, V_WK_CARD, WK_EASE, domainGrad, toneColor, useMounted, weekdayLetter,
+  DOMAIN_HREFS, DOMAIN_ICONS, DeltaChip, Liquid, Num, V_WK_CARD, WK_EASE, scoreGrad, toneColor, useMounted, weekdayLetter,
 } from "./WeeklyAnalysisKit";
 
 // 7 ستون ریز (شنبه سمت راست): روز آینده خط‌چین توخالی، روز گذشته‌ی بدون
 // داده خط‌چین کم‌رنگ (یعنی «ثبت نشده»، نه صفر)، بقیه به نسبت امتیاز پر.
 export function MiniBars({ d, days, ready, tall = false }: { d: DomainResult; days: DayCell[]; ready: boolean; tall?: boolean }) {
-  const grad = domainGrad(d.domain);
   return (
     <div className={`wk-minibars${tall ? " is-tall" : ""}`} aria-hidden="true">
       {d.daily.map((v, i) => {
@@ -24,7 +23,7 @@ export function MiniBars({ d, days, ready, tall = false }: { d: DomainResult; da
           <div key={i} className="wk-minibar" title={day ? `${day.weekday}: ${v === null ? (future ? "هنوز نرسیده" : "بدون داده") : Math.round(v)}` : undefined}>
             <Liquid
               pct={future ? null : v}
-              grad={grad}
+              grad={scoreGrad(future ? null : v)}
               ready={ready}
               delay={i * 40}
               className={`${future ? "is-future" : ""}${day?.isToday ? " is-today" : ""}`}
@@ -55,7 +54,6 @@ function DomainCard({
 }: { d: DomainResult; days: DayCell[]; expanded: boolean; onToggle: () => void; ready: boolean }) {
   const Icon = DOMAIN_ICONS[d.domain];
   const label = ANALYSIS_DOMAIN_LABELS[d.domain];
-  const grad = domainGrad(d.domain);
   const bw = useMemo(() => bestWorst(d, days), [d, days]);
   const score = d.score === null ? null : Math.round(d.score);
 
@@ -63,7 +61,6 @@ function DomainCard({
     <motion.div
       variants={V_WK_CARD}
       className={`wk-card wk-domain${expanded ? " is-open" : ""}${d.hasData ? "" : " is-empty"}`}
-      style={{ ["--wk-dc" as string]: grad[0], ["--wk-dc2" as string]: grad[1] }}
     >
       <button
         type="button"
@@ -72,7 +69,7 @@ function DomainCard({
         aria-expanded={expanded}
         aria-label={`${label}، جزئیات`}
       >
-        <GradientRing value={(d.score ?? 0) / 100} size={58} stroke={6} grad={grad}>
+        <GradientRing value={(d.score ?? 0) / 100} size={58} stroke={6} grad={RING_GREEN}>
           <span className="wk-domain-score"><Num value={score} duration={0.8} /></span>
         </GradientRing>
         <span className="wk-domain-meta">

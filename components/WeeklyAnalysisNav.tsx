@@ -3,7 +3,7 @@
 import { ChevronLeft, ChevronRight, CornerDownLeft } from "lucide-react";
 import type { TrendPoint } from "@/lib/weeklyAnalysis/types";
 import { Spinner } from "./Spinner";
-import { Liquid, jalaliShort, relativeWeekLabel, useMounted } from "./WeeklyAnalysisKit";
+import { Liquid, jalaliShort, relativeWeekLabel, scoreGrad, useMounted } from "./WeeklyAnalysisKit";
 
 export const MIN_OFFSET = -52; // سقف API (یک سال به عقب)
 
@@ -43,7 +43,7 @@ export function WeeklyAnalysisNav({
                   aria-current={sel ? "true" : undefined}
                   title={`${jalaliShort(t.weekStart)} · ${t.score === null ? "بدون داده" : Math.round(t.score)}`}
                 >
-                  <Liquid pct={t.score} ready={ready} delay={(n - 1 - i) * 35} className="wk-strip-bar" />
+                  <Liquid pct={t.score} grad={scoreGrad(t.score)} ready={ready} delay={(n - 1 - i) * 35} className="wk-strip-bar" />
                   <span className="wk-strip-dot" aria-hidden="true" />
                 </button>
               );

@@ -4,14 +4,12 @@ import { useMemo } from "react";
 import { motion, type Variants } from "framer-motion";
 import { CalendarCheck, Flame, Medal, Trophy, TrendingDown, TrendingUp, type LucideIcon } from "lucide-react";
 import { ANALYSIS_DOMAIN_LABELS, type AnalysisDomain, type WeeklyAnalysis } from "@/lib/weeklyAnalysis/types";
-import type { RingGrad } from "./GradientRing";
-import { CountText, Num, V_WK_CARD, domainGrad, jalaliShort, scoreGrad } from "./WeeklyAnalysisKit";
+import { CountText, Num, V_WK_CARD, jalaliShort } from "./WeeklyAnalysisKit";
 
 type Spot = {
   key: string;
   icon: LucideIcon;
   label: string;
-  grad: RingGrad;
   // یا عدد قابل‌شمارش (value)، یا متن آماده (text — با CountText شمرده می‌شه اگه الگوش بخوره)
   value?: number;
   signed?: boolean;
@@ -19,7 +17,7 @@ type Spot = {
   unit?: string;
   sub: string;
   sub2?: string;
-  tone?: "good" | "bad"; // رنگ آیکون (عدد همیشه رنگ دامنه می‌مونه)
+  tone?: "good" | "bad"; // فقط رنگ آیکون کوچک (عدد همیشه خنثیه)
 };
 
 const V_STRIP: Variants = { hidden: {}, show: { transition: { staggerChildren: 0.08 } } };
@@ -31,28 +29,28 @@ function pickRecord(a: WeeklyAnalysis): Spot | null {
   const perfect = byKey("routine_perfect");
   if (perfect && Number(perfect.value) > 0) {
     return {
-      key: "record", icon: Medal, label: "روزهای کامل روتین", grad: domainGrad("routine"),
+      key: "record", icon: Medal, label: "روزهای کامل روتین",
       text: perfect.value, unit: perfect.unit ?? "روز", sub: perfect.hint ?? "همه‌ی برنامه‌ها انجام شد",
     };
   }
   const sleep = byKey("sleep_avg");
   if (sleep) {
     return {
-      key: "record", icon: Medal, label: "میانگین خواب", grad: domainGrad("sleep"),
+      key: "record", icon: Medal, label: "میانگین خواب",
       text: sleep.value, unit: sleep.unit ?? "ساعت", sub: sleep.hint ?? "در شب‌های ثبت‌شده",
     };
   }
   const fit = byKey("fitness_sessions");
   if (fit) {
     return {
-      key: "record", icon: Medal, label: "جلسه‌های تمرین", grad: domainGrad("fitness"),
+      key: "record", icon: Medal, label: "جلسه‌های تمرین",
       text: fit.value, unit: fit.unit, sub: fit.hint ?? "طبق برنامه‌ی این هفته",
     };
   }
   const days = a.isCurrentWeek ? a.daysElapsed : 7;
   if (a.overall.activeDays > 0) {
     return {
-      key: "record", icon: CalendarCheck, label: "روزهای فعال", grad: ["var(--ring-1a)", "var(--ring-1b)"],
+      key: "record", icon: CalendarCheck, label: "روزهای فعال",
       text: `${a.overall.activeDays}/${days}`, sub: "روزهایی که چیزی ثبت کردی",
     };
   }
@@ -74,7 +72,7 @@ function buildSpots(a: WeeklyAnalysis): Spot[] {
       }
     }
     out.push({
-      key: "best", icon: Trophy, label: "بهترین روز هفته", grad: scoreGrad(best.score),
+      key: "best", icon: Trophy, label: "بهترین روز هفته",
       value: Math.round(best.score),
       sub: `${best.weekday}${best.date ? ` · ${jalaliShort(best.date)}` : ""}`,
       sub2: top ? `بهترین بخش: ${ANALYSIS_DOMAIN_LABELS[top.domain]} ${Math.round(top.v)}` : undefined,
@@ -92,7 +90,7 @@ function buildSpots(a: WeeklyAnalysis): Spot[] {
     out.push({
       key: "mover", icon: up ? TrendingUp : TrendingDown,
       label: up ? "بیشترین پیشرفت" : "بیشترین افت",
-      grad: up ? domainGrad(m.domain) : ["var(--pnl-loss)", "var(--ring-over)"], value: Math.round(m.delta as number), signed: true, tone: up ? "good" : "bad",
+      value: Math.round(m.delta as number), signed: true, tone: up ? "good" : "bad",
       sub: ANALYSIS_DOMAIN_LABELS[m.domain],
       sub2: m.prevScore !== null && m.score !== null ? `از ${Math.round(m.prevScore)} به ${Math.round(m.score)}` : undefined,
     });
@@ -101,7 +99,7 @@ function buildSpots(a: WeeklyAnalysis): Spot[] {
     if (strong.length) {
       const m = strong.reduce((x, y) => ((y.score as number) > (x.score as number) ? y : x));
       out.push({
-        key: "mover", icon: Flame, label: "قوی‌ترین بخش", grad: domainGrad(m.domain), value: Math.round(m.score as number),
+        key: "mover", icon: Flame, label: "قوی‌ترین بخش", value: Math.round(m.score as number),
         sub: ANALYSIS_DOMAIN_LABELS[m.domain], sub2: `${m.daysWithData} روز داده`,
       });
     }
@@ -128,12 +126,11 @@ export function WeeklyAnalysisHighlights({ analysis }: { analysis: WeeklyAnalysi
             key={s.key}
             role="listitem"
             variants={V_WK_CARD}
-            className="wk-card wk-spot"
-            style={{ ["--wk-dc" as string]: s.grad[0], ["--wk-dc2" as string]: s.grad[1] }}
+            className={`wk-card wk-spot${s.tone === "bad" ? " is-down" : ""}`}
           >
             <span className="wk-spot-shine" aria-hidden="true" />
             <div className="wk-spot-top">
-              <span className="wk-spot-ic" aria-hidden="true" style={s.tone ? { ["--wk-ic" as string]: s.tone === "good" ? "var(--pnl-win)" : "var(--pnl-loss)" } : undefined}><Icon size={17} /></span>
+              <span className="wk-spot-ic" aria-hidden="true" style={s.tone === "bad" ? { ["--wk-ic" as string]: "var(--pnl-loss)" } : undefined}><Icon size={17} /></span>
               <span className="wk-spot-label">{s.label}</span>
             </div>
             <div className="wk-spot-value">

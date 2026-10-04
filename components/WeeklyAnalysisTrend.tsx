@@ -121,8 +121,9 @@ export function WeeklyAnalysisTrend({
   const jumpable = (i: number) => i !== n - 1 && offsetOf(i) >= MIN_OFFSET;
   const hv = hover !== null ? main[hover] : null;
   const tipX = hover !== null ? Math.min(Math.max(xAt(hover), 74), Math.max(74, w - 74)) : 0;
-  const color = active === "overall" ? "var(--accent)" : `var(--wk-d-${active}-a)`;
-  const color2 = active === "overall" ? "var(--accent)" : `var(--wk-d-${active}-b)`;
+  // یک رنگ داده برای همه‌ی سری‌ها (دامنه فقط با زبانه‌ی انتخابی مشخصه)
+  const color = "var(--ring-1a)";
+  const color2 = "var(--ring-1b)";
 
   return (
     <motion.section className="wk-card wk-trend" variants={V_WK_CARD} aria-label="روند هشت هفته‌ی اخیر">

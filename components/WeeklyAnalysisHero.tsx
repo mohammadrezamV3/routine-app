@@ -7,7 +7,7 @@ import {
   type LucideIcon,
 } from "lucide-react";
 import type { DayCell, WeekArchetypeKey, WeeklyAnalysis } from "@/lib/weeklyAnalysis/types";
-import { GradientRing, type RingGrad } from "./GradientRing";
+import { GradientRing, RING_GREEN } from "./GradientRing";
 import {
   CONFIDENCE_LABELS, DeltaChip, Num, V_WK_CARD, gradeOfScore, scoreGrad, useCalmMotion, useMounted, weekdayLetter, WK_EASE,
 } from "./WeeklyAnalysisKit";
@@ -38,11 +38,12 @@ const ARCHE_ICONS: Record<WeekArchetypeKey, LucideIcon> = {
   building: Sprout,
 };
 
-// گرادیان لحن تیپ: خوب سبز، بد مرجانی، خنثی آبی-بنفش (پالت حلقه‌ها)
-const TONE_GRADS: Record<"good" | "bad" | "neutral", RingGrad> = {
-  good: ["var(--ring-1a)", "var(--ring-1b)"],
-  bad: ["var(--ring-over)", "var(--ring-3b)"],
-  neutral: ["var(--ring-2a)", "var(--ring-2b)"],
+// لحن تیپ فقط رنگ آیکون کوچک کارت رو تعیین می‌کنه: خوب = رنگ داده، بد = زیان،
+// خنثی = رنگ متن. (عنوان تیپ همیشه خنثیه.)
+const TONE_COLORS: Record<"good" | "bad" | "neutral", string> = {
+  good: "var(--ring-1a)",
+  bad: "var(--pnl-loss)",
+  neutral: "var(--text)",
 };
 
 // فقط بار اول (اولین نمایش صفحه) قوس‌ها با تاخیر مراسم ورود می‌کشن؛ بعدش
@@ -80,7 +81,7 @@ function PredictionBand({ projected, low, high, now }: { projected: number; low:
 
 // ---- صفحه‌ی هفته ----
 // حلقه‌ی نازک بیرونی با هفت قوس (شنبه از بالا، ساعت‌گرد، هم‌جهت پر شدن حلقه‌ی
-// امتیاز). رنگ هر قوس = نمره‌ی همون روز؛ روز آینده خط‌چین، روز بدون داده
+// امتیاز). شدت رنگ هر قوس = امتیاز همون روز؛ روز آینده خط‌چین، روز بدون داده
 // خط‌چین کم‌رنگ و امروز یک نوک ضربان‌دار داره. قوس‌ها یکی‌یکی کشیده می‌شن.
 const C = DIAL / 2;
 const R_SEG = 112;
@@ -155,7 +156,7 @@ function WeekDial({ days }: { days: DayCell[] }) {
 }
 
 // ---- مهر نمره ----
-// دایره‌ی دوخطه با حرف گرادیانی و یک بار برق عبوری (انیمیشن CSS یک‌باره)
+// دایره‌ی دوخطه‌ی خنثی، فقط حرف با رنگ accent، و یک بار برق عبوری (انیمیشن CSS یک‌باره)
 function GradeSeal({ grade, compact }: { grade: string; compact: boolean }) {
   return (
     <motion.span
@@ -174,9 +175,9 @@ function GradeSeal({ grade, compact }: { grade: string; compact: boolean }) {
 // ---- کارت تیپ هفته ----
 function ArchetypeCard({ arche }: { arche: NonNullable<WeeklyAnalysis["archetype"]> }) {
   const Icon = ARCHE_ICONS[arche.key] ?? Zap;
-  const grad = TONE_GRADS[arche.tone] ?? TONE_GRADS.neutral;
+  const tone = TONE_COLORS[arche.tone] ?? TONE_COLORS.neutral;
   return (
-    <div className="wk-arche" style={{ ["--wk-at-a" as string]: grad[0], ["--wk-at-b" as string]: grad[1] }}>
+    <div className="wk-arche" style={{ ["--wk-at" as string]: tone }}>
       <span className="wk-arche-ic" aria-hidden="true"><Icon size={20} /></span>
       <div className="wk-arche-text">
         <span className="wk-arche-kicker">تیپ این هفته</span>
@@ -188,7 +189,7 @@ function ArchetypeCard({ arche }: { arche: NonNullable<WeeklyAnalysis["archetype
 }
 
 // کارت اصلی بالای صفحه: صفحه‌ی هفته (حلقه‌ی امتیاز کل + هفت قوس روزها) روی
-// هاله‌ی هم‌رنگ نمره، تیتر قطعی، کارت تیپ هفته، چهار آمار کوچک و پیش‌بینی
+// هاله‌ی تک‌رنگ (شدتش با نمره)، تیتر قطعی، کارت تیپ هفته، چهار آمار کوچک و پیش‌بینی
 // پایان هفته. حلقه همیشه سرجاشه و امتیاز تازه رو از مقدار قبلی می‌کشه.
 export function WeeklyAnalysisHero({ analysis, compact = false }: { analysis: WeeklyAnalysis; compact?: boolean }) {
   const o = analysis.overall;
@@ -197,7 +198,6 @@ export function WeeklyAnalysisHero({ analysis, compact = false }: { analysis: We
   const pct = o.score === null ? 0 : Math.min(100, Math.max(0, o.score)) / 100;
   const pred = analysis.isCurrentWeek ? analysis.prediction : null;
   const headline = analysis.headline || fallbackHeadline(analysis);
-  const grad = scoreGrad(o.score);
   const ring = compact ? RING_COMPACT : RING;
   const stroke = compact ? STROKE_COMPACT : STROKE;
   const showDial = !compact && Array.isArray(analysis.days) && analysis.days.length >= 7;
@@ -221,7 +221,7 @@ export function WeeklyAnalysisHero({ analysis, compact = false }: { analysis: We
         <div className={`wk-hero-dial${showDial ? " has-dial" : ""}`} style={{ width: box, height: box }}>
           {showDial && <WeekDial key={dialKey} days={analysis.days} />}
           <div className="wk-hero-ring" style={{ width: ring, height: ring }}>
-            <GradientRing value={pct} size={ring} stroke={stroke} grad={grad} delay={0.3}>
+            <GradientRing value={pct} size={ring} stroke={stroke} grad={RING_GREEN} delay={0.3}>
               <div className="wk-hero-center">
                 <span className="wk-hero-score"><Num value={o.score === null ? null : Math.round(o.score)} duration={1.2} delay={0.3} empty="—" /></span>
                 <span className="wk-hero-of">{o.score === null ? "بدون داده" : "از 100"}</span>
@@ -257,14 +257,14 @@ export function WeeklyAnalysisHero({ analysis, compact = false }: { analysis: We
           {o.consistency === null ? "—" : <><Num value={Math.round(o.consistency)} />%</>}
           <small className="wk-muted-sm"> · اطمینان {CONFIDENCE_LABELS[o.confidence]}</small>
         </MiniStat>
-        <MiniStat icon={<TrendingUp size={13} style={{ color: "var(--pnl-win)" }} />} label="بهترین روز">
+        <MiniStat icon={<TrendingUp size={13} style={{ color: "var(--ring-1a)" }} />} label="بهترین روز">
           {o.bestDay && o.bestDay.score !== null ? (
-            <>{o.bestDay.weekday} <span className="wk-num wk-good">{Math.round(o.bestDay.score)}</span></>
+            <>{o.bestDay.weekday} <span className="wk-num">{Math.round(o.bestDay.score)}</span></>
           ) : "—"}
         </MiniStat>
-        <MiniStat icon={<TrendingDown size={13} style={{ color: "var(--pnl-loss)" }} />} label="ضعیف‌ترین روز">
+        <MiniStat icon={<TrendingDown size={13} />} label="ضعیف‌ترین روز">
           {o.worstDay && o.worstDay.score !== null ? (
-            <>{o.worstDay.weekday} <span className="wk-num wk-bad">{Math.round(o.worstDay.score)}</span></>
+            <>{o.worstDay.weekday} <span className="wk-num">{Math.round(o.worstDay.score)}</span></>
           ) : "—"}
         </MiniStat>
       </div>

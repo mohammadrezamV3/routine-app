@@ -4,12 +4,12 @@ import { useEffect, useState } from "react";
 import { motion } from "framer-motion";
 import { Grid3x3 } from "lucide-react";
 import { ANALYSIS_DOMAIN_LABELS, type DayCell, type DomainResult } from "@/lib/weeklyAnalysis/types";
-import { SectionHead, V_WK_CARD, jalaliShort, useSeen, weekdayLetter } from "./WeeklyAnalysisKit";
+import { SectionHead, V_WK_CARD, heatPct, jalaliShort, useSeen, weekdayLetter } from "./WeeklyAnalysisKit";
 
-type Row = { key: string; label: string; values: (number | null)[]; total?: boolean; color: string };
+type Row = { key: string; label: string; values: (number | null)[]; total?: boolean };
 
 // نقشه‌ی حرارتی 7 روز × دامنه (شنبه سمت راست). شدت رنگ هر خانه = امتیاز،
-// با رنگ خود دامنه. خانه‌ی بدون داده فقط قاب خط‌چینه (نه رنگ صفر)، روز آینده
+// همه با یک رنگ (دامنه‌ها فقط با اسم ردیف شناخته می‌شن). خانه‌ی بدون داده فقط قاب خط‌چینه (نه رنگ صفر)، روز آینده
 // کم‌رنگ و ستون امروز قاب دارد. ورود: موج مورب (تاخیر هر خانه از ردیف+ستون)
 // فقط با opacity/transform. زدن عنوان ستون = برگه‌ی جزئیات همون روز.
 export function WeeklyAnalysisHeatmap({
@@ -26,8 +26,8 @@ export function WeeklyAnalysisHeatmap({
   }, [ready]);
 
   const rows: Row[] = [
-    ...domains.map((d) => ({ key: d.domain, label: ANALYSIS_DOMAIN_LABELS[d.domain], values: d.daily, color: `var(--wk-d-${d.domain}-a)` })),
-    { key: "overall", label: "کل روز", values: days.map((d) => d.score), total: true, color: "var(--accent)" },
+    ...domains.map((d) => ({ key: d.domain, label: ANALYSIS_DOMAIN_LABELS[d.domain], values: d.daily })),
+    { key: "overall", label: "کل روز", values: days.map((d) => d.score), total: true },
   ];
 
   const selRow = sel ? rows[sel.row] : null;
@@ -78,7 +78,7 @@ export function WeeklyAnalysisHeatmap({
               const day = days[ci];
               const future = !!day?.isFuture;
               const active = sel?.row === ri && sel?.col === ci;
-              const pct = v === null ? 0 : Math.round(14 + (Math.min(100, Math.max(0, v)) / 100) * 78);
+              const pct = v === null ? 0 : heatPct(v);
               return (
                 <button
                   key={ci}
@@ -86,7 +86,7 @@ export function WeeklyAnalysisHeatmap({
                   role="gridcell"
                   className={`wk-ghost wk-heat-cell${v === null ? " is-empty" : ""}${future ? " is-future" : ""}${day?.isToday ? " is-today" : ""}${active ? " is-active" : ""}${!active && sel && (sel.row === ri || sel.col === ci) ? " is-rc" : ""}`}
                   style={{
-                    ["--hc" as string]: v === null ? "transparent" : `color-mix(in srgb, ${r.color} ${pct}%, transparent)`,
+                    ["--hc" as string]: v === null ? "transparent" : `color-mix(in srgb, var(--ring-1a) ${pct}%, transparent)`,
                     ["--hd" as string]: `${120 + (ri + ci) * 55}ms`,
                   }}
                   onClick={() => setSel(active ? null : { row: ri, col: ci })}
@@ -102,7 +102,7 @@ export function WeeklyAnalysisHeatmap({
       <div className="wk-heat-legend" aria-hidden="true">
         <span>کم</span>
         {[10, 35, 60, 85].map((s) => (
-          <i key={s} style={{ background: `color-mix(in srgb, var(--accent) ${Math.round(14 + (s / 100) * 78)}%, transparent)` }} />
+          <i key={s} style={{ background: `color-mix(in srgb, var(--ring-1a) ${heatPct(s)}%, transparent)` }} />
         ))}
         <span>زیاد</span>
         <i className="is-empty" />

@@ -7,7 +7,7 @@ import {
   Apple, ArrowDownRight, ArrowUpRight, CandlestickChart, CheckCheck, Dumbbell, GraduationCap, Minus, Moon, Repeat,
   type LucideIcon,
 } from "lucide-react";
-import type { RingGrad } from "./GradientRing";
+import { RING_GREEN, type RingGrad } from "./GradientRing";
 import type { AnalysisDomain, DayDetails, Insight, WeeklyAnalysis } from "@/lib/weeklyAnalysis/types";
 import { J_MONTHS, toJalali } from "@/lib/jalali";
 
@@ -64,15 +64,17 @@ export const DOMAIN_HREFS: Record<AnalysisDomain, string> = {
   learning: "/roadmaps",
 };
 
-// گرادیان هر دامنه (توکن‌های --wk-d-* در weekly-analysis.css، روشن و تیره)
-export function domainGrad(d: AnalysisDomain): RingGrad {
-  return [`var(--wk-d-${d}-a)`, `var(--wk-d-${d}-b)`];
+// پالت v3 («خفن، نه رنگارنگ»): فقط *یک* رنگ داده داریم — گرادیان حلقه‌ی برند
+// (--ring-1a → --ring-1b). دامنه‌ها فقط با آیکون و اسم شناخته می‌شن، پس
+// گرادیان همه‌ی دامنه‌ها همین یکیه. شدت امتیاز با کم‌رنگی همین یک رنگ
+// نشون داده می‌شه (scoreGrad)، نه با عوض‌کردن رنگ.
+export function domainGrad(_d?: AnalysisDomain): RingGrad {
+  return RING_GREEN;
 }
-export const domainColor = (d: AnalysisDomain) => `var(--wk-d-${d}-a)`;
+export const domainColor = (_d?: AnalysisDomain) => "var(--ring-1a)";
 
 // نمره‌ی حرفی از روی امتیاز — همون آستانه‌های موتور (lib/weeklyAnalysis/score.ts
-// gradeFor)؛ این‌جا کپی می‌شه چون امتیاز روزها/دامنه‌ها هم باید هم‌رنگ نمره‌ی
-// هفته بشن و ماژول موتور سمت سرور نیست.
+// gradeFor)؛ این‌جا کپی می‌شه چون ماژول موتور سمت سرور نیست.
 export type GradeKey = "S" | "A" | "B" | "C" | "D";
 export function gradeOfScore(score: number | null): GradeKey | null {
   if (score === null) return null;
@@ -83,23 +85,29 @@ export function gradeOfScore(score: number | null): GradeKey | null {
   return "D";
 }
 
-// رنگ هر نمره: S/A سبز، B فیروزه‌ای، C کهربایی، D مرجانی (توکن‌ها در CSS؛
-// همین جفت‌ها برای هاله و عدد هیرو هم هستن تا حلقه/عدد/مهر یکی بمونن)
-const GRADE_GRADS: Record<GradeKey, RingGrad> = {
-  S: ["var(--ring-1a)", "var(--ring-1b)"],
-  A: ["var(--ring-1a)", "var(--ring-1b)"],
-  B: ["var(--wk-d-tasks-a)", "var(--wk-d-tasks-b)"],
-  C: ["var(--ring-3a)", "var(--ring-3b)"],
-  D: ["var(--ring-over)", "var(--ring-3b)"],
-};
-export function scoreGrad(score: number | null): RingGrad {
-  const g = gradeOfScore(score);
-  return g ? GRADE_GRADS[g] : GRADE_GRADS.A;
+/** شدت 0.3..1 از روی امتیاز: امتیاز بالا = رنگ کامل، پایین = محو */
+export function scoreIntensity(score: number | null): number {
+  if (score === null || !Number.isFinite(score)) return 0.3;
+  const t = Math.min(100, Math.max(0, score)) / 100;
+  return 0.3 + 0.7 * Math.pow(t, 1.15);
 }
 
-// خوب/بد با همون قرارداد جهانی سود/زیان (بیرون پالت تم)
+// گرادیان «شدتی» همون یک رنگ: امتیاز بالا کامل و روشن، امتیاز پایین با
+// آلفای کمتر (color-mix با transparent، پس روی هر دو تم یک‌رنگ می‌مونه)
+export function scoreGrad(score: number | null): RingGrad {
+  const k = Math.round(scoreIntensity(score) * 100);
+  if (k >= 100) return RING_GREEN;
+  return [`color-mix(in srgb, var(--ring-1a) ${k}%, transparent)`, `color-mix(in srgb, var(--ring-1b) ${k}%, transparent)`];
+}
+
+/** درصد پرشدگی خانه‌ی نقشه‌ی حرارتی (و راهنمای آن) از روی امتیاز */
+export function heatPct(v: number): number {
+  return Math.round(9 + Math.pow(Math.min(100, Math.max(0, v)) / 100, 1.2) * 88);
+}
+
+// لحن بینش/عدد: فقط معنا رنگ می‌گیره، کوچک — خوب = همون رنگ داده، بد = زیان
 export function toneColor(tone: Insight["tone"] | undefined): string {
-  if (tone === "good") return "var(--pnl-win)";
+  if (tone === "good") return "var(--ring-1a)";
   if (tone === "bad") return "var(--pnl-loss)";
   return "var(--muted)";
 }

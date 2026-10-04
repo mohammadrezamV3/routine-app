@@ -4,7 +4,7 @@ import "./weekly-analysis.css";
 import Link from "next/link";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { motion, useAnimationControls } from "framer-motion";
-import { BarChart3, ChevronLeft, Mail, Newspaper, RotateCw } from "lucide-react";
+import { BarChart3, ChevronLeft, Mail, Newspaper, Play, RotateCw } from "lucide-react";
 import type { AiCoach, AnalysisDomain, ReflectionDto, WeeklyAnalysis, WeeklyGoalDto } from "@/lib/weeklyAnalysis/types";
 import { ModuleGate } from "./ModuleGate";
 import { AuthGate } from "./AuthGate";
@@ -91,19 +91,29 @@ function TitleRow({ analysis }: { analysis: WeeklyAnalysis | null }) {
   );
 }
 
+// بنر هفته‌نامه‌ی خوانده‌نشده: خود کارت دو مقصد داره (لینک تو در تو ممنوعه،
+// پس کارت div و دو لینک هم‌سطح): متن/نماد = خواندن هفته‌نامه، دکمه‌ی
+// «پخش داستان» = همون صفحه با ?story=1 که خواننده خودش داستان رو باز می‌کنه.
 function LetterBanner({ analysis }: { analysis: WeeklyAnalysis }) {
   const l = analysis.unreadLetter;
   if (!l) return null;
+  const href = `/analysis/weekly/letters/${l.weekStart}`;
   return (
     <motion.div variants={V_WK_CARD} className="wk-span-12">
-      <Link href={`/analysis/weekly/letters/${l.weekStart}`} className="wk-card wk-banner" prefetch={false}>
-        <span className="wk-banner-ic"><Mail size={20} /></span>
-        <span className="wk-banner-text">
-          <b>هفته‌نامه‌ی شماره <span className="wk-num">{l.issueNo}</span> رسید</b>
-          <span className="wk-banner-sub">{l.headline || l.weekLabel}</span>
-        </span>
-        <span className="wk-banner-go">بخون<ChevronLeft size={15} /></span>
-      </Link>
+      <div className="wk-card wk-banner">
+        <Link href={href} className="wk-banner-main" prefetch={false}>
+          <span className="wk-banner-ic"><Mail size={20} /></span>
+          <span className="wk-banner-text">
+            <b>هفته‌نامه‌ی شماره <span className="wk-num">{l.issueNo}</span> رسید</b>
+            <span className="wk-banner-sub">{l.headline || l.weekLabel}</span>
+          </span>
+          <span className="wk-banner-go">بخون<ChevronLeft size={15} /></span>
+        </Link>
+        <Link href={`${href}?story=1`} className="account-outline-btn wk-small-btn wk-banner-story" prefetch={false}>
+          <Play size={12} fill="currentColor" aria-hidden="true" />
+          پخش داستان
+        </Link>
+      </div>
     </motion.div>
   );
 }
