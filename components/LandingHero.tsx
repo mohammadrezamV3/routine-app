@@ -256,13 +256,22 @@ export function LandingHero() {
             <div className="lh-layer lh-layer-phone" data-d="10">
               <div className="lh-phone">
                 <div className="lh-phone-screen">
+                  <span className="lh-ph-bg" aria-hidden="true"><i /><i /><i /></span>
                   {/* بوم 360پیکسلی = عرض واقعی یک گوشی؛ کوچک‌نمایی با transform.
                       پس کلاس‌های موبایل خود اپ همون اندازه‌ای رو دارن که روی گوشی. */}
                   <div className="lh-canvas dash-scope text-dash-text">
                     <div className="lh-ph-status">
-                      <span>9:41</span>
+                      <span className="lh-ph-clock">9:41</span>
                       <span className="lh-ph-notch" />
-                      <span className="lh-ph-sig"><i /><i /><i /></span>
+                      <span className="lh-ph-icons" aria-hidden="true">
+                        <span className="lh-ph-sig"><i /><i /><i /><i /></span>
+                        <svg className="lh-ph-wifi" viewBox="0 0 15 11" fill="currentColor">
+                          <path d="M7.5 9.2a1.3 1.3 0 1 0 0 2.6 1.3 1.3 0 0 0 0-2.6z" transform="translate(0 -1.3)" />
+                          <path d="M3.9 6.3a5.1 5.1 0 0 1 7.2 0l-.9.9a3.8 3.8 0 0 0-5.4 0z" />
+                          <path d="M1.3 3.7a8.8 8.8 0 0 1 12.4 0l-.9.9a7.5 7.5 0 0 0-10.6 0z" />
+                        </svg>
+                        <span className="lh-ph-batt"><span className="lh-ph-batt-body" /><span className="lh-ph-batt-cap" /></span>
+                      </span>
                     </div>
 
                     <div className="lh-ph-top">

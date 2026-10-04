@@ -284,7 +284,19 @@
      بدون این خط به فونت خام سیستم/مرورگر سقوط می‌کنه (دقیقا همون باگ
      «توی چارت‌ها یه فونت دیگه دیده می‌شه»، مخصوصا روی چارت‌های دسکتاپ ادمین/
      کالری که برچسب‌هاشون با <text> خام SVG رسم می‌شن، نه یه عنصر HTML). */
-  svg text{ font-family:var(--font-latin), var(--font-vazir), sans-serif; }
+  svg text, svg tspan{ font-family:var(--font-latin), var(--font-vazir), sans-serif; }
+  /* فونت همیشه از خود سایت (وزیرمتن/Inter با next/font) نه فونت دستگاه:
+     کنترل‌های فرم به‌طور پیش‌فرض فونت سیستم می‌گیرن و ارث نمی‌برن، و پریفلایت
+     تیلویند روی html استک سیستمی می‌ذاره. این قاعده‌ها فقط family/letter-spacing
+     رو ارث می‌دن (نه اندازه) تا چیدمان تغییر نکنه. */
+  html{ font-family:var(--font-latin), var(--font-vazir), sans-serif; }
+  button, input, textarea, select, optgroup, option{ font-family:inherit; letter-spacing:inherit; }
+  input::placeholder, textarea::placeholder{ font-family:inherit; }
+  input::-webkit-datetime-edit, input::-webkit-datetime-edit-fields-wrapper,
+  input::-webkit-datetime-edit-text, input::-webkit-datetime-edit-day-field,
+  input::-webkit-datetime-edit-month-field, input::-webkit-datetime-edit-year-field,
+  input::-webkit-datetime-edit-hour-field, input::-webkit-datetime-edit-minute-field{ font-family:inherit; }
+  code, kbd, samp, pre{ font-family:var(--font-latin), var(--font-vazir), monospace; }
   /* اسکرول‌بار سراسری صفحه هیچ‌وقت نباید دیده بشه — طبق درخواست صریح
      کاربر، نه فقط داخل پاپ‌آپ‌ها (که .no-scrollbar از قبل روشون بود). */
   html{ scrollbar-width:none; -ms-overflow-style:none; }
@@ -5805,7 +5817,7 @@ tr.is-open .admin-expand-icon{ transform:rotate(180deg); }
 .admin-table tr.admin-log-detail td{ white-space:normal; }
 .admin-log-context{
   margin:0; max-height:320px; overflow:auto; direction:ltr; text-align:left; white-space:pre-wrap; overflow-wrap:anywhere;
-  font-size:11px; line-height:1.7; color:var(--adm-muted); font-family:ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+  font-size:11px; line-height:1.7; color:var(--adm-muted); font-family:var(--font-latin), var(--font-vazir), monospace;
 }
 
 /* وضعیت سیستم */
@@ -9819,7 +9831,7 @@ body[data-theme="light"] .streak-bigflame-outline{ filter:drop-shadow(0 3px 6px 
 .streak-cel-actions{ margin-top:22px; width:100%; display:flex; flex-direction:column; gap:10px; }
 .streak-cel-btn{ width:100%; min-height:46px; font-size:14px; }
 .streak-cel-invite{ margin:4px 0 0; font-size:12px; line-height:1.8; color:var(--muted); }
-.streak-cel-invite b{ color:var(--accent); font-family:var(--font-latin), sans-serif; letter-spacing:.5px; }
+.streak-cel-invite b{ color:var(--accent); font-family:var(--font-latin), var(--font-vazir), sans-serif; letter-spacing:.5px; }
 .streak-cel-msg{ margin:0; font-size:12px; font-weight:700; color:var(--accent); }
 .streak-cel-msg:empty{ display:none; }
 .streak-cel-btn-in{ display:inline-flex; align-items:center; gap:6px; }

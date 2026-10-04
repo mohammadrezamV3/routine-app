@@ -244,7 +244,7 @@ body[data-theme="light"] .lh-phone{
 }
 .lh-phone-screen{
   position:relative; width:100%; height:100%; overflow:hidden;
-  border-radius:36px; background:var(--bg); direction:rtl; color:var(--text);
+  border-radius:36px; background:var(--bg); direction:rtl; isolation:isolate; color:var(--text);
 }
 /* بوم ۳۶۰پیکسلی: عرض واقعی گوشی. ۲۵۰ = عرض داخلی صفحه (۲۶۸ − ۲×۹).
    کوچک‌نمایی با zoom (چیدمان در اندازه‌ی نهایی → متن تیز)، نه transform. */
@@ -257,15 +257,35 @@ body[data-theme="light"] .lh-phone{
   .lh-phone{ zoom:normal; transform:scale(.88); transform-origin:50% 0; }
   .lh-canvas{ transform:scale(.69445); transform-origin:100% 0; }
 }
+/* نوار وضعیت مثل آیفون واقعی: ساعت سمت چپ، آنتن/وای‌فای/باتری سمت راست و جزیره
+   وسط. جهت عمدا ltr ثابته تا داخل صفحه‌ی rtl جای ساعت و آنتن برعکس نشه. */
 .lh-ph-status{
-  display:flex; align-items:center; justify-content:space-between; flex-shrink:0;
-  height:42px; padding:6px 30px 0; font-size:14px; font-weight:800;
+  display:grid; grid-template-columns:1fr auto 1fr; align-items:center; flex-shrink:0;
+  height:42px; padding:6px 26px 0; font-size:14px; font-weight:700; direction:ltr;
   font-family:var(--font-latin), var(--font-vazir), sans-serif;
+  position:relative; z-index:2;
 }
+.lh-ph-clock{ justify-self:start; letter-spacing:.01em; }
 .lh-ph-notch{ width:104px; height:28px; border-radius:999px; background:#000; }
-.lh-ph-sig{ display:inline-flex; align-items:flex-end; gap:3px; height:13px; }
-.lh-ph-sig i{ display:block; width:4px; border-radius:1px; background:var(--text); }
-.lh-ph-sig i:nth-child(1){ height:5px; } .lh-ph-sig i:nth-child(2){ height:9px; } .lh-ph-sig i:nth-child(3){ height:13px; }
+.lh-ph-icons{ justify-self:end; display:inline-flex; align-items:center; gap:5px; color:var(--text); }
+.lh-ph-sig{ display:inline-flex; align-items:flex-end; gap:2px; height:11px; }
+.lh-ph-sig i{ display:block; width:3px; border-radius:1px; background:currentColor; }
+.lh-ph-sig i:nth-child(1){ height:4px; } .lh-ph-sig i:nth-child(2){ height:6px; }
+.lh-ph-sig i:nth-child(3){ height:8px; } .lh-ph-sig i:nth-child(4){ height:11px; }
+.lh-ph-wifi{ display:block; width:15px; height:11px; }
+.lh-ph-batt{ display:inline-flex; align-items:center; }
+.lh-ph-batt-body{ position:relative; display:block; width:23px; height:11px; border-radius:3.5px; border:1px solid currentColor; opacity:.9; padding:1px; box-sizing:border-box; }
+.lh-ph-batt-body::after{ content:""; display:block; width:100%; height:100%; border-radius:1.5px; background:currentColor; }
+.lh-ph-batt-cap{ display:block; width:2px; height:4px; margin-inline-start:1px; border-radius:0 1px 1px 0; background:currentColor; opacity:.7; }
+
+/* بک‌گراند خود سایت پشت صفحه‌ی گوشی: همون رنگ body + لکه‌های نور aurora
+   (رنگ اصلی و دوم تم، هر دو حالت روشن و تیره) در مقیاس صفحه‌ی گوشی */
+.lh-ph-bg{ position:absolute; inset:0; pointer-events:none; overflow:hidden; border-radius:inherit; }
+.lh-ph-bg i{ position:absolute; display:block; border-radius:50%; }
+.lh-ph-bg i:nth-child(1){ width:300px; height:300px; top:-120px; left:-110px; background:radial-gradient(circle at 40% 40%, rgba(var(--accent-rgb),.30), rgba(var(--accent-rgb),0) 70%); }
+.lh-ph-bg i:nth-child(2){ width:280px; height:280px; bottom:-110px; right:-110px; background:radial-gradient(circle at 60% 60%, rgba(var(--accent-rgb),.22), rgba(var(--accent-rgb),0) 70%); }
+.lh-ph-bg i:nth-child(3){ width:200px; height:200px; top:38%; right:-40px; background:radial-gradient(circle, rgba(var(--secondary-rgb),.14), rgba(var(--secondary-rgb),0) 70%); }
+body[data-theme="light"] .lh-ph-bg i{ opacity:.6; }
 
 /* app-topbar: همبرگر + استریک سمت راست، لوگو سمت چپ */
 .lh-ph-top{
