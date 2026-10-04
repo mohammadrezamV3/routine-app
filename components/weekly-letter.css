@@ -372,12 +372,34 @@ section.wl-ch{ padding:0; border-top:none; margin-top:36px; scroll-margin-top:ca
 .wl-day-empty{ display:flex; align-items:center; gap:6px; font-size:12px; font-weight:600; color:var(--muted); padding:6px 0 2px; }
 
 .wl-meter{
-  display:block; height:5px; margin-top:5px; border-radius:99px; overflow:hidden;
-  background:color-mix(in srgb, var(--wl-da, var(--accent)) 16%, transparent);
+  display:block; height:3px; margin-top:6px; border-radius:3px; overflow:hidden;
+  background:color-mix(in srgb, var(--text) 10%, transparent);
 }
 .wl-meter i{ display:block; height:100%; border-radius:inherit; transform-origin:100% 50%; background:linear-gradient(270deg, var(--wl-da, var(--accent)), var(--wl-db, var(--accent))); }
 
 /* ── فصل‌های دامنه ─────────────────────────────────────── */
+.wl-root .wl-dov{ margin-bottom:12px; padding:18px 14px; }
+@media (min-width:760px){ .wl-root .wl-dov{ margin-bottom:14px; padding:22px 26px; } }
+.wl-dov-in{ display:grid; grid-template-columns:minmax(0,1fr); gap:18px; align-items:center; }
+@media (min-width:760px){ .wl-dov-in{ grid-template-columns:minmax(0,.46fr) minmax(0,.54fr); gap:28px; } }
+.wl-dov-radar{ display:flex; flex-direction:column; align-items:center; gap:6px; min-width:0; padding-inline:6px; }
+.wl-dov-key{ display:inline-flex; align-items:center; gap:7px; font-size:11px; font-weight:700; color:var(--muted); }
+.wl-dov-key i{ display:inline-block; width:14px; height:0; margin-inline-start:8px; border-top:2.5px solid var(--wl-da); border-radius:2px; }
+.wl-dov-key i:first-child{ margin-inline-start:0; }
+.wl-dov-key i.is-prev{ border-top:2px dashed color-mix(in srgb, var(--text) 55%, transparent); }
+.wl-dov-list{ display:flex; flex-direction:column; gap:2px; min-width:0; }
+.wl-root a.wl-dov-row{
+  display:grid; grid-template-columns:auto auto minmax(0,1fr) auto auto; align-items:center; column-gap:10px; row-gap:7px;
+  padding:9px 8px; border-radius:14px; border:1px solid transparent; transition:border-color .2s ease;
+}
+.wl-root a.wl-dov-row.is-active, .wl-root a.wl-dov-row:focus-visible{ border-color:color-mix(in srgb, var(--wl-da) 45%, transparent); outline:none; }
+.wl-dov-rank{ width:14px; text-align:center; font-family:var(--font-latin), sans-serif; font-size:11px; font-weight:800; color:var(--muted); }
+.wl-dov-ico{ display:grid; place-items:center; width:30px; height:30px; border-radius:50%; color:var(--wl-da); border:1px solid color-mix(in srgb, var(--wl-da) 40%, transparent); }
+.wl-dov-name{ font-size:14px; font-weight:800; min-width:0; }
+.wl-dov-score{ min-width:34px; text-align:end; font-family:var(--font-latin), var(--font-vazir), sans-serif; font-size:22px; font-weight:900; letter-spacing:-.04em; line-height:1; font-variant-numeric:tabular-nums; }
+.wl-dov-track{ grid-column:1 / -1; display:block; height:3px; border-radius:3px; overflow:hidden; background:color-mix(in srgb, var(--text) 9%, transparent); }
+.wl-dov-track i{ display:block; height:100%; border-radius:inherit; background:linear-gradient(270deg, var(--wl-da), var(--wl-db)); }
+.wl-root .wl-dom{ scroll-margin-top:calc(138px + env(safe-area-inset-top)); }
 .wl-dom-grid{ display:grid; grid-template-columns:minmax(0,1fr); gap:12px; }
 @media (min-width:760px){ .wl-dom-grid{ grid-template-columns:repeat(2, minmax(0,1fr)); gap:14px; } }
 .wl-root .wl-dom{ display:flex; flex-direction:column; gap:14px; }
@@ -397,10 +419,7 @@ section.wl-ch{ padding:0; border-top:none; margin-top:36px; scroll-margin-top:ca
 .wl-dom.is-empty .wl-dom-note{ color:var(--muted); }
 .wl-bars{ display:grid; grid-template-columns:repeat(7, minmax(0,1fr)); gap:6px; }
 .wl-bar-col{ display:flex; flex-direction:column; align-items:center; gap:5px; }
-.wl-bar-slot{ position:relative; width:100%; max-width:26px; height:54px; display:flex; align-items:flex-end; justify-content:center; }
-.wl-bar-fill{ display:block; width:100%; border-radius:7px 7px 3px 3px; background:linear-gradient(0deg, var(--wl-da), var(--wl-db)); }
-.wl-bar-col.is-best .wl-bar-fill{ box-shadow:0 0 14px -2px color-mix(in srgb, var(--wl-da) 60%, transparent); }
-.wl-bar-empty{ display:block; width:100%; height:6px; border-radius:3px; border:1px dashed var(--box-line); }
+.wl-bar-slot{ position:relative; display:block; width:100%; max-width:26px; height:54px; }
 .wl-bar-lbl{ font-size:10.5px; font-weight:700; color:var(--muted); }
 .wl-bar-col.is-best .wl-bar-lbl{ color:var(--wl-good); }
 .wl-bar-col.is-worst .wl-bar-lbl{ color:var(--muted2); }
@@ -763,23 +782,25 @@ body[data-theme="light"] .wl-st-slide::after{ opacity:.5; background:radial-grad
 }
 .wl-st-rbar{ display:flex; flex-direction:column; align-items:center; justify-content:flex-end; gap:7px; height:100%; }
 .wl-st-rbar b{
-  display:inline-flex; flex-direction:column; align-items:center; gap:2px; min-height:1.2em;
+  position:relative; display:inline-flex; align-items:flex-end; justify-content:center; height:1.25em; flex:none;
   font-family:var(--font-latin), sans-serif; font-size:calc(var(--u, 1) * 14px); font-weight:900; line-height:1.1; color:var(--muted);
   animation:wl-st-pop .5s ease calc(1.05s + var(--i, 0) * .13s) both;
 }
-.wl-st-rbar b svg{ color:var(--text); }
-.wl-st-rbar i{
-  display:block; width:100%; height:calc(var(--h, .2) * var(--u, 1) * 192px); min-height:4px; border-radius:11px 11px 4px 4px;
-  background:linear-gradient(0deg, var(--wl-da), var(--wl-db)); opacity:calc(.24 + .46 * var(--k, .7)); transform-origin:50% 100%;
-  animation:wl-st-grow .9s cubic-bezier(.22,1,.36,1) calc(.55s + var(--i, 0) * .13s) both;
-}
+.wl-st-rbar b svg{ color:var(--text); position:absolute; bottom:100%; left:50%; margin-bottom:2px; transform:translateX(-50%); }
+/* ستون اکولایزری مشترک (WeeklyMeter): ارتفاع و عرض رو این پوشش می‌ده */
+.wl-st-rcol{ display:block; flex:1 1 0; min-height:0; width:min(100%, calc(var(--u, 1) * 30px)); }
 .wl-st-rbar em{ font-style:normal; font-size:calc(var(--u, 1) * 12px); font-weight:800; color:var(--muted); line-height:1; }
 .wl-st-rbar.is-best b{ color:var(--text); }
-.wl-st-rbar.is-best i{ opacity:1; box-shadow:0 0 30px color-mix(in srgb, var(--wl-da) 55%, transparent), inset 0 1px 0 rgba(255,255,255,.35); }
 .wl-st-rbar.is-best em{ color:var(--text); }
-.wl-st-rbar.is-empty i{ background:none; border:1px dashed var(--box-line); opacity:1; }
-@keyframes wl-st-grow{ from{ transform:scaleY(0); } to{ transform:scaleY(1); } }
 @keyframes wl-st-pop{ from{ opacity:0; transform:translateY(8px); } to{ opacity:1; transform:translateY(0); } }
+
+/* بالا رفتن پله‌ای ستون‌های ریتم: روی دستگاه لمسی هم می‌مونه (فقط opacity/transform ارزون)، با کاهش حرکت خاموش */
+@media (prefers-reduced-motion: no-preference){
+  html[data-perf="low"] .wl-st-rcol .wm-seg::after{
+    transition-duration:.35s, .45s;
+    transition-delay:calc(var(--wm-delay, 0ms) + var(--i, 0) * 45ms);
+  }
+}
 
 /* 5) بهترین روز */
 .wl-st-dayname{ display:flex; flex-direction:column; align-items:center; }
@@ -791,7 +812,7 @@ body[data-theme="light"] .wl-st-slide::after{ opacity:.5; background:radial-grad
 .wl-st-meter{ width:68%; max-width:calc(var(--u, 1) * 240px); height:4px; border-radius:4px; overflow:hidden; background:color-mix(in srgb, var(--text) 14%, transparent); }
 .wl-st-meter i{
   display:block; height:100%; border-radius:inherit; transform-origin:100% 50%; transform:scaleX(var(--r, 1));
-  background:linear-gradient(270deg, var(--wl-da), var(--wl-db)); box-shadow:0 0 12px color-mix(in srgb, var(--wl-da) 70%, transparent);
+  background:linear-gradient(270deg, var(--wl-da), var(--wl-db));
   animation:wl-st-meter 1.3s cubic-bezier(.22,1,.36,1) .75s both;
 }
 @keyframes wl-st-meter{ from{ transform:scaleX(0); } to{ transform:scaleX(var(--r, 1)); } }
@@ -807,6 +828,14 @@ body[data-theme="light"] .wl-st-slide::after{ opacity:.5; background:radial-grad
 .wl-st-row-txt small{ font-size:11.5px; font-weight:600; color:var(--muted); line-height:1.6; }
 
 /* 6) قوی‌ترین بخش */
+.wl-st-radar{ width:100%; display:flex; flex-direction:column; align-items:center; gap:calc(var(--u, 1) * 4px); }
+.wl-st-radar .wr-root{ max-width:calc(var(--u, 1) * 316px); }
+.wl-st-radar-key{ display:inline-flex; align-items:center; gap:7px; font-size:calc(var(--u, 1) * 11px); font-weight:700; color:var(--muted); }
+.wl-st-radar-key i{ display:inline-block; width:14px; height:0; margin-inline-start:6px; border-top:2.5px solid var(--wl-da); border-radius:2px; }
+.wl-st-radar-key i:first-child{ margin-inline-start:0; }
+.wl-st-radar-key i.is-prev{ border-top:2px dashed color-mix(in srgb, var(--text) 55%, transparent); }
+.wl-st-topscore{ display:inline-flex; align-items:center; gap:calc(var(--u, 1) * 9px); color:var(--wl-da); }
+.wl-st-topscore small{ font-size:calc(var(--u, 1) * 12px); font-weight:700; color:var(--muted); align-self:flex-end; padding-bottom:calc(var(--u, 1) * 8px); }
 .wl-st-riser{
   display:flex; align-items:center; gap:12px; width:100%; text-align:start; padding:calc(var(--u, 1) * 11px) 14px; margin-top:calc(var(--u, 1) * 4px);
   border-radius:18px; border:1px solid var(--box-line); box-shadow:var(--wl-hi);
@@ -921,7 +950,7 @@ body[data-theme="light"] .wl-st-slide::after{ opacity:.5; background:radial-grad
 @media (prefers-reduced-motion:reduce){
   .wl-cover-aura, .wl-rule::after, .wl-story-play::after, .wl-tl-node.is-best::after,
   .wl-st-slide::before, .wl-st-slide::after, .wl-st-orbit-b, .wl-st-hint svg, .wl-st-flame-in,
-  .wl-st-rbar i, .wl-st-rbar b, .wl-st-meter i, .wl-st-pulse{ animation:none; }
+  .wl-st-rbar b, .wl-st-meter i, .wl-st-pulse{ animation:none; }
   .wl-rule::after{ display:none; }
   .wl-st-pulse{ display:none; }
 }
@@ -931,4 +960,4 @@ html[data-perf="low"] .wl-st-hint svg, html[data-perf="low"] .wl-st-flame-in, ht
 html[data-perf="low"] .wl-st-pulse{ display:none; }
 html[data-perf="low"] .wl-rule::after{ display:none; }
 html[data-perf="low"] .wl-stamp{ filter:none; }
-html[data-perf="low"] .wl-st-trend-last, html[data-perf="low"] .wl-st-rbar.is-best i, html[data-perf="low"] .wl-st-meter i{ filter:none; box-shadow:none; }
+html[data-perf="low"] .wl-st-trend-last, html[data-perf="low"] .wl-st-meter i{ filter:none; box-shadow:none; }

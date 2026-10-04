@@ -18,7 +18,9 @@ import { ANALYSIS_DOMAIN_LABELS } from "@/lib/weeklyAnalysis/types";
 import type { WeeklyLetterData } from "@/lib/weeklyLetter/types";
 import { useLockBodyScroll } from "@/lib/useLockBodyScroll";
 import { GradientRing, RING_GREEN } from "./GradientRing";
-import { DOMAIN_ICONS, GradeStamp, WL_EASE, useLite } from "./WeeklyLetterShared";
+import { DOMAIN_ICONS, GradeStamp, WL_EASE, useLite, useOnAfter } from "./WeeklyLetterShared";
+import { MeterColumn } from "./WeeklyMeter";
+import WeeklyRadar from "./WeeklyRadar";
 import { MaskText, Odo } from "./WeeklyLetterStoryFx";
 import { INSIGHT_ICONS, MOODS, MOOD_LABELS } from "./WeeklyLetterStory";
 import { ARCH_ICONS, BrandMark } from "./WeeklyLetterCover";
@@ -142,7 +144,7 @@ function ArchetypeSlide({ s }: { s: Extract<StorySlide, { id: "archetype" }> }) 
 }
 
 function RhythmSlide({ s }: { s: Extract<StorySlide, { id: "rhythm" }> }) {
-  const range = s.max - s.min;
+  const on = useOnAfter(350);
   return (
     <div className="wl-st-body">
       <SItem><Kicker icon={Activity}>ریتم هفته</Kicker></SItem>
@@ -157,10 +159,10 @@ function RhythmSlide({ s }: { s: Extract<StorySlide, { id: "rhythm" }> }) {
           <span
             key={i}
             className={`wl-st-rbar${b.best ? " is-best" : ""}${b.score === null ? " is-empty" : ""}`}
-            style={{ "--h": b.score === null ? 0.05 : 0.2 + 0.8 * ((b.score - s.min) / range), "--i": i, "--k": scoreIntensity(b.score) } as CSSProperties}
+            style={{ "--i": i } as CSSProperties}
           >
             <b>{b.best && <Crown size={16} />}{b.score === null ? "" : Math.round(b.score)}</b>
-            <i />
+            <span className="wl-st-rcol"><MeterColumn size="lg" value={b.score} on={on} delay={i * 130} highlight={b.best} /></span>
             <em>{b.label}</em>
           </span>
         ))}
@@ -209,21 +211,37 @@ function BestSlide({ s }: { s: Extract<StorySlide, { id: "best" }> }) {
 
 function DomainsSlide({ s }: { s: Extract<StorySlide, { id: "domains" }> }) {
   const U = useU();
+  const on = useOnAfter(450);
   const Icon = DOMAIN_ICONS[s.top.domain];
   const RIcon = s.riser ? DOMAIN_ICONS[s.riser.domain] : null;
   const same = s.riser?.domain === s.top.domain;
+  const radar = s.radar.length >= 3;
   return (
     <div className="wl-st-body">
       <SItem><Kicker icon={Medal}>قوی‌ترین بخش هفته</Kicker></SItem>
-      <SItem variants={POP} className="wl-st-ringwrap">
-        <GradientRing value={s.top.score / 100} size={Math.round(188 * U)} stroke={Math.round(15 * U)} grad={RING_GREEN} delay={0.5}>
-          <span className="wl-st-ringc is-icon">
-            <Icon size={Math.round(26 * U)} />
-            <Odo value={String(Math.round(s.top.score))} className="wl-st-mid wl-st-sheen" delay={0.55} duration={1.3} />
-          </span>
-        </GradientRing>
-      </SItem>
+      {radar ? (
+        <SItem variants={POP} className="wl-st-radar">
+          <WeeklyRadar axes={s.radar} size={Math.round(316 * U)} on={on} activeKey={s.top.domain} ariaLabel={`امتیاز بخش‌ها: ${s.radar.map((a) => `${a.label} ${Math.round(a.value as number)}`).join("، ")}`} />
+          <span className="wl-st-radar-key" aria-hidden="true"><i className="is-now" />این هفته<i className="is-prev" />هفته‌ی قبل</span>
+        </SItem>
+      ) : (
+        <SItem variants={POP} className="wl-st-ringwrap">
+          <GradientRing value={s.top.score / 100} size={Math.round(188 * U)} stroke={Math.round(15 * U)} grad={RING_GREEN} delay={0.5}>
+            <span className="wl-st-ringc is-icon">
+              <Icon size={Math.round(26 * U)} />
+              <Odo value={String(Math.round(s.top.score))} className="wl-st-mid wl-st-sheen" delay={0.55} duration={1.3} />
+            </span>
+          </GradientRing>
+        </SItem>
+      )}
       <h2 className="wl-st-title"><MaskText text={ANALYSIS_DOMAIN_LABELS[s.top.domain]} className="wl-st-sheen" delay={0.45} stagger={0.1} /></h2>
+      {radar && (
+        <SItem className="wl-st-topscore">
+          <Icon size={Math.round(22 * U)} />
+          <Odo value={String(Math.round(s.top.score))} className="wl-st-mid wl-st-sheen" delay={0.6} duration={1.2} />
+          <small>از 100</small>
+        </SItem>
+      )}
       {s.top.note && <SItem className="wl-st-cap">{s.top.note}</SItem>}
       {s.riser && RIcon && (
         <SItem className="wl-st-riser">

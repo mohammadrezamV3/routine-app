@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 import {
-  bestWorstIndex, dayRows, fmtMoney, groupByJalaliMonth, normalizeLetter, offsetOfWeek, parseCountable, scoreBand,
+  bestWorstIndex, dayRows, domainRadarAxes, fmtMoney, groupByJalaliMonth, normalizeLetter, offsetOfWeek, parseCountable, scoreBand,
 } from "@/components/WeeklyLetterUtils";
 import type { DayCell, LetterSummary } from "@/lib/weeklyAnalysis/types";
 
@@ -71,5 +71,19 @@ describe("misc", () => {
     expect(n?.ai).toBeNull();
     expect(n?.nextWeek.focusDomain).toBeNull();
     expect(normalizeLetter(null)).toBeNull();
+  });
+});
+
+describe("domainRadarAxes", () => {
+  const dom = (domain: string, score: number | null, prevScore: number | null = null, hasData = true) =>
+    ({ domain, active: true, hasData, score, prevScore, delta: null, daysWithData: 3, daily: [], stats: [], note: "", bestDay: null, worstDay: null }) as never;
+  it("با سه دامنه‌ی دارای داده محور می‌سازه و prev رو نگه می‌داره", () => {
+    const ax = domainRadarAxes([dom("sleep", 70, 60), dom("routine", 50), dom("fitness", 90, 80)]);
+    expect(ax.map((a) => a.key)).toEqual(["sleep", "routine", "fitness"]);
+    expect(ax[0]).toMatchObject({ label: "خواب", value: 70, prev: 60 });
+    expect(ax[1].prev).toBeNull();
+  });
+  it("دامنه‌ی بی‌داده حذف می‌شه و کمتر از سه تا یعنی رادار نیست", () => {
+    expect(domainRadarAxes([dom("sleep", 70), dom("routine", 50), dom("fitness", null, null, false)])).toEqual([]);
   });
 });

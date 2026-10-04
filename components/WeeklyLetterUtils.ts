@@ -2,8 +2,9 @@
 // جلالی، متن انسانی جزئیات هر روز، نرمال‌سازی داده‌ی ناقص. هیچ import سروری
 // نداره تا کلاینت امن باشه.
 import { J_MONTHS, toJalali } from "@/lib/jalali";
-import { ANALYSIS_DOMAINS, type AnalysisDomain, type DayCell, type DayDetails, type LetterSummary } from "@/lib/weeklyAnalysis/types";
-import type { WeeklyLetterData } from "@/lib/weeklyLetter/types";
+import { ANALYSIS_DOMAINS, ANALYSIS_DOMAIN_LABELS, type AnalysisDomain, type DayCell, type DayDetails, type LetterSummary } from "@/lib/weeklyAnalysis/types";
+import type { LetterDomain, WeeklyLetterData } from "@/lib/weeklyLetter/types";
+import { radarHasData, type RadarAxis } from "@/lib/weeklyRadar";
 
 const DAY_MS = 86_400_000;
 
@@ -277,4 +278,17 @@ export function normalizeLetter(raw: Partial<WeeklyLetterData> | null | undefine
       suggestedTarget: r.nextWeek?.suggestedTarget ?? null,
     },
   };
+}
+
+/** محورهای رادار از دامنه‌های هفته‌نامه: فقط دامنه‌هایی که داده‌ی این هفته دارن؛ کمتر از 3 تا = [] (رادار نمی‌آد). */
+export function domainRadarAxes(domains: LetterDomain[]): RadarAxis[] {
+  const axes: RadarAxis[] = domains
+    .filter((d) => d && d.hasData && typeof d.score === "number" && Number.isFinite(d.score))
+    .map((d) => ({
+      key: d.domain,
+      label: ANALYSIS_DOMAIN_LABELS[d.domain] ?? d.domain,
+      value: d.score as number,
+      prev: typeof d.prevScore === "number" && Number.isFinite(d.prevScore) ? d.prevScore : null,
+    }));
+  return radarHasData(axes) ? axes : [];
 }

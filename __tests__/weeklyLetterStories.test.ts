@@ -95,6 +95,15 @@ describe("buildStorySlides", () => {
     expect(dom?.top.note).toBe("میانگین خواب 8.2 ساعت بود.");
   });
 
+  it("رادار فقط با حداقل سه دامنه‌ی دارای داده می‌آد", () => {
+    expect(get(letter(), "domains")?.radar).toEqual([]);
+    const l = letter();
+    l.domains = [...l.domains, { ...l.domains[0], domain: "fitness", score: 80, prevScore: 70, delta: 10 }];
+    const radar = get(l, "domains")?.radar ?? [];
+    expect(radar.map((a) => a.key)).toEqual(["sleep", "routine", "fitness"]);
+    expect(radar[2]).toMatchObject({ value: 80, prev: 70 });
+  });
+
   it("حداکثر چهار عدد؛ خلاصه‌ی آخر سه عدد", () => {
     // سقف 10 اسلاید رو با حذف اسلایدهای دیگه آزاد می‌کنیم تا numbers بمونه
     const l = letter({ trend: [], insights: [], reflection: null });

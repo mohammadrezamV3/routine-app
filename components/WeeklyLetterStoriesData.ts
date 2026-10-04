@@ -4,7 +4,8 @@
 // v3: اسلایدها رنگ جدا ندارن؛ همه یک رنگ داده (ring-1) و شدت با امتیاز عوض می‌شه.
 import type { AnalysisDomain, DayCell, Grade, Insight, WeekArchetype, WeekNumber } from "@/lib/weeklyAnalysis/types";
 import type { LetterAchievement, WeeklyLetterData } from "@/lib/weeklyLetter/types";
-import { bestWorstIndex, dayRows, type DayRow } from "./WeeklyLetterUtils";
+import type { RadarAxis } from "@/lib/weeklyRadar";
+import { bestWorstIndex, dayRows, domainRadarAxes, type DayRow } from "./WeeklyLetterUtils";
 
 export type StoryBase = { dur: number; label: string };
 
@@ -18,7 +19,7 @@ export type StorySlide =
   | (StoryBase & { id: "archetype"; archetype: WeekArchetype })
   | (StoryBase & { id: "rhythm"; bars: RhythmBar[]; min: number; max: number; avg: number; bestDay: string; worstDay: string })
   | (StoryBase & { id: "best"; day: DayCell; rows: DayRow[] })
-  | (StoryBase & { id: "domains"; top: { domain: AnalysisDomain; score: number; note: string }; riser: { domain: AnalysisDomain; delta: number } | null })
+  | (StoryBase & { id: "domains"; top: { domain: AnalysisDomain; score: number; note: string }; riser: { domain: AnalysisDomain; delta: number } | null; radar: RadarAxis[] })
   | (StoryBase & { id: "numbers"; items: WeekNumber[] })
   | (StoryBase & { id: "trend"; points: (number | null)[]; weekStarts: string[]; last: number; count: number; mode: TrendMode; diff: number; caption: string })
   | (StoryBase & { id: "insight"; insight: Insight })
@@ -176,6 +177,7 @@ export function buildStorySlides(letter: WeeklyLetterData): StorySlide[] {
       id: "domains", dur: 5200, label: "قوی‌ترین بخش",
       top: { domain: top.domain, score: top.score as number, note: firstSentence(top.note) },
       riser: riserDom ? { domain: riserDom.domain, delta: Math.round(riserDom.delta as number) } : null,
+      radar: domainRadarAxes(letter.domains),
     });
   }
 

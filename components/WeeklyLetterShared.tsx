@@ -76,11 +76,22 @@ export function useLite(): boolean {
   return !!reduce || low;
 }
 
-export function Reveal({ children, className, delay = 0, y = 18, as = "div", style }: { children: ReactNode; className?: string; delay?: number; y?: number; as?: "div" | "li" | "section" | "article"; style?: CSSProperties }) {
+/** false تا ms میلی‌ثانیه بعد از mount، بعدش true (برای شروع انیمیشن‌های CSS داخل اسلاید بعد از ورودش). */
+export function useOnAfter(ms: number): boolean {
+  const [on, setOn] = useState(false);
+  useEffect(() => {
+    const t = window.setTimeout(() => setOn(true), ms);
+    return () => window.clearTimeout(t);
+  }, [ms]);
+  return on;
+}
+
+export function Reveal({ children, className, delay = 0, y = 18, as = "div", style, id }: { children: ReactNode; className?: string; delay?: number; y?: number; as?: "div" | "li" | "section" | "article"; style?: CSSProperties; id?: string }) {
   const lite = useLite();
   const Cmp = as === "li" ? motion.li : as === "section" ? motion.section : as === "article" ? motion.article : motion.div;
   return (
     <Cmp
+      id={id}
       className={className}
       style={style}
       initial={{ opacity: 0, y: lite ? 0 : y }}
