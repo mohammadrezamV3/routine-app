@@ -8,15 +8,28 @@ import { Spinner } from "./Spinner";
 import { TRADE_PAIRS } from "@/lib/tradePairs";
 import type { TradeAccount } from "@/lib/tradeTypes";
 import {
-  calcRisk, crossQuoteCurrency, fmtNum, priceDecimals, yahooSymbolFor,
-  type RiskDirection, type RiskMode, type RiskResult,
+  calcRisk, crossQuoteCurrency, fmtNum, nonUsdQuote, priceDecimals, simplePipCalc, symbolSpec, yahooSymbolFor,
+  type RiskDirection, type RiskMode, type RiskResult, type SimplePipResult,
 } from "@/lib/riskCalc";
 import "./risk-calc.css";
 
 const LS_KEY = "arion:riskCalc";
 const MAX_TPS = 3;
 
-function readPrefs(): { mode?: RiskMode; riskValue?: string; balance?: string } {
+type UiMode = "simple" | "advanced";
+
+type Snapshot = {
+  ui: UiMode;
+  key: string;
+  adv: RiskResult | { ok: false; error: string } | null;
+  simple: SimplePipResult | { ok: false; error: string } | null;
+  direction: RiskDirection;
+  entry: number;
+  sl: number;
+  symbol: string;
+};
+
+function readPrefs(): { ui?: UiMode; mode?: RiskMode; riskValue?: string; balance?: string } {
   try { return JSON.parse(localStorage.getItem(LS_KEY) || "{}") || {}; } catch { return {}; }
 }
 
@@ -52,16 +65,21 @@ export function RiskCalculator({
   const [quoteRate, setQuoteRate] = useState("");
   const [priceBusy, setPriceBusy] = useState(false);
   const [priceMsg, setPriceMsg] = useState<string | null>(null);
+  const [ui, setUi] = useState<UiMode>("advanced");
+  const [pips, setPips] = useState("");
+  const [lots, setLots] = useState("");
+  const [snap, setSnap] = useState<Snapshot | null>(null);
 
   useEffect(() => {
     const p = readPrefs();
+    if (p.ui === "simple" || p.ui === "advanced") setUi(p.ui);
     if (p.mode) setMode(p.mode);
     if (p.riskValue) setRiskValue(p.riskValue);
     if (p.balance) setBalance(p.balance);
   }, []);
   useEffect(() => {
-    try { localStorage.setItem(LS_KEY, JSON.stringify({ mode, riskValue, balance })); } catch { /* بدون ذخیره */ }
-  }, [mode, riskValue, balance]);
+    try { localStorage.setItem(LS_KEY, JSON.stringify({ ui, mode, riskValue, balance })); } catch { /* بدون ذخیره */ }
+  }, [ui, mode, riskValue, balance]);
 
   const active = useMemo(() => accounts.filter((a) => !a.archived), [accounts]);
   // اولین حساب فعال خودکار انتخاب می‌شود تا موجودی از همان پر شود
@@ -101,25 +119,57 @@ export function RiskCalculator({
   }, [symbol]);
 
   const cross = crossQuoteCurrency(symbol);
+  const simpleQuote = nonUsdQuote(symbol);
   const num = (s: string) => (s.trim() === "" ? NaN : Number(s));
-  const touched = entry !== "" || sl !== "";
-  const result = useMemo(
-    () =>
-      calcRisk({
-        symbol, direction,
-        balance: num(balance), mode, riskValue: num(riskValue),
-        entry: num(entry), stopLoss: num(sl),
-        takeProfits: tps.filter((t) => t.trim() !== "").map((t) => ({ price: Number(t) })),
-        quoteToUsd: quoteRate ? Number(quoteRate) : null,
-      }),
-    [symbol, direction, balance, mode, riskValue, entry, sl, tps, quoteRate]
+  const inputKey = JSON.stringify(
+    ui === "simple"
+      ? [ui, symbol, pips, lots, balance, simpleQuote ? quoteRate : ""]
+      : [ui, symbol, direction, balance, mode, riskValue, entry, sl, tps, quoteRate]
   );
-  const ok: RiskResult | null = result.ok ? result : null;
+
+  function calculate() {
+    const base = { ui, key: inputKey, direction, entry: num(entry), sl: num(sl), symbol };
+    if (ui === "simple") {
+      setSnap({
+        ...base, adv: null,
+        simple: simplePipCalc({
+          symbol, pips: num(pips), lots: num(lots), balance: num(balance),
+          quoteRate: quoteRate ? Number(quoteRate) : null,
+        }),
+      });
+    } else {
+      setSnap({
+        ...base, simple: null,
+        adv: calcRisk({
+          symbol, direction,
+          balance: num(balance), mode, riskValue: num(riskValue),
+          entry: num(entry), stopLoss: num(sl),
+          takeProfits: tps.filter((t) => t.trim() !== "").map((t) => ({ price: Number(t) })),
+          quoteToUsd: quoteRate ? Number(quoteRate) : null,
+        }),
+      });
+    }
+  }
+
+  const shown = snap && snap.ui === ui ? snap : null;
+  const stale = !!shown && shown.key !== inputKey;
+  const advRes = shown?.adv ?? null;
+  const ok: RiskResult | null = advRes && advRes.ok ? advRes : null;
+  const simpleRes = shown?.simple ?? null;
+  const sOk: SimplePipResult | null = simpleRes && simpleRes.ok ? simpleRes : null;
+  const err = advRes && !advRes.ok ? advRes.error : simpleRes && !simpleRes.ok ? simpleRes.error : null;
   const unit = ok ? (ok.spec.unit === "point" ? "پوینت" : "پیپ") : "پیپ";
+  const sUnit = sOk ? (sOk.spec.unit === "point" ? "پوینت" : "پیپ") : "پیپ";
 
   return (
     <div className={`rk-root${compact ? " rk-compact" : ""}`}>
       <div className="rk-form">
+        <SegmentedTabs
+          active={ui}
+          onChange={setUi}
+          options={[{ value: "simple" as const, label: "ساده" }, { value: "advanced" as const, label: "پیشرفته" }]}
+        />
+
         {!symbolProp && (
           <div>
             <label className="exercise-form-label">نماد</label>
@@ -130,6 +180,14 @@ export function RiskCalculator({
           </div>
         )}
 
+        {symbolProp && ui === "simple" && (
+          <div>
+            <label className="exercise-form-label">نماد</label>
+            <input className="wsearch-newform-name trade-glass-field" dir="ltr" value={symbol} readOnly aria-label="نماد" />
+          </div>
+        )}
+
+        {ui === "advanced" && (
         <div>
           <label className="exercise-form-label">جهت</label>
           <SegmentedTabs
@@ -138,6 +196,7 @@ export function RiskCalculator({
             options={[{ value: "BUY" as const, label: "خرید (Buy)" }, { value: "SELL" as const, label: "فروش (Sell)" }]}
           />
         </div>
+        )}
 
         {!!active.length && (
           <div>
@@ -150,6 +209,36 @@ export function RiskCalculator({
           </div>
         )}
 
+        {ui === "simple" && (
+          <>
+            <div className="rk-row">
+              <div>
+                <label className="exercise-form-label">تعداد {symbolSpec(symbol).unit === "point" ? "پوینت" : "پیپ"}</label>
+                <NumberInput decimal className="wsearch-newform-name trade-glass-field" dir="ltr"
+                  value={pips} onChange={setPips} placeholder="10" aria-label="تعداد پیپ" />
+              </div>
+              <div>
+                <label className="exercise-form-label">حجم (لات)</label>
+                <NumberInput decimal className="wsearch-newform-name trade-glass-field" dir="ltr"
+                  value={lots} onChange={setLots} placeholder="0.10" aria-label="حجم" />
+              </div>
+            </div>
+            <div>
+              <label className="exercise-form-label">موجودی حساب (دلار) — اختیاری</label>
+              <NumberInput decimal className="wsearch-newform-name trade-glass-field" dir="ltr"
+                value={balance} onChange={setBalance} placeholder="10000" />
+            </div>
+            {simpleQuote && (
+              <div>
+                <label className="exercise-form-label">هر 1 {simpleQuote} چند دلار است؟ (اختیاری)</label>
+                <NumberInput decimal className="wsearch-newform-name trade-glass-field" dir="ltr"
+                  value={quoteRate} onChange={setQuoteRate} placeholder="مثلا 0.0067" />
+              </div>
+            )}
+          </>
+        )}
+
+        {ui === "advanced" && (<>
         <div className="rk-row">
           <div>
             <label className="exercise-form-label">موجودی حساب (دلار)</label>
@@ -219,14 +308,30 @@ export function RiskCalculator({
               value={quoteRate} onChange={setQuoteRate} placeholder="مثلا 0.0067" />
           </div>
         )}
+        </>)}
+
+        <button type="button" className="trade-primary-btn rk-calc-btn" onClick={calculate}>محاسبه</button>
       </div>
 
       <div className="rk-out">
-        {!result.ok && touched && <div className="trade-form-error rk-error" role="alert">{result.error}</div>}
-        {!result.ok && !touched && <div className="rk-note">قیمت ورود و حد ضرر را وارد کن تا نتیجه بیاید.</div>}
+        {!shown && <div className="rk-note">مقادیر را وارد کن و محاسبه را بزن.</div>}
+        {err && <div className="trade-form-error rk-error" role="alert">{err}</div>}
+        {stale && (ok || sOk) && <div className="rk-note rk-stale-note">برای به‌روزرسانی دوباره محاسبه را بزن</div>}
+
+        {sOk && (
+          <div className={stale ? "rk-stale" : undefined}>
+            <div className="rk-tiles">
+              <Tile label={`ارزش هر ${sUnit} برای 1 لات (دلار)`} value={<Ltr>{fmtNum(sOk.pipValuePerLot, 3)}</Ltr>} />
+              <Tile label="ارزش هر پیپ برای حجم شما (دلار)" value={<Ltr>{fmtNum(sOk.pipValueForLots, 3)}</Ltr>} />
+              <Tile label="مبلغ کل (دلار)" value={<Ltr>{fmtNum(sOk.total, 2)}</Ltr>} strong />
+              <Tile label="درصد از موجودی" value={sOk.percent === null ? "—" : <Ltr>{fmtNum(sOk.percent, 2)}%</Ltr>} />
+            </div>
+            {sOk.approxQuoteRate && <div className="rk-warn">نرخ تبدیل ارز دوم تقریبی است — برای عدد دقیق‌تر نرخ را وارد کن</div>}
+          </div>
+        )}
 
         {ok && (
-          <>
+          <div className={`rk-res${stale ? " rk-stale" : ""}`}>
             <div className="rk-tiles">
               <Tile label={`فاصله‌ی حد ضرر (${unit})`} value={<Ltr>{fmtNum(ok.slPips, 1)}</Ltr>} />
               <Tile label="حجم (لات)" value={<Ltr>{fmtNum(ok.lots, 2)}</Ltr>} strong />
@@ -247,8 +352,8 @@ export function RiskCalculator({
             )}
             <div className="rk-note">ارزش هر {unit} برای 1 لات: <Ltr>{fmtNum(ok.pipValue, 3)}$</Ltr></div>
             {ok.warnings.map((w) => <div key={w} className="rk-warn">{w}</div>)}
-            <RiskVisual res={ok} direction={direction} entry={Number(entry)} sl={Number(sl)} unit={unit} dec={priceDecimals(symbol)} />
-          </>
+            <RiskVisual res={ok} direction={shown!.direction} entry={shown!.entry} sl={shown!.sl} unit={unit} dec={priceDecimals(shown!.symbol)} />
+          </div>
         )}
       </div>
     </div>

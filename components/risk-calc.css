@@ -37,3 +37,7 @@
 .rk-compact .rk-row{ grid-template-columns:1fr 1fr; gap:10px; }
 .rk-compact .rk-tile-value{ font-size:15px; }
 .rk-compact .rk-tiles{ grid-template-columns:repeat(2, minmax(0,1fr)); }
+
+.rk-calc-btn{ width:100%; }
+.rk-res{ display:flex; flex-direction:column; gap:12px; }
+.rk-stale{ opacity:.45; transition:opacity .2s; }

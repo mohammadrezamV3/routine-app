@@ -229,6 +229,51 @@ export function calcRisk(inp: RiskInput): RiskResult | RiskFailure {
   };
 }
 
+export type SimplePipInput = {
+  symbol: string;
+  pips: number;
+  lots: number;
+  /** دلار به‌ازای یک واحد ارز دوم (برای نمادهای غیردلاری) */
+  quoteRate?: number | null;
+  /** موجودی برای محاسبه‌ی درصد (اختیاری) */
+  balance?: number | null;
+};
+
+export type SimplePipResult = {
+  ok: true;
+  spec: SymbolSpec;
+  pipValuePerLot: number;
+  pipValueForLots: number;
+  total: number;
+  /** درصد از موجودی؛ null اگر موجودی داده نشده */
+  percent: number | null;
+  approxQuoteRate: boolean;
+};
+
+/** ارز دوم نماد غیر از دلار است؟ (برای نشان‌دادن فیلد نرخ در حالت ساده) */
+export function nonUsdQuote(symbol: string): string | null {
+  const s = symbolSpec(symbol);
+  return s.quote && s.quote !== "USD" ? s.quote : null;
+}
+
+/** حالت ساده: پیپ و لات می‌دهی، مبلغ دلاری می‌گیری. */
+export function simplePipCalc(inp: SimplePipInput): SimplePipResult | RiskFailure {
+  if (!inp.symbol.trim()) return { ok: false, error: "نماد را انتخاب کن" };
+  if (!fin(inp.pips) || inp.pips <= 0) return { ok: false, error: "تعداد پیپ را وارد کن" };
+  if (!fin(inp.lots) || inp.lots <= 0) return { ok: false, error: "حجم (لات) را وارد کن" };
+  const spec = symbolSpec(inp.symbol);
+  const inQuote = spec.pipSize * spec.contractSize;
+  let value: number;
+  let approx = false;
+  if (!spec.quote || spec.quote === "USD") value = inQuote;
+  else if (inp.quoteRate && inp.quoteRate > 0) value = inQuote * inp.quoteRate;
+  else { value = inQuote * (APPROX_QUOTE_USD[spec.quote] ?? 1); approx = true; }
+  if (!(value > 0)) return { ok: false, error: "ارزش پیپ این نماد قابل محاسبه نیست" };
+  const total = inp.pips * value * inp.lots;
+  const percent = fin(inp.balance) && inp.balance > 0 ? (total / inp.balance) * 100 : null;
+  return { ok: true, spec, pipValuePerLot: value, pipValueForLots: value * inp.lots, total, percent, approxQuoteRate: approx };
+}
+
 /** رقم اعشار مناسب برای نمایش قیمت */
 export function priceDecimals(symbol: string): number {
   return symbolSpec(symbol).decimals;

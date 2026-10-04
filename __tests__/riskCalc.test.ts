@@ -1,5 +1,5 @@
 import { describe, it, expect } from "vitest";
-import { calcRisk, symbolSpec, pipValuePerLot, crossQuoteCurrency, yahooSymbolFor, type RiskResult } from "@/lib/riskCalc";
+import { simplePipCalc, calcRisk, symbolSpec, pipValuePerLot, crossQuoteCurrency, yahooSymbolFor, type RiskResult } from "@/lib/riskCalc";
 
 const base = { balance: 10000, mode: "percent" as const, riskValue: 1 };
 
@@ -137,5 +137,41 @@ describe("yahooSymbolFor", () => {
     expect(yahooSymbolFor("BTCUSD")).toBe("BTC-USD");
     expect(yahooSymbolFor("US30")).toBe("^DJI");
     expect(yahooSymbolFor("???")).toBeNull();
+  });
+});
+
+describe("simplePipCalc", () => {
+  it("EURUSD ده پیپ یک لات = 100 دلار", () => {
+    const r = simplePipCalc({ symbol: "EURUSD", pips: 10, lots: 1, balance: 10000 });
+    if (!r.ok) throw new Error(r.error);
+    expect(r.pipValuePerLot).toBeCloseTo(10);
+    expect(r.total).toBeCloseTo(100);
+    expect(r.percent).toBeCloseTo(1);
+  });
+  it("لات کسری", () => {
+    const r = simplePipCalc({ symbol: "EURUSD", pips: 20, lots: 0.5 });
+    if (!r.ok) throw new Error(r.error);
+    expect(r.pipValueForLots).toBeCloseTo(5);
+    expect(r.total).toBeCloseTo(100);
+    expect(r.percent).toBeNull();
+  });
+  it("طلا: پیپ 0.1 و قرارداد 100", () => {
+    const r = simplePipCalc({ symbol: "XAUUSD", pips: 10, lots: 1 });
+    if (!r.ok) throw new Error(r.error);
+    expect(r.pipValuePerLot).toBeCloseTo(10);
+    expect(r.total).toBeCloseTo(100);
+  });
+  it("USDJPY با نرخ", () => {
+    const r = simplePipCalc({ symbol: "USDJPY", pips: 10, lots: 1, quoteRate: 0.0065 });
+    if (!r.ok) throw new Error(r.error);
+    expect(r.pipValuePerLot).toBeCloseTo(1000 * 0.0065);
+    expect(r.approxQuoteRate).toBe(false);
+    const a = simplePipCalc({ symbol: "USDJPY", pips: 10, lots: 1 });
+    if (!a.ok) throw new Error(a.error);
+    expect(a.approxQuoteRate).toBe(true);
+  });
+  it("ورودی نامعتبر", () => {
+    expect(simplePipCalc({ symbol: "EURUSD", pips: 0, lots: 1 }).ok).toBe(false);
+    expect(simplePipCalc({ symbol: "EURUSD", pips: 5, lots: NaN }).ok).toBe(false);
   });
 });
