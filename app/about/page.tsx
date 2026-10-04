@@ -5,7 +5,11 @@ import { AboutHero } from "@/components/AboutHero";
 import {
   AboutContact, AboutFinalCTA, AboutInside, AboutPrivacy, AboutStats, AboutStory, AboutValues,
 } from "@/components/AboutSections";
+import { getTeamMembers } from "@/lib/teamServer";
 import "./about.css";
+
+// اعضای تیم از AppSetting خونده می‌شن؛ صفحه هر دقیقه تازه می‌شه
+export const revalidate = 60;
 
 export const metadata: Metadata = pageMetadata({
   title: `درباره ${BRAND_FA} — اپ فارسی روتین و ورزش`,
@@ -22,7 +26,8 @@ export const metadata: Metadata = pageMetadata({
 // کاربر. تنها عددها از LandingStats می‌آیند (واقعی + پایه‌ی
 // lib/publicStatsBase.ts). همه‌ی متن در HTML سرور هست (برای سئو)؛ حرکت‌ها
 // فقط لایه‌ی نمایشی‌اند و با حرکت‌کاهی (MotionTuner) خاموش می‌شوند.
-export default function AboutPage() {
+export default async function AboutPage() {
+  const team = await getTeamMembers();
   return (
     <div className="ab-root">
       <script
@@ -35,7 +40,7 @@ export default function AboutPage() {
       <AboutValues />
       <AboutInside />
       <AboutPrivacy />
-      <AboutContact />
+      <AboutContact team={team} />
       <AboutFinalCTA />
     </div>
   );
