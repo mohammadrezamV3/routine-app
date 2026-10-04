@@ -74,7 +74,7 @@ html[data-admin-theme="noir"] body:not([data-theme="light"]) :where(
   .trade-surface:not(.trade-econ-monthpicker), .rp-card, .account-card, .acc-block-body, .auth-box,
   .fx-card, .tv-chart-box, .trade-chart-side, .trade-chat-panel, .trade-cal-card,
   .exercise-rules-box, .exercise-locked-box, .admin-card, .admin-kpi-tile, .admin-chart-card,
-  .admin-role-card, .cal-cell:not(.empty), .sl-card, .sl-stat, .trade-stat-tile, .wa-stat-tile,
+  .admin-role-card, .cal-cell:not(.empty), .sl-card, .sl-stat, .trade-stat-tile, .wk-card,
   .stk-ach-item, .mentor-note-box, .ls-card, .db-card, .db-hero, .app-topbar, .modal-panel,
   :is(div, section, article).rounded-dash.border-dash-border.bg-dash-card
 ){

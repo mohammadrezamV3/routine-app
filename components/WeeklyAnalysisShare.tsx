@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import "./weekly-analysis.css";
 import { Share2 } from "lucide-react";
 import { ANALYSIS_DOMAIN_LABELS, type WeeklyAnalysis } from "@/lib/weeklyAnalysis/types";
 import { BRAND_EN, BRAND_FA } from "@/lib/brand";
@@ -11,7 +12,7 @@ const H = 1350;
 
 type Palette = {
   bg: string; surface: string; line: string; accent: string; accentRgb: string;
-  text: string; muted: string; win: string; loss: string;
+  text: string; muted: string; loss: string; ringA: string; ringB: string;
 };
 
 // رنگ‌ها مستقیم از توکن‌های تم فعلی خونده می‌شن (تم روشن توکن‌هاش رو روی
@@ -28,8 +29,10 @@ function readPalette(): Palette {
     accentRgb: v("--accent-rgb", "0,168,107"),
     text: v("--text", "#EDEFEE"),
     muted: v("--muted", "#8A9099"),
-    win: v("--pnl-win", "#16C79A"),
     loss: v("--pnl-loss", "#E05252"),
+    // تنها رنگ داده‌ی کارت: گرادیان حلقه‌ی برند (همون پالت صفحه‌ی آنالیز)
+    ringA: v("--ring-1a", "#00C98D"),
+    ringB: v("--ring-1b", "#7DF9CF"),
   };
 }
 
@@ -110,15 +113,24 @@ async function renderCard(a: WeeklyAnalysis): Promise<HTMLCanvasElement> {
   const score = a.overall.score;
   ctx.lineCap = "round";
   ctx.lineWidth = sw;
-  ctx.strokeStyle = `rgba(${p.accentRgb},.16)`;
+  ctx.strokeStyle = p.ringA;
+  ctx.globalAlpha = 0.14;
   ctx.beginPath();
   ctx.arc(cx, cy, r, 0, Math.PI * 2);
   ctx.stroke();
+  ctx.globalAlpha = 1;
   if (score !== null && score > 0) {
-    ctx.strokeStyle = p.accent;
+    const rg = ctx.createLinearGradient(cx, cy + r, cx, cy - r);
+    rg.addColorStop(0, p.ringA);
+    rg.addColorStop(1, p.ringB);
+    ctx.strokeStyle = rg;
+    ctx.shadowColor = p.ringA;
+    ctx.shadowBlur = 26;
     ctx.beginPath();
     ctx.arc(cx, cy, r, -Math.PI / 2, -Math.PI / 2 + (Math.PI * 2 * Math.min(100, score)) / 100);
     ctx.stroke();
+    ctx.shadowBlur = 0;
+    ctx.shadowColor = "transparent";
   }
   ctx.textBaseline = "alphabetic";
   text(a.overall.grade ?? "—", cx, cy + 40, f(800, 150), p.accent, "center", "ltr");
@@ -128,7 +140,7 @@ async function renderCard(a: WeeklyAnalysis): Promise<HTMLCanvasElement> {
   const delta = a.overall.delta;
   if (delta !== null) {
     const d = Math.round(delta);
-    const color = d > 0 ? p.win : d < 0 ? p.loss : p.muted;
+    const color = d > 0 ? p.ringA : d < 0 ? p.loss : p.muted;
     const arrow = d > 0 ? "▲" : d < 0 ? "▼" : "•";
     // عدد علامت‌دار داخل ایزوله‌ی LTR، وگرنه bidi «+6» رو «6+» نشون می‌ده
     text(`${arrow} \u2066${d > 0 ? "+" : ""}${d}\u2069  نسبت به هفته‌ی قبل`, cx, 820, f(700, 38), color, "center");
@@ -149,13 +161,18 @@ async function renderCard(a: WeeklyAnalysis): Promise<HTMLCanvasElement> {
     text(ANALYSIS_DOMAIN_LABELS[d.domain], W - 120, y, f(700, 36), p.text, "right");
     const barRight = W - 330, barLeft = 250, barH = 18;
     roundRect(ctx, barLeft, y - 24, barRight - barLeft, barH, 9);
-    ctx.fillStyle = `rgba(${p.accentRgb},.14)`;
+    ctx.fillStyle = p.ringA;
+    ctx.globalAlpha = 0.14;
     ctx.fill();
+    ctx.globalAlpha = 1;
     const fillW = Math.max(barH, ((barRight - barLeft) * Math.min(100, s)) / 100);
     roundRect(ctx, barRight - fillW, y - 24, fillW, barH, 9);
-    ctx.fillStyle = p.accent;
+    const bg = ctx.createLinearGradient(barRight - fillW, 0, barRight, 0);
+    bg.addColorStop(0, p.ringB);
+    bg.addColorStop(1, p.ringA);
+    ctx.fillStyle = bg;
     ctx.fill();
-    text(String(s), 120, y, f(800, 40), p.accent, "left", "ltr");
+    text(String(s), 120, y, f(800, 40), p.text, "left", "ltr");
   });
 
   text(BRAND_FA, cx, H - 110, f(600, 30), p.muted, "center");
@@ -203,11 +220,11 @@ export function WeeklyAnalysisShare({ analysis }: { analysis: WeeklyAnalysis | n
   }
 
   return (
-    <div className="wa-share">
-      <button type="button" className="account-outline-btn wa-small-btn" onClick={share} disabled={!analysis || busy}>
-        {busy ? <Spinner size={13} /> : <><Share2 size={14} />اشتراک‌گذاری</>}
+    <div className="wk-share">
+      <button type="button" className="account-outline-btn wk-small-btn" onClick={share} disabled={!analysis || busy}>
+        {busy ? <Spinner size={13} label={null} /> : <><Share2 size={14} />اشتراک‌گذاری</>}
       </button>
-      {error && <span className="wa-error-inline">{error}</span>}
+      {error && <span className="wk-error-inline">{error}</span>}
     </div>
   );
 }

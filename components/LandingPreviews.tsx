@@ -10,6 +10,7 @@ import AIMessage from "@/components/smoothui/components/ai-message";
 import SiriOrb from "@/components/smoothui/components/siri-orb";
 import { SegmentedTabs } from "@/components/SegmentedTabs";
 import { CalorieMacrosCard } from "@/components/CalorieMacrosCard";
+import "@/components/weekly-analysis.css";
 import { WeeklyAnalysisHero } from "@/components/WeeklyAnalysisHero";
 import { WeeklyAnalysisInsights } from "@/components/WeeklyAnalysisInsights";
 import { ForexSessionsDial } from "@/components/ForexSessionsDial";
@@ -91,6 +92,8 @@ export function PreviewStreak() {
 const ANALYSIS = {
   isCurrentWeek: true,
   daysElapsed: 5,
+  headline: "5 روز از 7 روز بالای 70 بودی و خوابت 0.6 ساعت بیشتر شد",
+  archetype: { key: "steady", title: "ثابت‌قدم", description: "امتیاز روزهات خیلی به هم نزدیک بود.", tone: "good" },
   overall: {
     score: 82, prevScore: 74, delta: 8, grade: "A", confidence: "high", consistency: 86, activeDays: 5,
     bestDay: { date: "", weekday: "سه‌شنبه", score: 94, isToday: false, isFuture: false },
@@ -106,8 +109,8 @@ const INSIGHTS: Insight[] = [
 
 export function PreviewAnalysis() {
   return (
-    <Pv className="lsc-pv-wa">
-      <WeeklyAnalysisHero analysis={ANALYSIS} />
+    <Pv className="lsc-pv-wa wk-scope">
+      <WeeklyAnalysisHero analysis={ANALYSIS} compact />
       <WeeklyAnalysisInsights insights={INSIGHTS} />
     </Pv>
   );

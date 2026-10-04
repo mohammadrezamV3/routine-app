@@ -1,20 +1,21 @@
 "use client";
 
 import { useEffect, useRef, useState } from "react";
+import { motion } from "framer-motion";
 import { Check, NotebookPen } from "lucide-react";
 import type { ReflectionDto } from "@/lib/weeklyAnalysis/types";
-import { cn } from "@/lib/utils";
-import { DashCard } from "./DashCard";
+import { SegmentedTabs } from "./SegmentedTabs";
 import { Spinner } from "./Spinner";
-import { waFetch } from "./WeeklyAnalysisShared";
+import { SectionHead, V_WK_CARD, waFetch } from "./WeeklyAnalysisKit";
 
 const MOODS = [
-  { v: 1, emoji: "😞", label: "خیلی بد" },
-  { v: 2, emoji: "😕", label: "بد" },
-  { v: 3, emoji: "😐", label: "معمولی" },
-  { v: 4, emoji: "🙂", label: "خوب" },
-  { v: 5, emoji: "😄", label: "عالی" },
+  { value: "1", label: "😞" },
+  { value: "2", label: "😕" },
+  { value: "3", label: "😐" },
+  { value: "4", label: "🙂" },
+  { value: "5", label: "😄" },
 ];
+const MOOD_NAMES = ["", "خیلی بد", "بد", "معمولی", "خوب", "عالی"];
 
 const DEBOUNCE_MS = 900;
 type SaveState = "idle" | "dirty" | "saving" | "saved" | "error";
@@ -24,14 +25,8 @@ type Draft = { wentWell: string; improve: string; mood: number | null };
 // بازتاب هفته — ذخیره‌ی خودکار با تاخیر (بدون دکمه‌ی ذخیره). کامپوننت با
 // key=weekStart رندر می‌شه، پس با عوض‌شدن هفته استیتش از نو ساخته می‌شه.
 export function WeeklyAnalysisReflection({
-  offset,
-  reflection,
-  onSaved,
-}: {
-  offset: number;
-  reflection: ReflectionDto;
-  onSaved: (r: ReflectionDto) => void;
-}) {
+  offset, reflection, onSaved,
+}: { offset: number; reflection: ReflectionDto; onSaved: (r: ReflectionDto) => void }) {
   const [draft, setDraft] = useState<Draft>({
     wentWell: reflection?.wentWell ?? "",
     improve: reflection?.improve ?? "",
@@ -92,16 +87,19 @@ export function WeeklyAnalysisReflection({
   }, [offset]);
 
   return (
-    <DashCard className="wa-reflection-card">
-      <div className="wa-card-head">
-        <h2 className="wa-card-title"><NotebookPen size={16} className="wa-title-icon" />مرور هفته</h2>
-        <span className={cn("wa-save-state", state)} aria-live="polite">
-          {state === "saving" ? <Spinner size={12} /> : state === "saved" ? <><Check size={12} />ذخیره شد</> : state === "error" ? "ذخیره نشد" : null}
-        </span>
-      </div>
+    <motion.section id="reflection" className="wk-card wk-reflection" variants={V_WK_CARD} aria-label="مرور هفته">
+      <SectionHead
+        icon={<NotebookPen size={15} />}
+        title="مرور هفته"
+        aside={
+          <span className={`wk-save-state ${state}`} aria-live="polite">
+            {state === "saving" ? <Spinner size={12} label={null} /> : state === "saved" ? <><Check size={12} />ذخیره شد</> : state === "error" ? "ذخیره نشد" : null}
+          </span>
+        }
+      />
 
-      <div className="wa-reflection-grid">
-        <label className="wa-field">
+      <div className="wk-reflection-grid">
+        <label className="wk-field">
           <span className="exercise-form-label">چی خوب پیش رفت؟</span>
           <textarea
             className="wsearch-newform-name"
@@ -112,7 +110,7 @@ export function WeeklyAnalysisReflection({
             placeholder="یه چیز کوچیک هم حسابه…"
           />
         </label>
-        <label className="wa-field">
+        <label className="wk-field">
           <span className="exercise-form-label">چی رو بهتر کنم؟</span>
           <textarea
             className="wsearch-newform-name"
@@ -125,25 +123,20 @@ export function WeeklyAnalysisReflection({
         </label>
       </div>
 
-      <div className="exercise-form-label">حال کلی این هفته</div>
-      <div className="wa-mood-row" role="radiogroup" aria-label="حال کلی این هفته">
-        {MOODS.map((m) => (
-          <button
-            key={m.v}
-            type="button"
-            role="radio"
-            aria-checked={draft.mood === m.v}
-            aria-label={m.label}
-            title={m.label}
-            className={cn("wa-ghost wa-mood", draft.mood === m.v && "active", draft.mood !== null && draft.mood !== m.v && "dim")}
-            onClick={() => update({ mood: draft.mood === m.v ? null : m.v })}
-          >
-            <span aria-hidden="true">{m.emoji}</span>
-          </button>
-        ))}
+      <div className="wk-field">
+        <span className="exercise-form-label">
+          حال کلی این هفته{draft.mood ? <span className="wk-muted-sm"> · {MOOD_NAMES[draft.mood]}</span> : null}
+        </span>
+        <SegmentedTabs
+          className="wk-seg wk-mood-seg seg-flush"
+          ariaLabel="حال کلی این هفته"
+          active={draft.mood ? String(draft.mood) : null}
+          onChange={(v) => update({ mood: Number(v) })}
+          options={MOODS}
+        />
       </div>
 
-      {error && <div className="wa-error-inline">{error}</div>}
-    </DashCard>
+      {error && <div className="wk-error-inline">{error}</div>}
+    </motion.section>
   );
 }

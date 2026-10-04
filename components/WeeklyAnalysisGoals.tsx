@@ -6,11 +6,9 @@ import { Check, Plus, Target, Trash2, X } from "lucide-react";
 import {
   ANALYSIS_DOMAIN_LABELS, type AnalysisDomain, type DomainResult, type WeeklyGoalDto, type WeeklyGoalStatus,
 } from "@/lib/weeklyAnalysis/types";
-import { cn } from "@/lib/utils";
-import { DashCard } from "./DashCard";
 import { Spinner } from "./Spinner";
-import { ToggleSwitch } from "./ToggleSwitch";
-import { waFetch } from "./WeeklyAnalysisShared";
+import { TickOption } from "./TickOption";
+import { Num, SectionHead, V_WK_CARD, WK_EASE, waFetch } from "./WeeklyAnalysisKit";
 
 export type GoalDraft = { domain: AnalysisDomain | null; title: string; nonce: number };
 
@@ -31,36 +29,36 @@ function GoalRow({
   const pct = g.target && current !== null ? Math.min(100, (current / g.target) * 100) : 0;
   return (
     <motion.li
-      layout
-      initial={{ opacity: 0, y: 6 }}
+      layout="position"
+      initial={{ opacity: 0, y: 8 }}
       animate={{ opacity: 1, y: 0 }}
-      exit={{ opacity: 0, x: -20 }}
-      transition={{ duration: 0.25 }}
-      className="wa-goal"
+      exit={{ opacity: 0, x: -24, transition: { duration: 0.2 } }}
+      transition={{ duration: 0.3, ease: WK_EASE }}
+      className="wk-goal"
     >
-      <div className="wa-goal-head">
-        <span className={cn("wa-goal-status", meta.cls)}>
+      <div className="wk-goal-head">
+        <span className={`wk-goal-status ${meta.cls}`}>
           {g.status === "DONE" ? <Check size={11} /> : g.status === "MISSED" ? <X size={11} /> : null}
           {meta.label}
         </span>
-        <span className="wa-goal-title">{g.title}</span>
+        <span className="wk-goal-title">{g.title}</span>
         {onDelete && (
-          <button type="button" className="wa-ghost wa-icon-btn danger" onClick={onDelete} disabled={deleting} aria-label="حذف هدف">
-            {deleting ? <Spinner size={13} /> : <Trash2 size={14} />}
+          <button type="button" className="wk-ghost wk-icon-btn danger" onClick={onDelete} disabled={deleting} aria-label="حذف هدف">
+            {deleting ? <Spinner size={13} label={null} /> : <Trash2 size={14} />}
           </button>
         )}
       </div>
-      <div className="wa-goal-meta">
-        <span className="wa-tag">{g.domain ? ANALYSIS_DOMAIN_LABELS[g.domain] : "عمومی"}</span>
+      <div className="wk-goal-meta">
+        <span className="wk-chip">{g.domain ? ANALYSIS_DOMAIN_LABELS[g.domain] : "عمومی"}</span>
         {g.target !== null && (
-          <span className="wa-muted-sm">
-            هدف <span className="mono">{g.target}</span>
-            {current !== null && <> · {g.achievedScore !== null ? "رسیدی" : "الان"} <span className="mono">{Math.round(current)}</span></>}
+          <span className="wk-muted-sm">
+            هدف <span className="wk-num">{g.target}</span>
+            {current !== null && <> · {g.achievedScore !== null ? "رسیدی" : "الان"} <span className="wk-num">{Math.round(current)}</span></>}
           </span>
         )}
       </div>
       {g.target !== null && current !== null && (
-        <div className="wa-goal-bar"><i className={meta.cls} style={{ width: `${pct}%` }} /></div>
+        <div className="wk-goal-bar"><i className={meta.cls} style={{ transform: `scaleX(${pct / 100})` }} /></div>
       )}
     </motion.li>
   );
@@ -69,13 +67,7 @@ function GoalRow({
 // اهداف هفته — «این هفته» همون‌هایی‌ان که هفته‌ی قبل تعیین شدن؛ هدف جدید
 // همیشه برای *هفته‌ی بعد* ثبت می‌شه و فقط از هفته‌ی جاری (offset=0).
 export function WeeklyAnalysisGoals({
-  offset,
-  goals,
-  nextWeekGoals,
-  domains,
-  draft,
-  onAdded,
-  onDeleted,
+  offset, goals, nextWeekGoals, domains, draft, onAdded, onDeleted,
 }: {
   offset: number;
   goals: WeeklyGoalDto[];
@@ -94,10 +86,10 @@ export function WeeklyAnalysisGoals({
   const [saving, setSaving] = useState(false);
   const [deletingId, setDeletingId] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
-  const rootRef = useRef<HTMLDivElement>(null);
+  const rootRef = useRef<HTMLElement>(null);
   const titleRef = useRef<HTMLInputElement>(null);
 
-  // پیشنهاد مربی («+ هدف») فرم رو پر می‌کنه و کاربر رو به همین کارت می‌بره
+  // پیشنهاد مربی («افزودن به اهداف») فرم رو پر می‌کنه و کاربر رو به همین کارت می‌بره
   useEffect(() => {
     if (!draft) return;
     setDomain(draft.domain ?? "");
@@ -105,7 +97,7 @@ export function WeeklyAnalysisGoals({
     setUseTarget(!!draft.domain);
     setError(null);
     rootRef.current?.scrollIntoView({ behavior: "smooth", block: "center" });
-    const t = setTimeout(() => titleRef.current?.focus({ preventScroll: true }), 350);
+    const t = setTimeout(() => titleRef.current?.focus({ preventScroll: true }), 450);
     return () => clearTimeout(t);
   }, [draft]);
 
@@ -149,85 +141,92 @@ export function WeeklyAnalysisGoals({
   }
 
   return (
-    <div ref={rootRef}>
-      <DashCard className="wa-goals-card">
-        <div className="wa-card-head">
-          <h2 className="wa-card-title"><Target size={16} className="wa-title-icon" />اهداف</h2>
-        </div>
+    <motion.section id="goals" ref={rootRef} className="wk-card wk-goals" variants={V_WK_CARD} aria-label="اهداف">
+      <SectionHead icon={<Target size={15} />} title="اهداف" />
 
-        <div className="wa-sub-title">اهداف این هفته</div>
-        {goals.length === 0 ? (
-          <div className="wa-empty-inline">برای این هفته هدفی تعیین نشده بود.</div>
-        ) : (
-          <ul className="wa-goal-list">
-            {goals.map((g) => <GoalRow key={g.id} g={g} liveScore={liveScoreOf(g.domain)} />)}
-          </ul>
-        )}
+      <div className="wk-sub-title">اهداف این هفته</div>
+      {goals.length === 0 ? (
+        <div className="wk-empty-inline">برای این هفته هدفی تعیین نشده بود.</div>
+      ) : (
+        <ul className="wk-goal-list">
+          {goals.map((g) => <GoalRow key={g.id} g={g} liveScore={liveScoreOf(g.domain)} />)}
+        </ul>
+      )}
 
-        {canEdit && (
-          <>
-            <div className="wa-sub-title">
-              اهداف هفته‌ی بعد <span className="wa-muted-sm mono">{nextWeekGoals.length}/{MAX_GOALS}</span>
-            </div>
-            {nextWeekGoals.length > 0 && (
-              <ul className="wa-goal-list">
-                <AnimatePresence initial={false}>
-                  {nextWeekGoals.map((g) => (
-                    <GoalRow key={g.id} g={g} liveScore={null} onDelete={() => remove(g.id)} deleting={deletingId === g.id} />
-                  ))}
-                </AnimatePresence>
-              </ul>
-            )}
+      {canEdit ? (
+        <>
+          <div className="wk-sub-title">
+            اهداف هفته‌ی بعد <span className="wk-muted-sm wk-num">{nextWeekGoals.length}/{MAX_GOALS}</span>
+          </div>
+          {nextWeekGoals.length > 0 && (
+            <ul className="wk-goal-list">
+              <AnimatePresence initial={false}>
+                {nextWeekGoals.map((g) => (
+                  <GoalRow key={g.id} g={g} liveScore={null} onDelete={() => remove(g.id)} deleting={deletingId === g.id} />
+                ))}
+              </AnimatePresence>
+            </ul>
+          )}
 
-            {full ? (
-              <div className="wa-empty-inline">حداکثر {MAX_GOALS} هدف برای هر هفته — برای هدف تازه یکی رو حذف کن.</div>
-            ) : (
-              <form className="wa-goal-form" onSubmit={add}>
-                <div className="wa-goal-form-row">
-                  <select
-                    className="wsearch-newform-name wa-select"
-                    value={domain}
-                    onChange={(e) => setDomain(e.target.value as AnalysisDomain | "")}
-                    aria-label="بخش"
-                  >
-                    <option value="">عمومی</option>
-                    {domains.map((d) => <option key={d.domain} value={d.domain}>{ANALYSIS_DOMAIN_LABELS[d.domain]}</option>)}
-                  </select>
-                  <input
-                    ref={titleRef}
-                    className="wsearch-newform-name"
-                    value={title}
-                    maxLength={120}
-                    onChange={(e) => setTitle(e.target.value)}
-                    placeholder="مثلا: هر شب قبل از 12 بخوابم"
-                    aria-label="عنوان هدف"
-                  />
-                </div>
-                <div className="wa-goal-target-row">
-                  <ToggleSwitch checked={useTarget} onChange={setUseTarget} label="هدف امتیازی" />
-                  <span className="wa-muted-sm">هدف امتیازی</span>
-                  {useTarget && <b className="mono wa-goal-target-num">{target}</b>}
-                </div>
+          {full ? (
+            <div className="wk-empty-inline">حداکثر {MAX_GOALS} هدف برای هر هفته — برای هدف تازه یکی رو حذف کن.</div>
+          ) : (
+            <form className="wk-goal-form" onSubmit={add}>
+              <div className="wk-goal-form-row">
+                <select
+                  className="wsearch-newform-name wk-select"
+                  value={domain}
+                  onChange={(e) => setDomain(e.target.value as AnalysisDomain | "")}
+                  aria-label="بخش"
+                >
+                  <option value="">عمومی</option>
+                  {domains.map((d) => <option key={d.domain} value={d.domain}>{ANALYSIS_DOMAIN_LABELS[d.domain]}</option>)}
+                </select>
+                <input
+                  ref={titleRef}
+                  className="wsearch-newform-name"
+                  value={title}
+                  maxLength={120}
+                  onChange={(e) => setTitle(e.target.value)}
+                  placeholder="مثلا: هر شب قبل از 12 بخوابم"
+                  aria-label="عنوان هدف"
+                />
+              </div>
+              <div className="wk-goal-target-row">
+                <TickOption checked={useTarget} onChange={setUseTarget}>هدف امتیازی</TickOption>
+                {useTarget && <b className="wk-goal-target-num"><Num value={target} duration={0.2} /></b>}
+              </div>
+              <AnimatePresence initial={false}>
                 {useTarget && (
-                  <input
-                    type="range" min={0} max={100} step={5}
-                    value={target}
-                    onChange={(e) => setTarget(Number(e.target.value))}
-                    className="trade-range"
-                    aria-label="امتیاز هدف"
-                  />
+                  <motion.div
+                    key="range"
+                    initial={{ opacity: 0, height: 0 }}
+                    animate={{ opacity: 1, height: "auto" }}
+                    exit={{ opacity: 0, height: 0 }}
+                    transition={{ duration: 0.25, ease: WK_EASE }}
+                  >
+                    <input
+                      type="range" min={0} max={100} step={5}
+                      value={target}
+                      onChange={(e) => setTarget(Number(e.target.value))}
+                      className="trade-range"
+                      aria-label="امتیاز هدف"
+                      data-noswipe
+                    />
+                  </motion.div>
                 )}
-                <button type="submit" className="account-outline-btn wa-goal-submit" disabled={saving || !title.trim()}>
-                  {saving ? <Spinner size={14} /> : <><Plus size={14} />افزودن هدف برای هفته‌ی بعد</>}
-                </button>
-              </form>
-            )}
-          </>
-        )}
-        {!canEdit && <div className="wa-muted-sm wa-goal-note">هدف تازه فقط از هفته‌ی جاری تعیین می‌شه.</div>}
+              </AnimatePresence>
+              <button type="submit" className="account-outline-btn wk-goal-submit" disabled={saving || !title.trim()}>
+                {saving ? <Spinner size={14} label={null} /> : <><Plus size={14} />افزودن هدف برای هفته‌ی بعد</>}
+              </button>
+            </form>
+          )}
+        </>
+      ) : (
+        <div className="wk-muted-sm wk-goal-note">هدف تازه فقط از هفته‌ی جاری تعیین می‌شه.</div>
+      )}
 
-        {error && <div className="wa-error-inline">{error}</div>}
-      </DashCard>
-    </div>
+      {error && <div className="wk-error-inline">{error}</div>}
+    </motion.section>
   );
 }

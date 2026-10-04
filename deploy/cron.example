@@ -18,7 +18,10 @@
 # سازگاری مونده و اضافه‌کردنش هم تکراری نمی‌فرسته (PushReminderLog).
 # */5 * * * * curl -fsS -X POST -H "Authorization: Bearer <CRON_SECRET>" https://<YOUR_DOMAIN>/api/push/send-reminders >/dev/null 2>&1
 
-# گزارش هفتگی — هر شنبه ساعت ۹ صبح تهران (نگاه کن به app/api/cron/weekly-report)
+# هفته‌نامه (آنالیز هفتگی) — دیگه لازم نیست: زمان‌بند داخلی (lib/pushScheduler.ts)
+# هر ۱۰ دقیقه چک می‌کنه و هر کاربر رو از شنبه ساعت ۸ صبح به وقت خودش می‌گیره.
+# خط زیر فقط برای سازگاری با سرورهای قدیمی و اجرای دستی مونده و دوباره‌زدنش
+# شماره‌ی تکراری نمی‌سازه (app/api/cron/weekly-report).
 0 9 * * 6 curl -fsS -X POST -H "Authorization: Bearer <CRON_SECRET>" https://<YOUR_DOMAIN>/api/cron/weekly-report >/dev/null 2>&1
 # اگه TZ سرور UTC است، به‌جای خط بالا از این استفاده کن (۵:۳۰ صبح UTC = ۹ صبح تهران):
 # 30 5 * * 6 curl -fsS -X POST -H "Authorization: Bearer <CRON_SECRET>" https://<YOUR_DOMAIN>/api/cron/weekly-report >/dev/null 2>&1

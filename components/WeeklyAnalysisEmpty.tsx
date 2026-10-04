@@ -1,10 +1,10 @@
 "use client";
 
 import Link from "next/link";
+import { motion } from "framer-motion";
 import { ChevronLeft, Inbox } from "lucide-react";
 import { ANALYSIS_DOMAIN_LABELS, ANALYSIS_DOMAINS, type AnalysisDomain, type DomainResult } from "@/lib/weeklyAnalysis/types";
-import { DashCard } from "./DashCard";
-import { DOMAIN_HREFS, DOMAIN_ICONS } from "./WeeklyAnalysisShared";
+import { DOMAIN_HREFS, DOMAIN_ICONS, V_WK_CARD } from "./WeeklyAnalysisKit";
 
 // هفته‌ای که هیچ دامنه‌ای توش داده نداره — به‌جای یه صفحه‌ی پر از خط‌تیره،
 // مستقیم به بخش‌هایی که کاربر بهشون دسترسی داره لینک می‌ده.
@@ -20,27 +20,27 @@ export function WeeklyAnalysisEmpty({ domains, isCurrentWeek }: { domains: Domai
   });
 
   return (
-    <DashCard className="wa-empty-card">
-      <Inbox size={28} className="wa-empty-icon" />
-      <div className="wa-empty-title">هنوز داده‌ای برای این هفته ثبت نشده</div>
-      <div className="wa-muted-sm">
-        {isCurrentWeek ? "از همین امروز چیزی ثبت کن تا تحلیل این هفته شکل بگیره." : "توی این هفته فعالیتی ثبت نشده بود."}
-      </div>
+    <motion.section className="wk-card wk-empty" variants={V_WK_CARD}>
+      <span className="wk-empty-ic"><Inbox size={26} /></span>
+      <h2 className="wk-empty-title">{isCurrentWeek ? "این هفته هنوز خالیه" : "توی این هفته چیزی ثبت نشده بود"}</h2>
+      <p className="wk-muted">
+        {isCurrentWeek ? "از همین امروز چیزی ثبت کن تا تحلیل این هفته شکل بگیره." : "برای دیدن تحلیل، یکی از هفته‌های پرفعالیت‌تر رو از نوار بالا انتخاب کن."}
+      </p>
       {isCurrentWeek && (
-        <div className="wa-empty-links">
+        <div className="wk-empty-links">
           {links.map((d) => {
             const Icon = DOMAIN_ICONS[d];
-            const sameHref = list.filter((x) => DOMAIN_HREFS[x] === DOMAIN_HREFS[d]).map((x) => ANALYSIS_DOMAIN_LABELS[x]);
+            const same = list.filter((x) => DOMAIN_HREFS[x] === DOMAIN_HREFS[d]).map((x) => ANALYSIS_DOMAIN_LABELS[x]);
             return (
-              <Link key={d} href={DOMAIN_HREFS[d]} className="wa-empty-link">
+              <Link key={d} href={DOMAIN_HREFS[d]} className="wk-empty-link" prefetch={false}>
                 <Icon size={15} />
-                <span>{sameHref.join(" / ")}</span>
-                <ChevronLeft size={14} className="wa-empty-link-chev" />
+                <span>{same.join(" / ")}</span>
+                <ChevronLeft size={14} className="wk-empty-chev" />
               </Link>
             );
           })}
         </div>
       )}
-    </DashCard>
+    </motion.section>
   );
 }
