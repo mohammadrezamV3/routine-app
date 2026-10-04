@@ -23,6 +23,7 @@ const ITEMS: { href: string; title: string; desc: string; icon: keyof typeof ICO
   { href: "/trade/checklists", title: "چک‌لیست", desc: "شرط‌های ورود و اتصالشان به معامله", icon: "checklist", feature: "tradeChecklists" },
   { href: "/trade/calendar", title: "تقویم اقتصادی", desc: "رویدادهای مهم بازار، با هشدار قبل از انتشار", icon: "weekly", feature: "economicCalendar" },
   { href: "/trade/risk", title: "ریسک و سود", desc: "حجم معامله، نسبت ریسک به سود و حداقل درصد برد", icon: "checklist", feature: "tradeRisk" },
+  { href: "/trade/money", title: "مدیریت سرمایه", desc: "اکسپرت متاتریدر برای ریسک، حد ضرر روزانه و حجم خودکار", icon: "trade", feature: "tradeMoneyMgmt" },
   { href: "/trade/clock", title: "ساعت فارکس", desc: "وضعیت لحظه‌ای جلسه‌های معاملاتی", icon: "trade", feature: "forexClock" },
   { href: "/trade/notes", title: "یادداشت‌ها", desc: "تحلیل‌ها و تجربه‌های شخصی", icon: "journal", feature: "tradeNotes" },
   { href: "/trade/metatrader", title: "اتصال متاتریدر", desc: "دریافت خودکار معاملات، برای هر حساب جداگانه", icon: "trade", feature: "metatrader" },

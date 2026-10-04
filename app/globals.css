@@ -7400,17 +7400,26 @@ body:not([data-theme="light"]) button.trade-pair-suggest-item{ box-shadow:none; 
 
 /* ── صفحه‌ی چارت ─────────────────────────────────────────────────────────
    موبایل: تک‌ستونه و اسکرول‌شونده، به ترتیب
-   چارت → گفت‌وگو → چک‌لیست → ثبت معامله → اخبار اقتصادی.
+   چارت → گفت‌وگو → ابزارها (ژورنال/چک‌لیست/ریسک و سود) → اخبار اقتصادی.
    دسکتاپ: پایین‌تر، یک گرید دیوار-تا-دیوار که اسکرول نمی‌شود. */
 .tv-page{ display:grid; grid-template-columns:1fr; gap:14px; align-items:start; }
 
 @media (max-width:1023px){
   .tv-chart-card{ order:1; }
   .tv-page > .trade-chat-panel{ order:2; }
-  .tv-page > .tv-cell-check{ order:3; }
-  .tv-page > .tv-cell-entry{ order:4; }
-  .tv-page > .trade-cal-card{ order:5; }
+  .tv-page > .tv-cell-tools{ order:3; }
+  .tv-page > .trade-cal-card{ order:4; }
 }
+
+/* خانه‌ی ابزارها: ردیف باکس‌های کوچیک + یک باکس برای ابزار فعال */
+.tv-cell-tools{ display:flex; flex-direction:column; gap:16px; }
+@media (min-width:640px){ .tv-cell-tools{ gap:24px; } }
+.tv-tools-row{ display:flex; align-items:flex-end; justify-content:center; gap:10px; flex:none; }
+@media (min-width:640px){ .tv-tools-row{ gap:14px; } }
+.tv-tool-pane[hidden]{ display:none; }
+.tv-tool-pane:not([hidden]){ animation:tv-tool-in .22s ease-out; }
+@keyframes tv-tool-in{ from{ opacity:0; transform:translateY(10px); } to{ opacity:1; transform:none; } }
+@media (prefers-reduced-motion:reduce){ .tv-tool-pane:not([hidden]){ animation:none; } }
 
 /* ── دسکتاپ: کل پنجره، بدون اسکرول ─────────────────────────────────────
    دو خواسته‌ی صریح کاربر این‌جا اجرا می‌شود:
@@ -7429,11 +7438,11 @@ body:not([data-theme="light"]) button.trade-pair-suggest-item{ box-shadow:none; 
       نمی‌شود و کل صفحه دوباره اسکرول می‌خورد) و خودش داخلش اسکرول دارد.
 
    چیدمان طبق اسکچ (راست‌به‌چپ؛ ستون اول رشته‌ی area سمت راست است) —
-   چارت و ثبت معامله دو ردیف بالا را با هم می‌گیرند (بلندتر)، چک‌لیست فقط
-   ردیف اول، چت/تقویم فقط یک ردیف کوتاه پایینی:
-       chart chart check
-       chart chart entry
-       chat  cal   entry                                              */
+   چارت دو ردیف بالا را می‌گیرد، ستون سوم کامل خانه‌ی ابزارهاست (ردیف
+   باکس‌ها + باکس ابزار فعال)، چت/تقویم فقط یک ردیف کوتاه پایینی:
+       chart chart tools
+       chart chart tools
+       chat  cal   tools                                              */
 @media (min-width:1024px){
   /* پدینگ پایین body برای نوار پایین موبایل است؛ روی دسکتاپ هیچ نوار
      ثابتی آن‌جا نیست و آن ۹۰ پیکسل فقط باعث می‌شد صفحه دقیقا به همان
@@ -7476,22 +7485,23 @@ body:not([data-theme="light"]) button.trade-pair-suggest-item{ box-shadow:none; 
        کوچیک داشت. جاشون عوض شد: چک‌لیست حالا هم‌قد چارت (دو ردیف)، ثبت
        معامله فقط ردیف پایین کنار چت/تقویم. */
     grid-template-areas:
-      "chart chart check"
-      "chart chart check"
-      "chat  cal   entry";
+      "chart chart tools"
+      "chart chart tools"
+      "chat  cal   tools";
     gap:12px; align-items:stretch;
   }
   .tv-page > .tv-chart-card{ grid-area:chart; }
   .tv-page > .trade-chat-panel{ grid-area:chat; }
   .tv-page > .trade-cal-card{ grid-area:cal; }
-  .tv-page > .tv-cell-check{ grid-area:check; }
-  .tv-page > .tv-cell-entry{ grid-area:entry; }
+  .tv-page > .tv-cell-tools{ grid-area:tools; }
 
   /* هر خانه دقیقا به‌اندازه‌ی سهم خودش از گرید — نه بزرگ‌تر. */
   .tv-page > *{ min-height:0; min-width:0; height:100%; box-sizing:border-box; overflow:hidden; }
   .tv-page > .trade-chat-panel,
   .tv-page > .trade-cal-card,
   .tv-page > .trade-chart-side{ display:flex; flex-direction:column; min-height:0; }
+  .tv-cell-tools > .trade-chart-side{ flex:1; min-height:0; display:flex; flex-direction:column; }
+  .tv-cell-tools .tv-tool-pane:not([hidden]){ flex:1; min-height:0; display:flex; flex-direction:column; }
 
   /* لیست‌های داخلی: سقف ثابت قبلی برداشته می‌شود تا فضای واقعی خانه را
      پر کنند و اسکرول خودشان را داشته باشند. */
