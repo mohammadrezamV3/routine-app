@@ -4,11 +4,14 @@ import { motion } from "framer-motion";
 import { useMemo } from "react";
 import { Activity, Crown } from "lucide-react";
 import type { DayCell } from "@/lib/weeklyAnalysis/types";
-import { Liquid, Num, SectionHead, V_WK_CARD, jalaliShort, scoreGrad, useSeen, weekdayLetter } from "./WeeklyAnalysisKit";
+import { MeterColumn } from "./WeeklyMeter";
+import { Num, SectionHead, V_WK_CARD, jalaliShort, useSeen, weekdayLetter } from "./WeeklyAnalysisKit";
 
-// ریتم هفته: هفت ستون مایع (شنبه سمت راست) با امتیاز روز. نشانگر توخالی هر
-// ستون = امتیاز همون روز در هفته‌ی قبل (prevDays). امروز یک نقطه‌ی ضربان
-// کوچک داره و روز آینده خط‌چینه. زدن هر ستون برگه‌ی جزئیات روز رو باز می‌کنه.
+// ریتم هفته: هفت ستون اکولایزری (MeterColumn، شنبه سمت راست) با امتیاز روز.
+// خط نازک روی هر ستون = امتیاز همون روز در هفته‌ی قبل (prevDays). بهترین
+// روز تاج خنثی و خانه‌ی بالایی درخشان داره، امروز یک نقطه‌ی accent زیر اسم
+// روز و روز آینده خط‌چینه. ستون‌ها با دیده‌شدن کارت از پایین پله‌پله روشن
+// می‌شن. زدن هر ستون برگه‌ی جزئیات روز رو باز می‌کنه.
 export function WeeklyAnalysisRhythm({
   days, prevDays, selected, onPick,
 }: { days: DayCell[]; prevDays: (number | null)[]; selected: number | null; onPick: (i: number) => void }) {
@@ -56,19 +59,24 @@ export function WeeklyAnalysisRhythm({
                 aria-label={`${d.weekday} ${jalaliShort(d.date)}: ${label}`}
                 aria-pressed={selected === i}
               >
-                {bestIdx === i && <Crown size={14} className="wk-rh-crown" aria-label="بهترین روز" />}
+                {bestIdx === i && <Crown size={14} className="wk-rh-crown" aria-label="بهترین روز" role="img" />}
                 <span className="wk-rh-val">{score === null ? <span className="wk-muted-sm">—</span> : <Num value={Math.round(score)} duration={0.7} />}</span>
                 <span className="wk-rh-plot">
-                  <Liquid pct={score} grad={scoreGrad(score)} ready={ready} delay={i * 50} className={`wk-rh-liquid${d.isFuture ? " is-future" : ""}`} />
-                  {prev !== null && prev !== undefined && (
-                    <span className="wk-rh-prev" style={{ ["--p" as string]: ready ? prev : 0 }} />
-                  )}
+                  <MeterColumn
+                    size="lg"
+                    value={score}
+                    prev={prev ?? null}
+                    on={ready}
+                    delay={i * 60}
+                    future={d.isFuture}
+                    highlight={bestIdx === i}
+                  />
                 </span>
                 <span className="wk-rh-day">
-                  {d.isToday && <i className="wk-pulse" aria-hidden="true" />}
                   <span className="wk-rh-day-full">{d.weekday}</span>
                   <span className="wk-rh-day-short" aria-hidden="true">{weekdayLetter(d.weekday)}</span>
                 </span>
+                <i className={`wk-rh-today${d.isToday ? " is-on" : ""}`} aria-hidden="true" />
                 <span className="wk-rh-date wk-num">{jalaliShort(d.date)}</span>
               </button>
             );

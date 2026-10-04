@@ -24,9 +24,12 @@
 .wr-root.is-on .wr-poly{ transform:none; opacity:1; }
 .wr-stroke{
   fill:none; stroke-width:2.2; stroke-linejoin:round; stroke-linecap:round; vector-effect:non-scaling-stroke;
-  stroke-dasharray:1; stroke-dashoffset:1; transition:stroke-dashoffset 1.1s cubic-bezier(.22,1,.36,1) .25s;
+  stroke-dasharray:1; stroke-dashoffset:1;
 }
-.wr-root.is-on .wr-stroke{ stroke-dashoffset:0; }
+/* کشیده‌شدن خط با keyframes و آخرش dasharray:none: با pathLength + non-scaling-stroke
+   کروم طول نرمال‌شده رو کمی اشتباه حساب می‌کرد و تیکه‌ی آخر چندضلعی خالی می‌موند */
+.wr-root.is-on .wr-stroke{ stroke-dasharray:none; stroke-dashoffset:0; animation:wr-draw 1.1s cubic-bezier(.22,1,.36,1) .25s backwards; }
+@keyframes wr-draw{ from{ stroke-dasharray:1; stroke-dashoffset:1; } to{ stroke-dasharray:1; stroke-dashoffset:0; } }
 .wr-root.has-active .wr-area{ opacity:.8; }
 .wr-area{ transition:opacity .25s ease; }
 
@@ -49,6 +52,7 @@ body[data-theme="light"] .wr-dot{ stroke:#fff; }
 
 @media (prefers-reduced-motion: reduce){
   .wr-poly, .wr-stroke, .wr-prev, .wr-dot, .wr-spoke, .wr-label, .wr-area{ transition:none; }
+  .wr-root.is-on .wr-stroke{ animation:none; }
 }
 /* ورود رادار فقط transform/opacity/dashoffset ـه و ارزونه؛ روی گوشی هم می‌مونه (کاهش حرکت بالا خاموشش می‌کنه) */
 html[data-perf="low"] .wr-dot.is-active{ filter:none; }

@@ -125,9 +125,7 @@ function Skeleton() {
         <span className="wk-sk-ring" />
         <span className="wk-sk-lines"><i /><i /><i /></span>
       </div>
-      <div className="wk-span-12 wk-domain-grid">
-        {Array.from({ length: 6 }, (_, i) => <div key={i} className="wk-card wk-sk-domain" />)}
-      </div>
+      <div className="wk-card wk-span-12 wk-sk-block" />
       <div className="wk-card wk-span-7 wk-sk-block" />
       <div className="wk-card wk-span-5 wk-sk-block" />
     </div>

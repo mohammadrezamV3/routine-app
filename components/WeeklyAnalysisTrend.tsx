@@ -182,7 +182,8 @@ export function WeeklyAnalysisTrend({
               const skip = w < 420 && (n - 1 - i) % 2 === 1;
               return skip ? null : (
                 <text key={t.weekStart} x={xAt(i)} y={H - 8} textAnchor="middle" className={`wk-axis${i === n - 1 ? " is-cur" : ""}${hover === i ? " is-hov" : ""}`}>
-                  {i === n - 1 && offset === 0 ? "این هفته" : jalaliShort(t.weekStart)}
+                  {/* RLI/PDI: بعضی مرورگرها جهت متن svg رو ltr می‌گیرن و «4 مهر» برعکس («مهر 4») می‌شد */}
+                  {i === n - 1 && offset === 0 ? "این هفته" : `\u2067${jalaliShort(t.weekStart)}\u2069`}
                 </text>
               );
             })}

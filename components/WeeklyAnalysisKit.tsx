@@ -289,21 +289,23 @@ export function DeltaChip({ delta, size = "md", suffix }: { delta: number | null
   );
 }
 
-// ---- ستون «مایع» ----
-// کپسول با سطح مایع: پر شدن با translateY (فقط transform، روی کامپوزیتور)
-// و بدون اعوجاج گوشه‌ها. pct: 0..100 یا null (خالی)
-export function Liquid({
-  pct, grad, delay = 0, ready = true, className,
-}: { pct: number | null; grad?: [string, string]; delay?: number; ready?: boolean; className?: string }) {
+// ---- خط پیشرفت افقی ----
+// ریل نازک + پرشدن تک‌رنگ (شدت رنگ با امتیاز). پر شدن فقط transform (scaleX از
+// سمت راست در RTL) و با ready شروع می‌شه. pct: 0..100 یا null (خالی)
+export function LineMeter({
+  pct, ready = true, delay = 0, className,
+}: { pct: number | null; ready?: boolean; delay?: number; className?: string }) {
   const p = pct === null ? 0 : Math.max(0, Math.min(100, pct));
+  const [a, b] = scoreGrad(pct);
   const style = {
-    ["--lq" as string]: ready ? p : 0,
-    ["--lq-d" as string]: `${delay}ms`,
-    ...(grad ? { ["--lq-a" as string]: grad[0], ["--lq-b" as string]: grad[1] } : null),
+    ["--lm" as string]: ready ? p / 100 : 0,
+    ["--lm-d" as string]: `${delay}ms`,
+    ["--lm-a" as string]: a,
+    ["--lm-b" as string]: b,
   } as React.CSSProperties;
   return (
-    <span className={`wk-liquid${className ? ` ${className}` : ""}${pct === null ? " is-empty" : ""}`} style={style}>
-      <i className="wk-liquid-fill" />
+    <span className={`wk-line${className ? ` ${className}` : ""}${pct === null ? " is-empty" : ""}`} style={style} aria-hidden="true">
+      <i className="wk-line-fill" />
     </span>
   );
 }

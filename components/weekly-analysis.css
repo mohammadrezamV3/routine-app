@@ -168,7 +168,7 @@ body[data-theme="light"] .wk-page button.wk-ghost, body[data-theme="light"] .wk-
 .wk-nav-title{ display:flex; align-items:center; gap:8px; font-size:14.5px; font-weight:800; min-height:24px; }
 .wk-nav-spin{ display:inline-flex; width:14px; height:14px; color:var(--accent); }
 .wk-nav-sub{ font-size:11.5px; color:var(--muted); min-height:17px; font-family:var(--font-latin), var(--font-vazir), sans-serif; }
-.wk-strip{ display:flex; gap:8px; height:40px; max-width:380px; margin:0 auto 12px; padding-inline:4px; }
+.wk-strip{ display:flex; gap:6px; height:42px; max-width:340px; margin:0 auto 12px; padding-inline:4px; }
 .wk-page button.wk-strip-col{
   flex:1 1 0; min-width:0; display:flex; flex-direction:column; align-items:center; gap:4px;
   border:none; border-radius:10px; opacity:.85; transition:opacity .2s ease, transform .15s ease;
@@ -176,10 +176,9 @@ body[data-theme="light"] .wk-page button.wk-ghost, body[data-theme="light"] .wk-
 .wk-page button.wk-strip-col:disabled{ opacity:.35; }
 .wk-page button.wk-strip-col.is-sel:disabled{ opacity:1; }
 @media (hover:hover){ .wk-page button.wk-strip-col:hover:not(:disabled){ opacity:1; } }
-.wk-strip-bar{ flex:1; width:min(100%, 26px); }
+.wk-strip-bar{ display:block; flex:1; width:12px; min-height:0; }
 .wk-strip-dot{ width:5px; height:5px; border-radius:50%; background:transparent; flex-shrink:0; transition:background .2s ease; }
 .wk-strip-col.is-sel .wk-strip-dot{ background:var(--accent); }
-.wk-strip-col.is-sel .wk-liquid{ border-color:var(--accent); }
 
 /* ── بنر هفته‌نامه ─────────────────────────────────────────── */
 /* کارت دو مقصد داره: لینک اصلی (خواندن) + دکمه‌ی «پخش داستان» هم‌سطحش */
@@ -309,65 +308,63 @@ body[data-theme="light"] .wk-page button.wk-ghost, body[data-theme="light"] .wk-
 .wk-hero.is-compact .wk-prediction{ flex-direction:column; align-items:stretch; gap:10px; padding:10px 12px; }
 .wk-hero.is-compact .wk-band{ width:100%; }
 
-/* ── ستون مایع (کپسول با سطح مایع؛ پرشدن فقط با transform) ───── */
-.wk-liquid{
-  position:relative; display:block; overflow:hidden; border-radius:99px; min-height:0;
-  border:1px solid var(--box-line);
+/* ── خط پیشرفت افقی (برگه‌ی روز، نمای بخش‌ها) ──────────────────
+   ریل نازک + پرشدن تک‌رنگ با scaleX از راست. ریل مثل خانه‌های
+   خاموش ستون اکولایزری (wm-seg) سطح داده است، نه تزئین. */
+.wk-line{
+  position:relative; display:block; height:5px; border-radius:99px; overflow:hidden; min-width:0;
+  background:color-mix(in srgb, var(--text) 8%, transparent);
 }
-.wk-liquid-fill{
-  position:absolute; inset:0;
-  background:linear-gradient(0deg, var(--lq-a, var(--ring-1a)), var(--lq-b, var(--ring-1b)));
-  transform:translate3d(0, calc((100 - var(--lq, 0)) * 1%), 0);
-  transition:transform .85s var(--wk-ease) var(--lq-d, 0ms);
-  will-change:transform;
+.wk-line-fill{
+  position:absolute; inset:0; border-radius:inherit;
+  background:linear-gradient(270deg, var(--lm-a, var(--ring-1a)), var(--lm-b, var(--ring-1b)));
+  transform:scaleX(var(--lm, 0)); transform-origin:right;
+  transition:transform .85s var(--wk-ease) var(--lm-d, 0ms);
 }
-.wk-liquid-fill::after{ content:""; position:absolute; top:0; inset-inline:0; height:2px; background:rgba(255,255,255,.4); }
-body[data-theme="light"] .wk-liquid-fill::after{ background:rgba(255,255,255,.55); }
-.wk-liquid.is-empty{ border-style:dashed; opacity:.55; }
-.wk-liquid.is-empty .wk-liquid-fill{ display:none; }
-.wk-liquid.is-future{ border-style:dashed; opacity:.55; }
-.wk-liquid.is-today{ border-color:var(--accent); }
-/* نسخه‌ی افقی (برگه‌ی روز): از راست پر می‌شه */
-.wk-liquid.is-h .wk-liquid-fill{
-  background:linear-gradient(270deg, var(--lq-a, var(--ring-1a)), var(--lq-b, var(--ring-1b)));
-  transform:translate3d(calc((100 - var(--lq, 0)) * 1%), 0, 0);
-}
-.wk-liquid.is-h .wk-liquid-fill::after{ top:0; bottom:0; height:auto; width:2px; inset-inline:auto; inset-inline-end:auto; left:0; }
+.wk-line.is-empty .wk-line-fill{ display:none; }
 
-/* ── کارت دامنه ───────────────────────────────────────────── */
-/* گرید ثابت (نه flex-grow): ردیف آخر هم کارت‌هایی هم‌عرض بقیه داره، نه کشیده.
-   align-items:start تا بازشدن یک کارت ارتفاع همسایه‌هاش رو نکشه. */
-.wk-domain-grid{ display:grid; grid-template-columns:repeat(4, minmax(0,1fr)); gap:var(--wk-gap); align-items:start; }
-@media (min-width:640px) and (max-width:1023px){ .wk-domain-grid{ grid-template-columns:repeat(3, minmax(0,1fr)); } }
-@media (max-width:639px){ .wk-domain-grid{ grid-template-columns:repeat(2, minmax(0,1fr)); } }
-.wk-domain{ padding:14px; display:flex; flex-direction:column; gap:12px; }
-@media (min-width:640px){ .wk-domain{ padding:16px; } }
-.wk-domain.is-empty .gring{ opacity:.55; }
-.wk-page button.wk-domain-head{
-  display:flex; align-items:center; gap:12px; width:100%; text-align:start; border:none; color:inherit; font-family:inherit;
+/* ── نمای بخش‌ها (رادار + فهرست رتبه‌بندی‌شده) ─────────────────── */
+.wk-dv-grid{ display:grid; grid-template-columns:minmax(0,1fr); gap:22px; }
+.wk-dv-radar{ width:100%; max-width:330px; margin-inline:auto; padding:6px 18px 0; margin-bottom:-26px; box-sizing:border-box; }
+.wk-dv-radar .wr-root{ max-width:none !important; }
+@media (min-width:900px){
+  .wk-dv-grid.has-radar{ grid-template-columns:minmax(0,42fr) minmax(0,58fr); column-gap:36px; align-items:start; }
+  .wk-dv-radar{ order:2; position:sticky; top:150px; max-width:none; margin-bottom:0; padding:16px 36px 8px; box-sizing:border-box; }
 }
-.wk-domain-meta{ flex:1; min-width:0; display:flex; flex-direction:column; gap:6px; }
-.wk-domain-name{ display:flex; align-items:center; gap:6px; font-size:14px; font-weight:800; }
-.wk-domain-icon{ flex-shrink:0; }
-.wk-domain-sub{ display:flex; align-items:center; flex-wrap:wrap; gap:4px 8px; }
-.wk-domain-score{ font-size:16px; font-weight:800; }
-.wk-domain-chev{ color:var(--muted); flex-shrink:0; transition:transform .3s var(--wk-ease); }
-.wk-domain-chev.is-open{ transform:rotate(180deg); }
-@media (max-width:639px){
-  .wk-page button.wk-domain-head{ flex-wrap:wrap; gap:8px; }
-  .wk-domain-meta{ flex-basis:100%; order:3; }
-  .wk-domain-chev{ margin-inline-start:auto; }
-  .wk-domain .gring{ margin-inline-end:auto; }
+.wk-dv-legend{ display:inline-flex; align-items:center; gap:14px; margin-inline-start:auto; }
+.wk-legend-fill{ width:14px; height:8px; border-radius:3px; display:inline-block; background:linear-gradient(90deg, var(--ring-1a), var(--ring-1b)); opacity:.75; }
+.wk-legend-dash{ width:16px; height:0; border-top:2px dashed color-mix(in srgb, var(--text) 60%, transparent); display:inline-block; }
+
+.wk-dv-list{ list-style:none; margin:0; padding:0; display:flex; flex-direction:column; }
+.wk-dv-row{ border-top:1px solid var(--box-line); }
+.wk-dv-row:first-child{ border-top:none; }
+.wk-page button.wk-dv-head{
+  display:flex; flex-direction:column; gap:10px; width:100%; text-align:start; border:none; border-radius:14px;
+  color:inherit; font-family:inherit; padding:13px 6px;
+  transition:transform .2s var(--wk-ease);
 }
-.wk-minibars{ display:flex; gap:5px; height:46px; }
-.wk-minibars.is-tall{ height:96px; }
-.wk-minibar{ flex:1 1 0; min-width:0; display:flex; flex-direction:column; align-items:center; gap:5px; }
-.wk-minibar .wk-liquid{ flex:1; width:100%; max-width:36px; }
-.wk-minibar-letter{ font-size:10px; font-weight:700; color:var(--muted); line-height:1; }
-.wk-minibar-letter.is-today{ color:var(--accent); }
-.wk-domain-details{ overflow:hidden; }
-.wk-domain-body{ display:flex; flex-direction:column; gap:12px; padding-top:4px; }
-.wk-compare{ display:flex; justify-content:space-between; gap:10px; font-size:12px; color:var(--muted); }
+.wk-dv-line1{ display:flex; align-items:center; gap:12px; min-width:0; }
+.wk-dv-name{ display:flex; align-items:center; gap:8px; flex:1; min-width:0; font-size:14px; font-weight:800; white-space:nowrap; }
+.wk-dv-icon{ flex-shrink:0; color:var(--text); opacity:.72; }
+.wk-dv-score{ font-size:24px; font-weight:800; line-height:1; letter-spacing:-.04em; min-width:34px; text-align:end; }
+.wk-dv-row .wk-delta{ padding:2px 8px; border-radius:99px; border:1px solid color-mix(in srgb, currentColor 38%, transparent); }
+.wk-dv-row .wk-delta.flat{ border-color:transparent; padding-inline:0; }
+.wk-dv-chev{ color:var(--muted); flex-shrink:0; transition:transform .3s var(--wk-ease); }
+.wk-dv-chev.is-open{ transform:rotate(180deg); }
+.wk-dv-line2{ display:flex; align-items:center; gap:18px; }
+.wk-dv-line2 .wk-dv-track{ flex:1; }
+.wk-dv-cols{ display:flex; align-items:stretch; gap:4px; height:28px; flex-shrink:0; }
+.wk-dv-col{ display:block; width:9px; height:100%; }
+.wk-dv-row.is-empty .wk-dv-name, .wk-dv-row.is-empty .wk-dv-score{ opacity:.55; }
+@media (hover:hover) and (pointer:fine){
+  .wk-page button.wk-dv-head:hover .wk-dv-name{ color:var(--accent); }
+  .wk-page button.wk-dv-head:hover .wk-dv-icon{ color:var(--accent); opacity:1; }
+}
+.wk-page button.wk-dv-head:focus-visible{ outline:2px solid var(--accent); outline-offset:1px; }
+.wk-dv-row.is-open .wk-dv-name{ color:var(--accent); }
+.wk-dv-details{ overflow:hidden; }
+.wk-dv-body{ display:flex; flex-direction:column; gap:12px; padding:2px 6px 16px; }
+.wk-compare{ display:flex; justify-content:space-between; flex-wrap:wrap; gap:6px 14px; font-size:12px; color:var(--muted); }
 .wk-compare b{ color:var(--text); font-size:14px; }
 .wk-stats{ list-style:none; margin:0; padding:0; display:flex; flex-direction:column; }
 .wk-stats li{ display:flex; align-items:center; justify-content:space-between; gap:10px; padding:8px 0; border-top:1px solid var(--box-line); font-size:12px; }
@@ -378,47 +375,48 @@ body[data-theme="light"] .wk-liquid-fill::after{ background:rgba(255,255,255,.55
 .wk-bw b{ color:var(--text); }
 .wk-dot{ width:7px; height:7px; border-radius:50%; flex-shrink:0; display:inline-block; }
 .wk-dot.good{ background:var(--ring-1a); } .wk-dot.bad{ background:var(--muted); }
-.wk-domain-link{ align-self:flex-start; }
+.wk-dv-link{ align-self:flex-start; }
+@media (max-width:639px){
+  .wk-dv-line1{ gap:10px; }
+  .wk-dv-line2{ gap:14px; }
+  .wk-dv-cols{ gap:3px; height:24px; }
+  .wk-dv-col{ width:8px; }
+}
 
-/* ── ریتم هفته ─────────────────────────────────────────────── */
+/* ── ریتم هفته (ستون‌های اکولایزری MeterColumn) ───────────────── */
 .wk-legend{ display:inline-flex; align-items:center; gap:6px; font-size:11px; color:var(--muted); }
-.wk-legend-ghost{ width:16px; height:0; border-top:2px solid var(--text); opacity:.7; border-radius:2px; }
-.wk-rh-chart{ --plot:214px; position:relative; padding-inline-start:28px; padding-top:14px; }
+.wk-legend-ghost{ width:16px; height:0; border-top:2px solid color-mix(in srgb, var(--text) 70%, transparent); border-radius:2px; }
+/* --plot = ارتفاع ستون‌ها؛ خطوط شبکه‌ی 0/50/100 دقیقا هم‌تراز بالا و پایین ستون */
+.wk-rh-chart{ --plot:214px; --wk-rh-top:44px; position:relative; padding-inline-start:28px; padding-top:18px; }
 .wk-rh-grid{ position:absolute; inset:0; pointer-events:none; }
 .wk-rh-grid span{
-  position:absolute; inset-inline:0; top:calc(40px + (100 - var(--g)) * var(--plot) / 100);
+  position:absolute; inset-inline:0; top:calc(18px + 26px + (100 - var(--g)) * var(--plot) / 100);
   display:flex; align-items:center; gap:6px; transform:translateY(-50%);
   font-size:9.5px; color:var(--muted2); line-height:1;
 }
-.wk-rh-grid span::after{ content:""; flex:1; border-top:1px dashed var(--box-line); }
+.wk-rh-grid span::after{ content:""; flex:1; border-top:1px dashed color-mix(in srgb, var(--box-line) 70%, transparent); }
 .wk-rh-grid span:last-child::after{ border-top-style:solid; }
 .wk-rh-cols{ position:relative; display:flex; gap:6px; }
 .wk-page button.wk-rh-col{
   position:relative; flex:1 1 0; min-width:0; display:flex; flex-direction:column; align-items:center; gap:0;
-  border:none; border-radius:14px; color:inherit; font-family:inherit; padding:0 0 4px;
+  border:none; border-radius:14px; color:inherit; font-family:inherit; padding:0 0 6px;
   transition:transform .3s var(--wk-ease);
 }
-.wk-rh-val{ height:26px; display:flex; align-items:center; justify-content:center; font-size:12.5px; font-weight:800; }
-.wk-rh-plot{ position:relative; width:min(100%, 44px); height:var(--plot); }
-.wk-rh-liquid{ position:absolute; inset:0; width:100%; height:100%; }
-.wk-rh-prev{
-  position:absolute; bottom:0; left:-5px; right:-5px; height:0; border-top:2.5px solid var(--text); border-radius:2px; opacity:.75; z-index:2;
-  transform:translate3d(0, calc(var(--p, 0) * var(--plot) / -100), 0); transition:transform .85s var(--wk-ease);
-}
-.wk-rh-day{ display:flex; align-items:center; gap:5px; margin-top:8px; font-size:11.5px; font-weight:700; color:var(--muted); white-space:nowrap; }
-.wk-rh-date{ font-size:10px; color:var(--muted2); margin-top:2px; }
+.wk-rh-val{ height:26px; display:flex; align-items:center; justify-content:center; font-size:13px; font-weight:800; letter-spacing:-.02em; margin-bottom:0; }
+.wk-rh-plot{ position:relative; display:block; width:30px; height:var(--plot); }
+.wk-rh-day{ display:flex; align-items:center; margin-top:9px; font-size:11.5px; font-weight:700; color:var(--muted); white-space:nowrap; transition:color .2s ease; }
+.wk-rh-today{ display:block; width:5px; height:5px; margin-top:4px; border-radius:50%; background:transparent; flex-shrink:0; }
+.wk-rh-today.is-on{ background:var(--accent); }
+.wk-rh-date{ font-size:10px; color:var(--muted2); margin-top:3px; }
 .wk-rh-day-short{ display:none; }
 .wk-rh-col.is-today .wk-rh-day{ color:var(--accent); }
-.wk-rh-col.is-sel .wk-rh-liquid{ border-color:var(--accent); box-shadow:0 10px 20px -10px rgba(var(--accent-rgb),.7); }
 .wk-page button.wk-rh-col.is-sel{ transform:translate3d(0,-5px,0); }
-.wk-rh-col.is-sel .wk-rh-day{ color:var(--text); }
-@media (hover:hover){ .wk-page button.wk-rh-col:hover .wk-rh-liquid{ border-color:var(--accent); } }
-.wk-pulse{ position:relative; width:6px; height:6px; border-radius:50%; background:var(--accent); flex-shrink:0; }
-.wk-pulse::after{
-  content:""; position:absolute; inset:0; border-radius:50%; background:var(--accent);
-  animation:wk-pulse 2.2s ease-out infinite;
+.wk-rh-col.is-sel .wk-rh-day{ color:var(--accent); }
+.wk-page button.wk-rh-col:focus-visible{ outline:2px solid var(--accent); outline-offset:2px; }
+@media (hover:hover) and (pointer:fine){
+  .wk-page button.wk-rh-col:hover:not(.is-sel){ transform:translate3d(0,-2px,0); }
+  .wk-page button.wk-rh-col:hover .wk-rh-day{ color:var(--text); }
 }
-@keyframes wk-pulse{ 0%{ transform:scale(1); opacity:.6; } 70%,100%{ transform:scale(3); opacity:0; } }
 @media (max-width:639px){
   .wk-rh-chart{ --plot:130px; padding-inline-start:22px; }
   .wk-rh-cols{ gap:3px; }
@@ -427,7 +425,7 @@ body[data-theme="light"] .wk-liquid-fill::after{ background:rgba(255,255,255,.55
   .wk-rh-day-full{ display:none; }
   .wk-rh-day-short{ display:inline; }
   .wk-rh-date{ display:none; }
-  .wk-rh-plot{ width:min(100%, 34px); }
+  .wk-rh-plot{ width:21px; }
 }
 
 /* ── نقشه‌ی حرارتی ─────────────────────────────────────────── */
@@ -585,28 +583,25 @@ text.wk-axis[text-anchor="middle"]{ text-anchor:middle; }
 @media (hover:hover){ .wk-empty-link:hover{ border-color:var(--accent); color:var(--accent); } }
 .wk-error-card{ display:flex; flex-direction:column; align-items:center; gap:14px; text-align:center; font-size:13px; color:var(--muted); padding:32px 20px; }
 
-.wk-skel, .wk-sk-hero > *, .wk-sk-domain, .wk-sk-block{ position:relative; overflow:hidden; }
+.wk-skel, .wk-sk-hero > *, .wk-sk-block{ position:relative; overflow:hidden; }
 .wk-skel{ display:block; height:12px; border-radius:99px; background:rgba(var(--accent-rgb),.07); }
-.wk-skel::after, .wk-sk-ring::after, .wk-sk-lines i::after, .wk-sk-domain::after, .wk-sk-block::after{
+.wk-skel::after, .wk-sk-ring::after, .wk-sk-lines i::after, .wk-sk-block::after{
   content:""; position:absolute; inset:0; transform:translateX(100%);
   background:linear-gradient(90deg, transparent, rgba(255,255,255,.07), transparent);
   animation:wk-shimmer 1.5s ease-in-out infinite;
 }
 body[data-theme="light"] .wk-skel::after, body[data-theme="light"] .wk-sk-ring::after, body[data-theme="light"] .wk-sk-lines i::after,
-body[data-theme="light"] .wk-sk-domain::after, body[data-theme="light"] .wk-sk-block::after{ background:linear-gradient(90deg, transparent, rgba(255,255,255,.55), transparent); }
+body[data-theme="light"] .wk-sk-block::after{ background:linear-gradient(90deg, transparent, rgba(255,255,255,.55), transparent); }
 @keyframes wk-shimmer{ to{ transform:translateX(-100%); } }
 .wk-sk-hero{ display:flex; align-items:center; gap:28px; min-height:244px; }
 .wk-sk-ring{ width:184px; height:184px; border-radius:50%; flex-shrink:0; background:rgba(var(--accent-rgb),.06); position:relative; overflow:hidden; }
 .wk-sk-lines{ flex:1; display:flex; flex-direction:column; gap:14px; }
 .wk-sk-lines i{ display:block; height:14px; border-radius:99px; background:rgba(var(--accent-rgb),.07); position:relative; overflow:hidden; }
 .wk-sk-lines i:nth-child(1){ width:40%; } .wk-sk-lines i:nth-child(2){ width:88%; height:22px; } .wk-sk-lines i:nth-child(3){ width:60%; }
-.wk-sk-domain{ flex:1 1 calc(25% - var(--wk-gap)); min-width:210px; height:132px; background:var(--box-bg); }
-.wk-skeleton .wk-domain-grid > .wk-sk-domain{ flex:1 1 calc(25% - var(--wk-gap)); }
 .wk-sk-block{ min-height:300px; }
 @media (max-width:639px){
   .wk-sk-hero{ flex-direction:column; min-height:420px; justify-content:center; }
   .wk-sk-lines{ width:100%; }
-  .wk-skeleton .wk-domain-grid > .wk-sk-domain{ flex-basis:calc(50% - var(--wk-gap)); min-width:0; height:150px; }
 }
 
 /* ── برگه‌ی جزئیات روز ───────────────────────────────────── */
@@ -838,23 +833,6 @@ body[data-theme="light"] .wk-spot-shine::after{ background:linear-gradient(90deg
 }
 .wk-sh-rule.on{ transform:scaleX(1); }
 
-/* ── کارت دامنه: هویت با آیکون و اسم؛ نور فقط accent / تک‌رنگ ──── */
-.wk-domain{ isolation:isolate; transition:border-color .3s ease, box-shadow .3s ease; }
-.wk-domain::after{
-  content:""; position:absolute; top:0; left:0; right:0; height:150px; z-index:-1; border-radius:inherit; pointer-events:none;
-  background:radial-gradient(120% 100% at 50% 0%, color-mix(in srgb, var(--ring-1a) 15%, transparent), transparent 72%);
-  opacity:0; transition:opacity .45s ease;
-}
-.wk-domain.is-open::after{ opacity:1; }
-.wk-domain-icon{ color:var(--text); opacity:.72; }
-.wk-domain .wk-delta{ padding:2px 8px; border-radius:99px; border:1px solid color-mix(in srgb, currentColor 38%, transparent); }
-.wk-domain .wk-delta.flat{ border-color:transparent; padding-inline:0; }
-.wk-domain-score{ letter-spacing:-.03em; }
-@media (hover:hover) and (pointer:fine){
-  .wk-domain:hover{ border-color:color-mix(in srgb, var(--accent) 36%, var(--box-line)); box-shadow:inset 0 1px 0 var(--wk-rim), 0 12px 30px -18px rgba(var(--accent-rgb),.5); }
-}
-.wk-domain.is-open{ border-color:color-mix(in srgb, var(--accent) 32%, var(--box-line)); }
-
 /* ── اعداد هفته: عدد خنثی + آیکون ساده ───────────────────────── */
 .wk-tile-ic{
   display:inline-flex; align-items:center; justify-content:center;
@@ -870,20 +848,13 @@ body[data-theme="light"] .wk-spot-shine::after{ background:linear-gradient(90deg
   .wk-tile:hover{ border-color:color-mix(in srgb, var(--text) 24%, var(--box-line)); }
 }
 
-/* ── ریتم: برق لوله‌ها + تاج بهترین روز (خنثی) ───────────────── */
-.wk-rh-liquid .wk-liquid-fill::before{
-  content:""; position:absolute; top:12px; bottom:10px; inset-inline-start:18%; width:15%; border-radius:99px; pointer-events:none;
-  background:linear-gradient(180deg, rgba(255,255,255,.5), rgba(255,255,255,.08) 65%, transparent);
-}
-body[data-theme="light"] .wk-rh-liquid .wk-liquid-fill::before{ background:linear-gradient(180deg, rgba(255,255,255,.7), rgba(255,255,255,.15) 65%, transparent); }
+/* ── ریتم: تاج بهترین روز (خنثی) ───────────────────────────── */
 .wk-rh-crown{
-  position:absolute; top:-10px; left:50%; margin-left:-7px; z-index:3; pointer-events:none; color:var(--text);
+  position:absolute; top:-12px; left:50%; margin-left:-7px; z-index:3; pointer-events:none; color:var(--text);
   filter:drop-shadow(0 0 5px color-mix(in srgb, var(--text) 45%, transparent));
   animation:wk-crown 2.6s ease-in-out infinite alternate;
 }
 @keyframes wk-crown{ from{ transform:translateY(0) rotate(-4deg); } to{ transform:translateY(-2px) rotate(4deg); } }
-.wk-rh-col.is-best .wk-rh-liquid{ border-color:color-mix(in srgb, var(--text) 55%, transparent); }
-.wk-rh-val{ letter-spacing:-.02em; }
 
 /* ── نقشه‌ی حرارتی: موج مورب + ردیف/ستون هاور ─────────────── */
 .wk-heat.is-done button.wk-heat-cell{ transition-delay:0ms; }
@@ -897,24 +868,23 @@ body[data-theme="light"] .wk-rh-liquid .wk-liquid-fill::before{ background:linea
 
 /* ── کاهش حرکت / دستگاه ضعیف ──────────────────────────────── */
 @media (prefers-reduced-motion:reduce){
-  .wk-liquid-fill, .wk-rh-prev, .wk-band-range, .wk-band-pin, .wk-heat button.wk-heat-cell, .wk-goal-bar i, .wk-domain-chev,
+  .wk-line-fill, .wk-band-range, .wk-band-pin, .wk-heat button.wk-heat-cell, .wk-goal-bar i, .wk-dv-chev,
   .wk-tooltip, .wk-content{ transition:none !important; }
-  .wk-insight, .wk-ach-item, .wk-banner-ic, .wk-pulse::after{ animation:none !important; }
+  .wk-insight, .wk-ach-item, .wk-banner-ic{ animation:none !important; }
   .wk-title-row, .wk-nav, .wk-hero-dial::before, .wk-dial-pulse, .wk-rh-crown{ animation:none !important; }
   .wk-seal::after{ animation:none !important; display:none; }
-  .wk-sh-rule, .wk-spot-shine::after, .wk-domain::after, .wk-tile, .wk-spot, .wk-domain, .wk-dial-seg,
+  .wk-sh-rule, .wk-spot-shine::after, .wk-tile, .wk-spot, .wk-dial-seg,
   .wk-page button.wk-rh-col{ transition:none !important; }
   .wk-sh-rule{ transform:none; }
-  .wk-skel::after, .wk-sk-ring::after, .wk-sk-lines i::after, .wk-sk-domain::after, .wk-sk-block::after{ animation:none; }
+  .wk-skel::after, .wk-sk-ring::after, .wk-sk-lines i::after, .wk-sk-block::after{ animation:none; }
   .wk-heat button.wk-heat-cell{ opacity:1; transform:none; }
   .wk-band-range, .wk-band-pin{ transform:none; }
 }
-html[data-perf="low"] .wk-pulse::after,
 html[data-perf="low"] .wk-banner-ic,
 html[data-perf="low"] .wk-skel::after, html[data-perf="low"] .wk-sk-ring::after, html[data-perf="low"] .wk-sk-lines i::after,
-html[data-perf="low"] .wk-sk-domain::after, html[data-perf="low"] .wk-sk-block::after{ animation:none; }
+html[data-perf="low"] .wk-sk-block::after{ animation:none; }
 html[data-perf="low"] .wk-insight, html[data-perf="low"] .wk-ach-item{ animation:none; }
-html[data-perf="low"] .wk-liquid-fill, html[data-perf="low"] .wk-rh-prev{ transition-duration:.01ms; }
+html[data-perf="low"] .wk-line-fill{ transition-duration:.01ms; }
 html[data-perf="low"] .wk-heat button.wk-heat-cell{ transition:none; opacity:1; transform:none; }
 html[data-perf="low"] .wk-heat button.wk-heat-cell.is-future{ opacity:.35; }
 html[data-perf="low"] .wk-title-row, html[data-perf="low"] .wk-nav, html[data-perf="low"] .wk-hero-dial::before,
@@ -922,3 +892,6 @@ html[data-perf="low"] .wk-dial-pulse, html[data-perf="low"] .wk-rh-crown{ animat
 html[data-perf="low"] .wk-seal::after, html[data-perf="low"] .wk-spot-shine{ display:none; }
 html[data-perf="low"] .wk-dial-seg{ filter:none; }
 html[data-perf="low"] .wk-sh-rule{ transition-duration:.01ms; }
+
+/* ستون‌های ریز فهرست بخش‌ها: روز آینده کم‌نورتر تا شلوغ نشه */
+.wk-dv-col .wm-col.is-future{ opacity:.55; }

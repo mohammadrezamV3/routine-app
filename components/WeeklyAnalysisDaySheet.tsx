@@ -9,7 +9,7 @@ import { ANALYSIS_DOMAIN_LABELS, type AnalysisDomain, type DomainResult, type We
 import { LockBodyScroll } from "./LockBodyScroll";
 import { GradientRing, RING_GREEN } from "./GradientRing";
 import {
-  DOMAIN_HREFS, DOMAIN_ICONS, DeltaChip, Liquid, WK_EASE, formatDayDetail, jalaliShort, scoreGrad, useMounted,
+  DOMAIN_HREFS, DOMAIN_ICONS, DeltaChip, LineMeter, WK_EASE, formatDayDetail, jalaliShort, useMounted,
 } from "./WeeklyAnalysisKit";
 
 function useIsNarrow(): boolean {
@@ -75,7 +75,7 @@ function DayBody({ analysis, index }: { analysis: WeeklyAnalysis; index: number 
                     <span className="wk-sheet-dname">{ANALYSIS_DOMAIN_LABELS[d.domain]}</span>
                     <span className="wk-sheet-dscore wk-num">{v === null ? "—" : Math.round(v)}</span>
                   </span>
-                  <Liquid pct={v} grad={scoreGrad(v)} ready={ready} delay={60 * i} className="is-h wk-sheet-bar" />
+                  <LineMeter pct={v} ready={ready} delay={60 * i} className="wk-sheet-bar" />
                   {text && <span className="wk-sheet-text wk-num">{text}</span>}
                 </span>
               </motion.li>
