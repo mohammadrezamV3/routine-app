@@ -1,6 +1,5 @@
 "use client";
 
-import { useEffect, useMemo, useRef } from "react";
 import { motion } from "framer-motion";
 import {
   Activity, Anchor, CalendarCheck, Crown, Feather, Rocket, Scale, Sparkles, Sprout, TrendingDown, TrendingUp, Undo2, Waves, Zap,
@@ -9,12 +8,15 @@ import {
 import type { DayCell, WeekArchetypeKey, WeeklyAnalysis } from "@/lib/weeklyAnalysis/types";
 import { GradientRing, RING_GREEN } from "./GradientRing";
 import {
-  CONFIDENCE_LABELS, DeltaChip, Num, V_WK_CARD, gradeOfScore, scoreGrad, useCalmMotion, useMounted, weekdayLetter, WK_EASE,
+  CONFIDENCE_LABELS, DeltaChip, Num, V_WK_CARD, gradeOfScore, scoreGrad, useMounted, weekdayLetter, WK_EASE,
 } from "./WeeklyAnalysisKit";
+import "./wa-shell.css";
 
 const RING = 184;
 const STROKE = 15;
-const DIAL = 268; // قطر کل صفحه‌ی هفته (حلقه‌ی امتیاز + قوس‌های روزها + حرف روزها)
+const RING_OPEN = 212;
+const STROKE_OPEN = 17;
+const DAY_RING = 46;
 const RING_COMPACT = 112; // پیش‌نمایش لندینگ
 const STROKE_COMPACT = 10;
 
@@ -46,19 +48,6 @@ const TONE_COLORS: Record<"good" | "bad" | "neutral", string> = {
   neutral: "var(--text)",
 };
 
-// فقط بار اول (اولین نمایش صفحه) قوس‌ها با تاخیر مراسم ورود می‌کشن؛ بعدش
-// با عوض‌کردن هفته تقریبا فوری دوباره کشیده می‌شن. فقط سمت کلاینت ست می‌شه.
-let introPlayed = false;
-
-function MiniStat({ icon, label, children }: { icon: React.ReactNode; label: string; children: React.ReactNode }) {
-  return (
-    <div className="wk-mini-stat">
-      <div className="wk-mini-label">{icon}{label}</div>
-      <div className="wk-mini-value">{children}</div>
-    </div>
-  );
-}
-
 // نوار پیش‌بینی: بازه‌ی low تا high روی خط 0 تا 100 با نشانگر امتیاز پیش‌بینی
 // و نشانگر امتیاز فعلی. محور عددی همیشه چپ‌به‌راست (0 چپ).
 function PredictionBand({ projected, low, high, now }: { projected: number; low: number; high: number; now: number | null }) {
@@ -76,82 +65,6 @@ function PredictionBand({ projected, low, high, now }: { projected: number; low:
       </div>
       <div className="wk-band-scale"><span>0</span><span>50</span><span>100</span></div>
     </div>
-  );
-}
-
-// ---- صفحه‌ی هفته ----
-// حلقه‌ی نازک بیرونی با هفت قوس (شنبه از بالا، ساعت‌گرد، هم‌جهت پر شدن حلقه‌ی
-// امتیاز). شدت رنگ هر قوس = امتیاز همون روز؛ روز آینده خط‌چین، روز بدون داده
-// خط‌چین کم‌رنگ و امروز یک نوک ضربان‌دار داره. قوس‌ها یکی‌یکی کشیده می‌شن.
-const C = DIAL / 2;
-const R_SEG = 112;
-const R_LETTER = 126;
-const STEP = (Math.PI * 2) / 7;
-const GAP = 0.17;
-const pt = (r: number, a: number) => ({ x: C + r * Math.sin(a), y: C - r * Math.cos(a) });
-const SEGMENTS = Array.from({ length: 7 }, (_, i) => {
-  const a0 = i * STEP + GAP / 2;
-  const a1 = (i + 1) * STEP - GAP / 2;
-  const p0 = pt(R_SEG, a0);
-  const p1 = pt(R_SEG, a1);
-  return {
-    d: `M${p0.x.toFixed(2)} ${p0.y.toFixed(2)} A${R_SEG} ${R_SEG} 0 0 1 ${p1.x.toFixed(2)} ${p1.y.toFixed(2)}`,
-    mid: pt(R_SEG, (a0 + a1) / 2),
-    letter: pt(R_LETTER, (a0 + a1) / 2),
-  };
-});
-
-function WeekDial({ days }: { days: DayCell[] }) {
-  const calm = useCalmMotion();
-  const base = useRef(introPlayed ? 0.05 : 0.6).current;
-  return (
-    <svg className="wk-dial" viewBox={`0 0 ${DIAL} ${DIAL}`} width={DIAL} height={DIAL} aria-hidden="true">
-      {days.slice(0, 7).map((d, i) => {
-        const seg = SEGMENTS[i];
-        const has = !d.isFuture && d.score !== null;
-        const color = has ? scoreGrad(d.score)[0] : "var(--muted2)";
-        return (
-          <g key={d.date} className={`wk-dial-day${d.isToday ? " is-today" : ""}`}>
-            <title>{`${d.weekday}: ${d.isFuture ? "هنوز نرسیده" : d.score === null ? "بدون داده" : Math.round(d.score)}`}</title>
-            <path d={seg.d} className="wk-dial-track" fill="none" strokeWidth={8} strokeLinecap="round" />
-            {has ? (
-              <motion.path
-                d={seg.d}
-                className="wk-dial-seg"
-                fill="none"
-                strokeWidth={8}
-                strokeLinecap="round"
-                style={{ stroke: color, color }}
-                initial={calm ? false : { pathLength: 0, opacity: 0 }}
-                animate={{ pathLength: 1, opacity: 1 }}
-                transition={{ pathLength: { duration: 0.55, delay: base + i * 0.09, ease: WK_EASE }, opacity: { duration: 0.12, delay: base + i * 0.09 } }}
-              />
-            ) : (
-              <motion.path
-                d={seg.d}
-                className={`wk-dial-dash${d.isFuture ? " is-future" : ""}`}
-                fill="none"
-                strokeWidth={4}
-                strokeLinecap="round"
-                strokeDasharray="0.1 8"
-                initial={calm ? false : { opacity: 0 }}
-                animate={{ opacity: 1 }}
-                transition={{ duration: 0.4, delay: base + i * 0.09 }}
-              />
-            )}
-            <text x={seg.letter.x} y={seg.letter.y} className="wk-dial-letter" textAnchor="middle" dominantBaseline="central">
-              {weekdayLetter(d.weekday)}
-            </text>
-            {d.isToday && !d.isFuture && (
-              <g className="wk-dial-tip" transform={`translate(${seg.mid.x.toFixed(2)} ${seg.mid.y.toFixed(2)})`}>
-                <circle r="4.5" className="wk-dial-pulse" fill="none" strokeWidth="1.6" />
-                <circle r="3" className="wk-dial-dot" />
-              </g>
-            )}
-          </g>
-        );
-      })}
-    </svg>
   );
 }
 
@@ -188,100 +101,164 @@ function ArchetypeCard({ arche }: { arche: NonNullable<WeeklyAnalysis["archetype
   );
 }
 
-// کارت اصلی بالای صفحه: صفحه‌ی هفته (حلقه‌ی امتیاز کل + هفت قوس روزها) روی
-// هاله‌ی تک‌رنگ (شدتش با نمره)، تیتر قطعی، کارت تیپ هفته، چهار آمار کوچک و پیش‌بینی
-// پایان هفته. حلقه همیشه سرجاشه و امتیاز تازه رو از مقدار قبلی می‌کشه.
-export function WeeklyAnalysisHero({ analysis, compact = false }: { analysis: WeeklyAnalysis; compact?: boolean }) {
-  const o = analysis.overall;
-  const arche = analysis.archetype;
-  const daysBase = analysis.isCurrentWeek ? analysis.daysElapsed : 7;
-  const pct = o.score === null ? 0 : Math.min(100, Math.max(0, o.score)) / 100;
-  const pred = analysis.isCurrentWeek ? analysis.prediction : null;
-  const headline = analysis.headline || fallbackHeadline(analysis);
-  const ring = compact ? RING_COMPACT : RING;
-  const stroke = compact ? STROKE_COMPACT : STROKE;
-  const showDial = !compact && Array.isArray(analysis.days) && analysis.days.length >= 7;
-  const dialKey = useMemo(() => analysis.weekStart ?? "w", [analysis.weekStart]);
-
-  useEffect(() => {
-    if (compact) return;
-    const t = setTimeout(() => { introPlayed = true; }, 2000);
-    return () => clearTimeout(t);
-  }, [compact]);
-
-  const box = showDial ? DIAL : ring;
+// ردیف هفت حلقه‌ی کوچک روزها: امتیاز هر روز، امروز با خط زیرین، روز آینده کم‌رنگ
+function DayRings({ days, onPickDay }: { days: DayCell[]; onPickDay?: (i: number) => void }) {
   return (
-    <motion.section
-      className={`wk-card wk-hero${compact ? " is-compact" : ""}`}
-      data-grade={o.grade ?? gradeOfScore(o.score) ?? undefined}
-      variants={V_WK_CARD}
-      aria-label="خلاصه‌ی هفته"
-    >
-      <div className="wk-hero-main">
-        <div className={`wk-hero-dial${showDial ? " has-dial" : ""}`} style={{ width: box, height: box }}>
-          {showDial && <WeekDial key={dialKey} days={analysis.days} />}
-          <div className="wk-hero-ring" style={{ width: ring, height: ring }}>
-            <GradientRing value={pct} size={ring} stroke={stroke} grad={RING_GREEN} delay={0.3}>
-              <div className="wk-hero-center">
-                <span className="wk-hero-score"><Num value={o.score === null ? null : Math.round(o.score)} duration={1.2} delay={0.3} empty="—" /></span>
-                <span className="wk-hero-of">{o.score === null ? "بدون داده" : "از 100"}</span>
-              </div>
+    <div className="wa-days" role="group" aria-label="امتیاز روزهای هفته" data-noswipe>
+      {days.slice(0, 7).map((d, i) => {
+        const has = !d.isFuture && d.score !== null;
+        const pickable = !!onPickDay && !d.isFuture;
+        const inner = (
+          <>
+            <GradientRing value={has ? (d.score as number) / 100 : 0} size={DAY_RING} stroke={4.5} grad={scoreGrad(d.score)} delay={0.5 + i * 0.07}>
+              <span className="wa-day-score">{has ? Math.round(d.score as number) : ""}</span>
             </GradientRing>
-          </div>
-        </div>
+            <span className="wa-day-name">{weekdayLetter(d.weekday)}</span>
+          </>
+        );
+        const cls = `wa-day${d.isToday ? " is-today" : ""}${d.isFuture ? " is-future" : ""}${has ? "" : " is-empty"}`;
+        return pickable ? (
+          <button
+            key={d.date}
+            type="button"
+            className={`wk-ghost ${cls}`}
+            onClick={() => onPickDay?.(i)}
+            aria-label={`${d.weekday}: ${has ? Math.round(d.score as number) : "بدون داده"}`}
+          >{inner}</button>
+        ) : (
+          <span key={d.date} className={cls} title={`${d.weekday}: ${d.isFuture ? "هنوز نرسیده" : "بدون داده"}`}>{inner}</span>
+        );
+      })}
+    </div>
+  );
+}
 
-        <div className="wk-hero-body">
-          <div className="wk-hero-eyebrow">
-            <span>امتیاز کل هفته</span>
-            {o.grade && <GradeSeal grade={o.grade} compact={compact} />}
-            {compact && arche && <span className="wk-chip">{arche.title}</span>}
-          </div>
-          <h2 className="wk-hero-headline">{headline}</h2>
-          {!compact && arche && <ArchetypeCard arche={arche} />}
-          {compact && arche?.description && <p className="wk-hero-desc">{arche.description}</p>}
-
-          <div className="wk-hero-delta">
-            <DeltaChip delta={o.delta} size="lg" />
-            <span className="wk-muted">
-              {o.prevScore === null ? (analysis.isCurrentWeek && analysis.daysElapsed < 3 ? "مقایسه با هفته‌ی قبل از روز سوم" : "هفته‌ی قبل داده نداشت") : <>نسبت به هفته‌ی قبل (<span className="wk-num">{Math.round(o.prevScore)}</span>)</>}
-            </span>
-          </div>
-        </div>
+function HeroFacts({ analysis }: { analysis: WeeklyAnalysis }) {
+  const o = analysis.overall;
+  const daysBase = analysis.isCurrentWeek ? analysis.daysElapsed : 7;
+  return (
+    <dl className="wa-facts">
+      <div className="wa-fact">
+        <dt><CalendarCheck size={13} />روزهای فعال</dt>
+        <dd><span className="wk-num">{o.activeDays}/{daysBase}</span></dd>
       </div>
-
-      <div className="wk-mini-grid">
-        <MiniStat icon={<CalendarCheck size={13} />} label="روزهای فعال">
-          <span className="wk-num">{o.activeDays}/{daysBase}</span>
-        </MiniStat>
-        <MiniStat icon={<Waves size={13} />} label="ثبات">
+      <div className="wa-fact">
+        <dt><Waves size={13} />ثبات</dt>
+        <dd>
           {o.consistency === null ? "—" : <><Num value={Math.round(o.consistency)} />%</>}
           <small className="wk-muted-sm"> · اطمینان {CONFIDENCE_LABELS[o.confidence]}</small>
-        </MiniStat>
-        <MiniStat icon={<TrendingUp size={13} style={{ color: "var(--ring-1a)" }} />} label="بهترین روز">
-          {o.bestDay && o.bestDay.score !== null ? (
-            <>{o.bestDay.weekday} <span className="wk-num">{Math.round(o.bestDay.score)}</span></>
-          ) : "—"}
-        </MiniStat>
-        <MiniStat icon={<TrendingDown size={13} />} label="ضعیف‌ترین روز">
-          {o.worstDay && o.worstDay.score !== null ? (
-            <>{o.worstDay.weekday} <span className="wk-num">{Math.round(o.worstDay.score)}</span></>
-          ) : "—"}
-        </MiniStat>
+        </dd>
+      </div>
+      <div className="wa-fact">
+        <dt><TrendingUp size={13} style={{ color: "var(--ring-1a)" }} />بهترین روز</dt>
+        <dd>{o.bestDay && o.bestDay.score !== null ? <>{o.bestDay.weekday} <span className="wk-num">{Math.round(o.bestDay.score)}</span></> : "—"}</dd>
+      </div>
+      <div className="wa-fact">
+        <dt><TrendingDown size={13} />ضعیف‌ترین روز</dt>
+        <dd>{o.worstDay && o.worstDay.score !== null ? <>{o.worstDay.weekday} <span className="wk-num">{Math.round(o.worstDay.score)}</span></> : "—"}</dd>
+      </div>
+    </dl>
+  );
+}
+
+function Prediction({ analysis }: { analysis: WeeklyAnalysis }) {
+  const pred = analysis.isCurrentWeek ? analysis.prediction : null;
+  if (!pred) return null;
+  return (
+    <div className="wk-prediction wa-pred">
+      <div className="wk-prediction-text">
+        <span className="wk-prediction-title"><Sparkles size={14} />پیش‌بینی پایان هفته</span>
+        <span className="wk-prediction-main">
+          حدود <b className="wk-num">{Math.round(pred.projectedScore)}</b>
+          <span className="wk-muted"> (بین <span className="wk-num">{Math.round(pred.low)}</span> تا <span className="wk-num">{Math.round(pred.high)}</span>)</span>
+        </span>
+        {pred.message && <span className="wk-muted-sm">{pred.message}</span>}
+      </div>
+      <PredictionBand projected={pred.projectedScore} low={pred.low} high={pred.high} now={analysis.overall.score} />
+    </div>
+  );
+}
+
+function deltaText(analysis: WeeklyAnalysis) {
+  const o = analysis.overall;
+  if (o.prevScore === null) return analysis.isCurrentWeek && analysis.daysElapsed < 3 ? "مقایسه با هفته‌ی قبل از روز سوم" : "هفته‌ی قبل داده نداشت";
+  return <>نسبت به هفته‌ی قبل (<span className="wk-num">{Math.round(o.prevScore)}</span>)</>;
+}
+
+// پیش‌نمایش فشرده‌ی لندینگ (compact) همون کارت قبلیه؛ نسخه‌ی کامل بدون قاب
+// و دو ناحیه‌ایه: حلقه‌ی بزرگ امتیاز در یک سمت، تیتر/تیپ/روزها در سمت دیگه.
+export function WeeklyAnalysisHero({
+  analysis, compact = false, onPickDay,
+}: { analysis: WeeklyAnalysis; compact?: boolean; onPickDay?: (i: number) => void }) {
+  const o = analysis.overall;
+  const arche = analysis.archetype;
+  const pct = o.score === null ? 0 : Math.min(100, Math.max(0, o.score)) / 100;
+  const headline = analysis.headline || fallbackHeadline(analysis);
+  const grade = o.grade ?? gradeOfScore(o.score) ?? undefined;
+
+  if (compact) {
+    return (
+      <motion.section className="wk-card wk-hero is-compact" data-grade={grade} variants={V_WK_CARD} aria-label="خلاصه‌ی هفته">
+        <div className="wk-hero-main">
+          <div className="wk-hero-dial" style={{ width: RING_COMPACT, height: RING_COMPACT }}>
+            <div className="wk-hero-ring" style={{ width: RING_COMPACT, height: RING_COMPACT }}>
+              <GradientRing value={pct} size={RING_COMPACT} stroke={STROKE_COMPACT} grad={RING_GREEN} delay={0.3}>
+                <div className="wk-hero-center">
+                  <span className="wk-hero-score"><Num value={o.score === null ? null : Math.round(o.score)} duration={1.2} delay={0.3} empty="—" /></span>
+                  <span className="wk-hero-of">{o.score === null ? "بدون داده" : "از 100"}</span>
+                </div>
+              </GradientRing>
+            </div>
+          </div>
+          <div className="wk-hero-body">
+            <div className="wk-hero-eyebrow">
+              <span>امتیاز کل هفته</span>
+              {o.grade && <GradeSeal grade={o.grade} compact />}
+              {arche && <span className="wk-chip">{arche.title}</span>}
+            </div>
+            <h2 className="wk-hero-headline">{headline}</h2>
+            {arche?.description && <p className="wk-hero-desc">{arche.description}</p>}
+            <div className="wk-hero-delta">
+              <DeltaChip delta={o.delta} size="lg" />
+              <span className="wk-muted">{deltaText(analysis)}</span>
+            </div>
+          </div>
+        </div>
+        <Prediction analysis={analysis} />
+      </motion.section>
+    );
+  }
+
+  const hasDays = Array.isArray(analysis.days) && analysis.days.length >= 7;
+  return (
+    <motion.section className="wa-hero" data-grade={grade} variants={V_WK_CARD} aria-label="خلاصه‌ی هفته">
+      <div className="wa-hero-visual">
+        <div className="wa-ring-wrap">
+          <GradientRing value={pct} size={RING_OPEN} stroke={STROKE_OPEN} grad={RING_GREEN} delay={0.3}>
+            <div className="wk-hero-center">
+              <span className="wk-hero-score wa-score"><Num value={o.score === null ? null : Math.round(o.score)} duration={1.3} delay={0.3} empty="—" /></span>
+              <span className="wk-hero-of">{o.score === null ? "بدون داده" : "از 100"}</span>
+            </div>
+          </GradientRing>
+          {o.grade && <span className="wa-grade"><GradeSeal grade={o.grade} compact={false} /></span>}
+        </div>
       </div>
 
-      {pred && (
-        <div className="wk-prediction">
-          <div className="wk-prediction-text">
-            <span className="wk-prediction-title"><Sparkles size={14} />پیش‌بینی پایان هفته</span>
-            <span className="wk-prediction-main">
-              حدود <b className="wk-num">{Math.round(pred.projectedScore)}</b>
-              <span className="wk-muted"> (بین <span className="wk-num">{Math.round(pred.low)}</span> تا <span className="wk-num">{Math.round(pred.high)}</span>)</span>
-            </span>
-            {pred.message && <span className="wk-muted-sm">{pred.message}</span>}
-          </div>
-          <PredictionBand projected={pred.projectedScore} low={pred.low} high={pred.high} now={o.score} />
+      <div className="wa-hero-text">
+        <div className="wk-hero-eyebrow wa-eyebrow"><span>امتیاز کل هفته</span></div>
+        <h2 className="wa-headline">{headline}</h2>
+        {arche && <ArchetypeCard arche={arche} />}
+        <div className="wk-hero-delta">
+          <DeltaChip delta={o.delta} size="lg" />
+          <span className="wk-muted">{deltaText(analysis)}</span>
         </div>
-      )}
+        {hasDays && <DayRings days={analysis.days} onPickDay={onPickDay} />}
+      </div>
+
+      <div className="wa-hero-foot">
+        <HeroFacts analysis={analysis} />
+        <Prediction analysis={analysis} />
+      </div>
     </motion.section>
   );
 }
