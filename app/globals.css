@@ -7458,7 +7458,7 @@ body:not([data-theme="light"]) button.trade-pair-suggest-item{ box-shadow:none; 
        کوچیک‌تر» این‌جا برعکس شده، بدون این‌که چارت آن‌قدر کوچک شود که
        غیرقابل‌استفاده باشد. */
     grid-template-columns:minmax(0,1fr) minmax(0,1fr) 380px;
-    grid-template-rows:minmax(0,.95fr) minmax(0,.95fr) minmax(0,.85fr);
+    grid-template-rows:minmax(0,.95fr) minmax(0,.95fr) minmax(236px,.85fr);
     /* باگ: «ثبت معامله» (فقط انتخاب حساب+دکمه) دو ردیف می‌گرفت و بیشترش
        خالی می‌ماند، درحالی‌که «چک‌لیست» (لیست بلند آیتم‌ها) فقط یک ردیف
        کوچیک داشت. جاشون عوض شد: چک‌لیست حالا هم‌قد چارت (دو ردیف)، ثبت

@@ -18,7 +18,7 @@ export const FEATURE_KEYS = [
   // بدنسازی
   "exercise", "calorie",
   // ترید
-  "trade", "tradeJournal", "tradeChecklists", "economicCalendar", "forexClock", "tradeNotes", "metatrader", "tradeChart", "tradeChat", "tradeShare",
+  "trade", "tradeJournal", "tradeChecklists", "economicCalendar", "forexClock", "tradeNotes", "metatrader", "tradeChart", "tradeChat", "tradeShare", "tradeRisk",
   // اجتماعی
   "mentors", "friends",
   // هوش مصنوعی
@@ -66,6 +66,7 @@ export const FEATURE_META: Record<FeatureKey, FeatureMeta> = {
   metatrader: { label: "اتصال متاتریدر", hint: "/trade/metatrader و همگام‌سازی اکسپرت", default: "on", group: "trade", parent: "trade" },
   tradeChart: { label: "چارت نمادها", hint: "/trade/chart و قیمت لحظه‌ای", default: "on", group: "trade", parent: "trade" },
   tradeChat: { label: "چت نمادها", hint: "گفتگوی کاربران زیر چارت هر نماد", default: "on", group: "trade", parent: "tradeChart" },
+  tradeRisk: { label: "ریسک و سود", hint: "/trade/risk و ابزار ریسک داخل چارت", default: "on", group: "trade", parent: "trade" },
   tradeShare: { label: "اشتراک کارنامه‌ی ترید", hint: "دکمه‌ی اشتراک در /trade و صفحه‌ی حساب", default: "on", group: "trade", parent: "trade" },
 
   mentors: { label: "مربی‌ها", hint: "اتصال مربی ↔ شاگرد، برنامه‌ها، چت و نظرات (/mentors)", default: "on", group: "social" },
