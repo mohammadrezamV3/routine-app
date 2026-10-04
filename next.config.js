@@ -147,7 +147,12 @@ const nextConfig = {
   // bufferutil/utf-8-validate رو خراب می‌کنه، و pg هم require‌های پویا داره.
   // file-tracing خروجی standalone خودش node_modules/ws و pg رو کنار
   // server.js کپی می‌کنه (بعد از build: ls .next/standalone/node_modules/{ws,pg}).
-  experimental: { instrumentationHook: true, serverComponentsExternalPackages: ["ws", "pg"] },
+  experimental: {
+    instrumentationHook: true,
+    serverComponentsExternalPackages: ["ws", "pg"],
+    // فایل‌های اکسپرت مدیریت سرمایه با fs خونده می‌شن (نه import)، پس باید صریح توی خروجی standalone بیان
+    outputFileTracingIncludes: { "/api/trade/money/ea": ["./ea-src/**"] },
+  },
   output: "standalone", // برای ایمیج داکر سبک — فقط فایل‌های لازم اجرا رو کپی می‌کنه، نه کل node_modules
   poweredByHeader: false, // هدر X-Powered-By: Next.js رو حذف می‌کنه تا استک فنی رو لو نده
   async headers() {
