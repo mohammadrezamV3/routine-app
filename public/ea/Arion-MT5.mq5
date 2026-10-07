@@ -18,10 +18,10 @@
 //
 #property copyright "Arion"
 #property link      "https://arionapp.ir"
-#property version   "1.42"
+#property version   "1.43"
 #property strict
 
-#define EA_VERSION "1.42"
+#define EA_VERSION "1.43"
 
 input string ArionUrl    = "https://arionapp.ir"; // آدرس سایت Arion
 input string PairingCode = "";                     // کد اتصال (فقط بار اول)
@@ -679,21 +679,86 @@ bool HasShotJob(string key)
    return(false);
   }
 
-void ShotObjects(long ch, datetime t1, double p1, datetime t2, double p2, bool buy, double sl, double tp, bool closed)
+// ظاهر چارت اسکرین = ظاهر چارت خود تریدر (1.43): چارت تازه همیشه با تم پیش‌فرض
+// متاتریدر باز می‌شه، پس رنگ و ظاهر رو از یک چارت واقعی کپی می‌کنیم.
+// عمدا با تمپلیت چارت نه (ذخیره/اعمال تمپلیت): تمپلیت خود اکسپرت و اندیکاتورها
+// رو هم می‌بره و یک کپی دیگه‌ی اکسپرت روی چارت موقت می‌نشونه.
+// منبع: چارت خود اکسپرت اگه همون نماد باشه، وگرنه اولین چارت باز همون نماد،
+// وگرنه چارت اکسپرت (رنگ‌ها به نماد وابسته نیستن).
+long ShotSourceChart(string symbol)
   {
-   color c = buy ? clrDodgerBlue : clrTomato;
+   long me = ChartID();
+   if(ChartSymbol(me) == symbol) return(me);
+   long c = ChartFirst();
+   for(int n = 0; n < 200 && c >= 0; n++)
+     {
+      if(ChartSymbol(c) == symbol) return(c);
+      c = ChartNext(c);
+     }
+   return(me);
+  }
+
+#define SHOT_COPY(p) ChartSetInteger(dst, p, ChartGetInteger(src, p))
+
+// فقط ویژگی‌های ظاهری (رنگ‌ها و نمایش‌ها)؛ مقیاس قیمت (SCALEFIX/FIXED_*) و
+// موقعیت افقی عمدا کپی نمی‌شن تا معامله توی کادر بیاد.
+void CopyChartLook(long src, long dst)
+  {
+   if(ChartSymbol(src) == "") return; // چارت منبع بسته شده؛ همون پیش‌فرض می‌مونه
+   SHOT_COPY(CHART_COLOR_BACKGROUND);
+   SHOT_COPY(CHART_COLOR_FOREGROUND);
+   SHOT_COPY(CHART_COLOR_GRID);
+   SHOT_COPY(CHART_COLOR_VOLUME);
+   SHOT_COPY(CHART_COLOR_CHART_UP);
+   SHOT_COPY(CHART_COLOR_CHART_DOWN);
+   SHOT_COPY(CHART_COLOR_CHART_LINE);
+   SHOT_COPY(CHART_COLOR_CANDLE_BULL);
+   SHOT_COPY(CHART_COLOR_CANDLE_BEAR);
+   SHOT_COPY(CHART_COLOR_BID);
+   SHOT_COPY(CHART_COLOR_ASK);
+   SHOT_COPY(CHART_COLOR_LAST);
+   SHOT_COPY(CHART_COLOR_STOP_LEVEL);
+   SHOT_COPY(CHART_MODE);
+   SHOT_COPY(CHART_FOREGROUND);
+   SHOT_COPY(CHART_SCALE);
+   SHOT_COPY(CHART_SHOW_OHLC);
+   SHOT_COPY(CHART_SHOW_BID_LINE);
+   SHOT_COPY(CHART_SHOW_ASK_LINE);
+   SHOT_COPY(CHART_SHOW_LAST_LINE);
+   SHOT_COPY(CHART_SHOW_PERIOD_SEP);
+   SHOT_COPY(CHART_SHOW_GRID);
+   SHOT_COPY(CHART_SHOW_VOLUMES);
+  }
+
+// روشن/تیره‌بودن پس‌زمینه‌ی چارت (رنگ متاتریدر BGR است: 0x00BBGGRR)
+bool ShotDarkBackground(long ch)
+  {
+   long bg = ChartGetInteger(ch, CHART_COLOR_BACKGROUND);
+   if(bg < 0) return(true);
+   int r = (int)(bg & 0xFF), g = (int)((bg >> 8) & 0xFF), b = (int)((bg >> 16) & 0xFF);
+   return((r * 299 + g * 587 + b * 114) / 1000 < 128);
+  }
+
+void ShotObjects(long ch, bool dark, datetime t1, double p1, datetime t2, double p2, bool buy, double sl, double tp, bool closed)
+  {
+   // رنگ نشانه‌ها بر اساس روشنی پس‌زمینه‌ی چارت کاربر (dark): روی روشن، طلایی/سبز لیمویی گم می‌شن
+   color c     = dark ? (buy ? clrDodgerBlue : clrTomato) : (buy ? clrRoyalBlue : clrCrimson);
+   color cExit = dark ? clrGold : clrDarkOrange;
+   color cSl   = dark ? clrRed : clrFireBrick;
+   color cTp   = dark ? clrLimeGreen : clrForestGreen;
    ObjectCreate(ch, "arion_in", buy ? OBJ_ARROW_BUY : OBJ_ARROW_SELL, 0, t1, p1);
+   ObjectSetInteger(ch, "arion_in", OBJPROP_COLOR, c);
    if(closed)
      {
       ObjectCreate(ch, "arion_out", OBJ_ARROW_STOP, 0, t2, p2);
-      ObjectSetInteger(ch, "arion_out", OBJPROP_COLOR, clrGold);
+      ObjectSetInteger(ch, "arion_out", OBJPROP_COLOR, cExit);
       ObjectCreate(ch, "arion_line", OBJ_TREND, 0, t1, p1, t2, p2);
       ObjectSetInteger(ch, "arion_line", OBJPROP_COLOR, c);
       ObjectSetInteger(ch, "arion_line", OBJPROP_STYLE, STYLE_DOT);
       ObjectSetInteger(ch, "arion_line", OBJPROP_RAY_RIGHT, false);
      }
-   if(sl > 0) { ObjectCreate(ch, "arion_sl", OBJ_HLINE, 0, 0, sl); ObjectSetInteger(ch, "arion_sl", OBJPROP_COLOR, clrRed); ObjectSetInteger(ch, "arion_sl", OBJPROP_STYLE, STYLE_DASH); }
-   if(tp > 0) { ObjectCreate(ch, "arion_tp", OBJ_HLINE, 0, 0, tp); ObjectSetInteger(ch, "arion_tp", OBJPROP_COLOR, clrLimeGreen); ObjectSetInteger(ch, "arion_tp", OBJPROP_STYLE, STYLE_DASH); }
+   if(sl > 0) { ObjectCreate(ch, "arion_sl", OBJ_HLINE, 0, 0, sl); ObjectSetInteger(ch, "arion_sl", OBJPROP_COLOR, cSl); ObjectSetInteger(ch, "arion_sl", OBJPROP_STYLE, STYLE_DASH); }
+   if(tp > 0) { ObjectCreate(ch, "arion_tp", OBJ_HLINE, 0, 0, tp); ObjectSetInteger(ch, "arion_tp", OBJPROP_COLOR, cTp); ObjectSetInteger(ch, "arion_tp", OBJPROP_STYLE, STYLE_DASH); }
   }
 
 //| چارت موقت → اسکرین → فایل. true یعنی فایل ساخته شد.                 |
@@ -708,19 +773,22 @@ bool TakeShot(string symbol, datetime t1, double p1, datetime t2, double p2, boo
       if(CopyRates(symbol, ShotTimeframe, 0, 300, r) > 0 && SeriesInfoInteger(symbol, ShotTimeframe, SERIES_SYNCHRONIZED)) break;
       Sleep(100);
      }
+   // منبع ظاهر باید قبل از باز کردن چارت موقت انتخاب بشه
+   long src = ShotSourceChart(symbol);
    ResetLastError();
    long ch = ChartOpen(symbol, ShotTimeframe);
    if(ch == 0) { g_shotErr = "chart_open:" + symbol + ":" + IntegerToString(GetLastError()); return(false); }
+   CopyChartLook(src, ch);
+   // این دو برای جای‌گیری نشانه‌هاست و از چارت کاربر کپی نمی‌شن
    ChartSetInteger(ch, CHART_AUTOSCROLL, false);
    ChartSetInteger(ch, CHART_SHIFT, true);
-   ChartSetInteger(ch, CHART_MODE, CHART_CANDLES);
-   ChartSetInteger(ch, CHART_SHOW_GRID, false);
-   ShotObjects(ch, t1, p1, t2, p2, buy, sl, tp, closed);
+   // پس‌زمینه از چارت منبع خونده می‌شه (ChartSetInteger روی چارت موقت ناهم‌زمانه)
+   ShotObjects(ch, ShotDarkBackground(src), t1, p1, t2, p2, buy, sl, tp, closed);
    // زمان معامله (برای بسته: خروج) نزدیک لبه‌ی راست با کمی فاصله
    int shift = iBarShift(symbol, ShotTimeframe, closed ? t2 : t1, false);
    ChartNavigate(ch, CHART_END, -(int)MathMax(0, shift - 12));
    ChartRedraw(ch);
-   Sleep(400);
+   Sleep(700); // تغییر رنگ‌ها و ظاهر هم باید قبل از اسکرین رسم بشن
    FileDelete(file);
    ResetLastError();
    bool ok = ChartScreenShot(ch, file, width, height, ALIGN_RIGHT);
