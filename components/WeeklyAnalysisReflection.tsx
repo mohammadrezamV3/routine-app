@@ -3,7 +3,7 @@
 import "./wa-cards.css";
 import { useEffect, useRef, useState } from "react";
 import { AnimatePresence, motion } from "framer-motion";
-import { Check, NotebookPen } from "lucide-react";
+import { Check, Meh, NotebookPen } from "lucide-react";
 import type { ReflectionDto } from "@/lib/weeklyAnalysis/types";
 import { SegmentedTabs } from "./SegmentedTabs";
 import { Spinner } from "./Spinner";
@@ -126,6 +126,7 @@ export function WeeklyAnalysisReflection({
         <div className="wc-mood">
           <span className="wc-mood-big" aria-hidden="true">
             <AnimatePresence mode="wait" initial={false}>
+              {!draft.mood && <Meh key="none" size={22} strokeWidth={1.6} />}
               {draft.mood && (
                 <motion.span
                   key={draft.mood}
