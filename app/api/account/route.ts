@@ -1,7 +1,6 @@
 import { accountUserSelect, toAccountUser } from "@/lib/accountPayload";
 import { NextRequest, NextResponse } from "next/server";
-import { getServerSession } from "next-auth";
-import { authOptions } from "@/lib/auth";
+import { getSessionFast } from "@/lib/serverSession";
 import { prisma } from "@/lib/prisma";
 import { clampText, isValidPersianName, parseIsoDate } from "@/lib/validate";
 import { checkRateLimit, getClientIp } from "@/lib/rateLimit";
@@ -10,7 +9,7 @@ import { withLiveSync } from "@/lib/realtime";
 const GENDER_VALUES = new Set(["male", "female"]);
 
 export async function GET() {
-  const session = await getServerSession(authOptions);
+  const session = await getSessionFast();
   const userId = (session?.user as any)?.id;
   if (!userId) return NextResponse.json({ error: "unauthorized" }, { status: 401 });
 
@@ -25,7 +24,7 @@ export async function GET() {
 // بدون اون تاییدیه، اجازه‌ی تغییر مستقیم یعنی هرکسی با یه سشن سرقتی می‌تونه
 // شماره‌ی بازیابی حساب رو عوض کنه). یوزرنیم هم روت اختصاصی خودش رو داره.
 async function handlePATCH(req: NextRequest) {
-  const session = await getServerSession(authOptions);
+  const session = await getSessionFast();
   const userId = (session?.user as any)?.id;
   if (!userId) return NextResponse.json({ error: "unauthorized" }, { status: 401 });
 

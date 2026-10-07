@@ -1,6 +1,5 @@
-import { getServerSession } from "next-auth";
 import { NextResponse } from "next/server";
-import { authOptions } from "@/lib/auth";
+import { getSessionFast } from "@/lib/serverSession";
 import { prisma } from "@/lib/prisma";
 import { getAppSetting, setAppSetting } from "@/lib/appSettings";
 import { getAdminFlags } from "@/lib/adminFlag";
@@ -70,12 +69,15 @@ export async function featureBlocked(key: FeatureKey, userId: string | undefined
 export type FeatureGuardResult = { ok: true; userId: string; isSuperAdmin: boolean } | { ok: false; response: NextResponse };
 
 export async function requireFeature(key: FeatureKey): Promise<FeatureGuardResult> {
-  const session = await getServerSession(authOptions);
+  const session = await getSessionFast();
   const userId = (session?.user as any)?.id as string | undefined;
   if (!userId) return { ok: false, response: NextResponse.json({ error: "unauthorized" }, { status: 401 }) };
-  const u = await prisma.user.findUnique({ where: { id: userId }, select: { isBlocked: true } });
+  // چک مسدودبودن و فلگ مستقل‌اند → هم‌زمان
+  const [u, blocked] = await Promise.all([
+    prisma.user.findUnique({ where: { id: userId }, select: { isBlocked: true } }),
+    featureBlocked(key, userId),
+  ]);
   if (u?.isBlocked) return { ok: false, response: NextResponse.json({ error: "حساب کاربری مسدود شده است" }, { status: 403 }) };
-  const blocked = await featureBlocked(key, userId);
   if (blocked) return { ok: false, response: blocked };
   return { ok: true, userId, isSuperAdmin: !!(session!.user as any).isSuperAdmin };
 }
@@ -87,6 +89,6 @@ export async function requireFeature(key: FeatureKey): Promise<FeatureGuardResul
  * (حالت «فقط ادمین‌ها»/«خاموش» یعنی بسته)؛ احراز هویت خود روت بعدش میاد.
  */
 export async function sessionFeatureBlocked(key: FeatureKey): Promise<NextResponse | null> {
-  const session = await getServerSession(authOptions);
+  const session = await getSessionFast();
   return featureBlocked(key, (session?.user as any)?.id as string | undefined);
 }

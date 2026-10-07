@@ -191,7 +191,7 @@ export async function buildTrade({ userId, date, tz }: Ctx): Promise<DashTrade> 
   const sumAccounts = new Set(accounts.filter((a) => a.currency === sumCurrency).map((a) => a.id));
   const top = accounts.slice(0, 4);
 
-  const [windowRows, openTrades, recentRows, topRows] = await Promise.all([
+  const [windowRows, openTrades, recentRows, topRows, money] = await Promise.all([
     prisma.tradeEntry.findMany({
       where: { userId, status: "CLOSED", accountId: { in: Array.from(sumAccounts) }, openedAt: { gte: new Date(localMidnight(start30)) } },
       select: { pnl: true, result: true, openedAt: true },
@@ -209,6 +209,8 @@ export async function buildTrade({ userId, date, tz }: Ctx): Promise<DashTrade> 
       select: { accountId: true, status: true, pnl: true, rMultiple: true, openedAt: true },
       take: 20_000,
     }),
+    // پول حساب (همون قاعده‌ی صفحه‌ی حساب‌ها: lib/tradeCashflowServer.ts) تا موجودی یکی باشه
+    loadAccountMoney(top),
   ]);
 
   const weekStart = isoAdd(date, -((jsDayOf(date) + 1) % 7));
@@ -242,8 +244,6 @@ export async function buildTrade({ userId, date, tz }: Ctx): Promise<DashTrade> 
     if (!byAcc.has(r.accountId)) byAcc.set(r.accountId, []);
     byAcc.get(r.accountId)!.push({ status: r.status, pnl: r.pnl, rMultiple: r.rMultiple, openedAt: r.openedAt.toISOString() });
   }
-  // پول حساب (همون قاعده‌ی صفحه‌ی حساب‌ها: lib/tradeCashflowServer.ts) تا موجودی یکی باشه
-  const money = await loadAccountMoney(top);
   res.accounts = top.map((a) => {
     const m = money.get(a.id)!;
     const s = computeTradeStats((byAcc.get(a.id) ?? []) as any, { ...a, initialBalance: m.initialBalance, cashFunding: m.cashFunding, cashCharges: m.cashCharges });
