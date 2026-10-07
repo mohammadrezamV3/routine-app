@@ -6,6 +6,8 @@ import { AdminPermission, sanitizePermissions } from "@/lib/adminPermissions";
 import { invalidateAdminAnalyticsCache, writeAuditLog } from "@/lib/adminAnalytics";
 import { revokeOtherDeviceSessions } from "@/lib/deviceSessions";
 import { invalidateAdminFlagCache } from "@/lib/adminFlag";
+import { notifyUser } from "@/lib/inAppNotify";
+import { MAX_NOTE_LEN, normalizeTag } from "@/lib/adminUsersView";
 
 // عملیات نوشتنی پنل ادمین روی کاربران. همه‌ی قوانین «کی روی کی» این‌جا
 // متمرکزه تا هیچ روتی یادش نره:
@@ -126,6 +128,110 @@ export async function setModuleAccess(
   });
   done();
   return prisma.moduleAccess.findMany({ where: { userId: targetId }, select: { module: true, active: true, expiresAt: true } });
+}
+
+// ---------------------------------------------------------------- پیام، برچسب، یادداشت، تمدید
+// همه از loadTarget رد می‌شن (قوانین کی روی کی) و در AuditLog ثبت می‌شن. متن
+// پیام/یادداشت هیچ‌وقت داخل AuditLog نمی‌ره.
+
+export async function sendUserMessage(ctx: AdminContext, targetId: string, input: { title: unknown; body: unknown; url?: unknown }) {
+  const target = await loadTarget(ctx, targetId);
+  if (target.deletedAt) throw new AdminActionError("این حساب حذف شده است");
+  const title = typeof input.title === "string" ? input.title.trim().slice(0, 120) : "";
+  const body = typeof input.body === "string" ? input.body.trim().slice(0, 500) : "";
+  if (!title || !body) throw new AdminActionError("عنوان و متن پیام لازمه");
+  let url: string | undefined;
+  if (typeof input.url === "string" && input.url.trim()) {
+    url = input.url.trim();
+    if (!/^\/(?!\/)[^\s]*$/.test(url)) throw new AdminActionError("لینک باید یک مسیر داخلی (/...) باشه");
+  }
+  await notifyUser(targetId, { type: "admin.message", title, body, url });
+  await writeAuditLog(ctx.userId, "user.message", "User", targetId, { titleLength: title.length });
+}
+
+export async function addUserTag(ctx: AdminContext, targetId: string, rawTag: unknown) {
+  await loadTarget(ctx, targetId);
+  const tag = normalizeTag(typeof rawTag === "string" ? rawTag : "");
+  if (!tag) throw new AdminActionError("برچسب نامعتبر است");
+  await prisma.userTag.upsert({ where: { userId_tag: { userId: targetId, tag } }, create: { userId: targetId, tag }, update: {} });
+  await writeAuditLog(ctx.userId, "user.tag_add", "User", targetId, { tag });
+  return tag;
+}
+
+export async function removeUserTag(ctx: AdminContext, targetId: string, rawTag: unknown) {
+  await loadTarget(ctx, targetId);
+  const tag = normalizeTag(typeof rawTag === "string" ? rawTag : "");
+  if (!tag) throw new AdminActionError("برچسب نامعتبر است");
+  await prisma.userTag.deleteMany({ where: { userId: targetId, tag } });
+  await writeAuditLog(ctx.userId, "user.tag_remove", "User", targetId, { tag });
+}
+
+export async function addUserNote(ctx: AdminContext, targetId: string, rawBody: unknown) {
+  await loadTarget(ctx, targetId);
+  const body = typeof rawBody === "string" ? rawBody.trim() : "";
+  if (!body) throw new AdminActionError("متن یادداشت خالیه");
+  if (body.length > MAX_NOTE_LEN) throw new AdminActionError(`یادداشت حداکثر ${MAX_NOTE_LEN} حرف`);
+  const note = await prisma.adminUserNote.create({
+    data: { userId: targetId, authorId: ctx.userId, body },
+    select: { id: true, body: true, createdAt: true, author: { select: { id: true, name: true, lastName: true, username: true } } },
+  });
+  await writeAuditLog(ctx.userId, "user.note_add", "User", targetId, { noteId: note.id });
+  return note;
+}
+
+// حذف: نویسنده‌ی یادداشت یا Owner
+export async function deleteUserNote(ctx: AdminContext, targetId: string, noteId: string) {
+  await loadTarget(ctx, targetId);
+  const note = await prisma.adminUserNote.findFirst({ where: { id: noteId, userId: targetId }, select: { id: true, authorId: true } });
+  if (!note) throw new AdminActionError("یادداشت پیدا نشد", 404);
+  if (note.authorId !== ctx.userId && !ctx.isSuperAdmin) throw new AdminActionError("فقط نویسنده یا Owner می‌تونه یادداشت رو حذف کنه", 403);
+  await prisma.adminUserNote.delete({ where: { id: note.id } });
+  await writeAuditLog(ctx.userId, "user.note_delete", "User", targetId, { noteId });
+}
+
+function cleanDays(days: unknown): number {
+  const n = Math.floor(Number(days));
+  if (!Number.isFinite(n) || n < 1 || n > 3650) throw new AdminActionError("تعداد روز باید بین 1 و 3650 باشه");
+  return n;
+}
+
+// اعطا/تمدید ماژول: از دیرترین بین «الان» و انقضای فعلی (اگه فعاله) N روز جلوتر
+export async function grantModuleDays(ctx: AdminContext, targetId: string, modules: unknown, daysRaw: unknown) {
+  await loadTarget(ctx, targetId);
+  const days = cleanDays(daysRaw);
+  const valid = Object.values(ModuleKey) as string[];
+  const list = Array.isArray(modules) ? Array.from(new Set(modules.filter((m): m is string => typeof m === "string" && valid.includes(m)))) : [];
+  if (!list.length) throw new AdminActionError("ماژولی انتخاب نشده");
+  const now = new Date();
+  const existing = await prisma.moduleAccess.findMany({ where: { userId: targetId, module: { in: list as ModuleKey[] } }, select: { module: true, active: true, expiresAt: true } });
+  const cur = new Map(existing.map((e) => [e.module as string, e]));
+  await prisma.$transaction(list.map((m) => {
+    const e = cur.get(m);
+    const from = e?.active && e.expiresAt && e.expiresAt > now ? e.expiresAt : now;
+    const expiresAt = new Date(from.getTime() + days * 86400000);
+    return prisma.moduleAccess.upsert({
+      where: { userId_module: { userId: targetId, module: m as ModuleKey } },
+      create: { userId: targetId, module: m as ModuleKey, active: true, expiresAt },
+      update: { active: true, expiresAt },
+    });
+  }));
+  await writeAuditLog(ctx.userId, "user.module_grant", "User", targetId, { modules: list, days });
+  done();
+}
+
+// تمدید دستی اشتراک: پایان دوره‌ی آخرین اشتراک فعال/آزمایشی N روز جلوتر
+export async function extendSubscriptionDays(ctx: AdminContext, targetId: string, daysRaw: unknown) {
+  await loadTarget(ctx, targetId);
+  const days = cleanDays(daysRaw);
+  const sub = await prisma.subscription.findFirst({ where: { userId: targetId, status: { in: ["ACTIVE", "TRIAL"] } }, orderBy: { createdAt: "desc" }, select: { id: true, currentPeriodEnd: true } });
+  if (!sub) throw new AdminActionError("این کاربر اشتراک فعالی نداره؛ از «اعطای ماژول» استفاده کن");
+  const now = new Date();
+  const from = sub.currentPeriodEnd > now ? sub.currentPeriodEnd : now;
+  const end = new Date(from.getTime() + days * 86400000);
+  await prisma.subscription.update({ where: { id: sub.id }, data: { currentPeriodEnd: end } });
+  await writeAuditLog(ctx.userId, "user.subscription_extend", "User", targetId, { subscriptionId: sub.id, days, newEnd: end.toISOString() });
+  done();
+  return end;
 }
 
 // ---------------------------------------------------------------- حذف
