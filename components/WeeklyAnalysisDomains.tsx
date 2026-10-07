@@ -15,10 +15,10 @@ import {
 
 // هفت میله‌ی ریز روزها. شنبه سمت راست (محور x معکوس)، میله‌ها پله‌پله از پایین
 // بالا می‌آن. روز آینده / بدون داده فقط یک خط کم‌رنگ.
-function Spark({ daily, days, big, delay }: { daily: (number | null)[]; days: DayCell[]; big: boolean; delay: number }) {
+function Spark({ daily, days, big, wide, delay }: { daily: (number | null)[]; days: DayCell[]; big: boolean; wide?: boolean; delay: number }) {
   const calm = useCalmMotion();
-  const W = big ? 140 : 84;
-  const H = big ? 44 : 28;
+  const W = big ? 220 : wide ? 160 : 84;
+  const H = big ? 64 : wide ? 36 : 28;
   const gap = big ? 8 : 5;
   const bw = (W - gap * 6) / 7;
   return (
@@ -26,21 +26,27 @@ function Spark({ daily, days, big, delay }: { daily: (number | null)[]; days: Da
       {daily.slice(0, 7).map((v, i) => {
         const day = days[i];
         const empty = v === null || !!day?.isFuture;
-        const h = empty ? 2 : Math.max(3, (H * Math.min(100, Math.max(0, v as number))) / 100);
         const x = (6 - i) * (bw + gap);
+        const h = empty ? 0 : Math.max(Math.round(H * 0.14), (H * Math.min(100, Math.max(0, v as number))) / 100);
         return (
-          <motion.rect
-            key={i}
-            x={x}
-            width={bw}
-            rx={Math.min(3, bw / 2)}
-            fill={empty ? "var(--box-line)" : "var(--ring-1a)"}
-            fillOpacity={empty ? 1 : 0.35 + 0.65 * ((v as number) / 100)}
-            initial={calm ? { y: H - h, height: h } : { y: H - 2, height: 2 }}
-            whileInView={{ y: H - h, height: h }}
-            viewport={{ once: true, margin: "0px 0px -20px 0px" }}
-            transition={{ duration: 0.6, delay: calm ? 0 : delay + i * 0.05, ease: WK_EASE }}
-          />
+          <g key={i}>
+            <rect x={x} y={0} width={bw} height={H} rx={Math.min(3, bw / 2)} fill="var(--box-line)" fillOpacity={0.55} />
+            {empty ? (
+              <circle cx={x + bw / 2} cy={H - 3} r={1.6} fill="var(--muted)" fillOpacity={0.6} />
+            ) : (
+              <motion.rect
+                x={x}
+                width={bw}
+                rx={Math.min(3, bw / 2)}
+                fill="var(--ring-1a)"
+                fillOpacity={0.55 + 0.45 * ((v as number) / 100)}
+                initial={calm ? { y: H - h, height: h } : { y: H, height: 0 }}
+                whileInView={{ y: H - h, height: h }}
+                viewport={{ once: true, margin: "0px 0px -20px 0px" }}
+                transition={{ duration: 0.6, delay: calm ? 0 : delay + i * 0.05, ease: WK_EASE }}
+              />
+            )}
+          </g>
         );
       })}
     </svg>
@@ -48,22 +54,22 @@ function Spark({ daily, days, big, delay }: { daily: (number | null)[]; days: Da
 }
 
 function DomainTile({
-  d, days, rank, big,
-}: { d: DomainResult; days: DayCell[]; rank: number; big: boolean }) {
+  d, days, rank, big, wide,
+}: { d: DomainResult; days: DayCell[]; rank: number; big: boolean; wide: boolean }) {
   const [open, setOpen] = useState(false);
   const panelId = useId();
   const Icon = DOMAIN_ICONS[d.domain];
   const label = ANALYSIS_DOMAIN_LABELS[d.domain];
   const score = Math.round(d.score as number);
   const bw = useMemo(() => bestWorstDay(d.daily, days), [d.daily, days]);
-  const ringSize = big ? 112 : 68;
+  const ringSize = big ? 140 : wide ? 96 : 68;
   const delay = 0.05 * rank;
 
   return (
     <motion.article
       layout
       transition={{ duration: 0.4, ease: WK_EASE }}
-      className={`wk-card wkv-tile${big ? " is-big" : ""}${open ? " is-open" : ""}`}
+      className={`wk-card wkv-tile${big ? " is-big" : ""}${wide ? " is-wide" : ""}${open ? " is-open" : ""}`}
     >
       <button
         type="button"
@@ -78,15 +84,15 @@ function DomainTile({
           <ChevronDown size={15} className={`wk-dv-chev${open ? " is-open" : ""}`} aria-hidden="true" />
         </span>
         <span className="wkv-tile-mid">
-          <GradientRing value={score / 100} size={ringSize} stroke={big ? 9 : 6} grad={d.score === null ? domainGrad(d.domain) : scoreGrad(d.score)} delay={delay}>
-            <span className={`wkv-ring-num${big ? " is-big" : ""}`}><Num value={score} duration={0.9} delay={delay} /></span>
+          <GradientRing value={score / 100} size={ringSize} stroke={big ? 11 : wide ? 8 : 6} grad={d.score === null ? domainGrad(d.domain) : scoreGrad(d.score)} delay={delay}>
+            <span className={`wkv-ring-num${big ? " is-big" : wide ? " is-wide" : ""}`}><Num value={score} duration={0.9} delay={delay} /></span>
           </GradientRing>
           <span className="wkv-tile-side">
-            <DeltaChip delta={d.delta} size={big ? "md" : "sm"} />
-            {big && <span className="wk-muted-sm">نسبت به هفته‌ی قبل</span>}
+            <DeltaChip delta={d.delta} size={big || wide ? "md" : "sm"} />
+            {(big || wide) && <span className="wk-muted-sm">نسبت به هفته‌ی قبل</span>}
           </span>
         </span>
-        <Spark daily={d.daily} days={days} big={big} delay={delay + 0.2} />
+        <span className="wkv-tile-spark"><Spark daily={d.daily} days={days} big={big} wide={wide} delay={delay + 0.2} /></span>
       </button>
 
       <AnimatePresence initial={false}>
@@ -141,14 +147,11 @@ function EmptyChip({ d }: { d: DomainResult }) {
   const Icon = DOMAIN_ICONS[d.domain];
   const label = ANALYSIS_DOMAIN_LABELS[d.domain];
   return (
-    <motion.div layout transition={{ duration: 0.4, ease: WK_EASE }} className="wkv-chip-cell">
-      <Link href={DOMAIN_HREFS[d.domain]} prefetch={false} className="wkv-chip" aria-label={`شروع ثبت ${label}`}>
-        <Icon size={15} aria-hidden="true" />
-        <span className="wkv-chip-name">{label}</span>
-        <span className="wk-muted-sm">ثبت نشده</span>
-        <ChevronLeft size={13} aria-hidden="true" />
-      </Link>
-    </motion.div>
+    <Link href={DOMAIN_HREFS[d.domain]} prefetch={false} className="wkv-chip" aria-label={`شروع ثبت ${label}`}>
+      <Icon size={15} aria-hidden="true" />
+      <span className="wkv-chip-name">{label}</span>
+      <ChevronLeft size={13} aria-hidden="true" />
+    </Link>
   );
 }
 
@@ -161,7 +164,8 @@ export function WeeklyAnalysisDomains({ domains, days }: { domains: DomainResult
 
   const withData = ranked.filter((d) => d.hasData && d.score !== null);
   const noData = ranked.filter((d) => !(d.hasData && d.score !== null));
-  const bigKey = withData.length >= 2 ? [...withData].sort((a, b) => (b.score as number) - (a.score as number))[0].domain : null;
+  const cnt = withData.length;
+  const bigKey = cnt >= 4 ? [...withData].sort((a, b) => (b.score as number) - (a.score as number))[0].domain : null;
 
   return (
     <motion.section
@@ -173,15 +177,24 @@ export function WeeklyAnalysisDomains({ domains, days }: { domains: DomainResult
       transition={{ duration: 0.5, ease: WK_EASE }}
     >
       <SectionHead icon={<LayoutGrid size={15} />} title="نمای بخش‌ها" />
-      {withData.length === 0 && <div className="wk-empty-inline">این هفته در هیچ‌کدوم از بخش‌ها چیزی ثبت نشده.</div>}
-      <div className="wkv-bento">
-        {withData.map((d, i) => (
-          <DomainTile key={d.domain} d={d} days={days} rank={i} big={d.domain === bigKey} />
-        ))}
-        {noData.map((d) => (
-          <EmptyChip key={d.domain} d={d} />
-        ))}
-      </div>
+      {cnt === 0 && <div className="wk-empty-inline">این هفته در هیچ‌کدوم از بخش‌ها چیزی ثبت نشده.</div>}
+      {cnt > 0 && (
+        <div className={`wkv-bento${cnt <= 3 ? ` is-n${cnt}` : ""}`}>
+          {withData.map((d, i) => (
+            <DomainTile key={d.domain} d={d} days={days} rank={i} big={d.domain === bigKey} wide={cnt === 1} />
+          ))}
+        </div>
+      )}
+      {noData.length > 0 && (
+        <div className="wkv-nodata">
+          <span className="wkv-nodata-title">بدون داده این هفته</span>
+          <div className="wkv-nodata-row">
+            {noData.map((d) => (
+              <EmptyChip key={d.domain} d={d} />
+            ))}
+          </div>
+        </div>
+      )}
     </motion.section>
   );
 }
