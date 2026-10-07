@@ -1,5 +1,5 @@
 import { BRAND_EN, BRAND_FA } from "@/lib/brand";
-import { DESCRIPTION_FA, FACTS_FA, FEATURES_FA, PUBLIC_PAGES } from "@/lib/llmsContent";
+import { BLOG_CATEGORY_PAGES, DESCRIPTION_FA, FACTS_FA, FEATURES_FA, PUBLIC_PAGES, TOOL_PAGES } from "@/lib/llmsContent";
 import { absoluteUrl } from "@/lib/seo";
 import { fillPriceCopy } from "@/lib/planPricing";
 import { getPricingConfig } from "@/lib/planPricingServer";
@@ -16,7 +16,13 @@ export const revalidate = 3600;
 
 function blockToText(b: BlogBlock): string {
   if (b.type === "ul") return b.items.map((i) => `- ${i}`).join("\n");
+  if (b.type === "ol") return b.items.map((i, n) => `${n + 1}. ${i}`).join("\n");
   if (b.type === "h2" || b.type === "h3") return `\n${b.text}\n`;
+  if (b.type === "tip") return b.title ? `نکته (${b.title}): ${b.text}` : `نکته: ${b.text}`;
+  if (b.type === "table") {
+    return [b.head, ...b.rows].map((r) => r.join(" | ")).join("\n");
+  }
+  if (b.type === "cta") return `${b.label}: ${absoluteUrl(b.href)}`;
   return b.text;
 }
 
@@ -53,6 +59,20 @@ function build(): string {
     lines.push(f.a);
     lines.push("");
   }
+  lines.push("## ابزارهای رایگان");
+  for (const t of TOOL_PAGES) {
+    lines.push(`### ${t.label}`);
+    lines.push(`آدرس: ${absoluteUrl(t.path)}`);
+    lines.push(t.note);
+    lines.push("");
+  }
+  lines.push("## دسته‌های مقاله‌ها");
+  for (const c of BLOG_CATEGORY_PAGES) {
+    lines.push(`### ${c.label}`);
+    lines.push(`آدرس: ${absoluteUrl(c.path)}`);
+    lines.push(c.note);
+    lines.push("");
+  }
   lines.push("## مقاله‌ها");
   for (const post of sortedPosts()) {
     lines.push(`### ${post.title}`);
@@ -61,6 +81,14 @@ function build(): string {
     lines.push("");
     for (const block of post.blocks) lines.push(blockToText(block));
     lines.push("");
+    if (post.faq && post.faq.length > 0) {
+      lines.push("پرسش‌های متداول این مقاله:");
+      for (const f of post.faq) {
+        lines.push(`Q: ${f.q}`);
+        lines.push(`A: ${f.a}`);
+      }
+      lines.push("");
+    }
   }
   return lines.join("\n");
 }

@@ -1,5 +1,6 @@
 import { BRAND_FA } from "@/lib/brand";
 import { sortedPosts } from "@/lib/blogPosts";
+import { BLOG_CATEGORIES } from "@/lib/blog/categories";
 import { absoluteUrl, SITE_URL } from "@/lib/seo";
 
 // RSS 2.0 فارسی برای بلاگ — کاربردش فقط برای فیدخوان‌های آدم نیست:
@@ -30,11 +31,13 @@ function build(): string {
       <link>${url}</link>
       <guid isPermaLink="true">${url}</guid>
       <pubDate>${pubDate}</pubDate>
+      <category>${escapeXml(BLOG_CATEGORIES[p.category].label)}</category>
       <description>${escapeXml(p.description)}</description>
     </item>`;
     })
     .join("\n");
 
+  // sortedPosts جدیدترین (به‌روزرسانی یا انتشار) را اول می‌گذارد؛ lastBuildDate از همان
   const lastBuildDate = posts.length > 0 ? new Date(posts[0].updated || posts[0].published).toUTCString() : new Date().toUTCString();
 
   return `<?xml version="1.0" encoding="UTF-8"?>

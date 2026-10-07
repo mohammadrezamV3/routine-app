@@ -1,5 +1,5 @@
 import { BRAND_EN, BRAND_FA } from "@/lib/brand";
-import { DESCRIPTION_FA, FACTS_FA, PUBLIC_PAGES } from "@/lib/llmsContent";
+import { BLOG_CATEGORY_PAGES, DESCRIPTION_FA, FACTS_FA, PUBLIC_PAGES, TOOL_PAGES } from "@/lib/llmsContent";
 import { absoluteUrl } from "@/lib/seo";
 import { fillPriceCopy } from "@/lib/planPricing";
 import { getPricingConfig } from "@/lib/planPricingServer";
@@ -27,6 +27,16 @@ function build(): string {
   lines.push("## بخش‌های عمومی");
   for (const p of PUBLIC_PAGES) {
     lines.push(`- [${p.label}](${absoluteUrl(p.path)}): ${p.note}`);
+  }
+  lines.push("");
+  lines.push("## ابزارهای رایگان");
+  for (const t of TOOL_PAGES) {
+    lines.push(`- [${t.label}](${absoluteUrl(t.path)}): ${t.note}`);
+  }
+  lines.push("");
+  lines.push("## دسته‌های مقاله‌ها");
+  for (const c of BLOG_CATEGORY_PAGES) {
+    lines.push(`- [${c.label}](${absoluteUrl(c.path)}): ${c.note}`);
   }
   lines.push("");
   lines.push("## مقاله‌ها");

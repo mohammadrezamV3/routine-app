@@ -92,6 +92,14 @@ export const ICONS: Record<string, JSX.Element> = {
   mentorPanel: (
     <svg viewBox="0 0 24 24" fill="none"><rect x="3.5" y="4" width="17" height="11.5" rx="2" stroke="currentColor" strokeWidth="1.7"/><path d="m7.5 12 3-3 2.5 2 3.5-3.5" stroke="currentColor" strokeWidth="1.7" strokeLinecap="round" strokeLinejoin="round"/><path d="M12 15.5V18m-3.5 2.5L12 18l3.5 2.5" stroke="currentColor" strokeWidth="1.7" strokeLinecap="round" strokeLinejoin="round"/></svg>
   ),
+  // «مقاله‌ها» — کتاب باز
+  blog: (
+    <svg viewBox="0 0 24 24" fill="none"><path d="M12 6.5C10.3 5.3 8 4.8 4 4.8v13.4c4 0 6.3.5 8 1.7 1.7-1.2 4-1.7 8-1.7V4.8c-4 0-6.3.5-8 1.7Z" stroke="currentColor" strokeWidth="1.7" strokeLinejoin="round"/><path d="M12 6.5v13.4" stroke="currentColor" strokeWidth="1.7" strokeLinecap="round"/></svg>
+  ),
+  // «ابزارهای رایگان» — ماشین‌حساب
+  tools: (
+    <svg viewBox="0 0 24 24" fill="none"><rect x="5" y="3.5" width="14" height="17" rx="2.2" stroke="currentColor" strokeWidth="1.7"/><rect x="8" y="6.8" width="8" height="3" rx="1" stroke="currentColor" strokeWidth="1.5"/><path d="M8.5 13.5h.01M12 13.5h.01M15.5 13.5h.01M8.5 17h.01M12 17h.01M15.5 17h.01" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round"/></svg>
+  ),
   about: (
     <svg viewBox="0 0 24 24" fill="none"><circle cx="12" cy="12" r="8.2" stroke="currentColor" strokeWidth="1.7"/><path d="M12 11v5.2M12 8.3v.1" stroke="currentColor" strokeWidth="1.9" strokeLinecap="round"/></svg>
   ),
@@ -170,6 +178,8 @@ const LINKS: NavItem[] = [
   // بخش (ژورنال/چک‌لیست/تقویم/…) داخل همان صفحه انجام می‌شود.
   { href: "/trade", label: "ترید", icon: "trade", module: "TRADE", feature: "trade" },
   { href: "/analysis/weekly", label: "آنالیز هفتگی", icon: "weeklyReport", module: "AI_INSIGHT", feature: "weeklyAnalysis" },
+  { href: "/blog", label: "مقاله‌ها", icon: "blog", feature: "blog" },
+  { href: "/tools", label: "ابزارهای رایگان", icon: "tools" },
   { href: "/about", label: "درباره ما", icon: "about", feature: "about" },
 ];
 

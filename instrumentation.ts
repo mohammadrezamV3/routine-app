@@ -37,6 +37,14 @@ export async function register() {
       } catch (err: any) {
         console.error(`[push] scheduler failed to start: ${err?.message || err}`);
       }
+
+      // اعلام خودکار صفحه‌های عمومی تازه/عوض‌شده به IndexNow (lib/indexNowAuto.ts)
+      try {
+        const { scheduleIndexNowAutoSubmit } = await import("@/lib/indexNowAuto");
+        scheduleIndexNowAutoSubmit();
+      } catch (err: any) {
+        console.error(`[indexnow] failed to schedule: ${err?.message || err}`);
+      }
     }
   }
 }
