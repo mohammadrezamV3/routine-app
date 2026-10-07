@@ -1,17 +1,18 @@
 "use client";
 
 import "./wa-cards.css";
+import "./wa-bottom.css";
 import { useState } from "react";
 import { AnimatePresence, motion } from "framer-motion";
 import { Plus, RotateCw } from "lucide-react";
 import { ANALYSIS_DOMAIN_LABELS, type AiCoach, type AnalysisDomain } from "@/lib/weeklyAnalysis/types";
 import { AiSparkleIcon } from "./AiSparkleIcon";
 import { Spinner } from "./Spinner";
-import { SectionHead, V_WK_CARD, WK_EASE, waFetch } from "./WeeklyAnalysisKit";
+import { V_WK_CARD, WK_EASE, waFetch } from "./WeeklyAnalysisKit";
 
 type Rec = NonNullable<AiCoach>["recommendations"][number];
 
-const PRIORITY_LABELS: Record<Rec["priority"], string> = { high: "اولویت بالا", medium: "اولویت متوسط", low: "اولویت کم" };
+const PRIORITY_LABELS: Record<Rec["priority"], string> = { high: "مهم", medium: "متوسط", low: "سبک" };
 
 function formatGeneratedAt(iso: string): string {
   const d = new Date(iso);
@@ -52,82 +53,71 @@ export function WeeklyAnalysisCoach({
     <span className="wc-typing" aria-hidden="true"><i /><i /><i /></span>
   );
 
+  const sparkle = <AiSparkleIcon size={15} still />;
   return (
-    <motion.section className="wk-card wk-coach" variants={V_WK_CARD} aria-label="مربی هوشمند">
-      <SectionHead
-        icon={<AiSparkleIcon size={15} still />}
-        title="مربی هوشمند"
-        aside={ai && aiAvailable ? (
-          <button type="button" className="account-outline-btn muted wk-small-btn" onClick={generate} disabled={busy} aria-label="بازسازی تحلیل مربی">
-            {busy ? <Spinner size={13} label={null} /> : <><RotateCw size={13} />بازسازی</>}
+    <motion.section className="wk-card wb-card wb-coach" variants={V_WK_CARD} aria-label="مربی هوشمند">
+      <div className="wb-coach-meta">
+        <span className="wb-coach-ic" aria-hidden="true"><AiSparkleIcon size={26} still /></span>
+        <h2 className="wb-title">مربی هوشمند</h2>
+        <span className="wb-coach-sub">بر اساس داده‌ی همین هفته، برای هفته‌ی بعد</span>
+        {ai && aiAvailable && (
+          <button type="button" className="account-outline-btn muted wk-small-btn wb-coach-regen" onClick={generate} disabled={busy} aria-label="بازسازی تحلیل مربی">
+            {busy ? <Spinner size={13} label={null} /> : <><RotateCw size={13} />تحلیل دوباره</>}
           </button>
-        ) : undefined}
-      />
+        )}
+      </div>
 
-      <div className="wc-chat">
+      <div className="wb-coach-chat">
         {busy && !ai ? (
-          <div className="wc-row" role="status" aria-label="در حال ساخت تحلیل">
-            <span className="wc-avatar"><AiSparkleIcon size={16} still /></span>
-            <div className="wc-stack">
-              <div className="wc-bubble">{typing}</div>
-              <span className="wc-note">مربی داره اعداد هفته رو می‌خونه…</span>
-            </div>
+          <div className="wb-bubble" role="status" aria-label="در حال ساخت تحلیل">
+            {typing}
+            <span className="wc-note">مربی داره اعداد هفته رو می‌خونه…</span>
           </div>
         ) : !ai ? (
           aiAvailable ? (
-            <div className="wc-row">
-              <span className="wc-avatar"><AiSparkleIcon size={16} still /></span>
-              <div className="wc-stack">
-                <div className="wc-bubble">مربی هوشمند اعداد همین هفته رو می‌خونه و یه جمع‌بندی کوتاه با چند پیشنهاد عملی برای هفته‌ی بعد می‌ده.</div>
-                <div className="wc-cta">
-                  <button type="button" className="account-outline-btn wk-coach-cta" onClick={generate} disabled={busy}>
-                    <AiSparkleIcon size={15} still />ساخت تحلیل مربی
-                  </button>
-                </div>
+            <>
+              <div className="wb-bubble">مربی هوشمند اعداد همین هفته رو می‌خونه و یه جمع‌بندی کوتاه با چند پیشنهاد عملی برای هفته‌ی بعد می‌ده.</div>
+              <div>
+                <button type="button" className="account-outline-btn wk-coach-cta" onClick={generate} disabled={busy}>
+                  {sparkle}ساخت تحلیل مربی
+                </button>
               </div>
-            </div>
+            </>
           ) : (
             <div className="wk-empty-inline">تحلیل مربی هوشمند فعلا در دسترس نیست.</div>
           )
         ) : (
-          <motion.div className="wc-row" initial={{ opacity: 0 }} animate={{ opacity: busy ? 0.55 : 1 }} transition={{ duration: 0.35 }}>
-            <span className="wc-avatar"><AiSparkleIcon size={16} still /></span>
-            <div className="wc-stack">
-              <div className="wc-bubble is-sum" style={{ ["--i" as string]: 0 }}>{ai.summary}</div>
-              <AnimatePresence initial={false}>
-                {ai.recommendations.map((r, i) => (
-                  <motion.div
-                    key={`${r.title}-${i}`}
-                    className="wc-bubble"
-                    style={{ animation: "none" }}
-                    initial={{ opacity: 0, y: 10, scale: 0.97 }}
-                    animate={{ opacity: 1, y: 0, scale: 1 }}
-                    transition={{ duration: 0.35, delay: 0.08 * (i + 1), ease: WK_EASE }}
-                  >
-                    <div className="wc-bubble-head">
-                      <span className="wc-bubble-title">{r.title}</span>
-                      <span className={`wk-priority ${r.priority}`}>{PRIORITY_LABELS[r.priority]}</span>
-                    </div>
-                    <div className="wc-bubble-desc">{r.description}</div>
-                    <div className="wc-chips">
-                      {r.domain && <span className="wk-chip">{ANALYSIS_DOMAIN_LABELS[r.domain]}</span>}
-                      {canAddGoal && (
-                        <button type="button" className="wk-ghost wc-chip-btn" onClick={() => onAddGoal({ domain: r.domain, title: r.title })}>
-                          <Plus size={12} />افزودن به اهداف
-                        </button>
-                      )}
-                    </div>
-                  </motion.div>
-                ))}
-              </AnimatePresence>
-              {busy && <div className="wc-bubble">{typing}</div>}
-              {ai.generatedAt && <div className="wc-note">ساخته‌شده ساعت <span className="wk-num">{formatGeneratedAt(ai.generatedAt)}</span></div>}
-            </div>
+          <motion.div className="wb-coach-stack" initial={{ opacity: 0 }} animate={{ opacity: busy ? 0.55 : 1 }} transition={{ duration: 0.35 }}>
+            <div className="wb-bubble is-sum">{ai.summary}</div>
+            <AnimatePresence initial={false}>
+              {ai.recommendations.map((r, i) => (
+                <motion.div
+                  key={`${r.title}-${i}`}
+                  className="wb-bubble wb-rec"
+                  initial={{ opacity: 0, y: 10, scale: 0.97 }}
+                  animate={{ opacity: 1, y: 0, scale: 1 }}
+                  transition={{ duration: 0.35, delay: 0.08 * (i + 1), ease: WK_EASE }}
+                >
+                  <span className={`wb-prio ${r.priority}`}>{PRIORITY_LABELS[r.priority]}</span>
+                  <span className="wb-rec-text">
+                    <b>{r.title}</b>
+                    <span>{r.description}</span>
+                    {r.domain && <span className="wk-chip wb-rec-chip">{ANALYSIS_DOMAIN_LABELS[r.domain]}</span>}
+                  </span>
+                  {canAddGoal && (
+                    <button type="button" className="wk-ghost wb-add-goal" onClick={() => onAddGoal({ domain: r.domain, title: r.title })}>
+                      <Plus size={12} />به اهداف
+                    </button>
+                  )}
+                </motion.div>
+              ))}
+            </AnimatePresence>
+            {busy && <div className="wb-bubble">{typing}</div>}
+            {ai.generatedAt && <div className="wc-note">ساخته‌شده ساعت <span className="wk-num">{formatGeneratedAt(ai.generatedAt)}</span></div>}
           </motion.div>
         )}
+        {error && <div className="wk-error-inline">{error}</div>}
       </div>
-
-      {error && <div className="wk-error-inline">{error}</div>}
     </motion.section>
   );
 }

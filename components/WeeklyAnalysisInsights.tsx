@@ -2,28 +2,15 @@
 
 import "./weekly-analysis.css";
 import "./wa-cards.css";
+import "./wa-bottom.css";
 import { useRef, useState } from "react";
 import { motion } from "framer-motion";
-import {
-  AlertTriangle, CalendarDays, Flame, Lightbulb, Link2, TrendingDown, TrendingUp, Trophy, Zap, type LucideIcon,
-} from "lucide-react";
 import { ANALYSIS_DOMAIN_LABELS, type Insight } from "@/lib/weeklyAnalysis/types";
-import { SectionHead, V_WK_CARD, toneColor } from "./WeeklyAnalysisKit";
+import { V_WK_CARD, toneColor } from "./WeeklyAnalysisKit";
 
-const INSIGHT_ICONS: Record<Insight["icon"], LucideIcon> = {
-  link: Link2,
-  flame: Flame,
-  trophy: Trophy,
-  alert: AlertTriangle,
-  trend_up: TrendingUp,
-  trend_down: TrendingDown,
-  calendar: CalendarDays,
-  zap: Zap,
-};
-
-// بینش‌های قطعی موتور محاسبه (نه AI) — بخش باز (بدون باکس بیرونی). هر بینش یک
-// کارت کوچک با خط رنگ لحن در لبه‌ی ابتدایی. موبایل: ردیف اسکرول افقی با نشانگر
-// نقطه‌ای، دسکتاپ: دو ستون. ورود پله‌ای با CSS (تاخیر از --i).
+// بینش‌های قطعی موتور محاسبه (نه AI) — بخش باز، بدون باکس. ستون‌ها با خط مو
+// جدا می‌شن (تا سه‌تا در هر ردیف، بقیه ردیف بعد)، عدد درشت کم‌رنگ 01/02/03،
+// چیپ بخش، عنوان پررنگ و متن. موبایل: کارت‌های اسکرول افقی با نقطه.
 export function WeeklyAnalysisInsights({ insights }: { insights: Insight[] }) {
   const trackRef = useRef<HTMLUListElement>(null);
   const [active, setActive] = useState(0);
@@ -39,32 +26,24 @@ export function WeeklyAnalysisInsights({ insights }: { insights: Insight[] }) {
   }
 
   return (
-    <motion.section className="wc-ins" variants={V_WK_CARD} aria-label="بینش‌های این هفته">
-      <SectionHead icon={<Lightbulb size={15} />} title="بینش‌های این هفته" />
+    <motion.section className="wb-ins" variants={V_WK_CARD} aria-label="بینش‌های این هفته">
+      <h2 className="wb-title">سه چیزی که این هفته معلوم شد</h2>
       {insights.length === 0 ? (
         <div className="wk-empty-inline">هنوز الگوی قابل‌اتکایی پیدا نشده — با چند روز داده‌ی بیشتر، بینش‌ها ظاهر می‌شن.</div>
       ) : (
         <>
-          <ul className={`wc-ins-track${insights.length === 1 ? " is-one" : ""}`} ref={trackRef} onScroll={onScroll} data-noswipe>
-            {insights.map((ins, i) => {
-              const Icon = INSIGHT_ICONS[ins.icon] ?? Lightbulb;
-              const color = toneColor(ins.tone);
-              return (
-                <li key={ins.id} className="wc-ins-card wk-card" style={{ ["--i" as string]: i, ["--wc-tone" as string]: color }}>
-                  <span className="wc-ins-ic"><Icon size={15} /></span>
-                  <div>
-                    <div className="wc-ins-title">
-                      {ins.title}
-                      {ins.domain && <span className="wk-chip">{ANALYSIS_DOMAIN_LABELS[ins.domain]}</span>}
-                    </div>
-                    <div className="wc-ins-body">{ins.body}</div>
-                  </div>
-                </li>
-              );
-            })}
+          <ul className="wb-ins-track" ref={trackRef} onScroll={onScroll} data-noswipe>
+            {insights.map((ins, i) => (
+              <li key={ins.id} className="wb-ins-item" style={{ ["--i" as string]: i, ["--wb-tone" as string]: toneColor(ins.tone) }}>
+                <span className="wb-ins-n wk-num" aria-hidden="true">{String(i + 1).padStart(2, "0")}</span>
+                {ins.domain && <span className="wb-ins-chip">{ANALYSIS_DOMAIN_LABELS[ins.domain]}</span>}
+                <h3 className="wb-ins-title">{ins.title}</h3>
+                <p className="wb-ins-body">{ins.body}</p>
+              </li>
+            ))}
           </ul>
           {insights.length > 1 && (
-            <div className="wc-dots" aria-hidden="true">
+            <div className="wc-dots wb-ins-dots" aria-hidden="true">
               {insights.map((ins, i) => <i key={ins.id} className={i === active ? "on" : ""} />)}
             </div>
           )}
