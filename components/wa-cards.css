@@ -16,6 +16,8 @@
   scroll-padding-inline:16px; overscroll-behavior-x:contain;
 }
 .wc-ins-track::-webkit-scrollbar{ display:none; }
+.wc-ins-track.is-one{ overflow:visible; margin-inline:0; padding-inline:0; }
+.wc-ins-track.is-one .wc-ins-card{ flex-basis:100%; max-width:none; }
 .wc-ins .wc-ins-card{
   flex:0 0 78%; max-width:320px; scroll-snap-align:start;
   padding:13px 14px; border-radius:16px;
@@ -34,8 +36,8 @@
 .wc-dots i{ width:6px; height:6px; border-radius:99px; border:1px solid var(--muted); transition:width .3s ease, border-color .3s ease, transform .3s ease; }
 .wc-dots i.on{ width:18px; border-color:var(--accent); border-width:2px; height:6px; }
 @media (min-width:768px){
-  .wc-ins-track{ display:block; column-count:2; column-gap:12px; overflow:visible; margin-inline:0; padding:0; }
-  .wc-ins .wc-ins-card{ break-inside:avoid; max-width:none; margin-bottom:12px; }
+  .wc-ins-track{ display:grid; grid-template-columns:repeat(auto-fit,minmax(340px,1fr)); gap:12px; overflow:visible; margin-inline:0; padding:0; }
+  .wc-ins .wc-ins-card{ max-width:none; }
   .wc-dots{ display:none; }
   @media (hover:hover){
     .wc-ins-card{ transition:transform .25s ease, border-color .25s ease; }
@@ -87,7 +89,7 @@
 .wc-medal-disc{ position:relative; width:64px; height:64px; border-radius:50%; overflow:hidden; display:grid; place-items:center; }
 .wc-medal-inner{ display:grid; place-items:center; }
 .wc-medal-emoji{ font-size:24px; line-height:1; }
-.wc-medal:not(.is-on) .wc-medal-emoji{ filter:grayscale(1); opacity:.5; }
+.wc-medal:not(.is-on) .wc-medal-emoji{ filter:grayscale(1); opacity:.6; }
 .wc-medal.is-on .wc-medal-disc::after{
   content:""; position:absolute; top:-20%; bottom:-20%; width:34%; left:0; pointer-events:none;
   background:linear-gradient(90deg,transparent,rgba(255,255,255,.5),transparent);
@@ -96,7 +98,7 @@
 .wc-medal-title{ font-size:11.5px; font-weight:800; color:var(--text); line-height:1.6; }
 .wc-medal:not(.is-on) .wc-medal-title{ color:var(--muted); }
 .wc-medal-desc{ font-size:10px; color:var(--muted); line-height:1.7; }
-.wc-medal-prog{ display:inline-flex; align-items:center; gap:3px; font-size:10.5px; font-weight:700; color:var(--muted); }
+.wc-medal-prog{ display:inline-flex; align-items:center; gap:3px; font-size:11px; font-weight:700; color:var(--muted); }
 @media (hover:hover){
   .wc-medal.is-on:hover .wc-medal-disc{ animation:wc-float 1.2s ease-in-out infinite; }
 }
@@ -132,7 +134,7 @@
 .wc-field{ display:flex; flex-direction:column; gap:6px; min-width:0; }
 .wc-field textarea{ width:100%; resize:vertical; min-height:84px; }
 .wc-mood{ display:flex; align-items:center; gap:14px; flex-wrap:wrap; }
-.wc-mood-big{ width:46px; height:46px; display:grid; place-items:center; font-size:34px; line-height:1; border-radius:50%; border:1px dashed var(--box-line); overflow:hidden; }
+.wc-mood-big{ width:46px; height:46px; display:grid; place-items:center; font-size:34px; line-height:1; border-radius:50%; border:1px solid var(--box-line); overflow:hidden; color:var(--muted); }
 .wc-mood-face{ display:inline-block; font-size:20px; line-height:1; transition:transform .28s cubic-bezier(.34,1.56,.64,1), filter .2s ease; filter:grayscale(.75); opacity:.8; }
 .wc-mood-face.on{ transform:scale(1.45); filter:none; opacity:1; }
 .wc-mood-seg{ flex:1 1 240px; max-width:360px; }

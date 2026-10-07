@@ -45,7 +45,7 @@ export function WeeklyAnalysisInsights({ insights }: { insights: Insight[] }) {
         <div className="wk-empty-inline">هنوز الگوی قابل‌اتکایی پیدا نشده — با چند روز داده‌ی بیشتر، بینش‌ها ظاهر می‌شن.</div>
       ) : (
         <>
-          <ul className="wc-ins-track" ref={trackRef} onScroll={onScroll} data-noswipe>
+          <ul className={`wc-ins-track${insights.length === 1 ? " is-one" : ""}`} ref={trackRef} onScroll={onScroll} data-noswipe>
             {insights.map((ins, i) => {
               const Icon = INSIGHT_ICONS[ins.icon] ?? Lightbulb;
               const color = toneColor(ins.tone);
