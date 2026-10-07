@@ -34,6 +34,7 @@ import { Suspense } from "react";
 import { BootSplash } from "@/components/BootSplash";
 import { BootSplashRelease } from "@/components/BootSplashRelease";
 import { EventThemeGreeting } from "@/components/EventThemeGreeting";
+import { MaintenanceBanner } from "@/components/MaintenanceBanner";
 import { getActiveEventThemeId } from "@/lib/eventThemeServer";
 import { EVENT_PREVIEW_KEY } from "@/lib/eventThemeState";
 
@@ -278,6 +279,8 @@ export default async function RootLayout({ children }: { children: React.ReactNo
         <AuthSessionProvider session={session}>
           <ThemeProvider initialTheme={theme}>
             <MotionTuner>
+              {/* نوار تعمیر (lib/maintenance.ts) — وقتی خاموشه چیزی رندر نمی‌کنه */}
+              <MaintenanceBanner />
               <NavDrawer />
               <NotificationEngine />
               {/* WebSocket `/ws` برای کاربر لاگین‌کرده — تغییرات همون لحظه روی همه‌ی دستگاه‌ها */}
