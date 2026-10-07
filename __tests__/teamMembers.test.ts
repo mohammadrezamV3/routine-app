@@ -1,6 +1,6 @@
 import { describe, it, expect, vi, beforeEach } from "vitest";
 import {
-  TEAM_MAX_MEMBERS, normalizeTeamLink, sanitizeTeamMembers, validateTeamMembers,
+  TEAM_MAX_MEMBERS, TEAM_ROLES_MAX, TEAM_ROLE_MAX, normalizeTeamLink, normalizeTeamRoles, sanitizeTeamMembers, validateTeamMembers,
 } from "@/lib/teamMembers";
 
 const PIXEL = "data:image/png;base64,iVBORw0KGgo=";
@@ -8,7 +8,7 @@ const PIXEL = "data:image/png;base64,iVBORw0KGgo=";
 describe("validateTeamMembers", () => {
   it("keeps order, assigns ids and normalizes links", () => {
     const r = validateTeamMembers([
-      { name: " Ali ", role: "CTO", links: { telegram: "@ali", website: "example.com" } },
+      { name: " Ali ", roles: ["CTO"], links: { telegram: "@ali", website: "example.com" } },
       { name: "Sara", photo: PIXEL },
     ]);
     expect(r.ok).toBe(true);
@@ -36,6 +36,43 @@ describe("validateTeamMembers", () => {
   it("sanitize drops broken rows", () => {
     expect(sanitizeTeamMembers([{ name: "ok" }, { name: "" }, 5]).length).toBe(1);
     expect(sanitizeTeamMembers(null)).toEqual([]);
+  });
+});
+
+describe("team roles (multi + legacy migration)", () => {
+  it("migrates a legacy single role string into roles", () => {
+    const m = sanitizeTeamMembers([{ id: "m-legacy01", name: "Ali", role: "Developer", bio: "x" }]);
+    expect(m).toHaveLength(1);
+    expect(m[0].roles).toEqual(["Developer"]);
+    expect((m[0] as any).role).toBeUndefined();
+    expect(m[0].bio).toBe("x");
+  });
+  it("legacy rows without any role get an empty list", () => {
+    expect(sanitizeTeamMembers([{ name: "Sara" }])[0].roles).toEqual([]);
+    expect(sanitizeTeamMembers([{ name: "Sara", role: "  " }])[0].roles).toEqual([]);
+  });
+  it("keeps order, trims, drops blanks and case-insensitive duplicates", () => {
+    const r = normalizeTeamRoles({ roles: [" Developer ", "", "developer", "Cybersecurity  Specialist", 5 as any] });
+    expect(r.roles).toEqual(["Developer", "Cybersecurity Specialist"]);
+    expect(r.error).toBeUndefined();
+  });
+  it("merges roles with a legacy role field without duplicating", () => {
+    expect(normalizeTeamRoles({ roles: ["A"], role: "B" }).roles).toEqual(["A", "B"]);
+    expect(normalizeTeamRoles({ roles: ["A"], role: "a" }).roles).toEqual(["A"]);
+  });
+  it("validate rejects too many / too long roles", () => {
+    const many = Array.from({ length: TEAM_ROLES_MAX + 1 }, (_, i) => `r${i}`);
+    expect(validateTeamMembers([{ name: "a", roles: many }]).ok).toBe(false);
+    expect(validateTeamMembers([{ name: "a", roles: ["x".repeat(TEAM_ROLE_MAX + 1)] }]).ok).toBe(false);
+    const ok = validateTeamMembers([{ name: "a", roles: ["Developer", "Cybersecurity Specialist"] }]);
+    expect(ok.ok && ok.members[0].roles).toEqual(["Developer", "Cybersecurity Specialist"]);
+  });
+  it("sanitize never drops a stored member over role limits, it trims instead", () => {
+    const many = Array.from({ length: 10 }, (_, i) => `r${i}`);
+    const m = sanitizeTeamMembers([{ name: "a", roles: many }, { name: "b", role: "y".repeat(200) }]);
+    expect(m).toHaveLength(2);
+    expect(m[0].roles).toHaveLength(TEAM_ROLES_MAX);
+    expect(m[1].roles[0]).toHaveLength(TEAM_ROLE_MAX);
   });
 });
 

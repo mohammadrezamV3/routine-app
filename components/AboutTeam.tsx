@@ -57,9 +57,13 @@ export function AboutTeamPanel({ open, members, id }: { open: boolean; members: 
                 transition={{ duration: 0.4, delay: reduce ? 0 : 0.08 + i * 0.05, ease: [0.22, 1, 0.36, 1] }}
               >
                 <TeamMemberAvatar member={m} size={72} />
+                {m.roles.length > 0 && (
+                  <ul className="ab-team-roles" aria-label="عنوان‌ها">
+                    {m.roles.map((r) => <li key={r} className="ab-team-role">{r}</li>)}
+                  </ul>
+                )}
                 <div className="ab-team-name">{m.name}</div>
-                {m.role && <div className="ab-team-role">{m.role}</div>}
-                {m.bio && <p className="ab-team-bio">{m.bio}</p>}
+                {m.bio && <p className="ab-team-bio" dir="auto">{m.bio}</p>}
                 <div className="ab-team-links">
                   {TEAM_LINK_KINDS.filter((k) => m.links[k]).map((k) => (
                     <a

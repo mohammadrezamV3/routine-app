@@ -1,14 +1,14 @@
 "use client";
 
 import { useCallback, useEffect, useRef, useState } from "react";
-import { ArrowDown, ArrowUp, Pencil, Plus, Trash2 } from "lucide-react";
+import { ArrowDown, ArrowUp, Pencil, Plus, Trash2, X } from "lucide-react";
 import { adminFetch, useAdminToast } from "@/components/admin/useAdminToast";
 import { AdminModal, ConfirmModal } from "@/components/admin/AdminModal";
 import { ImageCropModal } from "@/components/ImageCropModal";
 import { Spinner } from "@/components/Spinner";
 import { TeamMemberAvatar } from "@/components/AboutTeam";
 import {
-  TEAM_BIO_MAX, TEAM_LINK_KINDS, TEAM_MAX_MEMBERS, TEAM_NAME_MAX, TEAM_ROLE_MAX,
+  TEAM_BIO_MAX, TEAM_LINK_KINDS, TEAM_MAX_MEMBERS, TEAM_NAME_MAX, TEAM_ROLES_MAX, TEAM_ROLE_MAX,
   type TeamLinkKind, type TeamMember,
 } from "@/lib/teamMembers";
 
@@ -22,13 +22,13 @@ const LINK_LABELS: Record<TeamLinkKind, { label: string; ph: string }> = {
   website: { label: "وب‌سایت", ph: "example.com" },
 };
 
-type Draft = { id: string | null; name: string; role: string; bio: string; photo: string | null; links: Record<TeamLinkKind, string> };
+type Draft = { id: string | null; name: string; roles: string[]; roleInput: string; bio: string; photo: string | null; links: Record<TeamLinkKind, string> };
 
-const emptyDraft = (): Draft => ({ id: null, name: "", role: "", bio: "", photo: null, links: { telegram: "", instagram: "", linkedin: "", website: "" } });
+const emptyDraft = (): Draft => ({ id: null, name: "", roles: [], roleInput: "", bio: "", photo: null, links: { telegram: "", instagram: "", linkedin: "", website: "" } });
 
 function toDraft(m: TeamMember): Draft {
   return {
-    id: m.id, name: m.name, role: m.role, bio: m.bio, photo: m.photo,
+    id: m.id, name: m.name, roles: m.roles, roleInput: "", bio: m.bio, photo: m.photo,
     links: { telegram: m.links.telegram ?? "", instagram: m.links.instagram ?? "", linkedin: m.links.linkedin ?? "", website: m.links.website ?? "" },
   };
 }
@@ -103,7 +103,7 @@ export default function AdminTeamPage() {
                 <TeamMemberAvatar member={m} size={44} className="admin-team-thumb" />
                 <div>
                   <div className="admin-perm-label">{m.name}</div>
-                  <div className="admin-perm-hint">{m.role || "بدون عنوان"}</div>
+                  <div className="admin-perm-hint">{m.roles.length ? m.roles.join(" / ") : "بدون عنوان"}</div>
                 </div>
               </div>
               <div style={{ display: "flex", gap: 6 }}>
@@ -124,7 +124,7 @@ export default function AdminTeamPage() {
           onSave={async (d) => {
             const links: TeamMember["links"] = {};
             for (const k of TEAM_LINK_KINDS) if (d.links[k].trim()) links[k] = d.links[k].trim();
-            const member = { id: d.id ?? "", name: d.name, role: d.role, bio: d.bio, photo: d.photo, links } as TeamMember;
+            const member = { id: d.id ?? "", name: d.name, roles: d.roles, bio: d.bio, photo: d.photo, links } as TeamMember;
             const next = d.id ? members.map((m) => (m.id === d.id ? member : m)) : [...members, member];
             await persist(next);
             toast(d.id ? "عضو ویرایش شد" : "عضو اضافه شد", "ok");
@@ -163,10 +163,21 @@ function MemberForm({ draft, onClose, onSave }: { draft: Draft; onClose: () => v
     setCropFile(f);
   }
 
+  function addRole() {
+    const t = d.roleInput.trim();
+    if (!t || d.roles.length >= TEAM_ROLES_MAX) return;
+    if (d.roles.some((r) => r.toLowerCase() === t.toLowerCase())) { setD({ ...d, roleInput: "" }); return; }
+    setD({ ...d, roles: [...d.roles, t], roleInput: "" });
+  }
+
   async function submit() {
     if (!d.name.trim()) { toast("نام عضو رو وارد کن", "err"); return; }
+    // متنی که تایپ شده ولی هنوز «افزودن» نخورده هم به عنوان‌ها اضافه می‌شه
+    const pending = d.roleInput.trim();
+    const roles = pending && !d.roles.some((r) => r.toLowerCase() === pending.toLowerCase()) ? [...d.roles, pending] : d.roles;
+    if (roles.length > TEAM_ROLES_MAX) { toast(`حداکثر ${TEAM_ROLES_MAX} عنوان`, "err"); return; }
     setSaving(true);
-    try { await onSave(d); }
+    try { await onSave({ ...d, roles, roleInput: "" }); }
     catch (e) { toast(e instanceof Error && e.message ? e.message : "خطا در ذخیره", "err"); }
     finally { setSaving(false); }
   }
@@ -183,13 +194,31 @@ function MemberForm({ draft, onClose, onSave }: { draft: Draft; onClose: () => v
           <input ref={fileRef} type="file" accept="image/*" style={{ display: "none" }} onChange={(e) => { pick(e.target.files?.[0]); e.target.value = ""; }} />
         </div>
         <label className="admin-field">
-          <span>نام</span>
+          <span>نام و نام خانوادگی</span>
           <input className="admin-input" value={d.name} maxLength={TEAM_NAME_MAX} onChange={(e) => setD({ ...d, name: e.target.value })} autoFocus />
         </label>
-        <label className="admin-field">
-          <span>عنوان یا نقش</span>
-          <input className="admin-input" value={d.role} maxLength={TEAM_ROLE_MAX} onChange={(e) => setD({ ...d, role: e.target.value })} />
-        </label>
+        <div className="admin-field">
+          <span>عنوان‌ها (هر عضو می‌تونه چندتا داشته باشه)</span>
+          {d.roles.length > 0 && (
+            <div className="admin-team-roles">
+              {d.roles.map((r) => (
+                <span key={r} className="admin-team-role-chip">
+                  {r}
+                  <button type="button" className="admin-team-role-x" aria-label={`حذف ${r}`} onClick={() => setD({ ...d, roles: d.roles.filter((x) => x !== r) })}><X size={12} /></button>
+                </span>
+              ))}
+            </div>
+          )}
+          <div style={{ display: "flex", gap: 8 }}>
+            <input
+              className="admin-input" style={{ flex: 1, minWidth: 0 }} value={d.roleInput} maxLength={TEAM_ROLE_MAX}
+              placeholder="Developer" disabled={d.roles.length >= TEAM_ROLES_MAX}
+              onChange={(e) => setD({ ...d, roleInput: e.target.value })}
+              onKeyDown={(e) => { if (e.key === "Enter") { e.preventDefault(); addRole(); } }}
+            />
+            <button type="button" className="admin-btn sm" onClick={addRole} disabled={!d.roleInput.trim() || d.roles.length >= TEAM_ROLES_MAX}>افزودن</button>
+          </div>
+        </div>
         <label className="admin-field">
           <span>معرفی کوتاه (اختیاری)</span>
           <textarea className="admin-input" rows={3} value={d.bio} maxLength={TEAM_BIO_MAX} onChange={(e) => setD({ ...d, bio: e.target.value })} />

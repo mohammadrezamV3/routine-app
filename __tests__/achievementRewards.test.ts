@@ -37,11 +37,11 @@ describe("کاتالوگ اچیومنت", () => {
       expect(a.desc).not.toMatch(/[\u064B-\u0652\u0654\u0655\u0670\u0623\u0625]/);
     }
   });
-  it("{n} برای باز عدد واقعی و برای قفل ??", () => {
+  it("{n} برای باز و قفل هر دو عدد واقعی (بدون علامت سوال)", () => {
     const a = ACHIEVEMENTS.find((x) => x.id === "streak_30")!;
     expect(achievementDesc(a, 30, true)).toContain("30");
-    expect(achievementDesc(a, 30, false)).toContain("??");
-    expect(achievementDesc(a, 30, false)).not.toContain("30");
+    expect(achievementDesc(a, 30, false)).toContain("30");
+    expect(achievementDesc(a, 30, false)).not.toMatch(/[?؟]/);
   });
 });
 

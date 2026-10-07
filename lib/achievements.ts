@@ -6,7 +6,7 @@
 // قاعده‌ی کاتالوگ: هر اچیومنت باید تلاش واقعی بخواد (نه «یک بار اپ رو باز کن»).
 // شناسه‌ها پایدارن (UserAchievement بهشون ارجاع می‌ده) — هیچ‌وقت عوضشون نکن.
 // name انگلیسی و کوتاه؛ desc فارسی و در صورت نیاز با نشانه‌ی {n} برای عدد هدف
-// (UI عدد رو فقط برای اچیومنت باز نشون می‌ده، برای قفل «??»).
+// (عدد هدف همیشه نشون داده می‌شه؛ «؟» فقط برای روزهای مایلستون استریک مونده).
 
 export type AchievementMetrics = {
   currentStreak: number;
@@ -194,9 +194,9 @@ const DEFS: Def[] = [
 
 export const ACHIEVEMENTS: AchievementDef[] = DEFS.map((d) => ({ ...d, title: d.name }));
 
-/** نشانه‌ی {n} با عدد هدف (باز) یا «??» (قفل) جایگزین می‌شه */
-export function achievementDesc(a: Pick<AchievementDef, "desc">, goal: number, unlocked: boolean): string {
-  return a.desc.split("{n}").join(unlocked ? String(goal) : "??");
+/** نشانه‌ی {n} همیشه با عدد هدف جایگزین می‌شه (چه باز چه قفل) — علامت سوال فقط برای مایلستون‌های استریکه */
+export function achievementDesc(a: Pick<AchievementDef, "desc">, goal: number, _unlocked?: boolean): string {
+  return a.desc.split("{n}").join(String(goal));
 }
 
 export type AchievementState = {
