@@ -2,11 +2,9 @@
 
 import "./mentor.css";
 import { useState } from "react";
-import { createPortal } from "react-dom";
-import { X } from "lucide-react";
 import { faNum } from "@/lib/jalali";
 import { forgetThisDevice, removeDevice, useE2EEIdentity, type Identity } from "@/lib/e2ee/client";
-import { LockBodyScroll } from "./LockBodyScroll";
+import { MentorSheet } from "./MentorSheet";
 import { MentorConfirmDialog } from "./MentorConfirmDialog";
 
 /**
@@ -55,19 +53,9 @@ export function MentorE2EESettings({
   const labelOf = (d: (typeof devices)[number]) =>
     d.version === identity.version ? "همین دستگاه" : d.kind === "SYNCED" ? "دستگاه‌هایی که با رمز عبور وارد می‌شوند" : d.deviceLabel || "دستگاه دیگر";
 
-  if (typeof document === "undefined") return null;
-  return createPortal(
+  return (
     <>
-      <LockBodyScroll />
-      <div className="modal-overlay open" onClick={() => busy === null && onClose()} style={{ zIndex: 90 }} />
-      <div className="modal-panel open mentor-modal" role="dialog" aria-modal="true" aria-label="رمزگذاری سرتاسری" style={{ zIndex: 91, maxWidth: 460 }}>
-        <div className="modal-head">
-          <div className="modal-title">رمزگذاری سرتاسری</div>
-          <button type="button" className="trade-icon-btn" onClick={onClose} aria-label="بستن" disabled={busy !== null}>
-            <X size={16} strokeWidth={1.75} />
-          </button>
-        </div>
-
+      <MentorSheet open onClose={onClose} title="رمزگذاری سرتاسری" dismissible={busy === null && !confirm}>
         <div className="mentor-form">
           {safetyCode && (
             <div className="mentor-e2ee-block">
@@ -112,7 +100,7 @@ export function MentorE2EESettings({
             </div>
           </div>
         </div>
-      </div>
+      </MentorSheet>
 
       {confirm === "forget" && (
         <MentorConfirmDialog
@@ -135,7 +123,6 @@ export function MentorE2EESettings({
           onCancel={() => { setConfirm(null); setError(null); }}
         />
       )}
-    </>,
-    document.body
+    </>
   );
 }

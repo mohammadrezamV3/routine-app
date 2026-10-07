@@ -46,7 +46,8 @@
  *     بسته unmount می‌شود.
  *
  *   <MentorSheet open onClose title? labelledBy? size="sm"|"md"|"lg" dismissible?>
- *     پاپ‌آپ: وسط صفحه در دسکتاپ، bottom sheet در موبایل (≤ 560px).
+ *     پاپ‌آپ: وسط صفحه در دسکتاپ (≥ 720px)، bottom sheet در موبایل.
+ *     تله‌ی فوکوس + برگشت فوکوس به بازکننده + Escape.
  *     پورتال به body، قفل اسکرول، Escape و کلیک روی پس‌زمینه = بستن
  *     (مگر dismissible={false})، فوکوس به پنل. سطح همان .modal-panel سایت
  *     است (بک‌گراند تازه ندارد). فوتر دکمه‌ها: <div className="trade-modal-actions">.
@@ -235,7 +236,7 @@ export function MentorCollapse({
 }
 
 /* ── شیت/مودال ──────────────────────────────────────────────── */
-function useIsNarrow(bp = 560) {
+function useIsNarrow(bp = 719) {
   const [narrow, setNarrow] = useState(false);
   useEffect(() => {
     const mq = window.matchMedia(`(max-width:${bp}px)`);
@@ -246,6 +247,8 @@ function useIsNarrow(bp = 560) {
   }, [bp]);
   return narrow;
 }
+
+const FOCUSABLE = 'a[href],button:not([disabled]),input:not([disabled]):not([type="hidden"]),select:not([disabled]),textarea:not([disabled]),[tabindex]:not([tabindex="-1"])';
 
 export function MentorSheet({
   open, onClose, title, labelledBy, size = "md", dismissible = true, role = "dialog", children,
@@ -267,17 +270,43 @@ export function MentorSheet({
   const [mounted, setMounted] = useState(false);
   useEffect(() => setMounted(true), []);
 
+  // آخرین onClose/dismissible در ref تا افکت با هر رندر دوباره اجرا نشه
+  // (وگرنه فوکوس برگشتی به المنت اشتباه می‌رفت)
+  const live = useRef({ onClose, dismissible });
+  live.current = { onClose, dismissible };
+
   useEffect(() => {
     if (!open) return;
-    const prev = document.activeElement as HTMLElement | null;
+    const opener = document.activeElement as HTMLElement | null;
     const t = setTimeout(() => {
       const el = panelRef.current;
       if (el && !el.contains(document.activeElement)) el.focus({ preventScroll: true });
     }, 30);
-    const onKey = (e: KeyboardEvent) => { if (e.key === "Escape" && dismissible) onClose(); };
-    window.addEventListener("keydown", onKey);
-    return () => { clearTimeout(t); window.removeEventListener("keydown", onKey); prev?.focus?.({ preventScroll: true }); };
-  }, [open, dismissible, onClose]);
+    const onKey = (e: KeyboardEvent) => {
+      // پنجره‌ی دیگری (مثلا تایید) روی این شیت باز است: کلید مال اوست
+      const act = document.activeElement as HTMLElement | null;
+      const pe = panelRef.current;
+      if (pe && act && !pe.contains(act) && act.closest('[aria-modal="true"]')) return;
+      if (e.key === "Escape" && live.current.dismissible) { e.stopPropagation(); live.current.onClose(); return; }
+      if (e.key !== "Tab") return;
+      // تله‌ی فوکوس داخل پنل
+      const el = panelRef.current;
+      if (!el) return;
+      const items = Array.from(el.querySelectorAll<HTMLElement>(FOCUSABLE)).filter((n) => n.offsetParent !== null || n === document.activeElement);
+      if (items.length === 0) { e.preventDefault(); el.focus(); return; }
+      const first = items[0], last = items[items.length - 1];
+      const a = document.activeElement;
+      if (e.shiftKey && (a === first || a === el)) { e.preventDefault(); last.focus(); }
+      else if (!e.shiftKey && a === last) { e.preventDefault(); first.focus(); }
+      else if (!el.contains(a)) { e.preventDefault(); first.focus(); }
+    };
+    document.addEventListener("keydown", onKey, true);
+    return () => {
+      clearTimeout(t);
+      document.removeEventListener("keydown", onKey, true);
+      if (opener && document.contains(opener)) opener.focus?.({ preventScroll: true });
+    };
+  }, [open]);
 
   if (!mounted) return null;
   const from = narrow ? { opacity: 1, y: "100%" } : { opacity: 0, y: 8, scale: 0.98 };
@@ -312,7 +341,7 @@ export function MentorSheet({
               <div className="m-sheet-head">
                 <h2 id={titleId} className="m-sheet-title">{title}</h2>
                 {dismissible && (
-                  <button type="button" className="trade-icon-btn" aria-label="بستن" onClick={onClose}>
+                  <button type="button" className="trade-icon-btn mentor-icon-btn" aria-label="بستن" onClick={onClose}>
                     <X size={16} strokeWidth={1.75} aria-hidden />
                   </button>
                 )}

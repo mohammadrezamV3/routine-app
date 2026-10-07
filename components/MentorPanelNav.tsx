@@ -6,7 +6,7 @@ import { usePathname } from "next/navigation";
 import { useSession } from "next-auth/react";
 import { useCallback, useEffect, useState, useSyncExternalStore } from "react";
 import { motion } from "framer-motion";
-import { BarChart3, LayoutDashboard, LayoutTemplate, Settings, Users } from "lucide-react";
+import { LayoutDashboard, LayoutTemplate, Settings, Users } from "lucide-react";
 import { mentorApi } from "./MentorDashKit";
 import { M_DUR, mT } from "./MentorMotion";
 import type { MentorSelf } from "@/lib/mentorTypes";
@@ -20,10 +20,9 @@ import type { MentorSelf } from "@/lib/mentorTypes";
  */
 
 export const MENTOR_PANEL_TABS = [
-  { href: "/mentor", label: "داشبورد", Icon: LayoutDashboard, match: (p: string) => p === "/mentor" },
-  { href: "/mentor/students", label: "شاگردها", Icon: Users, match: (p: string) => p.startsWith("/mentor/students") },
-  { href: "/mentor/templates", label: "قالب‌ها", Icon: LayoutTemplate, match: (p: string) => p.startsWith("/mentor/templates") || p.startsWith("/mentor/programs") },
-  { href: "/mentor/reports", label: "گزارش‌ها", Icon: BarChart3, match: (p: string) => p.startsWith("/mentor/reports") },
+  { href: "/mentor", label: "امروز", Icon: LayoutDashboard, match: (p: string) => p === "/mentor" },
+  { href: "/mentor/students", label: "شاگردها", Icon: Users, match: (p: string) => p.startsWith("/mentor/students") || p.startsWith("/mentor/reports") },
+  { href: "/mentor/templates", label: "برنامه‌ها", Icon: LayoutTemplate, match: (p: string) => p.startsWith("/mentor/templates") || p.startsWith("/mentor/programs") },
   { href: "/mentor/settings", label: "تنظیمات", Icon: Settings, match: (p: string) => p.startsWith("/mentor/settings") || p.startsWith("/mentor/profile") },
 ] as const;
 

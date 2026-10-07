@@ -3,13 +3,12 @@
 import "./mentor.css";
 import { TickButton } from "./TickButton";
 import { useCallback, useEffect, useMemo, useState } from "react";
-import { createPortal } from "react-dom";
-import { Lock, Megaphone, Send, X } from "lucide-react";
+import { Lock, Megaphone, Send } from "lucide-react";
 import { faNum } from "@/lib/jalali";
 import { publicUserName, type PublicUser } from "@/lib/mentorTypes";
 import { NETWORK_ERROR, readApiError } from "@/lib/mentorFormat";
 import { broadcastCipher, type Identity } from "@/lib/e2ee/client";
-import { LockBodyScroll } from "./LockBodyScroll";
+import { MentorSheet } from "./MentorSheet";
 import { LoadingBlock, Spinner } from "./Spinner";
 import { MentorE2EEGate } from "./MentorE2EEGate";
 import { MentorEmpty, MentorField, MentorSection, MI, MI_STROKE } from "./MentorUI";
@@ -50,22 +49,10 @@ export function MentorBroadcast({ activeCount }: { activeCount: number }) {
 
 function BroadcastModal({ onClose }: { onClose: () => void }) {
   const [busy, setBusy] = useState(false);
-  if (typeof document === "undefined") return null;
-  return createPortal(
-    <>
-      <LockBodyScroll />
-      <div className="modal-overlay open" onClick={() => !busy && onClose()} style={{ zIndex: 90 }} />
-      <div className="modal-panel open mentor-modal" role="dialog" aria-modal="true" aria-label="ارسال گروهی" style={{ zIndex: 91, maxWidth: 480 }}>
-        <div className="modal-head">
-          <div className="modal-title">ارسال گروهی</div>
-          <button type="button" className="trade-icon-btn" onClick={onClose} aria-label="بستن" disabled={busy}>
-            <X size={16} strokeWidth={1.75} />
-          </button>
-        </div>
-        <MentorE2EEGate>{(identity) => <BroadcastForm identity={identity} busy={busy} setBusy={setBusy} onClose={onClose} />}</MentorE2EEGate>
-      </div>
-    </>,
-    document.body
+  return (
+    <MentorSheet open onClose={onClose} title="ارسال گروهی" size="lg" dismissible={!busy}>
+      <MentorE2EEGate>{(identity) => <BroadcastForm identity={identity} busy={busy} setBusy={setBusy} onClose={onClose} />}</MentorE2EEGate>
+    </MentorSheet>
   );
 }
 

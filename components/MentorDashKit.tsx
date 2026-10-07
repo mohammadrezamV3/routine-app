@@ -129,10 +129,10 @@ export function MentorDashNotice({
 }
 
 /** نوار پیشرفت باریک — همون `.rp-bar` رودمپ‌ها */
-export function MentorDashBar({ rate }: { rate: number | null | undefined }) {
+export function MentorDashBar({ rate, label }: { rate: number | null | undefined; label?: string }) {
   const pct = Math.round(normRate(rate) * 100);
   return (
-    <div className="rp-bar" role="progressbar" aria-valuenow={pct} aria-valuemin={0} aria-valuemax={100}>
+    <div className="rp-bar" role="progressbar" aria-label={label} aria-valuetext={`${pct} درصد`} aria-valuenow={pct} aria-valuemin={0} aria-valuemax={100}>
       <span style={{ width: `${pct}%` }} />
     </div>
   );
