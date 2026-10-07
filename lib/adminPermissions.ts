@@ -91,6 +91,7 @@ const ROUTE_PERMISSIONS: [string, AdminPermission | null][] = [
   ["/admin/mentors", "mentors"],
   ["/admin/economic-calendar", "content"],
   ["/admin/announcements", "content"],
+  ["/admin/broadcast", "content"],
   ["/admin/exercise-media", "content"],
   ["/admin/products", "analytics"],
   ["/admin/analytics", "analytics"],
