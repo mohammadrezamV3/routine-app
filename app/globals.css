@@ -9135,7 +9135,7 @@ html[data-perf="low"] body[data-theme] .modal-panel{
   .exercise-rules-box, .exercise-locked-box, .admin-card, .admin-kpi-tile, .admin-chart-card,
   .admin-role-card, .cal-cell:not(.empty), .sl-card, .sl-stat, .trade-stat-tile, .wk-card,
   .stk-ach-item, .mentor-note-box, .ls-card, .wl-card, .wl-cover,
-  .blog-card, .blog-takeaways, .blog-inline-cta, .blog-signup, .blog-toc-side,
+  .blog-card, .blog-takeaways, .blog-inline-cta, .blog-signup, .blog-toc-side, .tl-hub-card,
   :is(div, section, article).rounded-dash.border-dash-border.bg-dash-card
 ){
   --box-hover:1;
