@@ -1,22 +1,16 @@
 "use client";
 
 import { motion } from "framer-motion";
-import {
-  Activity, Anchor, Crown, Feather, Rocket, Scale, Sparkles, Sprout, TrendingUp, Undo2, Zap,
-  type LucideIcon,
-} from "lucide-react";
-import type { DayCell, WeekArchetypeKey, WeeklyAnalysis } from "@/lib/weeklyAnalysis/types";
+import { Sparkles } from "lucide-react";
+import type { WeeklyAnalysis } from "@/lib/weeklyAnalysis/types";
 import { GradientRing, RING_GREEN } from "./GradientRing";
 import {
-  DeltaChip, Num, V_WK_CARD, gradeOfScore, scoreGrad, useMounted, weekdayLetter, WK_EASE,
+  DeltaChip, Num, V_WK_CARD, gradeOfScore, useMounted, WK_EASE,
 } from "./WeeklyAnalysisKit";
 import "./wa-shell.css";
 
-const RING = 184;
-const STROKE = 15;
-const RING_OPEN = 212;
-const STROKE_OPEN = 17;
-const DAY_RING = 46;
+const RING_OPEN = 280;
+const STROKE_OPEN = 18;
 const RING_COMPACT = 112; // پیش‌نمایش لندینگ
 const STROKE_COMPACT = 10;
 
@@ -26,27 +20,6 @@ function fallbackHeadline(a: WeeklyAnalysis): string {
   if (s === null) return "برای این هفته هنوز داده‌ای ثبت نشده";
   return `امتیاز کل این هفته ${Math.round(s)} از 100 شد`;
 }
-
-// هر تیپ هفته یک آیکون داره (داخل حلقه‌ی کارت تیپ)
-const ARCHE_ICONS: Record<WeekArchetypeKey, LucideIcon> = {
-  perfect: Crown,
-  steady: Anchor,
-  comeback: Undo2,
-  fast_start: Rocket,
-  rollercoaster: Activity,
-  rising: TrendingUp,
-  quiet: Feather,
-  balanced: Scale,
-  building: Sprout,
-};
-
-// لحن تیپ فقط رنگ آیکون کوچک کارت رو تعیین می‌کنه: خوب = رنگ داده، بد = زیان،
-// خنثی = رنگ متن. (عنوان تیپ همیشه خنثیه.)
-const TONE_COLORS: Record<"good" | "bad" | "neutral", string> = {
-  good: "var(--ring-1a)",
-  bad: "var(--pnl-loss)",
-  neutral: "var(--text)",
-};
 
 // نوار پیش‌بینی: بازه‌ی low تا high روی خط 0 تا 100 با نشانگر امتیاز پیش‌بینی
 // و نشانگر امتیاز فعلی. محور عددی همیشه چپ‌به‌راست (0 چپ).
@@ -85,58 +58,6 @@ function GradeSeal({ grade, compact }: { grade: string; compact: boolean }) {
   );
 }
 
-// ---- کارت تیپ هفته ----
-function ArchetypeCard({ arche }: { arche: NonNullable<WeeklyAnalysis["archetype"]> }) {
-  const Icon = ARCHE_ICONS[arche.key] ?? Zap;
-  const tone = TONE_COLORS[arche.tone] ?? TONE_COLORS.neutral;
-  return (
-    <div className="wk-arche" style={{ ["--wk-at" as string]: tone }}>
-      <span className="wk-arche-ic" aria-hidden="true"><Icon size={20} /></span>
-      <div className="wk-arche-text">
-        <span className="wk-arche-kicker">تیپ این هفته</span>
-        <b className="wk-arche-title">{arche.title}</b>
-        {arche.description && <p className="wk-arche-desc">{arche.description}</p>}
-      </div>
-    </div>
-  );
-}
-
-// ردیف هفت حلقه‌ی کوچک روزها: امتیاز هر روز، امروز با خط زیرین، روز آینده کم‌رنگ
-function DayRings({ days, onPickDay }: { days: DayCell[]; onPickDay?: (i: number) => void }) {
-  return (
-    <div className="wa-days" role="group" aria-label="امتیاز روزهای هفته" data-noswipe>
-      {days.slice(0, 7).map((d, i) => {
-        const has = !d.isFuture && d.score !== null;
-        const pickable = !!onPickDay && !d.isFuture;
-        const inner = (
-          <>
-            {d.isFuture ? (
-              <span className="wa-day-future" style={{ width: DAY_RING, height: DAY_RING }} aria-hidden="true" />
-            ) : (
-              <GradientRing value={has ? (d.score as number) / 100 : 0} size={DAY_RING} stroke={4.5} grad={scoreGrad(d.score)} delay={0.5 + i * 0.07}>
-                <span className="wa-day-score">{has ? Math.round(d.score as number) : ""}</span>
-              </GradientRing>
-            )}
-            <span className="wa-day-name">{weekdayLetter(d.weekday)}</span>
-          </>
-        );
-        const cls = `wa-day${d.isToday ? " is-today" : ""}${d.isFuture ? " is-future" : ""}${has ? "" : " is-empty"}`;
-        return pickable ? (
-          <button
-            key={d.date}
-            type="button"
-            className={`wk-ghost ${cls}`}
-            onClick={() => onPickDay?.(i)}
-            aria-label={`${d.weekday}: ${has ? Math.round(d.score as number) : "بدون داده"}`}
-          >{inner}</button>
-        ) : (
-          <span key={d.date} className={cls} title={`${d.weekday}: ${d.isFuture ? "هنوز نرسیده" : "بدون داده"}`}>{inner}</span>
-        );
-      })}
-    </div>
-  );
-}
-
 function Prediction({ analysis, inline = false }: { analysis: WeeklyAnalysis; inline?: boolean }) {
   const pred = analysis.isCurrentWeek ? analysis.prediction : null;
   if (!pred) return null;
@@ -168,6 +89,21 @@ function Prediction({ analysis, inline = false }: { analysis: WeeklyAnalysis; in
   );
 }
 
+// پیش‌بینی پایان هفته (فقط هفته‌ی جاری): برچسب + نوار بازه
+function Forecast({ analysis }: { analysis: WeeklyAnalysis }) {
+  const pred = analysis.isCurrentWeek ? analysis.prediction : null;
+  if (!pred) return null;
+  return (
+    <div className="wa-forecast">
+      <div className="wa-forecast-row">
+        <span>پیش‌بینی پایان هفته</span>
+        <b>حدود <span className="wk-num">{Math.round(pred.projectedScore)}</span></b>
+      </div>
+      <PredictionBand projected={pred.projectedScore} low={pred.low} high={pred.high} now={analysis.overall.score} />
+    </div>
+  );
+}
+
 function deltaText(analysis: WeeklyAnalysis) {
   const o = analysis.overall;
   if (o.prevScore === null) return analysis.isCurrentWeek && analysis.daysElapsed < 3 ? "مقایسه با هفته‌ی قبل از روز سوم" : "هفته‌ی قبل داده نداشت";
@@ -177,7 +113,7 @@ function deltaText(analysis: WeeklyAnalysis) {
 // پیش‌نمایش فشرده‌ی لندینگ (compact) همون کارت قبلیه؛ نسخه‌ی کامل بدون قاب
 // و دو ناحیه‌ایه: حلقه‌ی بزرگ امتیاز در یک سمت، تیتر/تیپ/روزها در سمت دیگه.
 export function WeeklyAnalysisHero({
-  analysis, compact = false, onPickDay,
+  analysis, compact = false,
 }: { analysis: WeeklyAnalysis; compact?: boolean; onPickDay?: (i: number) => void }) {
   const o = analysis.overall;
   const arche = analysis.archetype;
@@ -218,31 +154,50 @@ export function WeeklyAnalysisHero({
     );
   }
 
-  const hasDays = Array.isArray(analysis.days) && analysis.days.length >= 7;
+  const best = o.bestDay;
   return (
     <motion.section className="wa-hero" data-grade={grade} variants={V_WK_CARD} aria-label="خلاصه‌ی هفته">
-      <div className="wa-hero-visual">
-        <div className="wa-ring-wrap">
-          <GradientRing value={pct} size={RING_OPEN} stroke={STROKE_OPEN} grad={RING_GREEN} delay={0.3}>
-            <div className="wk-hero-center">
-              <span className="wk-hero-score wa-score"><Num value={o.score === null ? null : Math.round(o.score)} duration={1.3} delay={0.3} empty="—" /></span>
-              <span className="wk-hero-of">{o.score === null ? "بدون داده" : "از 100"}</span>
-            </div>
-          </GradientRing>
-          {o.grade && <span className="wa-grade"><GradeSeal grade={o.grade} compact={false} /></span>}
-        </div>
+      <div className="wa-hero-text">
+        {arche && <span className="wa-kicker">تیپ این هفته · {arche.title}</span>}
+        <h2 className="wa-headline">{headline}</h2>
+        {arche?.description && <p className="wa-summary">{arche.description}</p>}
+        <dl className="wa-kpis">
+          <div className="wa-kpi">
+            <dt>روزهای فعال</dt>
+            <dd><span className="wk-num">{o.activeDays}</span><small>/7</small></dd>
+          </div>
+          <div className="wa-kpi">
+            <dt>ثبات</dt>
+            <dd>{o.consistency === null ? <span className="wk-num">—</span> : <><span className="wk-num">{Math.round(o.consistency)}</span><small>%</small></>}</dd>
+          </div>
+          <div className="wa-kpi">
+            <dt>بهترین روز</dt>
+            <dd>
+              {best && best.score !== null
+                ? <><span className="wa-kpi-day">{best.weekday}</span><small className="is-good wk-num">{Math.round(best.score)}</small></>
+                : <span className="wk-num">—</span>}
+            </dd>
+          </div>
+        </dl>
       </div>
 
-      <div className="wa-hero-text">
-        <div className="wk-hero-eyebrow wa-eyebrow"><span>امتیاز کل هفته</span></div>
-        <h2 className="wa-headline">{headline}</h2>
-        {arche && <ArchetypeCard arche={arche} />}
-        <div className="wk-hero-delta">
-          <DeltaChip delta={o.delta} size="lg" />
-          <span className="wk-muted">{deltaText(analysis)}</span>
+      <div className="wa-hero-visual">
+        <div className="wa-ring-box">
+          <div className="wa-ring-in">
+            <GradientRing value={pct} size={RING_OPEN} stroke={STROKE_OPEN} grad={RING_GREEN} delay={0.3}>
+              <div className="wa-ring-center">
+                <span className="wa-score"><Num value={o.score === null ? null : Math.round(o.score)} duration={1.3} delay={0.3} empty="—" /></span>
+                <span className="wa-of">{o.score === null ? "بدون داده" : "از 100"}</span>
+              </div>
+            </GradientRing>
+            {o.grade && <span className="wa-grade-badge" aria-label={`نمره ${o.grade}`}>{o.grade}</span>}
+          </div>
         </div>
-        {hasDays && <DayRings days={analysis.days} onPickDay={onPickDay} />}
-        <Prediction analysis={analysis} inline />
+        <div className="wa-delta-row">
+          <DeltaChip delta={o.delta} size="lg" />
+          <span className="wa-delta-note">{deltaText(analysis)}</span>
+        </div>
+        <Forecast analysis={analysis} />
       </div>
     </motion.section>
   );
