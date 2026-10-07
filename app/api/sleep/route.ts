@@ -1,7 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { ModuleKey } from "@prisma/client";
-import { getServerSession } from "next-auth";
-import { authOptions } from "@/lib/auth";
+import { getSessionFast } from "@/lib/serverSession";
 import { prisma } from "@/lib/prisma";
 import { requireModule } from "@/lib/moduleAccess";
 import { parseDateRange, parseIsoDate, readJsonBody } from "@/lib/validate";
@@ -48,7 +47,7 @@ function optInt(v: unknown, max: number): number | null {
 // tasks/daily): بعد از پایان دوره‌ی رایگان هم تاریخچه گروگان نمی‌مونه؛ نوشتن پلن می‌خواد.
 export async function GET(req: NextRequest) {
   { const off = await sessionFeatureBlocked("sleep"); if (off) return off; }
-  const session = await getServerSession(authOptions);
+  const session = await getSessionFast();
   const userId = (session?.user as { id?: string } | undefined)?.id;
   if (!userId) return NextResponse.json({ error: "unauthorized" }, { status: 401 });
 

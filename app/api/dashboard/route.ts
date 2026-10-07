@@ -1,6 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
-import { getServerSession } from "next-auth";
-import { authOptions } from "@/lib/auth";
+import { getSessionFast } from "@/lib/serverSession";
 import { getAdminFlags } from "@/lib/adminFlag";
 import { checkRateLimit } from "@/lib/rateLimit";
 import { featureBlocked } from "@/lib/featureFlagsServer";
@@ -19,7 +18,7 @@ export const dynamic = "force-dynamic";
  * این روت برای تازه‌سازی‌های بعدیه.
  */
 export async function GET(req: NextRequest) {
-  const session = await getServerSession(authOptions);
+  const session = await getSessionFast();
   const userId = (session?.user as any)?.id as string | undefined;
   if (!userId) return NextResponse.json({ error: "unauthorized" }, { status: 401 });
 

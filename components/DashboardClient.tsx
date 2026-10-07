@@ -10,7 +10,9 @@
 //   • چیدمان بنتو با grid-template-areas در app/dashboard/dashboard.css.
 
 import "@/app/dashboard/dashboard.css";
-import { useCallback, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useState } from "react";
+import dynamic from "next/dynamic";
+import { preloadWhenIdle } from "@/lib/preloadIdle";
 import { useRouter } from "next/navigation";
 import { useSession } from "next-auth/react";
 import { MotionConfig, motion } from "framer-motion";
@@ -31,8 +33,7 @@ import { DashboardMarket } from "./DashboardMarket";
 import { DashboardInbox, DashboardMentors, DashboardRoadmaps } from "./DashboardSocial";
 import { DashboardQuickActions } from "./DashboardLauncher";
 import { DashboardActionsProvider } from "./DashboardActions";
-import { DashboardCommand, useCommandHotkey } from "./DashboardCommand";
-import { DashboardShare } from "./DashboardShare";
+import { useCommandHotkey } from "./DashboardCommand";
 import { V_GRID } from "./DashboardKit";
 import { DashIcon } from "./DashboardIcons";
 
@@ -99,6 +100,12 @@ function bentoAreas(has: Set<Area>) {
   return { ["--areas-lg" as any]: lg.join(" "), ["--areas-md" as any]: md.join(" "), ["--areas-sm" as any]: sm } as React.CSSProperties;
 }
 
+// پنجره‌های جست‌وجو و اشتراک فقط با تعامل باز می‌شن؛ چانکشون خارج از مسیر لود اولیه‌ست
+const loadCommand = () => import("./DashboardCommand").then((m) => m.DashboardCommand);
+const loadShare = () => import("./DashboardShare").then((m) => m.DashboardShare);
+const DashboardCommand = dynamic(loadCommand, { ssr: false });
+const DashboardShare = dynamic(loadShare, { ssr: false });
+
 function DashboardBody({ initial }: { initial: { key: string; data: DashboardData } | null }) {
   const { data, status, refresh } = useDashboardData(initial);
   const router = useRouter();
@@ -111,6 +118,12 @@ function DashboardBody({ initial }: { initial: { key: string; data: DashboardDat
   const [shareOpen, setShareOpen] = useState(false);
   const toggleCmd = useCallback((fn: (v: boolean) => boolean) => setCmdOpen(fn), []);
   useCommandHotkey(toggleCmd);
+  // بعد از اولین باز شدن mount می‌مونه تا انیمیشن بسته‌شدن سر جاش بمونه
+  const [cmdEver, setCmdEver] = useState(false);
+  const [shareEver, setShareEver] = useState(false);
+  useEffect(() => { if (cmdOpen) setCmdEver(true); }, [cmdOpen]);
+  useEffect(() => { if (shareOpen) setShareEver(true); }, [shareOpen]);
+  useEffect(() => { preloadWhenIdle(loadCommand); preloadWhenIdle(loadShare); }, []);
 
   const features = data?.features ?? flagFeatures;
   const modules = useMemo(() => (data ? new Set(data.modules) : null), [data]);
@@ -179,8 +192,8 @@ function DashboardBody({ initial }: { initial: { key: string; data: DashboardDat
         <DashboardInbox data={data} loading={loading} />
       </motion.div>
 
-      <DashboardShare open={shareOpen} onClose={() => setShareOpen(false)} data={data} routine={routine} routineLocked={routineLocked} />
-      <DashboardCommand open={cmdOpen} onClose={() => setCmdOpen(false)} features={features} modules={modules} isAdmin={isAdmin} />
+      {shareEver && <DashboardShare open={shareOpen} onClose={() => setShareOpen(false)} data={data} routine={routine} routineLocked={routineLocked} />}
+      {cmdEver && <DashboardCommand open={cmdOpen} onClose={() => setCmdOpen(false)} features={features} modules={modules} isAdmin={isAdmin} />}
       </DashboardActionsProvider>
     </MotionConfig>
   );

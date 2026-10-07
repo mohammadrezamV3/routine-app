@@ -1,7 +1,6 @@
 import type { Metadata } from "next";
 import { redirect } from "next/navigation";
-import { getServerSession } from "next-auth";
-import { authOptions } from "@/lib/auth";
+import { getSessionFast } from "@/lib/serverSession";
 import { prisma } from "@/lib/prisma";
 import { isFeatureEnabled, serverHomePath } from "@/lib/featureFlagsServer";
 import { buildDashboard, dashboardKey, dayInTimezone } from "@/lib/dashboardServer";
@@ -23,7 +22,7 @@ export const dynamic = "force-dynamic";
  * کلاینت خودش یک بار با تاریخ مرورگر دوباره می‌گیره.
  */
 export default async function DashboardPage() {
-  const session = await getServerSession(authOptions);
+  const session = await getSessionFast();
   const userId = (session?.user as { id?: string } | undefined)?.id;
   if (!userId) return <DashboardClient gate="guest" initial={null} />;
 
@@ -31,12 +30,14 @@ export default async function DashboardPage() {
   // صفحه‌ی قفل؛ چون /dashboard حالا مقصد پیش‌فرض بعد از ورود و fallback
   // lib/homePath.ts هم هست، کاربر هیچ‌وقت نباید این‌جا پشت قفل بمونه.
   // روتین هم خاموش باشه → پنل کاربری (serverHomePath)
+  // منطقه‌ی زمانی با گیت فلگ مستقله → هم‌زمان (یک رفت‌وبرگشت دیتابیس کمتر)
+  const tzPromise = prisma.user.findUnique({ where: { id: userId }, select: { timezone: true } }).catch(() => null);
   if (!(await isFeatureEnabled("dashboard", userId))) redirect(await serverHomePath(userId));
 
   let initial: { key: string; data: Awaited<ReturnType<typeof buildDashboard>> } | null = null;
   let gate: DashboardGate = "on";
   try {
-    const u = await prisma.user.findUnique({ where: { id: userId }, select: { timezone: true } });
+    const u = await tzPromise;
     const day = dayInTimezone(u?.timezone);
     const data = await buildDashboard(userId, day);
     if (data === "blocked" || data === "notfound") gate = "off";

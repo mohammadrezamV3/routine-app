@@ -150,6 +150,8 @@ const nextConfig = {
   experimental: {
     instrumentationHook: true,
     serverComponentsExternalPackages: ["ws", "pg"],
+    // ایمپورت‌های barrel رو به ماژول‌های تکی می‌شکنه تا فقط چیزی که استفاده شده وارد باندل بشه
+    optimizePackageImports: ["lucide-react", "framer-motion", "animejs"],
     // فایل‌های اکسپرت مدیریت سرمایه با fs خونده می‌شن (نه import)، پس باید صریح توی خروجی standalone بیان
     outputFileTracingIncludes: { "/api/trade/money/ea": ["./ea-src/**"] },
   },

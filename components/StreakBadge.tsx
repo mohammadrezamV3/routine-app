@@ -3,7 +3,13 @@
 import { useEffect, useRef, useState } from "react";
 import { useMyStreak } from "@/lib/useMyStreak";
 import { StreakFlame } from "./StreakFlame";
-import { StreakCelebration, type StreakCelebrationProps } from "./StreakCelebration";
+import dynamic from "next/dynamic";
+import type { StreakCelebrationProps } from "./StreakCelebration";
+import { preloadWhenIdle } from "@/lib/preloadIdle";
+
+// جشن فقط روز اول تیک کامل دیده می‌شه؛ چانکش (کارت اشتراک + شعله‌ی انیمیشنی) در بیکاری گرم می‌شه
+const loadCelebration = () => import("./StreakCelebration").then((m) => m.StreakCelebration);
+const StreakCelebration = dynamic(loadCelebration, { ssr: false });
 
 // یک جشن در روز، روی همین دستگاه — تیک‌برداشتن و دوباره تیک‌زدن دوباره جشن نمی‌گیره
 const CELEBRATED_KEY = "arion:streakCelebrated";
@@ -24,6 +30,8 @@ export function StreakBadge({ className }: { className?: string }) {
   const prevDone = useRef<boolean | null>(null);
   const [cel, setCel] = useState<Omit<StreakCelebrationProps, "anchor" | "onClose"> | null>(null);
   const [landing, setLanding] = useState(false);
+
+  useEffect(() => { preloadWhenIdle(loadCelebration); }, []);
 
   useEffect(() => {
     if (streak === null) return;

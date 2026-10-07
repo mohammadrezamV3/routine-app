@@ -1,6 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
-import { getServerSession } from "next-auth";
-import { authOptions } from "@/lib/auth";
+import { getSessionFast } from "@/lib/serverSession";
 import { prisma } from "@/lib/prisma";
 import { parseIsoDate, readJsonBody } from "@/lib/validate";
 import { withLiveSync } from "@/lib/realtime";
@@ -14,7 +13,7 @@ const MAX_DAILY_TASK_KEYS = 500;
 // GET /api/tasks/daily?date=2026-07-24
 export async function GET(req: NextRequest) {
   { const off = await sessionFeatureBlocked("routine"); if (off) return off; }
-  const session = await getServerSession(authOptions);
+  const session = await getSessionFast();
   const userId = (session?.user as any)?.id;
   if (!userId) return NextResponse.json({ error: "unauthorized" }, { status: 401 });
 

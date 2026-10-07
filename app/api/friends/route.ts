@@ -1,6 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
-import { getServerSession } from "next-auth";
-import { authOptions } from "@/lib/auth";
+import { getSessionFast } from "@/lib/serverSession";
 import { prisma } from "@/lib/prisma";
 import { NAME_STYLE_SELECT, nameFlags } from "@/lib/nameStyle";
 import { routineStatsForUsers, RoutineStats } from "@/lib/friendStats";
@@ -84,7 +83,7 @@ async function statsForUserCalorie(userId: string) {
 // وگرنه پیشرفت روتین روزانه (پیش‌فرض، برای داشبورد اصلی).
 export async function GET(req: NextRequest) {
   { const off = await sessionFeatureBlocked("friends"); if (off) return off; }
-  const session = await getServerSession(authOptions);
+  const session = await getSessionFast();
   const userId = (session?.user as any)?.id;
   if (!userId) return NextResponse.json({ error: "unauthorized" }, { status: 401 });
 
@@ -139,7 +138,7 @@ export async function GET(req: NextRequest) {
 // username برای سازگاری با ورودی مستقیم یوزرنیم.
 export async function POST(req: NextRequest) {
   { const off = await sessionFeatureBlocked("friends"); if (off) return off; }
-  const session = await getServerSession(authOptions);
+  const session = await getSessionFast();
   const userId = (session?.user as any)?.id;
   if (!userId) return NextResponse.json({ error: "unauthorized" }, { status: 401 });
 

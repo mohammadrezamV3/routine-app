@@ -1,7 +1,6 @@
 import { accountUserSelect, toAccountUser } from "@/lib/accountPayload";
 import { NextRequest, NextResponse } from "next/server";
-import { getServerSession } from "next-auth";
-import { authOptions } from "@/lib/auth";
+import { getSessionFast } from "@/lib/serverSession";
 import { prisma } from "@/lib/prisma";
 import { parseDateRange } from "@/lib/validate";
 import { BOOTSTRAP_SETTING_KEYS } from "@/lib/userSettingKeys";
@@ -28,7 +27,7 @@ import { BOOTSTRAP_SETTING_KEYS } from "@/lib/userSettingKeys";
  * خواندنی که خارج از موج لود اولیه اتفاق می‌افته.
  */
 export async function GET(req: NextRequest) {
-  const session = await getServerSession(authOptions);
+  const session = await getSessionFast();
   const userId = (session?.user as any)?.id;
   if (!userId) return NextResponse.json({ error: "unauthorized" }, { status: 401 });
 

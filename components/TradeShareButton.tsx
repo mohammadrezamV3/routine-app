@@ -8,8 +8,13 @@ import { useEffect, useState } from "react";
 import { useSession } from "next-auth/react";
 import { Share2 } from "lucide-react";
 import { activeModulesOf, getAccount } from "@/lib/accountCache";
-import { TradeSharePanel } from "./TradeSharePanel";
+import dynamic from "next/dynamic";
+import { preloadWhenIdle } from "@/lib/preloadIdle";
 import { useFeature } from "@/lib/useFeatures";
+
+// پنجره‌ی اشتراک (رندر canvas کارنامه) فقط با کلیک لازم می‌شه
+const loadPanel = () => import("./TradeSharePanel").then((m) => m.TradeSharePanel);
+const TradeSharePanel = dynamic(loadPanel, { ssr: false });
 
 export function TradeShareButton({ account = "all", deepLink = false, className, size = 17 }: {
   account?: string;
@@ -23,6 +28,9 @@ export function TradeShareButton({ account = "all", deepLink = false, className,
   const [moduleOk, setAllowed] = useState(false);
   const allowed = moduleOk && flagOn;
   const [open, setOpen] = useState(false);
+  const [ever, setEver] = useState(false);
+  useEffect(() => { if (open) setEver(true); }, [open]);
+  useEffect(() => { if (allowed) preloadWhenIdle(loadPanel); }, [allowed]);
 
   useEffect(() => {
     if (status !== "authenticated") { setAllowed(false); return; }
@@ -55,7 +63,7 @@ export function TradeShareButton({ account = "all", deepLink = false, className,
       >
         <Share2 size={size} />
       </button>
-      <TradeSharePanel open={open} onClose={() => setOpen(false)} initialAccount={account} />
+      {ever && <TradeSharePanel open={open} onClose={() => setOpen(false)} initialAccount={account} />}
     </>
   );
 }

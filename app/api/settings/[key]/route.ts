@@ -1,6 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
-import { getServerSession } from "next-auth";
-import { authOptions } from "@/lib/auth";
+import { getSessionFast } from "@/lib/serverSession";
 import { prisma } from "@/lib/prisma";
 import { readJsonBody } from "@/lib/validate";
 import { isUserSettingKey, MAX_SETTING_VALUE_BYTES } from "@/lib/userSettingKeys";
@@ -21,7 +20,7 @@ function rejectUnknownKey(key: string) {
 
 // GET /api/settings/theme  →  { value: ... }  (یا null اگه ذخیره نشده)
 export async function GET(req: NextRequest, { params }: { params: { key: string } }) {
-  const session = await getServerSession(authOptions);
+  const session = await getSessionFast();
   const userId = (session?.user as any)?.id;
   if (!userId) return NextResponse.json({ error: "unauthorized" }, { status: 401 });
   if (!isUserSettingKey(params.key)) return rejectUnknownKey(params.key);
@@ -34,7 +33,7 @@ export async function GET(req: NextRequest, { params }: { params: { key: string 
 
 // POST /api/settings/theme  { value }
 async function handlePOST(req: NextRequest, { params }: { params: { key: string } }) {
-  const session = await getServerSession(authOptions);
+  const session = await getSessionFast();
   const userId = (session?.user as any)?.id;
   if (!userId) return NextResponse.json({ error: "unauthorized" }, { status: 401 });
   if (!isUserSettingKey(params.key)) return rejectUnknownKey(params.key);

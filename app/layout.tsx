@@ -9,9 +9,7 @@ import { BackgroundCanvasLoader } from "@/components/BackgroundCanvasLoader";
 import { SvgFilters } from "@/components/SvgFilters";
 import { AuthSessionProvider } from "@/components/AuthSessionProvider";
 import { MotionTuner } from "@/components/MotionTuner";
-import { getServerSession } from "next-auth";
-import { authOptions } from "@/lib/auth";
-import { NotificationEngine } from "@/components/NotificationEngine";
+import { getSessionFast } from "@/lib/serverSession";
 import { PRELOAD_SCRIPT } from "@/lib/preload";
 import { THEME_INIT_SCRIPT, THEME_COLORS, THEME_COOKIE } from "@/lib/themeColor";
 import { cookies } from "next/headers";
@@ -24,9 +22,7 @@ import { SITE_URL, organizationJsonLd, websiteJsonLd, softwareApplicationJsonLd,
 import { PUBLIC_PAGES } from "@/lib/llmsContent";
 import { InlineBootstrap } from "@/components/InlineBootstrap";
 import { PwaProvider } from "@/components/PwaProvider";
-import { RealtimeProvider } from "@/components/RealtimeProvider";
 import { InviteRefCapture } from "@/components/InviteRefCapture";
-import { AnnouncementDelivery } from "@/components/AnnouncementDelivery";
 import { PopupExitAnimator } from "@/components/PopupExitAnimator";
 import { BoxHoverTracker } from "@/components/BoxHoverTracker";
 import { RouteProgress } from "@/components/RouteProgress";
@@ -34,7 +30,7 @@ import { Suspense } from "react";
 import { BootSplash } from "@/components/BootSplash";
 import { BootSplashRelease } from "@/components/BootSplashRelease";
 import { AssetRecovery } from "@/components/AssetRecovery";
-import { EventThemeGreeting } from "@/components/EventThemeGreeting";
+import { DeferredEffects } from "@/components/DeferredEffects";
 import { MaintenanceBanner } from "@/components/MaintenanceBanner";
 import { getActiveEventThemeId } from "@/lib/eventThemeServer";
 import { EVENT_PREVIEW_KEY } from "@/lib/eventThemeState";
@@ -203,7 +199,7 @@ async function resolveInitialTheme(userId: string | undefined): Promise<{ theme:
 }
 
 export default async function RootLayout({ children }: { children: React.ReactNode }) {
-  const session = await getServerSession(authOptions);
+  const session = await getSessionFast();
   // تم از همون اولین بایت HTML درسته، نه بعد از اجرای اسکریپت inline.
   // قبلا سرور همیشه data-theme="dark" می‌فرستاد و اسکریپت بعدا (روی کوکی)
   // عوضش می‌کرد؛ ولی اگه مرورگر قبل از اون اسکریپت حتی یک بار استایل رو
@@ -221,10 +217,11 @@ export default async function RootLayout({ children }: { children: React.ReactNo
   // `transition:background` به تم دیگر می‌رفت — اندازه‌گیری‌شده روی کاربر
   // آزمایشی با کوکی dark و تم حساب light. یک findUnique روی کلید یکتای
   // (userId, key)؛ فقط برای کاربر لاگین‌کرده.
-  const { theme, fromAccount } = await resolveInitialTheme((session?.user as { id?: string } | undefined)?.id);
-  // تم مناسبتی زنده برای همه — از همون اولین بایت HTML (بدون فلش)
-  let eventThemeId: string | null = null;
-  try { eventThemeId = await getActiveEventThemeId(); } catch { eventThemeId = null; }
+  // تم مناسبتی زنده برای همه — از همون اولین بایت HTML (بدون فلش)؛ موازی با تم حساب
+  const [{ theme, fromAccount }, eventThemeId] = await Promise.all([
+    resolveInitialTheme((session?.user as { id?: string } | undefined)?.id),
+    getActiveEventThemeId().catch((): string | null => null),
+  ]);
   return (
     // data-theme روی html هم هست (نه فقط body): پس‌زمینه‌ی خود <html> همونیه
     // که سافاری توی ناحیه‌ی امن (زیر ناچ / بالای نوار خانه) و موقع اورراسکرول
@@ -289,21 +286,17 @@ export default async function RootLayout({ children }: { children: React.ReactNo
               {/* نوار تعمیر (lib/maintenance.ts) — وقتی خاموشه چیزی رندر نمی‌کنه */}
               <MaintenanceBanner />
               <NavDrawer />
-              <NotificationEngine />
-              {/* WebSocket `/ws` برای کاربر لاگین‌کرده — تغییرات همون لحظه روی همه‌ی دستگاه‌ها */}
-              <RealtimeProvider />
               {/* ثبت سرویس‌ورکر (کش app shell) + پیشنهاد نصب اپ */}
               <PwaProvider />
               {/* لینک دعوت دوست (?ref=) — lib/invite.ts */}
               <InviteRefCapture />
-              {/* پاپ‌آپ/بنر اطلاعیه‌ها — بعد از اولین پینت، در زمان بیکاری (lib/announcements.ts) */}
-              <AnnouncementDelivery />
+              {/* یادآور + realtime + اطلاعیه + تبریک مناسبت — بعد از اولین پینت، در زمان بیکاری */}
+              <DeferredEffects />
               {/* Suspense: RouteProgress از useSearchParams استفاده می‌کنه و بدون مرز، رندر
                   استاتیک همه‌ی صفحه‌ها رو به کلاینت می‌کشوند */}
               <Suspense fallback={null}><RouteProgress /></Suspense>
               <div className="wrap">{children}</div>
               <BootSplashRelease />
-              <EventThemeGreeting />
             </MotionTuner>
           </ThemeProvider>
         </AuthSessionProvider>

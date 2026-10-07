@@ -51,10 +51,6 @@ export async function GET(req: NextRequest) {
   const userId = guard.userId;
 
   const accountId = req.nextUrl.searchParams.get("accountId") || "";
-  if (!(await ownedAccount(userId, accountId))) {
-    return NextResponse.json({ error: "حساب پیدا نشد" }, { status: 404 });
-  }
-
   const fromRaw = req.nextUrl.searchParams.get("from");
   const toRaw = req.nextUrl.searchParams.get("to");
   let dateFilter: Prisma.TradeEntryWhereInput = {};
@@ -65,12 +61,18 @@ export async function GET(req: NextRequest) {
     dateFilter = { openedAt: { gte: range.from, lte: new Date(range.to.getTime() + 86_400_000 - 1) } };
   }
 
-  const entries = await prisma.tradeEntry.findMany({
-    where: { userId, accountId, ...dateFilter },
-    orderBy: { openedAt: "desc" },
-    take: 2000,
-    select: ENTRY_SELECT,
-  });
+  // مالکیت حساب و خواندن معاملات مستقل‌اند (خود کوئری معاملات هم با userId
+  // محدوده) → هم‌زمان؛ حساب غیرمال کاربر همچنان ۴۰۴ می‌گیره.
+  const [owned, entries] = await Promise.all([
+    ownedAccount(userId, accountId),
+    prisma.tradeEntry.findMany({
+      where: { userId, accountId, ...dateFilter },
+      orderBy: { openedAt: "desc" },
+      take: 2000,
+      select: ENTRY_SELECT,
+    }),
+  ]);
+  if (!owned) return NextResponse.json({ error: "حساب پیدا نشد" }, { status: 404 });
 
   return NextResponse.json({ entries: entries.map(serializeEntry) });
 }

@@ -41,15 +41,17 @@ export async function GET(req: NextRequest) {
   // خلاصه‌ی هر کارت در یک کوئری برای همه‌ی حساب‌ها، نه یکی به‌ازای هر حساب
   // (کاربر می‌تواند ده حساب داشته باشد؛ ده کوئری برای یک صفحه زیاد است).
   // فقط ستون‌های موردنیاز آمار انتخاب می‌شوند تا متن/عکس کشیده نشود.
-  const stats = await prisma.tradeEntry.findMany({
-    where: { userId, accountId: { in: accounts.map((a) => a.id) } },
-    select: { accountId: true, status: true, pnl: true, rMultiple: true, openedAt: true },
-    take: 20_000,
-  });
-
   // پول هر حساب (بالانس اولیه‌ی موثر + واریز/برداشت + هزینه‌ها) — اولین واریز
-  // متاتریدر جای بالانس اولیه‌ی دستی می‌شینه، نه اینکه روش جمع بشه
-  const money = await loadAccountMoney(accounts);
+  // متاتریدر جای بالانس اولیه‌ی دستی می‌شینه، نه اینکه روش جمع بشه. دو
+  // کوئری مستقل‌اند → هم‌زمان.
+  const [stats, money] = await Promise.all([
+    prisma.tradeEntry.findMany({
+      where: { userId, accountId: { in: accounts.map((a) => a.id) } },
+      select: { accountId: true, status: true, pnl: true, rMultiple: true, openedAt: true },
+      take: 20_000,
+    }),
+    loadAccountMoney(accounts),
+  ]);
 
   const byAccount = new Map<string, typeof stats>();
   for (const s of stats) {

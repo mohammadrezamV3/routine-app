@@ -885,6 +885,7 @@ model ExercisePlan {
   logs ExerciseLog[]
 
   @@index([userId])
+  @@index([userId, isActive, startDate])
 }
 
 model ExerciseLog {
@@ -1305,6 +1306,7 @@ model TradeEntry {
   @@index([userId, openedAt])
   @@index([accountId, openedAt])
   @@index([checklistId])
+  @@index([userId, status])
 }
 
 // عکس چارت — عمدا جدول جدا، نه ستونی روی خود TradeEntry. دلیل فنی:

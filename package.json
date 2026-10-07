@@ -18,6 +18,16 @@
     "optimize:images": "node scripts/optimize-images.js",
     "test": "vitest run"
   },
+  "browserslist": [
+    "ios_saf >= 13",
+    "safari >= 13",
+    "chrome >= 70",
+    "and_chr >= 70",
+    "android >= 70",
+    "samsung >= 10",
+    "firefox >= 68",
+    "edge >= 79"
+  ],
   "prisma": {
     "seed": "tsx prisma/seed.ts"
   },
