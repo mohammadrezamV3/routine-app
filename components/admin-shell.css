@@ -180,3 +180,13 @@ body[data-theme] button.ads-pal-row.on{ border-color:color-mix(in srgb, var(--ac
 }
 @media (min-width:901px){ .ads-bottom{ display:none; } }
 @media (prefers-reduced-motion:reduce){ .ads-sidebar{ transition:none; } }
+
+/* قاب ادمین از بالای صفحه شروع می‌شه: padding سراسری body (فضای هدر ثابت اپ) اینجا لازم نیست */
+body:has(.admin-root){ padding:0; }
+body[data-theme] button.ads-search{ min-width:0; }
+.ads-topbar > *{ min-width:0; }
+@media (max-width:900px){
+  .ads-topbar{ max-width:100vw; box-sizing:border-box; }
+  body[data-theme] button.ads-search{ flex:1 1 0; width:auto; }
+  .ads-content{ min-width:0; }
+}
