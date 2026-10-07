@@ -111,3 +111,13 @@
   .adb-nums{ gap:16px; }
   .adb-actions{ width:100%; }
 }
+
+.adb-range{ flex:none; width:max-content; max-width:100%; }
+.adb-range{ margin-top:0; }
+.adb-range .auth-tab{ white-space:nowrap; flex:none; padding:9px 16px; }
+.adb-grid > .adb-tx-card{ align-self:start; }
+.adb-tx-card .adb-empty{ padding:2px 0; }
+@media (max-width:640px){
+  .adb-range{ width:100%; }
+  .adb-range .auth-tab{ flex:1 1 0; padding:9px 0; }
+}

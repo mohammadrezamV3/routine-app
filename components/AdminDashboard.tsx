@@ -45,10 +45,7 @@ export function AdminDashboard() {
           {can("content") && <Link href="/admin/announcements" className="admin-btn">+ اطلاعیه</Link>}
           {can("content") && <Link href="/admin/broadcast" className="admin-btn primary">پیام همگانی</Link>}
         </div>
-      </div>
-
-      <div className="adb-toolbar">
-        <SegmentedTabs<DashRange> options={RANGE_OPTIONS} active={range} onChange={setRange} ariaLabel="بازه‌ی زمانی" />
+        <SegmentedTabs<DashRange> className="adb-range" options={RANGE_OPTIONS} active={range} onChange={setRange} ariaLabel="بازه‌ی زمانی" />
       </div>
 
       {!d ? (

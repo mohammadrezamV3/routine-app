@@ -6,9 +6,10 @@ import { formatCurrencyAmount, formatNumber } from "@/lib/adminFormat";
 import type { KpiOut, OverviewDashboard } from "@/lib/adminOverviewServer";
 
 export function KpiCard({ label, k, invert, color }: { label: string; k: KpiOut; invert?: boolean; color: string }) {
-  const hasValue = k.value !== null && k.value !== undefined;
+  const noData = k.spark.every((v) => v === 0);
+  const hasValue = k.value !== null && k.value !== undefined && !(k.unit === "percent" && k.value === 0 && noData);
   const value = !hasValue ? "—" : k.unit === "percent" ? `${k.value}%` : formatNumber(k.value as number);
-  const d = k.delta;
+  const d = k.delta === 0 && noData ? null : k.delta;
   const good = d === null || d === 0 ? null : invert ? d < 0 : d > 0;
   const deltaText = d === null ? "—" : `${d > 0 ? "+" : ""}${d}%`;
   return (
@@ -35,6 +36,7 @@ export function RevenueChart({ chart, days, canRevenue }: { chart: NonNullable<O
   const bw = Math.max(3, Math.min(14, (W / Math.max(n, 1)) * 0.5));
   const bars = barHeights(chart.signups, 110);
   const { line, area } = areaPaths(chart.revenue, W, H, 20, 25);
+  const hasRevenue = chart.revenue.some((v) => v > 0);
   return (
     <>
       <div className="adb-card-head">
@@ -58,15 +60,16 @@ export function RevenueChart({ chart, days, canRevenue }: { chart: NonNullable<O
         </defs>
         {[30, 100, 170].map((y) => <line key={y} x1="0" x2={W} y1={y} y2={y} stroke="var(--surface-line)" />)}
         {bars.map((h, i) => (h > 0 ? <rect key={i} x={10 + i * step - bw / 2} y={205 - h} width={bw} height={h} rx="3" fill="var(--ring-2a)" opacity="0.35" /> : null))}
-        {canRevenue && chart.revenue.length > 0 && (
+        {canRevenue && hasRevenue && (
           <>
             <path d={area} fill="url(#adb-ra)" />
             <path d={line} fill="none" stroke="var(--accent)" strokeWidth="3" strokeLinejoin="round" vectorEffect="non-scaling-stroke" />
           </>
         )}
       </svg>
+      {canRevenue && !hasRevenue && <div className="adb-card-hint">درآمدی در این بازه ثبت نشده</div>}
       <div className="adb-legend">
-        {canRevenue && <span><i className="adb-lg-line" />درآمد</span>}
+        {canRevenue && hasRevenue && <span><i className="adb-lg-line" />درآمد</span>}
         <span><i className="adb-lg-bar" />ثبت‌نام روزانه</span>
       </div>
     </>
@@ -172,7 +175,7 @@ const STATUS: Record<string, { label: string; cls: string }> = {
 
 export function TransactionsCard({ rows, canUsers }: { rows: NonNullable<OverviewDashboard["transactions"]>; canUsers: boolean }) {
   return (
-    <div className="adb-card adb-span-7" style={{ gap: 10 }}>
+    <div className="adb-card adb-span-7 adb-tx-card" style={{ gap: 10 }}>
       <div className="adb-card-head" style={{ alignItems: "center" }}>
         <h2 className="adb-card-title sm">آخرین تراکنش‌ها</h2>
         <Link href="/admin/transactions" className="adb-link">همه ‹</Link>
