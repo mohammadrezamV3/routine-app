@@ -17,7 +17,25 @@ import type { BlogCategoryKey, BlogPost } from "./blog/types";
 
 export type { BlogBlock, BlogCategoryKey, BlogFaq, BlogPost } from "./blog/types";
 
-export const BLOG_POSTS: BlogPost[] = [...ROUTINE_POSTS, ...HEALTH_POSTS, ...TRADING_POSTS];
+/** تعداد کلمه‌ی متن واقعی مقاله (بدنه + پرسش‌ها) — برای wordCount schema و زمان مطالعه */
+export function postWordCount(post: BlogPost): number {
+  const parts: string[] = [];
+  for (const b of post.blocks) {
+    if (b.type === "ul" || b.type === "ol") parts.push(...b.items);
+    else if (b.type === "table") parts.push(...b.head, ...b.rows.flat());
+    else if (b.type === "tip") parts.push(b.title || "", b.text);
+    else parts.push(b.text);
+  }
+  for (const f of post.faq || []) parts.push(f.q, f.a);
+  return parts.join(" ").split(/\s+/).filter(Boolean).length;
+}
+
+// زمان مطالعه از روی متن واقعی حساب می‌شه (حدود 200 کلمه در دقیقه)، نه عدد
+// دستی که با هر بازنویسی از متن جا بمونه.
+export const BLOG_POSTS: BlogPost[] = [...ROUTINE_POSTS, ...HEALTH_POSTS, ...TRADING_POSTS].map((p) => ({
+  ...p,
+  readingMinutes: Math.max(1, Math.round(postWordCount(p) / 200)),
+}));
 
 export function getPost(slug: string): BlogPost | undefined {
   return BLOG_POSTS.find((p) => p.slug === slug);

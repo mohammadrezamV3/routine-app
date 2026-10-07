@@ -3,7 +3,7 @@ import { notFound } from "next/navigation";
 import { BlogArticle } from "@/components/BlogArticle";
 import { BRAND_FA } from "@/lib/brand";
 import { BLOG_CATEGORIES } from "@/lib/blog/categories";
-import { BLOG_POSTS, getPost } from "@/lib/blogPosts";
+import { BLOG_POSTS, getPost, postWordCount } from "@/lib/blogPosts";
 import { articleJsonLd, breadcrumbJsonLd, faqJsonLd, pageMetadata } from "@/lib/seo";
 
 /**
@@ -52,16 +52,7 @@ export default function BlogPostPage({ params }: { params: { slug: string } }) {
     { name: post.title, path: `/blog/${post.slug}` },
   ];
 
-  // شمارش کلمه از متن واقعی بلاک‌ها
-  const texts: string[] = [post.title];
-  for (const b of post.blocks) {
-    if (b.type === "ul" || b.type === "ol") texts.push(...b.items);
-    else if (b.type === "table") texts.push(...b.head, ...b.rows.flat());
-    else if (b.type === "cta") texts.push(b.text, b.label);
-    else texts.push(b.text);
-  }
-  for (const f of post.faq || []) texts.push(f.q, f.a);
-  const wordCount = texts.join(" ").split(/\s+/).filter(Boolean).length;
+  const wordCount = postWordCount(post);
 
   const article = {
     ...articleJsonLd({
