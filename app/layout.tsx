@@ -33,6 +33,7 @@ import { RouteProgress } from "@/components/RouteProgress";
 import { Suspense } from "react";
 import { BootSplash } from "@/components/BootSplash";
 import { BootSplashRelease } from "@/components/BootSplashRelease";
+import { AssetRecovery } from "@/components/AssetRecovery";
 import { EventThemeGreeting } from "@/components/EventThemeGreeting";
 import { getActiveEventThemeId } from "@/lib/eventThemeServer";
 import { EVENT_PREVIEW_KEY } from "@/lib/eventThemeState";
@@ -63,6 +64,10 @@ const latin = Inter({
   weight: "variable",
   variable: "--font-latin",
   display: "block",
+  // پیش‌فرض next/font یک فونت جایگزین با src:local(Arial) می‌سازه که *همه‌ی* کاراکترها رو
+  // ادعا می‌کنه؛ روی آیفون Arial وجود داره و متن فارسی به‌جای وزیرمتن با Arial (فونت
+  // دستگاه) رسم می‌شد — دقیقا باگ «فونت PWA به فونت گوشی بستگی داره».
+  adjustFontFallback: false,
 });
 
 // وریفیکیشن موتورهای جست‌وجو/نقشه — فقط وقتی env مقدار داره اضافه می‌شه؛
@@ -271,6 +276,8 @@ export default async function RootLayout({ children }: { children: React.ReactNo
         <script dangerouslySetInnerHTML={{ __html: PRELOAD_SCRIPT }} />
         <SvgFilters />
         <BackgroundCanvasLoader />
+        {/* خودترمیمی لود CSS/چانک بعد از شکست شبکه یا دیپلوی جدید — lib/assetRecovery.ts */}
+        <AssetRecovery />
         {/* خروج نرم همه‌ی پاپ‌آپ‌ها — lib/popupExit.ts */}
         <PopupExitAnimator />
         {/* نور هاور دور همه‌ی باکس‌ها — lib/boxHover.ts */}
