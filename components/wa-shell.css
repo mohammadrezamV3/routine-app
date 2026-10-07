@@ -43,7 +43,6 @@ body[data-theme="light"] .wa-ring-wrap::before{
 }
 .wa-hero .wk-arche{ border:none; box-shadow:none; padding:0; max-width:60ch; text-align:start; }
 .wa-hero .wk-hero-delta{ justify-content:center; }
-.wa-hero-foot{ display:flex; flex-direction:column; gap:18px; }
 
 .wa-days{ display:flex; justify-content:space-between; gap:4px; width:100%; max-width:470px; margin-top:6px; }
 .wa-day{
@@ -52,7 +51,9 @@ body[data-theme="light"] .wa-ring-wrap::before{
   transition:transform .18s ease, color .18s ease;
 }
 .wa-day-score{ font-size:12px; font-weight:800; color:var(--text); font-family:var(--font-latin), var(--font-vazir), sans-serif; line-height:1; }
-.wa-day.is-future{ opacity:.4; }
+.wa-day-future{ display:block; border-radius:50%; border:1.5px dashed color-mix(in srgb, var(--muted) 75%, transparent); box-sizing:border-box; }
+.wa-day.is-future .wa-day-name{ opacity:.7; }
+.wa-day.is-empty:not(.is-future) .gring{ opacity:.9; }
 .wa-day.is-today{ color:var(--accent); }
 .wa-day.is-today .wa-day-name{ position:relative; }
 .wa-day.is-today .wa-day-name::after{
@@ -63,25 +64,11 @@ button.wa-day:focus-visible{ outline:2px solid var(--accent); outline-offset:2px
 @media (hover:hover){ button.wa-day:hover{ transform:translateY(-3px); color:var(--text); } }
 button.wa-day:active{ transform:scale(.95); }
 
-.wa-facts{ margin:0; display:grid; grid-template-columns:repeat(2, minmax(0,1fr)); gap:16px 0; }
-.wa-fact{ min-width:0; padding-inline:16px; }
-.wa-fact:nth-child(odd){ border-inline-end:1px solid var(--box-line); padding-inline-start:0; }
-.wa-fact dt{ display:flex; align-items:center; gap:5px; font-size:11.5px; font-weight:700; color:var(--muted); }
-.wa-fact dd{ margin:5px 0 0; font-size:20px; font-weight:800; letter-spacing:-.02em; line-height:1.3; }
-.wa-fact dd small{ font-size:10.5px; font-weight:600; }
-
 @media (min-width:900px){
   .wa-hero{ grid-template-columns:auto minmax(0,1fr); column-gap:clamp(36px, 5vw, 72px); row-gap:30px; }
   .wa-hero-text{ align-items:flex-start; text-align:start; }
   .wa-eyebrow, .wa-hero .wk-hero-delta{ justify-content:flex-start; }
   .wa-ring-wrap{ width:248px; height:248px; }
-  .wa-hero-foot{ grid-column:1 / -1; border-top:1px solid var(--box-line); padding-top:22px; }
-  .wa-facts{ grid-template-columns:repeat(4, minmax(0,1fr)); }
-  .wa-fact{ border-inline-end:1px solid var(--box-line); padding-inline-start:20px; }
-  .wa-fact:first-child{ padding-inline-start:0; }
-  .wa-fact:last-child{ border-inline-end:none; }
-  .wa-fact:nth-child(odd){ padding-inline-start:20px; }
-  .wa-fact:nth-child(odd):first-child{ padding-inline-start:0; }
 }
 
 /* ── ریبون آمار ─────────────────────────────────────────── */
@@ -99,8 +86,8 @@ button.wa-day:active{ transform:scale(.95); }
 }
 .wa-stat.is-down .wa-stat-ic{ color:var(--pnl-loss); border-color:color-mix(in srgb, var(--pnl-loss) 45%, transparent); }
 .wa-stat-label{ font-size:12.5px; font-weight:700; color:var(--muted); }
-.wa-stat-main{ display:flex; align-items:flex-end; justify-content:space-between; gap:14px; min-height:58px; }
-.wa-stat-value{ display:flex; align-items:baseline; gap:6px; font-size:clamp(40px, 3.4vw, 54px); font-weight:800; line-height:1.05; letter-spacing:-.05em; }
+.wa-stat-main{ display:flex; align-items:flex-end; justify-content:space-between; gap:14px; min-height:40px; }
+.wa-stat-value{ display:flex; align-items:baseline; gap:6px; font-size:clamp(26px, 2.3vw, 32px); font-weight:800; line-height:1.05; letter-spacing:-.05em; }
 .wa-stat-value > .wk-num{
   unicode-bidi:isolate; direction:ltr; padding:0 .06em 3px;
   background:var(--wk-sheen); -webkit-background-clip:text; background-clip:text; color:transparent; -webkit-text-fill-color:transparent;
@@ -112,6 +99,7 @@ button.wa-day:active{ transform:scale(.95); }
 .wa-stat-sub b{ font-size:13px; color:var(--text); font-weight:800; }
 @media (hover:hover) and (pointer:fine){ .wa-stat:hover{ transform:translateY(-3px); } }
 @media (max-width:767px){
+  .wa-stat-value{ font-size:24px; }
   .wa-ribbon{
     display:flex; overflow-x:auto; scroll-snap-type:x mandatory; gap:12px; padding:2px 16px 6px; margin-inline:-16px;
     scroll-padding-inline:16px; scrollbar-width:none; -ms-overflow-style:none; overscroll-behavior-x:contain;
@@ -183,3 +171,11 @@ button.wa-day:active{ transform:scale(.95); }
   .wa-stat:hover, button.wa-day:hover{ transform:none !important; }
 }
 html[data-perf="low"] .wa-ring-wrap::before{ animation:none; }
+
+/* پیش‌بینی جمع‌وجور داخل ناحیه‌ی متن هیرو */
+.wa-pred-inline{ margin-inline:auto; display:flex; flex-direction:column; gap:6px; width:100%; max-width:470px; margin-top:4px; }
+@media (min-width:900px){ .wa-pred-inline{ margin-inline:0; } }
+.wa-pred-line{ display:flex; align-items:center; flex-wrap:wrap; gap:6px; font-size:12.5px; font-weight:700; color:var(--accent); }
+.wa-pred-line b{ font-size:15px; color:var(--text); }
+.wa-pred-inline .wk-band{ width:100%; }
+.wa-pred-inline .wk-band-scale{ display:none; }

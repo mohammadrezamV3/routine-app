@@ -2,13 +2,13 @@
 
 import { motion } from "framer-motion";
 import {
-  Activity, Anchor, CalendarCheck, Crown, Feather, Rocket, Scale, Sparkles, Sprout, TrendingDown, TrendingUp, Undo2, Waves, Zap,
+  Activity, Anchor, Crown, Feather, Rocket, Scale, Sparkles, Sprout, TrendingUp, Undo2, Zap,
   type LucideIcon,
 } from "lucide-react";
 import type { DayCell, WeekArchetypeKey, WeeklyAnalysis } from "@/lib/weeklyAnalysis/types";
 import { GradientRing, RING_GREEN } from "./GradientRing";
 import {
-  CONFIDENCE_LABELS, DeltaChip, Num, V_WK_CARD, gradeOfScore, scoreGrad, useMounted, weekdayLetter, WK_EASE,
+  DeltaChip, Num, V_WK_CARD, gradeOfScore, scoreGrad, useMounted, weekdayLetter, WK_EASE,
 } from "./WeeklyAnalysisKit";
 import "./wa-shell.css";
 
@@ -110,9 +110,13 @@ function DayRings({ days, onPickDay }: { days: DayCell[]; onPickDay?: (i: number
         const pickable = !!onPickDay && !d.isFuture;
         const inner = (
           <>
-            <GradientRing value={has ? (d.score as number) / 100 : 0} size={DAY_RING} stroke={4.5} grad={scoreGrad(d.score)} delay={0.5 + i * 0.07}>
-              <span className="wa-day-score">{has ? Math.round(d.score as number) : ""}</span>
-            </GradientRing>
+            {d.isFuture ? (
+              <span className="wa-day-future" style={{ width: DAY_RING, height: DAY_RING }} aria-hidden="true" />
+            ) : (
+              <GradientRing value={has ? (d.score as number) / 100 : 0} size={DAY_RING} stroke={4.5} grad={scoreGrad(d.score)} delay={0.5 + i * 0.07}>
+                <span className="wa-day-score">{has ? Math.round(d.score as number) : ""}</span>
+              </GradientRing>
+            )}
             <span className="wa-day-name">{weekdayLetter(d.weekday)}</span>
           </>
         );
@@ -133,37 +137,22 @@ function DayRings({ days, onPickDay }: { days: DayCell[]; onPickDay?: (i: number
   );
 }
 
-function HeroFacts({ analysis }: { analysis: WeeklyAnalysis }) {
-  const o = analysis.overall;
-  const daysBase = analysis.isCurrentWeek ? analysis.daysElapsed : 7;
-  return (
-    <dl className="wa-facts">
-      <div className="wa-fact">
-        <dt><CalendarCheck size={13} />روزهای فعال</dt>
-        <dd><span className="wk-num">{o.activeDays}/{daysBase}</span></dd>
-      </div>
-      <div className="wa-fact">
-        <dt><Waves size={13} />ثبات</dt>
-        <dd>
-          {o.consistency === null ? "—" : <><Num value={Math.round(o.consistency)} />%</>}
-          <small className="wk-muted-sm"> · اطمینان {CONFIDENCE_LABELS[o.confidence]}</small>
-        </dd>
-      </div>
-      <div className="wa-fact">
-        <dt><TrendingUp size={13} style={{ color: "var(--ring-1a)" }} />بهترین روز</dt>
-        <dd>{o.bestDay && o.bestDay.score !== null ? <>{o.bestDay.weekday} <span className="wk-num">{Math.round(o.bestDay.score)}</span></> : "—"}</dd>
-      </div>
-      <div className="wa-fact">
-        <dt><TrendingDown size={13} />ضعیف‌ترین روز</dt>
-        <dd>{o.worstDay && o.worstDay.score !== null ? <>{o.worstDay.weekday} <span className="wk-num">{Math.round(o.worstDay.score)}</span></> : "—"}</dd>
-      </div>
-    </dl>
-  );
-}
-
-function Prediction({ analysis }: { analysis: WeeklyAnalysis }) {
+function Prediction({ analysis, inline = false }: { analysis: WeeklyAnalysis; inline?: boolean }) {
   const pred = analysis.isCurrentWeek ? analysis.prediction : null;
   if (!pred) return null;
+  if (inline) {
+    return (
+      <div className="wa-pred-inline">
+        <span className="wa-pred-line">
+          <Sparkles size={13} />
+          <span>پیش‌بینی پایان هفته: حدود <b className="wk-num">{Math.round(pred.projectedScore)}</b></span>
+          <span className="wk-muted-sm">(<span className="wk-num">{Math.round(pred.low)}</span> تا <span className="wk-num">{Math.round(pred.high)}</span>)</span>
+        </span>
+        <PredictionBand projected={pred.projectedScore} low={pred.low} high={pred.high} now={analysis.overall.score} />
+        {pred.message && <span className="wk-muted-sm">{pred.message}</span>}
+      </div>
+    );
+  }
   return (
     <div className="wk-prediction wa-pred">
       <div className="wk-prediction-text">
@@ -253,11 +242,7 @@ export function WeeklyAnalysisHero({
           <span className="wk-muted">{deltaText(analysis)}</span>
         </div>
         {hasDays && <DayRings days={analysis.days} onPickDay={onPickDay} />}
-      </div>
-
-      <div className="wa-hero-foot">
-        <HeroFacts analysis={analysis} />
-        <Prediction analysis={analysis} />
+        <Prediction analysis={analysis} inline />
       </div>
     </motion.section>
   );
