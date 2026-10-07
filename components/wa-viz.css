@@ -26,8 +26,6 @@
 .wkv-spark{ display:block; width:100%; overflow:visible; }
 .wkv-tile-details{ overflow:hidden; border-top:1px solid var(--box-line); padding-inline:14px; }
 .wkv-tile.is-big .wkv-tile-details{ padding-inline:18px; }
-.wkv-chip-cell{ grid-column:span 2; min-width:0; }
-@media (min-width:900px){ .wkv-chip-cell{ grid-column:span 1; } }
 .wkv-chip{
   display:flex; align-items:center; gap:8px; min-width:0; padding:10px 12px; border-radius:99px;
   border:1px dashed var(--box-line); color:var(--muted); font-size:12.5px; font-weight:700; text-decoration:none;
@@ -133,3 +131,26 @@
 @media (prefers-reduced-motion:reduce){
   .wkv-tile, .wkv-chip, .wkv-num-tile, .wkv-rh-bar{ transition:none; }
 }
+
+/* بنتو: تعداد کم بخش، ردیف رو مساوی بین کاشی‌ها تقسیم می‌کنه */
+.wkv-bento.is-n1{ grid-template-columns:minmax(0,1fr); }
+.wkv-bento.is-n2{ grid-template-columns:repeat(2, minmax(0,1fr)); }
+.wkv-bento.is-n3{ grid-template-columns:repeat(2, minmax(0,1fr)); }
+.wkv-bento.is-n3 .wkv-tile:last-child{ grid-column:1 / -1; }
+@media (min-width:900px){
+  .wkv-bento.is-n3{ grid-template-columns:repeat(3, minmax(0,1fr)); }
+  .wkv-bento.is-n3 .wkv-tile:last-child{ grid-column:auto; }
+}
+.wkv-bento .wkv-tile.is-open{ grid-column:1 / -1 !important; }
+.wkv-tile-spark{ display:block; width:100%; }
+.wkv-tile.is-big .wkv-tile-mid{ gap:18px; padding-block:14px; }
+.wkv-tile.is-big .wkv-tile-spark{ margin-top:auto; }
+.wk-page .wkv-tile.is-wide button.wkv-tile-head{ flex-direction:row; align-items:center; gap:24px; padding:20px; flex-wrap:wrap; }
+.wkv-tile.is-wide .wkv-tile-top{ order:0; flex:0 0 100%; }
+.wkv-tile.is-wide .wkv-tile-mid{ flex:0 0 auto; gap:18px; }
+.wkv-tile.is-wide .wkv-tile-spark{ flex:1 1 200px; min-width:160px; }
+.wkv-ring-num.is-wide{ font-size:26px; }
+.wkv-nodata{ margin-top:16px; display:flex; flex-direction:column; gap:8px; }
+.wkv-nodata-title{ font-size:12px; font-weight:700; color:var(--muted); }
+.wkv-nodata-row{ display:flex; flex-wrap:wrap; gap:8px; }
+.wkv-nodata-row .wkv-chip{ padding:7px 12px; }
