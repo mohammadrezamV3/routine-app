@@ -2,9 +2,9 @@
 
 import { useMemo } from "react";
 import { motion, type Variants } from "framer-motion";
-import { CalendarCheck, Flame, Medal, Trophy, TrendingDown, TrendingUp, type LucideIcon } from "lucide-react";
+import { CalendarCheck, Flame, Waves, Medal, Trophy, TrendingDown, TrendingUp, type LucideIcon } from "lucide-react";
 import { ANALYSIS_DOMAIN_LABELS, type AnalysisDomain, type WeeklyAnalysis } from "@/lib/weeklyAnalysis/types";
-import { CountText, Num, WK_EASE, jalaliShort, useCalmMotion } from "./WeeklyAnalysisKit";
+import { CONFIDENCE_LABELS, CountText, Num, WK_EASE, jalaliShort, useCalmMotion } from "./WeeklyAnalysisKit";
 import "./wa-shell.css";
 
 type Spot = {
@@ -32,7 +32,7 @@ const V_TILE: Variants = {
 function Spark({ points, delay }: { points: (number | null)[]; delay: number }) {
   const calm = useCalmMotion();
   const pts = points.map((v, i) => ({ v, i })).filter((p): p is { v: number; i: number } => p.v !== null);
-  if (pts.length < 2) return null;
+  if (pts.length < 3 || pts.every((p) => p.v === pts[0].v)) return null;
   const W = 100, H = 30, PAD = 3;
   const lo = Math.min(...pts.map((p) => p.v));
   const hi = Math.max(...pts.map((p) => p.v));
@@ -118,6 +118,16 @@ function buildSpots(a: WeeklyAnalysis): Spot[] {
     });
   }
 
+  // ۱.۵) ضعیف‌ترین روز (فقط وقتی با بهترین روز یکی نیست)
+  const worst = a.overall.worstDay;
+  if (worst && worst.score !== null && (!best || worst.date !== best.date)) {
+    out.push({
+      key: "worst", icon: TrendingDown, label: "ضعیف‌ترین روز هفته", value: Math.round(worst.score), tone: "bad",
+      spark: a.days.map((d) => (d.isFuture ? null : d.score)),
+      sub: `${worst.weekday}${worst.date ? ` · ${jalaliShort(worst.date)}` : ""}`,
+    });
+  }
+
   // ۲) بیشترین تغییر نسبت به هفته‌ی قبل (یا قوی‌ترین بخش اگه تغییری نبود)
   const movers = a.domains.filter((d) => d.hasData && d.delta !== null && Math.abs(Math.round(d.delta)) >= 1);
   if (movers.length) {
@@ -142,6 +152,15 @@ function buildSpots(a: WeeklyAnalysis): Spot[] {
         sub: ANALYSIS_DOMAIN_LABELS[m.domain], sub2: `${m.daysWithData} روز داده`,
       });
     }
+  }
+
+  // ۲.۵) ثبات
+  const cons = a.overall.consistency;
+  if (cons !== null) {
+    out.push({
+      key: "consistency", icon: Waves, label: "ثبات هفته", value: Math.round(cons), unit: "%",
+      sub: `اطمینان ${CONFIDENCE_LABELS[a.overall.confidence]}`,
+    });
   }
 
   // ۳) رکورد
