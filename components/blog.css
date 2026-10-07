@@ -1,0 +1,178 @@
+/* بلاگ: همان توکن‌های کارت useThemeTokens (PlanShowcase) به‌صورت متغیر، تا
+   کامپوننت‌های سرور بدون هوک تم را دنبال کنند. رنگ تازه‌ای تعریف نشده. */
+.blog-root{
+  --b-card:rgba(255,255,255,.05); --b-border:#242E28; --b-shadow:0 15px 45px rgba(0,0,0,.35);
+  --b-head:#F3EADD; --b-muted:#A79A8A; --b-line:#262A2C; --b-acc:#00A86B; --b-acc-rgb:0,168,107;
+  padding:16px 0 40px; text-align:right; color:var(--text); min-width:0;
+}
+body[data-theme="light"] .blog-root{
+  --b-card:rgba(255,255,255,.4); --b-border:rgba(255,255,255,.6); --b-shadow:0 15px 45px rgba(0,0,0,.06);
+  --b-head:#2B2118; --b-muted:#6B5D4D; --b-line:#E7DCC8; --b-acc:#D97706; --b-acc-rgb:217,119,6;
+}
+@media (min-width:1024px){
+  body:has(.blog-root) .wrap{ max-width:1120px; }
+}
+
+/* مسیر صفحه */
+.blog-crumb{ display:flex; flex-wrap:wrap; align-items:center; gap:4px; margin-bottom:18px; font-size:11.5px; color:var(--b-muted); }
+.blog-crumb a:hover{ color:var(--b-acc); text-decoration:underline; }
+.blog-crumb svg{ opacity:.6; }
+.blog-crumb-cur{ display:inline-block; max-width:100%; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
+
+/* هیرو و چیپ‌ها */
+.blog-hero{ margin-bottom:22px; }
+.blog-hero h1{ font-size:1.65rem; font-weight:800; line-height:1.5; color:var(--b-head); }
+.blog-hero p{ margin-top:12px; font-size:14px; line-height:2; color:var(--b-muted); max-width:46rem; }
+.blog-chips{ display:flex; flex-wrap:wrap; gap:8px; margin-bottom:26px; }
+.blog-chip{
+  display:inline-flex; align-items:center; padding:7px 14px; border-radius:999px; font-size:12.5px; font-weight:700;
+  border:1px solid var(--b-border); color:var(--b-muted); transition:transform .18s ease, color .18s ease, border-color .18s ease;
+}
+.blog-chip:hover{ color:var(--b-acc); border-color:var(--b-acc); }
+.blog-chip:active{ transform:scale(.97); }
+.blog-chip[aria-current="page"]{ color:var(--b-acc); border-color:var(--b-acc); }
+
+/* کارت‌ها */
+.blog-card{
+  position:relative; display:flex; flex-direction:column; align-items:flex-start; min-width:0;
+  padding:22px 20px; border-radius:24px; border:1px solid var(--b-border); background:var(--b-card);
+  box-shadow:var(--b-shadow); backdrop-filter:blur(24px); -webkit-backdrop-filter:blur(24px);
+  transition:transform .22s ease;
+}
+.blog-card-title{ margin-top:12px; font-size:1.05rem; font-weight:800; line-height:1.85; color:var(--b-head); }
+.blog-card-link:hover{ text-decoration:underline; }
+/* کل کارت قابل‌کلیک، با همان یک لینک توصیفی */
+.blog-card-link::after{ content:""; position:absolute; inset:0; border-radius:inherit; }
+.blog-card-excerpt{ margin-top:8px; font-size:13px; line-height:2; color:var(--b-muted); flex:1; }
+.blog-card-meta{ display:flex; flex-wrap:wrap; align-items:center; gap:6px; margin-top:16px; font-size:11.5px; color:var(--b-muted); }
+.blog-cat{ font-size:11.5px; font-weight:800; color:var(--b-acc); }
+a.blog-cat:hover{ text-decoration:underline; }
+.blog-card-featured{ margin-bottom:20px; padding:26px 22px; }
+.blog-card-featured .blog-card-title{ font-size:1.3rem; line-height:1.7; }
+.blog-card-featured .blog-card-excerpt{ font-size:14px; }
+@media (hover:hover) and (pointer:fine){
+  .blog-card:hover{ transform:translateY(-3px); }
+}
+.blog-grid{ display:grid; grid-template-columns:minmax(0,1fr); gap:16px; }
+@media (min-width:640px){ .blog-grid{ grid-template-columns:repeat(2,minmax(0,1fr)); gap:20px; } }
+@media (min-width:1024px){
+  .blog-grid{ grid-template-columns:repeat(3,minmax(0,1fr)); }
+  .blog-card-featured{ padding:34px 36px; }
+  .blog-card-featured .blog-card-title{ font-size:1.75rem; max-width:48rem; }
+  .blog-card-featured .blog-card-excerpt{ font-size:15px; max-width:48rem; }
+  .blog-hero h1{ font-size:2.1rem; }
+}
+.blog-empty{ font-size:13px; color:var(--b-muted); }
+
+/* نوار پیشرفت مطالعه (جدا از RouteProgress) */
+.blog-progress{ position:fixed; top:0; inset-inline:0; height:3px; z-index:45; pointer-events:none; }
+.blog-progress-bar{ height:100%; background:var(--b-acc); transform:scaleX(0); transform-origin:100% 50%; }
+@media (prefers-reduced-motion:reduce){ .blog-progress{ display:none; } .blog-card, .blog-chip{ transition:none; } }
+
+/* چیدمان مقاله */
+.blog-layout{ display:flex; flex-direction:column; min-width:0; }
+.blog-head h1{ margin-top:10px; font-size:1.6rem; font-weight:800; line-height:1.6; color:var(--b-head); }
+.blog-meta{ display:flex; flex-wrap:wrap; align-items:center; gap:6px 8px; margin-top:14px; font-size:12px; color:var(--b-muted); }
+.blog-toc-mobile{
+  margin-top:20px; border:1px solid var(--b-border); background:var(--b-card); border-radius:20px; padding:0 16px;
+}
+.blog-toc-mobile summary{ cursor:pointer; padding:14px 0; font-size:13.5px; font-weight:800; color:var(--b-head); list-style-position:inside; }
+.blog-toc-mobile[open] summary{ border-bottom:1px solid var(--b-line); }
+.blog-toc-side{ display:none; }
+.blog-toc-list{ list-style:none; margin:0; padding:8px 0 12px; }
+.blog-toc-list li{ counter-increment:toc; }
+.blog-toc-list a{ display:block; padding:6px 0; font-size:13px; line-height:1.9; color:var(--b-muted); }
+.blog-toc-list a:hover, .blog-toc-list a[aria-current]{ color:var(--b-acc); }
+.blog-body{ margin-top:22px; min-width:0; }
+@media (min-width:1024px){
+  .blog-layout{ display:grid; grid-template-columns:minmax(0,720px) 260px; justify-content:center; column-gap:56px; align-items:start; }
+  .blog-head{ grid-column:1; grid-row:1; }
+  .blog-body{ grid-column:1; grid-row:2; }
+  .blog-toc-mobile{ display:none; }
+  .blog-toc-side{
+    display:block; grid-column:2; grid-row:1 / span 2; position:sticky; top:24px;
+    padding:18px 18px 8px; border:1px solid var(--b-border); background:var(--b-card); border-radius:22px;
+  }
+  .blog-toc-title{ font-size:13.5px; font-weight:800; color:var(--b-head); padding-bottom:8px; border-bottom:1px solid var(--b-line); }
+  .blog-head h1{ font-size:2.1rem; }
+}
+
+/* خلاصه */
+.blog-takeaways{ margin-bottom:28px; padding:18px 18px 14px; border-radius:22px; border:1px solid var(--b-border); background:var(--b-card); box-shadow:var(--b-shadow); }
+.blog-takeaways-title{ font-size:14px; font-weight:800; color:var(--b-acc); margin-bottom:8px; }
+.blog-takeaways ul{ list-style:none; margin:0; padding:0; }
+.blog-takeaways li{ position:relative; padding:4px 18px 4px 0; font-size:14px; line-height:2; }
+.blog-takeaways li::before{ content:""; position:absolute; right:2px; top:15px; width:6px; height:6px; border-radius:50%; background:var(--b-acc); }
+
+/* تایپوگرافی متن */
+.blog-prose{ font-size:15.5px; line-height:2.1; }
+.blog-prose p{ margin-top:14px; }
+.blog-prose h2{ margin-top:40px; font-size:1.3rem; font-weight:800; line-height:1.7; color:var(--b-head); scroll-margin-top:24px; }
+.blog-prose h3{ margin-top:26px; font-size:1.07rem; font-weight:800; line-height:1.8; color:var(--b-head); }
+.blog-prose ul, .blog-prose ol{ margin-top:14px; padding:0; list-style:none; }
+.blog-prose ul li{ position:relative; padding:3px 22px 3px 0; }
+.blog-prose ul li::before{ content:""; position:absolute; right:5px; top:17px; width:6px; height:6px; border-radius:50%; background:var(--b-acc); }
+.blog-prose ol{ counter-reset:step; }
+.blog-prose ol li{ position:relative; padding:3px 36px 3px 0; counter-increment:step; }
+.blog-prose ol li::before{
+  content:counter(step); position:absolute; right:0; top:8px; width:24px; height:24px; border-radius:50%;
+  border:1px solid var(--b-acc); color:var(--b-acc); font-size:12px; font-weight:800; line-height:22px; text-align:center;
+}
+.blog-tip{
+  display:flex; gap:12px; margin-top:22px; padding:16px 18px; border-radius:20px;
+  border:1px solid rgba(var(--b-acc-rgb),.4); background:rgba(var(--b-acc-rgb),.08);
+}
+.blog-tip svg{ flex:none; margin-top:6px; color:var(--b-acc); }
+.blog-tip strong{ display:block; font-size:14px; color:var(--b-head); }
+.blog-tip p{ margin-top:2px; font-size:14.5px; line-height:2; }
+.blog-table-wrap{ margin-top:20px; overflow-x:auto; border:1px solid var(--b-border); border-radius:18px; -webkit-overflow-scrolling:touch; }
+.blog-table-wrap table{ width:100%; min-width:460px; border-collapse:collapse; font-size:13.5px; line-height:1.9; }
+.blog-table-wrap th{ text-align:right; font-weight:800; color:var(--b-head); white-space:nowrap; }
+.blog-table-wrap th, .blog-table-wrap td{ padding:10px 14px; border-bottom:1px solid var(--b-line); vertical-align:top; }
+.blog-table-wrap tr:last-child td{ border-bottom:0; }
+.blog-inline-cta{
+  display:flex; align-items:center; justify-content:space-between; gap:12px; margin-top:22px; padding:16px 18px;
+  border-radius:20px; border:1px solid var(--b-border); background:var(--b-card); box-shadow:var(--b-shadow);
+  transition:transform .18s ease, border-color .18s ease;
+}
+.blog-inline-cta-text{ display:block; font-size:13px; line-height:1.9; color:var(--b-muted); }
+.blog-inline-cta strong{ font-size:14.5px; color:var(--b-acc); }
+.blog-inline-cta svg{ flex:none; color:var(--b-acc); }
+.blog-inline-cta:hover{ border-color:var(--b-acc); }
+.blog-inline-cta:active{ transform:scale(.985); }
+
+/* پرسش‌های پرتکرار */
+.blog-faq{ margin-top:44px; }
+.blog-faq h2{ font-size:1.3rem; font-weight:800; color:var(--b-head); margin-bottom:14px; }
+.blog-faq details{ border:1px solid var(--b-border); background:var(--b-card); border-radius:18px; padding:0 16px; margin-top:10px; }
+.blog-faq summary{ cursor:pointer; padding:14px 0; list-style-position:inside; }
+.blog-faq summary h3{ display:inline; font-size:14.5px; font-weight:800; line-height:1.9; color:var(--b-head); }
+.blog-faq details[open] summary{ border-bottom:1px solid var(--b-line); }
+.blog-faq details p{ padding:12px 0 16px; font-size:14.5px; line-height:2.05; }
+
+/* اشتراک */
+.blog-share{ display:flex; flex-wrap:wrap; align-items:center; gap:10px; margin-top:36px; padding-top:18px; border-top:1px solid var(--b-line); font-size:12.5px; color:var(--b-muted); }
+.blog-share-btn{
+  display:inline-flex; align-items:center; gap:6px; padding:7px 14px; border-radius:999px; font-size:12.5px; font-weight:700;
+  border:1px solid var(--b-border); color:var(--b-head); transition:transform .18s ease;
+}
+.blog-share-btn:active{ transform:scale(.96); }
+
+/* پایین مقاله */
+.blog-more{ margin-top:48px; }
+.blog-more h2{ font-size:1.2rem; font-weight:800; color:var(--b-head); margin-bottom:16px; }
+.blog-links{ list-style:none; margin:22px 0 0; padding:0; display:flex; flex-direction:column; gap:8px; }
+.blog-links a{ font-size:13.5px; font-weight:700; color:var(--b-acc); }
+.blog-links a:hover{ text-decoration:underline; }
+.blog-signup{
+  display:flex; flex-direction:column; align-items:flex-start; gap:14px; margin-top:28px; padding:22px 20px;
+  border-radius:24px; border:1px solid var(--b-border); background:var(--b-card); box-shadow:var(--b-shadow);
+}
+.blog-signup p{ font-size:14px; line-height:1.9; color:var(--b-head); font-weight:700; }
+.blog-btn{
+  display:inline-flex; align-items:center; gap:6px; padding:12px 20px; border-radius:20px; font-size:13.5px; font-weight:700;
+  color:#fff; background:var(--b-acc); box-shadow:0 12px 30px rgba(var(--b-acc-rgb),.28); transition:transform .18s ease, filter .18s ease;
+}
+.blog-btn:hover{ filter:brightness(1.05); }
+.blog-btn:active{ transform:scale(.97); }
+@media (min-width:640px){ .blog-signup{ flex-direction:row; align-items:center; justify-content:space-between; } }

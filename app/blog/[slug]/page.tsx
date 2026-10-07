@@ -2,8 +2,9 @@ import type { Metadata } from "next";
 import { notFound } from "next/navigation";
 import { BlogArticle } from "@/components/BlogArticle";
 import { BRAND_FA } from "@/lib/brand";
+import { BLOG_CATEGORIES } from "@/lib/blog/categories";
 import { BLOG_POSTS, getPost } from "@/lib/blogPosts";
-import { articleJsonLd, breadcrumbJsonLd, pageMetadata } from "@/lib/seo";
+import { articleJsonLd, breadcrumbJsonLd, faqJsonLd, pageMetadata } from "@/lib/seo";
 
 /**
  * مقاله‌ها ثابت‌اند، پس در زمان build رندر می‌شوند: هم HTML کامل برای
@@ -16,15 +17,28 @@ export function generateStaticParams() {
 export function generateMetadata({ params }: { params: { slug: string } }): Metadata {
   const post = getPost(params.slug);
   // اسلاگ ناموجود در ادامه به notFound می‌رسد؛ این‌جا فقط باید metadata
-  // معتبر (و noindex) برگردد تا صفحه‌ی ۴۰۴ ایندکس نشود.
+  // معتبر (و noindex) برگردد تا صفحه‌ی 404 ایندکس نشود.
   if (!post) return { title: { absolute: "صفحه پیدا نشد" }, robots: { index: false, follow: false } };
-  return pageMetadata({
+  const meta = pageMetadata({
     title: `${post.metaTitle || post.title} | ${BRAND_FA}`,
     description: post.description,
     path: `/blog/${post.slug}`,
     ogTitle: post.title,
     ownOgImage: true,
   });
+  // pageMetadata نوع openGraph رو website می‌ذاره؛ این‌جا article می‌شه و
+  // رفتار ownOgImage (بدون images) دست‌نخورده می‌مونه.
+  return {
+    ...meta,
+    keywords: post.keywords,
+    openGraph: {
+      ...meta.openGraph,
+      type: "article",
+      publishedTime: post.published,
+      modifiedTime: post.updated || post.published,
+      section: BLOG_CATEGORIES[post.category].label,
+    },
+  } as Metadata;
 }
 
 export default function BlogPostPage({ params }: { params: { slug: string } }) {
@@ -34,24 +48,41 @@ export default function BlogPostPage({ params }: { params: { slug: string } }) {
   const breadcrumb = [
     { name: BRAND_FA, path: "/" },
     { name: "مقاله‌ها", path: "/blog" },
+    { name: BLOG_CATEGORIES[post.category].label, path: `/blog/category/${post.category}` },
     { name: post.title, path: `/blog/${post.slug}` },
   ];
+
+  // شمارش کلمه از متن واقعی بلاک‌ها
+  const texts: string[] = [post.title];
+  for (const b of post.blocks) {
+    if (b.type === "ul" || b.type === "ol") texts.push(...b.items);
+    else if (b.type === "table") texts.push(...b.head, ...b.rows.flat());
+    else if (b.type === "cta") texts.push(b.text, b.label);
+    else texts.push(b.text);
+  }
+  for (const f of post.faq || []) texts.push(f.q, f.a);
+  const wordCount = texts.join(" ").split(/\s+/).filter(Boolean).length;
+
+  const article = {
+    ...articleJsonLd({
+      title: post.title,
+      description: post.description,
+      path: `/blog/${post.slug}`,
+      published: post.published,
+      modified: post.updated,
+    }),
+    articleSection: BLOG_CATEGORIES[post.category].label,
+    ...(post.keywords?.length ? { keywords: post.keywords.join("، ") } : {}),
+    wordCount,
+  };
+  const ld = [breadcrumbJsonLd(breadcrumb), article, ...(post.faq?.length ? [faqJsonLd(post.faq)] : [])];
 
   return (
     <>
       <script
         type="application/ld+json"
         dangerouslySetInnerHTML={{
-          __html: JSON.stringify([
-            breadcrumbJsonLd(breadcrumb),
-            articleJsonLd({
-              title: post.title,
-              description: post.description,
-              path: `/blog/${post.slug}`,
-              published: post.published,
-              modified: post.updated,
-            }),
-          ]),
+          __html: JSON.stringify(ld),
         }}
       />
       <BlogArticle post={post} />
