@@ -7,7 +7,7 @@
 // حرکت‌های دائمی (نور پس‌زمینه، مدار) روی کاهش حرکت و html[data-perf="low"] خاموشن،
 // و با کاهش حرکت پخش خودکار هم نداریم (اسلاید فقط با دست عوض می‌شه).
 import "./weekly-letter.css";
-import { useCallback, useContext, createContext, useEffect, useId, useMemo, useRef, useState, type CSSProperties, type ReactNode } from "react";
+import { useCallback, useContext, createContext, useEffect, useId, useLayoutEffect, useMemo, useRef, useState, type CSSProperties, type ReactNode } from "react";
 import { createPortal } from "react-dom";
 import Link from "next/link";
 import { AnimatePresence, motion, useReducedMotion, type Variants } from "framer-motion";
@@ -42,6 +42,65 @@ function frameSize(): { w: number; h: number } {
   return { w: iw, h: ih };
 }
 const unitOf = (w: number, h: number) => Math.max(0.68, Math.min(1.12, Math.min(w / 390, h / 800)));
+
+/**
+ * هر اسلاید باید توی ارتفاع واقعی دیده‌شده جا بشه (سافاری آیفون با نوار ابزار،
+ * safe-area، گوشی کوتاه). مقیاس پایه (--u) فقط از عرض/ارتفاع قاب میاد، ولی
+ * محتوای هر اسلاید یه مقدار ثابت px هم داره؛ پس بعد از چیدمان، ارتفاع طبیعی
+ * محتوا رو اندازه می‌گیریم و اگه از جای موجود بلندتر بود، مقیاس رو کم می‌کنیم
+ * (چند دور تا جا بشه). همه‌ی بچه‌های بدنه flex-shrink:0ن تا هیچ کارتی روی
+ * متن کناریش فشرده/کشیده نشه.
+ */
+function bodyNeed(body: HTMLElement): number {
+  const cs = getComputedStyle(body);
+  const gap = parseFloat(cs.rowGap) || 0;
+  let sum = 0, cnt = 0;
+  for (const el of Array.from(body.children) as HTMLElement[]) {
+    const c = getComputedStyle(el);
+    if (c.display === "none" || c.position === "absolute") continue;
+    sum += el.offsetHeight + (parseFloat(c.marginTop) || 0) + (parseFloat(c.marginBottom) || 0);
+    cnt++;
+  }
+  return sum + gap * Math.max(0, cnt - 1);
+}
+
+function FitScale({ u, boxKey, children }: { u: number; boxKey: string; children: ReactNode }) {
+  const ref = useRef<HTMLDivElement>(null);
+  const [fit, setFit] = useState(1);
+  const [tick, setTick] = useState(0);
+  const pass = useRef(0);
+  const lastKey = useRef(boxKey);
+
+  // فونت دیر برسه ارتفاع‌ها عوض می‌شه: از اول اندازه می‌گیریم
+  useEffect(() => {
+    let live = true;
+    try { document.fonts?.ready.then(() => { if (live) { pass.current = 0; setFit(1); setTick((t) => t + 1); } }); } catch { /* */ }
+    return () => { live = false; };
+  }, []);
+
+  useLayoutEffect(() => {
+    if (lastKey.current !== boxKey) {
+      lastKey.current = boxKey;
+      pass.current = 0;
+      if (fit !== 1) { setFit(1); return; }
+    }
+    const body = ref.current?.firstElementChild as HTMLElement | null;
+    if (!body || pass.current >= 6) return;
+    const avail = body.clientHeight;
+    const need = bodyNeed(body);
+    if (avail > 0 && need > avail + 1) {
+      pass.current += 1;
+      setFit(Math.max(0.45, fit * Math.min(0.97, (avail / need) * 0.985)));
+    }
+  }, [boxKey, fit, tick]);
+
+  const uu = u * fit;
+  return (
+    <div ref={ref} className="wl-st-fit" style={{ "--u": uu } as CSSProperties}>
+      <UCtx.Provider value={uu}>{children}</UCtx.Provider>
+    </div>
+  );
+}
 
 // ---- ورودی‌های حرکتی ----
 const SLIDE: Variants = {
@@ -754,7 +813,9 @@ export function WeeklyLetterStories({
                     className={`wl-st-slide wl-st-${slide.id}`}
                     style={{ "--wl-k": slideK(slide) } as CSSProperties}
                   >
-                    <SlideView slide={slide} letter={letter} offset={offset} onReplay={replay} />
+                    <FitScale u={u} boxKey={`${box.w}x${box.h}`}>
+                      <SlideView slide={slide} letter={letter} offset={offset} onReplay={replay} />
+                    </FitScale>
                   </motion.div>
                 </AnimatePresence>
               </motion.div>

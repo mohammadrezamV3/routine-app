@@ -38,3 +38,21 @@ export function hhmmToMin(v: string): number | null {
   if (h > 23 || mi > 59) return null;
   return h * 60 + mi;
 }
+
+/** عرض تقریبی یک متن به واحد em (رقم‌های جدولی عریض‌تر از دونقطه) — برای جاکردن متن وسط صفحه */
+export function textEm(text: string): number {
+  let w = 0;
+  for (const ch of text) {
+    if (/[0-9]/.test(ch)) w += 0.66;
+    else if (ch === ":" || ch === "." || ch === " ") w += 0.32;
+    else w += 0.6;
+  }
+  return w;
+}
+
+/** بزرگ‌ترین اندازه‌ی فونت (کمتر یا مساوی base) که متن توی maxWidth جا بشه */
+export function fitFontSize(text: string, base: number, maxWidth: number): number {
+  const em = textEm(text);
+  if (em <= 0) return base;
+  return Math.min(base, Math.floor((maxWidth / em) * 10) / 10);
+}

@@ -9,7 +9,7 @@ import {
   SCORE_BAND_LABEL, clockOf, durationLabel, goalFromTargets, minuteOfDay, minutesUntil, scoreBand,
   sleepMinutes, sleepPhase, wakeTimesFor, type SleepRecord,
 } from "@/lib/sleep";
-import { arcPath, hhmmToMin, minuteToAngle, pointAt } from "@/lib/sleepDial";
+import { arcPath, fitFontSize, hhmmToMin, minuteToAngle, pointAt } from "@/lib/sleepDial";
 import { cycleBoundaries } from "@/lib/sleepCycles";
 import { SleepCycleButton } from "./SleepCycleButton";
 import { startTracking, stopTracking, type SleepTracking } from "@/lib/sleepTracker";
@@ -20,11 +20,18 @@ import { startTracking, stopTracking, type SleepTracking } from "@/lib/sleepTrac
 // شمارش معکوس تا خواب، زمان خواب زنده‌ی ردیاب، یا امتیاز دیشب. زیرش دو ساعت
 // هدف (زدن = ویرایش هدف) و یک دکمه‌ی اصلی. هیچ آماری این‌جا نیست؛ آمار در
 // آنالیز هفتگی‌ه. هندسه‌ی خالص در lib/sleepDial.ts.
+// همه‌چیز (قوس‌ها، آیکون‌های ماه/خورشید، متن وسط) داخل یک SVG با یک دستگاه
+// مختصاته: لایه‌ی HTML جدا با درصد روی SVG نمی‌شینه چون توی وب‌کیت (آیفون)
+// ترکیب aspect-ratio و container-type باکس رو بلندتر از عرضش می‌کرد و آیکون‌ها
+// و متن وسط از جاشون سر می‌خوردن.
 
 const S = 300;
 const C = S / 2;
 const R_GOAL = 124;
 const R_LAST = 102;
+const PIN = 14;
+// حاشیه‌ی خالی دور حلقه (واحد SVG) کم می‌شه تا زیر صفحه‌ی ساعت فضای خالی نمونه؛ هنوز جا برای درخشش قوس و نبض نقطه هست
+const VB = 8;
 const EASE = [0.22, 1, 0.36, 1] as const;
 
 function hms(totalSec: number): string {
@@ -33,10 +40,8 @@ function hms(totalSec: number): string {
   return `${String(h).padStart(2, "0")}:${String(m).padStart(2, "0")}:${String(x).padStart(2, "0")}`;
 }
 
-/** جای یک نقطه‌ی SVG به‌صورت درصد برای لایه‌ی HTML روی صفحه */
-function pct(p: { x: number; y: number }) {
-  return { left: `${(p.x / S) * 100}%`, top: `${(p.y / S) * 100}%` };
-}
+// بیشینه‌ی عرض متن وسط (واحد SVG): فاصله‌ی بین عددهای 06 و 18 منهای حاشیه
+const CENTER_W = 124;
 
 export function SleepDial({
   loaded,
@@ -125,6 +130,10 @@ export function SleepDial({
     ? wakeTimesFor(Math.floor(nowMin), latency).slice(0, 2).reverse().map((w) => w.clock)
     : null;
 
+  // اندازه و جای عمودی متن وسط (نسبت به مرکز)؛ امتیاز درشت‌تره و فاصله‌ها بازتر
+  const baseBig = bigCls.includes("is-score") ? 56 : bigCls.includes("is-hms") ? 26 : bigCls.includes("is-word") ? 32 : 40;
+  const cy = bigCls.includes("is-score") ? { kicker: -40, big: 2, caption: 42 } : { kicker: -30, big: 2, caption: 32 };
+
   const nowAngle = nowMin !== null ? minuteToAngle(nowMin) : 0;
   const nowPt = pointAt(C, R_GOAL, nowAngle);
   const bedPt = pointAt(C, R_GOAL, minuteToAngle(bedMin));
@@ -135,7 +144,7 @@ export function SleepDial({
   return (
     <section className="sl-card sld" aria-live="polite">
       <div className="sld-dial">
-        <svg viewBox={`0 0 ${S} ${S}`} className="sld-svg" aria-hidden="true">
+        <svg viewBox={`${VB} ${VB} ${S - 2 * VB} ${S - 2 * VB}`} className="sld-svg" preserveAspectRatio="xMidYMid meet" role="img" aria-label={`${kicker} ${big} ${caption}`}>
           <defs>
             <linearGradient id={`sldg${uid}`} x1="0" y1="0" x2="1" y2="1">
               <stop offset="0%" style={{ stopColor: "var(--slp-ink)" }} />
@@ -198,16 +207,16 @@ export function SleepDial({
               <circle cx={nowPt.x} cy={nowPt.y} r={5.5} className="sld-now" />
             </g>
           )}
+
+          {/* ماه و خورشید روی دو سر قوس هدف */}
+          <Moon className="sld-pin" x={bedPt.x - PIN / 2} y={bedPt.y - PIN / 2} width={PIN} height={PIN} />
+          <Sun className="sld-pin" x={wakePt.x - PIN / 2} y={wakePt.y - PIN / 2} width={PIN} height={PIN} />
+
+          {/* متن وسط: داخل دایره‌ی درونی، شمارش‌های بلند کوچیک می‌شن */}
+          <text x={C} y={C + cy.kicker} className="sld-kicker" textAnchor="middle" dominantBaseline="central" style={{ fontSize: fitFontSize(kicker, 12, CENTER_W) }}>{kicker}</text>
+          <text x={C} y={C + cy.big} className={`sld-big ${bigCls}`} textAnchor="middle" dominantBaseline="central" style={{ fontSize: fitFontSize(big, baseBig, CENTER_W) }}>{big}</text>
+          <text x={C} y={C + cy.caption} className="sld-caption" textAnchor="middle" dominantBaseline="central" style={{ fontSize: fitFontSize(caption, 11.5, CENTER_W) }}>{caption}</text>
         </svg>
-
-        <span className="sld-pin is-bed" style={pct(bedPt)} aria-hidden="true"><Moon /></span>
-        <span className="sld-pin is-wake" style={pct(wakePt)} aria-hidden="true"><Sun /></span>
-
-        <div className="sld-center">
-          <span className="sld-kicker">{kicker}</span>
-          <b className={`sld-big ${bigCls}`}>{big}</b>
-          <span className="sld-caption">{caption}</span>
-        </div>
       </div>
 
       <button type="button" className="sld-goal-row" onClick={onEditGoal} aria-label="ویرایش هدف خواب">

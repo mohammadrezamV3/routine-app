@@ -627,7 +627,8 @@ html[data-perf="low"] .wl-flame{ filter:none; }
   background:rgba(0,0,0,.84); color:var(--text);
 }
 body[data-theme="light"] .wl-st-root{ background:rgba(58,38,24,.58); }
-.wl-st-frame{ position:relative; width:min(440px, 100%); height:100vh; height:100dvh; }
+/* ارتفاع واقعی دیده‌شده: 100vh در سافاری آیفون زیر نوار ابزار می‌ره، پس dvh (و برگشت به vh) */
+.wl-st-frame{ position:relative; width:min(440px, 100%); height:100vh; height:100dvh; max-height:100%; }
 @media (min-width:560px){ .wl-st-frame{ height:min(calc(100vh - 40px), 820px); height:min(calc(100dvh - 40px), 820px); } }
 .wl-st{
   position:absolute; inset:0; overflow:hidden; isolation:isolate; outline:none;
@@ -678,8 +679,10 @@ body[data-theme="light"] .wl-st::after{ background:radial-gradient(ellipse 125% 
 /* اسلاید */
 .wl-st-slide{
   position:absolute; inset:0; isolation:isolate; display:flex; flex-direction:column;
-  padding:calc(84px + env(safe-area-inset-top)) 24px calc(26px + env(safe-area-inset-bottom));
+  padding:calc(76px + env(safe-area-inset-top)) 24px calc(20px + env(safe-area-inset-bottom));
 }
+/* پوسته‌ی مقیاس‌دهنده (FitScale): --u خودش رو ست می‌کنه و بدنه‌ی اسلاید کل جاش رو می‌گیره */
+.wl-st-fit{ flex:1; min-height:0; display:flex; flex-direction:column; }
 .wl-st-slide::before, .wl-st-slide::after{ content:""; position:absolute; z-index:-1; border-radius:50%; pointer-events:none; will-change:transform; }
 /* نور اصلی: یک رنگ، شدتش از امتیاز اسلاید (--wl-k)؛ نور دوم سفید خنثی */
 .wl-st-slide::before{
@@ -702,6 +705,8 @@ body[data-theme="light"] .wl-st-slide::after{ opacity:.5; background:radial-grad
   flex:1; min-height:0; display:flex; flex-direction:column; align-items:center; justify-content:center; text-align:center;
   gap:calc(var(--u, 1) * 16px);
 }
+/* هیچ بچه‌ای فشرده نمی‌شه (کارت پایین روی متن نمی‌افته)؛ اگه جا کم باشه FitScale مقیاس رو کم می‌کنه */
+.wl-st-body > *{ flex-shrink:0; }
 
 /* ── تایپوگرافی مشترک ───────────────────────────────────────── */
 .wl-st-sheen, .wl-st-grad{ -webkit-background-clip:text; background-clip:text; -webkit-text-fill-color:transparent; color:transparent; }
