@@ -49,13 +49,14 @@ describe("parseMtShotBody — بایت‌های اضافه‌ی ترمینال",
 
 describe("mtShotDiag", () => {
   it("مقایسه‌ی نسخه و نرمال‌سازی", () => {
-    expect(EA_LATEST_VERSION).toBe("1.42");
+    expect(EA_LATEST_VERSION).toBe("1.43");
     expect(isEaOutdated(null)).toBe(true);
     expect(isEaOutdated("1.41")).toBe(true);
     expect(isEaOutdated("1.9")).toBe(true);
-    expect(isEaOutdated("1.42")).toBe(false);
+    expect(isEaOutdated("1.42")).toBe(true);
+    expect(isEaOutdated("1.43")).toBe(false);
     expect(isEaOutdated("2.0")).toBe(false);
-    expect(normalizeEaVersion("1.42")).toBe("1.42");
+    expect(normalizeEaVersion("1.43")).toBe("1.43");
     expect(normalizeEaVersion("<b>")).toBeNull();
   });
 
@@ -90,6 +91,13 @@ describe("سورس اکسپرت (public/ea)", () => {
       expect(src).toContain('StringReplace(img, "\\r", "");');
       expect(src).toContain('StringReplace(img, "\\n", "");');
       expect(src).toMatch(/\/api\/mt\/screenshot",\s*\n\s*"Content-Type: application\/json\\r\\nAuthorization: Bearer "/);
+    });
+    it(`${f}: ظاهر چارت اسکرین از چارت کاربر کپی می‌شه، نه تمپلیت (تا اکسپرت دوباره نشینه)`, () => {
+      expect(src).toContain("CopyChartLook(src, ch);");
+      expect(src).toContain("SHOT_COPY(CHART_COLOR_BACKGROUND);");
+      expect(src).toContain("SHOT_COPY(CHART_COLOR_CANDLE_BULL);");
+      expect(src).not.toContain("ChartApplyTemplate");
+      expect(src).not.toContain("ChartSaveTemplate");
     });
     it(`${f}: 413 اول با اندازه‌ی کوچک‌تر دوباره گرفته می‌شه و صف بعد از ری‌استارت برمی‌گرده`, () => {
       const i413 = src.indexOf('status == 413 && StringFind(g_shotSmall');

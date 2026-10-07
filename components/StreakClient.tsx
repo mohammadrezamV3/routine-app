@@ -24,7 +24,7 @@ import { DashIcon } from "./DashboardIcons";
 import { useDashboardRoutine } from "@/lib/useDashboardRoutine";
 import { useLiveRefresh, keyMatches } from "@/lib/liveSync";
 import { getStreakTier, STREAK_MILESTONES } from "@/lib/streakTier";
-import { ACHIEVEMENTS, ACHIEVEMENT_BY_ID } from "@/lib/achievements";
+import { ACHIEVEMENTS, ACHIEVEMENT_BY_ID, achievementDesc } from "@/lib/achievements";
 import type { AchievementsPayload } from "@/lib/achievementsServer";
 import { FA_WEEKDAY_SHORT, J_MONTHS, toJalali } from "@/lib/jalali";
 
@@ -44,18 +44,13 @@ export function StreakClient() {
   );
 }
 
-/** عدد هدفی که هنوز نرسیده نشون داده نمی‌شه — کنجکاوی، نه شمارش معکوس */
+/** فقط برای روزهای مایلستون استریک (مسیر مایلستون‌ها و «مایلستون بعدی») — اچیومنت‌ها عدد واقعی نشون می‌دن */
 const HIDDEN = "??";
 
 /** اسم اچیومنت (انگلیسی) — با هر دو شکل کاتالوگ (name یا title) کار می‌کنه */
 function achName(a: unknown): string {
   const r = a as { name?: string; title?: string } | undefined;
   return r?.name ?? r?.title ?? "";
-}
-
-/** توضیح اچیومنت: نشانه‌ی {n} = عدد هدف وقتی باز شده، وگرنه ?? */
-function achDesc(desc: string, goal: number, unlocked: boolean): string {
-  return desc.split("{n}").join(unlocked ? String(goal) : HIDDEN);
 }
 
 type Reward = { tier: "half" | "full"; percent: number; unlocked: boolean; used: boolean; usedAt: string | null };
@@ -298,18 +293,18 @@ function AchievementGrid({ data }: { data: AchievementsPayload | null }) {
     <motion.ul className="stk-ach-grid" variants={V_ACH_LIST} initial={reduced ? false : "hidden"} animate="show">
       {list.map(({ a, st }) => {
         const pct = st.goal ? Math.min(1, st.value / st.goal) : 0;
-        const desc = achDesc(a.desc, st.goal, st.unlocked);
+        const desc = achievementDesc(a, st.goal, st.unlocked);
         return (
           <motion.li key={a.id} variants={V_ACH_ITEM} className={`stk-ach-item rarity-${a.rarity}${st.unlocked ? " is-unlocked" : ""}`}>
             <AchievementIcon id={a.id} unlocked={st.unlocked} rarity={a.rarity} size={64} reduced={reduced} />
             <strong className="stk-ach-title" dir="ltr">{achName(a)}</strong>
             <span className="stk-ach-desc">{desc}</span>
             {st.unlocked ? (
-              <span className="stk-ach-date">{st.unlockedAt ? jDate(st.unlockedAt) : "باز شده"}</span>
+              st.unlockedAt && jDate(st.unlockedAt) ? <span className="stk-ach-date">{jDate(st.unlockedAt)}</span> : null
             ) : (
-              <span className="stk-ach-prog" aria-label={`${st.value} از ${HIDDEN}`}>
+              <span className="stk-ach-prog" aria-label={`${st.value} از ${st.goal}`}>
                 <span className="stk-ach-bar"><i style={{ transform: `scaleX(${pct})` }} /></span>
-                <em dir="ltr">{st.value}/{HIDDEN}</em>
+                <em dir="ltr">{Math.min(st.value, st.goal)}/{st.goal}</em>
               </span>
             )}
           </motion.li>
@@ -353,8 +348,10 @@ function RewardsCard({ data }: { data: AchievementsPayload | null }) {
   );
 }
 
+// تاریخ نامعتبر/نامشخص (ردیف‌های قدیمی) رشته‌ی خالی می‌ده، نه «؟» یا NaN
 function jDate(iso: string) {
   const d = new Date(iso);
+  if (Number.isNaN(d.getTime())) return "";
   const [jy, jm, jd] = toJalali(d.getFullYear(), d.getMonth() + 1, d.getDate());
   return `${jd} ${J_MONTHS[jm - 1]} ${jy}`;
 }

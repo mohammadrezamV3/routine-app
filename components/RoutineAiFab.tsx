@@ -203,7 +203,7 @@ export function RoutineAiFab({ onChanged }: { onChanged: () => void }) {
     <>
       <button
         type="button"
-        className="routine-ai-fab"
+        className="routine-ai-fab mm-appear"
         onClick={() => setOpen(true)}
         aria-label="نومو"
         title="نومو"

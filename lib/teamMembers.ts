@@ -6,6 +6,7 @@ export const TEAM_KEY = "team_members";
 export const TEAM_MAX_MEMBERS = 30;
 export const TEAM_NAME_MAX = 60;
 export const TEAM_ROLE_MAX = 80;
+export const TEAM_ROLES_MAX = 6;
 export const TEAM_BIO_MAX = 240;
 export const TEAM_PHOTO_MAX_LENGTH = 120_000;
 
@@ -16,7 +17,9 @@ export type TeamLinks = Partial<Record<TeamLinkKind, string>>;
 export type TeamMember = {
   id: string;
   name: string;
-  role: string;
+  // یک نفر می‌تونه چند عنوان داشته باشه؛ ردیف‌های قدیمی با فیلد تکی role
+  // موقع خواندن به roles تبدیل می‌شن
+  roles: string[];
   bio: string;
   photo: string | null;
   links: TeamLinks;
@@ -56,6 +59,28 @@ export function normalizeTeamLink(kind: TeamLinkKind, raw: unknown): string | nu
   return httpsUrl(t);
 }
 
+// عنوان‌ها: هم roles (آرایه) هم role قدیمی (رشته) پذیرفته می‌شه. خالی‌ها و
+// تکراری‌ها (بدون حساسیت به حروف) حذف می‌شن و ترتیب حفظ می‌شه. خطا با
+// فیلد error برمی‌گرده تا ذخیره‌ی ادمین رد بشه، ولی هیچ‌وقت داده‌ی قدیمی گم نمی‌شه.
+export function normalizeTeamRoles(o: { roles?: unknown; role?: unknown }): { roles: string[]; error?: string } {
+  const raw: unknown[] = Array.isArray(o.roles) ? o.roles : [];
+  if (typeof o.role === "string" && o.role.trim()) raw.push(o.role);
+  const roles: string[] = [];
+  const seen = new Set<string>();
+  for (const r of raw) {
+    if (typeof r !== "string") continue;
+    const t = r.replace(/\s+/g, " ").trim();
+    if (!t) continue;
+    if (t.length > TEAM_ROLE_MAX) return { roles, error: "role-too-long" };
+    const key = t.toLowerCase();
+    if (seen.has(key)) continue;
+    seen.add(key);
+    roles.push(t);
+  }
+  if (roles.length > TEAM_ROLES_MAX) return { roles: roles.slice(0, TEAM_ROLES_MAX), error: "too-many-roles" };
+  return { roles };
+}
+
 export type TeamValidation = { ok: true; members: TeamMember[] } | { ok: false; error: string };
 
 function newId(): string {
@@ -76,8 +101,10 @@ export function validateTeamMembers(input: unknown): TeamValidation {
     const name = str(o.name, TEAM_NAME_MAX + 1);
     if (!name) return { ok: false, error: `نام عضو ${n} را وارد کن` };
     if (name.length > TEAM_NAME_MAX) return { ok: false, error: `نام عضو ${n} بیشتر از ${TEAM_NAME_MAX} حرف است` };
-    const role = str(o.role, TEAM_ROLE_MAX + 1);
-    if (role.length > TEAM_ROLE_MAX) return { ok: false, error: `عنوان عضو ${n} بیشتر از ${TEAM_ROLE_MAX} حرف است` };
+    const rr = normalizeTeamRoles(o);
+    if (rr.error === "role-too-long") return { ok: false, error: `عنوان عضو ${n} بیشتر از ${TEAM_ROLE_MAX} حرف است` };
+    if (rr.error === "too-many-roles") return { ok: false, error: `هر عضو حداکثر ${TEAM_ROLES_MAX} عنوان می‌تونه داشته باشه` };
+    const roles = rr.roles;
     const bio = str(o.bio, TEAM_BIO_MAX + 1);
     if (bio.length > TEAM_BIO_MAX) return { ok: false, error: `توضیح عضو ${n} بیشتر از ${TEAM_BIO_MAX} حرف است` };
 
@@ -101,7 +128,7 @@ export function validateTeamMembers(input: unknown): TeamValidation {
     let id = typeof o.id === "string" && ID_RE.test(o.id) ? o.id : newId();
     while (seen.has(id)) id = newId();
     seen.add(id);
-    members.push({ id, name, role, bio, photo, links });
+    members.push({ id, name, roles, bio, photo, links });
   }
   return { ok: true, members };
 }
@@ -111,7 +138,15 @@ export function sanitizeTeamMembers(raw: unknown): TeamMember[] {
   if (!Array.isArray(raw)) return [];
   const out: TeamMember[] = [];
   for (const item of raw.slice(0, TEAM_MAX_MEMBERS)) {
-    const v = validateTeamMembers([item]);
+    // ردیف قدیمی/دستی با عنوان بلند یا زیاد: به‌جای حذف کل عضو، عنوان‌ها کوتاه می‌شن
+    let row = item;
+    if (item && typeof item === "object") {
+      const o = item as Record<string, unknown>;
+      const list: unknown[] = [...(Array.isArray(o.roles) ? o.roles : []), ...(typeof o.role === "string" ? [o.role] : [])];
+      const fixed = normalizeTeamRoles({ roles: list.map((r) => (typeof r === "string" ? r.slice(0, TEAM_ROLE_MAX) : r)).slice(0, TEAM_ROLES_MAX * 2) });
+      row = { ...o, role: undefined, roles: fixed.roles };
+    }
+    const v = validateTeamMembers([row]);
     if (v.ok) out.push(v.members[0]);
   }
   return out;

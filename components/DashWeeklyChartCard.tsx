@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useLayoutEffect, useRef, useState } from "react";
 import { cn } from "@/lib/utils";
 import { DashCard } from "./DashCard";
 import { getWeekStats, WeekDayStat } from "@/lib/routineStats";
@@ -44,6 +44,23 @@ function useBarsReveal(el: HTMLElement | null, key: string): boolean {
   return playedKey === key;
 }
 
+// حرکت میله‌ها (Web Animations، فقط transform = کامپوزیتور، بدون layout):
+//  - اولین بار که دیده می‌شن از صفر پر می‌شن، پشت‌سرهم (stagger)؛
+//  - تغییرهای بعدی (تیک و ...) از ارتفاع قبلی به جدید می‌رن، نه از صفر (FLIP:
+//    ارتفاع جدید همون لحظه ست می‌شه و scaleY از نسبت قدیم/جدید به 1 می‌ره).
+// منحنی عمدا ملایمه: منحنی قبلی (expo-out) ۷۰٪ مسیر رو توی ۱۵۰ میلی‌ثانیه
+// می‌رفت و روی گوشی «ناگهانی» به نظر می‌اومد؛ مثل نسخه‌ی قدیمی easeOut نرم.
+const GROW_MS = 820;
+const UPDATE_MS = 560;
+const STAGGER_MS = 70;
+const GROW_EASE = "cubic-bezier(.3,.55,.3,1)";
+
+function prefersReducedMotion(): boolean {
+  try { return window.matchMedia("(prefers-reduced-motion: reduce)").matches; } catch { return false; }
+}
+
+const barHeight = (pct: number) => Math.max(pct > 0 ? 4 : 1, pct);
+
 // نمودار میله‌ای آمار هفتگی — درصد واقعی هرروز (از DailyEntry.completedItems
 // نسبت به تعداد برنامه‌های همون روز)، راست‌چین طبیعی: شنبه راست، جمعه چپ.
 export function DashWeeklyChartCard({ delay, refreshKey }: { delay?: number; refreshKey?: number }) {
@@ -59,6 +76,32 @@ export function DashWeeklyChartCard({ delay, refreshKey }: { delay?: number; ref
   const played = useBarsReveal(barsEl, stats ? (rows[0]?.iso ?? "empty") : "");
   const maxPct = Math.max(1, ...rows.map((s) => s.pct));
 
+  const barEls = useRef(new Map<string, HTMLElement>());
+  const prevHeights = useRef(new Map<string, number>());
+  const revealedKey = useRef<string | null>(null);
+  const revealKey = rows[0]?.iso ?? "";
+  // قبل از پینت (useLayoutEffect) تا کلاس hold برداشته می‌شه همون لحظه انیمیشن
+  // شروع بشه و حالت نهایی حتی یک فریم دیده نشه.
+  useLayoutEffect(() => {
+    const reduce = prefersReducedMotion();
+    const first = played && revealedKey.current !== revealKey;
+    rows.forEach((s, i) => {
+      const el = barEls.current.get(s.iso);
+      const h = barHeight(s.pct);
+      const before = prevHeights.current.get(s.iso);
+      prevHeights.current.set(s.iso, h);
+      if (!el || !played || reduce || typeof el.animate !== "function") return;
+      if (first) {
+        el.animate([{ transform: "scaleY(0)" }, { transform: "scaleY(1)" }],
+          { duration: GROW_MS, delay: i * STAGGER_MS, easing: GROW_EASE, fill: "backwards" });
+      } else if (before !== undefined && before !== h) {
+        el.animate([{ transform: `scaleY(${before / h})` }, { transform: "scaleY(1)" }],
+          { duration: UPDATE_MS, easing: GROW_EASE });
+      }
+    });
+    if (played) revealedKey.current = revealKey;
+  }, [rows, played, revealKey]);
+
   return (
     <DashCard delay={delay}>
       <h2 className="flex items-center gap-1.5 text-right text-[14px] font-bold text-dash-text sm:text-[15px]">
@@ -71,7 +114,7 @@ export function DashWeeklyChartCard({ delay, refreshKey }: { delay?: number; ref
       ) : (
         <div className="mt-5 flex items-end gap-3">
           <div ref={setBarsEl} className="flex flex-1 items-end justify-between gap-1.5 sm:gap-2">
-            {rows.map((s, i) => {
+            {rows.map((s) => {
               const peak = s.pct > 0 && s.pct === maxPct;
               return (
                 <div key={s.iso} className="flex flex-1 flex-col items-center gap-1 sm:gap-1.5">
@@ -80,12 +123,13 @@ export function DashWeeklyChartCard({ delay, refreshKey }: { delay?: number; ref
                     {/* پرشدن نرم با CSS (scaleY، فقط کامپوزیت) نه framer — روی
                         گوشی ضعیف MotionTuner انیمیشن‌های framer رو خاموش می‌کنه،
                         ولی این میله‌ها باید همه‌جا مثل دسکتاپ پر بشن. تا لحظه‌ی
-                        دیده‌شدن (useBarsReveal) میله‌ها در حالت صفرن. */}
+                        دیده‌شدن (useBarsReveal) میله‌ها در حالت صفرن؛ حرکت‌شون
+                        در useLayoutEffect بالا (WAAPI) اجرا می‌شه. */}
                     <div
-                      className={cn(played ? "dash-bar-grow" : "dash-bar-hold", "w-2 rounded-full sm:w-2.5")}
+                      ref={(el) => { if (el) barEls.current.set(s.iso, el); else barEls.current.delete(s.iso); }}
+                      className={cn(!played && "dash-bar-hold", "dash-bar w-2 rounded-full sm:w-2.5")}
                       style={{
-                        height: `${Math.max(s.pct > 0 ? 4 : 1, s.pct)}%`,
-                        animationDelay: `${0.1 + i * 0.05}s`,
+                        height: `${barHeight(s.pct)}%`,
                         background: peak ? "var(--accent)" : "rgba(var(--accent-rgb),.45)",
                         boxShadow: peak ? "0 0 12px rgba(var(--accent-rgb),.6)" : "none",
                       }}

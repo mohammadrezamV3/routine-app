@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { createPortal } from "react-dom";
 import { Check, ChevronRight, MoreVertical, PenLine, Plus } from "lucide-react";
 import { AnimatePresence, motion } from "framer-motion";
@@ -13,6 +13,7 @@ import { useLockBodyScroll } from "@/lib/useLockBodyScroll";
 import type { Target } from "./CaloriePanel";
 import { NumberInput } from "./NumberInput";
 import { Spinner } from "./Spinner";
+import { useMenuPresence } from "@/lib/useMenuPresence";
 
 type Mode = "choice" | "smart" | "manual";
 type SmartStep = "goal" | "meals" | "specs";
@@ -79,6 +80,11 @@ export function CalorieGoalModal({
   const [editingKey, setEditingKey] = useState<string | null>(null);
   const [menuOpenKey, setMenuOpenKey] = useState<string | null>(null);
   const [menuPos, setMenuPos] = useState<{ top: number; right: number } | null>(null);
+  // خروج نرم منو (حرکت مشترک menu-motion): کلید آخرین ردیف باز می‌مونه تا منو
+  // در مدت خروج هنوز رندر بشه
+  const mealMenuPresence = useMenuPresence(!!menuOpenKey);
+  const lastMenuKey = useRef<string | null>(null);
+  if (menuOpenKey) lastMenuKey.current = menuOpenKey;
   // هدف درشت‌مغذی‌ها — فقط توی همین مسیر دستی قابل تنظیمه و اختیاریه
   const [proteinTarget, setProteinTarget] = useState(target.proteinTargetG ? String(target.proteinTargetG) : "");
   const [carbsTarget, setCarbsTarget] = useState(target.carbsTargetG ? String(target.carbsTargetG) : "");
@@ -376,10 +382,11 @@ export function CalorieGoalModal({
                                   (که خودش اسکرول‌شونده و بلوردار و یه
                                   stacking-context جداست) زیر ردیف‌های بعدی
                                   می‌افتاد و دیده نمی‌شد. */}
-                              {menuOpenKey === row.key && menuPos && createPortal(
+                              {mealMenuPresence.present && lastMenuKey.current === row.key && menuPos && createPortal(
                                 <>
-                                  <div className="fixed inset-0 z-[79]" onClick={() => setMenuOpenKey(null)} />
-                                  <div className="manual-meal-row-menu" style={{ top: menuPos.top, right: menuPos.right }}>
+                                  {/* پرده‌ی کلیک فقط وقتی منو باز باشه؛ در مدت خروج نباید تپ بگیره */}
+                                  {menuOpenKey === row.key && <div className="fixed inset-0 z-[79]" onClick={() => setMenuOpenKey(null)} />}
+                                  <div className="mm-menu manual-meal-row-menu" data-state={mealMenuPresence.state} style={{ top: menuPos.top, right: menuPos.right }}>
                                     <button type="button" onClick={() => { setEditingKey(row.key); setMenuOpenKey(null); }}>
                                       ویرایش
                                     </button>

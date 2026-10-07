@@ -9312,7 +9312,54 @@ body[data-theme="light"] .task-check-btn, body:not([data-theme="light"]) .task-c
 .popup-panel{
   animation:popupPanelIn var(--popup-in-dur) var(--popup-ease-in) backwards;
 }
-.dash-context-menu{ animation:popupMenuIn .18s var(--popup-ease-in) backwards; }
+/* ============================================================
+   حرکت مشترک منوها و دکمه‌های تازه‌پیدا (menu-motion)
+   ------------------------------------------------------------
+   یک مجموعه‌ی واحد برای همه‌ی منوهای سه‌نقطه، پاپ‌اورها و پنل‌های کوچک
+   (DashTaskRow، DashMedicationCard، TradeKebabMenu، MentorKebabMenu،
+   منوی وعده‌ی کالری، منوی پروفایل و اعلان‌ها):
+     • .mm-menu — ورود ۱۶۰ms: محو + scale از .96 به 1، از سمت لنگر
+       (transform-origin با --mm-origin؛ پیش‌فرض بالا-راست چون منوها زیر
+       دکمه و هم‌لبه‌ی راست RTL باز می‌شن)؛ خروج ۱۱۰ms با data-state="closed".
+       خروج رو هوک useMenuPresence (lib/useMenuPresence.ts) نگه می‌داره و در
+       همین حالت pointer-events:none می‌گیره، پس تپ‌ها رد می‌شن.
+     • .mm-appear — دکمه‌ای که تازه پیدا می‌شه: محو + ۴px بالا آمدن. با
+       `translate` (نه transform) تا با hover/active همون دکمه قاطی نشه.
+   فقط opacity/transform (کامپوزیتور)، بدون backdrop-filter اضافه و بدون
+   layout. حرکت‌کاهی: فقط یک محو کوتاه. دستگاه ضعیف (data-perf="low"):
+   فقط محو، کوتاه‌تر. */
+@keyframes mmIn{ from{ opacity:0; transform:scale(.96); } to{ opacity:1; transform:none; } }
+@keyframes mmOut{ from{ opacity:1; transform:none; } to{ opacity:0; transform:scale(.97); } }
+@keyframes mmFadeIn{ from{ opacity:0; } to{ opacity:1; } }
+@keyframes mmFadeOut{ from{ opacity:1; } to{ opacity:0; } }
+@keyframes mmRise{ from{ opacity:0; translate:0 4px; } to{ opacity:1; translate:none; } }
+.mm-menu{
+  transform-origin:var(--mm-origin, top right);
+  animation:mmIn .16s var(--popup-ease-in) backwards;
+}
+.mm-menu[data-state="closed"]{
+  animation:mmOut .11s var(--popup-ease-out) forwards;
+  pointer-events:none;
+}
+.mm-appear{ animation:mmRise .18s var(--popup-ease-in) backwards; }
+html[data-perf="low"] .mm-menu{ animation-name:mmFadeIn; animation-duration:.12s; }
+html[data-perf="low"] .mm-menu[data-state="closed"]{ animation-name:mmFadeOut; animation-duration:.09s; }
+html[data-perf="low"] .mm-appear{ animation-name:mmFadeIn; animation-duration:.14s; }
+@media (prefers-reduced-motion:reduce){
+  .mm-menu, .mm-appear{ animation:mmFadeIn .12s ease backwards; }
+  .mm-menu[data-state="closed"]{ animation:none; opacity:0; }
+}
+/* پنل‌های اعلان/پروفایل (.notif-panel) همون خروج رو می‌گیرن؛ ورودشون
+   قبلا خودش scale .96 داشت (notifPanelIn). */
+.notif-panel{ transform-origin:var(--mm-origin, top right); }
+.notif-panel[data-state="closed"]{
+  animation:mmOut .11s var(--popup-ease-out) forwards;
+  pointer-events:none;
+}
+html[data-perf="low"] .notif-panel[data-state="closed"]{ animation-name:mmFadeOut; animation-duration:.09s; }
+@media (prefers-reduced-motion:reduce){
+  .notif-panel[data-state="closed"]{ animation:none; opacity:0; }
+}
 
 /* کپی خروجی: غیرتعاملی، و انیمیشن‌های CSS داخلش (مثلا ورود همین پنل)
    دوباره پخش نشوند — روی حالت پایانی‌شان قفل می‌شوند. انیمیشن خروج با
@@ -9403,17 +9450,16 @@ body[data-theme="light"] select option,
 body[data-theme="light"] select optgroup{ background-color:var(--surface-2); color:var(--text); }
 body select option:disabled{ color:var(--muted2); }
 
-/* میله‌های «آمار هفتگی» (DashWeeklyChartCard): پرشدن نرم از پایین روی همه‌ی
-   دستگاه‌ها — فقط transform، بدون reflow. */
-.dash-bar-grow, .dash-bar-hold{ transform-origin:bottom; }
+/* میله‌های «آمار هفتگی» (DashWeeklyChartCard): پرشدن/به‌روزرسانی با Web
+   Animations در خود کامپوننت (فقط transform، بدون reflow). این‌جا فقط حالت
+   «هنوز دیده نشده» می‌مونه: صفر از پایین. */
+.dash-bar{ transform-origin:bottom; }
 /* پیش از دیده‌شدن (اسپلش هنوز هست یا کارت بیرون از صفحه) صفر می‌مونه؛
-   DashWeeklyChartCard با رسیدن لحظه‌ی دیده‌شدن کلاس رو به grow عوض می‌کنه. */
+   DashWeeklyChartCard با رسیدن لحظه‌ی دیده‌شدن کلاس رو برمی‌داره و
+   همون لحظه انیمیشن رو شروع می‌کنه. */
 .dash-bar-hold{ transform:scaleY(0); }
-.dash-bar-grow{ animation:dashBarGrow .75s cubic-bezier(.22,1,.36,1) both; }
-@keyframes dashBarGrow{ from{ transform:scaleY(0); } to{ transform:scaleY(1); } }
 @media (prefers-reduced-motion:reduce){
   .dash-bar-hold{ transform:none; }
-  .dash-bar-grow{ animation:none; }
 }
 
 /* خروج از حساب (lib/logout.ts): پرده‌ی تار فوری روی کل صفحه تا ریدایرکت —
@@ -9997,3 +10043,7 @@ textarea.wsearch-newform-name,
 
 /* تصویر کوچک عضو تیم در /admin/team */
 .admin-team-thumb{ border-radius:50%; object-fit:cover; display:block; flex:none; }
+.admin-team-roles{ display:flex; flex-wrap:wrap; gap:6px; margin-bottom:8px; }
+.admin-team-role-chip{ display:inline-flex; align-items:center; gap:4px; font-size:12px; font-weight:700; padding:2px 6px 2px 10px; border-radius:999px; border:1px solid var(--adm-line, currentColor); }
+button.admin-team-role-x, .admin-team-role-chip button.admin-team-role-x{ background:transparent; box-shadow:none; backdrop-filter:none; -webkit-backdrop-filter:none; border:0; }
+.admin-team-role-x{ display:inline-flex; align-items:center; justify-content:center; width:18px; height:18px; padding:0; border:0; border-radius:50%; background:transparent; color:inherit; cursor:pointer; }

@@ -15,12 +15,12 @@ body[data-theme="light"] .slw-col, body:not([data-theme="light"]) .slw-col{
 
 /* ── صفحه‌ی ساعت ───────────────────────────────────────── */
 .sld{ align-items:stretch; gap:18px; padding-top:22px; }
-.sld-dial{
-  position:relative; width:min(300px, 100%); aspect-ratio:1; margin:0 auto;
-  container-type:inline-size; container-name:sldial;
-}
+/* صفحه‌ی ساعت یک مربع واقعیه: عرض مشخص و ارتفاع از خود SVG (viewBox) میاد؛ هیچ
+   لایه‌ی HTML جدا، container-type یا درصد-روی-aspect-ratio نیست (وب‌کیت اون ترکیب رو
+   بلندتر از عرضش می‌ساخت). aspect-ratio روی خود SVG فقط پشتیبانه. */
+.sld-dial{ flex:none; width:min(300px, 100%); margin:0 auto; }
 @media (min-width:1024px){ .sld-dial{ width:min(280px, 100%); } }
-.sld-svg{ display:block; width:100%; height:100%; overflow:hidden; }
+.sld-svg{ display:block; width:100%; height:auto; aspect-ratio:1 / 1; overflow:hidden; }
 .sld-track{ fill:none; stroke:var(--box-line); stroke-width:14; }
 .sld-tick{ stroke:var(--muted); stroke-width:1.5; stroke-linecap:round; opacity:.3; }
 .sld-tick.is-major{ stroke-width:2; opacity:.65; }
@@ -37,29 +37,15 @@ body[data-theme="light"] .slw-col, body:not([data-theme="light"]) .slw-col{
 .sld-now-halo{ fill:none; stroke:var(--text); stroke-width:1.5; opacity:.28; transform-box:fill-box; transform-origin:center; animation:sldPulse 2.4s ease-out infinite; }
 @keyframes sldPulse{ 0%{ transform:scale(.6); opacity:.45; } 100%{ transform:scale(1.5); opacity:0; } }
 
-/* آیکون ماه/خورشید روی دو سر قوس هدف (اندازه نسبت به خود صفحه‌ی ساعت) */
-.sld-pin{
-  position:absolute; width:4.7cqw; height:4.7cqw; transform:translate(-50%, -50%);
-  display:flex; align-items:center; justify-content:center; color:#fff; pointer-events:none;
-}
-.sld-pin svg{ width:100%; height:100%; stroke-width:2.4; }
+/* آیکون ماه/خورشید روی دو سر قوس هدف (داخل SVG، واحدهای viewBox) */
+.sld-pin{ color:#fff; stroke-width:2.4; pointer-events:none; overflow:visible; }
 
-/* متن وسط: همه‌ی اندازه‌ها بر پایه‌ی cqw تا داخل دایره‌ی درونی (حدود 40 درصد عرض) بمونه */
-.sld-center{
-  position:absolute; left:50%; top:50%; width:42cqw; transform:translate(-50%, -50%);
-  display:flex; flex-direction:column; align-items:center; justify-content:center;
-  gap:.6cqw; text-align:center; pointer-events:none;
-}
-.sld-kicker{ font-size:max(10px, 4.1cqw); font-weight:700; color:var(--muted); line-height:1.3; white-space:nowrap; }
-.sld-big{
-  font-size:13cqw; font-weight:900; line-height:1.15; font-variant-numeric:tabular-nums; color:var(--text);
-  max-width:100%; white-space:nowrap;
-}
+/* متن وسط داخل SVG: اندازه‌ها از کد میان (fitFontSize) و دیگه به عرض کانتینر وابسته نیستن */
+.sld-kicker, .sld-caption{ fill:var(--muted); font-weight:700; }
+.sld-caption{ font-weight:600; }
+.sld-big{ fill:var(--text); font-weight:900; font-variant-numeric:tabular-nums; }
 .sld-big.is-clock{ direction:ltr; unicode-bidi:isolate; }
-.sld-big.is-clock.is-hms{ font-size:9cqw; letter-spacing:0; }
-.sld-big.is-score{ font-size:19cqw; }
-.sld-big.is-word{ font-size:11cqw; }
-.sld-caption{ font-size:max(10px, 3.8cqw); color:var(--muted); font-weight:600; line-height:1.5; text-wrap:balance; }
+.sld-big.is-score{ fill:currentColor; }
 
 /* ساعت‌های هدف — زدن کل ردیف = ویرایش هدف */
 .sld-goal-row{

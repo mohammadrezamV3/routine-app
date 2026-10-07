@@ -25,7 +25,7 @@ export async function PUT(req: NextRequest) {
   const before = await getTeamMembers();
   await setTeamMembers(v.members);
   // عکس‌ها داخل لاگ نمی‌رن (حجم)
-  const brief = (l: { id: string; name: string; role: string }[]) => l.map((m) => ({ id: m.id, name: m.name, role: m.role }));
+  const brief = (l: { id: string; name: string; roles: string[] }[]) => l.map((m) => ({ id: m.id, name: m.name, roles: m.roles }));
   await writeAuditLog(guard.userId, "setting.team_members", "AppSetting", "team_members", { before: brief(before), after: brief(v.members) });
   return NextResponse.json({ members: v.members });
 }

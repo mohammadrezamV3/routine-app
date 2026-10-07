@@ -6,6 +6,7 @@ import { motion, AnimatePresence } from "framer-motion";
 import { ChevronDown, MoreVertical, Pencil, Play, Trash2, CalendarClock } from "lucide-react";
 import { TickButton } from "./TickButton";
 import { cn } from "@/lib/utils";
+import { useMenuPresence } from "@/lib/useMenuPresence";
 import { Importance } from "@/lib/storage";
 import { toEnDigits } from "@/lib/schedule";
 
@@ -56,6 +57,8 @@ export function DashTaskRow({
   const [expanded, setExpanded] = useState(false);
   const canTick = editable && !task.isFuture && !task.dayPast;
   const [menuPos, setMenuPos] = useState<{ top: number; right: number } | null>(null);
+  // خروج نرم منو (حرکت مشترک menu-motion)
+  const menuPresence = useMenuPresence(menuOpen);
   const btnWrapRef = useRef<HTMLDivElement>(null);
   const menuRef = useRef<HTMLDivElement>(null);
   // جلوگیری از باگ تپ‌استرایک: با اولین کلیک «شروع» بلافاصله دکمه غیرفعال
@@ -115,11 +118,12 @@ export function DashTaskRow({
             <MoreVertical className="h-[15px] w-[15px] sm:h-[17px] sm:w-[17px]" />
           </button>
         )}
-        {menuOpen && menuPos && createPortal(
+        {menuPresence.present && menuPos && createPortal(
           <div
             ref={menuRef}
+            data-state={menuPresence.state}
             style={{ top: menuPos.top, right: menuPos.right }}
-            className="dash-context-menu fixed z-[70] min-w-[150px] overflow-hidden rounded-2xl border border-dash-border p-1.5 shadow-[0_16px_40px_rgba(0,0,0,.5)]"
+            className="mm-menu dash-context-menu fixed z-[70] min-w-[150px] overflow-hidden rounded-2xl border border-dash-border p-1.5 shadow-[0_16px_40px_rgba(0,0,0,.5)]"
           >
             <div
               onClick={() => { if (task.isPast) return; setMenuOpen(false); onEdit(task.id); }}

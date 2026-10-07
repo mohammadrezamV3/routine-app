@@ -28,3 +28,13 @@ describe("صفحه‌ی ساعت خواب", () => {
     expect(hhmmToMin("")).toBeNull();
   });
 });
+
+describe("جاکردن متن وسط صفحه‌ی ساعت", () => {
+  it("شمارش بلند توی عرض مجاز می‌مونه و متن کوتاه از اندازه‌ی پایه بزرگ‌تر نمی‌شه", async () => {
+    const { fitFontSize, textEm } = await import("@/lib/sleepDial");
+    expect(textEm("11:53:29") * fitFontSize("11:53:29", 40, 124)).toBeLessThanOrEqual(124.01);
+    expect(fitFontSize("11:53:29", 40, 124)).toBeLessThan(40);
+    expect(fitFontSize("85", 56, 124)).toBe(56);
+    expect(fitFontSize("", 20, 124)).toBe(20);
+  });
+});

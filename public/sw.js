@@ -18,7 +18,10 @@
 
 // v2: صفحه‌هایی که سرور no-store/private فرستاده دیگه کش نمی‌شن؛ بالا بردن نسخه
 // کش صفحه‌های قبلی (که ممکن بود HTML حالت واردشده یا مهمان باشن) رو پاک می‌کنه.
-const VERSION = "v2";
+// v3: پاک‌کردن کش‌های قبلی که ممکن بود پاسخ‌های خراب (HTML پورتال/فیلترینگ با کد 200 زیر
+// آدرس css/js) رو برای همیشه نگه داشته باشن؛ از این نسخه به بعد هر دارایی قبل از کش‌شدن
+// و قبل از سرو از کش با content-type اعتبارسنجی می‌شه (isValidAsset).
+const VERSION = "v3";
 const SHELL_CACHE = `arion-shell-${VERSION}`;
 const ASSET_CACHE = `arion-assets-${VERSION}`;
 const PAGE_CACHE = `arion-pages-${VERSION}`;
@@ -79,11 +82,44 @@ self.addEventListener("fetch", (event) => {
     return;
   }
 
-  // فایل‌های ساکن: cache-first. این‌جا همان جایی‌ست که سرعت به دست می‌آید.
-  if (url.pathname.startsWith("/_next/static/") || url.pathname.startsWith("/images/") || /\.(?:js|css|woff2?|png|jpg|jpeg|svg|webp|ico)$/.test(url.pathname)) {
+  // دارایی‌های هش‌دار نکست: cache-first (نام فایل هش محتواست، هیچ‌وقت بیات نمی‌شه).
+  // در dev نکست فایل‌ها هش ندارن (page.css، main-app.js)؛ اون‌ها رو دست نمی‌زنیم تا
+  // نسخه‌ی بیات سرو نشه.
+  if (isImmutableAsset(url.pathname)) {
     event.respondWith(cacheFirst(request));
+    return;
+  }
+
+  // بقیه‌ی فایل‌های ساکن (لوگو، آیکون، …) اسم هش‌دار ندارن و ممکنه عوض بشن:
+  // stale-while-revalidate، یعنی سریع از کش و بی‌سروصدا تازه می‌شه.
+  if (!url.pathname.startsWith("/_next/") && (url.pathname.startsWith("/images/") || STATIC_EXT.test(url.pathname))) {
+    event.respondWith(staleWhileRevalidate(event));
   }
 });
+
+const STATIC_EXT = /\.(?:js|css|woff2?|png|jpg|jpeg|svg|webp|ico)$/;
+
+/** /_next/static/ و اسم فایل هش‌دار (حداقل ۸ هگز) — فقط همین‌ها «تا ابد معتبر»ن */
+function isImmutableAsset(pathname) {
+  if (!pathname.startsWith("/_next/static/") || pathname.includes(".hot-update.")) return false;
+  const base = pathname.slice(pathname.lastIndexOf("/") + 1);
+  return /[0-9a-f]{8,}/.test(base);
+}
+
+/**
+ * پاسخ واقعا همون چیزیه که آدرس ادعا می‌کنه؟ روی موبایل (پورتال وای‌فای، فیلترینگ
+ * اپراتور، پروکسی) گاهی یه HTML با کد 200 زیر آدرس css/js برمی‌گرده؛ مرورگر با
+ * nosniff ردش می‌کنه و اگه کش می‌شد، صفحه برای همیشه بدون استایل می‌موند.
+ */
+function isValidAsset(pathname, response) {
+  if (!response || !response.ok || response.type !== "basic" || response.status !== 200) return false;
+  const ct = (response.headers.get("content-type") || "").toLowerCase();
+  if (/\.css$/.test(pathname)) return ct.includes("text/css");
+  if (/\.js$/.test(pathname)) return ct.includes("javascript") || ct.includes("ecmascript");
+  if (/\.(?:woff2?|ttf|otf)$/.test(pathname)) return !ct.includes("text/html") && !ct.includes("text/plain");
+  if (/\.(?:png|jpe?g|webp|ico|svg)$/.test(pathname)) return ct.startsWith("image/");
+  return !ct.includes("text/html");
+}
 
 /**
  * ناوبری: network-first.
@@ -122,24 +158,76 @@ function isShareableResponse(response) {
   return !/(?:^|[\s,])(?:no-store|private)(?:$|[\s,=])/.test(cc);
 }
 
-/** فایل ساکن: اول کش، بعد شبکه (و نتیجه را برای دفعه‌ی بعد نگه می‌دارد) */
+/** فایل هش‌دار: اول کش (اگه سالم بود)، بعد شبکه؛ پاسخ سالم برای دفعه‌ی بعد کش می‌شه */
 async function cacheFirst(request) {
-  const cached = await caches.match(request);
-  if (cached) return cached;
+  const pathname = new URL(request.url).pathname;
+  const cached = await caches.match(request, { ignoreVary: true });
+  if (cached) {
+    if (isValidAsset(pathname, cached)) return cached;
+    // ورودی خراب (از نسخه‌ی قبلی یا پاسخ بد) — دورش می‌ریزیم
+    caches.open(ASSET_CACHE).then((c) => c.delete(request, { ignoreSearch: false })).catch(() => {});
+  }
   try {
     const response = await fetch(request);
-    // فقط پاسخ‌های سالم و کامل خود همین دامنه کش می‌شوند (نه opaque/partial)
-    if (response.ok && response.type === "basic") {
+    if (isValidAsset(pathname, response)) {
       const copy = response.clone();
       caches.open(ASSET_CACHE).then((c) => c.put(request, copy)).catch(() => {});
     }
     return response;
   } catch (err) {
-    const fallback = await caches.match(request, { ignoreSearch: true });
-    if (fallback) return fallback;
+    const fallback = await caches.match(request, { ignoreSearch: true, ignoreVary: true });
+    if (fallback && isValidAsset(pathname, fallback)) return fallback;
     throw err;
   }
 }
+
+/** فایل بدون هش: همون لحظه از کش، و هم‌زمان نسخه‌ی تازه رو می‌گیره */
+async function staleWhileRevalidate(event) {
+  const request = event.request;
+  const pathname = new URL(request.url).pathname;
+  const cached = await caches.match(request, { ignoreVary: true });
+  const refresh = fetch(request)
+    .then((response) => {
+      if (isValidAsset(pathname, response)) {
+        const copy = response.clone();
+        caches.open(ASSET_CACHE).then((c) => c.put(request, copy)).catch(() => {});
+      }
+      return response;
+    })
+    .catch(() => null);
+  // بدون این SW ممکنه قبل از نوشتن نسخه‌ی تازه در کش کشته بشه
+  event.waitUntil(refresh);
+  if (cached && isValidAsset(pathname, cached)) return cached;
+  const fresh = await refresh;
+  if (fresh) return fresh;
+  return Response.error();
+}
+
+// ── پیش‌گرم‌کردن فونت و CSS ───────────────────────────────────────────────
+// اسم فایل‌های فونت/CSS نکست هش‌دارن و موقع نصب SW معلوم نیستن؛ صفحه بعد از لود
+// فهرست چیزهایی که واقعا استفاده کرده رو می‌فرسته (lib/assetRecovery.ts) تا بعدا
+// اجرای PWA/آفلاین هیچ‌وقت به فونت دستگاه سقوط نکنه.
+self.addEventListener("message", (event) => {
+  const data = event.data;
+  if (!data || data.type !== "warm" || !Array.isArray(data.urls)) return;
+  event.waitUntil(
+    (async () => {
+      const cache = await caches.open(ASSET_CACHE);
+      for (const raw of data.urls.slice(0, 24)) {
+        try {
+          const u = new URL(String(raw), self.location.origin);
+          if (u.origin !== self.location.origin || !isImmutableAsset(u.pathname)) continue;
+          const req = new Request(u.pathname + u.search);
+          if (await cache.match(req, { ignoreVary: true })) continue;
+          const res = await fetch(req);
+          if (isValidAsset(u.pathname, res)) await cache.put(req, res);
+        } catch {
+          /* یکی نشد، بقیه ادامه */
+        }
+      }
+    })()
+  );
+});
 
 // ── Web Push ────────────────────────────────────────────────────────────
 // هر یادآوری یک `deadline` (لحظه‌ی شروع برنامه، epoch ms) داره. سرور TTL
