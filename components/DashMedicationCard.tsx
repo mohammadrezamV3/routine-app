@@ -4,6 +4,7 @@ import { useEffect, useRef, useState } from "react";
 import { createPortal } from "react-dom";
 import { Bell, MoreVertical, Pencil, Tablets, Plus, Trash2 } from "lucide-react";
 import { cn } from "@/lib/utils";
+import { useMenuPresence } from "@/lib/useMenuPresence";
 import { DashCard } from "./DashCard";
 import { MedicationForm } from "./MedicationForm";
 import { isoLocal } from "@/lib/jalali";
@@ -32,6 +33,8 @@ export function DashMedicationCard({ delay }: { delay?: number }) {
   const [menuFor, setMenuFor] = useState<string | null>(null);
   const [menuPos, setMenuPos] = useState<{ top: number; right: number } | null>(null);
   const menuRef = useRef<HTMLDivElement>(null);
+  // خروج نرم منو (حرکت مشترک menu-motion)
+  const menuPresence = useMenuPresence(!!menuFor);
 
   useEffect(() => { getMedications().then(setMeds); }, []);
 
@@ -170,11 +173,12 @@ export function DashMedicationCard({ delay }: { delay?: number }) {
         </div>
       </DashCard>
 
-      {menuFor && menuPos && createPortal(
+      {menuPresence.present && menuPos && createPortal(
         <div
           ref={menuRef}
+          data-state={menuPresence.state}
           style={{ top: menuPos.top, right: menuPos.right }}
-          className="dash-context-menu fixed z-[70] min-w-[140px] overflow-hidden rounded-2xl border border-dash-border p-1.5 shadow-[0_16px_40px_rgba(0,0,0,.5)]"
+          className="mm-menu dash-context-menu fixed z-[70] min-w-[140px] overflow-hidden rounded-2xl border border-dash-border p-1.5 shadow-[0_16px_40px_rgba(0,0,0,.5)]"
         >
           <div
             onClick={() => {
@@ -189,7 +193,7 @@ export function DashMedicationCard({ delay }: { delay?: number }) {
             ویرایش دارو
           </div>
           <div
-            onClick={() => removeMedication(menuFor)}
+            onClick={() => { if (menuFor) removeMedication(menuFor); }}
             className="flex cursor-pointer items-center gap-2 rounded-xl px-3 py-2 text-right text-[12px] text-[#E05252] transition hover:bg-[#E05252]/10 sm:text-[13px]"
           >
             <Trash2 size={13} className="shrink-0" />

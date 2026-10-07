@@ -3,6 +3,7 @@
 import { useEffect, useRef, useState } from "react";
 import { createPortal } from "react-dom";
 import { MoreVertical } from "lucide-react";
+import { useMenuPresence } from "@/lib/useMenuPresence";
 
 export type KebabAction = {
   label: string;
@@ -25,6 +26,8 @@ export function TradeKebabMenu({ actions, label = "گزینه‌ها" }: { actio
   const [pos, setPos] = useState<{ top: number; right: number } | null>(null);
   const btnRef = useRef<HTMLButtonElement>(null);
   const menuRef = useRef<HTMLDivElement>(null);
+  // خروج نرم منو (حرکت مشترک menu-motion)
+  const presence = useMenuPresence(open);
 
   useEffect(() => {
     if (!open) return;
@@ -67,11 +70,12 @@ export function TradeKebabMenu({ actions, label = "گزینه‌ها" }: { actio
           (DashTaskRow) — همون کلاس‌های Tailwind مستقیم روی هر ردیف، نه
           کلاس قدیمی .wsearch-fab-option/.trade-account-menu که ظاهرشون
           با مرجع فرق داشت و طبق گزارش کاربر انگار «یه دکمه‌ی بزرگ» بود. */}
-      {open && pos && createPortal(
+      {presence.present && pos && createPortal(
         <div
           ref={menuRef}
+          data-state={presence.state}
           style={{ top: pos.top, right: pos.right }}
-          className="dash-context-menu fixed z-[96] min-w-[150px] overflow-hidden rounded-2xl border border-dash-border p-1.5 shadow-[0_16px_40px_rgba(0,0,0,.5)]"
+          className="mm-menu dash-context-menu fixed z-[96] min-w-[150px] overflow-hidden rounded-2xl border border-dash-border p-1.5 shadow-[0_16px_40px_rgba(0,0,0,.5)]"
         >
           {actions.map((a) => (
             <div
