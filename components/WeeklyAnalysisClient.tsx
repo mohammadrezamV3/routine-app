@@ -4,20 +4,19 @@ import "./weekly-analysis.css";
 import Link from "next/link";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { motion, useAnimationControls } from "framer-motion";
-import { BarChart3, ChevronLeft, Mail, Newspaper, Play, RotateCw } from "lucide-react";
+import { Newspaper, RotateCw } from "lucide-react";
 import type { AiCoach, AnalysisDomain, ReflectionDto, WeeklyAnalysis, WeeklyGoalDto } from "@/lib/weeklyAnalysis/types";
 import { ModuleGate } from "./ModuleGate";
 import { AuthGate } from "./AuthGate";
 import { Spinner } from "./Spinner";
 import { WeeklyAnalysisNav, MIN_OFFSET } from "./WeeklyAnalysisNav";
 import { WeeklyAnalysisHero } from "./WeeklyAnalysisHero";
-import { WeeklyAnalysisHighlights } from "./WeeklyAnalysisHighlights";
-import { WeeklyAnalysisDomains } from "./WeeklyAnalysisDomains";
-import { WeeklyAnalysisRhythm } from "./WeeklyAnalysisRhythm";
+import { WeeklyAnalysisDays } from "./WeeklyAnalysisDays";
+import { WeeklyAnalysisMatrix } from "./WeeklyAnalysisMatrix";
 import { WeeklyAnalysisDaySheet } from "./WeeklyAnalysisDaySheet";
-import { WeeklyAnalysisHeatmap } from "./WeeklyAnalysisHeatmap";
-import { WeeklyAnalysisTrend } from "./WeeklyAnalysisTrend";
-import { WeeklyAnalysisNumbers } from "./WeeklyAnalysisNumbers";
+import { WeeklyAnalysisTrendCard } from "./WeeklyAnalysisTrendCard";
+import { WeeklyAnalysisMoments } from "./WeeklyAnalysisMoments";
+import { WeeklyAnalysisLetterCta } from "./WeeklyAnalysisLetterCta";
 import { WeeklyAnalysisInsights } from "./WeeklyAnalysisInsights";
 import { WeeklyAnalysisAchievements } from "./WeeklyAnalysisAchievements";
 import { WeeklyAnalysisCoach } from "./WeeklyAnalysisCoach";
@@ -26,7 +25,10 @@ import { WeeklyAnalysisReflection } from "./WeeklyAnalysisReflection";
 import { WeeklyAnalysisShare } from "./WeeklyAnalysisShare";
 import { WeeklyAnalysisEmpty } from "./WeeklyAnalysisEmpty";
 import { WeeklyAnalysisSleep } from "./WeeklyAnalysisSleep";
-import { Reveal, V_WK_CARD, V_WK_GRID, WK_EASE, normalizeAnalysis, waFetch } from "./WeeklyAnalysisKit";
+import { WeeklyAnalysisChapters, type ChapterId } from "./WeeklyAnalysisChapters";
+import "./wa-shell.css";
+import { Reveal, V_WK_GRID, WK_EASE, normalizeAnalysis, waFetch } from "./WeeklyAnalysisKit";
+import { toJalali } from "@/lib/jalali";
 
 export type WeeklyGate = "guest" | "on";
 
@@ -71,14 +73,26 @@ function AfterMount({ children }: { children: React.ReactNode }) {
   return on ? <>{children}</> : null;
 }
 
-function TitleRow({ analysis }: { analysis: WeeklyAnalysis | null }) {
+// شماره‌ی هفته‌ی سال شمسی (هفته‌ی ۱ از اول فروردین، هفته‌ها شنبه‌محور از weekStart)
+function weekOfYear(weekStart: string | undefined): number | null {
+  if (!weekStart) return null;
+  const [gy, gm, gd] = weekStart.slice(0, 10).split("-").map(Number);
+  if (!gy || !gm || !gd) return null;
+  const [, jm, jd] = toJalali(gy, gm, gd);
+  const doy = jm <= 6 ? (jm - 1) * 31 + jd : 186 + (jm - 7) * 30 + jd;
+  return Math.ceil(doy / 7);
+}
+
+function TitleRow({ analysis, switcher }: { analysis: WeeklyAnalysis | null; switcher?: React.ReactNode }) {
   const unread = !!analysis?.unreadLetter;
+  const wn = weekOfYear(analysis?.weekStart);
   return (
-    <div className="wk-title-row">
+    <header className="wk-title-row">
       <div className="wk-title">
-        <span className="page-title-icon"><BarChart3 /></span>
         <h1>آنالیز هفتگی</h1>
+        {wn !== null && <span className="wa-weekno">هفته‌ی <span className="wk-num">{wn}</span> سال</span>}
       </div>
+      {switcher}
       <div className="wk-actions">
         <Link href="/analysis/weekly/letters" className="account-outline-btn wk-small-btn wk-letters-btn" prefetch={false}>
           <Newspaper size={14} />
@@ -87,34 +101,7 @@ function TitleRow({ analysis }: { analysis: WeeklyAnalysis | null }) {
         </Link>
         <WeeklyAnalysisShare analysis={analysis} />
       </div>
-    </div>
-  );
-}
-
-// بنر هفته‌نامه‌ی خوانده‌نشده: خود کارت دو مقصد داره (لینک تو در تو ممنوعه،
-// پس کارت div و دو لینک هم‌سطح): متن/نماد = خواندن هفته‌نامه، دکمه‌ی
-// «پخش داستان» = همون صفحه با ?story=1 که خواننده خودش داستان رو باز می‌کنه.
-function LetterBanner({ analysis }: { analysis: WeeklyAnalysis }) {
-  const l = analysis.unreadLetter;
-  if (!l) return null;
-  const href = `/analysis/weekly/letters/${l.weekStart}`;
-  return (
-    <motion.div variants={V_WK_CARD} className="wk-span-12">
-      <div className="wk-card wk-banner">
-        <Link href={href} className="wk-banner-main" prefetch={false}>
-          <span className="wk-banner-ic"><Mail size={20} /></span>
-          <span className="wk-banner-text">
-            <b>هفته‌نامه‌ی شماره <span className="wk-num">{l.issueNo}</span> رسید</b>
-            <span className="wk-banner-sub">{l.headline || l.weekLabel}</span>
-          </span>
-          <span className="wk-banner-go">بخون<ChevronLeft size={15} /></span>
-        </Link>
-        <Link href={`${href}?story=1`} className="account-outline-btn wk-small-btn wk-banner-story" prefetch={false}>
-          <Play size={12} fill="currentColor" aria-hidden="true" />
-          پخش داستان
-        </Link>
-      </div>
-    </motion.div>
+    </header>
   );
 }
 
@@ -283,18 +270,29 @@ function WeeklyAnalysisBody({ initial }: { initial: WeeklyAnalysis | null }) {
   const loading = !analysis || analysis.offset !== offset;
   const showCoach = !!analysis && (!!analysis.ai || analysis.aiAvailable);
   const hasAnyData = !!analysis && (analysis.domains.some((d) => d.hasData) || analysis.overall.score !== null);
+  const chapterIds = useMemo<ChapterId[]>(() => {
+    if (!analysis || !hasAnyData) return [];
+    const out: ChapterId[] = ["wk-ch-overview", "wk-ch-matrix", "wk-ch-trend", "wk-ch-insights"];
+    if (showCoach) out.push("wk-ch-coach");
+    out.push("wk-ch-achievements");
+    return out;
+  }, [analysis, hasAnyData, showCoach]);
 
   return (
     <section className="wk-page" aria-busy={loading}>
-      <TitleRow analysis={analysis} />
-
-      <WeeklyAnalysisNav
-        offset={offset}
-        weekLabel={analysis && analysis.offset === offset ? analysis.weekLabel : null}
-        trend={analysis?.trend ?? []}
-        loading={loading && !error}
-        onChange={go}
+      <TitleRow
+        analysis={analysis}
+        switcher={
+          <WeeklyAnalysisNav
+            offset={offset}
+            weekLabel={analysis && analysis.offset === offset ? analysis.weekLabel : null}
+            loading={loading && !error}
+            onChange={go}
+          />
+        }
       />
+
+      {!!analysis && !error && <WeeklyAnalysisChapters ids={chapterIds} resetKey={analysis.weekStart} />}
 
       {error && loading ? (
         <div className="wk-card wk-error-card" role="alert">
@@ -308,64 +306,67 @@ function WeeklyAnalysisBody({ initial }: { initial: WeeklyAnalysis | null }) {
           <motion.div animate={controls} className={`wk-content${loading ? " is-loading" : ""}`}>
             {/* پرده‌ی بی‌صدا: حین گرفتن هفته‌ی تازه محتوای قبلی کم‌رنگ می‌مونه */}
             {loading && <span className="wk-loading-chip" role="status"><Spinner size={13} label={null} />در حال بارگذاری</span>}
-            <motion.div className="wk-grid" variants={V_WK_GRID} initial="hidden" animate="show">
-              <LetterBanner analysis={analysis} />
-
+            <motion.div className="wa-stack" variants={V_WK_GRID} initial="hidden" animate="show">
               {hasAnyData ? (
                 <>
-                  <div className="wk-span-12 wk-pass"><WeeklyAnalysisHero analysis={analysis} /></div>
-                  <div className="wk-span-12 wk-pass"><WeeklyAnalysisHighlights analysis={analysis} /></div>
-                  <div className="wk-span-12 wk-pass"><WeeklyAnalysisDomains domains={analysis.domains} days={analysis.days} /></div>
-                  <Reveal className="wk-span-7 wk-pass">
-                    <WeeklyAnalysisRhythm days={analysis.days} prevDays={analysis.prevDays} selected={day} onPick={setDay} />
-                  </Reveal>
-                  <Reveal className="wk-span-5 wk-pass">
-                    <WeeklyAnalysisHeatmap domains={analysis.domains} days={analysis.days} onPickDay={setDay} />
-                  </Reveal>
-                  <Reveal className={`${analysis.numbers.length ? "wk-span-7" : "wk-span-12"} wk-pass`}>
-                    <WeeklyAnalysisTrend trend={analysis.trend} offset={analysis.offset} onJump={go} />
-                  </Reveal>
-                  {analysis.numbers.length > 0 && (
-                    <Reveal className="wk-span-5 wk-pass"><WeeklyAnalysisNumbers numbers={analysis.numbers} /></Reveal>
-                  )}
+                  <div id="wk-ch-overview" className="wa-ch wa-stack">
+                    <WeeklyAnalysisHero analysis={analysis} />
+                    <WeeklyAnalysisDays days={analysis.days} onPickDay={setDay} />
+                  </div>
+                  <div id="wk-ch-matrix" className="wa-ch">
+                    <WeeklyAnalysisMatrix domains={analysis.domains} days={analysis.days} onPickDay={setDay} />
+                  </div>
+                  <div id="wk-ch-trend" className="wa-ch wa-ch-grid">
+                    <Reveal className="wa-c8 wk-pass"><WeeklyAnalysisTrendCard analysis={analysis} onJump={go} /></Reveal>
+                    <Reveal className="wa-c4 wk-pass"><WeeklyAnalysisMoments analysis={analysis} /></Reveal>
+                  </div>
+                  <div id="wk-ch-insights" className="wa-ch">
+                    <Reveal className="wk-pass"><WeeklyAnalysisInsights insights={analysis.insights} /></Reveal>
+                  </div>
                   {/* مربی وقتی نه نتیجه‌ی کش‌شده داره نه AI در دسترسه، کارت خالی‌ای نمی‌سازه */}
-                  <Reveal className={`${showCoach ? "wk-span-6" : "wk-span-12"} wk-pass`}><WeeklyAnalysisInsights insights={analysis.insights} /></Reveal>
                   {showCoach && (
-                    <Reveal className="wk-span-6 wk-pass">
-                      <WeeklyAnalysisCoach
-                        offset={analysis.offset}
-                        ai={analysis.ai}
-                        aiAvailable={analysis.aiAvailable}
-                        canAddGoal={analysis.offset === 0}
-                        onAi={onAi}
-                        onAddGoal={onAddGoalFromCoach}
-                      />
-                    </Reveal>
+                    <div id="wk-ch-coach" className="wa-ch">
+                      <Reveal className="wk-pass">
+                        <WeeklyAnalysisCoach
+                          offset={analysis.offset}
+                          ai={analysis.ai}
+                          aiAvailable={analysis.aiAvailable}
+                          canAddGoal={analysis.offset === 0}
+                          onAi={onAi}
+                          onAddGoal={onAddGoalFromCoach}
+                        />
+                      </Reveal>
+                    </div>
                   )}
-                  <Reveal className="wk-span-12 wk-pass"><WeeklyAnalysisAchievements achievements={analysis.achievements} /></Reveal>
+                  <div id="wk-ch-achievements" className="wa-ch">
+                    <Reveal className="wk-pass"><WeeklyAnalysisAchievements achievements={analysis.achievements} /></Reveal>
+                  </div>
                 </>
               ) : (
-                <div className="wk-span-12 wk-pass"><WeeklyAnalysisEmpty domains={analysis.domains} isCurrentWeek={analysis.isCurrentWeek} /></div>
+                <div className="wk-pass"><WeeklyAnalysisEmpty domains={analysis.domains} isCurrentWeek={analysis.isCurrentWeek} /></div>
               )}
-              <Reveal className="wk-span-6 wk-pass">
-                <WeeklyAnalysisGoals
-                  offset={analysis.offset}
-                  goals={analysis.goals}
-                  nextWeekGoals={analysis.nextWeekGoals}
-                  domains={analysis.domains}
-                  draft={goalDraft}
-                  onAdded={onGoalAdded}
-                  onDeleted={onGoalDeleted}
-                />
-              </Reveal>
-              <Reveal className="wk-span-6 wk-pass">
-                <WeeklyAnalysisReflection
-                  key={analysis.weekStart}
-                  offset={analysis.offset}
-                  reflection={analysis.reflection}
-                  onSaved={onReflection}
-                />
-              </Reveal>
+              <div id="wk-ch-plan" className="wa-ch wa-ch-grid">
+                <Reveal className="wa-c6 wk-pass">
+                  <WeeklyAnalysisGoals
+                    offset={analysis.offset}
+                    goals={analysis.goals}
+                    nextWeekGoals={analysis.nextWeekGoals}
+                    domains={analysis.domains}
+                    draft={goalDraft}
+                    onAdded={onGoalAdded}
+                    onDeleted={onGoalDeleted}
+                  />
+                </Reveal>
+                <Reveal className="wa-c6 wk-pass">
+                  <WeeklyAnalysisReflection
+                    key={analysis.weekStart}
+                    offset={analysis.offset}
+                    reflection={analysis.reflection}
+                    onSaved={onReflection}
+                  />
+                </Reveal>
+              </div>
+              <WeeklyAnalysisLetterCta analysis={analysis} />
             </motion.div>
           </motion.div>
         </div>
@@ -399,7 +400,7 @@ export function WeeklyAnalysisClient({ gate, initial }: { gate: WeeklyGate; init
         <WeeklyAnalysisBody initial={initial} />
       </ModuleGate>
       {/* آمار خواب بیرون از گیت AI Insight: خوندن تاریخچه‌ی خواب آزاده */}
-      <AfterMount><section className="wk-page wk-page-sleep"><WeeklyAnalysisSleep /></section></AfterMount>
+      <AfterMount><section id="wk-ch-sleep" className="wk-page wk-page-sleep wa-ch"><WeeklyAnalysisSleep /></section></AfterMount>
     </>
   );
 }

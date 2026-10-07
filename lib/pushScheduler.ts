@@ -2,6 +2,7 @@ import { isPushConfigured } from "@/lib/webPush";
 import { pruneReminderLog, runDueReminders, runEconomicAlerts } from "@/lib/pushReminders";
 import { sweepWaitlists } from "@/lib/mentorWaitlistServer";
 import { runWeeklyLetters } from "@/lib/weeklyLetter/dispatch";
+import { runDueBroadcasts } from "@/lib/broadcastServer";
 
 // زمان‌بند داخلی یادآوری‌ها — از instrumentation.ts یک‌بار موقع بالا
 // آمدن هر پروسه‌ی سرور (next dev / next start / هر worker cluster.js) شروع
@@ -65,6 +66,9 @@ export function startPushScheduler(): void {
             lettersRunning = false;
           });
       }
+      // پیام‌های همگانی سررسیده/نیمه‌کاره (lib/broadcastServer.ts) — اعلان درون‌برنامه‌ای VAPID لازم نداره
+      // و هر شناسه فقط یک‌بار ارسال می‌شه (قفل run)، پس قبل از چک VAPID و ایمن برای چند worker.
+      await runDueBroadcasts(now, 20_000).catch((err: any) => console.error(`[broadcast] run failed: ${err?.message || err}`));
       if (!isPushConfigured()) return;
       await runDueReminders(now);
       await runEconomicAlerts(now);

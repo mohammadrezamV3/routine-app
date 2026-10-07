@@ -8,6 +8,7 @@ import { useAdminAccess } from "@/components/admin/AdminAccess";
 import { formatDateTime, formatNumber } from "@/lib/adminFormat";
 import { NumberInput } from "@/components/NumberInput";
 import { TickOption } from "@/components/TickOption";
+import { AdminMaintenanceCard } from "@/components/AdminMaintenanceCard";
 import { useTheme } from "@/components/ThemeProvider";
 import { readAdminNoir, writeAdminNoir } from "@/lib/adminTheme";
 import { MAX_TRIAL_AI_LIMIT, TRIAL_AI_FEATURES, TRIAL_AI_FEATURE_LABELS_FA, TRIAL_DAYS, type TrialAiFeature, type TrialAiLimits } from "@/lib/trial";
@@ -217,6 +218,8 @@ export default function AdminSettingsPage() {
           </form>
         )}
       </div>
+
+      <AdminMaintenanceCard />
 
       <div className="admin-chart-card">
         <div className="admin-chart-head"><span className="admin-chart-title">تم آزمایشی (فقط برای خودت)</span></div>

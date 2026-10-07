@@ -71,7 +71,9 @@ function finalize(
   override?: { score: number | null; hasData?: boolean; daysWithData?: number },
   details: Partial<DayDetails>[] = []
 ): DomainWeek {
-  const vals = daily.filter((v): v is number => v != null);
+  // امتیاز هفته از همون مقدارهای روزانه‌ی محدودشده (0 تا 100) میاد؛ قبلا میانگین مقدار خام
+  // بود و روزهای اورترید امتیاز هفته و امتیاز کل رو منفی می‌کرد
+  const vals = daily.filter((v): v is number => v != null).map((v) => clamp(v));
   const daysWithData = override?.daysWithData ?? vals.length;
   const score = override ? override.score : vals.length ? r0(mean(vals)!) : null;
   const hasData = override?.hasData ?? score != null;

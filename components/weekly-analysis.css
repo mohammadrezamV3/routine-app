@@ -140,10 +140,23 @@ body[data-theme="light"] .wk-page button.wk-ghost, body[data-theme="light"] .wk-
 @keyframes wk-rise{ from{ opacity:0; transform:translate3d(0,8px,0); } to{ opacity:1; transform:none; } }
 
 /* ── ردیف عنوان ────────────────────────────────────────────── */
-.wk-title-row{ display:flex; align-items:center; justify-content:space-between; gap:12px; margin-bottom:14px; padding-inline-end:var(--tp-sb, 0px); animation:wk-rise .5s var(--wk-ease) both; }
-.wk-title{ display:flex; align-items:center; gap:8px; min-width:0; }
-.wk-title h1{ font-size:clamp(1.3rem, 1.1rem + 1vw, 1.7rem); white-space:nowrap; font-weight:800; letter-spacing:-.02em; }
+.wk-title-row{
+  display:grid; grid-template-columns:auto minmax(0,1fr) auto; grid-template-areas:"title switch actions"; align-items:center; gap:16px;
+  margin-bottom:40px; padding-inline-end:var(--tp-sb, 0px); animation:wk-rise .5s var(--wk-ease) both;
+}
+.wk-title-row > .wk-title{ grid-area:title; }
+.wk-title-row > .wa-switch{ grid-area:switch; justify-self:center; }
+.wk-title-row > .wk-actions{ grid-area:actions; justify-self:end; }
+.wk-title{ display:flex; align-items:baseline; gap:14px; min-width:0; }
+.wk-title h1{ font-size:clamp(1.4rem, 1.1rem + 1.2vw, 1.75rem); white-space:nowrap; font-weight:800; letter-spacing:-.01em; }
+.wa-weekno{ font-size:13px; color:var(--muted); white-space:nowrap; }
 .wk-actions{ display:flex; align-items:center; gap:8px; flex-shrink:0; }
+@media (max-width:767px){
+  .wk-title-row{ grid-template-columns:minmax(0,1fr) auto; grid-template-areas:"title actions" "switch switch"; gap:14px; margin-bottom:16px; }
+  .wk-title-row > .wa-switch{ justify-self:stretch; }
+  .wk-title h1{ font-size:22px; }
+  .wa-weekno{ display:none; }
+}
 .wk-share{ display:flex; align-items:center; gap:8px; }
 .wk-letters-btn{ position:relative; }
 .wk-unread-dot{
@@ -151,34 +164,6 @@ body[data-theme="light"] .wk-page button.wk-ghost, body[data-theme="light"] .wk-
   background:var(--accent); border:2px solid var(--bg);
 }
 @media (max-width:420px){ .wk-title h1{ font-size:1.2rem; } .wk-actions{ gap:6px; } }
-
-/* ── ناوبر هفته (چسبیده زیر هدر) ───────────────────────────── */
-/* نوار هشت‌هفته بالای کارته و با top منفی زیر هدر می‌رود؛ فقط ردیف
-   فلش‌ها و برچسب هفته می‌چسبد (کم‌جا روی موبایل) */
-.wk-nav{ animation:wk-rise .5s var(--wk-ease) .08s both; --wk-strip-h:62px; position:sticky; top:calc(84px + env(safe-area-inset-top) - var(--wk-strip-h)); z-index:30; margin-bottom:var(--wk-gap); }
-.wk-nav-card{ padding:10px 12px; border-radius:20px; }
-.wk-nav-row{ display:flex; align-items:center; justify-content:space-between; gap:8px; }
-.wk-page button.wk-nav-btn{
-  width:40px; height:40px; flex-shrink:0; border-radius:50%; border:1px solid var(--box-line);
-  display:inline-flex; align-items:center; justify-content:center; color:var(--text);
-  transition:border-color .18s ease, color .18s ease, opacity .18s ease, transform .15s ease;
-}
-@media (hover:hover){ .wk-page button.wk-nav-btn:hover:not(:disabled){ border-color:var(--accent); color:var(--accent); } }
-.wk-nav-center{ flex:1; min-width:0; display:flex; flex-direction:column; align-items:center; gap:2px; text-align:center; }
-.wk-nav-title{ display:flex; align-items:center; gap:8px; font-size:14.5px; font-weight:800; min-height:24px; }
-.wk-nav-spin{ display:inline-flex; width:14px; height:14px; color:var(--accent); }
-.wk-nav-sub{ font-size:11.5px; color:var(--muted); min-height:17px; font-family:var(--font-latin), var(--font-vazir), sans-serif; }
-.wk-strip{ display:flex; gap:6px; height:42px; max-width:340px; margin:0 auto 12px; padding-inline:4px; }
-.wk-page button.wk-strip-col{
-  flex:1 1 0; min-width:0; display:flex; flex-direction:column; align-items:center; gap:4px;
-  border:none; border-radius:10px; opacity:.85; transition:opacity .2s ease, transform .15s ease;
-}
-.wk-page button.wk-strip-col:disabled{ opacity:.35; }
-.wk-page button.wk-strip-col.is-sel:disabled{ opacity:1; }
-@media (hover:hover){ .wk-page button.wk-strip-col:hover:not(:disabled){ opacity:1; } }
-.wk-strip-bar{ display:block; flex:1; width:12px; min-height:0; }
-.wk-strip-dot{ width:5px; height:5px; border-radius:50%; background:transparent; flex-shrink:0; transition:background .2s ease; }
-.wk-strip-col.is-sel .wk-strip-dot{ background:var(--accent); }
 
 /* ── بنر هفته‌نامه ─────────────────────────────────────────── */
 /* کارت دو مقصد داره: لینک اصلی (خواندن) + دکمه‌ی «پخش داستان» هم‌سطحش */
@@ -761,65 +746,6 @@ html[data-perf="low"] .wk-hero-score{ filter:none; }
 .wk-mini-value small{ font-size:10.5px; }
 .wk-hero.is-compact .wk-mini-value{ font-size:16px; }
 
-/* ── هایلایت‌های هفته ──────────────────────────────────────── */
-.wk-spot-strip{ display:grid; grid-template-columns:repeat(3, minmax(0,1fr)); gap:var(--wk-gap); }
-.wk-spot{
-  display:flex; flex-direction:column; gap:12px; min-height:196px; padding:22px 24px; isolation:isolate;
-  transition:border-color .3s ease, box-shadow .3s ease;
-}
-.wk-spot::after{
-  content:""; position:absolute; inset:0; z-index:-1; border-radius:inherit; pointer-events:none;
-  background:radial-gradient(110% 85% at 88% 0%, color-mix(in srgb, var(--ring-1a) 11%, transparent), transparent 72%);
-}
-.wk-spot.is-down::after{
-  background:radial-gradient(110% 85% at 88% 0%, color-mix(in srgb, var(--text) 6%, transparent), transparent 72%);
-}
-.wk-spot-top{ display:flex; align-items:center; gap:11px; }
-.wk-spot-ic{
-  position:relative; isolation:isolate; flex-shrink:0; width:36px; height:36px; border-radius:50%;
-  display:inline-flex; align-items:center; justify-content:center; color:var(--wk-ic, var(--accent));
-  border:1.5px solid color-mix(in srgb, var(--wk-ic, var(--accent)) 50%, transparent);
-}
-.wk-spot-ic::before{
-  content:""; position:absolute; inset:-8px; border-radius:50%; z-index:-1; pointer-events:none;
-  background:radial-gradient(closest-side, color-mix(in srgb, var(--wk-ic, var(--accent)) 20%, transparent), transparent);
-}
-.wk-spot-label{ font-size:13px; font-weight:700; color:var(--muted); }
-.wk-spot-value{
-  display:flex; align-items:baseline; gap:8px; margin-top:auto;
-  font-size:clamp(60px, 5.2vw, 82px); font-weight:800; line-height:1.02; letter-spacing:-.055em;
-}
-/* عدد بزرگ: خنثی با درخشش عمودی (نه گرادیان رنگی) */
-.wk-spot-value > .wk-num{
-  unicode-bidi:isolate; direction:ltr; padding:0 .06em 4px;
-  background:var(--wk-sheen);
-  -webkit-background-clip:text; background-clip:text; color:transparent; -webkit-text-fill-color:transparent;
-}
-.wk-spot-value small{ font-size:15px; font-weight:600; letter-spacing:0; color:var(--muted); }
-.wk-spot-sub{ display:flex; flex-direction:column; gap:2px; font-size:12.5px; color:var(--muted); line-height:1.7; }
-.wk-spot-sub b{ font-size:13.5px; color:var(--text); font-weight:800; }
-.wk-spot-shine{ position:absolute; inset:0; z-index:0; border-radius:inherit; overflow:hidden; pointer-events:none; }
-.wk-spot-shine::after{
-  content:""; position:absolute; top:-25%; bottom:-25%; left:-45%; width:34%; opacity:0;
-  background:linear-gradient(90deg, transparent, rgba(255,255,255,.1), transparent);
-  transform:translateX(0) skewX(-18deg);
-  transition:transform .95s var(--wk-ease), opacity .35s ease;
-}
-body[data-theme="light"] .wk-spot-shine::after{ background:linear-gradient(90deg, transparent, rgba(255,255,255,.6), transparent); }
-@media (hover:hover) and (pointer:fine){
-  .wk-spot:hover{ border-color:color-mix(in srgb, var(--accent) 38%, var(--box-line)); box-shadow:inset 0 1px 0 var(--wk-rim), 0 14px 34px -18px rgba(var(--accent-rgb),.5); }
-  .wk-spot:hover .wk-spot-shine::after{ opacity:1; transform:translateX(520%) skewX(-18deg); }
-}
-@media (max-width:767px){
-  .wk-spot-strip{
-    display:flex; overflow-x:auto; scroll-snap-type:x mandatory; gap:12px; padding:2px 16px 8px; margin-inline:-16px;
-    scroll-padding-inline:16px; scrollbar-width:none; -ms-overflow-style:none; overscroll-behavior-x:contain;
-  }
-  .wk-spot-strip::-webkit-scrollbar{ display:none; }
-  .wk-spot{ flex:0 0 76%; scroll-snap-align:start; min-height:184px; padding:18px 18px 16px; }
-  .wk-spot-value{ font-size:60px; }
-}
-
 /* ── سربرگ کارت‌ها: آیکون در حلقه + عنوان + خط گرادیانی ───────── */
 .wk-sh-ic{
   flex-shrink:0; width:30px; height:30px; border-radius:50%; color:var(--accent);
@@ -873,7 +799,7 @@ body[data-theme="light"] .wk-spot-shine::after{ background:linear-gradient(90deg
   .wk-insight, .wk-ach-item, .wk-banner-ic{ animation:none !important; }
   .wk-title-row, .wk-nav, .wk-hero-dial::before, .wk-dial-pulse, .wk-rh-crown{ animation:none !important; }
   .wk-seal::after{ animation:none !important; display:none; }
-  .wk-sh-rule, .wk-spot-shine::after, .wk-tile, .wk-spot, .wk-dial-seg,
+  .wk-sh-rule, .wk-tile,
   .wk-page button.wk-rh-col{ transition:none !important; }
   .wk-sh-rule{ transform:none; }
   .wk-skel::after, .wk-sk-ring::after, .wk-sk-lines i::after, .wk-sk-block::after{ animation:none; }
@@ -889,8 +815,7 @@ html[data-perf="low"] .wk-heat button.wk-heat-cell{ transition:none; opacity:1; 
 html[data-perf="low"] .wk-heat button.wk-heat-cell.is-future{ opacity:.35; }
 html[data-perf="low"] .wk-title-row, html[data-perf="low"] .wk-nav, html[data-perf="low"] .wk-hero-dial::before,
 html[data-perf="low"] .wk-dial-pulse, html[data-perf="low"] .wk-rh-crown{ animation:none; }
-html[data-perf="low"] .wk-seal::after, html[data-perf="low"] .wk-spot-shine{ display:none; }
-html[data-perf="low"] .wk-dial-seg{ filter:none; }
+html[data-perf="low"] .wk-seal::after{ display:none; }
 html[data-perf="low"] .wk-sh-rule{ transition-duration:.01ms; }
 
 /* ستون‌های ریز فهرست بخش‌ها: روز آینده کم‌نورتر تا شلوغ نشه */

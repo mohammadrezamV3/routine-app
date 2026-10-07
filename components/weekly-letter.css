@@ -37,7 +37,7 @@ section.wl-root{ padding:0 0 40px; border-top:none; color:var(--text); position:
 .wl-page{ min-width:0; }
 @media (min-width:1024px){
   .wl-page{
-    --wl-w:min(880px, calc(100vw - 64px));
+    --wl-w:min(1240px, calc(100vw - 64px));
     width:var(--wl-w); max-width:var(--wl-w);
     margin-inline:calc((620px - var(--wl-w)) / 2);
   }
@@ -966,3 +966,93 @@ html[data-perf="low"] .wl-st-pulse{ display:none; }
 html[data-perf="low"] .wl-rule::after{ display:none; }
 html[data-perf="low"] .wl-stamp{ filter:none; }
 html[data-perf="low"] .wl-st-trend-last, html[data-perf="low"] .wl-st-meter i{ filter:none; box-shadow:none; }
+
+
+/* ============================================================
+   چیدمان دسکتاپ (از 1024px): خواننده = فهرست چسبان کنار + ستون اصلی پهن،
+   جلد = دو ستون مجله‌ای، آرشیو = شبکه‌ی 3 ستونه. موبایل دست‌نخورده.
+   ============================================================ */
+@media (min-width:1024px){
+  .wl-reader{
+    display:grid; grid-template-columns:232px minmax(0,1fr); column-gap:36px; align-items:start;
+    grid-template-areas:"top top" "cover cover" "toc chapters" "toc nav";
+  }
+  .wl-reader > .wl-top{ grid-area:top; }
+  .wl-reader > .wl-cover{ grid-area:cover; margin-bottom:8px; }
+  .wl-reader > .wl-toc{ grid-area:toc; align-self:start; top:calc(96px + env(safe-area-inset-top)); margin-top:36px; }
+  .wl-reader > .wl-chapters{ grid-area:chapters; min-width:0; }
+  .wl-reader > .wl-nav-wrap{ grid-area:nav; min-width:0; }
+
+  /* فهرست عمودی (بدون پیل و بدون بک‌گراند) */
+  .wl-reader .wl-toc-row{
+    flex-direction:column; gap:2px; padding:0; overflow:visible; border:none; border-radius:0; background:none;
+    border-inline-start:1px solid var(--box-line);
+  }
+  .wl-root .wl-reader a.wl-toc-chip, .wl-reader a.wl-toc-chip{
+    min-height:40px; padding:0 14px; border-radius:0; border:none; margin-inline-start:-1px;
+    border-inline-start:2px solid transparent; font-size:13px; white-space:normal; line-height:1.5;
+  }
+  .wl-root .wl-reader a.wl-toc-chip.is-active, .wl-reader a.wl-toc-chip.is-active{ border-inline-start-color:var(--accent); }
+  .wl-reader .wl-toc-chip i{ font-size:11px; }
+
+  section.wl-ch:first-child{ margin-top:36px; }
+
+  /* جلد: مجله‌ی دو ستونه */
+  .wl-cover{ padding:30px 48px 44px; border-radius:32px; }
+  .wl-mast-title{ font-size:56px; }
+  .wl-mast-no{ font-size:34px; }
+  .wl-mast-year{ font-size:20px; }
+  .wl-cover-watermark span{ font-size:420px; bottom:-110px; }
+  .wl-cover-body{ grid-template-columns:minmax(0,1fr) 360px; gap:56px; align-items:stretch; }
+  .wl-cover-text{ justify-content:center; gap:22px; }
+  .wl-headline{ font-size:clamp(40px, 4vw, 56px) !important; line-height:1.5; }
+  .wl-intro-text{ font-size:16px; line-height:2.15; max-width:62ch; }
+  .wl-cover-score{
+    justify-content:center; gap:22px; padding-inline-start:40px; border-inline-start:1px solid var(--box-line);
+  }
+  .wl-chips{ flex-direction:column; align-items:stretch; width:100%; gap:8px; }
+  .wl-chip{ justify-content:flex-start; font-size:12.5px; padding:8px 14px; border-radius:14px; }
+
+  /* اعداد / دامنه‌ها / ... : ستون‌های بیشتر */
+  .wl-num-grid{ grid-template-columns:repeat(4, minmax(0,1fr)); gap:14px; }
+  .wl-ach-grid{ grid-template-columns:repeat(4, minmax(0,1fr)); gap:14px; }
+  .wl-goals{ display:grid; grid-template-columns:repeat(2, minmax(0,1fr)); gap:12px; }
+  .wl-goals > :last-child:nth-child(odd){ grid-column:1 / -1; }
+  .wl-dom-grid > :last-child:nth-child(odd){ grid-column:1 / -1; }
+  .wl-rec-list{ display:grid; grid-template-columns:repeat(2, minmax(0,1fr)); gap:12px; }
+  .wl-rec-list > :last-child:nth-child(odd){ grid-column:1 / -1; }
+
+  /* روزبه‌روز: شبکه‌ی دو ستونه‌ی کارت روز (به‌جای ستون باریک عمودی) */
+  .wl-tl{ display:grid; grid-template-columns:repeat(2, minmax(0,1fr)); gap:14px; align-items:stretch; }
+  .wl-tl-item{ padding-inline-start:0; display:flex; }
+  .wl-tl-item::before{ display:none; }
+  .wl-tl-node{ display:none; }
+  .wl-tl-item > .wl-day{ flex:1; }
+  .wl-tl-item:last-child:nth-child(odd){ grid-column:1 / -1; }
+  .wl-tl-item .wl-day-rows{ display:flex; flex-direction:column; }
+  .wl-tl-item .wl-day-row:nth-child(2){ border-top:1px dashed var(--box-line); }
+  .wl-tl-item:last-child:nth-child(odd) .wl-day-rows{ display:grid; grid-template-columns:repeat(2, minmax(0,1fr)); column-gap:28px; }
+  .wl-tl-item:last-child:nth-child(odd) .wl-day-row:nth-child(2){ border-top:none; }
+
+  .wl-issue-nav{ margin-top:48px; }
+}
+
+/* آرشیو دسکتاپ: شبکه‌ی 3 ستونه */
+@media (min-width:1024px){
+  .wl-archive .wl-issue-grid{ grid-template-columns:repeat(3, minmax(0,1fr)); gap:16px; }
+  .wl-archive .wl-issue-wrap.is-featured{ grid-column:auto; }
+  .wl-archive .wl-month{ margin-bottom:34px; }
+  .wl-archive .wl-arch-head{ margin-bottom:26px; }
+  .wl-archive .wl-issue-grid > .wl-issue-wrap > a.wl-issue{ padding:20px; }
+  .wl-skel-list{ display:grid; grid-template-columns:repeat(3, minmax(0,1fr)); }
+}
+@media (min-width:1024px) and (max-width:1199px){
+  .wl-archive .wl-issue-grid{ grid-template-columns:repeat(2, minmax(0,1fr)); }
+}
+@media (min-width:1024px) and (max-width:1199px){
+  .wl-num-grid{ grid-template-columns:repeat(3, minmax(0,1fr)); }
+  .wl-ach-grid{ grid-template-columns:repeat(3, minmax(0,1fr)); }
+  .wl-reader{ grid-template-columns:200px minmax(0,1fr); column-gap:28px; }
+  .wl-cover-body{ grid-template-columns:minmax(0,1fr) 300px; gap:36px; }
+  .wl-cover{ padding-inline:34px; }
+}
