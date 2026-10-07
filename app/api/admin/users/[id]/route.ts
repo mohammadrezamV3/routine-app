@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { requireAdmin } from "@/lib/requireAdmin";
 import { getUserDetail } from "@/lib/adminAnalytics";
+import { getUserProfileExtras } from "@/lib/adminUserProfile";
 import { adminErrorResponse, hardDelete, restoreUser, setBlocked, softDelete, updateProfile } from "@/lib/adminUsers";
 
 export async function GET(_req: NextRequest, { params }: { params: { id: string } }) {
@@ -9,7 +10,8 @@ export async function GET(_req: NextRequest, { params }: { params: { id: string 
 
   const detail = await getUserDetail(params.id);
   if (!detail) return NextResponse.json({ error: "کاربر پیدا نشد" }, { status: 404 });
-  return NextResponse.json(detail);
+  const extras = await getUserProfileExtras(params.id, detail.user.createdAt);
+  return NextResponse.json({ ...detail, extras });
 }
 
 // PATCH { blocked?: boolean, profile?: {...}, restore?: true }

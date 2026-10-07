@@ -245,6 +245,9 @@ model User {
   tradeChatMessages      TradeChatMessage[]
   tradeChatReports       TradeChatReport[]  @relation("ChatReporter")
   supportTickets         SupportTicket[]
+  adminNotesAbout        AdminUserNote[]    @relation("AdminNoteAbout")
+  adminNotesWritten      AdminUserNote[]    @relation("AdminNoteAuthor")
+  adminTags              UserTag[]
 
   // اکوسیستم منتور — پروفایل منتوری (اختیاری؛ داشتنش یعنی کاربر منتور هم هست)
   mentorProfile                MentorProfile?
@@ -2785,4 +2788,43 @@ model WeeklyLetter {
 
   @@unique([userId, weekStart])
   @@index([userId, createdAt])
+}
+
+// ============================================================================
+// پنل ادمین: یادداشت خصوصی، برچسب و بخش ذخیره‌شده‌ی کاربران
+// (مهاجرت 20261007120000_admin_user_crm). یادداشت‌ها فقط برای ادمین‌ان، هیچ‌وقت
+// به کاربر نشون داده نمی‌شن.
+// ============================================================================
+
+model AdminUserNote {
+  id        String   @id @default(cuid())
+  userId    String
+  user      User     @relation("AdminNoteAbout", fields: [userId], references: [id], onDelete: Cascade)
+  authorId  String
+  author    User     @relation("AdminNoteAuthor", fields: [authorId], references: [id], onDelete: Cascade)
+  body      String // حداکثر 2000 حرف (سمت سرور اعمال می‌شه)
+  createdAt DateTime @default(now())
+
+  @@index([userId, createdAt])
+}
+
+model UserTag {
+  id        String   @id @default(cuid())
+  userId    String
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  tag       String // حداکثر 24 حرف
+  createdAt DateTime @default(now())
+
+  @@unique([userId, tag])
+  @@index([tag])
+}
+
+model AdminSegment {
+  id          String   @id @default(cuid())
+  name        String // حداکثر 60 حرف
+  filters     Json
+  createdById String
+  createdAt   DateTime @default(now())
+
+  @@index([createdAt])
 }
