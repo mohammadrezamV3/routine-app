@@ -25,22 +25,28 @@
 //
 // دسکتاپ (pointer:fine) هیچ‌وقت علامت نمی‌خورد و افکت شیشه‌ای کاملش را
 // نگه می‌دارد.
+import { COMPAT_POLYFILLS_SCRIPT } from "@/lib/compatScript";
+
 export const PERF_TIER_ATTR = "data-perf";
 
 // ردیف دوم («ضعیف»): فقط روی همون دستگاه‌های لمسی، و فقط وقتی سیگنال
 // سخت‌افزاری واقعا پایین باشه — ≤۴ هسته، ≤۴GB رم (navigator.deviceMemory؛
 // فقط کروم/اندروید گزارشش می‌کنه، روی iOS undefinedه و این شرط بی‌اثره)، یا
-// حالت صرفه‌جویی داده. این ردیف چند افکت باقی‌مانده رو هم برمی‌داره
+// حالت صرفه‌جویی داده، یا مرورگر قدیمی (بدون aspect-ratio یعنی سافاری قبل از 15 / کروم
+// قبل از 88؛ این مرورگرها معمولا روی سخت‌افزار قدیمی‌ان). این ردیف چند افکت باقی‌مانده رو هم برمی‌داره
 // (globals.css → «ردیف ضعیف»)؛ گوشی لمسی قوی هیچ تغییری نمی‌بینه.
 export const PERF_WEAK_ATTR = "data-perf-weak";
 
-export const PERF_INIT_SCRIPT = `(function(){try{
+// جایگزین‌های APIهای قدیمی (lib/compatScript.ts) همین‌جا سوار می‌شن چون این اسکریپت
+// از قبل بالای body و قبل از باندل اجرا می‌شه.
+export const PERF_INIT_SCRIPT = COMPAT_POLYFILLS_SCRIPT + `(function(){try{
 var coarse=window.matchMedia&&window.matchMedia("(pointer:coarse)").matches;
 if(!coarse)return;
 var d=document.documentElement;
 d.setAttribute("${PERF_TIER_ATTR}","low");
 var n=navigator,mem=n.deviceMemory,cores=n.hardwareConcurrency,c=n.connection;
-if((mem&&mem<=4)||(cores&&cores<=4)||(c&&c.saveData))d.setAttribute("${PERF_WEAK_ATTR}","");
+var old=!(window.CSS&&CSS.supports&&CSS.supports("aspect-ratio","1"));
+if(old||(mem&&mem<=4)||(cores&&cores<=4)||(c&&c.saveData))d.setAttribute("${PERF_WEAK_ATTR}","");
 document.addEventListener("touchstart",function(){},{passive:true});
 }catch(e){}})();`;
 

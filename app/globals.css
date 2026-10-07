@@ -10047,3 +10047,28 @@ textarea.wsearch-newform-name,
 .admin-team-role-chip{ display:inline-flex; align-items:center; gap:4px; font-size:12px; font-weight:700; padding:2px 6px 2px 10px; border-radius:999px; border:1px solid var(--adm-line, currentColor); }
 button.admin-team-role-x, .admin-team-role-chip button.admin-team-role-x{ background:transparent; box-shadow:none; backdrop-filter:none; -webkit-backdrop-filter:none; border:0; }
 .admin-team-role-x{ display:inline-flex; align-items:center; justify-content:center; width:18px; height:18px; padding:0; border:0; border-radius:50%; background:transparent; color:inherit; cursor:pointer; }
+
+/* ── جایگزین‌های مرورگر قدیمی (iOS 13/14، کروم < 88) ───────────────────
+   همه پشت @supports not (...)ـن؛ مرورگر مدرن این بلاک رو اصلا اعمال نمی‌کنه.
+   inset، ویژگی‌های منطقی، :is() و dvh در postcss-compat.js حل می‌شن. */
+@supports not (aspect-ratio:1){
+  .fx-dial-wrap, .wr-root{ height:0; padding-bottom:100%; }
+  .fx-dial{ position:absolute; top:0; left:0; }
+  .db-share-preview{ display:block; height:0; padding-bottom:125%; }
+  .db-share-preview .db-share-canvas{ position:absolute; top:0; left:0; }
+  .db-wdot i{ height:16px; }
+  .cal-cell, .jdate-cell{ min-height:40px; }
+  .wsearch-box, .outing-box{ min-height:84px; }
+}
+@supports not (translate:0 0){
+  .bs-aura::before, .bs-aura::after{ width:min(90vw,620px); height:min(90vw,620px); margin-left:calc(min(90vw,620px) / -2); margin-top:calc(min(90vw,620px) / -2); }
+}
+@supports not (width:1cqi){
+  /* بدون container query: خانه‌های نقشه‌ی ثبات از عرض صفحه حساب می‌شن */
+  .db-heat-wrap > *{ --cell:clamp(12px, calc((100vw - 130px) / 13), 22px); }
+  .wr-label{ font-size:11px; }
+}
+@supports not (height:1dvh){
+  .db-share{ --share-w:min(440px, calc((100vh - 32px - 220px) * .8)); }
+  .ts-share{ --share-w:min(440px, max(250px, calc((100vh - 32px - 300px) * .8))); }
+}
