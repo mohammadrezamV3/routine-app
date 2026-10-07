@@ -1,13 +1,13 @@
 "use client";
 
 import "./wa-cards.css";
+import "./wa-bottom.css";
 import { useEffect, useRef, useState } from "react";
-import { AnimatePresence, motion } from "framer-motion";
-import { Check, Meh, NotebookPen } from "lucide-react";
+import { motion } from "framer-motion";
+import { Check } from "lucide-react";
 import type { ReflectionDto } from "@/lib/weeklyAnalysis/types";
-import { SegmentedTabs } from "./SegmentedTabs";
 import { Spinner } from "./Spinner";
-import { SectionHead, V_WK_CARD, WK_EASE, useCalmMotion, waFetch } from "./WeeklyAnalysisKit";
+import { V_WK_CARD, waFetch } from "./WeeklyAnalysisKit";
 
 const FACES = ["", "😞", "😕", "😐", "🙂", "😄"];
 const MOOD_NAMES = ["", "خیلی بد", "بد", "معمولی", "خوب", "عالی"];
@@ -28,7 +28,6 @@ export function WeeklyAnalysisReflection({
     mood: reflection?.mood ?? null,
   });
   const [state, setState] = useState<SaveState>("idle");
-  const calm = useCalmMotion();
   const [error, setError] = useState<string | null>(null);
   const pending = useRef<Draft | null>(null);
   const timer = useRef<ReturnType<typeof setTimeout> | null>(null);
@@ -83,73 +82,56 @@ export function WeeklyAnalysisReflection({
   }, [offset]);
 
   return (
-    <motion.section id="reflection" className="wk-card wc-journal" variants={V_WK_CARD} aria-label="مرور هفته">
-      <SectionHead
-        icon={<NotebookPen size={15} />}
-        title="مرور هفته"
-        aside={
-          <span className={`wk-save-state ${state}`} aria-live="polite">
-            {state === "saving" ? <Spinner size={12} label={null} /> : state === "saved" ? <><Check size={12} />ذخیره شد</> : state === "error" ? "ذخیره نشد" : null}
-          </span>
-        }
-      />
-
-      <div className="wc-journal-grid">
-        <label className="wc-field">
-          <span className="exercise-form-label">چی خوب پیش رفت؟</span>
-          <textarea
-            className="wsearch-newform-name"
-            rows={3}
-            maxLength={1000}
-            value={draft.wentWell}
-            onChange={(e) => update({ wentWell: e.target.value })}
-            placeholder="یه چیز کوچیک هم حسابه…"
-          />
-        </label>
-        <label className="wc-field">
-          <span className="exercise-form-label">چی رو بهتر کنم؟</span>
-          <textarea
-            className="wsearch-newform-name"
-            rows={3}
-            maxLength={1000}
-            value={draft.improve}
-            onChange={(e) => update({ improve: e.target.value })}
-            placeholder="هفته‌ی بعد روی چی تمرکز کنی؟"
-          />
-        </label>
-      </div>
-
-      <div className="wc-field" style={{ marginTop: 14 }}>
-        <span className="exercise-form-label">
-          حال کلی این هفته{draft.mood ? <span className="wk-muted-sm"> · {MOOD_NAMES[draft.mood]}</span> : null}
+    <motion.section id="reflection" className="wk-card wb-card wc-journal" variants={V_WK_CARD} aria-label="مرور هفته">
+      <div className="wb-head wb-head-base">
+        <h2 className="wb-title">مرور هفته</h2>
+        <span className={`wk-save-state ${state}`} aria-live="polite">
+          {state === "saving" ? <Spinner size={12} label={null} /> : state === "saved" ? <><Check size={12} />ذخیره شد</> : state === "error" ? "ذخیره نشد" : null}
         </span>
-        <div className="wc-mood">
-          <span className="wc-mood-big" aria-hidden="true">
-            <AnimatePresence mode="wait" initial={false}>
-              {!draft.mood && <Meh key="none" size={22} strokeWidth={1.6} />}
-              {draft.mood && (
-                <motion.span
-                  key={draft.mood}
-                  initial={calm ? false : { opacity: 0, scale: 0.4, rotate: -12 }}
-                  animate={{ opacity: 1, scale: 1, rotate: 0 }}
-                  exit={calm ? { opacity: 0 } : { opacity: 0, scale: 0.4 }}
-                  transition={{ duration: 0.25, ease: WK_EASE }}
-                >{FACES[draft.mood]}</motion.span>
-              )}
-            </AnimatePresence>
-          </span>
-          <SegmentedTabs
-            className="wk-seg wk-mood-seg wc-mood-seg seg-flush"
-            ariaLabel="حال کلی این هفته"
-            active={draft.mood ? String(draft.mood) : null}
-            onChange={(v) => update({ mood: Number(v) })}
-            options={[1, 2, 3, 4, 5].map((n) => ({
-              value: String(n),
-              label: <span className={`wc-mood-face${draft.mood === n ? " on" : ""}`}>{FACES[n]}</span>,
-            }))}
-          />
-        </div>
       </div>
+
+      <div className="wb-mood" role="radiogroup" aria-label="حال کلی این هفته" data-noswipe>
+        {[1, 2, 3, 4, 5].map((n) => {
+          const on = draft.mood === n;
+          return (
+            <button
+              key={n}
+              type="button"
+              role="radio"
+              aria-checked={on}
+              aria-label={MOOD_NAMES[n]}
+              title={MOOD_NAMES[n]}
+              className={`wb-mood-btn${on ? " on" : ""}`}
+              onClick={() => update({ mood: n })}
+            >
+              <span aria-hidden="true">{FACES[n]}</span>
+            </button>
+          );
+        })}
+      </div>
+
+      <label className="wc-field">
+        <span className="wb-label">چی خوب پیش رفت؟</span>
+        <textarea
+          className="wsearch-newform-name"
+          rows={3}
+          maxLength={1000}
+          value={draft.wentWell}
+          onChange={(e) => update({ wentWell: e.target.value })}
+          placeholder="یه چیز کوچیک هم حسابه…"
+        />
+      </label>
+      <label className="wc-field">
+        <span className="wb-label">چی رو بهتر کنم؟</span>
+        <textarea
+          className="wsearch-newform-name"
+          rows={3}
+          maxLength={1000}
+          value={draft.improve}
+          onChange={(e) => update({ improve: e.target.value })}
+          placeholder="هفته‌ی بعد روی چی تمرکز کنی؟"
+        />
+      </label>
 
       {error && <div className="wk-error-inline">{error}</div>}
     </motion.section>

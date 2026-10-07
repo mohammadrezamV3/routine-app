@@ -1,0 +1,147 @@
+/* نیمه‌ی پایین تحلیل هفتگی: روند، لحظه‌ها، بینش‌ها، مربی، دستاوردها، اهداف، مرور، بنر هفته‌نامه.
+   پیشوند wb-. فقط بوردر/رنگ متن؛ بک‌گراند فقط سطح کارت و داده‌نما. */
+
+.wb-title{ margin:0; font-size:20px; font-weight:800; letter-spacing:-.015em; color:var(--text); line-height:1.5; }
+.wb-head{ display:flex; align-items:center; justify-content:space-between; flex-wrap:wrap; gap:12px; margin-bottom:16px; }
+.wb-head-base{ align-items:baseline; }
+.wb-count{ font-size:13px; color:var(--muted); }
+.wb-card{ padding:20px; border-radius:24px; }
+@media (min-width:768px){ .wb-card{ padding:28px; } }
+.wb-label{ font-size:13px; color:var(--muted); }
+
+/* ── روند ── */
+.wb-trend .wk-trend-box{ min-height:240px; }
+.wb-tabs{ margin-bottom:0; max-width:100%; }
+.wb-legend{ display:flex; flex-wrap:wrap; gap:18px; margin-top:14px; font-size:12px; color:var(--muted); }
+.wb-legend span{ display:inline-flex; align-items:center; gap:6px; }
+.wb-lg-line{ width:16px; height:3px; border-radius:2px; background:var(--ring-1a); }
+.wb-lg-dash{ width:16px; height:0; border-top:2px dashed var(--ring-2a); }
+
+/* ── لحظه‌ها ── */
+.wb-moments{ display:flex; flex-direction:column; gap:12px; min-width:0; }
+.wb-mom-list{ list-style:none; margin:0; padding:0; display:flex; flex-direction:column; gap:12px; }
+.wb-mom{ display:flex; align-items:center; gap:14px; padding:16px 18px; border:1px solid var(--box-line); border-radius:18px; }
+.wb-mom-ic{
+  flex:0 0 auto; width:44px; height:44px; border-radius:14px; display:grid; place-items:center;
+  border:1px solid color-mix(in srgb, var(--wb-tone) 55%, var(--box-line)); color:var(--wb-tone);
+}
+.wb-mom-text{ flex:1; min-width:0; display:flex; flex-direction:column; gap:2px; }
+.wb-mom-label{ font-size:12px; color:var(--muted); }
+.wb-mom-value{ font-size:15px; color:var(--text); }
+.wb-mom-num{ font-size:18px; font-weight:800; color:var(--wb-tone); }
+
+/* ── بینش‌ها ── */
+.wb-ins{ display:flex; flex-direction:column; gap:20px; min-width:0; }
+.wb-ins-track{
+  list-style:none; margin:0; padding:2px 16px 4px; margin-inline:-16px;
+  display:flex; gap:12px; overflow-x:auto; scroll-snap-type:x mandatory; scrollbar-width:none;
+  scroll-padding-inline:16px; overscroll-behavior-x:contain;
+}
+.wb-ins-track::-webkit-scrollbar{ display:none; }
+.wb-ins-item{
+  flex:0 0 82%; scroll-snap-align:start; display:flex; flex-direction:column; align-items:flex-start; gap:10px;
+  padding:18px; border:1px solid var(--box-line); border-radius:20px;
+  animation:wc-in .5s cubic-bezier(.22,1,.36,1) both; animation-delay:calc(var(--i,0) * 55ms);
+}
+.wb-ins-n{ font-size:40px; font-weight:800; line-height:1; color:var(--box-line); }
+.wb-ins-chip{
+  font-size:11px; font-weight:700; padding:3px 10px; border-radius:999px; line-height:1.5;
+  border:1px solid color-mix(in srgb, var(--wb-tone) 55%, var(--box-line)); color:var(--wb-tone);
+}
+.wb-ins-title{ margin:0; font-size:16px; font-weight:800; line-height:1.6; color:var(--text); }
+.wb-ins-body{ margin:0; font-size:13.5px; line-height:1.9; color:var(--muted); }
+.wb-ins-dots{ margin-top:0; }
+@media (min-width:768px){
+  .wb-ins-track{ display:grid; grid-template-columns:repeat(3, minmax(0,1fr)); gap:28px 0; overflow:visible; margin-inline:0; padding:0; }
+  .wb-ins-item{ flex:none; border:0; border-radius:0; padding:0 28px; }
+  .wb-ins-item:nth-child(3n+1){ padding-inline-start:0; }
+  .wb-ins-item:nth-child(3n){ padding-inline-end:0; }
+  .wb-ins-item:not(:nth-child(3n+1)){ border-inline-start:1px solid var(--box-line); }
+  .wb-ins-n{ font-size:44px; }
+  .wb-ins-dots{ display:none; }
+}
+
+/* ── مربی ── */
+.wb-coach{ display:grid; grid-template-columns:1fr; gap:20px; }
+@media (min-width:768px){ .wb-coach{ grid-template-columns:220px minmax(0,1fr); gap:28px; } }
+.wb-coach-meta{ display:flex; flex-direction:column; align-items:flex-start; gap:12px; }
+.wb-coach-ic{
+  width:56px; height:56px; border-radius:18px; display:grid; place-items:center;
+  border:1px solid color-mix(in srgb, var(--ring-2b) 45%, var(--box-line)); color:var(--ring-2b);
+}
+.wb-coach-sub{ font-size:13px; line-height:1.8; color:var(--muted); }
+@media (min-width:768px){ .wb-coach-regen{ margin-top:auto; } }
+.wb-coach-chat, .wb-coach-stack{ display:flex; flex-direction:column; gap:12px; min-width:0; align-items:flex-start; }
+.wb-coach-stack{ width:100%; }
+.wb-bubble{
+  max-width:720px; padding:16px 20px; border:1px solid var(--box-line); border-radius:20px; border-end-start-radius:6px;
+  font-size:14.5px; line-height:1.9; color:var(--text);
+}
+.wb-bubble.is-sum{ border-color:var(--surface-line, var(--box-line)); }
+.wb-rec{ display:flex; align-items:center; gap:14px; padding:14px 18px; font-size:14px; line-height:1.8; width:fit-content; }
+.wb-rec-text{ flex:1; min-width:0; display:flex; flex-direction:column; gap:2px; }
+.wb-rec-text > b{ font-weight:800; }
+.wb-rec-text > span:not(.wk-chip){ color:var(--muted); font-size:13px; }
+.wb-rec-chip{ align-self:flex-start; margin-top:6px; }
+.wb-prio{ flex:0 0 auto; font-size:11px; font-weight:800; padding:3px 10px; border-radius:999px; border:1px solid var(--box-line); color:var(--muted); line-height:1.5; }
+.wb-prio.high{ border-color:color-mix(in srgb, var(--pnl-loss) 55%, var(--box-line)); color:var(--pnl-loss); }
+.wb-prio.medium{ border-color:color-mix(in srgb, var(--ring-3a) 55%, var(--box-line)); color:var(--ring-3a); }
+.wb-coach .wb-add-goal{
+  flex:0 0 auto; display:inline-flex; align-items:center; gap:4px; padding:7px 12px; border-radius:999px; white-space:nowrap;
+  border:1px dashed color-mix(in srgb, var(--accent) 50%, var(--box-line)); color:var(--accent); font-size:12px; font-weight:600; cursor:pointer;
+}
+@media (max-width:560px){ .wb-rec{ flex-wrap:wrap; width:100%; } }
+
+/* ── دستاوردها ── */
+.wb-ach{ min-width:0; }
+.wb-medals{ list-style:none; margin:0; padding:0; display:grid; grid-template-columns:repeat(4, minmax(0,1fr)); gap:20px 8px; }
+@media (min-width:768px){ .wb-medals{ grid-template-columns:repeat(8, minmax(0,1fr)); gap:20px 16px; } }
+.wb-medal{ display:flex; flex-direction:column; align-items:center; gap:8px; text-align:center; min-width:0; }
+.wb-medal-core{
+  width:calc(100% - 4px); height:calc(100% - 4px); border-radius:50%; display:grid; place-items:center; font-size:22px; line-height:1;
+  border:1px solid color-mix(in srgb, var(--accent) 35%, var(--box-line));
+}
+.wb-medal:not(.is-on) .wb-medal-core{ border-color:var(--box-line); filter:grayscale(1); opacity:.6; }
+.wb-medal-name{ font-size:13px; font-weight:800; color:var(--text); line-height:1.5; }
+.wb-medal:not(.is-on) .wb-medal-name{ color:var(--muted); }
+.wb-medal-sub{ font-size:11px; color:var(--muted); }
+.wb-medal.is-on .wb-medal-sub{ color:var(--accent); }
+
+/* ── اهداف و مرور ── */
+.wc-goals .wc-goal{ align-items:center; padding:14px 0; }
+.wc-goals .wc-goal-title{ font-size:15px; font-weight:600; }
+.wc-goals .wc-goal-meter{ margin-top:8px; }
+.wb-goal-domain{ flex:0 0 auto; font-size:12px; color:var(--muted); }
+.wc-journal{ display:flex; flex-direction:column; gap:16px; }
+.wc-journal .wb-head{ margin-bottom:0; }
+.wb-mood{ display:flex; justify-content:space-between; gap:8px; }
+.wb-mood .wb-mood-btn{
+  width:56px; height:56px; border-radius:50%; display:grid; place-items:center; font-size:24px; line-height:1; cursor:pointer;
+  background:transparent; border:1px solid var(--box-line); color:var(--muted);
+  transition:transform .25s cubic-bezier(.34,1.56,.64,1), border-color .2s ease;
+}
+.wb-mood .wb-mood-btn > span{ filter:grayscale(.8); opacity:.75; transition:filter .2s ease, opacity .2s ease; }
+.wb-mood .wb-mood-btn.on{ border:2px solid var(--accent); transform:scale(1.08); }
+.wb-mood .wb-mood-btn.on > span{ filter:none; opacity:1; }
+.wb-mood .wb-mood-btn:active{ transform:scale(.94); }
+.wb-mood .wb-mood-btn:focus-visible{ outline:2px solid var(--accent); outline-offset:2px; }
+@media (max-width:420px){ .wb-mood .wb-mood-btn{ width:46px; height:46px; font-size:20px; } }
+
+/* ── بنر هفته‌نامه ── */
+.wb-letter{
+  display:flex; align-items:center; justify-content:space-between; gap:20px; flex-wrap:wrap;
+  padding:24px; border-radius:24px; color:var(--text); text-decoration:none;
+  border:1px solid color-mix(in srgb, var(--accent) 35%, var(--surface-line, var(--box-line)));
+}
+@media (min-width:768px){ .wb-letter{ padding:28px 32px; } }
+.wb-letter-text{ display:flex; flex-direction:column; gap:6px; min-width:0; }
+.wb-letter-kicker{ font-size:12px; font-weight:700; color:var(--accent); }
+.wb-letter-title{ font-size:20px; font-weight:800; line-height:1.6; }
+.wb-letter-sub{ font-size:14px; color:var(--muted); }
+.wb-letter-btn{ display:inline-flex; align-items:center; justify-content:center; white-space:nowrap; }
+@media (max-width:560px){ .wb-letter-btn{ width:100%; } }
+
+@media (prefers-reduced-motion:reduce){
+  .wb-ins-item{ animation:none !important; }
+  .wb-mood .wb-mood-btn, .wb-mood .wb-mood-btn > span{ transition:none !important; }
+}

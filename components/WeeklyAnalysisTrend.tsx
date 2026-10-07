@@ -12,7 +12,7 @@ import { MIN_OFFSET } from "./WeeklyAnalysisNav";
 const MIN_H = 210;
 const PAD = { top: 18, right: 34, bottom: 30, left: 14 };
 
-type Series = "overall" | AnalysisDomain;
+export type Series = "overall" | AnalysisDomain;
 type Pt = { x: number; y: number };
 
 // مسیر خط نرم (منحنی کاتمول-رام→بزیه) با شکستگی روی هفته‌های بدون داده —
@@ -55,14 +55,23 @@ function buildPaths(pts: (Pt | null)[], baseY: number) {
 // روی نمودار مقدار هر هفته نشون داده می‌شه؛ زدن دوباره روی همون هفته (یا
 // کلیک ماوس) اون هفته رو باز می‌کنه.
 export function WeeklyAnalysisTrend({
-  trend, offset, onJump,
-}: { trend: TrendPoint[]; offset: number; onJump: (offset: number) => void }) {
+  trend, offset, onJump, series: seriesProp, onSeriesChange, hideTabs = false, showAvg = false,
+}: {
+  trend: TrendPoint[]; offset: number; onJump: (offset: number) => void;
+  /** کنترل از بیرون (کارت «روند 8 هفته»): سری انتخابی و تغییرش */
+  series?: Series; onSeriesChange?: (s: Series) => void;
+  hideTabs?: boolean;
+  /** خط چین میانگین 8 هفته + برچسب مقدار روی آخرین نقطه */
+  showAvg?: boolean;
+}) {
   const uid = useId().replace(/:/g, "");
   const reduce = useReducedMotion();
   const boxRef = useRef<HTMLDivElement>(null);
   const [w, setW] = useState(0);
   const [boxH, setBoxH] = useState(MIN_H);
-  const [series, setSeries] = useState<Series>("overall");
+  const [seriesState, setSeriesState] = useState<Series>("overall");
+  const series = seriesProp ?? seriesState;
+  const setSeries = (s: Series) => { setSeriesState(s); onSeriesChange?.(s); };
   const [hover, setHover] = useState<number | null>(null);
   const downSel = useRef<number | null>(null);
 
@@ -105,6 +114,11 @@ export function WeeklyAnalysisTrend({
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [main, overall, w, active]);
 
+  const nums = main.filter((v): v is number => v !== null);
+  const avgY = nums.length > 1 ? yAt(nums.reduce((a, b) => a + b, 0) / nums.length) : null;
+  const lastPt = geo.pts[n - 1] ?? null;
+  const lastVal = main[n - 1] ?? null;
+
   function pickIndex(clientX: number): number | null {
     const el = boxRef.current;
     if (!el || n === 0) return null;
@@ -129,7 +143,7 @@ export function WeeklyAnalysisTrend({
   return (
     <div className="wk-trend wkv-trend" aria-label="روند هشت هفته‌ی اخیر">
 
-      {availableDomains.length > 0 && (
+      {!hideTabs && availableDomains.length > 0 && (
         <div className="wk-tabs-scroll" data-noswipe>
           <SegmentedTabs<Series>
             className="wk-seg"
@@ -192,6 +206,10 @@ export function WeeklyAnalysisTrend({
               <line x1={xAt(hover)} x2={xAt(hover)} y1={PAD.top - 4} y2={baseY} stroke="var(--accent)" strokeOpacity={0.5} strokeWidth={1} />
             )}
 
+            {showAvg && avgY !== null && (
+              <line x1={PAD.left} x2={w - PAD.right + 6} y1={avgY} y2={avgY} stroke="var(--ring-2a)" strokeWidth={2} strokeDasharray="5 6" opacity={0.7} />
+            )}
+
             {geo.ghost && <path d={geo.ghost} fill="none" stroke="var(--muted2)" strokeWidth={1.5} strokeDasharray="4 5" />}
 
             {hasAny && (
@@ -216,6 +234,11 @@ export function WeeklyAnalysisTrend({
                   animate={{ pathLength: 1 }}
                   transition={{ duration: reduce ? 0 : 1, ease: [0.22, 1, 0.36, 1] }}
                 />
+                {showAvg && lastPt && lastVal !== null && (
+                  <text x={lastPt.x} y={Math.max(12, lastPt.y - 14)} textAnchor="middle" className="wk-trend-last" fill="var(--text)" fontSize={14} fontWeight={700}>
+                    {Math.round(lastVal)}
+                  </text>
+                )}
                 {geo.pts.map((p, i) =>
                   p ? (
                     <g key={`${active}-${i}`}>
