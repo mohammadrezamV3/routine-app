@@ -1,0 +1,55 @@
+/* ابزارهای رایگان عمومی (components/Tool*.tsx) — فقط چیدمان؛ فیلدها، دکمه‌ها و
+   کاشی‌ها از کلاس‌های استاندارد سایت می‌آیند و بک‌گراند جدیدی تعریف نمی‌شود. */
+.tl-calc{ display:grid; grid-template-columns:minmax(0,1fr); gap:18px; margin-top:16px; }
+@media (min-width:860px){ .tl-calc{ grid-template-columns:minmax(0,1fr) minmax(0,1fr); gap:28px; } }
+.tl-form, .tl-out{ display:flex; flex-direction:column; gap:14px; min-width:0; }
+.tl-form .exercise-form-label{ margin:0 0 7px; }
+.tl-form select, .tl-form input{ width:100%; min-width:0; }
+.tl-row{ display:grid; grid-template-columns:minmax(0,1fr); gap:14px; }
+@media (min-width:480px){ .tl-row{ grid-template-columns:repeat(2, minmax(0,1fr)); } }
+.tl-row > div{ min-width:0; }
+.tl-ltr{ unicode-bidi:isolate; direction:ltr; display:inline-block; }
+.tl-note{ font-size:11.5px; color:var(--muted); line-height:1.9; }
+.tl-warn{ font-size:12px; color:#E0A64C; line-height:1.8; }
+.tl-btn{ width:100%; }
+.tl-tiles{ display:grid; grid-template-columns:repeat(2, minmax(0,1fr)); gap:8px; }
+.tl-tile-label{ font-size:11px; color:var(--muted2); margin-bottom:4px; }
+.tl-tile-value{ font-size:17px; font-weight:800; }
+.tl-tile.strong .tl-tile-value{ color:var(--accent); }
+.tl-tile.wide{ grid-column:1 / -1; }
+.tl-out-title{ font-size:13px; font-weight:800; }
+.tl-fade{ animation:tl-in .28s ease both; }
+@keyframes tl-in{ from{ opacity:0; transform:translateY(6px); } to{ opacity:1; transform:none; } }
+@media (prefers-reduced-motion:reduce){ .tl-fade{ animation:none; } }
+
+/* ردیف نتیجه‌ی خواب */
+.tl-list{ display:flex; flex-direction:column; gap:8px; margin:0; padding:0; list-style:none; }
+.tl-opt{
+  display:flex; align-items:center; justify-content:space-between; gap:10px; flex-wrap:wrap;
+  padding:11px 14px; border-radius:16px; border:1px solid var(--line);
+}
+.tl-opt.rec{ border-color:var(--accent); }
+.tl-opt-clock{ font-size:21px; font-weight:800; }
+.tl-opt-meta{ font-size:11.5px; color:var(--muted); }
+.tl-badge{ font-size:10.5px; font-weight:800; color:var(--accent); border:1px solid var(--accent); border-radius:999px; padding:1px 8px; }
+
+/* مقیاس BMI */
+.tl-scale-wrap{ position:relative; margin:26px 0 6px; direction:ltr; }
+.tl-scale{ height:10px; border-radius:999px; display:flex; overflow:hidden; }
+.tl-scale > span{ height:100%; }
+.tl-scale-pin{ position:absolute; top:-6px; height:22px; width:0; color:var(--text); transition:left .4s ease; }
+.tl-scale-pin::after{ content:""; position:absolute; top:0; bottom:0; left:-1px; width:2px; border-radius:2px; background:currentColor; }
+.tl-scale-pin b{ position:absolute; top:-20px; left:0; transform:translateX(-50%); font-size:12px; font-weight:800; white-space:nowrap; }
+.tl-scale-labels{ display:flex; justify-content:space-between; font-size:10.5px; color:var(--muted2); direction:ltr; }
+
+/* هاب */
+.tl-hub{ display:grid; grid-template-columns:minmax(0,1fr); gap:12px; margin-top:16px; }
+@media (min-width:640px){ .tl-hub{ grid-template-columns:repeat(2, minmax(0,1fr)); } }
+.tl-hub-card{
+  display:flex; flex-direction:column; gap:8px; padding:16px; border-radius:20px; border:1px solid var(--line);
+  transition:transform .18s ease, border-color .18s ease;
+}
+@media (hover:hover){ .tl-hub-card:hover{ transform:translateY(-2px); border-color:var(--accent); } }
+.tl-hub-card h2{ font-size:15px; font-weight:800; display:flex; align-items:center; gap:8px; }
+.tl-hub-card p{ font-size:12.5px; line-height:1.9; color:var(--muted); }
+.tl-hub-go{ font-size:12px; font-weight:700; color:var(--accent); }

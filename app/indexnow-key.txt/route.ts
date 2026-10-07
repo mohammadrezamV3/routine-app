@@ -6,7 +6,7 @@ import { indexNowKey } from "@/lib/indexNow";
 export const dynamic = "force-dynamic";
 
 export async function GET() {
-  const key = indexNowKey();
+  const key = await indexNowKey();
   if (!key) return new Response("", { status: 404 });
   return new Response(key, { headers: { "Content-Type": "text/plain; charset=utf-8" } });
 }

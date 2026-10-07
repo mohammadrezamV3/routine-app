@@ -1,3 +1,5 @@
+import { randomBytes } from "crypto";
+import { getAppSetting, setAppSetting } from "./appSettings";
 import { SITE_URL } from "./seo";
 
 /**
@@ -11,8 +13,24 @@ import { SITE_URL } from "./seo";
  * این فایل را می‌خواند تا مطمئن شود دامنه واقعا مال همین کلید است.
  */
 
-export function indexNowKey(): string | null {
-  return process.env.INDEXNOW_KEY || null;
+const KEY_SETTING = "indexnow_key";
+
+/**
+ * کلید IndexNow: اول env؛ اگه نبود، یک کلید تصادفی مستقل که یک بار ساخته و
+ * در AppSetting نگه داشته می‌شه — تا IndexNow بدون کار اضافه‌ی ادمین هم کار
+ * کنه. این کلید محرمانه نیست (خود پروتکل اون رو عمومی منتشر می‌کنه).
+ */
+export async function indexNowKey(): Promise<string | null> {
+  if (process.env.INDEXNOW_KEY) return process.env.INDEXNOW_KEY;
+  const stored = await getAppSetting<string | null>(KEY_SETTING, null);
+  if (typeof stored === "string" && /^[a-f0-9]{32}$/.test(stored)) return stored;
+  try {
+    const fresh = randomBytes(16).toString("hex");
+    await setAppSetting(KEY_SETTING, fresh);
+    return fresh;
+  } catch {
+    return null;
+  }
 }
 
 export function indexNowKeyLocation(): string {
@@ -22,7 +40,7 @@ export function indexNowKeyLocation(): string {
 export type IndexNowResult = { ok: boolean; status: number; submitted: number; error?: string };
 
 export async function submitUrlsToIndexNow(urls: string[]): Promise<IndexNowResult> {
-  const key = indexNowKey();
+  const key = await indexNowKey();
   if (!key) return { ok: false, status: 0, submitted: 0, error: "INDEXNOW_KEY تنظیم نشده است" };
   if (!urls.length) return { ok: false, status: 0, submitted: 0, error: "هیچ آدرسی برای ارسال وجود ندارد" };
 

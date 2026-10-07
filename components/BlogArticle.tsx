@@ -1,93 +1,177 @@
-"use client";
-
 import Link from "next/link";
-import { ArrowLeft, ChevronLeft } from "lucide-react";
-import { useThemeTokens } from "@/components/PlanShowcase";
-import { faNum } from "@/lib/jalali";
-import type { BlogPost } from "@/lib/blogPosts";
+import { ArrowLeft, ChevronLeft, Lightbulb } from "lucide-react";
+import { BLOG_CATEGORIES } from "@/lib/blog/categories";
+import { relatedPosts } from "@/lib/blogPosts";
+import type { BlogBlock, BlogPost } from "@/lib/blogPosts";
+import { BlogPostCard } from "./BlogPostCard";
+import { BlogProgress } from "./BlogProgress";
+import { BlogShare } from "./BlogShare";
+import { BlogToc } from "./BlogToc";
+import { blogDate } from "./blogFormat";
+import "./blog.css";
 
 /**
- * رندر یک مقاله. بلاک‌ها عمدا داده‌اند نه HTML خام: هم `dangerouslySetInnerHTML`
- * لازم نمی‌شود (قانون پروژه)، هم سلسله‌مراتب تیترها (یک H1، بعد H2/H3)
- * ساختاری می‌ماند نه دستی نویسنده.
+ * رندر یک مقاله (کامپوننت سرور؛ فقط نوار پیشرفت، اشتراک و فهرست مطالب
+ * کلاینت‌اند). بلاک‌ها عمدا داده‌اند نه HTML خام: هم `dangerouslySetInnerHTML`
+ * لازم نمی‌شود، هم سلسله‌مراتب تیترها (یک H1، بعد H2/H3) ساختاری می‌ماند.
  */
+function renderBlock(b: BlogBlock, i: number, h2Id?: string) {
+  switch (b.type) {
+    case "h2":
+      return <h2 key={i} id={h2Id}>{b.text}</h2>;
+    case "h3":
+      return <h3 key={i}>{b.text}</h3>;
+    case "ul":
+      return (
+        <ul key={i}>
+          {b.items.map((it, j) => <li key={j}>{it}</li>)}
+        </ul>
+      );
+    case "ol":
+      return (
+        <ol key={i}>
+          {b.items.map((it, j) => <li key={j}>{it}</li>)}
+        </ol>
+      );
+    case "tip":
+      return (
+        <aside key={i} className="blog-tip">
+          <Lightbulb size={18} aria-hidden="true" />
+          <div>
+            {b.title && <strong>{b.title}</strong>}
+            <p>{b.text}</p>
+          </div>
+        </aside>
+      );
+    case "table":
+      return (
+        <div key={i} className="blog-table-wrap" tabIndex={0}>
+          <table>
+            <thead>
+              <tr>{b.head.map((h, j) => <th key={j} scope="col">{h}</th>)}</tr>
+            </thead>
+            <tbody>
+              {b.rows.map((r, j) => (
+                <tr key={j}>{r.map((c, k) => <td key={k}>{c}</td>)}</tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
+      );
+    case "cta":
+      return (
+        <Link key={i} href={b.href} className="blog-inline-cta">
+          <span>
+            <span className="blog-inline-cta-text">{b.text}</span>
+            <strong>{b.label}</strong>
+          </span>
+          <ArrowLeft size={18} aria-hidden="true" />
+        </Link>
+      );
+    default:
+      return <p key={i}>{b.text}</p>;
+  }
+}
+
 export function BlogArticle({ post }: { post: BlogPost }) {
-  const t = useThemeTokens();
-  const card = `rounded-[24px] border ${t.cardBorder} ${t.cardBg} p-5 sm:p-7 ${t.shadow} backdrop-blur-xl`;
+  const cat = BLOG_CATEGORIES[post.category];
+  // شناسه‌ی لنگر هر H2 به ترتیب: s-1، s-2، ...
+  const toc: { id: string; text: string }[] = [];
+  const ids = new Map<number, string>();
+  post.blocks.forEach((b, i) => {
+    if (b.type === "h2") {
+      const id = `s-${toc.length + 1}`;
+      toc.push({ id, text: b.text });
+      ids.set(i, id);
+    }
+  });
+  const related = relatedPosts(post, 3);
+  const modified = post.updated && post.updated !== post.published ? post.updated : undefined;
 
   return (
-    <main className="pb-10 pt-4 text-right">
-      <nav aria-label="مسیر صفحه" className={`mb-4 flex flex-wrap items-center gap-1 text-[11.5px] ${t.muted}`}>
-        <Link href="/" className={`${t.accentHoverText} hover:underline`}>آریون</Link>
-        <ChevronLeft size={13} aria-hidden="true" className="opacity-60" />
-        <Link href="/blog" className={`${t.accentHoverText} hover:underline`}>مقاله‌ها</Link>
-        <ChevronLeft size={13} aria-hidden="true" className="opacity-60" />
-        <span aria-current="page">{post.title}</span>
+    <main className="blog-root blog-post">
+      <BlogProgress />
+      <nav aria-label="مسیر صفحه" className="blog-crumb">
+        <Link href="/">آریون</Link>
+        <ChevronLeft size={13} aria-hidden="true" />
+        <Link href="/blog">مقاله‌ها</Link>
+        <ChevronLeft size={13} aria-hidden="true" />
+        <Link href={`/blog/category/${post.category}`}>{cat.label}</Link>
+        <ChevronLeft size={13} aria-hidden="true" />
+        <span aria-current="page" className="blog-crumb-cur">{post.title}</span>
       </nav>
 
-      <article className={card}>
-        <h1 className={`text-[1.5rem] font-extrabold leading-[1.45] sm:text-[1.95rem] ${t.heading}`}>{post.title}</h1>
-        <p className={`mt-2.5 text-[11.5px] ${t.muted}`}>{faNum(post.readingMinutes)} دقیقه مطالعه</p>
+      <div className="blog-layout">
+        <header className="blog-head">
+          <Link href={`/blog/category/${post.category}`} className="blog-cat">{cat.label}</Link>
+          <h1>{post.title}</h1>
+          <div className="blog-meta">
+            <span>تیم آریون</span>
+            <span aria-hidden="true">·</span>
+            <span>
+              انتشار <time dateTime={post.published}>{blogDate(post.published)}</time>
+            </span>
+            {modified && (
+              <>
+                <span aria-hidden="true">·</span>
+                <span>
+                  به‌روزرسانی <time dateTime={modified}>{blogDate(modified)}</time>
+                </span>
+              </>
+            )}
+            <span aria-hidden="true">·</span>
+            <span>{post.readingMinutes} دقیقه مطالعه</span>
+          </div>
+        </header>
 
-        <div className="mt-5">
-          {post.blocks.map((b, i) => {
-            if (b.type === "h2") {
-              return (
-                <h2 key={i} className={`mt-7 text-[1.05rem] font-extrabold sm:text-[1.18rem] ${t.heading}`}>
-                  {b.text}
-                </h2>
-              );
-            }
-            if (b.type === "h3") {
-              return (
-                <h3 key={i} className={`mt-5 text-[13.5px] font-bold sm:text-[14.5px] ${t.heading}`}>
-                  {b.text}
-                </h3>
-              );
-            }
-            if (b.type === "ul") {
-              return (
-                <ul key={i} className="mt-3 space-y-2.5">
-                  {b.items.map((it) => (
-                    <li key={it.slice(0, 40)} className={`border-r-2 pr-3 text-[12.5px] leading-7 sm:text-[13.5px] ${t.accentBorder} ${t.muted}`}>
-                      {it}
-                    </li>
-                  ))}
-                </ul>
-              );
-            }
-            return (
-              <p key={i} className={`mt-3 text-[13px] leading-8 sm:text-[14px] ${t.muted}`}>
-                {b.text}
-              </p>
-            );
-          })}
+        <BlogToc items={toc} />
+
+        <article className="blog-body" id="blog-article-body">
+          {post.takeaways && post.takeaways.length > 0 && (
+            <section className="blog-takeaways" aria-label="خلاصه در یک نگاه">
+              <div className="blog-takeaways-title">خلاصه در یک نگاه</div>
+              <ul>
+                {post.takeaways.map((t, i) => <li key={i}>{t}</li>)}
+              </ul>
+            </section>
+          )}
+
+          <div className="blog-prose">{post.blocks.map((b, i) => renderBlock(b, i, ids.get(i)))}</div>
+
+          {post.faq && post.faq.length > 0 && (
+            <section className="blog-faq">
+              <h2>پرسش‌های پرتکرار</h2>
+              {post.faq.map((f, i) => (
+                <details key={i}>
+                  <summary><h3>{f.q}</h3></summary>
+                  <p>{f.a}</p>
+                </details>
+              ))}
+            </section>
+          )}
+
+          <BlogShare title={post.title} />
+        </article>
+      </div>
+
+      <section className="blog-more">
+        <h2>ادامه‌ی مطلب</h2>
+        <div className="blog-grid">
+          {related.map((p) => <BlogPostCard key={p.slug} post={p} />)}
         </div>
-      </article>
-
-      <section className={`mt-5 ${card}`}>
-        <h2 className={`text-[1.05rem] font-extrabold sm:text-[1.15rem] ${t.heading}`}>ادامه‌ی مطلب</h2>
-        <ul className="mt-3.5 space-y-2.5">
+        <ul className="blog-links">
           {post.related.map((r) => (
-            <li key={r.href}>
-              <Link href={r.href} className={`text-[13.5px] font-bold ${t.accentText} hover:underline`}>
-                {r.label}
-              </Link>
-            </li>
+            <li key={r.href}><Link href={r.href}>{r.label}</Link></li>
           ))}
-          <li>
-            <Link href="/blog" className={`text-[13.5px] font-bold ${t.accentText} hover:underline`}>
-              همه‌ی مقاله‌های آریون
-            </Link>
-          </li>
+          <li><Link href="/blog">همه‌ی مقاله‌های آریون</Link></li>
         </ul>
 
-        <Link
-          href="/auth/signup"
-          className={`mt-6 inline-flex items-center gap-1.5 rounded-[20px] px-5 py-3 text-[13.5px] font-bold text-white transition hover:brightness-105 active:scale-[0.97] ${t.accentBg} ${t.accentShadow}`}
-        >
-          شروع رایگان با آریون <ArrowLeft size={16} aria-hidden="true" />
-        </Link>
+        <div className="blog-signup">
+          <p>روتین، خواب، تمرین و ژورنال ترید در یک اپ.</p>
+          <Link href="/auth/signup" className="blog-btn">
+            امتحان رایگان 14 روزه <ArrowLeft size={16} aria-hidden="true" />
+          </Link>
+        </div>
       </section>
     </main>
   );

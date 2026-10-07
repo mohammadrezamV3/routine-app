@@ -4,11 +4,11 @@ import { sortedPosts } from "@/lib/blogPosts";
 import { absoluteUrl, breadcrumbJsonLd, pageMetadata } from "@/lib/seo";
 
 const INTRO =
-  "راهنماهای کاربردی درباره‌ی ساختن روتین روزانه، پیگیری عادت‌ها، برنامه‌ریزی روزانه و ژورنال " +
+  "راهنماهای کاربردی درباره‌ی روتین روزانه، عادت‌سازی، برنامه‌ریزی، خواب، بدنسازی، کالری و ژورنال " +
   "معاملاتی. هر مقاله به یک سوال مشخص جواب می‌دهد، نه بیشتر.";
 
 export const metadata = pageMetadata({
-  title: `مقاله‌های ${BRAND_FA} درباره روتین، عادت و برنامه‌ریزی`,
+  title: `مقاله‌های ${BRAND_FA} درباره روتین، سلامت و ترید`,
   description: INTRO,
   path: "/blog",
 });
@@ -37,13 +37,22 @@ export default function BlogIndexPage() {
     })),
   };
 
+  const collectionJsonLd = {
+    "@context": "https://schema.org",
+    "@type": "CollectionPage",
+    name: `مقاله‌های ${BRAND_FA}`,
+    description: INTRO,
+    url: absoluteUrl("/blog"),
+    inLanguage: "fa-IR",
+  };
+
   return (
     <>
       <script
         type="application/ld+json"
-        dangerouslySetInnerHTML={{ __html: JSON.stringify([breadcrumbJsonLd(BREADCRUMB), listJsonLd]) }}
+        dangerouslySetInnerHTML={{ __html: JSON.stringify([breadcrumbJsonLd(BREADCRUMB), collectionJsonLd, listJsonLd]) }}
       />
-      <BlogList posts={posts} intro={INTRO} />
+      <BlogList posts={posts} intro={INTRO} heading="مقاله‌های آریون درباره نظم، روتین، سلامت و ترید" />
     </>
   );
 }
