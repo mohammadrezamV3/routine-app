@@ -33,12 +33,14 @@ function isoToJalali(iso: string | null | undefined): JalaliDate | null {
  * بالای /mentor/settings استفاده می‌شود؛ `onChange` تنظیمات را به والد می‌دهد.
  */
 export function MentorAvailabilityQuick({
-  initial, onChange, variant = "section",
+  initial, onChange, variant = "section", bare = false,
 }: {
   initial?: MentorSettingsResponse;
   onChange?: (d: MentorSettingsResponse) => void;
   /** pill: قرص وضعیت کنار هیرو که همین کنترل را در یک برگه باز می‌کند */
   variant?: "section" | "pill";
+  /** بدون عنوان و قاب بخش (وقتی داخل یک MentorSheet با عنوان خودش رندر می‌شود) */
+  bare?: boolean;
 }) {
   const [data, setData] = useState<MentorSettingsResponse | null>(initial ?? null);
   const [busy, setBusy] = useState<Mode | "end" | null>(null);
@@ -71,6 +73,7 @@ export function MentorAvailabilityQuick({
   const icon = ic(UserPlus, MI.section);
   if (!data) {
     if (variant === "pill") return <span className="mv2-today-pill is-loading" aria-hidden><Spinner size={14} /></span>;
+    if (bare) return <div className="mentor-avail-skeleton" aria-hidden><Spinner size={16} /></div>;
     return (
       <MentorSection title={title} icon={icon}>
         <div className="mentor-avail-skeleton" aria-hidden><Spinner size={16} /></div>
@@ -188,6 +191,16 @@ export function MentorAvailabilityQuick({
             {body}
           </div>
         </MentorSheet>
+        {awaySheet}
+      </>
+    );
+  }
+
+  if (bare) {
+    return (
+      <>
+        <p className="mv2-today-avail-cap">{capacity}</p>
+        {body}
         {awaySheet}
       </>
     );

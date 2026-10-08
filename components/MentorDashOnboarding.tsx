@@ -1,126 +1,46 @@
 "use client";
 
 import Link from "next/link";
-import {
-  AlertCircle, BadgeCheck, Ban, Check, ClipboardList, Eye, EyeOff, Hourglass, IdCard, ShieldCheck, UserRound, XCircle,
-} from "lucide-react";
-import { MI, MI_STROKE, MentorChip, MentorRow, MentorSection } from "./MentorUI";
-import { VERIFICATION_LABELS, VERIFICATION_SHORT } from "@/lib/mentorCategories";
-import type { VerificationStatus } from "@/lib/mentorTypes";
+import { Check } from "lucide-react";
+import { MI_STROKE } from "./MentorUI";
+import { MentorHero } from "./MentorHero";
 
-const ic = (Icon: typeof UserRound, size: number) => <Icon size={size} strokeWidth={MI_STROKE} aria-hidden />;
-
-/** شماره‌ی مرحله یا تیک انجام‌شده، جای آیکون ردیف */
-function StepMark({ n, done }: { n: number; done: boolean }) {
-  return (
-    <span className={`mentor-step-mark${done ? " is-done" : ""}`} aria-hidden>
-      {done ? <Check size={14} strokeWidth={2} /> : String(n)}
-    </span>
-  );
-}
-
-function identityChip(status: VerificationStatus) {
-  switch (status) {
-    case "PENDING": return <MentorChip tone="info" icon={ic(Hourglass, MI.chip)} title={VERIFICATION_LABELS.PENDING}>{VERIFICATION_SHORT.PENDING}</MentorChip>;
-    case "VERIFIED": return <MentorChip tone="accent" icon={ic(BadgeCheck, MI.chip)}>{VERIFICATION_SHORT.VERIFIED}</MentorChip>;
-    case "REJECTED": return <MentorChip tone="danger" icon={ic(XCircle, MI.chip)}>{VERIFICATION_SHORT.REJECTED}</MentorChip>;
-    default: return <MentorChip tone="warn" icon={ic(AlertCircle, MI.chip)}>{VERIFICATION_SHORT.NOT_PROVIDED}</MentorChip>;
-  }
-}
+type StepState = "done" | "now" | "later";
+const STATE_WORD: Record<StepState, string> = { done: "انجام شد", now: "الان", later: "بعدا" };
 
 /**
- * مراحل فعال‌شدن منتور — احراز هویت اجباری است: تا تایید مدرک شناسایی،
- * پروفایل در فهرست منتورها نمایش داده نمی‌شود و درخواست شاگرد پذیرفته
- * نمی‌شود (سرور همین را اعمال می‌کند). روی داشبورد تا کامل‌شدن دیده می‌شود.
- */
-export function MentorSetupSteps({
-  hasProfile, identity, rejectReason, published, suspended,
-}: {
-  hasProfile: boolean;
-  identity: VerificationStatus;
-  rejectReason?: string | null;
-  published: boolean;
-  suspended?: boolean;
-}) {
-  const verified = identity === "VERIFIED";
-  const idSub = !hasProfile
-    ? "کارت ملی یا گذرنامه؛ ادمین‌های آریون بررسی می‌کنند"
-    : identity === "REJECTED"
-      ? rejectReason || "مدرک واضح‌تری بفرست"
-      : identity === "PENDING"
-        ? "تا تایید، در فهرست مربی‌ها نمایش داده نمی‌شوی"
-        : verified
-          ? "هویتت تایید شده است"
-          : "کارت ملی یا گذرنامه؛ پیش از نمایش در فهرست لازم است";
-  const idAction = hasProfile && (identity === "NOT_PROVIDED" || identity === "REJECTED")
-    ? <Link href="/mentor/profile#verification" className="trade-primary-btn mentor-btn is-sm">{identity === "REJECTED" ? "ارسال دوباره" : "ارسال مدرک"}</Link>
-    : hasProfile ? identityChip(identity) : undefined;
-
-  const pubSub = !published
-    ? "انتشار را در پروفایل روشن کن"
-    : !verified
-      ? "منتشر شده؛ پس از تایید هویت در فهرست دیده می‌شوی"
-      : "در فهرست مربی‌ها دیده می‌شوی";
-  const pubEnd = !hasProfile
-    ? undefined
-    : suspended
-      ? <MentorChip tone="danger" icon={ic(Ban, MI.chip)}>معلق</MentorChip>
-      : published
-        ? (verified
-          ? <MentorChip tone="accent" icon={ic(Eye, MI.chip)}>در فهرست</MentorChip>
-          : <MentorChip tone="info" icon={ic(Hourglass, MI.chip)}>منتظر تایید هویت</MentorChip>)
-        : <Link href="/mentor/profile" className="account-outline-btn mentor-btn is-sm">{ic(EyeOff, MI.btnSm)} انتشار</Link>;
-
-  return (
-    <MentorSection title="فعال‌سازی پروفایل" icon={ic(ShieldCheck, MI.section)} flush>
-      <MentorRow
-        lead={<StepMark n={1} done={hasProfile} />}
-        title="ساخت پروفایل"
-        sub={<span>{hasProfile ? "ساخته شده است" : "حوزه، بیوگرافی و روش کار"}</span>}
-        end={hasProfile ? undefined : <Link href="/mentor/profile" className="trade-primary-btn mentor-btn is-sm">ساخت پروفایل</Link>}
-      />
-      <MentorRow
-        lead={<StepMark n={2} done={verified} />}
-        title="احراز هویت"
-        sub={<span>{idSub}</span>}
-        end={idAction}
-      />
-      <MentorRow
-        lead={<StepMark n={3} done={published && verified && !suspended} />}
-        title="نمایش در فهرست مربی‌ها"
-        sub={<span>{hasProfile ? pubSub : "پس از تایید هویت، شاگردها پیدایت می‌کنند و درخواست می‌دهند"}</span>}
-        end={pubEnd}
-      />
-    </MentorSection>
-  );
-}
-
-/**
- * /mentor برای کاربری که هنوز پروفایل منتوری ندارد: سه مرحله‌ی فعال‌سازی
- * (ساخت پروفایل، احراز هویت، نمایش) و دو نکته‌ی لازم پیش از شروع.
- * نکته‌ی اصلی: آریون واسطه است و مسئولیت محتوای برنامه با منتور است.
+ * /mentor برای کسی که هنوز پروفایل مربی‌گری نداره: سه قدم شماره‌دار بزرگ
+ * (ساخت پروفایل، تایید هویت، نمایش در فهرست)، یک دکمه‌ی اصلی و چند نکته‌ی کوتاه.
  */
 export function MentorDashOnboarding() {
+  const steps: { n: number; title: string; text: string; state: StepState }[] = [
+    { n: 1, title: "ساخت پروفایل", text: "حوزه، معرفی کوتاه و روش کارت رو بنویس", state: "now" },
+    { n: 2, title: "تایید هویت", text: "مدرک شناسایی رو بفرست تا ادمین‌ها بررسی کنن", state: "later" },
+    { n: 3, title: "نمایش در فهرست", text: "بعد از تایید، شاگردها پیدات می‌کنن و درخواست می‌دن", state: "later" },
+  ];
   return (
-    <>
-      <MentorSetupSteps hasProfile={false} identity="NOT_PROVIDED" published={false} />
-      <MentorSection title="پیش از شروع" icon={ic(AlertCircle, MI.section)} flush>
-        <MentorRow
-          lead={ic(ClipboardList, MI.row)}
-          title="مسئولیت برنامه‌ها"
-          sub={<span>آریون واسطه‌ی ارتباط است و مسئولیت محتوای برنامه با مربی است</span>}
-        />
-        <MentorRow
-          lead={ic(ShieldCheck, MI.row)}
-          title="حریم خصوصی شاگرد"
-          sub={<span>هر شاگرد تعیین می‌کند چه بخشی از برنامه و پیشرفتش را ببینی</span>}
-        />
-        <MentorRow
-          lead={ic(IdCard, MI.row)}
-          title="مدرک شناسایی"
-          sub={<span>فقط تو و ادمین‌های آریون آن را می‌بینید؛ مدرک تخصصی اختیاری است</span>}
-        />
-      </MentorSection>
-    </>
+    <div className="mv2-today">
+      <MentorHero title="خوش اومدی" summary="با سه قدم کوتاه، مربی‌گری‌ت شروع می‌شه." />
+      <ol className="mv2-today-steps">
+        {steps.map((s) => (
+          <li key={s.n} className={`mv2-today-step is-${s.state}`} aria-current={s.state === "now" ? "step" : undefined}>
+            <span className="mv2-today-step-n" aria-hidden>{s.state === "done" ? <Check size={20} strokeWidth={MI_STROKE} /> : s.n}</span>
+            <div className="mv2-today-step-body">
+              <span className="mv2-today-step-state">{STATE_WORD[s.state]}</span>
+              <b>{s.title}</b>
+              <span>{s.text}</span>
+            </div>
+          </li>
+        ))}
+      </ol>
+      <div className="mentor-form-actions">
+        <Link href="/mentor/profile" className="trade-primary-btn mentor-btn">ساخت پروفایل</Link>
+      </div>
+      <ul className="mv2-today-notes">
+        <li>آریون واسطه‌ی ارتباطه و مسئولیت محتوای برنامه‌ها با خود مربیه.</li>
+        <li>هر شاگرد خودش تعیین می‌کنه چی رو ببینی.</li>
+        <li>مدرک شناسایی فقط پیش تو و ادمین‌ها می‌مونه.</li>
+      </ul>
+    </div>
   );
 }

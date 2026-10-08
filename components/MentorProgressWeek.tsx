@@ -95,15 +95,15 @@ export function MentorProgressWeek({
       )}
 
       {view.hidden ? (
-        <MentorEmpty>شاگرد نمایش پیشرفت را برای تو بسته است</MentorEmpty>
+        <MentorEmpty>این بخش رو شاگرد خصوصی نگه داشته</MentorEmpty>
       ) : weekItems.length === 0 ? (
-        <MentorEmpty>در این هفته آیتمی از برنامه نیست</MentorEmpty>
+        <MentorEmpty>این هفته کاری تو برنامه نیست</MentorEmpty>
       ) : (
         <div className="mentor-pg-scroll">
           <table className="mentor-pg">
             <thead>
               <tr>
-                <th scope="col" className="mentor-pg-item">آیتم</th>
+                <th scope="col" className="mentor-pg-item">کار</th>
                 {days.map((d) => {
                   const summary = summarizeDay(d.cells.map((c) => c.state));
                   return (
@@ -141,6 +141,12 @@ export function MentorProgressWeek({
               ))}
             </tbody>
           </table>
+          <ul className="mv2-pg-legend" aria-label="راهنمای نشانه‌ها">
+            {(["done", "partial", "missed", "upcoming"] as ProgressState[]).map((k) => {
+              const m = STATE_META[k];
+              return <li key={k} className={`mv2-pg-legend-item is-${k}`}><m.Icon {...CHIP} /> {m.label}</li>;
+            })}
+          </ul>
         </div>
       )}
 
@@ -156,7 +162,7 @@ export function MentorProgressWeek({
         !inRange(selected) ? (
           <MentorEmpty>این روز خارج از بازه‌ی برنامه است</MentorEmpty>
         ) : !selDay || selDay.cells.length === 0 ? (
-          <MentorEmpty>برای این روز آیتمی نیست</MentorEmpty>
+          <MentorEmpty>برای این روز کاری نیست</MentorEmpty>
         ) : (
           selDay.cells.map((c) => {
             const it = byId.get(c.itemId);
@@ -180,7 +186,7 @@ export function MentorProgressWeek({
                     style={{ marginTop: 4 }}
                     onClick={() => onFeedback(c.logId ? { itemId: it.id, logId: c.logId, label: `اجرای «${it.title}»` } : { itemId: it.id, label: `«${it.title}»` })}
                   >
-                    <MessageSquareText {...BTN_SM} /> {c.logId ? "بازخورد به این اجرا" : "بازخورد به این آیتم"}
+                    <MessageSquareText {...BTN_SM} /> {c.logId ? "بازخورد به این اجرا" : "بازخورد به این کار"}
                   </button>
                 )}
               </div>
@@ -221,7 +227,7 @@ function DayNoteEditor({
 
   async function save() {
     const b = body.trim();
-    if (b.length > NOTE_MAX) { setError(`یادداشت حداکثر ${faNum(NOTE_MAX)} نویسه است`); return; }
+    if (b.length > NOTE_MAX) { setError(`یادداشت حداکثر ${faNum(NOTE_MAX)} حرف باشه`); return; }
     setBusy(true);
     setError(null);
     try {
@@ -230,7 +236,7 @@ function DayNoteEditor({
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ date, note: b }),
       });
-      if (!res.ok) { setError(await readApiError(res, "یادداشت ذخیره نشد؛ دوباره تلاش کن")); return; }
+      if (!res.ok) { setError(await readApiError(res, "یادداشت ذخیره نشد؛ دوباره امتحان کن")); return; }
       const d: { note: { body: string } | null } = await res.json();
       const next = d.note?.body ?? "";
       setSaved(next);

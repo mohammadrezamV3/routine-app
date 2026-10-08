@@ -3,7 +3,7 @@
 import { MentorCollapse, MentorList, MentorListItem } from "./MentorMotion";
 import { useCallback, useEffect, useState } from "react";
 import Link from "next/link";
-import { CalendarCheck, Check, ChevronDown, Dumbbell, LayoutTemplate, Pencil, Plus, Trash2, X } from "lucide-react";
+import { CalendarCheck, Check, ChevronDown, Dumbbell, LayoutTemplate, Pencil, Plus, Trash2 } from "lucide-react";
 import { MentorKebabMenu } from "./MentorKebabMenu";
 import { LoadingBlock, Spinner } from "./Spinner";
 import { MentorConfirmDialog } from "./MentorConfirmDialog";
