@@ -7412,9 +7412,8 @@ body:not([data-theme="light"]) button.trade-pair-suggest-item{ box-shadow:none; 
 }
 
 /* خانه‌ی ابزارها: ردیف باکس‌های کوچیک + یک باکس برای ابزار فعال */
-.tv-cell-tools{ display:flex; flex-direction:column; gap:16px; }
-@media (min-width:640px){ .tv-cell-tools{ gap:24px; } }
-.tv-tools-row{ display:flex; align-items:flex-end; justify-content:center; gap:10px; flex:none; }
+.tv-cell-tools{ display:flex; flex-direction:column; gap:14px; }
+.tv-tools-row{ display:flex; align-items:flex-start; justify-content:center; gap:10px; flex:none; }
 @media (min-width:640px){ .tv-tools-row{ gap:14px; } }
 .tv-tool-pane[hidden]{ display:none; }
 .tv-tool-pane:not([hidden]){ animation:tv-tool-in .22s ease-out; }
