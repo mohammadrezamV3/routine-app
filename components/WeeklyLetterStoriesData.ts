@@ -161,7 +161,7 @@ export function buildStorySlides(letter: WeeklyLetterData): StorySlide[] {
 
   if (scored >= 2 && best >= 0 && letter.days[best] && !letter.days[best].isFuture) {
     const day = letter.days[best];
-    const rows = dayRows(day.details)
+    const rows = dayRows(day.details, !!day.isToday)
       .sort((a, b) => (TONE_ORDER[a.tone ?? "neutral"] ?? 1) - (TONE_ORDER[b.tone ?? "neutral"] ?? 1))
       .slice(0, 3);
     slides.push({ id: "best", dur: 5400, label: "بهترین روز", day, rows });

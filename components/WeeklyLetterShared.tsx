@@ -17,6 +17,7 @@ import { GradientRing, RING_GREEN } from "@/components/GradientRing";
 import { activeModulesOf, getAccount } from "@/lib/accountCache";
 import { parseCountable } from "./WeeklyLetterUtils";
 import "./weekly-letter.css";
+import "./weekly-letter-live.css";
 
 export const WL_EASE = [0.22, 1, 0.36, 1] as const;
 

@@ -1,7 +1,8 @@
 "use client";
 
-// آرشیو هفته‌نامه (/analysis/weekly/letters): شماره‌ها به‌صورت کارت، گروه‌بندی
-// بر اساس ماه جلالی، نقطه‌ی خوانده‌نشده و حالت خالی.
+// آرشیو آنالیز هفتگی (/analysis/weekly/letters): هفته‌ی جاری «در جریان» بالا،
+// بعد شماره‌های ثبت‌شده به‌صورت کارت، گروه‌بندی بر اساس ماه جلالی، نقطه‌ی
+// خوانده‌نشده و حالت خالی. لینک هر کارت خود خواننده‌ست (?week=).
 import { useCallback, useEffect, useMemo, useState } from "react";
 import Link from "next/link";
 import { MotionConfig } from "framer-motion";
@@ -17,7 +18,7 @@ function IssueCard({ l, featured, i }: { l: LetterSummary; featured: boolean; i:
   const color = BAND_COLOR[scoreBand(score)];
   return (
     <Reveal className={featured ? "wl-issue-wrap is-featured" : "wl-issue-wrap"} delay={Math.min(i, 3) * 0.06}>
-      <Link href={`/analysis/weekly/letters/${l.weekStart}`} className={`wl-card wl-issue${featured ? " is-featured" : ""}${l.read ? "" : " is-unread"}`} style={{ ["--c" as string]: color } as React.CSSProperties} prefetch>
+      <Link href={`/analysis/weekly?week=${l.weekStart}`} className={`wl-card wl-issue${featured ? " is-featured" : ""}${l.read ? "" : " is-unread"}`} style={{ ["--c" as string]: color } as React.CSSProperties} prefetch>
         <LazyRing value={score === null ? 0 : score / 100} size={featured ? 92 : 68} stroke={featured ? 9 : 7} delay={0.1}>
           <span className="wl-issue-score">{score === null ? "—" : Math.round(score)}</span>
         </LazyRing>
@@ -70,10 +71,16 @@ function ArchiveInner() {
     <section className="wl-root wl-page wl-archive">
       <div className="wl-arch-head">
         <span className="page-title-icon"><Newspaper /></span>
-        <h1>هفته‌نامه</h1>
+        <h1>آرشیو آنالیز هفتگی</h1>
         {unread > 0 && <span className="wl-count">{unread} جدید</span>}
-        <Link href="/analysis/weekly" className="wl-back wl-back-end"><BarChart3 size={16} />آنالیز هفتگی</Link>
+        <Link href="/analysis/weekly" className="wl-back wl-back-end"><BarChart3 size={16} />هفته‌ی جاری</Link>
       </div>
+
+      <Link href="/analysis/weekly" className="wl-card wl-rd-now" prefetch={false}>
+        <i className="wl-live-dot" aria-hidden="true" />
+        <span><b>این هفته</b><small>در جریان، همین حالا به‌روز می‌شه</small></span>
+        <ArrowLeft size={16} />
+      </Link>
 
       {error && !letters ? (
         <div className="wl-card wl-state">
@@ -85,8 +92,8 @@ function ArchiveInner() {
       ) : letters.length === 0 ? (
         <Reveal className="wl-card wl-state wl-empty">
           <span className="wl-state-ico"><Inbox size={26} /></span>
-          <h2>هنوز هفته‌نامه‌ای نرسیده</h2>
-          <p>هر شنبه صبح هفته‌نامه‌ی هفته‌ی قبلت این‌جا می‌رسه.</p>
+          <h2>هنوز شماره‌ای در آرشیو نیست</h2>
+          <p>هر شنبه صبح آنالیز هفته‌ی قبلت این‌جا ثبت می‌شه.</p>
           <Link href="/analysis/weekly" className="account-outline-btn wl-cta-btn">آنالیز این هفته</Link>
         </Reveal>
       ) : (

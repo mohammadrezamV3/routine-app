@@ -18,7 +18,7 @@ export function WeeklyLetterTimeline({ days, domains }: { days: WeeklyLetterData
   return (
     <ol className="wl-tl">
       {days.map((d, i) => {
-        const rows = dayRows(d.details);
+        const rows = dayRows(d.details, !!d.isToday);
         const band = scoreBand(d.score);
         const color = BAND_COLOR[band];
         return (
