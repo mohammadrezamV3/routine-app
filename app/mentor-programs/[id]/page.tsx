@@ -262,7 +262,7 @@ function ProgramView({ onHead, onFailed, cmd }: { onHead: (h: Head) => void; onF
 
           {showProgress && program.progress.hidden && (
             <div className="mentor-chips">
-              <MentorChip tone="neutral" icon={<EyeOff {...CHIP} />}>این بخش رو خصوصی نگه داشتی</MentorChip>
+              <MentorChip tone="neutral" icon={<EyeOff {...CHIP} />}>این بخش رو شاگرد خصوصی نگه داشته</MentorChip>
             </div>
           )}
           {showProgress && !program.progress.hidden && (
