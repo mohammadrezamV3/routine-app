@@ -1,7 +1,6 @@
 import type { MetadataRoute } from "next";
 import { BLOG_CATEGORY_KEYS } from "@/lib/blog/categories";
 import { postsInCategory, sortedPosts } from "@/lib/blogPosts";
-import { PUBLIC_TOOLS } from "@/lib/tools";
 import { absoluteUrl, SITE_URL } from "@/lib/seo";
 
 // تاریخ ثابت برای صفحه‌های ایستا: تغییر واقعی‌شان با تغییر این ثابت (هنگام
@@ -27,20 +26,11 @@ export default function sitemap(): MetadataRoute.Sitemap {
     { url: absoluteUrl("/economic-calendar"), lastModified: STATIC_LASTMOD, changeFrequency: "monthly", priority: 0.8 },
     { url: absoluteUrl("/forex-sessions"), lastModified: STATIC_LASTMOD, changeFrequency: "monthly", priority: 0.8 },
     { url: absoluteUrl("/learning-roadmap"), lastModified: STATIC_LASTMOD, changeFrequency: "monthly", priority: 0.5 },
-    { url: absoluteUrl("/tools"), lastModified: STATIC_LASTMOD, changeFrequency: "monthly", priority: 0.8 },
     { url: absoluteUrl("/faq"), lastModified: STATIC_LASTMOD, changeFrequency: "monthly", priority: 0.7 },
     { url: absoluteUrl("/about"), lastModified: STATIC_LASTMOD, changeFrequency: "monthly", priority: 0.6 },
     { url: absoluteUrl("/terms"), lastModified: STATIC_LASTMOD, changeFrequency: "yearly", priority: 0.3 },
     { url: absoluteUrl("/terms/mentors"), lastModified: STATIC_LASTMOD, changeFrequency: "yearly", priority: 0.3 },
   ];
-
-  // ابزارهای رایگان (هاب /tools و هر ابزار) از فهرست مشترک lib/tools.ts
-  const toolPages: MetadataRoute.Sitemap = PUBLIC_TOOLS.map((t) => ({
-    url: absoluteUrl(t.path),
-    lastModified: STATIC_LASTMOD,
-    changeFrequency: "monthly",
-    priority: 0.8,
-  }));
 
   // lastModified مقاله‌ها از تاریخ واقعی خودشان می‌آید، نه `now` — تاریخ
   // همیشه-امروز به گوگل سیگنال دروغ «تازه به‌روز شد» می‌دهد و بعد از
@@ -74,5 +64,5 @@ export default function sitemap(): MetadataRoute.Sitemap {
     };
   });
 
-  return [...staticPages, ...toolPages, ...blogIndex, ...categoryPages, ...posts];
+  return [...staticPages, ...blogIndex, ...categoryPages, ...posts];
 }
