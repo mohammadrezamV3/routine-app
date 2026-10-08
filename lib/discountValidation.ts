@@ -1,8 +1,8 @@
 import { prisma } from "@/lib/prisma";
 import { ensureEventDiscounts } from "@/lib/eventDiscountServer";
-import { REFERRAL_DISCOUNT_PERCENT, REFERRAL_INVITER_REWARD_PERCENT } from "@/lib/referral";
+import { REFERRAL_DISCOUNT_PERCENT } from "@/lib/referral";
 
-export { REFERRAL_DISCOUNT_PERCENT, REFERRAL_INVITER_REWARD_PERCENT };
+export { REFERRAL_DISCOUNT_PERCENT };
 
 // منطق اعتبارسنجی کد تخفیف — مشترک بین چک‌اوت واقعی
 // (app/api/subscription/checkout) و پیش‌نمایش «اعمال» توی همون صفحه
@@ -52,18 +52,4 @@ export async function resolveDiscountCode(rawCode: string, userId: string, planK
   }
 
   return { ok: false, error: "کد تخفیف نامعتبر، منقضی‌شده، یا برای این پکیج نیست" };
-}
-
-/**
- * پاداش‌های مصرف‌نشده‌ی صاحب کد: هر دوستی که خرید اولش رو با کد این کاربر
- * انجام داده (ReferralUsage با status=REWARDED) یک بار REFERRAL_INVITER_REWARD_PERCENT٪
- * تخفیف می‌ده. قدیمی‌ترین پاداش اول مصرف می‌شه.
- */
-export async function findInviterRewards(userId: string): Promise<{ count: number; nextUsageId: string | null }> {
-  const where = { status: "REWARDED" as const, inviterRewardApplied: false, referralCode: { userId } };
-  const [count, next] = await Promise.all([
-    prisma.referralUsage.count({ where }),
-    prisma.referralUsage.findFirst({ where, orderBy: { rewardedAt: "asc" }, select: { id: true } }),
-  ]);
-  return { count, nextUsageId: next?.id ?? null };
 }

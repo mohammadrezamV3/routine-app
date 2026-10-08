@@ -51,12 +51,12 @@ export function rewardStates(rows: { tier: string; usedAt: Date | null }[]): Ach
   });
 }
 
-export type DiscountSource = "code" | "inviter" | "achievement";
+export type DiscountSource = "code" | "achievement";
 
 /**
  * تخفیف‌ها جمع نمی‌شن: بیشترین درصد برنده‌ست. در تساوی، اونی که زودتر در
- * فهرست اومده می‌مونه (کد → پاداش دعوت → پاداش اچیومنت) تا پاداش یک‌بارمصرف
- * بی‌دلیل مصرف نشه.
+ * فهرست اومده می‌مونه (کد → پاداش اچیومنت) تا پاداش یک‌بارمصرف بی‌دلیل
+ * مصرف نشه.
  */
 export function pickBestDiscount(cands: { source: DiscountSource; percent: number }[]): { source: DiscountSource; percent: number } | null {
   let best: { source: DiscountSource; percent: number } | null = null;

@@ -5,10 +5,9 @@ import { prisma } from "@/lib/prisma";
 import { checkRateLimit, getClientIp } from "@/lib/rateLimit";
 import { withLiveSync } from "@/lib/realtime";
 import { CUSTOM_REFERRAL_CODE_RE, normalizeReferralCode } from "@/lib/referral";
-import { findInviterRewards } from "@/lib/discountValidation";
 
 // GET  /api/account/referral → کد دعوت خود کاربر + آمار (چند دوست با کدش خرید
-//      اولشون رو کردن و چند پاداش ۱۵٪ مصرف‌نشده داره) — قاعده‌ها در lib/referral.ts
+//      اولشون رو کردن) + موجودی کیفِ اعتبار (lib/wallet.ts — قاعده‌ها در lib/referral.ts)
 // PATCH /api/account/referral { code } → انتخاب اسم کد توسط خود کاربر. یکتا در
 //      برابر کد دعوت بقیه *و* کدهای تخفیف ادمین (DiscountCode اول چک می‌شه،
 //      پس کد هم‌نام عملا مرده می‌شد).
@@ -20,12 +19,12 @@ async function getUserId() {
 export async function GET() {
   const userId = await getUserId();
   if (!userId) return NextResponse.json({ error: "unauthorized" }, { status: 401 });
-  const [row, invitedPaid, rewards] = await Promise.all([
+  const [row, invitedPaid, user] = await Promise.all([
     prisma.referralCode.findUnique({ where: { userId }, select: { code: true } }),
     prisma.referralUsage.count({ where: { status: "REWARDED", referralCode: { userId } } }),
-    findInviterRewards(userId),
+    prisma.user.findUnique({ where: { id: userId }, select: { walletBalance: true } }),
   ]);
-  return NextResponse.json({ code: row?.code ?? null, invitedPaid, rewardsAvailable: rewards.count });
+  return NextResponse.json({ code: row?.code ?? null, invitedPaid, walletBalance: user?.walletBalance ?? 0 });
 }
 
 async function handlePATCH(req: NextRequest) {

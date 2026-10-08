@@ -2,7 +2,7 @@
 
 import { useEffect, useRef, useState } from "react";
 import { readInviteRef } from "@/lib/invite";
-import { REFERRAL_DISCOUNT_PERCENT, REFERRAL_INVITER_REWARD_PERCENT } from "@/lib/referral";
+import { REFERRAL_DISCOUNT_PERCENT } from "@/lib/referral";
 import { faNum } from "@/lib/jalali";
 import { useSession } from "next-auth/react";
 import { XCircle } from "lucide-react";
@@ -15,6 +15,8 @@ import { Duration, durationLabel, isDuration, isPaidPlanKey } from "@/lib/planPr
 import { usePlanPricing } from "@/lib/usePlanPricing";
 import { TickButton } from "@/components/TickButton";
 import { isMonthlyOption, pickBestDiscount } from "@/lib/achievementRewards";
+import { getAccount } from "@/lib/accountCache";
+import { ToggleSwitch } from "@/components/ToggleSwitch";
 
 type Gateway = "zibal";
 
@@ -30,8 +32,8 @@ function ZibalMark() {
 }
 
 // چک‌اوت واقعی خرید پلن — از صفحه‌ی /subscription با ?plan=key&duration=1|3|6|12
-// باز می‌شه. کد تخفیف (رفرال یک نفر دیگه)، پذیرش قوانین و دکمه‌ی پرداخت.
-// زرین‌پال طبق درخواست صریح کامل از پروژه حذف شد — زیبال تنها درگاهه.
+// باز می‌شه. کد تخفیف (رفرال یک نفر دیگه)، کیفِ اعتبار، پذیرش قوانین و دکمه‌ی
+// پرداخت. زرین‌پال طبق درخواست صریح کامل از پروژه حذف شد — زیبال تنها درگاهه.
 export default function CheckoutPage() {
   const { status } = useSession();
   const router = useRouter();
@@ -74,21 +76,29 @@ export default function CheckoutPage() {
   const [agreed, setAgreed] = useState(false);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [walletBalance, setWalletBalance] = useState(0);
+  const [useWallet, setUseWallet] = useState(false);
+
+  // موجودیِ کیفِ اعتبار — از همون کشِ مشترکِ account (lib/accountCache.ts)
+  // می‌خونیم، نه فچِ جداگانه، چون اینجا فقط یک عدد لازمه.
+  useEffect(() => {
+    if (status !== "authenticated") return;
+    getAccount().then((acc) => {
+      const bal = Number((acc?.user as any)?.walletBalance || 0);
+      setWalletBalance(bal);
+    });
+  }, [status]);
 
   // اعتبار ارتقا به مکس (اگه کاربر از قبل ورزش/ترید فعال داره) — پیش‌نمایشه؛
   // مبلغ واقعی همیشه سمت سرور، مستقل از این fetch، توی
   // api/subscription/checkout دوباره محاسبه می‌شه.
   const [upgradeOffer, setUpgradeOffer] = useState<UpgradeOffer | null>(null);
-  // پاداش دعوت صاحب کد (lib/referral.ts): خودکار، با کد تخفیف جمع نمی‌شه — هر کدوم
-  // بیشتر بود؛ همون قاعده‌ی سمت سرور (api/subscription/checkout)، این فقط پیش‌نمایشه.
-  const [inviterReward, setInviterReward] = useState(false);
   // پاداش اچیومنت‌ها (20٪ با نصف، 50٪ با همه) — فقط روی گزینه‌ی یک‌ماهه؛ پیش‌نمایش،
   // تصمیم واقعی همیشه سمت سرور.
   const [achReward, setAchReward] = useState<{ tier: "half" | "full"; percent: number } | null>(null);
   useEffect(() => {
     if (status !== "authenticated") return;
     fetch("/api/plans").then((r) => r.json()).then((data) => setUpgradeOffer(data.upgradeOffer || null)).catch(() => {});
-    fetch("/api/account/referral").then((r) => (r.ok ? r.json() : null)).then((d) => setInviterReward((d?.rewardsAvailable ?? 0) > 0)).catch(() => {});
     fetch("/api/achievements/reward", { cache: "no-store" }).then((r) => (r.ok ? r.json() : null)).then((d) => setAchReward(d?.reward ?? null)).catch(() => {});
   }, [status]);
 
@@ -126,10 +136,8 @@ export default function CheckoutPage() {
   const achPercent = monthly && achReward ? achReward.percent : 0;
   const best = pickBestDiscount([
     { source: "code", percent: codePercent },
-    { source: "inviter", percent: inviterReward ? REFERRAL_INVITER_REWARD_PERCENT : 0 },
     { source: "achievement", percent: achPercent },
   ]);
-  const rewardWins = best?.source === "inviter";
   const achWins = best?.source === "achievement";
   const effectivePercent = best?.percent ?? 0;
   const discountedAmount = effectivePercent > 0 && creditedBaseAmount != null
@@ -138,6 +146,14 @@ export default function CheckoutPage() {
     ? upgradeInfo.amount
     : null;
   const finalPriceLabel = discountedAmount != null ? formatPriceAmount(discountedAmount) : price;
+
+  // کیفِ اعتبار آخرین لایه‌است — روی قیمتی اعمال می‌شه که همه‌ی تخفیف‌های
+  // بالا (ارتقا/کد/اچیومنت) قبلا روش حساب شدن. سرور دوباره و مستقلا همین
+  // ترتیب رو با همین سقف‌ها حساب می‌کنه (clampWalletApply در lib/wallet.ts).
+  const preWalletAmount = discountedAmount ?? (upgradeInfo ? upgradeInfo.amount : baseAmount);
+  const appliedCredit = useWallet ? Math.min(walletBalance, preWalletAmount) : 0;
+  const payAmount = Math.max(0, preWalletAmount - appliedCredit);
+  const payLabel = formatPriceAmount(payAmount);
 
   async function applyDiscount() {
     if (discountResult?.ok) {
@@ -195,7 +211,7 @@ export default function CheckoutPage() {
       const res = await fetch("/api/subscription/checkout", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ planKey, duration, discountCode: discountCode.trim() || undefined, gateway }),
+        body: JSON.stringify({ planKey, duration, discountCode: discountCode.trim() || undefined, gateway, useWalletCredit: useWallet }),
       });
       // عمدا `res.json()` مستقیم صدا زده نمی‌شود: اگر پاسخ JSON نباشد (مثلا
       // ۵۰۴ـ HTML از nginx وقتی درگاه کند است، یا ۵۰۲ وقتی کانتینر بالا
@@ -208,7 +224,13 @@ export default function CheckoutPage() {
         setLoading(false);
         return;
       }
-      window.location.href = data.paymentUrl;
+      // کیفِ اعتبار ممکنه کلِ قیمت رو پوشش بده — آن‌وقت دیگه نیازی به درگاه
+      // نیست و سرور مستقیم redirectUrl (صفحه‌ی موفقیت) برمی‌گردونه.
+      if (data.paymentUrl) {
+        window.location.href = data.paymentUrl;
+      } else if (data.redirectUrl) {
+        window.location.href = data.redirectUrl;
+      }
     } catch {
       // این‌جا فقط خطای واقعی شبکه می‌رسد (اینترنت کاربر قطع شده)، نه پاسخ
       // نامعتبر سرور — پس این پیام حالا واقعا درست است.
@@ -283,14 +305,13 @@ export default function CheckoutPage() {
           </div>
         </div>
         {fromInvite && !discountResult && <div className="checkout-invite-hint">کد دعوت دوستت پر شده — «اعمال» رو بزن تا {faNum(REFERRAL_DISCOUNT_PERCENT)}٪ تخفیف بگیری</div>}
-        {rewardWins && <div className="checkout-discount-success">{faNum(REFERRAL_INVITER_REWARD_PERCENT)}٪ تخفیف پاداش دعوت دوستت خودکار اعمال شد{discountResult?.ok ? " (از کد تخفیف بیشتره، پس اون مصرف نمی‌شه)" : ""}</div>}
         {achWins && achReward && (
           <div className="checkout-discount-success">
             {faNum(achReward.percent)}٪ تخفیف پاداش اچیومنت‌ها ({achReward.tier === "full" ? "باز کردن همه‌ی اچیومنت‌ها" : "باز کردن نیمی از اچیومنت‌ها"}) خودکار اعمال شد{discountResult?.ok ? " (از کد تخفیف بیشتره، پس اون مصرف نمی‌شه)" : ""}
           </div>
         )}
         {achReward && !monthly && <div className="checkout-invite-hint">پاداش {faNum(achReward.percent)}٪ اچیومنت‌ها فقط روی گزینه‌ی یک‌ماهه اعمال می‌شه</div>}
-        {discountResult?.ok && !rewardWins && !achWins && <div className="checkout-discount-success">کد تخفیف اعمال شد</div>}
+        {discountResult?.ok && !achWins && <div className="checkout-discount-success">کد تخفیف اعمال شد</div>}
         {discountResult && !discountResult.ok && <div className="field-error-msg" style={{ display: "block", marginTop: 7 }}>{discountResult.error}</div>}
       </div>
 
@@ -303,6 +324,27 @@ export default function CheckoutPage() {
           </button>
         </div>
       </div>
+
+      {walletBalance > 0 && (
+        <div className="checkout-box">
+          <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", gap: 10 }}>
+            <div className="checkout-field-label" style={{ marginBottom: 0 }}>
+              استفاده از کیفِ اعتبار{" "}
+              <span className="mono" dir="ltr" style={{ marginRight: 4, color: "var(--accent)", fontWeight: 700 }}>
+                {formatPriceAmount(walletBalance)}
+              </span>
+            </div>
+            <ToggleSwitch checked={useWallet} onChange={setUseWallet} label="استفاده از کیفِ اعتبار" />
+          </div>
+          {useWallet && preWalletAmount > 0 && (
+            <div className="item-line" style={{ marginTop: 8 }}>
+              مبلغِ قابل‌اعمال از کیف: <span className="mono" dir="ltr">{formatPriceAmount(appliedCredit)}</span>
+              {" — "}
+              باقیِ قابلِ پرداخت: <span className="mono" dir="ltr">{payLabel}</span>
+            </div>
+          )}
+        </div>
+      )}
 
       <div className="task checkout-terms-row" onClick={() => { setAgreed((v) => !v); setError(null); }}>
         <TickButton as="span" className="mt-0.5" size={22} shape="square" checked={agreed} />
@@ -321,8 +363,8 @@ export default function CheckoutPage() {
           "در حال اتصال به درگاه…"
         ) : (
           <span className="checkout-pay-btn-inner">
-            {discountedAmount != null && <span className="checkout-pay-old-price">{price}</span>}
-            <span>{`پرداخت ${finalPriceLabel}`}</span>
+            {(discountedAmount != null || appliedCredit > 0) && <span className="checkout-pay-old-price">{price}</span>}
+            <span>{payAmount === 0 ? "فعال‌سازی با کیفِ اعتبار" : `پرداخت ${payLabel}`}</span>
           </span>
         )}
       </button>

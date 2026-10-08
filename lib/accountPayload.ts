@@ -29,6 +29,7 @@ export function accountUserSelect() {
     avatarUrl: true,
     goldenSince: true,
     adminPermissions: true,
+    walletBalance: true,
     referralCode: { select: { code: true } },
     moduleAccess: { select: { module: true, active: true, expiresAt: true } },
     // فقط اشتراک واقعا فعال — نه صرفا «آخرین ردیف ساخته‌شده»

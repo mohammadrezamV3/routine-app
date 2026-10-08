@@ -18,10 +18,13 @@ export type CheckoutParams = {
   discountPercent: number;
   referralUsageId?: string;
   discountCodeId?: string;
-  inviterRewardId?: string;
   upgradeFromSubId?: string;
   /** پاداش اچیومنت (lib/achievementRewards.ts) — فقط وقتی هست ته رشته میاد */
   achievementRewardId?: string;
+  /** مقدار کسرشده از کیفِ اعتبارِ خودِ خریدار (lib/wallet.ts) — امضا می‌شه تا
+   * کاربر نتونه این عدد رو توی URL برگشتی دستکاری کنه و بدون کسرِ واقعی از
+   * کیفش همون تخفیف رو بگیره. */
+  walletApplied?: number;
 };
 
 function secret(): string {
@@ -41,10 +44,10 @@ function canonical(p: CheckoutParams): string {
     String(p.discountPercent),
     p.referralUsageId || "",
     p.discountCodeId || "",
-    p.inviterRewardId || "",
     p.upgradeFromSubId || "",
     // فقط وقتی هست اضافه می‌شه تا امضای پرداخت‌های در جریان قبل از این تغییر معتبر بمونه
     ...(p.achievementRewardId ? [`ach:${p.achievementRewardId}`] : []),
+    ...(p.walletApplied ? [`wal:${p.walletApplied}`] : []),
   ].join("|");
 }
 

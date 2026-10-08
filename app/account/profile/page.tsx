@@ -17,7 +17,8 @@ import { getBodyMetrics, saveBodyMetrics } from "@/lib/bodyMetrics";
 import { isValidUsername, isValidPersianName } from "@/lib/validate";
 import { ImageCropModal } from "@/components/ImageCropModal";
 import { AvatarSheet } from "@/components/AvatarSheet";
-import { CUSTOM_REFERRAL_CODE_RE, REFERRAL_DISCOUNT_PERCENT, REFERRAL_INVITER_REWARD_PERCENT, normalizeReferralCode } from "@/lib/referral";
+import { CUSTOM_REFERRAL_CODE_RE, REFERRAL_DISCOUNT_PERCENT, normalizeReferralCode } from "@/lib/referral";
+import { formatPriceAmount } from "@/lib/formatPrice";
 import { faNum } from "@/lib/jalali";
 import { Spinner } from "@/components/Spinner";
 
@@ -71,7 +72,7 @@ export default function AccountProfilePage() {
   // کد دعوت — اسمش رو خود کاربر انتخاب می‌کنه (/api/account/referral، lib/referral.ts)
   const [refCode, setRefCode] = useState("");
   const [savedRefCode, setSavedRefCode] = useState<string | null>(null);
-  const [refStats, setRefStats] = useState<{ invitedPaid: number; rewardsAvailable: number } | null>(null);
+  const [refStats, setRefStats] = useState<{ invitedPaid: number; walletBalance: number } | null>(null);
   const [birthDate, setBirthDate] = useState<JalaliDate | null>(null);
   const [dobOpen, setDobOpen] = useState(false);
   const [gender, setGender] = useState<"male" | "female" | "unset">("unset");
@@ -109,7 +110,7 @@ export default function AccountProfilePage() {
         if (!d) return;
         setRefCode(d.code ?? "");
         setSavedRefCode(d.code ?? null);
-        setRefStats({ invitedPaid: d.invitedPaid ?? 0, rewardsAvailable: d.rewardsAvailable ?? 0 });
+        setRefStats({ invitedPaid: d.invitedPaid ?? 0, walletBalance: d.walletBalance ?? 0 });
       })
       .catch(() => {});
     getAvatarUrl().then(setAvatarUrl);
@@ -434,7 +435,7 @@ export default function AccountProfilePage() {
       <AccountBlock
         title="کد دعوت"
         icon={<Gift size={15} />}
-        desc={`دوستت با کدت روی اولین خریدش ${faNum(REFERRAL_DISCOUNT_PERCENT)}٪ تخفیف می‌گیره (هر نفر فقط یک بار)، و تو به‌ازای هر دوستی که خرید کنه یک بار ${faNum(REFERRAL_INVITER_REWARD_PERCENT)}٪ تخفیف روی خرید بعدیت.`}
+        desc={`دوستت با کدت روی اولین خریدش ${faNum(REFERRAL_DISCOUNT_PERCENT)}٪ تخفیف می‌گیره (هر نفر فقط یک بار)، و تو به‌ازای هر دوستی که با پول واقعی خرید کنه ۱۰٪ از همون مبلغ به‌صورت اعتبار داخلِ کیفِ خودت واریز می‌شه — فقط برای کم‌کردنِ قیمتِ خریدِ پلن بعدی، نه قابل‌برداشت.`}
         index={1}
       >
         <div className="acc-field-stack">
@@ -448,8 +449,7 @@ export default function AccountProfilePage() {
           </AuthField>
           {refStats && (
             <p className="acc-option-desc">
-              {faNum(refStats.invitedPaid)} دوست با کدت خرید کردن · {faNum(refStats.rewardsAvailable)} تخفیف {faNum(REFERRAL_INVITER_REWARD_PERCENT)}٪ آماده‌ی استفاده
-              {refStats.rewardsAvailable > 0 ? " (خودکار روی خرید بعدیت اعمال می‌شه)" : ""}
+              {faNum(refStats.invitedPaid)} دوست با کدت خرید کردن · موجودیِ کیف: {formatPriceAmount(refStats.walletBalance)}
             </p>
           )}
         </div>

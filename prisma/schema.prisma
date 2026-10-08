@@ -72,6 +72,12 @@ enum PartnerType {
   OTHER
 }
 
+enum WalletTransactionType {
+  REFERRAL_REWARD     // ۱۰٪ مبلغ خریدِ دعوت‌شونده، واریز به کیفِ دعوت‌کننده
+  CHECKOUT_REDEMPTION // استفاده از موجودیِ کیف برای کم‌کردن مبلغ یک خرید
+  ADMIN_ADJUSTMENT    // اصلاح دستی توسط Owner (ندرتاً، مثلاً جبرانِ خطا)
+}
+
 enum FriendshipStatus {
   PENDING
   ACCEPTED
@@ -194,6 +200,13 @@ model User {
   // رفرال — کد خود کاربر برای دعوت دیگران
   referralCode            ReferralCode?
   referralUsagesAsInvitee ReferralUsage[] @relation("InviteeUsages")
+
+  // کیفِ اعتبارِ رفرال — فقط داخلِ همین اپ قابل‌خرج (کم‌کردن از مبلغِ خریدِ
+  // پلن)، هیچ مسیرِ برداشت/انتقال/اتصال به شبکه‌ی بانکی یا کیف دیگری ندارد.
+  // واحد: به کوچک‌ترین واحدِ ارزِ بازارِ کاربر (ریال برای ایران، سنت برای
+  // بین‌المللی) — هم‌راستا با Plan.priceMonthly/Payment.amount.
+  walletBalance        Int      @default(0)
+  walletTransactions   WalletTransaction[]
 
   // اگر کاربر از طریق باشگاه اومده
   gymPartnerId String?
@@ -493,10 +506,11 @@ model Payment {
   subscriptionId String
   subscription   Subscription @relation(fields: [subscriptionId], references: [id], onDelete: Cascade)
 
-  amount      Int // واحد کوچک ارز، بعد از اعمال تخفیف
-  currency    Currency
-  provider    String // zarinpal | stripe | ...
-  providerRef String? // شناسه تراکنش سمت درگاه
+  amount              Int    // واحد کوچک ارز، بعد از اعمال تخفیف و بعد از کسرِ سهمِ کیفِ اعتبار — یعنی دقیقاً همان مبلغی که درگاه واقعاً دریافت کرده
+  walletAmountApplied Int    @default(0) // بخشی از قیمتِ این خرید که از کیفِ اعتبارِ کاربر کسر شد (نه از درگاه) — فقط برای حسابرسی/نمایش در پنل کاربری/Owner
+  currency            Currency
+  provider            String // zibal | ...
+  providerRef         String? // شناسه تراکنش سمت درگاه
 
   // برای محاسبه سهم باشگاه از سود واقعی، نه از قیمت لیست
   gymRevenueShareAmount Int? // مبلغی که باید به باشگاه پرداخت شود (۱۵٪ سهم)
@@ -549,11 +563,16 @@ model ReferralUsage {
 
   status ReferralUsageStatus @default(PENDING)
 
-  // status=REWARDED یعنی دعوت‌شونده خرید اولش رو با این کد کرد (10٪ گرفت)؛ از همون
-  // لحظه صاحب کد یک بار 15٪ روی خرید بعدی خودش داره و inviterRewardApplied یعنی
-  // اون پاداش مصرف شده (lib/referral.ts). inviteeRewardApplied فعلا استفاده نمی‌شه.
+  // پاداشِ دعوت‌کننده: ۱۰٪ مبلغِ همین خرید، به‌صورتِ اعتبار داخلِ کیفِ خودش
+  // (نه تخفیفِ خریدِ بعدی) — inviterRewardApplied یعنی این مبلغ واقعاً به کیفِ
+  // دعوت‌کننده واریز شده (lib/wallet.ts). inviteeRewardApplied برای فازِ بعدی/پاداشِ
+  // احتمالیِ طرفِ دعوت‌شونده نگه داشته شده، فعلاً پاداشِ دعوت‌شونده فقط همون ۱۰٪
+  // تخفیفِ لحظه‌ی خرید است (در Subscription.discountPercent).
   inviterRewardApplied Boolean @default(false)
   inviteeRewardApplied Boolean @default(false)
+  // مبلغِ دقیقی که به کیفِ دعوت‌کننده واریز شد (به واحدِ ارزِ همین خرید) — برای
+  // تطبیق با WalletTransaction.amount و نمایش در تاریخچه/پنل Owner
+  rewardAmount Int?
 
   subscriptions Subscription[] // اشتراک‌هایی که این کد تخفیف را گرفتند
 
@@ -623,6 +642,29 @@ model Partner {
   users User[] @relation("GymUsers")
 
   @@index([market])
+}
+
+// دفترِ تراکنش‌های append-only کیفِ اعتبار — هیچ UPDATE/DELETE ای روش انجام
+// نمی‌شود، فقط ردیفِ جدید اضافه می‌شود (موجودیِ لحظه‌ای هم‌زمان با هر تراکنش
+// در User.walletBalance نگه داشته می‌شود تا خوانده‌شدنِ موجودی نیاز به SUM
+// نداشته باشد؛ balanceAfter اینجا برای نمایشِ تاریخچه/حسابرسی است).
+model WalletTransaction {
+  id              String                @id @default(cuid())
+  userId          String
+  user            User                  @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  type            WalletTransactionType
+  amount          Int                   // مثبت = واریز به کیف، منفی = خرجِ کیف در یک خرید (هیچ‌وقت برداشتِ بانکی)
+  balanceAfter    Int
+
+  referralUsageId String?               // فقط برای type=REFERRAL_REWARD
+  paymentId       String?               // فقط برای type=CHECKOUT_REDEMPTION — Payment همان خریدی که کیف صرفش شد
+
+  description     String
+
+  createdAt       DateTime              @default(now())
+
+  @@index([userId, createdAt])
 }
 
 // ============================================================================

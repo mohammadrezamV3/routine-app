@@ -60,11 +60,11 @@ describe("آستانه‌ی پاداش", () => {
     for (const m of [3, 6, 12, 2]) expect(isMonthlyOption(m)).toBe(false);
   });
   it("بیشترین درصد برنده‌ست، جمع نمی‌شه، تساوی به نفع کد", () => {
-    expect(pickBestDiscount([{ source: "code", percent: 10 }, { source: "inviter", percent: 15 }, { source: "achievement", percent: 50 }])).toEqual({ source: "achievement", percent: 50 });
-    expect(pickBestDiscount([{ source: "code", percent: 30 }, { source: "inviter", percent: 15 }, { source: "achievement", percent: 20 }])).toEqual({ source: "code", percent: 30 });
-    expect(pickBestDiscount([{ source: "code", percent: 20 }, { source: "inviter", percent: 0 }, { source: "achievement", percent: 20 }])).toEqual({ source: "code", percent: 20 });
-    expect(pickBestDiscount([{ source: "code", percent: 0 }, { source: "inviter", percent: 15 }, { source: "achievement", percent: 20 }])).toEqual({ source: "achievement", percent: 20 });
-    expect(pickBestDiscount([{ source: "code", percent: 0 }, { source: "inviter", percent: 0 }, { source: "achievement", percent: 0 }])).toBeNull();
+    expect(pickBestDiscount([{ source: "code", percent: 10 }, { source: "achievement", percent: 50 }])).toEqual({ source: "achievement", percent: 50 });
+    expect(pickBestDiscount([{ source: "code", percent: 30 }, { source: "achievement", percent: 20 }])).toEqual({ source: "code", percent: 30 });
+    expect(pickBestDiscount([{ source: "code", percent: 20 }, { source: "achievement", percent: 20 }])).toEqual({ source: "code", percent: 20 });
+    expect(pickBestDiscount([{ source: "code", percent: 0 }, { source: "achievement", percent: 20 }])).toEqual({ source: "achievement", percent: 20 });
+    expect(pickBestDiscount([{ source: "code", percent: 0 }, { source: "achievement", percent: 0 }])).toBeNull();
   });
   it("اول 50٪ مصرف می‌شه، مصرف‌شده دیگه انتخاب نمی‌شه", () => {
     const rows = [{ tier: "half", usedAt: null }, { tier: "full", usedAt: null }];

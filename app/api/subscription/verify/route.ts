@@ -6,8 +6,7 @@ import { zibalVerify } from "@/lib/zibal";
 import { getSiteUrl } from "@/lib/siteUrl";
 import { isDuration, PRICING_LIMITS } from "@/lib/planPricing";
 import { verifyCheckoutSignature } from "@/lib/checkoutSignature";
-import { consumeAchievementReward } from "@/lib/achievementsServer";
-import { isMonthlyOption } from "@/lib/achievementRewards";
+import { activateSubscription } from "@/lib/subscriptionActivation";
 
 // پنل Owner › تراکنش‌ها/Funnel — تنها جایی که پرداخت ناموفق/رهاشده واقعا
 // جایی ثبت می‌شه؛ جدول Payment فقط پرداخت verify-شده‌ی موفق رو داره
@@ -17,11 +16,11 @@ function logCheckoutFailed(userId: string | undefined, reason: string) {
   prisma.analyticsEvent.create({ data: { userId: userId || null, type: "checkout_failed", meta: { reason } } }).catch(() => {});
 }
 
-// GET /api/subscription/verify → مرورگر کاربر بعد پرداخت از زرین‌پال
-// اینجا برمی‌گرده (Authority/Status توی query). مبلغ رو مستقیم از همون
-// query که خودمون موقع ساخت callback_url ساختیم می‌خونیم — امنیتش با
-// verify خود زرین‌پال تضمین می‌شه (اگه کسی این مبلغ رو دستکاری کنه،
-// verify روی زرین‌پال با مبلغ واقعا پرداخت‌شده مچ نمی‌شه و fail می‌شه).
+// GET /api/subscription/verify → مرورگر کاربر بعد پرداخت از زیبال
+// اینجا برمی‌گرده (trackId/success توی query). پلن/مدت/مبلغ/تخفیف همه با
+// امضای HMAC خود این اپ تضمین می‌شن (lib/checkoutSignature.ts) — زیبال فقط
+// تضمین می‌کنه «مبلغ» با پرداخت واقعی یکیه، نه این‌که این مبلغ قیمت کدوم
+// پلن بوده.
 export async function GET(req: NextRequest) {
   const session = await getServerSession(authOptions);
   const userId = (session?.user as any)?.id;
@@ -70,16 +69,16 @@ export async function GET(req: NextRequest) {
   const discountPercent = Number(searchParams.get("discountPercent") || 0);
   const referralUsageId = searchParams.get("referralUsageId") || undefined;
   const discountCodeId = searchParams.get("discountCodeId") || undefined;
-  const inviterRewardId = searchParams.get("inviterRewardId") || undefined;
   const upgradeFromSubId = searchParams.get("upgradeFromSubId") || undefined;
   const achievementRewardId = searchParams.get("achievementRewardId") || undefined;
+  const walletApplied = Number(searchParams.get("walletApplied") || 0);
 
   if (!planKey || !duration || !amount || !Number.isInteger(months) || months < PRICING_LIMITS.minMonths || months > PRICING_LIMITS.maxMonths) {
     return failRedirect("invalid_params", userId, planKey, durationRaw);
   }
-  // پلن/مدت/مبلغ/تخفیف همه با امضای checkout مطابقت داده می‌شن؛ زیبال فقط
-  // مبلغ رو تضمین می‌کنه، نه این‌که این مبلغ قیمت کدوم پلن بوده.
-  if (!verifyCheckoutSignature({ userId, planKey, duration, months, amount, discountPercent, referralUsageId, discountCodeId, inviterRewardId, upgradeFromSubId, achievementRewardId }, searchParams.get("sig"))) {
+  // پلن/مدت/مبلغ/تخفیف/مبلغِ کیف همه با امضای checkout مطابقت داده می‌شن؛
+  // زیبال فقط مبلغ رو تضمین می‌کنه، نه این‌که این مبلغ قیمت کدوم پلن بوده.
+  if (!verifyCheckoutSignature({ userId, planKey, duration, months, amount, discountPercent, referralUsageId, discountCodeId, upgradeFromSubId, achievementRewardId, walletApplied }, searchParams.get("sig"))) {
     return failRedirect("bad_signature", userId, planKey, duration);
   }
 
@@ -103,101 +102,28 @@ export async function GET(req: NextRequest) {
     return failRedirect("verify_rejected", userId, planKey, duration);
   }
 
-  const plan = await prisma.plan.findUnique({
-    where: { key_market: { key: planKey, market: "IRAN" } },
-    include: { modules: true },
-  });
-  if (!plan) {
-    return failRedirect("plan_not_found", userId, planKey, duration);
-  }
-
-  const currentPeriodEnd = new Date();
-  currentPeriodEnd.setMonth(currentPeriodEnd.getMonth() + months);
-
-  // ارتقا به مکس: سقف انقضا مستقلا از دیتابیس (نه از روی query که کاربر
-  // می‌تونه توی URL بازگشت از درگاه دستکاری‌اش کنه) خونده می‌شه — where
-  // شامل userId هم هست تا حتی با دستکاری id، کاربر فقط بتونه یکی از
-  // اشتراک‌های خودش رو مبنا بگیره، نه یه اشتراک کاربر دیگه.
-  if (upgradeFromSubId) {
-    const sourceSub = await prisma.subscription.findFirst({ where: { id: upgradeFromSubId, userId }, select: { currentPeriodEnd: true } });
-    if (sourceSub && sourceSub.currentPeriodEnd.getTime() < currentPeriodEnd.getTime()) {
-      currentPeriodEnd.setTime(sourceSub.currentPeriodEnd.getTime());
-    }
-  }
-
-  const subscription = await prisma.subscription.create({
-    data: {
+  let result: { subscriptionId: string };
+  try {
+    result = await activateSubscription({
       userId,
-      planId: plan.id,
-      status: "ACTIVE",
-      interval: months >= 12 ? "YEARLY" : "MONTHLY",
-      currentPeriodEnd,
+      planKey,
+      months,
       discountPercent,
-      appliedReferralUsageId: referralUsageId,
-      payments: {
-        create: {
-          amount,
-          currency: "IRR",
-          provider: "zibal",
-          providerRef: verified.refId,
-          paidAt: new Date(),
-        },
-      },
-    },
-  });
-
-  // دسترسی ماژول‌های پلن: هر ماژول پلن (از جمله «روتین من» — دیگه رایگان
-  // نیست) یک ردیف ModuleAccess با انقضای پایان دوره. اگه ردیف فعلی دیرتر
-  // منقضی می‌شد (مثلا از خرید پلن بلندتری) همون حفظ می‌شه — خرید پلن
-  // کوتاه‌تر هیچ‌وقت دسترسی باقی‌مونده رو کوتاه نمی‌کنه.
-  const planModules = plan.modules.map((m) => m.module);
-  const existing = await prisma.moduleAccess.findMany({
-    where: { userId, module: { in: planModules } },
-    select: { module: true, active: true, expiresAt: true },
-  });
-  const keepUntil = new Map(existing.filter((r) => r.active).map((r) => [r.module, r.expiresAt]));
-  await prisma.moduleAccess.deleteMany({ where: { userId, module: { in: planModules } } });
-  await prisma.moduleAccess.createMany({
-    data: planModules.map((module) => {
-      const prev = keepUntil.get(module);
-      const expiresAt = prev === null ? null : prev && prev > currentPeriodEnd ? prev : currentPeriodEnd;
-      return { userId, module, active: true, expiresAt };
-    }),
-  });
-
-  // شرط «اولین پرداخت موفق» برای کد رفرال محقق شد — وضعیت REWARDED می‌شه و
-  // از همین لحظه صاحب کد یک پاداش ۱۵٪ برای خرید بعدی خودش داره (lib/referral.ts).
-  // where شامل inviteeUserId هست تا id دستکاری‌شده‌ی query مال کاربر دیگه‌ای نباشه.
-  if (referralUsageId) {
-    await prisma.referralUsage.updateMany({
-      where: { id: referralUsageId, inviteeUserId: userId, status: "PENDING" },
-      data: { status: "REWARDED", rewardedAt: new Date() },
-    }).catch(() => {});
-  }
-
-  // مصرف پاداش دعوت صاحب کد — فقط پاداشی که واقعا مال همین کاربره و هنوز مصرف نشده
-  if (inviterRewardId) {
-    await prisma.referralUsage.updateMany({
-      where: { id: inviterRewardId, status: "REWARDED", inviterRewardApplied: false, referralCode: { userId } },
-      data: { inviterRewardApplied: true },
-    }).catch(() => {});
-  }
-
-  // مصرف پاداش اچیومنت — فقط بعد از پرداخت موفق، فقط روی خرید یک‌ماهه و فقط
-  // پاداشی که مال همین کاربره و هنوز مصرف نشده (اجرای دوباره‌ی verify اثری نداره)
-  if (achievementRewardId && isMonthlyOption(months)) {
-    await consumeAchievementReward(achievementRewardId, userId, subscription.id).catch(() => {});
-  }
-
-  // مصرف کد تخفیف عمومی (DiscountCode) فقط اینجا، بعد verify شدن واقعی
-  // پرداخت، ثبت می‌شه — نه موقع پیش‌نمایش/اعمال توی چک‌اوت — تا سقف
-  // maxUsesPerUser واقعا روی خریدهای موفق حساب بشه، نه تلاش‌های ناتمام.
-  if (discountCodeId) {
-    await prisma.discountCodeUsage.create({ data: { discountCodeId, userId } }).catch(() => {});
+      referralUsageId,
+      discountCodeId,
+      achievementRewardId,
+      upgradeFromSubId,
+      amountCharged: amount,
+      walletApplied,
+      provider: "zibal",
+      providerRef: verified.refId,
+    });
+  } catch {
+    return failRedirect("plan_not_found", userId, planKey, duration);
   }
 
   const okUrl = new URL("/subscription", siteUrl);
   okUrl.searchParams.set("checkout", "success");
-  okUrl.searchParams.set("sub", subscription.id);
+  okUrl.searchParams.set("sub", result.subscriptionId);
   return NextResponse.redirect(okUrl);
 }

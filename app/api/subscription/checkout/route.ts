@@ -8,10 +8,12 @@ import { getPricingConfig } from "@/lib/planPricingServer";
 import { signCheckoutParams } from "@/lib/checkoutSignature";
 import { zibalRequest } from "@/lib/zibal";
 import { getSiteUrl } from "@/lib/siteUrl";
-import { resolveDiscountCode, findInviterRewards, REFERRAL_INVITER_REWARD_PERCENT } from "@/lib/discountValidation";
+import { resolveDiscountCode } from "@/lib/discountValidation";
 import { findAchievementReward } from "@/lib/achievementsServer";
 import { isMonthlyOption, pickBestDiscount } from "@/lib/achievementRewards";
 import { findUpgradeSource, computeUpgradePricing, UPGRADE_TARGET_PLAN_KEY } from "@/lib/planUpgrade";
+import { clampWalletApply } from "@/lib/wallet";
+import { activateSubscription } from "@/lib/subscriptionActivation";
 
 // زرین‌پال طبق درخواست صریح کامل از پروژه حذف شد — زیبال تنها درگاهه.
 const GATEWAYS = ["zibal"] as const;
@@ -41,8 +43,8 @@ export async function POST(req: NextRequest) {
     }
 
     const body = await req.json();
-    const { planKey, duration, discountCode, gateway: rawGateway } = body as {
-      planKey: string; duration: Duration; discountCode?: string; gateway?: string;
+    const { planKey, duration, discountCode, gateway: rawGateway, useWalletCredit } = body as {
+      planKey: string; duration: Duration; discountCode?: string; gateway?: string; useWalletCredit?: boolean;
     };
     const gateway: Gateway = GATEWAYS.includes(rawGateway as Gateway) ? (rawGateway as Gateway) : "zibal";
 
@@ -52,7 +54,7 @@ export async function POST(req: NextRequest) {
 
     // نسخه‌ی بین‌المللی طبق درخواست صریح کامل حذف شد؛ همه‌ی کاربرها بازار
     // ایران‌اند، پس دیگر چک market لازم نیست.
-    const user = await prisma.user.findUnique({ where: { id: userId }, select: { id: true } });
+    const user = await prisma.user.findUnique({ where: { id: userId }, select: { id: true, walletBalance: true } });
     if (!user) return NextResponse.json({ error: "not found" }, { status: 404 });
 
     // قیمت و تعداد ماه از پیکربندی پنل ادمین (/admin/pricing)، تازه از دیتابیس
@@ -76,7 +78,6 @@ export async function POST(req: NextRequest) {
     let discountPercent = 0;
     let referralUsageId: string | undefined;
     let discountCodeId: string | undefined;
-    let inviterRewardId: string | undefined;
     let achievementRewardId: string | undefined;
     let discountApplied = false;
     let resolution: Awaited<ReturnType<typeof resolveDiscountCode>> | null = null;
@@ -88,25 +89,18 @@ export async function POST(req: NextRequest) {
         return NextResponse.json({ error: resolution.error }, { status: 400 });
       }
     }
-    // پاداش دعوت صاحب کد (lib/referral.ts) و پاداش اچیومنت‌ها (lib/achievementRewards.ts،
-    // فقط گزینه‌ی یک‌ماهه) خودکار اعمال می‌شن؛ هیچ‌کدوم با کد تخفیف جمع نمی‌شن —
-    // بیشترین درصد برنده‌ست و اونی که استفاده نشد مصرف هم نمی‌شه.
-    const [reward, achReward] = await Promise.all([
-      findInviterRewards(userId),
-      isMonthlyOption(months) ? findAchievementReward(userId) : Promise.resolve(null),
-    ]);
+    // پاداش اچیومنت‌ها (lib/achievementRewards.ts، فقط گزینه‌ی یک‌ماهه) خودکار
+    // اعمال می‌شه؛ با کد تخفیف جمع نمی‌شه — بیشترین درصد برنده‌ست و اونی که
+    // استفاده نشد مصرف هم نمی‌شه. پاداشِ دعوت دیگه تخفیف نیست — اعتبار کیفه
+    // که بعد از خریدِ موفقِ *این* کاربر به صاحبِ کد واریز می‌شه (lib/wallet.ts).
+    const achReward = isMonthlyOption(months) ? await findAchievementReward(userId) : null;
     const best = pickBestDiscount([
       { source: "code", percent: resolution?.ok ? resolution.percent : 0 },
-      { source: "inviter", percent: reward.nextUsageId ? REFERRAL_INVITER_REWARD_PERCENT : 0 },
       { source: "achievement", percent: achReward?.percent ?? 0 },
     ]);
     if (best?.source === "achievement" && achReward) {
       discountPercent = achReward.percent;
       achievementRewardId = achReward.id;
-      discountApplied = true;
-    } else if (best?.source === "inviter" && reward.nextUsageId) {
-      discountPercent = REFERRAL_INVITER_REWARD_PERCENT;
-      inviterRewardId = reward.nextUsageId;
       discountApplied = true;
     } else if (resolution?.ok) {
       discountPercent = resolution.percent;
@@ -139,17 +133,47 @@ export async function POST(req: NextRequest) {
     }
     const finalAmount = discountPercent > 0 ? Math.round((baseAmount * (100 - discountPercent)) / 100) : baseAmount;
 
+    // کیفِ اعتبار فقط اگه کاربر صریحاً خواسته باشه (useWalletCredit) اعمال می‌شه،
+    // و هیچ‌وقت بیشتر از موجودیِ واقعی یا بیشتر از خودِ قیمت (clampWalletApply).
+    const walletApplied = useWalletCredit ? clampWalletApply(user.walletBalance, user.walletBalance, finalAmount) : 0;
+    const amountToCharge = finalAmount - walletApplied;
+
+    if (amountToCharge === 0) {
+      // کیفِ اعتبار به‌تنهایی کل قیمت رو پوشش داد — بدونِ تماس با درگاه،
+      // مستقیم فعال‌سازی. amountCharged صفره، پس پاداشِ رفرالی هم روی این
+      // خرید حساب نمی‌شه (قاعده‌ی ضدتورم توی lib/subscriptionActivation.ts).
+      const result = await activateSubscription({
+        userId,
+        planKey,
+        months,
+        discountPercent,
+        referralUsageId,
+        discountCodeId,
+        achievementRewardId,
+        upgradeFromSubId,
+        amountCharged: 0,
+        walletApplied,
+        provider: "wallet",
+      });
+      prisma.analyticsEvent.create({ data: { userId, type: "checkout_start", meta: { planKey, duration, gateway: "wallet" } } }).catch(() => {});
+      return NextResponse.json({
+        paymentUrl: null,
+        redirectUrl: `/subscription?checkout=success&sub=${result.subscriptionId}`,
+        discountApplied,
+      });
+    }
+
     // از NEXTAUTH_URL ساخته می‌شود، نه از origin درخواست — دلیل کامل در
     // lib/siteUrl.ts. خلاصه‌اش: پشت nginx، origin می‌تواند http یا
     // localhost دربیاید و زیبال آدرس بازگشت نامعتبر را با کد ۱۰۶ رد می‌کند.
     const origin = getSiteUrl(req.nextUrl.origin);
-    // پلن/مدت/ماه/مبلغ با HMAC امضا می‌شن (lib/checkoutSignature.ts) تا
-    // verify به هیچ پارامتر دستکاری‌شده‌ای از URL بازگشت اعتماد نکنه.
-    const sig = signCheckoutParams({ userId, planKey, duration, months, amount: finalAmount, discountPercent, referralUsageId, discountCodeId, inviterRewardId, achievementRewardId, upgradeFromSubId });
-    const callbackUrl = `${origin}/api/subscription/verify?gateway=${gateway}&planKey=${encodeURIComponent(planKey)}&duration=${duration}&months=${months}&amount=${finalAmount}&discountPercent=${discountPercent}${referralUsageId ? `&referralUsageId=${referralUsageId}` : ""}${discountCodeId ? `&discountCodeId=${discountCodeId}` : ""}${inviterRewardId ? `&inviterRewardId=${inviterRewardId}` : ""}${achievementRewardId ? `&achievementRewardId=${achievementRewardId}` : ""}${upgradeFromSubId ? `&upgradeFromSubId=${upgradeFromSubId}` : ""}&sig=${sig}`;
+    // پلن/مدت/ماه/مبلغ/مبلغِ کیف با HMAC امضا می‌شن (lib/checkoutSignature.ts)
+    // تا verify به هیچ پارامتر دستکاری‌شده‌ای از URL بازگشت اعتماد نکنه.
+    const sig = signCheckoutParams({ userId, planKey, duration, months, amount: amountToCharge, discountPercent, referralUsageId, discountCodeId, upgradeFromSubId, achievementRewardId, walletApplied });
+    const callbackUrl = `${origin}/api/subscription/verify?gateway=${gateway}&planKey=${encodeURIComponent(planKey)}&duration=${duration}&months=${months}&amount=${amountToCharge}&discountPercent=${discountPercent}${referralUsageId ? `&referralUsageId=${referralUsageId}` : ""}${discountCodeId ? `&discountCodeId=${discountCodeId}` : ""}${upgradeFromSubId ? `&upgradeFromSubId=${upgradeFromSubId}` : ""}${achievementRewardId ? `&achievementRewardId=${achievementRewardId}` : ""}${walletApplied ? `&walletApplied=${walletApplied}` : ""}&sig=${sig}`;
 
     const description = `خرید ${pricing.nameFa} — ${months} ماهه`;
-    const { paymentUrl } = await zibalRequest(finalAmount, callbackUrl, description);
+    const { paymentUrl } = await zibalRequest(amountToCharge, callbackUrl, description);
     // پنل Owner › Funnel — «شروع خرید» فقط وقتی ثبت می‌شه که واقعا درخواست
     // پرداخت به درگاه با موفقیت ساخته شده باشه (نه هر کلیک فرانت)
     prisma.analyticsEvent.create({ data: { userId, type: "checkout_start", meta: { planKey, duration, gateway } } }).catch(() => {});
