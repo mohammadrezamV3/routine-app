@@ -1,70 +1,72 @@
 "use client";
 
-import { useCallback, useEffect, useState } from "react";
-import { BellRing } from "lucide-react";
+import { useState } from "react";
+import { Check } from "lucide-react";
 import { SegmentedTabs } from "./SegmentedTabs";
 import { Spinner } from "./Spinner";
 import { mentorApi } from "./MentorDashKit";
-import { MI, MI_STROKE, MentorField, MentorSection } from "./MentorUI";
+import { MI, MI_STROKE, MentorField } from "./MentorUI";
 import type { AlertsResponse } from "@/lib/mentorToolsTypes";
 
-type Choice = "off" | "2" | "3" | "5" | "7";
-const OPTIONS: { value: Choice; label: string }[] = [
-  { value: "off", label: "خاموش" },
+export type AlertChoice = "off" | "2" | "3" | "5" | "7";
+const OPTIONS: { value: AlertChoice; label: string }[] = [
   { value: "2", label: "2 روز" },
   { value: "3", label: "3 روز" },
   { value: "5", label: "5 روز" },
   { value: "7", label: "7 روز" },
+  { value: "off", label: "خاموش" },
 ];
 
-function toChoice(n: number | null): Choice {
+export function alertToChoice(n: number | null | undefined): AlertChoice {
   if (n == null) return "off";
-  const s = String(n) as Choice;
+  const s = String(n) as AlertChoice;
   return OPTIONS.some((o) => o.value === s) ? s : "3";
 }
 
+export function alertValueText(c: AlertChoice | null): string {
+  if (c === null) return "";
+  return c === "off" ? "خاموش" : `بعد از ${c} روز`;
+}
+
 /**
- * بخش تنظیمات «هشدار پایبندی» برای /mentor/settings: وقتی شاگرد n روز
- * برنامه‌دار پشت‌سرهم هیچ آیتمی انجام نداد، اعلان درون‌برنامه‌ای برای منتور
- * ساخته می‌شود (با لود پنل منتور؛ یک بار برای هر دوره‌ی بی‌کاری). انتخاب
- * همان لحظه ذخیره می‌شود.
+ * برگه‌ی «یادآور بی‌خبری شاگرد»: وقتی شاگرد n روز برنامه‌دار پشت سر هم هیچ کاری نکرد،
+ * یک اعلان برای مربی ساخته می‌شه (برای هر دوره یک بار). با دکمه‌ی ذخیره ثبت می‌شه.
  */
-export function MentorAlertsSettings() {
-  const [value, setValue] = useState<Choice | null>(null);
+export function MentorAlertsSettings({
+  initial, onSaved, onDone,
+}: { initial: AlertChoice; onSaved: (v: AlertChoice) => void; onDone?: () => void }) {
+  const [value, setValue] = useState<AlertChoice>(initial);
   const [saving, setSaving] = useState(false);
+  const [saved, setSaved] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
-  const load = useCallback(async () => {
-    const r = await mentorApi<AlertsResponse>("/api/mentor/alerts");
-    if (!r.ok) { setError(r.error); return; }
-    setValue(toChoice(r.data.alertMissedDays));
-  }, []);
-
-  useEffect(() => { load(); }, [load]);
-
-  async function change(v: Choice) {
-    const prev = value;
-    setValue(v);
+  async function save(e: React.FormEvent) {
+    e.preventDefault();
+    if (saving) return;
     setSaving(true);
     setError(null);
-    const r = await mentorApi<AlertsResponse>("/api/mentor/alerts", { method: "PUT", body: { alertMissedDays: v === "off" ? null : Number(v) } });
+    const r = await mentorApi<AlertsResponse>("/api/mentor/alerts", { method: "PUT", body: { alertMissedDays: value === "off" ? null : Number(value) } });
     setSaving(false);
-    if (!r.ok) { setValue(prev); setError(r.error); }
+    if (!r.ok) { setError(r.error); return; }
+    setSaved(true);
+    onSaved(value);
+    onDone?.();
   }
 
   return (
-    <MentorSection title="هشدار پایبندی" icon={<BellRing size={MI.section} strokeWidth={MI_STROKE} aria-hidden />} action={saving ? <Spinner size={14} /> : undefined}>
+    <form onSubmit={save} noValidate className="mentor-form mv2-set-form">
       <MentorField
-        label="هشدار وقتی شاگرد چند روز پشت‌سرهم برنامه را انجام نداد"
-        hint="فقط روزهایی که طبق برنامه آیتمی داشته‌اند شمرده می‌شوند؛ برای هر دوره یک اعلان"
+        label="وقتی شاگرد چند روز پشت سر هم برنامه رو انجام نداد خبرم کن"
+        hint="فقط روزهایی که طبق برنامه کاری داشته شمرده می‌شن؛ برای هر دوره یک اعلان"
         error={error}
       >
-        {value === null ? (
-          error ? null : <Spinner size={14} />
-        ) : (
-          <SegmentedTabs<Choice> active={value} onChange={change} options={OPTIONS} />
-        )}
+        <SegmentedTabs<AlertChoice> active={value} onChange={(v) => { setValue(v); setSaved(false); setError(null); }} options={OPTIONS} />
       </MentorField>
-    </MentorSection>
+      <div className="mentor-form-actions" style={{ marginTop: 0 }}>
+        <button type="submit" className="trade-primary-btn mentor-btn" disabled={saving}>
+          {saving ? <Spinner size={14} /> : saved ? <><Check size={MI.btn} strokeWidth={MI_STROKE} aria-hidden /> ذخیره شد</> : "ذخیره"}
+        </button>
+      </div>
+    </form>
   );
 }
