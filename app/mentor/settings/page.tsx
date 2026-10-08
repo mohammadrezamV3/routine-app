@@ -150,7 +150,7 @@ function MentorSettings() {
 
       <MentorSheet open={sheet !== null} onClose={close} title={sheet ? SHEET_TITLE[sheet] : undefined} size="sm">
         {sheet === "availability" && (
-          <MentorAvailabilityQuick initial={data} onChange={(d) => patch({ settings: d })} />
+          <MentorAvailabilityQuick bare initial={data} onChange={(d) => patch({ settings: d })} />
         )}
         {(sheet === "capacity" || sheet === "response" || sheet === "intake") && (
           <MentorSettingsForm
