@@ -148,9 +148,9 @@ function LetterBody({ data, onGo, reload }: { data: LiveWeekPayload; onGo: (w: s
   const chapters = useMemo(() => {
     const c: (TocItem & { show: boolean })[] = [
       { id: "wl-days", label: "روز به روز", show: hasData && letter.days.length > 0 },
-      { id: "wl-domains", label: "بخش‌ها", show: letter.domains.length > 0 },
+      { id: "wl-domains", label: "بخش‌ها", show: hasData && letter.domains.length > 0 },
       { id: "matrix", label: "نقشه‌ی هفته", show: hasMatrix },
-      { id: "wl-numbers", label: "عددها و روند", show: letter.numbers.length > 0 || letter.trend.length > 1 },
+      { id: "wl-numbers", label: "عددها و روند", show: hasData && (letter.numbers.length > 0 || letter.trend.length > 1) },
       { id: "wl-insights", label: "بینش‌ها", show: letter.insights.length > 0 },
       { id: "wl-wins", label: "بردها", show: letter.wins.length > 0 || letter.improve.length > 0 },
       { id: "coach", label: "حرف مربی", show: hasCoach },
@@ -194,7 +194,7 @@ function LetterBody({ data, onGo, reload }: { data: LiveWeekPayload; onGo: (w: s
         onPlayStory={() => setStoryOpen(true)}
         prediction={data.isCurrent ? <WeeklyLetterPrediction letter={letter} ctx={ctx} /> : null}
       />
-      <WeeklyLetterStories open={storyOpen} onClose={() => setStoryOpen(false)} letter={letter} slides={slides} offset={data.offset} />
+      <WeeklyLetterStories open={storyOpen} onClose={() => setStoryOpen(false)} letter={letter} slides={slides} />
       <WeeklyLetterToc items={chapters} />
 
       <div className="wl-chapters">
@@ -233,7 +233,7 @@ function LetterBody({ data, onGo, reload }: { data: LiveWeekPayload; onGo: (w: s
         )}
         {has("wl-next") && (
           <Chapter id="wl-next" no={no("wl-next")} icon={CH_ICONS["wl-next"]} title="هفته‌ی بعد">
-            <WeeklyLetterNext letter={letter} offset={data.offset} />
+            <WeeklyLetterNext letter={letter} />
           </Chapter>
         )}
         {has("goals") && <WeeklyLetterGoals letter={letter} ctx={ctx} no={no("goals")} />}

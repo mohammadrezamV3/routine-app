@@ -49,7 +49,6 @@ export function WeeklyLetterMatrix({ ctx, no }: LetterChapterProps & { no?: numb
               aria-label={`جزئیات ${d.weekday}`}
             >{LETTERS[i]}</button>
           ))}
-          <span className="wl-dp-mx-sc-h">هفته</span>
 
           {rows.map((r) => {
             const Icon = DOMAIN_ICONS[r.domain];
@@ -74,7 +73,6 @@ export function WeeklyLetterMatrix({ ctx, no }: LetterChapterProps & { no?: numb
                     ><span>{v}</span></button>
                   );
                 })}
-                <b className="wl-dp-mx-sc">{Math.round(r.score as number)}</b>
               </div>
             );
           })}

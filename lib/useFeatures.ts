@@ -40,7 +40,7 @@ export function refreshFeatures(): Promise<Map | null> {
 }
 
 export function useFeatures(): Map | null {
-  const [v, setV] = useState<Map | null>(cached?.value ?? null);
+  const [v, setV] = useState<Map | null>(null); // همیشه null در اولین رندر تا هیدریشن با SSR جور باشه
   useEffect(() => {
     let alive = true;
     load().then((m) => { if (alive && m) setV(m); });

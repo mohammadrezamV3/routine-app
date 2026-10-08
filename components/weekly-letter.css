@@ -1019,6 +1019,8 @@ html[data-perf="low"] .wl-st-trend-last, html[data-perf="low"] .wl-st-meter i{ f
   .wl-goals{ display:grid; grid-template-columns:repeat(2, minmax(0,1fr)); gap:12px; }
   .wl-goals > :last-child:nth-child(odd){ grid-column:1 / -1; }
   .wl-dom-grid > :last-child:nth-child(odd){ grid-column:1 / -1; }
+  .wl-dom-grid:has(> :nth-child(3):last-child){ grid-template-columns:repeat(3, minmax(0,1fr)); }
+  .wl-dom-grid:has(> :nth-child(3):last-child) > :last-child{ grid-column:auto; }
   .wl-rec-list{ display:grid; grid-template-columns:repeat(2, minmax(0,1fr)); gap:12px; }
   .wl-rec-list > :last-child:nth-child(odd){ grid-column:1 / -1; }
 
@@ -1161,7 +1163,7 @@ body[data-theme="light"] .wl-root button.wl-live-mood{ background:none; box-shad
 
 /* نقشه‌ی هفته */
 .wl-root .wl-dp-mx{ padding:16px 12px; display:flex; flex-direction:column; gap:14px; }
-.wl-dp-mx-grid{ display:grid; grid-template-columns:auto repeat(7, minmax(0,1fr)) 30px; column-gap:5px; row-gap:6px; align-items:center; }
+.wl-dp-mx-grid{ display:grid; grid-template-columns:auto repeat(7, minmax(0,1fr)); column-gap:5px; row-gap:6px; align-items:center; }
 .wl-dp-mx-row{ display:contents; }
 .wl-dp-mx-corner{ display:block; }
 .wl-dp-mx-name{ display:flex; align-items:center; gap:6px; min-width:0; padding-inline-end:6px; font-size:12px; font-weight:800; color:var(--text); white-space:nowrap; }
@@ -1171,7 +1173,6 @@ body[data-theme="light"] .wl-root button.wl-live-mood{ background:none; box-shad
   font-size:11.5px; font-weight:800; text-align:center; cursor:pointer;
 }
 .wl-root button.wl-dp-mx-dh:disabled{ opacity:.5; cursor:default; }
-.wl-dp-mx-sc-h{ font-size:10.5px; font-weight:700; color:var(--muted); text-align:end; }
 .wl-dp-mx-cell{
   display:grid; place-items:center; min-width:0; height:34px; border-radius:9px; padding:0; border:none;
   font-family:var(--font-latin), var(--font-vazir), sans-serif; font-size:11px; font-weight:800; font-variant-numeric:tabular-nums;
@@ -1187,7 +1188,6 @@ body[data-theme="light"] .wl-root button.wl-live-mood{ background:none; box-shad
 .wl-root .wl-dp-mx-cell.s2{ background:color-mix(in srgb, var(--wl-da) 36%, var(--box-bg)); }
 .wl-root .wl-dp-mx-cell.s3{ background:color-mix(in srgb, var(--wl-da) 64%, var(--box-bg)); }
 .wl-root .wl-dp-mx-cell.s4{ background:var(--wl-da); color:var(--bg); }
-.wl-dp-mx-sc{ text-align:end; font-family:var(--font-latin), var(--font-vazir), sans-serif; font-size:15px; font-weight:900; font-variant-numeric:tabular-nums; }
 .wl-dp-mx-foot{ display:flex; flex-wrap:wrap; align-items:center; justify-content:space-between; gap:8px 14px; font-size:11.5px; font-weight:600; color:var(--muted); }
 .wl-dp-mx-legend{ display:inline-flex; align-items:center; gap:5px; }
 .wl-dp-mx-legend i{ width:13px; height:13px; border-radius:4px; display:block; }
@@ -1203,8 +1203,6 @@ body[data-theme="light"] .wl-root button.wl-live-mood{ background:none; box-shad
   .wl-dp-mx-cell{ height:40px; font-size:0; }
   .wl-dp-mx-cell > span{ display:inline; font-size:12.5px; }
   .wl-dp-mx-cell.s0{ font-size:13px; }
-  .wl-dp-mx-sc{ font-size:20px; }
-  .wl-dp-mx-sc-h{ font-size:12px; }
 }
 
 /* خواب */

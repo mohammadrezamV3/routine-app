@@ -51,9 +51,9 @@ function DomainsOverview({ domains }: { domains: LetterDomain[] }) {
     () => domains.filter((d) => axes.some((a) => a.key === d.domain)).sort((a, b) => (b.score as number) - (a.score as number)),
     [domains, axes],
   );
-  if (axes.length < 1) return null;
-  // با کمتر از 4 بخش رادار مثلثی و خالی می‌شه؛ فقط فهرست میله‌ای تمام‌عرض
+  // با کمتر از 4 بخش رادار مثلثی و خالی می‌شه و فهرست فقط امتیاز کارت‌ها رو تکرار می‌کنه؛ پس هیچی
   const showRadar = axes.length >= 4;
+  if (!showRadar) return null;
   const hasPrev = axes.some((a) => a.prev !== null);
   return (
     <Reveal className="wl-card wl-dov">

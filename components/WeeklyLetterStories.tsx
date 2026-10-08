@@ -558,7 +558,7 @@ function SummarySlide({ s, weekStart, onReplay }: { s: Extract<StorySlide, { id:
   );
 }
 
-function SlideView({ slide, letter, offset, onReplay }: { slide: StorySlide; letter: WeeklyLetterData; offset: number; onReplay: () => void }) {
+function SlideView({ slide, letter, onReplay }: { slide: StorySlide; letter: WeeklyLetterData; onReplay: () => void }) {
   switch (slide.id) {
     case "intro": return <IntroSlide letter={letter} />;
     case "score": return <ScoreSlide s={slide} headline={letter.headline} />;
@@ -586,8 +586,8 @@ function slideK(slide: StorySlide): number {
 
 // ---- پوسته ----
 export function WeeklyLetterStories({
-  open, onClose, letter, slides, offset,
-}: { open: boolean; onClose: () => void; letter: WeeklyLetterData; slides: StorySlide[]; offset: number }) {
+  open, onClose, letter, slides,
+}: { open: boolean; onClose: () => void; letter: WeeklyLetterData; slides: StorySlide[] }) {
   useLockBodyScroll(open);
   const reduce = !!useReducedMotion();
   const autoplay = !reduce;
@@ -814,7 +814,7 @@ export function WeeklyLetterStories({
                     style={{ "--wl-k": slideK(slide) } as CSSProperties}
                   >
                     <FitScale u={u} boxKey={`${box.w}x${box.h}`}>
-                      <SlideView slide={slide} letter={letter} offset={offset} onReplay={replay} />
+                      <SlideView slide={slide} letter={letter} onReplay={replay} />
                     </FitScale>
                   </motion.div>
                 </AnimatePresence>

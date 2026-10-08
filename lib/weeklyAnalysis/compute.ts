@@ -75,7 +75,7 @@ export async function computeWeeklyAnalysis(
     const ds = domains.map((d) => all.get(d)![i].result);
     return {
       weekStart: w.weekStartIso,
-      score: overallScore(ds),
+      score: overallScore(ds.map((r) => (r.hasData ? r : { ...r, score: null }))),
       domains: Object.fromEntries(ds.map((r) => [r.domain, r.score])),
     };
   });

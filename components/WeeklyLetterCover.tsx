@@ -90,12 +90,12 @@ export function WeeklyLetterCover({
               <span className="wl-mast-k">این هفته</span>
               <b className="wl-mast-live"><i className="wl-live-dot" aria-hidden="true" />در جریان</b>
             </>
-          ) : (
+          ) : letter.issueNo ? (
             <>
               <span className="wl-mast-k">شماره</span>
-              <b className="wl-mast-no">{letter.issueNo || "—"}</b>
+              <b className="wl-mast-no">{letter.issueNo}</b>
             </>
-          )}
+          ) : null}
         </div>
         <div className="wl-mast-center">
           <BrandMark />
