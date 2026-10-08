@@ -2,7 +2,8 @@
 
 import Link from "next/link";
 import { motion } from "framer-motion";
-import { ChevronRight } from "lucide-react";
+import { ChevronLeft, ChevronRight } from "lucide-react";
+import { isEn, tr } from "@/lib/i18n";
 import { useSession } from "next-auth/react";
 import { useEffect, useRef } from "react";
 import { ModuleGate } from "./ModuleGate";
@@ -23,7 +24,7 @@ import { PanelSkeleton } from "./PanelSkeleton";
 export function TradePageShell({
   title,
   note,
-  back = { href: "/trade", label: "ترید" },
+  back,
   titleAction,
   fullBleed = false,
   noScroll = false,
@@ -49,6 +50,7 @@ export function TradePageShell({
   children: React.ReactNode;
 }) {
   const { status } = useSession();
+  const backLink = back === undefined ? { href: "/trade", label: tr("ترید", "Trading") } : back;
   const boxRef = useRef<HTMLDivElement>(null);
   useEffect(() => {
     if (!noScroll) return;
@@ -101,9 +103,9 @@ export function TradePageShell({
           طبق درخواست صریح تایتل سمت چپ دکمه‌ی بازگشت بنشیند، بدون
           این‌که رفتار بقیه‌ی صفحه‌های ترید عوض شود. */}
       <div className="trade-head-block">
-        {back && (
-          <Link href={back.href} prefetch className="trade-back-link">
-            <ChevronRight size={15} /> {back.label}
+        {backLink && (
+          <Link href={backLink.href} prefetch className="trade-back-link">
+            {isEn() ? <ChevronLeft size={15} /> : <ChevronRight size={15} />} {backLink.label}
           </Link>
         )}
         <div className={titleAction ? "trade-head-row" : undefined}>
@@ -115,7 +117,7 @@ export function TradePageShell({
 
       {status === "loading" && <PanelSkeleton />}
 
-      {status === "unauthenticated" && <AuthGate message="برای استفاده از این سرویس وارد شوید" />}
+      {status === "unauthenticated" && <AuthGate message={tr("برای استفاده از این سرویس وارد شوید", "Sign in to use this service")} />}
 
       {status === "authenticated" && (
         <ModuleGate module="TRADE">

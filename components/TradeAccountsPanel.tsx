@@ -18,6 +18,7 @@ import { LockBodyScroll } from "./LockBodyScroll";
 import { PanelSkeleton } from "./PanelSkeleton";
 import { useLiveRefresh } from "@/lib/liveSync";
 import { Spinner } from "./Spinner";
+import { tr } from "@/lib/i18n";
 
 // صفحه‌ی «ژورنال‌نویسی»: اول حساب‌ها، فقط به‌شکل فشرده (اسم + سود/زیان +
 // برچسب) — جزئیات کامل (بالانس/تعداد معاملات/نرخ برد/هدف) جاش صفحه‌ی
@@ -95,7 +96,7 @@ export function TradeAccountsPanel({
       <div>
         <div className="trade-surface trade-account-grid trade-journal-grid">
           <div className="trade-accounts-head">
-            <div className="trade-section-title">حساب‌های معاملاتی</div>
+            <div className="trade-section-title">{tr("حساب‌های معاملاتی", "Trading accounts")}</div>
           </div>
           {[0, 1, 2, 3].map((i) => <div key={i} className="trade-account-card trade-account-skel" />)}
         </div>
@@ -109,9 +110,9 @@ export function TradeAccountsPanel({
           نیستن — اولین ردیف داخل خود باکسن. */}
       <div className="trade-surface trade-account-grid trade-journal-grid">
         <div className="trade-accounts-head">
-          <div className="trade-section-title">حساب‌های معاملاتی</div>
+          <div className="trade-section-title">{tr("حساب‌های معاملاتی", "Trading accounts")}</div>
           <button type="button" className="trade-ghost-btn" onClick={() => { setArchiveOpen(true); setArchived(null); loadArchived(); }}>
-            نمایش آرشیو
+            {tr("نمایش آرشیو", "Show archive")}
           </button>
         </div>
 
@@ -123,7 +124,7 @@ export function TradeAccountsPanel({
         {!accounts.length && (
           <div className="trade-empty-state">
             <Wallet size={32} />
-            <p>هنوز حسابی ایجاد نکردی</p>
+            <p>{tr("هنوز حسابی ایجاد نکردی", "You have not created an account yet")}</p>
           </div>
         )}
 
@@ -155,13 +156,13 @@ export function TradeAccountsPanel({
           <div className="modal-overlay open" onClick={() => setArchiveOpen(false)} />
           <div className="modal-panel open" role="dialog" aria-modal="true">
             <div className="modal-head">
-              <div className="modal-title">حساب‌های آرشیوشده</div>
-              <button type="button" className="trade-icon-btn" onClick={() => setArchiveOpen(false)} aria-label="بستن"><X size={16} /></button>
+              <div className="modal-title">{tr("حساب‌های آرشیوشده", "Archived accounts")}</div>
+              <button type="button" className="trade-icon-btn" onClick={() => setArchiveOpen(false)} aria-label={tr("بستن", "Close")}><X size={16} /></button>
             </div>
             {archived === null ? (
               <PanelSkeleton />
             ) : !archived.length ? (
-              <div className="trade-empty-state"><Archive size={28} /><p>هیچ حسابی توی آرشیو نیست</p></div>
+              <div className="trade-empty-state"><Archive size={28} /><p>{tr("هیچ حسابی توی آرشیو نیست", "No accounts in the archive")}</p></div>
             ) : (
               <div className="trade-account-grid" style={{ marginTop: 4 }}>
                 {archived.map((a) => (
@@ -169,15 +170,15 @@ export function TradeAccountsPanel({
                     <div className="trade-account-top-row">
                       <div className="trade-account-kebab-inline">
                         <TradeKebabMenu
-                          label="گزینه‌های حساب"
+                          label={tr("گزینه‌های حساب", "Account options")}
                           actions={[
                             {
-                              label: "بازگردانی از آرشیو",
+                              label: tr("بازگردانی از آرشیو", "Restore from archive"),
                               icon: <ArchiveRestore size={14} />,
                               onClick: async () => { await toggleArchive(a); loadArchived(); },
                             },
                             {
-                              label: "حذف کامل",
+                              label: tr("حذف کامل", "Delete permanently"),
                               icon: <Trash2 size={14} />,
                               danger: true,
                               onClick: () => { setArchiveOpen(false); setConfirmPurge(a); },
@@ -337,22 +338,22 @@ function AccountRow({
         href={`/trade/accounts/${a.id}`}
         className="trade-account-hit"
         prefetch
-        aria-label={`باز کردن حساب ${a.name}`}
+        aria-label={tr(`باز کردن حساب ${a.name}`, `Open account ${a.name}`)}
         tabIndex={-1}
       />
 
       <div className="trade-account-top-row">
         <div className="trade-account-kebab-inline" onClick={(e) => { e.preventDefault(); e.stopPropagation(); }}>
           <TradeKebabMenu
-            label="گزینه‌های حساب"
+            label={tr("گزینه‌های حساب", "Account options")}
             actions={[
-              { label: "ویرایش حساب", icon: <Pencil size={14} />, onClick: onEdit },
+              { label: tr("ویرایش حساب", "Edit account"), icon: <Pencil size={14} />, onClick: onEdit },
               {
-                label: a.archived ? "بازگردانی از آرشیو" : "آرشیو کردن",
+                label: a.archived ? tr("بازگردانی از آرشیو", "Restore from archive") : tr("آرشیو کردن", "Archive"),
                 icon: a.archived ? <ArchiveRestore size={14} /> : <Archive size={14} />,
                 onClick: onToggleArchive,
               },
-              ...(a.archived ? [{ label: "حذف کامل", icon: <Trash2 size={14} />, onClick: onPurge, danger: true }] : []),
+              ...(a.archived ? [{ label: tr("حذف کامل", "Delete permanently"), icon: <Trash2 size={14} />, onClick: onPurge, danger: true }] : []),
             ]}
           />
         </div>
@@ -360,7 +361,7 @@ function AccountRow({
         <Link href={`/trade/accounts/${a.id}`} className="trade-account-title-link" prefetch>
           <span className="trade-account-name">{a.name}</span>
           <span className="trade-account-dot" style={{ background: a.color }} />
-          {a.archived && <span className="trade-account-archived-badge">آرشیو</span>}
+          {a.archived && <span className="trade-account-archived-badge">{tr("آرشیو", "Archived")}</span>}
         </Link>
 
         <span className="trade-account-pnl-inline mono" dir="ltr" style={{ color: netPnl >= 0 ? "var(--accent)" : "#E05252" }}>
@@ -374,10 +375,10 @@ function AccountRow({
           می‌کردی. روی موبایل CSS این ردیف را کامل برمی‌دارد تا کارت فشرده‌ی
           فعلی مو‌به‌مو همان بماند. */}
       <div className="trade-account-facts">
-        <span><Hash size={12} /> {a.summary?.tradeCount ?? 0} معامله</span>
-        {a.summary?.winRate != null && <span><Percent size={12} /> {a.summary.winRate}% برد</span>}
+        <span><Hash size={12} /> {a.summary?.tradeCount ?? 0} {(a.summary?.tradeCount ?? 0) === 1 ? tr("معامله", "trade") : tr("معامله", "trades")}</span>
+        {a.summary?.winRate != null && <span><Percent size={12} /> {a.summary.winRate}% {tr("برد", "wins")}</span>}
         {a.broker && <span className="trade-account-facts-broker">{a.broker}</span>}
-        {a.mtConnected && <span className="trade-account-facts-mt">متاتریدر</span>}
+        {a.mtConnected && <span className="trade-account-facts-mt">{tr("متاتریدر", "MetaTrader")}</span>}
       </div>
 
       {/* نوار هدف — عدد درصد کنارش، چون خود نوار بدون عدد فقط یک حس
@@ -428,16 +429,16 @@ function PurgeConfirm({ account, onCancel, onConfirm, busy }: { account: TradeAc
     <>
       <div className="modal-overlay open" onClick={onCancel} />
       <div className="modal-panel open" role="dialog" aria-modal="true">
-        <div className="modal-head"><div className="modal-title">حذف کامل حساب</div></div>
+        <div className="modal-head"><div className="modal-title">{tr("حذف کامل حساب", "Delete account permanently")}</div></div>
         <div className="item-line">
-          با این کار تمام معاملات، عکس‌ها و آمار «{account.name}» برای همیشه پاک می‌شوند. این کار برگشت‌پذیر نیست.
+          {tr(`با این کار تمام معاملات، عکس‌ها و آمار «${account.name}» برای همیشه پاک می‌شوند. این کار برگشت‌پذیر نیست.`, `This permanently deletes all trades, images and stats of "${account.name}". This cannot be undone.`)}
         </div>
-        <label className="exercise-form-label">برای تایید، نام حساب را تایپ کن</label>
+        <label className="exercise-form-label">{tr("برای تایید، نام حساب را تایپ کن", "To confirm, type the account name")}</label>
         <input className="wsearch-newform-name trade-glass-field" value={typed} onChange={(e) => setTyped(e.target.value)} placeholder={account.name} />
         <div className="trade-modal-actions">
-          <button type="button" className="account-outline-btn" onClick={onCancel}>لغو</button>
+          <button type="button" className="account-outline-btn" onClick={onCancel}>{tr("لغو", "Cancel")}</button>
           <button type="button" className="trade-danger-btn" disabled={typed.trim() !== account.name || busy} onClick={onConfirm}>
-            {busy ? <Spinner size={14} /> : "حذف کامل"}
+            {busy ? <Spinner size={14} /> : tr("حذف کامل", "Delete permanently")}
           </button>
         </div>
       </div>

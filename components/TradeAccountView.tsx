@@ -5,7 +5,7 @@ import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import {
-  Award, Building2, ChevronRight, Flame, Gauge, Hash,
+  Award, Building2, ChevronLeft, ChevronRight, Flame, Gauge, Hash,
   Inbox, Pencil, Percent, Plus, RefreshCw, Scale, Sigma, Snowflake, TrendingDown,
   TrendingUp, Wallet, Zap,
 } from "lucide-react";
@@ -31,6 +31,10 @@ import { TradeShareButton } from "./TradeShareButton";
 import { useAsyncAction } from "@/lib/useAsyncAction";
 import { useLiveRefresh } from "@/lib/liveSync";
 import { rowActivateProps } from "@/lib/rowActivate";
+import { isEn, tr } from "@/lib/i18n";
+
+// علامت درصد: فارسی ٪ و انگلیسی %
+const pctSign = () => (isEn() ? "%" : "٪");
 
 // آیکون هر کارت آماری — فقط یک لمس بصری، بدون تغییر در منطق محاسبه‌ها
 const TRADE_STAT_ICONS: Record<TradeStatKey, typeof Wallet> = {
@@ -162,7 +166,7 @@ export function TradeAccountView({ accountId }: { accountId: string }) {
         if (runId !== syncRun.current) return;
         const link = await fetchMtLink();
         if (runId !== syncRun.current) return;
-        if (!link?.connected) { setMtSync({ kind: "error", message: "اتصال متاتریدر این حساب قطع شده است." }); return; }
+        if (!link?.connected) { setMtSync({ kind: "error", message: tr("اتصال متاتریدر این حساب قطع شده است.", "The MetaTrader connection of this account was lost.") }); return; }
         last = link.lastSyncAt;
         if (last && new Date(last).getTime() >= startedAt) {
           await load(true);
@@ -172,7 +176,7 @@ export function TradeAccountView({ accountId }: { accountId: string }) {
       }
       setMtSync({ kind: "stale", lastSyncAt: last });
     } catch {
-      if (runId === syncRun.current) setMtSync({ kind: "error", message: "ارتباط با سرور برقرار نشد. دوباره تلاش کنید." });
+      if (runId === syncRun.current) setMtSync({ kind: "error", message: tr("ارتباط با سرور برقرار نشد. دوباره تلاش کنید.", "Could not reach the server. Please try again.") });
     }
   }
 
@@ -203,7 +207,7 @@ export function TradeAccountView({ accountId }: { accountId: string }) {
   }
 
   if (loading && !account) return <PanelSkeleton />;
-  if (notFound) return <div className="item-line empty">این حساب پیدا نشد.</div>;
+  if (notFound) return <div className="item-line empty">{tr("این حساب پیدا نشد.", "This account was not found.")}</div>;
   if (!account) return null;
 
   const goal = stats.goalProgress;
@@ -213,9 +217,9 @@ export function TradeAccountView({ accountId }: { accountId: string }) {
 
   return (
     <div>
-      <Link href="/trade/journal" className="trade-back-link"><ChevronRight size={15} /> حساب‌ها</Link>
+      <Link href="/trade/journal" className="trade-back-link">{isEn() ? <ChevronLeft size={15} /> : <ChevronRight size={15} />} {tr("حساب‌ها", "Accounts")}</Link>
 
-      <h1 className="trade-journal-title">ژورنال‌نویسی</h1>
+      <h1 className="trade-journal-title">{tr("ژورنال‌نویسی", "Journal")}</h1>
 
       {/* نام حساب ابتدای خط، بالانس اولیه انتهای همان خط */}
       <div className="trade-journal-idrow">
@@ -224,8 +228,8 @@ export function TradeAccountView({ accountId }: { accountId: string }) {
           {/* توپ رنگی سمت چپ اسم (بعدش در RTL) — هم‌قاعده‌ی بقیه‌ی صفحه‌های ترید */}
           <span className="trade-journal-acc-dot" style={{ background: account.color }} />
           <span className="trade-account-type">{ACCOUNT_TYPE_LABELS[account.type]}</span>
-          {account.archived && <span className="trade-account-archived-badge">آرشیو</span>}
-          <button type="button" className="trade-icon-btn" onClick={() => setEditingAccount(true)} aria-label="ویرایش حساب">
+          {account.archived && <span className="trade-account-archived-badge">{tr("آرشیو", "Archived")}</span>}
+          <button type="button" className="trade-icon-btn" onClick={() => setEditingAccount(true)} aria-label={tr("ویرایش حساب", "Edit account")}>
             <Pencil size={14} />
           </button>
           {/* اشتراک کارنامه با همین حساب از پیش انتخاب‌شده (حساب آرشیوشده در کارنامه نیست) */}
@@ -236,25 +240,25 @@ export function TradeAccountView({ accountId }: { accountId: string }) {
               className="trade-add-btn"
               onClick={syncWithMt}
               disabled={mtSync.kind === "waiting"}
-              title={account.mtConnected ? "دریافت آخرین معاملات از متاتریدر" : "اتصال این حساب به متاتریدر"}
+              title={account.mtConnected ? tr("دریافت آخرین معاملات از متاتریدر", "Fetch the latest trades from MetaTrader") : tr("اتصال این حساب به متاتریدر", "Connect this account to MetaTrader")}
             >
-              <RefreshCw size={14} className={mtSync.kind === "waiting" ? "trade-spin" : undefined} /> همگام‌سازی
+              <RefreshCw size={14} className={mtSync.kind === "waiting" ? "trade-spin" : undefined} /> {tr("همگام‌سازی", "Sync")}
             </button>
           )}
         </div>
         <div className="trade-journal-idrow-balance">
-          <span>بالانس اولیه</span>
+          <span>{tr("بالانس اولیه", "Initial balance")}</span>
           <b className="mono">{faNum(account.initialBalance.toFixed(2))} {sym}</b>
         </div>
         {account.cashFunding ? (
           <div className="trade-journal-idrow-balance">
-            <span>واریز/برداشت</span>
+            <span>{tr("واریز/برداشت", "Deposits/withdrawals")}</span>
             <b className="mono">{faNum(account.cashFunding.toFixed(2))} {sym}</b>
           </div>
         ) : null}
         {account.cashCharges ? (
           <div className="trade-journal-idrow-balance">
-            <span>هزینه‌های غیرمعاملاتی</span>
+            <span>{tr("هزینه‌های غیرمعاملاتی", "Non-trading charges")}</span>
             <b className="mono">{faNum(account.cashCharges.toFixed(2))} {sym}</b>
           </div>
         ) : null}
@@ -271,12 +275,12 @@ export function TradeAccountView({ accountId }: { accountId: string }) {
 
       {mtSync.kind !== "idle" && (
         <div className={mtSync.kind === "error" ? "trade-form-error" : "trade-mt-note"} role="status" style={{ marginTop: 10 }}>
-          {mtSync.kind === "waiting" && "در انتظار ارسال داده از اکسپرت متاتریدر… (حداکثر حدود یک و نیم دقیقه)"}
-          {mtSync.kind === "done" && `همگام‌سازی انجام شد — ${formatTradeDateTime(mtSync.at, calSystem)}`}
+          {mtSync.kind === "waiting" && tr("در انتظار ارسال داده از اکسپرت متاتریدر… (حداکثر حدود یک و نیم دقیقه)", "Waiting for data from the MetaTrader expert... (up to about a minute and a half)")}
+          {mtSync.kind === "done" && tr(`همگام‌سازی انجام شد — ${formatTradeDateTime(mtSync.at, calSystem)}`, `Sync complete — ${formatTradeDateTime(mtSync.at, calSystem)}`)}
           {mtSync.kind === "stale" && (
             <>
-              در این فاصله داده‌ی تازه‌ای از متاتریدر نرسید. متاتریدر باید باز باشد و اکسپرت Arion روی چارت فعال باشد.
-              {" "}آخرین همگام‌سازی: {mtSync.lastSyncAt ? formatTradeDateTime(mtSync.lastSyncAt, calSystem) : "هنوز انجام نشده"}
+              {tr("در این فاصله داده‌ی تازه‌ای از متاتریدر نرسید. متاتریدر باید باز باشد و اکسپرت Arion روی چارت فعال باشد.", "No new data arrived from MetaTrader. MetaTrader must be open and the Arion expert must be active on a chart.")}
+              {" "}{tr("آخرین همگام‌سازی:", "Last sync:")} {mtSync.lastSyncAt ? formatTradeDateTime(mtSync.lastSyncAt, calSystem) : tr("هنوز انجام نشده", "not yet")}
             </>
           )}
           {mtSync.kind === "error" && mtSync.message}
@@ -288,8 +292,8 @@ export function TradeAccountView({ accountId }: { accountId: string }) {
         <div className="trade-journal-stats-part">
           <div className="trade-headline-stats">
             <HeadlineStat
-              label="نرخ برد"
-              value={stats.winRate === null ? "—" : `${faNum(stats.winRate)}٪`}
+              label={tr("نرخ برد", "Win rate")}
+              value={stats.winRate === null ? "—" : `${faNum(stats.winRate)}${pctSign()}`}
               tone={stats.winRate === null ? undefined : stats.winRate >= 50 ? "up" : "down"}
               icon={<Percent size={13} />}
             />
@@ -300,11 +304,11 @@ export function TradeAccountView({ accountId }: { accountId: string }) {
               <div className="trade-goal-ring-wrap">
                 <GradientRing value={inProfit ? (goal ?? 0) : 0} size={72} stroke={6} className="trade-goal-ring" />
                 <span className="trade-goal-ring-pct mono">
-                  {faNum(Math.round((inProfit ? (goal ?? 0) : 0) * 100))}٪
+                  {faNum(Math.round((inProfit ? (goal ?? 0) : 0) * 100))}{pctSign()}
                 </span>
               </div>
               <div className="trade-headline-goal-text">
-                <div className="trade-stat-label">هدف سود</div>
+                <div className="trade-stat-label">{tr("هدف سود", "Profit goal")}</div>
                 <div className="trade-headline-goal-target mono">
                   {faNum((stats.goalTarget || 0).toFixed(0))} {sym}
                 </div>
@@ -312,7 +316,7 @@ export function TradeAccountView({ accountId }: { accountId: string }) {
             </div>
 
             <HeadlineStat
-              label="سود / ضرر"
+              label={tr("سود / ضرر", "Profit / loss")}
               value={`${faNum(stats.netPnl.toFixed(2))} ${sym}`}
               tone={stats.netPnl >= 0 ? "up" : "down"}
               icon={stats.netPnl >= 0 ? <TrendingUp size={13} /> : <TrendingDown size={13} />}
@@ -361,13 +365,13 @@ export function TradeAccountView({ accountId }: { accountId: string }) {
       {/* ── تریدهای روز انتخاب‌شده ───────────────────────────────────── */}
       <div className="trade-list-head">
         <div className="trade-section-title">
-          تریدها
+          {tr("تریدها", "Trades")}
           <span className="trade-day-label">
             {formatTradeDateTime(new Date(`${activeDay}T00:00:00`).toISOString(), calSystem, false)}
           </span>
         </div>
         <button type="button" className="trade-add-btn" onClick={() => { setEditingEntry(null); setFormOpen(true); }}>
-          <Plus size={15} /> افزودن
+          <Plus size={15} /> {tr("افزودن", "Add")}
         </button>
       </div>
 
@@ -375,7 +379,7 @@ export function TradeAccountView({ accountId }: { accountId: string }) {
         {!dayEntries.length && (
           <div className="trade-empty-state">
             <Inbox size={28} />
-            <p>برای این روز معامله‌ای ثبت نشده</p>
+            <p>{tr("برای این روز معامله‌ای ثبت نشده", "No trades logged for this day")}</p>
           </div>
         )}
 
@@ -383,11 +387,11 @@ export function TradeAccountView({ accountId }: { accountId: string }) {
           <div
             key={e.id}
             className="trade-day-row is-clickable"
-            {...rowActivateProps(() => setDetailId(e.id), `جزئیات معامله‌ی ${e.symbol}`)}
+            {...rowActivateProps(() => setDetailId(e.id), tr(`جزئیات معامله‌ی ${e.symbol}`, `Details of the ${e.symbol} trade`))}
           >
             <div className="trade-day-row-head">
               <span className={`trade-row-dir ${e.direction === "BUY" ? "buy" : "sell"}`}>
-                {e.direction === "BUY" ? "خرید" : "فروش"}
+                {e.direction === "BUY" ? tr("خرید", "Buy") : tr("فروش", "Sell")}
               </span>
               <span className="trade-row-symbol mono">{e.symbol}</span>
               {e.status === "CLOSED" ? (
@@ -427,7 +431,7 @@ export function TradeAccountView({ accountId }: { accountId: string }) {
             {/* کل ردیف قابل‌کلیک است؛ این فقط نشانه‌ی بصری است (دکمه‌ی تودرتو
                 داخل role=button برای صفحه‌خوان نامعتبر است) */}
             <span className="trade-detail-btn" aria-hidden="true">
-              جزئیات
+              {tr("جزئیات", "Details")}
             </span>
           </div>
         ))}
@@ -436,10 +440,10 @@ export function TradeAccountView({ accountId }: { accountId: string }) {
       {/* جزئیات کامل اتصال (مراحل نصب، کد اتصال، ...) جاش صفحه‌ی
           اختصاصی /trade/metatrader/[id]ه — این‌جا فقط یک خط وضعیته. */}
       <Link href={`/trade/metatrader/${account.id}?from=account`} className="trade-surface trade-mt-line">
-        <span>اتصال متاتریدر</span>
+        <span>{tr("اتصال متاتریدر", "MetaTrader connection")}</span>
         <span className={`trade-mt-status${account.mtConnected ? " connected" : ""}`}>
           <span className="forex-dot" />
-          {account.mtConnected ? "فعال" : "غیرفعال"}
+          {account.mtConnected ? tr("فعال", "Active") : tr("غیرفعال", "Inactive")}
         </span>
       </Link>
 
@@ -494,7 +498,7 @@ function tradeFactValue(
   switch (key) {
     case "openedAt": return timeOf(e.openedAt);
     case "closedAt": return e.closedAt ? timeOf(e.closedAt) : null;
-    case "volume": return `${faNum(e.volume)} ${e.volumeUnit === "LOT" ? "لات" : "$"}`;
+    case "volume": return `${faNum(e.volume)} ${e.volumeUnit === "LOT" ? tr("لات", "lots") : "$"}`;
     case "rMultiple": return e.rMultiple === null ? null : `${e.rMultiple > 0 ? "+" : ""}${faNum(e.rMultiple)}`;
     case "timeframe": return e.timeframe || null;
     case "setup": return e.setup || null;
@@ -505,7 +509,7 @@ function tradeFactValue(
     case "riskAmount": return e.riskAmount === null ? null : `${faNum(e.riskAmount)} ${sym}`;
     case "commission": return e.commission === null ? null : faNum(e.commission);
     case "swap": return e.swap === null ? null : faNum(e.swap);
-    case "session": return e.sessions.length ? e.sessions.map((s) => SESSION_LABELS[s]).join("، ") : null;
+    case "session": return e.sessions.length ? e.sessions.map((s) => SESSION_LABELS[s]).join(tr("، ", ", ")) : null;
     case "confidence": return e.confidence === null ? null : `${faNum(e.confidence)}/10`;
     case "result": return RESULT_LABELS[e.result];
   }

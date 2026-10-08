@@ -11,7 +11,8 @@
 // آمار (نرخ برد، فاکتور سود، میانگین R) عمدا از computeTradeStats می‌آید تا
 // عددهای کارت با صفحه‌ی حساب یکی باشند.
 
-import { FA_WEEKDAY, J_MONTHS, faNum, jalaliToIso, toJalali } from "./jalali";
+import { weekdayName, jMonthName, faNum, jalaliToIso, toJalali } from "./jalali";
+import { tr } from "./i18n";
 import { addDaysIso, isoWeekday, localIso } from "./weeklyAnalysis/week";
 import { computeTradeStats } from "./tradeAnalytics";
 import type { TradeShareAccount, TradeShareData, TradeSharePeriod } from "./tradeShareTypes";
@@ -117,15 +118,26 @@ export function resolveTradeShareRange(period: TradeSharePeriod, anchor: string)
 export function tradeShareRangeLabel(period: TradeSharePeriod, firstDay: string, lastDay: string): string {
   const [sy, sm, sd] = jalaliOf(firstDay);
   if (period === "day") {
-    return `${FA_WEEKDAY[isoWeekday(firstDay)]} ${faNum(sd)} ${J_MONTHS[sm - 1]} ${faNum(sy)}`;
+    return `${weekdayName(isoWeekday(firstDay))} ${faNum(sd)} ${jMonthName(sm - 1)} ${faNum(sy)}`;
   }
-  if (period === "month") return `${J_MONTHS[sm - 1]} ${faNum(sy)}`;
+  if (period === "month") return `${jMonthName(sm - 1)} ${faNum(sy)}`;
   const [ey, em, ed] = jalaliOf(lastDay);
   if (sy !== ey) {
-    return `هفته‌ی ${faNum(sd)} ${J_MONTHS[sm - 1]} ${faNum(sy)} تا ${faNum(ed)} ${J_MONTHS[em - 1]} ${faNum(ey)}`;
+    return tr(
+      `هفته‌ی ${faNum(sd)} ${jMonthName(sm - 1)} ${faNum(sy)} تا ${faNum(ed)} ${jMonthName(em - 1)} ${faNum(ey)}`,
+      `Week of ${faNum(sd)} ${jMonthName(sm - 1)} ${faNum(sy)} to ${faNum(ed)} ${jMonthName(em - 1)} ${faNum(ey)}`,
+    );
   }
-  if (sm !== em) return `هفته‌ی ${faNum(sd)} ${J_MONTHS[sm - 1]} تا ${faNum(ed)} ${J_MONTHS[em - 1]} ${faNum(ey)}`;
-  return `هفته‌ی ${faNum(sd)} تا ${faNum(ed)} ${J_MONTHS[em - 1]} ${faNum(ey)}`;
+  if (sm !== em) {
+    return tr(
+      `هفته‌ی ${faNum(sd)} ${jMonthName(sm - 1)} تا ${faNum(ed)} ${jMonthName(em - 1)} ${faNum(ey)}`,
+      `Week of ${faNum(sd)} ${jMonthName(sm - 1)} to ${faNum(ed)} ${jMonthName(em - 1)} ${faNum(ey)}`,
+    );
+  }
+  return tr(
+    `هفته‌ی ${faNum(sd)} تا ${faNum(ed)} ${jMonthName(em - 1)} ${faNum(ey)}`,
+    `Week of ${faNum(sd)} to ${faNum(ed)} ${jMonthName(em - 1)} ${faNum(ey)}`,
+  );
 }
 
 // ── محاسبه ─────────────────────────────────────────────────

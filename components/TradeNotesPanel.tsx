@@ -14,6 +14,7 @@ import { TradeTagField } from "./TradeTagField";
 import { CAL_SYSTEM_KEY, CalSystem, TAG_COLORS, TradeTag } from "@/lib/tradeTypes";
 import { useLiveRefresh } from "@/lib/liveSync";
 import { Spinner } from "./Spinner";
+import { tr } from "@/lib/i18n";
 
 type Note = {
   id: string; title: string; content: string; color: string; pinned: boolean;
@@ -97,8 +98,8 @@ export function TradeNotesPanel({
       <div className="trade-surface trade-page-box trade-note-box">
         <div className="trade-note-search-row">
           <div className="trade-search trade-note-search">
-            <input className="wsearch-newform-name trade-glass-field" value={query} onChange={(e) => setQuery(e.target.value)} placeholder="جست‌وجو در یادداشت‌ها" style={{ width: "100%" }} />
-            <button type="button" className="trade-search-btn" onClick={() => load()} aria-label="جست‌وجو"><Search size={14} /></button>
+            <input className="wsearch-newform-name trade-glass-field" value={query} onChange={(e) => setQuery(e.target.value)} placeholder={tr("جست‌وجو در یادداشت‌ها", "Search notes")} style={{ width: "100%" }} />
+            <button type="button" className="trade-search-btn" onClick={() => load()} aria-label={tr("جست‌وجو", "Search")}><Search size={14} /></button>
           </div>
 
           {!!tags.length && (
@@ -127,7 +128,7 @@ export function TradeNotesPanel({
         {!loading && !notes.length && (
           <div className="trade-empty-state">
             <StickyNote size={32} />
-            <p>{query || filterTags.length ? "یادداشتی با این فیلتر پیدا نشد" : "هنوز یادداشتی اضافه نشده"}</p>
+            <p>{query || filterTags.length ? tr("یادداشتی با این فیلتر پیدا نشد", "No notes match this filter") : tr("هنوز یادداشتی اضافه نشده", "No notes added yet")}</p>
           </div>
         )}
 
@@ -148,16 +149,16 @@ export function TradeNotesPanel({
               <div className="trade-note-head">
                 <div className="trade-note-kebab" onClick={(e) => e.stopPropagation()}>
                   <TradeKebabMenu
-                    label={`گزینه‌های ${n.title}`}
+                    label={tr(`گزینه‌های ${n.title}`, `Options for ${n.title}`)}
                     actions={[
-                      { label: "ویرایش", icon: <Pencil size={14} />, onClick: () => setEditing(n) },
+                      { label: tr("ویرایش", "Edit"), icon: <Pencil size={14} />, onClick: () => setEditing(n) },
                       {
-                        label: n.pinned ? "برداشتن سنجاق" : "سنجاق کردن",
+                        label: n.pinned ? tr("برداشتن سنجاق", "Unpin") : tr("سنجاق کردن", "Pin"),
                         icon: n.pinned ? <PinOff size={14} /> : <Pin size={14} />,
                         onClick: () => togglePin(n),
                         disabled: pendingKey === `pin:${n.id}`,
                       },
-                      { label: "حذف یادداشت", icon: <Trash2 size={14} />, onClick: () => remove(n.id), danger: true },
+                      { label: tr("حذف یادداشت", "Delete note"), icon: <Trash2 size={14} />, onClick: () => remove(n.id), danger: true },
                     ]}
                   />
                 </div>
@@ -217,7 +218,7 @@ function NoteViewer({
             <span className="trade-note-view-dot" style={{ background: note.color }} />
             {note.title}
           </div>
-          <button type="button" className="trade-icon-btn" onClick={onClose} aria-label="بستن"><X size={16} /></button>
+          <button type="button" className="trade-icon-btn" onClick={onClose} aria-label={tr("بستن", "Close")}><X size={16} /></button>
         </div>
 
         {!!note.tags.length && (
@@ -230,7 +231,7 @@ function NoteViewer({
 
         <div className="trade-note-view-box">
           <div className="trade-note-view-body">
-            {note.content ? note.content : <span className="trade-note-view-empty">متنی نوشته نشده</span>}
+            {note.content ? note.content : <span className="trade-note-view-empty">{tr("متنی نوشته نشده", "No text written")}</span>}
           </div>
         </div>
       </div>
@@ -256,7 +257,7 @@ function NoteEditor({
 
   async function save() {
     if (saving) return;
-    if (!title.trim()) { setError("عنوان یادداشت را وارد کن"); return; }
+    if (!title.trim()) { setError(tr("عنوان یادداشت را وارد کن", "Enter a note title")); return; }
     setSaving(true);
     setError(null);
     const res = await fetch("/api/trade/notes", {
@@ -269,7 +270,7 @@ function NoteEditor({
     });
     const data = await res.json().catch(() => null);
     setSaving(false);
-    if (!res.ok) { setError(data?.error || "خطا در ذخیره یادداشت"); return; }
+    if (!res.ok) { setError(data?.error || tr("خطا در ذخیره یادداشت", "Could not save the note")); return; }
     onSaved();
   }
 
@@ -279,32 +280,32 @@ function NoteEditor({
       <div className="modal-overlay open" onClick={onClose} />
       <div className="modal-panel open" role="dialog" aria-modal="true">
         <div className="modal-head">
-          <div className="modal-title">{note ? "ویرایش یادداشت" : "یادداشت جدید"}</div>
-          <button type="button" className="trade-icon-btn" onClick={onClose} aria-label="بستن"><X size={16} /></button>
+          <div className="modal-title">{note ? tr("ویرایش یادداشت", "Edit note") : tr("یادداشت جدید", "New note")}</div>
+          <button type="button" className="trade-icon-btn" onClick={onClose} aria-label={tr("بستن", "Close")}><X size={16} /></button>
         </div>
 
-        <label className="exercise-form-label">عنوان</label>
+        <label className="exercise-form-label">{tr("عنوان", "Title")}</label>
         <input className="wsearch-newform-name trade-glass-field" autoFocus value={title} onChange={(e) => setTitle(e.target.value)} maxLength={120} />
 
-        <label className="exercise-form-label">متن</label>
+        <label className="exercise-form-label">{tr("متن", "Text")}</label>
         <textarea className="wsearch-newform-name trade-glass-field" rows={8} value={content} onChange={(e) => setContent(e.target.value)} maxLength={20000} />
 
-        <label className="exercise-form-label">رنگ</label>
+        <label className="exercise-form-label">{tr("رنگ", "Color")}</label>
         <div className="trade-color-row">
           {TAG_COLORS.map((c) => (
             <button key={c} type="button" className={`trade-color-dot${c === color ? " active" : ""}`} style={{ background: c }} onClick={() => setColor(c)} aria-label={c} />
           ))}
         </div>
 
-        <label className="exercise-form-label">برچسب‌ها</label>
+        <label className="exercise-form-label">{tr("برچسب‌ها", "Tags")}</label>
         <TradeTagField tags={tags} value={tagIds} onChange={setTagIds} onCreated={onTagCreated} />
 
         {error && <div className="trade-form-error">{error}</div>}
 
         <div className="trade-modal-actions">
-          <button type="button" className="account-outline-btn" onClick={onClose}>لغو</button>
+          <button type="button" className="account-outline-btn" onClick={onClose}>{tr("لغو", "Cancel")}</button>
           <button type="button" className="trade-primary-btn" onClick={save} disabled={saving}>
-            {saving ? <Spinner size={14} /> : "ذخیره"}
+            {saving ? <Spinner size={14} /> : tr("ذخیره", "Save")}
           </button>
         </div>
       </div>

@@ -5,6 +5,7 @@ import { motion } from "framer-motion";
 import { ModuleGate } from "@/components/ModuleGate";
 import { AuthGate } from "@/components/AuthGate";
 import { PanelSkeleton } from "@/components/PanelSkeleton";
+import { tr } from "@/lib/i18n";
 import { TradeAccountView } from "@/components/TradeAccountView";
 
 // این صفحه عنوان خودش را از داده حساب می‌سازد، پس برخلاف بقیه‌ی
@@ -16,7 +17,7 @@ export default function TradeAccountPage({ params }: { params: { id: string } })
   return (
     <section className="trade-desktop">
       {status === "loading" && <PanelSkeleton />}
-      {status === "unauthenticated" && <AuthGate message="برای استفاده از این سرویس وارد شوید" />}
+      {status === "unauthenticated" && <AuthGate message={tr("برای استفاده از این سرویس وارد شوید", "Sign in to use this service")} />}
       {status === "authenticated" && (
         <ModuleGate module="TRADE">
           <motion.div

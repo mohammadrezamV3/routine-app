@@ -6,6 +6,28 @@
 // با enumهای schema.prisma یکی بمانند.
 
 import { SETTING_KEYS } from "./userSettingKeys";
+import { pick } from "./i18n";
+
+// جدول برچسب دوزبانه با همون API قبلی (Record<K,string>): هر خوندن موقع
+// استفاده با زبان جاری حل می‌شه، پس هیچ tr() در سطح ماژول اجرا نمی‌شه.
+function localizedRecord<K extends string>(pairs: Record<K, [string, string]>): Record<K, string> {
+  const resolve = (v: [string, string]) => pick({ fa: v[0], en: v[1] });
+  return new Proxy(pairs as unknown as Record<K, string>, {
+    get(target, key, receiver) {
+      if (typeof key === "string" && Object.prototype.hasOwnProperty.call(target, key)) {
+        return resolve((target as unknown as Record<string, [string, string]>)[key]);
+      }
+      return Reflect.get(target, key, receiver);
+    },
+    getOwnPropertyDescriptor(target, key) {
+      const d = Reflect.getOwnPropertyDescriptor(target, key);
+      if (d && typeof key === "string" && "value" in d) {
+        return { ...d, value: resolve(d.value as unknown as [string, string]) };
+      }
+      return d;
+    },
+  });
+}
 
 // ── تنظیمات مشترک با پنل کاربری ─────────────────────────────────────────
 export type CalSystem = "jalali" | "gregorian";
@@ -34,54 +56,70 @@ export type TradeEmotionBefore =
 export type TradeEmotionAfter =
   | "SATISFIED" | "RELIEVED" | "INDIFFERENT" | "ANXIOUS" | "REGRET" | "ANGRY";
 
-export const ACCOUNT_TYPE_LABELS: Record<TradeAccountType, string> = {
-  REAL: "واقعی", DEMO: "دمو", PROP: "پراپ", BACKTEST: "بک‌تست",
-};
+export const ACCOUNT_TYPE_LABELS: Record<TradeAccountType, string> = localizedRecord({
+  REAL: ["واقعی", "Live"],
+  DEMO: ["دمو", "Demo"],
+  PROP: ["پراپ", "Prop"],
+  BACKTEST: ["بک‌تست", "Backtest"],
+});
 
-export const DIRECTION_LABELS: Record<TradeDirection, string> = {
-  BUY: "خرید (Buy)", SELL: "فروش (Sell)",
-};
+export const DIRECTION_LABELS: Record<TradeDirection, string> = localizedRecord({
+  BUY: ["خرید (Buy)", "Buy"],
+  SELL: ["فروش (Sell)", "Sell"],
+});
 
-export const STATUS_LABELS: Record<TradeStatus, string> = {
-  OPEN: "باز", CLOSED: "بسته", CANCELED: "لغو شده",
-};
+export const STATUS_LABELS: Record<TradeStatus, string> = localizedRecord({
+  OPEN: ["باز", "Open"],
+  CLOSED: ["بسته", "Closed"],
+  CANCELED: ["لغو شده", "Canceled"],
+});
 
-export const RESULT_LABELS: Record<TradeResult, string> = {
-  PROFIT: "سود", LOSS: "ضرر", BREAKEVEN: "سربه‌سر",
-};
+export const RESULT_LABELS: Record<TradeResult, string> = localizedRecord({
+  PROFIT: ["سود", "Profit"],
+  LOSS: ["ضرر", "Loss"],
+  BREAKEVEN: ["سربه‌سر", "Breakeven"],
+});
 
-export const ENTRY_REASON_LABELS: Record<TradeEntryReason, string> = {
-  STRATEGY: "طبق استراتژی",
-  TECHNICAL_SIGNAL: "سیگنال تکنیکال",
-  FUNDAMENTAL_SIGNAL: "سیگنال فاندامنتال",
-  NEWS: "اخبار",
-  INTUITION: "شهود",
-  OTHERS_ADVICE: "توصیه دیگران",
-  FOMO: "FOMO (ترس از جاماندن)",
-  REVENGE: "انتقام از بازار",
-  OTHER: "سایر",
-};
+export const ENTRY_REASON_LABELS: Record<TradeEntryReason, string> = localizedRecord({
+  STRATEGY: ["طبق استراتژی", "Followed strategy"],
+  TECHNICAL_SIGNAL: ["سیگنال تکنیکال", "Technical signal"],
+  FUNDAMENTAL_SIGNAL: ["سیگنال فاندامنتال", "Fundamental signal"],
+  NEWS: ["اخبار", "News"],
+  INTUITION: ["شهود", "Intuition"],
+  OTHERS_ADVICE: ["توصیه دیگران", "Others' advice"],
+  FOMO: ["FOMO (ترس از جاماندن)", "FOMO (fear of missing out)"],
+  REVENGE: ["انتقام از بازار", "Revenge trade"],
+  OTHER: ["سایر", "Other"],
+});
 
-export const EXIT_REASON_LABELS: Record<TradeExitReason, string> = {
-  TAKE_PROFIT: "رسیدن به حد سود",
-  STOP_LOSS: "خوردن حد ضرر",
-  MANUAL: "خروج دستی",
-  TRAILING_STOP: "تریلینگ استاپ",
-  MARKET_CHANGE: "تغییر شرایط بازار",
-  EMOTIONAL: "خروج احساسی",
-  TIME_BASED: "خروج زمانی",
-  OTHER: "سایر",
-};
+export const EXIT_REASON_LABELS: Record<TradeExitReason, string> = localizedRecord({
+  TAKE_PROFIT: ["رسیدن به حد سود", "Take profit hit"],
+  STOP_LOSS: ["خوردن حد ضرر", "Stop loss hit"],
+  MANUAL: ["خروج دستی", "Manual exit"],
+  TRAILING_STOP: ["تریلینگ استاپ", "Trailing stop"],
+  MARKET_CHANGE: ["تغییر شرایط بازار", "Market conditions changed"],
+  EMOTIONAL: ["خروج احساسی", "Emotional exit"],
+  TIME_BASED: ["خروج زمانی", "Time-based exit"],
+  OTHER: ["سایر", "Other"],
+});
 
-export const EMOTION_BEFORE_LABELS: Record<TradeEmotionBefore, string> = {
-  CALM: "آرام", NEUTRAL: "معمولی", EXCITED: "هیجان‌زده",
-  ANXIOUS: "مضطرب", ANGRY: "عصبانی", OVERCONFIDENT: "بیش‌ازحد مطمئن",
-};
+export const EMOTION_BEFORE_LABELS: Record<TradeEmotionBefore, string> = localizedRecord({
+  CALM: ["آرام", "Calm"],
+  NEUTRAL: ["معمولی", "Neutral"],
+  EXCITED: ["هیجان‌زده", "Excited"],
+  ANXIOUS: ["مضطرب", "Anxious"],
+  ANGRY: ["عصبانی", "Angry"],
+  OVERCONFIDENT: ["بیش‌ازحد مطمئن", "Overconfident"],
+});
 
-export const EMOTION_AFTER_LABELS: Record<TradeEmotionAfter, string> = {
-  SATISFIED: "راضی", RELIEVED: "آسوده", INDIFFERENT: "بی‌تفاوت",
-  ANXIOUS: "مضطرب", REGRET: "پشیمان", ANGRY: "عصبانی",
-};
+export const EMOTION_AFTER_LABELS: Record<TradeEmotionAfter, string> = localizedRecord({
+  SATISFIED: ["راضی", "Satisfied"],
+  RELIEVED: ["آسوده", "Relieved"],
+  INDIFFERENT: ["بی‌تفاوت", "Indifferent"],
+  ANXIOUS: ["مضطرب", "Anxious"],
+  REGRET: ["پشیمان", "Regretful"],
+  ANGRY: ["عصبانی", "Angry"],
+});
 
 export const ENTRY_REASON_ORDER: TradeEntryReason[] = [
   "STRATEGY", "TECHNICAL_SIGNAL", "FUNDAMENTAL_SIGNAL", "NEWS",
@@ -110,20 +148,27 @@ export const TAG_COLORS = [
 // همان چیزی‌ست که در دیتابیس ذخیره می‌شود، `CURRENCY_SYMBOLS` فقط برای نمایش.
 export const ACCOUNT_CURRENCIES = ["USD", "EUR", "IRT", "IRR", "AED", "TRY", "GBP", "USDT"] as const;
 
-export const CURRENCY_LABELS: Record<string, string> = {
-  USD: "دلار آمریکا",
-  EUR: "یورو",
-  IRT: "تومان",
-  IRR: "ریال",
-  AED: "درهم امارات",
-  TRY: "لیر ترکیه",
-  GBP: "پوند انگلیس",
-  USDT: "تتر",
-};
+export const CURRENCY_LABELS: Record<string, string> = localizedRecord<string>({
+  USD: ["دلار آمریکا", "US dollar"],
+  EUR: ["یورو", "Euro"],
+  IRT: ["تومان", "Toman"],
+  IRR: ["ریال", "Rial"],
+  AED: ["درهم امارات", "UAE dirham"],
+  TRY: ["لیر ترکیه", "Turkish lira"],
+  GBP: ["پوند انگلیس", "British pound"],
+  USDT: ["تتر", "Tether"],
+});
 
-export const CURRENCY_SYMBOLS: Record<string, string> = {
-  USD: "$", EUR: "€", IRT: "تومان", IRR: "ریال", AED: "درهم", TRY: "₺", GBP: "£", USDT: "₮",
-};
+export const CURRENCY_SYMBOLS: Record<string, string> = localizedRecord<string>({
+  USD: ["$", "$"],
+  EUR: ["€", "€"],
+  IRT: ["تومان", "Toman"],
+  IRR: ["ریال", "Rial"],
+  AED: ["درهم", "AED"],
+  TRY: ["₺", "₺"],
+  GBP: ["£", "£"],
+  USDT: ["₮", "₮"],
+});
 
 export function currencySymbol(code: string): string {
   return CURRENCY_SYMBOLS[code] || code;
@@ -398,23 +443,23 @@ export type TradeStatKey =
   | "largestGain" | "largestLoss" | "maxWinStreak" | "maxLossStreak"
   | "avgR" | "profitFactor" | "balance" | "maxDrawdown" | "expectancy";
 
-export const TRADE_STAT_LABELS: Record<TradeStatKey, string> = {
-  goalRing: "پیشرفت هدف (دایره‌ای)",
-  balance: "بالانس حساب",
-  monthTotal: "سود/زیان دوره",
-  total: "تعداد معاملات",
-  winRate: "نرخ برد",
-  avgWin: "میانگین سود",
-  avgLoss: "میانگین ضرر",
-  largestGain: "بیشترین سود",
-  largestLoss: "بیشترین ضرر",
-  maxWinStreak: "بیشترین برد پشت‌سرهم",
-  maxLossStreak: "بیشترین باخت پشت‌سرهم",
-  avgR: "میانگین R",
-  profitFactor: "فاکتور سود",
-  maxDrawdown: "بیشترین افت سرمایه",
-  expectancy: "امید ریاضی هر معامله",
-};
+export const TRADE_STAT_LABELS: Record<TradeStatKey, string> = localizedRecord({
+  goalRing: ["پیشرفت هدف (دایره‌ای)", "Goal progress (ring)"],
+  balance: ["بالانس حساب", "Account balance"],
+  monthTotal: ["سود/زیان دوره", "Period P/L"],
+  total: ["تعداد معاملات", "Number of trades"],
+  winRate: ["نرخ برد", "Win rate"],
+  avgWin: ["میانگین سود", "Average win"],
+  avgLoss: ["میانگین ضرر", "Average loss"],
+  largestGain: ["بیشترین سود", "Largest win"],
+  largestLoss: ["بیشترین ضرر", "Largest loss"],
+  maxWinStreak: ["بیشترین برد پشت‌سرهم", "Longest win streak"],
+  maxLossStreak: ["بیشترین باخت پشت‌سرهم", "Longest losing streak"],
+  avgR: ["میانگین R", "Average R"],
+  profitFactor: ["فاکتور سود", "Profit factor"],
+  maxDrawdown: ["بیشترین افت سرمایه", "Max drawdown"],
+  expectancy: ["امید ریاضی هر معامله", "Expectancy per trade"],
+});
 
 export const TRADE_STAT_ORDER: TradeStatKey[] = [
   "goalRing", "balance", "monthTotal", "total", "winRate", "avgR", "profitFactor",
@@ -433,15 +478,15 @@ export const TRADE_STATS_VISIBILITY_KEY = SETTING_KEYS.tradeVisibleStats;
 // صفحه‌ی ژورنال‌نویسی یک حساب. کاربر از تنظیمات انتخاب می‌کند کدام‌ها باشند.
 export type TradeTotalsStatKey = "balance" | "netPnl" | "winRate" | "trades" | "closed" | "open" | "accounts";
 
-export const TRADE_TOTALS_STAT_LABELS: Record<TradeTotalsStatKey, string> = {
-  balance: "بالانس کل",
-  netPnl: "سود/زیان خالص",
-  winRate: "نرخ برد",
-  trades: "کل معاملات",
-  closed: "معاملات بسته‌شده",
-  open: "معاملات باز",
-  accounts: "حساب فعال",
-};
+export const TRADE_TOTALS_STAT_LABELS: Record<TradeTotalsStatKey, string> = localizedRecord({
+  balance: ["بالانس کل", "Total balance"],
+  netPnl: ["سود/زیان خالص", "Net P/L"],
+  winRate: ["نرخ برد", "Win rate"],
+  trades: ["کل معاملات", "Total trades"],
+  closed: ["معاملات بسته‌شده", "Closed trades"],
+  open: ["معاملات باز", "Open trades"],
+  accounts: ["حساب فعال", "Active accounts"],
+});
 
 export const TRADE_TOTALS_STAT_ORDER: TradeTotalsStatKey[] = ["balance", "netPnl", "winRate", "trades", "closed", "open", "accounts"];
 
@@ -457,24 +502,24 @@ export type TradeFactKey =
   | "entryPrice" | "exitPrice" | "stopLoss" | "takeProfit"
   | "riskAmount" | "commission" | "swap" | "session" | "confidence" | "result";
 
-export const TRADE_FACT_LABELS: Record<TradeFactKey, string> = {
-  openedAt: "ساعت ورود",
-  closedAt: "ساعت خروج",
-  volume: "حجم",
-  rMultiple: "R",
-  timeframe: "تایم‌فریم",
-  setup: "ستاپ",
-  entryPrice: "قیمت ورود",
-  exitPrice: "قیمت خروج",
-  stopLoss: "حد ضرر",
-  takeProfit: "حد سود",
-  riskAmount: "ریسک اولیه",
-  commission: "کمیسیون",
-  swap: "سواپ",
-  session: "جلسه",
-  confidence: "میزان اطمینان",
-  result: "نتیجه",
-};
+export const TRADE_FACT_LABELS: Record<TradeFactKey, string> = localizedRecord({
+  openedAt: ["ساعت ورود", "Entry time"],
+  closedAt: ["ساعت خروج", "Exit time"],
+  volume: ["حجم", "Volume"],
+  rMultiple: ["R", "R"],
+  timeframe: ["تایم‌فریم", "Timeframe"],
+  setup: ["ستاپ", "Setup"],
+  entryPrice: ["قیمت ورود", "Entry price"],
+  exitPrice: ["قیمت خروج", "Exit price"],
+  stopLoss: ["حد ضرر", "Stop loss"],
+  takeProfit: ["حد سود", "Take profit"],
+  riskAmount: ["ریسک اولیه", "Initial risk"],
+  commission: ["کمیسیون", "Commission"],
+  swap: ["سواپ", "Swap"],
+  session: ["جلسه", "Session"],
+  confidence: ["میزان اطمینان", "Confidence"],
+  result: ["نتیجه", "Result"],
+});
 
 export const TRADE_FACT_ORDER: TradeFactKey[] = [
   "openedAt", "closedAt", "volume", "rMultiple", "timeframe", "setup",

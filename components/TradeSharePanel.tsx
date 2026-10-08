@@ -24,12 +24,13 @@ import type { TradeShareAccount, TradeSharePeriod, TradeShareQuery, TradeShareRe
 import { SegmentedTabs } from "./SegmentedTabs";
 import { Spinner } from "./Spinner";
 import { D_EASE } from "./DashboardKit";
+import { isEn, pick, tr, type Localized } from "@/lib/i18n";
 
 const FOCUSABLE = 'button:not([disabled]), [href], input:not([disabled]), select:not([disabled]), [tabindex]:not([tabindex="-1"])';
-const PERIOD_OPTIONS: { value: TradeSharePeriod; label: string }[] = [
-  { value: "day", label: "روز" },
-  { value: "week", label: "هفته" },
-  { value: "month", label: "ماه" },
+const PERIOD_OPTIONS: { value: TradeSharePeriod; label: Localized }[] = [
+  { value: "day", label: { fa: "روز", en: "Day" } },
+  { value: "week", label: { fa: "هفته", en: "Week" } },
+  { value: "month", label: { fa: "ماه", en: "Month" } },
 ];
 /** تا این تعداد گزینه (با «همه») انتخاب حساب SegmentedTabs ـه، بیشترش سلکت */
 const MAX_ACCOUNT_TABS = 3;
@@ -227,9 +228,9 @@ export function TradeSharePanel({
   function onButton() {
     if (failed) { retry(); return; }
     if (!ready || !full || !data) return;
-    const lead = `کارنامه‌ی ترید من: ${data.rangeLabel} 📈`;
+    const lead = tr(`کارنامه‌ی ترید من: ${data.rangeLabel} 📈`, `My trading report: ${data.rangeLabel} 📈`);
     const inv = invite ? { code: invite.code, url: invite.url, percent: REFERRAL_DISCOUNT_PERCENT } : null;
-    share(full.blob, `arion-trade-${data.period}-${anchor}.png`, "کارنامه‌ی ترید", shareText(lead, inv));
+    share(full.blob, `arion-trade-${data.period}-${anchor}.png`, tr("کارنامه‌ی ترید", "Trading report"), shareText(lead, inv));
   }
 
   // ── فوکوس: داخل پنجره، و بعد از بستن برگشت به دکمه‌ی بازکننده ──
@@ -268,23 +269,23 @@ export function TradeSharePanel({
   let btnBody: React.ReactNode;
   let btnLabel: string;
   if (phase === "done") {
-    btnLabel = result === "downloaded" ? "ذخیره شد" : "ارسال شد";
+    btnLabel = result === "downloaded" ? tr("ذخیره شد", "Saved") : tr("ارسال شد", "Sent");
     btnBody = (
       <motion.span className="db-share-btn-in" initial={{ scale: 0.6, opacity: 0 }} animate={{ scale: 1, opacity: 1 }} transition={{ type: "spring", stiffness: 420, damping: 18 }}>
         <Check size={17} strokeWidth={3} /> {btnLabel}
       </motion.span>
     );
   } else if (busy || preparing) {
-    btnLabel = busy ? "در حال اشتراک" : "در حال آماده‌سازی تصویر";
+    btnLabel = busy ? tr("در حال اشتراک", "Sharing") : tr("در حال آماده‌سازی تصویر", "Preparing image");
     btnBody = <Spinner size={16} />;
   } else {
-    btnLabel = failed || phase === "error" ? "تلاش دوباره" : saveOnly ? "ذخیره تصویر" : "اشتراک‌گذاری";
+    btnLabel = failed || phase === "error" ? tr("تلاش دوباره", "Try again") : saveOnly ? tr("ذخیره تصویر", "Save image") : tr("اشتراک‌گذاری", "Share");
     btnBody = <span className="db-share-btn-in">{failed ? null : saveOnly ? <Download size={17} /> : <Share2 size={16} />} {btnLabel}</span>;
   }
 
   const accountOptions = useMemo(() => {
     const list = accounts ?? [];
-    return [{ id: ALL, name: "همه‌ی حساب‌ها", color: "" }, ...list.map((a) => ({ id: a.id, name: a.name, color: a.color }))];
+    return [{ id: ALL, name: tr("همه‌ی حساب‌ها", "All accounts"), color: "" }, ...list.map((a) => ({ id: a.id, name: a.name, color: a.color }))];
   }, [accounts]);
   const selectedColor = accountOptions.find((a) => a.id === account)?.color ?? "";
 
@@ -306,23 +307,23 @@ export function TradeSharePanel({
             className="db-share ts-share"
             role="dialog"
             aria-modal="true"
-            aria-label="اشتراک کارنامه‌ی ترید"
+            aria-label={tr("اشتراک کارنامه‌ی ترید", "Share trading report")}
             initial={{ opacity: 0, y: 18, scale: 0.97 }}
             animate={{ opacity: 1, y: 0, scale: 1 }}
             exit={{ opacity: 0, y: 10, scale: 0.98 }}
             transition={{ duration: 0.28, ease: D_EASE }}
             onMouseDown={(e) => { if (e.target === e.currentTarget) onClose(); }}
           >
-            <button type="button" className="trade-icon-btn db-share-close" onClick={onClose} aria-label="بستن"><X size={18} /></button>
+            <button type="button" className="trade-icon-btn db-share-close" onClick={onClose} aria-label={tr("بستن", "Close")}><X size={18} /></button>
 
-            <SegmentedTabs options={PERIOD_OPTIONS} active={period} onChange={setPeriod} className="ts-tabs" ariaLabel="بازه" />
+            <SegmentedTabs options={PERIOD_OPTIONS.map((o) => ({ value: o.value, label: pick(o.label) }))} active={period} onChange={setPeriod} className="ts-tabs" ariaLabel={tr("بازه", "Period")} />
 
             <div className="ts-nav">
-              <button type="button" className="trade-icon-btn ts-nav-btn" onClick={goPrev} aria-label="بازه‌ی قبلی"><ChevronRight size={18} /></button>
+              <button type="button" className="trade-icon-btn ts-nav-btn" onClick={goPrev} aria-label={tr("بازه‌ی قبلی", "Previous period")}>{isEn() ? <ChevronLeft size={18} /> : <ChevronRight size={18} />}</button>
               <span className={`ts-nav-label${data ? "" : " is-dim"}`} aria-live="polite">
                 {rangeLabel ?? <span className="db-skel ts-nav-skel" aria-hidden="true" />}
               </span>
-              <button type="button" className="trade-icon-btn ts-nav-btn" onClick={goNext} disabled={nextDisabled} aria-label="بازه‌ی بعدی"><ChevronLeft size={18} /></button>
+              <button type="button" className="trade-icon-btn ts-nav-btn" onClick={goNext} disabled={nextDisabled} aria-label={tr("بازه‌ی بعدی", "Next period")}>{isEn() ? <ChevronRight size={18} /> : <ChevronLeft size={18} />}</button>
             </div>
 
             {accounts && accountOptions.length > 1 && (
@@ -335,12 +336,12 @@ export function TradeSharePanel({
                   active={account}
                   onChange={setAccount}
                   className="ts-tabs"
-                  ariaLabel="حساب"
+                  ariaLabel={tr("حساب", "Account")}
                 />
               ) : (
                 <span className={`acc-select-wrap ts-select-wrap${selectedColor ? " has-dot" : ""}`}>
                   {selectedColor && <span className="ts-dot ts-select-dot" style={{ background: selectedColor }} aria-hidden="true" />}
-                  <select className="wsearch-newform-name trade-glass-field acc-select" value={account} onChange={(e) => setAccount(e.target.value)} aria-label="حساب">
+                  <select className="wsearch-newform-name trade-glass-field acc-select" value={account} onChange={(e) => setAccount(e.target.value)} aria-label={tr("حساب", "Account")}>
                     {accountOptions.map((a) => <option key={a.id} value={a.id}>{a.name}</option>)}
                   </select>
                   <ChevronDown size={15} />
@@ -350,16 +351,16 @@ export function TradeSharePanel({
 
             <div className="db-share-preview" style={{ aspectRatio: aspect }} aria-busy={preparing || undefined}>
               {renderErr ? (
-                <div className="db-share-fail" role="alert"><p>ساخت تصویر ممکن نشد</p></div>
+                <div className="db-share-fail" role="alert"><p>{tr("ساخت تصویر ممکن نشد", "Could not create the image")}</p></div>
               ) : fetchErr && !shown ? (
-                <div className="db-share-fail" role="alert"><p>دریافت کارنامه ممکن نشد</p></div>
+                <div className="db-share-fail" role="alert"><p>{tr("دریافت کارنامه ممکن نشد", "Could not load the report")}</p></div>
               ) : (
                 <>
                   <canvas
                     ref={canvasRef}
                     className={`db-share-canvas${shown ? "" : " is-hidden"}${stale || fetchErr ? " is-dim" : ""}`}
                     role="img"
-                    aria-label="پیش‌نمایش کارنامه‌ی ترید"
+                    aria-label={tr("پیش‌نمایش کارنامه‌ی ترید", "Trading report preview")}
                   />
                   {!shown && <div className="db-share-skel ts-skel" aria-hidden="true"><span className="db-skel" /></div>}
                   {stale && !fetchErr && <span className="db-share-preview-spin"><Spinner size={18} /></span>}
@@ -378,7 +379,7 @@ export function TradeSharePanel({
               {btnBody}
             </button>
             <span className="sr-only" role="status" aria-live="polite">
-              {phase === "error" ? "اشتراک انجام نشد" : result === "downloaded" ? "تصویر توی دانلودها ذخیره شد" : ""}
+              {phase === "error" ? tr("اشتراک انجام نشد", "Sharing failed") : result === "downloaded" ? tr("تصویر توی دانلودها ذخیره شد", "Image saved to downloads") : ""}
             </span>
           </motion.div>
         </motion.div>

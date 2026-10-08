@@ -11,6 +11,7 @@ import { activeModulesOf, getAccount } from "@/lib/accountCache";
 import dynamic from "next/dynamic";
 import { preloadWhenIdle } from "@/lib/preloadIdle";
 import { useFeature } from "@/lib/useFeatures";
+import { tr } from "@/lib/i18n";
 
 // پنجره‌ی اشتراک (رندر canvas کارنامه) فقط با کلیک لازم می‌شه
 const loadPanel = () => import("./TradeSharePanel").then((m) => m.TradeSharePanel);
@@ -58,8 +59,8 @@ export function TradeShareButton({ account = "all", deepLink = false, className,
         className={`trade-icon-btn${className ? ` ${className}` : ""}`}
         onClick={() => setOpen(true)}
         aria-haspopup="dialog"
-        aria-label="اشتراک کارنامه‌ی ترید"
-        title="اشتراک کارنامه"
+        aria-label={tr("اشتراک کارنامه‌ی ترید", "Share trading report")}
+        title={tr("اشتراک کارنامه", "Share report")}
       >
         <Share2 size={size} />
       </button>
