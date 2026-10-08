@@ -1534,3 +1534,84 @@ body[data-theme="light"] .mv2-st-day, body:not([data-theme="light"]) .mv2-st-day
 .mv2-st-shared li.is-on svg{ color:var(--m-ok); }
 .mv2-st-shared li.is-off{ color:var(--muted); }
 .mv2-st-shared-note{ margin-inline-start:auto; font-size:12px; }
+
+/* ── mv2: student & chat ── */
+.mv2-ms{ display:flex; flex-direction:column; gap:var(--m-4); }
+.mv2-ms-invites{ display:flex; flex-direction:column; gap:var(--m-3); }
+.mv2-ms-invite{
+  display:flex; flex-direction:column; gap:var(--m-3); padding:var(--m-4);
+  border:1px solid rgba(var(--accent-rgb), .55); border-radius:20px; margin-bottom:var(--m-3);
+}
+.mv2-ms-invite-head{ display:flex; align-items:center; gap:var(--m-3); }
+.mv2-ms-invite-text{ margin:0; font-size:14.5px; line-height:1.8; color:var(--text); display:flex; flex-direction:column; gap:2px; min-width:0; }
+.mv2-ms-invite-actions{ display:flex; gap:var(--m-2); }
+.mv2-ms-invite-actions > *{ flex:1 1 0; min-height:44px; justify-content:center; }
+.mv2-ms-invite-actions.is-three > :first-child{ flex-basis:100%; }
+.mv2-ms-invite-actions.is-three{ flex-wrap:wrap; }
+.mv2-ms-invite-actions.is-three > :not(:first-child){ flex:1 1 40%; }
+.mv2-ms-name{ font-weight:800; font-size:15px; color:var(--text); text-decoration:none; }
+.mv2-ms-meta{ display:block; font-size:12px; font-weight:400; color:var(--muted); line-height:1.7; }
+.mv2-ms-filter{ margin-bottom:var(--m-3); }
+.mv2-ms-empty{ margin:0; padding:var(--m-3) 0; font-size:13px; color:var(--muted); }
+.mv2-ms-cards{ list-style:none; margin:0; padding:0; display:flex; flex-direction:column; gap:var(--m-2); }
+.mv2-ms-card{ border:1px solid var(--surface-line); border-radius:20px; overflow:hidden; }
+.mv2-ms-card-main{ display:flex; align-items:center; gap:var(--m-3); padding:var(--m-3) var(--m-4); text-decoration:none; color:var(--text); min-height:64px; }
+.mv2-ms-card-main:focus-visible, .mv2-ms-strip:focus-visible, .mv2-ms-fold-btn:focus-visible, .mv2-ms-find:focus-visible{ outline:2px solid var(--accent); outline-offset:-2px; }
+.mv2-ms-card-body{ flex:1 1 auto; min-width:0; display:flex; flex-direction:column; gap:1px; }
+.mv2-ms-chev{ flex-shrink:0; color:var(--muted); }
+.mv2-ms-strip{
+  display:flex; align-items:center; gap:var(--m-2); min-height:44px; padding:var(--m-2) var(--m-4);
+  border-top:1px solid var(--surface-line); font-size:13px; font-weight:700; text-decoration:none;
+  color:var(--m-warn, var(--accent));
+}
+.mv2-ms-strip > span{ flex:1; }
+.mv2-ms-strip.is-chat{ color:var(--m-info, var(--accent)); }
+.mv2-ms-fold{ border-top:1px solid var(--surface-line); }
+.mv2-ms-fold-btn{
+  display:flex; align-items:center; gap:var(--m-3); width:100%; min-height:52px; padding:0 var(--m-1);
+  font-family:inherit; font-size:14px; font-weight:700; color:var(--text); text-align:start; cursor:pointer;
+  border:none; border-radius:0; background:none; box-shadow:none;
+}
+body[data-theme="light"] .mv2-ms-fold-btn, body:not([data-theme="light"]) .mv2-ms-fold-btn{ background:none; box-shadow:none; }
+.mv2-ms-fold-btn > span:first-child{ flex:1; }
+.mv2-ms-fold-btn svg{ transition:transform .2s ease; color:var(--muted); }
+.mv2-ms-fold-btn svg.is-open{ transform:rotate(180deg); }
+.mv2-ms-count{ font-size:13px; font-weight:400; color:var(--muted); }
+.mv2-ms-list{ list-style:none; margin:0; padding:0 0 var(--m-2); }
+.mv2-ms-li{ display:flex; align-items:center; gap:var(--m-3); min-height:56px; padding:var(--m-2) var(--m-1); }
+.mv2-ms-find{ display:flex; align-items:center; justify-content:center; min-height:48px; font-size:14px; font-weight:700; color:var(--accent); text-decoration:none; }
+.mv2-ms-sub{ margin:var(--m-3) 0 var(--m-1); font-size:12px; font-weight:700; color:var(--muted); }
+.mv2-ms-items{ margin:0; padding:0 var(--m-4) 0 0; font-size:13px; line-height:1.9; color:var(--text); }
+.mv2-ms-items .is-more{ list-style:none; margin-inline-start:-18px; color:var(--muted); }
+/* سرتیتر وسط‌چین صفحه‌ی همکاری */
+.mv2-ms-head{ position:relative; display:flex; flex-direction:column; align-items:center; gap:var(--m-2); text-align:center; padding:var(--m-2) 0 var(--m-3); }
+.mv2-ms-head h1{ margin:0; font-size:20px; }
+.mv2-ms-head-kebab{ position:absolute; top:0; inset-inline-end:0; }
+.mv2-ms-role{ margin:0; font-size:13px; color:var(--muted); }
+.mv2-ms-head-actions{ display:flex; flex-wrap:wrap; justify-content:center; gap:var(--m-2); margin-top:var(--m-2); }
+.mv2-ms-head-actions > *{ min-height:44px; }
+.mv2-ms-badge{ display:inline-flex; align-items:center; justify-content:center; min-width:20px; height:20px; padding:0 6px; margin-inline-start:6px; border-radius:999px; font-size:12px; font-weight:800; border:1px solid currentColor; }
+/* گفت‌وگو */
+body .mc-screen .mv2-ms-lockpill{ width:auto; height:44px; padding:0 14px; gap:6px; font-size:12px; font-weight:700; display:inline-flex; align-items:center; }
+.mc-screen:focus{ outline:none; }
+.mc-screen .mc-text{ font-size:14.5px; line-height:1.8; }
+.mc-screen .mc-meta, .mc-screen .mc-time, .mc-screen .mv2-ms-read{ font-size:12px; }
+.mv2-ms-read{ display:inline-flex; align-items:center; gap:3px; }
+body .mc-screen .mc-composer .routine-ai-action{ width:48px; height:48px; }
+.mc-screen .routine-ai-input.mc-input{ min-height:48px; font-size:14px; }
+.mv2-ms-syscard{
+  display:flex; align-items:flex-start; gap:var(--m-3); margin:0 0 var(--m-2); padding:var(--m-3) var(--m-4);
+  border:1px solid color-mix(in srgb, var(--m-info, var(--accent)) 40%, transparent); border-radius:18px;
+  font-size:13px; line-height:1.9; color:var(--text);
+}
+.mv2-ms-syscard > svg{ flex-shrink:0; margin-top:4px; color:var(--m-info, var(--accent)); }
+.mv2-ms-syscard-body{ display:flex; flex-direction:column; flex:1; min-width:0; }
+.mv2-ms-syscard-actions{ display:flex; gap:var(--m-4); }
+.mv2-ms-syscard-actions .mentor-text-btn{ min-height:44px; }
+.mv2-ms-secure{ display:flex; flex-direction:column; align-items:center; gap:var(--m-2); text-align:center; padding:var(--m-2) 0 var(--m-3); }
+.mv2-ms-secure-lock{ display:inline-flex; align-items:center; justify-content:center; width:72px; height:72px; border-radius:50%; color:var(--accent); border:1px solid rgba(var(--accent-rgb), .5); }
+.mv2-ms-secure-title{ margin:0; font-size:16px; font-weight:800; line-height:1.8; }
+.mv2-ms-secure-text{ margin:0; font-size:13.5px; line-height:1.9; color:var(--muted); }
+.mv2-ms-more{ min-height:44px; display:inline-flex; align-items:center; gap:4px; }
+.mv2-ms-more svg{ transition:transform .2s ease; }
+.mv2-ms-more svg.is-open{ transform:rotate(180deg); }
