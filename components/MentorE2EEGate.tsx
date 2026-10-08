@@ -28,7 +28,7 @@ type Ready = Extract<IdentityState, { status: "ready" }>;
 export { useE2EEReady } from "@/lib/e2ee/client";
 
 /**
- * راه‌انداز نامرئی رمزگذاری سرتاسری (docs/mentor-e2ee.md). کاربر هیچ رمزی
+ * راه‌انداز نامرئی گفت‌وگوی خصوصی (docs/mentor-e2ee.md). کاربر هیچ رمزی
  * نمی‌سازد و هیچ فرمی نمی‌بیند: کلید در پس‌زمینه ساخته/باز می‌شود و children با
  * کلید آماده رندر می‌شود. فقط در این حالت‌ها یک خط کوچک دیده می‌شود:
  *   • خطای واقعی (شبکه/سرور) — با «تلاش دوباره»
@@ -50,7 +50,7 @@ export function MentorE2EEGate({
     return (
       <p className="mentor-e2ee-line is-warn" role="status">
         <AlertTriangle {...ICON} aria-hidden />
-        <span>این مرورگر رمزگذاری سرتاسری را پشتیبانی نمی‌کند؛ مرورگر را به‌روز کن</span>
+        <span>برای گفت‌وگو، مرورگرت رو به‌روز کن</span>
       </p>
     );
   }
@@ -84,7 +84,7 @@ function NoticeLine({ notice, link }: { notice: E2EENotice; link: LinkState | nu
     return (
       <p className="mentor-e2ee-line" role="status">
         <History {...ICON} aria-hidden />
-        <span>پیام‌های قبلی بعد از ورود دوباره با رمز عبور روی این دستگاه هم باز می‌شوند</span>
+        <span>پیام‌های قبلی بعد از ورود دوباره با رمز عبور، روی این دستگاه هم باز می‌شن</span>
       </p>
     );
   }
@@ -92,14 +92,14 @@ function NoticeLine({ notice, link }: { notice: E2EENotice; link: LinkState | nu
   return (
     <p className="mentor-e2ee-line" role="status">
       <History {...ICON} aria-hidden />
-      <span>پیام‌های قبلی روی دستگاه دیگرت است</span>
+      <span>پیام‌های قبلی روی یه دستگاه دیگه‌ته</span>
       <button
         type="button"
         className="mentor-text-btn"
         disabled={busy}
         onClick={async () => { setBusy(true); try { await requestHistoryLink(); } finally { setBusy(false); } }}
       >
-        {busy ? <Spinner size={12} /> : "انتقال سابقه"}
+        {busy ? <Spinner size={12} /> : "آوردن پیام‌های قبلی"}
       </button>
     </p>
   );
@@ -116,7 +116,7 @@ function RequesterLine({ link }: { link: Extract<LinkState, { role: "requester" 
     return (
       <p className="mentor-e2ee-line" role="status">
         <History {...ICON} aria-hidden />
-        <span>انتقال سابقه روی دستگاه دیگر رد شد</span>
+        <span>آوردن پیام‌های قبلی روی دستگاه دیگه رد شد</span>
       </p>
     );
   }
@@ -125,7 +125,7 @@ function RequesterLine({ link }: { link: Extract<LinkState, { role: "requester" 
     <p className="mentor-e2ee-line" role="status">
       <History {...ICON} aria-hidden />
       <span>
-        روی دستگاه دیگرت بخش مربی را باز کن و این کد را تایید کن: <b className="mono" dir="ltr">{faNum(link.code)}</b>
+        روی دستگاه دیگه‌ات بخش مربی رو باز کن و این کد رو تایید کن: <b className="mono" dir="ltr">{faNum(link.code)}</b>
       </span>
       <button type="button" className="mentor-text-btn" onClick={() => cancelHistoryLink(link.id)}>لغو</button>
     </p>
@@ -138,9 +138,9 @@ function ApproveDialog({ link }: { link: Extract<LinkState, { role: "approver" }
   const [moved, setMoved] = useState(0);
   return (
     <MentorConfirmDialog
-      message="انتقال سابقه‌ی گفت‌وگو به دستگاه تازه"
-      hint={`کد روی ${link.deviceLabel || "دستگاه تازه"}: ${faNum(link.code)}. فقط اگر همین کد را آن‌جا می‌بینی تایید کن.`}
-      confirmLabel={busy ? (moved ? `${faNum(moved)} مورد منتقل شد` : "در حال انتقال") : "تایید و انتقال"}
+      message="آوردن پیام‌های قبلی به دستگاه تازه"
+      hint={`کد روی ${link.deviceLabel || "دستگاه تازه"}: ${faNum(link.code)}. فقط اگه همین کد رو اون‌جا می‌بینی تایید کن.`}
+      confirmLabel={busy ? (moved ? `${faNum(moved)} مورد آورده شد` : "در حال آوردن") : "تایید"}
       danger={false}
       busy={busy}
       error={error}
@@ -150,7 +150,7 @@ function ApproveDialog({ link }: { link: Extract<LinkState, { role: "approver" }
         try {
           await approveHistoryLink(link, setMoved);
         } catch (e) {
-          setError(errMsg(e, "انتقال انجام نشد؛ دوباره تلاش کن"));
+          setError(errMsg(e, "انجام نشد؛ دوباره تلاش کن"));
         } finally {
           setBusy(false);
         }
@@ -170,7 +170,7 @@ function LegacyPasscode({ version }: { version: number }) {
   async function unlock(e: React.FormEvent) {
     e.preventDefault();
     if (busy) return;
-    if (!pass) { setError("رمز قبلی پیام‌ها را وارد کن"); return; }
+    if (!pass) { setError("رمز قبلی پیام‌ها رو وارد کن"); return; }
     setBusy(true);
     setError(null);
     try {
@@ -186,7 +186,7 @@ function LegacyPasscode({ version }: { version: number }) {
     <form className="mentor-e2ee-line mentor-e2ee-legacy" onSubmit={unlock}>
       <KeyRound {...ICON} aria-hidden />
       <span>
-        پیام‌های قبلی با رمزی که قبلا برای آن‌ها ساخته بودی قفل‌اند. یک بار واردش کن تا باز شوند؛ پس از آن رمز جداگانه‌ای لازم نیست.
+        پیام‌های قبلی با رمزی که قبلا برای اون‌ها ساخته بودی قفل‌ان. یه بار واردش کن تا باز بشن؛ بعدش دیگه رمز جداگانه‌ای لازم نیست.
         <span className="mentor-e2ee-legacy-row">
           <input
             type="password"
@@ -201,15 +201,15 @@ function LegacyPasscode({ version }: { version: number }) {
             {busy ? <Spinner size={14} /> : "باز کردن"}
           </button>
           <button type="button" className="account-outline-btn muted mentor-btn is-sm" disabled={busy} onClick={() => setConfirmSkip(true)}>
-            از آن‌ها بگذر
+            بی‌خیال پیام‌های قبلی
           </button>
         </span>
         {error && <span className="mentor-field-error" role="alert">{error}</span>}
       </span>
       {confirmSkip && (
         <MentorConfirmDialog
-          message="بدون پیام‌های قبلی ادامه می‌دهی؟"
-          hint="پیام‌های قبلی روی این حساب دیگر خوانده نمی‌شوند."
+          message="بدون پیام‌های قبلی ادامه بدیم؟"
+          hint="پیام‌های قبلی دیگه روی این حساب باز نمی‌شن."
           confirmLabel="ادامه"
           busy={busy}
           onConfirm={async () => {

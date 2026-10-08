@@ -6,7 +6,7 @@ import { createPortal } from "react-dom";
 import Link from "next/link";
 import { motion } from "framer-motion";
 import { useSession } from "next-auth/react";
-import { ChevronRight, Lock, ShieldCheck } from "lucide-react";
+import { ChevronRight, Lock } from "lucide-react";
 import { AuthGate } from "./AuthGate";
 import { FeatureGate } from "./FeatureGate";
 import { LoadingBlock } from "./Spinner";
@@ -18,9 +18,8 @@ import { useMentorshipActions } from "./MentorshipActions";
 import { useMentorshipRelation } from "./useMentorshipRelation";
 import { M_DUR, mT } from "./MentorMotion";
 import { publicUserName } from "@/lib/mentorTypes";
+import { fmtDate } from "@/lib/mentorFormat";
 import { GoldenName } from "@/components/GoldenName";
-
-const MENU_ICON = { size: 15, strokeWidth: 1.75, "aria-hidden": true } as const;
 
 /**
  * صفحه‌ی گفت‌وگو (/mentorship/[id]/chat) — یک صفحه‌ی کامل مثل پیام‌رسان‌ها:
@@ -44,6 +43,25 @@ export function MentorChatScreen({ id }: { id: string }) {
     return () => root.classList.remove("mc-open");
   }, []);
 
+  // صفحه‌ی زیرین تا وقتی گفت‌وگو بازه غیرفعاله (inert) و فوکوس میاد داخل گفت‌وگو
+  useEffect(() => {
+    if (!mounted) return;
+    const screen = screenRef.current;
+    if (!screen) return;
+    const opener = document.activeElement as HTMLElement | null;
+    const touched: Element[] = [];
+    for (const el of Array.from(document.body.children)) {
+      if (el === screen || el.tagName === "SCRIPT" || el.hasAttribute("inert")) continue;
+      el.setAttribute("inert", "");
+      touched.push(el);
+    }
+    screen.focus({ preventScroll: true });
+    return () => {
+      touched.forEach((el) => el.removeAttribute("inert"));
+      if (opener && document.contains(opener)) opener.focus?.({ preventScroll: true });
+    };
+  }, [mounted]);
+
   // کیبورد موبایل: ارتفاع و جای صفحه = viewport دیدنی
   useEffect(() => {
     const vv = window.visualViewport;
@@ -65,11 +83,15 @@ export function MentorChatScreen({ id }: { id: string }) {
       ref={screenRef}
       className="mc-screen"
       dir="rtl"
+      role="dialog"
+      aria-modal="true"
+      aria-label="گفت‌وگو"
+      tabIndex={-1}
       initial={{ opacity: 0, x: -12 }}
       animate={{ opacity: 1, x: 0, transition: mT(M_DUR.slow) }}
     >
       {status === "loading" && <div className="mc-state"><LoadingBlock /></div>}
-      {status === "unauthenticated" && <div className="mc-state"><AuthGate message="برای استفاده از بخش مربی‌ها وارد شوید" /></div>}
+      {status === "unauthenticated" && <div className="mc-state"><AuthGate message="برای استفاده از بخش مربی‌ها وارد شو" /></div>}
       {status === "authenticated" && (
         <FeatureGate feature="mentors">
           <ChatScreenBody id={id} />
@@ -106,38 +128,39 @@ function ChatScreenBody({ id }: { id: string }) {
     onReportConversation: () => (ready ? setSheet("report") : setWantReport(true)),
   });
   const menu: MentorMenuAction[] = [
-    ...(rel && (rel.row.status === "ACTIVE" || rel.row.status === "ENDED")
-      ? [{ label: "جزئیات رمزگذاری", icon: <ShieldCheck {...MENU_ICON} />, onClick: () => setSheet("e2ee"), disabled: !ready }]
-      : []),
     ...actions,
   ];
 
   const name = rel ? publicUserName(rel.row.counterpart) : "";
   const chatOpen = rel && (rel.row.status === "ACTIVE" || rel.row.status === "ENDED");
+  const away = rel?.role === "student" && rel.row.mentorAway ? rel.row.mentorAway : null;
   const statusLine = !rel ? ""
-    : rel.row.status === "ENDED" ? "رابطه پایان یافته"
-    : rel.row.status === "PENDING" ? "در انتظار پاسخ"
-    : rel.row.status === "ACTIVE" && rel.row.pausedAt ? "همکاری متوقف است"
+    : rel.row.status === "ENDED" ? "همکاری تموم شده"
+    : rel.row.status === "PENDING" ? "منتظر جواب"
+    : rel.row.pausedAt ? "همکاری فعلا نگه داشته شده"
+    : away ? `تا ${fmtDate(away.until)} در دسترس نیست`
     : rel.role === "student" ? "مربی تو" : "شاگرد تو";
 
   return (
     <>
       <header className="mc-head">
-        <Link href={`/mentorship/${id}`} className="mc-pill mc-circle" aria-label="بازگشت به صفحه‌ی رابطه">
+        <Link href={`/mentorship/${id}`} className="mc-pill mc-circle" aria-label="برگشت">
           <ChevronRight size={22} strokeWidth={1.75} aria-hidden />
         </Link>
         {rel ? (
-          <Link href={`/mentorship/${id}`} className="mc-pill mc-title" aria-label={`${name}؛ صفحه‌ی رابطه`}>
+          <Link href={`/mentorship/${id}`} className="mc-pill mc-title" aria-label={`${name}؛ صفحه‌ی همکاری`}>
             <b><GoldenName golden={rel?.row.counterpart.golden} staff={rel?.row.counterpart.staff}>{name}</GoldenName></b>
-            <span>
-              {chatOpen && rel.row.status === "ACTIVE" && <Lock size={10} strokeWidth={2} aria-hidden />}
-              {statusLine}
-            </span>
+            <span>{statusLine}</span>
           </Link>
         ) : (
           <span className="mc-pill mc-title is-empty" aria-hidden />
         )}
         <div className="mc-head-end">
+          {chatOpen && (
+            <button type="button" className="mc-pill mv2-ms-lockpill" onClick={() => setSheet("e2ee")} disabled={!ready} aria-haspopup="dialog" aria-label="خصوصی؛ امنیت گفت‌وگو">
+              <Lock size={14} strokeWidth={2} aria-hidden /> خصوصی
+            </button>
+          )}
           {rel && <MentorKebabMenu actions={menu} className="mc-pill mc-circle mc-kebab" iconSize={18} label="گزینه‌های گفت‌وگو" />}
           {rel ? (
             <Link href={`/mentorship/${id}`} className="mc-avatar" aria-hidden tabIndex={-1}>
@@ -153,9 +176,9 @@ function ChatScreenBody({ id }: { id: string }) {
         ) : !rel ? (
           <div className="mc-state"><LoadingBlock /></div>
         ) : chatOpen ? (
-          <MentorChat mentorshipId={id} peerName={name} sheet={sheet} onSheetClose={() => setSheet(null)} onReady={onReady} />
+          <MentorChat mentorshipId={id} peerName={name} sheet={sheet} onSheetClose={() => setSheet(null)} onOpenSheet={setSheet} onReady={onReady} />
         ) : (
-          <div className="mc-state"><p className="mc-empty">{rel.row.status === "PENDING" ? "گفت‌وگو پس از پذیرش درخواست باز می‌شود" : "این رابطه گفت‌وگو ندارد"}</p></div>
+          <div className="mc-state"><p className="mc-empty">{rel.row.status === "PENDING" ? "گفت‌وگو بعد از قبول شدن درخواست باز می‌شه" : "این همکاری گفت‌وگو نداره"}</p></div>
         )}
       </main>
       {dialogs}

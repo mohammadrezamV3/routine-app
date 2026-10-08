@@ -114,14 +114,14 @@ export default function DuplicateMentorProgramPage() {
             sub={
               <>
                 <span>{publicUserName(program.counterpart)}</span>
-                <span>{fa(data.itemCount)} {program.type === "WORKOUT" ? "حرکت" : "آیتم"}</span>
+                <span>{fa(data.itemCount)} {program.type === "WORKOUT" ? "حرکت" : "کار"}</span>
                 {program.startDate && <span>{fmtDate(program.startDate)}{program.endDate ? ` تا ${fmtDate(program.endDate)}` : ""}</span>}
               </>
             }
           />
         </MentorSection>
 
-        <MentorSection title="کپی جدید">
+        <MentorSection title="کپی برای">
           <form className="mentor-form" onSubmit={submit} noValidate>
             <MentorField label="شاگرد" htmlFor="dup-student">
               <select
@@ -167,7 +167,7 @@ export default function DuplicateMentorProgramPage() {
 
             {target && target.id !== program.mentorshipId && (
               <p className="mentor-field-hint" style={{ margin: 0 }}>
-                آیتم‌ها، توضیح و یادداشت کپی می‌شود؛ اجرا، بازخورد و وضعیت برنامه‌ی مبدا نه
+                کارها، توضیح و یادداشت کپی می‌شه؛ پیشرفت، بازخورد و وضعیت برنامه‌ی اصلی نه
               </p>
             )}
 
@@ -175,7 +175,7 @@ export default function DuplicateMentorProgramPage() {
             <div className="mentor-form-actions">
               <button type="button" className="account-outline-btn muted mentor-btn" onClick={() => router.back()} disabled={busy}>انصراف</button>
               <button type="submit" className="trade-primary-btn mentor-btn" disabled={busy}>
-                {busy ? <Spinner size={14} /> : <>{ic(Copy, MI.btn)} ساخت پیش‌نویس</>}
+                {busy ? <Spinner size={14} /> : <>{ic(Copy, MI.btn)} ساخت کپی</>}
               </button>
             </div>
           </form>
@@ -197,7 +197,7 @@ export default function DuplicateMentorProgramPage() {
   return (
     <MentorDashShell
       title="کپی برنامه"
-      back={program ? { href: `/mentor-programs/${program.id}`, label: program.title } : { href: "/mentor", label: "پنل مربی" }}
+      back={program ? { href: `/mentor-programs/${program.id}`, label: program.title } : { href: "/mentor/templates", label: "برنامه‌ها" }}
     >
       {body}
     </MentorDashShell>

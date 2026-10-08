@@ -2,8 +2,8 @@
 
 import { useState } from "react";
 import Link from "next/link";
-import { Check, Copy, Download, LayoutTemplate, Wrench } from "lucide-react";
-import { MI, MI_STROKE, MentorSection } from "./MentorUI";
+import { Check, Copy, Download, LayoutTemplate } from "lucide-react";
+import { MI, MI_STROKE } from "./MentorUI";
 import { MentorTemplateSaveDialog } from "./MentorTemplateSaveDialog";
 import { exportCsvUrl } from "@/lib/mentorToolsTypes";
 
@@ -27,7 +27,7 @@ export function MentorProgramTools({
   const [saved, setSaved] = useState(false);
 
   return (
-    <MentorSection title="ابزار برنامه" icon={ic(Wrench, MI.section)}>
+    <div className="mv2-pg-tools" role="group" aria-label="کارهای بیشتر روی برنامه">
       <div className="mentor-btn-group">
         <button type="button" className="account-outline-btn mentor-btn is-sm" onClick={() => setSaving(true)}>
           {saved ? <>{ic(Check, MI.btnSm)} قالب ذخیره شد</> : <>{ic(LayoutTemplate, MI.btnSm)} ذخیره به‌عنوان قالب</>}
@@ -49,6 +49,6 @@ export function MentorProgramTools({
           onSaved={() => { setSaved(true); setTimeout(() => setSaved(false), 2400); }}
         />
       )}
-    </MentorSection>
+    </div>
   );
 }

@@ -13,7 +13,7 @@ import { exportCsvUrl, type WeeklyReport, type WeeklyStudentReport } from "@/lib
 const ic = (Icon: typeof Flame, size: number) => <Icon size={size} strokeWidth={MI_STROKE} aria-hidden />;
 
 /**
- * گزارش ۷ روزه‌ی هر شاگرد، ساخته‌شده خودکار از پیشرفت برنامه‌ها (نه گزارش
+ * گزارش 7 روزه‌ی هر شاگرد، ساخته‌شده خودکار از پیشرفت برنامه‌ها (نه گزارش
  * دستی شاگرد). فقط بدنه؛ انتخاب هفته و ظرف صفحه با والد است.
  * offset: 0 = 7 روز اخیر، 1 = هفته‌ی قبل، 2 = دو هفته قبل
  */
