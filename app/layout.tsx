@@ -34,6 +34,9 @@ import { DeferredEffects } from "@/components/DeferredEffects";
 import { MaintenanceBanner } from "@/components/MaintenanceBanner";
 import { getActiveEventThemeId } from "@/lib/eventThemeServer";
 import { EVENT_PREVIEW_KEY } from "@/lib/eventThemeState";
+import { getLocale } from "@/lib/i18nServer";
+import { dirOf } from "@/lib/i18n";
+import { I18nProvider } from "@/components/I18nProvider";
 
 // پیش‌نمایش تم مناسبتی فقط روی دستگاه ادمین: شناسه = اعمال همون تم، "none" = بدون تم.
 // قبل از اولین پینت اجرا می‌شه و تم زنده‌ی سرور رو فقط روی همین دستگاه override می‌کنه.
@@ -222,14 +225,15 @@ export default async function RootLayout({ children }: { children: React.ReactNo
     resolveInitialTheme((session?.user as { id?: string } | undefined)?.id),
     getActiveEventThemeId().catch((): string | null => null),
   ]);
+  const locale = getLocale();
   return (
     // data-theme روی html هم هست (نه فقط body): پس‌زمینه‌ی خود <html> همونیه
     // که سافاری توی ناحیه‌ی امن (زیر ناچ / بالای نوار خانه) و موقع اورراسکرول
     // نشون می‌ده. suppressHydrationWarning روی هردو لازمه چون اسکریپت inline
     // ممکنه قبل از هیدریت عوضشون کرده باشه.
     <html
-      lang="fa"
-      dir="rtl"
+      lang={locale}
+      dir={dirOf(locale)}
       data-theme={theme}
       // «account» = تم از حساب آمده و اسکریپت inline نباید با کوکی بازنویسی‌اش
       // کند (برعکس: کوکی را با آن هم‌گام می‌کند) — lib/themeColor.ts
@@ -280,6 +284,7 @@ export default async function RootLayout({ children }: { children: React.ReactNo
         <PopupExitAnimator />
         {/* نور هاور دور همه‌ی باکس‌ها — lib/boxHover.ts */}
         <BoxHoverTracker />
+        <I18nProvider locale={locale}>
         <AuthSessionProvider session={session}>
           <ThemeProvider initialTheme={theme}>
             <MotionTuner>
@@ -300,6 +305,7 @@ export default async function RootLayout({ children }: { children: React.ReactNo
             </MotionTuner>
           </ThemeProvider>
         </AuthSessionProvider>
+        </I18nProvider>
       </body>
     </html>
   );

@@ -11,6 +11,7 @@ import { ChevronDown, Lock } from "lucide-react";
 import Image from "next/image";
 import Link from "next/link";
 import { useTheme } from "./ThemeProvider";
+import { LanguageSwitch } from "./LanguageSwitch";
 import { useRouter, usePathname } from "next/navigation";
 import { useSession } from "next-auth/react";
 import { useLiveRefresh, useVisiblePolling } from "@/lib/liveSync";
@@ -568,6 +569,7 @@ export function NavDrawer() {
             </button>
             <button onClick={() => setOpen(false)} className="nav-close" aria-label="بستن منو">×</button>
           </div>
+          <LanguageSwitch className="nav-lang-switch" />
 
           {visibleLinks.map((item) => {
             const isLocked = (m?: string) => !!m && activeModules !== null && !activeModules.has(m);

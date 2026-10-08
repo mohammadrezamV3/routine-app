@@ -196,6 +196,8 @@
      رنگ: تیغه هم مثل شیارش سیاه است، فقط یک پله روشن‌تر تا دیده شود. */
   html{ direction:ltr; scrollbar-width:thin; scrollbar-color:#2B2F33 #000000; }
   body{ direction:rtl; }
+  /* زبان انگلیسی (lib/i18n.ts، docs/i18n.md): کل صفحه چپ‌به‌راست */
+  html[dir="ltr"] body{ direction:ltr; }
   html::-webkit-scrollbar{ width:6px; }
   html::-webkit-scrollbar-track{ background:#000000; }
   html::-webkit-scrollbar-thumb{ background:#2B2F33; border-radius:10px; }
@@ -10073,3 +10075,10 @@ button.admin-team-role-x, .admin-team-role-chip button.admin-team-role-x{ backgr
   .db-share{ --share-w:min(440px, calc((100vh - 32px - 220px) * .8)); }
   .ts-share{ --share-w:min(440px, max(250px, calc((100vh - 32px - 300px) * .8))); }
 }
+
+/* ===== زبان انگلیسی (docs/i18n.md) =====
+   آیکون جهت‌دار (فلش/شورون «بعدی»/«برگشت») در ltr آینه می‌شه. فقط روی عنصری که
+   خودش transform دیگه‌ای نداره (وگرنه داخل یک span جدا). در rtl هیچ اثری نداره. */
+html[dir="ltr"] .dir-flip{ transform:scaleX(-1); }
+/* انتخاب زبان داخل منوی کشویی (components/LanguageSwitch.tsx) */
+.nav-lang-switch{ margin:0 0 10px; }
