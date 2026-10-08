@@ -1268,3 +1268,9 @@ body[data-theme="light"] .wl-root button.wl-live-mood{ background:none; box-shad
 @media (max-width:559px){
   .wl-st-body{ justify-content:space-evenly; }
 }
+
+/* عدد تنهای آخر روی دسکتاپ کشیده نشه: وسط، هم‌عرض بقیه */
+@media (min-width:720px){
+  .wl-num-grid > :last-child:nth-child(3n){ grid-column:span 2; }
+  .wl-num-grid > :last-child:nth-child(3n+1){ grid-column:3 / span 2; }
+}

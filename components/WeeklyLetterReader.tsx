@@ -34,6 +34,7 @@ import { WeeklyLetterEmpty } from "./WeeklyLetterEmpty";
 import { WeeklyLetterStories } from "./WeeklyLetterStories";
 import { buildStorySlides, storySeconds } from "./WeeklyLetterStoriesData";
 import { normalizeLetter } from "./WeeklyLetterUtils";
+import { dedupeNumbers, dedupeWins } from "@/lib/weeklyLetter/dedupe";
 import type { LetterCtx } from "./WeeklyLetterCtx";
 
 const STORY_MIN = 3;
@@ -139,6 +140,10 @@ function LetterBody({ data, onGo, reload }: { data: LiveWeekPayload; onGo: (w: s
     weekStart: data.weekStart, offset: data.offset, isCurrent: data.isCurrent, analysis, issue: data.issue, reload,
   }), [data, analysis, reload]);
 
+  // هر واقعیت فقط یک بار: عددهای تکراری کارت بخش‌ها و بردهای تکراری بینش‌ها/استریک حذف می‌شن
+  const numbers = useMemo(() => dedupeNumbers(letter.numbers, letter.domains), [letter.numbers, letter.domains]);
+  const wins = useMemo(() => dedupeWins(letter.wins, letter.insights), [letter.wins, letter.insights]);
+
   const hasData = analysis.domains.some((d) => d.hasData) || analysis.overall.score !== null;
   const hasMatrix = analysis.domains.some((d) => d.hasData && d.score !== null);
   const hasCoach = !!analysis.ai || (analysis.aiAvailable && analysis.overall.score !== null);
@@ -150,9 +155,9 @@ function LetterBody({ data, onGo, reload }: { data: LiveWeekPayload; onGo: (w: s
       { id: "wl-days", label: "روز به روز", show: hasData && letter.days.length > 0 },
       { id: "wl-domains", label: "بخش‌ها", show: hasData && letter.domains.length > 0 },
       { id: "matrix", label: "نقشه‌ی هفته", show: hasMatrix },
-      { id: "wl-numbers", label: "عددها و روند", show: hasData && (letter.numbers.length > 0 || letter.trend.length > 1) },
+      { id: "wl-numbers", label: "عددها و روند", show: hasData && (numbers.length > 0 || letter.trend.length > 1) },
       { id: "wl-insights", label: "بینش‌ها", show: letter.insights.length > 0 },
-      { id: "wl-wins", label: "بردها", show: letter.wins.length > 0 || letter.improve.length > 0 },
+      { id: "wl-wins", label: "بردها", show: wins.length > 0 || letter.improve.length > 0 },
       { id: "coach", label: "حرف مربی", show: hasCoach },
       { id: "wl-ach", label: "مدال‌ها", show: letter.achievements.length > 0 || !!letter.streak },
       { id: "wl-next", label: "هفته‌ی بعد", show: data.isCurrent && hasData },
@@ -161,7 +166,7 @@ function LetterBody({ data, onGo, reload }: { data: LiveWeekPayload; onGo: (w: s
       { id: "sleep", label: "خواب", show: sleepOn },
     ];
     return c.filter((x) => x.show);
-  }, [letter, data.isCurrent, hasData, hasMatrix, hasCoach, hasGoals, sleepOn]);
+  }, [letter, numbers, wins, data.isCurrent, hasData, hasMatrix, hasCoach, hasGoals, sleepOn]);
   const no = (id: string) => chapters.findIndex((c) => c.id === id) + 1;
   const has = (id: string) => chapters.some((c) => c.id === id);
 
@@ -212,7 +217,7 @@ function LetterBody({ data, onGo, reload }: { data: LiveWeekPayload; onGo: (w: s
         {has("matrix") && <WeeklyLetterMatrix letter={letter} ctx={ctx} no={no("matrix")} />}
         {has("wl-numbers") && (
           <Chapter id="wl-numbers" no={no("wl-numbers")} icon={CH_ICONS["wl-numbers"]} title="عددها و روند">
-            <WeeklyLetterNumbers numbers={letter.numbers} trend={letter.trend} onJumpWeek={onGo} />
+            <WeeklyLetterNumbers numbers={numbers} trend={letter.trend} onJumpWeek={onGo} />
           </Chapter>
         )}
         {has("wl-insights") && (
@@ -222,7 +227,7 @@ function LetterBody({ data, onGo, reload }: { data: LiveWeekPayload; onGo: (w: s
         )}
         {has("wl-wins") && (
           <Chapter id="wl-wins" no={no("wl-wins")} icon={CH_ICONS["wl-wins"]} title="بردها و جای پیشرفت">
-            <WeeklyLetterWins wins={letter.wins} improve={letter.improve} />
+            <WeeklyLetterWins wins={wins} improve={letter.improve} />
           </Chapter>
         )}
         {has("coach") && <WeeklyLetterCoach letter={letter} ctx={ctx} no={no("coach")} />}
@@ -287,6 +292,20 @@ function ReaderInner({ initial, query, currentWeek }: { initial: LiveWeekPayload
       })
       .finally(() => { if (target.current === key) setBusy(false); });
   }, []);
+
+  // آدرس همیشه هفته‌ای رو نشون بده که واقعا نمایش داده می‌شه (week نامعتبر/خارج از بازه پاک می‌شه)
+  const shownWeek = data?.weekStart ?? null;
+  const shownCurrent = data?.isCurrent ?? false;
+  useEffect(() => {
+    if (!shownWeek) return;
+    try {
+      const url = new URL(window.location.href);
+      const w = url.searchParams.get("week");
+      const want = shownCurrent ? null : shownWeek;
+      if (w === want && !url.searchParams.has("offset")) return;
+      setUrlWeek(want);
+    } catch { /* آدرس همون می‌مونه */ }
+  }, [shownWeek, shownCurrent]);
 
   // بار اول بدون داده‌ی سرور (خطای SSR) از API می‌گیره
   useEffect(() => {
