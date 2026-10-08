@@ -332,7 +332,7 @@ const FITNESS_LABELS: Record<NonNullable<DayDetails["fitness"]>["status"], strin
   done: "طبق برنامه تمرین کردی",
   extra: "روز استراحت بود ولی تمرین کردی",
   rest: "روز استراحت برنامه",
-  missed: "تمرین امروز انجام نشد",
+  missed: "تمرین انجام نشد",
   partial: "تمرین نیمه‌کاره موند",
 };
 

@@ -10,6 +10,7 @@ import {
 } from "lucide-react";
 import { ANALYSIS_DOMAIN_LABELS, type Insight } from "@/lib/weeklyAnalysis/types";
 import type { WeeklyLetterData } from "@/lib/weeklyLetter/types";
+import { goalCtaHref, weekCtaHref } from "./WeeklyLetterStoriesData";
 import { CountText, DOMAIN_ICONS, MeterBar, Reveal } from "./WeeklyLetterShared";
 
 export const INSIGHT_ICONS: Record<Insight["icon"], LucideIcon> = {
@@ -200,7 +201,8 @@ export function WeeklyLetterReflection({ reflection }: { reflection: NonNullable
   );
 }
 
-export function WeeklyLetterNext({ letter, offset }: { letter: WeeklyLetterData; offset: number }) {
+// offset فقط برای سازگاری با فراخوان‌های قدیمی؛ لینک‌ها از weekStart ساخته می‌شن
+export function WeeklyLetterNext({ letter }: { letter: WeeklyLetterData; offset?: number }) {
   const nw = letter.nextWeek;
   const Icon = nw.focusDomain ? DOMAIN_ICONS[nw.focusDomain] : Target;
   return (
@@ -219,8 +221,8 @@ export function WeeklyLetterNext({ letter, offset }: { letter: WeeklyLetterData;
         )}
       </div>
       <div className="wl-cta">
-        <Link href="/analysis/weekly#goals" className="trade-primary-btn wl-cta-btn"><Target size={16} />تعیین هدف</Link>
-        <Link href={offset === 0 ? "/analysis/weekly" : `/analysis/weekly?offset=${offset}`} className="account-outline-btn wl-cta-btn">آنالیز کامل این هفته</Link>
+        <Link href={goalCtaHref({ title: nw.focusTitle, domain: nw.focusDomain, target: nw.suggestedTarget })} className="trade-primary-btn wl-cta-btn"><Target size={16} />تعیین هدف</Link>
+        <Link href={weekCtaHref(letter.weekStart)} className="account-outline-btn wl-cta-btn">آنالیز کامل این هفته</Link>
       </div>
     </Reveal>
   );

@@ -40,7 +40,7 @@ function MicroBars({ daily, best, worst }: { daily: (number | null)[]; best: str
   );
 }
 
-/** مرور کلی فصل‌ها: رادار بخش‌ها (این هفته پر، هفته‌ی قبل خط‌چین) + فهرست رتبه‌بندی‌شده. فقط با ≥3 دامنه‌ی دارای داده. */
+/** مرور کلی فصل‌ها: رادار بخش‌ها (این هفته پر، هفته‌ی قبل خط‌چین) + فهرست رتبه‌بندی‌شده. رادار فقط با ≥4 دامنه، وگرنه فقط فهرست. */
 function DomainsOverview({ domains }: { domains: LetterDomain[] }) {
   const lite = useLite();
   const ref = useRef<HTMLDivElement>(null);
@@ -51,18 +51,20 @@ function DomainsOverview({ domains }: { domains: LetterDomain[] }) {
     () => domains.filter((d) => axes.some((a) => a.key === d.domain)).sort((a, b) => (b.score as number) - (a.score as number)),
     [domains, axes],
   );
-  if (axes.length < 3) return null;
+  if (axes.length < 1) return null;
+  // با کمتر از 4 بخش رادار مثلثی و خالی می‌شه؛ فقط فهرست میله‌ای تمام‌عرض
+  const showRadar = axes.length >= 4;
   const hasPrev = axes.some((a) => a.prev !== null);
   return (
     <Reveal className="wl-card wl-dov">
-      <div ref={ref} className="wl-dov-in">
-        <div className="wl-dov-radar">
+      <div ref={ref} className={`wl-dov-in${showRadar ? "" : " is-list"}`}>
+        {showRadar && <div className="wl-dov-radar">
           <WeeklyRadar axes={axes} size={320} on={inView || lite} activeKey={active} ariaLabel={`امتیاز بخش‌ها: ${axes.map((a) => `${a.label} ${Math.round(a.value as number)}`).join("، ")}`} />
           <span className="wl-dov-key" aria-hidden="true">
             <i className="is-now" />این هفته
             {hasPrev && (<><i className="is-prev" />هفته‌ی قبل</>)}
           </span>
-        </div>
+        </div>}
         <ol className="wl-dov-list" onMouseLeave={() => setActive(null)}>
           {rows.map((d, i) => {
             const Icon = DOMAIN_ICONS[d.domain];

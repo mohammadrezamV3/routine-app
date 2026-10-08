@@ -24,7 +24,7 @@ import WeeklyRadar from "./WeeklyRadar";
 import { MaskText, Odo } from "./WeeklyLetterStoryFx";
 import { INSIGHT_ICONS, MOODS, MOOD_LABELS } from "./WeeklyLetterStory";
 import { ARCH_ICONS, BrandMark } from "./WeeklyLetterCover";
-import type { StorySlide } from "./WeeklyLetterStoriesData";
+import { goalCtaHref, weekCtaHref, type StorySlide } from "./WeeklyLetterStoriesData";
 import { jalaliDayMonth, letterYear, scoreIntensity, smoothPath } from "./WeeklyLetterUtils";
 
 const FOCUSABLE = 'button:not([disabled]), [href], input:not([disabled]), [tabindex]:not([tabindex="-1"])';
@@ -506,7 +506,7 @@ function ReflectionSlide({ s }: { s: Extract<StorySlide, { id: "reflection" }> }
   );
 }
 
-function SummarySlide({ s, offset, onReplay }: { s: Extract<StorySlide, { id: "summary" }>; offset: number; onReplay: () => void }) {
+function SummarySlide({ s, weekStart, onReplay }: { s: Extract<StorySlide, { id: "summary" }>; weekStart: string; onReplay: () => void }) {
   const U = useU();
   const Arch = s.archetype ? ARCH_ICONS[s.archetype.key] ?? Sparkles : null;
   const FIcon = s.focus.domain ? DOMAIN_ICONS[s.focus.domain] : Compass;
@@ -550,8 +550,8 @@ function SummarySlide({ s, offset, onReplay }: { s: Extract<StorySlide, { id: "s
         {s.focus.target !== null && <span className="wl-st-next-t" dir="ltr">{Math.round(s.focus.target)}</span>}
       </SItem>
       <SItem className="wl-st-cta">
-        <Link href="/analysis/weekly#goals" className="trade-primary-btn wl-cta-btn"><Target size={16} />تعیین هدف</Link>
-        <Link href={offset === 0 ? "/analysis/weekly" : `/analysis/weekly?offset=${offset}`} className="account-outline-btn wl-cta-btn">آنالیز کامل این هفته</Link>
+        <Link href={goalCtaHref(s.focus)} className="trade-primary-btn wl-cta-btn"><Target size={16} />تعیین هدف</Link>
+        <Link href={weekCtaHref(weekStart)} className="account-outline-btn wl-cta-btn">آنالیز کامل این هفته</Link>
         <button type="button" className="trade-ghost-btn wl-st-replay" onClick={onReplay}><RotateCcw size={14} />پخش دوباره</button>
       </SItem>
     </div>
@@ -571,7 +571,7 @@ function SlideView({ slide, letter, offset, onReplay }: { slide: StorySlide; let
     case "insight": return <InsightSlide s={slide} />;
     case "streak": return <StreakSlide s={slide} />;
     case "reflection": return <ReflectionSlide s={slide} />;
-    case "summary": return <SummarySlide s={slide} offset={offset} onReplay={onReplay} />;
+    case "summary": return <SummarySlide s={slide} weekStart={letter.weekStart} onReplay={onReplay} />;
   }
 }
 

@@ -22,7 +22,7 @@ export function WeeklyLetterTimeline({ days, domains }: { days: WeeklyLetterData
         const band = scoreBand(d.score);
         const color = BAND_COLOR[band];
         return (
-          <li key={d.date || i} className={`wl-tl-item${d.isFuture ? " is-future" : ""}${d.isToday ? " is-today" : ""}${i === days.length - 1 ? " is-last" : ""}`} style={{ ["--c" as string]: color } as React.CSSProperties}>
+          <li key={d.date || i} id={`wl-day-${i}`} className={`wl-tl-item${d.isFuture ? " is-future" : ""}${d.isToday ? " is-today" : ""}${i === days.length - 1 ? " is-last" : ""}`} style={{ ["--c" as string]: color } as React.CSSProperties}>
             <span className={`wl-tl-node${i === best ? " is-best" : i === worst ? " is-worst" : ""}`} aria-hidden="true">
               {i === best && <Crown className="wl-tl-crown" size={18} />}
               {i === worst ? <TrendingDown size={13} /> : <i />}

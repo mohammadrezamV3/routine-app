@@ -27,7 +27,7 @@ export function WeeklyAnalysisInsights({ insights }: { insights: Insight[] }) {
 
   return (
     <motion.section className="wb-ins" variants={V_WK_CARD} aria-label="بینش‌های این هفته">
-      <h2 className="wb-title">سه چیزی که این هفته معلوم شد</h2>
+      <h2 className="wb-title">چیزهایی که این هفته معلوم شد</h2>
       {insights.length === 0 ? (
         <div className="wk-empty-inline">هنوز الگوی قابل‌اتکایی پیدا نشده — با چند روز داده‌ی بیشتر، بینش‌ها ظاهر می‌شن.</div>
       ) : (

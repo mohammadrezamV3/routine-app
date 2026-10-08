@@ -179,6 +179,32 @@ async function renderCard(a: WeeklyAnalysis): Promise<HTMLCanvasElement> {
   return canvas;
 }
 
+// ساخت و اشتراک/دانلود کارت: share فایل روی موبایل، وگرنه دانلود PNG
+export async function shareWeeklyCard(analysis: WeeklyAnalysis): Promise<void> {
+  const canvas = await renderCard(analysis);
+  const blob = await new Promise<Blob | null>((res) => canvas.toBlob(res, "image/png"));
+  if (!blob) throw new Error("blob");
+  const name = `arion-weekly-${analysis.weekStart}.png`;
+  const file = new File([blob], name, { type: "image/png" });
+  const nav = navigator as Navigator & { canShare?: (d: ShareData) => boolean };
+  if (nav.share && nav.canShare?.({ files: [file] })) {
+    try {
+      await nav.share({ files: [file], title: "آنالیز هفتگی" });
+      return;
+    } catch (e) {
+      if ((e as Error)?.name === "AbortError") return; // کاربر خودش بست
+    }
+  }
+  const url = URL.createObjectURL(blob);
+  const link = document.createElement("a");
+  link.href = url;
+  link.download = name;
+  document.body.appendChild(link);
+  link.click();
+  link.remove();
+  setTimeout(() => URL.revokeObjectURL(url), 4000);
+}
+
 // «اشتراک‌گذاری»: یک کارت خلاصه روی canvas می‌کشه؛ اگه مرورگر اشتراک فایل
 // رو پشتیبانی کنه (موبایل) با navigator.share، وگرنه PNG دانلود می‌شه.
 export function WeeklyAnalysisShare({ analysis }: { analysis: WeeklyAnalysis | null }) {
@@ -190,28 +216,7 @@ export function WeeklyAnalysisShare({ analysis }: { analysis: WeeklyAnalysis | n
     setBusy(true);
     setError(null);
     try {
-      const canvas = await renderCard(analysis);
-      const blob = await new Promise<Blob | null>((res) => canvas.toBlob(res, "image/png"));
-      if (!blob) throw new Error("blob");
-      const name = `arion-weekly-${analysis.weekStart}.png`;
-      const file = new File([blob], name, { type: "image/png" });
-      const nav = navigator as Navigator & { canShare?: (d: ShareData) => boolean };
-      if (nav.share && nav.canShare?.({ files: [file] })) {
-        try {
-          await nav.share({ files: [file], title: "آنالیز هفتگی" });
-          return;
-        } catch (e) {
-          if ((e as Error)?.name === "AbortError") return; // کاربر خودش بست
-        }
-      }
-      const url = URL.createObjectURL(blob);
-      const link = document.createElement("a");
-      link.href = url;
-      link.download = name;
-      document.body.appendChild(link);
-      link.click();
-      link.remove();
-      setTimeout(() => URL.revokeObjectURL(url), 4000);
+      await shareWeeklyCard(analysis);
     } catch {
       setError("ساخت تصویر ممکن نشد");
     } finally {

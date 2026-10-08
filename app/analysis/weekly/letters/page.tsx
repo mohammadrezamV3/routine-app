@@ -1,9 +1,9 @@
 import type { Metadata } from "next";
 import { WeeklyLetterArchive } from "@/components/WeeklyLetterArchive";
 
-// آرشیو شماره‌های هفته‌نامه؛ صفحه‌ی شخصیه و ایندکس نمی‌شه.
+// آرشیو آنالیز هفتگی؛ صفحه‌ی شخصیه و ایندکس نمی‌شه.
 export const metadata: Metadata = {
-  title: "هفته‌نامه",
+  title: "آرشیو آنالیز هفتگی",
   robots: { index: false, follow: false },
 };
 
