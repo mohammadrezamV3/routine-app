@@ -1414,3 +1414,28 @@ body[data-theme="light"] .mv2-srow, body:not([data-theme="light"]) .mv2-srow{ ba
 .mv2-srow-value{ flex-shrink:1; max-width:50%; font-size:12.5px; color:var(--muted); overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
 .mv2-srow-chev{ flex-shrink:0; color:var(--muted2); }
 .mv2-srow.is-danger .mv2-srow-title, .mv2-srow.is-danger .mv2-srow-icon{ color:#E05252; }
+
+/* ── mv2: settings ── */
+.mv2-set-id{ display:flex; align-items:center; gap:var(--m-3); margin:0 0 var(--m-4); }
+.mv2-set-id-text{ min-width:0; }
+.mv2-set-id-name{ display:flex; align-items:center; gap:6px; font-size:17px; font-weight:800; }
+.mv2-set-verified{ color:var(--accent); flex-shrink:0; }
+.mv2-set-id-title{ font-size:13px; color:var(--muted); margin-top:2px; }
+.mv2-set-tick{ display:flex; align-items:center; gap:var(--m-3); min-height:52px; padding:var(--m-1) var(--m-4); border-top:1px solid var(--surface-line); }
+.mv2-set-tick .mv2-srow-icon{ flex-shrink:0; }
+.mv2-set-tickopt{ flex:1; min-height:44px; }
+.mv2-set-pub-error{ margin:0 var(--m-4) var(--m-3); }
+.mv2-set-form{ display:flex; flex-direction:column; gap:var(--m-3); }
+.mv2-set-questions{ display:flex; flex-direction:column; gap:var(--m-2); }
+.mv2-set-form .trade-icon-btn, .mv2-set-labels .trade-icon-btn, .mv2-set-iconbtn{ min-width:44px; min-height:44px; }
+.mv2-set-textbtn{ min-height:44px; display:inline-flex; align-items:center; gap:6px; }
+.mv2-set-profile{ display:flex; flex-direction:column; gap:var(--m-4); }
+.mv2-set-cats{ display:flex; flex-direction:column; }
+.mv2-set-cats .tick-option{ min-height:44px; }
+.mv2-set-publish{ display:flex; flex-direction:column; gap:var(--m-1); padding-top:var(--m-3); border-top:1px solid var(--surface-line); }
+.mv2-set-publish .tick-option{ min-height:44px; }
+.mv2-set-spec-x{ padding:0; min-width:28px; min-height:28px; display:inline-flex; align-items:center; justify-content:center; }
+.mv2-set-profile-page{ display:flex; flex-direction:column; gap:var(--m-5, 24px); }
+.mv2-set-verify{ padding-top:var(--m-4); border-top:1px solid var(--surface-line); }
+.mv2-set-h{ display:flex; align-items:center; gap:6px; margin:0 0 var(--m-3); font-size:15px; font-weight:800; }
+.mv2-set-upload{ min-height:44px; }

@@ -1,7 +1,6 @@
 "use client";
 
 import { useState } from "react";
-import { TickButton } from "./TickButton";
 import { Ban, Check, Plus, Tag, X } from "lucide-react";
 import { TickOption } from "./TickOption";
 import { Spinner } from "./Spinner";
@@ -37,7 +36,7 @@ export function MentorProfileForm({ profile, onSaved }: { profile: MentorSelf | 
   );
   const [routineRole, setRoutineRole] = useState(profile?.routineRole ?? "");
   const [published, setPublished] = useState(profile?.published ?? false);
-  // پذیرش نسخه‌ی جاری «شرایط منتوری» (lib/mentorTerms.ts)؛ بدون آن سرور ۴۰۰ می‌دهد
+  // پذیرش نسخه‌ی جاری «شرایط منتوری» (lib/mentorTerms.ts)؛ بدون آن سرور 400 می‌دهد
   const needsTerms = profile?.mentorTermsVersion !== MENTOR_TERMS_VERSION;
   const [termsAccepted, setTermsAccepted] = useState(false);
   const [termsErr, setTermsErr] = useState<string | null>(null);

@@ -2,19 +2,8 @@
 
 import "./mentor.css";
 import { Ban, CheckCircle2, CircleDot, CircleSlash, Clock, FileEdit, Flag, XCircle } from "lucide-react";
-import { PROGRAM_STATUS_LABELS } from "@/lib/mentorProgramState";
-
-// برچسب‌های کوتاه چیپ. کلیدها همان وضعیت‌های دیتابیس‌اند؛ برای وضعیت
-// ناشناخته به PROGRAM_STATUS_LABELS و در نهایت خود کلید برمی‌گردد.
-const PROGRAM_LABELS: Record<string, string> = {
-  DRAFT: "پیش‌نویس",
-  PENDING: "در انتظار پاسخ",
-  ACCEPTED: "پذیرفته‌شده",
-  REJECTED: "ردشده",
-  ACTIVE: "در حال اجرا",
-  COMPLETED: "تمام‌شده",
-  CANCELLED: "لغوشده",
-};
+import { programStatusText } from "@/lib/mentorStatus";
+import type { ProgramStatus } from "@/lib/mentorTypes";
 
 const MENTORSHIP_LABELS: Record<string, string> = {
   PENDING: "در انتظار پاسخ",
@@ -41,13 +30,23 @@ function statusIcon(status: string) {
   }
 }
 
-/** وضعیت برنامه‌ی منتور — چیپ کوچک: آیکون + متن، فقط رنگ متن و بوردر */
-export function ProgramStatusBadge({ status }: { status: string }) {
-  const label = PROGRAM_LABELS[status] ?? (PROGRAM_STATUS_LABELS as Record<string, string>)[status] ?? MENTORSHIP_LABELS[status] ?? status;
+const PROGRAM_KEYS = ["DRAFT", "PENDING", "ACCEPTED", "REJECTED", "ACTIVE", "COMPLETED", "CANCELLED"];
+
+/** وضعیت برنامه به زبان مربی: آیتم نقطه‌ای + متن (رنگ تنها نیست). changeRequested برای پیش‌نویس برگشتی */
+export function ProgramStatusBadge({ status, changeRequested }: { status: string; changeRequested?: boolean }) {
+  if (!PROGRAM_KEYS.includes(status)) {
+    return (
+      <span className={`mentor-status is-${status.toLowerCase()}`}>
+        {statusIcon(status)}
+        {MENTORSHIP_LABELS[status] ?? status}
+      </span>
+    );
+  }
+  const { text, tone } = programStatusText(status as ProgramStatus, { changeRequested });
   return (
-    <span className={`mentor-status is-${status.toLowerCase()}`}>
+    <span className={`mv2-pg-pill mv2-tone-${tone}`}>
       {statusIcon(status)}
-      {label}
+      {text}
     </span>
   );
 }

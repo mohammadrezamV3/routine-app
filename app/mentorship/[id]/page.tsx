@@ -4,22 +4,21 @@ import { useCallback, useEffect, useMemo, useState } from "react";
 import { useLiveRefresh, useVisiblePolling } from "@/lib/liveSync";
 import Link from "next/link";
 import { useParams, useRouter } from "next/navigation";
-import {
-  CalendarCheck, Check, ChevronLeft, ClipboardList, Dumbbell, Inbox, Lock, MessageCircle, Pencil, Plus, ShieldCheck, X,
-} from "lucide-react";
+import { CalendarCheck, ClipboardList, Dumbbell, MessageCircle, Plus, ShieldCheck, User } from "lucide-react";
 import { MentorPageShell, MentorErrorState } from "@/components/MentorPageShell";
 import { MentorEmpty, MentorRow, MentorSection } from "@/components/MentorUI";
 import { MentorList, MentorListItem } from "@/components/MentorMotion";
 import { MentorUserAvatar } from "@/components/MentorUserAvatar";
 import { MentorshipStateNote } from "@/components/MentorshipStateNote";
-import { MentorshipStatusBadge, ProgramStatusBadge } from "@/components/ProgramStatusBadge";
+import { ProgramStatusBadge } from "@/components/ProgramStatusBadge";
 import { ProgramRespondModal } from "@/components/ProgramRespondModal";
 import { MentorKebabMenu } from "@/components/MentorKebabMenu";
 import { useMentorshipActions } from "@/components/MentorshipActions";
 import { useMentorshipRelation, type Relation } from "@/components/useMentorshipRelation";
 import { MentorTermsAcceptance, isMentorTermsError, mentorTermsPayload, useMentorTermsStatus } from "@/components/MentorTermsAcceptance";
 import { LoadingBlock, Spinner } from "@/components/Spinner";
-import type { ProgramRow, ProgramsResponse } from "@/lib/mentorTypes";
+import { GradientRing } from "@/components/GradientRing";
+import type { ProgramDetailResponse, ProgramRow, ProgramsResponse } from "@/lib/mentorTypes";
 import { publicUserName } from "@/lib/mentorTypes";
 import { categoryLabel } from "@/components/MentorBadges";
 import { fmtDate, fmtDay, fmtRelative, NETWORK_ERROR, readApiError } from "@/lib/mentorFormat";
@@ -57,19 +56,39 @@ export default function MentorshipPage() {
     ? { href: `/mentor/students/${rel.row.counterpart.id}`, label: publicUserName(rel.row.counterpart) }
     : { href: "/mentorship", label: "مربی‌های من" };
   const name = rel ? publicUserName(rel.row.counterpart) : "";
+  const chatOpen = !!rel && (rel.row.status === "ACTIVE" || rel.row.status === "ENDED");
 
   const head = rel ? (
-    <div className="mentor-head-custom">
-      <MentorUserAvatar name={name} avatarUrl={rel.row.counterpart.avatarUrl} size={48} />
-      <div className="mentor-rel-id">
-        <h1><GoldenName golden={rel.row.counterpart.golden} staff={rel.row.counterpart.staff}>{name}</GoldenName></h1>
-        <div className="mentor-rel-sub">
-          <span>{rel.role === "student" ? "مربی تو" : "شاگرد تو"}</span>
-          <MentorshipStatusBadge status={rel.row.status} />
-          {rel.row.startedAt && <span>از {fmtDate(rel.row.startedAt)}</span>}
-        </div>
+    <div className="mv2-ms-head">
+      <div className="mv2-ms-head-kebab">
+        <MentorKebabMenu actions={actions} label="گزینه‌های همکاری" />
       </div>
-      <MentorKebabMenu actions={actions} label="گزینه‌های رابطه" />
+      <MentorUserAvatar name={name} avatarUrl={rel.row.counterpart.avatarUrl} size={72} />
+      <h1><GoldenName golden={rel.row.counterpart.golden} staff={rel.row.counterpart.staff}>{name}</GoldenName></h1>
+      <p className="mv2-ms-role">
+        {[
+          rel.role === "student" ? "مربی تو" : "شاگرد تو",
+          rel.row.categories.map((c) => categoryLabel(c)).join("، "),
+          rel.row.startedAt ? `از ${fmtDate(rel.row.startedAt)}` : "",
+        ].filter(Boolean).join(" · ")}
+      </p>
+      <div className="mv2-ms-head-actions">
+        {chatOpen && (
+          <Link href={`/mentorship/${id}/chat`} className="trade-primary-btn mentor-btn">
+            <MessageCircle {...BTN} /> گفت‌وگو
+            {rel.row.unread > 0 && <span className="mv2-ms-badge" aria-label={`${faNum(rel.row.unread)} پیام تازه`}>{faNum(rel.row.unread)}</span>}
+          </Link>
+        )}
+        {rel.role === "student" ? (
+          <Link href={`/account/general/mentors?mentorship=${encodeURIComponent(id)}`} className="account-outline-btn mentor-btn">
+            <ShieldCheck {...BTN} /> چی می‌بینه؟
+          </Link>
+        ) : (
+          <Link href={`/mentor/students/${rel.row.counterpart.id}`} className="account-outline-btn mentor-btn">
+            <User {...BTN} /> صفحه‌ی شاگرد
+          </Link>
+        )}
+      </div>
     </div>
   ) : null;
 
@@ -103,7 +122,6 @@ function Relationship({ rel, reload }: { rel: Relation; reload: () => void }) {
 
   const isPending = row.status === "PENDING";
   const iMustAnswer = isPending && ((role === "student" && row.initiatedBy === "MENTOR") || (role === "mentor" && row.initiatedBy === "STUDENT"));
-  const chatOpen = row.status === "ACTIVE" || row.status === "ENDED";
   const needTerms = role === "student" && iMustAnswer && (forceTerms || (!terms.loading && !terms.studentAccepted));
 
   // «دسترسی‌ها» به تنظیمات پنل کاربری منتقل شد؛ لینک قدیمی ?tab=privacy همان‌جا می‌رود
@@ -175,6 +193,44 @@ function Relationship({ rel, reload }: { rel: Relation; reload: () => void }) {
 
   const waiting = useMemo(() => (role === "student" ? (programs ?? []).filter((p) => p.status === "PENDING") : []), [programs, role]);
   const others = useMemo(() => (programs ?? []).filter((p) => !waiting.includes(p)), [programs, waiting]);
+  const running = others.filter((p) => p.status === "ACTIVE" || p.status === "ACCEPTED");
+  const rest = others.filter((p) => !running.includes(p));
+
+  // خلاصه‌ی کارهای برنامه‌ی منتظر جواب (چند عنوان اول)
+  const [itemsById, setItemsById] = useState<Record<string, string[]>>({});
+  const waitingKey = waiting.map((p) => p.id).join(",");
+  useEffect(() => {
+    let alive = true;
+    for (const p of waiting) {
+      fetch(`/api/mentor-programs/${p.id}`, { cache: "no-store" })
+        .then((r) => (r.ok ? r.json() : null))
+        .then((d: ProgramDetailResponse | null) => {
+          if (alive && d) setItemsById((prev) => ({ ...prev, [p.id]: d.items.map((i) => i.title) }));
+        })
+        .catch(() => {});
+    }
+    return () => { alive = false; };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [waitingKey]);
+
+  const programRow = (p: ProgramRow) => (
+    <MentorListItem key={p.id}>
+      <MentorRow
+        href={`/mentor-programs/${p.id}`}
+        lead={
+          p.status === "ACTIVE" && !p.progress.hidden ? (
+            <GradientRing value={Math.max(0, Math.min(1, p.progress.rate > 1 ? p.progress.rate / 100 : p.progress.rate))} size={40} stroke={4}>
+              {p.type === "WORKOUT" ? <Dumbbell size={14} strokeWidth={1.75} aria-hidden /> : <CalendarCheck size={14} strokeWidth={1.75} aria-hidden />}
+            </GradientRing>
+          ) : p.type === "WORKOUT" ? <Dumbbell {...ROW} /> : <CalendarCheck {...ROW} />
+        }
+        title={p.title}
+        sub={<ProgramFacts p={p} />}
+        end={<ProgramStatusBadge status={p.status} />}
+        below={p.note?.trim() ? <MentorNote note={p.note} role={role} /> : undefined}
+      />
+    </MentorListItem>
+  );
 
   const programsSection = (
     <MentorSection
@@ -196,23 +252,23 @@ function Relationship({ rel, reload }: { rel: Relation; reload: () => void }) {
         <LoadingBlock />
       ) : others.length === 0 ? (
         <MentorEmpty>
-          {waiting.length ? "برنامه‌ی دیگری نیست" : role === "student" ? "هنوز برنامه‌ای از این مربی نرسیده است" : "هنوز برنامه‌ای برای این شاگرد نساخته‌ای"}
+          {waiting.length ? "برنامه‌ی دیگه‌ای نیست" : role === "student" ? "هنوز برنامه‌ای از این مربی نرسیده" : "هنوز برنامه‌ای برای این شاگرد نساخته‌ای"}
         </MentorEmpty>
       ) : (
-        <MentorList>
-          {others.map((p) => (
-            <MentorListItem key={p.id}>
-              <MentorRow
-                href={`/mentor-programs/${p.id}`}
-                lead={p.type === "WORKOUT" ? <Dumbbell {...ROW} /> : <CalendarCheck {...ROW} />}
-                title={p.title}
-                sub={<ProgramFacts p={p} />}
-                end={<ProgramStatusBadge status={p.status} />}
-                below={p.note?.trim() ? <MentorNote note={p.note} role={role} /> : undefined}
-              />
-            </MentorListItem>
-          ))}
-        </MentorList>
+        <>
+          {running.length > 0 && (
+            <>
+              <h3 className="mv2-ms-sub">در حال اجرا</h3>
+              <MentorList>{running.map(programRow)}</MentorList>
+            </>
+          )}
+          {rest.length > 0 && (
+            <>
+              {running.length > 0 && <h3 className="mv2-ms-sub">بقیه</h3>}
+              <MentorList>{rest.map(programRow)}</MentorList>
+            </>
+          )}
+        </>
       )}
     </MentorSection>
   );
@@ -220,87 +276,60 @@ function Relationship({ rel, reload }: { rel: Relation; reload: () => void }) {
   return (
     <>
       {iMustAnswer && (
-        <MentorSection title={role === "student" ? "دعوت مربی‌گری" : "درخواست مربی‌گری"} icon={<Inbox {...SECTION} />}>
-          <div className="mentor-form mentor-decision">
-            {row.categories.length > 0 && (
-              <div className="mentor-chips">
-                {row.categories.map((c) => <span key={c} className="mentor-chip is-cat"><span>{categoryLabel(c)}</span></span>)}
-              </div>
-            )}
-            {row.message && <p className="mentor-quote">{row.message}</p>}
-            {needTerms && (
-              <MentorTermsAcceptance role="student" checked={termsChecked} onChange={(v) => { setTermsChecked(v); setTermsError(null); }} error={termsError} />
-            )}
-            {actionError?.key === "rel" && <div className="form-inline-error" role="alert">{actionError.msg}</div>}
-            <div className="mentor-form-actions">
-              <button type="button" className="account-outline-btn muted mentor-btn" onClick={() => answer("reject")} disabled={!!busy}>
-                {busy === "reject" ? <Spinner size={14} /> : <><X {...BTN} /> رد {role === "student" ? "دعوت" : "درخواست"}</>}
-              </button>
-              <button type="button" className="trade-primary-btn mentor-btn" onClick={() => answer("accept")} disabled={!!busy || (needTerms && !termsChecked)}>
-                {busy === "accept" ? <Spinner size={14} /> : <><Check {...BTN} /> پذیرفتن</>}
-              </button>
-            </div>
+        <section className="mv2-ms-invite" aria-label={role === "student" ? "دعوت مربی" : "درخواست شاگرد"}>
+          <p className="mv2-ms-invite-text">
+            {role === "student" ? `${name} دعوتت کرده مربی‌ت باشه` : `${name} می‌خواد شاگردت باشه`}
+            {row.categories.length > 0 && <span className="mv2-ms-meta">{row.categories.map((c) => categoryLabel(c)).join("، ")}</span>}
+          </p>
+          {row.message && <p className="mentor-quote">{row.message}</p>}
+          {needTerms && (
+            <MentorTermsAcceptance role="student" checked={termsChecked} onChange={(v) => { setTermsChecked(v); setTermsError(null); }} error={termsError} />
+          )}
+          {actionError?.key === "rel" && <div className="form-inline-error" role="alert">{actionError.msg}</div>}
+          <div className="mv2-ms-invite-actions">
+            <button type="button" className="trade-primary-btn mentor-btn" onClick={() => answer("accept")} disabled={!!busy || (needTerms && !termsChecked)}>
+              {busy === "accept" ? <Spinner size={14} /> : "قبول"}
+            </button>
+            <button type="button" className="account-outline-btn muted mentor-btn" onClick={() => answer("reject")} disabled={!!busy}>
+              {busy === "reject" ? <Spinner size={14} /> : "نه، ممنون"}
+            </button>
           </div>
-        </MentorSection>
+        </section>
       )}
 
       <MentorshipStateNote row={row} role={role} />
 
-      {waiting.length > 0 && (
-        <MentorSection title="برنامه‌ی تازه؛ منتظر پاسخ تو" icon={<Inbox {...SECTION} />} count={faNum(waiting.length)}>
-          <MentorList>
-            {waiting.map((p) => (
-              <MentorListItem key={p.id}>
-                <div className="mentor-decision-card">
-                  <Link href={`/mentor-programs/${p.id}`} className="mentor-decision-title">
-                    {p.type === "WORKOUT" ? <Dumbbell {...ROW} /> : <CalendarCheck {...ROW} />}
-                    <span>{p.title}</span>
-                    <ChevronLeft size={16} strokeWidth={1.75} className="mentor-row-chevron" aria-hidden />
-                  </Link>
-                  <div className="mentor-row-sub"><ProgramFacts p={p} /></div>
-                  {p.note?.trim() && <MentorNote note={p.note} role={role} />}
-                  {actionError?.key === p.id && <div className="form-inline-error" role="alert">{actionError.msg}</div>}
-                  <div className="mentor-form-actions">
-                    <button type="button" className="account-outline-btn muted mentor-btn" onClick={() => setRespond({ id: p.id, action: "reject" })} disabled={!!busy}>
-                      <X {...BTN} /> رد
-                    </button>
-                    <button type="button" className="account-outline-btn mentor-btn" onClick={() => setRespond({ id: p.id, action: "request_changes" })} disabled={!!busy}>
-                      <Pencil {...BTN} /> درخواست تغییر
-                    </button>
-                    <button type="button" className="trade-primary-btn mentor-btn" onClick={() => acceptProgram(p)} disabled={!!busy}>
-                      {busy === `accept:${p.id}` ? <Spinner size={14} /> : <><Check {...BTN} /> پذیرفتن برنامه</>}
-                    </button>
-                  </div>
-                </div>
-              </MentorListItem>
-            ))}
-          </MentorList>
-        </MentorSection>
-      )}
-
-      {(chatOpen || role === "student") && (
-        <MentorSection flush>
-          {chatOpen && <MentorRow
-            href={`/mentorship/${row.id}/chat`}
-            lead={<MessageCircle {...ROW} />}
-            title="گفت‌وگو"
-            sub={
-              row.unread > 0
-                ? <span>{faNum(row.unread)} پیام تازه</span>
-                : <span><Lock size={12} strokeWidth={1.75} aria-hidden /> رمزگذاری سرتاسری{row.status === "ENDED" ? "؛ فقط‌خواندنی" : ""}</span>
-            }
-            end={row.unread > 0 ? <span className="mentor-unread" aria-label={`${faNum(row.unread)} پیام خوانده‌نشده`}>{faNum(row.unread)}</span> : undefined}
-          />}
-          {role === "student" && (
-            <MentorRow
-              href={privacyHref}
-              lead={<ShieldCheck {...ROW} />}
-              title="دسترسی‌ها"
-              sub={<span>{name} چه بخشی از روتینت را ببیند</span>}
-            />
-          )}
-        </MentorSection>
-      )}
+      {waiting.map((p) => {
+        const titles = itemsById[p.id] ?? [];
+        return (
+          <section key={p.id} className="mv2-ms-invite" aria-label="برنامه‌ی تازه">
+            <p className="mv2-ms-invite-text">
+              <b>{name}</b> یه برنامه‌ی تازه برات فرستاده
+              <Link href={`/mentor-programs/${p.id}`} className="mv2-ms-name">{p.title}</Link>
+              <span className="mv2-ms-meta"><ProgramFacts p={p} /></span>
+            </p>
+            {p.note?.trim() && <MentorNote note={p.note} role={role} />}
+            {titles.length > 0 && (
+              <ul className="mv2-ms-items">
+                {titles.slice(0, 4).map((t, i) => <li key={i}>{t}</li>)}
+                {titles.length > 4 && <li className="is-more">و {faNum(titles.length - 4)} مورد دیگه</li>}
+              </ul>
+            )}
+            {actionError?.key === p.id && <div className="form-inline-error" role="alert">{actionError.msg}</div>}
+            <div className="mv2-ms-invite-actions is-three">
+              <button type="button" className="trade-primary-btn mentor-btn" onClick={() => acceptProgram(p)} disabled={!!busy}>
+                {busy === `accept:${p.id}` ? <Spinner size={14} /> : "قبول"}
+              </button>
+              <button type="button" className="account-outline-btn mentor-btn" onClick={() => setRespond({ id: p.id, action: "request_changes" })} disabled={!!busy}>
+                تغییر بخواه
+              </button>
+              <button type="button" className="account-outline-btn muted mentor-btn" onClick={() => setRespond({ id: p.id, action: "reject" })} disabled={!!busy}>
+                نه
+              </button>
+            </div>
+          </section>
+        );
+      })}
 
       {programsSection}
 
@@ -320,15 +349,15 @@ function ProgramFacts({ p }: { p: ProgramRow }) {
   return (
     <>
       <span>{p.type === "WORKOUT" ? "تمرینی" : "روتین"}</span>
-      {p.version > 1 && <span>نسخه‌ی {faNum(p.version)}</span>}
-      {p.startDate && <span>{p.endDate ? `${fmtDay(p.startDate)} تا ${fmtDay(p.endDate)}` : `از ${fmtDay(p.startDate)}`}</span>}
-      {(p.status === "ACTIVE" || p.status === "COMPLETED") && !p.progress.hidden && <span>{faNum(p.progress.rate)}٪ پایبندی</span>}
-      {p.status === "PENDING" && p.sentAt && <span>ارسال {fmtRelative(p.sentAt)}</span>}
+      {p.version > 1 && <span> · ویرایش‌شده</span>}
+      {p.startDate && <span> · {p.endDate ? `${fmtDay(p.startDate)} تا ${fmtDay(p.endDate)}` : `از ${fmtDay(p.startDate)}`}</span>}
+      {(p.status === "ACTIVE" || p.status === "COMPLETED") && !p.progress.hidden && <span> · {faNum(Math.round(p.progress.rate))}٪ انجام شده</span>}
+      {p.status === "PENDING" && p.sentAt && <span> · {fmtRelative(p.sentAt)}</span>}
     </>
   );
 }
 
-/** یادداشت منتور روی برنامه — برچسب‌دار تا با توضیح برنامه اشتباه نشود */
+/** یادداشت مربی روی برنامه، برچسب‌دار تا با توضیح برنامه اشتباه نشه */
 function MentorNote({ note, role }: { note: string; role: Role }) {
   return (
     <div className="mentor-note-box mentor-program-note">

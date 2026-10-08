@@ -1,9 +1,9 @@
 "use client";
 
 import { useCallback, useEffect, useState } from "react";
-import { Hourglass, ListOrdered, PartyPopper, UserMinus } from "lucide-react";
+import { ChevronDown, Hourglass, ListOrdered, PartyPopper, UserMinus } from "lucide-react";
 import { MentorList, MentorListItem } from "./MentorMotion";
-import { MI, MI_STROKE, MentorChip, MentorRow, MentorSection } from "./MentorUI";
+import { MI, MI_STROKE, MentorChip, MentorRow } from "./MentorUI";
 import { MentorUserAvatar } from "./MentorUserAvatar";
 import { MentorConfirmDialog } from "./MentorConfirmDialog";
 import { fa, mentorApi } from "./MentorDashKit";
@@ -24,6 +24,7 @@ const ic = (Icon: typeof Hourglass, size: number) => <Icon size={size} strokeWid
 export function MentorWaitlistSection() {
   const [data, setData] = useState<MentorWaitlistResponse | null>(null);
   const [remove, setRemove] = useState<MentorWaitlistRow | null>(null);
+  const [open, setOpen] = useState(false);
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
@@ -50,7 +51,14 @@ export function MentorWaitlistSection() {
 
   return (
     <>
-      <MentorSection title="صف انتظار" icon={ic(ListOrdered, MI.section)} count={fa(waiting)} flush>
+      <div className="mv2-st-wait">
+      <button type="button" className="mv2-st-wait-head" aria-expanded={open} aria-controls="mv2-st-wait-list" onClick={() => setOpen((o) => !o)}>
+        {ic(ListOrdered, MI.row)}
+        <span className="mv2-st-wait-title">صف انتظار</span>
+        <span className="mv2-st-wait-count">{fa(waiting)} نفر</span>
+        <ChevronDown size={MI.row} strokeWidth={MI_STROKE} className="mv2-st-wait-chev" data-open={open ? "1" : "0"} aria-hidden />
+      </button>
+      {open && <div id="mv2-st-wait-list">
         <MentorList>
           {data.entries.map((e) => {
             const name = publicUserName(e.user);
@@ -88,7 +96,8 @@ export function MentorWaitlistSection() {
             );
           })}
         </MentorList>
-      </MentorSection>
+      </div>}
+      </div>
       {remove && (
         <MentorConfirmDialog
           message={`${publicUserName(remove.user)} از صف خارج بشه؟`}

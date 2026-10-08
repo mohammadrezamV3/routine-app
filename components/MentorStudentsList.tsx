@@ -161,7 +161,7 @@ export function MentorStudentsList({ data, initialReport = false }: { data: Stud
                   {view === "attention" ? "الان کسی نیاز به توجه نداره" : "شاگردی با این فیلتر پیدا نشد"}
                 </MentorEmpty>
               ) : (
-                <MentorList className="mv2-st-list">
+                <div className="mv2-st-list"><MentorList>
                   {rows.map((r) => {
                     const name = publicUserName(r.student);
                     const st = studentStatusText({ rate: r.adherence, idleDays: idleDaysOf(r), paused: !!r.pausedAt });
@@ -186,7 +186,7 @@ export function MentorStudentsList({ data, initialReport = false }: { data: Stud
                       </MentorListItem>
                     );
                   })}
-                </MentorList>
+                </MentorList></div>
               )}
 
               <div className="mv2-st-center">

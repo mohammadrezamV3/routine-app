@@ -63,7 +63,7 @@ function StudentReportRow({ s, current }: { s: WeeklyStudentReport; current: boo
       title={s.name}
       sub={
         s.progressHidden ? (
-          <span>{ic(EyeOff, MI.chip)} شاگرد نمایش پیشرفت را خاموش کرده است</span>
+          <span>{ic(EyeOff, MI.chip)} این بخش رو شاگرد خصوصی نگه داشته</span>
         ) : noPlan ? (
           <span>در این بازه برنامه‌ی فعالی نداشت</span>
         ) : (
@@ -99,7 +99,7 @@ function StudentReportDetails({ s, current }: { s: WeeklyStudentReport; current:
     );
   }
   if (s.paused && !(s.progressHidden || s.scheduled === 0)) {
-    lines.push(<MentorChip key="paused" tone="neutral" icon={ic(PauseCircle, MI.chip)}>رابطه متوقف است</MentorChip>);
+    lines.push(<MentorChip key="paused" tone="neutral" icon={ic(PauseCircle, MI.chip)}>همکاری متوقف است</MentorChip>);
   }
   for (const p of s.scheduledPrograms.slice(0, 2)) {
     lines.push(
