@@ -1757,3 +1757,10 @@ body[data-theme="light"] .mv2-pg-item-main, body:not([data-theme="light"]) .mv2-
   background:transparent; border:none; box-shadow:none; border-radius:0;
   -webkit-backdrop-filter:none; backdrop-filter:none;
 }
+
+/* ── mv2: دسکتاپ پهن ── */
+/* روی صفحه‌ی پهن دکمه‌ی کارت کار کنار متن می‌مونه، نه ته ردیف */
+@media (min-width:900px){
+  .mv2-task-body{ flex:0 1 560px; }
+  .mv2-task-end{ margin-inline-start:var(--m-4, 16px); }
+}

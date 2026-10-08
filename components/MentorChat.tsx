@@ -568,7 +568,7 @@ function ChatBody({
                 <span className="mc-label">پیام خوش‌آمد</span>
                 <span className="mc-text" dir="auto">{welcome.body}</span>
                 <span className="mc-spacer" aria-hidden />
-                <span className="mc-meta"><span className="mc-time">{hm(welcome.at)}</span></span>
+                
               </div>
             </div>
           )}
