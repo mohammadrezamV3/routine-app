@@ -3,6 +3,7 @@
 import { Crown } from "lucide-react";
 import { AgentAvatar } from "@/components/AgentAvatar";
 import { GoldenName } from "@/components/GoldenName";
+import { tr, isEn } from "@/lib/i18n";
 
 // کارت سرصفحه‌ی پنل کاربری (بالای /account).
 //
@@ -23,10 +24,10 @@ export function AccountHeroCard({
   staff?: boolean;
 }) {
   return (
-    <div className="account-hero" dir="rtl">
+    <div className="account-hero" dir={isEn() ? "ltr" : "rtl"}>
       <div className="account-hero-avatar-wrap">
         {avatarUrl ? (
-          <img src={avatarUrl} alt="عکس پروفایل" className="account-hero-avatar-img" />
+          <img src={avatarUrl} alt={tr("عکس پروفایل", "Profile photo")} className="account-hero-avatar-img" />
         ) : (
           <AgentAvatar seed={fullName || username || "؟"} size={44} className="account-hero-avatar-fallback" />
         )}
@@ -38,7 +39,7 @@ export function AccountHeroCard({
       </div>
       <span className={`account-hero-badge${isPremium ? " premium" : ""}`}>
         <Crown size={12} />
-        {planNameFa || (isPremium ? "پریمیوم" : "بدون پلن فعال")}
+        {planNameFa || (isPremium ? tr("پریمیوم", "Premium") : tr("بدون پلن فعال", "No active plan"))}
       </span>
     </div>
   );

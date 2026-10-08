@@ -11,10 +11,12 @@ import { AuthField, useAuthFieldsStagger } from "@/components/AuthField";
 import { AuthBackButton, AuthBrandMark } from "@/components/AuthChrome";
 import { PasswordVisibilityToggle } from "@/components/PasswordVisibilityToggle";
 import { isValidIranPhone, isValidUsername, validatePassword, isValidPersianName, digitsOnly } from "@/lib/validate";
+import { passwordTierLabel } from "@/lib/passwordTierLabel";
 import { passwordTier, PASSWORD_TIER_LABELS, PASSWORD_TIER_ORDER, isPasswordAcceptable } from "@/lib/passwordStrength";
 import { loginAndRedirect } from "@/lib/loginRedirect";
 import { captureInviteRef } from "@/lib/invite";
 import { TickButton } from "@/components/TickButton";
+import { tr, isEn } from "@/lib/i18n";
 
 type FieldErrors = {
   phone?: string; name?: string; lastName?: string; username?: string;
@@ -89,11 +91,11 @@ export default function SignupPage() {
   async function requestOtp() {
     const trimmed = phone.trim();
     if (!trimmed) {
-      setFieldErrors((f) => ({ ...f, phone: "شماره همراه را وارد کن" }));
+      setFieldErrors((f) => ({ ...f, phone: tr("شماره همراه را وارد کن", "Enter your phone number") }));
       return;
     }
     if (!isValidIranPhone(trimmed)) {
-      setFieldErrors((f) => ({ ...f, phone: "فرمت شماره معتبر نیست (مثال: 09xxxxxxxxx)" }));
+      setFieldErrors((f) => ({ ...f, phone: tr("فرمت شماره معتبر نیست (مثال: 09xxxxxxxxx)", "Invalid phone number format (example: 09xxxxxxxxx)") }));
       return;
     }
     clearError("phone");
@@ -107,7 +109,7 @@ export default function SignupPage() {
       const data = await res.json().catch(() => ({}));
       setSendingCode(false);
       if (!res.ok) {
-        setFieldErrors((f) => ({ ...f, phone: data.error || "خطایی پیش آمد" }));
+        setFieldErrors((f) => ({ ...f, phone: data.error || tr("خطایی پیش آمد", "Something went wrong") }));
         return;
       }
       setOtpCode("");
@@ -116,7 +118,7 @@ export default function SignupPage() {
       setOtpSent(true);
     } catch {
       setSendingCode(false);
-      setFieldErrors((f) => ({ ...f, phone: "مشکلی در اتصال به سرور پیش اومد — دوباره امتحان کن" }));
+      setFieldErrors((f) => ({ ...f, phone: tr("مشکلی در اتصال به سرور پیش اومد — دوباره امتحان کن", "Could not reach the server. Please try again") }));
     }
   }
 
@@ -134,23 +136,23 @@ export default function SignupPage() {
     const errs: FieldErrors = {};
     const name = firstName.trim();
     const lastName = lastNameInput.trim();
-    if (!name) errs.name = "نام را وارد کن";
+    if (!name) errs.name = tr("نام را وارد کن", "Enter your first name");
     // فقط فارسی — همین بررسی سمت سرور هم تکرار می‌شود (قابل دور زدن است)
-    else if (!isValidPersianName(name)) errs.name = "نام باید فقط با حروف فارسی نوشته شود";
-    if (!lastName) errs.lastName = "نام خانوادگی را وارد کن";
-    else if (!isValidPersianName(lastName)) errs.lastName = "نام خانوادگی باید فقط با حروف فارسی نوشته شود";
-    if (!username.trim()) errs.username = "یوزرنیم را وارد کن";
-    else if (!isValidUsername(username.trim())) errs.username = "یوزرنیم باید 3 تا 20 کاراکتر انگلیسی/عدد/آندرلاین باشد";
-    if (!password) errs.password = "رمز عبور را وارد کن";
+    else if (!isValidPersianName(name)) errs.name = tr("نام باید فقط با حروف فارسی نوشته شود", "First name must use Persian letters only");
+    if (!lastName) errs.lastName = tr("نام خانوادگی را وارد کن", "Enter your last name");
+    else if (!isValidPersianName(lastName)) errs.lastName = tr("نام خانوادگی باید فقط با حروف فارسی نوشته شود", "Last name must use Persian letters only");
+    if (!username.trim()) errs.username = tr("یوزرنیم را وارد کن", "Enter a username");
+    else if (!isValidUsername(username.trim())) errs.username = tr("یوزرنیم باید 3 تا 20 کاراکتر انگلیسی/عدد/آندرلاین باشد", "Username must be 3 to 20 characters: English letters, digits or underscores");
+    if (!password) errs.password = tr("رمز عبور را وارد کن", "Enter a password");
     else {
       const pwErr = await validatePassword(password, [username, firstName, lastNameInput, phone]);
       if (pwErr) errs.password = pwErr;
     }
-    if (!phone.trim()) errs.phone = "شماره همراه را وارد کن";
-    else if (!isValidIranPhone(phone.trim())) errs.phone = "فرمت شماره معتبر نیست (مثال: 09xxxxxxxxx)";
-    else if (!otpSent) errs.phone = "اول باید کد تایید رو ارسال کنی";
-    if (otpSent && !otpCode.trim()) errs.otp = "کد ارسال‌شده را وارد کن";
-    if (!agreed) errs.agreed = "برای ادامه باید قوانین سایت را بپذیری";
+    if (!phone.trim()) errs.phone = tr("شماره همراه را وارد کن", "Enter your phone number");
+    else if (!isValidIranPhone(phone.trim())) errs.phone = tr("فرمت شماره معتبر نیست (مثال: 09xxxxxxxxx)", "Invalid phone number format (example: 09xxxxxxxxx)");
+    else if (!otpSent) errs.phone = tr("اول باید کد تایید رو ارسال کنی", "Send the verification code first");
+    if (otpSent && !otpCode.trim()) errs.otp = tr("کد ارسال‌شده را وارد کن", "Enter the code we sent you");
+    if (!agreed) errs.agreed = tr("برای ادامه باید قوانین سایت را بپذیری", "You need to accept the terms to continue");
 
     setFieldErrors(errs);
     if (Object.keys(errs).length) {
@@ -170,12 +172,12 @@ export default function SignupPage() {
       verifyData = await verifyRes.json().catch(() => ({}));
     } catch {
       setLoading(false);
-      setError("مشکلی در اتصال به سرور پیش اومد — دوباره امتحان کن");
+      setError(tr("مشکلی در اتصال به سرور پیش اومد — دوباره امتحان کن", "Could not reach the server. Please try again"));
       return;
     }
     if (!verifyRes.ok) {
       setLoading(false);
-      setFieldErrors((f) => ({ ...f, otp: verifyData.error || "کد وارد شده اشتباه است" }));
+      setFieldErrors((f) => ({ ...f, otp: verifyData.error || tr("کد وارد شده اشتباه است", "The code is incorrect") }));
       return;
     }
 
@@ -190,12 +192,12 @@ export default function SignupPage() {
       data = await res.json();
     } catch {
       setLoading(false);
-      setError("مشکلی در اتصال به سرور پیش اومد — دوباره امتحان کن");
+      setError(tr("مشکلی در اتصال به سرور پیش اومد — دوباره امتحان کن", "Could not reach the server. Please try again"));
       return;
     }
     if (!res.ok) {
       setLoading(false);
-      setError(data.error || "خطایی پیش آمد — دوباره امتحان کن");
+      setError(data.error || tr("خطایی پیش آمد — دوباره امتحان کن", "Something went wrong. Please try again"));
       return;
     }
 
@@ -235,27 +237,27 @@ export default function SignupPage() {
   return (
     <form ref={formRef} onSubmit={submit} className="auth-box">
       <AuthBackButton />
-      <AuthBrandMark subtitle={"به آریون خوش اومدی!"} />
+      <AuthBrandMark subtitle={tr("به آریون خوش اومدی!", "Welcome to Arion!")} />
 
       <div className="auth-field-grid" ref={nameRef} style={{ marginTop: 20 }}>
-        <AuthField id="firstName" label={"نام"} error={fieldErrors.name} icon={<User size={15} />}>
+        <AuthField id="firstName" label={tr("نام", "First name")} error={fieldErrors.name} icon={<User size={15} />}>
           <input
-            id="firstName" type="text" autoComplete="given-name" autoCorrect="off" spellCheck={false} className="wsearch-newform-name" value={firstName} placeholder={"نام"}
+            id="firstName" type="text" autoComplete="given-name" autoCorrect="off" spellCheck={false} className="wsearch-newform-name" value={firstName} placeholder={tr("نام", "First name")}
             onChange={(e) => { setFirstName(e.target.value); if (e.target.value.trim()) clearError("name"); }}
           />
         </AuthField>
-        <AuthField id="lastName" label={"نام خانوادگی"} error={fieldErrors.lastName} icon={<User size={15} />}>
+        <AuthField id="lastName" label={tr("نام خانوادگی", "Last name")} error={fieldErrors.lastName} icon={<User size={15} />}>
           <input
-            id="lastName" type="text" autoComplete="family-name" autoCorrect="off" spellCheck={false} className="wsearch-newform-name" value={lastNameInput} placeholder={"نام خانوادگی"}
+            id="lastName" type="text" autoComplete="family-name" autoCorrect="off" spellCheck={false} className="wsearch-newform-name" value={lastNameInput} placeholder={tr("نام خانوادگی", "Last name")}
             onChange={(e) => { setLastNameInput(e.target.value); if (e.target.value.trim()) clearError("lastName"); }}
           />
         </AuthField>
       </div>
 
       <div style={{ marginTop: 14 }}>
-        <AuthField id="username" label={"یوزرنیم"} error={fieldErrors.username} icon={<AtSign size={15} />} ref={usernameRef}>
+        <AuthField id="username" label={tr("یوزرنیم", "Username")} error={fieldErrors.username} icon={<AtSign size={15} />} ref={usernameRef}>
           <input
-            id="username" type="text" name="username" autoComplete="username" autoCapitalize="none" autoCorrect="off" spellCheck={false} className="wsearch-newform-name" value={username} dir="ltr" style={{ textAlign: "right" }} placeholder={"یوزرنیم خود را وارد کنید"}
+            id="username" type="text" name="username" autoComplete="username" autoCapitalize="none" autoCorrect="off" spellCheck={false} className="wsearch-newform-name" value={username} dir="ltr" style={{ textAlign: isEn() ? "left" : "right" }} placeholder={tr("یوزرنیم خود را وارد کنید", "Enter your username")}
             onChange={(e) => { setUsername(e.target.value); if (e.target.value.trim()) clearError("username"); }}
           />
         </AuthField>
@@ -263,12 +265,12 @@ export default function SignupPage() {
 
       <div style={{ marginTop: 14 }}>
         <AuthField
-          id="password" label={"رمز عبور"} error={fieldErrors.password} ref={passwordRef}
+          id="password" label={tr("رمز عبور", "Password")} error={fieldErrors.password} ref={passwordRef}
           icon={<Lock size={15} />}
           endAction={<PasswordVisibilityToggle visible={passwordVisible} onToggle={() => setPasswordVisible((v) => !v)} />}
         >
           <input
-            id="password" type={passwordVisible ? "text" : "password"} name="password" autoComplete="new-password" autoCapitalize="none" autoCorrect="off" spellCheck={false} className="wsearch-newform-name" value={password} placeholder={"حداقل 8 کاراکتر"}
+            id="password" type={passwordVisible ? "text" : "password"} name="password" autoComplete="new-password" autoCapitalize="none" autoCorrect="off" spellCheck={false} className="wsearch-newform-name" value={password} placeholder={tr("حداقل 8 کاراکتر", "At least 8 characters")}
             onChange={(e) => { setPassword(e.target.value); if (e.target.value) clearError("password"); }}
           />
         </AuthField>
@@ -280,15 +282,15 @@ export default function SignupPage() {
               ))}
             </div>
             <div className="pw-strength-label">
-              {`قدرت رمز: ${PASSWORD_TIER_LABELS[tier]}`}
-              {!isPasswordAcceptable(tier) && " — حداقل باید «خوب» باشه"}
+              {tr(`قدرت رمز: ${PASSWORD_TIER_LABELS[tier]}`, `Password strength: ${passwordTierLabel(tier)}`)}
+              {!isPasswordAcceptable(tier) && tr(" — حداقل باید «خوب» باشه", " — must be at least \u201cGood\u201d")}
             </div>
           </div>
         )}
       </div>
 
       <div style={{ marginTop: 14 }} ref={phoneRef}>
-        <AuthField id="phone" label={"شماره همراه"} error={fieldErrors.phone} icon={<Phone size={15} />}>
+        <AuthField id="phone" label={tr("شماره همراه", "Phone number")} error={fieldErrors.phone} icon={<Phone size={15} />}>
           <div className={`auth-phone-wrap${otpSent ? " sent" : ""}`}>
             <input
               id="phone" type="tel" inputMode="numeric" autoComplete="tel-national" autoCapitalize="none" autoCorrect="off" spellCheck={false} className="wsearch-newform-name" value={phone} dir="ltr"
@@ -302,7 +304,7 @@ export default function SignupPage() {
               disabled={sendingCode || (otpSent && resendCooldown > 0)}
               onClick={otpSent ? changePhone : requestOtp}
             >
-              {sendingCode ? "در حال ارسال…" : otpSent ? "تغییر شماره" : "ارسال کد"}
+              {sendingCode ? tr("در حال ارسال…", "Sending…") : otpSent ? tr("تغییر شماره", "Change number") : tr("ارسال کد", "Send code")}
             </button>
           </div>
         </AuthField>
@@ -310,9 +312,9 @@ export default function SignupPage() {
 
       {otpSent && (
         <div className="auth-otp-reveal" ref={otpRef}>
-          <AuthField id="signupOtp" label={"کد 5 رقمی"} error={fieldErrors.otp}>
+          <AuthField id="signupOtp" label={tr("کد 5 رقمی", "5-digit code")} error={fieldErrors.otp}>
             <input
-              id="signupOtp" type="tel" inputMode="numeric" autoComplete="one-time-code" autoCapitalize="none" autoCorrect="off" spellCheck={false} maxLength={5} className="wsearch-newform-name" value={otpCode} dir="ltr" style={{ textAlign: "right" }}
+              id="signupOtp" type="tel" inputMode="numeric" autoComplete="one-time-code" autoCapitalize="none" autoCorrect="off" spellCheck={false} maxLength={5} className="wsearch-newform-name" value={otpCode} dir="ltr" style={{ textAlign: isEn() ? "left" : "right" }}
               onChange={(e) => { const v = digitsOnly(e.target.value); setOtpCode(v); if (v) clearError("otp"); }}
             />
           </AuthField>
@@ -323,8 +325,8 @@ export default function SignupPage() {
             onClick={requestOtp}
           >
             {resendCooldown > 0
-              ? `ارسال مجدد کد ${faNum(resendCooldown)}`
-              : "ارسال مجدد کد"}
+              ? tr(`ارسال مجدد کد ${faNum(resendCooldown)}`, `Resend code ${faNum(resendCooldown)}`)
+              : tr("ارسال مجدد کد", "Resend code")}
           </button>
         </div>
       )}
@@ -338,18 +340,19 @@ export default function SignupPage() {
       >
         <TickButton as="span" className="mt-0.5" size={22} shape="square" checked={agreed} />
         <div className="task-name">
+          {isEn() && <>{"I accept the "}</>}
           <Link href="/terms" target="_blank" onClick={(e) => e.stopPropagation()} style={{ color: "var(--accent)" }}>
-            {"قوانین و مقررات"}
+            {tr("قوانین و مقررات", "terms and conditions")}
           </Link>
-          {" "}{"سایت را می‌پذیرم"}
+          {!isEn() && <>{" "}{"سایت را می‌پذیرم"}</>}
         </div>
       </div>
-      {fieldErrors.agreed && <div className="field-error-msg" style={{ display: "block", marginRight: 32 }}>{fieldErrors.agreed}</div>}
+      {fieldErrors.agreed && <div className="field-error-msg" style={{ display: "block", marginInlineStart: 32 }}>{fieldErrors.agreed}</div>}
 
       {error && <div className="field-error-msg" style={{ display: "block", marginTop: 8 }}>{error}</div>}
 
       <button type="submit" className="auth-full-btn" disabled={loading} data-anim-field style={{ marginTop: 16 }}>
-        {loading ? "در حال ثبت‌نام…" : "ساخت حساب"}
+        {loading ? tr("در حال ثبت‌نام…", "Signing up…") : tr("ساخت حساب", "Create account")}
       </button>
     </form>
   );

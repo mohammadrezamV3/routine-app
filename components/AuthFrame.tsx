@@ -3,6 +3,7 @@
 import { usePathname } from "next/navigation";
 import { AuthShell } from "./AuthShell";
 import { AuthTabs } from "./AuthTabs";
+import { LanguageSwitch } from "./LanguageSwitch";
 
 /**
  * قاب مشترک و *پایدار* صفحه‌های auth — از `app/auth/layout.tsx` رندر می‌شه.
@@ -32,6 +33,12 @@ export function AuthFrame({ children }: { children: React.ReactNode }) {
         {tab && <AuthTabs active={tab} />}
         {children}
       </AuthShell>
+      {/* انتخاب زبان برای مهمان: ثابت پایین صفحه تا چیدمان وسط‌چین فرم‌ها دست نخوره */}
+      <div style={{ position: "fixed", bottom: 14, left: 0, right: 0, display: "flex", justifyContent: "center", pointerEvents: "none", zIndex: 5 }}>
+        <div style={{ width: 168, pointerEvents: "auto" }}>
+          <LanguageSwitch />
+        </div>
+      </div>
     </section>
   );
 }

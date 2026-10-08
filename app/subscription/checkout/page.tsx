@@ -9,14 +9,16 @@ import { XCircle } from "lucide-react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
 import { AuthGate } from "@/components/AuthGate";
-import { formatPriceAmount } from "@/lib/formatPrice";
+import { priceText as formatPriceAmount } from "@/lib/subscriptionI18n";
 import { findPlanCard, formatJalaliLong, UpgradeOffer } from "@/components/PlanShowcase";
-import { Duration, durationLabel, isDuration, isPaidPlanKey } from "@/lib/planPricing";
+import { Duration, isDuration, isPaidPlanKey } from "@/lib/planPricing";
+import { monthsText } from "@/lib/subscriptionI18n";
 import { usePlanPricing } from "@/lib/usePlanPricing";
 import { TickButton } from "@/components/TickButton";
 import { isMonthlyOption, pickBestDiscount } from "@/lib/achievementRewards";
 import { getAccount } from "@/lib/accountCache";
 import { ToggleSwitch } from "@/components/ToggleSwitch";
+import { tr, isEn } from "@/lib/i18n";
 
 type Gateway = "zibal";
 
@@ -107,8 +109,8 @@ export default function CheckoutPage() {
   if (status !== "authenticated") {
     return (
       <section className="checkout-page">
-        <h1>پرداخت</h1>
-        <AuthGate message="برای خرید اشتراک وارد شوید" />
+        <h1>{tr("پرداخت", "Checkout")}</h1>
+        <AuthGate message={tr("برای خرید اشتراک وارد شوید", "Log in to buy a subscription")} />
       </section>
     );
   }
@@ -117,9 +119,9 @@ export default function CheckoutPage() {
   if (!plan || plan.free || !isPaidPlanKey(planKey) || !durationOk) {
     return (
       <section className="checkout-page">
-        <h1>پرداخت</h1>
-        <div className="section-note">پلن انتخاب‌شده معتبر نیست.</div>
-        <Link href="/subscription" className="checkout-back-link">بازگشت به صفحه‌ی اشتراک</Link>
+        <h1>{tr("پرداخت", "Checkout")}</h1>
+        <div className="section-note">{tr("پلن انتخاب‌شده معتبر نیست.", "The selected plan is not valid.")}</div>
+        <Link href="/subscription" className="checkout-back-link">{tr("بازگشت به صفحه‌ی اشتراک", "Back to subscription")}</Link>
       </section>
     );
   }
@@ -174,13 +176,13 @@ export default function CheckoutPage() {
       const data = await res.json().catch(() => ({}));
       if (myGen !== requestGenRef.current) return; // درخواست جدیدتری در راهه/رسیده — این جواب دیگه معتبر نیست
       if (!res.ok) {
-        setDiscountResult({ ok: false, error: data.error || "خطایی پیش آمد — دوباره امتحان کن" });
+        setDiscountResult({ ok: false, error: data.error || tr("خطایی پیش آمد — دوباره امتحان کن", "Something went wrong. Please try again") });
       } else {
         setDiscountResult({ ok: true, percentOff: data.percentOff });
       }
     } catch {
       if (myGen === requestGenRef.current) {
-        setDiscountResult({ ok: false, error: "مشکلی در اتصال به سرور پیش اومد — دوباره امتحان کن" });
+        setDiscountResult({ ok: false, error: tr("مشکلی در اتصال به سرور پیش اومد — دوباره امتحان کن", "Could not reach the server. Please try again") });
       }
     } finally {
       applyingRef.current = false;
@@ -192,17 +194,17 @@ export default function CheckoutPage() {
   // (nginx / پراکسی / کانتینر خاموش). این پیام‌ها کاربر را به سمت کار درست
   // می‌برند به‌جای این‌که فکر کند اینترنتش مشکل دارد.
   function httpErrorMessage(status: number): string {
-    if (status === 504 || status === 408) return "درگاه پرداخت دیر جواب داد — چند لحظه دیگر دوباره امتحان کن";
-    if (status === 502 || status === 503) return "سرور پرداخت موقتا در دسترس نیست — چند دقیقه دیگر دوباره امتحان کن";
-    if (status === 401) return "برای پرداخت باید دوباره وارد حسابت بشی";
-    if (status === 429) return "تعداد تلاش‌ها زیاد بود — چند دقیقه صبر کن";
-    return `خطای غیرمنتظره از سرور (کد ${status}) — اگر تکرار شد به پشتیبانی اطلاع بده`;
+    if (status === 504 || status === 408) return tr("درگاه پرداخت دیر جواب داد — چند لحظه دیگر دوباره امتحان کن", "The payment gateway took too long to respond. Please try again in a moment");
+    if (status === 502 || status === 503) return tr("سرور پرداخت موقتا در دسترس نیست — چند دقیقه دیگر دوباره امتحان کن", "The payment server is temporarily unavailable. Please try again in a few minutes");
+    if (status === 401) return tr("برای پرداخت باید دوباره وارد حسابت بشی", "You need to log in again to pay");
+    if (status === 429) return tr("تعداد تلاش‌ها زیاد بود — چند دقیقه صبر کن", "Too many attempts. Please wait a few minutes");
+    return tr(`خطای غیرمنتظره از سرور (کد ${status}) — اگر تکرار شد به پشتیبانی اطلاع بده`, `Unexpected server error (code ${status}). If it keeps happening, contact support`);
   }
 
   async function pay() {
     if (loading) return;
     if (!agreed) {
-      setError("برای ادامه‌ی پرداخت، لطفا قوانین و مقررات سایت را بپذیر");
+      setError(tr("برای ادامه‌ی پرداخت، لطفا قوانین و مقررات سایت را بپذیر", "To continue, please accept the terms and conditions"));
       return;
     }
     setLoading(true);
@@ -234,22 +236,22 @@ export default function CheckoutPage() {
     } catch {
       // این‌جا فقط خطای واقعی شبکه می‌رسد (اینترنت کاربر قطع شده)، نه پاسخ
       // نامعتبر سرور — پس این پیام حالا واقعا درست است.
-      setError("اتصال به اینترنت برقرار نیست — اتصالت رو چک کن و دوباره امتحان کن");
+      setError(tr("اتصال به اینترنت برقرار نیست — اتصالت رو چک کن و دوباره امتحان کن", "No internet connection. Check your connection and try again"));
       setLoading(false);
     }
   }
 
   return (
     <section className="checkout-page">
-      <button type="button" className="checkout-back-btn" aria-label="بازگشت" onClick={() => router.push("/subscription")}>
-        <svg viewBox="0 0 24 24" fill="none"><path d="M3 12h18M21 12l-7-6M21 12l-7 6" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" /></svg>
+      <button type="button" className="checkout-back-btn" aria-label={tr("بازگشت", "Back")} onClick={() => router.push("/subscription")}>
+        <svg viewBox="0 0 24 24" fill="none" className="dir-flip"><path d="M3 12h18M21 12l-7-6M21 12l-7 6" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" /></svg>
       </button>
 
-      <h1>تکمیل خرید</h1>
+      <h1>{tr("تکمیل خرید", "Complete purchase")}</h1>
 
       {failedReturn && (
         <div className="checkout-status-banner failed">
-          <XCircle size={18} /> پرداخت ناموفق بود یا لغو شد — چیزی از حسابت کم نشده. می‌تونی دوباره امتحان کنی.
+          <XCircle size={18} /> {tr("پرداخت ناموفق بود یا لغو شد — چیزی از حسابت کم نشده. می‌تونی دوباره امتحان کنی.", "The payment failed or was cancelled. Nothing was charged. You can try again.")}
         </div>
       )}
 
@@ -257,7 +259,7 @@ export default function CheckoutPage() {
         <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full checkout-summary-icon">{plan.icon}</span>
         <div className="checkout-summary-body">
           <div className="checkout-summary-name">{plan.nameFa}</div>
-          <div className="checkout-summary-duration">{durationLabel(pricing, duration)}</div>
+          <div className="checkout-summary-duration">{monthsText(pricing.durations[duration].months)}</div>
         </div>
         <div className="checkout-summary-price">
           {discountedAmount != null && (
@@ -271,24 +273,24 @@ export default function CheckoutPage() {
 
       {upgradeInfo && (
         <div className="checkout-upgrade-note">
-          با اعتبار پلن فعلیت ارتقا می‌گیری —{" "}
+          {tr("با اعتبار پلن فعلیت ارتقا می‌گیری —", "You are upgrading with the credit from your current plan —")}{" "}
           {upgradeInfo.capped
-            ? `این پلن تا ${formatJalaliLong(upgradeInfo.capEndIso)} فعال می‌مونه (هم‌زمان با پایان پلن فعلیت).`
-            : "به‌مدت کامل خریداری‌شده فعال می‌مونه."}
+            ? tr(`این پلن تا ${formatJalaliLong(upgradeInfo.capEndIso)} فعال می‌مونه (هم‌زمان با پایان پلن فعلیت).`, `This plan stays active until ${formatJalaliLong(upgradeInfo.capEndIso)} (the same day your current plan ends).`)
+            : tr("به‌مدت کامل خریداری‌شده فعال می‌مونه.", "Stays active for the full purchased period.")}
         </div>
       )}
 
       <div className="checkout-box">
         <div className="checkout-discount-row">
-          <label className="checkout-field-label" htmlFor="discountCode">کد تخفیف</label>
+          <label className="checkout-field-label" htmlFor="discountCode">{tr("کد تخفیف", "Discount code")}</label>
           <div className={`checkout-discount-field-wrap${discountResult?.ok ? " applied" : ""}`}>
             <input
               id="discountCode"
               type="text"
               dir="ltr"
               className="wsearch-newform-name checkout-discount-input"
-              style={{ textAlign: "right" }}
-              placeholder="کد تخفیف (اختیاری)"
+              style={{ textAlign: isEn() ? "left" : "right" }}
+              placeholder={tr("کد تخفیف (اختیاری)", "Discount code (optional)")}
               value={discountCode}
               readOnly={discountResult?.ok}
               onChange={(e) => { setDiscountCode(e.target.value); setDiscountResult(null); }}
@@ -300,27 +302,29 @@ export default function CheckoutPage() {
               disabled={applyingDiscount || (!discountResult?.ok && !discountCode.trim())}
               onClick={applyDiscount}
             >
-              {applyingDiscount ? "..." : discountResult?.ok ? "تغییر" : "اعمال"}
+              {applyingDiscount ? "..." : discountResult?.ok ? tr("تغییر", "Change") : tr("اعمال", "Apply")}
             </button>
           </div>
         </div>
-        {fromInvite && !discountResult && <div className="checkout-invite-hint">کد دعوت دوستت پر شده — «اعمال» رو بزن تا {faNum(REFERRAL_DISCOUNT_PERCENT)}٪ تخفیف بگیری</div>}
+        {fromInvite && !discountResult && <div className="checkout-invite-hint">{isEn() ? `Your friend's invite code is filled in. Press “Apply” to get ${faNum(REFERRAL_DISCOUNT_PERCENT)}% off` : <>کد دعوت دوستت پر شده — «اعمال» رو بزن تا {faNum(REFERRAL_DISCOUNT_PERCENT)}٪ تخفیف بگیری</>}</div>}
         {achWins && achReward && (
           <div className="checkout-discount-success">
-            {faNum(achReward.percent)}٪ تخفیف پاداش اچیومنت‌ها ({achReward.tier === "full" ? "باز کردن همه‌ی اچیومنت‌ها" : "باز کردن نیمی از اچیومنت‌ها"}) خودکار اعمال شد{discountResult?.ok ? " (از کد تخفیف بیشتره، پس اون مصرف نمی‌شه)" : ""}
+            {isEn()
+              ? `${faNum(achReward.percent)}% achievements reward (${achReward.tier === "full" ? "all achievements unlocked" : "half of the achievements unlocked"}) was applied automatically${discountResult?.ok ? " (it is bigger than the discount code, so the code is not used)" : ""}`
+              : <>{faNum(achReward.percent)}٪ تخفیف پاداش اچیومنت‌ها ({achReward.tier === "full" ? "باز کردن همه‌ی اچیومنت‌ها" : "باز کردن نیمی از اچیومنت‌ها"}) خودکار اعمال شد{discountResult?.ok ? " (از کد تخفیف بیشتره، پس اون مصرف نمی‌شه)" : ""}</>}
           </div>
         )}
-        {achReward && !monthly && <div className="checkout-invite-hint">پاداش {faNum(achReward.percent)}٪ اچیومنت‌ها فقط روی گزینه‌ی یک‌ماهه اعمال می‌شه</div>}
-        {discountResult?.ok && !achWins && <div className="checkout-discount-success">کد تخفیف اعمال شد</div>}
+        {achReward && !monthly && <div className="checkout-invite-hint">{isEn() ? `The ${faNum(achReward.percent)}% achievements reward only applies to the 1-month option` : <>پاداش {faNum(achReward.percent)}٪ اچیومنت‌ها فقط روی گزینه‌ی یک‌ماهه اعمال می‌شه</>}</div>}
+        {discountResult?.ok && !achWins && <div className="checkout-discount-success">{tr("کد تخفیف اعمال شد", "Discount code applied")}</div>}
         {discountResult && !discountResult.ok && <div className="field-error-msg" style={{ display: "block", marginTop: 7 }}>{discountResult.error}</div>}
       </div>
 
       <div className="checkout-box">
-        <div className="checkout-field-label">درگاه پرداخت</div>
+        <div className="checkout-field-label">{tr("درگاه پرداخت", "Payment gateway")}</div>
         <div className="checkout-gateway-row">
           <button type="button" className="checkout-gateway-pill on" disabled>
             <ZibalMark />
-            زیبال
+            {tr("زیبال", "Zibal")}
           </button>
         </div>
       </div>
@@ -329,18 +333,18 @@ export default function CheckoutPage() {
         <div className="checkout-box">
           <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", gap: 10 }}>
             <div className="checkout-field-label" style={{ marginBottom: 0 }}>
-              استفاده از کیفِ اعتبار{" "}
-              <span className="mono" dir="ltr" style={{ marginRight: 4, color: "var(--accent)", fontWeight: 700 }}>
+              {tr(tr("استفاده از کیفِ اعتبار", "Use wallet credit"), "Use wallet credit")}{" "}
+              <span className="mono" dir="ltr" style={{ marginInlineStart: 4, color: "var(--accent)", fontWeight: 700 }}>
                 {formatPriceAmount(walletBalance)}
               </span>
             </div>
-            <ToggleSwitch checked={useWallet} onChange={setUseWallet} label="استفاده از کیفِ اعتبار" />
+            <ToggleSwitch checked={useWallet} onChange={setUseWallet} label={tr("استفاده از کیفِ اعتبار", "Use wallet credit")} />
           </div>
           {useWallet && preWalletAmount > 0 && (
             <div className="item-line" style={{ marginTop: 8 }}>
-              مبلغِ قابل‌اعمال از کیف: <span className="mono" dir="ltr">{formatPriceAmount(appliedCredit)}</span>
+              {tr("مبلغِ قابل‌اعمال از کیف:", "Applied from wallet:")} <span className="mono" dir="ltr">{formatPriceAmount(appliedCredit)}</span>
               {" — "}
-              باقیِ قابلِ پرداخت: <span className="mono" dir="ltr">{payLabel}</span>
+              {tr("باقیِ قابلِ پرداخت:", "Left to pay:")} <span className="mono" dir="ltr">{payLabel}</span>
             </div>
           )}
         </div>
@@ -349,10 +353,11 @@ export default function CheckoutPage() {
       <div className="task checkout-terms-row" onClick={() => { setAgreed((v) => !v); setError(null); }}>
         <TickButton as="span" className="mt-0.5" size={22} shape="square" checked={agreed} />
         <div className="task-name">
+          {isEn() && <>{"I accept the "}</>}
           <Link href="/terms" target="_blank" onClick={(e) => e.stopPropagation()} style={{ color: "var(--accent)" }}>
-            قوانین و مقررات
+            {tr("قوانین و مقررات", "terms and conditions")}
           </Link>
-          {" "}سایت را می‌پذیرم
+          {!isEn() && <>{" "}سایت را می‌پذیرم</>}
         </div>
       </div>
 
@@ -360,11 +365,11 @@ export default function CheckoutPage() {
 
       <button type="button" className="auth-full-btn checkout-pay-btn" disabled={loading} onClick={pay}>
         {loading ? (
-          "در حال اتصال به درگاه…"
+          tr("در حال اتصال به درگاه…", "Connecting to the gateway…")
         ) : (
           <span className="checkout-pay-btn-inner">
             {(discountedAmount != null || appliedCredit > 0) && <span className="checkout-pay-old-price">{price}</span>}
-            <span>{payAmount === 0 ? "فعال‌سازی با کیفِ اعتبار" : `پرداخت ${payLabel}`}</span>
+            <span>{payAmount === 0 ? tr("فعال‌سازی با کیفِ اعتبار", "Activate with wallet credit") : tr(`پرداخت ${payLabel}`, `Pay ${payLabel}`)}</span>
           </span>
         )}
       </button>

@@ -3,6 +3,7 @@
 import Image from "next/image";
 import Link from "next/link";
 import { useTheme } from "./ThemeProvider";
+import { tr } from "@/lib/i18n";
 
 /** فلش بازگشت — داخل خود باکس، همیشه بالا-راست، بدون بک‌گراند، فقط آیکون.
  * پیش‌فرض به صفحه‌ی اصلی می‌ره؛ اگه onClick بدی (مثل ویزارد ثبت‌نام)
@@ -10,17 +11,17 @@ import { useTheme } from "./ThemeProvider";
  * بازگشت واحد، نه دو تا دکمه‌ی هم‌پوشان. */
 export function AuthBackButton({ onClick }: { onClick?: () => void }) {
   const icon = (
-    <svg viewBox="0 0 24 24" fill="none"><path d="M3 12h18M21 12l-7-6M21 12l-7 6" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" /></svg>
+    <svg viewBox="0 0 24 24" fill="none" className="dir-flip"><path d="M3 12h18M21 12l-7-6M21 12l-7 6" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" /></svg>
   );
   if (onClick) {
     return (
-      <button type="button" className="auth-home-btn auth-home-btn-right" aria-label="گام قبل" onClick={onClick}>
+      <button type="button" className="auth-home-btn auth-home-btn-right" aria-label={tr("گام قبل", "Previous step")} onClick={onClick}>
         {icon}
       </button>
     );
   }
   return (
-    <Link href="/" className="auth-home-btn auth-home-btn-right" aria-label="بازگشت به صفحه اصلی">
+    <Link href="/" className="auth-home-btn auth-home-btn-right" aria-label={tr("بازگشت به صفحه اصلی", "Back to home")}>
       {icon}
     </Link>
   );

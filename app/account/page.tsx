@@ -8,7 +8,9 @@ import { AccountRowLink, AccountRowButton } from "@/components/AccountRow";
 import { logoutAndRedirect } from "@/lib/logout";
 import { AccountHeroCard } from "@/components/AccountHeroCard";
 import { getAccount, getAvatarUrl, AccountData } from "@/lib/accountCache";
-import { ACCOUNT_SECTIONS } from "@/components/accountSections";
+import { getAccountSections } from "@/components/accountSections";
+import { planDisplayName } from "@/lib/subscriptionI18n";
+import { tr } from "@/lib/i18n";
 
 type IndexUser = {
   golden?: boolean; staff?: boolean; name: string | null; lastName: string | null; username: string | null;
@@ -20,6 +22,7 @@ type IndexUser = {
 // اختصاصی خودش با کلیک روی همین ردیف‌ها باز می‌شه.
 export default function AccountIndexPage() {
   const router = useRouter();
+  const ACCOUNT_SECTIONS = getAccountSections();
   const [data, setData] = useState<IndexUser | null>(null);
   const [avatarUrl, setAvatarUrl] = useState<string | null>(null);
 
@@ -43,7 +46,7 @@ export default function AccountIndexPage() {
 
   // /api/account خودش `name` رو «نام + نام خانوادگی» برمی‌گردونه؛ چسبوندن
   // دوباره‌ی lastName فامیل رو دوبار نشون می‌داد.
-  const fullName = data ? data.name?.trim() || "کاربر آریون" : "";
+  const fullName = data ? data.name?.trim() || tr("کاربر آریون", "Arion user") : "";
   // /api/account فقط اشتراک واقعا فعال (ACTIVE/TRIAL منقضی‌نشده) رو برمی‌گردونه،
   // پس این‌جا دیگه لازم نیست وضعیت دوباره چک بشه — قبلا «آخرین ردیف ساخته‌شده»
   // می‌اومد و یه اشتراک منقضی هم «پریمیوم» نشون داده می‌شد.
@@ -58,7 +61,7 @@ export default function AccountIndexPage() {
     <section>
       {data && (
         <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.35, ease: [0.22, 1, 0.36, 1] }}>
-          <AccountHeroCard fullName={fullName} username={data.username} avatarUrl={avatarUrl} isPremium={isPremium} planNameFa={sub?.plan.nameFa ?? null} golden={data.golden} staff={data.staff} />
+          <AccountHeroCard fullName={fullName} username={data.username} avatarUrl={avatarUrl} isPremium={isPremium} planNameFa={sub ? planDisplayName(sub.plan) : null} golden={data.golden} staff={data.staff} />
         </motion.div>
       )}
 
@@ -70,7 +73,7 @@ export default function AccountIndexPage() {
         ))}
         <AccountRowButton
           icon={<LogOut size={15} />}
-          label="خروج از حساب"
+          label={tr("خروج از حساب", "Log out")}
           onClick={logoutAndRedirect}
           danger
           index={ACCOUNT_SECTIONS.length}
