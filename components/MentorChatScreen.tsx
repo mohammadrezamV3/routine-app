@@ -51,7 +51,7 @@ export function MentorChatScreen({ id }: { id: string }) {
     const opener = document.activeElement as HTMLElement | null;
     const touched: Element[] = [];
     for (const el of Array.from(document.body.children)) {
-      if (el === screen || el.tagName === "SCRIPT" || el.hasAttribute("inert")) continue;
+      if (el === screen || el.tagName === "SCRIPT" || el.getAttribute("aria-hidden") === "true" || el.hasAttribute("inert")) continue;
       el.setAttribute("inert", "");
       touched.push(el);
     }

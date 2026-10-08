@@ -43,7 +43,7 @@ export function MentorWeeklyReport({ offset = 0 }: { offset?: 0 | 1 | 2 }) {
     const first = shown.find((s) => !s.progressHidden) ?? shown[0];
     body = (
       <MentorSection
-        title="شاگردها" icon={ic(ClipboardCheck, MI.section)} count={fa(shown.length)} flush
+        flush
         action={<span className="mentor-range">{fmtDate(first.from)} تا {fmtDate(first.to)}</span>}
       >
         {shown.map((s) => <StudentReportRow key={s.studentId} s={s} current={data.offset === 0} />)}
