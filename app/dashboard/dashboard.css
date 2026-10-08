@@ -941,3 +941,29 @@ html body[data-theme="light"] .db-share-opts button.tick-option{ color:var(--tex
 .db-tl-items{ list-style:none; margin:8px 0 0; padding:0; overflow:hidden; display:flex; flex-direction:column; gap:6px; }
 .db-tl-items li{ display:flex; align-items:center; gap:9px; font-size:12px; font-weight:600; }
 .db-tl-items li.is-done span{ color:var(--muted); text-decoration:line-through; text-decoration-color:color-mix(in srgb, var(--ring-1a) 60%, transparent); }
+
+/* ── شیشه‌ی مات واقعی (فقط دسکتاپ + تم تیره) ─────────────────────
+   باکس‌های داشبورد پس‌زمینه‌ی ثابت (لکه‌های شفق) رو تار می‌کنن.
+   فقط وقتی ماوس دقیق هست (نه لمسی) و html[data-perf] نیست: backdrop-filter
+   با هر اسکرول دوباره تار می‌کنه و سایت خودش روی لمسی/ضعیف تار رو
+   برمی‌داره (lib/perfTier.ts). تم روشن و نوآر ادمین دست نمی‌خورن.
+   سطح‌های داخلی (نقطه‌ی ریبون) عمدا پر می‌مونن تا خط ریبون ازشون رد نشه.
+   برگشت: حذف همین بلوک، باکس‌ها رو به حالت پر قبلی برمی‌گردونه. */
+@media (hover:hover) and (pointer:fine){
+  @supports ((backdrop-filter: blur(1px)) or (-webkit-backdrop-filter: blur(1px))){
+    html:not([data-perf]):not([data-admin-theme="noir"]) body:not([data-theme="light"]) .db-page :is(.db-card, .db-hero, .db-error, .db-quick-item, button.db-quick-item),
+    html:not([data-perf]):not([data-admin-theme="noir"]) body:not([data-theme="light"]) .db-error{
+      background:
+        linear-gradient(160deg, rgba(255,255,255,.07) 0%, rgba(255,255,255,.015) 45%, rgba(255,255,255,0) 100%),
+        rgba(23,26,28,.42);
+      -webkit-backdrop-filter:blur(28px) saturate(160%);
+      backdrop-filter:blur(28px) saturate(160%);
+      box-shadow:inset 0 1px 0 rgba(255,255,255,.075), 0 24px 48px -32px rgba(0,0,0,.85);
+    }
+    html:not([data-perf]):not([data-admin-theme="noir"]) body:not([data-theme="light"]) .db-page :is(.db-card, .db-hero),
+    html:not([data-perf]):not([data-admin-theme="noir"]) body:not([data-theme="light"]) .db-error,
+    html:not([data-perf]):not([data-admin-theme="noir"]) body:not([data-theme="light"]) .db-page :is(.db-quick-item, button.db-quick-item):not(:hover){
+      border-color:rgba(255,255,255,.09);
+    }
+  }
+}
