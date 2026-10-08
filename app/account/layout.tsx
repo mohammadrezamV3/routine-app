@@ -6,7 +6,7 @@ import { useSession, signOut } from "next-auth/react";
 import Link from "next/link";
 import { AnimatePresence, motion } from "framer-motion";
 import {
-  User, SlidersHorizontal, LayoutGrid, CreditCard, ShieldCheck, Bell, Headset, LogOut,
+  User, SlidersHorizontal, LayoutGrid, CreditCard, Gift, ShieldCheck, Bell, Headset, LogOut,
 } from "lucide-react";
 import { AuthGate } from "@/components/AuthGate";
 import { invalidateStorageCache } from "@/lib/storage";
@@ -16,6 +16,7 @@ import { clearAuthHintCookie } from "@/lib/preload";
 // پنل کاربریِ Arion — صفحه‌ی مستقلِ /account (نه مودال، نه داشبورد). مسیرها:
 //   /account                    → پروفایل (پیش‌فرض)
 //   /account/subscription       → اشتراک
+//   /account/referral           → رفرال (دعوت دوستان + کیفِ اعتبارِ درون‌اپی)
 //   /account/arion-settings     → تنظیمات آریون (زبان/حریم‌خصوصی — تمِ نمایش
 //                                  عمداً این‌جا نیست، همون سوییچِ بالای منوی
 //                                  همبرگری کفایت می‌کنه، تکرارش نمی‌کنیم)
@@ -28,6 +29,7 @@ const SECTIONS: { href: string; label: string; icon: React.ReactNode; match: (p:
   { href: "/account/arion-settings", label: "تنظیمات آریون", icon: <SlidersHorizontal size={15} />, match: (p) => p.startsWith("/account/arion-settings") },
   { href: "/account/modules", label: "تنظیمات بخش‌ها", icon: <LayoutGrid size={15} />, match: (p) => p.startsWith("/account/modules") },
   { href: "/account/subscription", label: "اشتراک", icon: <CreditCard size={15} />, match: (p) => p.startsWith("/account/subscription") },
+  { href: "/account/referral", label: "رفرال", icon: <Gift size={15} />, match: (p) => p.startsWith("/account/referral") },
   { href: "/account/security", label: "امنیت", icon: <ShieldCheck size={15} />, match: (p) => p.startsWith("/account/security") },
   { href: "/account/notifications", label: "اعلان‌ها", icon: <Bell size={15} />, match: (p) => p.startsWith("/account/notifications") },
   { href: "/account/support", label: "پشتیبانی", icon: <Headset size={15} />, match: (p) => p.startsWith("/account/support") },

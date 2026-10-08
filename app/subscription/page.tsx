@@ -27,6 +27,14 @@ export default function SubscriptionPage() {
     setCheckoutResult(new URLSearchParams(window.location.search).get("checkout"));
   }, []);
 
+  // اگه کسی از لینکِ رفرالِ یه دوست اومده (?ref=CODE)، کدش رو همین‌جا توی
+  // localStorage نگه می‌داریم تا بعداً توی چک‌اوت به‌صورتِ کدِ تخفیف پیش‌پُر بشه
+  // — فقط یه side-effect، چیزی از رندر/رفتارِ این صفحه عوض نمی‌شه.
+  useEffect(() => {
+    const ref = new URLSearchParams(window.location.search).get("ref");
+    if (ref) localStorage.setItem("referralCode", ref.toUpperCase());
+  }, []);
+
   // پنل Owner › Funnel — یک بار به‌ازای هر بازدیدِ واقعیِ این صفحه، بی‌صدا و
   // بدون تأثیر روی تجربه‌ی کاربر (fire-and-forget)
   useEffect(() => {

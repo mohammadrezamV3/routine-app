@@ -60,7 +60,7 @@ export async function InlineBootstrap() {
         where: { id: userId },
         select: {
           email: true, username: true, phone: true, name: true, market: true,
-          createdAt: true, isSuperAdmin: true, avatarUrl: true,
+          createdAt: true, isSuperAdmin: true, avatarUrl: true, walletBalance: true,
           referralCode: { select: { code: true } },
           moduleAccess: { select: { module: true, active: true, expiresAt: true } },
           subscriptions: {

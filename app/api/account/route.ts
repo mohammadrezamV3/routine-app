@@ -27,6 +27,7 @@ export async function GET() {
       market: true,
       createdAt: true,
       isSuperAdmin: true,
+      walletBalance: true,
       referralCode: { select: { code: true } },
       moduleAccess: { select: { module: true, active: true, expiresAt: true } },
       subscriptions: {

@@ -3,9 +3,8 @@ import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
 import { zarinpalVerifyPayment } from "@/lib/zarinpal";
-import type { Duration } from "@/lib/planPricing";
-
-const DURATION_MONTHS: Record<Duration, number> = { "1": 1, "3": 3, "6": 6, "12": 12 };
+import { activatePaidSubscription } from "@/lib/subscriptionActivation";
+import { DURATIONS, type Duration } from "@/lib/planPricing";
 
 // پنل Owner › تراکنش‌ها/Funnel — تنها جایی که پرداختِ ناموفق/رهاشده واقعاً
 // جایی ثبت می‌شه؛ جدولِ Payment فقط پرداختِ verify-شده‌ی موفق رو داره
@@ -40,7 +39,7 @@ export async function GET(req: NextRequest) {
   const discountPercent = Number(searchParams.get("discountPercent") || 0);
   const referralUsageId = searchParams.get("referralUsageId") || undefined;
 
-  if (status !== "OK" || !authority || !planKey || !duration || !DURATION_MONTHS[duration] || !amount) {
+  if (status !== "OK" || !authority || !planKey || !duration || !DURATIONS.includes(duration) || !amount) {
     logCheckoutFailed(userId, status === "OK" ? "invalid_params" : "gateway_canceled_or_error");
     redirectBase.searchParams.set("checkout", "failed");
     return NextResponse.redirect(redirectBase);
@@ -60,59 +59,36 @@ export async function GET(req: NextRequest) {
     return NextResponse.redirect(redirectBase);
   }
 
-  const plan = await prisma.plan.findUnique({
-    where: { key_market: { key: planKey, market: "IRAN" } },
-    include: { modules: true },
-  });
-  if (!plan) {
+  // مقدارِ کیفِ اعتبارِ این خرید رو فقط از PendingCheckout (سمتِ سرور) می‌خونیم،
+  // نه از query — کاربر نمی‌تونه این مبلغ رو دستکاری کنه. حذف = مصرف، پس
+  // یک verify تکراری/replay‌شده با همون authority این بار چیزی پیدا نمی‌کنه
+  // و walletApplied صفر می‌شه (دوباره کسر نمی‌شه).
+  const pending = await prisma.pendingCheckout.findUnique({ where: { authority } });
+  const walletApplied = pending?.walletApplied ?? 0;
+  if (pending) {
+    await prisma.pendingCheckout.delete({ where: { authority } }).catch(() => {});
+  }
+
+  let result: { subscriptionId: string; paymentId: string };
+  try {
+    result = await activatePaidSubscription({
+      userId,
+      planKey,
+      duration,
+      discountPercent,
+      referralUsageId,
+      amountCharged: amount,
+      walletApplied,
+      provider: "zarinpal",
+      providerRef: verified.refId,
+    });
+  } catch {
     logCheckoutFailed(userId, "plan_not_found");
     redirectBase.searchParams.set("checkout", "failed");
     return NextResponse.redirect(redirectBase);
   }
 
-  const months = DURATION_MONTHS[duration];
-  const currentPeriodEnd = new Date();
-  currentPeriodEnd.setMonth(currentPeriodEnd.getMonth() + months);
-
-  const subscription = await prisma.subscription.create({
-    data: {
-      userId,
-      planId: plan.id,
-      status: "ACTIVE",
-      interval: duration === "12" ? "YEARLY" : "MONTHLY",
-      currentPeriodEnd,
-      discountPercent,
-      appliedReferralUsageId: referralUsageId,
-      payments: {
-        create: {
-          amount,
-          currency: "IRR",
-          provider: "zarinpal",
-          providerRef: verified.refId,
-          paidAt: new Date(),
-        },
-      },
-    },
-  });
-
-  // دسترسیِ ماژول‌های پلن — همون قاعده‌ی ثبت‌نام (BASIC_MODULES): هر ماژول
-  // یک ردیفِ ModuleAccess با تاریخِ انقضای پایانِ دوره‌ی اشتراک.
-  await prisma.moduleAccess.deleteMany({ where: { userId, module: { in: plan.modules.map((m) => m.module) } } });
-  await prisma.moduleAccess.createMany({
-    data: plan.modules.map((m) => ({ userId, module: m.module, active: true, expiresAt: currentPeriodEnd })),
-  });
-
-  // شرطِ «اولین پرداختِ موفق» برای کدِ رفرال محقق شد — وضعیت REWARDED می‌شه.
-  // توجه: پاداشِ «یک ماه رایگان برای دعوت‌کننده» هنوز پیاده نشده (فازِ بعدی)،
-  // اینجا فقط رکوردِ استفاده‌ی موفق ثبت می‌شه.
-  if (referralUsageId) {
-    await prisma.referralUsage.update({
-      where: { id: referralUsageId },
-      data: { status: "REWARDED", rewardedAt: new Date() },
-    }).catch(() => {});
-  }
-
   redirectBase.searchParams.set("checkout", "success");
-  redirectBase.searchParams.set("sub", subscription.id);
+  redirectBase.searchParams.set("sub", result.subscriptionId);
   return NextResponse.redirect(redirectBase);
 }

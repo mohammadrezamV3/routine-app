@@ -5,6 +5,8 @@ import { prisma } from "@/lib/prisma";
 import { checkRateLimit, getClientIp } from "@/lib/rateLimit";
 import { DURATIONS, Duration, findPlanPricing } from "@/lib/planPricing";
 import { zarinpalRequestPayment } from "@/lib/zarinpal";
+import { clampWalletApply } from "@/lib/wallet";
+import { activatePaidSubscription } from "@/lib/subscriptionActivation";
 
 // درصدِ تخفیفِ کدِ رفرال در چک‌اوت — پاداشِ «یک ماه رایگان برای هردو طرف»یِ
 // خودِ سیستم رفرال (بعد از اولین پرداختِ موفق دعوت‌شونده) جدا و هنوز سمتِ
@@ -26,13 +28,18 @@ export async function POST(req: NextRequest) {
   }
 
   const body = await req.json();
-  const { planKey, duration, discountCode } = body as { planKey: string; duration: Duration; discountCode?: string };
+  const { planKey, duration, discountCode, useWalletCredit } = body as {
+    planKey: string;
+    duration: Duration;
+    discountCode?: string;
+    useWalletCredit?: boolean;
+  };
 
   if (!planKey || !DURATIONS.includes(duration)) {
     return NextResponse.json({ error: "پلن یا مدت انتخاب‌شده معتبر نیست" }, { status: 400 });
   }
 
-  const user = await prisma.user.findUnique({ where: { id: userId }, select: { market: true, phone: true } });
+  const user = await prisma.user.findUnique({ where: { id: userId }, select: { market: true, phone: true, walletBalance: true } });
   if (!user) return NextResponse.json({ error: "not found" }, { status: 404 });
   if (user.market !== "IRAN") {
     return NextResponse.json({ error: "درگاهِ پرداختِ بین‌المللی هنوز فعال نشده — به‌زودی" }, { status: 503 });
@@ -68,19 +75,59 @@ export async function POST(req: NextRequest) {
   const baseAmount = pricing.amounts[duration];
   const finalAmount = discountPercent > 0 ? Math.round((baseAmount * (100 - discountPercent)) / 100) : baseAmount;
 
+  // کیفِ اعتبار فقط اگه کاربر صریحاً خواسته باشه (useWalletCredit) اعمال می‌شه،
+  // و هیچ‌وقت بیشتر از موجودیِ واقعی یا بیشتر از خودِ قیمت (clampWalletApply).
+  const walletApplied = useWalletCredit ? clampWalletApply(user.walletBalance, user.walletBalance, finalAmount) : 0;
+  const amountToCharge = finalAmount - walletApplied;
+
+  // پنل Owner › Funnel — «شروع خرید» فقط وقتی ثبت می‌شه که واقعاً درخواستِ
+  // پرداخت (یا فعال‌سازیِ کاملاً کیفی) با موفقیت انجام شده باشه (نه هر کلیکِ فرانت)
+  const logCheckoutStart = () =>
+    prisma.analyticsEvent.create({ data: { userId, type: "checkout_start", meta: { planKey, duration } } }).catch(() => {});
+
+  if (amountToCharge === 0) {
+    // کیفِ اعتبار به‌تنهایی کل قیمت رو پوشش داد — بدونِ تماس با زرین‌پال،
+    // مستقیم فعال‌سازی. amountCharged صفره، پس پاداشِ رفرالی هم روی این
+    // خرید حساب نمی‌شه (قاعده‌ی ضدتورم توی activatePaidSubscription).
+    try {
+      const result = await activatePaidSubscription({
+        userId,
+        planKey,
+        duration,
+        discountPercent,
+        referralUsageId,
+        amountCharged: 0,
+        walletApplied,
+        provider: "wallet",
+      });
+      logCheckoutStart();
+      return NextResponse.json({
+        paymentUrl: null,
+        redirectUrl: `/subscription?checkout=success&sub=${result.subscriptionId}`,
+        discountApplied,
+      });
+    } catch (e: any) {
+      return NextResponse.json({ error: e?.message || "خطا در فعال‌سازیِ اشتراک" }, { status: 500 });
+    }
+  }
+
   const origin = req.nextUrl.origin;
-  const callbackUrl = `${origin}/api/subscription/verify?planKey=${encodeURIComponent(planKey)}&duration=${duration}&amount=${finalAmount}&discountPercent=${discountPercent}${referralUsageId ? `&referralUsageId=${referralUsageId}` : ""}`;
+  const callbackUrl = `${origin}/api/subscription/verify?planKey=${encodeURIComponent(planKey)}&duration=${duration}&amount=${amountToCharge}&discountPercent=${discountPercent}${referralUsageId ? `&referralUsageId=${referralUsageId}` : ""}`;
 
   try {
-    const { paymentUrl } = await zarinpalRequestPayment({
-      amountRial: finalAmount,
+    const { authority, paymentUrl } = await zarinpalRequestPayment({
+      amountRial: amountToCharge,
       description: `خرید ${pricing.nameFa} — ${duration} ماهه`,
       callbackUrl,
       mobile: user.phone || undefined,
     });
-    // پنل Owner › Funnel — «شروع خرید» فقط وقتی ثبت می‌شه که واقعاً درخواستِ
-    // پرداخت به درگاه با موفقیت ساخته شده باشه (نه هر کلیکِ فرانت)
-    prisma.analyticsEvent.create({ data: { userId, type: "checkout_start", meta: { planKey, duration } } }).catch(() => {});
+    // مقدارِ کیفِ اعتبارِ این خرید رو سمتِ سرور نگه می‌داریم (نه در URL برگشتی
+    // که قابلِ دستکاریِ کاربره) — verify با authority همین رکورد رو می‌خونه
+    // و مصرف (حذف) می‌کنه. توضیحِ کامل روی مدلِ PendingCheckout در schema.prisma.
+    if (walletApplied > 0) {
+      await prisma.pendingCheckout.create({ data: { authority, userId, walletApplied } });
+    }
+    logCheckoutStart();
     return NextResponse.json({ paymentUrl, discountApplied });
   } catch (e: any) {
     // اگه ZARINPAL_MERCHANT_ID هنوز ست نشده (این محیط/قبل از دیپلوی نهایی)

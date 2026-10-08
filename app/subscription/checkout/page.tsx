@@ -7,7 +7,19 @@ import Link from "next/link";
 import { ShieldCheck } from "lucide-react";
 import { AuthGate } from "@/components/AuthGate";
 import { getSiteMarket } from "@/lib/market";
+import { getAccount } from "@/lib/accountCache";
 import { findPlanCard, DURATION_LABELS, DURATION_LABELS_INTL, Duration } from "@/components/PlanShowcase";
+import { ToggleSwitch } from "@/components/ToggleSwitch";
+
+// مبلغِ خام (ریال برای ایران، سنت برای بین‌المللی) → همون قاعده‌ی نمایشیِ
+// بقیه‌ی سایت (نگاه کن به components/PlanShowcase.tsx) — نسخه‌ی محلیِ همین
+// فرمت، چون این فایل اجازه‌ی اضافه‌کردنِ یک lib/ مشترکِ جدید رو نداره.
+function formatWalletAmount(amount: number, isIntl: boolean): string {
+  if (isIntl) {
+    return "$" + (amount / 100).toLocaleString("en-US", { minimumFractionDigits: 2 });
+  }
+  return Math.round(amount / 10).toLocaleString("en-US") + " تومان";
+}
 
 // چک‌اوتِ واقعیِ خریدِ پلن — از صفحه‌ی /subscription با ?plan=key&duration=1|3|6|12
 // باز می‌شه. کدِ تخفیف (رفرالِ یک نفرِ دیگه)، پذیرشِ قوانین، انتخابِ درگاه
@@ -33,6 +45,28 @@ export default function CheckoutPage() {
   const [agreed, setAgreed] = useState(false);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [walletBalance, setWalletBalance] = useState(0);
+  const [useWallet, setUseWallet] = useState(false);
+
+  // پیش‌پُرکردنِ کدِ تخفیف از لینکِ رفرالِ ذخیره‌شده (app/subscription/page.tsx)
+  // — فقط وقتی فیلد هنوز خالیه، کاربر هر وقت خواست می‌تونه پاکش کنه/عوضش کنه.
+  useEffect(() => {
+    if (!discountCode) {
+      const stored = localStorage.getItem("referralCode");
+      if (stored) setDiscountCode(stored);
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
+  // موجودیِ کیفِ اعتبار — از همون کشِ مشترکِ account (lib/accountCache.ts)
+  // می‌خونیم، نه فچِ جداگانه‌ی /api/referral، چون اینجا فقط یک عدد لازمه.
+  useEffect(() => {
+    if (status !== "authenticated") return;
+    getAccount().then((acc) => {
+      const bal = Number((acc?.user as any)?.walletBalance || 0);
+      setWalletBalance(bal);
+    });
+  }, [status]);
 
   if (!query) return null;
 
@@ -57,6 +91,12 @@ export default function CheckoutPage() {
 
   const labels = isIntl ? DURATION_LABELS_INTL : DURATION_LABELS;
   const price = plan.prices[duration];
+  // مبلغِ خامِ پلن (ریال/سنت) — مستقیم از amounts همین PlanCard، چون همونی
+  // که components/PlanShowcase.tsx برای نمایش استفاده می‌کنه، از قبل عددِ
+  // خام رو هم کنارِ رشته‌ی فرمت‌شده نگه می‌داره؛ نیازی به findPlanPricing نیست.
+  const rawPrice = plan.amounts?.[duration] ?? 0;
+  const appliedCredit = Math.min(walletBalance, rawPrice);
+  const remainingAfterWallet = rawPrice - appliedCredit;
 
   async function pay() {
     if (!agreed || loading) return;
@@ -66,7 +106,7 @@ export default function CheckoutPage() {
       const res = await fetch("/api/subscription/checkout", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ planKey, duration, discountCode: discountCode.trim() || undefined }),
+        body: JSON.stringify({ planKey, duration, discountCode: discountCode.trim() || undefined, useWalletCredit: useWallet }),
       });
       const data = await res.json();
       if (!res.ok) {
@@ -74,7 +114,13 @@ export default function CheckoutPage() {
         setLoading(false);
         return;
       }
-      window.location.href = data.paymentUrl;
+      // کیفِ اعتبار ممکنه کلِ قیمت رو پوشش بده — آن‌وقت دیگه نیازی به درگاه
+      // نیست و سرور مستقیم redirectUrl (صفحه‌ی موفقیت) برمی‌گردونه.
+      if (data.paymentUrl) {
+        window.location.href = data.paymentUrl;
+      } else if (data.redirectUrl) {
+        window.location.href = data.redirectUrl;
+      }
     } catch {
       setError("مشکلی در اتصال به سرور پیش اومد — دوباره امتحان کن");
       setLoading(false);
@@ -120,6 +166,27 @@ export default function CheckoutPage() {
           </div>
         </div>
       </div>
+
+      {walletBalance > 0 && (
+        <div className="checkout-box">
+          <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", gap: 10 }}>
+            <div className="checkout-field-label" style={{ marginBottom: 0 }}>
+              استفاده از کیفِ اعتبار{" "}
+              <span className="mono" dir="ltr" style={{ marginRight: 4, color: "var(--accent)", fontWeight: 700 }}>
+                {formatWalletAmount(walletBalance, isIntl)}
+              </span>
+            </div>
+            <ToggleSwitch checked={useWallet} onChange={setUseWallet} label="استفاده از کیفِ اعتبار" />
+          </div>
+          {useWallet && rawPrice > 0 && (
+            <div className="item-line" style={{ marginTop: 8 }}>
+              مبلغِ قابل‌اعمال از کیف: <span className="mono" dir="ltr">{formatWalletAmount(appliedCredit, isIntl)}</span>
+              {" — "}
+              باقیِ قابلِ پرداخت: <span className="mono" dir="ltr">{formatWalletAmount(remainingAfterWallet, isIntl)}</span>
+            </div>
+          )}
+        </div>
+      )}
 
       <div className="task checkout-terms-row" onClick={() => setAgreed((v) => !v)}>
         <div className={`check${agreed ? " on" : ""}`}>
