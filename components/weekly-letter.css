@@ -1198,7 +1198,7 @@ body[data-theme="light"] .wl-root button.wl-live-mood{ background:none; box-shad
 .wl-dp-mx-nodata a{ color:var(--accent); font-weight:700; }
 @media (min-width:640px){
   .wl-root .wl-dp-mx{ padding:22px 24px; }
-  .wl-dp-mx-grid{ grid-template-columns:150px repeat(7, minmax(0,1fr)) 54px; column-gap:8px; row-gap:8px; }
+  .wl-dp-mx-grid{ grid-template-columns:150px repeat(7, minmax(0,1fr)); column-gap:8px; row-gap:8px; }
   .wl-dp-mx-name{ font-size:13.5px; }
   .wl-dp-mx-cell{ height:40px; font-size:0; }
   .wl-dp-mx-cell > span{ display:inline; font-size:12.5px; }

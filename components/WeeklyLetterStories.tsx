@@ -788,7 +788,7 @@ export function WeeklyLetterStories({
                   <div className="wl-st-top">
                     <span className="wl-st-id">
                       <BrandMark />
-                      <b>هفته‌نامه</b>
+                      <b>آنالیز هفتگی</b>
                       {letter.issueNo > 0 && <small>شماره {letter.issueNo}</small>}
                     </span>
                     <span className="wl-st-ctl">
