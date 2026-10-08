@@ -10,15 +10,17 @@ import {
 } from "@/lib/exerciseTimerStore";
 import { ProgressRing } from "./ProgressRing";
 import { useLockBodyScroll } from "@/lib/useLockBodyScroll";
+import { tr } from "@/lib/i18n";
+import { exerciseDisplayName } from "@/lib/exerciseI18n";
 
 const REST_SECONDS = 90;
 
 function formatDuration(sec: number): string {
   const m = Math.floor(sec / 60);
   const s = sec % 60;
-  if (m > 0 && s > 0) return `${m} دقیقه و ${s} ثانیه`;
-  if (m > 0) return `${m} دقیقه`;
-  return `${s} ثانیه`;
+  if (m > 0 && s > 0) return tr(`${m} دقیقه و ${s} ثانیه`, `${m} min ${s} sec`);
+  if (m > 0) return tr(`${m} دقیقه`, `${m} min`);
+  return tr(`${s} ثانیه`, `${s} sec`);
 }
 
 function formatClock(sec: number): string {
@@ -97,13 +99,13 @@ export function ExerciseSetTrackerModal({
     const next = state.completedSets + 1;
     if (next >= setCount) {
       const total = Math.round((Date.now() - state.startedAt) / 1000);
-      fireTimerDone(baseName, "حرکت تموم شد — عالی بود!");
+      fireTimerDone(exerciseDisplayName(baseName), tr("حرکت تموم شد — عالی بود!", "Exercise done. Great job!"));
       clearExerciseTimer(planId, dateIso, item);
       onComplete();
       setFinishedTotalSec(total);
       persist({ completedSets: next, phase: null, endAt: null, pausedRemainingMs: null });
     } else {
-      fireTimerDone(baseName, `ست ${next} تموم شد — وقت استراحته`);
+      fireTimerDone(exerciseDisplayName(baseName), tr(`ست ${next} تموم شد — وقت استراحته`, `Set ${next} done. Time to rest`));
       persist({ completedSets: next, phase: "resting", endAt: Date.now() + REST_SECONDS * 1000, pausedRemainingMs: null });
     }
   }
@@ -145,11 +147,11 @@ export function ExerciseSetTrackerModal({
       type="button"
       whileTap={{ scale: 0.88 }}
       onClick={skipPhase}
-      aria-label="رد کردن استراحت"
+      aria-label={tr("رد کردن استراحت", "Skip rest")}
       className="exercise-pause-btn"
     >
       <SkipForward size={13} />
-      رد کردن استراحت
+      {tr("رد کردن استراحت", "Skip rest")}
     </motion.button>
   );
   const skipTimingBtn = (
@@ -157,11 +159,11 @@ export function ExerciseSetTrackerModal({
       type="button"
       whileTap={{ scale: 0.88 }}
       onClick={skipPhase}
-      aria-label="رد کردن این شمارش"
+      aria-label={tr("رد کردن این شمارش", "Skip this countdown")}
       className="exercise-pause-btn"
     >
       <SkipForward size={13} />
-      رد کردن
+      {tr("رد کردن", "Skip")}
     </motion.button>
   );
 
@@ -170,8 +172,8 @@ export function ExerciseSetTrackerModal({
       <div className="modal-overlay open" onClick={onClose} />
       <div className="modal-panel liquid-glass-panel dash-scope open exercise-set-tracker-panel">
         <div className="modal-head">
-          <div className="modal-title">{baseName}</div>
-          <button className="nav-close" onClick={onClose} aria-label="بستن">×</button>
+          <div className="modal-title">{exerciseDisplayName(baseName)}</div>
+          <button className="nav-close" onClick={onClose} aria-label={tr("بستن", "Close")}>×</button>
         </div>
 
         <div className="modal-body">
@@ -192,7 +194,7 @@ export function ExerciseSetTrackerModal({
                     disabled={!isCurrent || state.phase !== null}
                     onClick={() => (isTimed ? startTiming(i) : tickSet(i))}
                     whileTap={isCurrent && state.phase === null ? { scale: 0.85 } : undefined}
-                    aria-label={`ست ${i + 1}`}
+                    aria-label={tr(`ست ${i + 1}`, `Set ${i + 1}`)}
                     // دایره‌ی ست فعلی (همونی که کاربر باید بزنه) یه موج
                     // پیوسته می‌ده تا معلوم باشه «الان نوبت اینه» — نه یه
                     // هاله‌ی ثابت بی‌حرکت. موج فقط وقتی واقعا منتظر تپ‌ـه
@@ -252,7 +254,7 @@ export function ExerciseSetTrackerModal({
                     <PartyPopper className="text-dash-green" size={26} />
                   </motion.div>
                   <div className="text-[13px] font-semibold text-dash-text sm:text-[14px]">
-                    این حرکت رو توی <span className="mono text-dash-green" dir="ltr">{formatDuration(finishedTotalSec)}</span> تموم کردی!
+                    {tr("این حرکت رو توی ", "You finished this exercise in ")}<span className="mono text-dash-green" dir="ltr">{formatDuration(finishedTotalSec)}</span>{tr(" تموم کردی!", "!")}
                   </div>
                   <button
                     type="button"
@@ -260,12 +262,12 @@ export function ExerciseSetTrackerModal({
                     className="mt-1 rounded-2xl px-8 py-2.5 text-[13px] font-bold"
                     style={{ borderColor: "var(--accent)", color: "var(--accent)" }}
                   >
-                    باشه
+                    {tr("باشه", "OK")}
                   </button>
                 </motion.div>
               ) : state.phase === "resting" ? (
                 <motion.div key="resting" initial={{ opacity: 0, y: 6 }} animate={{ opacity: 1, y: 0 }} className="flex flex-col items-center gap-2.5">
-                  <div className="text-[11.5px] text-dash-muted">استراحت تا ست بعدی</div>
+                  <div className="text-[11.5px] text-dash-muted">{tr("استراحت تا ست بعدی", "Rest until the next set")}</div>
                   <ProgressRing pct={restPct / 100} size={92} strokeWidth={7} color="var(--accent)">
                     <span className="mono text-[24px] font-bold text-dash-green" dir="ltr">{remainingSec}</span>
                   </ProgressRing>
@@ -273,7 +275,7 @@ export function ExerciseSetTrackerModal({
                 </motion.div>
               ) : !soloTimer && state.phase === "timing" ? (
                 <motion.div key="set-timing" initial={{ opacity: 0, y: 6 }} animate={{ opacity: 1, y: 0 }} className="flex flex-col items-center gap-2">
-                  <div className="text-[11.5px] text-dash-muted">نگه دار تا شمارش‌معکوس تموم بشه</div>
+                  <div className="text-[11.5px] text-dash-muted">{tr("نگه دار تا شمارش‌معکوس تموم بشه", "Hold until the countdown ends")}</div>
                   <div className="mono text-[26px] font-bold text-dash-green" dir="ltr">{remainingSec}</div>
                   <div className="exercise-rest-bar">
                     <div className="exercise-rest-bar-fill" style={{ width: `${timePct}%` }} />
@@ -283,7 +285,7 @@ export function ExerciseSetTrackerModal({
               ) : soloTimer ? (
                 state.phase === "timing" ? (
                   <motion.div key="solo-timing" initial={{ opacity: 0, y: 6 }} animate={{ opacity: 1, y: 0 }} className="flex flex-col items-center gap-2">
-                    <div className="text-[11.5px] text-dash-muted">در حال اجرا — تا آخر ادامه بده</div>
+                    <div className="text-[11.5px] text-dash-muted">{tr("در حال اجرا — تا آخر ادامه بده", "In progress. Keep going to the end")}</div>
                     <div className="mono text-[34px] font-bold text-dash-green" dir="ltr">{remainingSec !== null ? formatClock(remainingSec) : ""}</div>
                     <div className="exercise-rest-bar" style={{ width: 220 }}>
                       <div className="exercise-rest-bar-fill" style={{ width: `${timePct}%` }} />
@@ -293,7 +295,7 @@ export function ExerciseSetTrackerModal({
                 ) : (
                   <motion.div key="solo-idle" initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="flex flex-col items-center gap-3">
                     <div className="text-[11.5px] text-dash-muted">
-                      وقتی آماده بودی، تایمر رو بزن و تا آخر {formatDuration(seconds || 0)} ادامه بده
+                      {tr(`وقتی آماده بودی، تایمر رو بزن و تا آخر ${formatDuration(seconds || 0)} ادامه بده`, `When you are ready, start the timer and keep going for ${formatDuration(seconds || 0)}`)}
                     </div>
                     <motion.button
                       type="button"
@@ -307,7 +309,7 @@ export function ExerciseSetTrackerModal({
                       whileTap={{ scale: 0.9 }}
                       onClick={() => startTiming(0)}
                       className="exercise-solo-play"
-                      aria-label="شروع تایمر"
+                      aria-label={tr("شروع تایمر", "Start timer")}
                     >
                       <Play size={15} fill="currentColor" />
                     </motion.button>
@@ -317,11 +319,11 @@ export function ExerciseSetTrackerModal({
                 <motion.div key="hint" initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="text-[11.5px] text-dash-muted">
                   {isTimed
                     ? state.completedSets === 0
-                      ? "برای شروع ست اول، دایره رو بزن تا شمارش‌معکوس شروع بشه"
-                      : "استراحت تموم شد — ست بعدی رو شروع کن، یا اگه لازم بود همین ست رو دوباره انجام بده"
+                      ? tr("برای شروع ست اول، دایره رو بزن تا شمارش‌معکوس شروع بشه", "Tap the circle to start the first set's countdown")
+                      : tr("استراحت تموم شد — ست بعدی رو شروع کن، یا اگه لازم بود همین ست رو دوباره انجام بده", "Rest is over. Start the next set, or repeat this one if you need to")
                     : state.completedSets === 0
-                    ? "وقتی این ست رو زدی، روی دایره‌ی اول بزن"
-                    : "استراحت تموم شد — ست بعدی رو شروع کن، یا اگه لازم بود همین ست رو دوباره انجام بده"}
+                    ? tr("وقتی این ست رو زدی، روی دایره‌ی اول بزن", "When you finish this set, tap the first circle")
+                    : tr("استراحت تموم شد — ست بعدی رو شروع کن، یا اگه لازم بود همین ست رو دوباره انجام بده", "Rest is over. Start the next set, or repeat this one if you need to")}
                 </motion.div>
               )}
             </AnimatePresence>

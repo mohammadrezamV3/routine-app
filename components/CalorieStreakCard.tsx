@@ -2,9 +2,10 @@
 
 import { motion } from "framer-motion";
 import { Check, Trophy } from "lucide-react";
-import { faNum, FA_WEEKDAY_SHORT, isoLocal } from "@/lib/jalali";
+import { faNum, weekdayShort, isoLocal } from "@/lib/jalali";
 import { DashCard } from "./DashCard";
 import { StreakFlame } from "./StreakFlame";
+import { tr } from "@/lib/i18n";
 
 type Entry = { customCalories: number; date?: string };
 
@@ -52,15 +53,15 @@ export function CalorieStreakCard({ rangeEntries, targetKcal, delay }: { rangeEn
     const d = new Date(Date.now() - offset * 24 * 60 * 60 * 1000);
     const key = isoLocal(d);
     const isToday = key === todayKey;
-    return { key, letter: FA_WEEKDAY_SHORT[d.getDay()], done: !isToday && isSuccess(key), isToday };
+    return { key, letter: weekdayShort(d.getDay()), done: !isToday && isSuccess(key), isToday };
   });
 
   return (
     <DashCard delay={delay}>
-      <div className="flex items-center justify-between pl-2 sm:pl-0">
+      <div className="flex items-center justify-between pe-2 sm:pe-0">
         <h2 className="flex items-center gap-1.5 text-[13px] font-bold text-dash-text sm:text-[15px]">
           <Trophy className="h-4 w-4 text-dash-green sm:h-[18px] sm:w-[18px]" />
-          استرایک
+          {tr("استرایک", "Streak")}
         </h2>
         <motion.div
           initial={{ scale: 0.7, opacity: 0 }}

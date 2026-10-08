@@ -3,9 +3,10 @@
 import { useEffect, useMemo, useState } from "react";
 import { ChevronLeft, ChevronRight } from "lucide-react";
 import {
-  CAL_WEEK_ORDER, FA_WEEKDAY_SHORT, J_MONTHS, faNum,
+  CAL_WEEK_ORDER, weekdayShort, jMonthName, faNum,
   isoLocal, jalaliMonthLength, jalaliToGregorianApprox, toJalali,
 } from "@/lib/jalali";
+import { tr } from "@/lib/i18n";
 
 type Entry = { customCalories: number; date?: string };
 
@@ -78,18 +79,18 @@ export function CalorieHistoryCalendar({
         {/* طبق درخواست صریح: جهت این دو دکمه برعکس بود — آیکون هرکدام
             درست بود ولی به عملکرد اشتباه وصل شده بود (هم‌الگوی
             HistoryCalendar: راست=ماه قبل، چپ=ماه بعد). */}
-        <button type="button" onClick={goPrev} aria-label="ماه قبل" className="flex h-8 w-8 items-center justify-center rounded-full text-dash-muted transition hover:bg-white/5 hover:text-dash-text">
+        <button type="button" onClick={goPrev} aria-label={tr("ماه قبل", "Previous month")} className="flex h-8 w-8 items-center justify-center rounded-full text-dash-muted transition hover:bg-white/5 hover:text-dash-text">
           <ChevronLeft size={18} />
         </button>
-        <div className="text-[13.5px] font-bold text-dash-text sm:text-[15px]">{J_MONTHS[calMonth - 1]} {faNum(calYear)}</div>
-        <button type="button" onClick={goNext} aria-label="ماه بعد" className="flex h-8 w-8 items-center justify-center rounded-full text-dash-muted transition hover:bg-white/5 hover:text-dash-text">
+        <div className="text-[13.5px] font-bold text-dash-text sm:text-[15px]">{jMonthName(calMonth - 1)} {faNum(calYear)}</div>
+        <button type="button" onClick={goNext} aria-label={tr("ماه بعد", "Next month")} className="flex h-8 w-8 items-center justify-center rounded-full text-dash-muted transition hover:bg-white/5 hover:text-dash-text">
           <ChevronRight size={18} />
         </button>
       </div>
 
       <div className="mt-3 grid grid-cols-7 gap-1.5 sm:gap-2">
         {CAL_WEEK_ORDER.map((d) => (
-          <div key={d} className="text-center text-[10.5px] font-bold text-dash-green sm:text-[12px]">{FA_WEEKDAY_SHORT[d]}</div>
+          <div key={d} className="text-center text-[10.5px] font-bold text-dash-green sm:text-[12px]">{weekdayShort(d)}</div>
         ))}
 
         {Array.from({ length: startCol }, (_, i) => <div key={`e${i}`} />)}
@@ -120,16 +121,16 @@ export function CalorieHistoryCalendar({
         })}
       </div>
 
-      {loading && <div className="mt-3 text-center text-[11px] text-dash-muted is-loading">در حال بارگذاری…</div>}
+      {loading && <div className="mt-3 text-center text-[11px] text-dash-muted is-loading">{tr("در حال بارگذاری…", "Loading…")}</div>}
 
       <div className="mt-4 flex items-center justify-center gap-4 text-[10.5px] text-dash-muted">
         <span className="flex items-center gap-1.5">
           <span className="h-2 w-2 rounded-full" style={{ background: "var(--accent)" }} />
-          زیر هدف
+          {tr("زیر هدف", "Under goal")}
         </span>
         <span className="flex items-center gap-1.5">
           <span className="h-2 w-2 rounded-full" style={{ background: "#E05252" }} />
-          بالای هدف
+          {tr("بالای هدف", "Over goal")}
         </span>
       </div>
     </div>

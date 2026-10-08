@@ -19,6 +19,7 @@ import { ExercisePlan } from "@/lib/exerciseTypes";
 import type { ExerciseDay } from "@/lib/exercisePlans";
 import { focusNextOnEnter } from "@/lib/formNav";
 import { useLockBodyScroll } from "@/lib/useLockBodyScroll";
+import { tr } from "@/lib/i18n";
 
 type Mode = "choice" | "ai" | "manual";
 
@@ -56,12 +57,12 @@ export function AddExerciseProgramForm({
       const res = await fetch("/api/exercise/plan", { method: "DELETE" });
       if (!res.ok) {
         const d = await res.json().catch(() => null);
-        setError(d?.error || "حذف برنامه انجام نشد");
+        setError(d?.error || tr("حذف برنامه انجام نشد", "Could not delete the plan"));
         return;
       }
       onDeleted?.();
     } catch {
-      setError("حذف برنامه انجام نشد");
+      setError(tr("حذف برنامه انجام نشد", "Could not delete the plan"));
     } finally {
       setDeleting(false);
     }
@@ -76,7 +77,7 @@ export function AddExerciseProgramForm({
     });
     const data = await res.json();
     setSubmitting(false);
-    if (!res.ok) { setError(data.error || "خطایی پیش آمد"); return; }
+    if (!res.ok) { setError(data.error || tr("خطایی پیش آمد", "Something went wrong")); return; }
     onCreated(data.plan);
   }
 
@@ -87,8 +88,8 @@ export function AddExerciseProgramForm({
         <div className="relative z-[1] add-program-glass exercise-add-glass" ref={formRef} onKeyDown={(e) => focusNextOnEnter(e, formRef)}>
           {mode === "choice" && (
             <div className="wsearch-newform-head">
-              <div className="wsearch-newform-title accent">تغییر برنامه</div>
-              <button className="nav-close" onClick={onClose} aria-label="بستن">×</button>
+              <div className="wsearch-newform-title accent">{tr("تغییر برنامه", "Change plan")}</div>
+              <button className="nav-close" onClick={onClose} aria-label={tr("بستن", "Close")}>×</button>
             </div>
           )}
 
@@ -105,7 +106,7 @@ export function AddExerciseProgramForm({
                 transition={{ type: "spring", stiffness: 400, damping: 22 }}
               >
                 <AiSparkleIcon size={26} />
-                <span>ساخت با هوش مصنوعی</span>
+                <span>{tr("ساخت با هوش مصنوعی", "Build with AI")}</span>
               </motion.button>
               <div className="exercise-choice-divider" />
               <motion.button
@@ -117,7 +118,7 @@ export function AddExerciseProgramForm({
                 transition={{ type: "spring", stiffness: 400, damping: 22 }}
               >
                 <PenLine size={22} />
-                <span>وارد کردن برنامه‌ی خودم</span>
+                <span>{tr("وارد کردن برنامه‌ی خودم", "Enter my own plan")}</span>
               </motion.button>
             </div>
           )}
@@ -125,7 +126,7 @@ export function AddExerciseProgramForm({
           {mode === "choice" && onDeleted && (
             <div style={{ display: "flex", justifyContent: "center", alignItems: "center", gap: 10, flexWrap: "wrap", marginTop: 16 }}>
               <button type="button" className="account-outline-btn trade-danger-btn" onClick={deletePlan} disabled={deleting}>
-                {deleting ? <Spinner size={14} /> : <Trash2 size={14} />} حذف برنامه‌ی فعلی
+                {deleting ? <Spinner size={14} /> : <Trash2 size={14} />} {tr("حذف برنامه‌ی فعلی", "Delete current plan")}
               </button>
             </div>
           )}

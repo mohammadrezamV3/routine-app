@@ -7,6 +7,8 @@ import type { ExerciseDay } from "@/lib/exercisePlans";
 import { toEnDigits } from "@/lib/schedule";
 import { cn } from "@/lib/utils";
 import { TickButton } from "./TickButton";
+import { tr } from "@/lib/i18n";
+import { dayNameDisplay, exerciseDisplayName, focusDisplay } from "@/lib/exerciseI18n";
 
 // «برنامه هفتگی» بدنسازی — یک باکس واحد، با پدینگ دورش تا خط جداکننده‌ی
 // بین روزها به لبه‌ی باکس نچسبه. موبایل: تک‌ستونی (زیر هم)، بدون تغییر
@@ -35,7 +37,7 @@ export function ExerciseWeekGrid({
           چپ‌چین می‌شود. */}
       <h1 className="mb-4 flex items-center justify-start gap-2 text-[20px] font-bold text-dash-text sm:mb-5 sm:text-[26px]">
         <CalendarDays className="h-[19px] w-[19px] text-dash-green sm:h-6 sm:w-6" />
-        برنامه هفتگی
+        {tr("برنامه هفتگی", "Weekly plan")}
       </h1>
 
       <motion.div
@@ -61,7 +63,7 @@ export function ExerciseWeekGrid({
               >
                 <div className="flex items-center justify-between gap-2">
                   <span className={cn("text-[12px] font-bold sm:text-[13px]", isToday ? "text-dash-green" : "text-dash-text")}>
-                    {dayName}
+                    {dayNameDisplay(dayName)}
                   </span>
                   <div className="flex shrink-0 items-center gap-1.5">
                     {d && dayStatus?.[dayName] && dayStatus[dayName] !== "rest" && (
@@ -69,12 +71,12 @@ export function ExerciseWeekGrid({
                         className="shrink-0 text-[9.5px] font-semibold sm:text-[10.5px]"
                         style={{ color: dayStatus[dayName] === "done" ? "var(--accent)" : "#E05252" }}
                       >
-                        {dayStatus[dayName] === "done" ? "انجام دادی" : "وقتش گذشته"}
+                        {dayStatus[dayName] === "done" ? tr("انجام دادی", "Done") : tr("وقتش گذشته", "Overdue")}
                       </span>
                     )}
                     {isToday && (
                       <span className="shrink-0 rounded-full bg-dash-green px-1.5 py-0.5 text-[8px] font-bold text-dash-bg sm:text-[8.5px]">
-                        امروز
+                        {tr("امروز", "Today")}
                       </span>
                     )}
                   </div>
@@ -85,18 +87,18 @@ export function ExerciseWeekGrid({
                   // نمایشی (disabled، بدون کلیک) — تا خود روز نرسیده تیک نمی‌خوره.
                   <div className="flex flex-1 items-center gap-1.5 py-1.5 text-[10.5px] text-dash-muted lg:flex-col lg:justify-center lg:text-center">
                     <TickButton as="span" size={20} disabled checked={dayStatus?.[dayName] === "rest"} />
-                    <span>استراحت</span>
+                    <span>{tr("استراحت", "Rest")}</span>
                   </div>
                 ) : (
                   <>
-                    <div className="mt-1 truncate text-[10px] font-semibold text-dash-green sm:text-[11px]" title={d.focus}>
-                      {d.focus}
+                    <div className="mt-1 truncate text-[10px] font-semibold text-dash-green sm:text-[11px]" title={focusDisplay(d.focus)}>
+                      {focusDisplay(d.focus)}
                     </div>
                     <ol className="mt-2 flex flex-1 flex-col gap-1">
                       {d.items.map((it, i) => (
-                        <li key={it} className="flex items-start gap-1.5 text-[10px] leading-tight text-dash-text sm:text-[11px]" title={toEnDigits(it)}>
+                        <li key={it} className="flex items-start gap-1.5 text-[10px] leading-tight text-dash-text sm:text-[11px]" title={toEnDigits(exerciseDisplayName(it))}>
                           <span className="mono shrink-0 text-dash-muted">{i + 1}-</span>
-                          <span className="truncate">{toEnDigits(it)}</span>
+                          <span className="truncate">{toEnDigits(exerciseDisplayName(it))}</span>
                         </li>
                       ))}
                     </ol>

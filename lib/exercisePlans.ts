@@ -8,22 +8,23 @@
 
 import { CAL_WEEK_ORDER, FA_WEEKDAY } from "./jalali";
 import { stripSetSuffix } from "./exerciseSets";
+import { tr } from "./i18n";
 
 export type ExerciseDay = { day: string; focus: string; items: string[] };
 export type ExerciseGoal = "strength" | "hypertrophy" | "cut" | "endurance";
 export type ExerciseLevel = "beginner" | "intermediate" | "advanced";
 
 export const LEVEL_LABELS: Record<ExerciseLevel, string> = {
-  beginner: "مبتدی",
-  intermediate: "متوسط",
-  advanced: "پیشرفته",
+  get beginner() { return tr("مبتدی", "Beginner"); },
+  get intermediate() { return tr("متوسط", "Intermediate"); },
+  get advanced() { return tr("پیشرفته", "Advanced"); },
 };
 
 export const GOAL_LABELS: Record<ExerciseGoal, string> = {
-  strength: "قدرت / لیفتینگ",
-  hypertrophy: "حجم",
-  cut: "کات (کاهش چربی)",
-  endurance: "استقامت",
+  get strength() { return tr("قدرت / لیفتینگ", "Strength / lifting"); },
+  get hypertrophy() { return tr("حجم", "Muscle gain"); },
+  get cut() { return tr("کات (کاهش چربی)", "Cut (fat loss)"); },
+  get endurance() { return tr("استقامت", "Endurance"); },
 };
 
 // طبق درخواست صریح، هدف دیگر چندگزینه‌ای نیست — یک فیلد متنی آزاد است

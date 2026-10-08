@@ -3,7 +3,7 @@
 import { useEffect, useRef, useState } from "react";
 import { AnimatePresence, motion } from "framer-motion";
 import { AlertCircle, ChevronRight } from "lucide-react";
-import { FA_WEEKDAY, FA_WEEKDAY_SHORT, CAL_WEEK_ORDER } from "@/lib/jalali";
+import { FA_WEEKDAY, weekdayShort, CAL_WEEK_ORDER } from "@/lib/jalali";
 import { LEVEL_LABELS, ExerciseLevel } from "@/lib/exercisePlans";
 import { ExercisePlanFormValue, EMPTY_EXERCISE_FORM, ExercisePlan } from "@/lib/exerciseTypes";
 import { ExerciseRulesStep, hasSeenExerciseRules, markExerciseRulesSeen } from "./ExerciseRulesStep";
@@ -14,21 +14,25 @@ import { SegmentedTabs } from "./SegmentedTabs";
 import { TickButton } from "./TickButton";
 import { Spinner } from "./Spinner";
 import { TickOption } from "./TickOption";
-import { MUSCLE_KEYS, MUSCLE_LABELS, type MuscleKey } from "@/lib/exerciseSplit";
+import { MUSCLE_KEYS, muscleLabel, type MuscleKey } from "@/lib/exerciseSplit";
+import { isEn, tr } from "@/lib/i18n";
+import { dayNameDisplay } from "@/lib/exerciseDay";
 
 // توضیح هر سطح — زیر انتخاب سطح، تا کاربر بدونه انتخابش چی رو عوض می‌کنه
-const LEVEL_HINTS: Record<ExerciseLevel, string> = {
-  beginner: "کمتر از 6 ماه تمرین منظم. حرکات پایه و ساده‌تر، حجم کمتر (حدود 10 تا 14 ست برای هر عضله در هفته) و تمرکز روی فرم درست؛ هر ست 2 تا 3 تکرار مونده به ناتوانی تموم می‌شه.",
-  intermediate: "6 ماه تا 2 سال تمرین منظم. ترکیب حرکات چندمفصلی و تک‌مفصلی، حجم متوسط (14 تا 20 ست در هفته) و شدت بیشتر؛ 1 تا 2 تکرار مونده به ناتوانی.",
-  advanced: "بیش از 2 سال تمرین منظم و تسلط کامل روی فرم. حجم بالا (16 تا 24 ست در هفته)، تنوع حرکات و تکنیک‌های پیشرفته، و شدت نزدیک به ناتوانی.",
-};
+const levelHints = (): Record<ExerciseLevel, string> => ({
+  beginner: tr("کمتر از 6 ماه تمرین منظم. حرکات پایه و ساده‌تر، حجم کمتر (حدود 10 تا 14 ست برای هر عضله در هفته) و تمرکز روی فرم درست؛ هر ست 2 تا 3 تکرار مونده به ناتوانی تموم می‌شه.", "Less than 6 months of regular training. Basic, simpler exercises, lower volume (about 10 to 14 sets per muscle per week) and a focus on good form; each set ends 2 to 3 reps short of failure."),
+  intermediate: tr("6 ماه تا 2 سال تمرین منظم. ترکیب حرکات چندمفصلی و تک‌مفصلی، حجم متوسط (14 تا 20 ست در هفته) و شدت بیشتر؛ 1 تا 2 تکرار مونده به ناتوانی.", "6 months to 2 years of regular training. A mix of compound and isolation exercises, moderate volume (14 to 20 sets per week) and higher intensity; 1 to 2 reps short of failure."),
+  advanced: tr("بیش از 2 سال تمرین منظم و تسلط کامل روی فرم. حجم بالا (16 تا 24 ست در هفته)، تنوع حرکات و تکنیک‌های پیشرفته، و شدت نزدیک به ناتوانی.", "More than 2 years of regular training and full command of form. High volume (16 to 24 sets per week), exercise variety, advanced techniques and intensity close to failure."),
+});
 
 type SplitReview = { issues: string[]; suggestion: { day: string; muscles: MuscleKey[] }[] | null };
 
 type Step = "hw" | "goal" | "gear" | "days" | "description" | "rules";
 const STEP_INDEX: Record<Step, number> = { hw: 0, goal: 1, gear: 2, days: 3, description: 4, rules: 4 };
 const STEP_DOTS = [0, 1, 2, 3, 4];
+// مقدار (فارسی) به سرور می‌ره؛ فقط برچسب ترجمه می‌شه
 const EQUIPMENT_OPTIONS = ["باشگاه", "خانه"];
+const equipmentLabel = (eq: string) => (eq === "باشگاه" ? tr("باشگاه", "Gym") : eq === "خانه" ? tr("خانه", "Home") : eq);
 
 // فرم «افزودن برنامه با AI» — چهار مرحله (قد/وزن → هدف → روزها+سطح →
 // توضیح آزاد) به‌جای یک فرم تک‌صفحه‌ای. حداقل روزهای لازم برای هر هدف فقط
@@ -97,7 +101,7 @@ export function AiExercisePlanWizard({
         body: JSON.stringify({ level: form.level, gymDays: form.gymDays, split: splitPayload(), goal: form.goal.trim(), hasPhysicalLimitation: form.hasLimitation }),
       });
       const d = await r.json().catch(() => ({}));
-      if (!r.ok) { setSubmitting(false); setError(d.error || "بررسی تقسیم ناموفق بود"); setStep("description"); return; }
+      if (!r.ok) { setSubmitting(false); setError(d.error || tr("بررسی تقسیم ناموفق بود", "Checking the split failed")); setStep("description"); return; }
       if (d.issues?.length) { setSubmitting(false); setReview({ issues: d.issues, suggestion: d.suggestion ?? null }); setStep("description"); return; }
       customSplit = splitPayload();
     }
@@ -122,7 +126,7 @@ export function AiExercisePlanWizard({
     });
     const data = await res.json();
     setSubmitting(false);
-    if (!res.ok) { setError(data.error || "خطایی پیش آمد"); setStep("description"); return; }
+    if (!res.ok) { setError(data.error || tr("خطایی پیش آمد", "Something went wrong")); setStep("description"); return; }
     if (data.feasible === false) { setRejection(data.message); setStep("description"); return; }
     if (form.heightCm && form.weightKg) saveBodyMetrics({ heightCm: +form.heightCm, weightKg: +form.weightKg });
     onCreated(data.plan);
@@ -132,24 +136,24 @@ export function AiExercisePlanWizard({
     setError(null);
     if (step === "hw") {
       const fe: typeof fieldErrors = {};
-      if (!form.heightCm) fe.heightCm = "قد رو وارد کن";
-      if (!form.weightKg) fe.weightKg = "وزن رو وارد کن";
+      if (!form.heightCm) fe.heightCm = tr("قد رو وارد کن", "Enter your height");
+      if (!form.weightKg) fe.weightKg = tr("وزن رو وارد کن", "Enter your weight");
       if (fe.heightCm || fe.weightKg) { setFieldErrors(fe); return; }
       setFieldErrors({});
       setStep("goal");
     } else if (step === "goal") {
-      if (!form.goal.trim()) { setError("نوشتن هدف تمرین لازمه"); return; }
+      if (!form.goal.trim()) { setError(tr("نوشتن هدف تمرین لازمه", "Please write your training goal")); return; }
       setStep("gear");
     } else if (step === "gear") {
-      if (!form.trainingMonth) { setFieldErrors({ trainingMonth: "چندمین ماه تمرینت رو وارد کن" }); return; }
+      if (!form.trainingMonth) { setFieldErrors({ trainingMonth: tr("چندمین ماه تمرینت رو وارد کن", "Enter which month of training you are in") }); return; }
       setFieldErrors({});
-      if (!form.equipment) { setError("یکی از گزینه‌ها رو انتخاب کن"); return; }
+      if (!form.equipment) { setError(tr("یکی از گزینه‌ها رو انتخاب کن", "Pick one of the options")); return; }
       setStep("days");
     } else if (step === "days") {
-      if (form.gymDays.length === 0) { setError("حداقل یک روز باشگاه رو انتخاب کن"); return; }
+      if (form.gymDays.length === 0) { setError(tr("حداقل یک روز باشگاه رو انتخاب کن", "Pick at least one gym day")); return; }
       if (form.advancedSplit) {
         const empty = orderedGymDays.filter((d) => !(form.customSplit[d] ?? []).length);
-        if (empty.length) { setError(`برای ${empty.join("، ")} حداقل یک عضله انتخاب کن`); return; }
+        if (empty.length) { setError(tr(`برای ${empty.join("، ")} حداقل یک عضله انتخاب کن`, `Pick at least one muscle for ${empty.map(dayNameDisplay).join(", ")}`)); return; }
       }
       setReview(null);
       setStep("description");
@@ -180,20 +184,20 @@ export function AiExercisePlanWizard({
       {(showBack || onClose) && (
         <div className="exercise-wizard-head">
           {showBack ? (
-            <button type="button" className="exercise-catalog-back-btn" onClick={goBack} aria-label="بازگشت">
-              <ChevronRight size={20} />
+            <button type="button" className="exercise-catalog-back-btn" onClick={goBack} aria-label={tr("بازگشت", "Back")}>
+              <ChevronRight size={20} className="dir-flip" />
             </button>
           ) : <span />}
-          {onClose && <button type="button" className="nav-close" onClick={onClose} aria-label="بستن">×</button>}
+          {onClose && <button type="button" className="nav-close" onClick={onClose} aria-label={tr("بستن", "Close")}>×</button>}
         </div>
       )}
 
       {step === "hw" && (
         <>
-          <label className="exercise-wizard-title exercise-wizard-title-hw">قد و وزن خود را وارد کنید</label>
+          <label className="exercise-wizard-title exercise-wizard-title-hw">{tr("قد و وزن خود را وارد کنید", "Enter your height and weight")}</label>
           <div style={{ display: "flex", gap: 10 }}>
             <div style={{ flex: 1 }}>
-              <label className="exercise-form-label">قد (سانتی‌متر)</label>
+              <label className="exercise-form-label">{tr("قد (سانتی‌متر)", "Height (cm)")}</label>
               <NumberInput className="wsearch-newform-name" value={form.heightCm} onChange={(v) => patch({ heightCm: v })} />
               {fieldErrors.heightCm && (
                 <div className="field-error-msg field-error-msg-inline">
@@ -203,7 +207,7 @@ export function AiExercisePlanWizard({
               )}
             </div>
             <div style={{ flex: 1 }}>
-              <label className="exercise-form-label">وزن (کیلوگرم)</label>
+              <label className="exercise-form-label">{tr("وزن (کیلوگرم)", "Weight (kg)")}</label>
               <NumberInput className="wsearch-newform-name" value={form.weightKg} onChange={(v) => patch({ weightKg: v })} />
               {fieldErrors.weightKg && (
                 <div className="field-error-msg field-error-msg-inline">
@@ -218,12 +222,12 @@ export function AiExercisePlanWizard({
 
       {step === "goal" && (
         <>
-          <label className="exercise-wizard-title">هدف تمرینت چیه؟</label>
+          <label className="exercise-wizard-title">{tr("هدف تمرینت چیه؟", "What is your training goal?")}</label>
           <textarea
-            dir="rtl"
+            dir={isEn() ? "ltr" : "rtl"}
             className="exercise-desc-textarea"
             rows={3}
-            placeholder="با کلمات خودت بنویس — مثلا «می‌خوام حجم عضلات بالاتنه‌م زیاد بشه» یا «می‌خوام چربی کم کنم و فرم بدنم بهتر بشه»"
+            placeholder={tr("با کلمات خودت بنویس — مثلا «می‌خوام حجم عضلات بالاتنه‌م زیاد بشه» یا «می‌خوام چربی کم کنم و فرم بدنم بهتر بشه»", "Write it in your own words, e.g. \"I want to build more upper-body muscle\" or \"I want to lose fat and improve my shape\"")}
             value={form.goal}
             onChange={(e) => patch({ goal: e.target.value })}
           />
@@ -232,8 +236,8 @@ export function AiExercisePlanWizard({
 
       {step === "gear" && (
         <>
-          <label className="exercise-wizard-title">چندمین ماهته که تمرین می‌کنی؟</label>
-          <NumberInput className="wsearch-newform-name" placeholder="مثلا 3" value={form.trainingMonth} onChange={(v) => patch({ trainingMonth: v })} />
+          <label className="exercise-wizard-title">{tr("چندمین ماهته که تمرین می‌کنی؟", "Which month of training are you in?")}</label>
+          <NumberInput className="wsearch-newform-name" placeholder={tr("مثلا 3", "e.g. 3")} value={form.trainingMonth} onChange={(v) => patch({ trainingMonth: v })} />
           {fieldErrors.trainingMonth && (
             <div className="field-error-msg field-error-msg-inline">
               <AlertCircle size={12} />
@@ -241,11 +245,11 @@ export function AiExercisePlanWizard({
             </div>
           )}
 
-          <label className="exercise-form-label" style={{ marginTop: 14 }}>کجا تمرین می‌کنی؟</label>
+          <label className="exercise-form-label" style={{ marginTop: 14 }}>{tr("کجا تمرین می‌کنی؟", "Where do you train?")}</label>
           <SegmentedTabs
             className="seg-flush"
-            ariaLabel="کجا تمرین می‌کنی؟"
-            options={EQUIPMENT_OPTIONS.map((eq) => ({ value: eq, label: eq }))}
+            ariaLabel={tr("کجا تمرین می‌کنی؟", "Where do you train?")}
+            options={EQUIPMENT_OPTIONS.map((eq) => ({ value: eq, label: equipmentLabel(eq) }))}
             active={form.equipment || null}
             onChange={(eq) => patch({ equipment: eq })}
           />
@@ -254,7 +258,7 @@ export function AiExercisePlanWizard({
 
       {step === "days" && (
         <>
-          <label className="exercise-wizard-title">کدوم روزها میخوای بری باشگاه؟</label>
+          <label className="exercise-wizard-title">{tr("کدوم روزها میخوای بری باشگاه؟", "Which days do you want to go to the gym?")}</label>
           <div className="exercise-day-select-row">
             {CAL_WEEK_ORDER.map((i) => (
               <span
@@ -262,15 +266,15 @@ export function AiExercisePlanWizard({
                 className={`day-pill${form.gymDays.includes(FA_WEEKDAY[i]) ? " on" : ""}`}
                 onClick={() => toggleDay(FA_WEEKDAY[i])}
               >
-                {FA_WEEKDAY_SHORT[i]}
+                {weekdayShort(i)}
               </span>
             ))}
           </div>
 
-          <label className="exercise-form-label">سطح</label>
+          <label className="exercise-form-label">{tr("سطح", "Level")}</label>
           <SegmentedTabs
             className="seg-flush"
-            ariaLabel="سطح"
+            ariaLabel={tr("سطح", "Level")}
             options={(["beginner", "intermediate", "advanced"] as ExerciseLevel[]).map((l) => ({ value: l, label: LEVEL_LABELS[l] }))}
             active={form.level}
             onChange={(l) => patch({ level: l })}
@@ -284,12 +288,12 @@ export function AiExercisePlanWizard({
               exit={{ opacity: 0, y: -4 }}
               transition={{ duration: 0.18 }}
             >
-              {LEVEL_HINTS[form.level]}
+              {levelHints()[form.level]}
             </motion.p>
           </AnimatePresence>
 
           <TickOption className="ex-adv-toggle" checked={form.advancedSplit} onChange={(v) => patch({ advancedSplit: v })}>
-            تنظیمات پیشرفته: عضله‌های هر روز رو خودم انتخاب می‌کنم
+            {tr("تنظیمات پیشرفته: عضله‌های هر روز رو خودم انتخاب می‌کنم", "Advanced: I will choose the muscles for each day")}
           </TickOption>
           <AnimatePresence initial={false}>
             {form.advancedSplit && (
@@ -301,21 +305,21 @@ export function AiExercisePlanWizard({
                 transition={{ height: { duration: 0.28, ease: [0.22, 1, 0.36, 1] }, opacity: { duration: 0.2 } }}
               >
                 {orderedGymDays.length === 0 ? (
-                  <p className="ex-level-hint">اول روزهای باشگاه رو انتخاب کن.</p>
+                  <p className="ex-level-hint">{tr("اول روزهای باشگاه رو انتخاب کن.", "Pick your gym days first.")}</p>
                 ) : (
                   <>
-                    <p className="ex-level-hint">برای هر روز عضله‌هایی که می‌خوای تمرین کنی رو بزن. قبل از ساخت، مربی تقسیمت رو بررسی می‌کنه.</p>
+                    <p className="ex-level-hint">{tr("برای هر روز عضله‌هایی که می‌خوای تمرین کنی رو بزن. قبل از ساخت، مربی تقسیمت رو بررسی می‌کنه.", "For each day, tap the muscles you want to train. Before building, the coach will review your split.")}</p>
                     {orderedGymDays.map((day) => (
                       <div key={day} className="ex-adv-day">
-                        <span className="ex-adv-day-name">{day}</span>
-                        <div className="ex-muscle-chips" role="group" aria-label={`عضله‌های ${day}`}>
+                        <span className="ex-adv-day-name">{dayNameDisplay(day)}</span>
+                        <div className="ex-muscle-chips" role="group" aria-label={tr(`عضله‌های ${day}`, `${dayNameDisplay(day)} muscles`)}>
                           {MUSCLE_KEYS.map((m) => {
                             const on = (form.customSplit[day] ?? []).includes(m);
                             return (
                               <span key={m} role="checkbox" aria-checked={on} tabIndex={0} className={`day-pill${on ? " on" : ""}`}
                                 onClick={() => toggleMuscle(day, m)}
                                 onKeyDown={(e) => { if (e.key === "Enter" || e.key === " ") { e.preventDefault(); toggleMuscle(day, m); } }}>
-                                {MUSCLE_LABELS[m]}
+                                {muscleLabel(m)}
                               </span>
                             );
                           })}
@@ -332,19 +336,19 @@ export function AiExercisePlanWizard({
 
       {step === "description" && (
         <>
-          <label className="exercise-wizard-title">دوست داری برنامه‌ات چطوری باشه؟ (اختیاری)</label>
+          <label className="exercise-wizard-title">{tr("دوست داری برنامه‌ات چطوری باشه؟ (اختیاری)", "How would you like your plan to be? (optional)")}</label>
           <textarea
-            dir="rtl"
+            dir={isEn() ? "ltr" : "rtl"}
             className="exercise-desc-textarea"
             rows={4}
-            placeholder="مثلا می‌خوام بیشتر روی بالاتنه کار کنم، یا فقط با وزن بدن، یا حرکاتی که صدا کمتری دارن…"
+            placeholder={tr("مثلا می‌خوام بیشتر روی بالاتنه کار کنم، یا فقط با وزن بدن، یا حرکاتی که صدا کمتری دارن…", "e.g. I want to focus more on my upper body, or only bodyweight, or quieter exercises…")}
             value={form.description}
             onChange={(e) => patch({ description: e.target.value })}
           />
 
           <div className="task" style={{ marginTop: 16, cursor: "pointer" }} onClick={() => patch({ hasLimitation: !form.hasLimitation })}>
             <TickButton as="span" className="mt-0.5" size={22} checked={form.hasLimitation} />
-            <div className="task-name">محدودیت جسمی دارم</div>
+            <div className="task-name">{tr("محدودیت جسمی دارم", "I have a physical limitation")}</div>
           </div>
 
           <AnimatePresence initial={false}>
@@ -357,11 +361,11 @@ export function AiExercisePlanWizard({
                 style={{ overflow: "hidden" }}
               >
                 <textarea
-                  dir="rtl"
+                  dir={isEn() ? "ltr" : "rtl"}
                   className="exercise-desc-textarea"
                   style={{ marginTop: 10 }}
                   rows={3}
-                  placeholder="محدودیتت رو توضیح بده — مثلا کمردرد، مشکل زانو، یا هر چیزی که مربی/هوش‌مصنوعی موقع انتخاب حرکت باید بدونه"
+                  placeholder={tr("محدودیتت رو توضیح بده — مثلا کمردرد، مشکل زانو، یا هر چیزی که مربی/هوش‌مصنوعی موقع انتخاب حرکت باید بدونه", "Describe your limitation, e.g. back pain, a knee problem, or anything the coach/AI should know when choosing exercises")}
                   value={form.limitationDetails}
                   onChange={(e) => patch({ limitationDetails: e.target.value })}
                 />
@@ -371,7 +375,7 @@ export function AiExercisePlanWizard({
 
           {rejection && (
             <div className="exercise-feasibility-reject">
-              <div className="exercise-feasibility-reject-badge">هوش مصنوعی</div>
+              <div className="exercise-feasibility-reject-badge">{tr("هوش مصنوعی", "AI")}</div>
               {rejection}
             </div>
           )}
@@ -385,16 +389,16 @@ export function AiExercisePlanWizard({
                 exit={{ opacity: 0, y: 8 }}
                 transition={{ duration: 0.22 }}
               >
-                <div className="exercise-feasibility-reject-badge">بررسی مربی</div>
+                <div className="exercise-feasibility-reject-badge">{tr("بررسی مربی", "Coach review")}</div>
                 <ul className="ex-review-issues">
                   {review.issues.map((x) => <li key={x}>{x}</li>)}
                 </ul>
                 {review.suggestion && (
                   <>
-                    <div className="ex-review-sub">پیشنهاد مربی:</div>
+                    <div className="ex-review-sub">{tr("پیشنهاد مربی:", "Coach suggestion:")}</div>
                     <ul className="ex-review-split">
                       {review.suggestion.map((d) => (
-                        <li key={d.day}><b>{d.day}:</b> {d.muscles.map((m) => MUSCLE_LABELS[m]).join("، ")}</li>
+                        <li key={d.day}><b>{dayNameDisplay(d.day)}:</b> {d.muscles.map((m) => muscleLabel(m)).join(tr("، ", ", "))}</li>
                       ))}
                     </ul>
                   </>
@@ -403,11 +407,11 @@ export function AiExercisePlanWizard({
                   {review.suggestion && (
                     <button type="button" className="exercise-wizard-next-btn" disabled={submitting}
                       onClick={() => { const s = review.suggestion!; patch({ customSplit: Object.fromEntries(s.map((d) => [d.day, d.muscles])) }); submit(s); }}>
-                      برنامه با پیشنهاد مربی
+                      {tr("برنامه با پیشنهاد مربی", "Build with the coach's suggestion")}
                     </button>
                   )}
                   <button type="button" className="account-outline-btn" disabled={submitting} onClick={() => submit(splitPayload())}>
-                    همون تقسیم خودم
+                    {tr("همون تقسیم خودم", "Keep my own split")}
                   </button>
                 </div>
               </motion.div>
@@ -434,9 +438,9 @@ export function AiExercisePlanWizard({
           {submitting ? (
             <Spinner size={15} />
           ) : step === "description" && rejection ? (
-            "ویرایش و امتحان دوباره"
+            tr("ویرایش و امتحان دوباره", "Edit and try again")
           ) : (
-            "مرحله بعد"
+            tr("مرحله بعد", "Next step")
           )}
         </button>
       </div>

@@ -4,29 +4,30 @@ import { useState } from "react";
 import { AnimatePresence, motion, PanInfo } from "framer-motion";
 import { ChevronRight, MousePointerClick, Timer, CheckCircle2, PartyPopper } from "lucide-react";
 import { useLockBodyScroll } from "@/lib/useLockBodyScroll";
+import { isEn, tr } from "@/lib/i18n";
 
 export const EXERCISE_TUTORIAL_SEEN_KEY = "exercise-set-tutorial-seen";
 
-const STEPS = [
+const steps = () => [
   {
     icon: MousePointerClick,
-    title: "روی دکمه‌ی «شروع» هر حرکت بزن",
-    text: "با زدن دکمه‌ی شروع حرکت، یه پاپ‌آپ باز می‌شه که می‌تونی ست‌به‌ست پیشرفتت رو توش ثبت کنی.",
+    title: tr("روی دکمه‌ی «شروع» هر حرکت بزن", "Tap Start on any exercise"),
+    text: tr("با زدن دکمه‌ی شروع حرکت، یه پاپ‌آپ باز می‌شه که می‌تونی ست‌به‌ست پیشرفتت رو توش ثبت کنی.", "Tapping an exercise's Start button opens a popup where you can log your progress set by set."),
   },
   {
     icon: CheckCircle2,
-    title: "هر ست رو که زدی، تیک بزن",
-    text: "به‌اندازه‌ی ست‌های همون حرکت دایره می‌بینی — بعد هر ست، دایره‌ی بعدی رو بزن.",
+    title: tr("هر ست رو که زدی، تیک بزن", "Tick each set when you finish it"),
+    text: tr("به‌اندازه‌ی ست‌های همون حرکت دایره می‌بینی — بعد هر ست، دایره‌ی بعدی رو بزن.", "You will see one circle per set of that exercise. After each set, tap the next circle."),
   },
   {
     icon: Timer,
-    title: "بین ست‌ها استراحت می‌کنی",
-    text: "با هر تیک، یه شمارش‌معکوس 90 ثانیه‌ای شروع می‌شه؛ تا تموم اون زمان، ست بعدی قفله.",
+    title: tr("بین ست‌ها استراحت می‌کنی", "Rest between sets"),
+    text: tr("با هر تیک، یه شمارش‌معکوس 90 ثانیه‌ای شروع می‌شه؛ تا تموم اون زمان، ست بعدی قفله.", "Each tick starts a 90-second countdown; the next set stays locked until it ends."),
   },
   {
     icon: PartyPopper,
-    title: "آخر کار، زمانت رو می‌بینی",
-    text: "بعد آخرین ست، کل زمانی که برای این حرکت گذاشتی رو نشونت می‌دیم و حرکت انجام‌شده ثبت می‌شه.",
+    title: tr("آخر کار، زمانت رو می‌بینی", "See your time at the end"),
+    text: tr("بعد آخرین ست، کل زمانی که برای این حرکت گذاشتی رو نشونت می‌دیم و حرکت انجام‌شده ثبت می‌شه.", "After the last set we show the total time you spent on this exercise and mark it as done."),
   },
 ];
 
@@ -48,8 +49,11 @@ export function ExerciseSetTutorial({ onDone }: { onDone: () => void }) {
   // دقیقا همون الگویی که FeatureCarousel (LandingPage.tsx) استفاده می‌کنه.
   const [dir, setDir] = useState(1);
   const [isMobile] = useState(() => typeof window !== "undefined" && window.innerWidth < 1024);
+  const STEPS = steps();
   const isLast = step === STEPS.length - 1;
   const Icon = STEPS[step].icon;
+  // جهت: در فارسی (rtl) کشیدن به راست = جلو؛ در انگلیسی (ltr) کشیدن به چپ = جلو
+  const sgn = isEn() ? -1 : 1;
 
   function finish() {
     try { localStorage.setItem(EXERCISE_TUTORIAL_SEEN_KEY, "1"); } catch {}
@@ -70,8 +74,9 @@ export function ExerciseSetTutorial({ onDone }: { onDone: () => void }) {
   // (اسلاید بعدی)، به چپ (منفی) باید عقب ببره — دقیقا همون قراردادی که
   // FeatureCarousel (LandingPage.tsx) استفاده می‌کنه.
   function handleDragEnd(_: unknown, info: PanInfo) {
-    const swipedForward = info.offset.x > SWIPE_DISTANCE || info.velocity.x > SWIPE_VELOCITY;
-    const swipedBack = info.offset.x < -SWIPE_DISTANCE || info.velocity.x < -SWIPE_VELOCITY;
+    const ox = info.offset.x * sgn, vx = info.velocity.x * sgn;
+    const swipedForward = ox > SWIPE_DISTANCE || vx > SWIPE_VELOCITY;
+    const swipedBack = ox < -SWIPE_DISTANCE || vx < -SWIPE_VELOCITY;
     if (swipedForward) goNext();
     else if (swipedBack && step > 0) goBack();
   }
@@ -81,8 +86,8 @@ export function ExerciseSetTutorial({ onDone }: { onDone: () => void }) {
       <div className="modal-overlay open" onClick={finish} />
       <div className="modal-panel liquid-glass-panel dash-scope open exercise-set-tracker-panel">
         <div className="modal-head">
-          <div className="modal-title">روش ردیابی ست‌به‌ست</div>
-          <button className="nav-close" onClick={finish} aria-label="بستن">×</button>
+          <div className="modal-title">{tr("روش ردیابی ست‌به‌ست", "Set-by-set tracking")}</div>
+          <button className="nav-close" onClick={finish} aria-label={tr("بستن", "Close")}>×</button>
         </div>
 
         <div className="modal-body">
@@ -90,9 +95,9 @@ export function ExerciseSetTutorial({ onDone }: { onDone: () => void }) {
             <motion.div
               key={step}
               custom={dir}
-              initial={{ opacity: 0, x: dir * 28 }}
+              initial={{ opacity: 0, x: dir * 28 * sgn }}
               animate={{ opacity: 1, x: 0 }}
-              exit={{ opacity: 0, x: dir * -28 }}
+              exit={{ opacity: 0, x: dir * -28 * sgn }}
               transition={{ duration: 0.28, ease: [0.22, 1, 0.36, 1] }}
               drag={isMobile ? "x" : false}
               dragConstraints={{ left: 0, right: 0 }}
@@ -133,12 +138,12 @@ export function ExerciseSetTutorial({ onDone }: { onDone: () => void }) {
                   className="flex w-full items-center justify-center py-2.5 text-[13px] font-bold"
                   style={{ borderColor: "var(--accent)", color: "var(--accent)" }}
                 >
-                  شروع برنامه
+                  {tr("شروع برنامه", "Start the plan")}
                 </button>
               ) : (
                 <div className="exercise-tutorial-swipe-hint">
-                  برای ادامه، به راست بکش
-                  <ChevronRight size={13} />
+                  {tr("برای ادامه، به راست بکش", "Swipe left to continue")}
+                  <ChevronRight size={13} className="dir-flip" />
                 </div>
               )}
             </div>
@@ -146,13 +151,13 @@ export function ExerciseSetTutorial({ onDone }: { onDone: () => void }) {
             <div className="mt-4 flex items-center justify-between gap-2">
               {step > 0 ? (
                 <button type="button" onClick={goBack} className="small">
-                  قبلی
+                  {tr("قبلی", "Previous")}
                 </button>
               ) : (
                 <span />
               )}
               <button type="button" onClick={goNext} style={{ borderColor: "var(--accent)", color: "var(--accent)" }}>
-                {isLast ? "متوجه شدم، بزن بریم" : "بعدی"}
+                {isLast ? tr("متوجه شدم، بزن بریم", "Got it, let's go") : tr("بعدی", "Next")}
               </button>
             </div>
           )}

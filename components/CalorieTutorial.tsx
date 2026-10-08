@@ -4,6 +4,7 @@ import { useState } from "react";
 import { AnimatePresence, motion, PanInfo } from "framer-motion";
 import { ChevronRight, Flame, LineChart, PlusCircle, Trophy } from "lucide-react";
 import { useLockBodyScroll } from "@/lib/useLockBodyScroll";
+import { isEn, tr } from "@/lib/i18n";
 
 export const CALORIE_TUTORIAL_SEEN_KEY = "calorie-tutorial-seen";
 
@@ -12,26 +13,26 @@ export function hasSeenCalorieTutorial(): boolean {
   try { return localStorage.getItem(CALORIE_TUTORIAL_SEEN_KEY) === "1"; } catch { return true; }
 }
 
-const STEPS = [
+const steps = () => [
   {
     icon: Flame,
-    title: "حلقه‌ی «کالری امروز»",
-    text: "همیشه بالای صفحه می‌بینیش — نشون می‌ده چقدر از هدف روزانه‌ات رو تا الان خوردی.",
+    title: tr("حلقه‌ی «کالری امروز»", "The \"Today's calories\" ring"),
+    text: tr("همیشه بالای صفحه می‌بینیش — نشون می‌ده چقدر از هدف روزانه‌ات رو تا الان خوردی.", "You always see it at the top. It shows how much of your daily goal you have eaten so far."),
   },
   {
     icon: LineChart,
-    title: "نمودار روند کالری",
-    text: "روند امروز، هفته یا ماهت رو با خط زمانی می‌بینی؛ خط چین‌دار زردرنگ هم هدف روزانه‌ته.",
+    title: tr("نمودار روند کالری", "Calorie trend chart"),
+    text: tr("روند امروز، هفته یا ماهت رو با خط زمانی می‌بینی؛ خط چین‌دار زردرنگ هم هدف روزانه‌ته.", "See your day, week or month trend on a timeline; the dashed yellow line is your daily goal."),
   },
   {
     icon: Trophy,
-    title: "استرایک",
-    text: "هر روزی که کالریت رو ثبت کنی و از هدف رد نشی، توی این ردیف تیک می‌خوره و به روزهای متوالیت اضافه می‌شه.",
+    title: tr("استرایک", "Streak"),
+    text: tr("هر روزی که کالریت رو ثبت کنی و از هدف رد نشی، توی این ردیف تیک می‌خوره و به روزهای متوالیت اضافه می‌شه.", "Every day you log your calories and stay within your goal gets a tick in this row and adds to your streak."),
   },
   {
     icon: PlusCircle,
-    title: "افزودن غذا",
-    text: "از بخش «افزودن غذا» جستجو کن، مقدار و وعده رو انتخاب کن و ثبتش کن — همه‌ی حلقه‌ها و نمودارها خودکار آپدیت می‌شن.",
+    title: tr("افزودن غذا", "Add food"),
+    text: tr("از بخش «افزودن غذا» جستجو کن، مقدار و وعده رو انتخاب کن و ثبتش کن — همه‌ی حلقه‌ها و نمودارها خودکار آپدیت می‌شن.", "Use Add food to search, pick the amount and meal, and save. All rings and charts update automatically."),
   },
 ];
 
@@ -53,8 +54,11 @@ export function CalorieTutorial({ onDone }: { onDone: () => void }) {
   // FeatureCarousel (LandingPage.tsx) استفاده می‌کنه.
   const [dir, setDir] = useState(1);
   const [isMobile] = useState(() => typeof window !== "undefined" && window.innerWidth < 1024);
+  const STEPS = steps();
   const isLast = step === STEPS.length - 1;
   const Icon = STEPS[step].icon;
+  // در انگلیسی (ltr) کشیدن به چپ = جلو
+  const sgn = isEn() ? -1 : 1;
 
   function finish() {
     try { localStorage.setItem(CALORIE_TUTORIAL_SEEN_KEY, "1"); } catch {}
@@ -75,8 +79,9 @@ export function CalorieTutorial({ onDone }: { onDone: () => void }) {
   // (اسلاید بعدی)، به چپ (منفی) باید عقب ببره — دقیقا همون قراردادی که
   // FeatureCarousel (LandingPage.tsx) استفاده می‌کنه.
   function handleDragEnd(_: unknown, info: PanInfo) {
-    const swipedForward = info.offset.x > SWIPE_DISTANCE || info.velocity.x > SWIPE_VELOCITY;
-    const swipedBack = info.offset.x < -SWIPE_DISTANCE || info.velocity.x < -SWIPE_VELOCITY;
+    const ox = info.offset.x * sgn, vx = info.velocity.x * sgn;
+    const swipedForward = ox > SWIPE_DISTANCE || vx > SWIPE_VELOCITY;
+    const swipedBack = ox < -SWIPE_DISTANCE || vx < -SWIPE_VELOCITY;
     if (swipedForward) goNext();
     else if (swipedBack && step > 0) goBack();
   }
@@ -86,8 +91,8 @@ export function CalorieTutorial({ onDone }: { onDone: () => void }) {
       <div className="modal-overlay open" onClick={finish} />
       <div className="modal-panel liquid-glass-panel dash-scope open exercise-set-tracker-panel">
         <div className="modal-head">
-          <div className="modal-title">راهنمای بخش کالری</div>
-          <button className="nav-close" onClick={finish} aria-label="بستن">×</button>
+          <div className="modal-title">{tr("راهنمای بخش کالری", "Calorie guide")}</div>
+          <button className="nav-close" onClick={finish} aria-label={tr("بستن", "Close")}>×</button>
         </div>
 
         <div className="modal-body">
@@ -95,9 +100,9 @@ export function CalorieTutorial({ onDone }: { onDone: () => void }) {
             <motion.div
               key={step}
               custom={dir}
-              initial={{ opacity: 0, x: dir * 28 }}
+              initial={{ opacity: 0, x: dir * 28 * sgn }}
               animate={{ opacity: 1, x: 0 }}
-              exit={{ opacity: 0, x: dir * -28 }}
+              exit={{ opacity: 0, x: dir * -28 * sgn }}
               transition={{ duration: 0.28, ease: [0.22, 1, 0.36, 1] }}
               drag={isMobile ? "x" : false}
               dragConstraints={{ left: 0, right: 0 }}
@@ -138,12 +143,12 @@ export function CalorieTutorial({ onDone }: { onDone: () => void }) {
                   className="flex w-full items-center justify-center rounded-2xl border py-2.5 text-[13px] font-bold"
                   style={{ borderColor: "var(--accent)", color: "var(--accent)" }}
                 >
-                  متوجه شدم
+                  {tr("متوجه شدم", "Got it")}
                 </button>
               ) : (
                 <div className="exercise-tutorial-swipe-hint">
-                  برای ادامه، به راست بکش
-                  <ChevronRight size={13} />
+                  {tr("برای ادامه، به راست بکش", "Swipe left to continue")}
+                  <ChevronRight size={13} className="dir-flip" />
                 </div>
               )}
             </div>
@@ -156,7 +161,7 @@ export function CalorieTutorial({ onDone }: { onDone: () => void }) {
                   className="rounded-xl border px-3 py-1.5 text-[12px] font-semibold text-dash-muted"
                   style={{ borderColor: "var(--line)" }}
                 >
-                  قبلی
+                  {tr("قبلی", "Previous")}
                 </button>
               ) : (
                 <span />
@@ -167,7 +172,7 @@ export function CalorieTutorial({ onDone }: { onDone: () => void }) {
                 className="rounded-2xl border px-5 py-2 text-[13px] font-bold"
                 style={{ borderColor: "var(--accent)", color: "var(--accent)" }}
               >
-                {isLast ? "متوجه شدم" : "بعدی"}
+                {isLast ? tr("متوجه شدم", "Got it") : tr("بعدی", "Next")}
               </button>
             </div>
           )}
