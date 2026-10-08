@@ -948,22 +948,27 @@ html body[data-theme="light"] .db-share-opts button.tick-option{ color:var(--tex
    با هر اسکرول دوباره تار می‌کنه و سایت خودش روی لمسی/ضعیف تار رو
    برمی‌داره (lib/perfTier.ts). تم روشن و نوآر ادمین دست نمی‌خورن.
    سطح‌های داخلی (نقطه‌ی ریبون) عمدا پر می‌مونن تا خط ریبون ازشون رد نشه.
+   سطح مات: یک لایه‌ی نویز ثابت (SVG ایستا) روی لایه‌ی سفید شیری، با بلور سنگین‌تر و اشباع کمتر.
    برگشت: حذف همین بلوک، باکس‌ها رو به حالت پر قبلی برمی‌گردونه. */
 @media (hover:hover) and (pointer:fine){
   @supports ((backdrop-filter: blur(1px)) or (-webkit-backdrop-filter: blur(1px))){
+    /* خط‌های داخلی (جست‌وجو، ردیف‌های تایم‌لاین، چیپ‌ها) روی شیشه‌ی روشن‌تر گم می‌شدن */
+    html:not([data-perf]):not([data-admin-theme="noir"]) body:not([data-theme="light"]) .db-page{ --box-line:rgba(255,255,255,.11); }
     html:not([data-perf]):not([data-admin-theme="noir"]) body:not([data-theme="light"]) .db-page :is(.db-card, .db-hero, .db-error, .db-quick-item, button.db-quick-item),
     html:not([data-perf]):not([data-admin-theme="noir"]) body:not([data-theme="light"]) .db-error{
       background:
-        linear-gradient(160deg, rgba(255,255,255,.07) 0%, rgba(255,255,255,.015) 45%, rgba(255,255,255,0) 100%),
-        rgba(23,26,28,.42);
-      -webkit-backdrop-filter:blur(28px) saturate(160%);
-      backdrop-filter:blur(28px) saturate(160%);
-      box-shadow:inset 0 1px 0 rgba(255,255,255,.075), 0 24px 48px -32px rgba(0,0,0,.85);
+        url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='160' height='160'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.85' numOctaves='2' stitchTiles='stitch'/%3E%3CfeColorMatrix values='0 0 0 0 1 0 0 0 0 1 0 0 0 0 1 .38 0 0 0 -.12'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E") repeat,
+        linear-gradient(165deg, rgba(255,255,255,.10) 0%, rgba(255,255,255,.05) 38%, rgba(255,255,255,.03) 100%),
+        rgba(30,33,36,.62);
+      background-size:160px 160px, auto, auto;
+      -webkit-backdrop-filter:blur(40px) saturate(120%);
+      backdrop-filter:blur(40px) saturate(120%);
+      box-shadow:inset 0 1px 0 rgba(255,255,255,.13), inset 0 0 0 1px rgba(255,255,255,.035), inset 0 -24px 48px -28px rgba(255,255,255,.05), 0 24px 48px -32px rgba(0,0,0,.85);
     }
     html:not([data-perf]):not([data-admin-theme="noir"]) body:not([data-theme="light"]) .db-page :is(.db-card, .db-hero),
     html:not([data-perf]):not([data-admin-theme="noir"]) body:not([data-theme="light"]) .db-error,
     html:not([data-perf]):not([data-admin-theme="noir"]) body:not([data-theme="light"]) .db-page :is(.db-quick-item, button.db-quick-item):not(:hover){
-      border-color:rgba(255,255,255,.09);
+      border-color:rgba(255,255,255,.11);
     }
   }
 }
