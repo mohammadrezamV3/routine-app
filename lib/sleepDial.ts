@@ -9,7 +9,9 @@ export function minuteToAngle(min: number): number {
 /** نقطه‌ی روی دایره برای زاویه‌ی داده‌شده */
 export function pointAt(c: number, r: number, angleDeg: number): { x: number; y: number } {
   const a = (angleDeg * Math.PI) / 180;
-  return { x: c + r * Math.sin(a), y: c - r * Math.cos(a) };
+  // گرد کردن تا خروجی SSR و کلاینت بیت‌به‌بیت یکی باشه (بدون هشدار هیدریشن)
+  const rd = (n: number) => Math.round(n * 1000) / 1000;
+  return { x: rd(c + r * Math.sin(a)), y: rd(c - r * Math.cos(a)) };
 }
 
 /** طول قوس ساعتگرد از دقیقه‌ی a تا b (بیرون از نیمه‌شب هم درست می‌چرخه) */

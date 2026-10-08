@@ -5,7 +5,7 @@
 // خواندن نسخه‌ی قبلی در UI.
 import type {
   AiCoach, AnalysisDomain, DayCell, DomainResult, Grade, Insight, ReflectionDto,
-  TrendPoint, WeekArchetype, WeekNumber, WeeklyGoalDto,
+  TrendPoint, WeekArchetype, WeekNumber, WeeklyAnalysis, WeeklyGoalDto,
 } from "@/lib/weeklyAnalysis/types";
 
 export const WEEKLY_LETTER_VERSION = 1 as const;
@@ -65,4 +65,21 @@ export type WeeklyLetterData = {
     focusText: string; // یک-دو جمله‌ی عملی
     suggestedTarget: number | null; // امتیاز هدف پیشنهادی برای همون دامنه
   };
+};
+
+/**
+ * خروجی زنده‌ی یک هفته برای خواننده (GET /api/analysis/letters/live و SSR صفحه):
+ * همون قالب هفته‌نامه، ولی از داده‌ی زنده‌ی همین لحظه ساخته می‌شه نه snapshot.
+ */
+export type LiveWeekPayload = {
+  letter: WeeklyLetterData;
+  analysis: WeeklyAnalysis;
+  /** شماره‌ی ثبت‌شده‌ی همین هفته؛ null = شماره‌ای ساخته نشده (مثلا هفته‌ی جاری) */
+  issue: number | null;
+  /** هفته‌ی قدیمی‌تر / جدیدتر (شنبه) یا null در لبه‌ی بازه */
+  prev: string | null;
+  next: string | null;
+  weekStart: string;
+  offset: number;
+  isCurrent: boolean;
 };

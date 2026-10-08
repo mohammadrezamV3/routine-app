@@ -2,7 +2,7 @@
 
 // جلد هفته‌نامه: سرصفحه‌ی مجله‌ای (شماره / عنوان / هفته)، حلقه‌ی بزرگ امتیاز،
 // تیتر کلمه‌به‌کلمه، تیپ هفته، سلام و مقدمه. ورود پله‌ای فقط با transform/opacity.
-import { Fragment } from "react";
+import { Fragment, type ReactNode } from "react";
 import { motion, useScroll, useTransform, type Variants } from "framer-motion";
 import {
   Activity, Anchor, Crown, Feather, Hammer, Play, Scale, Trophy, TrendingDown, TrendingUp, Undo2, Zap, type LucideIcon,
@@ -36,7 +36,18 @@ export function BrandMark() {
   );
 }
 
-export function WeeklyLetterCover({ letter, storyCount = 0, storySeconds = 0, onPlayStory }: { letter: WeeklyLetterData; storyCount?: number; storySeconds?: number; onPlayStory?: () => void }) {
+export function WeeklyLetterCover({
+  letter, isCurrent = false, storyCount = 0, storySeconds = 0, onPlayStory, prediction,
+}: {
+  letter: WeeklyLetterData;
+  /** هفته هنوز تموم نشده: به‌جای شماره، نشان «در جریان» */
+  isCurrent?: boolean;
+  storyCount?: number;
+  storySeconds?: number;
+  onPlayStory?: () => void;
+  /** باند پیش‌بینی (فقط هفته‌ی جاری)؛ زیر بدنه‌ی جلد، تمام‌عرض */
+  prediction?: ReactNode;
+}) {
   const lite = useLite();
   // شماره‌ی بزرگ پشت جلد با اسکرول کمی بالا می‌ره (فقط transform)
   const { scrollY } = useScroll();
@@ -69,17 +80,26 @@ export function WeeklyLetterCover({ letter, storyCount = 0, storySeconds = 0, on
     <motion.header className="wl-cover" initial="hidden" animate="show" variants={group} aria-labelledby="wl-headline">
       <span className="wl-cover-edge" aria-hidden="true" />
       <div className="wl-cover-watermark" aria-hidden="true">
-        <motion.span style={{ y: markY }}>{letter.issueNo || ""}</motion.span>
+        <motion.span style={{ y: markY }}>{isCurrent ? "" : letter.issueNo || ""}</motion.span>
       </div>
 
       <motion.div className="wl-mast" variants={item}>
         <div className="wl-mast-side">
-          <span className="wl-mast-k">شماره</span>
-          <b className="wl-mast-no">{letter.issueNo || "—"}</b>
+          {isCurrent ? (
+            <>
+              <span className="wl-mast-k">این هفته</span>
+              <b className="wl-mast-live"><i className="wl-live-dot" aria-hidden="true" />در جریان</b>
+            </>
+          ) : letter.issueNo ? (
+            <>
+              <span className="wl-mast-k">شماره</span>
+              <b className="wl-mast-no">{letter.issueNo}</b>
+            </>
+          ) : null}
         </div>
         <div className="wl-mast-center">
           <BrandMark />
-          <p className="wl-mast-title">هفته‌نامه</p>
+          <p className="wl-mast-title">آنالیز هفتگی</p>
         </div>
         <div className="wl-mast-side is-end">
           <span className="wl-mast-k">{letter.weekLabel}</span>
@@ -159,6 +179,7 @@ export function WeeklyLetterCover({ letter, storyCount = 0, storySeconds = 0, on
           </motion.div>
         </div>
       </div>
+      {prediction && <motion.div className="wl-cover-pred" variants={item}>{prediction}</motion.div>}
     </motion.header>
   );
 }

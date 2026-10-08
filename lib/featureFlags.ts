@@ -76,7 +76,7 @@ export const FEATURE_META: Record<FeatureKey, FeatureMeta> = {
   routineAssistant: { label: "دستیار هوشمند روتین", hint: "دکمه‌ی AI در صفحه‌ی روتین", default: "on", group: "ai", parent: "routine" },
   aiExercisePlan: { label: "ساخت برنامه تمرینی با AI", hint: "ساخت خودکار پلن تمرین؛ برنامه‌ی دستی همچنان کار می‌کنه", default: "on", group: "ai", parent: "exercise" },
   roadmaps: { label: "رودمپ یادگیری", hint: "ساخت رودمپ با هوش مصنوعی و صفحه‌ی /roadmaps", default: "off", group: "ai" },
-  weeklyAnalysis: { label: "آنالیز هفتگی", hint: "صفحه‌ی /analysis/weekly و مربی AI (همچنان نیازمند ماژول AI Insight)", default: "off", group: "ai" },
+  weeklyAnalysis: { label: "آنالیز هفتگی", hint: "صفحه‌ی آنالیز هفتگی (هفته به هفته، با مربی AI، هدف و یادداشت) (همچنان نیازمند ماژول AI Insight)", default: "off", group: "ai" },
 };
 
 /** کلید + همه‌ی مادرهاش (از نزدیک به دور) — همه باید مجاز باشن */

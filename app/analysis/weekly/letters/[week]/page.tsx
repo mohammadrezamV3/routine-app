@@ -1,15 +1,16 @@
-import type { Metadata } from "next";
-import { notFound } from "next/navigation";
-import { WeeklyLetterReader } from "@/components/WeeklyLetterReader";
-import { WEEK_PARAM_RE } from "@/components/WeeklyLetterUtils";
+import { notFound, redirect } from "next/navigation";
+import { isRealIsoDate } from "@/lib/weeklyLetter/weekParam";
 
-// یک شماره‌ی هفته‌نامه؛ [week] = شنبه‌ی همون هفته (YYYY-MM-DD).
-export const metadata: Metadata = {
-  title: "هفته‌نامه",
-  robots: { index: false, follow: false },
-};
-
-export default function WeeklyLetterPage({ params }: { params: { week: string } }) {
-  if (!WEEK_PARAM_RE.test(params.week)) notFound();
-  return <WeeklyLetterReader week={params.week} />;
+// لینک قدیمی هر شماره (اعلان‌ها، بوکمارک): خواننده الان یکیه و روی
+// /analysis/weekly?week=<شنبه> باز می‌شه؛ پارامتر story حفظ می‌شه.
+export default function WeeklyLetterLegacyPage({
+  params,
+  searchParams,
+}: {
+  params: { week: string };
+  searchParams?: { story?: string };
+}) {
+  if (!isRealIsoDate(params.week)) notFound();
+  const story = searchParams?.story === "1" ? "&story=1" : "";
+  redirect(`/analysis/weekly?week=${params.week}${story}`);
 }

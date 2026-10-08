@@ -5,6 +5,7 @@ import { J_MONTHS, toJalali } from "@/lib/jalali";
 import { ANALYSIS_DOMAINS, ANALYSIS_DOMAIN_LABELS, type AnalysisDomain, type DayCell, type DayDetails, type LetterSummary } from "@/lib/weeklyAnalysis/types";
 import type { LetterDomain, WeeklyLetterData } from "@/lib/weeklyLetter/types";
 import { radarHasData, type RadarAxis } from "@/lib/weeklyRadar";
+import { getWeekRange } from "@/lib/weeklyAnalysis/week";
 
 const DAY_MS = 86_400_000;
 
@@ -16,14 +17,21 @@ function utcMs(iso: string): number {
 }
 
 /**
- * فاصله‌ی هفته‌ی هفته‌نامه تا هفته‌ی جاری (شنبه‌محور): 0 = هفته‌ی جاری، -1 = قبلی.
- * همون قرارداد `?offset=` صفحه‌ی آنالیز. «امروز» از تاریخ محلی مرورگره.
+ * فاصله‌ی یک هفته تا هفته‌ی جاری (شنبه‌محور): 0 = هفته‌ی جاری، -1 = قبلی.
+ * بدون timezone «امروز» از تاریخ محلی مرورگره؛ با timezone (منطقه‌ی زمانی حساب
+ * کاربر) هم‌قاعده‌ی سرور حساب می‌شه. خواننده افست رو از خود سرور می‌گیره
+ * (analysis.offset)؛ این تابع فقط برای جاهایی‌ه که داده‌ی سرور در دست نیست.
  */
-export function offsetOfWeek(weekStart: string, now: Date = new Date()): number {
+export function offsetOfWeek(weekStart: string, now: Date = new Date(), timezone?: string): number {
   if (!WEEK_PARAM_RE.test(weekStart)) return -1;
-  const today = Date.UTC(now.getFullYear(), now.getMonth(), now.getDate());
-  const diffToSat = (new Date(today).getUTCDay() + 1) % 7; // شنبه = 0
-  const curStart = today - diffToSat * DAY_MS;
+  let curStart: number;
+  if (timezone) {
+    curStart = utcMs(getWeekRange(timezone, 0, now).weekStartIso);
+  } else {
+    const today = Date.UTC(now.getFullYear(), now.getMonth(), now.getDate());
+    const diffToSat = (new Date(today).getUTCDay() + 1) % 7; // شنبه = 0
+    curStart = today - diffToSat * DAY_MS;
+  }
   return Math.min(0, Math.round((utcMs(weekStart) - curStart) / (7 * DAY_MS)));
 }
 
@@ -133,12 +141,12 @@ const FITNESS_TEXT: Record<NonNullable<DayDetails["fitness"]>["status"], { text:
   done: { text: "تمرین طبق برنامه انجام شد", tone: "good" },
   extra: { text: "تمرین اضافه در روز غیرباشگاه", tone: "good" },
   rest: { text: "روز استراحت برنامه", tone: "neutral" },
-  missed: { text: "تمرین امروز انجام نشد", tone: "bad" },
+  missed: { text: "تمرین انجام نشد", tone: "bad" },
   partial: { text: "تمرین نیمه‌کاره موند", tone: "neutral" },
 };
 
 /** هر کلید DayDetails → یک ردیف متن فارسی؛ ترتیب ثابت دامنه‌ها. */
-export function dayRows(details: DayDetails | undefined | null): DayRow[] {
+export function dayRows(details: DayDetails | undefined | null, isToday = false): DayRow[] {
   const d = details ?? {};
   const rows: DayRow[] = [];
   if (d.routine && d.routine.total > 0) {
@@ -163,7 +171,8 @@ export function dayRows(details: DayDetails | undefined | null): DayRow[] {
   }
   if (d.fitness) {
     const f = FITNESS_TEXT[d.fitness.status] ?? FITNESS_TEXT.rest;
-    rows.push({ domain: "fitness", text: f.text, tone: f.tone });
+    // «امروز» فقط وقتی خود روز، امروز باشه (روز گذشته: «تمرین انجام نشد»)
+    rows.push({ domain: "fitness", text: isToday && d.fitness.status === "missed" ? "تمرین امروز انجام نشد" : f.text, tone: f.tone });
   }
   if (d.nutrition) {
     const n = d.nutrition;

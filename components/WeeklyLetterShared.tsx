@@ -14,8 +14,10 @@ import { AuthGate } from "@/components/AuthGate";
 import { FeatureGate } from "@/components/FeatureGate";
 import { ModuleGate } from "@/components/ModuleGate";
 import { GradientRing, RING_GREEN } from "@/components/GradientRing";
+import { activeModulesOf, getAccount } from "@/lib/accountCache";
 import { parseCountable } from "./WeeklyLetterUtils";
 import "./weekly-letter.css";
+import "./weekly-letter-live.css";
 
 export const WL_EASE = [0.22, 1, 0.36, 1] as const;
 
@@ -217,19 +219,39 @@ export function GradeStamp({ grade, size = 84, delay = 1, className }: { grade: 
 }
 
 // ---- گیت صفحه (هم‌قاعده‌ی /analysis/weekly) ----
-export function WeeklyLetterGate({ children, skeleton }: { children: ReactNode; skeleton: ReactNode }) {
+/** ماژول AI Insight رد شده؟ (null تا مشخص شدن). ModuleGate خودش پیام خرید رو نشون می‌ده؛ این فقط برای فصل‌های بیرون از گیت (خواب) */
+function useAiInsightDenied(enabled: boolean): boolean | null {
+  const [denied, setDenied] = useState<boolean | null>(null);
+  useEffect(() => {
+    if (!enabled) return;
+    let cancelled = false;
+    getAccount()
+      .then((data) => { if (!cancelled) setDenied(!(data?.user && activeModulesOf(data).has("AI_INSIGHT"))); })
+      .catch(() => { if (!cancelled) setDenied(null); });
+    return () => { cancelled = true; };
+  }, [enabled]);
+  return denied;
+}
+
+/**
+ * سشن + فلگ weeklyAnalysis + ماژول AI_INSIGHT. بدون دسترسی به ماژول، گیت پیام
+ * خرید رو نشون می‌ده و `whenLocked` (فصل خواب: خوندن تاریخچه آزاده) زیرش میاد.
+ */
+export function WeeklyLetterGate({ children, skeleton, whenLocked }: { children: ReactNode; skeleton: ReactNode; whenLocked?: ReactNode }) {
   const { status } = useSession();
+  const denied = useAiInsightDenied(status === "authenticated" && !!whenLocked);
   if (status === "authenticated") {
     return (
       <FeatureGate feature="weeklyAnalysis">
         <ModuleGate module="AI_INSIGHT">{children}</ModuleGate>
+        {denied === true && whenLocked}
       </FeatureGate>
     );
   }
   if (status === "loading") return <>{skeleton}</>;
   return (
     <section className="wl-root wl-page">
-      <AuthGate message="برای دیدن هفته‌نامه وارد شوید" />
+      <AuthGate message="برای دیدن آنالیز هفتگی وارد شوید" />
     </section>
   );
 }

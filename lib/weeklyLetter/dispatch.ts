@@ -81,7 +81,7 @@ type Outcome = "created" | "skipped" | "exists" | "busy" | "failed" | "not_due";
 async function deliver(u: Candidate, data: Awaited<ReturnType<typeof buildLetterData>>, res: RunResult) {
   const url = `/analysis/weekly/letters/${data.weekStart}`;
   try {
-    await notifyUser(u.id, { type: "weekly.letter", title: `هفته‌نامه‌ی شماره ${data.issueNo} رسید`, body: data.headline, url });
+    await notifyUser(u.id, { type: "weekly.letter", title: `آنالیز هفتگی شماره ${data.issueNo} رسید`, body: data.headline, url });
     res.notified++;
   } catch {
     // اعلان نباید ساخت شماره رو خراب کنه

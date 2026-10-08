@@ -56,7 +56,7 @@ export function WeeklyLetterToc({ items }: { items: TocItem[] }) {
 
   if (items.length < 2) return null;
   return (
-    <nav className="wl-toc" aria-label="فصل‌های هفته‌نامه">
+    <nav className="wl-toc" aria-label="فصل‌های آنالیز هفتگی">
       <div className="wl-toc-row" ref={rowRef}>
         {items.map((it, i) => (
           <a

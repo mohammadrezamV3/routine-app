@@ -1019,6 +1019,8 @@ html[data-perf="low"] .wl-st-trend-last, html[data-perf="low"] .wl-st-meter i{ f
   .wl-goals{ display:grid; grid-template-columns:repeat(2, minmax(0,1fr)); gap:12px; }
   .wl-goals > :last-child:nth-child(odd){ grid-column:1 / -1; }
   .wl-dom-grid > :last-child:nth-child(odd){ grid-column:1 / -1; }
+  .wl-dom-grid:has(> :nth-child(3):last-child){ grid-template-columns:repeat(3, minmax(0,1fr)); }
+  .wl-dom-grid:has(> :nth-child(3):last-child) > :last-child{ grid-column:auto; }
   .wl-rec-list{ display:grid; grid-template-columns:repeat(2, minmax(0,1fr)); gap:12px; }
   .wl-rec-list > :last-child:nth-child(odd){ grid-column:1 / -1; }
 
@@ -1028,11 +1030,8 @@ html[data-perf="low"] .wl-st-trend-last, html[data-perf="low"] .wl-st-meter i{ f
   .wl-tl-item::before{ display:none; }
   .wl-tl-node{ display:none; }
   .wl-tl-item > .wl-day{ flex:1; }
-  .wl-tl-item:last-child:nth-child(odd){ grid-column:1 / -1; }
   .wl-tl-item .wl-day-rows{ display:flex; flex-direction:column; }
   .wl-tl-item .wl-day-row:nth-child(2){ border-top:1px dashed var(--box-line); }
-  .wl-tl-item:last-child:nth-child(odd) .wl-day-rows{ display:grid; grid-template-columns:repeat(2, minmax(0,1fr)); column-gap:28px; }
-  .wl-tl-item:last-child:nth-child(odd) .wl-day-row:nth-child(2){ border-top:none; }
 
   .wl-issue-nav{ margin-top:48px; }
 }
@@ -1055,4 +1054,223 @@ html[data-perf="low"] .wl-st-trend-last, html[data-perf="low"] .wl-st-meter i{ f
   .wl-reader{ grid-template-columns:200px minmax(0,1fr); column-gap:28px; }
   .wl-cover-body{ grid-template-columns:minmax(0,1fr) 300px; gap:36px; }
   .wl-cover{ padding-inline:34px; }
+}
+
+/* ── live: interactive ── */
+/* دکمه‌ی شبح: ریست شیشه‌ای سراسری button{} نباید بهش بک‌گراند بده */
+.wl-root button.wl-live-ghost{
+  display:inline-flex; align-items:center; justify-content:center; gap:5px; cursor:pointer;
+  background:none; box-shadow:none; backdrop-filter:none; -webkit-backdrop-filter:none;
+  border:1px solid transparent; padding:0 8px; min-height:36px; border-radius:12px;
+  color:var(--muted); font-size:12px; font-weight:700;
+}
+body[data-theme="light"] .wl-root button.wl-live-ghost{ background:none; box-shadow:none; }
+@media (hover:hover) and (pointer:fine){
+  .wl-root button.wl-live-ghost:hover:not(:disabled), body[data-theme="light"] .wl-root button.wl-live-ghost:hover:not(:disabled){ background:none; color:var(--accent); }
+}
+.wl-root button.wl-live-ghost:disabled{ opacity:.4; cursor:default; }
+.wl-root button.wl-live-ghost:focus-visible{ outline:2px solid var(--accent); outline-offset:2px; }
+.wl-root button.wl-live-icon{ width:40px; height:40px; padding:0; flex-shrink:0; }
+.wl-root button.wl-live-addgoal{ color:var(--accent); min-height:30px; padding:0 4px; margin-inline-start:auto; }
+.wl-root .wl-live-btn{ min-height:44px; padding-inline:18px; font-weight:800; }
+.wl-live-error{ margin-top:10px; font-size:12.5px; font-weight:700; color:var(--wl-bad); line-height:1.9; }
+.wl-live-note{ font-size:12px; font-weight:600; color:var(--muted); line-height:1.9; }
+.wl-live-note b{ font-family:var(--font-latin), var(--font-vazir), sans-serif; font-weight:900; color:var(--text); }
+.wl-live-sub{ font-size:12.5px !important; font-weight:800; color:var(--muted); }
+
+/* مربی */
+.wl-root .wl-live-coach-empty{ display:flex; flex-direction:column; align-items:flex-start; gap:14px; border-color:rgba(var(--accent-rgb),.35); }
+.wl-live-coach-empty p{ font-size:14px; line-height:2.05; font-weight:600; }
+.wl-live-rec-body{ flex:1; min-width:0; }
+.wl-live-rec-body .wl-rec-meta{ align-items:center; }
+.wl-live-coach-foot{ display:flex; align-items:center; justify-content:space-between; gap:10px; }
+
+/* هدف‌ها */
+.wl-live-goals{ display:flex; flex-direction:column; gap:22px; }
+.wl-live-group{ display:flex; flex-direction:column; gap:10px; }
+.wl-live-subrow{ display:flex; align-items:center; justify-content:space-between; gap:10px; }
+.wl-live-count{ font-family:var(--font-latin), var(--font-vazir), sans-serif; font-size:12px; font-weight:800; color:var(--muted); }
+.wl-root .wl-live-form{ display:flex; flex-direction:column; gap:12px; }
+.wl-live-row{ display:flex; gap:10px; align-items:center; }
+.wl-live-sel{ flex:0 0 130px; width:130px; min-width:0; }
+.wl-live-title{ flex:1; min-width:0; }
+.wl-live-target{ justify-content:space-between; min-height:36px; }
+.wl-live-targetnum{ font-family:var(--font-latin), var(--font-vazir), sans-serif; font-size:18px; font-weight:900; color:var(--accent); }
+.wl-live-form .wl-live-btn{ align-self:flex-start; }
+@media (max-width:480px){
+  .wl-live-row{ flex-direction:column; align-items:stretch; }
+  .wl-live-sel{ flex-basis:auto; width:100%; }
+  .wl-live-form .wl-live-btn{ align-self:stretch; }
+}
+
+/* یادداشت */
+.wl-root .wl-live-refl{ display:flex; flex-direction:column; gap:14px; }
+.wl-live-refl-top{ display:flex; align-items:center; justify-content:space-between; gap:10px; min-height:22px; }
+.wl-live-save{ display:inline-flex; align-items:center; gap:4px; font-size:11.5px; font-weight:700; color:var(--muted); }
+.wl-live-save.is-saved{ color:var(--accent); }
+.wl-live-save.is-error{ color:var(--wl-bad); }
+.wl-live-moods{ display:flex; gap:8px; flex-wrap:wrap; }
+.wl-root button.wl-live-mood{
+  width:48px; height:48px; border-radius:50%; display:grid; place-items:center; padding:0; cursor:pointer;
+  font-size:22px; line-height:1; background:none; box-shadow:none; backdrop-filter:none; -webkit-backdrop-filter:none;
+  border:1px solid var(--box-line); color:var(--muted);
+  transition:transform .25s cubic-bezier(.34,1.56,.64,1), border-color .2s ease;
+}
+body[data-theme="light"] .wl-root button.wl-live-mood{ background:none; box-shadow:none; }
+.wl-live-mood > span{ filter:grayscale(.8); opacity:.75; transition:filter .2s ease, opacity .2s ease; }
+.wl-root button.wl-live-mood.is-on{ border:2px solid var(--accent); transform:scale(1.08); }
+.wl-live-mood.is-on > span{ filter:none; opacity:1; }
+.wl-root button.wl-live-mood:active{ transform:scale(.94); }
+.wl-root button.wl-live-mood:focus-visible{ outline:2px solid var(--accent); outline-offset:2px; }
+.wl-live-field{ display:flex; flex-direction:column; gap:7px; }
+.wl-live-field textarea{ resize:vertical; min-height:84px; }
+@media (min-width:900px){
+  .wl-root .wl-live-refl{ display:grid; grid-template-columns:1fr 1fr; column-gap:18px; }
+  .wl-live-refl-top, .wl-live-moods{ grid-column:1 / -1; }
+  .wl-live-refl .wl-live-error{ grid-column:1 / -1; }
+}
+
+/* پیش‌بینی */
+.wl-root .wl-live-pred{ display:flex; align-items:center; gap:16px; }
+.wl-live-pred-ring{ flex-shrink:0; }
+.wl-live-pred-num{ font-family:var(--font-latin), var(--font-vazir), sans-serif; font-size:19px; font-weight:900; color:var(--text); }
+.wl-live-pred-body{ flex:1; min-width:0; display:flex; flex-direction:column; gap:6px; }
+.wl-live-pred-k{ display:inline-flex; align-items:center; gap:5px; font-size:11.5px; font-weight:800; color:var(--accent); }
+.wl-live-pred-body p{ font-size:13.5px; line-height:2; font-weight:600; }
+.wl-live-pred-range{ position:relative; height:6px; border-radius:99px; border:1px solid var(--box-line); margin-top:2px; }
+.wl-live-pred-band{ position:absolute; top:-1px; bottom:-1px; border-radius:99px; background:linear-gradient(90deg, var(--wl-da), var(--wl-db)); opacity:.55; }
+.wl-live-pred-dot{ position:absolute; top:50%; width:12px; height:12px; margin:-6px 0 0 -6px; border-radius:50%; background:var(--accent); border:2px solid var(--bg, #0e1011); }
+.wl-live-pred-cap{ font-size:11.5px; font-weight:600; color:var(--muted); }
+.wl-live-pred-cap b{ font-family:var(--font-latin), var(--font-vazir), sans-serif; font-weight:900; color:var(--text); }
+
+/* انتخاب هفته */
+.wl-live-picker{ display:inline-flex; align-items:center; gap:2px; max-width:100%; border:1px solid var(--box-line); border-radius:999px; padding:2px; }
+.wl-root button.wl-live-pick-btn{ width:44px; height:44px; min-height:44px; padding:0; border-radius:50%; color:var(--text); flex-shrink:0; }
+.wl-live-pick-mid{ display:flex; flex-direction:column; align-items:center; justify-content:center; min-width:0; padding:0 6px; line-height:1.5; }
+.wl-live-pick-mid strong{ font-size:13px; font-weight:800; white-space:nowrap; }
+.wl-live-pick-now{ font-size:11px; font-weight:800; color:var(--accent); }
+.wl-root button.wl-live-pick-link{ min-height:24px; padding:0 4px; font-size:11px; color:var(--accent); }
+@media (max-width:360px){ .wl-live-pick-mid strong{ font-size:12px; } }
+
+/* دکمه‌ی اشتراک */
+.wl-root .wl-live-share{ min-height:44px; white-space:nowrap; }
+
+@media (prefers-reduced-motion:reduce){
+  .wl-root button.wl-live-mood, .wl-live-mood > span{ transition:none; }
+}
+
+/* ── live: data & polish ── */
+
+/* نقشه‌ی هفته */
+.wl-root .wl-dp-mx{ padding:16px 12px; display:flex; flex-direction:column; gap:14px; }
+.wl-dp-mx-grid{ display:grid; grid-template-columns:auto repeat(7, minmax(0,1fr)); column-gap:5px; row-gap:6px; align-items:center; }
+.wl-dp-mx-row{ display:contents; }
+.wl-dp-mx-corner{ display:block; }
+.wl-dp-mx-name{ display:flex; align-items:center; gap:6px; min-width:0; padding-inline-end:6px; font-size:12px; font-weight:800; color:var(--text); white-space:nowrap; }
+.wl-dp-mx-name svg{ flex-shrink:0; color:var(--wl-da); }
+.wl-root button.wl-dp-mx-dh{
+  min-height:28px; padding:0; border:none; background:transparent; color:var(--muted);
+  font-size:11.5px; font-weight:800; text-align:center; cursor:pointer;
+}
+.wl-root button.wl-dp-mx-dh:disabled{ opacity:.5; cursor:default; }
+.wl-dp-mx-cell{
+  display:grid; place-items:center; min-width:0; height:34px; border-radius:9px; padding:0; border:none;
+  font-family:var(--font-latin), var(--font-vazir), sans-serif; font-size:11px; font-weight:800; font-variant-numeric:tabular-nums;
+  color:var(--text);
+}
+.wl-dp-mx-cell > span{ display:none; }
+.wl-root button.wl-dp-mx-cell{ cursor:pointer; transition:transform .15s ease; }
+.wl-root button.wl-dp-mx-cell:focus-visible, .wl-root button.wl-dp-mx-dh:focus-visible{ outline:2px solid var(--accent); outline-offset:2px; }
+.wl-root button.wl-dp-mx-cell:active{ transform:scale(.94); }
+@media (hover:hover){ .wl-root button.wl-dp-mx-cell:hover{ transform:scale(1.06); } }
+.wl-dp-mx-cell.s0{ background:color-mix(in srgb, var(--muted) 10%, transparent); color:color-mix(in srgb, var(--muted) 70%, transparent); font-weight:500; }
+.wl-root .wl-dp-mx-cell.s1{ background:color-mix(in srgb, var(--wl-da) 16%, var(--box-bg)); }
+.wl-root .wl-dp-mx-cell.s2{ background:color-mix(in srgb, var(--wl-da) 36%, var(--box-bg)); }
+.wl-root .wl-dp-mx-cell.s3{ background:color-mix(in srgb, var(--wl-da) 64%, var(--box-bg)); }
+.wl-root .wl-dp-mx-cell.s4{ background:var(--wl-da); color:var(--bg); }
+.wl-dp-mx-foot{ display:flex; flex-wrap:wrap; align-items:center; justify-content:space-between; gap:8px 14px; font-size:11.5px; font-weight:600; color:var(--muted); }
+.wl-dp-mx-legend{ display:inline-flex; align-items:center; gap:5px; }
+.wl-dp-mx-legend i{ width:13px; height:13px; border-radius:4px; display:block; }
+.wl-dp-mx-legend i.s1{ background:color-mix(in srgb, var(--wl-da) 16%, var(--box-bg)); }
+.wl-dp-mx-legend i.s2{ background:color-mix(in srgb, var(--wl-da) 36%, var(--box-bg)); }
+.wl-dp-mx-legend i.s3{ background:color-mix(in srgb, var(--wl-da) 64%, var(--box-bg)); }
+.wl-dp-mx-legend i.s4{ background:var(--wl-da); }
+.wl-dp-mx-nodata a{ color:var(--accent); font-weight:700; }
+@media (min-width:640px){
+  .wl-root .wl-dp-mx{ padding:22px 24px; }
+  .wl-dp-mx-grid{ grid-template-columns:150px repeat(7, minmax(0,1fr)); column-gap:8px; row-gap:8px; }
+  .wl-dp-mx-name{ font-size:13.5px; }
+  .wl-dp-mx-cell{ height:40px; font-size:0; }
+  .wl-dp-mx-cell > span{ display:inline; font-size:12.5px; }
+  .wl-dp-mx-cell.s0{ font-size:13px; }
+}
+
+/* خواب */
+.wl-dp-sleep{ display:flex; flex-direction:column; }
+.wl-dp-sleep-grid{ display:flex; flex-direction:column; gap:14px; }
+@media (min-width:900px){
+  .wl-dp-sleep-grid{ display:grid; grid-template-columns:minmax(0,1fr) minmax(0,1fr); align-items:start; gap:16px; }
+  .wl-dp-sleep-wide{ grid-column:1 / -1; }
+}
+
+/* حالت خالی */
+.wl-root .wl-dp-empty{ display:flex; flex-direction:column; align-items:center; text-align:center; gap:10px; padding:28px 18px; }
+.wl-dp-empty-ico{ display:grid; place-items:center; width:54px; height:54px; border-radius:50%; color:var(--wl-da); border:1px solid color-mix(in srgb, var(--wl-da) 45%, transparent); }
+.wl-dp-empty h3{ margin:0; font-size:17px; font-weight:900; }
+.wl-dp-empty p{ margin:0; max-width:420px; font-size:13px; font-weight:600; line-height:1.9; color:var(--muted); }
+.wl-dp-empty-links{ display:grid; grid-template-columns:repeat(2, minmax(0,1fr)); gap:8px; width:100%; max-width:460px; margin-top:6px; }
+@media (min-width:640px){ .wl-dp-empty-links{ grid-template-columns:repeat(3, minmax(0,1fr)); } }
+.wl-root a.wl-dp-empty-link{
+  display:flex; align-items:center; gap:8px; min-height:44px; padding:0 12px; border-radius:14px;
+  border:1px solid var(--box-line); font-size:13px; font-weight:800; color:var(--text);
+  transition:border-color .2s ease, color .2s ease;
+}
+.wl-dp-empty-link svg:first-child{ color:var(--wl-da); flex-shrink:0; }
+.wl-dp-empty-link span{ flex:1; text-align:start; }
+.wl-dp-empty-link svg:last-child{ color:var(--muted); }
+@media (hover:hover){ .wl-root a.wl-dp-empty-link:hover{ border-color:rgba(var(--accent-rgb),.5); color:var(--accent); } }
+
+/* روند 8 هفته */
+.wl-dp-tr-tabs{ overflow-x:auto; scrollbar-width:none; -ms-overflow-style:none; margin-inline:-2px; padding:2px; }
+.wl-dp-tr-tabs::-webkit-scrollbar{ display:none; }
+.wl-dp-tr-tabs > *{ width:max-content; min-width:100%; }
+.wl-dp-tr-none{ margin:0; padding:30px 0; text-align:center; font-size:12.5px; font-weight:600; color:var(--muted); }
+.wl-trend-lbl.is-sel{ fill:var(--text); font-weight:900; }
+.wl-trend-svg .wl-dp-tr-hit{ fill:transparent; cursor:pointer; outline:none; }
+.wl-trend-svg .wl-dp-tr-hit:focus-visible{ stroke:var(--accent); stroke-width:2; }
+.wl-root button.wl-dp-tr-jump{ align-self:flex-start; min-height:40px; }
+
+/* شبکه‌ی عددها: ردیف آخر ناهموار نمی‌مونه */
+.wl-num-grid > :last-child:nth-child(odd){ grid-column:1 / -1; }
+@media (min-width:720px){
+  .wl-num-grid{ grid-template-columns:repeat(6, minmax(0,1fr)); }
+  .wl-num-grid > *{ grid-column:span 2; }
+  .wl-num-grid > :last-child:nth-child(3n+1){ grid-column:1 / -1; }
+  .wl-num-grid > :nth-last-child(2):nth-child(3n+1), .wl-num-grid > :last-child:nth-child(3n+2){ grid-column:span 3; }
+}
+@media (min-width:1024px) and (max-width:1199px){ .wl-num-grid{ grid-template-columns:repeat(6, minmax(0,1fr)); } }
+
+/* رادار با کمتر از 4 بخش: فقط فهرست تمام‌عرض */
+.wl-dov-in.is-list{ grid-template-columns:minmax(0,1fr); }
+@media (min-width:760px){ .wl-dov-in.is-list{ grid-template-columns:minmax(0,1fr); } .wl-dov-in.is-list .wl-dov-list{ gap:8px; } }
+.wl-dov-in.is-list .wl-dov-score{ font-size:26px; }
+
+/* فهرست چسبان موبایل: لبه‌ی چیپ‌ها نیمه‌بریده دیده نشه */
+@media (max-width:719px){
+  .wl-toc-row{
+    padding-inline:12px;
+    -webkit-mask-image:linear-gradient(90deg, transparent 0, #000 16px, #000 calc(100% - 16px), transparent 100%);
+    mask-image:linear-gradient(90deg, transparent 0, #000 16px, #000 calc(100% - 16px), transparent 100%);
+  }
+}
+
+/* اسلاید داستان موبایل: محتوا کل ارتفاع رو پر می‌کنه (نیمه‌ی پایین خالی نمی‌مونه) */
+@media (max-width:559px){
+  .wl-st-body{ justify-content:space-evenly; }
+}
+
+/* عدد تنهای آخر روی دسکتاپ کشیده نشه: وسط، هم‌عرض بقیه */
+@media (min-width:720px){
+  .wl-num-grid > :last-child:nth-child(3n){ grid-column:span 2; }
+  .wl-num-grid > :last-child:nth-child(3n+1){ grid-column:3 / span 2; }
 }

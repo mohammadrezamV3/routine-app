@@ -161,7 +161,7 @@ export function buildStorySlides(letter: WeeklyLetterData): StorySlide[] {
 
   if (scored >= 2 && best >= 0 && letter.days[best] && !letter.days[best].isFuture) {
     const day = letter.days[best];
-    const rows = dayRows(day.details)
+    const rows = dayRows(day.details, !!day.isToday)
       .sort((a, b) => (TONE_ORDER[a.tone ?? "neutral"] ?? 1) - (TONE_ORDER[b.tone ?? "neutral"] ?? 1))
       .slice(0, 3);
     slides.push({ id: "best", dur: 5400, label: "بهترین روز", day, rows });
@@ -225,4 +225,19 @@ export function buildStorySlides(letter: WeeklyLetterData): StorySlide[] {
   });
 
   return capSlides(slides);
+}
+
+/** لینک «تعیین هدف»: همیشه هفته‌ی جاری (API هدف برای هفته‌ی بعد واقعیه) با پیش‌پر شدن فرم از کانون هفته‌ی بعد. */
+export function goalCtaHref(focus: { title?: string | null; domain?: string | null; target?: number | null }): string {
+  const q = new URLSearchParams();
+  if (focus.domain) q.set("goalDomain", focus.domain);
+  if (focus.title) q.set("goalTitle", focus.title);
+  if (typeof focus.target === "number" && Number.isFinite(focus.target)) q.set("goalTarget", String(Math.round(focus.target)));
+  const qs = q.toString();
+  return `/analysis/weekly${qs ? `?${qs}` : ""}#goals`;
+}
+
+/** لینک «آنالیز کامل این هفته»: خود هفته‌ی همین شماره. */
+export function weekCtaHref(weekStart: string): string {
+  return `/analysis/weekly?week=${weekStart}`;
 }

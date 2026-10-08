@@ -1,0 +1,34 @@
+/* خواننده‌ی زنده: ردیف بالا، نشان بارگذاری، «در جریان» */
+.wl-rd-top{ gap:10px; flex-wrap:wrap; justify-content:space-between; }
+.wl-rd-tools{ display:flex; align-items:center; gap:8px; flex-wrap:wrap; margin-inline-start:auto; }
+.wl-rd-busy .wl-top ~ *{ opacity:.55; transition:opacity .2s ease; pointer-events:none; }
+.wl-rd-chip{
+  position:fixed; z-index:60; left:50%; transform:translateX(-50%); top:calc(76px + env(safe-area-inset-top));
+  display:inline-flex; align-items:center; gap:8px; padding:7px 14px; border-radius:999px;
+  font-size:12px; font-weight:700; color:var(--muted); background:var(--surface-2); border:1px solid var(--surface-line);
+}
+.wl-rd-err{ display:flex; align-items:center; justify-content:space-between; gap:12px; margin-bottom:12px; font-size:13px; }
+.wl-mast-live{ display:inline-flex; align-items:center; gap:7px; font-size:15px; font-weight:900; color:var(--text); line-height:1.4; }
+@media (min-width:1024px){ .wl-mast-live{ font-size:19px; } }
+.wl-live-dot{ width:8px; height:8px; border-radius:50%; background:var(--ring-1a); box-shadow:0 0 0 0 color-mix(in srgb, var(--ring-1a) 60%, transparent); animation:wl-live-pulse 2s ease-out infinite; }
+@keyframes wl-live-pulse{ 0%{ box-shadow:0 0 0 0 color-mix(in srgb, var(--ring-1a) 55%, transparent); } 100%{ box-shadow:0 0 0 9px transparent; } }
+@media (prefers-reduced-motion:reduce){ .wl-live-dot{ animation:none; } }
+html[data-perf="low"] .wl-live-dot{ animation:none; }
+.wl-cover-pred{ margin-top:18px; }
+.wl-rd-archive-link{ display:inline-flex; align-items:center; gap:7px; margin:18px auto 0; font-size:13px; font-weight:700; color:var(--muted); }
+.wl-nav-wrap{ display:flex; flex-direction:column; }
+.wl-rd-locked-sleep{ margin-top:8px; }
+
+/* واترمارک جلد: فقط بالای جلد و محو‌شونده تا روی حلقه، چیپ‌ها و دکمه‌ی پخش نیفته */
+.wl-cover-watermark span{
+  bottom:auto; top:-22px; opacity:.9;
+  -webkit-mask-image:linear-gradient(180deg, #000 0, transparent 62%); mask-image:linear-gradient(180deg, #000 0, transparent 62%);
+}
+@media (min-width:720px){ .wl-cover-watermark span{ top:-34px; font-size:300px; } }
+@media (min-width:1024px){ .wl-cover-watermark span{ top:-40px; font-size:340px; } .wl-mast-title{ font-size:48px; } }
+
+/* آرشیو: ردیف هفته‌ی جاری */
+.wl-root a.wl-rd-now{ display:flex; align-items:center; gap:12px; margin-bottom:18px; padding:14px 16px; }
+.wl-rd-now span{ flex:1; display:flex; flex-direction:column; gap:2px; min-width:0; }
+.wl-rd-now b{ font-size:15px; }
+.wl-rd-now small{ font-size:12px; color:var(--muted); }

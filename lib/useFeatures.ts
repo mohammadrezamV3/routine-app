@@ -39,9 +39,14 @@ export function refreshFeatures(): Promise<Map | null> {
   });
 }
 
+// فقط اولین رندر بعد از لود کامل باید null باشه تا هیدریشن با SSR جور بمونه؛
+// بعد از اون، mountهای تازه (ناوبری کلاینتی) همون کش رو بی‌چشمک می‌گیرن.
+let hydrated = false;
+
 export function useFeatures(): Map | null {
-  const [v, setV] = useState<Map | null>(cached?.value ?? null);
+  const [v, setV] = useState<Map | null>(() => (hydrated ? cached?.value ?? null : null));
   useEffect(() => {
+    hydrated = true;
     let alive = true;
     load().then((m) => { if (alive && m) setV(m); });
     const on = (m: Map) => { if (alive) setV(m); };
