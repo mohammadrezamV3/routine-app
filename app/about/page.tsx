@@ -1,39 +1,47 @@
 import type { Metadata } from "next";
-import { EnamadBadge } from "@/components/EnamadBadge";
+import { BRAND_FA } from "@/lib/brand";
+import { breadcrumbJsonLd, pageMetadata } from "@/lib/seo";
+import { AboutHero } from "@/components/AboutHero";
+import {
+  AboutContact, AboutFinalCTA, AboutInside, AboutPrivacy, AboutStats, AboutStory, AboutValues,
+} from "@/components/AboutSections";
+import { getTeamMembers } from "@/lib/teamServer";
+import "./about.css";
 
-export const metadata: Metadata = {
-  title: "درباره آریون",
-  description: "درباره‌ی تیم سازنده‌ی آریون و راه‌های تماس.",
-  alternates: { canonical: "/about" },
-  openGraph: { url: "/about", title: "درباره آریون" },
-};
+// اعضای تیم از AppSetting خونده می‌شن؛ صفحه هر دقیقه تازه می‌شه
+export const revalidate = 60;
 
-export default function AboutPage() {
-  const rows = [
-    { label: "سازنده", value: "Arion Group" },
-    { label: "ایمیل", value: "smm881517@gmail.com", href: "mailto:smm881517@gmail.com" },
-  ];
+export const metadata: Metadata = pageMetadata({
+  title: `درباره ${BRAND_FA} — اپ فارسی روتین و ورزش`,
+  description:
+    `${BRAND_FA} چیست، چرا ساخته شد و چه بخش‌هایی دارد: روتین روزانه، برنامه‌ی هفتگی، ` +
+    `برنامه‌ی بدنسازی، کالری‌شماری و ژورنال ترید — همه در یک حساب کاربری.`,
+  path: "/about",
+  ogTitle: `درباره ${BRAND_FA}`,
+  ownOgImage: true,
+});
 
+// محتوای این صفحه عمدا واقعی و دقیقا منطبق بر کاری‌ست که اپ الان انجام
+// می‌دهد — بدون ادعای اثبات‌نشدنی «بهترین»، آمار ساختگی، جایزه یا نقل‌قول
+// کاربر. تنها عددها از LandingStats می‌آیند (واقعی + پایه‌ی
+// lib/publicStatsBase.ts). همه‌ی متن در HTML سرور هست (برای سئو)؛ حرکت‌ها
+// فقط لایه‌ی نمایشی‌اند و با حرکت‌کاهی (MotionTuner) خاموش می‌شوند.
+export default async function AboutPage() {
+  const team = await getTeamMembers();
   return (
-    <section>
-      <h1>درباره ما</h1>
-      <div className="about-list">
-        {rows.map((r) => (
-          <div key={r.label} className="about-row">
-            <span className="about-label">{r.label}</span>
-            {r.href ? (
-              <a href={r.href} className="mono" style={{ color: "var(--accent)", textDecoration: "none" }} dir="ltr">
-                {r.value}
-              </a>
-            ) : (
-              <span className="mono" dir="ltr">{r.value}</span>
-            )}
-          </div>
-        ))}
-      </div>
-      <div style={{ marginTop: 24 }}>
-        <EnamadBadge />
-      </div>
-    </section>
+    <div className="ab-root">
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{ __html: JSON.stringify(breadcrumbJsonLd([{ name: BRAND_FA, path: "/" }, { name: "درباره", path: "/about" }])) }}
+      />
+      <AboutHero />
+      <AboutStats />
+      <AboutStory />
+      <AboutValues />
+      <AboutInside />
+      <AboutPrivacy />
+      <AboutContact team={team} />
+      <AboutFinalCTA />
+    </div>
   );
 }

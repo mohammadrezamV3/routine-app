@@ -1,14 +1,16 @@
-// لایه‌ی تجمیعِ کوئری‌های پنلِ Owner — همه‌جا Prisma پارامتری‌شده (بدون raw
-// SQL، طبقِ قاعده‌ی امنیتیِ ثابتِ پروژه)، و برای جلوگیری از سنگین‌شدنِ هر
-// بارگذاریِ صفحه، نتیجه‌ی هر تابع با یک کشِ کوتاه‌مدتِ در-حافظه (تک-instance،
+// لایه‌ی تجمیع کوئری‌های پنل Owner — همه‌جا Prisma پارامتری‌شده (بدون raw
+// SQL، طبق قاعده‌ی امنیتی ثابت پروژه)، و برای جلوگیری از سنگین‌شدن هر
+// بارگذاری صفحه، نتیجه‌ی هر تابع با یک کش کوتاه‌مدت در-حافظه (تک-instance،
 // هم‌الگوی lib/rateLimit.ts/lib/appSettings.ts) نگه داشته می‌شه.
 //
-// هیچ عددی این‌جا Fake نیست — هر مقدار مستقیم از یک کوئریِ واقعی میاد. جایی
-// که داده‌ی کافی نیست یا زیرساختِ لازم (مثلاً event tracking) هنوز از قبل از
+// هیچ عددی این‌جا Fake نیست — هر مقدار مستقیم از یک کوئری واقعی میاد. جایی
+// که داده‌ی کافی نیست یا زیرساخت لازم (مثلا event tracking) هنوز از قبل از
 // این تاریخ وجود نداشته، مقدار «null»/آرایه‌ی خالی برمی‌گرده و صفحه باید
-// «داده‌ای برای نمایش وجود ندارد» نشون بده — نه صفر یا عددِ ساختگی.
+// «داده‌ای برای نمایش وجود ندارد» نشون بده — نه صفر یا عدد ساختگی.
 
 import { prisma } from "@/lib/prisma";
+import { countRowProgress } from "@/lib/roadmapPlan";
+import { latestDate } from "@/lib/tehranTime";
 import { ModuleKey } from "@prisma/client";
 
 // ============================================================================
@@ -67,7 +69,11 @@ function previousRange(range: Range): Range {
 }
 
 function rangeCacheKey(prefix: string, range: Range, extra = ""): string {
-  return `${prefix}:${range.from.getTime()}:${range.to.getTime()}${extra ? ":" + extra : ""}`;
+  // بازه‌های پیش‌فرض (۷ روز/۳۰ روز/...) هر بار با «الان» ساخته می‌شن، پس
+  // from/to هر درخواست میلی‌ثانیه‌ای فرق داره و کلید قبلی هیچ‌وقت hit نمی‌شد —
+  // برای اون‌ها خود key بازه کافیه (TTL کوتاهه)؛ فقط custom با تاریخ دقیق.
+  const span = range.key === "custom" ? `${range.from.getTime()}:${range.to.getTime()}` : range.key;
+  return `${prefix}:${span}${extra ? ":" + extra : ""}`;
 }
 
 function pctChange(cur: number, prev: number): number | null {
@@ -76,7 +82,7 @@ function pctChange(cur: number, prev: number): number | null {
 }
 
 // ============================================================================
-// سطل‌بندیِ زمانی برای نمودارها (بدونِ raw SQL — همه‌ی سطل‌بندی سمتِ JS)
+// سطل‌بندی زمانی برای نمودارها (بدون raw SQL — همه‌ی سطل‌بندی سمت JS)
 // ============================================================================
 
 type BucketUnit = "day" | "week" | "month";
@@ -91,7 +97,7 @@ function pickBucketUnit(range: Range): BucketUnit {
 function startOfWeek(d: Date): Date {
   const x = new Date(d);
   x.setHours(0, 0, 0, 0);
-  const day = (x.getDay() + 1) % 7; // شنبه=۰ برای همخوانی با هفته‌ی فارسی نیست، فقط یک سطل‌بندیِ پایدار می‌خوایم
+  const day = (x.getDay() + 1) % 7; // شنبه=۰ برای همخوانی با هفته‌ی فارسی نیست، فقط یک سطل‌بندی پایدار می‌خوایم
   x.setDate(x.getDate() - day);
   return x;
 }
@@ -288,10 +294,10 @@ export async function getPlanBreakdown(range: Range): Promise<PlanBreakdownRow[]
 
 export type RenewalsUpgrades = { renewalsInRange: number; upgradesInRange: number; downgradesInRange: number };
 
-// «تمدید» و «ارتقا» فیلدِ مستقلی توی دیتابیس ندارن — هر خرید یک ردیفِ تازه‌ی
-// Subscription می‌سازه (نه آپدیتِ ردیفِ قبلی)، پس این‌ها از روی توالیِ
-// Subscriptionهای هر کاربر استنتاج می‌شن: همون پلن دوباره = تمدید؛ پلنِ
-// گران‌تر = ارتقا؛ پلنِ ارزون‌تر = تنزل.
+// «تمدید» و «ارتقا» فیلد مستقلی توی دیتابیس ندارن — هر خرید یک ردیف تازه‌ی
+// Subscription می‌سازه (نه آپدیت ردیف قبلی)، پس این‌ها از روی توالی
+// Subscriptionهای هر کاربر استنتاج می‌شن: همون پلن دوباره = تمدید؛ پلن
+// گران‌تر = ارتقا؛ پلن ارزون‌تر = تنزل.
 export async function getRenewalsAndUpgrades(range: Range): Promise<RenewalsUpgrades> {
   return withCache(rangeCacheKey("renewals-upgrades", range), 60_000, async () => {
     const subs = await prisma.subscription.findMany({
@@ -322,7 +328,7 @@ export async function getRenewalsAndUpgrades(range: Range): Promise<RenewalsUpgr
 // کاربران
 // ============================================================================
 
-export type UsersListFilter = "all" | "new" | "active" | "inactive" | "free" | "paid" | "blocked";
+export type UsersListFilter = "all" | "new" | "active" | "inactive" | "free" | "paid" | "blocked" | "admins" | "deleted";
 export type UsersListParams = { search?: string; filter?: UsersListFilter; page?: number; pageSize?: number; sort?: "newest" | "oldest" | "name" };
 
 export async function getUsersList(params: UsersListParams) {
@@ -332,10 +338,11 @@ export async function getUsersList(params: UsersListParams) {
   const sevenDaysAgo = new Date(now.getTime() - 7 * 86400000);
   const thirtyDaysAgo = new Date(now.getTime() - 30 * 86400000);
 
-  const where: any = { deletedAt: null };
+  const where: any = { deletedAt: params.filter === "deleted" ? { not: null } : null };
   if (params.search?.trim()) {
     const q = params.search.trim();
     where.OR = [
+      { id: q },
       { name: { contains: q, mode: "insensitive" } },
       { lastName: { contains: q, mode: "insensitive" } },
       { email: { contains: q, mode: "insensitive" } },
@@ -362,6 +369,9 @@ export async function getUsersList(params: UsersListParams) {
     case "blocked":
       where.isBlocked = true;
       break;
+    case "admins":
+      where.AND = [{ OR: [{ isSuperAdmin: true }, { NOT: { adminPermissions: { isEmpty: true } } }] }];
+      break;
   }
 
   const orderBy =
@@ -382,7 +392,10 @@ export async function getUsersList(params: UsersListParams) {
         username: true,
         market: true,
         isSuperAdmin: true,
+        adminPermissions: true,
         isBlocked: true,
+        deletedAt: true,
+        avatarUrl: true,
         createdAt: true,
         subscriptions: { where: { status: "ACTIVE" }, take: 1, orderBy: { createdAt: "desc" }, select: { status: true, currentPeriodEnd: true, plan: { select: { nameFa: true, priceMonthly: true } } } },
         loginEvents: { take: 1, orderBy: { createdAt: "desc" }, select: { createdAt: true } },
@@ -390,6 +403,13 @@ export async function getUsersList(params: UsersListParams) {
     }),
     prisma.user.count({ where }),
   ]);
+
+  // «آخرین ورود/فعالیت» = دیرترین بین آخرین ورود ثبت‌شده و آخرین بازدید نشست‌ها
+  // (نشست JWT تا ۳۰ روز می‌ماند و بدون ورود دوباره فعال است).
+  const seen = rows.length
+    ? await prisma.session.groupBy({ by: ["userId"], where: { userId: { in: rows.map((r) => r.id) } }, _max: { lastSeenAt: true } })
+    : [];
+  const seenBy = new Map(seen.map((g) => [g.userId, g._max.lastSeenAt]));
 
   return {
     users: rows.map((u) => ({
@@ -401,12 +421,15 @@ export async function getUsersList(params: UsersListParams) {
       username: u.username,
       market: u.market,
       isSuperAdmin: u.isSuperAdmin,
+      isAdmin: u.isSuperAdmin || u.adminPermissions.length > 0,
       isBlocked: u.isBlocked,
+      deletedAt: u.deletedAt,
+      avatarUrl: u.avatarUrl,
       createdAt: u.createdAt,
       plan: u.subscriptions[0]?.plan?.nameFa || null,
       subscriptionStatus: u.subscriptions[0]?.status || null,
       subscriptionExpiresAt: u.subscriptions[0]?.currentPeriodEnd || null,
-      lastActivityAt: u.loginEvents[0]?.createdAt || null,
+      lastActivityAt: latestDate(u.loginEvents[0]?.createdAt, seenBy.get(u.id)),
     })),
     total,
     page,
@@ -419,8 +442,10 @@ export async function getUserDetail(userId: string) {
     where: { id: userId },
     select: {
       id: true, name: true, lastName: true, email: true, phone: true, username: true,
-      market: true, locale: true, isSuperAdmin: true, isBlocked: true, blockedAt: true,
-      createdAt: true, gender: true, birthDate: true,
+      market: true, locale: true, isSuperAdmin: true, adminPermissions: true, isBlocked: true, blockedAt: true,
+      createdAt: true, gender: true, birthDate: true, deletedAt: true, avatarUrl: true, bio: true,
+      emailVerifiedAt: true, phoneVerifiedAt: true, twoFactorEnabled: true, updatedAt: true,
+      chatBanUntil: true, chatDisabled: true, chatWarnAt: true, chatWarnNote: true, chatWarnSeenAt: true,
       subscriptions: { orderBy: { createdAt: "desc" }, include: { plan: true, payments: { orderBy: { createdAt: "desc" } } } },
       moduleAccess: true,
       loginEvents: { orderBy: { createdAt: "desc" }, take: 20 },
@@ -428,13 +453,23 @@ export async function getUserDetail(userId: string) {
   });
   if (!user) return null;
 
-  const [dailyEntries, exerciseLogs, foodLogs, tradeEntries, roadmaps, aiUsage] = await Promise.all([
+  const [dailyEntries, exerciseLogs, foodLogs, tradeEntries, roadmaps, aiUsage, chatModerationHistory, adminHistory, activeSessions, seenAgg] = await Promise.all([
     prisma.dailyEntry.count({ where: { userId } }),
     prisma.exerciseLog.count({ where: { userId } }),
     prisma.foodLogEntry.count({ where: { userId } }),
     prisma.tradeEntry.count({ where: { userId } }),
     prisma.roadmap.count({ where: { userId } }),
     prisma.aiUsageRecord.aggregate({ where: { userId }, _count: { _all: true }, _sum: { inputTokens: true, outputTokens: true, costUsdMicros: true } }),
+    prisma.auditLog.findMany({
+      where: { targetType: "User", targetId: userId, action: { startsWith: "chat." } },
+      orderBy: { createdAt: "desc" }, take: 20,
+    }),
+    prisma.auditLog.findMany({
+      where: { targetType: "User", targetId: userId, NOT: { action: { startsWith: "chat." } } },
+      orderBy: { createdAt: "desc" }, take: 30,
+    }),
+    prisma.session.count({ where: { userId, revokedAt: null, expiresAt: { gt: new Date() } } }),
+    prisma.session.aggregate({ where: { userId }, _max: { lastSeenAt: true } }),
   ]);
 
   return {
@@ -446,7 +481,45 @@ export async function getUserDetail(userId: string) {
       outputTokens: aiUsage._sum.outputTokens || 0,
       costUsdMicros: aiUsage._sum.costUsdMicros || 0,
     },
+    chatModerationHistory,
+    adminHistory,
+    activeSessions,
+    lastActivityAt: latestDate(user.loginEvents[0]?.createdAt, seenAgg._max.lastSeenAt),
   };
+}
+
+// اعمال یکی از سه سطح تعدیل چت (+ رفع محدودیت) — نگاه کن به توضیح
+// enum CHAT_MODERATION_ACTIONS در lib/tradeChat.ts. هیچ escalation
+// خودکاری نیست؛ ادمین خودش هر بار انتخاب می‌کند.
+export async function applyChatModeration(
+  actorUserId: string,
+  targetUserId: string,
+  action: "WARNING" | "BAN_72H" | "DISABLE_CHAT" | "ENABLE_CHAT",
+  note: string | null
+) {
+  const now = new Date();
+  const data =
+    action === "WARNING" ? { chatWarnAt: now, chatWarnNote: note, chatWarnSeenAt: null }
+    : action === "BAN_72H" ? { chatBanUntil: new Date(now.getTime() + 72 * 3600_000) }
+    : action === "DISABLE_CHAT" ? { chatDisabled: true }
+    : { chatDisabled: false, chatBanUntil: null }; // ENABLE_CHAT
+
+  const updated = await prisma.user.update({
+    where: { id: targetUserId },
+    data,
+    select: { id: true, chatBanUntil: true, chatDisabled: true, chatWarnAt: true, chatWarnNote: true },
+  });
+  await prisma.auditLog.create({
+    data: {
+      actorUserId,
+      action: `chat.${action.toLowerCase()}`,
+      targetType: "User",
+      targetId: targetUserId,
+      meta: note ? { note } : undefined,
+    },
+  });
+  invalidateAdminAnalyticsCache();
+  return updated;
 }
 
 export async function setUserBlocked(actorUserId: string, targetUserId: string, blocked: boolean) {
@@ -500,30 +573,28 @@ export async function getProductAnalytics(module: ModuleKey, range: Range): Prom
       metrics.aiGeneratedPlans = aiPlans;
       metrics.logsInRange = logs.length;
     } else if (module === "CALORIE") {
-      const [logs, aiScanned] = await Promise.all([
-        prisma.foodLogEntry.findMany({ where: { createdAt: { gte: range.from, lte: range.to } }, select: { userId: true, aiScanned: true } }),
-        prisma.foodLogEntry.count({ where: { createdAt: { gte: range.from, lte: range.to }, aiScanned: true } }),
-      ]);
+      const logs = await prisma.foodLogEntry.findMany({ where: { createdAt: { gte: range.from, lte: range.to } }, select: { userId: true } });
       activeUserIds = new Set(logs.map((l) => l.userId));
       metrics.foodLogsInRange = logs.length;
-      metrics.aiScannedLogsInRange = aiScanned;
     } else if (module === "TRADE") {
       const entries = await prisma.tradeEntry.findMany({ where: { createdAt: { gte: range.from, lte: range.to } }, select: { userId: true } });
       activeUserIds = new Set(entries.map((e) => e.userId));
       metrics.entriesInRange = entries.length;
     } else if (module === "ROADMAP") {
-      const roadmaps = await prisma.roadmap.findMany({ where: { createdAt: { gte: range.from, lte: range.to } }, select: { userId: true, generatedByAi: true, stations: true } });
+      const roadmaps = await prisma.roadmap.findMany({ where: { createdAt: { gte: range.from, lte: range.to } }, select: { userId: true, generatedByAi: true, steps: true, progress: true } });
       activeUserIds = new Set(roadmaps.map((r) => r.userId));
       metrics.roadmapsInRange = roadmaps.length;
       metrics.aiGeneratedInRange = roadmaps.filter((r) => r.generatedByAi).length;
-      let totalStations = 0;
-      let doneStations = 0;
+      let totalStages = 0;
+      let doneStages = 0;
       for (const r of roadmaps) {
-        const stations = Array.isArray(r.stations) ? (r.stations as any[]) : [];
-        totalStations += stations.length;
-        doneStations += stations.filter((s) => s?.done).length;
+        // شمارش از countRowProgress می‌آید تا تعریف «مرحله‌ی انجام‌شده»
+        // یک‌جا بماند (همان تعریفی که خود ماژول و گزارش هفتگی دارند).
+        const c = countRowProgress(r.steps, r.progress);
+        totalStages += c.total;
+        doneStages += c.done;
       }
-      metrics.stationCompletionPercent = totalStations > 0 ? Math.round((doneStations / totalStations) * 100) : 0;
+      metrics.stageCompletionPercent = totalStages > 0 ? Math.round((doneStages / totalStages) * 100) : 0;
     }
 
     return {
@@ -705,7 +776,7 @@ export type ChurnAnalytics = {
   canceledInRange: number;
   expiredInRange: number;
   churnRatePercent: number | null;
-  atRiskCount: number; // اشتراکِ فعالی که ظرفِ ۷ روزِ آینده منقضی می‌شه
+  atRiskCount: number; // اشتراک فعالی که ظرف ۷ روز آینده منقضی می‌شه
   series: { bucket: string; canceled: number }[];
 };
 
@@ -862,7 +933,7 @@ export async function getErrorLogs(params: ErrorLogParams) {
 }
 
 // ============================================================================
-// لاگِ اقدامات Owner
+// لاگ اقدامات Owner
 // ============================================================================
 
 export async function getAuditLog(params: { page?: number; pageSize?: number }) {
@@ -891,8 +962,8 @@ export async function writeAuditLog(actorUserId: string, action: string, targetT
 }
 
 // ============================================================================
-// وضعیت سیستم — فقط داده‌ی واقعی؛ هیچ متریکی که واقعاً قابل‌اندازه‌گیری
-// نیست (CPU/RAM/Disk سرورِ واقعیِ production وقتی این کد داخلِ یک محیطِ
+// وضعیت سیستم — فقط داده‌ی واقعی؛ هیچ متریکی که واقعا قابل‌اندازه‌گیری
+// نیست (CPU/RAM/Disk سرور واقعی production وقتی این کد داخل یک محیط
 // دیگه اجرا می‌شه) نمایش داده نمی‌شه.
 // ============================================================================
 

@@ -1,68 +1,75 @@
 import type { Metadata } from "next";
+import { breadcrumbJsonLd, pageMetadata } from "@/lib/seo";
+import { FAQS } from "@/lib/faqContent";
+import { fillPriceCopy } from "@/lib/planPricing";
+import { getPricingConfig } from "@/lib/planPricingServer";
 import Link from "next/link";
 
-export const metadata: Metadata = {
-  title: "سوالات متداول درباره آریون",
-  description: "جواب سوالات رایج درباره‌ی آریون — چیه، چیکار می‌کنه، رایگانه یا نه، و امنیتِ اطلاعاتت چطوره.",
-  alternates: { canonical: "/faq" },
-  openGraph: { url: "/faq", title: "سوالات متداول درباره آریون" },
-};
+export const metadata: Metadata = pageMetadata({
+  title: "سوالات متداول آریون",
+  description:
+    "جواب 15 سوال رایج درباره‌ی آریون: چیست، رایگان است یا نه، تقویم شمسی دارد؟ چطور روتین روزانه بسازم، " +
+    "ژورنال ترید چیست، برنامه‌ی بدنسازی چطور ساخته می‌شود و اطلاعاتم چقدر امن است.",
+  path: "/faq",
+  ogTitle: "سوالات متداول درباره آریون",
+  // og:image از app/faq/opengraph-image.tsx می‌آید
+  ownOgImage: true,
+});
 
-// محتوای این صفحه عمداً واقعی و دقیقاً منطبق بر چیزیه که آریون الان واقعاً
-// انجام می‌ده — بدون ادعای غیرقابل‌اثباتِ «بهترین» یا آمار ساختگی. هدف اینه
-// که هم آدم‌ها هم موتورهای جست‌وجو/AIِ زنده‌سرچ یه جواب صادقانه و مشخص پیدا
-// کنن، نه یه متنِ تبلیغاتیِ پرکلمه.
-const FAQS: { q: string; a: string }[] = [
-  {
-    q: "آریون چیست؟",
-    a: "آریون یک اپ فارسی برای مدیریت زندگی روزمره است: برنامه‌ی هفتگی و پیگیری کارها، ثبت خواب، برنامه‌ی ورزشی و کالری‌شماری، ژورنال معاملات ترید، و رودمپ یادگیری با کمک هوش‌مصنوعی — همه در یک حساب کاربری، بدون نیاز به چند اپ جدا.",
-  },
-  {
-    q: "آریون با اپ‌های تک‌منظوره (فقط ورزش یا فقط ترید) چه فرقی دارد؟",
-    a: "به‌جای نصب چند اپ جدا برای هرکدوم از این بخش‌ها، آریون همه‌شون رو زیر یک حساب کاربری کنار هم می‌ذاره. اینکه کدوم انتخاب برای شما بهتره به نیاز خودتون بستگی داره — اگه فقط یک بخش (مثلاً فقط ترید) لازم دارید، شاید یک اپ تخصصی همون بخش مناسب‌تر باشه.",
-  },
-  {
-    q: "آیا استفاده از آریون رایگان است؟",
-    a: "بخش‌های روتین، خواب و کارهای روزانه همیشه رایگان‌اند. بخش‌های ورزش/کالری، ترید، رودمپ و پیشنهادهای هوشمند AI به‌صورت اشتراکی‌اند و با یک دوره‌ی آزمایشی رایگان شروع می‌شن.",
-  },
-  {
-    q: "آریون برای چه کسانی مناسب است؟",
-    a: "برای کسی که می‌خواد روتین روزانه، خواب، ورزش، تغذیه یا معاملات ترید خودش رو در یک‌جا پیگیری کنه، بدون جابه‌جا شدن بین چند اپ مختلف.",
-  },
-  {
-    q: "آیا اطلاعات من در آریون امن است؟",
-    a: "رمز عبور با bcrypt هش می‌شه، نشست ورود با JWT امضاشده مدیریت می‌شه، و ارتباط با سایت روی HTTPS رمزنگاری‌شده است. اطلاعات هر کاربر فقط برای خودش قابل مشاهده‌ست.",
-  },
-  {
-    q: "چطور در آریون ثبت‌نام کنم؟",
-    a: "از صفحه‌ی ثبت‌نام با شماره‌موبایل یا حساب گوگل می‌تونید یک حساب رایگان بسازید و بلافاصله از بخش‌های پایه (روتین، خواب، کارها) استفاده کنید.",
-  },
-];
+// محتوای این صفحه عمدا واقعی و دقیقا منطبق بر چیزیه که آریون الان واقعا
+// انجام می‌ده — بدون ادعای غیرقابل‌اثبات «بهترین» یا آمار ساختگی. هدف اینه
+// که هم آدم‌ها هم موتورهای جست‌وجو/AI زنده‌سرچ یه جواب صادقانه و مشخص پیدا
+// کنن، نه یه متن تبلیغاتی پرکلمه. خود آرایه در lib/faqContent.ts است —
+// llms-full.txt هم از همون‌جا می‌خواند تا این دو از هم واگرا نشوند.
 
-const FAQ_JSON_LD = {
-  "@context": "https://schema.org",
-  "@type": "FAQPage",
-  mainEntity: FAQS.map((f) => ({
-    "@type": "Question",
-    name: f.q,
-    acceptedAnswer: { "@type": "Answer", text: f.a },
-  })),
-};
+// قیمت «روتین من» از پنل ادمین (/admin/pricing) پر می‌شه؛ ISR تا تغییر قیمت بدون دیپلوی برسه
+export const revalidate = 300;
 
-export default function FaqPage() {
+export default async function FaqPage() {
+  const faqs = fillPriceCopy(FAQS, await getPricingConfig());
+  const FAQ_JSON_LD = {
+    "@context": "https://schema.org",
+    "@type": "FAQPage",
+    mainEntity: faqs.map((f) => ({
+      "@type": "Question",
+      name: f.q,
+      acceptedAnswer: { "@type": "Answer", text: f.a },
+    })),
+  };
   return (
     <section>
+      <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(breadcrumbJsonLd([{ name: "آریون", path: "/" }, { name: "سوالات متداول", path: "/faq" }])) }} />
       <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(FAQ_JSON_LD) }} />
       <h1>سوالات متداول</h1>
       <div className="about-list" style={{ marginTop: 12 }}>
-        {FAQS.map((f) => (
+        {faqs.map((f) => (
           <div key={f.q} style={{ marginTop: 20 }}>
             <h2 style={{ fontSize: 14 }}>{f.q}</h2>
             <div style={{ marginTop: 6, fontSize: 13.5, color: "var(--muted)", lineHeight: 1.9 }}>{f.a}</div>
           </div>
         ))}
       </div>
-      <div style={{ marginTop: 28, fontSize: 12.5, color: "var(--muted)" }}>
+      {/* لینک‌های داخلی با متن توصیفی — هر کدام به صفحه‌ای می‌روند که همان
+          موضوع را کامل توضیح داده، نه یک «اینجا کلیک کنید». */}
+      <div style={{ marginTop: 28, fontSize: 12.5, color: "var(--muted)", lineHeight: 2 }}>
+        توضیح کامل هر بخش:{" "}
+        <Link href="/routine" style={{ color: "var(--accent)" }}>روتین روزانه در آریون</Link>
+        ،{" "}
+        <Link href="/habit-tracker" style={{ color: "var(--accent)" }}>مدیریت عادت‌ها</Link>
+        ،{" "}
+        <Link href="/daily-planner" style={{ color: "var(--accent)" }}>برنامه‌ریزی روزانه</Link>
+        ،{" "}
+        <Link href="/bodybuilding-program" style={{ color: "var(--accent)" }}>برنامه‌ی بدنسازی هوشمند</Link>
+        ،{" "}
+        <Link href="/calorie-counter" style={{ color: "var(--accent)" }}>کالری‌شمار فارسی</Link>
+        ،{" "}
+        <Link href="/trading-journal" style={{ color: "var(--accent)" }}>ژورنال معاملاتی</Link>
+        ،{" "}
+        <Link href="/economic-calendar" style={{ color: "var(--accent)" }}>تقویم اقتصادی</Link>{" "}
+        و{" "}
+        <Link href="/forex-sessions" style={{ color: "var(--accent)" }}>ساعت بازار فارکس</Link>
+        .
+        <br />
         سوال دیگه‌ای داری؟ <Link href="/about" style={{ color: "var(--accent)" }}>با ما تماس بگیر</Link>.
       </div>
     </section>

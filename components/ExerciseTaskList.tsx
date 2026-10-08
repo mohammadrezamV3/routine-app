@@ -2,14 +2,17 @@
 
 import { useEffect, useRef, useState } from "react";
 import { createPortal } from "react-dom";
-import { AnimatePresence, motion } from "framer-motion";
-import { Check, Dumbbell, Lock, Play, Plus, Repeat2, RotateCw, Square, Timer, X } from "lucide-react";
+import { motion } from "framer-motion";
+import { TickButton } from "./TickButton";
+import { Check, Dumbbell, Lock, Pencil, Play, Repeat2, RotateCw, Timer, X } from "lucide-react";
 import { DashCard } from "./DashCard";
 import type { ExerciseDay } from "@/lib/exercisePlans";
 import { isoLocal } from "@/lib/jalali";
+import { reportLiveError } from "@/lib/liveSync";
 import { parseExerciseItem } from "@/lib/exerciseSets";
 import { ExerciseSetTrackerModal } from "./ExerciseSetTrackerModal";
 import { ExerciseSetTutorial, EXERCISE_TUTORIAL_SEEN_KEY } from "./ExerciseSetTutorial";
+import { Spinner } from "./Spinner";
 
 function formatElapsed(sec: number): string {
   const m = Math.floor(sec / 60).toString().padStart(2, "0");
@@ -17,7 +20,7 @@ function formatElapsed(sec: number): string {
   return `${m}:${s}`;
 }
 
-/** ثانیه‌ها رو به یه لیبلِ کوتاه برای جدولِ مشخصات تبدیل می‌کنه — «30 ثانیه» یا «25 دقیقه» */
+/** ثانیه‌ها رو به یه لیبل کوتاه برای جدول مشخصات تبدیل می‌کنه — «30 ثانیه» یا «25 دقیقه» */
 function formatSpecDuration(seconds: number | null): string {
   if (!seconds) return "—";
   if (seconds % 60 === 0) return `${seconds / 60} دقیقه`;
@@ -25,11 +28,11 @@ function formatSpecDuration(seconds: number | null): string {
   return `${Math.floor(seconds / 60)}:${(seconds % 60).toString().padStart(2, "0")}`;
 }
 
-// «برنامه تمرینی امروز» — ستونِ بزرگِ سمتِ راستِ داشبوردِ بدنسازی، هم‌نقشِ
+// «برنامه تمرینی امروز» — ستون بزرگ سمت راست داشبورد بدنسازی، هم‌نقش
 // DashTaskList توی روتین. «شروع تمرین» یک تایمر می‌ندازه و به هر حرکت دکمه‌ی
-// «شروع» می‌ده؛ «پایان تمرین» جلسه رو ثبت می‌کنه و به هر حرکتِ تیک‌نخورده
-// ضربدرِ قرمز می‌زنه. تنها راهِ تکمیلِ یک حرکت، دکمه‌ی «شروع» ـشه که پاپ‌آپِ
-// ردیابیِ ست‌به‌ست با استراحتِ زنده (ExerciseSetTrackerModal) رو باز می‌کنه.
+// «شروع» می‌ده؛ «پایان تمرین» جلسه رو ثبت می‌کنه و به هر حرکت تیک‌نخورده
+// ضربدر قرمز می‌زنه. تنها راه تکمیل یک حرکت، دکمه‌ی «شروع» ـشه که پاپ‌آپ
+// ردیابی ست‌به‌ست با استراحت زنده (ExerciseSetTrackerModal) رو باز می‌کنه.
 export function ExerciseTaskList({
   planId,
   dayPlan,
@@ -44,6 +47,7 @@ export function ExerciseTaskList({
   onSessionEnd,
   onAddProgram,
   onActiveChange,
+  onStarted,
   delay,
 }: {
   planId: string;
@@ -59,6 +63,8 @@ export function ExerciseTaskList({
   onSessionEnd: () => void;
   onAddProgram: () => void;
   onActiveChange?: (active: boolean) => void;
+  /** «شروع تمرین» روی سرور ثبت شد — حالت «ماندن» با همین روز را گذرانده حساب می‌کند */
+  onStarted?: () => void;
   delay?: number;
 }) {
   const todayPlan = dayPlan;
@@ -72,14 +78,22 @@ export function ExerciseTaskList({
   const [ending, setEnding] = useState(false);
   const [showTutorial, setShowTutorial] = useState(false);
   const [setTrackerItem, setSetTrackerItem] = useState<string | null>(null);
+  const [confirmEnd, setConfirmEnd] = useState(false);
   const timerRef = useRef<ReturnType<typeof setInterval> | null>(null);
 
+  // `initialCompletedItems` از والد به‌صورت `res.completedItems ?? []` میاد،
+  // یعنی وقتی لاگی وجود نداره هر رندر یک آرایه‌ی *جدید* ساخته می‌شه. با گذاشتن
+  // خود آرایه توی وابستگی‌ها، این افکت هر رندر اجرا می‌شد و
+  // `setChecked(new Set(...))` هم هر بار یک Set جدید (پس state جدید) می‌ساخت
+  // → رندر بعدی → افکت دوباره → یک حلقه‌ی رندر بی‌پایان که CPU رو اشغال
+  // می‌کرد و گوشی رو داغ. حالا وابستگی یک کلید رشته‌ای پایدار از محتواست.
+  const completedKey = initialCompletedItems.join("|");
   useEffect(() => {
     setEnded(initialCompleted);
-    setChecked(new Set(initialCompletedItems));
-    setActive(!initialCompleted && initialCompletedItems.length > 0);
+    setChecked(new Set(completedKey ? completedKey.split("|") : []));
+    setActive(!initialCompleted && completedKey.length > 0);
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [todayPlan?.day, initialCompleted, initialCompletedItems]);
+  }, [todayPlan?.day, initialCompleted, completedKey]);
 
   useEffect(() => {
     if (!active) { if (timerRef.current) clearInterval(timerRef.current); return; }
@@ -89,12 +103,17 @@ export function ExerciseTaskList({
 
   useEffect(() => { onActiveChange?.(active); }, [active, onActiveChange]);
 
-  async function persist(nextChecked: Set<string>, completed: boolean) {
-    await fetch("/api/exercise/log", {
+  // true = روی سرور نشست. خطا دیگه بی‌صدا بلعیده نمی‌شه: صدازننده تغییر
+  // optimistic رو برمی‌گردونه و پیام سراسری (LiveSyncToaster) نشون داده می‌شه.
+  async function persist(nextChecked: Set<string>, completed: boolean): Promise<boolean> {
+    const res = await fetch("/api/exercise/log", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ planId, date: dateIso, completed, completedItems: Array.from(nextChecked) }),
-    });
+    }).catch(() => null);
+    if (res?.ok) return true;
+    reportLiveError("ذخیره نشد — تغییر برگردانده شد. اتصال را چک کن و دوباره امتحان کن");
+    return false;
   }
 
   function startWorkout() {
@@ -102,6 +121,16 @@ export function ExerciseTaskList({
     setActive(true);
     setEnded(false);
     setElapsed(0);
+    // ثبت «شروع» — بدون این، حالت «ماندن» (lib/exerciseProgression.ts) همین
+    // تمرین را فردا دوباره می‌آورد. شکستش جلسه را نمی‌بندد؛ اولین تیک/پایان
+    // هم لاگ می‌سازد و لاگ دارای پیشرفت «شروع‌شده» حساب می‌شود.
+    fetch("/api/exercise/log", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ planId, date: dateIso, started: true }),
+    })
+      .then((r) => { if (r.ok) onStarted?.(); })
+      .catch(() => {});
   }
 
   function handleStartClick() {
@@ -112,19 +141,42 @@ export function ExerciseTaskList({
     startWorkout();
   }
 
+  // optimistic: تیک همون لحظه می‌خوره؛ اگه سرور رد کرد همون حرکت برمی‌گرده.
+  // checkedRef تا چند تیک پشت‌سرهم قبل از رندر بعدی هم مجموعه‌ی کامل رو بفرستن.
+  const checkedRef = useRef(checked);
+  checkedRef.current = checked;
   function markItemDone(item: string) {
-    setChecked((prev) => {
-      if (prev.has(item)) return prev;
-      const next = new Set(prev).add(item);
-      persist(next, false);
-      return next;
+    const prev = checkedRef.current;
+    if (prev.has(item)) return;
+    const next = new Set(prev).add(item);
+    checkedRef.current = next;
+    setChecked(next);
+    persist(next, false).then((ok) => {
+      if (ok) return;
+      setChecked((cur) => {
+        if (!cur.has(item)) return cur;
+        const rolled = new Set(cur);
+        rolled.delete(item);
+        return rolled;
+      });
     });
   }
 
+  const remainingCount = (todayPlan?.items ?? []).filter((it) => !checked.has(it)).length;
+
+  // زدن «پایان تمرین» وقتی هنوز حرکتی مونده، به‌جای ثبت بی‌برگشت، اول
+  // می‌پرسه — چون بعد ثبت، اون حرکت‌ها ضربدر قرمز «انجام‌نشده» می‌گیرن.
+  function requestEndWorkout() {
+    if (remainingCount > 0) { setConfirmEnd(true); return; }
+    endWorkout();
+  }
+
   async function endWorkout() {
+    setConfirmEnd(false);
     setEnding(true);
-    await persist(checked, true);
+    const ok = await persist(checked, true);
     setEnding(false);
+    if (!ok) return; // تمرین باز می‌مونه تا دوباره «پایان» بزنه
     setActive(false);
     setEnded(true);
     onSessionEnd();
@@ -145,20 +197,29 @@ export function ExerciseTaskList({
             onClick={onAddProgram}
             className="flex items-center gap-1 text-[11.5px] font-semibold text-dash-green transition hover:brightness-110 sm:gap-1.5 sm:text-[13.5px]"
           >
-            <Plus className="h-[15px] w-[15px] sm:h-[17px] sm:w-[17px]" />
-            افزودن برنامه
+            <Pencil className="h-[15px] w-[15px] sm:h-[17px] sm:w-[17px]" />
+            تغییر برنامه
           </button>
         )}
       </div>
 
       {!todayPlan ? (
-        <div className="py-6 text-center text-[11.5px] text-dash-muted sm:text-[12.5px]">{restDayLabel}</div>
+        // روز استراحت خودکار تیک می‌خوره (از خود پلن، بدون لاگ) — فقط نمایشی
+        <div className="flex flex-col items-center gap-2 py-6 text-center text-[11.5px] text-dash-muted sm:text-[12.5px]">
+          <TickButton as="span" size={24} disabled checked={!isFutureDay} />
+          <span>{restDayLabel}</span>
+        </div>
       ) : (
         <>
           <div className="mt-1 shrink-0 text-[11px] text-dash-muted sm:text-[12.5px]">{todayPlan.focus}</div>
 
-          <div className="mt-4 min-h-0 flex-1" dir="ltr" style={{ maxHeight: 360 }}>
-          <div className="thin-scroll h-full overflow-y-auto overflow-x-hidden px-1" dir="rtl">
+          {/* کارت با تعداد حرکت‌ها بزرگ نمی‌شه (درخواست صریح) — خود لیست
+              سقف ارتفاع داره و داخلش اسکرول می‌شه. باگ قبلی: سقف روی قاب بیرونی
+              بود و اسکرولر h-full داشت؛ درصد ارتفاع روی max-height حل نمی‌شه،
+              پس اسکرولر هیچ‌وقت اسکرول نمی‌کرد و ردیف‌ها از کارت بیرون می‌زدن.
+              حالا max-height مستقیم روی خود عنصر overflow نشسته. */}
+          <div className="mt-4 shrink-0" dir="ltr">
+          <div className="exercise-list-scroll thin-scroll overflow-y-auto overflow-x-hidden px-1" dir="rtl" style={{ maxHeight: 360 }}>
             <table className="exercise-plan-table">
               {active && (
                 <thead>
@@ -213,45 +274,7 @@ export function ExerciseTaskList({
                               شروع
                             </motion.button>
                           ) : (
-                            <motion.div
-                              aria-hidden
-                              animate={isChecked ? { scale: [1, 1.15, 1] } : { scale: 1 }}
-                              transition={{ duration: 0.3, ease: "easeOut" }}
-                              className={`flex h-5 w-5 shrink-0 items-center justify-center rounded-full border-2 sm:h-6 sm:w-6${showMiss ? " task-check-missed" : ""}`}
-                              style={
-                                isChecked
-                                  ? { background: "var(--accent)", borderColor: "var(--accent)", boxShadow: "0 0 10px rgba(var(--accent-rgb),.65)" }
-                                  : showMiss
-                                  ? { background: "#E05252", borderColor: "#E05252" }
-                                  : { background: "transparent", borderColor: "var(--muted)" }
-                              }
-                            >
-                              <AnimatePresence mode="wait">
-                                {isChecked ? (
-                                  <motion.span
-                                    key="on"
-                                    initial={{ scale: 0, rotate: -45, opacity: 0 }}
-                                    animate={{ scale: 1, rotate: 0, opacity: 1 }}
-                                    exit={{ scale: 0, opacity: 0 }}
-                                    transition={{ type: "spring", stiffness: 500, damping: 22 }}
-                                    className="flex items-center justify-center text-white"
-                                  >
-                                    <Check className="h-3 w-3 sm:h-[15px] sm:w-[15px]" strokeWidth={3} />
-                                  </motion.span>
-                                ) : showMiss ? (
-                                  <motion.span
-                                    key="x"
-                                    initial={{ scale: 0, rotate: 45, opacity: 0 }}
-                                    animate={{ scale: 1, rotate: 0, opacity: 1 }}
-                                    exit={{ scale: 0, opacity: 0 }}
-                                    transition={{ type: "spring", stiffness: 500, damping: 22 }}
-                                    className="flex items-center justify-center text-white"
-                                  >
-                                    <X className="h-3 w-3 sm:h-[15px] sm:w-[15px]" strokeWidth={3} />
-                                  </motion.span>
-                                ) : null}
-                              </AnimatePresence>
-                            </motion.div>
+                            <TickButton as="span" tone="exercise" size={24} checked={isChecked} state={showMiss ? "missed" : "idle"} />
                           )}
                         </div>
                       </td>
@@ -266,7 +289,19 @@ export function ExerciseTaskList({
           {isFutureDay ? (
             <div className="exercise-locked-box mt-5 shrink-0">
               <Lock size={14} />
-              وقتش نرسیده!
+              هنوز وقتش نرسیده
+            </div>
+          ) : ended && !active ? (
+            // تمرین این روز «تمام» ثبت شده (ExerciseLog.completed) — همون
+            // باکس وضعیت «هنوز وقتش نرسیده»، فقط با متن/رنگ خودش.
+            <div className="exercise-locked-box exercise-state-done mt-5 shrink-0">
+              <Check size={14} strokeWidth={3} />
+              انجام دادی
+            </div>
+          ) : isPastDay && !active ? (
+            <div className="exercise-locked-box exercise-state-missed mt-5 shrink-0">
+              <X size={14} strokeWidth={3} />
+              وقتش گذشته
             </div>
           ) : (
             editable && (!ended || active) && (
@@ -286,12 +321,11 @@ export function ExerciseTaskList({
                   <button
                     type="button"
                     disabled={ending}
-                    onClick={endWorkout}
+                    onClick={requestEndWorkout}
                     className="flex w-full items-center justify-center gap-2 rounded-2xl border py-3 text-[13px] font-bold sm:text-[15px]"
                     style={{ borderColor: "#E05252", color: "#E05252" }}
                   >
-                    <Square size={14} />
-                    {ending ? "در حال ثبت…" : "پایان تمرین"}
+                    {ending ? <Spinner size={14} /> : "پایان تمرین"}
                   </button>
                 )}
               </div>
@@ -304,6 +338,44 @@ export function ExerciseTaskList({
         <ExerciseSetTutorial
           onDone={() => { setShowTutorial(false); startWorkout(); }}
         />,
+        document.body
+      )}
+
+      {confirmEnd && createPortal(
+        <>
+          <div className="modal-overlay open" onClick={() => setConfirmEnd(false)} />
+          <div className="modal-panel liquid-glass-panel dash-scope open">
+            <div className="modal-head">
+              <div className="modal-title">هنوز تمرین مونده</div>
+              <button className="nav-close" onClick={() => setConfirmEnd(false)} aria-label="بستن">×</button>
+            </div>
+            <div className="modal-body">
+              <div className="text-[12.5px] leading-relaxed text-dash-text sm:text-[13.5px]">
+                {remainingCount} حرکت از برنامه‌ی امروزت هنوز انجام نشده. اگه الان تمرین رو ببندی،
+                همون‌ها «انجام‌نشده» ثبت می‌شن.
+              </div>
+              <div className="mt-4 flex flex-col gap-2.5">
+                <button
+                  type="button"
+                  onClick={() => setConfirmEnd(false)}
+                  className="flex w-full items-center justify-center gap-2 rounded-2xl py-3 text-[13px] font-bold sm:text-[14px]"
+                  style={{ background: "var(--accent)", color: "var(--bg)", boxShadow: "0 8px 22px rgba(var(--accent-rgb),.3)" }}
+                >
+                  ادامه تمرین
+                </button>
+                <button
+                  type="button"
+                  disabled={ending}
+                  onClick={endWorkout}
+                  className="flex w-full items-center justify-center gap-2 rounded-2xl border bg-transparent py-3 text-[13px] font-bold sm:text-[14px]"
+                  style={{ borderColor: "#E05252", color: "#E05252" }}
+                >
+                  {ending ? <Spinner size={14} /> : "پایان تمرین"}
+                </button>
+              </div>
+            </div>
+          </div>
+        </>,
         document.body
       )}
 

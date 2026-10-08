@@ -18,13 +18,24 @@ export function isValidUsername(v: string): boolean {
   return /^[a-zA-Z0-9_]{3,20}$/.test(v);
 }
 
+// نام و نام خانوادگی فقط فارسی (درخواست صریح محصول). حروف فارسی + نیم‌فاصله
+// اعراب (تشدید/فتحه/…) و فاصله‌ی معمولی مجازند؛ رقم/لاتین/نشانه نه.
+// رشته‌ی خالی «تنظیم‌نشده»
+// حساب می‌شود و اعتبارسنجی نمی‌خورد — جای بررسی‌اش نبود مقدار است، نه این‌جا.
+const PERSIAN_NAME_RE = /^[\u0621-\u063A\u0641-\u064A\u064B-\u0652\u0654\u067E\u0686\u0698\u06A9\u06AF\u06CC\u0622\u0623\u0624\u0626\u0629\u200c ]+$/;
+
+export function isValidPersianName(v: string): boolean {
+  const t = v.trim();
+  return t.length > 0 && t.length <= 60 && PERSIAN_NAME_RE.test(t);
+}
+
 /**
  * سیاست رمز عبور: حداقل ۸ کاراکتر، و از نظر zxcvbn (سنجش واقعی قدرت رمز، نه
  * فقط شمارش نوع کاراکتر) حداقل در سطح «خوب» باشه.
  * برمی‌گردونه: null اگه معتبر بود، وگرنه پیام خطا برای نمایش به کاربر.
  */
 export async function validatePassword(v: string, userInputs: string[] = []): Promise<string | null> {
-  if (v.length < 8) return "رمز عبور باید حداقل ۸ کاراکتر باشد";
+  if (v.length < 8) return "رمز عبور باید حداقل 8 کاراکتر باشد";
   if (v.length > 128) return "رمز عبور خیلی طولانی است";
   return passwordTierError(await passwordTier(v, userInputs));
 }
@@ -37,19 +48,19 @@ export function clampText(v: string, maxLen: number): string {
 // ─────────────────────────────────────────────────────────────────────────
 // ورودی‌های تاریخ‌محور و بدنه‌ی درخواست
 //
-// چرا اضافه شد: قبلاً همه‌ی روت‌هایی که تاریخ می‌گرفتن مستقیم
+// چرا اضافه شد: قبلا همه‌ی روت‌هایی که تاریخ می‌گرفتن مستقیم
 // `new Date(userInput)` می‌کردن. `new Date("garbage")` یه `Invalid Date`
-// می‌ده که Prisma باهاش throw می‌کنه و روت با **HTTP 500ِ هندل‌نشده** می‌افته
+// می‌ده که Prisma باهاش throw می‌کنه و روت با **HTTP 500 هندل‌نشده** می‌افته
 // (تست‌شده: `?date=garbage`، `?date=9999-99-99` هردو ۵۰۰ می‌دادن). این هم
-// یه راهِ ارزونِ خراب‌کردنِ سرویسه هم استکِ خطا رو توی لاگ می‌ریزه.
+// یه راه ارزون خراب‌کردن سرویسه هم استک خطا رو توی لاگ می‌ریزه.
 // ─────────────────────────────────────────────────────────────────────────
 
 /**
- * فقط `YYYY-MM-DD`ِ واقعی رو قبول می‌کنه — نه هر چیزی که `new Date` بتونه
- * حدس بزنه. تاریخ‌های بدشکلِ تقویمی (مثل `2026-02-31`) هم رد می‌شن، چون
- * جاوااسکریپت بی‌صدا سرریزشون می‌کنه به ماهِ بعد.
+ * فقط `YYYY-MM-DD` واقعی رو قبول می‌کنه — نه هر چیزی که `new Date` بتونه
+ * حدس بزنه. تاریخ‌های بدشکل تقویمی (مثل `2026-02-31`) هم رد می‌شن، چون
+ * جاوااسکریپت بی‌صدا سرریزشون می‌کنه به ماه بعد.
  * خروجی روی UTC نیم‌شب ساخته می‌شه تا با ستون‌های `@db.Date` جور باشه و
- * نتیجه به تایم‌زونِ سرور وابسته نباشه.
+ * نتیجه به تایم‌زون سرور وابسته نباشه.
  */
 export function parseIsoDate(v: unknown): Date | null {
   if (typeof v !== "string") return null;
@@ -58,18 +69,18 @@ export function parseIsoDate(v: unknown): Date | null {
   const [y, mo, d] = [Number(m[1]), Number(m[2]), Number(m[3])];
   if (mo < 1 || mo > 12 || d < 1 || d > 31) return null;
   const date = new Date(Date.UTC(y, mo - 1, d));
-  // سرریزِ تقویمی رو می‌گیره: Date.UTC(2026, 1, 31) می‌شه ۳ مارس
+  // سرریز تقویمی رو می‌گیره: Date.UTC(2026, 1, 31) می‌شه ۳ مارس
   if (date.getUTCFullYear() !== y || date.getUTCMonth() !== mo - 1 || date.getUTCDate() !== d) return null;
   return date;
 }
 
-/** سقفِ طولِ بازه‌ی تاریخی که یک درخواست می‌تونه بخواد (روز) */
+/** سقف طول بازه‌ی تاریخی که یک درخواست می‌تونه بخواد (روز) */
 export const MAX_RANGE_DAYS = 400;
 
 /**
  * بازه‌ی `from`/`to` رو اعتبارسنجی می‌کنه. علاوه بر بدشکل‌بودن، بازه‌های
- * بی‌انتها (`from=0001-01-01&to=9999-12-31` — تست‌شده، قبلاً ۲۰۰ می‌داد و
- * عملاً یه full-table scan بود) رو هم رد می‌کنه.
+ * بی‌انتها (`from=0001-01-01&to=9999-12-31` — تست‌شده، قبلا ۲۰۰ می‌داد و
+ * عملا یه full-table scan بود) رو هم رد می‌کنه.
  */
 export function parseDateRange(
   fromRaw: unknown,
@@ -79,7 +90,7 @@ export function parseDateRange(
   const from = parseIsoDate(fromRaw);
   const to = parseIsoDate(toRaw);
   if (!from || !to) return { error: "بازه‌ی تاریخ نامعتبر است (قالب درست: YYYY-MM-DD)" };
-  if (from > to) return { error: "شروعِ بازه بعد از پایانِ آن است" };
+  if (from > to) return { error: "شروع بازه بعد از پایان آن است" };
   const days = (to.getTime() - from.getTime()) / 86_400_000;
   if (days > maxDays) return { error: `بازه‌ی درخواستی طولانی‌تر از ${maxDays} روز است` };
   return { from, to };
@@ -90,14 +101,14 @@ export function clampQuery(v: unknown, maxLen = 100): string {
   return typeof v === "string" ? v.trim().slice(0, maxLen) : "";
 }
 
-/** سقفِ پیش‌فرضِ بدنه‌ی JSON — ۲۵۶ کیلوبایت برای هر چیزی که این اپ می‌نویسه فراوونه */
+/** سقف پیش‌فرض بدنه‌ی JSON — ۲۵۶ کیلوبایت برای هر چیزی که این اپ می‌نویسه فراوونه */
 export const MAX_JSON_BODY_BYTES = 256 * 1024;
 
 /**
- * بدنه‌ی JSON رو با سقفِ حجم می‌خونه. Next برای route handlerها هیچ سقفِ
- * پیش‌فرضی نمی‌ذاره، پس بدونِ این، یک کاربرِ لاگین‌کرده می‌تونست چندمگابایت
+ * بدنه‌ی JSON رو با سقف حجم می‌خونه. Next برای route handlerها هیچ سقف
+ * پیش‌فرضی نمی‌ذاره، پس بدون این، یک کاربر لاگین‌کرده می‌تونست چندمگابایت
  * بفرسته (تست‌شده: ۳MB روی `/api/settings/*` قبول و ذخیره می‌شد).
- * `Content-Length` اول چک می‌شه (ارزون)، ولی چون قابلِ جعل/نبودنه، خودِ
+ * `Content-Length` اول چک می‌شه (ارزون)، ولی چون قابل جعل/نبودنه، خود
  * بایت‌های خوانده‌شده هم شمرده می‌شن.
  */
 export async function readJsonBody<T = any>(
@@ -114,7 +125,7 @@ export async function readJsonBody<T = any>(
   } catch {
     return { ok: false, status: 400, error: "بدنه‌ی درخواست خوانده نشد" };
   }
-  // طولِ رشته کاراکتره نه بایت؛ برای متنِ فارسی بایت‌ها بیشترن، پس واقعیش رو می‌سنجیم
+  // طول رشته کاراکتره نه بایت؛ برای متن فارسی بایت‌ها بیشترن، پس واقعیش رو می‌سنجیم
   if (new TextEncoder().encode(text).length > maxBytes) {
     return { ok: false, status: 413, error: "حجم درخواست بیش از حد مجاز است" };
   }
@@ -124,3 +135,26 @@ export async function readJsonBody<T = any>(
     return { ok: false, status: 400, error: "بدنه‌ی درخواست JSON معتبر نیست" };
   }
 }
+
+/**
+ * ارقام فارسی و عربی را به لاتین تبدیل می‌کند.
+ *
+ * چرا لازم است: کیبورد فارسی اندروید و ویندوز «۰۹۱۲…» تایپ می‌کند، ولی
+ * هر جای دیگری (regex اعتبارسنجی، ذخیره در دیتابیس، مقایسه با کد OTP)
+ * فقط رقم لاتین می‌فهمد. بدون این، کاربر عدد درست وارد می‌کرد و پیام
+ * «شماره نامعتبر است» می‌گرفت — و هیچ راهی نداشت بفهمد چرا.
+ *
+ * ارقام عربی شرقی (٠١٢…) هم پوشش داده می‌شوند چون بعضی کیبوردها
+ * به‌جای فارسی همان‌ها را می‌فرستند و ظاهرشان تقریبا یکی است.
+ */
+export function toEnglishDigits(v: string): string {
+  return String(v)
+    .replace(/[\u06F0-\u06F9]/g, (d) => String(d.charCodeAt(0) - 0x06f0))
+    .replace(/[\u0660-\u0669]/g, (d) => String(d.charCodeAt(0) - 0x0660));
+}
+
+/** فقط رقم نگه می‌دارد و ارقام فارسی/عربی را هم اول لاتین می‌کند */
+export function digitsOnly(v: string): string {
+  return toEnglishDigits(v).replace(/\D/g, "");
+}
+

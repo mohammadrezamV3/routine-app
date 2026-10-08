@@ -1,0 +1,313 @@
+"use client";
+
+import { CSSProperties, useCallback, useEffect, useState } from "react";
+import { motion } from "framer-motion";
+import { Pencil, Pin, PinOff, Search, StickyNote, Trash2, X } from "lucide-react";
+import { TradeKebabMenu } from "./TradeKebabMenu";
+import { faNum } from "@/lib/jalali";
+import { getSetting } from "@/lib/storage";
+import { formatTradeDateTime } from "@/lib/tradeDateTime";
+import { PanelSkeleton } from "./PanelSkeleton";
+import { useAsyncAction } from "@/lib/useAsyncAction";
+import { LockBodyScroll } from "./LockBodyScroll";
+import { TradeTagField } from "./TradeTagField";
+import { CAL_SYSTEM_KEY, CalSystem, TAG_COLORS, TradeTag } from "@/lib/tradeTypes";
+import { useLiveRefresh } from "@/lib/liveSync";
+import { Spinner } from "./Spinner";
+
+type Note = {
+  id: string; title: string; content: string; color: string; pinned: boolean;
+  accountId: string | null; entryId: string | null;
+  createdAt: string; updatedAt: string; tags: TradeTag[];
+};
+
+// یادداشت‌های آزاد تریدر: جست‌وجو، فیلتر برچسب، رنگ و سنجاق‌کردن.
+// برچسب‌ها همان برچسب‌های ماژول ترید هستند (مشترک با حساب و معامله)، نه یک
+// لیست جدا — تا کاربر مجبور نباشد «Psychology» را دو بار بسازد.
+export function TradeNotesPanel({
+  creating,
+  onCreatingChange,
+}: {
+  creating: boolean;
+  onCreatingChange: (v: boolean) => void;
+}) {
+  const [notes, setNotes] = useState<Note[]>([]);
+  const [tags, setTags] = useState<TradeTag[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [query, setQuery] = useState("");
+  const [filterTags, setFilterTags] = useState<string[]>([]);
+  const [calSystem, setCalSystem] = useState<CalSystem>("jalali");
+  // کلیک روی کارت فقط نمایش متن می‌ده (viewing) — ویرایش واقعی
+  // (editing) فقط از زیر منوی سه‌نقطه باز می‌شه، طبق درخواست صریح.
+  const [viewing, setViewing] = useState<Note | null>(null);
+  const [editing, setEditing] = useState<Note | null>(null);
+  const { pendingKey, error: actionError, run } = useAsyncAction();
+
+  useEffect(() => { getSetting<CalSystem>(CAL_SYSTEM_KEY, "jalali").then(setCalSystem); }, []);
+
+  const load = useCallback(async (silent = false) => {
+    if (!silent) setLoading(true);
+    try {
+      const qs = new URLSearchParams();
+      if (query.trim()) qs.set("q", query.trim());
+      if (filterTags.length) qs.set("tags", filterTags.join(","));
+      const [nRes, tRes] = await Promise.all([
+        fetch(`/api/trade/notes?${qs}`),
+        fetch("/api/trade/tags"),
+      ]);
+      setNotes(nRes.ok ? (await nRes.json()).notes || [] : []);
+      setTags(tRes.ok ? (await tRes.json()).tags || [] : []);
+    } finally {
+      if (!silent) setLoading(false);
+    }
+  }, [query, filterTags]);
+
+  // جست‌وجو با تاخیر — تا هر حرفی که تایپ می‌شود یک درخواست نفرستد
+  useEffect(() => {
+    const t = setTimeout(load, query ? 300 : 0);
+    return () => clearTimeout(t);
+  }, [load, query]);
+  useLiveRefresh("trade", () => { load(true); });
+
+  async function togglePin(n: Note) {
+    setNotes((prev) => prev.map((x) => (x.id === n.id ? { ...x, pinned: !x.pinned } : x)));
+    const ok = await run(`pin:${n.id}`, () =>
+      fetch("/api/trade/notes", {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ ...n, pinned: !n.pinned, tagIds: n.tags.map((t) => t.id) }),
+      })
+    );
+    load(true);
+    if (!ok) return;
+  }
+
+  async function remove(id: string) {
+    setNotes((prev) => prev.filter((n) => n.id !== id));
+    const ok = await run(`del:${id}`, () => fetch(`/api/trade/notes?id=${id}`, { method: "DELETE" }));
+    if (!ok) load(true); // برگرداندن یادداشتی که حذفش نشد
+  }
+
+  return (
+    <div>
+      {actionError && <div className="trade-form-error">{actionError}</div>}
+
+      {/* طبق درخواست صریح: جست‌وجو دیگر باکس جدا از لیست یادداشت‌ها نیست —
+          هر دو داخل یک باکس واحد، هم‌الگوی چک‌لیست. */}
+      <div className="trade-surface trade-page-box trade-note-box">
+        <div className="trade-note-search-row">
+          <div className="trade-search trade-note-search">
+            <input className="wsearch-newform-name trade-glass-field" value={query} onChange={(e) => setQuery(e.target.value)} placeholder="جست‌وجو در یادداشت‌ها" style={{ width: "100%" }} />
+            <button type="button" className="trade-search-btn" onClick={() => load()} aria-label="جست‌وجو"><Search size={14} /></button>
+          </div>
+
+          {!!tags.length && (
+            <div className="trade-tag-row">
+              {tags.map((t) => {
+                const active = filterTags.includes(t.id);
+                return (
+                  <button
+                    key={t.id}
+                    type="button"
+                    className={`trade-tag-chip${active ? " active" : ""}`}
+                    style={active ? ({ "--tag-c": t.color } as CSSProperties) : undefined}
+                    onClick={() => setFilterTags((p) => (p.includes(t.id) ? p.filter((x) => x !== t.id) : [...p, t.id]))}
+                  >
+                    {/* توپ برچسب سمت چپ نامش (در RTL یعنی بعد از متن) */}
+                    {t.name}
+                    <span className="trade-tag-dot" style={{ background: t.color }} />
+                  </button>
+                );
+              })}
+            </div>
+          )}
+        </div>
+
+        {loading && <PanelSkeleton />}
+        {!loading && !notes.length && (
+          <div className="trade-empty-state">
+            <StickyNote size={32} />
+            <p>{query || filterTags.length ? "یادداشتی با این فیلتر پیدا نشد" : "هنوز یادداشتی اضافه نشده"}</p>
+          </div>
+        )}
+
+        {!!notes.length && (
+        <div className="trade-note-grid">
+          {notes.map((n, i) => (
+            <motion.div
+              key={n.id}
+              initial={{ opacity: 0, y: 8 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.32, delay: Math.min(i, 8) * 0.04, ease: [0.22, 1, 0.36, 1] }}
+              className="trade-surface trade-note-card"
+              onClick={() => setViewing(n)}
+            >
+              {/* فقط عنوان — متن یادداشت دیگر توی فهرست پیش‌نمایش نمی‌شود
+                  (درخواست صریح)؛ با کلیک روی کارت باز می‌شود. سه‌نقطه سمت راست
+                  عنوان است و حذف/سنجاق را می‌دهد. */}
+              <div className="trade-note-head">
+                <div className="trade-note-kebab" onClick={(e) => e.stopPropagation()}>
+                  <TradeKebabMenu
+                    label={`گزینه‌های ${n.title}`}
+                    actions={[
+                      { label: "ویرایش", icon: <Pencil size={14} />, onClick: () => setEditing(n) },
+                      {
+                        label: n.pinned ? "برداشتن سنجاق" : "سنجاق کردن",
+                        icon: n.pinned ? <PinOff size={14} /> : <Pin size={14} />,
+                        onClick: () => togglePin(n),
+                        disabled: pendingKey === `pin:${n.id}`,
+                      },
+                      { label: "حذف یادداشت", icon: <Trash2 size={14} />, onClick: () => remove(n.id), danger: true },
+                    ]}
+                  />
+                </div>
+                <span className="trade-note-title">{n.title}</span>
+                {/* توپ رنگی سمت چپ عنوان، نه گوشه‌ی مطلق کارت */}
+                <span className="trade-account-dot" style={{ background: n.color }} />
+                {n.pinned && <Pin size={12} className="trade-note-pinned-mark" />}
+              </div>
+              <div className="trade-note-foot">
+                <span>{formatTradeDateTime(n.updatedAt, calSystem)}</span>
+                {!!n.tags.length && (
+                  <span className="trade-tag-row">
+                    {n.tags.map((t) => (
+                      <span key={t.id} className="trade-tag-chip active" style={{ "--tag-c": t.color } as CSSProperties}>{t.name}</span>
+                    ))}
+                  </span>
+                )}
+              </div>
+            </motion.div>
+          ))}
+        </div>
+        )}
+      </div>
+
+      {viewing && !editing && (
+        <NoteViewer note={viewing} onClose={() => setViewing(null)} />
+      )}
+
+      {(creating || editing) && (
+        <NoteEditor
+          note={editing}
+          tags={tags}
+          onTagCreated={(t) => setTags((p) => [...p, t])}
+          onClose={() => { onCreatingChange(false); setEditing(null); }}
+          onSaved={() => { onCreatingChange(false); setEditing(null); load(); }}
+        />
+      )}
+    </div>
+  );
+}
+
+// نمایش فقط‌خواندنی یادداشت — کلیک روی کارت این را باز می‌کند، نه ویرایش
+// را (درخواست صریح). ویرایش واقعی فقط از زیر منوی سه‌نقطه در دسترس است.
+function NoteViewer({
+  note, onClose,
+}: {
+  note: Note;
+  onClose: () => void;
+}) {
+  return (
+    <>
+      <LockBodyScroll />
+      <div className="modal-overlay open" onClick={onClose} />
+      <div className="modal-panel open" role="dialog" aria-modal="true">
+        <div className="modal-head">
+          <div className="modal-title">
+            <span className="trade-note-view-dot" style={{ background: note.color }} />
+            {note.title}
+          </div>
+          <button type="button" className="trade-icon-btn" onClick={onClose} aria-label="بستن"><X size={16} /></button>
+        </div>
+
+        {!!note.tags.length && (
+          <div className="trade-tag-row" style={{ marginBottom: 4 }}>
+            {note.tags.map((t) => (
+              <span key={t.id} className="trade-tag-chip active" style={{ "--tag-c": t.color } as CSSProperties}>{t.name}</span>
+            ))}
+          </div>
+        )}
+
+        <div className="trade-note-view-box">
+          <div className="trade-note-view-body">
+            {note.content ? note.content : <span className="trade-note-view-empty">متنی نوشته نشده</span>}
+          </div>
+        </div>
+      </div>
+    </>
+  );
+}
+
+function NoteEditor({
+  note, tags, onTagCreated, onClose, onSaved,
+}: {
+  note: Note | null;
+  tags: TradeTag[];
+  onTagCreated: (t: TradeTag) => void;
+  onClose: () => void;
+  onSaved: () => void;
+}) {
+  const [title, setTitle] = useState(note?.title || "");
+  const [content, setContent] = useState(note?.content || "");
+  const [color, setColor] = useState(note?.color || TAG_COLORS[9]);
+  const [tagIds, setTagIds] = useState<string[]>(note?.tags.map((t) => t.id) || []);
+  const [saving, setSaving] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+
+  async function save() {
+    if (saving) return;
+    if (!title.trim()) { setError("عنوان یادداشت را وارد کن"); return; }
+    setSaving(true);
+    setError(null);
+    const res = await fetch("/api/trade/notes", {
+      method: note ? "PATCH" : "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        id: note?.id, title: title.trim(), content, color,
+        pinned: note?.pinned ?? false, tagIds,
+      }),
+    });
+    const data = await res.json().catch(() => null);
+    setSaving(false);
+    if (!res.ok) { setError(data?.error || "خطا در ذخیره یادداشت"); return; }
+    onSaved();
+  }
+
+  return (
+    <>
+      <LockBodyScroll />
+      <div className="modal-overlay open" onClick={onClose} />
+      <div className="modal-panel open" role="dialog" aria-modal="true">
+        <div className="modal-head">
+          <div className="modal-title">{note ? "ویرایش یادداشت" : "یادداشت جدید"}</div>
+          <button type="button" className="trade-icon-btn" onClick={onClose} aria-label="بستن"><X size={16} /></button>
+        </div>
+
+        <label className="exercise-form-label">عنوان</label>
+        <input className="wsearch-newform-name trade-glass-field" autoFocus value={title} onChange={(e) => setTitle(e.target.value)} maxLength={120} />
+
+        <label className="exercise-form-label">متن</label>
+        <textarea className="wsearch-newform-name trade-glass-field" rows={8} value={content} onChange={(e) => setContent(e.target.value)} maxLength={20000} />
+
+        <label className="exercise-form-label">رنگ</label>
+        <div className="trade-color-row">
+          {TAG_COLORS.map((c) => (
+            <button key={c} type="button" className={`trade-color-dot${c === color ? " active" : ""}`} style={{ background: c }} onClick={() => setColor(c)} aria-label={c} />
+          ))}
+        </div>
+
+        <label className="exercise-form-label">برچسب‌ها</label>
+        <TradeTagField tags={tags} value={tagIds} onChange={setTagIds} onCreated={onTagCreated} />
+
+        {error && <div className="trade-form-error">{error}</div>}
+
+        <div className="trade-modal-actions">
+          <button type="button" className="account-outline-btn" onClick={onClose}>لغو</button>
+          <button type="button" className="trade-primary-btn" onClick={save} disabled={saving}>
+            {saving ? <Spinner size={14} /> : "ذخیره"}
+          </button>
+        </div>
+      </div>
+    </>
+  );
+}

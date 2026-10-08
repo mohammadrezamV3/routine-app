@@ -1,20 +1,78 @@
 "use client";
 
 import { useEffect, useRef, useState } from "react";
+import { useRouter } from "next/navigation";
 import { getCustomOccurrences, getRemovedOccurrences, getDaily, getSetting, setSetting } from "@/lib/storage";
+import { useLiveRefresh } from "@/lib/liveSync";
 import { tasksForDate, timeStartMinutes } from "@/lib/schedule";
 import { FA_WEEKDAY, isoLocal } from "@/lib/jalali";
 import { getNotifPrefs } from "@/lib/notifPrefs";
 import { useLockBodyScroll } from "@/lib/useLockBodyScroll";
+import { fmtRelative } from "@/lib/mentorFormat";
+import { Spinner } from "./Spinner";
+import type { InAppNotification, NotificationsResponse } from "@/lib/mentorTypes";
+import { SETTING_KEYS } from "@/lib/userSettingKeys";
+import { ANNOUNCEMENT_READ_KEEP, type PublicAnnouncement } from "@/lib/announcements";
 
+type ServerNotif = { kind: "server"; id: string; title: string; body: string; url: string | null; readAt: string | null; createdAt: string };
+type AnnouncementNotif = { kind: "announcement"; id: string; title: string; body: string; createdAt: string; read: boolean };
 type NotifItem =
   | { kind: "info"; id: string; title: string; body: string }
-  | { kind: "static"; id: string; title: string; body: string; modalTitle: string; modalBody: string };
+  | AnnouncementNotif
+  | { kind: "static"; id: string; title: string; body: string; modalTitle: string; modalBody: string }
+  | ServerNotif;
+
+// اعلان‌های ذخیره‌شده‌ی سرور (InAppNotification — منتورها و …) فقط برای کاربر
+// لاگین‌کرده؛ برای مهمان یا وقتی قابلیت خاموش است پاسخ ok نیست و بی‌صدا
+// نادیده گرفته می‌شود، پس بقیه‌ی اطلاعیه‌های محاسبه‌شده دست‌نخورده می‌مانند.
+let serverHasMore = false;
+
+function toServerNotif(n: InAppNotification): ServerNotif {
+  return { kind: "server", id: `srv:${n.id}`, title: n.title, body: n.body ?? "", url: n.url, readAt: n.readAt, createdAt: n.createdAt };
+}
+
+async function loadServerNotifications(before?: string): Promise<{ items: ServerNotif[]; hasMore: boolean } | null> {
+  try {
+    const res = await fetch(`/api/notifications${before ? `?before=${encodeURIComponent(before)}` : ""}`, { cache: "no-store" });
+    if (!res.ok) return null;
+    const d: NotificationsResponse = await res.json();
+    return { items: (d.notifications || []).map(toServerNotif), hasMore: !!d.hasMore };
+  } catch {
+    return null;
+  }
+}
+
+// اطلاعیه‌های سراسری ادمین (/admin/announcements) — عمومی، پس برای مهمان هم
+// میاد. «خوانده‌شده» مثل dismissedStaticNotifs در تنظیم کاربر (یا localStorage
+// مهمان) نگه داشته می‌شه. خطا → لیست خالی، بقیه‌ی پنل دست‌نخورده.
+async function loadAnnouncements(): Promise<PublicAnnouncement[]> {
+  try {
+    const res = await fetch("/api/announcements", { cache: "no-store" });
+    if (!res.ok) return [];
+    const d = await res.json();
+    return Array.isArray(d?.announcements) ? d.announcements : [];
+  } catch {
+    return [];
+  }
+}
+
+function announcementId(it: AnnouncementNotif): string {
+  return it.id.slice("ann:".length);
+}
+
+function serverId(it: ServerNotif): string {
+  return it.id.slice("srv:".length);
+}
+
+/** تعداد «نخوانده»‌ها برای نقطه‌ی زنگوله — اعلان سرور خوانده‌شده حساب نمی‌شود */
+export function countUnreadNotifications(items: NotifItem[]): number {
+  return items.filter((i) => (i.kind === "server" ? !i.readAt : i.kind === "announcement" ? !i.read : true)).length;
+}
 
 const EXERCISE_REMINDER_HOUR = 17;
 
-// دو اطلاعیه‌ی ثابت که همیشه (تا وقتی کاربر روشون کلیک نکرده) اولِ لیست
-// نشون داده می‌شن — برخلافِ بقیه‌ی آیتم‌ها که هر بار از نو محاسبه می‌شن،
+// دو اطلاعیه‌ی ثابت که همیشه (تا وقتی کاربر روشون کلیک نکرده) اول لیست
+// نشون داده می‌شن — برخلاف بقیه‌ی آیتم‌ها که هر بار از نو محاسبه می‌شن،
 // اینا فقط یک‌بار (با کلیک) به‌ازای هر کاربر/دستگاه بسته می‌شن، توی همون
 // UserSetting عمومی (کلید dismissedStaticNotifs) که برای مهمون هم localStorage کار می‌کنه.
 const STATIC_NOTIFS: Extract<NotifItem, { kind: "static" }>[] = [
@@ -25,16 +83,16 @@ const STATIC_NOTIFS: Extract<NotifItem, { kind: "static" }>[] = [
     body: "یه نگاه سریع به این‌که آریون چیکار برات می‌کنه.",
     modalTitle: "به آریون خوش اومدی! 👋",
     modalBody:
-      "آریون همه‌ی برنامه‌ت رو یه‌جا نگه می‌داره: روتینِ روزانه، خواب، بدنسازی و کالری، ژورنالِ ترید، و رودمپِ یادگیری — بدونِ اینکه لازم باشه بینِ چندتا اپ جابه‌جا بشی.\n\nهر بخش رو از منوی همبرگری (بالا-راست) پیدا می‌کنی. اگه سوالی داشتی یا چیزی گیر کرد، از همین‌جا (زنگوله‌ی بالای صفحه) یا بخشِ «درباره ما» می‌تونی پیگیرش بشی.\n\nامیدواریم روزهای بهتری رو با آریون بسازی.",
+      "آریون همه‌ی برنامه‌ات رو یه‌جا نگه می‌داره: روتین روزانه، خواب، بدنسازی و کالری، ژورنال ترید، و رودمپ یادگیری — بدون اینکه لازم باشه بین چندتا اپ جابه‌جا بشی.\n\nهر بخش رو از منوی همبرگری (بالا-راست) پیدا می‌کنی. اگه سوالی داشتی یا چیزی گیر کرد، از همین‌جا (زنگوله‌ی بالای صفحه) یا بخش «درباره ما» می‌تونی پیگیرش بشی.\n\nامیدواریم روزهای بهتری رو با آریون بسازی.",
   },
   {
     kind: "static",
     id: "pwa",
     title: "آریون رو نصب کن",
-    body: "برای تجربه‌ی بهتر و سریع‌تر، به‌جای مرورگر، به‌صورتِ اپ نصبش کن.",
-    modalTitle: "نصبِ آریون به‌عنوانِ اپ (PWA)",
+    body: "برای تجربه‌ی بهتر و سریع‌تر، به‌جای مرورگر، به‌صورت اپ نصبش کن.",
+    modalTitle: "نصب آریون به‌عنوان اپ (PWA)",
     modalBody:
-      "آریون رو می‌تونی مثل یه اپِ واقعی روی گوشیت نصب کنی — بدون کافه‌بازار/گوگل‌پلی، مستقیم از همین مرورگر:\n\nآیفون (سافاری): پایینِ صفحه، آیکونِ Share (مربع با فلشِ رو به بالا) رو بزن، بعد «Add to Home Screen» رو انتخاب کن.\n\nاندروید (کروم): از منوی سه‌نقطه‌ی بالای مرورگر، «Add to Home screen» یا «Install app» رو بزن.\n\nبعدِ نصب، آیکونِ آریون میاد رو صفحه‌ی اصلیِ گوشیت و بازش کردن دقیقاً مثلِ یه اپِ معمولیه — سریع‌تر بالا میاد و نوارِ آدرسِ مرورگر هم نشون داده نمی‌شه.",
+      "آریون رو می‌تونی مثل یه اپ واقعی روی گوشیت نصب کنی — بدون کافه‌بازار/گوگل‌پلی، مستقیم از همین مرورگر:\n\nآیفون (سافاری): پایین صفحه، آیکون Share (مربع با فلش رو به بالا) رو بزن، بعد «Add to Home Screen» رو انتخاب کن.\n\nاندروید (کروم): از منوی سه‌نقطه‌ی بالای مرورگر، «Add to Home screen» یا «Install app» رو بزن.\n\nبعد نصب، آیکون آریون میاد رو صفحه‌ی اصلی گوشیت و بازش کردن دقیقا مثل یه اپ معمولیه — سریع‌تر بالا میاد و نوار آدرس مرورگر هم نشون داده نمی‌شه.",
   },
 ];
 
@@ -56,30 +114,38 @@ async function loadExerciseReminder(): Promise<NotifItem | null> {
   }
 }
 
-// همون قوانینِ NotificationEngine (که فقط نوتیف واقعیِ مرورگر می‌فرسته)، ولی
-// این‌جا به‌جای فرستادنِ Notification، همون آیتم‌ها رو به‌شکل لیست برمی‌گردونه —
+// همون قوانین NotificationEngine (که فقط نوتیف واقعی مرورگر می‌فرسته)، ولی
+// این‌جا به‌جای فرستادن Notification، همون آیتم‌ها رو به‌شکل لیست برمی‌گردونه —
 // چون دیتای نوتیف جدایی توی دیتابیس ذخیره نمی‌شه، پنل همیشه «الان چی برات
 // مونده» رو نشون می‌ده، نه تاریخچه‌ی نوتیف‌های قبلی.
 //
-// همه‌ی فچ‌های مستقل موازی می‌رن (قبلاً پشتِ‌سرِهم بودن — dismissedStaticNotifs
-// بعد prefs بعد بقیه — که یعنی جمعِ RTTها روی هم می‌رفت). export شده چون
-// NavDrawer هم همین رو از قبل (موقعِ لودِ صفحه) صدا می‌زنه تا وقتی کاربر
-// واقعاً زنگوله رو می‌زنه، پنل از کشِ آماده باز شه، نه از صفر.
+// همه‌ی فچ‌های مستقل موازی می‌رن (قبلا پشت‌سرهم بودن — dismissedStaticNotifs
+// بعد prefs بعد بقیه — که یعنی جمع RTTها روی هم می‌رفت). export شده چون
+// NavDrawer هم همین رو از قبل (موقع لود صفحه) صدا می‌زنه تا وقتی کاربر
+// واقعا زنگوله رو می‌زنه، پنل از کش آماده باز شه، نه از صفر.
 export async function loadPendingNotifications(): Promise<NotifItem[]> {
-  const [dismissed, prefs] = await Promise.all([
+  const [dismissed, prefs, readAnn, announcements] = await Promise.all([
     getSetting<string[]>("dismissedStaticNotifs", []),
     getNotifPrefs(),
+    getSetting<string[]>(SETTING_KEYS.readAnnouncements, []),
+    loadAnnouncements(),
   ]);
+  const annItems: AnnouncementNotif[] = announcements.map((a) => ({
+    kind: "announcement", id: `ann:${a.id}`, title: a.title, body: a.body, createdAt: a.createdAt, read: readAnn.includes(a.id),
+  }));
   const staticItems = STATIC_NOTIFS.filter((n) => !dismissed.includes(n.id));
   const items: NotifItem[] = [];
 
   const wantsExercise = prefs.exerciseReminders && new Date().getHours() >= EXERCISE_REMINDER_HOUR;
-  const [removedArr, customArr, daily, exerciseItem] = await Promise.all([
+  const [removedArr, customArr, daily, exerciseItem, server] = await Promise.all([
     getRemovedOccurrences(),
     getCustomOccurrences(),
     getDaily(isoLocal(new Date())),
     wantsExercise ? loadExerciseReminder() : Promise.resolve(null),
+    loadServerNotifications(),
   ]);
+  serverHasMore = !!server?.hasMore;
+  const serverItems = server?.items ?? [];
 
   if (prefs.taskReminders) {
     const tasks = tasksForDate(new Date(), { removedOccurrences: new Set(removedArr), customOccurrences: customArr });
@@ -90,7 +156,7 @@ export async function loadPendingNotifications(): Promise<NotifItem[]> {
       if (daily.tasks[t.id]) continue;
 
       if (nowMinutes >= startMinutes - 30 && nowMinutes < startMinutes) {
-        items.push({ kind: "info", id: `soon:${t.id}`, title: "یادآوری برنامه", body: `تا ۳۰ دقیقه دیگه وقت «${t.name}» می‌رسه.` });
+        items.push({ kind: "info", id: `soon:${t.id}`, title: "یادآوری برنامه", body: `تا 30 دقیقه دیگه وقت «${t.name}» می‌رسه.` });
       } else if (nowMinutes >= startMinutes) {
         items.push({ kind: "info", id: `now:${t.id}`, title: "یادآوری برنامه", body: `وقت «${t.name}» رسیده.` });
       }
@@ -99,19 +165,27 @@ export async function loadPendingNotifications(): Promise<NotifItem[]> {
 
   if (exerciseItem) items.push(exerciseItem);
 
-  return [...staticItems, ...items];
+  // اطلاعیه‌های نخوانده‌ی ادمین و نخوانده‌های سرور اول، خوانده‌شده‌ها ته لیست
+  return [
+    ...annItems.filter((n) => !n.read),
+    ...serverItems.filter((n) => !n.readAt),
+    ...staticItems,
+    ...items,
+    ...serverItems.filter((n) => n.readAt),
+    ...annItems.filter((n) => n.read),
+  ];
 }
 
-// کش‌شده بیرونِ کامپوننت (نه یه stateِ داخلی) — پنل هر بار که باز/بسته
-// می‌شه کاملاً unmount/mount می‌شه (طبقِ رندرِ شرطیِ NavDrawer)، پس یه
-// stateِ معمولی هر بار از صفر می‌رفت روی «در حال بارگذاری…». با این کش،
+// کش‌شده بیرون کامپوننت (نه یه state داخلی) — پنل هر بار که باز/بسته
+// می‌شه کاملا unmount/mount می‌شه (طبق رندر شرطی NavDrawer)، پس یه
+// state معمولی هر بار از صفر می‌رفت روی «در حال بارگذاری…». با این کش،
 // دفعه‌ی اول لود می‌شه و بعدش هر بار که باز می‌شه بلافاصله همون دیتای
 // قبلی رو نشون می‌ده (و بی‌سروصدا در پس‌زمینه دوباره تازه‌ش می‌کنه).
 let cachedItems: NotifItem[] | null = null;
 
-// NavDrawer همین رو موقعِ لودِ صفحه صدا می‌زنه (برای نشونِ تعدادِ نخونده‌ها
-// روی خودِ زنگوله) — همون فچ رو توی cachedItems می‌ذاره، پس وقتی کاربر
-// واقعاً زنگوله رو می‌زنه، پنل به‌جای «در حال بارگذاری…» بلافاصله همین
+// NavDrawer همین رو موقع لود صفحه صدا می‌زنه (برای نشون تعداد نخونده‌ها
+// روی خود زنگوله) — همون فچ رو توی cachedItems می‌ذاره، پس وقتی کاربر
+// واقعا زنگوله رو می‌زنه، پنل به‌جای «در حال بارگذاری…» بلافاصله همین
 // دیتای از‌قبل‌آماده رو نشون می‌ده.
 export async function preloadNotifications(): Promise<NotifItem[]> {
   const res = await loadPendingNotifications();
@@ -119,11 +193,72 @@ export async function preloadNotifications(): Promise<NotifItem[]> {
   return res;
 }
 
-export function NotificationPanel({ onClose, anchor }: { onClose: () => void; anchor: { top: number; right: number } }) {
+// closing: والد منو رو برای پخش انیمیشن خروج (menu-motion) چند لحظه بعد از بسته‌شدن نگه می‌داره
+export function NotificationPanel({ onClose, anchor, closing = false }: { onClose: () => void; anchor: { top: number; right: number }; closing?: boolean }) {
   useLockBodyScroll();
   const [items, setItems] = useState<NotifItem[] | null>(cachedItems);
-  const [openStatic, setOpenStatic] = useState<Extract<NotifItem, { kind: "static" }> | null>(null);
+  const [openStatic, setOpenStatic] = useState<{ modalTitle: string; modalBody: string } | null>(null);
+  const [hasMore, setHasMore] = useState(serverHasMore);
+  const [moreBusy, setMoreBusy] = useState(false);
+  const [markAllBusy, setMarkAllBusy] = useState(false);
+  const [serverError, setServerError] = useState<string | null>(null);
   const panelRef = useRef<HTMLDivElement>(null);
+  const router = useRouter();
+
+  function updateItems(fn: (prev: NotifItem[]) => NotifItem[]) {
+    setItems((prev) => {
+      const next = fn(prev ?? []);
+      cachedItems = next;
+      return next;
+    });
+  }
+
+  function markRead(ids: string[] | "all") {
+    const now = new Date().toISOString();
+    updateItems((prev) => prev.map((x) => (x.kind === "server" && !x.readAt && (ids === "all" || ids.includes(serverId(x))) ? { ...x, readAt: now } : x)));
+    return fetch("/api/notifications", {
+      method: "PATCH",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(ids === "all" ? { all: true } : { ids }),
+    });
+  }
+
+  function openServerNotif(it: ServerNotif) {
+    if (!it.readAt) markRead([serverId(it)]).catch(() => {});
+    // فقط مسیر داخلی — url سمت سرور همیشه «/…» است، این فقط کمربند ایمنی است
+    if (it.url && it.url.startsWith("/") && !it.url.startsWith("//")) {
+      onClose();
+      router.push(it.url);
+    }
+  }
+
+  async function markAllRead() {
+    setMarkAllBusy(true);
+    setServerError(null);
+    const snapshot = items;
+    try {
+      const res = await markRead("all");
+      if (!res.ok) throw new Error();
+    } catch {
+      if (snapshot) updateItems(() => snapshot);
+      setServerError("علامت‌گذاری انجام نشد — دوباره تلاش کن");
+    } finally {
+      setMarkAllBusy(false);
+    }
+  }
+
+  async function loadMore() {
+    const oldest = (items ?? []).filter((x): x is ServerNotif => x.kind === "server").map((x) => x.createdAt).sort()[0];
+    if (!oldest) return;
+    setMoreBusy(true);
+    setServerError(null);
+    const res = await loadServerNotifications(oldest);
+    setMoreBusy(false);
+    if (!res) { setServerError("بارگذاری نشد — دوباره تلاش کن"); return; }
+    serverHasMore = res.hasMore;
+    setHasMore(res.hasMore);
+    updateItems((prev) => [...prev, ...res.items.filter((n) => !prev.some((p) => p.id === n.id))]);
+  }
 
   useEffect(() => {
     let cancelled = false;
@@ -131,28 +266,47 @@ export function NotificationPanel({ onClose, anchor }: { onClose: () => void; an
       if (cancelled) return;
       cachedItems = res;
       setItems(res);
+      setHasMore(serverHasMore);
     });
     return () => { cancelled = true; };
   }, []);
 
-  // یه لیسنرِ سطحِ document به‌جای لایه‌ی overlayِ fixed — چون app-topbar
-  // (والدِ این پنل) backdrop-filter داره و برای فرزندهای position:fixed یه
-  // containing-block جدید می‌سازه؛ یعنی اون overlay فقط داخلِ کادرِ خودِ
-  // هدر (۵۸px بالای صفحه) پوشش می‌داد، نه کلِ صفحه، پس کلیک روی بقیه‌ی
+  // پنل باز هم زنده‌ست: اعلان تازه (WebSocket/تب دیگه) همون لحظه به لیست میاد
+  useLiveRefresh(["notifications", "mentor"], () => {
+    loadPendingNotifications().then((res) => {
+      cachedItems = res;
+      setItems(res);
+      setHasMore(serverHasMore);
+    });
+  });
+
+  // یه لیسنر سطح document به‌جای لایه‌ی overlay fixed — چون app-topbar
+  // (والد این پنل) backdrop-filter داره و برای فرزندهای position:fixed یه
+  // containing-block جدید می‌سازه؛ یعنی اون overlay فقط داخل کادر خود
+  // هدر (۵۸px بالای صفحه) پوشش می‌داد، نه کل صفحه، پس کلیک روی بقیه‌ی
   // صفحه هیچ‌وقت بسته‌ش نمی‌کرد.
   useEffect(() => {
     function onDocClick(e: MouseEvent) {
       const target = e.target as HTMLElement;
       if (panelRef.current?.contains(target)) return;
-      // دکمه‌ی زنگوله عمداً از «بیرون» مستثناست — وگرنه mousedown اول
+      // دکمه‌ی زنگوله عمدا از «بیرون» مستثناست — وگرنه mousedown اول
       // پنل رو می‌بست، و بلافاصله click همون کلیک روی زنگوله دوباره
-      // toggle می‌کرد و بازش می‌کرد (پنل هیچ‌وقت واقعاً بسته نمی‌شد).
+      // toggle می‌کرد و بازش می‌کرد (پنل هیچ‌وقت واقعا بسته نمی‌شد).
       if (target.closest?.(".bell-btn")) return;
       onClose();
     }
     document.addEventListener("mousedown", onDocClick);
     return () => document.removeEventListener("mousedown", onDocClick);
   }, [onClose]);
+
+  async function openAnnouncement(it: AnnouncementNotif) {
+    setOpenStatic({ modalTitle: it.title, modalBody: it.body });
+    if (it.read) return;
+    updateItems((prev) => prev.map((x) => (x.id === it.id && x.kind === "announcement" ? { ...x, read: true } : x)));
+    const id = announcementId(it);
+    const readIds = await getSetting<string[]>(SETTING_KEYS.readAnnouncements, []);
+    if (!readIds.includes(id)) await setSetting(SETTING_KEYS.readAnnouncements, [...readIds, id].slice(-ANNOUNCEMENT_READ_KEEP));
+  }
 
   async function openStaticNotif(it: Extract<NotifItem, { kind: "static" }>) {
     setOpenStatic(it);
@@ -165,18 +319,56 @@ export function NotificationPanel({ onClose, anchor }: { onClose: () => void; an
     <>
       <div
         className="notif-panel dash-scope open"
+        data-state={closing ? "closed" : "open"}
         ref={panelRef}
         style={{ position: "fixed", top: anchor.top, right: anchor.right, left: "auto" }}
       >
-        <div className="notif-panel-head">اطلاعیه‌ها</div>
+        <div className="notif-panel-head" style={{ display: "flex", alignItems: "center", justifyContent: "space-between", gap: 8 }}>
+          <span>اطلاعیه‌ها</span>
+          {items?.some((x) => x.kind === "server" && !x.readAt) && (
+            <button type="button" className="trade-ghost-btn" style={{ padding: "3px 8px", fontSize: 11 }} onClick={markAllRead} disabled={markAllBusy}>
+              خواندن همه
+            </button>
+          )}
+        </div>
+        {serverError && <div className="trade-form-error" style={{ margin: "0 4px 6px" }}>{serverError}</div>}
         {items === null ? (
-          <div className="item-line" style={{ padding: "10px 4px" }}>در حال بارگذاری…</div>
+          <div className="item-line is-loading" style={{ padding: "10px 4px" }}>در حال بارگذاری…</div>
         ) : items.length === 0 ? (
           <div className="item-line empty" style={{ padding: "10px 4px" }}>چیزی برای نمایش نیست</div>
         ) : (
           <div className="notif-panel-list">
             {items.map((it) =>
-              it.kind === "static" ? (
+              it.kind === "server" ? (
+                <div
+                  key={it.id}
+                  className="notif-panel-item"
+                  onClick={() => openServerNotif(it)}
+                  role={it.url ? "link" : undefined}
+                  style={{ cursor: it.url ? "pointer" : "default", opacity: it.readAt ? 0.62 : 1 }}
+                >
+                  <div className="notif-panel-item-title">
+                    {!it.readAt && <span aria-label="نخوانده" style={{ color: "var(--accent)", marginInlineEnd: 5 }}>●</span>}
+                    {it.title}
+                  </div>
+                  {it.body && <div className="notif-panel-item-body">{it.body}</div>}
+                  <div className="notif-panel-item-body" style={{ fontSize: 10.5, opacity: 0.75 }}>{fmtRelative(it.createdAt)}</div>
+                </div>
+              ) : it.kind === "announcement" ? (
+                <div
+                  key={it.id}
+                  className="notif-panel-item"
+                  onClick={() => openAnnouncement(it)}
+                  style={{ cursor: "pointer", opacity: it.read ? 0.62 : 1 }}
+                >
+                  <div className="notif-panel-item-title">
+                    {!it.read && <span aria-label="نخوانده" style={{ color: "var(--accent)", marginInlineEnd: 5 }}>●</span>}
+                    {it.title}
+                  </div>
+                  <div className="notif-panel-item-body notif-panel-item-clamp">{it.body}</div>
+                  <div className="notif-panel-item-body" style={{ fontSize: 10.5, opacity: 0.75 }}>{fmtRelative(it.createdAt)}</div>
+                </div>
+              ) : it.kind === "static" ? (
                 <div key={it.id} className="notif-panel-item" onClick={() => openStaticNotif(it)} style={{ cursor: "pointer" }}>
                   <div className="notif-panel-item-title">{it.title}</div>
                   <div className="notif-panel-item-body">{it.body}</div>
@@ -187,6 +379,11 @@ export function NotificationPanel({ onClose, anchor }: { onClose: () => void; an
                   <div className="notif-panel-item-body">{it.body}</div>
                 </div>
               )
+            )}
+            {hasMore && (
+              <button type="button" className="trade-ghost-btn" style={{ alignSelf: "center", margin: "6px auto 2px", display: "flex" }} onClick={loadMore} disabled={moreBusy}>
+                {moreBusy ? <Spinner size={13} /> : "اعلان‌های قبلی"}
+              </button>
             )}
           </div>
         )}

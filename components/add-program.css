@@ -1,0 +1,79 @@
+/* فرم «افزودن برنامه» (AddProgramForm) — پوسته، سطح، بوردر، سایه، بلور و
+   انیمیشن ورود از کلاس‌های مشترک پاپ‌آپ‌های سایت میاد (wsearch-newform،
+   wsearch-newform-overlay، strong-blur، add-program-glass در globals.css)،
+   همون EditOccurrenceForm. اینجا فقط چیدمان داخلی (هدر ثابت، بدنه‌ی
+   اسکرول‌شونده، پاورقی چسبان) با پیشوند apf- مونده. فیلدها و دکمه‌ها
+   بک‌گراند اضافه نمی‌گیرن و از کلاس‌های استاندارد add-program-glass میان. */
+
+/* روی همه‌ی عرض‌ها پاپ‌آپ وسط: اطراف همیشه بک‌دراپ دیده می‌شه (نه تمام‌صفحه،
+   نه باتم‌شیت). اسکرول به بدنه‌ی داخلی منتقل می‌شه تا پاورقی همیشه دیده بشه. */
+.wsearch-newform.apf-popup:has(.add-program-glass){
+  width:min(480px, calc(100vw - 48px)); max-width:min(480px, calc(100vw - 48px));
+  max-height:78vh; max-height:78dvh;
+  overflow:hidden; padding:0;
+  display:flex; flex-direction:column;
+}
+.apf-glass{
+  display:flex; flex-direction:column; flex:1 1 auto; min-height:0;
+}
+.apf-glass > .wsearch-newform-head{
+  flex:none; margin-bottom:0; padding:18px 20px 8px;
+}
+.apf-body{
+  flex:1 1 auto; min-height:0; overflow-y:auto; overflow-x:hidden;
+  -webkit-overflow-scrolling:touch; overscroll-behavior:contain;
+  padding:4px 20px 16px;
+  scrollbar-width:none; -ms-overflow-style:none;
+}
+.apf-body::-webkit-scrollbar{ display:none; width:0; height:0; }
+.apf-section{ margin-top:14px; }
+.apf-section:first-child{ margin-top:0; }
+
+.apf-msg{
+  display:block; margin-top:6px; font-size:11px; color:#E05252; line-height:1.7;
+}
+.apf-name-wrap.apf-invalid .wsearch-newform-name{ border-color:#E05252; }
+
+/* بلوک تیک‌ها: همه‌ی تیک‌های فرم یکجا (بوردر، بدون بک‌گراند) */
+.apf-ticks{
+  margin-top:14px; border:1px solid var(--box-line); border-radius:18px; padding:6px 14px;
+  display:flex; flex-direction:column; min-width:0;
+}
+.apf-ticks > .tick-option{ padding-block:8px; }
+.apf-ticks-list{ padding:0 0 10px; }
+.apf-ticks-list .checklist-editor{ margin-top:10px; }
+
+/* تاریخ‌ها */
+.apf-dates{ display:grid; grid-template-columns:1fr; gap:10px; margin-top:12px; }
+.apf-dates.two{ grid-template-columns:1fr 1fr; }
+.apf-date-field{ min-width:0; }
+.apf-date-label{ display:block; font-size:11px; color:var(--accent); margin-bottom:5px; }
+.apf-dates.apf-invalid .jdate-btn{ border-color:#E05252; }
+.apf-rows{ margin-top:14px; }
+
+/* پاورقی چسبان پایین پاپ‌آپ */
+.apf-foot{
+  flex:none; padding:12px 20px calc(16px + env(safe-area-inset-bottom, 0px));
+  border-top:1px solid var(--surface-line);
+}
+.apf-summary{
+  font-size:12px; font-weight:600; color:var(--accent); line-height:1.8; margin-bottom:8px; text-align:center;
+}
+.apf-error{
+  margin-bottom:10px; padding:8px 12px; border-radius:999px; text-align:center;
+  font-size:12px; font-weight:600; line-height:1.8; color:#E05252; border:1px solid rgba(224,82,82,.35);
+}
+.apf-actions{ display:flex; gap:10px; align-items:stretch; }
+.apf-actions .apf-submit{ flex:1 1 auto; width:auto; min-height:44px; padding:10px 0; }
+.apf-actions .apf-cancel{ flex:none; min-height:44px; padding-inline:22px; }
+.apf-submit.shake{ animation:apf-shake .32s ease; }
+@keyframes apf-shake{
+  0%,100%{ transform:translateX(0); }
+  25%{ transform:translateX(-3px); }
+  50%{ transform:translateX(3px); }
+  75%{ transform:translateX(-1px); }
+}
+
+@media (prefers-reduced-motion: reduce){
+  .apf-submit.shake{ animation:none; }
+}

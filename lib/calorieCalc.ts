@@ -1,5 +1,5 @@
 // محاسبه‌ی هدف کالری روزانه — یک فرمول قطعی و شناخته‌شده (بدون هوش مصنوعی، چون
-// این بخش یک حساب‌وکتاب استانداردِ تغذیه‌ست، نه چیزی که نیاز به تولید متن داشته باشه).
+// این بخش یک حساب‌وکتاب استاندارد تغذیه‌ست، نه چیزی که نیاز به تولید متن داشته باشه).
 
 export type CalorieGoal = "lose" | "maintain" | "gain";
 export type Sex = "male" | "female";
@@ -43,6 +43,14 @@ export function calcAge(birthDate: Date): number {
   return age;
 }
 
+// کف ایمنی کالری روزانه. کسر ۲۰٪ برای هدف «کاهش وزن» روی یک فرد ریز و
+// کم‌تحرک می‌تونه هدف رو ببره *زیر* خود BMR — یعنی زیر کالری لازم برای
+// کارکرد پایه‌ی بدن در حالت استراحت. سقف قبلی (`Math.max(1000, ...)`) هم
+// یک عدد ثابت بود که برای هیچ‌کس واقعا محافظت نمی‌کرد. حالا دو کف داریم:
+// (۱) هیچ‌وقت زیر BMR، (۲) هیچ‌وقت زیر حداقل رایج ایمن بالینی
+// (۱۲۰۰ برای زن، ۱۵۰۰ برای مرد).
+const ABSOLUTE_MIN_KCAL: Record<Sex, number> = { female: 1200, male: 1500 };
+
 export function calcDailyTargetKcal(input: {
   sex: Sex;
   weightKg: number;
@@ -55,11 +63,12 @@ export function calcDailyTargetKcal(input: {
   const bmr = calcBmr(input.sex, input.weightKg, input.heightCm, input.age);
   const tdee = bmr * activityMultiplier(input.gymDaysPerWeek);
   const adjusted = tdee * (1 + goalAdjustment(input.goal, input.trainingPhase));
-  return Math.max(1000, Math.round(adjusted / 10) * 10);
+  const floor = Math.max(ABSOLUTE_MIN_KCAL[input.sex], bmr);
+  return Math.round(Math.max(floor, adjusted) / 10) * 10;
 }
 
 // واحدهای اندازه‌گیری برای ثبت غذا — همه به گرم تبدیل می‌شن قبل از ارسال،
-// چون ذخیره‌سازی و کالریِ هر‌۱۰۰گرم (FoodItem) همیشه بر مبنای گرمه؛ ضریب‌ها
+// چون ذخیره‌سازی و کالری هر‌۱۰۰گرم (FoodItem) همیشه بر مبنای گرمه؛ ضریب‌ها
 // تقریبی و رایج آشپزی‌ان (نه دقیق آزمایشگاهی)
 export type FoodUnit = "gram" | "ml" | "tsp" | "tbsp" | "cup";
 export const UNIT_LABELS: Record<FoodUnit, string> = {
@@ -99,16 +108,16 @@ const MEAL_SPLITS: Record<number, { key: string; label: string; ratio: number }[
     { key: "breakfast", label: "صبحانه", ratio: 0.22 },
     { key: "lunch", label: "ناهار", ratio: 0.26 },
     { key: "dinner", label: "شام", ratio: 0.26 },
-    { key: "snack1", label: "میان‌وعده ۱", ratio: 0.13 },
-    { key: "snack2", label: "میان‌وعده ۲", ratio: 0.13 },
+    { key: "snack1", label: "میان‌وعده 1", ratio: 0.13 },
+    { key: "snack2", label: "میان‌وعده 2", ratio: 0.13 },
   ],
   6: [
     { key: "breakfast", label: "صبحانه", ratio: 0.2 },
-    { key: "snack1", label: "میان‌وعده ۱", ratio: 0.1 },
+    { key: "snack1", label: "میان‌وعده 1", ratio: 0.1 },
     { key: "lunch", label: "ناهار", ratio: 0.25 },
-    { key: "snack2", label: "میان‌وعده ۲", ratio: 0.1 },
+    { key: "snack2", label: "میان‌وعده 2", ratio: 0.1 },
     { key: "dinner", label: "شام", ratio: 0.25 },
-    { key: "snack3", label: "میان‌وعده ۳", ratio: 0.1 },
+    { key: "snack3", label: "میان‌وعده 3", ratio: 0.1 },
   ],
 };
 

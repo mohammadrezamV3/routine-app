@@ -1,82 +1,62 @@
+import { accountUserSelect, toAccountUser } from "@/lib/accountPayload";
 import { NextRequest, NextResponse } from "next/server";
-import { getServerSession } from "next-auth";
-import { authOptions } from "@/lib/auth";
+import { getSessionFast } from "@/lib/serverSession";
 import { prisma } from "@/lib/prisma";
-import { ModuleKey } from "@prisma/client";
-import { clampText, parseIsoDate } from "@/lib/validate";
+import { clampText, isValidPersianName, parseIsoDate } from "@/lib/validate";
 import { checkRateLimit, getClientIp } from "@/lib/rateLimit";
+import { withLiveSync } from "@/lib/realtime";
 
 const GENDER_VALUES = new Set(["male", "female"]);
 
 export async function GET() {
-  const session = await getServerSession(authOptions);
+  const session = await getSessionFast();
   const userId = (session?.user as any)?.id;
   if (!userId) return NextResponse.json({ error: "unauthorized" }, { status: 401 });
 
-  const user = await prisma.user.findUnique({
-    where: { id: userId },
-    select: {
-      email: true,
-      username: true,
-      phone: true,
-      name: true,
-      lastName: true,
-      birthDate: true,
-      gender: true,
-      discoverable: true,
-      market: true,
-      createdAt: true,
-      isSuperAdmin: true,
-      walletBalance: true,
-      referralCode: { select: { code: true } },
-      moduleAccess: { select: { module: true, active: true, expiresAt: true } },
-      subscriptions: {
-        orderBy: { createdAt: "desc" },
-        take: 1,
-        select: { status: true, currentPeriodEnd: true, plan: { select: { nameFa: true, key: true } } },
-      },
-    },
-  });
-
+  const user = await prisma.user.findUnique({ where: { id: userId }, select: accountUserSelect() });
   if (!user) return NextResponse.json({ error: "not found" }, { status: 404 });
-
-  // سوپریوزر همیشه به همه ماژول‌ها دسترسی نامحدود داره — صرف‌نظر از این‌که
-  // جدول ModuleAccess چی می‌گه (که معمولاً seed هم شده، ولی این تضمین اضافه‌ست)
-  const moduleAccess = user.isSuperAdmin
-    ? Object.values(ModuleKey).map((m) => ({ module: m, active: true, expiresAt: null }))
-    : user.moduleAccess;
-
-  const fullName = [user.name, user.lastName].filter(Boolean).join(" ") || null;
-
-  return NextResponse.json({ user: { ...user, firstName: user.name, name: fullName, moduleAccess } });
+  return NextResponse.json({ user: toAccountUser(user) });
 }
 
-// PATCH /api/account  { name?, lastName?, birthDate?, gender?, discoverable? }
-// فقط فیلدهای «امن»ِ پروفایل از همین‌جا قابل تغییرن — ایمیل/شماره موبایل عمداً
-// این‌جا نیستن (نیاز به فلوی تاییدِ جدا دارن، مثلِ signup/forgot-password؛
-// بدونِ اون تاییدیه، اجازه‌ی تغییرِ مستقیم یعنی هرکسی با یه سشنِ سرقتی می‌تونه
-// شماره‌ی بازیابیِ حساب رو عوض کنه). یوزرنیم هم روتِ اختصاصیِ خودش رو داره.
-export async function PATCH(req: NextRequest) {
-  const session = await getServerSession(authOptions);
+// PATCH /api/account  { name?, lastName?, birthDate?, gender?, discoverable?, sharePhone? }
+// فقط فیلدهای «امن» پروفایل از همین‌جا قابل تغییرن — ایمیل/شماره موبایل عمدا
+// این‌جا نیستن (نیاز به فلوی تایید جدا دارن، مثل signup/forgot-password؛
+// بدون اون تاییدیه، اجازه‌ی تغییر مستقیم یعنی هرکسی با یه سشن سرقتی می‌تونه
+// شماره‌ی بازیابی حساب رو عوض کنه). یوزرنیم هم روت اختصاصی خودش رو داره.
+async function handlePATCH(req: NextRequest) {
+  const session = await getSessionFast();
   const userId = (session?.user as any)?.id;
   if (!userId) return NextResponse.json({ error: "unauthorized" }, { status: 401 });
 
   const ip = getClientIp(req.headers);
   const isSuperAdmin = !!(session!.user as any).isSuperAdmin;
-  if (!isSuperAdmin && (!checkRateLimit(`profile-edit:${userId}`, 20, 60 * 60 * 1000) || !checkRateLimit(`profile-edit-ip:${ip}`, 40, 60 * 60 * 1000))) {
+  if (!isSuperAdmin && (!(await checkRateLimit(`profile-edit:${userId}`, 20, 60 * 60 * 1000)) || !(await checkRateLimit(`profile-edit-ip:${ip}`, 40, 60 * 60 * 1000)))) {
     return NextResponse.json({ error: "درخواست‌های زیاد — کمی بعد دوباره امتحان کن" }, { status: 429 });
   }
 
   const body = await req.json().catch(() => ({}));
   const data: Record<string, unknown> = {};
 
+  // نام/نام خانوادگی فقط فارسی — چک سمت کلاینت قابل دور زدن است، پس این‌جا
+  // هم بررسی می‌شود (همان قاعده‌ی بقیه‌ی ورودی‌های این اپ).
   if (body.name !== undefined) {
     const v = clampText(String(body.name || "").trim(), 60);
+    if (v && !isValidPersianName(v)) {
+      return NextResponse.json({ error: "نام باید فقط با حروف فارسی نوشته شود" }, { status: 400 });
+    }
     data.name = v || null;
   }
   if (body.lastName !== undefined) {
     const v = clampText(String(body.lastName || "").trim(), 60);
+    if (v && !isValidPersianName(v)) {
+      return NextResponse.json({ error: "نام خانوادگی باید فقط با حروف فارسی نوشته شود" }, { status: 400 });
+    }
     data.lastName = v || null;
+  }
+  // بیوگرافی: متن آزاد ولی کوتاه — هم توی پروفایل خود کاربر ویرایش
+  // می‌شه هم توی پاپ‌آپ پروفایل دوستان نشون داده می‌شه.
+  if (body.bio !== undefined) {
+    data.bio = clampText(String(body.bio || "").trim(), 200) || null;
   }
   if (body.gender !== undefined) {
     const v = body.gender === null ? null : String(body.gender);
@@ -97,6 +77,31 @@ export async function PATCH(req: NextRequest) {
   if (body.discoverable !== undefined) {
     data.discoverable = !!body.discoverable;
   }
+  if (body.sharePhone !== undefined) {
+    data.sharePhone = !!body.sharePhone;
+  }
+  if (body.heightCm !== undefined) {
+    if (body.heightCm === null) {
+      data.heightCm = null;
+    } else {
+      const v = Number(body.heightCm);
+      if (!Number.isFinite(v) || v < 100 || v > 250) {
+        return NextResponse.json({ error: "قد نامعتبر است" }, { status: 400 });
+      }
+      data.heightCm = Math.round(v);
+    }
+  }
+  if (body.weightKg !== undefined) {
+    if (body.weightKg === null) {
+      data.weightKg = null;
+    } else {
+      const v = Number(body.weightKg);
+      if (!Number.isFinite(v) || v < 20 || v > 300) {
+        return NextResponse.json({ error: "وزن نامعتبر است" }, { status: 400 });
+      }
+      data.weightKg = Math.round(v * 10) / 10;
+    }
+  }
 
   if (Object.keys(data).length === 0) {
     return NextResponse.json({ error: "هیچ فیلدی برای ذخیره ارسال نشده" }, { status: 400 });
@@ -106,3 +111,6 @@ export async function PATCH(req: NextRequest) {
 
   return NextResponse.json({ ok: true });
 }
+
+// حساب/پروفایل روی بقیه‌ی دستگاه‌های همین کاربر همون لحظه (lib/realtime.ts)
+export const PATCH = withLiveSync(["account"], handlePATCH);

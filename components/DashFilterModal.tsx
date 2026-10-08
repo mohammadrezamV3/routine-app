@@ -15,8 +15,8 @@ const IMPORTANCE_TABS: { value: "all" | Importance; label: string }[] = [
   { value: "veryHigh", label: IMPORTANCE_LABELS.veryHigh },
 ];
 
-// پاپ‌آپِ واحدِ فیلتر — هم میزانِ اهمیت هم انتخابِ برنامه‌ها (به‌جای دو
-// کنترلِ جدا: دراپ‌داونِ قدیمی + دکمه‌ی روشن/خاموشِ «فیلتر»). با تیک‌زدن هر
+// پاپ‌آپ واحد فیلتر — هم میزان اهمیت هم انتخاب برنامه‌ها (به‌جای دو
+// کنترل جدا: دراپ‌داون قدیمی + دکمه‌ی روشن/خاموش «فیلتر»). با تیک‌زدن هر
 // برنامه، فقط همون‌ها توی «برنامه‌های امروز» می‌مونن.
 export function DashFilterModal({
   importance,
@@ -32,8 +32,8 @@ export function DashFilterModal({
   importance: "all" | Importance;
   onImportanceChange: (v: "all" | Importance) => void;
   programNames: string[];
-  programTags?: Record<string, string[]>; // اسمِ برنامه → تگ‌هایی که بهش اضافه شده، برای جستجو
-  programImportance?: Record<string, Importance[]>; // اسمِ برنامه → سطوحِ اهمیتی که براش ثبت شده
+  programTags?: Record<string, string[]>; // اسم برنامه → تگ‌هایی که بهش اضافه شده، برای جستجو
+  programImportance?: Record<string, Importance[]>; // اسم برنامه → سطوح اهمیتی که براش ثبت شده
   selectedPrograms: Set<string> | null; // null = فیلتری فعال نیست، یعنی همه نشون داده می‌شن
   onToggleProgram: (name: string) => void;
   onSelectAll: () => void;
@@ -43,9 +43,9 @@ export function DashFilterModal({
   const [query, setQuery] = useState("");
   const isChecked = (name: string) => selectedPrograms === null || selectedPrograms.has(name);
   const normalizedQuery = normalizeFa(query);
-  // انتخابِ «میزان اهمیت» بالا فقط رویِ «برنامه‌های امروز» اثر نمی‌ذاره —
-  // همین‌جا هم لیستِ چک‌باکسِ برنامه‌ها رو محدود می‌کنه به اونایی که واقعاً
-  // اون سطحِ اهمیت رو دارن، تا خودِ دکمه هم قابل‌لمس/معنی‌دار باشه.
+  // انتخاب «میزان اهمیت» بالا فقط روی «برنامه‌های امروز» اثر نمی‌ذاره —
+  // همین‌جا هم لیست چک‌باکس برنامه‌ها رو محدود می‌کنه به اونایی که واقعا
+  // اون سطح اهمیت رو دارن، تا خود دکمه هم قابل‌لمس/معنی‌دار باشه.
   const visibleNames = programNames
     .filter((n) => importance === "all" || (programImportance?.[n] ?? ["low"]).includes(importance))
     .filter(

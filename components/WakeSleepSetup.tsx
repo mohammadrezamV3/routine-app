@@ -5,12 +5,13 @@ import { Clock } from "lucide-react";
 import { DEFAULT_SLEEP, DEFAULT_WAKE, setWakeSleepTimes, WakeSleepTimes } from "@/lib/wakeSleep";
 import { useLockBodyScroll } from "@/lib/useLockBodyScroll";
 import { TimeInput } from "./TimeInput";
+import { Spinner } from "./Spinner";
 
 type Step = "intro" | "form";
 
 // اولین بار که کاربر بعد از ثبت‌نام میره توی برنامه هفتگی، این ازش پرسیده
 // می‌شه؛ همون کامپوننت از پنل کاربری هم برای تغییر دوباره استفاده می‌شه —
-// وقتی initial پر باشه (یعنی ویرایشِ دوباره‌ست، نه اولین‌بار)، مرحله‌ی
+// وقتی initial پر باشه (یعنی ویرایش دوباره‌ست، نه اولین‌بار)، مرحله‌ی
 // راهنما رد می‌شه و مستقیم فرم نشون داده می‌شه.
 export function WakeSleepSetup({
   initial,
@@ -54,7 +55,7 @@ export function WakeSleepSetup({
               </span>
               <div className="text-[14px] font-bold text-dash-text sm:text-[15px]">قبل از هر چیز، یه چیز کوچیک ازت می‌پرسیم</div>
               <div className="text-[11.5px] leading-relaxed text-dash-muted sm:text-[12.5px]">
-                ساعتِ بیداری و خوابت پایه‌ی تایم‌لاینِ روزانه‌ته — باهاش برنامه‌های هر روزت رو روی یه خطِ زمانی می‌چینیم. هر وقت خواستی از پنل کاربری می‌تونی عوضش کنی.
+                ساعت بیداری و خوابت پایه‌ی تایم‌لاین روزانه‌ته — باهاش برنامه‌های هر روزت رو روی یه خط زمانی می‌چینیم. هر وقت خواستی از پنل کاربری می‌تونی عوضش کنی.
               </div>
             </div>
             <button className="auth-full-btn" onClick={() => setStep("form")} style={{ marginTop: 8 }}>
@@ -89,7 +90,7 @@ export function WakeSleepSetup({
           <TimeInput value={sleep} onChange={setSleep} className="wsearch-newform-name" />
 
           <button className="auth-full-btn" onClick={save} disabled={saving} style={{ marginTop: 20 }}>
-            {saving ? "در حال ذخیره…" : "ثبت و ادامه"}
+            {saving ? <Spinner size={15} /> : "ثبت و ادامه"}
           </button>
         </div>
       </div>

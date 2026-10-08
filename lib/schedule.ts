@@ -1,30 +1,56 @@
 // منطق زمان‌بندی روزانه. برنامه از خالی شروع می‌شه — کاربر خودش درس/برنامه
 // اضافه می‌کنه (از دکمه + توی برنامه هفتگی)؛ اینجا فقط customOccurrences و
 // removedOccurrences رو پردازش می‌کنیم. در آینده این تابع باید از مدل
-// RoutineItem (schema.prisma) هم بخونه تا برنامه‌های تکرارشونده واقعاً در
+// RoutineItem (schema.prisma) هم بخونه تا برنامه‌های تکرارشونده واقعا در
 // دیتابیس ذخیره بشن، نه فقط localStorage/UserSetting.
 
 import { isoLocal } from "./jalali";
+import { toEnglishDigits } from "./validate";
 
 export type ScheduleTask = {
   id: string;
   name: string;
-  time: string; // نمایش فارسی، مثلاً "۱۰:۳۰ – ۱۹:۳۰"
+  time: string; // نمایش فارسی، مثلا "۱۰:۳۰ – ۱۹:۳۰"
   custom?: boolean;
 };
 
-const faDigits = ["۰", "۱", "۲", "۳", "۴", "۵", "۶", "۷", "۸", "۹"];
-const faDigitMap: Record<string, string> = {
-  "۰": "0", "۱": "1", "۲": "2", "۳": "3", "۴": "4",
-  "۵": "5", "۶": "6", "۷": "7", "۸": "8", "۹": "9",
-};
-
-export function toEnDigits(s: string): string {
-  return String(s).replace(/[۰-۹]/g, (ch) => faDigitMap[ch] ?? ch);
+/**
+ * یک روز قبل از iso — برای «حذف/انتقال از این روز به بعد»: به‌جای پاک‌کردن
+ * کامل یک occurrence (که گذشته‌اش را هم از تاریخچه محو می‌کند)، endDate
+ * روی همین مقدار ست می‌شود تا هر روز *قبل* از iso دقیقا مثل قبل بماند.
+ */
+export function dayBeforeIso(iso: string): string {
+  const d = new Date(iso + "T00:00:00");
+  d.setDate(d.getDate() - 1);
+  return isoLocal(d);
 }
 
-export function toFaDigits(s: string): string {
-  return String(s).replace(/[0-9]/g, (ch) => faDigits[+ch]);
+/** iso + n روز (n می‌تواند منفی باشد) — به وقت محلی، بدون لغزش DST */
+export function addDaysIso(iso: string, n: number): string {
+  const d = new Date(iso + "T00:00:00");
+  d.setDate(d.getDate() + n);
+  return isoLocal(d);
+}
+
+/** روز هفته‌ی یک تاریخ ISO (مثل Date.getDay: یکشنبه=0 … شنبه=6) */
+export function jsDayOfIso(iso: string): number {
+  return new Date(iso + "T00:00:00").getDay();
+}
+
+/**
+ * همان روز هفته‌ی `jsDay` داخل *همان هفته‌ی شنبه‌شروع* `iso`. برای وقتی
+ * یک برنامه‌ی تک‌روزه روز هفته‌اش عوض می‌شود: «این شنبه» که به یکشنبه برود
+ * باید یکشنبه‌ی همین هفته شود، نه هفته‌ی بعد.
+ */
+export function sameWeekIso(iso: string, jsDay: number): string {
+  const offsetFromSat = (jsDayOfIso(iso) + 1) % 7;
+  return addDaysIso(iso, ((jsDay + 1) % 7) - offsetFromSat);
+}
+
+/** نام قدیمی که جاهای زیادی از آن import می‌کنند — پیاده‌سازی در
+ *  `lib/validate.ts` است تا دو نسخه‌ی جدا از هم درنروند. */
+export function toEnDigits(s: string): string {
+  return toEnglishDigits(s);
 }
 
 export function timeStartMinutes(timeStr: string): number | null {
@@ -42,6 +68,30 @@ export function timeEndMinutes(timeStr: string): number | null {
     if (m) return parseInt(m[1], 10) * 60 + parseInt(m[2], 10);
   }
   return null;
+}
+
+/**
+ * «وقتش گذشته»ی یک برنامه در لحظه‌ی `now` — منبع واحد حالت ضربدر (✕) در
+ * همه‌ی لیست‌ها. روز گذشته همیشه گذشته است؛ برای امروز، پایان بازه (یا خود
+ * ساعت اگر تک‌ساعته باشد) باید رد شده باشد. بازه‌ای که از نیمه‌شب رد می‌شود
+ * (مثلا ۲۳:۰۰ – ۰۱:۰۰) تا آخر امروز «گذشته» حساب نمی‌شود، و برنامه‌ی
+ * بی‌ساعت فقط با تمام‌شدن روزش. ارقام فارسی/عربی با toEnDigits نرمال می‌شوند.
+ */
+// ✕ «وقتش گذشته» فقط بعد از پایان خود روز — طبق درخواست صریح، برنامه‌ی
+// امروز تا آخر امروز ✕ نمی‌خوره حتی اگه ساعتش رد شده باشه.
+export function isDayOver(iso: string, now: Date): boolean {
+  return iso < isoLocal(now);
+}
+
+export function isTaskTimePassed(iso: string, time: string, now: Date): boolean {
+  const today = isoLocal(now);
+  if (iso < today) return true;
+  if (iso > today) return false;
+  const start = timeStartMinutes(time);
+  if (start === null) return false;
+  let end = timeEndMinutes(time) ?? start;
+  if (end < start) end += 24 * 60;
+  return now.getHours() * 60 + now.getMinutes() >= end;
 }
 
 export function splitTimeRange(t: string): { start: string | null; full: string } {
@@ -73,18 +123,21 @@ export function sortTasksByTime(list: ScheduleTask[]): ScheduleTask[] {
  */
 export function tasksForDate(
   d: Date,
-  opts?: { removedOccurrences?: Set<string>; customOccurrences?: { id: string; name: string; jsDay: number; time: string; startDate?: string }[] }
+  opts?: { removedOccurrences?: Set<string>; customOccurrences?: { id: string; name: string; jsDay: number; time: string; startDate?: string; endDate?: string }[] }
 ): ScheduleTask[] {
   const day = d.getDay();
   let filtered: ScheduleTask[] = [];
 
   if (opts?.customOccurrences) {
-    // مقایسه‌ی رشته‌ایِ ISOِ «YYYY-MM-DD» درسته چون هردو طرف همون فرمتِ
-    // قابلِ‌مرتب‌سازیِ لغوی‌ان — نبودِ startDate (آیتم‌های ثبت‌شده قبل از این
-    // فیلد) یعنی همیشه اعمال بشه، نه اینکه رد بشه.
+    // مقایسه‌ی رشته‌ای ISO «YYYY-MM-DD» درسته چون هردو طرف همون فرمت
+    // قابل‌مرتب‌سازی لغوی‌ان — نبود startDate (آیتم‌های ثبت‌شده قبل از این
+    // فیلد) یعنی همیشه اعمال بشه، نه اینکه رد بشه. endDate هم همین‌طور:
+    // «حذف از یک روز به بعد» به‌جای پاک‌کردن کامل آیتم، همین فیلد رو
+    // ست می‌کنه — تا گذشته (روزهای قبل از endDate) دقیقا همون‌طور که
+    // بوده دیده بشه، فقط از endDate به بعد دیگه نیاد.
     const dIso = isoLocal(d);
     opts.customOccurrences.forEach((c) => {
-      if (c.jsDay === day && (!c.startDate || dIso >= c.startDate)) {
+      if (c.jsDay === day && (!c.startDate || dIso >= c.startDate) && (!c.endDate || dIso <= c.endDate)) {
         filtered.push({ id: c.id, name: c.name, time: c.time, custom: true });
       }
     });
@@ -95,10 +148,10 @@ export function tasksForDate(
   return sortTasksByTime(filtered);
 }
 
-// تابعِ خالصِ محاسبه‌ی «چند درصد انجام شده» — عمداً همین‌جاست (نه
+// تابع خالص محاسبه‌ی «چند درصد انجام شده» — عمدا همین‌جاست (نه
 // lib/routineStats.ts) چون این فایل هیچ وابستگی‌ای به next-auth/react نداره؛
-// API routeهای سمتِ سرور (مثلاً محاسبه‌ی درصدِ یک دوست) باید بتونن این تابع
-// رو بدون کشیدنِ کل زنجیره‌ی import سمتِ کلاینتِ storage.ts صدا بزنن.
+// API routeهای سمت سرور (مثلا محاسبه‌ی درصد یک دوست) باید بتونن این تابع
+// رو بدون کشیدن کل زنجیره‌ی import سمت کلاینت storage.ts صدا بزنن.
 export type ScheduleOpts = { removedOccurrences: Set<string>; customOccurrences: { id: string; name: string; jsDay: number; time: string }[] };
 export type DayStats = { completed: number; total: number; pct: number };
 
@@ -114,8 +167,8 @@ export function computeDayStats(
   return { completed, total, pct };
 }
 
-// شروعِ هفته‌ی حاوی `now` — شنبه (jsDay=6). offset با گام‌های ۷روزه هفته
-// رو عقب/جلو می‌بره (برای فلش‌های قبلی/بعدیِ نوار انتخاب تاریخ).
+// شروع هفته‌ی حاوی `now` — شنبه (jsDay=6). offset با گام‌های ۷روزه هفته
+// رو عقب/جلو می‌بره (برای فلش‌های قبلی/بعدی نوار انتخاب تاریخ).
 export function startOfWeek(now: Date, weekOffset = 0): Date {
   const diffToSat = (now.getDay() + 1) % 7;
   const d = new Date(now);

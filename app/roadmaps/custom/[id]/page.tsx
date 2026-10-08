@@ -1,171 +1,430 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { GradientRing } from "@/components/GradientRing";
+import { useCallback, useEffect, useMemo, useState } from "react";
 import { useParams, useRouter } from "next/navigation";
-import { ExternalLink } from "lucide-react";
+import Link from "next/link";
+import {
+  Award, ChevronLeft, ChevronRight, Clock, Flag, Gauge, Layers, Sparkles, Target,
+  Timer, Trash2, UserRound, Wrench,
+} from "lucide-react";
 import { faNum } from "@/lib/jalali";
-import { getSetting, setSetting } from "@/lib/storage";
+import { RoadmapDisclaimer } from "@/components/RoadmapDisclaimer";
+import { RoadmapStageCard, searchUrl } from "@/components/RoadmapStageCard";
+import { RoadmapBuildStatus, BuildInfo } from "@/components/RoadmapBuildStatus";
+import { LoadingBlock, Spinner } from "@/components/Spinner";
+import { SegmentedTabs } from "@/components/SegmentedTabs";
+import { MentorConfirmDialog } from "@/components/MentorConfirmDialog";
+import { useLiveRefresh } from "@/lib/liveSync";
+import { hoursLabel, levelLabel, type PlanStage, type RoadmapPlan } from "@/lib/roadmapPlan";
 
-// لینک‌کردنِ منابع/کارهای رودمپ به یه جست‌وجوی واقعی — نه یه URL ساختگی
-// (که معلوم نیست واقعاً درست باشه)، بلکه یه جست‌وجوی گوگل برای همون عنوان،
-// همراه با موضوعِ رودمپ برای دقیق‌تر بودنِ نتیجه؛ این یعنی هر آیتم واقعاً
-// «قابلِ‌اجرا»ست، نه فقط یه متنِ ایستا.
-function searchUrl(query: string, topic: string): string {
-  return `https://www.google.com/search?q=${encodeURIComponent(`${query} ${topic}`)}`;
-}
-
-type Roadmap = {
-  id: string;
-  title: string;
-  topic: string;
-  note: string;
-  stations: { t: string; items: string[] }[];
-  tips: string[];
-  proTips: string[];
-  books: string[];
+type Detail = {
+  roadmap: { id: string; topic: string; goal: string | null; createdAt: string };
+  plan: RoadmapPlan;
+  stepProgress: Record<string, boolean>;
+  progress: { total: number; done: number; pct: number };
+  build: BuildInfo;
 };
 
-const TM_BACK_SVG = (
-  <svg viewBox="0 0 24 24" fill="none">
-    <path d="M5 12h14M13 6l6 6-6 6" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
-  </svg>
-);
+type Tab = "stages" | "guide" | "overview";
 
-export default function CustomRoadmapDetailPage() {
+function pctOf(stages: PlanStage[], progress: Record<string, boolean>) {
+  const done = stages.filter((s) => progress[String(s.n)]).length;
+  return { total: stages.length, done, pct: stages.length ? Math.round((done / stages.length) * 100) : 0 };
+}
+
+export default function RoadmapDetailPage() {
   const params = useParams<{ id: string }>();
   const router = useRouter();
-  const [data, setData] = useState<Roadmap | null | undefined>(undefined);
-  const [done, setDone] = useState<Record<number, boolean>>({});
-  const [squashIdx, setSquashIdx] = useState<number | null>(null);
+  const [data, setData] = useState<Detail | null | undefined>(undefined);
+  const [tab, setTab] = useState<Tab>("stages");
+  const [openStages, setOpenStages] = useState<Set<number>>(new Set());
+  const [busy, setBusy] = useState<string | null>(null); // "guide" | "stage-3"
+  const [error, setError] = useState<string | null>(null);
+  const [confirmDelete, setConfirmDelete] = useState(false);
+  const [deleting, setDeleting] = useState(false);
+  const [deleteError, setDeleteError] = useState<string | null>(null);
 
-  const settingKey = `roadmapDone:custom-${params.id}`;
-
-  useEffect(() => {
-    fetch(`/api/roadmaps/${params.id}`).then((r) => r.json()).then((res) => setData(res.roadmap || null));
-    getSetting<Record<number, boolean>>(settingKey, {}).then(setDone);
-    // eslint-disable-next-line react-hooks/exhaustive-deps
+  const load = useCallback(() => {
+    fetch(`/api/roadmaps/${params.id}`)
+      .then((r) => (r.ok ? r.json() : null))
+      .then((d: Detail | null) => {
+        setData(d ?? null);
+        // اولین مرحله‌ی تمام‌نشده خودش باز می‌شود — همان جایی که کاربر باید ادامه دهد.
+        if (d) {
+          const next = d.plan.stages.find((s) => !d.stepProgress[String(s.n)]);
+          setOpenStages((prev) => (prev.size ? prev : new Set(next ? [next.n] : [])));
+        }
+      })
+      .catch(() => setData(null));
   }, [params.id]);
 
-  function toggle(idx: number) {
-    const next = { ...done, [idx]: !done[idx] };
-    setDone(next);
-    setSetting(settingKey, next);
-    setSquashIdx(idx);
-    setTimeout(() => setSquashIdx(null), 450);
+  useEffect(() => { load(); }, [load]);
+  // زنده: پیشرفت/ساخت همین مسیر از تب دیگه یا برگشت به تب. نوشتن‌های همین
+  // صفحه نادیده گرفته می‌شن — تیک‌ها خودشون optimisticن و پژواک هر تیک وسط
+  // چند تیک پشت‌سرهم فقط پرش می‌ساخت.
+  useLiveRefresh("roadmaps", load, { remoteOnly: true });
+
+  /**
+   * تیک فورا روی صفحه می‌نشیند و بعد ذخیره می‌شود — نه برعکس؛ اگر ذخیره
+   * شکست بخورد، جواب سرور حالت واقعی را برمی‌گرداند.
+   */
+  async function saveProgress(key: string, body: { n: number; task?: number; done: boolean }) {
+    if (!data) return;
+    const optimistic = { ...data.stepProgress };
+    if (body.done) optimistic[key] = true;
+    else delete optimistic[key];
+    setData({ ...data, stepProgress: optimistic, progress: pctOf(data.plan.stages, optimistic) });
+
+    const res = await fetch(`/api/roadmaps/${params.id}/progress`, {
+      method: "PATCH",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(body),
+    }).catch(() => null);
+    if (!res?.ok) { load(); return; }
+    const out = await res.json().catch(() => null);
+    if (out) setData((prev) => (prev ? { ...prev, stepProgress: out.stepProgress, progress: out.progress } : prev));
+  }
+
+  function toggleStage(st: PlanStage) {
+    if (!data) return;
+    const key = String(st.n);
+    saveProgress(key, { n: st.n, done: !data.stepProgress[key] });
+  }
+
+  function toggleTask(st: PlanStage, i: number) {
+    if (!data) return;
+    const key = `${st.n}.${i + 1}`;
+    saveProgress(key, { n: st.n, task: i, done: !data.stepProgress[key] });
+  }
+
+  async function regenerate(target: "guide" | "stage", n?: number) {
+    if (!data || busy) return;
+    const stage = n ? data.plan.stages.find((s) => s.n === n) : undefined;
+    // ساخت دوباره‌ی مرحله‌ای که جزئیات دارد، تیک کارهایش را هم می‌برد.
+    if (stage?.detailed && !window.confirm("جزئیات این مرحله دوباره ساخته شود؟ تیک کارهایش پاک می‌شود.")) return;
+
+    const tag = target === "guide" ? "guide" : `stage-${n}`;
+    setBusy(tag);
+    setError(null);
+    try {
+      const res = await fetch(`/api/roadmaps/${params.id}/regenerate`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ target, n }),
+      });
+      const out = await res.json().catch(() => null);
+      if (!res.ok) { setError(out?.error || "ساخته نشد — دوباره امتحان کن"); return; }
+      setData((prev) => {
+        if (!prev) return prev;
+        if (target === "guide") return { ...prev, plan: { ...prev.plan, guide: out.guide } };
+        const stages = prev.plan.stages.map((s) => (s.n === n ? out.stage : s));
+        return {
+          ...prev,
+          plan: { ...prev.plan, stages },
+          stepProgress: out.stepProgress,
+          progress: pctOf(stages, out.stepProgress),
+        };
+      });
+    } catch {
+      setError("ارتباط با سرور برقرار نشد — دوباره امتحان کن");
+    } finally {
+      setBusy(null);
+    }
+  }
+
+  // مرحله‌هایی که موقع ساخت اولیه به بودجه‌ی زمانی نرسیدن (حالا که جزئیات
+  // هر مرحله خیلی ریزتر و طولانی‌تره، این طبیعیه) یکی‌یکی و خودکار کامل می‌شن —
+  // کاربر لازم نیست برای هرکدوم دکمه بزنه. با اولین خطا متوقف می‌شه تا حلقه نشه.
+  const [autoFillStopped, setAutoFillStopped] = useState(false);
+  // ساخت پس‌زمینه هنوز در جریان است → هر ۵ ثانیه تازه کن تا مرحله‌های آماده‌شده
+  // بیایند؛ و تا وقتی سرور خودش دارد می‌سازد، این صفحه هیچ مرحله‌ای را جدا نمی‌سازد.
+  const serverBuilding = data?.build?.status === "building";
+  useEffect(() => {
+    if (!serverBuilding) return;
+    const t = setInterval(load, 5000);
+    return () => clearInterval(t);
+  }, [serverBuilding, load]);
+
+  useEffect(() => {
+    if (!data || busy || autoFillStopped || data.build?.status === "building") return;
+    const pending = data.plan.stages.find((s) => !s.detailed);
+    if (pending) { regenerate("stage", pending.n).then(() => {}); return; }
+    if (!data.plan.guide) regenerate("guide").then(() => {});
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [data, busy, autoFillStopped]);
+  useEffect(() => { if (error) setAutoFillStopped(true); }, [error]);
+
+  function openStage(n: number) {
+    setTab("stages");
+    setOpenStages((prev) => new Set(prev).add(n));
+    requestAnimationFrame(() =>
+      document.getElementById(`stage-${n}`)?.scrollIntoView({ behavior: "smooth", block: "start" })
+    );
+  }
+
+  function openDeleteConfirm() {
+    setDeleteError(null);
+    setConfirmDelete(true);
   }
 
   async function removeRoadmap() {
-    await fetch(`/api/roadmaps/${params.id}`, { method: "DELETE" });
+    if (deleting) return;
+    setDeleting(true);
+    setDeleteError(null);
+    const res = await fetch(`/api/roadmaps/${params.id}`, { method: "DELETE" }).catch(() => null);
+    if (!res?.ok) {
+      setDeleting(false);
+      setDeleteError(res ? "حذف نشد — دوباره امتحان کن" : "ارتباط با سرور برقرار نشد — اتصال را چک کن");
+      return;
+    }
     router.push("/roadmaps");
   }
 
-  if (data === undefined) {
+  const guideBlocks = useMemo(() => parseGuide(data?.plan.guide || ""), [data?.plan.guide]);
+
+  if (data === undefined) return <section className="roadmaps-desktop rp-page"><LoadingBlock /></section>;
+  if (data === null) {
     return (
-      <section style={{ borderTop: "none" }}>
-        <div className="tm-head-row">
-          <button className="tm-back-btn" onClick={() => router.push("/roadmaps")}>{TM_BACK_SVG}</button>
-          <h1>در حال بارگذاری…</h1>
-        </div>
+      <section className="roadmaps-desktop rp-page">
+        <Link href="/roadmaps" className="trade-back-link"><ChevronRight size={15} /> رودمپ‌ها</Link>
+        <div className="trade-empty-state"><p>این مسیر پیدا نشد</p></div>
       </section>
     );
   }
 
-  if (!data) {
-    return (
-      <section style={{ borderTop: "none" }}>
-        <div className="tm-head-row">
-          <button className="tm-back-btn" onClick={() => router.push("/roadmaps")}>{TM_BACK_SVG}</button>
-          <h1>رودمپ پیدا نشد</h1>
-        </div>
-      </section>
-    );
-  }
-
-  const stations = data.stations || [];
-  const doneCount = stations.reduce((s, _st, i) => s + (done[i] ? 1 : 0), 0);
-  const pct = stations.length ? Math.round((doneCount / stations.length) * 100) : 0;
-  const railPct = stations.length > 1 ? (doneCount / (stations.length - 1)) * 100 : doneCount ? 100 : 0;
+  const { plan, progress, roadmap } = data;
+  const nextStage = plan.stages.find((s) => !data.stepProgress[String(s.n)]);
+  const pending = plan.stages.filter((s) => !s.detailed).length;
+  const R = 26;
+  const C = 2 * Math.PI * R;
 
   return (
-    <section style={{ borderTop: "none" }}>
-      <div className="tm-head-row" style={{ justifyContent: "space-between" }}>
-        <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
-          <button className="tm-back-btn" onClick={() => router.push("/roadmaps")}>{TM_BACK_SVG}</button>
-          <h1>{data.title}</h1>
-        </div>
-        <button onClick={removeRoadmap} style={{ borderColor: "#E05252", color: "#E05252" }}>حذف</button>
-      </div>
-      <div className="section-note">{data.note}</div>
+    <section className="roadmaps-desktop rp-page">
+      <Link href="/roadmaps" className="trade-back-link"><ChevronRight size={15} /> رودمپ‌ها</Link>
 
-      {!!stations.length && (
-        <div className="tm-progress-summary">
-          <div className="mono">
-            {faNum(doneCount)}<span className="mx-1">/</span>{faNum(stations.length)}<span> ایستگاه تکمیل‌شده</span>
+      <RoadmapBuildStatus build={data.build} />
+
+      <header className="trade-surface rp-hero">
+        <div className="rp-hero-top">
+          <span className="rp-eyebrow">مسیر یادگیری · {roadmap.topic}</span>
+          <button type="button" className="trade-icon-btn danger" aria-label="حذف مسیر" onClick={openDeleteConfirm}>
+            <Trash2 size={16} />
+          </button>
+        </div>
+
+        <div className="rp-hero-main">
+          <div className="rp-hero-text">
+            <h1>{plan.title}</h1>
+            {plan.summary && <p>{plan.summary}</p>}
           </div>
-          <div className="mono" style={{ color: "var(--muted)", fontSize: 12 }}>{faNum(pct)}٪</div>
-        </div>
-      )}
-      {!!stations.length && (
-        <div className="tm-progress-bar"><div className="tm-progress-bar-fill" style={{ width: `${pct}%` }} /></div>
-      )}
-
-      <div className="treasure-map">
-        {!!stations.length && (
-          <div className="tm-rail"><div className="tm-rail-fill" style={{ height: `${railPct}%` }} /></div>
-        )}
-        {stations.map((s, i) => {
-          const isDone = !!done[i];
-          return (
-            <div key={i} className={`tm-station clickable ${isDone ? "past" : ""}`}>
-              <div className={`tm-marker mono${squashIdx === i ? " squash" : ""}`} onClick={() => toggle(i)}>
-                <span className="tmm-num">{faNum(i + 1)}</span>
-                <svg className="tmm-check" viewBox="0 0 24 24" fill="none">
-                  <path d="M5 12.5l4.5 4.5L19 7.5" stroke="var(--bg)" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round" />
-                </svg>
-              </div>
-              <div className="tm-title">{s.t}</div>
-              {!!s.items?.length && (
-                <ul className="tm-item-list">
-                  {s.items.map((it, ii) => (
-                    <li key={ii}>
-                      <a href={searchUrl(it, data.topic)} target="_blank" rel="noopener noreferrer">
-                        {it}
-                        <ExternalLink size={11} />
-                      </a>
-                    </li>
-                  ))}
-                </ul>
-              )}
+          <div className="rp-ring" aria-label={`${progress.pct} درصد`}>
+            <GradientRing value={progress.pct / 100} size={74} stroke={5} />
+            <div className="rp-ring-text">
+              <b>{faNum(progress.pct)}٪</b>
+              <span>{faNum(progress.done)}/{faNum(progress.total)}</span>
             </div>
-          );
-        })}
+          </div>
+        </div>
+
+        {roadmap.goal && (
+          <div className="rp-hero-goal"><Target size={14} /><span><b>هدفت:</b> {roadmap.goal}</span></div>
+        )}
+
+        <div className="rp-stats">
+          {plan.totalDuration && <Stat icon={<Clock size={14} />} label="مدت کل" value={plan.totalDuration} />}
+          <Stat icon={<Layers size={14} />} label="مرحله" value={faNum(plan.stages.length)} />
+          {levelLabel(plan.meta.level) && <Stat icon={<Gauge size={14} />} label="سطح شروع" value={levelLabel(plan.meta.level)!} />}
+          {hoursLabel(plan.meta.weeklyHours) && <Stat icon={<Timer size={14} />} label="در هفته" value={hoursLabel(plan.meta.weeklyHours)!} />}
+        </div>
+
+        {nextStage && (
+          <button type="button" className="rp-next" onClick={() => openStage(nextStage.n)}>
+            <span className="rp-next-label">قدم بعدی</span>
+            <span className="rp-next-title">مرحله‌ی {faNum(nextStage.n)} — {nextStage.title}</span>
+            <ChevronLeft size={16} />
+          </button>
+        )}
+      </header>
+
+      {confirmDelete && (
+        <MentorConfirmDialog
+          message={`مسیر «${plan.title}» و همه‌ی پیشرفتش حذف شود؟ این کار برگشت‌پذیر نیست.`}
+          confirmLabel="حذف مسیر"
+          busy={deleting}
+          error={deleteError}
+          onConfirm={removeRoadmap}
+          onCancel={() => { if (!deleting) setConfirmDelete(false); }}
+        />
+      )}
+
+      {!!pending && (
+        <div className="rp-notice">
+          جزئیات {faNum(pending)} مرحله در ساخت اول نرسید — مرحله را باز کن و «ساخت جزئیات» را بزن.
+        </div>
+      )}
+      {error && <div className="trade-form-error">{error}</div>}
+
+      <div className="rp-tabs">
+        <SegmentedTabs
+          active={tab}
+          onChange={setTab}
+          options={[
+            { value: "stages" as const, label: "مرحله‌ها" },
+            { value: "guide" as const, label: "راهنما" },
+            { value: "overview" as const, label: "نمای کلی" },
+          ]}
+        />
       </div>
 
-      <div className="tm-extra">
-        <div className="domain-sub">نکات کلیدی</div>
-        <ul>{(data.tips || []).map((t, i) => <li key={i}>{t}</li>)}</ul>
-      </div>
-      {!!data.proTips?.length && (
-        <div className="tm-extra">
-          <div className="domain-sub">مسیر حرفه‌ای‌شدن</div>
-          <ul>{data.proTips.map((t, i) => <li key={i}>{t}</li>)}</ul>
+      {tab === "stages" && (
+        <ol className="rp-timeline">
+          {plan.stages.map((st) => (
+            <RoadmapStageCard
+              key={st.n}
+              stage={st}
+              topic={roadmap.topic}
+              open={openStages.has(st.n)}
+              onToggleOpen={() =>
+                setOpenStages((prev) => {
+                  const next = new Set(prev);
+                  if (next.has(st.n)) next.delete(st.n);
+                  else next.add(st.n);
+                  return next;
+                })
+              }
+              progress={data.stepProgress}
+              onToggleStage={() => toggleStage(st)}
+              onToggleTask={(i) => toggleTask(st, i)}
+              onRegenerate={() => regenerate("stage", st.n)}
+              regenerating={busy === `stage-${st.n}`}
+            />
+          ))}
+        </ol>
+      )}
+
+      {tab === "guide" && (
+        <article className="trade-surface rp-guide">
+          {guideBlocks.length ? (
+            guideBlocks.map((b, i) =>
+              b.kind === "h" ? (
+                <h2 key={i}>{b.text}</h2>
+              ) : b.kind === "li" ? (
+                <div key={i} className="rp-guide-li">{b.text}</div>
+              ) : (
+                <p key={i}>{b.text}</p>
+              )
+            )
+          ) : (
+            <div className="rp-pending-box">
+              <p>متن راهنمای این مسیر هنوز ساخته نشده.</p>
+              <button type="button" className="trade-primary-btn" onClick={() => regenerate("guide")} disabled={!!busy}>
+                {busy === "guide" ? <Spinner size={13} /> : <Sparkles size={14} />}
+                {busy === "guide" ? "در حال ساخت…" : "ساخت راهنما"}
+              </button>
+            </div>
+          )}
+        </article>
+      )}
+
+      {tab === "overview" && (
+        <div className="rp-overview">
+          {plan.meta.audience && (
+            <OverviewCard icon={<UserRound size={15} />} title="این مسیر برای کیه">
+              <p className="rp-ov-text">{plan.meta.audience}</p>
+            </OverviewCard>
+          )}
+          {!!plan.meta.outcomes.length && (
+            <OverviewCard icon={<Target size={15} />} title="آخر مسیر چه کارهایی ازت برمیاد">
+              <ul className="rp-done">
+                {plan.meta.outcomes.map((o, i) => <li key={i}><Target size={13} /><span>{o}</span></li>)}
+              </ul>
+            </OverviewCard>
+          )}
+          {!!plan.meta.prerequisites.length && (
+            <OverviewCard icon={<Flag size={15} />} title="قبل از شروع">
+              <div className="rp-tags">
+                {plan.meta.prerequisites.map((p, i) => <span key={i} className="rp-tag">{p}</span>)}
+              </div>
+            </OverviewCard>
+          )}
+          {!!plan.tools.length && (
+            <OverviewCard icon={<Wrench size={15} />} title="ابزارهای کل مسیر">
+              <ul className="rp-tools">
+                {plan.tools.map((t, i) => (
+                  <li key={i}>
+                    <a href={searchUrl(t.name, roadmap.topic)} target="_blank" rel="noopener noreferrer" className="rp-tool-name">
+                      {t.name}
+                    </a>
+                    {t.use && <span>{t.use}</span>}
+                  </li>
+                ))}
+              </ul>
+            </OverviewCard>
+          )}
+          {!!plan.meta.certifications.length && (
+            <OverviewCard icon={<Award size={15} />} title="مدرک‌ها">
+              <ul className="rp-tools">
+                {plan.meta.certifications.map((c, i) => (
+                  <li key={i}><b className="rp-tool-name">{c.name}</b>{c.note && <span>{c.note}</span>}</li>
+                ))}
+              </ul>
+            </OverviewCard>
+          )}
+          <OverviewCard icon={<Layers size={15} />} title="همه‌ی مرحله‌ها">
+            <ol className="rp-mini-stages">
+              {plan.stages.map((s) => (
+                <li key={s.n} className={data.stepProgress[String(s.n)] ? "done" : ""}>
+                  <button type="button" onClick={() => openStage(s.n)}>
+                    <span className="rp-mini-n">{faNum(s.n)}</span>
+                    <span className="rp-mini-title">{s.title}</span>
+                    {s.duration && <span className="rp-mini-dur">{s.duration}</span>}
+                  </button>
+                </li>
+              ))}
+            </ol>
+          </OverviewCard>
         </div>
       )}
-      {!!data.books?.length && (
-        <div className="tm-extra">
-          <div className="domain-sub">منابع پیشنهادی</div>
-          <ul>
-            {data.books.map((t, i) => (
-              <li key={i}>
-                <a href={searchUrl(t, data.topic)} target="_blank" rel="noopener noreferrer">
-                  {t}
-                  <ExternalLink size={11} />
-                </a>
-              </li>
-            ))}
-          </ul>
-        </div>
-      )}
+
+      <RoadmapDisclaimer />
     </section>
   );
+}
+
+function Stat({ icon, label, value }: { icon: React.ReactNode; label: string; value: string }) {
+  return (
+    <div className="rp-stat">
+      <span className="rp-stat-label">{icon}{label}</span>
+      <span className="rp-stat-value">{value}</span>
+    </div>
+  );
+}
+
+function OverviewCard({ icon, title, children }: { icon: React.ReactNode; title: string; children: React.ReactNode }) {
+  return (
+    <div className="trade-surface rp-ov-card">
+      <div className="rp-sec-title">{icon}{title}</div>
+      {children}
+    </div>
+  );
+}
+
+type GuideBlock = { kind: "h" | "p" | "li"; text: string };
+
+/**
+ * متن راهنما را به بلوک‌های قابل رندر می‌شکند. عمدا پارسر مارک‌داون
+ * کامل نیست: مدل فقط تیتر (##)، بند و آیتم فهرست می‌دهد و هر سه به‌صورت
+ * متن ساده رندر می‌شوند — هیچ HTMLی از خروجی مدل اجرا نمی‌شود.
+ */
+function parseGuide(guide: string): GuideBlock[] {
+  const out: GuideBlock[] = [];
+  for (const rawLine of guide.split("\n")) {
+    const line = rawLine.trim();
+    if (!line) continue;
+    if (line.startsWith("#")) out.push({ kind: "h", text: line.replace(/^#+\s*/, "").replace(/\*\*/g, "") });
+    else if (/^([-*•]|\d+[.)])\s+/.test(line)) out.push({ kind: "li", text: line.replace(/^([-*•]|\d+[.)])\s+/, "").replace(/\*\*/g, "") });
+    else out.push({ kind: "p", text: line.replace(/\*\*/g, "") });
+  }
+  return out;
 }

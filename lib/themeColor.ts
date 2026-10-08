@@ -1,21 +1,21 @@
-// رنگِ نوارِ وضعیت/ناچِ مرورگر (`<meta name="theme-color">`).
+// رنگ نوار وضعیت/ناچ مرورگر (`<meta name="theme-color">`).
 //
-// باگی که این فایل حل می‌کنه: قبلاً `themeColor` توی export‌ِ `viewport`ِ
-// نکست تعریف شده بود، یعنی *نکست* مالکِ اون تگ بود، ولی اسکریپتِ inline و
+// باگی که این فایل حل می‌کنه: قبلا `themeColor` توی export‌ `viewport`
+// نکست تعریف شده بود، یعنی *نکست* مالک اون تگ بود، ولی اسکریپت inline و
 // ThemeProvider مستقیم با setAttribute دستکاریش می‌کردن. نتیجه‌اش این بود که
-// سیستمِ متادیتای نکست بعدِ هیدریت نسخه‌ی خودش رو **دوباره تزریق** می‌کرد و
+// سیستم متادیتای نکست بعد هیدریت نسخه‌ی خودش رو **دوباره تزریق** می‌کرد و
 // صفحه با **دو تا** متای theme-color می‌موند:
 //
-//     <meta name="theme-color" content="#F4E3C9">   ← درست (تمِ روشن)
+//     <meta name="theme-color" content="#F4E3C9">   ← درست (تم روشن)
 //     <meta name="theme-color" content="#0E1011">   ← بیات، دوباره تزریق‌شده
 //
 // مرورگر بین چندتا متا یکی رو می‌گیره و ThemeProvider هم فقط `querySelector`
-// (یعنی *اولی*) رو آپدیت می‌کرد — پس اون یکی برای همیشه با رنگِ تمِ اشتباه
-// می‌موند. این دقیقاً همون «بعد از یک دور سوییچ‌کردنِ تم، رنگِ بالای صفحه
-// گیر می‌کنه و نمی‌ره» بود. (بازتولیدشده: ریلود در تمِ روشن → دو متا.)
+// (یعنی *اولی*) رو آپدیت می‌کرد — پس اون یکی برای همیشه با رنگ تم اشتباه
+// می‌موند. این دقیقا همون «بعد از یک دور سوییچ‌کردن تم، رنگ بالای صفحه
+// گیر می‌کنه و نمی‌ره» بود. (بازتولیدشده: ریلود در تم روشن → دو متا.)
 //
-// راه‌حل: `themeColor` از `viewport` برداشته شد تا نکست اصلاً این تگ رو
-// نسازه؛ حالا خودِ اپ تنها مالکشه و همیشه دقیقاً یکی نگهش می‌داره.
+// راه‌حل: `themeColor` از `viewport` برداشته شد تا نکست اصلا این تگ رو
+// نسازه؛ حالا خود اپ تنها مالکشه و همیشه دقیقا یکی نگهش می‌داره.
 
 export const THEME_COLORS = {
   dark: "#0E1011",
@@ -24,14 +24,34 @@ export const THEME_COLORS = {
 
 export type ThemeName = keyof typeof THEME_COLORS;
 
+/** نام کوکی تم — layout.tsx (سمت سرور) و اسکریپت inline هر دو از همین می‌خونن. */
+export const THEME_COOKIE = "theme";
+
 /**
- * دقیقاً یک `<meta name="theme-color">` با رنگِ تمِ داده‌شده باقی می‌ذاره:
+ * فقط کوکی تم رو (بدون نوشتن دیتابیس) هم‌گام می‌کنه.
+ *
+ * چرا جدا از setThemeSetting: وقتی تم ذخیره‌شده‌ی حساب (DB) با کوکی این
+ * دستگاه فرق داره (تم روی دستگاه دیگه عوض شده، کوکی پاک/منقضی شده، یا
+ * اپ نصب‌شده کوکی جدا داره)، ThemeProvider بعد از لود تم رو به مقدار DB
+ * برمی‌گردونه — ولی چون اون مقدار «از قبل ذخیره‌ست»، setThemeSetting صدا
+ * زده نمی‌شد و کوکی هیچ‌وقت درست نمی‌شد. نتیجه: *هر* بار باز کردن اپ،
+ * اول تم کوکی رسم می‌شد و بعد به تم حساب فید می‌کرد. با نوشتن کوکی در
+ * همون لحظه، این فقط یک بار (اولین لود بعد از ناهماهنگی) رخ می‌ده.
+ */
+export function writeThemeCookie(theme: ThemeName) {
+  if (typeof document === "undefined") return;
+  const secure = typeof location !== "undefined" && location.protocol === "https:" ? "; secure" : "";
+  document.cookie = `${THEME_COOKIE}=${theme}; path=/; max-age=31536000; samesite=lax${secure}`;
+}
+
+/**
+ * دقیقا یک `<meta name="theme-color">` با رنگ تم داده‌شده باقی می‌ذاره:
  * اضافه‌ها حذف می‌شن، و اگه هیچی نبود ساخته می‌شه.
  */
 export function syncThemeColorMeta(theme: ThemeName) {
   if (typeof document === "undefined") return;
   const all = document.querySelectorAll('meta[name="theme-color"]');
-  // هر تگِ اضافه‌ای (مثلاً چیزی که بعدِ هیدریت دوباره تزریق شده) دور ریخته می‌شه
+  // هر تگ اضافه‌ای (مثلا چیزی که بعد هیدریت دوباره تزریق شده) دور ریخته می‌شه
   for (let i = 1; i < all.length; i++) all[i].remove();
   let meta = all[0] as HTMLMetaElement | undefined;
   if (!meta) {
@@ -45,12 +65,12 @@ export function syncThemeColorMeta(theme: ThemeName) {
 /**
  * `data-theme` باید هم روی `<html>` باشه هم روی `<body>`.
  *
- * روی body: تقریباً کلِ `globals.css` با `body[data-theme="light"]` نوشته شده.
- * روی html: پس‌زمینه‌ی *خودِ* `<html>` همون چیزیه که سافاری توی ناحیه‌ی امن
- * (زیرِ ناچ و بالای نوارِ خانه) و موقعِ اورراسکرول نشون می‌ده. قبلاً این کار
+ * روی body: تقریبا کل `globals.css` با `body[data-theme="light"]` نوشته شده.
+ * روی html: پس‌زمینه‌ی *خود* `<html>` همون چیزیه که سافاری توی ناحیه‌ی امن
+ * (زیر ناچ و بالای نوار خانه) و موقع اورراسکرول نشون می‌ده. قبلا این کار
  * با `html:has(body[data-theme="light"])` انجام می‌شد که به `:has()` وابسته
- * بود؛ با گذاشتنِ خودِ اتریبیوت روی html، یک سلکتورِ ساده کافیه و دیگه به
- * پشتیبانیِ `:has()` وابسته نیست.
+ * بود؛ با گذاشتن خود اتریبیوت روی html، یک سلکتور ساده کافیه و دیگه به
+ * پشتیبانی `:has()` وابسته نیست.
  */
 export function applyThemeAttribute(theme: ThemeName) {
   if (typeof document === "undefined") return;
@@ -58,17 +78,28 @@ export function applyThemeAttribute(theme: ThemeName) {
   document.body.setAttribute("data-theme", theme);
 }
 
-// اسکریپتِ inlineِ مسدودکننده — قبل از هر پینتی اجرا می‌شه (اولین فرزندِ body)
-// و تم رو از روی کوکی می‌سازه. عمداً کوکی خونده می‌شه نه `cookies()`ِ سمتِ
-// سرور: اون یکی کلِ اپ رو از static به dynamic می‌برد (رندر به‌ازای هر
-// ریکوئست) که دقیقاً برخلافِ کارِ بهینه‌سازیِ سرعتِ لوده.
+// اسکریپت inline مسدودکننده — قبل از هر پینتی اجرا می‌شه (اولین فرزند body)
+// و تم رو از روی کوکی می‌سازه. عمدا کوکی خونده می‌شه نه `cookies()` سمت
+// سرور: اون یکی کل اپ رو از static به dynamic می‌برد (رندر به‌ازای هر
+// ریکوئست) که دقیقا برخلاف کار بهینه‌سازی سرعت لوده.
 //
-// برخلافِ نسخه‌ی قبلی، این‌جا متا **همیشه** ست می‌شه (نه فقط وقتی تم روشنه)،
+// برخلاف نسخه‌ی قبلی، این‌جا متا **همیشه** ست می‌شه (نه فقط وقتی تم روشنه)،
 // و اگه وجود نداشت ساخته می‌شه — چون دیگه نکست یکی نمی‌سازه.
+//
+// به‌روزرسانی: layout.tsx حالا خودش تم را سمت سرور تعیین می‌کند (برای
+// کاربر لاگین‌کرده از *حساب*، وگرنه از کوکی). وقتی مرجع حساب بوده
+// (`data-theme-src="account"` روی html)، کوکی دیگر حق بازنویسی ندارد —
+// برعکس، همین‌جا کوکی با تم حساب هم‌گام می‌شود تا صفحه‌های بعدی (و حتی
+// نسخه‌ی کش‌شده‌ی آفلاین سرویس‌ورکر) هم از اولین پینت درست باشند.
 export const THEME_INIT_SCRIPT = `(function(){try{
+var d=document.documentElement;
 var m=document.cookie.match(/(?:^|; )theme=(dark|light)/);
-var t=m?m[1]:"${"dark"}";
-document.documentElement.setAttribute("data-theme",t);
+var t;
+if(d.getAttribute("data-theme-src")==="account"){
+t=d.getAttribute("data-theme")==="light"?"light":"dark";
+if(!m||m[1]!==t)document.cookie="${THEME_COOKIE}="+t+"; path=/; max-age=31536000; samesite=lax"+(location.protocol==="https:"?"; secure":"");
+}else t=m?m[1]:"${"dark"}";
+d.setAttribute("data-theme",t);
 document.body.setAttribute("data-theme",t);
 var c=${JSON.stringify(THEME_COLORS)}[t];
 var all=document.querySelectorAll('meta[name="theme-color"]');
@@ -79,10 +110,10 @@ e.setAttribute("content",c);
 }catch(e){}})();`;
 
 /**
- * تمی که همین الان *واقعاً* روی DOMه — یعنی همونی که اسکریپتِ inline از روی
- * کوکی ساخته. موقعِ اولین اجرای افکتِ ThemeProvider لازمه: اون‌جا stateِ ری‌اکت
- * هنوز مقدارِ اولیه‌ی «dark» رو داره (که عمداً با رندرِ سرور یکیه) و مرجع
- * گرفتنش، تمِ درستِ کاربر رو پاک می‌کرد.
+ * تمی که همین الان *واقعا* روی DOMه — یعنی همونی که اسکریپت inline از روی
+ * کوکی ساخته. موقع اولین اجرای افکت ThemeProvider لازمه: اون‌جا state ری‌اکت
+ * هنوز مقدار اولیه‌ی «dark» رو داره (که عمدا با رندر سرور یکیه) و مرجع
+ * گرفتنش، تم درست کاربر رو پاک می‌کرد.
  */
 export function readThemeFromDom(): ThemeName {
   if (typeof document === "undefined") return "dark";

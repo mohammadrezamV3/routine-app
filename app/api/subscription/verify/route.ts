@@ -2,93 +2,128 @@ import { NextRequest, NextResponse } from "next/server";
 import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
-import { zarinpalVerifyPayment } from "@/lib/zarinpal";
-import { activatePaidSubscription } from "@/lib/subscriptionActivation";
-import { DURATIONS, type Duration } from "@/lib/planPricing";
+import { zibalVerify } from "@/lib/zibal";
+import { getSiteUrl } from "@/lib/siteUrl";
+import { isDuration, PRICING_LIMITS } from "@/lib/planPricing";
+import { verifyCheckoutSignature } from "@/lib/checkoutSignature";
+import { activateSubscription } from "@/lib/subscriptionActivation";
 
-// پنل Owner › تراکنش‌ها/Funnel — تنها جایی که پرداختِ ناموفق/رهاشده واقعاً
-// جایی ثبت می‌شه؛ جدولِ Payment فقط پرداختِ verify-شده‌ی موفق رو داره
-// (هیچ ردیفی برای تلاشِ ناموفق ساخته نمی‌شه)، پس بدونِ این رویداد، «تراکنشِ
-// ناموفق» یه حالتِ کاملاً نامرئی توی دیتابیس بود.
+// پنل Owner › تراکنش‌ها/Funnel — تنها جایی که پرداخت ناموفق/رهاشده واقعا
+// جایی ثبت می‌شه؛ جدول Payment فقط پرداخت verify-شده‌ی موفق رو داره
+// (هیچ ردیفی برای تلاش ناموفق ساخته نمی‌شه)، پس بدون این رویداد، «تراکنش
+// ناموفق» یه حالت کاملا نامرئی توی دیتابیس بود.
 function logCheckoutFailed(userId: string | undefined, reason: string) {
   prisma.analyticsEvent.create({ data: { userId: userId || null, type: "checkout_failed", meta: { reason } } }).catch(() => {});
 }
 
-// GET /api/subscription/verify → مرورگرِ کاربر بعدِ پرداخت از زرین‌پال
-// اینجا برمی‌گرده (Authority/Status توی query). مبلغ رو مستقیم از همون
-// query که خودمون موقعِ ساختِ callback_url ساختیم می‌خونیم — امنیتش با
-// verifyِ خودِ زرین‌پال تضمین می‌شه (اگه کسی این مبلغ رو دستکاری کنه،
-// verify روی زرین‌پال با مبلغِ واقعاً پرداخت‌شده مچ نمی‌شه و fail می‌شه).
+// GET /api/subscription/verify → مرورگر کاربر بعد پرداخت از زیبال
+// اینجا برمی‌گرده (trackId/success توی query). پلن/مدت/مبلغ/تخفیف همه با
+// امضای HMAC خود این اپ تضمین می‌شن (lib/checkoutSignature.ts) — زیبال فقط
+// تضمین می‌کنه «مبلغ» با پرداخت واقعی یکیه، نه این‌که این مبلغ قیمت کدوم
+// پلن بوده.
 export async function GET(req: NextRequest) {
   const session = await getServerSession(authOptions);
   const userId = (session?.user as any)?.id;
   const { searchParams } = req.nextUrl;
-  const redirectBase = new URL("/subscription", req.nextUrl.origin);
 
-  if (!userId) {
-    logCheckoutFailed(undefined, "no_session");
-    redirectBase.searchParams.set("checkout", "failed");
-    return NextResponse.redirect(redirectBase);
+  // آدرس پایه از NEXTAUTH_URL می‌آید، نه از origin درخواست.
+  //
+  // باگی که این حل می‌کند: کاربر بعد از پرداخت **صفحه‌ی سفید** می‌دید. اپ
+  // پشت nginx است، پس `req.nextUrl.origin` می‌توانست `http://127.0.0.1:3000`
+  // دربیاید — و مرورگر کاربر به آن آدرس ریدایرکت می‌شد، که روی دستگاه خودش
+  // هیچ چیزی نیست. همان ریشه‌ای که آدرس بازگشت درگاه را هم شکسته بود
+  // (lib/siteUrl.ts).
+  const siteUrl = getSiteUrl(req.nextUrl.origin);
+
+  /**
+   * برگشت ناموفق **به صفحه‌ی انتخاب درگاه**، نه به فهرست اشتراک‌ها.
+   *
+   * چرا: کاربری که پرداختش نگرفته معمولا می‌خواهد همان لحظه دوباره امتحان
+   * کند (شاید با درگاه دیگر). فرستادنش به `/subscription` یعنی باید کل
+   * مسیر انتخاب پلن و مدت و کد تخفیف را از اول برود. با نگه‌داشتن
+   * plan/duration، دقیقا همان‌جایی برمی‌گردد که بود.
+   *
+   * اگر پلن/مدت معلوم نباشد (مثلا سشن منقضی شده)، فهرست اشتراک تنها جای
+   * معنادار است.
+   */
+  function failRedirect(reason: string, uid?: string, plan?: string | null, dur?: string | null) {
+    logCheckoutFailed(uid, reason);
+    const url = plan && dur
+      ? new URL(`/subscription/checkout?plan=${encodeURIComponent(plan)}&duration=${encodeURIComponent(dur)}`, siteUrl)
+      : new URL("/subscription", siteUrl);
+    url.searchParams.set("checkout", "failed");
+    return NextResponse.redirect(url);
   }
 
-  const status = searchParams.get("Status");
-  const authority = searchParams.get("Authority");
+  if (!userId) {
+    return failRedirect("no_session", undefined);
+  }
+
   const planKey = searchParams.get("planKey");
-  const duration = searchParams.get("duration") as Duration | null;
+  const durationRaw = searchParams.get("duration");
+  const duration = isDuration(durationRaw) ? durationRaw : null;
+  // تعداد ماه موقع پرداخت از پنل خونده و امضا شده — نه از پیکربندی فعلی، تا
+  // تغییر ادمین وسط پرداخت چیزی که کاربر پولش رو داده عوض نکنه.
+  const months = Number(searchParams.get("months"));
   const amount = Number(searchParams.get("amount"));
   const discountPercent = Number(searchParams.get("discountPercent") || 0);
   const referralUsageId = searchParams.get("referralUsageId") || undefined;
+  const discountCodeId = searchParams.get("discountCodeId") || undefined;
+  const upgradeFromSubId = searchParams.get("upgradeFromSubId") || undefined;
+  const achievementRewardId = searchParams.get("achievementRewardId") || undefined;
+  const walletApplied = Number(searchParams.get("walletApplied") || 0);
 
-  if (status !== "OK" || !authority || !planKey || !duration || !DURATIONS.includes(duration) || !amount) {
-    logCheckoutFailed(userId, status === "OK" ? "invalid_params" : "gateway_canceled_or_error");
-    redirectBase.searchParams.set("checkout", "failed");
-    return NextResponse.redirect(redirectBase);
+  if (!planKey || !duration || !amount || !Number.isInteger(months) || months < PRICING_LIMITS.minMonths || months > PRICING_LIMITS.maxMonths) {
+    return failRedirect("invalid_params", userId, planKey, durationRaw);
+  }
+  // پلن/مدت/مبلغ/تخفیف/مبلغِ کیف همه با امضای checkout مطابقت داده می‌شن؛
+  // زیبال فقط مبلغ رو تضمین می‌کنه، نه این‌که این مبلغ قیمت کدوم پلن بوده.
+  if (!verifyCheckoutSignature({ userId, planKey, duration, months, amount, discountPercent, referralUsageId, discountCodeId, upgradeFromSubId, achievementRewardId, walletApplied }, searchParams.get("sig"))) {
+    return failRedirect("bad_signature", userId, planKey, duration);
   }
 
   let verified: { ok: boolean; refId?: string };
   try {
-    verified = await zarinpalVerifyPayment({ amountRial: amount, authority });
+    const trackId = searchParams.get("trackId");
+    const success = searchParams.get("success");
+    if (!trackId || success !== "1") {
+      return failRedirect("gateway_canceled_or_error", userId, planKey, duration);
+    }
+    const result = await zibalVerify(Number(trackId));
+    // زیبال مبلغ رو به verify نمی‌گیره، فقط توی جواب برمی‌گردونه — پس
+    // تطبیق مبلغ رو خودمون اینجا چک می‌کنیم (تضمین امنیتی مقابل دستکاری).
+    verified = result.ok && result.amount === amount
+      ? { ok: true, refId: String(result.refNumber ?? trackId) }
+      : { ok: false };
   } catch {
-    logCheckoutFailed(userId, "verify_request_error");
-    redirectBase.searchParams.set("checkout", "failed");
-    return NextResponse.redirect(redirectBase);
+    return failRedirect("verify_request_error", userId, planKey, duration);
   }
   if (!verified.ok) {
-    logCheckoutFailed(userId, "verify_rejected");
-    redirectBase.searchParams.set("checkout", "failed");
-    return NextResponse.redirect(redirectBase);
+    return failRedirect("verify_rejected", userId, planKey, duration);
   }
 
-  // مقدارِ کیفِ اعتبارِ این خرید رو فقط از PendingCheckout (سمتِ سرور) می‌خونیم،
-  // نه از query — کاربر نمی‌تونه این مبلغ رو دستکاری کنه. حذف = مصرف، پس
-  // یک verify تکراری/replay‌شده با همون authority این بار چیزی پیدا نمی‌کنه
-  // و walletApplied صفر می‌شه (دوباره کسر نمی‌شه).
-  const pending = await prisma.pendingCheckout.findUnique({ where: { authority } });
-  const walletApplied = pending?.walletApplied ?? 0;
-  if (pending) {
-    await prisma.pendingCheckout.delete({ where: { authority } }).catch(() => {});
-  }
-
-  let result: { subscriptionId: string; paymentId: string };
+  let result: { subscriptionId: string };
   try {
-    result = await activatePaidSubscription({
+    result = await activateSubscription({
       userId,
       planKey,
-      duration,
+      months,
       discountPercent,
       referralUsageId,
+      discountCodeId,
+      achievementRewardId,
+      upgradeFromSubId,
       amountCharged: amount,
       walletApplied,
-      provider: "zarinpal",
+      provider: "zibal",
       providerRef: verified.refId,
     });
   } catch {
-    logCheckoutFailed(userId, "plan_not_found");
-    redirectBase.searchParams.set("checkout", "failed");
-    return NextResponse.redirect(redirectBase);
+    return failRedirect("plan_not_found", userId, planKey, duration);
   }
 
-  redirectBase.searchParams.set("checkout", "success");
-  redirectBase.searchParams.set("sub", result.subscriptionId);
-  return NextResponse.redirect(redirectBase);
+  const okUrl = new URL("/subscription", siteUrl);
+  okUrl.searchParams.set("checkout", "success");
+  okUrl.searchParams.set("sub", result.subscriptionId);
+  return NextResponse.redirect(okUrl);
 }

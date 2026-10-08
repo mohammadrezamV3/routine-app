@@ -3,6 +3,7 @@ import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
 import { parseDateRange } from "@/lib/validate";
+import { sessionFeatureBlocked } from "@/lib/featureFlagsServer";
 
 function pad(n: number) { return n < 10 ? "0" + n : "" + n; }
 function toIso(d: Date) { return `${d.getUTCFullYear()}-${pad(d.getUTCMonth() + 1)}-${pad(d.getUTCDate())}`; }
@@ -11,12 +12,13 @@ function toIso(d: Date) { return `${d.getUTCFullYear()}-${pad(d.getUTCMonth() + 
 // یک کوئری واحد که کل بازه رو برمی‌گردونه — به‌جای این‌که صفحه اصلی مجبور
 // باشه برای هر روز جدا fetch بزنه (که با ۳۰-۹۰ روز، لود اولیه رو خیلی کند می‌کرد).
 export async function GET(req: NextRequest) {
+  { const off = await sessionFeatureBlocked("routine"); if (off) return off; }
   const session = await getServerSession(authOptions);
   const userId = (session?.user as any)?.id;
   if (!userId) return NextResponse.json({ error: "unauthorized" }, { status: 401 });
 
-  // بازه اعتبارسنجی و سقف‌گذاری می‌شه — قبلاً `from=0001-01-01&to=9999-12-31`
-  // با ۲۰۰ جواب می‌گرفت و عملاً کلِ جدولِ کاربر رو می‌خوند.
+  // بازه اعتبارسنجی و سقف‌گذاری می‌شه — قبلا `from=0001-01-01&to=9999-12-31`
+  // با ۲۰۰ جواب می‌گرفت و عملا کل جدول کاربر رو می‌خوند.
   const range = parseDateRange(req.nextUrl.searchParams.get("from"), req.nextUrl.searchParams.get("to"));
   if ("error" in range) return NextResponse.json({ error: range.error }, { status: 400 });
 

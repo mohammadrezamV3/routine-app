@@ -5,14 +5,14 @@ import { isValidEmail } from "@/lib/validate";
 import { hashEmailOtp, hashesMatch, EMAIL_OTP_MAX_ATTEMPTS } from "@/lib/emailOtp";
 
 // POST /api/auth/email-otp/verify  { email, code }
-// فقط یک پیش‌بررسی‌ست — درستیِ کد رو تایید می‌کنه و verifiedAt رو ست می‌کنه،
-// ولی OTP رو usedAt نمی‌کنه (مصرفِ واقعی/صدورِ نشست توسطِ providerِ
-// «email-otp» توی lib/auth.ts انجام می‌شه، دقیقاً جایی که NextAuth کوکیِ
-// نشست رو می‌سازه). این جداسازی چون authorize()ِ NextAuth پیامِ خطای
-// سفارشی رو حفظ نمی‌کنه (نگاه کن به کامنتِ همون provider) — پس تشخیصِ
-// «کدِ اشتباه» در برابرِ «این ایمیل حساب نداره» باید همین‌جا اتفاق بیفته.
+// فقط یک پیش‌بررسی‌ست — درستی کد رو تایید می‌کنه و verifiedAt رو ست می‌کنه،
+// ولی OTP رو usedAt نمی‌کنه (مصرف واقعی/صدور نشست توسط provider
+// «email-otp» توی lib/auth.ts انجام می‌شه، دقیقا جایی که NextAuth کوکی
+// نشست رو می‌سازه). این جداسازی چون authorize() NextAuth پیام خطای
+// سفارشی رو حفظ نمی‌کنه (نگاه کن به کامنت همون provider) — پس تشخیص
+// «کد اشتباه» در برابر «این ایمیل حساب نداره» باید همین‌جا اتفاق بیفته.
 //
-// hasAccount فقط *بعدِ* واردکردنِ کدِ درست فاش می‌شه — یعنی کسی که کد رو
+// hasAccount فقط *بعد* واردکردن کد درست فاش می‌شه — یعنی کسی که کد رو
 // نمی‌دونه (به ایمیل دسترسی نداره) هیچ‌وقت از این مسیر نمی‌فهمه اون ایمیل
 // حساب داره یا نه.
 export async function POST(req: NextRequest) {
@@ -27,7 +27,7 @@ export async function POST(req: NextRequest) {
   const email = rawEmail.trim().toLowerCase();
   const cleanCode = code.trim();
 
-  if (!checkRateLimit(`email-otp-verify-ip:${ip}`, 20, 10 * 60 * 1000) || !checkRateLimit(`email-otp-verify-email:${email}`, 8, 10 * 60 * 1000)) {
+  if (!(await checkRateLimit(`email-otp-verify-ip:${ip}`, 20, 10 * 60 * 1000)) || !(await checkRateLimit(`email-otp-verify-email:${email}`, 8, 10 * 60 * 1000))) {
     return NextResponse.json({ error: "تعداد تلاش‌ها بیش از حد مجازه — چند دقیقه دیگه دوباره امتحان کن" }, { status: 429 });
   }
 

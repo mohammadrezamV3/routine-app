@@ -3,9 +3,9 @@ import { NextResponse } from "next/server";
 import { authOptions } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
 
-// رودمپ و نوت‌پد فعلاً کاملاً غیرفعالن برای همه به‌جز سوپریوزر — نه یه
-// ماژولِ خریدنی مثل بقیه (requireModule)، بلکه یه قفلِ کاملِ سطحِ کد که به
-// وضعیتِ ModuleAccess/Plan توی دیتابیس اصلاً کاری نداره. همون الگوی
+// رودمپ و نوت‌پد فعلا کاملا غیرفعالن برای همه به‌جز سوپریوزر — نه یه
+// ماژول خریدنی مثل بقیه (requireModule)، بلکه یه قفل کامل سطح کد که به
+// وضعیت ModuleAccess/Plan توی دیتابیس اصلا کاری نداره. همون الگوی
 // ModuleGuardResult رو تکرار می‌کنه تا با requireModule یکدست بمونه.
 export type SuperAdminGuardResult =
   | { ok: true; userId: string }
@@ -18,7 +18,7 @@ export async function requireSuperAdmin(): Promise<SuperAdminGuardResult> {
     return { ok: false, response: NextResponse.json({ error: "unauthorized" }, { status: 401 }) };
   }
   if (!(session!.user as any).isSuperAdmin) {
-    return { ok: false, response: NextResponse.json({ error: "این بخش موقتاً غیرفعال است" }, { status: 403 }) };
+    return { ok: false, response: NextResponse.json({ error: "این بخش موقتا غیرفعال است" }, { status: 403 }) };
   }
   const blockedCheck = await prisma.user.findUnique({ where: { id: userId }, select: { isBlocked: true } });
   if (blockedCheck?.isBlocked) {

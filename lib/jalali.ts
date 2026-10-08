@@ -1,6 +1,6 @@
 // توابع تبدیل تقویم جلالی — پورت مستقیم از منطق فایل HTML اولیه (روتین من)
-// عمداً همون الگوریتم ساده (بدون تصحیح کبیسه پیچیده) نگه داشته شده تا رفتار
-// یکسان با نسخه قبلی داشته باشیم؛ اگر بعداً دقت بیشتر لازم شد، این فایل
+// عمدا همون الگوریتم ساده (بدون تصحیح کبیسه پیچیده) نگه داشته شده تا رفتار
+// یکسان با نسخه قبلی داشته باشیم؛ اگر بعدا دقت بیشتر لازم شد، این فایل
 // تنها جایی‌ست که باید عوض شود.
 
 export type JalaliDate = [number, number, number]; // [year, month, day]
@@ -39,7 +39,7 @@ export function toJalali(gy: number, gm: number, gd: number): JalaliDate {
   return [jy, jm, jd];
 }
 
-// طول ماه‌های جلالی به‌صورت ساده‌شده (تصحیح کبیسه عمداً حذف شده، مطابق نسخه اصلی)
+// طول ماه‌های جلالی به‌صورت ساده‌شده (تصحیح کبیسه عمدا حذف شده، مطابق نسخه اصلی)
 export function jalaliMonthLength(jm: number): number {
   return jm <= 6 ? 31 : jm <= 11 ? 30 : 29;
 }
@@ -53,6 +53,25 @@ export function jalaliToGregorianApprox(jy: number, jm: number, jd: number): Dat
   offset += jd - 1;
   d.setDate(d.getDate() + offset);
   return d;
+}
+
+/**
+ * تبدیل *دقیق* جلالی → ISO محلی. `jalaliToGregorianApprox` نوروز را همیشه
+ * ۲۱ مارس و اسفند را ۲۹ روزه فرض می‌کند، پس گاهی یک روز جابه‌جاست؛ این‌جا از
+ * همان تقریب شروع می‌کنیم و با `toJalali` (که دقیق است) تا ±۲ روز اصلاحش
+ * می‌کنیم. null یعنی چنین تاریخ جلالی‌ای وجود ندارد (مثلا ۳۱ مهر).
+ */
+export function jalaliToIso(jy: number, jm: number, jd: number): string | null {
+  if (!Number.isInteger(jy) || !Number.isInteger(jm) || !Number.isInteger(jd)) return null;
+  if (jm < 1 || jm > 12 || jd < 1 || jd > 31) return null;
+  const base = jalaliToGregorianApprox(jy, jm, jd);
+  for (const delta of [0, -1, 1, -2, 2]) {
+    const d = new Date(base);
+    d.setDate(d.getDate() + delta);
+    const j = toJalali(d.getFullYear(), d.getMonth() + 1, d.getDate());
+    if (j[0] === jy && j[1] === jm && j[2] === jd) return isoLocal(d);
+  }
+  return null;
 }
 
 export const J_MONTHS = [
@@ -71,7 +90,14 @@ export function faNum(n: number | string): string {
   return String(n);
 }
 
-// نمایش تاریخ جلالی به ترتیب روز/ماه/سال، مثل "07/05/1404"
+// نمایش تاریخ جلالی به شکل "۱۴۰۴/۰۵/۰۷".
+//
+// چرا سال اول نوشته می‌شه در حالی که ترتیب خواسته‌شده «روز/ماه/سال» است:
+// این رشته یک دنباله‌ی خالص رقم و اسلش است، پس الگوریتم دوجهته‌ی مرورگر
+// همیشه چپ‌به‌راست رندرش می‌کند — حتی داخل صفحه‌ی RTL. یعنی چیزی که کاربر
+// از **راست** می‌خواند دقیقا برعکس ترتیب نوشتن ماست: با نوشتن
+// سال/ماه/روز، خواندن از راست می‌شود روز، ماه، سال — همان که پلیس‌هولدر
+// «روز / ماه / سال» هم وعده می‌دهد. حالت قبلی (روز اول) دقیقا برعکس دیده می‌شد.
 export function formatJalali(j: JalaliDate): string {
-  return `${pad(j[2])}/${pad(j[1])}/${j[0]}`;
+  return `${j[0]}/${pad(j[1])}/${pad(j[2])}`;
 }

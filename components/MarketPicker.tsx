@@ -3,8 +3,9 @@
 import { useMemo, useState } from "react";
 import { TICKER_CATALOG, CATEGORY_LABELS, MAX_TICKER_SYMBOLS, TickerSymbol } from "@/lib/tickerSymbols";
 import { useLockBodyScroll } from "@/lib/useLockBodyScroll";
+import { TickButton } from "./TickButton";
 
-// انتخاب‌گر بازارها — هم توی پنل کاربری (مدیریت همیشگی) و هم توی خودِ
+// انتخاب‌گر بازارها — هم توی پنل کاربری (مدیریت همیشگی) و هم توی خود
 // صفحه‌ی ترید (فقط دفعه‌ی اول، برای onboarding) استفاده می‌شه. کاتالوگ حدود
 // ۳۶۰ نماده، پس یک جستجو + گروه‌بندی بر اساس دسته لازم بود، نه یک لیست تخت.
 export function MarketPicker({
@@ -64,16 +65,12 @@ export function MarketPicker({
                 const on = symbols.includes(s.symbol);
                 return (
                   <div key={s.symbol} onClick={() => onToggle(s.symbol)} className="task">
-                    <div className={`check${on ? " on" : ""}`}>
-                      <svg className="c-check" viewBox="0 0 24 24" fill="none">
-                        <path d="M2.5 13l5.5 5.5L21.5 4.5" stroke="var(--bg)" strokeWidth="3.2" strokeLinecap="round" strokeLinejoin="round" />
-                      </svg>
-                    </div>
+                    <TickButton as="span" className="mt-0.5" size={22} checked={on} />
                     <div className={`task-name${on ? " done" : ""}`}>
                       {s.label}
-                      {/* برای فارکس، label و symbol (مثلاً EUR/USD و EURUSD=X) عملاً همون
-                          حروف رو تکرار می‌کنن — فقط برای بقیه‌ی دسته‌ها که واقعاً اطلاعات
-                          اضافه می‌ده (مثلاً «بیت‌کوین» در برابر BTC-USD) نماد رو هم نشون بده */}
+                      {/* برای فارکس، label و symbol (مثلا EUR/USD و EURUSD=X) عملا همون
+                          حروف رو تکرار می‌کنن — فقط برای بقیه‌ی دسته‌ها که واقعا اطلاعات
+                          اضافه می‌ده (مثلا «بیت‌کوین» در برابر BTC-USD) نماد رو هم نشون بده */}
                       {s.category !== "forex" && (
                         <span className="mono" style={{ color: "var(--muted2)", fontSize: 11 }}> {s.symbol}</span>
                       )}

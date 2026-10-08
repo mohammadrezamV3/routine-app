@@ -5,6 +5,8 @@ import { useRouter, usePathname, useSearchParams } from "next/navigation";
 import { RangePicker } from "@/components/admin/RangePicker";
 import { KpiGrid, KpiTile } from "@/components/admin/KpiTile";
 import { EmptyState } from "@/components/admin/EmptyState";
+import { AdminTabBar } from "@/components/admin/TabBar";
+import { adminFetch } from "@/components/admin/useAdminToast";
 import { formatNumber } from "@/lib/adminFormat";
 
 type PlanRow = { plan: { id: string; nameFa: string; market: string; currency: string; priceMonthly: number }; active: number; expired: number; newInRange: number; canceledInRange: number };
@@ -16,24 +18,40 @@ const TABS = [
   { key: "renewals", label: "تمدیدها" },
   { key: "upgrades", label: "ارتقاها" },
   { key: "canceled", label: "لغو اشتراک" },
-];
+] as const;
+type TabKey = (typeof TABS)[number]["key"];
 
 function SubscriptionsInner() {
   const router = useRouter();
   const pathname = usePathname();
   const searchParams = useSearchParams();
-  const tab = searchParams.get("tab") || "active";
+  const tabParam = searchParams.get("tab") || "active";
+  const tab: TabKey = TABS.some((t) => t.key === tabParam) ? (tabParam as TabKey) : "active";
   const [data, setData] = useState<Resp | null>(null);
+  const [error, setError] = useState<string | null>(null);
+
+  // فقط پارامترهای بازه روی داده اثر دارن — عوض‌کردن تب نباید دوباره fetch کنه
+  const range = searchParams.get("range") || "";
+  const from = searchParams.get("from") || "";
+  const to = searchParams.get("to") || "";
 
   useEffect(() => {
-    const sp = new URLSearchParams(searchParams.toString());
-    fetch(`/api/admin/subscriptions?${sp.toString()}`).then((r) => r.json()).then(setData);
-  }, [searchParams]);
+    let cancelled = false;
+    setError(null);
+    const sp = new URLSearchParams();
+    if (range) sp.set("range", range);
+    if (from) sp.set("from", from);
+    if (to) sp.set("to", to);
+    adminFetch<Resp>(`/api/admin/subscriptions?${sp.toString()}`)
+      .then((d) => { if (!cancelled) setData(d); })
+      .catch((e) => { if (!cancelled) setError(e.message); });
+    return () => { cancelled = true; };
+  }, [range, from, to]);
 
-  function setTab(key: string) {
+  function setTab(key: TabKey) {
     const sp = new URLSearchParams(searchParams.toString());
     sp.set("tab", key);
-    router.push(`${pathname}?${sp.toString()}`);
+    router.replace(`${pathname}?${sp.toString()}`, { scroll: false });
   }
 
   const totals = data ? data.planBreakdown.reduce((acc, r) => ({
@@ -42,15 +60,15 @@ function SubscriptionsInner() {
 
   return (
     <section>
-      <div className="admin-chart-head" style={{ marginBottom: 12 }}>
-        <div className="admin-tabs" style={{ marginBottom: 0 }}>
-          {TABS.map((t) => <button key={t.key} type="button" className={`admin-tab${tab === t.key ? " active" : ""}`} onClick={() => setTab(t.key)}>{t.label}</button>)}
-        </div>
+      <div className="admin-commerce-head">
+        <AdminTabBar items={[...TABS]} active={tab} onChange={setTab} />
         <RangePicker />
       </div>
 
-      {!data || !totals ? (
-        <div className="admin-empty">در حال بارگذاری…</div>
+      {error ? (
+        <EmptyState message={error} />
+      ) : !data || !totals ? (
+        <div className="admin-empty is-loading">در حال بارگذاری…</div>
       ) : (
         <>
           <KpiGrid>
@@ -68,7 +86,7 @@ function SubscriptionsInner() {
 
           <div className="admin-chart-card">
             <div className="admin-chart-head"><span className="admin-chart-title">جزئیات بر اساس پلن</span></div>
-            {data.planBreakdown.length === 0 ? <EmptyState /> : (
+            {data.planBreakdown.length === 0 ? <EmptyState message="هنوز پلنی تعریف نشده" /> : (
               <div className="admin-table-wrap">
                 <table className="admin-table">
                   <thead><tr><th>پلن</th><th>بازار</th><th>فعال</th><th>منقضی</th><th>خرید جدید در بازه</th><th>لغوشده در بازه</th></tr></thead>
@@ -77,10 +95,10 @@ function SubscriptionsInner() {
                       <tr key={row.plan.id}>
                         <td>{row.plan.nameFa}</td>
                         <td>{row.plan.market === "IRAN" ? "ایران" : "بین‌المللی"}</td>
-                        <td>{formatNumber(row.active)}</td>
-                        <td>{formatNumber(row.expired)}</td>
+                        <td className={tab === "active" ? "admin-col-focus" : undefined}>{formatNumber(row.active)}</td>
+                        <td className={tab === "expired" ? "admin-col-focus" : undefined}>{formatNumber(row.expired)}</td>
                         <td>{formatNumber(row.newInRange)}</td>
-                        <td>{formatNumber(row.canceledInRange)}</td>
+                        <td className={tab === "canceled" ? "admin-col-focus" : undefined}>{formatNumber(row.canceledInRange)}</td>
                       </tr>
                     ))}
                   </tbody>
@@ -89,8 +107,8 @@ function SubscriptionsInner() {
             )}
           </div>
 
-          <div className="admin-section-hint">
-            «تمدید»/«ارتقا» فیلد مستقلی در دیتابیس ندارن — از روی توالیِ خریدهای هر کاربر (همون پلن دوباره = تمدید، پلن گران‌تر = ارتقا) استنتاج می‌شن.
+          <div className="admin-section-hint admin-commerce-foot">
+            «تمدید»/«ارتقا» فیلد مستقلی در دیتابیس ندارن — از روی توالی خریدهای هر کاربر (همون پلن دوباره = تمدید، پلن گران‌تر = ارتقا) استنتاج می‌شن.
           </div>
         </>
       )}
@@ -100,7 +118,7 @@ function SubscriptionsInner() {
 
 export default function AdminSubscriptionsPage() {
   return (
-    <Suspense fallback={<div className="admin-empty">در حال بارگذاری…</div>}>
+    <Suspense fallback={<div className="admin-empty is-loading">در حال بارگذاری…</div>}>
       <SubscriptionsInner />
     </Suspense>
   );

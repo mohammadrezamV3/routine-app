@@ -7,19 +7,18 @@ import { Plus, UtensilsCrossed, X } from "lucide-react";
 import { faNum } from "@/lib/jalali";
 import { DashCard } from "./DashCard";
 import { CalorieAddEntryModal } from "./CalorieAddEntryModal";
-import { CalorieAiScanModal } from "./CalorieAiScanModal";
 import type { Target } from "./CaloriePanel";
 
 type Entry = { id: string; customName: string; customCalories: number; grams: number; date?: string };
 
-// «برنامه غذایی» — کارتِ اصلیِ ستونِ راست، هم‌قاعده‌ی اندازه‌ی
-// ExerciseTaskListِ داشبوردِ بدنسازی: با h-full توی گریدِ items-stretch
-// قدِّ کلِ ستونِ کناری (استریک+دوستان) رو می‌گیره و خودِ لیستِ غذاها هم
-// مثلِ اونجا داخلِ یه بخشِ اسکرول‌شونده با سقفِ ارتفاعِ ثابت جا می‌گیره،
-// نه اینکه با هر ثبتِ جدید کلِ کارت بی‌نهایت درازتر بشه. بالای کارت
-// خلاصه‌ی مصرفِ همون روزِ انتخاب‌شده (عدد/هدف + خطِ نازکِ پیشرفت + دکمه‌ی
-// «تغییر برنامه»، بدونِ متنِ «کالری امروز» و بدونِ درصد — طبقِ طرحِ کاربر)،
-// بعدش یه جداکننده و لیستِ غذاها + دکمه‌ی «افزودن». دکمه‌ی افزودن فقط
+// «برنامه غذایی» — کارت اصلی ستون راست، هم‌قاعده‌ی اندازه‌ی
+// ExerciseTaskList داشبورد بدنسازی: با h-full توی گرید items-stretch
+// قد کل ستون کناری (استریک+دوستان) رو می‌گیره و خود لیست غذاها هم
+// مثل اونجا داخل یه بخش اسکرول‌شونده با سقف ارتفاع ثابت جا می‌گیره،
+// نه اینکه با هر ثبت جدید کل کارت بی‌نهایت درازتر بشه. بالای کارت
+// خلاصه‌ی مصرف همون روز انتخاب‌شده (عدد/هدف + خط نازک پیشرفت + دکمه‌ی
+// «تغییر برنامه»، بدون متن «کالری امروز» و بدون درصد — طبق طرح کاربر)،
+// بعدش یه جداکننده و لیست غذاها + دکمه‌ی «افزودن». دکمه‌ی افزودن فقط
 // برای «امروز» فعاله — روزهای گذشته/آینده فقط نمایشی‌ان.
 export function CalorieFoodPlanCard({
   date,
@@ -47,7 +46,6 @@ export function CalorieFoodPlanCard({
   delay?: number;
 }) {
   const [addOpen, setAddOpen] = useState(false);
-  const [scanOpen, setScanOpen] = useState(false);
   const overGoal = pct > 100;
   const barColor = overGoal ? "#E05252" : "var(--accent)";
 
@@ -78,7 +76,7 @@ export function CalorieFoodPlanCard({
       <div className="mt-4 flex shrink-0 items-center justify-between sm:mt-5">
         <h2 className="flex items-center gap-1.5 text-[13px] font-bold text-dash-text sm:text-[15px]">
           <UtensilsCrossed className="h-4 w-4 text-dash-green sm:h-[18px] sm:w-[18px]" />
-          برنامه غذایی
+          کالری‌شمار
         </h2>
         {isToday && (
           <button
@@ -137,13 +135,7 @@ export function CalorieFoodPlanCard({
           mealTypes={mealTypes}
           onClose={() => setAddOpen(false)}
           onAdded={onAdded}
-          onOpenAiScan={() => { setAddOpen(false); setScanOpen(true); }}
         />,
-        document.body
-      )}
-
-      {scanOpen && createPortal(
-        <CalorieAiScanModal date={date} mealTypes={mealTypes} onClose={() => setScanOpen(false)} onLogged={onAdded} />,
         document.body
       )}
     </DashCard>

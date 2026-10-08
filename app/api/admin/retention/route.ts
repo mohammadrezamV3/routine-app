@@ -1,12 +1,12 @@
 import { NextRequest, NextResponse } from "next/server";
 import { ModuleKey } from "@prisma/client";
-import { requireSuperAdmin } from "@/lib/requireSuperAdmin";
+import { requireAdmin } from "@/lib/requireAdmin";
 import { getRetention } from "@/lib/adminAnalytics";
 
 const VALID_MODULES: ModuleKey[] = [ModuleKey.ROUTINE, ModuleKey.EXERCISE, ModuleKey.CALORIE, ModuleKey.TRADE, ModuleKey.ROADMAP];
 
 export async function GET(req: NextRequest) {
-  const guard = await requireSuperAdmin();
+  const guard = await requireAdmin("analytics");
   if (!guard.ok) return guard.response;
 
   const sp = req.nextUrl.searchParams;

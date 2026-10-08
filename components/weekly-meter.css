@@ -1,0 +1,52 @@
+/* ============================================================
+   ستون اکولایزری مشترک (components/WeeklyMeter.tsx) — آنالیز هفتگی و
+   هفته‌نامه. بدون قاب لوله و براقی: فقط خانه‌های گرد کوچیک روی هم.
+   تک‌رنگ (--ring-1a/1b)، شدت با --k. فقط opacity/transform.
+   ============================================================ */
+.wm-col{
+  --wm-gap:3px; --wm-r:3px; --wm-w:100%;
+  position:relative; display:flex; flex-direction:column-reverse; gap:var(--wm-gap);
+  width:var(--wm-w); height:100%; min-height:0;
+}
+.wm-lg{ --wm-gap:4px; --wm-r:4px; }
+.wm-sm{ --wm-gap:2px; --wm-r:2px; }
+.wm-xs{ --wm-gap:2px; --wm-r:1.5px; }
+
+.wm-seg{
+  flex:1 1 0; min-height:2px; border-radius:var(--wm-r); display:block;
+  background:color-mix(in srgb, var(--text) 7%, transparent);
+  position:relative; overflow:hidden;
+}
+body[data-theme="light"] .wm-seg{ background:color-mix(in srgb, var(--text) 8%, transparent); }
+/* لایه‌ی روشن جدا تا روشن شدن فقط opacity/transform باشه */
+.wm-seg::after{
+  content:""; position:absolute; inset:0; border-radius:inherit;
+  background:linear-gradient(90deg, var(--ring-1a), var(--ring-1b));
+  opacity:0; transform:scaleY(.4); transform-origin:bottom;
+  transition:opacity .35s ease, transform .45s cubic-bezier(.22,1,.36,1);
+  transition-delay:calc(var(--wm-delay, 0ms) + var(--i, 0) * 45ms);
+}
+.wm-col.is-on .wm-seg.is-lit::after{ opacity:var(--k, 1); transform:none; }
+
+/* بالاترین خانه‌ی روشن بهترین روز کمی می‌درخشه (سایه‌ی تک‌رنگ) */
+.wm-col.is-on.is-hi .wm-seg.is-top{ box-shadow:0 0 12px color-mix(in srgb, var(--ring-1a) 55%, transparent); }
+.wm-col.is-on.is-hi .wm-seg.is-top::after{ opacity:1; }
+
+/* روز آینده: خانه‌ها خط‌چین؛ بدون داده: کم‌رنگ‌تر */
+.wm-col.is-future .wm-seg{ background:none; outline:1px dashed color-mix(in srgb, var(--text) 14%, transparent); outline-offset:-1px; }
+.wm-col.is-empty .wm-seg{ background:color-mix(in srgb, var(--text) 4%, transparent); }
+
+/* سطح هفته‌ی قبل */
+.wm-prev{
+  position:absolute; inset-inline:-3px; height:2px; border-radius:2px; pointer-events:none;
+  bottom:calc(var(--p) * 1%); transform:translateY(50%);
+  background:color-mix(in srgb, var(--text) 70%, transparent);
+  opacity:0; transition:opacity .4s ease; transition-delay:calc(var(--wm-delay, 0ms) + 500ms);
+}
+.wm-col.is-on .wm-prev{ opacity:.85; }
+
+@media (prefers-reduced-motion: reduce){
+  .wm-seg::after, .wm-prev{ transition:none; }
+}
+html[data-perf="low"] .wm-seg::after, html[data-perf="low"] .wm-prev{ transition-delay:0ms; transition-duration:.15s; }
+html[data-perf="low"] .wm-col.is-on.is-hi .wm-seg.is-top{ box-shadow:none; }

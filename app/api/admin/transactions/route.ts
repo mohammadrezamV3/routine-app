@@ -1,11 +1,11 @@
 import { NextRequest, NextResponse } from "next/server";
-import { requireSuperAdmin } from "@/lib/requireSuperAdmin";
+import { requireAdmin } from "@/lib/requireAdmin";
 import { getTransactions, TransactionsFilter } from "@/lib/adminAnalytics";
 
 const VALID_FILTERS: TransactionsFilter[] = ["all", "paid", "refunded"];
 
 export async function GET(req: NextRequest) {
-  const guard = await requireSuperAdmin();
+  const guard = await requireAdmin("finance");
   if (!guard.ok) return guard.response;
 
   const sp = req.nextUrl.searchParams;

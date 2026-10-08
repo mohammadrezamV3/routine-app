@@ -1,20 +1,20 @@
-import { toEnDigits, toFaDigits } from "./schedule";
+import { toEnDigits } from "./schedule";
 
-// نرمال‌سازی هر رشته زمانی (فارسی یا انگلیسی) به فرمت "hh:mm" با ارقام فارسی.
+// نرمال‌سازی هر رشته زمانی (فارسی یا انگلیسی) به فرمت "hh:mm" با ارقام انگلیسی.
 // ورودی «h» یا «hh» به‌تنهایی هم پذیرفته می‌شود و به "hh:۰۰" تبدیل می‌شود.
 export function normalizeTimeToFa(str: string): string {
   const en = toEnDigits(str).trim();
   const m = /^(\d{1,2}):(\d{2})$/.exec(en);
   if (m) {
     const hh = m[1].length === 1 ? "0" + m[1] : m[1];
-    return toFaDigits(hh + ":" + m[2]);
+    return toEnDigits(hh + ":" + m[2]);
   }
   const hOnly = /^(\d{1,2})$/.exec(en);
   if (hOnly) {
     const hh2 = hOnly[1].length === 1 ? "0" + hOnly[1] : hOnly[1];
-    return toFaDigits(hh2 + ":00");
+    return toEnDigits(hh2 + ":00");
   }
-  return toFaDigits(en);
+  return toEnDigits(en);
 }
 
 // ماسک ورودی به شکل ثابت HH:MM حین تایپ — فقط رقم، دو نقطه خودکار بعد رقم دوم،

@@ -1,35 +1,55 @@
-// فراخوانیِ گیت‌وی هوش‌مصنوعیِ آروان‌کلود (GPT-4o-mini) برای همه‌ی جاهایی که
-// این اپ از AI استفاده می‌کنه — قبلاً مستقیم به Anthropic Messages API وصل
-// بودن، الان همه از همین یک تابعِ مشترک (callAiChat) رد می‌شن که با API
-// سازگارِ OpenAIِ همین گیت‌وی (endpoint‌ِ chat/completions) حرف می‌زنه.
+// فراخوانی گیت‌وی هوش‌مصنوعی آروان‌کلود برای همه‌ی جاهایی که این اپ از AI
+// استفاده می‌کنه — قبلا مستقیم به Anthropic Messages API وصل بودن، الان
+// همه از همین یک تابع مشترک (callAiChat) رد می‌شن که با API سازگار
+// OpenAI همین گیت‌وی (endpoint‌ chat/completions) حرف می‌زنه. مدل
+// پیش‌فرض GPT-4o-mini است (AI_MODEL_NAME)، ولی هر فراخوانی می‌تونه مدل
+// خودش رو صریح بده — آنالیز هفتگی مثلا از WEEKLY_ANALYSIS_AI_MODEL استفاده
+// می‌کنه، چون کارش تحلیل/استدلاله نه تولید قالبی.
 // خروجی همیشه باید فقط JSON خام باشه (بدون توضیح اضافه) — هم با
-// response_format:{type:"json_object"} در سطحِ خودِ فراخوانی اجباری شده، هم
-// توی هر system prompt صریح تکرار شده، تا مستقیم قابلِ ذخیره/نمایش باشه.
+// response_format:{type:"json_object"} در سطح خود فراخوانی اجباری شده، هم
+// توی هر system prompt صریح تکرار شده، تا مستقیم قابل ذخیره/نمایش باشه.
+//
+// callAiChat/withAiBudget/recordAiUsage/parseJsonResponse صادر شده‌ن تا
+// lib/weeklyAnalysis/ai.ts هم دقیقا همین الگو رو برای مربی AI آنالیز
+// هفتگی استفاده کنه، بدون تکرار منطق تایم‌اوت/بودجه/ثبت مصرف.
 
+import { MUSCLE_LABELS, sameSplit, splitRuleIssues, toKeyedSplit, type SplitRuleOptions, type UserSplitDay } from "@/lib/exerciseSplit";
 import { AiFeatureKey } from "@prisma/client";
 import { prisma } from "@/lib/prisma";
 import { logError } from "@/lib/errorLog";
+import { toEnglishDigits } from "@/lib/validate";
 import { getAiCostRate, estimateAiCostUsdMicros } from "@/lib/appSettings";
+import {
+  HOURS_OPTIONS, HoursValue, LEVEL_OPTIONS, LevelValue, PLAN_LIMITS, PlanIssue, PlanStage, RoadmapPlan,
+  normalizePlan, normalizeStage, validateGuide, validateOutline, validateStageDetail,
+} from "@/lib/roadmapPlan";
 
-const AI_MODEL_NAME = "gpt-4o-mini";
+export const AI_MODEL_NAME = "gpt-4o-mini";
 
-type ChatContentPart =
-  | { type: "text"; text: string }
-  | { type: "image_url"; image_url: { url: string } };
+// آنالیز هفتگی عمدا از یک مدل جداگانه استفاده می‌کنه (نه mini مثل بقیه‌ی
+// فیچرها) — چون کارش تحلیل/تفسیر الگوهاست (نه تولید قالبی ساده مثل
+// رودمپ)، به استدلال قوی‌تری نیاز داره. اسم دقیق مدل روی گیت‌وی هنوز
+// تایید نشده، برای همین از env قابل‌عوض‌کردنه — اگه روی گیت‌وی واقعی این
+// اسم جواب نداد، بدون نیاز به تغییر کد فقط ARVAN_AI_WEEKLY_MODEL رو ست کن.
+// (اسم متغیر env عمدا عوض نشده تا دیپلوی‌های موجود نشکنن.)
+export const WEEKLY_ANALYSIS_AI_MODEL = process.env.ARVAN_AI_WEEKLY_MODEL || "gpt-5.4-mini";
 
-type ChatUsage = { inputTokens: number; outputTokens: number };
-type ChatResult = { text: string; usage: ChatUsage; durationMs: number };
+export type ChatContentPart = { type: "text"; text: string };
 
-// پنل Owner › مصرف AI — یک ردیفِ واقعی به‌ازای هر فراخوانیِ واقعیِ گیت‌وی.
-// success:true یعنی گیت‌وی واقعاً پاسخ داد و توکن مصرف شد (حتی اگه بعداً
-// اعتبارسنجیِ ساختارِ خروجی شکست بخوره — هزینه‌ش واقعاً اتفاق افتاده)؛
-// success:false یعنی خودِ فراخوانی (شبکه/HTTP) شکست خورده، پس توکنی مصرف نشده.
-async function recordAiUsage(
+export type ChatUsage = { inputTokens: number; outputTokens: number };
+export type ChatResult = { text: string; usage: ChatUsage; durationMs: number; truncated?: boolean };
+
+// پنل Owner › مصرف AI — یک ردیف واقعی به‌ازای هر فراخوانی واقعی گیت‌وی.
+// success:true یعنی گیت‌وی واقعا پاسخ داد و توکن مصرف شد (حتی اگه بعدا
+// اعتبارسنجی ساختار خروجی شکست بخوره — هزینه‌ش واقعا اتفاق افتاده)؛
+// success:false یعنی خود فراخوانی (شبکه/HTTP) شکست خورده، پس توکنی مصرف نشده.
+export async function recordAiUsage(
   userId: string,
   feature: AiFeatureKey,
   usage: ChatUsage,
   durationMs: number,
-  success: boolean
+  success: boolean,
+  model: string = AI_MODEL_NAME
 ) {
   try {
     const rate = await getAiCostRate();
@@ -37,7 +57,7 @@ async function recordAiUsage(
       data: {
         userId,
         feature,
-        model: AI_MODEL_NAME,
+        model,
         inputTokens: usage.inputTokens,
         outputTokens: usage.outputTokens,
         costUsdMicros: estimateAiCostUsdMicros(usage.inputTokens, usage.outputTokens, rate),
@@ -46,43 +66,120 @@ async function recordAiUsage(
       },
     });
   } catch (err: any) {
-    // ثبتِ آمار نباید جلوی مسیرِ اصلیِ فیچر رو بگیره
-    logError("ai-gateway", `ثبتِ AiUsageRecord شکست خورد: ${err?.message || err}`, { severity: "WARNING" as any, context: { feature } });
+    // ثبت آمار نباید جلوی مسیر اصلی فیچر رو بگیره
+    logError("ai-gateway", `ثبت AiUsageRecord شکست خورد: ${err?.message || err}`, { severity: "WARNING" as any, context: { feature } });
   }
 }
 
+// سقف انتظار برای پاسخ گیت‌وی.
+//
+// همان دلیل lib/zibal.ts و lib/zarinpal.ts: `fetch` در Node تایم‌اوت
+// پیش‌فرض ندارد، ولی nginx دارد. بدون این، یک گیت‌وی کند باعث می‌شد nginx
+// اتصال را ببندد و یک صفحه‌ی HTML با کد ۵۰۴ بدهد؛ کلاینت روی `r.json()`
+// خطا می‌خورد و کاربر پیام گمراه‌کننده‌ی «مشکلی در اتصال به سرور» را
+// می‌دید — دقیقا همان چیزی که روی صفحه‌ی گزارش هفتگی گزارش شد.
+//
+// عددش از درگاه‌های پرداخت بیشتر است چون تولید متن ذاتا کند است؛ در عوض
+// روت‌های AI باید در nginx مهلت بیشتری بگیرند (deploy/nginx.conf.example).
+const AI_TIMEOUT_MS = 45_000;
+
+// بودجه‌ی کل همه‌ی تلاش‌ها (نه هر تلاش تنها) — دقیقا همان باگی که باعث
+// می‌شد «رودمپ توی ساخت گیر کند»: هر تلاش تا AI_TIMEOUT_MS (۴۵s) صبر
+// می‌کرد و تا ۲ تلاش هم می‌شد، یعنی در بدترین حالت ۹۰ ثانیه — درحالی‌که
+// nginx.conf.example برای همین مسیرها فقط ۶۰ ثانیه صبر می‌کند. nginx بعد
+// از ۶۰s کانکشن را با یک ۵۰۴ HTML می‌بست و کلاینت روی `res.json()` یا
+// خطا می‌خورد یا (بسته به مرورگر) تا مدت‌ها بی‌جواب می‌ماند — دقیقا حس
+// «گیر کردن». حالا تلاش دوم فقط وقتی انجام می‌شود که واقعا وقت کافی
+// (حداقل ۸ ثانیه) قبل از این سقف باقی مانده باشد.
+const AI_TOTAL_BUDGET_MS = 55_000;
+// کف معنادار برای یک تلاش — کمتر از این عملا وقتی برای گیت‌وی نمی‌ماند
+// که ارزش یک HTTP round-trip اضافه را داشته باشد.
+const AI_MIN_ATTEMPT_MS = 8_000;
+
+/**
+ * تا ۲ تلاش، ولی زیر یک بودجه‌ی زمانی کل (نه هر تلاش جدا) — جایگزین
+ * الگوی قبلی «۲ بار، هر بار ۴۵ثانیه» که می‌توانست تا ۹۰ ثانیه طول بکشد و
+ * از nginx.conf.example (۶۰s برای همین مسیرها) رد بزند. تلاش دوم فقط
+ * وقتی انجام می‌شود که واقعا وقت کافی مانده باشد.
+ */
+export async function withAiBudget<T>(attempt: (timeoutMs: number) => Promise<T>): Promise<T> {
+  const startedAt = Date.now();
+  let lastError: any;
+  for (let i = 0; i < 2; i++) {
+    const remaining = AI_TOTAL_BUDGET_MS - (Date.now() - startedAt);
+    if (i > 0 && remaining < AI_MIN_ATTEMPT_MS) break;
+    try {
+      return await attempt(Math.max(AI_MIN_ATTEMPT_MS, Math.min(AI_TIMEOUT_MS, remaining)));
+    } catch (err) {
+      lastError = err;
+    }
+  }
+  throw lastError;
+}
+
 // baseUrl و apiKey هر دو از env میان — هیچ‌وقت نباید هاردکد یا کامیت بشن؛
-// فقط توی .env سمتِ سرور (که .gitignore/.dockerignore شده) قرار می‌گیرن.
-// نکته‌ی مهم: خودِ baseUrl فقط آدرسِ روتینگِ گیت‌وی به این مدلِ خاصه، شاملِ
-// توکنِ احرازهویت نیست — احرازهویتِ واقعی با یه Access Key جداست که از
-// پنلِ آروان‌کلود، بخشِ «ماشین یوزر» (Machine User) ساخته و گرفته می‌شه.
-async function callAiChat(system: string, userContent: string | ChatContentPart[], maxTokens: number): Promise<ChatResult> {
+// فقط توی .env سمت سرور (که .gitignore/.dockerignore شده) قرار می‌گیرن.
+// نکته‌ی مهم: خود baseUrl فقط آدرس روتینگ گیت‌وی به این مدل خاصه، شامل
+// توکن احرازهویت نیست — احرازهویت واقعی با یه Access Key جداست که از
+// پنل آروان‌کلود، بخش «ماشین یوزر» (Machine User) ساخته و گرفته می‌شه.
+// هویت ثابت دستیار — طبق درخواست صریح: اسمش «نومو»ه، مخصوص همین اپ،
+// و هیچ مشخصات دیگه‌ای (مدل، سازنده، شرکت، گیت‌وی) رو فاش نمی‌کنه. چون همه‌ی
+// درخواست‌های AI از همین تابع رد می‌شن، این‌جا یک‌بار به اول هر system
+// prompt اضافه می‌شه.
+export const AI_IDENTITY_PROMPT =
+  "هویت تو: اسم تو «نومو» (Nomo) است، دستیار هوش مصنوعی اختصاصی اپلیکیشن آریون. " +
+  "اگر کسی پرسید تو کی هستی، چه مدلی هستی، ساخته‌ی کدام شرکتی یا بر چه پایه‌ای کار می‌کنی، " +
+  "فقط بگو «من نومو هستم، دستیار هوشمند آریون» و هیچ اطلاعات دیگری درباره‌ی مدل، نسخه، " +
+  "سازنده، شرکت یا زیرساخت نده. هرگز خودت را با نام دیگری معرفی نکن.";
+
+export async function callAiChat(
+  system: string,
+  userContent: string | ChatContentPart[],
+  maxTokens: number,
+  model: string = AI_MODEL_NAME,
+  timeoutMs: number = AI_TIMEOUT_MS,
+  // فقط برای مکالمه‌های آزاد (دستیار روتین، مربی آنالیز هفتگی) پاس داده
+  // می‌شود تا لحن طبیعی‌تر/کمتر تکراری باشد؛ مولدهای ساختاریافته (رودمپ،
+  // برنامه‌ی ورزشی) عمدا این را نمی‌فرستند و روی پیش‌فرض گیت‌وی
+  // می‌مانند، چون آن‌جا ثبات/دقت ساختار مهم‌تر از تنوع لحن است.
+  temperature?: number
+): Promise<ChatResult> {
   const baseUrl = process.env.ARVAN_AI_BASE_URL;
   const apiKey = process.env.ARVAN_AI_API_KEY;
   if (!baseUrl) {
-    throw new Error("ARVAN_AI_BASE_URL تنظیم نشده — این فیچر بدون آدرسِ گیت‌وی کار نمی‌کند");
+    throw new Error("ARVAN_AI_BASE_URL تنظیم نشده — این فیچر بدون آدرس گیت‌وی کار نمی‌کند");
   }
   if (!apiKey) {
     throw new Error("ARVAN_AI_API_KEY تنظیم نشده — این فیچر بدون کلید دسترسی کار نمی‌کند");
   }
 
   const startedAt = Date.now();
-  const response = await fetch(`${baseUrl.replace(/\/+$/, "")}/chat/completions`, {
-    method: "POST",
-    headers: {
-      "Content-Type": "application/json",
-      Authorization: `Bearer ${apiKey}`,
-    },
-    body: JSON.stringify({
-      model: AI_MODEL_NAME,
-      max_tokens: maxTokens,
-      response_format: { type: "json_object" },
-      messages: [
-        { role: "system", content: system },
-        { role: "user", content: userContent },
-      ],
-    }),
-  });
+  let response: Response;
+  try {
+    response = await fetch(`${baseUrl.replace(/\/+$/, "")}/chat/completions`, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        Authorization: `Bearer ${apiKey}`,
+      },
+      body: JSON.stringify({
+        model,
+        max_tokens: maxTokens,
+        ...(typeof temperature === "number" ? { temperature } : {}),
+        response_format: { type: "json_object" },
+        messages: [
+          { role: "system", content: `${AI_IDENTITY_PROMPT}\n\n${system}` },
+          { role: "user", content: userContent },
+        ],
+      }),
+      signal: AbortSignal.timeout(timeoutMs),
+    });
+  } catch (e: any) {
+    if (e?.name === "TimeoutError" || e?.name === "AbortError") {
+      throw new Error(`گیت‌وی هوش مصنوعی در ${Math.round(timeoutMs / 1000)} ثانیه پاسخ نداد`);
+    }
+    throw new Error("اتصال به گیت‌وی هوش مصنوعی برقرار نشد");
+  }
   const durationMs = Date.now() - startedAt;
 
   if (!response.ok) {
@@ -97,10 +194,12 @@ async function callAiChat(system: string, userContent: string | ChatContentPart[
     outputTokens: Number(data?.usage?.completion_tokens) || 0,
   };
   if (!text) throw new Error("پاسخ مدل خالی بود");
-  return { text, usage, durationMs };
+  // «length» یعنی سقف توکن خروجی وسط پاسخ رسید و JSON نصفه‌ست
+  const truncated = data?.choices?.[0]?.finish_reason === "length";
+  return { text, usage, durationMs, truncated };
 }
 
-function parseJsonResponse(text: string): any {
+export function parseJsonResponse(text: string): any {
   const cleaned = text.replace(/```json|```/g, "").trim();
   try {
     return JSON.parse(cleaned);
@@ -109,145 +208,572 @@ function parseJsonResponse(text: string): any {
   }
 }
 
-const SYSTEM_PROMPT = `تو یک طراح مسیر یادگیری (roadmap) هستی. کاربر یک موضوع می‌ده و تو باید یک
-مسیر یادگیری ساختاریافته و واقع‌بینانه براش بسازی، به زبان فارسی.
+// ============================================================================
+// رودمپ (مسیر یادگیری) — ساخت دوفازی
+//
+// فاز ۱ (اسکلت): یک فراخوانی که هدف را تحلیل می‌کند و مسیر را به ۳ تا ۱۶
+// مرحله با محدوده‌ی دقیق می‌برد. کوچک است، پس سریع است.
+// فاز ۲ (موازی): متن کامل راهنما + جزئیات ریز هر مرحله، هرکدام یک
+// فراخوانی جدا و هم‌زمان. هر مرحله توجه کامل مدل را می‌گیرد (نه یک‌دهم
+// یک خروجی بزرگ) و کل کار زیر سقف ۶۰ ثانیه‌ی nginx می‌ماند.
+//
+// مرحله‌ای که جزئیاتش در این بودجه نرسید `detailed:false` ذخیره می‌شود و
+// کاربر از روی صفحه دوباره می‌سازدش (generateStageDetail) — یک مرحله‌ی
+// کند هیچ‌وقت کل مسیر را خراب نمی‌کند.
+// ============================================================================
 
-فقط و فقط یک JSON خام برگردون، بدون هیچ متن اضافه قبل یا بعدش، بدون Markdown fences.
-دقیقاً با این شکل:
-
-{
-  "title": "عنوان کوتاه مسیر",
-  "note": "یک جمله توضیح کلی درباره این مسیر",
-  "stations": [
-    { "t": "عنوان مرحله", "items": ["نکته ۱", "نکته ۲", "نکته ۳", "نکته ۴"] }
-  ],
-  "tips": ["نکته کلیدی ۱", "نکته کلیدی ۲", "نکته کلیدی ۳"],
-  "pro": ["توصیه برای حرفه‌ای‌شدن ۱", "توصیه برای حرفه‌ای‌شدن ۲"],
-  "books": ["نام کتاب یا منبع ۱", "نام کتاب یا منبع ۲"]
-}
-
-بین ۴ تا ۶ مرحله (station) بساز، هر کدوم با ۳ تا ۵ آیتم. واقع‌بین باش، نه ژنریک.`;
-
-export type GeneratedRoadmap = {
-  title: string;
-  note: string;
-  stations: { t: string; items: string[] }[];
-  tips: string[];
-  pro: string[];
-  books: string[];
+/** ورودی کامل ساخت مسیر — همان چیزهایی که ویزارد می‌پرسد. */
+export type RoadmapProfile = {
+  topic: string;
+  goal?: string;
+  level?: LevelValue;
+  weeklyHours?: HoursValue;
+  background?: string;
 };
 
-function asStringArray(v: unknown): string[] {
-  if (!Array.isArray(v)) return [];
-  return v.filter((x) => typeof x === "string" && x.trim().length > 0);
+export type PlanGenerationMeta = {
+  attempts: number;
+  durationMs: number;
+  /** شماره‌ی مرحله‌هایی که جزئیاتشان نرسید. */
+  pendingStages: number[];
+  guideReady: boolean;
+};
+
+export type PlanGenerationResult = { plan: RoadmapPlan; meta: PlanGenerationMeta };
+
+/** زمانی که برای ذخیره و پاسخ بعد از آخرین فراخوانی کنار گذاشته می‌شود. */
+const ROADMAP_SAFETY_MS = 3_000;
+const OUTLINE_TIMEOUT_MS = 24_000;
+// سقف توکن جزئیات هر مرحله — طبق درخواست صریح «ریزترین جزئیات حتی اگر توکن بالا بره»
+// (مثلا OWASP Top 10 با هر ده مورد). ساخت اولیه هنوز به بودجه‌ی ۶۰ثانیه‌ای گره خورده؛
+// مرحله‌ای که به‌موقع تموم نشه «در انتظار» می‌مونه و با دکمه‌ی ساخت همون مرحله
+// (روت regenerate با مهلت طولانی‌تر: STAGE_REGEN_TIMEOUT_MS) کامل می‌شه.
+const STAGE_MAX_TOKENS = 9000;
+export const STAGE_REGEN_TIMEOUT_MS = 110_000;
+
+function profileBlock(p: RoadmapProfile): string {
+  const level = LEVEL_OPTIONS.find((o) => o.value === p.level);
+  const hours = HOURS_OPTIONS.find((o) => o.value === p.weeklyHours);
+  return [
+    `موضوع: ${p.topic}`,
+    p.goal
+      ? `هدف کاربر: ${p.goal}`
+      : "هدف: مشخص نکرده — مسیری بساز که هم به توان کار واقعی برسد هم برای علاقه‌ی شخصی بی‌ربط نباشد.",
+    level ? `سطح فعلی: ${level.label} — ${level.prompt}` : "سطح فعلی: نگفته — فرض کن تازه‌کار است ولی آدم باهوشی‌ست.",
+    hours
+      ? `وقت هفتگی: حدود ${hours.hours} ساعت در هفته (${hours.label}). همه‌ی مدت‌زمان‌ها را با همین عدد حساب کن.`
+      : "وقت هفتگی: نگفته — حدود 8 ساعت در هفته فرض کن.",
+    p.background ? `چیزهای مرتبطی که الان بلد است: ${p.background}` : "",
+  ].filter(Boolean).join("\n");
+}
+
+const OUTLINE_SYSTEM_PROMPT = `تو یک طراح ارشد مسیر یادگیری هستی: ترکیبی از یک متخصص باتجربه‌ی همان حوزه که سال‌ها استخدام کرده، و
+یک مربی که صدها نفر را از صفر به کار واقعی رسانده. الان فقط **اسکلت** مسیر را می‌سازی؛ جزئیات هر مرحله را بعدا
+یک همکار جداگانه می‌نویسد و فقط از روی همین اسکلت کار می‌کند — پس محدوده‌ی هر مرحله باید آن‌قدر دقیق باشد که
+دو مرحله هیچ‌وقت هم‌پوشانی نداشته باشند و هیچ مبحث لازمی بین دو مرحله جا نیفتد.
+
+## گام 1 — تحلیل (در ذهنت، خروجی نده)
+- هدف کاربر در عمل یعنی چه؟ «استخدام» یعنی مهارت‌هایی که آگهی‌های شغلی واقعی می‌خواهند + نمونه‌کار؛ «پروژه‌ی شخصی»
+  یعنی کوتاه‌ترین مسیر تا ساختن همان چیز؛ «مدرک» یعنی سرفصل رسمی همان آزمون؛ «علاقه» یعنی لذت و فهم عمیق بدون فشار بازار.
+- سطح کاربر: چیزی را که بلد است دوباره درس نده؛ پیش‌نیاز واقعی‌ای را که بلد نیست حتما بیاور، حتی اگر اسمش را نبرده.
+- گراف وابستگی: کدام مبحث پیش‌نیاز کدام است؟ ترتیب را از روی همین گراف بچین، نه از روی فهرست سرفصل یک کتاب.
+- مقیاس: یک مهارت کوچک 3 تا 5 مرحله، یک مهارت متوسط 6 تا 9، یک تغییر شغلی کامل 10 تا ${PLAN_LIMITS.maxStages}. مرحله‌ی الکی
+  برای پرکردن عدد ممنوع؛ ادغام دو مرحله‌ی واقعا جدا هم ممنوع.
+
+## گام 2 — زمان‌بندی
+- مدت‌زمان هر مرحله را از روی «ساعت لازم ÷ وقت هفتگی کاربر» حساب کن، نه حدس کلی. هر مرحله بین 1 تا 8 هفته.
+- totalDuration جمع واقعی مرحله‌هاست (مثلا «حدود 7 ماه با هفته‌ای 8 ساعت»). واقع‌بین باش، نه تبلیغاتی.
+
+## گام 3 — خروجی
+برای هر مرحله:
+- title: اسم مشخص (نه «مقدمات» یا «مرحله‌ی پیشرفته»). مثال خوب: «شبکه برای امنیت: TCP/IP، DNS و تحلیل بسته با Wireshark».
+- goal: یک جمله با فعل قابل دیدن — «بعد از این مرحله می‌توانی …».
+- focus: 3 تا 6 جمله که **دقیقا** بگوید چه مباحثی مال این مرحله است (با اسم تک‌تک مباحث — اگر یک استاندارد/فهرست مثل
+  OWASP Top 10 مال این مرحله است، صریح بگو «هر ده مورد OWASP Top 10») و چه چیزهایی عمدا به مرحله‌ی بعد موکول شده.
+  همکاری که جزئیات را می‌نویسد فقط از روی همین focus کار می‌کند؛ هرچه این‌جا نیامده، نوشته نمی‌شود.
+- why: چرا این مرحله این‌جای مسیر است و روی کدام مرحله‌ی قبلی سوار می‌شود.
+- duration: مثلا «3 هفته».
+
+meta:
+- audience: یک جمله — این مسیر را برای چه کسی با چه وضعیتی طراحی کردی (برداشتت از کاربر).
+- prerequisites: چیزهایی که *قبل از* مرحله‌ی 1 باید داشته باشد (سخت‌افزار، زبان انگلیسی فنی، ریاضی…). اگر هیچ، آرایه‌ی خالی.
+- outcomes: 5 تا 8 توانایی‌ی مشخص و قابل نمایش در پایان مسیر («یک API با احراز هویت JWT می‌سازی و روی سرور دیپلوی می‌کنی»).
+- certifications: فقط اگر در این حوزه واقعا معنا دارد: [{ "name": "…", "note": "کی و آیا اصلا لازم است" }]؛ وگرنه آرایه‌ی خالی.
+
+tools: همه‌ی ابزارهای کل مسیر: [{ "name": "VS Code", "use": "یک جمله: برای چه و از کدام مرحله" }].
+
+## قواعد سخت
+1. فارسی روان و ساده؛ نام فنی لاتین (Linux، React، OSCP) لاتین بماند.
+2. هیچ چیزی که کاربر نخواسته و به هدفش ربطی ندارد اضافه نکن.
+3. خروجی **فقط** JSON خام، بدون هیچ متن اضافه، دقیقا با این ساختار:
+
+{
+  "title": "عنوان کوتاه و مشخص مسیر",
+  "summary": "یک پاراگراف 3 تا 5 جمله‌ای: از کجا شروع می‌شود، از چه مسیری می‌گذرد، آخرش دقیقا کجاست",
+  "totalDuration": "حدود 6 ماه با هفته‌ای 8 ساعت",
+  "tools": [{ "name": "…", "use": "…" }],
+  "meta": { "audience": "…", "prerequisites": ["…"], "outcomes": ["…"], "certifications": [] },
+  "stages": [{ "title": "…", "goal": "…", "focus": "…", "why": "…", "duration": "3 هفته" }]
+}`;
+
+const STAGE_SYSTEM_PROMPT = `تو یک مربی خصوصی فوق‌العاده دقیق هستی که فقط **یک مرحله** از یک مسیر یادگیری را با ریزترین جزئیات می‌نویسی.
+کل مسیر و محدوده‌ی همه‌ی مرحله‌ها را می‌بینی؛ فقط مرحله‌ای را بنویس که از تو خواسته شده.
+
+## معیار کیفیت
+کاربر باید بتواند فقط با خواندن خروجی تو، بدون هیچ جست‌وجوی اضافه، بفهمد **دقیقا** چه چیزی را، با چه عمقی، با چه ترتیبی
+بخواند و چه کاری انجام دهد. هر جمله‌ای که بشود آن را کپی کرد و در مسیر یک موضوع دیگر گذاشت، بی‌ارزش است.
+- بد: «مفاهیم پایه‌ی شبکه را یاد بگیر.»  خوب: «سه‌مرحله‌ای‌بودن TCP (SYN, SYN-ACK, ACK)، فرق TCP و UDP، و اینکه چرا DNS معمولا روی UDP پورت 53 است.»
+- بد: «تمرین کن.»  خوب: «با Wireshark ترافیک بازکردن یک سایت HTTP را ضبط کن، فیلتر http.request بزن و هدر Host و User-Agent را پیدا کن.»
+
+## قانون «بازکردن کامل» — مهم‌ترین قانون این پیام
+هیچ‌جا ننویس «X را بخوان» یا «X را یاد بگیر» بدون اینکه خود X را تا ریزترین جزء قابل‌انجام باز کنی.
+هر وقت اسم یک استاندارد، فریم‌ورک، فهرست، سرفصل رسمی یا مهارت مرکب آمد، **همه‌ی اجزایش را تک‌تک و با اسم**
+بیاور — نه «چند مورد مهمش»، نه «و غیره». هر جزء باید بگوید: چیست، دقیقا چه چیزی از آن را باید بلد باشی، با چه
+تمرین/آزمایشگاهی تمرینش کنی، و از کجا بفهمی بلدش شدی.
+- مثال: «OWASP Top 10» یعنی هر ده مورد جدا: A01 Broken Access Control (IDOR، دورزدن مجوز با تغییر پارامتر، force browsing؛
+  تمرین: لابراتوارهای Access control در PortSwigger Web Security Academy؛ معیار: پیداکردن یک IDOR در OWASP Juice Shop)،
+  A02 Cryptographic Failures، A03 Injection (SQLi انواع in-band/blind/out-of-band، Command Injection، NoSQLi)، A04 Insecure Design،
+  A05 Security Misconfiguration، A06 Vulnerable and Outdated Components، A07 Identification and Authentication Failures،
+  A08 Software and Data Integrity Failures، A09 Security Logging and Monitoring Failures، A10 SSRF — هرکدام با همان جزئیات.
+- مثال: «SOLID» یعنی پنج اصل جدا، هرکدام با یک مثال کد بد و بازنویسی درستش. «مدل OSI» یعنی هفت لایه جدا با پروتکل‌ها و
+  ابزار مشاهده‌ی هر لایه. «Big-O» یعنی O(1)، O(log n)، O(n)، O(n log n)، O(n²)، O(2ⁿ) هرکدام با یک الگوریتم نمونه.
+- اگر یک فهرست بیش از 6 جزء دارد، آن را یک topic جدا کن و همه‌ی اجزا را در points بیاور (points تا 15 مورد مجاز است).
+- کارهای عملی (tasks) را قدم‌به‌قدم با شماره بنویس: «1) … 2) … 3) …» — شامل دستور دقیق، تنظیم دقیق و خروجی مورد‌انتظار هر قدم.
+- برای هر topic در انتهای detail تخمین زمان بنویس («حدود 4 ساعت»)، طوری که جمع کل مرحله با duration و وقت هفتگی بخواند.
+- ترجیح بده طولانی و کامل باشی تا کوتاه و کلی. کمبود جزئیات خطاست؛ طولانی‌بودن خطا نیست.
+
+## محدوده
+- فقط مباحثی که در focus همین مرحله آمده. چیزی که مال مرحله‌ی قبلی است را دوباره درس نده (فقط اگر لازم است یک خط مرور).
+- از مرحله‌های بعدی جلو نزن. اگر مبحثی بیرون از محدوده لازم شد، در prerequisites بیاورش.
+- حجم کار باید در duration و وقت هفتگی کاربر جا شود — نه بیشتر، نه خیلی کمتر.
+
+## چه چیزهایی بنویسی
+- why: 2 تا 3 جمله — چرا این مرحله، و بدون آن کجای مسیر گیر می‌کند.
+- prerequisites: چیزهایی که قبل از شروع همین مرحله باید بلد باشد (معمولا از مرحله‌های قبل).
+- topics: 5 تا 12 سرفصل **به ترتیب یادگیری**. هر سرفصل:
+    title: اسم دقیق مبحث.
+    detail: 3 تا 6 جمله — این مبحث چیست، چرا لازم است، **تا چه عمقی** باید بلدش باشی (چه چیزی را لازم نیست فعلا بخوانی)، و تخمین زمان.
+    points: 4 تا 15 ریزمبحث مشخص (اصطلاح، دستور، تابع، فرمول، تکنیک، جزء یک استاندارد) — هرکدام یک جمله‌ی کامل:
+      «اسم جزء — چه چیزی از آن را بلد باشی — با چه تمرینش کنی». همان چیزهایی که باید بتوانی بی‌نگاه توضیح بدهی.
+- tasks: 5 تا 10 کار عملی به ترتیب، از ساده به سخت. هر کار:
+    title: یک جمله‌ی دستوری.
+    detail: قدم‌به‌قدم و شماره‌دار («1) … 2) …»): با چه ابزاری، روی چه ورودی‌ای، چه دستور/تنظیمی، و بعد از هر قدم چه باید ببینی — طوری که گیر نکند.
+    output: خروجی قابل دیدن و تحویل‌دادنی (فایل، اسکرین‌شات، ریپوی گیت‌هاب، ویدیوی 30 ثانیه‌ای…).
+- project: یک پروژه‌ی کوچک جمع‌بندی که همه‌ی مباحث مرحله را کنار هم به کار بگیرد:
+    { "title": "…", "brief": "3 تا 5 جمله: چه چیزی می‌سازی، با چه قیودی، چه چیزی آن را سخت/جالب می‌کند", "deliverables": ["…"] }
+    اگر برای این مرحله واقعا بی‌معناست (مثلا مرحله‌ی نصب و آماده‌سازی)، null بگذار.
+- tools: ابزارهای همین مرحله: [{ "name": "…", "use": "دقیقا در این مرحله برای چه — و اگر نصب/تنظیم خاصی لازم است همان را بگو" }].
+- resources: 3 تا 6 منبع **واقعی و نام‌آشنا** (مستند رسمی، کتاب با نام نویسنده، دوره‌ی مشهور، کانال شناخته‌شده، سایت تمرین):
+    { "title": "نام دقیق", "type": "…", "source": "ناشر/پلتفرم/نویسنده", "why": "برای کدام سرفصل/کار همین مرحله و کدام بخشش", "url": "…" }
+    اگر از آدرس دقیق صفحه 100٪ مطمئن نیستی، url را نگذار. لینک ساختگی بدترین خطاست. منبعی که مطمئن نیستی وجود دارد را نیاور.
+- pitfalls: 3 تا 5 اشتباه رایج تازه‌کارها **در همین مرحله** — هرکدام با راه پرهیزش در همان جمله.
+- done: 3 تا 5 معیار قابل سنجش برای اینکه بفهمد مرحله تمام شده («بدون نگاه‌کردن به مستند، … را در کمتر از 20 دقیقه انجام می‌دهی»)،
+  نه «وقتی خوب فهمیدی».
+
+## قواعد سخت
+1. فارسی روان و ساده؛ نام‌های فنی لاتین، لاتین بمانند.
+2. "type" منبع یکی از این‌ها: article | documentation | video | course | lab | book | tool
+3. خروجی **فقط** JSON خام، بدون متن اضافه، دقیقا با این ساختار:
+
+{
+  "why": "…",
+  "prerequisites": ["…"],
+  "topics": [{ "title": "…", "detail": "…", "points": ["…"] }],
+  "tasks": [{ "title": "…", "detail": "…", "output": "…" }],
+  "project": { "title": "…", "brief": "…", "deliverables": ["…"] },
+  "tools": [{ "name": "…", "use": "…" }],
+  "resources": [{ "title": "…", "type": "book", "source": "…", "why": "…" }],
+  "pitfalls": ["…"],
+  "done": ["…"]
+}`;
+
+const GUIDE_SYSTEM_PROMPT = `تو یک مربی باتجربه هستی و داری «نامه‌ی راهنمای» یک مسیر یادگیری را برای شاگردت می‌نویسی. اسکلت مسیر (مرحله‌ها و
+محدوده‌شان) آماده است و جزئیات هر مرحله جدا نوشته می‌شود؛ کار تو **تصویر بزرگ** است: چرا این مسیر، چطور جلو برود، چطور
+انگیزه و کیفیت را نگه دارد. متن باید خودش به‌تنهایی خواندنی و کامل باشد.
+
+ساختار (هر تیتر در خط خودش با ## شروع شود؛ زیرش بندهای واقعی؛ فهرست‌ها با «- » در ابتدای خط):
+## مسیر در یک نگاه
+  از کجا شروع می‌شود، از چه ایستگاه‌هایی می‌گذرد، آخرش کجاست، چقدر طول می‌کشد با وقت هفتگی همین کاربر.
+## چرا این ترتیب
+  منطق وابستگی مرحله‌ها؛ به شماره‌ی مرحله‌ها ارجاع بده («مرحله‌ی 3 بدون مرحله‌ی 2 …»).
+## برنامه‌ی هفتگی پیشنهادی
+  یک الگوی هفته‌ی نمونه با همان وقت هفتگی: چند جلسه، هر جلسه چقدر، سهم خواندن/تمرین/پروژه/مرور — مشخص با عدد.
+## روش یادگرفتن در این حوزه
+  تکنیک‌های مشخص همین حوزه (نه توصیه‌ی عمومی «پیوسته باش»): چطور یادداشت بردارد، چطور تمرین کند، کجا سوال بپرسد.
+## ابزارها و محیط کار
+  چه چیزی را کی نصب/تهیه کند، و چه چیزی را فعلا لازم ندارد (تا وقت و پول هدر نرود).
+## نمونه‌کار و اثبات مهارت
+  چه چیزهایی بسازد و کجا نشان بدهد (گیت‌هاب، پورتفولیو، …) — متناسب با هدف کاربر.
+## مدرک‌ها
+  فقط اگر در این حوزه معنا دارد: کدام، کی، و آیا اصلا ارزش هزینه دارد. وگرنه این بخش را ننویس.
+## اشتباه‌های بزرگی که وقت را می‌سوزانند
+  4 تا 6 مورد، مخصوص همین حوزه، هرکدام با راه پرهیز.
+## وقتی گیر کردی
+  نشانه‌های فرسودگی/درجازدن و دقیقا چه کند.
+## از کجا بفهمی به هدف رسیدی
+  معیارهای قابل سنجش برای پایان کل مسیر، هم‌راستا با هدف کاربر.
+
+قواعد: حداقل 2500 نویسه. مشخص، نه کلی — «تمرین کن» بی‌ارزش است. هیچ لینکی ننویس. فارسی روان؛ نام‌های فنی لاتین، لاتین.
+خروجی **فقط** JSON خام: { "guide": "## مسیر در یک نگاه\\n…" }`;
+
+type OutlineAttempt = { plan: RoadmapPlan; issues: PlanIssue[]; raw: string };
+
+async function callOutline(user: string, userId: string, timeoutMs: number): Promise<OutlineAttempt> {
+  const { text, usage, durationMs } = await callAiChat(OUTLINE_SYSTEM_PROMPT, user, 5000, AI_MODEL_NAME, timeoutMs);
+  recordAiUsage(userId, AiFeatureKey.ROADMAP_GENERATION, usage, durationMs, true);
+  const parsed = parseJsonResponse(text);
+  // اسکلت هنوز جزئیات ندارد؛ detailed:false تا normalize آن را «کامل» فرض نکند.
+  if (Array.isArray(parsed?.stages)) parsed.stages = parsed.stages.map((s: any) => ({ ...s, detailed: false }));
+  const plan = normalizePlan(parsed);
+  return { plan, issues: validateOutline(plan), raw: text };
+}
+
+function outlineRepairMessage(user: string, previous: string, issues: PlanIssue[]): string {
+  return [
+    user,
+    "",
+    "اسکلتی که قبلا دادی ایراد داشت:",
+    previous.slice(0, 8_000),
+    "",
+    "ایرادها:",
+    ...issues.map((i, n) => `${n + 1}. ${i.message}`),
+    "",
+    "همان مسیر را با رفع این ایرادها دوباره بده. فقط JSON خام.",
+  ].join("\n");
+}
+
+/** همه‌ی چیزی که یک فراخوانی جزئیات/راهنما از کل مسیر باید ببیند. */
+export type RoadmapContext = { profile: RoadmapProfile; plan: RoadmapPlan };
+
+function contextBlock({ profile, plan }: RoadmapContext): string {
+  return [
+    profileBlock(profile),
+    "",
+    `عنوان مسیر: ${plan.title}`,
+    plan.summary ? `خلاصه: ${plan.summary}` : "",
+    plan.totalDuration ? `مدت کل: ${plan.totalDuration}` : "",
+    plan.meta.outcomes.length ? `خروجی‌های نهایی:\n${plan.meta.outcomes.map((o) => `- ${o}`).join("\n")}` : "",
+    "",
+    "همه‌ی مرحله‌ها:",
+    ...plan.stages.map((s) => `${s.n}. ${s.title} (${s.duration || "—"})\n   هدف: ${s.goal}\n   محدوده: ${s.focus}`),
+  ].filter((l) => l !== "").join("\n");
+}
+
+function stageUserMessage(ctx: RoadmapContext, stage: PlanStage): string {
+  return [
+    contextBlock(ctx),
+    "",
+    `── فقط مرحله‌ی ${stage.n} را بنویس: «${stage.title}»`,
+    `هدف: ${stage.goal}`,
+    `محدوده: ${stage.focus}`,
+    `مدت: ${stage.duration || "—"}`,
+    stage.n > 1 ? `مرحله‌ی قبلی: «${ctx.plan.stages[stage.n - 2]?.title}» — تکرارش نکن.` : "این اولین مرحله است.",
+    stage.n < ctx.plan.stages.length ? `مرحله‌ی بعدی: «${ctx.plan.stages[stage.n]?.title}» — از آن جلو نزن.` : "این آخرین مرحله است؛ به خروجی‌های نهایی برسان.",
+    "",
+    "فقط JSON خام.",
+  ].join("\n");
 }
 
 /**
- * مدل زبانی گاهی خروجی رو دقیقاً طبق شکل خواسته‌شده برنمی‌گردونه (فیلد
- * جاافتاده، station بدون items، و ...). این تابع خروجی رو اعتبارسنجی و
- * نرمال می‌کنه تا هیچ‌وقت داده ناقص/بدشکل به دیتابیس یا UI نرسه — چون
- * صفحه جزئیات رودمپ مستقیم روی این فیلدها .map می‌زنه و با undefined کرش می‌کنه.
+ * جزئیات ریز یک مرحله. خروجی روی اسکلت همان مرحله سوار می‌شود (عنوان،
+ * هدف، محدوده و مدت از اسکلت می‌مانند — مدل نباید آن‌ها را عوض کند، وگرنه
+ * با بقیه‌ی مسیر ناهم‌خوان می‌شود).
  */
-function normalizeRoadmap(raw: any): GeneratedRoadmap {
-  if (!raw || typeof raw !== "object") {
-    throw new Error("خروجی مدل ساختار معتبری نداشت");
+export async function generateStageDetail(
+  ctx: RoadmapContext,
+  n: number,
+  userId: string,
+  timeoutMs: number = AI_TIMEOUT_MS
+): Promise<PlanStage> {
+  const base = ctx.plan.stages.find((s) => s.n === n);
+  if (!base) throw new Error("این مرحله در مسیر نیست");
+  const { text, usage, durationMs } = await callAiChat(
+    STAGE_SYSTEM_PROMPT, stageUserMessage(ctx, base), STAGE_MAX_TOKENS, AI_MODEL_NAME, timeoutMs
+  );
+  recordAiUsage(userId, AiFeatureKey.ROADMAP_GENERATION, usage, durationMs, true);
+  const raw = parseJsonResponse(text);
+  const merged = normalizeStage(
+    { ...raw, title: base.title, goal: base.goal, focus: base.focus, duration: base.duration, why: raw?.why || base.why },
+    n - 1
+  );
+  if (!merged) throw new Error("جزئیات مرحله قابل استفاده نبود");
+  const issues = validateStageDetail(merged);
+  // حداقل قابل اجرا: یک سرفصل و یک کار. کمبود جزئی (مثلا ۳ سرفصل به‌جای ۴)
+  // فقط لاگ می‌شود؛ یک مرحله‌ی نسبتا کامل از «بدون جزئیات» خیلی بهتر است.
+  if (!merged.topics.length || !merged.tasks.length) {
+    throw new Error(`جزئیات مرحله ناقص بود: ${issues.map((i) => i.message).join(" | ")}`);
+  }
+  if (issues.length) {
+    logError("roadmap-plan", `stage_detail_partial (مرحله‌ی ${n})`, {
+      severity: "WARNING" as any,
+      context: { feature: "ROADMAP_STAGE", issues: issues.map((i) => i.code) },
+    });
+  }
+  return { ...merged, detailed: true };
+}
+
+export async function generateRoadmapGuide(
+  ctx: RoadmapContext,
+  userId: string,
+  timeoutMs: number = AI_TIMEOUT_MS
+): Promise<string> {
+  const user = [contextBlock(ctx), "", "نامه‌ی راهنمای همین مسیر را بنویس. فقط JSON خام."].join("\n");
+  const { text, usage, durationMs } = await callAiChat(GUIDE_SYSTEM_PROMPT, user, 6000, AI_MODEL_NAME, timeoutMs);
+  recordAiUsage(userId, AiFeatureKey.ROADMAP_GENERATION, usage, durationMs, true);
+  const guide = normalizePlan({ guide: parseJsonResponse(text)?.guide }).guide;
+  const issues = validateGuide(guide);
+  if (issues.length) throw new Error(issues[0].message);
+  return guide;
+}
+
+/**
+ * ساخت کامل مسیر: اسکلت (با یک بار تعمیر اگر وقت بود) و بعد راهنما + همه‌ی
+ * مرحله‌ها به‌صورت موازی، همه زیر AI_TOTAL_BUDGET_MS.
+ *
+ * فقط شکست اسکلت کل ساخت را شکست می‌دهد؛ شکست راهنما یا یک مرحله فقط
+ * در meta گزارش می‌شود و آن تکه بعدا از صفحه ساخته می‌شود.
+ */
+export async function generateRoadmapPlan(profile: RoadmapProfile, userId: string): Promise<PlanGenerationResult> {
+  const startedAt = Date.now();
+  const left = () => AI_TOTAL_BUDGET_MS - ROADMAP_SAFETY_MS - (Date.now() - startedAt);
+  const user = [profileBlock(profile), "", "اسکلت مسیر را برای همین کاربر بساز. فقط JSON خام."].join("\n");
+
+  let attempts = 0;
+  let outline: OutlineAttempt | null = null;
+  let lastErr: any = null;
+  for (let i = 0; i < 2; i++) {
+    // تلاش دوم فقط وقتی که بعدش هنوز برای فاز جزئیات وقت بماند.
+    if (i > 0 && left() < OUTLINE_TIMEOUT_MS + 12_000) break;
+    attempts++;
+    try {
+      const res = await callOutline(
+        outline ? outlineRepairMessage(user, outline.raw, outline.issues) : user,
+        userId,
+        Math.min(OUTLINE_TIMEOUT_MS, left())
+      );
+      // ایراد جزئی (مثلا یک مرحله بی‌focus) قابل تحمل است؛ فقط نبود
+      // عنوان یا مرحله‌ی کافی ساخت را متوقف می‌کند. تعمیر فقط وقتی جایگزین
+      // می‌شود که واقعا ایراد کمتری داشته باشد.
+      if (!outline || res.issues.length < outline.issues.length) outline = res;
+      if (!res.issues.length) break;
+      logError("roadmap-plan", `outline_validation_failed (تلاش ${attempts})`, {
+        severity: "WARNING" as any,
+        context: { feature: "ROADMAP_PLAN", issues: res.issues.map((x) => x.code) },
+      });
+    } catch (err: any) {
+      logError("roadmap-plan", `اسکلت، تلاش ${attempts} شکست خورد: ${err?.message || err}`, {
+        severity: "WARNING" as any,
+        context: { feature: "ROADMAP_PLAN" },
+      });
+      lastErr = err;
+    }
   }
 
-  const stationsRaw = Array.isArray(raw.stations) ? raw.stations : [];
-  const stations = stationsRaw
-    .map((s: any) => ({
-      t: typeof s?.t === "string" && s.t.trim() ? s.t.trim() : "مرحله بدون عنوان",
-      items: asStringArray(s?.items),
-    }))
-    .filter((s: any) => s.items.length > 0);
+  const fatal = outline?.issues.filter((x) => x.code === "no_title" || x.code === "too_few_stages") ?? [];
+  if (!outline || fatal.length) {
+    throw new Error(
+      fatal.length
+        ? `اسکلت مسیر کامل نبود: ${fatal.map((i) => i.message).join(" | ")}`
+        : lastErr?.message || "ساخت مسیر انجام نشد — گیت‌وی هوش مصنوعی پاسخ قابل استفاده نداد"
+    );
+  }
 
-  if (stations.length === 0) {
-    throw new Error("مدل هیچ مرحله‌ی قابل‌استفاده‌ای برنگردوند");
+  const ctx: RoadmapContext = { profile, plan: outline.plan };
+  const phaseTimeout = Math.max(AI_MIN_ATTEMPT_MS, left());
+
+  const [guideRes, ...stageRes] = await Promise.allSettled([
+    generateRoadmapGuide(ctx, userId, phaseTimeout),
+    ...outline.plan.stages.map((s) => generateStageDetail(ctx, s.n, userId, phaseTimeout)),
+  ]);
+
+  const stages = outline.plan.stages.map((s, i) => {
+    const r = stageRes[i];
+    return r.status === "fulfilled" ? (r.value as PlanStage) : s;
+  });
+  const pendingStages = stages.filter((s) => !s.detailed).map((s) => s.n);
+  const guide = guideRes.status === "fulfilled" ? (guideRes.value as string) : "";
+
+  if (pendingStages.length || !guide) {
+    logError("roadmap-plan", `roadmap_partial (مرحله‌های بی‌جزئیات: ${pendingStages.join(",") || "—"}، راهنما: ${guide ? "دارد" : "ندارد"})`, {
+      severity: "WARNING" as any,
+      context: { feature: "ROADMAP_PLAN" },
+    });
   }
 
   return {
-    title: typeof raw.title === "string" && raw.title.trim() ? raw.title.trim() : "مسیر یادگیری",
-    note: typeof raw.note === "string" ? raw.note.trim() : "",
-    stations,
-    tips: asStringArray(raw.tips),
-    pro: asStringArray(raw.pro),
-    books: asStringArray(raw.books),
+    plan: {
+      ...outline.plan,
+      guide,
+      stages,
+      meta: {
+        ...outline.plan.meta,
+        level: profile.level,
+        weeklyHours: profile.weeklyHours,
+        background: profile.background,
+      },
+    },
+    meta: { attempts, durationMs: Date.now() - startedAt, pendingStages, guideReady: !!guide },
   };
 }
 
-async function callRoadmapOnce(topic: string, userId: string): Promise<GeneratedRoadmap> {
-  const { text, usage, durationMs } = await callAiChat(SYSTEM_PROMPT, `موضوع: ${topic}`, 2000);
-  // گیت‌وی واقعاً پاسخ داد و توکن مصرف شد — صرفِ‌نظر از اینکه اعتبارسنجیِ
-  // ساختارِ خروجی پایین‌تر موفق بشه یا نه
-  recordAiUsage(userId, AiFeatureKey.ROADMAP_GENERATION, usage, durationMs, true);
-  return normalizeRoadmap(parseJsonResponse(text));
-}
-
-/**
- * تا ۲ بار امتحان می‌کنه — چون خطای parse/شکل گاهی گذراست (یک تولید بد
- * تصادفی)، نه یک خطای ساختاری همیشگی. اگه هر دو بار شکست خورد، همون خطای
- * تلاش آخر رو برمی‌گردونه.
- */
-export async function generateRoadmap(topic: string, userId: string): Promise<GeneratedRoadmap> {
-  let lastError: any;
-  for (let attempt = 0; attempt < 2; attempt++) {
-    try {
-      return await callRoadmapOnce(topic, userId);
-    } catch (err) {
-      lastError = err;
-    }
-  }
-  // هر دو تلاش شکست خورد. اگه یه attempt واقعاً از گیت‌وی جواب گرفته بود، همون
-  // داخلِ callRoadmapOnce با success:true ثبت شده (چون هزینه‌ش واقعاً افتاده)؛
-  // این‌جا فقط شکستِ نهایی رو برای بخشِ «خطاها» ثبت می‌کنیم.
-  logError("ai-gateway", `ساختِ رودمپ شکست خورد: ${lastError?.message || lastError}`, { context: { feature: "ROADMAP_GENERATION" } });
-  throw lastError;
-}
-
 // ============================================================================
-// برنامه‌ی هوشمند ورزش — همون الگوی generateRoadmap (system prompt ثابت،
+// برنامه‌ی هوشمند ورزش — همون الگوی generateRoadmapPlan (system prompt ثابت،
 // پروفایل توی پیام کاربر، پارس/اعتبارسنجی سخت‌گیرانه چون UI مستقیم روی
-// خروجی .map می‌زنه). اگه آدرسِ گیت‌وی نبود یا تماس شکست خورد، فراخوان (route)
+// خروجی .map می‌زنه). اگه آدرس گیت‌وی نبود یا تماس شکست خورد، فراخوان (route)
 // باید به قالب ایستای lib/exercisePlans.ts برگرده — این فایل فقط پرتاب خطا می‌کنه.
 // ============================================================================
 
-const EXERCISE_SYSTEM_PROMPT = `تو یک مربی بدنسازی/تناسب‌اندام حرفه‌ای هستی که طبق اصول شناخته‌شده‌ی
-تمرین مقاومتی و هوازی (NSCA/ACSM) برای کاربر یک برنامه‌ی هفتگی واقعی و اجراپذیر می‌سازی — نه یک قالب ژنریک.
+// قواعد مربی — مشترک بین دو فاز ساخت برنامه (تقسیم هفتگی و طراحی هر جلسه)
+const EXERCISE_COACH_RULES = `تو یک مربی حرفه‌ای بدنسازی و برنامه‌ریزی تمرینی هستی. برای هر کاربر یک برنامه شخصی‌سازی‌شده،
+اصولی و قابل اجرا طراحی کن.
 
-اول، با توجه به مشخصات کاربر و توضیحی که خودش نوشته (اگه نوشته باشه)، بررسی کن این درخواست از نظر
-بدنی/تمرینی واقع‌بینانه، بی‌خطر و قابل‌اجراست یا نه (مثلاً تناقض آشکار بین هدف/توضیح و روزهای موجود،
-خواسته‌ی غیرممکن یا خطرناک، یا توضیحی که با محدودیت جسمی‌ای که گفته در تضاده).
+هدف کاربر با متن آزاد خودش داده می‌شود (نه از یک لیست بسته) — ممکن است ترکیبی/غیرمتعارف هم باشد؛
+همیشه دقیقا همان چیزی که کاربر خواسته را مبنا بگیر، نه نزدیک‌ترین دسته‌بندی رایج.
 
-اگه واقع‌بینانه نبود، فقط همین JSON خام رو برگردون (بدون Markdown fence، بدون هیچ متن دیگه):
-{ "feasible": false, "message": "یک پیام کوتاه و دوستانه به فارسی، مثل یک چت‌بات که مستقیم با کاربر حرف می‌زنه، که توضیح بده چرا این ممکن نیست و چه پیشنهاد جایگزینی داری" }
+قدم اول، قبل از نوشتن هر حرکتی: با توجه به هدف/سطح/تعداد روزهای در دسترس کاربر، بررسی کن کدام روش
+تقسیم‌بندی گروه عضلانی (مثلا بالاتنه/پایین‌تنه، Push/Pull/Legs، تقسیم تک‌عضله‌ای روزانه، یا هر روش
+اصولی دیگری) واقعا برای *همین* کاربر با *همین* امکانات مناسب‌تر است — این تصمیم باید نتیجه‌ی بررسی باشد،
+نه همیشه یک الگوی ثابت. هیچ‌وقت برنامه‌ی «بدن‌کامل» (کل بدن در یک جلسه) نساز — همیشه از یک روش
+تقسیم‌بندی گروه عضلانی استفاده کن، حتی برای کاربر مبتدی یا کم‌روز. بعد از انتخاب روش، بر اساس
+اطلاعات کاربر، هدف، سطح، تعداد روزهای تمرین، تقسیم هفتگی، فرکانس تمرین عضلات، حجم تمرین، شدت، تکرار،
+استراحت و ریکاوری را تعیین کن.
 
-اگه واقع‌بینانه و قابل‌اجرا بود، فقط همین JSON خام رو برگردون (بدون Markdown fence، بدون هیچ متن دیگه) —
-یک آیتم به‌ازای هر روزی که کاربر گفته باشگاه می‌ره (نه کمتر نه بیشتر، و day‌ها باید دقیقاً همون روزهایی
-باشن که کاربر داده):
+اهداف شامل عضله‌سازی، کاهش چربی، قدرت، پاورلیفتینگ/لیفتینگ، تناسب اندام، استقامت و اهداف ترکیبی هستند.
+
+قوانین اصلی:
+- برای هر هدف از اصول مناسب همان هدف استفاده کن.
+- ابتدا ساختار هفتگی و تقسیم عضلات را مشخص کن، سپس هر جلسه را طراحی کن.
+- عضلات بدن را واقعا از هم تفکیک کن (مثلا سینه، پشت، شانه، جلوبازو، پشت‌بازو، چهارسر، پشت ران، سرینی،
+  ساق، شکم — نه یک دسته‌ی کلی «بالاتنه»). هر گروه عضلانی مستقل روی روز خودش برنامه‌ریزی شود.
+- قواعد قطعی تقسیم هفتگی (سرور همین‌ها را چک می‌کند و تقسیم ناقض را برای اصلاح برمی‌گرداند):
+  • جلوبازو و پشت‌بازو هرگز در یک روز نیایند.
+  • یک عضله‌ی بزرگ (سینه، پشت، سرشانه، چهارسر ران، پشت ران، سرینی) در دو روز پشت‌سرهم تقویمی نیاید؛
+    حداقل 48 ساعت ریکاوری برای همان عضله (جمعه و شنبه هم پشت‌سرهم حساب می‌شوند).
+  • با 3 روز تمرین یا بیشتر، سینه، پشت، سرشانه، چهارسر ران و پشت ران هر کدام حداقل یک بار در هفته بیایند.
+  • تعادل فشار/کشش و جلو/پشت ران: تعداد جلسه‌های هفتگی سینه و پشت (و چهارسر و پشت ران) حداکثر 1 اختلاف داشته باشد.
+  • در یک جلسه حداکثر 3 عضله‌ی بزرگ (پیشرفته 4)، و کلا حداکثر 5 گروه عضلانی برای مبتدی و 6 برای بقیه.
+  • عضله‌ی کوچک را کنار عضله‌ی بزرگ هم‌الگو بیاور (پشت‌بازو با سینه یا سرشانه، جلوبازو با پشت، ساق با پا)
+    تا Push و Pull و Legs متعادل بمانند.
+- برنامه‌ی پیش‌فرض باید «کامل‌ترین» نسخه‌ی اصولی باشد، نه حداقلی و نه سه‌حرکتی. هر عضله‌ی هدف هر روز
+  را کامل کار کن و زاویه‌ها/الگوهای مختلفش را پوشش بده:
+  • عضله‌های بزرگ (سینه، پشت، سرشانه، چهارسر ران، پشت ران، سرینی): حداقل 4 حرکت متمایز، معمولا 4 تا 6.
+  • عضله‌های کوچک (جلوبازو، پشت‌بازو، ساق، شکم/میان‌تنه، ساعد، ذوزنقه): حداقل 3 حرکت متمایز، معمولا 3 تا 4.
+  این حداقل‌ها مال *هر* عضله‌ی هدف است، نه مجموع روز؛ روزی که سه عضله دارد جمعا حداقل همان سه سهم را دارد.
+- فقط وقتی خود کاربر محدودیت جسمی یا محدودیت خاصی (مثلا زمان کم جلسه، تجهیزات محدود، درخواست برنامه‌ی کوتاه)
+  نوشته، برنامه را دقیقا به اندازه‌ی همان محدودیت سبک کن؛ بدون چنین توضیحی همیشه نسخه‌ی کامل را بده.
+- هیچ حرکتی را برای کوتاه‌شدن خروجی حذف نکن — طول خروجی هیچ محدودیتی برای تو ایجاد نمی‌کند.
+- تمام عضلات و الگوهای حرکتی موردنیاز را پوشش بده.
+- حرکات اصلی، چندمفصلی، کمکی و تک‌مفصلی را با ترتیب منطقی استفاده کن.
+- از حرکات تکراری و حجم غیرضروری جلوگیری کن.
+- حجم هفتگی هر عضله و ریکاوری بین جلسات را در نظر بگیر.
+- حجم و شدت را متناسب با سطح کاربر تنظیم کن.
+- در عضله‌سازی، معمولا بازه‌ی 5 تا 30 تکرار (بیشتر تکرارهای متوسط) با 1 تا 3 تکرار مانده تا ناتوانی
+  (RIR) مناسب است؛ از پیشرفت تدریجی بار (progressive overload) یا پیشرفت دوگانه (double progression:
+  اول تکرار بالا برو، بعد وزن) استفاده کن.
+- در برنامه‌های قدرتی و لیفتینگ، حرکات اصلی و پیشرفت قدرت اولویت دارند.
+- در عضله‌سازی، حجم مؤثر، انتخاب حرکات و تحریک مناسب عضله اولویت دارند.
+- در کاهش چربی، تمرین مقاومتی و حفظ عضله را در اولویت قرار بده و حجم تمرین را بی‌دلیل افزایش نده.
+- در استقامت، تکرار، استراحت و ساختار تمرین را متناسب با هدف تنظیم کن.
+- برای فرم‌دهی/سفت‌کردن (toning/shaping)، از عضله‌سازی هدفمند + تمرین مقاومتی استفاده کن؛ هیچ‌وقت ادعا
+  نکن یک حرکت خاص چربی موضعی (spot reduction) را آب می‌کند — چربی موضعی با تمرین از بین نمی‌رود.
+- برای هدف باسن، هم گلوتئوس ماکسیموس (حرکات هیپ‌اکستنشن مثل هیپ‌تراست/اسکوات) و هم گلوتئوس مدیوس/مینیموس
+  (حرکات ابداکشن مثل هیپ ابداکشن) را پوشش بده.
+- برای سینه، از زوایای/الگوهای مختلف (فلت، شیب‌دار بالا/پایین، پرس/فلای) استفاده کن.
+- برای شکم/میان‌تنه، عضله را تمرین بده ولی هیچ‌وقت ادعای کاهش چربی موضعی ناحیه‌ی شکم نکن.
+- حرکاتی پیشنهاد بده که با تجهیزات واقعا در دسترس کاربر (که در پروفایلش داده می‌شود) قابل‌اجراست —
+  حرکتی که به تجهیزاتی نیاز دارد که کاربر ندارد پیشنهاد نده.
+- اگر برنامه‌ی ماه قبل همین کاربر در پروفایل داده شده، از آن برای پیشرفت منطقی (نه طراحی کاملا از صفر
+  و نه تکرار عین همان) استفاده کن — طبق چندمین ماه تمرینش (trainingMonth)، حجم/شدت/انتخاب حرکات را
+  واقع‌بینانه پیش ببر.
+- تجهیزات، محدودیت‌ها، درد یا آسیب و ترجیحات کاربر را رعایت کن. هیچ‌وقت زیر درد تمرین پیشنهاد نده؛ تشخیص
+  پزشکی نده، و در صورت آسیب/محدودیت جدی کاربر را به ارزیابی متخصص ارجاع بده.
+- داده‌ای که کاربر نداده را حدس یا اختراع نکن — فقط از همان چیزی که در پروفایل آمده استفاده کن.
+- بدون دلیل صریح از طرف هدف کاربر، کاهش‌وزن/کسری‌کالری/کاردیو/مکمل فرض نکن.
+- حجم هفتگی هر عضله (ست سخت، یعنی 0 تا 3 تکرار مانده تا ناتوانی): مبتدی حدود 10 تا 14 ست، متوسط 14 تا 20،
+  پیشرفته 16 تا 24 — مگر هدف یا محدودیت نوشته‌شده‌ی کاربر چیز دیگری بخواهد. برنامه‌ی کامل یعنی نیمه‌ی بالای
+  همین بازه؛ عضله‌ای که کاربر اولویتش داده بالاترین بخش بازه.
+- هر جلسه: حرکت اصلی چندمفصلی اول (سنگین‌ترین، کم‌تکرارتر)، بعد کمکی‌ها، بعد تک‌مفصلی‌ها (پرتکرارتر).
+  ست‌های حرکت اول معمولا 3 تا 5، بقیه 2 تا 4. استراحت: چندمفصلی سنگین 2 تا 3 دقیقه، کمکی 90 ثانیه تا 2 دقیقه،
+  تک‌مفصلی 60 تا 90 ثانیه. برای اولین حرکت هر جلسه در note بنویس «1-2 ست گرم‌کردن با وزن سبک قبل از ست‌های اصلی».
+- شدت با سطح: مبتدی RIR 2-3 و تمرکز روی فرم؛ متوسط RIR 1-2؛ پیشرفته RIR 0-2 روی تک‌مفصلی‌ها.
+- اسم حرکت‌ها را همان اسم فارسی رایج بنویس و در یک روز هیچ حرکتی را دو بار نیاور.
+
+## بررسی نهایی (در ذهنت، قبل از خروجی — هرکدام رد شد، برنامه را اصلاح کن)
+1. تعداد آیتم‌های days دقیقا برابر تعداد روزهای باشگاه کاربر است و هر روز دقیقا یک بار آمده.
+2. هر عضله‌ی بزرگ هدف حداقل 4 و هر عضله‌ی کوچک حداقل 3 حرکت متمایز دارد (مگر محدودیتی که خود کاربر نوشته).
+3. حجم هفتگی هر عضله در بازه‌ی سطح کاربر است؛ هیچ عضله‌ی اصلی جا نیفتاده و هیچ‌کدام بی‌دلیل دو برابر بقیه نیست.
+4. هیچ حرکتی به تجهیزاتی که کاربر ندارد نیاز ندارد و هیچ حرکتی با محدودیت جسمی کاربر تضاد ندارد.
+5. sets عدد صحیح 1 تا 6 است، reps هیچ‌وقت خالی نیست، rest هیچ‌وقت خالی نیست.
+6. JSON کامل و معتبر است (هیچ آرایه یا آکولاد بازی نمانده).
+- قبل از خروجی، برنامه را از نظر حجم، تعادل عضلانی، شدت، ریکاوری و تناسب با هدف بررسی کن.
+- برنامه باید امکان پیشرفت تدریجی داشته باشد.
+- هیچ توصیه‌ی پزشکی یا تغذیه‌ای نده.`;
+
+// فاز ۱: فقط تقسیم هفتگی (کدام روز کدام عضله‌ها). کوچک و سریع است.
+const EXERCISE_SPLIT_PROMPT = `${EXERCISE_COACH_RULES}
+
+الان فقط *تقسیم هفتگی* را طراحی کن، نه حرکات را. حرکات هر جلسه در مرحله‌ی بعد جدا طراحی می‌شوند.
+
+پیش از طراحی، بررسی کن که درخواست کاربر (با توجه به توضیحی که خودش نوشته، محدودیت جسمی‌اش و روزهایی که
+در اختیار داره) از نظر بدنی/تمرینی واقع‌بینانه، بی‌خطر و قابل‌اجراست یا نه.
+
+اگر واقع‌بینانه نبود، فقط همین JSON خام را برگردان (بدون Markdown fence، بدون هیچ متن دیگر):
+{ "feasible": false, "message": "یک پیام کوتاه و دوستانه به فارسی، مثل یک مربی که مستقیم با کاربر حرف می‌زند، که توضیح دهد چرا این ممکن نیست و چه پیشنهاد جایگزینی داری" }
+
+اگر واقع‌بینانه بود، فقط همین JSON خام را برگردان (بدون Markdown fence، بدون هیچ متن دیگر) — دقیقا یک آیتم
+به‌ازای هر روزی که کاربر گفته باشگاه می‌رود (نه کمتر، نه بیشتر)، و مقدار day دقیقا یکی از همان روزها:
 {
   "feasible": true,
+  "split": "نام کوتاه روش تقسیم‌بندی، مثلا Push/Pull/Legs",
   "days": [
-    { "day": "شنبه", "focus": "پایین‌تنه — اسکوات", "items": ["اسکوات هالتر ۴×۸", "لانج دمبل ۳×۱۰ هر پا", "پلانک ۳×۳۰ ثانیه"] }
+    { "day": "شنبه", "focus": "سینه و پشت‌بازو", "muscles": ["سینه", "پشت‌بازو"] }
+  ]
+}
+muscles: عضله‌های هدف همان روز با نام‌های تفکیک‌شده (سینه، پشت، سرشانه، جلوبازو، پشت‌بازو، چهارسر ران، پشت ران،
+سرینی، ساق، شکم، ساعد، ذوزنقه)، به ترتیب اولویت. فقط JSON معتبر.`;
+
+// فاز ۲: یک جلسه‌ی کامل برای یک روز — هر روز یک فراخوانی جدا و هم‌زمان، پس
+// هیچ جلسه‌ای به‌خاطر سقف توکن یک خروجی بزرگ کوتاه یا بریده نمی‌شود.
+const EXERCISE_DAY_PROMPT = `${EXERCISE_COACH_RULES}
+
+تقسیم هفتگی قبلا مشخص شده و به تو داده می‌شود. الان فقط *جلسه‌ی همان یک روزی* را که خواسته شده کامل طراحی کن،
+با در نظر گرفتن بقیه‌ی روزهای هفته (حجم هفتگی هر عضله و ریکاوری).
+
+فقط همین JSON خام را برگردان (بدون Markdown fence، بدون هیچ متن دیگر):
+{
+  "exercises": [
+    { "name": "اسکوات هالتر", "muscle": "چهارسر ران", "sets": 4, "reps": "6-8", "rest": "3 دقیقه", "note": "زانو هم‌راستای پنجه" }
   ]
 }
 
-قوانین (وقتی feasible=true):
-- day دقیقاً یکی از نام‌های فارسی روزهای هفته (شنبه/یکشنبه/دوشنبه/سه‌شنبه/چهارشنبه/پنجشنبه/جمعه).
-- هر آیتم: «نام حرکت تعداد‌ست×تکرار» یا برای کاردیو «نام حرکت + مدت‌زمان»، به سبک استاندارد فارسی بدنسازی.
-- اگه کاربر توضیحی نوشته، برنامه رو با توجه به همون توضیح (نوع تمرین، تجهیزات، ترجیحات) بساز، نه یک قالب ژنریک.
-- اگه کاربر محدودیت جسمی داره، از حرکات پرفشار/پرضربه (پرش، برپی، دویدن سرعتی) پرهیز کن و معادل ملایم‌تر بذار.
-- بین ۲ تا ۵ حرکت برای هر روز؛ بین روزهایی که یک گروه عضلانی مشترک دارن فاصله‌ی ریکاوری منطقی بذار.
-- قد/وزن فقط برای کالیبره‌کردن شدت/حجمه؛ هیچ توصیه‌ی پزشکی یا تغذیه‌ای نده.`;
+قواعد فیلدها:
+- day: دقیقا یکی از نام‌های فارسی روزهای هفته (شنبه/یکشنبه/دوشنبه/سه‌شنبه/چهارشنبه/پنجشنبه/جمعه).
+- name: نام فارسی رایج حرکت در بدنسازی ایران.
+- muscle: عضله‌ی هدف اصلی همان حرکت.
+- sets: عدد.
+- reps: تعداد تکرار (رشته؛ می‌تواند بازه باشد مثل "8-12")، یا برای حرکات زمان‌محور مدت‌زمان مثل "30 ثانیه".
+- rest: زمان استراحت بین ست‌ها.
+- note: یک نکته‌ی کوتاه و کاربردی درباره‌ی اجرای همان حرکت (یا رشته‌ی خالی).
+
+خروجی فقط JSON معتبر باشد.
+- muscle: دقیقا یکی از عضله‌های هدف همین روز، با همان نامی که به تو داده شده.
+
+خروجی فقط JSON معتبر باشد.`;
 
 export type ExercisePlanProfile = {
   level: "beginner" | "intermediate" | "advanced";
-  goalLabel: string; // برچسبِ فارسیِ هدف، از قبل توسط caller حل‌شده (چون گزینه‌های هدف سمتِ UI بیشتر از این تایپِ محدودن)
+  goalLabel: string; // متن آزاد هدف، دقیقا همان چیزی که کاربر خودش نوشته (نه یک گزینه‌ی از پیش‌تعیین‌شده)
   gymDays: string[]; // نام فارسی روزهای هفته
   heightCm?: number | null;
   weightKg?: number | null;
+  trainingMonth?: number | null; // چندمین ماه تمرین کاربر — برای پیشرفت منطقی
+  equipment: string; // تجهیزات در دسترس، متن آزاد
   hasPhysicalLimitation: boolean;
   limitationDetails?: string | null;
   description?: string | null;
+  previousProgram?: unknown | null; // planData ماه قبل همین کاربر (اگه بود) — فقط برای زمینه‌ی پیشرفت
+  /** تقسیم هفتگی که خود کاربر در «تنظیمات پیشرفته» انتخاب کرده (اعتبارسنجی‌شده) — فاز ۱ رد می‌شود */
+  userSplit?: UserSplitDay[] | null;
 };
 
 export type GeneratedExerciseDay = { day: string; focus: string; items: string[] };
@@ -255,17 +781,62 @@ export type ExercisePlanResult =
   | { feasible: true; days: GeneratedExerciseDay[] }
   | { feasible: false; message: string };
 
+// سقف توکن هر فراخوانی. کل هفته دیگه توی یک خروجی نمیاد (قبلا با ۸۰۰۰ توکن
+// برنامه‌ی ۵-۶ روزه وسط راه بریده می‌شد یا مدل برای جا شدن حرکات رو کم می‌کرد)؛
+// هر جلسه جدا ساخته می‌شه و یک جلسه‌ی کامل (حتی ۱۸ حرکت) خیلی زیر این سقفه.
+const EXERCISE_SPLIT_MAX_TOKENS = 3000;
+const EXERCISE_DAY_MAX_TOKENS = 6000;
+// اگه با همه‌ی این‌ها باز هم خروجی بریده شد (finish_reason=length)، یک بار با این سقف
+const EXERCISE_DAY_MAX_TOKENS_RETRY = 12000;
+
 const VALID_FA_DAYS = ["شنبه", "یکشنبه", "دوشنبه", "سه‌شنبه", "چهارشنبه", "پنجشنبه", "جمعه"];
 const LEVEL_LABELS_FA: Record<ExercisePlanProfile["level"], string> = { beginner: "مبتدی", intermediate: "متوسط", advanced: "پیشرفته" };
+
+// مدل حالا هر حرکت را به‌صورت یک شیء (name/muscle/sets/reps/rest/note) برمی‌گرداند
+// تا بتواند واقعا مثل یک مربی برنامه بنویسد. ولی کل اپ (جدول برنامه‌ی روز،
+// ردیاب ست‌به‌ست، فرم دستی، برنامه‌ی هفتگی) روی `items: string[]` با فرمت
+// «نام حرکت ۴×۸» بنا شده؛ پس همین‌جا به همان رشته تخت می‌شود، به‌جای اینکه
+// شکل داده‌ی کل اپ عوض شود. خروجی قدیمی (items به‌صورت رشته) هم هنوز
+// پذیرفته می‌شود تا پاسخ‌های در-راه مدل ناگهان بی‌اعتبار نشوند.
+function flattenExercise(ex: any): string | null {
+  if (typeof ex === "string") return ex.trim() || null;
+  if (!ex || typeof ex !== "object") return null;
+  const name = typeof ex.name === "string" ? ex.name.trim() : "";
+  if (!name) return null;
+  const reps = ex.reps === undefined || ex.reps === null ? "" : String(ex.reps).trim();
+  const sets = Number(ex.sets);
+  // «۳۰ ثانیه»/«۲ دقیقه» → حرکت زمان‌محور؛ عدد خالی/بازه → ست×تکرار
+  const isTimed = /ثانیه|دقیقه/.test(reps);
+  if (isTimed) return Number.isFinite(sets) && sets > 1 ? `${name} ${toFaDigitsAi(String(sets))}×${toFaDigitsAi(reps)}` : `${name} ${toFaDigitsAi(reps)}`;
+  if (!Number.isFinite(sets) || sets < 1 || !reps) return name;
+  return `${name} ${toFaDigitsAi(String(sets))}×${toFaDigitsAi(reps)}`;
+}
+
+// ارقام در کل سایت انگلیسی‌اند؛ رقم فارسی خروجی مدل هم انگلیسی می‌شه
+function toFaDigitsAi(s: string): string {
+  return toEnglishDigits(s);
+}
+
+/** فقط رشته‌های ناتهی یک آرایه — خروجی مدل پر از null/عدد/شیء هم می‌تواند باشد. */
+function asStringArray(v: unknown): string[] {
+  if (!Array.isArray(v)) return [];
+  return v.map((x) => (typeof x === "string" ? x.trim() : "")).filter(Boolean);
+}
 
 function normalizeExercisePlan(raw: any, allowedDays: string[]): GeneratedExerciseDay[] {
   if (!Array.isArray(raw)) throw new Error("خروجی مدل ساختار معتبری نداشت");
   const days: GeneratedExerciseDay[] = raw
-    .map((d: any) => ({
-      day: typeof d?.day === "string" ? d.day.trim() : "",
-      focus: typeof d?.focus === "string" && d.focus.trim() ? d.focus.trim() : "تمرین",
-      items: asStringArray(d?.items),
-    }))
+    .map((d: any) => {
+      const source = Array.isArray(d?.exercises) ? d.exercises : d?.items;
+      const items = Array.isArray(source)
+        ? source.map(flattenExercise).filter((x: string | null): x is string => !!x)
+        : asStringArray(source);
+      return {
+        day: typeof d?.day === "string" ? d.day.trim() : "",
+        focus: typeof d?.focus === "string" && d.focus.trim() ? d.focus.trim() : "تمرین",
+        items,
+      };
+    })
     .filter((d: GeneratedExerciseDay) => VALID_FA_DAYS.includes(d.day) && allowedDays.includes(d.day) && d.items.length > 0);
 
   if (days.length === 0) {
@@ -274,122 +845,433 @@ function normalizeExercisePlan(raw: any, allowedDays: string[]): GeneratedExerci
   return days;
 }
 
-async function callExercisePlanOnce(profile: ExercisePlanProfile, userId: string): Promise<ExercisePlanResult> {
-  const profileText = [
+// ── اعتبارسنجی سمت سرور همان قواعد پرامپت ──
+// مدل گاهی روزی را جا می‌اندازد، روزی را دو بار می‌آورد، یا با وجود دستور
+// «کامل‌ترین برنامه» باز به سه حرکت بسنده می‌کند. ایرادها یک بار (در همان
+// بودجه‌ی زمانی) برای اصلاح به خود مدل برگردانده می‌شوند.
+
+const SMALL_MUSCLE_RE = /بازو|ساق|شکم|میان\s*‌?\s*تنه|ساعد|ذوزنقه|کول|core|abs|calf|calves|biceps|triceps|forearm/i;
+/** حداقل حرکت متمایز هر عضله‌ی هدف — محدودیتی که خود کاربر نوشته این کف را برمی‌دارد. */
+export function minExercisesFor(muscle: string, relaxed: boolean): number {
+  if (relaxed) return 1;
+  return SMALL_MUSCLE_RE.test(muscle) ? 3 : 4;
+}
+const normMuscle = (m: string) => toEnglishDigits(String(m || "")).replace(/[\s\u200c\-–—_]/g, "").toLowerCase();
+function muscleMatches(exMuscle: string, target: string): boolean {
+  const a = normMuscle(exMuscle), b = normMuscle(target);
+  return !!a && !!b && (a === b || a.includes(b) || b.includes(a));
+}
+
+export type SplitDay = { day: string; focus: string; muscles: string[] };
+
+export function splitIssues(rawDays: unknown, gymDays: string[], opts: SplitRuleOptions = {}): string[] {
+  const issues: string[] = [];
+  if (!Array.isArray(rawDays)) return ["days آرایه نیست."];
+  const seen = rawDays.map((d: any) => (typeof d?.day === "string" ? d.day.trim() : ""));
+  const missing = gymDays.filter((d) => !seen.includes(d));
+  if (missing.length) issues.push(`این روزها برنامه ندارند: ${missing.join("، ")}.`);
+  const dup = seen.filter((d, i) => d && seen.indexOf(d) !== i);
+  if (dup.length) issues.push(`این روزها تکراری آمده‌اند: ${Array.from(new Set(dup)).join("، ")}.`);
+  const extra = seen.filter((d) => d && !gymDays.includes(d));
+  if (extra.length) issues.push(`این روزها جزو روزهای باشگاه کاربر نیستند: ${extra.join("، ")}.`);
+  for (const d of rawDays as any[]) {
+    if (!asStringArray(d?.muscles).length) issues.push(`روز ${d?.day || "?"} هیچ عضله‌ی هدفی ندارد.`);
+  }
+  // قواعد برنامه‌نویسی (جلوبازو و پشت‌بازو جدا، ریکاوری 48 ساعته، تعادل و …) — lib/exerciseSplit.ts
+  issues.push(...splitRuleIssues(toKeyedSplit(rawDays), opts));
+  return issues;
+}
+
+function normalizeSplit(rawDays: unknown, gymDays: string[]): SplitDay[] {
+  if (!Array.isArray(rawDays)) throw new Error("تقسیم هفتگی مدل ساختار معتبری نداشت");
+  const out: SplitDay[] = [];
+  for (const day of gymDays) {
+    const d: any = (rawDays as any[]).find((x) => typeof x?.day === "string" && x.day.trim() === day);
+    const muscles = Array.from(new Set(asStringArray(d?.muscles)));
+    if (!d || !muscles.length) continue;
+    out.push({ day, focus: typeof d.focus === "string" && d.focus.trim() ? d.focus.trim() : muscles.join(" و "), muscles });
+  }
+  if (!out.length) throw new Error("مدل هیچ روز قابل‌استفاده‌ای برنگردوند");
+  return out;
+}
+
+/** ایرادهای یک جلسه: حرکت تکراری، ست/تکرار نامعتبر، و عضله‌ی هدفی که کمتر از کف «کامل» حرکت دارد. */
+export function dayIssues(rawExercises: unknown, muscles: string[], relaxed: boolean): string[] {
+  const issues: string[] = [];
+  if (!Array.isArray(rawExercises) || !rawExercises.length) return ["هیچ حرکتی نیامده."];
+  const ex = rawExercises as any[];
+  const names = ex.map((e) => String(e?.name || "").trim()).filter(Boolean);
+  const dupEx = names.filter((n, i) => names.indexOf(n) !== i);
+  if (dupEx.length) issues.push(`حرکت تکراری آمده: ${Array.from(new Set(dupEx)).join("، ")}.`);
+  for (const e of ex) {
+    const sets = Number(e?.sets);
+    if (!Number.isInteger(sets) || sets < 1 || sets > 8) issues.push(`حرکت «${e?.name}» تعداد ست نامعتبر دارد.`);
+    if (!String(e?.reps ?? "").trim()) issues.push(`حرکت «${e?.name}» تکرار ندارد.`);
+  }
+  for (const m of muscles) {
+    const distinct = new Set(ex.filter((e) => muscleMatches(String(e?.muscle || ""), m)).map((e) => String(e?.name || "").trim()).filter(Boolean));
+    const min = minExercisesFor(m, relaxed);
+    if (distinct.size < min) issues.push(`عضله‌ی «${m}» فقط ${distinct.size} حرکت دارد؛ برنامه‌ی کامل حداقل ${min} حرکت متمایز برای آن می‌خواهد.`);
+  }
+  return issues;
+}
+
+/** کاربر خودش محدودیتی نوشته؟ (محدودیت جسمی، یا زمان/تجهیزات/برنامه‌ی کوتاه در توضیحش) */
+function userAskedForLess(profile: ExercisePlanProfile): boolean {
+  if (profile.hasPhysicalLimitation) return true;
+  const d = profile.description || "";
+  return /محدود|کوتاه|کم\s*‌?\s*حجم|وقت\s*ندار|وقت\s*کم|فقط\s*\d+\s*دقیقه|دقیقه\s*وقت|حداکثر\s*\d+\s*حرکت|آسیب|درد/.test(d);
+}
+
+function exerciseProfileText(profile: ExercisePlanProfile): string {
+  const prev = profile.previousProgram ? JSON.stringify(profile.previousProgram) : "";
+  return [
     `سطح: ${LEVEL_LABELS_FA[profile.level]}`,
     `هدف: ${profile.goalLabel}`,
     `روزهای باشگاه: ${profile.gymDays.join("، ")}`,
     profile.heightCm ? `قد: ${profile.heightCm} سانتی‌متر` : null,
     profile.weightKg ? `وزن: ${profile.weightKg} کیلوگرم` : null,
+    profile.trainingMonth ? `چندمین ماه تمرینش: ماه ${profile.trainingMonth}` : null,
+    `تجهیزات در دسترس: ${profile.equipment}`,
     profile.hasPhysicalLimitation ? "محدودیت جسمی داره — از حرکات پرفشار/پرضربه پرهیز کن" : null,
-    profile.hasPhysicalLimitation && profile.limitationDetails ? `توضیحِ محدودیتِ جسمی: ${profile.limitationDetails}` : null,
-    profile.description ? `توضیحِ کاربر درباره‌ی برنامه‌ی دلخواهش: ${profile.description}` : null,
+    profile.hasPhysicalLimitation && profile.limitationDetails ? `توضیح محدودیت جسمی: ${profile.limitationDetails}` : null,
+    profile.description ? `توضیح کاربر درباره‌ی برنامه‌ی دلخواهش: ${profile.description}` : null,
+    prev ? `برنامه‌ی ماه قبل همین کاربر (برای پیشرفت منطقی، نه تکرار عین آن):\n${prev.slice(0, 8000)}` : null,
+    userAskedForLess(profile)
+      ? "کاربر خودش محدودیت نوشته — حجم را دقیقا متناسب با همان محدودیت تنظیم کن."
+      : "کاربر هیچ محدودیتی ننوشته — کامل‌ترین برنامه را بده (حداقل 4 حرکت برای هر عضله‌ی بزرگ و 3 برای هر عضله‌ی کوچک).",
   ].filter(Boolean).join("\n");
+}
 
-  const { text, usage, durationMs } = await callAiChat(EXERCISE_SYSTEM_PROMPT, profileText, 2000);
-  recordAiUsage(userId, AiFeatureKey.EXERCISE_PLAN_GENERATION, usage, durationMs, true);
-  const parsed = parseJsonResponse(text);
+const msLeft = (deadline: number) => deadline - Date.now();
 
+/** فاز ۱ — تقسیم هفتگی (یک دور اصلاح اگر روزی جا افتاده/تکراری بود). */
+async function generateSplit(profile: ExercisePlanProfile, profileText: string, userId: string, deadline: number): Promise<{ feasible: false; message: string } | { feasible: true; days: SplitDay[] }> {
+  const res = await callAiChat(EXERCISE_SPLIT_PROMPT, profileText, EXERCISE_SPLIT_MAX_TOKENS, AI_MODEL_NAME, Math.min(25_000, msLeft(deadline)));
+  recordAiUsage(userId, AiFeatureKey.EXERCISE_PLAN_GENERATION, res.usage, res.durationMs, true);
+  let parsed = parseJsonResponse(res.text);
   if (parsed?.feasible === false) {
-    const message = typeof parsed?.message === "string" && parsed.message.trim()
-      ? parsed.message.trim()
-      : "این برنامه با مشخصاتی که وارد کردی قابل‌اجرا نیست.";
+    const message = typeof parsed?.message === "string" && parsed.message.trim() ? parsed.message.trim() : "این برنامه با مشخصاتی که وارد کردی قابل‌اجرا نیست.";
     return { feasible: false, message };
   }
+  const ruleOpts: SplitRuleOptions = { level: profile.level, relaxed: userAskedForLess(profile) };
+  const issues = splitIssues(parsed?.days, profile.gymDays, ruleOpts);
+  if (issues.length && msLeft(deadline) > 30_000) {
+    try {
+      const repair = await callAiChat(
+        EXERCISE_SPLIT_PROMPT,
+        [profileText, "", "تقسیم قبلی این ایرادها را داشت:", ...issues.map((x, i) => `${i + 1}. ${x}`), "", "تقسیم قبلی:", res.text.slice(0, 4000), "", "همان تقسیم را با رفع همه‌ی ایرادها دوباره بده. فقط JSON خام."].join("\n"),
+        EXERCISE_SPLIT_MAX_TOKENS, AI_MODEL_NAME, Math.min(15_000, msLeft(deadline) - 20_000),
+      );
+      recordAiUsage(userId, AiFeatureKey.EXERCISE_PLAN_GENERATION, repair.usage, repair.durationMs, true);
+      const fixed = parseJsonResponse(repair.text);
+      if (fixed?.feasible !== false && splitIssues(fixed?.days, profile.gymDays, ruleOpts).length < issues.length) parsed = fixed;
+    } catch (err: any) {
+      logError("ai-gateway", `اصلاح تقسیم هفتگی شکست خورد: ${err?.message || err}`, { severity: "WARNING" as any, context: { feature: "EXERCISE_PLAN_GENERATION" } });
+    }
+  }
+  return { feasible: true, days: normalizeSplit(parsed?.days, profile.gymDays) };
+}
 
-  return { feasible: true, days: normalizeExercisePlan(parsed?.days, profile.gymDays) };
+/** فاز ۲ — یک جلسه‌ی کامل برای یک روز؛ بریده‌شدن خروجی یا جلسه‌ی ناقص یک بار جبران می‌شود. */
+async function generateDay(day: SplitDay, split: SplitDay[], profileText: string, relaxed: boolean, userId: string, deadline: number): Promise<GeneratedExerciseDay> {
+  const weekText = split.map((d) => `- ${d.day}: ${d.muscles.join("، ")}`).join("\n");
+  const ask = [
+    profileText, "", "تقسیم هفتگی کل برنامه:", weekText, "",
+    `حالا فقط جلسه‌ی روز ${day.day} را کامل طراحی کن. عضله‌های هدف این روز: ${day.muscles.join("، ")}.`,
+    ...day.muscles.map((m) => `- ${m}: حداقل ${minExercisesFor(m, relaxed)} حرکت متمایز`),
+  ].join("\n");
+
+  const attempt = async (content: string, maxTokens: number) => {
+    const timeout = Math.min(AI_TIMEOUT_MS, msLeft(deadline));
+    if (timeout < 5_000) throw new Error("زمان کافی برای ساخت این جلسه نماند");
+    const r = await callAiChat(EXERCISE_DAY_PROMPT, content, maxTokens, AI_MODEL_NAME, timeout);
+    recordAiUsage(userId, AiFeatureKey.EXERCISE_PLAN_GENERATION, r.usage, r.durationMs, true);
+    if (r.truncated) throw new Error("خروجی جلسه به سقف توکن رسید");
+    return { text: r.text, exercises: parseJsonResponse(r.text)?.exercises };
+  };
+
+  let first: { text: string; exercises: any };
+  try {
+    first = await attempt(ask, EXERCISE_DAY_MAX_TOKENS);
+  } catch (err) {
+    // بریده‌شدن/JSON خراب/خطای شبکه: یک بار دیگر با سقف توکن بالاتر، اگر وقت هست
+    if (msLeft(deadline) < 12_000) throw err;
+    first = await attempt(ask, EXERCISE_DAY_MAX_TOKENS_RETRY);
+  }
+  let exercises = first.exercises;
+  const issues = dayIssues(exercises, day.muscles, relaxed);
+  if (issues.length && msLeft(deadline) > 15_000) {
+    try {
+      const fixed = await attempt(
+        [ask, "", "جلسه‌ای که دادی این ایرادها را داشت:", ...issues.map((x, i) => `${i + 1}. ${x}`), "", "جلسه‌ی قبلی:", first.text.slice(0, 8000), "", "همان جلسه را کامل و با رفع همه‌ی ایرادها دوباره بده. فقط JSON خام."].join("\n"),
+        EXERCISE_DAY_MAX_TOKENS_RETRY,
+      );
+      if (dayIssues(fixed.exercises, day.muscles, relaxed).length < issues.length) exercises = fixed.exercises;
+    } catch (err: any) {
+      logError("ai-gateway", `اصلاح جلسه‌ی ${day.day} شکست خورد: ${err?.message || err}`, { severity: "WARNING" as any, context: { feature: "EXERCISE_PLAN_GENERATION" } });
+    }
+  }
+  const [norm] = normalizeExercisePlan([{ day: day.day, focus: day.focus, exercises }], [day.day]);
+  return norm;
+}
+
+/** تقسیم کلیدی کاربر → روزهای فاز ۲ با نام فارسی عضله‌ها */
+function userSplitToDays(split: UserSplitDay[]): SplitDay[] {
+  return split.map((d) => {
+    const muscles = d.muscles.map((m) => MUSCLE_LABELS[m]);
+    return { day: d.day, focus: muscles.join(" و "), muscles };
+  });
+}
+
+/**
+ * پیشنهاد مربی برای تقسیمی که کاربر خودش چیده و قواعد را نقض می‌کند: کمترین
+ * تغییر لازم برای رفع همان ایرادها. سهمیه‌ی ساخت برنامه را مصرف نمی‌کند؛
+ * خروجی دوباره با همان قواعد سنجیده می‌شود و اگر بهتر نبود null برمی‌گردد.
+ */
+export async function suggestSplitFix(
+  profile: Pick<ExercisePlanProfile, "level" | "gymDays" | "goalLabel" | "hasPhysicalLimitation">,
+  split: UserSplitDay[],
+  issues: string[],
+  userId: string,
+): Promise<UserSplitDay[] | null> {
+  const opts: SplitRuleOptions = { level: profile.level, relaxed: profile.hasPhysicalLimitation };
+  const userText = split.map((d) => `- ${d.day}: ${d.muscles.map((m) => MUSCLE_LABELS[m]).join("، ")}`).join("\n");
+  const ask = [
+    `سطح: ${LEVEL_LABELS_FA[profile.level]}`,
+    profile.goalLabel ? `هدف: ${profile.goalLabel}` : "",
+    `روزهای باشگاه: ${profile.gymDays.join("، ")}`,
+    "",
+    "کاربر خودش این تقسیم هفتگی را چیده:",
+    userText,
+    "",
+    "این ایرادها را دارد:",
+    ...issues.map((x, i) => `${i + 1}. ${x}`),
+    "",
+    "با کمترین تغییر ممکن (تا جای ممکن انتخاب‌های خود کاربر بماند) همه‌ی این ایرادها را رفع کن و تقسیم اصلاح‌شده را بده.",
+    `muscles فقط از همین نام‌ها: ${Object.values(MUSCLE_LABELS).join("، ")}. فقط JSON خام.`,
+  ].filter((l) => l !== null).join("\n");
+  try {
+    const res = await callAiChat(EXERCISE_SPLIT_PROMPT, ask, EXERCISE_SPLIT_MAX_TOKENS, AI_MODEL_NAME, 20_000);
+    recordAiUsage(userId, AiFeatureKey.EXERCISE_PLAN_GENERATION, res.usage, res.durationMs, true);
+    const parsed = parseJsonResponse(res.text);
+    const keyed = toKeyedSplit(parsed?.days).filter((d) => profile.gymDays.includes(d.day) && d.muscles.length);
+    if (keyed.length !== profile.gymDays.length) return null;
+    const ordered = profile.gymDays.map((day) => keyed.find((d) => d.day === day)!);
+    if (sameSplit(ordered, split)) return null;
+    return splitRuleIssues(ordered, opts).length < issues.length ? ordered : null;
+  } catch (err: any) {
+    logError("ai-gateway", `پیشنهاد اصلاح تقسیم شکست خورد: ${err?.message || err}`, { severity: "WARNING" as any, context: { feature: "EXERCISE_PLAN_GENERATION" } });
+    return null;
+  }
 }
 
 export async function generateExercisePlan(profile: ExercisePlanProfile, userId: string): Promise<ExercisePlanResult> {
-  let lastError: any;
-  for (let attempt = 0; attempt < 2; attempt++) {
-    try {
-      const result = await callExercisePlanOnce(profile, userId);
-      // «feasible: false» یک پاسخِ معتبرِ مدلِه، نه خطای موقتِ شبکه/پارس —
-      // نباید دوباره تلاش کنیم، همون رد رو مستقیم برگردونیم.
-      return result;
-    } catch (err) {
-      lastError = err;
-    }
-  }
-  logError("ai-gateway", `ساختِ برنامه‌ی تمرینی شکست خورد: ${lastError?.message || lastError}`, { context: { feature: "EXERCISE_PLAN_GENERATION" } });
-  throw lastError;
-}
-
-// ============================================================================
-// اسکنِ عکسِ غذا با هوش مصنوعی — تنها فراخوانیِ چندوجهی (multimodal) این فایل؛
-// بقیه‌ی فراخوان‌ها فقط متنی‌ان. خروجی شاملِ کالری + درشت‌مغذی‌هاست، چون
-// این تنها راهِ عملیِ این اپه که بدونِ کاتالوگِ دستیِ درشت‌مغذی برای هزاران
-// غذا، بخشِ «ریزِ درشت‌مغذی‌ها» عدد داشته باشه.
-// ============================================================================
-
-const FOOD_SCAN_SYSTEM_PROMPT = `تو یک متخصص تغذیه هستی که با نگاه‌کردن به عکسِ یک وعده غذا، مقدارِ کالری و
-درشت‌مغذی‌هاش رو تخمین می‌زنی. این یک تخمینِ بصریه، نه اندازه‌گیریِ آزمایشگاهی — بر اساسِ نوع و حجمِ ظاهریِ
-غذا در عکس بهترین حدسِ واقع‌بینانه رو بزن.
-
-اگه عکس اصلاً غذا/نوشیدنیِ قابل‌تشخیصی نشون نمی‌ده، فقط همین JSON خام رو برگردون:
-{ "recognized": false, "message": "یک جمله‌ی کوتاه و دوستانه به فارسی که بگه غذایی توی عکس تشخیص داده نشد" }
-
-اگه غذا قابل‌تشخیص بود، فقط همین JSON خام رو برگردون (بدون Markdown fence، بدون هیچ متنِ اضافه):
-{
-  "recognized": true,
-  "name": "نامِ فارسیِ کوتاهِ غذا",
-  "estimatedGrams": 250,
-  "calories": 480,
-  "proteinG": 22,
-  "carbsG": 55,
-  "fatG": 18
-}
-
-قوانین: همه‌ی اعدادِ بالا باید عددِ مثبت باشن (نه رشته)؛ calories باید با estimatedGrams/proteinG/carbsG/fatG
-هم‌خوانیِ تقریبی داشته باشه (پروتئین×۴ + کربوهیدرات×۴ + چربی×۹ ≈ calories)؛ هیچ توصیه‌ی پزشکی یا تشخیصی نده،
-فقط تخمینِ عددی.`;
-
-export type FoodScanResult =
-  | { recognized: true; name: string; estimatedGrams: number; calories: number; proteinG: number; carbsG: number; fatG: number }
-  | { recognized: false; message: string };
-
-function asPositiveNumber(v: unknown): number | null {
-  const n = typeof v === "number" ? v : NaN;
-  return Number.isFinite(n) && n > 0 ? n : null;
-}
-
-export async function analyzeFoodPhoto(base64Data: string, mediaType: "image/jpeg" | "image/png" | "image/webp", userId: string): Promise<FoodScanResult> {
-  let chatResult: { text: string; usage: { inputTokens: number; outputTokens: number }; durationMs: number };
+  // کل کار (تقسیم + همه‌ی جلسه‌ها به‌صورت موازی + اصلاح‌ها) زیر همان بودجه‌ی
+  // کلی AI می‌ماند تا nginx (۶۰ ثانیه) زودتر کانکشن را نبندد.
+  const deadline = Date.now() + AI_TOTAL_BUDGET_MS;
   try {
-    chatResult = await callAiChat(
-      FOOD_SCAN_SYSTEM_PROMPT,
-      [
-        { type: "text", text: "این عکسِ غذا رو تحلیل کن." },
-        { type: "image_url", image_url: { url: `data:${mediaType};base64,${base64Data}` } },
-      ],
-      500
-    );
+    const profileText = exerciseProfileText(profile);
+    const split = profile.userSplit?.length
+      ? { feasible: true as const, days: userSplitToDays(profile.userSplit) }
+      : await generateSplit(profile, profileText, userId, deadline);
+    if (!split.feasible) return split;
+    const relaxed = userAskedForLess(profile);
+    const days = await Promise.all(split.days.map((d) => generateDay(d, split.days, profileText, relaxed, userId, deadline)));
+    return { feasible: true, days };
   } catch (err: any) {
-    logError("ai-gateway", `اسکنِ عکسِ غذا شکست خورد: ${err?.message || err}`, { context: { feature: "FOOD_SCAN" } });
+    logError("ai-gateway", `ساخت برنامه‌ی تمرینی شکست خورد: ${err?.message || err}`, { context: { feature: "EXERCISE_PLAN_GENERATION" } });
     throw err;
   }
-  const { text, usage, durationMs } = chatResult;
-  recordAiUsage(userId, AiFeatureKey.FOOD_SCAN, usage, durationMs, true);
+}
+
+// ============================================================================
+// مدیر برنامه (دستیار روتین) — دایره‌ی گوشه‌ی صفحه‌ی «روتین من»
+//
+// برخلاف بقیه‌ی فراخوان‌های این فایل که یک خروجی محتوایی می‌سازند، این یکی
+// یک *نقشه‌ی تغییر* برمی‌گرداند: چه چیزی اضافه/جابه‌جا/حذف شود. خود تغییر
+// را مدل انجام نمی‌دهد — `lib/routineAssistant.ts` نقشه را اعتبارسنجی و
+// اعمال می‌کند. پس هر ادعایی که مدل بکند (ساعت آزاد است، برنامه وجود دارد)
+// دوباره سمت سرور سنجیده می‌شود.
+// ============================================================================
+
+const ROUTINE_ASSISTANT_PROMPT = `اسم تو «نومو» است و دستیار اپلیکیشن «آریون» هستی. اگر کاربر اسمت را پرسید، فقط بگو «نومو»؛
+هیچ‌وقت خودت را «آری» یا با هر اسم دیگری معرفی نکن.
+
+تو «نومو» هستی، مدیر برنامه‌ی اپلیکیشن آریون: یک دوست باحوصله و باتجربه که هم
+دسترسی کامل به برنامه‌ی هفتگی کاربر داره، هم واقعا حواسش به آدم روبه‌رویشه.
+هر تغییری که کاربر بخواهد — افزودن، تغییر ساعت، جابه‌جایی، حذف، تغییر
+اسم/اهمیت/تگ/اعلان، محدودکردن به یک دوره، یا فقط برای یک روز مشخص — را با
+عملیات زیر انجام بده. درباره‌ی خود برنامه‌ریزی هم آزادانه و صمیمی مشورت بده.
+
+لحنت محاوره‌ای و گرم باشه، مثل رفیقی که برنامه‌ریزیش خوبه و کنار کاربر
+نشسته، نه یک ربات یا منشی رسمی. راحت باش، از زبان روزمره استفاده کن، جایی
+که طبیعیه یه ذره شوخ‌طبعی یا همدلی نشون بده (اگه کاربر گله کرد که خسته‌ست یا
+برنامه‌ش شلوغه، اول یه اشاره‌ی کوتاه و انسانی بکن، بعد برو سراغ راه‌حل). قالب
+ثابت و رباتی («گزینه‌های شما:»، «طبق درخواست شما») نساز؛ هر بار با کلمات خودت
+حرف بزن، نه یه جمله‌ی از پیش حفظ‌شده. در عین حال reply همیشه کوتاه و
+کاربردی بمونه — گرم‌بودن یعنی طبیعی و بی‌تکلف، نه پرحرفی یا شعار دادن.
+
+کاربر با زبان طبیعی حرف می‌زند. از جمله‌اش بفهم چه می‌خواهد و مستقیم
+عملیات بده؛ سوال فقط برای ابهام واقعی.
+
+## ساعت — مهم‌ترین قاعده
+- **فقط وقتی start/end بنویس که کاربر خودش ساعت یا بخشی از روز را گفته**
+  («8 صبح»، «عصر»، «ساعت 20») یا صریحا گفته «خودت ساعت بذار».
+- در هر حالت دیگر start و end را **اصلا ننویس**. برنامه‌ی بی‌ساعت کاملا
+  معتبر است و ته برنامه‌های همان روز می‌نشیند. هیچ‌وقت ساعت حدس نزن، حتی
+  برای «دوره» یا «برنامه‌ی کامل».
+- ساعت‌ها 24ساعته با رقم لاتین: "08:00"، "19:30". «عصر 5» یعنی "17:00".
+
+## روز و تاریخ — هیچ‌وقت خودت تاریخ حساب نکن
+- روز هفته را با **نام فارسی** بنویس: "شنبه"، "یکشنبه"، "دوشنبه"،
+  "سه‌شنبه"، "چهارشنبه"، "پنجشنبه"، "جمعه".
+- اگر بالای پیام «تاریخ‌هایی که کاربر گفته» آمده، تاریخ همان‌جاست: همان
+  میلادی YYYY-MM-DD را عینا بنویس.
+- وگرنه تاریخ را از **جدول تاریخ‌ها** بردار: ردیفی را پیدا کن که روز و
+  **اسم ماه** جلالی‌اش («30 مهر») با گفته‌ی کاربر یکی است و ستون اول
+  همان ردیف را بنویس.
+- اگر تاریخ در جدول نبود، **عین عبارت کاربر** را بنویس ("30 مهر"،
+  "1 آبان 1406"، "شنبه بعد"، "فردا") — خود سیستم دقیق تبدیلش می‌کند.
+- ماه جلالی را هیچ‌وقت به ماه میلادی تبدیل نکن: «30 مهر» یعنی 30 مهر،
+  نه 30 اکتبر. روز هفته‌ی یک تاریخ را هم از ذهن حساب نکن.
+
+## سه حالت تکرار — درست تشخیص بده
+1) **هر هفته** (پیش‌فرض): «شنبه‌ها کلاس دارم»، «هر روز ورزش» → days.
+2) **فقط یک/چند روز مشخص، بدون تکرار**: «امروز»، «فردا»، «این جمعه»،
+   «پنجشنبه‌ی این هفته»، «15 مهر» → date یا dates (نه days!). «فردا خرید
+   دارم» یعنی فقط فردا، نه هر هفته.
+3) **دوره‌ی محدود**: «تا آخر آبان»، «سه ماه»، «6 هفته»، «از هفته‌ی بعد تا
+   20 آذر» → days به‌همراه from/until (یا weeks/months).
+   «یه دوره‌ی سه‌ماهه‌ی ریاضی هفته‌ای دو جلسه» → خودت دو روز مناسب انتخاب
+   کن و months: 3 بده (ساعت نه، مگر گفته باشد).
+
+## خروجی — فقط JSON، بدون هیچ متن اضافه
+{ "offTopic": false, "reply": "یک جمله‌ی کوتاه، محاوره‌ای و دوستانه به فارسی", "ops": [] }
+
+### عملیات‌ها
+add — برنامه‌ی جدید:
+{ "op": "add", "name": "ورزش", "days": ["شنبه","دوشنبه"],
+  "start": "08:00", "end": "09:00",            ← فقط اگر کاربر ساعت گفت
+  "date": "2026-09-26" | "dates": ["…","…"],   ← فقط برای روز مشخص بدون تکرار (به‌جای days)
+  "from": "2026-10-01", "until": "20 آذر",     ← دوره (اختیاری؛ from پیش‌فرض امروز)
+  "weeks": 6 | "months": 3,                    ← به‌جای until
+  "importance": "low|medium|high|veryHigh", "tag": "درس", "notify": false,
+  "repeatEveryMin": 60, "repeatUntil": "22:00" } ← تکرار درون‌روزی («هر یک ساعت یک‌بار»)
+فقط فیلدهای لازم را بنویس. یک برنامه روی چند روز = یک add با چند day.
+تکرار درون‌روزی: start/end طول هر نوبت است (نگفت؟ end ننویس = 5 دقیقه)،
+repeatUntil آخرین شروع (نگفت؟ ننویس = تا آخر بیداری). سوال نپرس.
+
+retime — تغییر ساعت: { "op": "retime", "ref": 3, "start": "10:00", "end": "11:00" }
+  بدون start/end یعنی «ساعتش را بردار».
+
+move — جابه‌جایی به روز دیگر: { "op": "move", "ref": 3, "toDay": "پنجشنبه" }
+  ساعت فقط اگر کاربر ساعت جدید گفت؛ وگرنه همان ساعت قبلی می‌ماند.
+
+update — مشخصات: { "op": "update", "ref": 3, "name": "…", "importance": "high",
+  "tag": "…" (یا null برای برداشتن), "notify": true|false,
+  "from": "…", "until": "…" (یا null یعنی بی‌پایان), "weeks": 4 }
+
+delete — حذف: { "op": "delete", "ref": 3 }  (از امروز به بعد؛ گذشته می‌ماند)
+  «از هفته‌ی بعد دیگه نمی‌خوام» → "from": تاریخ شروع حذف.
+
+**فقط یک روز از یک برنامه‌ی تکراری**: به retime/move/delete فیلد
+"date": "YYYY-MM-DD" بده — فقط همان روز عوض/حذف می‌شود، بقیه‌ی هفته‌ها
+دست نمی‌خورند. «فقط این شنبه ورزش رو بنداز یکشنبه» →
+{ "op": "move", "ref": 2, "date": "<تاریخ این شنبه>", "toDay": "یکشنبه" }
+«این هفته کلاس دوشنبه رو ندارم» → { "op": "delete", "ref": 5, "date": "<تاریخ این دوشنبه>" }
+بدون date، تغییر روی همه‌ی هفته‌ها از امروز به بعد اعمال می‌شود.
+
+### ref چیست
+فهرست برنامه‌ها با «#n» داده می‌شود. همان عدد n را در ref بگذار؛ هیچ‌وقت
+عددی نساز که در فهرست نیست. اگر برنامه روی چند روز است، هر روز یک ردیف
+جداست — برای تغییر همه، برای هر ردیف یک op بده.
+
+### سوال یا مشورت (بدون تغییر)
+«شنبه چی دارم؟»، «چطور برای کنکور برنامه بریزم؟»، سلام‌وعلیک → ops خالی
+و یک جواب مفید و صمیمی در reply (تا چهار جمله یا یک لیست کوتاه) — مثل
+جوابی که یه دوست باتجربه می‌ده، نه یه راهنمای خشک اپلیکیشن. برای دیدن
+برنامه‌ی یک روز، دوره‌ها («فقط …»، «دوره … تا …») را هم در نظر بگیر.
+
+### ابهام واقعی — سوال با گزینه
+فقط وقتی واقعا نمی‌شود تصمیم گرفت (دو برنامه با اسم مشابه، نامعلوم بودن
+«فقط این هفته» یا «همیشه» وقتی فرق بزرگی دارد):
+{ "offTopic": false, "ops": [], "ask": { "question": "…", "options": ["…", "…"] } }
+حداکثر چهار گزینه‌ی کوتاه که کاربر بتواند همان را بفرستد. ask با ops خالی.
+
+### خارج از موضوع
+فقط برای چیزی که هیچ ربطی به وقت/برنامه/عادت/درس/هدف ندارد (کدنویسی، ترجمه،
+اخبار، تشخیص پزشکی، سیاست): { "offTopic": true }
+
+### قواعد دیگر
+- ساعت پایان باید بعد از شروع باشد.
+- در reply ادعا نکن کاری «انجام شد» — فقط قصدت را بگو؛ گزارش نهایی را خود
+  برنامه می‌دهد. reply فارسی و بدون اعراب.
+- تا 40 عملیات در یک پیام مجاز است؛ برای بازچیدن کل هفته دریغ نکن.`;
+
+export type RoutineAssistantPlan = {
+  offTopic: boolean;
+  reply: string;
+  ops: any[];
+  /** سوال مدل وقتی خودش نمی‌تواند تصمیم بگیرد، همراه گزینه‌های آماده */
+  ask: { question: string; options: string[] } | null;
+};
+
+export type RoutineChatTurn = { role: "user" | "assistant"; text: string };
+
+/**
+ * پیام کاربر + وضعیت فعلی برنامه‌ها را می‌دهد و یک نقشه‌ی تغییر می‌گیرد.
+ * هیچ اعتبارسنجی معنایی این‌جا نیست جز شکل کلی — آن کار routineAssistant است.
+ */
+export async function planRoutineChange(
+  message: string,
+  scheduleText: string,
+  todayLabel: string,
+  userId: string,
+  history: RoutineChatTurn[] = [],
+  calendarText = ""
+): Promise<RoutineAssistantPlan> {
+  // تاریخچه لازم است چون کاربر روی گزینه‌ها کلیک می‌کند و جواب کوتاه
+  // می‌دهد («همون»، «۹:۳۰»)؛ بدون چند پیام قبلی این‌ها بی‌معنی‌اند.
+  const historyText = history.length
+    ? ["گفت‌وگوی قبلی (تازه‌ترین در انتها):",
+       ...history.map((t) => `${t.role === "user" ? "کاربر" : "تو"}: ${t.text}`), ""].join("\n")
+    : "";
+
+  const userContent = [
+    `امروز: ${todayLabel}`,
+    "",
+    calendarText ? `${calendarText}\n` : "",
+    historyText,
+    "برنامه‌های فعلی کاربر:",
+    scheduleText,
+    "",
+    `پیام کاربر: ${message}`,
+  ].filter((x) => x !== "").join("\n");
+
+  // temperature بالاتر فقط برای همین مکالمه‌ی آزاد (نه برای ops که خودش
+  // زیر اعتبارسنجی سخت‌گیرانه‌ی lib/routineAssistant.ts می‌رود) — لحن را
+  // طبیعی‌تر و کمتر تکراری می‌کند، بدون اینکه به ساختار JSON آسیبی بزند.
+  const { text, usage, durationMs } = await callAiChat(ROUTINE_ASSISTANT_PROMPT, userContent, 4000, AI_MODEL_NAME, AI_TIMEOUT_MS, 0.7);
+  recordAiUsage(userId, AiFeatureKey.ROUTINE_ASSISTANT, usage, durationMs, true);
   const parsed = parseJsonResponse(text);
 
-  if (parsed?.recognized === false) {
-    const message = typeof parsed?.message === "string" && parsed.message.trim()
-      ? parsed.message.trim()
-      : "غذایی توی این عکس تشخیص داده نشد.";
-    return { recognized: false, message };
-  }
+  const rawAsk = parsed?.ask;
+  const ask =
+    rawAsk && typeof rawAsk.question === "string" && rawAsk.question.trim()
+      ? {
+          question: rawAsk.question.trim().slice(0, 300),
+          options: (Array.isArray(rawAsk.options) ? rawAsk.options : [])
+            .filter((o: unknown): o is string => typeof o === "string" && !!o.trim())
+            .slice(0, 4)
+            .map((o: string) => o.trim().slice(0, 80)),
+        }
+      : null;
 
-  const calories = asPositiveNumber(parsed?.calories);
-  const estimatedGrams = asPositiveNumber(parsed?.estimatedGrams);
-  const proteinG = asPositiveNumber(parsed?.proteinG) ?? 0;
-  const carbsG = asPositiveNumber(parsed?.carbsG) ?? 0;
-  const fatG = asPositiveNumber(parsed?.fatG) ?? 0;
-  const name = typeof parsed?.name === "string" && parsed.name.trim() ? parsed.name.trim() : "";
-
-  if (!calories || !estimatedGrams || !name) {
-    throw new Error("مدل تخمین قابل‌استفاده‌ای برنگردوند");
-  }
-
-  return { recognized: true, name, estimatedGrams, calories, proteinG, carbsG, fatG };
+  return {
+    offTopic: parsed?.offTopic === true,
+    reply: typeof parsed?.reply === "string" ? parsed.reply.trim().slice(0, 800) : "",
+    ops: Array.isArray(parsed?.ops) ? parsed.ops : [],
+    ask,
+  };
 }

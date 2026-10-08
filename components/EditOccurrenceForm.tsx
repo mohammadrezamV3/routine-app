@@ -1,30 +1,34 @@
 "use client";
 
 import { useRef, useState } from "react";
-import { WEEK_ORDER } from "@/lib/schedule";
+import { WEEK_ORDER, sameWeekIso } from "@/lib/schedule";
 import { normalizeTimeToFa } from "@/lib/timeUtils";
 import { timeStartMinutes } from "@/lib/schedule";
-import { findScheduleConflict, isPastToday, rangesOverlap } from "@/lib/conflict";
-import { showConflictAlert } from "@/lib/conflictAlertBus";
+import { findScheduleConflict, rangesOverlap } from "@/lib/conflict";
 import { TimeInput } from "./TimeInput";
 import { CustomOccurrence, Importance, IMPORTANCE_LABELS, setCustomOccurrences, setRemovedOccurrences } from "@/lib/storage";
 import { isoLocal } from "@/lib/jalali";
 import { SegmentedTabs } from "./SegmentedTabs";
 import { focusNextOnEnter } from "@/lib/formNav";
 import { useLockBodyScroll } from "@/lib/useLockBodyScroll";
+import { TickOption } from "./TickOption";
+import { RoutineChecklistEditor } from "./RoutineChecklistEditor";
+import { RoutineTagField } from "./RoutineTagField";
+import { checklistOf, type ChecklistItem } from "@/lib/routineChecklist";
+import { Spinner } from "./Spinner";
 
 type Occ = { dayName: string; jsDay: number; time: string; id: string; custom?: boolean; importance?: Importance; tag?: string };
 type ScheduleOpts = { removedOccurrences: Set<string>; customOccurrences: CustomOccurrence[] };
-// دقیقاً همون ساختارِ ردیف‌هایِ AddProgramForm — هر ردیف می‌تونه چند روزِ
-// هم‌زمان داشته باشه (فیکسِ باگِ «توی ویرایش نمی‌شه چند روز انتخاب کرد»).
+// دقیقا همون ساختار ردیف‌های AddProgramForm — هر ردیف می‌تونه چند روز
+// هم‌زمان داشته باشه (فیکس باگ «توی ویرایش نمی‌شه چند روز انتخاب کرد»).
 type EditRow = { jsDays: number[]; start: string; end: string };
 
 const now = new Date();
 
-// این فرم دقیقاً همون دیزاینِ AddProgramForm رو داره (همون کلاس‌های
-// liquid-glass-form / add-program-glass، همون بلاب‌های ثابت، همون منطقِ
-// چندردیفی/چندروزه) — چون خودِ محصول باید حسِ یکسان بده، فقط برای
-// ویرایشِ یک برنامه‌ی موجود به‌جای افزودنِ یک برنامه‌ی تازه.
+// این فرم دقیقا همون دیزاین AddProgramForm رو داره (همون کلاس‌های
+// liquid-glass-form / add-program-glass، همون بلاب‌های ثابت، همون منطق
+// چندردیفی/چندروزه) — چون خود محصول باید حس یکسان بده، فقط برای
+// ویرایش یک برنامه‌ی موجود به‌جای افزودن یک برنامه‌ی تازه.
 export function EditOccurrenceForm({
   name,
   occ,
@@ -45,8 +49,14 @@ export function EditOccurrenceForm({
   ]);
   const [importance, setImportance] = useState<Importance>(occ.importance ?? "low");
   const [tag, setTag] = useState(occ.tag ?? "");
+  // آیتم‌های برنامه‌ی لیستی — از خود occurrence  ذخیره‌شده (ویرایش نباید پاکشون کنه)
+  const origItems = checklistOf(scheduleOpts.customOccurrences.find((c) => c.id === occ.id));
+  const [isList, setIsList] = useState(origItems.length > 0);
+  const [items, setItems] = useState<ChecklistItem[]>(origItems);
   const [status, setStatus] = useState<"idle" | "loading" | "success" | "error">("idle");
-  const [rowErrors, setRowErrors] = useState<Record<number, { start?: boolean; end?: boolean; days?: boolean }>>({});
+  // پیام خطا داخل همین فرم، نه بنر بالای صفحه (درخواست صریح کاربر).
+  const [formError, setFormError] = useState<string | null>(null);
+  const [rowErrors, setRowErrors] = useState<Record<number, { start?: boolean; end?: boolean; days?: boolean; order?: boolean }>>({});
   const formRef = useRef<HTMLDivElement>(null);
 
   function addRow() {
@@ -74,14 +84,23 @@ export function EditOccurrenceForm({
     let hasError = false;
     const rErrs: typeof rowErrors = {};
     rows.forEach((r, i) => {
-      const e: { start?: boolean; end?: boolean; days?: boolean } = {};
+      const e: { start?: boolean; end?: boolean; days?: boolean; order?: boolean } = {};
       if (!r.jsDays.length) { e.days = true; hasError = true; }
       if (!r.start.trim()) { e.start = true; hasError = true; }
       if (!r.end.trim()) { e.end = true; hasError = true; }
-      if (e.start || e.end || e.days) rErrs[i] = e;
+      // ساعت پایان هیچ‌وقت نباید زودتر (یا برابر) ساعت شروع باشه
+      if (!e.start && !e.end) {
+        const sMin = timeStartMinutes(normalizeTimeToFa(r.start));
+        const eMin = timeStartMinutes(normalizeTimeToFa(r.end));
+        if (sMin !== null && eMin !== null && eMin <= sMin) { e.order = true; hasError = true; }
+      }
+      if (e.start || e.end || e.days || e.order) rErrs[i] = e;
     });
     setRowErrors(rErrs);
-    if (hasError) return;
+    if (hasError) {
+      setFormError(Object.values(rErrs).some((e) => e.order) ? "ساعت پایان باید بعد از ساعت شروع باشه" : null);
+      return;
+    }
 
     const normalizedRows: { jsDay: number; start: string; end: string; startMin: number | null; endMin: number | null }[] = [];
     let conflictMsg: string | null = null;
@@ -92,11 +111,8 @@ export function EditOccurrenceForm({
       const endMin = timeStartMinutes(endFa);
 
       for (const jsDay of r.jsDays) {
-        if (isPastToday(jsDay, startMin, endMin, now)) {
-          conflictMsg = "این ساعت برای امروز گذشته — نمی‌شه براش برنامه ثبت کرد";
-          break outer;
-        }
-        // occ.id excluded تا خودِ همون occurrence‌ای که داریم ویرایشش می‌کنیم
+        // هیچ قفلی روی «این ساعت امروز گذشته» نیست — درخواست صریح کاربر.
+        // occ.id excluded تا خود همون occurrence‌ای که داریم ویرایشش می‌کنیم
         // با خودش تداخل حساب نشه.
         let conflict = findScheduleConflict(jsDay, startMin, endMin, now, scheduleOpts, occ.id);
         if (!conflict) {
@@ -112,44 +128,68 @@ export function EditOccurrenceForm({
       }
     }
 
+    if (conflictMsg) {
+      setFormError(null);
+      setStatus("error");
+      setFormError(conflictMsg);
+      setTimeout(() => setStatus("idle"), 900);
+      return;
+    }
+
+    setFormError(null);
     setStatus("loading");
-    setTimeout(async () => {
-      if (conflictMsg) {
-        setStatus("error");
-        showConflictAlert(conflictMsg!);
-        setTimeout(() => setStatus("idle"), 900);
-        return;
+
+    // بدون لودینگ مصنوعی — همین که واقعا ذخیره شد باید همه‌جای اپ دیده بشه.
+    let nextRemoved = scheduleOpts.removedOccurrences;
+    let nextCustom = scheduleOpts.customOccurrences;
+    if (occ.custom) {
+      nextCustom = scheduleOpts.customOccurrences.filter((c) => c.id !== occ.id);
+    } else {
+      nextRemoved = new Set(scheduleOpts.removedOccurrences);
+      nextRemoved.add(occ.id + "|" + occ.jsDay);
+    }
+
+    const trimmedTag = tag.trim();
+    // دوره/تک‌روزه بودن برنامه با ویرایش از دست نمی‌رود: قبلا ویرایش
+    // همیشه startDate=امروز و بدون endDate می‌ساخت، یعنی یک برنامه‌ی «فقط
+    // همین پنجشنبه» بعد از ویرایش هر هفته تکرار می‌شد.
+    const orig = scheduleOpts.customOccurrences.find((c) => c.id === occ.id);
+    const today = isoLocal(now);
+    const isOneOff = !!orig?.startDate && orig.startDate === orig.endDate;
+    const datesFor = (jsDay: number): Pick<CustomOccurrence, "startDate" | "endDate"> => {
+      if (isOneOff) {
+        const iso = sameWeekIso(orig!.startDate!, jsDay);
+        return { startDate: iso, endDate: iso };
       }
+      if (orig?.endDate && orig.endDate < today) return { startDate: orig.startDate, endDate: orig.endDate };
+      return {
+        startDate: orig?.startDate && orig.startDate > today ? orig.startDate : today,
+        ...(orig?.endDate ? { endDate: orig.endDate } : {}),
+      };
+    };
+    const cleanItems = isList ? items.map((i) => ({ id: i.id, name: i.name.trim() })).filter((i) => i.name) : [];
+    const additions: CustomOccurrence[] = normalizedRows.map((r) => ({
+      id: "custom-" + Date.now().toString(36) + Math.random().toString(36).slice(2, 7),
+      name,
+      jsDay: r.jsDay,
+      time: r.end ? `${r.start} – ${r.end}` : r.start,
+      ...datesFor(r.jsDay),
+      importance,
+      ...(trimmedTag ? { tag: trimmedTag } : {}),
+      ...(cleanItems.length ? { items: cleanItems } : {}),
+      // آینه‌ی برنامه‌ی منتور باید بعد از ویرایش هم آینه بمونه — وگرنه به «برنامه‌ی
+      // خود شاگرد» تبدیل می‌شه و ممکنه برای منتور دیگه‌ای قابل‌اشتراک بشه
+      ...(orig?.mentorProgramId ? { mentorProgramId: orig.mentorProgramId } : {}),
+      ...(orig?.mentorProgramId && orig.mentorItemId ? { mentorItemId: orig.mentorItemId } : {}),
+    }));
+    nextCustom = [...nextCustom, ...additions];
 
-      setStatus("success");
-      if (navigator.vibrate) navigator.vibrate(15);
-
-      let nextRemoved = scheduleOpts.removedOccurrences;
-      let nextCustom = scheduleOpts.customOccurrences;
-      if (occ.custom) {
-        nextCustom = scheduleOpts.customOccurrences.filter((c) => c.id !== occ.id);
-      } else {
-        nextRemoved = new Set(scheduleOpts.removedOccurrences);
-        nextRemoved.add(occ.id + "|" + occ.jsDay);
-      }
-
-      const trimmedTag = tag.trim();
-      const additions: CustomOccurrence[] = normalizedRows.map((r) => ({
-        id: "custom-" + Date.now().toString(36) + Math.random().toString(36).slice(2, 7),
-        name,
-        jsDay: r.jsDay,
-        time: r.end ? `${r.start} – ${r.end}` : r.start,
-        startDate: isoLocal(now),
-        importance,
-        ...(trimmedTag ? { tag: trimmedTag } : {}),
-      }));
-      nextCustom = [...nextCustom, ...additions];
-
-      await setCustomOccurrences(nextCustom);
-      await setRemovedOccurrences(Array.from(nextRemoved));
-
-      setTimeout(() => { onChanged(); onClose(); }, 480);
-    }, 550);
+    await setCustomOccurrences(nextCustom);
+    await setRemovedOccurrences(Array.from(nextRemoved));
+    if (navigator.vibrate) navigator.vibrate(15);
+    setStatus("success");
+    onChanged();
+    setTimeout(onClose, 480);
   }
 
   return (
@@ -162,15 +202,13 @@ export function EditOccurrenceForm({
             <button className="nav-close" onClick={onClose} aria-label="بستن">×</button>
           </div>
 
+          <TickOption checked={isList} onChange={setIsList} className="mb-2">
+            این برنامه یک لیسته (چند آیتم که تک‌تک تیک می‌خورن)
+          </TickOption>
+          {isList && <div style={{ marginBottom: 14 }}><RoutineChecklistEditor items={items} onChange={setItems} /></div>}
+
           <label htmlFor="editOccTag">تگ (اختیاری)</label>
-          <input
-            id="editOccTag"
-            type="text"
-            className="wsearch-newform-name"
-            placeholder="درس، ورزش، کار…"
-            value={tag}
-            onChange={(e) => setTag(e.target.value)}
-          />
+          <RoutineTagField id="editOccTag" value={tag} onChange={setTag} occurrences={scheduleOpts.customOccurrences} />
 
           <label>میزان اهمیت</label>
           <SegmentedTabs
@@ -194,13 +232,13 @@ export function EditOccurrenceForm({
                   ))}
                 </div>
               </div>
-              <div className={`time-field${rowErrors[ri]?.start ? " field-error" : ""}`}>
+              <div className={`time-field${rowErrors[ri]?.start || rowErrors[ri]?.order ? " field-error" : ""}`}>
                 <span className="time-field-label">ساعت شروع</span>
                 <div className="field-error-wrap">
                   <TimeInput value={r.start} onChange={(v) => updateRow(ri, { start: v })} />
                 </div>
               </div>
-              <div className={`time-field${rowErrors[ri]?.end ? " field-error" : ""}`}>
+              <div className={`time-field${rowErrors[ri]?.end || rowErrors[ri]?.order ? " field-error" : ""}`}>
                 <span className="time-field-label">ساعت پایان</span>
                 <div className="field-error-wrap">
                   <TimeInput value={r.end} onChange={(v) => updateRow(ri, { end: v })} />
@@ -214,6 +252,8 @@ export function EditOccurrenceForm({
             </div>
           ))}
 
+          {formError && <div className="form-inline-error">{formError}</div>}
+
           <div className="wsearch-newform-addrow">
             <button type="button" className="wsearch-add-btn" onClick={addRow}>
               افزودن روز دیگر
@@ -221,17 +261,13 @@ export function EditOccurrenceForm({
             </button>
             <button
               type="button"
-              className={`wsearch-newform-submit${status !== "idle" ? " " + status : ""}`}
+              className={`wsearch-submit-btn wsearch-submit-btn-inline${status !== "idle" ? " " + status : ""}`}
               onClick={submit}
-              aria-label="ذخیره"
+              disabled={status !== "idle"}
             >
-              <span className="wns-spinner" />
-              <svg className="wns-check" viewBox="0 0 24 24" fill="none">
-                <path d="M5 13l4 4L19 7" stroke="currentColor" strokeWidth="2.4" strokeLinecap="round" strokeLinejoin="round" />
-              </svg>
-              <svg className="wns-x" viewBox="0 0 24 24" fill="none">
-                <path d="M6 6l12 12M18 6L6 18" stroke="currentColor" strokeWidth="2.4" strokeLinecap="round" strokeLinejoin="round" />
-              </svg>
+              {status === "loading" ? (
+                <Spinner size={15} />
+              ) : status === "success" ? "ذخیره شد" : status === "error" ? "ذخیره نشد" : "ذخیره"}
             </button>
           </div>
         </div>

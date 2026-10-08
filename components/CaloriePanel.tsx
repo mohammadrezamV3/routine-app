@@ -1,15 +1,14 @@
 "use client";
 
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useState } from "react";
 import { createPortal } from "react-dom";
 import { Calendar, History } from "lucide-react";
 import { useSession } from "next-auth/react";
-import { isoLocal, faNum, toJalali, J_MONTHS } from "@/lib/jalali";
-import { WEEK_ORDER } from "@/lib/schedule";
+import { isoLocal, faNum } from "@/lib/jalali";
 import { AuthGate } from "./AuthGate";
 import { CalorieGoal, CALORIE_GOAL_LABELS, Sex } from "@/lib/calorieCalc";
 import { SegmentedTabs } from "./SegmentedTabs";
-import { DashDateSelector, DashDay } from "./DashDateSelector";
+import { DashDateSelector } from "./DashDateSelector";
 import { LockBodyScroll } from "./LockBodyScroll";
 import { DashFilterButton } from "./DashFilterButton";
 import { DashFriendsCard } from "./DashFriendsCard";
@@ -23,6 +22,9 @@ import { CalorieHistoryCalendar } from "./CalorieHistoryCalendar";
 import { CalorieTutorial, hasSeenCalorieTutorial } from "./CalorieTutorial";
 import { getBodyMetrics, isWeightStale, saveBodyMetrics } from "@/lib/bodyMetrics";
 import { useDashboardPrefs } from "@/lib/dashboardPrefs";
+import { NumberInput } from "./NumberInput";
+import { reportLiveError, useLiveRefresh } from "@/lib/liveSync";
+import { Spinner } from "./Spinner";
 
 const now = new Date();
 const todayIso = isoLocal(now);
@@ -57,46 +59,34 @@ export type Target = {
   sex: Sex | null;
   heightCm: number | null;
   weightKg: number | null;
+  // هدف درشت‌مغذی‌ها (گرم در روز) — اختیاری، فقط از «وارد کردن دستی»
+  proteinTargetG?: number | null;
+  carbsTargetG?: number | null;
+  fatTargetG?: number | null;
 };
 
 export function CaloriePanel() {
   const { status } = useSession();
   const dashboardPrefs = useDashboardPrefs();
   const [target, setTarget] = useState<Target | null | undefined>(undefined);
+  // شبکه‌ی ایمنی: اگه هر دلیلی (فچ گیرکرده، پاسخ کند سرور، ...) بعد از
+  // چند ثانیه هنوز روی «در حال بارگذاری» مانده بودیم، به‌جای اسپینر ابدی
+  // (دقیقا گزارش کاربر: «کالری‌شمار بالا نمیاد») یک پیام خطا با دکمه‌ی
+  // تلاش دوباره نشان بده.
+  const [loadStuck, setLoadStuck] = useState(false);
   const [needsAge, setNeedsAge] = useState(false);
 
-  // انتخابِ روز — طبقِ طرحِ کاربر، بالای صفحه یه نوارِ روزهای هفته‌ست که
-  // مشخص می‌کنه داری کدوم روز رو می‌بینی/واردش می‌کنی؛ دقیقاً هم‌الگوی
-  // انتخابِ روزِ داشبوردِ بدنسازی (DashDateSelector + weekOffset/dayWindow).
-  const [weekOffset, setWeekOffset] = useState(0);
+  // انتخاب روز — طبق طرح کاربر، بالای صفحه یه نوار روزهاست که مشخص می‌کنه
+  // داری کدوم روز رو می‌بینی/واردش می‌کنی (DashDateSelector، نوار آزاد
+  // قابل‌کشیدن؛ روز دور انتخاب‌شده از تقویم رو خودش باز و وسط‌چین می‌کنه).
   const [selectedIso, setSelectedIso] = useState(todayIso);
-  const [dayWindow, setDayWindow] = useState(5);
+  const [recenterKey, setRecenterKey] = useState(0);
   const isSelectedToday = selectedIso === todayIso;
-
-  const dashDays: DashDay[] = useMemo(() => {
-    const center = new Date(now);
-    center.setDate(now.getDate() + weekOffset * dayWindow);
-    return Array.from({ length: dayWindow }, (_, i) => {
-      const d = new Date(center);
-      d.setDate(center.getDate() - Math.floor(dayWindow / 2) + i);
-      const iso = isoLocal(d);
-      const order = WEEK_ORDER.find((w) => w.jsDay === d.getDay())!;
-      const j = toJalali(d.getFullYear(), d.getMonth() + 1, d.getDate());
-      return { iso, weekday: order.name, dateLabel: `${faNum(j[2])} ${J_MONTHS[j[1] - 1]}` };
-    });
-  }, [weekOffset, dayWindow]);
 
   const [historyPickerOpen, setHistoryPickerOpen] = useState(false);
 
-  // انتخابِ یه تاریخِ دلخواه از تقویم — پنجره‌ی نوارِ روزها هم باید دورِ همون
-  // تاریخ وسط‌چین بشه، نه اینکه روزِ انتخاب‌شده بیرونِ پنجره‌ی فعلی بمونه
-  // (دقیقاً هم‌منطقِ pickDate توی داشبوردِ بدنسازی).
   function pickDate(iso: string) {
     setSelectedIso(iso);
-    const [y, m, d] = iso.split("-").map(Number);
-    const picked = new Date(y, m - 1, d);
-    const diffDays = Math.round((picked.getTime() - now.getTime()) / 86400000);
-    setWeekOffset(Math.round(diffDays / dayWindow));
     setHistoryPickerOpen(false);
   }
 
@@ -113,15 +103,15 @@ export function CaloriePanel() {
   const [savingGoal, setSavingGoal] = useState(false);
   const [editingGoal, setEditingGoal] = useState(false);
 
-  // تاریخچه — ۳۰ روزِ واقعیِ اخیر از «امروز»، مستقل از روزی که کاربر داره
-  // می‌بینه؛ چون نمودارِ هفتگی/ماهانه و روندِ موفقیت به تاریخِ واقعی نیاز دارن
+  // تاریخچه — ۳۰ روز واقعی اخیر از «امروز»، مستقل از روزی که کاربر داره
+  // می‌بینه؛ چون نمودار هفتگی/ماهانه و روند موفقیت به تاریخ واقعی نیاز دارن
   const [historyEntries, setHistoryEntries] = useState<Entry[]>([]);
 
-  // راهنمای اولین‌بار — دقیقاً وقتی صفحه با یه هدفِ کالریِ ازقبل‌ساخته‌شده
-  // باز می‌شه (نه توی فرمِ ساختِ هدف) نشون داده می‌شه، یه بار برای همیشه
+  // راهنمای اولین‌بار — دقیقا وقتی صفحه با یه هدف کالری ازقبل‌ساخته‌شده
+  // باز می‌شه (نه توی فرم ساخت هدف) نشون داده می‌شه، یه بار برای همیشه
   const [showTutorial, setShowTutorial] = useState(false);
 
-  // یادآوریِ به‌روزکردنِ وزن — هر دو هفته یک‌بار
+  // یادآوری به‌روزکردن وزن — هر دو هفته یک‌بار
   const [weightReminder, setWeightReminder] = useState(false);
 
   useEffect(() => {
@@ -134,28 +124,47 @@ export function CaloriePanel() {
     });
   }, [status]);
 
+  // بدون چک res.ok، یک ۵۰۰ که بدنه‌اش JSON نیست باعث می‌شد res.json()
+  // throw کند، هیچ‌جا catch نشود، و target تا ابد روی حالت اولیه‌ی
+  // undefined بماند — یعنی از دید کاربر «کالری‌شمار بالا نمی‌آید»
+  // (اسکلتون «در حال بارگذاری…» بی‌نهایت). الگوی ExercisePanel.tsx.
   async function loadTarget() {
-    const res = await fetch("/api/calorie/target");
-    const data = await res.json();
-    setTarget(data.target ?? null);
-    setNeedsAge(!!data.needsAge);
+    try {
+      const res = await fetch("/api/calorie/target");
+      const data = res.ok ? await res.json() : null;
+      setTarget(data?.target ?? null);
+      setNeedsAge(!!data?.needsAge);
+    } catch {
+      setTarget(null);
+    }
   }
   async function loadEntries() {
-    const res = await fetch(`/api/calorie/log?date=${selectedIso}`);
-    const data = await res.json();
-    setEntries(data.entries || []);
+    try {
+      const res = await fetch(`/api/calorie/log?date=${selectedIso}`);
+      const data = res.ok ? await res.json() : null;
+      setEntries(data?.entries || []);
+    } catch {
+      setEntries([]);
+    }
   }
   async function loadHistory() {
-    const from = isoLocal(new Date(Date.now() - 29 * 24 * 60 * 60 * 1000));
-    const res = await fetch(`/api/calorie/log/range?from=${from}&to=${todayIso}`);
-    const data = await res.json();
-    setHistoryEntries(data.entries || []);
+    try {
+      const from = isoLocal(new Date(Date.now() - 29 * 24 * 60 * 60 * 1000));
+      const res = await fetch(`/api/calorie/log/range?from=${from}&to=${todayIso}`);
+      const data = res.ok ? await res.json() : null;
+      setHistoryEntries(data?.entries || []);
+    } catch {
+      setHistoryEntries([]);
+    }
   }
 
   useEffect(() => {
     if (status !== "authenticated") return;
+    setLoadStuck(false);
     loadTarget();
     loadHistory();
+    const t = setTimeout(() => setLoadStuck(true), 12_000);
+    return () => clearTimeout(t);
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [status]);
 
@@ -166,8 +175,9 @@ export function CaloriePanel() {
   }, [status, selectedIso]);
 
   useEffect(() => {
+    if (status !== "authenticated") return;
     if (target && !editingGoal && !hasSeenCalorieTutorial()) setShowTutorial(true);
-  }, [target, editingGoal]);
+  }, [status, target, editingGoal]);
 
   async function saveGoal() {
     if (!goal) { setGoalError("انتخاب هدف لازمه"); return; }
@@ -195,12 +205,25 @@ export function CaloriePanel() {
   }
 
   async function removeEntry(id: string) {
+    // optimistic: همون لحظه از لیست (و از جمع امروز/تاریخچه) حذف می‌شه؛
+    // اگه سرور رد کرد برمی‌گرده و پیام خطا نشون داده می‌شه.
+    const prevEntries = entries;
+    const prevHistory = historyEntries;
     setEntries((e) => e.filter((x) => x.id !== id));
-    await fetch(`/api/calorie/log?id=${id}`, { method: "DELETE" });
+    setHistoryEntries((h) => h.filter((x: { id?: string }) => x.id !== id));
+    const res = await fetch(`/api/calorie/log?id=${id}`, { method: "DELETE" }).catch(() => null);
+    if (!res?.ok) {
+      setEntries(prevEntries);
+      setHistoryEntries(prevHistory);
+      reportLiveError("حذف نشد — دوباره امتحان کن");
+    }
   }
 
-  // بعدِ افزودن/حذف/اسکن، هم لیستِ روزِ انتخاب‌شده هم تاریخچه‌ی ۳۰روزه باید
-  // به‌روز بشن — چون نمودار/روندِ موفقیت/ریزِ درشت‌مغذی‌ها به هردو وابسته‌ن
+  // زنده: افزودن/حذف از هرجا (مودال، تب دیگه، سرور) یا برگشت به تب
+  useLiveRefresh("calorie", () => { loadTarget(); refreshAfterChange(); }, { enabled: status === "authenticated" });
+
+  // بعد افزودن/حذف، هم لیست روز انتخاب‌شده هم تاریخچه‌ی ۳۰روزه باید
+  // به‌روز بشن — چون نمودار/روند موفقیت/ریز درشت‌مغذی‌ها به هردو وابسته‌ن
   function refreshAfterChange() {
     loadEntries();
     loadHistory();
@@ -211,15 +234,30 @@ export function CaloriePanel() {
   }
 
   if (target === undefined) {
-    return <div className="item-line" style={{ marginTop: 10 }}>در حال بارگذاری…</div>;
+    if (loadStuck) {
+      return (
+        <div className="item-line empty" style={{ marginTop: 10 }}>
+          بارگذاری کالری‌شمار خیلی طول کشید — اتصال اینترنت را چک کن.
+          <button
+            type="button"
+            className="account-outline-btn"
+            style={{ marginRight: 10 }}
+            onClick={() => { setLoadStuck(false); loadTarget(); }}
+          >
+            تلاش دوباره
+          </button>
+        </div>
+      );
+    }
+    return <div className="item-line is-loading" style={{ marginTop: 10 }}>در حال بارگذاری…</div>;
   }
 
   const mealTypes = target?.mealBreakdown?.length ? target.mealBreakdown.map((m) => ({ key: m.key, label: m.label })) : DEFAULT_MEAL_TYPES;
   const totalToday = entries.reduce((s, e) => s + e.customCalories, 0);
-  // عمداً اینجا سقف ۱۰۰٪ زده نمی‌شه — کارتِ کالری امروز خودش برای طولِ نوار
-  // سقف می‌زنه ولی برای تشخیصِ «رد شدن از هدف» (رنگِ قرمز) به همون درصدِ
+  // عمدا اینجا سقف ۱۰۰٪ زده نمی‌شه — کارت کالری امروز خودش برای طول نوار
+  // سقف می‌زنه ولی برای تشخیص «رد شدن از هدف» (رنگ قرمز) به همون درصد
   // واقعی نیاز داره؛ سقف‌زدن اینجا باعث می‌شد pct هیچ‌وقت از ۱۰۰ رد نشه و
-  // رنگِ قرمز هیچ‌وقت فعال نشه، حتی وقتی کاربر چند برابرِ هدفش خورده بود.
+  // رنگ قرمز هیچ‌وقت فعال نشه، حتی وقتی کاربر چند برابر هدفش خورده بود.
   const pct = target ? Math.round((totalToday / target.dailyTargetKcal) * 100) : 0;
 
   return (
@@ -257,16 +295,16 @@ export function CaloriePanel() {
           <div style={{ display: "flex", gap: 10, marginTop: 14 }}>
             <div style={{ flex: 1 }}>
               <label className="exercise-form-label">قد (سانتی‌متر)</label>
-              <input type="number" className="wsearch-newform-name" value={goalHeight} onChange={(e) => setGoalHeight(e.target.value)} />
+              <NumberInput className="wsearch-newform-name" value={goalHeight} onChange={(v) => setGoalHeight(v)} />
             </div>
             <div style={{ flex: 1 }}>
               <label className="exercise-form-label">وزن (کیلوگرم)</label>
-              <input type="number" className="wsearch-newform-name" value={goalWeight} onChange={(e) => setGoalWeight(e.target.value)} />
+              <NumberInput className="wsearch-newform-name" value={goalWeight} onChange={(v) => setGoalWeight(v)} />
             </div>
             {needsAge && (
               <div style={{ flex: 1 }}>
                 <label className="exercise-form-label">سن</label>
-                <input type="number" className="wsearch-newform-name" value={age} onChange={(e) => setAge(e.target.value)} />
+                <NumberInput className="wsearch-newform-name" value={age} onChange={(v) => setAge(v)} />
               </div>
             )}
           </div>
@@ -274,7 +312,7 @@ export function CaloriePanel() {
           {goalError && <div className="field-error-msg" style={{ display: "block", marginTop: 10 }}>{goalError}</div>}
           <div style={{ display: "flex", gap: 8, marginTop: 14 }}>
             <button onClick={saveGoal} disabled={savingGoal} style={{ flex: 2, borderColor: "var(--accent)", color: "var(--accent)" }}>
-              {savingGoal ? "در حال محاسبه…" : "محاسبه‌ی برنامه کالری"}
+              {savingGoal ? <Spinner size={14} /> : "محاسبه‌ی برنامه کالری"}
             </button>
           </div>
         </div>
@@ -283,12 +321,9 @@ export function CaloriePanel() {
           <div className="dash-scope flex flex-col gap-3 sm:gap-4">
             <div className="flex flex-col gap-2.5 sm:gap-3 lg:flex-row lg:items-center lg:gap-4">
               <DashDateSelector
-                days={dashDays}
                 activeIso={selectedIso}
                 onSelect={setSelectedIso}
-                onPrevWeek={() => setWeekOffset((v) => v - 1)}
-                onNextWeek={() => setWeekOffset((v) => v + 1)}
-                onVisibleCountChange={setDayWindow}
+                recenterKey={recenterKey}
                 className="lg:order-2"
               />
               <div className="flex flex-wrap items-center gap-2 lg:order-1 lg:shrink-0 lg:flex-nowrap">
@@ -302,7 +337,7 @@ export function CaloriePanel() {
                   label="امروز"
                   icon={<Calendar size={15} />}
                   active={isSelectedToday}
-                  onClick={() => { setWeekOffset(0); setSelectedIso(todayIso); }}
+                  onClick={() => { setSelectedIso(todayIso); setRecenterKey((k) => k + 1); }}
                 />
               </div>
             </div>
@@ -310,23 +345,23 @@ export function CaloriePanel() {
             {weightReminder && (
               <div className="flex flex-wrap items-center justify-between gap-2.5 rounded-2xl border px-3.5 py-2.5" style={{ borderColor: "rgba(var(--accent-rgb),.35)", background: "rgba(var(--accent-rgb),.08)" }}>
                 <span className="text-[11.5px] font-semibold text-dash-text sm:text-[12.5px]">
-                  دو هفته از آخرین ثبتِ وزنت گذشته — برای دقیق‌موندنِ محاسبه‌ها به‌روزش کن
+                  دو هفته از آخرین ثبت وزنت گذشته — برای دقیق‌موندن محاسبه‌ها به‌روزش کن
                 </span>
                 <button
                   type="button"
                   onClick={() => setEditingGoal(true)}
                   className="text-[11px] font-bold text-dash-green transition hover:brightness-110 sm:text-[12.5px]"
                 >
-                  به‌روزرسانیِ وزن
+                  به‌روزرسانی وزن
                 </button>
               </div>
             )}
 
-            {/* موبایل: یه ستونِ ساده به ترتیبِ DOM. دسکتاپ: گریدِ نام‌دار
-                (.calorie-dash-grid توی globals.css) که مستقلِ از این ترتیب،
-                برنامه‌ی غذایی رو ستونِ اصلیِ راست می‌کنه و بقیه رو توی دو
-                ردیفِ سمتِ چپ می‌چینه — نمودار/استریک/دوستان بالا،
-                ریزِ درشت‌مغذی‌ها/کالری هر وعده پایین. */}
+            {/* موبایل: یه ستون ساده به ترتیب DOM. دسکتاپ: گرید نام‌دار
+                (.calorie-dash-grid توی globals.css) که مستقل از این ترتیب،
+                برنامه‌ی غذایی رو ستون اصلی راست می‌کنه و بقیه رو توی دو
+                ردیف سمت چپ می‌چینه — نمودار/استریک/دوستان بالا،
+                ریز درشت‌مغذی‌ها/کالری هر وعده پایین. */}
             <div className="calorie-dash-grid">
               <div className="calorie-col-food">
                 <CalorieFoodPlanCard
@@ -346,13 +381,13 @@ export function CaloriePanel() {
 
               <div className="calorie-col-mid">
                 <CalorieMealBreakdownCard target={target} entries={entries} delay={0.16} />
-                <CalorieMacrosCard entries={entries} delay={0.19} />
+                <CalorieMacrosCard entries={entries} target={target} delay={0.19} />
               </div>
 
               <div className="calorie-col-side">
-                {dashboardPrefs.showFriends && <DashFriendsCard delay={0.12} module="calorie" unitLabel="روز موفق" />}
+                {dashboardPrefs.showFriends && <DashFriendsCard delay={0.12} module="calorie" />}
                 <CalorieStreakCard rangeEntries={historyEntries} targetKcal={target.dailyTargetKcal} delay={0.1} />
-                {dashboardPrefs.showChart && <CalorieChartCard todayEntries={entries} rangeEntries={historyEntries} targetKcal={target.dailyTargetKcal} delay={0.22} />}
+                {dashboardPrefs.showChart && <CalorieChartCard rangeEntries={historyEntries} targetKcal={target.dailyTargetKcal} delay={0.22} />}
               </div>
             </div>
           </div>

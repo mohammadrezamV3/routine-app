@@ -1,9 +1,9 @@
 import { ErrorSeverity } from "@prisma/client";
 import { prisma } from "@/lib/prisma";
 
-// ثبتِ رخدادهای خطای واقعیِ سیستم برای بخشِ «خطاها»ی پنلِ Owner — فقط از
-// جاهایی صدا زده می‌شه که واقعاً یک catch رخ داده، هیچ‌وقت داده‌ی ساختگی.
-// هیچ‌وقت نباید خودش پرتاب کنه — ثبتِ لاگ نباید جلوی مسیرِ اصلیِ درخواست رو بگیره.
+// ثبت رخدادهای خطای واقعی سیستم برای بخش «خطاها»ی پنل Owner — فقط از
+// جاهایی صدا زده می‌شه که واقعا یک catch رخ داده، هیچ‌وقت داده‌ی ساختگی.
+// هیچ‌وقت نباید خودش پرتاب کنه — ثبت لاگ نباید جلوی مسیر اصلی درخواست رو بگیره.
 export function logError(service: string, message: string, opts?: { severity?: ErrorSeverity; context?: Record<string, unknown> }) {
   prisma.errorLog
     .create({

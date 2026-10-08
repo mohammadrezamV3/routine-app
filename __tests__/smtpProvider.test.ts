@@ -1,7 +1,7 @@
 import { describe, it, expect, beforeEach, afterEach, vi } from "vitest";
 
-// SMTP_* عمداً هر بار پاک می‌شه و ماژول با vi.resetModules() دوباره import
-// می‌شه، چون مقادیرِ env توی smtpProvider.ts یک‌بار در import ثابت می‌شن.
+// SMTP_* عمدا هر بار پاک می‌شه و ماژول با vi.resetModules() دوباره import
+// می‌شه، چون مقادیر env توی smtpProvider.ts یک‌بار در import ثابت می‌شن.
 // از vi.stubEnv استفاده می‌شه (نه process.env.X = ...) چون NODE_ENV توی
 // تایپ‌های Node به‌صورت readonly تعریف شده.
 function clearSmtpEnv() {
@@ -31,7 +31,7 @@ describe("SmtpEmailProvider — SMTP failure / unconfigured handling", () => {
     const { SmtpEmailProvider } = await import("@/lib/email/smtpProvider");
     const provider = new SmtpEmailProvider();
     const result = await provider.sendMail({ to: "user@example.com", subject: "کد ورود", html: "<p>482931</p>", text: "482931" });
-    // بسته به دسترسیِ شبکه به Ethereal ممکنه ok true یا false باشه، ولی
+    // بسته به دسترسی شبکه به Ethereal ممکنه ok true یا false باشه، ولی
     // «شبیه‌سازی‌شده» بودنش تضمینیه — و هیچ‌وقت نباید throw کنه
     expect(result.simulated).toBe(true);
   });
@@ -60,7 +60,7 @@ describe("SmtpEmailProvider — SMTP failure / unconfigured handling", () => {
     const provider = new SmtpEmailProvider();
     const secretCode = "739284";
     const result = await provider.sendMail({ to: "user@example.com", subject: "کد ورود", html: `<p>${secretCode}</p>`, text: secretCode });
-    // خودِ result API-facing نباید هیچ‌جا کد رو echo کنه
+    // خود result API-facing نباید هیچ‌جا کد رو echo کنه
     expect(JSON.stringify(result)).not.toContain(secretCode);
   }, 20000);
 });

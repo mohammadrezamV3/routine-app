@@ -1,11 +1,11 @@
 import { NextRequest, NextResponse } from "next/server";
-import { requireSuperAdmin } from "@/lib/requireSuperAdmin";
+import { requireAdmin } from "@/lib/requireAdmin";
 import { getErrorLogs } from "@/lib/adminAnalytics";
 
 const VALID_SEVERITIES = ["WARNING", "ERROR", "CRITICAL"] as const;
 
 export async function GET(req: NextRequest) {
-  const guard = await requireSuperAdmin();
+  const guard = await requireAdmin("system");
   if (!guard.ok) return guard.response;
 
   const sp = req.nextUrl.searchParams;

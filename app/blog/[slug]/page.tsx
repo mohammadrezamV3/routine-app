@@ -1,0 +1,82 @@
+import type { Metadata } from "next";
+import { notFound } from "next/navigation";
+import { BlogArticle } from "@/components/BlogArticle";
+import { BRAND_FA } from "@/lib/brand";
+import { BLOG_CATEGORIES } from "@/lib/blog/categories";
+import { BLOG_POSTS, getPost, postWordCount } from "@/lib/blogPosts";
+import { articleJsonLd, breadcrumbJsonLd, faqJsonLd, pageMetadata } from "@/lib/seo";
+
+/**
+ * مقاله‌ها ثابت‌اند، پس در زمان build رندر می‌شوند: هم HTML کامل برای
+ * کراولر آماده است، هم هیچ رفت‌وبرگشتی به دیتابیس لازم نیست.
+ */
+export function generateStaticParams() {
+  return BLOG_POSTS.map((p) => ({ slug: p.slug }));
+}
+
+export function generateMetadata({ params }: { params: { slug: string } }): Metadata {
+  const post = getPost(params.slug);
+  // اسلاگ ناموجود در ادامه به notFound می‌رسد؛ این‌جا فقط باید metadata
+  // معتبر (و noindex) برگردد تا صفحه‌ی 404 ایندکس نشود.
+  if (!post) return { title: { absolute: "صفحه پیدا نشد" }, robots: { index: false, follow: false } };
+  const meta = pageMetadata({
+    title: `${post.metaTitle || post.title} | ${BRAND_FA}`,
+    description: post.description,
+    path: `/blog/${post.slug}`,
+    ogTitle: post.title,
+    ownOgImage: true,
+  });
+  // pageMetadata نوع openGraph رو website می‌ذاره؛ این‌جا article می‌شه و
+  // رفتار ownOgImage (بدون images) دست‌نخورده می‌مونه.
+  return {
+    ...meta,
+    keywords: post.keywords,
+    openGraph: {
+      ...meta.openGraph,
+      type: "article",
+      publishedTime: post.published,
+      modifiedTime: post.updated || post.published,
+      section: BLOG_CATEGORIES[post.category].label,
+    },
+  } as Metadata;
+}
+
+export default function BlogPostPage({ params }: { params: { slug: string } }) {
+  const post = getPost(params.slug);
+  if (!post) notFound();
+
+  const breadcrumb = [
+    { name: BRAND_FA, path: "/" },
+    { name: "مقاله‌ها", path: "/blog" },
+    { name: BLOG_CATEGORIES[post.category].label, path: `/blog/category/${post.category}` },
+    { name: post.title, path: `/blog/${post.slug}` },
+  ];
+
+  const wordCount = postWordCount(post);
+
+  const article = {
+    ...articleJsonLd({
+      title: post.title,
+      description: post.description,
+      path: `/blog/${post.slug}`,
+      published: post.published,
+      modified: post.updated,
+    }),
+    articleSection: BLOG_CATEGORIES[post.category].label,
+    ...(post.keywords?.length ? { keywords: post.keywords.join("، ") } : {}),
+    wordCount,
+  };
+  const ld = [breadcrumbJsonLd(breadcrumb), article, ...(post.faq?.length ? [faqJsonLd(post.faq)] : [])];
+
+  return (
+    <>
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{
+          __html: JSON.stringify(ld),
+        }}
+      />
+      <BlogArticle post={post} />
+    </>
+  );
+}

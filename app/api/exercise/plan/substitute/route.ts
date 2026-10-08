@@ -6,13 +6,16 @@ import { stripSetSuffix } from "@/lib/exerciseSets";
 import { checkRateLimit } from "@/lib/rateLimit";
 import { requireModule } from "@/lib/moduleAccess";
 import { ModuleKey } from "@prisma/client";
+import { withLiveSync } from "@/lib/realtime";
+import { sessionFeatureBlocked } from "@/lib/featureFlagsServer";
 
 // PATCH /api/exercise/plan/substitute { planId, day, oldItem, newItem? }
-// جایگزینیِ یک حرکت — چون تجهیزاتش توی باشگاه کاربر نیست. این «برنامه‌ی جدید»
+// جایگزینی یک حرکت — چون تجهیزاتش توی باشگاه کاربر نیست. این «برنامه‌ی جدید»
 // حساب نمی‌شه (سقف دوهفته‌ای رو دست نمی‌زنه)، فقط یک ابزار سبک با rate-limit جدا.
-// دو حالت: بدونِ newItem → فقط سه‌تا پیشنهاد برمی‌گردونه (بدونِ نوشتن توی
-// دیتابیس)؛ با newItem → همون گزینه‌ی انتخاب‌شده رو واقعاً جایگزین می‌کنه.
-export async function PATCH(req: NextRequest) {
+// دو حالت: بدون newItem → فقط سه‌تا پیشنهاد برمی‌گردونه (بدون نوشتن توی
+// دیتابیس)؛ با newItem → همون گزینه‌ی انتخاب‌شده رو واقعا جایگزین می‌کنه.
+async function handlePATCH(req: NextRequest) {
+  { const off = await sessionFeatureBlocked("exercise"); if (off) return off; }
   const guard = await requireModule(ModuleKey.EXERCISE);
   if (!guard.ok) return guard.response;
   const userId = guard.userId;
@@ -23,8 +26,8 @@ export async function PATCH(req: NextRequest) {
     return NextResponse.json({ error: "اطلاعات ناقص است" }, { status: 400 });
   }
 
-  if (!guard.isSuperAdmin && !checkRateLimit(`exercise-sub:${userId}`, 20, 60 * 60 * 1000)) {
-    return NextResponse.json({ error: "سقف درخواست جایگزینی در این ساعت پر شده — بعداً امتحان کن" }, { status: 429 });
+  if (!guard.isSuperAdmin && !(await checkRateLimit(`exercise-sub:${userId}`, 20, 60 * 60 * 1000))) {
+    return NextResponse.json({ error: "سقف درخواست جایگزینی در این ساعت پر شده — بعدا امتحان کن" }, { status: 429 });
   }
 
   const plan = await prisma.exercisePlan.findFirst({ where: { id: planId, userId } });
@@ -56,3 +59,6 @@ export async function PATCH(req: NextRequest) {
 
   return NextResponse.json({ ok: true, plan: updated });
 }
+
+// بعد از هر نوشتن موفق، بقیه‌ی دستگاه‌ها/تب‌های همین کاربر با WebSocket خبردار می‌شن (lib/realtime.ts)
+export const PATCH = withLiveSync(["exercise"], handlePATCH);

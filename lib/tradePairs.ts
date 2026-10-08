@@ -1,7 +1,7 @@
 // کاتالوگ نمادهای رایج معاملاتی — برای پیشنهاد/جست‌وجو توی فیلد «جفت‌ارز»ی
 // فرم ثبت معامله؛ برخلاف lib/tickerSymbols.ts (که نمادهای Yahoo Finance با
 // پسوند =X/-USD هستن و برای گرفتن قیمت لحظه‌ای لازمن)، این‌جا همون کدهای
-// خامِ سبکِ بروکر (EURUSD، XAUUSD، …) که تریدرها عادت دارن بنویسن.
+// خام سبک بروکر (EURUSD، XAUUSD، …) که تریدرها عادت دارن بنویسن.
 export type TradePair = { code: string; label: string };
 
 export const TRADE_PAIRS: TradePair[] = [
@@ -46,12 +46,12 @@ export const TRADE_PAIRS: TradePair[] = [
   { code: "NATGAS", label: "گاز طبیعی" },
   // شاخص‌ها (CFD)
   { code: "US30", label: "شاخص داوجونز" },
-  { code: "US100", label: "شاخص نزدک ۱۰۰" },
-  { code: "US500", label: "شاخص اس‌اند‌پی ۵۰۰" },
+  { code: "US100", label: "شاخص نزدک 100" },
+  { code: "US500", label: "شاخص اس‌اند‌پی 500" },
   { code: "GER40", label: "شاخص دکس آلمان" },
   { code: "UK100", label: "شاخص فوتسی انگلیس" },
   { code: "JPN225", label: "شاخص نیک‌کی ژاپن" },
-  { code: "FRA40", label: "شاخص کک ۴۰ فرانسه" },
+  { code: "FRA40", label: "شاخص کک 40 فرانسه" },
   // کریپتو
   { code: "BTCUSD", label: "بیت‌کوین / دلار" },
   { code: "ETHUSD", label: "اتریوم / دلار" },

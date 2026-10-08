@@ -4,9 +4,12 @@ import { requireModule } from "@/lib/moduleAccess";
 import { ModuleKey } from "@prisma/client";
 import { clampText } from "@/lib/validate";
 import { parseIsoDate, readJsonBody } from "@/lib/validate";
+import { withLiveSync } from "@/lib/realtime";
+import { sessionFeatureBlocked } from "@/lib/featureFlagsServer";
 
 // GET /api/calorie/log?date=2026-07-25
 export async function GET(req: NextRequest) {
+  { const off = await sessionFeatureBlocked("calorie"); if (off) return off; }
   const guard = await requireModule(ModuleKey.CALORIE);
   if (!guard.ok) return guard.response;
   const userId = guard.userId;
@@ -24,16 +27,17 @@ export async function GET(req: NextRequest) {
 // POST /api/calorie/log  { date, customName, customCalories, grams, mealType }
 // customCalories اینجا کالری کل همون مقدار ثبت‌شده است (نه به‌ازای هر ۱۰۰ گرم) —
 // محاسبه‌اش سمت کلاینت انجام می‌شه تا از دوباره‌کاری منطق جلوگیری بشه.
-export async function POST(req: NextRequest) {
+async function handlePOST(req: NextRequest) {
+  { const off = await sessionFeatureBlocked("calorie"); if (off) return off; }
   const guard = await requireModule(ModuleKey.CALORIE);
   if (!guard.ok) return guard.response;
   const userId = guard.userId;
 
   const parsed = await readJsonBody(req);
   if (!parsed.ok) return NextResponse.json({ error: parsed.error }, { status: parsed.status });
-  const { customName, customCalories, grams, mealType, proteinG, carbsG, fatG, aiScanned } = parsed.body as {
+  const { customName, customCalories, grams, mealType, proteinG, carbsG, fatG } = parsed.body as {
     customName: string; customCalories: number; grams: number; mealType?: string;
-    proteinG?: number; carbsG?: number; fatG?: number; aiScanned?: boolean;
+    proteinG?: number; carbsG?: number; fatG?: number;
   };
 
   const date = parseIsoDate(parsed.body?.date);
@@ -50,25 +54,26 @@ export async function POST(req: NextRequest) {
   if (mealType && (typeof mealType !== "string" || mealType.length > 20)) {
     return NextResponse.json({ error: "نوع وعده نامعتبر است" }, { status: 400 });
   }
-  // درشت‌مغذی‌ها فقط وقتی معتبرن که هر سه با هم بیان و عددِ نامنفی باشن —
-  // یا هر سه ثبت می‌شن (نتیجه‌ی اسکنِ AI) یا هیچ‌کدوم (ثبتِ دستی/کاتالوگ معمولی).
+  // درشت‌مغذی‌ها فقط وقتی معتبرن که هر سه با هم بیان و عدد نامنفی باشن —
+  // یا هر سه ثبت می‌شن یا هیچ‌کدوم.
   const hasMacros = proteinG !== undefined || carbsG !== undefined || fatG !== undefined;
   const macrosValid = [proteinG, carbsG, fatG].every((v) => typeof v === "number" && v >= 0 && v <= 2000);
   if (hasMacros && !macrosValid) {
-    return NextResponse.json({ error: "مقادیرِ درشت‌مغذی نامعتبره" }, { status: 400 });
+    return NextResponse.json({ error: "مقادیر درشت‌مغذی نامعتبره" }, { status: 400 });
   }
 
   const entry = await prisma.foodLogEntry.create({
     data: {
       userId, date, customName: clampText(customName, 80), customCalories, grams, mealType: mealType || null,
-      ...(hasMacros && macrosValid ? { proteinG, carbsG, fatG, aiScanned: !!aiScanned } : {}),
+      ...(hasMacros && macrosValid ? { proteinG, carbsG, fatG } : {}),
     },
   });
   return NextResponse.json({ ok: true, entry });
 }
 
 // DELETE /api/calorie/log?id=...
-export async function DELETE(req: NextRequest) {
+async function handleDELETE(req: NextRequest) {
+  { const off = await sessionFeatureBlocked("calorie"); if (off) return off; }
   const guard = await requireModule(ModuleKey.CALORIE);
   if (!guard.ok) return guard.response;
   const userId = guard.userId;
@@ -79,3 +84,7 @@ export async function DELETE(req: NextRequest) {
   await prisma.foodLogEntry.deleteMany({ where: { id, userId } });
   return NextResponse.json({ ok: true });
 }
+
+// بعد از هر نوشتن موفق، بقیه‌ی دستگاه‌ها/تب‌های همین کاربر با WebSocket خبردار می‌شن (lib/realtime.ts)
+export const POST = withLiveSync(["calorie"], handlePOST);
+export const DELETE = withLiveSync(["calorie"], handleDELETE);

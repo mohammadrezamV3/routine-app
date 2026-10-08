@@ -11,16 +11,16 @@ describe("generateEmailOtp", () => {
   });
 
   it("zero-pads small values instead of producing a short string", () => {
-    // با ۲۰۰ نمونه، احتمالِ عملیِ اینکه حداقل یکی زیر ۱۰۰۰۰۰ باشه خیلی بالاست؛
-    // این تست عمداً روی رفتارِ padStart تمرکز داره، نه فقط شانس
+    // با ۲۰۰ نمونه، احتمال عملی اینکه حداقل یکی زیر ۱۰۰۰۰۰ باشه خیلی بالاست؛
+    // این تست عمدا روی رفتار padStart تمرکز داره، نه فقط شانس
     const codes = Array.from({ length: 500 }, () => generateEmailOtp());
     expect(codes.every((c) => c.length === 6)).toBe(true);
   });
 
   it("has reasonable entropy across many samples (not a constant or narrow range)", () => {
     const codes = new Set(Array.from({ length: 500 }, () => generateEmailOtp()));
-    // با ۵۰۰ نمونه از فضای ۱میلیونی، برخوردِ زیاد بعیده — اگه ژنراتور خراب
-    // باشه (مثلاً همیشه یک عدد) اینجا فوراً رد می‌شه
+    // با ۵۰۰ نمونه از فضای ۱میلیونی، برخورد زیاد بعیده — اگه ژنراتور خراب
+    // باشه (مثلا همیشه یک عدد) اینجا فورا رد می‌شه
     expect(codes.size).toBeGreaterThan(490);
   });
 });

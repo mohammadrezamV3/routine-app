@@ -2,9 +2,9 @@
 
 import { useEffect, useMemo, useState } from "react";
 import { getSetting, setSetting } from "@/lib/storage";
-import { getSiteMarket } from "@/lib/market";
+import { useLiveRefresh } from "@/lib/liveSync";
 import {
-  DEFAULT_TICKER_SYMBOLS_IRAN, DEFAULT_TICKER_SYMBOLS_INTERNATIONAL,
+  DEFAULT_TICKER_SYMBOLS_IRAN,
   MAX_TICKER_SYMBOLS, MIN_TICKER_SYMBOLS, tickerLabelFor, TICKER_SETTING_KEY,
 } from "@/lib/tickerSymbols";
 import { useSeamlessMarquee } from "@/lib/useSeamlessMarquee";
@@ -16,13 +16,13 @@ const POLL_MS = 30_000;
 
 type Quote = { symbol: string; price: number; changePercent: number; changeAbs: number };
 
-// نوار قیمت لحظه‌ای تمام‌عرضِ بالای صفحه‌ی ترید — خودش با سرعت کم اسلاید
+// نوار قیمت لحظه‌ای تمام‌عرض بالای صفحه‌ی ترید — خودش با سرعت کم اسلاید
 // می‌شه. انتخاب بازارها دیگه دکمه‌ی کنار همین نواره نیست (رفته توی پنل
 // کاربری)؛ فقط دفعه‌ی اولی که کاربر این صفحه رو می‌بینه و هنوز هیچ انتخابی
 // نکرده، همینجا ازش می‌پرسیم کدوم بازارها رو دنبال کنه.
 export function MarketTicker() {
   const defaultSymbols = useMemo(
-    () => (getSiteMarket() === "INTERNATIONAL" ? DEFAULT_TICKER_SYMBOLS_INTERNATIONAL : DEFAULT_TICKER_SYMBOLS_IRAN),
+    () => DEFAULT_TICKER_SYMBOLS_IRAN,
     []
   );
   const [symbols, setSymbols] = useState<string[]>(defaultSymbols);
@@ -38,6 +38,10 @@ export function MarketTicker() {
     });
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
+  // زنده: نمادها از تنظیمات ترید (یا تب دیگه) عوض شدن → نوار همون لحظه
+  useLiveRefresh(TICKER_SETTING_KEY, () => {
+    getSetting<string[]>(TICKER_SETTING_KEY, defaultSymbols).then((saved) => { if (saved?.length) setSymbols(saved); });
+  }, { includeFocus: false });
 
   useEffect(() => {
     let cancelled = false;
@@ -53,8 +57,24 @@ export function MarketTicker() {
       }
     }
     load();
-    const timer = setInterval(load, POLL_MS);
-    return () => { cancelled = true; clearInterval(timer); };
+    // فقط وقتی تب دیده می‌شود پول می‌زند.
+    //
+    // مرورگرها تایمر تب مخفی را کند می‌کنند ولی **متوقف نمی‌کنند** — پس یک
+    // تب فراموش‌شده در پس‌زمینه با فاصله‌ی ۳۰ ثانیه‌ای روزی حدود ۲۹۰۰
+    // درخواست بی‌فایده به سرور می‌زد. با چند ده کاربری که تب را باز
+    // می‌گذارند، همین به‌تنهایی بار پایه‌ی سرور را می‌ساخت.
+    //
+    // لحظه‌ی برگشت کاربر یک‌بار فورا اجرا می‌شود، پس داده‌ی بیات نمی‌بیند —
+    // یعنی هم بار کم می‌شود هم تجربه بهتر، نه بدتر.
+    const visible = () => !document.hidden;
+    const timer = setInterval(() => { if (visible()) load(); }, POLL_MS);
+    const onVis = () => { if (visible()) load(); };
+    document.addEventListener("visibilitychange", onVis);
+    return () => {
+      cancelled = true;
+      clearInterval(timer);
+      document.removeEventListener("visibilitychange", onVis);
+    };
   }, [symbols]);
 
   function toggleSymbol(symbol: string) {
@@ -74,8 +94,8 @@ export function MarketTicker() {
   }
 
   // پایه تا حداقل ۲۴ آیتم تکرار می‌شه — حتی اگه کاربر فقط ۱-۲ نماد انتخاب
-  // کرده باشه، وسطِ چرخه‌ی نوارِ تمام‌عرض هیچ فاصله‌ی خالی‌ای دیده نمی‌شه؛
-  // سرعت هم از روی عرضِ واقعی حساب می‌شه، نه یک عددِ ثابتِ فرضی که با تعداد
+  // کرده باشه، وسط چرخه‌ی نوار تمام‌عرض هیچ فاصله‌ی خالی‌ای دیده نمی‌شه؛
+  // سرعت هم از روی عرض واقعی حساب می‌شه، نه یک عدد ثابت فرضی که با تعداد
   // آیتم‌های متفاوت، کند/تند به‌نظر برسه.
   const { trackRef, track: loop, durationSec } = useSeamlessMarquee(quotes, { minCount: 24, pxPerSecond: 22 });
 
@@ -96,7 +116,7 @@ export function MarketTicker() {
           </div>
         </div>
       ) : (
-        <div className="ticker-viewport ticker-empty-msg">قیمت‌ها موقتاً در دسترس نیست</div>
+        <div className="ticker-viewport ticker-empty-msg">قیمت‌ها موقتا در دسترس نیست</div>
       )}
 
       {onboardOpen && (

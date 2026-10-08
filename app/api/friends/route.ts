@@ -1,17 +1,18 @@
 import { NextRequest, NextResponse } from "next/server";
-import { getServerSession } from "next-auth";
-import { authOptions } from "@/lib/auth";
+import { getSessionFast } from "@/lib/serverSession";
 import { prisma } from "@/lib/prisma";
+import { NAME_STYLE_SELECT, nameFlags } from "@/lib/nameStyle";
 import { routineStatsForUsers, RoutineStats } from "@/lib/friendStats";
 import { timeToMinutes, isWakeOnTime, DEFAULT_WAKE } from "@/lib/wakeSleep";
 import { isValidUsername } from "@/lib/validate";
 import { isoLocal, FA_WEEKDAY } from "@/lib/jalali";
 import { sessionsThisWeekTotal, sessionsThisWeekDone, weekProgressPct, computeExerciseStreak, ExerciseLogRange } from "@/lib/exerciseStats";
 import { sendPushToUser } from "@/lib/webPush";
+import { sessionFeatureBlocked } from "@/lib/featureFlagsServer";
 
-// پیشرفتِ «بدنسازی»ِ یک دوست — بر خلافِ statsForUser (که روزانه‌ست، چون
-// روتین هر روز تسک داره)، اینجا مبنا «جلساتِ این‌هفته» است، چون تمرین فقط
-// روزهای باشگاهِ برنامه (gymDays) اتفاق می‌افته، نه هر روز.
+// پیشرفت «بدنسازی» یک دوست — بر خلاف statsForUser (که روزانه‌ست، چون
+// روتین هر روز تسک داره)، اینجا مبنا «جلسات این‌هفته» است، چون تمرین فقط
+// روزهای باشگاه برنامه (gymDays) اتفاق می‌افته، نه هر روز.
 async function statsForUserExercise(userId: string) {
   const plan = await prisma.exercisePlan.findFirst({ where: { userId, isActive: true }, orderBy: { startDate: "desc" } });
   if (!plan) return { completed: 0, total: 0, pct: 0, streak: 0 };
@@ -37,10 +38,10 @@ async function statsForUserExercise(userId: string) {
   };
 }
 
-// پیشرفتِ «کالری»ِ یک دوست — روزهایی که توی هفتِ اخیر جمعِ کالریِ ثبت‌شده‌شون
-// بین صفر تا هدفِ روزانه بوده («روزِ موفق»)، به‌علاوه‌ی استریکِ روزهای پشتِ‌سرهمِ
-// موفق (دقیقاً هم‌منطقِ CalorieStreakCard سمتِ کلاینت، ولی سمتِ سرور روی دیتای
-// خودِ دوست چون کلاینت به FoodLogEntry دوست‌ها دسترسی نداره).
+// پیشرفت «کالری» یک دوست — روزهایی که توی هفت اخیر جمع کالری ثبت‌شده‌شون
+// بین صفر تا هدف روزانه بوده («روز موفق»)، به‌علاوه‌ی استریک روزهای پشت‌سرهم
+// موفق (دقیقا هم‌منطق CalorieStreakCard سمت کلاینت، ولی سمت سرور روی دیتای
+// خود دوست چون کلاینت به FoodLogEntry دوست‌ها دسترسی نداره).
 async function statsForUserCalorie(userId: string) {
   const target = await prisma.calorieTarget.findFirst({ where: { userId, effectiveTo: null }, orderBy: { effectiveFrom: "desc" } });
   if (!target) return { completed: 0, total: 0, pct: 0, streak: 0 };
@@ -77,11 +78,12 @@ async function statsForUserCalorie(userId: string) {
   return { completed, total, pct: Math.round((completed / total) * 100), streak };
 }
 
-// GET /api/friends?module=exercise|calorie → لیست دوستانِ تأییدشده + پیشرفتِ
-// هرکدوم؛ exercise یعنی پیشرفتِ بدنسازی، calorie یعنی روزهای موفقِ کالری،
-// وگرنه پیشرفتِ روتینِ روزانه (پیش‌فرض، برای داشبوردِ اصلی).
+// GET /api/friends?module=exercise|calorie → لیست دوستان تاییدشده + پیشرفت
+// هرکدوم؛ exercise یعنی پیشرفت بدنسازی، calorie یعنی روزهای موفق کالری،
+// وگرنه پیشرفت روتین روزانه (پیش‌فرض، برای داشبورد اصلی).
 export async function GET(req: NextRequest) {
-  const session = await getServerSession(authOptions);
+  { const off = await sessionFeatureBlocked("friends"); if (off) return off; }
+  const session = await getSessionFast();
   const userId = (session?.user as any)?.id;
   if (!userId) return NextResponse.json({ error: "unauthorized" }, { status: 401 });
 
@@ -90,18 +92,18 @@ export async function GET(req: NextRequest) {
   const rows = await prisma.friendship.findMany({
     where: { status: "ACCEPTED", OR: [{ requesterId: userId }, { addresseeId: userId }] },
     include: {
-      requester: { select: { id: true, name: true, username: true, avatarUrl: true } },
-      addressee: { select: { id: true, name: true, username: true, avatarUrl: true } },
+      requester: { select: { id: true, name: true, username: true, avatarUrl: true, ...NAME_STYLE_SELECT } },
+      addressee: { select: { id: true, name: true, username: true, avatarUrl: true, ...NAME_STYLE_SELECT } },
     },
   });
 
   const otherIds = rows.map((r) => (r.requesterId === userId ? r.addresseeId : r.requesterId));
 
-  // مسیرِ پیش‌فرض (روتین) کلاً دسته‌ای شد. مسیرهای ورزش/کالری هنوز به‌ازای هر
-  // دوست کوئری می‌زنن، ولی هرکدوم فقط ۲ کوئریِ سبک‌ن و این دو تب خیلی کمتر
-  // از داشبوردِ اصلی باز می‌شن — پس فعلاً همون‌طور مونده.
+  // مسیر پیش‌فرض (روتین) کلا دسته‌ای شد. مسیرهای ورزش/کالری هنوز به‌ازای هر
+  // دوست کوئری می‌زنن، ولی هرکدوم فقط ۲ کوئری سبک‌ن و این دو تب خیلی کمتر
+  // از داشبورد اصلی باز می‌شن — پس فعلا همون‌طور مونده.
   const routineStats = module === "exercise" || module === "calorie" ? null : await routineStatsForUsers(otherIds);
-  const EMPTY: RoutineStats = { completed: 0, total: 0, pct: 0, streak: 0 };
+  const EMPTY: RoutineStats = { completed: 0, total: 0, pct: 0, streak: 0, week: [] };
 
   const friends = await Promise.all(
     rows.map(async (r) => {
@@ -118,6 +120,7 @@ export async function GET(req: NextRequest) {
         name: other.name || other.username || "کاربر",
         username: other.username,
         avatarUrl: other.avatarUrl,
+        ...nameFlags(other),
         favorite: isRequester ? r.favoritedByRequester : r.favoritedByAddressee,
         ...stats,
       };
@@ -131,10 +134,11 @@ export async function GET(req: NextRequest) {
 }
 
 // POST /api/friends  { userId } یا { username }  → ارسال درخواست دوستی.
-// حالتِ userId برای نتیجه‌ی جستجوی زنده‌ست (کاربر از قبل با آیدی پیدا شده)؛
-// username برای سازگاری با ورودیِ مستقیمِ یوزرنیم.
+// حالت userId برای نتیجه‌ی جستجوی زنده‌ست (کاربر از قبل با آیدی پیدا شده)؛
+// username برای سازگاری با ورودی مستقیم یوزرنیم.
 export async function POST(req: NextRequest) {
-  const session = await getServerSession(authOptions);
+  { const off = await sessionFeatureBlocked("friends"); if (off) return off; }
+  const session = await getSessionFast();
   const userId = (session?.user as any)?.id;
   if (!userId) return NextResponse.json({ error: "unauthorized" }, { status: 401 });
 
@@ -149,7 +153,7 @@ export async function POST(req: NextRequest) {
     if (!isValidUsername(username)) {
       return NextResponse.json({ error: "یوزرنیم نامعتبر است" }, { status: 400 });
     }
-    // بدون حساسیت به بزرگ/کوچکیِ حروف — هم‌راستا با قاعده‌ی ورود (lib/auth.ts):
+    // بدون حساسیت به بزرگ/کوچکی حروف — هم‌راستا با قاعده‌ی ورود (lib/auth.ts):
     // "Ali_2024" و "ali_2024" باید یک کاربر پیدا بشن.
     target = await prisma.user.findFirst({ where: { username: { equals: username, mode: "insensitive" } } });
   }
@@ -166,7 +170,7 @@ export async function POST(req: NextRequest) {
   });
   if (existing) {
     return NextResponse.json(
-      { error: existing.status === "ACCEPTED" ? "قبلاً دوست هستید" : "درخواست قبلاً ارسال شده" },
+      { error: existing.status === "ACCEPTED" ? "قبلا دوست هستید" : "درخواست قبلا ارسال شده" },
       { status: 409 }
     );
   }
@@ -175,8 +179,8 @@ export async function POST(req: NextRequest) {
     data: { requesterId: userId, addresseeId: target.id, status: "PENDING" },
   });
 
-  // پوش حتی وقتی اپِ addressee کاملاً بسته‌ست هم می‌رسه — best-effort، اگه
-  // VAPID تنظیم نشده باشه یا سابسکریپشنی نباشه، درخواستِ دوستی خودش هیچ‌وقت
+  // پوش حتی وقتی اپ addressee کاملا بسته‌ست هم می‌رسه — best-effort، اگه
+  // VAPID تنظیم نشده باشه یا سابسکریپشنی نباشه، درخواست دوستی خودش هیچ‌وقت
   // نباید fail کنه.
   const requesterName = session!.user!.name || "یک کاربر";
   sendPushToUser(target.id, {

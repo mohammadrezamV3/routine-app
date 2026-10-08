@@ -4,11 +4,14 @@ import { requireModule } from "@/lib/moduleAccess";
 import { ModuleKey } from "@prisma/client";
 import { calcAge, calcDailyTargetKcal, splitMeals, CalorieGoal, Sex } from "@/lib/calorieCalc";
 import { clampText } from "@/lib/validate";
+import { withLiveSync } from "@/lib/realtime";
+import { sessionFeatureBlocked } from "@/lib/featureFlagsServer";
 
 const VALID_GOALS: CalorieGoal[] = ["lose", "maintain", "gain"];
 const VALID_SEX: Sex[] = ["male", "female"];
 
 export async function GET() {
+  { const off = await sessionFeatureBlocked("calorie"); if (off) return off; }
   const guard = await requireModule(ModuleKey.CALORIE);
   if (!guard.ok) return guard.response;
   const userId = guard.userId;
@@ -24,7 +27,8 @@ export async function GET() {
 // POST /api/calorie/target { goal, mealsPerDay, sex, ageYears?, heightCm, weightKg }
 // هدف روزانه رو با فرمول Mifflin-St Jeor حساب می‌کنه (نه هوش مصنوعی — این یک
 // محاسبه‌ی قطعی تغذیه‌ایه) و بین تعداد وعده‌های خواسته‌شده تقسیم می‌کنه.
-export async function POST(req: NextRequest) {
+async function handlePOST(req: NextRequest) {
+  { const off = await sessionFeatureBlocked("calorie"); if (off) return off; }
   const guard = await requireModule(ModuleKey.CALORIE);
   if (!guard.ok) return guard.response;
   const userId = guard.userId;
@@ -38,7 +42,7 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ error: "هدف کالری نامعتبر است" }, { status: 400 });
   }
   if (!mealsPerDay || mealsPerDay < 2 || mealsPerDay > 6) {
-    return NextResponse.json({ error: "تعداد وعده باید بین ۲ تا ۶ باشد" }, { status: 400 });
+    return NextResponse.json({ error: "تعداد وعده باید بین 2 تا 6 باشد" }, { status: 400 });
   }
   if (!sex || !VALID_SEX.includes(sex)) {
     return NextResponse.json({ error: "جنسیت نامعتبر است" }, { status: 400 });
@@ -63,7 +67,10 @@ export async function POST(req: NextRequest) {
 
   const activePlan = await prisma.exercisePlan.findFirst({ where: { userId, isActive: true } });
   const activeGymDays = activePlan?.gymDays && Array.isArray(activePlan.gymDays) ? (activePlan.gymDays as string[]) : null;
-  const gymDaysPerWeek = activeGymDays ? activeGymDays.length : 3; // فرض محافظه‌کارانه اگه برنامه ورزشی فعالی نبود
+  // اگه برنامه‌ی ورزشی فعالی نبود، «۳ روز باشگاه» فرض نکن — این ضریب ۱.۵۵
+  // (فعالیت متوسط) رو می‌داد و هدف رو برای کسی که اصلا تمرین نمی‌کنه چند صد
+  // کالری بیش‌برآورد می‌کرد. فرض واقعا محافظه‌کارانه «کم‌تحرک سبک» (۱.۳۷۵)ه.
+  const gymDaysPerWeek = activeGymDays ? activeGymDays.length : 1;
 
   const dailyTargetKcal = calcDailyTargetKcal({
     sex, weightKg, heightCm, age, gymDaysPerWeek, goal, trainingPhase: activePlan?.trainingPhase,
@@ -90,16 +97,37 @@ export async function POST(req: NextRequest) {
 // کاربر خودش می‌تونه بچینه چند وعده داره و توی هر وعده چقدر کالری می‌خواد —
 // جایگزین تقسیم خودکار splitMeals می‌شه؛ کالری روزانه هم برابر جمع همین
 // وعده‌ها می‌شه تا نوار پیشرفت بالای صفحه با «سهم هر وعده» ناسازگار نباشه.
-export async function PATCH(req: NextRequest) {
+async function handlePATCH(req: NextRequest) {
+  { const off = await sessionFeatureBlocked("calorie"); if (off) return off; }
   const guard = await requireModule(ModuleKey.CALORIE);
   if (!guard.ok) return guard.response;
   const userId = guard.userId;
 
   const body = await req.json();
-  const { mealBreakdown } = body as { mealBreakdown: { key: string; label: string; kcal: number }[] };
+  const { mealBreakdown, proteinTargetG, carbsTargetG, fatTargetG } = body as {
+    mealBreakdown: { key: string; label: string; kcal: number }[];
+    proteinTargetG?: number | null;
+    carbsTargetG?: number | null;
+    fatTargetG?: number | null;
+  };
+
+  // هدف درشت‌مغذی اختیاریه؛ هر کدوم که خالی بمونه null ذخیره می‌شه.
+  // سقف ۲۰۰۰ گرم صرفا یک نگهبان بی‌معنی‌نبودنه، نه توصیه‌ی تغذیه‌ای.
+  function macro(v: unknown): number | null | "invalid" {
+    if (v === undefined || v === null || v === "") return null;
+    const n = Number(v);
+    if (!isFinite(n) || n < 0 || n > 2000) return "invalid";
+    return Math.round(n);
+  }
+  const protein = macro(proteinTargetG);
+  const carbs = macro(carbsTargetG);
+  const fat = macro(fatTargetG);
+  if (protein === "invalid" || carbs === "invalid" || fat === "invalid") {
+    return NextResponse.json({ error: "هدف درشت‌مغذی نامعتبر است" }, { status: 400 });
+  }
 
   if (!Array.isArray(mealBreakdown) || mealBreakdown.length < 1 || mealBreakdown.length > 8) {
-    return NextResponse.json({ error: "بین ۱ تا ۸ وعده مجاز است" }, { status: 400 });
+    return NextResponse.json({ error: "بین 1 تا 8 وعده مجاز است" }, { status: 400 });
   }
   const cleaned: { key: string; label: string; kcal: number }[] = [];
   for (const m of mealBreakdown) {
@@ -122,8 +150,15 @@ export async function PATCH(req: NextRequest) {
 
   const target = await prisma.calorieTarget.update({
     where: { id: existing.id },
-    data: { mealBreakdown: cleaned as any, dailyTargetKcal, mealsPerDay: cleaned.length },
+    data: {
+      mealBreakdown: cleaned as any, dailyTargetKcal, mealsPerDay: cleaned.length,
+      proteinTargetG: protein, carbsTargetG: carbs, fatTargetG: fat,
+    },
   });
 
   return NextResponse.json({ ok: true, target });
 }
+
+// بعد از هر نوشتن موفق، بقیه‌ی دستگاه‌ها/تب‌های همین کاربر با WebSocket خبردار می‌شن (lib/realtime.ts)
+export const POST = withLiveSync(["calorie"], handlePOST);
+export const PATCH = withLiveSync(["calorie"], handlePATCH);

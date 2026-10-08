@@ -1,6 +1,6 @@
 {
   "name": "routine-platform",
-  "version": "0.1.0",
+  "version": "1.0.0",
   "private": true,
   "scripts": {
     "dev": "next dev",
@@ -10,12 +10,24 @@
     "prisma:generate": "prisma generate",
     "prisma:migrate": "prisma migrate dev",
     "prisma:seed": "tsx prisma/seed.ts",
+    "db:deploy": "prisma migrate deploy",
+    "db:status": "prisma migrate status",
     "check:sql": "node scripts/check-sql-safety.js",
     "check:settings": "node scripts/check-setting-keys.js",
     "check": "npm run check:sql && npm run check:settings && tsc --noEmit",
     "optimize:images": "node scripts/optimize-images.js",
     "test": "vitest run"
   },
+  "browserslist": [
+    "ios_saf >= 13",
+    "safari >= 13",
+    "chrome >= 70",
+    "and_chr >= 70",
+    "android >= 70",
+    "samsung >= 10",
+    "firefox >= 68",
+    "edge >= 79"
+  ],
   "prisma": {
     "seed": "tsx prisma/seed.ts"
   },
@@ -30,20 +42,24 @@
     "next": "^14.2.35",
     "next-auth": "^4.24.7",
     "nodemailer": "^7.0.13",
+    "pg": "^8.23.0",
     "react": "^18.3.1",
     "react-dom": "^18.3.1",
     "sharp": "^0.35.3",
     "tailwind-merge": "^3.6.0",
     "web-push": "^3.6.7",
+    "ws": "^8.22.0",
     "zxcvbn": "^4.4.2"
   },
   "devDependencies": {
     "@types/bcryptjs": "^2.4.6",
     "@types/node": "^20.14.2",
     "@types/nodemailer": "^8.0.1",
+    "@types/pg": "^8.23.1",
     "@types/react": "^18.3.3",
     "@types/react-dom": "^18.3.0",
     "@types/web-push": "^3.6.4",
+    "@types/ws": "^8.18.1",
     "autoprefixer": "^10.4.19",
     "postcss": "^8.4.38",
     "prisma": "^5.20.0",

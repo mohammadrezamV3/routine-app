@@ -3,48 +3,48 @@
 import { useMemo, useState } from "react";
 import { motion } from "framer-motion";
 import { LineChart } from "lucide-react";
-import { faNum, FA_WEEKDAY_SHORT, isoLocal } from "@/lib/jalali";
+import { faNum, FA_WEEKDAY_SHORT, isoLocal, J_MONTHS, toJalali } from "@/lib/jalali";
+import { cn } from "@/lib/utils";
 import { SegmentedTabs } from "./SegmentedTabs";
 import { DashCard } from "./DashCard";
 
 type Entry = { customCalories: number; date?: string; createdAt?: string };
-type ChartRange = "daily" | "weekly" | "monthly";
+type ChartRange = "weekly" | "monthly";
 
 const MIN_DAYS = 3;
-
-const VB_W = 320;
-const VB_H = 128;
-const PAD_L = 30;
-const PAD_R = 6;
-const PAD_T = 14;
-const PAD_B = 18;
-const PLOT_W = VB_W - PAD_L - PAD_R;
-const PLOT_H = VB_H - PAD_T - PAD_B;
 
 function formatKcal(n: number): string {
   return faNum(Math.round(n).toLocaleString("en-US"));
 }
 
-// نمودارِ روندِ کالری — نسخه‌ی سوم. حالا که توی چیدمانِ جدید (ردیفِ
-// دوستان/روند موفقیت/نمودار) سهمِ عرضِ بیشتری داره (دو برابرِ استریک/دوستان)،
-// دیگه لازم نبود بی‌نهایت جمع‌وجور بشه — یه محورِ Yِ سبک (فقط ۳ خط، نه ۵ تا)
-// برگشت تا نمودار بدونِ نقطه‌ی مرجع شناور به‌نظر نرسه، ارتفاع/فونت‌ها هم بزرگ‌تر
-// شدن. تا وقتی کاربر حداقل ۳ روز داده ثبت نکرده، به‌جای نموداری که با یکی‌دو
-// نقطه بی‌معنیه، یه پیامِ روشن نشون می‌ده که چند روزِ دیگه مونده.
+// «۲۲ شهریور» — تاریخ خوانا برای ستون انتخاب‌شده، از روی کلید ISO
+// همون روز (که خود محور محلی سیستم است، نه UTC).
+function formatJalaliShort(iso: string): string {
+  const [gy, gm, gd] = iso.split("-").map(Number);
+  const [, jm, jd] = toJalali(gy, gm, gd);
+  return `${faNum(jd)} ${J_MONTHS[jm - 1]}`;
+}
+
+// نمودار روند کالری.
+//
+// حالت «روزانه» (نمودار خطی SVG از روی ساعت ثبت هر وعده) طبق درخواست
+// صریح کاربر حذف شد؛ فقط هفتگی و ماهانه موند. هر دو حالا **یک** دیزاین
+// دارن — همون میله‌های گرد عمودی نمودار هفتگی «روتین من» — نه یکی
+// میله‌ای و یکی SVG خط‌دار با رنگ‌بندی متفاوت. هر میله کلیک‌پذیره و با
+// انتخاب، هم رنگش کاملا عوض می‌شه (پررنگ + هاله) هم عدد کالری همون روز
+// بالای نمودار نشون داده می‌شه.
 export function CalorieChartCard({
-  todayEntries,
   rangeEntries,
   targetKcal,
   delay,
 }: {
-  todayEntries: Entry[];
   rangeEntries: Entry[];
   targetKcal: number;
   delay?: number;
 }) {
-  const [range, setRange] = useState<ChartRange>("daily");
+  const [range, setRange] = useState<ChartRange>("weekly");
   const [selected, setSelected] = useState<number | null>(null);
-  const isDaily = range === "daily";
+  const isMonthly = range === "monthly";
 
   const distinctDays = useMemo(() => {
     const set = new Set<string>();
@@ -56,74 +56,53 @@ export function CalorieChartCard({
   }, [rangeEntries]);
   const locked = distinctDays < MIN_DAYS;
 
-  const rawPoints = useMemo(() => {
-    if (range === "daily") {
-      const sorted = [...todayEntries]
-        .filter((e) => e.createdAt)
-        .sort((a, b) => new Date(a.createdAt!).getTime() - new Date(b.createdAt!).getTime());
-      let running = 0;
-      const pts = sorted.map((e) => {
-        running += e.customCalories;
-        const d = new Date(e.createdAt!);
-        return { value: running, hour: d.getHours() + d.getMinutes() / 60 };
-      });
-      const now = new Date();
-      return [{ value: 0, hour: 0 }, ...pts, ...(pts.length ? [{ value: running, hour: now.getHours() + now.getMinutes() / 60 }] : [])];
-    }
-
-    const days = range === "weekly" ? 7 : 30;
+  const bars = useMemo(() => {
+    const days = isMonthly ? 30 : 7;
     const byDate: Record<string, number> = {};
     for (const e of rangeEntries) {
       const d = (e.date || "").slice(0, 10);
       if (!d) continue;
       byDate[d] = (byDate[d] || 0) + e.customCalories;
     }
-    const out: { value: number; label: string }[] = [];
+    const out: { value: number; label: string; key: string; showLabel: boolean }[] = [];
     for (let i = days - 1; i >= 0; i--) {
       const d = new Date(Date.now() - i * 24 * 60 * 60 * 1000);
       const key = isoLocal(d);
-      const showLabel = range === "weekly" || i % 6 === 0;
-      out.push({ value: byDate[key] || 0, label: showLabel ? (range === "weekly" ? FA_WEEKDAY_SHORT[d.getDay()] : faNum(d.getDate())) : "" });
+      // ماهانه ۳۰ برچسب کنار هم جا نمی‌شه — هر پنج روز یکی نشون داده می‌شه
+      // (بقیه invisible می‌مونن، نه حذف — نگاه کن به توضیح پایین JSX).
+      const showLabel = !isMonthly || i % 5 === 0;
+      // روز ماه باید شمسی باشه، نه d.getDate() میلادی — قبلا همینجا
+      // باگ بود: بج بالا (formatJalaliShort) درست شمسی نشون می‌داد ولی
+      // برچسب زیر خود میله‌ها میلادی مونده بود.
+      const [, , jd] = toJalali(d.getFullYear(), d.getMonth() + 1, d.getDate());
+      out.push({
+        key,
+        value: byDate[key] || 0,
+        label: isMonthly ? faNum(jd) : FA_WEEKDAY_SHORT[d.getDay()],
+        showLabel,
+      });
     }
     return out;
-  }, [range, todayEntries, rangeEntries]);
+  }, [isMonthly, rangeEntries]);
 
-  const n = rawPoints.length;
-  const maxVal = Math.max(targetKcal * 1.15, ...rawPoints.map((p) => p.value), 1);
-
-  const points = rawPoints.map((p, i) => ({
-    x: isDaily
-      ? PAD_L + (("hour" in p ? p.hour! : i) / 24) * PLOT_W
-      : PAD_L + ((i + 0.5) / n) * PLOT_W,
-    y: PAD_T + PLOT_H - (p.value / maxVal) * PLOT_H,
-    value: p.value,
-    label: "label" in p ? p.label : "",
-  }));
-
-  const linePath = points.map((p, i) => `${i === 0 ? "M" : "L"}${p.x.toFixed(1)},${p.y.toFixed(1)}`).join(" ");
-  const areaPath = points.length
-    ? `${linePath} L${points[points.length - 1].x.toFixed(1)},${(PAD_T + PLOT_H).toFixed(1)} L${points[0].x.toFixed(1)},${(PAD_T + PLOT_H).toFixed(1)} Z`
-    : "";
-
-  const barWidth = isDaily ? 0 : Math.min(20, (PLOT_W / n) * 0.55);
-  const goalY = PAD_T + PLOT_H - (targetKcal / maxVal) * PLOT_H;
-  const yTicks = [0, 0.5, 1].map((f) => f * maxVal);
-  const sel = selected !== null ? points[selected] : null;
+  const maxPct = Math.max(1, ...bars.map((b) => (targetKcal > 0 ? Math.round((b.value / targetKcal) * 100) : 0)));
+  const sel = selected !== null ? bars[selected] : null;
 
   return (
     <DashCard delay={delay} className="flex h-full flex-col p-3 sm:p-4">
-      <div className="flex shrink-0 flex-col gap-2.5 sm:flex-row sm:items-center sm:justify-between">
-        <h2 className="flex items-center gap-1.5 text-[13px] font-bold text-dash-text sm:text-[15px]">
+      {/* دکمه‌ی سوییچ هم‌ردیف تایتل و چپ‌چین (توی RTL یعنی انتهای ردیف) —
+          دیگه روی موبایل هم به خط بعد نمی‌ره. */}
+      <div className="flex shrink-0 items-center justify-between gap-2">
+        <h2 className="flex shrink-0 items-center gap-1.5 text-[13px] font-bold text-dash-text sm:text-[15px]">
           <LineChart className="h-4 w-4 text-dash-green sm:h-[18px] sm:w-[18px]" />
           نمودار کالری
         </h2>
         {!locked && (
-          <div className="w-full shrink-0 sm:w-[184px]">
+          <div className="w-[140px] shrink-0 sm:w-[168px]">
             <SegmentedTabs
               active={range}
               onChange={(v) => { setRange(v); setSelected(null); }}
               options={[
-                { value: "daily" as ChartRange, label: "روزانه" },
                 { value: "weekly" as ChartRange, label: "هفتگی" },
                 { value: "monthly" as ChartRange, label: "ماهانه" },
               ]}
@@ -137,129 +116,90 @@ export function CalorieChartCard({
           <LineChart className="h-6 w-6 text-dash-muted" />
           <div className="text-[12px] font-bold text-dash-text sm:text-[13px]">نمودار هنوز آماده نیست</div>
           <div className="max-w-[260px] text-[10.5px] leading-relaxed text-dash-muted sm:text-[11.5px]">
-            برای نمایشِ نمودار حداقل به ۳ روز داده نیاز داری — {faNum(MIN_DAYS - distinctDays)} روزِ دیگه مونده.
+            برای نمایش نمودار حداقل به 3 روز داده نیاز داری — {faNum(MIN_DAYS - distinctDays)} روز دیگه مونده.
           </div>
         </div>
       ) : (
-        <div className="relative mt-3 w-full flex-1" style={{ aspectRatio: `${VB_W} / ${VB_H}` }}>
-          <svg viewBox={`0 0 ${VB_W} ${VB_H}`} width="100%" height="100%" preserveAspectRatio="xMidYMid meet" className="block overflow-visible">
-            <defs>
-              <linearGradient id="calorie-chart-area-grad" x1="0" y1="0" x2="0" y2="1">
-                <stop offset="0%" stopColor="var(--accent)" stopOpacity="0.28" />
-                <stop offset="100%" stopColor="var(--accent)" stopOpacity="0" />
-              </linearGradient>
-              <linearGradient id="calorie-chart-bar-grad" x1="0" y1="0" x2="0" y2="1">
-                <stop offset="0%" stopColor="var(--accent)" stopOpacity="0.95" />
-                <stop offset="100%" stopColor="var(--accent)" stopOpacity="0.45" />
-              </linearGradient>
-            </defs>
-
-            {yTicks.map((v, i) => {
-              const y = PAD_T + PLOT_H - (v / maxVal) * PLOT_H;
-              return (
-                <g key={i}>
-                  <line x1={PAD_L} y1={y} x2={VB_W - PAD_R} y2={y} stroke="var(--line)" strokeWidth="0.6" opacity="0.55" />
-                  <text x={PAD_L - 5} y={y + 2.6} fontSize="7.5" fill="var(--dash-muted)" textAnchor="end">{formatKcal(v)}</text>
-                </g>
-              );
-            })}
-
-            {!isDaily &&
-              points.map((p, i) =>
-                p.label ? (
-                  <text key={`l${i}`} x={p.x} y={VB_H - 3} fontSize="7.5" fill="var(--dash-muted)" textAnchor="middle">{p.label}</text>
-                ) : null
-              )}
-
-            <line x1={PAD_L} y1={goalY} x2={VB_W - PAD_R} y2={goalY} stroke="var(--accent)" strokeWidth="1" strokeDasharray="3 2.5" opacity="0.6" />
-
-            {isDaily ? (
-              <>
-                {points.length > 1 && (
-                  <motion.path
-                    d={areaPath}
-                    fill="url(#calorie-chart-area-grad)"
-                    initial={{ opacity: 0 }}
-                    animate={{ opacity: 1 }}
-                    transition={{ duration: 0.5, delay: 0.25 }}
-                  />
-                )}
-                {points.length > 1 && (
-                  <motion.path
-                    d={linePath}
-                    fill="none"
-                    stroke="var(--accent)"
-                    strokeWidth="2"
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                    initial={{ pathLength: 0 }}
-                    animate={{ pathLength: 1 }}
-                    transition={{ duration: 0.8, ease: "easeOut" }}
-                  />
-                )}
-                {points.map((p, i) => {
-                  const isLast = i === points.length - 1;
-                  return (
-                    <motion.g
-                      key={i}
-                      initial={{ opacity: 0 }}
-                      animate={{ opacity: 1 }}
-                      transition={{ duration: 0.25, delay: 0.35 + i * 0.02 }}
-                      onClick={() => setSelected(selected === i ? null : i)}
-                      style={{ cursor: "pointer" }}
-                    >
-                      <circle cx={p.x} cy={p.y} r={isLast ? 5.5 : 4} fill="var(--accent)" opacity={isLast ? 0.22 : 0.14} />
-                      <circle cx={p.x} cy={p.y} r={isLast || selected === i ? 2.8 : 2.1} fill="var(--bg)" stroke="var(--accent)" strokeWidth="1.4" />
-                    </motion.g>
-                  );
-                })}
-              </>
-            ) : (
-              points.map((p, i) => {
-                const barTop = Math.min(p.y, PAD_T + PLOT_H - 1.5);
-                const barH = Math.max(0, PAD_T + PLOT_H - barTop);
-                const isActive = selected === i;
-                return (
-                  <motion.rect
-                    key={i}
-                    x={p.x - barWidth / 2}
-                    width={barWidth}
-                    rx={barWidth / 2.6}
-                    fill="url(#calorie-chart-bar-grad)"
-                    opacity={p.value === 0 ? 0.08 : isActive ? 1 : 0.85}
-                    style={{ cursor: p.value ? "pointer" : "default" }}
-                    onClick={() => p.value && setSelected(isActive ? null : i)}
-                    initial={{ y: PAD_T + PLOT_H, height: 0 }}
-                    animate={{ y: p.value === 0 ? PAD_T + PLOT_H - 1.5 : barTop, height: p.value === 0 ? 1.5 : barH }}
-                    transition={{ duration: 0.5, ease: "easeOut", delay: i * 0.012 }}
-                  />
-                );
-              })
+        <>
+          {/* عدد روز انتخاب‌شده — جای ثابتی بالای نمودار داره تا با
+              انتخاب/لغو انتخاب، ارتفاع کارت نپره. */}
+          <div className="mt-3 flex h-6 shrink-0 items-center justify-end">
+            {sel && (
+              <span
+                className="rounded-full px-2.5 py-1 text-[10.5px] font-extrabold sm:text-[11.5px]"
+                style={{ background: "var(--accent)", color: "var(--bg)" }}
+              >
+                {formatJalaliShort(sel.key)} — <span className="mono">{formatKcal(sel.value)}</span> کالری
+              </span>
             )}
-          </svg>
-
-          <div
-            className="pointer-events-none absolute flex items-center whitespace-nowrap rounded-dash border border-dash-border bg-dash-card px-1.5 py-0.5 text-[8.5px] font-bold text-dash-text sm:text-[9.5px]"
-            style={{ right: `${(PAD_R / VB_W) * 100}%`, top: `${(Math.max(PAD_T - 8, goalY - 8) / VB_H) * 100}%` }}
-          >
-            هدف: {formatKcal(targetKcal)}
           </div>
 
-          {sel && (
-            <div
-              className="mono pointer-events-none absolute z-[2] whitespace-nowrap rounded-full px-2 py-0.5 text-[9.5px] font-bold shadow-lg"
-              style={{
-                left: `${(sel.x / VB_W) * 100}%`,
-                top: `${(sel.y / VB_H) * 100}%`,
-                transform: "translate(-50%, calc(-100% - 8px))",
-                background: "var(--accent)",
-                color: "var(--bg)",
-              }}
-            >
-              {formatKcal(sel.value)} کالری
-            </div>
-          )}
-        </div>
+          {/* طبق درخواست صریح: تاریخ باید از چپ به راست بره (قدیم چپ،
+              امروز راست) — چون داده‌ها به ترتیب صعودی (قدیم اول) ساخته
+              می‌شن، بدون dir="ltr" چیدمان RTL صفحه اولین آیتم (قدیم) رو
+              سمت راست می‌ذاشت، برعکس خواسته. */}
+          <div dir="ltr" className={cn("mt-1 flex items-end", isMonthly ? "gap-0.5 sm:gap-1" : "gap-1.5 sm:gap-2")}>
+            {bars.map((b, i) => {
+              const pct = targetKcal > 0 ? Math.round((b.value / targetKcal) * 100) : 0;
+              const isActive = selected === i;
+              const peak = !isActive && pct > 0 && pct === maxPct;
+              return (
+                <button
+                  type="button"
+                  key={b.key}
+                  onClick={() => setSelected(isActive ? null : i)}
+                  aria-label={`${b.label || b.key} — ${formatKcal(b.value)} کالری`}
+                  className="calorie-chart-bar-btn flex min-w-0 flex-1 flex-col items-center gap-1 bg-transparent p-0 sm:gap-1.5"
+                >
+                  {/* درصد فقط توی هفتگی جا می‌شه؛ ماهانه ۳۰ ستون داره */}
+                  {!isMonthly && (
+                    <span className={cn("text-[9px] font-semibold sm:text-[10px]", isActive || peak ? "text-dash-green" : "text-dash-muted")}>
+                      {faNum(pct)}٪
+                    </span>
+                  )}
+                  <div className="flex h-24 w-full items-end justify-center sm:h-28">
+                    <motion.div
+                      initial={{ height: 0 }}
+                      animate={{ height: `${Math.max(pct > 0 ? 4 : 1, Math.min(pct, 100))}%` }}
+                      transition={{ duration: 0.5, ease: "easeOut", delay: Math.min(0.1 + i * 0.02, 0.5) }}
+                      className={cn("rounded-full", isMonthly ? "w-1.5 sm:w-2" : "w-2 sm:w-2.5")}
+                      style={{
+                        // رنگ انتخاب‌شده عمدا خیلی متفاوته (توپر + هاله‌ی
+                        // پررنگ) تا کاربر بی‌شک بفهمه کدوم میله رو زده.
+                        background: isActive ? "var(--accent)" : peak ? "var(--accent)" : "rgba(var(--accent-rgb),.45)",
+                        boxShadow: isActive
+                          ? "0 0 0 2px rgba(var(--accent-rgb),.35), 0 0 16px rgba(var(--accent-rgb),.85)"
+                          : peak
+                          ? "0 0 12px rgba(var(--accent-rgb),.6)"
+                          : "none",
+                      }}
+                    />
+                  </div>
+                  {/* برچسب زیر میله سفید (رنگ متن اصلی) و توی ماهانه
+                      بزرگ‌تر — قبلا خاکستری کم‌رنگ و ریز بود و دیده نمی‌شد.
+                      باگ ریشه‌ای: توی ماهانه فقط هر پنج روز یکی برچسب
+                      داشت و بقیه رشته‌ی خالی — یک <span> خالی از یکی با
+                      متن کوتاه‌تره (ارتفاع خط فرق می‌کنه)، و چون کل دکمه
+                      با items-end به پایین ردیف می‌چسبه، میله‌های ستون‌های
+                      بی‌برچسب چسبیده به میله‌های برچسب‌دار نبودن — انگار
+                      برآمدگی داشتن. حالا همه‌ی ستون‌ها همیشه متن دارن، فقط
+                      ستون‌های بینابینی با invisible مخفی می‌شن (نه حذف)، پس
+                      فضاشون و در نتیجه خط پایه‌ی میله‌ها همیشه یکسانه. */}
+                  <span
+                    className={cn(
+                      "whitespace-nowrap font-semibold",
+                      isMonthly ? "text-[9.5px] sm:text-[11px]" : "text-[10px] sm:text-[11.5px]",
+                      isActive ? "text-dash-green" : "text-dash-text",
+                      !b.showLabel && "invisible"
+                    )}
+                  >
+                    {b.label}
+                  </span>
+                </button>
+              );
+            })}
+          </div>
+        </>
       )}
     </DashCard>
   );

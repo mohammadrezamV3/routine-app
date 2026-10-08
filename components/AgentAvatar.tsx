@@ -4,66 +4,66 @@ import { cn } from "@/lib/utils";
 import { useEffect, useRef } from "react";
 import { useTheme } from "./ThemeProvider";
 
-// آواتارِ پیش‌فرضِ پروفایل — کامپوننتِ agent-avatar از smoothui، عیناً پورت
-// شده (کدِ منبع رو خودِ کاربر داد چون شبکه‌ی این سندباکس به smoothui.dev و
-// ui.shadcn.com دسترسی نداره). یه گریدِ ۶×۶ پیکسلِ رنگی که رویِ canvas با
-// یه seedِ قطعی (اینجا اسمِ کاربر) رسم می‌شه — هر کاربر همیشه دقیقاً همون
-// الگو/پالتِ رنگی رو می‌گیره، با چهار لایه‌ی انیمیشنِ هم‌زمان (pulse تکی‌تکِ
-// پیکسل‌ها، breathe سراسری، موجِ مورب، و جرقه‌های تصادفی) — به‌جای حرفِ اولِ
-// ثابتِ نسخه‌ی قبلی. با آپلودِ عکسِ واقعی (AccountPanel) این آواتار به‌طور
+// آواتار پیش‌فرض پروفایل — کامپوننت agent-avatar از smoothui، عینا پورت
+// شده (کد منبع رو خود کاربر داد چون شبکه‌ی این سندباکس به smoothui.dev و
+// ui.shadcn.com دسترسی نداره). یه گرید ۶×۶ پیکسل رنگی که روی canvas با
+// یه seed قطعی (اینجا اسم کاربر) رسم می‌شه — هر کاربر همیشه دقیقا همون
+// الگو/پالت رنگی رو می‌گیره، با چهار لایه‌ی انیمیشن هم‌زمان (pulse تکی‌تک
+// پیکسل‌ها، breathe سراسری، موج مورب، و جرقه‌های تصادفی) — به‌جای حرف اول
+// ثابت نسخه‌ی قبلی. با آپلود عکس واقعی (AccountPanel) این آواتار به‌طور
 // کامل جایگزین می‌شه.
 export type AgentAvatarProps = Omit<
   React.CanvasHTMLAttributes<HTMLCanvasElement>,
   "children"
 > & {
-  /** رشته‌ی seed برای تولیدِ الگویِ قطعیِ آواتار (اینجا: اسم/یوزرنیمِ کاربر) */
+  /** رشته‌ی seed برای تولید الگوی قطعی آواتار (اینجا: اسم/یوزرنیم کاربر) */
   seed: string;
   /** قطر به پیکسل */
   size?: number;
-  /** فعال/غیرفعال‌کردنِ انیمیشنِ پیکسلی (به prefers-reduced-motion احترام می‌ذاره) */
+  /** فعال/غیرفعال‌کردن انیمیشن پیکسلی (به prefers-reduced-motion احترام می‌ذاره) */
   animated?: boolean;
 };
 
 const GRID_SIZE = 6;
 
-/** Pulse: هر پیکسل روشنیِ خودش رو مستقل نوسان می‌ده */
+/** Pulse: هر پیکسل روشنی خودش رو مستقل نوسان می‌ده */
 const PULSE_SPEED = 0.002;
 const PULSE_AMPLITUDE = 22;
 
-/** Breathe: نوسانِ کلیِ مقیاس، سراسری و آروم */
+/** Breathe: نوسان کلی مقیاس، سراسری و آروم */
 const BREATHE_SPEED = 0.001;
 const BREATHE_AMPLITUDE = 10;
 
-/** Wave: یه موجِ مورب که رویِ کلِ گرید می‌گذره */
+/** Wave: یه موج مورب که روی کل گرید می‌گذره */
 const WAVE_SPEED = 0.0015;
 const WAVE_AMPLITUDE = 15;
 const WAVE_LENGTH = 3;
 
-/** Sparkle: جرقه‌های روشنِ تصادفی */
+/** Sparkle: جرقه‌های روشن تصادفی */
 const SPARKLE_SPEED = 0.004;
 const SPARKLE_THRESHOLD = 0.92;
 const SPARKLE_BOOST = 25;
 
-/** Scale pulse: کلِ آواتار توی اندازه نفس می‌کشه */
+/** Scale pulse: کل آواتار توی اندازه نفس می‌کشه */
 const SCALE_PULSE_SPEED = 0.0008;
 const SCALE_PULSE_AMOUNT = 0.03;
 
-/** بیشینه‌ی پخشِ hue از رنگِ پایه — هرچی بیشتر، تنوعِ رنگیِ غنی‌تر.
- * قبلاً ۴۵ بود؛ برای تمِ روشن (baseHue=24، نارنجی) این مقدار تا hueِ ۶۹
- * می‌رفت بالا — یعنی زردِ خالص/زیتونی، که چشم اونو «سبز» می‌بینه، نه
- * قرمز/نارنجی. با ۱۵ بیشینه‌ی هردو تم توی همون خانواده‌ی رنگیِ خودشون
+/** بیشینه‌ی پخش hue از رنگ پایه — هرچی بیشتر، تنوع رنگی غنی‌تر.
+ * قبلا ۴۵ بود؛ برای تم روشن (baseHue=24، نارنجی) این مقدار تا hue ۶۹
+ * می‌رفت بالا — یعنی زرد خالص/زیتونی، که چشم اونو «سبز» می‌بینه، نه
+ * قرمز/نارنجی. با ۱۵ بیشینه‌ی هردو تم توی همون خانواده‌ی رنگی خودشون
  * می‌مونه (نارنجی/قرمز برای روشن، سبز برای تاریک). */
 const HUE_SPREAD = 15;
 
 const GLOW_RADIUS_RATIO = 0.25;
 
-// عمداً دیگه hueِ پایه از seed تصادفی نمی‌شه — رنگِ آواتار باید با تمِ فعلی
-// هماهنگ باشه، نه یوزربه‌یوزر فرق کنه: سبز برای تمِ تاریک، قرمزنارنجی برای
-// تمِ روشن — دقیقاً همون hueِ رنگِ accentِ خودِ تم (--accent در globals.css:
+// عمدا دیگه hue پایه از seed تصادفی نمی‌شه — رنگ آواتار باید با تم فعلی
+// هماهنگ باشه، نه یوزربه‌یوزر فرق کنه: سبز برای تم تاریک، قرمزنارنجی برای
+// تم روشن — دقیقا همون hue رنگ accent خود تم (--accent در globals.css:
 // #00A86B تاریک ≈ hue 158، #B85C1F روشن ≈ hue 24) تا با بقیه‌ی UI یکدست بمونه.
 const THEME_BASE_HUE: Record<"dark" | "light", number> = { dark: 158, light: 24 };
 
-/** هشِ قطعیِ ساده از یه رشته */
+/** هش قطعی ساده از یه رشته */
 const hashSeed = (str: string): number => {
   let hash = 0;
   for (const char of str) {
@@ -72,7 +72,7 @@ const hashSeed = (str: string): number => {
   return Math.abs(hash);
 };
 
-/** PRNGِ seed‌دار (mulberry32) */
+/** PRNG seed‌دار (mulberry32) */
 const createRng = (seed: number) => {
   let state = seed;
   return () => {
@@ -85,7 +85,7 @@ const createRng = (seed: number) => {
 
 type HSL = [hue: number, saturation: number, lightness: number];
 
-/** ساختِ پالتِ ۳رنگی توی یه خانواده‌ی هیوِ واحد، بر پایه‌ی hueِ تمِ فعلی */
+/** ساخت پالت ۳رنگی توی یه خانواده‌ی هیو واحد، بر پایه‌ی hue تم فعلی */
 const generatePalette = (hash: number, baseHue: number): [HSL, HSL, HSL] => {
   const rng = createRng(hash);
   const sat = 75 + rng() * 20; // 75-95%
@@ -112,7 +112,7 @@ type Cell = {
   sparklePhase: number;
 };
 
-/** ساختِ گرید با متادیتای هر سلول */
+/** ساخت گرید با متادیتای هر سلول */
 const generateGrid = (hash: number): Cell[][] => {
   const rng = createRng(hash + 1);
   const grid: Cell[][] = [];
@@ -171,7 +171,7 @@ export function AgentAvatar({
     const draw = (time: number) => {
       ctx.clearRect(0, 0, size, size);
 
-      // Scale pulse — کلِ آواتار نفس می‌کشه
+      // Scale pulse — کل آواتار نفس می‌کشه
       const scale = shouldAnimate
         ? 1 + Math.sin(time * SCALE_PULSE_SPEED) * SCALE_PULSE_AMOUNT
         : 1;
@@ -190,29 +190,29 @@ export function AgentAvatar({
       ctx.fillStyle = "#08080f";
       ctx.fillRect(0, 0, size, size);
 
-      // آفستِ breathe سراسری برای روشنی
+      // آفست breathe سراسری برای روشنی
       const breatheOffset = shouldAnimate
         ? Math.sin(time * BREATHE_SPEED) * BREATHE_AMPLITUDE
         : 0;
 
-      // رسمِ گریدِ پیکسلی
+      // رسم گرید پیکسلی
       for (let y = 0; y < GRID_SIZE; y++) {
         for (let x = 0; x < GRID_SIZE; x++) {
           const cell = grid[y][x];
           const [h, s, l] = palette[cell.colorIndex];
 
-          // pulseِ تک‌پیکسلی
+          // pulse تک‌پیکسلی
           const pulse = shouldAnimate
             ? Math.sin(time * PULSE_SPEED + cell.phase) * PULSE_AMPLITUDE
             : 0;
 
-          // موجِ موربِ عبوری
+          // موج مورب عبوری
           const waveDist = (x + y) / WAVE_LENGTH;
           const wave = shouldAnimate
             ? Math.sin(time * WAVE_SPEED + waveDist) * WAVE_AMPLITUDE
             : 0;
 
-          // sparkle — جرقه‌ی روشنِ گاه‌به‌گاه
+          // sparkle — جرقه‌ی روشن گاه‌به‌گاه
           const sparkleVal = shouldAnimate
             ? Math.sin(time * SPARKLE_SPEED + cell.sparklePhase)
             : 0;
@@ -231,7 +231,7 @@ export function AgentAvatar({
           );
           const finalSat = Math.min(100, s + 5);
 
-          // glowِ هر پیکسل — یه سایه‌ی ظریف
+          // glow هر پیکسل — یه سایه‌ی ظریف
           ctx.shadowColor = `hsl(${h}, ${finalSat}%, ${finalLight}%)`;
           ctx.shadowBlur = cellSize * 0.45;
 
@@ -240,11 +240,11 @@ export function AgentAvatar({
         }
       }
 
-      // ریست‌کردنِ سایه قبل از restore
+      // ریست‌کردن سایه قبل از restore
       ctx.shadowBlur = 0;
       ctx.restore();
 
-      // حلقه‌ی glowِ بیرونی
+      // حلقه‌ی glow بیرونی
       const [gh, gs, gl] = palette[0];
       ctx.save();
       ctx.globalCompositeOperation = "screen";

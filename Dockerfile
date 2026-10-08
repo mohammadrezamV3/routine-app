@@ -18,9 +18,7 @@ COPY . .
 # (نه در runtime) — ولی .env توی .dockerignoreست (عمداً، چون رمزهای دیتابیس
 # هم توشه) پس هیچ‌وقت وارد این stage نمی‌شه. باید صریح از docker-compose (که
 # خودش .env رو برای همین ${...}ها می‌خونه) به‌عنوان build arg بیاد.
-ARG NEXT_PUBLIC_MARKET
 ARG NEXT_PUBLIC_VAPID_PUBLIC_KEY
-ENV NEXT_PUBLIC_MARKET=$NEXT_PUBLIC_MARKET
 ENV NEXT_PUBLIC_VAPID_PUBLIC_KEY=$NEXT_PUBLIC_VAPID_PUBLIC_KEY
 # Prisma Client باید قبل از build ساخته بشه وگرنه import هاش fail می‌شن
 RUN npx prisma generate
@@ -42,10 +40,13 @@ COPY --from=builder --chown=nextjs:nodejs /app/.next/static ./.next/static
 COPY --from=builder /app/prisma ./prisma
 COPY --from=builder /app/node_modules/.prisma ./node_modules/.prisma
 COPY --from=builder /app/node_modules/@prisma ./node_modules/@prisma
+# ورودیِ کلاستر (فورکِ چند worker از همین server.js) — جزوِ خروجیِ standalone
+# نکست نیست چون هیچ فایلی importش نمی‌کنه، پس جدا کپی می‌شه.
+COPY --from=builder /app/cluster.js ./cluster.js
 
 USER nextjs
 EXPOSE 3000
 ENV PORT=3000
 ENV HOSTNAME="0.0.0.0"
 
-CMD ["node", "server.js"]
+CMD ["node", "cluster.js"]

@@ -1,220 +1,341 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useMemo, useState } from "react";
+import Image from "next/image";
 import Link from "next/link";
-import { usePathname, useRouter } from "next/navigation";
-import { signOut } from "next-auth/react";
+import { usePathname, useSearchParams } from "next/navigation";
+import { useSession } from "next-auth/react";
+import { logoutAndRedirect } from "@/lib/logout";
 import { motion, AnimatePresence } from "framer-motion";
-import {
-  LayoutGrid, Users, CreditCard, Coins, Boxes, Sparkles, LineChart,
-  ServerCog, Settings, LogOut, ChevronDown, Menu, X,
-} from "lucide-react";
+import { ChevronDown, Menu, X, Home, Sun, Moon, Lock, LogOut, Search, PanelRightClose, PanelRightOpen, LayoutGrid, Users, Coins, Headset, Ellipsis } from "lucide-react";
+import { useTheme } from "@/components/ThemeProvider";
+import { useLockBodyScroll } from "@/lib/useLockBodyScroll";
+import { AdminToastProvider } from "@/components/admin/useAdminToast";
+import { AdminAccessContext } from "@/components/admin/AdminAccess";
+import { hasPermission, permissionForPath } from "@/lib/adminPermissions";
+import { NAV_GROUPS, type NavGroup, type NavItem, type NavLeaf, type NavAccess } from "@/components/adminNavConfig";
+import { AdminAlertsProvider, useAdminAlerts } from "@/components/AdminAlerts";
+import { AdminAlertsBell } from "@/components/AdminAlertsBell";
+import { AdminCommandPalette } from "@/components/AdminCommandPalette";
+import "@/components/admin-shell.css";
 
-type Leaf = { label: string; href: string };
-type NavSection = { label: string; icon: React.ReactNode; href?: string; children?: Leaf[] };
+type Access = NavAccess;
+const COLLAPSE_KEY = "arion:adminSidebarCollapsed";
 
-const SECTIONS: NavSection[] = [
-  { label: "نمای کلی", icon: <LayoutGrid size={17} />, href: "/admin" },
-  {
-    label: "کاربران", icon: <Users size={17} />, href: "/admin/users",
-    children: [
-      { label: "همه کاربران", href: "/admin/users" },
-      { label: "کاربران جدید", href: "/admin/users?filter=new" },
-      { label: "کاربران فعال", href: "/admin/users?filter=active" },
-      { label: "کاربران غیرفعال", href: "/admin/users?filter=inactive" },
-      { label: "کاربران رایگان", href: "/admin/users?filter=free" },
-      { label: "کاربران پولی", href: "/admin/users?filter=paid" },
-    ],
-  },
-  {
-    label: "اشتراک‌ها", icon: <CreditCard size={17} />, href: "/admin/subscriptions",
-    children: [
-      { label: "اشتراک‌های فعال", href: "/admin/subscriptions?tab=active" },
-      { label: "اشتراک‌های منقضی", href: "/admin/subscriptions?tab=expired" },
-      { label: "تمدیدها", href: "/admin/subscriptions?tab=renewals" },
-      { label: "ارتقاها", href: "/admin/subscriptions?tab=upgrades" },
-      { label: "لغو اشتراک", href: "/admin/subscriptions?tab=canceled" },
-    ],
-  },
-  {
-    label: "درآمد", icon: <Coins size={17} />, href: "/admin/revenue",
-    children: [
-      { label: "درآمد امروز", href: "/admin/revenue?range=today" },
-      { label: "درآمد این ماه", href: "/admin/revenue?range=30d" },
-      { label: "درآمد سال", href: "/admin/revenue?range=12m" },
-      { label: "تراکنش‌ها", href: "/admin/transactions" },
-      { label: "بازپرداخت‌ها", href: "/admin/transactions?filter=refunded" },
-    ],
-  },
-  {
-    label: "محصولات", icon: <Boxes size={17} />,
-    children: [
-      { label: "روتین", href: "/admin/products/routine" },
-      { label: "بدنسازی", href: "/admin/products/exercise" },
-      { label: "کالری", href: "/admin/products/calorie" },
-      { label: "ترید", href: "/admin/products/trade" },
-      { label: "Skill / یادگیری", href: "/admin/products/roadmap" },
-    ],
-  },
-  { label: "مصرف AI", icon: <Sparkles size={17} />, href: "/admin/ai-usage" },
-  {
-    label: "تحلیل", icon: <LineChart size={17} />,
-    children: [
-      { label: "رشد کاربران", href: "/admin/analytics/growth" },
-      { label: "Retention", href: "/admin/analytics/retention" },
-      { label: "Funnel / Conversion", href: "/admin/analytics/funnel" },
-      { label: "Churn", href: "/admin/analytics/churn" },
-      { label: "Cohort", href: "/admin/analytics/cohort" },
-    ],
-  },
-  {
-    label: "سیستم", icon: <ServerCog size={17} />,
-    children: [
-      { label: "وضعیت سرورها و منابع", href: "/admin/system/status" },
-      { label: "خطاها و لاگ‌ها", href: "/admin/system/errors" },
-    ],
-  },
-  { label: "تنظیمات Owner", icon: <Settings size={17} />, href: "/admin/settings" },
-];
+// منو فقط بخش‌هایی رو نشون می‌ده که ادمین بهشون دسترسی داره؛ گروه خالی حذف می‌شه
+function visibleGroups(access: Access): NavGroup[] {
+  return NAV_GROUPS.map((g) => ({
+    ...g,
+    items: g.items
+      .filter((s) => hasPermission(access, s.perm) && (!s.ownerOnly || access.isSuperAdmin))
+      .map((s) => (s.children ? { ...s, children: s.children.filter((c) => hasPermission(access, c.perm)) } : s)),
+  })).filter((g) => g.items.length > 0);
+}
 
-function isActive(pathname: string, href: string): boolean {
+function isActive(pathname: string, href: string, exact = false): boolean {
   const path = href.split("?")[0];
-  if (path === "/admin") return pathname === "/admin";
+  if (path === "/admin" || exact) return pathname === path;
   return pathname === path || pathname.startsWith(path + "/");
 }
 
-function sectionActive(pathname: string, section: NavSection): boolean {
-  if (section.href && isActive(pathname, section.href)) return true;
-  return !!section.children?.some((c) => isActive(pathname, c.href));
+function itemActive(pathname: string, item: NavItem): boolean {
+  if (item.children?.length) return item.children.some((c) => isActive(pathname, c.href, c.exact)) || isActive(pathname, item.href, false);
+  return isActive(pathname, item.href);
 }
 
-function SidebarContent({ pathname, onNavigate }: { pathname: string; onNavigate?: () => void }) {
-  const [expanded, setExpanded] = useState<string | null>(() => SECTIONS.find((s) => s.children && sectionActive(pathname, s))?.label || null);
+// کدوم زیرمنو فعاله — با query هم مقایسه می‌شه. برگی که query داره فقط وقتی
+// همه‌ی پارامترهاش با URL یکی باشه فعاله؛ برگ بدون query فقط وقتی هیچ برگ
+// خاص‌تری مطابق نباشه.
+function activeLeafHref(pathname: string, search: URLSearchParams, leaves: NavLeaf[]): string | null {
+  let best: { href: string; score: number } | null = null;
+  for (const leaf of leaves) {
+    if (!isActive(pathname, leaf.href, leaf.exact)) continue;
+    const q = leaf.href.split("?")[1];
+    const params = q ? Array.from(new URLSearchParams(q).entries()) : [];
+    if (!params.every(([k, v]) => search.get(k) === v)) continue;
+    const score = params.length;
+    if (!best || score > best.score) best = { href: leaf.href, score };
+  }
+  return best?.href ?? null;
+}
+
+function Brand({ onClose, collapsed }: { onClose?: () => void; collapsed?: boolean }) {
+  const { theme } = useTheme();
+  return (
+    <div className="admin-brand">
+      <span className="admin-brand-logo" aria-hidden="true">
+        <Image src="/images/logo-icon-dark-theme.png" alt="" fill sizes="30px" className={`object-contain transition-opacity duration-150${theme === "light" ? " opacity-0" : " opacity-100"}`} />
+        <Image src="/images/logo-icon-light-theme.webp" alt="" fill sizes="30px" className={`object-contain transition-opacity duration-150${theme === "light" ? " opacity-100" : " opacity-0"}`} />
+      </span>
+      {!collapsed && <span className="admin-brand-text">Arion <span className="admin-brand-sub">پنل مدیریت</span></span>}
+      {onClose && (
+        <button type="button" className="admin-mobile-close" onClick={onClose} aria-label="بستن">
+          <X size={18} />
+        </button>
+      )}
+    </div>
+  );
+}
+
+function RoleCard({ access }: { access: Access }) {
+  const { data: session } = useSession();
+  const name = (session?.user as any)?.name || "ادمین";
+  return (
+    <div className="admin-role-card">
+      <span className="admin-avatar-fallback admin-role-avatar">{String(name)[0]?.toUpperCase()}</span>
+      <div className="admin-role-info">
+        <div className="admin-role-name">{name}</div>
+        <div className="admin-role-sub">{access.isSuperAdmin ? "Owner — دسترسی کامل" : `ادمین · ${access.permissions.length} دسترسی`}</div>
+      </div>
+    </div>
+  );
+}
+
+function useBadges(): Record<string, number> {
+  const { items, total } = useAdminAlerts();
+  return useMemo(() => {
+    const m: Record<string, number> = { alerts: total };
+    for (const i of items) m[i.key] = i.count;
+    return m;
+  }, [items, total]);
+}
+
+function SidebarContent({ pathname, groups, access, collapsed, onNavigate }: { pathname: string; groups: NavGroup[]; access: Access; collapsed?: boolean; onNavigate?: () => void }) {
+  const searchParams = useSearchParams();
+  const search = useMemo(() => new URLSearchParams(searchParams?.toString() || ""), [searchParams]);
+  const badges = useBadges();
+  const { theme, toggle } = useTheme();
+  const activeParent = groups.flatMap((g) => g.items).find((s) => s.children && s.children.length > 0 && itemActive(pathname, s))?.href || null;
+  const [expanded, setExpanded] = useState<string | null>(activeParent);
+
+  // سایدبار دسکتاپ بین صفحه‌ها unmount نمی‌شه — با رفتن به یه بخش دیگه، زیرمنوی همون باز بشه
+  useEffect(() => { if (activeParent) setExpanded(activeParent); }, [activeParent]);
 
   return (
-    <nav className="admin-nav">
-      {SECTIONS.map((section) => {
-        const active = sectionActive(pathname, section);
-        const isOpen = expanded === section.label;
-        return (
-          <div key={section.label} className="admin-nav-section">
-            {section.children ? (
-              <button
-                type="button"
-                className={`admin-nav-head${active ? " active" : ""}`}
-                onClick={() => setExpanded(isOpen ? null : section.label)}
-              >
-                <span className="admin-nav-icon">{section.icon}</span>
-                <span className="admin-nav-label">{section.label}</span>
-                <motion.span animate={{ rotate: isOpen ? 180 : 0 }} transition={{ duration: 0.2 }} className="admin-nav-chevron">
-                  <ChevronDown size={14} />
-                </motion.span>
-              </button>
-            ) : (
-              <Link href={section.href!} className={`admin-nav-head${active ? " active" : ""}`} onClick={onNavigate}>
-                <span className="admin-nav-icon">{section.icon}</span>
-                <span className="admin-nav-label">{section.label}</span>
-              </Link>
-            )}
+    <nav className={`admin-nav ads-nav${collapsed ? " is-rail" : ""}`} aria-label="منوی ادمین">
+      {!collapsed && <RoleCard access={access} />}
+      {groups.map((group) => (
+        <div key={group.title} className="ads-group">
+          {collapsed ? <span className="ads-group-rule" aria-hidden="true" /> : <div className="ads-group-title">{group.title}</div>}
+          {group.items.map((item) => {
+            const active = itemActive(pathname, item);
+            const kids = item.children && item.children.length > 1 ? item.children : null;
+            const isOpen = !!kids && !collapsed && expanded === item.href;
+            const n = item.badge ? badges[item.badge] || 0 : 0;
+            return (
+              <div key={item.href} className="ads-item-wrap">
+                <div className="ads-item-row">
+                  <Link
+                    href={item.href} onClick={onNavigate} title={collapsed ? item.label : undefined}
+                    aria-current={active && !kids ? "page" : undefined}
+                    className={`ads-item${active ? " active" : ""}`}
+                  >
+                    {collapsed ? <span className="ads-item-icon">{item.icon}</span> : <span className="ads-item-dot" aria-hidden="true" />}
+                    {!collapsed && <span className="ads-item-label">{item.label}</span>}
+                    {n > 0 && <span className={`ads-count${collapsed ? " rail" : ""}`}>{n > 99 ? "99+" : n}</span>}
+                  </Link>
+                  {kids && !collapsed && (
+                    <button type="button" className="ads-chev" aria-expanded={isOpen} aria-label={`زیرمنوی ${item.label}`} onClick={() => setExpanded(isOpen ? null : item.href)}>
+                      <motion.span animate={{ rotate: isOpen ? 180 : 0 }} transition={{ duration: 0.2 }} style={{ display: "flex" }}><ChevronDown size={14} /></motion.span>
+                    </button>
+                  )}
+                </div>
+                <AnimatePresence initial={false}>
+                  {kids && isOpen && (
+                    <motion.div
+                      initial={{ height: 0, opacity: 0 }} animate={{ height: "auto", opacity: 1 }} exit={{ height: 0, opacity: 0 }}
+                      transition={{ duration: 0.22, ease: [0.22, 1, 0.36, 1] }} style={{ overflow: "hidden" }}
+                    >
+                      <div className="ads-children">
+                        {(() => {
+                          const activeHref = activeLeafHref(pathname, search, kids);
+                          return kids.map((leaf) => (
+                            <Link key={leaf.href} href={leaf.href} onClick={onNavigate} aria-current={activeHref === leaf.href ? "page" : undefined} className={`ads-leaf${activeHref === leaf.href ? " active" : ""}`}>
+                              {leaf.label}
+                            </Link>
+                          ));
+                        })()}
+                      </div>
+                    </motion.div>
+                  )}
+                </AnimatePresence>
+              </div>
+            );
+          })}
+        </div>
+      ))}
 
-            <AnimatePresence initial={false}>
-              {section.children && isOpen && (
-                <motion.div
-                  initial={{ height: 0, opacity: 0 }}
-                  animate={{ height: "auto", opacity: 1 }}
-                  exit={{ height: 0, opacity: 0 }}
-                  transition={{ duration: 0.22, ease: [0.22, 1, 0.36, 1] }}
-                  style={{ overflow: "hidden" }}
-                >
-                  <div className="admin-nav-children">
-                    {section.children.map((leaf) => (
-                      <Link
-                        key={leaf.href}
-                        href={leaf.href}
-                        onClick={onNavigate}
-                        className={`admin-nav-leaf${isActive(pathname, leaf.href) ? " active" : ""}`}
-                      >
-                        {leaf.label}
-                      </Link>
-                    ))}
-                  </div>
-                </motion.div>
-              )}
-            </AnimatePresence>
-          </div>
+      <div className="ads-group ads-foot">
+        {collapsed ? <span className="ads-group-rule" aria-hidden="true" /> : null}
+        <button type="button" className="ads-item ads-foot-btn" onClick={toggle} title="تغییر تم">
+          <span className="ads-item-icon">{theme === "light" ? <Moon size={16} /> : <Sun size={16} />}</span>
+          {!collapsed && <span className="ads-item-label">{theme === "light" ? "تم تیره" : "تم روشن"}</span>}
+        </button>
+        <Link href="/" className="ads-item" onClick={onNavigate} title="بازگشت به اپ">
+          <span className="ads-item-icon"><Home size={16} /></span>
+          {!collapsed && <span className="ads-item-label">بازگشت به اپ</span>}
+        </Link>
+        <button type="button" className="ads-item ads-foot-btn ads-logout" onClick={logoutAndRedirect} title="خروج">
+          <span className="ads-item-icon"><LogOut size={16} /></span>
+          {!collapsed && <span className="ads-item-label">خروج</span>}
+        </button>
+      </div>
+    </nav>
+  );
+}
+
+const EXTRA_TITLES: [string, string][] = [["/admin/alerts", "هشدارها"], ["/admin/mentors", "مربی‌ها"], ["/admin/products", "محصولات"]];
+
+function pageTitle(pathname: string): string {
+  let best: { label: string; len: number } | null = null;
+  for (const item of NAV_GROUPS.flatMap((g) => g.items)) {
+    for (const h of [item.href, ...(item.children?.map((c) => c.href) ?? [])]) {
+      const path = h.split("?")[0];
+      if (isActive(pathname, h) && (!best || path.length > best.len)) best = { label: item.label, len: path.length };
+    }
+  }
+  if (best) return best.label;
+  for (const [pre, label] of EXTRA_TITLES) if (pathname.startsWith(pre)) return label;
+  return "پنل مدیریت";
+}
+
+function NoAccess() {
+  return (
+    <div className="admin-card admin-no-access">
+      <span className="admin-no-access-icon"><Lock size={22} /></span>
+      <div className="admin-no-access-title">به این بخش دسترسی نداری</div>
+      <div className="admin-section-hint admin-no-access-hint">برای دسترسی، از Owner یا ادمینی که «مدیریت ادمین‌ها» داره بخواه دسترسی این بخش رو بهت بده.</div>
+      <Link href="/admin" className="admin-btn admin-no-access-btn">برگشت به داشبورد</Link>
+    </div>
+  );
+}
+
+function BottomNav({ pathname, access, onMore }: { pathname: string; access: Access; onMore: () => void }) {
+  const badges = useBadges();
+  const tabs = [
+    { label: "داشبورد", href: "/admin", icon: <LayoutGrid size={18} />, perm: undefined, n: 0 },
+    { label: "کاربران", href: "/admin/users", icon: <Users size={18} />, perm: "users.view" as const, n: 0 },
+    { label: "درآمد", href: "/admin/revenue", icon: <Coins size={18} />, perm: "finance" as const, n: 0 },
+    { label: "پشتیبانی", href: "/admin/support", icon: <Headset size={18} />, perm: "support" as const, n: badges.tickets || 0 },
+  ].filter((t) => hasPermission(access, t.perm));
+  return (
+    <nav className="ads-bottom" aria-label="ناوبری پایین">
+      {tabs.map((t) => {
+        const on = isActive(pathname, t.href);
+        return (
+          <Link key={t.href} href={t.href} className={`ads-tab${on ? " on" : ""}`} aria-current={on ? "page" : undefined}>
+            <span className="ads-tab-dot" aria-hidden="true" />
+            <span className="ads-tab-icon">{t.icon}{t.n > 0 && <span className="ads-count rail">{t.n > 99 ? "99+" : t.n}</span>}</span>
+            {t.label}
+          </Link>
         );
       })}
-
-      <button type="button" className="admin-nav-head admin-nav-logout" onClick={() => signOut({ callbackUrl: "/" })}>
-        <span className="admin-nav-icon"><LogOut size={17} /></span>
-        <span className="admin-nav-label">خروج</span>
+      <button type="button" className="ads-tab" onClick={onMore}>
+        <span className="ads-tab-dot" aria-hidden="true" />
+        <span className="ads-tab-icon"><Ellipsis size={18} /></span>
+        بیشتر
       </button>
     </nav>
   );
 }
 
-function pageTitle(pathname: string): string {
-  for (const section of SECTIONS) {
-    if (section.href && isActive(pathname, section.href) && !section.children) return section.label;
-    if (section.children) {
-      const leaf = section.children.find((c) => isActive(pathname, c.href));
-      if (leaf) return section.label;
-      if (section.href && pathname === section.href) return section.label;
-    }
-  }
-  if (pathname.startsWith("/admin/products/")) return "محصولات";
-  return "پنل Owner";
-}
-
-export function AdminShell({ children }: { children: React.ReactNode }) {
+export function AdminShell({ children, isSuperAdmin, permissions }: { children: React.ReactNode; isSuperAdmin: boolean; permissions: string[] }) {
   const pathname = usePathname() || "/admin";
   const [mobileOpen, setMobileOpen] = useState(false);
+  const [paletteOpen, setPaletteOpen] = useState(false);
+  const [collapsed, setCollapsed] = useState(false);
+  const { theme, toggle } = useTheme();
+  const access = useMemo<Access>(() => ({ isSuperAdmin, permissions }), [isSuperAdmin, permissions]);
+  const groups = useMemo(() => visibleGroups(access), [access]);
+  const allowed = hasPermission(access, permissionForPath(pathname) || undefined);
+
+  useEffect(() => {
+    try { if (localStorage.getItem(COLLAPSE_KEY) === "1") setCollapsed(true); } catch { /* حافظه در دسترس نیست */ }
+  }, []);
+  const toggleCollapsed = () => {
+    setCollapsed((v) => {
+      try { localStorage.setItem(COLLAPSE_KEY, v ? "0" : "1"); } catch { /* حافظه در دسترس نیست */ }
+      return !v;
+    });
+  };
+
+  // کشوی موبایل: Esc می‌بنده، با عوض‌شدن مسیر بسته می‌شه، و تا بازه اسکرول صفحه‌ی پشت قفله
+  useEffect(() => { setMobileOpen(false); }, [pathname]);
+  useLockBodyScroll(mobileOpen);
+  useEffect(() => {
+    if (!mobileOpen) return;
+    const onKey = (e: KeyboardEvent) => { if (e.key === "Escape") setMobileOpen(false); };
+    window.addEventListener("keydown", onKey);
+    return () => window.removeEventListener("keydown", onKey);
+  }, [mobileOpen]);
+
+  // Ctrl/Cmd + K
+  useEffect(() => {
+    const onKey = (e: KeyboardEvent) => {
+      if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === "k") { e.preventDefault(); setPaletteOpen((v) => !v); }
+    };
+    window.addEventListener("keydown", onKey);
+    return () => window.removeEventListener("keydown", onKey);
+  }, []);
 
   return (
-    <div className="admin-root" dir="rtl">
-      <div className="admin-sidebar-desktop">
-        <div className="admin-brand">
-          <span className="admin-brand-dot" />
-          <span className="admin-brand-text">Arion <span className="admin-brand-sub">Owner</span></span>
+    <AdminAccessContext.Provider value={access}>
+    <AdminToastProvider>
+    <AdminAlertsProvider>
+      <div className="admin-root ads-root" dir="rtl" data-collapsed={collapsed ? "1" : undefined}>
+        <div className="admin-sidebar-desktop ads-sidebar">
+          <div className="ads-sidebar-top">
+            <Brand collapsed={collapsed} />
+            <button type="button" className="ads-collapse" onClick={toggleCollapsed} aria-label={collapsed ? "باز کردن منو" : "جمع کردن منو"} aria-pressed={collapsed}>
+              {collapsed ? <PanelRightOpen size={16} /> : <PanelRightClose size={16} />}
+            </button>
+          </div>
+          <SidebarContent pathname={pathname} groups={groups} access={access} collapsed={collapsed} />
         </div>
-        <SidebarContent pathname={pathname} />
-      </div>
 
-      <div className="admin-main">
-        <div className="admin-topbar">
-          <button type="button" className="admin-mobile-toggle" onClick={() => setMobileOpen(true)} aria-label="منو">
-            <Menu size={20} />
-          </button>
-          <h1 className="admin-page-title">{pageTitle(pathname)}</h1>
+        <div className="admin-main">
+          <div className="admin-topbar ads-topbar">
+            <button type="button" className="admin-mobile-toggle ads-round-btn" onClick={() => setMobileOpen(true)} aria-label="منو" aria-expanded={mobileOpen}>
+              <Menu size={20} />
+            </button>
+            <h1 className="admin-page-title ads-title">{pageTitle(pathname)}</h1>
+            <button type="button" className="ads-search" onClick={() => setPaletteOpen(true)} aria-label="جست‌وجو" aria-keyshortcuts="Control+K">
+              <Search size={15} aria-hidden="true" />
+              <span className="ads-search-text">جست‌وجوی کاربر، تراکنش، کد تخفیف، تیکت</span>
+              <kbd className="ads-kbd">Ctrl K</kbd>
+            </button>
+            <div className="admin-topbar-actions ads-actions">
+              <AdminAlertsBell />
+              <button type="button" className="admin-icon-btn ads-hide-sm" onClick={toggle} aria-label="تغییر تم">
+                {theme === "light" ? <Moon size={16} /> : <Sun size={16} />}
+              </button>
+              <Link href="/" className="admin-icon-btn ads-hide-sm" aria-label="بازگشت به اپ"><Home size={16} /></Link>
+            </div>
+          </div>
+          <div className="admin-content ads-content">{allowed ? children : <NoAccess />}</div>
         </div>
-        <div className="admin-content">{children}</div>
-      </div>
 
-      <AnimatePresence>
-        {mobileOpen && (
-          <>
-            <motion.div
-              className="admin-mobile-backdrop"
-              initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
-              onClick={() => setMobileOpen(false)}
-            />
-            <motion.div
-              className="admin-mobile-drawer"
-              initial={{ x: "100%" }} animate={{ x: 0 }} exit={{ x: "100%" }}
-              transition={{ duration: 0.26, ease: [0.22, 1, 0.36, 1] }}
-            >
-              <div className="admin-brand">
-                <span className="admin-brand-dot" />
-                <span className="admin-brand-text">Arion <span className="admin-brand-sub">Owner</span></span>
-                <button type="button" className="admin-mobile-close" onClick={() => setMobileOpen(false)} aria-label="بستن">
-                  <X size={18} />
-                </button>
-              </div>
-              <SidebarContent pathname={pathname} onNavigate={() => setMobileOpen(false)} />
-            </motion.div>
-          </>
-        )}
-      </AnimatePresence>
-    </div>
+        <BottomNav pathname={pathname} access={access} onMore={() => setMobileOpen(true)} />
+        <AdminCommandPalette open={paletteOpen} onClose={() => setPaletteOpen(false)} access={access} />
+
+        <AnimatePresence>
+          {mobileOpen && (
+            <>
+              <motion.div className="admin-mobile-backdrop" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} onClick={() => setMobileOpen(false)} />
+              <motion.div
+                className="admin-mobile-drawer" role="dialog" aria-modal="true" aria-label="منوی پنل"
+                initial={{ x: "100%" }} animate={{ x: 0 }} exit={{ x: "100%" }}
+                transition={{ duration: 0.26, ease: [0.22, 1, 0.36, 1] }}
+              >
+                <Brand onClose={() => setMobileOpen(false)} />
+                <SidebarContent pathname={pathname} groups={groups} access={access} onNavigate={() => setMobileOpen(false)} />
+              </motion.div>
+            </>
+          )}
+        </AnimatePresence>
+      </div>
+    </AdminAlertsProvider>
+    </AdminToastProvider>
+    </AdminAccessContext.Provider>
   );
 }

@@ -1,0 +1,446 @@
+"use client";
+
+import { CSSProperties, useCallback, useEffect, useState } from "react";
+import Link from "next/link";
+import { motion } from "framer-motion";
+import { Archive, ArchiveRestore, ArrowDown, ArrowUp, Hash, Pencil, Percent, Target, Trash2, Wallet, X } from "lucide-react";
+import { TradeAccountModal } from "./TradeAccountModal";
+import {
+  TradeAccount, TradeTag, TradeTotalsStatKey, TRADE_TOTALS_STAT_LABELS, TRADE_TOTALS_STAT_ORDER,
+  DEFAULT_VISIBLE_TRADE_TOTALS_STATS, TRADE_TOTALS_VISIBILITY_KEY,
+} from "@/lib/tradeTypes";
+import { getSetting } from "@/lib/storage";
+import { TradeStatsCollapse } from "./TradeStatsCollapse";
+import { takePreloaded } from "@/lib/preload";
+import { useAsyncAction } from "@/lib/useAsyncAction";
+import { TradeKebabMenu } from "./TradeKebabMenu";
+import { LockBodyScroll } from "./LockBodyScroll";
+import { PanelSkeleton } from "./PanelSkeleton";
+import { useLiveRefresh } from "@/lib/liveSync";
+import { Spinner } from "./Spinner";
+
+// صفحه‌ی «ژورنال‌نویسی»: اول حساب‌ها، فقط به‌شکل فشرده (اسم + سود/زیان +
+// برچسب) — جزئیات کامل (بالانس/تعداد معاملات/نرخ برد/هدف) جاش صفحه‌ی
+// خود حسابه، نه این فهرست. با انتخاب هر حساب می‌رویم داخل آمار و
+// معاملات همان حساب.
+export function TradeAccountsPanel({
+  creating,
+  onCreatingChange,
+}: {
+  creating: boolean;
+  onCreatingChange: (v: boolean) => void;
+}) {
+  const [accounts, setAccounts] = useState<TradeAccount[]>([]);
+  const [tags, setTags] = useState<TradeTag[]>([]);
+  const [loading, setLoading] = useState(true);
+  // آرشیو دیگر کل فهرست را عوض نمی‌کند؛ توی یک پاپ‌آپ جدا نشان داده می‌شود
+  // (درخواست صریح کاربر) — پس این صفحه همیشه فقط حساب‌های فعال را دارد.
+  const [archiveOpen, setArchiveOpen] = useState(false);
+  const [archived, setArchived] = useState<TradeAccount[] | null>(null);
+  const [editing, setEditing] = useState<TradeAccount | null>(null);
+  const [confirmPurge, setConfirmPurge] = useState<TradeAccount | null>(null);
+  const { pendingKey, error: actionError, run } = useAsyncAction();
+
+  // `silent` یعنی «داده را تازه کن ولی اسکلت نشان نده». بدون این، هر
+  // آرشیو/حذف کل لیست را برای یک لحظه با اسکلت عوض می‌کرد — همان پرشی که
+  // از بیرون شبیه باگ دیده می‌شد.
+  const load = useCallback(async (silent = false) => {
+    if (!silent) setLoading(true);
+    try {
+      // اگر اسکریپت inline preload از قبل همین URL را درخواست کرده،
+      // همان promise استفاده می‌شود تا درخواست دوباره نرود.
+      const accountsUrl = "/api/trade/accounts?archived=0";
+      const [aData, tData] = await Promise.all([
+        takePreloaded(accountsUrl) ?? fetch(accountsUrl).then((r) => (r.ok ? r.json() : null)),
+        takePreloaded("/api/trade/tags") ?? fetch("/api/trade/tags").then((r) => (r.ok ? r.json() : null)),
+      ]);
+      setAccounts(aData?.accounts || []);
+      setTags(tData?.tags || []);
+    } finally {
+      if (!silent) setLoading(false);
+    }
+  }, []);
+
+  // فهرست آرشیو فقط وقتی پاپ‌آپش باز می‌شود گرفته می‌شود، نه در لود صفحه
+  const loadArchived = useCallback(async () => {
+    const res = await fetch("/api/trade/accounts?archived=1").then((r) => (r.ok ? r.json() : null));
+    const list: TradeAccount[] = res?.accounts || [];
+    setArchived(list.filter((a) => a.archived));
+  }, []);
+
+  useEffect(() => { load(); }, [load]);
+  // زنده: ثبت/ویرایش/حذف از هرجا (مودال، تب دیگه، همگام‌سازی متاتریدر) → آمار همون لحظه
+  useLiveRefresh("trade", () => { load(true); });
+
+  async function toggleArchive(a: TradeAccount) {
+    const ok = await run(`archive:${a.id}`, () =>
+      fetch(`/api/trade/accounts?id=${a.id}&mode=archive`, { method: "DELETE" })
+    );
+    if (ok) load(true);
+  }
+
+  async function purge(a: TradeAccount) {
+    const ok = await run(`purge:${a.id}`, () =>
+      fetch(`/api/trade/accounts?id=${a.id}&mode=purge`, { method: "DELETE" })
+    );
+    if (ok) { setConfirmPurge(null); load(true); }
+  }
+
+  // اسکلت عمومی PanelSkeleton شکلش (چند خط + ردیف سه‌کارتی افقی) با
+  // کارت فشرده‌ی تک‌ستونی اینجا فرق داشت — همون فرق شکل، سوییچ
+  // اسکلت→دیتای واقعی رو یه «پرش بزرگ به کوچیک» نشون می‌داد. حالا
+  // اسکلت خودش هم‌شکل و هم‌اندازه‌ی کارت واقعیه.
+  if (loading) {
+    return (
+      <div>
+        <div className="trade-surface trade-account-grid trade-journal-grid">
+          <div className="trade-accounts-head">
+            <div className="trade-section-title">حساب‌های معاملاتی</div>
+          </div>
+          {[0, 1, 2, 3].map((i) => <div key={i} className="trade-account-card trade-account-skel" />)}
+        </div>
+      </div>
+    );
+  }
+
+  return (
+    <div>
+      {/* طبق درخواست صریح: تایتل + دکمه‌ی «نمایش آرشیو» دیگه بالای باکس
+          نیستن — اولین ردیف داخل خود باکسن. */}
+      <div className="trade-surface trade-account-grid trade-journal-grid">
+        <div className="trade-accounts-head">
+          <div className="trade-section-title">حساب‌های معاملاتی</div>
+          <button type="button" className="trade-ghost-btn" onClick={() => { setArchiveOpen(true); setArchived(null); loadArchived(); }}>
+            نمایش آرشیو
+          </button>
+        </div>
+
+        {/* جمع همه‌ی حساب‌ها — موبایل و دسکتاپ؛ سه آمار سرخط + «جزئیات بیشتر». */}
+        {!!accounts.length && <JournalTotals accounts={accounts} />}
+
+        {actionError && <div className="trade-form-error">{actionError}</div>}
+
+        {!accounts.length && (
+          <div className="trade-empty-state">
+            <Wallet size={32} />
+            <p>هنوز حسابی ایجاد نکردی</p>
+          </div>
+        )}
+
+        {accounts.map((a, i) => (
+          <AccountRow
+            key={a.id}
+            account={a}
+            index={i}
+            onEdit={() => setEditing(a)}
+            onToggleArchive={() => toggleArchive(a)}
+            onPurge={() => setConfirmPurge(a)}
+          />
+        ))}
+      </div>
+
+      {(creating || editing) && (
+        <TradeAccountModal
+          account={editing}
+          tags={tags}
+          onTagCreated={(t) => setTags((prev) => [...prev, t])}
+          onClose={() => { onCreatingChange(false); setEditing(null); }}
+          onSaved={() => { onCreatingChange(false); setEditing(null); load(); }}
+        />
+      )}
+
+      {archiveOpen && (
+        <>
+          <LockBodyScroll />
+          <div className="modal-overlay open" onClick={() => setArchiveOpen(false)} />
+          <div className="modal-panel open" role="dialog" aria-modal="true">
+            <div className="modal-head">
+              <div className="modal-title">حساب‌های آرشیوشده</div>
+              <button type="button" className="trade-icon-btn" onClick={() => setArchiveOpen(false)} aria-label="بستن"><X size={16} /></button>
+            </div>
+            {archived === null ? (
+              <PanelSkeleton />
+            ) : !archived.length ? (
+              <div className="trade-empty-state"><Archive size={28} /><p>هیچ حسابی توی آرشیو نیست</p></div>
+            ) : (
+              <div className="trade-account-grid" style={{ marginTop: 4 }}>
+                {archived.map((a) => (
+                  <div key={a.id} className="trade-surface trade-account-card archived">
+                    <div className="trade-account-top-row">
+                      <div className="trade-account-kebab-inline">
+                        <TradeKebabMenu
+                          label="گزینه‌های حساب"
+                          actions={[
+                            {
+                              label: "بازگردانی از آرشیو",
+                              icon: <ArchiveRestore size={14} />,
+                              onClick: async () => { await toggleArchive(a); loadArchived(); },
+                            },
+                            {
+                              label: "حذف کامل",
+                              icon: <Trash2 size={14} />,
+                              danger: true,
+                              onClick: () => { setArchiveOpen(false); setConfirmPurge(a); },
+                            },
+                          ]}
+                        />
+                      </div>
+                      <Link href={`/trade/accounts/${a.id}`} className="trade-account-title-link">
+                        <span className="trade-account-name">{a.name}</span>
+                        <span className="trade-account-dot" style={{ background: a.color }} />
+                      </Link>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            )}
+          </div>
+        </>
+      )}
+
+      {confirmPurge && (
+        <PurgeConfirm
+          account={confirmPurge}
+          onCancel={() => setConfirmPurge(null)}
+          onConfirm={() => purge(confirmPurge)}
+          busy={pendingKey === `purge:${confirmPurge.id}`}
+        />
+      )}
+    </div>
+  );
+}
+
+// جمع کل همه‌ی حساب‌های فعال — طبق درخواست صریح دقیقا همان مدل صفحه‌ی
+// ژورنال‌نویسی یک حساب: سه آمار اول سرخط، بقیه پشت «جزئیات بیشتر»، و
+// کاربر از تنظیمات ترید انتخاب می‌کند کدام آمارها اصلا باشند. ارزها ممکن
+// است فرق کنند، پس جمع پولی فقط وقتی نشان داده می‌شود که همه‌ی حساب‌ها
+// یک ارز داشته باشند؛ جمع‌زدن دلار و یورو عددی می‌سازد که درست به‌نظر
+// می‌رسد ولی نیست.
+const TOTALS_ICONS: Record<TradeTotalsStatKey, typeof Wallet> = {
+  balance: Wallet, netPnl: ArrowUp, winRate: Percent, trades: Hash, closed: Hash, open: Hash, accounts: Target,
+};
+
+function JournalTotals({ accounts }: { accounts: TradeAccount[] }) {
+  const [visible, setVisible] = useState<TradeTotalsStatKey[]>(DEFAULT_VISIBLE_TRADE_TOTALS_STATS);
+  useEffect(() => {
+    getSetting<TradeTotalsStatKey[]>(TRADE_TOTALS_VISIBILITY_KEY, DEFAULT_VISIBLE_TRADE_TOTALS_STATS)
+      .then((v) => setVisible(Array.isArray(v) && v.length ? v : DEFAULT_VISIBLE_TRADE_TOTALS_STATS));
+  }, []);
+
+  const currencies = new Set(accounts.map((a) => a.currency));
+  const sameCurrency = currencies.size === 1 ? accounts[0].currency : null;
+
+  const balance = accounts.reduce((sum, a) => sum + (a.summary?.balance ?? a.initialBalance), 0);
+  const netPnl = accounts.reduce((sum, a) => sum + (a.summary?.netPnl ?? 0), 0);
+  const trades = accounts.reduce((sum, a) => sum + (a.summary?.tradeCount ?? 0), 0);
+  // نرخ برد کل باید وزنی تعداد معامله باشد، نه میانگین ساده‌ی نرخ‌ها:
+  // حسابی با ۲ معامله نباید هم‌وزن حسابی با ۲۰۰ معامله باشد.
+  const closed = accounts.reduce((sum, a) => sum + (a.summary?.closedCount ?? 0), 0);
+  const wins = accounts.reduce(
+    (sum, a) => sum + ((a.summary?.winRate ?? 0) / 100) * (a.summary?.closedCount ?? 0),
+    0
+  );
+  const winRate = closed > 0 ? Math.round((wins / closed) * 1000) / 10 : null;
+
+  const values: Record<TradeTotalsStatKey, { value: string; tone?: "up" | "down" }> = {
+    balance: { value: sameCurrency ? formatMoney(balance, sameCurrency) : "—" },
+    netPnl: { value: sameCurrency ? formatMoney(netPnl, sameCurrency) : "—", tone: sameCurrency ? (netPnl >= 0 ? "up" : "down") : undefined },
+    winRate: { value: winRate === null ? "—" : `${winRate}%`, tone: winRate === null ? undefined : winRate >= 50 ? "up" : "down" },
+    trades: { value: String(trades) },
+    closed: { value: String(closed) },
+    open: { value: String(Math.max(0, trades - closed)) },
+    accounts: { value: String(accounts.length) },
+  };
+
+  const keys = TRADE_TOTALS_STAT_ORDER.filter((k) => visible.includes(k));
+  const head = keys.slice(0, 3);
+  const rest = keys.slice(3);
+  const toneColor = (t?: "up" | "down") => (t ? { color: t === "up" ? "var(--pnl-win)" : "var(--pnl-loss)" } : undefined);
+
+  if (!keys.length) return null;
+  return (
+    <div className="trade-journal-kpis">
+      <div className="trade-headline-stats" style={{ gridTemplateColumns: `repeat(${head.length}, 1fr)` }}>
+        {head.map((k) => {
+          const Icon = k === "netPnl" && netPnl < 0 ? ArrowDown : TOTALS_ICONS[k];
+          return (
+            <div key={k} className="trade-headline-stat">
+              <div className="trade-stat-label"><Icon size={12} /> {TRADE_TOTALS_STAT_LABELS[k]}</div>
+              <div className="trade-headline-value mono" dir="ltr" style={toneColor(values[k].tone)}>{values[k].value}</div>
+            </div>
+          );
+        })}
+      </div>
+      {!!rest.length && (
+        <TradeStatsCollapse>
+          <div className="trade-stats-grid">
+            {rest.map((k) => {
+              const Icon = TOTALS_ICONS[k];
+              return (
+                <div key={k} className="trade-stat-tile">
+                  <div className="trade-stat-label"><Icon size={12} /> {TRADE_TOTALS_STAT_LABELS[k]}</div>
+                  <div className="trade-stat-value mono" dir="ltr" style={toneColor(values[k].tone)}>{values[k].value}</div>
+                </div>
+              );
+            })}
+          </div>
+        </TradeStatsCollapse>
+      )}
+    </div>
+  );
+}
+
+// ردیف فشرده‌ی یک حساب — اسم + سود/زیان + برچسب، به‌علاوه‌ی منوی
+// سه‌نقطه‌ی کنار اسم (ویرایش/آرشیو). جزئیات کامل حساب فقط با بازکردن
+// خود صفحه‌ی حساب دیده می‌شود.
+function AccountRow({
+  account: a, index, onEdit, onToggleArchive, onPurge,
+}: {
+  account: TradeAccount;
+  index: number;
+  onEdit: () => void;
+  onToggleArchive: () => void;
+  onPurge: () => void;
+}) {
+  // منطق باز/بسته و موقعیت منو حالا داخل خود TradeKebabMenu است (مشترک با
+  // چک‌لیست‌ها و یادداشت‌ها) — این‌جا فقط کارهایش تعریف می‌شود.
+  const netPnl = a.summary?.netPnl ?? 0;
+  // طبق درخواست صریح: عدد اصلی کارت دیگه سود/زیان نیست، بالانس کلی
+  // حسابه (initialBalance + netPnl) — رنگ/درصد/فلش همچنان از روی
+  // سود/زیان حساب می‌شن، فقط خود عدد نمایشی عوض شد.
+  const balance = a.summary?.balance ?? a.initialBalance;
+  // درصد نسبت به بالانس اولیه — بدون بالانس اولیه معنایی ندارد، پس نشان داده نمی‌شود
+  const pctBase = a.initialBalance + (a.cashFunding ?? 0);
+  const pnlPct = pctBase > 0 ? Math.round((netPnl / pctBase) * 1000) / 10 : null;
+
+  return (
+    <motion.div
+      initial={{ opacity: 0, y: 8 }}
+      animate={{ opacity: 1, y: 0 }}
+      transition={{ duration: 0.32, delay: Math.min(index, 8) * 0.045, ease: [0.22, 1, 0.36, 1] }}
+      className={`trade-surface trade-account-card${a.archived ? " archived" : ""}`}
+    >
+      {/* ردیف بالا: سه‌نقطه کنار نام حساب (توی RTL یعنی سمت راست، اولین
+          فرزند DOM)، و سود/زیان چپ‌چین انتهای همان ردیف — «1000$ 10% ↑».
+          طبق درخواست صریح («توپ برچسب باید سمت چپ اسم باشه، نه گوشه‌ی
+          بالا-راست کارت»): توپ رنگی حساب دیگه absolute-positioned و
+          مستقل از اسم نیست — داخل خود لینک اسم، بلافاصله بعد متن اسم
+          نشسته (که توی RTL یعنی دقیقا سمت چپ اسم). */}
+      {/* باگ گزارش‌شده: «روی حساب می‌زنم نمی‌ره تو». تنها ناحیه‌ی کلیک‌پذیر
+          کارت، خود متن نام حساب بود (و `.trade-account-main` که وقتی
+          برچسبی نبود ارتفاع صفر داشت) — یعنی بیشتر سطح کارت اصلا لینک
+          نبود. حالا یک لینک کششی نامرئی کل کارت را می‌پوشاند و بقیه‌ی
+          محتوا رویش می‌نشیند؛ سه‌نقطه هم چون z-index بالاتری دارد همچنان
+          خودش کلیک می‌گیرد. `prefetch` هم روشن است تا مقصد از قبل آماده
+          باشد و ورود به حساب کند نباشد. */}
+      <Link
+        href={`/trade/accounts/${a.id}`}
+        className="trade-account-hit"
+        prefetch
+        aria-label={`باز کردن حساب ${a.name}`}
+        tabIndex={-1}
+      />
+
+      <div className="trade-account-top-row">
+        <div className="trade-account-kebab-inline" onClick={(e) => { e.preventDefault(); e.stopPropagation(); }}>
+          <TradeKebabMenu
+            label="گزینه‌های حساب"
+            actions={[
+              { label: "ویرایش حساب", icon: <Pencil size={14} />, onClick: onEdit },
+              {
+                label: a.archived ? "بازگردانی از آرشیو" : "آرشیو کردن",
+                icon: a.archived ? <ArchiveRestore size={14} /> : <Archive size={14} />,
+                onClick: onToggleArchive,
+              },
+              ...(a.archived ? [{ label: "حذف کامل", icon: <Trash2 size={14} />, onClick: onPurge, danger: true }] : []),
+            ]}
+          />
+        </div>
+
+        <Link href={`/trade/accounts/${a.id}`} className="trade-account-title-link" prefetch>
+          <span className="trade-account-name">{a.name}</span>
+          <span className="trade-account-dot" style={{ background: a.color }} />
+          {a.archived && <span className="trade-account-archived-badge">آرشیو</span>}
+        </Link>
+
+        <span className="trade-account-pnl-inline mono" dir="ltr" style={{ color: netPnl >= 0 ? "var(--accent)" : "#E05252" }}>
+          {formatMoney(balance, a.currency)}
+          {pnlPct !== null && <span className="trade-account-pnl-pct">{pnlPct}%</span>}
+          {netPnl >= 0 ? <ArrowUp size={13} /> : <ArrowDown size={13} />}
+        </span>
+      </div>
+
+      {/* فقط دسکتاپ: همان چیزهایی که تا حالا برای دیدنشان باید حساب را باز
+          می‌کردی. روی موبایل CSS این ردیف را کامل برمی‌دارد تا کارت فشرده‌ی
+          فعلی مو‌به‌مو همان بماند. */}
+      <div className="trade-account-facts">
+        <span><Hash size={12} /> {a.summary?.tradeCount ?? 0} معامله</span>
+        {a.summary?.winRate != null && <span><Percent size={12} /> {a.summary.winRate}% برد</span>}
+        {a.broker && <span className="trade-account-facts-broker">{a.broker}</span>}
+        {a.mtConnected && <span className="trade-account-facts-mt">متاتریدر</span>}
+      </div>
+
+      {/* نوار هدف — عدد درصد کنارش، چون خود نوار بدون عدد فقط یک حس
+          مبهم می‌دهد. وقتی هدفی ست نشده اصلا رندر نمی‌شود. */}
+      {a.summary?.goalProgress != null && (
+        <div className="trade-account-goalbar">
+          <div className="trade-account-goalbar-track">
+            <div
+              className="trade-account-goalbar-fill"
+              style={{ width: `${Math.min(100, Math.max(0, Math.round(a.summary.goalProgress * 100)))}%` }}
+            />
+          </div>
+          <span className="mono" dir="ltr">{Math.round(a.summary.goalProgress * 100)}%</span>
+        </div>
+      )}
+
+      <div className="trade-account-main">
+        {!!a.tags.length && (
+          <div className="trade-tag-row" style={{ marginTop: 10 }}>
+            {a.tags.map((t) => (
+              <span key={t.id} className="trade-tag-chip active" style={{ "--tag-c": t.color } as CSSProperties}>
+                {/* توپ برچسب سمت چپ نامش (در RTL یعنی بعد از متن) */}
+                {t.name}
+                <span className="trade-tag-dot" style={{ background: t.color }} />
+              </span>
+            ))}
+          </div>
+        )}
+      </div>
+    </motion.div>
+  );
+}
+
+// «1000$» — نماد ارزهای رایج چسبیده به عدد؛ بقیه با فاصله بعد از عدد.
+const CURRENCY_SYMBOL: Record<string, string> = { USD: "$", EUR: "\u20AC", GBP: "\u00A3" };
+function formatMoney(value: number, currency: string): string {
+  const n = Math.round(Math.abs(value) * 100) / 100;
+  const sign = value < 0 ? "-" : "";
+  const sym = CURRENCY_SYMBOL[currency];
+  return sym ? `${sign}${n}${sym}` : `${sign}${n} ${currency}`;
+}
+
+// حذف کامل حساب برگشت‌ناپذیر است و کل تاریخچه‌ی معاملاتش را می‌برد — پس
+// پشت تایپ دقیق نام حساب قفل شده، نه یک «آیا مطمئنی؟»ی ساده.
+function PurgeConfirm({ account, onCancel, onConfirm, busy }: { account: TradeAccount; onCancel: () => void; onConfirm: () => void; busy: boolean }) {
+  const [typed, setTyped] = useState("");
+  return (
+    <>
+      <div className="modal-overlay open" onClick={onCancel} />
+      <div className="modal-panel open" role="dialog" aria-modal="true">
+        <div className="modal-head"><div className="modal-title">حذف کامل حساب</div></div>
+        <div className="item-line">
+          با این کار تمام معاملات، عکس‌ها و آمار «{account.name}» برای همیشه پاک می‌شوند. این کار برگشت‌پذیر نیست.
+        </div>
+        <label className="exercise-form-label">برای تایید، نام حساب را تایپ کن</label>
+        <input className="wsearch-newform-name trade-glass-field" value={typed} onChange={(e) => setTyped(e.target.value)} placeholder={account.name} />
+        <div className="trade-modal-actions">
+          <button type="button" className="account-outline-btn" onClick={onCancel}>لغو</button>
+          <button type="button" className="trade-danger-btn" disabled={typed.trim() !== account.name || busy} onClick={onConfirm}>
+            {busy ? <Spinner size={14} /> : "حذف کامل"}
+          </button>
+        </div>
+      </div>
+    </>
+  );
+}

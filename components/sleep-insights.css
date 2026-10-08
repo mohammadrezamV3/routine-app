@@ -1,0 +1,51 @@
+/* تحلیل خواب (در آنالیز هفتگی). بدون هیچ بک‌گراند تازه؛ فقط بوردر و رنگ متن.
+   میله‌ها با border-top رنگی کشیده می‌شن (نه بک‌گراند). */
+.sli-ltr{ direction:ltr; unicode-bidi:isolate; font-variant-numeric:tabular-nums; }
+
+.sli-grid{ display:grid; grid-template-columns:repeat(2, minmax(0,1fr)); gap:10px; }
+@media (min-width:640px){ .sli-grid{ grid-template-columns:repeat(3, minmax(0,1fr)); } }
+.sli-grid .sl-stat b{ font-size:15px; line-height:1.5; }
+.sli-clocks{ display:flex; align-items:baseline; gap:6px; flex-wrap:wrap; }
+.sli-clocks em{ font-style:normal; font-size:11px; font-weight:600; color:var(--muted); }
+.sli-ring-stat{ flex-direction:row; align-items:center; gap:10px; }
+.sli-ring-txt{ display:flex; flex-direction:column; gap:2px; min-width:0; }
+.sli-ring-txt span{ font-size:11.5px; color:var(--muted); }
+.sli-ring-txt b{ font-size:15px; font-weight:800; }
+.sli-streak{ display:inline-flex; align-items:center; gap:4px; }
+.sli-streak svg{ width:15px; height:15px; color:var(--slp-fair); }
+
+.sli-list{ list-style:none; margin:0; padding:0; display:flex; flex-direction:column; gap:10px; }
+.sli-card{
+  display:flex; gap:12px; align-items:flex-start; padding:12px; border-radius:18px;
+  border:1px solid var(--box-line); min-width:0;
+}
+.sli-ic{
+  flex:none; width:34px; height:34px; border-radius:50%; border:1px solid currentColor;
+  display:flex; align-items:center; justify-content:center; color:var(--slp-ink);
+}
+.sli-ic svg{ width:17px; height:17px; }
+.sli-t-good .sli-ic{ color:var(--slp-great); }
+.sli-t-fair .sli-ic{ color:var(--slp-fair); }
+.sli-t-poor .sli-ic{ color:var(--slp-poor); }
+.sli-body{ flex:1; min-width:0; display:flex; flex-direction:column; gap:4px; }
+.sli-body b{ font-size:13.5px; font-weight:800; }
+.sli-body p{ margin:0; font-size:12.5px; line-height:1.9; color:var(--muted); }
+
+.sli-tags{ list-style:none; margin:6px 0 0; padding:0; display:flex; flex-direction:column; gap:8px; }
+.sli-tag{ display:grid; grid-template-columns:minmax(70px,auto) minmax(0,1fr) 34px; align-items:center; gap:8px; font-size:12px; }
+.sli-tag-name{ white-space:nowrap; }
+.sli-tag b.sli-val{ font-size:12px; font-weight:800; text-align:left; unicode-bidi:isolate; font-variant-numeric:tabular-nums; white-space:nowrap; }
+.sli-div{ display:flex; height:10px; min-width:0; }
+.sli-div-half{ flex:1; display:flex; align-items:center; min-width:0; }
+/* جهت RTL: بد (منفی) سمت راست مرکز، خوب (مثبت) سمت چپ؛ هم‌جهت با نمودارهای RTL اپ (جلوتر = چپ‌تر) */
+.sli-div-neg{ justify-content:flex-end; border-left:1px solid var(--box-line); }
+.sli-div-pos{ justify-content:flex-start; border-right:1px solid var(--box-line); }
+.sli-bar{ display:block; height:0; border-top:7px solid currentColor; border-radius:4px; min-width:4px; }
+.sli-bar-neg{ color:var(--slp-poor); }
+.sli-bar-pos{ color:var(--slp-great); }
+.sli-pos{ color:var(--slp-great); }
+.sli-neg{ color:var(--slp-poor); }
+
+.sli-empty-body{ display:flex; align-items:center; gap:16px; }
+.sli-empty-n{ font-size:13px; font-weight:900; font-variant-numeric:tabular-nums; direction:ltr; }
+.sli-empty-body .sl-sub{ margin:0; flex:1; min-width:0; }

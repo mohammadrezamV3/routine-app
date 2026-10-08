@@ -1,14 +1,18 @@
-import type { ExerciseDay, ExerciseGoalOption, ExerciseLevel } from "./exercisePlans";
+import type { ExerciseDay, ExerciseLevel } from "./exercisePlans";
 
 export type ExercisePlan = {
   id: string;
-  // پلن‌های دستی (بدونِ هوش‌مصنوعی/پرسش‌نامه) "custom" ذخیره می‌شن — سه‌تای
-  // اصلی فقط برای پلن‌های ساخته‌شده با فرمِ سطح/هدف (AI یا fallback) صدق می‌کنه.
+  // پلن‌های دستی (بدون هوش‌مصنوعی/پرسش‌نامه) "custom" ذخیره می‌شن — سه‌تای
+  // اصلی فقط برای پلن‌های ساخته‌شده با فرم سطح/هدف (AI یا fallback) صدق می‌کنه.
   level: ExerciseLevel | "custom";
   heightCm: number | null;
   weightKg: number | null;
-  goal: ExerciseGoalOption | null;
+  // طبق درخواست صریح، هدف دیگر یکی از چند گزینه‌ی ثابت نیست — متن آزاد
+  // خود کاربر است.
+  goal: string | null;
   gymDays: string[] | null;
+  trainingMonth: number | null;
+  equipment: string | null;
   generatedByAi: boolean;
   createdAt: string;
   planData: ExerciseDay[];
@@ -18,20 +22,30 @@ export type ExercisePlanFormValue = {
   level: ExerciseLevel;
   heightCm: string;
   weightKg: string;
-  goal: ExerciseGoalOption | null;
+  goal: string;
+  trainingMonth: string;
+  equipment: string;
   hasLimitation: boolean;
   limitationDetails: string;
   gymDays: string[];
   description: string;
+  /** «تنظیمات پیشرفته»: کاربر تقسیم عضله‌ها رو خودش انتخاب می‌کنه */
+  advancedSplit: boolean;
+  /** روز باشگاه → کلیدهای عضله (lib/exerciseSplit.ts) */
+  customSplit: Record<string, string[]>;
 };
 
 export const EMPTY_EXERCISE_FORM: ExercisePlanFormValue = {
   level: "beginner",
   heightCm: "",
   weightKg: "",
-  goal: null,
+  goal: "",
+  trainingMonth: "",
+  equipment: "",
   hasLimitation: false,
   limitationDetails: "",
   gymDays: [],
   description: "",
+  advancedSplit: false,
+  customSplit: {},
 };

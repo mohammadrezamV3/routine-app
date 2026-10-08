@@ -1,0 +1,81 @@
+/* خواب (/sleep، صفحه و سیستم جدا از روتین) — پایه‌ی مشترک همه‌ی بخش‌ها.
+   سطح باکس‌ها همون توکن واحد سایت (--box-bg / --box-line) و کلاس .sl-card
+   (در فهرست «نور هاور دور باکس‌ها» در globals)؛ هیچ بک‌گراند تازه‌ای روی
+   دکمه/عنصری نیست. هر بخش CSS خودش رو در components/sleep-<بخش>.css داره. */
+.sleep-scope{
+  --slp-great:#00C98D; --slp-good:#3D9BFF; --slp-fair:#FFB547; --slp-poor:#FF5C7A;
+  --slp-ink:#8C9BFF; --slp-ink-2:#C08CFF;
+  --slp-moon:#FFE7A8;
+  color:var(--text);
+}
+body[data-theme="light"] .sleep-scope{
+  --slp-great:#0A9A70; --slp-good:#2F7BE6; --slp-fair:#E08A0A; --slp-poor:#E23D5E;
+  --slp-ink:#5363E8; --slp-ink-2:#8A4DEB;
+  --slp-moon:#E3A82B;
+}
+.sleep-scope, .sleep-scope *{ box-sizing:border-box; }
+
+/* لایه‌بندی صفحه: یک ستون خلوت، روی دسکتاپ هم باریک و وسط (درخواست صریح:
+   شلوغ نباشه؛ نمودارها و تحلیل‌ها رفتن به آنالیز هفتگی) */
+.slp-page{ max-width:640px; margin-inline:auto; }
+.slp-hub{ display:flex; flex-direction:column; gap:14px; margin-top:14px; }
+@media (min-width:1024px){ .slp-hub{ gap:16px; } }
+.slp-col{ display:flex; flex-direction:column; gap:14px; min-width:0; }
+
+/* لینک «آمار» کنار عنوان صفحه → /analysis/weekly#sleep — بی‌بک‌گراند */
+.slp-stats-link{
+  margin-inline-start:auto; display:inline-flex; align-items:center; gap:6px;
+  color:var(--accent); font-size:13px; font-weight:700; text-decoration:none;
+}
+.slp-stats-link svg{ width:17px; height:17px; flex:none; }
+
+/* کارت پایه */
+.sl-card{
+  position:relative; padding:16px; border-radius:22px;
+  background:var(--box-bg); border:1px solid var(--box-line);
+  display:flex; flex-direction:column; gap:14px; min-width:0;
+}
+@media (min-width:640px){ .sl-card{ padding:20px; } }
+.sl-card-title{ font-size:14px; font-weight:800; margin:0; display:flex; align-items:center; gap:8px; }
+.sl-card-title svg{ width:18px; height:18px; color:var(--slp-ink); }
+.sl-sub{ font-size:12px; color:var(--muted); line-height:1.8; }
+.sl-head-row{ display:flex; align-items:center; justify-content:space-between; gap:10px; flex-wrap:wrap; }
+.sl-stat{
+  position:relative; padding:12px; border-radius:18px; border:1px solid var(--box-line);
+  display:flex; flex-direction:column; gap:4px; min-width:0;
+}
+.sl-stat span{ font-size:11.5px; color:var(--muted); }
+.sl-stat b{ font-size:16px; font-weight:800; }
+.sl-err{ font-size:12px; color:var(--slp-poor); }
+
+/* رنگ هر سطح امتیاز (برای متن/نقطه/میله؛ نه بک‌گراند باکس) */
+.slp-c-great{ color:var(--slp-great); }
+.slp-c-good{ color:var(--slp-good); }
+.slp-c-fair{ color:var(--slp-fair); }
+.slp-c-poor{ color:var(--slp-poor); }
+
+/* ── هدف خواب (components/SleepGoalCard.tsx) ─────────────── */
+.slp-goal-fields{ display:grid; grid-template-columns:1fr 1fr; gap:12px; }
+.slp-goal-field{ display:flex; flex-direction:column; gap:6px; min-width:0; }
+.slp-goal-field span{ font-size:12px; font-weight:700; color:var(--muted); }
+.slp-goal-bare{ display:flex; flex-direction:column; gap:14px; }
+.slp-goal-panel{ max-width:420px; }
+.slp-goal-field input{ width:100%; text-align:center; direction:ltr; }
+
+/* ── آمار خواب در آنالیز هفتگی (components/WeeklyAnalysisSleep.tsx) ── */
+.wa-sleep{ margin-top:22px; scroll-margin-top:110px; display:flex; flex-direction:column; gap:14px; }
+.wa-sleep-title{ display:flex; align-items:center; gap:8px; margin:0; font-size:17px; font-weight:800; }
+.wa-sleep-title svg{ width:19px; height:19px; color:var(--slp-ink); }
+.wa-sleep-grid{ display:flex; flex-direction:column; gap:14px; }
+@media (min-width:1024px){
+  .wa-sleep-grid{ display:grid; grid-template-columns:minmax(0,1fr) minmax(0,1fr); align-items:start; gap:18px; }
+  .wa-sleep-wide{ grid-column:1 / -1; }
+}
+
+/* دکمه‌ی خطی داخل هیرو/پنجره: .account-outline-btn فقط داخل پنل کاربری شکل کامل داره،
+   این‌جا قالب دکمه‌ی خطی سایت (هم‌اندازه‌ی trade-primary-btn) صریح داده می‌شه؛ بی‌بک‌گراند. */
+.sleep-scope .account-outline-btn{
+  padding:10px 20px; border:1px solid var(--accent); border-radius:13px; font-size:12.5px; font-weight:700;
+}
+.sleep-scope .account-outline-btn.slg-danger{ border-color:var(--slp-poor); }
+

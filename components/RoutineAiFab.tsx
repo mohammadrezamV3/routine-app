@@ -1,0 +1,316 @@
+"use client";
+
+import { Fragment, useEffect, useLayoutEffect, useRef, useState } from "react";
+import { createPortal } from "react-dom";
+import { useSession } from "next-auth/react";
+import Link from "next/link";
+import { Send, X } from "lucide-react";
+import { LockBodyScroll } from "./LockBodyScroll";
+import { primeSettingCache } from "@/lib/storage";
+import { SETTING_KEYS } from "@/lib/userSettingKeys";
+import { isoLocal } from "@/lib/jalali";
+import SiriOrb from "@/components/smoothui/components/siri-orb";
+import AIMessage from "@/components/smoothui/components/ai-message";
+import AILoader from "@/components/smoothui/components/ai-loader";
+import {
+  type AIState, useSimulatedAmplitude,
+} from "@/components/smoothui/components/ai-core";
+
+type Msg = { id: string; role: "user" | "bot"; text: string; tone?: "ok" | "warn" | "error" };
+type Quota = { unlimited: boolean; used: number; limit: number | null; remaining: number | null };
+
+const GREETING = "سلام! من نومو هستم، دستیار برنامه‌ات. بگو چی رو اضافه، جابه‌جا یا ویرایش کنم.";
+
+function newId() {
+  return Math.random().toString(36).slice(2);
+}
+
+function clockNow() {
+  const d = new Date();
+  return `${String(d.getHours()).padStart(2, "0")}:${String(d.getMinutes()).padStart(2, "0")}`;
+}
+
+/**
+ * گوی گوشه‌ی چپ‌پایین صفحه‌ی روتین — «مدیر برنامه».
+ *
+ * کاربر هیچ گزینه‌ای انتخاب نمی‌کند: فقط با زبان خودش می‌گوید چه می‌خواهد و
+ * سرور تصمیم می‌گیرد. هر تغییری که واقعا اعمال شود، همان‌جا با `onChanged`
+ * به صفحه خبر داده می‌شود تا فهرست برنامه‌ها بلافاصله تازه شود.
+ */
+export function RoutineAiFab({ onChanged }: { onChanged: () => void }) {
+  const { status } = useSession();
+  const [open, setOpen] = useState(false);
+  const [msgs, setMsgs] = useState<Msg[]>([]);
+  const [input, setInput] = useState("");
+  const [sending, setSending] = useState(false);
+  const [quota, setQuota] = useState<Quota | null>(null);
+  const listRef = useRef<HTMLDivElement>(null);
+  const inputRef = useRef<HTMLTextAreaElement>(null);
+
+  // فیکس سافاری/iOS برای شکاف کیبورد: dvh + interactive-widget (توی
+  // app/layout.tsx) فقط روی کروم/اندروید کار می‌کنه — وبکیت با بازشدن
+  // کیبورد فقط visual viewport رو کوچیک می‌کنه، نه layout viewport، پس
+  // top:50%ی مودال (که روی layout viewport حساب می‌شه) همون‌جای قبل از
+  // کیبورد می‌مونه. اینجا مستقیم از visualViewport واقعی می‌خونیم و
+  // مرکز/ارتفاع پنل رو با inline style بازنویسی می‌کنیم.
+  //
+  // minHeight هم همین‌جا محاسبه و ست می‌شه — طبق گزارش باگ، min-height
+  // ثابت CSS .routine-ai-panel (برای اینکه یک پیام تنها پنل رو کوچیک
+  // نشون نده) با maxHeight واقعی این‌جا تداخل داشت: وقتی کیبورد باز
+  // می‌شد و ویوپورت واقعی کوچیک‌تر از اون min-height ثابت می‌شد، مرورگر
+  // min-height رو برنده می‌کرد و پنل بلندتر از فضای واقعا دیده‌شده
+  // می‌موند — نتیجه‌اش نیمه‌ی بالای پنل (هدر/پیام‌ها) از صفحه بیرون می‌زد.
+  // با ست‌کردن minHeight هم از همون maxHeight واقعی (نه بیشتر)، پنل
+  // هیچ‌وقت از فضای واقعا در دسترس بزرگ‌تر نمی‌شه — بدون هیچ تغییری در
+  // ظاهر/چیدمان خود کارت (طبق درخواست صریح: فقط مقدار، نه دیزاین).
+  //
+  // باگ «پنل زیر هدر می‌رود» (کروم اندروید): پنل وسط *کل* ویوپورت
+  // می‌نشست و تا ۸۸٪ ارتفاع قد می‌کشید؛ روی گوشی‌ای که نوار ابزار کروم
+  // باز است (ویوپورت ~۷۰۰پیکسلی) لبه‌ی بالایش به ~۴۰px می‌رسید، یعنی زیر
+  // قرص هدر (که تا 72px + safe-area پایین می‌آید). حالا ناحیه‌ی مجاز از
+  // *لبه‌ی پایین واقعی هدر* (اندازه‌گیری‌شده، نه عدد ثابت) تا پایین
+  // visual viewport است و پنل وسط همان ناحیه می‌نشیند.
+  // useLayoutEffect (نه useEffect) تا اولین فریم هم با همین مقدارها پینت
+  // شود، نه یک فریم با وسط‌چینی CSSی و بعد پرش.
+  const [kbViewport, setKbViewport] = useState<{ top: number; maxHeight: number; minHeight: number } | null>(null);
+  useLayoutEffect(() => {
+    if (!open) { setKbViewport(null); return; }
+    const vv = typeof window !== "undefined" ? window.visualViewport : null;
+    if (!vv) return;
+    function update() {
+      if (!vv) return;
+      const GAP = 10;
+      const header = document.querySelector<HTMLElement>(".app-topbar");
+      const headerBottom = header ? header.getBoundingClientRect().bottom : 0;
+      const areaTop = Math.max(vv.offsetTop, headerBottom) + GAP;
+      const areaBottom = vv.offsetTop + vv.height - GAP;
+      const maxHeight = Math.max(0, Math.min(areaBottom - areaTop, 760));
+      setKbViewport({
+        top: (areaTop + areaBottom) / 2,
+        maxHeight,
+        minHeight: Math.min(maxHeight, 620),
+      });
+    }
+    update();
+    vv.addEventListener("resize", update);
+    vv.addEventListener("scroll", update);
+    return () => {
+      vv.removeEventListener("resize", update);
+      vv.removeEventListener("scroll", update);
+    };
+  }, [open]);
+
+  // وضعیت گوی دستیار. یک منبع واحد برای هر دو گو (دکمه‌ی شناور و سر پنل)
+  // تا هر دو یک چیز بگویند.
+  const [orbState, setOrbState] = useState<AIState>("idle");
+  const simulated = useSimulatedAmplitude(orbState);
+
+  // سهمیه فقط برای *بستن* ورودی وقتی تمام شده لازم است — دیگر بالای پنل
+  // نوشته نمی‌شود (درخواست صریح: «نامحدود» بالا ننویس).
+  useEffect(() => {
+    if (!open || quota || status !== "authenticated") return;
+    let alive = true;
+    fetch("/api/routine/assistant")
+      .then((r) => (r.ok ? r.json() : null))
+      .then((d) => { if (alive && d) setQuota(d); })
+      .catch(() => {});
+    return () => { alive = false; };
+  }, [open, quota, status]);
+
+  // پیام خوش‌آمد یک‌بار، همان لحظه‌ی بازشدن — به‌جای فهرست پیشنهادها.
+  useEffect(() => {
+    if (open && msgs.length === 0) {
+      setMsgs([{ id: newId(), role: "bot", text: GREETING }]);
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [open]);
+
+  useEffect(() => {
+    if (open) { setTimeout(() => inputRef.current?.focus(), 120); return; }
+    setOrbState("idle");
+  }, [open]);
+
+  // «done» و «error» حالت لحظه‌ای‌اند؛ گو باید بعدشان به آرامش برگردد.
+  useEffect(() => {
+    if (orbState !== "done" && orbState !== "error") return;
+    const t = setTimeout(() => setOrbState("idle"), 1400);
+    return () => clearTimeout(t);
+  }, [orbState]);
+
+  useEffect(() => {
+    listRef.current?.scrollTo({ top: listRef.current.scrollHeight, behavior: "smooth" });
+  }, [msgs, sending]);
+
+  function push(role: Msg["role"], text: string, tone?: Msg["tone"]): string {
+    const id = newId();
+    setMsgs((m) => [...m, { id, role, text, tone }]);
+    return id;
+  }
+
+  async function send(text: string) {
+    const body = text.trim();
+    if (!body || sending) return;
+    setInput("");
+    // تاریخچه *قبل* از افزودن همین پیام گرفته می‌شود؛ خود پیام جدا می‌رود.
+    const history = msgs.slice(-6).map((m) => ({ role: m.role === "user" ? "user" : "assistant", text: m.text }));
+    push("user", body);
+    setSending(true);
+    setOrbState("thinking");
+    try {
+      const res = await fetch("/api/routine/assistant", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        // تاریخ محلی دستگاه — «امروز/فردا» باید همان روزی باشد که کاربر می‌بیند
+        body: JSON.stringify({ message: body, history, today: isoLocal(new Date()) }),
+      });
+      const data = await res.json().catch(() => null);
+
+      if (!res.ok) {
+        push("bot", data?.error || "یک مشکل ناشناخته پیش آمد. دوباره امتحان کن.", "error");
+        if (data?.quota) setQuota(data.quota);
+        setOrbState("error");
+        return;
+      }
+
+      if (data?.quota) setQuota(data.quota);
+
+      if (data?.changed && Array.isArray(data.occurrences)) {
+        // سرور نوشته، پس کش کلاینت باید همان لحظه مقدار تازه را بگیرد —
+        // وگرنه refresh() زیر، تا انقضای TTL همان فهرست قدیمی را می‌خواند.
+        primeSettingCache(SETTING_KEYS.customOccurrences, data.occurrences);
+        if (Array.isArray(data.removed)) primeSettingCache(SETTING_KEYS.removedOccurrences, data.removed);
+        onChanged();
+      }
+
+      const tone: Msg["tone"] = data?.problems?.length
+        ? (data?.applied?.length ? "warn" : "error")
+        : (data?.changed ? "ok" : undefined);
+      // طبق درخواست صریح: بعد از هر پاسخ گزینه‌ی پیشنهادی نشان داده نمی‌شود.
+      push("bot", data?.reply || "چیزی برای گفتن ندارم.", tone);
+      setOrbState(tone === "error" ? "error" : "done");
+    } catch {
+      push("bot", "اتصال برقرار نشد. اینترنتت را چک کن و دوباره بفرست.", "error");
+      setOrbState("error");
+    } finally {
+      setSending(false);
+    }
+  }
+
+  const exhausted = !!quota && !quota.unlimited && (quota.remaining ?? 0) <= 0;
+  const hasText = !!input.trim();
+
+  return (
+    <>
+      <button
+        type="button"
+        className="routine-ai-fab mm-appear"
+        onClick={() => setOpen(true)}
+        aria-label="نومو"
+        title="نومو"
+      >
+        <SiriOrb size="52px" state={orbState} amplitude={simulated} />
+      </button>
+
+      {/* پورتال به body — مثل بقیه‌ی مودال‌های اپ (TradeFormModal، …).
+          زیر <section> صفحه، z-index پنل/اورلی در stacking context
+          همان بخش حبس می‌شد و هدر fixed (z-index:40 در ریشه) رویش
+          می‌نشست؛ اورلی هم هدر را تار/تیره نمی‌کرد. */}
+      {open && typeof document !== "undefined" && createPortal(
+        <>
+          <LockBodyScroll />
+          <div className="modal-overlay open" onClick={() => setOpen(false)} />
+          <div
+            className="modal-panel routine-ai-panel open"
+            style={kbViewport ? { top: kbViewport.top, maxHeight: kbViewport.maxHeight, minHeight: kbViewport.minHeight } : undefined}
+            role="dialog"
+            aria-modal="true"
+            aria-label="نومو"
+          >
+            <div className="modal-head">
+              <div className="modal-title routine-ai-title">
+                <SiriOrb size="26px" state={orbState} amplitude={simulated} />
+                نومو
+              </div>
+              <button type="button" className="trade-icon-btn" onClick={() => setOpen(false)} aria-label="بستن">
+                <X size={16} />
+              </button>
+            </div>
+
+            <div className="routine-ai-list thin-scroll" ref={listRef}>
+              {msgs.map((m) => (
+                <Fragment key={m.id}>
+                  <AIMessage
+                    from={m.role === "user" ? "user" : "assistant"}
+                    avatar={m.role === "bot" ? <SiriOrb size="24px" state="idle" /> : undefined}
+                    copyText={m.role === "bot" ? m.text : undefined}
+                    timestamp={undefined}
+                    className={`${m.role === "user" ? "routine-ai-row-user" : "routine-ai-row-bot"}${m.tone ? ` tone-${m.tone}` : ""}`}
+                  >
+                    {m.text.split("\n").map((line, i) => (
+                      <p key={i} className={i ? "mt-1" : undefined}>{line}</p>
+                    ))}
+                  </AIMessage>
+
+                </Fragment>
+              ))}
+
+              {sending && (
+                <div className="routine-ai-status">
+                  <AILoader variant="dots" />
+                </div>
+              )}
+            </div>
+
+            {status !== "authenticated" ? (
+              /* صفحه‌ی روتین برای مهمان هم کار می‌کند (روی localStorage)، ولی
+                 دستیار بدون حساب نه: نه جایی برای شمردن سهمیه هست نه
+                 برنامه‌ای روی سرور که بشود عوضش کرد. */
+              <div className="routine-ai-exhausted">
+                <p>نومو فقط با حساب کاربری کار می‌کند.</p>
+                <Link href="/auth/login" className="trade-primary-btn" onClick={() => setOpen(false)}>
+                  ورود / ثبت‌نام
+                </Link>
+              </div>
+            ) : exhausted ? (
+              <div className="routine-ai-exhausted">
+                <p>پیام‌های رایگان نومو تمام شد.</p>
+                <Link href="/subscription" className="trade-primary-btn" onClick={() => setOpen(false)}>
+                  دیدن اشتراک‌ها
+                </Link>
+              </div>
+            ) : (
+              <form
+                className="routine-ai-composer"
+                onSubmit={(e) => { e.preventDefault(); send(input); }}
+              >
+                <textarea
+                  ref={inputRef}
+                  className="routine-ai-input"
+                  rows={1}
+                  value={input}
+                  maxLength={500}
+                  placeholder="پیام…"
+                  onChange={(e) => setInput(e.target.value)}
+                  onKeyDown={(e) => {
+                    if (e.key === "Enter" && !e.shiftKey) { e.preventDefault(); send(input); }
+                  }}
+                  disabled={sending}
+                />
+                <button
+                  type="submit"
+                  className={`routine-ai-action${hasText ? " has-text" : ""}`}
+                  disabled={sending || !hasText}
+                  aria-label="ارسال"
+                  title="ارسال"
+                >
+                  <span className="routine-ai-action-icon" aria-hidden="true"><Send size={16} /></span>
+                </button>
+              </form>
+            )}
+          </div>
+        </>,
+        document.body
+      )}
+    </>
+  );
+}

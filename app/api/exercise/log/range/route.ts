@@ -4,11 +4,13 @@ import { requireModule } from "@/lib/moduleAccess";
 import { ModuleKey } from "@prisma/client";
 import { isoLocal } from "@/lib/jalali";
 import { parseDateRange } from "@/lib/validate";
+import { sessionFeatureBlocked } from "@/lib/featureFlagsServer";
 
 // GET /api/exercise/log/range?planId=...&start=2026-07-01&end=2026-07-31
-// برای محاسبه‌ی سمتِ کلاینتِ «تعداد جلسات این هفته»، «میزان پیشرفت هفتگی»
-// و استریک — یک درخواست به‌جای N تا (مثلِ getDailyRange در lib/storage.ts).
+// برای محاسبه‌ی سمت کلاینت «تعداد جلسات این هفته»، «میزان پیشرفت هفتگی»
+// و استریک — یک درخواست به‌جای N تا (مثل getDailyRange در lib/storage.ts).
 export async function GET(req: NextRequest) {
+  { const off = await sessionFeatureBlocked("exercise"); if (off) return off; }
   const guard = await requireModule(ModuleKey.EXERCISE);
   if (!guard.ok) return guard.response;
   const userId = guard.userId;
@@ -23,11 +25,12 @@ export async function GET(req: NextRequest) {
     where: { userId, planId, date: { gte: range.from, lte: range.to } },
   });
 
-  const byDate: Record<string, { completed: boolean; completedItems: string[] }> = {};
+  const byDate: Record<string, { completed: boolean; completedItems: string[]; started: boolean }> = {};
   for (const log of logs) {
     byDate[isoLocal(log.date)] = {
       completed: log.completed,
       completedItems: (log.completedItems as string[] | null) ?? [],
+      started: !!log.startedAt,
     };
   }
 

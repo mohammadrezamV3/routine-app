@@ -8,9 +8,9 @@ function hashCode(code: string): string {
   return crypto.createHash("sha256").update(code).digest("hex");
 }
 
-// تاییدِ کدِ پیامک‌شده — فقط verifiedAt رو ست می‌کنه (مصرفِ واقعی/usedAt
-// موقعِ ثبت‌نامِ نهایی توی route.ts خودِ signup انجام می‌شه، تا اگه کاربر
-// بینِ این مرحله و مرحله‌ی بعد رها کرد، تاییدیه هدر نره).
+// تایید کد پیامک‌شده — فقط verifiedAt رو ست می‌کنه (مصرف واقعی/usedAt
+// موقع ثبت‌نام نهایی توی route.ts خود signup انجام می‌شه، تا اگه کاربر
+// بین این مرحله و مرحله‌ی بعد رها کرد، تاییدیه هدر نره).
 export async function POST(req: NextRequest) {
   const ip = getClientIp(req.headers);
   const body = await req.json();
@@ -20,7 +20,7 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ error: "اطلاعات وارد شده کامل نیست" }, { status: 400 });
   }
 
-  if (!checkRateLimit(`signup-otp-verify-ip:${ip}`, 15, 10 * 60 * 1000) || !checkRateLimit(`signup-otp-verify-phone:${phone}`, 6, 10 * 60 * 1000)) {
+  if (!(await checkRateLimit(`signup-otp-verify-ip:${ip}`, 15, 10 * 60 * 1000)) || !(await checkRateLimit(`signup-otp-verify-phone:${phone}`, 6, 10 * 60 * 1000))) {
     return NextResponse.json({ error: "تعداد تلاش‌ها بیش از حد مجازه — چند دقیقه دیگه دوباره امتحان کن" }, { status: 429 });
   }
 

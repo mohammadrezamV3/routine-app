@@ -13,12 +13,12 @@ const now = new Date();
 const todayIso = isoLocal(now);
 const jToday = toJalali(now.getFullYear(), now.getMonth() + 1, now.getDate());
 
-// تقویمِ ماهانه‌ی مخصوصِ کالری — هم‌ساختارِ HistoryCalendar (تقویمِ روتین)
-// ولی به‌جای تکمیل‌شدنِ تسک‌های روزانه، هر روز رو بر اساسِ برخورد با هدفِ
-// کالری رنگ می‌کنه (سبز = ثبت‌شده و زیرِ هدف، قرمز = ثبت‌شده و بالای هدف،
-// خاکستری = چیزی ثبت نشده). عمداً کامپوننتِ HistoryCalendar استفاده نشده،
+// تقویم ماهانه‌ی مخصوص کالری — هم‌ساختار HistoryCalendar (تقویم روتین)
+// ولی به‌جای تکمیل‌شدن تسک‌های روزانه، هر روز رو بر اساس برخورد با هدف
+// کالری رنگ می‌کنه (سبز = ثبت‌شده و زیر هدف، قرمز = ثبت‌شده و بالای هدف،
+// خاکستری = چیزی ثبت نشده). عمدا کامپوننت HistoryCalendar استفاده نشده،
 // چون اون به دیتای روتین/تسک وصله و این‌جا معنی نداشت؛ اینجا هم استایلش
-// Tailwind/dash-scope ـه، هم‌راستا با بقیه‌ی بخشِ کالری.
+// Tailwind/dash-scope ـه، هم‌راستا با بقیه‌ی بخش کالری.
 export function CalorieHistoryCalendar({
   targetKcal,
   onPick,
@@ -75,11 +75,14 @@ export function CalorieHistoryCalendar({
   return (
     <div>
       <div className="flex items-center justify-between">
-        <button type="button" onClick={goNext} aria-label="ماه بعد" className="flex h-8 w-8 items-center justify-center rounded-full text-dash-muted transition hover:bg-white/5 hover:text-dash-text">
+        {/* طبق درخواست صریح: جهت این دو دکمه برعکس بود — آیکون هرکدام
+            درست بود ولی به عملکرد اشتباه وصل شده بود (هم‌الگوی
+            HistoryCalendar: راست=ماه قبل، چپ=ماه بعد). */}
+        <button type="button" onClick={goPrev} aria-label="ماه قبل" className="flex h-8 w-8 items-center justify-center rounded-full text-dash-muted transition hover:bg-white/5 hover:text-dash-text">
           <ChevronLeft size={18} />
         </button>
         <div className="text-[13.5px] font-bold text-dash-text sm:text-[15px]">{J_MONTHS[calMonth - 1]} {faNum(calYear)}</div>
-        <button type="button" onClick={goPrev} aria-label="ماه قبل" className="flex h-8 w-8 items-center justify-center rounded-full text-dash-muted transition hover:bg-white/5 hover:text-dash-text">
+        <button type="button" onClick={goNext} aria-label="ماه بعد" className="flex h-8 w-8 items-center justify-center rounded-full text-dash-muted transition hover:bg-white/5 hover:text-dash-text">
           <ChevronRight size={18} />
         </button>
       </div>
@@ -117,16 +120,16 @@ export function CalorieHistoryCalendar({
         })}
       </div>
 
-      {loading && <div className="mt-3 text-center text-[11px] text-dash-muted">در حال بارگذاری…</div>}
+      {loading && <div className="mt-3 text-center text-[11px] text-dash-muted is-loading">در حال بارگذاری…</div>}
 
       <div className="mt-4 flex items-center justify-center gap-4 text-[10.5px] text-dash-muted">
         <span className="flex items-center gap-1.5">
           <span className="h-2 w-2 rounded-full" style={{ background: "var(--accent)" }} />
-          زیرِ هدف
+          زیر هدف
         </span>
         <span className="flex items-center gap-1.5">
           <span className="h-2 w-2 rounded-full" style={{ background: "#E05252" }} />
-          بالایِ هدف
+          بالای هدف
         </span>
       </div>
     </div>

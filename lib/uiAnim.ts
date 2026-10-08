@@ -14,17 +14,6 @@ export function staggerFieldsIn(container: HTMLElement | null) {
   });
 }
 
-/** لرزش کوتاه برای فیلدهای نامعتبر بعد از تلاش ثبت فرم */
-export function shakeFields(els: (HTMLElement | null | undefined)[]) {
-  const targets = els.filter(Boolean) as HTMLElement[];
-  if (!targets.length) return;
-  animate(targets, {
-    translateX: [0, -6, 6, -4, 4, 0],
-    duration: 420,
-    ease: "inOutQuad",
-  });
-}
-
 /** نمایان‌شدن مرحله‌ای عناصر هنگام اسکرول (برای کارت‌های ویژگی صفحه لندینگ) — یک‌بار برای هر عنصر */
 export function revealOnScroll(container: HTMLElement | null) {
   if (!container) return;

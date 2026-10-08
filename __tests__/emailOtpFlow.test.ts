@@ -1,9 +1,9 @@
 import { describe, it, expect, afterAll, vi } from "vitest";
 import { NextRequest } from "next/server";
 
-// sendOtpEmail رو mock می‌کنیم تا (۱) هیچ ایمیلِ واقعی/شبکه‌ای توی تست رد
-// نشه، (۲) کدِ واقعیِ تولیدشده رو بگیریم — تنها راهی که تست می‌تونه بفهمه
-// کدِ درست چیه، چون خودِ route هیچ‌وقت کد رو برنمی‌گردونه (طبقِ الزام).
+// sendOtpEmail رو mock می‌کنیم تا (۱) هیچ ایمیل واقعی/شبکه‌ای توی تست رد
+// نشه، (۲) کد واقعی تولیدشده رو بگیریم — تنها راهی که تست می‌تونه بفهمه
+// کد درست چیه، چون خود route هیچ‌وقت کد رو برنمی‌گردونه (طبق الزام).
 let capturedCode: string | null = null;
 vi.mock("@/lib/email", () => ({
   sendOtpEmail: vi.fn(async (_to: string, code: string) => {
@@ -97,7 +97,7 @@ describe("POST /api/auth/email-otp/request + /verify (integration, real DB)", ()
     createdEmails.push(email);
     capturedCode = null;
     await requestOtp(makeRequest("http://localhost/api/auth/email-otp/request", { email }));
-    // به‌جای صبرکردنِ واقعیِ ۱۰ دقیقه، انقضا رو دستی جلو می‌بریم
+    // به‌جای صبرکردن واقعی ۱۰ دقیقه، انقضا رو دستی جلو می‌بریم
     await prisma.emailLoginOtp.updateMany({ where: { email }, data: { expiresAt: new Date(Date.now() - 1000) } });
 
     const res = await verifyOtp(makeRequest("http://localhost/api/auth/email-otp/verify", { email, code: capturedCode }));
@@ -163,7 +163,7 @@ describe("verifyAndConsumeEmailOtp — the function that actually gates sign-in"
     expect(wrong.ok).toBe(false);
     if (!wrong.ok) expect(wrong.reason).toBe("wrong_code");
 
-    // چون کدِ اشتباه مصرفش نکرد، کدِ درست هنوز باید جواب بده
+    // چون کد اشتباه مصرفش نکرد، کد درست هنوز باید جواب بده
     const correct = await verifyAndConsumeEmailOtp(email, "482931");
     expect(correct.ok).toBe(true);
   });

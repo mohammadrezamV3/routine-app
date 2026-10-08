@@ -1,0 +1,208 @@
+/* ============================================================
+   تم آزمایشی «نوآر سیاه و سفید» (الهام از فیلم‌نوآر کمیک) — فقط برای
+   ادمین، فقط روی همین دستگاه
+   ------------------------------------------------------------
+   فعال‌سازی: lib/adminTheme.ts (کلید localStorage و اتریبیوت
+   data-admin-theme روی html). همه‌ی قانون‌ها فقط وقتی اعمال می‌شن که
+   اتریبیوت noir روی html باشه و تم تیره فعال باشه؛ در تم روشن هیچ چیز
+   عوض نمی‌شه. این فایل توکن‌های تم تیره رو به سیاه و سفید خالص
+   بازنویسی می‌کنه (بدون هیچ رنگی) و چند افکت ارزون اضافه می‌کنه:
+   خطوط سفید نئونی، دونه‌ی فیلم، رگبار مورب و نقطه‌های هاف‌تون.
+   هیچ کامپوننتی ازش خبر نداره.
+   ============================================================ */
+
+html[data-admin-theme="noir"]:not([data-theme="light"]){ background:#050505; color-scheme:dark; }
+
+html[data-admin-theme="noir"] body:not([data-theme="light"]){
+  --bg:#050505;
+  --bg-rgb:5,5,5;
+  --surface-rgb:5,5,5;
+  --text:#F4F4F4;
+  --muted:#A3A3A3;
+  --muted2:#6B6B6B;
+  --accent:#FFFFFF;
+  --accent-rgb:255,255,255;
+  --accent-dim:rgba(255,255,255,.10);
+  --accent-soft:#E0E0E0;
+  --accent-deep:#BDBDBD;
+  --card-bg:#0A0A0A;
+  --input-bg:#0A0A0A;
+  --line:rgba(255,255,255,.22);
+  --surface-1:#0A0A0A;
+  --surface-2:#101010;
+  --surface-glass:rgba(16,16,16,.78);
+  --surface-line:rgba(255,255,255,.30);
+  --box-bg:#0A0A0A;
+  --box-line:rgba(255,255,255,.78);
+  --pnl-win:#FFFFFF;
+  --pnl-win-rgb:255,255,255;
+  --pnl-loss:#8E8E8E;
+  --pnl-loss-rgb:142,142,142;
+  --sun:#FFFFFF;
+  --moon:#F4F4F4;
+  --secondary:#BDBDBD;
+  --secondary-rgb:189,189,189;
+  --secondary-dim:rgba(189,189,189,.16);
+  /* حلقه‌ها: خاکستری، از روشن به تیره */
+  --ring-1a:#FFFFFF; --ring-1b:#BDBDBD;
+  --ring-2a:#E0E0E0; --ring-2b:#8C8C8C;
+  --ring-3a:#C8C8C8; --ring-3b:#6E6E6E;
+  --ring-over:#FFFFFF;
+  /* پنل ادمین و صفحه‌ی درباره */
+  --adm-panel:#0A0A0A;
+  --adm-panel-2:rgba(255,255,255,.05);
+  --adm-border:rgba(255,255,255,.22);
+  --adm-border-strong:rgba(255,255,255,.55);
+  --adm-accent-dim:rgba(255,255,255,.10);
+  --adm-amber:#CFCFCF;
+  --adm-amber-dim:rgba(255,255,255,.10);
+  --adm-red:#BDBDBD;
+  --adm-red-dim:rgba(255,255,255,.10);
+  --ab-card:rgba(10,10,10,.9);
+  --ab-line:rgba(255,255,255,.25);
+  --ab-line-hi:rgba(255,255,255,.6);
+  --ab-shadow:0 18px 48px -26px rgba(255,255,255,.3);
+  /* گوی دستیار */
+  --orb-bg:#0A0A0A;
+  --orb-c1:#FFFFFF; --orb-c2:#9A9A9A; --orb-c3:#D6D6D6; --orb-c4:#5C5C5C;
+  --neon:0 0 0 1px #FFFFFF, 0 0 14px rgba(255,255,255,.45);
+  --neon-soft:0 0 0 1px rgba(255,255,255,.6), 0 0 10px rgba(255,255,255,.25);
+}
+
+/* ── خطوط سفید نئونی دور باکس‌ها (همان فهرست باکس‌های نور هاور) ── */
+html[data-admin-theme="noir"] body:not([data-theme="light"]) :where(
+  .trade-surface:not(.trade-econ-monthpicker), .rp-card, .account-card, .acc-block-body, .auth-box,
+  .fx-card, .tv-chart-box, .trade-chart-side, .trade-chat-panel, .trade-cal-card,
+  .exercise-rules-box, .exercise-locked-box, .admin-card, .admin-kpi-tile, .admin-chart-card,
+  .admin-role-card, .cal-cell:not(.empty), .sl-card, .sl-stat, .trade-stat-tile, .wk-card,
+  .stk-ach-item, .mentor-note-box, .ls-card, .db-card, .db-hero, .app-topbar, .modal-panel,
+  :is(div, section, article).rounded-dash.border-dash-border.bg-dash-card
+){
+  border-color:rgba(255,255,255,.78);
+  box-shadow:0 0 0 1px rgba(255,255,255,.06), 0 0 16px rgba(255,255,255,.14);
+}
+
+/* ── تیترها: هاله‌ی سفید کم‌رنگ ── */
+html[data-admin-theme="noir"] body:not([data-theme="light"]) :where(h1, h2, h3, .landing-section-title, .admin-chart-title){
+  text-shadow:0 0 10px rgba(255,255,255,.22);
+}
+
+/* ── دکمه‌ی اصلی: جوهر وارونه (سفید با متن سیاه) و هاله‌ی سفید ── */
+html[data-admin-theme="noir"] body:not([data-theme="light"]) .admin-btn.primary,
+html[data-admin-theme="noir"] body:not([data-theme="light"]) .trade-primary-btn{
+  background:#FFFFFF; border-color:#FFFFFF; color:#050505;
+  box-shadow:0 0 0 1px #FFFFFF, 0 0 16px rgba(255,255,255,.45);
+}
+@media (hover:hover){
+  html[data-admin-theme="noir"] body:not([data-theme="light"]) .admin-btn.primary:hover:not(:disabled),
+  html[data-admin-theme="noir"] body:not([data-theme="light"]) .trade-primary-btn:hover:not(:disabled){
+    background:#FFFFFF; border-color:#FFFFFF; color:#050505;
+    box-shadow:0 0 0 1px #FFFFFF, 0 0 24px rgba(255,255,255,.7);
+  }
+}
+
+/* ── دکمه‌ی خطی: شفاف با بوردر سفید نئونی ── */
+html[data-admin-theme="noir"] body:not([data-theme="light"]) .admin-btn:not(.primary):not(.danger){
+  background:transparent; border-color:rgba(255,255,255,.7); color:var(--text);
+  box-shadow:0 0 10px rgba(255,255,255,.10);
+}
+
+/* ── فوکوس فیلدها: هاله‌ی نئونی سفید ── */
+html[data-admin-theme="noir"] body:not([data-theme="light"]) input:focus,
+html[data-admin-theme="noir"] body:not([data-theme="light"]) textarea:focus,
+html[data-admin-theme="noir"] body:not([data-theme="light"]) select:focus{
+  border-color:#FFFFFF;
+  box-shadow:0 0 0 1px #FFFFFF, 0 0 12px rgba(255,255,255,.4);
+  outline:none;
+}
+html[data-admin-theme="noir"] body:not([data-theme="light"]) :focus-visible{
+  outline:2px solid #FFFFFF; outline-offset:2px;
+}
+
+/* ── عکس‌ها: فقط لوگو و آواتار خاکستری (نه کل صفحه) ── */
+html[data-admin-theme="noir"] body:not([data-theme="light"]) .topbar-logo-lockup,
+html[data-admin-theme="noir"] body:not([data-theme="light"]) .account-avatar-img,
+html[data-admin-theme="noir"] body:not([data-theme="light"]) img[class*="avatar"],
+html[data-admin-theme="noir"] body:not([data-theme="light"]) canvas.agent-avatar{
+  filter:grayscale(1) contrast(1.1);
+}
+/* نقطه‌ی اعلان قرمز نمی‌مونه: سفید با هاله‌ی نئونی */
+html[data-admin-theme="noir"] body:not([data-theme="light"]) .bell-dot{
+  background:#FFFFFF; box-shadow:0 0 0 2px var(--bg), 0 0 8px rgba(255,255,255,.7);
+}
+
+/* ── بافت فیلم نوآر: هر کدوم فقط یک لایه‌ی ثابت روی body ──
+   ::before = رگبار مورب + نقطه‌های هاف‌تون، پشت محتوا (z-index منفی)؛
+   فقط transform جابه‌جا می‌شه. ::after = دونه‌ی فیلم روی محتوا با
+   opacity خیلی کم، بالاتر از محتوا ولی زیر هدر و مودال‌ها (z 40+). */
+html[data-admin-theme="noir"] body:not([data-theme="light"])::before{
+  content:""; position:fixed; left:0; right:0; top:-400px; height:calc(100% + 400px);
+  z-index:-1; pointer-events:none;
+  background-image:
+    repeating-linear-gradient(112deg, rgba(255,255,255,.06) 0 1px, transparent 1px 46px),
+    radial-gradient(circle, rgba(255,255,255,.05) 0 1px, transparent 1.6px);
+  background-size:auto, 8px 8px;
+  will-change:transform;
+  animation:admin-noir-rain 1.4s linear infinite;
+}
+@keyframes admin-noir-rain{
+  from{ transform:translate3d(0,0,0); }
+  to{ transform:translate3d(-14px,400px,0); }
+}
+html[data-admin-theme="noir"] body:not([data-theme="light"])::after{
+  content:""; position:fixed; left:-60px; top:-60px; width:calc(100% + 120px); height:calc(100% + 120px);
+  z-index:30; pointer-events:none; opacity:.06;
+  background-image:url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='200' height='200'><filter id='n'><feTurbulence type='fractalNoise' baseFrequency='.85' numOctaves='2' stitchTiles='stitch'/><feColorMatrix type='saturate' values='0'/></filter><rect width='100%' height='100%' filter='url(%23n)'/></svg>");
+  background-size:200px 200px;
+  will-change:transform;
+  animation:admin-noir-grain .9s steps(6) infinite;
+}
+@keyframes admin-noir-grain{
+  0%{ transform:translate3d(0,0,0); }
+  17%{ transform:translate3d(-22px,14px,0); }
+  34%{ transform:translate3d(18px,-26px,0); }
+  51%{ transform:translate3d(-12px,-18px,0); }
+  68%{ transform:translate3d(26px,20px,0); }
+  85%{ transform:translate3d(-30px,-6px,0); }
+  100%{ transform:translate3d(0,0,0); }
+}
+@media (prefers-reduced-motion:reduce){
+  html[data-admin-theme="noir"] body:not([data-theme="light"])::before,
+  html[data-admin-theme="noir"] body:not([data-theme="light"])::after{ animation:none; }
+}
+html[data-perf="low"][data-admin-theme="noir"] body:not([data-theme="light"])::before{ animation:none; opacity:.5; }
+html[data-perf="low"][data-admin-theme="noir"] body:not([data-theme="light"])::after{ animation:none; opacity:.03; }
+html[data-perf-weak][data-admin-theme="noir"] body:not([data-theme="light"])::before,
+html[data-perf-weak][data-admin-theme="noir"] body:not([data-theme="light"])::after{ display:none; }
+
+/* ── ماژول‌های رنگی که توکن خودشون رو دارن: همه خاکستری ── */
+html[data-admin-theme="noir"] body:not([data-theme="light"]) .db-page,
+html[data-admin-theme="noir"] body:not([data-theme="light"]) .db-cmd-root{
+  --ring-1a:#FFFFFF; --ring-1b:#BDBDBD;
+  --ring-2a:#E0E0E0; --ring-2b:#8C8C8C;
+  --ring-3a:#C8C8C8; --ring-3b:#6E6E6E;
+  --ring-over:#FFFFFF;
+  --tl-warn:#BDBDBD;
+}
+html[data-admin-theme="noir"] body:not([data-theme="light"]) .golden-name{
+  --g1:#FFFFFF; --g2:#D6D6D6; --g3:#8C8C8C; --g4:#F0F0F0;
+  filter:drop-shadow(0 0 6px rgba(255,255,255,.35));
+}
+html[data-admin-theme="noir"] body:not([data-theme="light"]) .toxic-name{
+  --t1:#FFFFFF; --t2:#D6D6D6; --t3:#8C8C8C; --t4:#F0F0F0;
+  --tx-glow-lo:rgba(255,255,255,.25); --tx-glow-hi:rgba(255,255,255,.5);
+}
+html[data-admin-theme="noir"] body:not([data-theme="light"]) .db-ribbon-fill{
+  background:linear-gradient(270deg, #FFFFFF 0%, #BDBDBD 40%, #6E6E6E 75%, #2A2A2A 100%);
+}
+html[data-admin-theme="noir"] body:not([data-theme="light"]) .db-ribbon-sun-core{
+  background:#FFFFFF; box-shadow:0 0 0 4px rgba(255,255,255,.2), 0 0 18px 4px rgba(255,255,255,.5);
+}
+/* ابرهای aurora کم‌رنگ‌تر تا فقط دود محو بمونن */
+html[data-admin-theme="noir"] body:not([data-theme="light"]) .aurora-blob{ opacity:.45; }
+
+/* خواب: درجه‌های کیفیت به‌جای رنگ، پله‌های خاکستری می‌شن */
+html[data-admin-theme="noir"] body:not([data-theme="light"]) .sleep-scope{
+  --slp-great:#FFFFFF; --slp-good:#D0D0D0; --slp-fair:#A0A0A0; --slp-poor:#6E6E6E;
+  --slp-ink:#E8E8E8; --slp-ink-2:#B0B0B0; --slp-moon:#F4F4F4;
+}

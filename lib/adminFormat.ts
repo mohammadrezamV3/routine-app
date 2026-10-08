@@ -1,12 +1,12 @@
-// فرمت‌دهیِ اعداد/پول/تاریخ در پنل Owner — عمداً اعدادِ لاتین (نه فارسی)،
-// هم‌راستا با تصمیمِ قبلیِ پروژه برای بخش‌های فنی/عددی (نگاه کن به تسکِ
+// فرمت‌دهی اعداد/پول/تاریخ در پنل Owner — عمدا اعداد لاتین (نه فارسی)،
+// هم‌راستا با تصمیم قبلی پروژه برای بخش‌های فنی/عددی (نگاه کن به تسک
 // «Use English digits in exercise section» در تاریخچه‌ی این ریپو).
 
 const CURRENCY_LABEL_FA: Record<string, string> = { IRR: "تومان", USD: "دلار" };
 
 export function formatCurrencyAmount(amountSmallestUnit: number, currency: string): string {
   // IRR توی این پروژه به ریال ذخیره می‌شه؛ برای نمایش به تومان تقسیم بر ۱۰ می‌کنیم
-  // (همون قراردادی که بقیه‌ی صفحاتِ پرداخت/اشتراک استفاده می‌کنن)
+  // (همون قراردادی که بقیه‌ی صفحات پرداخت/اشتراک استفاده می‌کنن)
   const value = currency === "IRR" ? Math.round(amountSmallestUnit / 10) : amountSmallestUnit / 100;
   return `${value.toLocaleString("en-US")} ${CURRENCY_LABEL_FA[currency] || currency}`;
 }
@@ -28,10 +28,29 @@ export function formatPercent(n: number | null): string {
 
 export function formatDateShort(d: string | Date): string {
   const date = typeof d === "string" ? new Date(d) : d;
-  return date.toLocaleDateString("en-CA"); // YYYY-MM-DD، بدون ابهامِ ماه/روز
+  return date.toLocaleDateString("en-CA", { timeZone: "Asia/Tehran" }); // YYYY-MM-DD به وقت تهران
 }
 
 export function formatDateTime(d: string | Date): string {
   const date = typeof d === "string" ? new Date(d) : d;
-  return date.toLocaleString("en-CA", { hour12: false });
+  return date.toLocaleString("en-CA", { hour12: false, timeZone: "Asia/Tehran" });
+}
+
+/**
+ * ISO UTC → مقداری که `<input type="datetime-local">` می‌پذیرد.
+ *
+ * دقیقا معکوس `new Date(value).toISOString()` است که مسیر ذخیره استفاده
+ * می‌کند، پس باز کردن و بی‌تغییر ذخیره‌کردن یک رویداد همان زمان قبلی را
+ * می‌نویسد.
+ *
+ * `toISOString().slice(0,16)` این‌جا **غلط** می‌بود: آن UTC می‌دهد ولی
+ * اینپوت مقدار را وقت محلی می‌فهمد — یعنی هر بار باز و ذخیره‌کردن، ساعت
+ * رویداد را به‌اندازه‌ی افست تایم‌زون جابه‌جا می‌کرد (برای ایران ۳:۳۰ در
+ * هر رفت‌وبرگشت).
+ */
+export function toLocalInputValue(iso: string | Date): string {
+  const d = typeof iso === "string" ? new Date(iso) : iso;
+  if (isNaN(d.getTime())) return "";
+  const pad = (n: number) => String(n).padStart(2, "0");
+  return `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}T${pad(d.getHours())}:${pad(d.getMinutes())}`;
 }

@@ -1,29 +1,32 @@
 "use client";
 
+import { useFeatures } from "@/lib/useFeatures";
+import { useMenuPresence } from "@/lib/useMenuPresence";
+import { featureVisible, type FeatureKey } from "@/lib/featureFlags";
 import { useEffect, useRef, useState } from "react";
 import { createPortal } from "react-dom";
 import dynamic from "next/dynamic";
 import { animate } from "animejs";
-import { AnimatePresence, motion } from "framer-motion";
 import { ChevronDown, Lock } from "lucide-react";
 import Image from "next/image";
 import Link from "next/link";
 import { useTheme } from "./ThemeProvider";
 import { useRouter, usePathname } from "next/navigation";
-import { useSession, signOut } from "next-auth/react";
-import { invalidateStorageCache } from "@/lib/storage";
-import { getAccount, activeModulesOf, invalidateAccountCache } from "@/lib/accountCache";
+import { useSession } from "next-auth/react";
+import { useLiveRefresh, useVisiblePolling } from "@/lib/liveSync";
+import { getAccount, activeModulesOf } from "@/lib/accountCache";
 import { HeaderStreakClock } from "./HeaderStreakClock";
 import { AgentAvatar } from "./AgentAvatar";
 import { useLockBodyScroll } from "@/lib/useLockBodyScroll";
 import { getNotificationPermission, requestNotificationPermission, notificationsSupported } from "@/lib/notifications";
 import { subscribeToPush } from "@/lib/pushClient";
-import { clearAuthHintCookie, takePreloaded, getPreloadedBootstrap } from "@/lib/preload";
+import { takePreloaded, getPreloadedBootstrap } from "@/lib/preload";
+import { logoutAndRedirect } from "@/lib/logout";
 
 // این فقط با کلیک باز می‌شه (نه توی رندر اولیه‌ی هیچ صفحه‌ای لازمه)، ولی
 // NavDrawer خودش توی root layout هست و همه‌جا مانت می‌شه — پس اگه معمولی
-// import بشه، باندلِ اصلیِ هر صفحه سنگین‌تر می‌شه. با dynamic+ssr:false جدا از
-// باندل اصلی لود می‌شه، دقیقاً مثل BackgroundCanvas.
+// import بشه، باندل اصلی هر صفحه سنگین‌تر می‌شه. با dynamic+ssr:false جدا از
+// باندل اصلی لود می‌شه، دقیقا مثل BackgroundCanvas.
 const NotificationPanel = dynamic(() => import("./NotificationPanel").then((m) => m.NotificationPanel), { ssr: false });
 
 // آیکون‌های خطی ساده برای هر آیتم منو — یک svg مجموعه یکدست برای همه.
@@ -32,8 +35,20 @@ export const ICONS: Record<string, JSX.Element> = {
   home: (
     <svg viewBox="0 0 24 24" fill="none"><path d="M4 11.5 12 4l8 7.5" stroke="currentColor" strokeWidth="1.7" strokeLinecap="round" strokeLinejoin="round"/><path d="M6 10v9a1 1 0 0 0 1 1h3v-5.5a1 1 0 0 1 1-1h2a1 1 0 0 1 1 1V20h3a1 1 0 0 0 1-1v-9" stroke="currentColor" strokeWidth="1.7" strokeLinecap="round" strokeLinejoin="round"/></svg>
   ),
+  // داشبورد — چیدمان بنتو (یک کاشی بلند + سه کاشی)
+  dashboard: (
+    <svg viewBox="0 0 24 24" fill="none"><rect x="3.5" y="3.5" width="7.5" height="10" rx="2" stroke="currentColor" strokeWidth="1.7"/><rect x="13" y="3.5" width="7.5" height="6" rx="2" stroke="currentColor" strokeWidth="1.7"/><rect x="13" y="11.5" width="7.5" height="9" rx="2" stroke="currentColor" strokeWidth="1.7"/><rect x="3.5" y="15.5" width="7.5" height="5" rx="2" stroke="currentColor" strokeWidth="1.7"/></svg>
+  ),
   weekly: (
     <svg viewBox="0 0 24 24" fill="none"><rect x="3.5" y="5" width="17" height="15" rx="2.2" stroke="currentColor" strokeWidth="1.7"/><path d="M3.5 9.5h17M8 3v3.4M16 3v3.4" stroke="currentColor" strokeWidth="1.7" strokeLinecap="round"/></svg>
+  ),
+  // خواب — هلال ماه
+  // دوستان — دو نفر کنار هم (هم‌خط با بقیه‌ی ست)
+  friends: (
+    <svg viewBox="0 0 24 24" fill="none"><circle cx="9" cy="8" r="3.2" stroke="currentColor" strokeWidth="1.7"/><path d="M3 19.5c1-3.3 3.3-5 6-5s5 1.7 6 5" stroke="currentColor" strokeWidth="1.7" strokeLinecap="round"/><circle cx="16.6" cy="8.6" r="2.6" stroke="currentColor" strokeWidth="1.6"/><path d="M16.2 13.9c2.4 0 4.2 1.6 4.8 4.3" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round"/></svg>
+  ),
+  sleep: (
+    <svg viewBox="0 0 24 24" fill="none"><path d="M20 14.2A8 8 0 0 1 9.8 4a8 8 0 1 0 10.2 10.2Z" stroke="currentColor" strokeWidth="1.7" strokeLinecap="round" strokeLinejoin="round"/></svg>
   ),
   roadmaps: (
     <svg viewBox="0 0 24 24" fill="none"><path d="M4 20 9 4l4 12 3-6 4 10" stroke="currentColor" strokeWidth="1.7" strokeLinecap="round" strokeLinejoin="round"/></svg>
@@ -41,33 +56,61 @@ export const ICONS: Record<string, JSX.Element> = {
   exercise: (
     <svg viewBox="0 0 24 24" fill="none"><path d="M6.5 8v8M17.5 8v8M3 10v4M21 10v4M6.5 12h11" stroke="currentColor" strokeWidth="1.7" strokeLinecap="round" strokeLinejoin="round"/></svg>
   ),
+  // آیکون اختصاصی «گزارش هفتگی» — سه میله‌ی صعودی، تا از آیکون خطی trade جدا باشه
+  weeklyReport: (
+    <svg viewBox="0 0 24 24" fill="none"><path d="M5 20V13M12 20V8M19 20v-6" stroke="currentColor" strokeWidth="1.9" strokeLinecap="round" strokeLinejoin="round"/></svg>
+  ),
   trade: (
     <svg viewBox="0 0 24 24" fill="none"><path d="M4 17 9.5 11l3.5 3 6-7" stroke="currentColor" strokeWidth="1.7" strokeLinecap="round" strokeLinejoin="round"/><path d="M15 6.5h4.5V11" stroke="currentColor" strokeWidth="1.7" strokeLinecap="round" strokeLinejoin="round"/></svg>
   ),
-  // آیکونِ اختصاصیِ «برنامه غذایی» (زیرمجموعه‌ی بدنسازی) — سیب، تا از
-  // آیکونِ دمبلِ «برنامه تمرینی» واضح جدا باشه
+  // آیکون اختصاصی «برنامه غذایی» (زیرمجموعه‌ی بدنسازی) — سیب، تا از
+  // آیکون دمبل «برنامه تمرینی» واضح جدا باشه
   food: (
     <svg viewBox="0 0 24 24" fill="none"><path d="M12 8.3c-2.7-2.5-6.4-1.5-7.7 1.1-1.7 3.3-.4 8.3 2.5 10.4 1.3 1 2.7 1 3.9.3.6-.3 1.1-.3 1.7 0 1.2.7 2.6.7 3.9-.3 2.9-2.1 4.2-7.1 2.5-10.4-1.3-2.6-5-3.6-7.7-1.1Z" stroke="currentColor" strokeWidth="1.6" strokeLinejoin="round"/><path d="M12 8.3c0-1.9.8-3.4 2.2-4.3" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round"/></svg>
   ),
-  // آیکونِ اختصاصیِ «ژورنال» (زیرمجموعه‌ی ترید) — دفترچه
+  // آیکون اختصاصی «ژورنال» (زیرمجموعه‌ی ترید) — دفترچه
   journal: (
     <svg viewBox="0 0 24 24" fill="none"><rect x="5" y="3.5" width="14" height="17" rx="2" stroke="currentColor" strokeWidth="1.7"/><path d="M9 8h6M9 12h6M9 16h3.5" stroke="currentColor" strokeWidth="1.7" strokeLinecap="round"/></svg>
   ),
-  // آیکونِ اختصاصیِ «چک‌لیست» (زیرمجموعه‌ی ترید) — چک‌باکس‌های ردیفی
+  // آیکون اختصاصی «چک‌لیست» (زیرمجموعه‌ی ترید) — چک‌باکس‌های ردیفی
   checklist: (
     <svg viewBox="0 0 24 24" fill="none"><rect x="3.5" y="4.5" width="4" height="4" rx="1" stroke="currentColor" strokeWidth="1.6"/><path d="M4.3 6.5 5.2 7.4 6.8 5.6" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round"/><rect x="3.5" y="14" width="4" height="4" rx="1" stroke="currentColor" strokeWidth="1.6"/><path d="M4.3 16 5.2 16.9 6.8 15.1" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round"/><path d="M11 6.5h9.5M11 16h9.5" stroke="currentColor" strokeWidth="1.7" strokeLinecap="round"/></svg>
   ),
+  // منتورها — یک نفر (منتور) و یک نفر کوچک‌تر کنارش (شاگرد)، هم‌خط با بقیه‌ی ست
+  mentors: (
+    <svg viewBox="0 0 24 24" fill="none"><circle cx="9" cy="7.5" r="3.2" stroke="currentColor" strokeWidth="1.7"/><path d="M3 19.5c1-3.3 3.3-5 6-5s5 1.7 6 5" stroke="currentColor" strokeWidth="1.7" strokeLinecap="round"/><circle cx="17.2" cy="10" r="2.3" stroke="currentColor" strokeWidth="1.6"/><path d="M16.3 14.6c2.2-.2 3.9 1.1 4.7 3.4" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round"/></svg>
+  ),
+  // «پیدا کردن منتور» — یک نفر و ذره‌بین
+  mentorsDiscover: (
+    <svg viewBox="0 0 24 24" fill="none"><circle cx="9.5" cy="7.8" r="3.3" stroke="currentColor" strokeWidth="1.7"/><path d="M3 19.5c1.1-3.3 3.6-5 6.5-5 1.1 0 2.1.2 3 .7" stroke="currentColor" strokeWidth="1.7" strokeLinecap="round"/><circle cx="17" cy="15.8" r="2.7" stroke="currentColor" strokeWidth="1.7"/><path d="m19 17.8 2 2" stroke="currentColor" strokeWidth="1.7" strokeLinecap="round"/></svg>
+  ),
+  // «منتورهای من» — یک نفر و تیک (رابطه‌ی برقرارشده)
+  mentorsMine: (
+    <svg viewBox="0 0 24 24" fill="none"><circle cx="9" cy="8" r="3.3" stroke="currentColor" strokeWidth="1.7"/><path d="M2.5 19c1.2-3.2 3.7-4.9 6.5-4.9s5.3 1.7 6.5 4.9" stroke="currentColor" strokeWidth="1.7" strokeLinecap="round"/><path d="m15.6 10.6 1.9 1.9 3.6-3.8" stroke="currentColor" strokeWidth="1.7" strokeLinecap="round" strokeLinejoin="round"/></svg>
+  ),
+  // «پنل منتور» — تخته‌ی ارائه با نمودار، برای کسی که منتوری می‌کند
+  mentorPanel: (
+    <svg viewBox="0 0 24 24" fill="none"><rect x="3.5" y="4" width="17" height="11.5" rx="2" stroke="currentColor" strokeWidth="1.7"/><path d="m7.5 12 3-3 2.5 2 3.5-3.5" stroke="currentColor" strokeWidth="1.7" strokeLinecap="round" strokeLinejoin="round"/><path d="M12 15.5V18m-3.5 2.5L12 18l3.5 2.5" stroke="currentColor" strokeWidth="1.7" strokeLinecap="round" strokeLinejoin="round"/></svg>
+  ),
+  // «مقاله‌ها» — کتاب باز
+  blog: (
+    <svg viewBox="0 0 24 24" fill="none"><path d="M12 6.5C10.3 5.3 8 4.8 4 4.8v13.4c4 0 6.3.5 8 1.7 1.7-1.2 4-1.7 8-1.7V4.8c-4 0-6.3.5-8 1.7Z" stroke="currentColor" strokeWidth="1.7" strokeLinejoin="round"/><path d="M12 6.5v13.4" stroke="currentColor" strokeWidth="1.7" strokeLinecap="round"/></svg>
+  ),
+  // «ابزارهای رایگان» — ماشین‌حساب
+  tools: (
+    <svg viewBox="0 0 24 24" fill="none"><rect x="5" y="3.5" width="14" height="17" rx="2.2" stroke="currentColor" strokeWidth="1.7"/><rect x="8" y="6.8" width="8" height="3" rx="1" stroke="currentColor" strokeWidth="1.5"/><path d="M8.5 13.5h.01M12 13.5h.01M15.5 13.5h.01M8.5 17h.01M12 17h.01M15.5 17h.01" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round"/></svg>
+  ),
   about: (
     <svg viewBox="0 0 24 24" fill="none"><circle cx="12" cy="12" r="8.2" stroke="currentColor" strokeWidth="1.7"/><path d="M12 11v5.2M12 8.3v.1" stroke="currentColor" strokeWidth="1.9" strokeLinecap="round"/></svg>
-  ),
-  notepad: (
-    <svg viewBox="0 0 24 24" fill="none"><path d="M12 6.5c-1.6-1.2-3.7-1.7-6-1.7v13c2.3 0 4.4.5 6 1.7 1.6-1.2 3.7-1.7 6-1.7v-13c-2.3 0-4.4.5-6 1.7Z" stroke="currentColor" strokeWidth="1.6" strokeLinejoin="round"/><path d="M12 6.5v13" stroke="currentColor" strokeWidth="1.6"/></svg>
   ),
   account: (
     <svg viewBox="0 0 24 24" fill="none"><circle cx="12" cy="8" r="3.3" stroke="currentColor" strokeWidth="1.7"/><path d="M5 19.5c1.3-3.3 4-5 7-5s5.7 1.7 7 5" stroke="currentColor" strokeWidth="1.7" strokeLinecap="round"/></svg>
   ),
   subscription: (
     <svg viewBox="0 0 24 24" fill="none"><rect x="3.5" y="5.5" width="17" height="13" rx="2" stroke="currentColor" strokeWidth="1.7"/><path d="M3.5 9.5h17" stroke="currentColor" strokeWidth="1.7"/><path d="M7 14h5" stroke="currentColor" strokeWidth="1.7" strokeLinecap="round"/></svg>
+  ),
+  admin: (
+    <svg viewBox="0 0 24 24" fill="none"><path d="M12 3.5 5 6.3v5.4c0 4.4 3 8.3 7 9.3 4-1 7-4.9 7-9.3V6.3l-7-2.8Z" stroke="currentColor" strokeWidth="1.7" strokeLinejoin="round"/><path d="M9 12.2 11.2 14.4 15.3 10" stroke="currentColor" strokeWidth="1.7" strokeLinecap="round" strokeLinejoin="round"/></svg>
   ),
   logout: (
     <svg viewBox="0 0 24 24" fill="none"><path d="M15 4H7a2 2 0 0 0-2 2v12a2 2 0 0 0 2 2h8" stroke="currentColor" strokeWidth="1.7" strokeLinecap="round" strokeLinejoin="round"/><path d="M10 12h10m0 0-3-3m3 3-3 3" stroke="currentColor" strokeWidth="1.7" strokeLinecap="round" strokeLinejoin="round"/></svg>
@@ -80,20 +123,21 @@ export const ICONS: Record<string, JSX.Element> = {
   ),
 };
 
-// «صفحه اصلی» قدیمی (/) دیگه توی منو نیست — کاربرِ لاگین‌کرده مستقیم به
-// برنامه هفتگی می‌ره، پس همون این‌جا لیبل «روتین» رو می‌گیره؛ خودِ صفحه‌ی
+// «صفحه اصلی» قدیمی (/) دیگه توی منو نیست — کاربر لاگین‌کرده مستقیم به
+// برنامه هفتگی می‌ره، پس همون این‌جا لیبل «روتین» رو می‌گیره؛ خود صفحه‌ی
 // هیرو (/) دست‌نخورده می‌مونه، فقط دیگه لینک جدایی توی منو نداره.
 //
-// «بدنسازی» و «ترید» دیگه لینکِ مستقیم نیستن — با کلیک زیرمجموعه‌هاشون باز
+// «بدنسازی» و «ترید» دیگه لینک مستقیم نیستن — با کلیک زیرمجموعه‌هاشون باز
 // می‌شن (برنامه‌ی تمرینی/برنامه‌ی غذایی، چک‌لیست/ژورنال) تا کاربر مستقیم از
-// منو به تبِ موردنظر بره، نه اینکه اول صفحه باز شه و بعد از توی خودش تب بزنه.
-// module: اگه ست بشه، یعنی این آیتم پولیه — اگه کاربر دسترسیِ فعال به این
+// منو به تب موردنظر بره، نه اینکه اول صفحه باز شه و بعد از توی خودش تب بزنه.
+// module: اگه ست بشه، یعنی این آیتم پولیه — اگه کاربر دسترسی فعال به این
 // ماژول رو نداشته باشه، کنار لیبلش یه آیکون قفل نشون داده می‌شه (فقط
-// نشانه‌ست، enforcement واقعی همچنان سمتِ سرور/ModuleGate انجام می‌شه).
-// superAdminOnly: کلاً برای همه به‌جز سوپریوزر غیرفعاله (نه یه ماژولِ
-// خریدنی مثلِ بقیه) — از منو هم مخفی می‌شه، نه فقط قفل‌نشون‌داده.
-type NavLink = { href: string; label: string; icon: string; module?: string; superAdminOnly?: boolean };
-type NavGroup = { label: string; icon: string; children: NavLink[]; module?: string };
+// نشانه‌ست، enforcement واقعی همچنان سمت سرور/ModuleGate انجام می‌شه).
+// superAdminOnly: کلا برای همه به‌جز سوپریوزر غیرفعاله (نه یه ماژول
+// خریدنی مثل بقیه) — از منو هم مخفی می‌شه، نه فقط قفل‌نشون‌داده.
+// feature: روشن/خاموش از پنل ادمین (lib/featureFlags.ts) — خاموش یعنی از منو مخفی.
+type NavLink = { href: string; label: string; icon: string; module?: string; feature?: FeatureKey };
+type NavGroup = { label: string; icon: string; children: NavLink[]; module?: string; feature?: FeatureKey };
 type NavItem = NavLink | NavGroup;
 
 function isGroup(item: NavItem): item is NavGroup {
@@ -101,49 +145,74 @@ function isGroup(item: NavItem): item is NavGroup {
 }
 
 const LINKS: NavItem[] = [
-  { href: "/weekly", label: "روتین", icon: "weekly" },
-  { href: "/notepad", label: "Notepad", icon: "notepad", superAdminOnly: true },
-  { href: "/roadmaps", label: "رودمپ‌ها", icon: "roadmaps", superAdminOnly: true },
+  // داشبورد — نمای کلی همه‌ی بخش‌ها و صفحه‌ی اصلی بعد از ورود؛ پشت فلگ `dashboard` (پیش‌فرض روشن برای همه)
+  { href: "/dashboard", label: "داشبورد", icon: "dashboard", feature: "dashboard" },
+  // «روتین من»: برنامه‌ی روزانه و خواب دو صفحه و سیستم کاملا جدا، فقط در منو کنار هم
+  {
+    label: "روتین من", icon: "weekly",
+    children: [
+      { href: "/weekly", label: "برنامه روزانه", icon: "weekly", feature: "routine" },
+      { href: "/sleep", label: "خواب", icon: "sleep", module: "SLEEP", feature: "sleep" },
+    ],
+  },
+  { href: "/roadmaps", label: "رودمپ‌ها", icon: "roadmaps", feature: "roadmaps" },
+  // منتورها درست زیر رودمپ‌ها. گروه فقط صفحه‌های سمت شاگرد را دارد؛
+  // «پنل منتور» (برای کسی که منتوری می‌کند) این‌جا نیست — در پاپ‌آپ پروفایل،
+  // زیر «پنل کاربری»، کنار بقیه‌ی پنل‌ها. آیکون زیرمجموعه‌ها در داده هست ولی طبق درخواست قبلی
+  // کاربر زیرمجموعه‌های منو آیکون رندر نمی‌کنند (globals.css → .nav-link-sub-item).
+  {
+    label: "مربی‌ها", icon: "mentors", feature: "mentors",
+    children: [
+      { href: "/mentors", label: "مربی‌ها", icon: "mentorsDiscover" },
+      { href: "/mentorship", label: "مربی‌های من", icon: "mentorsMine" },
+    ],
+  },
   {
     label: "بدنسازی", icon: "exercise",
     children: [
-      { href: "/exercise?tab=exercise", label: "برنامه تمرینی", icon: "exercise", module: "EXERCISE" },
-      { href: "/exercise?tab=calorie", label: "برنامه غذایی", icon: "food", module: "CALORIE" },
+      { href: "/exercise?tab=exercise", label: "برنامه تمرینی", icon: "exercise", module: "EXERCISE", feature: "exercise" },
+      { href: "/exercise?tab=calorie", label: "کالری‌شمار", icon: "food", module: "CALORIE", feature: "calorie" },
     ],
   },
-  {
-    label: "ترید", icon: "trade",
-    children: [
-      { href: "/trade?tab=journal", label: "ژورنال", icon: "journal", module: "TRADE" },
-      { href: "/trade?tab=checklist", label: "چک‌لیست", icon: "checklist", module: "TRADE" },
-    ],
-  },
-  { href: "/about", label: "درباره ما", icon: "about" },
+  // ترید زیرمنو ندارد — با یک کلیک مستقیم می‌رود به هاب خودش، و انتخاب
+  // بخش (ژورنال/چک‌لیست/تقویم/…) داخل همان صفحه انجام می‌شود.
+  { href: "/trade", label: "ترید", icon: "trade", module: "TRADE", feature: "trade" },
+  { href: "/analysis/weekly", label: "آنالیز هفتگی", icon: "weeklyReport", module: "AI_INSIGHT", feature: "weeklyAnalysis" },
+  { href: "/blog", label: "مقاله‌ها", icon: "blog", feature: "blog" },
+  { href: "/tools", label: "ابزارهای رایگان", icon: "tools" },
+  { href: "/about", label: "درباره ما", icon: "about", feature: "about" },
 ];
 
-// کش‌شده بیرونِ کامپوننت — مثلِ الگوی NotificationPanel/AccountPanel، تا
+// کش‌شده بیرون کامپوننت — مثل الگوی NotificationPanel/AccountPanel، تا
 // هدر (که توی همه‌ی صفحه‌ها mount می‌شه) هر بار عکس رو دوباره فچ نکنه.
 let cachedAvatarUrl: string | null = null;
 
 export function NavDrawer() {
   const [open, setOpen] = useState(false);
-  // گروهِ بازشده‌ی منو (بدنسازی/ترید) — با کلیک روی هرکدوم toggle می‌شه؛
+  // گروه بازشده‌ی منو (بدنسازی/ترید) — با کلیک روی هرکدوم toggle می‌شه؛
   // همیشه با همه‌چیز بسته شروع می‌شه، هیچ‌وقت خودکار باز نمی‌شه.
   const [expandedGroup, setExpandedGroup] = useState<string | null>(null);
-  // برای نشونِ قفلِ آیتم‌های پولیِ منو — null یعنی «هنوز معلوم نیست»
-  // (چیزی رندر نمی‌کنیم تا از فلشِ اشتباه جلوگیری بشه).
+  // برای نشون قفل آیتم‌های پولی منو — null یعنی «هنوز معلوم نیست»
+  // (چیزی رندر نمی‌کنیم تا از فلش اشتباه جلوگیری بشه).
   const [activeModules, setActiveModules] = useState<Set<string> | null>(null);
   const [profileMenuOpen, setProfileMenuOpen] = useState(false);
   const [notifPermission, setNotifPermission] = useState<NotificationPermission | "unsupported">("default");
   const [notifPanelOpen, setNotifPanelOpen] = useState(false);
   const [notifCount, setNotifCount] = useState(0);
+  // خروج نرم منوی پروفایل و پنل اعلان (حرکت مشترک menu-motion)
+  const profilePresence = useMenuPresence(profileMenuOpen);
+  const notifPresence = useMenuPresence(notifPanelOpen);
+  // هر بار منو بسته می‌شه (از هر مسیری: کلیک بیرون، دکمه‌ی ضربدر، رفتن به
+  // یه لینک)، گروه بازشده هم باید ریست بشه — وگرنه دفعه‌ی بعد که منو باز
+  // می‌شه، همون گروه هنوز «انتخاب‌شده»/بازشده می‌موند.
+  useEffect(() => { if (!open) setExpandedGroup(null); }, [open]);
   useLockBodyScroll(open || profileMenuOpen);
-  // موقعیتِ لنگرِ پنل‌های پروفایل/اعلان‌ها — چون این دو تا حالا به بادی
-  // پورتال می‌شن (نه دیگه فرزندِ app-topbar)، باید مختصاتشون رو خودمون از
-  // روی دکمه‌ی محرک حساب کنیم. علتِ پورتال‌کردن: app-topbar خودش
-  // backdrop-filter داره، و یه پنلِ توی فرزندانش که خودش هم backdrop-filter
-  // داره فقط لایه‌ی از‌قبل‌بلورشده‌ی تقریباً خالیِ همون stacking context رو
-  // می‌بینه، نه محتوای واقعیِ پشتِ صفحه — پس هیچ‌وقت واقعاً مات نمی‌شد.
+  // موقعیت لنگر پنل‌های پروفایل/اعلان‌ها — چون این دو تا حالا به بادی
+  // پورتال می‌شن (نه دیگه فرزند app-topbar)، باید مختصاتشون رو خودمون از
+  // روی دکمه‌ی محرک حساب کنیم. علت پورتال‌کردن: app-topbar خودش
+  // backdrop-filter داره، و یه پنل توی فرزندانش که خودش هم backdrop-filter
+  // داره فقط لایه‌ی از‌قبل‌بلورشده‌ی تقریبا خالی همون stacking context رو
+  // می‌بینه، نه محتوای واقعی پشت صفحه — پس هیچ‌وقت واقعا مات نمی‌شد.
   const [profileAnchor, setProfileAnchor] = useState<{ top: number; right: number } | null>(null);
   const [bellAnchor, setBellAnchor] = useState<{ top: number; right: number } | null>(null);
   const [avatarUrl, setAvatarUrl] = useState<string | null>(cachedAvatarUrl);
@@ -151,28 +220,47 @@ export function NavDrawer() {
   const router = useRouter();
   const pathname = usePathname();
   const { data: session, status } = useSession();
+  const features = useFeatures();
   const authSlotRef = useRef<HTMLDivElement>(null);
+  // بخش‌هایی که از پنل ادمین (/admin/features) برای این کاربر خاموشن از منو
+  // حذف می‌شن؛ گروهی که همه‌ی زیرمجموعه‌هاش خاموشن هم کامل حذف می‌شه.
+  const visibleLinks = LINKS.filter((item) => {
+    if (item.feature && !featureVisible(features, item.feature)) return false;
+    if (isGroup(item)) return item.children.some((c) => !c.feature || featureVisible(features, c.feature));
+    return true;
+  });
   const profileBtnRef = useRef<HTMLButtonElement>(null);
   const bellBtnRef = useRef<HTMLButtonElement>(null);
   // صفحات ورود/ثبت‌نام هدر خودشونو دارن (فلش بازگشت + نشان برند) — هدر
   // سراسری سایت اونجا لازم نیست و فقط شلوغی اضافه می‌کنه.
-  // پنل Owner (/admin) کاملاً محیطِ جدایی‌ست — نه هدر/منوی سایتِ اصلی، نه
+  // پنل Owner (/admin) کاملا محیط جدایی‌ست — نه هدر/منوی سایت اصلی، نه
   // پس‌زمینه‌ی aurora (پایین‌تر در BackgroundCanvasLoader)
   const hideTopbar = pathname?.startsWith("/auth") || pathname?.startsWith("/admin");
 
-  function go(href: string) {
-    setOpen(false);
-    router.push(href);
-  }
+  // آیتم‌های منو عمدا `<Link>` واقعی‌اند، نه `<a onClick={router.push}>`.
+  // دو باگ گزارش‌شده مستقیم از همان می‌آمد: «دکمه رو می‌زنم نمی‌ره» و «خیلی
+  // دیر می‌ره». با router.push هیچ prefetchی وجود ندارد، پس ضربه یعنی
+  // شروع دانلود صفحه از صفر — و چون هندلر جاوااسکریپتی‌ست، اگر همان
+  // لحظه ترد اصلی مشغول باشد (بسته‌شدن کشو، انیمیشن‌ها) کلیک عملا گم
+  // می‌شود. Link مقصد را از قبل آماده می‌کند و ناوبری‌اش دست خود Next است.
 
-  // منوی همبرگری، پروفایل، و اعلان‌ها هر سه توی هدر همزمان قابلِ بازشدن
+  // منوی همبرگری، پروفایل، و اعلان‌ها هر سه توی هدر همزمان قابل بازشدن
   // بودن (سه تا state جدا، بدون هماهنگی) — کاربر می‌تونست چندتاشونو با هم
-  // باز کنه. الان باز کردنِ هرکدوم اون دوتای دیگه رو می‌بنده.
+  // باز کنه. الان باز کردن هرکدوم اون دوتای دیگه رو می‌بنده.
   function openHamburgerDrawer() {
     setOpen(true);
     setProfileMenuOpen(false);
     setNotifPanelOpen(false);
   }
+  // مقصدهای منوی پروفایل در هیچ `<Link>`ی نیستند (آیتم‌هایش دکمه‌اند، چون
+  // پنل پورتال‌شده است)، پس Next خودش آماده‌شان نمی‌کند. با بازشدن پنل
+  // همان‌جا prefetch می‌شوند تا ضربه‌ی بعدی منتظر دانلود نماند.
+  useEffect(() => {
+    if (!profileMenuOpen) return;
+    router.prefetch("/account");
+    router.prefetch("/subscription");
+  }, [profileMenuOpen, router]);
+
   function toggleProfileMenu() {
     setProfileMenuOpen((v) => {
       const next = !v;
@@ -196,13 +284,13 @@ export function NavDrawer() {
     });
   }, [status]);
 
-  // یه لیسنرِ سطحِ document به‌جای لایه‌ی overlayِ fixed — چون app-topbar
-  // (والدِ چیپِ پروفایل) backdrop-filter داره و برای فرزندهای position:fixed
-  // یه containing-block جدید می‌سازه؛ یعنی اون overlay فقط داخلِ کادرِ خودِ
-  // هدر پوشش می‌داد، نه کلِ صفحه، پس کلیک روی بقیه‌ی صفحه بسته‌ش نمی‌کرد.
-  // خودِ پنل حالا به بادی پورتال می‌شه (دیگه فرزندِ authSlotRef نیست)، پس
-  // یه ref جدا برای خودِ پنلِ پورتال‌شده هم لازمه — وگرنه کلیک روی خودِ
-  // آیتم‌های پنل هم «بیرون» حساب می‌شد و فوراً می‌بستش.
+  // یه لیسنر سطح document به‌جای لایه‌ی overlay fixed — چون app-topbar
+  // (والد چیپ پروفایل) backdrop-filter داره و برای فرزندهای position:fixed
+  // یه containing-block جدید می‌سازه؛ یعنی اون overlay فقط داخل کادر خود
+  // هدر پوشش می‌داد، نه کل صفحه، پس کلیک روی بقیه‌ی صفحه بسته‌ش نمی‌کرد.
+  // خود پنل حالا به بادی پورتال می‌شه (دیگه فرزند authSlotRef نیست)، پس
+  // یه ref جدا برای خود پنل پورتال‌شده هم لازمه — وگرنه کلیک روی خود
+  // آیتم‌های پنل هم «بیرون» حساب می‌شد و فورا می‌بستش.
   const profilePanelRef = useRef<HTMLDivElement>(null);
   useEffect(() => {
     if (!profileMenuOpen) return;
@@ -219,17 +307,17 @@ export function NavDrawer() {
   useEffect(() => {
     const p = getNotificationPermission();
     setNotifPermission(p);
-    // اگه از قبل (مثلاً یه نسخه‌ی قدیمی‌تر) اجازه‌ی نوتیف داده شده بود ولی
+    // اگه از قبل (مثلا یه نسخه‌ی قدیمی‌تر) اجازه‌ی نوتیف داده شده بود ولی
     // این دستگاه هنوز به Web Push سابسکرایب نشده، همین‌جا (بی‌صدا، بدون
-    // نیاز به باز کردنِ دوباره‌ی پنل) انجامش می‌ده — subscribeToPush خودش
-    // idempotent ـه (سابسکریپشنِ موجود رو دوباره می‌فرسته، نه یکی جدید).
+    // نیاز به باز کردن دوباره‌ی پنل) انجامش می‌ده — subscribeToPush خودش
+    // idempotent ـه (سابسکریپشن موجود رو دوباره می‌فرسته، نه یکی جدید).
     if (p === "granted") subscribeToPush();
   }, []);
 
   useEffect(() => {
     if (status !== "authenticated") return;
     function loadAvatar() {
-      // آواتار توی پاسخِ bootstrap هست (ستونی از خودِ User) — درخواستِ جدا
+      // آواتار توی پاسخ bootstrap هست (ستونی از خود User) — درخواست جدا
       // فقط وقتی لازمه که bootstrap نرفته باشه.
       const boot = getPreloadedBootstrap();
       const source = boot
@@ -245,21 +333,36 @@ export function NavDrawer() {
     return () => window.removeEventListener("avatar-updated", loadAvatar);
   }, [status]);
 
-  // پیش‌بارگذاریِ اطلاعیه‌ها موقعِ لودِ صفحه — هم برای نشونِ تعدادِ نخونده‌ها
-  // روی زنگوله، هم اینکه وقتی کاربر واقعاً زنگوله رو بزنه، پنل از کشِ آماده
+  // پیش‌بارگذاری اطلاعیه‌ها موقع لود صفحه — هم برای نشون تعداد نخونده‌ها
+  // روی زنگوله، هم اینکه وقتی کاربر واقعا زنگوله رو بزنه، پنل از کش آماده
   // باز شه (نه از صفر، که «بارگذاری خیلی طول می‌کشه» حس می‌داد).
-  useEffect(() => {
+  const notifPanelOpenRef = useRef(false);
+  notifPanelOpenRef.current = notifPanelOpen;
+  const notifLoadSeq = useRef(0);
+  function loadNotifCount() {
     if (status !== "authenticated") return;
-    let cancelled = false;
-    import("./NotificationPanel").then(({ preloadNotifications }) =>
+    const seq = ++notifLoadSeq.current;
+    import("./NotificationPanel").then(({ preloadNotifications, countUnreadNotifications }) =>
       preloadNotifications().then((items) => {
-        if (!cancelled) setNotifCount(items.length);
+        // پنل باز یعنی کاربر همین الان داره می‌بینه — نقطه‌ی زنگوله خاموش می‌مونه
+        if (seq === notifLoadSeq.current && !notifPanelOpenRef.current) setNotifCount(countUnreadNotifications(items));
       })
     );
-    return () => { cancelled = true; };
+  }
+  useEffect(() => {
+    loadNotifCount();
+    return () => { notifLoadSeq.current++; };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [status]);
+  // زنده: اعلان تازه (WebSocket/تب دیگه) یا تغییر برنامه‌ها/تیک‌ها (یادآوری‌های
+  // امروز از همون‌ها ساخته می‌شن) → شمارنده همون لحظه. پولینگ فقط-وقت-دیده‌شدن
+  // تور ایمنیه برای وقتی WebSocket وصل نیست.
+  useLiveRefresh(["notifications", "mentor", "customOccurrences", "removedOccurrences", "daily"], loadNotifCount, {
+    enabled: status === "authenticated",
+  });
+  useVisiblePolling(loadNotifCount, 60_000, { enabled: status === "authenticated", realtimeIntervalMs: 5 * 60_000 });
 
-  // برای نشونِ قفلِ آیتم‌های پولیِ منو — همون /api/account که ModuleGate هم
+  // برای نشون قفل آیتم‌های پولی منو — همون /api/account که ModuleGate هم
   // استفاده می‌کنه (سوپریوزر توش خودش همه‌ی ماژول‌ها رو active برمی‌گردونه).
   useEffect(() => {
     if (status === "unauthenticated") { setActiveModules(new Set()); return; }
@@ -274,8 +377,8 @@ export function NavDrawer() {
     return () => { cancelled = true; };
   }, [status]);
 
-  // طبقِ درخواستِ صریح، منو هیچ‌وقت خودکار یه گروه رو باز/سلکت‌شده نشون نده —
-  // حتی وقتی توی زیرصفحه‌ی یه گروهی (مثلاً /exercise)، منو همیشه با همه‌چیز
+  // طبق درخواست صریح، منو هیچ‌وقت خودکار یه گروه رو باز/سلکت‌شده نشون نده —
+  // حتی وقتی توی زیرصفحه‌ی یه گروهی (مثلا /exercise)، منو همیشه با همه‌چیز
   // بسته باز می‌شه؛ کاربر خودش هرکدوم رو خواست دستی باز می‌کنه.
 
   // کلیک روی زنگوله همیشه پنل اطلاعیه‌ها رو باز/بسته می‌کنه؛ اگه هنوز اجازه‌ی
@@ -295,7 +398,7 @@ export function NavDrawer() {
     if (!notificationsSupported() || notifPermission === "granted") return;
     const p = await requestNotificationPermission();
     setNotifPermission(p);
-    // اجازه‌ی نوتیفِ مرورگر جدا از سابسکرایب‌شدن به Web Pushه — این یکی
+    // اجازه‌ی نوتیف مرورگر جدا از سابسکرایب‌شدن به Web Pushه — این یکی
     // برای یادآوری‌های واقعی حتی وقتی تب/اپ بسته‌ست لازمه (lib/pushClient.ts).
     if (p === "granted") subscribeToPush();
   }
@@ -303,15 +406,36 @@ export function NavDrawer() {
   return (
     <>
       {!hideTopbar && (
-        <header className="app-topbar">
+        <>
+          {/* طبق درخواست صریح: بالای صفحه (پشت نوار وضعیت/بریدگی دوربین
+              روی موبایل) هم باید موقع اسکرول بلور بماند، نه بک‌گراند خام
+              صفحه. .app-topbar خودش از `top:14px + safe-area-inset-top`
+              شروع می‌شود، یعنی از خود safe-area تا لبه‌ی بالای صفحه یک
+              نواری می‌ماند که قبلا هیچ بلوری نداشت. این عنصر مستقل، فقط
+              همان نوار را (به ارتفاع safe-area-inset-top) می‌پوشاند. */}
+          <div className="app-topbar-statusbar-blur" aria-hidden="true" />
+          <header className="app-topbar">
           <div className="topbar-actions-left">
-            <Link href="/" aria-label="رفتن به صفحه اصلی">
+            {/* هر دو نسخه (روز/شب) هم‌زمان با اولین رندر لود می‌شن (هردو priority)،
+                فقط با opacity جابه‌جا می‌شن — نه اینکه src عوض بشه، وگرنه موقع
+                تعویض تم، تصویر تم جدید (که تا اون لحظه fetch نشده) یه تاخیر
+                دیدنی داشت تا دانلود بشه. */}
+            {/* کاربر واردشده مستقیم به صفحه‌ی اصلی خودش (داشبورد) می‌ره، نه لندینگ و بعد ریدایرکت */}
+            <Link href={status === "authenticated" ? "/dashboard" : "/"} aria-label="رفتن به صفحه اصلی" className="topbar-logo-lockup-wrap">
               <Image
-                src={theme === "light" ? "/images/logo-lockup-light-theme.png" : "/images/logo-lockup-dark-theme.png"}
-                alt="Arion"
+                src="/images/logo-lockup-dark-theme.png"
+                alt="آریون"
                 width={138}
                 height={34}
-                className="topbar-logo-lockup"
+                className={`topbar-logo-lockup${theme === "light" ? " topbar-logo-lockup-hidden" : ""}`}
+                priority
+              />
+              <Image
+                src="/images/logo-lockup-light-theme.webp"
+                alt="آریون"
+                width={138}
+                height={34}
+                className={`topbar-logo-lockup${theme === "light" ? "" : " topbar-logo-lockup-hidden"}`}
                 priority
               />
             </Link>
@@ -335,14 +459,15 @@ export function NavDrawer() {
                       {avatarUrl ? (
                         <img src={avatarUrl} alt="" className="profile-chip-avatar-img" />
                       ) : (
-                        <AgentAvatar seed={session?.user?.name || session?.user?.email || "؟"} size={27} />
+                        <AgentAvatar seed={session?.user?.name || session?.user?.email || "؟"} size={28} />
                       )}
                     </span>
                   </button>
-                  {profileMenuOpen && profileAnchor && createPortal(
+                  {profilePresence.present && profileAnchor && createPortal(
                     <div
                       ref={profilePanelRef}
-                      className="notif-panel open"
+                      className="notif-panel profile-menu-panel open"
+                      data-state={profilePresence.state}
                       style={{ position: "fixed", top: profileAnchor.top, right: profileAnchor.right, left: "auto" }}
                     >
                       <div className="notif-panel-list">
@@ -353,6 +478,24 @@ export function NavDrawer() {
                           <span className="nav-link-icon-svg">{ICONS.account}</span>
                           <span>پنل کاربری</span>
                         </div>
+                        {features?.mentors === true && (
+                          <div
+                            className="notif-panel-item profile-menu-item"
+                            onClick={() => { setProfileMenuOpen(false); router.push("/mentor"); }}
+                          >
+                            <span className="nav-link-icon-svg">{ICONS.mentorPanel}</span>
+                            <span>پنل مربی</span>
+                          </div>
+                        )}
+                        {((session?.user as any)?.isAdmin || (session?.user as any)?.isSuperAdmin) && (
+                          <div
+                            className="notif-panel-item profile-menu-item"
+                            onClick={() => { setProfileMenuOpen(false); router.push("/admin"); }}
+                          >
+                            <span className="nav-link-icon-svg">{ICONS.admin}</span>
+                            <span>پنل ادمین</span>
+                          </div>
+                        )}
                         <div
                           className="notif-panel-item profile-menu-item"
                           onClick={() => { setProfileMenuOpen(false); router.push("/subscription"); }}
@@ -363,7 +506,7 @@ export function NavDrawer() {
                         <div
                           className="notif-panel-item profile-menu-item"
                           style={{ color: "#E05252" }}
-                          onClick={() => { setProfileMenuOpen(false); invalidateStorageCache(); invalidateAccountCache(); clearAuthHintCookie(); signOut({ callbackUrl: "/" }); }}
+                          onClick={() => { setProfileMenuOpen(false); logoutAndRedirect(); }}
                         >
                           <span className="nav-link-icon-svg">{ICONS.logout}</span>
                           <span>خروج از حساب</span>
@@ -373,17 +516,17 @@ export function NavDrawer() {
                     document.body
                   )}
                 </div>
-                <div className="bell-btn-wrap">
+                {featureVisible(features, "notifications") && <div className="bell-btn-wrap">
                   <button ref={bellBtnRef} className="bell-btn" aria-label="اعلان‌ها" onClick={handleBellClick}>
                     <svg viewBox="0 0 24 24" fill="none"><path d="M6 9.5a6 6 0 1 1 12 0c0 4 1.4 5.6 2 6.5H4c.6-.9 2-2.5 2-6.5Z" stroke="currentColor" strokeWidth="1.7" strokeLinecap="round" strokeLinejoin="round" /><path d="M9.5 19a2.6 2.6 0 0 0 5 0" stroke="currentColor" strokeWidth="1.7" strokeLinecap="round" /></svg>
                     {(notifCount > 0 || notifPermission !== "granted") && <span className="bell-dot" />}
                   </button>
-                  {notifPanelOpen && bellAnchor && createPortal(
-                    <NotificationPanel onClose={() => setNotifPanelOpen(false)} anchor={bellAnchor} />,
+                  {notifPresence.present && bellAnchor && createPortal(
+                    <NotificationPanel onClose={() => setNotifPanelOpen(false)} anchor={bellAnchor} closing={!notifPanelOpen} />,
                     document.body
                   )}
-                </div>
-                <HeaderStreakClock />
+                </div>}
+                {featureVisible(features, "routine") && featureVisible(features, "streak") && <HeaderStreakClock />}
               </>
             ) : (
               <div ref={authSlotRef}>
@@ -395,6 +538,7 @@ export function NavDrawer() {
             )}
           </div>
         </header>
+        </>
       )}
 
       <div className={`nav-overlay${open ? " open" : ""}`} onClick={() => setOpen(false)} />
@@ -425,7 +569,7 @@ export function NavDrawer() {
             <button onClick={() => setOpen(false)} className="nav-close" aria-label="بستن منو">×</button>
           </div>
 
-          {LINKS.filter((item) => !("superAdminOnly" in item && item.superAdminOnly) || (session?.user as any)?.isSuperAdmin).map((item) => {
+          {visibleLinks.map((item) => {
             const isLocked = (m?: string) => !!m && activeModules !== null && !activeModules.has(m);
             if (isGroup(item)) {
               const isExpanded = expandedGroup === item.label;
@@ -440,43 +584,51 @@ export function NavDrawer() {
                     <span className="nav-link-icon-svg">{ICONS[item.icon]}</span>
                     <span style={{ flex: 1 }}>{item.label}</span>
                     {groupLocked && <Lock size={13} className="nav-link-lock" />}
-                    <motion.span
-                      animate={{ rotate: isExpanded ? 180 : 0 }}
-                      transition={{ duration: 0.2 }}
-                      style={{ display: "flex" }}
-                    >
+                    <span className={`nav-group-chevron${isExpanded ? " open" : ""}`}>
                       <ChevronDown size={16} />
-                    </motion.span>
+                    </span>
                   </a>
-                  <AnimatePresence initial={false}>
-                    {isExpanded && (
-                      <motion.div
-                        initial={{ height: 0, opacity: 0 }}
-                        animate={{ height: "auto", opacity: 1 }}
-                        exit={{ height: 0, opacity: 0 }}
-                        transition={{ duration: 0.22, ease: "easeInOut" }}
-                        style={{ overflow: "hidden" }}
-                      >
-                        <div className="nav-group-children">
-                          {item.children.map((c) => (
-                            <a key={c.href} onClick={() => go(c.href)} className="nav-link-sub-item">
-                              <span style={{ flex: 1 }}>{c.label}</span>
-                              {isLocked(c.module) && <Lock size={12} className="nav-link-lock" />}
-                            </a>
-                          ))}
-                        </div>
-                      </motion.div>
-                    )}
-                  </AnimatePresence>
+                  {/* باز/بسته‌شدن زیرمنو عمدا CSSی خالص است، نه انیمیشن
+                      ارتفاع framer-motion. دلیلش لگی بود که کاربر گزارش کرد:
+                      این کشو یک لایه‌ی backdrop-filter سنگین است، و
+                      انیمیشن height توسط JS یعنی هر فریم یک نوشتن استایل +
+                      layout + رستر دوباره‌ی همان بلور. با ترفند
+                      grid-template-rows: 0fr→1fr هیچ کار جاوااسکریپتی در
+                      هر فریم نیست، و `contain` هم نمی‌گذارد این تغییر کل
+                      کشو را باطل کند. */}
+                  <div className={`nav-group-sub${isExpanded ? " open" : ""}`}>
+                    <div className="nav-group-sub-inner">
+                      <div className="nav-group-children">
+                        {item.children.filter((c) => !c.feature || featureVisible(features, c.feature)).map((c) => (
+                          <Link
+                            key={c.href}
+                            href={c.href}
+                            prefetch
+                            onClick={() => setOpen(false)}
+                            className="nav-link-sub-item"
+                          >
+                            <span style={{ flex: 1 }}>{c.label}</span>
+                            {isLocked(c.module) && <Lock size={12} className="nav-link-lock" />}
+                          </Link>
+                        ))}
+                      </div>
+                    </div>
+                  </div>
                 </div>
               );
             }
             return (
-              <a key={item.href} onClick={() => go(item.href)} className="nav-link nav-link-icon">
+              <Link
+                key={item.href}
+                href={item.href}
+                prefetch
+                onClick={() => setOpen(false)}
+                className="nav-link nav-link-icon"
+              >
                 <span className="nav-link-icon-svg">{ICONS[item.icon]}</span>
                 <span style={{ flex: 1 }}>{item.label}</span>
                 {isLocked(item.module) && <Lock size={13} className="nav-link-lock" />}
-              </a>
+              </Link>
             );
           })}
 
@@ -485,14 +637,14 @@ export function NavDrawer() {
               دوباره‌کاری نداره. مهمون هنوز آواتار نداره، پس ورود/ثبت‌نامش می‌مونه. */}
           {status !== "authenticated" && (
             <div style={{ borderTop: "1px solid var(--line)", marginTop: 6, paddingTop: 6 }}>
-              <a onClick={() => go("/auth/login")} className="nav-link nav-link-icon" style={{ cursor: "pointer" }}>
+              <Link href="/auth/login" prefetch onClick={() => setOpen(false)} className="nav-link nav-link-icon">
                 <span className="nav-link-icon-svg">{ICONS.login}</span>
                 <span>ورود</span>
-              </a>
-              <a onClick={() => go("/auth/signup")} className="nav-link nav-link-icon" style={{ cursor: "pointer" }}>
+              </Link>
+              <Link href="/auth/signup" prefetch onClick={() => setOpen(false)} className="nav-link nav-link-icon">
                 <span className="nav-link-icon-svg">{ICONS.signup}</span>
                 <span>ثبت‌نام</span>
-              </a>
+              </Link>
             </div>
           )}
         </div>

@@ -1,0 +1,108 @@
+/* بخش «داشبورد» لندینگ (LandingDashboard در LandingSections.tsx) — پیشوند
+   ls-dash- و فقط توکن‌های تم (--accent, --text, --muted, --ls-*). رنگ‌های
+   حلقه‌ها همون پالت app/dashboard/dashboard.css. همه‌ی حرکت‌ها transform/opacity. */
+
+.ls-dash-intro{ margin:-6px 0 18px; font-size:13.5px; line-height:2; color:var(--muted); max-width:720px; }
+.ls-dash{ display:grid; grid-template-columns:minmax(0,1fr); gap:18px; align-items:center; }
+@media (min-width:900px){ .ls-dash{ grid-template-columns:minmax(0,1.25fr) minmax(0,1fr); gap:26px; } }
+.ls-dash-stage{ position:relative; min-width:0; }
+.ls-dash-stage::before{
+  content:""; position:absolute; inset:-8% -4%; z-index:0; pointer-events:none;
+  background:radial-gradient(closest-side, rgba(var(--accent-rgb),.16), transparent);
+}
+.ls-dash-mock{
+  position:relative; z-index:1; display:flex; flex-direction:column; gap:10px; padding:14px;
+  border-radius:26px; border:1px solid var(--ls-line); background:var(--ls-card);
+  box-shadow:var(--ls-shadow); backdrop-filter:blur(18px); -webkit-backdrop-filter:blur(18px);
+  color:var(--text); user-select:none; overflow:hidden;
+}
+.ls-dash-hero{
+  display:flex; align-items:center; justify-content:space-between; gap:12px;
+  padding:14px; border-radius:20px; border:1px solid var(--ls-line);
+}
+.ls-dash-hello{ display:flex; flex-direction:column; gap:4px; min-width:0; }
+.ls-dash-hello > b{ font-size:16px; font-weight:800; }
+.ls-dash-date{ font-size:11px; color:var(--muted); }
+.ls-dash-chip{
+  align-self:flex-start; display:inline-flex; align-items:center; gap:4px; margin-top:2px;
+  padding:3px 9px; border-radius:999px; font-size:10.5px; font-weight:700;
+  color:#FF8A3D; border:1px solid rgba(255,138,61,.4);
+}
+.ls-dash-legend{ list-style:none; margin:6px 0 0; padding:0; display:flex; flex-wrap:wrap; gap:4px 12px; }
+.ls-dash-legend li{ display:flex; align-items:center; gap:5px; font-size:10.5px; color:var(--muted); }
+.ls-dash-legend i{ width:7px; height:7px; border-radius:50%; }
+.ls-dash-legend b{ color:var(--text); font-weight:800; }
+.ls-dash-rings{ width:112px; height:112px; flex-shrink:0; color:var(--text); }
+@media (min-width:640px){ .ls-dash-rings{ width:128px; height:128px; } }
+
+.ls-dash-quick{ display:grid; grid-template-columns:repeat(4,minmax(0,1fr)); gap:6px; }
+.ls-dash-q{
+  display:flex; flex-direction:column; align-items:center; gap:5px; padding:9px 4px; text-align:center;
+  border-radius:15px; border:1px solid var(--ls-line); font-size:10px; font-weight:700; white-space:nowrap;
+}
+.ls-dash-q-ic{
+  width:28px; height:28px; border-radius:10px; display:flex; align-items:center; justify-content:center;
+  color:var(--c); border:1px solid color-mix(in srgb, var(--c) 40%, transparent);
+}
+.ls-dash-q.is-on{ border-color:color-mix(in srgb, var(--c) 60%, transparent); animation:ls-dash-tap 4.8s ease-in-out infinite; }
+
+.ls-dash-row{ display:grid; grid-template-columns:minmax(0,1.2fr) minmax(0,1fr); gap:8px; }
+.ls-dash-card{ min-width:0; padding:11px 12px; border-radius:18px; border:1px solid var(--ls-line); display:flex; flex-direction:column; gap:6px; }
+.ls-dash-card-h{ display:flex; align-items:center; gap:5px; font-size:11px; font-weight:800; color:var(--muted); }
+.ls-dash-card-h svg{ color:var(--accent); }
+.ls-dash-tl{ display:flex; align-items:center; gap:7px; font-size:10.5px; }
+.ls-dash-tl > .mono{ color:var(--muted); font-size:10px; }
+.ls-dash-tl-n{ flex:1; min-width:0; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; font-weight:700; }
+.ls-dash-tl i{
+  width:16px; height:16px; border-radius:50%; flex-shrink:0; display:flex; align-items:center; justify-content:center;
+  border:1.5px solid var(--ls-line); color:#fff;
+}
+.ls-dash-tl.is-done i{ border-color:#00C98D; background:#00C98D; }
+.ls-dash-tl.is-done .ls-dash-tl-n{ color:var(--muted); text-decoration:line-through; text-decoration-color:rgba(127,127,127,.5); }
+.ls-dash-pnl{ font-size:18px; font-weight:800; color:var(--pnl-win, #00C98D); text-align:left; }
+.ls-dash-spark{ width:100%; height:34px; }
+.ls-dash-sub{ font-size:10px; color:var(--muted); }
+
+/* پاپ‌آپ نمونه روی خود ماکت — ورود/خروجش با «تپ» روی «ثبت غذا» هم‌زمانه */
+.ls-dash-pop{
+  position:absolute; z-index:2; left:50%; bottom:18px; width:min(220px, 70%);
+  padding:12px; border-radius:18px; border:1px solid rgba(var(--accent-rgb),.45);
+  background:var(--bg); box-shadow:0 18px 50px rgba(0,0,0,.35);
+  display:flex; flex-direction:column; gap:8px;
+  transform:translateX(-50%); animation:ls-dash-pop 4.8s cubic-bezier(.22,1,.36,1) infinite;
+}
+.ls-dash-pop-h{ display:flex; align-items:center; gap:6px; font-size:12px; font-weight:800; color:var(--accent); }
+.ls-dash-pop-f{
+  display:flex; justify-content:space-between; gap:8px; padding:7px 11px; border-radius:999px;
+  border:1px solid var(--ls-line); font-size:10.5px; font-weight:700;
+}
+.ls-dash-pop-f .mono{ color:var(--muted); font-weight:500; }
+.ls-dash-pop-btn{ padding:7px; border-radius:12px; text-align:center; font-size:11px; font-weight:800; color:#fff; background:var(--accent); }
+@keyframes ls-dash-tap{
+  0%, 16%, 100%{ transform:scale(1); }
+  20%{ transform:scale(.92); }
+  26%{ transform:scale(1); }
+}
+@keyframes ls-dash-pop{
+  0%, 22%{ opacity:0; transform:translate(-50%, 14px) scale(.94); }
+  32%, 78%{ opacity:1; transform:translate(-50%, 0) scale(1); }
+  90%, 100%{ opacity:0; transform:translate(-50%, 8px) scale(.97); }
+}
+@media (prefers-reduced-motion:reduce){
+  .ls-dash-q.is-on, .ls-dash-pop{ animation:none; }
+}
+html[data-perf="low"] .ls-dash-q.is-on, html[data-perf="low"] .ls-dash-pop{ animation:none; }
+
+.ls-dash-points{ list-style:none; margin:0; padding:0; display:grid; grid-template-columns:minmax(0,1fr); gap:10px; }
+@media (min-width:640px) and (max-width:899px){ .ls-dash-points{ grid-template-columns:repeat(2,minmax(0,1fr)); } }
+.ls-dash-point{
+  display:flex; gap:12px; align-items:flex-start; padding:14px; border-radius:20px;
+  border:1px solid var(--ls-line); background:var(--ls-card);
+}
+.ls-dash-point > span:last-child{ display:flex; flex-direction:column; gap:3px; min-width:0; }
+.ls-dash-point b{ font-size:14px; font-weight:800; color:var(--text); }
+.ls-dash-point > span:last-child > span{ font-size:12.5px; line-height:1.9; color:var(--muted); }
+.ls-dash-point-ic{
+  flex-shrink:0; width:34px; height:34px; border-radius:12px; display:flex; align-items:center; justify-content:center;
+  color:var(--accent); background:rgba(var(--accent-rgb),.12);
+}

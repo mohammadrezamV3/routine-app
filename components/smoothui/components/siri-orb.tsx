@@ -1,0 +1,316 @@
+"use client";
+
+import { cn } from "@/lib/utils";
+import {
+  type MotionStyle,
+  motion,
+  type TargetAndTransition,
+  type Transition,
+  useReducedMotion,
+  useTransform,
+} from "framer-motion";
+import {
+  type AIAmplitude,
+  type AIState,
+  getAIStateMotion,
+  useAmplitudeValue,
+} from "./ai-core";
+
+// منبع: SmoothUI (siri-orb). تغییرهای عمدی:
+//   • `motion/react` → `framer-motion` (همان کتابخانه، نام بسته‌ی این پروژه).
+//   • بلاک <style> ثابت به `app/globals.css` منتقل شد. نسخه‌ی اصلی آن را
+//     داخل خود کامپوننت تزریق می‌کرد؛ در صفحه‌ی گفت‌وگو به‌ازای هر پیام یک
+//     گو رندر می‌شود، یعنی ده‌ها نسخه‌ی یکسان از همان قوانین توی DOM. متغیرها
+//     همچنان inline و per-instance‌اند، پس رفتار دقیقا همان است.
+
+const SIZE_THRESHOLD_SMALL = 50;
+const SIZE_THRESHOLD_TINY = 30;
+const SIZE_THRESHOLD_MEDIUM = 100;
+const BLUR_MULTIPLIER_SMALL = 0.008;
+const BLUR_MIN_SMALL = 1;
+const BLUR_MULTIPLIER_LARGE = 0.015;
+const BLUR_MIN_LARGE = 4;
+const CONTRAST_MULTIPLIER_SMALL = 0.004;
+const CONTRAST_MIN_SMALL = 1.2;
+const CONTRAST_MULTIPLIER_LARGE = 0.008;
+const CONTRAST_MIN_LARGE = 1.5;
+const DOT_SIZE_MULTIPLIER_SMALL = 0.004;
+const DOT_SIZE_MIN_SMALL = 0.05;
+const DOT_SIZE_MULTIPLIER_LARGE = 0.008;
+const DOT_SIZE_MIN_LARGE = 0.1;
+const SHADOW_MULTIPLIER_SMALL = 0.004;
+const SHADOW_MIN_SMALL = 0.5;
+const SHADOW_MULTIPLIER_LARGE = 0.008;
+const SHADOW_MIN_LARGE = 2;
+const MASK_RADIUS_TINY = "0%";
+const MASK_RADIUS_SMALL = "5%";
+const MASK_RADIUS_MEDIUM = "15%";
+const MASK_RADIUS_LARGE = "25%";
+const CONTRAST_TINY = 1.1;
+const CONTRAST_MULTIPLIER_FINAL = 1.2;
+const CONTRAST_MIN_FINAL = 1.3;
+
+/** Loud audio tightens the gradient, which reads as the orb "focusing". */
+const AMPLITUDE_BLUR_FALLOFF = 0.45;
+/** Amplitude adds at most 12% of extra size on top of the state scale. */
+const AMPLITUDE_SCALE_GAIN = 0.12;
+/** Single lateral nudge used to signal `error`, well under 200ms. */
+const ERROR_SHAKE_KEYFRAMES = [0, -3, 3, 0];
+const ERROR_SHAKE_DURATION = 0.18;
+const EASE_IN_OUT = [0.645, 0.045, 0.355, 1] as const;
+const GLOW_BLUR_RATIO = 0.28;
+const GLOW_MAX_OPACITY = 0.7;
+/** Depth rim, as a fraction of the orb size. */
+const RIM_RATIO = 0.06;
+const RIM_MIN = 1.5;
+/** Sheen drift period at rest, before the state speed divides it. */
+const DRIFT_BASE_SECONDS = 12;
+/** `idle` breathes: a slow, shallow scale cycle that never draws attention. */
+const BREATHE_SCALE = [1, 1.035, 1];
+const BREATHE_SECONDS = 5.5;
+const SPRING_DEFAULT: Transition = {
+  bounce: 0.1,
+  duration: 0.25,
+  type: "spring",
+};
+
+export interface SiriOrbProps {
+  /**
+   * Live audio level, 0–1. Pass the `MotionValue` from `useAudioAmplitude` so
+   * the signal never re-renders React.
+   */
+  amplitude?: AIAmplitude;
+  /** Ambient rotation period in seconds, before the state speed multiplier. */
+  animationDuration?: number;
+  className?: string;
+  colors?: {
+    bg?: string;
+    c1?: string;
+    c2?: string;
+    c3?: string;
+    /** Fourth mesh stop. More stops means fewer visible repeats per rotation. */
+    c4?: string;
+  };
+  size?: string;
+  /** Shared AI state driving speed, scale, saturation and reactivity. */
+  state?: AIState;
+}
+
+const SiriOrb: React.FC<SiriOrbProps> = ({
+  size = "192px",
+  className,
+  colors,
+  animationDuration = 20,
+  amplitude,
+  state = "idle",
+}) => {
+  const shouldReduceMotion = useReducedMotion();
+  const amplitudeValue = useAmplitudeValue(amplitude);
+  const stateMotion = getAIStateMotion(state);
+
+  /**
+   * طبق درخواست صریح: پالت گو دوباره از --orb-* میاد (globals.css، :root
+   * و body[data-theme="light"]) — شب سبز/آبی/سیاه، روز شیری/قهوه‌ای/
+   * نارنجی. با تم روز/شب سایت خودکار جابه‌جا می‌شه.
+   */
+  const defaultColors = {
+    bg: "var(--orb-bg)",
+    c1: "var(--orb-c1)",
+    c2: "var(--orb-c2)",
+    c3: "var(--orb-c3)",
+    c4: "var(--orb-c4)",
+  };
+
+  const finalColors = { ...defaultColors, ...colors };
+  // The bloom stays in the orb's own palette — see the note in ai-orb-aura.
+  const glowColor = finalColors.c2;
+
+  // Extract numeric value from size for calculations
+  const sizeValue = Number.parseInt(size.replace("px", ""), 10);
+
+  // Responsive calculations based on size
+  const blurAmount =
+    sizeValue < SIZE_THRESHOLD_SMALL
+      ? Math.max(sizeValue * BLUR_MULTIPLIER_SMALL, BLUR_MIN_SMALL) // Reduced blur for small sizes
+      : Math.max(sizeValue * BLUR_MULTIPLIER_LARGE, BLUR_MIN_LARGE);
+
+  const contrastAmount =
+    sizeValue < SIZE_THRESHOLD_SMALL
+      ? Math.max(sizeValue * CONTRAST_MULTIPLIER_SMALL, CONTRAST_MIN_SMALL) // Reduced contrast for small sizes
+      : Math.max(sizeValue * CONTRAST_MULTIPLIER_LARGE, CONTRAST_MIN_LARGE);
+
+  const dotSize =
+    sizeValue < SIZE_THRESHOLD_SMALL
+      ? Math.max(sizeValue * DOT_SIZE_MULTIPLIER_SMALL, DOT_SIZE_MIN_SMALL) // Smaller dots for small sizes
+      : Math.max(sizeValue * DOT_SIZE_MULTIPLIER_LARGE, DOT_SIZE_MIN_LARGE);
+
+  const shadowSpread =
+    sizeValue < SIZE_THRESHOLD_SMALL
+      ? Math.max(sizeValue * SHADOW_MULTIPLIER_SMALL, SHADOW_MIN_SMALL) // Reduced shadow for small sizes
+      : Math.max(sizeValue * SHADOW_MULTIPLIER_LARGE, SHADOW_MIN_LARGE);
+
+  // Adjust mask radius based on size to reduce black center in small sizes
+  const getMaskRadius = (value: number) => {
+    if (value < SIZE_THRESHOLD_TINY) {
+      return MASK_RADIUS_TINY;
+    }
+    if (value < SIZE_THRESHOLD_SMALL) {
+      return MASK_RADIUS_SMALL;
+    }
+    if (value < SIZE_THRESHOLD_MEDIUM) {
+      return MASK_RADIUS_MEDIUM;
+    }
+    return MASK_RADIUS_LARGE;
+  };
+
+  const maskRadius = getMaskRadius(sizeValue);
+
+  // Use more subtle contrast for very small sizes
+  const getFinalContrast = (value: number) => {
+    if (value < SIZE_THRESHOLD_TINY) {
+      return CONTRAST_TINY; // Very subtle contrast for tiny sizes
+    }
+    if (value < SIZE_THRESHOLD_SMALL) {
+      return Math.max(
+        contrastAmount * CONTRAST_MULTIPLIER_FINAL,
+        CONTRAST_MIN_FINAL
+      ); // Reduced contrast for small sizes
+    }
+    return contrastAmount;
+  };
+
+  const finalContrast = getFinalContrast(sizeValue);
+
+  // Reactivity is gated by the state preset: `thinking` barely listens so the
+  // orb keeps churning internally instead of throbbing with room noise.
+  const reactivity = shouldReduceMotion ? 0 : stateMotion.reactivity;
+
+  const reactiveBlur = useTransform(amplitudeValue, (level: number) => {
+    const focus = 1 - level * reactivity * AMPLITUDE_BLUR_FALLOFF;
+    return `${blurAmount * focus}px`;
+  });
+
+  const reactiveScale = useTransform(
+    amplitudeValue,
+    (level: number) => stateMotion.scale + level * reactivity * AMPLITUDE_SCALE_GAIN
+  );
+
+  const loopDuration = shouldReduceMotion
+    ? animationDuration
+    : animationDuration / stateMotion.speed;
+
+  // Rim thickness scales with the orb, so the lit edge reads the same at 24px
+  // and at 240px instead of swallowing the small one.
+  const rim = Math.max(sizeValue * RIM_RATIO, RIM_MIN);
+  // The sheen drifts slower than the mesh rotates; a busier state speeds it up
+  // a touch without matching the rotation, which would look mechanical.
+  const driftDuration = (DRIFT_BASE_SECONDS / (1 + stateMotion.speed)) * 2;
+
+  const getRootAnimate = (): TargetAndTransition => {
+    if (shouldReduceMotion) {
+      return { scale: 1, x: 0 };
+    }
+    if (state === "error") {
+      return { scale: 1, x: ERROR_SHAKE_KEYFRAMES };
+    }
+    if (stateMotion.motif === "breathe") {
+      return { scale: BREATHE_SCALE, x: 0 };
+    }
+    return { scale: 1, x: 0 };
+  };
+
+  const getRootTransition = (): Transition => {
+    if (shouldReduceMotion) {
+      return { duration: 0 };
+    }
+    if (state === "error") {
+      return { duration: ERROR_SHAKE_DURATION, ease: EASE_IN_OUT };
+    }
+    if (stateMotion.motif === "breathe") {
+      return {
+        duration: BREATHE_SECONDS,
+        ease: EASE_IN_OUT,
+        repeat: Number.POSITIVE_INFINITY,
+      };
+    }
+    return SPRING_DEFAULT;
+  };
+
+  return (
+    // The gradient disc clips its own overflow, so the bloom and the status
+    // motif have to live in a wrapper rather than inside it.
+    <motion.div
+      animate={getRootAnimate()}
+      className={cn("relative", className)}
+      style={
+        {
+          "--orb-size": size,
+          height: size,
+          width: size,
+        } as MotionStyle
+      }
+      transition={getRootTransition()}
+    >
+      {/* Bloom tinted by the state's semantic accent. */}
+      <motion.div
+        animate={{ opacity: stateMotion.glow * GLOW_MAX_OPACITY }}
+        className="absolute rounded-full"
+        style={{
+          // `circle` بدون کلیدواژه‌ی سایز، پیش‌فرض CSS یعنی `farthest-corner`
+          // می‌گیرد — روی یک باکس مربعی، فاصله‌ی گوشه از قطر باکس بیشتر از
+          // نصف عرضشه، پس ایستگاه ۶۴٪ هنوز به لبه‌های صاف باکس نرسیده
+          // بود کاملا شفاف بشه؛ نتیجه یک هاله‌ی مربعی محو بود، نه دایره‌ی
+          // تمیز (باگ گزارش‌شده: «بک‌گراند مربع می‌شه»). `closest-side`
+          // مرجع را نصف عرض/ارتفاع باکس می‌گیرد، پس ۶۴٪ همیشه قبل از
+          // لبه‌ها کاملا شفاف می‌شود، روی هر چهار ضلع یکسان.
+          background: `radial-gradient(circle closest-side at 50% 50%, ${glowColor} 0%, transparent 64%)`,
+          filter: `blur(calc(var(--orb-size) * ${GLOW_BLUR_RATIO}))`,
+          inset: "-12%",
+        }}
+        transition={shouldReduceMotion ? { duration: 0 } : SPRING_DEFAULT}
+      />
+
+      {/* لایه‌ی کلیپ گرد از خود .siri-orb (که فیلتر می‌گیرد) جدا نگه داشته
+          می‌شود — سافاری وقتی overflow:hidden+border-radius با filter روی
+          یک المان مشترک باشند، کلیپ گرد را نادیده می‌گیرد و باکس
+          چهارگوش خام دیده می‌شود (باگ گزارش‌شده، فقط توی سافاری). */}
+      <motion.div className="siri-orb-clip">
+        <motion.div
+          className="siri-orb"
+          style={
+            {
+              "--animation-duration": `${loopDuration}s`,
+              "--bg": finalColors.bg,
+              "--blur-amount": reactiveBlur,
+              "--c1": finalColors.c1,
+              "--c2": finalColors.c2,
+              "--c3": finalColors.c3,
+              "--c4": finalColors.c4,
+              "--contrast-amount": finalContrast,
+              "--dot-size": `${dotSize}px`,
+              "--drift-duration": `${driftDuration}s`,
+              "--mask-radius": maskRadius,
+              "--rim": `${rim}px`,
+              "--shadow-spread": `${shadowSpread}px`,
+              // Saturation and hue only affect the gradient disc. Applying them
+              // to the whole component would desaturate the semantic accent too,
+              // and `error` would lose the very red that identifies it.
+              filter: `saturate(${stateMotion.saturation}) hue-rotate(${stateMotion.hueRotate}deg)`,
+              height: "100%",
+              scale: reactiveScale,
+              width: "100%",
+            } as MotionStyle
+          }
+        >
+          {/* Specular sheen and depth rim. The mesh alone reads as a flat blurred
+              disc; a drifting highlight plus a lit top edge and shaded bottom are
+              what make it read as a sphere. */}
+          <span aria-hidden="true" className="siri-orb-layer siri-orb-sheen" />
+          <span aria-hidden="true" className="siri-orb-layer siri-orb-rim" />
+        </motion.div>
+      </motion.div>
+    </motion.div>
+  );
+};
+
+export default SiriOrb;

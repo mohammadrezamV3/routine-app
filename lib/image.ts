@@ -1,9 +1,9 @@
 // فشرده‌سازی سمت کلاینت عکس معامله قبل از ارسال — چون عکسی که مستقیم از
 // گالری موبایل میاد می‌تونه چند مگابایت باشه و ما استوریج فایل جدا نداریم
 // (روی همون رکورد TradeEntry به‌صورت data URL ذخیره می‌شه). خروجی JPEG با
-// حداکثر بعد ۱۶۰۰px، که برای دیدن اسکرین‌شات چارت کاملاً کافیه.
+// حداکثر بعد ۱۶۰۰px، که برای دیدن اسکرین‌شات چارت کاملا کافیه.
 
-const MAX_SOURCE_BYTES = 3 * 1024 * 1024;
+const MAX_SOURCE_BYTES = 2 * 1024 * 1024;
 
 export function compressImageToDataUrl(file: File, maxDim = 1600, quality = 0.82): Promise<string> {
   return new Promise((resolve, reject) => {
@@ -12,7 +12,7 @@ export function compressImageToDataUrl(file: File, maxDim = 1600, quality = 0.82
       return;
     }
     if (file.size > MAX_SOURCE_BYTES) {
-      reject(new Error("حجم عکس نباید بیشتر از ۳ مگابایت باشد"));
+      reject(new Error("حجم عکس نباید بیشتر از 2 مگابایت باشد"));
       return;
     }
     const reader = new FileReader();

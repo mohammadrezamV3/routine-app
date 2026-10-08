@@ -1,19 +1,23 @@
 import { NextRequest, NextResponse } from "next/server";
-import { getServerSession } from "next-auth";
-import { authOptions } from "@/lib/auth";
+import { getSessionFast } from "@/lib/serverSession";
 import { prisma } from "@/lib/prisma";
 import { parseIsoDate, readJsonBody } from "@/lib/validate";
+import { withLiveSync } from "@/lib/realtime";
+import { ModuleKey } from "@prisma/client";
+import { requireModule } from "@/lib/moduleAccess";
+import { sessionFeatureBlocked } from "@/lib/featureFlagsServer";
 
-// سقفِ تعدادِ کلیدِ «انجام‌شده»ی یک روز — از هر برنامه‌ی واقعی خیلی بیشتره
+// سقف تعداد کلید «انجام‌شده»ی یک روز — از هر برنامه‌ی واقعی خیلی بیشتره
 const MAX_DAILY_TASK_KEYS = 500;
 
 // GET /api/tasks/daily?date=2026-07-24
 export async function GET(req: NextRequest) {
-  const session = await getServerSession(authOptions);
+  { const off = await sessionFeatureBlocked("routine"); if (off) return off; }
+  const session = await getSessionFast();
   const userId = (session?.user as any)?.id;
   if (!userId) return NextResponse.json({ error: "unauthorized" }, { status: 401 });
 
-  // `new Date(userInput)` مستقیم استفاده نمی‌شه: یه ورودیِ بدشکل یه
+  // `new Date(userInput)` مستقیم استفاده نمی‌شه: یه ورودی بدشکل یه
   // Invalid Date می‌داد که Prisma باهاش throw می‌کرد و روت ۵۰۰ می‌شد.
   const date = parseIsoDate(req.nextUrl.searchParams.get("date"));
   if (!date) return NextResponse.json({ error: "تاریخ نامعتبر است (قالب درست: YYYY-MM-DD)" }, { status: 400 });
@@ -29,10 +33,13 @@ export async function GET(req: NextRequest) {
 }
 
 // POST /api/tasks/daily  { date, tasks, wake }
-export async function POST(req: NextRequest) {
-  const session = await getServerSession(authOptions);
-  const userId = (session?.user as any)?.id;
-  if (!userId) return NextResponse.json({ error: "unauthorized" }, { status: 401 });
+// تیک‌زدن = استفاده از «روتین من» → بعد از ۱۴ روز آزمایشی نیاز به پلن داره
+// (سمت سرور، نه فقط ModuleGate). خوندن آزاده تا تاریخچه گروگان نمونه.
+async function handlePOST(req: NextRequest) {
+  { const off = await sessionFeatureBlocked("routine"); if (off) return off; }
+  const guard = await requireModule(ModuleKey.ROUTINE);
+  if (!guard.ok) return guard.response;
+  const userId = guard.userId;
 
   const parsed = await readJsonBody<{ date?: string; tasks?: Record<string, boolean>; wake?: string | null }>(req);
   if (!parsed.ok) return NextResponse.json({ error: parsed.error }, { status: parsed.status });
@@ -42,12 +49,12 @@ export async function POST(req: NextRequest) {
   if (!date) return NextResponse.json({ error: "تاریخ نامعتبر است (قالب درست: YYYY-MM-DD)" }, { status: 400 });
 
   // `wake` یه timestamp کامله (نه فقط روز)؛ اگه بدشکل بود باید null بشه نه
-  // Invalid Date — وگرنه همون ۵۰۰ِ قبلی از مسیرِ دیگه‌ای برمی‌گرده.
+  // Invalid Date — وگرنه همون ۵۰۰ قبلی از مسیر دیگه‌ای برمی‌گرده.
   const wakeAt = wake ? new Date(wake) : null;
   const wakeUpAt = wakeAt && !Number.isNaN(wakeAt.getTime()) ? wakeAt : null;
 
-  // فقط کلیدهای booleanِ واقعی ذخیره می‌شن، با سقفِ تعداد — این ستون Jsonه و
-  // بدونِ سقف هر چیزی که فرستاده بشه عیناً می‌نشست توی دیتابیس.
+  // فقط کلیدهای boolean واقعی ذخیره می‌شن، با سقف تعداد — این ستون Jsonه و
+  // بدون سقف هر چیزی که فرستاده بشه عینا می‌نشست توی دیتابیس.
   const completedItems: Record<string, boolean> = {};
   for (const [k, v] of Object.entries(tasks ?? {}).slice(0, MAX_DAILY_TASK_KEYS)) {
     if (typeof k === "string" && k.length <= 200) completedItems[k.slice(0, 200)] = !!v;
@@ -61,3 +68,6 @@ export async function POST(req: NextRequest) {
 
   return NextResponse.json({ ok: true, id: entry.id });
 }
+
+// بعد از هر نوشتن موفق، بقیه‌ی دستگاه‌ها/تب‌های همین کاربر با WebSocket خبردار می‌شن (lib/realtime.ts)
+export const POST = withLiveSync(["daily"], handlePOST);

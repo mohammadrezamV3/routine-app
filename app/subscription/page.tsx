@@ -4,39 +4,38 @@ import { useEffect, useState } from "react";
 import { useSession } from "next-auth/react";
 import { CheckCircle2, XCircle } from "lucide-react";
 import { AuthGate } from "@/components/AuthGate";
-import { getSiteMarket } from "@/lib/market";
-import { PlansSection } from "@/components/PlanShowcase";
+import { PlansSection, UpgradeOffer, BREAKOUT } from "@/components/PlanShowcase";
+import { PremiumUnlockCelebration } from "@/components/PremiumUnlockCelebration";
+import { FREE_ROUTINE_COPY_FA, TRIAL_COPY_FA } from "@/lib/trial";
+import { fillPriceCopy } from "@/lib/planPricing";
+import { usePlanPricing } from "@/lib/usePlanPricing";
 
 type SubscriptionInfo = { planId: string; status: string; currentPeriodEnd: string; plan: { key: string; nameFa: string } } | null;
 
-// صفحه‌ی مستقلِ «اشتراک» — همون کارت‌ها/جدولِ مقایسه‌ی صفحه‌ی لندینگ رو
-// اینجا هم نشون می‌ده (از طریقِ PlansSection مشترک)، فقط دکمه‌ی هر پلن
-// به‌جای بردن به ثبت‌نام، می‌بره به چک‌اوتِ واقعی — پلنِ فعلیِ کاربر هم
-// به‌جای دکمه‌ی خرید یه نشانِ «پلنِ فعلیِ تو» می‌گیره.
+// صفحه‌ی مستقل «اشتراک» — همون کارت‌ها/جدول مقایسه‌ی صفحه‌ی لندینگ رو
+// اینجا هم نشون می‌ده (از طریق PlansSection مشترک)، فقط دکمه‌ی هر پلن
+// به‌جای بردن به ثبت‌نام، می‌بره به چک‌اوت واقعی — پلن فعلی کاربر هم
+// به‌جای دکمه‌ی خرید یه نشان «پلن فعلی تو» می‌گیره.
 export default function SubscriptionPage() {
   const { status } = useSession();
+  const { pricing } = usePlanPricing();
   const [checkoutResult, setCheckoutResult] = useState<string | null>(null);
   const [subscription, setSubscription] = useState<SubscriptionInfo>(null);
+  const [upgradeOffer, setUpgradeOffer] = useState<UpgradeOffer | null>(null);
   const [isSuperAdmin, setIsSuperAdmin] = useState(false);
   const [loaded, setLoaded] = useState(false);
-  const isIntl = getSiteMarket() === "INTERNATIONAL";
+  const [showCelebration, setShowCelebration] = useState(false);
 
   // از window.location مستقیم می‌خونیم تا نیازی به useSearchParams/Suspense
-  // نباشه (قاعده‌ی معمولِ پروژه — نگاه کن به app/auth/login/page.tsx).
+  // نباشه (قاعده‌ی معمول پروژه — نگاه کن به app/auth/login/page.tsx).
   useEffect(() => {
-    setCheckoutResult(new URLSearchParams(window.location.search).get("checkout"));
+    const result = new URLSearchParams(window.location.search).get("checkout");
+    setCheckoutResult(result);
+    if (result === "success") setShowCelebration(true);
   }, []);
 
-  // اگه کسی از لینکِ رفرالِ یه دوست اومده (?ref=CODE)، کدش رو همین‌جا توی
-  // localStorage نگه می‌داریم تا بعداً توی چک‌اوت به‌صورتِ کدِ تخفیف پیش‌پُر بشه
-  // — فقط یه side-effect، چیزی از رندر/رفتارِ این صفحه عوض نمی‌شه.
-  useEffect(() => {
-    const ref = new URLSearchParams(window.location.search).get("ref");
-    if (ref) localStorage.setItem("referralCode", ref.toUpperCase());
-  }, []);
-
-  // پنل Owner › Funnel — یک بار به‌ازای هر بازدیدِ واقعیِ این صفحه، بی‌صدا و
-  // بدون تأثیر روی تجربه‌ی کاربر (fire-and-forget)
+  // پنل Owner › Funnel — یک بار به‌ازای هر بازدید واقعی این صفحه، بی‌صدا و
+  // بدون تاثیر روی تجربه‌ی کاربر (fire-and-forget)
   useEffect(() => {
     if (status === "loading") return;
     fetch("/api/analytics/track", {
@@ -52,6 +51,7 @@ export default function SubscriptionPage() {
       .then((r) => r.json())
       .then((data) => {
         setSubscription(data.subscription || null);
+        setUpgradeOffer(data.upgradeOffer || null);
         setIsSuperAdmin(!!data.isSuperAdmin);
         setLoaded(true);
       });
@@ -60,7 +60,12 @@ export default function SubscriptionPage() {
   if (status !== "authenticated") {
     return (
       <section className="subscription-page">
-        <h1>اشتراک</h1>
+        {/* BREAKOUT: تیتر باید با کارت‌های پلن (که خودشون از ستون باریک
+            ۶۲۰px بیرون می‌زنن) هم‌لبه بمونه — بدونش تیتر توی همون ستون
+            باریک می‌موند و روی دسکتاپ نسبت به کارت‌های عریض‌تر زیرش،
+            راست‌چین به‌نظر نمی‌رسید (لبه‌ی راستش با لبه‌ی راست کارت‌ها
+            یکی نبود). */}
+        <h1 className={BREAKOUT}>اشتراک</h1>
         <AuthGate message="برای مشاهده‌ی پلن‌های اشتراک وارد شوید" />
       </section>
     );
@@ -68,11 +73,11 @@ export default function SubscriptionPage() {
 
   return (
     <section className="subscription-page">
-      <h1>اشتراک</h1>
+      <h1 className={BREAKOUT}>اشتراک</h1>
 
       {checkoutResult === "success" && (
         <div className="checkout-status-banner success">
-          <CheckCircle2 size={18} /> پرداخت با موفقیت انجام شد — پلنِ جدید فعال شد.
+          <CheckCircle2 size={18} /> پرداخت با موفقیت انجام شد — پلن جدید فعال شد.
         </div>
       )}
       {checkoutResult === "failed" && (
@@ -83,19 +88,21 @@ export default function SubscriptionPage() {
 
       <div className="section-note">
         {isSuperAdmin
-          ? "دسترسیِ نامحدود داری — نیازی به اشتراک نداری"
+          ? "دسترسی نامحدود داری — نیازی به اشتراک نداری"
           : subscription
-          ? `پلنِ فعلی: ${subscription.plan.nameFa} — ${subscription.status === "TRIAL" ? "دوره آزمایشی" : "فعال"}`
-          : "هنوز پلن پولی فعالی نداری — فقط ماژول‌های دوره آزمایشی در دسترسته"}
+          ? `پلن فعلی: ${subscription.plan.nameFa} — ${subscription.status === "TRIAL" ? "دوره آزمایشی" : "فعال"}`
+          : `هنوز پلن پولی فعالی نداری. ${fillPriceCopy(FREE_ROUTINE_COPY_FA, pricing)} هر حساب تازه: ${TRIAL_COPY_FA}؛ بعدش برای ادامه یکی از پلن‌ها رو انتخاب کن.`}
       </div>
 
       {!loaded ? (
-        <div className="item-line" style={{ marginTop: 14 }}>در حال بارگذاری…</div>
+        <div className="item-line is-loading" style={{ marginTop: 14 }}>در حال بارگذاری…</div>
       ) : (
         <div style={{ marginTop: 8 }}>
-          <PlansSection isIntl={isIntl} mode="account" currentPlanKey={subscription?.plan.key ?? null} title="" />
+          <PlansSection mode="account" currentPlanKey={subscription?.plan.key ?? null} title="" upgradeOffer={upgradeOffer} />
         </div>
       )}
+
+      {showCelebration && <PremiumUnlockCelebration onClose={() => setShowCelebration(false)} />}
     </section>
   );
 }

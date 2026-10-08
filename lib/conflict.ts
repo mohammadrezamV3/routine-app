@@ -7,9 +7,9 @@ export function rangesOverlap(aStart: number, aEnd: number | null, bStart: numbe
 }
 
 /**
- * برنامه‌ها هفتگی‌ان (فقط روزِ هفته، بدون تاریخِ مشخص)، پس «گذشته» فقط برای
- * امروز معنی داره — بقیه‌ی روزهای هفته همیشه یک وقوعِ آینده دارن. اگه
- * jsDay همون امروزه و ساعتِ پایان (یا شروع، اگه پایان نداشت) رد شده باشه،
+ * برنامه‌ها هفتگی‌ان (فقط روز هفته، بدون تاریخ مشخص)، پس «گذشته» فقط برای
+ * امروز معنی داره — بقیه‌ی روزهای هفته همیشه یک وقوع آینده دارن. اگه
+ * jsDay همون امروزه و ساعت پایان (یا شروع، اگه پایان نداشت) رد شده باشه،
  * یعنی این بازه برای امروز گذشته و نباید بشه چیزی توش ثبت/جابه‌جا کرد.
  */
 export function isPastToday(jsDay: number, startMin: number | null, endMin: number | null, now: Date): boolean {
@@ -32,9 +32,23 @@ export function findScheduleConflict(
   opts: Parameters<typeof tasksForDate>[1],
   excludeId?: string
 ): ScheduleTask | null {
-  if (startMin === null) return null;
   const d = new Date(now);
   d.setDate(now.getDate() + (jsDay - now.getDay()));
+  return findConflictOnDate(d, startMin, endMin, opts, excludeId);
+}
+
+/**
+ * همان سنجش روی یک *تاریخ مشخص* — برای برنامه‌ی تک‌روزه یا دوره‌ای که از
+ * هفته‌های بعد شروع می‌شود؛ «همین هفته» آن‌جا ملاک نیست.
+ */
+export function findConflictOnDate(
+  d: Date,
+  startMin: number | null,
+  endMin: number | null,
+  opts: Parameters<typeof tasksForDate>[1],
+  excludeId?: string
+): ScheduleTask | null {
+  if (startMin === null) return null;
   const items = tasksForDate(d, opts);
   for (const t of items) {
     if (excludeId && t.id === excludeId) continue;

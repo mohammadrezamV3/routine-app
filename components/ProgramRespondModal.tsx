@@ -1,0 +1,138 @@
+"use client";
+
+import "./mentor.css";
+import { useEffect, useState } from "react";
+import type { Program, ProgramTransitionAction } from "@/lib/mentorTypes";
+import { NETWORK_ERROR, readApiError } from "@/lib/mentorFormat";
+import { faNum } from "@/lib/jalali";
+import { Spinner } from "./Spinner";
+import { MentorField } from "./MentorUI";
+import { MentorSheet } from "./MentorMotion";
+
+const NOTE_MAX = 1000;
+
+type RespondAction = "reject" | "request_changes" | "cancel";
+
+const COPY: Record<RespondAction, {
+  title: string;
+  hint: string;
+  label: string | null;
+  placeholder?: string;
+  required: boolean;
+  confirm: string;
+  danger: boolean;
+}> = {
+  reject: {
+    title: "نه، این برنامه رو نمی‌خوام",
+    hint: "برنامه کنار گذاشته می‌شه و مربی دلیلش رو می‌بینه",
+    label: "دلیلش چیه",
+    placeholder: "مثلا «با ساعت کاری‌ام هماهنگ نیست»",
+    required: false,
+    confirm: "نه، نمی‌خوام",
+    danger: true,
+  },
+  request_changes: {
+    title: "تغییر بخواه",
+    hint: "برنامه برای اصلاح پیش مربی برمی‌گرده و دوباره برات فرستاده می‌شه",
+    label: "چی عوض بشه",
+    placeholder: "مثلا «روزهای تمرین را به 3 روز در هفته کم کن»",
+    required: true,
+    confirm: "ارسال درخواست",
+    danger: false,
+  },
+  cancel: {
+    title: "لغو برنامه",
+    hint: "برنامه متوقف و از روتینت برداشته می‌شه؛ برگشتی نداره",
+    label: null,
+    required: false,
+    confirm: "لغو برنامه",
+    danger: true,
+  },
+};
+
+/**
+ * پاسخ به یک برنامه با یادداشت (رد / درخواست تغییر / لغو) —
+ * POST /api/mentor-programs/[id]/transition. برای «درخواست تغییر» یادداشت
+ * اجباری است و بدونش خطای زیر فیلد دیده می‌شود، نه درخواست بی‌فایده.
+ */
+export function ProgramRespondModal({
+  programId,
+  action,
+  onClose,
+  onDone,
+}: {
+  programId: string;
+  action: RespondAction;
+  onClose: () => void;
+  onDone: (program: Program | null) => void;
+}) {
+  const copy = COPY[action];
+  const [note, setNote] = useState("");
+  const [busy, setBusy] = useState(false);
+  const [fieldError, setFieldError] = useState<string | null>(null);
+  const [error, setError] = useState<string | null>(null);
+  // بستن با انیمیشن شیت؛ والد پس از پایان آن باخبر می‌شود
+  const [open, setOpen] = useState(true);
+  const close = () => { if (!busy) setOpen(false); };
+  useEffect(() => {
+    if (open) return;
+    const t = setTimeout(onClose, 180);
+    return () => clearTimeout(t);
+  }, [open, onClose]);
+
+  async function submit() {
+    const n = note.trim();
+    if (copy.required && !n) { setFieldError("بنویس چی باید عوض بشه"); return; }
+    if (n.length > NOTE_MAX) { setFieldError(`یادداشت حداکثر ${faNum(NOTE_MAX)} حرف می‌شه`); return; }
+    setBusy(true);
+    setError(null);
+    try {
+      const res = await fetch(`/api/mentor-programs/${programId}/transition`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ action: action as ProgramTransitionAction, note: n || undefined }),
+      });
+      if (!res.ok) { setError(await readApiError(res)); return; }
+      const d = await res.json().catch(() => null);
+      onDone(d?.program ?? null);
+    } catch {
+      setError(NETWORK_ERROR);
+    } finally {
+      setBusy(false);
+    }
+  }
+
+  return (
+    <MentorSheet open={open} onClose={close} title={copy.title} size="sm" dismissible={!busy}>
+        <div className="mentor-form">
+          <p className="mentor-muted">{copy.hint}</p>
+          {copy.label && (
+            <MentorField label={copy.label} htmlFor="program-note" optional={!copy.required} error={fieldError}>
+              <textarea
+                id="program-note"
+                className="wsearch-newform-name trade-glass-field"
+                rows={4}
+                value={note}
+                maxLength={NOTE_MAX + 50}
+                placeholder={copy.placeholder}
+                onChange={(e) => { setNote(e.target.value); setFieldError(null); }}
+                aria-invalid={!!fieldError}
+              />
+            </MentorField>
+          )}
+        </div>
+        {error && <div className="form-inline-error" role="alert">{error}</div>}
+        <div className="trade-modal-actions">
+          <button type="button" className="account-outline-btn mentor-btn" onClick={close} disabled={busy}>انصراف</button>
+          <button
+            type="button"
+            className={`${copy.danger ? "trade-danger-btn" : "trade-primary-btn"} mentor-btn`}
+            onClick={submit}
+            disabled={busy}
+          >
+            {busy ? <Spinner size={14} /> : copy.confirm}
+          </button>
+        </div>
+    </MentorSheet>
+  );
+}

@@ -2,38 +2,41 @@
 
 import { useRef, useState } from "react";
 import { normalizeTimeToFa } from "@/lib/timeUtils";
-import { timeStartMinutes } from "@/lib/schedule";
+import { timeStartMinutes, dayBeforeIso } from "@/lib/schedule";
 import { findScheduleConflict } from "@/lib/conflict";
-import { showConflictAlert } from "@/lib/conflictAlertBus";
 import { TimeInput } from "./TimeInput";
 import { JalaliDatePicker } from "./JalaliDatePicker";
 import { formatJalali, isoLocal, jalaliToGregorianApprox, toJalali, JalaliDate } from "@/lib/jalali";
 import { CustomOccurrence, Importance, setCustomOccurrences, setRemovedOccurrences } from "@/lib/storage";
 import { focusNextOnEnter } from "@/lib/formNav";
 import { useLockBodyScroll } from "@/lib/useLockBodyScroll";
+import { Spinner } from "./Spinner";
 
 type Occ = { dayName: string; jsDay: number; time: string; id: string; custom?: boolean; importance?: Importance; tag?: string };
 type ScheduleOpts = { removedOccurrences: Set<string>; customOccurrences: CustomOccurrence[] };
 
 const now = new Date();
-const jNow = toJalali(now.getFullYear(), now.getMonth() + 1, now.getDate());
 
-// پاپ‌آپِ «انتقال به یک روز دیگر» — از منویِ سه‌نقطه‌ی یک برنامه باز می‌شه.
-// دیزاینش دقیقاً مثلِ افزودن/ویرایشِ برنامه‌ست. روزِ مقصد با یک تقویمِ واقعی
-// انتخاب می‌شه؛ فقط روزهایی که واقعاً از تقویم گذشتن غیرفعالن (نه کلِ یه
-// روزِ هفته برای همیشه — چون برنامه‌ها تکرارشونده‌ان، هفته‌ی بعدِ هر روزی
-// می‌تونه مقصدِ معتبر باشه). ساعتِ شروع/پایان همیشه توی پاپ‌آپن، پیش‌فرض
-// همون ساعتِ فعلیِ برنامه، ولی کاربر می‌تونه آزادانه تغییرشون بده.
+// پاپ‌آپ «انتقال به یک روز دیگر» — از منوی سه‌نقطه‌ی یک برنامه باز می‌شه.
+// دیزاینش دقیقا مثل افزودن/ویرایش برنامه‌ست. روز مقصد با یک تقویم واقعی
+// انتخاب می‌شه؛ فقط روزهایی که واقعا از تقویم گذشتن غیرفعالن (نه کل یه
+// روز هفته برای همیشه — چون برنامه‌ها تکرارشونده‌ان، هفته‌ی بعد هر روزی
+// می‌تونه مقصد معتبر باشه). ساعت شروع/پایان همیشه توی پاپ‌آپن، پیش‌فرض
+// همون ساعت فعلی برنامه، ولی کاربر می‌تونه آزادانه تغییرشون بده.
 export function MoveOccurrenceModal({
   name,
   occ,
   scheduleOpts,
+  sourceIso,
   onClose,
   onChanged,
 }: {
   name: string;
   occ: Occ;
   scheduleOpts: ScheduleOpts;
+  /** روزی که کاربر از رویش «انتقال» را زده — برای اینکه نسخه‌ی قبلی
+   * فقط از همین روز به بعد ناپدید شود، نه این‌که گذشته‌اش هم پاک شود. */
+  sourceIso: string;
   onClose: () => void;
   onChanged: () => void;
 }) {
@@ -45,6 +48,8 @@ export function MoveOccurrenceModal({
   const [start, setStart] = useState((parts[0] || "").trim());
   const [end, setEnd] = useState((parts[1] || "").trim());
   const [status, setStatus] = useState<"idle" | "loading" | "success" | "error">("idle");
+  // پیام خطا داخل همین پاپ‌آپ، نه بنر بالای صفحه (درخواست صریح کاربر).
+  const [formError, setFormError] = useState<string | null>(null);
   const [errors, setErrors] = useState<{ start?: boolean; end?: boolean }>({});
   const formRef = useRef<HTMLDivElement>(null);
 
@@ -64,55 +69,65 @@ export function MoveOccurrenceModal({
     const startMin = timeStartMinutes(startFa);
     const endMin = timeStartMinutes(endFa);
 
-    let pastMsg: string | null = null;
-    const isPickedToday = targetJalali![0] === jNow[0] && targetJalali![1] === jNow[1] && targetJalali![2] === jNow[2];
-    if (isPickedToday) {
-      const checkMin = endMin ?? startMin;
-      const nowMin = now.getHours() * 60 + now.getMinutes();
-      if (checkMin !== null && nowMin >= checkMin) {
-        pastMsg = "این ساعت برای امروز گذشته — نمی‌شه منتقلش کرد";
-      }
+    // هیچ قفلی روی «این ساعت امروز گذشته» نیست — درخواست صریح کاربر.
+    const conflict = findScheduleConflict(targetJsDay, startMin, endMin, now, scheduleOpts, occ.id);
+
+    if (conflict) {
+      setFormError(null);
+      setStatus("error");
+      setFormError(`تداخل زمانی با «${conflict.name}» — منتقل نشد`);
+      setTimeout(() => setStatus("idle"), 900);
+      return;
     }
 
-    const conflict = pastMsg ? null : findScheduleConflict(targetJsDay, startMin, endMin, now, scheduleOpts, occ.id);
-
+    setFormError(null);
     setStatus("loading");
-    setTimeout(async () => {
-      if (pastMsg || conflict) {
-        setStatus("error");
-        showConflictAlert(pastMsg || `تداخل زمانی با «${conflict!.name}» — منتقل نشد`);
-        setTimeout(() => setStatus("idle"), 900);
-        return;
-      }
 
-      setStatus("success");
-      if (navigator.vibrate) navigator.vibrate(15);
+    // بدون لودینگ مصنوعی — همین که واقعا ذخیره شد باید همه‌جای اپ دیده بشه.
+    let nextRemoved = scheduleOpts.removedOccurrences;
+    let nextCustom = scheduleOpts.customOccurrences;
+    if (occ.custom) {
+      // پاک‌کردن کامل رکورد قبلی یعنی گذشته‌ی همان occurrence هم از
+      // «برنامه هفتگی» ناپدید می‌شود (چون از روی همین آرایه محاسبه می‌شود،
+      // نه یک اسنپ‌شات جدا) — به‌جایش endDate روی «یک روز قبل از روزی که
+      // انتقال از رویش زده شده» ست می‌شود، دقیقا مثل حذف.
+      const cutoff = dayBeforeIso(sourceIso);
+      nextCustom = scheduleOpts.customOccurrences.flatMap((c) => {
+        if (c.id !== occ.id) return [c];
+        if (c.startDate && c.startDate > cutoff) return [];
+        return [{ ...c, endDate: cutoff }];
+      });
+    } else {
+      nextRemoved = new Set(scheduleOpts.removedOccurrences);
+      nextRemoved.add(occ.id + "|" + occ.jsDay);
+    }
 
-      let nextRemoved = scheduleOpts.removedOccurrences;
-      let nextCustom = scheduleOpts.customOccurrences;
-      if (occ.custom) {
-        nextCustom = scheduleOpts.customOccurrences.filter((c) => c.id !== occ.id);
-      } else {
-        nextRemoved = new Set(scheduleOpts.removedOccurrences);
-        nextRemoved.add(occ.id + "|" + occ.jsDay);
-      }
+    const mirrorOf = scheduleOpts.customOccurrences.find((c) => c.id === occ.id);
+    const mentorProgramId = mirrorOf?.mentorProgramId;
+    const mentorItemId = mirrorOf?.mentorItemId;
+    const newOcc: CustomOccurrence = {
+      id: "custom-" + Date.now().toString(36) + Math.random().toString(36).slice(2, 7),
+      name,
+      jsDay: targetJsDay,
+      time: endFa ? `${startFa} – ${endFa}` : startFa,
+      startDate: isoLocal(now),
+      ...(occ.importance ? { importance: occ.importance } : {}),
+      ...(occ.tag ? { tag: occ.tag } : {}),
+      // جابه‌جایی نباید پیوند آینه با برنامه‌ی منتور رو قطع کنه (حریم خصوصی/حذف خودکار)
+      ...(mentorProgramId ? { mentorProgramId } : {}),
+      // و پیوند با آیتم همان برنامه — تیک روز جدید به پیشرفت خودکار همان آیتم می‌رسد
+      ...(mentorProgramId && mentorItemId ? { mentorItemId } : {}),
+      // برنامه‌ی لیستی با جابه‌جایی آیتم‌هاش رو از دست نمی‌ده
+      ...(mirrorOf?.items?.length ? { items: mirrorOf.items } : {}),
+    };
+    nextCustom = [...nextCustom, newOcc];
 
-      const newOcc: CustomOccurrence = {
-        id: "custom-" + Date.now().toString(36) + Math.random().toString(36).slice(2, 7),
-        name,
-        jsDay: targetJsDay,
-        time: endFa ? `${startFa} – ${endFa}` : startFa,
-        startDate: isoLocal(now),
-        ...(occ.importance ? { importance: occ.importance } : {}),
-        ...(occ.tag ? { tag: occ.tag } : {}),
-      };
-      nextCustom = [...nextCustom, newOcc];
-
-      await setCustomOccurrences(nextCustom);
-      await setRemovedOccurrences(Array.from(nextRemoved));
-
-      setTimeout(() => { onChanged(); onClose(); }, 480);
-    }, 550);
+    await setCustomOccurrences(nextCustom);
+    await setRemovedOccurrences(Array.from(nextRemoved));
+    if (navigator.vibrate) navigator.vibrate(15);
+    setStatus("success");
+    onChanged();
+    setTimeout(onClose, 480);
   }
 
   return (
@@ -149,6 +164,8 @@ export function MoveOccurrenceModal({
             </div>
           </div>
 
+          {formError && <div className="form-inline-error">{formError}</div>}
+
           <div className="wsearch-newform-actions">
             <button
               type="button"
@@ -156,7 +173,7 @@ export function MoveOccurrenceModal({
               onClick={submit}
               aria-label="انتقال"
             >
-              <span className="wns-spinner" />
+              {status === "loading" && <span className="wns-spinner"><Spinner size={10} label={null} /></span>}
               <svg className="wns-check" viewBox="0 0 24 24" fill="none">
                 <path d="M5 13l4 4L19 7" stroke="currentColor" strokeWidth="2.4" strokeLinecap="round" strokeLinejoin="round" />
               </svg>
