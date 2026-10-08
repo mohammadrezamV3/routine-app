@@ -23,18 +23,18 @@ const COPY: Record<RespondAction, {
   danger: boolean;
 }> = {
   reject: {
-    title: "رد برنامه",
-    hint: "برنامه کنار گذاشته می‌شود و مربی دلیل رد را می‌بیند",
-    label: "دلیل رد",
+    title: "نه، این برنامه رو نمی‌خوام",
+    hint: "برنامه کنار گذاشته می‌شه و مربی دلیلش رو می‌بینه",
+    label: "دلیلش چیه",
     placeholder: "مثلا «با ساعت کاری‌ام هماهنگ نیست»",
     required: false,
-    confirm: "رد برنامه",
+    confirm: "نه، نمی‌خوام",
     danger: true,
   },
   request_changes: {
-    title: "درخواست تغییر",
-    hint: "برنامه برای اصلاح به مربی برمی‌گردد و نسخه‌ی تازه دوباره برایت فرستاده می‌شود",
-    label: "چه چیزی تغییر کند",
+    title: "تغییر بخواه",
+    hint: "برنامه برای اصلاح پیش مربی برمی‌گرده و دوباره برات فرستاده می‌شه",
+    label: "چی عوض بشه",
     placeholder: "مثلا «روزهای تمرین را به 3 روز در هفته کم کن»",
     required: true,
     confirm: "ارسال درخواست",
@@ -42,7 +42,7 @@ const COPY: Record<RespondAction, {
   },
   cancel: {
     title: "لغو برنامه",
-    hint: "برنامه متوقف و از روتین برداشته می‌شود؛ این کار برگشت‌پذیر نیست",
+    hint: "برنامه متوقف و از روتینت برداشته می‌شه؛ برگشتی نداره",
     label: null,
     required: false,
     confirm: "لغو برنامه",
@@ -82,8 +82,8 @@ export function ProgramRespondModal({
 
   async function submit() {
     const n = note.trim();
-    if (copy.required && !n) { setFieldError("بنویس چه چیزی باید تغییر کند"); return; }
-    if (n.length > NOTE_MAX) { setFieldError(`یادداشت حداکثر ${faNum(NOTE_MAX)} نویسه است`); return; }
+    if (copy.required && !n) { setFieldError("بنویس چی باید عوض بشه"); return; }
+    if (n.length > NOTE_MAX) { setFieldError(`یادداشت حداکثر ${faNum(NOTE_MAX)} حرف می‌شه`); return; }
     setBusy(true);
     setError(null);
     try {

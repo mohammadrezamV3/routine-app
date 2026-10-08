@@ -18,7 +18,7 @@ export default function EditMentorProgramPage() {
   const params = useParams<{ id: string }>();
   const id = typeof params?.id === "string" ? params.id : "";
   const [state, setState] = useState<State>({ loading: true, error: null, status: 200, data: null });
-  // ?saved=1 یعنی از «برنامه‌ی جدید» با ذخیره‌ی پیش‌نویس آمده؛ روی دکمه نشان داده می‌شود
+  // ?saved=1 یعنی از «برنامه‌ی تازه» با ذخیره آمده؛ روی دکمه نشان داده می‌شود
   const [justSaved, setJustSaved] = useState(false);
 
   const load = useCallback(async () => {
@@ -43,17 +43,17 @@ export default function EditMentorProgramPage() {
   const student = data?.role === "MENTOR" ? data.program.counterpart ?? null : null;
   const back = student
     ? { href: `/mentor/students/${student.id}`, label: publicUserName(student) }
-    : { href: "/mentor", label: "پنل مربی" };
+    : { href: "/mentor/templates", label: "برنامه‌ها" };
 
   let body: React.ReactNode;
   if (!id || state.loading) body = <LoadingBlock />;
   else if (state.error || !data) {
     const final = state.status === 404 || state.status === 403;
-    body = <MentorDashError message={state.error || "برنامه دریافت نشد؛ دوباره تلاش کن"} onRetry={final ? undefined : load} />;
+    body = <MentorDashError message={state.error || "برنامه باز نشد؛ دوباره تلاش کن"} onRetry={final ? undefined : load} />;
   } else if (data.role !== "MENTOR") {
     body = (
       <MentorDashError
-        message="فقط مربی سازنده‌ی این برنامه می‌تواند آن را ویرایش کند"
+        message="فقط مربی سازنده‌ی این برنامه می‌تونه ویرایشش کنه"
         action={<Link href={`/mentor-programs/${data.program.id}`} className="account-outline-btn mentor-btn is-sm">مشاهده‌ی برنامه</Link>}
       />
     );
@@ -62,8 +62,8 @@ export default function EditMentorProgramPage() {
       <>
       <MentorEmptyState
         icon={<ClipboardList size={MI.empty} strokeWidth={MI_STROKE} aria-hidden />}
-        title="این برنامه ارسال شده و دیگر ویرایش نمی‌شود"
-        text="اگر شاگرد درخواست تغییر بدهد، برنامه دوباره پیش‌نویس می‌شود"
+        title="این برنامه فرستاده شده و دیگه ویرایش نمی‌شه"
+        text="اگه شاگرد تغییر بخواد، دوباره قابل ویرایش می‌شه"
         action={<Link href={`/mentor-programs/${data.program.id}`} className="account-outline-btn mentor-btn">مشاهده‌ی برنامه</Link>}
       />
       <MentorProgramTools programId={data.program.id} title={data.program.title} studentId={student?.id} />

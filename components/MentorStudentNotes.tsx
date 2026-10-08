@@ -4,6 +4,7 @@ import { MentorList, MentorListItem } from "./MentorMotion";
 import { useEffect, useRef, useState } from "react";
 import { NotebookPen, Pencil, Plus, Trash2 } from "lucide-react";
 import { Spinner } from "./Spinner";
+import { MentorSheet } from "./MentorSheet";
 import { MentorConfirmDialog } from "./MentorConfirmDialog";
 import { fa, mentorApi } from "./MentorDashKit";
 import { MI, MI_STROKE, MentorEmpty, MentorSection } from "./MentorUI";
@@ -24,15 +25,18 @@ const ic = (Icon: typeof Pencil, size: number) => <Icon size={size} strokeWidth=
  * دستگاه با کلید منتور رمز می‌شود و سرور فقط پاکت رمزشده می‌گیرد. تا کلید روی
  * دستگاه باز نشده، MentorE2EEGate فرم باز کردن را نشان می‌دهد.
  */
-export function MentorStudentNotes({ studentId, initial }: { studentId: string; initial: StudentNote[] }) {
+export function MentorStudentNotes({ studentId, initial, composeOpen = false, onComposeClose }: { studentId: string; initial: StudentNote[]; composeOpen?: boolean; onComposeClose?: () => void }) {
   return (
     <MentorE2EEGate context="notes">
-      {(identity) => <NotesBody key={`${identity.userId}:${identity.version}`} identity={identity} studentId={studentId} initial={initial} />}
+      {(identity) => <NotesBody key={`${identity.userId}:${identity.version}`} identity={identity} studentId={studentId} initial={initial} composeOpen={composeOpen} onComposeClose={onComposeClose} />}
     </MentorE2EEGate>
   );
 }
 
-function NotesBody({ identity, studentId, initial }: { identity: Identity; studentId: string; initial: StudentNote[] }) {
+function NotesBody({ identity, studentId, initial, composeOpen, onComposeClose }: { identity: Identity; studentId: string; initial: StudentNote[]; composeOpen: boolean; onComposeClose?: () => void }) {
+  const [sheet, setSheet] = useState(composeOpen);
+  useEffect(() => { if (composeOpen) setSheet(true); }, [composeOpen]);
+  const closeSheet = () => { setSheet(false); setError(null); onComposeClose?.(); };
   const base = `/api/mentor/students/${encodeURIComponent(studentId)}/notes`;
   const [notes, setNotes] = useState<StudentNote[]>(initial);
   const [draft, setDraft] = useState("");
@@ -84,7 +88,7 @@ function NotesBody({ identity, studentId, initial }: { identity: Identity; stude
     e.preventDefault();
     const body = draft.trim();
     if (!body || busy) return;
-    if (body.length > NOTE_MAX) { setError(`یادداشت حداکثر ${fa(NOTE_MAX)} نویسه است`); return; }
+    if (body.length > NOTE_MAX) { setError(`یادداشت حداکثر ${fa(NOTE_MAX)} حرف باشه`); return; }
     setBusy("add");
     setError(null);
     const r = await mentorApi<{ note: StudentNote }>(base, { method: "POST", body: { body: await sealNote(identity, studentId, body) } });
@@ -93,6 +97,7 @@ function NotesBody({ identity, studentId, initial }: { identity: Identity; stude
     setOpened((prev) => ({ ...prev, [r.data.note.id]: { kind: "text", text: body } }));
     setNotes((xs) => [r.data.note, ...xs]);
     setDraft("");
+    closeSheet();
   }
 
   async function saveEdit() {
@@ -122,20 +127,26 @@ function NotesBody({ identity, studentId, initial }: { identity: Identity; stude
   return (
     <MentorSection
       title="یادداشت‌های خصوصی" icon={ic(NotebookPen, MI.section)} count={notes.length ? fa(notes.length) : undefined}
+      action={<button type="button" className="account-outline-btn mentor-btn is-sm" onClick={() => { setError(null); setSheet(true); }}>{ic(Plus, MI.btnSm)} یادداشت تازه</button>}
     >
-      <form onSubmit={add} noValidate className="mentor-form" style={{ gap: "var(--m-2)" }}>
-        <textarea
-          className="wsearch-newform-name trade-glass-field" rows={2} maxLength={NOTE_MAX + 50} aria-label="یادداشت جدید"
-          value={draft} placeholder="مثلا «هفته‌ی امتحانات؛ حجم برنامه را کم کن»"
-          onChange={(e) => { setDraft(e.target.value); setError(null); }}
-        />
-        <div className="mentor-btn-group is-end">
-          <button type="submit" className="account-outline-btn mentor-btn is-sm" disabled={!draft.trim() || !!busy}>
-            {busy === "add" ? <Spinner size={14} /> : <>{ic(Plus, MI.btnSm)} افزودن یادداشت</>}
-          </button>
-        </div>
-      </form>
-      {error && !confirm && <div className="form-inline-error" role="alert">{error}</div>}
+      <MentorSheet open={sheet} onClose={closeSheet} title="یادداشت تازه" size="sm" dismissible={busy !== "add"}>
+        <form onSubmit={add} noValidate className="mentor-form" style={{ gap: "var(--m-2)" }}>
+          <textarea
+            className="wsearch-newform-name trade-glass-field" rows={4} maxLength={NOTE_MAX + 50} aria-label="یادداشت تازه" autoFocus
+            value={draft} placeholder="مثلا «هفته‌ی امتحانات؛ حجم برنامه رو کم کن»"
+            onChange={(e) => { setDraft(e.target.value); setError(null); }}
+          />
+          <p className="mentor-muted">فقط خودت می‌بینی</p>
+          {error && <div className="form-inline-error" role="alert">{error}</div>}
+          <div className="mentor-btn-group is-end">
+            <button type="button" className="account-outline-btn muted mentor-btn is-sm" onClick={closeSheet}>انصراف</button>
+            <button type="submit" className="trade-primary-btn mentor-btn is-sm" disabled={!draft.trim() || !!busy}>
+              {busy === "add" ? <Spinner size={14} /> : "ذخیره"}
+            </button>
+          </div>
+        </form>
+      </MentorSheet>
+      {error && !confirm && !sheet && <div className="form-inline-error" role="alert">{error}</div>}
 
       {notes.length === 0 ? (
         <MentorEmpty>هنوز یادداشتی ننوشته‌ای</MentorEmpty>
@@ -178,8 +189,8 @@ function NotesBody({ identity, studentId, initial }: { identity: Identity; stude
                 <p className="mentor-feedback-body">
                   {!opened[n.id] ? <Spinner size={14} />
                     : textOf(n) !== null ? textOf(n)
-                    : opened[n.id].kind === "old-key" ? <span className="mentor-msg-unreadable">این یادداشت با کلید قبلی رمز شده و دیگر خوانده نمی‌شود</span>
-                    : <span className="mentor-msg-unreadable">این یادداشت رمزگشایی نشد</span>}
+                    : opened[n.id].kind === "old-key" ? <span className="mentor-msg-unreadable">این یادداشت دیگه روی این دستگاه باز نمی‌شه</span>
+                    : <span className="mentor-msg-unreadable">این یادداشت باز نشد</span>}
                 </p>
               )}
             </div>

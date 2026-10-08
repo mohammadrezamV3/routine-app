@@ -18,9 +18,9 @@ export function MentorshipStateNote({ row, role }: { row: MentorshipRow; role: "
   if (row.status === "ACTIVE" && row.pausedAt) {
     lines.push(
       <p key="paused" className="mentor-state-note">
-        <MentorChip tone="neutral" icon={ic(CirclePause, MI.chip)}>همکاری متوقف است</MentorChip>
+        <MentorChip tone="neutral" icon={ic(CirclePause, MI.chip)}>همکاری فعلا نگه داشته شده</MentorChip>
         <span>
-          {role === "student" ? "مربی همکاری را موقتا متوقف کرده است" : "همکاری را موقتا متوقف کرده‌ای"}
+          {role === "student" ? "مربی همکاری رو فعلا نگه داشته" : "همکاری رو فعلا نگه داشته‌ای"}
           {row.pauseReason ? `؛ ${row.pauseReason}` : ""}
         </span>
       </p>,
@@ -38,7 +38,7 @@ export function MentorshipStateNote({ row, role }: { row: MentorshipRow; role: "
     const byMe = (row.endedBy === "MENTOR" && role === "mentor") || (row.endedBy === "STUDENT" && role === "student");
     lines.push(
       <p key="ended" className="mentor-state-note">
-        <MentorChip tone="neutral" icon={ic(LogOut, MI.chip)}>{byMe ? "پایان از طرف تو" : role === "student" ? "پایان از طرف مربی" : "پایان از طرف شاگرد"}</MentorChip>
+        <MentorChip tone="neutral" icon={ic(LogOut, MI.chip)}>{byMe ? "تو همکاری رو تموم کردی" : role === "student" ? "مربی همکاری رو تموم کرد" : "شاگرد همکاری رو تموم کرد"}</MentorChip>
         <span>{row.endReason}</span>
       </p>,
     );

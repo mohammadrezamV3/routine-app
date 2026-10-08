@@ -5,7 +5,7 @@ import { useCallback, useEffect, useLayoutEffect, useMemo, useRef, useState } fr
 import { AnimatePresence, motion } from "framer-motion";
 import {
   AlertCircle, BellRing, Check, CheckCheck, ChevronDown, Clock, Copy, Flag, Lock, Megaphone, MessageSquareQuote,
-  RefreshCw, Send, ShieldAlert, Trash2,
+  RefreshCw, Send, Smartphone, Trash2,
 } from "lucide-react";
 import type { ChatMessage, MessagesResponse } from "@/lib/mentorTypes";
 import { NETWORK_ERROR, fmtDate, readApiError } from "@/lib/mentorFormat";
@@ -101,12 +101,13 @@ function useCoarsePointer() {
  *  • گزارش یک پیام یا کل گفت‌وگو: متن + کلید فرانکینگ هر پیام به سرور می‌رود.
  */
 export function MentorChat({
-  mentorshipId, peerName, sheet = null, onSheetClose, onReady,
+  mentorshipId, peerName, sheet = null, onSheetClose, onOpenSheet, onReady,
 }: {
   mentorshipId: string;
   peerName?: string;
   sheet?: ChatSheet;
   onSheetClose?: () => void;
+  onOpenSheet?: (s: ChatSheet) => void;
   /** true وقتی رشته‌ی پیام‌ها آماده است (گزارش گفت‌وگو فقط آن موقع ممکن است) */
   onReady?: (ready: boolean) => void;
 }) {
@@ -121,6 +122,7 @@ export function MentorChat({
           peerName={peerName}
           sheet={sheet}
           onSheetClose={onSheetClose}
+          onOpenSheet={onOpenSheet}
           onReady={onReady}
         />
       )}
@@ -136,7 +138,7 @@ type Row =
     };
 
 function ChatBody({
-  identity, persistent, mentorshipId, peerName, sheet, onSheetClose, onReady,
+  identity, persistent, mentorshipId, peerName, sheet, onSheetClose, onOpenSheet, onReady,
 }: {
   identity: Identity;
   persistent: boolean;
@@ -144,6 +146,7 @@ function ChatBody({
   peerName?: string;
   sheet: ChatSheet;
   onSheetClose?: () => void;
+  onOpenSheet?: (s: ChatSheet) => void;
   onReady?: (ready: boolean) => void;
 }) {
   const [keys, setKeys] = useState<ConversationKeys | null>(null);
@@ -216,7 +219,7 @@ function ChatBody({
       if (initial) await loadKeys();
       const res = await fetch(`/api/mentorships/${mentorshipId}/messages`, { cache: "no-store" });
       if (!res.ok) {
-        if (initial) setLoadError(await readApiError(res, "گفت‌وگو دریافت نشد؛ دوباره تلاش کن"));
+        if (initial) setLoadError(await readApiError(res, "گفت‌وگو باز نشد؛ دوباره امتحان کن"));
         return;
       }
       const data: MessagesResponse = await res.json();
@@ -401,7 +404,7 @@ function ChatBody({
     let frankingKey = p.frankingKey;
     try {
       if (!payload) {
-        if (!cipher) throw new Error("کلیدهای گفت‌وگو هنوز دریافت نشده");
+        if (!cipher) throw new Error("گفت‌وگو داره آماده می‌شه، چند لحظه دیگه دوباره امتحان کن");
         const { frankingKey: fk, ...enc } = await cipher.encrypt(p.text, randomId());
         payload = enc;
         frankingKey = fk;
@@ -423,7 +426,7 @@ function ChatBody({
             return deliver({ ...p, payload: enc, frankingKey: fk2 }, true);
           }
         }
-        const msg = await readApiError(res, "ارسال نشد");
+        const msg = await readApiError(res, "پیام نرفت؛ دوباره امتحان کن");
         fail(p.tempId, msg, payload);
         if (res.status === 403 || res.status === 404 || (res.status === 409 && !data?.code)) setCanSend(false);
         return;
@@ -556,27 +559,21 @@ function ChatBody({
             </div>
           )}
 
-          {!hasMore && (
-            <div className="mc-service">
-              <span><Lock size={12} strokeWidth={1.75} aria-hidden /> پیام‌ها رمزگذاری سرتاسری دارند و فقط روی دستگاه تو و {peerLabel} خوانده می‌شوند</span>
-            </div>
-          )}
-
           {welcome && !hasMore && welcomeDay && (
             <div className="mc-day"><span>{dayLabel(welcomeDay)}</span></div>
           )}
           {welcome && !hasMore && (
             <div className="mc-row is-peer is-last is-first">
               <div className="support-msg admin mc-bubble has-tail mc-welcome">
-                <span className="mc-label">پیام خوش‌آمد؛ بدون رمزگذاری سرتاسری</span>
+                <span className="mc-label">پیام خوش‌آمد</span>
                 <span className="mc-text" dir="auto">{welcome.body}</span>
                 <span className="mc-spacer" aria-hidden />
-                <span className="mc-meta"><span className="mc-time">{hm(welcome.at)}</span></span>
+                
               </div>
             </div>
           )}
 
-          {empty && <div className="mc-service"><span>هنوز پیامی نیست</span></div>}
+          {empty && <div className="mc-service"><span>هنوز پیامی نیست؛ اولین پیام رو بفرست</span></div>}
 
           {rows.map((r, idx) => {
             if (r.kind === "day") {
@@ -610,11 +607,11 @@ function ChatBody({
                     <span className="mc-meta">
                       <span className="mc-time">{hm(p.createdAt)}</span>
                       {p.state === "sending"
-                        ? <Clock {...META_ICON} aria-label="در حال ارسال" />
-                        : <AlertCircle {...META_ICON} className="mc-fail-icon" aria-label={p.error || "ارسال نشد"} />}
+                        ? <span className="mv2-ms-read"><Clock {...META_ICON} aria-hidden /> در حال فرستادن</span>
+                        : <span className="mv2-ms-read"><AlertCircle {...META_ICON} className="mc-fail-icon" aria-hidden /> نرفت</span>}
                     </span>
                   </div>
-                  {p.state === "failed" && <div className="mc-fail-note" role="alert">{p.error || "ارسال نشد"}؛ برای تلاش دوباره روی پیام بزن</div>}
+                  {p.state === "failed" && <div className="mc-fail-note" role="alert">{p.error || "نرفت"}؛ برای تلاش دوباره روی پیام بزن</div>}
                 </motion.div>
               );
             }
@@ -624,10 +621,10 @@ function ChatBody({
             const readable = o && ((o.kind === "text" && o.committed) || o.kind === "legacy");
             const text = readable ? (o as { text: string }).text : null;
             const body = !o ? <Spinner size={14} />
-              : o.kind === "text" ? (o.committed ? o.text : <span className="mentor-msg-unreadable">این پیام با تعهد رمزنگاری‌اش نمی‌خواند و نمایش داده نمی‌شود</span>)
+              : o.kind === "text" ? (o.committed ? o.text : <span className="mentor-msg-unreadable">این پیام نمایش داده نمی‌شه چون درست نرسیده</span>)
               : o.kind === "legacy" ? o.text
-              : o.kind === "old-key" ? <span className="mentor-msg-unreadable">این پیام با کلید قبلی حساب رمز شده و دیگر خوانده نمی‌شود</span>
-              : <span className="mentor-msg-unreadable">این پیام رمزگشایی نشد</span>;
+              : o.kind === "old-key" ? <span className="mentor-msg-unreadable">این پیام دیگه روی این دستگاه باز نمی‌شه</span>
+              : <span className="mentor-msg-unreadable">این پیام باز نشد</span>;
             const actions: MentorMenuAction[] = [];
             if (text) actions.push({ label: "کپی متن", icon: <Copy {...MENU_ICON} />, onClick: () => copyText(text) });
             if (!m.mine && readable) {
@@ -648,12 +645,12 @@ function ChatBody({
                   <span className="mc-text" dir="auto">{body}</span>
                   <span className={`mc-spacer${m.mine ? " is-mine" : ""}`} aria-hidden />
                   <span className="mc-meta">
-                    {m.broadcast && <Megaphone {...META_ICON} aria-label="ارسال گروهی" />}
-                    {o?.kind === "legacy" && <span title="پیش از رمزگذاری سرتاسری ارسال شده">بدون رمزگذاری</span>}
+                    {m.broadcast && <span className="mv2-ms-read"><Megaphone {...META_ICON} aria-hidden /> پیام به همه</span>}
+                    {o?.kind === "legacy" && <span>پیام قدیمی</span>}
                     <span className="mc-time">{hm(m.createdAt)}</span>
                     {m.mine && (m.readAt
-                      ? <CheckCheck {...META_ICON} aria-label="خوانده شد" />
-                      : <Check {...META_ICON} aria-label="ارسال شد" />)}
+                      ? <span className="mv2-ms-read"><CheckCheck {...META_ICON} aria-hidden /> خونده شد</span>
+                      : <span className="mv2-ms-read"><Check {...META_ICON} aria-hidden /> رسید</span>)}
                   </span>
                 </div>
               </motion.div>
@@ -691,26 +688,31 @@ function ChatBody({
         </AnimatePresence>
 
         {peerChanged && (
-          <div className="mc-notice is-warn" role="status">
-            <ShieldAlert size={14} strokeWidth={1.75} aria-hidden />
-            <span>کلید رمزگذاری {peerLabel} عوض شده است؛ اگر خودش کلید تازه نساخته، کد امنیتی را با او مقایسه کن</span>
-            <button type="button" className="mentor-text-btn" onClick={async () => { await cipher?.acceptPeerKey(); setPeerChanged(false); }}>متوجه شدم</button>
+          <div className="mv2-ms-syscard" role="status">
+            <Smartphone size={18} strokeWidth={1.75} aria-hidden />
+            <span className="mv2-ms-syscard-body">
+              <span>{peerLabel} با یه دستگاه تازه وارد شده. اگه مطمئن نیستی، کد تایید رو با هم چک کنید.</span>
+              <span className="mv2-ms-syscard-actions">
+                <button type="button" className="mentor-text-btn" onClick={() => onOpenSheet?.("e2ee")}>چک کردن</button>
+                <button type="button" className="mentor-text-btn" onClick={async () => { await cipher?.acceptPeerKey(); setPeerChanged(false); }}>باشه</button>
+              </span>
+            </span>
           </div>
         )}
 
         {!canSend ? (
           <div className="mc-notice">
             <Lock size={14} strokeWidth={1.75} aria-hidden />
-            <span>گفت‌وگو فقط‌خواندنی است؛ ارسال پیام فقط در رابطه‌ی فعال ممکن است</span>
+            <span>همکاری تموم شده، فقط می‌تونی پیام‌های قبلی رو ببینی</span>
           </div>
         ) : !peerReady ? (
           <div className="mc-notice">
-            <span>{peerLabel} هنوز وارد بخش مربی نشده؛ با اولین ورودش، ارسال پیام باز می‌شود</span>
+            <span>{peerLabel} هنوز وارد بخش مربی نشده؛ با اولین ورودش می‌تونی پیام بدی</span>
             {nudge === "sent" ? (
-              <span className="mentor-muted">به {peerLabel} اطلاع داده شد</span>
+              <span className="mentor-muted">به {peerLabel} خبر دادیم</span>
             ) : (
               <button type="button" className="mentor-text-btn" onClick={askPeerToEnable} disabled={nudge === "busy"}>
-                {nudge === "busy" ? <Spinner size={14} /> : <><BellRing size={14} strokeWidth={1.75} aria-hidden /> اطلاع به {peerLabel}</>}
+                {nudge === "busy" ? <Spinner size={14} /> : <><BellRing size={14} strokeWidth={1.75} aria-hidden /> خبر دادن به {peerLabel}</>}
               </button>
             )}
           </div>
@@ -729,7 +731,7 @@ function ChatBody({
                 </motion.div>
               )}
             </AnimatePresence>
-            {tooLong && <p className="mc-notice is-error" role="alert">پیام حداکثر {faNum(MAX_LEN)} نویسه است</p>}
+            {tooLong && <p className="mc-notice is-error" role="alert">پیام حداکثر {faNum(MAX_LEN)} حرف می‌شه</p>}
             <form className="mc-composer" onSubmit={(e) => { e.preventDefault(); send(); }}>
               {isMentor && (
                 <button
@@ -737,6 +739,7 @@ function ChatBody({
                   className={`routine-ai-action mc-side-btn${repliesOpen ? " is-on" : ""}`}
                   onClick={() => setRepliesOpen((v) => !v)}
                   aria-label="پاسخ‌های آماده"
+                  aria-haspopup="true"
                   aria-expanded={repliesOpen}
                   title="پاسخ‌های آماده"
                 >
@@ -749,7 +752,7 @@ function ChatBody({
                 rows={1}
                 value={draft}
                 maxLength={MAX_LEN + 200}
-                placeholder="پیام"
+                placeholder="پیام بنویس..."
                 aria-label={`پیام به ${peerLabel}`}
                 enterKeyHint={coarse ? "enter" : "send"}
                 onChange={(e) => setDraft(e.target.value)}
@@ -761,8 +764,8 @@ function ChatBody({
               <button
                 type="submit"
                 className={`routine-ai-action mc-send${hasText ? " is-send" : ""}`}
-                aria-label={hasText ? "ارسال پیام" : "نوشتن پیام"}
-                title={hasText ? "ارسال پیام" : undefined}
+                aria-label="فرستادن پیام"
+                title="فرستادن"
                 aria-disabled={!hasText}
               >
                 <span className="routine-ai-action-icon" aria-hidden="true"><Send size={18} strokeWidth={1.75} className="mc-send-icon" /></span>
@@ -809,7 +812,7 @@ function ChatReplies({ onPick }: { onPick: (text: string) => void }) {
   if (error) return <div className="form-inline-error" role="alert">{error}</div>;
   if (!list) return <div className="mc-replies-loading"><Spinner size={16} /></div>;
   if (list.length === 0) {
-    return <p className="mentor-muted">هنوز پاسخ آماده‌ای نیست؛ از <a href="/mentor/templates?tab=replies" className="mentor-link">قالب‌ها</a> اضافه کن</p>;
+    return <p className="mentor-muted">هنوز پاسخ آماده‌ای نداری؛ از <a href="/mentor/templates?tab=replies" className="mentor-link">برنامه‌ها</a> اضافه کن</p>;
   }
   return (
     <div className="mc-replies-list" role="list" aria-label="پاسخ‌های آماده">

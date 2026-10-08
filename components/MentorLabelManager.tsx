@@ -6,7 +6,7 @@ import { Check, Pencil, Plus, Tag, Trash2, X } from "lucide-react";
 import { Spinner } from "./Spinner";
 import { MentorConfirmDialog } from "./MentorConfirmDialog";
 import { fa, mentorApi } from "./MentorDashKit";
-import { MI, MI_STROKE, MentorEmpty, MentorField, MentorSection } from "./MentorUI";
+import { MI, MI_STROKE, MentorEmpty, MentorField } from "./MentorUI";
 import { LABELS_MAX, LABEL_NAME_MAX } from "@/lib/mentorAvailability";
 import type { StudentLabel } from "@/lib/mentorTypes";
 
@@ -16,7 +16,7 @@ const ic = (Icon: typeof Tag, size: number) => <Icon size={size} strokeWidth={MI
  * برچسب‌های خصوصی منتور برای دسته‌بندی شاگردها (ساخت، تغییر نام، حذف).
  * هر اقدام فورا ذخیره می‌شود؛ شاگرد هیچ‌وقت برچسب‌ها را نمی‌بیند.
  */
-export function MentorLabelManager({ initial }: { initial: StudentLabel[] }) {
+export function MentorLabelManager({ initial, onChange }: { initial: StudentLabel[]; onChange?: (labels: StudentLabel[]) => void }) {
   const [labels, setLabels] = useState<StudentLabel[]>(initial);
   const [name, setName] = useState("");
   const [editing, setEditing] = useState<{ id: string; name: string } | null>(null);
@@ -24,17 +24,19 @@ export function MentorLabelManager({ initial }: { initial: StudentLabel[] }) {
   const [busy, setBusy] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
 
+  function applyLabels(l: StudentLabel[]) { setLabels(l); onChange?.(l); }
+
   async function add(e?: React.FormEvent) {
     e?.preventDefault();
     const v = name.replace(/\s+/g, " ").trim();
     if (!v || busy) return;
-    if (v.length > LABEL_NAME_MAX) { setError(`نام برچسب حداکثر ${fa(LABEL_NAME_MAX)} نویسه است`); return; }
+    if (v.length > LABEL_NAME_MAX) { setError(`نام برچسب حداکثر ${fa(LABEL_NAME_MAX)} حرف است`); return; }
     setBusy("add");
     setError(null);
     const r = await mentorApi<{ labels: StudentLabel[] }>("/api/mentor/labels", { method: "POST", body: { name: v } });
     setBusy(null);
     if (!r.ok) { setError(r.error); return; }
-    setLabels(r.data.labels);
+    applyLabels(r.data.labels);
     setName("");
   }
 
@@ -47,7 +49,7 @@ export function MentorLabelManager({ initial }: { initial: StudentLabel[] }) {
     const r = await mentorApi<{ labels: StudentLabel[] }>(`/api/mentor/labels/${editing.id}`, { method: "PATCH", body: { name: v } });
     setBusy(null);
     if (!r.ok) { setError(r.error); return; }
-    setLabels(r.data.labels);
+    applyLabels(r.data.labels);
     setEditing(null);
   }
 
@@ -57,14 +59,12 @@ export function MentorLabelManager({ initial }: { initial: StudentLabel[] }) {
     const r = await mentorApi<{ labels: StudentLabel[] }>(`/api/mentor/labels/${l.id}`, { method: "DELETE" });
     setBusy(null);
     if (!r.ok) { setError(r.error); return; }
-    setLabels(r.data.labels);
+    applyLabels(r.data.labels);
     setConfirm(null);
   }
 
   return (
-    <MentorSection
-      id="labels" title="برچسب شاگردها" icon={ic(Tag, MI.section)} count={labels.length ? fa(labels.length) : undefined}
-    >
+    <div className="mv2-set-labels" id="labels">
       {labels.length === 0 ? (
         <MentorEmpty>هنوز برچسبی نساخته‌ای</MentorEmpty>
       ) : (
@@ -122,8 +122,8 @@ export function MentorLabelManager({ initial }: { initial: StudentLabel[] }) {
 
       {confirm && (
         <MentorConfirmDialog
-          message={`برچسب «${confirm.name}» حذف شود؟`}
-          hint="برچسب از روی همه‌ی شاگردها برداشته می‌شود."
+          message={`برچسب «${confirm.name}» حذف بشه؟`}
+          hint="برچسب از روی همه‌ی شاگردها برداشته می‌شه."
           confirmLabel="حذف برچسب"
           danger
           busy={busy === confirm.id}
@@ -132,6 +132,6 @@ export function MentorLabelManager({ initial }: { initial: StudentLabel[] }) {
           onCancel={() => { setConfirm(null); setError(null); }}
         />
       )}
-    </MentorSection>
+    </div>
   );
 }

@@ -29,7 +29,7 @@ export function MentorTemplateSaveDialog({
   async function save() {
     if (busy) return;
     const n = name.trim();
-    if (!n) { setError("نام قالب لازم است"); return; }
+    if (!n) { setError("اسم قالب لازمه"); return; }
     setBusy(true);
     setError(null);
     const r = await mentorApi<{ template: TemplateRow }>("/api/mentor/templates", {
@@ -45,7 +45,7 @@ export function MentorTemplateSaveDialog({
   return (
     <MentorConfirmDialog
       message="ذخیره به‌عنوان قالب"
-      hint="آیتم‌ها، توضیح و یادداشت ذخیره می‌شود؛ شاگرد و تاریخ‌ها نه"
+      hint="کارها، توضیح و یادداشت ذخیره می‌شه؛ شاگرد و تاریخ‌ها نه"
       confirmLabel="ذخیره‌ی قالب"
       danger={false}
       busy={busy}
@@ -54,7 +54,7 @@ export function MentorTemplateSaveDialog({
       onCancel={onClose}
     >
       <div className="mentor-form" style={{ marginTop: "var(--m-3)" }}>
-        <MentorField label="نام قالب" htmlFor="tpl-save-name">
+        <MentorField label="اسم قالب" htmlFor="tpl-save-name">
           <input
             id="tpl-save-name" type="text" className="wsearch-newform-name trade-glass-field" maxLength={NAME_MAX}
             value={name} placeholder="مثلا حجم 8 هفته‌ای مبتدی" autoFocus

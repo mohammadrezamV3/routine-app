@@ -1,12 +1,11 @@
 "use client";
 
 import { useState } from "react";
-import { TickButton } from "./TickButton";
-import { Ban, Check, Eye, Plus, Tag, UserRound, X } from "lucide-react";
-import { ToggleSwitch } from "./ToggleSwitch";
+import { Ban, Check, Plus, Tag, X } from "lucide-react";
+import { TickOption } from "./TickOption";
 import { Spinner } from "./Spinner";
 import { fa, mentorApi } from "./MentorDashKit";
-import { MI, MI_STROKE, MentorField, MentorNotice, MentorSection } from "./MentorUI";
+import { MI, MI_STROKE, MentorField, MentorNotice } from "./MentorUI";
 import { MENTOR_CATEGORIES, MENTOR_CATEGORY_META, type MentorCategory } from "@/lib/mentorCategories";
 import type { MentorSelf } from "@/lib/mentorTypes";
 import { MENTOR_TERMS_REQUIRED_MESSAGE, MENTOR_TERMS_VERSION } from "@/lib/mentorTerms";
@@ -37,7 +36,7 @@ export function MentorProfileForm({ profile, onSaved }: { profile: MentorSelf | 
   );
   const [routineRole, setRoutineRole] = useState(profile?.routineRole ?? "");
   const [published, setPublished] = useState(profile?.published ?? false);
-  // پذیرش نسخه‌ی جاری «شرایط منتوری» (lib/mentorTerms.ts)؛ بدون آن سرور ۴۰۰ می‌دهد
+  // پذیرش نسخه‌ی جاری «شرایط منتوری» (lib/mentorTerms.ts)؛ بدون آن سرور 400 می‌دهد
   const needsTerms = profile?.mentorTermsVersion !== MENTOR_TERMS_VERSION;
   const [termsAccepted, setTermsAccepted] = useState(false);
   const [termsErr, setTermsErr] = useState<string | null>(null);
@@ -56,7 +55,7 @@ export function MentorProfileForm({ profile, onSaved }: { profile: MentorSelf | 
   function addSpecialty() {
     const v = specInput.trim().replace(/\s+/g, " ");
     if (!v) return;
-    if (v.length > SPECIALTY_MAX) { setFieldErr((e) => ({ ...e, spec: `هر تخصص حداکثر ${fa(SPECIALTY_MAX)} نویسه است` })); return; }
+    if (v.length > SPECIALTY_MAX) { setFieldErr((e) => ({ ...e, spec: `هر تخصص حداکثر ${fa(SPECIALTY_MAX)} حرف است` })); return; }
     if (specialties.length >= SPECIALTIES_MAX) { setFieldErr((e) => ({ ...e, spec: `حداکثر ${fa(SPECIALTIES_MAX)} تخصص` })); return; }
     if (!specialties.includes(v)) setSpecialties((s) => [...s, v]);
     setSpecInput("");
@@ -77,11 +76,11 @@ export function MentorProfileForm({ profile, onSaved }: { profile: MentorSelf | 
     setSaved(false);
     const role = routineRole.replace(/\s+/g, " ").trim();
     const errs: typeof fieldErr = {};
-    if (headline.trim().length > HEADLINE_MAX) errs.headline = `حداکثر ${fa(HEADLINE_MAX)} نویسه`;
-    if (bio.trim().length > BIO_MAX) errs.bio = `حداکثر ${fa(BIO_MAX)} نویسه`;
+    if (headline.trim().length > HEADLINE_MAX) errs.headline = `حداکثر ${fa(HEADLINE_MAX)} حرف`;
+    if (bio.trim().length > BIO_MAX) errs.bio = `حداکثر ${fa(BIO_MAX)} حرف`;
     if (published && !bio.trim()) errs.bio = "برای انتشار، بیوگرافی لازم است";
     if (published && categories.length === 0) errs.categories = "برای انتشار، حداقل یک حوزه انتخاب کن";
-    if (hasRoutine && role.length > ROUTINE_ROLE_MAX) errs.role = `حداکثر ${fa(ROUTINE_ROLE_MAX)} نویسه`;
+    if (hasRoutine && role.length > ROUTINE_ROLE_MAX) errs.role = `حداکثر ${fa(ROUTINE_ROLE_MAX)} حرف`;
     setFieldErr(errs);
     const termsMissing = needsTerms && !termsAccepted;
     setTermsErr(termsMissing ? MENTOR_TERMS_REQUIRED_MESSAGE.mentor : null);
@@ -117,123 +116,101 @@ export function MentorProfileForm({ profile, onSaved }: { profile: MentorSelf | 
   }
 
   return (
-    <form onSubmit={save} noValidate>
+    <form onSubmit={save} noValidate className="mv2-set-profile">
       {profile?.suspendedAt && (
-        <MentorNotice tone="danger" icon={ic(Ban, MI.row)} title="حساب مربی‌گری معلق است">
-          {profile.suspendedReason || "تا رفع تعلیق، پروفایل در فهرست مربی‌ها دیده نمی‌شود"}
+        <MentorNotice tone="danger" icon={ic(Ban, MI.row)} title="حساب مربی‌گری‌ت موقتا بسته شده">
+          {profile.suspendedReason || "تا باز شدن حساب، پروفایلت توی فهرست مربی‌ها دیده نمی‌شه"}
         </MentorNotice>
       )}
 
-      <MentorSection
-        title="معرفی" icon={ic(UserRound, MI.section)}
-        desc={isNew ? "پروفایل با اولین ذخیره ساخته می‌شود و تا انتشار، پنهان می‌ماند" : undefined}
-      >
-        <div className="mentor-form">
-          <MentorField label="عنوان کوتاه" htmlFor="mp-headline" optional error={fieldErr.headline} hint={`حداکثر ${fa(HEADLINE_MAX)} نویسه`}>
-            <input
-              id="mp-headline" type="text" className="wsearch-newform-name trade-glass-field" maxLength={HEADLINE_MAX}
-              value={headline} placeholder="مثلا مربی بدنسازی با 8 سال سابقه"
-              onChange={(e) => { setHeadline(e.target.value); setFieldErr((x) => ({ ...x, headline: undefined })); touched(); }}
-            />
-          </MentorField>
-          <MentorField
-            label="بیوگرافی" htmlFor="mp-bio" error={fieldErr.bio}
-            hint={`${fa(bio.length)} از ${fa(BIO_MAX)} نویسه`}
-          >
-            <textarea
-              id="mp-bio" className="wsearch-newform-name trade-glass-field" rows={5} maxLength={BIO_MAX}
-              value={bio} placeholder="مثلا سابقه، روش کار و این‌که به چه کسانی کمک می‌کنی"
-              onChange={(e) => { setBio(e.target.value); setFieldErr((x) => ({ ...x, bio: undefined })); touched(); }}
-            />
-          </MentorField>
-        </div>
-      </MentorSection>
+      <div className="mentor-form">
+        <MentorField label="عنوان کوتاه" htmlFor="mp-headline" optional error={fieldErr.headline} hint={`حداکثر ${fa(HEADLINE_MAX)} حرف`}>
+          <input
+            id="mp-headline" type="text" className="wsearch-newform-name trade-glass-field" maxLength={HEADLINE_MAX}
+            value={headline} placeholder="مثلا مربی بدنسازی با 8 سال سابقه"
+            onChange={(e) => { setHeadline(e.target.value); setFieldErr((x) => ({ ...x, headline: undefined })); touched(); }}
+          />
+        </MentorField>
+        <MentorField label="بیوگرافی" htmlFor="mp-bio" error={fieldErr.bio} hint={`${fa(bio.length)} از ${fa(BIO_MAX)} حرف`}>
+          <textarea
+            id="mp-bio" className="wsearch-newform-name trade-glass-field" rows={5} maxLength={BIO_MAX}
+            value={bio} placeholder="مثلا سابقه، روش کار و اینکه به چه کسایی کمک می‌کنی"
+            onChange={(e) => { setBio(e.target.value); setFieldErr((x) => ({ ...x, bio: undefined })); touched(); }}
+          />
+        </MentorField>
 
-      <MentorSection title="حوزه‌ها و تخصص‌ها" icon={ic(Tag, MI.section)}>
-        <div className="mentor-form">
+        <MentorField label="حوزه‌ها" error={fieldErr.categories} hint="برای هر حوزه، یه بخش مدرک جدا توی تایید هویت اضافه می‌شه">
+          <div role="group" aria-label="حوزه‌ها" className="mv2-set-cats">
+            {MENTOR_CATEGORIES.map((c) => (
+              <TickOption key={c} checked={categories.includes(c)} onChange={(v) => toggleCategory(c, v)}>
+                {MENTOR_CATEGORY_META[c].label}
+              </TickOption>
+            ))}
+          </div>
+        </MentorField>
+
+        {hasRoutine && (
           <MentorField
-            label="حوزه‌ها" error={fieldErr.categories}
-            hint="برای هر حوزه، بخش مدرک جداگانه‌ای در احراز هویت اضافه می‌شود"
+            label="نقش تو در این حوزه" htmlFor="mp-role" optional error={fieldErr.role}
+            hint={`کنار حوزه‌ی «${MENTOR_CATEGORY_META.ROUTINE.label}» روی پروفایلت نشون داده می‌شه؛ حداکثر ${fa(ROUTINE_ROLE_MAX)} حرف`}
           >
-            <div role="group" aria-label="حوزه‌ها">
-              {MENTOR_CATEGORIES.map((c) => (
-                <label key={c} className="mentor-check">
-                  <TickButton shape="square" size={22} checked={categories.includes(c)} onToggle={() => toggleCategory(c, !categories.includes(c))} />
-                  <span className="mentor-check-label">{MENTOR_CATEGORY_META[c].label}</span>
-                </label>
+            <input
+              id="mp-role" type="text" className="wsearch-newform-name trade-glass-field" maxLength={ROUTINE_ROLE_MAX}
+              value={routineRole} placeholder="مثلا استاد ریاضی، مشاور کنکور"
+              onChange={(e) => { setRoutineRole(e.target.value); setFieldErr((x) => ({ ...x, role: undefined })); touched(); }}
+            />
+          </MentorField>
+        )}
+
+        <MentorField label="تخصص‌ها" htmlFor="mp-spec" optional error={fieldErr.spec} hint={`حداکثر ${fa(SPECIALTIES_MAX)} مورد`}>
+          {specialties.length > 0 && (
+            <div className="mentor-chips">
+              {specialties.map((sp) => (
+                <span key={sp} className="mentor-chip is-cat mv2-set-spec">
+                  <span>{sp}</span>
+                  <button
+                    type="button" className="mentor-text-btn mv2-set-spec-x"
+                    onClick={() => { setSpecialties((xs) => xs.filter((x) => x !== sp)); touched(); }}
+                    aria-label={`حذف تخصص ${sp}`}
+                  >
+                    {ic(X, MI.chip)}
+                  </button>
+                </span>
               ))}
             </div>
-          </MentorField>
-
-          {hasRoutine && (
-            <MentorField
-              label="نقش تو در این حوزه" htmlFor="mp-role" optional error={fieldErr.role}
-              hint={`کنار حوزه‌ی «${MENTOR_CATEGORY_META.ROUTINE.label}» روی پروفایلت نمایش داده می‌شود؛ حداکثر ${fa(ROUTINE_ROLE_MAX)} نویسه`}
-            >
-              <input
-                id="mp-role" type="text" className="wsearch-newform-name trade-glass-field" maxLength={ROUTINE_ROLE_MAX}
-                value={routineRole} placeholder="مثلا استاد ریاضی، مشاور کنکور"
-                onChange={(e) => { setRoutineRole(e.target.value); setFieldErr((x) => ({ ...x, role: undefined })); touched(); }}
-              />
-            </MentorField>
           )}
-
-          <MentorField
-            label="تخصص‌ها" htmlFor="mp-spec" optional error={fieldErr.spec}
-            hint={`حداکثر ${fa(SPECIALTIES_MAX)} مورد`}
-          >
-            {specialties.length > 0 && (
-              <div className="mentor-chips">
-                {specialties.map((s) => (
-                  <span key={s} className="mentor-chip is-cat">
-                    <span>{s}</span>
-                    <button
-                      type="button" className="mentor-text-btn" style={{ padding: 0 }}
-                      onClick={() => { setSpecialties((xs) => xs.filter((x) => x !== s)); touched(); }}
-                      aria-label={`حذف تخصص ${s}`}
-                    >
-                      {ic(X, MI.chip)}
-                    </button>
-                  </span>
-                ))}
-              </div>
-            )}
-            <div className="flex items-stretch gap-2">
-              <input
-                id="mp-spec" type="text" className="wsearch-newform-name trade-glass-field min-w-0 flex-1" maxLength={SPECIALTY_MAX}
-                value={specInput} placeholder="مثلا کاهش وزن"
-                onChange={(e) => { setSpecInput(e.target.value); setFieldErr((x) => ({ ...x, spec: undefined })); }}
-                onKeyDown={(e) => { if (e.key === "Enter") { e.preventDefault(); addSpecialty(); } }}
-              />
-              <button
-                type="button" className="account-outline-btn mentor-btn" onClick={addSpecialty}
-                disabled={!specInput.trim() || specialties.length >= SPECIALTIES_MAX}
-              >
-                {ic(Plus, MI.btn)} افزودن
-              </button>
-            </div>
-          </MentorField>
-        </div>
-      </MentorSection>
-
-      <MentorSection title="نمایش پروفایل" icon={ic(Eye, MI.section)}>
-        <div className="mentor-toggle-row">
-          <div className="mentor-toggle-text">
-            <div className="mentor-toggle-title">انتشار پروفایل</div>
-            <div className="mentor-toggle-desc">
-              {missing.length > 0 && !published
-                ? `برای انتشار، ${missing.join(" و ")} لازم است`
-                : profile?.identityStatus === "VERIFIED"
-                  ? "پروفایل منتشرشده در فهرست مربی‌ها دیده می‌شود"
-                  : "پس از تایید مدرک شناسایی در فهرست مربی‌ها دیده می‌شود"}
-            </div>
+          <div className="flex items-stretch gap-2">
+            <input
+              id="mp-spec" type="text" className="wsearch-newform-name trade-glass-field min-w-0 flex-1" maxLength={SPECIALTY_MAX}
+              value={specInput} placeholder="مثلا کاهش وزن"
+              onChange={(e) => { setSpecInput(e.target.value); setFieldErr((x) => ({ ...x, spec: undefined })); }}
+              onKeyDown={(e) => { if (e.key === "Enter") { e.preventDefault(); addSpecialty(); } }}
+            />
+            <button
+              type="button" className="account-outline-btn mentor-btn" onClick={addSpecialty}
+              disabled={!specInput.trim() || specialties.length >= SPECIALTIES_MAX}
+            >
+              {ic(Plus, MI.btn)} افزودن
+            </button>
           </div>
-          <ToggleSwitch
-            checked={published} label="انتشار پروفایل"
+        </MentorField>
+
+        <div className="mv2-set-publish">
+          <TickOption
+            checked={published}
             onChange={(v) => { setPublished(v); setFieldErr((x) => ({ ...x, bio: undefined, categories: undefined })); touched(); }}
-          />
+          >
+            نمایش در فهرست مربی‌ها
+          </TickOption>
+          <p className="mentor-field-hint">
+            {missing.length > 0 && !published
+              ? `برای نمایش، ${missing.join(" و ")} لازمه`
+              : profile?.identityStatus === "VERIFIED"
+                ? "پروفایلت توی فهرست مربی‌ها دیده می‌شه"
+                : "بعد از تایید مدرک شناسایی توی فهرست مربی‌ها دیده می‌شه"}
+          </p>
         </div>
-      </MentorSection>
+      </div>
 
       {needsTerms && (
         <div className="mentor-terms-row">
@@ -246,7 +223,7 @@ export function MentorProfileForm({ profile, onSaved }: { profile: MentorSelf | 
       {error && <div className="form-inline-error" role="alert">{error}</div>}
       <div className="mentor-form-actions" style={{ marginTop: error ? undefined : 0 }}>
         <button type="submit" className="trade-primary-btn mentor-btn" disabled={saving}>
-          {saving ? <Spinner size={14} /> : saved ? <>{ic(Check, MI.btn)} ذخیره شد</> : isNew ? "ساخت پروفایل" : "ذخیره تغییرات"}
+          {saving ? <Spinner size={14} /> : saved ? <>{ic(Check, MI.btn)} ذخیره شد</> : isNew ? "ساخت پروفایل" : "ذخیره"}
         </button>
       </div>
     </form>

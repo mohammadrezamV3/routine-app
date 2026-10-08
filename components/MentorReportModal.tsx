@@ -69,7 +69,7 @@ function DoneBody({ onClose, text }: { onClose: () => void; text: string }) {
   return (
     <>
       <p className="mentor-dialog-msg" role="status">{text}</p>
-      <p className="mentor-dialog-hint">در صف بررسی ادمین‌های آریون قرار گرفت</p>
+      <p className="mentor-dialog-hint">ادمین‌های آریون بررسیش می‌کنن</p>
       <div className="trade-modal-actions">
         <button type="button" className="account-outline-btn mentor-btn" onClick={onClose}>بستن</button>
       </div>
@@ -116,7 +116,7 @@ export function MentorReportModal({
 
   async function submit() {
     if (!reason) { setReasonError("یک دلیل انتخاب کن"); return; }
-    if (reason === OTHER && !details.trim()) { setDetailsError("برای «سایر» توضیح لازم است"); return; }
+    if (reason === OTHER && !details.trim()) { setDetailsError("برای «سایر» یه توضیح بنویس"); return; }
     setBusy(true);
     setError(null);
     try {
@@ -125,8 +125,8 @@ export function MentorReportModal({
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ targetType, targetId, reason, details: details.trim() || undefined, ...(franking ? { franking } : {}) }),
       });
-      if (res.status === 409) { setError("این مورد را قبلا گزارش داده‌ای و در صف بررسی ادمین‌های آریون است"); return; }
-      if (!res.ok) { setError(await readApiError(res, "گزارش ثبت نشد؛ دوباره تلاش کن")); return; }
+      if (res.status === 409) { setError("این مورد رو قبلا گزارش دادی و ادمین‌ها دارن بررسیش می‌کنن"); return; }
+      if (!res.ok) { setError(await readApiError(res, "گزارش ثبت نشد؛ دوباره امتحان کن")); return; }
       setDone(true);
     } catch {
       setError(NETWORK_ERROR);
@@ -143,7 +143,7 @@ export function MentorReportModal({
         <>
           <div className="mentor-form">
             {targetType === "MESSAGE" && (
-              <p className="mentor-muted">با ثبت گزارش، متن همین یک پیام برای ادمین‌های آریون قابل مشاهده می‌شود؛ پیام‌های دیگر این گفت‌وگو رمزگذاری‌شده می‌مانند.</p>
+              <p className="mentor-muted">با ثبت گزارش، فقط متن همین یک پیام برای ادمین‌های آریون دیده می‌شه. بقیه‌ی پیام‌های گفت‌وگو خصوصی می‌مونن.</p>
             )}
             <ReasonFields
               kind={targetType}
@@ -226,7 +226,7 @@ export function MentorConversationReportSheet({
 
   async function submit() {
     if (!reason) { setReasonError("یک دلیل انتخاب کن"); return; }
-    if (reason === OTHER && !details.trim()) { setDetailsError("برای «سایر» توضیح لازم است"); return; }
+    if (reason === OTHER && !details.trim()) { setDetailsError("برای «سایر» یه توضیح بنویس"); return; }
     const chosen = list.filter((c) => picked.has(c.id));
     if (!chosen.some((c) => !c.mine)) { setPickError(`حداقل یک پیام از ${peerName} انتخاب کن`); return; }
     setBusy(true);
@@ -241,8 +241,8 @@ export function MentorConversationReportSheet({
           messages: chosen.map((c) => (c.frankingKey ? { id: c.id, text: c.text, frankingKey: c.frankingKey } : { id: c.id })),
         }),
       });
-      if (res.status === 409) { setError("این گفت‌وگو را قبلا گزارش داده‌ای و در صف بررسی ادمین‌های آریون است"); return; }
-      if (!res.ok) { setError(await readApiError(res, "گزارش ثبت نشد؛ دوباره تلاش کن")); return; }
+      if (res.status === 409) { setError("این گفت‌وگو رو قبلا گزارش دادی و ادمین‌ها دارن بررسیش می‌کنن"); return; }
+      if (!res.ok) { setError(await readApiError(res, "گزارش ثبت نشد؛ دوباره امتحان کن")); return; }
       setDone(true);
     } catch {
       setError(NETWORK_ERROR);
@@ -259,7 +259,7 @@ export function MentorConversationReportSheet({
         <DoneBody onClose={close} text={`گزارش با ${faNum(picked.size)} پیام پیوست ثبت شد`} />
       ) : list.length === 0 ? (
         <>
-          <p className="mentor-dialog-msg">پیامی برای پیوست نیست</p>
+          <p className="mentor-dialog-msg">پیامی برای پیوست کردن نیست</p>
           <div className="trade-modal-actions">
             <button type="button" className="account-outline-btn mentor-btn" onClick={close}>بستن</button>
           </div>
@@ -288,7 +288,7 @@ export function MentorConversationReportSheet({
                   {picked.size === list.length ? "برداشتن همه" : "انتخاب همه"}
                 </button>
               </div>
-              <p className="mentor-field-hint">فقط متن پیام‌های انتخاب‌شده برای ادمین‌های آریون قابل مشاهده می‌شود؛ بقیه رمزگذاری‌شده می‌مانند</p>
+              <p className="mentor-field-hint">فقط متن پیام‌هایی که انتخاب کردی برای ادمین‌های آریون دیده می‌شه. بقیه خصوصی می‌مونن.</p>
               <div className="mc-pick-list thin-scroll" role="group" aria-label="پیام‌های پیوست">
                 {list.map((c) => (
                   <label key={c.id} className={`mentor-check mc-pick${c.mine ? " is-mine" : ""}`}>

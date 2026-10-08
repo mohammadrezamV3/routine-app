@@ -7,7 +7,7 @@ import {
 import { Spinner } from "./Spinner";
 import { MentorConfirmDialog } from "./MentorConfirmDialog";
 import { fa, formatBytes, mentorApi, statusMessage } from "./MentorDashKit";
-import { MI, MI_STROKE, MentorChip, MentorEmpty, MentorNotice, MentorRow, MentorSection } from "./MentorUI";
+import { MI, MI_STROKE, MentorChip, MentorEmpty, MentorNotice, MentorRow } from "./MentorUI";
 import { fmtDate } from "@/lib/mentorFormat";
 import { MENTOR_CATEGORY_META, VERIFICATION_LABELS, isMentorCategory } from "@/lib/mentorCategories";
 import type { MentorDocumentMeta, MentorSelf, VerificationStatus } from "@/lib/mentorTypes";
@@ -57,23 +57,25 @@ function StatusChip({ status }: { status: VerificationStatus }) {
  * تخصصی برای هر حوزه) با چیپ وضعیت، فهرست فایل‌ها و دکمه‌ی ارسال.
  */
 export function MentorProfileVerification({ profile, onChanged }: { profile: MentorSelf | null; onChanged: () => void }) {
-  const title = "احراز هویت و مدارک";
+  const title = "تایید هویت و مدارک";
   const icon = ic(BadgeCheck, MI.section);
 
   if (!profile) {
     return (
-      <MentorSection id="verification" title={title} icon={icon}>
-        <MentorEmpty>پس از ساخت پروفایل، می‌توانی مدرک بفرستی</MentorEmpty>
-      </MentorSection>
+      <section id="verification" className="mv2-set-verify">
+        <h2 className="mv2-set-h">{icon}{title}</h2>
+        <MentorEmpty>بعد از ساخت پروفایل می‌تونی مدرک بفرستی</MentorEmpty>
+      </section>
     );
   }
 
   const cats = profile.categories.filter(isMentorCategory);
   return (
-    <MentorSection id="verification" title={title} icon={icon}>
+    <section id="verification" className="mv2-set-verify">
+      <h2 className="mv2-set-h">{icon}{title}</h2>
       <MentorDocRow
         title="مدرک شناسایی"
-        hint="کارت ملی یا گذرنامه؛ برای نمایش در فهرست مربی‌ها لازم است"
+        hint="کارت ملی یا گذرنامه، برای نمایش در فهرست مربی‌ها لازمه"
         icon={ic(IdCard, MI.row)}
         status={profile.identityStatus}
         rejectReason={profile.identityRejectReason}
@@ -82,14 +84,14 @@ export function MentorProfileVerification({ profile, onChanged }: { profile: Men
         onChanged={onChanged}
       />
       {cats.length === 0 ? (
-        <MentorEmpty>برای ارسال مدرک تخصصی، یک حوزه انتخاب و ذخیره کن</MentorEmpty>
+        <MentorEmpty>برای فرستادن مدرک تخصصی، یه حوزه انتخاب و ذخیره کن</MentorEmpty>
       ) : cats.map((c) => {
         const cred = profile.credentials.find((x) => x.category === c);
         return (
           <MentorDocRow
             key={c}
             title={MENTOR_CATEGORY_META[c].certLabel}
-            hint={`${MENTOR_CATEGORY_META[c].label}؛ اختیاری`}
+            hint={`${MENTOR_CATEGORY_META[c].label}، اختیاری`}
             icon={ic(Award, MI.row)}
             status={cred?.status ?? "NOT_PROVIDED"}
             rejectReason={cred?.rejectReason ?? null}
@@ -99,8 +101,8 @@ export function MentorProfileVerification({ profile, onChanged }: { profile: Men
           />
         );
       })}
-      <p className="mentor-field-hint mentor-doc-rules">JPG، PNG، WebP یا PDF تا 5 مگابایت؛ فقط تو و ادمین‌های آریون فایل‌ها را می‌بینید</p>
-    </MentorSection>
+      <p className="mentor-field-hint mentor-doc-rules">عکس یا PDF تا 5 مگابایت. فقط تو و ادمین‌های آریون فایل‌ها رو می‌بینید</p>
+    </section>
   );
 }
 
@@ -128,10 +130,10 @@ function MentorDocRow({
 
   async function pick(file: File) {
     setError(null);
-    if (file.size === 0) { setError("فایل خالی است"); return; }
-    if (file.size > MAX_BYTES) { setError(`حجم فایل حداکثر 5 مگابایت است؛ این فایل ${formatBytes(file.size)} است`); return; }
+    if (file.size === 0) { setError("فایل خالیه"); return; }
+    if (file.size > MAX_BYTES) { setError(`حجم فایل حداکثر 5 مگابایته، این فایل ${formatBytes(file.size)} است`); return; }
     const typeOk = file.type ? ALLOWED_MIME.includes(file.type) : ALLOWED_EXT.test(file.name);
-    if (!typeOk) { setError("فقط تصویر (JPG، PNG، WebP) یا PDF پذیرفته می‌شود"); return; }
+    if (!typeOk) { setError("فقط عکس یا PDF قبول می‌شه"); return; }
 
     const form = new FormData();
     form.append("file", file, file.name);
@@ -189,13 +191,13 @@ function MentorDocRow({
     <MentorRow
       lead={icon}
       title={title}
-      sub={<span>{status === "VERIFIED" ? "مدرک تاییدشده حذف نمی‌شود؛ فایل تازه آن را به صف بررسی برمی‌گرداند" : hint}</span>}
+      sub={<span>{status === "VERIFIED" ? "مدرک تاییدشده حذف نمی‌شه و فایل تازه دوباره به صف بررسی می‌ره" : hint}</span>}
       end={<StatusChip status={status} />}
       below={
         <>
           {status === "REJECTED" && (
             <MentorNotice tone="danger" icon={ic(XCircle, MI.row)} title="مدرک رد شد">
-              {rejectReason || "فایل اصلاح‌شده را دوباره بفرست"}
+              {rejectReason || "فایل اصلاح‌شده رو دوباره بفرست"}
             </MentorNotice>
           )}
 
@@ -210,14 +212,14 @@ function MentorDocRow({
                   end={
                     <>
                       <button
-                        type="button" className="trade-icon-btn" disabled={!!busyDoc}
+                        type="button" className="trade-icon-btn mv2-set-iconbtn" disabled={!!busyDoc}
                         onClick={() => download(d)} aria-label={`دریافت ${d.fileName}`}
                       >
                         {busyDoc === d.id + ":get" ? <Spinner size={14} /> : <Download size={MI.btnSm} strokeWidth={MI_STROKE} />}
                       </button>
                       {canDelete && (
                         <button
-                          type="button" className="trade-icon-btn danger" disabled={!!busyDoc || uploading}
+                          type="button" className="trade-icon-btn danger mv2-set-iconbtn" disabled={!!busyDoc || uploading}
                           onClick={() => { setDelError(null); setConfirmDel(d); }} aria-label={`حذف ${d.fileName}`}
                         >
                           <Trash2 size={MI.btnSm} strokeWidth={MI_STROKE} />
@@ -234,12 +236,12 @@ function MentorDocRow({
 
           <div className="mentor-btn-group is-end">
             <button
-              type="button" className="account-outline-btn mentor-btn is-sm" disabled={uploading}
+              type="button" className="account-outline-btn mentor-btn is-sm mv2-set-upload" disabled={uploading}
               onClick={() => inputRef.current?.click()}
               aria-label={uploading ? `در حال ارسال، ${fa(pctNow)} درصد` : undefined}
             >
               {uploading
-                ? <><Spinner size={14} /> {fa(pctNow)}٪</>
+                ? <><Spinner size={14} /> {fa(pctNow)}%</>
                 : <>{ic(Upload, MI.btnSm)} {docs.length ? "افزودن فایل" : "ارسال مدرک"}</>}
             </button>
             <input

@@ -41,8 +41,8 @@ export function useMentorshipActions({
 
   const open = (c: Confirm) => { clearError(); setConfirm(c); };
   const actions: MentorMenuAction[] = [];
-  if (chatOpen && onReportConversation) actions.push({ label: "گزارش گفت‌وگو", icon: <Flag {...MENU_ICON} />, onClick: onReportConversation });
-  if (row.status === "ACTIVE") actions.push({ label: "پایان رابطه", icon: <LogOut {...MENU_ICON} />, onClick: () => open("end") });
+  if (chatOpen && onReportConversation) actions.push({ label: "گزارش", icon: <Flag {...MENU_ICON} />, onClick: onReportConversation });
+  if (row.status === "ACTIVE") actions.push({ label: "پایان همکاری", icon: <LogOut {...MENU_ICON} />, onClick: () => open("end") });
   if (iInitiated) actions.push({ label: "لغو درخواست", icon: <X {...MENU_ICON} />, onClick: () => open("cancel") });
   if (row.status === "ACTIVE" || isPending || row.status === "ENDED") {
     actions.push({ label: "مسدود کردن", icon: <Ban {...MENU_ICON} />, onClick: () => open("block"), danger: true });
@@ -67,13 +67,13 @@ export function useMentorshipActions({
 
   const dialogs = confirm ? (
     <MentorConfirmDialog
-      message={confirm === "end" ? `رابطه با ${name} پایان یابد؟` : confirm === "cancel" ? `درخواست به ${name} لغو شود؟` : `${name} مسدود شود؟`}
+      message={confirm === "end" ? `همکاری با ${name} تموم بشه؟` : confirm === "cancel" ? `درخواست به ${name} لغو بشه؟` : `${name} مسدود بشه؟`}
       hint={
-        confirm === "end" ? "برنامه‌های در جریان لغو می‌شوند؛ گفت‌وگو فقط‌خواندنی می‌ماند."
-          : confirm === "cancel" ? "بعدا می‌توانی دوباره درخواست بدهی."
-          : "رابطه قطع و برنامه‌های در جریان لغو می‌شوند؛ دیگر درخواست یا پیامی از او نمی‌رسد."
+        confirm === "end" ? "برنامه‌های در جریان لغو می‌شن و فقط می‌تونی پیام‌های قبلی رو ببینی."
+          : confirm === "cancel" ? "بعدا می‌تونی دوباره درخواست بدی."
+          : "همکاری قطع و برنامه‌های در جریان لغو می‌شن؛ دیگه درخواست یا پیامی از او نمی‌رسه."
       }
-      confirmLabel={confirm === "end" ? "پایان رابطه" : confirm === "cancel" ? "لغو درخواست" : "مسدود کردن"}
+      confirmLabel={confirm === "end" ? "پایان همکاری" : confirm === "cancel" ? "لغو درخواست" : "مسدود کردن"}
       busy={pendingKey === confirm}
       error={error}
       onConfirm={() => act(confirm)}

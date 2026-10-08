@@ -8,7 +8,7 @@ import { GOAL_LABELS, LEVEL_LABELS } from "@/lib/exercisePlans";
 import { CALORIE_GOAL_LABELS } from "@/lib/calorieCalc";
 import type { StudentView } from "./MentorStudentTypes";
 
-const PHASE_LABELS: Record<string, string> = { bulk: "حجم", cut: "کات", maintenance: "حفظ", none: "بدون فاز" };
+const PHASE_LABELS: Record<string, string> = { bulk: "افزایش حجم", cut: "کم‌کردن وزن", maintenance: "حفظ وزن", none: "بدون مرحله" };
 
 const ic = (Icon: typeof Flame, size: number) => <Icon size={size} strokeWidth={MI_STROKE} aria-hidden />;
 
@@ -49,20 +49,20 @@ export function MentorStudentModules({ modules }: { modules: StudentView["module
       {exercise && (
         <MentorSection title="بدنسازی" icon={ic(Dumbbell, MI.section)}>
           {!exercise.hasPlan ? (
-            <MentorEmpty>شاگرد برنامه‌ی تمرینی فعالی در آریون ندارد</MentorEmpty>
+            <MentorEmpty>شاگرد هنوز برنامه‌ی تمرینی فعالی نداره</MentorEmpty>
           ) : (
             <>
               <Facts
                 items={[
                   { k: "سطح", v: label(LEVEL_LABELS, exercise.level) ?? "نامشخص" },
                   { k: "هدف", v: label(GOAL_LABELS, exercise.goal) ?? "نامشخص" },
-                  { k: "فاز", v: label(PHASE_LABELS, exercise.trainingPhase) ?? "نامشخص" },
+                  { k: "مرحله", v: label(PHASE_LABELS, exercise.trainingPhase) ?? "نامشخص" },
                   { k: "شروع", v: fmtDate(exercise.startDate) || "نامشخص" },
                 ]}
               />
               <div style={{ marginTop: "var(--m-3)" }}>
                 {exercise.gymDays === null ? (
-                  <Hidden>روزهای تمرین مخفی است</Hidden>
+                  <Hidden>این بخش رو شاگرد خصوصی نگه داشته</Hidden>
                 ) : (
                   <p className="mentor-muted">
                     {exercise.gymDays.length ? `روزهای تمرین: ${exercise.gymDays.join("، ")}` : "روز تمرینی مشخص نشده است"}
@@ -70,7 +70,7 @@ export function MentorStudentModules({ modules }: { modules: StudentView["module
                 )}
               </div>
               {exercise.progress === null ? (
-                <Hidden>اجرای تمرین‌ها مخفی است</Hidden>
+                <Hidden>این بخش رو شاگرد خصوصی نگه داشته</Hidden>
               ) : (
                 <div style={{ marginTop: "var(--m-2)" }}>
                   <p className="mentor-muted">
@@ -96,7 +96,7 @@ export function MentorStudentModules({ modules }: { modules: StudentView["module
       {calorie && (
         <MentorSection title="کالری" icon={ic(Flame, MI.section)}>
           {!calorie.hasTarget ? (
-            <MentorEmpty>شاگرد هدف کالری تعیین نکرده است</MentorEmpty>
+            <MentorEmpty>شاگرد هنوز هدف کالری نذاشته</MentorEmpty>
           ) : (
             <Facts
               items={[
@@ -105,21 +105,21 @@ export function MentorStudentModules({ modules }: { modules: StudentView["module
                 ...(calorie.macros
                   ? [
                       { k: "پروتئین", v: calorie.macros.proteinG != null ? `${fa(calorie.macros.proteinG)} گرم` : "نامشخص" },
-                      { k: "کربوهیدرات / چربی", v: `${calorie.macros.carbsG != null ? fa(calorie.macros.carbsG) : "؟"} / ${calorie.macros.fatG != null ? fa(calorie.macros.fatG) : "؟"} گرم` },
+                      { k: "کربوهیدرات / چربی", v: `${calorie.macros.carbsG != null ? fa(calorie.macros.carbsG) : "نامشخص"} / ${calorie.macros.fatG != null ? fa(calorie.macros.fatG) : "نامشخص"} گرم` },
                     ]
-                  : [{ k: "درشت‌مغذی‌ها", v: "مخفی" }]),
+                  : [{ k: "پروتئین، کربوهیدرات، چربی", v: "خصوصی" }]),
               ]}
             />
           )}
           {calorie.progress === null ? (
-            <Hidden>ثبت‌های روزانه مخفی است</Hidden>
+            <Hidden>این بخش رو شاگرد خصوصی نگه داشته</Hidden>
           ) : (
             <div style={{ marginTop: "var(--m-3)" }}>
               {calorie.hasTarget && (
                 <p className="mentor-muted">{fa(calorie.progress.successDays)} روز در محدوده‌ی هدف</p>
               )}
               {calorie.progress.days.length === 0 ? (
-                <MentorEmpty>در این بازه ثبتی نیست</MentorEmpty>
+                <MentorEmpty>در این هفته ثبتی نیست</MentorEmpty>
               ) : calorie.progress.days.map((d) => {
                 const over = calorie.dailyTargetKcal != null && d.kcal > calorie.dailyTargetKcal;
                 return (

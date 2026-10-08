@@ -54,10 +54,10 @@ export function MentorConfirmDialog({
     <>
       <LockBodyScroll />
       <div className="modal-overlay open" onClick={() => !busy && onCancel()} style={{ zIndex: 90 }} />
-      <div className="modal-panel open mentor-modal" role="alertdialog" aria-modal="true" aria-label={message} style={{ zIndex: 91, maxWidth: 380 }}>
+      <div className="modal-panel open mentor-modal" role="alertdialog" aria-modal="true" aria-label={message} aria-describedby={hint ? "mentor-confirm-hint" : undefined} style={{ zIndex: 91, maxWidth: 380 }}>
         <div className="modal-body" style={{ paddingTop: 4 }}>
           <p className="mentor-dialog-msg">{message}</p>
-          {hint && <p className="mentor-dialog-hint">{hint}</p>}
+          {hint && <p className="mentor-dialog-hint" id="mentor-confirm-hint">{hint}</p>}
           {children}
           {error && <div className="trade-form-error">{error}</div>}
           <div className="trade-modal-actions">

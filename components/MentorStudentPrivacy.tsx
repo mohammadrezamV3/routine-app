@@ -1,56 +1,39 @@
 "use client";
 
 import "./mentor.css";
-import { Eye, EyeOff, ShieldCheck } from "lucide-react";
-import { MentorChip, MentorRow, MentorSection } from "./MentorUI";
+import { Check, Minus } from "lucide-react";
 import { fa } from "./MentorDashKit";
 import type { StudentPrivacySummary, StudentView } from "./MentorStudentTypes";
 
-const CHIP_ICON = { size: 13, strokeWidth: 1.75, "aria-hidden": true } as const;
+const ICON = { size: 16, strokeWidth: 2, "aria-hidden": true } as const;
 
 /**
- * «آنچه می‌بینی» — خلاصه‌ی تنظیمات حریم خصوصی شاگرد برای همین رابطه.
- * هر ردیف یک بخش است با یک چیپ (دیده می‌شود / مخفی) تا منتور خالی‌بودن
- * یک بخش را با «کاری نکرده» اشتباه نگیرد.
+ * «چیزهایی که با تو به اشتراک گذاشته»: فهرست ساده؛ هر خط با علامت و متن
+ * (دیده می‌شه / خصوصی). تنظیمات رو خود شاگرد تعیین می‌کنه.
  */
 export function MentorStudentPrivacy({
   privacy: p, modules, scheduleHidden,
 }: { privacy: StudentPrivacySummary; modules: StudentView["modules"]; scheduleHidden: boolean }) {
-  const scheduleOn = !scheduleHidden && p.showSchedule;
-  const programsText = p.shareAllPrograms ? "همه" : p.sharedCount > 0 ? `${fa(p.sharedCount)} برنامه` : null;
-
-  const lines: { key: string; label: string; on: boolean; onText?: string; sub?: string }[] = [
-    { key: "programs", label: "برنامه‌های روتین", on: !!programsText, onText: programsText ?? undefined },
-    { key: "schedule", label: "زمان‌بندی", on: scheduleOn },
+  const programsText = p.shareAllPrograms ? "همه‌ی برنامه‌ها" : p.sharedCount > 0 ? `${fa(p.sharedCount)} برنامه` : "برنامه‌های روتین";
+  const lines: { key: string; label: string; on: boolean }[] = [
+    { key: "programs", label: programsText, on: p.shareAllPrograms || p.sharedCount > 0 },
+    { key: "schedule", label: "زمان‌بندی", on: !scheduleHidden && p.showSchedule },
     { key: "programName", label: "نام برنامه‌ها", on: p.showProgramName },
-    { key: "taskName", label: "عنوان کارها", on: p.showTaskName, sub: p.showTaskName ? undefined : "به‌جای عنوان، «مشغول» نمایش داده می‌شود" },
+    { key: "taskName", label: "عنوان کارها", on: p.showTaskName },
     { key: "taskDetails", label: "جزئیات کارها", on: p.showTaskDetails },
     { key: "progress", label: "پیشرفت روزانه", on: p.showProgress },
     { key: "exercise", label: "بدنسازی", on: modules.exercise !== null },
-    { key: "calorie", label: "کالری‌شمار", on: modules.calorie !== null },
+    { key: "calorie", label: "کالری", on: modules.calorie !== null },
   ];
-
   return (
-    <MentorSection
-      title="آنچه می‌بینی"
-      icon={<ShieldCheck size={15} strokeWidth={1.75} aria-hidden />}
-      desc="این تنظیمات را شاگرد تعیین می‌کند. برنامه‌هایی که خودت فرستاده‌ای همیشه دیده می‌شوند."
-      flush
-    >
+    <ul className="mv2-st-shared">
       {lines.map((l) => (
-        <MentorRow
-          key={l.key}
-          title={l.label}
-          sub={l.sub ? <span>{l.sub}</span> : undefined}
-          end={
-            l.on ? (
-              <MentorChip tone="accent" icon={<Eye {...CHIP_ICON} />}>{l.onText ?? "دیده می‌شود"}</MentorChip>
-            ) : (
-              <MentorChip tone="neutral" icon={<EyeOff {...CHIP_ICON} />}>مخفی</MentorChip>
-            )
-          }
-        />
+        <li key={l.key} className={l.on ? "is-on" : "is-off"}>
+          {l.on ? <Check {...ICON} /> : <Minus {...ICON} />}
+          <span>{l.label}</span>
+          {!l.on && <span className="mv2-st-shared-note">خصوصیه</span>}
+        </li>
       ))}
-    </MentorSection>
+    </ul>
   );
 }

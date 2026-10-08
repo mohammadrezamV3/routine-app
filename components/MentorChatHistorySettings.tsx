@@ -37,7 +37,7 @@ export function MentorChatHistorySettings({ index = 0, showEmpty = false }: { in
     try {
       const res = await fetch("/api/mentorships/chat-history", { cache: "no-store" });
       if (res.status === 401 || res.status === 403 || res.status === 404) { setList([]); return; }
-      if (!res.ok) { setLoadError(await readApiError(res, "سابقه‌ی گفت‌وگو دریافت نشد؛ دوباره تلاش کن")); return; }
+      if (!res.ok) { setLoadError(await readApiError(res, "سابقه‌ی گفت‌وگو باز نشد؛ دوباره امتحان کن")); return; }
       const d: ChatHistoryResponse = await res.json();
       setList(d.conversations);
     } catch {
@@ -57,7 +57,7 @@ export function MentorChatHistorySettings({ index = 0, showEmpty = false }: { in
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(confirm.kind === "all" ? { all: true } : { mentorshipId: confirm.conv.id }),
       });
-      if (!res.ok) { setError(await readApiError(res, "سابقه پاک نشد؛ دوباره تلاش کن")); return; }
+      if (!res.ok) { setError(await readApiError(res, "سابقه پاک نشد؛ دوباره امتحان کن")); return; }
       setConfirm(null);
       await load();
     } catch {
@@ -116,7 +116,7 @@ export function MentorChatHistorySettings({ index = 0, showEmpty = false }: { in
             })}
           </MentorList>
           <div className="mentor-history-foot">
-            <p className="mentor-field-hint">پیام‌ها فقط برای تو پاک می‌شوند؛ نسخه‌ی طرف مقابل می‌ماند</p>
+            <p className="mentor-field-hint">پیام‌ها فقط برای تو پاک می‌شن؛ طرف مقابل همچنان داره‌شون</p>
             <button
               type="button"
               className="trade-danger-btn mentor-btn is-sm"
@@ -131,8 +131,8 @@ export function MentorChatHistorySettings({ index = 0, showEmpty = false }: { in
 
       {confirm && (
         <MentorConfirmDialog
-          message={confirm.kind === "all" ? "سابقه‌ی همه‌ی گفت‌وگوها پاک شود؟" : `سابقه‌ی گفت‌وگو با ${publicUserName(confirm.conv.counterpart)} پاک شود؟`}
-          hint="پیام‌های تا این لحظه فقط برای تو پاک می‌شوند و برنمی‌گردند؛ طرف مقابل همچنان آن‌ها را می‌بیند."
+          message={confirm.kind === "all" ? "سابقه‌ی همه‌ی گفت‌وگوها پاک بشه؟" : `سابقه‌ی گفت‌وگو با ${publicUserName(confirm.conv.counterpart)} پاک بشه؟`}
+          hint="پیام‌های تا الان فقط برای تو پاک می‌شن و برنمی‌گردن؛ طرف مقابل همچنان می‌بینه‌شون."
           confirmLabel={confirm.kind === "all" ? "پاک کردن همه" : "پاک کردن سابقه"}
           busy={busy}
           error={error}

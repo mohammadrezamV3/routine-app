@@ -16,6 +16,7 @@ import { ProgramRespondModal } from "@/components/ProgramRespondModal";
 import { MentorConfirmDialog } from "@/components/MentorConfirmDialog";
 import { MentorReportModal } from "@/components/MentorReportModal";
 import { MentorKebabMenu, type MentorMenuAction } from "@/components/MentorKebabMenu";
+import { GradientRing } from "@/components/GradientRing";
 import { MentorProgressWeek } from "@/components/MentorProgressWeek";
 import { MentorProgramTools } from "@/components/MentorProgramTools";
 import { LoadingBlock, Spinner } from "@/components/Spinner";
@@ -101,7 +102,7 @@ function ProgramView({ onHead, onFailed, cmd }: { onHead: (h: Head) => void; onF
       if (rid !== reqId.current) return;
       if (!res.ok) {
         const notFound = res.status === 404 || res.status === 403;
-        const msg = notFound ? "این برنامه پیدا نشد یا به آن دسترسی نداری" : await readApiError(res, "برنامه دریافت نشد؛ دوباره تلاش کن");
+        const msg = notFound ? "این برنامه پیدا نشد یا به آن دسترسی نداری" : await readApiError(res, "برنامه باز نشد؛ دوباره تلاش کن");
         // بارگذاری آرام (هفته/بعد از اقدام) صفحه را خراب نمی‌کند؛ خطا کنار دکمه‌ها دیده می‌شود
         if (opts?.quiet) setActionError(msg); else setError({ msg, retry: !notFound });
         return;
@@ -212,11 +213,11 @@ function ProgramView({ onHead, onFailed, cmd }: { onHead: (h: Head) => void; onF
       <MentorSection>
         <div className="mentor-form" style={{ gap: 12 }}>
           <div className="mentor-chips">
-            <ProgramStatusBadge status={program.status} />
+            <ProgramStatusBadge status={program.status} changeRequested={!!program.sentAt || !!program.changeRequestNote} />
             <MentorChip tone="neutral" icon={isWorkout ? <Dumbbell {...CHIP} /> : <CalendarCheck {...CHIP} />}>
               {isWorkout ? "برنامه‌ی تمرینی" : "برنامه‌ی روتین"}
             </MentorChip>
-            {program.version > 1 && <MentorChip tone="neutral">نسخه‌ی {faNum(program.version)}</MentorChip>}
+            {program.version > 1 && <MentorChip tone="neutral">ویرایش‌شده</MentorChip>}
             {program.status === "ACCEPTED" && (
               canActivate
                 ? <MentorChip tone="ok" icon={<CheckCircle2 {...CHIP} />}>آماده‌ی شروع</MentorChip>
@@ -234,7 +235,7 @@ function ProgramView({ onHead, onFailed, cmd }: { onHead: (h: Head) => void; onF
             </span>
             {program.startDate && <span><CalendarDays {...CHIP} /> شروع {fmtDay(program.startDate)}</span>}
             {program.endDate && <span><CalendarDays {...CHIP} /> پایان {fmtDay(program.endDate)}</span>}
-            <span><ClipboardList {...CHIP} /> {faNum(items.length)} آیتم</span>
+            <span><ClipboardList {...CHIP} /> {faNum(items.length)} {isWorkout ? "حرکت" : "کار"}</span>
           </div>
 
           {program.description && <p className="mentor-bio">{program.description}</p>}
@@ -261,23 +262,22 @@ function ProgramView({ onHead, onFailed, cmd }: { onHead: (h: Head) => void; onF
 
           {showProgress && program.progress.hidden && (
             <div className="mentor-chips">
-              <MentorChip tone="neutral" icon={<EyeOff {...CHIP} />}>پیشرفت برای تو نمایش داده نمی‌شود</MentorChip>
+              <MentorChip tone="neutral" icon={<EyeOff {...CHIP} />}>این بخش رو شاگرد خصوصی نگه داشته</MentorChip>
             </div>
           )}
           {showProgress && !program.progress.hidden && (
-            <div>
-              <div className="mentor-progress" style={{ marginTop: 0 }}>
-                <div className="rp-bar" role="progressbar" aria-valuenow={Math.round(program.progress.rate)} aria-valuemin={0} aria-valuemax={100} aria-label="پایبندی">
-                  <span style={{ width: `${Math.max(0, Math.min(100, program.progress.rate))}%` }} />
-                </div>
-                <span className="mentor-progress-value">{faNum(program.progress.rate)}٪</span>
-              </div>
-              <div className="mentor-progress-legend">
-                <span>انجام‌شده {faNum(program.progress.completed)}</span>
+            <div className="mv2-pg-prog">
+              <span className="mv2-pg-prog-ring" role="img" aria-label={`پیشرفت ${faNum(Math.round(program.progress.rate))} درصد`}>
+                <GradientRing value={Math.max(0, Math.min(100, program.progress.rate)) / 100} size={84} stroke={7}>
+                  <b className="mv2-pg-prog-num">{faNum(Math.round(program.progress.rate))}٪</b>
+                </GradientRing>
+              </span>
+              <ul className="mv2-pg-prog-legend">
+                <li><CheckCircle2 {...CHIP} /> انجام شده {faNum(program.progress.completed)}</li>
                 {/* نیمه‌کاره فقط از ثبت‌های دستی قدیمی می‌آید */}
-                {program.progress.partial > 0 && <span>نیمه‌کاره {faNum(program.progress.partial)}</span>}
-                <span>انجام‌نشده {faNum(program.progress.missed)}</span>
-              </div>
+                {program.progress.partial > 0 && <li>نیمه‌کاره {faNum(program.progress.partial)}</li>}
+                <li><X {...CHIP} /> انجام نشده {faNum(program.progress.missed)}</li>
+              </ul>
             </div>
           )}
 
@@ -288,24 +288,24 @@ function ProgramView({ onHead, onFailed, cmd }: { onHead: (h: Head) => void; onF
                 {answering && (
                   <>
                     <button type="button" className="account-outline-btn muted mentor-btn" onClick={() => setRespond("reject")} disabled={!!busy}>
-                      <X {...BTN} /> رد برنامه
+                      <X {...BTN} /> نه
                     </button>
                     <button type="button" className="account-outline-btn mentor-btn" onClick={() => setRespond("request_changes")} disabled={!!busy}>
-                      <Pencil {...BTN} /> درخواست تغییر
+                      <Pencil {...BTN} /> تغییر بخواه
                     </button>
                     <button type="button" className="trade-primary-btn mentor-btn" onClick={() => transition("accept")} disabled={!!busy}>
-                      {busy === "accept" ? <Spinner size={14} /> : <><Check {...BTN} /> پذیرفتن برنامه</>}
+                      {busy === "accept" ? <Spinner size={14} /> : <><Check {...BTN} /> قبول</>}
                     </button>
                   </>
                 )}
                 {editDraft && (
                   <Link href={`/mentor/programs/${program.id}/edit`} className="trade-primary-btn mentor-btn">
-                    <Pencil {...BTN} /> ویرایش پیش‌نویس
+                    <Pencil {...BTN} /> ویرایش و فرستادن
                   </Link>
                 )}
                 {program.status === "ACTIVE" && (
                   <button type="button" className="account-outline-btn mentor-btn" onClick={() => { setActionError(null); setConfirmComplete(true); }} disabled={!!busy}>
-                    <CheckCircle2 {...BTN} /> اتمام برنامه
+                    <CheckCircle2 {...BTN} /> تموم کردن برنامه
                   </button>
                 )}
                 {canActivate && (
@@ -325,7 +325,7 @@ function ProgramView({ onHead, onFailed, cmd }: { onHead: (h: Head) => void; onF
 
       {trackable ? (
         <MentorSection
-          title={isStudent ? "ثبت خودکار از روتین تو" : "پیشرفت خودکار"}
+          title={isStudent ? "پیشرفت تو" : "پیشرفت شاگرد"}
           icon={<CalendarDays {...SECTION} />}
           desc={isStudent
             ? "وضعیت هر آیتم از تیک‌های «روتین من» خوانده می‌شود؛ ثبت دستی لازم نیست."
@@ -357,9 +357,9 @@ function ProgramView({ onHead, onFailed, cmd }: { onHead: (h: Head) => void; onF
           )}
         </MentorSection>
       ) : (
-        <MentorSection title="آیتم‌های برنامه" icon={<ClipboardList {...SECTION} />} count={sortedItems.length ? faNum(sortedItems.length) : undefined}>
+        <MentorSection title="کارهای برنامه" icon={<ClipboardList {...SECTION} />} count={sortedItems.length ? faNum(sortedItems.length) : undefined}>
           {sortedItems.length === 0 ? (
-            <MentorEmpty>این برنامه آیتمی ندارد</MentorEmpty>
+            <MentorEmpty>این برنامه کاری نداره</MentorEmpty>
           ) : (
             sortedItems.map((it) => (
               <div key={it.id} className="mentor-item">
@@ -393,9 +393,9 @@ function ProgramView({ onHead, onFailed, cmd }: { onHead: (h: Head) => void; onF
       )}
       {confirmComplete && (
         <MentorConfirmDialog
-          message="برنامه تمام‌شده علامت بخورد؟"
-          hint="پیگیری خودکار متوقف می‌شود و آیتم‌ها از روتین شاگرد برداشته می‌شوند."
-          confirmLabel="اتمام برنامه"
+          message="برنامه تموم بشه؟"
+          hint="پیگیری خودکار متوقف می‌شه و کارها از روتین شاگرد برداشته می‌شن."
+          confirmLabel="تموم کردن برنامه"
           danger={false}
           busy={busy === "complete"}
           error={actionError}
@@ -442,7 +442,7 @@ function FeedbackBlock({
   async function send() {
     const b = body.trim();
     if (!b) { setError("متن بازخورد خالی است"); return; }
-    if (b.length > FEEDBACK_MAX) { setError(`بازخورد حداکثر ${faNum(FEEDBACK_MAX)} نویسه است`); return; }
+    if (b.length > FEEDBACK_MAX) { setError(`بازخورد حداکثر ${faNum(FEEDBACK_MAX)} حرف باشه`); return; }
     setBusy(true);
     setError(null);
     try {
@@ -451,7 +451,7 @@ function FeedbackBlock({
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ body: b, itemId: target?.itemId, logId: target?.logId }),
       });
-      if (!res.ok) { setError(await readApiError(res, "بازخورد ارسال نشد؛ دوباره تلاش کن")); return; }
+      if (!res.ok) { setError(await readApiError(res, "بازخورد فرستاده نشد؛ دوباره تلاش کن")); return; }
       const d: { feedback: Feedback } = await res.json();
       setBody("");
       onSent(d.feedback);

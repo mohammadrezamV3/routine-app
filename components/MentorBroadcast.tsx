@@ -3,16 +3,15 @@
 import "./mentor.css";
 import { TickButton } from "./TickButton";
 import { useCallback, useEffect, useMemo, useState } from "react";
-import { createPortal } from "react-dom";
-import { Lock, Megaphone, Send, X } from "lucide-react";
+import { Lock, Send } from "lucide-react";
 import { faNum } from "@/lib/jalali";
 import { publicUserName, type PublicUser } from "@/lib/mentorTypes";
 import { NETWORK_ERROR, readApiError } from "@/lib/mentorFormat";
 import { broadcastCipher, type Identity } from "@/lib/e2ee/client";
-import { LockBodyScroll } from "./LockBodyScroll";
+import { MentorSheet } from "./MentorSheet";
 import { LoadingBlock, Spinner } from "./Spinner";
 import { MentorE2EEGate } from "./MentorE2EEGate";
-import { MentorEmpty, MentorField, MentorSection, MI, MI_STROKE } from "./MentorUI";
+import { MentorEmpty, MentorField, MI, MI_STROKE } from "./MentorUI";
 import { MentorDashError } from "./MentorDashKit";
 import { SavedRepliesPicker } from "./MentorSavedReplies";
 
@@ -25,47 +24,19 @@ type RecipientsResponse = { myKeys: KeyRow[]; recipients: Recipient[]; labels: {
 type SendResult = { sent: number; failed: { mentorshipId: string; code: string }[] };
 
 /**
- * «ارسال گروهی» در داشبورد منتور — یک متن برای چند شاگرد فعال. متن روی همین
+ * «پیام به همه» از ردیف میان‌بر صفحه‌ی امروز: یک متن برای چند شاگرد فعال. متن روی همین
  * دستگاه برای *هر* گفت‌وگو جداگانه رمز می‌شود (برای همه‌ی دستگاه‌های دو طرف)؛ سرور فقط
- * پیام‌های رمزشده‌ی مستقل می‌گیرد. خودکفا و قابل حذف: فقط همین فایل + /api/mentor/broadcast.
+ * پیام‌های رمزشده‌ی مستقل می‌گیرد. خودکفا: فقط همین فایل + /api/mentor/broadcast.
+ * بازکننده (کاشی میان‌بر) بیرون است؛ این فقط برگه را رندر می‌کند.
  */
-export function MentorBroadcast({ activeCount }: { activeCount: number }) {
-  const [open, setOpen] = useState(false);
-  if (activeCount < 2) return null;
-  return (
-    <MentorSection
-      title="ارسال گروهی"
-      icon={<Megaphone size={MI.section} strokeWidth={MI_STROKE} aria-hidden />}
-      desc="یک پیام برای چند شاگرد فعال؛ برای هر شاگرد جداگانه رمزگذاری سرتاسری می‌شود."
-      action={
-        <button type="button" className="account-outline-btn mentor-btn is-sm" onClick={() => setOpen(true)}>
-          <Send size={MI.btnSm} strokeWidth={MI_STROKE} aria-hidden /> نوشتن پیام
-        </button>
-      }
-    >
-      {open && <BroadcastModal onClose={() => setOpen(false)} />}
-    </MentorSection>
-  );
-}
-
-function BroadcastModal({ onClose }: { onClose: () => void }) {
+export function MentorBroadcastSheet({ open, onClose, activeCount }: { open: boolean; onClose: () => void; activeCount: number }) {
   const [busy, setBusy] = useState(false);
-  if (typeof document === "undefined") return null;
-  return createPortal(
-    <>
-      <LockBodyScroll />
-      <div className="modal-overlay open" onClick={() => !busy && onClose()} style={{ zIndex: 90 }} />
-      <div className="modal-panel open mentor-modal" role="dialog" aria-modal="true" aria-label="ارسال گروهی" style={{ zIndex: 91, maxWidth: 480 }}>
-        <div className="modal-head">
-          <div className="modal-title">ارسال گروهی</div>
-          <button type="button" className="trade-icon-btn" onClick={onClose} aria-label="بستن" disabled={busy}>
-            <X size={16} strokeWidth={1.75} />
-          </button>
-        </div>
-        <MentorE2EEGate>{(identity) => <BroadcastForm identity={identity} busy={busy} setBusy={setBusy} onClose={onClose} />}</MentorE2EEGate>
-      </div>
-    </>,
-    document.body
+  return (
+    <MentorSheet open={open} onClose={onClose} title="پیام به همه" size="lg" dismissible={!busy}>
+      {open && (activeCount === 0
+        ? <MentorEmpty>شاگرد فعالی برای ارسال نیست</MentorEmpty>
+        : <MentorE2EEGate>{(identity) => <BroadcastForm identity={identity} busy={busy} setBusy={setBusy} onClose={onClose} />}</MentorE2EEGate>)}
+    </MentorSheet>
   );
 }
 
@@ -111,7 +82,7 @@ function BroadcastForm({ identity, busy, setBusy, onClose }: { identity: Identit
     if (busy) return;
     const body = text.trim();
     if (!body) { setTextErr("متن پیام را بنویس"); return; }
-    if (body.length > MAX_LEN) { setTextErr(`پیام حداکثر ${faNum(MAX_LEN)} نویسه است`); return; }
+    if (body.length > MAX_LEN) { setTextErr(`پیام حداکثر ${faNum(MAX_LEN)} حرف است`); return; }
     if (chosen.length === 0) { setError("حداقل یک شاگرد انتخاب کن"); return; }
     setBusy(true);
     setError(null);

@@ -96,7 +96,7 @@ export function MentorPrivacySettings({ mentorshipId, mentorName, active }: { me
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(draft),
       });
-      if (!res.ok) { setSaveError(await readApiError(res, "دسترسی‌ها ذخیره نشد؛ دوباره تلاش کن")); return; }
+      if (!res.ok) { setSaveError(await readApiError(res, "ذخیره نشد؛ دوباره امتحان کن")); return; }
       const d: { privacy: PrivacySettings } = await res.json();
       setData((prev) => (prev ? { ...prev, privacy: d.privacy } : prev));
       setDraft(d.privacy);
@@ -118,13 +118,13 @@ export function MentorPrivacySettings({ mentorshipId, mentorName, active }: { me
       <MentorSection
         title="برنامه‌های قابل مشاهده"
         icon={<ShieldCheck {...SECTION} />}
-        desc={`فقط برای ${mentorName}؛ آنچه اجازه ندهی برایش فرستاده نمی‌شود.${active ? "" : " تا رابطه فعال نشود چیزی نمی‌بیند."}`}
+        desc={`فقط ${mentorName} می‌بینه و هرچی اجازه ندی براش فرستاده نمی‌شه.${active ? "" : " تا همکاری شروع نشه چیزی نمی‌بینه."}`}
       >
         <label className="mentor-check">
           <TickButton shape="square" size={22} checked={allOn} onToggle={() => patch({ shareAllPrograms: !allOn })} />
           <span className="mentor-check-label">
             <b>همه‌ی برنامه‌ها</b>
-            <div className="mentor-check-kind">برنامه‌هایی که بعدا بسازی هم خودکار دیده می‌شوند</div>
+            <div className="mentor-check-kind">برنامه‌هایی که بعدا بسازی هم خودکار دیده می‌شن</div>
           </span>
         </label>
         {routineScopes.length === 0 && <MentorEmpty>هنوز برنامه‌ای در روتینت نیست</MentorEmpty>}
@@ -133,7 +133,7 @@ export function MentorPrivacySettings({ mentorshipId, mentorName, active }: { me
             <TickButton shape="square" size={22} checked={scopeChecked(s.key)} disabled={allOn} onToggle={() => toggleScope(s.key)} />
             <span className="mentor-check-label">
               {s.label}
-              <div className="mentor-check-kind">{s.kind === "module" ? "ماژول" : "برنامه‌ی روتین"}</div>
+              <div className="mentor-check-kind">{s.kind === "module" ? "بخش" : "برنامه‌ی روتین"}</div>
             </span>
           </label>
         ))}

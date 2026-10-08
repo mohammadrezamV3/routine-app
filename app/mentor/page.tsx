@@ -23,7 +23,7 @@ function MentorHome() {
 
 export default function MentorPage() {
   return (
-    <MentorDashShell title="پنل مربی">
+    <MentorDashShell title="">
       <MentorHome />
     </MentorDashShell>
   );

@@ -33,16 +33,21 @@ function isoToJalali(iso: string | null | undefined): JalaliDate | null {
  * بالای /mentor/settings استفاده می‌شود؛ `onChange` تنظیمات را به والد می‌دهد.
  */
 export function MentorAvailabilityQuick({
-  initial, onChange,
+  initial, onChange, variant = "section", bare = false,
 }: {
   initial?: MentorSettingsResponse;
   onChange?: (d: MentorSettingsResponse) => void;
+  /** pill: قرص وضعیت کنار هیرو که همین کنترل را در یک برگه باز می‌کند */
+  variant?: "section" | "pill";
+  /** بدون عنوان و قاب بخش (وقتی داخل یک MentorSheet با عنوان خودش رندر می‌شود) */
+  bare?: boolean;
 }) {
   const [data, setData] = useState<MentorSettingsResponse | null>(initial ?? null);
   const [busy, setBusy] = useState<Mode | "end" | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [loadError, setLoadError] = useState(false);
   const [sheet, setSheet] = useState(false);
+  const [panel, setPanel] = useState(false);
 
   const load = useCallback(async () => {
     const r = await mentorApi<MentorSettingsResponse>("/api/mentor/settings");
@@ -67,6 +72,8 @@ export function MentorAvailabilityQuick({
   const title = "وضعیت پذیرش";
   const icon = ic(UserPlus, MI.section);
   if (!data) {
+    if (variant === "pill") return <span className="mv2-today-pill is-loading" aria-hidden><Spinner size={14} /></span>;
+    if (bare) return <div className="mentor-avail-skeleton" aria-hidden><Spinner size={16} /></div>;
     return (
       <MentorSection title={title} icon={icon}>
         <div className="mentor-avail-skeleton" aria-hidden><Spinner size={16} /></div>
@@ -84,7 +91,7 @@ export function MentorAvailabilityQuick({
 
   function pick(v: Mode) {
     if (v === mode || busy) return;
-    if (v === "away") { setError(null); setSheet(true); return; }
+    if (v === "away") { setError(null); setPanel(false); setSheet(true); return; }
     save(v, { acceptingStudents: v === "open", awayUntil: null });
   }
 
@@ -105,9 +112,9 @@ export function MentorAvailabilityQuick({
             type="button" className="trade-primary-btn mentor-btn is-sm" disabled={!!busy}
             onClick={() => save("end", { awayUntil: null })}
           >
-            {busy === "end" ? <Spinner size={14} /> : <>{ic(CheckCircle2, MI.btnSm)} پایان عدم حضور</>}
+            {busy === "end" ? <Spinner size={14} /> : <>{ic(CheckCircle2, MI.btnSm)} برگشتم</>}
           </button>
-          <button type="button" className="account-outline-btn mentor-btn is-sm" disabled={!!busy} onClick={() => setSheet(true)}>
+          <button type="button" className="account-outline-btn mentor-btn is-sm" disabled={!!busy} onClick={() => { setPanel(false); setSheet(true); }}>
             {ic(Pencil, MI.btnSm)} ویرایش
           </button>
         </div>
@@ -129,13 +136,7 @@ export function MentorAvailabilityQuick({
     );
   }
 
-  return (
-    <MentorSection
-      title={title} icon={icon}
-      action={
-        <MentorChip tone={full ? "warn" : "neutral"} icon={ic(Users, MI.chip)}>{capacity}</MentorChip>
-      }
-    >
+  const body = (
       <div className="mentor-avail">
         <div className={`mentor-avail-tabs${busy && busy !== "end" ? " is-busy" : ""}`} aria-busy={!!busy}>
           <SegmentedTabs<Mode>
@@ -153,7 +154,9 @@ export function MentorAvailabilityQuick({
         </div>
         {error && <div className="form-inline-error" role="alert" style={{ marginTop: 0 }}>{error}</div>}
       </div>
+  );
 
+  const awaySheet = (
       <AwaySheet
         open={sheet}
         settings={s}
@@ -166,6 +169,52 @@ export function MentorAvailabilityQuick({
         busy={busy === "away"}
         error={sheet ? error : null}
       />
+  );
+
+  if (variant === "pill") {
+    const label = mode === "away" ? `در دسترس نیستم تا ${fmtDate(s.awayUntil)}`
+      : mode === "closed" ? "فعلا نمی‌پذیرم"
+      : full ? "ظرفیت پره" : "درخواست می‌پذیرم";
+    const tone = mode === "open" && !full ? "ok" : mode === "closed" ? "neutral" : "warn";
+    return (
+      <>
+        <button
+          type="button" className={`mv2-today-pill is-${tone}`} aria-haspopup="dialog"
+          aria-label={`وضعیت پذیرش: ${label}؛ برای تغییر بزن`} onClick={() => { setError(null); setPanel(true); }}
+        >
+          <span className="mv2-today-pill-dot" aria-hidden />
+          <span>{label}</span>
+        </button>
+        <MentorSheet open={panel} onClose={() => setPanel(false)} title="وضعیت پذیرش" size="sm" dismissible={!busy}>
+          <div className="mv2-today-avail">
+            <p className="mv2-today-avail-cap">{capacity}</p>
+            {body}
+          </div>
+        </MentorSheet>
+        {awaySheet}
+      </>
+    );
+  }
+
+  if (bare) {
+    return (
+      <>
+        <p className="mv2-today-avail-cap">{capacity}</p>
+        {body}
+        {awaySheet}
+      </>
+    );
+  }
+
+  return (
+    <MentorSection
+      title={title} icon={icon}
+      action={
+        <MentorChip tone={full ? "warn" : "neutral"} icon={ic(Users, MI.chip)}>{capacity}</MentorChip>
+      }
+    >
+      {body}
+      {awaySheet}
     </MentorSection>
   );
 }
@@ -201,7 +250,7 @@ function AwaySheet({
     const iso = date ? jalaliToIso(...date) : null;
     const errs: typeof err = {};
     if (!iso) errs.date = "تاریخ بازگشت را انتخاب کن";
-    if (message.trim().length > AWAY_MESSAGE_MAX) errs.message = `حداکثر ${fa(AWAY_MESSAGE_MAX)} نویسه`;
+    if (message.trim().length > AWAY_MESSAGE_MAX) errs.message = `حداکثر ${fa(AWAY_MESSAGE_MAX)} حرف`;
     setErr(errs);
     if (Object.keys(errs).length) return;
     await onSave({ awayUntil: iso, awayMessage: message.trim() || null, awayPausesRequests: pause });
@@ -222,7 +271,7 @@ function AwaySheet({
           </MentorField>
           <MentorField
             label="پیام برای شاگردها" htmlFor="away-msg" optional error={err.message}
-            hint={`${fa(message.trim().length)} از ${fa(AWAY_MESSAGE_MAX)} نویسه`}
+            hint={`${fa(message.trim().length)} از ${fa(AWAY_MESSAGE_MAX)} حرف`}
           >
             <textarea
               id="away-msg" className="wsearch-newform-name trade-glass-field" rows={2} maxLength={AWAY_MESSAGE_MAX + 20}
@@ -241,7 +290,7 @@ function AwaySheet({
           <div className="mentor-form-actions" style={{ marginTop: 0 }}>
             <button type="button" className="account-outline-btn muted mentor-btn" onClick={onClose} disabled={busy}>انصراف</button>
             <button type="submit" className="trade-primary-btn mentor-btn" disabled={busy}>
-              {busy ? <Spinner size={14} /> : settings.awayUntil ? "ذخیره" : "ثبت عدم حضور"}
+              {busy ? <Spinner size={14} /> : settings.awayUntil ? "ذخیره" : "ثبت"}
             </button>
           </div>
         </form>
