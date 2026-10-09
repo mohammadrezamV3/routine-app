@@ -3,6 +3,8 @@ import { ChevronLeft } from "lucide-react";
 import type { BlogCategoryKey, BlogPost } from "@/lib/blogPosts";
 import { BlogCategoryChips } from "./BlogCategoryChips";
 import { BlogPostCard } from "./BlogPostCard";
+import { brandName } from "@/lib/brand";
+import { tr } from "@/lib/i18n";
 import "./blog.css";
 
 /**
@@ -28,17 +30,17 @@ export function BlogList({
 
   return (
     <main className="blog-root blog-index">
-      <nav aria-label="مسیر صفحه" className="blog-crumb">
-        <Link href="/">آریون</Link>
-        <ChevronLeft size={13} aria-hidden="true" />
+      <nav aria-label={tr("مسیر صفحه", "Breadcrumb")} className="blog-crumb">
+        <Link href="/">{brandName()}</Link>
+        <ChevronLeft size={13} aria-hidden="true" className="dir-flip" />
         {category ? (
           <>
-            <Link href="/blog">مقاله‌ها</Link>
-            <ChevronLeft size={13} aria-hidden="true" />
+            <Link href="/blog">{tr("مقاله‌ها", "Articles")}</Link>
+            <ChevronLeft size={13} aria-hidden="true" className="dir-flip" />
             <span aria-current="page">{categoryLabel}</span>
           </>
         ) : (
-          <span aria-current="page">مقاله‌ها</span>
+          <span aria-current="page">{tr("مقاله‌ها", "Articles")}</span>
         )}
       </nav>
 
@@ -52,13 +54,13 @@ export function BlogList({
       {featured && <BlogPostCard post={featured} featured />}
 
       {rest.length > 0 ? (
-        <section className="blog-grid" aria-label="فهرست مقاله‌ها">
+        <section className="blog-grid" aria-label={tr("فهرست مقاله‌ها", "Article list")}>
           {rest.map((p) => (
             <BlogPostCard key={p.slug} post={p} />
           ))}
         </section>
       ) : (
-        !featured && <p className="blog-empty">هنوز مقاله‌ای در این دسته نیست.</p>
+        !featured && <p className="blog-empty">{tr("هنوز مقاله‌ای در این دسته نیست.", "There are no articles in this category yet.")}</p>
       )}
     </main>
   );

@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from "react";
 import { Check, Link2, Share2 } from "lucide-react";
+import { tr } from "@/lib/i18n";
 import "./blog.css";
 
 /** کپی لینک + اشتراک بومی مرورگر (در صورت پشتیبانی)؛ بدون اسکریپت بیرونی */
@@ -33,14 +34,14 @@ export function BlogShare({ title }: { title: string }) {
 
   return (
     <div className="blog-share">
-      <span>اشتراک این مقاله</span>
+      <span>{tr("اشتراک این مقاله", "Share this article")}</span>
       <button type="button" onClick={copy} className="blog-share-btn">
         {copied ? <Check size={15} aria-hidden="true" /> : <Link2 size={15} aria-hidden="true" />}
-        {copied ? "کپی شد" : "کپی لینک"}
+        {copied ? tr("کپی شد", "Copied") : tr("کپی لینک", "Copy link")}
       </button>
       {canShare && (
         <button type="button" onClick={share} className="blog-share-btn">
-          <Share2 size={15} aria-hidden="true" /> ارسال
+          <Share2 size={15} aria-hidden="true" /> {tr("ارسال", "Share")}
         </button>
       )}
     </div>

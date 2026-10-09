@@ -1,6 +1,8 @@
 import Link from "next/link";
 import { ArrowLeft, ChevronLeft, Lightbulb } from "lucide-react";
-import { BLOG_CATEGORIES } from "@/lib/blog/categories";
+import { localizedBlogCategory } from "@/lib/blog/categories";
+import { brandName } from "@/lib/brand";
+import { tr } from "@/lib/i18n";
 import { relatedPosts } from "@/lib/blogPosts";
 import type { BlogBlock, BlogPost } from "@/lib/blogPosts";
 import { BlogPostCard } from "./BlogPostCard";
@@ -65,7 +67,7 @@ function renderBlock(b: BlogBlock, i: number, h2Id?: string) {
             <span className="blog-inline-cta-text">{b.text}</span>
             <strong>{b.label}</strong>
           </span>
-          <ArrowLeft size={18} aria-hidden="true" />
+          <ArrowLeft size={18} aria-hidden="true" className="dir-flip" />
         </Link>
       );
     default:
@@ -74,7 +76,7 @@ function renderBlock(b: BlogBlock, i: number, h2Id?: string) {
 }
 
 export function BlogArticle({ post }: { post: BlogPost }) {
-  const cat = BLOG_CATEGORIES[post.category];
+  const cat = localizedBlogCategory(post.category);
   // شناسه‌ی لنگر هر H2 به ترتیب: s-1، s-2، ...
   const toc: { id: string; text: string }[] = [];
   const ids = new Map<number, string>();
@@ -91,13 +93,13 @@ export function BlogArticle({ post }: { post: BlogPost }) {
   return (
     <main className="blog-root blog-post">
       <BlogProgress />
-      <nav aria-label="مسیر صفحه" className="blog-crumb">
-        <Link href="/">آریون</Link>
-        <ChevronLeft size={13} aria-hidden="true" />
-        <Link href="/blog">مقاله‌ها</Link>
-        <ChevronLeft size={13} aria-hidden="true" />
+      <nav aria-label={tr("مسیر صفحه", "Breadcrumb")} className="blog-crumb">
+        <Link href="/">{brandName()}</Link>
+        <ChevronLeft size={13} aria-hidden="true" className="dir-flip" />
+        <Link href="/blog">{tr("مقاله‌ها", "Articles")}</Link>
+        <ChevronLeft size={13} aria-hidden="true" className="dir-flip" />
         <Link href={`/blog/category/${post.category}`}>{cat.label}</Link>
-        <ChevronLeft size={13} aria-hidden="true" />
+        <ChevronLeft size={13} aria-hidden="true" className="dir-flip" />
         <span aria-current="page" className="blog-crumb-cur">{post.title}</span>
       </nav>
 
@@ -106,21 +108,21 @@ export function BlogArticle({ post }: { post: BlogPost }) {
           <Link href={`/blog/category/${post.category}`} className="blog-cat">{cat.label}</Link>
           <h1>{post.title}</h1>
           <div className="blog-meta">
-            <span>تیم آریون</span>
+            <span>{tr("تیم آریون", `${brandName()} team`)}</span>
             <span aria-hidden="true">·</span>
             <span>
-              انتشار <time dateTime={post.published}>{blogDate(post.published)}</time>
+              {tr("انتشار", "Published")} <time dateTime={post.published}>{blogDate(post.published)}</time>
             </span>
             {modified && (
               <>
                 <span aria-hidden="true">·</span>
                 <span>
-                  به‌روزرسانی <time dateTime={modified}>{blogDate(modified)}</time>
+                  {tr("به‌روزرسانی", "Updated")} <time dateTime={modified}>{blogDate(modified)}</time>
                 </span>
               </>
             )}
             <span aria-hidden="true">·</span>
-            <span>{post.readingMinutes} دقیقه مطالعه</span>
+            <span>{tr(`${post.readingMinutes} دقیقه مطالعه`, `${post.readingMinutes} min read`)}</span>
           </div>
         </header>
 
@@ -128,8 +130,8 @@ export function BlogArticle({ post }: { post: BlogPost }) {
 
         <article className="blog-body" id="blog-article-body">
           {post.takeaways && post.takeaways.length > 0 && (
-            <section className="blog-takeaways" aria-label="خلاصه در یک نگاه">
-              <div className="blog-takeaways-title">خلاصه در یک نگاه</div>
+            <section className="blog-takeaways" aria-label={tr("خلاصه در یک نگاه", "Key takeaways")}>
+              <div className="blog-takeaways-title">{tr("خلاصه در یک نگاه", "Key takeaways")}</div>
               <ul>
                 {post.takeaways.map((t, i) => <li key={i}>{t}</li>)}
               </ul>
@@ -140,7 +142,7 @@ export function BlogArticle({ post }: { post: BlogPost }) {
 
           {post.faq && post.faq.length > 0 && (
             <section className="blog-faq">
-              <h2>پرسش‌های پرتکرار</h2>
+              <h2>{tr("پرسش‌های پرتکرار", "Frequently asked questions")}</h2>
               {post.faq.map((f, i) => (
                 <details key={i}>
                   <summary><h3>{f.q}</h3></summary>
@@ -155,7 +157,7 @@ export function BlogArticle({ post }: { post: BlogPost }) {
       </div>
 
       <section className="blog-more">
-        <h2>ادامه‌ی مطلب</h2>
+        <h2>{tr("ادامه‌ی مطلب", "Keep reading")}</h2>
         <div className="blog-grid">
           {related.map((p) => <BlogPostCard key={p.slug} post={p} />)}
         </div>
@@ -163,13 +165,13 @@ export function BlogArticle({ post }: { post: BlogPost }) {
           {post.related.map((r) => (
             <li key={r.href}><Link href={r.href}>{r.label}</Link></li>
           ))}
-          <li><Link href="/blog">همه‌ی مقاله‌های آریون</Link></li>
+          <li><Link href="/blog">{tr("همه‌ی مقاله‌های آریون", `All ${brandName()} articles`)}</Link></li>
         </ul>
 
         <div className="blog-signup">
-          <p>روتین، خواب، تمرین و ژورنال ترید در یک اپ.</p>
+          <p>{tr("روتین، خواب، تمرین و ژورنال ترید در یک اپ.", "Routine, sleep, training and a trading journal in one app.")}</p>
           <Link href="/auth/signup" className="blog-btn">
-            امتحان رایگان 14 روزه <ArrowLeft size={16} aria-hidden="true" />
+            {tr("امتحان رایگان 14 روزه", "Try it free for 14 days")} <ArrowLeft size={16} aria-hidden="true" className="dir-flip" />
           </Link>
         </div>
       </section>
