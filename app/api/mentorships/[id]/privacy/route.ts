@@ -4,6 +4,7 @@ import { requireMentorsUser, notFound, badRequest } from "@/lib/mentorGuard";
 import { readJsonBody } from "@/lib/validate";
 import { listStudentScopes, sanitizeSharedPrograms, type PrivacySettings } from "@/lib/mentorPrivacy";
 import { publishToUsers } from "@/lib/realtime";
+import { tr } from "@/lib/i18n";
 
 type Ctx = { params: { id: string } };
 
@@ -48,11 +49,11 @@ export async function PUT(req: Request, { params }: Ctx) {
   const data: Partial<PrivacySettings> = {};
   for (const k of BOOL_FIELDS) {
     if (b[k] === undefined) continue;
-    if (typeof b[k] !== "boolean") return badRequest("مقدار تنظیمات حریم خصوصی نامعتبره");
+    if (typeof b[k] !== "boolean") return badRequest(tr(tr("مقدار تنظیمات حریم خصوصی نامعتبره", "Invalid privacy setting value"), "Invalid privacy setting value"));
     data[k] = b[k];
   }
   if (b.sharedPrograms !== undefined) {
-    if (!Array.isArray(b.sharedPrograms)) return badRequest("لیست برنامه‌های مشترک نامعتبره");
+    if (!Array.isArray(b.sharedPrograms)) return badRequest(tr(tr("لیست برنامه‌های مشترک نامعتبره", "Invalid shared programs list"), "Invalid shared programs list"));
     data.sharedPrograms = sanitizeSharedPrograms(b.sharedPrograms);
   }
 

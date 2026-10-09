@@ -59,7 +59,7 @@ export async function POST(req: NextRequest) {
     } catch (err: any) {
       await quota.release();
       const msg: string = err?.message || "";
-      if (msg.includes("ثانیه پاسخ نداد")) {
+      if (msg.includes("ثانیه پاسخ نداد") || msg.includes("did not respond within")) {
         return NextResponse.json({ error: tr("گیت‌وی هوش‌مصنوعی به‌موقع پاسخ نداد", "The AI gateway did not respond in time") }, { status: 504 });
       }
       return NextResponse.json({ error: msg || tr("ساخت مربی AI شکست خورد", "Building the AI coach failed") }, { status: 502 });

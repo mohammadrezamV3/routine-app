@@ -5,6 +5,7 @@ import { readJsonBody } from "@/lib/validate";
 import { checkRateLimit } from "@/lib/rateLimit";
 import { isSealedNote } from "@/lib/e2ee/notes";
 import { parseWraps, publicKeysFor } from "@/lib/e2ee/server";
+import { tr } from "@/lib/i18n";
 
 // انتقال سابقه بین کلیدهای *یک* کاربر (docs/mentor-e2ee.md): دستگاهی که کلید from
 // را دارد، CEK هر پیام را باز و برای کلید to (کلید فعال دیگر همین کاربر) بسته‌بندی
@@ -28,7 +29,7 @@ export async function GET(req: NextRequest) {
   const me = g.userId;
   const sp = req.nextUrl.searchParams;
   if (!(await checkRateLimit(`e2ee-history-get:${me}`, 300, 60 * 60 * 1000))) {
-    return NextResponse.json({ error: "تعداد درخواست‌ها زیاد بوده؛ کمی بعد دوباره تلاش کن" }, { status: 429 });
+    return NextResponse.json({ error: tr("تعداد درخواست‌ها زیاد بوده؛ کمی بعد دوباره تلاش کن", "There were too many requests; try again shortly") }, { status: 429 });
   }
 
   if (sp.get("notes") === "1") {
@@ -43,7 +44,7 @@ export async function GET(req: NextRequest) {
 
   const from = int(sp.get("from"));
   const to = int(sp.get("to"));
-  if (!from || !to || from === to) return badRequest("پارامترها نامعتبر است");
+  if (!from || !to || from === to) return badRequest(tr("پارامترها نامعتبر است", "Parameters are not valid"));
   const cursor = sp.get("cursor");
   const rows = await prisma.mentorMessageKeyWrap.findMany({
     where: {
@@ -96,20 +97,20 @@ export async function POST(req: Request) {
   if (!g.ok) return g.response;
   const me = g.userId;
   if (!(await checkRateLimit(`e2ee-history-post:${me}`, 300, 60 * 60 * 1000))) {
-    return NextResponse.json({ error: "تعداد درخواست‌ها زیاد بوده؛ کمی بعد دوباره تلاش کن" }, { status: 429 });
+    return NextResponse.json({ error: tr("تعداد درخواست‌ها زیاد بوده؛ کمی بعد دوباره تلاش کن", "There were too many requests; try again shortly") }, { status: 429 });
   }
   const parsed = await readJsonBody(req, 512 * 1024);
   if (!parsed.ok) return NextResponse.json({ error: parsed.error }, { status: parsed.status });
   const b = parsed.body || {};
   const target = Number.isInteger(b.target) ? (b.target as number) : null;
-  if (!target) return badRequest("کلید مقصد نامعتبر است");
+  if (!target) return badRequest(tr("کلید مقصد نامعتبر است", "Invalid target key"));
   const myKeys = await prisma.userE2EKey.findMany({ where: { userId: me }, select: { version: true, retiredAt: true } });
-  if (!myKeys.some((k) => k.version === target && !k.retiredAt)) return badRequest("کلید مقصد فعال نیست");
+  if (!myKeys.some((k) => k.version === target && !k.retiredAt)) return badRequest(tr("کلید مقصد فعال نیست", "The target key is not active"));
   const mine = new Set(myKeys.map((k) => k.version));
 
   let added = 0;
   const items = Array.isArray(b.wraps) ? b.wraps : [];
-  if (items.length > MAX_WRAPS) return badRequest("تعداد زیاد است");
+  if (items.length > MAX_WRAPS) return badRequest(tr("تعداد زیاد است", "Too many items"));
   if (items.length) {
     // بسته‌بندی‌ها همه برای همان یک کلیدند؛ parseWraps یکتایی (u,k) را می‌خواهد، پس یکی‌یکی
     const ok: { messageId: string; w: string; via: number }[] = [];
@@ -135,7 +136,7 @@ export async function POST(req: Request) {
 
   let notes = 0;
   const ns = Array.isArray(b.notes) ? b.notes : [];
-  if (ns.length > MAX_NOTES) return badRequest("تعداد زیاد است");
+  if (ns.length > MAX_NOTES) return badRequest(tr("تعداد زیاد است", "Too many items"));
   for (const n of ns) {
     if (!n || typeof n.id !== "string" || typeof n.prev !== "string" || !isSealedNote(n.body)) continue;
     const r = await prisma.mentorStudentNote.updateMany({ where: { id: n.id, mentorId: me, body: n.prev }, data: { body: n.body } });

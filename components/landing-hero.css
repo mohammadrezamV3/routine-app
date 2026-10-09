@@ -9,7 +9,7 @@
 .lh, .lsc{
   --lh-w: 100%;
   position:relative;
-  text-align:right;
+  text-align:start;
   /* خنثی‌سازی section{} سراسری (پدینگ و خط بالای هر بخش) */
   border-top:none; padding-bottom:0;
 }

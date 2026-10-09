@@ -3,13 +3,14 @@ import { requireAdmin } from "@/lib/requireAdmin";
 import { getUserDetail } from "@/lib/adminAnalytics";
 import { getUserProfileExtras } from "@/lib/adminUserProfile";
 import { adminErrorResponse, hardDelete, restoreUser, setBlocked, softDelete, updateProfile } from "@/lib/adminUsers";
+import { tr } from "@/lib/i18n";
 
 export async function GET(_req: NextRequest, { params }: { params: { id: string } }) {
   const guard = await requireAdmin("users.view");
   if (!guard.ok) return guard.response;
 
   const detail = await getUserDetail(params.id);
-  if (!detail) return NextResponse.json({ error: "کاربر پیدا نشد" }, { status: 404 });
+  if (!detail) return NextResponse.json({ error: tr("کاربر پیدا نشد", "User not found") }, { status: 404 });
   const extras = await getUserProfileExtras(params.id, detail.user.createdAt);
   return NextResponse.json({ ...detail, extras });
 }
@@ -17,7 +18,7 @@ export async function GET(_req: NextRequest, { params }: { params: { id: string 
 // PATCH { blocked?: boolean, profile?: {...}, restore?: true }
 export async function PATCH(req: NextRequest, { params }: { params: { id: string } }) {
   const body = await req.json().catch(() => null);
-  if (!body || typeof body !== "object") return NextResponse.json({ error: "ورودی نامعتبر است" }, { status: 400 });
+  if (!body || typeof body !== "object") return NextResponse.json({ error: tr("ورودی نامعتبر است", "Invalid input") }, { status: 400 });
 
   const guard = await requireAdmin(body.restore === true ? "users.delete" : "users.edit");
   if (!guard.ok) return guard.response;
@@ -30,7 +31,7 @@ export async function PATCH(req: NextRequest, { params }: { params: { id: string
     let user: any = {};
     if (body.profile && typeof body.profile === "object") user = { ...user, ...(await updateProfile(guard, params.id, body.profile)) };
     if (typeof body.blocked === "boolean") user = { ...user, ...(await setBlocked(guard, params.id, body.blocked)) };
-    if (!Object.keys(user).length) return NextResponse.json({ error: "ورودی نامعتبر است" }, { status: 400 });
+    if (!Object.keys(user).length) return NextResponse.json({ error: tr("ورودی نامعتبر است", "Invalid input") }, { status: 400 });
     return NextResponse.json({ ok: true, user });
   } catch (e) {
     return adminErrorResponse(e);

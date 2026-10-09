@@ -18,6 +18,7 @@ import { MentorRankingBreakdown } from "@/components/admin/MentorRankingBreakdow
 import "@/components/mentor.css";
 import { formatDateShort, formatDateTime, formatNumber } from "@/lib/adminFormat";
 import { MENTOR_CATEGORY_META, VERIFICATION_LABELS, VERIFICATION_SHORT, isMentorCategory } from "@/lib/mentorCategories";
+import { tr } from "@/lib/i18n";
 
 type VStatus = keyof typeof VERIFICATION_LABELS;
 type DocKind = "IDENTITY" | "CERTIFICATE";
@@ -45,7 +46,8 @@ type Detail = {
 const V_TONE: Record<VStatus, "green" | "red" | "amber" | "gray"> = { VERIFIED: "green", REJECTED: "red", PENDING: "amber", NOT_PROVIDED: "gray" };
 const V_ICON: Record<VStatus, typeof Hourglass> = { VERIFIED: BadgeCheck, REJECTED: XCircle, PENDING: Hourglass, NOT_PROVIDED: CircleSlash };
 const V_STATUSES: VStatus[] = ["PENDING", "VERIFIED", "REJECTED", "NOT_PROVIDED"];
-const TARGET_LABELS: Record<string, string> = { USER: "کاربر", REVIEW: "نظر", MESSAGE: "پیام", PROGRAM: "برنامه" };
+// تابع، نه ثابت سطح ماژول: برچسب‌ها موقع رندر به زبان جاری وابسته‌ان.
+const targetLabels = (): Record<string, string> => ({ USER: tr("کاربر", "User"), REVIEW: tr("نظر", "Review"), MESSAGE: tr("پیام", "Message"), PROGRAM: tr("برنامه", "Program") });
 const I = { size: 15, strokeWidth: 1.75 } as const;
 const IS = { size: 14, strokeWidth: 1.75 } as const;
 
@@ -62,8 +64,8 @@ function certLabel(c: string) {
 }
 function formatSize(bytes: number) {
   return bytes >= 1024 * 1024
-    ? `${formatNumber(Math.round((bytes / 1024 / 1024) * 10) / 10)} مگابایت`
-    : `${formatNumber(Math.max(1, Math.round(bytes / 1024)))} کیلوبایت`;
+    ? tr(`${formatNumber(Math.round((bytes / 1024 / 1024) * 10) / 10)} مگابایت`, `${formatNumber(Math.round((bytes / 1024 / 1024) * 10) / 10)} MB`)
+    : tr(`${formatNumber(Math.max(1, Math.round(bytes / 1024)))} کیلوبایت`, `${formatNumber(Math.max(1, Math.round(bytes / 1024)))} KB`);
 }
 
 function VBadge({ status }: { status: VStatus }) {
@@ -98,7 +100,7 @@ export default function AdminMentorDetailPage() {
       .then(async (r) => {
         if (r.status === 404 || r.status === 403) {
           const d = await r.json().catch(() => ({}));
-          setErrorMsg((d as { error?: string })?.error || (r.status === 404 ? "مربی پیدا نشد" : "دسترسی به این مربی مجاز نیست"));
+          setErrorMsg((d as { error?: string })?.error || (r.status === 404 ? tr("مربی پیدا نشد", "Mentor not found") : tr("دسترسی به این مربی مجاز نیست", "You don't have access to this mentor")));
           setState("blocked");
           return;
         }
@@ -110,18 +112,18 @@ export default function AdminMentorDetailPage() {
   }, [id]);
   useEffect(load, [load]);
 
-  if (state === "blocked") return <EmptyState message={errorMsg || "مربی پیدا نشد"} />;
+  if (state === "blocked") return <EmptyState message={errorMsg || tr("مربی پیدا نشد", "Mentor not found")} />;
   if (state === "error" && !data) {
     return (
       <div className="admin-empty">
-        <span>اطلاعات مربی دریافت نشد</span>
+        <span>{tr("اطلاعات مربی دریافت نشد", "Couldn't load the mentor's details")}</span>
         <button type="button" className="admin-btn" onClick={() => { setState("loading"); load(); }}>
-          <RefreshCw {...IS} aria-hidden /> تلاش دوباره
+          <RefreshCw {...IS} aria-hidden /> {tr("تلاش دوباره", "Try again")}
         </button>
       </div>
     );
   }
-  if (!data) return <div className="admin-empty is-loading" role="status" aria-label="در حال دریافت" />;
+  if (!data) return <div className="admin-empty is-loading" role="status" aria-label={tr("در حال دریافت", "Loading")} />;
 
   const p = data.profile;
   const u = p.user;
@@ -135,7 +137,7 @@ export default function AdminMentorDetailPage() {
   return (
     <section>
       <button type="button" className="admin-btn" style={{ marginBottom: 16 }} onClick={() => router.back()}>
-        <ArrowRight {...IS} aria-hidden /> بازگشت
+        <ArrowRight {...IS} className="dir-flip" aria-hidden /> {tr("بازگشت", "Back")}
       </button>
 
       <div className="admin-chart-card admin-onebox">
@@ -144,80 +146,80 @@ export default function AdminMentorDetailPage() {
         <div className="admin-user-hero-info">
           <div className="admin-user-hero-name">
             {displayName(u)}
-            {p.suspendedAt ? <span className="admin-badge red"><Ban size={13} strokeWidth={1.75} aria-hidden />تعلیق</span>
-              : p.published ? <span className="admin-badge green">منتشرشده</span>
-              : <span className="admin-badge gray">منتشرنشده</span>}
-            {u.deletedAt ? <span className="admin-badge red">حساب حذف‌شده</span> : u.isBlocked ? <span className="admin-badge red">حساب مسدود</span> : null}
-            {isSelf && <span className="admin-badge gray">پروفایل خودت</span>}
+            {p.suspendedAt ? <span className="admin-badge red"><Ban size={13} strokeWidth={1.75} aria-hidden />{tr("تعلیق", "Suspended")}</span>
+              : p.published ? <span className="admin-badge green">{tr("منتشرشده", "Published")}</span>
+              : <span className="admin-badge gray">{tr("منتشرنشده", "Unpublished")}</span>}
+            {u.deletedAt ? <span className="admin-badge red">{tr("حساب حذف‌شده", "Deleted account")}</span> : u.isBlocked ? <span className="admin-badge red">{tr("حساب مسدود", "Account blocked")}</span> : null}
+            {isSelf && <span className="admin-badge gray">{tr("پروفایل خودت", "Your profile")}</span>}
           </div>
           <div className="admin-user-hero-sub admin-ltr">{u.username ? `@${u.username}` : "—"}</div>
           {p.suspendedAt && (
             <div className="admin-user-hero-sub">
-              تعلیق از {formatDateShort(p.suspendedAt)}{p.suspendedReason ? `؛ دلیل: ${p.suspendedReason}` : ""}
+              {tr("تعلیق از ", "Suspended since ")}{formatDateShort(p.suspendedAt)}{p.suspendedReason ? tr(`؛ دلیل: ${p.suspendedReason}`, `; reason: ${p.suspendedReason}`) : ""}
             </div>
           )}
-          <button type="button" className="admin-id-chip" onClick={() => { navigator.clipboard?.writeText(p.id).then(() => toast("آیدی پروفایل کپی شد"), () => toast("کپی ناموفق بود", "err")); }}>
+          <button type="button" className="admin-id-chip" onClick={() => { navigator.clipboard?.writeText(p.id).then(() => toast(tr("آیدی پروفایل کپی شد", "Profile ID copied")), () => toast(tr("کپی ناموفق بود", "Copy failed"), "err")); }}>
             <Copy size={12} strokeWidth={1.75} aria-hidden /> <span className="admin-ltr">{p.id}</span>
           </button>
         </div>
         <div className="admin-head-actions">
           {can("users.view") && (
-            <Link href={`/admin/users/${u.id}`} className="admin-btn"><UserRound {...IS} aria-hidden /> حساب کاربری</Link>
+            <Link href={`/admin/users/${u.id}`} className="admin-btn"><UserRound {...IS} aria-hidden /> {tr("حساب کاربری", "User account")}</Link>
           )}
           {!isSelf && (p.suspendedAt
-            ? <button type="button" className="admin-btn" onClick={() => setRestoreOpen(true)}><RotateCcw {...IS} aria-hidden /> رفع تعلیق</button>
-            : <button type="button" className="admin-btn danger" onClick={() => setSuspendOpen(true)}><Ban {...IS} aria-hidden /> تعلیق مربی‌گری</button>)}
+            ? <button type="button" className="admin-btn" onClick={() => setRestoreOpen(true)}><RotateCcw {...IS} aria-hidden /> {tr("رفع تعلیق", "Lift suspension")}</button>
+            : <button type="button" className="admin-btn danger" onClick={() => setSuspendOpen(true)}><Ban {...IS} aria-hidden /> {tr("تعلیق مربی‌گری", "Suspend mentoring")}</button>)}
         </div>
       </div>
 
       <div className="admin-kpi-grid">
-        <Kpi icon={<Users size={13} strokeWidth={1.75} aria-hidden />} label="شاگرد فعال" value={formatNumber(data.stats.activeStudents)} sub={`از ${formatNumber(data.stats.totalStudents)} شاگرد`} />
-        <Kpi icon={<ClipboardList size={13} strokeWidth={1.75} aria-hidden />} label="برنامه‌های ارسالی" value={formatNumber(data.stats.programs)} sub={`${formatNumber(data.stats.completedPrograms)} تمام‌شده`} />
+        <Kpi icon={<Users size={13} strokeWidth={1.75} aria-hidden />} label={tr("شاگرد فعال", "Active students")} value={formatNumber(data.stats.activeStudents)} sub={tr(`از ${formatNumber(data.stats.totalStudents)} شاگرد`, `of ${formatNumber(data.stats.totalStudents)} students`)} />
+        <Kpi icon={<ClipboardList size={13} strokeWidth={1.75} aria-hidden />} label={tr("برنامه‌های ارسالی", "Programs sent")} value={formatNumber(data.stats.programs)} sub={tr(`${formatNumber(data.stats.completedPrograms)} تمام‌شده`, `${formatNumber(data.stats.completedPrograms)} completed`)} />
         <Kpi
-          icon={<Star size={13} strokeWidth={1.75} aria-hidden />} label="امتیاز"
+          icon={<Star size={13} strokeWidth={1.75} aria-hidden />} label={tr("امتیاز", "Rating")}
           value={data.stats.ratingCount ? data.stats.ratingAvg.toFixed(1) : "—"}
-          sub={data.stats.ratingCount ? `${formatNumber(data.stats.ratingCount)} نظر` : "بدون نظر"}
+          sub={data.stats.ratingCount ? tr(`${formatNumber(data.stats.ratingCount)} نظر`, `${formatNumber(data.stats.ratingCount)} review(s)`) : tr("بدون نظر", "No reviews")}
         />
-        <Kpi icon={<Flag size={13} strokeWidth={1.75} aria-hidden />} label="گزارش باز" value={formatNumber(data.openReports.length)} sub={`${formatNumber(data.stats.hiddenReviews)} نظر پنهان`} />
+        <Kpi icon={<Flag size={13} strokeWidth={1.75} aria-hidden />} label={tr("گزارش باز", "Open reports")} value={formatNumber(data.openReports.length)} sub={tr(`${formatNumber(data.stats.hiddenReviews)} نظر پنهان`, `${formatNumber(data.stats.hiddenReviews)} hidden review(s)`)} />
       </div>
 
       <div className="admin-chart-card">
-        <div className="admin-chart-head"><span className="admin-chart-title"><UserRound {...I} className="admin-title-icon" style={{ display: "inline-block" }} aria-hidden />پروفایل مربی‌گری</span></div>
+        <div className="admin-chart-head"><span className="admin-chart-title"><UserRound {...I} className="admin-title-icon" style={{ display: "inline-block" }} aria-hidden />{tr("پروفایل مربی‌گری", "Mentor profile")}</span></div>
         <div className="admin-info-grid">
-          <InfoRow k="عنوان" v={p.headline} />
+          <InfoRow k={tr("عنوان", "Headline")} v={p.headline} />
           <div className="admin-info-row">
-            <span className="admin-muted">دسته‌ها</span>
+            <span className="admin-muted">{tr("دسته‌ها", "Categories")}</span>
             {p.categories.length === 0 ? <span>—</span> : (
               <span className="admin-badge-row" style={{ justifyContent: "flex-end" }}>
                 {p.categories.map((c) => (
-                  <span key={c} className="admin-badge gray" title={c === "ROUTINE" && routineRole ? `نقش در روتین: ${routineRole}` : undefined}>
-                    {categoryLabel(c)}{c === "ROUTINE" && routineRole ? `؛ ${routineRole}` : ""}
+                  <span key={c} className="admin-badge gray" title={c === "ROUTINE" && routineRole ? tr(`نقش در روتین: ${routineRole}`, `Role in routine: ${routineRole}`) : undefined}>
+                    {categoryLabel(c)}{c === "ROUTINE" && routineRole ? tr(`؛ ${routineRole}`, `; ${routineRole}`) : ""}
                   </span>
                 ))}
               </span>
             )}
           </div>
-          <InfoRow k="تخصص‌ها" v={p.specialties.join("، ") || null} />
-          <InfoRow k="پذیرش شاگرد جدید" v={p.acceptingStudents ? "باز" : "بسته"} />
-          <InfoRow k="آخرین فعالیت" v={p.lastActiveAt ? formatDateTime(p.lastActiveAt) : null} />
-          <InfoRow k="مربی از" v={formatDateShort(p.createdAt)} />
-          <InfoRow k="عضویت در آریون" v={formatDateShort(u.createdAt)} />
+          <InfoRow k={tr("تخصص‌ها", "Specialties")} v={p.specialties.join(tr("، ", ", ")) || null} />
+          <InfoRow k={tr("پذیرش شاگرد جدید", "Accepting new students")} v={p.acceptingStudents ? tr("باز", "Open") : tr("بسته", "Closed")} />
+          <InfoRow k={tr("آخرین فعالیت", "Last active")} v={p.lastActiveAt ? formatDateTime(p.lastActiveAt) : null} />
+          <InfoRow k={tr("مربی از", "Mentor since")} v={formatDateShort(p.createdAt)} />
+          <InfoRow k={tr("عضویت در آریون", "Joined Arion")} v={formatDateShort(u.createdAt)} />
         </div>
         {p.bio && <div className="admin-modal-text admin-mentor-bio">{p.bio}</div>}
       </div>
 
       <div className="admin-chart-card">
         <div className="admin-chart-head">
-          <span className="admin-chart-title"><ShieldCheck {...I} className="admin-title-icon" style={{ display: "inline-block" }} aria-hidden />احراز هویت و مدارک</span>
+          <span className="admin-chart-title"><ShieldCheck {...I} className="admin-title-icon" style={{ display: "inline-block" }} aria-hidden />{tr("احراز هویت و مدارک", "Verification and documents")}</span>
           {!canReview && (
             <span className="admin-muted" style={{ fontSize: 12, display: "inline-flex", alignItems: "center", gap: 6 }}>
-              <Lock size={13} strokeWidth={1.75} aria-hidden />بررسی مدارک خودت فقط با Owner انجام می‌شود
+              <Lock size={13} strokeWidth={1.75} aria-hidden />{tr("بررسی مدارک خودت فقط با Owner انجام می‌شود", "Only Owner can review your own documents")}
             </span>
           )}
         </div>
         <div>
           <VerificationRow
-            title="احراز هویت"
+            title={tr("احراز هویت", "Identity verification")}
             status={p.identityStatus}
             rejectReason={p.identityRejectReason}
             reviewedAt={p.identityReviewedAt}
@@ -244,22 +246,22 @@ export default function AdminMentorDetailPage() {
             );
           })}
         </div>
-        {categories.length === 0 && <div className="admin-section-hint" style={{ margin: "10px 0 0" }}>دسته‌ای انتخاب نشده؛ مدرک تخصصی وجود ندارد</div>}
+        {categories.length === 0 && <div className="admin-section-hint" style={{ margin: "10px 0 0" }}>{tr("دسته‌ای انتخاب نشده؛ مدرک تخصصی وجود ندارد", "No category selected; there are no credentials")}</div>}
       </div>
 
       {data.openReports.length > 0 && (
         <div className="admin-chart-card">
           <div className="admin-chart-head">
-            <span className="admin-chart-title"><Flag {...I} className="admin-title-icon" style={{ display: "inline-block" }} aria-hidden />گزارش‌های باز علیه این کاربر</span>
-            <Link href="/admin/mentors/reports" className="admin-link" style={{ fontSize: 12, fontWeight: 700 }}>رسیدگی در صف گزارش‌ها</Link>
+            <span className="admin-chart-title"><Flag {...I} className="admin-title-icon" style={{ display: "inline-block" }} aria-hidden />{tr("گزارش‌های باز علیه این کاربر", "Open reports against this user")}</span>
+            <Link href="/admin/mentors/reports" className="admin-link" style={{ fontSize: 12, fontWeight: 700 }}>{tr("رسیدگی در صف گزارش‌ها", "Handle in the report queue")}</Link>
           </div>
           <div className="admin-table-wrap">
             <table className="admin-table">
-              <thead><tr><th>هدف</th><th>دلیل</th><th>توضیح</th><th>زمان</th></tr></thead>
+              <thead><tr><th>{tr("هدف", "Target")}</th><th>{tr("دلیل", "Reason")}</th><th>{tr("توضیح", "Details")}</th><th>{tr("زمان", "Time")}</th></tr></thead>
               <tbody>
                 {data.openReports.map((r) => (
                   <tr key={r.id}>
-                    <td>{TARGET_LABELS[r.targetType] || r.targetType}</td>
+                    <td>{targetLabels()[r.targetType] || r.targetType}</td>
                     <td>{r.reason}</td>
                     <td className="admin-muted admin-cell-wrap">{r.details || "—"}</td>
                     <td className="admin-ltr">{formatDateTime(r.createdAt)}</td>
@@ -275,24 +277,24 @@ export default function AdminMentorDetailPage() {
       <MentorRankingBreakdown profileId={p.id} />
 
       <div className="admin-chart-card">
-        <div className="admin-chart-head"><span className="admin-chart-title"><History {...I} className="admin-title-icon" style={{ display: "inline-block" }} aria-hidden />تاریخچه‌ی احراز</span></div>
-        {data.events.length === 0 ? <EmptyState message="تغییری ثبت نشده" /> : (
+        <div className="admin-chart-head"><span className="admin-chart-title"><History {...I} className="admin-title-icon" style={{ display: "inline-block" }} aria-hidden />{tr("تاریخچه‌ی احراز", "Verification history")}</span></div>
+        {data.events.length === 0 ? <EmptyState message={tr("تغییری ثبت نشده", "No changes recorded")} /> : (
           <div className="admin-table-wrap">
             <table className="admin-table">
-              <thead><tr><th>مورد</th><th>تغییر وضعیت</th><th>دلیل</th><th>توسط</th><th>زمان</th></tr></thead>
+              <thead><tr><th>{tr("مورد", "Item")}</th><th>{tr("تغییر وضعیت", "Status change")}</th><th>{tr("دلیل", "Reason")}</th><th>{tr("توسط", "By")}</th><th>{tr("زمان", "Time")}</th></tr></thead>
               <tbody>
                 {data.events.map((e) => (
                   <tr key={e.id}>
-                    <td>{e.kind === "IDENTITY" ? "احراز هویت" : certLabel(e.category || "")}</td>
+                    <td>{e.kind === "IDENTITY" ? tr("احراز هویت", "Identity verification") : certLabel(e.category || "")}</td>
                     <td>
                       <span className="admin-badge-row">
                         <VBadge status={e.fromStatus} />
-                        <span className="admin-muted" aria-label="به">←</span>
+                        <span className="admin-muted" aria-label={tr("به", "to")}>{tr("←", "→")}</span>
                         <VBadge status={e.toStatus} />
                       </span>
                     </td>
                     <td className="admin-muted admin-cell-wrap">{e.reason || "—"}</td>
-                    <td>{e.byMentor ? "خود مربی" : e.actor ? displayName(e.actor) : "—"}</td>
+                    <td>{e.byMentor ? tr("خود مربی", "The mentor") : e.actor ? displayName(e.actor) : "—"}</td>
                     <td className="admin-ltr">{formatDateTime(e.createdAt)}</td>
                   </tr>
                 ))}
@@ -317,8 +319,8 @@ export default function AdminMentorDetailPage() {
       )}
       {restoreOpen && (
         <ConfirmModal
-          title="رفع تعلیق مربی‌گری" danger={false} confirmLabel="رفع تعلیق"
-          message="پروفایل مربی‌گری دوباره فعال می‌شود و اگر منتشرشده باشد، در فهرست مربی‌ها نمایش داده می‌شود."
+          title={tr("رفع تعلیق مربی‌گری", "Lift mentoring suspension")} danger={false} confirmLabel={tr("رفع تعلیق", "Lift suspension")}
+          message={tr("پروفایل مربی‌گری دوباره فعال می‌شود و اگر منتشرشده باشد، در فهرست مربی‌ها نمایش داده می‌شود.", "The mentor profile becomes active again, and if it's published, it shows in the mentor list.")}
           onClose={() => setRestoreOpen(false)}
           onConfirm={async () => {
             // روی خطا مودال باز می‌مونه تا ادمین بدونه اقدام انجام نشده
@@ -328,7 +330,7 @@ export default function AdminMentorDetailPage() {
               toast(e.message, "err");
               return;
             }
-            toast("تعلیق برداشته شد");
+            toast(tr("تعلیق برداشته شد", "Suspension lifted"));
             setRestoreOpen(false);
             load();
           }}
@@ -367,9 +369,9 @@ function VerificationRow({
   canReview: boolean; onView: (d: Doc) => void; onAction?: (preset: VStatus) => void;
 }) {
   const meta = [
-    reviewedAt ? `آخرین بررسی ${formatDateShort(reviewedAt)}` : null,
-    docs.length ? `${formatNumber(docs.length)} فایل` : "فایلی ارسال نشده",
-  ].filter(Boolean).join("؛ ");
+    reviewedAt ? tr(`آخرین بررسی ${formatDateShort(reviewedAt)}`, `Last reviewed ${formatDateShort(reviewedAt)}`) : null,
+    docs.length ? tr(`${formatNumber(docs.length)} فایل`, `${formatNumber(docs.length)} file(s)`) : tr("فایلی ارسال نشده", "No files submitted"),
+  ].filter(Boolean).join(tr("؛ ", "; "));
 
   return (
     <div style={ROW}>
@@ -385,23 +387,23 @@ function VerificationRow({
           <div className="admin-head-actions">
             {status !== "VERIFIED" && docs.length > 0 && (
               <button type="button" className="admin-btn primary" onClick={() => onAction("VERIFIED")}>
-                <BadgeCheck {...IS} aria-hidden /> تایید
+                <BadgeCheck {...IS} aria-hidden /> {tr("تایید", "Approve")}
               </button>
             )}
             {(status !== "NOT_PROVIDED" || docs.length > 0) && (
               <button type="button" className="admin-btn danger" onClick={() => onAction("REJECTED")}>
-                <X {...IS} aria-hidden /> رد
+                <X {...IS} aria-hidden /> {tr("رد", "Reject")}
               </button>
             )}
             <button type="button" className="admin-btn" onClick={() => onAction(status === "PENDING" ? "NOT_PROVIDED" : "PENDING")}>
-              تغییر وضعیت
+              {tr("تغییر وضعیت", "Change status")}
             </button>
           </div>
         )}
       </div>
 
       {status === "REJECTED" && rejectReason && (
-        <div className="admin-perm-hint" style={{ marginTop: 6 }}>دلیل رد: {rejectReason}</div>
+        <div className="admin-perm-hint" style={{ marginTop: 6 }}>{tr("دلیل رد: ", "Rejection reason: ")}{rejectReason}</div>
       )}
 
       {docs.length > 0 && (
@@ -415,10 +417,10 @@ function VerificationRow({
                   {d.fileName}
                 </span>
                 <span className="admin-muted" style={{ fontSize: 11.5, whiteSpace: "nowrap" }}>
-                  {formatSize(d.sizeBytes)}؛ {formatDateShort(d.createdAt)}
+                  {formatSize(d.sizeBytes)}{tr("؛ ", "; ")}{formatDateShort(d.createdAt)}
                 </span>
                 {canReview && (
-                  <button type="button" className="admin-icon-btn" aria-label={`مشاهده‌ی ${d.fileName}`} onClick={() => onView(d)}>
+                  <button type="button" className="admin-icon-btn" aria-label={tr(`مشاهده‌ی ${d.fileName}`, `View ${d.fileName}`)} onClick={() => onView(d)}>
                     <Eye {...I} aria-hidden />
                   </button>
                 )}
@@ -439,10 +441,10 @@ function VerifyModal({ profileId, target, onClose, onDone }: { profileId: string
   const [error, setError] = useState<string | null>(null);
   const needsReason = status === "REJECTED";
   const unchanged = status === target.current && status !== "REJECTED";
-  const title = target.kind === "IDENTITY" ? "احراز هویت" : certLabel(target.category || "");
+  const title = target.kind === "IDENTITY" ? tr("احراز هویت", "Identity verification") : certLabel(target.category || "");
 
   async function submit() {
-    if (needsReason && !reason.trim()) { setError("دلیل رد الزامی است"); return; }
+    if (needsReason && !reason.trim()) { setError(tr("دلیل رد الزامی است", "A rejection reason is required")); return; }
     setBusy(true);
     setError(null);
     try {
@@ -450,7 +452,7 @@ function VerifyModal({ profileId, target, onClose, onDone }: { profileId: string
         method: "POST",
         json: { kind: target.kind, category: target.category || undefined, status, reason: reason.trim() || undefined },
       });
-      toast("وضعیت ثبت شد؛ اعلان برای مربی ارسال شد");
+      toast(tr("وضعیت ثبت شد؛ اعلان برای مربی ارسال شد", "Status saved; a notification was sent to the mentor"));
       onDone();
     } catch (e: any) {
       setError(e.message);
@@ -460,35 +462,35 @@ function VerifyModal({ profileId, target, onClose, onDone }: { profileId: string
   }
 
   return (
-    <AdminModal title={title} eyebrow="بررسی مدرک" onClose={onClose}>
+    <AdminModal title={title} eyebrow={tr("بررسی مدرک", "Document review")} onClose={onClose}>
       <div className="admin-modal-text" style={{ display: "flex", alignItems: "center", gap: 8, flexWrap: "wrap" }}>
-        <span className="admin-muted">وضعیت فعلی</span>
+        <span className="admin-muted">{tr("وضعیت فعلی", "Current status")}</span>
         <VBadge status={target.current} />
       </div>
       <label className="admin-field">
-        <span>وضعیت جدید</span>
+        <span>{tr("وضعیت جدید", "New status")}</span>
         <select className="admin-input" value={status} onChange={(e) => { setStatus(e.target.value as VStatus); setError(null); }}>
           {V_STATUSES.map((s) => <option key={s} value={s}>{VERIFICATION_LABELS[s]}</option>)}
         </select>
       </label>
       <label className="admin-field" style={{ marginTop: 12 }}>
-        <span>{needsReason ? "دلیل رد" : "توضیح (اختیاری)"}</span>
+        <span>{needsReason ? tr("دلیل رد", "Rejection reason") : tr("توضیح (اختیاری)", "Note (optional)")}</span>
         <textarea
           className="admin-input" rows={3} maxLength={500} value={reason}
-          placeholder={needsReason ? "مثلا تصویر مدرک خوانا نیست" : undefined}
+          placeholder={needsReason ? tr("مثلا تصویر مدرک خوانا نیست", "e.g. the document image isn't readable") : undefined}
           onChange={(e) => { setReason(e.target.value); setError(null); }}
         />
-        {needsReason && <span className="admin-perm-hint" style={{ marginTop: 0, fontWeight: 400 }}>این دلیل برای مربی نمایش داده می‌شود</span>}
+        {needsReason && <span className="admin-perm-hint" style={{ marginTop: 0, fontWeight: 400 }}>{tr("این دلیل برای مربی نمایش داده می‌شود", "This reason is shown to the mentor")}</span>}
       </label>
       {error && <div className="admin-form-error">{error}</div>}
       <div className="admin-modal-actions">
-        <button type="button" className="admin-btn" onClick={onClose} disabled={busy}>انصراف</button>
+        <button type="button" className="admin-btn" onClick={onClose} disabled={busy}>{tr("انصراف", "Cancel")}</button>
         <button
           type="button" className={`admin-btn ${status === "REJECTED" ? "danger" : "primary"}`}
           disabled={busy || unchanged || (needsReason && !reason.trim())} onClick={submit}
           aria-busy={busy}
         >
-          {busy ? <Spinner size={14} /> : "ثبت وضعیت"}
+          {busy ? <Spinner size={14} /> : tr("ثبت وضعیت", "Save status")}
         </button>
       </div>
     </AdminModal>
@@ -506,7 +508,7 @@ function SuspendModal({ profileId, onClose, onDone }: { profileId: string; onClo
     setError(null);
     try {
       await adminFetch(`/api/admin/mentors/${profileId}/suspend`, { method: "POST", json: { suspend: true, reason: reason.trim() } });
-      toast("مربی‌گری تعلیق شد");
+      toast(tr("مربی‌گری تعلیق شد", "Mentoring suspended"));
       onDone();
     } catch (e: any) {
       setError(e.message);
@@ -516,20 +518,20 @@ function SuspendModal({ profileId, onClose, onDone }: { profileId: string; onClo
   }
 
   return (
-    <AdminModal title="تعلیق مربی‌گری" eyebrow="تایید اقدام" onClose={onClose}>
+    <AdminModal title={tr("تعلیق مربی‌گری", "Suspend mentoring")} eyebrow={tr("تایید اقدام", "Confirm action")} onClose={onClose}>
       <div className="admin-modal-text">
-        پروفایل از فهرست مربی‌ها حذف می‌شود و پذیرش شاگرد و ساخت برنامه بسته می‌شود؛ حساب کاربری فعال می‌ماند.
+        {tr("پروفایل از فهرست مربی‌ها حذف می‌شود و پذیرش شاگرد و ساخت برنامه بسته می‌شود؛ حساب کاربری فعال می‌ماند.", "The profile is removed from the mentor list, student acceptance and program creation are closed. The user account stays active.")}
       </div>
       <label className="admin-field">
-        <span>دلیل تعلیق</span>
+        <span>{tr("دلیل تعلیق", "Reason for suspension")}</span>
         <textarea className="admin-input" rows={3} maxLength={500} value={reason} onChange={(e) => setReason(e.target.value)} autoFocus />
-        <span className="admin-perm-hint" style={{ marginTop: 0, fontWeight: 400 }}>این دلیل برای مربی نمایش داده می‌شود</span>
+        <span className="admin-perm-hint" style={{ marginTop: 0, fontWeight: 400 }}>{tr("این دلیل برای مربی نمایش داده می‌شود", "This reason is shown to the mentor")}</span>
       </label>
       {error && <div className="admin-form-error">{error}</div>}
       <div className="admin-modal-actions">
-        <button type="button" className="admin-btn" onClick={onClose} disabled={busy}>انصراف</button>
+        <button type="button" className="admin-btn" onClick={onClose} disabled={busy}>{tr("انصراف", "Cancel")}</button>
         <button type="button" className="admin-btn danger" disabled={busy || !reason.trim()} onClick={submit} aria-busy={busy}>
-          {busy ? <Spinner size={14} /> : "تعلیق مربی‌گری"}
+          {busy ? <Spinner size={14} /> : tr("تعلیق مربی‌گری", "Suspend mentoring")}
         </button>
       </div>
     </AdminModal>
@@ -550,7 +552,7 @@ function DocumentViewer({ doc, onClose }: { doc: Doc; onClose: () => void }) {
       .then(async (r) => {
         if (!r.ok) {
           const d = await r.json().catch(() => ({}));
-          throw new Error((d as any)?.error || "فایل دریافت نشد");
+          throw new Error((d as any)?.error || tr("فایل دریافت نشد", "Couldn't load the file"));
         }
         const blob = await r.blob();
         if (revoked) return;
@@ -569,30 +571,30 @@ function DocumentViewer({ doc, onClose }: { doc: Doc; onClose: () => void }) {
   const isPdf = mime === "application/pdf";
 
   return (
-    <AdminModal title={doc.fileName} eyebrow={doc.kind === "IDENTITY" ? "مدرک هویت" : certLabel(doc.category || "")} onClose={onClose} wide>
+    <AdminModal title={doc.fileName} eyebrow={doc.kind === "IDENTITY" ? tr("مدرک هویت", "Identity document") : certLabel(doc.category || "")} onClose={onClose} wide>
       {error ? (
         <div className="admin-empty">{error}</div>
       ) : !url ? (
-        <div className="admin-empty is-loading" role="status" aria-label="در حال دریافت فایل" />
+        <div className="admin-empty is-loading" role="status" aria-label={tr("در حال دریافت فایل", "Loading file")} />
       ) : isImage ? (
         // eslint-disable-next-line @next/next/no-img-element
         <img src={url} alt={doc.fileName} className="admin-doc-image" />
       ) : isPdf ? (
         <div className="admin-empty">
           <FileText size={24} strokeWidth={1.75} aria-hidden />
-          <span>فایل PDF؛ {formatSize(doc.sizeBytes)}</span>
+          <span>{tr("فایل PDF؛ ", "PDF file; ")}{formatSize(doc.sizeBytes)}</span>
           <a href={url} target="_blank" rel="noopener noreferrer" className="admin-btn primary">
-            <ExternalLink {...IS} aria-hidden /> باز کردن در زبانه‌ی جدید
+            <ExternalLink {...IS} aria-hidden /> {tr("باز کردن در زبانه‌ی جدید", "Open in a new tab")}
           </a>
         </div>
       ) : (
         <div className="admin-empty">
-          <span>پیش‌نمایش این نوع فایل ممکن نیست</span>
-          <a href={url} download={doc.fileName} className="admin-btn"><Download {...IS} aria-hidden /> دریافت فایل</a>
+          <span>{tr("پیش‌نمایش این نوع فایل ممکن نیست", "This file type can't be previewed")}</span>
+          <a href={url} download={doc.fileName} className="admin-btn"><Download {...IS} aria-hidden /> {tr("دریافت فایل", "Download file")}</a>
         </div>
       )}
       <div className="admin-modal-actions">
-        <button type="button" className="admin-btn" onClick={onClose}>بستن</button>
+        <button type="button" className="admin-btn" onClick={onClose}>{tr("بستن", "Close")}</button>
       </div>
     </AdminModal>
   );

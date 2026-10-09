@@ -6,10 +6,11 @@ import { ConfirmModal } from "@/components/admin/AdminModal";
 import { NumberInput } from "@/components/NumberInput";
 import { TickOption } from "@/components/TickOption";
 import {
-  DURATIONS, Duration, PAID_PLAN_KEYS, PLAN_NAMES_FA, PRICING_LIMITS, PaidPlanKey, PricingConfig,
-  discountPercentOf, priceFromDiscount, validatePricingConfig,
+  DURATIONS, Duration, PAID_PLAN_KEYS, PRICING_LIMITS, PaidPlanKey, PricingConfig,
+  discountPercentOf, planNameLabel, priceFromDiscount, validatePricingConfig,
 } from "@/lib/planPricing";
 import { invalidatePlanPricing } from "@/lib/usePlanPricing";
+import { tr } from "@/lib/i18n";
 
 type Payload = { pricing: PricingConfig; defaults: PricingConfig; saved: boolean };
 
@@ -66,7 +67,7 @@ export default function AdminPricingPage() {
       setDraft(d.pricing);
       setPctDraft({});
       invalidatePlanPricing();
-      toast("قیمت‌ها ذخیره شد");
+      toast(tr("قیمت‌ها ذخیره شد", "Prices saved"));
     } catch (e: any) {
       toast(e.message, "err");
     } finally {
@@ -81,17 +82,17 @@ export default function AdminPricingPage() {
     setPctDraft({});
     invalidatePlanPricing();
     setConfirmReset(false);
-    toast("قیمت‌ها به پیش‌فرض برگشت");
+    toast(tr("قیمت‌ها به پیش‌فرض برگشت", "Prices reverted to defaults"));
   }
 
   return (
     <section>
       <div className="admin-page-head">
         <div>
-          <div className="admin-page-kicker">قیمت پلن‌ها</div>
+          <div className="admin-page-kicker">{tr("قیمت پلن‌ها", "Plan pricing")}</div>
           <div className="admin-section-hint admin-page-sub">
-            همه‌ی مبلغ‌ها به تومان. پرداخت‌های جدید همون لحظه با قیمت ذخیره‌شده حساب می‌شن و صفحه‌های قیمت حداکثر تا یک دقیقه به‌روز می‌شن.
-            {data && (data.saved ? " الان قیمت‌های ذخیره‌شده‌ی پنل فعالن." : " الان قیمت‌های پیش‌فرض فعالن.")}
+            {tr("همه‌ی مبلغ‌ها به تومان. پرداخت‌های جدید همون لحظه با قیمت ذخیره‌شده حساب می‌شن و صفحه‌های قیمت حداکثر تا یک دقیقه به‌روز می‌شن.", "All amounts are in toman. New payments are calculated with the saved price right away, and pricing pages update within a minute.")}
+            {data && (data.saved ? tr(" الان قیمت‌های ذخیره‌شده‌ی پنل فعالن.", " The prices saved in the panel are active now.") : tr(" الان قیمت‌های پیش‌فرض فعالن.", " The default prices are active now."))}
           </div>
         </div>
       </div>
@@ -99,28 +100,28 @@ export default function AdminPricingPage() {
       {!draft || !data ? (
         failed ? (
           <div className="admin-empty">
-            <span>خطا در دریافت اطلاعات</span>
-            <button type="button" className="admin-btn sm" onClick={load}>تلاش دوباره</button>
+            <span>{tr("خطا در دریافت اطلاعات", "Couldn't load the data")}</span>
+            <button type="button" className="admin-btn sm" onClick={load}>{tr("تلاش دوباره", "Try again")}</button>
           </div>
-        ) : <div className="admin-empty is-loading">در حال بارگذاری…</div>
+        ) : <div className="admin-empty is-loading">{tr("در حال بارگذاری…", "Loading…")}</div>
       ) : (
         <form onSubmit={(e) => { e.preventDefault(); save(); }} noValidate>
           <div className="admin-chart-card">
-            <div className="admin-chart-head"><span className="admin-chart-title">مدت‌های اشتراک</span></div>
+            <div className="admin-chart-head"><span className="admin-chart-title">{tr("مدت‌های اشتراک", "Subscription durations")}</span></div>
             <div className="admin-section-hint admin-settings-hint">
-              تعداد ماه هر مدت ({PRICING_LIMITS.minMonths} تا {PRICING_LIMITS.maxMonths}) و این‌که برای خرید نمایش داده بشه یا نه. حداقل یک مدت باید فعال بمونه.
+              {tr(`تعداد ماه هر مدت (${PRICING_LIMITS.minMonths} تا ${PRICING_LIMITS.maxMonths}) و این‌که برای خرید نمایش داده بشه یا نه. حداقل یک مدت باید فعال بمونه.`, `Number of months for each duration (${PRICING_LIMITS.minMonths} to ${PRICING_LIMITS.maxMonths}), and whether it's shown for purchase. At least one duration must stay active.`)}
             </div>
             <div className="admin-form-grid">
               {DURATIONS.map((d, i) => (
                 <div key={d} className="admin-field">
-                  <span>مدت {i + 1} (پیش‌فرض {data.defaults.durations[d].months} ماهه)</span>
+                  <span>{tr(`مدت ${i + 1} (پیش‌فرض ${data.defaults.durations[d].months} ماهه)`, `Duration ${i + 1} (default ${data.defaults.durations[d].months} months)`)}</span>
                   <NumberInput
-                    className="admin-input admin-ltr" dir="ltr" maxLength={2} aria-label={`تعداد ماه مدت ${i + 1}`}
+                    className="admin-input admin-ltr" dir="ltr" maxLength={2} aria-label={tr(`تعداد ماه مدت ${i + 1}`, `Months for duration ${i + 1}`)}
                     value={draft.durations[d].months ? String(draft.durations[d].months) : ""}
                     onChange={(v) => setDuration(d, { months: toInt(v) })}
                   />
                   <TickOption checked={draft.durations[d].enabled} onChange={(on) => setDuration(d, { enabled: on })}>
-                    فعال برای خرید
+                    {tr("فعال برای خرید", "Active for purchase")}
                   </TickOption>
                 </div>
               ))}
@@ -129,16 +130,16 @@ export default function AdminPricingPage() {
 
           {PAID_PLAN_KEYS.map((plan) => (
             <div key={plan} className="admin-chart-card">
-              <div className="admin-chart-head"><span className="admin-chart-title">{PLAN_NAMES_FA[plan]}</span></div>
+              <div className="admin-chart-head"><span className="admin-chart-title">{planNameLabel(plan)}</span></div>
               <div className="admin-table-wrap">
                 <table className="admin-table">
                   <thead>
                     <tr>
-                      <th>مدت</th>
-                      <th>قیمت قبل از تخفیف (خط‌خورده)</th>
-                      <th>تخفیف ٪</th>
-                      <th>قیمت نهایی (پرداختی)</th>
-                      <th>پیش‌فرض (تومان)</th>
+                      <th>{tr("مدت", "Duration")}</th>
+                      <th>{tr("قیمت قبل از تخفیف (خط‌خورده)", "Price before discount (struck through)")}</th>
+                      <th>{tr("تخفیف ٪", "Discount %")}</th>
+                      <th>{tr("قیمت نهایی (پرداختی)", "Final price (paid)")}</th>
+                      <th>{tr("پیش‌فرض (تومان)", "Default (toman)")}</th>
                     </tr>
                   </thead>
                   <tbody>
@@ -150,12 +151,12 @@ export default function AdminPricingPage() {
                       const dur = draft.durations[d];
                       return (
                         <tr key={d} style={dur.enabled ? undefined : { opacity: 0.5 }}>
-                          <td>{dur.months || "?"} ماهه{dur.enabled ? "" : " (غیرفعال)"}</td>
+                          <td>{tr(`${dur.months || "?"} ماهه${dur.enabled ? "" : " (غیرفعال)"}`, `${dur.months || "?"} months${dur.enabled ? "" : " (inactive)"}`)}</td>
                           <td>
                             <NumberInput
                               className="admin-input admin-ltr" dir="ltr" maxLength={13} style={{ width: 150 }}
-                              aria-label={`قیمت قبل از تخفیف ${PLAN_NAMES_FA[plan]} ${dur.months} ماهه`}
-                              placeholder="بدون تخفیف"
+                              aria-label={tr(`قیمت قبل از تخفیف ${planNameLabel(plan)} ${dur.months} ماهه`, `Pre-discount price, ${planNameLabel(plan)} ${dur.months} months`)}
+                              placeholder={tr("بدون تخفیف", "No discount")}
                               value={fmt(cell.original)}
                               onChange={(v) => { setCell(plan, d, { original: toInt(v) }); setPctDraft((m) => { const n = { ...m }; delete n[key]; return n; }); }}
                             />
@@ -163,7 +164,7 @@ export default function AdminPricingPage() {
                           <td>
                             <NumberInput
                               decimal className="admin-input admin-ltr" dir="ltr" maxLength={5} style={{ width: 80 }}
-                              aria-label={`درصد تخفیف ${PLAN_NAMES_FA[plan]} ${dur.months} ماهه`}
+                              aria-label={tr(`درصد تخفیف ${planNameLabel(plan)} ${dur.months} ماهه`, `Discount %, ${planNameLabel(plan)} ${dur.months} months`)}
                               disabled={!cell.original}
                               value={pctDraft[key] ?? (pct ? String(pct) : "")}
                               onChange={(v) => setPercent(plan, d, v)}
@@ -173,7 +174,7 @@ export default function AdminPricingPage() {
                           <td>
                             <NumberInput
                               className="admin-input admin-ltr" dir="ltr" maxLength={13} style={{ width: 150 }}
-                              aria-label={`قیمت نهایی ${PLAN_NAMES_FA[plan]} ${dur.months} ماهه`}
+                              aria-label={tr(`قیمت نهایی ${planNameLabel(plan)} ${dur.months} ماهه`, `Final price, ${planNameLabel(plan)} ${dur.months} months`)}
                               value={fmt(cell.price)}
                               onChange={(v) => { setCell(plan, d, { price: toInt(v) }); setPctDraft((m) => { const n = { ...m }; delete n[key]; return n; }); }}
                             />
@@ -194,13 +195,13 @@ export default function AdminPricingPage() {
           {validation && !validation.ok && dirty && <div className="admin-form-error" role="alert">{validation.error}</div>}
           <div className="admin-modal-actions">
             <button type="button" className="admin-btn danger" onClick={() => setConfirmReset(true)} disabled={saving || !data.saved}>
-              بازگشت به پیش‌فرض
+              {tr("بازگشت به پیش‌فرض", "Revert to defaults")}
             </button>
             <button type="button" className="admin-btn" onClick={() => { setDraft(data.pricing); setPctDraft({}); }} disabled={saving || !dirty}>
-              لغو تغییرات
+              {tr("لغو تغییرات", "Discard changes")}
             </button>
             <button type="submit" className="admin-btn primary" disabled={saving || !dirty || !validation?.ok}>
-              {saving ? "در حال ذخیره…" : "ذخیره"}
+              {saving ? tr("در حال ذخیره…", "Saving…") : tr("ذخیره", "Save")}
             </button>
           </div>
         </form>
@@ -208,9 +209,9 @@ export default function AdminPricingPage() {
 
       {confirmReset && (
         <ConfirmModal
-          title="بازگشت به قیمت‌های پیش‌فرض"
-          message="قیمت‌ها، مدت‌ها و تخفیف‌های ذخیره‌شده پاک می‌شن و قیمت‌های پیش‌فرض کد دوباره فعال می‌شن."
-          confirmLabel="بازگشت به پیش‌فرض"
+          title={tr("بازگشت به قیمت‌های پیش‌فرض", "Revert to default prices")}
+          message={tr("قیمت‌ها، مدت‌ها و تخفیف‌های ذخیره‌شده پاک می‌شن و قیمت‌های پیش‌فرض کد دوباره فعال می‌شن.", "Saved prices, durations and discounts will be cleared, and the code's default prices will be active again.")}
+          confirmLabel={tr("بازگشت به پیش‌فرض", "Revert to defaults")}
           onConfirm={reset}
           onClose={() => setConfirmReset(false)}
         />

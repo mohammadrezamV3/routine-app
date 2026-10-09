@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { requireMentorTools } from "@/lib/mentorToolsGuard";
 import { forbidden } from "@/lib/mentorGuard";
 import { buildWeeklyReport } from "@/lib/mentorReports";
+import { tr } from "@/lib/i18n";
 
 const MAX_OFFSET = 12;
 
@@ -10,7 +11,7 @@ const MAX_OFFSET = 12;
 export async function GET(req: NextRequest) {
   const g = await requireMentorTools();
   if (!g.ok) return g.response;
-  if (g.profile.suspendedAt) return forbidden("حساب مربی‌گری تو تعلیق شده");
+  if (g.profile.suspendedAt) return forbidden(tr(tr("حساب مربی‌گری تو تعلیق شده", "Your mentor account is suspended"), "Your mentor account is suspended"));
   const raw = Number(req.nextUrl.searchParams.get("offset") ?? 0);
   const offset = Number.isInteger(raw) && raw >= 0 && raw <= MAX_OFFSET ? raw : 0;
   return NextResponse.json(await buildWeeklyReport(g.userId, offset));

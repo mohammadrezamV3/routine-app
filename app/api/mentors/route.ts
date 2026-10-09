@@ -5,6 +5,7 @@ import { checkRateLimit } from "@/lib/rateLimit";
 import { DISCOVERABLE_PROFILE_WHERE, blockedUserIds } from "@/lib/mentorServer";
 import { filtersFromParams } from "@/lib/mentorSearch";
 import { searchMentors } from "@/lib/mentorSearchServer";
+import { tr } from "@/lib/i18n";
 
 const PAGE_SIZE = 20;
 const MAX_PAGE = 50;
@@ -24,7 +25,7 @@ export async function GET(req: NextRequest) {
   const g = await requireMentorsUser();
   if (!g.ok) return g.response;
   if (!(await checkRateLimit(`mentors:discover:${g.userId}`, 60, 60_000))) {
-    return NextResponse.json({ error: "درخواست‌ها زیاد بوده؛ کمی بعد دوباره تلاش کن" }, { status: 429 });
+    return NextResponse.json({ error: tr("درخواست‌ها زیاد بوده؛ کمی بعد دوباره تلاش کن", "There were too many requests; try again shortly") }, { status: 429 });
   }
 
   const sp = req.nextUrl.searchParams;

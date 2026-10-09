@@ -5,6 +5,7 @@ import { clampText } from "@/lib/validate";
 import { adminErrorResponse, loadTarget } from "@/lib/adminUsers";
 import { recomputeMentorRating } from "@/lib/mentorServer";
 import { notifyUser } from "@/lib/inAppNotify";
+import { tr } from "@/lib/i18n";
 
 // PATCH /api/admin/mentors/reports/:id
 // بدنه { status: RESOLVED|DISMISSED, resolution?, action?: hide_review|delete_message|suspend_mentor }
@@ -23,21 +24,21 @@ export async function PATCH(req: NextRequest, { params }: { params: { id: string
 
   const body = await req.json().catch(() => null);
   const status = body?.status === "RESOLVED" || body?.status === "DISMISSED" ? (body.status as "RESOLVED" | "DISMISSED") : null;
-  if (!status) return NextResponse.json({ error: "وضعیت نامعتبر است" }, { status: 400 });
+  if (!status) return NextResponse.json({ error: tr("وضعیت نامعتبر است", "Invalid status") }, { status: 400 });
   let action: Action | null = null;
   if (body.action !== undefined && body.action !== null && body.action !== "") {
-    if (!ACTIONS.includes(body.action)) return NextResponse.json({ error: "اقدام نامعتبر است" }, { status: 400 });
+    if (!ACTIONS.includes(body.action)) return NextResponse.json({ error: tr("اقدام نامعتبر است", "Invalid action") }, { status: 400 });
     action = body.action as Action;
   }
-  if (action && status !== "RESOLVED") return NextResponse.json({ error: "اقدام فقط همراه با «رسیدگی‌شده» ممکنه" }, { status: 400 });
+  if (action && status !== "RESOLVED") return NextResponse.json({ error: tr("اقدام فقط همراه با «رسیدگی‌شده» ممکنه", "An action can only be taken together with “Resolved”") }, { status: 400 });
   const resolution = typeof body.resolution === "string" ? clampText(body.resolution.trim(), 500) : "";
 
   const report = await prisma.mentorReport.findUnique({
     where: { id: params.id },
     select: { id: true, status: true, targetType: true, targetId: true, targetUserId: true, reason: true },
   });
-  if (!report) return NextResponse.json({ error: "گزارش پیدا نشد" }, { status: 404 });
-  if (report.status !== "OPEN") return NextResponse.json({ error: "این گزارش قبلا بررسی شده" }, { status: 409 });
+  if (!report) return NextResponse.json({ error: tr("گزارش پیدا نشد", "Report not found") }, { status: 404 });
+  if (report.status !== "OPEN") return NextResponse.json({ error: tr("این گزارش قبلا بررسی شده", "This report was already reviewed") }, { status: 409 });
 
   // گزارشی که علیه خود ادمین یا Owner (یا ادمین دیگه بدون admins.manage) ثبت شده،
   // حتی بدون اقدام هم نباید توسط همون ادمین بسته/رد بشه
@@ -54,9 +55,9 @@ export async function PATCH(req: NextRequest, { params }: { params: { id: string
   let suspendProfile: { id: string; userId: string; suspendedAt: Date | null } | null = null;
 
   if (action === "hide_review") {
-    if (report.targetType !== "REVIEW") return NextResponse.json({ error: "این اقدام فقط برای گزارش نظر است" }, { status: 400 });
+    if (report.targetType !== "REVIEW") return NextResponse.json({ error: tr("این اقدام فقط برای گزارش نظر است", "This action is only for review reports") }, { status: 400 });
     const review = await prisma.mentorReview.findUnique({ where: { id: report.targetId }, select: { mentorId: true } });
-    if (!review) return NextResponse.json({ error: "نظر گزارش‌شده دیگه وجود نداره" }, { status: 404 });
+    if (!review) return NextResponse.json({ error: tr("نظر گزارش‌شده دیگه وجود نداره", "The reported review no longer exists") }, { status: 404 });
     reviewMentorId = review.mentorId;
     try {
       await loadTarget(g, review.mentorId, { destructive: true });
@@ -64,7 +65,7 @@ export async function PATCH(req: NextRequest, { params }: { params: { id: string
       return adminErrorResponse(e);
     }
   } else if (action === "delete_message") {
-    if (report.targetType !== "MESSAGE") return NextResponse.json({ error: "این اقدام فقط برای گزارش پیام است" }, { status: 400 });
+    if (report.targetType !== "MESSAGE") return NextResponse.json({ error: tr("این اقدام فقط برای گزارش پیام است", "This action is only for message reports") }, { status: 400 });
     const msg = await prisma.mentorMessage.findUnique({ where: { id: report.targetId }, select: { senderId: true } });
     if (msg) {
       try {
@@ -82,7 +83,7 @@ export async function PATCH(req: NextRequest, { params }: { params: { id: string
     suspendProfile = mentorUserId
       ? await prisma.mentorProfile.findUnique({ where: { userId: mentorUserId }, select: { id: true, userId: true, suspendedAt: true } })
       : null;
-    if (!suspendProfile) return NextResponse.json({ error: "صاحب این محتوا مربی نیست" }, { status: 400 });
+    if (!suspendProfile) return NextResponse.json({ error: tr("صاحب این محتوا مربی نیست", "The owner of this content is not a mentor") }, { status: 400 });
     try {
       await loadTarget(g, suspendProfile.userId, { destructive: true });
     } catch (e) {
@@ -163,7 +164,7 @@ export async function PATCH(req: NextRequest, { params }: { params: { id: string
       });
     });
   } catch (e) {
-    if (e instanceof Conflict) return NextResponse.json({ error: "این گزارش همزمان بررسی شده" }, { status: 409 });
+    if (e instanceof Conflict) return NextResponse.json({ error: tr("این گزارش همزمان بررسی شده", "This report was reviewed at the same time") }, { status: 409 });
     throw e;
   }
 

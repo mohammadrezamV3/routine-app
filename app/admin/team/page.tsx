@@ -11,16 +11,18 @@ import {
   TEAM_BIO_MAX, TEAM_LINK_KINDS, TEAM_MAX_MEMBERS, TEAM_NAME_MAX, TEAM_ROLES_MAX, TEAM_ROLE_MAX,
   type TeamLinkKind, type TeamMember,
 } from "@/lib/teamMembers";
+import { tr } from "@/lib/i18n";
 
 // مدیریت اعضای تیم Arion Group (نمایش در /about پس از زدن روی «Arion Group»).
 // ترتیب این فهرست همون ترتیب نمایشه. هر تغییر کل فهرست رو ذخیره می‌کنه.
 
-const LINK_LABELS: Record<TeamLinkKind, { label: string; ph: string }> = {
-  telegram: { label: "تلگرام", ph: "@username" },
-  instagram: { label: "اینستاگرام", ph: "@username" },
-  linkedin: { label: "لینکدین", ph: "linkedin.com/in/..." },
-  website: { label: "وب‌سایت", ph: "example.com" },
-};
+// تابع، نه ثابت سطح ماژول: برچسب‌ها موقع رندر به زبان جاری وابسته‌ان.
+const linkLabels = (): Record<TeamLinkKind, { label: string; ph: string }> => ({
+  telegram: { label: tr("تلگرام", "Telegram"), ph: "@username" },
+  instagram: { label: tr("اینستاگرام", "Instagram"), ph: "@username" },
+  linkedin: { label: tr("لینکدین", "LinkedIn"), ph: "linkedin.com/in/..." },
+  website: { label: tr("وب‌سایت", "Website"), ph: "example.com" },
+});
 
 type Draft = { id: string | null; name: string; roles: string[]; roleInput: string; bio: string; photo: string | null; links: Record<TeamLinkKind, string> };
 
@@ -66,35 +68,38 @@ export default function AdminTeamPage() {
     if (j < 0 || j >= members.length) return;
     const next = members.slice();
     [next[i], next[j]] = [next[j], next[i]];
-    try { await persist(next); } catch (e) { toast(e instanceof Error ? e.message : "خطا", "err"); }
+    try { await persist(next); } catch (e) { toast(e instanceof Error ? e.message : tr("خطا", "Error"), "err"); }
   }
 
   return (
     <section>
       <div className="admin-page-head">
         <div>
-          <div className="admin-page-kicker">تیم Arion Group</div>
+          <div className="admin-page-kicker">{tr("تیم Arion Group", "Arion Group team")}</div>
           <div className="admin-section-hint admin-page-sub">
-            اعضای این فهرست با زدن روی «Arion Group» در صفحه‌ی درباره‌ما نمایش داده می‌شن، به همین ترتیب. تا وقتی عضوی نباشه، اون کارت قابل‌زدن نیست.
+            {tr(
+              "اعضای این فهرست با زدن روی «Arion Group» در صفحه‌ی درباره‌ما نمایش داده می‌شن، به همین ترتیب. تا وقتی عضوی نباشه، اون کارت قابل‌زدن نیست.",
+              "Members in this list show up when someone taps \"Arion Group\" on the About page, in this same order. Until there's a member, that card can't be tapped.",
+            )}
           </div>
         </div>
         <button
           type="button" className="admin-btn primary" onClick={() => setEditing(emptyDraft())}
           disabled={!members || members.length >= TEAM_MAX_MEMBERS}
         >
-          <Plus size={15} /> عضو جدید
+          <Plus size={15} /> {tr("عضو جدید", "New member")}
         </button>
       </div>
 
       {!members ? (
         failed ? (
           <div className="admin-empty">
-            <span>خطا در دریافت اطلاعات</span>
-            <button type="button" className="admin-btn sm" onClick={load}>تلاش دوباره</button>
+            <span>{tr("خطا در دریافت اطلاعات", "Couldn't load the data")}</span>
+            <button type="button" className="admin-btn sm" onClick={load}>{tr("تلاش دوباره", "Try again")}</button>
           </div>
         ) : <div className="admin-empty"><Spinner size={22} /></div>
       ) : members.length === 0 ? (
-        <div className="admin-empty"><span>هنوز عضوی اضافه نشده</span></div>
+        <div className="admin-empty"><span>{tr("هنوز عضوی اضافه نشده", "No members added yet")}</span></div>
       ) : (
         <div className="admin-chart-card">
           {members.map((m, i) => (
@@ -103,14 +108,14 @@ export default function AdminTeamPage() {
                 <TeamMemberAvatar member={m} size={44} className="admin-team-thumb" />
                 <div>
                   <div className="admin-perm-label">{m.name}</div>
-                  <div className="admin-perm-hint">{m.roles.length ? m.roles.join(" / ") : "بدون عنوان"}</div>
+                  <div className="admin-perm-hint">{m.roles.length ? m.roles.join(" / ") : tr("بدون عنوان", "No title")}</div>
                 </div>
               </div>
               <div style={{ display: "flex", gap: 6 }}>
-                <button type="button" className="admin-icon-btn" aria-label="بالاتر" disabled={busy || i === 0} onClick={() => move(i, -1)}><ArrowUp size={15} /></button>
-                <button type="button" className="admin-icon-btn" aria-label="پایین‌تر" disabled={busy || i === members.length - 1} onClick={() => move(i, 1)}><ArrowDown size={15} /></button>
-                <button type="button" className="admin-icon-btn" aria-label="ویرایش" onClick={() => setEditing(toDraft(m))}><Pencil size={15} /></button>
-                <button type="button" className="admin-icon-btn" aria-label="حذف" onClick={() => setRemoving(m)}><Trash2 size={15} /></button>
+                <button type="button" className="admin-icon-btn" aria-label={tr("بالاتر", "Move up")} disabled={busy || i === 0} onClick={() => move(i, -1)}><ArrowUp size={15} /></button>
+                <button type="button" className="admin-icon-btn" aria-label={tr("پایین‌تر", "Move down")} disabled={busy || i === members.length - 1} onClick={() => move(i, 1)}><ArrowDown size={15} /></button>
+                <button type="button" className="admin-icon-btn" aria-label={tr("ویرایش", "Edit")} onClick={() => setEditing(toDraft(m))}><Pencil size={15} /></button>
+                <button type="button" className="admin-icon-btn" aria-label={tr("حذف", "Delete")} onClick={() => setRemoving(m)}><Trash2 size={15} /></button>
               </div>
             </div>
           ))}
@@ -127,7 +132,7 @@ export default function AdminTeamPage() {
             const member = { id: d.id ?? "", name: d.name, roles: d.roles, bio: d.bio, photo: d.photo, links } as TeamMember;
             const next = d.id ? members.map((m) => (m.id === d.id ? member : m)) : [...members, member];
             await persist(next);
-            toast(d.id ? "عضو ویرایش شد" : "عضو اضافه شد", "ok");
+            toast(d.id ? tr("عضو ویرایش شد", "Member updated") : tr("عضو اضافه شد", "Member added"), "ok");
             setEditing(null);
           }}
         />
@@ -135,13 +140,13 @@ export default function AdminTeamPage() {
 
       {removing && members && (
         <ConfirmModal
-          title="حذف عضو"
-          message={<>«{removing.name}» از فهرست تیم حذف بشه؟</>}
-          confirmLabel="حذف"
+          title={tr("حذف عضو", "Delete member")}
+          message={<>{tr("«", "\"")}{removing.name}{tr("» از فهرست تیم حذف بشه؟", "\" be removed from the team list?")}</>}
+          confirmLabel={tr("حذف", "Delete")}
           onClose={() => setRemoving(null)}
           onConfirm={async () => {
             await persist(members.filter((m) => m.id !== removing.id));
-            toast("عضو حذف شد", "ok");
+            toast(tr("عضو حذف شد", "Member deleted"), "ok");
             setRemoving(null);
           }}
         />
@@ -159,7 +164,7 @@ function MemberForm({ draft, onClose, onSave }: { draft: Draft; onClose: () => v
 
   function pick(f: File | undefined) {
     if (!f) return;
-    if (!f.type.startsWith("image/")) { toast("فایل انتخاب‌شده عکس نیست", "err"); return; }
+    if (!f.type.startsWith("image/")) { toast(tr("فایل انتخاب‌شده عکس نیست", "The selected file isn't an image"), "err"); return; }
     setCropFile(f);
   }
 
@@ -171,40 +176,40 @@ function MemberForm({ draft, onClose, onSave }: { draft: Draft; onClose: () => v
   }
 
   async function submit() {
-    if (!d.name.trim()) { toast("نام عضو رو وارد کن", "err"); return; }
+    if (!d.name.trim()) { toast(tr("نام عضو رو وارد کن", "Enter the member's name"), "err"); return; }
     // متنی که تایپ شده ولی هنوز «افزودن» نخورده هم به عنوان‌ها اضافه می‌شه
     const pending = d.roleInput.trim();
     const roles = pending && !d.roles.some((r) => r.toLowerCase() === pending.toLowerCase()) ? [...d.roles, pending] : d.roles;
-    if (roles.length > TEAM_ROLES_MAX) { toast(`حداکثر ${TEAM_ROLES_MAX} عنوان`, "err"); return; }
+    if (roles.length > TEAM_ROLES_MAX) { toast(tr(`حداکثر ${TEAM_ROLES_MAX} عنوان`, `${TEAM_ROLES_MAX} titles at most`), "err"); return; }
     setSaving(true);
     try { await onSave({ ...d, roles, roleInput: "" }); }
-    catch (e) { toast(e instanceof Error && e.message ? e.message : "خطا در ذخیره", "err"); }
+    catch (e) { toast(e instanceof Error && e.message ? e.message : tr("خطا در ذخیره", "Couldn't save"), "err"); }
     finally { setSaving(false); }
   }
 
   return (
     <>
-      <AdminModal title={d.id ? "ویرایش عضو" : "عضو جدید"} eyebrow="تیم Arion Group" onClose={onClose}>
+      <AdminModal title={d.id ? tr("ویرایش عضو", "Edit member") : tr("عضو جدید", "New member")} eyebrow={tr("تیم Arion Group", "Arion Group team")} onClose={onClose}>
         <div style={{ display: "flex", alignItems: "center", gap: 14, marginBottom: 12 }}>
           <TeamMemberAvatar member={{ name: d.name, photo: d.photo }} size={64} className="admin-team-thumb" />
           <div style={{ display: "flex", gap: 8, flexWrap: "wrap" }}>
-            <button type="button" className="admin-btn sm" onClick={() => fileRef.current?.click()}>{d.photo ? "تغییر عکس" : "انتخاب عکس"}</button>
-            {d.photo && <button type="button" className="admin-btn sm danger" onClick={() => setD({ ...d, photo: null })}>حذف عکس</button>}
+            <button type="button" className="admin-btn sm" onClick={() => fileRef.current?.click()}>{d.photo ? tr("تغییر عکس", "Change photo") : tr("انتخاب عکس", "Choose photo")}</button>
+            {d.photo && <button type="button" className="admin-btn sm danger" onClick={() => setD({ ...d, photo: null })}>{tr("حذف عکس", "Remove photo")}</button>}
           </div>
           <input ref={fileRef} type="file" accept="image/*" style={{ display: "none" }} onChange={(e) => { pick(e.target.files?.[0]); e.target.value = ""; }} />
         </div>
         <label className="admin-field">
-          <span>نام و نام خانوادگی</span>
+          <span>{tr("نام و نام خانوادگی", "Full name")}</span>
           <input className="admin-input" value={d.name} maxLength={TEAM_NAME_MAX} onChange={(e) => setD({ ...d, name: e.target.value })} autoFocus />
         </label>
         <div className="admin-field">
-          <span>عنوان‌ها (هر عضو می‌تونه چندتا داشته باشه)</span>
+          <span>{tr("عنوان‌ها (هر عضو می‌تونه چندتا داشته باشه)", "Titles (a member can have several)")}</span>
           {d.roles.length > 0 && (
             <div className="admin-team-roles">
               {d.roles.map((r) => (
                 <span key={r} className="admin-team-role-chip">
                   {r}
-                  <button type="button" className="admin-team-role-x" aria-label={`حذف ${r}`} onClick={() => setD({ ...d, roles: d.roles.filter((x) => x !== r) })}><X size={12} /></button>
+                  <button type="button" className="admin-team-role-x" aria-label={tr(`حذف ${r}`, `Delete ${r}`)} onClick={() => setD({ ...d, roles: d.roles.filter((x) => x !== r) })}><X size={12} /></button>
                 </span>
               ))}
             </div>
@@ -216,32 +221,32 @@ function MemberForm({ draft, onClose, onSave }: { draft: Draft; onClose: () => v
               onChange={(e) => setD({ ...d, roleInput: e.target.value })}
               onKeyDown={(e) => { if (e.key === "Enter") { e.preventDefault(); addRole(); } }}
             />
-            <button type="button" className="admin-btn sm" onClick={addRole} disabled={!d.roleInput.trim() || d.roles.length >= TEAM_ROLES_MAX}>افزودن</button>
+            <button type="button" className="admin-btn sm" onClick={addRole} disabled={!d.roleInput.trim() || d.roles.length >= TEAM_ROLES_MAX}>{tr("افزودن", "Add")}</button>
           </div>
         </div>
         <label className="admin-field">
-          <span>معرفی کوتاه (اختیاری)</span>
+          <span>{tr("معرفی کوتاه (اختیاری)", "Short bio (optional)")}</span>
           <textarea className="admin-input" rows={3} value={d.bio} maxLength={TEAM_BIO_MAX} onChange={(e) => setD({ ...d, bio: e.target.value })} />
         </label>
         {TEAM_LINK_KINDS.map((k) => (
           <label key={k} className="admin-field">
-            <span>{LINK_LABELS[k].label} (اختیاری)</span>
+            <span>{linkLabels()[k].label} {tr("(اختیاری)", "(optional)")}</span>
             <input
-              className="admin-input" dir="ltr" placeholder={LINK_LABELS[k].ph} value={d.links[k]}
+              className="admin-input" dir="ltr" placeholder={linkLabels()[k].ph} value={d.links[k]}
               onChange={(e) => setD({ ...d, links: { ...d.links, [k]: e.target.value } })}
             />
           </label>
         ))}
         <div className="admin-modal-actions">
-          <button type="button" className="admin-btn" onClick={onClose} disabled={saving}>انصراف</button>
+          <button type="button" className="admin-btn" onClick={onClose} disabled={saving}>{tr("انصراف", "Cancel")}</button>
           <button type="button" className="admin-btn primary" onClick={submit} disabled={saving}>
-            {saving ? <Spinner size={14} /> : "ذخیره"}
+            {saving ? <Spinner size={14} /> : tr("ذخیره", "Save")}
           </button>
         </div>
       </AdminModal>
       {cropFile && (
         <ImageCropModal
-          file={cropFile} outputW={256} outputH={256} shape="circle" title="عکس عضو"
+          file={cropFile} outputW={256} outputH={256} shape="circle" title={tr("عکس عضو", "Member photo")}
           onCancel={() => setCropFile(null)}
           onConfirm={(dataUrl) => { setCropFile(null); setD((p) => ({ ...p, photo: dataUrl })); }}
         />

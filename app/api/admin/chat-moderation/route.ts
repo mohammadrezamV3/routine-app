@@ -4,6 +4,7 @@ import { applyChatModeration } from "@/lib/adminAnalytics";
 import { clampText } from "@/lib/validate";
 import { isChatModerationAction } from "@/lib/tradeChat";
 import { adminErrorResponse, loadTarget } from "@/lib/adminUsers";
+import { tr } from "@/lib/i18n";
 
 // POST /api/admin/chat-moderation  { userId, action, note? }
 //
@@ -17,7 +18,7 @@ export async function POST(req: NextRequest) {
   const payload = await req.json().catch(() => null);
   const userId = typeof payload?.userId === "string" ? payload.userId : "";
   if (!userId || !isChatModerationAction(payload?.action)) {
-    return NextResponse.json({ error: "درخواست نامعتبر است" }, { status: 400 });
+    return NextResponse.json({ error: tr("درخواست نامعتبر است", "Invalid request") }, { status: 400 });
   }
 
   try {
@@ -29,7 +30,7 @@ export async function POST(req: NextRequest) {
   const note = clampText(String(payload?.note ?? "").trim(), 300) || null;
 
   const updated = await applyChatModeration(guard.userId, userId, payload.action, note).catch(() => null);
-  if (!updated) return NextResponse.json({ error: "کاربر پیدا نشد" }, { status: 404 });
+  if (!updated) return NextResponse.json({ error: tr("کاربر پیدا نشد", "User not found") }, { status: 404 });
 
   return NextResponse.json({ ok: true, user: updated });
 }

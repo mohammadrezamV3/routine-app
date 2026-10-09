@@ -7,6 +7,7 @@ import { isHexColor } from "@/lib/tradeServer";
 import { MAX_CHECKLISTS, MAX_CHECKLIST_ITEMS, MIN_CHECKLIST_ITEMS } from "@/lib/tradeTypes";
 import { withLiveSync } from "@/lib/realtime";
 import { sessionFeatureBlocked } from "@/lib/featureFlagsServer";
+import { tr } from "@/lib/i18n";
 
 // چک‌لیست‌های نام‌دار کاربر. جایگزین /api/trade/checklist (تکی) شده — آن
 // نسخه یک لیست تخت واحد برای هر کاربر بود و امکان «هر معامله با چک‌لیست
@@ -95,7 +96,7 @@ async function handlePOST(req: NextRequest) {
   const body = await req.json().catch(() => null);
   const count = await prisma.tradeChecklist.count({ where: { userId, archived: false } });
   if (count >= MAX_CHECKLISTS) {
-    return NextResponse.json({ error: `حداکثر ${MAX_CHECKLISTS} چک‌لیست مجاز است` }, { status: 400 });
+    return NextResponse.json({ error: tr(tr(`حداکثر ${MAX_CHECKLISTS} چک‌لیست مجاز است`, `You can have up to ${MAX_CHECKLISTS} checklists`), `You can have up to ${MAX_CHECKLISTS} checklists`) }, { status: 400 });
   }
 
   let items = parseItems(body?.items);
@@ -109,16 +110,16 @@ async function handlePOST(req: NextRequest) {
       where: { id: String(body.duplicateOf), userId },
       select: { name: true, color: true, note: true, items: { select: { text: true }, orderBy: { order: "asc" } } },
     });
-    if (!src) return NextResponse.json({ error: "چک‌لیست پیدا نشد" }, { status: 404 });
+    if (!src) return NextResponse.json({ error: tr(tr("چک‌لیست پیدا نشد", "Checklist not found"), "Checklist not found") }, { status: 404 });
     items = src.items.map((i) => i.text);
     name = name || clampText(`${src.name} (کپی)`, 60);
     color = src.color;
     note = src.note;
   }
 
-  if (!name) return NextResponse.json({ error: "نام چک‌لیست الزامی است" }, { status: 400 });
+  if (!name) return NextResponse.json({ error: tr(tr("نام چک‌لیست الزامی است", "Checklist name is required"), "Checklist name is required") }, { status: 400 });
   if (items.length < MIN_CHECKLIST_ITEMS) {
-    return NextResponse.json({ error: `چک‌لیست باید حداقل ${MIN_CHECKLIST_ITEMS} مورد داشته باشد` }, { status: 400 });
+    return NextResponse.json({ error: tr(tr(`چک‌لیست باید حداقل ${MIN_CHECKLIST_ITEMS} مورد داشته باشد`, `A checklist must have at least ${MIN_CHECKLIST_ITEMS} items`), `A checklist must have at least ${MIN_CHECKLIST_ITEMS} items`) }, { status: 400 });
   }
 
   const checklist = await prisma.tradeChecklist.create({
@@ -146,10 +147,10 @@ async function handlePATCH(req: NextRequest) {
 
   const body = await req.json().catch(() => null);
   const id = String(body?.id || "");
-  if (!id) return NextResponse.json({ error: "id الزامی است" }, { status: 400 });
+  if (!id) return NextResponse.json({ error: tr(tr("id الزامی است", "id is required"), "id is required") }, { status: 400 });
 
   const existing = await prisma.tradeChecklist.findFirst({ where: { id, userId }, select: { id: true } });
-  if (!existing) return NextResponse.json({ error: "چک‌لیست پیدا نشد" }, { status: 404 });
+  if (!existing) return NextResponse.json({ error: tr(tr("چک‌لیست پیدا نشد", "Checklist not found"), "Checklist not found") }, { status: 404 });
 
   const data: Record<string, unknown> = {};
   if (typeof body.name === "string" && body.name.trim()) data.name = clampText(body.name.trim(), 60);
@@ -161,7 +162,7 @@ async function handlePATCH(req: NextRequest) {
   const hasItems = Array.isArray(body.items);
   const items = hasItems ? parseItems(body.items) : [];
   if (hasItems && items.length < MIN_CHECKLIST_ITEMS) {
-    return NextResponse.json({ error: `چک‌لیست باید حداقل ${MIN_CHECKLIST_ITEMS} مورد داشته باشد` }, { status: 400 });
+    return NextResponse.json({ error: tr(tr(`چک‌لیست باید حداقل ${MIN_CHECKLIST_ITEMS} مورد داشته باشد`, `A checklist must have at least ${MIN_CHECKLIST_ITEMS} items`), `A checklist must have at least ${MIN_CHECKLIST_ITEMS} items`) }, { status: 400 });
   }
 
   const checklist = await prisma.$transaction(async (tx) => {
@@ -185,7 +186,7 @@ async function handleDELETE(req: NextRequest) {
   const guard = await requireModule(ModuleKey.TRADE);
   if (!guard.ok) return guard.response;
   const id = req.nextUrl.searchParams.get("id");
-  if (!id) return NextResponse.json({ error: "id الزامی است" }, { status: 400 });
+  if (!id) return NextResponse.json({ error: tr(tr("id الزامی است", "id is required"), "id is required") }, { status: 400 });
   // معاملات متصل پاک نمی‌شوند — checklistId شان null می‌شود (SetNull) ولی
   // اسنپ‌شات متن چک‌لیست روی خود معامله باقی می‌ماند.
   await prisma.tradeChecklist.deleteMany({ where: { id, userId: guard.userId } });

@@ -49,3 +49,4 @@
 .sli-empty-body{ display:flex; align-items:center; gap:16px; }
 .sli-empty-n{ font-size:13px; font-weight:900; font-variant-numeric:tabular-nums; direction:ltr; }
 .sli-empty-body .sl-sub{ margin:0; flex:1; min-width:0; }
+html[dir="ltr"] .sli-tag b.sli-val{ text-align:right; }

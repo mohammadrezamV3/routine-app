@@ -8,6 +8,7 @@ import { parseEncryptedMessage } from "@/lib/e2ee/server";
 import { clearedBeforeFor } from "@/lib/mentorChatHistory";
 import { MESSAGE_SELECT, checkSendKeys, encryptedMessageData, notifyNewMessage, purgeExpiredLegacyMessages, serializeMessage } from "@/lib/mentorChatServer";
 import { publishToUsers } from "@/lib/realtime";
+import { tr } from "@/lib/i18n";
 
 type Ctx = { params: { id: string } };
 const PAGE_SIZE = 50;
@@ -24,13 +25,13 @@ export async function GET(req: NextRequest, { params }: Ctx) {
 
   const m = await getMentorshipForUser(params.id, me);
   if (!m) return notFound();
-  if (m.status !== "ACTIVE" && m.status !== "ENDED") return forbidden("گفت‌وگو برای این رابطه در دسترس نیست");
+  if (m.status !== "ACTIVE" && m.status !== "ENDED") return forbidden(tr(tr("گفت‌وگو برای این رابطه در دسترس نیست", "The conversation is not available for this relationship"), "The conversation is not available for this relationship"));
 
   const beforeRaw = req.nextUrl.searchParams.get("before");
   let before: Date | null = null;
   if (beforeRaw) {
     before = new Date(beforeRaw);
-    if (Number.isNaN(before.getTime())) return badRequest("پارامتر before نامعتبره");
+    if (Number.isNaN(before.getTime())) return badRequest(tr(tr("پارامتر before نامعتبره", "The before parameter is invalid"), "The before parameter is invalid"));
   }
 
   await purgeExpiredLegacyMessages(m.id);
@@ -83,11 +84,11 @@ export async function POST(req: Request, { params }: Ctx) {
 
   const m = await getMentorshipForUser(params.id, me);
   if (!m) return notFound();
-  if (m.status !== "ACTIVE") return conflict("این رابطه فعال نیست؛ امکان ارسال پیام نداری");
-  if (await isMentorSuspended(m.mentorId)) return forbidden("فعالیت این مربی موقتا متوقف شده");
+  if (m.status !== "ACTIVE") return conflict(tr(tr("این رابطه فعال نیست؛ امکان ارسال پیام نداری", "This relationship is not active; you can't send messages"), "This relationship is not active; you can't send messages"));
+  if (await isMentorSuspended(m.mentorId)) return forbidden(tr(tr("فعالیت این مربی موقتا متوقف شده", "This mentor's activity is temporarily paused"), "This mentor's activity is temporarily paused"));
 
   if (!(await checkRateLimit(`mentor-msg:${me}`, 30, 60 * 1000))) {
-    return NextResponse.json({ error: "پیام‌ها خیلی پشت‌سرهم بود؛ چند لحظه صبر کن" }, { status: 429 });
+    return NextResponse.json({ error: tr(tr("پیام‌ها خیلی پشت‌سرهم بود؛ چند لحظه صبر کن", "Messages were sent too quickly; wait a moment"), "Messages were sent too quickly; wait a moment") }, { status: 429 });
   }
 
   const parsed = await readJsonBody(req, 24 * 1024);
@@ -111,7 +112,7 @@ export async function POST(req: Request, { params }: Ctx) {
       select: MESSAGE_SELECT,
     });
     if (prev && prev.senderId === me && prev.ciphertext === input.data.ciphertext) return NextResponse.json({ message: serializeMessage(prev, me) });
-    return NextResponse.json({ error: "این پیام قبلا ثبت شده", code: "DUPLICATE" }, { status: 409 });
+    return NextResponse.json({ error: tr(tr("این پیام قبلا ثبت شده", "This message was already saved"), "This message was already saved"), code: "DUPLICATE" }, { status: 409 });
   }
   if (m.mentorId === me) touchMentorActivity(me);
   await notifyNewMessage(m, me);

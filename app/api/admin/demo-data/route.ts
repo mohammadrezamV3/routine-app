@@ -2,13 +2,14 @@ import { NextResponse } from "next/server";
 import { requireAdmin } from "@/lib/requireAdmin";
 import { writeAuditLog } from "@/lib/adminAnalytics";
 import { clearDemoData, getDemoStatus, seedDemoData, DEMO_DATA_SETTING_KEY } from "@/lib/demoData";
+import { tr } from "@/lib/i18n";
 
 // داده‌ی آزمایشی — فقط Owner. ادمین محدود حتی با دسترسی settings هم نه،
 // چون ساخت/حذف کاربر انجام می‌ده و Owner رو وارد داده می‌کنه.
 async function requireOwner() {
   const g = await requireAdmin();
   if (!g.ok) return g;
-  if (!g.isSuperAdmin) return { ok: false as const, response: NextResponse.json({ error: "این بخش فقط برای Owner است" }, { status: 403 }) };
+  if (!g.isSuperAdmin) return { ok: false as const, response: NextResponse.json({ error: tr("این بخش فقط برای Owner است", "This section is for the Owner only") }, { status: 403 }) };
   return g;
 }
 
@@ -16,7 +17,7 @@ async function requireOwner() {
 let busy = false;
 
 async function exclusive(fn: () => Promise<NextResponse>): Promise<NextResponse> {
-  if (busy) return NextResponse.json({ error: "عملیات قبلی هنوز تمام نشده" }, { status: 409 });
+  if (busy) return NextResponse.json({ error: tr("عملیات قبلی هنوز تمام نشده", "The previous operation has not finished yet") }, { status: 409 });
   busy = true;
   try {
     return await fn();

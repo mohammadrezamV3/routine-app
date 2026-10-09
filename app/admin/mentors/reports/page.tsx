@@ -13,6 +13,7 @@ import { adminFetch, useAdminToast } from "@/components/admin/useAdminToast";
 import { useAdminAccess } from "@/components/admin/AdminAccess";
 import { Spinner } from "@/components/Spinner";
 import { formatDateTime, formatNumber } from "@/lib/adminFormat";
+import { tr } from "@/lib/i18n";
 
 type PublicUser = { id: string; name: string | null; lastName: string | null; username: string | null; avatarUrl: string | null };
 type Target =
@@ -35,34 +36,41 @@ type Data = { reports: Report[]; total: number; pageSize: number; countByStatus:
 
 type Action = "hide_review" | "delete_message" | "suspend_mentor";
 
-const TABS: { key: ReportStatus; label: string }[] = [
-  { key: "OPEN", label: "باز" },
-  { key: "RESOLVED", label: "رسیدگی‌شده" },
-  { key: "DISMISSED", label: "ردشده" },
+// توابع، نه ثابت سطح ماژول: برچسب‌ها موقع رندر به زبان جاری وابسته‌ان.
+const tabList = (): { key: ReportStatus; label: string }[] => [
+  { key: "OPEN", label: tr("باز", "Open") },
+  { key: "RESOLVED", label: tr("رسیدگی‌شده", "Resolved") },
+  { key: "DISMISSED", label: tr("ردشده", "Dismissed") },
 ];
-const EMPTY_LABELS: Record<ReportStatus, string> = {
-  OPEN: "گزارش بازی نیست",
-  RESOLVED: "گزارش رسیدگی‌شده‌ای نیست",
-  DISMISSED: "گزارش ردشده‌ای نیست",
-};
+const emptyLabels = (): Record<ReportStatus, string> => ({
+  OPEN: tr("گزارش بازی نیست", "No open reports"),
+  RESOLVED: tr("گزارش رسیدگی‌شده‌ای نیست", "No resolved reports"),
+  DISMISSED: tr("گزارش ردشده‌ای نیست", "No dismissed reports"),
+});
 const STATUS_BADGE: Record<ReportStatus, "amber" | "green" | "gray"> = { OPEN: "amber", RESOLVED: "green", DISMISSED: "gray" };
 const STATUS_ICON: Record<ReportStatus, typeof Hourglass> = { OPEN: Hourglass, RESOLVED: CheckCircle2, DISMISSED: CircleSlash };
-const TARGET_LABELS: Record<Target["kind"], string> = { USER: "کاربر", REVIEW: "نظر", MESSAGE: "پیام چت", PROGRAM: "برنامه", CONVERSATION: "گفت‌وگو" };
-const ACTION_LABELS: Record<Action, string> = {
-  hide_review: "پنهان کردن نظر",
-  delete_message: "حذف پیام",
-  suspend_mentor: "تعلیق مربی‌گری صاحب محتوا",
-};
-const ACTION_DONE: Record<Action, string> = {
-  hide_review: "نظر پنهان شد و گزارش بسته شد",
-  delete_message: "پیام حذف شد و گزارش بسته شد",
-  suspend_mentor: "مربی‌گری تعلیق شد و گزارش بسته شد",
-};
-const PROGRAM_TYPE: Record<string, string> = { ROUTINE: "روتین", WORKOUT: "تمرینی" };
-const PROGRAM_STATUS: Record<string, string> = {
-  DRAFT: "پیش‌نویس", PENDING: "در انتظار پاسخ", ACCEPTED: "پذیرفته‌شده", REJECTED: "ردشده",
-  ACTIVE: "در حال اجرا", COMPLETED: "تمام‌شده", CANCELLED: "لغوشده",
-};
+const targetLabels = (): Record<Target["kind"], string> => ({
+  USER: tr("کاربر", "User"),
+  REVIEW: tr("نظر", "Review"),
+  MESSAGE: tr("پیام چت", "Chat message"),
+  PROGRAM: tr("برنامه", "Program"),
+  CONVERSATION: tr("گفت‌وگو", "Conversation"),
+});
+const actionLabels = (): Record<Action, string> => ({
+  hide_review: tr("پنهان کردن نظر", "Hide review"),
+  delete_message: tr("حذف پیام", "Delete message"),
+  suspend_mentor: tr("تعلیق مربی‌گری صاحب محتوا", "Suspend the content owner's mentoring"),
+});
+const actionDone = (): Record<Action, string> => ({
+  hide_review: tr("نظر پنهان شد و گزارش بسته شد", "Review hidden and report closed"),
+  delete_message: tr("پیام حذف شد و گزارش بسته شد", "Message deleted and report closed"),
+  suspend_mentor: tr("مربی‌گری تعلیق شد و گزارش بسته شد", "Mentoring suspended and report closed"),
+});
+const programType = (): Record<string, string> => ({ ROUTINE: tr("روتین", "Routine"), WORKOUT: tr("تمرینی", "Workout") });
+const programStatus = (): Record<string, string> => ({
+  DRAFT: tr("پیش‌نویس", "Draft"), PENDING: tr("در انتظار پاسخ", "Awaiting reply"), ACCEPTED: tr("پذیرفته‌شده", "Accepted"), REJECTED: tr("ردشده", "Rejected"),
+  ACTIVE: tr("در حال اجرا", "Active"), COMPLETED: tr("تمام‌شده", "Completed"), CANCELLED: tr("لغوشده", "Cancelled"),
+});
 const IS = { size: 14, strokeWidth: 1.75 } as const;
 const ROW_LINE: React.CSSProperties = { display: "flex", justifyContent: "space-between", alignItems: "center", gap: 8, flexWrap: "wrap" };
 
@@ -77,21 +85,21 @@ function availableActions(r: Report): Action[] {
 function TargetSnippet({ t }: { t: Target }) {
   // پیام گفت‌وگو رمزگذاری سرتاسری دارد: متن فقط از خود گزارش می‌آید، پس حتی
   // پس از حذف پیام هم نمایش داده می‌شود
-  if (!t.exists && t.kind !== "MESSAGE" && t.kind !== "CONVERSATION") return <div className="trade-row-sub">محتوای گزارش‌شده حذف شده است</div>;
+  if (!t.exists && t.kind !== "MESSAGE" && t.kind !== "CONVERSATION") return <div className="trade-row-sub">{tr("محتوای گزارش‌شده حذف شده است", "The reported content was deleted")}</div>;
   if (t.kind === "USER") return <div className="trade-row-main">{t.user ? displayName(t.user) : "—"}</div>;
   if (t.kind === "REVIEW") {
     return (
       <>
         <div className="trade-row-sub">
-          نظر {t.author ? displayName(t.author) : "—"} درباره‌ی {t.mentor ? displayName(t.mentor) : "—"}
-          {t.status === "HIDDEN" && "؛ پنهان"}
+          {tr("نظر ", "Review by ")}{t.author ? displayName(t.author) : "—"}{tr(" درباره‌ی ", " about ")}{t.mentor ? displayName(t.mentor) : "—"}
+          {t.status === "HIDDEN" && tr("؛ پنهان", "; hidden")}
         </div>
         {t.rating != null && (
-          <span style={{ display: "inline-flex", gap: 2, color: "var(--adm-amber)" }} role="img" aria-label={`${formatNumber(t.rating)} از 5`}>
+          <span style={{ display: "inline-flex", gap: 2, color: "var(--adm-amber)" }} role="img" aria-label={tr(`${formatNumber(t.rating)} از 5`, `${formatNumber(t.rating)} of 5`)}>
             {[1, 2, 3, 4, 5].map((i) => <Star key={i} size={13} fill={i <= (t.rating || 0) ? "currentColor" : "none"} strokeWidth={1.75} aria-hidden />)}
           </span>
         )}
-        <div className="trade-row-main" style={{ whiteSpace: "pre-wrap", fontSize: 13, lineHeight: 1.9 }}>{t.body || <span className="admin-muted">بدون متن</span>}</div>
+        <div className="trade-row-main" style={{ whiteSpace: "pre-wrap", fontSize: 13, lineHeight: 1.9 }}>{t.body || <span className="admin-muted">{tr("بدون متن", "No text")}</span>}</div>
       </>
     );
   }
@@ -99,15 +107,15 @@ function TargetSnippet({ t }: { t: Target }) {
     return (
       <>
         <div className="trade-row-sub">
-          پیام {t.sender ? displayName(t.sender) : "—"}
+          {tr("پیام ", "Message from ")}{t.sender ? displayName(t.sender) : "—"}
           {t.createdAt && <span className="admin-ltr" style={{ display: "inline-block", margin: "0 6px" }}>{formatDateTime(t.createdAt)}</span>}
-          {!t.exists && "؛ حذف‌شده"}
+          {!t.exists && tr("؛ حذف‌شده", "; deleted")}
         </div>
-        <div className="trade-row-main" style={{ whiteSpace: "pre-wrap", fontSize: 13, lineHeight: 1.9 }}>{t.body || <span className="admin-muted">متن در دسترس نیست</span>}</div>
+        <div className="trade-row-main" style={{ whiteSpace: "pre-wrap", fontSize: 13, lineHeight: 1.9 }}>{t.body || <span className="admin-muted">{tr("متن در دسترس نیست", "Text not available")}</span>}</div>
         <div className="trade-row-sub">
           {t.verified
-            ? "متن با تعهد رمزنگاری فرستنده تایید شده؛ پیام‌های دیگر این گفت‌وگو برای ادمین قابل خواندن نیست"
-            : "پیام پیش از رمزگذاری سرتاسری ارسال شده و تایید رمزنگاری ندارد"}
+            ? tr("متن با تعهد رمزنگاری فرستنده تایید شده؛ پیام‌های دیگر این گفت‌وگو برای ادمین قابل خواندن نیست", "The text is verified by the sender's encryption commitment. The admin can't read the other messages in this conversation.")
+            : tr("پیام پیش از رمزگذاری سرتاسری ارسال شده و تایید رمزنگاری ندارد", "This message was sent before end-to-end encryption and has no encryption verification.")}
         </div>
       </>
     );
@@ -117,7 +125,7 @@ function TargetSnippet({ t }: { t: Target }) {
     return (
       <>
         <div className="trade-row-sub">
-          گفت‌وگوی {t.mentor ? displayName(t.mentor) : "—"} (مربی) و {t.student ? displayName(t.student) : "—"} (شاگرد)؛ {formatNumber(t.messages.length)} پیام پیوست
+          {tr("گفت‌وگوی ", "Conversation between ")}{t.mentor ? displayName(t.mentor) : "—"}{tr(" (مربی) و ", " (mentor) and ")}{t.student ? displayName(t.student) : "—"}{tr(" (شاگرد)؛ ", " (student); ")}{tr(`${formatNumber(t.messages.length)} پیام پیوست`, `${formatNumber(t.messages.length)} attached message(s)`)}
         </div>
         <div style={{ display: "flex", flexDirection: "column", gap: 8, marginTop: 6 }}>
           {t.messages.map((m) => (
@@ -125,16 +133,16 @@ function TargetSnippet({ t }: { t: Target }) {
               <div className="trade-row-sub">
                 {m.sender ? displayName(m.sender) : "—"}
                 <span className="admin-ltr" style={{ display: "inline-block", margin: "0 6px" }}>{formatDateTime(m.createdAt)}</span>
-                {!m.verified && "؛ بدون تایید رمزنگاری"}
+                {!m.verified && tr("؛ بدون تایید رمزنگاری", "; no encryption verification")}
               </div>
-              <div className="trade-row-main" style={{ whiteSpace: "pre-wrap", fontSize: 13, lineHeight: 1.9 }}>{m.text || <span className="admin-muted">متن در دسترس نیست</span>}</div>
+              <div className="trade-row-main" style={{ whiteSpace: "pre-wrap", fontSize: 13, lineHeight: 1.9 }}>{m.text || <span className="admin-muted">{tr("متن در دسترس نیست", "Text not available")}</span>}</div>
             </div>
           ))}
         </div>
         <div className="trade-row-sub">
           {allVerified
-            ? "هر پیام با تعهد رمزنگاری فرستنده‌اش تایید شده؛ پیام‌های دیگر این گفت‌وگو برای ادمین قابل خواندن نیست"
-            : "بعضی پیام‌ها پیش از رمزگذاری سرتاسری ارسال شده‌اند و تایید رمزنگاری ندارند"}
+            ? tr("هر پیام با تعهد رمزنگاری فرستنده‌اش تایید شده؛ پیام‌های دیگر این گفت‌وگو برای ادمین قابل خواندن نیست", "Each message is verified by its sender's encryption commitment. The admin can't read the other messages in this conversation.")
+            : tr("بعضی پیام‌ها پیش از رمزگذاری سرتاسری ارسال شده‌اند و تایید رمزنگاری ندارند", "Some messages were sent before end-to-end encryption and have no encryption verification.")}
         </div>
       </>
     );
@@ -142,8 +150,8 @@ function TargetSnippet({ t }: { t: Target }) {
   return (
     <>
       <div className="trade-row-sub">
-        برنامه‌ی {PROGRAM_TYPE[t.type || ""] || t.type} از {t.mentor ? displayName(t.mentor) : "—"}
-        {t.status && `؛ ${PROGRAM_STATUS[t.status] || t.status}`}
+        {tr("برنامه‌ی ", "Program ")}{programType()[t.type || ""] || t.type}{tr(" از ", " by ")}{t.mentor ? displayName(t.mentor) : "—"}
+        {t.status && `${tr("؛ ", "; ")}${programStatus()[t.status] || t.status}`}
       </div>
       <div className="trade-row-main">{t.title}</div>
     </>
@@ -177,13 +185,13 @@ export default function AdminMentorReportsPage() {
 
   const rows = data?.reports || [];
   const totalPages = data ? Math.max(1, Math.ceil(data.total / data.pageSize)) : 1;
-  const tabItems = TABS.map((t) => ({ key: t.key, label: data?.countByStatus?.[t.key] ? `${t.label} (${formatNumber(data.countByStatus[t.key])})` : t.label }));
+  const tabItems = tabList().map((t) => ({ key: t.key, label: data?.countByStatus?.[t.key] ? `${t.label} (${formatNumber(data.countByStatus[t.key])})` : t.label }));
 
   return (
     <section>
       <div className="admin-page-head">
         <div>
-          <div className="admin-page-kicker">گزارش‌های مربی‌ها</div>
+          <div className="admin-page-kicker">{tr("گزارش‌های مربی‌ها", "Mentor reports")}</div>
         </div>
       </div>
 
@@ -191,15 +199,15 @@ export default function AdminMentorReportsPage() {
 
       {!data ? (
         loading ? (
-          <div className="admin-empty is-loading" role="status" aria-label="در حال دریافت" />
+          <div className="admin-empty is-loading" role="status" aria-label={tr("در حال دریافت", "Loading")} />
         ) : failed ? (
           <div className="admin-empty">
-            <span>گزارش‌ها دریافت نشد</span>
-            <button type="button" className="admin-btn" onClick={load}><RefreshCw {...IS} aria-hidden /> تلاش دوباره</button>
+            <span>{tr("گزارش‌ها دریافت نشد", "Couldn't load the reports")}</span>
+            <button type="button" className="admin-btn" onClick={load}><RefreshCw {...IS} aria-hidden /> {tr("تلاش دوباره", "Try again")}</button>
           </div>
         ) : null
       ) : rows.length === 0 ? (
-        <EmptyState message={EMPTY_LABELS[tab]} />
+        <EmptyState message={emptyLabels()[tab]} />
       ) : (
         <>
           <div className="trade-list" style={{ opacity: loading ? 0.6 : 1 }}>
@@ -210,10 +218,10 @@ export default function AdminMentorReportsPage() {
                 <div key={r.id} className="trade-row" style={{ cursor: "default", flexDirection: "column", alignItems: "stretch", gap: 8 }}>
                   <div style={ROW_LINE}>
                     <span className="trade-row-sub">
-                      {TARGET_LABELS[r.targetType]}؛ گزارش‌دهنده: {displayName(r.reporter)}
+                      {targetLabels()[r.targetType]}{tr("؛ گزارش‌دهنده: ", "; reporter: ")}{displayName(r.reporter)}
                       {r.targetUser && (
                         <>
-                          {"؛ صاحب محتوا: "}
+                          {tr("؛ صاحب محتوا: ", "; content owner: ")}
                           {r.targetUser.mentorProfileId ? (
                             <Link href={`/admin/mentors/${r.targetUser.mentorProfileId}`} className="admin-link">{displayName(r.targetUser)}</Link>
                           ) : can("users.view") ? (
@@ -223,20 +231,20 @@ export default function AdminMentorReportsPage() {
                       )}
                     </span>
                     <span className="admin-badge-row">
-                      {r.targetUser?.mentorSuspended && <span className="admin-badge red">مربی‌گری تعلیق</span>}
+                      {r.targetUser?.mentorSuspended && <span className="admin-badge red">{tr("مربی‌گری تعلیق", "Mentoring suspended")}</span>}
                       <span className={`admin-badge ${STATUS_BADGE[r.status]}`}>
-                        <StatusIcon size={13} strokeWidth={1.75} aria-hidden />{TABS.find((t) => t.key === r.status)?.label}
+                        <StatusIcon size={13} strokeWidth={1.75} aria-hidden />{tabList().find((t) => t.key === r.status)?.label}
                       </span>
                     </span>
                   </div>
 
-                  <div className="trade-row-sub">دلیل: {r.reason}{r.details ? `؛ ${r.details}` : ""}</div>
+                  <div className="trade-row-sub">{tr("دلیل: ", "Reason: ")}{r.reason}{r.details ? `${tr("؛ ", "; ")}${r.details}` : ""}</div>
                   <TargetSnippet t={r.target} />
 
                   {r.status !== "OPEN" && (
                     <div className="trade-row-sub">
-                      {r.resolution ? `نتیجه: ${r.resolution}` : "بدون توضیح"}
-                      {r.resolvedBy && `؛ ${displayName(r.resolvedBy)}`}
+                      {r.resolution ? `${tr("نتیجه: ", "Result: ")}${r.resolution}` : tr("بدون توضیح", "No note")}
+                      {r.resolvedBy && `${tr("؛ ", "; ")}${displayName(r.resolvedBy)}`}
                       {r.resolvedAt && <span className="admin-ltr" style={{ display: "inline-block", margin: "0 6px" }}>{formatDateTime(r.resolvedAt)}</span>}
                     </div>
                   )}
@@ -245,15 +253,15 @@ export default function AdminMentorReportsPage() {
                     <span className="trade-row-sub admin-ltr">{formatDateTime(r.createdAt)}</span>
                     {r.status === "OPEN" && (aboutSelf ? (
                       <span className="trade-row-sub" style={{ display: "inline-flex", alignItems: "center", gap: 6 }}>
-                        <Lock size={13} strokeWidth={1.75} aria-hidden />گزارش علیه خودت؛ رسیدگی با ادمین دیگر
+                        <Lock size={13} strokeWidth={1.75} aria-hidden />{tr("گزارش علیه خودت؛ رسیدگی با ادمین دیگر", "A report against you; another admin will handle it")}
                       </span>
                     ) : (
                       <span className="admin-head-actions">
                         <button type="button" className="admin-btn" onClick={() => setActing({ report: r, mode: "DISMISSED" })}>
-                          <X {...IS} aria-hidden /> رد گزارش
+                          <X {...IS} aria-hidden /> {tr("رد گزارش", "Dismiss report")}
                         </button>
                         <button type="button" className="admin-btn primary" onClick={() => setActing({ report: r, mode: "RESOLVED" })}>
-                          <CheckCircle2 {...IS} aria-hidden /> رسیدگی
+                          <CheckCircle2 {...IS} aria-hidden /> {tr("رسیدگی", "Resolve")}
                         </button>
                       </span>
                     ))}
@@ -293,7 +301,7 @@ function ResolveModal({ report, mode, onClose, onDone }: { report: Report; mode:
         method: "PATCH",
         json: { status: mode, resolution: resolution.trim() || undefined, action: action || undefined },
       });
-      onDone(mode === "DISMISSED" ? "گزارش رد شد" : action ? ACTION_DONE[action] : "گزارش بسته شد");
+      onDone(mode === "DISMISSED" ? tr("گزارش رد شد", "Report dismissed") : action ? actionDone()[action] : tr("گزارش بسته شد", "Report closed"));
     } catch (e: any) {
       setError(e.message);
     } finally {
@@ -302,38 +310,38 @@ function ResolveModal({ report, mode, onClose, onDone }: { report: Report; mode:
   }
 
   return (
-    <AdminModal title={mode === "DISMISSED" ? "رد گزارش" : "رسیدگی به گزارش"} eyebrow={TARGET_LABELS[report.targetType]} onClose={onClose}>
+    <AdminModal title={mode === "DISMISSED" ? tr("رد گزارش", "Dismiss report") : tr("رسیدگی به گزارش", "Resolve report")} eyebrow={targetLabels()[report.targetType]} onClose={onClose}>
       <div className="admin-modal-text">
         {mode === "DISMISSED"
-          ? "گزارش بدون اقدام روی محتوا بسته می‌شود."
-          : "بدون انتخاب اقدام، فقط گزارش بسته می‌شود."}
+          ? tr("گزارش بدون اقدام روی محتوا بسته می‌شود.", "The report is closed without any action on the content.")
+          : tr("بدون انتخاب اقدام، فقط گزارش بسته می‌شود.", "Without choosing an action, only the report is closed.")}
       </div>
       {mode === "RESOLVED" && (
         <label className="admin-field">
-          <span>اقدام</span>
+          <span>{tr("اقدام", "Action")}</span>
           <select className="admin-input" value={action} onChange={(e) => { setAction(e.target.value as Action | ""); setError(null); }}>
-            <option value="">بدون اقدام</option>
-            {actions.map((a) => <option key={a} value={a}>{ACTION_LABELS[a]}</option>)}
+            <option value="">{tr("بدون اقدام", "No action")}</option>
+            {actions.map((a) => <option key={a} value={a}>{actionLabels()[a]}</option>)}
           </select>
         </label>
       )}
       {action === "delete_message" && (
         <div className="admin-form-error" style={{ display: "flex", alignItems: "center", gap: 6 }}>
-          <AlertTriangle size={13} strokeWidth={1.75} aria-hidden />پیام برای همیشه حذف می‌شود و برگشت‌پذیر نیست
+          <AlertTriangle size={13} strokeWidth={1.75} aria-hidden />{tr("پیام برای همیشه حذف می‌شود و برگشت‌پذیر نیست", "The message will be deleted permanently and can't be undone")}
         </div>
       )}
       <label className="admin-field" style={{ marginTop: 12 }}>
-        <span>{action === "hide_review" || action === "suspend_mentor" ? "دلیل" : "توضیح (اختیاری)"}</span>
+        <span>{action === "hide_review" || action === "suspend_mentor" ? tr("دلیل", "Reason") : tr("توضیح (اختیاری)", "Note (optional)")}</span>
         <textarea className="admin-input" rows={3} maxLength={500} value={resolution} onChange={(e) => { setResolution(e.target.value); setError(null); }} />
         {(action === "hide_review" || action === "suspend_mentor") && (
-          <span className="admin-perm-hint" style={{ marginTop: 0, fontWeight: 400 }}>اگر خالی بماند، دلیل گزارش ثبت می‌شود</span>
+          <span className="admin-perm-hint" style={{ marginTop: 0, fontWeight: 400 }}>{tr("اگر خالی بماند، دلیل گزارش ثبت می‌شود", "If left empty, the report's reason is recorded")}</span>
         )}
       </label>
       {error && <div className="admin-form-error">{error}</div>}
       <div className="admin-modal-actions">
-        <button type="button" className="admin-btn" onClick={onClose} disabled={busy}>انصراف</button>
+        <button type="button" className="admin-btn" onClick={onClose} disabled={busy}>{tr("انصراف", "Cancel")}</button>
         <button type="button" className={`admin-btn ${destructive ? "danger" : "primary"}`} disabled={busy} onClick={submit} aria-busy={busy}>
-          {busy ? <Spinner size={14} /> : mode === "DISMISSED" ? "رد گزارش" : "ثبت رسیدگی"}
+          {busy ? <Spinner size={14} /> : mode === "DISMISSED" ? tr("رد گزارش", "Dismiss report") : tr("ثبت رسیدگی", "Submit resolution")}
         </button>
       </div>
     </AdminModal>

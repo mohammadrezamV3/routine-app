@@ -7,6 +7,7 @@ import { isUniqueViolation } from "@/lib/mentorServer";
 import { KDF_SALT_BYTES, isKeyBackupShape, isPublicKeyShape } from "@/lib/e2ee/core";
 import { b64ByteLength } from "@/lib/e2ee/encoding";
 import { E2E_KEY_SELECT, keyChangedResponse, myKeyState, nextVersionOk } from "@/lib/e2ee/keyServer";
+import { tr } from "@/lib/i18n";
 
 // کلیدهای رمزگذاری سرتاسری کاربر فعلی (docs/mentor-e2ee.md). سرور فقط کلیدهای
 // عمومی و پشتیبان *رمزشده* (با کلید مشتق از رمز عبور، روی دستگاه) را نگه می‌دارد.
@@ -32,22 +33,22 @@ export async function POST(req: Request) {
   const parsed = await readJsonBody(req, 8 * 1024);
   if (!parsed.ok) return NextResponse.json({ error: parsed.error }, { status: parsed.status });
   const b = parsed.body || {};
-  if (!isPublicKeyShape(b.publicKey)) return badRequest("کلید عمومی نامعتبر است");
-  if (!isKeyBackupShape(b.backup)) return badRequest("پشتیبان کلید نامعتبر است");
-  if (!Number.isInteger(b.version) || b.version < 1) return badRequest("نسخه‌ی کلید نامعتبر است");
-  if (!Number.isInteger(b.replaceVersion) || b.replaceVersion < 0) return badRequest("نسخه‌ی قبلی نامعتبر است");
+  if (!isPublicKeyShape(b.publicKey)) return badRequest(tr("کلید عمومی نامعتبر است", "Invalid public key"));
+  if (!isKeyBackupShape(b.backup)) return badRequest(tr("پشتیبان کلید نامعتبر است", "Invalid key backup"));
+  if (!Number.isInteger(b.version) || b.version < 1) return badRequest(tr("نسخه‌ی کلید نامعتبر است", "Invalid key version"));
+  if (!Number.isInteger(b.replaceVersion) || b.replaceVersion < 0) return badRequest(tr("نسخه‌ی قبلی نامعتبر است", "Invalid previous version"));
   if (!(await checkRateLimit(`e2ee-key-create:${me}`, 10, 60 * 60 * 1000))) {
-    return NextResponse.json({ error: "تعداد تلاش‌ها زیاد بوده؛ کمی بعد دوباره تلاش کن" }, { status: 429 });
+    return NextResponse.json({ error: tr("تعداد تلاش‌ها زیاد بوده؛ کمی بعد دوباره تلاش کن", "Too many attempts; try again shortly") }, { status: 429 });
   }
   // پشتیبان باید با نمک فعلی همین حساب ساخته شده باشد؛ فقط در جایگزینی (بازیابی رمز)
   // نمک تازه همراه کلید می‌آید و اتمی ثبت می‌شود (KEK کهنه‌ی دستگاه‌های دیگر باطل)
   const newKdf = b.kdf as { salt?: unknown; iterations?: unknown } | undefined;
   if (newKdf !== undefined) {
-    if (b.replaceVersion === 0 || !newKdf || typeof newKdf.salt !== "string" || b64ByteLength(newKdf.salt) !== KDF_SALT_BYTES) return badRequest("نمک نامعتبر است");
-    if (newKdf.iterations !== b.backup.iterations || newKdf.salt !== b.backup.salt) return badRequest("پشتیبان با پارامترهای این حساب نمی‌خواند");
+    if (b.replaceVersion === 0 || !newKdf || typeof newKdf.salt !== "string" || b64ByteLength(newKdf.salt) !== KDF_SALT_BYTES) return badRequest(tr("نمک نامعتبر است", "Invalid salt"));
+    if (newKdf.iterations !== b.backup.iterations || newKdf.salt !== b.backup.salt) return badRequest(tr("پشتیبان با پارامترهای این حساب نمی‌خواند", "The backup can't be read with this account's parameters"));
   } else {
     const kdf = await prisma.userE2EKdf.findUnique({ where: { userId: me } });
-    if (!kdf || kdf.salt !== b.backup.salt || kdf.iterations !== b.backup.iterations) return badRequest("پشتیبان با پارامترهای این حساب نمی‌خواند");
+    if (!kdf || kdf.salt !== b.backup.salt || kdf.iterations !== b.backup.iterations) return badRequest(tr("پشتیبان با پارامترهای این حساب نمی‌خواند", "The backup can't be read with this account's parameters"));
   }
 
   try {

@@ -4,6 +4,7 @@ import { AdminPermission } from "@/lib/adminPermissions";
 import {
   AdminActionError, addUserTag, grantModuleDays, removeUserTag, restoreUser, sendUserMessage, setBlocked, softDelete,
 } from "@/lib/adminUsers";
+import { tr } from "@/lib/i18n";
 
 const ACTIONS: Record<string, AdminPermission> = {
   block: "users.edit", unblock: "users.edit", delete: "users.delete", restore: "users.delete",
@@ -18,7 +19,7 @@ export async function POST(req: NextRequest) {
   const ids: string[] = Array.isArray(body?.ids)
     ? Array.from(new Set<string>(body.ids.filter((x: unknown): x is string => typeof x === "string" && x.length > 0))).slice(0, 100)
     : [];
-  if (!ACTIONS[action] || ids.length === 0) return NextResponse.json({ error: "ورودی نامعتبر است" }, { status: 400 });
+  if (!ACTIONS[action] || ids.length === 0) return NextResponse.json({ error: tr("ورودی نامعتبر است", "Invalid input") }, { status: 400 });
 
   const guard = await requireAdmin(ACTIONS[action]);
   if (!guard.ok) return guard.response;
@@ -35,7 +36,7 @@ export async function POST(req: NextRequest) {
       else if (action === "untag") await removeUserTag(guard, id, body.tag);
       else await grantModuleDays(guard, id, body.modules, body.days);
     } catch (e) {
-      failed.push({ id, error: e instanceof AdminActionError ? e.message : "خطای سرور" });
+      failed.push({ id, error: e instanceof AdminActionError ? e.message : tr("خطای سرور", "Server error") });
     }
   }
   return NextResponse.json({ ok: true, done: ids.length - failed.length, failed });

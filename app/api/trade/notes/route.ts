@@ -6,6 +6,7 @@ import { clampText } from "@/lib/validate";
 import { isHexColor } from "@/lib/tradeServer";
 import { withLiveSync } from "@/lib/realtime";
 import { sessionFeatureBlocked } from "@/lib/featureFlagsServer";
+import { tr } from "@/lib/i18n";
 
 // یادداشت‌های ترید. جست‌وجو عمدا روی عنوان و متن با `contains` انجام
 // می‌شود (نه full-text index): حجم یادداشت‌های یک کاربر کوچک است و
@@ -30,9 +31,9 @@ async function ownedTagIds(userId: string, raw: unknown): Promise<{ id: string }
 }
 
 function parseNote(body: any): string | { title: string; content: string; color: string; pinned: boolean } {
-  if (!body || typeof body !== "object") return "بدنه‌ی درخواست نامعتبر است";
+  if (!body || typeof body !== "object") return tr("بدنه‌ی درخواست نامعتبر است", "Invalid request body");
   const title = String(body.title || "").trim();
-  if (!title) return "عنوان یادداشت الزامی است";
+  if (!title) return tr(tr("عنوان یادداشت الزامی است", "Note title is required"), "Note title is required");
   return {
     title: clampText(title, 120),
     content: clampText(String(body.content || ""), 20_000),
@@ -84,7 +85,7 @@ async function handlePOST(req: NextRequest) {
   if (typeof parsed === "string") return NextResponse.json({ error: parsed }, { status: 400 });
 
   const count = await prisma.tradeNote.count({ where: { userId } });
-  if (count >= MAX_NOTES) return NextResponse.json({ error: `حداکثر ${MAX_NOTES} یادداشت مجاز است` }, { status: 400 });
+  if (count >= MAX_NOTES) return NextResponse.json({ error: tr(tr(`حداکثر ${MAX_NOTES} یادداشت مجاز است`, `You can have up to ${MAX_NOTES} notes`), `You can have up to ${MAX_NOTES} notes`) }, { status: 400 });
 
   // ارجاع‌های اختیاری فقط وقتی ثبت می‌شوند که واقعا مال همین کاربر باشند
   const accountId = body?.accountId
@@ -112,13 +113,13 @@ async function handlePATCH(req: NextRequest) {
 
   const body = await req.json().catch(() => null);
   const id = String(body?.id || "");
-  if (!id) return NextResponse.json({ error: "id الزامی است" }, { status: 400 });
+  if (!id) return NextResponse.json({ error: tr(tr("id الزامی است", "id is required"), "id is required") }, { status: 400 });
 
   const parsed = parseNote(body);
   if (typeof parsed === "string") return NextResponse.json({ error: parsed }, { status: 400 });
 
   const existing = await prisma.tradeNote.findFirst({ where: { id, userId }, select: { id: true } });
-  if (!existing) return NextResponse.json({ error: "یادداشت پیدا نشد" }, { status: 404 });
+  if (!existing) return NextResponse.json({ error: tr(tr("یادداشت پیدا نشد", "Note not found"), "Note not found") }, { status: 404 });
 
   const note = await prisma.tradeNote.update({
     where: { id },
@@ -136,7 +137,7 @@ async function handleDELETE(req: NextRequest) {
   const guard = await requireModule(ModuleKey.TRADE);
   if (!guard.ok) return guard.response;
   const id = req.nextUrl.searchParams.get("id");
-  if (!id) return NextResponse.json({ error: "id الزامی است" }, { status: 400 });
+  if (!id) return NextResponse.json({ error: tr(tr("id الزامی است", "id is required"), "id is required") }, { status: 400 });
   await prisma.tradeNote.deleteMany({ where: { id, userId: guard.userId } });
   return NextResponse.json({ ok: true });
 }

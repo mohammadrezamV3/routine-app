@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { requireAdmin } from "@/lib/requireAdmin";
 import { prisma } from "@/lib/prisma";
 import { writeAuditLog } from "@/lib/adminAnalytics";
+import { tr } from "@/lib/i18n";
 
 // DELETE → حذف کامل. کدهای تخفیف برخلاف ReferralCode به هیچ رکورد دیگه‌ای
 // (مثلا Subscription) وصل نیستن — تخفیف اعمال‌شده مستقیم روی خود
@@ -17,7 +18,7 @@ export async function DELETE(_req: NextRequest, { params }: { params: { id: stri
   if (!guard.ok) return guard.response;
 
   const existing = await prisma.discountCode.findUnique({ where: { id: params.id }, select: { id: true, code: true } });
-  if (!existing) return NextResponse.json({ error: "کد تخفیف پیدا نشد" }, { status: 404 });
+  if (!existing) return NextResponse.json({ error: tr("کد تخفیف پیدا نشد", "Discount code not found") }, { status: 404 });
 
   await prisma.$transaction([
     prisma.discountCodeUsage.deleteMany({ where: { discountCodeId: existing.id } }),
@@ -34,12 +35,12 @@ export async function PATCH(req: NextRequest, { params }: { params: { id: string
 
   const body = await req.json().catch(() => null);
   if (!body || typeof body !== "object" || typeof (body as any).active !== "boolean") {
-    return NextResponse.json({ error: "ورودی نامعتبر است" }, { status: 400 });
+    return NextResponse.json({ error: tr("ورودی نامعتبر است", "Invalid input") }, { status: 400 });
   }
   const active = (body as { active: boolean }).active;
 
   const existing = await prisma.discountCode.findUnique({ where: { id: params.id }, select: { id: true, code: true } });
-  if (!existing) return NextResponse.json({ error: "کد تخفیف پیدا نشد" }, { status: 404 });
+  if (!existing) return NextResponse.json({ error: tr("کد تخفیف پیدا نشد", "Discount code not found") }, { status: 404 });
 
   await prisma.discountCode.update({ where: { id: existing.id }, data: { active } });
   await writeAuditLog(guard.userId, "discount_code.toggle", "DiscountCode", existing.id, { code: existing.code, active });

@@ -5,6 +5,7 @@ import { readJsonBody } from "@/lib/validate";
 import { isUniqueViolation } from "@/lib/mentorServer";
 import { validateLabelName } from "@/lib/mentorAvailability";
 import { readLabels } from "@/lib/mentorManageServer";
+import { tr } from "@/lib/i18n";
 
 type Ctx = { params: { labelId: string } };
 
@@ -28,7 +29,7 @@ export async function PATCH(req: Request, { params }: Ctx) {
   try {
     await prisma.mentorStudentLabel.updateMany({ where: { id: label.id, profileId: label.profileId }, data: { name: v.data } });
   } catch (e) {
-    if (isUniqueViolation(e)) return conflict("برچسبی با این نام داری");
+    if (isUniqueViolation(e)) return conflict(tr(tr("برچسبی با این نام داری", "You already have a label with this name"), "You already have a label with this name"));
     throw e;
   }
   return NextResponse.json({ labels: await readLabels(label.profileId) });
