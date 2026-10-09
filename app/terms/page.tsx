@@ -477,7 +477,7 @@ export default function TermsPage() {
       <div className="dateline" style={{ marginBottom: 6 }}>
         {tr("آخرین بازنگری: ", "Last updated: ")}{lastUpdated}
       </div>
-      <p style={{ marginTop: 12, fontSize: 13.5, color: "var(--muted)", lineHeight: 2 }}>
+      <p style={{ marginTop: 12, fontSize: 13.5, color: "var(--muted)", lineHeight: isEn() ? 1.7 : 2 }}>
         {tr(
           "این قوانین شرایط استفاده از آریون را تعیین می‌کند. لطفا پیش از ثبت‌نام و خرید اشتراک آن را به‌طور کامل مطالعه کنید؛ ثبت‌نام و استفاده از خدمات به معنای پذیرش کامل آن است.",
           "These terms set out the conditions for using Arion. Please read them carefully before signing up and buying a subscription. Signing up and using the services means you fully accept them.",
@@ -488,15 +488,15 @@ export default function TermsPage() {
         <article key={a.title} style={{ marginTop: 26 }}>
           <h2>{tr("ماده‌ی", "Article")} {i + 1} — {a.title}</h2>
           {a.intro && (
-            <p style={{ marginTop: 8, fontSize: 13.5, color: "var(--muted)", lineHeight: 2 }}>{a.intro}</p>
+            <p style={{ marginTop: 8, fontSize: 13.5, color: "var(--muted)", lineHeight: isEn() ? 1.7 : 2 }}>{a.intro}</p>
           )}
           <ol style={{ marginTop: 8, paddingInlineStart: 22, listStyleType: isEn() ? "decimal" : "persian" }}>
             {a.clauses.map((c, j) => (
-              <li key={j} style={{ marginTop: 7, fontSize: 13.5, color: "var(--muted)", lineHeight: 2 }}>{c}</li>
+              <li key={j} style={{ marginTop: 7, fontSize: 13.5, color: "var(--muted)", lineHeight: isEn() ? 1.7 : 2 }}>{c}</li>
             ))}
           </ol>
           {a.link && (
-            <p style={{ marginTop: 8, fontSize: 13.5, lineHeight: 2 }}>
+            <p style={{ marginTop: 8, fontSize: 13.5, lineHeight: isEn() ? 1.7 : 2 }}>
               <Link href={a.link.href} style={{ color: "var(--accent)" }}>{a.link.label}</Link>
             </p>
           )}

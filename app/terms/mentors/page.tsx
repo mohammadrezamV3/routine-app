@@ -361,7 +361,7 @@ export default function MentorTermsPage() {
       <div className="dateline" style={{ marginBottom: 6 }}>
         {tr("آخرین بازنگری: ", "Last updated: ")}{isEn() ? UPDATED_LABEL_EN : MENTOR_TERMS_UPDATED_LABEL}
       </div>
-      <p style={{ marginTop: 12, fontSize: 13.5, color: "var(--muted)", lineHeight: 2 }}>
+      <p style={{ marginTop: 12, fontSize: 13.5, color: "var(--muted)", lineHeight: isEn() ? 1.7 : 2 }}>
         {tr(
           "آریون فقط بستر ارتباط میان مربی و شاگرد است. مربی‌ها کاربران مستقل‌اند، از طرف آریون کار نمی‌کنند و مسئولیت خدماتشان با خودشان است. این شرایط مکمل",
           "Arion is only the connecting platform between mentor and student. Mentors are independent users, do not work on Arion's behalf, and are responsible for their own services. These terms supplement the",
@@ -376,11 +376,11 @@ export default function MentorTermsPage() {
         <article key={a.title} style={{ marginTop: 26 }}>
           <h2>{tr("ماده‌ی", "Article")} {i + 1} — {a.title}</h2>
           {a.intro && (
-            <p style={{ marginTop: 8, fontSize: 13.5, color: "var(--muted)", lineHeight: 2 }}>{a.intro}</p>
+            <p style={{ marginTop: 8, fontSize: 13.5, color: "var(--muted)", lineHeight: isEn() ? 1.7 : 2 }}>{a.intro}</p>
           )}
           <ol style={{ marginTop: 8, paddingInlineStart: 22, listStyleType: isEn() ? "decimal" : "persian" }}>
             {a.clauses.map((c, j) => (
-              <li key={j} style={{ marginTop: 7, fontSize: 13.5, color: "var(--muted)", lineHeight: 2 }}>{c}</li>
+              <li key={j} style={{ marginTop: 7, fontSize: 13.5, color: "var(--muted)", lineHeight: isEn() ? 1.7 : 2 }}>{c}</li>
             ))}
           </ol>
         </article>
