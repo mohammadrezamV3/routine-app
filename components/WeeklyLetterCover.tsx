@@ -148,7 +148,7 @@ export function WeeklyLetterCover({
           {onPlayStory && storyCount >= 3 && (
             <motion.div className="wl-story-cta" variants={item}>
               <button type="button" className="trade-primary-btn wl-cta-btn wl-story-play" onClick={onPlayStory}>
-                <Play size={16} fill="currentColor" className="dir-flip" />{tr("پخش داستان هفته", "Play the week story")}
+                <Play size={16} fill="currentColor" />{tr("پخش داستان هفته", "Play the week story")}
               </button>
               <span className="wl-story-meta">{tr(`${storyCount} اسلاید، `, `${storyCount} slides, `)}{storySeconds > 0 && storySeconds < 60 ? tr(`حدود ${storySeconds} ثانیه`, `about ${storySeconds} seconds`) : tr("حدود یک دقیقه", "about a minute")}</span>
             </motion.div>

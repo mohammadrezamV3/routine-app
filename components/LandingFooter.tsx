@@ -72,7 +72,7 @@ export function LandingFooter() {
 
   return (
     <footer className={`mt-12 border-t ${t.line} px-1 pb-8 pt-8 text-start`}>
-      <div className="flex flex-col gap-8 lg:flex-row-reverse lg:items-start lg:justify-between lg:gap-12">
+      <div className="flex flex-col gap-8 rtl:lg:flex-row-reverse lg:items-start lg:justify-between lg:gap-12">
         <div className="max-w-[240px] shrink-0">
           <Link href="/" aria-label={tr("آریون — صفحه‌ی اصلی", `${brandName()} - home`)} className="inline-flex items-center gap-2.5">
             <span className="relative h-8 w-8 shrink-0" aria-hidden="true">
@@ -123,7 +123,7 @@ export function LandingFooter() {
                   className={`flex items-center justify-end ltr:justify-start gap-1.5 text-[12px] transition-colors ${t.muted} ${t.accentHoverText}`}
                   dir="ltr"
                 >
-                  <span dir={isEn() ? "ltr" : "rtl"}>{SUPPORT_EMAIL}</span>
+                  <span dir={isEn() ? "ltr" : "rtl"} className="min-w-0 ltr:break-all">{SUPPORT_EMAIL}</span>
                   <Mail size={13} className="shrink-0" />
                 </a>
               </li>

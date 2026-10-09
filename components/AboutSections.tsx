@@ -177,7 +177,7 @@ export function AboutStory() {
 /* ─────────────────── ارزش‌ها ─────────────────── */
 type ValueDef = { icon: LucideIcon; title: string; body: string };
 const values = (): ValueDef[] => [
-  { icon: Languages, title: tr("فارسی از پایه", "Persian from the ground up"), body: tr("راست‌به‌چپ و با تقویم شمسی ساخته شده، نه ترجمه‌ی یک اپ خارجی.", "Built right-to-left with the Jalali calendar, not a translation of a foreign app.") },
+  { icon: Languages, title: tr("فارسی از پایه", "Persian from the ground up"), body: tr("راست‌به‌چپ و با تقویم شمسی ساخته شده، نه ترجمه‌ی یک اپ خارجی.", "Built for Persian speakers with the Jalali calendar, not a translation of a foreign app.") },
   { icon: Target, title: tr("ساخته‌شده برای اجرا", "Built for doing"), body: tr("فقط برای برنامه‌ریزی نیست؛ اجرای روزانه و پیشرفتت را هم دنبال می‌کند.", "It is not only for planning; it also follows your daily execution and progress.") },
   { icon: Layers, title: tr("همه‌چیز کنار هم", "Everything together"), body: tr("به‌جای پراکندگی بین چند ابزار، برنامه‌هایت را در یک سیستم مدیریت کن.", "Instead of scattering across several tools, manage your plans in one system.") },
   { icon: ShieldCheck, title: tr("حریم خصوصی پیش‌فرض", "Private by default"), body: tr("اطلاعاتت فروخته نمی‌شود و چت‌ها سرتاسر رمزنگاری‌شده‌اند.", "Your data is never sold and chats are end-to-end encrypted.") },
