@@ -21,16 +21,16 @@ const CHECKLIST_SELECT = {
 } as const;
 
 // چک‌لیست پیش‌فرض اولین ورود — نقطه‌ی شروع، کاملا قابل ویرایش/حذف
-const SEED_NAME = "چک‌لیست من";
+const seedName = () => tr("چک‌لیست من", "My checklist");
 const SEED_FLAG_KEY = "tradeChecklistSeeded";
-const SEED_ITEMS = [
-  "سطح H1 با برخورد قبلی معتبره؟",
-  "گره معاملاتی در M5 شکل گرفته؟",
-  "کندل تاییدی صادر شده؟",
-  "DXY همسوئه یا حداقل واگرایی مشکوک نداره؟",
-  "خبر مهمی در 30-60 دقیقه آینده نیست؟",
-  "حجم پوزیشن بر اساس ریسک محاسبه شده؟",
-  "حد ضرر و هدف سود قبل از ورود مشخصه؟",
+const seedItems = () => [
+  tr("سطح H1 با برخورد قبلی معتبره؟", "Is the H1 level valid with a previous touch?"),
+  tr("گره معاملاتی در M5 شکل گرفته؟", "Has a trading node formed on M5?"),
+  tr("کندل تاییدی صادر شده؟", "Has a confirmation candle printed?"),
+  tr("DXY همسوئه یا حداقل واگرایی مشکوک نداره؟", "Is DXY aligned, or at least free of suspicious divergence?"),
+  tr("خبر مهمی در 30-60 دقیقه آینده نیست؟", "No major news in the next 30-60 minutes?"),
+  tr("حجم پوزیشن بر اساس ریسک محاسبه شده؟", "Is the position size calculated from risk?"),
+  tr("حد ضرر و هدف سود قبل از ورود مشخصه؟", "Are stop loss and take profit set before entry?"),
 ];
 
 function parseItems(raw: unknown): string[] {
@@ -68,8 +68,8 @@ export async function GET() {
     if (!seeded) {
       await prisma.tradeChecklist.create({
         data: {
-          userId, name: SEED_NAME, order: 0,
-          items: { create: SEED_ITEMS.map((text, i) => ({ text, order: i })) },
+          userId, name: seedName(), order: 0,
+          items: { create: seedItems().map((text, i) => ({ text, order: i })) },
         },
       });
       await prisma.userSetting.upsert({
