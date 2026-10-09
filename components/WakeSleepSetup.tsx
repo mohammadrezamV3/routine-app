@@ -6,6 +6,7 @@ import { DEFAULT_SLEEP, DEFAULT_WAKE, setWakeSleepTimes, WakeSleepTimes } from "
 import { useLockBodyScroll } from "@/lib/useLockBodyScroll";
 import { TimeInput } from "./TimeInput";
 import { Spinner } from "./Spinner";
+import { tr } from "@/lib/i18n";
 
 type Step = "intro" | "form";
 
@@ -42,8 +43,8 @@ export function WakeSleepSetup({
         <div className="modal-overlay open" onClick={onClose} />
         <div className="modal-panel dash-scope open" style={{ maxWidth: 380 }}>
           <div className="modal-head">
-            <div className="modal-title">خوش اومدی 👋</div>
-            {onClose && <button className="nav-close" onClick={onClose} aria-label="بستن">×</button>}
+            <div className="modal-title">{tr("خوش اومدی 👋", "Welcome 👋")}</div>
+            {onClose && <button className="nav-close" onClick={onClose} aria-label={tr("بستن", "Close")}>×</button>}
           </div>
           <div className="modal-body">
             <div className="flex flex-col items-center gap-3 py-3 text-center">
@@ -53,13 +54,13 @@ export function WakeSleepSetup({
               >
                 <Clock size={26} />
               </span>
-              <div className="text-[14px] font-bold text-dash-text sm:text-[15px]">قبل از هر چیز، یه چیز کوچیک ازت می‌پرسیم</div>
+              <div className="text-[14px] font-bold text-dash-text sm:text-[15px]">{tr("قبل از هر چیز، یه چیز کوچیک ازت می‌پرسیم", "First, one small question")}</div>
               <div className="text-[11.5px] leading-relaxed text-dash-muted sm:text-[12.5px]">
-                ساعت بیداری و خوابت پایه‌ی تایم‌لاین روزانه‌ته — باهاش برنامه‌های هر روزت رو روی یه خط زمانی می‌چینیم. هر وقت خواستی از پنل کاربری می‌تونی عوضش کنی.
+                {tr("ساعت بیداری و خوابت پایه‌ی تایم‌لاین روزانه‌ته — باهاش برنامه‌های هر روزت رو روی یه خط زمانی می‌چینیم. هر وقت خواستی از پنل کاربری می‌تونی عوضش کنی.", "Your wake and sleep times are the base of your daily timeline — we use them to lay out each day's plans on one timeline. You can change them anytime from your account panel.")}
               </div>
             </div>
             <button className="auth-full-btn" onClick={() => setStep("form")} style={{ marginTop: 8 }}>
-              بریم
+              {tr("بریم", "Let's go")}
             </button>
           </div>
         </div>
@@ -73,24 +74,24 @@ export function WakeSleepSetup({
       <div className="modal-panel dash-scope open" style={{ maxWidth: 380 }}>
         <div className="modal-head">
           <div>
-            <div className="modal-eyebrow">تنظیم اولیه</div>
-            <div className="modal-title">کی بیدار می‌شی، کی می‌خوابی؟</div>
+            <div className="modal-eyebrow">{tr("تنظیم اولیه", "Initial setup")}</div>
+            <div className="modal-title">{tr("کی بیدار می‌شی، کی می‌خوابی؟", "When do you wake up and go to sleep?")}</div>
           </div>
-          {onClose && <button className="nav-close" onClick={onClose} aria-label="بستن">×</button>}
+          {onClose && <button className="nav-close" onClick={onClose} aria-label={tr("بستن", "Close")}>×</button>}
         </div>
         <div className="modal-body">
           <div className="item-line" style={{ marginBottom: 16, color: "var(--muted)" }}>
-            این دو ساعت پایه‌ی تایم‌لاین روزانه‌تو می‌سازن. هر وقت خواستی از پنل کاربری می‌تونی عوضش کنی.
+            {tr("این دو ساعت پایه‌ی تایم‌لاین روزانه‌تو می‌سازن. هر وقت خواستی از پنل کاربری می‌تونی عوضش کنی.", "These two times form the base of your daily timeline. You can change them anytime from your account panel.")}
           </div>
 
-          <label style={{ display: "block", fontSize: 12, color: "var(--muted)", marginBottom: 6 }}>ساعت بیداری هدف</label>
+          <label style={{ display: "block", fontSize: 12, color: "var(--muted)", marginBottom: 6 }}>{tr("ساعت بیداری هدف", "Target wake-up time")}</label>
           <TimeInput value={wake} onChange={setWake} className="wsearch-newform-name" />
 
-          <label style={{ display: "block", fontSize: 12, color: "var(--muted)", margin: "14px 0 6px" }}>ساعت خواب هدف</label>
+          <label style={{ display: "block", fontSize: 12, color: "var(--muted)", margin: "14px 0 6px" }}>{tr("ساعت خواب هدف", "Target bedtime")}</label>
           <TimeInput value={sleep} onChange={setSleep} className="wsearch-newform-name" />
 
           <button className="auth-full-btn" onClick={save} disabled={saving} style={{ marginTop: 20 }}>
-            {saving ? <Spinner size={15} /> : "ثبت و ادامه"}
+            {saving ? <Spinner size={15} /> : tr("ثبت و ادامه", "Save and continue")}
           </button>
         </div>
       </div>

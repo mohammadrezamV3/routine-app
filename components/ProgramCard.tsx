@@ -3,12 +3,23 @@
 import { useMemo, useState } from "react";
 import { WEEK_ORDER, tasksForDate, toEnDigits } from "@/lib/schedule";
 import { PROGRAM_META, formatDaysLeft } from "@/lib/programMeta";
-import { faNum } from "@/lib/jalali";
+import { faNum, weekdayName } from "@/lib/jalali";
+import { isEn, tr } from "@/lib/i18n";
 import { CustomOccurrence, Importance } from "@/lib/storage";
 import { LiquidBlobLayers } from "./LiquidBlobBox";
 import { useLockBodyScroll } from "@/lib/useLockBodyScroll";
 
 const now = new Date();
+
+// نسخه‌ی انگلیسی formatDaysLeft (lib/programMeta.ts فقط فارسیه)
+function daysLeftEn(days: number): string {
+  if (days <= 0) return "Ends today";
+  const weeks = Math.floor(days / 7), rem = days % 7;
+  const w = `${weeks} ${weeks === 1 ? "week" : "weeks"}`;
+  const d = `${rem} ${rem === 1 ? "day" : "days"}`;
+  if (weeks > 0) return w + (rem ? " and " + d : "");
+  return `${days} ${days === 1 ? "day" : "days"}`;
+}
 
 type Occ = { dayName: string; jsDay: number; time: string; id: string; custom?: boolean; importance?: Importance };
 type ScheduleOpts = { removedOccurrences: Set<string>; customOccurrences: CustomOccurrence[] };
@@ -79,9 +90,11 @@ export function ProgramCard({
     const uniqueIds = Array.from(new Set(group.occ.map((o) => o.id)));
     let sessions = 0;
     uniqueIds.forEach((id) => { sessions += countRemainingSessionsForId(id, endDate as Date, scheduleOpts); });
-    combinedStat = formatDaysLeft(daysLeft, faNum) + " | " + faNum(sessions) + " جلسه";
+    combinedStat = isEn()
+      ? daysLeftEn(daysLeft) + " | " + sessions + (sessions === 1 ? " session" : " sessions")
+      : formatDaysLeft(daysLeft, faNum) + " | " + faNum(sessions) + " جلسه";
   } else {
-    combinedStat = "پایان‌باز | نامحدود";
+    combinedStat = tr("پایان‌باز | نامحدود", "Open-ended | Unlimited");
   }
 
   return (
@@ -90,24 +103,24 @@ export function ProgramCard({
       <div className="pcard-stage open">
         <div className={`pcard-inner${flipped ? " flipped" : ""}`}>
           <div className="pcard-face pcard-face-front" onClick={() => setFlipped(true)}>
-            <button className="pcard-close" onClick={(e) => { e.stopPropagation(); onClose(); }}>×</button>
+            <button className="pcard-close" onClick={(e) => { e.stopPropagation(); onClose(); }} aria-label={tr("بستن", "Close")}>×</button>
             <div className="pcard-combined-stat">{combinedStat}</div>
             <div className="pcard-times-list">
               {group.occ.map((o, oi) => (
                 <div key={oi} className="pcard-time-row">
-                  <span className="pcard-time-text">{o.dayName}</span>
+                  <span className="pcard-time-text">{weekdayName(o.jsDay)}</span>
                   <span className="pcard-time-text mono" dir="ltr">{toEnDigits(o.time)}</span>
                 </div>
               ))}
             </div>
-            <div className="pcard-front-hint">برای دیدن نام درس ضربه بزن</div>
+            <div className="pcard-front-hint">{tr("برای دیدن نام درس ضربه بزن", "Tap to see the lesson name")}</div>
           </div>
           <div className="pcard-face pcard-face-back" onClick={() => setFlipped(false)}>
             <LiquidBlobLayers />
             <div className="pcard-back-content">
-              <div className="pcard-back-eyebrow">درس</div>
+              <div className="pcard-back-eyebrow">{tr("درس", "Lesson")}</div>
               <div className="pcard-back-lesson">{lessonName}</div>
-              <div className="pcard-back-hint">برای برگشت ضربه بزن</div>
+              <div className="pcard-back-hint">{tr("برای برگشت ضربه بزن", "Tap to go back")}</div>
             </div>
           </div>
         </div>

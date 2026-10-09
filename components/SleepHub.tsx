@@ -20,6 +20,7 @@ import { DEFAULT_LATENCY } from "@/lib/sleepCycles";
 import { useLiveRefresh } from "@/lib/liveSync";
 import { useFeature } from "@/lib/useFeatures";
 import { isoLocal } from "@/lib/jalali";
+import { tr } from "@/lib/i18n";
 import { addDaysIso, sleepInsights, sleepMinutes, type SleepRecord } from "@/lib/sleep";
 import { getTracking, stopTracking, draftFromTracking, TRACKER_EVENT, type SleepTracking } from "@/lib/sleepTracker";
 
@@ -133,10 +134,10 @@ export function SleepHub() {
     <section className="sleep-scope slp-page">
       <div className="trade-head-row" style={{ justifyContent: "flex-start" }}>
         <span className="page-title-icon">{ICONS.sleep}</span>
-        <h1>خواب</h1>
+        <h1>{tr("خواب", "Sleep")}</h1>
         {statsOn && (
           <Link href="/analysis/weekly#sleep" prefetch={false} className="slp-stats-link">
-            <BarChart3 aria-hidden /> آمار خواب
+            <BarChart3 aria-hidden /> {tr("آمار خواب", "Sleep stats")}
           </Link>
         )}
       </div>

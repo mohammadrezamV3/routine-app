@@ -9,6 +9,7 @@
 import { useState } from "react";
 import { GripVertical, Plus, X } from "lucide-react";
 import { Reorder, useDragControls } from "framer-motion";
+import { tr } from "@/lib/i18n";
 import { MAX_CHECKLIST_ITEMS, newItemId, type ChecklistItem } from "@/lib/routineChecklist";
 
 function ItemRow({ item, index, count, onRename, onRemove, onMove }: {
@@ -28,7 +29,7 @@ function ItemRow({ item, index, count, onRename, onRemove, onMove }: {
       <button
         type="button"
         className="checklist-editor-grip"
-        aria-label={`جابه‌جایی آیتم ${index + 1}`}
+        aria-label={tr(`جابه‌جایی آیتم ${index + 1}`, `Move item ${index + 1}`)}
         onPointerDown={(e) => { e.preventDefault(); controls.start(e); }}
         onKeyDown={(e) => {
           if (e.key === "ArrowUp" && index > 0) { e.preventDefault(); e.stopPropagation(); onMove(-1); }
@@ -42,10 +43,10 @@ function ItemRow({ item, index, count, onRename, onRemove, onMove }: {
         className="wsearch-newform-name"
         value={item.name}
         maxLength={80}
-        aria-label={`آیتم ${index + 1}`}
+        aria-label={tr(`آیتم ${index + 1}`, `Item ${index + 1}`)}
         onChange={(e) => onRename(e.target.value)}
       />
-      <button type="button" className="wsearch-newrow-remove-text" onClick={onRemove} aria-label={`حذف ${item.name}`}>
+      <button type="button" className="wsearch-newrow-remove-text" onClick={onRemove} aria-label={tr(`حذف ${item.name}`, `Remove ${item.name}`)}>
         <X size={14} />
       </button>
     </Reorder.Item>
@@ -88,14 +89,14 @@ export function RoutineChecklistEditor({ items, onChange, error }: { items: Chec
           <input
             type="text"
             className="wsearch-newform-name"
-            placeholder={items.length ? "آیتم بعدی…" : "مثلا: نان، شیر، میوه…"}
+            placeholder={items.length ? tr("آیتم بعدی…", "Next item…") : tr("مثلا: نان، شیر، میوه…", "e.g. bread, milk, fruit…")}
             value={draft}
             maxLength={80}
             // Enter آیتم اضافه می‌کنه (نه پرش به فیلد بعدی فرم)
             onKeyDown={(e) => { if (e.key === "Enter") { e.preventDefault(); e.stopPropagation(); add(); } }}
             onChange={(e) => setDraft(e.target.value)}
           />
-          <button type="button" className="wsearch-add-btn checklist-editor-add" onClick={add} disabled={!draft.trim()} aria-label="افزودن آیتم">
+          <button type="button" className="wsearch-add-btn checklist-editor-add" onClick={add} disabled={!draft.trim()} aria-label={tr("افزودن آیتم", "Add item")}>
             <Plus size={16} />
           </button>
         </div>

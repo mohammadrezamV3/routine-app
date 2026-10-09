@@ -7,7 +7,8 @@ import { timeStartMinutes } from "@/lib/schedule";
 import { findScheduleConflict, rangesOverlap } from "@/lib/conflict";
 import { TimeInput } from "./TimeInput";
 import { CustomOccurrence, Importance, IMPORTANCE_LABELS, setCustomOccurrences, setRemovedOccurrences } from "@/lib/storage";
-import { isoLocal } from "@/lib/jalali";
+import { isoLocal, weekdayShort } from "@/lib/jalali";
+import { tr } from "@/lib/i18n";
 import { SegmentedTabs } from "./SegmentedTabs";
 import { focusNextOnEnter } from "@/lib/formNav";
 import { useLockBodyScroll } from "@/lib/useLockBodyScroll";
@@ -16,6 +17,8 @@ import { RoutineChecklistEditor } from "./RoutineChecklistEditor";
 import { RoutineTagField } from "./RoutineTagField";
 import { checklistOf, type ChecklistItem } from "@/lib/routineChecklist";
 import { Spinner } from "./Spinner";
+
+const IMPORTANCE_EN: Record<Importance, string> = { low: "Low", medium: "Medium", high: "High", veryHigh: "Very high" };
 
 type Occ = { dayName: string; jsDay: number; time: string; id: string; custom?: boolean; importance?: Importance; tag?: string };
 type ScheduleOpts = { removedOccurrences: Set<string>; customOccurrences: CustomOccurrence[] };
@@ -98,7 +101,7 @@ export function EditOccurrenceForm({
     });
     setRowErrors(rErrs);
     if (hasError) {
-      setFormError(Object.values(rErrs).some((e) => e.order) ? "ساعت پایان باید بعد از ساعت شروع باشه" : null);
+      setFormError(Object.values(rErrs).some((e) => e.order) ? tr("ساعت پایان باید بعد از ساعت شروع باشه", "End time must be after start time") : null);
       return;
     }
 
@@ -123,7 +126,7 @@ export function EditOccurrenceForm({
             }
           }
         }
-        if (conflict) { conflictMsg = `تداخل زمانی با «${conflict.name}» — ذخیره نشد`; break outer; }
+        if (conflict) { conflictMsg = tr(`تداخل زمانی با «${conflict.name}» — ذخیره نشد`, `Time conflict with "${conflict.name}" — not saved`); break outer; }
         normalizedRows.push({ jsDay, start: startFa, end: endFa, startMin, endMin });
       }
     }
@@ -198,23 +201,23 @@ export function EditOccurrenceForm({
       <div className="wsearch-newform occ-edit-form dash-scope open">
         <div className="relative z-[1] add-program-glass" ref={formRef} onKeyDown={(e) => focusNextOnEnter(e, formRef)}>
           <div className="wsearch-newform-head">
-            <div className="wsearch-newform-title accent">ویرایش «{name}»</div>
-            <button className="nav-close" onClick={onClose} aria-label="بستن">×</button>
+            <div className="wsearch-newform-title accent">{tr(`ویرایش «${name}»`, `Edit "${name}"`)}</div>
+            <button className="nav-close" onClick={onClose} aria-label={tr("بستن", "Close")}>×</button>
           </div>
 
           <TickOption checked={isList} onChange={setIsList} className="mb-2">
-            این برنامه یک لیسته (چند آیتم که تک‌تک تیک می‌خورن)
+            {tr("این برنامه یک لیسته (چند آیتم که تک‌تک تیک می‌خورن)", "This plan is a list (several items checked off one by one)")}
           </TickOption>
           {isList && <div style={{ marginBottom: 14 }}><RoutineChecklistEditor items={items} onChange={setItems} /></div>}
 
-          <label htmlFor="editOccTag">تگ (اختیاری)</label>
+          <label htmlFor="editOccTag">{tr("تگ (اختیاری)", "Tag (optional)")}</label>
           <RoutineTagField id="editOccTag" value={tag} onChange={setTag} occurrences={scheduleOpts.customOccurrences} />
 
-          <label>میزان اهمیت</label>
+          <label>{tr("میزان اهمیت", "Importance")}</label>
           <SegmentedTabs
             active={importance}
             onChange={setImportance}
-            options={(Object.keys(IMPORTANCE_LABELS) as Importance[]).map((k) => ({ value: k, label: IMPORTANCE_LABELS[k] }))}
+            options={(Object.keys(IMPORTANCE_LABELS) as Importance[]).map((k) => ({ value: k, label: tr(IMPORTANCE_LABELS[k], IMPORTANCE_EN[k]) }))}
           />
 
           {rows.map((r, ri) => (
@@ -227,26 +230,26 @@ export function EditOccurrenceForm({
                       className={`day-pill${r.jsDays.includes(o.jsDay) ? " on" : ""}`}
                       onClick={() => toggleRowDay(ri, o.jsDay)}
                     >
-                      {o.short}
+                      {tr(o.short, weekdayShort(o.jsDay))}
                     </span>
                   ))}
                 </div>
               </div>
               <div className={`time-field${rowErrors[ri]?.start || rowErrors[ri]?.order ? " field-error" : ""}`}>
-                <span className="time-field-label">ساعت شروع</span>
+                <span className="time-field-label">{tr("ساعت شروع", "Start time")}</span>
                 <div className="field-error-wrap">
                   <TimeInput value={r.start} onChange={(v) => updateRow(ri, { start: v })} />
                 </div>
               </div>
               <div className={`time-field${rowErrors[ri]?.end || rowErrors[ri]?.order ? " field-error" : ""}`}>
-                <span className="time-field-label">ساعت پایان</span>
+                <span className="time-field-label">{tr("ساعت پایان", "End time")}</span>
                 <div className="field-error-wrap">
                   <TimeInput value={r.end} onChange={(v) => updateRow(ri, { end: v })} />
                 </div>
               </div>
               {rows.length > 1 && (
                 <button type="button" className="wsearch-newrow-remove-text" onClick={() => removeRow(ri)}>
-                  حذف این روز
+                  {tr("حذف این روز", "Remove this day")}
                 </button>
               )}
             </div>
@@ -256,7 +259,7 @@ export function EditOccurrenceForm({
 
           <div className="wsearch-newform-addrow">
             <button type="button" className="wsearch-add-btn" onClick={addRow}>
-              افزودن روز دیگر
+              {tr("افزودن روز دیگر", "Add another day")}
               <span className="wsearch-add-btn-icon">+</span>
             </button>
             <button
@@ -267,7 +270,7 @@ export function EditOccurrenceForm({
             >
               {status === "loading" ? (
                 <Spinner size={15} />
-              ) : status === "success" ? "ذخیره شد" : status === "error" ? "ذخیره نشد" : "ذخیره"}
+              ) : status === "success" ? tr("ذخیره شد", "Saved") : status === "error" ? tr("ذخیره نشد", "Not saved") : tr("ذخیره", "Save")}
             </button>
           </div>
         </div>

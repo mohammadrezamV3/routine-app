@@ -56,3 +56,6 @@ body[data-theme="light"] .wr-dot{ stroke:#fff; }
 }
 /* ورود رادار فقط transform/opacity/dashoffset ـه و ارزونه؛ روی گوشی هم می‌مونه (کاهش حرکت بالا خاموشش می‌کنه) */
 html[data-perf="low"] .wr-dot.is-active{ filter:none; }
+
+/* انگلیسی: برچسب‌ها چپ به راست */
+html[dir="ltr"] .wr-root{ direction:ltr; }

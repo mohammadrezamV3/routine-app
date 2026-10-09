@@ -13,6 +13,8 @@ import {
   type ProgramKind,
   type TimeRow,
 } from "@/lib/programForm";
+import { tr } from "@/lib/i18n";
+import { weekdayName, weekdayShort } from "@/lib/jalali";
 import "./program-time-rows.css";
 
 // کارت‌های ردیف ساعت فرم «افزودن برنامه».
@@ -67,9 +69,9 @@ export function ProgramTimeRows({ kind, rows, onChange, errors, conflicts, onCle
           const orderBad = !!err.order || (bothFilled && dur === null);
           const active = matchDayPreset(row.jsDays);
           const msg = err.days
-            ? "حداقل یک روز رو انتخاب کن"
+            ? tr("حداقل یک روز رو انتخاب کن", "Pick at least one day")
             : err.start || err.end
-            ? "ساعت شروع و پایان رو کامل وارد کن"
+            ? tr("ساعت شروع و پایان رو کامل وارد کن", "Enter both start and end times")
             : "";
           return (
             <motion.div key={row.id} className="ptr-item" {...motionProps}>
@@ -79,7 +81,7 @@ export function ProgramTimeRows({ kind, rows, onChange, errors, conflicts, onCle
                     <button
                       type="button"
                       className="ptr-remove"
-                      aria-label="حذف این ساعت"
+                      aria-label={tr("حذف این ساعت", "Remove this time")}
                       onClick={() => onChange(rows.filter((r) => r.id !== row.id))}
                     >
                       <Trash2 size={17} />
@@ -98,10 +100,10 @@ export function ProgramTimeRows({ kind, rows, onChange, errors, conflicts, onCle
                             type="button"
                             className={"ptr-pill" + (on ? " is-on" : "")}
                             aria-pressed={on}
-                            aria-label={d.name}
+                            aria-label={tr(d.name, weekdayName(d.jsDay))}
                             onClick={() => toggleDay(row, d.jsDay)}
                           >
-                            {d.short}
+                            {tr(d.short, weekdayShort(d.jsDay))}
                           </button>
                         );
                       })}
@@ -116,7 +118,7 @@ export function ProgramTimeRows({ kind, rows, onChange, errors, conflicts, onCle
                             aria-pressed={active === p.key}
                             onClick={() => patch(row.id, { jsDays: [...p.jsDays] })}
                           >
-                            {p.label}
+                            {tr(p.label, p.en)}
                           </button>
                         ))}
                       </div>
@@ -126,17 +128,17 @@ export function ProgramTimeRows({ kind, rows, onChange, errors, conflicts, onCle
 
                 <div className="ptr-times">
                   <div className={"time-field" + (err.start ? " is-err" : "")}>
-                    <span className="time-field-label">شروع</span>
+                    <span className="time-field-label">{tr("شروع", "Start")}</span>
                     <TimeInput value={row.start} onChange={(v) => patch(row.id, { start: v })} />
                   </div>
                   <div className={"time-field" + (err.end || orderBad ? " is-err" : "")}>
-                    <span className="time-field-label">پایان</span>
+                    <span className="time-field-label">{tr("پایان", "End")}</span>
                     <TimeInput value={row.end} onChange={(v) => patch(row.id, { end: v })} />
                   </div>
                 </div>
 
                 {orderBad ? (
-                  <p className="ptr-dur is-err">پایان باید بعد از شروع باشه</p>
+                  <p className="ptr-dur is-err">{tr("پایان باید بعد از شروع باشه", "End must be after start")}</p>
                 ) : dur !== null ? (
                   <p className="ptr-dur">{durationText(dur)}</p>
                 ) : null}
@@ -146,7 +148,7 @@ export function ProgramTimeRows({ kind, rows, onChange, errors, conflicts, onCle
                 {conflict ? (
                   <p className="ptr-warn">
                     <AlertTriangle size={14} />
-                    <span>{"با «" + conflict + "» هم‌زمانه"}</span>
+                    <span>{tr("با «" + conflict + "» هم‌زمانه", "Overlaps with \"" + conflict + "\"")}</span>
                   </p>
                 ) : null}
               </div>
@@ -158,7 +160,7 @@ export function ProgramTimeRows({ kind, rows, onChange, errors, conflicts, onCle
       {!once && (
         <button type="button" className="ptr-add" onClick={() => onChange([...rows, newTimeRow()])}>
           <Plus size={15} />
-          <span>ساعت دیگه برای روزهای دیگه</span>
+          <span>{tr("ساعت دیگه برای روزهای دیگه", "Another time for other days")}</span>
         </button>
       )}
     </div>

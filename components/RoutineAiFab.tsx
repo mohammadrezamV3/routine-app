@@ -9,6 +9,7 @@ import { LockBodyScroll } from "./LockBodyScroll";
 import { primeSettingCache } from "@/lib/storage";
 import { SETTING_KEYS } from "@/lib/userSettingKeys";
 import { isoLocal } from "@/lib/jalali";
+import { tr } from "@/lib/i18n";
 import SiriOrb from "@/components/smoothui/components/siri-orb";
 import AIMessage from "@/components/smoothui/components/ai-message";
 import AILoader from "@/components/smoothui/components/ai-loader";
@@ -19,7 +20,7 @@ import {
 type Msg = { id: string; role: "user" | "bot"; text: string; tone?: "ok" | "warn" | "error" };
 type Quota = { unlimited: boolean; used: number; limit: number | null; remaining: number | null };
 
-const GREETING = "سلام! من نومو هستم، دستیار برنامه‌ات. بگو چی رو اضافه، جابه‌جا یا ویرایش کنم.";
+const greeting = () => tr("سلام! من نومو هستم، دستیار برنامه‌ات. بگو چی رو اضافه، جابه‌جا یا ویرایش کنم.", "Hi! I'm Nomo, your routine assistant. Tell me what to add, move or edit.");
 
 function newId() {
   return Math.random().toString(36).slice(2);
@@ -120,7 +121,7 @@ export function RoutineAiFab({ onChanged }: { onChanged: () => void }) {
   // پیام خوش‌آمد یک‌بار، همان لحظه‌ی بازشدن — به‌جای فهرست پیشنهادها.
   useEffect(() => {
     if (open && msgs.length === 0) {
-      setMsgs([{ id: newId(), role: "bot", text: GREETING }]);
+      setMsgs([{ id: newId(), role: "bot", text: greeting() }]);
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [open]);
@@ -166,7 +167,7 @@ export function RoutineAiFab({ onChanged }: { onChanged: () => void }) {
       const data = await res.json().catch(() => null);
 
       if (!res.ok) {
-        push("bot", data?.error || "یک مشکل ناشناخته پیش آمد. دوباره امتحان کن.", "error");
+        push("bot", data?.error || tr("یک مشکل ناشناخته پیش آمد. دوباره امتحان کن.", "Something went wrong. Please try again."), "error");
         if (data?.quota) setQuota(data.quota);
         setOrbState("error");
         return;
@@ -186,10 +187,10 @@ export function RoutineAiFab({ onChanged }: { onChanged: () => void }) {
         ? (data?.applied?.length ? "warn" : "error")
         : (data?.changed ? "ok" : undefined);
       // طبق درخواست صریح: بعد از هر پاسخ گزینه‌ی پیشنهادی نشان داده نمی‌شود.
-      push("bot", data?.reply || "چیزی برای گفتن ندارم.", tone);
+      push("bot", data?.reply || tr("چیزی برای گفتن ندارم.", "I have nothing to say."), tone);
       setOrbState(tone === "error" ? "error" : "done");
     } catch {
-      push("bot", "اتصال برقرار نشد. اینترنتت را چک کن و دوباره بفرست.", "error");
+      push("bot", tr("اتصال برقرار نشد. اینترنتت را چک کن و دوباره بفرست.", "Couldn't connect. Check your internet and send again."), "error");
       setOrbState("error");
     } finally {
       setSending(false);
@@ -205,8 +206,8 @@ export function RoutineAiFab({ onChanged }: { onChanged: () => void }) {
         type="button"
         className="routine-ai-fab mm-appear"
         onClick={() => setOpen(true)}
-        aria-label="نومو"
-        title="نومو"
+        aria-label={tr("نومو", "Nomo")}
+        title={tr("نومو", "Nomo")}
       >
         <SiriOrb size="52px" state={orbState} amplitude={simulated} />
       </button>
@@ -224,14 +225,14 @@ export function RoutineAiFab({ onChanged }: { onChanged: () => void }) {
             style={kbViewport ? { top: kbViewport.top, maxHeight: kbViewport.maxHeight, minHeight: kbViewport.minHeight } : undefined}
             role="dialog"
             aria-modal="true"
-            aria-label="نومو"
+            aria-label={tr("نومو", "Nomo")}
           >
             <div className="modal-head">
               <div className="modal-title routine-ai-title">
                 <SiriOrb size="26px" state={orbState} amplitude={simulated} />
-                نومو
+                {tr("نومو", "Nomo")}
               </div>
-              <button type="button" className="trade-icon-btn" onClick={() => setOpen(false)} aria-label="بستن">
+              <button type="button" className="trade-icon-btn" onClick={() => setOpen(false)} aria-label={tr("بستن", "Close")}>
                 <X size={16} />
               </button>
             </div>
@@ -266,16 +267,16 @@ export function RoutineAiFab({ onChanged }: { onChanged: () => void }) {
                  دستیار بدون حساب نه: نه جایی برای شمردن سهمیه هست نه
                  برنامه‌ای روی سرور که بشود عوضش کرد. */
               <div className="routine-ai-exhausted">
-                <p>نومو فقط با حساب کاربری کار می‌کند.</p>
+                <p>{tr("نومو فقط با حساب کاربری کار می‌کند.", "Nomo only works with an account.")}</p>
                 <Link href="/auth/login" className="trade-primary-btn" onClick={() => setOpen(false)}>
-                  ورود / ثبت‌نام
+                  {tr("ورود / ثبت‌نام", "Log in / Sign up")}
                 </Link>
               </div>
             ) : exhausted ? (
               <div className="routine-ai-exhausted">
-                <p>پیام‌های رایگان نومو تمام شد.</p>
+                <p>{tr("پیام‌های رایگان نومو تمام شد.", "You've used all your free Nomo messages.")}</p>
                 <Link href="/subscription" className="trade-primary-btn" onClick={() => setOpen(false)}>
-                  دیدن اشتراک‌ها
+                  {tr("دیدن اشتراک‌ها", "See plans")}
                 </Link>
               </div>
             ) : (
@@ -289,7 +290,7 @@ export function RoutineAiFab({ onChanged }: { onChanged: () => void }) {
                   rows={1}
                   value={input}
                   maxLength={500}
-                  placeholder="پیام…"
+                  placeholder={tr("پیام…", "Message…")}
                   onChange={(e) => setInput(e.target.value)}
                   onKeyDown={(e) => {
                     if (e.key === "Enter" && !e.shiftKey) { e.preventDefault(); send(input); }
@@ -300,8 +301,8 @@ export function RoutineAiFab({ onChanged }: { onChanged: () => void }) {
                   type="submit"
                   className={`routine-ai-action${hasText ? " has-text" : ""}`}
                   disabled={sending || !hasText}
-                  aria-label="ارسال"
-                  title="ارسال"
+                  aria-label={tr("ارسال", "Send")}
+                  title={tr("ارسال", "Send")}
                 >
                   <span className="routine-ai-action-icon" aria-hidden="true"><Send size={16} /></span>
                 </button>

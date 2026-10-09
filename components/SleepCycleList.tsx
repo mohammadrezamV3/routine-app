@@ -4,6 +4,7 @@ import { memo } from "react";
 import { motion, useReducedMotion } from "framer-motion";
 import { MAX_CYCLES, type CycleOption } from "@/lib/sleepCycles";
 import { durationLabel } from "@/lib/sleep";
+import { tr } from "@/lib/i18n";
 
 // فهرست گزینه‌های چرخه: ساعت درشت (چپ‌به‌راست)، تعداد چرخه + مدت، و نوار ریز
 // چرخه‌ها. گزینه‌ی پیشنهادی (نزدیک‌ترین به هدف) فقط با رنگ بوردر و نشان
@@ -22,7 +23,7 @@ export const SleepCycleList = memo(function SleepCycleList({ options, listKey }:
         >
           <b className="slc-clock" dir="ltr">{o.clock}</b>
           <span className="slc-meta">
-            <span className="slc-cyc">{o.cycles} چرخه</span>
+            <span className="slc-cyc">{tr(`${o.cycles} چرخه`, `${o.cycles} ${o.cycles === 1 ? "cycle" : "cycles"}`)}</span>
             <small>{durationLabel(o.sleepMin)}</small>
           </span>
           <svg className="slc-pips" viewBox={`0 0 ${MAX_CYCLES * 8 - 2} 6`} aria-hidden="true">
@@ -30,7 +31,7 @@ export const SleepCycleList = memo(function SleepCycleList({ options, listKey }:
               <rect key={k} x={k * 8} y={0} width={6} height={6} rx={3} className={k < o.cycles ? "on" : "off"} />
             ))}
           </svg>
-          {o.best && <span className="slc-badge">پیشنهاد</span>}
+          {o.best && <span className="slc-badge">{tr("پیشنهاد", "Suggested")}</span>}
         </motion.li>
       ))}
     </ul>

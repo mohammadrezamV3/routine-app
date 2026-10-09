@@ -7,14 +7,15 @@ import { SleepTrendChart } from "./SleepTrendChart";
 import { SleepMonthMap } from "./SleepMonthMap";
 import { SleepInsightsPanel } from "./SleepInsightsPanel";
 import type { sleepInsights, SleepRecord } from "@/lib/sleep";
+import { tr } from "@/lib/i18n";
 
 type PanelKey = "calendar" | "trend" | "insights";
 
-const PANEL_META: Record<PanelKey, { label: string; icon: React.ReactNode }> = {
-  calendar: { label: "تقویم", icon: <CalendarDays /> },
-  trend: { label: "روند", icon: <TrendingUp /> },
-  insights: { label: "تحلیل", icon: <Lightbulb /> },
-};
+const panelMeta = (): Record<PanelKey, { label: string; icon: React.ReactNode }> => ({
+  calendar: { label: tr("تقویم", "Calendar"), icon: <CalendarDays /> },
+  trend: { label: tr("روند", "Trend"), icon: <TrendingUp /> },
+  insights: { label: tr("تحلیل", "Insights"), icon: <Lightbulb /> },
+});
 const ORDER: PanelKey[] = ["calendar", "trend", "insights"];
 
 // آمار خواب زیر دو کارت /sleep: ردیف باکس‌های آیکونی (عین DashQuickPanels و
@@ -33,10 +34,11 @@ export function SleepStatsPanels({
   onPick: (dateIso: string) => void;
 }) {
   const [active, setActive] = useState<PanelKey>("calendar");
+  const meta = panelMeta();
 
   return (
     <div className="flex flex-col gap-4 sm:gap-6">
-      <div className="flex items-end justify-center gap-2.5 sm:gap-3.5" role="tablist" aria-label="آمار خواب">
+      <div className="flex items-end justify-center gap-2.5 sm:gap-3.5" role="tablist" aria-label={tr("آمار خواب", "Sleep stats")}>
         {ORDER.map((key) => {
           const on = key === active;
           return (
@@ -45,13 +47,13 @@ export function SleepStatsPanels({
               type="button"
               role="tab"
               aria-selected={on}
-              aria-label={PANEL_META[key].label}
-              title={PANEL_META[key].label}
+              aria-label={meta[key].label}
+              title={meta[key].label}
               onClick={() => setActive(key)}
               className={`dash-quick-tile rounded-dash border bg-dash-card backdrop-blur-xl${on ? " is-on" : ""}`}
             >
-              <span className="dash-quick-tile-icon">{PANEL_META[key].icon}</span>
-              <span className="dash-quick-tile-label" aria-hidden={!on}>{PANEL_META[key].label}</span>
+              <span className="dash-quick-tile-icon">{meta[key].icon}</span>
+              <span className="dash-quick-tile-label" aria-hidden={!on}>{meta[key].label}</span>
             </button>
           );
         })}

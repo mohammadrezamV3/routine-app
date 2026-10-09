@@ -38,8 +38,8 @@
 .sli-div{ display:flex; height:10px; min-width:0; }
 .sli-div-half{ flex:1; display:flex; align-items:center; min-width:0; }
 /* جهت RTL: بد (منفی) سمت راست مرکز، خوب (مثبت) سمت چپ؛ هم‌جهت با نمودارهای RTL اپ (جلوتر = چپ‌تر) */
-.sli-div-neg{ justify-content:flex-end; border-left:1px solid var(--box-line); }
-.sli-div-pos{ justify-content:flex-start; border-right:1px solid var(--box-line); }
+.sli-div-neg{ justify-content:flex-end; border-inline-end:1px solid var(--box-line); }
+.sli-div-pos{ justify-content:flex-start; border-inline-start:1px solid var(--box-line); }
 .sli-bar{ display:block; height:0; border-top:7px solid currentColor; border-radius:4px; min-width:4px; }
 .sli-bar-neg{ color:var(--slp-poor); }
 .sli-bar-pos{ color:var(--slp-great); }

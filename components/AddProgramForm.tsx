@@ -24,6 +24,7 @@ import {
   type ProgramKind,
   type TimeRow,
 } from "@/lib/programForm";
+import { isEn, tr } from "@/lib/i18n";
 import "./add-program.css";
 
 type ScheduleOpts = { removedOccurrences: Set<string>; customOccurrences: CustomOccurrence[] };
@@ -147,7 +148,7 @@ export function AddProgramForm({
             if (b === a || b.startMin === null || b.endMin === null) continue;
             if (!daysOf(b.row).includes(jsDay)) continue;
             if (rangesOverlap(a.startMin, a.endMin, b.startMin, b.endMin)) {
-              conflict = { name: "ردیف دیگر همین برنامه" };
+              conflict = { name: tr("ردیف دیگر همین برنامه", "Another row of this plan") };
               break;
             }
           }
@@ -250,7 +251,7 @@ export function AddProgramForm({
     const live = computeConflicts();
     const hit = usedRows.map((r) => live[r.id]).find((c) => c);
     if (hit) {
-      setFormError(`تداخل زمانی با «${hit}» — این برنامه اضافه نشد`);
+      setFormError(tr(`تداخل زمانی با «${hit}» — این برنامه اضافه نشد`, `Time conflict with "${hit}" — this plan was not added`));
       setStatus("error");
       setTimeout(() => setStatus("idle"), 900);
       return;
@@ -282,9 +283,9 @@ export function AddProgramForm({
     }
     // نتیجه‌ی ذخیره بررسی می‌شه (مثلا پایان دوره‌ی آزمایشی روتین = 403)؛ قبلا خطا
     // دکمه رو برای همیشه در حالت لودینگ نگه می‌داشت
-    const saved = await setSettingChecked("customOccurrences", [...scheduleOpts.customOccurrences, ...additions]).catch(() => ({ ok: false as const, error: "اتصال برقرار نشد" }));
+    const saved = await setSettingChecked("customOccurrences", [...scheduleOpts.customOccurrences, ...additions]).catch(() => ({ ok: false as const, error: tr("اتصال برقرار نشد", "Couldn't connect") }));
     if (!saved.ok) {
-      setFormError(saved.error || "ذخیره نشد، دوباره امتحان کن");
+      setFormError(saved.error || tr("ذخیره نشد، دوباره امتحان کن", "Couldn't save, please try again"));
       setStatus("error");
       setTimeout(() => setStatus("idle"), 1400);
       return;
@@ -302,14 +303,14 @@ export function AddProgramForm({
       <div className={`wsearch-newform-overlay strong-blur${show ? " open" : ""}`} onClick={requestClose} />
       <div
         className={`wsearch-newform apf-popup dash-scope${show ? " open" : ""}`}
-        dir="rtl"
+        dir={isEn() ? "ltr" : "rtl"}
         role="dialog"
         aria-modal="true"
-        aria-label="برنامه‌ی جدید"
+        aria-label={tr("برنامه‌ی جدید", "New plan")}
       >
         <div className="relative z-[1] add-program-glass apf-glass" onKeyDown={(e) => focusNextOnEnter(e, bodyRef)}>
           <div className="wsearch-newform-head">
-            <div className="wsearch-newform-title accent">برنامه‌ی جدید</div>
+            <div className="wsearch-newform-title accent">{tr("برنامه‌ی جدید", "New plan")}</div>
           </div>
 
               <div className="apf-body" ref={bodyRef}>
@@ -319,8 +320,8 @@ export function AddProgramForm({
                       id="addProgramName"
                       type="text"
                       className="wsearch-newform-name"
-                      aria-label="اسم برنامه"
-                      placeholder="اسم برنامه، مثلا ورزش یا مطالعه"
+                      aria-label={tr("اسم برنامه", "Plan name")}
+                      placeholder={tr("اسم برنامه، مثلا ورزش یا مطالعه", "Plan name, e.g. Workout or Study")}
                       value={name}
                       onChange={(e) => {
                         setName(e.target.value);
@@ -328,24 +329,24 @@ export function AddProgramForm({
                       }}
                     />
                   </div>
-                  {nameError && <span className="apf-msg">اسم برنامه رو وارد کن</span>}
+                  {nameError && <span className="apf-msg">{tr("اسم برنامه رو وارد کن", "Enter a plan name")}</span>}
                 </div>
 
                 <div className="apf-section">
                   <SegmentedTabs<ProgramKind>
                     active={kind}
                     onChange={changeKind}
-                    ariaLabel="نوع برنامه"
+                    ariaLabel={tr("نوع برنامه", "Plan type")}
                     options={[
-                      { value: "weekly", label: "هفتگی" },
-                      { value: "once", label: "یک روز" },
-                      { value: "period", label: "دوره" },
+                      { value: "weekly", label: tr("هفتگی", "Weekly") },
+                      { value: "once", label: tr("یک روز", "One day") },
+                      { value: "period", label: tr("دوره", "Period") },
                     ]}
                   />
                   {kind === "once" && (
                     <div className="apf-dates">
                       <div className="apf-date-field">
-                        <span className="apf-date-label">تاریخ</span>
+                        <span className="apf-date-label">{tr("تاریخ", "Date")}</span>
                         <button type="button" className="jdate-btn" onClick={() => setPickerFor("once")}>
                           {formatJalali(onceJalali)}
                         </button>
@@ -356,21 +357,21 @@ export function AddProgramForm({
                     <div data-apf-field="period">
                       <div className={`apf-dates two${periodError ? " apf-invalid" : ""}`}>
                         <div className="apf-date-field">
-                          <span className="apf-date-label">شروع دوره</span>
+                          <span className="apf-date-label">{tr("شروع دوره", "Period start")}</span>
                           <button type="button" className={`jdate-btn${startJalali ? "" : " placeholder"}`} onClick={() => setPickerFor("start")}>
-                            {startJalali ? formatJalali(startJalali) : "روز / ماه / سال"}
+                            {startJalali ? formatJalali(startJalali) : tr("روز / ماه / سال", "Day / month / year")}
                           </button>
                         </div>
                         <div className="apf-date-field">
-                          <span className="apf-date-label">پایان دوره</span>
+                          <span className="apf-date-label">{tr("پایان دوره", "Period end")}</span>
                           <button type="button" className={`jdate-btn${endJalali ? "" : " placeholder"}`} onClick={() => setPickerFor("end")}>
-                            {endJalali ? formatJalali(endJalali) : "روز / ماه / سال"}
+                            {endJalali ? formatJalali(endJalali) : tr("روز / ماه / سال", "Day / month / year")}
                           </button>
                         </div>
                       </div>
                       {periodError && (
                         <span className="apf-msg">
-                          {periodError === "order" ? "تاریخ پایان دوره باید بعد از تاریخ شروع باشه" : "تاریخ شروع و پایان دوره رو انتخاب کن"}
+                          {periodError === "order" ? tr("تاریخ پایان دوره باید بعد از تاریخ شروع باشه", "The end date must be after the start date") : tr("تاریخ شروع و پایان دوره رو انتخاب کن", "Pick a start and end date")}
                         </span>
                       )}
                     </div>
@@ -389,13 +390,13 @@ export function AddProgramForm({
                 </div>
 
                 <div className="apf-section">
-                  <label htmlFor="addProgramTag">تگ (اختیاری)</label>
+                  <label htmlFor="addProgramTag">{tr("تگ (اختیاری)", "Tag (optional)")}</label>
                   <RoutineTagField id="addProgramTag" value={tag} onChange={setTag} occurrences={scheduleOpts.customOccurrences} />
                 </div>
 
                 <div className="apf-ticks" data-apf-field="list">
                   <TickOption checked={isList} onChange={(on) => { setIsList(on); if (!on) setItemsError(false); }}>
-                    این برنامه یک لیسته (چند آیتم که تک‌تک تیک می‌خورن)
+                    {tr("این برنامه یک لیسته (چند آیتم که تک‌تک تیک می‌خورن)", "This plan is a list (several items checked off one by one)")}
                   </TickOption>
                   {isList && (
                     <div className="apf-ticks-list">
@@ -404,11 +405,11 @@ export function AddProgramForm({
                         onChange={(v) => { setItems(v); if (v.some((i) => i.name.trim())) setItemsError(false); }}
                         error={itemsError}
                       />
-                      {itemsError && <span className="apf-msg">حداقل یک آیتم به لیست اضافه کن</span>}
+                      {itemsError && <span className="apf-msg">{tr("حداقل یک آیتم به لیست اضافه کن", "Add at least one item to the list")}</span>}
                     </div>
                   )}
                   <TickOption checked={notify} onChange={setNotify}>
-                    برای این برنامه اعلان بفرست
+                    {tr("برای این برنامه اعلان بفرست", "Send a notification for this plan")}
                   </TickOption>
                 </div>
               </div>
@@ -418,7 +419,7 @@ export function AddProgramForm({
                 {formError && <div className="apf-error">{formError}</div>}
                 <div className="apf-actions">
                   <button type="button" className="account-outline-btn apf-cancel" onClick={requestClose}>
-                    انصراف
+                    {tr("انصراف", "Cancel")}
                   </button>
                   <button
                     type="button"
@@ -426,7 +427,7 @@ export function AddProgramForm({
                     onClick={submitNew}
                     disabled={status === "loading" || status === "success"}
                   >
-                    {status === "loading" ? <Spinner size={15} /> : status === "success" ? "اضافه شد ✓" : status === "error" ? "اضافه نشد" : "افزودن برنامه"}
+                    {status === "loading" ? <Spinner size={15} /> : status === "success" ? tr("اضافه شد ✓", "Added ✓") : status === "error" ? tr("اضافه نشد", "Not added") : tr("افزودن برنامه", "Add plan")}
                   </button>
                 </div>
               </div>
@@ -436,7 +437,7 @@ export function AddProgramForm({
       {pickerFor && (
         <JalaliDatePicker
           initial={pickerFor === "once" ? onceJalali : pickerFor === "start" ? startJalali : endJalali}
-          title={pickerFor === "once" ? "تاریخ برنامه" : pickerFor === "start" ? "تاریخ شروع دوره" : "تاریخ پایان دوره"}
+          title={pickerFor === "once" ? tr("تاریخ برنامه", "Plan date") : pickerFor === "start" ? tr("تاریخ شروع دوره", "Period start date") : tr("تاریخ پایان دوره", "Period end date")}
           onClose={() => setPickerFor(null)}
           onPick={(d) => {
             if (pickerFor === "once") { setOnceJalali(d); setPickerFor(null); }

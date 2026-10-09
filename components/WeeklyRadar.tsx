@@ -10,6 +10,7 @@ import {
   RADAR_C, RADAR_R, RADAR_RINGS, RADAR_MIN_AXES, RADAR_VIEW, pointsToPath, radarDir, radarLabelPos, radarPoint, radarPoints, ringPath,
   type RadarAxis,
 } from "@/lib/weeklyRadar";
+import { tr } from "@/lib/i18n";
 import "./weekly-radar.css";
 
 export type { RadarAxis };
@@ -35,7 +36,7 @@ export default function WeeklyRadar({
   const hasPrev = axes.some((a) => a.prev !== null && Number.isFinite(a.prev));
   const prevPts = hasPrev ? radarPoints(axes.map((a) => a.prev)) : [];
   const curPath = pointsToPath(cur);
-  const label = ariaLabel ?? axes.map((a) => `${a.label} ${a.value === null ? "-" : Math.round(a.value)}`).join("، ");
+  const label = ariaLabel ?? axes.map((a) => `${a.label} ${a.value === null ? "-" : Math.round(a.value)}`).join(tr("، ", ", "));
   const activeIdx = activeKey ? axes.findIndex((a) => a.key === activeKey) : -1;
 
   return (

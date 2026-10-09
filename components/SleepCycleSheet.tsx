@@ -9,6 +9,7 @@ import { TimeInput } from "./TimeInput";
 import { SleepCycleList } from "./SleepCycleList";
 import { SleepCycleHypnogram } from "./SleepCycleHypnogram";
 import { useLockBodyScroll } from "@/lib/useLockBodyScroll";
+import { isEn, tr } from "@/lib/i18n";
 import { clockOf, durationLabel, sleepMinutes, type SleepRecord } from "@/lib/sleep";
 import { hhmmToMin } from "@/lib/sleepDial";
 import {
@@ -23,18 +24,18 @@ import {
 
 type Mode = "now" | "wake" | "bed" | "last";
 
-const MODES: { value: Mode; label: string }[] = [
-  { value: "now", label: "الان" },
-  { value: "wake", label: "بیداری" },
-  { value: "bed", label: "خواب" },
-  { value: "last", label: "دیشب" },
+const modes = (): { value: Mode; label: string }[] => [
+  { value: "now", label: tr("الان", "Now") },
+  { value: "wake", label: tr("بیداری", "Wake") },
+  { value: "bed", label: tr("خواب", "Bed") },
+  { value: "last", label: tr("دیشب", "Last night") },
 ];
 
-const VERDICT_TEXT: Record<WakeVerdict, { title: string; text: string }> = {
-  good: { title: "بیدارشدن سبک", text: "نزدیک پایان یه چرخه بیدار شدی؛ معمولا سبک‌تر و سرحال‌تری." },
-  ok: { title: "بیدارشدن معمولی", text: "کمی با مرز چرخه فاصله داشتی؛ احتمالا بد نبوده." },
-  groggy: { title: "وسط یه چرخه", text: "وسط یه چرخه بیدار شدی؛ ممکنه کمی گیج و خواب‌آلود بوده باشی." },
-};
+const verdictText = (): Record<WakeVerdict, { title: string; text: string }> => ({
+  good: { title: tr("بیدارشدن سبک", "Light wake-up"), text: tr("نزدیک پایان یه چرخه بیدار شدی؛ معمولا سبک‌تر و سرحال‌تری.", "You woke near the end of a cycle, so you probably feel lighter and fresher.") },
+  ok: { title: tr("بیدارشدن معمولی", "Normal wake-up"), text: tr("کمی با مرز چرخه فاصله داشتی؛ احتمالا بد نبوده.", "You were a little away from a cycle boundary; it probably wasn't bad.") },
+  groggy: { title: tr("وسط یه چرخه", "Mid-cycle"), text: tr("وسط یه چرخه بیدار شدی؛ ممکنه کمی گیج و خواب‌آلود بوده باشی.", "You woke in the middle of a cycle, so you may have felt a bit groggy.") },
+});
 
 function minuteNow(): number {
   const d = new Date();
@@ -93,15 +94,15 @@ function Body({
   return (
     <>
       <div className="modal-overlay open" onClick={onClose} />
-      <div className="modal-panel liquid-glass-panel open sleep-scope slc-panel" role="dialog" aria-modal="true" aria-label="چرخه‌های خواب" dir="rtl">
+      <div className="modal-panel liquid-glass-panel open sleep-scope slc-panel" role="dialog" aria-modal="true" aria-label={tr("چرخه‌های خواب", "Sleep cycles")} dir={isEn() ? "ltr" : "rtl"}>
         <div className="modal-head">
-          <div className="modal-title">چرخه‌های خواب</div>
-          <button type="button" className="nav-close" onClick={onClose} aria-label="بستن">×</button>
+          <div className="modal-title">{tr("چرخه‌های خواب", "Sleep cycles")}</div>
+          <button type="button" className="nav-close" onClick={onClose} aria-label={tr("بستن", "Close")}>×</button>
         </div>
 
-        <p className="slc-intro">هر چرخه حدود 90 دقیقه‌ست؛ بیدارشدن پایان چرخه سبک‌تر از وسط خواب عمیقه.</p>
+        <p className="slc-intro">{tr("هر چرخه حدود 90 دقیقه‌ست؛ بیدارشدن پایان چرخه سبک‌تر از وسط خواب عمیقه.", "Each cycle is about 90 minutes; waking at the end of a cycle feels lighter than waking in deep sleep.")}</p>
 
-        <SegmentedTabs<Mode> options={MODES} active={mode} onChange={setMode} className="slc-tabs" ariaLabel="بخش‌های چرخه‌ی خواب" />
+        <SegmentedTabs<Mode> options={modes()} active={mode} onChange={setMode} className="slc-tabs" ariaLabel={tr("بخش‌های چرخه‌ی خواب", "Sleep cycle sections")} />
 
           <motion.div
             key={mode}
@@ -112,7 +113,7 @@ function Body({
           >
             {mode === "now" && (
               <>
-                <h3 className="slc-q">اگه همین الان (<span dir="ltr">{nowClock}</span>) بخوابم، کی بیدار شم؟</h3>
+                <h3 className="slc-q">{tr("اگه همین الان (", "If I fall asleep right now (")}<span dir="ltr">{nowClock}</span>{tr(") بخوابم، کی بیدار شم؟", "), when should I wake up?")}</h3>
                 <SleepCycleList options={nowOpts} listKey={`now-${nowMin}-${latency}`} />
               </>
             )}
@@ -120,22 +121,22 @@ function Body({
             {mode === "wake" && (
               <>
                 <label className="slc-field">
-                  <span>می‌خوام ساعت</span>
+                  <span>{tr("می‌خوام ساعت", "I want to wake at")}</span>
                   <TimeInput value={wakeAt} onChange={setWakeAt} className="wsearch-newform-name" />
-                  <span>بیدار شم، کی بخوابم؟</span>
+                  <span>{tr("بیدار شم، کی بخوابم؟", "— when should I go to bed?")}</span>
                 </label>
-                {wakeOpts ? <SleepCycleList options={wakeOpts} listKey={`wake-${wakeAt}-${latency}`} /> : <p className="slc-hint">ساعت رو کامل وارد کن، مثل 07:00</p>}
+                {wakeOpts ? <SleepCycleList options={wakeOpts} listKey={`wake-${wakeAt}-${latency}`} /> : <p className="slc-hint">{tr("ساعت رو کامل وارد کن، مثل 07:00", "Enter the full time, like 07:00")}</p>}
               </>
             )}
 
             {mode === "bed" && (
               <>
                 <label className="slc-field">
-                  <span>اگه ساعت</span>
+                  <span>{tr("اگه ساعت", "If I go to bed at")}</span>
                   <TimeInput value={bedAt} onChange={setBedAt} className="wsearch-newform-name" />
-                  <span>بخوابم، کی بیدار شم؟</span>
+                  <span>{tr("بخوابم، کی بیدار شم؟", "— when should I wake up?")}</span>
                 </label>
-                {bedOpts ? <SleepCycleList options={bedOpts} listKey={`bed-${bedAt}-${latency}`} /> : <p className="slc-hint">ساعت رو کامل وارد کن، مثل 23:30</p>}
+                {bedOpts ? <SleepCycleList options={bedOpts} listKey={`bed-${bedAt}-${latency}`} /> : <p className="slc-hint">{tr("ساعت رو کامل وارد کن، مثل 23:30", "Enter the full time, like 23:30")}</p>}
               </>
             )}
 
@@ -143,13 +144,13 @@ function Body({
           </motion.div>
 
         <div className="slc-latency">
-          <span className="slc-latency-title">چند دقیقه طول می‌کشه خوابت ببره؟</span>
+          <span className="slc-latency-title">{tr("چند دقیقه طول می‌کشه خوابت ببره؟", "How many minutes does it take you to fall asleep?")}</span>
           <SegmentedTabs<string>
             options={LATENCY_PRESETS.map((p) => ({ value: String(p), label: <span dir="ltr">{p}</span> }))}
             active={String(latency)}
             onChange={(v) => onLatencyChange(normalizeLatency(Number(v)))}
             className="slc-latency-tabs"
-            ariaLabel="زمان به خواب رفتن به دقیقه"
+            ariaLabel={tr("زمان به خواب رفتن به دقیقه", "Time to fall asleep in minutes")}
           />
         </div>
       </div>
@@ -167,22 +168,22 @@ function LastNight({ lastNight, latency }: { lastNight: SleepRecord | null; late
   }, [lastNight, latency]);
 
   if (!info) {
-    return <p className="slc-hint">خواب دیشبت هنوز ثبت نشده. بعد از ثبتش، چرخه‌هاش این‌جا دیده می‌شن.</p>;
+    return <p className="slc-hint">{tr("خواب دیشبت هنوز ثبت نشده. بعد از ثبتش، چرخه‌هاش این‌جا دیده می‌شن.", "Last night's sleep isn't logged yet. Once you log it, its cycles will show up here.")}</p>;
   }
-  const v = VERDICT_TEXT[info.a.verdict];
+  const v = verdictText()[info.a.verdict];
   return (
     <>
       <div className="slc-last-head">
-        <b className="slc-last-big"><span dir="ltr">{info.a.fullCycles}</span> چرخه کامل</b>
-        <small>{durationLabel(info.a.asleepMin)} خواب</small>
+        <b className="slc-last-big"><span dir="ltr">{info.a.fullCycles}</span> {tr("چرخه کامل", info.a.fullCycles === 1 ? "full cycle" : "full cycles")}</b>
+        <small>{durationLabel(info.a.asleepMin)} {tr("خواب", "asleep")}</small>
       </div>
       <div className={`slc-verdict is-${info.a.verdict}`}>
         <b>{v.title}</b>
         <span>{v.text}</span>
       </div>
       <div className="slc-hypno-head">
-        <span>مراحل خواب</span>
-        <em>تخمینی</em>
+        <span>{tr("مراحل خواب", "Sleep stages")}</span>
+        <em>{tr("تخمینی", "Estimated")}</em>
       </div>
       <SleepCycleHypnogram totalMin={info.total} latency={info.lat} startClock={info.start} endClock={info.end} />
     </>
