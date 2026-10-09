@@ -1,5 +1,6 @@
 "use client";
 
+import "./mentor-student-ltr.css";
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { TickButton } from "@/components/TickButton";
 import { Eye, ShieldCheck } from "lucide-react";
@@ -10,7 +11,8 @@ import { AccountSaveBar } from "@/components/AccountUI";
 import { LoadingBlock } from "@/components/Spinner";
 import { getCustomOccurrences, IMPORTANCE_LABELS, type CustomOccurrence, type Importance } from "@/lib/storage";
 import type { PrivacyResponse, PrivacyScope, PrivacySettings } from "@/lib/mentorTypes";
-import { NETWORK_ERROR, readApiError } from "@/lib/mentorFormat";
+import { networkError, readApiError } from "@/lib/mentorFormat";
+import { tr } from "@/lib/i18n";
 
 const SECTION = { size: 15, strokeWidth: 1.75, "aria-hidden": true } as const;
 
@@ -26,12 +28,12 @@ function scopeKeyOf(o: { name: string; tag?: string }): string {
   return "routine:" + label.slice(0, 120);
 }
 
-const DETAIL_TOGGLES: { key: keyof Omit<PrivacySettings, "shareAllPrograms" | "sharedPrograms">; title: string; desc: string }[] = [
-  { key: "showSchedule", title: "زمان‌بندی", desc: "روزها و ساعت‌هایی که مشغولی؛ خاموش باشد، هیچ بخشی از روتین دیده نمی‌شود" },
-  { key: "showProgramName", title: "نام برنامه", desc: "برچسب هر بازه‌ی زمانی، مثلا «دانشگاه»" },
-  { key: "showTaskName", title: "نام کار", desc: "عنوان هر کار؛ خاموش باشد، فقط «مشغول» دیده می‌شود" },
-  { key: "showTaskDetails", title: "جزئیات کار", desc: "میزان اهمیت هر کار" },
-  { key: "showProgress", title: "پیشرفت", desc: "انجام شدن یا نشدن هر کار در هر روز" },
+const detailToggles = (): { key: keyof Omit<PrivacySettings, "shareAllPrograms" | "sharedPrograms">; title: string; desc: string }[] => [
+  { key: "showSchedule", title: tr("زمان‌بندی", "Schedule"), desc: tr("روزها و ساعت‌هایی که مشغولی؛ خاموش باشد، هیچ بخشی از روتین دیده نمی‌شود", "The days and times you are busy. If this is off, no part of your routine is visible") },
+  { key: "showProgramName", title: tr("نام برنامه", "Program name"), desc: tr("برچسب هر بازه‌ی زمانی، مثلا «دانشگاه»", "The label of each time slot, for example \"University\"") },
+  { key: "showTaskName", title: tr("نام کار", "Task name"), desc: tr("عنوان هر کار؛ خاموش باشد، فقط «مشغول» دیده می‌شود", "The title of each task. If this is off, only \"Busy\" is shown") },
+  { key: "showTaskDetails", title: tr("جزئیات کار", "Task details"), desc: tr("میزان اهمیت هر کار", "How important each task is") },
+  { key: "showProgress", title: tr("پیشرفت", "Progress"), desc: tr("انجام شدن یا نشدن هر کار در هر روز", "Whether each task was done on each day") },
 ];
 
 export function MentorPrivacySettings({ mentorshipId, mentorName, active }: { mentorshipId: string; mentorName: string; active: boolean }) {
@@ -47,12 +49,12 @@ export function MentorPrivacySettings({ mentorshipId, mentorName, active }: { me
     setError(null);
     try {
       const res = await fetch(`/api/mentorships/${mentorshipId}/privacy`, { cache: "no-store" });
-      if (!res.ok) { setError(await readApiError(res, "تنظیمات دسترسی دریافت نشد؛ دوباره تلاش کن")); return; }
+      if (!res.ok) { setError(await readApiError(res, tr("تنظیمات دسترسی دریافت نشد؛ دوباره تلاش کن", "Couldn't load access settings. Try again"))); return; }
       const d: PrivacyResponse = await res.json();
       setData(d);
       setDraft(d.privacy);
     } catch {
-      setError(NETWORK_ERROR);
+      setError(networkError());
     }
   }, [mentorshipId]);
 
@@ -96,13 +98,13 @@ export function MentorPrivacySettings({ mentorshipId, mentorName, active }: { me
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(draft),
       });
-      if (!res.ok) { setSaveError(await readApiError(res, "ذخیره نشد؛ دوباره امتحان کن")); return; }
+      if (!res.ok) { setSaveError(await readApiError(res, tr("ذخیره نشد؛ دوباره امتحان کن", "Couldn't save. Try again"))); return; }
       const d: { privacy: PrivacySettings } = await res.json();
       setData((prev) => (prev ? { ...prev, privacy: d.privacy } : prev));
       setDraft(d.privacy);
       setSaved(true);
     } catch {
-      setSaveError(NETWORK_ERROR);
+      setSaveError(networkError());
     } finally {
       setSaving(false);
     }
@@ -116,31 +118,31 @@ export function MentorPrivacySettings({ mentorshipId, mentorName, active }: { me
   return (
     <>
       <MentorSection
-        title="برنامه‌های قابل مشاهده"
+        title={tr("برنامه‌های قابل مشاهده", "Visible programs")}
         icon={<ShieldCheck {...SECTION} />}
-        desc={`فقط ${mentorName} می‌بینه و هرچی اجازه ندی براش فرستاده نمی‌شه.${active ? "" : " تا همکاری شروع نشه چیزی نمی‌بینه."}`}
+        desc={tr(`فقط ${mentorName} می‌بینه و هرچی اجازه ندی براش فرستاده نمی‌شه.${active ? "" : " تا همکاری شروع نشه چیزی نمی‌بینه."}`, `Only ${mentorName} can see these, and anything you don't allow is never sent to them.${active ? "" : " They won't see anything until the mentorship starts."}`)}
       >
         <label className="mentor-check">
           <TickButton shape="square" size={22} checked={allOn} onToggle={() => patch({ shareAllPrograms: !allOn })} />
           <span className="mentor-check-label">
-            <b>همه‌ی برنامه‌ها</b>
-            <div className="mentor-check-kind">برنامه‌هایی که بعدا بسازی هم خودکار دیده می‌شن</div>
+            <b>{tr("همه‌ی برنامه‌ها", "All programs")}</b>
+            <div className="mentor-check-kind">{tr("برنامه‌هایی که بعدا بسازی هم خودکار دیده می‌شن", "Programs you create later are shared automatically too")}</div>
           </span>
         </label>
-        {routineScopes.length === 0 && <MentorEmpty>هنوز برنامه‌ای در روتینت نیست</MentorEmpty>}
+        {routineScopes.length === 0 && <MentorEmpty>{tr("هنوز برنامه‌ای در روتینت نیست", "You have no programs in your routine yet")}</MentorEmpty>}
         {[...routineScopes, ...moduleScopes].map((s) => (
           <label key={s.key} className={`mentor-check${allOn ? " is-disabled" : ""}`}>
             <TickButton shape="square" size={22} checked={scopeChecked(s.key)} disabled={allOn} onToggle={() => toggleScope(s.key)} />
             <span className="mentor-check-label">
               {s.label}
-              <div className="mentor-check-kind">{s.kind === "module" ? "بخش" : "برنامه‌ی روتین"}</div>
+              <div className="mentor-check-kind">{s.kind === "module" ? tr("بخش", "Section") : tr("برنامه‌ی روتین", "Routine program")}</div>
             </span>
           </label>
         ))}
       </MentorSection>
 
-      <MentorSection title="جزئیات قابل مشاهده" icon={<Eye {...SECTION} />}>
-        {DETAIL_TOGGLES.map((t) => {
+      <MentorSection title={tr("جزئیات قابل مشاهده", "Visible details")} icon={<Eye {...SECTION} />}>
+        {detailToggles().map((t) => {
           const disabled = t.key !== "showSchedule" && !draft.showSchedule;
           return (
             <div key={t.key} className="mentor-toggle-row" style={disabled ? { opacity: 0.55 } : undefined}>
@@ -154,11 +156,11 @@ export function MentorPrivacySettings({ mentorshipId, mentorName, active }: { me
         })}
 
         <div className="mentor-field" style={{ marginTop: 16 }}>
-          <span className="mentor-field-label">پیش‌نمایش</span>
+          <span className="mentor-field-label">{tr("پیش‌نمایش", "Preview")}</span>
           <PrivacyPreview draft={draft} occs={occs} />
         </div>
 
-        <AccountSaveBar onSave={save} saving={saving} saved={saved && !dirty} error={saveError} disabled={!dirty} label="ذخیره‌ی دسترسی‌ها" />
+        <AccountSaveBar onSave={save} saving={saving} saved={saved && !dirty} error={saveError} disabled={!dirty} label={tr("ذخیره‌ی دسترسی‌ها", "Save access settings")} />
       </MentorSection>
     </>
   );
@@ -174,34 +176,34 @@ function PrivacyPreview({ draft, occs }: { draft: PrivacySettings; occs: CustomO
   const real = occs.find(visible) ?? occs[0];
   const sample = !real;
   const ex: { name: string; tag?: string; time: string; importance?: Importance } =
-    real ?? { name: "مطالعه‌ی فصل 3", tag: "دانشگاه", time: "18:00 - 19:00", importance: "high" };
+    real ?? { name: tr("مطالعه‌ی فصل 3", "Study chapter 3"), tag: tr("دانشگاه", "University"), time: "18:00 - 19:00", importance: "high" };
 
-  const actualParts = [ex.tag?.trim() || null, ex.name, ex.importance ? `اهمیت ${IMPORTANCE_LABELS[ex.importance]}` : null].filter((x): x is string => !!x);
+  const actualParts = [ex.tag?.trim() || null, ex.name, ex.importance ? tr(`اهمیت ${IMPORTANCE_LABELS[ex.importance]}`, `${IMPORTANCE_LABELS[ex.importance]} importance`) : null].filter((x): x is string => !!x);
 
   let hiddenLine: string | null = null;
   let mentorParts: string[] | null = null;
-  if (!draft.showSchedule) hiddenLine = "هیچ زمان‌بندی‌ای دیده نمی‌شود";
-  else if (!sample && !visible(real!)) hiddenLine = "این برنامه برای مربی دیده نمی‌شود";
-  else if (sample && !draft.shareAllPrograms && draft.sharedPrograms.length === 0) hiddenLine = "هیچ برنامه‌ای انتخاب نشده؛ چیزی دیده نمی‌شود";
+  if (!draft.showSchedule) hiddenLine = tr("هیچ زمان‌بندی‌ای دیده نمی‌شود", "No schedule is visible");
+  else if (!sample && !visible(real!)) hiddenLine = tr("این برنامه برای مربی دیده نمی‌شود", "This program isn't visible to your mentor");
+  else if (sample && !draft.shareAllPrograms && draft.sharedPrograms.length === 0) hiddenLine = tr("هیچ برنامه‌ای انتخاب نشده؛ چیزی دیده نمی‌شود", "No program is selected, so nothing is visible");
   else {
     const hasTag = !!ex.tag?.trim();
     const program = draft.showProgramName && (hasTag || draft.showTaskName) ? (ex.tag?.trim() || ex.name) : null;
     const parts: string[] = [];
     if (program) parts.push(program);
-    parts.push(draft.showTaskName ? ex.name : "مشغول");
-    if (draft.showTaskDetails && ex.importance) parts.push(`اهمیت ${IMPORTANCE_LABELS[ex.importance]}`);
-    if (draft.showProgress) parts.push("وضعیت انجام");
+    parts.push(draft.showTaskName ? ex.name : tr("مشغول", "Busy"));
+    if (draft.showTaskDetails && ex.importance) parts.push(tr(`اهمیت ${IMPORTANCE_LABELS[ex.importance]}`, `${IMPORTANCE_LABELS[ex.importance]} importance`));
+    if (draft.showProgress) parts.push(tr("وضعیت انجام", "Done status"));
     mentorParts = parts;
   }
 
   return (
     <div className="mentor-preview" aria-live="polite">
       <div className="mentor-preview-row">
-        <span className="mentor-preview-tag">{sample ? "نمونه" : "برنامه‌ی تو"}</span>
+        <span className="mentor-preview-tag">{sample ? tr("نمونه", "Sample") : tr("برنامه‌ی تو", "Your program")}</span>
         <span className="mentor-preview-line"><PreviewParts time={ex.time} parts={actualParts} /></span>
       </div>
       <div className="mentor-preview-row">
-        <span className="mentor-preview-tag">مربی می‌بیند</span>
+        <span className="mentor-preview-tag">{tr("مربی می‌بیند", "Mentor sees")}</span>
         {mentorParts ? (
           <span className="mentor-preview-line is-mentor"><PreviewParts time={ex.time} parts={mentorParts} /></span>
         ) : (

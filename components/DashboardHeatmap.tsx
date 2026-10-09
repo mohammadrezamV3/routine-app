@@ -7,13 +7,16 @@
 // عضویت خنثی‌ان نه «شکست».
 
 import { useMemo, useState } from "react";
-import { FA_WEEKDAY, J_MONTHS, faNum, toJalali } from "@/lib/jalali";
+import { weekdayName, jMonthName, faNum, toJalali } from "@/lib/jalali";
 import { heatLevel, type HeatCell } from "@/lib/dashboardCompute";
 import { BentoCard, CardHead, CountUp, Skel } from "./DashboardKit";
+import { tr, isEn } from "@/lib/i18n";
 
-const ROW_LABELS = ["ش", "", "د", "", "چ", "", "ج"];
+const rowLabels = () => (isEn() ? ["Sa", "", "Mo", "", "We", "", "Fr"] : ["ش", "", "د", "", "چ", "", "ج"]);
 /** حداقل فاصله‌ی ستونی بین دو اسم ماه تا روی هم نیفتن */
 const MONTH_GAP = 3;
+
+const dayUnit = (n: number) => tr("روز", n === 1 ? "day" : "days");
 
 function jalaliOf(iso: string) {
   const [y, m, d] = iso.split("-").map(Number);
@@ -51,7 +54,7 @@ export function DashboardHeatmap({ heat, streak, ready, memberSince }: { heat: H
         const next = heat.slice(1, MONTH_GAP).some((c2) => c2.some((c) => jalaliOf(c.iso)[2] === 1));
         if (next) return;
       } else if (ci - last < MONTH_GAP) return;
-      marks[ci] = J_MONTHS[jm - 1];
+      marks[ci] = jMonthName(jm - 1);
       last = ci;
     });
     return marks;
@@ -60,17 +63,17 @@ export function DashboardHeatmap({ heat, streak, ready, memberSince }: { heat: H
   const levelOf = (c: HeatCell) => (sinceIso && c.iso < sinceIso ? -1 : heatLevel(c.pct));
 
   const hoverLabel = (() => {
-    if (!hover) return "روی هر خانه بایست";
+    if (!hover) return tr("روی هر خانه بایست", "Hover over a cell");
     const [, jm, jd] = jalaliOf(hover.iso);
     const [y, m, d] = hover.iso.split("-").map(Number);
-    const wd = FA_WEEKDAY[new Date(y, m - 1, d).getDay()];
-    const state = sinceIso && hover.iso < sinceIso ? "قبل از عضویت" : hover.pct === null ? "بدون برنامه" : `${faNum(hover.pct)}٪`;
-    return `${wd} ${faNum(jd)} ${J_MONTHS[jm - 1]} · ${state}`;
+    const wd = weekdayName(new Date(y, m - 1, d).getDay());
+    const state = sinceIso && hover.iso < sinceIso ? tr("قبل از عضویت", "Before joining") : hover.pct === null ? tr("بدون برنامه", "No programs") : `${faNum(hover.pct)}${tr("٪", "%")}`;
+    return `${wd} ${faNum(jd)} ${jMonthName(jm - 1)} · ${state}`;
   })();
 
   return (
-    <BentoCard area="heat" className="db-heat" label="نقشه‌ی ثبات">
-      <CardHead icon="chart" title="نقشه‌ی ثبات" href="/weekly" hrefLabel="برنامه" />
+    <BentoCard area="heat" className="db-heat" label={tr("نقشه‌ی ثبات", "Consistency map")}>
+      <CardHead icon="chart" title={tr("نقشه‌ی ثبات", "Consistency map")} href="/weekly" hrefLabel={tr("برنامه", "Routine")} />
 
       <div className="db-heat-body">
         <div className="db-heat-wrap" style={{ ["--cols" as any]: heat.length || 13 }}>
@@ -81,7 +84,7 @@ export function DashboardHeatmap({ heat, streak, ready, memberSince }: { heat: H
               {monthMarks.map((m, ci) => (
                 <span key={`m${ci}`} className="db-heat-month" style={{ gridColumn: ci + 2 }}>{m}</span>
               ))}
-              {ROW_LABELS.map((l, ri) => (
+              {rowLabels().map((l, ri) => (
                 <span key={`r${ri}`} className="db-heat-day" style={{ gridRow: ri + 2 }} aria-hidden="true">{l}</span>
               ))}
               {heat.map((col, ci) =>
@@ -102,16 +105,16 @@ export function DashboardHeatmap({ heat, streak, ready, memberSince }: { heat: H
           <div className="db-heat-foot">
             <span className="db-heat-hover">{hoverLabel}</span>
             <span className="db-heat-legend" aria-hidden="true">
-              کم <i className="db-heat-cell lv0" /><i className="db-heat-cell lv1" /><i className="db-heat-cell lv2" /><i className="db-heat-cell lv3" /><i className="db-heat-cell lv4" /> زیاد
+              {tr("کم", "Less")} <i className="db-heat-cell lv0" /><i className="db-heat-cell lv1" /><i className="db-heat-cell lv2" /><i className="db-heat-cell lv3" /><i className="db-heat-cell lv4" /> {tr("زیاد", "More")}
             </span>
           </div>
         </div>
 
         <dl className="db-heat-stats">
-          <div><dt>استریک فعلی</dt><dd>{streak === null ? <Skel w={22} h={13} /> : <CountUp value={streak} />}<small> روز</small></dd></div>
-          <div><dt>بهترین رکورد</dt><dd><CountUp value={summary.best} /><small> روز</small></dd></div>
-          <div><dt>میانگین 30 روز</dt><dd><CountUp value={summary.avg} suffix="٪" /></dd></div>
-          <div><dt>روزهای کامل</dt><dd><CountUp value={summary.perfect} /></dd></div>
+          <div><dt>{tr("استریک فعلی", "Current streak")}</dt><dd>{streak === null ? <Skel w={22} h={13} /> : <CountUp value={streak} />}<small> {dayUnit(streak ?? 0)}</small></dd></div>
+          <div><dt>{tr("بهترین رکورد", "Best streak")}</dt><dd><CountUp value={summary.best} /><small> {dayUnit(summary.best)}</small></dd></div>
+          <div><dt>{tr("میانگین 30 روز", "30-day average")}</dt><dd><CountUp value={summary.avg} suffix={tr("٪", "%")} /></dd></div>
+          <div><dt>{tr("روزهای کامل", "Perfect days")}</dt><dd><CountUp value={summary.perfect} /></dd></div>
         </dl>
       </div>
     </BentoCard>

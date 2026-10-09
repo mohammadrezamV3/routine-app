@@ -3,10 +3,12 @@
 import { useMemo, useState } from "react";
 import { ChevronLeft, ChevronRight } from "lucide-react";
 import {
-  CAL_WEEK_ORDER, FA_WEEKDAY_SHORT, J_MONTHS, faNum,
+  CAL_WEEK_ORDER, weekdayShort, jMonthName, faNum,
   isoLocal, jalaliMonthLength, jalaliToGregorianApprox, toJalali,
 } from "@/lib/jalali";
-import { G_MONTHS, gregorianMonthLength } from "@/lib/gregorian";
+import { gregorianMonthLength } from "@/lib/gregorian";
+import { gMonthName } from "@/lib/tradeDateTime";
+import { isEn, tr } from "@/lib/i18n";
 import { dailyPnl } from "@/lib/tradeAnalytics";
 import { currencySymbol, type CalSystem, type TradeEntry } from "@/lib/tradeTypes";
 
@@ -45,7 +47,7 @@ export function TradeCalendarPanel({
   const monthLen = jalali ? jalaliMonthLength(month) : gregorianMonthLength(year, month);
   const firstDate = jalali ? jalaliToGregorianApprox(year, month, 1) : new Date(year, month - 1, 1);
   const startCol = (firstDate.getDay() + 1) % 7;
-  const label = jalali ? `${J_MONTHS[month - 1]} ${faNum(year)}` : `${G_MONTHS[month - 1]} ${faNum(year)}`;
+  const label = jalali ? `${jMonthName(month - 1)} ${faNum(year)}` : `${gMonthName(month - 1)} ${faNum(year)}`;
 
   function go(delta: number) {
     let m = month + delta, y = year;
@@ -96,12 +98,12 @@ export function TradeCalendarPanel({
       {/* بدون تایتل/آیکون و بدون جمع ماه (درخواست صریح) — فقط ناوبری ماه.
           جهت پیکان‌ها طبق RTL: «قبل» به راست و «بعد» به چپ اشاره می‌کند. */}
       <div className="cal-controls trade-cal-controls">
-        <button type="button" className="trade-icon-btn" onClick={() => go(-1)} aria-label="ماه قبل"><ChevronRight size={16} /></button>
+        <button type="button" className="trade-icon-btn" onClick={() => go(-1)} aria-label={tr("ماه قبل", "Previous month")}>{isEn() ? <ChevronLeft size={16} /> : <ChevronRight size={16} />}</button>
         <div className="cal-label">{label}</div>
-        <button type="button" className="trade-icon-btn" onClick={() => go(1)} aria-label="ماه بعد"><ChevronLeft size={16} /></button>
+        <button type="button" className="trade-icon-btn" onClick={() => go(1)} aria-label={tr("ماه بعد", "Next month")}>{isEn() ? <ChevronRight size={16} /> : <ChevronLeft size={16} />}</button>
       </div>
       <div className="cal-grid trade-cal-grid">
-        {CAL_WEEK_ORDER.map((d) => <div key={d} className="cal-weekday">{FA_WEEKDAY_SHORT[d]}</div>)}
+        {CAL_WEEK_ORDER.map((d) => <div key={d} className="cal-weekday">{weekdayShort(d)}</div>)}
         {cells}
       </div>
     </div>

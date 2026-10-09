@@ -1,5 +1,7 @@
 import { ANALYSIS_DOMAIN_LABELS, type AnalysisDomain, type DayCell, type Insight } from "./types";
 import { consistencyFor, longestStreak, mean } from "./score";
+import { tr } from "@/lib/i18n";
+import { pl } from "./plural";
 
 // بینش‌ها — همه تابع خالص روی خروجی محاسبه‌شده. هر بینش یک priority
 // داخلی داره؛ آخر کار مرتب و به ۶ تا بریده می‌شه. متن‌ها فارسی، عددها لاتین.
@@ -31,14 +33,16 @@ export type InsightInput = {
 };
 
 // «روزهایی که …» — عبارت حالت خوب هر دامنه
-const GOOD_PHRASE: Record<AnalysisDomain, string> = {
-  routine: "روتینت رو کامل‌تر انجام دادی",
-  sleep: "خواب خوبی داشتی",
-  tasks: "کارهات رو به‌موقع انجام دادی",
-  fitness: "تمرین کردی",
-  nutrition: "تغذیه‌ت طبق هدف بود",
-  trading: "با انضباط ترید کردی",
-  learning: "روی یادگیری کار کردی",
+const goodPhrase = (d: AnalysisDomain): string => {
+  switch (d) {
+    case "routine": return tr("روتینت رو کامل‌تر انجام دادی", "you completed your routine more fully");
+    case "sleep": return tr("خواب خوبی داشتی", "you slept well");
+    case "tasks": return tr("کارهات رو به‌موقع انجام دادی", "you finished your tasks on time");
+    case "fitness": return tr("تمرین کردی", "you worked out");
+    case "nutrition": return tr("تغذیه‌ت طبق هدف بود", "your nutrition was on target");
+    case "trading": return tr("با انضباط ترید کردی", "you traded with discipline");
+    case "learning": return tr("روی یادگیری کار کردی", "you worked on learning");
+  }
 };
 
 type Ranked = Insight & { priority: number };
@@ -101,7 +105,10 @@ export function buildInsights(input: InsightInput): Insight[] {
       kind: "correlation",
       icon: "link",
       title: `${L(c.driver)} ↔ ${L(c.outcome)}`,
-      body: `روزهایی که ${GOOD_PHRASE[c.driver]}، امتیاز ${L(c.outcome)} ${Math.abs(c.diff)} واحد ${better ? "بهتر" : "پایین‌تر"} بود.`,
+      body: tr(
+        `روزهایی که ${goodPhrase(c.driver)}، امتیاز ${L(c.outcome)} ${Math.abs(c.diff)} واحد ${better ? "بهتر" : "پایین‌تر"} بود.`,
+        `On days when ${goodPhrase(c.driver)}, your ${L(c.outcome)} score was ${pl(Math.abs(c.diff), "point")} ${better ? "higher" : "lower"}.`,
+      ),
       domain: c.outcome,
       tone: better ? "good" : "neutral",
       priority: 90 + Math.min(9, Math.abs(c.diff) / 5),
@@ -113,9 +120,9 @@ export function buildInsights(input: InsightInput): Insight[] {
   if (score != null && prev != null) {
     const d = score - prev;
     if (d >= 5) {
-      out.push({ id: "overall_up", kind: "improvement", icon: "trend_up", title: "بهتر از هفته‌ی قبل", body: `امتیاز کلت از ${prev} به ${score} رسید (+${d}).`, tone: "good", priority: 80 + Math.min(9, d / 2) });
+      out.push({ id: "overall_up", kind: "improvement", icon: "trend_up", title: tr("بهتر از هفته‌ی قبل", "Better than last week"), body: tr(`امتیاز کلت از ${prev} به ${score} رسید (+${d}).`, `Your overall score went from ${prev} to ${score} (+${d}).`), tone: "good", priority: 80 + Math.min(9, d / 2) });
     } else if (d <= -5) {
-      out.push({ id: "overall_down", kind: "decline", icon: "trend_down", title: "افت نسبت به هفته‌ی قبل", body: `امتیاز کلت از ${prev} به ${score} رسید (${d}).`, tone: "bad", priority: 82 + Math.min(9, -d / 2) });
+      out.push({ id: "overall_down", kind: "decline", icon: "trend_down", title: tr("افت نسبت به هفته‌ی قبل", "Down from last week"), body: tr(`امتیاز کلت از ${prev} به ${score} رسید (${d}).`, `Your overall score went from ${prev} to ${score} (${d}).`), tone: "bad", priority: 82 + Math.min(9, -d / 2) });
     }
   }
   // بزرگ‌ترین تغییر یک دامنه
@@ -129,8 +136,11 @@ export function buildInsights(input: InsightInput): Insight[] {
       id: `domain_${up ? "up" : "down"}_${m.domain}`,
       kind: up ? "improvement" : "decline",
       icon: up ? "trend_up" : "trend_down",
-      title: up ? `پیشرفت در ${L(m.domain)}` : `افت در ${L(m.domain)}`,
-      body: `امتیاز ${L(m.domain)} از ${m.prevScore} به ${m.score} ${up ? "رسید" : "افتاد"} (${up ? "+" : ""}${m.delta}).`,
+      title: up ? tr(`پیشرفت در ${L(m.domain)}`, `${L(m.domain)} improved`) : tr(`افت در ${L(m.domain)}`, `${L(m.domain)} dropped`),
+      body: tr(
+        `امتیاز ${L(m.domain)} از ${m.prevScore} به ${m.score} ${up ? "رسید" : "افتاد"} (${up ? "+" : ""}${m.delta}).`,
+        `Your ${L(m.domain)} score ${up ? "rose" : "fell"} from ${m.prevScore} to ${m.score} (${up ? "+" : ""}${m.delta}).`,
+      ),
       domain: m.domain,
       tone: up ? "good" : "bad",
       priority: up ? 75 : 78,
@@ -143,9 +153,9 @@ export function buildInsights(input: InsightInput): Insight[] {
     const avg = Math.round(mean(hist)!);
     const d = score - avg;
     if (d >= 8) {
-      out.push({ id: "above_avg", kind: "improvement", icon: "trophy", title: "بالاتر از میانگینت", body: `این هفته ${d} امتیاز بالاتر از میانگین ${hist.length} هفته‌ی اخیرت (${avg}) بودی.`, tone: "good", priority: 60 });
+      out.push({ id: "above_avg", kind: "improvement", icon: "trophy", title: tr("بالاتر از میانگینت", "Above your average"), body: tr(`این هفته ${d} امتیاز بالاتر از میانگین ${hist.length} هفته‌ی اخیرت (${avg}) بودی.`, `This week you were ${pl(d, "point")} above your average of the last ${pl(hist.length, "week")} (${avg}).`), tone: "good", priority: 60 });
     } else if (d <= -8) {
-      out.push({ id: "below_avg", kind: "decline", icon: "alert", title: "پایین‌تر از میانگینت", body: `این هفته ${-d} امتیاز پایین‌تر از میانگین ${hist.length} هفته‌ی اخیرت (${avg}) بودی.`, tone: "bad", priority: 62 });
+      out.push({ id: "below_avg", kind: "decline", icon: "alert", title: tr("پایین‌تر از میانگینت", "Below your average"), body: tr(`این هفته ${-d} امتیاز پایین‌تر از میانگین ${hist.length} هفته‌ی اخیرت (${avg}) بودی.`, `This week you were ${pl(-d, "point")} below your average of the last ${pl(hist.length, "week")} (${avg}).`), tone: "bad", priority: 62 });
     }
   }
 
@@ -153,7 +163,7 @@ export function buildInsights(input: InsightInput): Insight[] {
   const dayScores = days.map((d) => (d.isFuture ? null : d.score));
   const streak = longestStreak(dayScores, 70);
   if (streak >= 3) {
-    out.push({ id: "streak", kind: "streak", icon: "flame", title: `${streak} روز پشت‌سرهم`, body: `${streak} روز متوالی امتیاز 70 یا بیشتر گرفتی.`, tone: "good", priority: 70 + streak });
+    out.push({ id: "streak", kind: "streak", icon: "flame", title: tr(`${streak} روز پشت‌سرهم`, `${pl(streak, "day")} in a row`), body: tr(`${streak} روز متوالی امتیاز 70 یا بیشتر گرفتی.`, `You scored 70 or more for ${pl(streak, "day")} in a row.`), tone: "good", priority: 70 + streak });
   }
 
   // ── روز غیرعادی در یک دامنه (حداقل ۴ روز داده، فاصله ≥۳۵ از میانگین) ──
@@ -175,8 +185,11 @@ export function buildInsights(input: InsightInput): Insight[] {
       id: `outlier_${o.d.domain}_${o.i}`,
       kind: "outlier",
       icon: "zap",
-      title: `${wd} غیرعادی بود`,
-      body: `${L(o.d.domain)} در ${wd} ${o.v} بود، در حالی که میانگین هفته‌ت ${Math.round(o.avg)} بود.`,
+      title: tr(`${wd} غیرعادی بود`, `${wd} was unusual`),
+      body: tr(
+        `${L(o.d.domain)} در ${wd} ${o.v} بود، در حالی که میانگین هفته‌ت ${Math.round(o.avg)} بود.`,
+        `${L(o.d.domain)} was ${o.v} on ${wd}, while your weekly average was ${Math.round(o.avg)}.`,
+      ),
       domain: o.d.domain,
       tone: low ? "bad" : "good",
       priority: 65,
@@ -189,16 +202,16 @@ export function buildInsights(input: InsightInput): Insight[] {
     const best = scored.reduce((a, b) => (b.score! > a.score! ? b : a));
     const worst = scored.reduce((a, b) => (b.score! < a.score! ? b : a));
     if (best.score! - worst.score! >= 15) {
-      out.push({ id: "best_day", kind: "best_day", icon: "trophy", title: `بهترین روز: ${best.weekday}`, body: `${best.weekday} با امتیاز ${best.score} بهترین روز هفته‌ت بود.`, tone: "good", priority: 55 });
-      out.push({ id: "worst_day", kind: "worst_day", icon: "calendar", title: `ضعیف‌ترین روز: ${worst.weekday}`, body: `${worst.weekday} با امتیاز ${worst.score} پایین‌ترین روز بود — ببین اون روز چی فرق داشت.`, tone: "bad", priority: 57 });
+      out.push({ id: "best_day", kind: "best_day", icon: "trophy", title: tr(`بهترین روز: ${best.weekday}`, `Best day: ${best.weekday}`), body: tr(`${best.weekday} با امتیاز ${best.score} بهترین روز هفته‌ت بود.`, `${best.weekday} was your best day of the week with a score of ${best.score}.`), tone: "good", priority: 55 });
+      out.push({ id: "worst_day", kind: "worst_day", icon: "calendar", title: tr(`ضعیف‌ترین روز: ${worst.weekday}`, `Weakest day: ${worst.weekday}`), body: tr(`${worst.weekday} با امتیاز ${worst.score} پایین‌ترین روز بود — ببین اون روز چی فرق داشت.`, `${worst.weekday} was the lowest day with a score of ${worst.score}. See what was different that day.`), tone: "bad", priority: 57 });
     }
   }
 
   // ── یکنواختی ──
   const cons = consistencyFor(dayScores);
   if (cons != null && scored.length >= 4) {
-    if (cons >= 85) out.push({ id: "consistent", kind: "consistency", icon: "calendar", title: "هفته‌ی یکنواخت", body: `یکنواختی روزهات ${cons} از 100 بود — ریتمت ثابت مونده.`, tone: "good", priority: 50 });
-    else if (cons <= 50) out.push({ id: "inconsistent", kind: "consistency", icon: "alert", title: "نوسان زیاد بین روزها", body: `یکنواختی روزهات ${cons} از 100 بود — بعضی روزها خیلی بهتر از بقیه بودن.`, tone: "bad", priority: 52 });
+    if (cons >= 85) out.push({ id: "consistent", kind: "consistency", icon: "calendar", title: tr("هفته‌ی یکنواخت", "An even week"), body: tr(`یکنواختی روزهات ${cons} از 100 بود — ریتمت ثابت مونده.`, `Your day-to-day consistency was ${cons} out of 100. Your rhythm held steady.`), tone: "good", priority: 50 });
+    else if (cons <= 50) out.push({ id: "inconsistent", kind: "consistency", icon: "alert", title: tr("نوسان زیاد بین روزها", "Big swings between days"), body: tr(`یکنواختی روزهات ${cons} از 100 بود — بعضی روزها خیلی بهتر از بقیه بودن.`, `Your day-to-day consistency was ${cons} out of 100. Some days were much better than others.`), tone: "bad", priority: 52 });
   }
 
   return out

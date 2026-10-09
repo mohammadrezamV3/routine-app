@@ -1,3 +1,5 @@
+import { tr } from "./i18n";
+
 // خواب — منطق خالص مشترک کلاینت و سرور (بدون fetch/prisma). صفحه و سیستم
 // جدای خودش (/sleep)، جدا از صفحه‌ی روتین.
 //
@@ -81,8 +83,8 @@ export function clockOf(iso: string): string {
 /** «7 ساعت و 20 دقیقه» */
 export function durationLabel(min: number): string {
   const h = Math.floor(min / 60), m = min % 60;
-  if (!h) return `${m} دقیقه`;
-  return m ? `${h} ساعت و ${m} دقیقه` : `${h} ساعت`;
+  if (!h) return tr(`${m} دقیقه`, `${m} min`);
+  return m ? tr(`${h} ساعت و ${m} دقیقه`, `${h} h ${m} min`) : tr(`${h} ساعت`, `${h} h`);
 }
 
 /** میانگین دایره‌ای ساعت‌ها (میانگین 23:00 و 01:00 = 00:00، نه 12:00) */
@@ -144,18 +146,18 @@ export const NAP_MAX = 240;
 
 /** عوامل قابل برچسب‌زدن روی هر شب — effect انتظار کلی (فقط برای رنگ/ترتیب UI) */
 export const SLEEP_TAGS = [
-  { key: "caffeine", label: "کافئین عصر", effect: "bad" },
-  { key: "screen", label: "گوشی قبل خواب", effect: "bad" },
-  { key: "late_meal", label: "شام دیر", effect: "bad" },
-  { key: "stress", label: "استرس", effect: "bad" },
-  { key: "noise", label: "سروصدا", effect: "bad" },
-  { key: "sick", label: "بیماری", effect: "bad" },
-  { key: "travel", label: "سفر", effect: "bad" },
-  { key: "exercise", label: "ورزش", effect: "good" },
-  { key: "reading", label: "مطالعه", effect: "good" },
-  { key: "meditation", label: "مدیتیشن", effect: "good" },
-  { key: "dark_room", label: "اتاق تاریک", effect: "good" },
-  { key: "early_dinner", label: "شام سبک", effect: "good" },
+  { key: "caffeine", label: "کافئین عصر", en: "Evening caffeine", effect: "bad" },
+  { key: "screen", label: "گوشی قبل خواب", en: "Phone before bed", effect: "bad" },
+  { key: "late_meal", label: "شام دیر", en: "Late dinner", effect: "bad" },
+  { key: "stress", label: "استرس", en: "Stress", effect: "bad" },
+  { key: "noise", label: "سروصدا", en: "Noise", effect: "bad" },
+  { key: "sick", label: "بیماری", en: "Illness", effect: "bad" },
+  { key: "travel", label: "سفر", en: "Travel", effect: "bad" },
+  { key: "exercise", label: "ورزش", en: "Exercise", effect: "good" },
+  { key: "reading", label: "مطالعه", en: "Reading", effect: "good" },
+  { key: "meditation", label: "مدیتیشن", en: "Meditation", effect: "good" },
+  { key: "dark_room", label: "اتاق تاریک", en: "Dark room", effect: "good" },
+  { key: "early_dinner", label: "شام سبک", en: "Light dinner", effect: "good" },
 ] as const;
 export type SleepTagKey = (typeof SLEEP_TAGS)[number]["key"];
 const TAG_KEYS = new Set<string>(SLEEP_TAGS.map((t) => t.key));
@@ -168,7 +170,8 @@ export function sanitizeTags(raw: unknown): string[] {
 }
 
 export function tagLabel(key: string): string {
-  return SLEEP_TAGS.find((t) => t.key === key)?.label ?? key;
+  const t = SLEEP_TAGS.find((x) => x.key === key);
+  return t ? tr(t.label, t.en) : key;
 }
 
 /** دقیقه از نیمه‌شب برای یک ISO (ساعت محلی) */
@@ -238,6 +241,11 @@ export function scoreBand(score: number): ScoreBand {
   return score >= 85 ? "great" : score >= 70 ? "good" : score >= 50 ? "fair" : "poor";
 }
 export const SCORE_BAND_LABEL: Record<ScoreBand, string> = { great: "عالی", good: "خوب", fair: "متوسط", poor: "ضعیف" };
+const SCORE_BAND_EN: Record<ScoreBand, string> = { great: "Excellent", good: "Good", fair: "Fair", poor: "Poor" };
+/** برچسب کیفیت به زبان جاری */
+export function scoreBandLabel(b: ScoreBand): string {
+  return tr(SCORE_BAND_LABEL[b], SCORE_BAND_EN[b]);
+}
 
 /** وسط خواب (دقیقه از نیمه‌شب) — پایه‌ی کرونوتایپ و جت‌لگ اجتماعی */
 export function midSleepMinute(rec: Pick<SleepRecord, "sleptAt" | "wokeAt">): number {
@@ -255,6 +263,11 @@ export function isFreeNight(wakeDateIso: string): boolean {
 
 export type Chronotype = "lark" | "middle" | "owl";
 export const CHRONOTYPE_LABEL: Record<Chronotype, string> = { lark: "سحرخیز", middle: "میانه", owl: "شب‌زنده‌دار" };
+const CHRONOTYPE_EN: Record<Chronotype, string> = { lark: "Early bird", middle: "In-between", owl: "Night owl" };
+/** برچسب کرونوتایپ به زبان جاری */
+export function chronotypeLabel(c: Chronotype): string {
+  return tr(CHRONOTYPE_LABEL[c], CHRONOTYPE_EN[c]);
+}
 
 export type TagImpact = { key: string; label: string; nights: number; avgWith: number; avgWithout: number; delta: number };
 
@@ -343,7 +356,7 @@ export function sleepInsights(entries: SleepRecord[], target: { wake: string; sl
     if (withT.length < 2 || without.length < 2) continue;
     const a = withT.reduce((s, x) => s + x, 0) / withT.length;
     const b = without.reduce((s, x) => s + x, 0) / without.length;
-    tagImpacts.push({ key: t.key, label: t.label, nights: withT.length, avgWith: Math.round(a), avgWithout: Math.round(b), delta: Math.round(a - b) });
+    tagImpacts.push({ key: t.key, label: tr(t.label, t.en), nights: withT.length, avgWith: Math.round(a), avgWithout: Math.round(b), delta: Math.round(a - b) });
   }
   tagImpacts.sort((x, y) => Math.abs(y.delta) - Math.abs(x.delta));
 

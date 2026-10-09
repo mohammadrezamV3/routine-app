@@ -19,24 +19,27 @@ import { mediaKey } from "@/lib/exerciseMedia";
 import { normalizeFa } from "@/lib/utils";
 import { useLockBodyScroll } from "@/lib/useLockBodyScroll";
 import { useProgressiveList } from "@/lib/useProgressiveList";
+import { isEn, tr } from "@/lib/i18n";
+import { localizeExercise } from "@/lib/exerciseI18n";
+import { EXERCISE_EN } from "@/lib/exerciseCatalogData/en";
 
 const MUSCLE_LABEL: Record<MuscleKey, string> = {
-  chest: "سینه",
-  back: "پشت",
-  traps: "ذوزنقه‌ای",
-  shoulders: "سرشانه",
-  biceps: "جلوبازو",
-  triceps: "پشت‌بازو",
-  forearms: "ساعد",
-  abs: "شکم",
-  obliques: "مایل‌های شکم",
-  glutes: "باسن",
-  quads: "چهارسر ران",
-  hamstrings: "همسترینگ",
-  calves: "ساق پا",
-  cardio: "کاردیو",
-  fullbody: "تمام بدن",
-  flexibility: "انعطاف‌پذیری",
+  get chest() { return tr("سینه", "Chest"); },
+  get back() { return tr("پشت", "Back"); },
+  get traps() { return tr("ذوزنقه‌ای", "Traps"); },
+  get shoulders() { return tr("سرشانه", "Shoulders"); },
+  get biceps() { return tr("جلوبازو", "Biceps"); },
+  get triceps() { return tr("پشت‌بازو", "Triceps"); },
+  get forearms() { return tr("ساعد", "Forearms"); },
+  get abs() { return tr("شکم", "Abs"); },
+  get obliques() { return tr("مایل‌های شکم", "Obliques"); },
+  get glutes() { return tr("باسن", "Glutes"); },
+  get quads() { return tr("چهارسر ران", "Quads"); },
+  get hamstrings() { return tr("همسترینگ", "Hamstrings"); },
+  get calves() { return tr("ساق پا", "Calves"); },
+  get cardio() { return tr("کاردیو", "Cardio"); },
+  get fullbody() { return tr("تمام بدن", "Full body"); },
+  get flexibility() { return tr("انعطاف‌پذیری", "Flexibility"); },
 };
 
 const MUSCLE_FILTERS: MuscleKey[] = [
@@ -52,14 +55,15 @@ const EQUIPMENT_FILTERS: ExerciseEquipment[] = [
 // حرف تایپ‌شده) — با 700+ حرکت این فرق محسوسه.
 const INDEXED = EXERCISE_CATALOG.map((entry) => ({
   entry,
-  text: exerciseSearchText(entry),
+  // نام و گروه عضلانی انگلیسی هم قابل جستجوست (فارسی و انگلیسی مستقل از زبان جاری)
+  text: normalizeFa(`${exerciseSearchText(entry)} | ${EXERCISE_EN[entry.name]?.name ?? ""} | ${EXERCISE_EN[entry.name]?.muscleGroup ?? ""}`),
   equipment: getExerciseEquipment(entry),
   level: getExerciseDifficulty(entry),
 }));
 
 export function DifficultyStars({ level, className }: { level: number; className?: string }) {
   return (
-    <div className={`exercise-difficulty-stars${className ? ` ${className}` : ""}`} aria-label={`میزان سختی: ${level} از 5`}>
+    <div className={`exercise-difficulty-stars${className ? ` ${className}` : ""}`} aria-label={tr(`میزان سختی: ${level} از 5`, `Difficulty: ${level} of 5`)}>
       {[1, 2, 3, 4, 5].map((i) => (
         <Star key={i} size={13} fill={i <= level ? "currentColor" : "none"} className={i <= level ? "on" : ""} />
       ))}
@@ -128,6 +132,7 @@ export function ExerciseCatalogModal({ onClose }: { onClose: () => void }) {
       ),
     [normalizedQuery, muscleFilter, equipmentFilter]
   );
+  const sel = selected ? localizeExercise(selected) : null;
   const { limit, onScroll, listRef } = useProgressiveList(
     visible.length,
     `${normalizedQuery}|${muscleFilter ?? ""}|${equipmentFilter ?? ""}`
@@ -152,15 +157,15 @@ export function ExerciseCatalogModal({ onClose }: { onClose: () => void }) {
           transition={{ duration: 0.2, ease: [0.22, 1, 0.36, 1] }}
         >
           <div className="modal-head">
-            <div className="modal-title">مشاهده حرکات</div>
-            <button type="button" className="nav-close" onClick={onClose} aria-label="بستن">×</button>
+            <div className="modal-title">{tr("مشاهده حرکات", "Browse exercises")}</div>
+            <button type="button" className="nav-close" onClick={onClose} aria-label={tr("بستن", "Close")}>×</button>
           </div>
 
           <input
             type="text"
-            dir="rtl"
+            dir={isEn() ? "ltr" : "rtl"}
             className="wsearch-newform-name trade-glass-field pill-glass-field"
-            placeholder="جستجوی حرکت…"
+            placeholder={tr("جستجوی حرکت…", "Search exercises…")}
             value={query}
             onChange={(e) => setQuery(e.target.value)}
           />
@@ -171,7 +176,7 @@ export function ExerciseCatalogModal({ onClose }: { onClose: () => void }) {
               onClick={() => setMuscleFilter(null)}
               className={`exercise-catalog-chip${muscleFilter === null ? " active" : ""}`}
             >
-              همه
+              {tr("همه", "All")}
             </button>
             {MUSCLE_FILTERS.map((k) => (
               <button
@@ -200,12 +205,12 @@ export function ExerciseCatalogModal({ onClose }: { onClose: () => void }) {
 
           <div ref={listRef} className="no-scrollbar exercise-catalog-list" onScroll={onScroll}>
             {visible.length === 0 ? (
-              <div className="item-line empty">حرکتی پیدا نشد.</div>
+              <div className="item-line empty">{tr("حرکتی پیدا نشد.", "No exercises found.")}</div>
             ) : (
               visible.slice(0, limit).map(({ entry: e, level }) => (
                 <div key={e.name} onClick={() => setSelected(e)} className="exercise-catalog-row">
-                  <div className="min-w-0 flex-1 truncate text-right text-[12.5px] font-semibold text-dash-text sm:text-[13.5px]">
-                    {e.name}
+                  <div className="min-w-0 flex-1 truncate text-start text-[12.5px] font-semibold text-dash-text sm:text-[13.5px]">
+                    {localizeExercise(e).name}
                   </div>
                   <DifficultyStars level={level} className="exercise-catalog-row-stars" />
                 </div>
@@ -216,7 +221,7 @@ export function ExerciseCatalogModal({ onClose }: { onClose: () => void }) {
       </motion.div>
 
       <AnimatePresence>
-        {selected && (
+        {selected && sel && (
           <>
             <motion.div
               className="modal-overlay open exercise-catalog-detail-overlay"
@@ -235,7 +240,7 @@ export function ExerciseCatalogModal({ onClose }: { onClose: () => void }) {
             >
               <div className="modal-head exercise-detail-head">
                 <span />
-                <button className="nav-close" onClick={() => setSelected(null)} aria-label="بستن">×</button>
+                <button className="nav-close" onClick={() => setSelected(null)} aria-label={tr("بستن", "Close")}>×</button>
               </div>
 
               <div className="no-scrollbar exercise-catalog-detail-body">
@@ -245,35 +250,35 @@ export function ExerciseCatalogModal({ onClose }: { onClose: () => void }) {
                       {/* عکس ادمین یک data URL است، نه فایل استاتیک؛ next/image
                           روی data URL چیزی بهینه نمی‌کند و فقط محدودیت اضافه می‌کند. */}
                       {/* eslint-disable-next-line @next/next/no-img-element */}
-                      <img src={photo} alt={selected.name} />
+                      <img src={photo} alt={sel.name} />
                     </div>
                   ) : (
                     // جای خالی عکس — دقیقا هم‌اندازه‌ی .exercise-photo تا با
                     // اضافه‌شدن عکس از پنل ادمین چیدمان کارت جابه‌جا نشود.
-                    <div className="exercise-photo-placeholder exercise-photo-slot" role="img" aria-label="عکس این حرکت هنوز اضافه نشده">
+                    <div className="exercise-photo-placeholder exercise-photo-slot" role="img" aria-label={tr("عکس این حرکت هنوز اضافه نشده", "No photo has been added for this exercise yet")}>
                       <ImageOff size={32} />
                     </div>
                   )}
                 </div>
-                <div className="modal-title exercise-detail-name">{selected.name}</div>
+                <div className="modal-title exercise-detail-name">{sel.name}</div>
 
                 <div className="tm-extra">
-                  <div className="domain-sub exercise-detail-label">میزان سختی</div>
+                  <div className="domain-sub exercise-detail-label">{tr("میزان سختی", "Difficulty")}</div>
                   <DifficultyStars level={getExerciseDifficulty(selected)} />
                 </div>
 
                 <div className="tm-extra">
-                  <div className="domain-sub exercise-detail-label">تجهیزات</div>
+                  <div className="domain-sub exercise-detail-label">{tr("تجهیزات", "Equipment")}</div>
                   <div className="item-line">{EQUIPMENT_LABEL[getExerciseEquipment(selected)]}</div>
                 </div>
 
                 <div className="tm-extra">
-                  <div className="domain-sub exercise-detail-label">دستورالعمل</div>
-                  <ol style={{ display: "flex", flexDirection: "column", gap: 8, marginTop: 6, paddingRight: 18 }}>
-                    {selected.howTo.map((step, i) => (
+                  <div className="domain-sub exercise-detail-label">{tr("دستورالعمل", "Instructions")}</div>
+                  <ol style={{ display: "flex", flexDirection: "column", gap: 8, marginTop: 6, paddingInlineStart: 18 }}>
+                    {sel.howTo.map((step, i) => (
                       <motion.li
                         key={i}
-                        initial={{ opacity: 0, x: -8 }}
+                        initial={{ opacity: 0, x: isEn() ? 8 : -8 }}
                         animate={{ opacity: 1, x: 0 }}
                         transition={{ delay: 0.06 * i, duration: 0.2 }}
                         className="item-line"
@@ -286,13 +291,13 @@ export function ExerciseCatalogModal({ onClose }: { onClose: () => void }) {
                 </div>
 
                 <div className="tm-extra">
-                  <div className="domain-sub exercise-detail-label">عضلات درگیر</div>
-                  <div className="item-line">{selected.muscleGroup}</div>
+                  <div className="domain-sub exercise-detail-label">{tr("عضلات درگیر", "Muscles worked")}</div>
+                  <div className="item-line">{sel.muscleGroup}</div>
                 </div>
 
                 <div className="tm-extra">
-                  <div className="domain-sub exercise-detail-label">مزایا</div>
-                  <div className="item-line">{selected.benefits}</div>
+                  <div className="domain-sub exercise-detail-label">{tr("مزایا", "Benefits")}</div>
+                  <div className="item-line">{sel.benefits}</div>
                 </div>
               </div>
             </motion.div>

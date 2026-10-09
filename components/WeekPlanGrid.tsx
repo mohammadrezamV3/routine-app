@@ -3,6 +3,8 @@
 import { motion } from "framer-motion";
 import { CalendarDays, Check, X } from "lucide-react";
 import { cn } from "@/lib/utils";
+import { tr } from "@/lib/i18n";
+import "./week-plan-grid.css";
 
 export type WeekPlanGridItem = {
   id: string;
@@ -30,8 +32,8 @@ export type WeekPlanGridDay = {
 // شماره دیده می‌شود.
 export function WeekPlanGrid({
   days,
-  title = "برنامه هفتگی",
-  emptyLabel = "برنامه‌ای ثبت نشده",
+  title = tr("برنامه هفتگی", "Weekly plan"),
+  emptyLabel = tr("برنامه‌ای ثبت نشده", "No plans yet"),
   onItemClick,
 }: {
   days: WeekPlanGridDay[];
@@ -69,7 +71,7 @@ export function WeekPlanGrid({
                 </span>
                 {d.isToday && (
                   <span className="shrink-0 rounded-full bg-dash-green px-1.5 py-0.5 text-[8px] font-bold text-dash-bg sm:text-[8.5px]">
-                    امروز
+                    {tr("امروز", "Today")}
                   </span>
                 )}
               </div>
@@ -91,12 +93,12 @@ export function WeekPlanGrid({
                           disabled={!onItemClick}
                           onClick={() => onItemClick?.(it, d)}
                           title={it.meta ? `${it.label} — ${it.meta}` : it.label}
-                          className="flex w-full items-start gap-1.5 bg-transparent p-0 text-right text-[10px] leading-tight text-dash-text transition hover:text-dash-green disabled:cursor-default disabled:hover:text-dash-text sm:text-[11px]"
+                          className="flex w-full items-start gap-1.5 bg-transparent p-0 text-start text-[10px] leading-tight text-dash-text transition hover:text-dash-green disabled:cursor-default disabled:hover:text-dash-text sm:text-[11px]"
                         >
                           {it.state === "done" ? (
-                            <Check aria-label="انجام‌شده" className="mt-px h-3 w-3 shrink-0 text-dash-green" strokeWidth={3} />
+                            <Check aria-label={tr("انجام‌شده", "Done")} className="mt-px h-3 w-3 shrink-0 text-dash-green" strokeWidth={3} />
                           ) : it.state === "missed" ? (
-                            <X aria-label="انجام‌نشده" className="mt-px h-3 w-3 shrink-0" style={{ color: "#E05252" }} strokeWidth={3} />
+                            <X aria-label={tr("انجام‌نشده", "Not done")} className="mt-px h-3 w-3 shrink-0" style={{ color: "#E05252" }} strokeWidth={3} />
                           ) : null}
                           <span className="min-w-0 flex-1 truncate">{it.label}</span>
                           {it.meta && <bdi dir="ltr" className="mono shrink-0 text-dash-muted">{it.meta}</bdi>}

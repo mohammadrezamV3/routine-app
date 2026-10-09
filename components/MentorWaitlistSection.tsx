@@ -13,6 +13,7 @@ import { offerRemainingLabel, positionLabel } from "@/lib/mentorWaitlist";
 import { publicUserName } from "@/lib/mentorTypes";
 import type { MentorWaitlistResponse, MentorWaitlistRow } from "@/lib/mentorTypes";
 import { GoldenName } from "@/components/GoldenName";
+import { tr } from "@/lib/i18n";
 
 const ic = (Icon: typeof Hourglass, size: number) => <Icon size={size} strokeWidth={MI_STROKE} aria-hidden />;
 
@@ -54,8 +55,8 @@ export function MentorWaitlistSection() {
       <div className="mv2-st-wait">
       <button type="button" className="mv2-st-wait-head" aria-expanded={open} aria-controls="mv2-st-wait-list" onClick={() => setOpen((o) => !o)}>
         {ic(ListOrdered, MI.row)}
-        <span className="mv2-st-wait-title">صف انتظار</span>
-        <span className="mv2-st-wait-count">{fa(waiting)} نفر</span>
+        <span className="mv2-st-wait-title">{tr("صف انتظار", "Waitlist")}</span>
+        <span className="mv2-st-wait-count">{fa(waiting)} {tr("نفر", "people")}</span>
         <ChevronDown size={MI.row} strokeWidth={MI_STROKE} className="mv2-st-wait-chev" data-open={open ? "1" : "0"} aria-hidden />
       </button>
       {open && <div id="mv2-st-wait-list">
@@ -69,23 +70,23 @@ export function MentorWaitlistSection() {
                   title={<GoldenName golden={e.user.golden} staff={e.user.staff}>{name}</GoldenName>}
                   sub={
                     e.status === "OFFERED" && e.offerExpiresAt ? (
-                      <span>نوبتش رسیده · {offerRemainingLabel(e.offerExpiresAt, new Date(), true)}</span>
+                      <span>{tr("نوبتش رسیده", "Their turn has come")} · {offerRemainingLabel(e.offerExpiresAt, new Date(), true)}</span>
                     ) : (
                       <>
                         {e.position && <span>{positionLabel(e.position)}</span>}
-                        <span>از {fmtRelative(e.joinedAt)}</span>
+                        <span>{tr(`از ${fmtRelative(e.joinedAt)}`, `Since ${fmtRelative(e.joinedAt)}`)}</span>
                       </>
                     )
                   }
                   end={
                     <>
-                      {e.status === "OFFERED" && <MentorChip tone="ok" icon={ic(PartyPopper, MI.chip)}>نوبت داده شد</MentorChip>}
+                      {e.status === "OFFERED" && <MentorChip tone="ok" icon={ic(PartyPopper, MI.chip)}>{tr("نوبت داده شد", "Turn offered")}</MentorChip>}
                       <button
                         type="button"
                         className="trade-icon-btn"
                         onClick={() => { setError(null); setRemove(e); }}
-                        aria-label={`خارج کردن ${name} از صف`}
-                        title="خارج کردن از صف"
+                        aria-label={tr(`خارج کردن ${name} از صف`, `Remove ${name} from the waitlist`)}
+                        title={tr("خارج کردن از صف", "Remove from waitlist")}
                       >
                         {ic(UserMinus, MI.btnSm)}
                       </button>
@@ -100,9 +101,9 @@ export function MentorWaitlistSection() {
       </div>
       {remove && (
         <MentorConfirmDialog
-          message={`${publicUserName(remove.user)} از صف خارج بشه؟`}
-          hint={remove.status === "OFFERED" ? "نوبتش به نفر بعدی صف می‌رسه." : "بهش خبر می‌دیم که فعلا جایی براش نیست."}
-          confirmLabel="خارج کردن"
+          message={tr(`${publicUserName(remove.user)} از صف خارج بشه؟`, `Remove ${publicUserName(remove.user)} from the waitlist?`)}
+          hint={remove.status === "OFFERED" ? tr("نوبتش به نفر بعدی صف می‌رسه.", "Their turn goes to the next person in line.") : tr("بهش خبر می‌دیم که فعلا جایی براش نیست.", "We will let them know there is no spot for them for now.")}
+          confirmLabel={tr("خارج کردن", "Remove")}
           busy={busy}
           error={error}
           onConfirm={confirmRemove}

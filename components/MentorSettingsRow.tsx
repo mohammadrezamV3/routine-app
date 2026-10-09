@@ -39,7 +39,7 @@ export function MentorSettingsRow({
       {icon && <span className="mv2-srow-icon" aria-hidden>{icon}</span>}
       <span className="mv2-srow-title">{title}</span>
       {value != null && value !== "" && <span className="mv2-srow-value">{value}</span>}
-      <ChevronLeft size={16} strokeWidth={1.75} className="mv2-srow-chev" aria-hidden />
+      <ChevronLeft size={16} strokeWidth={1.75} className="mv2-srow-chev dir-flip" aria-hidden />
     </>
   );
   const cls = `mv2-srow${danger ? " is-danger" : ""}`;

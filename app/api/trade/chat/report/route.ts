@@ -6,6 +6,7 @@ import { checkRateLimit } from "@/lib/rateLimit";
 import { clampText } from "@/lib/validate";
 import { isChatReportReason } from "@/lib/tradeChat";
 import { sessionFeatureBlocked } from "@/lib/featureFlagsServer";
+import { tr } from "@/lib/i18n";
 
 // POST /api/trade/chat/report  { messageId, reason, note? }
 //
@@ -26,14 +27,14 @@ export async function POST(req: NextRequest) {
 
   const payload = await req.json().catch(() => null);
   const messageId = typeof payload?.messageId === "string" ? payload.messageId : "";
-  if (!messageId) return NextResponse.json({ error: "شناسه پیام لازم است" }, { status: 400 });
+  if (!messageId) return NextResponse.json({ error: tr(tr("شناسه پیام لازم است", "Message ID is required"), "Message ID is required") }, { status: 400 });
   if (!isChatReportReason(payload?.reason)) {
-    return NextResponse.json({ error: "دلیل گزارش نامعتبر است" }, { status: 400 });
+    return NextResponse.json({ error: tr(tr("دلیل گزارش نامعتبر است", "Invalid report reason"), "Invalid report reason") }, { status: 400 });
   }
 
   // سقف نرخ تا کسی نتواند با گزارش انبوه صف را غرق کند
   if (!(await checkRateLimit(`chat-report:${guard.userId}`, 20, 60 * 60_000))) {
-    return NextResponse.json({ error: "تعداد گزارش‌هایت زیاد شده — بعدا دوباره تلاش کن" }, { status: 429 });
+    return NextResponse.json({ error: tr(tr("تعداد گزارش‌هایت زیاد شده — بعدا دوباره تلاش کن", "You have submitted too many reports — try again later"), "You have submitted too many reports — try again later") }, { status: 429 });
   }
 
   const message = await prisma.tradeChatMessage.findUnique({
@@ -41,10 +42,10 @@ export async function POST(req: NextRequest) {
     select: { id: true, userId: true, deletedAt: true },
   });
   if (!message || message.deletedAt) {
-    return NextResponse.json({ error: "پیام پیدا نشد" }, { status: 404 });
+    return NextResponse.json({ error: tr(tr("پیام پیدا نشد", "Message not found"), "Message not found") }, { status: 404 });
   }
   if (message.userId === guard.userId) {
-    return NextResponse.json({ error: "نمی‌توانی پیام خودت را گزارش کنی" }, { status: 400 });
+    return NextResponse.json({ error: tr(tr("نمی‌توانی پیام خودت را گزارش کنی", "You can't report your own message"), "You can't report your own message") }, { status: 400 });
   }
 
   const note = clampText(String(payload?.note ?? "").trim(), 500) || null;

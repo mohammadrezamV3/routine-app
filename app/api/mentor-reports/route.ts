@@ -6,6 +6,7 @@ import { checkRateLimit } from "@/lib/rateLimit";
 import { visibleToStudent } from "@/lib/mentorProgramState";
 import { isUniqueViolation } from "@/lib/mentorServer";
 import { sealReportedText, verifyMessageReport, type MessageReportEvidence } from "@/lib/e2ee/reportServer";
+import { tr } from "@/lib/i18n";
 
 const TARGETS = ["USER", "REVIEW", "MESSAGE", "PROGRAM"] as const;
 type Target = (typeof TARGETS)[number];
@@ -63,19 +64,19 @@ export async function POST(req: Request) {
   const me = g.userId;
 
   if (!(await checkRateLimit(`mentor-report:${me}`, 10, 60 * 60 * 1000))) {
-    return NextResponse.json({ error: "تعداد گزارش‌ها زیاد بوده؛ کمی بعد دوباره تلاش کن" }, { status: 429 });
+    return NextResponse.json({ error: tr("تعداد گزارش‌ها زیاد بوده؛ کمی بعد دوباره تلاش کن", "There were too many reports; try again shortly") }, { status: 429 });
   }
 
   const parsed = await readJsonBody(req, 16 * 1024);
   if (!parsed.ok) return NextResponse.json({ error: parsed.error }, { status: parsed.status });
   const b = parsed.body || {};
 
-  if (!TARGETS.includes(b.targetType)) return badRequest("نوع گزارش نامعتبره");
+  if (!TARGETS.includes(b.targetType)) return badRequest(tr("نوع گزارش نامعتبره", "Invalid report type"));
   const targetType = b.targetType as Target;
-  if (typeof b.targetId !== "string" || !b.targetId || b.targetId.length > 64) return badRequest("هدف گزارش نامعتبره");
-  if (typeof b.reason !== "string" || !b.reason.trim()) return badRequest("دلیل گزارش لازمه");
+  if (typeof b.targetId !== "string" || !b.targetId || b.targetId.length > 64) return badRequest(tr("هدف گزارش نامعتبره", "Invalid report target"));
+  if (typeof b.reason !== "string" || !b.reason.trim()) return badRequest(tr("دلیل گزارش لازمه", "A report reason is required"));
   const reason = b.reason.trim().slice(0, REASON_MAX);
-  if (b.details !== undefined && b.details !== null && typeof b.details !== "string") return badRequest("توضیحات نامعتبره");
+  if (b.details !== undefined && b.details !== null && typeof b.details !== "string") return badRequest(tr("توضیحات نامعتبره", "Invalid details"));
   const details = typeof b.details === "string" ? b.details.trim().slice(0, DETAILS_MAX) || null : null;
 
   const targetUserId = await resolveTargetOwner(targetType, b.targetId, me);
@@ -104,7 +105,7 @@ export async function POST(req: Request) {
     });
     return NextResponse.json({ ok: true, report });
   } catch (e) {
-    if (isUniqueViolation(e)) return conflict("قبلا همین مورد رو گزارش دادی");
+    if (isUniqueViolation(e)) return conflict(tr("قبلا همین مورد رو گزارش دادی", "You've already reported this"));
     throw e;
   }
 }

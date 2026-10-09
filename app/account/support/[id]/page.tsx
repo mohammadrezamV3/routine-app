@@ -5,16 +5,17 @@ import { useParams } from "next/navigation";
 import { Mic, Send, Square } from "lucide-react";
 import { AccountBackButton } from "@/components/AccountBackButton";
 import { PanelSkeleton } from "@/components/PanelSkeleton";
-import { toJalali, faNum, J_MONTHS } from "@/lib/jalali";
+import { toJalali, faNum, jMonthName } from "@/lib/jalali";
 import { useVoiceRecorder, VOICE_CONSTRAINTS, VOICE_MAX_BYTES } from "@/components/useVoiceRecorder";
+import { tr } from "@/lib/i18n";
 
 type TicketStatus = "OPEN" | "ANSWERED" | "CLOSED";
 type Message = { id: string; body: string; fromAdmin: boolean; createdAt: string };
 type TicketDetail = { id: string; subject: string; status: TicketStatus; messages: Message[] };
 
-const STATUS_LABEL: Record<TicketStatus, string> = {
-  OPEN: "در انتظار پاسخ", ANSWERED: "پاسخ داده شد", CLOSED: "بسته‌شده",
-};
+const statusLabel = (): Record<TicketStatus, string> => ({
+  OPEN: tr("در انتظار پاسخ", "Awaiting reply"), ANSWERED: tr("پاسخ داده شد", "Answered"), CLOSED: tr("بسته‌شده", "Closed"),
+});
 const STATUS_CLASS: Record<TicketStatus, string> = { OPEN: "open", ANSWERED: "answered", CLOSED: "closed" };
 
 function formatMsgTime(iso: string): string {
@@ -22,7 +23,7 @@ function formatMsgTime(iso: string): string {
   const [jy, jm, jd] = toJalali(d.getFullYear(), d.getMonth() + 1, d.getDate());
   const hh = faNum(String(d.getHours()).padStart(2, "0"));
   const mm = faNum(String(d.getMinutes()).padStart(2, "0"));
-  return `${faNum(jd)} ${J_MONTHS[jm - 1]}، ${hh}:${mm}`;
+  return tr(`${faNum(jd)} ${jMonthName(jm - 1)}، ${hh}:${mm}`, `${faNum(jd)} ${jMonthName(jm - 1)}, ${hh}:${mm}`);
 }
 
 // طبق درخواست صریح: نوار نوشتن پیام پشتیبانی دقیقا مثل «مدیربرنامه»ست —
@@ -76,11 +77,11 @@ export default function SupportTicketPage() {
         body: JSON.stringify({ message: body }),
       });
       const data = await res.json().catch(() => null);
-      if (!res.ok) { setError(data?.error || "ارسال پیام ناموفق بود"); return; }
+      if (!res.ok) { setError(data?.error || tr("ارسال پیام ناموفق بود", "Could not send the message")); return; }
       setReply("");
       await load();
     } catch {
-      setError("ارتباط با سرور برقرار نشد");
+      setError(tr("ارتباط با سرور برقرار نشد", "Could not reach the server"));
     } finally {
       setSending(false);
     }
@@ -89,8 +90,8 @@ export default function SupportTicketPage() {
   async function toggleVoice() {
     if (listening) {
       const blob = await recorder.stop();
-      if (!blob) { setError("چیزی ضبط نشد. دوباره امتحان کن."); return; }
-      if (blob.size > VOICE_MAX_BYTES) { setError("ویس خیلی طولانی است. کوتاه‌تر بگو."); return; }
+      if (!blob) { setError(tr("چیزی ضبط نشد. دوباره امتحان کن.", "Nothing was recorded. Please try again.")); return; }
+      if (blob.size > VOICE_MAX_BYTES) { setError(tr("ویس خیلی طولانی است. کوتاه‌تر بگو.", "The voice message is too long. Keep it shorter.")); return; }
       setSending(true);
       setError(null);
       try {
@@ -98,11 +99,11 @@ export default function SupportTicketPage() {
         fd.append("audio", blob, "voice.webm");
         const res = await fetch("/api/support/tickets/voice", { method: "POST", body: fd });
         const data = await res.json().catch(() => null);
-        if (!res.ok || !data?.text) { setError(data?.error || "تبدیل ویس انجام نشد."); return; }
+        if (!res.ok || !data?.text) { setError(data?.error || tr("تبدیل ویس انجام نشد.", "Could not convert the voice message.")); return; }
         setSending(false);
         await send(data.text);
       } catch {
-        setError("تبدیل ویس انجام نشد. اینترنتت را چک کن.");
+        setError(tr("تبدیل ویس انجام نشد. اینترنتت را چک کن.", "Could not convert the voice message. Check your internet connection."));
       } finally {
         setSending(false);
       }
@@ -114,12 +115,12 @@ export default function SupportTicketPage() {
       try {
         streamRef.current = await navigator.mediaDevices.getUserMedia({ audio: VOICE_CONSTRAINTS });
       } catch {
-        setError("به میکروفون دسترسی نداریم.");
+        setError(tr("به میکروفون دسترسی نداریم.", "We cannot access the microphone."));
         return;
       }
     }
     const ok = recorder.start();
-    if (!ok) setError(recorder.error || "به میکروفون دسترسی نداریم.");
+    if (!ok) setError(recorder.error || tr("به میکروفون دسترسی نداریم.", "We cannot access the microphone."));
   }
 
   const hasText = !!reply.trim();
@@ -127,7 +128,7 @@ export default function SupportTicketPage() {
   if (notFound) {
     return (
       <section>
-        <div className="acc-head"><AccountBackButton /><h1>تیکت پیدا نشد</h1></div>
+        <div className="acc-head"><AccountBackButton /><h1>{tr("تیکت پیدا نشد", "Ticket not found")}</h1></div>
       </section>
     );
   }
@@ -140,7 +141,7 @@ export default function SupportTicketPage() {
         <AccountBackButton />
         <div className="support-head-row">
           <h1>{ticket.subject}</h1>
-          <span className={`support-status ${STATUS_CLASS[ticket.status]}`}>{STATUS_LABEL[ticket.status]}</span>
+          <span className={`support-status ${STATUS_CLASS[ticket.status]}`}>{statusLabel()[ticket.status]}</span>
         </div>
       </div>
 
@@ -162,7 +163,7 @@ export default function SupportTicketPage() {
           rows={1}
           value={reply}
           maxLength={4000}
-          placeholder="پیامت رو بنویس…"
+          placeholder={tr("پیامت رو بنویس…", "Write your message…")}
           onChange={(e) => setReply(e.target.value)}
           onKeyDown={(e) => { if (e.key === "Enter" && !e.shiftKey) { e.preventDefault(); send(); } }}
           disabled={sending}
@@ -172,8 +173,8 @@ export default function SupportTicketPage() {
           className={`routine-ai-action${hasText ? " is-send" : ""}${listening ? " is-recording" : ""}`}
           onClick={() => (hasText ? send() : toggleVoice())}
           disabled={sending}
-          aria-label={hasText ? "ارسال" : listening ? "پایان ضبط" : "ضبط صدا"}
-          title={hasText ? "ارسال" : listening ? "پایان ضبط و ارسال" : "با صدا بگو"}
+          aria-label={hasText ? tr("ارسال", "Send") : listening ? tr("پایان ضبط", "Stop recording") : tr("ضبط صدا", "Record audio")}
+          title={hasText ? tr("ارسال", "Send") : listening ? tr("پایان ضبط و ارسال", "Stop recording and send") : tr("با صدا بگو", "Speak instead")}
         >
           <span className="routine-ai-action-icon" aria-hidden="true"><Mic size={17} /></span>
           <span className="routine-ai-action-icon" aria-hidden="true"><Square size={13} /></span>

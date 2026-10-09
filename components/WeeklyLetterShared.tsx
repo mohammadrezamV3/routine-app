@@ -15,6 +15,7 @@ import { FeatureGate } from "@/components/FeatureGate";
 import { ModuleGate } from "@/components/ModuleGate";
 import { GradientRing, RING_GREEN } from "@/components/GradientRing";
 import { activeModulesOf, getAccount } from "@/lib/accountCache";
+import { tr } from "@/lib/i18n";
 import { parseCountable } from "./WeeklyLetterUtils";
 import "./weekly-letter.css";
 import "./weekly-letter-live.css";
@@ -59,11 +60,11 @@ export async function wlFetch<T>(url: string, init?: RequestInit): Promise<T> {
   try {
     res = await fetch(url, { credentials: "same-origin", ...init });
   } catch {
-    throw new WlError("ارتباط با سرور برقرار نشد", 0);
+    throw new WlError(tr("ارتباط با سرور برقرار نشد", "Could not reach the server"), 0);
   }
   let data: unknown = null;
   try { data = await res.json(); } catch { /* بدنه‌ی خالی */ }
-  if (!res.ok) throw new WlError((data as { error?: string } | null)?.error || "مشکلی پیش اومد", res.status);
+  if (!res.ok) throw new WlError((data as { error?: string } | null)?.error || tr("مشکلی پیش اومد", "Something went wrong"), res.status);
   return data as T;
 }
 
@@ -171,7 +172,7 @@ export function Chapter({ id, no, title, icon: Icon, children }: { id: string; n
           {Icon ? <Icon size={19} /> : <b>{String(no).padStart(2, "0")}</b>}
         </span>
         <span className="wl-ch-txt">
-          <span className="wl-ch-k" aria-hidden="true">فصل {String(no).padStart(2, "0")}</span>
+          <span className="wl-ch-k" aria-hidden="true">{tr("فصل", "Chapter")} {String(no).padStart(2, "0")}</span>
           <h2 className="wl-ch-title">{title}</h2>
         </span>
         <motion.span
@@ -197,7 +198,7 @@ export function GradeStamp({ grade, size = 84, delay = 1, className }: { grade: 
       className={`wl-stamp${className ? ` ${className}` : ""}`}
       style={{ width: size, height: size }}
       role="img"
-      aria-label={`درجه ${grade}`}
+      aria-label={tr(`درجه ${grade}`, `Grade ${grade}`)}
       initial={lite ? { opacity: 0, rotate: -12 } : { opacity: 0, scale: 1.6, rotate: -36 }}
       animate={{ opacity: 1, scale: 1, rotate: -12 }}
       transition={lite ? { duration: 0.3, delay } : { delay, type: "spring", stiffness: 240, damping: 13, mass: 0.9 }}
@@ -251,7 +252,7 @@ export function WeeklyLetterGate({ children, skeleton, whenLocked }: { children:
   if (status === "loading") return <>{skeleton}</>;
   return (
     <section className="wl-root wl-page">
-      <AuthGate message="برای دیدن آنالیز هفتگی وارد شوید" />
+      <AuthGate message={tr("برای دیدن آنالیز هفتگی وارد شوید", "Sign in to see your weekly review")} />
     </section>
   );
 }

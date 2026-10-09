@@ -3,6 +3,7 @@
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import { SegmentedTabs } from "./SegmentedTabs";
+import { tr } from "@/lib/i18n";
 
 type Tab = "login" | "signup";
 const HREF: Record<Tab, string> = { login: "/auth/login", signup: "/auth/signup" };
@@ -36,8 +37,8 @@ export function AuthTabs({ active }: { active: Tab }) {
         router.push(HREF[v], { scroll: false });
       }}
       options={[
-        { value: "login", label: "ورود" },
-        { value: "signup", label: "ثبت‌نام" },
+        { value: "login", label: tr("ورود", "Log in") },
+        { value: "signup", label: tr("ثبت‌نام", "Sign up") },
       ]}
     />
   );

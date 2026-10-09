@@ -7,6 +7,7 @@ import { notifyUser, displayName } from "@/lib/inAppNotify";
 import { PUBLIC_USER_SELECT, feedbackAad, toFeedbackRow } from "@/lib/mentorServer";
 import { sealAtRest } from "@/lib/e2ee/server";
 import { publishToUsers } from "@/lib/realtime";
+import { tr } from "@/lib/i18n";
 
 type Ctx = { params: { id: string } };
 const BODY_MAX = 2000;
@@ -30,29 +31,29 @@ export async function POST(req: Request, { params }: Ctx) {
     select: { id: true, title: true, status: true, studentId: true, mentorship: { select: { status: true } } },
   });
   if (!p) return notFound();
-  if (p.status === "DRAFT") return conflict("برای پیش‌نویس نمی‌شه فیدبک فرستاد");
+  if (p.status === "DRAFT") return conflict(tr("برای پیش‌نویس نمی‌شه فیدبک فرستاد", "Feedback can't be sent for a draft"));
   // بعد از پایان/بلاک رابطه، منتور دیگه راهی برای رسیدن به شاگرد نداره
-  if (p.mentorship.status !== "ACTIVE") return conflict("رابطه با این شاگرد فعال نیست");
-  if (await isMentorSuspended(me)) return forbidden("حساب مربی‌گری تو تعلیق شده");
+  if (p.mentorship.status !== "ACTIVE") return conflict(tr("رابطه با این شاگرد فعال نیست", "The relationship with this student is not active"));
+  if (await isMentorSuspended(me)) return forbidden(tr("حساب مربی‌گری تو تعلیق شده", "Your mentor account is suspended"));
 
   if (!(await checkRateLimit(`mentor-feedback:${me}`, 60, 60 * 60 * 1000))) {
-    return NextResponse.json({ error: "تعداد فیدبک‌ها زیاد بوده؛ کمی بعد دوباره تلاش کن" }, { status: 429 });
+    return NextResponse.json({ error: tr("تعداد فیدبک‌ها زیاد بوده؛ کمی بعد دوباره تلاش کن", "Too many feedback messages; try again shortly") }, { status: 429 });
   }
 
   const parsed = await readJsonBody(req, 16 * 1024);
   if (!parsed.ok) return NextResponse.json({ error: parsed.error }, { status: parsed.status });
   const b = parsed.body || {};
-  if (typeof b.body !== "string" || !b.body.trim()) return badRequest("متن فیدبک لازمه");
+  if (typeof b.body !== "string" || !b.body.trim()) return badRequest(tr("متن فیدبک لازمه", "Feedback text is required"));
   const body = b.body.trim().slice(0, BODY_MAX);
 
   let itemId = optId(b.itemId);
   const logId = optId(b.logId);
-  if (itemId === "bad" || logId === "bad") return badRequest("آیتم یا لاگ نامعتبره");
+  if (itemId === "bad" || logId === "bad") return badRequest(tr("آیتم یا لاگ نامعتبره", "Invalid item or log"));
 
   if (logId) {
     const log = await prisma.mentorProgramLog.findFirst({ where: { id: logId, programId: p.id }, select: { itemId: true } });
     if (!log) return notFound();
-    if (itemId && itemId !== log.itemId) return badRequest("لاگ متعلق به این آیتم نیست");
+    if (itemId && itemId !== log.itemId) return badRequest(tr("لاگ متعلق به این آیتم نیست", "This log does not belong to this item"));
     itemId = log.itemId;
   } else if (itemId) {
     const item = await prisma.mentorProgramItem.findFirst({ where: { id: itemId, programId: p.id }, select: { id: true } });

@@ -1,3 +1,4 @@
+import { tr } from "@/lib/i18n";
 import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 import { requireFeature } from "@/lib/featureFlagsServer";
@@ -65,12 +66,12 @@ async function handlePOST(req: NextRequest) {
   // ساخت هر مسیر یک فراخوانی گران AI است (گاهی سه‌تا، با حلقه‌ی تعمیر) —
   // سقف روی خود کاربر است، نه روی IP.
   if (!(await checkRateLimit(`roadmap:${userId}`, LIMIT, WINDOW_MS))) {
-    return NextResponse.json({ error: "تعداد ساخت مسیر زیاد شد — کمی بعد دوباره امتحان کن" }, { status: 429 });
+    return NextResponse.json({ error: tr("تعداد ساخت مسیر زیاد شد — کمی بعد دوباره امتحان کن", "Too many roadmap creations — try again shortly") }, { status: 429 });
   }
 
   const body = await req.json().catch(() => null);
   const topic = clampText(String((body as any)?.topic || "").trim(), MAX_TOPIC);
-  if (!topic) return NextResponse.json({ error: "بگو چی می‌خوای یاد بگیری" }, { status: 400 });
+  if (!topic) return NextResponse.json({ error: tr("بگو چی می‌خوای یاد بگیری", "Tell us what you want to learn") }, { status: 400 });
   const goalRaw = String((body as any)?.goal || "").trim();
   const goal = goalRaw ? clampText(goalRaw, MAX_GOAL) : undefined;
   // سطح و وقت هفتگی فقط از فهرست ثابت پذیرفته می‌شوند — هر مقدار دیگری

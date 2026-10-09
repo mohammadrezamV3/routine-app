@@ -14,6 +14,7 @@ import {
   TradeEntryDetail,
 } from "@/lib/tradeTypes";
 import { TickButton } from "./TickButton";
+import { tr } from "@/lib/i18n";
 
 // جزئیات کامل یک معامله. عمدا کشویی (نه صفحه‌ی جدا): کاربر معمولا چند
 // معامله را پشت‌سرهم مرور می‌کند و برگشتن به لیست نباید هربار یک ناوبری
@@ -76,33 +77,33 @@ export function TradeDetailDrawer({
 
   const coreRows: [string, string][] = entry
     ? [
-        ["جهت", DIRECTION_LABELS[entry.direction]],
-        ["وضعیت", STATUS_LABELS[entry.status]],
-        ["نتیجه", RESULT_LABELS[entry.result]],
-        ["حجم", `${faNum(entry.volume)} ${entry.volumeUnit === "LOT" ? "لات" : "دلار"}`],
-        ["زمان ورود", formatTradeDateTime(entry.openedAt, calSystem)],
-        ...row("زمان خروج", entry.closedAt ? formatTradeDateTime(entry.closedAt, calSystem) : null),
-        ...row("تایم فریم", entry.timeframe),
-        ...row("قیمت ورود", entry.entryPrice !== null ? faNum(entry.entryPrice) : null),
-        ...row("قیمت خروج", entry.exitPrice !== null ? faNum(entry.exitPrice) : null),
-        ...row("حد ضرر", entry.stopLoss !== null ? faNum(entry.stopLoss) : null),
-        ...row("حد سود", entry.takeProfit !== null ? faNum(entry.takeProfit) : null),
-        ...row("کمیسیون", entry.commission !== null ? faNum(entry.commission) : null),
-        ...row("سواپ", entry.swap !== null ? faNum(entry.swap) : null),
-        ...row("ریسک اولیه", entry.riskAmount !== null ? `${faNum(entry.riskAmount)} ${currency}` : null),
+        [tr("جهت", "Direction"), DIRECTION_LABELS[entry.direction]],
+        [tr("وضعیت", "Status"), STATUS_LABELS[entry.status]],
+        [tr("نتیجه", "Result"), RESULT_LABELS[entry.result]],
+        [tr("حجم", "Volume"), `${faNum(entry.volume)} ${entry.volumeUnit === "LOT" ? tr("لات", "lots") : tr("دلار", "USD")}`],
+        [tr("زمان ورود", "Entry time"), formatTradeDateTime(entry.openedAt, calSystem)],
+        ...row(tr("زمان خروج", "Exit time"), entry.closedAt ? formatTradeDateTime(entry.closedAt, calSystem) : null),
+        ...row(tr("تایم فریم", "Timeframe"), entry.timeframe),
+        ...row(tr("قیمت ورود", "Entry price"), entry.entryPrice !== null ? faNum(entry.entryPrice) : null),
+        ...row(tr("قیمت خروج", "Exit price"), entry.exitPrice !== null ? faNum(entry.exitPrice) : null),
+        ...row(tr("حد ضرر", "Stop loss"), entry.stopLoss !== null ? faNum(entry.stopLoss) : null),
+        ...row(tr("حد سود", "Take profit"), entry.takeProfit !== null ? faNum(entry.takeProfit) : null),
+        ...row(tr("کمیسیون", "Commission"), entry.commission !== null ? faNum(entry.commission) : null),
+        ...row(tr("سواپ", "Swap"), entry.swap !== null ? faNum(entry.swap) : null),
+        ...row(tr("ریسک اولیه", "Initial risk"), entry.riskAmount !== null ? `${faNum(entry.riskAmount)} ${currency}` : null),
         ...row("R", entry.rMultiple !== null ? `${entry.rMultiple > 0 ? "+" : ""}${faNum(entry.rMultiple)}` : null),
-        ...row("جلسه", entry.sessions.length ? entry.sessions.map((s) => SESSION_LABELS[s]).join("، ") : null),
-        ...row("ستاپ", entry.setup),
-        ...row("ریسک‌فری", entry.riskFree ? "بله" : null),
+        ...row(tr("جلسه", "Session"), entry.sessions.length ? entry.sessions.map((s) => SESSION_LABELS[s]).join(tr("، ", ", ")) : null),
+        ...row(tr("ستاپ", "Setup"), entry.setup),
+        ...row(tr("ریسک‌فری", "Risk-free"), entry.riskFree ? tr("بله", "Yes") : null),
       ]
     : [];
 
   const emotionRows: [string, string][] = entry
     ? [
-        ...row("میزان اطمینان", entry.confidence !== null ? `${faNum(entry.confidence)} از 10` : null),
-        ...row("حال قبل از معامله", entry.emotionBefore ? EMOTION_BEFORE_LABELS[entry.emotionBefore] : null),
-        ...row("حال بعد از معامله", entry.emotionAfter ? EMOTION_AFTER_LABELS[entry.emotionAfter] : null),
-        ...row("طبق پلن", entry.followedPlan !== null ? (entry.followedPlan ? "بله" : "خیر") : null),
+        ...row(tr("میزان اطمینان", "Confidence"), entry.confidence !== null ? tr(`${faNum(entry.confidence)} از 10`, `${faNum(entry.confidence)} out of 10`) : null),
+        ...row(tr("حال قبل از معامله", "Mood before the trade"), entry.emotionBefore ? EMOTION_BEFORE_LABELS[entry.emotionBefore] : null),
+        ...row(tr("حال بعد از معامله", "Mood after the trade"), entry.emotionAfter ? EMOTION_AFTER_LABELS[entry.emotionAfter] : null),
+        ...row(tr("طبق پلن", "Followed plan"), entry.followedPlan !== null ? (entry.followedPlan ? tr("بله", "Yes") : tr("خیر", "No")) : null),
       ]
     : [];
 
@@ -125,23 +126,23 @@ export function TradeDetailDrawer({
           <div className="trade-drawer-actions">
             {onEdit ? (
               <button type="button" className="trade-icon-btn" disabled={!entry}
-                onClick={() => entry && onEdit(entry)} aria-label="ویرایش"><Pencil size={16} /></button>
+                onClick={() => entry && onEdit(entry)} aria-label={tr("ویرایش", "Edit")}><Pencil size={16} /></button>
             ) : editHref ? (
-              <Link href={editHref} prefetch className="trade-icon-btn" aria-label="ویرایش در صفحه‌ی حساب" title="ویرایش در صفحه‌ی حساب"><Pencil size={16} /></Link>
+              <Link href={editHref} prefetch className="trade-icon-btn" aria-label={tr("ویرایش در صفحه‌ی حساب", "Edit on the account page")} title={tr("ویرایش در صفحه‌ی حساب", "Edit on the account page")}><Pencil size={16} /></Link>
             ) : null}
             {onDelete && (
-              <button type="button" className="trade-icon-btn danger" onClick={() => setConfirmDelete(true)} aria-label="حذف"><Trash2 size={16} /></button>
+              <button type="button" className="trade-icon-btn danger" onClick={() => setConfirmDelete(true)} aria-label={tr("حذف", "Delete")}><Trash2 size={16} /></button>
             )}
-            <button type="button" className="trade-icon-btn" onClick={onClose} aria-label="بستن" autoFocus><X size={16} /></button>
+            <button type="button" className="trade-icon-btn" onClick={onClose} aria-label={tr("بستن", "Close")} autoFocus><X size={16} /></button>
           </div>
         </div>
 
-        {loading && <div className="item-line is-loading">در حال بارگذاری...</div>}
-        {!loading && !entry && <div className="item-line empty">معامله پیدا نشد</div>}
+        {loading && <div className="item-line is-loading">{tr("در حال بارگذاری...", "Loading...")}</div>}
+        {!loading && !entry && <div className="item-line empty">{tr("معامله پیدا نشد", "Trade not found")}</div>}
 
         {entry && (
           <>
-            <Section title="اطلاعات">
+            <Section title={tr("اطلاعات", "Information")}>
               <div className="trade-detail-grid">
                 {coreRows.map(([k, v]) => (
                   <div key={k} className="trade-detail-cell">
@@ -153,7 +154,7 @@ export function TradeDetailDrawer({
             </Section>
 
             {!!entry.entryReasons.length && (
-              <Section title="دلایل ورود">
+              <Section title={tr("دلایل ورود", "Entry reasons")}>
                 <div className="trade-choice-grid readonly">
                   {entry.entryReasons.map((r) => <span key={r} className="trade-choice active">{ENTRY_REASON_LABELS[r]}</span>)}
                 </div>
@@ -162,7 +163,7 @@ export function TradeDetailDrawer({
             )}
 
             {!!entry.exitReasons.length && (
-              <Section title="دلایل خروج">
+              <Section title={tr("دلایل خروج", "Exit reasons")}>
                 <div className="trade-choice-grid readonly">
                   {entry.exitReasons.map((r) => <span key={r} className="trade-choice active">{EXIT_REASON_LABELS[r]}</span>)}
                 </div>
@@ -171,10 +172,10 @@ export function TradeDetailDrawer({
             )}
 
             {entry.checklistSnapshot && entry.checklistSnapshot.length > 0 && (
-              <Section title={`چک‌لیست: ${entry.checklistName || ""}`}>
+              <Section title={tr(`چک‌لیست: ${entry.checklistName || ""}`, `Checklist: ${entry.checklistName || ""}`)}>
                 <div className="trade-checklist-progress">
                   <b className="mono">{faNum(entry.checklistDone ?? 0)} / {faNum(entry.checklistTotal ?? 0)}</b>
-                  <span>وضعیت در لحظه‌ی ثبت</span>
+                  <span>{tr("وضعیت در لحظه‌ی ثبت", "Status when the trade was logged")}</span>
                 </div>
                 <div className="trade-checklist-items">
                   {entry.checklistSnapshot.map((i, idx) => (
@@ -188,18 +189,18 @@ export function TradeDetailDrawer({
             )}
 
             {!!entry.images.length && (
-              <Section title="عکس‌ها">
+              <Section title={tr("عکس‌ها", "Images")}>
                 <div className="trade-image-grid">
                   {entry.images.map((img) => (
                     // eslint-disable-next-line @next/next/no-img-element
-                    <img key={img.id} src={img.dataUrl} alt="تصویر معامله" className="trade-image-thumb" onClick={() => setLightbox(img.dataUrl)} />
+                    <img key={img.id} src={img.dataUrl} alt={tr("تصویر معامله", "Trade image")} className="trade-image-thumb" onClick={() => setLightbox(img.dataUrl)} />
                   ))}
                 </div>
               </Section>
             )}
 
             {!!entry.tags.length && (
-              <Section title="برچسب‌ها">
+              <Section title={tr("برچسب‌ها", "Tags")}>
                 <div className="trade-tag-row">
                   {entry.tags.map((t) => (
                     <span key={t.id} className="trade-tag-chip active" style={{ "--tag-c": t.color } as CSSProperties}>
@@ -212,7 +213,7 @@ export function TradeDetailDrawer({
             )}
 
             {!!emotionRows.length && (
-              <Section title="احساسات">
+              <Section title={tr("احساسات", "Emotions")}>
                 <div className="trade-detail-grid">
                   {emotionRows.map(([k, v]) => (
                     <div key={k} className="trade-detail-cell">
@@ -224,16 +225,16 @@ export function TradeDetailDrawer({
               </Section>
             )}
 
-            {entry.note && <Section title="نکات معامله"><p className="trade-detail-note">{entry.note}</p></Section>}
+            {entry.note && <Section title={tr("نکات معامله", "Trade notes")}><p className="trade-detail-note">{entry.note}</p></Section>}
           </>
         )}
 
         {confirmDelete && onDelete && (
           <div className="trade-inline-confirm">
-            <span>این معامله برای همیشه حذف شود؟</span>
+            <span>{tr("این معامله برای همیشه حذف شود؟", "Delete this trade permanently?")}</span>
             <div className="trade-modal-actions">
-              <button type="button" className="account-outline-btn" onClick={() => setConfirmDelete(false)}>لغو</button>
-              <button type="button" className="trade-danger-btn" onClick={onDelete}>حذف</button>
+              <button type="button" className="account-outline-btn" onClick={() => setConfirmDelete(false)}>{tr("لغو", "Cancel")}</button>
+              <button type="button" className="trade-danger-btn" onClick={onDelete}>{tr("حذف", "Delete")}</button>
             </div>
           </div>
         )}
@@ -242,7 +243,7 @@ export function TradeDetailDrawer({
       {lightbox && (
         <div className="trade-lightbox" onClick={() => setLightbox(null)}>
           {/* eslint-disable-next-line @next/next/no-img-element */}
-          <img src={lightbox} alt="تصویر معامله" />
+          <img src={lightbox} alt={tr("تصویر معامله", "Trade image")} />
         </div>
       )}
     </>,

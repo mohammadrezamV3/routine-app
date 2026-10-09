@@ -16,7 +16,8 @@ import { MentorTemplateSaveDialog } from "./MentorTemplateSaveDialog";
 import { fa, mentorApi } from "./MentorDashKit";
 import { MI, MI_STROKE, MentorChip, MentorField, MentorNotice } from "./MentorUI";
 import { WEEK_ORDER, toEnDigits } from "@/lib/schedule";
-import { FA_WEEKDAY, JalaliDate, formatJalali, jalaliToIso, toJalali } from "@/lib/jalali";
+import { weekdayName, JalaliDate, formatJalali, jalaliToIso, toJalali } from "@/lib/jalali";
+import { tr, trv } from "@/lib/i18n";
 import { publicUserName } from "@/lib/mentorTypes";
 import type { Item, ItemInput, Program, ProgramType, PublicUser } from "@/lib/mentorTypes";
 
@@ -87,28 +88,28 @@ function intIn(v: string, min: number, max: number): number | null | "bad" {
 function validateDraft(d: Draft, type: ProgramType): { errors: ItemErrors; input: ItemInput | null } {
   const errors: ItemErrors = {};
   const title = d.title.trim();
-  if (!title) errors.title = "عنوان لازم است";
-  else if (title.length > ITEM_TITLE_MAX) errors.title = `حداکثر ${fa(ITEM_TITLE_MAX)} حرف`;
-  if (d.details.trim().length > ITEM_DETAILS_MAX) errors.details = `حداکثر ${fa(ITEM_DETAILS_MAX)} حرف`;
-  if (d.repeat === "WEEKLY" && d.days.length === 0) errors.days = "حداقل یک روز رو انتخاب کن";
+  if (!title) errors.title = tr("عنوان لازم است", "A title is required");
+  else if (title.length > ITEM_TITLE_MAX) errors.title = tr(`حداکثر ${fa(ITEM_TITLE_MAX)} حرف`, `At most ${fa(ITEM_TITLE_MAX)} characters`);
+  if (d.details.trim().length > ITEM_DETAILS_MAX) errors.details = tr(`حداکثر ${fa(ITEM_DETAILS_MAX)} حرف`, `At most ${fa(ITEM_DETAILS_MAX)} characters`);
+  if (d.repeat === "WEEKLY" && d.days.length === 0) errors.days = tr("حداقل یک روز رو انتخاب کن", "Pick at least one day");
   const time = toEnDigits(d.startTime).trim();
-  if (time && !HHMM_RE.test(time)) errors.startTime = "ساعت باید به شکل 08:30 باشد";
+  if (time && !HHMM_RE.test(time)) errors.startTime = tr("ساعت باید به شکل 08:30 باشد", "Time must look like 08:30");
   const dur = intIn(d.durationMin, 1, 1440);
-  if (dur === "bad") errors.durationMin = "بین 1 تا 1440 دقیقه";
+  if (dur === "bad") errors.durationMin = tr("بین 1 تا 1440 دقیقه", "Between 1 and 1440 minutes");
 
   let sets: number | null = null, reps: string | null = null, weight: number | null = null, rest: number | null = null;
   if (type === "WORKOUT") {
     const s = intIn(d.sets, 1, 100);
-    if (s === "bad") errors.sets = "بین 1 تا 100"; else sets = s;
+    if (s === "bad") errors.sets = tr("بین 1 تا 100", "Between 1 and 100"); else sets = s;
     const r = toEnDigits(d.reps).trim();
-    if (r && !REPS_RE.test(r)) errors.reps = "عدد یا بازه، مثل 8-12"; else reps = r || null;
+    if (r && !REPS_RE.test(r)) errors.reps = tr("عدد یا بازه، مثل 8-12", "A number or a range, like 8-12"); else reps = r || null;
     const w = toEnDigits(d.weightKg).trim();
     if (w) {
       const n = Number(w);
-      if (!Number.isFinite(n) || n < 0 || n > 1000) errors.weightKg = "بین 0 تا 1000 کیلوگرم"; else weight = Math.round(n * 10) / 10;
+      if (!Number.isFinite(n) || n < 0 || n > 1000) errors.weightKg = tr("بین 0 تا 1000 کیلوگرم", "Between 0 and 1000 kg"); else weight = Math.round(n * 10) / 10;
     }
     const rs = intIn(d.restSec, 0, 3600);
-    if (rs === "bad") errors.restSec = "بین 0 تا 3600 ثانیه"; else rest = rs;
+    if (rs === "bad") errors.restSec = tr("بین 0 تا 3600 ثانیه", "Between 0 and 3600 seconds"); else rest = rs;
   }
   if (Object.keys(errors).length) return { errors, input: null };
 
@@ -175,10 +176,10 @@ function weeksBetween(a: JalaliDate | null, b: JalaliDate | null): number | null
 
 function itemSummary(d: Draft): string {
   const parts: string[] = [];
-  if (d.repeat === "DAILY" || d.days.length === 7) parts.push("هر روز");
-  else if (d.days.length) parts.push(WEEK_ORDER.filter((o) => d.days.includes(o.jsDay)).map((o) => FA_WEEKDAY[o.jsDay]).join("، "));
+  if (d.repeat === "DAILY" || d.days.length === 7) parts.push(tr("هر روز", "Every day"));
+  else if (d.days.length) parts.push(WEEK_ORDER.filter((o) => d.days.includes(o.jsDay)).map((o) => weekdayName(o.jsDay)).join(tr("، ", ", ")));
   if (d.startTime) parts.push(toEnDigits(d.startTime));
-  if (d.durationMin) parts.push(`${toEnDigits(d.durationMin)} دقیقه`);
+  if (d.durationMin) parts.push(tr(`${toEnDigits(d.durationMin)} دقیقه`, `${toEnDigits(d.durationMin)} min`));
   return parts.join(" · ");
 }
 
@@ -193,7 +194,7 @@ export function MentorProgramEditor(props: MentorProgramEditorProps) {
   const seed = initialProgram ?? prefill;
   const student = props.student;
   const allowed: ProgramType[] = props.mode === "new" ? props.allowedTypes : [initialProgram!.type];
-  const typeOptions = allowed.map((v) => ({ value: v, label: v === "ROUTINE" ? "روتین" : "تمرین ورزشی" }));
+  const typeOptions = allowed.map((v) => ({ value: v, label: v === "ROUTINE" ? tr("روتین", "Routine") : tr("تمرین ورزشی", "Workout") }));
   const locked = props.mode === "new" ? props.locked : false;
 
   const [programId, setProgramId] = useState<string | null>(initialProgram?.id ?? null);
@@ -222,7 +223,7 @@ export function MentorProgramEditor(props: MentorProgramEditorProps) {
   const listRef = useRef<HTMLDivElement>(null);
 
   const neverSent = !initialProgram?.sentAt;
-  const studentFirst = (student?.name || "").trim().split(/\s+/)[0] || (student ? publicUserName(student) : "شاگرد");
+  const studentFirst = (student?.name || "").trim().split(/\s+/)[0] || (student ? publicUserName(student) : tr("شاگرد", "Student"));
 
   // پر کردن دوباره‌ی فرم وقتی قالب/کپی تازه‌ای انتخاب شد (یا پاک شد)
   const prefillKey = props.mode === "new" ? props.prefillKey ?? "" : "";
@@ -264,7 +265,8 @@ export function MentorProgramEditor(props: MentorProgramEditorProps) {
       .catch(() => {});
     return () => { alive = false; };
   }, [type, exerciseNames.length]);
-  const itemWord = type === "WORKOUT" ? "حرکت" : "کار";
+  const itemWord = type === "WORKOUT" ? tr("حرکت", "exercises") : tr("کار", "tasks");
+  const itemWord1 = type === "WORKOUT" ? tr("حرکت", "exercise") : tr("کار", "task");
 
   useEffect(() => {
     if (!saved) return;
@@ -310,7 +312,7 @@ export function MentorProgramEditor(props: MentorProgramEditorProps) {
   }
 
   function addItem() {
-    if (items.length >= MAX_ITEMS) { setFormErr((f) => ({ ...f, items: `حداکثر ${fa(MAX_ITEMS)} ${itemWord}` })); return; }
+    if (items.length >= MAX_ITEMS) { setFormErr((f) => ({ ...f, items: tr(`حداکثر ${fa(MAX_ITEMS)} ${itemWord}`, `At most ${fa(MAX_ITEMS)} ${itemWord}`) })); return; }
     const d = emptyDraft();
     setItems((xs) => [...xs, d]);
     setOpenKeys((s) => new Set(s).add(d.key));
@@ -323,15 +325,15 @@ export function MentorProgramEditor(props: MentorProgramEditorProps) {
   function buildBody(forSend: boolean): ProgramBody | null {
     const f: typeof formErr = {};
     const t = title.trim();
-    if (!t) f.title = "اسم برنامه لازمه";
-    else if (t.length > TITLE_MAX) f.title = `حداکثر ${fa(TITLE_MAX)} حرف`;
-    if (description.trim().length > DESC_MAX) f.description = `حداکثر ${fa(DESC_MAX)} حرف`;
-    if (note.trim().length > NOTE_MAX) f.note = `حداکثر ${fa(NOTE_MAX)} حرف`;
+    if (!t) f.title = tr("اسم برنامه لازمه", "A program name is required");
+    else if (t.length > TITLE_MAX) f.title = tr(`حداکثر ${fa(TITLE_MAX)} حرف`, `At most ${fa(TITLE_MAX)} characters`);
+    if (description.trim().length > DESC_MAX) f.description = tr(`حداکثر ${fa(DESC_MAX)} حرف`, `At most ${fa(DESC_MAX)} characters`);
+    if (note.trim().length > NOTE_MAX) f.note = tr(`حداکثر ${fa(NOTE_MAX)} حرف`, `At most ${fa(NOTE_MAX)} characters`);
     const sIso = startDate ? jalaliToIso(...startDate) : null;
     const eIso = endDate ? jalaliToIso(...endDate) : null;
-    if ((startDate && !sIso) || (endDate && !eIso)) f.dates = "تاریخ معتبر نیست";
-    else if (sIso && eIso && eIso < sIso) f.dates = "تاریخ پایان باید بعد از تاریخ شروع باشه";
-    if (items.length > MAX_ITEMS) f.items = `حداکثر ${fa(MAX_ITEMS)} ${itemWord}`;
+    if ((startDate && !sIso) || (endDate && !eIso)) f.dates = tr("تاریخ معتبر نیست", "The date is not valid");
+    else if (sIso && eIso && eIso < sIso) f.dates = tr("تاریخ پایان باید بعد از تاریخ شروع باشه", "The end date must be after the start date");
+    if (items.length > MAX_ITEMS) f.items = tr(`حداکثر ${fa(MAX_ITEMS)} ${itemWord}`, `At most ${fa(MAX_ITEMS)} ${itemWord}`);
 
     const errs: Record<string, ItemErrors> = {};
     const inputs: ItemInput[] = [];
@@ -341,14 +343,14 @@ export function MentorProgramEditor(props: MentorProgramEditorProps) {
       const r = validateDraft(d, type);
       if (r.input) inputs.push(r.input); else errs[d.key] = r.errors;
     }
-    if (forSend && meaningful.length === 0) f.items = `برای فرستادن، حداقل یک ${itemWord} اضافه کن`;
+    if (forSend && meaningful.length === 0) f.items = tr(`برای فرستادن، حداقل یک ${itemWord} اضافه کن`, `Add at least one ${itemWord1} before sending`);
 
     setFormErr(f);
     setItemErrors(errs);
     const bad = Object.keys(errs);
     if (bad.length) setOpenKeys((s) => { const n = new Set(s); bad.forEach((k) => n.add(k)); return n; });
     if (Object.keys(f).length || bad.length) {
-      setError(bad.length ? `چند مورد نیاز به اصلاح داره؛ ${fa(bad.length)} ${itemWord} مشکل داره` : "چند مورد نیاز به اصلاح داره");
+      setError(bad.length ? tr(`چند مورد نیاز به اصلاح داره؛ ${fa(bad.length)} ${itemWord} مشکل داره`, `A few things need fixing; ${fa(bad.length)} ${bad.length === 1 ? itemWord1 : itemWord} ${bad.length === 1 ? "has" : "have"} a problem`) : tr("چند مورد نیاز به اصلاح داره", "A few things need fixing"));
       return null;
     }
     const body: ProgramBody = { type, title: t, note: note.trim() || null, items: inputs };
@@ -361,11 +363,11 @@ export function MentorProgramEditor(props: MentorProgramEditorProps) {
   async function persist(body: ProgramBody): Promise<string | null> {
     if (programId) {
       const r = await mentorApi<{ program: Program }>(`/api/mentor-programs/${programId}`, { method: "PUT", body });
-      if (!r.ok) { setError(r.status === 409 ? "این برنامه فرستاده شده و دیگه ویرایش نمی‌شه" : r.error); return null; }
+      if (!r.ok) { setError(r.status === 409 ? tr("این برنامه فرستاده شده و دیگه ویرایش نمی‌شه", "This program was sent and can no longer be edited") : r.error); return null; }
       return programId;
     }
     const mentorshipId = props.mode === "new" ? props.mentorshipId : initialProgram?.mentorshipId;
-    if (!mentorshipId) { setError("اول شاگرد رو انتخاب کن"); return null; }
+    if (!mentorshipId) { setError(tr("اول شاگرد رو انتخاب کن", "Pick a student first")); return null; }
     const templateId = prefill?.templateId;
     const r = await mentorApi<{ program: Program }>("/api/mentor-programs", { method: "POST", body: { mentorshipId, ...body, ...(templateId ? { templateId } : {}) } });
     if (!r.ok) { setError(r.error); return null; }
@@ -398,7 +400,7 @@ export function MentorProgramEditor(props: MentorProgramEditorProps) {
     const r = await mentorApi<{ program: Program }>(`/api/mentor-programs/${id}/transition`, { method: "POST", body: { action: "send" } });
     if (!r.ok) {
       setBusy(null);
-      setError(`برنامه ذخیره شد ولی فرستاده نشد؛ ${r.error}`);
+      setError(tr(`برنامه ذخیره شد ولی فرستاده نشد؛ ${r.error}`, `The program was saved but not sent: ${r.error}`));
       if (props.mode === "new") window.history.replaceState(null, "", `/mentor/programs/${id}/edit`);
       return;
     }
@@ -435,13 +437,13 @@ export function MentorProgramEditor(props: MentorProgramEditorProps) {
   return (
     <div className="mv2-pg-editor">
       {initialProgram?.changeRequestNote && (
-        <MentorNotice tone="warn" icon={ic(MessageSquareText, MI.row)} title={`${studentFirst} تغییر خواسته`}>
+        <MentorNotice tone="warn" icon={ic(MessageSquareText, MI.row)} title={tr(`${studentFirst} تغییر خواسته`, `${studentFirst} asked for changes`)}>
           {initialProgram.changeRequestNote}
         </MentorNotice>
       )}
 
       <section className="mv2-pg-block" aria-labelledby="pe-sec1">
-        <div id="pe-sec1">{sec(1, "برای کی؟")}</div>
+        <div id="pe-sec1">{sec(1, tr("برای کی؟", "For whom?"))}</div>
         {props.mode === "new" ? props.startSlot : student && (
           <div className="mv2-pg-who">
             <MentorUserAvatar avatarUrl={student.avatarUrl} name={publicUserName(student)} size={40} />
@@ -453,7 +455,7 @@ export function MentorProgramEditor(props: MentorProgramEditorProps) {
       {!locked && (
         <>
           <section className="mv2-pg-block" aria-labelledby="pe-sec2">
-            <div id="pe-sec2">{sec(2, "چی؟")}</div>
+            <div id="pe-sec2">{sec(2, tr("چی؟", "What?"))}</div>
             <div className="mentor-form">
               {typeOptions.length > 1 && (
                 <SegmentedTabs<ProgramType>
@@ -463,37 +465,37 @@ export function MentorProgramEditor(props: MentorProgramEditorProps) {
                 />
               )}
 
-              <MentorField label="اسم برنامه" htmlFor="pe-title" error={formErr.title}>
+              <MentorField label={tr("اسم برنامه", "Program name")} htmlFor="pe-title" error={formErr.title}>
                 <input
                   id="pe-title" type="text" className="wsearch-newform-name trade-glass-field" maxLength={TITLE_MAX} value={title}
-                  placeholder={type === "WORKOUT" ? "مثلا برنامه‌ی حجم 8 هفته‌ای" : "مثلا روتین صبحگاهی"}
+                  placeholder={type === "WORKOUT" ? tr("مثلا برنامه‌ی حجم 8 هفته‌ای", "For example: 8-week volume plan") : tr("مثلا روتین صبحگاهی", "For example: Morning routine")}
                   onChange={(e) => { setTitle(e.target.value); setFormErr((f) => ({ ...f, title: undefined })); dirty(); }}
                 />
               </MentorField>
 
-              <MentorField label="توضیح برای شاگرد" htmlFor="pe-desc" optional error={formErr.description}>
+              <MentorField label={tr("توضیح برای شاگرد", "Description for the student")} htmlFor="pe-desc" optional error={formErr.description}>
                 <textarea
                   id="pe-desc" className="wsearch-newform-name trade-glass-field" rows={3} maxLength={DESC_MAX} value={description}
-                  placeholder="مثلا هدف برنامه و نکات کلی"
+                  placeholder={tr("مثلا هدف برنامه و نکات کلی", "For example: the goal of the program and general tips")}
                   onChange={(e) => { setDescription(e.target.value); setFormErr((f) => ({ ...f, description: undefined })); dirty(); }}
                 />
               </MentorField>
 
               <MentorField
-                label="بازه‌ی زمانی" optional error={formErr.dates}
-                hint="بدون تاریخ شروع، برنامه از روزی که شاگرد قبول کنه شروع می‌شه؛ با تاریخ شروع در آینده، همون روز خودکار فعال می‌شه"
+                label={tr("بازه‌ی زمانی", "Date range")} optional error={formErr.dates}
+                hint={tr("بدون تاریخ شروع، برنامه از روزی که شاگرد قبول کنه شروع می‌شه؛ با تاریخ شروع در آینده، همون روز خودکار فعال می‌شه", "With no start date, the program starts the day the student accepts. With a future start date, it starts automatically that day.")}
               >
                 <div className={`wsearch-date-row${formErr.dates ? " field-error" : ""}`} style={{ marginTop: 0 }}>
                   <div className="time-field">
-                    <span className="time-field-label">شروع</span>
+                    <span className="time-field-label">{tr("شروع", "Start")}</span>
                     <button type="button" className={`jdate-btn${startDate ? "" : " placeholder"}`} onClick={() => setPicker("start")}>
-                      {startDate ? formatJalali(startDate) : "روز / ماه / سال"}
+                      {startDate ? formatJalali(startDate) : tr("روز / ماه / سال", "Day / month / year")}
                     </button>
                   </div>
                   <div className="time-field">
-                    <span className="time-field-label">پایان</span>
+                    <span className="time-field-label">{tr("پایان", "End")}</span>
                     <button type="button" className={`jdate-btn${endDate ? "" : " placeholder"}`} onClick={() => setPicker("end")}>
-                      {endDate ? formatJalali(endDate) : "روز / ماه / سال"}
+                      {endDate ? formatJalali(endDate) : tr("روز / ماه / سال", "Day / month / year")}
                     </button>
                   </div>
                 </div>
@@ -503,19 +505,19 @@ export function MentorProgramEditor(props: MentorProgramEditorProps) {
                       type="button" className="mentor-text-btn"
                       onClick={() => { setStartDate(null); setEndDate(null); setFormErr((f) => ({ ...f, dates: undefined })); dirty(); }}
                     >
-                      {ic(X, MI.btnSm)} پاک کردن تاریخ‌ها
+                      {ic(X, MI.btnSm)} {tr("پاک کردن تاریخ‌ها", "Clear dates")}
                     </button>
                   </div>
                 )}
               </MentorField>
 
               <MentorField
-                label="یادداشت برای شاگرد" htmlFor="pe-note" optional error={formErr.note}
-                hint={`${fa(note.length)} از ${fa(NOTE_MAX)} حرف`}
+                label={tr("یادداشت برای شاگرد", "Note for the student")} htmlFor="pe-note" optional error={formErr.note}
+                hint={tr(`${fa(note.length)} از ${fa(NOTE_MAX)} حرف`, `${fa(note.length)} of ${fa(NOTE_MAX)} characters`)}
               >
                 <textarea
                   id="pe-note" className="wsearch-newform-name trade-glass-field" rows={3} maxLength={NOTE_MAX} value={note}
-                  placeholder="مثلا هفته‌ی اول وزنه‌ها رو سبک‌تر بردار و روی فرم حرکت کار کن"
+                  placeholder={tr("مثلا هفته‌ی اول وزنه‌ها رو سبک‌تر بردار و روی فرم حرکت کار کن", "For example: Go lighter on weights in week one and focus on form")}
                   onChange={(e) => { setNote(e.target.value); setFormErr((f) => ({ ...f, note: undefined })); dirty(); }}
                 />
               </MentorField>
@@ -524,7 +526,7 @@ export function MentorProgramEditor(props: MentorProgramEditorProps) {
 
           <section className="mv2-pg-block" aria-labelledby="pe-sec3">
             <div id="pe-sec3">
-              {sec(3, type === "WORKOUT" ? "حرکت‌ها" : "کارها", <span className="mv2-pg-count">{fa(items.length)}</span>)}
+              {sec(3, type === "WORKOUT" ? tr("حرکت‌ها", "Exercises") : tr("کارها", "Tasks"), <span className="mv2-pg-count">{fa(items.length)}</span>)}
             </div>
             {type === "WORKOUT" && (
               <datalist id="pe-exercise-names">
@@ -553,11 +555,11 @@ export function MentorProgramEditor(props: MentorProgramEditorProps) {
             </div>
             {formErr.items && <p className="mentor-field-error" role="alert">{formErr.items}</p>}
             <div className="mv2-pg-addrow">
-              <button type="button" className="trade-icon-btn mv2-pg-add" onClick={addItem} disabled={items.length >= MAX_ITEMS} aria-label={type === "WORKOUT" ? "افزودن حرکت" : "افزودن کار"}>
+              <button type="button" className="trade-icon-btn mv2-pg-add" onClick={addItem} disabled={items.length >= MAX_ITEMS} aria-label={type === "WORKOUT" ? tr("افزودن حرکت", "Add exercise") : tr("افزودن کار", "Add task")}>
                 <Plus size={20} strokeWidth={2} aria-hidden />
               </button>
               <button type="button" className="mentor-text-btn" onClick={saveAsTemplate} disabled={!!busy}>
-                {ic(LayoutTemplate, MI.btnSm)} ذخیره به‌عنوان قالب
+                {ic(LayoutTemplate, MI.btnSm)} {tr("ذخیره به‌عنوان قالب", "Save as template")}
               </button>
             </div>
           </section>
@@ -565,7 +567,7 @@ export function MentorProgramEditor(props: MentorProgramEditorProps) {
           {programId && neverSent && props.mode === "edit" && (
             <div className="mv2-pg-danger">
               <button type="button" className="trade-danger-btn mentor-btn is-sm" disabled={!!busy} onClick={() => { setDeleteError(null); setConfirmDelete(true); }}>
-                {ic(Trash2, MI.btnSm)} حذف این برنامه
+                {ic(Trash2, MI.btnSm)} {tr("حذف این برنامه", "Delete this program")}
               </button>
             </div>
           )}
@@ -574,15 +576,15 @@ export function MentorProgramEditor(props: MentorProgramEditorProps) {
 
           <div className="mv2-pg-foot">
             <div className="mv2-pg-foot-sum">
-              <b>{fa(countable)} {itemWord}</b>{weeks != null ? ` · ${fa(weeks)} هفته` : ""}
-              {edited && <MentorChip tone="neutral">ویرایش‌شده</MentorChip>}
+              <b>{fa(countable)} {countable === 1 ? itemWord1 : itemWord}</b>{weeks != null ? tr(` · ${fa(weeks)} هفته`, ` · ${fa(weeks)} ${weeks === 1 ? "week" : "weeks"}`) : ""}
+              {edited && <MentorChip tone="neutral">{tr("ویرایش‌شده", "Edited")}</MentorChip>}
             </div>
             <div className="mv2-pg-foot-btns">
               <button type="button" className="account-outline-btn mentor-btn" disabled={!!busy} onClick={saveDraft}>
-                {busy === "save" ? <Spinner size={14} /> : saved ? "ذخیره شد" : "ذخیره"}
+                {busy === "save" ? <Spinner size={14} /> : saved ? tr("ذخیره شد", "Saved") : tr("ذخیره", "Save")}
               </button>
               <button type="button" className="trade-primary-btn mentor-btn" disabled={!!busy} onClick={send}>
-                {busy === "send" ? <Spinner size={14} /> : `فرستادن برای ${studentFirst}`}
+                {busy === "send" ? <Spinner size={14} /> : tr(`فرستادن برای ${studentFirst}`, `Send to ${studentFirst}`)}
               </button>
             </div>
           </div>
@@ -591,9 +593,9 @@ export function MentorProgramEditor(props: MentorProgramEditorProps) {
 
       {confirmDelete && (
         <MentorConfirmDialog
-          message={title.trim() ? `برنامه‌ی «${title.trim()}» حذف بشه؟` : "این برنامه حذف بشه؟"}
-          hint="برنامه‌ی حذف‌شده برنمی‌گرده"
-          confirmLabel="حذف برنامه"
+          message={title.trim() ? tr(`برنامه‌ی «${title.trim()}» حذف بشه؟`, `Delete the program "${title.trim()}"?`) : tr("این برنامه حذف بشه؟", "Delete this program?")}
+          hint={tr("برنامه‌ی حذف‌شده برنمی‌گرده", "A deleted program cannot be restored")}
+          confirmLabel={tr("حذف برنامه", "Delete program")}
           busy={busy === "delete"}
           error={deleteError}
           onConfirm={remove}
@@ -612,7 +614,7 @@ export function MentorProgramEditor(props: MentorProgramEditorProps) {
       {picker && (
         <JalaliDatePicker
           initial={picker === "start" ? startDate : endDate}
-          title={picker === "start" ? "تاریخ شروع برنامه" : "تاریخ پایان برنامه"}
+          title={picker === "start" ? tr("تاریخ شروع برنامه", "Program start date") : tr("تاریخ پایان برنامه", "Program end date")}
           disablePast
           onClose={() => setPicker(null)}
           onPick={(v) => {
@@ -644,7 +646,7 @@ function MentorProgramEditorItem({
 }) {
   const controls = useDragControls();
   const id = (f: string) => `pe-${d.key}-${f}`;
-  const word = type === "WORKOUT" ? "حرکت" : "کار";
+  const word = type === "WORKOUT" ? tr("حرکت", "Exercise") : tr("کار", "Task");
   const name = d.title.trim() || `${word} ${fa(index + 1)}`;
   const summary = itemSummary(d);
   const hasErr = Object.keys(errors).length > 0;
@@ -656,7 +658,7 @@ function MentorProgramEditorItem({
     >
       <div className="mv2-pg-item-head">
         <button
-          type="button" className="mv2-pg-grip" aria-label={`جابه‌جایی ${name}`}
+          type="button" className="mv2-pg-grip" aria-label={tr(`جابه‌جایی ${name}`, `Move ${name}`)}
           onPointerDown={(e) => { e.preventDefault(); controls.start(e); }}
           onKeyDown={(e) => {
             if (e.key === "ArrowUp" && index > 0) { e.preventDefault(); e.stopPropagation(); onMove(-1); }
@@ -668,38 +670,38 @@ function MentorProgramEditorItem({
         <button type="button" className="mv2-pg-item-main" onClick={onToggle} aria-expanded={open} aria-controls={id("body")}>
           <span className="mv2-pg-item-title">{name}</span>
           {summary && <span className="mv2-pg-item-sum">{summary}</span>}
-          {hasErr && !open && <span className="mv2-pg-item-err">نیاز به اصلاح داره</span>}
+          {hasErr && !open && <span className="mv2-pg-item-err">{tr("نیاز به اصلاح داره", "Needs fixing")}</span>}
           <ChevronDown size={18} strokeWidth={MI_STROKE} className={`mv2-pg-chev${open ? " is-open" : ""}`} aria-hidden />
         </button>
-        <button type="button" className="trade-icon-btn danger" onClick={onRemove} aria-label={`حذف ${name}`}>
+        <button type="button" className="trade-icon-btn danger" onClick={onRemove} aria-label={tr(`حذف ${name}`, `Delete ${name}`)}>
           <X size={16} strokeWidth={MI_STROKE} aria-hidden />
         </button>
       </div>
 
       <MentorCollapse open={open} id={id("body")}>
         <div className="mentor-form mv2-pg-item-body">
-          <MentorField label={type === "WORKOUT" ? "اسم حرکت" : "اسم کار"} htmlFor={id("title")} error={errors.title}>
+          <MentorField label={type === "WORKOUT" ? tr("اسم حرکت", "Exercise name") : tr("اسم کار", "Task name")} htmlFor={id("title")} error={errors.title}>
             <input
               id={id("title")} type="text" className="wsearch-newform-name trade-glass-field" maxLength={ITEM_TITLE_MAX} value={d.title}
               list={type === "WORKOUT" ? "pe-exercise-names" : undefined}
-              placeholder={type === "WORKOUT" ? "مثلا اسکوات با هالتر" : "مثلا پیاده‌روی 30 دقیقه"}
+              placeholder={type === "WORKOUT" ? tr("مثلا اسکوات با هالتر", "For example: Barbell squat") : tr("مثلا پیاده‌روی 30 دقیقه", "For example: 30-minute walk")}
               onChange={(e) => onPatch({ title: e.target.value })}
             />
           </MentorField>
 
-          <MentorField label="چه روزهایی؟" error={errors.days}>
+          <MentorField label={tr("چه روزهایی؟", "Which days?")} error={errors.days}>
             <SegmentedTabs<"DAILY" | "WEEKLY">
               active={d.repeat}
               onChange={(v) => onPatch({ repeat: v, days: v === "DAILY" ? [] : d.days })}
-              options={[{ value: "WEEKLY", label: "روزهای مشخص" }, { value: "DAILY", label: "هر روز" }]}
+              options={[{ value: "WEEKLY", label: tr("روزهای مشخص", "Specific days") }, { value: "DAILY", label: tr(tr("هر روز", "Every day"), "Every day") }]}
             />
             {d.repeat === "WEEKLY" && (
-              <div className={`add-program-glass mv2-pg-days${errors.days ? " field-error" : ""}`} role="group" aria-label="روزهای هفته">
+              <div className={`add-program-glass mv2-pg-days${errors.days ? " field-error" : ""}`} role="group" aria-label={tr("روزهای هفته", "Days of the week")}>
                 {WEEK_ORDER.map((o) => {
                   const on = d.days.includes(o.jsDay);
                   return (
                     <button
-                      key={o.jsDay} type="button" aria-pressed={on} aria-label={FA_WEEKDAY[o.jsDay]}
+                      key={o.jsDay} type="button" aria-pressed={on} aria-label={weekdayName(o.jsDay)}
                       className={`day-pill${on ? " on" : ""}`} onClick={() => toggleDay(o.jsDay)}
                     >
                       {o.short}
@@ -711,12 +713,12 @@ function MentorProgramEditorItem({
           </MentorField>
 
           <div className="mentor-field-row">
-            <MentorField label="ساعت" optional error={errors.startTime}>
+            <MentorField label={tr("ساعت", "Time")} optional error={errors.startTime}>
               <span dir="ltr" className="block">
                 <TimeInput value={d.startTime} onChange={(v) => onPatch({ startTime: v })} className="wsearch-newform-name trade-glass-field mono" placeholder="--:--" />
               </span>
             </MentorField>
-            <MentorField label="مدت (دقیقه)" htmlFor={id("dur")} optional error={errors.durationMin}>
+            <MentorField label={tr("مدت (دقیقه)", "Duration (minutes)")} htmlFor={id("dur")} optional error={errors.durationMin}>
               <NumberInput id={id("dur")} className="wsearch-newform-name trade-glass-field" dir="ltr" style={{ textAlign: "right" }} value={d.durationMin} onChange={(v) => onPatch({ durationMin: v })} maxLength={4} />
             </MentorField>
           </div>
@@ -724,10 +726,10 @@ function MentorProgramEditorItem({
           {type === "WORKOUT" && (
             <>
               <div className="mentor-field-row">
-                <MentorField label="ست" htmlFor={id("sets")} optional error={errors.sets}>
+                <MentorField label={tr("ست", "Sets")} htmlFor={id("sets")} optional error={errors.sets}>
                   <NumberInput id={id("sets")} className="wsearch-newform-name trade-glass-field" dir="ltr" style={{ textAlign: "right" }} value={d.sets} onChange={(v) => onPatch({ sets: v })} maxLength={3} />
                 </MentorField>
-                <MentorField label="تکرار در هر ست" htmlFor={id("reps")} optional error={errors.reps}>
+                <MentorField label={tr("تکرار در هر ست", "Reps per set")} htmlFor={id("reps")} optional error={errors.reps}>
                   <input
                     id={id("reps")} type="text" inputMode="numeric" className="wsearch-newform-name trade-glass-field" dir="ltr" style={{ textAlign: "right" }}
                     value={d.reps} placeholder="8-12" maxLength={7}
@@ -736,20 +738,20 @@ function MentorProgramEditorItem({
                 </MentorField>
               </div>
               <div className="mentor-field-row">
-                <MentorField label="وزنه (کیلوگرم)" htmlFor={id("w")} optional error={errors.weightKg}>
+                <MentorField label={tr("وزنه (کیلوگرم)", "Weight (kg)")} htmlFor={id("w")} optional error={errors.weightKg}>
                   <NumberInput decimal id={id("w")} className="wsearch-newform-name trade-glass-field" dir="ltr" style={{ textAlign: "right" }} value={d.weightKg} onChange={(v) => onPatch({ weightKg: v })} maxLength={6} />
                 </MentorField>
-                <MentorField label="استراحت (ثانیه)" htmlFor={id("rest")} optional error={errors.restSec}>
+                <MentorField label={tr("استراحت (ثانیه)", "Rest (seconds)")} htmlFor={id("rest")} optional error={errors.restSec}>
                   <NumberInput id={id("rest")} className="wsearch-newform-name trade-glass-field" dir="ltr" style={{ textAlign: "right" }} value={d.restSec} onChange={(v) => onPatch({ restSec: v })} maxLength={4} />
                 </MentorField>
               </div>
             </>
           )}
 
-          <MentorField label="جزئیات" htmlFor={id("details")} optional error={errors.details}>
+          <MentorField label={tr("جزئیات", "Details")} htmlFor={id("details")} optional error={errors.details}>
             <textarea
               id={id("details")} className="wsearch-newform-name trade-glass-field" rows={2} maxLength={ITEM_DETAILS_MAX} value={d.details}
-              placeholder={type === "WORKOUT" ? "مثلا تمپوی 3-1-1، زانو هم‌راستای پنجه" : "مثلا بعد از صبحانه"}
+              placeholder={type === "WORKOUT" ? tr("مثلا تمپوی 3-1-1، زانو هم‌راستای پنجه", "For example: 3-1-1 tempo, knees in line with toes") : tr("مثلا بعد از صبحانه", "For example: After breakfast")}
               onChange={(e) => onPatch({ details: e.target.value })}
             />
           </MentorField>

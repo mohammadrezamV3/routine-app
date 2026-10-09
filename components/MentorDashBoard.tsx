@@ -20,6 +20,7 @@ import { MentorTodayRequestSheet } from "./MentorTodayRequest";
 import { MentorList, MentorListItem } from "./MentorMotion";
 import { fmtRelative } from "@/lib/mentorFormat";
 import { publicUserName } from "@/lib/mentorTypes";
+import { tr, trv } from "@/lib/i18n";
 import type {
   MentorDashboard, MentorSelf, MentorshipRow, MentorshipsResponse, ProgramRow, ProgramsResponse,
 } from "@/lib/mentorTypes";
@@ -90,7 +91,7 @@ export function MentorDashBoard({ self }: { self: MentorSelf }) {
   }
 
   if (loading && !dash) return <LoadingBlock />;
-  if (!dash) return <MentorDashError message={error || "داشبورد دریافت نشد؛ دوباره تلاش کن"} onRetry={() => load()} />;
+  if (!dash) return <MentorDashError message={error || tr("داشبورد دریافت نشد؛ دوباره تلاش کن", "Could not load the dashboard. Try again.")} onRetry={() => load()} />;
 
   const profile = dash.profile;
   const suspended = !!(profile?.suspendedAt ?? self.suspendedAt);
@@ -114,9 +115,9 @@ export function MentorDashBoard({ self }: { self: MentorSelf }) {
       node: (
         <MentorTaskCard
           icon={ic(UserPlus, MI.row)} tone="accent" meta={fmtRelative(r.createdAt)}
-          action={{ label: "دیدن درخواست", onClick: () => setReqRow(r) }}
+          action={{ label: tr("دیدن درخواست", "View request"), onClick: () => setReqRow(r) }}
         >
-          <b>{name}</b> می‌خواد شاگردت بشه
+          {trv(<><b>{name}</b> می‌خواد شاگردت بشه</>, <><b>{name}</b> wants to be your student</>)}
         </MentorTaskCard>
       ),
     });
@@ -127,9 +128,9 @@ export function MentorDashBoard({ self }: { self: MentorSelf }) {
       node: (
         <MentorTaskCard
           icon={ic(Pencil, MI.row)} tone="warn" meta={p.title}
-          action={{ label: "ویرایش برنامه", href: `/mentor/programs/${p.id}/edit` }}
+          action={{ label: tr("ویرایش برنامه", "Edit program"), href: `/mentor/programs/${p.id}/edit` }}
         >
-          <b>{publicUserName(p.counterpart)}</b> برای برنامه تغییر خواسته
+          {trv(<><b>{publicUserName(p.counterpart)}</b> برای برنامه تغییر خواسته</>, <><b>{publicUserName(p.counterpart)}</b> asked for changes to a program</>)}
         </MentorTaskCard>
       ),
     });
@@ -140,9 +141,9 @@ export function MentorDashBoard({ self }: { self: MentorSelf }) {
       node: (
         <MentorTaskCard
           icon={ic(MessageCircle, MI.row)} tone="info"
-          action={{ label: "جواب دادن", href: `/mentorship/${r.id}/chat` }}
+          action={{ label: tr("جواب دادن", "Reply"), href: `/mentorship/${r.id}/chat` }}
         >
-          <b>{publicUserName(r.counterpart)}</b> {fa(r.unread)} پیام خوانده‌نشده برات داره
+          {trv(<><b>{publicUserName(r.counterpart)}</b> {fa(r.unread)} پیام خوانده‌نشده برات داره</>, <><b>{publicUserName(r.counterpart)}</b> sent you {fa(r.unread)} unread {r.unread === 1 ? "message" : "messages"}</>)}
         </MentorTaskCard>
       ),
     });
@@ -154,9 +155,9 @@ export function MentorDashBoard({ self }: { self: MentorSelf }) {
       node: (
         <MentorTaskCard
           icon={ic(Clock, MI.row)} tone="warn" meta={a.reason}
-          action={{ label: "پیام دادن", href: rel ? `/mentorship/${rel.id}/chat` : `/mentor/students/${a.studentId}` }}
+          action={{ label: tr("پیام دادن", "Send a message"), href: rel ? `/mentorship/${rel.id}/chat` : `/mentor/students/${a.studentId}` }}
         >
-          <b>{a.name}</b> نیاز به توجه داره
+          {trv(<><b>{a.name}</b> نیاز به توجه داره</>, <><b>{a.name}</b> needs your attention</>)}
         </MentorTaskCard>
       ),
     });
@@ -166,10 +167,10 @@ export function MentorDashBoard({ self }: { self: MentorSelf }) {
       key: `inv-${r.id}`,
       node: (
         <MentorTaskCard
-          icon={ic(Hourglass, MI.row)} tone="neutral" meta={`دعوت ${fmtRelative(r.createdAt)}`}
-          action={{ label: "لغو دعوت", onClick: () => cancelInvite(r.id), busy: busyId === r.id }}
+          icon={ic(Hourglass, MI.row)} tone="neutral" meta={tr(`دعوت ${fmtRelative(r.createdAt)}`, `Invited ${fmtRelative(r.createdAt)}`)}
+          action={{ label: tr("لغو دعوت", "Cancel invite"), onClick: () => cancelInvite(r.id), busy: busyId === r.id }}
         >
-          دعوت <b>{publicUserName(r.counterpart)}</b> هنوز جواب نگرفته
+          {trv(<>دعوت <b>{publicUserName(r.counterpart)}</b> هنوز جواب نگرفته</>, <>Your invite to <b>{publicUserName(r.counterpart)}</b> has no answer yet</>)}
         </MentorTaskCard>
       ),
     });
@@ -180,30 +181,36 @@ export function MentorDashBoard({ self }: { self: MentorSelf }) {
   const waiting = incoming.length + changeProgs.length + unreadRows.length;
 
   const summary = active.length === 0
-    ? "هنوز شاگرد فعالی نداری؛ یکی رو دعوت کن"
+    ? tr("هنوز شاگرد فعالی نداری؛ یکی رو دعوت کن", "You have no active students yet. Invite one.")
     : waiting > 0
-      ? <><b>{fa(waiting)} مورد</b> منتظر جواب توئه{great > 0 && <> و <b>{fa(great)} شاگرد</b> عالی پیش می‌رن</>}.</>
+      ? trv(
+          <><b>{fa(waiting)} مورد</b> منتظر جواب توئه{great > 0 && <> و <b>{fa(great)} شاگرد</b> عالی پیش می‌رن</>}.</>,
+          <><b>{fa(waiting)} {waiting === 1 ? "item" : "items"}</b> waiting for your reply{great > 0 && <>, and <b>{fa(great)} {great === 1 ? "student is" : "students are"}</b> doing great</>}.</>,
+        )
       : great > 0
-        ? <>کاری منتظرت نیست؛ <b>{fa(great)} شاگرد</b> عالی پیش می‌رن.</>
-        : "فعلا کاری منتظر تو نیست.";
+        ? trv(
+            <>کاری منتظرت نیست؛ <b>{fa(great)} شاگرد</b> عالی پیش می‌رن.</>,
+            <>Nothing is waiting for you; <b>{fa(great)} {great === 1 ? "student is" : "students are"}</b> doing great.</>,
+          )
+        : tr("فعلا کاری منتظر تو نیست.", "Nothing is waiting for you right now.");
 
   const rawName = (session?.user?.name || "").trim();
   const first = rawName.split(/\s+/)[0] || "";
 
   let setupTitle = "";
   if (!setupDone) {
-    setupTitle = identity === "PENDING" ? "تایید هویتت در حال بررسیه"
-      : identity === "VERIFIED" ? "پروفایلت هنوز در فهرست مربی‌ها نیست"
-        : identity === "REJECTED" ? "مدرک هویتت تایید نشد؛ دوباره بفرست"
-          : "برای دیده شدن در فهرست، هویتت رو تایید کن";
+    setupTitle = identity === "PENDING" ? tr("تایید هویتت در حال بررسیه", "Your identity check is under review")
+      : identity === "VERIFIED" ? tr("پروفایلت هنوز در فهرست مربی‌ها نیست", "Your profile is not in the mentor listing yet")
+        : identity === "REJECTED" ? tr("مدرک هویتت تایید نشد؛ دوباره بفرست", "Your ID document was not accepted. Send it again.")
+          : tr("برای دیده شدن در فهرست، هویتت رو تایید کن", "Verify your identity to appear in the listing");
   }
 
   return (
     <div className="mv2-today">
       {suspended && (
         <div className="mentor-notices">
-          <MentorNotice tone="danger" icon={ic(Ban, MI.row)} title="حساب مربی‌گری‌ت موقتا بسته شده">
-            {self.suspendedReason || "تا باز شدنش، شاگرد تازه و فرستادن برنامه ممکن نیست"}
+          <MentorNotice tone="danger" icon={ic(Ban, MI.row)} title={tr("حساب مربی‌گری‌ت موقتا بسته شده", "Your mentor account is temporarily closed")}>
+            {self.suspendedReason || tr("تا باز شدنش، شاگرد تازه و فرستادن برنامه ممکن نیست", "Until it reopens, you cannot take new students or send programs")}
           </MentorNotice>
         </div>
       )}
@@ -211,42 +218,42 @@ export function MentorDashBoard({ self }: { self: MentorSelf }) {
         <div className="mentor-notices">
           <MentorNotice
             tone="warn" icon={ic(ShieldCheck, MI.row)} title={setupTitle}
-            action={<Link href="/mentor/settings" className="account-outline-btn mentor-btn is-sm">تنظیمات</Link>}
+            action={<Link href="/mentor/settings" className="account-outline-btn mentor-btn is-sm">{tr("تنظیمات", "Settings")}</Link>}
           />
         </div>
       )}
 
       <MentorHero
-        title={first ? `سلام ${first}` : "سلام"}
+        title={first ? tr(`سلام ${first}`, `Hi ${first}`) : tr("سلام", "Hi")}
         summary={summary}
         trailing={<MentorAvailabilityQuick variant="pill" />}
         stats={[
-          { label: "شاگردها", value: fa(dash.stats.activeStudents) },
-          { label: "عالی پیش می‌رن", value: fa(great) },
-          { label: "منتظر جواب تو", value: fa(waiting) },
+          { label: tr("شاگردها", "Students"), value: fa(dash.stats.activeStudents) },
+          { label: tr("عالی پیش می‌رن", "Doing great"), value: fa(great) },
+          { label: tr("منتظر جواب تو", "Waiting for you"), value: fa(waiting) },
         ]}
       />
 
       <div className="mv2-today-tiles">
         <button type="button" className="mv2-today-tile mv2-tone-accent" onClick={() => setInviteOpen(true)}>
-          <UserPlus size={22} strokeWidth={MI_STROKE} aria-hidden /><span>دعوت شاگرد</span>
+          <UserPlus size={22} strokeWidth={MI_STROKE} aria-hidden /><span>{tr("دعوت شاگرد", "Invite a student")}</span>
         </button>
         <button type="button" className="mv2-today-tile mv2-tone-info" onClick={() => setBcOpen(true)} disabled={suspended || !!rowsError}>
-          <Send size={22} strokeWidth={MI_STROKE} aria-hidden /><span>پیام به همه</span>
+          <Send size={22} strokeWidth={MI_STROKE} aria-hidden /><span>{tr("پیام به همه", "Message everyone")}</span>
         </button>
         <Link href="/mentor/programs/new" className="mv2-today-tile mv2-tone-warn">
-          <FilePlus2 size={22} strokeWidth={MI_STROKE} aria-hidden /><span>برنامه‌ی تازه</span>
+          <FilePlus2 size={22} strokeWidth={MI_STROKE} aria-hidden /><span>{tr("برنامه‌ی تازه", "New program")}</span>
         </Link>
       </div>
 
       <section className="mv2-today-sec" aria-labelledby="mv2-today-tasks">
         <div className="mv2-today-sec-head">
-          <h2 id="mv2-today-tasks">کارهای امروز</h2>
+          <h2 id="mv2-today-tasks">{tr("کارهای امروز", "Today's tasks")}</h2>
           {tasks.length > 0 && <span className="mv2-today-count">{fa(tasks.length)}</span>}
         </div>
         {actionError && <div className="form-inline-error" role="alert">{actionError}</div>}
         {tasks.length === 0 ? (
-          <MentorEmptyState icon={<CheckCircle2 size={28} strokeWidth={MI_STROKE} aria-hidden />} title="همه‌چیز مرتبه" />
+          <MentorEmptyState icon={<CheckCircle2 size={28} strokeWidth={MI_STROKE} aria-hidden />} title={tr("همه‌چیز مرتبه", "All caught up")} />
         ) : (
           <MentorList>
             {tasks.map((t) => <MentorListItem key={t.key}>{t.node}</MentorListItem>)}
@@ -256,13 +263,13 @@ export function MentorDashBoard({ self }: { self: MentorSelf }) {
 
       <section className="mv2-today-sec" aria-labelledby="mv2-today-students">
         <div className="mv2-today-sec-head">
-          <h2 id="mv2-today-students">شاگردها امروز</h2>
-          <Link href="/mentor/students" className="mentor-link">همه</Link>
+          <h2 id="mv2-today-students">{tr("شاگردها امروز", "Students today")}</h2>
+          <Link href="/mentor/students" className="mentor-link">{tr("همه", "All")}</Link>
         </div>
         {rowsError ? (
-          <p className="mentor-empty"><span>فهرست شاگردها دریافت نشد؛ صفحه رو تازه کن</span></p>
+          <p className="mentor-empty"><span>{tr("فهرست شاگردها دریافت نشد؛ صفحه رو تازه کن", "Could not load your students. Refresh the page.")}</span></p>
         ) : active.length === 0 ? (
-          <p className="mentor-empty"><span>هنوز شاگرد فعالی نداری</span></p>
+          <p className="mentor-empty"><span>{tr("هنوز شاگرد فعالی نداری", "You have no active students yet")}</span></p>
         ) : (
           <ul className="mv2-today-people thin-scroll">
             {active.map((r) => {
@@ -270,9 +277,9 @@ export function MentorDashBoard({ self }: { self: MentorSelf }) {
               const c = completionBy.get(r.counterpart.id);
               const has = !!c && c.completed + c.partial + c.missed > 0;
               const progress = has ? normRate(c!.rate) : null;
-              const label = r.pausedAt ? `${name}، متوقف`
-                : !c ? `${name}، پیشرفت رو شاگرد خصوصی نگه داشته`
-                  : has ? `${name}، ${Math.round(normRate(c.rate) * 100)} درصد در 7 روز اخیر` : `${name}، هنوز داده‌ای نیست`;
+              const label = r.pausedAt ? tr(`${name}، متوقف`, `${name}, paused`)
+                : !c ? tr(`${name}، پیشرفت رو شاگرد خصوصی نگه داشته`, `${name}, keeps their progress private`)
+                  : has ? tr(`${name}، ${Math.round(normRate(c.rate) * 100)} درصد در 7 روز اخیر`, `${name}, ${Math.round(normRate(c.rate) * 100)} percent in the last 7 days`) : tr(`${name}، هنوز داده‌ای نیست`, `${name}, no data yet`);
               return (
                 <li key={r.id}>
                   <Link href={`/mentor/students/${r.counterpart.id}`} className="mv2-today-person" aria-label={label}>

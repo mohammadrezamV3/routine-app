@@ -2,6 +2,7 @@ import { prisma } from "@/lib/prisma";
 import { generateRoadmapGuide, generateRoadmapPlan, generateStageDetail, RoadmapProfile, STAGE_REGEN_TIMEOUT_MS } from "@/lib/aiClient";
 import { normalizePlan, PlanStage } from "@/lib/roadmapPlan";
 import { logError } from "@/lib/errorLog";
+import { tr } from "@/lib/i18n";
 
 // ساخت رودمپ در پس‌زمینه‌ی سرور — طبق درخواست صریح کاربر دیگر پشت صفحه‌ی
 // ساخت منتظر نمی‌ماند: ردیف فورا با وضعیت «در حال ساخت» ذخیره می‌شود، کاربر
@@ -24,7 +25,7 @@ export function buildStatusOf(meta: unknown): BuildState | null {
   const b = (meta as any)?.build;
   if (!b || typeof b !== "object") return null;
   if (b.status === "building" && Date.now() - Number(b.at || 0) > STALE_MS) {
-    return { ...b, status: "failed", error: b.error || "ساخت نیمه‌کاره ماند — ادامه‌اش از صفحه‌ی خود رودمپ کامل می‌شود" };
+    return { ...b, status: "failed", error: b.error || tr("ساخت نیمه‌کاره ماند — ادامه‌اش از صفحه‌ی خود رودمپ کامل می‌شود", "The build was left unfinished — it will be completed from the roadmap page") };
   }
   return b as BuildState;
 }
@@ -52,7 +53,7 @@ async function runBuild(id: string, userId: string, profile: RoadmapProfile) {
   try {
     plan = (await generateRoadmapPlan(profile, userId)).plan;
   } catch (err: any) {
-    await setBuild(id, userId, baseMeta, { status: "failed", phase: "outline", error: err?.message || "ساخت مسیر انجام نشد" });
+    await setBuild(id, userId, baseMeta, { status: "failed", phase: "outline", error: err?.message || tr("ساخت مسیر انجام نشد", "The path could not be built") });
     return;
   }
   let stages: PlanStage[] = plan.stages;

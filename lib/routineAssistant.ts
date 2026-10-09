@@ -15,7 +15,8 @@
 // نباید داخل باندل سرور کشیده شود؛ `import type` تضمین می‌کند که نمی‌شود.
 import type { CustomOccurrence, Importance } from "./storage";
 import { addDaysIso, dayBeforeIso, jsDayOfIso, sameWeekIso, timeStartMinutes, toEnDigits, WEEK_ORDER } from "./schedule";
-import { isoLocal, J_MONTHS, jalaliToIso, toJalali, faNum } from "./jalali";
+import { isoLocal, J_MONTHS, jMonthName, weekdayName, jalaliToIso, toJalali, faNum } from "./jalali";
+import { tr } from "./i18n";
 import { normalizeTimeToFa } from "./timeUtils";
 import { rangesOverlap } from "./conflict";
 
@@ -62,6 +63,11 @@ export const MAX_REPEAT_EVERY_MIN = 720;
 export const DEFAULT_REPEAT_DURATION_MIN = 5;
 /** سقف تعداد تکرار در یک op — جلوی یک repeatEveryMin خیلی کوچک را می‌گیرد */
 export const MAX_REPEATS_PER_OP = 48;
+
+/** اسم روز هفته در پیام‌های کاربر (به زبان جاری؛ در فارسی همان DAY_NAME_FA) */
+function dayLbl(jsDay: number): string {
+  return weekdayName(jsDay);
+}
 
 export const DAY_NAME_FA: Record<number, string> = {
   6: "شنبه", 0: "یکشنبه", 1: "دوشنبه", 2: "سه‌شنبه", 3: "چهارشنبه", 4: "پنجشنبه", 5: "جمعه",
@@ -365,9 +371,12 @@ export function invalidDateMessage(m: DateMention): string {
   if (m.jalali) {
     const [month] = m.jalali;
     const len = month <= 6 ? 31 : month <= 11 ? 30 : 29;
-    return `«${m.text}» وجود ندارد — ${J_MONTHS[month - 1]} ${len} روز دارد${month === 12 ? " (در سال کبیسه 30)" : ""}. کدام روز را می‌گویی؟`;
+    return tr(
+      `«${m.text}» وجود ندارد — ${jMonthName(month - 1)} ${len} روز دارد${month === 12 ? " (در سال کبیسه 30)" : ""}. کدام روز را می‌گویی؟`,
+      `"${m.text}" doesn't exist — ${jMonthName(month - 1)} has ${len} days${month === 12 ? " (30 in a leap year)" : ""}. Which day do you mean?`
+    );
   }
-  return `تاریخ «${m.text}» را نفهمیدم.`;
+  return tr(`تاریخ «${m.text}» را نفهمیدم.`, `I didn't understand the date "${m.text}".`);
 }
 
 /** خلاصه‌ی تاریخ‌های حل‌شده برای مدل: «30 مهر» = 2026-10-22 (چهارشنبه 30 مهر 1405) */
@@ -471,7 +480,7 @@ export function reconcileOpDates(ops: RawOp[], mentions: DateMention[], todayIso
 export function faDateLabel(iso: string): string {
   const d = new Date(iso + "T00:00:00");
   const j = toJalali(d.getFullYear(), d.getMonth() + 1, d.getDate());
-  return `${faNum(j[2])} ${J_MONTHS[j[1] - 1]}`;
+  return `${faNum(j[2])} ${jMonthName(j[1] - 1)}`;
 }
 
 /** بازه‌ی تاریخی یک برنامه — هر دو سر شامل؛ نبود هر سر یعنی باز */
@@ -486,9 +495,9 @@ function periodsOverlap(a: Period, b: Period): boolean {
 }
 
 function periodLabel(p: Period, todayIso: string): string {
-  if (p.from && p.to && p.from === p.to) return `(فقط ${faDateLabel(p.from)})`;
-  if (p.to) return `(${p.from && p.from > todayIso ? `از ${faDateLabel(p.from)} ` : ""}تا ${faDateLabel(p.to)})`;
-  if (p.from && p.from > todayIso) return `(از ${faDateLabel(p.from)})`;
+  if (p.from && p.to && p.from === p.to) return tr(`(فقط ${faDateLabel(p.from)})`, `(only ${faDateLabel(p.from)})`);
+  if (p.to) return tr(`(${p.from && p.from > todayIso ? `از ${faDateLabel(p.from)} ` : ""}تا ${faDateLabel(p.to)})`, `(${p.from && p.from > todayIso ? `from ${faDateLabel(p.from)} ` : ""}until ${faDateLabel(p.to)})`);
+  if (p.from && p.from > todayIso) return tr(`(از ${faDateLabel(p.from)})`, `(from ${faDateLabel(p.from)})`);
   return "";
 }
 
@@ -705,18 +714,18 @@ export function applyOps(
   function resolve(ref: unknown): CustomOccurrence | { error: string } {
     const n = typeof ref === "string" ? Number(toEnDigits(ref).replace(/^#/, "")) : ref;
     if (typeof n !== "number" || !Number.isInteger(n)) {
-      offer("همه‌ی برنامه‌هایم را نشانم بده");
-      return { error: "نفهمیدم کدام برنامه را می‌گویی. اسمش را دقیق بنویس." };
+      offer(tr("همه‌ی برنامه‌هایم را نشانم بده", "Show me all my plans"));
+      return { error: tr("نفهمیدم کدام برنامه را می‌گویی. اسمش را دقیق بنویس.", "I didn't understand which plan you mean. Write its exact name.") };
     }
     let id: string | null | undefined = refToId.get(n);
     if (!id) {
-      offer("همه‌ی برنامه‌هایم را نشانم بده");
-      return { error: "برنامه‌ای که گفتی در فهرست برنامه‌هایت نیست." };
+      offer(tr("همه‌ی برنامه‌هایم را نشانم بده", "Show me all my plans"));
+      return { error: tr("برنامه‌ای که گفتی در فهرست برنامه‌هایت نیست.", "That plan isn't in your plan list.") };
     }
     for (let guard = 0; guard < 50 && id && successor.has(id); guard++) id = successor.get(id)!;
-    if (!id) return { error: "آن برنامه در همین پیام حذف شده بود." };
+    if (!id) return { error: tr("آن برنامه در همین پیام حذف شده بود.", "That plan was already deleted in this message.") };
     const found = list.find((o) => o.id === id);
-    if (!found) return { error: "آن برنامه در همین پیام حذف شده بود." };
+    if (!found) return { error: tr("آن برنامه در همین پیام حذف شده بود.", "That plan was already deleted in this message.") };
     return found;
   }
 
@@ -760,12 +769,12 @@ export function applyOps(
 
   function parseTimeSpec(raw: RawOp, name: string): TimeSpec | { error: string } {
     if (isBlank(raw.start) && isBlank(raw.end)) return { kind: "keep" };
-    if (isBlank(raw.start)) return { error: `ساعت شروع «${name}» را نفهمیدم.` };
+    if (isBlank(raw.start)) return { error: tr(`ساعت شروع «${name}» را نفهمیدم.`, `I didn't understand the start time of "${name}".`) };
     const start = parseClock(raw.start);
-    if (!start) return { error: `ساعت شروع «${name}» را نفهمیدم. مثلا «8:30» بنویس.` };
+    if (!start) return { error: tr(`ساعت شروع «${name}» را نفهمیدم. مثلا «8:30» بنویس.`, `I didn't understand the start time of "${name}". Write something like "8:30".`) };
     const end = isBlank(raw.end) ? null : parseClock(raw.end);
-    if (!isBlank(raw.end) && !end) return { error: `ساعت پایان «${name}» را نفهمیدم.` };
-    if (end && end.min <= start.min) return { error: `ساعت پایان «${name}» باید بعد از ساعت شروع باشد.` };
+    if (!isBlank(raw.end) && !end) return { error: tr(`ساعت پایان «${name}» را نفهمیدم.`, `I didn't understand the end time of "${name}".`) };
+    if (end && end.min <= start.min) return { error: tr(`ساعت پایان «${name}» باید بعد از ساعت شروع باشد.`, `The end time of "${name}" must be after its start time.`) };
     return { kind: "set", start, end };
   }
 
@@ -774,14 +783,14 @@ export function applyOps(
     let from = defaults.from;
     if (!isBlank(raw.from)) {
       const f = parseDateInput(raw.from, todayIso);
-      if (!f) return { error: `تاریخ شروع «${name}» را نفهمیدم.` };
+      if (!f) return { error: tr(`تاریخ شروع «${name}» را نفهمیدم.`, `I didn't understand the start date of "${name}".`) };
       from = f;
     }
     let to = defaults.to;
     if (raw.until === null) to = undefined;
     else if (!isBlank(raw.until)) {
       const u = parseDateInput(raw.until, todayIso);
-      if (!u) return { error: `تاریخ پایان «${name}» را نفهمیدم.` };
+      if (!u) return { error: tr(`تاریخ پایان «${name}» را نفهمیدم.`, `I didn't understand the end date of "${name}".`) };
       to = u;
     } else if (!isBlank(raw.weeks) || !isBlank(raw.months)) {
       const base = from ?? todayIso;
@@ -793,10 +802,10 @@ export function applyOps(
         d.setMonth(d.getMonth() + months);
         to = addDaysIso(isoLocal(d), -1);
       } else {
-        return { error: `طول دوره‌ی «${name}» را نفهمیدم.` };
+        return { error: tr(`طول دوره‌ی «${name}» را نفهمیدم.`, `I didn't understand the length of the period for "${name}".`) };
       }
     }
-    if (from && to && to < from) return { error: `تاریخ پایان «${name}» قبل از شروعش است.` };
+    if (from && to && to < from) return { error: tr(`تاریخ پایان «${name}» قبل از شروعش است.`, `The end date of "${name}" is before its start.`) };
     return { from, to };
   }
 
@@ -805,25 +814,25 @@ export function applyOps(
     start: { fa: string; min: number }, end: { fa: string; min: number } | null,
     conflict: CustomOccurrence, excludeId?: string, singleDay = false
   ) {
-    const dayFa = DAY_NAME_FA[jsDay];
+    const dayFa = dayLbl(jsDay);
     const slot = suggestFreeSlot(list, jsDay, start.min, end?.min ?? null, excludeId, period);
     problems.push(
       slot
-        ? `${dayFa} ساعت ${timeLabel(start.fa, end?.fa)} با «${conflict.name}» پر است. نزدیک‌ترین وقت آزاد ${timeLabel(slot.startFa, slot.endFa)} است.`
-        : `${dayFa} ساعت ${timeLabel(start.fa, end?.fa)} با «${conflict.name}» پر است و تا آخر آن روز هم جای خالی هم‌اندازه نمانده.`
+        ? tr(`${dayFa} ساعت ${timeLabel(start.fa, end?.fa)} با «${conflict.name}» پر است. نزدیک‌ترین وقت آزاد ${timeLabel(slot.startFa, slot.endFa)} است.`, `${dayFa} at ${timeLabel(start.fa, end?.fa)} is taken by "${conflict.name}". The nearest free time is ${timeLabel(slot.startFa, slot.endFa)}.`)
+        : tr(`${dayFa} ساعت ${timeLabel(start.fa, end?.fa)} با «${conflict.name}» پر است و تا آخر آن روز هم جای خالی هم‌اندازه نمانده.`, `${dayFa} at ${timeLabel(start.fa, end?.fa)} is taken by "${conflict.name}", and there is no free slot of the same length for the rest of that day.`)
     );
-    if (slot) offer(`«${name}» را ${singleDay ? "همان روز" : dayFa} ساعت ${slot.startFa} بگذار`);
-    offer(`«${name}» را یک روز دیگر بگذار`, `«${conflict.name}» را جابه‌جا کن`);
+    if (slot) offer(tr(`«${name}» را ${singleDay ? "همان روز" : dayFa} ساعت ${slot.startFa} بگذار`, `Put "${name}" ${singleDay ? "on the same day" : "on " + dayFa} at ${slot.startFa}`));
+    offer(tr(`«${name}» را یک روز دیگر بگذار`, `Put "${name}" on another day`), tr(`«${conflict.name}» را جابه‌جا کن`, `Move "${conflict.name}"`));
   }
 
   for (const raw of ops.slice(0, MAX_OPS_PER_MESSAGE)) {
-    if (!raw || typeof raw !== "object") { problems.push("یکی از کارهایی که خواستی را بلد نیستم انجام بدهم."); continue; }
+    if (!raw || typeof raw !== "object") { problems.push(tr("یکی از کارهایی که خواستی را بلد نیستم انجام بدهم.", "I don't know how to do one of the things you asked.")); continue; }
     const op = typeof raw.op === "string" ? raw.op : "";
 
     // ---------- افزودن ----------
     if (op === "add") {
       const name = typeof raw.name === "string" ? raw.name.trim().slice(0, 60) : "";
-      if (!name) { problems.push("برای برنامه‌ی جدید اسمی نگفتی."); continue; }
+      if (!name) { problems.push(tr("برای برنامه‌ی جدید اسمی نگفتی.", "You didn't give the new plan a name.")); continue; }
 
       // تاریخ‌های مشخص (تک‌روزه) بر روزهای هفته مقدم‌اند: «فقط همین پنجشنبه»
       // نباید هر پنجشنبه تکرار شود.
@@ -835,8 +844,8 @@ export function applyOps(
         if (!iso) { badDate = true; continue; }
         if (!dates.includes(iso)) dates.push(iso);
       }
-      if (badDate && !dates.length) { problems.push(`تاریخ «${name}» را نفهمیدم.`); continue; }
-      if (badDate) problems.push(`یکی از تاریخ‌های «${name}» را نفهمیدم و از آن گذشتم.`);
+      if (badDate && !dates.length) { problems.push(tr(`تاریخ «${name}» را نفهمیدم.`, `I didn't understand the date of "${name}".`)); continue; }
+      if (badDate) problems.push(tr(`یکی از تاریخ‌های «${name}» را نفهمیدم و از آن گذشتم.`, `I didn't understand one of the dates of "${name}" and skipped it.`));
 
       type Target = { jsDay: number; period: Period };
       let targets: Target[];
@@ -845,8 +854,8 @@ export function applyOps(
       } else {
         const days = parseDays(raw.days);
         if (!days.length) {
-          problems.push(`برای «${name}» روزی مشخص نکردی — کدام روز هفته؟`);
-          offer(`«${name}» را برای امروز بگذار`, `«${name}» را برای فردا بگذار`, `«${name}» را هر روز بگذار`);
+          problems.push(tr(`برای «${name}» روزی مشخص نکردی — کدام روز هفته؟`, `You didn't specify a day for "${name}" — which day of the week?`));
+          offer(tr(`«${name}» را برای امروز بگذار`, `Put "${name}" today`), tr(`«${name}» را برای فردا بگذار`, `Put "${name}" tomorrow`), tr(`«${name}» را هر روز بگذار`, `Put "${name}" every day`));
           continue;
         }
         const period = parsePeriod(raw, name, { from: todayIso });
@@ -857,11 +866,11 @@ export function applyOps(
       // ساعت *اختیاری* است. نبودش یعنی برنامه‌ی بی‌ساعت، نه ساعت حدسی.
       const hasStart = !isBlank(raw.start);
       const start = hasStart ? parseClock(raw.start) : null;
-      if (hasStart && !start) { problems.push(`ساعت شروع «${name}» را نفهمیدم. مثلا «8:30» بنویس.`); continue; }
+      if (hasStart && !start) { problems.push(tr(`ساعت شروع «${name}» را نفهمیدم. مثلا «8:30» بنویس.`, `I didn't understand the start time of "${name}". Write something like "8:30".`)); continue; }
       const end = isBlank(raw.end) ? null : parseClock(raw.end);
-      if (!isBlank(raw.end) && !end) { problems.push(`ساعت پایان «${name}» را نفهمیدم.`); continue; }
+      if (!isBlank(raw.end) && !end) { problems.push(tr(`ساعت پایان «${name}» را نفهمیدم.`, `I didn't understand the end time of "${name}".`)); continue; }
       if (start && end && end.min <= start.min) {
-        problems.push(`ساعت پایان «${name}» باید بعد از ساعت شروع باشد.`);
+        problems.push(tr(`ساعت پایان «${name}» باید بعد از ساعت شروع باشد.`, `The end time of "${name}" must be after its start time.`));
         continue;
       }
 
@@ -874,25 +883,25 @@ export function applyOps(
         importance, ...(tag ? { tag } : {}),
         ...(raw.notify === false ? { notify: false } : {}),
       });
-      const where = (t: Target) => `${DAY_NAME_FA[t.jsDay]}${periodLabel(t.period, todayIso) ? " " + periodLabel(t.period, todayIso) : ""}`;
+      const where = (t: Target) => `${dayLbl(t.jsDay)}${periodLabel(t.period, todayIso) ? " " + periodLabel(t.period, todayIso) : ""}`;
 
       // ── تکرار درون‌روزی («هر یک ساعت یک‌بار به مدت ۵ دقیقه») ──────────
       if (!isBlank(raw.repeatEveryMin)) {
         const everyRaw = Number(toEnDigits(String(raw.repeatEveryMin)));
         if (!Number.isFinite(everyRaw) || !Number.isInteger(everyRaw) || everyRaw < MIN_REPEAT_EVERY_MIN || everyRaw > MAX_REPEAT_EVERY_MIN) {
-          problems.push(`بازه‌ی تکرار «${name}» را نفهمیدم — بین ${MIN_REPEAT_EVERY_MIN} تا ${MAX_REPEAT_EVERY_MIN} دقیقه بنویس.`);
+          problems.push(tr(`بازه‌ی تکرار «${name}» را نفهمیدم — بین ${MIN_REPEAT_EVERY_MIN} تا ${MAX_REPEAT_EVERY_MIN} دقیقه بنویس.`, `I didn't understand the repeat interval of "${name}" — write between ${MIN_REPEAT_EVERY_MIN} and ${MAX_REPEAT_EVERY_MIN} minutes.`));
           continue;
         }
         const hasRepeatUntil = !isBlank(raw.repeatUntil);
         const repeatUntilParsed = hasRepeatUntil ? parseClock(raw.repeatUntil) : null;
         if (hasRepeatUntil && !repeatUntilParsed) {
-          problems.push(`ساعت پایان تکرار «${name}» را نفهمیدم.`);
+          problems.push(tr(`ساعت پایان تکرار «${name}» را نفهمیدم.`, `I didn't understand when the repeats of "${name}" end.`));
           continue;
         }
         const anchor = start ?? { fa: minutesToFa(awake.startMin), min: awake.startMin };
         const duration = end ? end.min - anchor.min : DEFAULT_REPEAT_DURATION_MIN;
         if (duration <= 0) {
-          problems.push(`ساعت پایان «${name}» باید بعد از ساعت شروع باشد.`);
+          problems.push(tr(`ساعت پایان «${name}» باید بعد از ساعت شروع باشد.`, `The end time of "${name}" must be after its start time.`));
           continue;
         }
         const repeatUntilMin = repeatUntilParsed ? repeatUntilParsed.min : awake.endMin;
@@ -901,7 +910,7 @@ export function applyOps(
           let created = 0, skipped = 0, iterations = 0, capped = false;
           for (let m = anchor.min; m <= repeatUntilMin && iterations < MAX_REPEATS_PER_OP; m += everyRaw, iterations++) {
             if (list.length >= MAX_OCCURRENCES) {
-              problems.push(`به سقف ${MAX_OCCURRENCES} برنامه رسیدی — اول چند تا را پاک کن.`);
+              problems.push(tr(`به سقف ${MAX_OCCURRENCES} برنامه رسیدی — اول چند تا را پاک کن.`, `You've reached the limit of ${MAX_OCCURRENCES} plans — delete a few first.`));
               capped = true;
               break;
             }
@@ -912,13 +921,13 @@ export function applyOps(
           }
           if (created > 0) {
             const everyLabel = everyRaw % 60 === 0
-              ? `${toEnDigits(String(everyRaw / 60))} ساعت`
-              : `${toEnDigits(String(everyRaw))} دقیقه`;
-            let msg = `«${name}» ${where(t)} هر ${everyLabel} یک‌بار (${toEnDigits(String(duration))} دقیقه‌ای) از ${minutesToFa(anchor.min)} تا ${minutesToFa(repeatUntilMin)} — ${toEnDigits(String(created))} بار اضافه شد.`;
-            if (skipped > 0) msg += ` (${toEnDigits(String(skipped))} بار به‌خاطر تداخل با برنامه‌های دیگر رد شد)`;
+              ? tr(`${toEnDigits(String(everyRaw / 60))} ساعت`, `${toEnDigits(String(everyRaw / 60))} ${everyRaw / 60 === 1 ? "hour" : "hours"}`)
+              : tr(`${toEnDigits(String(everyRaw))} دقیقه`, `${toEnDigits(String(everyRaw))} minutes`);
+            let msg = tr(`«${name}» ${where(t)} هر ${everyLabel} یک‌بار (${toEnDigits(String(duration))} دقیقه‌ای) از ${minutesToFa(anchor.min)} تا ${minutesToFa(repeatUntilMin)} — ${toEnDigits(String(created))} بار اضافه شد.`, `"${name}" ${where(t)} every ${everyLabel} (${toEnDigits(String(duration))} min each) from ${minutesToFa(anchor.min)} to ${minutesToFa(repeatUntilMin)} — added ${toEnDigits(String(created))} ${created === 1 ? "time" : "times"}.`);
+            if (skipped > 0) msg += tr(` (${toEnDigits(String(skipped))} بار به‌خاطر تداخل با برنامه‌های دیگر رد شد)`, ` (${toEnDigits(String(skipped))} ${skipped === 1 ? "time was" : "times were"} skipped due to conflicts with other plans)`);
             applied.push(msg);
           } else if (!capped) {
-            problems.push(`«${name}» ${where(t)} هیچ‌کدام از بازه‌های تکرار آزاد نبود — همه با برنامه‌ی دیگری تداخل داشتند.`);
+            problems.push(tr(`«${name}» ${where(t)} هیچ‌کدام از بازه‌های تکرار آزاد نبود — همه با برنامه‌ی دیگری تداخل داشتند.`, `None of the repeat slots for "${name}" ${where(t)} were free — all of them conflicted with another plan.`));
           }
           if (capped) break;
         }
@@ -927,13 +936,13 @@ export function applyOps(
 
       for (const t of targets) {
         if (list.length >= MAX_OCCURRENCES) {
-          problems.push(`به سقف ${MAX_OCCURRENCES} برنامه رسیدی — اول چند تا را پاک کن.`);
+          problems.push(tr(`به سقف ${MAX_OCCURRENCES} برنامه رسیدی — اول چند تا را پاک کن.`, `You've reached the limit of ${MAX_OCCURRENCES} plans — delete a few first.`));
           break;
         }
         if (!start) {
           list.push({ ...base(t), id: newOccId(), time: "" });
-          applied.push(`«${name}» ${where(t)} بدون ساعت اضافه شد.`);
-          offer(`برای «${name}» ساعت هم بگذار`);
+          applied.push(tr(`«${name}» ${where(t)} بدون ساعت اضافه شد.`, `Added "${name}" ${where(t)} with no time.`));
+          offer(tr(`برای «${name}» ساعت هم بگذار`, `Set a time for "${name}" too`));
           continue;
         }
         const conflict = findConflict(list, t.jsDay, start.min, end?.min ?? null, undefined, t.period);
@@ -942,7 +951,7 @@ export function applyOps(
           continue;
         }
         list.push({ ...base(t), id: newOccId(), time: timeLabel(start.fa, end?.fa) });
-        applied.push(`«${name}» ${where(t)} ساعت ${timeLabel(start.fa, end?.fa)} اضافه شد.`);
+        applied.push(tr(`«${name}» ${where(t)} ساعت ${timeLabel(start.fa, end?.fa)} اضافه شد.`, `Added "${name}" ${where(t)} at ${timeLabel(start.fa, end?.fa)}.`));
       }
       continue;
     }
@@ -956,13 +965,13 @@ export function applyOps(
       let spec = parseTimeSpec(raw, target.name);
       if ("error" in spec) { problems.push(spec.error); continue; }
       if (op === "retime" && spec.kind === "keep") spec = { kind: "clear" };
-      if (spec.kind === "clear" && !target.time) { problems.push(`«${target.name}» از قبل بی‌ساعت است.`); continue; }
+      if (spec.kind === "clear" && !target.time) { problems.push(tr(`«${target.name}» از قبل بی‌ساعت است.`, `"${target.name}" already has no time.`)); continue; }
 
       // ── فقط یک روز («فقط همین شنبه») ──
       const singleIso = isBlank(raw.date) ? null : parseDateInput(raw.date, todayIso);
-      if (!isBlank(raw.date) && !singleIso) { problems.push(`تاریخ «${target.name}» را نفهمیدم.`); continue; }
+      if (!isBlank(raw.date) && !singleIso) { problems.push(tr(`تاریخ «${target.name}» را نفهمیدم.`, `I didn't understand the date for "${target.name}".`)); continue; }
       if (singleIso && !occursOn(target, singleIso)) {
-        problems.push(`«${target.name}» در ${faDateLabel(singleIso)} (${DAY_NAME_FA[jsDayOfIso(singleIso)]}) برنامه‌ای ندارد.`);
+        problems.push(tr(`«${target.name}» در ${faDateLabel(singleIso)} (${dayLbl(jsDayOfIso(singleIso))}) برنامه‌ای ندارد.`, `"${target.name}" has nothing planned on ${faDateLabel(singleIso)} (${dayLbl(jsDayOfIso(singleIso))}).`));
         continue;
       }
 
@@ -970,7 +979,7 @@ export function applyOps(
       let destIso: string | null = singleIso;
       if (op === "move") {
         const toDateIso = isBlank(raw.toDate) ? null : parseDateInput(raw.toDate, todayIso);
-        if (!isBlank(raw.toDate) && !toDateIso) { problems.push(`نفهمیدم «${target.name}» را به کدام تاریخ ببرم.`); continue; }
+        if (!isBlank(raw.toDate) && !toDateIso) { problems.push(tr(`نفهمیدم «${target.name}» را به کدام تاریخ ببرم.`, `I didn't understand which date to move "${target.name}" to.`)); continue; }
         const toDay = parseDay(raw.toDay);
         if (toDateIso) {
           // مقصد تاریخ‌دار همیشه یعنی «فقط همان روز»
@@ -985,11 +994,11 @@ export function applyOps(
           newJsDay = toDay;
           if (singleIso) destIso = sameWeekIso(singleIso, toDay);
         } else {
-          problems.push(`نفهمیدم «${target.name}» را به کدام روز ببرم.`);
+          problems.push(tr(`نفهمیدم «${target.name}» را به کدام روز ببرم.`, `I didn't understand which day to move "${target.name}" to.`));
           continue;
         }
         if (newJsDay === target.jsDay && spec.kind === "keep" && (!destIso || destIso === singleIso)) {
-          problems.push(`«${target.name}» همین حالا هم ${DAY_NAME_FA[newJsDay]} است.`);
+          problems.push(tr(`«${target.name}» همین حالا هم ${dayLbl(newJsDay)} است.`, `"${target.name}" is already on ${dayLbl(newJsDay)}.`));
           continue;
         }
       }
@@ -1021,19 +1030,20 @@ export function applyOps(
         const moved: CustomOccurrence = { ...target, id: newOccId(), jsDay: newJsDay, time: newTime, startDate: destIso, endDate: destIso };
         replaceRow(target.id, [...carveOut(target, sourceIso), moved]);
         if (!list.some((o) => o.id === target.id)) successor.set(target.id, moved.id);
-        const dayPart = destIso !== sourceIso
-          ? `از ${DAY_NAME_FA[target.jsDay]} ${faDateLabel(sourceIso)} به ${DAY_NAME_FA[newJsDay]} ${faDateLabel(destIso)} منتقل شد`
-          : `در ${DAY_NAME_FA[newJsDay]} ${faDateLabel(destIso)}`;
-        const timePart = spec.kind === "set" ? ` ساعت ${newTime}` : spec.kind === "clear" ? " بدون ساعت" : "";
-        applied.push(destIso !== sourceIso
-          ? `«${target.name}» فقط برای همان یک روز ${dayPart}${timePart}.`
-          : `«${target.name}» فقط ${dayPart}${spec.kind === "clear" ? " ساعتش برداشته شد" : ` ساعت ${newTime} شد`}.`);
+        if (destIso !== sourceIso) {
+          const dayPart = tr(`از ${dayLbl(target.jsDay)} ${faDateLabel(sourceIso)} به ${dayLbl(newJsDay)} ${faDateLabel(destIso)} منتقل شد`, `moved from ${dayLbl(target.jsDay)} ${faDateLabel(sourceIso)} to ${dayLbl(newJsDay)} ${faDateLabel(destIso)}`);
+          const timePart = spec.kind === "set" ? tr(` ساعت ${newTime}`, ` at ${newTime}`) : spec.kind === "clear" ? tr(" بدون ساعت", " with no time") : "";
+          applied.push(tr(`«${target.name}» فقط برای همان یک روز ${dayPart}${timePart}.`, `"${target.name}" ${dayPart}${timePart} (that one day only).`));
+        } else {
+          const dayPart = tr(`در ${dayLbl(newJsDay)} ${faDateLabel(destIso)}`, `on ${dayLbl(newJsDay)} ${faDateLabel(destIso)}`);
+          applied.push(tr(`«${target.name}» فقط ${dayPart}${spec.kind === "clear" ? " ساعتش برداشته شد" : ` ساعت ${newTime} شد`}.`, `"${target.name}" ${dayPart} only ${spec.kind === "clear" ? "had its time removed" : `is now at ${newTime}`}.`));
+        }
         continue;
       }
 
       // ── کل تکرارها، از امروز به بعد ──
       const effectiveFrom = target.startDate && target.startDate > todayIso ? target.startDate : todayIso;
-      if (target.endDate && target.endDate < effectiveFrom) { problems.push(`«${target.name}» تمام شده است.`); continue; }
+      if (target.endDate && target.endDate < effectiveFrom) { problems.push(tr(`«${target.name}» تمام شده است.`, `"${target.name}" has already ended.`)); continue; }
       const period: Period = { from: effectiveFrom, to: target.endDate };
       if (checkStart) {
         const conflict = findConflict(list, newJsDay, checkStart.min, checkEnd?.min ?? null, target.id, period);
@@ -1052,10 +1062,10 @@ export function applyOps(
       successor.set(target.id, next.id);
       if (op === "retime") {
         applied.push(spec.kind === "clear"
-          ? `ساعت «${target.name}» (${toEnDigits(target.time ?? "")}) برداشته شد.`
-          : `ساعت «${target.name}» از ${target.time ? toEnDigits(target.time) : "بی‌ساعت"} به ${newTime} تغییر کرد.`);
+          ? tr(`ساعت «${target.name}» (${toEnDigits(target.time ?? "")}) برداشته شد.`, `Removed the time of "${target.name}" (${toEnDigits(target.time ?? "")}).`)
+          : tr(`ساعت «${target.name}» از ${target.time ? toEnDigits(target.time) : "بی‌ساعت"} به ${newTime} تغییر کرد.`, `Changed the time of "${target.name}" from ${target.time ? toEnDigits(target.time) : "no time"} to ${newTime}.`));
       } else {
-        applied.push(`«${target.name}» از ${DAY_NAME_FA[target.jsDay]} به ${DAY_NAME_FA[newJsDay]}${newTime ? ` ساعت ${newTime}` : ""} منتقل شد${newTime ? "" : " (همچنان بدون ساعت)"}.`);
+        applied.push(tr(`«${target.name}» از ${dayLbl(target.jsDay)} به ${dayLbl(newJsDay)}${newTime ? ` ساعت ${newTime}` : ""} منتقل شد${newTime ? "" : " (همچنان بدون ساعت)"}.`, `Moved "${target.name}" from ${dayLbl(target.jsDay)} to ${dayLbl(newJsDay)}${newTime ? ` at ${newTime}` : ""}${newTime ? "" : " (still no time)"}.`));
       }
       continue;
     }
@@ -1068,19 +1078,19 @@ export function applyOps(
       const notes: string[] = [];
       if (typeof raw.name === "string" && raw.name.trim() && raw.name.trim() !== target.name) {
         patch.name = raw.name.trim().slice(0, 60);
-        notes.push(`اسم «${patch.name}» شد`);
+        notes.push(tr(`اسم «${patch.name}» شد`, `renamed to "${patch.name}"`));
       }
       const imp = parseImportance(raw.importance);
-      if (imp && imp !== target.importance) { patch.importance = imp; notes.push("اهمیتش عوض شد"); }
+      if (imp && imp !== target.importance) { patch.importance = imp; notes.push(tr("اهمیتش عوض شد", "importance changed")); }
       if (raw.tag === null || raw.tag === "") {
-        if (target.tag) { patch.tag = undefined; notes.push("تگش برداشته شد"); }
+        if (target.tag) { patch.tag = undefined; notes.push(tr("تگش برداشته شد", "tag removed")); }
       } else if (typeof raw.tag === "string" && raw.tag.trim() !== (target.tag ?? "")) {
         patch.tag = raw.tag.trim().slice(0, 30);
-        notes.push(`تگ «${patch.tag}» گرفت`);
+        notes.push(tr(`تگ «${patch.tag}» گرفت`, `tagged "${patch.tag}"`));
       }
       if (typeof raw.notify === "boolean" && raw.notify !== (target.notify !== false)) {
         patch.notify = raw.notify ? undefined : false;
-        notes.push(raw.notify ? "اعلانش روشن شد" : "اعلانش خاموش شد");
+        notes.push(raw.notify ? tr("اعلانش روشن شد", "notifications turned on") : tr("اعلانش خاموش شد", "notifications turned off"));
       }
       const touchesPeriod = !isBlank(raw.from) || raw.until !== undefined || !isBlank(raw.weeks) || !isBlank(raw.months);
       if (touchesPeriod) {
@@ -1089,17 +1099,17 @@ export function applyOps(
         const s = occStart(target);
         if (s !== null) {
           const conflict = findConflict(list, target.jsDay, s, occEnd(target), target.id, period);
-          if (conflict) { problems.push(`با این دوره، «${target.name}» با «${conflict.name}» تداخل پیدا می‌کند.`); continue; }
+          if (conflict) { problems.push(tr(`با این دوره، «${target.name}» با «${conflict.name}» تداخل پیدا می‌کند.`, `With this period, "${target.name}" would conflict with "${conflict.name}".`)); continue; }
         }
         patch.startDate = period.from;
         patch.endDate = period.to;
-        notes.push(period.to ? `دوره‌اش ${periodLabel(period, todayIso) || `تا ${faDateLabel(period.to)}`} شد` : "دیگر تاریخ پایان ندارد");
+        notes.push(period.to ? tr(`دوره‌اش ${periodLabel(period, todayIso) || `تا ${faDateLabel(period.to)}`} شد`, `period is now ${periodLabel(period, todayIso) || `until ${faDateLabel(period.to)}`}`) : tr("دیگر تاریخ پایان ندارد", "no longer has an end date"));
       }
-      if (!notes.length) { problems.push(`برای «${target.name}» تغییری نگفتی.`); continue; }
+      if (!notes.length) { problems.push(tr(`برای «${target.name}» تغییری نگفتی.`, `You didn't specify any change for "${target.name}".`)); continue; }
       const updated: CustomOccurrence = { ...target, ...patch };
       (Object.keys(updated) as (keyof CustomOccurrence)[]).forEach((k) => { if (updated[k] === undefined) delete updated[k]; });
       list = list.map((o) => (o.id === target.id ? updated : o));
-      applied.push(`«${target.name}»: ${notes.join("، ")}.`);
+      applied.push(`${tr(`«${target.name}»`, `"${target.name}"`)}: ${notes.join(tr("، ", ", "))}.`);
       continue;
     }
 
@@ -1107,37 +1117,37 @@ export function applyOps(
     if (op === "delete") {
       const target = resolve(raw.ref);
       if ("error" in target) { problems.push(target.error); continue; }
-      const whenLabel = target.time ? `${DAY_NAME_FA[target.jsDay]} ${toEnDigits(target.time)}` : DAY_NAME_FA[target.jsDay];
+      const whenLabel = target.time ? `${dayLbl(target.jsDay)} ${toEnDigits(target.time)}` : dayLbl(target.jsDay);
 
       if (!isBlank(raw.date)) {
         const iso = parseDateInput(raw.date, todayIso);
-        if (!iso) { problems.push(`تاریخ «${target.name}» را نفهمیدم.`); continue; }
-        if (!occursOn(target, iso)) { problems.push(`«${target.name}» در ${faDateLabel(iso)} برنامه‌ای ندارد.`); continue; }
+        if (!iso) { problems.push(tr(`تاریخ «${target.name}» را نفهمیدم.`, `I didn't understand the date for "${target.name}".`)); continue; }
+        if (!occursOn(target, iso)) { problems.push(tr(`«${target.name}» در ${faDateLabel(iso)} برنامه‌ای ندارد.`, `"${target.name}" has nothing planned on ${faDateLabel(iso)}.`)); continue; }
         replaceRow(target.id, carveOut(target, iso));
         if (!list.some((o) => o.id === target.id)) successor.set(target.id, null);
-        applied.push(`«${target.name}» فقط برای ${DAY_NAME_FA[target.jsDay]} ${faDateLabel(iso)} حذف شد.`);
+        applied.push(tr(`«${target.name}» فقط برای ${dayLbl(target.jsDay)} ${faDateLabel(iso)} حذف شد.`, `Deleted "${target.name}" for ${dayLbl(target.jsDay)} ${faDateLabel(iso)} only.`));
         continue;
       }
 
       let fromIso = todayIso;
       if (!isBlank(raw.from)) {
         const f = parseDateInput(raw.from, todayIso);
-        if (!f) { problems.push(`تاریخ «${target.name}» را نفهمیدم.`); continue; }
+        if (!f) { problems.push(tr(`تاریخ «${target.name}» را نفهمیدم.`, `I didn't understand the date for "${target.name}".`)); continue; }
         fromIso = f;
       }
       replaceRow(target.id, closeFrom(target, fromIso));
       successor.set(target.id, null);
       applied.push(fromIso > todayIso
-        ? `«${target.name}» (${whenLabel}) از ${faDateLabel(fromIso)} به بعد حذف شد.`
-        : `«${target.name}» (${whenLabel}) حذف شد.`);
+        ? tr(`«${target.name}» (${whenLabel}) از ${faDateLabel(fromIso)} به بعد حذف شد.`, `Deleted "${target.name}" (${whenLabel}) from ${faDateLabel(fromIso)} onward.`)
+        : tr(`«${target.name}» (${whenLabel}) حذف شد.`, `Deleted "${target.name}" (${whenLabel}).`));
       continue;
     }
 
-    problems.push("یکی از کارهایی که خواستی را بلد نیستم انجام بدهم.");
+    problems.push(tr("یکی از کارهایی که خواستی را بلد نیستم انجام بدهم.", "I don't know how to do one of the things you asked."));
   }
 
   if (ops.length > MAX_OPS_PER_MESSAGE) {
-    problems.push(`در هر پیام حداکثر ${MAX_OPS_PER_MESSAGE} تغییر انجام می‌دهم — بقیه را در پیام بعدی بگو.`);
+    problems.push(tr(`در هر پیام حداکثر ${MAX_OPS_PER_MESSAGE} تغییر انجام می‌دهم — بقیه را در پیام بعدی بگو.`, `I can make at most ${MAX_OPS_PER_MESSAGE} changes per message — send the rest in the next one.`));
   }
 
   return { occurrences: list, removed, applied, problems, options, changed: applied.length > 0 };

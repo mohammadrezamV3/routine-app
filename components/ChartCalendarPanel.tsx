@@ -12,6 +12,7 @@ import {
   EconomicEventDto, IMPACT_COLORS, IMPACT_LABELS, currencyMeta, compareActualToForecast,
 } from "@/lib/economicCalendar";
 import { Spinner } from "./Spinner";
+import { tr } from "@/lib/i18n";
 
 // کارت فشرده‌ی تقویم اقتصادی برای صفحه‌ی چارت — جایگزین «اخبار بازار».
 //
@@ -64,7 +65,7 @@ export function ChartCalendarPanel() {
     <div className="trade-surface trade-cal-card">
       <div className="trade-panel-head">
         <span className="trade-panel-title">
-          <CalendarClock size={16} /> تقویم اقتصادی
+          <CalendarClock size={16} /> {tr("تقویم اقتصادی", "Economic calendar")}
         </span>
         <div className="trade-cal-card-actions">
           <button
@@ -72,19 +73,19 @@ export function ChartCalendarPanel() {
             className={`trade-ghost-btn${highOnly ? " active" : ""}`}
             onClick={() => setHighOnly((v) => !v)}
           >
-            فقط تاثیر بالا
+            {tr("فقط تاثیر بالا", "High impact only")}
           </button>
-          <button type="button" className="trade-icon-btn" onClick={load} disabled={loading} aria-label="به‌روزرسانی">
+          <button type="button" className="trade-icon-btn" onClick={load} disabled={loading} aria-label={tr("به‌روزرسانی", "Refresh")}>
             {loading ? <Spinner size={13} /> : <RefreshCw size={14} />}
           </button>
         </div>
       </div>
 
-      {firstLoad && <div className="trade-chat-empty is-loading">در حال بارگذاری…</div>}
+      {firstLoad && <div className="trade-chat-empty is-loading">{tr("در حال بارگذاری…", "Loading…")}</div>}
 
       {!firstLoad && !events.length && (
         <div className="trade-chat-empty">
-          رویدادی برای هفت روز آینده ثبت نشده است.
+          {tr("رویدادی برای هفت روز آینده ثبت نشده است.", "No events are listed for the next seven days.")}
         </div>
       )}
 
@@ -114,15 +115,15 @@ export function ChartCalendarPanel() {
                   </span>
                   <span className="trade-cal-values">
                     <span>
-                      واقعی: <b
+                      {tr("واقعی:", "Actual:")} <b
                         className={e.actual ? "mono" : "mono muted"}
                         style={cmp === "up" ? { color: "var(--accent)" } : cmp === "down" ? { color: "#E05252" } : undefined}
                       >
                         {e.actual ? faNum(e.actual) : "—"}
                       </b>
                     </span>
-                    <span>پیش‌بینی: <b className="mono">{e.forecast ? faNum(e.forecast) : "—"}</b></span>
-                    <span>قبلی: <b className="mono">{e.previous ? faNum(e.previous) : "—"}</b></span>
+                    <span>{tr("پیش‌بینی:", "Forecast:")} <b className="mono">{e.forecast ? faNum(e.forecast) : "—"}</b></span>
+                    <span>{tr("قبلی:", "Previous:")} <b className="mono">{e.previous ? faNum(e.previous) : "—"}</b></span>
                   </span>
                 </span>
               </div>

@@ -10,6 +10,7 @@ import { ExercisePlan } from "@/lib/exerciseTypes";
 import { takePreloaded } from "@/lib/preload";
 import { useFeature } from "@/lib/useFeatures";
 import { AddExerciseProgramForm } from "./AddExerciseProgramForm";
+import { tr } from "@/lib/i18n";
 
 export function ExercisePanel() {
   const { status } = useSession();
@@ -34,11 +35,11 @@ export function ExercisePanel() {
   }, [status]);
 
   if (status === "unauthenticated") {
-    return <AuthGate message="برای استفاده از این سرویس وارد شوید" />;
+    return <AuthGate message={tr("برای استفاده از این سرویس وارد شوید", "Sign in to use this service")} />;
   }
 
   if (plan === undefined) {
-    return <div className="item-line is-loading" style={{ marginTop: 10 }}>در حال بارگذاری…</div>;
+    return <div className="item-line is-loading" style={{ marginTop: 10 }}>{tr("در حال بارگذاری…", "Loading…")}</div>;
   }
 
   // ------------- بدون برنامه فعال -------------
@@ -48,14 +49,14 @@ export function ExercisePanel() {
         <div>
           <div className="trade-empty-state" style={{ marginTop: 10 }}>
             <Dumbbell size={32} />
-            <p>هنوز برنامه‌ی تمرینی نداری</p>
+            <p>{tr("هنوز برنامه‌ی تمرینی نداری", "You don't have a workout plan yet")}</p>
           </div>
           <div className="section-note" style={{ textAlign: "center" }}>
-            هر وقت خواستی، برنامه‌ات را بر اساس روزهای باشگاه، سطح، هدف و توضیحاتت می‌سازیم.
+            {tr("هر وقت خواستی، برنامه‌ات را بر اساس روزهای باشگاه، سطح، هدف و توضیحاتت می‌سازیم.", "Whenever you are ready, we will build your plan from your gym days, level, goal and notes.")}
           </div>
           <div style={{ display: "flex", justifyContent: "center", marginTop: 14 }}>
             <button type="button" className="account-outline-btn" onClick={() => setWizardOpen(true)}>
-              ساخت برنامه تمرینی
+              {tr("ساخت برنامه تمرینی", "Create a workout plan")}
             </button>
           </div>
         </div>
@@ -67,10 +68,10 @@ export function ExercisePanel() {
     }
     return (
       <div>
-        <div className="section-note" style={{ marginTop: 10 }}>برنامه‌ات رو بر اساس روزهای باشگاه، سطح، هدف و توضیحاتت می‌سازیم</div>
+        <div className="section-note" style={{ marginTop: 10 }}>{tr("برنامه‌ات رو بر اساس روزهای باشگاه، سطح، هدف و توضیحاتت می‌سازیم", "We will build your plan from your gym days, level, goal and notes")}</div>
         <AiExercisePlanWizard onCreated={setPlan} onClose={() => setWizardOpen(false)} />
         <div className="disclaimer-note">
-          این برنامه پیشنهاد تمرینی است، نه توصیه‌ی پزشکی؛ اجرای آن بر عهده‌ی کاربر است.
+          {tr("این برنامه پیشنهاد تمرینی است، نه توصیه‌ی پزشکی؛ اجرای آن بر عهده‌ی کاربر است.", "This plan is a training suggestion, not medical advice; following it is the user's responsibility.")}
         </div>
       </div>
     );
@@ -86,7 +87,7 @@ export function ExercisePanel() {
         <ExerciseDashboard plan={plan} onPlanChange={setPlan} onPlanDeleted={() => { setPlan(null); setWizardOpen(false); }} />
       </div>
       <div className="disclaimer-note">
-        <span className="disclaimer-warn">توجه: </span>
+        <span className="disclaimer-warn">{tr("توجه: ", "Note: ")}</span>
         این برنامه پیشنهاد تمرینی است، نه توصیه‌ی پزشکی؛ اجرای آن بر عهده‌ی کاربر است.
       </div>
     </div>

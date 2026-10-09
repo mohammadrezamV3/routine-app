@@ -1,3 +1,4 @@
+import { tr } from "@/lib/i18n";
 import { NextRequest, NextResponse } from "next/server";
 import crypto from "crypto";
 import bcrypt from "bcryptjs";
@@ -23,18 +24,18 @@ export async function POST(req: NextRequest) {
 
   const identifier = typeof rawIdentifier === "string" ? resolveIdentifier(rawIdentifier) : null;
   if (!identifier || !code || !newPassword) {
-    return NextResponse.json({ error: "اطلاعات وارد شده کامل نیست" }, { status: 400 });
+    return NextResponse.json({ error: tr("اطلاعات وارد شده کامل نیست", "The information entered is incomplete") }, { status: 400 });
   }
   const { kind, value } = identifier;
 
   // محدودیت تلاش برای حدس‌زدن کد ۵رقمی — هم روی IP هم روی شناسه
   if (!(await checkRateLimit(`fp-verify-ip:${ip}`, 15, 10 * 60 * 1000)) || !(await checkRateLimit(`fp-verify-id:${value}`, 6, 10 * 60 * 1000))) {
-    return NextResponse.json({ error: "تعداد تلاش‌ها بیش از حد مجازه — چند دقیقه دیگه دوباره امتحان کن" }, { status: 429 });
+    return NextResponse.json({ error: tr("تعداد تلاش‌ها بیش از حد مجازه — چند دقیقه دیگه دوباره امتحان کن", "Too many attempts — try again in a few minutes") }, { status: 429 });
   }
 
   const user = await prisma.user.findFirst({ where: kind === "phone" ? { phone: value } : { email: value } });
   if (!user) {
-    return NextResponse.json({ error: "کد نامعتبر یا منقضی‌شده است" }, { status: 400 });
+    return NextResponse.json({ error: tr("کد نامعتبر یا منقضی‌شده است", "The code is invalid or has expired") }, { status: 400 });
   }
 
   const otp = await prisma.passwordResetOtp.findFirst({
@@ -42,12 +43,12 @@ export async function POST(req: NextRequest) {
     orderBy: { createdAt: "desc" },
   });
   if (!otp || otp.attempts >= 5) {
-    return NextResponse.json({ error: "کد نامعتبر یا منقضی‌شده است" }, { status: 400 });
+    return NextResponse.json({ error: tr("کد نامعتبر یا منقضی‌شده است", "The code is invalid or has expired") }, { status: 400 });
   }
 
   if (otp.codeHash !== hashCode(code.trim())) {
     await prisma.passwordResetOtp.update({ where: { id: otp.id }, data: { attempts: { increment: 1 } } });
-    return NextResponse.json({ error: "کد وارد شده اشتباه است" }, { status: 400 });
+    return NextResponse.json({ error: tr("کد وارد شده اشتباه است", "The code entered is incorrect") }, { status: 400 });
   }
 
   const passwordError = await validatePassword(newPassword, [user.username || "", user.name || "", value]);
@@ -59,7 +60,7 @@ export async function POST(req: NextRequest) {
   if (user.passwordHash) {
     const samePassword = await bcrypt.compare(newPassword, user.passwordHash);
     if (samePassword) {
-      return NextResponse.json({ error: "رمز جدید نباید با رمز قبلی یکی باشه" }, { status: 400 });
+      return NextResponse.json({ error: tr("رمز جدید نباید با رمز قبلی یکی باشه", "The new password must not be the same as the previous one") }, { status: 400 });
     }
   }
 

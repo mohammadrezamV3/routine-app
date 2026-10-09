@@ -3,10 +3,11 @@
 import { useMemo, useState } from "react";
 import { motion } from "framer-motion";
 import { LineChart } from "lucide-react";
-import { faNum, FA_WEEKDAY_SHORT, isoLocal, J_MONTHS, toJalali } from "@/lib/jalali";
+import { faNum, weekdayShort, isoLocal, jMonthName, toJalali } from "@/lib/jalali";
 import { cn } from "@/lib/utils";
 import { SegmentedTabs } from "./SegmentedTabs";
 import { DashCard } from "./DashCard";
+import { tr } from "@/lib/i18n";
 
 type Entry = { customCalories: number; date?: string; createdAt?: string };
 type ChartRange = "weekly" | "monthly";
@@ -22,7 +23,7 @@ function formatKcal(n: number): string {
 function formatJalaliShort(iso: string): string {
   const [gy, gm, gd] = iso.split("-").map(Number);
   const [, jm, jd] = toJalali(gy, gm, gd);
-  return `${faNum(jd)} ${J_MONTHS[jm - 1]}`;
+  return `${faNum(jd)} ${jMonthName(jm - 1)}`;
 }
 
 // نمودار روند کالری.
@@ -78,7 +79,7 @@ export function CalorieChartCard({
       out.push({
         key,
         value: byDate[key] || 0,
-        label: isMonthly ? faNum(jd) : FA_WEEKDAY_SHORT[d.getDay()],
+        label: isMonthly ? faNum(jd) : weekdayShort(d.getDay()),
         showLabel,
       });
     }
@@ -95,7 +96,7 @@ export function CalorieChartCard({
       <div className="flex shrink-0 items-center justify-between gap-2">
         <h2 className="flex shrink-0 items-center gap-1.5 text-[13px] font-bold text-dash-text sm:text-[15px]">
           <LineChart className="h-4 w-4 text-dash-green sm:h-[18px] sm:w-[18px]" />
-          نمودار کالری
+          {tr("نمودار کالری", "Calorie chart")}
         </h2>
         {!locked && (
           <div className="w-[140px] shrink-0 sm:w-[168px]">
@@ -103,8 +104,8 @@ export function CalorieChartCard({
               active={range}
               onChange={(v) => { setRange(v); setSelected(null); }}
               options={[
-                { value: "weekly" as ChartRange, label: "هفتگی" },
-                { value: "monthly" as ChartRange, label: "ماهانه" },
+                { value: "weekly" as ChartRange, label: tr("هفتگی", "Weekly") },
+                { value: "monthly" as ChartRange, label: tr("ماهانه", "Monthly") },
               ]}
             />
           </div>
@@ -114,9 +115,9 @@ export function CalorieChartCard({
       {locked ? (
         <div className="mt-3 flex flex-1 flex-col items-center justify-center gap-2 rounded-2xl border border-dashed px-4 py-8 text-center" style={{ borderColor: "var(--line)" }}>
           <LineChart className="h-6 w-6 text-dash-muted" />
-          <div className="text-[12px] font-bold text-dash-text sm:text-[13px]">نمودار هنوز آماده نیست</div>
+          <div className="text-[12px] font-bold text-dash-text sm:text-[13px]">{tr("نمودار هنوز آماده نیست", "The chart is not ready yet")}</div>
           <div className="max-w-[260px] text-[10.5px] leading-relaxed text-dash-muted sm:text-[11.5px]">
-            برای نمایش نمودار حداقل به 3 روز داده نیاز داری — {faNum(MIN_DAYS - distinctDays)} روز دیگه مونده.
+            {tr(`برای نمایش نمودار حداقل به 3 روز داده نیاز داری — ${faNum(MIN_DAYS - distinctDays)} روز دیگه مونده.`, `You need at least 3 days of data to show the chart. ${faNum(MIN_DAYS - distinctDays)} more ${MIN_DAYS - distinctDays === 1 ? "day" : "days"} to go.`)}
           </div>
         </div>
       ) : (
@@ -129,7 +130,7 @@ export function CalorieChartCard({
                 className="rounded-full px-2.5 py-1 text-[10.5px] font-extrabold sm:text-[11.5px]"
                 style={{ background: "var(--accent)", color: "var(--bg)" }}
               >
-                {formatJalaliShort(sel.key)} — <span className="mono">{formatKcal(sel.value)}</span> کالری
+                {formatJalaliShort(sel.key)} — <span className="mono">{formatKcal(sel.value)}</span>{tr(" کالری", " kcal")}
               </span>
             )}
           </div>
@@ -148,13 +149,13 @@ export function CalorieChartCard({
                   type="button"
                   key={b.key}
                   onClick={() => setSelected(isActive ? null : i)}
-                  aria-label={`${b.label || b.key} — ${formatKcal(b.value)} کالری`}
+                  aria-label={tr(`${b.label || b.key} — ${formatKcal(b.value)} کالری`, `${b.label || b.key}: ${formatKcal(b.value)} kcal`)}
                   className="calorie-chart-bar-btn flex min-w-0 flex-1 flex-col items-center gap-1 bg-transparent p-0 sm:gap-1.5"
                 >
                   {/* درصد فقط توی هفتگی جا می‌شه؛ ماهانه ۳۰ ستون داره */}
                   {!isMonthly && (
                     <span className={cn("text-[9px] font-semibold sm:text-[10px]", isActive || peak ? "text-dash-green" : "text-dash-muted")}>
-                      {faNum(pct)}٪
+                      {faNum(pct)}{tr("٪", "%")}
                     </span>
                   )}
                   <div className="flex h-24 w-full items-end justify-center sm:h-28">

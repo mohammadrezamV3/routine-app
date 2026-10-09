@@ -6,8 +6,15 @@
 // این رشته‌ها توی title/description/JSON-LD/h1 پخش شدن، اگه هرکدوم جدا
 // نوشته بشن مرور زمان از هم واگرا می‌شن (همون درسی که با لیست کلیدهای
 // تنظیمات گرفتیم) — پس یک منبع واحد.
+import { tr } from "./i18n";
+
 export const BRAND_FA = "آریون";
 export const BRAND_EN = "Arion";
+
+/** اسم برند به زبان جاری (lib/i18n.ts) — برای متن UI؛ ثابت‌های بالا برای سئو/متادیتا */
+export function brandName(): string {
+  return tr(BRAND_FA, BRAND_EN);
+}
 
 /**
  * هردو املا کنار هم — طبق درخواست صریح کاربر، این دیگه توی متن فارسی

@@ -9,6 +9,7 @@ import { PanelSkeleton } from "@/components/PanelSkeleton";
 import { ICONS } from "@/components/NavDrawer";
 import { featureVisible } from "@/lib/featureFlags";
 import { useFeatures } from "@/lib/useFeatures";
+import { tr } from "@/lib/i18n";
 
 // انتخاب برنامه‌ی تمرینی/غذایی دیگه تب روی صفحه نداره — طبق درخواست
 // صریح کاربر فقط از منوی «بدنسازی» ← «برنامه تمرینی»/«برنامه غذایی» ممکنه؛
@@ -46,7 +47,7 @@ export default function BodybuildingPage() {
           فعلی (برنامه‌ی تمرینی/کالری‌شمار) روی همین عنوان تاثیری ندارد. */}
       <div className="trade-head-row" style={{ justifyContent: "flex-start" }}>
         <span className="page-title-icon">{ICONS.exercise}</span>
-        <h1>بدنسازی</h1>
+        <h1>{tr("بدنسازی", "Workout")}</h1>
       </div>
       <Suspense fallback={<PanelSkeleton />}>
         <BodybuildingTabContent />

@@ -4,6 +4,7 @@ import { badRequest, conflict } from "@/lib/mentorGuard";
 import { readJsonBody } from "@/lib/validate";
 import { requireMentorTools } from "@/lib/mentorToolsGuard";
 import { MAX_REPLIES_PER_MENTOR, toReplyRow, validateReply } from "@/lib/mentorReplies";
+import { tr } from "@/lib/i18n";
 
 // GET /api/mentor/replies → پاسخ‌های آماده‌ی خود منتور (قدیمی‌ترین اول، ترتیب ثابت برای انتخاب)
 export async function GET() {
@@ -27,7 +28,7 @@ export async function POST(req: Request) {
   if (!v.ok) return badRequest(v.error);
 
   const count = await prisma.mentorSavedReply.count({ where: { profileId: g.profile.id } });
-  if (count >= MAX_REPLIES_PER_MENTOR) return conflict(`حداکثر ${MAX_REPLIES_PER_MENTOR} پاسخ آماده مجاز است`);
+  if (count >= MAX_REPLIES_PER_MENTOR) return conflict(tr(tr(`حداکثر ${MAX_REPLIES_PER_MENTOR} پاسخ آماده مجاز است`, `You can have up to ${MAX_REPLIES_PER_MENTOR} ready replies`), `You can have up to ${MAX_REPLIES_PER_MENTOR} ready replies`));
 
   const r = await prisma.mentorSavedReply.create({ data: { profileId: g.profile.id, title: v.data.title!, body: v.data.body! } });
   return NextResponse.json({ reply: toReplyRow(r) });

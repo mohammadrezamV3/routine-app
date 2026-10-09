@@ -6,17 +6,28 @@
 // مالکیت ایمیل جدید موقع تغییر ایمیل حساب از پنل کاربری — متنش عمدا
 // جداست چون «کد ورود» توی این کانتکست گمراه‌کننده/نگران‌کننده بود (کاربر
 // فکر می‌کرد یعنی کسی داره وارد حسابش می‌شه، نه اینکه خودش داره ایمیل عوض می‌کنه).
-import { BRAND_FA } from "@/lib/brand";
+import { brandName } from "@/lib/brand";
+import { tr, isEn } from "@/lib/i18n";
 
 export type OtpEmailPurpose = "login" | "change-email";
 
-const COPY: Record<OtpEmailPurpose, { subject: string; heading: string }> = {
-  login: { subject: `کد ورود به ${BRAND_FA}`, heading: "کد ورود شما" },
-  "change-email": { subject: `کد تایید تغییر ایمیل در ${BRAND_FA}`, heading: "کد تایید ایمیل جدید" },
+// تابع (نه ثابت سطح ماژول) تا زبان هر درخواست جدا انتخاب بشه؛ این تابع داخل
+// خود درخواست API اجرا می‌شه، پس tr() زبان کوکی همون کاربر رو می‌خونه.
+const copy = (purpose: OtpEmailPurpose): { subject: string; heading: string } => {
+  const BRAND = brandName();
+  return purpose === "change-email"
+    ? { subject: tr(`کد تایید تغییر ایمیل در ${BRAND}`, `${BRAND} email change verification code`), heading: tr("کد تایید ایمیل جدید", "Verification code for your new email") }
+    : { subject: tr(`کد ورود به ${BRAND}`, `Your ${BRAND} login code`), heading: tr("کد ورود شما", "Your login code") };
 };
 
 export function renderOtpEmail(code: string, purpose: OtpEmailPurpose = "login"): { subject: string; html: string; text: string } {
-  const { subject, heading } = COPY[purpose];
+  const { subject, heading } = copy(purpose);
+  const BRAND_FA = brandName(); // نام برند به زبان جاری (در فارسی همون «آریون» قبلی)
+  const en = isEn();
+  const dir = en ? "ltr" : "rtl";
+  const bodyLine = tr("این کد تا 10 دقیقه‌ی دیگر معتبر است.", "This code is valid for 10 more minutes.");
+  const ignoreText = tr("اگر این درخواست از طرف شما نبوده، این پیام را نادیده بگیرید.", "If you did not make this request, please ignore this message.");
+  const ignoreHtml = tr("اگر این درخواست از طرف شما نبوده، با خیال راحت این ایمیل را نادیده بگیرید — هیچ اقدامی برای حساب شما انجام نمی‌شود.", "If you did not make this request, you can safely ignore this email. No action will be taken on your account.");
 
   const text = [
     BRAND_FA,
@@ -24,12 +35,12 @@ export function renderOtpEmail(code: string, purpose: OtpEmailPurpose = "login")
     "",
     code,
     "",
-    "این کد تا 10 دقیقه‌ی دیگر معتبر است.",
-    "اگر این درخواست از طرف شما نبوده، این پیام را نادیده بگیرید.",
+    bodyLine,
+    ignoreText,
   ].join("\n");
 
   const html = `<!doctype html>
-<html lang="fa" dir="rtl">
+<html lang="${en ? "en" : "fa"}" dir="${dir}">
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
@@ -47,7 +58,7 @@ export function renderOtpEmail(code: string, purpose: OtpEmailPurpose = "login")
             </tr>
             <tr>
               <td style="padding:32px 28px 8px; text-align:center;">
-                <p style="margin:0 0 6px; font-size:14px; color:#5b6660; direction:rtl;">${heading}</p>
+                <p style="margin:0 0 6px; font-size:14px; color:#5b6660; direction:${dir};">${heading}</p>
               </td>
             </tr>
             <tr>
@@ -59,12 +70,12 @@ export function renderOtpEmail(code: string, purpose: OtpEmailPurpose = "login")
             </tr>
             <tr>
               <td style="padding:0 28px 8px; text-align:center;">
-                <p style="margin:0; font-size:13px; color:#5b6660; direction:rtl; line-height:1.7;">این کد تا 10 دقیقه‌ی دیگر معتبر است.</p>
+                <p style="margin:0; font-size:13px; color:#5b6660; direction:${dir}; line-height:1.7;">${bodyLine}</p>
               </td>
             </tr>
             <tr>
               <td style="padding:8px 28px 30px; text-align:center;">
-                <p style="margin:0; font-size:12px; color:#8b9791; direction:rtl; line-height:1.7;">اگر این درخواست از طرف شما نبوده، با خیال راحت این ایمیل را نادیده بگیرید — هیچ اقدامی برای حساب شما انجام نمی‌شود.</p>
+                <p style="margin:0; font-size:12px; color:#8b9791; direction:${dir}; line-height:1.7;">${ignoreHtml}</p>
               </td>
             </tr>
             <tr>

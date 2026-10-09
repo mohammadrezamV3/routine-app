@@ -8,6 +8,7 @@ import type { MentorCard as MentorCardData } from "@/lib/mentorTypes";
 import { MentorCard } from "./MentorCard";
 import { MentorSectionTitle } from "./MentorUI";
 import { MentorStaggerItem } from "./MentorMotion";
+import { tr } from "@/lib/i18n";
 
 /** حداکثر کارت در هر ردیف؛ بقیه با «مشاهده همه» */
 export const CAROUSEL_LIMIT = 10;
@@ -34,7 +35,7 @@ export function MentorCarousel({
         icon={icon}
         action={
           <button type="button" className="mentor-text-btn" onClick={onViewAll}>
-            مشاهده همه <ArrowLeft size={14} strokeWidth={1.75} aria-hidden />
+            {tr("مشاهده همه", "View all")} <ArrowLeft size={14} strokeWidth={1.75} aria-hidden className="dir-flip" />
           </button>
         }
       >
@@ -50,8 +51,8 @@ export function MentorCarousel({
         ))}
         <MentorStaggerItem index={shown.length} className="mentor-grid-item">
           <button type="button" className="mentor-carousel-more" onClick={onViewAll}>
-            <span className="mentor-carousel-more-icon"><ArrowLeft size={18} strokeWidth={1.75} aria-hidden /></span>
-            مشاهده همه
+            <span className="mentor-carousel-more-icon"><ArrowLeft size={18} strokeWidth={1.75} aria-hidden className="dir-flip" /></span>
+            {tr("مشاهده همه", "View all")}
           </button>
         </MentorStaggerItem>
       </motion.div>

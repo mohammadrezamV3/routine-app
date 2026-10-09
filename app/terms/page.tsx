@@ -1,25 +1,30 @@
 import type { Metadata } from "next";
 import Link from "next/link";
-import { SUPPORT_EMAIL } from "@/lib/brand";
+import { SUPPORT_EMAIL, brandName } from "@/lib/brand";
+import { isEn, tr } from "@/lib/i18n";
 import { breadcrumbJsonLd, pageMetadata } from "@/lib/seo";
 import { MENTOR_TERMS_PATH } from "@/lib/mentorTerms";
 
-export const metadata: Metadata = pageMetadata({
-  title: "قوانین و مقررات آریون",
-  description:
-    "شرایط و قوانین استفاده از آریون — حساب کاربری، اشتراک و پرداخت، انصراف و بازگشت وجه، حریم خصوصی، سلب مسئولیت پزشکی و مالی، و حل اختلاف.",
-  path: "/terms",
-  ogTitle: "قوانین و مقررات",
-});
+export function generateMetadata(): Metadata {
+  return pageMetadata({
+    title: tr("قوانین و مقررات آریون", `Terms and conditions | ${brandName()}`),
+    description: tr(
+      "شرایط و قوانین استفاده از آریون — حساب کاربری، اشتراک و پرداخت، انصراف و بازگشت وجه، حریم خصوصی، سلب مسئولیت پزشکی و مالی، و حل اختلاف.",
+      `The terms of use for ${brandName()}: accounts, subscriptions and payments, cancellations and refunds, privacy, medical and financial disclaimers, and dispute resolution.`,
+    ),
+    path: "/terms",
+    ogTitle: tr("قوانین و مقررات", "Terms and conditions"),
+  });
+}
 
 // تاریخ آخرین بازنگری — با هر تغییر ماهوی متن باید عوض شود (بند ۱۹-۲).
-const LAST_UPDATED = "مهر 1405";
+const LAST_UPDATED = { fa: "مهر 1405", en: "Mehr 1405 (Jalali)" };
 
 type Article = { title: string; intro?: string; clauses: string[]; link?: { href: string; label: string } };
 
 // متن عمدا رسمی و بندبه‌بند است (نه لحن محاوره‌ای بقیه‌ی سایت): هر بند
 // باید به‌تنهایی قابل استناد باشد و در اختلاف، «ماده‌ی X بند Y» ارجاع‌پذیر.
-const ARTICLES: Article[] = [
+const ARTICLES_FA: Article[] = [
   {
     title: "تعاریف",
     clauses: [
@@ -239,32 +244,259 @@ const ARTICLES: Article[] = [
   },
 ];
 
+// نسخه‌ی انگلیسی بندها: ساختار و شماره‌ی مواد دقیقا با ARTICLES_FA یکی است
+// (ارجاع‌های «ماده‌ی X» در متن هم همین شماره‌ها را دارند).
+const ARTICLES_EN: Article[] = [
+  {
+    title: "Definitions",
+    clauses: [
+      "“Arion” or “we”: the Arion Group, the provider and operator of the website, the app and all services under the Arion brand.",
+      "“User” or “you”: any natural person who creates an Arion account or uses any part of the services.",
+      "“Services”: all features offered on Arion, including the daily and weekly routine, habit and sleep tracking, daily tasks, workout plans, the calorie counter, the trading journal and related tools (economic calendar, MetaTrader connection, checklists and notes), the smart learning roadmap, smart analysis, social features and the mentor section.",
+      "“Paid module”: any part of the services whose access depends on having an active subscription.",
+      "“Subscription”: a time-limited right to use one or more paid modules, according to the plan the user has purchased.",
+      "“User content”: any data that the user enters, uploads or syncs on Arion.",
+      "“AI-generated content”: any output automatically produced for the user by artificial intelligence models, including roadmaps, workout plans and analytical reports.",
+    ],
+  },
+  {
+    title: "Acceptance of terms and eligibility",
+    clauses: [
+      "Signing up, logging in or using the services in any way means you have read, understood and fully and unconditionally accepted these terms and any later amendments (in accordance with Article 19). If you do not accept any part of these terms, you must not use the services.",
+      "These terms constitute an electronic contract between the user and Arion and are valid and binding under the Electronic Commerce Law and other laws of the Islamic Republic of Iran.",
+      "Adults aged 18 or over may use the services. People under 18 may only use them with the knowledge, consent and supervision of a parent or legal guardian, who is responsible for that use.",
+      "The user confirms that the identity and contact details entered when registering are correct, complete and belong to the user.",
+    ],
+  },
+  {
+    title: "Nature of the services",
+    clauses: [
+      "Arion is a personal tool for planning, recording and tracking. The services are provided “as is” and “as available”, and Arion does not guarantee any specific result (including weight loss, improved physical fitness, trading profits or learning a skill). The final outcome depends on the user's own actions.",
+      "Arion may develop, change or discontinue parts of the services. If a module the user has paid for is fully discontinued before the subscription ends, the amount for the unused period of that module will be refunded to the user or, with the user's consent, converted into an equivalent subscription.",
+      "Some data (including the economic calendar, market prices and the results of AI analysis) comes from third-party sources and service providers. Arion does not guarantee the accuracy, completeness or timeliness of this data, which is provided for information only.",
+    ],
+  },
+  {
+    title: "Account and security",
+    clauses: [
+      "Each user may only have one account. Creating multiple accounts to abuse a trial period, a discount, a referral code or the AI quota is prohibited.",
+      "The user account is personal and non-transferable. Handing over, selling, renting or sharing an account or subscription with others is prohibited.",
+      "The user is responsible for keeping their password confidential and for all activity carried out through their account. If the user becomes aware of any unauthorised access, they must change their password immediately and inform support. Arion is not liable for losses caused by the user disclosing their password or being careless with it.",
+      "To protect accounts, failed login attempts and unusual requests may be limited automatically and temporarily.",
+      "Arion will never ask for your account password or your trading account password by phone, message or email. Any such request is fake.",
+    ],
+  },
+  {
+    title: "User obligations and prohibited conduct",
+    intro: "The user agrees to use the services only for lawful and personal purposes, and in particular to refrain from the following:",
+    clauses: [
+      "Any attempt to gain unauthorised access to other people's accounts, servers, databases or non-public parts of the system, or to bypass access or payment restrictions.",
+      "Any action that disrupts, slows down or takes down the services, including sending mass requests, or using bots, crawlers or automated scripts without Arion's written permission.",
+      "Reverse engineering, copying, mass extraction of data, or reselling the services or Arion's content.",
+      "Posting or publishing content that breaks the laws of the Islamic Republic of Iran, is abusive, obscene, infringes others' rights or contains malware, including in usernames, profile pictures and social sections.",
+      "Abusing the AI service's quota or inputs, including attempts to generate unlawful content or to bypass its limits.",
+      "Impersonating others or providing false information.",
+      "A breach of any of these points, in addition to the application of Article 18, makes the user liable for all losses caused to Arion or to third parties.",
+    ],
+  },
+  {
+    title: "Subscriptions, prices and payment",
+    clauses: [
+      "The modules included, the duration and the price of each plan are shown on the subscription page. The final price is displayed before payment, and the amount shown is the basis of both parties' obligations.",
+      "Payment is only made through the official and authorised payment gateways in the country. Users' bank card details are not stored by Arion, and the payment process is subject to the rules of the gateway and the relevant bank.",
+      "A subscription becomes active once the payment gateway confirms the payment. If an amount is debited from the user's account but the subscription does not activate, the amount will be returned automatically within 72 hours in line with banking procedures. Otherwise, the user can contact support with their tracking number.",
+      "Subscriptions do not renew automatically, and no amount is taken from the user without their action and explicit confirmation.",
+      "Changes to plan prices apply to the future and do not affect subscriptions purchased before the change.",
+      "Discounts, discount codes and special offers are subject to their stated conditions and deadlines, cannot be exchanged for cash, and are void if abuse is discovered.",
+      "Upgrading to the Max plan: if a user has an active Workout or Trading plan and buys the Max plan, the full amount paid for the current plan is deducted from the Max price. The new Max plan ends at the same time as the first plan (Workout or Trading), unless the duration purchased for Max expires before the first plan, in which case the purchased duration applies. If the second plan is a new Workout or Trading subscription (not an upgrade to Max), the full and separately purchased duration is given to the user.",
+      "A free trial period (where offered) may be used only once per person, and Arion may change its conditions, duration or availability for new users at any time.",
+    ],
+  },
+  {
+    title: "Cancellation and refunds",
+    clauses: [
+      "The user may cancel a subscription purchase within 7 days of the purchase date, without giving a reason, and request a refund through support, provided that they have not used the AI-based services of that same subscription during this period (such as building a roadmap, an intelligent workout plan, food image analysis or an analytical report). In this case, the full amount paid is refunded after deducting the payment gateway's final fee (if any).",
+      "If the user has used the AI services within the 7-day period, the refund is calculated in proportion to the remaining days of the subscription, and the cost of the AI services used is deducted, because those services created a final and non-refundable cost for Arion.",
+      "After 7 days from the purchase, the subscription amount is not refundable, except in the cases in clause 4 of this article, clause 2 of Article 3, or clause 4 of Article 18.",
+      "If, because of a technical fault on Arion's side, a user's paid module is unavailable for more than 72 consecutive hours, the user may choose either a free extension of the subscription for the lost period, or a refund for the lost period.",
+      "Refundable amounts are paid within a maximum of 10 business days after the request is approved, to the same card or account the payment was made from.",
+      "Once a refund is made, the related subscription is cancelled immediately. The user's data is not deleted and will be available again after a new purchase.",
+    ],
+  },
+  {
+    title: "AI-based services",
+    clauses: [
+      "AI-generated content is produced automatically, without human review, and may be incomplete, inaccurate or out of date (including source names, the order of steps, time estimates, calorie values and exercise moves). This content is only a suggestion and educational aid, and the user must check its accuracy themselves before relying on it.",
+      "Use of the AI services may be subject to a quota or limit on the number of uses, as stated in the relevant plan or page.",
+      "The inputs the user gives these services (such as a roadmap topic or body measurements) are sent to the AI processing provider to generate a response. The user must not enter sensitive personal information or information about other people in these inputs.",
+      "The user's personal use of the AI-generated content for themselves is free. However, Arion gives no guarantee that this content is unique or free from third-party intellectual property rights.",
+    ],
+  },
+  {
+    title: "Medical, nutritional and financial disclaimers",
+    clauses: [
+      "The workout, training plan, calorie counter and sleep sections are in no way medical, nutritional or therapeutic advice, diagnosis or treatment, and they do not replace consultation with a doctor, a qualified dietitian or a qualified coach. Before starting any exercise programme or diet, especially if you have an illness, are pregnant, have an injury or take medication, the user must consult a doctor.",
+      "The user accepts that physical activity carries an inherent risk of injury, and that performing any movement or programme is entirely at the user's own decision and responsibility. Arion is not liable for physical injury or health problems arising from following the programmes.",
+      "The trading journal, trade statistics, the economic calendar, prices, market hours and any related tools are only tools for recording and information. They are in no way recommendations, signals, investment advice or buy and sell suggestions. Arion is not an investment advisor.",
+      "Trading in financial markets (including forex, cryptocurrencies, stocks and commodities) is high risk and can lead to the loss of all capital. All trading decisions and the resulting profits and losses are solely the user's responsibility. Arion has no liability for financial loss, including losses caused by delays, errors or interruptions in economic calendar data or prices.",
+      "The user is responsible for complying with the laws of their own country and with the rules of their brokers regarding their trading activity.",
+    ],
+  },
+  {
+    title: "MetaTrader connection and third-party services",
+    clauses: [
+      "A trading account is connected through a connection code and an Expert Advisor. Arion never requests or stores the user's trading account password. The connection is only for reading and recording trade history, and Arion does not place any trade orders in the user's account.",
+      "Installing and running the Expert Advisor on the user's trading platform is the user's own decision and responsibility. Before installing it, the user must check that it complies with the rules of their broker.",
+      "The user may disconnect at any time. The connection code and token are only stored in hashed form.",
+      "The use of third-party services (including Google sign-in, payment gateways and data sources) is subject to the terms of those services, and Arion is not responsible for their performance, outages or policies.",
+    ],
+  },
+  {
+    title: "Intellectual property",
+    clauses: [
+      "All economic and moral rights in the Arion name and trademark, the design, user interface, code, text, images, data structure and other components of the services belong to Arion and are protected by the intellectual property laws of the Islamic Republic of Iran.",
+      "Any copying, republishing, imitation of the design, commercial use or creation of derivative works from the services without Arion's written permission is prohibited and may be pursued legally.",
+      "Ownership of user content belongs to the user. The user grants Arion a non-exclusive, royalty-free and limited permission to store and process their content solely to provide, maintain, back up and improve the services for that user. This permission ends when the account is deleted.",
+      "Arion may use aggregated and fully anonymous statistics (which cannot in any way be attributed to a specific person) to improve the services.",
+    ],
+  },
+  {
+    title: "Privacy and data protection",
+    clauses: [
+      "The data collected includes account information (name, email or mobile number, username), user content, payment information (without card details) and the technical data needed for security and the operation of the service (such as login times and device type).",
+      "This data is used only to provide the services, verify identity, provide support, ensure security, prevent fraud and send the notifications the user has turned on.",
+      "Arion does not sell, rent or provide users' data to any third party for advertising. Data is disclosed only in the following cases: on the written order of a competent judicial or legal authority; to service providers who are essential for providing the same service (such as hosting, payment gateways, SMS delivery and AI processing), and only to the extent necessary; or with the user's explicit consent.",
+      "Passwords are stored in hashed form, the connection to the site is encrypted, and Arion takes reasonable technical measures to protect data. However, no system is completely secure, and if a security breach affecting users' data occurs, Arion will inform the affected users as soon as possible.",
+      "The user has the right at any time to access their data, correct it, and request the complete deletion of their account and data through support. Deletion is carried out within a maximum of 30 days, except for information that must be kept by law (such as financial transaction records), which is kept only for the period required by law.",
+      "Arion uses cookies and local browser storage only to keep the login session, settings and the correct functioning of the site.",
+    ],
+  },
+  {
+    title: "Social features",
+    clauses: [
+      "In the friends section, users with whom the user has formed a friendship can see the user's public profile information (name, username, profile picture and banner, biography and plan name) and a summary of their progress statistics (such as streaks, the number of stars and the number of completed paths and programmes). A mobile number is only shown if the user has enabled it in their privacy settings. Details of the user's content (such as trades, notes and plans) are not shown to friends.",
+      "The user may end a friendship at any time. The user is responsible for content they place in areas visible to others (such as their name and profile picture).",
+    ],
+  },
+  {
+    title: "Mentor section",
+    clauses: [
+      "In the mentor section, Arion is only the medium through which a mentor and a student communicate. Mentors are independent users and are not employees, agents or partners of Arion, and Arion does not select or guarantee them to provide a service.",
+      "Responsibility for the content, recommendations, conduct and qualifications of a mentor, and for any agreement or payment between a mentor and a student, lies with those parties, and Arion is not a party to it. Arion does not currently process any payment between a mentor and a student.",
+      "Mentor guidance in the fields of exercise, nutrition or health is not medical advice, and Article 9 also applies to it.",
+      "The detailed conditions are set out in “Terms of use for the mentor section”, which forms an integral part of these terms. Explicit acceptance of it is required to create a mentor profile and to send a student request.",
+    ],
+    link: { href: MENTOR_TERMS_PATH, label: "Terms of use for the mentor section" },
+  },
+  {
+    title: "Referral codes and sales cooperation",
+    clauses: [
+      "Rewards, discounts or commissions arising from a referral code or sales cooperation are only due under the conditions stated at the time of use, and are not final until the referred purchase is finalised (the end of the cancellation period).",
+      "Referring yourself, referring through fake or multiple accounts, misleading advertising or any other fraudulent method will void all related rewards and, where necessary, suspend the account.",
+      "A sales partner has no right to present themselves as an official representative of Arion or to make any commitment on Arion's behalf to others that falls outside these terms.",
+    ],
+  },
+  {
+    title: "Availability of the services",
+    clauses: [
+      "Arion makes reasonable efforts to keep the services permanently available, but does not guarantee that the services will always be free of interruptions, errors or delays.",
+      "The services may be temporarily unavailable for maintenance, updates or bug fixes. Long planned outages are announced in advance where possible.",
+      "Users are advised to keep a personal backup of their important data.",
+    ],
+  },
+  {
+    title: "Limitation of liability",
+    clauses: [
+      "Arion is in no circumstances liable for indirect, consequential or lost-profit losses of the user, including trading losses, lost opportunities, injury arising from following an exercise or diet programme, or reliance on AI-generated content and third-party data.",
+      "In any case, Arion's total liability to each user, for any reason, is limited to the total amount that user paid to Arion in the three months before the event giving rise to the liability.",
+      "The limitations in this article do not cover losses caused by Arion's wilful misconduct or gross negligence, and do not remove the rights that mandatory consumer protection laws recognise for the user.",
+    ],
+  },
+  {
+    title: "Suspension and termination",
+    clauses: [
+      "The user may stop using the services at any time or request the deletion of their account. Deleting the account does not by itself lead to a refund of the subscription, except within the framework of Article 7.",
+      "If these terms are breached, Arion may, in proportion to the seriousness of the breach, first warn the user or temporarily restrict their access. For serious breaches (including intrusion or attempted intrusion, payment fraud, organised abuse or criminal activity), the account will be blocked without prior warning, and Arion has the right to pursue legal action and claim damages.",
+      "If the account is blocked because of the user's breach, the remaining subscription amount is not refunded.",
+      "If Arion closes the user's account or stops providing all services without the user's fault, the amount for the unused period of active subscriptions will be refunded to the user, and the user will be given a reasonable opportunity (at least 14 days) to obtain a copy of their data.",
+      "A user whose account has been blocked for a breach is not permitted to create a new account.",
+    ],
+  },
+  {
+    title: "Changes to these terms",
+    clauses: [
+      "Arion may update these terms. A new version will be published on this page, with the date of the last revision.",
+      "Material changes that alter the user's rights or obligations to their detriment will be notified to users with an active subscription by email or in-site notification at least 7 days before they take effect.",
+      "A user who does not accept material changes may cancel their subscription before they take effect and receive the amount for the unused period. Continuing to use the services after the effective date means accepting the new version.",
+      "Subscriptions purchased continue until the end of their term with the benefits they had at the time of purchase (in accordance with Article 6).",
+    ],
+  },
+  {
+    title: "Governing law and dispute resolution",
+    clauses: [
+      "These terms are subject to the laws of the Islamic Republic of Iran, and they are interpreted on the basis of those laws.",
+      "If a dispute arises, the parties must first try for 30 days to resolve it amicably through negotiation and Arion support. For this purpose, the user must raise the matter in writing (through a support ticket or email).",
+      "If the dispute is not resolved within this period, the competent judicial authorities of the Islamic Republic of Iran will have jurisdiction. This clause does not prevent the user from applying to the official consumer protection bodies.",
+    ],
+  },
+  {
+    title: "Force majeure",
+    clauses: [
+      "Arion is not liable for delay in, or failure to perform, its obligations arising from events beyond its reasonable control, including natural disasters, war, nationwide internet outages or restrictions, widespread disruption of infrastructure or the banking network, sanctions, strikes, large-scale cyberattacks, or decisions and orders of government authorities.",
+      "If such an event cuts the user's access to a paid module for more than 7 consecutive days, the outage period will be added to the user's subscription after it is resolved.",
+    ],
+  },
+  {
+    title: "Contact and notices",
+    clauses: [
+      `The official ways to contact Arion are the support ticket system inside the user's account and the email address ${SUPPORT_EMAIL}.`,
+      "Notices from Arion sent to the email address or mobile number registered on the user's account, or given through an in-site notification, are considered valid notice. Keeping contact details up to date is the user's responsibility.",
+      "The user's requests (including cancellation, refunds, data deletion and objections) must be submitted through these official channels so that their date and content can be relied upon.",
+    ],
+  },
+  {
+    title: "Other provisions",
+    clauses: [
+      "These terms, together with the conditions stated on each plan's page at the time of purchase, form the entire agreement between the user and Arion regarding the services. In the event of conflict, the specific conditions of the plan at the time of purchase take precedence.",
+      "If any clause of these terms is declared void or unenforceable by a competent authority, the other clauses remain in force, and the void clause is interpreted in the closest legally possible way to its original purpose.",
+      "Failure or delay by Arion in exercising any right does not waive that right.",
+      "The user has no right to transfer their rights and obligations under these terms to another party. In the event of a transfer or merger of the business, Arion may transfer these rights and obligations to its successor, while fully preserving users' rights.",
+      "The official language of these terms is Persian, and where a translation exists, the Persian text is the reference.",
+    ],
+  },
+];
+
 export default function TermsPage() {
+  const articles = isEn() ? ARTICLES_EN : ARTICLES_FA;
+  const lastUpdated = isEn() ? LAST_UPDATED.en : LAST_UPDATED.fa;
+  const brand = brandName();
   return (
     <section>
-      <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(breadcrumbJsonLd([{ name: "آریون", path: "/" }, { name: "قوانین و مقررات", path: "/terms" }])) }} />
-      <h1>قوانین و مقررات</h1>
+      <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(breadcrumbJsonLd([{ name: brand, path: "/" }, { name: tr("قوانین و مقررات", "Terms and conditions"), path: "/terms" }])) }} />
+      <h1>{tr("قوانین و مقررات", "Terms and conditions")}</h1>
       <div className="dateline" style={{ marginBottom: 6 }}>
-        آخرین بازنگری: {LAST_UPDATED}
+        {tr("آخرین بازنگری: ", "Last updated: ")}{lastUpdated}
       </div>
-      <p style={{ marginTop: 12, fontSize: 13.5, color: "var(--muted)", lineHeight: 2 }}>
-        این قوانین شرایط استفاده از آریون را تعیین می‌کند. لطفا پیش از ثبت‌نام و خرید اشتراک آن را به‌طور کامل مطالعه کنید؛
-        ثبت‌نام و استفاده از خدمات به معنای پذیرش کامل آن است.
+      <p style={{ marginTop: 12, fontSize: 13.5, color: "var(--muted)", lineHeight: isEn() ? 1.7 : 2 }}>
+        {tr(
+          "این قوانین شرایط استفاده از آریون را تعیین می‌کند. لطفا پیش از ثبت‌نام و خرید اشتراک آن را به‌طور کامل مطالعه کنید؛ ثبت‌نام و استفاده از خدمات به معنای پذیرش کامل آن است.",
+          "These terms set out the conditions for using Arion. Please read them carefully before signing up and buying a subscription. Signing up and using the services means you fully accept them.",
+        )}
       </p>
 
-      {ARTICLES.map((a, i) => (
+      {articles.map((a, i) => (
         <article key={a.title} style={{ marginTop: 26 }}>
-          <h2>ماده‌ی {i + 1} — {a.title}</h2>
+          <h2>{tr("ماده‌ی", "Article")} {i + 1} — {a.title}</h2>
           {a.intro && (
-            <p style={{ marginTop: 8, fontSize: 13.5, color: "var(--muted)", lineHeight: 2 }}>{a.intro}</p>
+            <p style={{ marginTop: 8, fontSize: 13.5, color: "var(--muted)", lineHeight: isEn() ? 1.7 : 2 }}>{a.intro}</p>
           )}
-          <ol style={{ marginTop: 8, paddingInlineStart: 22, listStyleType: "persian" }}>
+          <ol style={{ marginTop: 8, paddingInlineStart: 22, listStyleType: isEn() ? "decimal" : "persian" }}>
             {a.clauses.map((c, j) => (
-              <li key={j} style={{ marginTop: 7, fontSize: 13.5, color: "var(--muted)", lineHeight: 2 }}>{c}</li>
+              <li key={j} style={{ marginTop: 7, fontSize: 13.5, color: "var(--muted)", lineHeight: isEn() ? 1.7 : 2 }}>{c}</li>
             ))}
           </ol>
           {a.link && (
-            <p style={{ marginTop: 8, fontSize: 13.5, lineHeight: 2 }}>
+            <p style={{ marginTop: 8, fontSize: 13.5, lineHeight: isEn() ? 1.7 : 2 }}>
               <Link href={a.link.href} style={{ color: "var(--accent)" }}>{a.link.label}</Link>
             </p>
           )}

@@ -1,3 +1,4 @@
+import { tr } from "@/lib/i18n";
 import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 import { requireFeature } from "@/lib/featureFlagsServer";
@@ -27,7 +28,7 @@ async function handlePATCH(req: NextRequest, { params }: { params: { id: string 
     typeof n !== "number" || !Number.isFinite(n) || typeof done !== "boolean" ||
     (task !== undefined && (typeof task !== "number" || !Number.isInteger(task) || task < 0))
   ) {
-    return NextResponse.json({ error: "ورودی نامعتبر است" }, { status: 400 });
+    return NextResponse.json({ error: tr("ورودی نامعتبر است", "Invalid input") }, { status: 400 });
   }
 
   const row = await prisma.roadmap.findFirst({

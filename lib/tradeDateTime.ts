@@ -6,11 +6,22 @@
 // در نسخه‌ی قبل باعث شد همه‌ی معاملات ساعت ۱۲:۰۰ ثبت شوند و آمار جلسه
 // عملا غیرممکن شود).
 
-import { J_MONTHS, faNum, toJalali } from "./jalali";
+import { jMonthName, faNum, toJalali } from "./jalali";
 import { G_MONTHS } from "./gregorian";
+import { isEn } from "./i18n";
 import type { CalSystem } from "./tradeTypes";
 
 const pad = (n: number) => String(n).padStart(2, "0");
+
+const G_MONTHS_EN = [
+  "January", "February", "March", "April", "May", "June",
+  "July", "August", "September", "October", "November", "December",
+];
+
+/** اسم ماه میلادی به زبان جاری؛ index صفرمبنا */
+export function gMonthName(index0: number): string {
+  return (isEn() ? G_MONTHS_EN : G_MONTHS)[index0] ?? "";
+}
 
 /** Date → مقدار فیلد فرم (`YYYY-MM-DDTHH:mm`) به وقت محلی */
 export function toLocalInputValue(d: Date | string): string {
@@ -41,8 +52,8 @@ export function formatTradeDateTime(iso: string, cal: CalSystem, withTime = true
   const y = d.getFullYear(), m = d.getMonth() + 1, day = d.getDate();
   const datePart =
     cal === "jalali"
-      ? (() => { const j = toJalali(y, m, day); return `${faNum(j[2])} ${J_MONTHS[j[1] - 1]} ${faNum(j[0])}`; })()
-      : `${faNum(day)} ${G_MONTHS[m - 1]} ${faNum(y)}`;
+      ? (() => { const j = toJalali(y, m, day); return `${faNum(j[2])} ${jMonthName(j[1] - 1)} ${faNum(j[0])}`; })()
+      : `${faNum(day)} ${gMonthName(m - 1)} ${faNum(y)}`;
   if (!withTime) return datePart;
   return `${datePart} — ${faNum(pad(d.getHours()))}:${faNum(pad(d.getMinutes()))}`;
 }

@@ -6,6 +6,7 @@ import { TimeInput } from "./TimeInput";
 import { Spinner } from "./Spinner";
 import { setSleepGoal, type SleepGoal } from "@/lib/sleepGoal";
 import { durationLabel, goalFromTargets } from "@/lib/sleep";
+import { tr } from "@/lib/i18n";
 
 // هدف خواب سیستم جدای خواب: ساعت خواب و بیداری هدف، و مدت هدف که از همین دو
 // ساخته می‌شه (goalFromTargets). امتیاز، بدهی خواب، هیرو و چرخه‌ها همه از همین.
@@ -45,7 +46,7 @@ export function SleepGoalCard({
       setOk(true);
       onSaved();
     } catch {
-      setErr("ذخیره نشد. دوباره امتحان کن.");
+      setErr(tr("ذخیره نشد. دوباره امتحان کن.", "Couldn't save. Please try again."));
     } finally {
       setBusy(false);
     }
@@ -54,24 +55,24 @@ export function SleepGoalCard({
   return (
     <div className={bare ? "slp-goal-bare" : "sl-card"}>
       <div className="sl-head-row">
-        {!bare && <h3 className="sl-card-title"><Target aria-hidden="true" /> هدف خواب</h3>}
-        <span className="sl-sub">{durationLabel(dirty ? preview : goalMin)} هر شب</span>
+        {!bare && <h3 className="sl-card-title"><Target aria-hidden="true" /> {tr("هدف خواب", "Sleep goal")}</h3>}
+        <span className="sl-sub">{durationLabel(dirty ? preview : goalMin)} {tr("هر شب", "per night")}</span>
       </div>
       <div className="slp-goal-fields">
         <label className="slp-goal-field">
-          <span>ساعت خواب</span>
+          <span>{tr("ساعت خواب", "Bedtime")}</span>
           <TimeInput value={bed} onChange={(v) => { setBed(v); setOk(false); }} className="wsearch-newform-name" />
         </label>
         <label className="slp-goal-field">
-          <span>ساعت بیداری</span>
+          <span>{tr("ساعت بیداری", "Wake-up time")}</span>
           <TimeInput value={wake} onChange={(v) => { setWake(v); setOk(false); }} className="wsearch-newform-name" />
         </label>
       </div>
-      {!custom && !dirty && <span className="sl-sub">فعلا از ساعت‌های روتینت گرفته شده؛ هر وقت خواستی جدا تنظیمش کن.</span>}
+      {!custom && !dirty && <span className="sl-sub">{tr("فعلا از ساعت‌های روتینت گرفته شده؛ هر وقت خواستی جدا تنظیمش کن.", "For now it uses your routine times; set it separately whenever you like.")}</span>}
       {err && <span className="sl-err">{err}</span>}
       {(dirty || ok) && (
         <button type="button" className="trade-primary-btn" onClick={save} disabled={busy || !dirty}>
-          {busy ? <Spinner size={14} /> : ok && !dirty ? "ذخیره شد" : "ذخیره‌ی هدف"}
+          {busy ? <Spinner size={14} /> : ok && !dirty ? tr("ذخیره شد", "Saved") : tr("ذخیره‌ی هدف", "Save goal")}
         </button>
       )}
     </div>

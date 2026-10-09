@@ -3,6 +3,7 @@ import { prisma } from "@/lib/prisma";
 import { requireAdmin } from "@/lib/requireAdmin";
 import { writeAuditLog } from "@/lib/adminAnalytics";
 import { clampText } from "@/lib/validate";
+import { tr } from "@/lib/i18n";
 
 // POST /api/admin/support/:id/messages — جواب ادمین روی هر تیکتی. تیکت
 // خودکار ANSWERED می‌شه (منتظر کاربر) — برخلاف پیام کاربر که تیکت رو
@@ -12,11 +13,11 @@ export async function POST(req: NextRequest, { params }: { params: { id: string 
   if (!guard.ok) return guard.response;
 
   const ticket = await prisma.supportTicket.findUnique({ where: { id: params.id }, select: { id: true } });
-  if (!ticket) return NextResponse.json({ error: "تیکت پیدا نشد" }, { status: 404 });
+  if (!ticket) return NextResponse.json({ error: tr("تیکت پیدا نشد", "Ticket not found") }, { status: 404 });
 
   const body = await req.json().catch(() => null);
   const message = clampText(String(body?.message || "").trim(), 4000);
-  if (!message) return NextResponse.json({ error: "متن پیام الزامی است" }, { status: 400 });
+  if (!message) return NextResponse.json({ error: tr("متن پیام الزامی است", "Message text is required") }, { status: 400 });
 
   const [created] = await prisma.$transaction([
     prisma.supportMessage.create({ data: { ticketId: ticket.id, body: message, fromAdmin: true } }),

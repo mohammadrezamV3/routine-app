@@ -1,3 +1,5 @@
+import { pick, type Localized } from "@/lib/i18n";
+
 // دسترسی‌های پنل ادمین — منبع واحد، هم سمت سرور (lib/requireAdmin.ts) هم
 // کلاینت (AdminShell برای فیلتر منو). هیچ import سروری این‌جا نیست تا توی
 // باندل کلاینت هم امن باشه.
@@ -28,37 +30,59 @@ export const ADMIN_PERMISSIONS = [
 
 export type AdminPermission = (typeof ADMIN_PERMISSIONS)[number];
 
-export const PERMISSION_META: Record<AdminPermission, { label: string; hint: string; group: string }> = {
-  "users.view": { label: "مشاهده کاربران", hint: "لیست و جزئیات کاربران", group: "کاربران" },
-  "users.edit": { label: "ویرایش کاربران", hint: "ویرایش پروفایل، مسدودسازی، تعدیل چت", group: "کاربران" },
-  "users.access": { label: "تعیین دسترسی ماژول‌ها", hint: "فعال/غیرفعال‌کردن ماژول‌ها و تاریخ انقضا", group: "کاربران" },
-  "users.delete": { label: "حذف کاربران", hint: "حذف موقت و حذف دائمی حساب", group: "کاربران" },
-  "admins.manage": { label: "مدیریت ادمین‌ها", hint: "دادن/گرفتن نقش ادمین (فقط در حد دسترسی خودش)", group: "کاربران" },
-  subscriptions: { label: "اشتراک‌ها", hint: "مشاهده اشتراک‌ها و تمدیدها", group: "مالی" },
-  finance: { label: "درآمد و تراکنش‌ها", hint: "گزارش درآمد و پرداخت‌ها", group: "مالی" },
-  discounts: { label: "کدهای تخفیف", hint: "ساخت/ویرایش/حذف کد تخفیف", group: "مالی" },
-  pricing: { label: "قیمت پلن‌ها", hint: "تغییر قیمت، مدت‌ها و تخفیف پلن‌های اشتراک", group: "مالی" },
-  support: { label: "پشتیبانی", hint: "پاسخ به تیکت‌ها", group: "پشتیبانی و محتوا" },
-  chat: { label: "گزارش‌های چت", hint: "بررسی گزارش‌ها و حذف پیام", group: "پشتیبانی و محتوا" },
-  mentors: { label: "مربی‌ها", hint: "احراز هویت و مدارک مربی‌ها، نظرات و گزارش‌ها", group: "پشتیبانی و محتوا" },
-  content: { label: "محتوا", hint: "اطلاعیه‌ها، تقویم اقتصادی و عکس حرکات ورزشی", group: "پشتیبانی و محتوا" },
-  ai_usage: { label: "مصرف AI", hint: "هزینه و مصرف توکن", group: "تحلیل و سیستم" },
-  analytics: { label: "تحلیل‌ها", hint: "Retention، Funnel، Churn، Cohort و محصولات", group: "تحلیل و سیستم" },
-  system: { label: "سیستم", hint: "وضعیت سرور، خطاها و ابزارهای تست", group: "تحلیل و سیستم" },
-  settings: { label: "تنظیمات", hint: "تنظیمات سراسری اپ و روشن/خاموش‌کردن قابلیت‌ها", group: "تحلیل و سیستم" },
-  audit: { label: "لاگ فعالیت ادمین‌ها", hint: "مشاهده تاریخچه اقدامات پنل", group: "تحلیل و سیستم" },
+type PermMeta = { readonly label: string; readonly hint: string; readonly group: string };
+
+// group کلید ثابت (فارسی) می‌مونه؛ برای نمایش permissionGroupLabel رو بخون.
+function permMeta(label: Localized, hint: Localized, group: string): PermMeta {
+  return {
+    get label() { return pick(label); },
+    get hint() { return pick(hint); },
+    group,
+  };
+}
+
+export function permissionGroupLabel(group: string): string {
+  return pick(GROUP_LABELS[group] ?? { fa: group, en: group });
+}
+
+const GROUP_LABELS: Record<string, Localized> = {
+  "کاربران": { fa: "کاربران", en: "Users" },
+  "مالی": { fa: "مالی", en: "Finance" },
+  "پشتیبانی و محتوا": { fa: "پشتیبانی و محتوا", en: "Support and content" },
+  "تحلیل و سیستم": { fa: "تحلیل و سیستم", en: "Analytics and system" },
+};
+
+export const PERMISSION_META: Record<AdminPermission, PermMeta> = {
+  "users.view": permMeta({ fa: "مشاهده کاربران", en: "View users" }, { fa: "لیست و جزئیات کاربران", en: "Users list and details" }, "کاربران"),
+  "users.edit": permMeta({ fa: "ویرایش کاربران", en: "Edit users" }, { fa: "ویرایش پروفایل، مسدودسازی، تعدیل چت", en: "Edit profile, block, chat moderation" }, "کاربران"),
+  "users.access": permMeta({ fa: "تعیین دسترسی ماژول‌ها", en: "Set module access" }, { fa: "فعال/غیرفعال‌کردن ماژول‌ها و تاریخ انقضا", en: "Turn modules on/off and set expiry" }, "کاربران"),
+  "users.delete": permMeta({ fa: "حذف کاربران", en: "Delete users" }, { fa: "حذف موقت و حذف دائمی حساب", en: "Soft and permanent account deletion" }, "کاربران"),
+  "admins.manage": permMeta({ fa: "مدیریت ادمین‌ها", en: "Manage admins" }, { fa: "دادن/گرفتن نقش ادمین (فقط در حد دسترسی خودش)", en: "Grant/revoke admin role (within own access only)" }, "کاربران"),
+  "subscriptions": permMeta({ fa: "اشتراک‌ها", en: "Subscriptions" }, { fa: "مشاهده اشتراک‌ها و تمدیدها", en: "View subscriptions and renewals" }, "مالی"),
+  "finance": permMeta({ fa: "درآمد و تراکنش‌ها", en: "Revenue and transactions" }, { fa: "گزارش درآمد و پرداخت‌ها", en: "Revenue and payment reports" }, "مالی"),
+  "discounts": permMeta({ fa: "کدهای تخفیف", en: "Discount codes" }, { fa: "ساخت/ویرایش/حذف کد تخفیف", en: "Create/edit/delete discount codes" }, "مالی"),
+  "pricing": permMeta({ fa: "قیمت پلن‌ها", en: "Plan prices" }, { fa: "تغییر قیمت، مدت‌ها و تخفیف پلن‌های اشتراک", en: "Change plan prices, durations and discounts" }, "مالی"),
+  "support": permMeta({ fa: "پشتیبانی", en: "Support" }, { fa: "پاسخ به تیکت‌ها", en: "Reply to tickets" }, "پشتیبانی و محتوا"),
+  "chat": permMeta({ fa: "گزارش‌های چت", en: "Chat reports" }, { fa: "بررسی گزارش‌ها و حذف پیام", en: "Review reports and delete messages" }, "پشتیبانی و محتوا"),
+  "mentors": permMeta({ fa: "مربی‌ها", en: "Mentors" }, { fa: "احراز هویت و مدارک مربی‌ها، نظرات و گزارش‌ها", en: "Mentor identity and documents, reviews and reports" }, "پشتیبانی و محتوا"),
+  "content": permMeta({ fa: "محتوا", en: "Content" }, { fa: "اطلاعیه‌ها، تقویم اقتصادی و عکس حرکات ورزشی", en: "Announcements, economic calendar and exercise media" }, "پشتیبانی و محتوا"),
+  "ai_usage": permMeta({ fa: "مصرف AI", en: "AI usage" }, { fa: "هزینه و مصرف توکن", en: "Cost and token usage" }, "تحلیل و سیستم"),
+  "analytics": permMeta({ fa: "تحلیل‌ها", en: "Analytics" }, { fa: "Retention، Funnel، Churn، Cohort و محصولات", en: "Retention, funnel, churn, cohort and products" }, "تحلیل و سیستم"),
+  "system": permMeta({ fa: "سیستم", en: "System" }, { fa: "وضعیت سرور، خطاها و ابزارهای تست", en: "Server status, errors and test tools" }, "تحلیل و سیستم"),
+  "settings": permMeta({ fa: "تنظیمات", en: "Settings" }, { fa: "تنظیمات سراسری اپ و روشن/خاموش‌کردن قابلیت‌ها", en: "Global app settings and feature toggles" }, "تحلیل و سیستم"),
+  "audit": permMeta({ fa: "لاگ فعالیت ادمین‌ها", en: "Admin activity log" }, { fa: "مشاهده تاریخچه اقدامات پنل", en: "View admin action history" }, "تحلیل و سیستم"),
 };
 
 export const PERMISSION_GROUPS: string[] = Array.from(new Set(ADMIN_PERMISSIONS.map((p) => PERMISSION_META[p].group)));
 
 // نقش‌های آماده — فقط میان‌بر برای تیک‌زدن سریع؛ چیزی که ذخیره می‌شه همیشه
 // خود لیست کلیدهاست، نه اسم نقش.
-export const ROLE_PRESETS: { key: string; label: string; permissions: AdminPermission[] }[] = [
-  { key: "support", label: "پشتیبان", permissions: ["users.view", "support", "chat"] },
-  { key: "moderator", label: "ناظر کاربران", permissions: ["users.view", "users.edit", "users.access", "chat", "support", "mentors"] },
-  { key: "content", label: "مدیر محتوا", permissions: ["content", "analytics"] },
-  { key: "finance", label: "مالی", permissions: ["users.view", "subscriptions", "finance", "discounts"] },
-  { key: "full", label: "ادمین کامل", permissions: [...ADMIN_PERMISSIONS] },
+export const ROLE_PRESETS: { key: string; readonly label: string; permissions: AdminPermission[] }[] = [
+  { key: "support", get label() { return pick({ fa: "پشتیبان", en: "Support" }); }, permissions: ["users.view", "support", "chat"] },
+  { key: "moderator", get label() { return pick({ fa: "ناظر کاربران", en: "User moderator" }); }, permissions: ["users.view", "users.edit", "users.access", "chat", "support", "mentors"] },
+  { key: "content", get label() { return pick({ fa: "مدیر محتوا", en: "Content manager" }); }, permissions: ["content", "analytics"] },
+  { key: "finance", get label() { return pick({ fa: "مالی", en: "Finance" }); }, permissions: ["users.view", "subscriptions", "finance", "discounts"] },
+  { key: "full", get label() { return pick({ fa: "ادمین کامل", en: "Full admin" }); }, permissions: [...ADMIN_PERMISSIONS] },
 ];
 
 export function isAdminPermission(v: unknown): v is AdminPermission {

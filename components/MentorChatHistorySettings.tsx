@@ -12,7 +12,8 @@ import { MentorEmpty } from "./MentorUI";
 import { useFeature } from "@/lib/useFeatures";
 import type { ChatHistoryResponse } from "@/lib/mentorTypes";
 import { publicUserName } from "@/lib/mentorTypes";
-import { fmtDate, fmtRelative, NETWORK_ERROR, readApiError } from "@/lib/mentorFormat";
+import { fmtDate, fmtRelative, networkError, readApiError } from "@/lib/mentorFormat";
+import { tr } from "@/lib/i18n";
 import { faNum } from "@/lib/jalali";
 import { GoldenName } from "@/components/GoldenName";
 
@@ -37,11 +38,11 @@ export function MentorChatHistorySettings({ index = 0, showEmpty = false }: { in
     try {
       const res = await fetch("/api/mentorships/chat-history", { cache: "no-store" });
       if (res.status === 401 || res.status === 403 || res.status === 404) { setList([]); return; }
-      if (!res.ok) { setLoadError(await readApiError(res, "سابقه‌ی گفت‌وگو باز نشد؛ دوباره امتحان کن")); return; }
+      if (!res.ok) { setLoadError(await readApiError(res, tr("سابقه‌ی گفت‌وگو باز نشد؛ دوباره امتحان کن", "Couldn't load chat history. Try again"))); return; }
       const d: ChatHistoryResponse = await res.json();
       setList(d.conversations);
     } catch {
-      setLoadError(NETWORK_ERROR);
+      setLoadError(networkError());
     }
   }, []);
 
@@ -57,28 +58,28 @@ export function MentorChatHistorySettings({ index = 0, showEmpty = false }: { in
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(confirm.kind === "all" ? { all: true } : { mentorshipId: confirm.conv.id }),
       });
-      if (!res.ok) { setError(await readApiError(res, "سابقه پاک نشد؛ دوباره امتحان کن")); return; }
+      if (!res.ok) { setError(await readApiError(res, tr("سابقه پاک نشد؛ دوباره امتحان کن", "Couldn't clear the history. Try again"))); return; }
       setConfirm(null);
       await load();
     } catch {
-      setError(NETWORK_ERROR);
+      setError(networkError());
     } finally {
       setBusy(false);
     }
   }
 
   // در صفحه‌ی خودش (/account/general/chats) به‌جای صفحه‌ی خالی یک پیام کوتاه
-  if (!on) return showEmpty ? <MentorEmpty>بخش مربی‌ها فعلا در دسترس نیست</MentorEmpty> : null;
-  if (list !== null && list.length === 0 && !loadError) return showEmpty ? <MentorEmpty>هنوز گفت‌وگویی با مربی یا شاگردی نداری</MentorEmpty> : null;
+  if (!on) return showEmpty ? <MentorEmpty>{tr("بخش مربی‌ها فعلا در دسترس نیست", "The mentors section isn't available right now")}</MentorEmpty> : null;
+  if (list !== null && list.length === 0 && !loadError) return showEmpty ? <MentorEmpty>{tr("هنوز گفت‌وگویی با مربی یا شاگردی نداری", "You have no chats with a mentor or student yet")}</MentorEmpty> : null;
 
   const withMessages = (list ?? []).filter((c) => c.messageCount > 0);
 
   return (
-    <AccountBlock title="سابقه‌ی گفت‌وگو" icon={<History size={15} />} flush index={index}>
+    <AccountBlock title={tr("سابقه‌ی گفت‌وگو", "Chat history")} icon={<History size={15} />} flush index={index}>
       {loadError ? (
         <div className="mentor-history-empty">
           <span className="form-inline-error" role="alert">{loadError}</span>
-          <button type="button" className="account-outline-btn mentor-btn is-sm" onClick={load}>تلاش دوباره</button>
+          <button type="button" className="account-outline-btn mentor-btn is-sm" onClick={load}>{tr("تلاش دوباره", "Try again")}</button>
         </div>
       ) : list === null ? (
         <div className="mentor-history-empty"><Spinner size={16} /></div>
@@ -94,10 +95,10 @@ export function MentorChatHistorySettings({ index = 0, showEmpty = false }: { in
                     <span className="mentor-row-body">
                       <span className="mentor-row-title"><GoldenName golden={c.counterpart.golden} staff={c.counterpart.staff}>{name}</GoldenName></span>
                       <span className="mentor-row-sub">
-                        <span>{c.role === "student" ? "مربی" : "شاگرد"}</span>
+                        <span>{c.role === "student" ? tr("مربی", "Mentor") : tr("شاگرد", "Student")}</span>
                         {c.messageCount > 0
-                          ? <><span>{faNum(c.messageCount)} پیام</span>{c.lastMessageAt && <span>آخرین پیام {fmtRelative(c.lastMessageAt)}</span>}</>
-                          : <span>{c.clearedAt ? `پاک‌شده در ${fmtDate(c.clearedAt)}` : "بدون پیام"}</span>}
+                          ? <><span>{faNum(c.messageCount)} {tr("پیام", c.messageCount === 1 ? "message" : "messages")}</span>{c.lastMessageAt && <span>{tr("آخرین پیام", "Last message")} {fmtRelative(c.lastMessageAt)}</span>}</>
+                          : <span>{c.clearedAt ? tr(`پاک‌شده در ${fmtDate(c.clearedAt)}`, `Cleared on ${fmtDate(c.clearedAt)}`) : tr("بدون پیام", "No messages")}</span>}
                       </span>
                     </span>
                     <span className="mentor-row-end">
@@ -107,7 +108,7 @@ export function MentorChatHistorySettings({ index = 0, showEmpty = false }: { in
                         onClick={() => { setError(null); setConfirm({ kind: "one", conv: c }); }}
                         disabled={c.messageCount === 0}
                       >
-                        پاک کردن سابقه
+                        {tr("پاک کردن سابقه", "Clear history")}
                       </button>
                     </span>
                   </div>
@@ -116,14 +117,14 @@ export function MentorChatHistorySettings({ index = 0, showEmpty = false }: { in
             })}
           </MentorList>
           <div className="mentor-history-foot">
-            <p className="mentor-field-hint">پیام‌ها فقط برای تو پاک می‌شن؛ طرف مقابل همچنان داره‌شون</p>
+            <p className="mentor-field-hint">{tr("پیام‌ها فقط برای تو پاک می‌شن؛ طرف مقابل همچنان داره‌شون", "Messages are only cleared for you. The other person still has them")}</p>
             <button
               type="button"
               className="trade-danger-btn mentor-btn is-sm"
               onClick={() => { setError(null); setConfirm({ kind: "all" }); }}
               disabled={withMessages.length === 0}
             >
-              <Trash2 size={14} strokeWidth={1.75} aria-hidden /> پاک کردن همه
+              <Trash2 size={14} strokeWidth={1.75} aria-hidden /> {tr("پاک کردن همه", "Clear all")}
             </button>
           </div>
         </>
@@ -131,9 +132,9 @@ export function MentorChatHistorySettings({ index = 0, showEmpty = false }: { in
 
       {confirm && (
         <MentorConfirmDialog
-          message={confirm.kind === "all" ? "سابقه‌ی همه‌ی گفت‌وگوها پاک بشه؟" : `سابقه‌ی گفت‌وگو با ${publicUserName(confirm.conv.counterpart)} پاک بشه؟`}
-          hint="پیام‌های تا الان فقط برای تو پاک می‌شن و برنمی‌گردن؛ طرف مقابل همچنان می‌بینه‌شون."
-          confirmLabel={confirm.kind === "all" ? "پاک کردن همه" : "پاک کردن سابقه"}
+          message={confirm.kind === "all" ? tr("سابقه‌ی همه‌ی گفت‌وگوها پاک بشه؟", "Clear the history of all chats?") : tr(`سابقه‌ی گفت‌وگو با ${publicUserName(confirm.conv.counterpart)} پاک بشه؟`, `Clear your chat history with ${publicUserName(confirm.conv.counterpart)}?`)}
+          hint={tr("پیام‌های تا الان فقط برای تو پاک می‌شن و برنمی‌گردن؛ طرف مقابل همچنان می‌بینه‌شون.", "Messages up to now are cleared only for you and can't be restored. The other person can still see them.")}
+          confirmLabel={confirm.kind === "all" ? tr("پاک کردن همه", "Clear all") : tr("پاک کردن سابقه", "Clear history")}
           busy={busy}
           error={error}
           onConfirm={clear}

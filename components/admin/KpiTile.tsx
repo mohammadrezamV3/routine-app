@@ -1,6 +1,7 @@
 "use client";
 
 import { motion } from "framer-motion";
+import { tr } from "@/lib/i18n";
 
 export function KpiGrid({ children }: { children: React.ReactNode }) {
   return <div className="admin-kpi-grid">{children}</div>;
@@ -20,13 +21,13 @@ export function KpiTile({
       <span className="admin-kpi-label">{label}</span>
       <span className="admin-kpi-value" dir="ltr">{value}</span>
       {deltaPercent !== undefined && (
-        <span className={`admin-kpi-delta ${deltaClass}`} title="نسبت به بازه‌ی قبل">
+        <span className={`admin-kpi-delta ${deltaClass}`} title={tr("نسبت به بازه‌ی قبل", "Compared with the previous period")}>
           {deltaPercent === null ? (
-            "نسبت به بازه قبل: —"
+            tr("نسبت به بازه قبل: —", "vs previous period: —")
           ) : (
             <>
               <span dir="ltr">{`${deltaPercent > 0 ? "▲" : deltaPercent < 0 ? "▼" : "–"} ${Math.abs(deltaPercent)}%`}</span>
-              <span className="admin-kpi-delta-sub">نسبت به بازه قبل</span>
+              <span className="admin-kpi-delta-sub">{tr("نسبت به بازه قبل", "vs previous period")}</span>
             </>
           )}
         </span>

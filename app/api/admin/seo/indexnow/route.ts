@@ -3,6 +3,7 @@ import { requireAdmin } from "@/lib/requireAdmin";
 import { submitUrlsToIndexNow } from "@/lib/indexNow";
 import { writeAuditLog } from "@/lib/adminAnalytics";
 import sitemap from "@/app/sitemap";
+import { tr } from "@/lib/i18n";
 
 // همه‌ی URLهای sitemap.ts (منبع واحد صفحات عمومی — همون‌جایی که کراولرهای
 // معمولی هم می‌خونن) رو به IndexNow می‌فرسته تا Bing/Yandex زودتر از
@@ -14,9 +15,9 @@ export async function POST() {
   const urls = sitemap().map((entry) => entry.url);
   // خطای شبکه (DNS/timeout) از fetch داخل submitUrlsToIndexNow throw
   // می‌شه — بدون این catch پاسخ ۵۰۰ بی‌پیام به پنل می‌رسید.
-  const result = await submitUrlsToIndexNow(urls).catch(() => ({ ok: false, status: 0, submitted: 0, error: "اتصال به IndexNow برقرار نشد" }));
+  const result = await submitUrlsToIndexNow(urls).catch(() => ({ ok: false, status: 0, submitted: 0, error: tr("اتصال به IndexNow برقرار نشد", "Could not connect to IndexNow") }));
   if (!result.ok) {
-    const error = result.error || `ارسال به IndexNow ناموفق بود (کد ${result.status})`;
+    const error = result.error || tr(`ارسال به IndexNow ناموفق بود (کد ${result.status})`, `Sending to IndexNow failed (code ${result.status})`);
     return NextResponse.json({ error, status: result.status }, { status: 502 });
   }
 

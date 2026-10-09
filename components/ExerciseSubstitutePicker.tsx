@@ -3,6 +3,8 @@
 import { motion } from "framer-motion";
 import { useLockBodyScroll } from "@/lib/useLockBodyScroll";
 import { toEnDigits } from "@/lib/schedule";
+import { tr } from "@/lib/i18n";
+import { exerciseDisplayName } from "@/lib/exerciseI18n";
 
 // وقتی «این تجهیزات رو ندارم» می‌زنی، به‌جای سوییچ خودکار به یک حرکت
 // تصادفی، سه حرکت جایگزین آماده (از کاتالوگ، هم‌الگو/هم‌عضله با حرکت
@@ -26,13 +28,13 @@ export function ExerciseSubstitutePicker({
       <div className="modal-overlay open" onClick={onClose} />
       <div className="modal-panel liquid-glass-panel dash-scope open exercise-set-tracker-panel">
         <div className="modal-head">
-          <div className="modal-title">جایگزین «{toEnDigits(oldItem)}»</div>
-          <button className="nav-close" onClick={onClose} aria-label="بستن">×</button>
+          <div className="modal-title">{tr(`جایگزین «${toEnDigits(oldItem)}»`, `Replace "${toEnDigits(exerciseDisplayName(oldItem))}"`)}</div>
+          <button className="nav-close" onClick={onClose} aria-label={tr("بستن", "Close")}>×</button>
         </div>
 
         <div className="modal-body">
           <div className="section-note" style={{ marginTop: 0, marginBottom: 12 }}>
-            یکی از این حرکت‌های جایگزین رو انتخاب کن
+            {tr("یکی از این حرکت‌های جایگزین رو انتخاب کن", "Pick one of these replacement exercises")}
           </div>
           <div className="flex flex-col gap-2">
             {candidates.map((c, i) => (
@@ -47,7 +49,7 @@ export function ExerciseSubstitutePicker({
                 onClick={() => onPick(c)}
                 className="exercise-substitute-option"
               >
-                {toEnDigits(c)}
+                {toEnDigits(exerciseDisplayName(c))}
               </motion.button>
             ))}
           </div>

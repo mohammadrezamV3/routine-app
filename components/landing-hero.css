@@ -9,7 +9,7 @@
 .lh, .lsc{
   --lh-w: 100%;
   position:relative;
-  text-align:right;
+  text-align:start;
   /* خنثی‌سازی section{} سراسری (پدینگ و خط بالای هر بخش) */
   border-top:none; padding-bottom:0;
 }
@@ -39,7 +39,7 @@
    بالا/پایین هم با ماسک محو می‌شود. */
 .lh-aurora{
   position:absolute; top:-140px; bottom:-60px; z-index:-1; pointer-events:none; overflow:hidden;
-  left:calc(50% - 50vw); right:calc(50% - 50vw);
+  inset-inline-end:calc(50% - 50vw); inset-inline-start:calc(50% - 50vw);
   -webkit-mask-image:linear-gradient(to bottom, transparent, #000 18%, #000 72%, transparent);
   mask-image:linear-gradient(to bottom, transparent, #000 18%, #000 72%, transparent);
 }
@@ -48,16 +48,16 @@
   animation:lh-drift 18s ease-in-out infinite alternate;
 }
 .lh-aurora-a{
-  width:640px; height:640px; top:40px; left:calc(50vw - 640px);
+  width:640px; height:640px; top:40px; inset-inline-end:calc(50vw - 640px);
   background:radial-gradient(closest-side, rgba(var(--accent-rgb),.26), rgba(var(--accent-rgb),0));
 }
 .lh-aurora-b{
-  width:520px; height:520px; top:240px; left:calc(50vw - 260px);
+  width:520px; height:520px; top:240px; inset-inline-end:calc(50vw - 260px);
   background:radial-gradient(closest-side, rgba(var(--secondary-rgb),.16), rgba(var(--secondary-rgb),0));
   animation-duration:22s !important; animation-delay:-6s !important;
 }
 .lh-aurora-c{
-  width:520px; height:520px; top:80px; right:calc(50vw - 600px);
+  width:520px; height:520px; top:80px; inset-inline-start:calc(50vw - 600px);
   background:radial-gradient(closest-side, rgba(var(--accent-rgb),.14), rgba(var(--accent-rgb),0));
   animation-duration:26s !important; animation-delay:-11s !important;
 }
@@ -69,9 +69,9 @@ body[data-theme="light"] .lh-aurora-b{ background:radial-gradient(closest-side, 
   100%{ transform:translate3d(-40px,70px,0) scale(.94); }
 }
 @media (max-width:1023px){
-  .lh-aurora-a{ width:420px; height:420px; left:-160px; top:auto; bottom:40px; }
-  .lh-aurora-b{ width:360px; height:360px; left:auto; right:-120px; top:auto; bottom:260px; }
-  .lh-aurora-c{ width:380px; height:380px; right:-140px; top:60px; }
+  .lh-aurora-a{ width:420px; height:420px; inset-inline-end:-160px; top:auto; bottom:40px; }
+  .lh-aurora-b{ width:360px; height:360px; inset-inline-end:auto; inset-inline-start:-120px; top:auto; bottom:260px; }
+  .lh-aurora-c{ width:380px; height:380px; inset-inline-start:-140px; top:60px; }
 }
 
 /* ─── چیدمان ─── */
@@ -89,7 +89,7 @@ body[data-theme="light"] .lh-aurora-b{ background:radial-gradient(closest-side, 
 
 .lh-eyebrow{
   display:inline-flex; align-items:center; gap:8px;
-  padding:6px 12px 6px 14px; border-radius:999px;
+  padding-block:6px; padding-inline:12px 14px; border-radius:999px;
   border:1px solid rgba(var(--accent-rgb),.28);
   background:rgba(var(--accent-rgb),.08);
   color:var(--accent); font-size:12px; font-weight:700; line-height:1.4;
@@ -249,9 +249,9 @@ body[data-theme="light"] .lh-phone{
 /* بوم ۳۶۰پیکسلی: عرض واقعی گوشی. ۲۵۰ = عرض داخلی صفحه (۲۶۸ − ۲×۹).
    کوچک‌نمایی با zoom (چیدمان در اندازه‌ی نهایی → متن تیز)، نه transform. */
 .lh-canvas{
-  position:absolute; top:0; right:0; width:360px; height:769px;
+  position:absolute; top:0; inset-inline-start:0; width:360px; height:769px;
   zoom:.69445;
-  display:flex; flex-direction:column; text-align:right;
+  display:flex; flex-direction:column; text-align:start;
 }
 @supports not (zoom:1){
   .lh-phone{ zoom:normal; transform:scale(.88); transform-origin:50% 0; }
@@ -282,9 +282,9 @@ body[data-theme="light"] .lh-phone{
    (رنگ اصلی و دوم تم، هر دو حالت روشن و تیره) در مقیاس صفحه‌ی گوشی */
 .lh-ph-bg{ position:absolute; inset:0; pointer-events:none; overflow:hidden; border-radius:inherit; }
 .lh-ph-bg i{ position:absolute; display:block; border-radius:50%; }
-.lh-ph-bg i:nth-child(1){ width:300px; height:300px; top:-120px; left:-110px; background:radial-gradient(circle at 40% 40%, rgba(var(--accent-rgb),.30), rgba(var(--accent-rgb),0) 70%); }
-.lh-ph-bg i:nth-child(2){ width:280px; height:280px; bottom:-110px; right:-110px; background:radial-gradient(circle at 60% 60%, rgba(var(--accent-rgb),.22), rgba(var(--accent-rgb),0) 70%); }
-.lh-ph-bg i:nth-child(3){ width:200px; height:200px; top:38%; right:-40px; background:radial-gradient(circle, rgba(var(--secondary-rgb),.14), rgba(var(--secondary-rgb),0) 70%); }
+.lh-ph-bg i:nth-child(1){ width:300px; height:300px; top:-120px; inset-inline-end:-110px; background:radial-gradient(circle at 40% 40%, rgba(var(--accent-rgb),.30), rgba(var(--accent-rgb),0) 70%); }
+.lh-ph-bg i:nth-child(2){ width:280px; height:280px; bottom:-110px; inset-inline-start:-110px; background:radial-gradient(circle at 60% 60%, rgba(var(--accent-rgb),.22), rgba(var(--accent-rgb),0) 70%); }
+.lh-ph-bg i:nth-child(3){ width:200px; height:200px; top:38%; inset-inline-start:-40px; background:radial-gradient(circle, rgba(var(--secondary-rgb),.14), rgba(var(--secondary-rgb),0) 70%); }
 body[data-theme="light"] .lh-ph-bg i{ opacity:.6; }
 
 /* app-topbar: همبرگر + استریک سمت راست، لوگو سمت چپ */
@@ -302,7 +302,7 @@ body[data-theme="light"] .lh-ph-logo-light{ display:block; }
 body[data-theme="light"] .lh-ph-logo-dark{ display:none; }
 
 .lh-ph-body{ display:flex; flex-direction:column; gap:16px; padding:8px 16px 16px; min-height:0; }
-.lh-ph-fab{ position:absolute; left:22px; bottom:22px; width:52px; height:52px; display:flex; }
+.lh-ph-fab{ position:absolute; inset-inline-end:22px; bottom:22px; width:52px; height:52px; display:flex; }
 .lh-orb-still{
   display:block; width:52px; height:52px; border-radius:50%;
   background:radial-gradient(circle at 32% 30%, var(--orb-c3), var(--orb-c2) 48%, var(--orb-bg) 78%);
@@ -314,14 +314,14 @@ body[data-theme="light"] .lh-ph-logo-dark{ display:none; }
   border-radius:18px; padding:11px 12px;
   background:var(--surface-2); border:1px solid var(--surface-line);
   box-shadow:0 22px 44px -16px rgba(0,0,0,.5), 0 2px 6px rgba(0,0,0,.18);
-  color:var(--text); direction:rtl; text-align:right;
+  color:var(--text); direction:rtl; text-align:start;
 }
 body[data-theme="light"] .lh-card{
   box-shadow:0 22px 44px -18px rgba(107,79,61,.35), 0 2px 6px rgba(107,79,61,.08);
 }
 
 /* ژورنال ترید */
-.lh-pos-trade{ top:-4px; right:0; transform-origin:100% 0; }
+.lh-pos-trade{ top:-4px; inset-inline-start:0; transform-origin:100% 0; }
 .lh-card-trade{ width:168px; }
 .lh-trade-name{ display:flex; align-items:center; gap:7px; min-width:0; }
 .lh-trade-name .trade-account-name{ font-size:13px; }
@@ -340,7 +340,7 @@ body[data-theme="light"] .lh-trade-facts{ color:var(--muted); }
 .lh-trade-facts .lh-trade-mt{ color:var(--accent); }
 
 /* کالری‌شمار */
-.lh-pos-cal{ top:150px; left:0; transform-origin:0 0; }
+.lh-pos-cal{ top:150px; inset-inline-end:0; transform-origin:0 0; }
 .lh-card-cal{ width:168px; }
 .lh-cal-bar{ margin-top:8px; height:2px; background:rgba(255,255,255,.08); }
 body[data-theme="light"] .lh-cal-bar{ background:rgba(0,0,0,.08); }
@@ -351,19 +351,19 @@ body[data-theme="light"] .lh-cal-bar{ background:rgba(0,0,0,.08); }
 }
 .lh-cal-entry{
   margin-top:7px; display:flex; align-items:center; justify-content:space-between; gap:6px;
-  padding:5px 6px 5px 11px; border:1px solid; border-radius:999px;
+  padding-block:5px; padding-inline:6px 11px; border:1px solid; border-radius:999px;
 }
 
 /* نومو */
-.lh-pos-ai{ bottom:14px; right:0; transform-origin:100% 100%; }
+.lh-pos-ai{ bottom:14px; inset-inline-start:0; transform-origin:100% 100%; }
 .lh-card-ai{ width:196px; display:flex; flex-direction:column; gap:7px; }
 .lh-ai-title{ font-size:12px; font-weight:800; gap:6px; }
 .lh-ai-bubble{ max-width:92%; padding:6px 10px; border-radius:14px; font-size:10.5px; line-height:1.85; font-weight:500; }
-.lh-ai-user{ align-self:flex-start; border-bottom-right-radius:5px; }
-.lh-ai-bot{ align-self:flex-end; border-bottom-left-radius:5px; border-color:rgba(0,168,107,.55); }
+.lh-ai-user{ align-self:flex-start; border-end-start-radius:5px; }
+.lh-ai-bot{ align-self:flex-end; border-end-end-radius:5px; border-color:rgba(0,168,107,.55); }
 
 /* مربی — خود کارت MentorCard، روی سطح توپر */
-.lh-pos-mentor{ bottom:14px; left:0; transform-origin:0 100%; }
+.lh-pos-mentor{ bottom:14px; inset-inline-end:0; transform-origin:0 100%; }
 .lh-card-mentor{ width:224px; }
 .lh-card-mentor .lm-mentor-card{
   background:var(--surface-2);
@@ -496,7 +496,7 @@ html[data-perf-weak] .lh-aurora > span{ animation:none; }
 }
 @media (max-width:859px){ .lsc-stage-in{ padding:12px 8px 0; } }
 @media (min-width:860px){
-  .lsc-stage{ height:480px; margin:14px 14px 14px 0; }
+  .lsc-stage{ height:480px; margin-block:14px; margin-inline:14px 0; }
 }
 .lsc-stage-glow{
   position:absolute; inset:-30%; pointer-events:none;
@@ -546,7 +546,7 @@ html[data-perf-weak] .lh-aurora > span{ animation:none; }
 /* ─── برش‌های اپ ─── */
 .lsc-pv{
   width:100%; max-width:420px; display:flex; flex-direction:column; gap:12px;
-  font-size:12px; text-align:right;
+  font-size:12px; text-align:start;
 }
 
 /* روتین: اعلان پوش — بالای برش، روی هیچ ردیفی نمی‌افتد */
@@ -569,15 +569,15 @@ body[data-theme="light"] .lsc-push{ box-shadow:0 18px 36px -16px rgba(107,79,61,
 .lsc-pv-wa .wk-hero, .lsc-pv-wa .wk-insights{ padding:14px; }
 
 /* نومو */
-.lh-pos-ai{ bottom:14px; right:0; transform-origin:100% 100%; }
+.lh-pos-ai{ bottom:14px; inset-inline-start:0; transform-origin:100% 100%; }
 .lh-card-ai{ width:196px; display:flex; flex-direction:column; gap:7px; }
 .lh-ai-title{ font-size:12px; font-weight:800; gap:6px; }
 .lh-ai-bubble{ max-width:92%; padding:6px 10px; border-radius:14px; font-size:10.5px; line-height:1.85; font-weight:500; }
-.lh-ai-user{ align-self:flex-start; border-bottom-right-radius:5px; }
-.lh-ai-bot{ align-self:flex-end; border-bottom-left-radius:5px; border-color:rgba(0,168,107,.55); }
+.lh-ai-user{ align-self:flex-start; border-end-start-radius:5px; }
+.lh-ai-bot{ align-self:flex-end; border-end-end-radius:5px; border-color:rgba(0,168,107,.55); }
 
 /* مربی — خود کارت MentorCard، روی سطح توپر */
-.lh-pos-mentor{ bottom:14px; left:0; transform-origin:0 100%; }
+.lh-pos-mentor{ bottom:14px; inset-inline-end:0; transform-origin:0 100%; }
 .lh-card-mentor{ width:224px; }
 .lh-card-mentor .lm-mentor-card{
   background:var(--surface-2);
@@ -710,7 +710,7 @@ html[data-perf-weak] .lh-aurora > span{ animation:none; }
 }
 @media (max-width:859px){ .lsc-stage-in{ padding:12px 8px 0; } }
 @media (min-width:860px){
-  .lsc-stage{ height:480px; margin:14px 14px 14px 0; }
+  .lsc-stage{ height:480px; margin-block:14px; margin-inline:14px 0; }
 }
 .lsc-stage-glow{
   position:absolute; inset:-30%; pointer-events:none;
@@ -760,7 +760,7 @@ html[data-perf-weak] .lh-aurora > span{ animation:none; }
 /* ─── برش‌های اپ ─── */
 .lsc-pv{
   width:100%; max-width:420px; display:flex; flex-direction:column; gap:12px;
-  font-size:12px; text-align:right;
+  font-size:12px; text-align:start;
 }
 
 /* روتین: اعلان پوش — بالای برش، روی هیچ ردیفی نمی‌افتد */
@@ -792,15 +792,15 @@ body[data-theme="light"] .lsc-push{ box-shadow:0 18px 36px -16px rgba(107,79,61,
 .lsc-pv-wa .wk-band{ width:100%; }
 
 /* نومو */
-.lh-pos-ai{ bottom:14px; right:0; transform-origin:100% 100%; }
+.lh-pos-ai{ bottom:14px; inset-inline-start:0; transform-origin:100% 100%; }
 .lh-card-ai{ width:196px; display:flex; flex-direction:column; gap:7px; }
 .lh-ai-title{ font-size:12px; font-weight:800; gap:6px; }
 .lh-ai-bubble{ max-width:92%; padding:6px 10px; border-radius:14px; font-size:10.5px; line-height:1.85; font-weight:500; }
-.lh-ai-user{ align-self:flex-start; border-bottom-right-radius:5px; }
-.lh-ai-bot{ align-self:flex-end; border-bottom-left-radius:5px; border-color:rgba(0,168,107,.55); }
+.lh-ai-user{ align-self:flex-start; border-end-start-radius:5px; }
+.lh-ai-bot{ align-self:flex-end; border-end-end-radius:5px; border-color:rgba(0,168,107,.55); }
 
 /* مربی — خود کارت MentorCard، روی سطح توپر */
-.lh-pos-mentor{ bottom:14px; left:0; transform-origin:0 100%; }
+.lh-pos-mentor{ bottom:14px; inset-inline-end:0; transform-origin:0 100%; }
 .lh-card-mentor{ width:224px; }
 .lh-card-mentor .lm-mentor-card{
   background:var(--surface-2);
@@ -933,7 +933,7 @@ html[data-perf-weak] .lh-aurora > span{ animation:none; }
 }
 @media (max-width:859px){ .lsc-stage-in{ padding:12px 8px 0; } }
 @media (min-width:860px){
-  .lsc-stage{ height:480px; margin:14px 14px 14px 0; }
+  .lsc-stage{ height:480px; margin-block:14px; margin-inline:14px 0; }
 }
 .lsc-stage-glow{
   position:absolute; inset:-30%; pointer-events:none;
@@ -983,7 +983,7 @@ html[data-perf-weak] .lh-aurora > span{ animation:none; }
 /* ─── برش‌های اپ ─── */
 .lsc-pv{
   width:100%; max-width:420px; display:flex; flex-direction:column; gap:12px;
-  font-size:12px; text-align:right;
+  font-size:12px; text-align:start;
 }
 
 /* روتین: اعلان پوش — بالای برش، روی هیچ ردیفی نمی‌افتد */
@@ -1073,4 +1073,20 @@ body[data-theme="light"] .lsc-kcal-bar{ background:rgba(0,0,0,.08); }
    می‌شوند تا نام‌ها مثل خود اپ دیده شوند، نه بریده. */
 @media (max-width:420px){
   .lsc-pv{ zoom:.84; }
+}
+
+/* ================================================================
+   انگلیسی (چپ‌به‌راست): ماکت‌ها قرینه می‌شن؛ فارسی دست‌نخورده
+   ================================================================ */
+html[dir="ltr"] .lh-phone-screen,
+html[dir="ltr"] .lh-card{ direction:ltr; }
+html[dir="ltr"] .lh-pos-trade{ transform-origin:0 0; }
+html[dir="ltr"] .lh-pos-cal{ transform-origin:100% 0; }
+html[dir="ltr"] .lh-pos-ai{ transform-origin:0 100%; }
+html[dir="ltr"] .lh-pos-mentor{ transform-origin:100% 100%; }
+html[dir="ltr"] .lh-cal-bar i,
+html[dir="ltr"] .lsc-progress-fill,
+html[dir="ltr"] .lsc-kcal-bar i{ transform-origin:0 50%; }
+@supports not (zoom:1){
+  html[dir="ltr"] .lh-canvas{ transform-origin:0 0; }
 }

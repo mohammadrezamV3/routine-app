@@ -6,6 +6,7 @@ import { RangePicker } from "@/components/admin/RangePicker";
 import { EmptyState, ErrorState, LoadingState } from "@/components/admin/EmptyState";
 import { useAdminData } from "@/components/admin/useAdminData";
 import { formatNumber } from "@/lib/adminFormat";
+import { tr } from "@/lib/i18n";
 
 type Step = { key: string; label: string; count: number };
 
@@ -22,11 +23,11 @@ function FunnelInner() {
       </div>
 
       <div className="admin-chart-card">
-        <div className="admin-chart-head"><span className="admin-chart-title">Funnel تبدیل کاربر (بر اساس کاربران ثبت‌نام‌کرده در این بازه)</span></div>
+        <div className="admin-chart-head"><span className="admin-chart-title">{tr("Funnel تبدیل کاربر (بر اساس کاربران ثبت‌نام‌کرده در این بازه)", "User conversion funnel (based on users who signed up in this period)")}</span></div>
         {!steps ? (
           error ? <ErrorState message={error} onRetry={reload} /> : <LoadingState />
         ) : steps.length === 0 || steps[0].count === 0 ? (
-          <EmptyState message="در این بازه ثبت‌نام جدیدی نبوده" />
+          <EmptyState message={tr("در این بازه ثبت‌نام جدیدی نبوده", "No new sign-ups in this period")} />
         ) : (
           <div className={`admin-funnel${loading ? " admin-refreshing" : ""}`} aria-busy={loading}>
             {error && <ErrorState message={error} onRetry={reload} />}
@@ -42,7 +43,7 @@ function FunnelInner() {
                       <b className="admin-ltr">{formatNumber(s.count)}</b>
                       {convFromPrev !== null && (
                         <span className={convFromPrev >= 50 ? "is-good" : "is-low"}>
-                          (<bdi>{convFromPrev}%</bdi> از مرحله قبل)
+                          (<bdi>{convFromPrev}%</bdi> {tr("از مرحله قبل", "from previous step")})
                         </span>
                       )}
                     </span>
@@ -58,7 +59,10 @@ function FunnelInner() {
       </div>
 
       <div className="admin-section-hint">
-        «مشاهده پلن» و «شروع خرید» فقط از تاریخ فعال‌سازی ردیابی این دو رویداد قابل‌ثبت هستن — بازه‌های قدیمی‌تر برای این دو مرحله صفر نشون می‌دن.
+        {tr(
+          "«مشاهده پلن» و «شروع خرید» فقط از تاریخ فعال‌سازی ردیابی این دو رویداد قابل‌ثبت هستن — بازه‌های قدیمی‌تر برای این دو مرحله صفر نشون می‌دن.",
+          "\"View plan\" and \"Start purchase\" can only be recorded from the date event tracking for these two was turned on. Older periods show zero for these two steps.",
+        )}
       </div>
     </section>
   );

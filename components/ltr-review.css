@@ -1,0 +1,34 @@
+/* اصلاح‌های ظاهری چیدمان چپ‌به‌راست (انگلیسی) — بخش review. همه‌ی قاعده‌ها زیر html[dir="ltr"] تا فارسی بی‌تغییر بمونه. */
+
+/* جلد هفته‌نامه: در موبایل عنوان انگلیسی بلنده و روی مهر «در جریان» می‌افتاد؛ عنوان یک ردیف کامل می‌گیره */
+@media (max-width:719px){
+  html[dir="ltr"] .wl-mast{ grid-template-columns:minmax(0,1fr) minmax(0,1fr); grid-template-areas:"center center" "a b"; row-gap:10px; align-items:start; }
+  html[dir="ltr"] .wl-mast-center{ grid-area:center; }
+  html[dir="ltr"] .wl-mast > .wl-mast-side:first-child{ grid-area:a; }
+  html[dir="ltr"] .wl-mast > .wl-mast-side.is-end{ grid-area:b; }
+}
+
+/* خط‌فاصله‌ی متن‌های بلند: مقدارهای فارسی برای انگلیسی بیش از حد بازن */
+html[dir="ltr"] .wl-headline{ line-height:1.2; }
+html[dir="ltr"] .wl-intro-text{ line-height:1.65; }
+html[dir="ltr"] .wl-arch-txt small{ line-height:1.5; }
+html[dir="ltr"] .wl-dom-note,
+html[dir="ltr"] .wl-ins-body p,
+html[dir="ltr"] .wl-rec p{ line-height:1.6; }
+html[dir="ltr"] .wl-list li{ line-height:1.55; }
+html[dir="ltr"] .wl-coach-quote p,
+html[dir="ltr"] .wl-quote blockquote{ line-height:1.65; }
+html[dir="ltr"] .wl-next-text h3{ line-height:1.3; }
+html[dir="ltr"] .wl-next-text p{ line-height:1.6; }
+html[dir="ltr"] .wl-ach p{ line-height:1.5; }
+html[dir="ltr"] .wl-state p{ line-height:1.6; }
+html[dir="ltr"] .wl-issue-head{ line-height:1.55; }
+html[dir="ltr"] .wl-day-main, html[dir="ltr"] .wl-day-txt small{ line-height:1.5; }
+
+/* رودمپ: شماره‌ی سرفصل‌ها لاتین و خط‌فاصله‌ی انگلیسی */
+html[dir="ltr"] .rp-topics{ list-style-type:decimal; }
+html[dir="ltr"] .rp-topic-title{ line-height:1.5; }
+html[dir="ltr"] .rp-topic-detail, html[dir="ltr"] .rp-task-body p{ line-height:1.6; }
+html[dir="ltr"] .rp-points li{ line-height:1.6; }
+html[dir="ltr"] .rp-points li::before{ top:8px; }
+html[dir="ltr"] .rp-task-title, html[dir="ltr"] .rp-task-output{ line-height:1.5; }

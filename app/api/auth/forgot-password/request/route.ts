@@ -1,3 +1,4 @@
+import { tr } from "@/lib/i18n";
 import { NextRequest, NextResponse } from "next/server";
 import crypto from "crypto";
 import { prisma } from "@/lib/prisma";
@@ -26,20 +27,20 @@ export async function POST(req: NextRequest) {
 
   const identifier = typeof rawIdentifier === "string" ? resolveIdentifier(rawIdentifier) : null;
   if (!identifier) {
-    return NextResponse.json({ error: "شماره همراه یا ایمیل معتبر نیست" }, { status: 400 });
+    return NextResponse.json({ error: tr("شماره همراه یا ایمیل معتبر نیست", "Invalid mobile number or email") }, { status: 400 });
   }
   const { kind, value } = identifier;
 
   // محدودیت روی IP و روی خود شناسه — جلوگیری از پیامک/ایمیل‌بمبارون
   if (!(await checkRateLimit(`fp-req-ip:${ip}`, 8, 10 * 60 * 1000)) || !(await checkRateLimit(`fp-req-id:${value}`, 3, 10 * 60 * 1000))) {
-    return NextResponse.json({ error: "تعداد درخواست‌ها بیش از حد مجازه — چند دقیقه دیگه دوباره امتحان کن" }, { status: 429 });
+    return NextResponse.json({ error: tr("تعداد درخواست‌ها بیش از حد مجازه — چند دقیقه دیگه دوباره امتحان کن", "Too many requests — try again in a few minutes") }, { status: 429 });
   }
   // کولداون ثابت ۲ دقیقه‌ای — چک می‌شه حتی اگه شناسه حساب نداشته باشه، وگرنه
   // خود کد ۴۲۹ (که فقط موقع عبور از این کولداون برمی‌گرده) لو می‌داد که
   // شناسه‌ی موردنظر قبلا یه درخواست موفق داشته یا نه.
   const cooldownOk = await checkRateLimit(`fp-req-cooldown:${value}`, 1, 2 * 60 * 1000);
   if (!cooldownOk) {
-    return NextResponse.json({ error: "لطفا 2 دقیقه صبر کن و دوباره امتحان کن" }, { status: 429 });
+    return NextResponse.json({ error: tr("لطفا 2 دقیقه صبر کن و دوباره امتحان کن", "Please wait 2 minutes and try again") }, { status: 429 });
   }
 
   const user = await prisma.user.findFirst({ where: kind === "phone" ? { phone: value } : { email: value } });

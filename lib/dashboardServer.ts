@@ -24,6 +24,7 @@ import { getAdminFlags } from "./adminFlag";
 import { resolveFeaturesFor } from "./featureFlagsServer";
 import { announcementViewer, listAnnouncementsFor } from "./announcementsServer";
 import type { DashCalorie, DashEvent, DashExercise, DashMentors, DashNotification, DashRoadmap, DashTrade, DashboardData } from "./dashboardTypes";
+import { tr } from "@/lib/i18n";
 
 // ── تاریخ ────────────────────────────────────────────────────
 const DAY = 86_400_000;
@@ -422,7 +423,7 @@ export async function buildDashboard(userId: string, day: { date: string; tz: nu
   return {
     generatedAt: new Date().toISOString(),
     user: {
-      name: [user.name, user.lastName].filter(Boolean).join(" ") || user.username || "کاربر",
+      name: [user.name, user.lastName].filter(Boolean).join(" ") || user.username || tr("کاربر", "User"),
       avatarUrl: user.avatarUrl ?? null,
       isAdmin: !!flags?.isAdmin || isSuperAdmin,
       isSuperAdmin,

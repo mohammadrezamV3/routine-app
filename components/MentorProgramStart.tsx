@@ -15,6 +15,7 @@ import { nextPeriodStart, rangeDuration, shiftedRange } from "@/lib/mentorProgra
 import { publicUserName } from "@/lib/mentorTypes";
 import type { MentorshipRow, ProgramDetailResponse, ProgramRow, ProgramsResponse, ProgramType } from "@/lib/mentorTypes";
 import type { TemplateResponse, TemplateRow, TemplatesResponse } from "@/lib/mentorToolsTypes";
+import { tr } from "@/lib/i18n";
 
 const ic = (Icon: typeof Copy, size: number) => <Icon size={size} strokeWidth={MI_STROKE} aria-hidden />;
 const typeIcon = (t: ProgramType) => (t === "WORKOUT" ? ic(Dumbbell, MI.row) : ic(CalendarCheck, MI.row));
@@ -45,9 +46,9 @@ export function MentorProgramStart({
   if (!row) {
     return (
       <div className="mv2-pg-start">
-        {missing && <div className="form-inline-error" role="alert">همکاری فعالی با این شاگرد پیدا نشد؛ برنامه فقط برای شاگرد فعال ساخته می‌شود</div>}
+        {missing && <div className="form-inline-error" role="alert">{tr("همکاری فعالی با این شاگرد پیدا نشد؛ برنامه فقط برای شاگرد فعال ساخته می‌شود", "No active collaboration with this student was found. Programs can only be made for active students.")}</div>}
         {rows.length === 0 ? (
-          <MentorEmpty>هنوز شاگرد فعالی نداری</MentorEmpty>
+          <MentorEmpty>{tr("هنوز شاگرد فعالی نداری", "You have no active students yet")}</MentorEmpty>
         ) : (
           <ul className="mv2-pg-plain">
             {rows.map((r) => {
@@ -57,8 +58,8 @@ export function MentorProgramStart({
                   <MentorRow
                     lead={<MentorUserAvatar avatarUrl={r.counterpart.avatarUrl} name={name} size={36} />}
                     title={name}
-                    sub={<span>{r.activePrograms > 0 ? `${fa(r.activePrograms)} برنامه‌ی در حال اجرا` : "برنامه‌ی در حال اجرا نداره"}</span>}
-                    end={<button type="button" className="account-outline-btn mentor-btn is-sm" onClick={() => onPickStudent(r.id)}>انتخاب</button>}
+                    sub={<span>{r.activePrograms > 0 ? tr(`${fa(r.activePrograms)} برنامه‌ی در حال اجرا`, `${fa(r.activePrograms)} ${r.activePrograms === 1 ? "program" : "programs"} in progress`) : tr("برنامه‌ی در حال اجرا نداره", "No program in progress")}</span>}
+                    end={<button type="button" className="account-outline-btn mentor-btn is-sm" onClick={() => onPickStudent(r.id)}>{tr("انتخاب", "Choose")}</button>}
                   />
                 </li>
               );
@@ -74,17 +75,17 @@ export function MentorProgramStart({
       <MentorRow
         lead={<MentorUserAvatar avatarUrl={row.counterpart.avatarUrl} name={name} size={40} />}
         title={name}
-        sub={<span>{row.activePrograms > 0 ? `${fa(row.activePrograms)} برنامه‌ی در حال اجرا` : "برنامه‌ی در حال اجرا نداره"}</span>}
-        end={rows.length > 1 ? <button type="button" className="mentor-text-btn" onClick={onClearStudent}>عوض کردن</button> : undefined}
+        sub={<span>{row.activePrograms > 0 ? tr(`${fa(row.activePrograms)} برنامه‌ی در حال اجرا`, `${fa(row.activePrograms)} ${row.activePrograms === 1 ? "program" : "programs"} in progress`) : tr("برنامه‌ی در حال اجرا نداره", "No program in progress")}</span>}
+        end={rows.length > 1 ? <button type="button" className="mentor-text-btn" onClick={onClearStudent}>{tr("عوض کردن", "Change")}</button> : undefined}
       />
       <div className="mentor-tabs">
         <SegmentedTabs<StartSource>
           active={source}
           onChange={onSource}
           options={[
-            { value: "blank", label: "از اول" },
-            { value: "template", label: "از قالب" },
-            { value: "copy", label: "کپی برنامه" },
+            { value: "blank", label: tr("از اول", "From scratch") },
+            { value: "template", label: tr("از قالب", "From template") },
+            { value: "copy", label: tr("کپی برنامه", "Copy a program") },
           ]}
         />
       </div>
@@ -107,12 +108,12 @@ function LoadedRow({ loaded, onClear }: { loaded: Loaded; onClear: () => void })
       title={loaded.label}
       sub={
         <>
-          <span>{fa(p.items.length)} {p.type === "WORKOUT" ? "حرکت" : "کار"}</span>
-          {p.startDate && <span>شروع {fmtDate(p.startDate)}</span>}
-          {p.endDate && <span>پایان {fmtDate(p.endDate)}</span>}
+          <span>{fa(p.items.length)} {p.type === "WORKOUT" ? tr("حرکت", p.items.length === 1 ? "exercise" : "exercises") : tr("کار", p.items.length === 1 ? "task" : "tasks")}</span>
+          {p.startDate && <span>{tr("شروع", "Starts")} {fmtDate(p.startDate)}</span>}
+          {p.endDate && <span>{tr("پایان", "Ends")} {fmtDate(p.endDate)}</span>}
         </>
       }
-      end={<button type="button" className="mentor-text-btn" onClick={onClear}>تغییر مبدا</button>}
+      end={<button type="button" className="mentor-text-btn" onClick={onClear}>{tr("تغییر مبدا", "Change source")}</button>}
     />
   );
 }
@@ -132,12 +133,12 @@ function TemplateSource({
     setBusy(null);
     if (!r.ok) { setPickError(r.error); return; }
     const t = r.data.template;
-    if (!allowedTypes.includes(t.type)) { setPickError("نوع این قالب خارج از حوزه‌ی همکاری با این شاگرد است"); return; }
+    if (!allowedTypes.includes(t.type)) { setPickError(tr("نوع این قالب خارج از حوزه‌ی همکاری با این شاگرد است", "This template's type is outside your field of work with this student")); return; }
     // قالب تاریخ ندارد؛ اگر طول بازه دارد، از امروز شروع می‌شود و منتور می‌تواند عوضش کند
     const range = t.durationDays != null ? shiftedRange(t.durationDays, isoLocal(new Date())) : { startDate: null, endDate: null };
     onLoaded({
       key: `t:${t.id}`,
-      label: `قالب «${t.name}»`,
+      label: tr(`قالب «${t.name}»`, `Template "${t.name}"`),
       prefill: {
         type: t.type, title: t.title, description: t.description, note: t.note, ...range,
         items: t.items.map((it) => ({ ...it, id: "" })), templateId: t.id,
@@ -164,7 +165,7 @@ function TemplateSource({
   if (!list) return <LoadingBlock />;
   const usable = list.filter((t) => allowedTypes.includes(t.type));
   if (usable.length === 0) {
-    return <MentorEmpty icon={ic(SearchX, MI.row)}>{list.length ? "قالبی با نوع مجاز برای این شاگرد نیست" : "هنوز قالبی نساختی"}</MentorEmpty>;
+    return <MentorEmpty icon={ic(SearchX, MI.row)}>{list.length ? tr("قالبی با نوع مجاز برای این شاگرد نیست", "No templates of an allowed type for this student") : tr("هنوز قالبی نساختی", "You have not created any templates yet")}</MentorEmpty>;
   }
   return (
     <div>
@@ -175,14 +176,14 @@ function TemplateSource({
           title={t.name}
           sub={
             <>
-              <span>{fa(t.itemCount)} {t.type === "WORKOUT" ? "حرکت" : "کار"}</span>
-              {t.durationDays != null && <span>{fa(t.durationDays + 1)} روز</span>}
-              {t.usedCount > 0 && <span>{fa(t.usedCount)} بار استفاده</span>}
+              <span>{fa(t.itemCount)} {t.type === "WORKOUT" ? tr("حرکت", t.itemCount === 1 ? "exercise" : "exercises") : tr("کار", t.itemCount === 1 ? "task" : "tasks")}</span>
+              {t.durationDays != null && <span>{tr(`${fa(t.durationDays + 1)} روز`, `${fa(t.durationDays + 1)} days`)}</span>}
+              {t.usedCount > 0 && <span>{tr(`${fa(t.usedCount)} بار استفاده`, `Used ${fa(t.usedCount)} ${t.usedCount === 1 ? "time" : "times"}`)}</span>}
             </>
           }
           end={
             <button type="button" className="account-outline-btn mentor-btn is-sm" disabled={!!busy} onClick={() => pick(t.id)}>
-              {busy === t.id ? <Spinner size={14} /> : "استفاده از قالب"}
+              {busy === t.id ? <Spinner size={14} /> : tr("استفاده از قالب", "Use template")}
             </button>
           }
         />
@@ -207,7 +208,7 @@ function CopySource({
     setBusy(null);
     if (!r.ok) { setPickError(r.error); return; }
     const { program: p, items } = r.data;
-    if (!allowedTypes.includes(p.type)) { setPickError("نوع این برنامه خارج از حوزه‌ی همکاری با این شاگرد است"); return; }
+    if (!allowedTypes.includes(p.type)) { setPickError(tr("نوع این برنامه خارج از حوزه‌ی همکاری با این شاگرد است", "This program's type is outside your field of work with this student")); return; }
     const today = isoLocal(new Date());
     const duration = rangeDuration(p.startDate, p.endDate);
     // همان شاگرد = دوره‌ی بعد (روز بعد از پایان مبدا)؛ شاگرد دیگر = از امروز
@@ -215,7 +216,7 @@ function CopySource({
     const range = duration != null ? shiftedRange(duration, sameStudent ? nextPeriodStart(p.endDate, today) : today) : { startDate: null, endDate: null };
     onLoaded({
       key: `p:${p.id}`,
-      label: `کپی «${p.title}»`,
+      label: tr(`کپی «${p.title}»`, `Copy of "${p.title}"`),
       prefill: { type: p.type, title: p.title, description: p.description, note: p.note, ...range, items },
     });
   }, [allowedTypes, onLoaded, row.counterpart.id]);
@@ -242,7 +243,7 @@ function CopySource({
   if (loaded) return <LoadedRow loaded={loaded} onClear={() => onLoaded(null)} />;
   if (error) return <MentorEmpty>{error}</MentorEmpty>;
   if (!list) return <LoadingBlock />;
-  if (usable.length === 0) return <MentorEmpty icon={ic(SearchX, MI.row)}>برنامه‌ای برای کپی نیست</MentorEmpty>;
+  if (usable.length === 0) return <MentorEmpty icon={ic(SearchX, MI.row)}>{tr("برنامه‌ای برای کپی نیست", "There are no programs to copy")}</MentorEmpty>;
   return (
     <div>
       {usable.map((p) => (
@@ -259,7 +260,7 @@ function CopySource({
           }
           end={
             <button type="button" className="account-outline-btn mentor-btn is-sm" disabled={!!busy} onClick={() => pick(p.id)}>
-              {busy === p.id ? <Spinner size={14} /> : <>{ic(Copy, MI.btnSm)} کپی</>}
+              {busy === p.id ? <Spinner size={14} /> : <>{ic(Copy, MI.btnSm)} {tr("کپی", "Copy")}</>}
             </button>
           }
         />

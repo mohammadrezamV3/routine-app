@@ -10,6 +10,7 @@ import { AdminTabBar } from "@/components/admin/TabBar";
 import { UserAvatar, displayName } from "@/components/admin/UserAvatar";
 import { formatDateShort, formatNumber } from "@/lib/adminFormat";
 import { MENTOR_CATEGORY_META, VERIFICATION_LABELS, VERIFICATION_SHORT, isMentorCategory } from "@/lib/mentorCategories";
+import { tr } from "@/lib/i18n";
 
 type VStatus = keyof typeof VERIFICATION_LABELS;
 type MentorRow = {
@@ -23,12 +24,17 @@ type Data = { mentors: MentorRow[]; total: number; pageSize: number; counts: { p
 
 type Tab = "pending" | "all" | "suspended";
 const TABS: Tab[] = ["pending", "all", "suspended"];
-const TAB_LABELS: Record<Tab, string> = { pending: "صف احراز هویت", all: "همه مربی‌ها", suspended: "تعلیق‌شده" };
-const EMPTY_LABELS: Record<Tab, string> = {
-  pending: "مدرکی در صف بررسی نیست",
-  all: "مربی‌ای پیدا نشد",
-  suspended: "مربی تعلیق‌شده‌ای نیست",
-};
+// توابع، نه ثابت سطح ماژول: برچسب‌ها موقع رندر به زبان جاری وابسته‌ان.
+const tabLabels = (): Record<Tab, string> => ({
+  pending: tr("صف احراز هویت", "Verification queue"),
+  all: tr("همه مربی‌ها", "All mentors"),
+  suspended: tr("تعلیق‌شده", "Suspended"),
+});
+const emptyLabels = (): Record<Tab, string> => ({
+  pending: tr("مدرکی در صف بررسی نیست", "Nothing in the review queue"),
+  all: tr("مربی‌ای پیدا نشد", "No mentors found"),
+  suspended: tr("مربی تعلیق‌شده‌ای نیست", "No suspended mentors"),
+});
 
 const V_TONE: Record<VStatus, "green" | "red" | "amber" | "gray"> = { VERIFIED: "green", REJECTED: "red", PENDING: "amber", NOT_PROVIDED: "gray" };
 const V_ICON: Record<VStatus, typeof Hourglass> = { VERIFIED: BadgeCheck, REJECTED: XCircle, PENDING: Hourglass, NOT_PROVIDED: CircleSlash };
@@ -114,16 +120,17 @@ function MentorsInner() {
 
   const rows = data?.mentors || [];
   const totalPages = data ? Math.max(1, Math.ceil(data.total / data.pageSize)) : 1;
+  const labels = tabLabels();
   const tabItems = TABS.map((t) => ({
     key: t,
-    label: data?.counts && data.counts[t] ? `${TAB_LABELS[t]} (${formatNumber(data.counts[t])})` : TAB_LABELS[t],
+    label: data?.counts && data.counts[t] ? `${labels[t]} (${formatNumber(data.counts[t])})` : labels[t],
   }));
 
   return (
     <section>
       <div className="admin-page-head">
         <div>
-          <div className="admin-page-kicker">مربی‌ها</div>
+          <div className="admin-page-kicker">{tr("مربی‌ها", "Mentors")}</div>
         </div>
       </div>
 
@@ -133,8 +140,8 @@ function MentorsInner() {
         <div className="admin-search">
           <Search size={15} strokeWidth={1.75} aria-hidden />
           <input
-            className="admin-input" placeholder="نام، یوزرنیم، عنوان یا آیدی" value={search}
-            aria-label="جست‌وجوی مربی"
+            className="admin-input" placeholder={tr("نام، یوزرنیم، عنوان یا آیدی", "Name, username, title or ID")} value={search}
+            aria-label={tr("جست‌وجوی مربی", "Search mentors")}
             onChange={(e) => setSearch(e.target.value)}
           />
         </div>
@@ -142,22 +149,22 @@ function MentorsInner() {
 
       {!data ? (
         loading ? (
-          <div className="admin-empty is-loading" role="status" aria-label="در حال دریافت" />
+          <div className="admin-empty is-loading" role="status" aria-label={tr("در حال دریافت", "Loading")} />
         ) : failed ? (
           <div className="admin-empty">
-            <span>فهرست مربی‌ها دریافت نشد</span>
-            <button type="button" className="admin-btn" onClick={load}><RefreshCw size={14} strokeWidth={1.75} aria-hidden /> تلاش دوباره</button>
+            <span>{tr("فهرست مربی‌ها دریافت نشد", "Couldn't load the mentor list")}</span>
+            <button type="button" className="admin-btn" onClick={load}><RefreshCw size={14} strokeWidth={1.75} aria-hidden /> {tr("تلاش دوباره", "Try again")}</button>
           </div>
         ) : null
       ) : rows.length === 0 ? (
-        <EmptyState message={q ? "مربی‌ای با این جست‌وجو پیدا نشد" : EMPTY_LABELS[tab]} />
+        <EmptyState message={q ? tr("مربی‌ای با این جست‌وجو پیدا نشد", "No mentors match this search") : emptyLabels()[tab]} />
       ) : (
         <>
           <div className={`admin-table-wrap${loading ? " is-stale" : ""}`} aria-busy={loading}>
             <table className="admin-table">
               <thead>
                 <tr>
-                  <th>مربی</th><th>دسته‌ها</th><th>هویت</th><th>مدارک تخصصی</th><th>وضعیت</th><th>امتیاز</th><th>شاگرد فعال</th><th>ثبت</th><th />
+                  <th>{tr("مربی", "Mentor")}</th><th>{tr("دسته‌ها", "Categories")}</th><th>{tr("هویت", "Identity")}</th><th>{tr("مدارک تخصصی", "Credentials")}</th><th>{tr("وضعیت", "Status")}</th><th>{tr("امتیاز", "Rating")}</th><th>{tr("شاگرد فعال", "Active students")}</th><th>{tr("ثبت", "Joined")}</th><th />
                 </tr>
               </thead>
               <tbody>
@@ -172,7 +179,7 @@ function MentorsInner() {
                         </span>
                       </Link>
                     </td>
-                    <td>{m.categories.length ? m.categories.map(categoryLabel).join("، ") : <span className="admin-muted">—</span>}</td>
+                    <td>{m.categories.length ? m.categories.map(categoryLabel).join(tr("، ", ", ")) : <span className="admin-muted">—</span>}</td>
                     <td><VBadge status={m.identityStatus} /></td>
                     <td>
                       {m.credentials.length === 0 ? <span className="admin-muted">—</span> : (
@@ -185,12 +192,12 @@ function MentorsInner() {
                     </td>
                     <td>
                       <span className="admin-badge-row">
-                        {m.suspendedAt ? <span className="admin-badge red">تعلیق</span>
-                          : m.published ? <span className="admin-badge green">منتشرشده</span>
-                          : <span className="admin-badge gray">منتشرنشده</span>}
-                        {m.user.isBlocked && <span className="admin-badge red">حساب مسدود</span>}
+                        {m.suspendedAt ? <span className="admin-badge red">{tr("تعلیق", "Suspended")}</span>
+                          : m.published ? <span className="admin-badge green">{tr("منتشرشده", "Published")}</span>
+                          : <span className="admin-badge gray">{tr("منتشرنشده", "Unpublished")}</span>}
+                        {m.user.isBlocked && <span className="admin-badge red">{tr("حساب مسدود", "Account blocked")}</span>}
                         {m.pendingCount > 0 && (
-                          <span className="admin-badge amber" title={`${formatNumber(m.pendingCount)} مورد ${VERIFICATION_LABELS.PENDING}`}>
+                          <span className="admin-badge amber" title={tr(`${formatNumber(m.pendingCount)} مورد ${VERIFICATION_LABELS.PENDING}`, `${formatNumber(m.pendingCount)} item(s): ${VERIFICATION_LABELS.PENDING}`)}>
                             <Hourglass size={13} strokeWidth={1.75} aria-hidden />{formatNumber(m.pendingCount)}
                           </span>
                         )}
@@ -200,7 +207,7 @@ function MentorsInner() {
                     <td className="admin-ltr">{formatNumber(m.students)}</td>
                     <td className="admin-ltr">{formatDateShort(m.createdAt)}</td>
                     <td>
-                      <Link href={`/admin/mentors/${m.profileId}`} className="admin-icon-btn" aria-label={`جزئیات ${displayName(m.user)}`}>
+                      <Link href={`/admin/mentors/${m.profileId}`} className="admin-icon-btn" aria-label={tr(`جزئیات ${displayName(m.user)}`, `Details of ${displayName(m.user)}`)}>
                         <Eye size={15} strokeWidth={1.75} aria-hidden />
                       </Link>
                     </td>
@@ -218,7 +225,7 @@ function MentorsInner() {
 
 export default function AdminMentorsPage() {
   return (
-    <Suspense fallback={<div className="admin-empty is-loading" role="status" aria-label="در حال دریافت" />}>
+    <Suspense fallback={<div className="admin-empty is-loading" role="status" aria-label={tr("در حال دریافت", "Loading")} />}>
       <MentorsInner />
     </Suspense>
   );

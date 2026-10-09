@@ -22,13 +22,16 @@
 // طبق درخواست صریح، عنوان رویدادها دیگر به فارسی ترجمه نمی‌شود — دقیقا
 // همان متن انگلیسی منبع (مثل خود JBlanked) ذخیره/نمایش داده می‌شود.
 
+import { tr } from "./i18n";
+import { localizedRecord } from "./localizedRecord";
+
 export type EconomicImpact = "LOW" | "MEDIUM" | "HIGH";
 
-export const IMPACT_LABELS: Record<EconomicImpact, string> = {
-  HIGH: "تاثیر بالا",
-  MEDIUM: "تاثیر متوسط",
-  LOW: "تاثیر کم",
-};
+export const IMPACT_LABELS: Record<EconomicImpact, string> = localizedRecord({
+  HIGH: ["تاثیر بالا", "High impact"],
+  MEDIUM: ["تاثیر متوسط", "Medium impact"],
+  LOW: ["تاثیر کم", "Low impact"],
+});
 
 export const IMPACT_COLORS: Record<EconomicImpact, string> = {
   HIGH: "#E05252",
@@ -40,15 +43,15 @@ export const IMPACT_ORDER: EconomicImpact[] = ["HIGH", "MEDIUM", "LOW"];
 
 /** ارزهایی که تریدر فارکس واقعا دنبال می‌کند — با پرچم کشور متناظر */
 export const CALENDAR_CURRENCIES: { code: string; country: string; flag: string; label: string }[] = [
-  { code: "USD", country: "US", flag: "🇺🇸", label: "دلار آمریکا" },
-  { code: "EUR", country: "EU", flag: "🇪🇺", label: "یورو" },
-  { code: "GBP", country: "GB", flag: "🇬🇧", label: "پوند" },
-  { code: "JPY", country: "JP", flag: "🇯🇵", label: "ین ژاپن" },
-  { code: "CHF", country: "CH", flag: "🇨🇭", label: "فرانک سوئیس" },
-  { code: "CAD", country: "CA", flag: "🇨🇦", label: "دلار کانادا" },
-  { code: "AUD", country: "AU", flag: "🇦🇺", label: "دلار استرالیا" },
-  { code: "NZD", country: "NZ", flag: "🇳🇿", label: "دلار نیوزیلند" },
-  { code: "CNY", country: "CN", flag: "🇨🇳", label: "یوان چین" },
+  { code: "USD", country: "US", flag: "🇺🇸", get label() { return tr("دلار آمریکا", "US dollar"); } },
+  { code: "EUR", country: "EU", flag: "🇪🇺", get label() { return tr("یورو", "Euro"); } },
+  { code: "GBP", country: "GB", flag: "🇬🇧", get label() { return tr("پوند", "Pound"); } },
+  { code: "JPY", country: "JP", flag: "🇯🇵", get label() { return tr("ین ژاپن", "Japanese yen"); } },
+  { code: "CHF", country: "CH", flag: "🇨🇭", get label() { return tr("فرانک سوئیس", "Swiss franc"); } },
+  { code: "CAD", country: "CA", flag: "🇨🇦", get label() { return tr("دلار کانادا", "Canadian dollar"); } },
+  { code: "AUD", country: "AU", flag: "🇦🇺", get label() { return tr("دلار استرالیا", "Australian dollar"); } },
+  { code: "NZD", country: "NZ", flag: "🇳🇿", get label() { return tr("دلار نیوزیلند", "New Zealand dollar"); } },
+  { code: "CNY", country: "CN", flag: "🇨🇳", get label() { return tr("یوان چین", "Chinese yuan"); } },
 ];
 
 export function currencyMeta(code: string) {

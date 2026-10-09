@@ -7,7 +7,8 @@ import {
   Apple, ArrowLeft, CalendarCheck, CandlestickChart, Dumbbell, GraduationCap, Moon, ShieldCheck, Smartphone, Sparkles,
 } from "lucide-react";
 import type { LucideIcon } from "lucide-react";
-import { BRAND_FA } from "@/lib/brand";
+import { brandName } from "@/lib/brand";
+import { tr, trv } from "@/lib/i18n";
 
 // ─── هیروی صفحه‌ی «درباره» ─────────────────────────────────────────────
 // پس‌زمینه = چند گرادیان شعاعی (بدون filter:blur) که فقط transform می‌گیرند؛
@@ -17,15 +18,15 @@ import { BRAND_FA } from "@/lib/brand";
 
 const EASE = [0.22, 1, 0.36, 1] as const;
 
-const WORDS = ["همه‌ی", "نظم", "زندگی‌ات،"];
+const words = () => trv(["همه‌ی", "نظم", "زندگی‌ات،"], ["All", "your", "life", "in"]);
 
-const ORBIT: { label: string; icon: LucideIcon }[] = [
-  { label: "روتین", icon: CalendarCheck },
-  { label: "خواب", icon: Moon },
-  { label: "بدنسازی", icon: Dumbbell },
-  { label: "کالری", icon: Apple },
-  { label: "ترید", icon: CandlestickChart },
-  { label: "مربی‌ها", icon: GraduationCap },
+const orbit = (): { label: string; icon: LucideIcon }[] => [
+  { label: tr("روتین", "Routine"), icon: CalendarCheck },
+  { label: tr("خواب", "Sleep"), icon: Moon },
+  { label: tr("بدنسازی", "Workout"), icon: Dumbbell },
+  { label: tr("کالری", "Calories"), icon: Apple },
+  { label: tr("ترید", "Trading"), icon: CandlestickChart },
+  { label: tr("مربی‌ها", "Mentors"), icon: GraduationCap },
 ];
 
 function BrandLogo({ className }: { className?: string }) {
@@ -41,6 +42,8 @@ function BrandLogo({ className }: { className?: string }) {
 export { BrandLogo as AboutBrandLogo };
 
 export function AboutHero() {
+  const WORDS = words();
+  const ORBIT = orbit();
   const reduce = useReducedMotion();
   const stageRef = useRef<HTMLDivElement>(null);
   const [paused, setPaused] = useState(false);
@@ -95,7 +98,7 @@ export function AboutHero() {
             transition={{ duration: 0.6, ease: EASE }}
           >
             <span className="ab-badge-dot" aria-hidden="true" />
-            داستان آریون
+            {tr("داستان آریون", "The Arion story")}
           </motion.span>
 
           <h1 id="ab-h1" className="ab-h1" style={{ perspective: 600 }}>
@@ -105,14 +108,14 @@ export function AboutHero() {
               animate={{ opacity: 1 }}
               transition={{ duration: 0.6, delay: 0.05 }}
             >
-              {`درباره ${BRAND_FA}`}
+              {tr(`درباره ${brandName()}`, `About ${brandName()}`)}
             </motion.span>
             <span className="ab-h1-line">
               {WORDS.map((w, i) => (
                 <motion.span key={w} className="ab-word" {...word(i)}>{w}</motion.span>
               ))}
               <motion.span className="ab-word ab-word-accent" {...word(WORDS.length)}>
-                یک‌جا.
+                {tr("یک‌جا.", "one place.")}
                 <svg className="ab-swash" viewBox="0 0 200 20" preserveAspectRatio="none" aria-hidden="true">
                   <motion.path
                     d="M4 14 C 50 4, 120 4, 196 10"
@@ -135,8 +138,16 @@ export function AboutHero() {
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.7, delay: 0.55, ease: EASE }}
           >
-            {BRAND_FA} یک اپلیکیشن فارسی برای نظم‌دادن به زندگی روزمره است. <b>روتین، خواب، ورزش، تغذیه و ترید</b>
-            {" "}به‌جای چند اپ جدا، زیر یک حساب کاربری کنار هم‌اند؛ همه‌چیز فارسی، با تقویم شمسی، و روی موبایل و کامپیوتر یکسان.
+            {trv(
+              <>
+                {brandName()} یک اپلیکیشن فارسی برای نظم‌دادن به زندگی روزمره است. <b>روتین، خواب، ورزش، تغذیه و ترید</b>
+                {" "}به‌جای چند اپ جدا، زیر یک حساب کاربری کنار هم‌اند؛ همه‌چیز فارسی، با تقویم شمسی، و روی موبایل و کامپیوتر یکسان.
+              </>,
+              <>
+                {brandName()} is an app for bringing order to everyday life. <b>Routine, sleep, workouts, nutrition and trading</b>
+                {" "}live side by side under one account instead of several separate apps, and it works the same on phone and desktop.
+              </>,
+            )}
           </motion.p>
 
           <motion.div
@@ -146,9 +157,9 @@ export function AboutHero() {
             transition={{ duration: 0.7, delay: 0.7, ease: EASE }}
           >
             <Link href="/auth/signup" className="ls-btn ls-btn-primary">
-              شروع رایگان <ArrowLeft size={16} />
+              {tr("شروع رایگان", "Start free")} <ArrowLeft size={16} className="dir-flip" />
             </Link>
-            <a href="#inside" className="ls-btn ls-btn-ghost">داخل آریون</a>
+            <a href="#inside" className="ls-btn ls-btn-ghost">{tr("داخل آریون", "Inside Arion")}</a>
           </motion.div>
 
           <motion.div
@@ -157,9 +168,9 @@ export function AboutHero() {
             animate={{ opacity: 1 }}
             transition={{ duration: 0.7, delay: 0.9 }}
           >
-            <span><Sparkles size={14} /> «روتین من» 14 روز رایگان</span>
-            <span><ShieldCheck size={14} /> چت‌های سرتاسر رمزنگاری‌شده</span>
-            <span><Smartphone size={14} /> نصب روی گوشی (PWA)</span>
+            <span><Sparkles size={14} /> {tr("«روتین من» 14 روز رایگان", "My Routine free for 14 days")}</span>
+            <span><ShieldCheck size={14} /> {tr("چت‌های سرتاسر رمزنگاری‌شده", "End-to-end encrypted chats")}</span>
+            <span><Smartphone size={14} /> {tr("نصب روی گوشی (PWA)", "Install on your phone (PWA)")}</span>
           </motion.div>
         </div>
 

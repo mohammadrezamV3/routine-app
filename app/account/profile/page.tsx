@@ -18,9 +18,10 @@ import { isValidUsername, isValidPersianName } from "@/lib/validate";
 import { ImageCropModal } from "@/components/ImageCropModal";
 import { AvatarSheet } from "@/components/AvatarSheet";
 import { CUSTOM_REFERRAL_CODE_RE, REFERRAL_DISCOUNT_PERCENT, normalizeReferralCode } from "@/lib/referral";
-import { formatPriceAmount } from "@/lib/formatPrice";
+import { priceText as formatPriceAmount } from "@/lib/subscriptionI18n";
 import { faNum } from "@/lib/jalali";
 import { Spinner } from "@/components/Spinner";
+import { tr, isEn } from "@/lib/i18n";
 
 type ProfileUser = {
   username: string | null;
@@ -139,7 +140,7 @@ export default function AccountProfilePage() {
         body: JSON.stringify({ dataUrl }),
       });
       const resData = await res.json().catch(() => ({}));
-      if (!res.ok) { setMediaError(resData.error || "خطایی پیش اومد"); return; }
+      if (!res.ok) { setMediaError(resData.error || tr("خطایی پیش اومد", "Something went wrong")); return; }
       setAvatarUrl(resData.avatarUrl);
       // بدون این، آواتار منوی همبرگری همچنان عکس کهنه را نشان می‌داد:
       // lib/preload اسنپ‌شات bootstrap را کش می‌کند و رویداد avatar-updated
@@ -147,7 +148,7 @@ export default function AccountProfilePage() {
       invalidateAccountCache();
       window.dispatchEvent(new Event("avatar-updated"));
     } catch {
-      setMediaError("خطا در پردازش عکس");
+      setMediaError(tr("خطا در پردازش عکس", "Could not process the photo"));
     } finally {
       setAvatarSaving(false);
     }
@@ -157,13 +158,13 @@ export default function AccountProfilePage() {
     setAvatarSaving(true);
     try {
       const res = await fetch("/api/account/avatar", { method: "DELETE" });
-      if (!res.ok) { setMediaError("حذف عکس ناموفق بود"); return; }
+      if (!res.ok) { setMediaError(tr("حذف عکس ناموفق بود", "Could not remove the photo")); return; }
       setAvatarUrl(null);
       setAvatarSheet(false);
       invalidateAccountCache();
       window.dispatchEvent(new Event("avatar-updated"));
     } catch {
-      setMediaError("حذف عکس ناموفق بود");
+      setMediaError(tr("حذف عکس ناموفق بود", "Could not remove the photo"));
     } finally {
       setAvatarSaving(false);
     }
@@ -179,10 +180,10 @@ export default function AccountProfilePage() {
         body: JSON.stringify({ dataUrl }),
       });
       const resData = await res.json().catch(() => ({}));
-      if (!res.ok) { setMediaError(resData.error || "خطایی پیش اومد"); return; }
+      if (!res.ok) { setMediaError(resData.error || tr("خطایی پیش اومد", "Something went wrong")); return; }
       setBannerUrl(resData.bannerUrl);
     } catch {
-      setMediaError("خطا در پردازش عکس");
+      setMediaError(tr("خطا در پردازش عکس", "Could not process the photo"));
     } finally {
       setBannerSaving(false);
     }
@@ -200,14 +201,14 @@ export default function AccountProfilePage() {
 
   function pickAvatarFile(file: File) {
     setMediaError(null);
-    if (!file.type.startsWith("image/")) { setMediaError("فایل انتخاب‌شده عکس نیست"); return; }
+    if (!file.type.startsWith("image/")) { setMediaError(tr("فایل انتخاب‌شده عکس نیست", "The selected file is not an image")); return; }
     setAvatarSheet(false);
     setCropping({ file, kind: "avatar" });
   }
 
   function pickBannerFile(file: File) {
     setMediaError(null);
-    if (!file.type.startsWith("image/")) { setMediaError("فایل انتخاب‌شده عکس نیست"); return; }
+    if (!file.type.startsWith("image/")) { setMediaError(tr("فایل انتخاب‌شده عکس نیست", "The selected file is not an image")); return; }
     setCropping({ file, kind: "banner" });
   }
 
@@ -225,18 +226,18 @@ export default function AccountProfilePage() {
     const name = firstName.trim();
     const family = lastName.trim();
     const uname = username.trim().replace(/^@/, "");
-    if (name && !isValidPersianName(name)) { setSaveError("نام باید فقط با حروف فارسی نوشته شود"); return; }
-    if (family && !isValidPersianName(family)) { setSaveError("نام خانوادگی باید فقط با حروف فارسی نوشته شود"); return; }
-    if (uname && !isValidUsername(uname)) { setSaveError("یوزرنیم باید 3 تا 20 کاراکتر انگلیسی/عدد/آندرلاین باشد"); return; }
+    if (name && !isValidPersianName(name)) { setSaveError(tr("نام باید فقط با حروف فارسی نوشته شود", "First name must use Persian letters only")); return; }
+    if (family && !isValidPersianName(family)) { setSaveError(tr("نام خانوادگی باید فقط با حروف فارسی نوشته شود", "Last name must use Persian letters only")); return; }
+    if (uname && !isValidUsername(uname)) { setSaveError(tr("یوزرنیم باید 3 تا 20 کاراکتر انگلیسی/عدد/آندرلاین باشد", "Username must be 3 to 20 characters: English letters, digits or underscores")); return; }
     const code = normalizeReferralCode(refCode);
-    if (code && code !== savedRefCode && !CUSTOM_REFERRAL_CODE_RE.test(code)) { setSaveError("کد دعوت باید 4 تا 16 حرف انگلیسی یا عدد باشه"); return; }
+    if (code && code !== savedRefCode && !CUSTOM_REFERRAL_CODE_RE.test(code)) { setSaveError(tr("کد دعوت باید 4 تا 16 حرف انگلیسی یا عدد باشه", "The invite code must be 4 to 16 English letters or digits")); return; }
 
     const height = heightCm.trim() ? Number(heightCm) : undefined;
     const weight = weightKg.trim() ? Number(weightKg) : undefined;
     const age = ageYears.trim() ? Number(ageYears) : undefined;
-    if (height != null && (!Number.isFinite(height) || height < 100 || height > 250)) { setSaveError("قد باید بین 100 تا 250 سانتی‌متر باشه"); return; }
-    if (weight != null && (!Number.isFinite(weight) || weight < 20 || weight > 300)) { setSaveError("وزن باید بین 20 تا 300 کیلوگرم باشه"); return; }
-    if (age != null && (!Number.isFinite(age) || age < 10 || age > 100)) { setSaveError("سن باید بین 10 تا 100 سال باشه"); return; }
+    if (height != null && (!Number.isFinite(height) || height < 100 || height > 250)) { setSaveError(tr("قد باید بین 100 تا 250 سانتی‌متر باشه", "Height must be between 100 and 250 cm")); return; }
+    if (weight != null && (!Number.isFinite(weight) || weight < 20 || weight > 300)) { setSaveError(tr("وزن باید بین 20 تا 300 کیلوگرم باشه", "Weight must be between 20 and 300 kg")); return; }
+    if (age != null && (!Number.isFinite(age) || age < 10 || age > 100)) { setSaveError(tr("سن باید بین 10 تا 100 سال باشه", "Age must be between 10 and 100")); return; }
 
     setSaving(true);
     try {
@@ -249,7 +250,7 @@ export default function AccountProfilePage() {
           body: JSON.stringify({ username: uname }),
         });
         const uData = await uRes.json().catch(() => ({}));
-        if (!uRes.ok) { setSaveError(uData.error || "تغییر یوزرنیم ناموفق بود"); return; }
+        if (!uRes.ok) { setSaveError(uData.error || tr("تغییر یوزرنیم ناموفق بود", "Could not change the username")); return; }
         setSavedUsername(uname);
       }
 
@@ -261,7 +262,7 @@ export default function AccountProfilePage() {
           body: JSON.stringify({ code }),
         });
         const cData = await cRes.json().catch(() => ({}));
-        if (!cRes.ok) { setSaveError(cData.error || "تغییر کد دعوت ناموفق بود"); return; }
+        if (!cRes.ok) { setSaveError(cData.error || tr("تغییر کد دعوت ناموفق بود", "Could not change the invite code")); return; }
         setSavedRefCode(code);
         setRefCode(code);
       }
@@ -276,7 +277,7 @@ export default function AccountProfilePage() {
         }),
       });
       const resData = await res.json().catch(() => ({}));
-      if (!res.ok) { setSaveError(resData.error || "خطایی پیش اومد"); return; }
+      if (!res.ok) { setSaveError(resData.error || tr("خطایی پیش اومد", "Something went wrong")); return; }
 
       // قد/وزن/سن روی همان منبع مشترکی می‌روند که فرم‌های بدنسازی و کالری
       // می‌خوانند — وگرنه کاربر باید همان عدد را دو جا وارد می‌کرد.
@@ -293,7 +294,7 @@ export default function AccountProfilePage() {
       setSaved(true);
       setTimeout(() => setSaved(false), 2400);
     } catch {
-      setSaveError("مشکلی در اتصال به سرور پیش اومد");
+      setSaveError(tr("مشکلی در اتصال به سرور پیش اومد", "Could not reach the server"));
     } finally {
       setSaving(false);
     }
@@ -301,11 +302,11 @@ export default function AccountProfilePage() {
 
   if (!data) return null;
 
-  const fullName = [firstName, lastName].filter(Boolean).join(" ") || "کاربر آریون";
+  const fullName = [firstName, lastName].filter(Boolean).join(" ") || tr("کاربر آریون", "Arion user");
 
   return (
     <section>
-      <AccountPageHead title="پروفایل" hint="بنر و عکس پروفایل، مشخصات حساب و پروفایل ورزشی" />
+      <AccountPageHead title={tr("پروفایل", "Profile")} hint={tr("بنر و عکس پروفایل، مشخصات حساب و پروفایل ورزشی", "Banner and photo, account details and sports profile")} />
 
       {/* ── بنر + آواتار ── */}
       <motion.div className="profile-hero" initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.32, ease: [0.22, 1, 0.36, 1] }}>
@@ -315,7 +316,7 @@ export default function AccountProfilePage() {
               دوربین فقط موقع هاور/فوکوس راهنمایی بصری می‌دهد. */}
           <button
             type="button" className="profile-banner-hit" onClick={() => bannerInputRef.current?.click()}
-            disabled={bannerSaving} aria-label={bannerUrl ? "تغییر بنر" : "افزودن بنر"}
+            disabled={bannerSaving} aria-label={bannerUrl ? tr("تغییر بنر", "Change banner") : tr("افزودن بنر", "Add banner")}
           >
             {bannerUrl && <img src={bannerUrl} alt="" className="profile-banner-img" />}
             <span className="profile-banner-hint" aria-hidden="true">
@@ -325,7 +326,7 @@ export default function AccountProfilePage() {
 
           {bannerUrl && (
             <div className="profile-banner-actions">
-              <button type="button" className="profile-banner-btn" onClick={removeBanner} disabled={bannerSaving} aria-label="حذف بنر">
+              <button type="button" className="profile-banner-btn" onClick={removeBanner} disabled={bannerSaving} aria-label={tr("حذف بنر", "Remove banner")}>
                 <Trash2 size={14} />
               </button>
             </div>
@@ -339,10 +340,10 @@ export default function AccountProfilePage() {
               آیکون دوربین فقط یک نشانه‌ی بصری است (pointer-events ندارد). */}
           <button
             type="button" className="profile-hero-avatar-wrap" onClick={onAvatarTap}
-            disabled={avatarSaving} aria-label="تغییر عکس پروفایل"
+            disabled={avatarSaving} aria-label={tr("تغییر عکس پروفایل", "Change profile photo")}
           >
             {avatarUrl ? (
-              <img src={avatarUrl} alt="عکس پروفایل" className="profile-hero-avatar-img" />
+              <img src={avatarUrl} alt={tr("عکس پروفایل", "Profile photo")} className="profile-hero-avatar-img" />
             ) : (
               <AgentAvatar seed={fullName || username || "؟"} size={92} className="profile-hero-avatar-img" />
             )}
@@ -376,7 +377,7 @@ export default function AccountProfilePage() {
           outputW={cropping.kind === "avatar" ? 256 : 1024}
           outputH={cropping.kind === "avatar" ? 256 : 320}
           shape={cropping.kind === "avatar" ? "circle" : "rect"}
-          title={cropping.kind === "avatar" ? "عکس پروفایل" : "بنر"}
+          title={cropping.kind === "avatar" ? tr("عکس پروفایل", "Profile photo") : tr("بنر", "Banner")}
           onCancel={() => setCropping(null)}
           onConfirm={(dataUrl) => {
             const kind = cropping.kind;
@@ -388,14 +389,14 @@ export default function AccountProfilePage() {
       )}
 
       {/* ── پروفایل عمومی ── */}
-      <AccountBlock title="پروفایل عمومی" icon={<IdCard size={15} />} index={0}>
+      <AccountBlock title={tr("پروفایل عمومی", "Public profile")} icon={<IdCard size={15} />} index={0}>
         {/* طبق درخواست صریح: فقط نام و نام‌خانوادگی هم‌ردیف‌اند، بقیه
             هرکدام یک خط کامل می‌گیرند. */}
         <div className="auth-field-grid">
-          <AuthField id="pf-name" label="نام" icon={<UserIcon size={16} />}>
+          <AuthField id="pf-name" label={tr("نام", "First name")} icon={<UserIcon size={16} />}>
             <input id="pf-name" type="text" className="wsearch-newform-name" value={firstName} onChange={(e) => setFirstName(e.target.value)} />
           </AuthField>
-          <AuthField id="pf-lastname" label="نام خانوادگی" icon={<UserIcon size={16} />}>
+          <AuthField id="pf-lastname" label={tr("نام خانوادگی", "Last name")} icon={<UserIcon size={16} />}>
             <input id="pf-lastname" type="text" className="wsearch-newform-name" value={lastName} onChange={(e) => setLastName(e.target.value)} />
           </AuthField>
         </div>
@@ -403,28 +404,28 @@ export default function AccountProfilePage() {
         <div className="acc-field-stack">
           {/* شماره همراه عمدا فقط‌خواندنی است: تغییرش یعنی تغییر شناسه‌ی ورود
               و باید با تایید پیامکی انجام شود، نه با یک ذخیره‌ی ساده. */}
-          <AuthField id="pf-phone" label="شماره همراه" icon={<Phone size={16} />}>
-            <input id="pf-phone" type="text" className="wsearch-newform-name mono" dir="ltr" style={{ textAlign: "right" }} value={data.phone || "ثبت نشده"} readOnly disabled />
+          <AuthField id="pf-phone" label={tr("شماره همراه", "Phone number")} icon={<Phone size={16} />}>
+            <input id="pf-phone" type="text" className="wsearch-newform-name mono" dir="ltr" style={{ textAlign: isEn() ? "left" : "right" }} value={data.phone || tr("ثبت نشده", "Not set")} readOnly disabled />
           </AuthField>
 
-          <AuthField id="pf-username" label="یوزرنیم" icon={<AtSign size={16} />}>
+          <AuthField id="pf-username" label={tr("یوزرنیم", "Username")} icon={<AtSign size={16} />}>
             <input
-              id="pf-username" type="text" className="wsearch-newform-name mono" dir="ltr" style={{ textAlign: "right" }}
+              id="pf-username" type="text" className="wsearch-newform-name mono" dir="ltr" style={{ textAlign: isEn() ? "left" : "right" }}
               value={username} onChange={(e) => setUsername(e.target.value)} placeholder="username"
             />
           </AuthField>
 
-          <AuthField id="pf-dob" label="تاریخ تولد" icon={<Cake size={16} />}>
+          <AuthField id="pf-dob" label={tr("تاریخ تولد", "Birth date")} icon={<Cake size={16} />}>
             <button type="button" id="pf-dob" className={`jdate-btn${birthDate ? "" : " placeholder"}`} onClick={() => setDobOpen(true)}>
-              {birthDate ? formatJalali(birthDate) : "انتخاب تاریخ تولد"}
+              {birthDate ? formatJalali(birthDate) : tr("انتخاب تاریخ تولد", "Select birth date")}
             </button>
           </AuthField>
 
-          <AuthField id="pf-bio" label="بیوگرافی" icon={<NotebookPen size={16} />}>
+          <AuthField id="pf-bio" label={tr("بیوگرافی", "Bio")} icon={<NotebookPen size={16} />}>
             <textarea
               id="pf-bio" className="wsearch-newform-name acc-textarea" rows={3} maxLength={BIO_MAX}
               value={bio} onChange={(e) => setBio(e.target.value)}
-              placeholder="یک توضیح کوتاه درباره‌ی خودت — توی پروفایلی که دوستانت می‌بینن نشون داده می‌شه"
+              placeholder={tr("یک توضیح کوتاه درباره‌ی خودت — توی پروفایلی که دوستانت می‌بینن نشون داده می‌شه", "A short description about yourself, shown in the profile your friends see")}
             />
             <span className="acc-field-counter mono" dir="ltr">{bio.length}/{BIO_MAX}</span>
           </AuthField>
@@ -433,15 +434,15 @@ export default function AccountProfilePage() {
 
       {/* ── کد دعوت ── */}
       <AccountBlock
-        title="کد دعوت"
+        title={tr("کد دعوت", "Invite code")}
         icon={<Gift size={15} />}
-        desc={`دوستت با کدت روی اولین خریدش ${faNum(REFERRAL_DISCOUNT_PERCENT)}٪ تخفیف می‌گیره (هر نفر فقط یک بار)، و تو به‌ازای هر دوستی که با پول واقعی خرید کنه ۱۰٪ از همون مبلغ به‌صورت اعتبار داخلِ کیفِ خودت واریز می‌شه — فقط برای کم‌کردنِ قیمتِ خریدِ پلن بعدی، نه قابل‌برداشت.`}
+        desc={tr(`دوستت با کدت روی اولین خریدش ${faNum(REFERRAL_DISCOUNT_PERCENT)}٪ تخفیف می‌گیره (هر نفر فقط یک بار)، و تو به‌ازای هر دوستی که با پول واقعی خرید کنه ۱۰٪ از همون مبلغ به‌صورت اعتبار داخلِ کیفِ خودت واریز می‌شه — فقط برای کم‌کردنِ قیمتِ خریدِ پلن بعدی، نه قابل‌برداشت.`, `Your friend gets ${faNum(REFERRAL_DISCOUNT_PERCENT)}% off their first purchase with your code (once per person), and for every friend who buys with real money, 10% of that amount is added to your wallet as credit. It can only reduce the price of your next plan and cannot be withdrawn.`)}
         index={1}
       >
         <div className="acc-field-stack">
-          <AuthField id="pf-refcode" label="اسم کد (4 تا 16 حرف انگلیسی یا عدد)" icon={<Gift size={16} />}>
+          <AuthField id="pf-refcode" label={tr("اسم کد (4 تا 16 حرف انگلیسی یا عدد)", "Code name (4 to 16 English letters or digits)")} icon={<Gift size={16} />}>
             <input
-              id="pf-refcode" type="text" className="wsearch-newform-name mono" dir="ltr" style={{ textAlign: "right" }}
+              id="pf-refcode" type="text" className="wsearch-newform-name mono" dir="ltr" style={{ textAlign: isEn() ? "left" : "right" }}
               value={refCode} maxLength={16} autoCapitalize="characters" spellCheck={false}
               onChange={(e) => setRefCode(e.target.value.toUpperCase().replace(/[^A-Z0-9]/g, ""))}
               placeholder="MYCODE"
@@ -449,7 +450,7 @@ export default function AccountProfilePage() {
           </AuthField>
           {refStats && (
             <p className="acc-option-desc">
-              {faNum(refStats.invitedPaid)} دوست با کدت خرید کردن · موجودیِ کیف: {formatPriceAmount(refStats.walletBalance)}
+              {tr(`${faNum(refStats.invitedPaid)} دوست با کدت خرید کردن · موجودیِ کیف: ${formatPriceAmount(refStats.walletBalance)}`, `${faNum(refStats.invitedPaid)} ${refStats.invitedPaid === 1 ? "friend has" : "friends have"} purchased with your code · Wallet balance: ${formatPriceAmount(refStats.walletBalance)}`)}
             </p>
           )}
         </div>
@@ -457,30 +458,30 @@ export default function AccountProfilePage() {
 
       {/* ── پروفایل ورزشی ── */}
       <AccountBlock
-        title="پروفایل ورزشی"
+        title={tr("پروفایل ورزشی", "Sports profile")}
         icon={<Dumbbell size={15} />}
-        desc="برای استفاده از بخش ورزش و کالری الزامی است — همین اطلاعات توی فرم‌های بدنسازی و کالری هم پر می‌شود."
+        desc={tr("برای استفاده از بخش ورزش و کالری الزامی است — همین اطلاعات توی فرم‌های بدنسازی و کالری هم پر می‌شود.", "Required to use the workout and calorie sections. The same details are filled in the workout and calorie forms.")}
         index={2}
       >
         <div className="auth-field-grid">
-          <AuthField id="pf-age" label="سن" icon={<Cake size={16} />}>
-            <NumberInput id="pf-age" dir="ltr" style={{ textAlign: "right" }} className="wsearch-newform-name" value={ageYears} onChange={setAgeYears} />
+          <AuthField id="pf-age" label={tr("سن", "Age")} icon={<Cake size={16} />}>
+            <NumberInput id="pf-age" dir="ltr" style={{ textAlign: isEn() ? "left" : "right" }} className="wsearch-newform-name" value={ageYears} onChange={setAgeYears} />
           </AuthField>
-          <AuthField id="pf-height" label="قد (سانتی‌متر)" icon={<Ruler size={16} />}>
-            <NumberInput id="pf-height" dir="ltr" style={{ textAlign: "right" }} className="wsearch-newform-name" value={heightCm} onChange={setHeightCm} />
+          <AuthField id="pf-height" label={tr("قد (سانتی‌متر)", "Height (cm)")} icon={<Ruler size={16} />}>
+            <NumberInput id="pf-height" dir="ltr" style={{ textAlign: isEn() ? "left" : "right" }} className="wsearch-newform-name" value={heightCm} onChange={setHeightCm} />
           </AuthField>
-          <AuthField id="pf-weight" label="وزن (کیلوگرم)" icon={<Weight size={16} />}>
-            <NumberInput decimal id="pf-weight" dir="ltr" style={{ textAlign: "right" }} className="wsearch-newform-name" value={weightKg} onChange={setWeightKg} />
+          <AuthField id="pf-weight" label={tr("وزن (کیلوگرم)", "Weight (kg)")} icon={<Weight size={16} />}>
+            <NumberInput decimal id="pf-weight" dir="ltr" style={{ textAlign: isEn() ? "left" : "right" }} className="wsearch-newform-name" value={weightKg} onChange={setWeightKg} />
           </AuthField>
-          <AuthField id="pf-gender" label="جنسیت" icon={<VenetianMask size={16} />}>
+          <AuthField id="pf-gender" label={tr("جنسیت", "Gender")} icon={<VenetianMask size={16} />}>
             <span className="acc-select-wrap">
               <select
                 id="pf-gender" className="wsearch-newform-name acc-select"
                 value={gender} onChange={(e) => setGender(e.target.value as "male" | "female" | "unset")}
               >
-                <option value="unset">نامشخص</option>
-                <option value="male">مرد</option>
-                <option value="female">زن</option>
+                <option value="unset">{tr("نامشخص", "Unspecified")}</option>
+                <option value="male">{tr("مرد", "Male")}</option>
+                <option value="female">{tr("زن", "Female")}</option>
               </select>
               <ChevronDown size={15} />
             </span>

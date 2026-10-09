@@ -1,6 +1,7 @@
 "use client";
 
 import { cn } from "@/lib/utils";
+import { tr } from "@/lib/i18n";
 
 /**
  * دایره‌ی لودینگ مشترک اپ، به سبک تلگرام: یک کمان نازک با سر گرد، بدون
@@ -18,7 +19,7 @@ import { cn } from "@/lib/utils";
 export function Spinner({
   size = 16,
   className,
-  label = "در حال بارگذاری",
+  label = tr("در حال بارگذاری", "Loading"),
 }: {
   size?: number;
   className?: string;
@@ -47,7 +48,7 @@ export function Spinner({
 /** لودینگ وسط‌چین یک بخش — طبق درخواست صریح، دیگر متنی کنارش نیست. */
 export function LoadingBlock({ size = 22 }: { size?: number }) {
   return (
-    <div className="app-loading-block" role="status" aria-label="در حال بارگذاری">
+    <div className="app-loading-block" role="status" aria-label={tr("در حال بارگذاری", "Loading")}>
       <Spinner size={size} label={null} />
     </div>
   );

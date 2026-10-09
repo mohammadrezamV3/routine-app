@@ -4,6 +4,7 @@ import Link from "next/link";
 import { areaPaths, barHeights, relativeTimeFa, sparklinePoints, type FeedItem, type QueueItem } from "@/lib/adminOverview";
 import { formatCurrencyAmount, formatNumber } from "@/lib/adminFormat";
 import type { KpiOut, OverviewDashboard } from "@/lib/adminOverviewServer";
+import { tr } from "@/lib/i18n";
 
 export function KpiCard({ label, k, invert, color }: { label: string; k: KpiOut; invert?: boolean; color: string }) {
   const noData = k.spark.every((v) => v === 0);
@@ -17,7 +18,7 @@ export function KpiCard({ label, k, invert, color }: { label: string; k: KpiOut;
       <span className="adb-kpi-label">{label}</span>
       <strong className="adb-kpi-value">
         {value}
-        {hasValue && k.unit === "toman" && <span className="adb-kpi-unit">تومان</span>}
+        {hasValue && k.unit === "toman" && <span className="adb-kpi-unit">{tr("تومان", "Toman")}</span>}
       </strong>
       <div className="adb-kpi-foot">
         <span className={`adb-delta${good === null ? "" : good ? " up" : " down"}`}>{deltaText}</span>
@@ -41,17 +42,17 @@ export function RevenueChart({ chart, days, canRevenue }: { chart: NonNullable<O
     <>
       <div className="adb-card-head">
         <div style={{ display: "flex", flexDirection: "column", gap: 4 }}>
-          <h2 className="adb-card-title">{canRevenue ? "درآمد و ثبت‌نام" : "ثبت‌نام"}</h2>
-          <span className="adb-card-hint">{days} روز اخیر{canRevenue ? " · تومان" : ""}</span>
+          <h2 className="adb-card-title">{canRevenue ? tr("درآمد و ثبت‌نام", "Revenue and sign-ups") : tr("ثبت‌نام", "Sign-ups")}</h2>
+          <span className="adb-card-hint">{tr(`${days} روز اخیر`, `Last ${days} ${(days) === 1 ? "day" : "days"}`)}{canRevenue ? tr(" · تومان", " · Toman") : ""}</span>
         </div>
         {canRevenue && (
           <div className="adb-nums">
-            <div className="adb-num"><span>درآمد خالص</span><strong>{formatNumber(chart.netRevenue)}</strong></div>
-            <div className="adb-num"><span>میانگین سبد</span><strong>{chart.avgOrder === null ? "—" : formatNumber(chart.avgOrder)}</strong></div>
+            <div className="adb-num"><span>{tr("درآمد خالص", "Net revenue")}</span><strong>{formatNumber(chart.netRevenue)}</strong></div>
+            <div className="adb-num"><span>{tr("میانگین سبد", "Average order")}</span><strong>{chart.avgOrder === null ? "—" : formatNumber(chart.avgOrder)}</strong></div>
           </div>
         )}
       </div>
-      <svg className="adb-chart" viewBox={`0 0 ${W} ${H}`} preserveAspectRatio="none" role="img" aria-label="نمودار درآمد و ثبت‌نام روزانه" style={{ direction: "ltr" }}>
+      <svg className="adb-chart" viewBox={`0 0 ${W} ${H}`} preserveAspectRatio="none" role="img" aria-label={tr("نمودار درآمد و ثبت‌نام روزانه", "Daily revenue and sign-ups chart")} style={{ direction: "ltr" }}>
         <defs>
           <linearGradient id="adb-ra" x1="0" y1="0" x2="0" y2="1">
             <stop offset="0" stopColor="var(--accent)" stopOpacity="0.25" />
@@ -67,10 +68,10 @@ export function RevenueChart({ chart, days, canRevenue }: { chart: NonNullable<O
           </>
         )}
       </svg>
-      {canRevenue && !hasRevenue && <div className="adb-card-hint">درآمدی در این بازه ثبت نشده</div>}
+      {canRevenue && !hasRevenue && <div className="adb-card-hint">{tr("درآمدی در این بازه ثبت نشده", "No revenue recorded in this period")}</div>}
       <div className="adb-legend">
-        {canRevenue && hasRevenue && <span><i className="adb-lg-line" />درآمد</span>}
-        <span><i className="adb-lg-bar" />ثبت‌نام روزانه</span>
+        {canRevenue && hasRevenue && <span><i className="adb-lg-line" />{tr("درآمد", "Revenue")}</span>}
+        <span><i className="adb-lg-bar" />{tr("ثبت‌نام روزانه", "Daily sign-ups")}</span>
       </div>
     </>
   );
@@ -80,10 +81,10 @@ export function QueueCard({ items, total }: { items: QueueItem[]; total: number 
   return (
     <div className="adb-card adb-queue adb-span-4" style={{ gap: 12 }}>
       <div className="adb-card-head" style={{ alignItems: "center" }}>
-        <h2 className="adb-card-title">نیاز به اقدام</h2>
-        <span className="adb-queue-total">{total} مورد</span>
+        <h2 className="adb-card-title">{tr("نیاز به اقدام", "Needs action")}</h2>
+        <span className="adb-queue-total">{tr(`${total} مورد`, `${total} ${(total) === 1 ? "item" : "items"}`)}</span>
       </div>
-      {items.length === 0 && <div className="adb-empty">مورد منتظری نیست.</div>}
+      {items.length === 0 && <div className="adb-empty">{tr("مورد منتظری نیست.", "Nothing is waiting.")}</div>}
       {items.map((q) => (
         <Link key={q.key} href={q.href} className="adb-q-item">
           <span className={`adb-q-dot${q.count > 0 && q.tone === "red" ? " red" : ""}`} />
@@ -99,7 +100,7 @@ export function FunnelCard({ steps }: { steps: NonNullable<OverviewDashboard["fu
   const top = Math.max(steps[0]?.count || 0, 1);
   return (
     <div className="adb-card adb-span-4 adb-third">
-      <h2 className="adb-card-title sm">قیف تبدیل</h2>
+      <h2 className="adb-card-title sm">{tr("قیف تبدیل", "Conversion funnel")}</h2>
       {steps.map((s) => (
         <div className="adb-bar-row" key={s.key}>
           <div className="adb-bar-top"><span>{s.label}</span><strong>{formatNumber(s.count)}</strong></div>
@@ -113,7 +114,7 @@ export function FunnelCard({ steps }: { steps: NonNullable<OverviewDashboard["fu
 export function ModulesCard({ modules }: { modules: NonNullable<OverviewDashboard["modules"]> }) {
   return (
     <div className="adb-card adb-span-4 adb-third">
-      <h2 className="adb-card-title sm">استفاده از بخش‌ها</h2>
+      <h2 className="adb-card-title sm">{tr("استفاده از بخش‌ها", "Module usage")}</h2>
       {modules.map((m) => (
         <div className="adb-mod-row" key={m.key}>
           <span>{m.label}</span>
@@ -126,17 +127,17 @@ export function ModulesCard({ modules }: { modules: NonNullable<OverviewDashboar
 }
 
 export function HealthCard({ h }: { h: NonNullable<OverviewDashboard["health"]> }) {
-  const stateText = h.state === "ok" ? "همه سالم" : h.state === "warn" ? "نیاز به توجه" : "مشکل در اتصال";
+  const stateText = h.state === "ok" ? tr("همه سالم", "All healthy") : h.state === "warn" ? tr("نیاز به توجه", "Needs attention") : tr("مشکل در اتصال", "Connection problem");
   const rows: { label: string; value: string; tone?: "warn" | "bad" | "off" }[] = [
-    { label: "پایگاه داده", value: h.dbConnected ? (h.dbPingMs !== null ? `${h.dbPingMs}ms` : "متصل") : "قطع", tone: h.dbConnected ? undefined : "bad" },
-    { label: "آخرین همگام‌سازی تقویم", value: h.calendarSyncAt ? relativeTimeFa(h.calendarSyncAt) : "—", tone: h.calendarSyncAt ? undefined : "off" },
-    { label: "یادآور در صف پوش", value: h.pushQueue === null ? "—" : formatNumber(h.pushQueue) },
-    { label: "آخرین خطا", value: h.lastErrorAt ? relativeTimeFa(h.lastErrorAt) : "بدون خطا", tone: h.errors24h ? "warn" : undefined },
+    { label: tr("پایگاه داده", "Database"), value: h.dbConnected ? (h.dbPingMs !== null ? `${h.dbPingMs}ms` : tr("متصل", "Connected")) : tr("قطع", "Down"), tone: h.dbConnected ? undefined : "bad" },
+    { label: tr("آخرین همگام‌سازی تقویم", "Last calendar sync"), value: h.calendarSyncAt ? relativeTimeFa(h.calendarSyncAt) : "—", tone: h.calendarSyncAt ? undefined : "off" },
+    { label: tr("یادآور در صف پوش", "Reminders in push queue"), value: h.pushQueue === null ? "—" : formatNumber(h.pushQueue) },
+    { label: tr("آخرین خطا", "Last error"), value: h.lastErrorAt ? relativeTimeFa(h.lastErrorAt) : tr("بدون خطا", "No errors"), tone: h.errors24h ? "warn" : undefined },
   ];
   return (
     <div className="adb-card adb-span-4 adb-third" style={{ gap: 6 }}>
       <div className="adb-card-head" style={{ alignItems: "center" }}>
-        <h2 className="adb-card-title sm">سلامت سیستم</h2>
+        <h2 className="adb-card-title sm">{tr("سلامت سیستم", "System health")}</h2>
         <span className={`adb-state${h.state === "ok" ? "" : " " + h.state}`}>{stateText}</span>
       </div>
       {rows.map((r) => (
@@ -154,9 +155,9 @@ export function FeedCard({ items }: { items: FeedItem[] }) {
   return (
     <div className="adb-card adb-span-5" style={{ gap: 4 }}>
       <div className="adb-card-head" style={{ alignItems: "center", paddingBottom: 8 }}>
-        <h2 className="adb-card-title sm">فعالیت اخیر</h2>
+        <h2 className="adb-card-title sm">{tr("فعالیت اخیر", "Recent activity")}</h2>
       </div>
-      {items.length === 0 && <div className="adb-empty">فعالیتی ثبت نشده.</div>}
+      {items.length === 0 && <div className="adb-empty">{tr("فعالیتی ثبت نشده.", "No activity recorded.")}</div>}
       {items.map((e) => (
         <Link key={`${e.kind}:${e.id}`} href={e.href} className="adb-feed-item">
           <span className={`adb-feed-dot ${e.kind}`} />
@@ -167,29 +168,31 @@ export function FeedCard({ items }: { items: FeedItem[] }) {
   );
 }
 
-const STATUS: Record<string, { label: string; cls: string }> = {
-  paid: { label: "موفق", cls: "green" },
-  refunded: { label: "بازپرداخت", cls: "amber" },
-  pending: { label: "ناموفق", cls: "red" },
-};
+function statusMeta(): Record<string, { label: string; cls: string }> {
+  return {
+    paid: { label: tr("موفق", "Paid"), cls: "green" },
+    refunded: { label: tr("بازپرداخت", "Refunded"), cls: "amber" },
+    pending: { label: tr("ناموفق", "Failed"), cls: "red" },
+  };
+}
 
 export function TransactionsCard({ rows, canUsers }: { rows: NonNullable<OverviewDashboard["transactions"]>; canUsers: boolean }) {
   return (
     <div className="adb-card adb-span-7 adb-tx-card" style={{ gap: 10 }}>
       <div className="adb-card-head" style={{ alignItems: "center" }}>
-        <h2 className="adb-card-title sm">آخرین تراکنش‌ها</h2>
-        <Link href="/admin/transactions" className="adb-link">همه ‹</Link>
+        <h2 className="adb-card-title sm">{tr("آخرین تراکنش‌ها", "Latest transactions")}</h2>
+        <Link href="/admin/transactions" className="adb-link">{tr("همه ‹", "All ›")}</Link>
       </div>
-      {rows.length === 0 ? <div className="adb-empty">تراکنشی ثبت نشده.</div> : (
+      {rows.length === 0 ? <div className="adb-empty">{tr("تراکنشی ثبت نشده.", "No transactions recorded.")}</div> : (
         <div className="adb-tx-wrap">
           <table className="adb-tx">
-            <thead><tr><th>کاربر</th><th>پلن</th><th>مبلغ</th><th>وضعیت</th><th>زمان</th></tr></thead>
+            <thead><tr><th>{tr("کاربر", "User")}</th><th>{tr("پلن", "Plan")}</th><th>{tr("مبلغ", "Amount")}</th><th>{tr("وضعیت", "Status")}</th><th>{tr("زمان", "Time")}</th></tr></thead>
             <tbody>
               {rows.map((t) => {
-                const st = STATUS[t.status];
+                const st = statusMeta()[t.status];
                 const name = (
                   <span className="adb-user">
-                    <span className="adb-init">{t.user.replace("@", "").trim().charAt(0) || "؟"}</span>{t.user}
+                    <span className="adb-init">{t.user.replace("@", "").trim().charAt(0) || tr("؟", "?")}</span>{t.user}
                   </span>
                 );
                 return (

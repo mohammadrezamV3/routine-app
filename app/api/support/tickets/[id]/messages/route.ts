@@ -1,3 +1,4 @@
+import { tr } from "@/lib/i18n";
 import { NextRequest, NextResponse } from "next/server";
 import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/auth";
@@ -14,15 +15,15 @@ export async function POST(req: NextRequest, { params }: { params: { id: string 
   if (!userId) return NextResponse.json({ error: "unauthorized" }, { status: 401 });
 
   if (!(await checkRateLimit(`support-ticket-reply:${userId}`, 20, 60 * 60 * 1000))) {
-    return NextResponse.json({ error: "تعداد پیام‌های ارسالی زیاد بوده — کمی بعد دوباره امتحان کن" }, { status: 429 });
+    return NextResponse.json({ error: tr("تعداد پیام‌های ارسالی زیاد بوده — کمی بعد دوباره امتحان کن", "Too many messages were sent — try again shortly") }, { status: 429 });
   }
 
   const ticket = await prisma.supportTicket.findFirst({ where: { id: params.id, userId }, select: { id: true } });
-  if (!ticket) return NextResponse.json({ error: "تیکت پیدا نشد" }, { status: 404 });
+  if (!ticket) return NextResponse.json({ error: tr("تیکت پیدا نشد", "Ticket not found") }, { status: 404 });
 
   const body = await req.json().catch(() => null);
   const message = clampText(String(body?.message || "").trim(), 4000);
-  if (!message) return NextResponse.json({ error: "متن پیام الزامی است" }, { status: 400 });
+  if (!message) return NextResponse.json({ error: tr("متن پیام الزامی است", "Message text is required") }, { status: 400 });
 
   const [created] = await prisma.$transaction([
     prisma.supportMessage.create({ data: { ticketId: ticket.id, body: message, fromAdmin: false } }),

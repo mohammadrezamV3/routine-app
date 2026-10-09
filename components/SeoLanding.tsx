@@ -3,6 +3,7 @@
 import Link from "next/link";
 import { ArrowLeft, ChevronLeft } from "lucide-react";
 import { useThemeTokens } from "@/components/PlanShowcase";
+import { tr } from "@/lib/i18n";
 
 /**
  * قالب مشترک صفحه‌های فرود عمومی (روتین، عادت‌ساز، برنامه‌ریز روزانه،
@@ -34,11 +35,11 @@ export function SeoLanding({
   lead,
   sections,
   faqs,
-  faqTitle = "سوال‌های رایج",
+  faqTitle = tr("سوال‌های رایج", "Frequently asked questions"),
   related,
-  relatedTitle = "بخش‌های مرتبط",
+  relatedTitle = tr("بخش‌های مرتبط", "Related sections"),
   ctaHref = "/auth/signup",
-  ctaLabel = "شروع رایگان",
+  ctaLabel = tr("شروع رایگان", "Start free"),
   ctaNote,
 }: {
   breadcrumb: { name: string; path: string }[];
@@ -57,13 +58,13 @@ export function SeoLanding({
   const card = `rounded-[24px] border ${t.cardBorder} ${t.cardBg} p-5 sm:p-7 ${t.shadow} backdrop-blur-xl`;
 
   return (
-    <main className="pb-10 pt-4 text-right">
+    <main className="pb-10 pt-4 text-start">
       {/* مسیر راهنما — همان چیزی که BreadcrumbList در JSON-LD توصیفش می‌کند،
           پس باید واقعا روی صفحه دیده شود. */}
-      <nav aria-label="مسیر صفحه" className={`mb-4 flex flex-wrap items-center gap-1 text-[11.5px] ${t.muted}`}>
+      <nav aria-label={tr("مسیر صفحه", "Breadcrumb")} className={`mb-4 flex flex-wrap items-center gap-1 text-[11.5px] ${t.muted}`}>
         {breadcrumb.map((b, i) => (
           <span key={b.path} className="inline-flex items-center gap-1">
-            {i > 0 && <ChevronLeft size={13} aria-hidden="true" className="opacity-60" />}
+            {i > 0 && <ChevronLeft size={13} aria-hidden="true" className="dir-flip opacity-60" />}
             {i === breadcrumb.length - 1 ? (
               <span aria-current="page">{b.name}</span>
             ) : (
@@ -81,7 +82,7 @@ export function SeoLanding({
             href={ctaHref}
             className={`inline-flex items-center gap-1.5 rounded-[20px] px-5 py-3 text-[13.5px] font-bold text-white transition hover:brightness-105 active:scale-[0.97] sm:px-6 sm:text-[14.5px] ${t.accentBg} ${t.accentShadow}`}
           >
-            {ctaLabel} <ArrowLeft size={16} aria-hidden="true" />
+            {ctaLabel} <ArrowLeft size={16} aria-hidden="true" className="dir-flip" />
           </Link>
           {ctaNote && <span className={`text-[11.5px] ${t.muted}`}>{ctaNote}</span>}
         </div>
@@ -96,7 +97,7 @@ export function SeoLanding({
           {!!s.bullets?.length && (
             <ul className="mt-4 space-y-3">
               {s.bullets.map((b) => (
-                <li key={b.body.slice(0, 40)} className={`border-r-2 pr-3 ${t.accentBorder}`}>
+                <li key={b.body.slice(0, 40)} className={`border-s-2 ps-3 ${t.accentBorder}`}>
                   {b.title && <h3 className={`text-[13.5px] font-bold ${t.heading}`}>{b.title}</h3>}
                   <p className={`text-[12.5px] leading-7 sm:text-[13.5px] ${t.muted}`}>{b.body}</p>
                 </li>

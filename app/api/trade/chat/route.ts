@@ -10,6 +10,7 @@ import {
   CHAT_PAGE_SIZE, CHAT_RATE_LIMIT, CHAT_RATE_WINDOW_MS, CHAT_RETENTION_LIMIT, ChatMessageDto,
   ChatViewerModeration, MAX_CHAT_BODY, normalizeRoomSymbol,
 } from "@/lib/tradeChat";
+import { tr } from "@/lib/i18n";
 
 // اتاق گفت‌وگوی هر نماد. برخلاف بقیه‌ی روت‌های ترید که داده‌ی خصوصی یک
 // کاربرند، این‌جا داده عمومی است — پس قاعده‌ی `where:{id, userId}` این‌جا
@@ -53,7 +54,7 @@ function serialize(m: MessageRow, viewerId: string, reportedIds: Set<string>): C
     authorId: m.userId,
     // نام نمایشی؛ اگر کاربر نام نگذاشته باشد یوزرنیم را نشان می‌دهیم.
     // ایمیل/شماره هیچ‌وقت در پاسخ عمومی نمی‌آید.
-    authorName: m.user.name?.trim() || m.user.username || "کاربر",
+    authorName: m.user.name?.trim() || m.user.username || tr("کاربر", "User"),
     authorGolden: !!m.user.goldenSince,
     authorStaff: isStaffUser(m.user),
     mine: m.userId === viewerId,
@@ -69,7 +70,7 @@ export async function GET(req: NextRequest) {
   { const off = await featureBlocked("tradeChat", guard.userId); if (off) return off; }
 
   const symbol = normalizeRoomSymbol(req.nextUrl.searchParams.get("symbol"));
-  if (!symbol) return NextResponse.json({ error: "نماد نامعتبر است" }, { status: 400 });
+  if (!symbol) return NextResponse.json({ error: tr(tr("نماد نامعتبر است", "Invalid symbol"), "Invalid symbol") }, { status: 400 });
 
   const sinceRaw = req.nextUrl.searchParams.get("since");
   const since = sinceRaw ? new Date(sinceRaw) : null;
@@ -115,20 +116,20 @@ export async function POST(req: NextRequest) {
 
   const payload = await req.json().catch(() => null);
   const symbol = normalizeRoomSymbol(payload?.symbol);
-  if (!symbol) return NextResponse.json({ error: "نماد نامعتبر است" }, { status: 400 });
+  if (!symbol) return NextResponse.json({ error: tr(tr("نماد نامعتبر است", "Invalid symbol"), "Invalid symbol") }, { status: 400 });
 
   const body = clampText(String(payload?.body ?? "").trim(), MAX_CHAT_BODY);
-  if (!body) return NextResponse.json({ error: "متن پیام خالی است" }, { status: 400 });
+  if (!body) return NextResponse.json({ error: tr(tr("متن پیام خالی است", "Message text is empty"), "Message text is empty") }, { status: 400 });
 
   if (!guard.isSuperAdmin) {
     const viewer = await prisma.user.findUnique({ where: { id: guard.userId }, select: MODERATION_SELECT });
     const state = moderationState(viewer, false);
     if (state.disabled) {
-      return NextResponse.json({ error: "دسترسی تو به این گفت‌وگو توسط مدیریت غیرفعال شده است" }, { status: 403 });
+      return NextResponse.json({ error: tr(tr("دسترسی تو به این گفت‌وگو توسط مدیریت غیرفعال شده است", "Your access to this conversation has been disabled by the admins"), "Your access to this conversation has been disabled by the admins") }, { status: 403 });
     }
     if (state.bannedUntil) {
       const until = new Date(state.bannedUntil).toLocaleString("fa-IR-u-nu-latn", { timeZone: "Asia/Tehran" });
-      return NextResponse.json({ error: `به‌دلیل تخلف تا ${until} از ارسال پیام محروم شده‌ای` }, { status: 403 });
+      return NextResponse.json({ error: tr(tr(`به‌دلیل تخلف تا ${until} از ارسال پیام محروم شده‌ای`, `You are blocked from sending messages until ${until} due to a violation`), `You are blocked from sending messages until ${until} due to a violation`) }, { status: 403 });
     }
   }
 
@@ -136,7 +137,7 @@ export async function POST(req: NextRequest) {
   // شبکه‌های اشتراکی بی‌گناه‌ها را هم می‌گیرد.
   if (!(await checkRateLimit(`chat:${guard.userId}`, CHAT_RATE_LIMIT, CHAT_RATE_WINDOW_MS))) {
     return NextResponse.json(
-      { error: "کمی آرام‌تر — چند لحظه صبر کن و دوباره بفرست" },
+      { error: tr(tr("کمی آرام‌تر — چند لحظه صبر کن و دوباره بفرست", "A bit slower — wait a moment and send again"), "A bit slower — wait a moment and send again") },
       { status: 429 }
     );
   }
@@ -172,17 +173,17 @@ export async function DELETE(req: NextRequest) {
   { const off = await featureBlocked("tradeChat", guard.userId); if (off) return off; }
 
   const id = req.nextUrl.searchParams.get("id");
-  if (!id) return NextResponse.json({ error: "شناسه پیام لازم است" }, { status: 400 });
+  if (!id) return NextResponse.json({ error: tr(tr("شناسه پیام لازم است", "Message ID is required"), "Message ID is required") }, { status: 400 });
 
   const existing = await prisma.tradeChatMessage.findUnique({
     where: { id },
     select: { userId: true, deletedAt: true },
   });
   if (!existing || existing.deletedAt) {
-    return NextResponse.json({ error: "پیام پیدا نشد" }, { status: 404 });
+    return NextResponse.json({ error: tr(tr("پیام پیدا نشد", "Message not found"), "Message not found") }, { status: 404 });
   }
   if (existing.userId !== guard.userId && !guard.isSuperAdmin) {
-    return NextResponse.json({ error: "اجازه‌ی حذف این پیام را نداری" }, { status: 403 });
+    return NextResponse.json({ error: tr(tr("اجازه‌ی حذف این پیام را نداری", "You are not allowed to delete this message"), "You are not allowed to delete this message") }, { status: 403 });
   }
 
   await prisma.tradeChatMessage.update({

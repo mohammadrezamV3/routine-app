@@ -4,6 +4,7 @@
 // زمان‌ها «دقیقه‌ی روز» (0..1439) و ساعت‌ها "HH:mm" با ارقام لاتین‌اند.
 
 import { CYCLE_MIN, DEFAULT_LATENCY, minutesToClock } from "./sleep";
+import { tr } from "./i18n";
 
 export { CYCLE_MIN, DEFAULT_LATENCY };
 
@@ -140,3 +141,8 @@ export function hypnogram(totalMin: number, latency: number): StageSegment[] {
 }
 
 export const STAGE_LABEL: Record<Stage, string> = { awake: "بیدار", rem: "REM", light: "سبک", deep: "عمیق" };
+const STAGE_EN: Record<Stage, string> = { awake: "Awake", rem: "REM", light: "Light", deep: "Deep" };
+/** برچسب مرحله به زبان جاری */
+export function stageLabel(s: Stage): string {
+  return tr(STAGE_LABEL[s], STAGE_EN[s]);
+}

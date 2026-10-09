@@ -4,6 +4,8 @@ import { useEffect, useState } from "react";
 import { createPortal } from "react-dom";
 import { X } from "lucide-react";
 import { useLockBodyScroll } from "@/lib/useLockBodyScroll";
+import { tr } from "@/lib/i18n";
+import { useIsEn } from "@/components/I18nProvider";
 import { useAdminToast } from "./useAdminToast";
 
 // پاپ‌آپ مشترک پنل — همون .modal-overlay/.modal-panel خود اپ (نه یه استایل
@@ -13,6 +15,7 @@ export function AdminModal({
   title, eyebrow, onClose, children, wide = false,
 }: { title: string; eyebrow?: string; onClose: () => void; children: React.ReactNode; wide?: boolean }) {
   useLockBodyScroll();
+  const en = useIsEn();
   const [mounted, setMounted] = useState(false);
   useEffect(() => setMounted(true), []);
   useEffect(() => {
@@ -24,13 +27,13 @@ export function AdminModal({
   return createPortal(
     <>
       <div className="modal-overlay open" onClick={onClose} />
-      <div className={`modal-panel open admin-modal${wide ? " is-wide" : ""}`} role="dialog" aria-modal="true" aria-label={title} dir="rtl">
+      <div className={`modal-panel open admin-modal${wide ? " is-wide" : ""}`} role="dialog" aria-modal="true" aria-label={title} dir={en ? "ltr" : "rtl"}>
         <div className="modal-head">
           <div>
             {eyebrow && <div className="modal-eyebrow">{eyebrow}</div>}
             <div className="modal-title">{title}</div>
           </div>
-          <button type="button" className="admin-icon-btn" onClick={onClose} aria-label="بستن"><X size={16} /></button>
+          <button type="button" className="admin-icon-btn" onClick={onClose} aria-label={tr("بستن", "Close")}><X size={16} /></button>
         </div>
         {children}
       </div>
@@ -51,27 +54,27 @@ export function ConfirmModal({
   const toast = useAdminToast();
   const blocked = !!typeToConfirm && typed.trim() !== typeToConfirm;
   return (
-    <AdminModal title={title} eyebrow="تایید اقدام" onClose={onClose}>
+    <AdminModal title={title} eyebrow={tr("تایید اقدام", "Confirm action")} onClose={onClose}>
       <div className="admin-modal-text">{message}</div>
       {typeToConfirm && (
         <label className="admin-field">
-          <span>برای تایید، «{typeToConfirm}» رو تایپ کن</span>
+          <span>{tr("برای تایید، «", "To confirm, type «")}{typeToConfirm}{tr("» رو تایپ کن", "»")}</span>
           <input className="admin-input" value={typed} onChange={(e) => setTyped(e.target.value)} autoFocus />
         </label>
       )}
       <div className="admin-modal-actions">
-        <button type="button" className="admin-btn" onClick={onClose} disabled={busy}>انصراف</button>
+        <button type="button" className="admin-btn" onClick={onClose} disabled={busy}>{tr("انصراف", "Cancel")}</button>
         <button
           type="button" className={`admin-btn ${danger ? "danger" : "primary"}`} disabled={blocked || busy}
           onClick={async () => {
             setBusy(true);
             // خطای onConfirm قبلا یه unhandled rejection بی‌صدا بود — حالا پیام می‌گیره
             try { await onConfirm(); }
-            catch (e) { toast(e instanceof Error && e.message ? e.message : "خطا در انجام درخواست", "err"); }
+            catch (e) { toast(e instanceof Error && e.message ? e.message : tr("خطا در انجام درخواست", "Request failed"), "err"); }
             finally { setBusy(false); }
           }}
         >
-          {busy ? "در حال انجام…" : confirmLabel}
+          {busy ? tr("در حال انجام…", "Working…") : confirmLabel}
         </button>
       </div>
     </AdminModal>

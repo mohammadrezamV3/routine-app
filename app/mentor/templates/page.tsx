@@ -9,6 +9,7 @@ import { MentorTemplatesList } from "@/components/MentorTemplatesList";
 import { MentorSavedRepliesManager } from "@/components/MentorSavedReplies";
 import { SegmentedTabs } from "@/components/SegmentedTabs";
 import { MentorSwap } from "@/components/MentorMotion";
+import { tr } from "@/lib/i18n";
 
 type Tab = "sent" | "templates" | "replies";
 
@@ -33,10 +34,10 @@ export default function MentorProgramsPage() {
 
   return (
     <MentorDashShell
-      title="برنامه‌ها"
+      title={tr("برنامه‌ها", "Programs")}
       titleAction={
         <Link href="/mentor/programs/new" className="trade-primary-btn mentor-btn is-sm">
-          <Plus size={15} strokeWidth={2} aria-hidden /> برنامه‌ی تازه
+          <Plus size={15} strokeWidth={2} aria-hidden /> {tr("برنامه‌ی تازه", "New program")}
         </Link>
       }
     >
@@ -44,11 +45,11 @@ export default function MentorProgramsPage() {
         <SegmentedTabs<Tab>
           active={tab}
           onChange={change}
-          ariaLabel="بخش‌های برنامه‌ها"
+          ariaLabel={tr("بخش‌های برنامه‌ها", "Program sections")}
           options={[
-            { value: "sent", label: "فرستاده‌شده" },
-            { value: "templates", label: "قالب‌ها" },
-            { value: "replies", label: "پیام‌های آماده" },
+            { value: "sent", label: tr("فرستاده‌شده", "Sent") },
+            { value: "templates", label: tr("قالب‌ها", "Templates") },
+            { value: "replies", label: tr("پیام‌های آماده", "Saved replies") },
           ]}
         />
       </div>

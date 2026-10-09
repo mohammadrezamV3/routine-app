@@ -11,6 +11,7 @@ import { AuthBackButton, AuthBrandMark } from "@/components/AuthChrome";
 import { PasswordVisibilityToggle } from "@/components/PasswordVisibilityToggle";
 import { toEnDigits } from "@/lib/schedule";
 import { loginAndRedirect } from "@/lib/loginRedirect";
+import { tr } from "@/lib/i18n";
 
 // ورود فقط با یوزرنیم/شماره + رمز عبوره — روش کد ایمیل از اینجا حذف شد
 // (تصمیم صریح کاربر: «ورود به پنل فقط با رمز عبور باشه نه کد ایمیل»).
@@ -56,7 +57,7 @@ export default function LoginPage() {
     // می‌شود: نشست جعلی هیچ‌وقت کاربر ندارد.
     const session = await getSession();
     if (!(session?.user as any)?.id) {
-      setError("ورود ناموفق بود — دوباره امتحان کن");
+      setError(tr("ورود ناموفق بود — دوباره امتحان کن", "Login failed. Please try again"));
       return false;
     }
 
@@ -73,8 +74,8 @@ export default function LoginPage() {
     setError(null);
 
     const errs: typeof fieldErrors = {};
-    if (!identifier.trim()) errs.identifier = "یوزرنیم یا شماره موبایل را وارد کن";
-    if (!password) errs.password = "رمز عبور را وارد کن";
+    if (!identifier.trim()) errs.identifier = tr("یوزرنیم یا شماره موبایل را وارد کن", "Enter your username or phone number");
+    if (!password) errs.password = tr("رمز عبور را وارد کن", "Enter your password");
     if (Object.keys(errs).length) {
       setFieldErrors(errs);
       return;
@@ -106,7 +107,7 @@ export default function LoginPage() {
       res = await signIn("credentials", { redirect: false, identifier, password, remember: remember ? "1" : "0" });
     } catch {
       setLoading(false);
-      setError("مشکلی در اتصال به سرور پیش اومد — دوباره امتحان کن");
+      setError(tr("مشکلی در اتصال به سرور پیش اومد — دوباره امتحان کن", "Could not reach the server. Please try again"));
       return;
     }
     setLoading(false);
@@ -114,11 +115,11 @@ export default function LoginPage() {
     if (res?.error) {
       // پیام عمدا کلیه (نه «یوزرنیم اشتباهه» / «رمز اشتباهه» جدا) تا کسی که
       // فقط رمز رو حدس می‌زنه نتونه بفهمه شناسه‌ی درست رو پیدا کرده یا نه.
-      setError("یوزرنیم/شماره موبایل یا رمز عبور اشتباه است");
+      setError(tr("یوزرنیم/شماره موبایل یا رمز عبور اشتباه است", "Incorrect username/phone number or password"));
       return;
     }
     if (!res?.ok) {
-      setError("مشکلی در اتصال به سرور پیش اومد — دوباره امتحان کن");
+      setError(tr("مشکلی در اتصال به سرور پیش اومد — دوباره امتحان کن", "Could not reach the server. Please try again"));
       return;
     }
     setLoading(true);
@@ -129,7 +130,7 @@ export default function LoginPage() {
   async function submitOtp(e: React.FormEvent) {
     e.preventDefault();
     setError(null);
-    if (otpCode.trim().length < 4) { setError("کد پیامک‌شده رو کامل وارد کن"); return; }
+    if (otpCode.trim().length < 4) { setError(tr("کد پیامک‌شده رو کامل وارد کن", "Enter the full code from the SMS")); return; }
 
     setLoading(true);
     let res;
@@ -137,10 +138,10 @@ export default function LoginPage() {
       res = await signIn("sms-2fa", { redirect: false, identifier, code: otpCode.trim(), remember: remember ? "1" : "0" });
     } catch {
       setLoading(false);
-      setError("مشکلی در اتصال به سرور پیش اومد — دوباره امتحان کن");
+      setError(tr("مشکلی در اتصال به سرور پیش اومد — دوباره امتحان کن", "Could not reach the server. Please try again"));
       return;
     }
-    if (res?.error || !res?.ok) { setLoading(false); setError("کد وارد‌شده درست نیست یا منقضی شده"); return; }
+    if (res?.error || !res?.ok) { setLoading(false); setError(tr("کد وارد‌شده درست نیست یا منقضی شده", "The code is incorrect or has expired")); return; }
     const ok = await finalizeLogin();
     if (!ok) setLoading(false);
   }
@@ -149,13 +150,13 @@ export default function LoginPage() {
     return (
       <form onSubmit={submitOtp} className="auth-box">
         <AuthBackButton />
-        <AuthBrandMark subtitle={"ورود دومرحله‌ای"} />
+        <AuthBrandMark subtitle={tr("ورود دومرحله‌ای", "Two-step login")} />
 
         <div className="section-note" style={{ marginBottom: 12 }}>
-          {`یک کد به شماره‌ی ثبت‌شده‌ی حسابت (…${toEnDigits(twoFactor.phoneHint)}) پیامک شد. کد رو وارد کن.`}
+          {tr(`یک کد به شماره‌ی ثبت‌شده‌ی حسابت (…${toEnDigits(twoFactor.phoneHint)}) پیامک شد. کد رو وارد کن.`, `A code was sent by SMS to your registered number (…${toEnDigits(twoFactor.phoneHint)}). Enter it below.`)}
         </div>
 
-        <AuthField id="otp" label={"کد پیامک‌شده"} icon={<ShieldCheck size={15} />}>
+        <AuthField id="otp" label={tr("کد پیامک‌شده", "SMS code")} icon={<ShieldCheck size={15} />}>
           <input
             id="otp"
             type="text"
@@ -176,7 +177,7 @@ export default function LoginPage() {
         {error && <div className="field-error-msg" style={{ display: "block", marginTop: 8 }}>{error}</div>}
 
         <button type="submit" className={`auth-full-btn${loading || success ? " is-busy" : ""}`} disabled={loading || success}>
-          {loading || success ? <SpinnerCheck done={success} /> : "تایید و ورود"}
+          {loading || success ? <SpinnerCheck done={success} /> : tr("تایید و ورود", "Verify and log in")}
         </button>
         <button
           type="button"
@@ -184,7 +185,7 @@ export default function LoginPage() {
           style={{ marginTop: 12, background: "none", display: "block", width: "100%" }}
           onClick={() => { setTwoFactor(null); setError(null); }}
         >
-          {"بازگشت"}
+          {tr("بازگشت", "Back")}
         </button>
       </form>
     );
@@ -193,9 +194,9 @@ export default function LoginPage() {
   return (
     <form ref={formRef} onSubmit={submitPassword} className="auth-box">
       <AuthBackButton />
-      <AuthBrandMark subtitle={"ورود به پنل کاربری"} />
+      <AuthBrandMark subtitle={tr("ورود به پنل کاربری", "Log in to your account")} />
 
-      <AuthField id="identifier" label={"یوزرنیم یا شماره همراه"} error={fieldErrors.identifier} icon={<User size={15} />} ref={identifierRef}>
+      <AuthField id="identifier" label={tr("یوزرنیم یا شماره همراه", "Username or phone number")} error={fieldErrors.identifier} icon={<User size={15} />} ref={identifierRef}>
         <input
           id="identifier"
           type="text"
@@ -214,7 +215,7 @@ export default function LoginPage() {
 
       <div style={{ marginTop: 14 }}>
         <AuthField
-          id="password" label={"رمز عبور"} error={fieldErrors.password} ref={passwordRef}
+          id="password" label={tr("رمز عبور", "Password")} error={fieldErrors.password} ref={passwordRef}
           icon={<Lock size={15} />}
           endAction={<PasswordVisibilityToggle visible={passwordVisible} onToggle={() => setPasswordVisible((v) => !v)} />}
         >
@@ -227,7 +228,7 @@ export default function LoginPage() {
             autoCorrect="off"
             spellCheck={false}
             className="wsearch-newform-name"
-            placeholder={"رمز عبورت رو وارد کن"}
+            placeholder={tr("رمز عبورت رو وارد کن", "Enter your password")}
             value={password}
             onChange={(e) => { setPassword(e.target.value); if (e.target.value) clearError("password"); }}
           />
@@ -237,15 +238,15 @@ export default function LoginPage() {
       <div className="auth-remember-row" data-anim-field>
         <label className="auth-remember-label">
           <TickButton shape="square" size={22} checked={remember} onToggle={() => setRemember((v) => !v)} />
-          {"منو به‌یاد داشته باش"}
+          {tr("منو به‌یاد داشته باش", "Remember me")}
         </label>
-        <Link href="/auth/forgot-password" className="auth-forgot-link">{"فراموشی رمز عبور؟"}</Link>
+        <Link href="/auth/forgot-password" className="auth-forgot-link">{tr("فراموشی رمز عبور؟", "Forgot password?")}</Link>
       </div>
 
       {error && <div className="field-error-msg" style={{ display: "block", marginTop: 8 }}>{error}</div>}
 
       <button type="submit" className={`auth-full-btn${loading || success ? " is-busy" : ""}`} disabled={loading || success} data-anim-field>
-        {loading || success ? <SpinnerCheck done={success} /> : "ورود"}
+        {loading || success ? <SpinnerCheck done={success} /> : tr("ورود", "Log in")}
       </button>
     </form>
   );

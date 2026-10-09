@@ -8,6 +8,7 @@ import { RiskCalculator } from "./RiskCalculator";
 import { TradeAccount, TradeTag, CalSystem } from "@/lib/tradeTypes";
 import { pairLabel } from "@/lib/tradingView";
 import { TradeFormModal } from "./TradeFormModal";
+import { tr } from "@/lib/i18n";
 import "./risk-calc.css";
 
 type ChecklistItem = { id: string; text: string; order: number };
@@ -15,11 +16,11 @@ type Checklist = { id: string; name: string; color: string; required: boolean; a
 
 type ToolKey = "journal" | "checklist" | "risk";
 
-const TOOL_META: Record<ToolKey, { label: string; icon: React.ReactNode }> = {
-  journal: { label: "ژورنال", icon: <NotebookPen /> },
-  checklist: { label: "چک‌لیست", icon: <ClipboardCheck /> },
-  risk: { label: "ریسک و سود", icon: <Calculator /> },
-};
+const toolMeta = (): Record<ToolKey, { label: string; icon: React.ReactNode }> => ({
+  journal: { label: tr("ژورنال", "Journal"), icon: <NotebookPen /> },
+  checklist: { label: tr("چک‌لیست", "Checklist"), icon: <ClipboardCheck /> },
+  risk: { label: tr("ریسک و سود", "Risk & reward"), icon: <Calculator /> },
+});
 
 /**
  * پنل ابزارهای کنار چارت: ثبت معامله، چک‌لیست پیش از ورود و ریسک و سود.
@@ -110,22 +111,23 @@ export function ChartTradePanel({
 
   return (
     <div className="tv-cell-tools">
-      <div className="tv-tools-row" role="tablist" aria-label="ابزارهای معامله">
+      <div className="tv-tools-row" role="tablist" aria-label={tr("ابزارهای معامله", "Trade tools")}>
         {tools.map((key) => {
           const on = key === currentTool;
+          const meta = toolMeta()[key];
           return (
             <button
               key={key}
               type="button"
               role="tab"
               aria-selected={on}
-              aria-label={TOOL_META[key].label}
-              title={TOOL_META[key].label}
+              aria-label={meta.label}
+              title={meta.label}
               onClick={() => setTool(key)}
               className={`dash-quick-tile rounded-dash border bg-dash-card backdrop-blur-xl${on ? " is-on" : ""}`}
             >
-              <span className="dash-quick-tile-icon">{TOOL_META[key].icon}</span>
-              <span className="dash-quick-tile-label" aria-hidden={!on}>{TOOL_META[key].label}</span>
+              <span className="dash-quick-tile-icon">{meta.icon}</span>
+              <span className="dash-quick-tile-label" aria-hidden={!on}>{meta.label}</span>
             </button>
           );
         })}
@@ -135,7 +137,7 @@ export function ChartTradePanel({
       <div className="tv-tool-pane" hidden={currentTool !== "checklist"} role="tabpanel">
         <div className="trade-panel-head">
           <span className="trade-panel-title">
-            <ClipboardCheck size={16} /> چک‌لیست معامله
+            <ClipboardCheck size={16} /> {tr("چک‌لیست معامله", "Trade checklist")}
           </span>
           {checklist && (
             <span className="trade-chat-room mono">
@@ -146,7 +148,7 @@ export function ChartTradePanel({
 
         {!checklist && (
           <div className="trade-chat-empty">
-            هنوز چک‌لیستی نساخته‌ای — از بخش چک‌لیست‌ها یکی بساز.
+            {tr("هنوز چک‌لیستی نساخته‌ای — از بخش چک‌لیست‌ها یکی بساز.", "You have not created a checklist yet. Create one in the Checklists section.")}
           </div>
         )}
 
@@ -155,7 +157,7 @@ export function ChartTradePanel({
             className="wsearch-newform-name trade-glass-field trade-chart-check-picker"
             value={checklist ? checklist.id : ""}
             onChange={(e) => setChecklistId(e.target.value)}
-            aria-label="انتخاب چک‌لیست"
+            aria-label={tr("انتخاب چک‌لیست", "Select checklist")}
           >
             {checklists.map((c) => (
               <option key={c.id} value={c.id}>{c.name}</option>
@@ -182,18 +184,18 @@ export function ChartTradePanel({
       <div className="tv-tool-pane" hidden={currentTool !== "journal"} role="tabpanel">
         <div className="trade-panel-head">
           <span className="trade-panel-title">
-            <NotebookPen size={16} /> ثبت معامله
+            <NotebookPen size={16} /> {tr("ثبت معامله", "Log trade")}
           </span>
         </div>
 
         <div className="tv-cell-scroll thin-scroll">
           {!active.length ? (
             <div className="trade-chat-empty">
-              برای ثبت معامله اول یک حساب معاملاتی بساز.
+              {tr("برای ثبت معامله اول یک حساب معاملاتی بساز.", "Create a trading account first to log a trade.")}
             </div>
           ) : (
             <>
-              <label className="exercise-form-label">حساب</label>
+              <label className="exercise-form-label">{tr("حساب", "Account")}</label>
               <select
                 className="wsearch-newform-name trade-glass-field"
                 value={accountId}
@@ -205,10 +207,10 @@ export function ChartTradePanel({
               </select>
 
               <div className="trade-chart-side-symbol">
-                نماد: <b className="mono">{symbol}</b> <span>({pairLabel(symbol)})</span>
+                {tr("نماد:", "Symbol:")} <b className="mono">{symbol}</b> <span>({pairLabel(symbol)})</span>
               </div>
 
-              {savedAt && <div className="trade-chart-saved" role="status">معامله ثبت شد</div>}
+              {savedAt && <div className="trade-chart-saved" role="status">{tr("معامله ثبت شد", "Trade logged")}</div>}
               <button
                 type="button"
                 className="account-outline-btn"
@@ -216,7 +218,7 @@ export function ChartTradePanel({
                 onClick={() => setFormOpen(true)}
                 disabled={!selectedAccount}
               >
-                <NotebookPen size={15} /> ثبت معامله
+                <NotebookPen size={15} /> {tr("ثبت معامله", "Log trade")}
               </button>
             </>
           )}
@@ -227,7 +229,7 @@ export function ChartTradePanel({
         <div className="tv-tool-pane" hidden={currentTool !== "risk"} role="tabpanel">
           <div className="trade-panel-head">
             <span className="trade-panel-title">
-              <Calculator size={16} /> ریسک و سود
+              <Calculator size={16} /> {tr("ریسک و سود", "Risk & reward")}
             </span>
             <span className="trade-chat-room mono"><bdi dir="ltr">{symbol}</bdi></span>
           </div>

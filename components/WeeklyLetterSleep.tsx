@@ -15,6 +15,7 @@ import { DEFAULT_SLEEP, DEFAULT_WAKE } from "@/lib/wakeSleep";
 import { useLiveRefresh } from "@/lib/liveSync";
 import { useFeature } from "@/lib/useFeatures";
 import { isoLocal } from "@/lib/jalali";
+import { tr } from "@/lib/i18n";
 import { addDaysIso, sleepInsights, sleepMinutes, type SleepRecord } from "@/lib/sleep";
 
 // فصل «خواب» هفته‌نامه: همون سه بخش آماری خواب (نمودار، تحلیل، تقویم) که
@@ -63,8 +64,8 @@ function Inner({ weekStart, no }: { weekStart: string; no?: number }) {
   const openNight = useCallback((iso: string) => router.push(`/sleep?date=${iso}`), [router]);
 
   return (
-    <section id="sleep" className="wl-ch sleep-scope wl-dp-sleep" aria-label="آمار خواب">
-      <WeeklyLetterChapterHead icon={Moon} title="خواب" no={no} />
+    <section id="sleep" className="wl-ch sleep-scope wl-dp-sleep" aria-label={tr("آمار خواب", "Sleep stats")}>
+      <WeeklyLetterChapterHead icon={Moon} title={tr("خواب", "Sleep")} no={no} />
       {entries === null ? (
         <PanelSkeleton rows={3} />
       ) : (

@@ -1,0 +1,19 @@
+/* اصلاح‌های ظاهری چیدمان چپ‌به‌راست (انگلیسی) — بخش admin. همه‌ی قاعده‌ها زیر html[dir="ltr"] تا فارسی بی‌تغییر بمونه. */
+
+/* داشبورد ادمین: عددهای direction:ltr با text-align:end در RTL کنار شروع می‌نشستن؛ در ltr باید چپ بمونن */
+html[dir="ltr"] .adb-kpi-value,
+html[dir="ltr"] .adb-num strong,
+html[dir="ltr"] .adb-amount{ text-align:left; }
+
+/* زنگوله‌ی ادمین: در ltr کنار لبه‌ی راست نوار بالاست، پس پنجره‌ی هشدارها باید از لبه‌ی راست زنگوله به سمت چپ باز بشه */
+html[dir="ltr"] .ads-bell-pop{ inset-inline-start:auto; inset-inline-end:0; }
+/* نشان شمارنده‌ی زنگوله و نوار پایین: گوشه‌ی بالا-راست (قرارداد ltr) */
+html[dir="ltr"] .ads-bell-badge{ inset-inline-start:auto; inset-inline-end:5px; }
+/* کاشی‌های KPI: عدد انگلیسی بلند ("8,250,000 Toman") نباید با سه‌نقطه بریده بشه؛ واحد زیر عدد می‌ره */
+html[dir="ltr"] .adb-kpi-value{ font-size:22px; white-space:normal; overflow:visible; text-overflow:clip; overflow-wrap:anywhere; }
+html[dir="ltr"] .adb-kpi-unit{ display:block; margin-inline-start:0; margin-top:2px; }
+/* کاشی‌های KPI صفحه‌های ادمین: وقتی واحد ("Toman") زیر عدد می‌ره، کاشی‌های هم‌ردیف هم‌قد بمونن */
+html[dir="ltr"] .admin-kpi-grid{ align-items:stretch; }
+/* شمارنده‌ی آیتم‌های سایدبار جمع‌شده و نوار پایین موبایل: گوشه‌ی بالا-راست آیکون */
+html[dir="ltr"] .ads-count.rail, html[dir="ltr"] .ads-nav.is-rail .ads-count{ inset-inline-start:auto; inset-inline-end:-2px; }
+@media (max-width:900px){ html[dir="ltr"] .ads-tab-icon .ads-count.rail{ inset-inline-start:auto; inset-inline-end:-14px; } }

@@ -7,6 +7,7 @@ import { motion } from "framer-motion";
 import { TradePageShell } from "@/components/TradePageShell";
 import { PanelSkeleton } from "@/components/PanelSkeleton";
 import { ACCOUNT_TYPE_LABELS, TradeAccount } from "@/lib/tradeTypes";
+import { tr } from "@/lib/i18n";
 
 // اتصال متاتریدر روی هر حساب جداگانه انجام می‌شود (هر حساب ترمینال و
 // لاگین خودش را دارد)، پس این صفحه فقط فهرست حساب‌ها و وضعیتشان را نشان
@@ -31,8 +32,8 @@ function AccountsForMt() {
   if (!rows.length) {
     return (
       <div className="item-line empty" style={{ marginTop: 16 }}>
-        ابتدا یک حساب معاملاتی بسازید —{" "}
-        <Link href="/trade/journal" style={{ color: "var(--accent)" }}>رفتن به حساب‌ها</Link>
+        {tr("ابتدا یک حساب معاملاتی بسازید", "Create a trading account first")} —{" "}
+        <Link href="/trade/journal" style={{ color: "var(--accent)" }}>{tr("رفتن به حساب‌ها", "Go to accounts")}</Link>
       </div>
     );
   }
@@ -57,7 +58,7 @@ function AccountsForMt() {
             </div>
             <div className={`trade-mt-status${a.mtConnected ? " connected" : ""}`}>
               <span className="forex-dot" />
-              {a.mtConnected ? "فعال" : "غیرفعال"}
+              {a.mtConnected ? tr("فعال", "Active") : tr("غیرفعال", "Inactive")}
             </div>
           </Link>
         </motion.div>
@@ -69,7 +70,7 @@ function AccountsForMt() {
 export default function TradeMetaTraderPage() {
   return (
     <TradePageShell
-      title="حساب‌ها"
+      title={tr("حساب‌ها", "Accounts")}
     >
       <AccountsForMt />
     </TradePageShell>

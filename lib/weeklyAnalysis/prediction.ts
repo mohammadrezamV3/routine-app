@@ -1,4 +1,5 @@
 import type { Prediction } from "./types";
+import { tr } from "@/lib/i18n";
 import { clamp, gradeFor, mean, stdDev } from "./score";
 
 // پیش‌بینی امتیاز پایان هفته — فقط هفته‌ی جاری و از روز دوم به بعد.
@@ -37,12 +38,12 @@ export function predictWeek(input: PredictionInput): Prediction {
 
   const grade = gradeFor(projected)!;
   let message = remaining === 0
-    ? `هفته با امتیاز حدود ${projected} (نمره‌ی ${grade}) تموم می‌شه.`
-    : `با همین روند، هفته رو با حدود ${projected} (نمره‌ی ${grade}) تموم می‌کنی.`;
+    ? tr(`هفته با امتیاز حدود ${projected} (نمره‌ی ${grade}) تموم می‌شه.`, `The week will end with a score of about ${projected} (grade ${grade}).`)
+    : tr(`با همین روند، هفته رو با حدود ${projected} (نمره‌ی ${grade}) تموم می‌کنی.`, `At this pace, you will finish the week with about ${projected} (grade ${grade}).`);
   const next = NEXT_GRADE[grade];
   if (next && remaining > 0) {
     const gap = GRADE_FLOOR[next] - projected;
-    if (gap > 0 && gap <= 6) message += ` فقط ${gap} امتیاز تا نمره‌ی ${next} فاصله داری.`;
+    if (gap > 0 && gap <= 6) message += tr(` فقط ${gap} امتیاز تا نمره‌ی ${next} فاصله داری.`, ` You are only ${gap} ${gap === 1 ? "point" : "points"} away from grade ${next}.`);
   }
   return { projectedScore: projected, low, high, message };
 }

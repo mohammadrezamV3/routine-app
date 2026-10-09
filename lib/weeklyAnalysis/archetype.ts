@@ -1,5 +1,7 @@
 import { ANALYSIS_DOMAIN_LABELS, type AnalysisDomain, type WeekArchetype } from "./types";
 import { mean } from "./score";
+import { tr } from "@/lib/i18n";
+import { pl } from "./plural";
 
 // «تیپ هفته» — برچسب قطعی (بدون AI) از الگوی امتیاز روزها. تابع خالص.
 // قانون صداقت: با داده‌ی کم (هفته‌ی جاری که تازه شروع شده یا روزهای فعال
@@ -42,8 +44,11 @@ export function detectArchetype(i: ArchetypeInput): WeekArchetype | null {
   if (i.activeDays <= 2 && elapsed >= 4) {
     return {
       key: "quiet",
-      title: "هفته‌ی آروم",
-      description: `فقط ${i.activeDays} روز از ${elapsed} روز چیزی ثبت کردی، برای همین امتیاز ${score} تصویر کاملی از هفته‌ت نیست.`,
+      title: tr("هفته‌ی آروم", "A quiet week"),
+      description: tr(
+        `فقط ${i.activeDays} روز از ${elapsed} روز چیزی ثبت کردی، برای همین امتیاز ${score} تصویر کاملی از هفته‌ت نیست.`,
+        `You logged something on only ${i.activeDays} of ${elapsed} days, so a score of ${score} is not the full picture of your week.`,
+      ),
       tone: "neutral",
     };
   }
@@ -53,8 +58,11 @@ export function detectArchetype(i: ArchetypeInput): WeekArchetype | null {
     const high = scored.filter((x) => x.s >= 80).length;
     return {
       key: "perfect",
-      title: "هفته‌ی بی‌نقص",
-      description: `امتیاز ${score} از 100؛ ${high} روز از ${scored.length} روز بالای 80 بودی.`,
+      title: tr("هفته‌ی بی‌نقص", "A flawless week"),
+      description: tr(
+        `امتیاز ${score} از 100؛ ${high} روز از ${scored.length} روز بالای 80 بودی.`,
+        `Score ${score} out of 100; you were above 80 on ${high} of ${scored.length} days.`,
+      ),
       tone: "good",
     };
   }
@@ -65,16 +73,22 @@ export function detectArchetype(i: ArchetypeInput): WeekArchetype | null {
     if (diff >= 15) {
       return {
         key: "comeback",
-        title: "برگشت قدرتمند",
-        description: `نیمه‌ی اول هفته با میانگین ${r0(h.first)} شروع شد و نیمه‌ی دوم به ${r0(h.second)} رسید؛ ${diff} امتیاز بهتر.`,
+        title: tr("برگشت قدرتمند", "Strong comeback"),
+        description: tr(
+          `نیمه‌ی اول هفته با میانگین ${r0(h.first)} شروع شد و نیمه‌ی دوم به ${r0(h.second)} رسید؛ ${diff} امتیاز بهتر.`,
+          `The first half of the week averaged ${r0(h.first)} and the second half reached ${r0(h.second)}; ${pl(diff, "point")} better.`,
+        ),
         tone: "good",
       };
     }
     if (-diff >= 15) {
       return {
         key: "fast_start",
-        title: "شروع پرقدرت",
-        description: `نیمه‌ی اول هفته میانگینت ${r0(h.first)} بود ولی نیمه‌ی دوم به ${r0(h.second)} رسید؛ ${-diff} امتیاز افت.`,
+        title: tr("شروع پرقدرت", "Fast start"),
+        description: tr(
+          `نیمه‌ی اول هفته میانگینت ${r0(h.first)} بود ولی نیمه‌ی دوم به ${r0(h.second)} رسید؛ ${-diff} امتیاز افت.`,
+          `Your average was ${r0(h.first)} in the first half of the week but ${r0(h.second)} in the second; a drop of ${pl(-diff, "point")}.`,
+        ),
         tone: "neutral",
       };
     }
@@ -85,8 +99,11 @@ export function detectArchetype(i: ArchetypeInput): WeekArchetype | null {
     const worst = scored.reduce((a, b) => (b.s < a.s ? b : a));
     return {
       key: "rollercoaster",
-      title: "هفته‌ی پرنوسان",
-      description: `${i.dayNames[best.idx]} با ${best.s} اوج بود و ${i.dayNames[worst.idx]} با ${worst.s} کف؛ یکنواختی روزهات ${i.consistency} از 100 شد.`,
+      title: tr("هفته‌ی پرنوسان", "A bumpy week"),
+      description: tr(
+        `${i.dayNames[best.idx]} با ${best.s} اوج بود و ${i.dayNames[worst.idx]} با ${worst.s} کف؛ یکنواختی روزهات ${i.consistency} از 100 شد.`,
+        `${i.dayNames[best.idx]} was the peak at ${best.s} and ${i.dayNames[worst.idx]} the low at ${worst.s}; your day-to-day consistency came out at ${i.consistency} out of 100.`,
+      ),
       tone: "neutral",
     };
   }
@@ -94,8 +111,11 @@ export function detectArchetype(i: ArchetypeInput): WeekArchetype | null {
   if (i.prevScore != null && score - i.prevScore >= 10) {
     return {
       key: "rising",
-      title: "در حال اوج گرفتن",
-      description: `امتیازت از ${i.prevScore} به ${score} رسید، ${score - i.prevScore} امتیاز بیشتر از هفته‌ی قبل.`,
+      title: tr("در حال اوج گرفتن", "On the rise"),
+      description: tr(
+        `امتیازت از ${i.prevScore} به ${score} رسید، ${score - i.prevScore} امتیاز بیشتر از هفته‌ی قبل.`,
+        `Your score went from ${i.prevScore} to ${score}, ${pl(score - i.prevScore, "point")} more than last week.`,
+      ),
       tone: "good",
     };
   }
@@ -103,8 +123,11 @@ export function detectArchetype(i: ArchetypeInput): WeekArchetype | null {
   if (i.consistency != null && i.consistency >= 80 && score >= 60 && scored.length >= 4) {
     return {
       key: "steady",
-      title: "ثابت‌قدم",
-      description: `روزهات خیلی هم‌سطح بودن (یکنواختی ${i.consistency} از 100) و میانگینت روی ${score} موند.`,
+      title: tr("ثابت‌قدم", "Steady"),
+      description: tr(
+        `روزهات خیلی هم‌سطح بودن (یکنواختی ${i.consistency} از 100) و میانگینت روی ${score} موند.`,
+        `Your days were very even (consistency ${i.consistency} out of 100) and your average held at ${score}.`,
+      ),
       tone: "good",
     };
   }
@@ -123,8 +146,11 @@ export function detectArchetype(i: ArchetypeInput): WeekArchetype | null {
       const hi = bestGroup[bestGroup.length - 1].score;
       return {
         key: "balanced",
-        title: "متعادل",
-        description: `${bestGroup.length} حوزه (${bestGroup.map((x) => L(x.domain)).join("، ")}) تقریبا هم‌سطح بودن، بین ${lo} و ${hi}.`,
+        title: tr("متعادل", "Balanced"),
+        description: tr(
+          `${bestGroup.length} حوزه (${bestGroup.map((x) => L(x.domain)).join("، ")}) تقریبا هم‌سطح بودن، بین ${lo} و ${hi}.`,
+          `${bestGroup.length} areas (${bestGroup.map((x) => L(x.domain)).join(", ")}) were roughly level, between ${lo} and ${hi}.`,
+        ),
         tone: "good",
       };
     }
@@ -133,13 +159,13 @@ export function detectArchetype(i: ArchetypeInput): WeekArchetype | null {
   const tail = scored.length >= 3
     ? (() => {
         const best = scored.reduce((a, b) => (b.s > a.s ? b : a));
-        return `؛ قوی‌ترین روزت ${i.dayNames[best.idx]} بود (${best.s}).`;
+        return tr(`؛ قوی‌ترین روزت ${i.dayNames[best.idx]} بود (${best.s}).`, `; your strongest day was ${i.dayNames[best.idx]} (${best.s}).`);
       })()
     : ".";
   return {
     key: "building",
-    title: "در حال ساختن",
-    description: `امتیاز ${score} با ${i.activeDays} روز فعال${tail}`,
+    title: tr("در حال ساختن", "Building up"),
+    description: tr(`امتیاز ${score} با ${i.activeDays} روز فعال${tail}`, `Score ${score} with ${pl(i.activeDays, "active day")}${tail}`),
     tone: "neutral",
   };
 }

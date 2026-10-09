@@ -9,7 +9,7 @@ import { FeaturePageGate } from "@/components/FeaturePageGate";
 export default function MentorPanelLayout({ children }: { children: React.ReactNode }) {
   return (
     <FeaturePageGate feature="mentors">
-      <div className="account-shell mentor-page mentor-panel" dir="rtl">
+      <div className="account-shell mentor-page mentor-panel">
         <MentorPanelNav />
         {children}
       </div>

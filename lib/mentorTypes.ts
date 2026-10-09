@@ -1,3 +1,4 @@
+import { tr } from "@/lib/i18n";
 // تایپ‌های سمت کلاینت اکوسیستم منتور — آینه‌ی دقیق شکل پاسخ‌های
 // docs/mentors.md. هیچ import سروری/Prisma این‌جا نیست تا هر کامپوننت
 // کلاینتی (سمت شاگرد و سمت منتور) بتواند مستقیم از همین فایل بخواند.
@@ -446,7 +447,7 @@ export function dayKey(iso: string | null | undefined): string | null {
 
 /** نام نمایشی یک کاربر عمومی */
 export function publicUserName(u: Pick<PublicUser, "name" | "lastName" | "username"> | null | undefined): string {
-  if (!u) return "کاربر";
+  if (!u) return tr("کاربر", "User");
   const full = [u.name, u.lastName].filter(Boolean).join(" ").trim();
-  return full || u.username || "کاربر";
+  return full || u.username || tr("کاربر", "User");
 }

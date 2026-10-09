@@ -4,7 +4,8 @@ import "./sleep-dial.css";
 import { useMemo } from "react";
 import { Plus } from "lucide-react";
 import { motion, useReducedMotion } from "framer-motion";
-import { FA_WEEKDAY_SHORT, faNum } from "@/lib/jalali";
+import { weekdayShort, faNum } from "@/lib/jalali";
+import { tr } from "@/lib/i18n";
 import { addDaysIso, scoreBand, sleepMinutes, type SleepInsights, type SleepRecord } from "@/lib/sleep";
 
 // هفت شب آخر به‌صورت هفت ستون ساده: ارتفاع ستون = مدت خواب (سقف 10 ساعت)،
@@ -40,7 +41,7 @@ export function SleepWeek({
 
   return (
     <section className="sl-card slw">
-      <h3 className="sl-card-title">هفت شب اخیر</h3>
+      <h3 className="sl-card-title">{tr("هفت شب اخیر", "Last 7 nights")}</h3>
       <div className="slw-grid">
         <span className="slw-goal" style={{ top: `calc(var(--slw-top) + ${goalY}px)` }} aria-hidden="true" />
         {days.map((iso, i) => {
@@ -50,7 +51,7 @@ export function SleepWeek({
           const band = score != null ? scoreBand(score) : null;
           const h = rec ? Math.max(BAR_W, Math.min(1, min / MAX_MIN) * BAR_H) : 0;
           const [y, m, d] = iso.split("-").map(Number);
-          const wd = FA_WEEKDAY_SHORT[new Date(y, m - 1, d).getDay()];
+          const wd = weekdayShort(new Date(y, m - 1, d).getDay());
           const isToday = iso === todayIso;
           return (
             <button
@@ -58,7 +59,7 @@ export function SleepWeek({
               type="button"
               className={`slw-col${isToday ? " is-today" : ""}${rec ? "" : " is-empty"}`}
               onClick={() => onPick(iso)}
-              aria-label={rec ? `${wd}: ${hm(min)} خواب${score != null ? `، امتیاز ${score}` : ""}` : `${wd}: ثبت نشده`}
+              aria-label={rec ? tr(`${wd}: ${hm(min)} خواب${score != null ? `، امتیاز ${score}` : ""}`, `${wd}: ${hm(min)} asleep${score != null ? `, score ${score}` : ""}`) : tr(`${wd}: ثبت نشده`, `${wd}: not logged`)}
             >
               <span className="slw-val">{rec ? faNum(hm(min)) : <Plus aria-hidden />}</span>
               <svg className="slw-bar" width={BAR_W} height={BAR_H} viewBox={`0 0 ${BAR_W} ${BAR_H}`} aria-hidden="true">

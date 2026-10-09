@@ -1,3 +1,4 @@
+import { tr } from "@/lib/i18n";
 import { NextRequest, NextResponse } from "next/server";
 import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/auth";
@@ -18,10 +19,10 @@ export async function PATCH(req: NextRequest) {
   if (enabled) {
     const user = await prisma.user.findUnique({ where: { id: userId }, select: { phone: true, phoneVerifiedAt: true } });
     if (!user?.phone) {
-      return NextResponse.json({ error: "اول باید شماره موبایلت روی حساب ثبت بشه" }, { status: 400 });
+      return NextResponse.json({ error: tr("اول باید شماره موبایلت روی حساب ثبت بشه", "Add your mobile number to the account first") }, { status: 400 });
     }
     if (!user.phoneVerifiedAt) {
-      return NextResponse.json({ error: "شماره موبایلت هنوز تایید نشده — بدون شماره‌ی تاییدشده نمی‌شه کد فرستاد" }, { status: 400 });
+      return NextResponse.json({ error: tr("شماره موبایلت هنوز تایید نشده — بدون شماره‌ی تاییدشده نمی‌شه کد فرستاد", "Your mobile number is not verified yet — a code cannot be sent without a verified number") }, { status: 400 });
     }
   }
 

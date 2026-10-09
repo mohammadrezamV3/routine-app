@@ -18,26 +18,27 @@ import { setMentorSelf, useMentorSelf } from "@/components/MentorPanelNav";
 import { LoadingBlock } from "@/components/Spinner";
 import type { AlertsResponse } from "@/lib/mentorToolsTypes";
 import type { MentorSelf, MentorSettingsResponse, StudentLabel } from "@/lib/mentorTypes";
+import { tr } from "@/lib/i18n";
 
 const ic = (Icon: typeof UserRound) => <Icon size={MI.row} strokeWidth={MI_STROKE} aria-hidden />;
 
 type SheetKey = "availability" | MentorSettingsSection | "alerts" | "labels" | null;
 
-const IDENTITY_TEXT: Record<MentorSelf["identityStatus"], string> = {
-  VERIFIED: "تایید شده",
-  PENDING: "در حال بررسی",
-  REJECTED: "رد شد",
-  NOT_PROVIDED: "نیاز به مدرک",
-};
+const identityText = (): Record<MentorSelf["identityStatus"], string> => ({
+  VERIFIED: tr("تایید شده", "Verified"),
+  PENDING: tr("در حال بررسی", "Under review"),
+  REJECTED: tr("رد شد", "Declined"),
+  NOT_PROVIDED: tr("نیاز به مدرک", "Document needed"),
+});
 
-const SHEET_TITLE: Record<Exclude<SheetKey, null>, string> = {
-  availability: "وضعیت پذیرش",
-  capacity: "ظرفیت",
-  response: "پیام خوش‌آمد و زمان جواب",
-  intake: "سوال‌های اول کار",
-  alerts: "یادآور بی‌خبری شاگرد",
-  labels: "برچسب‌ها",
-};
+const sheetTitle = (): Record<Exclude<SheetKey, null>, string> => ({
+  availability: tr("وضعیت پذیرش", "Accepting students"),
+  capacity: tr("ظرفیت", "Capacity"),
+  response: tr("پیام خوش‌آمد و زمان جواب", "Welcome message and reply time"),
+  intake: tr("سوال‌های اول کار", "Starter questions"),
+  alerts: tr("یادآور بی‌خبری شاگرد", "Student inactivity reminder"),
+  labels: tr("برچسب‌ها", "Labels"),
+});
 
 type Loaded = { settings: MentorSettingsResponse; labels: StudentLabel[]; alert: AlertChoice };
 
@@ -72,8 +73,8 @@ function MentorSettings() {
       return (
         <MentorEmptyState
           icon={<UserRound size={MI.empty} strokeWidth={MI_STROKE} aria-hidden />}
-          title="هنوز پروفایل مربی نداری"
-          action={<Link href="/mentor/profile" className="trade-primary-btn mentor-btn">ساخت پروفایل</Link>}
+          title={tr("هنوز پروفایل مربی نداری", "You do not have a mentor profile yet")}
+          action={<Link href="/mentor/profile" className="trade-primary-btn mentor-btn">{tr("ساخت پروفایل", "Create profile")}</Link>}
         />
       );
     }
@@ -87,13 +88,13 @@ function MentorSettings() {
   const close = () => setSheet(null);
 
   const user = session?.user;
-  const displayName = user?.name || "مربی";
+  const displayName = user?.name || tr("مربی", "Mentor");
   const complete = !!(profile && profile.bio?.trim() && profile.categories.length > 0);
   const identity = profile?.identityStatus ?? "NOT_PROVIDED";
 
-  const accept = s.awayUntil ? "در دسترس نیستم" : s.acceptingStudents ? "می‌پذیرم" : "نمی‌پذیرم";
-  const capacity = s.maxActiveStudents != null ? `${fa(data.activeStudents)} از ${fa(s.maxActiveStudents)} نفر` : "بدون سقف";
-  const response = s.responseTimeHours ? `تا ${fa(s.responseTimeHours)} ساعت` : "اعلام نشده";
+  const accept = s.awayUntil ? tr("در دسترس نیستم", "Away") : s.acceptingStudents ? tr("می‌پذیرم", "Accepting") : tr("نمی‌پذیرم", "Not accepting");
+  const capacity = s.maxActiveStudents != null ? tr(`${fa(data.activeStudents)} از ${fa(s.maxActiveStudents)} نفر`, `${fa(data.activeStudents)} of ${fa(s.maxActiveStudents)}`) : tr("بدون سقف", "No limit");
+  const response = s.responseTimeHours ? tr(`تا ${fa(s.responseTimeHours)} ساعت`, `Within ${fa(s.responseTimeHours)} h`) : tr("اعلام نشده", "Not set");
 
   async function setPublished(v: boolean) {
     if (pubBusy) return;
@@ -113,42 +114,42 @@ function MentorSettings() {
           <div className="mv2-set-id-name">
             <span>{displayName}</span>
             {identity === "VERIFIED" && (
-              <BadgeCheck size={18} strokeWidth={MI_STROKE} className="mv2-set-verified" aria-label="تایید شده" role="img" />
+              <BadgeCheck size={18} strokeWidth={MI_STROKE} className="mv2-set-verified" aria-label={tr("تایید شده", "Verified")} role="img" />
             )}
           </div>
           {profile?.headline && <div className="mv2-set-id-title">{profile.headline}</div>}
         </div>
       </div>
 
-      <MentorSettingsGroup title="پروفایل من">
-        <MentorSettingsRow icon={ic(UserRound)} title="پروفایل عمومی" value={complete ? "کامل" : "ناقص"} href="/mentor/profile" />
-        <MentorSettingsRow icon={ic(ShieldCheck)} title="تایید هویت" value={IDENTITY_TEXT[identity]} href="/mentor/profile#verification" />
+      <MentorSettingsGroup title={tr("پروفایل من", "My profile")}>
+        <MentorSettingsRow icon={ic(UserRound)} title={tr("پروفایل عمومی", "Public profile")} value={complete ? tr("کامل", "Complete") : tr("ناقص", "Incomplete")} href="/mentor/profile" />
+        <MentorSettingsRow icon={ic(ShieldCheck)} title={tr("تایید هویت", "Identity check")} value={identityText()[identity]} href="/mentor/profile#verification" />
         <div className="mv2-set-tick">
           <span className="mv2-srow-icon" aria-hidden><Eye size={MI.row} strokeWidth={MI_STROKE} /></span>
           <TickOption checked={!!profile?.published} onChange={setPublished} disabled={pubBusy || !profile} className="mv2-set-tickopt">
-            نمایش در فهرست مربی‌ها
+            {tr("نمایش در فهرست مربی‌ها", "Show in the mentor listing")}
           </TickOption>
         </div>
         {pubError && <div className="form-inline-error mv2-set-pub-error" role="alert">{pubError}</div>}
       </MentorSettingsGroup>
 
-      <MentorSettingsGroup title="پذیرش شاگرد">
-        <MentorSettingsRow icon={ic(DoorOpen)} title="وضعیت پذیرش" value={accept} onClick={() => setSheet("availability")} ariaHasPopup />
-        <MentorSettingsRow icon={ic(Users)} title="ظرفیت" value={capacity} onClick={() => setSheet("capacity")} ariaHasPopup />
-        <MentorSettingsRow icon={ic(MessageSquare)} title="پیام خوش‌آمد و زمان جواب" value={response} onClick={() => setSheet("response")} ariaHasPopup />
+      <MentorSettingsGroup title={tr("پذیرش شاگرد", "Taking students")}>
+        <MentorSettingsRow icon={ic(DoorOpen)} title={tr("وضعیت پذیرش", "Accepting students")} value={accept} onClick={() => setSheet("availability")} ariaHasPopup />
+        <MentorSettingsRow icon={ic(Users)} title={tr("ظرفیت", "Capacity")} value={capacity} onClick={() => setSheet("capacity")} ariaHasPopup />
+        <MentorSettingsRow icon={ic(MessageSquare)} title={tr("پیام خوش‌آمد و زمان جواب", "Welcome message and reply time")} value={response} onClick={() => setSheet("response")} ariaHasPopup />
         <MentorSettingsRow
-          icon={ic(HelpCircle)} title="سوال‌های اول کار"
-          value={s.intakeQuestions.length ? `${fa(s.intakeQuestions.length)} سوال` : "ندارم"}
+          icon={ic(HelpCircle)} title={tr("سوال‌های اول کار", "Starter questions")}
+          value={s.intakeQuestions.length ? tr(`${fa(s.intakeQuestions.length)} سوال`, `${fa(s.intakeQuestions.length)} ${s.intakeQuestions.length === 1 ? "question" : "questions"}`) : tr("ندارم", "None")}
           onClick={() => setSheet("intake")} ariaHasPopup
         />
       </MentorSettingsGroup>
 
-      <MentorSettingsGroup title="کار با شاگردها">
-        <MentorSettingsRow icon={ic(Bell)} title="یادآور بی‌خبری شاگرد" value={alertValueText(alert)} onClick={() => setSheet("alerts")} ariaHasPopup />
-        <MentorSettingsRow icon={ic(Tag)} title="برچسب‌ها" value={labels.length ? `${fa(labels.length)} برچسب` : "ندارم"} onClick={() => setSheet("labels")} ariaHasPopup />
+      <MentorSettingsGroup title={tr("کار با شاگردها", "Working with students")}>
+        <MentorSettingsRow icon={ic(Bell)} title={tr("یادآور بی‌خبری شاگرد", "Student inactivity reminder")} value={alertValueText(alert)} onClick={() => setSheet("alerts")} ariaHasPopup />
+        <MentorSettingsRow icon={ic(Tag)} title={tr("برچسب‌ها", "Labels")} value={labels.length ? tr(`${fa(labels.length)} برچسب`, `${fa(labels.length)} ${labels.length === 1 ? "label" : "labels"}`) : tr("ندارم", "None")} onClick={() => setSheet("labels")} ariaHasPopup />
       </MentorSettingsGroup>
 
-      <MentorSheet open={sheet !== null} onClose={close} title={sheet ? SHEET_TITLE[sheet] : undefined} size="sm">
+      <MentorSheet open={sheet !== null} onClose={close} title={sheet ? sheetTitle()[sheet] : undefined} size="sm">
         {sheet === "availability" && (
           <MentorAvailabilityQuick bare initial={data} onChange={(d) => patch({ settings: d })} />
         )}
@@ -167,7 +168,7 @@ function MentorSettings() {
 
 export default function MentorSettingsPage() {
   return (
-    <MentorDashShell title="تنظیمات">
+    <MentorDashShell title={tr("تنظیمات", "Settings")}>
       <MentorSettings />
     </MentorDashShell>
   );

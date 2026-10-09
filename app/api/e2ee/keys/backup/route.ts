@@ -6,6 +6,7 @@ import { checkRateLimit } from "@/lib/rateLimit";
 import { KDF_SALT_BYTES, PBKDF2_MAX_ITERATIONS, PBKDF2_MIN_ITERATIONS, isKeyBackupShape } from "@/lib/e2ee/core";
 import { b64ByteLength } from "@/lib/e2ee/encoding";
 import { keyChangedResponse } from "@/lib/e2ee/keyServer";
+import { tr } from "@/lib/i18n";
 
 // پشتیبان رمزشده‌ی کلید SYNCED — فقط برای باز کردن روی دستگاهی که با رمز عبور وارد
 // شده. سرور نمی‌تواند بازش کند؛ امنیتش در برابر حدس آفلاین = قدرت رمز عبور + PBKDF2
@@ -21,7 +22,7 @@ export async function GET() {
   if (!g.ok) return g.response;
   const me = g.userId;
   if (!(await checkRateLimit(`e2ee-backup-fetch:${me}`, FETCH_LIMIT, WINDOW_MS))) {
-    return NextResponse.json({ error: "تعداد درخواست‌ها زیاد بوده؛ یک ساعت دیگر دوباره تلاش کن" }, { status: 429 });
+    return NextResponse.json({ error: tr(tr("تعداد درخواست‌ها زیاد بوده؛ یک ساعت دیگر دوباره تلاش کن", "Too many requests; try again in an hour"), "Too many requests; try again in an hour") }, { status: 429 });
   }
   const k = await prisma.userE2EKey.findFirst({
     where: { userId: me, kind: "SYNCED", retiredAt: null },
@@ -45,12 +46,12 @@ export async function PUT(req: Request) {
   if (!g.ok) return g.response;
   const me = g.userId;
   if (!(await checkRateLimit(`e2ee-backup-put:${me}`, 10, WINDOW_MS))) {
-    return NextResponse.json({ error: "تعداد تلاش‌ها زیاد بوده؛ کمی بعد دوباره تلاش کن" }, { status: 429 });
+    return NextResponse.json({ error: tr(tr("تعداد تلاش‌ها زیاد بوده؛ کمی بعد دوباره تلاش کن", "Too many attempts; try again shortly"), "Too many attempts; try again shortly") }, { status: 429 });
   }
   const parsed = await readJsonBody(req, 8 * 1024);
   if (!parsed.ok) return NextResponse.json({ error: parsed.error }, { status: parsed.status });
   const b = parsed.body || {};
-  if (!Number.isInteger(b.version) || b.version < 1) return badRequest("نسخه‌ی کلید نامعتبر است");
+  if (!Number.isInteger(b.version) || b.version < 1) return badRequest(tr(tr("نسخه‌ی کلید نامعتبر است", "Invalid key version"), "Invalid key version"));
 
   if (b.convertToDevice === true) {
     const label = typeof b.label === "string" ? b.label.trim().slice(0, 60) || null : null;
@@ -63,15 +64,15 @@ export async function PUT(req: Request) {
     return NextResponse.json({ ok: true });
   }
 
-  if (b.backupKind !== "PASSWORD") return badRequest("نوع پشتیبان نامعتبر است");
-  if (!isKeyBackupShape(b.backup)) return badRequest("پشتیبان کلید نامعتبر است");
+  if (b.backupKind !== "PASSWORD") return badRequest(tr(tr("نوع پشتیبان نامعتبر است", "Invalid backup type"), "Invalid backup type"));
+  if (!isKeyBackupShape(b.backup)) return badRequest(tr(tr("پشتیبان کلید نامعتبر است", "Invalid key backup"), "Invalid key backup"));
   const newKdf = b.kdf as { salt?: unknown; iterations?: unknown } | undefined;
   if (newKdf !== undefined) {
-    if (!newKdf || typeof newKdf.salt !== "string" || b64ByteLength(newKdf.salt) !== KDF_SALT_BYTES) return badRequest("نمک نامعتبر است");
-    if (!Number.isInteger(newKdf.iterations) || (newKdf.iterations as number) < PBKDF2_MIN_ITERATIONS || (newKdf.iterations as number) > PBKDF2_MAX_ITERATIONS) return badRequest("پارامتر KDF نامعتبر است");
+    if (!newKdf || typeof newKdf.salt !== "string" || b64ByteLength(newKdf.salt) !== KDF_SALT_BYTES) return badRequest(tr(tr("نمک نامعتبر است", "Invalid salt"), "Invalid salt"));
+    if (!Number.isInteger(newKdf.iterations) || (newKdf.iterations as number) < PBKDF2_MIN_ITERATIONS || (newKdf.iterations as number) > PBKDF2_MAX_ITERATIONS) return badRequest(tr("پارامتر KDF نامعتبر است", "Invalid KDF parameter"));
   }
   const user = await prisma.user.findUnique({ where: { id: me }, select: { passwordHash: true } });
-  if (!user?.passwordHash) return badRequest("این حساب رمز عبور ندارد");
+  if (!user?.passwordHash) return badRequest(tr(tr("این حساب رمز عبور ندارد", "This account has no password"), "This account has no password"));
 
   const ok = await prisma.$transaction(async (tx) => {
     const cur = await tx.userE2EKdf.findUnique({ where: { userId: me } });
@@ -86,7 +87,7 @@ export async function PUT(req: Request) {
     if (newKdf) await tx.userE2EKdf.upsert({ where: { userId: me }, create: { userId: me, salt, iterations: iterations! }, update: { salt, iterations: iterations! } });
     return "OK" as const;
   });
-  if (ok === "BAD_KDF") return badRequest("پشتیبان با پارامترهای این حساب نمی‌خواند");
+  if (ok === "BAD_KDF") return badRequest(tr(tr("پشتیبان با پارامترهای این حساب نمی‌خواند", "The backup can't be read with this account's parameters"), "The backup can't be read with this account's parameters"));
   if (ok === "CHANGED") return keyChangedResponse();
   await prisma.auditLog.create({ data: { actorUserId: me, action: newKdf ? "e2ee.password_rewrap" : "e2ee.passcode_migrate", targetType: "User", targetId: me, meta: { version: b.version } } }).catch(() => {});
   return NextResponse.json({ ok: true });

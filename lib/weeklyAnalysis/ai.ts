@@ -16,6 +16,7 @@ import {
   parseJsonResponse,
   WEEKLY_ANALYSIS_AI_MODEL,
 } from "@/lib/aiClient";
+import { isEn } from "@/lib/i18n";
 import { logError } from "@/lib/errorLog";
 import { ANALYSIS_DOMAIN_LABELS, AnalysisDomain, AiCoach } from "@/lib/weeklyAnalysis/types";
 import type { WeeklyAnalysisBase } from "@/lib/weeklyAnalysis/compute";
@@ -50,6 +51,12 @@ const SYSTEM_PROMPT = `تو مربی آنالیز هفتگی Arion هستی. ی�
     { "title": "عنوان کوتاه", "description": "توضیح کوتاه با دلیل مبتنی‌بر داده", "priority": "high" | "medium" | "low", "domain": "یکی از keyهای domains ورودی، یا null اگه مربوط به یک دامنه‌ی خاص نیست" }
   ]
 }`;
+
+// انگلیسی: همون قوانین، فقط زبان خروجی عوض می‌شه (ورودی/کلیدهای JSON دست‌نخورده)
+const EN_SUFFIX = `
+
+LANGUAGE OVERRIDE: write the "summary" and every recommendation "title" and "description" in natural, warm, conversational English instead of Persian (second person, "you"). Keep the JSON keys, "priority" and "domain" values exactly as specified. Never use Persian text in the output.`;
+const systemPrompt = () => (isEn() ? SYSTEM_PROMPT + EN_SUFFIX : SYSTEM_PROMPT);
 
 type AiInputDomain = { key: AnalysisDomain; label: string; score: number | null; prevScore: number | null; delta: number | null; hasData: boolean };
 type AiInput = {
@@ -116,7 +123,7 @@ async function callOnce(analysis: WeeklyAnalysisForAi, userId: string, timeoutMs
   const input = buildInput(analysis);
   // temperature کمی بالاتر از پیش‌فرض فقط برای لحن متن آزاد (summary/description)؛
   // ساختار JSON و اعدادش دست‌نخورده می‌مانند چون normalizeAiCoach هرچیز نامعتبر را رد می‌کند.
-  const { text, usage, durationMs } = await callAiChat(SYSTEM_PROMPT, JSON.stringify(input), 1400, WEEKLY_ANALYSIS_AI_MODEL, timeoutMs, 0.8);
+  const { text, usage, durationMs } = await callAiChat(systemPrompt(), JSON.stringify(input), 1400, WEEKLY_ANALYSIS_AI_MODEL, timeoutMs, 0.8);
   recordAiUsage(userId, AiFeatureKey.WEEKLY_COACH_REPORT, usage, durationMs, true, WEEKLY_ANALYSIS_AI_MODEL);
   return normalizeAiCoach(parseJsonResponse(text), WEEKLY_ANALYSIS_AI_MODEL);
 }

@@ -1,6 +1,7 @@
 "use client";
 
 import "./mentor.css";
+import "./mentor-student-ltr.css";
 import Link from "next/link";
 import { CalendarDays, ChevronLeft, CircleSlash } from "lucide-react";
 import type { MentorCard as MentorCardData } from "@/lib/mentorTypes";
@@ -11,6 +12,7 @@ import { CertificateMark, RatingInline } from "./MentorBadges";
 import { MentorSaveButton } from "./MentorSaved";
 import { prefetchMentorProfile } from "@/lib/mentorProfileCache";
 import { GoldenName } from "@/components/GoldenName";
+import { tr } from "@/lib/i18n";
 
 const META_ICON = { size: 12, strokeWidth: 1.75, "aria-hidden": true } as const;
 
@@ -25,7 +27,7 @@ const META_ICON = { size: 12, strokeWidth: 1.75, "aria-hidden": true } as const;
 export function MentorCard({ mentor }: { mentor: MentorCardData }) {
   const closed = mentor.availability && mentor.availability !== "OPEN"
     ? availabilityShort(mentor.availability, mentor.awayUntil)
-    : !mentor.acceptingStudents ? "شاگرد جدید نمی‌پذیرد" : null;
+    : !mentor.acceptingStudents ? tr("شاگرد جدید نمی‌پذیرد", "Not accepting students") : null;
   const line = [mentor.routineRole, mentor.headline].filter(Boolean).join(" · ");
   return (
     <article className="trade-surface rp-card mentor-card">
@@ -58,9 +60,9 @@ export function MentorCard({ mentor }: { mentor: MentorCardData }) {
       <div className="mentor-card-foot">
         <RatingInline value={mentor.ratingAvg} count={mentor.ratingCount} />
         {mentor.memberSince && (
-          <span className="mentor-card-since"><CalendarDays {...META_ICON} /> از {fmtDate(mentor.memberSince)}</span>
+          <span className="mentor-card-since"><CalendarDays {...META_ICON} /> {tr("از", "Since")} {fmtDate(mentor.memberSince)}</span>
         )}
-        <ChevronLeft size={16} strokeWidth={1.75} className="rp-card-arrow" aria-hidden />
+        <ChevronLeft size={16} strokeWidth={1.75} className="rp-card-arrow dir-flip" aria-hidden />
       </div>
     </article>
   );

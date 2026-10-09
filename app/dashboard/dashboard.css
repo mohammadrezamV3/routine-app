@@ -217,7 +217,7 @@ body[data-theme="light"] .db-hero-phase:not(.is-night){ color:#D98A1E; }
 /* اشتراک موفقیت — فقط آیکون، گوشه‌ی بالا-چپ هیرو (فیزیکی چپ، مستقل از RTL).
    بی‌بک‌گراند (ریست :where(.dash-scope) button)، هدف لمسی ۴۰ پیکسلی. */
 .db-page .db-hero-share{
-  position:absolute; top:12px; left:12px; z-index:3;
+  position:absolute; top:12px; inset-inline-end:12px; z-index:3;
   width:40px; height:40px; display:grid; place-items:center; border-radius:12px;
   color:var(--muted); cursor:pointer; touch-action:manipulation; -webkit-tap-highlight-color:transparent;
   transition:color .2s ease, transform .15s ease;
@@ -261,8 +261,8 @@ body[data-theme="light"] .db-hero-phase:not(.is-night){ color:#D98A1E; }
 /* تبلت/دسکتاپ: ستون حلقه‌ها دقیقا زیر دکمه‌ی اشتراک (گوشه‌ی بالا-چپ، فیزیکی)
    می‌افتاد و حلقه‌ی بیرونی بهش می‌چسبید یا روش می‌رفت. فاصله‌ی چپ (فیزیکی، مثل
    خود دکمه) حلقه‌ها رو از ستون دکمه بیرون می‌بره: 12 + 40 دکمه + فاصله‌ی امن. */
-@media (min-width:640px){ .db-page .db-hero-orbit{ padding-left:48px; } }
-@media (min-width:1024px){ .db-page .db-hero-orbit{ padding-left:42px; } }
+@media (min-width:640px){ .db-page .db-hero-orbit{ padding-inline-end:48px; } }
+@media (min-width:1024px){ .db-page .db-hero-orbit{ padding-inline-end:42px; } }
 .db-orbit{ position:relative; flex-shrink:0; }
 @media (max-width:639px){ .db-orbit{ transform:scale(.8); transform-origin:right center; margin-inline-end:-30px; margin-block:-16px; } }
 .db-orbit svg{ display:block; overflow:visible; }
@@ -635,7 +635,7 @@ a.db-tl-name{ text-decoration:underline dotted color-mix(in srgb, var(--ring-1a)
 .db-trade-body{ display:flex; flex-direction:column; gap:16px; }
 .db-trade-main{ display:grid; gap:12px; align-items:end; }
 @media (min-width:720px){ .db-trade-main{ grid-template-columns:minmax(170px, auto) 1fr; } }
-.db-trade-pnl{ display:block; font-size:30px; font-weight:900; letter-spacing:-.02em; text-align:right; unicode-bidi:plaintext; margin:2px 0; }
+.db-trade-pnl{ display:block; font-size:30px; font-weight:900; letter-spacing:-.02em; text-align:start; unicode-bidi:plaintext; margin:2px 0; }
 .is-win{ color:var(--pnl-win); }
 .is-loss{ color:var(--pnl-loss); }
 .db-trade-sub{ font-size:11px; color:var(--muted); }
@@ -650,7 +650,7 @@ a.db-tl-name{ text-decoration:underline dotted color-mix(in srgb, var(--ring-1a)
 .db-trade-tiles{ display:grid; grid-template-columns:repeat(2, minmax(0,1fr)); gap:10px; }
 @media (min-width:720px){ .db-trade-tiles{ grid-template-columns:repeat(4, minmax(0,1fr)); } }
 .db-tile{ position:relative; padding:12px; border-radius:15px; border:1px solid var(--box-line); min-width:0; }
-.db-tile-val{ display:block; font-size:17px; font-weight:900; margin:4px 0 2px; text-align:right; unicode-bidi:plaintext; }
+.db-tile-val{ display:block; font-size:17px; font-weight:900; margin:4px 0 2px; text-align:start; unicode-bidi:plaintext; }
 .db-tile-sub{ display:block; font-size:10.5px; color:var(--muted); white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
 .db-tile-ring{ position:absolute; top:50%; inset-inline-end:12px; width:32px; height:32px; margin-top:-16px; }
 
@@ -902,7 +902,7 @@ body[data-theme="light"] .db-share-close{ color:var(--text); }
 .db-share-canvas{ grid-area:1 / 1; display:block; width:100%; height:100%; border-radius:5.2% / 4.15%; transition:opacity .2s ease; }
 .db-share-canvas.is-hidden{ visibility:hidden; }
 .db-share-canvas.is-dim{ opacity:.6; }
-.db-share-preview-spin{ position:absolute; top:12px; left:12px; display:grid; place-items:center; pointer-events:none; }
+.db-share-preview-spin{ position:absolute; top:12px; inset-inline-end:12px; display:grid; place-items:center; pointer-events:none; }
 .db-share-empty{ padding:24px; text-align:center; font-size:13px; line-height:1.9; color:#fff; }
 .db-share-fail{ display:flex; flex-direction:column; align-items:center; gap:12px; padding:24px; text-align:center; }
 .db-share-fail p{ margin:0; font-size:13px; font-weight:700; color:#E05252; }
@@ -941,3 +941,20 @@ html body[data-theme="light"] .db-share-opts button.tick-option{ color:var(--tex
 .db-tl-items{ list-style:none; margin:8px 0 0; padding:0; overflow:hidden; display:flex; flex-direction:column; gap:6px; }
 .db-tl-items li{ display:flex; align-items:center; gap:9px; font-size:12px; font-weight:600; }
 .db-tl-items li.is-done span{ color:var(--muted); text-decoration:line-through; text-decoration-color:color-mix(in srgb, var(--ring-1a) 60%, transparent); }
+
+
+/* ── English / LTR: همه‌ی موارد جهت‌دار آینه می‌شن (فارسی دست‌نخورده) ── */
+html[dir="ltr"] .db-card-more svg{ transform:scaleX(-1); }
+@media (hover:hover){ html[dir="ltr"] .db-card-more:hover svg{ transform:scaleX(-1) translateX(-3px); } }
+html[dir="ltr"] .db-skel::after{ transform:translateX(-100%); animation-name:db-shimmer-ltr; }
+@keyframes db-shimmer-ltr{ to{ transform:translateX(100%); } }
+@media (max-width:639px){ html[dir="ltr"] .db-orbit{ transform-origin:left center; } }
+html[dir="ltr"] .db-ribbon-fill{ background:linear-gradient(90deg, #ffd35a 0%, #ff9f43 30%, #f0705a 52%, #3f6fb5 76%, #1c2d5e 100%); }
+html[dir="ltr"] .db-tl-segs i, html[dir="ltr"] .db-tl-segs i.is-track b, html[dir="ltr"] .db-tl-prog i, html[dir="ltr"] .db-sess-bar i, html[dir="ltr"] .db-meter-fill, html[dir="ltr"] .db-stk-bar i{ transform-origin:left; }
+html[dir="ltr"] .db-tl-segs i.is-on{ background:linear-gradient(90deg, var(--ring-1a), var(--ring-1b)); }
+html[dir="ltr"] .db-tl-segs i.is-track b, html[dir="ltr"] .db-tl-prog i{ background:linear-gradient(90deg, var(--ring-1a), var(--ring-1b)); }
+html[dir="ltr"] .db-sess-bar i{ background:linear-gradient(90deg, rgba(var(--pnl-win-rgb),.35), var(--pnl-win)); }
+html[dir="ltr"] .db-tl-now-line{ background:linear-gradient(90deg, var(--pnl-loss), transparent); }
+@media (hover:hover){ html[dir="ltr"] .db-tl-item:hover .db-tl-card, html[dir="ltr"] .db-acc:hover{ transform:translateX(3px); } }
+html[dir="ltr"] .db-heat-grid{ direction:ltr; }
+html[dir="ltr"] .db-cd-title, html[dir="ltr"] .db-ev-title{ text-align:left; }

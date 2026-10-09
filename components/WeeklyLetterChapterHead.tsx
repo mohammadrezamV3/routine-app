@@ -4,6 +4,7 @@
 // (فصل‌هایی که پشت فلگ یا بی‌داده پنهان می‌شن شماره‌ی ثابت ندارن).
 import { motion } from "framer-motion";
 import type { LucideIcon } from "lucide-react";
+import { tr } from "@/lib/i18n";
 import { Reveal, WL_EASE, useLite } from "./WeeklyLetterShared";
 import "./weekly-letter.css";
 
@@ -13,7 +14,7 @@ export function WeeklyLetterChapterHead({ icon: Icon, title, no }: { icon: Lucid
     <Reveal className="wl-ch-head">
       <span className="wl-ch-badge" aria-hidden="true"><Icon size={19} /></span>
       <span className="wl-ch-txt">
-        {no ? <span className="wl-ch-k" aria-hidden="true">فصل {String(no).padStart(2, "0")}</span> : null}
+        {no ? <span className="wl-ch-k" aria-hidden="true">{tr("فصل", "Chapter")} {String(no).padStart(2, "0")}</span> : null}
         <h2 className="wl-ch-title">{title}</h2>
       </span>
       <motion.span

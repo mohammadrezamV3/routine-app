@@ -9,6 +9,7 @@ import {
 import type { LucideIcon } from "lucide-react";
 import { SegmentedTabs } from "@/components/SegmentedTabs";
 import { useThemeTokens } from "@/components/PlanShowcase";
+import { tr, trv } from "@/lib/i18n";
 import { faNum } from "@/components/LandingHero";
 import { INERT } from "@/components/LandingMockups";
 import {
@@ -39,116 +40,116 @@ type Mod = {
   href: string;
 };
 
-const MODS: Mod[] = [
+const mods = (): Mod[] => [
   {
-    key: "routine", tab: "روتین", icon: CalendarDays, href: "/routine",
-    title: "برنامه‌ای که واقعا اجرا شود",
-    hook: "روتینت را برای روز و هفته بچین، کارها را انجام بده و روند پایبندی‌ات را ببین.",
+    key: "routine", tab: tr("روتین", "Routine"), icon: CalendarDays, href: "/routine",
+    title: tr("برنامه‌ای که واقعا اجرا شود", "A plan that actually gets done"),
+    hook: tr("روتینت را برای روز و هفته بچین، کارها را انجام بده و روند پایبندی‌ات را ببین.", "Lay out your routine for the day and week, do the tasks and watch your consistency."),
     bullets: [
-      "برنامه‌ریزی و یادآوری — کارهایت را برای زمان مناسب تنظیم کن تا چیزی از قلم نیفتد.",
-      "پیوستگی — ببین چند روز پشت سر هم به برنامه‌ات عمل کرده‌ای.",
-      "تاریخچه — به روزهای گذشته برگرد و عملکردت را بررسی کن.",
+      tr("برنامه‌ریزی و یادآوری — کارهایت را برای زمان مناسب تنظیم کن تا چیزی از قلم نیفتد.", "Planning and reminders: set your tasks for the right time so nothing is missed."),
+      tr("پیوستگی — ببین چند روز پشت سر هم به برنامه‌ات عمل کرده‌ای.", "Consistency: see how many days in a row you have followed your plan."),
+      tr("تاریخچه — به روزهای گذشته برگرد و عملکردت را بررسی کن.", "History: go back to past days and review your performance."),
     ],
-    cta: "ساخت روتین",
+    cta: tr("ساخت روتین", "Build a routine"),
   },
   {
-    key: "streak", tab: "استریک و دوستان", icon: Flame, href: "/habit-tracker",
-    title: "پیوستگی، خودش یک دستاورد است.",
-    hook: "روزهایی را که به برنامه‌ات عمل کرده‌ای ثبت کن و زنجیره پیشرفتت را ببین.",
+    key: "streak", tab: tr("استریک و دوستان", "Streaks and friends"), icon: Flame, href: "/habit-tracker",
+    title: tr("پیوستگی، خودش یک دستاورد است.", "Consistency is an achievement in itself."),
+    hook: tr("روزهایی را که به برنامه‌ات عمل کرده‌ای ثبت کن و زنجیره پیشرفتت را ببین.", "Log the days you followed your plan and watch your chain of progress grow."),
     bullets: [
-      "8 سطح استریک از 1 تا 365 روز؛ هر سطح رنگ و شعله‌ی خودش را دارد",
-      "با هم جلو بروید — پیشرفت دوستانت را ببین و مسیرت را در کنار آنها ادامه بده.",
-      "در بدنسازی و کالری هم جلسه‌ها و روزهای موفق دوستانت را ببین",
+      tr("8 سطح استریک از 1 تا 365 روز؛ هر سطح رنگ و شعله‌ی خودش را دارد", "8 streak levels from 1 to 365 days; each level has its own colour and flame"),
+      tr("با هم جلو بروید — پیشرفت دوستانت را ببین و مسیرت را در کنار آنها ادامه بده.", "Move forward together: see your friends' progress and keep going alongside them."),
+      tr("در بدنسازی و کالری هم جلسه‌ها و روزهای موفق دوستانت را ببین", "See your friends' successful sessions and days in workouts and calories too"),
     ],
-    cta: "شروع زنجیره",
+    cta: tr("شروع زنجیره", "Start a streak"),
   },
   {
-    key: "analysis", tab: "آنالیز هفتگی", icon: BarChart3, href: "/auth/signup",
-    title: "فقط انجام نده؛ بررسی کن.",
-    hook: "در پایان هفته ببین چه چیزی خوب پیش رفته، کجا عقب مانده‌ای و هفته بعد روی چه چیزی باید تمرکز کنی.",
+    key: "analysis", tab: tr("آنالیز هفتگی", "Weekly review"), icon: BarChart3, href: "/auth/signup",
+    title: tr("فقط انجام نده؛ بررسی کن.", "Do not just do; review."),
+    hook: tr("در پایان هفته ببین چه چیزی خوب پیش رفته، کجا عقب مانده‌ای و هفته بعد روی چه چیزی باید تمرکز کنی.", "At the end of the week, see what went well, where you fell behind and what to focus on next week."),
     bullets: [
-      "امتیاز و نمره‌ی کل هفته، به‌تفکیک هر بخش از برنامه‌هایت",
-      "بینش از داده‌ی خودت — مثل اثر خواب روی روتین — و پیش‌بینی پایان هفته",
-      "مقایسه با هفته‌ی قبل، هدف هفتگی و دستاوردها",
+      tr("امتیاز و نمره‌ی کل هفته، به‌تفکیک هر بخش از برنامه‌هایت", "Your overall weekly score, broken down by each part of your plans"),
+      tr("بینش از داده‌ی خودت — مثل اثر خواب روی روتین — و پیش‌بینی پایان هفته", "Insights from your own data, such as the effect of sleep on routine, plus an end-of-week forecast"),
+      tr("مقایسه با هفته‌ی قبل، هدف هفتگی و دستاوردها", "Comparison with last week, a weekly goal and achievements"),
     ],
-    cta: "مشاهده عملکرد",
+    cta: tr("مشاهده عملکرد", "View performance"),
   },
   {
-    key: "numo", tab: "نومو", icon: Sparkles, href: "/ai-planner",
-    title: "برنامه‌ریزی، بدون دردسر",
-    hook: "به نومو، مدیر برنامه هوشمند، بگو چه می‌خواهی؛ برای ساختن و مدیریت برنامه‌هایت از او کمک بگیر.",
+    key: "numo", tab: tr("نومو", "Nomo"), icon: Sparkles, href: "/ai-planner",
+    title: tr("برنامه‌ریزی، بدون دردسر", "Planning without the hassle"),
+    hook: tr("به نومو، مدیر برنامه هوشمند، بگو چه می‌خواهی؛ برای ساختن و مدیریت برنامه‌هایت از او کمک بگیر.", "Tell Nomo, the smart plan manager, what you want; get help from it to build and manage your plans."),
     bullets: [
-      "به فارسی ساده بنویس؛ نومو برنامه‌ی روتینت را می‌سازد، جابه‌جا می‌کند یا حذف می‌کند",
-      "روز و ساعت را از جمله‌ات درمی‌آورد و تداخل با برنامه‌های دیگرت را بررسی می‌کند",
-      "هر تغییر همان لحظه در «روتین من» و بقیه‌ی دستگاه‌هایت دیده می‌شود",
+      tr("به فارسی ساده بنویس؛ نومو برنامه‌ی روتینت را می‌سازد، جابه‌جا می‌کند یا حذف می‌کند", "Write in plain language; Nomo creates, moves or deletes your routine plans"),
+      tr("روز و ساعت را از جمله‌ات درمی‌آورد و تداخل با برنامه‌های دیگرت را بررسی می‌کند", "It works out the day and time from your sentence and checks for conflicts with your other plans"),
+      tr("هر تغییر همان لحظه در «روتین من» و بقیه‌ی دستگاه‌هایت دیده می‌شود", "Every change shows up instantly in My Routine and on your other devices"),
     ],
-    cta: "امتحانش کن",
+    cta: tr("امتحانش کن", "Try it"),
   },
   {
-    key: "fitness", tab: "بدنسازی", icon: Dumbbell, href: "/bodybuilding-program",
-    title: "تمرینت را از برنامه تا نتیجه دنبال کن",
-    hook: "برنامه تمرینی، حرکات و عملکردت را یک‌جا مدیریت کن و بدان امروز دقیقا چه کاری باید انجام دهی.",
+    key: "fitness", tab: tr("بدنسازی", "Workouts"), icon: Dumbbell, href: "/bodybuilding-program",
+    title: tr("تمرینت را از برنامه تا نتیجه دنبال کن", "Follow your training from plan to result"),
+    hook: tr("برنامه تمرینی، حرکات و عملکردت را یک‌جا مدیریت کن و بدان امروز دقیقا چه کاری باید انجام دهی.", "Manage your training plan, exercises and performance in one place and know exactly what to do today."),
     bullets: [
-      "برنامه‌ی تمرینی با هوش مصنوعی یا دستی؛ حرکتی که تجهیزاتش را نداری، جایگزین می‌شود",
-      "شروع تمرین با کرنومتر و ثبت ست‌به‌ست، و کاتالوگ 149 حرکت با آموزش و سطح سختی",
-      "روزی را جا انداختی؟ «رد شدن» یا «ماندن» — انتخاب با خودت است",
+      tr("برنامه‌ی تمرینی با هوش مصنوعی یا دستی؛ حرکتی که تجهیزاتش را نداری، جایگزین می‌شود", "A training plan built with AI or by hand; an exercise you lack the equipment for gets replaced"),
+      tr("شروع تمرین با کرنومتر و ثبت ست‌به‌ست، و کاتالوگ 149 حرکت با آموزش و سطح سختی", "Start a workout with a timer and log set by set, plus a catalogue of 149 exercises with tutorials and difficulty levels"),
+      tr("روزی را جا انداختی؟ «رد شدن» یا «ماندن» — انتخاب با خودت است", "Missed a day? Skip or Stay: the choice is yours"),
     ],
-    cta: "برنامه‌ام را بگیرم",
+    cta: tr("برنامه‌ام را بگیرم", "Get my plan"),
   },
   {
-    key: "calorie", tab: "کالری", icon: UtensilsCrossed, href: "/calorie-counter",
-    title: "تغذیه‌ات را هم اندازه‌گیری کن",
-    hook: "کالری و ماکروهای روزانه‌ات را ثبت کن و ببین چقدر به هدف تغذیه‌ای خودت نزدیک شده‌ای.",
+    key: "calorie", tab: tr("کالری", "Calories"), icon: UtensilsCrossed, href: "/calorie-counter",
+    title: tr("تغذیه‌ات را هم اندازه‌گیری کن", "Measure your nutrition too"),
+    hook: tr("کالری و ماکروهای روزانه‌ات را ثبت کن و ببین چقدر به هدف تغذیه‌ای خودت نزدیک شده‌ای.", "Log your daily calories and macros and see how close you are to your nutrition goal."),
     bullets: [
-      "هدف کالری و درشت‌مغذی‌های روزانه بر اساس قد، وزن، سن و هدف خودت محاسبه می‌شود",
-      "264 خوراکی ایرانی و جهانی آماده است؛ هر وعده را با گرم ثبت کن و ماکروهای روز را ببین",
-      "نمودار هفتگی و ماهانه، استریک روزهای موفق و تفکیک هر وعده",
+      tr("هدف کالری و درشت‌مغذی‌های روزانه بر اساس قد، وزن، سن و هدف خودت محاسبه می‌شود", "Your daily calorie and macro goals are calculated from your height, weight, age and goal"),
+      tr("264 خوراکی ایرانی و جهانی آماده است؛ هر وعده را با گرم ثبت کن و ماکروهای روز را ببین", "264 Iranian and international foods are ready; log each meal in grams and see the day's macros"),
+      tr("نمودار هفتگی و ماهانه، استریک روزهای موفق و تفکیک هر وعده", "Weekly and monthly charts, a streak of successful days and a breakdown of each meal"),
     ],
-    cta: "شروع ثبت تغذیه",
+    cta: tr("شروع ثبت تغذیه", "Start logging nutrition"),
   },
   {
-    key: "trade", tab: "ژورنال ترید", icon: TrendingUp, href: "/trading-journal",
-    title: "هر معامله، بخشی از مسیر توست.",
-    hook: "معاملاتت را ثبت کن، چک‌لیستت را اجرا کن و عملکردت را در ژورنال ترید بررسی کن.",
+    key: "trade", tab: tr("ژورنال ترید", "Trading journal"), icon: TrendingUp, href: "/trading-journal",
+    title: tr("هر معامله، بخشی از مسیر توست.", "Every trade is part of your journey."),
+    hook: tr("معاملاتت را ثبت کن، چک‌لیستت را اجرا کن و عملکردت را در ژورنال ترید بررسی کن.", "Log your trades, run your checklist and review your performance in the trading journal."),
     bullets: [
-      "هر حساب جدا: بالانس، سود و زیان، نرخ برد و هدف؛ حذف حساب یعنی آرشیو، نه پاک‌شدن تاریخچه",
-      "با اتصال MT4 و MT5 (اکسپرت و کد اتصال)، معاملاتت مستقیما وارد ژورنال می‌شود؛ رمز حساب معاملاتی هرگز خواسته نمی‌شود",
-      "چک‌لیست ورود که وضعیتش لحظه‌ی ثبت معامله ذخیره می‌شود، به‌علاوه‌ی یادداشت و برچسب",
+      tr("هر حساب جدا: بالانس، سود و زیان، نرخ برد و هدف؛ حذف حساب یعنی آرشیو، نه پاک‌شدن تاریخچه", "Each account separately: balance, profit and loss, win rate and goal; deleting an account means archiving it, not erasing its history"),
+      tr("با اتصال MT4 و MT5 (اکسپرت و کد اتصال)، معاملاتت مستقیما وارد ژورنال می‌شود؛ رمز حساب معاملاتی هرگز خواسته نمی‌شود", "With MT4 and MT5 connected (Expert Advisor and connection code), your trades go straight into the journal; your trading account password is never requested"),
+      tr("چک‌لیست ورود که وضعیتش لحظه‌ی ثبت معامله ذخیره می‌شود، به‌علاوه‌ی یادداشت و برچسب", "An entry checklist whose state is saved at the moment you log a trade, plus notes and tags"),
     ],
-    cta: "ژورنالم را بسازم",
+    cta: tr("ژورنالم را بسازم", "Create my journal"),
   },
   {
-    key: "market", tab: "تقویم و ساعت فارکس", icon: CalendarClock, href: "/economic-calendar",
-    title: "تقویم اقتصادی و ساعت فارکس",
-    hook: "خبر و سشن را پیش از معامله ببین",
+    key: "market", tab: tr("تقویم و ساعت فارکس", "Calendar and forex hours"), icon: CalendarClock, href: "/economic-calendar",
+    title: tr("تقویم اقتصادی و ساعت فارکس", "Economic calendar and forex hours"),
+    hook: tr("خبر و سشن را پیش از معامله ببین", "See the news and sessions before you trade"),
     bullets: [
-      "تقویم اقتصادی 9 ارز اصلی با Actual، Forecast و Previous و فیلتر تاثیر و ارز",
-      "هشدار با نوتیفیکیشن برای خبرهایی که زیر نظر گرفته‌ای",
-      "سشن‌های سیدنی، توکیو، فرانکفورت، لندن و نیویورک به وقت خودت، با ساعت تابستانی واقعی",
+      tr("تقویم اقتصادی 9 ارز اصلی با Actual، Forecast و Previous و فیلتر تاثیر و ارز", "Economic calendar for 9 major currencies with Actual, Forecast and Previous, and filters for impact and currency"),
+      tr("هشدار با نوتیفیکیشن برای خبرهایی که زیر نظر گرفته‌ای", "Notification alerts for the news events you are watching"),
+      tr("سشن‌های سیدنی، توکیو، فرانکفورت، لندن و نیویورک به وقت خودت، با ساعت تابستانی واقعی", "Sydney, Tokyo, Frankfurt, London and New York sessions in your own time, with real daylight saving"),
     ],
-    cta: "تقویمم را ببینم",
+    cta: tr("تقویمم را ببینم", "See my calendar"),
   },
   {
-    key: "roadmap", tab: "رودمپ", icon: Route, href: "/learning-roadmap",
-    title: "بدان قدم بعدی چیست.",
-    hook: "هدف بزرگت را به مسیرهای کوچک‌تر تبدیل کن و پیشرفتت را مرحله‌به‌مرحله دنبال کن.",
+    key: "roadmap", tab: tr("رودمپ", "Roadmap"), icon: Route, href: "/learning-roadmap",
+    title: tr("بدان قدم بعدی چیست.", "Know what the next step is."),
+    hook: tr("هدف بزرگت را به مسیرهای کوچک‌تر تبدیل کن و پیشرفتت را مرحله‌به‌مرحله دنبال کن.", "Turn your big goal into smaller paths and follow your progress stage by stage."),
     bullets: [
-      "موضوع و سطحت را بگو؛ مسیر مرحله‌به‌مرحله با هدف، کارهای عملی و منابع ساخته می‌شود",
-      "هر مرحله پروژه‌ی جمع‌بندی و ابزارهای لازمش را دارد",
-      "کارهای هر مرحله را تیک بزن و پیشرفت کل مسیر را ببین",
+      tr("موضوع و سطحت را بگو؛ مسیر مرحله‌به‌مرحله با هدف، کارهای عملی و منابع ساخته می‌شود", "Tell it your topic and level; a stage-by-stage path is built with goals, practical tasks and resources"),
+      tr("هر مرحله پروژه‌ی جمع‌بندی و ابزارهای لازمش را دارد", "Each stage has a wrap-up project and the tools it needs"),
+      tr("کارهای هر مرحله را تیک بزن و پیشرفت کل مسیر را ببین", "Tick off each stage's tasks and see the progress of the whole path"),
     ],
-    cta: "ساخت مسیر یادگیری",
+    cta: tr("ساخت مسیر یادگیری", "Build a learning path"),
   },
   {
-    key: "mentor", tab: "مربی‌ها", icon: GraduationCap, href: "/mentors",
-    title: "تنها جلو نرو.",
-    hook: "مربی موردنظرت را پیدا کن، برنامه بگیر و روند همکاری‌تان را در آریون مدیریت کن.",
+    key: "mentor", tab: tr("مربی‌ها", "Mentors"), icon: GraduationCap, href: "/mentors",
+    title: tr("تنها جلو نرو.", "Do not go it alone."),
+    hook: tr("مربی موردنظرت را پیدا کن، برنامه بگیر و روند همکاری‌تان را در آریون مدیریت کن.", "Find the mentor you want, get a plan and manage your collaboration in Arion."),
     bullets: [
-      "پیدا کردن مربی، دریافت برنامه و تایید یا درخواست تغییر؛ رتبه‌بندی بر اساس شایستگی است",
-      "چت‌های سرتاسر رمزنگاری‌شده؛ متنشان را جز خودتان کسی نمی‌بیند",
-      "پیگیری روند پیشرفت خودکار از تیک‌های روتینت انجام می‌شود؛ اگر ظرفیت مربی پر بود، در صف انتظار بمان",
+      tr("پیدا کردن مربی، دریافت برنامه و تایید یا درخواست تغییر؛ رتبه‌بندی بر اساس شایستگی است", "Find a mentor, get a plan and approve it or ask for changes; ranking is merit-based"),
+      tr("چت‌های سرتاسر رمزنگاری‌شده؛ متنشان را جز خودتان کسی نمی‌بیند", "End-to-end encrypted chats; nobody but you can see their text"),
+      tr("پیگیری روند پیشرفت خودکار از تیک‌های روتینت انجام می‌شود؛ اگر ظرفیت مربی پر بود، در صف انتظار بمان", "Progress tracking is automatic from your routine ticks; if a mentor is at capacity, stay on the waiting list"),
     ],
-    cta: "مشاهده مربی‌ها",
+    cta: tr("مشاهده مربی‌ها", "See mentors"),
   },
 ];
 
@@ -168,6 +169,7 @@ const PREVIEWS: Record<ModKey, (p: PreviewProps) => JSX.Element> = {
 };
 
 export function LandingShowcase() {
+  const MODS = mods();
   const t = useThemeTokens();
   const [active, setActive] = useState<ModKey>("routine");
   const [hover, setHover] = useState(false);
@@ -224,9 +226,9 @@ export function LandingShowcase() {
       onBlurCapture={() => setHover(false)}
     >
       <div className="lsc-head">
-        <span className="lh-eyebrow"><span className="lh-eyebrow-dot" aria-hidden="true" /> برش‌هایی از خود اپ</span>
+        <span className="lh-eyebrow"><span className="lh-eyebrow-dot" aria-hidden="true" /> {tr("برش‌هایی از خود اپ", "Snapshots from the app itself")}</span>
         <h2 id="lsc-title" className={`lsc-title ${t.heading}`}>
-          همه‌چیز وقتی <span className="lh-brand">کنار هم</span> باشد، ساده‌تر می‌شود.
+          {trv(<>همه‌چیز وقتی <span className="lh-brand">کنار هم</span> باشد، ساده‌تر می‌شود.</>, <>Everything gets simpler when it is <span className="lh-brand">together</span>.</>)}
         </h2>
       </div>
 
@@ -281,10 +283,10 @@ export function LandingShowcase() {
                 href="/auth/signup"
                 className={`lsc-cta inline-flex items-center gap-1.5 rounded-[18px] px-5 py-3 text-[14px] font-bold text-white transition hover:brightness-105 active:scale-[0.97] ${t.accentBg} ${t.accentShadow}`}
               >
-                {mod.cta} <ArrowLeft size={16} />
+                {mod.cta} <ArrowLeft size={16} className="dir-flip" />
               </Link>
               {mod.href !== "/auth/signup" && (
-                <Link href={mod.href} className="lh-link lsc-more">بیشتر بخوانید</Link>
+                <Link href={mod.href} className="lh-link lsc-more">{tr("بیشتر بخوانید", "Read more")}</Link>
               )}
             </div>
           </div>

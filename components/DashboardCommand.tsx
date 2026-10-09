@@ -16,6 +16,7 @@ import { featureVisible, type FeatureKey } from "@/lib/featureFlags";
 import { DashIcon, type DashIconName } from "./DashboardIcons";
 import { D_EASE } from "./DashboardKit";
 import { useDashAction, type DashAction } from "./DashboardActions";
+import { tr, isEn } from "@/lib/i18n";
 
 export type CommandItem = {
   id: string;
@@ -65,6 +66,44 @@ export const COMMANDS: CommandItem[] = [
   { id: "c-admin", group: "حساب", label: "پنل ادمین", href: "/admin", icon: "shield", keywords: "مدیریت ادمین admin", adminOnly: true },
 ];
 
+const COMMAND_EN: Record<string, { label: string; hint?: string }> = {
+  "a-program": { label: "Add program to routine", hint: "Routine" },
+  "a-workout": { label: "Start today's workout", hint: "Workout" },
+  "a-food": { label: "Log food", hint: "Calories" },
+  "a-trade": { label: "Log trade", hint: "Journal" },
+  "a-roadmap": { label: "Create a learning roadmap with AI", hint: "Roadmap" },
+  "p-weekly": { label: "Routine and weekly plan" },
+  "p-streak": { label: "Streak and achievements" },
+  "p-sleep": { label: "Sleep" },
+  "p-exercise": { label: "Workout plan" },
+  "p-calorie": { label: "Calorie tracker" },
+  "p-roadmaps": { label: "Roadmaps" },
+  "p-mentors": { label: "Find a mentor" },
+  "p-mentorship": { label: "My mentors" },
+  "p-analysis": { label: "Weekly review" },
+  "t-hub": { label: "Trading hub" },
+  "t-chart": { label: "Chart" },
+  "t-journal": { label: "Trading accounts" },
+  "t-check": { label: "Checklists" },
+  "t-cal": { label: "Economic calendar" },
+  "t-clock": { label: "Forex clock" },
+  "t-notes": { label: "Trading notes" },
+  "t-mt": { label: "MetaTrader connection" },
+  "c-account": { label: "Account" },
+  "c-sub": { label: "Subscription and plans" },
+  "c-notif": { label: "Notification settings" },
+  "c-admin": { label: "Admin panel" },
+};
+
+const GROUP_EN: Record<CommandItem["group"], string> = { "کار سریع": "Quick actions", "صفحه‌ها": "Pages", "ترید": "Trading", "حساب": "Account" };
+
+/** متن نمایشی یک آیتم به زبان جاری (کلید و جست‌وجوی فارسی دست‌نخورده) */
+function cmdText(c: CommandItem): { label: string; hint?: string } {
+  if (!isEn()) return { label: c.label, hint: c.hint };
+  const e = COMMAND_EN[c.id];
+  return { label: e?.label ?? c.label, hint: e ? e.hint : c.hint };
+}
+
 export function DashboardCommand({
   open,
   onClose,
@@ -96,8 +135,9 @@ export function DashboardCommand({
     const terms = nq.split(/\s+/);
     return visible
       .map((c) => {
-        const hay = normalizeFa(`${c.label} ${c.hint ?? ""} ${c.keywords ?? ""}`);
-        const label = normalizeFa(c.label);
+        const tx = cmdText(c);
+        const hay = normalizeFa(`${c.label} ${c.hint ?? ""} ${c.keywords ?? ""}${isEn() ? ` ${tx.label} ${tx.hint ?? ""}` : ""}`);
+        const label = normalizeFa(tx.label);
         if (!terms.every((t) => hay.includes(t))) return null;
         const score = (label.startsWith(terms[0]) ? 0 : 1) + (label.includes(nq) ? 0 : 1);
         return { c, score };
@@ -146,13 +186,13 @@ export function DashboardCommand({
           exit={{ opacity: 0 }}
           transition={{ duration: 0.18 }}
           onMouseDown={(e) => { if (e.target === e.currentTarget) onClose(); }}
-          dir="rtl"
+          dir={isEn() ? "ltr" : "rtl"}
         >
           <motion.div
             className="db-cmd"
             role="dialog"
             aria-modal="true"
-            aria-label="دسترسی سریع"
+            aria-label={tr("دسترسی سریع", "Quick access")}
             initial={{ opacity: 0, y: -14, scale: 0.97 }}
             animate={{ opacity: 1, y: 0, scale: 1 }}
             exit={{ opacity: 0, y: -8, scale: 0.98 }}
@@ -165,8 +205,8 @@ export function DashboardCommand({
                 ref={inputRef}
                 value={q}
                 onChange={(e) => setQ(e.target.value)}
-                placeholder="کجا بریم؟ اسم صفحه یا کار رو بنویس…"
-                aria-label="جست‌وجو"
+                placeholder={tr("کجا بریم؟ اسم صفحه یا کار رو بنویس…", "Where to? Type a page or action…")}
+                aria-label={tr("جست‌وجو", "Search")}
                 aria-controls="db-cmd-list"
                 aria-activedescendant={results[active] ? `db-cmd-${results[active].id}` : undefined}
                 autoComplete="off"
@@ -175,14 +215,15 @@ export function DashboardCommand({
               <kbd className="db-kbd db-cmd-esc">Esc</kbd>
             </div>
             <div className="db-cmd-list thin-scroll" id="db-cmd-list" role="listbox" ref={listRef}>
-              {results.length === 0 && <p className="db-cmd-empty">چیزی پیدا نشد</p>}
+              {results.length === 0 && <p className="db-cmd-empty">{tr("چیزی پیدا نشد", "Nothing found")}</p>}
               {results.map((c, i) => {
                 const head = c.group !== lastGroup ? c.group : null;
                 lastGroup = c.group;
                 const locked = !!c.module && modules !== null && !modules.has(c.module);
+                const tx = cmdText(c);
                 return (
                   <div key={c.id}>
-                    {head && <div className="db-cmd-group">{head}</div>}
+                    {head && <div className="db-cmd-group">{isEn() ? GROUP_EN[head] : head}</div>}
                     <button
                       type="button"
                       id={`db-cmd-${c.id}`}
@@ -194,9 +235,9 @@ export function DashboardCommand({
                       onClick={() => go(c)}
                     >
                       <span className="db-cmd-icon"><DashIcon name={c.icon} /></span>
-                      <span className="db-cmd-label">{c.label}</span>
-                      {locked && <span className="db-cmd-lock" title="نیاز به اشتراک"><DashIcon name="lock" /></span>}
-                      {c.hint && <span className="db-cmd-hint">{c.hint}</span>}
+                      <span className="db-cmd-label">{tx.label}</span>
+                      {locked && <span className="db-cmd-lock" title={tr("نیاز به اشتراک", "Subscription required")}><DashIcon name="lock" /></span>}
+                      {tx.hint && <span className="db-cmd-hint">{tx.hint}</span>}
                       <span className="db-cmd-enter" aria-hidden="true">↵</span>
                     </button>
                   </div>
@@ -204,9 +245,9 @@ export function DashboardCommand({
               })}
             </div>
             <footer className="db-cmd-foot">
-              <span><kbd className="db-kbd">↑</kbd><kbd className="db-kbd">↓</kbd> جابه‌جایی</span>
-              <span><kbd className="db-kbd">↵</kbd> باز کردن</span>
-              <span><kbd className="db-kbd">Ctrl</kbd><kbd className="db-kbd">K</kbd> باز/بسته</span>
+              <span><kbd className="db-kbd">↑</kbd><kbd className="db-kbd">↓</kbd> {tr("جابه‌جایی", "Navigate")}</span>
+              <span><kbd className="db-kbd">↵</kbd> {tr("باز کردن", "Open")}</span>
+              <span><kbd className="db-kbd">Ctrl</kbd><kbd className="db-kbd">K</kbd> {tr("باز/بسته", "Toggle")}</span>
             </footer>
           </motion.div>
         </motion.div>

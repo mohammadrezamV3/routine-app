@@ -3,6 +3,7 @@ import { ModuleKey } from "@prisma/client";
 import { prisma } from "@/lib/prisma";
 import { requireModule } from "@/lib/moduleAccess";
 import { sessionFeatureBlocked } from "@/lib/featureFlagsServer";
+import { tr } from "@/lib/i18n";
 
 // جزئیات کامل یک معامله — تنها جایی که عکس‌ها و اسنپ‌شات چک‌لیست هم
 // برگردانده می‌شوند. لیست معاملات عمدا این‌ها را ندارد تا سبک بماند.
@@ -18,7 +19,7 @@ export async function GET(_req: NextRequest, { params }: { params: { id: string 
       images: { select: { id: true, dataUrl: true, caption: true, order: true }, orderBy: { order: "asc" } },
     },
   });
-  if (!entry) return NextResponse.json({ error: "معامله پیدا نشد" }, { status: 404 });
+  if (!entry) return NextResponse.json({ error: tr(tr("معامله پیدا نشد", "Trade not found"), "Trade not found") }, { status: 404 });
 
   return NextResponse.json({
     entry: {

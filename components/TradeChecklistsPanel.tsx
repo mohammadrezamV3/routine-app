@@ -11,6 +11,7 @@ import { useAsyncAction } from "@/lib/useAsyncAction";
 import { TradeKebabMenu } from "./TradeKebabMenu";
 import { ChecklistEditor } from "./ChecklistEditor";
 import { useLiveRefresh } from "@/lib/liveSync";
+import { tr } from "@/lib/i18n";
 
 type Item = { id: string; text: string; order: number };
 type Checklist = { id: string; name: string; color: string; required: boolean; archived: boolean; order: number; note: string | null; items: Item[] };
@@ -75,7 +76,7 @@ export function TradeChecklistsPanel({
       {!checklists.length && (
         <div className="trade-empty-state">
           <ClipboardList size={32} />
-          <p>هنوز چک‌لیستی نساختی</p>
+          <p>{tr("هنوز چک‌لیستی نساختی", "You have not created a checklist yet")}</p>
         </div>
       )}
 
@@ -93,11 +94,11 @@ export function TradeChecklistsPanel({
             >
               <div className="trade-checklist-row-kebab">
                 <TradeKebabMenu
-                  label={`گزینه‌های ${c.name}`}
+                  label={tr(`گزینه‌های ${c.name}`, `Options for ${c.name}`)}
                   actions={[
-                    { label: "ویرایش", icon: <Pencil size={14} />, onClick: () => setEditing(c) },
-                    { label: "کپی", icon: <Copy size={14} />, onClick: () => duplicate(c.id), disabled: pendingKey === `dup:${c.id}` },
-                    { label: "حذف", icon: <Trash2 size={14} />, onClick: () => remove(c.id), danger: true },
+                    { label: tr("ویرایش", "Edit"), icon: <Pencil size={14} />, onClick: () => setEditing(c) },
+                    { label: tr("کپی", "Duplicate"), icon: <Copy size={14} />, onClick: () => duplicate(c.id), disabled: pendingKey === `dup:${c.id}` },
+                    { label: tr("حذف", "Delete"), icon: <Trash2 size={14} />, onClick: () => remove(c.id), danger: true },
                   ]}
                 />
               </div>
@@ -106,8 +107,8 @@ export function TradeChecklistsPanel({
                 {/* توپ رنگی سمت چپ اسم (بلافاصله بعدش در RTL) — نه گوشه‌ی
                     مطلق کارت. هم‌قاعده‌ی فهرست حساب‌های معاملاتی. */}
                 <span className="trade-account-dot" style={{ background: c.color }} />
-                {c.required && <span className="trade-account-type">الزامی</span>}
-                <span className="trade-checklist-row-count mono">{faNum(c.items.length)} مورد</span>
+                {c.required && <span className="trade-account-type">{tr("الزامی", "Required")}</span>}
+                <span className="trade-checklist-row-count mono">{tr(`${faNum(c.items.length)} مورد`, `${c.items.length} ${c.items.length === 1 ? "item" : "items"}`)}</span>
               </Link>
             </motion.div>
           ))}

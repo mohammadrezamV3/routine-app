@@ -1,13 +1,15 @@
 // محاسبه‌ی هدف کالری روزانه — یک فرمول قطعی و شناخته‌شده (بدون هوش مصنوعی، چون
 // این بخش یک حساب‌وکتاب استاندارد تغذیه‌ست، نه چیزی که نیاز به تولید متن داشته باشه).
 
+import { tr } from "./i18n";
+
 export type CalorieGoal = "lose" | "maintain" | "gain";
 export type Sex = "male" | "female";
 
 export const CALORIE_GOAL_LABELS: Record<CalorieGoal, string> = {
-  lose: "کاهش وزن",
-  maintain: "حفظ وزن",
-  gain: "افزایش وزن/عضله",
+  get lose() { return tr("کاهش وزن", "Lose weight"); },
+  get maintain() { return tr("حفظ وزن", "Maintain weight"); },
+  get gain() { return tr("افزایش وزن/عضله", "Gain weight/muscle"); },
 };
 
 // Mifflin-St Jeor — دقیق‌ترین فرمول رایج BMR بدون نیاز به ابزار تخصصی
@@ -72,11 +74,11 @@ export function calcDailyTargetKcal(input: {
 // تقریبی و رایج آشپزی‌ان (نه دقیق آزمایشگاهی)
 export type FoodUnit = "gram" | "ml" | "tsp" | "tbsp" | "cup";
 export const UNIT_LABELS: Record<FoodUnit, string> = {
-  gram: "گرم",
-  ml: "میلی‌لیتر",
-  tsp: "قاشق چای‌خوری",
-  tbsp: "قاشق غذاخوری",
-  cup: "پیمانه",
+  get gram() { return tr("گرم", "Grams"); },
+  get ml() { return tr("میلی‌لیتر", "Milliliters"); },
+  get tsp() { return tr("قاشق چای‌خوری", "Teaspoon"); },
+  get tbsp() { return tr("قاشق غذاخوری", "Tablespoon"); },
+  get cup() { return tr("پیمانه", "Cup"); },
 };
 export const UNIT_TO_GRAMS: Record<FoodUnit, number> = {
   gram: 1,
@@ -120,6 +122,23 @@ const MEAL_SPLITS: Record<number, { key: string; label: string; ratio: number }[
     { key: "snack3", label: "میان‌وعده 3", ratio: 0.1 },
   ],
 };
+
+const MEAL_LABELS_EN: Record<string, string> = {
+  breakfast: "Breakfast", lunch: "Lunch", dinner: "Dinner", snack: "Snack",
+  snack1: "Snack 1", snack2: "Snack 2", snack3: "Snack 3",
+};
+
+const MEAL_LABELS_FA: Record<string, string> = {
+  breakfast: "صبحانه", lunch: "ناهار", dinner: "شام", snack: "میان‌وعده",
+  snack1: "میان‌وعده 1", snack2: "میان‌وعده 2", snack3: "میان‌وعده 3",
+};
+
+/** برچسب وعده به زبان جاری؛ labelFa همونیه که در دیتابیس ذخیره شده (فارسی).
+ * فقط برچسب پیش‌فرض ترجمه می‌شه — اسمی که کاربر خودش گذاشته دست‌نخورده می‌مونه. */
+export function mealLabelDisplay(key: string, labelFa: string): string {
+  if (MEAL_LABELS_FA[key] !== labelFa) return labelFa;
+  return tr(labelFa, MEAL_LABELS_EN[key] ?? labelFa);
+}
 
 export function splitMeals(dailyTargetKcal: number, mealsPerDay: number): MealBreakdownItem[] {
   const clamped = Math.min(6, Math.max(2, Math.round(mealsPerDay)));

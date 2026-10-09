@@ -3,6 +3,8 @@
 // یک جلوه‌ی تزئینی فقط-CSS، متن تبریک کوتاه و بازه‌های تاریخ هر بار وقوع.
 // [قرارداد — داده و CSS با ایجنت A؛ منطق زمان در lib/eventThemeState.ts]
 
+import { tr, isEn } from "@/lib/i18n";
+
 export type EventDecoration =
   | "snow" | "bats" | "leaves" | "lanterns" | "hearts"
   | "fireworks" | "blossoms" | "stars" | "sparks" | "candles";
@@ -158,4 +160,32 @@ export const EVENT_THEMES: EventTheme[] = [
 export function eventThemeById(id: string | null | undefined): EventTheme | null {
   if (!id) return null;
   return EVENT_THEMES.find((t) => t.id === id) ?? null;
+}
+
+// متن انگلیسی مناسبت‌ها (کلید = id). داده‌ی فارسی بالا دست‌نخورده می‌مونه و متن
+// قابل‌نمایش با eventThemeName / eventThemeGreeting / eventOccurrenceNote به زبان جاری میاد.
+const EVENT_TEXT_EN: Record<string, { name: string; greeting: string }> = {
+  mehregan: { name: "Mehregan festival", greeting: "Happy Mehregan; may your autumn be full of color and kindness" },
+  halloween: { name: "Halloween", greeting: "Happy Halloween; a night full of treats and thrills" },
+  yalda: { name: "Yalda night", greeting: "Happy Yalda; a night of warmth, pomegranates and poetry" },
+  christmas: { name: "Christmas and New Year", greeting: "Merry Christmas and Happy New Year" },
+  valentine: { name: "Valentine's Day", greeting: "Happy Valentine's Day; a day full of love and kindness" },
+  sepandarmazgan: { name: "Sepandarmazgan", greeting: "Happy Sepandarmazgan, the Persian day of love and of honoring the earth and women" },
+  "eid-fitr": { name: "Eid al-Fitr", greeting: "Eid Mubarak" },
+  "chaharshanbe-suri": { name: "Chaharshanbe Suri", greeting: "Happy Chaharshanbe Suri; take my yellow, give me your red" },
+  nowruz: { name: "Nowruz", greeting: "Happy Nowruz; a new year full of joy and health" },
+  sizdah: { name: "Sizdah Bedar", greeting: "Enjoy Sizdah Bedar; do not forget nature and friends" },
+};
+
+export function eventThemeName(t: EventTheme): string {
+  return isEn() ? (EVENT_TEXT_EN[t.id]?.name ?? t.name) : t.name;
+}
+
+export function eventThemeGreeting(t: EventTheme): string {
+  return isEn() ? (EVENT_TEXT_EN[t.id]?.greeting ?? t.greeting) : t.greeting;
+}
+
+export function eventOccurrenceNote(note: string | undefined): string | undefined {
+  if (!note) return note;
+  return tr(note, "Approximate date; depends on moon sighting");
 }

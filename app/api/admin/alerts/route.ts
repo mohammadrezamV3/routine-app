@@ -2,6 +2,7 @@ import { NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 import { requireAdmin } from "@/lib/requireAdmin";
 import { hasPermission } from "@/lib/adminPermissions";
+import { tr } from "@/lib/i18n";
 
 // شمارنده‌های «نیاز به اقدام» برای زنگوله و نشان‌های سایدبار. هر شمارنده فقط
 // وقتی برمی‌گرده که ادمین دسترسی همون بخش رو داره. فقط عدد و زمان — هیچ متن
@@ -39,7 +40,7 @@ export async function GET() {
         prisma.mentorProfile.count({ where }),
         prisma.mentorProfile.findFirst({ where, orderBy: { updatedAt: "asc" }, select: { updatedAt: true } }),
       ]);
-      items.push({ key: "mentors", label: "احراز هویت مربی", count, href: "/admin/mentors?tab=pending", tone: "info", oldestAt: oldest?.updatedAt.toISOString() ?? null });
+      items.push({ key: "mentors", label: tr("احراز هویت مربی", "Mentor verification"), count, href: "/admin/mentors?tab=pending", tone: "info", oldestAt: oldest?.updatedAt.toISOString() ?? null });
     })());
   }
   if (can("support")) {
@@ -49,7 +50,7 @@ export async function GET() {
         prisma.supportTicket.count({ where: { status: "OPEN", updatedAt: { lt: slaCut } } }),
         prisma.supportTicket.findFirst({ where: { status: "OPEN" }, orderBy: { updatedAt: "asc" }, select: { updatedAt: true } }),
       ]);
-      items.push({ key: "tickets", label: "تیکت‌های باز", count, href: "/admin/support", tone: overdue > 0 ? "danger" : "warn", oldestAt: oldest?.updatedAt.toISOString() ?? null, overdue });
+      items.push({ key: "tickets", label: tr("تیکت‌های باز", "Open tickets"), count, href: "/admin/support", tone: overdue > 0 ? "danger" : "warn", oldestAt: oldest?.updatedAt.toISOString() ?? null, overdue });
     })());
   }
   if (can("chat")) {
@@ -58,20 +59,20 @@ export async function GET() {
         prisma.tradeChatReport.count({ where: { status: "OPEN" } }),
         prisma.tradeChatReport.findFirst({ where: { status: "OPEN" }, orderBy: { createdAt: "asc" }, select: { createdAt: true } }),
       ]);
-      items.push({ key: "chat", label: "گزارش‌های چت بررسی‌نشده", count, href: "/admin/chat-reports", tone: "danger", oldestAt: oldest?.createdAt.toISOString() ?? null });
+      items.push({ key: "chat", label: tr("گزارش‌های چت بررسی‌نشده", "Unreviewed chat reports"), count, href: "/admin/chat-reports", tone: "danger", oldestAt: oldest?.createdAt.toISOString() ?? null });
     })());
   }
   // پرداخت فقط بعد از تایید ساخته می‌شه؛ شکست پرداخت از ErrorLog سرویس payment میاد
   if (can("finance")) {
     tasks.push((async () => {
       const count = await prisma.errorLog.count({ where: { service: "payment", createdAt: { gte: day } } });
-      items.push({ key: "payments", label: "پرداخت ناموفق (24 ساعت)", count, href: "/admin/transactions", tone: "danger" });
+      items.push({ key: "payments", label: tr("پرداخت ناموفق (24 ساعت)", "Failed payments (24 hours)"), count, href: "/admin/transactions", tone: "danger" });
     })());
   }
   if (can("system")) {
     tasks.push((async () => {
       const count = await prisma.errorLog.count({ where: { service: { not: "payment" }, severity: { in: ["ERROR", "CRITICAL"] }, createdAt: { gte: day } } });
-      items.push({ key: "errors", label: "خطاهای سرور (24 ساعت)", count, href: "/admin/system/errors", tone: "danger" });
+      items.push({ key: "errors", label: tr("خطاهای سرور (24 ساعت)", "Server errors (24 hours)"), count, href: "/admin/system/errors", tone: "danger" });
     })());
   }
 

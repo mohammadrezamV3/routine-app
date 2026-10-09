@@ -3,6 +3,7 @@
 import { cn } from "@/lib/utils";
 import { useEffect, useRef } from "react";
 import { useTheme } from "./ThemeProvider";
+import { tr } from "@/lib/i18n";
 
 // آواتار پیش‌فرض پروفایل — کامپوننت agent-avatar از smoothui، عینا پورت
 // شده (کد منبع رو خود کاربر داد چون شبکه‌ی این سندباکس به smoothui.dev و
@@ -288,7 +289,7 @@ export function AgentAvatar({
 
   return (
     <canvas
-      aria-label={`آواتار ${seed}`}
+      aria-label={tr(`آواتار ${seed}`, `Avatar ${seed}`)}
       className={cn("agent-avatar rounded-full", className)}
       ref={canvasRef}
       role="img"

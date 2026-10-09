@@ -2,6 +2,7 @@ import type { MentorProgramTemplate, Prisma } from "@prisma/client";
 import { validateProgramInput, type ItemData } from "@/lib/mentorValidate";
 import { rangeDuration } from "@/lib/mentorProgramCopy";
 import { isoDate } from "@/lib/mentorServer";
+import { tr } from "@/lib/i18n";
 
 // قالب برنامه‌ی منتور — اعتبارسنجی و شکل پاسخ. محتوای قالب از همان
 // validateProgramInput برنامه رد می‌شود، پس قالب هرگز چیزی نگه نمی‌دارد که
@@ -26,10 +27,10 @@ export type TemplateRow = {
 export type TemplateDetail = TemplateRow & { description: string | null; note: string | null; items: ItemData[] };
 
 export function validateTemplateName(v: unknown): { ok: true; name: string } | { ok: false; error: string } {
-  if (typeof v !== "string") return { ok: false, error: "نام قالب لازم است" };
+  if (typeof v !== "string") return { ok: false, error: tr("نام قالب لازم است", "A template name is required") };
   const name = v.replace(/\s+/g, " ").trim();
-  if (!name) return { ok: false, error: "نام قالب لازم است" };
-  if (name.length > TEMPLATE_NAME_MAX) return { ok: false, error: `نام قالب حداکثر ${TEMPLATE_NAME_MAX} نویسه است` };
+  if (!name) return { ok: false, error: tr("نام قالب لازم است", "A template name is required") };
+  if (name.length > TEMPLATE_NAME_MAX) return { ok: false, error: tr(`نام قالب حداکثر ${TEMPLATE_NAME_MAX} نویسه است`, `Template name can be at most ${TEMPLATE_NAME_MAX} characters`) };
   return { ok: true, name };
 }
 
@@ -37,7 +38,7 @@ export function validateTemplateName(v: unknown): { ok: true; name: string } | {
 export function templateDataFromBody(body: unknown): { ok: true; data: Omit<Prisma.MentorProgramTemplateUncheckedCreateInput, "profileId" | "name"> } | { ok: false; error: string } {
   const v = validateProgramInput(body);
   if (!v.ok) return v;
-  if (v.data.items.length === 0) return { ok: false, error: "قالب حداقل یک آیتم لازم دارد" };
+  if (v.data.items.length === 0) return { ok: false, error: tr("قالب حداقل یک آیتم لازم دارد", "A template needs at least one item") };
   const start = v.data.startDate ? isoDate(v.data.startDate) : null;
   const end = v.data.endDate ? isoDate(v.data.endDate) : null;
   return {
@@ -72,7 +73,7 @@ export function toTemplateRow(t: MentorProgramTemplate): TemplateRow {
 /** آیتم‌های ذخیره‌شده دوباره اعتبارسنجی می‌شوند؛ ردیف خراب نادیده گرفته می‌شود */
 export function templateItems(t: MentorProgramTemplate): ItemData[] {
   const raw = Array.isArray(t.items) ? t.items : [];
-  const v = validateProgramInput({ type: t.type, title: t.title || "قالب", items: raw });
+  const v = validateProgramInput({ type: t.type, title: t.title || tr("قالب", "Template"), items: raw });
   return v.ok ? v.data.items : [];
 }
 

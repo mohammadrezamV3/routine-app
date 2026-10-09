@@ -1,3 +1,4 @@
+import { tr } from "@/lib/i18n";
 import { NextResponse } from "next/server";
 import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/auth";
@@ -15,7 +16,7 @@ export async function GET() {
   const userId = (session?.user as any)?.id as string | undefined;
   if (!userId) return NextResponse.json({ error: "unauthorized" }, { status: 401 });
   if (!(await checkRateLimit(`achievement-reward:${userId}`, 30, 60_000))) {
-    return NextResponse.json({ error: "درخواست زیاد است، کمی بعد دوباره امتحان کن" }, { status: 429 });
+    return NextResponse.json({ error: tr("درخواست زیاد است، کمی بعد دوباره امتحان کن", "Too many requests — try again shortly") }, { status: 429 });
   }
   const reward = await findAchievementReward(userId);
   return NextResponse.json(

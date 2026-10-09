@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 import { requireAdmin } from "@/lib/requireAdmin";
 import { adminErrorResponse, loadTarget } from "@/lib/adminUsers";
+import { tr } from "@/lib/i18n";
 
 // GET /api/admin/mentors/:profileId — پروفایل + مدارک (فقط متا، هرگز بایت) +
 // تاریخچه‌ی احراز + آمار + گزارش‌های باز علیه همین کاربر.
@@ -35,7 +36,7 @@ export async function GET(_req: NextRequest, { params }: { params: { profileId: 
       },
     },
   });
-  if (!profile) return NextResponse.json({ error: "مربی پیدا نشد" }, { status: 404 });
+  if (!profile) return NextResponse.json({ error: tr("مربی پیدا نشد", "Mentor not found") }, { status: 404 });
   // ادمین محدود جزئیات/تاریخچه‌ی احراز Owner (یا ادمین دیگه بدون admins.manage) رو نمی‌بینه
   try {
     await loadTarget(g, profile.userId);

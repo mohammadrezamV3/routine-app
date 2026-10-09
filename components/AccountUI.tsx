@@ -4,6 +4,7 @@ import { motion } from "framer-motion";
 import { AlertTriangle, Check } from "lucide-react";
 import { AccountBackButton } from "./AccountBackButton";
 import { Spinner } from "./Spinner";
+import { tr } from "@/lib/i18n";
 
 /**
  * پایه‌های مشترک همه‌ی زیرصفحه‌های پنل کاربری.
@@ -109,7 +110,7 @@ export function AccountLine({
  * هشدار می‌گیرد).
  */
 export function AccountSaveBar({
-  onSave, saving, saved, error, label = "ذخیره تغییرات", disabled,
+  onSave, saving, saved, error, label = tr("ذخیره تغییرات", "Save changes"), disabled,
 }: {
   onSave: () => void;
   saving?: boolean;

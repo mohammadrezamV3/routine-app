@@ -6,6 +6,7 @@ import {
   normalizeTrialAiLimits, type TrialAiFeature, type TrialAiLimits,
 } from "@/lib/trial";
 import { isInTrial } from "@/lib/trialAccess";
+import { tr } from "@/lib/i18n";
 import { NOMO_FREE_USES_SETTING_KEY, normalizeNomoFreeUses } from "@/lib/routineAssistant";
 
 // سقف مصرف ماهانه‌ی هر فیچر AI به‌ازای هر پلن — عدد از پیش خود کاربر
@@ -100,14 +101,14 @@ export async function checkAndConsumeAiQuota(
           code: "trial_ai_limit",
           error:
             limit! > 0
-              ? `سهمیه‌ی هوش مصنوعی دوره‌ی آزمایشی برای این بخش (${limit} بار) تموم شد. برای استفاده‌ی بیشتر، از صفحه‌ی «اشتراک» یکی از پلن‌ها رو فعال کن.`
-              : "این امکان هوش مصنوعی توی دوره‌ی آزمایشی فعال نیست. برای استفاده، از صفحه‌ی «اشتراک» یکی از پلن‌ها رو فعال کن.",
+              ? tr(`سهمیه‌ی هوش مصنوعی دوره‌ی آزمایشی برای این بخش (${limit} بار) تموم شد. برای استفاده‌ی بیشتر، از صفحه‌ی «اشتراک» یکی از پلن‌ها رو فعال کن.`, `Your trial AI quota for this feature (${limit} uses) is used up. To keep using it, activate a plan from the Subscription page.`)
+              : tr("این امکان هوش مصنوعی توی دوره‌ی آزمایشی فعال نیست. برای استفاده، از صفحه‌ی «اشتراک» یکی از پلن‌ها رو فعال کن.", "This AI feature is not available during the trial. To use it, activate a plan from the Subscription page."),
         }
       : {
           ok: false,
           limit: limit!,
           code: "monthly_limit",
-          error: `این ماه سقف استفاده از این امکان (${limit} بار) رو پر کردی — اول ماه بعد دوباره فعال می‌شه.`,
+          error: tr(`این ماه سقف استفاده از این امکان (${limit} بار) رو پر کردی — اول ماه بعد دوباره فعال می‌شه.`, `You have reached this month's limit for this feature (${limit} uses) — it resets at the start of next month.`),
         };
 
   if (limit <= 0) return denied();

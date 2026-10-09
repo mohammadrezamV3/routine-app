@@ -4,6 +4,7 @@ import { useMemo, useState } from "react";
 import { TICKER_CATALOG, CATEGORY_LABELS, MAX_TICKER_SYMBOLS, TickerSymbol } from "@/lib/tickerSymbols";
 import { useLockBodyScroll } from "@/lib/useLockBodyScroll";
 import { TickButton } from "./TickButton";
+import { tr } from "@/lib/i18n";
 
 // انتخاب‌گر بازارها — هم توی پنل کاربری (مدیریت همیشگی) و هم توی خود
 // صفحه‌ی ترید (فقط دفعه‌ی اول، برای onboarding) استفاده می‌شه. کاتالوگ حدود
@@ -43,17 +44,17 @@ export function MarketPicker({
       <div className="modal-panel open">
         <div className="modal-head">
           <div className="modal-title">{title}</div>
-          <button className="nav-close" onClick={onClose} aria-label="بستن">×</button>
+          <button className="nav-close" onClick={onClose} aria-label={tr("بستن", "Close")}>×</button>
         </div>
         <div className="modal-body">
           {intro && <div className="section-note" style={{ marginTop: 0 }}>{intro}</div>}
           <div className="section-note" style={{ marginBottom: 10 }}>
-            {symbols.length} از حداکثر {MAX_TICKER_SYMBOLS} بازار انتخاب شده
+            {tr(`${symbols.length} از حداکثر ${MAX_TICKER_SYMBOLS} بازار انتخاب شده`, `${symbols.length} of ${MAX_TICKER_SYMBOLS} markets selected`)}
           </div>
           <input
             type="text"
             className="wsearch-newform-name"
-            placeholder="جستجوی نماد یا اسم بازار…"
+            placeholder={tr("جستجوی نماد یا اسم بازار…", "Search symbol or market name…")}
             value={query}
             onChange={(e) => setQuery(e.target.value)}
             style={{ marginBottom: 10 }}
@@ -80,7 +81,7 @@ export function MarketPicker({
               })}
             </div>
           ))}
-          {grouped.size === 0 && <div className="item-line empty">چیزی پیدا نشد</div>}
+          {grouped.size === 0 && <div className="item-line empty">{tr("چیزی پیدا نشد", "Nothing found")}</div>}
         </div>
       </div>
     </>

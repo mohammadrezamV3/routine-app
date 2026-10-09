@@ -1,11 +1,12 @@
 import Link from "next/link";
 import { LogIn } from "lucide-react";
+import { tr } from "@/lib/i18n";
 
 // وقتی کاربر مهمون (لاگین‌نکرده) میاد سراغ یه بخش نیازمند حساب (ورزش/ترید)
 // — عینا هم‌زبان بصری ModuleGate (پیش‌نمایش تار اسکلتی + پیام + دکمه)
 // ولی برای «وارد نشدن» نه «اشتراک نداشتن». بعد ورود، خود ModuleGate
 // تصمیم دسترسی ماژول رو می‌گیره — این گیت جایگزینش نمی‌شه، فقط قبلش می‌شینه.
-export function AuthGate({ message = "برای استفاده از این سرویس وارد شوید" }: { message?: string }) {
+export function AuthGate({ message = tr("برای استفاده از این سرویس وارد شوید", "Log in to use this service") }: { message?: string }) {
   return (
     <div className="module-gate auth-gate">
       <div className="module-gate-blur" aria-hidden="true">
@@ -29,7 +30,7 @@ export function AuthGate({ message = "برای استفاده از این سرو
         </span>
         <div className="module-gate-msg">{message}</div>
         <Link href="/auth/login" className="module-gate-cta">
-          وارد شوید
+          {tr("وارد شوید", "Log in")}
         </Link>
       </div>
     </div>

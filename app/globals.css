@@ -196,6 +196,8 @@
      رنگ: تیغه هم مثل شیارش سیاه است، فقط یک پله روشن‌تر تا دیده شود. */
   html{ direction:ltr; scrollbar-width:thin; scrollbar-color:#2B2F33 #000000; }
   body{ direction:rtl; }
+  /* زبان انگلیسی (lib/i18n.ts، docs/i18n.md): کل صفحه چپ‌به‌راست */
+  html[dir="ltr"] body{ direction:ltr; }
   html::-webkit-scrollbar{ width:6px; }
   html::-webkit-scrollbar-track{ background:#000000; }
   html::-webkit-scrollbar-thumb{ background:#2B2F33; border-radius:10px; }
@@ -2399,7 +2401,7 @@
   .tm-rail{ position:absolute; inset-inline-start:14px; top:14px; bottom:14px; width:2px; background:var(--line); border-radius:2px; }
   .tm-rail-fill{ position:absolute; inset-inline-start:0; top:0; width:100%; background:var(--accent); border-radius:2px; transition:height .5s ease; box-shadow:0 0 10px rgba(var(--accent-rgb),.5); }
   .tm-station{
-    position:relative; margin-bottom:16px; padding:14px 16px 14px 14px; border-radius:16px;
+    position:relative; margin-bottom:16px; padding:14px; padding-inline-start:16px; border-radius:16px;
     border:1px solid var(--line); background:rgba(var(--surface-rgb), .13);
     backdrop-filter:blur(20px) saturate(160%); -webkit-backdrop-filter:blur(20px) saturate(160%);
     transition:border-color .2s ease, background .2s ease;
@@ -2802,7 +2804,7 @@
   .wsearch-input-icon{position:absolute; top:50%; inset-inline-start:13px; transform:translateY(-50%); width:15px; height:15px; pointer-events:none;}
   .wsearch-input{
     width:100%; border:1px solid var(--line); border-radius:var(--field-radius);
-    padding:10px 38px 10px 14px; font-family:var(--font-latin), var(--font-vazir), sans-serif; font-weight:500; font-size:13.5px; color:var(--text);
+    padding:10px 14px; padding-inline-start:38px; font-family:var(--font-latin), var(--font-vazir), sans-serif; font-weight:500; font-size:13.5px; color:var(--text);
     outline:none; transition:border-color .15s ease, background .15s ease;
   }
   .wsearch-input:focus{border-color:var(--accent);}
@@ -3921,7 +3923,7 @@ body[data-theme="light"] .auth-full-btn, body:not([data-theme="light"]) .auth-fu
 /* دکمه‌ی «ارسال مجدد کد» — زیر فیلد کد، چسبیده به سمت راست (نه وسط‌چین
    زیر کل فرم)، عمدا بدون بک‌گراند/بردر (اکشن ثانویه، نه اصلی) */
 .auth-resend-btn{
-  display:block; width:auto; margin:8px 0 0 auto; padding:4px 2px; text-align:start;
+  display:block; width:auto; margin:8px 0 0; margin-inline-end:auto; padding:4px 2px; text-align:start;
   background:none; border:none; color:var(--muted); font-size:12px; font-weight:600; cursor:pointer;
   box-shadow:none; backdrop-filter:none; -webkit-backdrop-filter:none;
   transition:color .15s ease;
@@ -5152,7 +5154,7 @@ body:has(.admin-root) .wrap{ max-width:none; padding:0; margin:0; min-height:0; 
 .admin-nav-head.active .admin-nav-icon{ background:rgba(var(--adm-accent-rgb),.16); }
 .admin-nav-label{ flex:1; }
 .admin-nav-chevron{ display:flex; align-items:center; color:var(--adm-muted-2); flex-shrink:0; }
-.admin-nav-children{ display:flex; flex-direction:column; gap:1px; padding:2px 10px 6px 0; margin-inline-start:32px; border-inline-start:1px solid var(--adm-border); }
+.admin-nav-children{ display:flex; flex-direction:column; gap:1px; padding:2px 0 6px; padding-inline-start:10px; margin-inline-start:32px; border-inline-start:1px solid var(--adm-border); }
 .admin-nav-leaf{
   display:block; padding:7px 12px; font-size:12.5px; color:var(--adm-muted); text-decoration:none; border-radius:9px;
   transition:background .15s ease, color .15s ease;
@@ -5512,7 +5514,7 @@ textarea.admin-input{ resize:vertical; font-family:inherit; }
 .admin-feature-toolbar{ display:flex; align-items:center; justify-content:space-between; gap:12px; flex-wrap:wrap; margin-bottom:12px; }
 .admin-feature-search{ flex:1 1 240px; max-width:360px; }
 .admin-feature-counts{ display:flex; gap:14px; font-size:12px; color:var(--adm-muted); font-weight:600; }
-.admin-feature-counts b{ color:var(--adm-text); font-weight:800; margin-left:3px; }
+.admin-feature-counts b{ color:var(--adm-text); font-weight:800; margin-inline-end:3px; }
 .admin-feature-counts .is-off b{ color:var(--adm-red); }
 .admin-feature-grid{ display:grid; grid-template-columns:repeat(auto-fit, minmax(min(100%, 520px), 1fr)); gap:12px; align-items:start; }
 .admin-feature-card .admin-perm-group-title{ font-size:12.5px; margin-bottom:4px; }
@@ -6016,7 +6018,7 @@ html[data-perf="low"] .siri-orb *{
   display:flex; align-items:center; justify-content:center; background:var(--accent-dim); color:var(--accent);
 }
 .premium-celebration-particle{
-  position:absolute; top:50%; inset-inline-end:50%; width:6px; height:6px; margin:-3px 0 0 -3px;
+  position:absolute; top:50%; inset-inline-end:50%; width:6px; height:6px; margin:-3px 0 0; margin-inline-end:-3px;
   border-radius:999px; background:var(--accent); pointer-events:none;
 }
 .premium-celebration-title{ font-size:16px; font-weight:800; color:var(--text); }
@@ -6441,7 +6443,7 @@ body[data-theme="light"] .trade-toggle, body:not([data-theme="light"]) .trade-to
 }
 
 .trade-checklist-grid{ display:flex; flex-direction:column; gap:12px; margin-top:16px; }
-.trade-checklist-card{ position:relative; padding:17px 19px 17px 17px; overflow:hidden; }
+.trade-checklist-card{ position:relative; padding:17px; padding-inline-start:19px; overflow:hidden; }
 .trade-checklist-card-head{ display:flex; align-items:flex-start; justify-content:space-between; gap:10px; }
 .trade-checklist-card-foot{
   display:flex; align-items:center; justify-content:space-between; gap:10px;
@@ -6696,7 +6698,7 @@ body[data-theme="light"] .trade-datetime-btn{ background:rgba(255,255,255,.35); 
 
 .trade-account-header{
   position:relative; display:flex; align-items:flex-start; gap:13px; flex-wrap:wrap;
-  padding:18px 20px 18px 17px; overflow:hidden;
+  padding:18px 17px; padding-inline-start:20px; overflow:hidden;
 }
 .trade-account-header-main{ flex:1; min-width:180px; }
 .trade-account-header h1{ font-size:19px; }
@@ -7164,7 +7166,7 @@ body[data-theme="light"] .trade-cal-pill-btn.today.active, body:not([data-theme=
    خود فوتر همیشه یک ستونه (نه ردیف wrap-پذیر) — نتیجه‌ش یک کارت فشرده و
    قابل‌پیش‌بینیه، صرف‌نظر از این‌که چقدر محتوا/تگ داره. */
 .trade-note-card{
-  position:relative; padding:16px 19px 15px 17px; overflow:hidden; cursor:pointer;
+  position:relative; padding:16px 17px 15px; padding-inline-start:19px; overflow:hidden; cursor:pointer;
   display:flex; flex-direction:column; gap:10px;
   /* «کرو کامل» — طبق درخواست صریح، بیشتر از رادیوس پایه‌ی ۱۸پیکسلی
      .trade-surface؛ سایه‌ی نرم اضافه هم کارت را از باکس بزرگ پشتش که
@@ -7358,7 +7360,7 @@ body:not([data-theme="light"]) button.trade-pair-suggest-item{ box-shadow:none; 
    (.trade-page-box) دست‌نخورده می‌ماند. */
 .trade-checklist-row{
   position:relative; display:flex; align-items:center; gap:8px;
-  padding:13px 15px 13px 12px; border-radius:16px;
+  padding:13px 12px; padding-inline-start:15px; border-radius:16px;
   background:rgba(var(--surface-rgb),.22); border:1px solid var(--surface-line);
   transition:background .18s ease, border-color .18s ease, transform .15s ease;
 }
@@ -7642,7 +7644,7 @@ body:not([data-theme="light"]) button.trade-pair-suggest-item{ box-shadow:none; 
    روی «پایین‌ترین» (جدیدترین پیام) می‌گذارد، بدون نیاز به scrollTop
    دستی موقع باز شدن. `margin-top:auto` باعث می‌شود وقتی پیام‌ها کوتاه‌تر
    از ارتفاع باکس‌اند هم به پایین بچسبند، نه بالا. */
-.trade-chat-list{ flex:1; display:flex; flex-direction:column; overflow-y:auto; max-height:300px; padding:2px 4px 2px 0; }
+.trade-chat-list{ flex:1; display:flex; flex-direction:column; overflow-y:auto; max-height:300px; padding:2px 0; padding-inline-start:4px; }
 .trade-chat-list-inner{ display:flex; flex-direction:column-reverse; gap:11px; margin-top:auto; }
 .trade-chat-empty{ font-size:12px; color:var(--muted); text-align:center; padding:22px 8px; line-height:1.9; }
 .trade-chat-row{ display:flex; flex-direction:column; gap:4px; align-items:flex-start; max-width:86%; }
@@ -8041,13 +8043,13 @@ body[data-theme="light"] .friend-profile-star-btn.on{ color:#F5C518; }
    عکس پروفایل می‌نشیند (avatar right:20px تا right:92px، پس name از
    right:100px شروع می‌شود و به چپ رشد می‌کند) — نه دیگر گوشه‌ی دوردست. */
 .friend-profile-banner-name{
-  position:absolute; bottom:16px; right:100px; z-index:2; max-width:calc(100% - 116px);
+  position:absolute; bottom:16px; inset-inline-start:100px; z-index:2; max-width:calc(100% - 116px);
   font-size:15px; font-weight:800; color:#fff; text-shadow:0 1px 6px rgba(0,0,0,.5);
-  overflow:hidden; text-overflow:ellipsis; white-space:nowrap; text-align:right;
+  overflow:hidden; text-overflow:ellipsis; white-space:nowrap; text-align:start;
 }
 /* آواتار سمت راست، نیمه‌آویزان از لبه‌ی پایین بنر */
 .friend-profile-banner .friend-profile-avatar{
-  position:absolute; bottom:-30px; right:20px; z-index:2;
+  position:absolute; bottom:-30px; inset-inline-start:20px; z-index:2;
   width:72px; height:72px; border-radius:50%; object-fit:cover; margin:0;
   border:4px solid var(--surface-2); background:var(--surface-1);
 }
@@ -8057,7 +8059,7 @@ body[data-theme="light"] .friend-profile-star-btn.on{ color:#F5C518; }
    «چپ» یعنی flex-end — نه flex-start که سمت راست می‌افتد. */
 .friend-profile-body{
   display:flex; flex-direction:column; align-items:flex-end;
-  padding-top:40px; text-align:left;
+  padding-top:40px; text-align:end;
 }
 .friend-profile-plan-row{ display:flex; justify-content:flex-end; width:100%; margin-bottom:6px; }
 /* هر جعبه (بیو/آیدی/شماره) یک بخش جداست، با خط‌جداکننده‌ی خودش — طبق
@@ -8094,7 +8096,7 @@ body[data-theme="light"] button.friend-profile-username{
 }
 .friend-profile-bio{
   margin:0; font-size:12px; line-height:1.9; color:var(--muted);
-  text-align:left; max-width:100%; overflow-wrap:anywhere; white-space:pre-line;
+  text-align:end; max-width:100%; overflow-wrap:anywhere; white-space:pre-line;
 }
 .friend-profile-stats{
   display:grid; grid-template-columns:repeat(3,1fr); gap:8px; margin-top:18px; padding-top:16px;
@@ -8700,14 +8702,14 @@ html[data-perf="low"] .app-topbar-statusbar-blur{
 /* عنوان/زیرعنوان در یک ردیف flex کنار دکمه‌ی حذف‌اند (نه absolute روی
    متن) تا هیچ‌وقت زیر آیکون سطل‌زباله نروند — چه فارسی چه انگلیسی. */
 .rp-card-head{ display:flex; align-items:flex-start; justify-content:space-between; gap:8px; }
-.rp-card-delete{ flex-shrink:0; margin:-6px -6px 0 0; }
+.rp-card-delete{ flex-shrink:0; margin:-6px 0 0; margin-inline-start:-6px; }
 .rp-card-eyebrow{
   flex:1; min-width:0; font-size:10.5px; font-weight:700; color:var(--accent);
-  unicode-bidi:plaintext; text-align:right;
+  unicode-bidi:plaintext; text-align:start;
 }
 .rp-card-title{
   margin-top:4px; font-size:15px; font-weight:800; line-height:1.7;
-  unicode-bidi:plaintext; text-align:right;
+  unicode-bidi:plaintext; text-align:start;
 }
 .rp-card-desc{
   margin:5px 0 0; font-size:12px; line-height:1.95; color:var(--muted);
@@ -9008,7 +9010,7 @@ html[data-perf="low"] .app-topbar-statusbar-blur{
 
 /* ── فوتر هشدار AI — فقط متن قرمز، یک خط (درخواست صریح) ── */
 .rp-disclaimer{
-  margin:20px 0 0; font-size:11px; line-height:1.6; color:var(--text); text-align:right;
+  margin:20px 0 0; font-size:11px; line-height:1.6; color:var(--text); text-align:start;
   white-space:nowrap; overflow:hidden; text-overflow:ellipsis;
 }
 
@@ -9778,7 +9780,7 @@ html body .checklist-editor-grip:active{ cursor:grabbing; color:var(--accent); b
 @media (min-width:640px){ .checklist-item-name{ font-size:14px; } }
 .checklist-item.is-done .checklist-item-name{ color:var(--muted); text-decoration:line-through; text-decoration-color:color-mix(in srgb, var(--ring-1a) 60%, transparent); }
 /* آیتم‌های برنامه‌ی لیستی در پاپ‌آپ روز (DayModal) */
-.day-task-items{ list-style:none; margin:-4px 0 6px; padding:0 40px 0 0; display:flex; flex-direction:column; gap:6px; }
+.day-task-items{ list-style:none; margin:-4px 0 6px; padding:0; padding-inline-start:40px; display:flex; flex-direction:column; gap:6px; }
 .day-task-items li{ display:flex; align-items:center; gap:9px; font-size:12.5px; font-weight:600; }
 .day-task-items li.is-done span{ color:var(--muted); text-decoration:line-through; }
 
@@ -10045,7 +10047,7 @@ textarea.wsearch-newform-name,
 /* تصویر کوچک عضو تیم در /admin/team */
 .admin-team-thumb{ border-radius:50%; object-fit:cover; display:block; flex:none; }
 .admin-team-roles{ display:flex; flex-wrap:wrap; gap:6px; margin-bottom:8px; }
-.admin-team-role-chip{ display:inline-flex; align-items:center; gap:4px; font-size:12px; font-weight:700; padding:2px 6px 2px 10px; border-radius:999px; border:1px solid var(--adm-line, currentColor); }
+.admin-team-role-chip{ display:inline-flex; align-items:center; gap:4px; font-size:12px; font-weight:700; padding:2px 10px; padding-inline-start:6px; border-radius:999px; border:1px solid var(--adm-line, currentColor); }
 button.admin-team-role-x, .admin-team-role-chip button.admin-team-role-x{ background:transparent; box-shadow:none; backdrop-filter:none; -webkit-backdrop-filter:none; border:0; }
 .admin-team-role-x{ display:inline-flex; align-items:center; justify-content:center; width:18px; height:18px; padding:0; border:0; border-radius:50%; background:transparent; color:inherit; cursor:pointer; }
 
@@ -10072,4 +10074,114 @@ button.admin-team-role-x, .admin-team-role-chip button.admin-team-role-x{ backgr
 @supports not (height:1dvh){
   .db-share{ --share-w:min(440px, calc((100vh - 32px - 220px) * .8)); }
   .ts-share{ --share-w:min(440px, max(250px, calc((100vh - 32px - 300px) * .8))); }
+}
+
+/* ===== زبان انگلیسی (docs/i18n.md) =====
+   آیکون جهت‌دار (فلش/شورون «بعدی»/«برگشت») در ltr آینه می‌شه. فقط روی عنصری که
+   خودش transform دیگه‌ای نداره (وگرنه داخل یک span جدا). در rtl هیچ اثری نداره. */
+html[dir="ltr"] .dir-flip{ transform:scaleX(-1); }
+/* انتخاب زبان داخل منوی کشویی (components/LanguageSwitch.tsx) */
+.nav-lang-switch{ margin:0 0 10px; }
+
+/* ===== جهت LTR (انگلیسی) — بازتاب قاعده‌هایی که فقط برای RTL نوشته شده بودن =====
+   همه‌ی این قاعده‌ها فقط زیر html[dir="ltr"] ان و در فارسی هیچ اثری ندارن. هر کدوم
+   با سلکتور قاعده‌ی اصلی + پیشوند html[dir="ltr"] اسپسیفیسیتی بالاتر دارن. */
+
+/* وسط‌چین با inset-inline-end:50% + translate(-50%): در rtl این همون left:50%ـه؛
+   در ltr باید صریحا left:50% بشه تا translate(-50%) وسطش بذاره */
+@media (min-width:701px){ html[dir="ltr"] .cal-label{ left:50%; right:auto; } }
+html[dir="ltr"] .modal-panel:not(.modal-panel-notransform),
+html[dir="ltr"] .pcard-stage,
+html[dir="ltr"] .wsearch-panel,
+html[dir="ltr"] .jdate-popup,
+html[dir="ltr"] .wsearch-newform,
+html[dir="ltr"] .trade-cal-pnl,
+html[dir="ltr"] .outing-remove{ left:50%; right:auto; }
+
+/* هدر انگلیسی مثل سایت‌های انگلیسی: لوگو چپ، دکمه‌های هدر (منو، پروفایل، اعلان) راست؛
+   کشوی منو هم از همون سمت دکمه‌ی منو (راست) باز می‌شه — فارسی دقیقا همون قبلی */
+html[dir="ltr"] .topbar-actions{ inset-inline-start:auto; inset-inline-end:18px; flex-direction:row-reverse; }
+html[dir="ltr"] .topbar-actions-left{ inset-inline-end:auto; inset-inline-start:18px; }
+html[dir="ltr"] .nav-drawer{ inset-inline-start:auto; inset-inline-end:26px; }
+@media (max-width:700px){ html[dir="ltr"] .nav-drawer{ inset-inline-start:auto; inset-inline-end:14px; } }
+/* دستگیره‌ی سوییچ تم: حالت روشن در ltr به چپ می‌ره */
+html[dir="ltr"] body[data-theme="light"] .theme-switch .ts-knob{ transform:translateX(-22px); }
+/* خط زمان هفتگی: آیتم‌ها از چپ چیده می‌شن، پس وسط‌چینی با translateX(-50%) */
+html[dir="ltr"] .wt-item{ transform:translateX(-50%); }
+html[dir="ltr"] .wt-untimed-row{ direction:ltr; }
+
+/* فیلدها و دکمه‌هایی که قبلا direction:rtl صریح داشتن */
+html[dir="ltr"] .field-error-wrap .jdate-btn,
+html[dir="ltr"] .jdate-btn.placeholder,
+html[dir="ltr"] .fx-clock,
+html[dir="ltr"] .friend-profile-banner-bar,
+html[dir="ltr"] .admin-root,
+html[dir="ltr"] .admin-kpi-delta,
+html[dir="ltr"] .whyus-marquee-track > .whyus-card{ direction:ltr; }
+
+/* فیلدهای dir="ltr" داخل AuthField: جبران RTL قاب دیگه لازم نیست (جای مقدارها عوض می‌شه) */
+html[dir="ltr"] .account-shell .field-error-wrap.has-icon:not(.has-end-action) > input[dir="ltr"]{ padding-inline-start:38px; padding-inline-end:14px; }
+html[dir="ltr"] .account-shell .field-error-wrap.has-icon.has-end-action > input[dir="ltr"]{ padding-inline-start:38px; padding-inline-end:58px; }
+html[dir="ltr"] .field-error-wrap.has-icon:not(.has-end-action) > input[dir="ltr"]{ padding-inline-start:34px; padding-inline-end:11px; }
+html[dir="ltr"] .field-error-wrap.has-end-action:not(.has-icon) > input[dir="ltr"]{ padding-inline-start:11px; padding-inline-end:56px; }
+html[dir="ltr"] .field-error-wrap.has-icon.has-end-action > input[dir="ltr"]{ padding-inline-start:34px; padding-inline-end:56px; }
+html[dir="ltr"] .auth-phone-wrap .wsearch-newform-name{ padding-inline-start:18px; padding-inline-end:92px; text-align:left; }
+html[dir="ltr"] .field-error-wrap.has-icon .auth-phone-wrap input[dir="ltr"]{ padding-inline-start:34px; padding-inline-end:92px; text-align:left; }
+
+/* text-align فیزیکی روی عنصرهای ltr (عدد/یوزرنیم/تاریخ) که به راست‌چینی RTL تکیه داشتن */
+html[dir="ltr"] .account-hero-username,
+html[dir="ltr"] .admin-kpi-value,
+html[dir="ltr"] .admin-ltr,
+html[dir="ltr"] input[type="date"].admin-input,
+html[dir="ltr"] input[type="datetime-local"].admin-input{ text-align:left; }
+
+/* حباب گفت‌وگو: پیام خود کاربر همچنان سمت راست و طرف مقابل چپ (قرارداد چت در ltr) */
+html[dir="ltr"] .support-msg.mine{ align-self:flex-end; }
+html[dir="ltr"] .support-msg.admin{ align-self:flex-start; }
+html[dir="ltr"] .routine-ai-list .routine-ai-row-user{ flex-direction:row-reverse; }
+html[dir="ltr"] .routine-ai-list .routine-ai-row-user > *:last-child{ align-items:flex-end; }
+html[dir="ltr"] .routine-ai-list .routine-ai-row-bot{ flex-direction:row; }
+html[dir="ltr"] .routine-ai-list .routine-ai-row-bot > *:last-child{ align-items:flex-start; }
+html[dir="ltr"] .routine-ai-status{ justify-content:flex-start; }
+/* نوار نوشتن: ورودی چپ، دکمه‌ی ارسال انتهای راست (row-reverse فقط برای rtl لازم بود) */
+html[dir="ltr"] .routine-ai-composer{ flex-direction:row; }
+/* دم حباب پیام رد AI در ناحیه‌ی شروع (چپ در ltr) */
+html[dir="ltr"] .exercise-feasibility-reject{ border-radius:14px 14px 14px 4px; }
+
+/* حرکت جهت‌دار: لغزش هاور آیکون‌های جلو/عقب قرینه می‌شه. نسخه‌ی .dir-flip
+   (عنصری که خودش scaleX(-1) داره) مقدار رو داخل مختصات آینه‌شده می‌گیره */
+@media (hover:hover){
+  html[dir="ltr"] .account-back-btn:hover svg{ transform:translateX(-2px); }
+  html[dir="ltr"] .account-back-btn:hover svg.dir-flip{ transform:scaleX(-1) translateX(2px); }
+  html[dir="ltr"] .checkout-back-btn:hover{ transform:translateX(-3px); }
+  html[dir="ltr"] .checkout-back-btn:active{ transform:scale(.86); }
+  html[dir="ltr"] .auth-home-btn:hover{ transform:translateX(3px); }
+  html[dir="ltr"] .auth-home-btn-right:hover{ transform:translateX(-3px); }
+  html[dir="ltr"] .trade-back-link:hover svg{ transform:translateX(-2px); }
+  html[dir="ltr"] .trade-back-link:hover svg.dir-flip{ transform:scaleX(-1) translateX(2px); }
+}
+@media (hover:hover) and (pointer:fine){
+  html[dir="ltr"] a.account-row2:hover .account-row2-chevron{ transform:translateX(2px); }
+  html[dir="ltr"] a.account-row2:hover .account-row2-chevron.dir-flip{ transform:scaleX(-1) translateX(-2px); }
+  html[dir="ltr"] .rp-card:hover .rp-card-arrow{ transform:translateX(3px); }
+  html[dir="ltr"] .rp-card:hover .rp-card-arrow.dir-flip{ transform:scaleX(-1) translateX(-3px); }
+}
+@media (hover:hover){
+  html[dir="ltr"] .trade-hub-box:hover .trade-hub-chevron{ transform:translateX(3px); }
+  html[dir="ltr"] .trade-hub-box:hover .trade-hub-chevron.dir-flip{ transform:scaleX(-1) translateX(-3px); }
+}
+
+/* نوار پیشرفت مسیر از چپ رشد می‌کنه */
+html[dir="ltr"] .route-progress{ transform-origin:left; }
+/* درخشش اسکلت لودینگ از چپ به راست */
+@keyframes pl-shimmer-ltr{ to{ transform:translateX(100%); } }
+html[dir="ltr"] .pls-line::after, html[dir="ltr"] .pls-card::after{ transform:translateX(-100%); }
+@media (prefers-reduced-motion:no-preference){
+  html[dir="ltr"] .pls-line::after, html[dir="ltr"] .pls-card::after{ animation-name:pl-shimmer-ltr; }
+}
+/* مبدا انیمیشن منوها و پنل اعلان: گوشه‌ی بالا-چپ */
+html[dir="ltr"] .mm-menu, html[dir="ltr"] .notif-panel{ transform-origin:var(--mm-origin, top left); }
+/* خط جداکننده‌ی روزهای برنامه‌ی هفتگی بدنسازی سمت شروع (چپ) */
+@media (min-width:1024px){
+  html[dir="ltr"] .exercise-week-cell-divider{ background-position:left; }
 }

@@ -14,7 +14,8 @@ import { LoadingBlock, Spinner } from "@/components/Spinner";
 import { useAsyncAction } from "@/lib/useAsyncAction";
 import type { MentorshipAction, MentorshipRow, MentorshipsResponse, ProgramRow, ProgramsResponse } from "@/lib/mentorTypes";
 import { publicUserName } from "@/lib/mentorTypes";
-import { fmtDate, fmtRelative, NETWORK_ERROR, readApiError } from "@/lib/mentorFormat";
+import { fmtDate, fmtRelative, networkError, readApiError } from "@/lib/mentorFormat";
+import { tr } from "@/lib/i18n";
 import { faNum } from "@/lib/jalali";
 import { MENTOR_CATEGORIES, MENTOR_CATEGORY_META } from "@/lib/mentorCategories";
 import { categoryLabel } from "@/components/MentorBadges";
@@ -25,7 +26,7 @@ const STRIP = { size: 18, strokeWidth: 1.75, "aria-hidden": true } as const;
 
 export default function MentorshipHomePage() {
   return (
-    <MentorPageShell title="مربی‌های من" surface>
+    <MentorPageShell title={tr("مربی‌های من", "My mentors")} surface>
       <MentorshipHome />
     </MentorPageShell>
   );
@@ -39,7 +40,7 @@ function adherence(programs: ProgramRow[], mentorshipId: string): number | null 
   return Math.max(0, Math.min(1, avg));
 }
 
-const PAST_LABEL: Record<string, string> = { ENDED: "همکاری تموم شده", REJECTED: "قبول نشد", BLOCKED: "مسدود شده" };
+const pastLabel = (): Record<string, string> => ({ ENDED: tr("همکاری تموم شده", "Mentorship ended"), REJECTED: tr("قبول نشد", "Declined"), BLOCKED: tr("مسدود شده", "Blocked") });
 
 function MentorshipHome() {
   const [rows, setRows] = useState<MentorshipRow[] | null>(null);
@@ -61,11 +62,11 @@ function MentorshipHome() {
     setError(null);
     try {
       const res = await fetch("/api/mentorships?role=student", { cache: "no-store" });
-      if (!res.ok) { setError(await readApiError(res, "فهرست مربی‌ها دریافت نشد؛ دوباره تلاش کن")); return; }
+      if (!res.ok) { setError(await readApiError(res, tr("فهرست مربی‌ها دریافت نشد؛ دوباره تلاش کن", "Couldn't load your mentors. Try again"))); return; }
       const d: MentorshipsResponse = await res.json();
       setRows(d.mentorships || []);
     } catch {
-      setError(NETWORK_ERROR);
+      setError(networkError());
     }
   }, []);
 
@@ -88,7 +89,7 @@ function MentorshipHome() {
   async function act(row: MentorshipRow, action: MentorshipAction) {
     setActionFor(row.id);
     const withTerms = action === "accept" && row.initiatedBy === "MENTOR";
-    if (withTerms && needTerms && !termsChecked) { setTermsError("برای قبول کردن، شرایط رو بپذیر"); return; }
+    if (withTerms && needTerms && !termsChecked) { setTermsError(tr("برای قبول کردن، شرایط رو بپذیر", "Accept the terms to continue")); return; }
     const ok = await run(`${action}:${row.id}`, async () => {
       const res = await fetch(`/api/mentorships/${row.id}`, {
         method: "PATCH",
@@ -131,11 +132,11 @@ function MentorshipHome() {
     return (
       <MentorEmptyState
         icon={<Users size={24} strokeWidth={1.75} aria-hidden />}
-        title="هنوز مربی‌ای نداری"
-        text="مربی‌ها رو بر اساس حوزه و امتیاز پیدا کن و درخواست بده."
+        title={tr("هنوز مربی‌ای نداری", "You don't have a mentor yet")}
+        text={tr("مربی‌ها رو بر اساس حوزه و امتیاز پیدا کن و درخواست بده.", "Find mentors by area and rating, then send a request.")}
         action={
           <Link href="/mentors" className="trade-primary-btn mentor-btn">
-            <Search size={15} strokeWidth={1.75} aria-hidden /> پیدا کردن مربی
+            <Search size={15} strokeWidth={1.75} aria-hidden /> {tr("پیدا کردن مربی", "Find a mentor")}
           </Link>
         }
       />
@@ -152,14 +153,14 @@ function MentorshipHome() {
   return (
     <div className="mv2-ms">
       {invites.length > 0 && (
-        <section className="mv2-ms-invites" aria-label={`دعوت‌های تازه (${faNum(invites.length)})`}>
+        <section className="mv2-ms-invites" aria-label={tr(`دعوت‌های تازه (${faNum(invites.length)})`, `New invitations (${faNum(invites.length)})`)}>
           {invites.map((r) => (
             <div key={r.id} className="mv2-ms-invite">
               <div className="mv2-ms-invite-head">
                 <MentorUserAvatar name={publicUserName(r.counterpart)} avatarUrl={r.counterpart.avatarUrl} size={48} />
                 <p className="mv2-ms-invite-text">
-                  <Link href={`/mentors/${r.counterpart.id}`} className="mv2-ms-name">{nameOf(r)}</Link> دعوتت کرده مربی‌ت باشه
-                  {r.categories.length > 0 && <span className="mv2-ms-meta">{r.categories.map((c) => categoryLabel(c)).join("، ")}</span>}
+                  <Link href={`/mentors/${r.counterpart.id}`} className="mv2-ms-name">{nameOf(r)}</Link> {tr("دعوتت کرده مربی‌ت باشه", "invited you to be your mentor")}
+                  {r.categories.length > 0 && <span className="mv2-ms-meta">{r.categories.map((c) => categoryLabel(c)).join(tr("، ", ", "))}</span>}
                 </p>
               </div>
               {r.message && <p className="mentor-quote">{r.message}</p>}
@@ -169,10 +170,10 @@ function MentorshipHome() {
               {rowError(r.id)}
               <div className="mv2-ms-invite-actions">
                 <button type="button" className="trade-primary-btn mentor-btn" onClick={() => { clearError(); act(r, "accept"); }} disabled={!!pendingKey || (needTerms && !termsChecked)}>
-                  {busy(`accept:${r.id}`) ? <Spinner size={14} /> : "قبول"}
+                  {busy(`accept:${r.id}`) ? <Spinner size={14} /> : tr("قبول", "Accept")}
                 </button>
                 <button type="button" className="account-outline-btn muted mentor-btn" onClick={() => { clearError(); act(r, "reject"); }} disabled={!!pendingKey}>
-                  {busy(`reject:${r.id}`) ? <Spinner size={14} /> : "نه، ممنون"}
+                  {busy(`reject:${r.id}`) ? <Spinner size={14} /> : tr("نه، ممنون", "No, thanks")}
                 </button>
               </div>
             </div>
@@ -180,18 +181,18 @@ function MentorshipHome() {
         </section>
       )}
 
-      <section aria-label="مربی‌های فعال">
+      <section aria-label={tr("مربی‌های فعال", "Active mentors")}>
         {areas.length > 1 && (
           <div className="mv2-ms-filter">
             <SegmentedTabs
-              options={[{ value: "", label: "همه" }, ...areas.map((c) => ({ value: c as string, label: MENTOR_CATEGORY_META[c].short }))]}
+              options={[{ value: "", label: tr("همه", "All") }, ...areas.map((c) => ({ value: c as string, label: MENTOR_CATEGORY_META[c].short }))]}
               active={activeArea}
               onChange={setArea}
             />
           </div>
         )}
         {active.length === 0 ? (
-          <p className="mv2-ms-empty">{allActive.length === 0 ? "الان مربی فعالی نداری" : "تو این حوزه مربی فعالی نداری"}</p>
+          <p className="mv2-ms-empty">{allActive.length === 0 ? tr("الان مربی فعالی نداری", "You have no active mentors right now") : tr("تو این حوزه مربی فعالی نداری", "You have no active mentors in this area")}</p>
         ) : (
           <ul className="mv2-ms-cards">
             {active.map((r) => {
@@ -205,31 +206,31 @@ function MentorshipHome() {
                       avatarUrl={r.counterpart.avatarUrl}
                       progress={rate}
                       size={56}
-                      label={rate == null ? undefined : `پیشرفت برنامه ${faNum(Math.round(rate * 100))} درصد`}
+                      label={rate == null ? undefined : tr(`پیشرفت برنامه ${faNum(Math.round(rate * 100))} درصد`, `Program progress ${faNum(Math.round(rate * 100))} percent`)}
                     />
                     <span className="mv2-ms-card-body">
                       <span className="mv2-ms-name">{nameOf(r)}</span>
                       <span className="mv2-ms-meta">
-                        {[r.categories.map((c) => categoryLabel(c)).join("، "), r.startedAt ? `از ${fmtDate(r.startedAt)}` : ""].filter(Boolean).join(" · ")}
+                        {[r.categories.map((c) => categoryLabel(c)).join(tr("، ", ", ")), r.startedAt ? tr(`از ${fmtDate(r.startedAt)}`, `Since ${fmtDate(r.startedAt)}`) : ""].filter(Boolean).join(" · ")}
                       </span>
                       <span className="mv2-ms-meta">
-                        {rate != null ? `پیشرفت برنامه ${faNum(Math.round(rate * 100))}٪` : r.activePrograms > 0 ? `${faNum(r.activePrograms)} برنامه در حال اجرا` : "برنامه‌ی در حال اجرا نداری"}
+                        {rate != null ? tr(`پیشرفت برنامه ${faNum(Math.round(rate * 100))}٪`, `Program progress ${faNum(Math.round(rate * 100))}%`) : r.activePrograms > 0 ? tr(`${faNum(r.activePrograms)} برنامه در حال اجرا`, `${faNum(r.activePrograms)} ${r.activePrograms === 1 ? "program" : "programs"} in progress`) : tr("برنامه‌ی در حال اجرا نداری", "No programs in progress")}
                       </span>
                     </span>
-                    <ChevronLeft size={16} strokeWidth={1.75} className="mv2-ms-chev" aria-hidden />
+                    <ChevronLeft size={16} strokeWidth={1.75} className="mv2-ms-chev dir-flip" aria-hidden />
                   </Link>
                   {waitingByMentorship.has(r.id) && (
                     <Link href={`/mentorship/${r.id}`} className="mv2-ms-strip is-program">
                       <ClipboardList {...STRIP} />
-                      <span>برنامه‌ی تازه رسیده، ببین</span>
-                      <ChevronLeft size={16} strokeWidth={1.75} aria-hidden />
+                      <span>{tr("برنامه‌ی تازه رسیده، ببین", "A new program arrived, take a look")}</span>
+                      <ChevronLeft size={16} strokeWidth={1.75} aria-hidden className="dir-flip" />
                     </Link>
                   )}
                   {r.unread > 0 && (
                     <Link href={`/mentorship/${r.id}/chat`} className="mv2-ms-strip is-chat">
                       <MessageCircle {...STRIP} />
-                      <span>{faNum(r.unread)} پیام تازه</span>
-                      <ChevronLeft size={16} strokeWidth={1.75} aria-hidden />
+                      <span>{tr(`${faNum(r.unread)} پیام تازه`, `${faNum(r.unread)} new ${r.unread === 1 ? "message" : "messages"}`)}</span>
+                      <ChevronLeft size={16} strokeWidth={1.75} aria-hidden className="dir-flip" />
                     </Link>
                   )}
                 </li>
@@ -242,7 +243,7 @@ function MentorshipHome() {
       {outgoing.length > 0 && (
         <section className="mv2-ms-fold">
           <button type="button" className="mv2-ms-fold-btn" aria-expanded={openSent} aria-controls="mv2-ms-sent" onClick={() => setOpenSent((v) => !v)}>
-            <span>درخواست‌هایی که فرستادی</span>
+            <span>{tr("درخواست‌هایی که فرستادی", "Requests you sent")}</span>
             <span className="mv2-ms-count">{faNum(outgoing.length)}</span>
             <ChevronDown size={18} strokeWidth={1.75} className={openSent ? "is-open" : ""} aria-hidden />
           </button>
@@ -253,11 +254,11 @@ function MentorshipHome() {
                   <MentorUserAvatar name={publicUserName(r.counterpart)} avatarUrl={r.counterpart.avatarUrl} size={40} />
                   <span className="mv2-ms-card-body">
                     <Link href={`/mentors/${r.counterpart.id}`} className="mv2-ms-name">{nameOf(r)}</Link>
-                    <span className="mv2-ms-meta">منتظر جواب · {fmtRelative(r.createdAt)}</span>
+                    <span className="mv2-ms-meta">{tr("منتظر جواب", "Waiting for a reply")} · {fmtRelative(r.createdAt)}</span>
                     {rowError(r.id)}
                   </span>
                   <button type="button" className="account-outline-btn muted mentor-btn is-sm" onClick={() => { clearError(); setActionFor(r.id); setConfirmCancel(r); }} disabled={!!pendingKey}>
-                    لغو درخواست
+                    {tr("لغو درخواست", "Cancel request")}
                   </button>
                 </li>
               ))}
@@ -269,7 +270,7 @@ function MentorshipHome() {
       {past.length > 0 && (
         <section className="mv2-ms-fold">
           <button type="button" className="mv2-ms-fold-btn" aria-expanded={openPast} aria-controls="mv2-ms-past" onClick={() => setOpenPast((v) => !v)}>
-            <span>همکاری‌های قبلی</span>
+            <span>{tr("همکاری‌های قبلی", "Past mentorships")}</span>
             <span className="mv2-ms-count">{faNum(past.length)}</span>
             <ChevronDown size={18} strokeWidth={1.75} className={openPast ? "is-open" : ""} aria-hidden />
           </button>
@@ -281,13 +282,13 @@ function MentorshipHome() {
                   <span className="mv2-ms-card-body">
                     <Link href={r.status === "ENDED" ? `/mentorship/${r.id}` : `/mentors/${r.counterpart.id}`} className="mv2-ms-name">{nameOf(r)}</Link>
                     <span className="mv2-ms-meta">
-                      {PAST_LABEL[r.status] ?? ""}{r.status === "ENDED" && r.endedAt ? ` · ${fmtDate(r.endedAt)}` : ""}
+                      {pastLabel()[r.status] ?? ""}{r.status === "ENDED" && r.endedAt ? ` · ${fmtDate(r.endedAt)}` : ""}
                     </span>
                     {rowError(r.id)}
                   </span>
                   {r.status === "BLOCKED" && r.blockedByMe && (
                     <button type="button" className="account-outline-btn mentor-btn is-sm" onClick={() => { clearError(); act(r, "unblock"); }} disabled={!!pendingKey}>
-                      {busy(`unblock:${r.id}`) ? <Spinner size={14} /> : "رفع مسدودی"}
+                      {busy(`unblock:${r.id}`) ? <Spinner size={14} /> : tr("رفع مسدودی", "Unblock")}
                     </button>
                   )}
                 </li>
@@ -297,13 +298,13 @@ function MentorshipHome() {
         </section>
       )}
 
-      <Link href="/mentors" className="mv2-ms-find">پیدا کردن مربی تازه</Link>
+      <Link href="/mentors" className="mv2-ms-find">{tr("پیدا کردن مربی تازه", "Find a new mentor")}</Link>
 
       {confirmCancel && (
         <MentorConfirmDialog
-          message={`درخواست به ${publicUserName(confirmCancel.counterpart)} لغو بشه؟`}
-          hint="بعدا می‌تونی دوباره درخواست بدی."
-          confirmLabel="لغو درخواست"
+          message={tr(`درخواست به ${publicUserName(confirmCancel.counterpart)} لغو بشه؟`, `Cancel your request to ${publicUserName(confirmCancel.counterpart)}?`)}
+          hint={tr("بعدا می‌تونی دوباره درخواست بدی.", "You can send a request again later.")}
+          confirmLabel={tr("لغو درخواست", "Cancel request")}
           busy={busy(`cancel:${confirmCancel.id}`)}
           error={actionError}
           onConfirm={() => act(confirmCancel, "cancel")}

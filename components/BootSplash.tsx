@@ -1,4 +1,5 @@
-import { BRAND_FA } from "@/lib/brand";
+import { brandName } from "@/lib/brand";
+import { tr } from "@/lib/i18n";
 
 // اسپلش ورود اپ: از اولین بایت HTML سرور (قبل از دانلود جاوااسکریپت) روی صفحه‌ست،
 // تا وقتی صفحه هم کامل لود شده (window load) و هم React هیدریت شده
@@ -10,7 +11,12 @@ import { BRAND_FA } from "@/lib/brand";
 // سقف زمانی: اسکریپت بعد از ۸ ثانیه به هر حال خارجش می‌کنه، و CSS بعد از ۱۲
 // ثانیه (حتی اگه اسکریپت اجرا نشه) خودش پنهانش می‌کنه؛ بدون جاوااسکریپت هم
 // noscript اصلا نشونش نمی‌ده.
-const PHRASES = ["روزت رو می‌چینیم", "عادت‌ها رو گرم می‌کنیم", "استریکت رو پیدا می‌کنیم", "تقریبا آماده‌ست"];
+const phrases = () => [
+  tr("روزت رو می‌چینیم", "Arranging your day"),
+  tr("عادت‌ها رو گرم می‌کنیم", "Warming up your habits"),
+  tr("استریکت رو پیدا می‌کنیم", "Finding your streak"),
+  tr("تقریبا آماده‌ست", "Almost ready"),
+];
 
 // حداقل نمایش از اولین فریم (نه اجرای اسکریپت) حساب می‌شه تا انیمیشن ورود (~1.1s)
 // هیچ‌وقت نیمه‌کاره قطع نشه؛ done با پایان واقعی محوشدن پرده (animationend)،
@@ -42,7 +48,7 @@ export function BootSplash() {
       <noscript>
         <style>{".boot-splash{display:none!important}"}</style>
       </noscript>
-      <div className="boot-splash" role="status" aria-label="در حال بارگذاری" suppressHydrationWarning>
+      <div className="boot-splash" role="status" aria-label={tr("در حال بارگذاری", "Loading")} suppressHydrationWarning>
         <div className="bs-aura" aria-hidden="true" />
         <div className="bs-grid" aria-hidden="true" />
         <div className="bs-stage">
@@ -69,10 +75,10 @@ export function BootSplash() {
             {/* eslint-disable-next-line @next/next/no-img-element */}
             <img src="/images/logo-icon-light-theme.webp" alt="" className="bs-logo is-light" width={36} height={31} />
           </div>
-          <div className="bs-brand">{BRAND_FA}</div>
+          <div className="bs-brand">{brandName()}</div>
           <div className="bs-tagline" aria-hidden="true">PLAN · FOCUS · ACHIEVE</div>
           <div className="bs-phrases" aria-hidden="true">
-            {PHRASES.map((p, i) => (
+            {phrases().map((p, i) => (
               <span key={i} style={{ animationDelay: `${0.55 + i * 1.6}s` }}>{p}</span>
             ))}
           </div>

@@ -8,6 +8,8 @@ import { faNum } from "@/lib/jalali";
 import { DashCard } from "./DashCard";
 import { CalorieAddEntryModal } from "./CalorieAddEntryModal";
 import type { Target } from "./CaloriePanel";
+import { tr, isEn } from "@/lib/i18n";
+import { foodNameDisplay } from "@/lib/foodNamesEn";
 
 type Entry = { id: string; customName: string; customCalories: number; grams: number; date?: string };
 
@@ -56,10 +58,10 @@ export function CalorieFoodPlanCard({
           {faNum(totalToday)}
           <span className="mx-1 text-dash-muted">/</span>
           {faNum(target.dailyTargetKcal)}
-          <span className="mr-1.5 text-[10.5px] font-semibold text-dash-muted sm:text-[12px]">کالری</span>
+          <span className="me-1.5 text-[10.5px] font-semibold text-dash-muted sm:text-[12px]">{tr("کالری", "kcal")}</span>
         </div>
         <button type="button" onClick={onEditGoal} className="text-[11px] font-semibold text-dash-green transition hover:brightness-110 sm:text-[12.5px]">
-          تغییر برنامه
+          {tr("تغییر برنامه", "Change plan")}
         </button>
       </div>
 
@@ -76,7 +78,7 @@ export function CalorieFoodPlanCard({
       <div className="mt-4 flex shrink-0 items-center justify-between sm:mt-5">
         <h2 className="flex items-center gap-1.5 text-[13px] font-bold text-dash-text sm:text-[15px]">
           <UtensilsCrossed className="h-4 w-4 text-dash-green sm:h-[18px] sm:w-[18px]" />
-          کالری‌شمار
+          {tr("کالری‌شمار", "Calorie tracker")}
         </h2>
         {isToday && (
           <button
@@ -85,20 +87,20 @@ export function CalorieFoodPlanCard({
             className="flex items-center gap-1 text-[11.5px] font-semibold text-dash-green transition hover:brightness-110 sm:gap-1.5 sm:text-[13.5px]"
           >
             <Plus className="h-[15px] w-[15px] sm:h-[17px] sm:w-[17px]" />
-            افزودن
+            {tr("افزودن", "Add")}
           </button>
         )}
       </div>
 
       <div className="mt-3 min-h-0 flex-1" dir="ltr" style={{ maxHeight: 360 }}>
-      <div className="thin-scroll h-full overflow-y-auto overflow-x-hidden" dir="rtl">
+      <div className="thin-scroll h-full overflow-y-auto overflow-x-hidden" dir={isEn() ? "ltr" : "rtl"}>
         <div className="flex flex-col gap-2">
           {entries.length ? (
             entries.map((e) => (
               <div key={e.id} className="calorie-glass-field flex items-center justify-between gap-2.5 border px-4 py-2.5" style={{ borderRadius: 9999 }}>
                 <div className="flex min-w-0 items-baseline gap-1.5">
-                  <span className="truncate text-[11.5px] font-bold text-dash-text sm:text-[12.5px]">{e.customName}</span>
-                  <span className="mono shrink-0 text-[10px] text-dash-muted sm:text-[11px]">{faNum(e.grams)} گرم</span>
+                  <span className="truncate text-[11.5px] font-bold text-dash-text sm:text-[12.5px]">{foodNameDisplay(e.customName)}</span>
+                  <span className="mono shrink-0 text-[10px] text-dash-muted sm:text-[11px]">{faNum(e.grams)}{tr(" گرم", " g")}</span>
                 </div>
                 <span className="flex shrink-0 items-center gap-2.5">
                   <span
@@ -111,7 +113,7 @@ export function CalorieFoodPlanCard({
                     <button
                       type="button"
                       onClick={() => onRemove(e.id)}
-                      aria-label="حذف"
+                      aria-label={tr("حذف", "Delete")}
                       className="flex h-6 w-6 shrink-0 items-center justify-center rounded-full bg-transparent text-[13px] text-dash-muted transition hover:text-[#E05252] sm:h-[26px] sm:w-[26px]"
                     >
                       <X size={13} />
@@ -122,7 +124,7 @@ export function CalorieFoodPlanCard({
             ))
           ) : (
             <div className="text-[11.5px] text-dash-muted sm:text-[12.5px]">
-              {isToday ? "هنوز چیزی برای امروز ثبت نشده" : "برای این روز چیزی ثبت نشده"}
+              {isToday ? tr("هنوز چیزی برای امروز ثبت نشده", "Nothing logged for today yet") : tr("برای این روز چیزی ثبت نشده", "Nothing logged for this day")}
             </div>
           )}
         </div>

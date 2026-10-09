@@ -3,6 +3,7 @@ import { requireMentorsUser, getActiveMentorshipAsMentor, notFound, badRequest }
 import { readJsonBody } from "@/lib/validate";
 import { deleteStudentNote, updateStudentNote } from "@/lib/mentorManageServer";
 import { isSealedNote } from "@/lib/e2ee/notes";
+import { tr } from "@/lib/i18n";
 
 type Ctx = { params: { studentId: string; noteId: string } };
 
@@ -19,7 +20,7 @@ export async function PATCH(req: Request, { params }: Ctx) {
   if (!parsed.ok) return NextResponse.json({ error: parsed.error }, { status: parsed.status });
   // فقط پاکت رمزشده (lib/e2ee/notes.ts)؛ متن ساده رد می‌شود
   const body = parsed.body?.body;
-  if (!isSealedNote(body)) return badRequest("یادداشت باید روی دستگاه رمزگذاری شود");
+  if (!isSealedNote(body)) return badRequest(tr(tr("یادداشت باید روی دستگاه رمزگذاری شود", "The note must be encrypted on this device"), "The note must be encrypted on this device"));
 
   const note = await updateStudentNote(params.noteId, m.id, g.userId, body);
   if (!note) return notFound();

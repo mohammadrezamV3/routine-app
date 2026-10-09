@@ -1,3 +1,4 @@
+import { tr } from "@/lib/i18n";
 import { NextRequest, NextResponse } from "next/server";
 import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/auth";
@@ -18,7 +19,7 @@ export async function GET(_req: NextRequest, { params }: { params: { id: string 
       messages: { orderBy: { createdAt: "asc" }, select: { id: true, body: true, fromAdmin: true, createdAt: true } },
     },
   });
-  if (!ticket) return NextResponse.json({ error: "تیکت پیدا نشد" }, { status: 404 });
+  if (!ticket) return NextResponse.json({ error: tr("تیکت پیدا نشد", "Ticket not found") }, { status: 404 });
 
   return NextResponse.json({
     ticket: {

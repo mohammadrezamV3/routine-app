@@ -1,8 +1,9 @@
 import type { Metadata } from "next";
 import { notFound } from "next/navigation";
 import { BlogArticle } from "@/components/BlogArticle";
-import { BRAND_FA } from "@/lib/brand";
-import { BLOG_CATEGORIES } from "@/lib/blog/categories";
+import { brandName } from "@/lib/brand";
+import { localizedBlogCategory } from "@/lib/blog/categories";
+import { tr } from "@/lib/i18n";
 import { BLOG_POSTS, getPost, postWordCount } from "@/lib/blogPosts";
 import { articleJsonLd, breadcrumbJsonLd, faqJsonLd, pageMetadata } from "@/lib/seo";
 
@@ -18,9 +19,9 @@ export function generateMetadata({ params }: { params: { slug: string } }): Meta
   const post = getPost(params.slug);
   // اسلاگ ناموجود در ادامه به notFound می‌رسد؛ این‌جا فقط باید metadata
   // معتبر (و noindex) برگردد تا صفحه‌ی 404 ایندکس نشود.
-  if (!post) return { title: { absolute: "صفحه پیدا نشد" }, robots: { index: false, follow: false } };
+  if (!post) return { title: { absolute: tr("صفحه پیدا نشد", "Page not found") }, robots: { index: false, follow: false } };
   const meta = pageMetadata({
-    title: `${post.metaTitle || post.title} | ${BRAND_FA}`,
+    title: `${post.metaTitle || post.title} | ${brandName()}`,
     description: post.description,
     path: `/blog/${post.slug}`,
     ogTitle: post.title,
@@ -36,7 +37,7 @@ export function generateMetadata({ params }: { params: { slug: string } }): Meta
       type: "article",
       publishedTime: post.published,
       modifiedTime: post.updated || post.published,
-      section: BLOG_CATEGORIES[post.category].label,
+      section: localizedBlogCategory(post.category).label,
     },
   } as Metadata;
 }
@@ -46,9 +47,9 @@ export default function BlogPostPage({ params }: { params: { slug: string } }) {
   if (!post) notFound();
 
   const breadcrumb = [
-    { name: BRAND_FA, path: "/" },
-    { name: "مقاله‌ها", path: "/blog" },
-    { name: BLOG_CATEGORIES[post.category].label, path: `/blog/category/${post.category}` },
+    { name: brandName(), path: "/" },
+    { name: tr("مقاله‌ها", "Articles"), path: "/blog" },
+    { name: localizedBlogCategory(post.category).label, path: `/blog/category/${post.category}` },
     { name: post.title, path: `/blog/${post.slug}` },
   ];
 
@@ -62,7 +63,7 @@ export default function BlogPostPage({ params }: { params: { slug: string } }) {
       published: post.published,
       modified: post.updated,
     }),
-    articleSection: BLOG_CATEGORIES[post.category].label,
+    articleSection: localizedBlogCategory(post.category).label,
     ...(post.keywords?.length ? { keywords: post.keywords.join("، ") } : {}),
     wordCount,
   };

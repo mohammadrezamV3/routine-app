@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import { tr } from "@/lib/i18n";
 import { redirect } from "next/navigation";
 import { getSessionFast } from "@/lib/serverSession";
 import { prisma } from "@/lib/prisma";
@@ -7,10 +8,12 @@ import { buildDashboard, dashboardKey, dayInTimezone } from "@/lib/dashboardServ
 import { DashboardClient, type DashboardGate } from "@/components/DashboardClient";
 
 // صفحه‌ی فقط‌ورودیه، پس ایندکس نمی‌شه (هم‌الگوی /admin و بقیه‌ی صفحه‌های حساب).
-export const metadata: Metadata = {
-  title: "داشبورد",
-  robots: { index: false, follow: false },
-};
+export function generateMetadata(): Metadata {
+  return {
+    title: tr("داشبورد", "Dashboard"),
+    robots: { index: false, follow: false },
+  };
+}
 export const dynamic = "force-dynamic";
 
 /**

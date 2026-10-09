@@ -15,7 +15,7 @@ import { useCallback, useEffect, useLayoutEffect, useMemo, useRef, useState } fr
 import { createPortal } from "react-dom";
 import { AnimatePresence, motion } from "framer-motion";
 import { Check, Download, Share2 } from "lucide-react";
-import { faNum } from "@/lib/jalali";
+import { faNum, weekdayShort, CAL_WEEK_ORDER } from "@/lib/jalali";
 import { getStreakTier, STREAK_MILESTONES } from "@/lib/streakTier";
 import { flamePalette } from "@/lib/streakFlameShape";
 import { useLockBodyScroll } from "@/lib/useLockBodyScroll";
@@ -26,8 +26,11 @@ import { REFERRAL_DISCOUNT_PERCENT } from "@/lib/referral";
 import { canvasToBlob, renderShareCard, shareText, type ShareCardInput } from "@/lib/shareCard";
 import { AnimatedStreakFlame } from "./AnimatedStreakFlame";
 import { Spinner } from "./Spinner";
+import { tr, isEn } from "@/lib/i18n";
 
-const WEEK = ["ش", "ی", "د", "س", "چ", "پ", "ج"];
+const WEEK_FA = ["ش", "ی", "د", "س", "چ", "پ", "ج"];
+/** برچسب روزهای هفته (شنبه تا جمعه) به زبان جاری */
+const weekLabels = () => (isEn() ? CAL_WEEK_ORDER.map((d) => weekdayShort(d)) : WEEK_FA);
 const FLAME = 176;
 const LAND_MS = 950;
 
@@ -42,7 +45,7 @@ function weekRow(streak: number) {
   const todayIdx = (new Date().getDay() + 1) % 7; // شنبه = 0
   // روزهای کامل: از امروز (که همین الان کامل شد) `streak` روز به عقب — تقریب
   // بصری؛ روز بی‌برنامه‌ای که وسط استریک رد شده این‌جا هم پر دیده می‌شه.
-  return { todayIdx, done: WEEK.map((_, i) => i <= todayIdx && todayIdx - i < streak) };
+  return { todayIdx, done: WEEK_FA.map((_, i) => i <= todayIdx && todayIdx - i < streak) };
 }
 
 export function StreakCelebration({ from, to, anchor, onClose }: StreakCelebrationProps) {
@@ -57,6 +60,7 @@ export function StreakCelebration({ from, to, anchor, onClose }: StreakCelebrati
   const pal = flamePalette(to);
   const isMilestone = (STREAK_MILESTONES as readonly number[]).includes(to);
   const week = useMemo(() => weekRow(to), [to]);
+  const WEEK = weekLabels();
 
   // فاصله‌ی شعله‌ی هدر تا جای شعله‌ی بزرگ — نقطه‌ی شروع پرواز (و مقصد برگشت)
   useLayoutEffect(() => {
@@ -95,11 +99,11 @@ export function StreakCelebration({ from, to, anchor, onClose }: StreakCelebrati
   // «اشتراک» بدون انتظار navigator.share رو صدا بزنه — سافاری iOS بیرون از
   // حرکت کاربر اجازه‌ی اشتراک نمی‌ده.
   const cardInput = useMemo<ShareCardInput>(() => ({
-    title: "استریک من",
+    title: tr("استریک من", "My streak"),
     subtitle: tier.name,
-    body: { kind: "streak", streak: to, label: "روز پشت‌سرهم، همه‌ی برنامه‌ها کامل", week: { labels: WEEK, done: week.done, todayIdx: week.todayIdx } },
+    body: { kind: "streak", streak: to, label: tr("روز پشت‌سرهم، همه‌ی برنامه‌ها کامل", to === 1 ? "day in a row, every program done" : "days in a row, every program done"), week: { labels: WEEK, done: week.done, todayIdx: week.todayIdx } },
     inviteCode: invite?.code ?? null,
-  }), [tier.name, to, week, invite?.code]);
+  }), [tier.name, to, week, invite?.code]); // eslint-disable-line react-hooks/exhaustive-deps
   const [card, setCard] = useState<{ input: ShareCardInput; blob: Blob } | null>(null);
   const [renderErr, setRenderErr] = useState(false);
   const [attempt, setAttempt] = useState(0);
@@ -123,27 +127,27 @@ export function StreakCelebration({ from, to, anchor, onClose }: StreakCelebrati
     if (renderErr) { setAttempt((n) => n + 1); return; }
     if (!ready || !card) return;
     const inv = invite ? { code: invite.code, url: invite.url, percent: REFERRAL_DISCOUNT_PERCENT } : null;
-    shareBlob(card.blob, `arion-streak-${to}.png`, "استریک من", shareText(`${faNum(to)} روز پشت‌سرهم روتینم رو کامل کردم 🔥`, inv));
+    shareBlob(card.blob, `arion-streak-${to}.png`, tr("استریک من", "My streak"), shareText(tr(`${faNum(to)} روز پشت‌سرهم روتینم رو کامل کردم 🔥`, `I have completed my routine ${to} ${to === 1 ? "day" : "days"} in a row 🔥`), inv));
   }
   const saveOnly = canShare === false;
   const shareBusy = phase === "busy" || (!ready && !renderErr);
   const shareLabel = phase === "done"
-    ? (result === "downloaded" ? "ذخیره شد" : "ارسال شد")
-    : renderErr ? "تلاش دوباره" : saveOnly ? "ذخیره تصویر" : "اشتراک با دوستام";
+    ? (result === "downloaded" ? tr("ذخیره شد", "Saved") : tr("ارسال شد", "Sent"))
+    : renderErr ? tr("تلاش دوباره", "Try again") : saveOnly ? tr("ذخیره تصویر", "Save image") : tr("اشتراک با دوستام", "Share with friends");
   const shareMsg = renderErr
-    ? "ساخت تصویر ممکن نشد"
+    ? tr("ساخت تصویر ممکن نشد", "Could not create the image")
     : phase === "error"
-      ? "اشتراک انجام نشد، دوباره بزن"
+      ? tr("اشتراک انجام نشد، دوباره بزن", "Sharing failed, try again")
       : result === "downloaded"
-        ? "تصویر ذخیره شد — حالا برای دوستات بفرستش"
+        ? tr("تصویر ذخیره شد — حالا برای دوستات بفرستش", "Image saved — now send it to your friends")
         : null;
 
-  const title = "روز استریک!";
+  const title = tr("روز استریک!", "Day streak!");
   const sub = isMilestone
-    ? `${tier.name} باز شد! شعله‌ت حالا یه سطح داغ‌تره.`
+    ? tr(`${tier.name} باز شد! شعله‌ت حالا یه سطح داغ‌تره.`, `${tier.name} unlocked! Your flame just got a level hotter.`)
     : to === 1
-      ? "یه استریک تازه روشن شد. فردا هم کامل کن تا خاموش نشه!"
-      : "همه‌ی برنامه‌های امروز انجام شد. فردا هم بیا تا شعله خاموش نشه!";
+      ? tr("یه استریک تازه روشن شد. فردا هم کامل کن تا خاموش نشه!", "A fresh streak just lit up. Complete tomorrow too so it does not go out!")
+      : tr("همه‌ی برنامه‌های امروز انجام شد. فردا هم بیا تا شعله خاموش نشه!", "All of today's programs are done. Come back tomorrow so the flame does not go out!");
   // مایلستون بعدی عمدا عدد نداره (قرارداد: هدف قفل‌شده = ??)
   const next = !!tier.nextMilestone;
 
@@ -152,7 +156,7 @@ export function StreakCelebration({ from, to, anchor, onClose }: StreakCelebrati
       className="streak-cel-root"
       role="dialog"
       aria-modal="true"
-      aria-label={`${faNum(to)} روز استریک`}
+      aria-label={tr(`${faNum(to)} روز استریک`, `${to}-day streak`)}
       initial={{ opacity: 0 }}
       animate={{ opacity: closing ? 0 : 1 }}
       transition={{ duration: closing ? 0.45 : 0.35, delay: closing ? 0.15 : 0 }}
@@ -244,7 +248,7 @@ export function StreakCelebration({ from, to, anchor, onClose }: StreakCelebrati
               </div>
             );
           })}
-          {next && <span className="streak-cel-next" dir="rtl"><bdi dir="ltr">??</bdi> روز دیگه تا سطح بعدی</span>}
+          {next && <span className="streak-cel-next" dir={isEn() ? "ltr" : "rtl"}><bdi dir="ltr">??</bdi> {tr("روز دیگه تا سطح بعدی", "more days to the next level")}</span>}
         </motion.div>
 
         <motion.div
@@ -253,13 +257,13 @@ export function StreakCelebration({ from, to, anchor, onClose }: StreakCelebrati
           animate={{ opacity: 1, y: 0 }}
           transition={{ delay: 1.4, duration: 0.4 }}
         >
-          <button type="button" className="trade-primary-btn streak-cel-btn" onClick={close}>ادامه</button>
+          <button type="button" className="trade-primary-btn streak-cel-btn" onClick={close}>{tr("ادامه", "Continue")}</button>
           <button
             type="button"
             className="account-outline-btn streak-cel-btn"
             onClick={share}
             disabled={shareBusy}
-            aria-label={shareBusy ? "در حال آماده‌سازی تصویر" : shareLabel}
+            aria-label={shareBusy ? tr("در حال آماده‌سازی تصویر", "Preparing image") : shareLabel}
             aria-busy={shareBusy || undefined}
           >
             {shareBusy ? <Spinner size={14} /> : (
@@ -276,8 +280,8 @@ export function StreakCelebration({ from, to, anchor, onClose }: StreakCelebrati
           </button>
           <p className="streak-cel-invite">
             {invite?.code
-              ? <>دوستات با کد دعوتت <b dir="ltr">{invite.code}</b> روی اولین اشتراک {faNum(REFERRAL_DISCOUNT_PERCENT)}٪ تخفیف می‌گیرن</>
-              : "استریکت رو بفرست و دوستات رو به چالش بکش"}
+              ? (isEn() ? <>Friends who use your invite code <b dir="ltr">{invite.code}</b> get {REFERRAL_DISCOUNT_PERCENT}% off their first subscription</> : <>دوستات با کد دعوتت <b dir="ltr">{invite.code}</b> روی اولین اشتراک {faNum(REFERRAL_DISCOUNT_PERCENT)}٪ تخفیف می‌گیرن</>)
+              : tr("استریکت رو بفرست و دوستات رو به چالش بکش", "Send your streak and challenge your friends")}
           </p>
           <p className="streak-cel-msg" role="status" aria-live="polite">{shareMsg}</p>
         </motion.div>

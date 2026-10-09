@@ -1274,3 +1274,30 @@ body[data-theme="light"] .wl-root button.wl-live-mood{ background:none; box-shad
   .wl-num-grid > :last-child:nth-child(3n){ grid-column:span 2; }
   .wl-num-grid > :last-child:nth-child(3n+1){ grid-column:3 / span 2; }
 }
+
+/* ── LTR (انگلیسی): قرینه‌ی جهت‌دارها. فارسی دست‌نخورده؛ همه‌چیز زیر html[dir="ltr"] ── */
+html[dir="ltr"] .wl-progress{ transform-origin:0 50%; background:linear-gradient(90deg, var(--ring-1a), var(--ring-1b)); }
+html[dir="ltr"] .wl-rule{
+  transform-origin:0 50%;
+  background:
+    linear-gradient(90deg, var(--wl-da), var(--wl-db) 55%, color-mix(in srgb, var(--wl-db) 24%, transparent)) top / 100% 3px no-repeat,
+    linear-gradient(90deg, color-mix(in srgb, var(--text) 55%, transparent), transparent 85%) bottom / 100% 1px no-repeat;
+}
+html[dir="ltr"] .wl-rule::after{ transform:translateX(-100%); animation-name:wl-ink-ltr; }
+@keyframes wl-ink-ltr{ 0%{ transform:translateX(-100%); opacity:1; } 100%{ transform:translateX(100%); opacity:1; } }
+html[dir="ltr"] .wl-cover-stamp{ right:auto; left:-22px; }
+html[dir="ltr"] .wl-ch-line{ transform-origin:0 50%; background:linear-gradient(90deg, var(--wl-da), color-mix(in srgb, var(--wl-db) 60%, transparent) 38%, transparent); }
+html[dir="ltr"] .wl-meter i{ transform-origin:0 50%; background:linear-gradient(90deg, var(--wl-da, var(--accent)), var(--wl-db, var(--accent))); }
+html[dir="ltr"] .wl-dov-track i{ background:linear-gradient(90deg, var(--wl-da), var(--wl-db)); }
+html[dir="ltr"] .wl-quote-mark, html[dir="ltr"] .wl-st-qmark{ transform:none; }
+html[dir="ltr"] .wl-skel::after{ transform:translateX(-100%); animation-name:wl-shimmer-ltr; }
+@keyframes wl-shimmer-ltr{ to{ transform:translateX(100%); } }
+html[dir="ltr"] .wl-st-bar i{ transform-origin:0 50%; }
+html[dir="ltr"] .wl-st-arrow.is-fwd{ right:auto; left:calc(100% + 14px); }
+html[dir="ltr"] .wl-st-arrow.is-back{ left:auto; right:calc(100% + 14px); }
+html[dir="ltr"] .wl-st-stamp{ right:auto; left:calc(var(--u, 1) * -16px); }
+html[dir="ltr"] .wl-st-hint svg{ animation-name:wl-st-nudge-ltr; }
+@keyframes wl-st-nudge-ltr{ 0%,100%{ transform:translateX(0); } 50%{ transform:translateX(5px); } }
+html[dir="ltr"] .wl-st-meter i{ transform-origin:0 50%; background:linear-gradient(90deg, var(--wl-da), var(--wl-db)); }
+html[dir="ltr"] .wl-st-attr{ padding:calc(var(--u, 1) * 6px) 6px 6px 14px; }
+html[dir="ltr"] .wl-st-next{ padding:calc(var(--u, 1) * 9px) 10px 9px 14px; }

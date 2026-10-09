@@ -128,6 +128,7 @@
 .stk-ach-prog{ display:flex; align-items:center; gap:6px; width:100%; }
 .stk-ach-bar{ flex:1; height:5px; border-radius:5px; overflow:hidden; background:color-mix(in srgb, var(--muted) 18%, transparent); }
 .stk-ach-bar i{ display:block; transition:transform .9s cubic-bezier(.22,1,.36,1); height:100%; transform-origin:right; border-radius:inherit; background:linear-gradient(270deg, var(--ring-1a), var(--ring-1b)); }
+html[dir="ltr"] .stk-ach-bar i{ transform-origin:left; background:linear-gradient(90deg, var(--ring-1a), var(--ring-1b)); }
 .stk-ach-prog em{ font-style:normal; unicode-bidi:isolate; font-size:10.5px; font-weight:700; color:var(--muted); font-variant-numeric:tabular-nums; }
 
 /* ── پاداش‌ها ── */

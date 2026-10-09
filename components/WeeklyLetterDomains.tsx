@@ -9,30 +9,35 @@ import { ArrowLeft, TrendingDown, TrendingUp } from "lucide-react";
 import { ANALYSIS_DOMAIN_LABELS } from "@/lib/weeklyAnalysis/types";
 import type { LetterDomain } from "@/lib/weeklyLetter/types";
 import { DOMAIN_HREFS, DOMAIN_ICONS, DOM_GRAD, LazyRing, Reveal, WL_EASE, useLite } from "./WeeklyLetterShared";
+import { CAL_WEEK_ORDER, weekdayName, weekdayShort } from "@/lib/jalali";
+import { tr } from "@/lib/i18n";
 import { domainRadarAxes, scoreIntensity } from "./WeeklyLetterUtils";
 import { MeterColumn } from "./WeeklyMeter";
 import WeeklyRadar from "./WeeklyRadar";
 
-const DAY_LETTERS = ["ش", "ی", "د", "س", "چ", "پ", "ج"];
-const DAY_NAMES = ["شنبه", "یکشنبه", "دوشنبه", "سه‌شنبه", "چهارشنبه", "پنجشنبه", "جمعه"];
+// شنبه تا جمعه به زبان جاری (فارسی: ش ی د س چ پ ج)
+const dayLetters = () => CAL_WEEK_ORDER.map(weekdayShort);
+const dayNames = () => CAL_WEEK_ORDER.map(weekdayName);
 
 function MicroBars({ daily, best, worst }: { daily: (number | null)[]; best: string | null; worst: string | null }) {
   const lite = useLite();
   const ref = useRef<HTMLDivElement>(null);
   const inView = useInView(ref, { once: true, margin: "0px 0px -6% 0px" });
   const on = inView || lite;
+  const letters = dayLetters();
+  const names = dayNames();
   const cells = Array.from({ length: 7 }, (_, i) => (typeof daily[i] === "number" ? (daily[i] as number) : null));
   return (
-    <div ref={ref} className="wl-bars" role="img" aria-label="امتیاز هر روز هفته">
+    <div ref={ref} className="wl-bars" role="img" aria-label={tr("امتیاز هر روز هفته", "Score for each day of the week")}>
       {cells.map((v, i) => {
-        const isBest = best === DAY_NAMES[i];
-        const isWorst = worst === DAY_NAMES[i];
+        const isBest = best === names[i];
+        const isWorst = worst === names[i];
         return (
           <div key={i} className={`wl-bar-col${isBest ? " is-best" : ""}${isWorst ? " is-worst" : ""}`}>
             <span className="wl-bar-slot">
               <MeterColumn size="sm" value={v} on={on} delay={i * 60} highlight={isBest} />
             </span>
-            <span className="wl-bar-lbl">{DAY_LETTERS[i]}</span>
+            <span className="wl-bar-lbl">{letters[i]}</span>
           </div>
         );
       })}
@@ -59,10 +64,10 @@ function DomainsOverview({ domains }: { domains: LetterDomain[] }) {
     <Reveal className="wl-card wl-dov">
       <div ref={ref} className={`wl-dov-in${showRadar ? "" : " is-list"}`}>
         {showRadar && <div className="wl-dov-radar">
-          <WeeklyRadar axes={axes} size={320} on={inView || lite} activeKey={active} ariaLabel={`امتیاز بخش‌ها: ${axes.map((a) => `${a.label} ${Math.round(a.value as number)}`).join("، ")}`} />
+          <WeeklyRadar axes={axes} size={320} on={inView || lite} activeKey={active} ariaLabel={`${tr("امتیاز بخش‌ها", "Area scores")}: ${axes.map((a) => `${a.label} ${Math.round(a.value as number)}`).join(tr("، ", ", "))}`} />
           <span className="wl-dov-key" aria-hidden="true">
-            <i className="is-now" />این هفته
-            {hasPrev && (<><i className="is-prev" />هفته‌ی قبل</>)}
+            <i className="is-now" />{tr("این هفته", "This week")}
+            {hasPrev && (<><i className="is-prev" />{tr("هفته‌ی قبل", "Last week")}</>)}
           </span>
         </div>}
         <ol className="wl-dov-list" onMouseLeave={() => setActive(null)}>
@@ -138,18 +143,18 @@ function DomainCard({ d, i }: { d: LetterDomain; i: number }) {
           <MicroBars daily={d.daily} best={d.bestDay} worst={d.worstDay} />
           {(d.bestDay || d.worstDay) && (
             <div className="wl-dom-days">
-              {d.bestDay && <span className="wl-mark is-good"><TrendingUp size={12} />اوج: {d.bestDay}</span>}
-              {d.worstDay && d.worstDay !== d.bestDay && <span className="wl-mark is-bad"><TrendingDown size={12} />افت: {d.worstDay}</span>}
+              {d.bestDay && <span className="wl-mark is-good"><TrendingUp size={12} />{tr("اوج:", "Peak:")} {d.bestDay}</span>}
+              {d.worstDay && d.worstDay !== d.bestDay && <span className="wl-mark is-bad"><TrendingDown size={12} />{tr("افت:", "Dip:")} {d.worstDay}</span>}
             </div>
           )}
         </>
       ) : (
-        <p className="wl-dom-note">این هفته در {label} چیزی ثبت نشد.</p>
+        <p className="wl-dom-note">{tr(`این هفته در ${label} چیزی ثبت نشد.`, `Nothing was logged in ${label} this week.`)}</p>
       )}
 
       <Link href={DOMAIN_HREFS[d.domain]} className="wl-link">
-        {has ? `برو به ${label}` : `شروع ثبت ${label}`}
-        <ArrowLeft size={14} />
+        {has ? tr(`برو به ${label}`, `Go to ${label}`) : tr(`شروع ثبت ${label}`, `Start logging ${label}`)}
+        <ArrowLeft size={14} className="dir-flip" />
       </Link>
     </Reveal>
   );

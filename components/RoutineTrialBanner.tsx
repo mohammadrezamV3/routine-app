@@ -12,6 +12,7 @@ import { ROUTINE_PLAN_KEY, ROUTINE_TRIAL_DAYS } from "@/lib/trial";
 import { entryOffer } from "@/lib/planPricing";
 import { usePlanPricing } from "@/lib/usePlanPricing";
 import { useLiveRefresh } from "@/lib/liveSync";
+import { tr, isEn } from "@/lib/i18n";
 
 export function routineTrialDaysLeft(data: Awaited<ReturnType<typeof getAccount>>): number | null {
   const u = data?.user;
@@ -44,10 +45,10 @@ export function RoutineTrialBanner({ className }: { className?: string }) {
   return (
     <div className={`routine-trial-strip${left <= 3 ? " is-urgent" : ""}${className ? ` ${className}` : ""}`} role="status">
       <span>
-        <b>{left}</b> روز از دوره‌ی رایگان «روتین من» مونده
+        {isEn() ? <><b>{left}</b> {left === 1 ? "day" : "days"} left in your free My Routine trial</> : <><b>{left}</b> روز از دوره‌ی رایگان «روتین من» مونده</>}
       </span>
       <Link href={`/subscription/checkout?plan=${ROUTINE_PLAN_KEY}&duration=${offer.duration}`} prefetch={false}>
-        {ready ? `خرید — ${offer.label}` : "خرید"}
+        {ready ? tr(`خرید — ${offer.label}`, `Buy: ${offer.label}`) : tr("خرید", "Buy")}
       </Link>
     </div>
   );

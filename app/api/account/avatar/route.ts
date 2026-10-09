@@ -1,3 +1,4 @@
+import { tr } from "@/lib/i18n";
 import { NextRequest, NextResponse } from "next/server";
 import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/auth";
@@ -25,16 +26,16 @@ async function handlePATCH(req: NextRequest) {
   if (!userId) return NextResponse.json({ error: "unauthorized" }, { status: 401 });
 
   if (!(session!.user as any).isSuperAdmin && !(await checkRateLimit(`avatar-change:${userId}`, 10, 60 * 60 * 1000))) {
-    return NextResponse.json({ error: "درخواست‌های زیاد — کمی بعد دوباره امتحان کن" }, { status: 429 });
+    return NextResponse.json({ error: tr("درخواست‌های زیاد — کمی بعد دوباره امتحان کن", "Too many requests — try again shortly") }, { status: 429 });
   }
 
   const body = await req.json().catch(() => ({}));
   const dataUrl = String(body?.dataUrl || "");
   if (!dataUrl.startsWith("data:image/")) {
-    return NextResponse.json({ error: "فایل معتبر نیست" }, { status: 400 });
+    return NextResponse.json({ error: tr("فایل معتبر نیست", "Invalid file") }, { status: 400 });
   }
   if (dataUrl.length > MAX_DATA_URL_LENGTH) {
-    return NextResponse.json({ error: "حجم عکس زیاد است" }, { status: 413 });
+    return NextResponse.json({ error: tr("حجم عکس زیاد است", "The image is too large") }, { status: 413 });
   }
 
   await prisma.user.update({ where: { id: userId }, data: { avatarUrl: dataUrl } });

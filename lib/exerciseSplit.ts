@@ -7,6 +7,8 @@
 
 import { CAL_WEEK_ORDER, FA_WEEKDAY } from "@/lib/jalali";
 import type { ExerciseLevel } from "@/lib/exercisePlans";
+import { isEn, tr } from "@/lib/i18n";
+import { dayNameDisplay } from "@/lib/exerciseDay";
 
 export const MUSCLE_KEYS = [
   "chest", "back", "shoulders", "biceps", "triceps", "quads",
@@ -29,6 +31,26 @@ export const MUSCLE_LABELS: Record<MuscleKey, string> = {
   forearms: "ساعد",
   traps: "ذوزنقه",
 };
+
+const MUSCLE_LABELS_EN: Record<MuscleKey, string> = {
+  chest: "Chest",
+  back: "Back",
+  shoulders: "Shoulders",
+  biceps: "Biceps",
+  triceps: "Triceps",
+  quads: "Quads",
+  hamstrings: "Hamstrings",
+  glutes: "Glutes",
+  calves: "Calves",
+  abs: "Abs",
+  forearms: "Forearms",
+  traps: "Traps",
+};
+
+/** برچسب عضله به زبان جاری (MUSCLE_LABELS ثابت فارسی می‌مونه چون وارد پرامپت مدل می‌شه). */
+export function muscleLabel(k: MuscleKey): string {
+  return isEn() ? MUSCLE_LABELS_EN[k] : MUSCLE_LABELS[k];
+}
 
 /** عضله‌های بزرگ — برای ریکاوری 48 ساعته و سقف عضله‌ی بزرگ در یک جلسه. */
 export const LARGE_MUSCLES: ReadonlySet<MuscleKey> = new Set<MuscleKey>(["chest", "back", "shoulders", "quads", "hamstrings", "glutes"]);
@@ -92,29 +114,29 @@ export type UserSplitDay = { day: string; muscles: MuscleKey[] };
  * هر روز. خروجی به ترتیب همان روزهای باشگاه است.
  */
 export function validateUserSplit(raw: unknown, gymDays: string[]): { ok: true; days: UserSplitDay[] } | { ok: false; error: string } {
-  if (!Array.isArray(raw) || raw.length === 0) return { ok: false, error: "تقسیم هفتگی نامعتبر است" };
-  if (raw.length > 7) return { ok: false, error: "تقسیم هفتگی بیش از 7 روز دارد" };
+  if (!Array.isArray(raw) || raw.length === 0) return { ok: false, error: tr("تقسیم هفتگی نامعتبر است", "Invalid weekly split") };
+  if (raw.length > 7) return { ok: false, error: tr("تقسیم هفتگی بیش از 7 روز دارد", "The weekly split has more than 7 days") };
   const byDay = new Map<string, MuscleKey[]>();
   for (const d of raw as any[]) {
     const day = typeof d?.day === "string" ? d.day.trim() : "";
-    if (!gymDays.includes(day)) return { ok: false, error: "روزهای تقسیم هفتگی باید از روزهای باشگاه باشند" };
-    if (byDay.has(day)) return { ok: false, error: `روز ${day} در تقسیم هفتگی تکراری است` };
+    if (!gymDays.includes(day)) return { ok: false, error: tr("روزهای تقسیم هفتگی باید از روزهای باشگاه باشند", "Split days must be your gym days") };
+    if (byDay.has(day)) return { ok: false, error: tr(`روز ${day} در تقسیم هفتگی تکراری است`, `${dayNameDisplay(day)} appears twice in the weekly split`) };
     if (!Array.isArray(d?.muscles) || d.muscles.length > MUSCLE_KEYS.length || !d.muscles.every(isMuscleKey)) {
-      return { ok: false, error: "گروه عضلانی ناشناخته در تقسیم هفتگی" };
+      return { ok: false, error: tr("گروه عضلانی ناشناخته در تقسیم هفتگی", "Unknown muscle group in the weekly split") };
     }
     const muscles = MUSCLE_KEYS.filter((k) => d.muscles.includes(k));
-    if (!muscles.length) return { ok: false, error: `برای روز ${day} حداقل یک گروه عضلانی انتخاب کن` };
+    if (!muscles.length) return { ok: false, error: tr(`برای روز ${day} حداقل یک گروه عضلانی انتخاب کن`, `Pick at least one muscle group for ${dayNameDisplay(day)}`) };
     byDay.set(day, muscles);
   }
   const missing = gymDays.filter((d) => !byDay.has(d));
-  if (missing.length) return { ok: false, error: `برای روز ${missing.join("، ")} گروه عضلانی انتخاب نشده` };
+  if (missing.length) return { ok: false, error: tr(`برای روز ${missing.join("، ")} گروه عضلانی انتخاب نشده`, `No muscle group selected for ${missing.map(dayNameDisplay).join(", ")}`) };
   return { ok: true, days: gymDays.map((day) => ({ day, muscles: byDay.get(day)! })) };
 }
 
 export type SplitRuleOptions = { level?: ExerciseLevel; relaxed?: boolean };
 
-const label = (k: MuscleKey) => MUSCLE_LABELS[k];
-const joinFa = (xs: string[]) => xs.join("، ");
+const label = (k: MuscleKey) => muscleLabel(k);
+const joinFa = (xs: string[]) => xs.join(tr("، ", ", "));
 
 /**
  * قواعد برنامه‌نویسی یک تقسیم هفتگی (روی کلیدهای عضله):
@@ -131,13 +153,13 @@ export function splitRuleIssues(days: UserSplitDay[], opts: SplitRuleOptions = {
   for (const d of days) {
     const s = sets.get(d.day)!;
     if (s.has("biceps") && s.has("triceps")) {
-      issues.push(`روز ${d.day} جلوبازو و پشت‌بازو را با هم دارد؛ این دو باید در روزهای جدا تمرین شوند.`);
+      issues.push(tr(`روز ${d.day} جلوبازو و پشت‌بازو را با هم دارد؛ این دو باید در روزهای جدا تمرین شوند.`, `${dayNameDisplay(d.day)} has both biceps and triceps; train them on separate days.`));
     }
     const large = d.muscles.filter((m) => LARGE_MUSCLES.has(m));
     if (large.length > MAX_LARGE_PER_DAY[level]) {
-      issues.push(`روز ${d.day} برای این سطح عضله‌ی بزرگ زیادی دارد (${joinFa(large.map(label))})؛ حداکثر ${MAX_LARGE_PER_DAY[level]} عضله‌ی بزرگ در یک جلسه.`);
+      issues.push(tr(`روز ${d.day} برای این سطح عضله‌ی بزرگ زیادی دارد (${joinFa(large.map(label))})؛ حداکثر ${MAX_LARGE_PER_DAY[level]} عضله‌ی بزرگ در یک جلسه.`, `${dayNameDisplay(d.day)} has too many large muscles for this level (${joinFa(large.map(label))}); at most ${MAX_LARGE_PER_DAY[level]} large muscles per session.`));
     } else if (s.size > MAX_MUSCLES_PER_DAY[level]) {
-      issues.push(`روز ${d.day} گروه عضلانی زیادی دارد (${s.size} گروه)؛ حداکثر ${MAX_MUSCLES_PER_DAY[level]} گروه در یک جلسه.`);
+      issues.push(tr(`روز ${d.day} گروه عضلانی زیادی دارد (${s.size} گروه)؛ حداکثر ${MAX_MUSCLES_PER_DAY[level]} گروه در یک جلسه.`, `${dayNameDisplay(d.day)} has too many muscle groups (${s.size}); at most ${MAX_MUSCLES_PER_DAY[level]} per session.`));
     }
   }
 
@@ -148,21 +170,21 @@ export function splitRuleIssues(days: UserSplitDay[], opts: SplitRuleOptions = {
     const sa = sets.get(a), sb = sets.get(b);
     if (!sa || !sb || a === b) continue;
     const both = MUSCLE_KEYS.filter((m) => LARGE_MUSCLES.has(m) && sa.has(m) && sb.has(m));
-    if (both.length) issues.push(`${joinFa(both.map(label))} هم ${a} و هم ${b} آمده؛ عضله‌ی بزرگ حداقل 48 ساعت ریکاوری می‌خواهد.`);
+    if (both.length) issues.push(tr(`${joinFa(both.map(label))} هم ${a} و هم ${b} آمده؛ عضله‌ی بزرگ حداقل 48 ساعت ریکاوری می‌خواهد.`, `${joinFa(both.map(label))} appears on both ${dayNameDisplay(a)} and ${dayNameDisplay(b)}; large muscles need at least 48 hours of recovery.`));
   }
 
   if (!opts.relaxed && days.length >= 3) {
     const all = new Set(days.flatMap((d) => d.muscles));
     const missing = REQUIRED_WEEKLY.filter((m) => !all.has(m));
-    if (missing.length) issues.push(`این عضله‌های اصلی در کل هفته تمرین نمی‌شوند: ${joinFa(missing.map(label))}.`);
+    if (missing.length) issues.push(tr(`این عضله‌های اصلی در کل هفته تمرین نمی‌شوند: ${joinFa(missing.map(label))}.`, `These main muscles are not trained all week: ${joinFa(missing.map(label))}.`));
   }
 
   const freq = (m: MuscleKey) => days.filter((d) => sets.get(d.day)!.has(m)).length;
   if (freq("chest") > 0 && freq("back") > 0 && Math.abs(freq("chest") - freq("back")) >= 2) {
-    issues.push(`تعادل فشار و کشش به هم خورده: سینه ${freq("chest")} بار و پشت ${freq("back")} بار در هفته.`);
+    issues.push(tr(`تعادل فشار و کشش به هم خورده: سینه ${freq("chest")} بار و پشت ${freq("back")} بار در هفته.`, `Push/pull balance is off: chest ${freq("chest")}x and back ${freq("back")}x per week.`));
   }
   if (freq("quads") > 0 && freq("hamstrings") > 0 && Math.abs(freq("quads") - freq("hamstrings")) >= 2) {
-    issues.push(`تعادل جلو و پشت ران به هم خورده: چهارسر ${freq("quads")} بار و پشت ران ${freq("hamstrings")} بار در هفته.`);
+    issues.push(tr(`تعادل جلو و پشت ران به هم خورده: چهارسر ${freq("quads")} بار و پشت ران ${freq("hamstrings")} بار در هفته.`, `Quad/hamstring balance is off: quads ${freq("quads")}x and hamstrings ${freq("hamstrings")}x per week.`));
   }
   return issues;
 }

@@ -21,7 +21,8 @@ import { MentorPlatformNotice } from "@/components/MentorPlatformNotice";
 import { MentorTermsAcceptance, isMentorTermsError, mentorTermsPayload, useMentorTermsStatus } from "@/components/MentorTermsAcceptance";
 import { LoadingBlock, Spinner } from "@/components/Spinner";
 import type { MentorProfileResponse, MyMentorship, Review, ReportTargetType } from "@/lib/mentorTypes";
-import { fmtDate, fmtRelative, NETWORK_ERROR, readApiError } from "@/lib/mentorFormat";
+import { fmtDate, fmtRelative, networkError, readApiError } from "@/lib/mentorFormat";
+import { tr } from "@/lib/i18n";
 import { faNum } from "@/lib/jalali";
 import { INTAKE_ANSWER_MAX, availabilityShort, responseTimeLabel } from "@/lib/mentorAvailability";
 import type { AvailabilityState, MyWaitlist } from "@/lib/mentorTypes";
@@ -38,7 +39,7 @@ const SECTION = { size: 15, strokeWidth: 1.75, "aria-hidden": true } as const;
 
 export default function MentorProfilePage() {
   return (
-    <MentorPageShell back={{ href: "/mentors", label: "مربی‌ها" }}>
+    <MentorPageShell back={{ href: "/mentors", label: tr("مربی‌ها", "Mentors") }}>
       <MentorProfile />
     </MentorPageShell>
   );
@@ -56,12 +57,12 @@ function MentorProfile() {
     setError(null);
     try {
       const res = await fetchMentorProfile(mentorId);
-      if (res.status === 404) { setError({ msg: "این مربی پیدا نشد یا پروفایلش منتشر نشده است", retry: false }); return; }
-      if (res.status === 403) { setError({ msg: await readApiError(res, "اجازه‌ی دیدن این پروفایل را نداری"), retry: false }); return; }
-      if (!res.ok) { setError({ msg: await readApiError(res, "پروفایل دریافت نشد؛ دوباره تلاش کن"), retry: true }); return; }
+      if (res.status === 404) { setError({ msg: tr("این مربی پیدا نشد یا پروفایلش منتشر نشده است", "This mentor wasn't found or their profile isn't published"), retry: false }); return; }
+      if (res.status === 403) { setError({ msg: await readApiError(res, tr("اجازه‌ی دیدن این پروفایل را نداری", "You don't have permission to view this profile")), retry: false }); return; }
+      if (!res.ok) { setError({ msg: await readApiError(res, tr("پروفایل دریافت نشد؛ دوباره تلاش کن", "Couldn't load the profile. Try again")), retry: true }); return; }
       setData(await res.json());
     } catch {
-      setError({ msg: NETWORK_ERROR, retry: true });
+      setError({ msg: networkError(), retry: true });
     }
   }, [mentorId]);
 
@@ -92,7 +93,7 @@ function MentorProfile() {
               {mentor.headline && <p className="mentor-hero-headline">{mentor.headline}</p>}
               <div className="mentor-hero-meta">
                 <RatingInline value={mentor.ratingAvg} count={mentor.ratingCount} withWord />
-                {mentor.memberSince && <span>تاریخ عضویت: {fmtDate(mentor.memberSince)}</span>}
+                {mentor.memberSince && <span>{tr("تاریخ عضویت:", "Member since:")} {fmtDate(mentor.memberSince)}</span>}
               </div>
             </div>
             {!isSelf && (
@@ -102,8 +103,8 @@ function MentorProfile() {
                   type="button"
                   className="trade-icon-btn mentor-report-flag"
                   onClick={() => setReport({ type: "USER", id: mentor.userId })}
-                  aria-label="گزارش این مربی"
-                  title="گزارش این مربی"
+                  aria-label={tr("گزارش این مربی", "Report this mentor")}
+                  title={tr("گزارش این مربی", "Report this mentor")}
                 >
                   <Flag size={15} strokeWidth={1.75} aria-hidden />
                 </button>
@@ -118,10 +119,10 @@ function MentorProfile() {
           )}
 
           <dl className="mentor-hero-stats">
-            <div><dt><Users {...CHIP} /> شاگرد فعال</dt><dd>{faNum(mentor.activeStudents)}</dd></div>
-            <div><dt><UserRound {...CHIP} /> کل شاگردها</dt><dd>{faNum(mentor.totalStudents)}</dd></div>
-            <div><dt><ClipboardList {...CHIP} /> برنامه‌ی تمام‌شده</dt><dd>{faNum(mentor.completedPrograms)}</dd></div>
-            <div><dt><Activity {...CHIP} /> آخرین فعالیت</dt><dd className="is-text">{fmtRelative(mentor.lastActiveAt)}</dd></div>
+            <div><dt><Users {...CHIP} /> {tr("شاگرد فعال", "Active students")}</dt><dd>{faNum(mentor.activeStudents)}</dd></div>
+            <div><dt><UserRound {...CHIP} /> {tr("کل شاگردها", "Total students")}</dt><dd>{faNum(mentor.totalStudents)}</dd></div>
+            <div><dt><ClipboardList {...CHIP} /> {tr("برنامه‌ی تمام‌شده", "Completed programs")}</dt><dd>{faNum(mentor.completedPrograms)}</dd></div>
+            <div><dt><Activity {...CHIP} /> {tr("آخرین فعالیت", "Last active")}</dt><dd className="is-text">{fmtRelative(mentor.lastActiveAt)}</dd></div>
           </dl>
 
           {/* عدم حضور فقط یک‌بار، در یک بلوک فشرده (تاریخ بازگشت + پیام) */}
@@ -129,7 +130,7 @@ function MentorProfile() {
             <div className="mentor-away" role="note">
               <CalendarDays size={16} strokeWidth={1.75} aria-hidden />
               <div className="mentor-away-body">
-                <span className="mentor-away-title">در دسترس نیست تا {fmtDate(mentor.awayUntil)}</span>
+                <span className="mentor-away-title">{tr(`در دسترس نیست تا ${fmtDate(mentor.awayUntil)}`, `Unavailable until ${fmtDate(mentor.awayUntil)}`)}</span>
                 {mentor.awayMessage && <span className="mentor-away-text">{mentor.awayMessage}</span>}
               </div>
             </div>
@@ -158,7 +159,7 @@ function MentorProfile() {
         </div>
 
         {hasAbout && (
-          <MentorSection title="درباره‌ی مربی" icon={<UserRound {...SECTION} />}>
+          <MentorSection title={tr("درباره‌ی مربی", "About the mentor")} icon={<UserRound {...SECTION} />}>
             {mentor.bio && <p className="mentor-bio">{mentor.bio}</p>}
             {mentor.specialties.length > 0 && (
               <div className="mentor-tags">
@@ -173,12 +174,12 @@ function MentorProfile() {
         )}
 
         <MentorSection
-          title="نظرها"
+          title={tr("نظرها", "Reviews")}
           icon={<MessageSquareText {...SECTION} />}
           count={reviews.length ? faNum(mentor.ratingCount || reviews.length) : undefined}
         >
           {reviews.length === 0 ? (
-            <MentorEmpty>هنوز نظری ثبت نشده است</MentorEmpty>
+            <MentorEmpty>{tr("هنوز نظری ثبت نشده است", "No reviews yet")}</MentorEmpty>
           ) : (
             reviews.map((r) => (
               <ReviewRow key={r.id} review={r} canReport={!isSelf && r.id !== myReview?.id} onReport={() => setReport({ type: "REVIEW", id: r.id })} />
@@ -199,14 +200,14 @@ function ReviewRow({ review, canReport, onReport }: { review: Review; canReport:
       <MentorUserAvatar name={review.student.name} avatarUrl={review.student.avatarUrl} size={36} />
       <div className="mentor-review-body">
         <div className="mentor-review-head">
-          <span className="mentor-review-name"><GoldenName golden={review.student.golden} staff={review.student.staff}>{review.student.name || "شاگرد"}</GoldenName></span>
+          <span className="mentor-review-name"><GoldenName golden={review.student.golden} staff={review.student.staff}>{review.student.name || tr("شاگرد", "Student")}</GoldenName></span>
           <RatingStars value={review.rating} />
           <span className="mentor-review-date">{fmtDate(review.createdAt)}</span>
         </div>
         {review.body && <p className="mentor-review-text">{review.body}</p>}
       </div>
       {canReport && (
-        <button type="button" className="trade-icon-btn mentor-review-flag" onClick={onReport} aria-label="گزارش این نظر" title="گزارش این نظر">
+        <button type="button" className="trade-icon-btn mentor-review-flag" onClick={onReport} aria-label={tr("گزارش این نظر", "Report this review")} title={tr("گزارش این نظر", "Report this review")}>
           <Flag {...BTN_SM} />
         </button>
       )}
@@ -257,7 +258,7 @@ function ConnectAction({
       if (res.status === 400 && action === "accept") {
         const j = await res.json().catch(() => null);
         if (isMentorTermsError(j)) { setTermsAccepted(false); setTermsError(j.error); terms.refresh(); return; }
-        setError(typeof j?.error === "string" ? j.error : NETWORK_ERROR);
+        setError(typeof j?.error === "string" ? j.error : networkError());
         return;
       }
       if (!res.ok) {
@@ -271,7 +272,7 @@ function ConnectAction({
       onChange({ ...mine, status });
       setConfirmCancel(false);
     } catch {
-      setError(NETWORK_ERROR);
+      setError(networkError());
     } finally {
       setBusy(null);
     }
@@ -282,22 +283,22 @@ function ConnectAction({
   if (mine?.status === "ACTIVE") {
     body = (
       <Link href={`/mentorship/${mine.id}`} className="trade-primary-btn mentor-btn">
-        <MessageCircle {...BTN} /> باز کردن گفت‌وگو
+        <MessageCircle {...BTN} /> {tr("باز کردن گفت‌وگو", "Open chat")}
       </Link>
     );
   } else if (mine?.status === "PENDING" && mine.initiatedBy === "STUDENT") {
     body = (
       <>
-        <MentorChip tone="info" icon={<Hourglass {...CHIP} />}>منتظر پاسخ مربی</MentorChip>
+        <MentorChip tone="info" icon={<Hourglass {...CHIP} />}>{tr("منتظر پاسخ مربی", "Waiting for the mentor's reply")}</MentorChip>
         <button type="button" className="account-outline-btn muted mentor-btn is-sm" onClick={() => { setError(null); setConfirmCancel(true); }} disabled={!!busy}>
-          <X {...BTN_SM} /> لغو درخواست
+          <X {...BTN_SM} /> {tr("لغو درخواست", "Cancel request")}
         </button>
       </>
     );
   } else if (mine?.status === "PENDING" && mine.initiatedBy === "MENTOR") {
     body = (
       <>
-        <MentorChip tone="warn" icon={<AlertCircle {...CHIP} />} title="این مربی تو را به‌عنوان شاگرد دعوت کرده است">منتظر پاسخ تو</MentorChip>
+        <MentorChip tone="warn" icon={<AlertCircle {...CHIP} />} title={tr("این مربی تو را به‌عنوان شاگرد دعوت کرده است", "This mentor has invited you to be their student")}>{tr("منتظر پاسخ تو", "Waiting for your reply")}</MentorChip>
         {needTerms && (
           <div style={{ width: "100%" }}>
             <MentorTermsAcceptance
@@ -311,16 +312,16 @@ function ConnectAction({
         )}
         <div className="mentor-btn-group" style={{ width: "100%" }}>
           <button type="button" className="account-outline-btn muted mentor-btn" onClick={() => patch("reject")} disabled={!!busy}>
-            {busy === "reject" ? <Spinner size={14} /> : <><X {...BTN} /> رد دعوت</>}
+            {busy === "reject" ? <Spinner size={14} /> : <><X {...BTN} /> {tr("رد دعوت", "Decline invite")}</>}
           </button>
           <button type="button" className="trade-primary-btn mentor-btn" onClick={() => patch("accept")} disabled={!!busy || terms.loading || (needTerms && !termsAccepted)}>
-            {busy === "accept" ? <Spinner size={14} /> : <><Check {...BTN} /> پذیرفتن دعوت</>}
+            {busy === "accept" ? <Spinner size={14} /> : <><Check {...BTN} /> {tr("پذیرفتن دعوت", "Accept invite")}</>}
           </button>
         </div>
       </>
     );
   } else if (mine?.status === "BLOCKED") {
-    body = <MentorChip tone="danger" icon={<Ban {...CHIP} />}>ارتباط با این مربی ممکن نیست</MentorChip>;
+    body = <MentorChip tone="danger" icon={<Ban {...CHIP} />}>{tr("ارتباط با این مربی ممکن نیست", "You can't contact this mentor")}</MentorChip>;
   } else if (availability === "AWAY") {
     // عدم حضور بالاتر یک‌بار در بلوک «در دسترس نیست تا …» آمده؛ این‌جا تکرار نمی‌شود
     body = null;
@@ -346,11 +347,11 @@ function ConnectAction({
       </MentorChip>
     );
   } else if (!accepting) {
-    body = <MentorChip tone="neutral" icon={<CircleSlash {...CHIP} />}>شاگرد جدید نمی‌پذیرد</MentorChip>;
+    body = <MentorChip tone="neutral" icon={<CircleSlash {...CHIP} />}>{tr("شاگرد جدید نمی‌پذیرد", "Not accepting students")}</MentorChip>;
   } else {
     body = (
       <button type="button" className="trade-primary-btn mentor-btn" onClick={() => setRequestOpen(true)}>
-        <Send {...BTN} /> {mine && (mine.status === "ENDED" || mine.status === "REJECTED") ? "ارسال دوباره‌ی درخواست" : "ارسال درخواست"}
+        <Send {...BTN} className="dir-flip" /> {mine && (mine.status === "ENDED" || mine.status === "REJECTED") ? tr("ارسال دوباره‌ی درخواست", "Send request again") : tr("ارسال درخواست", "Send request")}
       </button>
     );
   }
@@ -374,9 +375,9 @@ function ConnectAction({
       )}
       {confirmCancel && (
         <MentorConfirmDialog
-          message={`درخواست به ${mentorName} لغو شود؟`}
-          hint="بعدا می‌توانی دوباره درخواست بدهی."
-          confirmLabel="لغو درخواست"
+          message={tr(`درخواست به ${mentorName} لغو شود؟`, `Cancel your request to ${mentorName}?`)}
+          hint={tr("بعدا می‌توانی دوباره درخواست بدهی.", "You can send a request again later.")}
+          confirmLabel={tr("لغو درخواست", "Cancel request")}
           busy={busy === "cancel"}
           error={error}
           onConfirm={() => patch("cancel")}
@@ -417,13 +418,13 @@ function RequestModal({
   const [termsError, setTermsError] = useState<string | null>(null);
 
   async function submit() {
-    if (mentorCategories.length > 0 && cats.length === 0) { setCatsError("حداقل یک حوزه انتخاب کن"); return; }
-    if (needTerms && !termsAccepted) { setTermsError("برای ارسال درخواست، شرایط را بپذیر"); return; }
+    if (mentorCategories.length > 0 && cats.length === 0) { setCatsError(tr("حداقل یک حوزه انتخاب کن", "Choose at least one area")); return; }
+    if (needTerms && !termsAccepted) { setTermsError(tr("برای ارسال درخواست، شرایط را بپذیر", "Accept the terms to send your request")); return; }
     if (tooLong) return;
     const aErrs = intakeQuestions.map((_, i) => {
       const a = (answers[i] ?? "").trim();
-      if (!a) return "جواب این سؤال را بنویس";
-      if (a.length > INTAKE_ANSWER_MAX) return `حداکثر ${faNum(INTAKE_ANSWER_MAX)} نویسه`;
+      if (!a) return tr("جواب این سؤال را بنویس", "Answer this question");
+      if (a.length > INTAKE_ANSWER_MAX) return tr(`حداکثر ${faNum(INTAKE_ANSWER_MAX)} نویسه`, `Up to ${faNum(INTAKE_ANSWER_MAX)} characters`);
       return null;
     });
     setAnswerErrs(aErrs);
@@ -445,30 +446,30 @@ function RequestModal({
       if (res.status === 400) {
         const j = await res.json().catch(() => null);
         if (isMentorTermsError(j)) { setTermsAccepted(false); setTermsError(j.error); terms.refresh(); return; }
-        setError(typeof j?.error === "string" ? j.error : "درخواست ارسال نشد؛ دوباره تلاش کن");
+        setError(typeof j?.error === "string" ? j.error : tr("درخواست ارسال نشد؛ دوباره تلاش کن", "Couldn't send the request. Try again"));
         return;
       }
       // ۴۰۹: درخواست باز/رابطه‌ی فعال، یا پذیرش بسته/ظرفیت پر/عدم حضور — پیام سرور دقیق‌تر است
-      if (res.status === 409) { setError(await readApiError(res, "با این مربی درخواست باز یا رابطه‌ی فعال داری")); onStale(); return; }
-      if (!res.ok) { setError(await readApiError(res, "درخواست ارسال نشد؛ دوباره تلاش کن")); return; }
+      if (res.status === 409) { setError(await readApiError(res, tr("با این مربی درخواست باز یا رابطه‌ی فعال داری", "You already have an open request or an active mentorship with this mentor"))); onStale(); return; }
+      if (!res.ok) { setError(await readApiError(res, tr("درخواست ارسال نشد؛ دوباره تلاش کن", "Couldn't send the request. Try again"))); return; }
       const d = await res.json().catch(() => null);
       const m = d?.mentorship;
       if (m?.id) onDone({ id: m.id, status: m.status ?? "PENDING", initiatedBy: m.initiatedBy ?? "STUDENT" });
       else { onClose(); onStale(); }
     } catch {
-      setError(NETWORK_ERROR);
+      setError(networkError());
     } finally {
       setBusy(false);
     }
   }
 
   return (
-    <MentorSheet open={open} onClose={onClose} title={`درخواست مربی‌گری از ${mentorName}`} dismissible={!busy}>
+    <MentorSheet open={open} onClose={onClose} title={tr(`درخواست مربی‌گری از ${mentorName}`, `Mentorship request to ${mentorName}`)} dismissible={!busy}>
       <div className="mentor-form">
-        <p className="mentor-muted">مربی تا وقتی در بخش دسترسی‌ها اجازه ندهی، هیچ بخشی از برنامه‌هایت را نمی‌بیند.</p>
+        <p className="mentor-muted">{tr("مربی تا وقتی در بخش دسترسی‌ها اجازه ندهی، هیچ بخشی از برنامه‌هایت را نمی‌بیند.", "Your mentor can't see any part of your programs until you allow it in the access settings.")}</p>
         {mentorCategories.length > 1 && (
-          <MentorField label="حوزه‌ی همکاری" error={catsError}>
-            <div role="group" aria-label="حوزه‌ی همکاری">
+          <MentorField label={tr("حوزه‌ی همکاری", "Area of work")} error={catsError}>
+            <div role="group" aria-label={tr("حوزه‌ی همکاری", "Area of work")}>
               {mentorCategories.map((c) => (
                 <label key={c} className="mentor-check">
                   <TickButton
@@ -500,11 +501,11 @@ function RequestModal({
           </MentorField>
         ))}
         <MentorField
-          label="پیام"
+          label={tr("پیام", "Message")}
           htmlFor="mentor-req-msg"
           optional
-          error={tooLong ? `پیام حداکثر ${faNum(MESSAGE_MAX)} نویسه است` : null}
-          hint={`${faNum(len)} از ${faNum(MESSAGE_MAX)} نویسه`}
+          error={tooLong ? tr(`پیام حداکثر ${faNum(MESSAGE_MAX)} نویسه است`, `Messages can be up to ${faNum(MESSAGE_MAX)} characters`) : null}
+          hint={tr(`${faNum(len)} از ${faNum(MESSAGE_MAX)} نویسه`, `${faNum(len)} of ${faNum(MESSAGE_MAX)} characters`)}
         >
           <textarea
             id="mentor-req-msg"
@@ -513,7 +514,7 @@ function RequestModal({
             value={message}
             maxLength={MESSAGE_MAX + 50}
             onChange={(e) => { setMessage(e.target.value); setError(null); }}
-            placeholder="مثلا «برای کنکور تجربی برنامه‌ی هفتگی می‌خواهم»"
+            placeholder={tr("مثلا «برای کنکور تجربی برنامه‌ی هفتگی می‌خواهم»", "For example: \"I'd like a weekly plan for my entrance exam\"")}
             aria-invalid={tooLong}
           />
         </MentorField>
@@ -529,9 +530,9 @@ function RequestModal({
       </div>
       {error && <div className="form-inline-error" role="alert">{error}</div>}
       <div className="trade-modal-actions">
-        <button type="button" className="account-outline-btn mentor-btn" onClick={onClose} disabled={busy}>انصراف</button>
+        <button type="button" className="account-outline-btn mentor-btn" onClick={onClose} disabled={busy}>{tr("انصراف", "Cancel")}</button>
         <button type="button" className="trade-primary-btn mentor-btn" onClick={submit} disabled={busy || tooLong || terms.loading}>
-          {busy ? <Spinner size={14} /> : "ارسال درخواست"}
+          {busy ? <Spinner size={14} /> : tr("ارسال درخواست", "Send request")}
         </button>
       </div>
     </MentorSheet>
@@ -557,7 +558,7 @@ function MyReviewBox({ mentorId, myReview, onChanged }: { mentorId: string; myRe
   }, [myReview]);
 
   async function save() {
-    if (rating < 1 || rating > 5) { setRatingError("امتیاز را انتخاب کن"); return; }
+    if (rating < 1 || rating > 5) { setRatingError(tr("امتیاز را انتخاب کن", "Choose a rating")); return; }
     if (tooLong) return;
     setBusy("save");
     setError(null);
@@ -567,12 +568,12 @@ function MyReviewBox({ mentorId, myReview, onChanged }: { mentorId: string; myRe
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ rating, body: body.trim() || undefined }),
       });
-      if (res.status === 409) { setError("برای این مربی قبلا نظر ثبت کرده‌ای"); onChanged(); return; }
-      if (!res.ok) { setError(await readApiError(res, "نظر ثبت نشد؛ دوباره تلاش کن")); return; }
+      if (res.status === 409) { setError(tr("برای این مربی قبلا نظر ثبت کرده‌ای", "You've already reviewed this mentor")); onChanged(); return; }
+      if (!res.ok) { setError(await readApiError(res, tr("نظر ثبت نشد؛ دوباره تلاش کن", "Couldn't save your review. Try again"))); return; }
       setEditing(false);
       onChanged();
     } catch {
-      setError(NETWORK_ERROR);
+      setError(networkError());
     } finally {
       setBusy(null);
     }
@@ -583,11 +584,11 @@ function MyReviewBox({ mentorId, myReview, onChanged }: { mentorId: string; myRe
     setError(null);
     try {
       const res = await fetch(`/api/mentors/${mentorId}/reviews`, { method: "DELETE" });
-      if (!res.ok && res.status !== 404) { setError(await readApiError(res, "نظر حذف نشد؛ دوباره تلاش کن")); return; }
+      if (!res.ok && res.status !== 404) { setError(await readApiError(res, tr("نظر حذف نشد؛ دوباره تلاش کن", "Couldn't delete your review. Try again"))); return; }
       setConfirmDelete(false);
       onChanged();
     } catch {
-      setError(NETWORK_ERROR);
+      setError(networkError());
     } finally {
       setBusy(null);
     }
@@ -595,33 +596,33 @@ function MyReviewBox({ mentorId, myReview, onChanged }: { mentorId: string; myRe
 
   return (
     <MentorSection
-      title={myReview ? "نظر تو" : "ثبت نظر"}
+      title={myReview ? tr("نظر تو", "Your review") : tr("ثبت نظر", "Write a review")}
       icon={<Star {...SECTION} />}
-      desc={myReview ? undefined : "نظر پس از ثبت برای همه دیده می‌شود و در امتیاز مربی حساب می‌شود."}
+      desc={myReview ? undefined : tr("نظر پس از ثبت برای همه دیده می‌شود و در امتیاز مربی حساب می‌شود.", "Your review is visible to everyone once posted and counts toward the mentor's rating.")}
     >
       {!editing && myReview ? (
         <>
           <ReviewRow review={myReview} canReport={false} onReport={() => {}} />
           <div className="mentor-btn-group is-end">
             <button type="button" className="account-outline-btn muted mentor-btn is-sm" onClick={() => { setError(null); setConfirmDelete(true); }}>
-              <Trash2 {...BTN_SM} /> حذف نظر
+              <Trash2 {...BTN_SM} /> {tr("حذف نظر", "Delete review")}
             </button>
             <button type="button" className="account-outline-btn mentor-btn is-sm" onClick={() => setEditing(true)}>
-              <Pencil {...BTN_SM} /> ویرایش نظر
+              <Pencil {...BTN_SM} /> {tr("ویرایش نظر", "Edit review")}
             </button>
           </div>
         </>
       ) : (
         <form className="mentor-form" onSubmit={(e) => { e.preventDefault(); save(); }}>
-          <MentorField label="امتیاز" error={ratingError}>
-            <div className="mentor-star-input" role="radiogroup" aria-label="امتیاز">
+          <MentorField label={tr("امتیاز", "Rating")} error={ratingError}>
+            <div className="mentor-star-input" role="radiogroup" aria-label={tr("امتیاز", "Rating")}>
               {[1, 2, 3, 4, 5].map((i) => (
                 <button
                   key={i}
                   type="button"
                   role="radio"
                   aria-checked={rating === i}
-                  aria-label={`${faNum(i)} ستاره`}
+                  aria-label={tr(`${faNum(i)} ستاره`, `${faNum(i)} ${i === 1 ? "star" : "stars"}`)}
                   className={i <= rating ? "on" : undefined}
                   onClick={() => { setRating(i); setRatingError(null); }}
                 >
@@ -631,10 +632,10 @@ function MyReviewBox({ mentorId, myReview, onChanged }: { mentorId: string; myRe
             </div>
           </MentorField>
           <MentorField
-            label="نظر تو"
+            label={tr("نظر تو", "Your review")}
             htmlFor="mentor-review-body"
             optional
-            error={tooLong ? `نظر حداکثر ${faNum(REVIEW_MAX)} نویسه است` : null}
+            error={tooLong ? tr(`نظر حداکثر ${faNum(REVIEW_MAX)} نویسه است`, `Reviews can be up to ${faNum(REVIEW_MAX)} characters`) : null}
           >
             <textarea
               id="mentor-review-body"
@@ -643,7 +644,7 @@ function MyReviewBox({ mentorId, myReview, onChanged }: { mentorId: string; myRe
               value={body}
               maxLength={REVIEW_MAX + 50}
               onChange={(e) => setBody(e.target.value)}
-              placeholder="مثلا «برنامه‌ها دقیق و قابل اجرا بود»"
+              placeholder={tr("مثلا «برنامه‌ها دقیق و قابل اجرا بود»", "For example: \"The programs were precise and doable\"")}
               aria-invalid={tooLong}
             />
           </MentorField>
@@ -656,11 +657,11 @@ function MyReviewBox({ mentorId, myReview, onChanged }: { mentorId: string; myRe
                 onClick={() => { setEditing(false); setError(null); setRatingError(null); setRating(myReview.rating); setBody(myReview.body ?? ""); }}
                 disabled={!!busy}
               >
-                انصراف
+                {tr("انصراف", "Cancel")}
               </button>
             )}
             <button type="submit" className="trade-primary-btn mentor-btn" disabled={!!busy || tooLong}>
-              {busy === "save" ? <Spinner size={14} /> : myReview ? "ذخیره‌ی نظر" : "ثبت نظر"}
+              {busy === "save" ? <Spinner size={14} /> : myReview ? tr("ذخیره‌ی نظر", "Save review") : tr("ثبت نظر", "Post review")}
             </button>
           </div>
         </form>
@@ -668,9 +669,9 @@ function MyReviewBox({ mentorId, myReview, onChanged }: { mentorId: string; myRe
       {!editing && error && !confirmDelete && <div className="form-inline-error" role="alert">{error}</div>}
       {confirmDelete && (
         <MentorConfirmDialog
-          message="نظرت حذف شود؟"
-          hint="امتیاز مربی بدون این نظر دوباره حساب می‌شود."
-          confirmLabel="حذف نظر"
+          message={tr("نظرت حذف شود؟", "Delete your review?")}
+          hint={tr("امتیاز مربی بدون این نظر دوباره حساب می‌شود.", "The mentor's rating will be recalculated without this review.")}
+          confirmLabel={tr("حذف نظر", "Delete review")}
           busy={busy === "delete"}
           error={error}
           onConfirm={remove}

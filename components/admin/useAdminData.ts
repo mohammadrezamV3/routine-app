@@ -1,5 +1,7 @@
 "use client";
 
+import { tr } from "@/lib/i18n";
+
 import { useCallback, useEffect, useRef, useState } from "react";
 
 // خواندن داده‌ی صفحات تحلیلی پنل — یک‌جا به‌جای fetch().then(r=>r.json())
@@ -24,13 +26,13 @@ export function useAdminData<T>(url: string | null) {
     fetch(url, { signal: ctrl.signal, cache: "no-store" })
       .then(async (res) => {
         const body = await res.json().catch(() => null);
-        if (!res.ok || !body) throw new Error((body as any)?.error || "خطا در دریافت اطلاعات");
+        if (!res.ok || !body) throw new Error((body as any)?.error || tr("خطا در دریافت اطلاعات", "Couldn't load data"));
         return body as T;
       })
       .then((body) => { if (id === seq.current) setData(body); })
       .catch((e: unknown) => {
         if (ctrl.signal.aborted || id !== seq.current) return;
-        setError(e instanceof Error && e.message ? e.message : "خطا در دریافت اطلاعات");
+        setError(e instanceof Error && e.message ? e.message : tr("خطا در دریافت اطلاعات", "Couldn't load data"));
       })
       .finally(() => { if (id === seq.current) setLoading(false); });
     return () => ctrl.abort();

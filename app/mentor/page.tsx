@@ -5,6 +5,7 @@ import { MentorDashOnboarding } from "@/components/MentorDashOnboarding";
 import { MentorDashBoard } from "@/components/MentorDashBoard";
 import { useMentorSelf } from "@/components/MentorPanelNav";
 import { LoadingBlock } from "@/components/Spinner";
+import { tr } from "@/lib/i18n";
 
 /**
  * /mentor — بدون پروفایل منتوری: مراحل شروع (ساخت پروفایل، احراز هویت،
@@ -15,7 +16,7 @@ function MentorHome() {
   const self = useMentorSelf();
   if (self.status === "unknown" || (self.status === "loading" && !self.profile)) return <LoadingBlock />;
   if (self.status === "error" && !self.profile) {
-    return <MentorDashError message={self.error || "پنل دریافت نشد؛ دوباره تلاش کن"} onRetry={() => self.reload()} />;
+    return <MentorDashError message={self.error || tr("پنل دریافت نشد؛ دوباره تلاش کن", "Could not load the panel. Try again.")} onRetry={() => self.reload()} />;
   }
   if (!self.profile) return <MentorDashOnboarding />;
   return <MentorDashBoard self={self.profile} />;

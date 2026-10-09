@@ -2,6 +2,7 @@ import { NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 import { requireMentorsUser, forbidden } from "@/lib/mentorGuard";
 import { advanceWaitlist, countReservedSeats, loadMentorWaitlist } from "@/lib/mentorWaitlistServer";
+import { tr } from "@/lib/i18n";
 
 // GET /api/mentor/waitlist → صف انتظار خودم (منتور) به ترتیب ورود:
 // { entries: MentorWaitlistRow[], capacity, reserved } — فقط کاربر عمومی و زمان‌ها،
@@ -11,7 +12,7 @@ export async function GET() {
   if (!g.ok) return g.response;
   const me = g.userId;
   const profile = await prisma.mentorProfile.findUnique({ where: { userId: me }, select: { maxActiveStudents: true } });
-  if (!profile) return forbidden("اول پروفایل مربی‌گری بساز");
+  if (!profile) return forbidden(tr(tr("اول پروفایل مربی‌گری بساز", "Create your mentor profile first"), "Create your mentor profile first"));
   await advanceWaitlist(me);
   const now = new Date();
   const [entries, reserved] = await Promise.all([loadMentorWaitlist(me, now), countReservedSeats(me, now)]);

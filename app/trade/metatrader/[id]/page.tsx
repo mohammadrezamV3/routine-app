@@ -3,6 +3,7 @@
 import { useEffect, useState } from "react";
 import { TradePageShell } from "@/components/TradePageShell";
 import { TradeMtAccountPanel } from "@/components/TradeMtAccountPanel";
+import { tr } from "@/lib/i18n";
 
 // دکمه‌ی بازگشت باید به همان جایی برگردد که کاربر از آن آمده.
 //
@@ -22,11 +23,11 @@ export default function TradeMetaTraderAccountPage({ params }: { params: { id: s
 
   return (
     <TradePageShell
-      title="اتصال متاتریدر"
+      title={tr("اتصال متاتریدر", "MetaTrader connection")}
       back={
         fromAccount
-          ? { href: `/trade/accounts/${params.id}`, label: "حساب" }
-          : { href: "/trade/metatrader", label: "اتصال متاتریدر" }
+          ? { href: `/trade/accounts/${params.id}`, label: tr("حساب", "Account") }
+          : { href: "/trade/metatrader", label: tr("اتصال متاتریدر", "MetaTrader connection") }
       }
     >
       <TradeMtAccountPanel accountId={params.id} />

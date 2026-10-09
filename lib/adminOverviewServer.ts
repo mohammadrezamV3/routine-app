@@ -4,6 +4,8 @@
 // ماژول‌ها از همون lib/adminAnalytics.ts میاد. هر بخش فقط وقتی حساب می‌شه که
 // ادمین دسترسی مربوطه رو داره.
 
+import { tr } from "@/lib/i18n";
+import { planDisplayName } from "@/lib/subscriptionI18n";
 import { prisma } from "@/lib/prisma";
 import { hasPermission, type AdminPermission } from "@/lib/adminPermissions";
 import { getFunnel, getProductAnalytics, getSystemStatus, resolveRange, type Range } from "@/lib/adminAnalytics";
@@ -44,14 +46,18 @@ export type OverviewDashboard = {
   }[];
 };
 
-const MODULE_LABELS: [ModuleKey, string][] = [
-  ["ROUTINE", "روتین"], ["EXERCISE", "ورزش"], ["CALORIE", "کالری"], ["TRADE", "ترید"], ["ROADMAP", "رودمپ"],
-];
+// تابع (نه ثابت ماژول) تا برچسب‌ها با زبان جاری حل بشن
+function moduleLabels(): [ModuleKey, string][] {
+  return [
+    ["ROUTINE", tr("روتین", "Routine")], ["EXERCISE", tr("ورزش", "Workout")], ["CALORIE", tr("کالری", "Calories")],
+    ["TRADE", tr("ترید", "Trading")], ["ROADMAP", tr("رودمپ", "Roadmap")],
+  ];
+}
 
 function displayName(u: { name: string | null; lastName: string | null; username: string | null } | null | undefined): string {
-  if (!u) return "کاربر";
+  if (!u) return tr("کاربر", "User");
   const full = [u.name, u.lastName].filter(Boolean).join(" ").trim();
-  return full || (u.username ? `@${u.username}` : "کاربر");
+  return full || (u.username ? `@${u.username}` : tr("کاربر", "User"));
 }
 
 const PENDING_MENTOR_WHERE = {
@@ -185,7 +191,7 @@ export async function buildOverview(access: Access, rangeKey: DashRange): Promis
         prisma.supportTicket.findMany({ where: { createdAt: { gte: seriesFrom } }, select: { createdAt: true } }),
       ]);
       out.kpis.openTickets = { value: open, delta: deltaPercent(newCur, newPrev), spark: bucketCounts(recent.map((t) => t.createdAt), seriesKeys), unit: "count" };
-      out.queue.push({ key: "tickets", title: "تیکت باز", sub: overdue > 0 ? `${overdue} مورد بیش از 24 ساعت بی‌پاسخ` : "همه در 24 ساعت اخیر", count: open, href: "/admin/support", tone: overdue > 0 ? "red" : "amber" });
+      out.queue.push({ key: "tickets", title: tr("تیکت باز", "Open tickets"), sub: overdue > 0 ? tr(`${overdue} مورد بیش از 24 ساعت بی‌پاسخ`, `${overdue} unanswered for over 24 hours`) : tr("همه در 24 ساعت اخیر", "All within the last 24 hours"), count: open, href: "/admin/support", tone: overdue > 0 ? "red" : "amber" });
     })());
   }
 
@@ -193,19 +199,19 @@ export async function buildOverview(access: Access, rangeKey: DashRange): Promis
   if (cm) {
     tasks.push((async () => {
       const n = await prisma.mentorProfile.count({ where: PENDING_MENTOR_WHERE });
-      out.queue.push({ key: "mentors", title: "احراز منتور", sub: "منتظر بررسی هویت یا مدرک", count: n, href: "/admin/mentors", tone: "amber" });
+      out.queue.push({ key: "mentors", title: tr("احراز منتور", "Mentor verification"), sub: tr("منتظر بررسی هویت یا مدرک", "Waiting for identity or document review"), count: n, href: "/admin/mentors", tone: "amber" });
     })());
   }
   if (cc) {
     tasks.push((async () => {
       const n = await prisma.tradeChatReport.count({ where: { status: "OPEN" } });
-      out.queue.push({ key: "chat", title: "گزارش چت", sub: "منتظر تصمیم", count: n, href: "/admin/chat-reports", tone: "amber" });
+      out.queue.push({ key: "chat", title: tr("گزارش چت", "Chat report"), sub: tr("منتظر تصمیم", "Awaiting a decision"), count: n, href: "/admin/chat-reports", tone: "amber" });
     })());
   }
   if (cf) {
     tasks.push((async () => {
       const n = await prisma.payment.count({ where: { paidAt: null, createdAt: { gte: dayAgo } } });
-      out.queue.push({ key: "failed", title: "پرداخت ناموفق", sub: "24 ساعت اخیر", count: n, href: "/admin/transactions", tone: "red" });
+      out.queue.push({ key: "failed", title: tr("پرداخت ناموفق", "Failed payment"), sub: tr("24 ساعت اخیر", "Last 24 hours"), count: n, href: "/admin/transactions", tone: "red" });
     })());
   }
   if (csys) {
@@ -217,7 +223,7 @@ export async function buildOverview(access: Access, rangeKey: DashRange): Promis
         prisma.economicEvent.findFirst({ orderBy: { updatedAt: "desc" }, select: { updatedAt: true } }),
         prisma.pushReminderLog.count({ where: { deadline: { gte: now } } }),
       ]);
-      out.queue.push({ key: "errors", title: "خطای سرور", sub: "24 ساعت اخیر", count: n, href: "/admin/system", tone: "red" });
+      out.queue.push({ key: "errors", title: tr("خطای سرور", "Server error"), sub: tr("24 ساعت اخیر", "Last 24 hours"), count: n, href: "/admin/system", tone: "red" });
       out.health = {
         state: healthSummary({ dbConnected: status.db.connected, errors24h: n }),
         dbConnected: status.db.connected,
@@ -249,17 +255,17 @@ export async function buildOverview(access: Access, rangeKey: DashRange): Promis
         firstWeek = hit.size;
       }
       out.funnel = [
-        { key: "signup", label: "ثبت‌نام", count: created.size },
-        { key: "first_week", label: "فعال در هفته‌ی اول", count: firstWeek },
-        { key: "purchase", label: "خرید", count: fun.find((s) => s.key === "payment_success")?.count ?? 0 },
+        { key: "signup", label: tr("ثبت‌نام", "Signed up"), count: created.size },
+        { key: "first_week", label: tr("فعال در هفته‌ی اول", "Active in first week"), count: firstWeek },
+        { key: "purchase", label: tr("خرید", "Purchase"), count: fun.find((s) => s.key === "payment_success")?.count ?? 0 },
       ];
     })());
     tasks.push((async () => {
       const [stats, actives] = await Promise.all([
-        Promise.all(MODULE_LABELS.map(([m]) => getProductAnalytics(m, range))),
+        Promise.all(moduleLabels().map(([m]) => getProductAnalytics(m, range))),
         prisma.loginEvent.findMany({ where: { createdAt: { gte: range.from, lte: range.to } }, select: { userId: true }, distinct: ["userId"] }),
       ]);
-      out.modules = MODULE_LABELS.map(([key, label], i) => {
+      out.modules = moduleLabels().map(([key, label], i) => {
         const r = safeRate(stats[i].activeUsers, actives.length);
         return { key, label, percent: r === null ? null : Math.min(100, Math.round(r)) };
       });
@@ -271,26 +277,26 @@ export async function buildOverview(access: Access, rangeKey: DashRange): Promis
   if (cu) {
     tasks.push((async () => {
       const rows = await prisma.user.findMany({ where: { deletedAt: null }, orderBy: { createdAt: "desc" }, take: 10, select: { id: true, name: true, lastName: true, username: true, createdAt: true } });
-      feedLists.push(rows.map((u) => ({ id: u.id, kind: "signup", text: `${displayName(u)} ثبت‌نام کرد`, at: u.createdAt.toISOString(), href: `/admin/users/${u.id}` })));
+      feedLists.push(rows.map((u) => ({ id: u.id, kind: "signup", text: tr(`${displayName(u)} ثبت‌نام کرد`, `${displayName(u)} signed up`), at: u.createdAt.toISOString(), href: `/admin/users/${u.id}` })));
     })());
   }
   if (cf) {
     tasks.push((async () => {
-      const include = { subscription: { select: { userId: true, user: { select: { name: true, lastName: true, username: true } }, plan: { select: { nameFa: true } } } } };
+      const include = { subscription: { select: { userId: true, user: { select: { name: true, lastName: true, username: true } }, plan: { select: { key: true, nameFa: true } } } } };
       const [okRows, badRows] = await Promise.all([
         prisma.payment.findMany({ where: { paidAt: { not: null } }, orderBy: { paidAt: "desc" }, take: 10, include }),
         prisma.payment.findMany({ where: { paidAt: null }, orderBy: { createdAt: "desc" }, take: 10, include }),
       ]);
-      feedLists.push(okRows.map((p) => ({ id: p.id, kind: "purchase", text: `${displayName(p.subscription.user)} پلن ${p.subscription.plan.nameFa} خرید`, at: (p.paidAt as Date).toISOString(), href: "/admin/transactions" })));
-      feedLists.push(badRows.map((p) => ({ id: p.id, kind: "failed_payment", text: `پرداخت ناموفق ${displayName(p.subscription.user)}`, at: p.createdAt.toISOString(), href: "/admin/transactions" })));
+      feedLists.push(okRows.map((p) => ({ id: p.id, kind: "purchase", text: tr(`${displayName(p.subscription.user)} پلن ${p.subscription.plan.nameFa} خرید`, `${displayName(p.subscription.user)} bought the ${planDisplayName(p.subscription.plan)} plan`), at: (p.paidAt as Date).toISOString(), href: "/admin/transactions" })));
+      feedLists.push(badRows.map((p) => ({ id: p.id, kind: "failed_payment", text: tr(`پرداخت ناموفق ${displayName(p.subscription.user)}`, `Failed payment: ${displayName(p.subscription.user)}`), at: p.createdAt.toISOString(), href: "/admin/transactions" })));
     })());
     tasks.push((async () => {
       const rows = await prisma.payment.findMany({
         orderBy: { createdAt: "desc" }, take: 5,
-        include: { subscription: { select: { userId: true, user: { select: { name: true, lastName: true, username: true } }, plan: { select: { nameFa: true } } } } },
+        include: { subscription: { select: { userId: true, user: { select: { name: true, lastName: true, username: true } }, plan: { select: { key: true, nameFa: true } } } } },
       });
       out.transactions = rows.map((p) => ({
-        id: p.id, userId: p.subscription.userId, user: displayName(p.subscription.user), plan: p.subscription.plan.nameFa,
+        id: p.id, userId: p.subscription.userId, user: displayName(p.subscription.user), plan: planDisplayName(p.subscription.plan),
         amount: p.amount, currency: p.currency,
         status: p.refundedAt ? "refunded" : p.paidAt ? "paid" : "pending",
         at: (p.paidAt ?? p.createdAt).toISOString(),
@@ -300,13 +306,13 @@ export async function buildOverview(access: Access, rangeKey: DashRange): Promis
   if (csup) {
     tasks.push((async () => {
       const rows = await prisma.supportTicket.findMany({ orderBy: { createdAt: "desc" }, take: 10, select: { id: true, subject: true, createdAt: true } });
-      feedLists.push(rows.map((t) => ({ id: t.id, kind: "ticket", text: `تیکت جدید: ${t.subject.length > 40 ? t.subject.slice(0, 40) + "…" : t.subject}`, at: t.createdAt.toISOString(), href: "/admin/support" })));
+      feedLists.push(rows.map((t) => ({ id: t.id, kind: "ticket", text: tr(`تیکت جدید: ${t.subject.length > 40 ? t.subject.slice(0, 40) + "…" : t.subject}`, `New ticket: ${t.subject.length > 40 ? t.subject.slice(0, 40) + "…" : t.subject}`), at: t.createdAt.toISOString(), href: "/admin/support" })));
     })());
   }
   if (cm) {
     tasks.push((async () => {
       const rows = await prisma.mentorProfile.findMany({ orderBy: { createdAt: "desc" }, take: 10, select: { id: true, createdAt: true, user: { select: { name: true, lastName: true, username: true } } } });
-      feedLists.push(rows.map((m) => ({ id: m.id, kind: "mentor", text: `درخواست منتوری از ${displayName(m.user)}`, at: m.createdAt.toISOString(), href: "/admin/mentors" })));
+      feedLists.push(rows.map((m) => ({ id: m.id, kind: "mentor", text: tr(`درخواست منتوری از ${displayName(m.user)}`, `Mentor request from ${displayName(m.user)}`), at: m.createdAt.toISOString(), href: "/admin/mentors" })));
     })());
   }
 

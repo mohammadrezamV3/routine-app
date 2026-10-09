@@ -1,4 +1,5 @@
 import type { AiFeatureKey } from "@prisma/client";
+import { tr } from "./i18n";
 
 // دوره‌ی آزمایشی حساب تازه — منبع واحد همه‌ی عددهای «تریال».
 //
@@ -54,7 +55,8 @@ export type TrialAiLimits = Record<TrialAiFeature, number>;
 export const TRIAL_AI_FEATURES = Object.keys(DEFAULT_TRIAL_AI_LIMITS) as TrialAiFeature[];
 
 export const TRIAL_AI_FEATURE_LABELS_FA: Record<TrialAiFeature, string> = {
-  EXERCISE_PLAN_GENERATION: "ساخت برنامه‌ی تمرینی",
+  // getter: زبان موقع خواندن (رندر) انتخاب می‌شه، نه موقع بارگذاری ماژول
+  get EXERCISE_PLAN_GENERATION() { return tr("ساخت برنامه‌ی تمرینی", "Workout plan generation"); },
 };
 
 export const TRIAL_AI_LIMITS_SETTING_KEY = "trial_ai_limits";

@@ -2,6 +2,7 @@ import { prisma } from "@/lib/prisma";
 import { activateDuePrograms } from "@/lib/mentorProgramMirror";
 import { todayIsoForUser, todayIsoInTz, dateFromIso } from "@/lib/mentorServer";
 import { notifyUser } from "@/lib/inAppNotify";
+import { tr } from "@/lib/i18n";
 
 // زمان‌بندی شروع برنامه — برنامه‌ی پذیرفته‌شده (ACCEPTED) با تاریخ شروع
 // آینده، در همان روز خودکار ACTIVE می‌شود. هیچ زمان‌بند بیرونی (cron) لازم
@@ -36,8 +37,8 @@ export async function activateDueForUser(userId: string): Promise<string[]> {
     for (const id of activated) {
       const p = due.find((x) => x.id === id)!;
       const url = `/mentor-programs/${p.id}`;
-      await notifyUser(p.studentId, { type: "program.started", title: "شروع برنامه", body: `برنامه‌ی «${p.title}» طبق زمان‌بندی از امروز فعال شد.`, url });
-      await notifyUser(p.mentorId, { type: "program.started", title: "شروع برنامه", body: `برنامه‌ی «${p.title}» طبق زمان‌بندی برای شاگرد فعال شد.`, url });
+      await notifyUser(p.studentId, { type: "program.started", title: tr("شروع برنامه", "Program started"), body: tr(`برنامه‌ی «${p.title}» طبق زمان‌بندی از امروز فعال شد.`, `The program "${p.title}" became active today, as scheduled.`), url });
+      await notifyUser(p.mentorId, { type: "program.started", title: tr("شروع برنامه", "Program started"), body: tr(`برنامه‌ی «${p.title}» طبق زمان‌بندی برای شاگرد فعال شد.`, `The program "${p.title}" became active for your student, as scheduled.`), url });
     }
     return activated;
   } catch {

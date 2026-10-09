@@ -1,3 +1,4 @@
+import { tr } from "./i18n";
 import { getSetting, setSetting } from "./storage";
 import { getWakeSleepTimes, DEFAULT_SLEEP, DEFAULT_WAKE } from "./wakeSleep";
 import { SETTING_KEYS } from "./userSettingKeys";
@@ -18,6 +19,6 @@ export async function getSleepGoal(): Promise<{ goal: SleepGoal; custom: boolean
 }
 
 export async function setSleepGoal(g: SleepGoal): Promise<void> {
-  if (!HHMM.test(g.wake) || !HHMM.test(g.sleep)) throw new Error("ساعت نامعتبر است");
+  if (!HHMM.test(g.wake) || !HHMM.test(g.sleep)) throw new Error(tr("ساعت نامعتبر است", "Invalid time"));
   await setSetting(SETTING_KEYS.sleepGoal, g);
 }

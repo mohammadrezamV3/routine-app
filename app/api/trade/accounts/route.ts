@@ -8,6 +8,7 @@ import { loadAccountMoney } from "@/lib/tradeCashflowServer";
 import { MAX_ACCOUNTS } from "@/lib/tradeTypes";
 import { withLiveSync } from "@/lib/realtime";
 import { sessionFeatureBlocked } from "@/lib/featureFlagsServer";
+import { tr } from "@/lib/i18n";
 
 // حساب‌های معاملاتی کاربر. ورودی صفحه‌ی «ژورنال‌نویسی» همین است: اول
 // حساب‌ها، بعد با انتخاب حساب می‌رویم داخل آمار و معاملاتش.
@@ -102,7 +103,7 @@ async function handlePOST(req: NextRequest) {
 
   const active = await prisma.tradeAccount.count({ where: { userId, archived: false } });
   if (active >= MAX_ACCOUNTS) {
-    return NextResponse.json({ error: `حداکثر ${MAX_ACCOUNTS} حساب فعال می‌توانی داشته باشی` }, { status: 400 });
+    return NextResponse.json({ error: tr(tr(`حداکثر ${MAX_ACCOUNTS} حساب فعال می‌توانی داشته باشی`, `You can have up to ${MAX_ACCOUNTS} active accounts`), `You can have up to ${MAX_ACCOUNTS} active accounts`) }, { status: 400 });
   }
 
   const tagIds: string[] = Array.isArray(body?.tagIds) ? body.tagIds.filter((t: unknown) => typeof t === "string") : [];
@@ -132,14 +133,14 @@ async function handlePATCH(req: NextRequest) {
 
   const body = await req.json().catch(() => null);
   const id = String(body?.id || "");
-  if (!id) return NextResponse.json({ error: "id الزامی است" }, { status: 400 });
+  if (!id) return NextResponse.json({ error: tr(tr("id الزامی است", "id is required"), "id is required") }, { status: 400 });
 
   const parsed = parseAccountInput(body);
   if (typeof parsed === "string") return NextResponse.json({ error: parsed }, { status: 400 });
 
   // مالکیت صریح چک می‌شود (نه فقط id) — جلوگیری از IDOR، هم‌قاعده‌ی بقیه‌ی روت‌ها
   const existing = await prisma.tradeAccount.findFirst({ where: { id, userId }, select: { id: true } });
-  if (!existing) return NextResponse.json({ error: "حساب پیدا نشد" }, { status: 404 });
+  if (!existing) return NextResponse.json({ error: tr(tr("حساب پیدا نشد", "Account not found"), "Account not found") }, { status: 404 });
 
   const tagIds: string[] = Array.isArray(body?.tagIds) ? body.tagIds.filter((t: unknown) => typeof t === "string") : [];
   const ownedTags = tagIds.length
@@ -168,10 +169,10 @@ async function handleDELETE(req: NextRequest) {
 
   const id = req.nextUrl.searchParams.get("id");
   const mode = req.nextUrl.searchParams.get("mode") === "purge" ? "purge" : "archive";
-  if (!id) return NextResponse.json({ error: "id الزامی است" }, { status: 400 });
+  if (!id) return NextResponse.json({ error: tr(tr("id الزامی است", "id is required"), "id is required") }, { status: 400 });
 
   const existing = await prisma.tradeAccount.findFirst({ where: { id, userId }, select: { id: true, archived: true } });
-  if (!existing) return NextResponse.json({ error: "حساب پیدا نشد" }, { status: 404 });
+  if (!existing) return NextResponse.json({ error: tr(tr("حساب پیدا نشد", "Account not found"), "Account not found") }, { status: 404 });
 
   if (mode === "purge") {
     // معاملات و عکس‌هایشان با cascade می‌روند

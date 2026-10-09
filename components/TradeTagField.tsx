@@ -6,6 +6,7 @@ import { Plus, X } from "lucide-react";
 import { LockBodyScroll } from "./LockBodyScroll";
 import { TAG_COLORS, TradeTag } from "@/lib/tradeTypes";
 import { Spinner } from "./Spinner";
+import { tr } from "@/lib/i18n";
 
 // انتخاب برچسب + ساخت برچسب جدید در همان لحظه.
 // برچسب‌ها بین حساب و معامله مشترک‌اند، پس این کامپوننت هر دو جا استفاده
@@ -47,7 +48,7 @@ export function TradeTagField({
           );
         })}
         <button type="button" className="trade-tag-chip trade-tag-add" onClick={() => setCreating(true)}>
-          <Plus size={13} /> افزودن برچسب
+          <Plus size={13} /> {tr("افزودن برچسب", "Add tag")}
         </button>
       </div>
 
@@ -89,10 +90,10 @@ export function TradeTagCreateModal({
         body: JSON.stringify({ name: trimmed, color }),
       });
       const data = await res.json().catch(() => null);
-      if (!res.ok) { setError(data?.error || "خطا در ساخت برچسب"); return; }
+      if (!res.ok) { setError(data?.error || tr("خطا در ساخت برچسب", "Could not create the tag")); return; }
       onCreated(data.tag);
     } catch {
-      setError("ارتباط با سرور برقرار نشد — دوباره تلاش کن");
+      setError(tr("ارتباط با سرور برقرار نشد — دوباره تلاش کن", "Could not reach the server. Try again"));
     } finally {
       setSaving(false);
     }
@@ -106,21 +107,21 @@ export function TradeTagCreateModal({
       <div className="modal-overlay open" onClick={onClose} />
       <div className="modal-panel open" role="dialog" aria-modal="true">
         <div className="modal-head">
-          <div className="modal-title">ایجاد برچسب</div>
-          <button type="button" className="trade-icon-btn" onClick={onClose} aria-label="بستن"><X size={16} /></button>
+          <div className="modal-title">{tr("ایجاد برچسب", "Create tag")}</div>
+          <button type="button" className="trade-icon-btn" onClick={onClose} aria-label={tr("بستن", "Close")}><X size={16} /></button>
         </div>
 
-        <label className="exercise-form-label">نام برچسب</label>
+        <label className="exercise-form-label">{tr("نام برچسب", "Tag name")}</label>
         <input className="wsearch-newform-name trade-glass-field"
           autoFocus
           value={name}
           onChange={(e) => setName(e.target.value)}
           onKeyDown={(e) => e.key === "Enter" && save()}
           maxLength={30}
-          placeholder="مثلا بریک‌اوت"
+          placeholder={tr("مثلا بریک‌اوت", "e.g. Breakout")}
         />
 
-        <label className="exercise-form-label">رنگ برچسب</label>
+        <label className="exercise-form-label">{tr("رنگ برچسب", "Tag color")}</label>
         <div className="trade-color-row">
           {TAG_COLORS.map((c) => (
             <button
@@ -137,9 +138,9 @@ export function TradeTagCreateModal({
         {error && <div className="trade-form-error" style={{ marginTop: 10 }}>{error}</div>}
 
         <div className="trade-modal-actions">
-          <button type="button" className="account-outline-btn" onClick={onClose}>لغو</button>
+          <button type="button" className="account-outline-btn" onClick={onClose}>{tr("لغو", "Cancel")}</button>
           <button type="button" className="trade-primary-btn" onClick={save} disabled={!name.trim() || saving}>
-            {saving ? <Spinner size={14} /> : "ایجاد"}
+            {saving ? <Spinner size={14} /> : tr("ایجاد", "Create")}
           </button>
         </div>
       </div>

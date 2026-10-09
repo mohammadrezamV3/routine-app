@@ -10,7 +10,8 @@ import { MentorConfirmDialog } from "./MentorConfirmDialog";
 import { MentorDashError, fa, mentorApi } from "./MentorDashKit";
 import { MI, MI_STROKE, MentorEmptyState, MentorField, MentorRow } from "./MentorUI";
 import { fmtRelative } from "@/lib/mentorFormat";
-import { FA_WEEKDAY } from "@/lib/jalali";
+import { weekdayName } from "@/lib/jalali";
+import { tr } from "@/lib/i18n";
 import { WEEK_ORDER } from "@/lib/schedule";
 import type { TemplateDetail, TemplateItem, TemplateRow, TemplatesResponse, TemplateResponse } from "@/lib/mentorToolsTypes";
 
@@ -18,8 +19,8 @@ const ic = (Icon: typeof Check, size: number) => <Icon size={size} strokeWidth={
 const NAME_MAX = 80;
 
 function daysLabel(it: TemplateItem): string {
-  if (it.repeat === "DAILY" || it.days.length === 7) return "هر روز";
-  return WEEK_ORDER.filter((o) => it.days.includes(o.jsDay)).map((o) => FA_WEEKDAY[o.jsDay]).join("، ");
+  if (it.repeat === "DAILY" || it.days.length === 7) return tr("هر روز", "Every day");
+  return WEEK_ORDER.filter((o) => it.days.includes(o.jsDay)).map((o) => weekdayName(o.jsDay)).join(tr("، ", ", "));
 }
 
 /** فهرست قالب‌های برنامه: ساخت برنامه از قالب، دیدن آیتم‌ها، تغییر نام و حذف */
@@ -56,8 +57,8 @@ export function MentorTemplatesList() {
     return (
       <MentorEmptyState
         icon={ic(LayoutTemplate, MI.empty)}
-        title="هنوز قالبی نساختی"
-        text="تو سازنده‌ی برنامه یا منوی هر برنامه، «ذخیره به‌عنوان قالب» رو بزن"
+        title={tr("هنوز قالبی نساختی", "You have not created any templates yet")}
+        text={tr("تو سازنده‌ی برنامه یا منوی هر برنامه، «ذخیره به‌عنوان قالب» رو بزن", `In the program builder or any program's menu, choose "Save as template"`)}
       />
     );
   }
@@ -79,9 +80,9 @@ export function MentorTemplatesList() {
       </div>
       {confirm && (
         <MentorConfirmDialog
-          message={`قالب «${confirm.name}» حذف بشه؟`}
-          hint="برنامه‌هایی که از این قالب ساختی تغییر نمی‌کنن"
-          confirmLabel="حذف قالب"
+          message={tr(`قالب «${confirm.name}» حذف بشه؟`, `Delete the template "${confirm.name}"?`)}
+          hint={tr("برنامه‌هایی که از این قالب ساختی تغییر نمی‌کنن", "Programs you made from this template are not changed")}
+          confirmLabel={tr("حذف قالب", "Delete template")}
           busy={delBusy}
           error={delError}
           onConfirm={remove}
@@ -103,7 +104,7 @@ function TemplateRowView({ t, onRenamed, onDelete }: { t: TemplateRow; onRenamed
     e.preventDefault();
     if (busy) return;
     const n = name.trim();
-    if (!n) { setErr("اسم قالب لازمه"); return; }
+    if (!n) { setErr(tr("اسم قالب لازمه", "A template name is required")); return; }
     setBusy(true);
     setErr(null);
     const r = await mentorApi<{ template: TemplateRow }>(`/api/mentor/templates/${encodeURIComponent(t.id)}`, { method: "PATCH", body: { name: n } });
@@ -125,7 +126,7 @@ function TemplateRowView({ t, onRenamed, onDelete }: { t: TemplateRow; onRenamed
     setDetail(r.data.template);
   }
 
-  const word = t.type === "WORKOUT" ? "حرکت" : "کار";
+  const word = t.type === "WORKOUT" ? tr("حرکت", "exercises") : tr("کار", "tasks");
   return (
     <MentorRow
       lead={t.type === "WORKOUT" ? ic(Dumbbell, MI.row) : ic(CalendarCheck, MI.row)}
@@ -134,24 +135,24 @@ function TemplateRowView({ t, onRenamed, onDelete }: { t: TemplateRow; onRenamed
         <>
           {t.title !== t.name && <span>{t.title}</span>}
           <span>{fa(t.itemCount)} {word}</span>
-          {t.durationDays != null && <span>{fa(t.durationDays + 1)} روز</span>}
-          <span>{t.usedCount > 0 ? `${fa(t.usedCount)} بار استفاده` : "استفاده‌نشده"}</span>
-          <span>{t.type === "WORKOUT" ? "تمرین ورزشی" : "روتین"}</span>
+          {t.durationDays != null && <span>{tr(`${fa(t.durationDays + 1)} روز`, `${fa(t.durationDays + 1)} days`)}</span>}
+          <span>{t.usedCount > 0 ? tr(`${fa(t.usedCount)} بار استفاده`, `Used ${fa(t.usedCount)} ${t.usedCount === 1 ? "time" : "times"}`) : tr("استفاده‌نشده", "Not used yet")}</span>
+          <span>{t.type === "WORKOUT" ? tr("تمرین ورزشی", "Workout") : tr("روتین", "Routine")}</span>
         </>
       }
       end={
         <MentorKebabMenu
-          label={`کارهای بیشتر روی قالب ${t.name}`}
+          label={tr(`کارهای بیشتر روی قالب ${t.name}`, `More actions for template ${t.name}`)}
           actions={[
-            { label: "تغییر اسم", icon: <Pencil size={MI.btn} strokeWidth={MI_STROKE} aria-hidden />, onClick: () => { setMode("rename"); setErr(null); } },
-            { label: "حذف قالب", icon: <Trash2 size={MI.btn} strokeWidth={MI_STROKE} aria-hidden />, danger: true, onClick: onDelete },
+            { label: tr("تغییر اسم", "Rename"), icon: <Pencil size={MI.btn} strokeWidth={MI_STROKE} aria-hidden />, onClick: () => { setMode("rename"); setErr(null); } },
+            { label: tr("حذف قالب", "Delete template"), icon: <Trash2 size={MI.btn} strokeWidth={MI_STROKE} aria-hidden />, danger: true, onClick: onDelete },
           ]}
         />
       }
       below={
         mode === "rename" ? (
           <form className="mentor-form" onSubmit={rename} noValidate>
-            <MentorField label="اسم قالب" htmlFor={`tpl-name-${t.id}`} error={err}>
+            <MentorField label={tr("اسم قالب", "Template name")} htmlFor={`tpl-name-${t.id}`} error={err}>
               <input
                 id={`tpl-name-${t.id}`} type="text" className="wsearch-newform-name trade-glass-field" maxLength={NAME_MAX} value={name} autoFocus
                 onChange={(e) => { setName(e.target.value); setErr(null); }}
@@ -159,10 +160,10 @@ function TemplateRowView({ t, onRenamed, onDelete }: { t: TemplateRow; onRenamed
             </MentorField>
             <div className="mentor-btn-group is-end">
               <button type="button" className="account-outline-btn muted mentor-btn is-sm" onClick={() => { setMode("idle"); setName(t.name); setErr(null); }} disabled={busy}>
-                انصراف
+                {tr("انصراف", "Cancel")}
               </button>
               <button type="submit" className="trade-primary-btn mentor-btn is-sm" disabled={busy}>
-                {busy ? <Spinner size={14} /> : <>{ic(Check, MI.btnSm)} ذخیره‌ی اسم</>}
+                {busy ? <Spinner size={14} /> : <>{ic(Check, MI.btnSm)} {tr("ذخیره‌ی اسم", "Save name")}</>}
               </button>
             </div>
           </form>
@@ -177,10 +178,10 @@ function TemplateRowView({ t, onRenamed, onDelete }: { t: TemplateRow; onRenamed
                       <div className="mentor-item-meta">
                         <span>{daysLabel(it)}</span>
                         {it.startTime && <span className="mono">{fa(it.startTime)}</span>}
-                        {it.durationMin != null && <span>{fa(it.durationMin)} دقیقه</span>}
-                        {it.sets != null && <span>{fa(it.sets)} ست{it.reps ? ` × ${fa(it.reps)}` : ""}</span>}
-                        {it.weightKg != null && <span>{fa(it.weightKg)} کیلوگرم</span>}
-                        {it.restSec != null && <span>استراحت {fa(it.restSec)} ثانیه</span>}
+                        {it.durationMin != null && <span>{tr(`${fa(it.durationMin)} دقیقه`, `${fa(it.durationMin)} min`)}</span>}
+                        {it.sets != null && <span>{fa(it.sets)} {tr("ست", it.sets === 1 ? "set" : "sets")}{it.reps ? ` × ${fa(it.reps)}` : ""}</span>}
+                        {it.weightKg != null && <span>{tr(`${fa(it.weightKg)} کیلوگرم`, `${fa(it.weightKg)} kg`)}</span>}
+                        {it.restSec != null && <span>{tr(`استراحت ${fa(it.restSec)} ثانیه`, `Rest ${fa(it.restSec)} s`)}</span>}
                       </div>
                       {it.details && <p className="mentor-item-details">{it.details}</p>}
                     </div>
@@ -191,10 +192,10 @@ function TemplateRowView({ t, onRenamed, onDelete }: { t: TemplateRow; onRenamed
             )}</MentorCollapse>
             <div className="mv2-pg-tpl-actions">
               <button type="button" className="mentor-text-btn" onClick={toggleItems} aria-expanded={mode === "items"}>
-                <ChevronDown size={MI.btnSm} strokeWidth={MI_STROKE} className={`mv2-pg-chev${mode === "items" ? " is-open" : ""}`} aria-hidden /> {mode === "items" ? "بستن" : `دیدن ${word}ها`}
+                <ChevronDown size={MI.btnSm} strokeWidth={MI_STROKE} className={`mv2-pg-chev${mode === "items" ? " is-open" : ""}`} aria-hidden /> {mode === "items" ? tr("بستن", "Close") : tr(`دیدن ${word}ها`, `View ${word}`)}
               </button>
               <Link href={`/mentor/programs/new?templateId=${encodeURIComponent(t.id)}`} prefetch={false} className="account-outline-btn mentor-btn is-sm">
-                {ic(Plus, MI.btnSm)} ساخت برنامه
+                {ic(Plus, MI.btnSm)} {tr("ساخت برنامه", "Create program")}
               </Link>
             </div>
           </>

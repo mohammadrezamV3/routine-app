@@ -7,13 +7,15 @@ import { usePathname, useSearchParams } from "next/navigation";
 import { useSession } from "next-auth/react";
 import { logoutAndRedirect } from "@/lib/logout";
 import { motion, AnimatePresence } from "framer-motion";
-import { ChevronDown, Menu, X, Home, Sun, Moon, Lock, LogOut, Search, PanelRightClose, PanelRightOpen, LayoutGrid, Users, Coins, Headset, Ellipsis } from "lucide-react";
+import { ChevronDown, Menu, X, Home, Sun, Moon, Lock, LogOut, Search, PanelRightClose, PanelRightOpen, PanelLeftClose, PanelLeftOpen, LayoutGrid, Users, Coins, Headset, Ellipsis } from "lucide-react";
 import { useTheme } from "@/components/ThemeProvider";
 import { useLockBodyScroll } from "@/lib/useLockBodyScroll";
 import { AdminToastProvider } from "@/components/admin/useAdminToast";
 import { AdminAccessContext } from "@/components/admin/AdminAccess";
 import { hasPermission, permissionForPath } from "@/lib/adminPermissions";
-import { NAV_GROUPS, type NavGroup, type NavItem, type NavLeaf, type NavAccess } from "@/components/adminNavConfig";
+import { navGroups, type NavGroup, type NavItem, type NavLeaf, type NavAccess } from "@/components/adminNavConfig";
+import { tr } from "@/lib/i18n";
+import { useIsEn } from "@/components/I18nProvider";
 import { AdminAlertsProvider, useAdminAlerts } from "@/components/AdminAlerts";
 import { AdminAlertsBell } from "@/components/AdminAlertsBell";
 import { AdminCommandPalette } from "@/components/AdminCommandPalette";
@@ -24,7 +26,7 @@ const COLLAPSE_KEY = "arion:adminSidebarCollapsed";
 
 // منو فقط بخش‌هایی رو نشون می‌ده که ادمین بهشون دسترسی داره؛ گروه خالی حذف می‌شه
 function visibleGroups(access: Access): NavGroup[] {
-  return NAV_GROUPS.map((g) => ({
+  return navGroups().map((g) => ({
     ...g,
     items: g.items
       .filter((s) => hasPermission(access, s.perm) && (!s.ownerOnly || access.isSuperAdmin))
@@ -67,9 +69,9 @@ function Brand({ onClose, collapsed }: { onClose?: () => void; collapsed?: boole
         <Image src="/images/logo-icon-dark-theme.png" alt="" fill sizes="30px" className={`object-contain transition-opacity duration-150${theme === "light" ? " opacity-0" : " opacity-100"}`} />
         <Image src="/images/logo-icon-light-theme.webp" alt="" fill sizes="30px" className={`object-contain transition-opacity duration-150${theme === "light" ? " opacity-100" : " opacity-0"}`} />
       </span>
-      {!collapsed && <span className="admin-brand-text">Arion <span className="admin-brand-sub">پنل مدیریت</span></span>}
+      {!collapsed && <span className="admin-brand-text">Arion <span className="admin-brand-sub">{tr("پنل مدیریت", "Admin panel")}</span></span>}
       {onClose && (
-        <button type="button" className="admin-mobile-close" onClick={onClose} aria-label="بستن">
+        <button type="button" className="admin-mobile-close" onClick={onClose} aria-label={tr("بستن", "Close")}>
           <X size={18} />
         </button>
       )}
@@ -79,13 +81,13 @@ function Brand({ onClose, collapsed }: { onClose?: () => void; collapsed?: boole
 
 function RoleCard({ access }: { access: Access }) {
   const { data: session } = useSession();
-  const name = (session?.user as any)?.name || "ادمین";
+  const name = (session?.user as any)?.name || tr("ادمین", "Admin");
   return (
     <div className="admin-role-card">
       <span className="admin-avatar-fallback admin-role-avatar">{String(name)[0]?.toUpperCase()}</span>
       <div className="admin-role-info">
         <div className="admin-role-name">{name}</div>
-        <div className="admin-role-sub">{access.isSuperAdmin ? "Owner — دسترسی کامل" : `ادمین · ${access.permissions.length} دسترسی`}</div>
+        <div className="admin-role-sub">{access.isSuperAdmin ? tr("Owner — دسترسی کامل", "Owner — full access") : tr(`ادمین · ${access.permissions.length} دسترسی`, `Admin · ${access.permissions.length} permissions`)}</div>
       </div>
     </div>
   );
@@ -112,7 +114,7 @@ function SidebarContent({ pathname, groups, access, collapsed, onNavigate }: { p
   useEffect(() => { if (activeParent) setExpanded(activeParent); }, [activeParent]);
 
   return (
-    <nav className={`admin-nav ads-nav${collapsed ? " is-rail" : ""}`} aria-label="منوی ادمین">
+    <nav className={`admin-nav ads-nav${collapsed ? " is-rail" : ""}`} aria-label={tr("منوی ادمین", "Admin menu")}>
       {!collapsed && <RoleCard access={access} />}
       {groups.map((group) => (
         <div key={group.title} className="ads-group">
@@ -135,7 +137,7 @@ function SidebarContent({ pathname, groups, access, collapsed, onNavigate }: { p
                     {n > 0 && <span className={`ads-count${collapsed ? " rail" : ""}`}>{n > 99 ? "99+" : n}</span>}
                   </Link>
                   {kids && !collapsed && (
-                    <button type="button" className="ads-chev" aria-expanded={isOpen} aria-label={`زیرمنوی ${item.label}`} onClick={() => setExpanded(isOpen ? null : item.href)}>
+                    <button type="button" className="ads-chev" aria-expanded={isOpen} aria-label={tr(`زیرمنوی ${item.label}`, `${item.label} submenu`)} onClick={() => setExpanded(isOpen ? null : item.href)}>
                       <motion.span animate={{ rotate: isOpen ? 180 : 0 }} transition={{ duration: 0.2 }} style={{ display: "flex" }}><ChevronDown size={14} /></motion.span>
                     </button>
                   )}
@@ -167,45 +169,47 @@ function SidebarContent({ pathname, groups, access, collapsed, onNavigate }: { p
 
       <div className="ads-group ads-foot">
         {collapsed ? <span className="ads-group-rule" aria-hidden="true" /> : null}
-        <button type="button" className="ads-item ads-foot-btn" onClick={toggle} title="تغییر تم">
+        <button type="button" className="ads-item ads-foot-btn" onClick={toggle} title={tr("تغییر تم", "Change theme")}>
           <span className="ads-item-icon">{theme === "light" ? <Moon size={16} /> : <Sun size={16} />}</span>
-          {!collapsed && <span className="ads-item-label">{theme === "light" ? "تم تیره" : "تم روشن"}</span>}
+          {!collapsed && <span className="ads-item-label">{theme === "light" ? tr("تم تیره", "Dark theme") : tr("تم روشن", "Light theme")}</span>}
         </button>
-        <Link href="/" className="ads-item" onClick={onNavigate} title="بازگشت به اپ">
+        <Link href="/" className="ads-item" onClick={onNavigate} title={tr("بازگشت به اپ", "Back to app")}>
           <span className="ads-item-icon"><Home size={16} /></span>
-          {!collapsed && <span className="ads-item-label">بازگشت به اپ</span>}
+          {!collapsed && <span className="ads-item-label">{tr("بازگشت به اپ", "Back to app")}</span>}
         </Link>
-        <button type="button" className="ads-item ads-foot-btn ads-logout" onClick={logoutAndRedirect} title="خروج">
+        <button type="button" className="ads-item ads-foot-btn ads-logout" onClick={logoutAndRedirect} title={tr("خروج", "Sign out")}>
           <span className="ads-item-icon"><LogOut size={16} /></span>
-          {!collapsed && <span className="ads-item-label">خروج</span>}
+          {!collapsed && <span className="ads-item-label">{tr("خروج", "Sign out")}</span>}
         </button>
       </div>
     </nav>
   );
 }
 
-const EXTRA_TITLES: [string, string][] = [["/admin/alerts", "هشدارها"], ["/admin/mentors", "مربی‌ها"], ["/admin/products", "محصولات"]];
+function extraTitles(): [string, string][] {
+  return [["/admin/alerts", tr("هشدارها", "Alerts")], ["/admin/mentors", tr("مربی‌ها", "Mentors")], ["/admin/products", tr("محصولات", "Products")]];
+}
 
 function pageTitle(pathname: string): string {
   let best: { label: string; len: number } | null = null;
-  for (const item of NAV_GROUPS.flatMap((g) => g.items)) {
+  for (const item of navGroups().flatMap((g) => g.items)) {
     for (const h of [item.href, ...(item.children?.map((c) => c.href) ?? [])]) {
       const path = h.split("?")[0];
       if (isActive(pathname, h) && (!best || path.length > best.len)) best = { label: item.label, len: path.length };
     }
   }
   if (best) return best.label;
-  for (const [pre, label] of EXTRA_TITLES) if (pathname.startsWith(pre)) return label;
-  return "پنل مدیریت";
+  for (const [pre, label] of extraTitles()) if (pathname.startsWith(pre)) return label;
+  return tr("پنل مدیریت", "Admin panel");
 }
 
 function NoAccess() {
   return (
     <div className="admin-card admin-no-access">
       <span className="admin-no-access-icon"><Lock size={22} /></span>
-      <div className="admin-no-access-title">به این بخش دسترسی نداری</div>
-      <div className="admin-section-hint admin-no-access-hint">برای دسترسی، از Owner یا ادمینی که «مدیریت ادمین‌ها» داره بخواه دسترسی این بخش رو بهت بده.</div>
-      <Link href="/admin" className="admin-btn admin-no-access-btn">برگشت به داشبورد</Link>
+      <div className="admin-no-access-title">{tr("به این بخش دسترسی نداری", "You don't have access to this section")}</div>
+      <div className="admin-section-hint admin-no-access-hint">{tr("برای دسترسی، از Owner یا ادمینی که «مدیریت ادمین‌ها» داره بخواه دسترسی این بخش رو بهت بده.", "To get access, ask the Owner or an admin with «Manage admins» to grant you access to this section.")}</div>
+      <Link href="/admin" className="admin-btn admin-no-access-btn">{tr("برگشت به داشبورد", "Back to dashboard")}</Link>
     </div>
   );
 }
@@ -213,13 +217,13 @@ function NoAccess() {
 function BottomNav({ pathname, access, onMore }: { pathname: string; access: Access; onMore: () => void }) {
   const badges = useBadges();
   const tabs = [
-    { label: "داشبورد", href: "/admin", icon: <LayoutGrid size={18} />, perm: undefined, n: 0 },
-    { label: "کاربران", href: "/admin/users", icon: <Users size={18} />, perm: "users.view" as const, n: 0 },
-    { label: "درآمد", href: "/admin/revenue", icon: <Coins size={18} />, perm: "finance" as const, n: 0 },
-    { label: "پشتیبانی", href: "/admin/support", icon: <Headset size={18} />, perm: "support" as const, n: badges.tickets || 0 },
+    { label: tr("داشبورد", "Dashboard"), href: "/admin", icon: <LayoutGrid size={18} />, perm: undefined, n: 0 },
+    { label: tr("کاربران", "Users"), href: "/admin/users", icon: <Users size={18} />, perm: "users.view" as const, n: 0 },
+    { label: tr("درآمد", "Revenue"), href: "/admin/revenue", icon: <Coins size={18} />, perm: "finance" as const, n: 0 },
+    { label: tr("پشتیبانی", "Support"), href: "/admin/support", icon: <Headset size={18} />, perm: "support" as const, n: badges.tickets || 0 },
   ].filter((t) => hasPermission(access, t.perm));
   return (
-    <nav className="ads-bottom" aria-label="ناوبری پایین">
+    <nav className="ads-bottom" aria-label={tr("ناوبری پایین", "Bottom navigation")}>
       {tabs.map((t) => {
         const on = isActive(pathname, t.href);
         return (
@@ -233,7 +237,7 @@ function BottomNav({ pathname, access, onMore }: { pathname: string; access: Acc
       <button type="button" className="ads-tab" onClick={onMore}>
         <span className="ads-tab-dot" aria-hidden="true" />
         <span className="ads-tab-icon"><Ellipsis size={18} /></span>
-        بیشتر
+        {tr("بیشتر", "More")}
       </button>
     </nav>
   );
@@ -245,6 +249,8 @@ export function AdminShell({ children, isSuperAdmin, permissions }: { children: 
   const [paletteOpen, setPaletteOpen] = useState(false);
   const [collapsed, setCollapsed] = useState(false);
   const { theme, toggle } = useTheme();
+  const en = useIsEn();
+  const drawerX = en ? "-100%" : "100%";
   const access = useMemo<Access>(() => ({ isSuperAdmin, permissions }), [isSuperAdmin, permissions]);
   const groups = useMemo(() => visibleGroups(access), [access]);
   const allowed = hasPermission(access, permissionForPath(pathname) || undefined);
@@ -282,12 +288,12 @@ export function AdminShell({ children, isSuperAdmin, permissions }: { children: 
     <AdminAccessContext.Provider value={access}>
     <AdminToastProvider>
     <AdminAlertsProvider>
-      <div className="admin-root ads-root" dir="rtl" data-collapsed={collapsed ? "1" : undefined}>
+      <div className="admin-root ads-root" dir={en ? "ltr" : "rtl"} data-collapsed={collapsed ? "1" : undefined}>
         <div className="admin-sidebar-desktop ads-sidebar">
           <div className="ads-sidebar-top">
             <Brand collapsed={collapsed} />
-            <button type="button" className="ads-collapse" onClick={toggleCollapsed} aria-label={collapsed ? "باز کردن منو" : "جمع کردن منو"} aria-pressed={collapsed}>
-              {collapsed ? <PanelRightOpen size={16} /> : <PanelRightClose size={16} />}
+            <button type="button" className="ads-collapse" onClick={toggleCollapsed} aria-label={collapsed ? tr("باز کردن منو", "Expand menu") : tr("جمع کردن منو", "Collapse menu")} aria-pressed={collapsed}>
+              {collapsed ? (en ? <PanelLeftOpen size={16} /> : <PanelRightOpen size={16} />) : (en ? <PanelLeftClose size={16} /> : <PanelRightClose size={16} />)}
             </button>
           </div>
           <SidebarContent pathname={pathname} groups={groups} access={access} collapsed={collapsed} />
@@ -295,21 +301,21 @@ export function AdminShell({ children, isSuperAdmin, permissions }: { children: 
 
         <div className="admin-main">
           <div className="admin-topbar ads-topbar">
-            <button type="button" className="admin-mobile-toggle ads-round-btn" onClick={() => setMobileOpen(true)} aria-label="منو" aria-expanded={mobileOpen}>
+            <button type="button" className="admin-mobile-toggle ads-round-btn" onClick={() => setMobileOpen(true)} aria-label={tr("منو", "Menu")} aria-expanded={mobileOpen}>
               <Menu size={20} />
             </button>
             <h1 className="admin-page-title ads-title">{pageTitle(pathname)}</h1>
-            <button type="button" className="ads-search" onClick={() => setPaletteOpen(true)} aria-label="جست‌وجو" aria-keyshortcuts="Control+K">
+            <button type="button" className="ads-search" onClick={() => setPaletteOpen(true)} aria-label={tr("جست‌وجو", "Search")} aria-keyshortcuts="Control+K">
               <Search size={15} aria-hidden="true" />
-              <span className="ads-search-text">جست‌وجوی کاربر، تراکنش، کد تخفیف، تیکت</span>
+              <span className="ads-search-text">{tr("جست‌وجوی کاربر، تراکنش، کد تخفیف، تیکت", "Search users, transactions, discount codes, tickets")}</span>
               <kbd className="ads-kbd">Ctrl K</kbd>
             </button>
             <div className="admin-topbar-actions ads-actions">
               <AdminAlertsBell />
-              <button type="button" className="admin-icon-btn ads-hide-sm" onClick={toggle} aria-label="تغییر تم">
+              <button type="button" className="admin-icon-btn ads-hide-sm" onClick={toggle} aria-label={tr("تغییر تم", "Change theme")}>
                 {theme === "light" ? <Moon size={16} /> : <Sun size={16} />}
               </button>
-              <Link href="/" className="admin-icon-btn ads-hide-sm" aria-label="بازگشت به اپ"><Home size={16} /></Link>
+              <Link href="/" className="admin-icon-btn ads-hide-sm" aria-label={tr("بازگشت به اپ", "Back to app")}><Home size={16} /></Link>
             </div>
           </div>
           <div className="admin-content ads-content">{allowed ? children : <NoAccess />}</div>
@@ -323,8 +329,8 @@ export function AdminShell({ children, isSuperAdmin, permissions }: { children: 
             <>
               <motion.div className="admin-mobile-backdrop" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} onClick={() => setMobileOpen(false)} />
               <motion.div
-                className="admin-mobile-drawer" role="dialog" aria-modal="true" aria-label="منوی پنل"
-                initial={{ x: "100%" }} animate={{ x: 0 }} exit={{ x: "100%" }}
+                className="admin-mobile-drawer" role="dialog" aria-modal="true" aria-label={tr("منوی پنل", "Panel menu")}
+                initial={{ x: drawerX }} animate={{ x: 0 }} exit={{ x: drawerX }}
                 transition={{ duration: 0.26, ease: [0.22, 1, 0.36, 1] }}
               >
                 <Brand onClose={() => setMobileOpen(false)} />

@@ -1,16 +1,25 @@
 import type { Metadata } from "next";
 import Link from "next/link";
-import { SUPPORT_EMAIL } from "@/lib/brand";
+import { SUPPORT_EMAIL, brandName } from "@/lib/brand";
+import { isEn, tr } from "@/lib/i18n";
 import { breadcrumbJsonLd, pageMetadata } from "@/lib/seo";
 import { MENTOR_TERMS_PATH, MENTOR_TERMS_UPDATED_LABEL } from "@/lib/mentorTerms";
 
-export const metadata: Metadata = pageMetadata({
-  title: "شرایط استفاده از بخش مربی‌ها — آریون",
-  description:
-    "نقش آریون به‌عنوان بستر ارتباط، استقلال و مسئولیت مربی‌ها، بررسی مدارک، سلامت، پرداخت‌ها، گزارش تخلف و حل اختلاف در بخش مربی‌ها.",
-  path: MENTOR_TERMS_PATH,
-  ogTitle: "شرایط استفاده از بخش مربی‌ها",
-});
+export function generateMetadata(): Metadata {
+  const brand = brandName();
+  return pageMetadata({
+    title: tr("شرایط استفاده از بخش مربی‌ها — آریون", `Terms of use for the mentor section — ${brand}`),
+    description: tr(
+      "نقش آریون به‌عنوان بستر ارتباط، استقلال و مسئولیت مربی‌ها، بررسی مدارک، سلامت، پرداخت‌ها، گزارش تخلف و حل اختلاف در بخش مربی‌ها.",
+      `${brand}'s role as a connecting platform, mentors' independence and responsibility, document checks, health, payments, reporting misconduct and dispute resolution in the mentor section.`,
+    ),
+    path: MENTOR_TERMS_PATH,
+    ogTitle: tr("شرایط استفاده از بخش مربی‌ها", "Terms of use for the mentor section"),
+  });
+}
+
+// نسخه‌ی انگلیسی تاریخ: برچسب فارسی در lib/mentorTerms.ts است؛ همین‌جا ترجمه می‌شود
+const UPDATED_LABEL_EN = "Mehr 1405 (Jalali)";
 
 // نسخه و تاریخ در lib/mentorTerms.ts است. تغییر ماهوی هر بند = عوض‌کردن
 // MENTOR_TERMS_VERSION تا منتورها و شاگردها دوباره بپذیرند.
@@ -21,7 +30,7 @@ export const metadata: Metadata = pageMetadata({
 
 type Article = { title: string; intro?: string; clauses: string[] };
 
-const ARTICLES: Article[] = [
+const ARTICLES_FA: Article[] = [
   {
     title: "تعاریف و جایگاه این شرایط",
     clauses: [
@@ -181,32 +190,197 @@ const ARTICLES: Article[] = [
   },
 ];
 
+// نسخه‌ی انگلیسی بندها: ساختار و شماره‌ی مواد دقیقا با ARTICLES_FA یکی است.
+const ARTICLES_EN: Article[] = [
+  {
+    title: "Definitions and status of these terms",
+    clauses: [
+      "“Mentor section”: the features of Arion that allow users to create mentoring profiles, search for a mentor, request to be a student, receive programmes, share their progress, chat and leave reviews.",
+      "“Mentor”: a user who has created a mentoring profile and offers guidance, training or coaching to other users.",
+      "“Student”: a user who has requested to be a student of a mentor or accepted a mentor's invitation.",
+      "“Mentor service”: any guidance, programme, recommendation, answer, content or service that a mentor provides to a student, whether on Arion or outside it.",
+      "These terms supplement the “Arion Terms and Conditions” and form an integral part of them. On matters relating to the mentor section, in case of conflict these terms prevail; in all other matters the general Arion terms apply.",
+      "Creating or editing a mentoring profile and sending a student request requires explicit acceptance of these terms. The date and version of acceptance are recorded on the user's account.",
+    ],
+  },
+  {
+    title: "Arion's role: a connecting platform only",
+    clauses: [
+      "In the mentor section, Arion is only a technical intermediary platform, providing the means to introduce mentors, search and communicate between mentor and student. Arion is not itself a provider of mentor services, and it does not select, hire or guarantee mentors to provide services to students.",
+      "Mentors are not employees, workers, representatives, lawyers, partners or agents of Arion. There is no employment, labour or employer relationship, representation, agency, partnership or joint venture between Arion and a mentor, and creating a profile, publishing it, or showing a rating, rank or verification badge does not create any such relationship.",
+      "Arion does not pay a mentor salary, wages or commission for their activity, and does not set their working hours, method of work or service prices.",
+      "A mentor must not present themselves as an employee, representative or official mentor of Arion, or make any promise or commitment on Arion's behalf. A mentor's statements and commitments are made only in their own name.",
+      "The order in which mentors are shown and ranked is determined by automatic criteria (such as activity, student consistency, approved reviews and verification status), and does not amount to a recommendation, confirmation of competence or guarantee by Arion regarding any mentor.",
+    ],
+  },
+  {
+    title: "Independence and responsibility of the mentor",
+    clauses: [
+      "The mentor operates independently and on their own judgement, and is solely responsible for their content, recommendations, programmes, conduct, qualifications, claims and the quality of their services.",
+      "Losses arising from error, fault, negligence, a false claim or the mentor's conduct towards a student or others are the mentor's own responsibility under the general rules of civil liability.",
+      "If any person brings a claim against Arion because of a mentor's services or conduct, the mentor undertakes to cooperate in resolving the claim and to compensate Arion for any loss caused to it as a result of the mentor's breach.",
+      "This article does not remove Arion's liability within the limits of its own legal duties as a platform (as set out in the “Limitation of Arion's liability” article of these terms).",
+    ],
+  },
+  {
+    title: "Payments and agreements between mentor and student",
+    clauses: [
+      "Arion currently does not receive, hold or process any money for mentor services. Any amount a user pays to Arion is solely for Arion's own features and does not include any mentor's services.",
+      "Any arrangement, price, payment, discount or refund agreed between a mentor and a student is a direct relationship between those two parties alone, and Arion is not a party to it. Performance of the obligation and the return of any amount is the responsibility of whoever received it or undertook the obligation.",
+      "Before any payment to a mentor, specify in writing the amount, the duration, what is being provided and the refund conditions, and use a traceable payment method. Arion will never ask you to transfer money on its behalf to a mentor's account or to any other person's account.",
+      "If Arion offers the ability to pay mentors within the site in future, its conditions will be announced separately and will apply only after the user's explicit acceptance.",
+      "The mentor is responsible for issuing receipts for their earnings, complying with tax rules and any other legal obligations relating to their income and activity.",
+    ],
+  },
+  {
+    title: "Document checks and verification badge",
+    clauses: [
+      "Arion may check identity or professional documents uploaded by a mentor. This check is limited to comparing the document's appearance with the profile information at the time of review and, unless expressly stated otherwise, does not involve verification with the issuing authority.",
+      "The “Verified” badge only shows that a document meeting the conditions of clause 1 of this article has been seen. It is not confirmation of the mentor's scientific, professional or ethical competence, a definitive guarantee that the document is authentic, or a guarantee of the quality of their services. A document may later be voided, expire or be suspended after review.",
+      "Arion may review documents again at any time and, if in doubt, remove the verification badge.",
+      "Uploading a forged, someone else's or misleading document is a serious breach, and in addition to suspension it may be reported to the competent authorities.",
+    ],
+  },
+  {
+    title: "Mentor's obligations",
+    intro: "By creating a profile, the mentor undertakes:",
+    clauses: [
+      "To be at least 18 years of age.",
+      "To keep their profile information, including name, title, background, areas of expertise and documents, honest, accurate and up to date, and not to make any claim about experience, qualifications or results that they cannot prove.",
+      "To upload only valid documents that belong to them, and if a document is voided, expires or is suspended, to remove it from their profile.",
+      "To comply with the laws of the Islamic Republic of Iran and the professional and trade regulations of their field, and to hold any licence or permit that the law requires for their service.",
+      "To stay within their area of expertise and to refer students to the relevant specialist for matters outside it, especially medical matters.",
+      "Not to promise students a definite result, such as a specific weight loss in a specific time, a guaranteed pass or a guaranteed profit.",
+      "To keep confidential the information a student shares, including programmes, progress and health information, to use it only for that guidance, and not to publish it or pass it to anyone else without the student's explicit consent.",
+      "To behave respectfully and professionally towards students.",
+    ],
+  },
+  {
+    title: "Student's responsibility",
+    clauses: [
+      "Starting work with a mentor, continuing or ending the relationship, and acting on their recommendations are the student's own decisions.",
+      "Before starting a relationship, and especially before any payment, check the mentor's background, documents, reviews and terms yourself. Ratings, ranks and other people's reviews reflect their experience and are not a guarantee for you.",
+      "If you feel the relationship is not useful at any time, you may end it from this section, block the mentor, or change what you have shared with them.",
+      "What you share with a mentor is your own decision. Give only the information that is necessary for the guidance.",
+    ],
+  },
+  {
+    title: "Health, nutrition and finance",
+    clauses: [
+      "A mentor's guidance on exercise, nutrition, sleep, mental health or any health-related matter is not medical advice, diagnosis or treatment, and does not replace a doctor, a dietitian, a psychologist or other licensed health professionals.",
+      "Consult a doctor before starting any exercise or diet programme, especially if you have an illness, are pregnant, have an injury or take medication. If you experience pain, unusual symptoms or a serious health problem while following a programme, stop the programme and see a doctor or go to the emergency service (115).",
+      "A mentor who does not hold the required licence has no right to diagnose or treat illness, prescribe medicine or supplements, or present themselves as a doctor or a specialist.",
+      "A mentor's guidance on financial markets or investment is not investment advice from Arion, and the financial decision and resulting profit or loss rest with the user.",
+    ],
+  },
+  {
+    title: "Prohibited conduct",
+    intro: "The following are prohibited in the mentor section and will result in action under the “Suspension and termination” article:",
+    clauses: [
+      "Requesting or receiving money in Arion's name, or claiming that Arion guarantees payment or a mentor's services.",
+      "Fraud, taking advance payment without intending to provide the service, or pressuring the other party into paying outside a clear agreement.",
+      "Receiving money, or access to a student's bank, brokerage or trading account, to manage capital or to promise a profit.",
+      "Requesting a password, verification code or bank card details from the other party.",
+      "Harassment, threats, insults, discrimination, pestering, sending sexual or inappropriate content, or continuing contact after being blocked or asked to stop.",
+      "Publishing or disclosing the other party's personal information, including phone number, address, picture, health information or conversation text, without their explicit consent.",
+      "Posting fake reviews, buying or trading reviews, creating multiple accounts, or any other method of manipulating ratings and rank.",
+      "Providing a service for which the law requires a licence, without holding that licence.",
+      "Impersonating another person or using another person's name or qualifications.",
+    ],
+  },
+  {
+    title: "Privacy, conversations and reporting misconduct",
+    clauses: [
+      "Conversations, group messages and a mentor's private notes on Arion are protected by end-to-end encryption: their text is read only on the parties' own devices, and Arion and its administrators cannot access the text of messages or recover it.",
+      "For this reason, Arion does not monitor the content of conversations and is not aware of it. The only exception is messages reported by one of the parties to the conversation; in that case the text of those messages, together with technical proof that they were really sent, is made available to Arion for review.",
+      "Non-content information, such as who the parties are, when messages were sent, the state of the relationship, programmes and reports, is kept to provide the service and for security. It is disclosed only in line with the “Privacy and data protection” article of the Arion terms and conditions, including on the order of competent authorities.",
+      "To report misconduct, use the report option on the mentor's profile, a relationship, a programme or a message, or contact support. Arion reviews reports and acts in proportion to the seriousness of the matter, including by removing content, taking a profile out of search or suspending the account.",
+      "Where Arion becomes aware of criminal content or a competent authority orders it, it will restrict access to that content in accordance with the law and, where necessary, report the matter to the competent authorities.",
+      "If you face threats, extortion or fraud, report it on Arion and also go to the cyber police (FATA) or the judicial authorities.",
+    ],
+  },
+  {
+    title: "Disputes between mentor and student",
+    clauses: [
+      "A dispute about the quality of services, payment, refunds or any other obligation between a mentor and a student is a dispute between those two alone, and Arion is not a party to it.",
+      "At the request of either party, and in good faith, Arion may help to resolve the dispute amicably, but it does not arbitrate, does not make a binding decision and does not undertake to achieve any outcome. Such help does not mean that Arion accepts responsibility or enters into the parties' agreement.",
+      "The parties may apply to the competent judicial or other legal authorities to pursue their rights. On the order of a competent authority, Arion provides the information it holds in line with the law; the text of encrypted conversations, except reported messages, is not held by Arion.",
+    ],
+  },
+  {
+    title: "Limitation of Arion's liability",
+    clauses: [
+      "Because Arion is not a party to the mentor–student relationship, it has no liability for the mentor's services, content and recommendations, their conduct, or the agreements and payments between mentor and student.",
+      "Arion's responsibility in this section is limited to performing its own duties as a platform: providing the mentor section's features as described, reasonable protection of data, handling reports in line with these terms, and complying with lawful orders of competent authorities.",
+      "This article and the “Limitation of liability” article of the Arion terms and conditions do not cover losses caused by Arion's wilful misconduct or gross negligence, and do not remove the rights that mandatory laws, including consumer protection laws and the Electronic Commerce Law, recognise for the user.",
+    ],
+  },
+  {
+    title: "Suspension and termination",
+    clauses: [
+      "If these terms are breached, or a credible report, a false document or a risk to users comes to light, Arion may, in proportion to the seriousness of the matter, issue a warning, remove the verification badge, take the profile out of search, stop student acceptance, suspend the mentoring account or restrict the user's access in line with the Arion terms and conditions.",
+      "In urgent cases, such as fraud, threats or risk to life, this action may be taken without prior warning and temporarily until the review is complete. The reason for the action is given to the user, as far as this does not endanger others' safety or the review process, and the user may object through support.",
+      "A mentor and a student may end the relationship at any time, and a mentor may take their profile out of search at any time. Ending a relationship or a suspension does not cancel obligations already created between mentor and student.",
+    ],
+  },
+  {
+    title: "Users under 18",
+    clauses: [
+      "Creating a mentoring profile is permitted only for persons who are at least 18 years of age.",
+      "A student under 18 may use this section only with the knowledge, consent and supervision of their parent or legal guardian, and no payment is made without their consent.",
+      "A mentor who knows their student is under 18 must not receive money, or communicate with that student outside Arion, without the knowledge of the student's parent or guardian.",
+    ],
+  },
+  {
+    title: "Changes to these terms",
+    clauses: [
+      "Arion may update these terms. The new version will be published on this page with the date of the last revision.",
+      "After any material change, a mentor must accept the new version before their next profile save, and a student must accept it before their next student request. A mentor who does not accept the new version may, without needing to accept it, take their profile out of search and stop accepting students.",
+      "Agreements made between mentor and student before a change are governed by their own agreement, and changes to these terms do not interfere with them, except within the rules for using Arion itself.",
+    ],
+  },
+  {
+    title: "Governing law and competent authority",
+    clauses: [
+      "These terms are subject to the laws of the Islamic Republic of Iran.",
+      "A dispute between a user and Arion about these terms is resolved in line with the “Governing law and dispute resolution” article of the Arion terms and conditions: first negotiation through support, and then the competent judicial authorities of the Islamic Republic of Iran. This clause does not prevent the user from applying to the official consumer protection bodies.",
+      "A dispute between a mentor and a student is heard by the competent judicial authorities of the Islamic Republic of Iran, or any authority the parties have lawfully agreed on.",
+      "If a clause of these terms is declared void or unenforceable by a competent authority, the other clauses remain valid.",
+      `The official ways to contact Arion about these terms are the support ticket system inside the user's account and the email address ${SUPPORT_EMAIL}.`,
+    ],
+  },
+];
+
 export default function MentorTermsPage() {
+  const articles = isEn() ? ARTICLES_EN : ARTICLES_FA;
+  const brand = brandName();
   return (
     <section>
-      <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(breadcrumbJsonLd([{ name: "آریون", path: "/" }, { name: "قوانین و مقررات", path: "/terms" }, { name: "شرایط بخش مربی‌ها", path: MENTOR_TERMS_PATH }])) }} />
-      <h1>شرایط استفاده از بخش مربی‌ها</h1>
+      <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(breadcrumbJsonLd([{ name: brand, path: "/" }, { name: tr("قوانین و مقررات", "Terms and conditions"), path: "/terms" }, { name: tr("شرایط بخش مربی‌ها", "Terms of use for the mentor section"), path: MENTOR_TERMS_PATH }])) }} />
+      <h1>{tr("شرایط استفاده از بخش مربی‌ها", "Terms of use for the mentor section")}</h1>
       <div className="dateline" style={{ marginBottom: 6 }}>
-        آخرین بازنگری: {MENTOR_TERMS_UPDATED_LABEL}
+        {tr("آخرین بازنگری: ", "Last updated: ")}{isEn() ? UPDATED_LABEL_EN : MENTOR_TERMS_UPDATED_LABEL}
       </div>
-      <p style={{ marginTop: 12, fontSize: 13.5, color: "var(--muted)", lineHeight: 2 }}>
-        آریون فقط بستر ارتباط میان مربی و شاگرد است. مربی‌ها کاربران مستقل‌اند، از طرف آریون کار نمی‌کنند و مسئولیت
-        خدماتشان با خودشان است. این شرایط مکمل{" "}
+      <p style={{ marginTop: 12, fontSize: 13.5, color: "var(--muted)", lineHeight: isEn() ? 1.7 : 2 }}>
+        {tr(
+          "آریون فقط بستر ارتباط میان مربی و شاگرد است. مربی‌ها کاربران مستقل‌اند، از طرف آریون کار نمی‌کنند و مسئولیت خدماتشان با خودشان است. این شرایط مکمل",
+          "Arion is only the connecting platform between mentor and student. Mentors are independent users, do not work on Arion's behalf, and are responsible for their own services. These terms supplement the",
+        )}{" "}
         <Link href="/terms" style={{ color: "var(--accent)" }}>
-          قوانین و مقررات آریون
+          {tr("قوانین و مقررات آریون", "Arion Terms and Conditions")}
         </Link>{" "}
-        است.
+        {tr("است.", ".")}
       </p>
 
-      {ARTICLES.map((a, i) => (
+      {articles.map((a, i) => (
         <article key={a.title} style={{ marginTop: 26 }}>
-          <h2>ماده‌ی {i + 1} — {a.title}</h2>
+          <h2>{tr("ماده‌ی", "Article")} {i + 1} — {a.title}</h2>
           {a.intro && (
-            <p style={{ marginTop: 8, fontSize: 13.5, color: "var(--muted)", lineHeight: 2 }}>{a.intro}</p>
+            <p style={{ marginTop: 8, fontSize: 13.5, color: "var(--muted)", lineHeight: isEn() ? 1.7 : 2 }}>{a.intro}</p>
           )}
-          <ol style={{ marginTop: 8, paddingInlineStart: 22, listStyleType: "persian" }}>
+          <ol style={{ marginTop: 8, paddingInlineStart: 22, listStyleType: isEn() ? "decimal" : "persian" }}>
             {a.clauses.map((c, j) => (
-              <li key={j} style={{ marginTop: 7, fontSize: 13.5, color: "var(--muted)", lineHeight: 2 }}>{c}</li>
+              <li key={j} style={{ marginTop: 7, fontSize: 13.5, color: "var(--muted)", lineHeight: isEn() ? 1.7 : 2 }}>{c}</li>
             ))}
           </ol>
         </article>

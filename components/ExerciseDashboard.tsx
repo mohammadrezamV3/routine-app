@@ -28,6 +28,8 @@ import {
   DEFAULT_MISSED_DAY_PREF, MissedDayPref, addDaysIso, effectiveDayName, logsNeededFrom,
   normalizeMissedDayPref, planStartIsoOf, rebasedPref, weekdayOf,
 } from "@/lib/exerciseProgression";
+import { tr } from "@/lib/i18n";
+import { dayNameDisplay } from "@/lib/exerciseDay";
 
 const now = new Date();
 const todayIso = isoLocal(now);
@@ -196,7 +198,7 @@ export function ExerciseDashboard({
     const data = await res.json();
     setSubbingItem(null);
     if (res.ok) { setSubTarget({ day, oldItem: item }); setSubCandidates(data.candidates); }
-    else setSubError(data.error || "خطا در جایگزینی");
+    else setSubError(data.error || tr("خطا در جایگزینی", "Could not replace the exercise"));
   }
 
   async function applySubstitute(newItem: string) {
@@ -214,7 +216,7 @@ export function ExerciseDashboard({
       setSubTarget(null);
       setSubCandidates(null);
     } else {
-      setSubError(data.error || "خطا در جایگزینی");
+      setSubError(data.error || tr("خطا در جایگزینی", "Could not replace the exercise"));
     }
   }
 
@@ -230,13 +232,13 @@ export function ExerciseDashboard({
 
         <div className="flex flex-wrap items-center gap-2 lg:order-1 lg:shrink-0 lg:flex-nowrap">
           <DashFilterButton
-            label="تاریخچه"
+            label={tr("تاریخچه", "History")}
             icon={<History size={15} />}
             active={!isSelectedToday}
             onClick={() => setHistoryPickerOpen(true)}
           />
           <DashFilterButton
-            label="امروز"
+            label={tr("امروز", "Today")}
             icon={<Calendar size={15} />}
             active={isSelectedToday}
             onClick={() => { setSelectedIso(todayIso); setRecenterKey((k) => k + 1); }}
@@ -269,10 +271,10 @@ export function ExerciseDashboard({
           dateIso={selectedIso}
           editable={isSelectedToday}
           title={
-            (isSelectedToday ? "برنامه تمرینی" : `برنامه تمرینی ${selectedDayName}`) +
-            (carriedFrom ? ` (جامانده از ${carriedFrom})` : "")
+            (isSelectedToday ? tr("برنامه تمرینی", "Workout plan") : tr(`برنامه تمرینی ${selectedDayName}`, `Workout plan, ${dayNameDisplay(selectedDayName)}`)) +
+            (carriedFrom ? tr(` (جامانده از ${carriedFrom})`, ` (carried over from ${dayNameDisplay(carriedFrom)})`) : "")
           }
-          restDayLabel={isSelectedToday ? "امروز روز استراحته — چیزی برنامه‌ریزی نشده." : "این روز، روز باشگاه برنامه نیست."}
+          restDayLabel={isSelectedToday ? tr("امروز روز استراحته — چیزی برنامه‌ریزی نشده.", "Today is a rest day. Nothing is planned.") : tr("این روز، روز باشگاه برنامه نیست.", "This is not a gym day in your plan.")}
           initialCompleted={!!selectedLog?.completed}
           initialCompletedItems={selectedLog?.completedItems ?? []}
           onSubstitute={openSubstitutePicker}
@@ -307,8 +309,8 @@ export function ExerciseDashboard({
           <div className="modal-overlay open" onClick={() => setHistoryPickerOpen(false)} />
           <div className="modal-panel dash-scope open">
             <div className="modal-head">
-              <div className="modal-title">انتخاب تاریخ</div>
-              <button className="nav-close" onClick={() => setHistoryPickerOpen(false)} aria-label="بستن">×</button>
+              <div className="modal-title">{tr("انتخاب تاریخ", "Pick a date")}</div>
+              <button className="nav-close" onClick={() => setHistoryPickerOpen(false)} aria-label={tr("بستن", "Close")}>×</button>
             </div>
             <div className="modal-body">
               <HistoryCalendar onPick={(iso) => { pickDate(iso); setHistoryPickerOpen(false); }} />

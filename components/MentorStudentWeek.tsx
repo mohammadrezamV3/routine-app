@@ -6,7 +6,8 @@ import { Spinner } from "./Spinner";
 import { MI, MI_STROKE, MentorChip, MentorEmpty } from "./MentorUI";
 import { fa } from "./MentorDashKit";
 import { fmtDate, fmtWeekday } from "@/lib/mentorFormat";
-import { FA_WEEKDAY_SHORT, isoLocal } from "@/lib/jalali";
+import { weekdayShort, isoLocal } from "@/lib/jalali";
+import { tr } from "@/lib/i18n";
 import { toEnDigits } from "@/lib/schedule";
 import type { MentorRoutineSlot } from "@/lib/mentorTypes";
 import type { StudentPrivacySummary } from "./MentorStudentTypes";
@@ -14,7 +15,7 @@ import type { StudentPrivacySummary } from "./MentorStudentTypes";
 type Routine = { scheduleHidden: boolean; slots: MentorRoutineSlot[] };
 type DayState = "full" | "partial" | "none" | "pending" | "rest" | "hidden";
 
-const PRIVATE_TEXT = "این بخش رو شاگرد خصوصی نگه داشته";
+const privateText = () => tr("این بخش رو شاگرد خصوصی نگه داشته", "The student keeps this section private");
 
 function daysBetween(from: string, to: string): string[] {
   const out: string[] = [];
@@ -58,7 +59,7 @@ export function weekRate(routine: Routine, from: string, to: string): number | n
   return total === 0 ? null : done / total;
 }
 
-const STATE_TEXT: Record<DayState, string> = { full: "کامل", partial: "نیمه", none: "نشده", pending: "در راهه", rest: "بدون برنامه", hidden: "خصوصی" };
+const stateText = (): Record<DayState, string> => ({ full: tr("کامل", "Complete"), partial: tr("نیمه", "Partial"), none: tr("نشده", "Missed"), pending: tr("در راهه", "Pending"), rest: tr("بدون برنامه", "No plan"), hidden: tr("خصوصی", "Private") });
 const ICON = { size: 16, strokeWidth: 2, "aria-hidden": true } as const;
 
 function Mark({ state }: { state: DayState }) {
@@ -88,20 +89,20 @@ export function MentorStudentWeek({
 
   const nav = (
     <div className="mv2-st-weeknav">
-      <button type="button" className="trade-icon-btn mv2-st-arrow" aria-label="هفته‌ی قبل" onClick={onPrev} disabled={!canPrev || loading}>
-        <ChevronRight size={18} strokeWidth={MI_STROKE} aria-hidden />
+      <button type="button" className="trade-icon-btn mv2-st-arrow" aria-label={tr("هفته‌ی قبل", "Previous week")} onClick={onPrev} disabled={!canPrev || loading}>
+        <ChevronRight size={18} strokeWidth={MI_STROKE} className="dir-flip" aria-hidden />
       </button>
       <span className="mv2-st-weeklabel" aria-live="polite">
-        {loading ? <Spinner size={14} /> : <>{fmtDate(from)} تا {fmtDate(to)}</>}
+        {loading ? <Spinner size={14} /> : <>{tr(`${fmtDate(from)} تا ${fmtDate(to)}`, `${fmtDate(from)} to ${fmtDate(to)}`)}</>}
       </span>
-      <button type="button" className="trade-icon-btn mv2-st-arrow" aria-label="هفته‌ی بعد" onClick={onNext} disabled={!canNext || loading}>
-        <ChevronLeft size={18} strokeWidth={MI_STROKE} aria-hidden />
+      <button type="button" className="trade-icon-btn mv2-st-arrow" aria-label={tr("هفته‌ی بعد", "Next week")} onClick={onNext} disabled={!canNext || loading}>
+        <ChevronLeft size={18} strokeWidth={MI_STROKE} className="dir-flip" aria-hidden />
       </button>
     </div>
   );
 
   if (routine.scheduleHidden) {
-    return <div>{nav}<MentorEmpty icon={<EyeOff size={MI.chip} strokeWidth={MI_STROKE} aria-hidden />}>{PRIVATE_TEXT}</MentorEmpty></div>;
+    return <div>{nav}<MentorEmpty icon={<EyeOff size={MI.chip} strokeWidth={MI_STROKE} aria-hidden />}>{privateText()}</MentorEmpty></div>;
   }
   if (routine.slots.length === 0) {
     return (
@@ -109,8 +110,8 @@ export function MentorStudentWeek({
         {nav}
         <MentorEmpty>
           {!privacy.shareAllPrograms && privacy.sharedCount === 0
-            ? "شاگرد هنوز برنامه‌ای با تو به اشتراک نذاشته"
-            : "برنامه‌ای برای نمایش نیست"}
+            ? tr("شاگرد هنوز برنامه‌ای با تو به اشتراک نذاشته", "The student has not shared any programs with you yet")
+            : tr("برنامه‌ای برای نمایش نیست", "No programs to show")}
         </MentorEmpty>
       </div>
     );
@@ -121,7 +122,7 @@ export function MentorStudentWeek({
   return (
     <div>
       {nav}
-      <ul className="mv2-st-strip" aria-label="روزهای هفته">
+      <ul className="mv2-st-strip" aria-label={tr("روزهای هفته", "Days of the week")}>
         {days.map((day) => {
           const st = dayState(routine, day, today);
           const d = new Date(day + "T12:00:00");
@@ -130,12 +131,12 @@ export function MentorStudentWeek({
             <li key={day}>
               <button
                 type="button" className={`mv2-st-day mv2-st-s-${st.state}${on ? " is-on" : ""}`} aria-pressed={on}
-                aria-label={`${fmtWeekday(day)}: ${STATE_TEXT[st.state]}`}
+                aria-label={`${fmtWeekday(day)}: ${stateText()[st.state]}`}
                 onClick={() => setPicked(day)}
               >
-                <span className="mv2-st-day-name">{FA_WEEKDAY_SHORT[d.getDay()]}</span>
+                <span className="mv2-st-day-name">{weekdayShort(d.getDay())}</span>
                 <span className="mv2-st-day-mark"><Mark state={st.state} /></span>
-                <span className="mv2-st-day-text">{STATE_TEXT[st.state]}</span>
+                <span className="mv2-st-day-text">{stateText()[st.state]}</span>
               </button>
             </li>
           );
@@ -143,38 +144,38 @@ export function MentorStudentWeek({
       </ul>
 
       {!privacy.showProgress && (
-        <p className="mentor-muted"><EyeOff size={MI.chip} strokeWidth={MI_STROKE} aria-hidden /> پیشرفت روزانه رو شاگرد خصوصی نگه داشته؛ فقط زمان‌بندی دیده می‌شه</p>
+        <p className="mentor-muted"><EyeOff size={MI.chip} strokeWidth={MI_STROKE} aria-hidden /> {tr("پیشرفت روزانه رو شاگرد خصوصی نگه داشته؛ فقط زمان‌بندی دیده می‌شه", "The student keeps daily progress private; only the schedule is visible")}</p>
       )}
 
       <h3 className="mv2-st-dayhead">
         {fmtWeekday(selected)}
-        {selected === today && <MentorChip tone="accent">امروز</MentorChip>}
+        {selected === today && <MentorChip tone="accent">{tr("امروز", "Today")}</MentorChip>}
       </h3>
       {selSlots.length === 0 ? (
-        <MentorEmpty>این روز برنامه‌ای نداره</MentorEmpty>
+        <MentorEmpty>{tr("این روز برنامه‌ای نداره", "Nothing planned for this day")}</MentorEmpty>
       ) : (
         <ul className="mv2-st-items">
           {selSlots.map((s, i) => {
             const future = selected > today;
             const state: DayState = s.done === null ? "hidden" : isDone(s, selected) ? "full" : future ? "pending" : selected === today ? "pending" : "none";
-            const masked = s.title === "مشغول" && !privacy.showTaskName;
+            const masked = (s.title === "مشغول" || s.title === "Busy") && !privacy.showTaskName;
             return (
               <li key={`${s.time}-${i}`} className="mv2-st-item">
                 <span className={`mv2-st-item-mark mv2-st-s-${state}`}><Mark state={state} /></span>
                 <span className="mv2-st-item-body">
-                  <span className={`mv2-st-item-title${masked ? " is-muted" : ""}`}>{s.title}</span>
+                  <span className={`mv2-st-item-title${masked ? " is-muted" : ""}`}>{masked ? tr("مشغول", "Busy") : s.title}</span>
                   <span className="mv2-st-item-meta">
                     <span dir="ltr">{toEnDigits(s.time).replace(/\s*[-–—]\s*/, " – ")}</span>
                     {s.program && <span>{s.program}</span>}
                   </span>
                 </span>
-                <span className={`mv2-st-item-state mv2-st-s-${state}`}>{state === "pending" ? (selected === today ? "هنوز نشده" : "بعدا") : STATE_TEXT[state]}</span>
+                <span className={`mv2-st-item-state mv2-st-s-${state}`}>{state === "pending" ? (selected === today ? tr("هنوز نشده", "Not yet") : tr("بعدا", "Later")) : stateText()[state]}</span>
               </li>
             );
           })}
         </ul>
       )}
-      <p className="mentor-muted">{fa(selSlots.filter((s) => isDone(s, selected)).length)} از {fa(selSlots.length)} کار انجام شده</p>
+      <p className="mentor-muted">{tr(`${fa(selSlots.filter((s) => isDone(s, selected)).length)} از ${fa(selSlots.length)} کار انجام شده`, `${fa(selSlots.filter((s) => isDone(s, selected)).length)} of ${fa(selSlots.length)} tasks done`)}</p>
     </div>
   );
 }

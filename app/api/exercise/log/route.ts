@@ -1,3 +1,4 @@
+import { tr } from "@/lib/i18n";
 import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 import { requireModule } from "@/lib/moduleAccess";
@@ -15,7 +16,7 @@ export async function GET(req: NextRequest) {
 
   const planId = req.nextUrl.searchParams.get("planId");
   const date = parseIsoDate(req.nextUrl.searchParams.get("date"));
-  if (!planId || !date) return NextResponse.json({ error: "planId و تاریخ معتبر (YYYY-MM-DD) الزامی است" }, { status: 400 });
+  if (!planId || !date) return NextResponse.json({ error: tr("planId و تاریخ معتبر (YYYY-MM-DD) الزامی است", "A valid planId and date (YYYY-MM-DD) are required") }, { status: 400 });
 
   const log = await prisma.exerciseLog.findUnique({
     where: { userId_planId_date: { userId, planId, date } },
@@ -43,7 +44,7 @@ async function handlePOST(req: NextRequest) {
 
   const date = parseIsoDate(parsed.body?.date);
   if (!planId || typeof planId !== "string" || !date) {
-    return NextResponse.json({ error: "planId و تاریخ معتبر (YYYY-MM-DD) الزامی است" }, { status: 400 });
+    return NextResponse.json({ error: tr("planId و تاریخ معتبر (YYYY-MM-DD) الزامی است", "A valid planId and date (YYYY-MM-DD) are required") }, { status: 400 });
   }
 
   // فقط «شروع تمرین»: اولین لحظه‌ی شروع نگه داشته می‌شه و completed/آیتم‌ها

@@ -10,6 +10,7 @@ import {
 } from "lucide-react";
 import { ANALYSIS_DOMAIN_LABELS, type Insight } from "@/lib/weeklyAnalysis/types";
 import type { WeeklyLetterData } from "@/lib/weeklyLetter/types";
+import { tr } from "@/lib/i18n";
 import { goalCtaHref, weekCtaHref } from "./WeeklyLetterStoriesData";
 import { CountText, DOMAIN_ICONS, Reveal } from "./WeeklyLetterShared";
 
@@ -43,7 +44,7 @@ export function WeeklyLetterWins({ wins, improve }: { wins: string[]; improve: s
     <div className={`wl-duo${both ? "" : " is-single"}`}>
       {wins.length > 0 && (
         <Reveal className="wl-card wl-list is-win">
-          <h3><span className="wl-list-ico"><Check size={16} /></span>بردها</h3>
+          <h3><span className="wl-list-ico"><Check size={16} /></span>{tr("بردها", "Wins")}</h3>
           <ul>
             {wins.map((w, i) => <li key={i}><Check size={15} />{w}</li>)}
           </ul>
@@ -51,7 +52,7 @@ export function WeeklyLetterWins({ wins, improve }: { wins: string[]; improve: s
       )}
       {improve.length > 0 && (
         <Reveal className="wl-card wl-list is-improve" delay={0.08}>
-          <h3><span className="wl-list-ico"><ArrowUpRight size={16} /></span>جای پیشرفت</h3>
+          <h3><span className="wl-list-ico"><ArrowUpRight size={16} /></span>{tr("جای پیشرفت", "Room to grow")}</h3>
           <ul>
             {improve.map((w, i) => <li key={i}><ArrowUpRight size={15} />{w}</li>)}
           </ul>
@@ -69,7 +70,7 @@ export function WeeklyLetterAchievements({ achievements, streak }: { achievement
           <span className="wl-flame" aria-hidden="true"><Flame size={34} /></span>
           <div>
             <CountText value={String(streak.days)} className="wl-streak-num" duration={1.3} />
-            <span className="wl-streak-cap">روز پیاپی روتین کامل تا پایان این هفته</span>
+            <span className="wl-streak-cap">{tr("روز پیاپی روتین کامل تا پایان این هفته", "days in a row of a complete routine through the end of this week")}</span>
           </div>
         </Reveal>
       )}
@@ -89,7 +90,7 @@ export function WeeklyLetterAchievements({ achievements, streak }: { achievement
               </motion.span>
               <h3>{a.title}</h3>
               <p>{a.description}</p>
-              <span className="wl-tag">{a.source === "global" ? "دستاورد دائمی" : "نشان این هفته"}</span>
+              <span className="wl-tag">{a.source === "global" ? tr("دستاورد دائمی", "Permanent achievement") : tr("نشان این هفته", "This week's badge")}</span>
             </Reveal>
           ))}
         </div>
@@ -99,7 +100,7 @@ export function WeeklyLetterAchievements({ achievements, streak }: { achievement
 }
 
 export const MOODS = ["😞", "🙁", "😐", "🙂", "😄"];
-export const MOOD_LABELS = ["خیلی بد", "بد", "معمولی", "خوب", "عالی"];
+export const moodLabels = () => [tr("خیلی بد", "Very bad"), tr("بد", "Bad"), tr("معمولی", "Okay"), tr("خوب", "Good"), tr("عالی", "Great")];
 
 export function WeeklyLetterNext({ letter }: { letter: WeeklyLetterData }) {
   const nw = letter.nextWeek;
@@ -109,19 +110,19 @@ export function WeeklyLetterNext({ letter }: { letter: WeeklyLetterData }) {
       <div className="wl-next-top">
         <span className="wl-next-ico"><Icon size={22} /></span>
         <div className="wl-next-text">
-          <h3>{nw.focusTitle || "هفته‌ی بعد"}</h3>
+          <h3>{nw.focusTitle || tr("هفته‌ی بعد", "Next week")}</h3>
           {nw.focusText && <p>{nw.focusText}</p>}
         </div>
         {nw.suggestedTarget !== null && (
           <div className="wl-next-target">
             <CountText value={String(Math.round(nw.suggestedTarget))} className="wl-next-num" duration={1.2} />
-            <span>هدف پیشنهادی</span>
+            <span>{tr("هدف پیشنهادی", "Suggested target")}</span>
           </div>
         )}
       </div>
       <div className="wl-cta">
-        <Link href={goalCtaHref({ title: nw.focusTitle, domain: nw.focusDomain, target: nw.suggestedTarget })} className="trade-primary-btn wl-cta-btn"><Target size={16} />تعیین هدف</Link>
-        <Link href={weekCtaHref(letter.weekStart)} className="account-outline-btn wl-cta-btn">آنالیز کامل این هفته</Link>
+        <Link href={goalCtaHref({ title: nw.focusTitle, domain: nw.focusDomain, target: nw.suggestedTarget })} className="trade-primary-btn wl-cta-btn"><Target size={16} />{tr("تعیین هدف", "Set a goal")}</Link>
+        <Link href={weekCtaHref(letter.weekStart)} className="account-outline-btn wl-cta-btn">{tr("آنالیز کامل این هفته", "Full analysis of this week")}</Link>
       </div>
     </Reveal>
   );

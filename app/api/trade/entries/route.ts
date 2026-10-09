@@ -6,6 +6,7 @@ import { parseTradeInput, ENTRY_SELECT, serializeEntry } from "@/lib/tradeServer
 import { parseDateRange } from "@/lib/validate";
 import { withLiveSync } from "@/lib/realtime";
 import { sessionFeatureBlocked } from "@/lib/featureFlagsServer";
+import { tr } from "@/lib/i18n";
 
 // معاملات یک حساب. برخلاف نسخه‌ی قبلی که همه‌ی معاملات کاربر را یکجا
 // می‌داد، این‌جا accountId اجباری است — چون کل UI حساب‌محور است و آمار دو
@@ -72,7 +73,7 @@ export async function GET(req: NextRequest) {
       select: ENTRY_SELECT,
     }),
   ]);
-  if (!owned) return NextResponse.json({ error: "حساب پیدا نشد" }, { status: 404 });
+  if (!owned) return NextResponse.json({ error: tr(tr("حساب پیدا نشد", "Account not found"), "Account not found") }, { status: 404 });
 
   return NextResponse.json({ entries: entries.map(serializeEntry) });
 }
@@ -89,7 +90,7 @@ async function handlePOST(req: NextRequest) {
   if (typeof parsed === "string") return NextResponse.json({ error: parsed }, { status: 400 });
 
   if (!(await ownedAccount(userId, parsed.data.accountId))) {
-    return NextResponse.json({ error: "حساب پیدا نشد" }, { status: 404 });
+    return NextResponse.json({ error: tr(tr("حساب پیدا نشد", "Account not found"), "Account not found") }, { status: 404 });
   }
 
   const checklist = await buildChecklistSnapshot(userId, body?.checklistId ?? null, parsed.checklistState);
@@ -121,15 +122,15 @@ async function handlePATCH(req: NextRequest) {
 
   const body = await req.json().catch(() => null);
   const id = String(body?.id || "");
-  if (!id) return NextResponse.json({ error: "id الزامی است" }, { status: 400 });
+  if (!id) return NextResponse.json({ error: tr(tr("id الزامی است", "id is required"), "id is required") }, { status: 400 });
 
   const parsed = parseTradeInput(body);
   if (typeof parsed === "string") return NextResponse.json({ error: parsed }, { status: 400 });
 
   const existing = await prisma.tradeEntry.findFirst({ where: { id, userId }, select: { id: true, externalId: true } });
-  if (!existing) return NextResponse.json({ error: "معامله پیدا نشد" }, { status: 404 });
+  if (!existing) return NextResponse.json({ error: tr(tr("معامله پیدا نشد", "Trade not found"), "Trade not found") }, { status: 404 });
   if (!(await ownedAccount(userId, parsed.data.accountId))) {
-    return NextResponse.json({ error: "حساب پیدا نشد" }, { status: 404 });
+    return NextResponse.json({ error: tr(tr("حساب پیدا نشد", "Account not found"), "Account not found") }, { status: 404 });
   }
 
   // معامله‌ای که از متاتریدر آمده (externalId دارد) و کاربر الان دستی ویرایشش
@@ -167,7 +168,7 @@ async function handleDELETE(req: NextRequest) {
   const guard = await requireModule(ModuleKey.TRADE);
   if (!guard.ok) return guard.response;
   const id = req.nextUrl.searchParams.get("id");
-  if (!id) return NextResponse.json({ error: "id الزامی است" }, { status: 400 });
+  if (!id) return NextResponse.json({ error: tr(tr("id الزامی است", "id is required"), "id is required") }, { status: 400 });
   await prisma.tradeEntry.deleteMany({ where: { id, userId: guard.userId } });
   return NextResponse.json({ ok: true });
 }

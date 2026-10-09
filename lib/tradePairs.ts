@@ -2,65 +2,72 @@
 // فرم ثبت معامله؛ برخلاف lib/tickerSymbols.ts (که نمادهای Yahoo Finance با
 // پسوند =X/-USD هستن و برای گرفتن قیمت لحظه‌ای لازمن)، این‌جا همون کدهای
 // خام سبک بروکر (EURUSD، XAUUSD، …) که تریدرها عادت دارن بنویسن.
+import { tr } from "./i18n";
+
 export type TradePair = { code: string; label: string };
+
+// label با getter حل می‌شه تا زبان جاری موقع خوندن اعمال بشه (نه موقع import).
+function pair(code: string, fa: string, en: string): TradePair {
+  return { code, get label() { return tr(fa, en); } };
+}
 
 export const TRADE_PAIRS: TradePair[] = [
   // فارکس — میجرها
-  { code: "EURUSD", label: "یورو / دلار" },
-  { code: "GBPUSD", label: "پوند / دلار" },
-  { code: "USDJPY", label: "دلار / ین" },
-  { code: "USDCHF", label: "دلار / فرانک" },
-  { code: "USDCAD", label: "دلار / دلار کانادا" },
-  { code: "AUDUSD", label: "دلار استرالیا / دلار" },
-  { code: "NZDUSD", label: "دلار نیوزیلند / دلار" },
+  pair("EURUSD", "یورو / دلار", "EUR / USD"),
+  pair("GBPUSD", "پوند / دلار", "GBP / USD"),
+  pair("USDJPY", "دلار / ین", "USD / JPY"),
+  pair("USDCHF", "دلار / فرانک", "USD / CHF"),
+  pair("USDCAD", "دلار / دلار کانادا", "USD / CAD"),
+  pair("AUDUSD", "دلار استرالیا / دلار", "AUD / USD"),
+  pair("NZDUSD", "دلار نیوزیلند / دلار", "NZD / USD"),
   // فارکس — ماینورها
-  { code: "EURGBP", label: "یورو / پوند" },
-  { code: "EURJPY", label: "یورو / ین" },
-  { code: "EURCHF", label: "یورو / فرانک" },
-  { code: "EURAUD", label: "یورو / دلار استرالیا" },
-  { code: "EURCAD", label: "یورو / دلار کانادا" },
-  { code: "GBPJPY", label: "پوند / ین" },
-  { code: "GBPCHF", label: "پوند / فرانک" },
-  { code: "GBPAUD", label: "پوند / دلار استرالیا" },
-  { code: "AUDJPY", label: "دلار استرالیا / ین" },
-  { code: "AUDNZD", label: "دلار استرالیا / دلار نیوزیلند" },
-  { code: "AUDCAD", label: "دلار استرالیا / دلار کانادا" },
-  { code: "CADJPY", label: "دلار کانادا / ین" },
-  { code: "CHFJPY", label: "فرانک / ین" },
-  { code: "NZDJPY", label: "دلار نیوزیلند / ین" },
+  pair("EURGBP", "یورو / پوند", "EUR / GBP"),
+  pair("EURJPY", "یورو / ین", "EUR / JPY"),
+  pair("EURCHF", "یورو / فرانک", "EUR / CHF"),
+  pair("EURAUD", "یورو / دلار استرالیا", "EUR / AUD"),
+  pair("EURCAD", "یورو / دلار کانادا", "EUR / CAD"),
+  pair("GBPJPY", "پوند / ین", "GBP / JPY"),
+  pair("GBPCHF", "پوند / فرانک", "GBP / CHF"),
+  pair("GBPAUD", "پوند / دلار استرالیا", "GBP / AUD"),
+  pair("AUDJPY", "دلار استرالیا / ین", "AUD / JPY"),
+  pair("AUDNZD", "دلار استرالیا / دلار نیوزیلند", "AUD / NZD"),
+  pair("AUDCAD", "دلار استرالیا / دلار کانادا", "AUD / CAD"),
+  pair("CADJPY", "دلار کانادا / ین", "CAD / JPY"),
+  pair("CHFJPY", "فرانک / ین", "CHF / JPY"),
+  pair("NZDJPY", "دلار نیوزیلند / ین", "NZD / JPY"),
   // فارکس — اگزاتیک
-  { code: "USDTRY", label: "دلار / لیر ترکیه" },
-  { code: "USDZAR", label: "دلار / رند آفریقای جنوبی" },
-  { code: "USDMXN", label: "دلار / پزو مکزیک" },
-  { code: "USDSEK", label: "دلار / کرون سوئد" },
-  { code: "USDNOK", label: "دلار / کرون نروژ" },
-  { code: "USDCNH", label: "دلار / یوان چین" },
+  pair("USDTRY", "دلار / لیر ترکیه", "USD / Turkish lira"),
+  pair("USDZAR", "دلار / رند آفریقای جنوبی", "USD / South African rand"),
+  pair("USDMXN", "دلار / پزو مکزیک", "USD / Mexican peso"),
+  pair("USDSEK", "دلار / کرون سوئد", "USD / Swedish krona"),
+  pair("USDNOK", "دلار / کرون نروژ", "USD / Norwegian krone"),
+  pair("USDCNH", "دلار / یوان چین", "USD / Chinese yuan"),
   // فلزات
-  { code: "XAUUSD", label: "طلا / دلار" },
-  { code: "XAGUSD", label: "نقره / دلار" },
-  { code: "XPTUSD", label: "پلاتین / دلار" },
-  { code: "XPDUSD", label: "پالادیوم / دلار" },
+  pair("XAUUSD", "طلا / دلار", "Gold / USD"),
+  pair("XAGUSD", "نقره / دلار", "Silver / USD"),
+  pair("XPTUSD", "پلاتین / دلار", "Platinum / USD"),
+  pair("XPDUSD", "پالادیوم / دلار", "Palladium / USD"),
   // انرژی
-  { code: "USOIL", label: "نفت خام WTI" },
-  { code: "UKOIL", label: "نفت خام برنت" },
-  { code: "NATGAS", label: "گاز طبیعی" },
+  pair("USOIL", "نفت خام WTI", "WTI crude oil"),
+  pair("UKOIL", "نفت خام برنت", "Brent crude oil"),
+  pair("NATGAS", "گاز طبیعی", "Natural gas"),
   // شاخص‌ها (CFD)
-  { code: "US30", label: "شاخص داوجونز" },
-  { code: "US100", label: "شاخص نزدک 100" },
-  { code: "US500", label: "شاخص اس‌اند‌پی 500" },
-  { code: "GER40", label: "شاخص دکس آلمان" },
-  { code: "UK100", label: "شاخص فوتسی انگلیس" },
-  { code: "JPN225", label: "شاخص نیک‌کی ژاپن" },
-  { code: "FRA40", label: "شاخص کک 40 فرانسه" },
+  pair("US30", "شاخص داوجونز", "Dow Jones index"),
+  pair("US100", "شاخص نزدک 100", "Nasdaq 100 index"),
+  pair("US500", "شاخص اس‌اند‌پی 500", "S&P 500 index"),
+  pair("GER40", "شاخص دکس آلمان", "DAX index (Germany)"),
+  pair("UK100", "شاخص فوتسی انگلیس", "FTSE index (UK)"),
+  pair("JPN225", "شاخص نیک‌کی ژاپن", "Nikkei index (Japan)"),
+  pair("FRA40", "شاخص کک 40 فرانسه", "CAC 40 index (France)"),
   // کریپتو
-  { code: "BTCUSD", label: "بیت‌کوین / دلار" },
-  { code: "ETHUSD", label: "اتریوم / دلار" },
-  { code: "XRPUSD", label: "ریپل / دلار" },
-  { code: "LTCUSD", label: "لایت‌کوین / دلار" },
-  { code: "BNBUSD", label: "بایننس‌کوین / دلار" },
-  { code: "SOLUSD", label: "سولانا / دلار" },
-  { code: "DOGEUSD", label: "دوج‌کوین / دلار" },
-  { code: "ADAUSD", label: "کاردانو / دلار" },
+  pair("BTCUSD", "بیت‌کوین / دلار", "Bitcoin / USD"),
+  pair("ETHUSD", "اتریوم / دلار", "Ethereum / USD"),
+  pair("XRPUSD", "ریپل / دلار", "Ripple / USD"),
+  pair("LTCUSD", "لایت‌کوین / دلار", "Litecoin / USD"),
+  pair("BNBUSD", "بایننس‌کوین / دلار", "BNB / USD"),
+  pair("SOLUSD", "سولانا / دلار", "Solana / USD"),
+  pair("DOGEUSD", "دوج‌کوین / دلار", "Dogecoin / USD"),
+  pair("ADAUSD", "کاردانو / دلار", "Cardano / USD"),
 ];
 
 export function searchTradePairs(query: string, limit = 8): TradePair[] {

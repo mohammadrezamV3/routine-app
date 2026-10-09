@@ -8,6 +8,7 @@ import { PUBLIC_USER_SELECT, toPublicUser } from "@/lib/mentorServer";
 import type { MentorWaitlistRow, MyWaitlist } from "@/lib/mentorTypes";
 import { WAITLIST_OFFER_BATCH, WAITLIST_OFFER_HOURS, offerDeadline, planOffers } from "@/lib/mentorWaitlist";
 import { faNum } from "@/lib/jalali";
+import { tr } from "@/lib/i18n";
 
 // سمت سرور صف انتظار منتور پر (منطق خالص: lib/mentorWaitlist.ts).
 //
@@ -223,16 +224,16 @@ async function advanceWaitlistUnsafe(mentorId: string, now: Date): Promise<void>
   for (const userId of offered) {
     await notifyUser(userId, {
       type: "mentor.waitlist.offer",
-      title: "نوبتت رسید!",
-      body: `یه جا پیش ${name} خالی شد. تا ${faNum(WAITLIST_OFFER_HOURS)} ساعت وقت داری درخواستت رو بفرستی.`,
+      title: tr("نوبتت رسید!", "It is your turn!"),
+      body: tr(`یه جا پیش ${name} خالی شد. تا ${faNum(WAITLIST_OFFER_HOURS)} ساعت وقت داری درخواستت رو بفرستی.`, `A spot opened up with ${name}. You have ${faNum(WAITLIST_OFFER_HOURS)} hours to send your request.`),
       url,
     });
   }
   for (const userId of expired) {
     await notifyUser(userId, {
       type: "mentor.waitlist.expired",
-      title: "مهلت نوبتت تموم شد",
-      body: `نوبتت پیش ${name} به نفر بعدی رسید. هر وقت خواستی دوباره بیا توی صف.`,
+      title: tr("مهلت نوبتت تموم شد", "Your turn has expired"),
+      body: tr(`نوبتت پیش ${name} به نفر بعدی رسید. هر وقت خواستی دوباره بیا توی صف.`, `Your turn with ${name} passed to the next person. Join the line again whenever you like.`),
       url,
     });
   }

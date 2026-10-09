@@ -7,6 +7,7 @@ import { checkRateLimit } from "@/lib/rateLimit";
 import { TRADE_SHARE_PERIODS, type TradeSharePeriod, type TradeShareResponse } from "@/lib/tradeShareTypes";
 import { computeTradeShare, isValidIsoDate, resolveTradeShareRange, tehranToday } from "@/lib/tradeShare";
 import { sessionFeatureBlocked } from "@/lib/featureFlagsServer";
+import { tr } from "@/lib/i18n";
 
 // کارنامه‌ی ترید برای اشتراک تصویر: یک روز/هفته/ماه شمسی، یک حساب یا همه.
 // فقط خواندن؛ محاسبه در lib/tradeShare.ts و قرارداد در lib/tradeShareTypes.ts.
@@ -27,21 +28,21 @@ export async function GET(req: NextRequest) {
   const userId = guard.userId;
 
   if (!(await checkRateLimit(`trade-share:${userId}`, 60, 60 * 1000))) {
-    return json({ error: "تعداد درخواست‌ها زیاد است، کمی بعد دوباره امتحان کن" }, 429);
+    return json({ error: tr(tr("تعداد درخواست‌ها زیاد است، کمی بعد دوباره امتحان کن", "Too many requests, try again shortly"), "Too many requests, try again shortly") }, 429);
   }
 
   const sp = req.nextUrl.searchParams;
   const periodRaw = sp.get("period") || "day";
   if (!(TRADE_SHARE_PERIODS as readonly string[]).includes(periodRaw)) {
-    return json({ error: "بازه نامعتبر است" }, 400);
+    return json({ error: tr(tr("بازه نامعتبر است", "Invalid range"), "Invalid range") }, 400);
   }
   const period = periodRaw as TradeSharePeriod;
 
   const date = sp.get("date") || tehranToday();
-  if (!isValidIsoDate(date)) return json({ error: "تاریخ نامعتبر است" }, 400);
+  if (!isValidIsoDate(date)) return json({ error: tr(tr("تاریخ نامعتبر است", "Invalid date"), "Invalid date") }, 400);
 
   const accountParam = sp.get("account") || "all";
-  if (accountParam.length > 64) return json({ error: "حساب پیدا نشد" }, 404);
+  if (accountParam.length > 64) return json({ error: tr(tr("حساب پیدا نشد", "Account not found"), "Account not found") }, 404);
 
   // همان ترتیب فهرست حساب‌ها (app/api/trade/accounts)، فقط حساب‌های فعال
   const accounts = await prisma.tradeAccount.findMany({
@@ -52,7 +53,7 @@ export async function GET(req: NextRequest) {
 
   // حساب باید مال همین کاربر و آرشیونشده باشد — وگرنه 404 (جلوگیری از IDOR)
   const selected = accountParam === "all" ? accounts : accounts.filter((a) => a.id === accountParam);
-  if (accountParam !== "all" && selected.length === 0) return json({ error: "حساب پیدا نشد" }, 404);
+  if (accountParam !== "all" && selected.length === 0) return json({ error: tr(tr("حساب پیدا نشد", "Account not found"), "Account not found") }, 404);
 
   const range = resolveTradeShareRange(period, date);
   const ids = selected.map((a) => a.id);

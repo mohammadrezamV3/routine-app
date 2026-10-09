@@ -4,9 +4,9 @@ import { useState } from "react";
 import { CalendarDays, X } from "lucide-react";
 import { JalaliDatePicker } from "./JalaliDatePicker";
 import { formatTimeDigits } from "@/lib/timeUtils";
-import { isoLocal, jalaliToGregorianApprox, toJalali, faNum, J_MONTHS } from "@/lib/jalali";
-import { G_MONTHS } from "@/lib/gregorian";
-import { joinLocalInput, splitLocalInput } from "@/lib/tradeDateTime";
+import { isoLocal, jalaliToGregorianApprox, toJalali, faNum } from "@/lib/jalali";
+import { gMonthName, joinLocalInput, splitLocalInput } from "@/lib/tradeDateTime";
+import { tr } from "@/lib/i18n";
 import type { CalSystem } from "@/lib/tradeTypes";
 
 // فیلد «تاریخ و ساعت». عمدا تاریخ و ساعت با هم‌اند و ساعت اختیاری نیست:
@@ -18,7 +18,7 @@ export function TradeDateTimeField({
   onChange,
   calSystem,
   allowClear = false,
-  placeholder = "انتخاب تاریخ",
+  placeholder,
 }: {
   value: string;                    // "YYYY-MM-DDTHH:mm" یا ""
   onChange: (v: string) => void;
@@ -30,13 +30,13 @@ export function TradeDateTimeField({
   const { date, time } = splitLocalInput(value);
 
   function label(): string {
-    if (!date) return placeholder;
+    if (!date) return placeholder ?? tr("انتخاب تاریخ", "Select date");
     const [y, m, d] = date.split("-").map(Number);
     if (calSystem === "jalali") {
       const j = toJalali(y, m, d);
       return `${faNum(j[0])}/${faNum(String(j[1]).padStart(2, "0"))}/${faNum(String(j[2]).padStart(2, "0"))}`;
     }
-    return `${faNum(d)} ${G_MONTHS[m - 1]} ${faNum(y)}`;
+    return `${faNum(d)} ${gMonthName(m - 1)} ${faNum(y)}`;
   }
 
   const initialJalali = date
@@ -56,17 +56,17 @@ export function TradeDateTimeField({
           onChange={(e) => onChange(joinLocalInput(date || isoLocal(new Date()), formatTimeDigits(e.target.value)))}
           placeholder="00:00"
           inputMode="numeric"
-          aria-label="ساعت"
+          aria-label={tr("ساعت", "Time")}
         />
         {allowClear && !!value && (
-          <button type="button" className="trade-icon-btn" onClick={() => onChange("")} aria-label="پاک‌کردن"><X size={15} /></button>
+          <button type="button" className="trade-icon-btn" onClick={() => onChange("")} aria-label={tr("پاک‌کردن", "Clear")}><X size={15} /></button>
         )}
       </div>
 
       {pickerOpen && (
         <JalaliDatePicker
           initial={initialJalali}
-          title="تاریخ معامله"
+          title={tr("تاریخ معامله", "Trade date")}
           disableFuture
           onPick={(j) => {
             // JalaliDatePicker همیشه تاریخ شمسی می‌دهد (حتی وقتی نمایش

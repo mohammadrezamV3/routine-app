@@ -3,7 +3,8 @@
 import { useEffect, useState } from "react";
 import { usePathname } from "next/navigation";
 import { X, Leaf, Ghost, Flame, TreePine, Heart, Flower2, MoonStar, Sprout, PartyPopper, type LucideIcon } from "lucide-react";
-import { eventThemeById, type EventTheme } from "@/lib/eventThemes";
+import { eventThemeById, eventThemeGreeting, type EventTheme } from "@/lib/eventThemes";
+import { tr, isEn } from "@/lib/i18n";
 
 // فقط آیکون‌هایی که کاتالوگ (lib/eventThemes.ts) استفاده می‌کنه — نه import پویای کل
 // lucide-react که یک chunk خیلی بزرگ روی همه‌ی صفحه‌ها اضافه می‌کرد. تم تازه با
@@ -66,7 +67,7 @@ export function EventThemeGreeting() {
   return (
     <div
       role="status"
-      dir="rtl"
+      dir={isEn() ? "ltr" : "rtl"}
       className="event-greet"
       style={{
         position: "fixed",
@@ -79,7 +80,7 @@ export function EventThemeGreeting() {
         display: "flex",
         alignItems: "center",
         gap: 10,
-        padding: "8px 8px 8px 14px",
+        paddingBlock: 8, paddingInlineStart: 8, paddingInlineEnd: 14,
         borderRadius: offer ? 22 : 999,
         background: "var(--box-bg)",
         border: "1px solid var(--surface-line)",
@@ -95,16 +96,16 @@ export function EventThemeGreeting() {
         <EventThemeIcon name={theme.icon} size={18} />
       </span>
       <span style={{ display: "flex", flexDirection: "column", gap: 2 }}>
-        <span>{theme.greeting}</span>
+        <span>{eventThemeGreeting(theme)}</span>
         {offer && (
           <span style={{ fontSize: 12, fontWeight: 500 }}>
-            کد <span dir="ltr" style={{ fontWeight: 700 }}>{offer.code}</span>: {offer.percent}٪ تخفیف روی همه‌ی پلن‌ها
+            {isEn() ? <>Code <span dir="ltr" style={{ fontWeight: 700 }}>{offer.code}</span>: {offer.percent}% off all plans</> : <>کد <span dir="ltr" style={{ fontWeight: 700 }}>{offer.code}</span>: {offer.percent}٪ تخفیف روی همه‌ی پلن‌ها</>}
           </span>
         )}
       </span>
       <button
         type="button"
-        aria-label="بستن"
+        aria-label={tr("بستن", "Close")}
         onClick={() => setOpen(false)}
         style={{
           background: "none",

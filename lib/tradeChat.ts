@@ -6,6 +6,8 @@
 // جدول را پر کند و هم لیست اتاق‌ها را بی‌معنا کند.
 
 import { TRADE_PAIRS } from "./tradePairs";
+import { tr } from "./i18n";
+import { localizedRecord } from "./localizedRecord";
 
 export const MAX_CHAT_BODY = 500;
 // طبق درخواست صریح: فقط ۲۰۰ پیام آخر هر اتاق نشان داده می‌شود و همان
@@ -31,12 +33,17 @@ export function normalizeRoomSymbol(raw: unknown): string | null {
   return TRADE_PAIRS.some((p) => p.code === code) ? code : null;
 }
 
+// label با getter حل می‌شه (زبان جاری موقع خوندن)، نه موقع import.
+function opt<V extends string>(value: V, fa: string, en: string) {
+  return { value, get label(): string { return tr(fa, en); } };
+}
+
 export const CHAT_REPORT_REASONS = [
-  { value: "SPAM", label: "تبلیغ یا اسپم" },
-  { value: "ABUSE", label: "توهین یا بی‌ادبی" },
-  { value: "SCAM", label: "کلاهبرداری یا سیگنال‌فروشی" },
-  { value: "OFFTOPIC", label: "بی‌ربط به این نماد" },
-  { value: "OTHER", label: "دلیل دیگر" },
+  opt("SPAM", "تبلیغ یا اسپم", "Ads or spam"),
+  opt("ABUSE", "توهین یا بی‌ادبی", "Abuse or rudeness"),
+  opt("SCAM", "کلاهبرداری یا سیگنال‌فروشی", "Scam or selling signals"),
+  opt("OFFTOPIC", "بی‌ربط به این نماد", "Unrelated to this symbol"),
+  opt("OTHER", "دلیل دیگر", "Other reason"),
 ] as const;
 
 export type ChatReportReason = (typeof CHAT_REPORT_REASONS)[number]["value"];
@@ -45,15 +52,19 @@ export function isChatReportReason(v: unknown): v is ChatReportReason {
   return typeof v === "string" && CHAT_REPORT_REASONS.some((r) => r.value === v);
 }
 
-export const CHAT_REPORT_REASON_LABELS: Record<string, string> = Object.fromEntries(
-  CHAT_REPORT_REASONS.map((r) => [r.value, r.label])
-);
+export const CHAT_REPORT_REASON_LABELS: Record<string, string> = localizedRecord({
+  SPAM: ["تبلیغ یا اسپم", "Ads or spam"],
+  ABUSE: ["توهین یا بی‌ادبی", "Abuse or rudeness"],
+  SCAM: ["کلاهبرداری یا سیگنال‌فروشی", "Scam or selling signals"],
+  OFFTOPIC: ["بی‌ربط به این نماد", "Unrelated to this symbol"],
+  OTHER: ["دلیل دیگر", "Other reason"],
+});
 
-export const CHAT_REPORT_STATUS_LABELS: Record<string, string> = {
-  OPEN: "بررسی‌نشده",
-  ACTIONED: "پیام حذف شد",
-  DISMISSED: "رد شد",
-};
+export const CHAT_REPORT_STATUS_LABELS: Record<string, string> = localizedRecord({
+  OPEN: ["بررسی‌نشده", "Not reviewed"],
+  ACTIONED: ["پیام حذف شد", "Message removed"],
+  DISMISSED: ["رد شد", "Dismissed"],
+});
 
 export type ChatMessageDto = {
   id: string;
@@ -78,10 +89,10 @@ export type ChatMessageDto = {
  * جدید را می‌گیرند (نه خواندن اتاق).
  */
 export const CHAT_MODERATION_ACTIONS = [
-  { value: "WARNING", label: "اخطار" },
-  { value: "BAN_72H", label: "بن 72 ساعته از چت" },
-  { value: "DISABLE_CHAT", label: "غیرفعال‌سازی دائمی چت" },
-  { value: "ENABLE_CHAT", label: "رفع محدودیت (بن/غیرفعال‌سازی)" },
+  opt("WARNING", "اخطار", "Warning"),
+  opt("BAN_72H", "بن 72 ساعته از چت", "72-hour chat ban"),
+  opt("DISABLE_CHAT", "غیرفعال‌سازی دائمی چت", "Permanently disable chat"),
+  opt("ENABLE_CHAT", "رفع محدودیت (بن/غیرفعال‌سازی)", "Lift restriction (ban/disable)"),
 ] as const;
 
 export type ChatModerationAction = (typeof CHAT_MODERATION_ACTIONS)[number]["value"];
@@ -105,11 +116,16 @@ export type ChatViewerModeration = {
  * عوض کند، خوانده نمی‌شود. همین‌جا داخل خود باکس گفت‌وگو نشان داده
  * می‌شود، درست پیش از جایی که قرار است پیام بنویسد.
  */
-export const CHAT_RULES: string[] = [
-  "این‌جا فقط درباره‌ی همین نماد حرف بزن — بحث بی‌ربط، اتاق را برای بقیه بی‌فایده می‌کند.",
-  "سیگنال‌فروشی، تبلیغ کانال و لینک دعوت ممنوع است.",
-  "توهین، تمسخر و برخورد تند ممنوع است؛ اشتباه تحلیلی حق همه است.",
-  "هیچ اطلاعات شخصی (شماره، آدرس، شماره‌ی حساب) از خودت یا دیگران نگذار.",
-  "تحلیل دیگران توصیه‌ی مالی نیست — مسئولیت هر معامله با خودت است.",
-  "پیام متخلف را گزارش کن؛ گزارش‌ها را ادمین بررسی می‌کند.",
+const CHAT_RULES_PAIRS: [string, string][] = [
+  ["این‌جا فقط درباره‌ی همین نماد حرف بزن — بحث بی‌ربط، اتاق را برای بقیه بی‌فایده می‌کند.", "Only talk about this symbol here. Off-topic chat makes the room useless for everyone else."],
+  ["سیگنال‌فروشی، تبلیغ کانال و لینک دعوت ممنوع است.", "Selling signals, promoting channels and invite links are not allowed."],
+  ["توهین، تمسخر و برخورد تند ممنوع است؛ اشتباه تحلیلی حق همه است.", "Insults, mockery and harsh behavior are not allowed. Everyone is allowed to get an analysis wrong."],
+  ["هیچ اطلاعات شخصی (شماره، آدرس، شماره‌ی حساب) از خودت یا دیگران نگذار.", "Do not share personal information (phone, address, account number) about yourself or others."],
+  ["تحلیل دیگران توصیه‌ی مالی نیست — مسئولیت هر معامله با خودت است.", "Other people's analysis is not financial advice. You are responsible for every trade you take."],
+  ["پیام متخلف را گزارش کن؛ گزارش‌ها را ادمین بررسی می‌کند.", "Report rule-breaking messages. An admin reviews every report."],
 ];
+
+/** قوانین به زبان جاری — موقع رندر صدا بزن */
+export function chatRules(): string[] {
+  return CHAT_RULES_PAIRS.map(([fa, en]) => tr(fa, en));
+}

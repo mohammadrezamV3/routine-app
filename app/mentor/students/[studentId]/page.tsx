@@ -25,16 +25,17 @@ import { isoLocal } from "@/lib/jalali";
 import { exportCsvUrl } from "@/lib/mentorToolsTypes";
 import { publicUserName } from "@/lib/mentorTypes";
 import type { StudentView } from "@/components/MentorStudentTypes";
+import { tr } from "@/lib/i18n";
 
 const ic = (Icon: typeof Tag, size: number) => <Icon size={size} strokeWidth={MI_STROKE} aria-hidden />;
-const PRIVATE_TEXT = "این بخش رو شاگرد خصوصی نگه داشته";
+const privateText = () => tr("این بخش رو شاگرد خصوصی نگه داشته", "The student keeps this section private");
 
 type Tab = "week" | "programs" | "notes" | "about";
-const TABS: { value: Tab; label: string }[] = [
-  { value: "week", label: "هفته" },
-  { value: "programs", label: "برنامه‌ها" },
-  { value: "notes", label: "یادداشت‌ها" },
-  { value: "about", label: "درباره" },
+const tabs = (): { value: Tab; label: string }[] => [
+  { value: "week", label: tr("هفته", "Week") },
+  { value: "programs", label: tr("برنامه‌ها", "Programs") },
+  { value: "notes", label: tr("یادداشت‌ها", "Notes") },
+  { value: "about", label: tr("درباره", "About") },
 ];
 
 function weekRange(offset: number): { from: string; to: string } {
@@ -85,7 +86,7 @@ export default function MentorStudentPage() {
   useVisiblePolling(() => { load(offsetRef.current); }, 30_000);
   useEffect(() => () => abortRef.current?.abort(), []);
 
-  const name = data ? publicUserName(data.student) : "شاگرد";
+  const name = data ? publicUserName(data.student) : tr("شاگرد", "Student");
 
   function download(url: string) {
     const a = document.createElement("a");
@@ -102,8 +103,8 @@ export default function MentorStudentPage() {
     body = error.status === 404 || error.status === 403 ? (
       <MentorEmptyState
         icon={ic(UserRound, MI.empty)}
-        title="به اطلاعات این شاگرد دسترسی نداری"
-        text="فقط شاگردهایی که همکاری فعال با تو دارن اینجا دیده می‌شن"
+        title={tr("به اطلاعات این شاگرد دسترسی نداری", "You do not have access to this student")}
+        text={tr("فقط شاگردهایی که همکاری فعال با تو دارن اینجا دیده می‌شن", "Only students you are actively working with show up here")}
       />
     ) : (
       <MentorDashError message={error.message} onRetry={() => load(offset)} />
@@ -119,18 +120,18 @@ export default function MentorStudentPage() {
     const activeCount = data.programs.filter((p) => p.status === "ACTIVE").length;
 
     const actions: MentorMenuAction[] = [
-      { label: "برچسب‌ها", icon: ic(Tag, MI.btnSm), onClick: () => setLabelsOpen(true), disabled: !manage.data },
-      { label: "خروجی هفته (CSV)", icon: ic(Download, MI.btnSm), onClick: () => download(exportCsvUrl(studentId, { from, to })) },
+      { label: tr("برچسب‌ها", "Labels"), icon: ic(Tag, MI.btnSm), onClick: () => setLabelsOpen(true), disabled: !manage.data },
+      { label: tr("خروجی هفته (CSV)", "Export week (CSV)"), icon: ic(Download, MI.btnSm), onClick: () => download(exportCsvUrl(studentId, { from, to })) },
       pausedAt
-        ? { label: "ادامه‌ی همکاری", icon: ic(CirclePlay, MI.btnSm), onClick: () => setRelation("resume") }
-        : { label: "توقف موقت", icon: ic(CirclePause, MI.btnSm), onClick: () => setRelation("pause") },
-      { label: "پایان همکاری", icon: ic(LogOut, MI.btnSm), onClick: () => setRelation("end"), danger: true },
+        ? { label: tr("ادامه‌ی همکاری", "Resume"), icon: ic(CirclePlay, MI.btnSm), onClick: () => setRelation("resume") }
+        : { label: tr("توقف موقت", "Pause"), icon: ic(CirclePause, MI.btnSm), onClick: () => setRelation("pause") },
+      { label: tr("پایان همکاری", "End working together"), icon: ic(LogOut, MI.btnSm), onClick: () => setRelation("end"), danger: true },
     ];
 
     body = (
       <>
         <div className="mv2-st-kebab">
-          <MentorKebabMenu actions={actions} label="کارهای بیشتر" />
+          <MentorKebabMenu actions={actions} label={tr("کارهای بیشتر", "More actions")} />
         </div>
         <MentorStudentHeader
           name={name} avatarUrl={data.student.avatarUrl} since={data.since}
@@ -140,7 +141,7 @@ export default function MentorStudentPage() {
           onNote={() => { setTab("notes"); setComposeOpen(true); }}
         />
 
-        <SegmentedTabs<Tab> options={TABS} active={tab} onChange={setTab} ariaLabel="بخش‌های صفحه‌ی شاگرد" className="mv2-st-seg" />
+        <SegmentedTabs<Tab> options={tabs()} active={tab} onChange={setTab} ariaLabel={tr("بخش‌های صفحه‌ی شاگرد", "Student page sections")} className="mv2-st-seg" />
 
         {tab === "week" && (
           <>
@@ -155,9 +156,9 @@ export default function MentorStudentPage() {
         )}
 
         {tab === "programs" && (
-          <MentorSection title="برنامه‌ها" icon={ic(CalendarCheck, MI.section)} count={data.programs.length ? fa(data.programs.length) : undefined} flush>
+          <MentorSection title={tr("برنامه‌ها", "Programs")} icon={ic(CalendarCheck, MI.section)} count={data.programs.length ? fa(data.programs.length) : undefined} flush>
             {data.programs.length === 0 ? (
-              <MentorEmpty>هنوز برنامه‌ای برای این شاگرد نساختی</MentorEmpty>
+              <MentorEmpty>{tr("هنوز برنامه‌ای برای این شاگرد نساختی", "You have not created a program for this student yet")}</MentorEmpty>
             ) : data.programs.map((p) => {
               const href = p.status === "DRAFT" ? `/mentor/programs/${p.id}/edit` : `/mentor-programs/${p.id}`;
               const st = programStatusText(p.status);
@@ -171,13 +172,13 @@ export default function MentorStudentPage() {
                   title={p.title}
                   sub={
                     <>
-                      <span>{p.type === "WORKOUT" ? "تمرینی" : "روتین"}</span>
-                      {p.version > 1 && <span>ویرایش‌شده</span>}
+                      <span>{p.type === "WORKOUT" ? tr("تمرینی", "Workout") : tr("روتین", "Routine")}</span>
+                      {p.version > 1 && <span>{tr("ویرایش‌شده", "Edited")}</span>}
                       {(p.startDate || p.endDate) && (
                         <span>
-                          {p.startDate ? `از ${fmtDate(p.startDate.slice(0, 10))}` : ""}
+                          {p.startDate ? tr(`از ${fmtDate(p.startDate.slice(0, 10))}`, `From ${fmtDate(p.startDate.slice(0, 10))}`) : ""}
                           {p.startDate && p.endDate ? " " : ""}
-                          {p.endDate ? `تا ${fmtDate(p.endDate.slice(0, 10))}` : ""}
+                          {p.endDate ? tr(`تا ${fmtDate(p.endDate.slice(0, 10))}`, `until ${fmtDate(p.endDate.slice(0, 10))}`) : ""}
                         </span>
                       )}
                     </>
@@ -185,10 +186,10 @@ export default function MentorStudentPage() {
                   end={<MentorChip tone={st.tone}>{st.text}</MentorChip>}
                   below={showProgress || p.status !== "DRAFT" ? (
                     <>
-                      {showProgress && p.progress.hidden && <span className="mentor-muted">{PRIVATE_TEXT}</span>}
+                      {showProgress && p.progress.hidden && <span className="mentor-muted">{privateText()}</span>}
                       {showProgress && !p.progress.hidden && (
                         <div className="mentor-progress" style={{ marginTop: 0 }}>
-                          <MentorDashBar rate={p.progress.rate} label={`پیشرفت ${p.title}`} />
+                          <MentorDashBar rate={p.progress.rate} label={tr(`پیشرفت ${p.title}`, `Progress on ${p.title}`)} />
                           <span className="mentor-progress-value">{pct(p.progress.rate)}</span>
                         </div>
                       )}
@@ -214,22 +215,22 @@ export default function MentorStudentPage() {
         {tab === "about" && (
           <>
             {manage.data && manage.data.intakeAnswers.length > 0 && (
-              <MentorSection title="جواب‌های اول کار">
+              <MentorSection title={tr("جواب‌های اول کار", "Answers from the start")}>
                 <MentorIntakeAnswers answers={manage.data.intakeAnswers} />
               </MentorSection>
             )}
-            <MentorSection title="چیزهایی که با تو به اشتراک گذاشته">
+            <MentorSection title={tr("چیزهایی که با تو به اشتراک گذاشته", "What they share with you")}>
               <MentorStudentPrivacy privacy={data.privacy} modules={data.modules} scheduleHidden={data.routine.scheduleHidden} />
             </MentorSection>
-            <MentorSection title="بازخوردهای اخیر" icon={ic(MessageSquareText, MI.section)}>
+            <MentorSection title={tr("بازخوردهای اخیر", "Recent feedback")} icon={ic(MessageSquareText, MI.section)}>
               {data.recentFeedback.length === 0 ? (
-                <MentorEmpty>هنوز بازخوردی ننوشتی</MentorEmpty>
+                <MentorEmpty>{tr("هنوز بازخوردی ننوشتی", "You have not written any feedback yet")}</MentorEmpty>
               ) : data.recentFeedback.map((f) => (
                 <div key={f.id} className="mentor-feedback">
                   <div className="mentor-feedback-head">
                     {f.itemTitle && <span className="mentor-feedback-ref">{f.itemTitle}</span>}
                     <span>{fmtRelative(f.createdAt)}</span>
-                    <span>{f.readAt ? "خوانده شد" : "هنوز نخونده"}</span>
+                    <span>{f.readAt ? tr("خوانده شد", "Read") : tr("هنوز نخونده", "Not read yet")}</span>
                   </div>
                   <p className="mentor-feedback-body">{f.body}</p>
                 </div>
@@ -255,7 +256,7 @@ export default function MentorStudentPage() {
   } else body = null;
 
   return (
-    <MentorDashShell title="" back={{ href: "/mentor/students", label: "شاگردها" }}>
+    <MentorDashShell title="" back={{ href: "/mentor/students", label: tr("شاگردها", "Students") }}>
       {body}
     </MentorDashShell>
   );

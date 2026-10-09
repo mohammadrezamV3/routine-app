@@ -8,6 +8,7 @@ import { getEventThemeState, setEventThemeState } from "@/lib/eventThemeServer";
 import { prisma } from "@/lib/prisma";
 import { EVENT_DISCOUNT_KEY, eventDiscountSchedule } from "@/lib/eventDiscount";
 import { ensureEventDiscounts, getEventDiscountState, setEventDiscountState } from "@/lib/eventDiscountServer";
+import { tr } from "@/lib/i18n";
 
 export const dynamic = "force-dynamic";
 
@@ -61,13 +62,13 @@ export async function POST(req: NextRequest) {
   const guard = await requireAdmin("settings");
   if (!guard.ok) return guard.response;
   const body = await req.json().catch(() => null);
-  if (!body || typeof body !== "object") return NextResponse.json({ error: "ورودی نامعتبر است" }, { status: 400 });
+  if (!body || typeof body !== "object") return NextResponse.json({ error: tr("ورودی نامعتبر است", "Invalid input") }, { status: 400 });
 
   invalidateAppSettingsCache();
   const before = await getEventThemeState();
 
   if (body.action === "discount_enabled") {
-    if (typeof body.enabled !== "boolean") return NextResponse.json({ error: "ورودی نامعتبر است" }, { status: 400 });
+    if (typeof body.enabled !== "boolean") return NextResponse.json({ error: tr("ورودی نامعتبر است", "Invalid input") }, { status: 400 });
     const ds = await getEventDiscountState();
     await setEventDiscountState({ ...ds, enabled: body.enabled });
     await writeAuditLog(guard.userId, "setting.event_discount", "AppSetting", EVENT_DISCOUNT_KEY, {
@@ -81,11 +82,11 @@ export async function POST(req: NextRequest) {
     const key = typeof body.key === "string" ? body.key : "";
     const ds = await getEventDiscountState();
     const code = Object.prototype.hasOwnProperty.call(ds.generated, key) ? ds.generated[key] : null;
-    if (!code) return NextResponse.json({ error: "کد این مناسبت پیدا نشد" }, { status: 404 });
+    if (!code) return NextResponse.json({ error: tr("کد این مناسبت پیدا نشد", "No code found for this event") }, { status: 404 });
     const row = await prisma.discountCode.findUnique({ where: { code }, select: { id: true } });
     if (body.action === "discount_set_active") {
-      if (typeof body.active !== "boolean") return NextResponse.json({ error: "ورودی نامعتبر است" }, { status: 400 });
-      if (!row) return NextResponse.json({ error: "کد پیدا نشد (قبلا حذف شده)" }, { status: 404 });
+      if (typeof body.active !== "boolean") return NextResponse.json({ error: tr("ورودی نامعتبر است", "Invalid input") }, { status: 400 });
+      if (!row) return NextResponse.json({ error: tr("کد پیدا نشد (قبلا حذف شده)", "Code not found (already deleted)") }, { status: 404 });
       await prisma.discountCode.update({ where: { id: row.id }, data: { active: body.active } });
       await writeAuditLog(guard.userId, "setting.event_discount", "DiscountCode", row.id, { action: "set_active", key, code, active: body.active });
     } else {
@@ -100,7 +101,7 @@ export async function POST(req: NextRequest) {
     }
   } else if (body.action === "release") {
     const theme = eventThemeById(typeof body.id === "string" ? body.id : null);
-    if (!theme) return NextResponse.json({ error: "تم پیدا نشد" }, { status: 404 });
+    if (!theme) return NextResponse.json({ error: tr("تم پیدا نشد", "Theme not found") }, { status: 404 });
     const next = buildReleaseState(theme, new Date());
     await setEventThemeState(next);
     await writeAuditLog(guard.userId, "setting.event_theme", "AppSetting", EVENT_THEME_KEY, {
@@ -112,7 +113,7 @@ export async function POST(req: NextRequest) {
       action: "reset", from: before.active?.id ?? null,
     });
   } else {
-    return NextResponse.json({ error: "ورودی نامعتبر است" }, { status: 400 });
+    return NextResponse.json({ error: tr("ورودی نامعتبر است", "Invalid input") }, { status: 400 });
   }
 
   invalidateAppSettingsCache();

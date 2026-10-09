@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import { tr } from "@/lib/i18n";
 import "./blog.css";
 
 export type BlogTocItem = { id: string; text: string };
@@ -35,11 +36,11 @@ export function BlogToc({ items }: { items: BlogTocItem[] }) {
   return (
     <>
       <details className="blog-toc-mobile">
-        <summary>فهرست مطالب</summary>
+        <summary>{tr("فهرست مطالب", "Contents")}</summary>
         {list}
       </details>
-      <aside className="blog-toc-side" aria-label="فهرست مطالب">
-        <div className="blog-toc-title">فهرست مطالب</div>
+      <aside className="blog-toc-side" aria-label={tr("فهرست مطالب", "Contents")}>
+        <div className="blog-toc-title">{tr("فهرست مطالب", "Contents")}</div>
         {list}
       </aside>
     </>

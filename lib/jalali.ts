@@ -3,6 +3,8 @@
 // یکسان با نسخه قبلی داشته باشیم؛ اگر بعدا دقت بیشتر لازم شد، این فایل
 // تنها جایی‌ست که باید عوض شود.
 
+import { isEn } from "./i18n";
+
 export type JalaliDate = [number, number, number]; // [year, month, day]
 
 export function pad(n: number): string {
@@ -85,6 +87,38 @@ export const FA_WEEKDAY_SHORT = ["ی", "د", "س", "چ", "پ", "ج", "ش"];
 
 // ترتیب هفته ایرانی: شنبه..جمعه به مقادیر JS getDay
 export const CAL_WEEK_ORDER = [6, 0, 1, 2, 3, 4, 5];
+
+// نسخه‌ی انگلیسی (lib/i18n.ts) — تقویم همچنان جلالیه، فقط اسم‌ها انگلیسی می‌شن
+export const J_MONTHS_EN = [
+  "Farvardin", "Ordibehesht", "Khordad", "Tir", "Mordad", "Shahrivar",
+  "Mehr", "Aban", "Azar", "Dey", "Bahman", "Esfand",
+];
+export const EN_WEEKDAY = ["Sunday", "Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday"];
+export const EN_WEEKDAY_SHORT = ["Su", "Mo", "Tu", "We", "Th", "Fr", "Sa"];
+
+/** اسم ماه جلالی به زبان جاری؛ index صفرمبنا (مثل J_MONTHS) */
+export function jMonthName(index0: number): string {
+  return (isEn() ? J_MONTHS_EN : J_MONTHS)[index0] ?? "";
+}
+/** همه‌ی اسم‌های ماه به زبان جاری (جایگزین J_MONTHS در رندر) */
+export function jMonths(): string[] {
+  return isEn() ? J_MONTHS_EN : J_MONTHS;
+}
+/** اسم روز هفته به زبان جاری؛ index = JS getDay() (مثل FA_WEEKDAY) */
+export function weekdayName(jsDay: number): string {
+  return (isEn() ? EN_WEEKDAY : FA_WEEKDAY)[jsDay] ?? "";
+}
+/** اسم کوتاه روز هفته به زبان جاری؛ index = JS getDay() (مثل FA_WEEKDAY_SHORT) */
+export function weekdayShort(jsDay: number): string {
+  return (isEn() ? EN_WEEKDAY_SHORT : FA_WEEKDAY_SHORT)[jsDay] ?? "";
+}
+/** همه‌ی اسم‌های روز هفته به زبان جاری (جایگزین FA_WEEKDAY در رندر) */
+export function weekdays(): string[] {
+  return isEn() ? EN_WEEKDAY : FA_WEEKDAY;
+}
+export function weekdaysShort(): string[] {
+  return isEn() ? EN_WEEKDAY_SHORT : FA_WEEKDAY_SHORT;
+}
 
 export function faNum(n: number | string): string {
   return String(n);

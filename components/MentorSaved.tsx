@@ -6,8 +6,9 @@ import { createPortal } from "react-dom";
 import { AnimatePresence, motion } from "framer-motion";
 import { Bookmark } from "lucide-react";
 import type { MentorCard as MentorCardData, SavedMentorsResponse } from "@/lib/mentorTypes";
-import { NETWORK_ERROR, readApiError } from "@/lib/mentorFormat";
+import { networkError, readApiError } from "@/lib/mentorFormat";
 import { M_DUR, mT } from "./MentorMotion";
+import { tr } from "@/lib/i18n";
 
 // «ذخیره‌شده‌ها» (نشانک منتور) — یک منبع حالت برای همه‌ی کارت‌ها و پروفایل،
 // تا نشانک یک منتور در ویترین، نتیجه‌ها و تب ذخیره‌شده‌ها هم‌زمان عوض شود.
@@ -52,13 +53,13 @@ export function SavedMentorsProvider({ children, initialSaved }: { children: Rea
     setError(null);
     fetch("/api/mentors/saved", { cache: "no-store" })
       .then(async (r) => {
-        if (!r.ok) { setError(await readApiError(r, "ذخیره‌شده‌ها دریافت نشد؛ دوباره تلاش کن")); setCards((c) => c ?? []); return; }
+        if (!r.ok) { setError(await readApiError(r, tr("ذخیره‌شده‌ها دریافت نشد؛ دوباره تلاش کن", "Could not load your saved mentors. Try again."))); setCards((c) => c ?? []); return; }
         const d: SavedMentorsResponse = await r.json();
         setCards(d.mentors);
         setIds(new Set(d.mentors.map((m) => m.userId)));
         setMax(d.max);
       })
-      .catch(() => { setError(NETWORK_ERROR); setCards((c) => c ?? []); });
+      .catch(() => { setError(networkError()); setCards((c) => c ?? []); });
   }, []);
   useEffect(() => { reload(); }, [reload]);
 
@@ -80,15 +81,15 @@ export function SavedMentorsProvider({ children, initialSaved }: { children: Rea
       const res = await fetch(`/api/mentors/${encodeURIComponent(id)}/saved`, { method: wasSaved ? "DELETE" : "PUT" });
       if (!res.ok) {
         revert();
-        showToast(await readApiError(res, wasSaved ? "از ذخیره‌شده‌ها برداشته نشد؛ دوباره تلاش کن" : "ذخیره نشد؛ دوباره تلاش کن"));
+        showToast(await readApiError(res, wasSaved ? tr("از ذخیره‌شده‌ها برداشته نشد؛ دوباره تلاش کن", "Could not remove it from saved. Try again.") : tr("ذخیره نشد؛ دوباره تلاش کن", "Could not save. Try again.")));
         return;
       }
-      showToast(wasSaved ? "از ذخیره‌شده‌ها برداشته شد" : "به ذخیره‌شده‌ها اضافه شد");
+      showToast(wasSaved ? tr("از ذخیره‌شده‌ها برداشته شد", "Removed from saved") : tr("به ذخیره‌شده‌ها اضافه شد", "Added to saved"));
       // کارت کامل برای تب ذخیره‌شده‌ها وقتی از پروفایل ذخیره شده
       if (!wasSaved && !("name" in mentor)) reload();
     } catch {
       revert();
-      showToast(NETWORK_ERROR);
+      showToast(networkError());
     } finally {
       setPending((p) => { const n = new Set(p); n.delete(id); return n; });
     }
@@ -134,14 +135,14 @@ export function MentorSaveButton({ mentor, size = 16, className }: { mentor: Men
   const ctx = useSavedMentors();
   if (!ctx) return null;
   const saved = ctx.isSaved(mentor.userId);
-  const name = "name" in mentor && mentor.name ? mentor.name : "این مربی";
+  const name = "name" in mentor && mentor.name ? mentor.name : tr("این مربی", "This mentor");
   return (
     <button
       type="button"
       className={`trade-icon-btn m-press mentor-save-btn${saved ? " is-on" : ""}${className ? ` ${className}` : ""}`}
       aria-pressed={saved}
-      aria-label={saved ? `برداشتن ${name} از ذخیره‌شده‌ها` : `ذخیره‌ی ${name}`}
-      title={saved ? "برداشتن از ذخیره‌شده‌ها" : "ذخیره برای بعد"}
+      aria-label={saved ? tr(`برداشتن ${name} از ذخیره‌شده‌ها`, `Remove ${name} from saved`) : tr(`ذخیره‌ی ${name}`, `Save ${name}`)}
+      title={saved ? tr("برداشتن از ذخیره‌شده‌ها", "Remove from saved") : tr("ذخیره برای بعد", "Save for later")}
       onClick={(e) => { e.preventDefault(); e.stopPropagation(); ctx.toggle(mentor as MentorCardData); }}
     >
       <motion.span

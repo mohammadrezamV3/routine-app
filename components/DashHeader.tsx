@@ -2,15 +2,16 @@
 
 import { motion } from "framer-motion";
 import { DashProgressCircle } from "./DashProgressCircle";
+import { tr, isEn } from "@/lib/i18n";
 
 // هدر صفحه‌ی داشبورد — عنوان + زیرعنوان، به‌همراه حلقه‌ی پیشرفت امروز که
 // دورترین عنصر سمت راست صفحه‌ست (دقیقا طبق طرح). دیگه کنترل «نمای جدول/
 // نمای لیست» بالای این هدر نیست، پس صفحه مستقیما از همین‌جا شروع می‌شه.
 export function DashHeader({
   progress = 75,
-  title = "روتین من",
-  subtitle = "برنامه‌های روزانه خود را مدیریت و پیگیری کنید.",
-  progressLabel = "پیشرفت امروز",
+  title = tr("روتین من", "My Routine"),
+  subtitle = tr("برنامه‌های روزانه خود را مدیریت و پیگیری کنید.", "Manage and track your daily programs."),
+  progressLabel = tr("پیشرفت امروز", "Today's progress"),
 }: {
   progress?: number;
   title?: string;
@@ -22,7 +23,7 @@ export function DashHeader({
       initial={{ opacity: 0, y: -8 }}
       animate={{ opacity: 1, y: 0 }}
       transition={{ duration: 0.4, ease: "easeOut" }}
-      className="flex flex-row items-center justify-start gap-3 text-right sm:items-start sm:gap-8"
+      className="flex flex-row items-center justify-start gap-3 text-start sm:items-start sm:gap-8"
     >
       <div className="flex flex-col items-center gap-1">
         <span className="sm:hidden">

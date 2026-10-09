@@ -1,6 +1,7 @@
 import type { Prisma } from "@prisma/client";
 import { prisma } from "@/lib/prisma";
 import { faNum } from "@/lib/jalali";
+import { tr } from "@/lib/i18n";
 import { DISCOVERABLE_PROFILE_WHERE, MENTOR_CARD_INCLUDE, blockedUserIds, buildMentorCards, isUniqueViolation, usersBlockEachOther, type MentorCard } from "@/lib/mentorServer";
 
 // منتورهای ذخیره‌شده (نشانک) — کاربر چند منتور را برای تصمیم بعدی کنار می‌گذارد.
@@ -12,6 +13,9 @@ import { DISCOVERABLE_PROFILE_WHERE, MENTOR_CARD_INCLUDE, blockedUserIds, buildM
 
 export const SAVED_MENTORS_MAX = 10;
 export const SAVED_LIMIT_MSG = `حداکثر ${faNum(SAVED_MENTORS_MAX)} مربی ذخیره می‌شود؛ برای ذخیره‌ی این مربی، یکی از ذخیره‌شده‌ها را بردار`;
+export function savedLimitMsg(): string {
+  return tr(SAVED_LIMIT_MSG, `You can save up to ${faNum(SAVED_MENTORS_MAX)} mentors. Remove one to save this mentor`);
+}
 
 function visibleSavedWhere(userId: string, blocked: string[]): Prisma.SavedMentorWhereInput {
   return {
@@ -32,7 +36,7 @@ export type SaveResult =
 /** ذخیره (بی‌اثر اگر از قبل ذخیره شده باشد) */
 export async function saveMentor(userId: string, mentorUserId: string): Promise<SaveResult> {
   if (typeof mentorUserId !== "string" || !mentorUserId || mentorUserId.length > 64) return { ok: false, status: 404, error: "not found" };
-  if (mentorUserId === userId) return { ok: false, status: 400, error: "پروفایل خودت را نمی‌توانی ذخیره کنی" };
+  if (mentorUserId === userId) return { ok: false, status: 400, error: tr("پروفایل خودت را نمی‌توانی ذخیره کنی", "You can't save your own profile") };
 
   const target = await prisma.mentorProfile.findFirst({ where: { ...DISCOVERABLE_PROFILE_WHERE, userId: mentorUserId }, select: { id: true } });
   if (!target || (await usersBlockEachOther(userId, mentorUserId))) return { ok: false, status: 404, error: "not found" };
@@ -41,7 +45,7 @@ export async function saveMentor(userId: string, mentorUserId: string): Promise<
   const existing = await prisma.savedMentor.findUnique({ where: { userId_mentorUserId: { userId, mentorUserId } }, select: { id: true } });
   if (existing) return { ok: true, saved: true, count: await countSavedMentors(userId, blocked) };
 
-  if ((await countSavedMentors(userId, blocked)) >= SAVED_MENTORS_MAX) return { ok: false, status: 409, error: SAVED_LIMIT_MSG };
+  if ((await countSavedMentors(userId, blocked)) >= SAVED_MENTORS_MAX) return { ok: false, status: 409, error: savedLimitMsg() };
 
   let createdId: string;
   try {
@@ -54,7 +58,7 @@ export async function saveMentor(userId: string, mentorUserId: string): Promise<
   const count = await countSavedMentors(userId, blocked);
   if (count > SAVED_MENTORS_MAX) {
     await prisma.savedMentor.deleteMany({ where: { id: createdId, userId } });
-    return { ok: false, status: 409, error: SAVED_LIMIT_MSG };
+    return { ok: false, status: 409, error: savedLimitMsg() };
   }
   return { ok: true, saved: true, count };
 }

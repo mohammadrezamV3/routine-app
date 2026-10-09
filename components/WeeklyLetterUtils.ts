@@ -1,7 +1,8 @@
 // منطق خالص UI هفته‌نامه (بدون React، تست‌دار): آفست هفته، گروه‌بندی ماه
 // جلالی، متن انسانی جزئیات هر روز، نرمال‌سازی داده‌ی ناقص. هیچ import سروری
 // نداره تا کلاینت امن باشه.
-import { J_MONTHS, toJalali } from "@/lib/jalali";
+import { jMonthName, toJalali } from "@/lib/jalali";
+import { tr } from "@/lib/i18n";
 import { ANALYSIS_DOMAINS, ANALYSIS_DOMAIN_LABELS, type AnalysisDomain, type DayCell, type DayDetails, type LetterSummary } from "@/lib/weeklyAnalysis/types";
 import type { LetterDomain, WeeklyLetterData } from "@/lib/weeklyLetter/types";
 import { radarHasData, type RadarAxis } from "@/lib/weeklyRadar";
@@ -44,7 +45,7 @@ export function jalaliParts(iso: string): { y: number; m: number; d: number } {
 /** «4 مهر» */
 export function jalaliDayMonth(iso: string): string {
   const { m, d } = jalaliParts(iso);
-  return `${d} ${J_MONTHS[m - 1]}`;
+  return `${d} ${jMonthName(m - 1)}`;
 }
 
 /** سال جلالی روز آخر هفته، مثلا 1405 */
@@ -62,7 +63,7 @@ export function groupByJalaliMonth(letters: LetterSummary[]): MonthGroup<LetterS
     const { y, m } = jalaliParts(l.weekStart);
     const key = `${y}-${String(m).padStart(2, "0")}`;
     let g = groups.find((x) => x.key === key);
-    if (!g) { g = { key, label: `${J_MONTHS[m - 1]} ${y}`, items: [] }; groups.push(g); }
+    if (!g) { g = { key, label: `${jMonthName(m - 1)} ${y}`, items: [] }; groups.push(g); }
     g.items.push(l);
   }
   return groups;
@@ -137,13 +138,24 @@ export function fmtMoney(net: number, currency: string | null): string {
 
 export type DayRow = { domain: AnalysisDomain; text: string; sub?: string; tone?: "good" | "bad" | "neutral"; ratio?: number };
 
-const FITNESS_TEXT: Record<NonNullable<DayDetails["fitness"]>["status"], { text: string; tone: "good" | "bad" | "neutral" }> = {
-  done: { text: "تمرین طبق برنامه انجام شد", tone: "good" },
-  extra: { text: "تمرین اضافه در روز غیرباشگاه", tone: "good" },
-  rest: { text: "روز استراحت برنامه", tone: "neutral" },
-  missed: { text: "تمرین انجام نشد", tone: "bad" },
-  partial: { text: "تمرین نیمه‌کاره موند", tone: "neutral" },
+const FITNESS_TONE: Record<NonNullable<DayDetails["fitness"]>["status"], "good" | "bad" | "neutral"> = {
+  done: "good",
+  extra: "good",
+  rest: "neutral",
+  missed: "bad",
+  partial: "neutral",
 };
+
+function fitnessText(status: NonNullable<DayDetails["fitness"]>["status"]): string {
+  switch (status) {
+    case "done": return tr("تمرین طبق برنامه انجام شد", "Workout done as planned");
+    case "extra": return tr("تمرین اضافه در روز غیرباشگاه", "Extra workout on a non-gym day");
+    case "missed": return tr("تمرین انجام نشد", "Workout missed");
+    case "partial": return tr("تمرین نیمه‌کاره موند", "Workout left unfinished");
+    case "rest":
+    default: return tr("روز استراحت برنامه", "Planned rest day");
+  }
+}
 
 /** هر کلید DayDetails → یک ردیف متن فارسی؛ ترتیب ثابت دامنه‌ها. */
 export function dayRows(details: DayDetails | undefined | null, isToday = false): DayRow[] {
@@ -152,7 +164,7 @@ export function dayRows(details: DayDetails | undefined | null, isToday = false)
   if (d.routine && d.routine.total > 0) {
     rows.push({
       domain: "routine",
-      text: `${d.routine.done} از ${d.routine.total} برنامه انجام شد`,
+      text: tr(`${d.routine.done} از ${d.routine.total} برنامه انجام شد`, `${d.routine.done} of ${d.routine.total} items done`),
       ratio: d.routine.done / d.routine.total,
       tone: d.routine.done >= d.routine.total ? "good" : "neutral",
     });
@@ -160,31 +172,31 @@ export function dayRows(details: DayDetails | undefined | null, isToday = false)
   if (d.sleep) {
     const s = d.sleep;
     const parts: string[] = [];
-    if (s.sleptAt && s.wokeAt) parts.push(`${s.sleptAt} تا ${s.wokeAt}`);
-    if (s.quality !== null && s.quality !== undefined) parts.push(`کیفیت ${s.quality} از 5`);
+    if (s.sleptAt && s.wokeAt) parts.push(`${s.sleptAt} ${tr("تا", "to")} ${s.wokeAt}`);
+    if (s.quality !== null && s.quality !== undefined) parts.push(tr(`کیفیت ${s.quality} از 5`, `quality ${s.quality} out of 5`));
     rows.push({
       domain: "sleep",
-      text: s.hours !== null && s.hours !== undefined ? `${fmtNum(s.hours)} ساعت خواب` : "خواب ثبت شد",
+      text: s.hours !== null && s.hours !== undefined ? tr(`${fmtNum(s.hours)} ساعت خواب`, `${fmtNum(s.hours)} hours of sleep`) : tr("خواب ثبت شد", "Sleep logged"),
       sub: parts.length ? parts.join(" · ") : undefined,
       tone: s.hours !== null && s.hours !== undefined ? (s.hours >= 7 ? "good" : s.hours < 6 ? "bad" : "neutral") : "neutral",
     });
   }
   if (d.fitness) {
-    const f = FITNESS_TEXT[d.fitness.status] ?? FITNESS_TEXT.rest;
+    const tone = FITNESS_TONE[d.fitness.status] ?? FITNESS_TONE.rest;
     // «امروز» فقط وقتی خود روز، امروز باشه (روز گذشته: «تمرین انجام نشد»)
-    rows.push({ domain: "fitness", text: isToday && d.fitness.status === "missed" ? "تمرین امروز انجام نشد" : f.text, tone: f.tone });
+    rows.push({ domain: "fitness", text: isToday && d.fitness.status === "missed" ? tr("تمرین امروز انجام نشد", "Today's workout was not done") : fitnessText(d.fitness.status), tone });
   }
   if (d.nutrition) {
     const n = d.nutrition;
     const parts: string[] = [];
-    if (n.protein !== null && n.protein !== undefined) parts.push(`پروتئین ${fmtInt(n.protein)} گرم`);
+    if (n.protein !== null && n.protein !== undefined) parts.push(tr(`پروتئین ${fmtInt(n.protein)} گرم`, `protein ${fmtInt(n.protein)} g`));
     let tone: DayRow["tone"] = "neutral";
-    let text = `${fmtInt(n.kcal)} کالری`;
+    let text = tr(`${fmtInt(n.kcal)} کالری`, `${fmtInt(n.kcal)} kcal`);
     if (n.target) {
-      text = `${fmtInt(n.kcal)} از ${fmtInt(n.target)} کالری`;
+      text = tr(`${fmtInt(n.kcal)} از ${fmtInt(n.target)} کالری`, `${fmtInt(n.kcal)} of ${fmtInt(n.target)} kcal`);
       const within = Math.abs(n.kcal - n.target) / n.target <= 0.1;
       tone = within ? "good" : "bad";
-      parts.unshift(within ? "در محدوده‌ی هدف" : n.kcal > n.target ? "بالای هدف" : "زیر هدف");
+      parts.unshift(within ? tr("در محدوده‌ی هدف", "within target") : n.kcal > n.target ? tr("بالای هدف", "above target") : tr("زیر هدف", "below target"));
     }
     rows.push({ domain: "nutrition", text, sub: parts.length ? parts.join(" · ") : undefined, tone });
   }
@@ -192,22 +204,22 @@ export function dayRows(details: DayDetails | undefined | null, isToday = false)
     const t = d.trading;
     rows.push({
       domain: "trading",
-      text: `${t.count} معامله: ${t.wins} برد و ${t.losses} باخت`,
+      text: tr(`${t.count} معامله: ${t.wins} برد و ${t.losses} باخت`, `${t.count} ${t.count === 1 ? "trade" : "trades"}: ${t.wins} won and ${t.losses} lost`),
       // جداسازی LTR تا علامت +/− و نماد ارز در متن راست‌به‌چپ جابه‌جا نشن
-      sub: t.net !== null && t.net !== undefined ? `نتیجه \u2066${fmtMoney(t.net, t.currency)}\u2069` : undefined,
+      sub: t.net !== null && t.net !== undefined ? `${tr("نتیجه", "Result")} \u2066${fmtMoney(t.net, t.currency)}\u2069` : undefined,
       tone: t.net === null || t.net === undefined ? "neutral" : t.net > 0 ? "good" : t.net < 0 ? "bad" : "neutral",
     });
   }
   if (d.tasks && (d.tasks.due > 0 || d.tasks.done > 0)) {
     rows.push({
       domain: "tasks",
-      text: `${d.tasks.done} از ${d.tasks.due} کار انجام شد`,
+      text: tr(`${d.tasks.done} از ${d.tasks.due} کار انجام شد`, `${d.tasks.done} of ${d.tasks.due} tasks done`),
       ratio: d.tasks.due > 0 ? Math.min(1, d.tasks.done / d.tasks.due) : undefined,
       tone: d.tasks.due > 0 && d.tasks.done >= d.tasks.due ? "good" : "neutral",
     });
   }
   if (d.learning && d.learning.steps > 0) {
-    rows.push({ domain: "learning", text: `${d.learning.steps} قدم یادگیری`, tone: "good" });
+    rows.push({ domain: "learning", text: tr(`${d.learning.steps} قدم یادگیری`, `${d.learning.steps} learning ${d.learning.steps === 1 ? "step" : "steps"}`), tone: "good" });
   }
   return rows;
 }

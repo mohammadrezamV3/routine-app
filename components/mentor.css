@@ -1764,3 +1764,15 @@ body[data-theme="light"] .mv2-pg-item-main, body:not([data-theme="light"]) .mv2-
   .mv2-task-body{ flex:0 1 560px; }
   .mv2-task-end{ margin-inline-start:var(--m-4, 16px); }
 }
+
+/* ── انگلیسی / چپ‌به‌راست ───────────────────────────────────────
+   در فارسی هیچ‌کدام از این قانون‌ها اثری ندارد. */
+html[dir="ltr"] .mentor-pop,
+html[dir="ltr"] .mentor-toast,
+html[dir="ltr"] .mentor-preview-line{ direction:ltr; }
+/* فلش‌های جهت‌دار (dir-flip) هنگام هاور نباید transform را از دست بدهند */
+@media (hover:hover){
+  html[dir="ltr"] .mentor-page .trade-back-link:hover svg.dir-flip,
+  html[dir="ltr"] .mentor-page .rp-card:hover .rp-card-arrow.dir-flip,
+  html[dir="ltr"] .mentor-page a.account-row2:hover .account-row2-chevron.dir-flip{ transform:scaleX(-1); }
+}

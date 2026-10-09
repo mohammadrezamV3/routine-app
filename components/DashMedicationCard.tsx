@@ -13,12 +13,14 @@ import {
   Medication, MAX_MEDICATIONS, doseIntervalHours, doseMinutesOfDay, getMedications,
   medicationDaysLeft, minutesToDoseTime, setMedications, setMedicationsChecked,
 } from "@/lib/medications";
+import { tr, isEn } from "@/lib/i18n";
 
 const todayIso = isoLocal(new Date());
 
 function intervalLabel(med: Medication): string {
   const h = doseIntervalHours(med);
-  return `هر ${h % 1 === 0 ? h : h.toFixed(1)} ساعت`;
+  const n = h % 1 === 0 ? h : h.toFixed(1);
+  return tr(`هر ${n} ساعت`, `Every ${n} ${Number(h) === 1 ? "hour" : "hours"}`);
 }
 
 // «یادآوری دارو» — کارت داشبورد روتین. کاربر اسم دارو، تعداد دفعات در روز
@@ -31,7 +33,7 @@ export function DashMedicationCard({ delay }: { delay?: number }) {
   const [formOpen, setFormOpen] = useState(false);
   const [editing, setEditing] = useState<Medication | null>(null);
   const [menuFor, setMenuFor] = useState<string | null>(null);
-  const [menuPos, setMenuPos] = useState<{ top: number; right: number } | null>(null);
+  const [menuPos, setMenuPos] = useState<{ top: number; x: number } | null>(null);
   const menuRef = useRef<HTMLDivElement>(null);
   // خروج نرم منو (حرکت مشترک menu-motion)
   const menuPresence = useMenuPresence(!!menuFor);
@@ -81,7 +83,7 @@ export function DashMedicationCard({ delay }: { delay?: number }) {
   function openMenu(e: React.MouseEvent, id: string) {
     if (menuFor === id) { setMenuFor(null); return; }
     const r = (e.currentTarget as HTMLElement).getBoundingClientRect();
-    setMenuPos({ top: r.bottom + 6, right: window.innerWidth - r.right });
+    setMenuPos({ top: r.bottom + 6, x: isEn() ? r.left : window.innerWidth - r.right });
     setMenuFor(id);
   }
 
@@ -94,7 +96,7 @@ export function DashMedicationCard({ delay }: { delay?: number }) {
         <div className="flex items-center justify-between gap-2">
           <h2 className="flex items-center gap-1.5 text-[13px] font-bold text-dash-text sm:text-[15px]">
             <Tablets className="h-4 w-4 text-dash-green sm:h-[18px] sm:w-[18px]" />
-            یادآوری دارو
+            {tr("یادآوری دارو", "Medication reminders")}
           </h2>
           {canAdd && (
             <button
@@ -103,17 +105,17 @@ export function DashMedicationCard({ delay }: { delay?: number }) {
               className="flex items-center gap-1 bg-transparent p-0 text-[11.5px] font-semibold text-dash-green transition hover:brightness-110 sm:gap-1.5 sm:text-[13px]"
             >
               <Plus className="h-[15px] w-[15px] sm:h-[17px] sm:w-[17px]" />
-              افزودن
+              {tr("افزودن", "Add")}
             </button>
           )}
         </div>
 
         <div className="no-scrollbar mt-3 flex max-h-[300px] flex-col gap-2 overflow-y-auto sm:mt-4 sm:max-h-[360px] sm:gap-2.5">
           {meds === null ? (
-            <div className="text-[11px] text-dash-muted sm:text-[12px] is-loading">در حال بارگذاری…</div>
+            <div className="text-[11px] text-dash-muted sm:text-[12px] is-loading">{tr("در حال بارگذاری…", "Loading…")}</div>
           ) : list.length === 0 ? (
             <div className="text-[11px] leading-relaxed text-dash-muted sm:text-[12px]">
-              دارویی ثبت نشده. با «افزودن»، اسم دارو و تعداد دفعاتش در روز رو بده تا سر هر نوبت بهت اطلاع بدیم.
+              {tr("دارویی ثبت نشده. با «افزودن»، اسم دارو و تعداد دفعاتش در روز رو بده تا سر هر نوبت بهت اطلاع بدیم.", "No medications yet. Tap \"Add\" and enter the medication name and how many times a day, and we will notify you at each dose.")}
             </div>
           ) : (
             list.map((m) => {
@@ -125,7 +127,7 @@ export function DashMedicationCard({ delay }: { delay?: number }) {
                 <div
                   key={m.id}
                   className={cn(
-                    "med-row flex items-center gap-2 rounded-2xl border border-dash-border px-3 py-2.5 text-right sm:gap-2.5 sm:px-3.5 sm:py-3",
+                    "med-row flex items-center gap-2 rounded-2xl border border-dash-border px-3 py-2.5 text-start sm:gap-2.5 sm:px-3.5 sm:py-3",
                     finished && "opacity-55"
                   )}
                 >
@@ -133,7 +135,7 @@ export function DashMedicationCard({ delay }: { delay?: number }) {
                   <div className="flex shrink-0 items-center">
                     <button
                       type="button"
-                      aria-label={`گزینه‌های ${m.name}`}
+                      aria-label={tr(`گزینه‌های ${m.name}`, `Options for ${m.name}`)}
                       onClick={(e) => openMenu(e, m.id)}
                       className="flex h-6 w-6 items-center justify-center rounded-full bg-transparent p-0 text-dash-muted transition hover:text-dash-text"
                     >
@@ -149,14 +151,14 @@ export function DashMedicationCard({ delay }: { delay?: number }) {
                     <div className="mt-1 truncate text-[9.5px] text-dash-muted sm:text-[11px]">
                       <span className="mono" dir="ltr">{times.join(" · ")}</span>
                       <span className="mx-1.5">·</span>
-                      {finished ? "دوره تموم شده" : `${daysLeft} روز مونده`}
+                      {finished ? tr("دوره تموم شده", "Course finished") : tr(`${daysLeft} روز مونده`, `${daysLeft} ${daysLeft === 1 ? "day" : "days"} left`)}
                     </div>
                     {m.note && <div className="mt-0.5 truncate text-[9.5px] text-dash-muted sm:text-[10.5px]">{m.note}</div>}
                   </div>
 
                   <span
                     role="button"
-                    aria-label={notifyOn ? `خاموش‌کردن یادآوری ${m.name}` : `روشن‌کردن یادآوری ${m.name}`}
+                    aria-label={notifyOn ? tr(`خاموش‌کردن یادآوری ${m.name}`, `Turn off reminder for ${m.name}`) : tr(`روشن‌کردن یادآوری ${m.name}`, `Turn on reminder for ${m.name}`)}
                     onClick={() => toggleNotify(m)}
                     className={cn(
                       "flex h-7 w-7 shrink-0 cursor-pointer items-center justify-center rounded-xl transition hover:brightness-125 sm:h-9 sm:w-9",
@@ -177,7 +179,7 @@ export function DashMedicationCard({ delay }: { delay?: number }) {
         <div
           ref={menuRef}
           data-state={menuPresence.state}
-          style={{ top: menuPos.top, right: menuPos.right }}
+          style={{ top: menuPos.top, [isEn() ? "left" : "right"]: menuPos.x }}
           className="mm-menu dash-context-menu fixed z-[70] min-w-[140px] overflow-hidden rounded-2xl border border-dash-border p-1.5 shadow-[0_16px_40px_rgba(0,0,0,.5)]"
         >
           <div
@@ -187,17 +189,17 @@ export function DashMedicationCard({ delay }: { delay?: number }) {
               setEditing(med);
               setFormOpen(true);
             }}
-            className="flex cursor-pointer items-center gap-2 rounded-xl px-3 py-2 text-right text-[12px] text-dash-text transition hover:bg-white/5 sm:text-[13px]"
+            className="flex cursor-pointer items-center gap-2 rounded-xl px-3 py-2 text-start text-[12px] text-dash-text transition hover:bg-white/5 sm:text-[13px]"
           >
             <Pencil size={13} className="shrink-0" />
-            ویرایش دارو
+            {tr("ویرایش دارو", "Edit medication")}
           </div>
           <div
             onClick={() => { if (menuFor) removeMedication(menuFor); }}
-            className="flex cursor-pointer items-center gap-2 rounded-xl px-3 py-2 text-right text-[12px] text-[#E05252] transition hover:bg-[#E05252]/10 sm:text-[13px]"
+            className="flex cursor-pointer items-center gap-2 rounded-xl px-3 py-2 text-start text-[12px] text-[#E05252] transition hover:bg-[#E05252]/10 sm:text-[13px]"
           >
             <Trash2 size={13} className="shrink-0" />
-            حذف دارو
+            {tr("حذف دارو", "Delete medication")}
           </div>
         </div>,
         document.body

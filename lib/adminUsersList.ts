@@ -1,4 +1,5 @@
 import { prisma } from "@/lib/prisma";
+import { planDisplayName } from "@/lib/subscriptionI18n";
 import { ROUTINE_TRIAL_DAYS } from "@/lib/trial";
 import {
   ACTIVE_DAYS, NEW_DAYS, RISK_EXPIRY_DAYS, RISK_INACTIVE_DAYS, SORTS, UsersFilters, UsersSort, SortDir,
@@ -113,7 +114,7 @@ const ROW_SELECT = {
   isSuperAdmin: true, adminPermissions: true, isBlocked: true, deletedAt: true, createdAt: true,
   subscriptions: {
     orderBy: { createdAt: "desc" as const }, take: 5,
-    select: { status: true, currentPeriodEnd: true, plan: { select: { nameFa: true, priceMonthly: true } } },
+    select: { status: true, currentPeriodEnd: true, plan: { select: { key: true, nameFa: true, priceMonthly: true } } },
   },
   adminTags: { orderBy: { createdAt: "asc" as const }, select: { tag: true } },
 };
@@ -136,7 +137,7 @@ async function shape(ids: string[], metrics: Metrics): Promise<UserListRow[]> {
     return {
       id: u.id, name: u.name, lastName: u.lastName, email: u.email, phone: u.phone, username: u.username, avatarUrl: u.avatarUrl, market: u.market,
       isSuperAdmin: u.isSuperAdmin, isAdmin: u.isSuperAdmin || u.adminPermissions.length > 0, isBlocked: u.isBlocked, deletedAt: u.deletedAt, createdAt: u.createdAt,
-      plan: active?.plan.nameFa || null,
+      plan: active ? planDisplayName(active.plan) : null,
       status: deriveUserStatus(u, subs, now, ROUTINE_TRIAL_DAYS),
       atRisk: isChurnRisk(subs, last, now),
       subscriptionExpiresAt: active?.currentPeriodEnd || null,
@@ -187,11 +188,11 @@ export async function listUsersForExport(f: UsersFilters, ids?: string[]) {
 
 export async function usersMeta() {
   const [plans, tags, segments] = await Promise.all([
-    prisma.plan.findMany({ select: { id: true, nameFa: true }, orderBy: { priceMonthly: "asc" } }),
+    prisma.plan.findMany({ select: { id: true, key: true, nameFa: true }, orderBy: { priceMonthly: "asc" } }),
     prisma.userTag.groupBy({ by: ["tag"], _count: { _all: true }, orderBy: { _count: { tag: "desc" } }, take: 50 }),
     prisma.adminSegment.findMany({ orderBy: { createdAt: "desc" }, take: 50, select: { id: true, name: true, filters: true } }),
   ]);
-  return { plans, tags: tags.map((t) => ({ tag: t.tag, count: t._count._all })), segments };
+  return { plans: plans.map((p) => ({ id: p.id, nameFa: planDisplayName(p) })), tags: tags.map((t) => ({ tag: t.tag, count: t._count._all })), segments };
 }
 
 /** شمارنده‌ی هر تب (با همان جست‌وجو/فیلترها، به‌جز خود تب) */

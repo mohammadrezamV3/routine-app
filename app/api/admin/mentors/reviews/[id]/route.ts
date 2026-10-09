@@ -4,6 +4,7 @@ import { requireAdmin } from "@/lib/requireAdmin";
 import { adminErrorResponse, loadTarget } from "@/lib/adminUsers";
 import { clampText } from "@/lib/validate";
 import { recomputeMentorRating } from "@/lib/mentorServer";
+import { tr } from "@/lib/i18n";
 
 // PATCH /api/admin/mentors/reviews/:id  بدنه { status: VISIBLE|HIDDEN, reason? }
 // پنهان‌کردن دلیل لازم داره. بعد از هر تغییر خلاصه‌ی امتیاز منتور بازمحاسبه می‌شه.
@@ -13,19 +14,19 @@ export async function PATCH(req: NextRequest, { params }: { params: { id: string
 
   const body = await req.json().catch(() => null);
   const status = body?.status === "VISIBLE" || body?.status === "HIDDEN" ? (body.status as "VISIBLE" | "HIDDEN") : null;
-  if (!status) return NextResponse.json({ error: "وضعیت نامعتبر است" }, { status: 400 });
+  if (!status) return NextResponse.json({ error: tr("وضعیت نامعتبر است", "Invalid status") }, { status: 400 });
   const reason = typeof body.reason === "string" ? clampText(body.reason.trim(), 500) : "";
-  if (status === "HIDDEN" && !reason) return NextResponse.json({ error: "برای پنهان‌کردن، نوشتن دلیل الزامیه" }, { status: 400 });
+  if (status === "HIDDEN" && !reason) return NextResponse.json({ error: tr("برای پنهان‌کردن، نوشتن دلیل الزامیه", "A reason is required to hide") }, { status: 400 });
 
   const review = await prisma.mentorReview.findUnique({ where: { id: params.id }, select: { id: true, mentorId: true, status: true } });
-  if (!review) return NextResponse.json({ error: "نظر پیدا نشد" }, { status: 404 });
+  if (!review) return NextResponse.json({ error: tr("نظر پیدا نشد", "Review not found") }, { status: 404 });
   // قوانین «کی روی کی»: نه روی خودش (تضاد منافع)، نه روی Owner، روی ادمین دیگه فقط با admins.manage
   try {
     await loadTarget(g, review.mentorId, { destructive: true });
   } catch (e) {
     return adminErrorResponse(e);
   }
-  if (review.status === status) return NextResponse.json({ error: "وضعیت فعلی همین است؛ تغییری ثبت نشد" }, { status: 409 });
+  if (review.status === status) return NextResponse.json({ error: tr("وضعیت فعلی همین است؛ تغییری ثبت نشد", "This is already the current status; no change was saved") }, { status: 409 });
 
   const changed = await prisma.$transaction(async (tx) => {
     const r = await tx.mentorReview.updateMany({
@@ -44,7 +45,7 @@ export async function PATCH(req: NextRequest, { params }: { params: { id: string
     });
     return true;
   });
-  if (!changed) return NextResponse.json({ error: "وضعیت در این فاصله تغییر کرده است؛ صفحه باید تازه شود" }, { status: 409 });
+  if (!changed) return NextResponse.json({ error: tr("وضعیت در این فاصله تغییر کرده است؛ صفحه باید تازه شود", "The status changed in the meantime; the page needs to be refreshed") }, { status: 409 });
 
   await recomputeMentorRating(review.mentorId);
   return NextResponse.json({ ok: true });

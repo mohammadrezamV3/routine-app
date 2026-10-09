@@ -5,6 +5,7 @@ import { clamp, mean } from "./score";
 import { addDaysIso, isoToUtcDate, isoWeekday, localIso, localMinuteOfDay, utcIso } from "./week";
 import { FA_WEEKDAY } from "@/lib/jalali";
 import { tasksForDate } from "@/lib/schedule";
+import { tr } from "@/lib/i18n";
 
 // محاسبه‌ی امتیاز هر دامنه از داده‌ی واقعی.
 //
@@ -161,9 +162,9 @@ export function routineWeeks(data: RoutineData, weeks: WeekSpec[], env: DomainEn
       "routine",
       daily,
       [
-        { label: "میانگین انجام", value: avg == null ? "-" : `${r0(avg)}%`, tone: avg == null ? "neutral" : avg >= 70 ? "good" : avg < 40 ? "bad" : "neutral" },
-        { label: "روزهای کامل", value: `${perfectDays}`, tone: perfectDays > 0 ? "good" : "neutral" },
-        { label: "برنامه‌های انجام‌شده", value: schedTotal ? `${doneTotal}/${schedTotal}` : "-" },
+        { label: tr("میانگین انجام", "Average completion"), value: avg == null ? "-" : `${r0(avg)}%`, tone: avg == null ? "neutral" : avg >= 70 ? "good" : avg < 40 ? "bad" : "neutral" },
+        { label: tr("روزهای کامل", "Perfect days"), value: `${perfectDays}`, tone: perfectDays > 0 ? "good" : "neutral" },
+        { label: tr("برنامه‌های انجام‌شده", "Items completed"), value: schedTotal ? `${doneTotal}/${schedTotal}` : "-" },
       ],
       { perfectDays, maxDay: vals.length ? Math.max(...vals) : 0, doneTotal, schedTotal },
       undefined,
@@ -285,9 +286,9 @@ export function sleepWeeks(rows: SleepRow[], weeks: WeekSpec[], env: DomainEnv):
     const avgQ = mean(qualities);
     const avgDev = mean(wakeDevs);
     const stats: DomainBase["stats"] = [
-      { label: "میانگین خواب", value: avgH == null ? "-" : `${r1(avgH)} ساعت`, tone: avgH == null ? "neutral" : avgH >= 7 && avgH <= 9 ? "good" : avgH < 6 ? "bad" : "neutral" },
-      { label: "کیفیت خواب", value: avgQ == null ? "-" : `${r1(avgQ)} از 5`, tone: avgQ == null ? "neutral" : avgQ >= 4 ? "good" : avgQ < 2.5 ? "bad" : "neutral" },
-      { label: "نظم بیداری", value: avgDev == null ? "-" : `±${r0(avgDev)} دقیقه`, tone: avgDev == null ? "neutral" : avgDev <= 30 ? "good" : avgDev > 75 ? "bad" : "neutral" },
+      { label: tr("میانگین خواب", "Average sleep"), value: avgH == null ? "-" : `${r1(avgH)} ${tr("ساعت", "hours")}`, tone: avgH == null ? "neutral" : avgH >= 7 && avgH <= 9 ? "good" : avgH < 6 ? "bad" : "neutral" },
+      { label: tr("کیفیت خواب", "Sleep quality"), value: avgQ == null ? "-" : tr(`${r1(avgQ)} از 5`, `${r1(avgQ)} out of 5`), tone: avgQ == null ? "neutral" : avgQ >= 4 ? "good" : avgQ < 2.5 ? "bad" : "neutral" },
+      { label: tr("نظم بیداری", "Wake-up regularity"), value: avgDev == null ? "-" : `±${r0(avgDev)} ${tr("دقیقه", "min")}`, tone: avgDev == null ? "neutral" : avgDev <= 30 ? "good" : avgDev > 75 ? "bad" : "neutral" },
     ];
     return finalize("sleep", daily, stats, { days7h, avgHours: avgH ?? 0 }, undefined, details);
   });
@@ -344,9 +345,9 @@ export function tasksWeeks(rows: TaskRow[], weeks: WeekSpec[], env: DomainEnv): 
       "tasks",
       daily,
       [
-        { label: "انجام‌شده", value: `${completed}`, tone: completed > 0 ? "good" : "neutral" },
-        { label: "عقب‌افتاده", value: `${overdue}`, tone: overdue > 0 ? "bad" : "good" },
-        { label: "به‌موقع", value: onTimePct == null ? "-" : `${onTimePct}%`, tone: onTimePct == null ? "neutral" : onTimePct >= 80 ? "good" : onTimePct < 50 ? "bad" : "neutral" },
+        { label: tr("انجام‌شده", "Completed"), value: `${completed}`, tone: completed > 0 ? "good" : "neutral" },
+        { label: tr("عقب‌افتاده", "Overdue"), value: `${overdue}`, tone: overdue > 0 ? "bad" : "good" },
+        { label: tr("به‌موقع", "On time"), value: onTimePct == null ? "-" : `${onTimePct}%`, tone: onTimePct == null ? "neutral" : onTimePct >= 80 ? "good" : onTimePct < 50 ? "bad" : "neutral" },
       ],
       { completed, overdue, dueCount },
       undefined,
@@ -444,8 +445,8 @@ export function fitnessWeeks(
       "fitness",
       daily,
       [
-        { label: "جلسات", value: planned ? `${done}/${planned}` : `${done + extra}`, tone: planned && done >= planned ? "good" : "neutral" },
-        { label: "جلسه‌ی اضافه", value: `${extra}`, tone: extra > 0 ? "good" : "neutral" },
+        { label: tr("جلسات", "Sessions"), value: planned ? `${done}/${planned}` : `${done + extra}`, tone: planned && done >= planned ? "good" : "neutral" },
+        { label: tr("جلسه‌ی اضافه", "Extra sessions"), value: `${extra}`, tone: extra > 0 ? "good" : "neutral" },
       ],
       { planned, done, extra },
       { score: hasData && vals.length ? r0(mean(vals)!) : null, hasData: hasData && vals.length > 0 },
@@ -547,11 +548,11 @@ export function nutritionWeeks(
     const avgK = mean(kcals);
     const avgP = mean(prots);
     const stats: DomainBase["stats"] = [
-      { label: "میانگین کالری", value: avgK == null ? "-" : `${r0(avgK)} kcal` },
-      { label: "هدف روزانه", value: target ? `${target} kcal` : "تعیین نشده", tone: target ? "neutral" : "bad" },
-      { label: "روزهای ثبت", value: `${kcals.length}/${Math.max(elapsed, 1)}`, tone: kcals.length >= Math.max(1, elapsed - 1) ? "good" : "neutral" },
+      { label: tr("میانگین کالری", "Average calories"), value: avgK == null ? "-" : `${r0(avgK)} kcal` },
+      { label: tr("هدف روزانه", "Daily target"), value: target ? `${target} kcal` : tr("تعیین نشده", "Not set"), tone: target ? "neutral" : "bad" },
+      { label: tr("روزهای ثبت", "Days logged"), value: `${kcals.length}/${Math.max(elapsed, 1)}`, tone: kcals.length >= Math.max(1, elapsed - 1) ? "good" : "neutral" },
     ];
-    if (avgP != null) stats.push({ label: "میانگین پروتئین", value: `${r0(avgP)} گرم` });
+    if (avgP != null) stats.push({ label: tr("میانگین پروتئین", "Average protein"), value: `${r0(avgP)} ${tr("گرم", "g")}` });
     const meta = { onTargetDays, loggedDays: kcals.length };
     if (!targets.length && kcals.length) {
       return finalize("nutrition", daily, stats, meta, {
@@ -677,12 +678,12 @@ export function tradingWeeks(rows: TradeRow[], weeks: WeekSpec[], env: DomainEnv
     const cur = currencies.size === 1 ? ` ${[...currencies][0]}` : "";
 
     const stats: DomainBase["stats"] = [
-      { label: "معاملات", value: `${real.length}` },
-      { label: "نرخ برد", value: winRate == null ? "-" : `${winRate}%`, tone: winRate == null ? "neutral" : winRate >= 50 ? "good" : "bad" },
-      { label: "سود/زیان خالص", value: closed.length ? `${net > 0 ? "+" : ""}${Math.round(net * 100) / 100}${cur}` : "-", tone: !closed.length ? "neutral" : net > 0 ? "good" : net < 0 ? "bad" : "neutral" },
-      { label: "پایبندی به چک‌لیست", value: adherence == null ? "-" : `${adherence}%`, tone: adherence == null ? "neutral" : adherence >= 80 ? "good" : adherence < 50 ? "bad" : "neutral" },
+      { label: tr("معاملات", "Trades"), value: `${real.length}` },
+      { label: tr("نرخ برد", "Win rate"), value: winRate == null ? "-" : `${winRate}%`, tone: winRate == null ? "neutral" : winRate >= 50 ? "good" : "bad" },
+      { label: tr("سود/زیان خالص", "Net profit/loss"), value: closed.length ? `${net > 0 ? "+" : ""}${Math.round(net * 100) / 100}${cur}` : "-", tone: !closed.length ? "neutral" : net > 0 ? "good" : net < 0 ? "bad" : "neutral" },
+      { label: tr("پایبندی به چک‌لیست", "Checklist adherence"), value: adherence == null ? "-" : `${adherence}%`, tone: adherence == null ? "neutral" : adherence >= 80 ? "good" : adherence < 50 ? "bad" : "neutral" },
     ];
-    if (best) stats.push({ label: "بهترین نماد", value: best, tone: "good" });
+    if (best) stats.push({ label: tr("بهترین نماد", "Best symbol"), value: best, tone: "good" });
     return finalize("trading", daily, stats, {
       trades: real.length,
       withChecklist: withChecklist.length,
@@ -730,9 +731,9 @@ export function learningWeeks(rows: RoadmapRow[], weeks: WeekSpec[], env: Domain
     const activeDays = new Set(existing.map((r) => r.updated).filter((d) => d >= w.days[0] && d <= last)).size;
     const daily = Array<number | null>(7).fill(null);
     const stats: DomainBase["stats"] = [
-      { label: "رودمپ‌ها", value: `${existing.length}` },
-      { label: "مراحل انجام‌شده", value: `${done}/${total}` },
-      { label: "فعالیت این هفته", value: activeDays ? `${activeDays} روز` : "ندارد", tone: activeDays ? "good" : "neutral" },
+      { label: tr("رودمپ‌ها", "Roadmaps"), value: `${existing.length}` },
+      { label: tr("مراحل انجام‌شده", "Steps completed"), value: `${done}/${total}` },
+      { label: tr("فعالیت این هفته", "Activity this week"), value: activeDays ? tr(`${activeDays} روز`, `${activeDays} ${activeDays === 1 ? "day" : "days"}`) : tr("ندارد", "None"), tone: activeDays ? "good" : "neutral" },
     ];
     // امتیاز یادگیری پیشرفت تجمعی رودمپه، نه کار همین هفته؛ پس فقط هفته‌ای
     // حساب می‌شه که واقعا روی رودمپ کار شده. وگرنه هفته‌ی کاملا خالی هم با

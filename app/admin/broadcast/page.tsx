@@ -4,6 +4,7 @@ import { useCallback, useEffect, useState } from "react";
 import { adminFetch } from "@/components/admin/useAdminToast";
 import { AdminBroadcastComposer } from "@/components/AdminBroadcastComposer";
 import { AdminBroadcastHistory, type PublicBroadcast } from "@/components/AdminBroadcastHistory";
+import { tr } from "@/lib/i18n";
 
 // پیام همگانی: ارسال اعلان درون‌برنامه‌ای و/یا پوش به بخشی از کاربران (دسترسی «content»)
 export default function AdminBroadcastPage() {
@@ -28,7 +29,7 @@ export default function AdminBroadcastPage() {
   return (
     <section>
       <div className="admin-page-head">
-        <div className="admin-page-kicker">پیام همگانی</div>
+        <div className="admin-page-kicker">{tr("پیام همگانی", "Broadcast")}</div>
       </div>
       <AdminBroadcastComposer onSent={(b) => { setItems((cur) => [b, ...(cur ?? [])]); load(); }} />
       <AdminBroadcastHistory items={items} onChanged={load} />

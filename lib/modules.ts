@@ -1,4 +1,5 @@
 import { ModuleKey } from "@prisma/client";
+import { tr } from "./i18n";
 
 // ماژول‌های «روتین من» (روتین/خواب/کار روزمره). این لیست باید با seed.ts
 // (پلن basic = «روتین من») هماهنگ بماند.
@@ -16,13 +17,14 @@ export function isBasicModule(module: string): boolean {
 
 // لیبل فارسی هر ماژول — منبع مشترک برای پنل کاربری و صفحه‌ی اشتراک، تا
 // این اسم‌ها جای مختلف تکراری/ناهماهنگ تعریف نشن
+// getter: زبان موقع خواندن (رندر) انتخاب می‌شه، نه موقع بارگذاری ماژول
 export const MODULE_LABELS_FA: Record<ModuleKey, string> = {
-  ROUTINE: "روتین روزانه",
-  SLEEP: "خواب",
-  TASKS: "کارهای روزمره",
-  EXERCISE: "برنامه تمرینی",
-  CALORIE: "کالری‌شمار",
-  TRADE: "ژورنال ترید",
-  ROADMAP: "رودمپ آموزشی هوشمند",
-  AI_INSIGHT: "تحلیل هوشمند (AI Insight)",
+  get ROUTINE() { return tr("روتین روزانه", "Daily routine"); },
+  get SLEEP() { return tr("خواب", "Sleep"); },
+  get TASKS() { return tr("کارهای روزمره", "Daily tasks"); },
+  get EXERCISE() { return tr("برنامه تمرینی", "Workout plan"); },
+  get CALORIE() { return tr("کالری‌شمار", "Calorie tracker"); },
+  get TRADE() { return tr("ژورنال ترید", "Trading journal"); },
+  get ROADMAP() { return tr("رودمپ آموزشی هوشمند", "Smart learning roadmap"); },
+  get AI_INSIGHT() { return tr("تحلیل هوشمند (AI Insight)", "Smart analysis (AI Insight)"); },
 };

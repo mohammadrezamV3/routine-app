@@ -6,6 +6,7 @@ import { adminErrorResponse, loadTarget } from "@/lib/adminUsers";
 import { clampText } from "@/lib/validate";
 import { isMentorCategory, MENTOR_CATEGORY_META, VERIFICATION_LABELS } from "@/lib/mentorCategories";
 import { notifyUser } from "@/lib/inAppNotify";
+import { tr } from "@/lib/i18n";
 
 // POST /api/admin/mentors/:profileId/verification
 // بدنه { kind: IDENTITY|CERTIFICATE, category?, status, reason? }
@@ -24,28 +25,28 @@ export async function POST(req: NextRequest, { params }: { params: { profileId: 
   if (!g.ok) return g.response;
 
   const body = await req.json().catch(() => null);
-  if (!body || typeof body !== "object") return NextResponse.json({ error: "ورودی نامعتبر است" }, { status: 400 });
+  if (!body || typeof body !== "object") return NextResponse.json({ error: tr("ورودی نامعتبر است", "Invalid input") }, { status: 400 });
 
   const kind = body.kind === "IDENTITY" || body.kind === "CERTIFICATE" ? (body.kind as "IDENTITY" | "CERTIFICATE") : null;
   const status = STATUSES.includes(body.status) ? (body.status as VerificationStatus) : null;
-  if (!kind || !status) return NextResponse.json({ error: "نوع یا وضعیت نامعتبر است" }, { status: 400 });
+  if (!kind || !status) return NextResponse.json({ error: tr("نوع یا وضعیت نامعتبر است", "Invalid type or status") }, { status: 400 });
 
   let category: string | null = null;
   if (kind === "CERTIFICATE") {
-    if (!isMentorCategory(body.category)) return NextResponse.json({ error: "دسته‌ی مدرک نامعتبر است" }, { status: 400 });
+    if (!isMentorCategory(body.category)) return NextResponse.json({ error: tr("دسته‌ی مدرک نامعتبر است", "Invalid document category") }, { status: 400 });
     category = body.category;
   }
 
   const reason = typeof body.reason === "string" ? clampText(body.reason.trim(), 500) : "";
   if (status === "REJECTED" && !reason) {
-    return NextResponse.json({ error: "دلیل رد الزامی است" }, { status: 400 });
+    return NextResponse.json({ error: tr("دلیل رد الزامی است", "A rejection reason is required") }, { status: 400 });
   }
 
   const profile = await prisma.mentorProfile.findUnique({
     where: { id: params.profileId },
     select: { id: true, userId: true, identityStatus: true },
   });
-  if (!profile) return NextResponse.json({ error: "مربی پیدا نشد" }, { status: 404 });
+  if (!profile) return NextResponse.json({ error: tr("مربی پیدا نشد", "Mentor not found") }, { status: 404 });
   // قوانین «کی روی کی»: نه روی خودش (تضاد منافع — جز Owner که همه رو، حتی خودش رو، تایید می‌کنه)، نه روی Owner، روی ادمین دیگه فقط با admins.manage
   try {
     await loadTarget(g, profile.userId, { destructive: !g.isSuperAdmin });
@@ -105,9 +106,9 @@ export async function POST(req: NextRequest, { params }: { params: { profileId: 
       return from;
     });
   } catch (e) {
-    if (e instanceof NoChange) return NextResponse.json({ error: "وضعیت فعلی همین است؛ تغییری ثبت نشد" }, { status: 400 });
+    if (e instanceof NoChange) return NextResponse.json({ error: tr("وضعیت فعلی همین است؛ تغییری ثبت نشد", "This is already the current status; no change was saved") }, { status: 400 });
     if (e instanceof Conflict || (e instanceof Prisma.PrismaClientKnownRequestError && e.code === "P2002")) {
-      return NextResponse.json({ error: "وضعیت در این فاصله تغییر کرده است؛ صفحه باید تازه شود" }, { status: 409 });
+      return NextResponse.json({ error: tr("وضعیت در این فاصله تغییر کرده است؛ صفحه باید تازه شود", "The status changed in the meantime; the page needs to be refreshed") }, { status: 409 });
     }
     throw e;
   }

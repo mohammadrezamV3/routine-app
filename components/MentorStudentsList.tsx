@@ -13,22 +13,23 @@ import { studentStatusText } from "@/lib/mentorStatus";
 import { publicUserName } from "@/lib/mentorTypes";
 import type { StudentIndexResponse, StudentIndexRow } from "@/lib/mentorTypes";
 import { GoldenName } from "@/components/GoldenName";
+import { isEn, tr } from "@/lib/i18n";
 
 const ic = (Icon: typeof Users, size: number) => <Icon size={size} strokeWidth={MI_STROKE} aria-hidden />;
 
 type Sort = "name" | "adherence" | "activity" | "joined";
-const SORTS: { value: Sort; label: string }[] = [
-  { value: "name", label: "نام" },
-  { value: "adherence", label: "پیشرفت" },
-  { value: "activity", label: "فعالیت" },
-  { value: "joined", label: "شروع" },
+const sorts = (): { value: Sort; label: string }[] => [
+  { value: "name", label: tr("نام", "Name") },
+  { value: "adherence", label: tr("پیشرفت", "Progress") },
+  { value: "activity", label: tr("فعالیت", "Activity") },
+  { value: "joined", label: tr("شروع", "Start date") },
 ];
 type View = "all" | "attention" | "paused";
 type Week = "0" | "1" | "2";
-const WEEKS: { value: Week; label: string }[] = [
-  { value: "0", label: "این هفته" },
-  { value: "1", label: "هفته‌ی قبل" },
-  { value: "2", label: "دو هفته قبل" },
+const weeks = (): { value: Week; label: string }[] => [
+  { value: "0", label: tr("این هفته", "This week") },
+  { value: "1", label: tr("هفته‌ی قبل", "Last week") },
+  { value: "2", label: tr("دو هفته قبل", "2 weeks ago") },
 ];
 
 const time = (iso: string | null) => (iso ? new Date(iso).getTime() : -Infinity);
@@ -51,10 +52,11 @@ function needsAttention(r: StudentIndexRow): boolean {
 function sortRows(rows: StudentIndexRow[], sort: Sort): StudentIndexRow[] {
   const out = rows.slice();
   const name = (r: StudentIndexRow) => publicUserName(r.student);
+  const loc = isEn() ? "en" : "fa";
   switch (sort) {
-    case "name": return out.sort((a, b) => name(a).localeCompare(name(b), "fa"));
+    case "name": return out.sort((a, b) => name(a).localeCompare(name(b), loc));
     // پیشرفت کم‌تر اول: شاگردی که عقب مانده زودتر دیده شود؛ بدون ثبت در انتها
-    case "adherence": return out.sort((a, b) => (a.adherence ?? Infinity) - (b.adherence ?? Infinity) || name(a).localeCompare(name(b), "fa"));
+    case "adherence": return out.sort((a, b) => (a.adherence ?? Infinity) - (b.adherence ?? Infinity) || name(a).localeCompare(name(b), loc));
     case "activity": return out.sort((a, b) => time(b.lastActivityAt) - time(a.lastActivityAt));
     case "joined": return out.sort((a, b) => time(b.startedAt) - time(a.startedAt));
   }
@@ -95,16 +97,16 @@ export function MentorStudentsList({ data, initialReport = false }: { data: Stud
   return (
     <div className="mv2-st-wrap">
       <div className="mv2-st-titlebar">
-        <h1 className="mv2-st-title">شاگردها</h1>
-        <span className="mv2-st-count" aria-label={`${fa(data.students.length)} شاگرد`}>{fa(data.students.length)}</span>
-        {data.capacity != null && <span className="mv2-st-cap">از {fa(data.capacity)} جا</span>}
+        <h1 className="mv2-st-title">{tr("شاگردها", "Students")}</h1>
+        <span className="mv2-st-count" aria-label={tr(`${fa(data.students.length)} شاگرد`, `${fa(data.students.length)} ${data.students.length === 1 ? "student" : "students"}`)}>{fa(data.students.length)}</span>
+        {data.capacity != null && <span className="mv2-st-cap">{tr(`از ${fa(data.capacity)} جا`, `of ${fa(data.capacity)} spots`)}</span>}
       </div>
 
       {data.students.length === 0 ? (
         <>
-          <MentorEmptyState icon={ic(Users, MI.empty)} title="هنوز شاگرد فعالی نداری" text="شاگردهایی که درخواستشون رو قبول کنی یا دعوتت رو بپذیرن اینجا میان" />
+          <MentorEmptyState icon={ic(Users, MI.empty)} title={tr("هنوز شاگرد فعالی نداری", "You have no active students yet")} text={tr("شاگردهایی که درخواستشون رو قبول کنی یا دعوتت رو بپذیرن اینجا میان", "Students whose requests you accept, or who accept your invite, will show up here")} />
           <div className="mv2-st-center">
-            <Link href="/mentor?invite=1" className="trade-primary-btn mentor-btn">{ic(Plus, MI.btn)} دعوت شاگرد</Link>
+            <Link href="/mentor?invite=1" className="trade-primary-btn mentor-btn">{ic(Plus, MI.btn)} {tr("دعوت شاگرد", "Invite a student")}</Link>
           </div>
         </>
       ) : (
@@ -113,14 +115,14 @@ export function MentorStudentsList({ data, initialReport = false }: { data: Stud
             <label className="mentor-search mv2-st-search">
               {ic(Search, MI.btnSm)}
               <input
-                type="search" className="wsearch-newform-name trade-glass-field" value={q} aria-label="جست‌وجوی شاگرد"
-                placeholder="جست‌وجوی نام" onChange={(e) => setQ(e.target.value)}
+                type="search" className="wsearch-newform-name trade-glass-field" value={q} aria-label={tr("جست‌وجوی شاگرد", "Search students")}
+                placeholder={tr("جست‌وجوی نام", "Search by name")} onChange={(e) => setQ(e.target.value)}
               />
             </label>
-            <Link href="/mentor?invite=1" className="trade-primary-btn mentor-btn mv2-st-invite">{ic(Plus, MI.btn)} دعوت</Link>
+            <Link href="/mentor?invite=1" className="trade-primary-btn mentor-btn mv2-st-invite">{ic(Plus, MI.btn)} {tr("دعوت", "Invite")}</Link>
           </div>
 
-          <SegmentedTabs<Week> options={WEEKS} active={week} onChange={(w) => { setWeek(w); if (w === "0") setReport(false); }} ariaLabel="هفته" className="mv2-st-seg" />
+          <SegmentedTabs<Week> options={weeks()} active={week} onChange={(w) => { setWeek(w); if (w === "0") setReport(false); }} ariaLabel={tr("هفته", "Week")} className="mv2-st-seg" />
 
           {showReport ? (
             <MentorWeeklyReport offset={Number(week) as 0 | 1 | 2} />
@@ -128,16 +130,16 @@ export function MentorStudentsList({ data, initialReport = false }: { data: Stud
             <>
               <SegmentedTabs<View>
                 options={[
-                  { value: "all", label: "همه" },
-                  { value: "attention", label: attention > 0 ? `نیاز به توجه (${fa(attention)})` : "نیاز به توجه" },
-                  { value: "paused", label: paused > 0 ? `متوقف (${fa(paused)})` : "متوقف" },
+                  { value: "all", label: tr("همه", "All") },
+                  { value: "attention", label: attention > 0 ? tr(`نیاز به توجه (${fa(attention)})`, `Needs attention (${fa(attention)})`) : tr("نیاز به توجه", "Needs attention") },
+                  { value: "paused", label: paused > 0 ? tr(`متوقف (${fa(paused)})`, `Paused (${fa(paused)})`) : tr("متوقف", "Paused") },
                 ]}
-                active={view} onChange={setView} ariaLabel="نمایش شاگردها" className="mv2-st-seg"
+                active={view} onChange={setView} ariaLabel={tr("نمایش شاگردها", "Show students")} className="mv2-st-seg"
               />
 
               <div className="mv2-st-filters">
                 {data.labels.length > 0 && (
-                  <div className="mv2-st-labels" role="group" aria-label="فیلتر برچسب">
+                  <div className="mv2-st-labels" role="group" aria-label={tr("فیلتر برچسب", "Filter by label")}>
                     {data.labels.map((l) => {
                       const on = label === l.id;
                       return (
@@ -149,16 +151,16 @@ export function MentorStudentsList({ data, initialReport = false }: { data: Stud
                   </div>
                 )}
                 <label className="mv2-st-sort">
-                  <span>مرتب‌سازی</span>
+                  <span>{tr("مرتب‌سازی", "Sort by")}</span>
                   <select className="wsearch-newform-name trade-glass-field" value={sort} onChange={(e) => setSort(e.target.value as Sort)}>
-                    {SORTS.map((s) => <option key={s.value} value={s.value}>{s.label}</option>)}
+                    {sorts().map((s) => <option key={s.value} value={s.value}>{s.label}</option>)}
                   </select>
                 </label>
               </div>
 
               {rows.length === 0 ? (
                 <MentorEmpty icon={ic(SearchX, MI.row)}>
-                  {view === "attention" ? "الان کسی نیاز به توجه نداره" : "شاگردی با این فیلتر پیدا نشد"}
+                  {view === "attention" ? tr("الان کسی نیاز به توجه نداره", "Nobody needs attention right now") : tr("شاگردی با این فیلتر پیدا نشد", "No students match this filter")}
                 </MentorEmpty>
               ) : (
                 <div className="mv2-st-list"><MentorList>
@@ -176,12 +178,12 @@ export function MentorStudentsList({ data, initialReport = false }: { data: Stud
                             <span className={`mv2-st-status mv2-tone-${st.tone}`}>
                               <span className="mv2-st-dot" aria-hidden />
                               <span>{st.text}</span>
-                              {r.adherence !== null && <span className="mv2-st-pct">{pct(r.adherence)} این هفته</span>}
+                              {r.adherence !== null && <span className="mv2-st-pct">{tr(`${pct(r.adherence)} این هفته`, `${pct(r.adherence)} this week`)}</span>}
                             </span>
-                            {labels.length > 0 && <span className="mv2-st-rowlabels">{labels.join("، ")}</span>}
+                            {labels.length > 0 && <span className="mv2-st-rowlabels">{labels.join(tr("، ", ", "))}</span>}
                           </span>
-                          {r.unread > 0 && <span className="mentor-unread" aria-label={`${fa(r.unread)} پیام خوانده‌نشده`}>{fa(r.unread)}</span>}
-                          <ChevronLeft size={MI.row} strokeWidth={MI_STROKE} className="mv2-st-chev" aria-hidden />
+                          {r.unread > 0 && <span className="mentor-unread" aria-label={tr(`${fa(r.unread)} پیام خوانده‌نشده`, `${fa(r.unread)} unread ${r.unread === 1 ? "message" : "messages"}`)}>{fa(r.unread)}</span>}
+                          <ChevronLeft size={MI.row} strokeWidth={MI_STROKE} className="mv2-st-chev dir-flip" aria-hidden />
                         </Link>
                       </MentorListItem>
                     );
@@ -190,7 +192,7 @@ export function MentorStudentsList({ data, initialReport = false }: { data: Stud
               )}
 
               <div className="mv2-st-center">
-                <button type="button" className="account-outline-btn mentor-btn is-sm" onClick={() => setReport(true)}>گزارش کامل این هفته</button>
+                <button type="button" className="account-outline-btn mentor-btn is-sm" onClick={() => setReport(true)}>{tr("گزارش کامل این هفته", "Full report for this week")}</button>
               </div>
             </>
           )}

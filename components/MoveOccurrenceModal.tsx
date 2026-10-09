@@ -11,6 +11,7 @@ import { CustomOccurrence, Importance, setCustomOccurrences, setRemovedOccurrenc
 import { focusNextOnEnter } from "@/lib/formNav";
 import { useLockBodyScroll } from "@/lib/useLockBodyScroll";
 import { Spinner } from "./Spinner";
+import { tr } from "@/lib/i18n";
 
 type Occ = { dayName: string; jsDay: number; time: string; id: string; custom?: boolean; importance?: Importance; tag?: string };
 type ScheduleOpts = { removedOccurrences: Set<string>; customOccurrences: CustomOccurrence[] };
@@ -75,7 +76,7 @@ export function MoveOccurrenceModal({
     if (conflict) {
       setFormError(null);
       setStatus("error");
-      setFormError(`تداخل زمانی با «${conflict.name}» — منتقل نشد`);
+      setFormError(tr(`تداخل زمانی با «${conflict.name}» — منتقل نشد`, `Time conflict with "${conflict.name}" — not moved`));
       setTimeout(() => setStatus("idle"), 900);
       return;
     }
@@ -136,28 +137,28 @@ export function MoveOccurrenceModal({
       <div className="wsearch-newform dash-scope open">
         <div className="relative z-[1] add-program-glass" ref={formRef} onKeyDown={(e) => focusNextOnEnter(e, formRef)}>
           <div className="wsearch-newform-head">
-            <div className="wsearch-newform-title accent">انتقال «{name}» به یک روز دیگر</div>
-            <button className="nav-close" onClick={onClose} aria-label="بستن">×</button>
+            <div className="wsearch-newform-title accent">{tr(`انتقال «${name}» به یک روز دیگر`, `Move "${name}" to another day`)}</div>
+            <button className="nav-close" onClick={onClose} aria-label={tr("بستن", "Close")}>×</button>
           </div>
 
-          <label>انتقال به روز:</label>
+          <label>{tr("انتقال به روز:", "Move to day:")}</label>
           <button
             type="button"
             className={`jdate-btn${targetJalali ? "" : " placeholder"}${dayError ? " field-error" : ""}`}
             onClick={() => setPickerOpen(true)}
           >
-            {targetJalali ? formatJalali(targetJalali) : "روز / ماه / سال"}
+            {targetJalali ? formatJalali(targetJalali) : tr("روز / ماه / سال", "Day / month / year")}
           </button>
 
           <div className="wsearch-newrow">
             <div className={`time-field${errors.start ? " field-error" : ""}`}>
-              <span className="time-field-label">ساعت شروع</span>
+              <span className="time-field-label">{tr("ساعت شروع", "Start time")}</span>
               <div className="field-error-wrap">
                 <TimeInput value={start} onChange={(v) => { setStart(v); if (v.trim()) setErrors((e) => ({ ...e, start: false })); }} />
               </div>
             </div>
             <div className={`time-field${errors.end ? " field-error" : ""}`}>
-              <span className="time-field-label">ساعت پایان</span>
+              <span className="time-field-label">{tr("ساعت پایان", "End time")}</span>
               <div className="field-error-wrap">
                 <TimeInput value={end} onChange={(v) => { setEnd(v); if (v.trim()) setErrors((e) => ({ ...e, end: false })); }} />
               </div>
@@ -171,7 +172,7 @@ export function MoveOccurrenceModal({
               type="button"
               className={`wsearch-newform-submit${status !== "idle" ? " " + status : ""}`}
               onClick={submit}
-              aria-label="انتقال"
+              aria-label={tr("انتقال", "Move")}
             >
               {status === "loading" && <span className="wns-spinner"><Spinner size={10} label={null} /></span>}
               <svg className="wns-check" viewBox="0 0 24 24" fill="none">
@@ -188,7 +189,7 @@ export function MoveOccurrenceModal({
       {pickerOpen && (
         <JalaliDatePicker
           initial={targetJalali}
-          title="انتقال به روز:"
+          title={tr("انتقال به روز:", "Move to day:")}
           disablePast
           onClose={() => setPickerOpen(false)}
           onPick={(d) => { setTargetJalali(d); setDayError(false); setPickerOpen(false); }}

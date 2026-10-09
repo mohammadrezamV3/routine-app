@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import { tr } from "@/lib/i18n";
 import { TradePageShell } from "@/components/TradePageShell";
 import { TradeChecklistsPanel } from "@/components/TradeChecklistsPanel";
 
@@ -9,11 +10,11 @@ export default function TradeChecklistsPage() {
 
   return (
     <TradePageShell
-      title="چک‌لیست"
+      title={tr("چک‌لیست", "Checklists")}
       noScroll
       titleAction={
         <button type="button" className="trade-title-add-btn" onClick={() => setCreating(true)}>
-          + افزودن چک‌لیست
+          {tr("+ افزودن چک‌لیست", "+ Add checklist")}
         </button>
       }
     >

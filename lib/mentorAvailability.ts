@@ -3,6 +3,7 @@
 // یک تعریف داشته باشند. سقف‌ها همین‌جا تعریف می‌شوند و فرم‌ها از همین می‌خوانند.
 import { fmtDate } from "@/lib/mentorFormat";
 import { faNum } from "@/lib/jalali";
+import { tr } from "@/lib/i18n";
 import { toEnglishDigits } from "@/lib/validate";
 
 export const INTAKE_MAX_QUESTIONS = 5;
@@ -68,28 +69,28 @@ export function computeAvailability(p: AvailabilityInput, activeStudents: number
 /** برچسب کوتاه برای کارت/چیپ */
 export function availabilityShort(state: AvailabilityState, awayUntil: string | null): string {
   switch (state) {
-    case "CLOSED": return "شاگرد جدید نمی‌پذیرد";
-    case "FULL": return "ظرفیت تکمیل";
-    case "AWAY": return awayUntil ? `در دسترس نیست تا ${fmtDate(awayUntil)}` : "در دسترس نیست";
-    default: return "پذیرش باز";
+    case "CLOSED": return tr("شاگرد جدید نمی‌پذیرد", "Not accepting students");
+    case "FULL": return tr("ظرفیت تکمیل", "Full");
+    case "AWAY": return awayUntil ? tr(`در دسترس نیست تا ${fmtDate(awayUntil)}`, `Unavailable until ${fmtDate(awayUntil)}`) : tr("در دسترس نیست", "Unavailable");
+    default: return tr("پذیرش باز", "Open for requests");
   }
 }
 
 /** پیام رد درخواست شاگرد (سمت سرور) */
 export function requestBlockedMessage(state: AvailabilityState, awayUntil: string | null): string {
   switch (state) {
-    case "CLOSED": return "این مربی فعلا شاگرد جدید نمی‌پذیرد";
-    case "FULL": return "ظرفیت شاگردهای این مربی تکمیل است";
+    case "CLOSED": return tr("این مربی فعلا شاگرد جدید نمی‌پذیرد", "This mentor is not accepting new students right now");
+    case "FULL": return tr("ظرفیت شاگردهای این مربی تکمیل است", "This mentor has no free spots");
     case "AWAY": return awayUntil
-      ? `این مربی تا ${fmtDate(awayUntil)} در دسترس نیست؛ پس از آن درخواست بده`
-      : "این مربی فعلا در دسترس نیست";
+      ? tr(`این مربی تا ${fmtDate(awayUntil)} در دسترس نیست؛ پس از آن درخواست بده`, `This mentor is unavailable until ${fmtDate(awayUntil)}. Request again after that.`)
+      : tr("این مربی فعلا در دسترس نیست", "This mentor is unavailable for now");
     default: return "";
   }
 }
 
 export function responseTimeLabel(hours: number | null | undefined): string | null {
   if (!hours) return null;
-  return `معمولا تا ${faNum(hours)} ساعت پاسخ می‌دهد`;
+  return tr(`معمولا تا ${faNum(hours)} ساعت پاسخ می‌دهد`, `Usually replies within ${faNum(hours)} ${hours === 1 ? "hour" : "hours"}`);
 }
 
 // ───────────────────────── اعتبارسنجی ─────────────────────────
@@ -103,16 +104,16 @@ function clean(v: string): string {
 /** لیست سؤال‌های پذیرش؛ سؤال خالی حذف و تکراری یکی می‌شود */
 export function validateIntakeQuestions(v: unknown): Result<string[]> {
   if (v === null || v === undefined) return { ok: true, data: [] };
-  if (!Array.isArray(v)) return { ok: false, error: "سؤال‌ها باید لیست باشد" };
+  if (!Array.isArray(v)) return { ok: false, error: tr("سؤال‌ها باید لیست باشد", "Questions must be a list") };
   const out: string[] = [];
   for (const q of v) {
-    if (typeof q !== "string") return { ok: false, error: "سؤال معتبر نیست" };
+    if (typeof q !== "string") return { ok: false, error: tr("سؤال معتبر نیست", "Invalid question") };
     const t = clean(q);
     if (!t) continue;
-    if (t.length > INTAKE_QUESTION_MAX) return { ok: false, error: `هر سؤال حداکثر ${faNum(INTAKE_QUESTION_MAX)} نویسه است` };
+    if (t.length > INTAKE_QUESTION_MAX) return { ok: false, error: tr(`هر سؤال حداکثر ${faNum(INTAKE_QUESTION_MAX)} نویسه است`, `Each question can be at most ${faNum(INTAKE_QUESTION_MAX)} characters`) };
     if (!out.includes(t)) out.push(t);
   }
-  if (out.length > INTAKE_MAX_QUESTIONS) return { ok: false, error: `حداکثر ${faNum(INTAKE_MAX_QUESTIONS)} سؤال` };
+  if (out.length > INTAKE_MAX_QUESTIONS) return { ok: false, error: tr(`حداکثر ${faNum(INTAKE_MAX_QUESTIONS)} سؤال`, `At most ${faNum(INTAKE_MAX_QUESTIONS)} questions`) };
   return { ok: true, data: out };
 }
 
@@ -125,14 +126,14 @@ export type IntakeAnswer = { question: string; answer: string };
  */
 export function validateIntakeAnswers(questions: string[], v: unknown): Result<IntakeAnswer[] | null> {
   if (questions.length === 0) return { ok: true, data: null };
-  if (!Array.isArray(v)) return { ok: false, error: "به سؤال‌های مربی جواب بده" };
+  if (!Array.isArray(v)) return { ok: false, error: tr("به سؤال‌های مربی جواب بده", "Answer the mentor's questions") };
   const out: IntakeAnswer[] = [];
   for (let i = 0; i < questions.length; i++) {
     const raw = v[i];
-    if (raw !== undefined && raw !== null && typeof raw !== "string") return { ok: false, error: "جواب معتبر نیست" };
+    if (raw !== undefined && raw !== null && typeof raw !== "string") return { ok: false, error: tr("جواب معتبر نیست", "Invalid answer") };
     const a = typeof raw === "string" ? raw.trim() : "";
-    if (!a) return { ok: false, error: `به سؤال ${faNum(i + 1)} جواب بده` };
-    if (a.length > INTAKE_ANSWER_MAX) return { ok: false, error: `هر جواب حداکثر ${faNum(INTAKE_ANSWER_MAX)} نویسه است` };
+    if (!a) return { ok: false, error: tr(`به سؤال ${faNum(i + 1)} جواب بده`, `Answer question ${faNum(i + 1)}`) };
+    if (a.length > INTAKE_ANSWER_MAX) return { ok: false, error: tr(`هر جواب حداکثر ${faNum(INTAKE_ANSWER_MAX)} نویسه است`, `Each answer can be at most ${faNum(INTAKE_ANSWER_MAX)} characters`) };
     out.push({ question: questions[i], answer: a });
   }
   return { ok: true, data: out };
@@ -153,51 +154,51 @@ export function validateCapacity(v: unknown): Result<number | null> {
   if (v === null || v === undefined || v === "") return { ok: true, data: null };
   const n = typeof v === "string" ? Number(toEnglishDigits(v).trim()) : v;
   if (typeof n !== "number" || !Number.isInteger(n) || n < 1 || n > CAPACITY_MAX) {
-    return { ok: false, error: `ظرفیت عددی بین 1 تا ${faNum(CAPACITY_MAX)} است` };
+    return { ok: false, error: tr(`ظرفیت عددی بین 1 تا ${faNum(CAPACITY_MAX)} است`, `Capacity must be a number from 1 to ${faNum(CAPACITY_MAX)}`) };
   }
   return { ok: true, data: n };
 }
 
 export function validateResponseTime(v: unknown): Result<number | null> {
   if (v === null || v === undefined || v === 0) return { ok: true, data: null };
-  if (typeof v !== "number" || !(RESPONSE_TIME_OPTIONS as readonly number[]).includes(v)) return { ok: false, error: "زمان پاسخ معتبر نیست" };
+  if (typeof v !== "number" || !(RESPONSE_TIME_OPTIONS as readonly number[]).includes(v)) return { ok: false, error: tr("زمان پاسخ معتبر نیست", "Invalid response time") };
   return { ok: true, data: v };
 }
 
 /** متن اختیاری با سقف؛ طولانی‌تر رد می‌شود (نه بریدن بی‌صدا) */
 export function validateOptionalText(v: unknown, max: number, label: string): Result<string | null> {
   if (v === null || v === undefined) return { ok: true, data: null };
-  if (typeof v !== "string") return { ok: false, error: `${label} معتبر نیست` };
+  if (typeof v !== "string") return { ok: false, error: tr(`${label} معتبر نیست`, `${label} is not valid`) };
   const t = v.trim();
   if (!t) return { ok: true, data: null };
-  if (t.length > max) return { ok: false, error: `${label} حداکثر ${faNum(max)} نویسه است` };
+  if (t.length > max) return { ok: false, error: tr(`${label} حداکثر ${faNum(max)} نویسه است`, `${label} can be at most ${faNum(max)} characters`) };
   return { ok: true, data: t };
 }
 
 /** تاریخ بازگشت: YYYY-MM-DD، بعد از امروز و حداکثر AWAY_MAX_DAYS روز بعد */
 export function validateAwayUntil(v: unknown, todayIso: string): Result<string> {
-  if (typeof v !== "string" || !/^\d{4}-\d{2}-\d{2}$/.test(v)) return { ok: false, error: "تاریخ بازگشت معتبر نیست" };
+  if (typeof v !== "string" || !/^\d{4}-\d{2}-\d{2}$/.test(v)) return { ok: false, error: tr("تاریخ بازگشت معتبر نیست", "Invalid return date") };
   const d = new Date(v + "T00:00:00.000Z");
-  if (isNaN(d.getTime()) || d.toISOString().slice(0, 10) !== v) return { ok: false, error: "تاریخ بازگشت معتبر نیست" };
-  if (v <= todayIso) return { ok: false, error: "تاریخ بازگشت باید بعد از امروز باشد" };
+  if (isNaN(d.getTime()) || d.toISOString().slice(0, 10) !== v) return { ok: false, error: tr("تاریخ بازگشت معتبر نیست", "Invalid return date") };
+  if (v <= todayIso) return { ok: false, error: tr("تاریخ بازگشت باید بعد از امروز باشد", "The return date must be after today") };
   const max = new Date(todayIso + "T00:00:00.000Z");
   max.setUTCDate(max.getUTCDate() + AWAY_MAX_DAYS);
-  if (d > max) return { ok: false, error: `حداکثر ${faNum(AWAY_MAX_DAYS)} روز` };
+  if (d > max) return { ok: false, error: tr(`حداکثر ${faNum(AWAY_MAX_DAYS)} روز`, `At most ${faNum(AWAY_MAX_DAYS)} days`) };
   return { ok: true, data: v };
 }
 
 export function validateLabelName(v: unknown): Result<string> {
-  if (typeof v !== "string") return { ok: false, error: "نام برچسب معتبر نیست" };
+  if (typeof v !== "string") return { ok: false, error: tr("نام برچسب معتبر نیست", "Invalid label name") };
   const t = clean(v);
-  if (!t) return { ok: false, error: "نام برچسب را بنویس" };
-  if (t.length > LABEL_NAME_MAX) return { ok: false, error: `نام برچسب حداکثر ${faNum(LABEL_NAME_MAX)} نویسه است` };
+  if (!t) return { ok: false, error: tr("نام برچسب را بنویس", "Enter a label name") };
+  if (t.length > LABEL_NAME_MAX) return { ok: false, error: tr(`نام برچسب حداکثر ${faNum(LABEL_NAME_MAX)} نویسه است`, `Label name can be at most ${faNum(LABEL_NAME_MAX)} characters`) };
   return { ok: true, data: t };
 }
 
 /** متن یادداشت خصوصی: خالی نه، بیشتر از سقف رد می‌شود */
 export function validateNoteBody(v: unknown): Result<string> {
-  if (typeof v !== "string" || !v.trim()) return { ok: false, error: "متن یادداشت را بنویس" };
+  if (typeof v !== "string" || !v.trim()) return { ok: false, error: tr("متن یادداشت را بنویس", "Write the note") };
   const t = v.trim();
-  if (t.length > NOTE_MAX) return { ok: false, error: `یادداشت حداکثر ${faNum(NOTE_MAX)} نویسه است` };
+  if (t.length > NOTE_MAX) return { ok: false, error: tr(`یادداشت حداکثر ${faNum(NOTE_MAX)} نویسه است`, `Note can be at most ${faNum(NOTE_MAX)} characters`) };
   return { ok: true, data: t };
 }

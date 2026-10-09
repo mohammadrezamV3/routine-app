@@ -2,7 +2,8 @@
 
 import { memo, useId, useMemo } from "react";
 import { motion, useReducedMotion } from "framer-motion";
-import { CYCLE_MIN, STAGE_LABEL, hypnogram, type Stage } from "@/lib/sleepCycles";
+import { tr } from "@/lib/i18n";
+import { CYCLE_MIN, stageLabel, hypnogram, type Stage } from "@/lib/sleepCycles";
 
 // نمودار پله‌ای تخمینی مراحل خواب (hypnogram). الگو از lib/sleepCycles.ts می‌آد
 // و اندازه‌گیری واقعی نیست؛ برچسب «تخمینی» کنارش می‌شینه. محور زمان چپ به راست.
@@ -35,10 +36,10 @@ export const SleepCycleHypnogram = memo(function SleepCycleHypnogram({
       <div className="slc-hypno-body">
         <div className="slc-hypno-labels" aria-hidden="true">
           {(["awake", "rem", "light", "deep"] as Stage[]).map((s) => (
-            <span key={s} style={{ top: `${(Y[s] / H) * 100}%` }}>{STAGE_LABEL[s]}</span>
+            <span key={s} style={{ top: `${(Y[s] / H) * 100}%` }}>{stageLabel(s)}</span>
           ))}
         </div>
-        <svg viewBox={`0 0 ${W} ${H}`} className="slc-hypno-svg" role="img" aria-label="نمودار تخمینی مراحل خواب دیشب">
+        <svg viewBox={`0 0 ${W} ${H}`} className="slc-hypno-svg" role="img" aria-label={tr("نمودار تخمینی مراحل خواب دیشب", "Estimated chart of last night's sleep stages")}>
           <defs>
             <linearGradient id={`slch${uid}`} x1="0" y1="0" x2="1" y2="0">
               <stop offset="0%" style={{ stopColor: "var(--slp-ink)" }} />

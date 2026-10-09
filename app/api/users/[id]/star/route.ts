@@ -1,3 +1,4 @@
+import { tr } from "@/lib/i18n";
 import { NextRequest, NextResponse } from "next/server";
 import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/auth";
@@ -24,7 +25,7 @@ export async function PATCH(req: NextRequest, { params }: { params: { id: string
     },
     select: { id: true },
   });
-  if (!friendship) return NextResponse.json({ error: "هنوز دوست نیستید" }, { status: 409 });
+  if (!friendship) return NextResponse.json({ error: tr("هنوز دوست نیستید", "You are not friends yet") }, { status: 409 });
 
   const body = await req.json().catch(() => ({}));
   const starred = !!body?.starred;

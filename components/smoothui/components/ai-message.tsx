@@ -3,6 +3,7 @@
 import { cn } from "@/lib/utils";
 import { Check, Copy, RotateCcw, ThumbsDown, ThumbsUp } from "lucide-react";
 import { type ReactNode, useEffect, useState } from "react";
+import { tr } from "@/lib/i18n";
 
 // منبع: SmoothUI (ai-message). تغییرهای عمدی نسبت به نسخه‌ی اصلی:
 //   • کلاس‌های رنگ shadcn (`text-muted-foreground`, `bg-muted`, `bg-foreground`)
@@ -96,7 +97,7 @@ const AIMessage = ({
           active: hasCopied,
           icon: hasCopied ? Check : Copy,
           key: "copy",
-          label: hasCopied ? "کپی شد" : "کپی",
+          label: hasCopied ? tr("کپی شد", "Copied") : tr("کپی", "Copy"),
           onClick: copy,
         }
       : null,
@@ -105,7 +106,7 @@ const AIMessage = ({
           active: false,
           icon: RotateCcw,
           key: "retry",
-          label: "دوباره",
+          label: tr("دوباره", "Retry"),
           onClick: onRetry,
         }
       : null,
@@ -116,7 +117,7 @@ const AIMessage = ({
           active: vote === "up",
           icon: ThumbsUp,
           key: "up",
-          label: "پاسخ خوب بود",
+          label: tr("پاسخ خوب بود", "Good response"),
           onClick: () => {
             setVote("up");
             onVote("up");
@@ -128,7 +129,7 @@ const AIMessage = ({
           active: vote === "down",
           icon: ThumbsDown,
           key: "down",
-          label: "پاسخ خوب نبود",
+          label: tr("پاسخ خوب نبود", "Bad response"),
           onClick: () => {
             setVote("down");
             onVote("down");

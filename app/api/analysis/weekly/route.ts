@@ -1,3 +1,4 @@
+import { tr } from "@/lib/i18n";
 import { featureBlocked } from "@/lib/featureFlagsServer";
 import { NextRequest, NextResponse } from "next/server";
 import { ModuleKey } from "@prisma/client";
@@ -22,7 +23,7 @@ export async function GET(req: NextRequest) {
     // سوپریوزر از سقف نرخ معافه (هم‌الگوی بقیه‌ی روت‌های پولی/AI) — چون
     // خودش تیم محصوله و باید بتونه پشت‌سرهم تست کنه.
     if (!isSuperAdmin && !(await checkRateLimit(`weekly-analysis:${userId}`, 60, 10 * 60 * 1000))) {
-      return NextResponse.json({ error: "تعداد درخواست بیش از حد مجاز — کمی صبر کن" }, { status: 429 });
+      return NextResponse.json({ error: tr("تعداد درخواست بیش از حد مجاز — کمی صبر کن", "Too many requests — wait a moment") }, { status: 429 });
     }
 
     const offsetRaw = req.nextUrl.searchParams.get("offset");
@@ -30,7 +31,7 @@ export async function GET(req: NextRequest) {
     if (offsetRaw !== null) {
       const n = Number(offsetRaw);
       if (!Number.isInteger(n) || n > 0 || n < MAX_OFFSET_BACK) {
-        return NextResponse.json({ error: "offset نامعتبر است" }, { status: 400 });
+        return NextResponse.json({ error: tr("offset نامعتبر است", "Invalid offset") }, { status: 400 });
       }
       offset = n;
     }
@@ -41,6 +42,6 @@ export async function GET(req: NextRequest) {
     const analysis = await getWeeklyAnalysis(userId, { timezone, offset, isSuperAdmin });
     return NextResponse.json({ analysis });
   } catch (err: any) {
-    return NextResponse.json({ error: err?.message || "خطای غیرمنتظره" }, { status: 500 });
+    return NextResponse.json({ error: err?.message || tr("خطای غیرمنتظره", "Unexpected error") }, { status: 500 });
   }
 }

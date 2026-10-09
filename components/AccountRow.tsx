@@ -2,7 +2,8 @@
 
 import Link from "next/link";
 import { motion } from "framer-motion";
-import { ChevronLeft } from "lucide-react";
+import { ChevronLeft, ChevronRight } from "lucide-react";
+import { isEn } from "@/lib/i18n";
 import { ToggleSwitch } from "@/components/ToggleSwitch";
 
 // ردیف استاندارد پنل کاربری — یا لینک به یه زیرصفحه‌ست (chevron)، یا یه
@@ -57,7 +58,7 @@ export function AccountRowLink({
       icon={icon}
       label={label}
       desc={desc}
-      end={<ChevronLeft size={15} className="account-row2-chevron" />}
+      end={isEn() ? <ChevronRight size={15} className="account-row2-chevron" /> : <ChevronLeft size={15} className="account-row2-chevron" />}
     />
   );
 }
@@ -99,6 +100,22 @@ export function AccountToggleRow({
           <ToggleSwitch checked={checked} onChange={onChange} label={label} />
         </span>
       }
+    />
+  );
+}
+
+// ردیف با کنترل دلخواه سمت انتهایی (مثلا انتخاب زبان) — همون ظاهر ردیف‌های دیگه
+export function AccountControlRow({
+  icon, label, desc, control, index,
+}: { icon: React.ReactNode; label: string; desc?: string; control: React.ReactNode; index?: number }) {
+  return (
+    <RowShell
+      as="div"
+      index={index}
+      icon={icon}
+      label={label}
+      desc={desc}
+      end={<span style={{ display: "flex", width: 168, flexShrink: 0 }}>{control}</span>}
     />
   );
 }

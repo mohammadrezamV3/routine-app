@@ -6,7 +6,7 @@ import { Calendar, History } from "lucide-react";
 import { useSession } from "next-auth/react";
 import { isoLocal, faNum } from "@/lib/jalali";
 import { AuthGate } from "./AuthGate";
-import { CalorieGoal, CALORIE_GOAL_LABELS, Sex } from "@/lib/calorieCalc";
+import { CalorieGoal, CALORIE_GOAL_LABELS, Sex, mealLabelDisplay } from "@/lib/calorieCalc";
 import { SegmentedTabs } from "./SegmentedTabs";
 import { DashDateSelector } from "./DashDateSelector";
 import { LockBodyScroll } from "./LockBodyScroll";
@@ -25,6 +25,7 @@ import { useDashboardPrefs } from "@/lib/dashboardPrefs";
 import { NumberInput } from "./NumberInput";
 import { reportLiveError, useLiveRefresh } from "@/lib/liveSync";
 import { Spinner } from "./Spinner";
+import { tr } from "@/lib/i18n";
 
 const now = new Date();
 const todayIso = isoLocal(now);
@@ -180,10 +181,10 @@ export function CaloriePanel() {
   }, [status, target, editingGoal]);
 
   async function saveGoal() {
-    if (!goal) { setGoalError("انتخاب هدف لازمه"); return; }
-    if (!sex) { setGoalError("انتخاب جنسیت لازمه (فقط برای محاسبه‌ی دقیق‌تر کالری)"); return; }
-    if (!goalHeight || !goalWeight) { setGoalError("قد و وزن لازمه"); return; }
-    if (needsAge && !age) { setGoalError("چون تاریخ تولدت توی حساب ثبت نشده، سنت رو وارد کن"); return; }
+    if (!goal) { setGoalError(tr("انتخاب هدف لازمه", "Please choose a goal")); return; }
+    if (!sex) { setGoalError(tr("انتخاب جنسیت لازمه (فقط برای محاسبه‌ی دقیق‌تر کالری)", "Please choose your sex (only used for a more accurate calorie estimate)")); return; }
+    if (!goalHeight || !goalWeight) { setGoalError(tr("قد و وزن لازمه", "Height and weight are required")); return; }
+    if (needsAge && !age) { setGoalError(tr("چون تاریخ تولدت توی حساب ثبت نشده، سنت رو وارد کن", "Your birth date is not saved on your account, so please enter your age")); return; }
 
     setGoalError(null);
     setSavingGoal(true);
@@ -198,7 +199,7 @@ export function CaloriePanel() {
     });
     const data = await res.json();
     setSavingGoal(false);
-    if (!res.ok) { setGoalError(data.error || "خطایی پیش آمد"); return; }
+    if (!res.ok) { setGoalError(data.error || tr("خطایی پیش آمد", "Something went wrong")); return; }
     saveBodyMetrics({ heightCm: +goalHeight, weightKg: +goalWeight, ageYears: age ? +age : undefined });
     setWeightReminder(false);
     setTarget(data.target);
@@ -215,7 +216,7 @@ export function CaloriePanel() {
     if (!res?.ok) {
       setEntries(prevEntries);
       setHistoryEntries(prevHistory);
-      reportLiveError("حذف نشد — دوباره امتحان کن");
+      reportLiveError(tr("حذف نشد — دوباره امتحان کن", "Could not delete. Try again"));
     }
   }
 
@@ -230,29 +231,29 @@ export function CaloriePanel() {
   }
 
   if (status === "unauthenticated") {
-    return <AuthGate message="برای استفاده از این سرویس وارد شوید" />;
+    return <AuthGate message={tr("برای استفاده از این سرویس وارد شوید", "Sign in to use this service")} />;
   }
 
   if (target === undefined) {
     if (loadStuck) {
       return (
         <div className="item-line empty" style={{ marginTop: 10 }}>
-          بارگذاری کالری‌شمار خیلی طول کشید — اتصال اینترنت را چک کن.
+          {tr("بارگذاری کالری‌شمار خیلی طول کشید — اتصال اینترنت را چک کن.", "Loading the calorie tracker took too long. Check your internet connection.")}
           <button
             type="button"
             className="account-outline-btn"
-            style={{ marginRight: 10 }}
+            style={{ marginInlineStart: 10 }}
             onClick={() => { setLoadStuck(false); loadTarget(); }}
           >
-            تلاش دوباره
+            {tr("تلاش دوباره", "Try again")}
           </button>
         </div>
       );
     }
-    return <div className="item-line is-loading" style={{ marginTop: 10 }}>در حال بارگذاری…</div>;
+    return <div className="item-line is-loading" style={{ marginTop: 10 }}>{tr("در حال بارگذاری…", "Loading…")}</div>;
   }
 
-  const mealTypes = target?.mealBreakdown?.length ? target.mealBreakdown.map((m) => ({ key: m.key, label: m.label })) : DEFAULT_MEAL_TYPES;
+  const mealTypes = (target?.mealBreakdown?.length ? target.mealBreakdown.map((m) => ({ key: m.key, label: m.label })) : DEFAULT_MEAL_TYPES).map((m) => ({ key: m.key, label: mealLabelDisplay(m.key, m.label) }));
   const totalToday = entries.reduce((s, e) => s + e.customCalories, 0);
   // عمدا اینجا سقف ۱۰۰٪ زده نمی‌شه — کارت کالری امروز خودش برای طول نوار
   // سقف می‌زنه ولی برای تشخیص «رد شدن از هدف» (رنگ قرمز) به همون درصد
@@ -265,27 +266,27 @@ export function CaloriePanel() {
       {!target ? (
         <div style={{ marginTop: 10 }}>
           <div className="section-note">
-            اول هدفت رو مشخص کن تا کالری روزانه و هر وعده رو براش حساب کنیم
+            {tr("اول هدفت رو مشخص کن تا کالری روزانه و هر وعده رو براش حساب کنیم", "First set your goal so we can work out your daily and per-meal calories")}
           </div>
 
-          <label className="exercise-form-label">هدف</label>
+          <label className="exercise-form-label">{tr("هدف", "Goal")}</label>
           <SegmentedTabs
             active={goal}
             onChange={setGoal}
             options={(Object.keys(CALORIE_GOAL_LABELS) as CalorieGoal[]).map((g) => ({ value: g, label: CALORIE_GOAL_LABELS[g] }))}
           />
 
-          <label className="exercise-form-label">جنسیت</label>
+          <label className="exercise-form-label">{tr("جنسیت", "Sex")}</label>
           <SegmentedTabs
             active={sex}
             onChange={setSex}
             options={[
-              { value: "male", label: "مرد" },
-              { value: "female", label: "زن" },
+              { value: "male", label: tr("مرد", "Male") },
+              { value: "female", label: tr("زن", "Female") },
             ]}
           />
 
-          <label className="exercise-form-label">چند وعده در روز می‌خوای؟</label>
+          <label className="exercise-form-label">{tr("چند وعده در روز می‌خوای؟", "How many meals a day?")}</label>
           <SegmentedTabs
             active={String(mealsPerDay)}
             onChange={(v) => setMealsPerDay(Number(v))}
@@ -294,16 +295,16 @@ export function CaloriePanel() {
 
           <div style={{ display: "flex", gap: 10, marginTop: 14 }}>
             <div style={{ flex: 1 }}>
-              <label className="exercise-form-label">قد (سانتی‌متر)</label>
+              <label className="exercise-form-label">{tr("قد (سانتی‌متر)", "Height (cm)")}</label>
               <NumberInput className="wsearch-newform-name" value={goalHeight} onChange={(v) => setGoalHeight(v)} />
             </div>
             <div style={{ flex: 1 }}>
-              <label className="exercise-form-label">وزن (کیلوگرم)</label>
+              <label className="exercise-form-label">{tr("وزن (کیلوگرم)", "Weight (kg)")}</label>
               <NumberInput className="wsearch-newform-name" value={goalWeight} onChange={(v) => setGoalWeight(v)} />
             </div>
             {needsAge && (
               <div style={{ flex: 1 }}>
-                <label className="exercise-form-label">سن</label>
+                <label className="exercise-form-label">{tr("سن", "Age")}</label>
                 <NumberInput className="wsearch-newform-name" value={age} onChange={(v) => setAge(v)} />
               </div>
             )}
@@ -312,7 +313,7 @@ export function CaloriePanel() {
           {goalError && <div className="field-error-msg" style={{ display: "block", marginTop: 10 }}>{goalError}</div>}
           <div style={{ display: "flex", gap: 8, marginTop: 14 }}>
             <button onClick={saveGoal} disabled={savingGoal} style={{ flex: 2, borderColor: "var(--accent)", color: "var(--accent)" }}>
-              {savingGoal ? <Spinner size={14} /> : "محاسبه‌ی برنامه کالری"}
+              {savingGoal ? <Spinner size={14} /> : tr("محاسبه‌ی برنامه کالری", "Calculate calorie plan")}
             </button>
           </div>
         </div>
@@ -328,13 +329,13 @@ export function CaloriePanel() {
               />
               <div className="flex flex-wrap items-center gap-2 lg:order-1 lg:shrink-0 lg:flex-nowrap">
                 <DashFilterButton
-                  label="تاریخچه"
+                  label={tr("تاریخچه", "History")}
                   icon={<History size={15} />}
                   active={!isSelectedToday}
                   onClick={() => setHistoryPickerOpen(true)}
                 />
                 <DashFilterButton
-                  label="امروز"
+                  label={tr("امروز", "Today")}
                   icon={<Calendar size={15} />}
                   active={isSelectedToday}
                   onClick={() => { setSelectedIso(todayIso); setRecenterKey((k) => k + 1); }}
@@ -345,14 +346,14 @@ export function CaloriePanel() {
             {weightReminder && (
               <div className="flex flex-wrap items-center justify-between gap-2.5 rounded-2xl border px-3.5 py-2.5" style={{ borderColor: "rgba(var(--accent-rgb),.35)", background: "rgba(var(--accent-rgb),.08)" }}>
                 <span className="text-[11.5px] font-semibold text-dash-text sm:text-[12.5px]">
-                  دو هفته از آخرین ثبت وزنت گذشته — برای دقیق‌موندن محاسبه‌ها به‌روزش کن
+                  {tr("دو هفته از آخرین ثبت وزنت گذشته — برای دقیق‌موندن محاسبه‌ها به‌روزش کن", "It has been two weeks since you last logged your weight. Update it to keep the numbers accurate")}
                 </span>
                 <button
                   type="button"
                   onClick={() => setEditingGoal(true)}
                   className="text-[11px] font-bold text-dash-green transition hover:brightness-110 sm:text-[12.5px]"
                 >
-                  به‌روزرسانی وزن
+                  {tr("به‌روزرسانی وزن", "Update weight")}
                 </button>
               </div>
             )}
@@ -393,8 +394,8 @@ export function CaloriePanel() {
           </div>
 
           <div className="disclaimer-note">
-            <span className="disclaimer-warn">توجه: </span>
-            این جدول کالری/وعده‌ها فقط یک پیشنهاد است و هیچ اجباری به اجرای دقیق آن نیست؛ مسئولیت کل برنامه‌ی غذایی با خود کاربر است.
+            <span className="disclaimer-warn">{tr("توجه: ", "Note: ")}</span>
+            {tr("این جدول کالری/وعده‌ها فقط یک پیشنهاد است و هیچ اجباری به اجرای دقیق آن نیست؛ مسئولیت کل برنامه‌ی غذایی با خود کاربر است.", "This calorie and meal table is only a suggestion and there is no obligation to follow it exactly; the user is responsible for the whole meal plan.")}
           </div>
         </>
       )}
@@ -410,8 +411,8 @@ export function CaloriePanel() {
           <div className="modal-overlay open" onClick={() => setHistoryPickerOpen(false)} />
           <div className="modal-panel liquid-glass-panel dash-scope open">
             <div className="modal-head">
-              <div className="modal-title">انتخاب تاریخ</div>
-              <button className="nav-close" onClick={() => setHistoryPickerOpen(false)} aria-label="بستن">×</button>
+              <div className="modal-title">{tr("انتخاب تاریخ", "Pick a date")}</div>
+              <button className="nav-close" onClick={() => setHistoryPickerOpen(false)} aria-label={tr("بستن", "Close")}>×</button>
             </div>
             <div className="modal-body">
               <CalorieHistoryCalendar targetKcal={target.dailyTargetKcal} onPick={pickDate} />

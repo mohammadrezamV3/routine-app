@@ -16,6 +16,7 @@ import { fmtDate } from "@/lib/mentorFormat";
 import { exportCsvUrl } from "@/lib/mentorToolsTypes";
 import { publicUserName } from "@/lib/mentorTypes";
 import type { ProgramRow, ProgramsResponse } from "@/lib/mentorTypes";
+import { tr } from "@/lib/i18n";
 
 const ic = (Icon: typeof Copy, size: number) => <Icon size={size} strokeWidth={MI_STROKE} aria-hidden />;
 
@@ -64,9 +65,9 @@ export function MentorProgramsSent() {
     return (
       <MentorEmptyState
         icon={ic(ClipboardList, MI.empty)}
-        title="هنوز برنامه‌ای نساختی"
-        text="اولین برنامه رو بساز و برای یکی از شاگردهات بفرست"
-        action={<Link href="/mentor/programs/new" className="trade-primary-btn mentor-btn">برنامه‌ی تازه</Link>}
+        title={tr("هنوز برنامه‌ای نساختی", "You have not created any programs yet")}
+        text={tr("اولین برنامه رو بساز و برای یکی از شاگردهات بفرست", "Create your first program and send it to one of your students")}
+        action={<Link href="/mentor/programs/new" className="trade-primary-btn mentor-btn">{tr("برنامه‌ی تازه", "New program")}</Link>}
       />
     );
   }
@@ -79,17 +80,17 @@ export function MentorProgramsSent() {
           const cr = changeRequested(p);
           const never = p.status === "DRAFT" && !p.sentAt;
           const actions: MentorMenuAction[] = [
-            { label: "ذخیره به‌عنوان قالب", icon: ic(LayoutTemplate, MI.btn), onClick: () => setTplFor(p) },
-            { label: "کپی برای شاگرد", icon: ic(Copy, MI.btn), onClick: () => router.push(`/mentor/programs/${p.id}/duplicate`) },
-            { label: "خروجی CSV", icon: ic(Download, MI.btn), onClick: () => { window.location.href = exportCsvUrl(p.counterpart.id); } },
-            ...(never ? [{ label: "حذف برنامه", icon: ic(Trash2, MI.btn), danger: true, onClick: () => { setDelError(null); setDelFor(p); } }] : []),
+            { label: tr("ذخیره به‌عنوان قالب", "Save as template"), icon: ic(LayoutTemplate, MI.btn), onClick: () => setTplFor(p) },
+            { label: tr("کپی برای شاگرد", "Copy for a student"), icon: ic(Copy, MI.btn), onClick: () => router.push(`/mentor/programs/${p.id}/duplicate`) },
+            { label: tr("خروجی CSV", "Export CSV"), icon: ic(Download, MI.btn), onClick: () => { window.location.href = exportCsvUrl(p.counterpart.id); } },
+            ...(never ? [{ label: tr("حذف برنامه", "Delete program"), icon: ic(Trash2, MI.btn), danger: true, onClick: () => { setDelError(null); setDelFor(p); } }] : []),
           ];
           const showBar = p.status === "ACTIVE" && !p.progress.hidden;
           return (
             <li key={p.id} className="mv2-pg-card">
               <div className="mv2-pg-card-top">
                 <ProgramStatusBadge status={p.status} changeRequested={cr} />
-                <MentorKebabMenu actions={actions} label={`کارهای بیشتر روی ${p.title}`} />
+                <MentorKebabMenu actions={actions} label={tr(`کارهای بیشتر روی ${p.title}`, `More actions for ${p.title}`)} />
               </div>
               <h3 className="mv2-pg-card-title">
                 <Link href={`/mentor-programs/${p.id}`} prefetch={false}>{p.title}</Link>
@@ -98,17 +99,17 @@ export function MentorProgramsSent() {
                 <MentorUserAvatar avatarUrl={p.counterpart.avatarUrl} name={name} size={20} />
                 <span>{name}</span>
                 <span aria-hidden>·</span>
-                <span>{p.type === "WORKOUT" ? <Dumbbell size={13} strokeWidth={MI_STROKE} aria-hidden /> : <CalendarCheck size={13} strokeWidth={MI_STROKE} aria-hidden />} {p.type === "WORKOUT" ? "تمرین ورزشی" : "روتین"}</span>
-                {p.startDate && <><span aria-hidden>·</span><span>{fmtDate(p.startDate)}{p.endDate ? ` تا ${fmtDate(p.endDate)}` : ""}</span></>}
+                <span>{p.type === "WORKOUT" ? <Dumbbell size={13} strokeWidth={MI_STROKE} aria-hidden /> : <CalendarCheck size={13} strokeWidth={MI_STROKE} aria-hidden />} {p.type === "WORKOUT" ? tr("تمرین ورزشی", "Workout") : tr("روتین", "Routine")}</span>
+                {p.startDate && <><span aria-hidden>·</span><span>{fmtDate(p.startDate)}{p.endDate ? tr(` تا ${fmtDate(p.endDate)}`, ` to ${fmtDate(p.endDate)}`) : ""}</span></>}
               </p>
               {showBar && (
                 <div className="mv2-pg-card-bar">
-                  <MentorDashBar rate={p.progress.rate} label={`پیشرفت ${p.title}`} />
-                  <b>{fa(Math.round(normRate(p.progress.rate) * 100))}٪</b>
+                  <MentorDashBar rate={p.progress.rate} label={tr(`پیشرفت ${p.title}`, `Progress on ${p.title}`)} />
+                  <b>{fa(Math.round(normRate(p.progress.rate) * 100))}{tr("٪", "%")}</b>
                 </div>
               )}
-              {cr && <Link href={`/mentor/programs/${p.id}/edit`} className="account-outline-btn mentor-btn is-sm">دیدن درخواست تغییر</Link>}
-              {never && <Link href={`/mentor/programs/${p.id}/edit`} className="account-outline-btn mentor-btn is-sm">فرستادن</Link>}
+              {cr && <Link href={`/mentor/programs/${p.id}/edit`} className="account-outline-btn mentor-btn is-sm">{tr("دیدن درخواست تغییر", "View change request")}</Link>}
+              {never && <Link href={`/mentor/programs/${p.id}/edit`} className="account-outline-btn mentor-btn is-sm">{tr("فرستادن", "Send")}</Link>}
             </li>
           );
         })}
@@ -116,9 +117,9 @@ export function MentorProgramsSent() {
       {tplFor && <MentorTemplateSaveDialog defaultName={tplFor.title} programId={tplFor.id} onClose={() => setTplFor(null)} />}
       {delFor && (
         <MentorConfirmDialog
-          message={`برنامه‌ی «${delFor.title}» حذف بشه؟`}
-          hint="برنامه‌ی حذف‌شده برنمی‌گرده"
-          confirmLabel="حذف برنامه"
+          message={tr(`برنامه‌ی «${delFor.title}» حذف بشه؟`, `Delete the program "${delFor.title}"?`)}
+          hint={tr("برنامه‌ی حذف‌شده برنمی‌گرده", "A deleted program cannot be restored")}
+          confirmLabel={tr("حذف برنامه", "Delete program")}
           busy={delBusy}
           error={delError}
           onConfirm={remove}
