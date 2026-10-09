@@ -10,6 +10,7 @@ import {
 import type { WeekArchetypeKey } from "@/lib/weeklyAnalysis/types";
 import type { WeeklyLetterData } from "@/lib/weeklyLetter/types";
 import { CountText, DOM_GRAD, GradeStamp, WL_EASE, useLite } from "./WeeklyLetterShared";
+import { tr } from "@/lib/i18n";
 import { GradientRing } from "./GradientRing";
 import { letterYear, scoreIntensity } from "./WeeklyLetterUtils";
 
@@ -87,19 +88,19 @@ export function WeeklyLetterCover({
         <div className="wl-mast-side">
           {isCurrent ? (
             <>
-              <span className="wl-mast-k">این هفته</span>
-              <b className="wl-mast-live"><i className="wl-live-dot" aria-hidden="true" />در جریان</b>
+              <span className="wl-mast-k">{tr("این هفته", "This week")}</span>
+              <b className="wl-mast-live"><i className="wl-live-dot" aria-hidden="true" />{tr("در جریان", "In progress")}</b>
             </>
           ) : letter.issueNo ? (
             <>
-              <span className="wl-mast-k">شماره</span>
+              <span className="wl-mast-k">{tr("شماره", "Issue")}</span>
               <b className="wl-mast-no">{letter.issueNo}</b>
             </>
           ) : null}
         </div>
         <div className="wl-mast-center">
           <BrandMark />
-          <p className="wl-mast-title">آنالیز هفتگی</p>
+          <p className="wl-mast-title">{tr("آنالیز هفتگی", "Weekly review")}</p>
         </div>
         <div className="wl-mast-side is-end">
           <span className="wl-mast-k">{letter.weekLabel}</span>
@@ -115,11 +116,11 @@ export function WeeklyLetterCover({
             <GradientRing value={pct} size={176} stroke={13} delay={0.35} grad={DOM_GRAD}>
               <span className="wl-score-center">
                 {score === null ? (
-                  <span className="wl-score-none">بدون داده</span>
+                  <span className="wl-score-none">{tr("بدون داده", "No data")}</span>
                 ) : (
                   <>
                     <CountText value={String(Math.round(score))} className="wl-score-num wl-grad-text" duration={1.4} />
-                    <span className="wl-score-of">از 100</span>
+                    <span className="wl-score-of">{tr("از 100", "out of 100")}</span>
                   </>
                 )}
               </span>
@@ -131,25 +132,25 @@ export function WeeklyLetterCover({
               <span className={`wl-chip ${deltaUp ? "is-good" : deltaDown ? "is-bad" : ""}`}>
                 {deltaUp ? <TrendingUp size={14} /> : deltaDown ? <TrendingDown size={14} /> : null}
                 <b dir="ltr">{deltaUp ? "+" : deltaDown ? "−" : ""}{Math.abs(Math.round(o.delta))}</b>
-                {o.prevScore !== null ? `نسبت به هفته‌ی قبل (${Math.round(o.prevScore)})` : "نسبت به هفته‌ی قبل"}
+                {o.prevScore !== null ? tr(`نسبت به هفته‌ی قبل (${Math.round(o.prevScore)})`, `vs last week (${Math.round(o.prevScore)})`) : tr("نسبت به هفته‌ی قبل", "vs last week")}
               </span>
             )}
             {o.rank && (
               <span className={`wl-chip ${o.rank.position === 1 ? "is-gold" : ""}`}>
                 <Trophy size={14} />
-                {o.rank.position === 1 ? `بهترین هفته از ${o.rank.of} هفته‌ی اخیر` : `رتبه ${o.rank.position} از ${o.rank.of} هفته‌ی اخیر`}
+                {o.rank.position === 1 ? tr(`بهترین هفته از ${o.rank.of} هفته‌ی اخیر`, `Best of the last ${o.rank.of} weeks`) : tr(`رتبه ${o.rank.position} از ${o.rank.of} هفته‌ی اخیر`, `Rank ${o.rank.position} of the last ${o.rank.of} weeks`)}
               </span>
             )}
             <span className="wl-chip">
-              <b>{o.activeDays}</b> از 7 روز فعال
+              <b>{o.activeDays}</b> {tr("از 7 روز فعال", "of 7 days active")}
             </span>
           </div>
           {onPlayStory && storyCount >= 3 && (
             <motion.div className="wl-story-cta" variants={item}>
               <button type="button" className="trade-primary-btn wl-cta-btn wl-story-play" onClick={onPlayStory}>
-                <Play size={16} fill="currentColor" />پخش داستان هفته
+                <Play size={16} fill="currentColor" className="dir-flip" />{tr("پخش داستان هفته", "Play the week story")}
               </button>
-              <span className="wl-story-meta">{storyCount} اسلاید، {storySeconds > 0 && storySeconds < 60 ? `حدود ${storySeconds} ثانیه` : "حدود یک دقیقه"}</span>
+              <span className="wl-story-meta">{tr(`${storyCount} اسلاید، `, `${storyCount} slides, `)}{storySeconds > 0 && storySeconds < 60 ? tr(`حدود ${storySeconds} ثانیه`, `about ${storySeconds} seconds`) : tr("حدود یک دقیقه", "about a minute")}</span>
             </motion.div>
           )}
         </motion.div>
@@ -160,7 +161,7 @@ export function WeeklyLetterCover({
               <Fragment key={i}>
                 <motion.span className="wl-word" variants={word}>{w}</motion.span>{" "}
               </Fragment>
-            )) : "هفته‌ی تو"}
+            )) : tr("هفته‌ی تو", "Your week")}
           </motion.h1>
 
           {letter.archetype && Arch && (
@@ -174,7 +175,7 @@ export function WeeklyLetterCover({
           )}
 
           <motion.div className="wl-intro" variants={item}>
-            <p className="wl-greet">{letter.greetingName ? `سلام ${letter.greetingName}` : "سلام"}</p>
+            <p className="wl-greet">{letter.greetingName ? tr(`سلام ${letter.greetingName}`, `Hi ${letter.greetingName}`) : tr("سلام", "Hi")}</p>
             {letter.intro && <p className="wl-intro-text">{letter.intro}</p>}
           </motion.div>
         </div>

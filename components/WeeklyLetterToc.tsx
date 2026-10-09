@@ -4,6 +4,7 @@
 // روی موبایل افقی اسکرول می‌شه و چیپ فعال خودکار وسط میاد.
 import { useCallback, useEffect, useRef, useState } from "react";
 import { useReducedMotion } from "framer-motion";
+import { tr } from "@/lib/i18n";
 
 export type TocItem = { id: string; label: string };
 
@@ -56,7 +57,7 @@ export function WeeklyLetterToc({ items }: { items: TocItem[] }) {
 
   if (items.length < 2) return null;
   return (
-    <nav className="wl-toc" aria-label="فصل‌های آنالیز هفتگی">
+    <nav className="wl-toc" aria-label={tr("فصل‌های آنالیز هفتگی", "Weekly review chapters")}>
       <div className="wl-toc-row" ref={rowRef}>
         {items.map((it, i) => (
           <a

@@ -7,9 +7,11 @@ import { LayoutGrid } from "lucide-react";
 import { ANALYSIS_DOMAIN_LABELS, type DomainResult } from "@/lib/weeklyAnalysis/types";
 import type { LetterChapterProps } from "./WeeklyLetterCtx";
 import { DOMAIN_HREFS, DOMAIN_ICONS, Reveal } from "./WeeklyLetterShared";
+import { CAL_WEEK_ORDER, weekdayShort } from "@/lib/jalali";
+import { tr } from "@/lib/i18n";
 import { WeeklyLetterChapterHead } from "./WeeklyLetterChapterHead";
 
-const LETTERS = ["ش", "ی", "د", "س", "چ", "پ", "ج"];
+const dayLetters = () => CAL_WEEK_ORDER.map(weekdayShort);
 
 function step(v: number | null): 0 | 1 | 2 | 3 | 4 {
   if (v === null) return 0;
@@ -32,12 +34,13 @@ export function WeeklyLetterMatrix({ ctx, no }: LetterChapterProps & { no?: numb
   if (rows.length === 0) return null;
   const noData = domains.filter((d) => !(d.hasData && d.score !== null));
   const cols = days.slice(0, 7);
+  const LETTERS = dayLetters();
 
   return (
     <section id="matrix" className="wl-ch">
-      <WeeklyLetterChapterHead icon={LayoutGrid} title="نقشه‌ی هفته" no={no} />
+      <WeeklyLetterChapterHead icon={LayoutGrid} title={tr("نقشه‌ی هفته", "Week map")} no={no} />
       <Reveal className="wl-card wl-dp-mx">
-        <div className="wl-dp-mx-grid" role="table" aria-label="امتیاز هر بخش در هر روز">
+        <div className="wl-dp-mx-grid" role="table" aria-label={tr("امتیاز هر بخش در هر روز", "Score of each area on each day")}>
           <span className="wl-dp-mx-corner" />
           {cols.map((d, i) => (
             <button
@@ -46,7 +49,7 @@ export function WeeklyLetterMatrix({ ctx, no }: LetterChapterProps & { no?: numb
               className="wl-dp-mx-dh"
               disabled={d.isFuture}
               onClick={() => jump(i)}
-              aria-label={`جزئیات ${d.weekday}`}
+              aria-label={tr(`جزئیات ${d.weekday}`, `Details for ${d.weekday}`)}
             >{LETTERS[i]}</button>
           ))}
 
@@ -60,7 +63,7 @@ export function WeeklyLetterMatrix({ ctx, no }: LetterChapterProps & { no?: numb
                   const raw = r.daily[i];
                   const v = d.isFuture || raw === null || raw === undefined ? null : Math.round(raw);
                   if (v === null) {
-                    return <span key={i} className="wl-dp-mx-cell s0" title={d.isFuture ? "هنوز نرسیده" : "بدون داده"} aria-hidden="true">·</span>;
+                    return <span key={i} className="wl-dp-mx-cell s0" title={d.isFuture ? tr("هنوز نرسیده", "Not yet") : tr("بدون داده", "No data")} aria-hidden="true">·</span>;
                   }
                   return (
                     <button
@@ -68,8 +71,8 @@ export function WeeklyLetterMatrix({ ctx, no }: LetterChapterProps & { no?: numb
                       type="button"
                       className={`wl-dp-mx-cell s${step(v)}`}
                       onClick={() => jump(i)}
-                      aria-label={`${label}، ${d.weekday}: ${v}`}
-                      title={`${label}، ${d.weekday}: ${v}`}
+                      aria-label={`${label}${tr("، ", ", ")}${d.weekday}: ${v}`}
+                      title={`${label}${tr("، ", ", ")}${d.weekday}: ${v}`}
                     ><span>{v}</span></button>
                   );
                 })}
@@ -79,15 +82,15 @@ export function WeeklyLetterMatrix({ ctx, no }: LetterChapterProps & { no?: numb
         </div>
         <div className="wl-dp-mx-foot">
           <span className="wl-dp-mx-legend" aria-hidden="true">
-            کم{[1, 2, 3, 4].map((s) => <i key={s} className={`s${s}`} />)}زیاد
+            {tr("کم", "Less")}{[1, 2, 3, 4].map((s) => <i key={s} className={`s${s}`} />)}{tr("زیاد", "More")}
           </span>
           {noData.length > 0 && (
             <span className="wl-dp-mx-nodata">
-              بدون داده:{" "}
+              {tr("بدون داده:", "No data:")}{" "}
               {noData.map((d, i) => (
                 <span key={d.domain}>
                   <Link href={DOMAIN_HREFS[d.domain]} prefetch={false}>{ANALYSIS_DOMAIN_LABELS[d.domain]}</Link>
-                  {i < noData.length - 1 ? "، " : ""}
+                  {i < noData.length - 1 ? tr("، ", ", ") : ""}
                 </span>
               ))}
             </span>

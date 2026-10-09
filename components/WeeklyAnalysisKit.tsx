@@ -9,7 +9,8 @@ import {
 } from "lucide-react";
 import { RING_GREEN, type RingGrad } from "./GradientRing";
 import type { AnalysisDomain, DayDetails, Insight, WeeklyAnalysis } from "@/lib/weeklyAnalysis/types";
-import { J_MONTHS, toJalali } from "@/lib/jalali";
+import { jMonthName, toJalali } from "@/lib/jalali";
+import { tr } from "@/lib/i18n";
 
 // کمک‌ابزارهای مشترک همه‌ی کامپوننت‌های «آنالیز هفتگی» — یک جا تا آیکون/
 // رنگ/لینک هر دامنه، قالب اعداد و منحنی حرکت بین کارت‌ها هیچ‌وقت از هم
@@ -117,7 +118,7 @@ export function jalaliShort(iso: string): string {
   const [gy, gm, gd] = iso.slice(0, 10).split("-").map(Number);
   if (!gy || !gm || !gd) return iso;
   const [, jm, jd] = toJalali(gy, gm, gd);
-  return `${jd} ${J_MONTHS[jm - 1]}`;
+  return `${jd} ${jMonthName(jm - 1)}`;
 }
 
 // حرف اول نام روز («سه‌شنبه» → «س») — برای ستون‌های باریک نمودارها
@@ -126,15 +127,16 @@ export function weekdayLetter(weekday: string): string {
 }
 
 export function relativeWeekLabel(offset: number): string {
-  if (offset === 0) return "هفته‌ی جاری";
-  if (offset === -1) return "هفته‌ی قبل";
-  return `${Math.abs(offset)} هفته پیش`;
+  if (offset === 0) return tr("هفته‌ی جاری", "This week");
+  if (offset === -1) return tr("هفته‌ی قبل", "Last week");
+  return tr(`${Math.abs(offset)} هفته پیش`, `${Math.abs(offset)} weeks ago`);
 }
 
+// getter ها موقع خوندن زبان جاری رو می‌گیرن
 export const CONFIDENCE_LABELS: Record<"low" | "medium" | "high", string> = {
-  low: "کم",
-  medium: "متوسط",
-  high: "بالا",
+  get low() { return tr("کم", "Low"); },
+  get medium() { return tr("متوسط", "Medium"); },
+  get high() { return tr("بالا", "High"); },
 };
 
 export const fmtInt = (n: number) => Math.round(n).toLocaleString("en-US");
@@ -276,7 +278,7 @@ export function CountText({ text, className }: { text: string; className?: strin
 // ---- نشان تغییر نسبت به هفته‌ی قبل ----
 // null یعنی «هفته‌ی قبل داده نداشت» — نه صفر، پس عددی نشون نمی‌دیم.
 export function DeltaChip({ delta, size = "md", suffix }: { delta: number | null; size?: "sm" | "md" | "lg"; suffix?: string }) {
-  if (delta === null) return <span className={`wk-delta flat ${size}`} aria-label="بدون مقایسه">—</span>;
+  if (delta === null) return <span className={`wk-delta flat ${size}`} aria-label={tr("بدون مقایسه", "No comparison")}>—</span>;
   const d = Math.round(delta);
   const cls = d > 0 ? "up" : d < 0 ? "down" : "flat";
   const Icon = d > 0 ? ArrowUpRight : d < 0 ? ArrowDownRight : Minus;
@@ -320,59 +322,64 @@ export async function waFetch<T>(url: string, init?: RequestInit): Promise<T> {
     });
   } catch (e) {
     if ((e as Error)?.name === "AbortError") throw e;
-    throw new Error("مشکلی در اتصال به سرور پیش اومد");
+    throw new Error(tr("مشکلی در اتصال به سرور پیش اومد", "Could not connect to the server"));
   }
   const data = await res.json().catch(() => ({}));
-  if (!res.ok) throw new Error((data as { error?: string })?.error || "خطایی پیش اومد");
+  if (!res.ok) throw new Error((data as { error?: string })?.error || tr("خطایی پیش اومد", "Something went wrong"));
   return data as T;
 }
 
 // ---- متن انسانی جزئیات هر روز (برگه‌ی روز) ----
-const FITNESS_LABELS: Record<NonNullable<DayDetails["fitness"]>["status"], string> = {
-  done: "طبق برنامه تمرین کردی",
-  extra: "روز استراحت بود ولی تمرین کردی",
-  rest: "روز استراحت برنامه",
-  missed: "تمرین انجام نشد",
-  partial: "تمرین نیمه‌کاره موند",
+const fitnessLabel = (st: NonNullable<DayDetails["fitness"]>["status"]): string => {
+  switch (st) {
+    case "done": return tr("طبق برنامه تمرین کردی", "You worked out as planned");
+    case "extra": return tr("روز استراحت بود ولی تمرین کردی", "It was a rest day but you worked out");
+    case "missed": return tr("تمرین انجام نشد", "Workout missed");
+    case "partial": return tr("تمرین نیمه‌کاره موند", "Workout left unfinished");
+    case "rest":
+    default: return tr("روز استراحت برنامه", "Planned rest day");
+  }
 };
 
 export function formatDayDetail(domain: AnalysisDomain, d: DayDetails): string | null {
   switch (domain) {
     case "routine": {
       const r = d.routine;
-      return r ? `${fmtInt(r.done)} از ${fmtInt(r.total)} برنامه انجام شد` : null;
+      return r ? tr(`${fmtInt(r.done)} از ${fmtInt(r.total)} برنامه انجام شد`, `${fmtInt(r.done)} of ${fmtInt(r.total)} items done`) : null;
     }
     case "sleep": {
       const s = d.sleep;
       if (!s) return null;
       const parts: string[] = [];
-      if (s.hours !== null) parts.push(`${s.hours.toFixed(1)} ساعت`);
-      if (s.sleptAt && s.wokeAt) parts.push(`${s.sleptAt} تا ${s.wokeAt}`);
-      return parts.length ? parts.join(" · ") : "خواب ثبت شده";
+      if (s.hours !== null) parts.push(`${s.hours.toFixed(1)} ${tr("ساعت", "hours")}`);
+      if (s.sleptAt && s.wokeAt) parts.push(`${s.sleptAt} ${tr("تا", "to")} ${s.wokeAt}`);
+      return parts.length ? parts.join(" · ") : tr("خواب ثبت شده", "Sleep logged");
     }
     case "fitness":
-      return d.fitness ? FITNESS_LABELS[d.fitness.status] : null;
+      return d.fitness ? fitnessLabel(d.fitness.status) : null;
     case "nutrition": {
       const n = d.nutrition;
       if (!n) return null;
-      const base = n.target ? `${fmtInt(n.kcal)} از ${fmtInt(n.target)} کیلوکالری` : `${fmtInt(n.kcal)} کیلوکالری`;
-      return n.protein ? `${base} · ${fmtInt(n.protein)} گرم پروتئین` : base;
+      const base = n.target
+        ? tr(`${fmtInt(n.kcal)} از ${fmtInt(n.target)} کیلوکالری`, `${fmtInt(n.kcal)} of ${fmtInt(n.target)} kcal`)
+        : tr(`${fmtInt(n.kcal)} کیلوکالری`, `${fmtInt(n.kcal)} kcal`);
+      return n.protein ? `${base} · ${tr(`${fmtInt(n.protein)} گرم پروتئین`, `${fmtInt(n.protein)} g protein`)}` : base;
     }
     case "trading": {
       const t = d.trading;
       if (!t) return null;
-      const out = [`${fmtInt(t.count)} معامله`];
-      if (t.wins || t.losses) out.push(`${fmtInt(t.wins)} برد، ${fmtInt(t.losses)} باخت`);
+      const out = [tr(`${fmtInt(t.count)} معامله`, `${fmtInt(t.count)} ${t.count === 1 ? "trade" : "trades"}`)];
+      if (t.wins || t.losses) out.push(tr(`${fmtInt(t.wins)} برد، ${fmtInt(t.losses)} باخت`, `${fmtInt(t.wins)} won, ${fmtInt(t.losses)} lost`));
       if (t.net !== null) out.push(`${t.net > 0 ? "+" : t.net < 0 ? "−" : ""}${fmtInt(Math.abs(t.net))}${t.currency ? ` ${t.currency}` : ""}`);
       return out.join(" · ");
     }
     case "tasks": {
       const t = d.tasks;
-      return t ? `${fmtInt(t.done)} از ${fmtInt(t.due)} کار انجام شد` : null;
+      return t ? tr(`${fmtInt(t.done)} از ${fmtInt(t.due)} کار انجام شد`, `${fmtInt(t.done)} of ${fmtInt(t.due)} tasks done`) : null;
     }
     case "learning": {
       const l = d.learning;
-      return l ? `${fmtInt(l.steps)} گام رودمپ` : null;
+      return l ? tr(`${fmtInt(l.steps)} گام رودمپ`, `${fmtInt(l.steps)} roadmap ${l.steps === 1 ? "step" : "steps"}`) : null;
     }
   }
 }

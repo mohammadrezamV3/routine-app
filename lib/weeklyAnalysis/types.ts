@@ -3,19 +3,22 @@
 // این فایل هیچ import سروری نداره تا توی باندل کلاینت هم امن باشه.
 // هر تغییری این‌جا یعنی هر سه لایه باید هماهنگ بشن.
 
+import { tr } from "@/lib/i18n";
+
 // شنبه تا جمعه، به وقت محلی کاربر (User.timezone)
 export type AnalysisDomain = "routine" | "sleep" | "tasks" | "fitness" | "nutrition" | "trading" | "learning";
 
 export const ANALYSIS_DOMAINS: AnalysisDomain[] = ["routine", "sleep", "tasks", "fitness", "nutrition", "trading", "learning"];
 
+// getter ها موقع خوندن زبان جاری رو می‌گیرن (نه یک بار در بارگذاری ماژول)
 export const ANALYSIS_DOMAIN_LABELS: Record<AnalysisDomain, string> = {
-  routine: "روتین",
-  sleep: "خواب",
-  tasks: "کارها",
-  fitness: "بدنسازی",
-  nutrition: "تغذیه",
-  trading: "ترید",
-  learning: "یادگیری",
+  get routine() { return tr("روتین", "Routine"); },
+  get sleep() { return tr("خواب", "Sleep"); },
+  get tasks() { return tr("کارها", "Tasks"); },
+  get fitness() { return tr("بدنسازی", "Workout"); },
+  get nutrition() { return tr("تغذیه", "Nutrition"); },
+  get trading() { return tr("ترید", "Trading"); },
+  get learning() { return tr("یادگیری", "Learning"); },
 };
 
 // ModuleKey هر دامنه (رشته، نه enum پریزما — برای امنیت باندل کلاینت)

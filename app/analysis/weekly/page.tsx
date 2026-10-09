@@ -8,13 +8,16 @@ import { buildLiveWeek } from "@/lib/weeklyLetter/live";
 import { resolveWeekOffset } from "@/lib/weeklyLetter/weekParam";
 import { getWeekRange, safeTimezone } from "@/lib/weeklyAnalysis/week";
 import type { LiveWeekPayload } from "@/lib/weeklyLetter/types";
+import { tr } from "@/lib/i18n";
 import { WeeklyLetterReader } from "@/components/WeeklyLetterReader";
 
 // صفحه‌ی فقط‌ورودیه، پس ایندکس نمی‌شه (هم‌الگوی /dashboard و بقیه‌ی صفحه‌های حساب).
-export const metadata: Metadata = {
-  title: "آنالیز هفتگی",
-  robots: { index: false, follow: false },
-};
+export function generateMetadata(): Metadata {
+  return {
+    title: tr("آنالیز هفتگی", "Weekly review"),
+    robots: { index: false, follow: false },
+  };
+}
 export const dynamic = "force-dynamic";
 
 type SP = { week?: string; offset?: string; story?: string };

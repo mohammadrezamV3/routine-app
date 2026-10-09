@@ -5,6 +5,7 @@ import { useEffect, type ReactNode } from "react";
 import { motion } from "framer-motion";
 import type { LucideIcon } from "lucide-react";
 import type { AnalysisDomain } from "@/lib/weeklyAnalysis/types";
+import { tr } from "@/lib/i18n";
 import { Reveal, WL_EASE, useLite } from "./WeeklyLetterShared";
 import "./weekly-letter.css";
 
@@ -21,7 +22,7 @@ export function LiveChapter({ id, no, title, icon: Icon, children }: { id: strin
       <Reveal className="wl-ch-head">
         <span className="wl-ch-badge" aria-hidden="true"><Icon size={19} /></span>
         <span className="wl-ch-txt">
-          {no ? <span className="wl-ch-k" aria-hidden="true">فصل {String(no).padStart(2, "0")}</span> : null}
+          {no ? <span className="wl-ch-k" aria-hidden="true">{tr("فصل", "Chapter")} {String(no).padStart(2, "0")}</span> : null}
           <h2 className="wl-ch-title">{title}</h2>
         </span>
         <motion.span
@@ -61,6 +62,6 @@ export function useGoalDraftListener(on: (d: GoalDraft) => void) {
 
 /** پیام خطای انسانی برای محدودیت نرخ/سهمیه‌ی مربی. */
 export function humanAiError(message: string): string {
-  if (/محدود|بار|ساعت|مجاز|rate/i.test(message)) return message;
-  return message || "ساخت تحلیل ممکن نشد. کمی بعد دوباره امتحان کن.";
+  if (/محدود|بار|ساعت|مجاز|rate|limit|too many|try again/i.test(message)) return message;
+  return message || tr("ساخت تحلیل ممکن نشد. کمی بعد دوباره امتحان کن.", "Could not build the analysis. Please try again in a moment.");
 }

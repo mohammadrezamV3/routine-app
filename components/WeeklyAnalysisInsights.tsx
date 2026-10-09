@@ -6,6 +6,7 @@ import "./wa-bottom.css";
 import { useRef, useState } from "react";
 import { motion } from "framer-motion";
 import { ANALYSIS_DOMAIN_LABELS, type Insight } from "@/lib/weeklyAnalysis/types";
+import { tr } from "@/lib/i18n";
 import { V_WK_CARD, toneColor } from "./WeeklyAnalysisKit";
 
 // بینش‌های قطعی موتور محاسبه (نه AI) — بخش باز، بدون باکس. ستون‌ها با خط مو
@@ -26,10 +27,10 @@ export function WeeklyAnalysisInsights({ insights }: { insights: Insight[] }) {
   }
 
   return (
-    <motion.section className="wb-ins" variants={V_WK_CARD} aria-label="بینش‌های این هفته">
-      <h2 className="wb-title">چیزهایی که این هفته معلوم شد</h2>
+    <motion.section className="wb-ins" variants={V_WK_CARD} aria-label={tr("بینش‌های این هفته", "This week's insights")}>
+      <h2 className="wb-title">{tr("چیزهایی که این هفته معلوم شد", "What this week revealed")}</h2>
       {insights.length === 0 ? (
-        <div className="wk-empty-inline">هنوز الگوی قابل‌اتکایی پیدا نشده — با چند روز داده‌ی بیشتر، بینش‌ها ظاهر می‌شن.</div>
+        <div className="wk-empty-inline">{tr("هنوز الگوی قابل‌اتکایی پیدا نشده — با چند روز داده‌ی بیشتر، بینش‌ها ظاهر می‌شن.", "No reliable pattern yet. With a few more days of data, insights will appear.")}</div>
       ) : (
         <>
           <ul className="wb-ins-track" ref={trackRef} onScroll={onScroll} data-noswipe>

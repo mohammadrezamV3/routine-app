@@ -137,3 +137,7 @@ html[data-perf="low"] .wa-ring-box::before{ animation:none; }
 
 /* ستون خالی (مثلا لحظه‌های هفته بدون محتوا) جا نمی‌گیره */
 .wa-ch-grid > :empty{ display:none; }
+
+/* LTR: نشان نمره روی گوشه‌ی بالا-راست حلقه (قرینه‌ی گوشه‌ی بالا-چپ فارسی) */
+html[dir="ltr"] .wa-grade-badge{ left:auto; right:18px; }
+@media (max-width:720px){ html[dir="ltr"] .wa-grade-badge{ left:auto; right:10px; } }

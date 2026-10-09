@@ -14,6 +14,7 @@ import { AnimatePresence, motion, useReducedMotion, type Variants } from "framer
 import {
   Activity, ChevronLeft, ChevronRight, Compass, Crown, Flame, Gauge, Lightbulb, Medal, Pause, PenLine, Play, Quote, RotateCcw, Sparkles, Target, TrendingDown, TrendingUp, X, Zap, type LucideIcon,
 } from "lucide-react";
+import { isEn, tr, trv } from "@/lib/i18n";
 import { ANALYSIS_DOMAIN_LABELS } from "@/lib/weeklyAnalysis/types";
 import type { WeeklyLetterData } from "@/lib/weeklyLetter/types";
 import { useLockBodyScroll } from "@/lib/useLockBodyScroll";
@@ -22,7 +23,7 @@ import { DOMAIN_ICONS, GradeStamp, WL_EASE, useLite, useOnAfter } from "./Weekly
 import { MeterColumn } from "./WeeklyMeter";
 import WeeklyRadar from "./WeeklyRadar";
 import { MaskText, Odo } from "./WeeklyLetterStoryFx";
-import { INSIGHT_ICONS, MOODS, MOOD_LABELS } from "./WeeklyLetterStory";
+import { INSIGHT_ICONS, MOODS, moodLabels } from "./WeeklyLetterStory";
 import { ARCH_ICONS, BrandMark } from "./WeeklyLetterCover";
 import { goalCtaHref, weekCtaHref, type StorySlide } from "./WeeklyLetterStoriesData";
 import { jalaliDayMonth, letterYear, scoreIntensity, smoothPath } from "./WeeklyLetterUtils";
@@ -104,9 +105,10 @@ function FitScale({ u, boxKey, children }: { u: number; boxKey: string; children
 
 // ---- ورودی‌های حرکتی ----
 const SLIDE: Variants = {
-  enter: (d: number) => ({ opacity: 0, x: -d * 44 }),
+  // جهت حرکت در LTR قرینه‌ست (isEn موقع اجرای variant خونده می‌شه، نه بارگذاری ماژول)
+  enter: (d: number) => ({ opacity: 0, x: (isEn() ? 1 : -1) * d * 44 }),
   center: { opacity: 1, x: 0, transition: { duration: 0.42, ease: WL_EASE as never, staggerChildren: 0.085, delayChildren: 0.1 } },
-  exit: (d: number) => ({ opacity: 0, x: d * 44, transition: { duration: 0.26, ease: [0.4, 0, 1, 1] as never } }),
+  exit: (d: number) => ({ opacity: 0, x: (isEn() ? -1 : 1) * d * 44, transition: { duration: 0.26, ease: [0.4, 0, 1, 1] as never } }),
 };
 const ITEM: Variants = {
   enter: { opacity: 0, y: 26 },
@@ -134,20 +136,20 @@ function Kicker({ icon: Icon, children }: { icon: LucideIcon; children: ReactNod
 function IntroSlide({ letter }: { letter: WeeklyLetterData }) {
   return (
     <div className="wl-st-body">
-      <SItem className="wl-st-eyebrow">شماره</SItem>
+      <SItem className="wl-st-eyebrow">{tr("شماره", "Issue")}</SItem>
       <SItem variants={POP} className="wl-st-big">
         {letter.issueNo ? <Odo value={String(letter.issueNo)} className="wl-st-sheen" delay={0.45} duration={1.5} /> : "—"}
       </SItem>
       <div className="wl-st-weeklabel">
-        <small>هفته‌ی</small>
+        <small>{tr("هفته‌ی", "Week of")}</small>
         <b><MaskText text={letter.weekLabel} className="wl-st-sheen" delay={0.55} /></b>
         <span>{letterYear(letter.weekEnd)}</span>
       </div>
       <SItem className="wl-st-greet">
-        <b>{letter.greetingName ? `سلام ${letter.greetingName}` : "سلام"}</b>
-        <span>بیا هفته‌ات رو با هم مرور کنیم</span>
+        <b>{letter.greetingName ? tr(`سلام ${letter.greetingName}`, `Hi ${letter.greetingName}`) : tr("سلام", "Hi")}</b>
+        <span>{tr("بیا هفته‌ات رو با هم مرور کنیم", "Let's look back at your week together")}</span>
       </SItem>
-      <SItem className="wl-st-hint"><ChevronLeft size={16} />برای ادامه بزن</SItem>
+      <SItem className="wl-st-hint"><ChevronLeft size={16} className="dir-flip" />{tr("برای ادامه بزن", "Tap to continue")}</SItem>
     </div>
   );
 }
@@ -158,12 +160,12 @@ function ScoreSlide({ s, headline }: { s: Extract<StorySlide, { id: "score" }>; 
   const down = (s.delta ?? 0) < 0;
   return (
     <div className="wl-st-body">
-      <SItem><Kicker icon={Gauge}>امتیاز این هفته</Kicker></SItem>
+      <SItem><Kicker icon={Gauge}>{tr("امتیاز این هفته", "This week's score")}</Kicker></SItem>
       <SItem variants={POP} className="wl-st-ringwrap">
         <GradientRing value={s.score / 100} size={Math.round(236 * U)} stroke={Math.round(17 * U)} grad={RING_GREEN} delay={0.5}>
           <span className="wl-st-ringc">
             <Odo value={String(Math.round(s.score))} className="wl-st-huge wl-st-grad" delay={0.55} duration={1.5} />
-            <small>از 100</small>
+            <small>{tr("از 100", "out of 100")}</small>
           </span>
         </GradientRing>
         {s.grade && <GradeStamp grade={s.grade} size={Math.round(84 * U)} delay={1.15} className="wl-st-stamp" />}
@@ -173,11 +175,11 @@ function ScoreSlide({ s, headline }: { s: Extract<StorySlide, { id: "score" }>; 
           <span className={`wl-chip ${up ? "is-good" : down ? "is-bad" : ""}`}>
             {up ? <TrendingUp size={14} /> : down ? <TrendingDown size={14} /> : null}
             <b dir="ltr">{up ? "+" : down ? "−" : ""}{Math.abs(Math.round(s.delta))}</b>
-            نسبت به هفته‌ی قبل
+            {tr("نسبت به هفته‌ی قبل", "vs last week")}
           </span>
         )}
         {s.rank && s.rank.position === 1 && (
-          <span className="wl-chip is-gold"><Crown size={14} />بهترین هفته از {s.rank.of} هفته‌ی اخیر</span>
+          <span className="wl-chip is-gold"><Crown size={14} />{tr(`بهترین هفته از ${s.rank.of} هفته‌ی اخیر`, `Best of the last ${s.rank.of} weeks`)}</span>
         )}
       </SItem>
       {headline && <p className="wl-st-cap"><MaskText text={headline} delay={1.0} stagger={0.045} /></p>}
@@ -190,7 +192,7 @@ function ArchetypeSlide({ s }: { s: Extract<StorySlide, { id: "archetype" }> }) 
   const Icon = ARCH_ICONS[s.archetype.key] ?? Sparkles;
   return (
     <div className="wl-st-body">
-      <SItem><Kicker icon={Sparkles}>تیپ هفته‌ی تو</Kicker></SItem>
+      <SItem><Kicker icon={Sparkles}>{tr("تیپ هفته‌ی تو", "Your week type")}</Kicker></SItem>
       <SItem variants={POP} className="wl-st-orbit" style={{ width: Math.round(176 * U), height: Math.round(176 * U) }}>
         <i className="wl-st-orbit-a" />
         <i className="wl-st-orbit-b" />
@@ -206,14 +208,14 @@ function RhythmSlide({ s }: { s: Extract<StorySlide, { id: "rhythm" }> }) {
   const on = useOnAfter(350);
   return (
     <div className="wl-st-body">
-      <SItem><Kicker icon={Activity}>ریتم هفته</Kicker></SItem>
+      <SItem><Kicker icon={Activity}>{tr("ریتم هفته", "Week rhythm")}</Kicker></SItem>
       <SItem className="wl-st-range">
-        <span>از</span>
+        <span>{tr("از", "From")}</span>
         <Odo value={String(s.min)} className="wl-st-mid wl-st-sheen" delay={0.5} duration={1.1} />
-        <span>تا</span>
+        <span>{tr("تا", "to")}</span>
         <Odo value={String(s.max)} className="wl-st-mid wl-st-sheen" delay={0.6} duration={1.3} />
       </SItem>
-      <div className="wl-st-rbars" role="img" aria-label={`امتیاز روزهای هفته: ${s.bars.map((b) => `${b.weekday} ${b.score === null ? "بدون امتیاز" : Math.round(b.score)}`).join("، ")}`}>
+      <div className="wl-st-rbars" role="img" aria-label={`${tr("امتیاز روزهای هفته", "Scores for the days of the week")}: ${s.bars.map((b) => `${b.weekday} ${b.score === null ? tr("بدون امتیاز", "no score") : Math.round(b.score)}`).join(tr("، ", ", "))}`}>
         {s.bars.map((b, i) => (
           <span
             key={i}
@@ -227,7 +229,7 @@ function RhythmSlide({ s }: { s: Extract<StorySlide, { id: "rhythm" }> }) {
         ))}
       </div>
       <SItem className="wl-st-cap">
-        اوج هفته‌ات <b>{s.bestDay}</b> بود و کمترین امتیاز <b>{s.worstDay}</b>؛ میانگین <b dir="ltr">{s.avg}</b>
+        {trv(<>اوج هفته‌ات <b>{s.bestDay}</b> بود و کمترین امتیاز <b>{s.worstDay}</b>؛ میانگین <b dir="ltr">{s.avg}</b></>, <>Your peak was <b>{s.bestDay}</b> and your lowest score <b>{s.worstDay}</b>; average <b dir="ltr">{s.avg}</b></>)}
       </SItem>
     </div>
   );
@@ -236,14 +238,14 @@ function RhythmSlide({ s }: { s: Extract<StorySlide, { id: "rhythm" }> }) {
 function BestSlide({ s }: { s: Extract<StorySlide, { id: "best" }> }) {
   return (
     <div className="wl-st-body">
-      <SItem><Kicker icon={Crown}>بهترین روز هفته</Kicker></SItem>
+      <SItem><Kicker icon={Crown}>{tr("بهترین روز هفته", "Best day of the week")}</Kicker></SItem>
       <div className="wl-st-dayname">
         <b><MaskText text={s.day.weekday} className="wl-st-sheen" delay={0.35} stagger={0.1} /></b>
         <span>{s.day.date ? jalaliDayMonth(s.day.date) : ""}</span>
       </div>
       <SItem variants={POP} className="wl-st-dayscore">
         <Odo value={String(Math.round(s.day.score ?? 0))} className="wl-st-huge wl-st-sheen" delay={0.5} duration={1.3} />
-        <small>امتیاز</small>
+        <small>{tr("امتیاز", "score")}</small>
       </SItem>
       <SItem className="wl-st-meter" decor>
         <i style={{ "--r": Math.min(1, Math.max(0.04, (s.day.score ?? 0) / 100)) } as CSSProperties} />
@@ -277,11 +279,11 @@ function DomainsSlide({ s }: { s: Extract<StorySlide, { id: "domains" }> }) {
   const radar = s.radar.length >= 3;
   return (
     <div className="wl-st-body">
-      <SItem><Kicker icon={Medal}>قوی‌ترین بخش هفته</Kicker></SItem>
+      <SItem><Kicker icon={Medal}>{tr("قوی‌ترین بخش هفته", "Strongest area of the week")}</Kicker></SItem>
       {radar ? (
         <SItem variants={POP} className="wl-st-radar">
-          <WeeklyRadar axes={s.radar} size={Math.round(316 * U)} on={on} activeKey={s.top.domain} ariaLabel={`امتیاز بخش‌ها: ${s.radar.map((a) => `${a.label} ${Math.round(a.value as number)}`).join("، ")}`} />
-          <span className="wl-st-radar-key" aria-hidden="true"><i className="is-now" />این هفته<i className="is-prev" />هفته‌ی قبل</span>
+          <WeeklyRadar axes={s.radar} size={Math.round(316 * U)} on={on} activeKey={s.top.domain} ariaLabel={`${tr("امتیاز بخش‌ها", "Area scores")}: ${s.radar.map((a) => `${a.label} ${Math.round(a.value as number)}`).join(tr("، ", ", "))}`} />
+          <span className="wl-st-radar-key" aria-hidden="true"><i className="is-now" />{tr("این هفته", "This week")}<i className="is-prev" />{tr("هفته‌ی قبل", "Last week")}</span>
         </SItem>
       ) : (
         <SItem variants={POP} className="wl-st-ringwrap">
@@ -298,7 +300,7 @@ function DomainsSlide({ s }: { s: Extract<StorySlide, { id: "domains" }> }) {
         <SItem className="wl-st-topscore">
           <Icon size={Math.round(22 * U)} />
           <Odo value={String(Math.round(s.top.score))} className="wl-st-mid wl-st-sheen" delay={0.6} duration={1.2} />
-          <small>از 100</small>
+          <small>{tr("از 100", "out of 100")}</small>
         </SItem>
       )}
       {s.top.note && <SItem className="wl-st-cap">{s.top.note}</SItem>}
@@ -306,7 +308,7 @@ function DomainsSlide({ s }: { s: Extract<StorySlide, { id: "domains" }> }) {
         <SItem className="wl-st-riser">
           <span className="wl-st-riser-ico"><RIcon size={17} /></span>
           <span className="wl-st-riser-txt">
-            <small>{same ? "و بیشترین پیشرفت هم همینه" : "بیشترین پیشرفت"}</small>
+            <small>{same ? tr("و بیشترین پیشرفت هم همینه", "and it also improved the most") : tr("بیشترین پیشرفت", "Most improved")}</small>
             {!same && <b>{ANALYSIS_DOMAIN_LABELS[s.riser.domain]}</b>}
           </span>
           <span className="wl-st-riser-d" dir="ltr"><TrendingUp size={14} />+{s.riser.delta}</span>
@@ -319,7 +321,7 @@ function DomainsSlide({ s }: { s: Extract<StorySlide, { id: "domains" }> }) {
 function NumbersSlide({ s }: { s: Extract<StorySlide, { id: "numbers" }> }) {
   return (
     <div className="wl-st-body">
-      <SItem><Kicker icon={Gauge}>هفته در اعداد</Kicker></SItem>
+      <SItem><Kicker icon={Gauge}>{tr("هفته در اعداد", "Week in numbers")}</Kicker></SItem>
       <div className={`wl-st-grid${s.items.length % 2 ? " is-odd" : ""}`}>
         {s.items.map((n, i) => {
           const Icon = n.domain ? DOMAIN_ICONS[n.domain] : Sparkles;
@@ -340,7 +342,7 @@ function NumbersSlide({ s }: { s: Extract<StorySlide, { id: "numbers" }> }) {
   );
 }
 
-// ---- مسیر هفته‌ها: خط از قدیمی‌ترین (راست) تا همین هفته (چپ) کشیده می‌شه ----
+// ---- مسیر هفته‌ها: خط از قدیمی‌ترین (راست) تا همین هفته (چپ) کشیده می‌شه (در LTR برعکس) ----
 const TW = 340, TH = 190, TPX = 16, TPT = 30, TPB = 14;
 function TrendSlide({ s }: { s: Extract<StorySlide, { id: "trend" }> }) {
   const lite = useLite();
@@ -351,7 +353,7 @@ function TrendSlide({ s }: { s: Extract<StorySlide, { id: "trend" }> }) {
     let lo = Math.max(0, Math.min(...vals) - 8);
     let hi = Math.min(100, Math.max(...vals) + 8);
     if (hi - lo < 28) { lo = Math.max(0, lo - (28 - (hi - lo)) / 2); hi = Math.min(100, lo + 28); }
-    const xAt = (i: number) => TW - TPX - (i * (TW - 2 * TPX)) / (n - 1);
+    const xAt = (i: number) => (isEn() ? TPX + (i * (TW - 2 * TPX)) / (n - 1) : TW - TPX - (i * (TW - 2 * TPX)) / (n - 1));
     const yAt = (v: number) => TPT + (1 - (v - lo) / (hi - lo)) * (TH - TPT - TPB);
     const pts = s.points.map((v, i) => ({ x: xAt(i), y: v === null ? null : yAt(v), v }));
     const segs: { x: number; y: number }[][] = [];
@@ -368,15 +370,15 @@ function TrendSlide({ s }: { s: Extract<StorySlide, { id: "trend" }> }) {
   const t0 = 0.6;
   return (
     <div className="wl-st-body">
-      <SItem><Kicker icon={Activity}>{`مسیر ${n} هفته`}</Kicker></SItem>
+      <SItem><Kicker icon={Activity}>{tr(`مسیر ${n} هفته`, `${n}-week trend`)}</Kicker></SItem>
       <SItem className="wl-st-trend" decor>
-        <svg viewBox={`0 0 ${TW} ${TH}`} className="wl-st-trend-svg" role="img" aria-label="نمودار امتیاز هفته‌ها" style={{ direction: "ltr" }}>
+        <svg viewBox={`0 0 ${TW} ${TH}`} className="wl-st-trend-svg" role="img" aria-label={tr("نمودار امتیاز هفته‌ها", "Weekly score chart")} style={{ direction: "ltr" }}>
           <defs>
             <linearGradient id={`tg${uid}`} x1="0" x2="0" y1="0" y2="1">
               <stop offset="0%" stopColor="var(--ring-1a)" stopOpacity=".34" />
               <stop offset="100%" stopColor="var(--ring-1a)" stopOpacity="0" />
             </linearGradient>
-            <linearGradient id={`tl${uid}`} x1="1" x2="0" y1="0" y2="0">
+            <linearGradient id={`tl${uid}`} x1={isEn() ? "0" : "1"} x2={isEn() ? "1" : "0"} y1="0" y2="0">
               <stop offset="0%" stopColor="var(--ring-1a)" stopOpacity=".55" />
               <stop offset="100%" stopColor="var(--ring-1b)" />
             </linearGradient>
@@ -429,7 +431,7 @@ function TrendSlide({ s }: { s: Extract<StorySlide, { id: "trend" }> }) {
         </span>
       </SItem>
       <h2 className="wl-st-title is-md"><MaskText text={s.caption} className="wl-st-sheen" delay={t0 + 0.9} stagger={0.08} /></h2>
-      <SItem className="wl-st-sub">{s.mode === "best" ? "بالاتر از همه‌ی هفته‌های قبل" : "نسبت به هفته‌های قبل"}</SItem>
+      <SItem className="wl-st-sub">{s.mode === "best" ? tr("بالاتر از همه‌ی هفته‌های قبل", "Higher than all previous weeks") : tr("نسبت به هفته‌های قبل", "Compared with previous weeks")}</SItem>
     </div>
   );
 }
@@ -439,7 +441,7 @@ function InsightSlide({ s }: { s: Extract<StorySlide, { id: "insight" }> }) {
   const Icon = INSIGHT_ICONS[s.insight.icon] ?? Zap;
   return (
     <div className="wl-st-body">
-      <SItem><Kicker icon={Lightbulb}>یک بینش</Kicker></SItem>
+      <SItem><Kicker icon={Lightbulb}>{tr("یک بینش", "An insight")}</Kicker></SItem>
       <SItem variants={POP} className={`wl-st-qmark is-${s.insight.tone}`} decor><Quote size={Math.round(46 * U)} strokeWidth={1.5} /></SItem>
       <p className="wl-st-quote"><MaskText text={s.insight.body} delay={0.4} stagger={0.05} /></p>
       <SItem className={`wl-st-attr is-${s.insight.tone}`}>
@@ -454,19 +456,19 @@ function StreakSlide({ s }: { s: Extract<StorySlide, { id: "streak" }> }) {
   const U = useU();
   return (
     <div className="wl-st-body">
-      <SItem><Kicker icon={Flame}>{s.streak ? "استریک و دستاوردها" : "دستاوردهای هفته"}</Kicker></SItem>
+      <SItem><Kicker icon={Flame}>{s.streak ? tr("استریک و دستاوردها", "Streak and achievements") : tr("دستاوردهای هفته", "Achievements this week")}</Kicker></SItem>
       {s.streak ? (
         <>
           <SItem variants={POP} className="wl-st-flame" decor><span className="wl-st-flame-in"><Flame size={Math.round(78 * U)} strokeWidth={1.7} /></span></SItem>
           <SItem className="wl-st-streakrow">
             <Odo value={String(s.streak)} className="wl-st-huge wl-st-sheen" delay={0.5} duration={1.4} />
-            <small>روز پیاپی روتین کامل</small>
+            <small>{tr("روز پیاپی روتین کامل", "days in a row of a complete routine")}</small>
           </SItem>
         </>
       ) : (
         <SItem className="wl-st-streakrow">
           <Odo value={String(s.achievements.length)} className="wl-st-huge wl-st-sheen" delay={0.5} duration={1} />
-          <small>دستاورد تازه این هفته</small>
+          <small>{tr("دستاورد تازه این هفته", "new achievements this week")}</small>
         </SItem>
       )}
       {s.achievements.length > 0 && (
@@ -487,11 +489,11 @@ function ReflectionSlide({ s }: { s: Extract<StorySlide, { id: "reflection" }> }
   const U = useU();
   return (
     <div className="wl-st-body">
-      <SItem><Kicker icon={PenLine}>حرف خودت</Kicker></SItem>
+      <SItem><Kicker icon={PenLine}>{tr("حرف خودت", "In your words")}</Kicker></SItem>
       {s.mood && (
         <SItem variants={POP} className="wl-st-mood">
           <span className="wl-st-mood-e" aria-hidden="true" style={{ fontSize: Math.round(54 * U) }}>{MOODS[s.mood - 1]}</span>
-          <small>{MOOD_LABELS[s.mood - 1]}</small>
+          <small>{moodLabels()[s.mood - 1]}</small>
         </SItem>
       )}
       <SItem className="wl-st-qlabel">{s.primary.label}</SItem>
@@ -512,7 +514,7 @@ function SummarySlide({ s, weekStart, onReplay }: { s: Extract<StorySlide, { id:
   const FIcon = s.focus.domain ? DOMAIN_ICONS[s.focus.domain] : Compass;
   return (
     <div className="wl-st-body">
-      <SItem><Kicker icon={Sparkles}>خلاصه در یک نگاه</Kicker></SItem>
+      <SItem><Kicker icon={Sparkles}>{tr("خلاصه در یک نگاه", "Summary at a glance")}</Kicker></SItem>
       <SItem variants={POP} className="wl-st-sum">
         <div className="wl-st-sum-top">
           {s.score !== null && (
@@ -522,13 +524,13 @@ function SummarySlide({ s, weekStart, onReplay }: { s: Extract<StorySlide, { id:
           )}
           <div className="wl-st-sum-id">
             {Arch && s.archetype && <span className="wl-st-sum-arch"><Arch size={16} />{s.archetype.title}</span>}
-            {s.grade && <span className="wl-st-sum-grade">درجه <b>{s.grade}</b></span>}
+            {s.grade && <span className="wl-st-sum-grade">{tr("درجه", "Grade")} <b>{s.grade}</b></span>}
           </div>
         </div>
         {s.bestDay && (
           <div className="wl-st-sum-best">
             <Crown size={15} />
-            <span>بهترین روز</span>
+            <span>{tr("بهترین روز", "Best day")}</span>
             <b>{s.bestDay.weekday}</b>
             <em dir="ltr">{s.bestDay.score}</em>
           </div>
@@ -550,9 +552,9 @@ function SummarySlide({ s, weekStart, onReplay }: { s: Extract<StorySlide, { id:
         {s.focus.target !== null && <span className="wl-st-next-t" dir="ltr">{Math.round(s.focus.target)}</span>}
       </SItem>
       <SItem className="wl-st-cta">
-        <Link href={goalCtaHref(s.focus)} className="trade-primary-btn wl-cta-btn"><Target size={16} />تعیین هدف</Link>
-        <Link href={weekCtaHref(weekStart)} className="account-outline-btn wl-cta-btn">آنالیز کامل این هفته</Link>
-        <button type="button" className="trade-ghost-btn wl-st-replay" onClick={onReplay}><RotateCcw size={14} />پخش دوباره</button>
+        <Link href={goalCtaHref(s.focus)} className="trade-primary-btn wl-cta-btn"><Target size={16} />{tr("تعیین هدف", "Set a goal")}</Link>
+        <Link href={weekCtaHref(weekStart)} className="account-outline-btn wl-cta-btn">{tr("آنالیز کامل این هفته", "Full analysis of this week")}</Link>
+        <button type="button" className="trade-ghost-btn wl-st-replay" onClick={onReplay}><RotateCcw size={14} />{tr("پخش دوباره", "Replay")}</button>
       </SItem>
     </div>
   );
@@ -759,8 +761,8 @@ export function WeeklyLetterStories({
                 tabIndex={-1}
                 role="dialog"
                 aria-modal="true"
-                aria-roledescription="داستان"
-                aria-label="داستان هفته"
+                aria-roledescription={tr("داستان", "story")}
+                aria-label={tr("داستان هفته", "Week story")}
                 className={`wl-st${hold ? " is-held" : ""}`}
                 initial={{ opacity: 0, scale: 0.96, y: 14 }}
                 animate={{ opacity: 1, scale: 1, y: 0 }}
@@ -768,7 +770,7 @@ export function WeeklyLetterStories({
                 transition={{ duration: 0.3, ease: WL_EASE as never }}
                 onPointerDown={onPointerDown}
               >
-                <p className="wl-sr" aria-live="polite">{`اسلاید ${index + 1} از ${n}: ${slide.label}`}</p>
+                <p className="wl-sr" aria-live="polite">{tr(`اسلاید ${index + 1} از ${n}: ${slide.label}`, `Slide ${index + 1} of ${n}: ${slide.label}`)}</p>
 
                 <div className="wl-st-chrome">
                   <ol className="wl-st-bars" aria-hidden="true">
@@ -788,16 +790,16 @@ export function WeeklyLetterStories({
                   <div className="wl-st-top">
                     <span className="wl-st-id">
                       <BrandMark />
-                      <b>آنالیز هفتگی</b>
-                      {letter.issueNo > 0 && <small>شماره {letter.issueNo}</small>}
+                      <b>{tr("آنالیز هفتگی", "Weekly review")}</b>
+                      {letter.issueNo > 0 && <small>{tr("شماره", "Issue")} {letter.issueNo}</small>}
                     </span>
                     <span className="wl-st-ctl">
                       {autoplay && (
-                        <button type="button" className="trade-icon-btn wl-st-btn" aria-label={userPause ? "ادامه‌ی پخش" : "توقف پخش"} onClick={() => setUserPause((p) => !p)}>
+                        <button type="button" className="trade-icon-btn wl-st-btn" aria-label={userPause ? tr("ادامه‌ی پخش", "Resume") : tr("توقف پخش", "Pause")} onClick={() => setUserPause((p) => !p)}>
                           {userPause ? <Play size={18} /> : <Pause size={18} />}
                         </button>
                       )}
-                      <button type="button" className="trade-icon-btn wl-st-btn" aria-label="بستن" onClick={onClose}><X size={20} /></button>
+                      <button type="button" className="trade-icon-btn wl-st-btn" aria-label={tr("بستن", "Close")} onClick={onClose}><X size={20} /></button>
                     </span>
                   </div>
                 </div>
@@ -821,8 +823,8 @@ export function WeeklyLetterStories({
               </motion.div>
             </UCtx.Provider>
 
-            <button type="button" className="trade-icon-btn wl-st-arrow is-fwd" aria-label="اسلاید بعدی" onClick={() => go(1)} disabled={index >= n - 1}><ChevronLeft size={26} /></button>
-            <button type="button" className="trade-icon-btn wl-st-arrow is-back" aria-label="اسلاید قبلی" onClick={() => go(-1)} disabled={index <= 0}><ChevronRight size={26} /></button>
+            <button type="button" className="trade-icon-btn wl-st-arrow is-fwd" aria-label={tr("اسلاید بعدی", "Next slide")} onClick={() => go(1)} disabled={index >= n - 1}><ChevronLeft size={26} className="dir-flip" /></button>
+            <button type="button" className="trade-icon-btn wl-st-arrow is-back" aria-label={tr("اسلاید قبلی", "Previous slide")} onClick={() => go(-1)} disabled={index <= 0}><ChevronRight size={26} className="dir-flip" /></button>
           </div>
         </motion.div>
       )}

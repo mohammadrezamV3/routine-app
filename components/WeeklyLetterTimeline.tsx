@@ -3,6 +3,7 @@
 // فصل «روزبه‌روز»: خط زمانی عمودی هفت‌روزه. هر روز: امتیاز، نشان بهترین/ضعیف‌ترین
 // و تک‌تک جزئیات ثبت‌شده‌ی دامنه‌ها (DayDetails) با آیکون و متن فارسی.
 import { Crown, Minus, TrendingDown } from "lucide-react";
+import { tr } from "@/lib/i18n";
 import type { WeeklyLetterData } from "@/lib/weeklyLetter/types";
 import { DOMAIN_ICONS, MeterBar, Reveal } from "./WeeklyLetterShared";
 import { BAND_COLOR, bestWorstIndex, dayRows, jalaliDayMonth, scoreBand } from "./WeeklyLetterUtils";
@@ -34,10 +35,10 @@ export function WeeklyLetterTimeline({ days, domains }: { days: WeeklyLetterData
                   <span>{d.date ? jalaliDayMonth(d.date) : ""}</span>
                 </div>
                 <div className="wl-day-marks">
-                  {i === best && <span className="wl-mark is-good"><Crown size={12} />بهترین روز</span>}
-                  {i === worst && <span className="wl-mark is-bad"><TrendingDown size={12} />ضعیف‌ترین روز</span>}
-                  {d.isToday && <span className="wl-mark">امروز</span>}
-                  <span className="wl-pill" aria-label={d.score === null ? "بدون امتیاز" : `امتیاز ${Math.round(d.score)}`}>
+                  {i === best && <span className="wl-mark is-good"><Crown size={12} />{tr("بهترین روز", "Best day")}</span>}
+                  {i === worst && <span className="wl-mark is-bad"><TrendingDown size={12} />{tr("ضعیف‌ترین روز", "Weakest day")}</span>}
+                  {d.isToday && <span className="wl-mark">{tr("امروز", "Today")}</span>}
+                  <span className="wl-pill" aria-label={d.score === null ? tr("بدون امتیاز", "No score") : tr(`امتیاز ${Math.round(d.score)}`, `Score ${Math.round(d.score)}`)}>
                     {d.score === null ? "—" : Math.round(d.score)}
                   </span>
                 </div>
@@ -61,7 +62,7 @@ export function WeeklyLetterTimeline({ days, domains }: { days: WeeklyLetterData
                   })}
                 </ul>
               ) : (
-                <p className="wl-day-empty"><Minus size={14} />{d.isFuture ? "هنوز نرسیده" : "چیزی ثبت نشد"}</p>
+                <p className="wl-day-empty"><Minus size={14} />{d.isFuture ? tr("هنوز نرسیده", "Not yet") : tr("چیزی ثبت نشد", "Nothing logged")}</p>
               )}
             </Reveal>
           </li>

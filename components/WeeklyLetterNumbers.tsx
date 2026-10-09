@@ -6,6 +6,7 @@ import { motion, useInView } from "framer-motion";
 import { Activity } from "lucide-react";
 import type { WeeklyLetterData } from "@/lib/weeklyLetter/types";
 import { ANALYSIS_DOMAINS, ANALYSIS_DOMAIN_LABELS, type AnalysisDomain, type TrendPoint } from "@/lib/weeklyAnalysis/types";
+import { isEn, tr } from "@/lib/i18n";
 import { SegmentedTabs } from "./SegmentedTabs";
 import { CountText, DOMAIN_ICONS, Reveal, WL_EASE, useLite } from "./WeeklyLetterShared";
 import { jalaliDayMonth, smoothPath } from "./WeeklyLetterUtils";
@@ -62,12 +63,12 @@ function TrendCard({ trend, onJumpWeek }: { trend: TrendPoint[]; onJumpWeek?: (w
   const model = useMemo(() => {
     const n = trend.length;
     const xAt = (i: number) => PAD_X + (n === 1 ? (W - 2 * PAD_X) / 2 : (i * (W - 2 * PAD_X)) / (n - 1));
-    // RTL: قدیمی‌ترین هفته سمت راست، همین هفته سمت چپ (جهت زمان فارسی)
+    // RTL: قدیمی‌ترین هفته سمت راست، همین هفته سمت چپ (جهت زمان فارسی)؛ LTR: برعکس
     const pts = trend.map((t, i) => {
       const raw = activeFilter === "all" ? t.score : t.domains?.[activeFilter] ?? null;
       const score = typeof raw === "number" && Number.isFinite(raw) ? raw : null;
       return {
-        x: W - xAt(i),
+        x: isEn() ? xAt(i) : W - xAt(i),
         y: score === null ? null : PAD_T + (1 - Math.min(100, Math.max(0, score)) / 100) * (H - PAD_T - PAD_B),
         score,
         weekStart: t.weekStart,
@@ -99,21 +100,21 @@ function TrendCard({ trend, onJumpWeek }: { trend: TrendPoint[]; onJumpWeek?: (w
     <Reveal className="wl-card wl-trend">
       <div className="wl-trend-head">
         <span className="wl-num-ico"><Activity size={16} /></span>
-        <span className="wl-num-label">مسیر {trend.length} هفته‌ی اخیر</span>
+        <span className="wl-num-label">{tr(`مسیر ${trend.length} هفته‌ی اخیر`, `Last ${trend.length} weeks`)}</span>
       </div>
       {domainOpts.length > 0 && (
         <div className="wl-dp-tr-tabs" data-noswipe>
           <SegmentedTabs<TrendFilter>
-            ariaLabel="بخش نمودار"
+            ariaLabel={tr("بخش نمودار", "Chart area")}
             active={activeFilter}
             onChange={(v) => { setFilter(v); setSel(null); }}
-            options={[{ value: "all", label: "کل" }, ...domainOpts.map((d) => ({ value: d as TrendFilter, label: ANALYSIS_DOMAIN_LABELS[d] }))]}
+            options={[{ value: "all", label: tr("کل", "All") }, ...domainOpts.map((d) => ({ value: d as TrendFilter, label: ANALYSIS_DOMAIN_LABELS[d] }))]}
           />
         </div>
       )}
       <div ref={boxRef} className="wl-trend-box" style={{ height: H + LBL_H }}>
-      {scored.length < 2 && <p className="wl-dp-tr-none">برای این بخش هنوز دو هفته داده نیست.</p>}
-      {W > 0 && scored.length >= 2 && <svg viewBox={`0 0 ${W} ${H + LBL_H}`} width={W} height={H + LBL_H} className="wl-trend-svg" role="img" aria-label="نمودار امتیاز هفته‌ها">
+      {scored.length < 2 && <p className="wl-dp-tr-none">{tr("برای این بخش هنوز دو هفته داده نیست.", "There are not yet two weeks of data for this area.")}</p>}
+      {W > 0 && scored.length >= 2 && <svg viewBox={`0 0 ${W} ${H + LBL_H}`} width={W} height={H + LBL_H} className="wl-trend-svg" role="img" aria-label={tr("نمودار امتیاز هفته‌ها", "Weekly score chart")}>
         <defs>
           <linearGradient id={`tg${uid}`} x1="0" x2="0" y1="0" y2="1">
             <stop offset="0%" stopColor="var(--ring-1a)" stopOpacity=".34" />
@@ -176,7 +177,7 @@ function TrendCard({ trend, onJumpWeek }: { trend: TrendPoint[]; onJumpWeek?: (w
           return (
             <text key={`l${i}`} x={p.x} y={H + 13} textAnchor={anchor} className={`wl-trend-lbl${i === selIdx ? " is-sel" : ""}`}>
               {/* svg عمدا ltr ـه (لنگر متن فیزیکی بمونه)؛ RLI/PDI تا «4 مهر» برعکس نشه */}
-              {`\u2067${jalaliDayMonth(p.weekStart)}\u2069`}
+              {isEn() ? jalaliDayMonth(p.weekStart) : `\u2067${jalaliDayMonth(p.weekStart)}\u2069`}
             </text>
           );
         })}
@@ -191,7 +192,7 @@ function TrendCard({ trend, onJumpWeek }: { trend: TrendPoint[]; onJumpWeek?: (w
               className="wl-dp-tr-hit"
               tabIndex={0}
               role="button"
-              aria-label={`هفته‌ی ${jalaliDayMonth(p.weekStart)}: ${Math.round(p.score as number)}`}
+              aria-label={tr(`هفته‌ی ${jalaliDayMonth(p.weekStart)}: ${Math.round(p.score as number)}`, `Week of ${jalaliDayMonth(p.weekStart)}: ${Math.round(p.score as number)}`)}
               onClick={() => setSel(i)}
               onFocus={() => setSel(i)}
               onKeyDown={(e) => { if (e.key === "Enter" || e.key === " ") { e.preventDefault(); setSel(i); } }}
@@ -202,7 +203,7 @@ function TrendCard({ trend, onJumpWeek }: { trend: TrendPoint[]; onJumpWeek?: (w
       </div>
       {selPt && onJumpWeek && !isCurrentSel && (
         <button type="button" className="account-outline-btn wl-dp-tr-jump" onClick={() => onJumpWeek(selPt.weekStart)}>
-          مشاهده‌ی هفته‌ی {jalaliDayMonth(selPt.weekStart)}
+          {tr("مشاهده‌ی هفته‌ی", "View the week of")} {jalaliDayMonth(selPt.weekStart)}
         </button>
       )}
     </Reveal>
