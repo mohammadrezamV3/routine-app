@@ -13,6 +13,7 @@ import { Spinner } from "./Spinner";
 import { GradientRing } from "./GradientRing";
 import { FriendWeekStrip } from "./FriendWeekStrip";
 import { fullDays, type WeekPcts } from "@/lib/friendWeek";
+import { tr, isEn } from "@/lib/i18n";
 
 type Relation = "none" | "friends" | "pending_sent" | "pending_received";
 
@@ -161,7 +162,7 @@ export function FriendProfileModal({
           </div>
         )}
 
-        {notFound && <div className="item-line empty" style={{ marginTop: 10 }}>پروفایل در دسترس نیست</div>}
+        {notFound && <div className="item-line empty" style={{ marginTop: 10 }}>{tr("پروفایل در دسترس نیست", "Profile not available")}</div>}
 
         {profile && (
           <>
@@ -178,12 +179,12 @@ export function FriendProfileModal({
               <div className="friend-profile-banner-bar">
                 <div className="friend-profile-banner-kebab">
                   <TradeKebabMenu
-                    label={`گزینه‌های ${profile.name}`}
+                    label={tr(`گزینه‌های ${profile.name}`, `Options for ${profile.name}`)}
                     actions={[
                       ...(profile.relation === "friends" && profile.friendshipId
-                        ? [{ label: "حذف از دوستان", icon: <UserMinus size={14} />, danger: true, onClick: () => setConfirmRemove(true) }]
+                        ? [{ label: tr("حذف از دوستان", "Remove friend"), icon: <UserMinus size={14} />, danger: true, onClick: () => setConfirmRemove(true) }]
                         : []),
-                      { label: "بلاک کردن", icon: <Ban size={14} />, danger: true, onClick: () => setConfirmBlock(true) },
+                      { label: tr("بلاک کردن", "Block"), icon: <Ban size={14} />, danger: true, onClick: () => setConfirmBlock(true) },
                     ]}
                   />
                 </div>
@@ -192,8 +193,8 @@ export function FriendProfileModal({
                   className={`friend-profile-star-btn${profile.starredByMe ? " on" : ""}`}
                   onClick={toggleStar}
                   disabled={starBusy || !canStar}
-                  title={canStar ? (profile.starredByMe ? "استار داده شد" : "دادن استار") : "بعد از دوست‌شدن می‌توانی استار بدهی"}
-                  aria-label={profile.starredByMe ? "برداشتن استار" : "دادن استار"}
+                  title={canStar ? (profile.starredByMe ? tr("استار داده شد", "Starred") : tr("دادن استار", "Give a star")) : tr("بعد از دوست‌شدن می‌توانی استار بدهی", "You can give a star after becoming friends")}
+                  aria-label={profile.starredByMe ? tr("برداشتن استار", "Remove star") : tr("دادن استار", "Give a star")}
                 >
                   <Star size={17} fill={profile.starredByMe ? "currentColor" : "none"} />
                 </button>
@@ -220,7 +221,7 @@ export function FriendProfileModal({
                   درخواست صریح. */}
               {profile.bio && (
                 <div className="friend-profile-section">
-                  <div className="friend-profile-section-label">بیو</div>
+                  <div className="friend-profile-section-label">{tr("بیو", "Bio")}</div>
                   <p className="friend-profile-bio">{profile.bio}</p>
                 </div>
               )}
@@ -228,13 +229,13 @@ export function FriendProfileModal({
               {profile.username && (
                 <div className="friend-profile-section">
                   <div className="friend-profile-section-label">
-                    {copied ? "کپی شد" : "آیدی"}
+                    {copied ? tr("کپی شد", "Copied") : tr("آیدی", "ID")}
                   </div>
                   <button
                     type="button"
                     className="friend-profile-username mono"
                     onClick={copyUsername}
-                    title="برای کپی‌کردن بزن"
+                    title={tr("برای کپی‌کردن بزن", "Tap to copy")}
                   >
                     @{profile.username}
                   </button>
@@ -243,7 +244,7 @@ export function FriendProfileModal({
 
               {profile.phone && (
                 <div className="friend-profile-section">
-                  <div className="friend-profile-section-label">شماره تماس</div>
+                  <div className="friend-profile-section-label">{tr("شماره تماس", "Phone number")}</div>
                   <div className="friend-profile-username mono" dir="ltr" style={{ cursor: "default" }}>
                     <Phone size={12} /> {profile.phone}
                   </div>
@@ -258,18 +259,18 @@ export function FriendProfileModal({
                   <b className="mono">{faNum(profile.today.pct)}<small>%</small></b>
                 </GradientRing>
                 <div className="friend-profile-today-text">
-                  <span className="friend-profile-section-label">امروز</span>
+                  <span className="friend-profile-section-label">{tr("امروز", "Today")}</span>
                   <span className="friend-profile-today-line">
                     {profile.today.total > 0
                       ? profile.today.pct >= 100
-                        ? "همه‌ی برنامه‌های امروز انجام شد"
-                        : `${faNum(profile.today.completed)} از ${faNum(profile.today.total)} برنامه`
-                      : "امروز برنامه‌ای نداره"}
+                        ? tr("همه‌ی برنامه‌های امروز انجام شد", "All of today's programs are done")
+                        : tr(`${faNum(profile.today.completed)} از ${faNum(profile.today.total)} برنامه`, `${profile.today.completed} of ${profile.today.total} programs`)
+                      : tr("امروز برنامه‌ای نداره", "No programs today")}
                   </span>
                   {profile.week && (
                     <span className="friend-profile-week">
                       <FriendWeekStrip week={profile.week} size={16} labels />
-                      <span className="friend-profile-week-count">{faNum(fullDays(profile.week))} روز کامل</span>
+                      <span className="friend-profile-week-count">{tr(`${faNum(fullDays(profile.week))} روز کامل`, `${fullDays(profile.week)} perfect ${fullDays(profile.week) === 1 ? "day" : "days"}`)}</span>
                     </span>
                   )}
                 </div>
@@ -280,22 +281,22 @@ export function FriendProfileModal({
               <div className="friend-profile-relation">
                 {profile.relation === "none" && (
                   <button type="button" className="trade-primary-btn" onClick={() => relationAction("add")} disabled={relBusy}>
-                    {relBusy ? <Spinner size={13} /> : "افزودن دوست"}
+                    {relBusy ? <Spinner size={13} /> : tr("افزودن دوست", "Add friend")}
                   </button>
                 )}
                 {profile.relation === "pending_sent" && (
                   <>
-                    <span className="friend-profile-relation-note">درخواست دوستی فرستادی</span>
+                    <span className="friend-profile-relation-note">{tr("درخواست دوستی فرستادی", "Friend request sent")}</span>
                     <button type="button" className="account-outline-btn" onClick={() => relationAction("cancel")} disabled={relBusy}>
-                      {relBusy ? <Spinner size={13} /> : "لغو درخواست"}
+                      {relBusy ? <Spinner size={13} /> : tr("لغو درخواست", "Cancel request")}
                     </button>
                   </>
                 )}
                 {profile.relation === "pending_received" && (
                   <>
-                    <button type="button" className="account-outline-btn" onClick={() => relationAction("decline")} disabled={relBusy}>رد</button>
+                    <button type="button" className="account-outline-btn" onClick={() => relationAction("decline")} disabled={relBusy}>{tr("رد", "Decline")}</button>
                     <button type="button" className="trade-primary-btn" onClick={() => relationAction("accept")} disabled={relBusy}>
-                      {relBusy ? <Spinner size={13} /> : "قبول درخواست"}
+                      {relBusy ? <Spinner size={13} /> : tr("قبول درخواست", "Accept request")}
                     </button>
                   </>
                 )}
@@ -309,15 +310,15 @@ export function FriendProfileModal({
                   <Star size={16} style={{ color: "#F5C518" }} fill="#F5C518" />
                   <b className="mono">{faNum(profile.starsCount)}</b>
                 </span>
-                <span>استار</span>
+                <span>{tr("استار", "Stars")}</span>
               </div>
               <div className="friend-profile-stat">
                 <StreakFlame streak={profile.streak} />
-                <span>استریک فعلی</span>
+                <span>{tr("استریک فعلی", "Current streak")}</span>
               </div>
               <div className="friend-profile-stat">
                 <StreakFlame streak={profile.bestStreak} />
-                <span>بیشترین استریک</span>
+                <span>{tr("بیشترین استریک", "Best streak")}</span>
               </div>
             </div>
 
@@ -325,12 +326,12 @@ export function FriendProfileModal({
               <div className="friend-profile-stat">
                 <Map size={16} className="friend-profile-stat-icon" />
                 <b className="mono">{faNum(profile.roadmapsCompleted)}</b>
-                <span>رودمپ تمام‌شده</span>
+                <span>{tr("رودمپ تمام‌شده", "Roadmaps completed")}</span>
               </div>
               <div className="friend-profile-stat">
                 <UserIcon size={16} className="friend-profile-stat-icon" />
                 <b className="mono">{faNum(profile.plansCompleted)}</b>
-                <span>برنامه تمام‌شده</span>
+                <span>{tr("برنامه تمام‌شده", "Programs completed")}</span>
               </div>
             </div>
           </>
@@ -343,14 +344,14 @@ export function FriendProfileModal({
           <div className="modal-panel open" role="dialog" aria-modal="true" style={{ zIndex: 91, maxWidth: 340 }}>
             <div className="modal-body" style={{ paddingTop: 4, textAlign: "center" }}>
               <div className="text-[13px] font-bold" style={{ color: "var(--text)" }}>
-                «{profile?.name}» از دوستات حذف بشه؟
+                {tr(`«${profile?.name}» از دوستات حذف بشه؟`, `Remove "${profile?.name}" from your friends?`)}
               </div>
               <div className="trade-modal-actions">
                 <button type="button" className="account-outline-btn" onClick={() => setConfirmRemove(false)} disabled={relBusy}>
-                  انصراف
+                  {tr("انصراف", "Cancel")}
                 </button>
                 <button type="button" className="trade-danger-btn" onClick={() => relationAction("remove")} disabled={relBusy}>
-                  {relBusy ? <Spinner size={13} /> : "حذف کن"}
+                  {relBusy ? <Spinner size={13} /> : tr("حذف کن", "Remove")}
                 </button>
               </div>
             </div>
@@ -364,14 +365,14 @@ export function FriendProfileModal({
           <div className="modal-panel open" role="dialog" aria-modal="true" style={{ zIndex: 91, maxWidth: 340 }}>
             <div className="modal-body" style={{ paddingTop: 4, textAlign: "center" }}>
               <div className="text-[13px] font-bold" style={{ color: "var(--text)" }}>
-                «{profile?.name}» بلاک بشه؟ دیگه توی جست‌وجوی دوستان دیده نمی‌شه.
+                {tr(`«${profile?.name}» بلاک بشه؟ دیگه توی جست‌وجوی دوستان دیده نمی‌شه.`, `Block "${profile?.name}"? They will no longer appear in friend search.`)}
               </div>
               <div className="trade-modal-actions">
                 <button type="button" className="account-outline-btn" onClick={() => setConfirmBlock(false)} disabled={blockBusy}>
-                  انصراف
+                  {tr("انصراف", "Cancel")}
                 </button>
                 <button type="button" className="trade-danger-btn" onClick={block} disabled={blockBusy}>
-                  {blockBusy ? <Spinner size={13} /> : "بلاک کن"}
+                  {blockBusy ? <Spinner size={13} /> : tr("بلاک کن", "Block")}
                 </button>
               </div>
             </div>

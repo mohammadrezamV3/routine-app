@@ -26,12 +26,13 @@ import { useLiveRefresh, keyMatches } from "@/lib/liveSync";
 import { getStreakTier, STREAK_MILESTONES } from "@/lib/streakTier";
 import { ACHIEVEMENTS, ACHIEVEMENT_BY_ID, achievementDesc } from "@/lib/achievements";
 import type { AchievementsPayload } from "@/lib/achievementsServer";
-import { FA_WEEKDAY_SHORT, J_MONTHS, toJalali } from "@/lib/jalali";
+import { weekdayShort, jMonthName, toJalali } from "@/lib/jalali";
+import { tr } from "@/lib/i18n";
 
 export function StreakClient() {
   const { status } = useSession();
   if (status === "unauthenticated") {
-    return <section className="db-page"><AuthGate message="برای دیدن استریک و اچیومنت‌ها وارد شوید" /></section>;
+    return <section className="db-page"><AuthGate message={tr("برای دیدن استریک و اچیومنت‌ها وارد شوید", "Sign in to see your streak and achievements")} /></section>;
   }
   return (
     <section className="db-page dash-scope stk-page">
@@ -98,16 +99,16 @@ function StreakBody() {
         </motion.div>
       </div>
 
-      <BentoCard className="stk-ach" label="اچیومنت‌ها">
+      <BentoCard className="stk-ach" label={tr("اچیومنت‌ها", "Achievements")}>
         <CardHead
           icon="trophy"
-          title="اچیومنت‌ها"
+          title={tr("اچیومنت‌ها", "Achievements")}
           extra={ach.data ? <span className="stk-ach-count"><b>{ach.data.unlockedCount}</b>/{ach.data.total}</span> : null}
         />
         {ach.error && !ach.data ? (
           <div className="db-empty">
-            <p>دریافت اچیومنت‌ها ناموفق بود.</p>
-            <button type="button" className="account-outline-btn mentor-btn is-sm" onClick={ach.reload}>تلاش دوباره</button>
+            <p>{tr("دریافت اچیومنت‌ها ناموفق بود.", "Could not load achievements.")}</p>
+            <button type="button" className="account-outline-btn mentor-btn is-sm" onClick={ach.reload}>{tr("تلاش دوباره", "Try again")}</button>
           </div>
         ) : (
           <AchievementGrid data={ach.data} />
@@ -136,14 +137,14 @@ function StreakHero({ routine, best }: { routine: ReturnType<typeof useDashboard
   const todayLine = !routine.ready
     ? null
     : total === 0
-      ? "امروز برنامه‌ای نداری — استریک سر جاش می‌مونه"
+      ? tr("امروز برنامه‌ای نداری — استریک سر جاش می‌مونه", "No programs today — your streak stays put")
       : todayDone
-        ? "امروز هم کامل شد — همین الان به استریک اضافه شد"
-        : `${total - completed} برنامه‌ی دیگه تا اضافه‌شدن امروز به استریک`;
+        ? tr("امروز هم کامل شد — همین الان به استریک اضافه شد", "Today is complete — just added to your streak")
+        : tr(`${total - completed} برنامه‌ی دیگه تا اضافه‌شدن امروز به استریک`, `${total - completed} more ${total - completed === 1 ? "program" : "programs"} until today counts toward your streak`);
 
   return (
     <motion.div className="stk-hero-col" variants={V_GRID} initial="hidden" animate="show">
-    <BentoCard className={`stk-hero tier-${tier.tier}${todayDone ? " is-lit" : ""}`} label="استریک">
+    <BentoCard className={`stk-hero tier-${tier.tier}${todayDone ? " is-lit" : ""}`} label={tr("استریک", "Streak")}>
       <span className="stk-hero-aura" aria-hidden="true" />
       <div className="stk-hero-main">
         <div className="stk-flame-wrap">
@@ -155,24 +156,24 @@ function StreakHero({ routine, best }: { routine: ReturnType<typeof useDashboard
           <span className="stk-kicker">{tier.name}</span>
           <div className="stk-count">
             {streak === null ? <Skel w={90} h={56} r={14} /> : <CountUp value={s} className="stk-count-num" />}
-            <span className="stk-count-unit">روز پشت‌سرهم</span>
+            <span className="stk-count-unit">{tr("روز پشت‌سرهم", s === 1 ? "day in a row" : "days in a row")}</span>
           </div>
           <p className="stk-today" aria-live="polite">
             {todayLine === null ? <Skel w="80%" h={12} /> : <><span className={`stk-today-dot${todayDone ? " is-done" : ""}`} />{todayLine}</>}
           </p>
           <div className="stk-hero-meta">
-            <span><DashIcon name="trophy" /> بهترین رکورد: <b>{best === null ? "…" : Math.max(best, s)}</b> روز</span>
-            {next && <span><DashIcon name="target" /> مایلستون بعدی: <b dir="ltr">{HIDDEN}</b> روز</span>}
+            <span><DashIcon name="trophy" /> {tr("بهترین رکورد:", "Best streak:")} <b>{best === null ? "…" : Math.max(best, s)}</b> {tr("روز", "days")}</span>
+            {next && <span><DashIcon name="target" /> {tr("مایلستون بعدی:", "Next milestone:")} <b dir="ltr">{HIDDEN}</b> {tr("روز", "days")}</span>}
           </div>
         </div>
       </div>
 
       <MilestoneTrack streak={s} />
 
-      <div className="stk-week" aria-label="7 روز اخیر">
+      <div className="stk-week" aria-label={tr("7 روز اخیر", "Last 7 days")}>
         {last7.map((c, i) => {
           const [y, m, d] = c.iso.split("-").map(Number);
-          const wd = FA_WEEKDAY_SHORT[new Date(y, m - 1, d).getDay()];
+          const wd = weekdayShort(new Date(y, m - 1, d).getDay());
           const state = c.pct === null ? "rest" : c.pct === 100 ? "done" : c.today ? "today" : "miss";
           return (
             <motion.div key={c.iso} className={`stk-day is-${state}`} initial={{ opacity: 0, y: 6 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.35 + i * 0.05 }}>
@@ -192,7 +193,7 @@ function StreakHero({ routine, best }: { routine: ReturnType<typeof useDashboard
 function MilestoneTrack({ streak }: { streak: number }) {
   const ms = STREAK_MILESTONES;
   return (
-    <ol className="stk-miles" aria-label="مایلستون‌های استریک">
+    <ol className="stk-miles" aria-label={tr("مایلستون‌های استریک", "Streak milestones")}>
       {ms.map((m, i) => {
         const reached = streak >= m;
         const current = !reached && (i === 0 || streak >= ms[i - 1]);
@@ -221,8 +222,8 @@ function MiniFlame() {
 function GoldenCard({ data, name }: { data: AchievementsPayload | null; name: string }) {
   const pct = data ? data.unlockedCount / data.total : 0;
   return (
-    <BentoCard className={`stk-golden${data?.golden ? " is-golden" : ""}`} label="نام طلایی">
-      <CardHead icon="spark" title="نام طلایی" />
+    <BentoCard className={`stk-golden${data?.golden ? " is-golden" : ""}`} label={tr("نام طلایی", "Golden name")}>
+      <CardHead icon="spark" title={tr("نام طلایی", "Golden name")} />
       <div className="stk-golden-body">
         <GradientRing value={pct} size={92} stroke={8} grad={["#d4891a", "#fff3b0"]} delay={0.3}>
           <b className="stk-golden-pct">{data ? Math.round(pct * 100) : "…"}%</b>
@@ -230,14 +231,14 @@ function GoldenCard({ data, name }: { data: AchievementsPayload | null; name: st
         <div className="stk-golden-text">
           {data?.golden ? (
             <>
-              <strong className="stk-golden-name"><GoldenName golden>{name || "قهرمان"}</GoldenName></strong>
-              <p>همه‌ی اچیومنت‌ها رو باز کردی — اسمت همه‌جا طلایی دیده می‌شه.</p>
+              <strong className="stk-golden-name"><GoldenName golden>{name || tr("قهرمان", "Champion")}</GoldenName></strong>
+              <p>{tr("همه‌ی اچیومنت‌ها رو باز کردی — اسمت همه‌جا طلایی دیده می‌شه.", "You unlocked every achievement — your name shows in gold everywhere.")}</p>
             </>
           ) : (
             <>
-              <strong>همه رو باز کن، اسمت طلایی می‌شه</strong>
-              <p>{data ? `${data.total - data.unlockedCount} اچیومنت دیگه تا نام طلایی دورنگ، همه‌جای آریون.` : <Skel w="70%" h={12} />}</p>
-              <span className="stk-golden-preview" aria-hidden="true"><GoldenName golden>{name || "نام تو"}</GoldenName></span>
+              <strong>{tr("همه رو باز کن، اسمت طلایی می‌شه", "Unlock them all and your name turns gold")}</strong>
+              <p>{data ? tr(`${data.total - data.unlockedCount} اچیومنت دیگه تا نام طلایی دورنگ، همه‌جای آریون.`, `${data.total - data.unlockedCount} more ${data.total - data.unlockedCount === 1 ? "achievement" : "achievements"} until your two-tone golden name, everywhere on Arion.`) : <Skel w="70%" h={12} />}</p>
+              <span className="stk-golden-preview" aria-hidden="true"><GoldenName golden>{name || tr("نام تو", "Your name")}</GoldenName></span>
             </>
           )}
         </div>
@@ -249,14 +250,14 @@ function GoldenCard({ data, name }: { data: AchievementsPayload | null; name: st
 function StatsCard({ data, streak }: { data: AchievementsPayload | null; streak: number | null }) {
   const m = data?.metrics;
   const items = [
-    { k: "best", label: "بهترین استریک", v: m ? Math.max(m.bestStreak, streak ?? 0) : null, unit: "روز" },
-    { k: "perfect", label: "روزهای کامل", v: m?.perfectDays ?? null, unit: "روز" },
-    { k: "ticks", label: "کل تیک‌ها", v: m?.totalTicks ?? null, unit: "" },
-    { k: "weeks", label: "هفته‌های بی‌نقص", v: m?.perfectWeeks ?? null, unit: "" },
+    { k: "best", label: tr("بهترین استریک", "Best streak"), v: m ? Math.max(m.bestStreak, streak ?? 0) : null, unit: tr("روز", "days") },
+    { k: "perfect", label: tr("روزهای کامل", "Perfect days"), v: m?.perfectDays ?? null, unit: tr("روز", "days") },
+    { k: "ticks", label: tr("کل تیک‌ها", "Total ticks"), v: m?.totalTicks ?? null, unit: "" },
+    { k: "weeks", label: tr("هفته‌های بی‌نقص", "Perfect weeks"), v: m?.perfectWeeks ?? null, unit: "" },
   ];
   return (
-    <BentoCard className="stk-stats" label="آمار">
-      <CardHead icon="chart" title="کارنامه" href="/weekly" hrefLabel="روتین من" />
+    <BentoCard className="stk-stats" label={tr("آمار", "Stats")}>
+      <CardHead icon="chart" title={tr("کارنامه", "Report card")} href="/weekly" hrefLabel={tr("روتین من", "My Routine")} />
       <div className="stk-stats-grid">
         {items.map((it) => (
           <div key={it.k}>
@@ -302,7 +303,7 @@ function AchievementGrid({ data }: { data: AchievementsPayload | null }) {
             {st.unlocked ? (
               st.unlockedAt && jDate(st.unlockedAt) ? <span className="stk-ach-date">{jDate(st.unlockedAt)}</span> : null
             ) : (
-              <span className="stk-ach-prog" aria-label={`${st.value} از ${st.goal}`}>
+              <span className="stk-ach-prog" aria-label={tr(`${st.value} از ${st.goal}`, `${st.value} of ${st.goal}`)}>
                 <span className="stk-ach-bar"><i style={{ transform: `scaleX(${pct})` }} /></span>
                 <em dir="ltr">{Math.min(st.value, st.goal)}/{st.goal}</em>
               </span>
@@ -321,8 +322,8 @@ function RewardsCard({ data }: { data: AchievementsPayload | null }) {
   const order: Reward["tier"][] = ["half", "full"];
   const sorted = [...rewards].sort((a, b) => order.indexOf(a.tier) - order.indexOf(b.tier));
   return (
-    <BentoCard className="stk-rewards" label="پاداش‌ها">
-      <CardHead icon="card" title="پاداش اچیومنت‌ها" />
+    <BentoCard className="stk-rewards" label={tr("پاداش‌ها", "Rewards")}>
+      <CardHead icon="card" title={tr("پاداش اچیومنت‌ها", "Achievement rewards")} />
       <ul className="stk-reward-list">
         {sorted.map((r) => {
           const state = r.used ? "used" : r.unlocked ? "ready" : "locked";
@@ -330,13 +331,13 @@ function RewardsCard({ data }: { data: AchievementsPayload | null }) {
             <li key={r.tier} className={`stk-reward is-${state}`}>
               <span className="stk-reward-pct" dir="ltr">{r.percent}%</span>
               <span className="stk-reward-text">
-                <strong>{r.percent}% تخفیف اشتراک یک‌ماهه</strong>
-                <small>{r.tier === "half" ? "با باز کردن نیمی از اچیومنت‌ها" : "با باز کردن همه‌ی اچیومنت‌ها"}</small>
+                <strong>{tr(`${r.percent}% تخفیف اشتراک یک‌ماهه`, `${r.percent}% off a one-month subscription`)}</strong>
+                <small>{r.tier === "half" ? tr("با باز کردن نیمی از اچیومنت‌ها", "Unlock half of the achievements") : tr("با باز کردن همه‌ی اچیومنت‌ها", "Unlock all of the achievements")}</small>
               </span>
               {state === "ready" ? (
-                <Link href="/subscription" prefetch className="account-outline-btn mentor-btn is-sm stk-reward-cta">دریافت</Link>
+                <Link href="/subscription" prefetch className="account-outline-btn mentor-btn is-sm stk-reward-cta">{tr("دریافت", "Claim")}</Link>
               ) : state === "used" ? (
-                <span className="stk-reward-state">استفاده شد</span>
+                <span className="stk-reward-state">{tr("استفاده شد", "Used")}</span>
               ) : (
                 <span className="stk-reward-state"><DashIcon name="lock" /></span>
               )}
@@ -353,7 +354,7 @@ function jDate(iso: string) {
   const d = new Date(iso);
   if (Number.isNaN(d.getTime())) return "";
   const [jy, jm, jd] = toJalali(d.getFullYear(), d.getMonth() + 1, d.getDate());
-  return `${jd} ${J_MONTHS[jm - 1]} ${jy}`;
+  return `${jd} ${jMonthName(jm - 1)} ${jy}`;
 }
 
 // ── جشن بازشدن ─────────────────────────────────────────────
@@ -373,7 +374,7 @@ function UnlockToast({ ids, onDone }: { ids: string[]; onDone: () => void }) {
     >
       <AchievementIcon id={first.id} unlocked rarity={first.rarity} size={52} />
       <div>
-        <span className="stk-toast-kicker">اچیومنت تازه{ids.length > 1 ? ` (+${ids.length - 1})` : ""}</span>
+        <span className="stk-toast-kicker">{tr("اچیومنت تازه", "New achievement")}{ids.length > 1 ? ` (+${ids.length - 1})` : ""}</span>
         <strong dir="ltr" className="stk-toast-name">{achName(first)}</strong>
       </div>
     </motion.div>

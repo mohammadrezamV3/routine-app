@@ -12,6 +12,7 @@ import { TradeKebabMenu } from "./TradeKebabMenu";
 import { Spinner } from "./Spinner";
 import { sortFriends, type FriendRowData } from "./FriendRow";
 import { useLiveRefresh } from "@/lib/liveSync";
+import { tr, isEn } from "@/lib/i18n";
 
 type Person = { friendshipId: string; id: string; name: string; username: string | null; avatarUrl: string | null; golden?: boolean; staff?: boolean };
 type SearchStatus = "none" | "friends" | "pending_sent" | "pending_received";
@@ -89,23 +90,23 @@ export function FriendsManageSheet({ friends, onClose, onChanged }: { friends: M
     <>
       <LockBodyScroll />
       <div className="modal-overlay open" onClick={onClose} />
-      <div className="modal-panel open modal-panel-notransform fr-sheet" role="dialog" aria-modal="true" aria-label="مدیریت دوستان" dir="rtl">
+      <div className="modal-panel open modal-panel-notransform fr-sheet" role="dialog" aria-modal="true" aria-label={tr("مدیریت دوستان", "Manage friends")} dir={isEn() ? "ltr" : "rtl"}>
         <div className="modal-head">
-          <div className="modal-title">دوستان</div>
-          <button type="button" className="trade-icon-btn" onClick={onClose} aria-label="بستن"><X size={16} /></button>
+          <div className="modal-title">{tr("دوستان", "Friends")}</div>
+          <button type="button" className="trade-icon-btn" onClick={onClose} aria-label={tr("بستن", "Close")}><X size={16} /></button>
         </div>
 
         <AddFriend onViewing={setViewing} onChanged={() => { onChanged(); loadRequests(); }} />
 
         {incoming.length > 0 && (
           <div>
-            <div className="fr-section-label">درخواست‌های دریافتی</div>
+            <div className="fr-section-label">{tr("درخواست‌های دریافتی", "Received requests")}</div>
             <ul className="fr-list">
               {incoming.map((p) => (
                 <PersonRow key={p.friendshipId} p={p} onOpen={() => setViewing(p.id)}>
-                  <button type="button" className="account-outline-btn" disabled={busy === p.friendshipId} onClick={() => respond(p, false)}>رد</button>
+                  <button type="button" className="account-outline-btn" disabled={busy === p.friendshipId} onClick={() => respond(p, false)}>{tr("رد", "Decline")}</button>
                   <button type="button" className="trade-primary-btn" disabled={busy === p.friendshipId} onClick={() => respond(p, true)}>
-                    {busy === p.friendshipId ? <Spinner size={12} /> : "قبول"}
+                    {busy === p.friendshipId ? <Spinner size={12} /> : tr("قبول", "Accept")}
                   </button>
                 </PersonRow>
               ))}
@@ -115,13 +116,13 @@ export function FriendsManageSheet({ friends, onClose, onChanged }: { friends: M
 
         {sent.length > 0 && (
           <div>
-            <div className="fr-section-label">درخواست‌های ارسالی</div>
+            <div className="fr-section-label">{tr("درخواست‌های ارسالی", "Sent requests")}</div>
             <ul className="fr-list">
               {sent.map((p) => (
                 <PersonRow key={p.friendshipId} p={p} onOpen={() => setViewing(p.id)}>
-                  <span className="fr-person-status">در انتظار</span>
+                  <span className="fr-person-status">{tr("در انتظار", "Pending")}</span>
                   <button type="button" className="account-outline-btn" disabled={busy === p.friendshipId} onClick={() => respond(p, false)}>
-                    {busy === p.friendshipId ? <Spinner size={12} /> : "لغو"}
+                    {busy === p.friendshipId ? <Spinner size={12} /> : tr("لغو", "Cancel")}
                   </button>
                 </PersonRow>
               ))}
@@ -131,15 +132,15 @@ export function FriendsManageSheet({ friends, onClose, onChanged }: { friends: M
 
         {list.length > 0 && (
           <div>
-            <div className="fr-section-label">دوستان شما</div>
+            <div className="fr-section-label">{tr("دوستان شما", "Your friends")}</div>
             <ul className="fr-list">
               {list.map((f) => (
                 <PersonRow key={f.id} p={f} onOpen={() => setViewing(f.id)} star={f.favorite}>
                   <TradeKebabMenu
-                    label={`گزینه‌های ${f.name}`}
+                    label={tr(`گزینه‌های ${f.name}`, `Options for ${f.name}`)}
                     actions={[
-                      { label: f.favorite ? "حذف از فیوریت‌ها" : "افزودن به فیوریت‌ها", icon: <Star size={14} />, onClick: () => toggleFavorite(f) },
-                      { label: "حذف از دوستان", icon: <UserMinus size={14} />, danger: true, onClick: () => setConfirmRemove(f) },
+                      { label: f.favorite ? tr("حذف از فیوریت‌ها", "Remove from favorites") : tr("افزودن به فیوریت‌ها", "Add to favorites"), icon: <Star size={14} />, onClick: () => toggleFavorite(f) },
+                      { label: tr("حذف از دوستان", "Remove friend"), icon: <UserMinus size={14} />, danger: true, onClick: () => setConfirmRemove(f) },
                     ]}
                   />
                 </PersonRow>
@@ -164,12 +165,12 @@ export function FriendsManageSheet({ friends, onClose, onChanged }: { friends: M
           <div className="modal-panel open" role="dialog" aria-modal="true" style={{ zIndex: 96, maxWidth: 340 }}>
             <div className="modal-body" style={{ paddingTop: 4, textAlign: "center" }}>
               <div className="text-[13px] font-bold" style={{ color: "var(--text)" }}>
-                «{confirmRemove.name}» از دوستات حذف بشه؟
+                {tr(`«${confirmRemove.name}» از دوستات حذف بشه؟`, `Remove "${confirmRemove.name}" from your friends?`)}
               </div>
               <div className="trade-modal-actions">
-                <button type="button" className="account-outline-btn" onClick={() => setConfirmRemove(null)} disabled={!!busy}>انصراف</button>
+                <button type="button" className="account-outline-btn" onClick={() => setConfirmRemove(null)} disabled={!!busy}>{tr("انصراف", "Cancel")}</button>
                 <button type="button" className="trade-danger-btn" onClick={() => removeFriend(confirmRemove)} disabled={!!busy}>
-                  {busy ? <Spinner size={13} /> : "حذف کن"}
+                  {busy ? <Spinner size={13} /> : tr("حذف کن", "Remove")}
                 </button>
               </div>
             </div>
@@ -189,7 +190,7 @@ function PersonRow({ p, onOpen, star, children }: { p: Omit<Person, "friendshipI
         <span className="fr-person-text">
           <span className="fr-name-line">
             <span className="fr-name"><GoldenName golden={p.golden} staff={p.staff}>{p.name}</GoldenName></span>
-            {star && <Star size={11} className="fr-fav" fill="currentColor" aria-label="فیوریت" />}
+            {star && <Star size={11} className="fr-fav" fill="currentColor" aria-label={tr("فیوریت", "Favorite")} />}
           </span>
           {p.username && <span className="fr-person-handle mono">@{p.username}</span>}
         </span>
@@ -241,40 +242,40 @@ function AddFriend({ onViewing, onChanged }: { onViewing: (id: string) => void; 
     <div>
       <input
         type="search"
-        dir="rtl"
+        dir={isEn() ? "ltr" : "rtl"}
         className="wsearch-newform-name trade-glass-field fr-search-field"
-        placeholder="جست‌وجو با یوزرنیم…"
+        placeholder={tr("جست‌وجو با یوزرنیم…", "Search by username…")}
         value={query}
         onChange={(e) => setQuery(e.target.value)}
-        aria-label="جست‌وجوی کاربر با یوزرنیم"
+        aria-label={tr("جست‌وجوی کاربر با یوزرنیم", "Search users by username")}
         autoComplete="off"
         spellCheck={false}
       />
       {q.length >= 2 && (
         searching && !results ? (
-          <div className="fr-search-state"><Spinner size={13} /> در حال جست‌وجو…</div>
+          <div className="fr-search-state"><Spinner size={13} /> {tr("در حال جست‌وجو…", "Searching…")}</div>
         ) : results && results.length === 0 ? (
-          <div className="fr-search-state">کسی با این یوزرنیم پیدا نشد.</div>
+          <div className="fr-search-state">{tr("کسی با این یوزرنیم پیدا نشد.", "No one found with this username.")}</div>
         ) : results ? (
           <ul className="fr-list">
             {results.map((u) => (
               <PersonRow key={u.id} p={u} onOpen={() => onViewing(u.id)}>
                 {u.status === "none" && (
                   <button type="button" className="trade-primary-btn" disabled={busy === u.id} onClick={() => act(u)}>
-                    {busy === u.id ? <Spinner size={12} /> : "افزودن"}
+                    {busy === u.id ? <Spinner size={12} /> : tr("افزودن", "Add")}
                   </button>
                 )}
                 {u.status === "pending_sent" && (
                   <button type="button" className="account-outline-btn" disabled={busy === u.id} onClick={() => act(u)}>
-                    {busy === u.id ? <Spinner size={12} /> : "لغو درخواست"}
+                    {busy === u.id ? <Spinner size={12} /> : tr("لغو درخواست", "Cancel request")}
                   </button>
                 )}
                 {u.status === "pending_received" && (
                   <button type="button" className="trade-primary-btn" disabled={busy === u.id} onClick={() => act(u)}>
-                    {busy === u.id ? <Spinner size={12} /> : "قبول"}
+                    {busy === u.id ? <Spinner size={12} /> : tr("قبول", "Accept")}
                   </button>
                 )}
-                {u.status === "friends" && <span className="fr-person-status">دوستید</span>}
+                {u.status === "friends" && <span className="fr-person-status">{tr("دوستید", "Friends")}</span>}
               </PersonRow>
             ))}
           </ul>

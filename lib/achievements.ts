@@ -8,6 +8,8 @@
 // name انگلیسی و کوتاه؛ desc فارسی و در صورت نیاز با نشانه‌ی {n} برای عدد هدف
 // (عدد هدف همیشه نشون داده می‌شه؛ «؟» فقط برای روزهای مایلستون استریک مونده).
 
+import { isEn, pick } from "./i18n";
+
 export type AchievementMetrics = {
   currentStreak: number;
   bestStreak: number;
@@ -73,6 +75,8 @@ export type AchievementDef = {
   title: string;
   /** توضیح فارسی؛ {n} = عدد هدف */
   desc: string;
+  /** توضیح انگلیسی؛ {n} = عدد هدف */
+  descEn: string;
   category: AchievementCategory;
   /** سطح درخشش (1 برنزی .. 4 افسانه‌ای) — فقط ظاهری */
   rarity: 1 | 2 | 3 | 4;
@@ -83,17 +87,100 @@ export type AchievementDef = {
 const at = (key: keyof AchievementMetrics, goal: number) => (m: AchievementMetrics) => ({ value: Number(m[key]) || 0, goal });
 
 export const ACHIEVEMENT_CATEGORIES: Record<AchievementCategory, string> = {
-  streak: "استریک",
-  perfect: "روزهای کامل",
-  ticks: "تیک‌ها",
-  consistency: "ثبات",
-  sleep: "خواب",
-  body: "بدن و تغذیه",
-  trade: "ترید",
-  special: "ویژه",
+  get streak() { return pick({ fa: "استریک", en: "Streak" }); },
+  get perfect() { return pick({ fa: "روزهای کامل", en: "Perfect days" }); },
+  get ticks() { return pick({ fa: "تیک‌ها", en: "Ticks" }); },
+  get consistency() { return pick({ fa: "ثبات", en: "Consistency" }); },
+  get sleep() { return pick({ fa: "خواب", en: "Sleep" }); },
+  get body() { return pick({ fa: "بدن و تغذیه", en: "Body and nutrition" }); },
+  get trade() { return pick({ fa: "ترید", en: "Trading" }); },
+  get special() { return pick({ fa: "ویژه", en: "Special" }); },
 };
 
-type Def = Omit<AchievementDef, "title">;
+/** توضیح انگلیسی هر اچیومنت (کلید = id)؛ {n} = عدد هدف */
+const DESC_EN: Record<string, string> = {
+  streak_1: "Your first perfect day in the chain",
+  streak_3: "{n} days in a row, every program done",
+  streak_7: "{n} days in a row, no breaks",
+  streak_14: "{n} days in a row, no breaks",
+  streak_30: "{n} days in a row, a month on fire",
+  streak_60: "{n} days in a row, no breaks",
+  streak_90: "{n} days in a row, a whole season",
+  streak_180: "{n} days in a row, no breaks",
+  streak_365: "{n} days in a row, a full year",
+  streak_500: "{n} days in a row; a flame that never dies",
+  perfect_1: "Completed every program in a day",
+  perfect_10: "{n} perfect days",
+  perfect_50: "{n} perfect days",
+  perfect_100: "{n} perfect days",
+  perfect_250: "{n} perfect days",
+  perfect_500: "{n} perfect days",
+  perfect_1000: "{n} perfect days",
+  week_1: "A Saturday-to-Friday week with every day perfect",
+  week_4: "{n} perfect weeks",
+  week_12: "{n} perfect weeks",
+  week_26: "{n} perfect weeks",
+  week_52: "{n} perfect weeks",
+  month_1: "Every day of a Persian-calendar month perfect",
+  month_3: "{n} perfect months",
+  month_6: "{n} perfect months",
+  month_12: "{n} perfect months",
+  friday_4: "{n} perfect Fridays, even on the day off",
+  ticks_10: "{n} programs completed",
+  ticks_100: "{n} programs completed",
+  ticks_500: "{n} programs completed",
+  ticks_1000: "{n} programs completed",
+  ticks_5000: "{n} programs completed",
+  ticks_10000: "{n} programs completed",
+  active_7: "{n} days with at least one tick",
+  active_30: "{n} days with at least one tick",
+  active_100: "{n} days with at least one tick",
+  active_365: "{n} days with at least one tick",
+  avg30_90: "30-day completion average above {n} percent",
+  avg90_85: "90-day completion average above {n} percent",
+  comeback: "After a broken streak, 7 days in a row again",
+  comeback_3: "Got back up {n} times after a broken streak",
+  early_7: "{n} days waking up on time",
+  early_30: "{n} days waking up on time",
+  early_100: "{n} days waking up on time",
+  early_run_14: "{n} days in a row waking up on time",
+  sleep_1: "Logged your first sleep",
+  sleep_7: "{n} nights of sleep logged",
+  sleep_30: "{n} nights of sleep logged",
+  sleep_100: "{n} nights of sleep logged",
+  sleep_365: "{n} nights of sleep logged",
+  sleep_log_run_30: "{n} nights in a row of sleep logging",
+  sleep_goal_7: "{n} nights with 7 to 9 hours of sleep",
+  sleep_goal_30: "{n} nights with 7 to 9 hours of sleep",
+  sleep_goal_100: "{n} nights with 7 to 9 hours of sleep",
+  sleep_steady_7: "{n} nights in a row sleeping on your target time",
+  sleep_steady_30: "{n} nights in a row sleeping on your target time",
+  workout_10: "{n} full workout sessions",
+  workout_50: "{n} full workout sessions",
+  workout_150: "{n} full workout sessions",
+  workout_365: "{n} full workout sessions",
+  workout_weeks_4: "{n} weeks in a row, at least 3 sessions each week",
+  workout_weeks_12: "{n} weeks in a row, at least 3 sessions each week",
+  cal_days_30: "{n} days of food logging",
+  cal_days_100: "{n} days of food logging",
+  cal_run_7: "{n} days in a row of food logging",
+  cal_run_30: "{n} days in a row of food logging",
+  cal_target_30: "{n} days with calories within 10 percent of your goal",
+  trade_50: "{n} journaled trades",
+  trade_250: "{n} journaled trades",
+  trade_check_25: "{n} trades with a full checklist",
+  trade_check_100: "{n} trades with a full checklist",
+  trade_plan_20: "{n} trades in a row following the plan",
+  trade_reflect_50: "{n} trades with feelings before and after plus a note",
+  planner_10: "At least {n} programs in your routine",
+  member_30: "{n} days together",
+  member_365: "One year together",
+  mentee_program_1: "Finished a mentor program to the end",
+  mentee_program_3: "{n} mentor programs finished to the end",
+  mentor_students_5: "Guided {n} students as a mentor",
+};
+
+type Def = Omit<AchievementDef, "title" | "descEn">;
 
 const DEFS: Def[] = [
   // ── استریک (بهترین رکورد، تا شکستن استریک اچیومنت نپره) ──
@@ -192,11 +279,12 @@ const DEFS: Def[] = [
   { id: "mentor_students_5", name: "Guiding Light", desc: "همراهی {n} شاگرد به‌عنوان منتور", category: "special", rarity: 4, progress: at("mentorStudents", 5) },
 ];
 
-export const ACHIEVEMENTS: AchievementDef[] = DEFS.map((d) => ({ ...d, title: d.name }));
+export const ACHIEVEMENTS: AchievementDef[] = DEFS.map((d) => ({ ...d, title: d.name, descEn: DESC_EN[d.id] ?? d.desc }));
 
 /** نشانه‌ی {n} همیشه با عدد هدف جایگزین می‌شه (چه باز چه قفل) — علامت سوال فقط برای مایلستون‌های استریکه */
-export function achievementDesc(a: Pick<AchievementDef, "desc">, goal: number, _unlocked?: boolean): string {
-  return a.desc.split("{n}").join(String(goal));
+export function achievementDesc(a: Pick<AchievementDef, "desc"> & { descEn?: string }, goal: number, _unlocked?: boolean): string {
+  const t = isEn() && a.descEn ? a.descEn : a.desc;
+  return t.split("{n}").join(String(goal));
 }
 
 export type AchievementState = {

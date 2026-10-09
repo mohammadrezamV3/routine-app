@@ -6,6 +6,8 @@ import { DashCard } from "./DashCard";
 import { getWeekStats, WeekDayStat } from "@/lib/routineStats";
 import { useLiveRefresh } from "@/lib/liveSync";
 import { BarChart3 } from "lucide-react";
+import { tr, isEn } from "@/lib/i18n";
+import { weekdayShort } from "@/lib/jalali";
 
 
 // میله‌ها وقتی پر می‌شن که واقعا دیده بشن: اسپلش (data-boot روی <html>) تموم شده
@@ -104,13 +106,13 @@ export function DashWeeklyChartCard({ delay, refreshKey }: { delay?: number; ref
 
   return (
     <DashCard delay={delay}>
-      <h2 className="flex items-center gap-1.5 text-right text-[14px] font-bold text-dash-text sm:text-[15px]">
+      <h2 className="flex items-center gap-1.5 text-start text-[14px] font-bold text-dash-text sm:text-[15px]">
         <BarChart3 className="h-4 w-4 text-dash-green sm:h-[18px] sm:w-[18px]" />
-        آمار هفتگی
+        {tr("آمار هفتگی", "Weekly stats")}
       </h2>
 
       {stats === null ? (
-        <div className="mt-4 text-[11px] text-dash-muted sm:text-[12px] is-loading">در حال بارگذاری…</div>
+        <div className="mt-4 text-[11px] text-dash-muted sm:text-[12px] is-loading">{tr("در حال بارگذاری…", "Loading…")}</div>
       ) : (
         <div className="mt-5 flex items-end gap-3">
           <div ref={setBarsEl} className="flex flex-1 items-end justify-between gap-1.5 sm:gap-2">
@@ -118,7 +120,7 @@ export function DashWeeklyChartCard({ delay, refreshKey }: { delay?: number; ref
               const peak = s.pct > 0 && s.pct === maxPct;
               return (
                 <div key={s.iso} className="flex flex-1 flex-col items-center gap-1 sm:gap-1.5">
-                  <span className={cn("text-[9px] font-semibold sm:text-[10px]", peak ? "text-dash-green" : "text-dash-muted")}>{s.pct}٪</span>
+                  <span className={cn("text-[9px] font-semibold sm:text-[10px]", peak ? "text-dash-green" : "text-dash-muted")}>{s.pct}{tr("٪", "%")}</span>
                   <div className="flex h-24 w-full items-end justify-center sm:h-28">
                     {/* پرشدن نرم با CSS (scaleY، فقط کامپوزیت) نه framer — روی
                         گوشی ضعیف MotionTuner انیمیشن‌های framer رو خاموش می‌کنه،
@@ -135,7 +137,7 @@ export function DashWeeklyChartCard({ delay, refreshKey }: { delay?: number; ref
                       }}
                     />
                   </div>
-                  <span className="text-[9.5px] text-dash-muted sm:text-[11.5px]">{s.short}</span>
+                  <span className="text-[9.5px] text-dash-muted sm:text-[11.5px]">{isEn() ? weekdayShort(s.jsDay) : s.short}</span>
                 </div>
               );
             })}

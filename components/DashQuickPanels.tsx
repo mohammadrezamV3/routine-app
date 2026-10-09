@@ -10,15 +10,16 @@ import { DashWeeklyChartCard } from "./DashWeeklyChartCard";
 import { DashboardPrefs } from "@/lib/dashboardPrefs";
 import { featureVisible } from "@/lib/featureFlags";
 import { useFeatures } from "@/lib/useFeatures";
+import { tr } from "@/lib/i18n";
 
 type PanelKey = "reminders" | "medications" | "chart" | "friends";
 
-const PANEL_META: Record<PanelKey, { label: string; icon: React.ReactNode }> = {
-  reminders: { label: "یادآوری", icon: <Bell /> },
-  medications: { label: "دارو", icon: <Tablets /> },
-  chart: { label: "آمار هفتگی", icon: <BarChart3 /> },
-  friends: { label: "دوستان", icon: <Users /> },
-};
+const panelMeta = (): Record<PanelKey, { label: string; icon: React.ReactNode }> => ({
+  reminders: { label: tr("یادآوری", "Reminders"), icon: <Bell /> },
+  medications: { label: tr("دارو", "Medication"), icon: <Tablets /> },
+  chart: { label: tr("آمار هفتگی", "Weekly stats"), icon: <BarChart3 /> },
+  friends: { label: tr("دوستان", "Friends"), icon: <Users /> },
+});
 
 // چهار کارت «یادآوری / یادآوری دارو / آمار هفتگی / دوستان» — طبق طرح
 // دستی کاربر: یک ردیف چهار باکس مربعی جدا (هرکدوم با آیکون و اسم، همون
@@ -51,7 +52,7 @@ export function DashQuickPanels({
   return (
     <div className="dash-quick-panels flex flex-col gap-4 sm:gap-6">
       {/* باکس‌های کوچیک فقط‌آیکون؛ انتخاب‌شده بزرگ‌تر می‌شه و اسمش ظاهر می‌شه. */}
-      <div className="flex items-end justify-center gap-2.5 sm:gap-3.5" role="tablist" aria-label="بخش‌های روتین">
+      <div className="flex items-end justify-center gap-2.5 sm:gap-3.5" role="tablist" aria-label={tr("بخش‌های روتین", "Routine sections")}>
         {enabled.map((key) => {
           const on = key === current;
           return (
@@ -62,13 +63,13 @@ export function DashQuickPanels({
               type="button"
               role="tab"
               aria-selected={on}
-              aria-label={PANEL_META[key].label}
-              title={PANEL_META[key].label}
+              aria-label={panelMeta()[key].label}
+              title={panelMeta()[key].label}
               onClick={() => setActive(key)}
               className={`dash-quick-tile rounded-dash border bg-dash-card backdrop-blur-xl${on ? " is-on" : ""}`}
             >
-              <span className="dash-quick-tile-icon">{PANEL_META[key].icon}</span>
-              <span className="dash-quick-tile-label" aria-hidden={!on}>{PANEL_META[key].label}</span>
+              <span className="dash-quick-tile-icon">{panelMeta()[key].icon}</span>
+              <span className="dash-quick-tile-label" aria-hidden={!on}>{panelMeta()[key].label}</span>
             </button>
           );
         })}

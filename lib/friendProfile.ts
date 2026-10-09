@@ -6,6 +6,7 @@ import { NAME_STYLE_SELECT, nameFlags } from "@/lib/nameStyle";
 import { countRowProgress } from "@/lib/roadmapPlan";
 import { routineStatsForUsers } from "@/lib/friendStats";
 import type { WeekPcts } from "@/lib/friendWeek";
+import { tr } from "@/lib/i18n";
 
 export type FriendRelation = "none" | "friends" | "pending_sent" | "pending_received";
 
@@ -107,7 +108,7 @@ export async function getFriendProfile(viewerId: string, targetUserId: string): 
 
   return {
     id: user.id,
-    name: user.name || "کاربر",
+    name: user.name || tr("کاربر", "User"),
     username: user.username,
     avatarUrl: user.avatarUrl,
     ...nameFlags(user),

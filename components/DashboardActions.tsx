@@ -16,6 +16,7 @@ import { isoLocal } from "@/lib/jalali";
 import { publishChange } from "@/lib/liveSync";
 import type { ScheduleOpts } from "@/lib/schedule";
 import { CAL_SYSTEM_KEY, type CalSystem, type TradeAccount, type TradeTag } from "@/lib/tradeTypes";
+import { tr, isEn } from "@/lib/i18n";
 
 export type DashAction = "program" | "food" | "trade";
 
@@ -26,11 +27,11 @@ export function useDashAction() {
   return useContext(Ctx);
 }
 
-const DEFAULT_MEAL_TYPES = [
-  { key: "breakfast", label: "صبحانه" },
-  { key: "lunch", label: "ناهار" },
-  { key: "dinner", label: "شام" },
-  { key: "snack", label: "میان‌وعده" },
+const defaultMealTypes = () => [
+  { key: "breakfast", label: tr("صبحانه", "Breakfast") },
+  { key: "lunch", label: tr("ناهار", "Lunch") },
+  { key: "dinner", label: tr("شام", "Dinner") },
+  { key: "snack", label: tr("میان‌وعده", "Snack") },
 ];
 
 type TradeCtx = { account: TradeAccount; tags: TradeTag[]; calSystem: CalSystem };
@@ -49,7 +50,7 @@ export function DashboardActionsProvider({
   children: React.ReactNode;
 }) {
   const [open, setOpen] = useState<DashAction | null>(null);
-  const [mealTypes, setMealTypes] = useState(DEFAULT_MEAL_TYPES);
+  const [mealTypes, setMealTypes] = useState(defaultMealTypes);
   const [trade, setTrade] = useState<TradeCtx | null>(null);
   const [mounted, setMounted] = useState(false);
   useEffect(() => setMounted(true), []);

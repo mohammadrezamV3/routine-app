@@ -8,7 +8,7 @@
 import Link from "next/link";
 import { useEffect, useMemo, useRef, useState } from "react";
 import { motion } from "framer-motion";
-import { FA_WEEKDAY, J_MONTHS, faNum, toJalali } from "@/lib/jalali";
+import { weekdayName, jMonthName, faNum, toJalali } from "@/lib/jalali";
 import { awakeProgress, dayPhase, PHASE_GREETING, type DayPhase } from "@/lib/dashboardCompute";
 import { getStreakTier } from "@/lib/streakTier";
 import type { DashboardData } from "@/lib/dashboardTypes";
@@ -18,6 +18,7 @@ import { GoldenName } from "./GoldenName";
 import { Spinner } from "./Spinner";
 import { ROUTINE_PLAN_KEY } from "@/lib/trial";
 import { CountUp, D_EASE, GradientArc, Skel } from "./DashboardKit";
+import { tr, isEn, pick } from "@/lib/i18n";
 
 const PHASE_ICON: Record<DayPhase, DashIconName> = { dawn: "sunrise", day: "sun", dusk: "sunset", night: "moon" };
 
@@ -43,7 +44,7 @@ function LiveClock() {
   }, []);
   if (!t) return <span className="db-ribbon-clock" dir="ltr" aria-hidden="true">--:--<span className="s">:--</span></span>;
   return (
-    <span className="db-ribbon-clock" dir="ltr" role="timer" aria-label="ساعت فعلی">
+    <span className="db-ribbon-clock" dir="ltr" role="timer" aria-label={tr("ساعت فعلی", "Current time")}>
       {two(t.getHours())}<i>:</i>{two(t.getMinutes())}<i className="s">:</i><span className="s">{two(t.getSeconds())}</span>
     </span>
   );
@@ -121,7 +122,7 @@ export function DashboardHero({
     if (!now) return "";
     const [, jm, jd] = toJalali(now.getFullYear(), now.getMonth() + 1, now.getDate());
     const jy = toJalali(now.getFullYear(), now.getMonth() + 1, now.getDate())[0];
-    return `${FA_WEEKDAY[now.getDay()]} ${faNum(jd)} ${J_MONTHS[jm - 1]} ${faNum(jy)}`;
+    return `${weekdayName(now.getDay())} ${faNum(jd)} ${jMonthName(jm - 1)} ${faNum(jy)}`;
   }, [now]);
 
   // ── سه حلقه ──
@@ -134,13 +135,13 @@ export function DashboardHero({
     const parts: string[] = [];
     const { completed, total } = routine.stats;
     if (!routine.ready) return null;
-    if (total === 0) parts.push("امروز برنامه‌ای در روتینت نیست");
-    else if (completed === total) parts.push("همه‌ی برنامه‌های امروز انجام شده");
-    else parts.push(`${faNum(total - completed)} برنامه‌ی دیگه تا کامل‌شدن امروز`);
-    if (ex?.hasPlan && ex.today.isGymDay && !ex.today.done) parts.push(ex.today.focus ? `تمرین امروز: ${ex.today.focus}` : "امروز روز تمرینه");
+    if (total === 0) parts.push(tr("امروز برنامه‌ای در روتینت نیست", "No programs in your routine today"));
+    else if (completed === total) parts.push(tr("همه‌ی برنامه‌های امروز انجام شده", "All of today's programs are done"));
+    else parts.push(tr(`${faNum(total - completed)} برنامه‌ی دیگه تا کامل‌شدن امروز`, `${total - completed} more ${total - completed === 1 ? "program" : "programs"} to complete today`));
+    if (ex?.hasPlan && ex.today.isGymDay && !ex.today.done) parts.push(ex.today.focus ? tr(`تمرین امروز: ${ex.today.focus}`, `Today's workout: ${ex.today.focus}`) : tr("امروز روز تمرینه", "Today is a workout day"));
     if (cal?.target) {
       const left = Math.round(cal.target.kcal - cal.today.kcal);
-      parts.push(left >= 0 ? `${faNum(left)} کالری تا هدف` : `${faNum(-left)} کالری بیشتر از هدف`);
+      parts.push(left >= 0 ? tr(`${faNum(left)} کالری تا هدف`, `${left} kcal to goal`) : tr(`${faNum(-left)} کالری بیشتر از هدف`, `${-left} kcal over goal`));
     }
     return parts.join(" · ");
   }, [routine.ready, routine.stats, ex, cal]);
@@ -158,8 +159,8 @@ export function DashboardHero({
           disabled={!routine.ready}
           aria-haspopup="dialog"
           aria-busy={!routine.ready || undefined}
-          aria-label="اشتراک موفقیت امروز با دوستات"
-          title="اشتراک موفقیت"
+          aria-label={tr("اشتراک موفقیت امروز با دوستات", "Share today's progress with friends")}
+          title={tr("اشتراک موفقیت", "Share progress")}
         >
           {routine.ready ? <DashIcon name="share" /> : <Spinner size={16} />}
         </button>
@@ -177,8 +178,8 @@ export function DashboardHero({
           </motion.span>
           <div className="db-hero-titles">
             <h1 className="db-hero-title">
-              {PHASE_GREETING[phase]}
-              {firstName ? <>، <GoldenName golden={data?.user.golden} staff={data?.user.staff}><span className="db-hero-name">{firstName}</span></GoldenName></> : null}
+              {pick(PHASE_GREETING[phase])}
+              {firstName ? <>{tr("،", ",")} <GoldenName golden={data?.user.golden} staff={data?.user.staff}><span className="db-hero-name">{firstName}</span></GoldenName></> : null}
             </h1>
             <p className="db-hero-date">
               {dateLine || <Skel w={140} h={12} />}
@@ -192,32 +193,32 @@ export function DashboardHero({
           {data?.routineTrial && !routineOff && (
             <Link href={`/subscription/checkout?plan=${ROUTINE_PLAN_KEY}&duration=1`} prefetch={false} className={`db-chip db-chip-trial${data.routineTrial.daysLeft <= 3 ? " is-urgent" : ""}`}>
               <DashIcon name="routine" />
-              روتین من: <b>{faNum(data.routineTrial.daysLeft)}</b> روز رایگان مونده
+              {isEn() ? <>My Routine: <b>{data.routineTrial.daysLeft}</b> free {data.routineTrial.daysLeft === 1 ? "day" : "days"} left</> : <>روتین من: <b>{faNum(data.routineTrial.daysLeft)}</b> روز رایگان مونده</>}
             </Link>
           )}
           {routineLocked && !routineOff && (
             <Link href={`/subscription/checkout?plan=${ROUTINE_PLAN_KEY}&duration=1`} prefetch={false} className="db-chip db-chip-trial is-urgent">
               <DashIcon name="lock" />
-              خرید «روتین من»
+              {tr("خرید «روتین من»", "Get My Routine")}
             </Link>
           )}
           {data?.plan && (
             <Link href="/account/subscription" prefetch className="db-chip">
               <DashIcon name="card" />
-              {data.plan.status === "TRIAL" ? "دوره‌ی آزمایشی" : data.plan.name}
-              <span className="db-chip-sub">تا {daysLeft(data.plan.endsAt)} روز دیگه</span>
+              {data.plan.status === "TRIAL" ? tr("دوره‌ی آزمایشی", "Trial") : data.plan.name}
+              <span className="db-chip-sub">{tr(`تا ${daysLeft(data.plan.endsAt)} روز دیگه`, `${daysLeft(data.plan.endsAt)} ${daysLeft(data.plan.endsAt) === "1" ? "day" : "days"} left`)}</span>
             </Link>
           )}
         </div>
 
-        <button type="button" className="db-cmd-trigger" onClick={onOpenCommand} aria-label="جست‌وجو و دسترسی سریع">
+        <button type="button" className="db-cmd-trigger" onClick={onOpenCommand} aria-label={tr("جست‌وجو و دسترسی سریع", "Search and quick access")}>
           <DashIcon name="command" />
-          <span>کجا بریم؟ جست‌وجو در همه‌ی بخش‌ها…</span>
+          <span>{tr("کجا بریم؟ جست‌وجو در همه‌ی بخش‌ها…", "Where to? Search every section…")}</span>
           <span className="db-cmd-trigger-keys" aria-hidden="true"><kbd className="db-kbd">Ctrl</kbd><kbd className="db-kbd">K</kbd></span>
         </button>
       </div>
 
-      <div className="db-hero-orbit" aria-label="پیشرفت امروز">
+      <div className="db-hero-orbit" aria-label={tr("پیشرفت امروز", "Today's progress")}>
         <OrbitRings rings={shownRings} ready={routine.ready} streak={routine.streak} />
         <ul className="db-orbit-legend">
           {shownRings.map((r, i) => (
@@ -248,9 +249,9 @@ export function heroRings(data: DashboardData | null, stats: { completed: number
   const exVal = ex?.today.isGymDay ? (ex.today.done ? 1 : ex.today.itemCount ? ex.today.doneItems / ex.today.itemCount : 0) : 1;
   const calVal = cal?.target?.kcal ? cal.today.kcal / cal.target.kcal : 0;
   return [
-    { key: "routine", label: "روتین", value: stats.total ? stats.completed / stats.total : 0, display: stats.total ? `${faNum(stats.completed)}/${faNum(stats.total)}` : "—", grad: ["var(--ring-1a)", "var(--ring-1b)"], show: !routineLocked, href: "/weekly" },
-    { key: "exercise", label: "تمرین امروز", value: exVal, display: ex ? (ex.today.isGymDay ? `${faNum(ex.today.doneItems)}/${faNum(ex.today.itemCount)}` : "استراحت") : "—", grad: ["var(--ring-2a)", "var(--ring-2b)"], show: !!ex?.hasPlan, href: "/exercise?tab=exercise" },
-    { key: "calorie", label: "کالری", value: Math.min(calVal, 1), display: cal?.target ? `${faNum(Math.round(cal.today.kcal))}` : "—", grad: calVal > 1 ? ["var(--ring-3b)", "var(--ring-over)"] : ["var(--ring-3a)", "var(--ring-3b)"], show: !!cal?.target, href: "/exercise?tab=calorie" },
+    { key: "routine", label: tr("روتین", "Routine"), value: stats.total ? stats.completed / stats.total : 0, display: stats.total ? `${faNum(stats.completed)}/${faNum(stats.total)}` : "—", grad: ["var(--ring-1a)", "var(--ring-1b)"], show: !routineLocked, href: "/weekly" },
+    { key: "exercise", label: tr("تمرین امروز", "Today's workout"), value: exVal, display: ex ? (ex.today.isGymDay ? `${faNum(ex.today.doneItems)}/${faNum(ex.today.itemCount)}` : tr("استراحت", "Rest")) : "—", grad: ["var(--ring-2a)", "var(--ring-2b)"], show: !!ex?.hasPlan, href: "/exercise?tab=exercise" },
+    { key: "calorie", label: tr("کالری", "Calories"), value: Math.min(calVal, 1), display: cal?.target ? `${faNum(Math.round(cal.today.kcal))}` : "—", grad: calVal > 1 ? ["var(--ring-3b)", "var(--ring-over)"] : ["var(--ring-3a)", "var(--ring-3b)"], show: !!cal?.target, href: "/exercise?tab=calorie" },
   ];
 }
 
@@ -294,7 +295,7 @@ function OrbitRings({ rings, ready, streak }: { rings: { key: string; value: num
           <>
             <span className={`db-orbit-flame tier-${getStreakTier(streak).tier}`}><DashIcon name="flame" className="dbi-live" /></span>
             <CountUp value={streak} className="db-orbit-pct" />
-            <span className="db-orbit-cap">{rings.length >= 3 ? "روز" : "روز استریک"}</span>
+            <span className="db-orbit-cap">{rings.length >= 3 ? tr("روز", "days") : tr("روز استریک", "day streak")}</span>
           </>
         ) : (
           <Skel w={46} h={20} />
@@ -322,20 +323,20 @@ export function DayRibbon({ now, tasks, wake, sleep, configured }: { now: Date |
   const dots = tasks.filter((t) => t.startMin !== null);
 
   return (
-    <div className="db-ribbon" aria-label="نوار روز">
+    <div className="db-ribbon" aria-label={tr("نوار روز", "Day bar")}>
       <div className="db-ribbon-head">
         <span className="db-ribbon-end"><DashIcon name="sunrise" /> <span dir="ltr">{wake}</span></span>
         <span className="db-ribbon-left">
           <LiveClock />
-          {!configured && <Link href="/weekly" prefetch className="db-ribbon-set">تنظیم ساعت خواب</Link>}
+          {!configured && <Link href="/weekly" prefetch className="db-ribbon-set">{tr("تنظیم ساعت خواب", "Set sleep times")}</Link>}
         </span>
         <span className="db-ribbon-end"><span dir="ltr">{sleep}</span> <DashIcon name="bed" /></span>
       </div>
       <div className="db-ribbon-track">
         <motion.span
           className="db-ribbon-fill"
-          initial={{ clipPath: "inset(0 0 0 100%)" }}
-          animate={{ clipPath: `inset(0 0 0 ${(1 - (p ?? 0)) * 100}%)` }}
+          initial={{ clipPath: isEn() ? "inset(0 100% 0 0)" : "inset(0 0 0 100%)" }}
+          animate={{ clipPath: isEn() ? `inset(0 ${(1 - (p ?? 0)) * 100}% 0 0)` : `inset(0 0 0 ${(1 - (p ?? 0)) * 100}%)` }}
           transition={{ duration: 1.6, ease: D_EASE, delay: 0.3 }}
         />
         {dots.map((t, i) => (

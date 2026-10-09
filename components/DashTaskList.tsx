@@ -4,6 +4,7 @@ import { ListChecks, Plus } from "lucide-react";
 import { DashCard } from "./DashCard";
 import { cn } from "@/lib/utils";
 import { DashTaskRow, DashTaskItem } from "./DashTaskRow";
+import { tr } from "@/lib/i18n";
 
 export function DashTaskList({
   tasks,
@@ -38,7 +39,7 @@ export function DashTaskList({
       <div className="flex items-center justify-between">
         <h2 className="flex items-center gap-1.5 text-[16px] font-bold text-dash-text sm:gap-2 sm:text-[22px]">
           <ListChecks className="h-[18px] w-[18px] text-dash-green sm:h-[22px] sm:w-[22px]" />
-          برنامه‌های امروز
+          {tr("برنامه‌های امروز", "Today's programs")}
         </h2>
         <button
           type="button"
@@ -46,13 +47,13 @@ export function DashTaskList({
           className="flex items-center gap-1 text-[11.5px] font-semibold text-dash-green transition hover:brightness-110 sm:gap-1.5 sm:text-[13.5px]"
         >
           <Plus className="h-[15px] w-[15px] sm:h-[17px] sm:w-[17px]" />
-          افزودن برنامه
+          {tr("افزودن برنامه", "Add program")}
         </button>
       </div>
 
       <div className="mt-4 flex flex-1 flex-col gap-1">
         {tasks.length === 0 ? (
-          <div className="flex flex-1 items-center justify-center py-6 text-center text-[11.5px] text-dash-muted sm:text-[12.5px]">برنامه‌ای برای این روز ثبت نشده</div>
+          <div className="flex flex-1 items-center justify-center py-6 text-center text-[11.5px] text-dash-muted sm:text-[12.5px]">{tr("برنامه‌ای برای این روز ثبت نشده", "No programs for this day")}</div>
         ) : (
           tasks.map((t) => (
             <DashTaskRow

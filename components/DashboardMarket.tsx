@@ -14,9 +14,10 @@ import { durationParts } from "@/lib/dashboardCompute";
 import type { DashEvent } from "@/lib/dashboardTypes";
 import { BentoCard, CardHead, D_EASE, Skel } from "./DashboardKit";
 import { FlagCircle } from "./FlagCircle";
+import { tr } from "@/lib/i18n";
 
 const SESSION_FLAG = { SYDNEY: "AU", TOKYO: "JP", LONDON: "GB", NEWYORK: "US" } as const;
-const IMPACT_LABEL = { HIGH: "مهم", MEDIUM: "متوسط", LOW: "کم" } as const;
+const impactLabel = (i: "HIGH" | "MEDIUM" | "LOW") => ({ HIGH: tr("مهم", "High"), MEDIUM: tr("متوسط", "Medium"), LOW: tr("کم", "Low") })[i];
 
 function useTick(ms: number) {
   const [now, setNow] = useState<Date | null>(null);
@@ -30,9 +31,9 @@ function useTick(ms: number) {
 
 function fmtDur(ms: number) {
   const { d, h, m } = durationParts(ms);
-  if (d) return `${faNum(d)} روز و ${faNum(h)} ساعت`;
-  if (h) return `${faNum(h)} ساعت و ${faNum(m)} دقیقه`;
-  return m ? `${faNum(m)} دقیقه` : "کمتر از یک دقیقه";
+  if (d) return tr(`${faNum(d)} روز و ${faNum(h)} ساعت`, `${d}d ${h}h`);
+  if (h) return tr(`${faNum(h)} ساعت و ${faNum(m)} دقیقه`, `${h}h ${m}m`);
+  return m ? tr(`${faNum(m)} دقیقه`, `${m}m`) : tr("کمتر از یک دقیقه", "Less than a minute");
 }
 function hhmm(d: Date) {
   return `${String(d.getHours()).padStart(2, "0")}:${String(d.getMinutes()).padStart(2, "0")}`;
@@ -49,8 +50,8 @@ export function DashboardMarket({ events, loading }: { events: DashEvent[] | nul
   const nextEvent = upcoming.find((e) => now && new Date(e.occursAt).getTime() > now.getTime() && e.impact === "HIGH") ?? upcoming.find((e) => now && new Date(e.occursAt).getTime() > now.getTime());
 
   return (
-    <BentoCard area="market" className="db-market" label="بازار و اخبار اقتصادی">
-      <CardHead icon="globeClock" title="بازار و اخبار اقتصادی" href="/trade/clock" hrefLabel="ساعت فارکس" />
+    <BentoCard area="market" className="db-market" label={tr("بازار و اخبار اقتصادی", "Market and economic news")}>
+      <CardHead icon="globeClock" title={tr("بازار و اخبار اقتصادی", "Market and economic news")} href="/trade/clock" hrefLabel={tr("ساعت فارکس", "Forex clock")} />
       <>
           <div className="db-sessions">
             {!now ? (
@@ -59,8 +60,8 @@ export function DashboardMarket({ events, loading }: { events: DashEvent[] | nul
               <>
                 <div className={`db-mkt-status${marketOpen ? " is-open" : ""}`}>
                   <span className="db-live-dot" />
-                  {!marketOpen ? "بازار فارکس تعطیله (آخر هفته)" : overlap ? `هم‌پوشانی ${overlap.label} — پرنوسان‌ترین ساعت‌ها` : arcs.some((a) => a.open) ? `${arcs.filter((a) => a.open).map((a) => SESSION_LABELS[a.key]).join(" و ")} باز است` : "بین جلسه‌ها"}
-                  {next && <span className="db-mkt-next">{SESSION_LABELS[next.key]} تا {fmtDur(next.at.getTime() - now.getTime())}</span>}
+                  {!marketOpen ? tr("بازار فارکس تعطیله (آخر هفته)", "Forex market is closed (weekend)") : overlap ? tr(`هم‌پوشانی ${overlap.label} — پرنوسان‌ترین ساعت‌ها`, `${overlap.label} overlap — the most volatile hours`) : arcs.some((a) => a.open) ? tr(`${arcs.filter((a) => a.open).map((a) => SESSION_LABELS[a.key]).join(" و ")} باز است`, `${arcs.filter((a) => a.open).map((a) => SESSION_LABELS[a.key]).join(" and ")} open`) : tr("بین جلسه‌ها", "Between sessions")}
+                  {next && <span className="db-mkt-next">{tr(`${SESSION_LABELS[next.key]} تا ${fmtDur(next.at.getTime() - now.getTime())}`, `${SESSION_LABELS[next.key]} in ${fmtDur(next.at.getTime() - now.getTime())}`)}</span>}
                 </div>
                 {arcs.map((a, i) => {
                   const total = a.closeAt.getTime() - a.openAt.getTime();
@@ -82,8 +83,8 @@ export function DashboardMarket({ events, loading }: { events: DashEvent[] | nul
 
           <div className="db-events">
             <span className="db-sub-head">
-              رویدادهای مهم پیش‌رو
-              <Link href="/trade/calendar" prefetch className="db-card-more db-card-more-sm">تقویم</Link>
+              {tr("رویدادهای مهم پیش‌رو", "Upcoming key events")}
+              <Link href="/trade/calendar" prefetch className="db-card-more db-card-more-sm">{tr("تقویم", "Calendar")}</Link>
             </span>
             {loading ? (
               <Skel w="100%" h={80} r={12} />
@@ -96,7 +97,7 @@ export function DashboardMarket({ events, loading }: { events: DashEvent[] | nul
                     const released = now && at.getTime() <= now.getTime();
                     return (
                       <li key={e.id} className={`db-ev imp-${e.impact}`}>
-                        <span className="db-ev-imp" title={IMPACT_LABEL[e.impact]} />
+                        <span className="db-ev-imp" title={impactLabel(e.impact)} />
                         <span className="db-ev-cur">{e.currency}</span>
                         <span className="db-ev-title">{e.title}</span>
                         <span className="db-ev-time" dir="ltr">{released ? (e.actual ?? "—") : hhmm(at)}</span>
@@ -106,7 +107,7 @@ export function DashboardMarket({ events, loading }: { events: DashEvent[] | nul
                 </ul>
               </>
             ) : (
-              <p className="db-muted-line">در 7 روز آینده خبر مهمی ثبت نشده</p>
+              <p className="db-muted-line">{tr("در 7 روز آینده خبر مهمی ثبت نشده", "No key events in the next 7 days")}</p>
             )}
           </div>
       </>
@@ -121,20 +122,20 @@ function EventCountdown({ ev }: { ev: DashEvent }) {
   const { d, h, m } = durationParts(left);
   const s = Math.max(0, Math.floor(left / 1000) % 60);
   const soon = left < 15 * 60_000;
-  const cells = d ? [[d, "روز"], [h, "ساعت"], [m, "دقیقه"]] : [[h, "ساعت"], [m, "دقیقه"], [s, "ثانیه"]];
+  const cells = d ? [[d, tr("روز", "days")], [h, tr("ساعت", "hours")], [m, tr("دقیقه", "min")]] : [[h, tr("ساعت", "hours")], [m, tr("دقیقه", "min")], [s, tr("ثانیه", "sec")]];
   return (
     <Link href="/trade/calendar" prefetch className={`db-countdown imp-${ev.impact}${soon ? " is-soon" : ""}`}>
       <div className="db-cd-info">
-        <span className="db-cd-kicker"><span className="db-ev-imp" /> {ev.currency} · {IMPACT_LABEL[ev.impact]}</span>
+        <span className="db-cd-kicker"><span className="db-ev-imp" /> {ev.currency} · {impactLabel(ev.impact)}</span>
         <strong className="db-cd-title">{ev.title}</strong>
         {(ev.forecast || ev.previous) && (
           <span className="db-cd-meta">
-            {ev.forecast && <>پیش‌بینی <b dir="ltr">{ev.forecast}</b></>}
-            {ev.previous && <> · قبلی <b dir="ltr">{ev.previous}</b></>}
+            {ev.forecast && <>{tr("پیش‌بینی", "Forecast")} <b dir="ltr">{ev.forecast}</b></>}
+            {ev.previous && <> · {tr("قبلی", "Previous")} <b dir="ltr">{ev.previous}</b></>}
           </span>
         )}
       </div>
-      <div className="db-cd-clock" dir="ltr" aria-label="زمان تا انتشار">
+      <div className="db-cd-clock" dir="ltr" aria-label={tr("زمان تا انتشار", "Time until release")}>
         {now ? cells.map(([v, l], i) => (
           <span key={i} className="db-cd-cell">
             <b>{String(v).padStart(2, "0")}</b>

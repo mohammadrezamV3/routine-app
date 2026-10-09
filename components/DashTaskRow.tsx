@@ -9,6 +9,7 @@ import { cn } from "@/lib/utils";
 import { useMenuPresence } from "@/lib/useMenuPresence";
 import { Importance } from "@/lib/storage";
 import { toEnDigits } from "@/lib/schedule";
+import { tr, isEn, dirSign } from "@/lib/i18n";
 
 export type DashTaskItem = {
   id: string; name: string; time: string; importance?: Importance; tag?: string; done: boolean;
@@ -56,7 +57,7 @@ export function DashTaskRow({
   const doneCount = items.filter((i) => i.done).length;
   const [expanded, setExpanded] = useState(false);
   const canTick = editable && !task.isFuture && !task.dayPast;
-  const [menuPos, setMenuPos] = useState<{ top: number; right: number } | null>(null);
+  const [menuPos, setMenuPos] = useState<{ top: number; x: number } | null>(null);
   // خروج نرم منو (حرکت مشترک menu-motion)
   const menuPresence = useMenuPresence(menuOpen);
   const btnWrapRef = useRef<HTMLDivElement>(null);
@@ -81,7 +82,7 @@ export function DashTaskRow({
   // می‌افتاد) بیاد. با پورتال به body، این مشکل stacking-context کلا حل می‌شه.
   function openMenu() {
     const rect = btnWrapRef.current?.getBoundingClientRect();
-    if (rect) setMenuPos({ top: rect.bottom + 6, right: window.innerWidth - rect.right });
+    if (rect) setMenuPos({ top: rect.bottom + 6, x: isEn() ? rect.left : window.innerWidth - rect.right });
     setMenuOpen(true);
   }
 
@@ -111,7 +112,7 @@ export function DashTaskRow({
         {!task.exercise && (
           <button
             type="button"
-            aria-label="گزینه‌های برنامه"
+            aria-label={tr("گزینه‌های برنامه", "Program options")}
             onClick={() => (menuOpen ? setMenuOpen(false) : openMenu())}
             className="flex h-6 w-6 items-center justify-center rounded-full bg-transparent p-0 text-dash-muted transition hover:text-dash-text"
           >
@@ -122,53 +123,53 @@ export function DashTaskRow({
           <div
             ref={menuRef}
             data-state={menuPresence.state}
-            style={{ top: menuPos.top, right: menuPos.right }}
+            style={{ top: menuPos.top, [isEn() ? "left" : "right"]: menuPos.x }}
             className="mm-menu dash-context-menu fixed z-[70] min-w-[150px] overflow-hidden rounded-2xl border border-dash-border p-1.5 shadow-[0_16px_40px_rgba(0,0,0,.5)]"
           >
             <div
               onClick={() => { if (task.isPast) return; setMenuOpen(false); onEdit(task.id); }}
               aria-disabled={task.isPast}
               className={cn(
-                "flex items-center gap-2 rounded-xl px-3 py-2 text-right text-[12px] transition sm:text-[13px]",
+                "flex items-center gap-2 rounded-xl px-3 py-2 text-start text-[12px] transition sm:text-[13px]",
                 task.isPast ? "cursor-not-allowed text-dash-muted opacity-50" : "cursor-pointer text-dash-text hover:bg-white/5"
               )}
             >
               <Pencil size={13} className="shrink-0" />
-              ویرایش برنامه{task.isPast ? " (گذشته)" : ""}
+              {tr("ویرایش برنامه", "Edit program")}{task.isPast ? tr(" (گذشته)", " (past)") : ""}
             </div>
             <div
               onClick={() => { if (task.isPast) return; setMenuOpen(false); onMove(task.id); }}
               aria-disabled={task.isPast}
               className={cn(
-                "flex items-center gap-2 rounded-xl px-3 py-2 text-right text-[12px] transition sm:text-[13px]",
+                "flex items-center gap-2 rounded-xl px-3 py-2 text-start text-[12px] transition sm:text-[13px]",
                 task.isPast ? "cursor-not-allowed text-dash-muted opacity-50" : "cursor-pointer text-dash-text hover:bg-white/5"
               )}
             >
               <CalendarClock size={13} className="shrink-0" />
-              انتقال به یک روز دیگر{task.isPast ? " (گذشته)" : ""}
+              {tr("انتقال به یک روز دیگر", "Move to another day")}{task.isPast ? tr(" (گذشته)", " (past)") : ""}
             </div>
             <div
               onClick={() => { if (task.isPast) return; setMenuOpen(false); onDelete(task.id); }}
               aria-disabled={task.isPast}
               className={cn(
-                "flex items-center gap-2 rounded-xl px-3 py-2 text-right text-[12px] transition sm:text-[13px]",
+                "flex items-center gap-2 rounded-xl px-3 py-2 text-start text-[12px] transition sm:text-[13px]",
                 task.isPast ? "cursor-not-allowed text-dash-muted opacity-50" : "cursor-pointer text-[#E05252] hover:bg-[#E05252]/10"
               )}
             >
               <Trash2 size={13} className="shrink-0" />
-              حذف همین روز{task.isPast ? " (گذشته)" : ""}
+              {tr("حذف همین روز", "Delete this day")}{task.isPast ? tr(" (گذشته)", " (past)") : ""}
             </div>
             {onDeleteAll && (
               <div
                 onClick={() => { if (task.isPast) return; setMenuOpen(false); onDeleteAll(task.id); }}
                 aria-disabled={task.isPast}
                 className={cn(
-                  "flex items-center gap-2 rounded-xl px-3 py-2 text-right text-[12px] transition sm:text-[13px]",
+                  "flex items-center gap-2 rounded-xl px-3 py-2 text-start text-[12px] transition sm:text-[13px]",
                   task.isPast ? "cursor-not-allowed text-dash-muted opacity-50" : "cursor-pointer text-[#E05252] hover:bg-[#E05252]/10"
                 )}
               >
                 <Trash2 size={13} className="shrink-0" />
-                حذف همه‌ی تکرارها
+                {tr("حذف همه‌ی تکرارها", "Delete all repeats")}
               </div>
             )}
           </div>,
@@ -181,12 +182,12 @@ export function DashTaskRow({
           تا کنار ساعت — روی نام بلند این خیلی واضح بود. حالا نام و تگ
           به‌اندازه‌ی محتوایشان کنار هم می‌مانند و فضای خالی با
           justify-between بینشان و ساعت می‌افتد. */}
-      <div className="flex min-w-0 flex-1 items-center justify-between gap-2 text-right sm:gap-3">
+      <div className="flex min-w-0 flex-1 items-center justify-between gap-2 text-start sm:gap-3">
         <div className="flex min-w-0 items-center gap-1.5">
           {/* ردیف ورزش یک ProgramCard واقعی برای بازکردن ندارد — نامش فقط
               متن است، نه دکمه. */}
           {task.exercise ? (
-            <span className="min-w-0 truncate text-right text-[13px] font-medium text-dash-text sm:text-[15px]">
+            <span className="min-w-0 truncate text-start text-[13px] font-medium text-dash-text sm:text-[15px]">
               {task.name}
             </span>
           ) : (
@@ -195,7 +196,7 @@ export function DashTaskRow({
               // برنامه‌ی لیستی: زدن اسم لیست رو باز/بسته می‌کنه (کارت برنامه از منو هم هست)
               onClick={() => (isList ? setExpanded((v) => !v) : onOpen(task.name))}
               aria-expanded={isList ? expanded : undefined}
-              className="min-w-0 truncate text-right text-[13px] font-medium text-dash-text transition hover:text-dash-green sm:text-[15px]"
+              className="min-w-0 truncate text-start text-[13px] font-medium text-dash-text transition hover:text-dash-green sm:text-[15px]"
             >
               {task.name}
             </button>
@@ -205,7 +206,7 @@ export function DashTaskRow({
               type="button"
               onClick={() => setExpanded((v) => !v)}
               aria-expanded={expanded}
-              aria-label={expanded ? "بستن لیست" : "بازکردن لیست"}
+              aria-label={expanded ? tr("بستن لیست", "Close list") : tr("بازکردن لیست", "Open list")}
               className="checklist-chip"
             >
               <span dir="ltr">{doneCount}/{items.length}</span>
@@ -233,7 +234,7 @@ export function DashTaskRow({
               {toEnDigits(task.time)}
             </span>
           ) : (
-            <span className="shrink-0 text-[10.5px] text-dash-muted sm:text-[12px]">بدون ساعت</span>
+            <span className="shrink-0 text-[10.5px] text-dash-muted sm:text-[12px]">{tr("بدون ساعت", "No time")}</span>
           )}
           {/* وضعیت برنامه، زیر ساعت و فقط متن (بی‌پس‌زمینه). ردیف ورزش
               وضعیتش را روی خود دکمه‌اش می‌گوید، این‌جا تکرار نمی‌شود.
@@ -244,7 +245,7 @@ export function DashTaskRow({
               className="shrink-0 text-[9.5px] font-semibold leading-none sm:text-[11px]"
               style={{ color: "#E05252" }}
             >
-              وقتش گذشته
+              {tr("وقتش گذشته", "Overdue")}
             </span>
           )}
         </div>
@@ -260,32 +261,32 @@ export function DashTaskRow({
             whileTap={{ scale: 0.94, transition: { duration: 0.1 } }}
             disabled={!editable || task.dayPast}
             onClick={() => { if (!task.dayPast) onStart?.(task.id); }}
-            aria-label="تمرین این روز انجام شده"
+            aria-label={tr("تمرین این روز انجام شده", "This day's workout is done")}
             className="flex shrink-0 items-center rounded-full px-2.5 py-1.5 text-[11px] font-bold transition-colors sm:px-3 sm:text-[12.5px]"
             style={{ background: "rgba(var(--accent-rgb),.14)", color: "var(--accent)" }}
           >
-            انجام دادی
+            {tr("انجام دادی", "Done")}
           </motion.button>
         ) : task.missed ? (
           <button
             type="button"
             disabled
-            aria-label="روز این تمرین گذشته و انجام نشده"
+            aria-label={tr("روز این تمرین گذشته و انجام نشده", "This workout day has passed and was not done")}
             className="flex shrink-0 cursor-not-allowed items-center rounded-full px-2.5 py-1.5 text-[11px] font-bold sm:px-3 sm:text-[12.5px]"
             style={{ background: "rgba(224,82,82,.14)", color: "#E05252" }}
           >
-            وقتش گذشته
+            {tr("وقتش گذشته", "Overdue")}
           </button>
         ) : task.isFuture ? (
           // روز آینده: هنوز قابل شروع نیست، پس «شروع» نشون داده نمی‌شه.
           <button
             type="button"
             disabled
-            aria-label="روز این تمرین هنوز نرسیده"
+            aria-label={tr("روز این تمرین هنوز نرسیده", "This workout day has not arrived yet")}
             className="flex shrink-0 cursor-not-allowed items-center rounded-full px-2.5 py-1.5 text-[11px] font-bold sm:px-3 sm:text-[12.5px]"
             style={{ background: "rgba(59,130,246,.14)", color: "#3B82F6" }}
           >
-            وقتش نرسیده
+            {tr("وقتش نرسیده", "Not yet")}
           </button>
         ) : (
         <motion.button
@@ -304,7 +305,7 @@ export function DashTaskRow({
           style={{ background: "rgba(var(--accent-rgb),.14)", color: "var(--accent)" }}
         >
           <Play className="h-3 w-3 sm:h-[13px] sm:w-[13px]" fill="currentColor" />
-          شروع
+          {tr("شروع", "Start")}
         </motion.button>
         )
       ) : (
@@ -316,14 +317,14 @@ export function DashTaskRow({
         onToggle={() => onToggle(task.id)}
         label={
           task.isFuture
-            ? "این برنامه هنوز نرسیده — قابل تیک‌زدن نیست"
+            ? tr("این برنامه هنوز نرسیده — قابل تیک‌زدن نیست", "This program has not arrived yet — cannot be ticked")
             : isList
-            ? task.done ? "برداشتن تیک همه‌ی آیتم‌ها" : "تیک‌زدن همه‌ی آیتم‌ها"
+            ? task.done ? tr("برداشتن تیک همه‌ی آیتم‌ها", "Untick all items") : tr("تیک‌زدن همه‌ی آیتم‌ها", "Tick all items")
             : task.done
-            ? "انجام دادی — علامت‌زدن به‌عنوان انجام‌نشده"
+            ? tr("انجام دادی — علامت‌زدن به‌عنوان انجام‌نشده", "Done — mark as not done")
             : task.missed
-            ? "وقتش گذشته — علامت‌زدن به‌عنوان انجام‌شده"
-            : "علامت‌زدن به‌عنوان انجام‌شده"
+            ? tr("وقتش گذشته — علامت‌زدن به‌عنوان انجام‌شده", "Overdue — mark as done")
+            : tr("علامت‌زدن به‌عنوان انجام‌شده", "Mark as done")
         }
       />
       )}
@@ -344,7 +345,7 @@ export function DashTaskRow({
             <motion.li
               key={it.id}
               className={cn("checklist-item", it.done && "is-done")}
-              initial={{ opacity: 0, x: 10 }}
+              initial={{ opacity: 0, x: -dirSign() * 10 }}
               animate={{ opacity: 1, x: 0 }}
               transition={{ delay: 0.04 * i, duration: 0.25 }}
             >
@@ -354,7 +355,7 @@ export function DashTaskRow({
                 size={20}
                 disabled={!canTick}
                 onToggle={() => onToggle(task.id, it.id)}
-                label={`${it.done ? "برداشتن تیک" : "تیک‌زدن"} ${it.name}`}
+                label={`${it.done ? tr("برداشتن تیک", "Untick") : tr("تیک‌زدن", "Tick")} ${it.name}`}
               />
             </motion.li>
           ))}

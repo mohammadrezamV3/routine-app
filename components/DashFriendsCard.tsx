@@ -12,6 +12,7 @@ import { FriendRow, sortFriends, type FriendRowData } from "./FriendRow";
 import { FriendsManageSheet } from "./FriendsManageSheet";
 import { getPreloadedBootstrap } from "@/lib/preload";
 import { useLiveRefresh } from "@/lib/liveSync";
+import { tr, isEn } from "@/lib/i18n";
 
 export type FriendListItem = FriendRowData & { friendshipId: string; username: string | null; favorite: boolean };
 type FriendRequest = { friendshipId: string; id: string; name: string; username: string | null; avatarUrl: string | null; golden?: boolean; staff?: boolean };
@@ -110,15 +111,15 @@ function DashFriendsCardInner({ delay, module }: { delay?: number; module?: "exe
   const sorted = useMemo(() => sortFriends(friends ?? []), [friends]);
 
   return (
-    <DashCard delay={delay} label="دوستان" dataCard="friends">
+    <DashCard delay={delay} label={tr("دوستان", "Friends")} dataCard="friends">
       <div className="fr-card-head">
         <h2 className="fr-card-title">
           <Users className="h-4 w-4 sm:h-[18px] sm:w-[18px]" />
-          دوستان
-          {requests.length > 0 && <span className="fr-badge mono" aria-label={`${requests.length} درخواست دوستی`}>{requests.length}</span>}
+          {tr("دوستان", "Friends")}
+          {requests.length > 0 && <span className="fr-badge mono" aria-label={tr(`${requests.length} درخواست دوستی`, `${requests.length} friend requests`)}>{requests.length}</span>}
         </h2>
         {!authRequired && (
-          <button type="button" className="trade-icon-btn fr-manage-btn" onClick={() => setManaging(true)} aria-label="مدیریت دوستان">
+          <button type="button" className="trade-icon-btn fr-manage-btn" onClick={() => setManaging(true)} aria-label={tr("مدیریت دوستان", "Manage friends")}>
             <UserPlus size={16} />
             {requests.length > 0 && <span className="fr-manage-dot" aria-hidden="true" />}
           </button>
@@ -126,9 +127,9 @@ function DashFriendsCardInner({ delay, module }: { delay?: number; module?: "exe
       </div>
 
       {authRequired ? (
-        <div className="fr-empty"><p>برای استفاده از بخش دوستان اول وارد حساب بشو.</p></div>
+        <div className="fr-empty"><p>{tr("برای استفاده از بخش دوستان اول وارد حساب بشو.", "Sign in to use Friends.")}</p></div>
       ) : friends === null ? (
-        <div className="fr-card-body"><div className="fr-sub is-loading">در حال بارگذاری…</div></div>
+        <div className="fr-card-body"><div className="fr-sub is-loading">{tr("در حال بارگذاری…", "Loading…")}</div></div>
       ) : friends.length === 0 ? (
         <div className="fr-empty">
           <span className="fr-empty-stack" aria-hidden="true">
@@ -136,8 +137,8 @@ function DashFriendsCardInner({ delay, module }: { delay?: number; module?: "exe
             <AgentAvatar seed="arion-b" size={34} />
             <AgentAvatar seed="arion-c" size={34} />
           </span>
-          <p>دوستاتو اضافه کن تا پیشرفت امروز و استریک همدیگه رو ببینید.</p>
-          <button type="button" className="account-outline-btn mentor-btn is-sm" onClick={() => setManaging(true)}>افزودن دوست</button>
+          <p>{tr("دوستاتو اضافه کن تا پیشرفت امروز و استریک همدیگه رو ببینید.", "Add your friends to see each other's progress and streaks today.")}</p>
+          <button type="button" className="account-outline-btn mentor-btn is-sm" onClick={() => setManaging(true)}>{tr("افزودن دوست", "Add friend")}</button>
         </div>
       ) : (
         <div className="fr-card-body no-scrollbar">

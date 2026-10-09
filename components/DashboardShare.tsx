@@ -22,7 +22,7 @@ import { useEffect, useMemo, useRef, useState } from "react";
 import { createPortal } from "react-dom";
 import { AnimatePresence, motion } from "framer-motion";
 import { Check, Download, Share2, X } from "lucide-react";
-import { FA_WEEKDAY, J_MONTHS, faNum, toJalali } from "@/lib/jalali";
+import { weekdayName, jMonthName, faNum, toJalali } from "@/lib/jalali";
 import type { DashboardData } from "@/lib/dashboardTypes";
 import { useLockBodyScroll } from "@/lib/useLockBodyScroll";
 import { useMyInvite } from "@/lib/invite";
@@ -34,10 +34,11 @@ import { Spinner } from "./Spinner";
 import { TickOption } from "./TickOption";
 import { SegmentedTabs } from "./SegmentedTabs";
 import { D_EASE } from "./DashboardKit";
+import { tr } from "@/lib/i18n";
 
 /** پیش‌فرض عدد زیر هر حلقه — کالری عدد شخصی‌تریه و پنهان می‌مونه */
 const SHOW_VALUE: Record<HeroRing["key"], boolean> = { routine: true, exercise: true, calorie: false };
-const VALUE_LABEL: Record<HeroRing["key"], string> = { routine: "روتین", exercise: "تمرین", calorie: "کالری" };
+const valueLabel = (): Record<HeroRing["key"], string> => ({ routine: tr("روتین", "Routine"), exercise: tr("تمرین", "Workout"), calorie: tr("کالری", "Calories") });
 const FOCUSABLE = 'button:not([disabled]), [href], input:not([disabled]), [tabindex]:not([tabindex="-1"])';
 
 /** رنگ حلقه‌ها توکن‌های --ring-*  داشبوردن؛ canvas مقدار واقعی‌شون رو لازم داره */
@@ -153,10 +154,10 @@ export function DashboardShare({
     if (!cardRings.length) return null;
     const [y, m, d] = routine.todayIso.split("-").map(Number);
     const [jy, jm, jd] = toJalali(y, m, d);
-    const weekday = FA_WEEKDAY[new Date(y, m - 1, d).getDay()];
+    const weekday = weekdayName(new Date(y, m - 1, d).getDay());
     return {
-      title: "فعالیت امروز",
-      subtitle: `${weekday} ${faNum(jd)} ${J_MONTHS[jm - 1]} ${faNum(jy)}`,
+      title: tr("فعالیت امروز", "Today's activity"),
+      subtitle: `${weekday} ${faNum(jd)} ${jMonthName(jm - 1)} ${faNum(jy)}`,
       inviteCode: showInvite ? (invite?.code ?? null) : null,
       body: { kind: "rings", streak, center, percent, items: cardRings },
     };
@@ -248,9 +249,9 @@ export function DashboardShare({
 
   function doShare() {
     if (!ready || !full) return;
-    const lead = center === "percent" ? `امروز ${faNum(percent)}% برنامه‌هام رو کامل کردم 💪` : streak ? `${faNum(streak)} روز پشت‌سرهم روتینم رو کامل کردم 🔥` : "امروزم توی آریون 💪";
+    const lead = center === "percent" ? tr(`امروز ${faNum(percent)}% برنامه‌هام رو کامل کردم 💪`, `I completed ${percent}% of my programs today 💪`) : streak ? tr(`${faNum(streak)} روز پشت‌سرهم روتینم رو کامل کردم 🔥`, `I have completed my routine ${streak} ${streak === 1 ? "day" : "days"} in a row 🔥`) : tr("امروزم توی آریون 💪", "My day on Arion 💪");
     const inv = invite && showInvite ? { code: invite.code, url: invite.url, percent: REFERRAL_DISCOUNT_PERCENT } : null;
-    share(full.blob, `arion-${routine.todayIso}.png`, "فعالیت امروز", shareText(lead, inv));
+    share(full.blob, `arion-${routine.todayIso}.png`, tr("فعالیت امروز", "Today's activity"), shareText(lead, inv));
   }
 
   // ── فوکوس: داخل پنجره، و بعد از بستن برگشت به دکمه‌ی بازکننده ──
@@ -288,7 +289,7 @@ export function DashboardShare({
   let btnBody: React.ReactNode;
   let btnLabel: string;
   if (phase === "done") {
-    btnLabel = result === "downloaded" ? "ذخیره شد" : "ارسال شد";
+    btnLabel = result === "downloaded" ? tr("ذخیره شد", "Saved") : tr("ارسال شد", "Sent");
     btnBody = (
       <motion.span className="db-share-btn-in" initial={{ scale: 0.6, opacity: 0 }} animate={{ scale: 1, opacity: 1 }} transition={{ type: "spring", stiffness: 420, damping: 18 }}>
         <Check size={17} strokeWidth={3} /> {btnLabel}
@@ -296,11 +297,11 @@ export function DashboardShare({
     );
   } else if (busy || rendering) {
     // طبق قانون لودینگ سایت: فقط دایره، بدون متن (متن برای صفحه‌خوان در aria-label)
-    btnLabel = busy ? "در حال اشتراک" : "در حال آماده‌سازی تصویر";
+    btnLabel = busy ? tr("در حال اشتراک", "Sharing") : tr("در حال آماده‌سازی تصویر", "Preparing image");
     btnBody = <Spinner size={16} />;
   } else {
     // خطای اشتراک: هیچ متنی زیر دکمه نمیاد، خود دکمه «تلاش دوباره» می‌شه
-    btnLabel = phase === "error" ? "تلاش دوباره" : saveOnly ? "ذخیره تصویر" : "اشتراک‌گذاری";
+    btnLabel = phase === "error" ? tr("تلاش دوباره", "Try again") : saveOnly ? tr("ذخیره تصویر", "Save image") : tr("اشتراک‌گذاری", "Share");
     btnBody = <span className="db-share-btn-in">{saveOnly ? <Download size={17} /> : <Share2 size={16} />} {btnLabel}</span>;
   }
 
@@ -322,22 +323,22 @@ export function DashboardShare({
             className="db-share"
             role="dialog"
             aria-modal="true"
-            aria-label="اشتراک موفقیت"
+            aria-label={tr("اشتراک موفقیت", "Share progress")}
             initial={{ opacity: 0, y: 18, scale: 0.97 }}
             animate={{ opacity: 1, y: 0, scale: 1 }}
             exit={{ opacity: 0, y: 10, scale: 0.98 }}
             transition={{ duration: 0.28, ease: D_EASE }}
             onMouseDown={(e) => { if (e.target === e.currentTarget) onClose(); }}
           >
-            <button type="button" className="trade-icon-btn db-share-close" onClick={onClose} aria-label="بستن"><X size={18} /></button>
+            <button type="button" className="trade-icon-btn db-share-close" onClick={onClose} aria-label={tr("بستن", "Close")}><X size={18} /></button>
 
             <div className="db-share-preview" aria-busy={rendering || undefined}>
               {!input ? (
-                <p className="db-share-empty">هنوز حلقه‌ای برای امروز نیست</p>
+                <p className="db-share-empty">{tr("هنوز حلقه‌ای برای امروز نیست", "No rings for today yet")}</p>
               ) : renderErr ? (
                 <div className="db-share-fail" role="alert">
-                  <p>ساخت تصویر ممکن نشد</p>
-                  <button type="button" className="account-outline-btn" onClick={() => setAttempt((n) => n + 1)}>تلاش دوباره</button>
+                  <p>{tr("ساخت تصویر ممکن نشد", "Could not create the image")}</p>
+                  <button type="button" className="account-outline-btn" onClick={() => setAttempt((n) => n + 1)}>{tr("تلاش دوباره", "Try again")}</button>
                 </div>
               ) : (
                 <>
@@ -345,7 +346,7 @@ export function DashboardShare({
                     ref={canvasRef}
                     className={`db-share-canvas${shown ? "" : " is-hidden"}${stale ? " is-dim" : ""}`}
                     role="img"
-                    aria-label="پیش‌نمایش تصویر اشتراکی"
+                    aria-label={tr("پیش‌نمایش تصویر اشتراکی", "Share image preview")}
                   />
                   {!shown && <PreviewSkeleton />}
                   {stale && <span className="db-share-preview-spin"><Spinner size={18} /></span>}
@@ -358,22 +359,22 @@ export function DashboardShare({
                 className="db-share-center"
                 active={center}
                 onChange={setCenter}
-                ariaLabel="وسط حلقه‌ها"
+                ariaLabel={tr("وسط حلقه‌ها", "Ring center")}
                 options={[
-                  { value: "streak", label: "استریک" },
-                  { value: "percent", label: "درصد تکمیل" },
+                  { value: "streak", label: tr("استریک", "Streak") },
+                  { value: "percent", label: tr("درصد تکمیل", "Completion") },
                 ]}
               />
             )}
 
             {input && (
-              <div className="db-share-opts" role="group" aria-label="آیتم‌های تصویر">
+              <div className="db-share-opts" role="group" aria-label={tr("آیتم‌های تصویر", "Image items")}>
                 {cardRings.map((r) => (
                   <TickOption key={r.key} checked={showValue[r.key]} onChange={(v) => setShowValue((o) => ({ ...o, [r.key]: v }))}>
-                    نمایش عدد {VALUE_LABEL[r.key]}
+                    {tr(`نمایش عدد ${valueLabel()[r.key]}`, `Show ${valueLabel()[r.key].toLowerCase()} number`)}
                   </TickOption>
                 ))}
-                <TickOption checked={showInvite && !!invite?.code} onChange={setShowInvite} disabled={!invite?.code}>کد دعوت</TickOption>
+                <TickOption checked={showInvite && !!invite?.code} onChange={setShowInvite} disabled={!invite?.code}>{tr("کد دعوت", "Invite code")}</TickOption>
               </div>
             )}
 
@@ -388,7 +389,7 @@ export function DashboardShare({
               {btnBody}
             </button>
             <span className="sr-only" role="status" aria-live="polite">
-              {phase === "error" ? "اشتراک انجام نشد" : result === "downloaded" ? "تصویر توی دانلودها ذخیره شد" : ""}
+              {phase === "error" ? tr("اشتراک انجام نشد", "Sharing failed") : result === "downloaded" ? tr("تصویر توی دانلودها ذخیره شد", "Image saved to downloads") : ""}
             </span>
           </motion.div>
         </motion.div>

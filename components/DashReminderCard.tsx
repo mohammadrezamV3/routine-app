@@ -8,9 +8,11 @@ import { cn } from "@/lib/utils";
 import { DashCard } from "./DashCard";
 import { getImportantUpcoming, ImportantOccurrence } from "@/lib/routineStats";
 import { WEEK_ORDER, toEnDigits } from "@/lib/schedule";
+import { weekdayName } from "@/lib/jalali";
 import { getCustomOccurrences, setCustomOccurrences } from "@/lib/storage";
 import { useLiveRefresh } from "@/lib/liveSync";
 import { getNotificationPermission, requestNotificationPermission } from "@/lib/notifications";
+import { tr } from "@/lib/i18n";
 
 // برنامه‌های «خیلی زیاد»/«زیاد» همین هفته — واقعا از customOccurrences
 // (با تگ اهمیتی که موقع افزودن/ویرایش برنامه انتخاب می‌شه) فیلتر می‌شه،
@@ -50,8 +52,8 @@ export function DashReminderCard({ delay }: { delay?: number }) {
 
     setToast(
       nextNotify
-        ? `نیم‌ساعت قبل از شروع «${occ.name}» بهت اطلاع داده می‌شه.`
-        : `دیگه برای «${occ.name}» یادآوری نمی‌شه.`
+        ? tr(`نیم‌ساعت قبل از شروع «${occ.name}» بهت اطلاع داده می‌شه.`, `You will be notified 30 minutes before "${occ.name}" starts.`)
+        : tr(`دیگه برای «${occ.name}» یادآوری نمی‌شه.`, `You will no longer be reminded about "${occ.name}".`)
     );
   }
 
@@ -81,25 +83,25 @@ export function DashReminderCard({ delay }: { delay?: number }) {
       <DashCard delay={delay}>
         <h2 className="flex items-center gap-1.5 text-[13px] font-bold text-dash-text sm:text-[15px]">
           <BellRing className="h-4 w-4 text-dash-green sm:h-[18px] sm:w-[18px]" />
-          یادآوری‌ها
+          {tr("یادآوری‌ها", "Reminders")}
         </h2>
 
         <div className="no-scrollbar mt-3 flex max-h-[300px] flex-col gap-2 overflow-y-auto sm:mt-4 sm:max-h-[360px] sm:gap-2.5">
           {items === null ? (
-            <div className="text-[11px] text-dash-muted sm:text-[12px] is-loading">در حال بارگذاری…</div>
+            <div className="text-[11px] text-dash-muted sm:text-[12px] is-loading">{tr("در حال بارگذاری…", "Loading…")}</div>
           ) : list.length === 0 ? (
             <div className="text-[11px] text-dash-muted sm:text-[12px]">
-              برنامه‌ای با تگ «خیلی زیاد» یا «زیاد» توی این هفته ثبت نشده.
+              {tr("برنامه‌ای با تگ «خیلی زیاد» یا «زیاد» توی این هفته ثبت نشده.", "No programs tagged \"Very high\" or \"High\" this week.")}
             </div>
           ) : (
             list.map((r) => {
-              const dayName = WEEK_ORDER.find((w) => w.jsDay === r.jsDay)?.name ?? "";
+              const dayName = WEEK_ORDER.some((w) => w.jsDay === r.jsDay) ? weekdayName(r.jsDay) : "";
               return (
                 <div
                   key={`${r.id}-${r.jsDay}`}
-                  className="flex min-h-[64px] items-center justify-between gap-2.5 rounded-2xl border border-dash-border bg-white/[0.02] px-3 py-2.5 text-right sm:min-h-[74px] sm:gap-3 sm:px-3.5 sm:py-3"
+                  className="flex min-h-[64px] items-center justify-between gap-2.5 rounded-2xl border border-dash-border bg-white/[0.02] px-3 py-2.5 text-start sm:min-h-[74px] sm:gap-3 sm:px-3.5 sm:py-3"
                 >
-                  <div className="min-w-0 flex-1 text-right">
+                  <div className="min-w-0 flex-1 text-start">
                     <div className="truncate text-[11.5px] font-semibold text-dash-text sm:text-[13.5px]">{r.name}</div>
                     <div className="mt-1 flex items-center gap-1.5 truncate text-[9.5px] text-dash-muted sm:text-[11.5px]">
                       <span className="truncate">{dayName}</span>
@@ -108,7 +110,7 @@ export function DashReminderCard({ delay }: { delay?: number }) {
                   </div>
                   <span
                     role="button"
-                    aria-label={r.notify ? `خاموش‌کردن یادآوری ${r.name}` : `روشن‌کردن یادآوری ${r.name}`}
+                    aria-label={r.notify ? tr(`خاموش‌کردن یادآوری ${r.name}`, `Turn off reminder for ${r.name}`) : tr(`روشن‌کردن یادآوری ${r.name}`, `Turn on reminder for ${r.name}`)}
                     onClick={(e) => handleBellClick(e, r)}
                     className={cn(
                       "flex h-7 w-7 shrink-0 cursor-pointer items-center justify-center rounded-xl transition hover:brightness-125 sm:h-9 sm:w-9",

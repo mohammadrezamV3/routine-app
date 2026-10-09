@@ -6,6 +6,7 @@ import { Star } from "lucide-react";
 import { StreakFlame } from "./StreakFlame";
 import { GoldenName } from "./GoldenName";
 import { FriendRingAvatar } from "./FriendAvatar";
+import { tr, isEn } from "@/lib/i18n";
 
 export type FriendRowData = {
   id: string;
@@ -36,7 +37,7 @@ export function FriendRow({ f, size = 40, onOpen, actions }: { f: FriendRowData;
         <span className="fr-who-text">
           <span className="fr-name-line">
             <span className="fr-name"><GoldenName golden={f.golden} staff={f.staff}>{f.name}</GoldenName></span>
-            {f.favorite && <Star size={11} className="fr-fav" fill="currentColor" aria-label="فیوریت" />}
+            {f.favorite && <Star size={11} className="fr-fav" fill="currentColor" aria-label={tr("فیوریت", "Favorite")} />}
             <StreakFlame streak={f.streak} className="fr-flame" />
           </span>
         </span>
