@@ -12,7 +12,7 @@
 .adb-card{ border:1px solid var(--surface-line); border-radius:22px; padding:22px; background:var(--box-bg); display:flex; flex-direction:column; gap:14px; min-width:0; }
 .adb-kpi{ border:1px solid var(--surface-line); border-radius:18px; padding:16px; background:var(--box-bg); display:flex; flex-direction:column; gap:10px; min-width:0; }
 .adb-kpi-label{ font-size:12px; color:var(--muted); }
-.adb-kpi-value{ font-size:24px; font-weight:800; letter-spacing:-.02em; direction:ltr; text-align:right; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+.adb-kpi-value{ font-size:24px; font-weight:800; letter-spacing:-.02em; direction:ltr; text-align:end; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
 .adb-kpi-unit{ font-size:11px; font-weight:600; color:var(--muted); margin-inline-start:4px; }
 .adb-kpi-foot{ display:flex; align-items:flex-end; justify-content:space-between; gap:8px; }
 .adb-delta{ font-size:12px; font-weight:700; direction:ltr; color:var(--muted); }
@@ -29,7 +29,7 @@
 .adb-nums{ display:flex; gap:22px; }
 .adb-num{ display:flex; flex-direction:column; gap:2px; }
 .adb-num span{ font-size:11px; color:var(--muted); }
-.adb-num strong{ font-size:20px; direction:ltr; text-align:right; }
+.adb-num strong{ font-size:20px; direction:ltr; text-align:end; }
 .adb-chart{ width:100%; height:230px; display:block; }
 .adb-legend{ display:flex; gap:18px; font-size:12px; color:var(--muted); flex-wrap:wrap; }
 .adb-legend span{ display:flex; align-items:center; gap:6px; }
@@ -57,7 +57,7 @@
 .adb-fill{ height:100%; border-radius:999px; background:linear-gradient(90deg, var(--ring-1a), var(--ring-1b)); }
 .adb-mod-row{ display:grid; grid-template-columns:70px minmax(0,1fr) 44px; align-items:center; gap:10px; font-size:12px; }
 .adb-mod-row span{ color:var(--muted); }
-.adb-mod-row strong{ direction:ltr; text-align:left; }
+.adb-mod-row strong{ direction:ltr; text-align:start; }
 
 .adb-health-row{ display:flex; align-items:center; gap:10px; padding:10px 0; border-bottom:1px solid var(--surface-line); font-size:13px; }
 .adb-health-row:last-child{ border-bottom:0; }
@@ -79,13 +79,13 @@
 
 .adb-tx-wrap{ overflow-x:auto; }
 .adb-tx{ width:100%; border-collapse:collapse; font-size:13px; min-width:520px; }
-.adb-tx th{ color:var(--muted); font-size:11px; font-weight:600; text-align:right; padding:8px 0; }
+.adb-tx th{ color:var(--muted); font-size:11px; font-weight:600; text-align:start; padding:8px 0; }
 .adb-tx td{ padding:11px 0; border-top:1px solid var(--surface-line); }
 .adb-tx a{ color:inherit; text-decoration:none; }
 .adb-tx a:hover{ color:var(--accent); }
 .adb-user{ display:flex; align-items:center; gap:10px; }
 .adb-init{ width:30px; height:30px; border-radius:999px; border:1px solid var(--surface-line); display:flex; align-items:center; justify-content:center; font-size:12px; font-weight:700; flex:none; }
-.adb-amount{ font-weight:700; direction:ltr; text-align:right; }
+.adb-amount{ font-weight:700; direction:ltr; text-align:end; }
 .adb-muted{ color:var(--muted); }
 .adb-link{ font-size:12px; color:var(--accent); text-decoration:none; }
 

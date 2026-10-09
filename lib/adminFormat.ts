@@ -1,14 +1,21 @@
+import { tr } from "@/lib/i18n";
+
 // فرمت‌دهی اعداد/پول/تاریخ در پنل Owner — عمدا اعداد لاتین (نه فارسی)،
 // هم‌راستا با تصمیم قبلی پروژه برای بخش‌های فنی/عددی (نگاه کن به تسک
 // «Use English digits in exercise section» در تاریخچه‌ی این ریپو).
 
-const CURRENCY_LABEL_FA: Record<string, string> = { IRR: "تومان", USD: "دلار" };
+// برچسب واحد پول — تابع (نه ثابت سطح ماژول) تا زبان جاری موقع اجرا خونده بشه
+function currencyLabel(currency: string): string {
+  if (currency === "IRR") return tr("تومان", "Toman");
+  if (currency === "USD") return tr("دلار", "USD");
+  return currency;
+}
 
 export function formatCurrencyAmount(amountSmallestUnit: number, currency: string): string {
   // IRR توی این پروژه به ریال ذخیره می‌شه؛ برای نمایش به تومان تقسیم بر ۱۰ می‌کنیم
   // (همون قراردادی که بقیه‌ی صفحات پرداخت/اشتراک استفاده می‌کنن)
   const value = currency === "IRR" ? Math.round(amountSmallestUnit / 10) : amountSmallestUnit / 100;
-  return `${value.toLocaleString("en-US")} ${CURRENCY_LABEL_FA[currency] || currency}`;
+  return `${value.toLocaleString("en-US")} ${currencyLabel(currency)}`;
 }
 
 export function formatNumber(n: number): string {

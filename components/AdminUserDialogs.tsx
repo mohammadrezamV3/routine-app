@@ -8,6 +8,7 @@ import { TickOption } from "@/components/TickOption";
 import { MAX_SEGMENT_NAME, MAX_TAG_LEN, UsersFilters } from "@/lib/adminUsersView";
 import { formatNumber } from "@/lib/adminFormat";
 import { ALL_MODULES, MODULE_LABELS_FA } from "@/components/AdminUserManageTabs";
+import { tr } from "@/lib/i18n";
 
 type BulkResult = { done: number; failed: { id: string; error: string }[] };
 
@@ -19,7 +20,7 @@ export async function postBulk(ids: string[], action: string, extra: Record<stri
 function Footer({ busy, label, onClose, onSubmit, disabled }: { busy: boolean; label: string; onClose: () => void; onSubmit: () => void; disabled?: boolean }) {
   return (
     <div className="admin-modal-actions">
-      <button type="button" className="admin-btn" onClick={onClose} disabled={busy}>انصراف</button>
+      <button type="button" className="admin-btn" onClick={onClose} disabled={busy}>{tr("انصراف", "Cancel")}</button>
       <button type="button" className="admin-btn primary" onClick={onSubmit} disabled={busy || disabled}>
         {busy && <Spinner size={14} label={null} />} {label}
       </button>
@@ -34,7 +35,7 @@ function useRunner(onDone: () => void, onClose: () => void) {
     setBusy(true);
     try {
       const r = await fn();
-      if (r && r.failed.length) toast(`${formatNumber(r.done)} انجام شد، ${formatNumber(r.failed.length)} ناموفق: ${r.failed[0].error}`, "err");
+      if (r && r.failed.length) toast(tr(`${formatNumber(r.done)} انجام شد، ${formatNumber(r.failed.length)} ناموفق: ${r.failed[0].error}`, `${formatNumber(r.done)} done, ${formatNumber(r.failed.length)} failed: ${r.failed[0].error}`), "err");
       else toast(okMsg(r ? r.done : 1));
       onDone();
       onClose();
@@ -52,17 +53,17 @@ export function MessageDialog({ ids, onClose, onDone }: { ids: string[]; onClose
   const [body, setBody] = useState("");
   const { busy, run } = useRunner(onDone, onClose);
   return (
-    <AdminModal title={`ارسال پیام به ${formatNumber(ids.length)} کاربر`} eyebrow="اعلان درون‌برنامه‌ای" onClose={onClose}>
+    <AdminModal title={tr(`ارسال پیام به ${formatNumber(ids.length)} کاربر`, `Send message to ${formatNumber(ids.length)} users`)} eyebrow={tr("اعلان درون‌برنامه‌ای", "In-app notification")} onClose={onClose}>
       <div className="au-form">
-        <label className="admin-field"><span>عنوان</span>
+        <label className="admin-field"><span>{tr("عنوان", "Title")}</span>
           <input className="admin-input" value={title} maxLength={120} onChange={(e) => setTitle(e.target.value)} autoFocus />
         </label>
-        <label className="admin-field"><span>متن</span>
+        <label className="admin-field"><span>{tr("متن", "Message")}</span>
           <textarea className="admin-input" rows={4} maxLength={500} value={body} onChange={(e) => setBody(e.target.value)} />
         </label>
       </div>
-      <Footer busy={busy} label="ارسال" onClose={onClose} disabled={!title.trim() || !body.trim()}
-        onSubmit={() => run(() => postBulk(ids, "message", { title, body }), (n) => `پیام برای ${formatNumber(n)} کاربر رفت`)} />
+      <Footer busy={busy} label={tr("ارسال", "Send")} onClose={onClose} disabled={!title.trim() || !body.trim()}
+        onSubmit={() => run(() => postBulk(ids, "message", { title, body }), (n) => tr(`پیام برای ${formatNumber(n)} کاربر رفت`, `Message sent to ${formatNumber(n)} users`))} />
     </AdminModal>
   );
 }
@@ -74,7 +75,7 @@ export function GrantDialog({ ids, onClose, onDone }: { ids: string[]; onClose: 
   const n = Math.floor(Number(days));
   const valid = mods.size > 0 && Number.isFinite(n) && n >= 1 && n <= 3650;
   return (
-    <AdminModal title={`اعطای ماژول به ${formatNumber(ids.length)} کاربر`} eyebrow="دسترسی" onClose={onClose}>
+    <AdminModal title={tr(`اعطای ماژول به ${formatNumber(ids.length)} کاربر`, `Grant module to ${formatNumber(ids.length)} users`)} eyebrow={tr("دسترسی", "Access")} onClose={onClose}>
       <div className="au-form">
         <div className="au-checks">
           {ALL_MODULES.map((m) => (
@@ -83,12 +84,12 @@ export function GrantDialog({ ids, onClose, onDone }: { ids: string[]; onClose: 
             </TickOption>
           ))}
         </div>
-        <label className="admin-field"><span>تعداد روز (از انقضای فعلی یا از الان)</span>
+        <label className="admin-field"><span>{tr("تعداد روز (از انقضای فعلی یا از الان)", "Number of days (from current expiry or from now)")}</span>
           <input className="admin-input admin-ltr" inputMode="numeric" value={days} onChange={(e) => setDays(e.target.value.replace(/[^0-9]/g, ""))} />
         </label>
       </div>
-      <Footer busy={busy} label="اعطا" onClose={onClose} disabled={!valid}
-        onSubmit={() => run(() => postBulk(ids, "grant", { modules: Array.from(mods), days: n }), (c) => `دسترسی برای ${formatNumber(c)} کاربر ثبت شد`)} />
+      <Footer busy={busy} label={tr("اعطا", "Grant")} onClose={onClose} disabled={!valid}
+        onSubmit={() => run(() => postBulk(ids, "grant", { modules: Array.from(mods), days: n }), (c) => tr(`دسترسی برای ${formatNumber(c)} کاربر ثبت شد`, `Access granted to ${formatNumber(c)} users`))} />
     </AdminModal>
   );
 }
@@ -97,9 +98,9 @@ export function TagDialog({ ids, mode = "tag", suggestions = [], onClose, onDone
   const [tag, setTag] = useState("");
   const { busy, run } = useRunner(onDone, onClose);
   return (
-    <AdminModal title={mode === "tag" ? "افزودن برچسب" : "حذف برچسب"} eyebrow={`${formatNumber(ids.length)} کاربر`} onClose={onClose}>
+    <AdminModal title={mode === "tag" ? tr("افزودن برچسب", "Add tag") : tr("حذف برچسب", "Remove tag")} eyebrow={tr(`${formatNumber(ids.length)} کاربر`, `${formatNumber(ids.length)} users`)} onClose={onClose}>
       <div className="au-form">
-        <label className="admin-field"><span>برچسب</span>
+        <label className="admin-field"><span>{tr("برچسب", "Tag")}</span>
           <input className="admin-input" value={tag} maxLength={MAX_TAG_LEN} onChange={(e) => setTag(e.target.value)} autoFocus />
         </label>
         {suggestions.length > 0 && (
@@ -108,8 +109,8 @@ export function TagDialog({ ids, mode = "tag", suggestions = [], onClose, onDone
           </div>
         )}
       </div>
-      <Footer busy={busy} label={mode === "tag" ? "افزودن" : "حذف"} onClose={onClose} disabled={!tag.trim()}
-        onSubmit={() => run(() => postBulk(ids, mode, { tag }), (c) => `برچسب برای ${formatNumber(c)} کاربر ثبت شد`)} />
+      <Footer busy={busy} label={mode === "tag" ? tr("افزودن", "Add") : tr("حذف", "Delete")} onClose={onClose} disabled={!tag.trim()}
+        onSubmit={() => run(() => postBulk(ids, mode, { tag }), (c) => tr(`برچسب برای ${formatNumber(c)} کاربر ثبت شد`, `Tag applied to ${formatNumber(c)} users`))} />
     </AdminModal>
   );
 }
@@ -119,14 +120,14 @@ export function ExtendDialog({ id, onClose, onDone }: { id: string; onClose: () 
   const { busy, run } = useRunner(onDone, onClose);
   const n = Math.floor(Number(days));
   return (
-    <AdminModal title="تمدید دستی اشتراک" eyebrow="اشتراک" onClose={onClose}>
+    <AdminModal title={tr("تمدید دستی اشتراک", "Manually extend subscription")} eyebrow={tr("اشتراک", "Subscription")} onClose={onClose}>
       <div className="au-form">
-        <label className="admin-field"><span>تعداد روز</span>
+        <label className="admin-field"><span>{tr("تعداد روز", "Number of days")}</span>
           <input className="admin-input admin-ltr" inputMode="numeric" value={days} onChange={(e) => setDays(e.target.value.replace(/[^0-9]/g, ""))} autoFocus />
         </label>
       </div>
-      <Footer busy={busy} label="تمدید" onClose={onClose} disabled={!(n >= 1 && n <= 3650)}
-        onSubmit={() => run(async () => { await adminFetch(`/api/admin/users/${id}/extend`, { method: "POST", json: { days: n } }); }, () => "اشتراک تمدید شد")} />
+      <Footer busy={busy} label={tr("تمدید", "Extend")} onClose={onClose} disabled={!(n >= 1 && n <= 3650)}
+        onSubmit={() => run(async () => { await adminFetch(`/api/admin/users/${id}/extend`, { method: "POST", json: { days: n } }); }, () => tr("اشتراک تمدید شد", "Subscription extended"))} />
     </AdminModal>
   );
 }
@@ -135,14 +136,14 @@ export function SaveSegmentDialog({ filters, onClose, onDone }: { filters: Users
   const [name, setName] = useState("");
   const { busy, run } = useRunner(onDone, onClose);
   return (
-    <AdminModal title="ذخیره به‌عنوان بخش" eyebrow="فیلترهای فعلی" onClose={onClose}>
+    <AdminModal title={tr("ذخیره به‌عنوان بخش", "Save as segment")} eyebrow={tr("فیلترهای فعلی", "Current filters")} onClose={onClose}>
       <div className="au-form">
-        <label className="admin-field"><span>اسم بخش</span>
+        <label className="admin-field"><span>{tr("اسم بخش", "Segment name")}</span>
           <input className="admin-input" value={name} maxLength={MAX_SEGMENT_NAME} onChange={(e) => setName(e.target.value)} autoFocus />
         </label>
       </div>
-      <Footer busy={busy} label="ذخیره" onClose={onClose} disabled={!name.trim()}
-        onSubmit={() => run(async () => { await adminFetch("/api/admin/users/segments", { method: "POST", json: { name, filters } }); }, () => "بخش ذخیره شد")} />
+      <Footer busy={busy} label={tr("ذخیره", "Save")} onClose={onClose} disabled={!name.trim()}
+        onSubmit={() => run(async () => { await adminFetch("/api/admin/users/segments", { method: "POST", json: { name, filters } }); }, () => tr("بخش ذخیره شد", "Segment saved"))} />
     </AdminModal>
   );
 }

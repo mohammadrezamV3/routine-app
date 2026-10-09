@@ -5,19 +5,24 @@ import { createPortal } from "react-dom";
 import { useRouter } from "next/navigation";
 import { Search, CornerDownLeft } from "lucide-react";
 import { hasPermission } from "@/lib/adminPermissions";
-import { NAV_GROUPS, type NavAccess } from "@/components/adminNavConfig";
+import { navGroups, type NavAccess } from "@/components/adminNavConfig";
+import { tr } from "@/lib/i18n";
+import { useIsEn } from "@/components/I18nProvider";
 import { useLockBodyScroll } from "@/lib/useLockBodyScroll";
 import { Spinner } from "@/components/Spinner";
 
 type Row = { key: string; group: string; title: string; sub?: string; href: string };
 type Remote = Record<"users" | "transactions" | "codes" | "tickets", { id: string; title: string; sub: string; href: string }[]>;
 
-const REMOTE_LABELS: [keyof Remote, string][] = [
-  ["users", "کاربران"], ["transactions", "تراکنش‌ها"], ["codes", "کدهای تخفیف"], ["tickets", "تیکت‌ها"],
-];
+function remoteLabels(): [keyof Remote, string][] {
+  return [
+    ["users", tr("کاربران", "Users")], ["transactions", tr("تراکنش‌ها", "Transactions")], ["codes", tr("کدهای تخفیف", "Discount codes")], ["tickets", tr("تیکت‌ها", "Tickets")],
+  ];
+}
 
 export function AdminCommandPalette({ open, onClose, access }: { open: boolean; onClose: () => void; access: NavAccess }) {
   const router = useRouter();
+  const en = useIsEn();
   const [q, setQ] = useState("");
   const [remote, setRemote] = useState<Remote | null>(null);
   const [busy, setBusy] = useState(false);
@@ -29,13 +34,14 @@ export function AdminCommandPalette({ open, onClose, access }: { open: boolean; 
   // همه‌ی صفحه‌های مجاز برای این ادمین
   const pages = useMemo<Row[]>(() => {
     const out: Row[] = [];
-    for (const g of NAV_GROUPS) {
+    const pageGroup = tr("صفحه‌ها", "Pages");
+    for (const g of navGroups()) {
       for (const it of g.items) {
         if (!hasPermission(access, it.perm) || (it.ownerOnly && !access.isSuperAdmin)) continue;
-        out.push({ key: it.href, group: "صفحه‌ها", title: it.label, sub: g.title, href: it.href });
+        out.push({ key: it.href, group: pageGroup, title: it.label, sub: g.title, href: it.href });
         for (const c of it.children ?? []) {
           if (c.href === it.href || !hasPermission(access, c.perm)) continue;
-          out.push({ key: c.href, group: "صفحه‌ها", title: c.label, sub: it.label, href: c.href });
+          out.push({ key: c.href, group: pageGroup, title: c.label, sub: it.label, href: c.href });
         }
       }
     }
@@ -68,7 +74,7 @@ export function AdminCommandPalette({ open, onClose, access }: { open: boolean; 
     const matched = (low ? pages.filter((p) => `${p.title} ${p.sub ?? ""}`.toLowerCase().includes(low)) : pages).slice(0, low ? 8 : 10);
     const out = [...matched];
     if (remote) {
-      for (const [k, label] of REMOTE_LABELS) {
+      for (const [k, label] of remoteLabels()) {
         for (const r of remote[k] ?? []) out.push({ key: `${k}:${r.id}`, group: label, title: r.title, sub: r.sub, href: r.href });
       }
     }
@@ -94,19 +100,19 @@ export function AdminCommandPalette({ open, onClose, access }: { open: boolean; 
   let lastGroup = "";
   return createPortal(
     <div className="ads-pal-backdrop" onMouseDown={(e) => { if (e.target === e.currentTarget) onClose(); }}>
-      <div className="ads-pal" role="dialog" aria-modal="true" aria-label="جست‌وجوی سراسری" dir="rtl" onKeyDown={onKeyDown}>
+      <div className="ads-pal" role="dialog" aria-modal="true" aria-label={tr("جست‌وجوی سراسری", "Global search")} dir={en ? "ltr" : "rtl"} onKeyDown={onKeyDown}>
         <div className="ads-pal-field">
           <Search size={16} aria-hidden="true" />
           <input
             ref={inputRef} value={q} onChange={(e) => setQ(e.target.value)} className="ads-pal-input"
-            placeholder="جست‌وجوی کاربر، تراکنش، کد تخفیف، تیکت یا صفحه" aria-label="جست‌وجو" autoComplete="off"
+            placeholder={tr("جست‌وجوی کاربر، تراکنش، کد تخفیف، تیکت یا صفحه", "Search users, transactions, discount codes, tickets or pages")} aria-label={tr("جست‌وجو", "Search")} autoComplete="off"
             role="combobox" aria-expanded="true" aria-controls="ads-pal-list"
           />
           {busy && <Spinner size={14} />}
           <kbd className="ads-kbd">Esc</kbd>
         </div>
         <div className="ads-pal-list" id="ads-pal-list" role="listbox" ref={listRef}>
-          {rows.length === 0 && <div className="ads-pal-empty">{busy ? "در حال جست‌وجو" : "نتیجه‌ای پیدا نشد"}</div>}
+          {rows.length === 0 && <div className="ads-pal-empty">{busy ? tr("در حال جست‌وجو", "Searching…") : tr("نتیجه‌ای پیدا نشد", "No results found")}</div>}
           {rows.map((r, i) => {
             const head = r.group !== lastGroup ? (lastGroup = r.group) : null;
             return (
@@ -124,7 +130,7 @@ export function AdminCommandPalette({ open, onClose, access }: { open: boolean; 
             );
           })}
         </div>
-        <div className="ads-pal-foot"><span><kbd className="ads-kbd">↑↓</kbd> حرکت</span><span><kbd className="ads-kbd">Enter</kbd> باز کردن</span></div>
+        <div className="ads-pal-foot"><span><kbd className="ads-kbd">↑↓</kbd> {tr("حرکت", "Move")}</span><span><kbd className="ads-kbd">Enter</kbd> {tr("باز کردن", "Open")}</span></div>
       </div>
     </div>,
     document.body,

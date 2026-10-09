@@ -1,6 +1,7 @@
 "use client";
 
 import { Suspense, useCallback, useEffect, useRef, useState } from "react";
+import { tr } from "@/lib/i18n";
 import Link from "next/link";
 import { usePathname, useRouter, useSearchParams } from "next/navigation";
 import { ArrowDown, ArrowUp, ArrowUpDown, Download, Search, X } from "lucide-react";
@@ -27,11 +28,18 @@ type Row = {
 };
 type Meta = { plans: { id: string; nameFa: string }[]; tags: { tag: string; count: number }[]; segments: { id: string; name: string; filters: unknown }[] };
 
-const SEEN_OPTS = [["", "آخرین فعالیت"], ["1d", "امروز"], ["7d", "7 روز اخیر"], ["30d", "30 روز اخیر"], ["90d", "90 روز اخیر"], ["never", "هیچ‌وقت"]];
-const SIGNUP_OPTS = [["", "ثبت‌نام"], ["7d", "7 روز اخیر"], ["30d", "30 روز اخیر"], ["90d", "90 روز اخیر"], ["365d", "یک سال اخیر"]];
+// توابع (نه ثابت ماژول) تا برچسب‌ها با زبان جاری حل بشن
+function seenOpts() {
+  return [["", tr("آخرین فعالیت", "Last activity")], ["1d", tr("امروز", "Today")], ["7d", tr("7 روز اخیر", "Last 7 days")], ["30d", tr("30 روز اخیر", "Last 30 days")], ["90d", tr("90 روز اخیر", "Last 90 days")], ["never", tr("هیچ‌وقت", "Never")]];
+}
+function signupOpts() {
+  return [["", tr("ثبت‌نام", "Signed up")], ["7d", tr("7 روز اخیر", "Last 7 days")], ["30d", tr("30 روز اخیر", "Last 30 days")], ["90d", tr("90 روز اخیر", "Last 90 days")], ["365d", tr("یک سال اخیر", "Last year")]];
+}
 
 type BulkAction = "block" | "unblock" | "delete" | "restore";
-const BULK_LABEL: Record<BulkAction, string> = { block: "مسدودکردن", unblock: "رفع مسدودی", delete: "حذف", restore: "بازگردانی" };
+function bulkLabels(): Record<BulkAction, string> {
+  return { block: tr("مسدودکردن", "Block"), unblock: tr("رفع مسدودی", "Unblock"), delete: tr("حذف", "Delete"), restore: tr("بازگردانی", "Restore") };
+}
 
 function Inner() {
   const router = useRouter();
@@ -120,8 +128,8 @@ function Inner() {
     setBusy(true);
     try {
       const r = await postBulk(ids, action, {});
-      if (r.failed.length) toast(`${formatNumber(r.done)} انجام شد، ${formatNumber(r.failed.length)} ناموفق: ${r.failed[0].error}`, "err");
-      else toast(`${BULK_LABEL[action]} برای ${formatNumber(r.done)} کاربر انجام شد`);
+      if (r.failed.length) toast(tr(`${formatNumber(r.done)} انجام شد، ${formatNumber(r.failed.length)} ناموفق: ${r.failed[0].error}`, `${formatNumber(r.done)} done, ${formatNumber(r.failed.length)} failed: ${r.failed[0].error}`), "err");
+      else toast(tr(`${bulkLabels()[action]} برای ${formatNumber(r.done)} کاربر انجام شد`, `${bulkLabels()[action]} applied to ${formatNumber(r.done)} users`));
       load();
     } catch (e: any) { toast(e.message, "err"); } finally { setBusy(false); setConfirm(null); }
   }
@@ -152,24 +160,24 @@ function Inner() {
     <section className="au-list">
       <div className="admin-page-head">
         <div>
-          <div className="au-kicker">کاربران</div>
-          <h1 className="au-title">همه‌ی کاربران</h1>
+          <div className="au-kicker">{tr("کاربران", "Users")}</div>
+          <h1 className="au-title">{tr("همه‌ی کاربران", "All users")}</h1>
         </div>
         <div className="admin-head-actions">
-          <button type="button" className="admin-btn" onClick={() => exportCsv()}><Download size={14} /> خروجی CSV</button>
-          {can("users.edit") && <button type="button" className="admin-btn" onClick={() => setDialog("segment")}>ذخیره به‌عنوان بخش</button>}
+          <button type="button" className="admin-btn" onClick={() => exportCsv()}><Download size={14} /> {tr("خروجی CSV", "Export CSV")}</button>
+          {can("users.edit") && <button type="button" className="admin-btn" onClick={() => setDialog("segment")}>{tr("ذخیره به‌عنوان بخش", "Save as segment")}</button>}
         </div>
       </div>
 
       <AdminTabBar items={tabItems} active={filters.tab} onChange={(k) => setParams({ tab: k === "all" ? null : k })} />
-      <div className="au-hint">«در خطر ریزش»: کاربر پولی که اشتراکش تا 7 روز دیگه تموم می‌شه یا 7 روز و بیشتر فعالیتی نداشته.</div>
+      <div className="au-hint">{tr("«در خطر ریزش»: کاربر پولی که اشتراکش تا 7 روز دیگه تموم می‌شه یا 7 روز و بیشتر فعالیتی نداشته.", "«At risk»: a paid user whose subscription ends within 7 days, or who has had no activity for 7 days or more.")}</div>
 
       {meta && meta.segments.length > 0 && (
-        <div className="au-segments" aria-label="بخش‌های ذخیره‌شده">
+        <div className="au-segments" aria-label={tr("بخش‌های ذخیره‌شده", "Saved segments")}>
           {meta.segments.map((s) => (
             <span key={s.id} className="au-chip au-seg">
               <button type="button" className="au-seg-btn" onClick={() => applySegment(s.filters)}>{s.name}</button>
-              {can("users.edit") && <button type="button" className="au-chip-x" aria-label={`حذف بخش ${s.name}`} onClick={() => deleteSegment(s.id)}><X size={11} /></button>}
+              {can("users.edit") && <button type="button" className="au-chip-x" aria-label={tr(`حذف بخش ${s.name}`, `Delete segment ${s.name}`)} onClick={() => deleteSegment(s.id)}><X size={11} /></button>}
             </span>
           ))}
         </div>
@@ -178,76 +186,76 @@ function Inner() {
       <div className="au-filters">
         <div className="admin-search">
           <Search size={15} />
-          <input className="admin-input au-pill" placeholder="نام، شماره، ایمیل یا نام کاربری" value={search} onChange={(e) => setSearch(e.target.value)} aria-label="جست‌وجوی کاربران" />
+          <input className="admin-input au-pill" placeholder={tr("نام، شماره، ایمیل یا نام کاربری", "Name, phone, email or username")} value={search} onChange={(e) => setSearch(e.target.value)} aria-label={tr("جست‌وجوی کاربران", "Search users")} />
         </div>
-        <select className="admin-input au-pill" value={filters.plan} onChange={(e) => setParams({ plan: e.target.value || null })} aria-label="پلن">
-          <option value="">پلن</option>
-          <option value="none">بدون پلن</option>
+        <select className="admin-input au-pill" value={filters.plan} onChange={(e) => setParams({ plan: e.target.value || null })} aria-label={tr("پلن", "Plan")}>
+          <option value="">{tr("پلن", "Plan")}</option>
+          <option value="none">{tr("بدون پلن", "No plan")}</option>
           {meta?.plans.map((p) => <option key={p.id} value={p.id}>{p.nameFa}</option>)}
         </select>
-        <select className="admin-input au-pill" value={filters.seen} onChange={(e) => setParams({ seen: e.target.value || null })} aria-label="آخرین فعالیت">
-          {SEEN_OPTS.map(([v, l]) => <option key={v} value={v}>{l}</option>)}
+        <select className="admin-input au-pill" value={filters.seen} onChange={(e) => setParams({ seen: e.target.value || null })} aria-label={tr("آخرین فعالیت", "Last activity")}>
+          {seenOpts().map(([v, l]) => <option key={v} value={v}>{l}</option>)}
         </select>
-        <select className="admin-input au-pill" value={filters.signup} onChange={(e) => setParams({ signup: e.target.value || null })} aria-label="تاریخ ثبت‌نام">
-          {SIGNUP_OPTS.map(([v, l]) => <option key={v} value={v}>{l}</option>)}
+        <select className="admin-input au-pill" value={filters.signup} onChange={(e) => setParams({ signup: e.target.value || null })} aria-label={tr("تاریخ ثبت‌نام", "Signup date")}>
+          {signupOpts().map(([v, l]) => <option key={v} value={v}>{l}</option>)}
         </select>
-        <select className="admin-input au-pill" value={filters.tag} onChange={(e) => setParams({ tag: e.target.value || null })} aria-label="برچسب">
-          <option value="">برچسب</option>
+        <select className="admin-input au-pill" value={filters.tag} onChange={(e) => setParams({ tag: e.target.value || null })} aria-label={tr("برچسب", "Tag")}>
+          <option value="">{tr("برچسب", "Tag")}</option>
           {meta?.tags.map((t) => <option key={t.tag} value={t.tag}>{t.tag} ({t.count})</option>)}
         </select>
-        {hasFilter && <button type="button" className="admin-btn sm" onClick={() => setParams({ plan: null, seen: null, signup: null, tag: null })}>پاک‌کردن فیلترها</button>}
+        {hasFilter && <button type="button" className="admin-btn sm" onClick={() => setParams({ plan: null, seen: null, signup: null, tag: null })}>{tr("پاک‌کردن فیلترها", "Clear filters")}</button>}
       </div>
 
       {ids.length > 0 && (
         <div className="admin-bulk-bar au-bulk">
-          <strong>{formatNumber(ids.length)} کاربر انتخاب شده</strong>
+          <strong>{tr(`${formatNumber(ids.length)} کاربر انتخاب شده`, `${formatNumber(ids.length)} users selected`)}</strong>
           <span className="au-grow" />
-          {!showDeleted && can("users.edit") && <button type="button" className="admin-btn sm" disabled={busy} onClick={() => setDialog("message")}>پیام</button>}
-          {!showDeleted && can("users.access") && <button type="button" className="admin-btn sm" disabled={busy} onClick={() => setDialog("grant")}>اعطای ماژول</button>}
-          {!showDeleted && can("users.edit") && <button type="button" className="admin-btn sm" disabled={busy} onClick={() => setDialog("tag")}>برچسب</button>}
-          {!showDeleted && can("users.edit") && <button type="button" className="admin-btn sm" disabled={busy} onClick={() => setDialog("untag")}>حذف برچسب</button>}
+          {!showDeleted && can("users.edit") && <button type="button" className="admin-btn sm" disabled={busy} onClick={() => setDialog("message")}>{tr("پیام", "Message")}</button>}
+          {!showDeleted && can("users.access") && <button type="button" className="admin-btn sm" disabled={busy} onClick={() => setDialog("grant")}>{tr("اعطای ماژول", "Grant module")}</button>}
+          {!showDeleted && can("users.edit") && <button type="button" className="admin-btn sm" disabled={busy} onClick={() => setDialog("tag")}>{tr("برچسب", "Tag")}</button>}
+          {!showDeleted && can("users.edit") && <button type="button" className="admin-btn sm" disabled={busy} onClick={() => setDialog("untag")}>{tr("حذف برچسب", "Remove tag")}</button>}
           <button type="button" className="admin-btn sm" disabled={busy} onClick={() => exportCsv(ids)}>CSV</button>
           {!showDeleted && can("users.edit") && (
             <>
-              <button type="button" className="admin-btn sm danger" disabled={busy} onClick={() => setConfirm({ action: "block", ids })}>مسدودسازی</button>
-              <button type="button" className="admin-btn sm" disabled={busy} onClick={() => runBulk("unblock", ids)}>رفع مسدودی</button>
+              <button type="button" className="admin-btn sm danger" disabled={busy} onClick={() => setConfirm({ action: "block", ids })}>{tr("مسدودسازی", "Block")}</button>
+              <button type="button" className="admin-btn sm" disabled={busy} onClick={() => runBulk("unblock", ids)}>{tr("رفع مسدودی", "Unblock")}</button>
             </>
           )}
           {can("users.delete") && (showDeleted
-            ? <button type="button" className="admin-btn sm" disabled={busy} onClick={() => runBulk("restore", ids)}>بازگردانی</button>
-            : <button type="button" className="admin-btn sm danger" disabled={busy} onClick={() => setConfirm({ action: "delete", ids })}>حذف</button>)}
-          <button type="button" className="admin-btn sm" disabled={busy} onClick={() => setSelected(new Set())}>لغو انتخاب</button>
+            ? <button type="button" className="admin-btn sm" disabled={busy} onClick={() => runBulk("restore", ids)}>{tr("بازگردانی", "Restore")}</button>
+            : <button type="button" className="admin-btn sm danger" disabled={busy} onClick={() => setConfirm({ action: "delete", ids })}>{tr("حذف", "Delete")}</button>)}
+          <button type="button" className="admin-btn sm" disabled={busy} onClick={() => setSelected(new Set())}>{tr("لغو انتخاب", "Clear selection")}</button>
         </div>
       )}
 
       {!data ? (
         failed ? (
-          <div className="admin-empty"><span>خطا در دریافت اطلاعات</span><button type="button" className="admin-btn sm" onClick={load}>تلاش دوباره</button></div>
+          <div className="admin-empty"><span>{tr("خطا در دریافت اطلاعات", "Couldn't load data")}</span><button type="button" className="admin-btn sm" onClick={load}>{tr("تلاش دوباره", "Try again")}</button></div>
         ) : <div className="admin-empty"><Spinner size={22} /></div>
       ) : (
         <>
-          {failed && <div className="admin-form-error admin-inline-error">به‌روزرسانی لیست ناموفق بود — داده‌ی قبلی نمایش داده می‌شه.<button type="button" className="admin-btn sm" onClick={load}>تلاش دوباره</button></div>}
-          {data.capped && <div className="au-hint">مرتب‌سازی روی 5000 کاربر اول انجام شد.</div>}
-          {rows.length === 0 ? <EmptyState message={filters.search ? "کاربری با این جست‌وجو پیدا نشد" : "کاربری پیدا نشد"} /> : (
+          {failed && <div className="admin-form-error admin-inline-error">{tr("به‌روزرسانی لیست ناموفق بود — داده‌ی قبلی نمایش داده می‌شه.", "Couldn't refresh the list — showing the previous data.")}<button type="button" className="admin-btn sm" onClick={load}>{tr("تلاش دوباره", "Try again")}</button></div>}
+          {data.capped && <div className="au-hint">{tr("مرتب‌سازی روی 5000 کاربر اول انجام شد.", "Sorted the first 5000 users.")}</div>}
+          {rows.length === 0 ? <EmptyState message={filters.search ? tr("کاربری با این جست‌وجو پیدا نشد", "No users match this search") : tr("کاربری پیدا نشد", "No users found")} /> : (
             <>
               <div className={`admin-table-wrap au-table-wrap${loading ? " is-refreshing" : ""}`} aria-busy={loading}>
                 <table className="admin-table au-table">
                   <thead>
                     <tr>
-                      <th className="admin-check-col"><TickButton shape="square" size={20} checked={allSel} onToggle={() => setSelected(allSel ? new Set() : new Set(rows.map((u) => u.id)))} label="انتخاب همه" /></th>
-                      <th><button type="button" className="au-th" onClick={() => toggleSort("name")}>کاربر {sortIcon("name")}</button></th>
-                      <th>پلن</th>
-                      <th>وضعیت</th>
-                      <th><button type="button" className="au-th" onClick={() => toggleSort("ltv")}>ارزش طول عمر {sortIcon("ltv")}</button></th>
-                      <th><button type="button" className="au-th" onClick={() => toggleSort("newest")}>ثبت‌نام {sortIcon("newest")}</button></th>
-                      <th><button type="button" className="au-th" onClick={() => toggleSort("seen")}>آخرین فعالیت {sortIcon("seen")}</button></th>
+                      <th className="admin-check-col"><TickButton shape="square" size={20} checked={allSel} onToggle={() => setSelected(allSel ? new Set() : new Set(rows.map((u) => u.id)))} label={tr("انتخاب همه", "Select all")} /></th>
+                      <th><button type="button" className="au-th" onClick={() => toggleSort("name")}>{tr("کاربر", "User")} {sortIcon("name")}</button></th>
+                      <th>{tr("پلن", "Plan")}</th>
+                      <th>{tr("وضعیت", "Status")}</th>
+                      <th><button type="button" className="au-th" onClick={() => toggleSort("ltv")}>{tr("ارزش طول عمر", "Lifetime value")} {sortIcon("ltv")}</button></th>
+                      <th><button type="button" className="au-th" onClick={() => toggleSort("newest")}>{tr("ثبت‌نام", "Signed up")} {sortIcon("newest")}</button></th>
+                      <th><button type="button" className="au-th" onClick={() => toggleSort("seen")}>{tr("آخرین فعالیت", "Last activity")} {sortIcon("seen")}</button></th>
                     </tr>
                   </thead>
                   <tbody>
                     {rows.map((u) => (
                       <tr key={u.id} className={`au-row-tr${selected.has(u.id) ? " is-selected" : ""}${openId === u.id ? " is-open" : ""}`} onClick={() => setParams({ u: u.id }, true)}>
                         <td className="admin-check-col" onClick={(e) => e.stopPropagation()}>
-                          <TickButton shape="square" size={20} checked={selected.has(u.id)} label={`انتخاب ${displayName(u)}`}
+                          <TickButton shape="square" size={20} checked={selected.has(u.id)} label={tr(`انتخاب ${displayName(u)}`, `Select ${displayName(u)}`)}
                             onToggle={() => setSelected((s) => { const n = new Set(s); if (n.has(u.id)) n.delete(u.id); else n.add(u.id); return n; })} />
                         </td>
                         <td>
@@ -264,8 +272,8 @@ function Inner() {
                         <td>
                           <span className="admin-badge-row">
                             <StatusChip status={u.status} />
-                            {u.atRisk && <span className="au-chip au-chip-warn">در خطر ریزش</span>}
-                            {u.isAdmin && <span className="au-chip au-chip-warn">{u.isSuperAdmin ? "Owner" : "ادمین"}</span>}
+                            {u.atRisk && <span className="au-chip au-chip-warn">{tr("در خطر ریزش", "At risk")}</span>}
+                            {u.isAdmin && <span className="au-chip au-chip-warn">{u.isSuperAdmin ? "Owner" : tr("ادمین", "Admin")}</span>}
                           </span>
                         </td>
                         <td className="admin-ltr">{u.ltv && u.ltv.amount > 0 ? formatCurrencyAmount(u.ltv.amount, u.ltv.currency) : <span className="admin-muted">0</span>}</td>
@@ -290,9 +298,9 @@ function Inner() {
       {dialog === "segment" && <SaveSegmentDialog filters={filters} onClose={() => setDialog(null)} onDone={loadMeta} />}
       {confirm && (
         <ConfirmModal
-          title={`${BULK_LABEL[confirm.action]} ${formatNumber(confirm.ids.length)} کاربر`}
-          message={confirm.action === "delete" ? "حساب‌ها غیرفعال و از همه‌ی دستگاه‌ها خارج می‌شن. داده‌ها می‌مونن و از تب «حذف‌شده» قابل بازگردانی‌ان." : "کاربران انتخاب‌شده دیگه نمی‌تونن وارد بشن و از همه‌ی دستگاه‌ها خارج می‌شن."}
-          confirmLabel={BULK_LABEL[confirm.action]} onConfirm={() => runBulk(confirm.action, confirm.ids)} onClose={() => setConfirm(null)}
+          title={tr(`${bulkLabels()[confirm.action]} ${formatNumber(confirm.ids.length)} کاربر`, `${bulkLabels()[confirm.action]} ${formatNumber(confirm.ids.length)} users`)}
+          message={confirm.action === "delete" ? tr("حساب‌ها غیرفعال و از همه‌ی دستگاه‌ها خارج می‌شن. داده‌ها می‌مونن و از تب «حذف‌شده» قابل بازگردانی‌ان.", "Accounts are deactivated and signed out of all devices. Data is kept and can be restored from the «Deleted» tab.") : tr("کاربران انتخاب‌شده دیگه نمی‌تونن وارد بشن و از همه‌ی دستگاه‌ها خارج می‌شن.", "Selected users can no longer sign in and are signed out of all devices.")}
+          confirmLabel={bulkLabels()[confirm.action]} onConfirm={() => runBulk(confirm.action, confirm.ids)} onClose={() => setConfirm(null)}
         />
       )}
     </section>

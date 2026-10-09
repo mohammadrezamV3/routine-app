@@ -1,5 +1,6 @@
 import type { Prisma } from "@prisma/client";
 import { prisma } from "@/lib/prisma";
+import { tr } from "@/lib/i18n";
 import { getAppSetting, setAppSetting } from "@/lib/appSettings";
 import { isPushConfigured, sendPushToUser } from "@/lib/webPush";
 import { publishToUser } from "@/lib/realtime";
@@ -181,7 +182,7 @@ export async function runBroadcast(id: string, budgetMs = DEFAULT_BUDGET_MS): Pr
   if (!b || b.status !== "sending") return b;
 
   if (wantsPush(b.channels) && !wantsInApp(b.channels) && !isPushConfigured()) {
-    return patchBroadcast(id, (x) => ({ ...x, status: "failed", leaseUntil: null, error: "کلیدهای VAPID روی سرور تنظیم نشده‌اند" }));
+    return patchBroadcast(id, (x) => ({ ...x, status: "failed", leaseUntil: null, error: tr("کلیدهای VAPID روی سرور تنظیم نشده‌اند", "VAPID keys are not configured on the server") }));
   }
 
   const where = segmentWhere(b.segment);
@@ -199,7 +200,7 @@ export async function runBroadcast(id: string, budgetMs = DEFAULT_BUDGET_MS): Pr
       if (users.length === 0) {
         const done = await patchBroadcast(id, (x) => {
           const failed = x.recipients > 0 && x.delivered === 0;
-          return { ...x, status: failed ? "failed" : "sent", leaseUntil: null, sentAt: new Date().toISOString(), error: failed ? "به هیچ گیرنده‌ای نرسید" : x.error };
+          return { ...x, status: failed ? "failed" : "sent", leaseUntil: null, sentAt: new Date().toISOString(), error: failed ? tr("به هیچ گیرنده‌ای نرسید", "Not delivered to any recipient") : x.error };
         });
         return done;
       }

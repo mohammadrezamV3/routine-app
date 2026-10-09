@@ -8,6 +8,7 @@
 // این تاریخ وجود نداشته، مقدار «null»/آرایه‌ی خالی برمی‌گرده و صفحه باید
 // «داده‌ای برای نمایش وجود ندارد» نشون بده — نه صفر یا عدد ساختگی.
 
+import { tr } from "@/lib/i18n";
 import { prisma } from "@/lib/prisma";
 import { countRowProgress } from "@/lib/roadmapPlan";
 import { latestDate } from "@/lib/tehranTime";
@@ -687,13 +688,13 @@ export async function getFunnel(range: Range): Promise<FunnelStep[]> {
     });
     const ids = signupUsers.map((u) => u.id);
     if (ids.length === 0) return [
-      { key: "signup", label: "ثبت‌نام", count: 0 },
-      { key: "profile_complete", label: "تکمیل پروفایل", count: 0 },
-      { key: "product_use", label: "استفاده از محصول", count: 0 },
-      { key: "view_plan", label: "مشاهده پلن", count: 0 },
-      { key: "checkout_start", label: "شروع خرید", count: 0 },
-      { key: "payment_success", label: "پرداخت موفق", count: 0 },
-      { key: "paid_user", label: "کاربر پولی", count: 0 },
+      { key: "signup", label: tr("ثبت‌نام", "Signed up"), count: 0 },
+      { key: "profile_complete", label: tr("تکمیل پروفایل", "Profile completed"), count: 0 },
+      { key: "product_use", label: tr("استفاده از محصول", "Used the product"), count: 0 },
+      { key: "view_plan", label: tr("مشاهده پلن", "Viewed a plan"), count: 0 },
+      { key: "checkout_start", label: tr("شروع خرید", "Started checkout"), count: 0 },
+      { key: "payment_success", label: tr("پرداخت موفق", "Payment successful"), count: 0 },
+      { key: "paid_user", label: tr("کاربر پولی", "Paying user"), count: 0 },
     ];
 
     const profileCompleteCount = signupUsers.filter((u) => u.name && u.lastName).length;
@@ -713,13 +714,13 @@ export async function getFunnel(range: Range): Promise<FunnelStep[]> {
     const productUseIds = new Set([...de, ...el, ...fl, ...te, ...rm].map((r) => r.userId));
 
     return [
-      { key: "signup", label: "ثبت‌نام", count: ids.length },
-      { key: "profile_complete", label: "تکمیل پروفایل", count: profileCompleteCount },
-      { key: "product_use", label: "استفاده از محصول", count: productUseIds.size },
-      { key: "view_plan", label: "مشاهده پلن", count: viewed.length },
-      { key: "checkout_start", label: "شروع خرید", count: checkoutStarted.length },
-      { key: "payment_success", label: "پرداخت موفق", count: new Set(paidPayments.map((p) => p.subscription.userId)).size },
-      { key: "paid_user", label: "کاربر پولی", count: paidUsers.length },
+      { key: "signup", label: tr("ثبت‌نام", "Signed up"), count: ids.length },
+      { key: "profile_complete", label: tr("تکمیل پروفایل", "Profile completed"), count: profileCompleteCount },
+      { key: "product_use", label: tr("استفاده از محصول", "Used the product"), count: productUseIds.size },
+      { key: "view_plan", label: tr("مشاهده پلن", "Viewed a plan"), count: viewed.length },
+      { key: "checkout_start", label: tr("شروع خرید", "Started checkout"), count: checkoutStarted.length },
+      { key: "payment_success", label: tr("پرداخت موفق", "Payment successful"), count: new Set(paidPayments.map((p) => p.subscription.userId)).size },
+      { key: "paid_user", label: tr("کاربر پولی", "Paying user"), count: paidUsers.length },
     ];
   });
 }

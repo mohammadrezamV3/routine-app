@@ -1,5 +1,7 @@
 "use client";
 
+import { tr } from "@/lib/i18n";
+
 import { createContext, useCallback, useContext, useState } from "react";
 import { AnimatePresence, motion } from "framer-motion";
 
@@ -47,6 +49,6 @@ export async function adminFetch<T = any>(url: string, init?: RequestInit & { js
     body: json !== undefined ? JSON.stringify(json) : rest.body,
   });
   const data = await res.json().catch(() => ({}));
-  if (!res.ok) throw new Error((data as any)?.error || "خطا در انجام درخواست");
+  if (!res.ok) throw new Error((data as any)?.error || tr("خطا در انجام درخواست", "Request failed"));
   return data as T;
 }

@@ -3,6 +3,8 @@
 import "./admin-dashboard.css";
 import Link from "next/link";
 import { useMemo, useState } from "react";
+import { tr } from "@/lib/i18n";
+import { useIsEn } from "@/components/I18nProvider";
 import { SegmentedTabs } from "@/components/SegmentedTabs";
 import { useAdminData } from "@/components/admin/useAdminData";
 import { useAdminAccess } from "@/components/admin/AdminAccess";
@@ -10,16 +12,19 @@ import { dashRangeDays, type DashRange } from "@/lib/adminOverview";
 import type { OverviewDashboard } from "@/lib/adminOverviewServer";
 import { DashboardSkeleton, FeedCard, FunnelCard, HealthCard, KpiCard, ModulesCard, QueueCard, RevenueChart, TransactionsCard } from "@/components/AdminDashboardParts";
 
-const RANGE_OPTIONS: { value: DashRange; label: string }[] = [
-  { value: "today", label: "امروز" },
-  { value: "7d", label: "7 روز" },
-  { value: "30d", label: "30 روز" },
-  { value: "90d", label: "90 روز" },
-];
+// تابع (نه ثابت ماژول) تا برچسب‌ها با زبان جاری حل بشن
+function rangeOptions(): { value: DashRange; label: string }[] {
+  return [
+    { value: "today", label: tr("امروز", "Today") },
+    { value: "7d", label: tr("7 روز", "7 days") },
+    { value: "30d", label: tr("30 روز", "30 days") },
+    { value: "90d", label: tr("90 روز", "90 days") },
+  ];
+}
 
-function todayLabel(): string {
+function todayLabel(en: boolean): string {
   try {
-    return new Intl.DateTimeFormat("fa-IR-u-nu-latn", { weekday: "long", day: "numeric", month: "long", timeZone: "Asia/Tehran" }).format(new Date());
+    return new Intl.DateTimeFormat(en ? "en-US" : "fa-IR-u-nu-latn", { weekday: "long", day: "numeric", month: "long", timeZone: "Asia/Tehran" }).format(new Date());
   } catch {
     return "";
   }
@@ -30,39 +35,40 @@ export function AdminDashboard() {
   const [range, setRange] = useState<DashRange>("30d");
   const { data, error, loading, reload } = useAdminData<{ dashboard: OverviewDashboard }>(`/api/admin/overview?range=${range}`);
   const d = data?.dashboard ?? null;
-  const date = useMemo(todayLabel, []);
+  const en = useIsEn();
+  const date = useMemo(() => todayLabel(en), [en]);
   const seriesDays = Math.max(dashRangeDays(range), 7);
 
   return (
     <section className="adb" aria-busy={loading}>
       <div className="adb-head">
         <div className="adb-head-text">
-          <h1 className="adb-title">سلام</h1>
-          <span className="adb-sub">{date}{d ? ` · ${d.queueTotal} مورد منتظر اقدام` : ""}</span>
+          <h1 className="adb-title">{tr("سلام", "Hello")}</h1>
+          <span className="adb-sub">{date}{d ? tr(` · ${d.queueTotal} مورد منتظر اقدام`, ` · ${d.queueTotal} items need action`) : ""}</span>
         </div>
         <div className="adb-actions">
-          {can("discounts") && <Link href="/admin/discount-codes" className="admin-btn">+ کد تخفیف</Link>}
-          {can("content") && <Link href="/admin/announcements" className="admin-btn">+ اطلاعیه</Link>}
-          {can("content") && <Link href="/admin/broadcast" className="admin-btn primary">پیام همگانی</Link>}
+          {can("discounts") && <Link href="/admin/discount-codes" className="admin-btn">{tr("+ کد تخفیف", "+ Discount code")}</Link>}
+          {can("content") && <Link href="/admin/announcements" className="admin-btn">{tr("+ اطلاعیه", "+ Announcement")}</Link>}
+          {can("content") && <Link href="/admin/broadcast" className="admin-btn primary">{tr("پیام همگانی", "Broadcast")}</Link>}
         </div>
-        <SegmentedTabs<DashRange> className="adb-range" options={RANGE_OPTIONS} active={range} onChange={setRange} ariaLabel="بازه‌ی زمانی" />
+        <SegmentedTabs<DashRange> className="adb-range" options={rangeOptions()} active={range} onChange={setRange} ariaLabel={tr("بازه‌ی زمانی", "Date range")} />
       </div>
 
       {!d ? (
         error ? (
-          <div className="adb-err">{error}<button type="button" className="admin-btn" onClick={reload}>تلاش دوباره</button></div>
+          <div className="adb-err">{error}<button type="button" className="admin-btn" onClick={reload}>{tr("تلاش دوباره", "Try again")}</button></div>
         ) : <DashboardSkeleton />
       ) : (
         <div className="adb" style={{ opacity: loading ? 0.6 : 1, transition: "opacity .2s" }}>
-          {error && <div className="adb-err">{error}<button type="button" className="admin-btn" onClick={reload}>تلاش دوباره</button></div>}
+          {error && <div className="adb-err">{error}<button type="button" className="admin-btn" onClick={reload}>{tr("تلاش دوباره", "Try again")}</button></div>}
 
-          <div className="adb-kpis" aria-label="شاخص‌ها">
-            {d.kpis.totalUsers && <KpiCard label="کل کاربران" k={d.kpis.totalUsers} color="var(--ring-2a)" />}
-            {d.kpis.activeUsers && <KpiCard label="کاربران فعال" k={d.kpis.activeUsers} color="var(--accent)" />}
-            {d.kpis.revenue && <KpiCard label="درآمد" k={d.kpis.revenue} color="var(--accent)" />}
-            {d.kpis.activeSubs && <KpiCard label="اشتراک فعال" k={d.kpis.activeSubs} color="var(--ring-2b)" />}
-            {d.kpis.churn && <KpiCard label="نرخ ریزش" k={d.kpis.churn} invert color="var(--ring-3a)" />}
-            {d.kpis.openTickets && <KpiCard label="تیکت باز" k={d.kpis.openTickets} invert color="var(--ring-3b)" />}
+          <div className="adb-kpis" aria-label={tr("شاخص‌ها", "Key metrics")}>
+            {d.kpis.totalUsers && <KpiCard label={tr("کل کاربران", "Total users")} k={d.kpis.totalUsers} color="var(--ring-2a)" />}
+            {d.kpis.activeUsers && <KpiCard label={tr("کاربران فعال", "Active users")} k={d.kpis.activeUsers} color="var(--accent)" />}
+            {d.kpis.revenue && <KpiCard label={tr("درآمد", "Revenue")} k={d.kpis.revenue} color="var(--accent)" />}
+            {d.kpis.activeSubs && <KpiCard label={tr("اشتراک فعال", "Active subscriptions")} k={d.kpis.activeSubs} color="var(--ring-2b)" />}
+            {d.kpis.churn && <KpiCard label={tr("نرخ ریزش", "Churn rate")} k={d.kpis.churn} invert color="var(--ring-3a)" />}
+            {d.kpis.openTickets && <KpiCard label={tr("تیکت باز", "Open tickets")} k={d.kpis.openTickets} invert color="var(--ring-3b)" />}
           </div>
 
           {(d.chart && (d.can.users || d.can.finance)) || d.queue.length > 0 ? (

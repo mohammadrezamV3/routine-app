@@ -4,6 +4,7 @@ import { useState } from "react";
 import { EmptyState } from "./EmptyState";
 import { bucketLabel, useChartWidth } from "./useChartWidth";
 import { formatNumber } from "@/lib/adminFormat";
+import { tr } from "@/lib/i18n";
 
 const H = 200, PAD_X = 8, PAD_T = 10, PAD_B = 24;
 
@@ -56,7 +57,7 @@ export function BarChart({ data, color = "var(--adm-accent)", formatValue }: { d
             <strong className="admin-ltr">{fmt(safe(active.value))}</strong>
           </>
         ) : (
-          <span className="admin-chart-tip-hint">برای دیدن مقدار، روی نمودار برو یا بزن</span>
+          <span className="admin-chart-tip-hint">{tr("برای دیدن مقدار، روی نمودار برو یا بزن", "Hover or tap the chart to see values")}</span>
         )}
       </div>
     </div>
