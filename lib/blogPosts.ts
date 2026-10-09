@@ -2,6 +2,10 @@ import { HEALTH_POSTS } from "./blog/posts/health";
 import { ROUTINE_POSTS } from "./blog/posts/routine";
 import { TRADING_POSTS } from "./blog/posts/trading";
 import type { BlogCategoryKey, BlogPost } from "./blog/types";
+import { HEALTH_POSTS_EN } from "./blog/posts/en/health";
+import { ROUTINE_POSTS_EN } from "./blog/posts/en/routine";
+import { TRADING_POSTS_EN } from "./blog/posts/en/trading";
+import { isEn } from "./i18n";
 
 /**
  * محتوای بلاگ، به‌صورت داده‌ی تایپ‌دار در همین ریپو (lib/blog/posts/*).
@@ -37,13 +41,32 @@ export const BLOG_POSTS: BlogPost[] = [...ROUTINE_POSTS, ...HEALTH_POSTS, ...TRA
   readingMinutes: Math.max(1, Math.round(postWordCount(p) / 200)),
 }));
 
+// نسخه‌ی انگلیسی (lib/blog/posts/en/*) — فقط مقاله‌هایی که ترجمه دارن؛ بقیه فارسی می‌مونن
+const POSTS_EN = { ...ROUTINE_POSTS_EN, ...HEALTH_POSTS_EN, ...TRADING_POSTS_EN };
+const BLOG_POSTS_EN: BlogPost[] = BLOG_POSTS.map((p) => {
+  const en = POSTS_EN[p.slug];
+  if (!en) return p;
+  const merged: BlogPost = { ...p, ...en };
+  return { ...merged, readingMinutes: Math.max(1, Math.round(postWordCount(merged) / 200)) };
+});
+
+/** مقاله‌ها به زبان جاری (برای نمایش؛ BLOG_POSTS همیشه فارسیه) */
+export function localizedPosts(): BlogPost[] {
+  return isEn() ? BLOG_POSTS_EN : BLOG_POSTS;
+}
+
+/** آیا این مقاله در زبان جاری محتوای ترجمه‌شده داره (برای lang/dir بدنه) */
+export function postHasCurrentLocale(slug: string): boolean {
+  return !isEn() || !!POSTS_EN[slug];
+}
+
 export function getPost(slug: string): BlogPost | undefined {
-  return BLOG_POSTS.find((p) => p.slug === slug);
+  return localizedPosts().find((p) => p.slug === slug);
 }
 
 /** جدیدترین اول — برای فهرست بلاگ و sitemap */
 export function sortedPosts(): BlogPost[] {
-  return [...BLOG_POSTS].sort((a, b) => (b.updated || b.published).localeCompare(a.updated || a.published) || b.published.localeCompare(a.published));
+  return [...localizedPosts()].sort((a, b) => (b.updated || b.published).localeCompare(a.updated || a.published) || b.published.localeCompare(a.published));
 }
 
 export function postsInCategory(cat: BlogCategoryKey): BlogPost[] {
