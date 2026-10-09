@@ -114,7 +114,7 @@ export default function AdminPricingPage() {
             <div className="admin-form-grid">
               {DURATIONS.map((d, i) => (
                 <div key={d} className="admin-field">
-                  <span>{tr(`مدت ${i + 1} (پیش‌فرض ${data.defaults.durations[d].months} ماهه)`, `Duration ${i + 1} (default ${data.defaults.durations[d].months} months)`)}</span>
+                  <span>{tr(`مدت ${i + 1} (پیش‌فرض ${data.defaults.durations[d].months} ماهه)`, `Duration ${i + 1} (default ${data.defaults.durations[d].months} ${data.defaults.durations[d].months === 1 ? "month" : "months"})`)}</span>
                   <NumberInput
                     className="admin-input admin-ltr" dir="ltr" maxLength={2} aria-label={tr(`تعداد ماه مدت ${i + 1}`, `Months for duration ${i + 1}`)}
                     value={draft.durations[d].months ? String(draft.durations[d].months) : ""}
@@ -151,11 +151,11 @@ export default function AdminPricingPage() {
                       const dur = draft.durations[d];
                       return (
                         <tr key={d} style={dur.enabled ? undefined : { opacity: 0.5 }}>
-                          <td>{tr(`${dur.months || "?"} ماهه${dur.enabled ? "" : " (غیرفعال)"}`, `${dur.months || "?"} months${dur.enabled ? "" : " (inactive)"}`)}</td>
+                          <td>{tr(`${dur.months || "?"} ماهه${dur.enabled ? "" : " (غیرفعال)"}`, `${dur.months || "?"} ${dur.months === 1 ? "month" : "months"}${dur.enabled ? "" : " (inactive)"}`)}</td>
                           <td>
                             <NumberInput
                               className="admin-input admin-ltr" dir="ltr" maxLength={13} style={{ width: 150 }}
-                              aria-label={tr(`قیمت قبل از تخفیف ${planNameLabel(plan)} ${dur.months} ماهه`, `Pre-discount price, ${planNameLabel(plan)} ${dur.months} months`)}
+                              aria-label={tr(`قیمت قبل از تخفیف ${planNameLabel(plan)} ${dur.months} ماهه`, `Pre-discount price, ${planNameLabel(plan)} ${dur.months} ${dur.months === 1 ? "month" : "months"}`)}
                               placeholder={tr("بدون تخفیف", "No discount")}
                               value={fmt(cell.original)}
                               onChange={(v) => { setCell(plan, d, { original: toInt(v) }); setPctDraft((m) => { const n = { ...m }; delete n[key]; return n; }); }}
@@ -164,7 +164,7 @@ export default function AdminPricingPage() {
                           <td>
                             <NumberInput
                               decimal className="admin-input admin-ltr" dir="ltr" maxLength={5} style={{ width: 80 }}
-                              aria-label={tr(`درصد تخفیف ${planNameLabel(plan)} ${dur.months} ماهه`, `Discount %, ${planNameLabel(plan)} ${dur.months} months`)}
+                              aria-label={tr(`درصد تخفیف ${planNameLabel(plan)} ${dur.months} ماهه`, `Discount %, ${planNameLabel(plan)} ${dur.months} ${dur.months === 1 ? "month" : "months"}`)}
                               disabled={!cell.original}
                               value={pctDraft[key] ?? (pct ? String(pct) : "")}
                               onChange={(v) => setPercent(plan, d, v)}
@@ -174,7 +174,7 @@ export default function AdminPricingPage() {
                           <td>
                             <NumberInput
                               className="admin-input admin-ltr" dir="ltr" maxLength={13} style={{ width: 150 }}
-                              aria-label={tr(`قیمت نهایی ${planNameLabel(plan)} ${dur.months} ماهه`, `Final price, ${planNameLabel(plan)} ${dur.months} months`)}
+                              aria-label={tr(`قیمت نهایی ${planNameLabel(plan)} ${dur.months} ماهه`, `Final price, ${planNameLabel(plan)} ${dur.months} ${dur.months === 1 ? "month" : "months"}`)}
                               value={fmt(cell.price)}
                               onChange={(v) => { setCell(plan, d, { price: toInt(v) }); setPctDraft((m) => { const n = { ...m }; delete n[key]; return n; }); }}
                             />

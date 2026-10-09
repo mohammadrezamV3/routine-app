@@ -173,7 +173,7 @@ export default function AdminMentorDetailPage() {
       </div>
 
       <div className="admin-kpi-grid">
-        <Kpi icon={<Users size={13} strokeWidth={1.75} aria-hidden />} label={tr("شاگرد فعال", "Active students")} value={formatNumber(data.stats.activeStudents)} sub={tr(`از ${formatNumber(data.stats.totalStudents)} شاگرد`, `of ${formatNumber(data.stats.totalStudents)} students`)} />
+        <Kpi icon={<Users size={13} strokeWidth={1.75} aria-hidden />} label={tr("شاگرد فعال", "Active students")} value={formatNumber(data.stats.activeStudents)} sub={tr(`از ${formatNumber(data.stats.totalStudents)} شاگرد`, `of ${formatNumber(data.stats.totalStudents)} ${(data.stats.totalStudents) === 1 ? "student" : "students"}`)} />
         <Kpi icon={<ClipboardList size={13} strokeWidth={1.75} aria-hidden />} label={tr("برنامه‌های ارسالی", "Programs sent")} value={formatNumber(data.stats.programs)} sub={tr(`${formatNumber(data.stats.completedPrograms)} تمام‌شده`, `${formatNumber(data.stats.completedPrograms)} completed`)} />
         <Kpi
           icon={<Star size={13} strokeWidth={1.75} aria-hidden />} label={tr("امتیاز", "Rating")}

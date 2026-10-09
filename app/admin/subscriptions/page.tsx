@@ -9,8 +9,9 @@ import { AdminTabBar } from "@/components/admin/TabBar";
 import { adminFetch } from "@/components/admin/useAdminToast";
 import { formatNumber } from "@/lib/adminFormat";
 import { pick, tr, type Localized } from "@/lib/i18n";
+import { planDisplayName } from "@/lib/subscriptionI18n";
 
-type PlanRow = { plan: { id: string; nameFa: string; nameEn?: string | null; market: string; currency: string; priceMonthly: number };active: number; expired: number; newInRange: number; canceledInRange: number };
+type PlanRow = { plan: { id: string; key: string; nameFa: string; nameEn?: string | null; market: string; currency: string; priceMonthly: number };active: number; expired: number; newInRange: number; canceledInRange: number };
 type Resp = { planBreakdown: PlanRow[]; renewalsUpgrades: { renewalsInRange: number; upgradesInRange: number; downgradesInRange: number } };
 
 const TABS = [
@@ -94,7 +95,7 @@ function SubscriptionsInner() {
                   <tbody>
                     {data.planBreakdown.map((row) => (
                       <tr key={row.plan.id}>
-                        <td>{tr(row.plan.nameFa, row.plan.nameEn || row.plan.nameFa)}</td>
+                        <td>{planDisplayName(row.plan)}</td>
                         <td>{row.plan.market === "IRAN" ? tr("ایران", "Iran") : tr("بین‌المللی", "International")}</td>
                         <td className={tab === "active" ? "admin-col-focus" : undefined}>{formatNumber(row.active)}</td>
                         <td className={tab === "expired" ? "admin-col-focus" : undefined}>{formatNumber(row.expired)}</td>

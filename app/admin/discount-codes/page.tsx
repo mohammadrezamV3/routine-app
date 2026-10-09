@@ -7,6 +7,7 @@ import { ConfirmModal } from "@/components/admin/AdminModal";
 import { adminFetch, useAdminToast } from "@/components/admin/useAdminToast";
 import { formatDateTime, formatNumber } from "@/lib/adminFormat";
 import { NumberInput } from "@/components/NumberInput";
+import { planDisplayName } from "@/lib/subscriptionI18n";
 import { tr } from "@/lib/i18n";
 
 type DiscountCodeRow = {
@@ -16,7 +17,7 @@ type DiscountCodeRow = {
 type PlanOption = { key: string; nameFa: string; nameEn?: string | null };
 
 // نام پکیج به زبان جاری؛ اگه API نام انگلیسی نفرسته، همون فارسی می‌مونه.
-const planName = (p: PlanOption) => tr(p.nameFa, p.nameEn || p.nameFa);
+const planName = (p: PlanOption) => planDisplayName(p);
 type Resp = { codes: DiscountCodeRow[]; plans: PlanOption[]; eventCodes?: string[] };
 
 const CODE_RE = /^[A-Z0-9_-]{3,32}$/;

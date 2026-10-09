@@ -43,7 +43,7 @@ export function RevenueChart({ chart, days, canRevenue }: { chart: NonNullable<O
       <div className="adb-card-head">
         <div style={{ display: "flex", flexDirection: "column", gap: 4 }}>
           <h2 className="adb-card-title">{canRevenue ? tr("درآمد و ثبت‌نام", "Revenue and sign-ups") : tr("ثبت‌نام", "Sign-ups")}</h2>
-          <span className="adb-card-hint">{tr(`${days} روز اخیر`, `Last ${days} days`)}{canRevenue ? tr(" · تومان", " · Toman") : ""}</span>
+          <span className="adb-card-hint">{tr(`${days} روز اخیر`, `Last ${days} ${(days) === 1 ? "day" : "days"}`)}{canRevenue ? tr(" · تومان", " · Toman") : ""}</span>
         </div>
         {canRevenue && (
           <div className="adb-nums">
@@ -82,7 +82,7 @@ export function QueueCard({ items, total }: { items: QueueItem[]; total: number 
     <div className="adb-card adb-queue adb-span-4" style={{ gap: 12 }}>
       <div className="adb-card-head" style={{ alignItems: "center" }}>
         <h2 className="adb-card-title">{tr("نیاز به اقدام", "Needs action")}</h2>
-        <span className="adb-queue-total">{tr(`${total} مورد`, `${total} items`)}</span>
+        <span className="adb-queue-total">{tr(`${total} مورد`, `${total} ${(total) === 1 ? "item" : "items"}`)}</span>
       </div>
       {items.length === 0 && <div className="adb-empty">{tr("مورد منتظری نیست.", "Nothing is waiting.")}</div>}
       {items.map((q) => (

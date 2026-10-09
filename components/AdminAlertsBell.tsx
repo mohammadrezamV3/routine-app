@@ -26,7 +26,7 @@ export function AdminAlertsBell() {
 
   return (
     <div className="ads-bell" ref={ref}>
-      <button type="button" className="ads-round-btn" aria-label={tr(`هشدارها، ${total} مورد`, `Alerts, ${total} items`)} aria-expanded={open} onClick={() => setOpen((v) => !v)}>
+      <button type="button" className="ads-round-btn" aria-label={tr(`هشدارها، ${total} مورد`, `Alerts, ${total} ${(total) === 1 ? "item" : "items"}`)} aria-expanded={open} onClick={() => setOpen((v) => !v)}>
         <Bell size={18} />
         {total > 0 && <span className="ads-bell-badge">{total > 99 ? "99+" : total}</span>}
       </button>

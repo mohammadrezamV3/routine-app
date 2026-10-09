@@ -5,6 +5,7 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useSession } from "next-auth/react";
 import { ArrowLeft, ArrowRight, ExternalLink, Trash2, X } from "lucide-react";
+import { planDisplayName } from "@/lib/subscriptionI18n";
 import { EmptyState } from "@/components/admin/EmptyState";
 import { AdminTabBar } from "@/components/admin/TabBar";
 import { ConfirmModal } from "@/components/admin/AdminModal";
@@ -239,7 +240,7 @@ export function AdminUserProfile({ id, variant, onClose, onChanged }: { id: stri
             <span className="au-section-title">{tr("اشتراک‌ها", "Subscriptions")}</span>
             {u.subscriptions.length === 0 ? <div className="au-muted">{tr("اشتراکی نیست", "No subscriptions")}</div> : u.subscriptions.map((s) => (
               <div key={s.id} className="au-row">
-                <span className="au-grow">{s.plan.nameFa}<span className="au-muted au-sub-line">{tr("از", "From")} {formatDateShort(s.startDate)} {tr("تا", "to")} {formatDateShort(s.currentPeriodEnd)}</span></span>
+                <span className="au-grow">{planDisplayName(s.plan)}<span className="au-muted au-sub-line">{tr("از", "From")} {formatDateShort(s.startDate)} {tr("تا", "to")} {formatDateShort(s.currentPeriodEnd)}</span></span>
                 <span className="au-chip">{SUB_STATUS_FA[s.status] || s.status}</span>
               </div>
             ))}

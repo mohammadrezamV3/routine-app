@@ -5,6 +5,7 @@
 // ادمین دسترسی مربوطه رو داره.
 
 import { tr } from "@/lib/i18n";
+import { planDisplayName } from "@/lib/subscriptionI18n";
 import { prisma } from "@/lib/prisma";
 import { hasPermission, type AdminPermission } from "@/lib/adminPermissions";
 import { getFunnel, getProductAnalytics, getSystemStatus, resolveRange, type Range } from "@/lib/adminAnalytics";
@@ -281,21 +282,21 @@ export async function buildOverview(access: Access, rangeKey: DashRange): Promis
   }
   if (cf) {
     tasks.push((async () => {
-      const include = { subscription: { select: { userId: true, user: { select: { name: true, lastName: true, username: true } }, plan: { select: { nameFa: true } } } } };
+      const include = { subscription: { select: { userId: true, user: { select: { name: true, lastName: true, username: true } }, plan: { select: { key: true, nameFa: true } } } } };
       const [okRows, badRows] = await Promise.all([
         prisma.payment.findMany({ where: { paidAt: { not: null } }, orderBy: { paidAt: "desc" }, take: 10, include }),
         prisma.payment.findMany({ where: { paidAt: null }, orderBy: { createdAt: "desc" }, take: 10, include }),
       ]);
-      feedLists.push(okRows.map((p) => ({ id: p.id, kind: "purchase", text: tr(`${displayName(p.subscription.user)} پلن ${p.subscription.plan.nameFa} خرید`, `${displayName(p.subscription.user)} bought the ${p.subscription.plan.nameFa} plan`), at: (p.paidAt as Date).toISOString(), href: "/admin/transactions" })));
+      feedLists.push(okRows.map((p) => ({ id: p.id, kind: "purchase", text: tr(`${displayName(p.subscription.user)} پلن ${p.subscription.plan.nameFa} خرید`, `${displayName(p.subscription.user)} bought the ${planDisplayName(p.subscription.plan)} plan`), at: (p.paidAt as Date).toISOString(), href: "/admin/transactions" })));
       feedLists.push(badRows.map((p) => ({ id: p.id, kind: "failed_payment", text: tr(`پرداخت ناموفق ${displayName(p.subscription.user)}`, `Failed payment: ${displayName(p.subscription.user)}`), at: p.createdAt.toISOString(), href: "/admin/transactions" })));
     })());
     tasks.push((async () => {
       const rows = await prisma.payment.findMany({
         orderBy: { createdAt: "desc" }, take: 5,
-        include: { subscription: { select: { userId: true, user: { select: { name: true, lastName: true, username: true } }, plan: { select: { nameFa: true } } } } },
+        include: { subscription: { select: { userId: true, user: { select: { name: true, lastName: true, username: true } }, plan: { select: { key: true, nameFa: true } } } } },
       });
       out.transactions = rows.map((p) => ({
-        id: p.id, userId: p.subscription.userId, user: displayName(p.subscription.user), plan: p.subscription.plan.nameFa,
+        id: p.id, userId: p.subscription.userId, user: displayName(p.subscription.user), plan: planDisplayName(p.subscription.plan),
         amount: p.amount, currency: p.currency,
         status: p.refundedAt ? "refunded" : p.paidAt ? "paid" : "pending",
         at: (p.paidAt ?? p.createdAt).toISOString(),

@@ -53,7 +53,7 @@ export function MessageDialog({ ids, onClose, onDone }: { ids: string[]; onClose
   const [body, setBody] = useState("");
   const { busy, run } = useRunner(onDone, onClose);
   return (
-    <AdminModal title={tr(`ارسال پیام به ${formatNumber(ids.length)} کاربر`, `Send message to ${formatNumber(ids.length)} users`)} eyebrow={tr("اعلان درون‌برنامه‌ای", "In-app notification")} onClose={onClose}>
+    <AdminModal title={tr(`ارسال پیام به ${formatNumber(ids.length)} کاربر`, `Send message to ${formatNumber(ids.length)} ${(ids.length) === 1 ? "user" : "users"}`)} eyebrow={tr("اعلان درون‌برنامه‌ای", "In-app notification")} onClose={onClose}>
       <div className="au-form">
         <label className="admin-field"><span>{tr("عنوان", "Title")}</span>
           <input className="admin-input" value={title} maxLength={120} onChange={(e) => setTitle(e.target.value)} autoFocus />
@@ -63,7 +63,7 @@ export function MessageDialog({ ids, onClose, onDone }: { ids: string[]; onClose
         </label>
       </div>
       <Footer busy={busy} label={tr("ارسال", "Send")} onClose={onClose} disabled={!title.trim() || !body.trim()}
-        onSubmit={() => run(() => postBulk(ids, "message", { title, body }), (n) => tr(`پیام برای ${formatNumber(n)} کاربر رفت`, `Message sent to ${formatNumber(n)} users`))} />
+        onSubmit={() => run(() => postBulk(ids, "message", { title, body }), (n) => tr(`پیام برای ${formatNumber(n)} کاربر رفت`, `Message sent to ${formatNumber(n)} ${(n) === 1 ? "user" : "users"}`))} />
     </AdminModal>
   );
 }
@@ -75,7 +75,7 @@ export function GrantDialog({ ids, onClose, onDone }: { ids: string[]; onClose: 
   const n = Math.floor(Number(days));
   const valid = mods.size > 0 && Number.isFinite(n) && n >= 1 && n <= 3650;
   return (
-    <AdminModal title={tr(`اعطای ماژول به ${formatNumber(ids.length)} کاربر`, `Grant module to ${formatNumber(ids.length)} users`)} eyebrow={tr("دسترسی", "Access")} onClose={onClose}>
+    <AdminModal title={tr(`اعطای ماژول به ${formatNumber(ids.length)} کاربر`, `Grant module to ${formatNumber(ids.length)} ${(ids.length) === 1 ? "user" : "users"}`)} eyebrow={tr("دسترسی", "Access")} onClose={onClose}>
       <div className="au-form">
         <div className="au-checks">
           {ALL_MODULES.map((m) => (
@@ -89,7 +89,7 @@ export function GrantDialog({ ids, onClose, onDone }: { ids: string[]; onClose: 
         </label>
       </div>
       <Footer busy={busy} label={tr("اعطا", "Grant")} onClose={onClose} disabled={!valid}
-        onSubmit={() => run(() => postBulk(ids, "grant", { modules: Array.from(mods), days: n }), (c) => tr(`دسترسی برای ${formatNumber(c)} کاربر ثبت شد`, `Access granted to ${formatNumber(c)} users`))} />
+        onSubmit={() => run(() => postBulk(ids, "grant", { modules: Array.from(mods), days: n }), (c) => tr(`دسترسی برای ${formatNumber(c)} کاربر ثبت شد`, `Access granted to ${formatNumber(c)} ${(c) === 1 ? "user" : "users"}`))} />
     </AdminModal>
   );
 }
@@ -98,7 +98,7 @@ export function TagDialog({ ids, mode = "tag", suggestions = [], onClose, onDone
   const [tag, setTag] = useState("");
   const { busy, run } = useRunner(onDone, onClose);
   return (
-    <AdminModal title={mode === "tag" ? tr("افزودن برچسب", "Add tag") : tr("حذف برچسب", "Remove tag")} eyebrow={tr(`${formatNumber(ids.length)} کاربر`, `${formatNumber(ids.length)} users`)} onClose={onClose}>
+    <AdminModal title={mode === "tag" ? tr("افزودن برچسب", "Add tag") : tr("حذف برچسب", "Remove tag")} eyebrow={tr(`${formatNumber(ids.length)} کاربر`, `${formatNumber(ids.length)} ${(ids.length) === 1 ? "user" : "users"}`)} onClose={onClose}>
       <div className="au-form">
         <label className="admin-field"><span>{tr("برچسب", "Tag")}</span>
           <input className="admin-input" value={tag} maxLength={MAX_TAG_LEN} onChange={(e) => setTag(e.target.value)} autoFocus />
@@ -110,7 +110,7 @@ export function TagDialog({ ids, mode = "tag", suggestions = [], onClose, onDone
         )}
       </div>
       <Footer busy={busy} label={mode === "tag" ? tr("افزودن", "Add") : tr("حذف", "Delete")} onClose={onClose} disabled={!tag.trim()}
-        onSubmit={() => run(() => postBulk(ids, mode, { tag }), (c) => tr(`برچسب برای ${formatNumber(c)} کاربر ثبت شد`, `Tag applied to ${formatNumber(c)} users`))} />
+        onSubmit={() => run(() => postBulk(ids, mode, { tag }), (c) => tr(`برچسب برای ${formatNumber(c)} کاربر ثبت شد`, `Tag applied to ${formatNumber(c)} ${(c) === 1 ? "user" : "users"}`))} />
     </AdminModal>
   );
 }

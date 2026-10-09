@@ -9,6 +9,7 @@
 // «داده‌ای برای نمایش وجود ندارد» نشون بده — نه صفر یا عدد ساختگی.
 
 import { tr } from "@/lib/i18n";
+import { planDisplayName } from "@/lib/subscriptionI18n";
 import { prisma } from "@/lib/prisma";
 import { countRowProgress } from "@/lib/roadmapPlan";
 import { latestDate } from "@/lib/tehranTime";
@@ -398,7 +399,7 @@ export async function getUsersList(params: UsersListParams) {
         deletedAt: true,
         avatarUrl: true,
         createdAt: true,
-        subscriptions: { where: { status: "ACTIVE" }, take: 1, orderBy: { createdAt: "desc" }, select: { status: true, currentPeriodEnd: true, plan: { select: { nameFa: true, priceMonthly: true } } } },
+        subscriptions: { where: { status: "ACTIVE" }, take: 1, orderBy: { createdAt: "desc" }, select: { status: true, currentPeriodEnd: true, plan: { select: { key: true, nameFa: true, priceMonthly: true } } } },
         loginEvents: { take: 1, orderBy: { createdAt: "desc" }, select: { createdAt: true } },
       },
     }),
@@ -427,7 +428,7 @@ export async function getUsersList(params: UsersListParams) {
       deletedAt: u.deletedAt,
       avatarUrl: u.avatarUrl,
       createdAt: u.createdAt,
-      plan: u.subscriptions[0]?.plan?.nameFa || null,
+      plan: u.subscriptions[0]?.plan ? planDisplayName(u.subscriptions[0].plan) : null,
       subscriptionStatus: u.subscriptions[0]?.status || null,
       subscriptionExpiresAt: u.subscriptions[0]?.currentPeriodEnd || null,
       lastActivityAt: latestDate(u.loginEvents[0]?.createdAt, seenBy.get(u.id)),
@@ -889,7 +890,7 @@ export async function getTransactions(params: TransactionsParams) {
       orderBy: { createdAt: "desc" },
       skip: (page - 1) * pageSize,
       take: pageSize,
-      include: { subscription: { include: { user: { select: { id: true, name: true, lastName: true, phone: true, email: true } }, plan: { select: { nameFa: true } } } } },
+      include: { subscription: { include: { user: { select: { id: true, name: true, lastName: true, phone: true, email: true } }, plan: { select: { key: true, nameFa: true } } } } },
     }),
     prisma.payment.count({ where }),
   ]);
@@ -906,7 +907,7 @@ export async function getTransactions(params: TransactionsParams) {
       refundedAt: p.refundedAt,
       createdAt: p.createdAt,
       user: p.subscription.user,
-      plan: p.subscription.plan.nameFa,
+      plan: planDisplayName(p.subscription.plan),
     })),
     total,
     page,

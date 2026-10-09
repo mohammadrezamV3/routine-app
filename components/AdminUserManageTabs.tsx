@@ -31,7 +31,7 @@ export type Detail = {
     deletedAt: string | null; createdAt: string; updatedAt: string; gender: string | null; birthDate: string | null;
     emailVerifiedAt: string | null; phoneVerifiedAt: string | null; twoFactorEnabled: boolean;
     chatBanUntil: string | null; chatDisabled: boolean; chatWarnAt: string | null; chatWarnNote: string | null; chatWarnSeenAt: string | null;
-    subscriptions: { id: string; status: string; interval: string; startDate: string; currentPeriodEnd: string; canceledAt: string | null; plan: { nameFa: string; currency: string; priceMonthly: number }; payments: { id: string; amount: number; currency: string; paidAt: string | null; refundedAt: string | null; provider: string }[] }[];
+    subscriptions: { id: string; status: string; interval: string; startDate: string; currentPeriodEnd: string; canceledAt: string | null; plan: { key: string; nameFa: string; currency: string; priceMonthly: number }; payments: { id: string; amount: number; currency: string; paidAt: string | null; refundedAt: string | null; provider: string }[] }[];
     moduleAccess: ModuleRow[];
     loginEvents: { id: string; provider: string; ip: string | null; userAgent?: string | null; createdAt: string }[];
   };
@@ -353,6 +353,6 @@ export function describeMeta(meta: any): string {
     return p.length ? p.map((k) => PERMISSION_META[k]?.label || k).join(tr("، ", ", ")) : tr("بدون دسترسی", "No access");
   }
   if (Array.isArray(meta.modules)) return meta.modules.map((m: any) => `${MODULE_LABELS_FA[m.module] || m.module}: ${m.active ? tr("فعال", "Active") : tr("غیرفعال", "Inactive")}`).join(tr("، ", ", "));
-  if (typeof meta.count === "number") return tr(`${meta.count} نشست`, `${meta.count} sessions`);
+  if (typeof meta.count === "number") return tr(`${meta.count} نشست`, `${meta.count} ${(meta.count) === 1 ? "session" : "sessions"}`);
   return "—";
 }

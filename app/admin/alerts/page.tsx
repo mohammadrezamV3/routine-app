@@ -18,7 +18,7 @@ export default function AdminAlertsPage() {
     <div className="ads-alerts">
       <p className="admin-section-hint" style={{ margin: 0 }}>
         {total > 0
-          ? tr(`${total} مورد منتظر اقدام توئه`, total === 1 ? "1 item needs your action" : `${total} items need your action`)
+          ? tr(`${total} مورد منتظر اقدام توئه`, total === 1 ? "1 item needs your action" : `${total} ${(total) === 1 ? "item" : "items"} need your action`)
           : tr("همه‌چیز مرتبه", "All clear")}
       </p>
       {items.map((i) => (

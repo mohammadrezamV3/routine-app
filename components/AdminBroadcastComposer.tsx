@@ -152,7 +152,7 @@ export function AdminBroadcastComposer({ onSent }: { onSent: (b: Omit<BroadcastR
         <div className="admin-modal-actions">
           <button type="submit" className="admin-btn primary" disabled={busy}>
             {busy ? tr("در حال ارسال…", "Sending…") : confirming && recipients != null
-              ? tr(`تایید ارسال به ${formatNumber(recipients)} نفر`, `Confirm sending to ${formatNumber(recipients)} people`)
+              ? tr(`تایید ارسال به ${formatNumber(recipients)} نفر`, `Confirm sending to ${formatNumber(recipients)} ${(recipients) === 1 ? "person" : "people"}`)
               : when === "later" ? tr("زمان‌بندی پیام", "Schedule message") : kind === "admins" ? tr("ارسال آزمایشی", "Test send") : tr("ارسال پیام", "Send message")}
           </button>
           {confirming && !busy && <button type="button" className="admin-btn" onClick={() => setConfirming(false)}>{tr("انصراف", "Cancel")}</button>}

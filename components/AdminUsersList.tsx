@@ -129,7 +129,7 @@ function Inner() {
     try {
       const r = await postBulk(ids, action, {});
       if (r.failed.length) toast(tr(`${formatNumber(r.done)} انجام شد، ${formatNumber(r.failed.length)} ناموفق: ${r.failed[0].error}`, `${formatNumber(r.done)} done, ${formatNumber(r.failed.length)} failed: ${r.failed[0].error}`), "err");
-      else toast(tr(`${bulkLabels()[action]} برای ${formatNumber(r.done)} کاربر انجام شد`, `${bulkLabels()[action]} applied to ${formatNumber(r.done)} users`));
+      else toast(tr(`${bulkLabels()[action]} برای ${formatNumber(r.done)} کاربر انجام شد`, `${bulkLabels()[action]} applied to ${formatNumber(r.done)} ${(r.done) === 1 ? "user" : "users"}`));
       load();
     } catch (e: any) { toast(e.message, "err"); } finally { setBusy(false); setConfirm(null); }
   }
@@ -208,7 +208,7 @@ function Inner() {
 
       {ids.length > 0 && (
         <div className="admin-bulk-bar au-bulk">
-          <strong>{tr(`${formatNumber(ids.length)} کاربر انتخاب شده`, `${formatNumber(ids.length)} users selected`)}</strong>
+          <strong>{tr(`${formatNumber(ids.length)} کاربر انتخاب شده`, `${formatNumber(ids.length)} ${(ids.length) === 1 ? "user" : "users"} selected`)}</strong>
           <span className="au-grow" />
           {!showDeleted && can("users.edit") && <button type="button" className="admin-btn sm" disabled={busy} onClick={() => setDialog("message")}>{tr("پیام", "Message")}</button>}
           {!showDeleted && can("users.access") && <button type="button" className="admin-btn sm" disabled={busy} onClick={() => setDialog("grant")}>{tr("اعطای ماژول", "Grant module")}</button>}
@@ -298,7 +298,7 @@ function Inner() {
       {dialog === "segment" && <SaveSegmentDialog filters={filters} onClose={() => setDialog(null)} onDone={loadMeta} />}
       {confirm && (
         <ConfirmModal
-          title={tr(`${bulkLabels()[confirm.action]} ${formatNumber(confirm.ids.length)} کاربر`, `${bulkLabels()[confirm.action]} ${formatNumber(confirm.ids.length)} users`)}
+          title={tr(`${bulkLabels()[confirm.action]} ${formatNumber(confirm.ids.length)} کاربر`, `${bulkLabels()[confirm.action]} ${formatNumber(confirm.ids.length)} ${(confirm.ids.length) === 1 ? "user" : "users"}`)}
           message={confirm.action === "delete" ? tr("حساب‌ها غیرفعال و از همه‌ی دستگاه‌ها خارج می‌شن. داده‌ها می‌مونن و از تب «حذف‌شده» قابل بازگردانی‌ان.", "Accounts are deactivated and signed out of all devices. Data is kept and can be restored from the «Deleted» tab.") : tr("کاربران انتخاب‌شده دیگه نمی‌تونن وارد بشن و از همه‌ی دستگاه‌ها خارج می‌شن.", "Selected users can no longer sign in and are signed out of all devices.")}
           confirmLabel={bulkLabels()[confirm.action]} onConfirm={() => runBulk(confirm.action, confirm.ids)} onClose={() => setConfirm(null)}
         />

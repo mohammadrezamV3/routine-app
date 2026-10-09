@@ -44,7 +44,7 @@ export function AdminDashboard() {
       <div className="adb-head">
         <div className="adb-head-text">
           <h1 className="adb-title">{tr("سلام", "Hello")}</h1>
-          <span className="adb-sub">{date}{d ? tr(` · ${d.queueTotal} مورد منتظر اقدام`, ` · ${d.queueTotal} items need action`) : ""}</span>
+          <span className="adb-sub">{date}{d ? tr(` · ${d.queueTotal} مورد منتظر اقدام`, ` · ${d.queueTotal} ${(d.queueTotal) === 1 ? "item" : "items"} need action`) : ""}</span>
         </div>
         <div className="adb-actions">
           {can("discounts") && <Link href="/admin/discount-codes" className="admin-btn">{tr("+ کد تخفیف", "+ Discount code")}</Link>}
