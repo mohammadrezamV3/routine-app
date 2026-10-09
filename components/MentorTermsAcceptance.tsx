@@ -5,6 +5,7 @@ import { TickButton } from "./TickButton";
 import Link from "next/link";
 import { useEffect, useState } from "react";
 import { MENTOR_TERMS_PATH, MENTOR_TERMS_VERSION, type MentorTermsRole } from "@/lib/mentorTerms";
+import { isEn, tr } from "@/lib/i18n";
 
 // چک‌باکس پذیرش «شرایط استفاده از بخش منتورها». سرور بدون پذیرش نسخه‌ی جاری
 // ۴۰۰ با code: "MENTOR_TERMS_REQUIRED" می‌دهد (lib/mentorTerms.ts)؛ این جزء فقط
@@ -19,10 +20,10 @@ import { MENTOR_TERMS_PATH, MENTOR_TERMS_VERSION, type MentorTermsRole } from "@
 // استفاده (درخواست شاگردی): وضعیت را با useMentorTermsStatus() بگیر؛ اگر
 // student.accepted نبود چک‌باکس را نشان بده و ارسال را تا تیک‌خوردن غیرفعال کن.
 
-const LABEL: Record<MentorTermsRole, [string, string]> = {
-  mentor: ["شرایط مربی‌گری", "را خوانده‌ام و می‌پذیرم"],
-  student: ["شرایط استفاده از بخش مربی‌ها", "را خوانده‌ام و می‌پذیرم"],
-};
+const label = (role: MentorTermsRole): [string, string] =>
+  role === "mentor"
+    ? [tr("شرایط مربی‌گری", "mentor terms"), tr("را خوانده‌ام و می‌پذیرم", "I have read and accept the")]
+    : [tr("شرایط استفاده از بخش مربی‌ها", "terms of use for the mentors section"), tr("را خوانده‌ام و می‌پذیرم", "I have read and accept the")];
 
 export function MentorTermsAcceptance({
   role,
@@ -37,16 +38,18 @@ export function MentorTermsAcceptance({
   error?: string | null;
   disabled?: boolean;
 }) {
-  const [link, rest] = LABEL[role];
+  const [link, rest] = label(role);
+  const linkEl = (
+    <Link href={MENTOR_TERMS_PATH} target="_blank" rel="noopener" className="mentor-terms-link" onClick={(e) => e.stopPropagation()}>
+      {link}
+    </Link>
+  );
   return (
     <div className="mentor-terms-accept">
       <label className={`mentor-check${disabled ? " is-disabled" : ""}`}>
         <TickButton shape="square" size={22} checked={checked} disabled={disabled} onToggle={() => onChange(!checked)} />
         <span className="mentor-check-label">
-          <Link href={MENTOR_TERMS_PATH} target="_blank" rel="noopener" className="mentor-terms-link" onClick={(e) => e.stopPropagation()}>
-            {link}
-          </Link>{" "}
-          {rest}
+          {isEn() ? <>{rest} {linkEl}</> : <>{linkEl}{" "}{rest}</>}
         </span>
       </label>
       {error && <div className="field-error-msg" style={{ display: "block" }}>{error}</div>}

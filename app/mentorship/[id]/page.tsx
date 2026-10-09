@@ -21,7 +21,8 @@ import { GradientRing } from "@/components/GradientRing";
 import type { ProgramDetailResponse, ProgramRow, ProgramsResponse } from "@/lib/mentorTypes";
 import { publicUserName } from "@/lib/mentorTypes";
 import { categoryLabel } from "@/components/MentorBadges";
-import { fmtDate, fmtDay, fmtRelative, NETWORK_ERROR, readApiError } from "@/lib/mentorFormat";
+import { fmtDate, fmtDay, fmtRelative, networkError, readApiError } from "@/lib/mentorFormat";
+import { tr } from "@/lib/i18n";
 import { faNum } from "@/lib/jalali";
 import { GoldenName } from "@/components/GoldenName";
 
@@ -54,38 +55,38 @@ export default function MentorshipPage() {
 
   const back = rel?.role === "mentor"
     ? { href: `/mentor/students/${rel.row.counterpart.id}`, label: publicUserName(rel.row.counterpart) }
-    : { href: "/mentorship", label: "مربی‌های من" };
+    : { href: "/mentorship", label: tr("مربی‌های من", "My mentors") };
   const name = rel ? publicUserName(rel.row.counterpart) : "";
   const chatOpen = !!rel && (rel.row.status === "ACTIVE" || rel.row.status === "ENDED");
 
   const head = rel ? (
     <div className="mv2-ms-head">
       <div className="mv2-ms-head-kebab">
-        <MentorKebabMenu actions={actions} label="گزینه‌های همکاری" />
+        <MentorKebabMenu actions={actions} label={tr("گزینه‌های همکاری", "Mentorship options")} />
       </div>
       <MentorUserAvatar name={name} avatarUrl={rel.row.counterpart.avatarUrl} size={72} />
       <h1><GoldenName golden={rel.row.counterpart.golden} staff={rel.row.counterpart.staff}>{name}</GoldenName></h1>
       <p className="mv2-ms-role">
         {[
-          rel.role === "student" ? "مربی تو" : "شاگرد تو",
-          rel.row.categories.map((c) => categoryLabel(c)).join("، "),
-          rel.row.startedAt ? `از ${fmtDate(rel.row.startedAt)}` : "",
+          rel.role === "student" ? tr("مربی تو", "Your mentor") : tr("شاگرد تو", "Your student"),
+          rel.row.categories.map((c) => categoryLabel(c)).join(tr("، ", ", ")),
+          rel.row.startedAt ? tr(`از ${fmtDate(rel.row.startedAt)}`, `Since ${fmtDate(rel.row.startedAt)}`) : "",
         ].filter(Boolean).join(" · ")}
       </p>
       <div className="mv2-ms-head-actions">
         {chatOpen && (
           <Link href={`/mentorship/${id}/chat`} className="trade-primary-btn mentor-btn">
-            <MessageCircle {...BTN} /> گفت‌وگو
-            {rel.row.unread > 0 && <span className="mv2-ms-badge" aria-label={`${faNum(rel.row.unread)} پیام تازه`}>{faNum(rel.row.unread)}</span>}
+            <MessageCircle {...BTN} /> {tr("گفت‌وگو", "Chat")}
+            {rel.row.unread > 0 && <span className="mv2-ms-badge" aria-label={tr(`${faNum(rel.row.unread)} پیام تازه`, `${faNum(rel.row.unread)} new ${rel.row.unread === 1 ? "message" : "messages"}`)}>{faNum(rel.row.unread)}</span>}
           </Link>
         )}
         {rel.role === "student" ? (
           <Link href={`/account/general/mentors?mentorship=${encodeURIComponent(id)}`} className="account-outline-btn mentor-btn">
-            <ShieldCheck {...BTN} /> چی می‌بینه؟
+            <ShieldCheck {...BTN} /> {tr("چی می‌بینه؟", "What can they see?")}
           </Link>
         ) : (
           <Link href={`/mentor/students/${rel.row.counterpart.id}`} className="account-outline-btn mentor-btn">
-            <User {...BTN} /> صفحه‌ی شاگرد
+            <User {...BTN} /> {tr("صفحه‌ی شاگرد", "Student page")}
           </Link>
         )}
       </div>
@@ -135,11 +136,11 @@ function Relationship({ rel, reload }: { rel: Relation; reload: () => void }) {
     setProgramsError(null);
     try {
       const res = await fetch(`/api/mentor-programs?role=${role}&mentorshipId=${encodeURIComponent(row.id)}`, { cache: "no-store" });
-      if (!res.ok) { setProgramsError(await readApiError(res, "برنامه‌ها دریافت نشد؛ دوباره تلاش کن")); return; }
+      if (!res.ok) { setProgramsError(await readApiError(res, tr("برنامه‌ها دریافت نشد؛ دوباره تلاش کن", "Couldn't load programs. Try again"))); return; }
       const d: ProgramsResponse = await res.json();
       setPrograms(d.programs || []);
     } catch {
-      setProgramsError(NETWORK_ERROR);
+      setProgramsError(networkError());
     }
   }, [row.id, role]);
   useEffect(() => { loadPrograms(); }, [loadPrograms]);
@@ -148,7 +149,7 @@ function Relationship({ rel, reload }: { rel: Relation; reload: () => void }) {
   useVisiblePolling(() => { loadPrograms(); }, 30_000);
 
   async function answer(action: "accept" | "reject") {
-    if (action === "accept" && needTerms && !termsChecked) { setTermsError("برای پذیرش، شرایط را بپذیر"); return; }
+    if (action === "accept" && needTerms && !termsChecked) { setTermsError(tr("برای پذیرش، شرایط را بپذیر", "Accept the terms to continue")); return; }
     setBusy(action);
     setActionError(null);
     try {
@@ -167,7 +168,7 @@ function Relationship({ rel, reload }: { rel: Relation; reload: () => void }) {
       reload();
       loadPrograms();
     } catch {
-      setActionError({ key: "rel", msg: NETWORK_ERROR });
+      setActionError({ key: "rel", msg: networkError() });
     } finally {
       setBusy(null);
     }
@@ -185,7 +186,7 @@ function Relationship({ rel, reload }: { rel: Relation; reload: () => void }) {
       if (!res.ok) { setActionError({ key: p.id, msg: await readApiError(res) }); return; }
       loadPrograms();
     } catch {
-      setActionError({ key: p.id, msg: NETWORK_ERROR });
+      setActionError({ key: p.id, msg: networkError() });
     } finally {
       setBusy(null);
     }
@@ -234,13 +235,13 @@ function Relationship({ rel, reload }: { rel: Relation; reload: () => void }) {
 
   const programsSection = (
     <MentorSection
-      title="برنامه‌ها"
+      title={tr("برنامه‌ها", "Programs")}
       icon={<ClipboardList {...SECTION} />}
       count={others.length ? faNum(others.length) : undefined}
       action={
         role === "mentor" && row.status === "ACTIVE" ? (
           <Link href={`/mentor/programs/new?mentorshipId=${encodeURIComponent(row.id)}`} className="mentor-text-btn">
-            <Plus {...BTN_SM} /> برنامه‌ی جدید
+            <Plus {...BTN_SM} /> {tr("برنامه‌ی جدید", "New program")}
           </Link>
         ) : undefined
       }
@@ -252,19 +253,19 @@ function Relationship({ rel, reload }: { rel: Relation; reload: () => void }) {
         <LoadingBlock />
       ) : others.length === 0 ? (
         <MentorEmpty>
-          {waiting.length ? "برنامه‌ی دیگه‌ای نیست" : role === "student" ? "هنوز برنامه‌ای از این مربی نرسیده" : "هنوز برنامه‌ای برای این شاگرد نساخته‌ای"}
+          {waiting.length ? tr("برنامه‌ی دیگه‌ای نیست", "No other programs") : role === "student" ? tr("هنوز برنامه‌ای از این مربی نرسیده", "No programs from this mentor yet") : tr("هنوز برنامه‌ای برای این شاگرد نساخته‌ای", "You haven't created a program for this student yet")}
         </MentorEmpty>
       ) : (
         <>
           {running.length > 0 && (
             <>
-              <h3 className="mv2-ms-sub">در حال اجرا</h3>
+              <h3 className="mv2-ms-sub">{tr("در حال اجرا", "In progress")}</h3>
               <MentorList>{running.map(programRow)}</MentorList>
             </>
           )}
           {rest.length > 0 && (
             <>
-              {running.length > 0 && <h3 className="mv2-ms-sub">بقیه</h3>}
+              {running.length > 0 && <h3 className="mv2-ms-sub">{tr("بقیه", "Others")}</h3>}
               <MentorList>{rest.map(programRow)}</MentorList>
             </>
           )}
@@ -276,10 +277,10 @@ function Relationship({ rel, reload }: { rel: Relation; reload: () => void }) {
   return (
     <>
       {iMustAnswer && (
-        <section className="mv2-ms-invite" aria-label={role === "student" ? "دعوت مربی" : "درخواست شاگرد"}>
+        <section className="mv2-ms-invite" aria-label={role === "student" ? tr("دعوت مربی", "Mentor invitation") : tr("درخواست شاگرد", "Student request")}>
           <p className="mv2-ms-invite-text">
-            {role === "student" ? `${name} دعوتت کرده مربی‌ت باشه` : `${name} می‌خواد شاگردت باشه`}
-            {row.categories.length > 0 && <span className="mv2-ms-meta">{row.categories.map((c) => categoryLabel(c)).join("، ")}</span>}
+            {role === "student" ? tr(`${name} دعوتت کرده مربی‌ت باشه`, `${name} invited you to be your mentor`) : tr(`${name} می‌خواد شاگردت باشه`, `${name} wants to be your student`)}
+            {row.categories.length > 0 && <span className="mv2-ms-meta">{row.categories.map((c) => categoryLabel(c)).join(tr("، ", ", "))}</span>}
           </p>
           {row.message && <p className="mentor-quote">{row.message}</p>}
           {needTerms && (
@@ -288,10 +289,10 @@ function Relationship({ rel, reload }: { rel: Relation; reload: () => void }) {
           {actionError?.key === "rel" && <div className="form-inline-error" role="alert">{actionError.msg}</div>}
           <div className="mv2-ms-invite-actions">
             <button type="button" className="trade-primary-btn mentor-btn" onClick={() => answer("accept")} disabled={!!busy || (needTerms && !termsChecked)}>
-              {busy === "accept" ? <Spinner size={14} /> : "قبول"}
+              {busy === "accept" ? <Spinner size={14} /> : tr("قبول", "Accept")}
             </button>
             <button type="button" className="account-outline-btn muted mentor-btn" onClick={() => answer("reject")} disabled={!!busy}>
-              {busy === "reject" ? <Spinner size={14} /> : "نه، ممنون"}
+              {busy === "reject" ? <Spinner size={14} /> : tr("نه، ممنون", "No, thanks")}
             </button>
           </div>
         </section>
@@ -302,9 +303,9 @@ function Relationship({ rel, reload }: { rel: Relation; reload: () => void }) {
       {waiting.map((p) => {
         const titles = itemsById[p.id] ?? [];
         return (
-          <section key={p.id} className="mv2-ms-invite" aria-label="برنامه‌ی تازه">
+          <section key={p.id} className="mv2-ms-invite" aria-label={tr("برنامه‌ی تازه", "New program")}>
             <p className="mv2-ms-invite-text">
-              <b>{name}</b> یه برنامه‌ی تازه برات فرستاده
+              <b>{name}</b> {tr("یه برنامه‌ی تازه برات فرستاده", "sent you a new program")}
               <Link href={`/mentor-programs/${p.id}`} className="mv2-ms-name">{p.title}</Link>
               <span className="mv2-ms-meta"><ProgramFacts p={p} /></span>
             </p>
@@ -312,19 +313,19 @@ function Relationship({ rel, reload }: { rel: Relation; reload: () => void }) {
             {titles.length > 0 && (
               <ul className="mv2-ms-items">
                 {titles.slice(0, 4).map((t, i) => <li key={i}>{t}</li>)}
-                {titles.length > 4 && <li className="is-more">و {faNum(titles.length - 4)} مورد دیگه</li>}
+                {titles.length > 4 && <li className="is-more">{tr(`و ${faNum(titles.length - 4)} مورد دیگه`, `and ${faNum(titles.length - 4)} more`)}</li>}
               </ul>
             )}
             {actionError?.key === p.id && <div className="form-inline-error" role="alert">{actionError.msg}</div>}
             <div className="mv2-ms-invite-actions is-three">
               <button type="button" className="trade-primary-btn mentor-btn" onClick={() => acceptProgram(p)} disabled={!!busy}>
-                {busy === `accept:${p.id}` ? <Spinner size={14} /> : "قبول"}
+                {busy === `accept:${p.id}` ? <Spinner size={14} /> : tr("قبول", "Accept")}
               </button>
               <button type="button" className="account-outline-btn mentor-btn" onClick={() => setRespond({ id: p.id, action: "request_changes" })} disabled={!!busy}>
-                تغییر بخواه
+                {tr("تغییر بخواه", "Ask for changes")}
               </button>
               <button type="button" className="account-outline-btn muted mentor-btn" onClick={() => setRespond({ id: p.id, action: "reject" })} disabled={!!busy}>
-                نه
+                {tr("نه", "No")}
               </button>
             </div>
           </section>
@@ -348,10 +349,10 @@ function Relationship({ rel, reload }: { rel: Relation; reload: () => void }) {
 function ProgramFacts({ p }: { p: ProgramRow }) {
   return (
     <>
-      <span>{p.type === "WORKOUT" ? "تمرینی" : "روتین"}</span>
-      {p.version > 1 && <span> · ویرایش‌شده</span>}
-      {p.startDate && <span> · {p.endDate ? `${fmtDay(p.startDate)} تا ${fmtDay(p.endDate)}` : `از ${fmtDay(p.startDate)}`}</span>}
-      {(p.status === "ACTIVE" || p.status === "COMPLETED") && !p.progress.hidden && <span> · {faNum(Math.round(p.progress.rate))}٪ انجام شده</span>}
+      <span>{p.type === "WORKOUT" ? tr("تمرینی", "Workout") : tr("روتین", "Routine")}</span>
+      {p.version > 1 && <span> · {tr("ویرایش‌شده", "Edited")}</span>}
+      {p.startDate && <span> · {p.endDate ? tr(`${fmtDay(p.startDate)} تا ${fmtDay(p.endDate)}`, `${fmtDay(p.startDate)} to ${fmtDay(p.endDate)}`) : tr(`از ${fmtDay(p.startDate)}`, `From ${fmtDay(p.startDate)}`)}</span>}
+      {(p.status === "ACTIVE" || p.status === "COMPLETED") && !p.progress.hidden && <span> · {tr(`${faNum(Math.round(p.progress.rate))}٪ انجام شده`, `${faNum(Math.round(p.progress.rate))}% done`)}</span>}
       {p.status === "PENDING" && p.sentAt && <span> · {fmtRelative(p.sentAt)}</span>}
     </>
   );
@@ -361,7 +362,7 @@ function ProgramFacts({ p }: { p: ProgramRow }) {
 function MentorNote({ note, role }: { note: string; role: Role }) {
   return (
     <div className="mentor-note-box mentor-program-note">
-      <b>{role === "student" ? "یادداشت مربی" : "یادداشت تو برای شاگرد"}</b>
+      <b>{role === "student" ? tr("یادداشت مربی", "Mentor's note") : tr("یادداشت تو برای شاگرد", "Your note to the student")}</b>
       <div>{note.trim()}</div>
     </div>
   );

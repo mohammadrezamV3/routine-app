@@ -1,6 +1,7 @@
 "use client";
 
 import "./mentor.css";
+import "./mentor-student-ltr.css";
 import { useCallback, useEffect, useId, useLayoutEffect, useRef, useState } from "react";
 import { createPortal } from "react-dom";
 import { AnimatePresence, motion } from "framer-motion";
@@ -8,6 +9,8 @@ import { Medal, Star } from "lucide-react";
 import { MENTOR_CATEGORY_META, isMentorCategory } from "@/lib/mentorCategories";
 import { faNum } from "@/lib/jalali";
 import { M_DUR, mT } from "./MentorMotion";
+import { isEn, tr } from "@/lib/i18n";
+import { brandName } from "@/lib/brand";
 
 /** برچسب فارسی یک دسته (کلید ناشناخته همان‌طور نمایش داده می‌شود) */
 export function categoryLabel(key: string): string {
@@ -29,6 +32,10 @@ function withEzafe(s: string): string {
  */
 export function certificateSentence(categories: string[]): string {
   const labels = categories.map(certLabel);
+  if (isEn()) {
+    const joinedEn = labels.length <= 1 ? labels.join("") : `${labels.slice(0, -1).join(", ")} and ${labels[labels.length - 1]}`;
+    return `This mentor's ${joinedEn} ${labels.length > 1 ? "have" : "has"} been reviewed and verified by the ${brandName()} team`;
+  }
   const joined = labels.length <= 1 ? labels.join("") : `${labels.slice(0, -1).join("، ")} و ${labels[labels.length - 1]}`;
   return `${withEzafe(joined)} این مربی توسط ادمین‌های آریون بررسی و تایید شده است`;
 }
@@ -104,7 +111,7 @@ export function CertificateMark({
 
   if (verified.length === 0) return null;
   const sentence = certificateSentence(verified);
-  const label = verified.length === 1 ? `${certLabel(verified[0])} تاییدشده` : "مدارک تاییدشده";
+  const label = verified.length === 1 ? tr(`${certLabel(verified[0])} تاییدشده`, `Verified ${certLabel(verified[0])}`) : tr("مدارک تاییدشده", "Verified certificates");
 
   const hoverable = (e: React.PointerEvent) => e.pointerType === "mouse";
 
@@ -180,15 +187,15 @@ export function RatingInline({ value, count, withWord = false }: { value: number
   if (none) {
     return (
       <span className="mentor-rating-inline is-none">
-        <Star size={13} strokeWidth={1.75} aria-hidden /> بدون امتیاز
+        <Star size={13} strokeWidth={1.75} aria-hidden /> {tr("بدون امتیاز", "No ratings")}
       </span>
     );
   }
   return (
-    <span className="mentor-rating-inline" aria-label={`امتیاز ${faNum(v.toFixed(1))} از 5، ${faNum(count)} نظر`}>
+    <span className="mentor-rating-inline" aria-label={tr(`امتیاز ${faNum(v.toFixed(1))} از 5، ${faNum(count)} نظر`, `Rated ${faNum(v.toFixed(1))} out of 5, ${faNum(count)} ${count === 1 ? "review" : "reviews"}`)}>
       <Star size={13} strokeWidth={1.75} fill="currentColor" aria-hidden />
       <b>{faNum(v.toFixed(1))}</b>
-      <span>({faNum(count)}{withWord ? " نظر" : ""})</span>
+      <span>({faNum(count)}{withWord ? ` ${tr("نظر", count === 1 ? "review" : "reviews")}` : ""})</span>
     </span>
   );
 }
@@ -199,16 +206,16 @@ export function RatingStars({ value, count }: { value: number; count?: number })
   const filled = Math.round(v);
   const none = count === 0 || v === 0;
   return (
-    <span className="mentor-stars" aria-label={none ? "بدون امتیاز" : `امتیاز ${faNum(v.toFixed(1))} از 5`}>
+    <span className="mentor-stars" aria-label={none ? tr("بدون امتیاز", "No ratings") : tr(`امتیاز ${faNum(v.toFixed(1))} از 5`, `Rated ${faNum(v.toFixed(1))} out of 5`)}>
       {[1, 2, 3, 4, 5].map((i) => (
         <Star key={i} size={13} strokeWidth={1.75} aria-hidden className={i <= filled && !none ? undefined : "is-empty"} fill={i <= filled && !none ? "currentColor" : "none"} />
       ))}
       {none ? (
-        <span className="mentor-stars-count">بدون امتیاز</span>
+        <span className="mentor-stars-count">{tr("بدون امتیاز", "No ratings")}</span>
       ) : (
         <>
           <span className="mentor-stars-value">{faNum(v.toFixed(1))}</span>
-          {count !== undefined && <span className="mentor-stars-count">({faNum(count)} نظر)</span>}
+          {count !== undefined && <span className="mentor-stars-count">({faNum(count)} {tr("نظر", count === 1 ? "review" : "reviews")})</span>}
         </>
       )}
     </span>

@@ -9,6 +9,7 @@ import type { Relation } from "./useMentorshipRelation";
 import { useAsyncAction } from "@/lib/useAsyncAction";
 import type { MentorshipAction } from "@/lib/mentorTypes";
 import { publicUserName } from "@/lib/mentorTypes";
+import { tr } from "@/lib/i18n";
 
 const MENU_ICON = { size: 15, strokeWidth: 1.75, "aria-hidden": true } as const;
 
@@ -41,11 +42,11 @@ export function useMentorshipActions({
 
   const open = (c: Confirm) => { clearError(); setConfirm(c); };
   const actions: MentorMenuAction[] = [];
-  if (chatOpen && onReportConversation) actions.push({ label: "گزارش", icon: <Flag {...MENU_ICON} />, onClick: onReportConversation });
-  if (row.status === "ACTIVE") actions.push({ label: "پایان همکاری", icon: <LogOut {...MENU_ICON} />, onClick: () => open("end") });
-  if (iInitiated) actions.push({ label: "لغو درخواست", icon: <X {...MENU_ICON} />, onClick: () => open("cancel") });
+  if (chatOpen && onReportConversation) actions.push({ label: tr("گزارش", "Report"), icon: <Flag {...MENU_ICON} />, onClick: onReportConversation });
+  if (row.status === "ACTIVE") actions.push({ label: tr("پایان همکاری", "End mentorship"), icon: <LogOut {...MENU_ICON} />, onClick: () => open("end") });
+  if (iInitiated) actions.push({ label: tr("لغو درخواست", "Cancel request"), icon: <X {...MENU_ICON} />, onClick: () => open("cancel") });
   if (row.status === "ACTIVE" || isPending || row.status === "ENDED") {
-    actions.push({ label: "مسدود کردن", icon: <Ban {...MENU_ICON} />, onClick: () => open("block"), danger: true });
+    actions.push({ label: tr("مسدود کردن", "Block"), icon: <Ban {...MENU_ICON} />, onClick: () => open("block"), danger: true });
   }
 
   async function act(action: MentorshipAction) {
@@ -67,13 +68,13 @@ export function useMentorshipActions({
 
   const dialogs = confirm ? (
     <MentorConfirmDialog
-      message={confirm === "end" ? `همکاری با ${name} تموم بشه؟` : confirm === "cancel" ? `درخواست به ${name} لغو بشه؟` : `${name} مسدود بشه؟`}
+      message={confirm === "end" ? tr(`همکاری با ${name} تموم بشه؟`, `End your mentorship with ${name}?`) : confirm === "cancel" ? tr(`درخواست به ${name} لغو بشه؟`, `Cancel your request to ${name}?`) : tr(`${name} مسدود بشه؟`, `Block ${name}?`)}
       hint={
-        confirm === "end" ? "برنامه‌های در جریان لغو می‌شن و فقط می‌تونی پیام‌های قبلی رو ببینی."
-          : confirm === "cancel" ? "بعدا می‌تونی دوباره درخواست بدی."
-          : "همکاری قطع و برنامه‌های در جریان لغو می‌شن؛ دیگه درخواست یا پیامی از او نمی‌رسه."
+        confirm === "end" ? tr("برنامه‌های در جریان لغو می‌شن و فقط می‌تونی پیام‌های قبلی رو ببینی.", "Programs in progress will be cancelled and you will only be able to see earlier messages.")
+          : confirm === "cancel" ? tr("بعدا می‌تونی دوباره درخواست بدی.", "You can send a request again later.")
+          : tr("همکاری قطع و برنامه‌های در جریان لغو می‌شن؛ دیگه درخواست یا پیامی از او نمی‌رسه.", "The mentorship will end, programs in progress will be cancelled, and you won't get requests or messages from them.")
       }
-      confirmLabel={confirm === "end" ? "پایان همکاری" : confirm === "cancel" ? "لغو درخواست" : "مسدود کردن"}
+      confirmLabel={confirm === "end" ? tr("پایان همکاری", "End mentorship") : confirm === "cancel" ? tr("لغو درخواست", "Cancel request") : tr("مسدود کردن", "Block")}
       busy={pendingKey === confirm}
       error={error}
       onConfirm={() => act(confirm)}

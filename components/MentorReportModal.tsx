@@ -4,7 +4,8 @@ import "./mentor.css";
 import { TickButton } from "./TickButton";
 import { useEffect, useMemo, useState } from "react";
 import type { ReportTargetType } from "@/lib/mentorTypes";
-import { NETWORK_ERROR, fmtDateTime, readApiError } from "@/lib/mentorFormat";
+import { networkError, fmtDateTime, readApiError } from "@/lib/mentorFormat";
+import { tr } from "@/lib/i18n";
 import { faNum } from "@/lib/jalali";
 import { Spinner } from "./Spinner";
 import { MentorField } from "./MentorUI";
@@ -20,12 +21,27 @@ const REASONS: Record<ReportTargetType | "CONVERSATION", string[]> = {
   PROGRAM: ["برنامه‌ی خطرناک یا آسیب‌زا", "محتوای نامناسب", "اسپم یا تبلیغ", OTHER],
 };
 
-const TITLES: Record<ReportTargetType, string> = {
-  USER: "گزارش مربی",
-  REVIEW: "گزارش نظر",
-  MESSAGE: "گزارش پیام",
-  PROGRAM: "گزارش برنامه",
+// متن فارسی دلیل‌ها همون چیزیه که ذخیره و برای ادمین فرستاده می‌شه (value)؛ فقط برچسب نمایشی ترجمه می‌شه
+const REASON_EN: Record<string, string> = {
+  "سایر": "Other",
+  "اطلاعات یا مدرک جعلی": "Fake information or certificate",
+  "رفتار نامناسب یا توهین‌آمیز": "Inappropriate or offensive behavior",
+  "درخواست پرداخت یا ارتباط خارج از آریون": "Asking for payment or contact outside Arion",
+  "اسپم یا تبلیغ": "Spam or advertising",
+  "محتوای توهین‌آمیز": "Offensive content",
+  "نظر جعلی یا غیرواقعی": "Fake or untrue review",
+  "افشای اطلاعات شخصی": "Sharing personal information",
+  "توهین یا آزار": "Insults or harassment",
+  "محتوای نامناسب": "Inappropriate content",
+  "برنامه‌ی خطرناک یا آسیب‌زا": "Dangerous or harmful program",
 };
+const reasonLabel = (r: string) => tr(r, REASON_EN[r] ?? r);
+
+const titleOf = (t: ReportTargetType): string =>
+  t === "USER" ? tr("گزارش مربی", "Report mentor")
+  : t === "REVIEW" ? tr("گزارش نظر", "Report review")
+  : t === "MESSAGE" ? tr("گزارش پیام", "Report message")
+  : tr("گزارش برنامه", "Report program");
 
 /** دلیل + توضیح — مشترک گزارش تکی و گزارش گفت‌وگو */
 function ReasonFields({
@@ -37,7 +53,7 @@ function ReasonFields({
 }) {
   return (
     <>
-      <MentorField label="دلیل" htmlFor={`mentor-report-reason-${kind}`} error={reasonError}>
+      <MentorField label={tr("دلیل", "Reason")} htmlFor={`mentor-report-reason-${kind}`} error={reasonError}>
         <select
           id={`mentor-report-reason-${kind}`}
           className="wsearch-newform-name trade-glass-field"
@@ -45,11 +61,11 @@ function ReasonFields({
           onChange={(e) => onReason(e.target.value)}
           aria-invalid={!!reasonError}
         >
-          <option value="">یک دلیل انتخاب کن</option>
-          {REASONS[kind].map((r) => <option key={r} value={r}>{r}</option>)}
+          <option value="">{tr("یک دلیل انتخاب کن", "Choose a reason")}</option>
+          {REASONS[kind].map((r) => <option key={r} value={r}>{reasonLabel(r)}</option>)}
         </select>
       </MentorField>
-      <MentorField label="توضیح" htmlFor={`mentor-report-details-${kind}`} optional={reason !== OTHER} error={detailsError}>
+      <MentorField label={tr("توضیح", "Details")} htmlFor={`mentor-report-details-${kind}`} optional={reason !== OTHER} error={detailsError}>
         <textarea
           id={`mentor-report-details-${kind}`}
           className="wsearch-newform-name trade-glass-field"
@@ -57,7 +73,7 @@ function ReasonFields({
           maxLength={1000}
           value={details}
           onChange={(e) => onDetails(e.target.value)}
-          placeholder="مثلا «شماره‌ی تماس شخصی خواست»"
+          placeholder={tr("مثلا «شماره‌ی تماس شخصی خواست»", "For example: \"Asked for my personal phone number\"")}
           aria-invalid={!!detailsError}
         />
       </MentorField>
@@ -69,9 +85,9 @@ function DoneBody({ onClose, text }: { onClose: () => void; text: string }) {
   return (
     <>
       <p className="mentor-dialog-msg" role="status">{text}</p>
-      <p className="mentor-dialog-hint">ادمین‌های آریون بررسیش می‌کنن</p>
+      <p className="mentor-dialog-hint">{tr("ادمین‌های آریون بررسیش می‌کنن", "The Arion team will review it")}</p>
       <div className="trade-modal-actions">
-        <button type="button" className="account-outline-btn mentor-btn" onClick={onClose}>بستن</button>
+        <button type="button" className="account-outline-btn mentor-btn" onClick={onClose}>{tr("بستن", "Close")}</button>
       </div>
     </>
   );
@@ -115,8 +131,8 @@ export function MentorReportModal({
   }, [open, onClose]);
 
   async function submit() {
-    if (!reason) { setReasonError("یک دلیل انتخاب کن"); return; }
-    if (reason === OTHER && !details.trim()) { setDetailsError("برای «سایر» یه توضیح بنویس"); return; }
+    if (!reason) { setReasonError(tr("یک دلیل انتخاب کن", "Choose a reason")); return; }
+    if (reason === OTHER && !details.trim()) { setDetailsError(tr("برای «سایر» یه توضیح بنویس", "Add a few details for \"Other\"")); return; }
     setBusy(true);
     setError(null);
     try {
@@ -125,25 +141,25 @@ export function MentorReportModal({
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ targetType, targetId, reason, details: details.trim() || undefined, ...(franking ? { franking } : {}) }),
       });
-      if (res.status === 409) { setError("این مورد رو قبلا گزارش دادی و ادمین‌ها دارن بررسیش می‌کنن"); return; }
-      if (!res.ok) { setError(await readApiError(res, "گزارش ثبت نشد؛ دوباره امتحان کن")); return; }
+      if (res.status === 409) { setError(tr("این مورد رو قبلا گزارش دادی و ادمین‌ها دارن بررسیش می‌کنن", "You already reported this and the team is reviewing it")); return; }
+      if (!res.ok) { setError(await readApiError(res, tr("گزارش ثبت نشد؛ دوباره امتحان کن", "Couldn't send the report. Try again"))); return; }
       setDone(true);
     } catch {
-      setError(NETWORK_ERROR);
+      setError(networkError());
     } finally {
       setBusy(false);
     }
   }
 
   return (
-    <MentorSheet open={open} onClose={close} title={TITLES[targetType]} size="sm" dismissible={!busy}>
+    <MentorSheet open={open} onClose={close} title={titleOf(targetType)} size="sm" dismissible={!busy}>
       {done ? (
-        <DoneBody onClose={close} text="گزارش ثبت شد" />
+        <DoneBody onClose={close} text={tr("گزارش ثبت شد", "Report sent")} />
       ) : (
         <>
           <div className="mentor-form">
             {targetType === "MESSAGE" && (
-              <p className="mentor-muted">با ثبت گزارش، فقط متن همین یک پیام برای ادمین‌های آریون دیده می‌شه. بقیه‌ی پیام‌های گفت‌وگو خصوصی می‌مونن.</p>
+              <p className="mentor-muted">{tr("با ثبت گزارش، فقط متن همین یک پیام برای ادمین‌های آریون دیده می‌شه. بقیه‌ی پیام‌های گفت‌وگو خصوصی می‌مونن.", "When you send the report, only the text of this one message is shown to the Arion team. The rest of the chat stays private.")}</p>
             )}
             <ReasonFields
               kind={targetType}
@@ -157,9 +173,9 @@ export function MentorReportModal({
           </div>
           {error && <div className="form-inline-error" role="alert">{error}</div>}
           <div className="trade-modal-actions">
-            <button type="button" className="account-outline-btn mentor-btn" onClick={close} disabled={busy}>انصراف</button>
+            <button type="button" className="account-outline-btn mentor-btn" onClick={close} disabled={busy}>{tr("انصراف", "Cancel")}</button>
             <button type="button" className="trade-danger-btn mentor-btn" onClick={submit} disabled={busy}>
-              {busy ? <Spinner size={14} /> : "ثبت گزارش"}
+              {busy ? <Spinner size={14} /> : tr("ثبت گزارش", "Send report")}
             </button>
           </div>
         </>
@@ -225,10 +241,10 @@ export function MentorConversationReportSheet({
   }
 
   async function submit() {
-    if (!reason) { setReasonError("یک دلیل انتخاب کن"); return; }
-    if (reason === OTHER && !details.trim()) { setDetailsError("برای «سایر» یه توضیح بنویس"); return; }
+    if (!reason) { setReasonError(tr("یک دلیل انتخاب کن", "Choose a reason")); return; }
+    if (reason === OTHER && !details.trim()) { setDetailsError(tr("برای «سایر» یه توضیح بنویس", "Add a few details for \"Other\"")); return; }
     const chosen = list.filter((c) => picked.has(c.id));
-    if (!chosen.some((c) => !c.mine)) { setPickError(`حداقل یک پیام از ${peerName} انتخاب کن`); return; }
+    if (!chosen.some((c) => !c.mine)) { setPickError(tr(`حداقل یک پیام از ${peerName} انتخاب کن`, `Select at least one message from ${peerName}`)); return; }
     setBusy(true);
     setError(null);
     try {
@@ -241,11 +257,11 @@ export function MentorConversationReportSheet({
           messages: chosen.map((c) => (c.frankingKey ? { id: c.id, text: c.text, frankingKey: c.frankingKey } : { id: c.id })),
         }),
       });
-      if (res.status === 409) { setError("این گفت‌وگو رو قبلا گزارش دادی و ادمین‌ها دارن بررسیش می‌کنن"); return; }
-      if (!res.ok) { setError(await readApiError(res, "گزارش ثبت نشد؛ دوباره امتحان کن")); return; }
+      if (res.status === 409) { setError(tr("این گفت‌وگو رو قبلا گزارش دادی و ادمین‌ها دارن بررسیش می‌کنن", "You already reported this chat and the team is reviewing it")); return; }
+      if (!res.ok) { setError(await readApiError(res, tr("گزارش ثبت نشد؛ دوباره امتحان کن", "Couldn't send the report. Try again"))); return; }
       setDone(true);
     } catch {
-      setError(NETWORK_ERROR);
+      setError(networkError());
     } finally {
       setBusy(false);
     }
@@ -254,14 +270,14 @@ export function MentorConversationReportSheet({
   const close = () => { if (!busy) onClose(); };
 
   return (
-    <MentorSheet open={open} onClose={close} title="گزارش گفت‌وگو" size="md" dismissible={!busy}>
+    <MentorSheet open={open} onClose={close} title={tr("گزارش گفت‌وگو", "Report chat")} size="md" dismissible={!busy}>
       {done ? (
-        <DoneBody onClose={close} text={`گزارش با ${faNum(picked.size)} پیام پیوست ثبت شد`} />
+        <DoneBody onClose={close} text={tr(`گزارش با ${faNum(picked.size)} پیام پیوست ثبت شد`, `Report sent with ${faNum(picked.size)} ${picked.size === 1 ? "message" : "messages"} attached`)} />
       ) : list.length === 0 ? (
         <>
-          <p className="mentor-dialog-msg">پیامی برای پیوست کردن نیست</p>
+          <p className="mentor-dialog-msg">{tr("پیامی برای پیوست کردن نیست", "There are no messages to attach")}</p>
           <div className="trade-modal-actions">
-            <button type="button" className="account-outline-btn mentor-btn" onClick={close}>بستن</button>
+            <button type="button" className="account-outline-btn mentor-btn" onClick={close}>{tr("بستن", "Close")}</button>
           </div>
         </>
       ) : (
@@ -278,23 +294,23 @@ export function MentorConversationReportSheet({
             />
             <div className="mentor-field">
               <div className="mc-pick-head">
-                <span className="mentor-field-label">پیام‌های پیوست</span>
-                <span className="mentor-muted">{faNum(picked.size)} از {faNum(list.length)}</span>
+                <span className="mentor-field-label">{tr("پیام‌های پیوست", "Attached messages")}</span>
+                <span className="mentor-muted">{faNum(picked.size)} {tr("از", "of")} {faNum(list.length)}</span>
                 <button
                   type="button"
                   className="mentor-text-btn"
                   onClick={() => setPicked(picked.size === list.length ? new Set() : new Set(list.map((c) => c.id)))}
                 >
-                  {picked.size === list.length ? "برداشتن همه" : "انتخاب همه"}
+                  {picked.size === list.length ? tr("برداشتن همه", "Deselect all") : tr("انتخاب همه", "Select all")}
                 </button>
               </div>
-              <p className="mentor-field-hint">فقط متن پیام‌هایی که انتخاب کردی برای ادمین‌های آریون دیده می‌شه. بقیه خصوصی می‌مونن.</p>
-              <div className="mc-pick-list thin-scroll" role="group" aria-label="پیام‌های پیوست">
+              <p className="mentor-field-hint">{tr("فقط متن پیام‌هایی که انتخاب کردی برای ادمین‌های آریون دیده می‌شه. بقیه خصوصی می‌مونن.", "Only the messages you select are shown to the Arion team. The rest stay private.")}</p>
+              <div className="mc-pick-list thin-scroll" role="group" aria-label={tr("پیام‌های پیوست", "Attached messages")}>
                 {list.map((c) => (
                   <label key={c.id} className={`mentor-check mc-pick${c.mine ? " is-mine" : ""}`}>
                     <TickButton shape="square" size={22} checked={picked.has(c.id)} onToggle={() => toggle(c.id)} />
                     <span className="mentor-check-label">
-                      <span className="mc-pick-meta">{c.mine ? "تو" : peerName}<span>{fmtDateTime(c.createdAt)}</span></span>
+                      <span className="mc-pick-meta">{c.mine ? tr("تو", "You") : peerName}<span>{fmtDateTime(c.createdAt)}</span></span>
                       <span className="mc-pick-text" dir="auto">{c.text}</span>
                     </span>
                   </label>
@@ -305,9 +321,9 @@ export function MentorConversationReportSheet({
           </div>
           {error && <div className="form-inline-error" role="alert">{error}</div>}
           <div className="trade-modal-actions">
-            <button type="button" className="account-outline-btn mentor-btn" onClick={close} disabled={busy}>انصراف</button>
+            <button type="button" className="account-outline-btn mentor-btn" onClick={close} disabled={busy}>{tr("انصراف", "Cancel")}</button>
             <button type="button" className="trade-danger-btn mentor-btn" onClick={submit} disabled={busy || picked.size === 0}>
-              {busy ? <Spinner size={14} /> : "ثبت گزارش"}
+              {busy ? <Spinner size={14} /> : tr("ثبت گزارش", "Send report")}
             </button>
           </div>
         </>

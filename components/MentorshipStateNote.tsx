@@ -4,6 +4,7 @@ import { CalendarDays, CirclePause, LogOut } from "lucide-react";
 import { MI, MI_STROKE, MentorChip } from "./MentorUI";
 import { fmtDate } from "@/lib/mentorFormat";
 import type { MentorshipRow } from "@/lib/mentorTypes";
+import { tr } from "@/lib/i18n";
 
 const ic = (Icon: typeof LogOut, size: number) => <Icon size={size} strokeWidth={MI_STROKE} aria-hidden />;
 
@@ -18,10 +19,10 @@ export function MentorshipStateNote({ row, role }: { row: MentorshipRow; role: "
   if (row.status === "ACTIVE" && row.pausedAt) {
     lines.push(
       <p key="paused" className="mentor-state-note">
-        <MentorChip tone="neutral" icon={ic(CirclePause, MI.chip)}>همکاری فعلا نگه داشته شده</MentorChip>
+        <MentorChip tone="neutral" icon={ic(CirclePause, MI.chip)}>{tr("همکاری فعلا نگه داشته شده", "Mentorship on hold")}</MentorChip>
         <span>
-          {role === "student" ? "مربی همکاری رو فعلا نگه داشته" : "همکاری رو فعلا نگه داشته‌ای"}
-          {row.pauseReason ? `؛ ${row.pauseReason}` : ""}
+          {role === "student" ? tr("مربی همکاری رو فعلا نگه داشته", "Your mentor has put the mentorship on hold") : tr("همکاری رو فعلا نگه داشته‌ای", "You have put the mentorship on hold")}
+          {row.pauseReason ? `${tr("؛", ";")} ${row.pauseReason}` : ""}
         </span>
       </p>,
     );
@@ -29,7 +30,7 @@ export function MentorshipStateNote({ row, role }: { row: MentorshipRow; role: "
   if (role === "student" && row.mentorAway && (row.status === "ACTIVE" || row.status === "PENDING")) {
     lines.push(
       <p key="away" className="mentor-state-note">
-        <MentorChip tone="info" icon={ic(CalendarDays, MI.chip)}>تا {fmtDate(row.mentorAway.until)} در دسترس نیست</MentorChip>
+        <MentorChip tone="info" icon={ic(CalendarDays, MI.chip)}>{tr(`تا ${fmtDate(row.mentorAway.until)} در دسترس نیست`, `Unavailable until ${fmtDate(row.mentorAway.until)}`)}</MentorChip>
         {row.mentorAway.message && <span>{row.mentorAway.message}</span>}
       </p>,
     );
@@ -38,7 +39,7 @@ export function MentorshipStateNote({ row, role }: { row: MentorshipRow; role: "
     const byMe = (row.endedBy === "MENTOR" && role === "mentor") || (row.endedBy === "STUDENT" && role === "student");
     lines.push(
       <p key="ended" className="mentor-state-note">
-        <MentorChip tone="neutral" icon={ic(LogOut, MI.chip)}>{byMe ? "تو همکاری رو تموم کردی" : role === "student" ? "مربی همکاری رو تموم کرد" : "شاگرد همکاری رو تموم کرد"}</MentorChip>
+        <MentorChip tone="neutral" icon={ic(LogOut, MI.chip)}>{byMe ? tr("تو همکاری رو تموم کردی", "You ended the mentorship") : role === "student" ? tr("مربی همکاری رو تموم کرد", "Your mentor ended the mentorship") : tr("شاگرد همکاری رو تموم کرد", "Your student ended the mentorship")}</MentorChip>
         <span>{row.endReason}</span>
       </p>,
     );

@@ -1,5 +1,6 @@
 import type { Mentorship } from "@prisma/client";
 import { prisma } from "@/lib/prisma";
+import { tr } from "@/lib/i18n";
 import { SETTING_KEYS } from "@/lib/userSettingKeys";
 
 // حریم خصوصی شاگرد در برابر هر منتور — *فقط* این‌جا تصمیم گرفته می‌شه و
@@ -13,8 +14,8 @@ import { SETTING_KEYS } from "@/lib/userSettingKeys";
 // منتور دیگه‌ای هرگز اون‌ها رو نمی‌بینه (این‌جا نیستن، با mentorId فیلتر می‌شن).
 
 export const MODULE_SCOPES = [
-  { key: "module:EXERCISE", label: "برنامه تمرینی (بدنسازی)" },
-  { key: "module:CALORIE", label: "کالری‌شمار" },
+  { key: "module:EXERCISE", get label() { return tr("برنامه تمرینی (بدنسازی)", "Workout plan"); } },
+  { key: "module:CALORIE", get label() { return tr("کالری‌شمار", "Calorie tracker"); } },
 ] as const;
 
 export const MAX_SHARED_PROGRAMS = 100;
@@ -131,7 +132,7 @@ export async function projectRoutineForMentor(
       jsDay: o.jsDay,
       time: o.time,
       program,
-      title: p.showTaskName ? o.name : "مشغول",
+      title: p.showTaskName ? o.name : tr("مشغول", "Busy"),
       details: p.showTaskDetails ? { importance: o.importance } : null,
       done,
     };

@@ -18,6 +18,7 @@ import {
   type LinkState,
 } from "@/lib/e2ee/client";
 import { faNum } from "@/lib/jalali";
+import { tr } from "@/lib/i18n";
 import { LoadingBlock, Spinner } from "./Spinner";
 import { MentorConfirmDialog } from "./MentorConfirmDialog";
 
@@ -50,7 +51,7 @@ export function MentorE2EEGate({
     return (
       <p className="mentor-e2ee-line is-warn" role="status">
         <AlertTriangle {...ICON} aria-hidden />
-        <span>برای گفت‌وگو، مرورگرت رو به‌روز کن</span>
+        <span>{tr("برای گفت‌وگو، مرورگرت رو به‌روز کن", "Update your browser to use chat")}</span>
       </p>
     );
   }
@@ -59,7 +60,7 @@ export function MentorE2EEGate({
       <p className="mentor-e2ee-line is-warn" role="alert">
         <AlertTriangle {...ICON} aria-hidden />
         <span>{s.message}</span>
-        <button type="button" className="mentor-text-btn" onClick={() => refreshIdentity()}>تلاش دوباره</button>
+        <button type="button" className="mentor-text-btn" onClick={() => refreshIdentity()}>{tr("تلاش دوباره", "Try again")}</button>
       </p>
     );
   }
@@ -84,7 +85,7 @@ function NoticeLine({ notice, link }: { notice: E2EENotice; link: LinkState | nu
     return (
       <p className="mentor-e2ee-line" role="status">
         <History {...ICON} aria-hidden />
-        <span>پیام‌های قبلی بعد از ورود دوباره با رمز عبور، روی این دستگاه هم باز می‌شن</span>
+        <span>{tr("پیام‌های قبلی بعد از ورود دوباره با رمز عبور، روی این دستگاه هم باز می‌شن", "Earlier messages will open on this device after you sign in again with your password")}</span>
       </p>
     );
   }
@@ -92,14 +93,14 @@ function NoticeLine({ notice, link }: { notice: E2EENotice; link: LinkState | nu
   return (
     <p className="mentor-e2ee-line" role="status">
       <History {...ICON} aria-hidden />
-      <span>پیام‌های قبلی روی یه دستگاه دیگه‌ته</span>
+      <span>{tr("پیام‌های قبلی روی یه دستگاه دیگه‌ته", "Your earlier messages are on another device")}</span>
       <button
         type="button"
         className="mentor-text-btn"
         disabled={busy}
         onClick={async () => { setBusy(true); try { await requestHistoryLink(); } finally { setBusy(false); } }}
       >
-        {busy ? <Spinner size={12} /> : "آوردن پیام‌های قبلی"}
+        {busy ? <Spinner size={12} /> : tr("آوردن پیام‌های قبلی", "Bring earlier messages")}
       </button>
     </p>
   );
@@ -116,7 +117,7 @@ function RequesterLine({ link }: { link: Extract<LinkState, { role: "requester" 
     return (
       <p className="mentor-e2ee-line" role="status">
         <History {...ICON} aria-hidden />
-        <span>آوردن پیام‌های قبلی روی دستگاه دیگه رد شد</span>
+        <span>{tr("آوردن پیام‌های قبلی روی دستگاه دیگه رد شد", "Bringing earlier messages was declined on the other device")}</span>
       </p>
     );
   }
@@ -125,9 +126,9 @@ function RequesterLine({ link }: { link: Extract<LinkState, { role: "requester" 
     <p className="mentor-e2ee-line" role="status">
       <History {...ICON} aria-hidden />
       <span>
-        روی دستگاه دیگه‌ات بخش مربی رو باز کن و این کد رو تایید کن: <b className="mono" dir="ltr">{faNum(link.code)}</b>
+        {tr("روی دستگاه دیگه‌ات بخش مربی رو باز کن و این کد رو تایید کن: ", "On your other device, open the mentor section and confirm this code: ")}<b className="mono" dir="ltr">{faNum(link.code)}</b>
       </span>
-      <button type="button" className="mentor-text-btn" onClick={() => cancelHistoryLink(link.id)}>لغو</button>
+      <button type="button" className="mentor-text-btn" onClick={() => cancelHistoryLink(link.id)}>{tr("لغو", "Cancel")}</button>
     </p>
   );
 }
@@ -138,9 +139,9 @@ function ApproveDialog({ link }: { link: Extract<LinkState, { role: "approver" }
   const [moved, setMoved] = useState(0);
   return (
     <MentorConfirmDialog
-      message="آوردن پیام‌های قبلی به دستگاه تازه"
-      hint={`کد روی ${link.deviceLabel || "دستگاه تازه"}: ${faNum(link.code)}. فقط اگه همین کد رو اون‌جا می‌بینی تایید کن.`}
-      confirmLabel={busy ? (moved ? `${faNum(moved)} مورد آورده شد` : "در حال آوردن") : "تایید"}
+      message={tr("آوردن پیام‌های قبلی به دستگاه تازه", "Bring earlier messages to the new device")}
+      hint={tr(`کد روی ${link.deviceLabel || "دستگاه تازه"}: ${faNum(link.code)}. فقط اگه همین کد رو اون‌جا می‌بینی تایید کن.`, `Code on ${link.deviceLabel || "the new device"}: ${faNum(link.code)}. Only confirm if you see the same code there.`)}
+      confirmLabel={busy ? (moved ? tr(`${faNum(moved)} مورد آورده شد`, `${faNum(moved)} brought over`) : tr("در حال آوردن", "Bringing over")) : tr("تایید", "Confirm")}
       danger={false}
       busy={busy}
       error={error}
@@ -150,7 +151,7 @@ function ApproveDialog({ link }: { link: Extract<LinkState, { role: "approver" }
         try {
           await approveHistoryLink(link, setMoved);
         } catch (e) {
-          setError(errMsg(e, "انجام نشد؛ دوباره تلاش کن"));
+          setError(errMsg(e, tr("انجام نشد؛ دوباره تلاش کن", "Something went wrong. Try again")));
         } finally {
           setBusy(false);
         }
@@ -170,13 +171,13 @@ function LegacyPasscode({ version }: { version: number }) {
   async function unlock(e: React.FormEvent) {
     e.preventDefault();
     if (busy) return;
-    if (!pass) { setError("رمز قبلی پیام‌ها رو وارد کن"); return; }
+    if (!pass) { setError(tr("رمز قبلی پیام‌ها رو وارد کن", "Enter the old password for your messages")); return; }
     setBusy(true);
     setError(null);
     try {
       await unlockLegacyPasscode(pass);
     } catch (e2) {
-      setError(e2 instanceof WrongPasscodeError ? e2.message : errMsg(e2, "باز نشد؛ دوباره تلاش کن"));
+      setError(e2 instanceof WrongPasscodeError ? e2.message : errMsg(e2, tr("باز نشد؛ دوباره تلاش کن", "Couldn't unlock. Try again")));
     } finally {
       setBusy(false);
     }
@@ -186,31 +187,31 @@ function LegacyPasscode({ version }: { version: number }) {
     <form className="mentor-e2ee-line mentor-e2ee-legacy" onSubmit={unlock}>
       <KeyRound {...ICON} aria-hidden />
       <span>
-        پیام‌های قبلی با رمزی که قبلا برای اون‌ها ساخته بودی قفل‌ان. یه بار واردش کن تا باز بشن؛ بعدش دیگه رمز جداگانه‌ای لازم نیست.
+        {tr("پیام‌های قبلی با رمزی که قبلا برای اون‌ها ساخته بودی قفل‌ان. یه بار واردش کن تا باز بشن؛ بعدش دیگه رمز جداگانه‌ای لازم نیست.", "Your earlier messages are locked with a password you set for them before. Enter it once to open them; after that you won't need a separate password.")}
         <span className="mentor-e2ee-legacy-row">
           <input
             type="password"
             className={FIELD}
             autoComplete="off"
-            aria-label="رمز قبلی پیام‌ها"
+            aria-label={tr("رمز قبلی پیام‌ها", "Old messages password")}
             value={pass}
             onChange={(e) => { setPass(e.target.value); setError(null); }}
             aria-invalid={!!error}
           />
           <button type="submit" className="trade-primary-btn mentor-btn is-sm" disabled={busy}>
-            {busy ? <Spinner size={14} /> : "باز کردن"}
+            {busy ? <Spinner size={14} /> : tr("باز کردن", "Unlock")}
           </button>
           <button type="button" className="account-outline-btn muted mentor-btn is-sm" disabled={busy} onClick={() => setConfirmSkip(true)}>
-            بی‌خیال پیام‌های قبلی
+            {tr("بی‌خیال پیام‌های قبلی", "Skip earlier messages")}
           </button>
         </span>
         {error && <span className="mentor-field-error" role="alert">{error}</span>}
       </span>
       {confirmSkip && (
         <MentorConfirmDialog
-          message="بدون پیام‌های قبلی ادامه بدیم؟"
-          hint="پیام‌های قبلی دیگه روی این حساب باز نمی‌شن."
-          confirmLabel="ادامه"
+          message={tr("بدون پیام‌های قبلی ادامه بدیم؟", "Continue without earlier messages?")}
+          hint={tr("پیام‌های قبلی دیگه روی این حساب باز نمی‌شن.", "Earlier messages will no longer open on this account.")}
+          confirmLabel={tr("ادامه", "Continue")}
           busy={busy}
           onConfirm={async () => {
             setBusy(true);

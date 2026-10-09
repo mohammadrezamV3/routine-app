@@ -1,6 +1,7 @@
 import "./mentor.css";
 import Link from "next/link";
 import { MENTOR_TERMS_PATH } from "@/lib/mentorTerms";
+import { tr } from "@/lib/i18n";
 
 // یک خط ثابت و همیشه‌پیدا زیر پروفایل عمومی منتور و فهرست پیدا کردن منتور:
 // نقش آریون (فقط بستر) و استقلال منتورها. متن عمدا کوتاه و بدون لحن تهدید است؛
@@ -8,9 +9,9 @@ import { MENTOR_TERMS_PATH } from "@/lib/mentorTerms";
 export function MentorPlatformNotice({ className }: { className?: string }) {
   return (
     <p className={`mentor-platform-notice${className ? ` ${className}` : ""}`}>
-      آریون فقط بستر ارتباط است؛ مربی‌ها مستقل‌اند و مسئولیت خدماتشان با خودشان است.{" "}
+      {tr("آریون فقط بستر ارتباط است؛ مربی‌ها مستقل‌اند و مسئولیت خدماتشان با خودشان است.", "Arion is only a platform for connecting. Mentors are independent and responsible for their own services.")}{" "}
       <Link href={MENTOR_TERMS_PATH} className="mentor-terms-link">
-        شرایط
+        {tr("شرایط", "Terms")}
       </Link>
     </p>
   );

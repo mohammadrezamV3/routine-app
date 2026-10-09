@@ -16,6 +16,8 @@
 // با این کار همه‌ی منتورها در ذخیره‌ی بعدی و همه‌ی شاگردها در درخواست بعدی دوباره
 // باید بپذیرند. اصلاح املایی/ویرایشی نسخه را عوض نمی‌کند.
 
+import { tr } from "@/lib/i18n";
+
 export const MENTOR_TERMS_VERSION = "2026-09-28";
 export const MENTOR_TERMS_UPDATED_LABEL = "مهر 1405";
 export const MENTOR_TERMS_PATH = "/terms/mentors";
@@ -26,10 +28,14 @@ export const MENTOR_TERMS_ERROR_CODE = "MENTOR_TERMS_REQUIRED";
 export type MentorTermsRole = "mentor" | "student";
 
 export const MENTOR_TERMS_REQUIRED_MESSAGE: Record<MentorTermsRole, string> = {
-  mentor: "برای ساخت یا ذخیره‌ی پروفایل مربی‌گری، شرایط استفاده از بخش مربی‌ها را بخوان و بپذیر",
-  student: "برای ارسال درخواست شاگردی، شرایط استفاده از بخش مربی‌ها را بخوان و بپذیر",
+  get mentor() { return tr("برای ساخت یا ذخیره‌ی پروفایل مربی‌گری، شرایط استفاده از بخش مربی‌ها را بخوان و بپذیر", "To create or save your mentor profile, read and accept the mentor terms"); },
+  get student() { return tr("برای ارسال درخواست شاگردی، شرایط استفاده از بخش مربی‌ها را بخوان و بپذیر", "To send a mentorship request, read and accept the mentor terms"); },
 };
+// ثابت فارسی: هویت پیام کهنه برای مقایسه (تست و روت)؛ متن زبان جاری از mentorTermsStaleMessage()
 export const MENTOR_TERMS_STALE_MESSAGE = "شرایط مربی‌ها به‌روز شده است؛ صفحه را دوباره باز کن و نسخه‌ی جدید را بپذیر";
+export function mentorTermsStaleMessage(): string {
+  return tr(MENTOR_TERMS_STALE_MESSAGE, "The mentor terms have been updated. Reload the page and accept the new version");
+}
 
 /** آیا نسخه‌ی ذخیره‌شده همان نسخه‌ی جاری است */
 export function hasCurrentMentorTerms(version: string | null | undefined): boolean {
@@ -38,7 +44,7 @@ export function hasCurrentMentorTerms(version: string | null | undefined): boole
 
 export type MentorTermsDecision =
   | { ok: true; record: boolean } // record: همین درخواست پذیرش را ثبت کند
-  | { ok: false; message: string };
+  | { ok: false; message: string; stale?: boolean };
 
 /**
  * تصمیم سرور درباره‌ی پذیرش. `stored` نسخه‌ی ذخیره‌شده، `sent` مقدار
@@ -48,6 +54,6 @@ export type MentorTermsDecision =
 export function decideMentorTerms(role: MentorTermsRole, stored: string | null | undefined, sent: unknown): MentorTermsDecision {
   if (sent === MENTOR_TERMS_VERSION) return { ok: true, record: !hasCurrentMentorTerms(stored) };
   if (hasCurrentMentorTerms(stored)) return { ok: true, record: false };
-  if (typeof sent === "string" && sent) return { ok: false, message: MENTOR_TERMS_STALE_MESSAGE };
+  if (typeof sent === "string" && sent) return { ok: false, message: mentorTermsStaleMessage(), stale: true };
   return { ok: false, message: MENTOR_TERMS_REQUIRED_MESSAGE[role] };
 }
