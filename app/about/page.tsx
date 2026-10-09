@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
-import { BRAND_FA } from "@/lib/brand";
+import { brandName } from "@/lib/brand";
+import { tr } from "@/lib/i18n";
 import { breadcrumbJsonLd, pageMetadata } from "@/lib/seo";
 import { AboutHero } from "@/components/AboutHero";
 import {
@@ -11,15 +12,21 @@ import "./about.css";
 // اعضای تیم از AppSetting خونده می‌شن؛ صفحه هر دقیقه تازه می‌شه
 export const revalidate = 60;
 
-export const metadata: Metadata = pageMetadata({
-  title: `درباره ${BRAND_FA} — اپ فارسی روتین و ورزش`,
-  description:
-    `${BRAND_FA} چیست، چرا ساخته شد و چه بخش‌هایی دارد: روتین روزانه، برنامه‌ی هفتگی، ` +
-    `برنامه‌ی بدنسازی، کالری‌شماری و ژورنال ترید — همه در یک حساب کاربری.`,
-  path: "/about",
-  ogTitle: `درباره ${BRAND_FA}`,
-  ownOgImage: true,
-});
+export function generateMetadata(): Metadata {
+  const brand = brandName();
+  return pageMetadata({
+    title: tr(`درباره ${brand} — اپ فارسی روتین و ورزش`, `About ${brand} - routine and fitness app`),
+    description: tr(
+      `${brand} چیست، چرا ساخته شد و چه بخش‌هایی دارد: روتین روزانه، برنامه‌ی هفتگی، ` +
+        `برنامه‌ی بدنسازی، کالری‌شماری و ژورنال ترید — همه در یک حساب کاربری.`,
+      `What ${brand} is, why it was built and what it includes: daily routine, weekly plan, ` +
+        `workout plan, calorie counting and a trading journal, all in one account.`,
+    ),
+    path: "/about",
+    ogTitle: tr(`درباره ${brand}`, `About ${brand}`),
+    ownOgImage: true,
+  });
+}
 
 // محتوای این صفحه عمدا واقعی و دقیقا منطبق بر کاری‌ست که اپ الان انجام
 // می‌دهد — بدون ادعای اثبات‌نشدنی «بهترین»، آمار ساختگی، جایزه یا نقل‌قول
@@ -32,7 +39,7 @@ export default async function AboutPage() {
     <div className="ab-root">
       <script
         type="application/ld+json"
-        dangerouslySetInnerHTML={{ __html: JSON.stringify(breadcrumbJsonLd([{ name: BRAND_FA, path: "/" }, { name: "درباره", path: "/about" }])) }}
+        dangerouslySetInnerHTML={{ __html: JSON.stringify(breadcrumbJsonLd([{ name: brandName(), path: "/" }, { name: tr("درباره", "About"), path: "/about" }])) }}
       />
       <AboutHero />
       <AboutStats />

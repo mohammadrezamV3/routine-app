@@ -5,6 +5,7 @@ import { ArrowLeft, ChevronLeft } from "lucide-react";
 import { useThemeTokens } from "@/components/PlanShowcase";
 import type { SeoFaq, SeoRelatedLink, SeoSection } from "@/components/SeoLanding";
 import "./tools.css";
+import { tr } from "@/lib/i18n";
 
 /**
  * قالب مشترک صفحه‌های ابزار رایگان: مسیر راهنما، H1 + مقدمه، خود ابزار (children)،
@@ -35,11 +36,11 @@ export function ToolPageShell({
   const h2 = `text-[1.05rem] font-extrabold sm:text-[1.2rem] ${t.heading}`;
 
   return (
-    <main className="pb-10 pt-4 text-right">
-      <nav aria-label="مسیر صفحه" className={`mb-4 flex flex-wrap items-center gap-1 text-[11.5px] ${t.muted}`}>
+    <main className="pb-10 pt-4 text-start">
+      <nav aria-label={tr("مسیر صفحه", "Breadcrumb")} className={`mb-4 flex flex-wrap items-center gap-1 text-[11.5px] ${t.muted}`}>
         {breadcrumb.map((b, i) => (
           <span key={b.path} className="inline-flex items-center gap-1">
-            {i > 0 && <ChevronLeft size={13} aria-hidden="true" className="opacity-60" />}
+            {i > 0 && <ChevronLeft size={13} aria-hidden="true" className="dir-flip opacity-60" />}
             {i === breadcrumb.length - 1 ? (
               <span aria-current="page">{b.name}</span>
             ) : (
@@ -64,7 +65,7 @@ export function ToolPageShell({
           {!!s.bullets?.length && (
             <ul className="mt-4 space-y-3">
               {s.bullets.map((b) => (
-                <li key={b.body.slice(0, 40)} className={`border-r-2 pr-3 ${t.accentBorder}`}>
+                <li key={b.body.slice(0, 40)} className={`border-s-2 ps-3 ${t.accentBorder}`}>
                   {b.title && <h3 className={`text-[13.5px] font-bold ${t.heading}`}>{b.title}</h3>}
                   <p className={`text-[12.5px] leading-7 sm:text-[13.5px] ${t.muted}`}>{b.body}</p>
                 </li>
@@ -76,7 +77,7 @@ export function ToolPageShell({
 
       {!!faqs?.length && (
         <section className={`mt-5 ${card}`}>
-          <h2 className={h2}>سوال‌های رایج</h2>
+          <h2 className={h2}>{tr("سوال‌های رایج", "Frequently asked questions")}</h2>
           <div className="mt-4 space-y-4">
             {faqs.map((f) => (
               <div key={f.q}>
@@ -90,7 +91,7 @@ export function ToolPageShell({
 
       {!!related?.length && (
         <section className={`mt-5 ${card}`}>
-          <h2 className={h2}>مطالب و ابزارهای مرتبط</h2>
+          <h2 className={h2}>{tr("مطالب و ابزارهای مرتبط", "Related articles and tools")}</h2>
           <ul className="mt-4 space-y-3">
             {related.map((r) => (
               <li key={r.href}>
@@ -110,7 +111,7 @@ export function ToolPageShell({
             href={cta.href || "/auth/signup"}
             className={`mt-5 inline-flex items-center gap-1.5 rounded-[20px] px-5 py-3 text-[13.5px] font-bold text-white transition hover:brightness-105 active:scale-[0.97] sm:px-6 sm:text-[14.5px] ${t.accentBg} ${t.accentShadow}`}
           >
-            {cta.label} <ArrowLeft size={16} aria-hidden="true" />
+            {cta.label} <ArrowLeft size={16} aria-hidden="true" className="dir-flip" />
           </Link>
         </section>
       )}

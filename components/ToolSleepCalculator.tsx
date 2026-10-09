@@ -6,6 +6,7 @@ import { TimeInput } from "./TimeInput";
 import { bedOptions, LATENCY_PRESETS, normalizeLatency, wakeOptions, type CycleOption } from "@/lib/sleepCycles";
 import { minutesToClock } from "@/lib/sleep";
 import { toEnDigits } from "@/lib/schedule";
+import { tr, trv } from "@/lib/i18n";
 
 const LS_KEY = "arion:tool:sleep";
 type Mode = "wake" | "now";
@@ -19,7 +20,7 @@ function parseClock(raw: string): number | null {
 
 function dur(min: number): string {
   const h = Math.floor(min / 60), m = min % 60;
-  return m ? `${h} ساعت و ${m} دقیقه` : `${h} ساعت`;
+  return m ? tr(`${h} ساعت و ${m} دقیقه`, `${h} h ${m} min`) : tr(`${h} ساعت`, `${h} h`);
 }
 
 type Shown = { mode: Mode; at: string; latency: number; options: CycleOption[] };
@@ -49,7 +50,9 @@ export function ToolSleepCalculator() {
     } else {
       const parsed = parseClock(time);
       if (parsed === null) {
-        setErr(mode === "wake" ? "ساعت بیدار شدن را کامل و به شکل 07:00 وارد کن" : "ساعت را به شکل 23:30 وارد کن یا خالی بگذار تا زمان الان حساب شود");
+        setErr(mode === "wake"
+          ? tr("ساعت بیدار شدن را کامل و به شکل 07:00 وارد کن", "Enter the full wake-up time like 07:00")
+          : tr("ساعت را به شکل 23:30 وارد کن یا خالی بگذار تا زمان الان حساب شود", "Enter the time like 23:30 or leave it empty to use the current time"));
         setShown(null);
         return;
       }
@@ -68,56 +71,56 @@ export function ToolSleepCalculator() {
         <SegmentedTabs<Mode>
           active={mode}
           onChange={(m) => { setMode(m); setShown(null); setErr(null); }}
-          ariaLabel="حالت محاسبه"
+          ariaLabel={tr("حالت محاسبه", "Calculation mode")}
           options={[
-            { value: "wake", label: "ساعت بیدار شدن را می‌دانم" },
-            { value: "now", label: "الان یا ساعت مشخص می‌خوابم" },
+            { value: "wake", label: tr("ساعت بیدار شدن را می‌دانم", "I know my wake-up time") },
+            { value: "now", label: tr("الان یا ساعت مشخص می‌خوابم", "I sleep now or at a set time") },
           ]}
         />
         <div>
           <label className="exercise-form-label" htmlFor="tl-sleep-time">
-            {mode === "wake" ? "ساعت بیدار شدن (24 ساعته)" : "ساعت خوابیدن (خالی = همین الان)"}
+            {mode === "wake" ? tr("ساعت بیدار شدن (24 ساعته)", "Wake-up time (24-hour)") : tr("ساعت خوابیدن (خالی = همین الان)", "Bedtime (empty = right now)")}
           </label>
           <TimeInput
             value={time}
             onChange={setTime}
             className="wsearch-newform-name"
-            placeholder={mode === "wake" ? "07:00" : "الان"}
+            placeholder={mode === "wake" ? "07:00" : tr("الان", "Now")}
           />
         </div>
         <div>
-          <span className="exercise-form-label">چند دقیقه طول می‌کشد خوابت ببرد؟</span>
+          <span className="exercise-form-label">{tr("چند دقیقه طول می‌کشد خوابت ببرد؟", "How many minutes does it take you to fall asleep?")}</span>
           <SegmentedTabs<string>
             active={String(latency)}
             onChange={(v) => setLatency(normalizeLatency(Number(v)))}
-            ariaLabel="زمان به خواب رفتن به دقیقه"
+            ariaLabel={tr("زمان به خواب رفتن به دقیقه", "Time to fall asleep in minutes")}
             options={LATENCY_PRESETS.map((p) => ({ value: String(p), label: <span dir="ltr">{p}</span> }))}
           />
         </div>
         {err && <div className="trade-form-error" role="alert">{err}</div>}
-        <button type="submit" className="trade-primary-btn tl-btn">محاسبه</button>
+        <button type="submit" className="trade-primary-btn tl-btn">{tr("محاسبه", "Calculate")}</button>
       </div>
 
       <div className="tl-out" aria-live="polite">
-        {!shown && <p className="tl-note">ساعت را وارد کن و روی محاسبه بزن؛ ساعت‌های مناسب با چرخه‌های 90 دقیقه‌ای همین‌جا نشان داده می‌شوند.</p>}
+        {!shown && <p className="tl-note">{tr("ساعت را وارد کن و روی محاسبه بزن؛ ساعت‌های مناسب با چرخه‌های 90 دقیقه‌ای همین‌جا نشان داده می‌شوند.", "Enter a time and press Calculate; suitable times based on 90-minute cycles will appear here.")}</p>}
         {shown && (
           <div className="tl-fade" key={`${shown.mode}-${shown.at}-${shown.latency}`}>
             <h2 className="tl-out-title">
               {shown.mode === "wake"
-                ? <>برای بیدار شدن ساعت <span dir="ltr">{shown.at}</span> بهتر است بخوابی:</>
-                : <>اگر ساعت <span dir="ltr">{shown.at}</span> بخوابی بهتر است بیدار شوی:</>}
+                ? trv(<>برای بیدار شدن ساعت <span dir="ltr">{shown.at}</span> بهتر است بخوابی:</>, <>To wake up at <span dir="ltr">{shown.at}</span>, go to sleep at:</>)
+                : trv(<>اگر ساعت <span dir="ltr">{shown.at}</span> بخوابی بهتر است بیدار شوی:</>, <>If you fall asleep at <span dir="ltr">{shown.at}</span>, it is best to wake up at:</>)}
             </h2>
             <ul className="tl-list" style={{ marginTop: 10 }}>
               {shown.options.map((o) => (
                 <li key={o.cycles} className={`tl-opt${o.cycles >= 5 ? " rec" : ""}`}>
                   <span className="tl-opt-clock" dir="ltr">{o.clock}</span>
-                  <span className="tl-opt-meta">{o.cycles} چرخه، {dur(o.sleepMin)} خواب</span>
-                  {o.cycles >= 5 && <span className="tl-badge">پیشنهادی</span>}
+                  <span className="tl-opt-meta">{tr(`${o.cycles} چرخه، ${dur(o.sleepMin)} خواب`, `${o.cycles} cycles, ${dur(o.sleepMin)} of sleep`)}</span>
+                  {o.cycles >= 5 && <span className="tl-badge">{tr("پیشنهادی", "Recommended")}</span>}
                 </li>
               ))}
             </ul>
             <p className="tl-note" style={{ marginTop: 10 }}>
-              زمان به خواب رفتن ({shown.latency} دقیقه) در محاسبه لحاظ شده است. چرخه‌ها حدودی هستند و برای هر فرد کمی فرق می‌کنند.
+              {tr(`زمان به خواب رفتن (${shown.latency} دقیقه) در محاسبه لحاظ شده است. چرخه‌ها حدودی هستند و برای هر فرد کمی فرق می‌کنند.`, `Time to fall asleep (${shown.latency} min) is included in the calculation. Cycles are approximate and vary a little from person to person.`)}
             </p>
           </div>
         )}

@@ -3,7 +3,7 @@ import { HomeClient } from "@/components/HomeClient";
 import { BRAND_FA, BRAND_EN, BRAND_TITLE } from "@/lib/brand";
 import { isEn } from "@/lib/i18n";
 import { faqJsonLd, pageMetadata } from "@/lib/seo";
-import { FAQ_ITEMS } from "@/lib/landingFaq";
+import { getFaqItems } from "@/lib/landingFaq";
 import { fillPriceCopy } from "@/lib/planPricing";
 import { getPricingConfig } from "@/lib/planPricingServer";
 
@@ -53,7 +53,7 @@ export function generateMetadata(): Metadata {
 export const revalidate = 300;
 
 export default async function HomePage() {
-  const faqItems = fillPriceCopy(FAQ_ITEMS, await getPricingConfig());
+  const faqItems = fillPriceCopy(getFaqItems(), await getPricingConfig());
   // Organization/WebSite/SoftwareApplication (با @id) از root layout
   // میان — تکرار همون بلوک اینجا فقط یه کپی عینا یکسان توی <head> بود.
   // FAQPage سؤالات متداول لندینگ — همون الگوی صفحه‌های فرود (داده‌ی ثابت).

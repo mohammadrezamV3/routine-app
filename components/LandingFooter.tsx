@@ -6,8 +6,9 @@ import { Mail } from "lucide-react";
 import { useThemeTokens } from "@/components/PlanShowcase";
 import { EnamadBadge } from "@/components/EnamadBadge";
 import { TelegramIcon, InstagramIcon } from "@/components/SocialIcons";
-import { SOCIAL, SUPPORT_EMAIL } from "@/lib/brand";
-import { PUBLIC_TOOLS } from "@/lib/tools";
+import { SOCIAL, SUPPORT_EMAIL, brandName } from "@/lib/brand";
+import { PUBLIC_TOOLS, toolLabel } from "@/lib/tools";
+import { isEn, tr } from "@/lib/i18n";
 
 // فوتر صفحه‌ی لندینگ — بدون کارت و بدون بک‌گراند (طبق قانون پروژه: هیچ
 // عنصری خودسرانه بک‌گراند نمی‌گیرد)، فقط یک خط جداکننده و همان توکن‌های
@@ -20,37 +21,37 @@ import { PUBLIC_TOOLS } from "@/lib/tools";
 // همه‌ی لینک‌های فوتر قبلی سر جایشان مانده‌اند: /about و /faq و /terms و
 // صفحه‌های فرود عمومی بدون این لینک‌ها برای کراولر یتیم‌اند (هیچ لینک
 // HTMLای از صفحه‌ی اصلی به آن‌ها نبود). فقط در سه گروه کوتاه چیده شده‌اند.
-const GROUPS: { title: string; links: { href: string; label: string }[] }[] = [
+const groups = (): { title: string; links: { href: string; label: string }[] }[] => [
   {
-    title: "امکانات",
+    title: tr("امکانات", "Features"),
     links: [
-      { href: "/routine", label: "روتین روزانه" },
-      { href: "/habit-tracker", label: "پیگیری عادت‌ها" },
-      { href: "/daily-planner", label: "برنامه‌ریزی روزانه" },
-      { href: "/ai-planner", label: "برنامه‌ریز هوشمند" },
-      { href: "/bodybuilding-program", label: "برنامه‌ی بدنسازی" },
-      { href: "/calorie-counter", label: "کالری‌شمار" },
-      { href: "/trading-journal", label: "ژورنال معاملاتی" },
-      { href: "/economic-calendar", label: "تقویم اقتصادی" },
-      { href: "/forex-sessions", label: "ساعت بازار فارکس" },
-      { href: "/learning-roadmap", label: "رودمپ یادگیری" },
+      { href: "/routine", label: tr("روتین روزانه", "Daily routine") },
+      { href: "/habit-tracker", label: tr("پیگیری عادت‌ها", "Habit tracking") },
+      { href: "/daily-planner", label: tr("برنامه‌ریزی روزانه", "Daily planning") },
+      { href: "/ai-planner", label: tr("برنامه‌ریز هوشمند", "Smart planner") },
+      { href: "/bodybuilding-program", label: tr("برنامه‌ی بدنسازی", "Workout plan") },
+      { href: "/calorie-counter", label: tr("کالری‌شمار", "Calorie counter") },
+      { href: "/trading-journal", label: tr("ژورنال معاملاتی", "Trading journal") },
+      { href: "/economic-calendar", label: tr("تقویم اقتصادی", "Economic calendar") },
+      { href: "/forex-sessions", label: tr("ساعت بازار فارکس", "Forex market hours") },
+      { href: "/learning-roadmap", label: tr("رودمپ یادگیری", "Learning roadmap") },
     ],
   },
   {
-    title: "منابع",
+    title: tr("منابع", "Resources"),
     links: [
-      { href: "/blog", label: "مقاله‌ها" },
+      { href: "/blog", label: tr("مقاله‌ها", "Articles") },
       // ابزارهای رایگان: هاب و هر ابزار از فهرست مشترک lib/tools.ts
-      { href: "/tools", label: "ابزارهای رایگان" },
-      ...PUBLIC_TOOLS.map((t) => ({ href: t.path, label: t.label })),
-      { href: "/faq", label: "سوالات متداول" },
+      { href: "/tools", label: tr("ابزارهای رایگان", "Free tools") },
+      ...PUBLIC_TOOLS.map((t) => ({ href: t.path, label: toolLabel(t) })),
+      { href: "/faq", label: tr("سوالات متداول", "FAQ") },
     ],
   },
   {
-    title: "آریون",
+    title: brandName(),
     links: [
-      { href: "/about", label: "درباره ما" },
-      { href: "/terms", label: "قوانین و مقررات" },
+      { href: "/about", label: tr("درباره ما", "About us") },
+      { href: "/terms", label: tr("قوانین و مقررات", "Terms and conditions") },
     ],
   },
 ];
@@ -67,12 +68,13 @@ function jalaliYear(): string {
 export function LandingFooter() {
   const t = useThemeTokens();
   const year = jalaliYear();
+  const GROUPS = groups();
 
   return (
-    <footer className={`mt-12 border-t ${t.line} px-1 pb-8 pt-8 text-right`}>
+    <footer className={`mt-12 border-t ${t.line} px-1 pb-8 pt-8 text-start`}>
       <div className="flex flex-col gap-8 lg:flex-row-reverse lg:items-start lg:justify-between lg:gap-12">
         <div className="max-w-[240px] shrink-0">
-          <Link href="/" aria-label="آریون — صفحه‌ی اصلی" className="inline-flex items-center gap-2.5">
+          <Link href="/" aria-label={tr("آریون — صفحه‌ی اصلی", `${brandName()} - home`)} className="inline-flex items-center gap-2.5">
             <span className="relative h-8 w-8 shrink-0" aria-hidden="true">
               {/* هر دو نسخه‌ی لوگو هم‌زمان‌اند و فقط opacity عوض می‌شود — مثل AuthBrandMark. */}
               <Image
@@ -85,15 +87,15 @@ export function LandingFooter() {
               />
             </span>
             <span className={`text-[15px] font-extrabold ${t.heading}`}>
-              آریون
+              {brandName()}
             </span>
           </Link>
           <p className={`mt-3 text-[12px] leading-6 ${t.muted}`}>
-            برنامه‌ریزی کن، اجرا کن و پیشرفتت را ببین؛ همه در یک سیستم.
+            {tr("برنامه‌ریزی کن، اجرا کن و پیشرفتت را ببین؛ همه در یک سیستم.", "Plan, do and see your progress, all in one system.")}
           </p>
         </div>
 
-        <nav aria-label="صفحه‌های آریون" className="grid grid-cols-2 gap-x-6 gap-y-8 sm:grid-cols-4 sm:gap-x-9">
+        <nav aria-label={tr("صفحه‌های آریون", `${brandName()} pages`)} className="grid grid-cols-2 gap-x-6 gap-y-8 sm:grid-cols-4 sm:gap-x-9">
           {GROUPS.map((g) => (
             <div key={g.title}>
               <div className={`text-[12px] font-bold ${t.heading}`}>{g.title}</div>
@@ -113,33 +115,33 @@ export function LandingFooter() {
               lib/brand.ts که صفحه‌ی «درباره ما» هم نشون می‌ده، لینک تازه‌ای
               ساخته نشده. */}
           <div>
-            <div className={`text-[12px] font-bold ${t.heading}`}>تماس با ما</div>
+            <div className={`text-[12px] font-bold ${t.heading}`}>{tr("تماس با ما", "Contact us")}</div>
             <ul className="mt-3 space-y-2">
               <li>
                 <a
                   href={`mailto:${SUPPORT_EMAIL}`}
-                  className={`flex items-center justify-end gap-1.5 text-[12px] transition-colors ${t.muted} ${t.accentHoverText}`}
+                  className={`flex items-center justify-end ltr:justify-start gap-1.5 text-[12px] transition-colors ${t.muted} ${t.accentHoverText}`}
                   dir="ltr"
                 >
-                  <span dir="rtl">{SUPPORT_EMAIL}</span>
+                  <span dir={isEn() ? "ltr" : "rtl"}>{SUPPORT_EMAIL}</span>
                   <Mail size={13} className="shrink-0" />
                 </a>
               </li>
               <li>
                 <a
                   href={SOCIAL.telegram.url} target="_blank" rel="noopener noreferrer"
-                  className={`flex items-center justify-end gap-1.5 whitespace-nowrap text-[12px] transition-colors ${t.muted} ${t.accentHoverText}`}
+                  className={`flex items-center justify-end ltr:justify-start gap-1.5 whitespace-nowrap text-[12px] transition-colors ${t.muted} ${t.accentHoverText}`}
                 >
-                  تلگرام
+                  {tr("تلگرام", "Telegram")}
                   <TelegramIcon size={13} className="shrink-0" />
                 </a>
               </li>
               <li>
                 <a
                   href={SOCIAL.instagram.url} target="_blank" rel="noopener noreferrer"
-                  className={`flex items-center justify-end gap-1.5 whitespace-nowrap text-[12px] transition-colors ${t.muted} ${t.accentHoverText}`}
+                  className={`flex items-center justify-end ltr:justify-start gap-1.5 whitespace-nowrap text-[12px] transition-colors ${t.muted} ${t.accentHoverText}`}
                 >
-                  اینستاگرام
+                  {tr("اینستاگرام", "Instagram")}
                   <InstagramIcon size={13} className="shrink-0" />
                 </a>
               </li>
@@ -150,7 +152,7 @@ export function LandingFooter() {
 
       <div className={`mt-8 flex flex-col-reverse items-center gap-4 border-t ${t.line} pt-5 sm:flex-row sm:justify-between`}>
         <p className={`text-[11px] ${t.muted}`} suppressHydrationWarning>
-          © {year} آریون — همه‌ی حقوق محفوظ است.
+          {tr(`© ${year} آریون — همه‌ی حقوق محفوظ است.`, `© ${year} ${brandName()}. All rights reserved.`)}
         </p>
         <EnamadBadge />
       </div>

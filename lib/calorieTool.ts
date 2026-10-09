@@ -3,16 +3,17 @@
 // هم‌قاعده با calcDailyTargetKcal در lib/calorieCalc.ts (کم‌کردن 20 درصد برای
 // کاهش وزن، افزودن 15 درصد برای افزایش وزن).
 
+import { tr } from "./i18n";
 import type { CalorieGoal, Sex } from "./calorieCalc";
 
 export type ActivityKey = "sedentary" | "light" | "moderate" | "active" | "athlete";
 
-export const ACTIVITY_LEVELS: { key: ActivityKey; label: string; factor: number }[] = [
-  { key: "sedentary", label: "کم‌تحرک (کار پشت میز، تقریبا بدون ورزش)", factor: 1.2 },
-  { key: "light", label: "فعالیت سبک (1 تا 2 روز ورزش در هفته)", factor: 1.375 },
-  { key: "moderate", label: "فعالیت متوسط (3 تا 4 روز ورزش در هفته)", factor: 1.55 },
-  { key: "active", label: "فعالیت زیاد (5 تا 6 روز ورزش در هفته)", factor: 1.725 },
-  { key: "athlete", label: "خیلی زیاد (تمرین سنگین روزانه یا کار بدنی سخت)", factor: 1.9 },
+export const ACTIVITY_LEVELS: { key: ActivityKey; label: string; labelEn: string; factor: number }[] = [
+  { key: "sedentary", label: "کم‌تحرک (کار پشت میز، تقریبا بدون ورزش)", labelEn: "Sedentary (desk job, almost no exercise)", factor: 1.2 },
+  { key: "light", label: "فعالیت سبک (1 تا 2 روز ورزش در هفته)", labelEn: "Light activity (1 to 2 days of exercise per week)", factor: 1.375 },
+  { key: "moderate", label: "فعالیت متوسط (3 تا 4 روز ورزش در هفته)", labelEn: "Moderate activity (3 to 4 days of exercise per week)", factor: 1.55 },
+  { key: "active", label: "فعالیت زیاد (5 تا 6 روز ورزش در هفته)", labelEn: "High activity (5 to 6 days of exercise per week)", factor: 1.725 },
+  { key: "athlete", label: "خیلی زیاد (تمرین سنگین روزانه یا کار بدنی سخت)", labelEn: "Very high (heavy daily training or hard physical work)", factor: 1.9 },
 ];
 
 const MIN_KCAL: Record<Sex, number> = { female: 1200, male: 1500 };
@@ -50,11 +51,11 @@ export function calcBmrMifflin(sex: Sex, weightKg: number, heightCm: number, age
 }
 
 export function calcCalorieTool(inp: CalorieToolInput): CalorieToolResult {
-  if (!fin(inp.age) || inp.age < 15 || inp.age > 90) return { ok: false, error: "سن را بین 15 تا 90 سال وارد کن" };
-  if (!fin(inp.heightCm) || inp.heightCm < 100 || inp.heightCm > 250) return { ok: false, error: "قد را بین 100 تا 250 سانتی‌متر وارد کن" };
-  if (!fin(inp.weightKg) || inp.weightKg < 30 || inp.weightKg > 300) return { ok: false, error: "وزن را بین 30 تا 300 کیلوگرم وارد کن" };
+  if (!fin(inp.age) || inp.age < 15 || inp.age > 90) return { ok: false, error: tr("سن را بین 15 تا 90 سال وارد کن", "Enter an age between 15 and 90") };
+  if (!fin(inp.heightCm) || inp.heightCm < 100 || inp.heightCm > 250) return { ok: false, error: tr("قد را بین 100 تا 250 سانتی‌متر وارد کن", "Enter a height between 100 and 250 cm") };
+  if (!fin(inp.weightKg) || inp.weightKg < 30 || inp.weightKg > 300) return { ok: false, error: tr("وزن را بین 30 تا 300 کیلوگرم وارد کن", "Enter a weight between 30 and 300 kg") };
   const level = ACTIVITY_LEVELS.find((a) => a.key === inp.activity);
-  if (!level) return { ok: false, error: "سطح فعالیت را انتخاب کن" };
+  if (!level) return { ok: false, error: tr("سطح فعالیت را انتخاب کن", "Choose an activity level") };
 
   const bmr = calcBmrMifflin(inp.sex, inp.weightKg, inp.heightCm, inp.age);
   const tdee = bmr * level.factor;
@@ -68,4 +69,8 @@ export function calcCalorieTool(inp: CalorieToolInput): CalorieToolResult {
   const fatG = Math.round((target * 0.25) / 9);
   const carbsG = Math.max(0, Math.round((target - proteinG * 4 - fatG * 9) / 4));
   return { ok: true, bmr: round10(bmr), tdee: round10(tdee), target, floored, proteinG, fatG, carbsG };
+}
+
+export function activityLabel(a: { label: string; labelEn: string }): string {
+  return tr(a.label, a.labelEn);
 }

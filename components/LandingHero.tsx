@@ -5,6 +5,7 @@ import Link from "next/link";
 import {
   ArrowLeft, Calendar, Filter, History, Lock, ShieldCheck, Sparkles, UtensilsCrossed, Hash, Percent, ArrowUp,
 } from "lucide-react";
+import { brandName } from "@/lib/brand";
 import { useThemeTokens } from "@/components/PlanShowcase";
 import { DashProgressCircle } from "@/components/DashProgressCircle";
 import { StreakFlame } from "@/components/StreakFlame";
@@ -13,6 +14,7 @@ import {
   INERT, MockDateStrip, MockFilterButton, MockMedicationCard, MockMentorCard, MockTaskList, type MockTask,
 } from "@/components/LandingMockups";
 import "./landing-hero.css";
+import { tr } from "@/lib/i18n";
 
 // ─── هیروی لندینگ (کاربر واردنشده) ────────────────────────────────────────
 // همه‌ی تصویر سمت چپ (گوشی + کارت‌های شناور) با JSX/CSS خالص ساخته شده —
@@ -28,25 +30,25 @@ export function faNum(n: number | string) {
 
 // خط چرخان تیتر: «تمام روتینت یک‌جا / روتین، خواب، تمرین، ترید» (متن صاحب
 // محصول)؛ انیمیشن همونه. اولین کلمه («روتین») متن h1 برای سئو/صفحه‌خوان هم هست.
-const ROT_WORDS = ["روتین", "خواب", "تمرین", "ترید"];
+const rotWords = () => [tr("روتین", "Routine"), tr("خواب", "Sleep"), tr("تمرین", "Workouts"), tr("ترید", "Trading")];
 
 // «روتین من» (app/weekly) همون‌طور که روی گوشی دیده می‌شه — ردیف‌ها آینه‌ی
 // DashTaskRow ـن، ردیف آخر همون ردیف سنتتیک «برنامه تمرینی امروز» با دکمه‌ی
 // «شروع». چرخه فقط تیک‌خوردن پشت‌سرهم همین ردیف‌هاست.
-const PHONE_TASKS: MockTask[] = [
-  { name: "مدیتیشن صبحگاهی", time: "07:00", importance: "medium", tag: "سلامتی" },
-  { name: "مطالعه", time: "13:30", importance: "high", tag: "یادگیری" },
-  { name: "پیاده‌روی عصر", time: "18:00" },
-  { name: "برنامه تمرینی امروز", exercise: true },
+const phoneTasks = (): MockTask[] => [
+  { name: tr("مدیتیشن صبحگاهی", "Morning meditation"), time: "07:00", importance: "medium", tag: tr("سلامتی", "Health") },
+  { name: tr("مطالعه", "Reading"), time: "13:30", importance: "high", tag: tr("یادگیری", "Learning") },
+  { name: tr("پیاده‌روی عصر", "Evening walk"), time: "18:00" },
+  { name: tr("برنامه تمرینی امروز", "Today's workout plan"), exercise: true },
 ];
 
-const SEO_LINKS = [
-  { href: "/routine", label: "روتین" },
-  { href: "/habit-tracker", label: "پیگیری عادت" },
-  { href: "/bodybuilding-program", label: "تمرین" },
-  { href: "/trading-journal", label: "ترید" },
-  { href: "/calorie-counter", label: "تغذیه" },
-  { href: "/ai-planner", label: "مدیر برنامه هوشمند" },
+const seoLinks = () => [
+  { href: "/routine", label: tr("روتین", "Routine") },
+  { href: "/habit-tracker", label: tr("پیگیری عادت", "Habit tracking") },
+  { href: "/bodybuilding-program", label: tr("تمرین", "Workouts") },
+  { href: "/trading-journal", label: tr("ترید", "Trading") },
+  { href: "/calorie-counter", label: tr("تغذیه", "Nutrition") },
+  { href: "/ai-planner", label: tr("مدیر برنامه هوشمند", "Smart plan manager") },
 ];
 
 function prefersReducedMotion() {
@@ -54,6 +56,9 @@ function prefersReducedMotion() {
 }
 
 export function LandingHero() {
+  const ROT_WORDS = rotWords();
+  const PHONE_TASKS = phoneTasks();
+  const SEO_LINKS = seoLinks();
   const t = useThemeTokens();
   const sectionRef = useRef<HTMLElement>(null);
   const stageRef = useRef<HTMLDivElement>(null);
@@ -188,15 +193,15 @@ export function LandingHero() {
         <div className="lh-copy">
           <span className="lh-eyebrow lh-rise" style={{ "--i": 0 } as React.CSSProperties}>
             <span className="lh-eyebrow-dot" aria-hidden="true" />
-            یک سیستم برای پیشرفت روزانه
+            {tr("یک سیستم برای پیشرفت روزانه", "One system for daily progress")}
           </span>
 
           {/* SEO: «روتین اپ» و «آریون» هر دو داخل خود h1 هستند (نه فقط متادیتا). */}
           <h1 id="lh-title" className={`lh-title lh-rise ${t.heading}`} style={{ "--i": 1 } as React.CSSProperties}>
             <span className="lh-title-kicker">
-              روتین اپ <span className="lh-brand">آریون</span>
+              {tr("روتین اپ", "Routine app")} <span className="lh-brand">{brandName()}</span>
             </span>
-            <span className="lh-title-main">تمام روتینت یک‌جا</span>
+            <span className="lh-title-main">{tr("تمام روتینت یک‌جا", "Everything in one place")}</span>
             <span className="lh-title-main lh-title-rot">
               <span className="lh-rot" aria-hidden="true">
                 {ROT_WORDS.map((w, i) => (
@@ -208,13 +213,13 @@ export function LandingHero() {
                   </span>
                 ))}
               </span>
-              <span className="lh-sr">روتین</span>
+              <span className="lh-sr">{tr("روتین", "Routine")}</span>
             </span>
           </h1>
 
           <p className={`lh-sub lh-rise ${t.muted}`} style={{ "--i": 2 } as React.CSSProperties}>
-            روتین، خواب، تمرین، تغذیه و ترید را یک‌جا پیش ببر؛ آریون از همین تیک‌های ساده
-            استریک، نقشه‌ی ثبات و دستاوردهایت را می‌سازد.
+            {tr(`روتین، خواب، تمرین، تغذیه و ترید را یک‌جا پیش ببر؛ آریون از همین تیک‌های ساده
+            استریک، نقشه‌ی ثبات و دستاوردهایت را می‌سازد.`, `Keep your routine, sleep, workouts, nutrition and trading moving in one place; ${brandName()} turns those simple ticks into streaks, a consistency map and achievements.`)}
           </p>
 
           <div className="lh-ctas lh-rise" style={{ "--i": 3 } as React.CSSProperties}>
@@ -222,26 +227,26 @@ export function LandingHero() {
               href="/auth/signup"
               className={`lh-cta-primary inline-flex items-center gap-1.5 rounded-[20px] px-6 py-3.5 text-[14.5px] font-bold text-white transition hover:brightness-105 active:scale-[0.97] sm:px-8 sm:text-[15.5px] ${t.accentBg} ${t.accentShadow}`}
             >
-              شروع رایگان <ArrowLeft size={17} className="lh-cta-arrow" />
+              {tr("شروع رایگان", "Start free")} <span className="dir-flip inline-flex"><ArrowLeft size={17} className="lh-cta-arrow" /></span>
             </Link>
             <Link
               href="/auth/login"
               className={`inline-flex items-center rounded-[20px] border ${t.line} ${t.secondaryBtnBg} px-6 py-3.5 text-[14.5px] font-bold ${t.heading} backdrop-blur-md transition active:scale-[0.97] sm:px-8 sm:text-[15.5px]`}
             >
-              ورود
+              {tr("ورود", "Log in")}
             </Link>
           </div>
 
           <ul className={`lh-trust lh-rise ${t.muted}`} style={{ "--i": 4 } as React.CSSProperties}>
-            <li><Sparkles size={14} aria-hidden="true" /> 14 روز رایگان</li>
-            <li><Sparkles size={14} aria-hidden="true" /> 3 روز بدنسازی، کالری‌شمار و ژورنال ترید</li>
-            <li><ShieldCheck size={15} aria-hidden="true" /> روی گوشی و کامپیوتر</li>
-            <li><Lock size={14} aria-hidden="true" /> چت‌های سرتاسر رمزنگاری‌شده</li>
+            <li><Sparkles size={14} aria-hidden="true" /> {tr("14 روز رایگان", "14 days free")}</li>
+            <li><Sparkles size={14} aria-hidden="true" /> {tr("3 روز بدنسازی، کالری‌شمار و ژورنال ترید", "3 days of workouts, calorie counter and trading journal")}</li>
+            <li><ShieldCheck size={15} aria-hidden="true" /> {tr("روی گوشی و کامپیوتر", "On phone and desktop")}</li>
+            <li><Lock size={14} aria-hidden="true" /> {tr("چت‌های سرتاسر رمزنگاری‌شده", "End-to-end encrypted chats")}</li>
           </ul>
 
           {/* لینک‌های داخلی به صفحه‌های دسته — هم برای بازدیدکننده، هم انتقال اعتبار صفحه‌ی اصلی */}
-          <nav className="lh-links lh-rise" style={{ "--i": 5 } as React.CSSProperties} aria-label="بیشتر بخوانید">
-            <span className={`lh-links-label ${t.muted}`}>بیشتر بخوانید:</span>
+          <nav className="lh-links lh-rise" style={{ "--i": 5 } as React.CSSProperties} aria-label={tr("بیشتر بخوانید", "Read more")}>
+            <span className={`lh-links-label ${t.muted}`}>{tr("بیشتر بخوانید:", "Read more:")}</span>
             {SEO_LINKS.map((l) => (
               <Link key={l.href} href={l.href} className="lh-link">{l.label}</Link>
             ))}
@@ -287,29 +292,29 @@ export function LandingHero() {
 
                     <div className="lh-ph-body">
                       {/* DashHeader */}
-                      <div className="flex flex-row items-center justify-start gap-3 text-right">
+                      <div className="flex flex-row items-center justify-start gap-3 text-start">
                         <div className="flex flex-col items-center gap-1">
                           <DashProgressCircle value={pct} size={52} strokeWidth={4.5} />
-                          <span className="whitespace-nowrap text-[9px] text-dash-muted">پیشرفت امروز</span>
+                          <span className="whitespace-nowrap text-[9px] text-dash-muted">{tr("پیشرفت امروز", "Today's progress")}</span>
                         </div>
                         <div>
-                          <div className="text-[19px] font-bold text-dash-text">روتین من</div>
-                          <div className="mt-1 text-[11px] text-dash-muted">برنامه‌های روزانه خود را مدیریت و پیگیری کنید.</div>
+                          <div className="text-[19px] font-bold text-dash-text">{tr("روتین من", "My Routine")}</div>
+                          <div className="mt-1 text-[11px] text-dash-muted">{tr("برنامه‌های روزانه خود را مدیریت و پیگیری کنید.", "Manage and track your daily plans.")}</div>
                         </div>
                       </div>
 
                       <div className="flex flex-col gap-2.5">
                         <MockDateStrip />
                         <div className="flex flex-wrap items-center gap-2">
-                          <MockFilterButton label="تاریخچه" icon={<History size={15} />} />
-                          <MockFilterButton label="امروز" icon={<Calendar size={15} />} active />
-                          <MockFilterButton label="فیلتر" icon={<Filter size={15} />} />
+                          <MockFilterButton label={tr("تاریخچه", "History")} icon={<History size={15} />} />
+                          <MockFilterButton label={tr("امروز", "Today")} icon={<Calendar size={15} />} active />
+                          <MockFilterButton label={tr("فیلتر", "Filter")} icon={<Filter size={15} />} />
                         </div>
                       </div>
 
                       <MockTaskList tasks={tasks} />
 
-                      <MockMedicationCard meds={[{ name: "ویتامین D", every: "هر 24 ساعت", times: "22:00", left: "12 روز مونده" }]} />
+                      <MockMedicationCard meds={[{ name: tr("ویتامین D", "Vitamin D"), every: tr("هر 24 ساعت", "Every 24 hours"), times: "22:00", left: tr("12 روز مونده", "12 days left") }]} />
                     </div>
 
                     {/* گو «نومو» — همون جای routine-ai-fab روی صفحه‌ی روتین */}
@@ -325,16 +330,16 @@ export function LandingHero() {
             <div className="lh-layer lh-pos-trade" data-d="34" data-f="0">
               <div className="lh-float lh-card lh-card-trade">
                 <div className="lh-trade-name">
-                  <span className="trade-account-name">حساب پراپ</span>
+                  <span className="trade-account-name">{tr("حساب پراپ", "Prop account")}</span>
                   <span className="trade-account-dot" style={{ background: "#3E7BFA" }} />
                 </div>
                 <div className="lh-trade-bal mono" dir="ltr">
                   10842$<span className="trade-account-pnl-pct">8.4%</span><ArrowUp size={13} />
                 </div>
                 <div className="lh-trade-facts">
-                  <span><Hash size={11} /> 24 معامله</span>
-                  <span><Percent size={11} /> 62% برد</span>
-                  <span className="lh-trade-mt">متاتریدر</span>
+                  <span><Hash size={11} /> {tr("24 معامله", "24 trades")}</span>
+                  <span><Percent size={11} /> {tr("62% برد", "62% win")}</span>
+                  <span className="lh-trade-mt">{tr("متاتریدر", "MetaTrader")}</span>
                 </div>
               </div>
             </div>
@@ -344,14 +349,14 @@ export function LandingHero() {
               <div className="lh-float lh-card lh-card-cal dash-scope">
                 <div className="mono text-[15px] font-extrabold" style={{ color: "var(--accent)" }}>
                   1420<span className="mx-1 text-dash-muted">/</span>2100
-                  <span className="mr-1.5 text-[10.5px] font-semibold text-dash-muted">کالری</span>
+                  <span className="ms-1.5 text-[10.5px] font-semibold text-dash-muted">{tr("کالری", "kcal")}</span>
                 </div>
                 <div className="lh-cal-bar"><i /></div>
                 <div className="mt-2.5 flex items-center gap-1.5 text-[11.5px] font-bold text-dash-text">
-                  <UtensilsCrossed className="h-3.5 w-3.5 text-dash-green" /> کالری‌شمار
+                  <UtensilsCrossed className="h-3.5 w-3.5 text-dash-green" /> {tr("کالری‌شمار", "Calorie counter")}
                 </div>
                 <div className="calorie-glass-field lh-cal-entry">
-                  <span className="truncate text-[10.5px] font-bold text-dash-text">جوجه‌کباب</span>
+                  <span className="truncate text-[10.5px] font-bold text-dash-text">{tr("جوجه‌کباب", "Chicken kebab")}</span>
                   <span className="mono rounded-lg px-1.5 py-0.5 text-[11px] font-extrabold" style={{ background: "rgba(var(--accent-rgb),.10)", color: "var(--accent)" }}>
                     <span className="text-[8px] font-semibold" style={{ opacity: 0.75 }}>kcal</span>330
                   </span>
@@ -364,17 +369,17 @@ export function LandingHero() {
               <div className="lh-float lh-card lh-card-ai">
                 <div className="routine-ai-title lh-ai-title">
                   {orbLive ? <SiriOrb size="20px" /> : <span className="lh-orb-still lh-orb-sm" />}
-                  نومو
+                  {tr("نومو", "Nomo")}
                 </div>
-                <div className="routine-ai-bubble-user lh-ai-bubble lh-ai-user">فردا ساعت 7 عصر باشگاه</div>
-                <div className="routine-ai-bubble-bot lh-ai-bubble lh-ai-bot">«باشگاه» سه‌شنبه ساعت 19:00 اضافه شد.</div>
+                <div className="routine-ai-bubble-user lh-ai-bubble lh-ai-user">{tr("فردا ساعت 7 عصر باشگاه", "Gym tomorrow at 7 pm")}</div>
+                <div className="routine-ai-bubble-bot lh-ai-bubble lh-ai-bot">{tr("«باشگاه» سه‌شنبه ساعت 19:00 اضافه شد.", "Gym added for Tuesday at 19:00.")}</div>
               </div>
             </div>
 
             {/* مربی — MentorCard + خط رمزگذاری گفت‌وگو */}
             <div className="lh-layer lh-pos-mentor" data-d="30" data-f="-1.2">
               <div className="lh-float lh-card-mentor">
-                <MockMentorCard name="سارا رحیمی" line="مربی تغذیه" rating="4.9" count="38" since="فروردین 1404" />
+                <MockMentorCard name={tr("سارا رحیمی", "Sara Rahimi")} line={tr("مربی تغذیه", "Nutrition mentor")} rating="4.9" count="38" since={tr("فروردین 1404", "Mar 2025")} />
               </div>
             </div>
           </div>

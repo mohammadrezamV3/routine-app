@@ -5,6 +5,7 @@ import { Globe } from "lucide-react";
 import { AgentAvatar } from "@/components/AgentAvatar";
 import { InstagramIcon, TelegramIcon } from "@/components/SocialIcons";
 import { TEAM_LINK_KINDS, type TeamLinkKind, type TeamMember } from "@/lib/teamMembers";
+import { tr } from "@/lib/i18n";
 
 // پنل اعضای تیم Arion Group در صفحه‌ی درباره. با زدن کارت «سازنده» باز
 // می‌شه (AboutContact)؛ ترتیب اعضا همون ترتیبیه که ادمین در /admin/team
@@ -18,12 +19,12 @@ function Linkedin({ size }: { size: number }) {
   );
 }
 
-const LINK_META: Record<TeamLinkKind, { label: string; icon: (s: number) => React.ReactNode }> = {
-  telegram: { label: "تلگرام", icon: (s) => <TelegramIcon size={s} /> },
-  instagram: { label: "اینستاگرام", icon: (s) => <InstagramIcon size={s} /> },
-  linkedin: { label: "لینکدین", icon: (s) => <Linkedin size={s} /> },
-  website: { label: "وب‌سایت", icon: (s) => <Globe size={s} /> },
-};
+const linkMeta = (): Record<TeamLinkKind, { label: string; icon: (s: number) => React.ReactNode }> => ({
+  telegram: { label: tr("تلگرام", "Telegram"), icon: (s) => <TelegramIcon size={s} /> },
+  instagram: { label: tr("اینستاگرام", "Instagram"), icon: (s) => <InstagramIcon size={s} /> },
+  linkedin: { label: tr("لینکدین", "LinkedIn"), icon: (s) => <Linkedin size={s} /> },
+  website: { label: tr("وب‌سایت", "Website"), icon: (s) => <Globe size={s} /> },
+});
 
 export function TeamMemberAvatar({ member, size, className = "ab-team-photo" }: { member: Pick<TeamMember, "name" | "photo">; size: number; className?: string }) {
   if (member.photo) {
@@ -35,6 +36,7 @@ export function TeamMemberAvatar({ member, size, className = "ab-team-photo" }: 
 
 export function AboutTeamPanel({ open, members, id }: { open: boolean; members: TeamMember[]; id: string }) {
   const reduce = useReducedMotion();
+  const LINK_META = linkMeta();
   return (
     <AnimatePresence initial={false}>
       {open && (
@@ -47,7 +49,7 @@ export function AboutTeamPanel({ open, members, id }: { open: boolean; members: 
           exit={reduce ? { opacity: 0 } : { height: 0, opacity: 0 }}
           transition={{ duration: reduce ? 0.15 : 0.45, ease: [0.22, 1, 0.36, 1] }}
         >
-          <ul className="ab-team" aria-label="اعضای تیم Arion Group">
+          <ul className="ab-team" aria-label={tr("اعضای تیم Arion Group", "Arion Group team members")}>
             {members.map((m, i) => (
               <motion.li
                 key={m.id}
@@ -58,7 +60,7 @@ export function AboutTeamPanel({ open, members, id }: { open: boolean; members: 
               >
                 <TeamMemberAvatar member={m} size={72} />
                 {m.roles.length > 0 && (
-                  <ul className="ab-team-roles" aria-label="عنوان‌ها">
+                  <ul className="ab-team-roles" aria-label={tr("عنوان‌ها", "Titles")}>
                     {m.roles.map((r) => <li key={r} className="ab-team-role">{r}</li>)}
                   </ul>
                 )}

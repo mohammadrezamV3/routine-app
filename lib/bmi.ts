@@ -1,17 +1,19 @@
 // شاخص توده بدنی (BMI) — منطق خالص. دسته‌بندی بر اساس جدول سازمان جهانی بهداشت
 // برای بزرگسالان؛ برای کودکان و نوجوانان یا ورزشکاران عضلانی معیار دقیقی نیست.
 
+import { tr } from "./i18n";
+
 export type BmiCategoryKey = "under" | "normal" | "over" | "obese1" | "obese2" | "obese3";
 
-export type BmiCategory = { key: BmiCategoryKey; label: string; from: number; to: number };
+export type BmiCategory = { key: BmiCategoryKey; label: string; labelEn: string; from: number; to: number };
 
 export const BMI_CATEGORIES: BmiCategory[] = [
-  { key: "under", label: "کم‌وزن", from: 0, to: 18.5 },
-  { key: "normal", label: "وزن طبیعی", from: 18.5, to: 25 },
-  { key: "over", label: "اضافه‌وزن", from: 25, to: 30 },
-  { key: "obese1", label: "چاقی درجه 1", from: 30, to: 35 },
-  { key: "obese2", label: "چاقی درجه 2", from: 35, to: 40 },
-  { key: "obese3", label: "چاقی درجه 3", from: 40, to: Infinity },
+  { key: "under", label: "کم‌وزن", labelEn: "Underweight", from: 0, to: 18.5 },
+  { key: "normal", label: "وزن طبیعی", labelEn: "Normal weight", from: 18.5, to: 25 },
+  { key: "over", label: "اضافه‌وزن", labelEn: "Overweight", from: 25, to: 30 },
+  { key: "obese1", label: "چاقی درجه 1", labelEn: "Obesity class 1", from: 30, to: 35 },
+  { key: "obese2", label: "چاقی درجه 2", labelEn: "Obesity class 2", from: 35, to: 40 },
+  { key: "obese3", label: "چاقی درجه 3", labelEn: "Obesity class 3", from: 40, to: Infinity },
 ];
 
 export const BMI_NORMAL_MIN = 18.5;
@@ -32,8 +34,8 @@ export function bmiCategory(bmi: number): BmiCategory {
  * صفر = داخل بازه).
  */
 export function calcBmi(heightCm: number, weightKg: number): BmiResult {
-  if (!fin(heightCm) || heightCm < 100 || heightCm > 250) return { ok: false, error: "قد را بین 100 تا 250 سانتی‌متر وارد کن" };
-  if (!fin(weightKg) || weightKg < 20 || weightKg > 400) return { ok: false, error: "وزن را بین 20 تا 400 کیلوگرم وارد کن" };
+  if (!fin(heightCm) || heightCm < 100 || heightCm > 250) return { ok: false, error: tr("قد را بین 100 تا 250 سانتی‌متر وارد کن", "Enter a height between 100 and 250 cm") };
+  if (!fin(weightKg) || weightKg < 20 || weightKg > 400) return { ok: false, error: tr("وزن را بین 20 تا 400 کیلوگرم وارد کن", "Enter a weight between 20 and 400 kg") };
   const m = heightCm / 100;
   const bmi = weightKg / (m * m);
   const minKg = BMI_NORMAL_MIN * m * m;
@@ -46,4 +48,8 @@ export function calcBmi(heightCm: number, weightKg: number): BmiResult {
 export function bmiScalePercent(bmi: number): number {
   const lo = 15, hi = 40;
   return Math.max(0, Math.min(100, ((bmi - lo) / (hi - lo)) * 100));
+}
+
+export function bmiCategoryLabel(c: BmiCategory): string {
+  return tr(c.label, c.labelEn);
 }

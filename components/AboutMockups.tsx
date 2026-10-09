@@ -6,6 +6,7 @@ import { Check, Lock, RefreshCw, Sparkles, Bot } from "lucide-react";
 import { TickButton } from "@/components/TickButton";
 import { GradientRing, RING_AMBER, RING_BLUE, RING_GREEN } from "@/components/GradientRing";
 import { StreakFlame } from "@/components/StreakFlame";
+import { tr, trv } from "@/lib/i18n";
 
 // ─── ماکت‌های کوچک «زنده» صفحه‌ی درباره ───────────────────────────────────
 // همه تزئینی‌اند (aria-hidden، بدون فوکوس)، دیتای نمونه‌ی ثابت دارند (بدون
@@ -29,17 +30,20 @@ function useLoop(len: number, ms: number, initial: number) {
 }
 
 /* ─── روتین ─── */
-const TASKS = [
-  { name: "مدیتیشن صبحگاهی", time: "07:00", tag: "سلامتی" },
-  { name: "مطالعه", time: "13:30", tag: "یادگیری" },
-  { name: "پیاده‌روی عصر", time: "18:00", tag: "ورزش" },
-  { name: "برنامه‌ریزی فردا", time: "22:00", tag: "کار" },
+const tasks = () => [
+  { name: tr("مدیتیشن صبحگاهی", "Morning meditation"), time: "07:00", tag: tr("سلامتی", "Health") },
+  { name: tr("مطالعه", "Reading"), time: "13:30", tag: tr("یادگیری", "Learning") },
+  { name: tr("پیاده‌روی عصر", "Evening walk"), time: "18:00", tag: tr("ورزش", "Fitness") },
+  { name: tr("برنامه‌ریزی فردا", "Plan tomorrow"), time: "22:00", tag: tr("کار", "Work") },
 ];
-const WEEK = [
-  { d: "ش", n: 5 }, { d: "ی", n: 6 }, { d: "د", n: 7 }, { d: "س", n: 8 }, { d: "چ", n: 9 }, { d: "پ", n: 10 }, { d: "ج", n: 11 },
+const weekDays = () => [
+  { d: tr("ش", "S"), n: 5 }, { d: tr("ی", "S"), n: 6 }, { d: tr("د", "M"), n: 7 }, { d: tr("س", "T"), n: 8 },
+  { d: tr("چ", "W"), n: 9 }, { d: tr("پ", "T"), n: 10 }, { d: tr("ج", "F"), n: 11 },
 ];
 
 export function AboutMockRoutine() {
+  const TASKS = tasks();
+  const WEEK = weekDays();
   // ۰..۴ تیک‌خوردن پشت‌سرهم، ۵..۶ مکث روی «همه انجام شد»
   const { ref, step } = useLoop(7, 1100, 2);
   const done = Math.min(step, TASKS.length);
@@ -47,7 +51,7 @@ export function AboutMockRoutine() {
     <div ref={ref} className="ab-mock" aria-hidden="true">
       <div className="ab-week">
         {WEEK.map((w, i) => (
-          <span key={w.d} className={i === 4 ? "is-on" : ""}>{w.d}<b className="ab-mono">{w.n}</b></span>
+          <span key={i} className={i === 4 ? "is-on" : ""}>{w.d}<b className="ab-mono">{w.n}</b></span>
         ))}
       </div>
       <div className="ab-routine-sum">
@@ -63,7 +67,7 @@ export function AboutMockRoutine() {
         </div>
       </div>
       <div className="ab-mock-row" style={{ marginTop: 10 }}>
-        <span className="ab-mock-label">پیشرفت امروز</span>
+        <span className="ab-mock-label">{tr("پیشرفت امروز", "Today's progress")}</span>
         <GradientRing value={done / TASKS.length} size={44} stroke={5} grad={RING_GREEN}>
           <span className="ab-mono">{done}/{TASKS.length}</span>
         </GradientRing>
@@ -90,7 +94,7 @@ export function AboutMockStreak() {
     <div ref={ref} className="ab-mock" aria-hidden="true">
       <div className="ab-streak-top">
         <StreakFlame streak={23} className="ab-streak-flame" />
-        <span className="ab-mock-label">روز کامل پشت‌سرهم</span>
+        <span className="ab-mock-label">{tr("روز کامل پشت‌سرهم", "full days in a row")}</span>
       </div>
       <div className="ab-heat">
         {HEAT.map((l, i) => (
@@ -114,11 +118,11 @@ export function AboutMockSleep() {
       <div className="ab-sleep">
         <GradientRing value={7.5 / 8} size={86} stroke={8} grad={RING_BLUE}>
           <span className="ab-mono">7:30</span>
-          <small>از 8 ساعت</small>
+          <small>{tr("از 8 ساعت", "of 8 hours")}</small>
         </GradientRing>
         <div className="ab-sleep-times">
-          <span>خواب<b className="ab-mono" dir="ltr">23:30</b></span>
-          <span>بیداری<b className="ab-mono" dir="ltr">07:00</b></span>
+          <span>{tr("خواب", "Sleep")}<b className="ab-mono" dir="ltr">23:30</b></span>
+          <span>{tr("بیداری", "Wake")}<b className="ab-mono" dir="ltr">07:00</b></span>
         </div>
       </div>
     </div>
@@ -126,19 +130,20 @@ export function AboutMockSleep() {
 }
 
 /* ─── بدنسازی ─── */
-const MOVES = [
-  { name: "پرس سینه هالتر", sets: "4×10" },
-  { name: "قفسه سینه دمبل", sets: "3×12" },
-  { name: "پشت بازو سیم‌کش", sets: "3×12" },
+const moves = () => [
+  { name: tr("پرس سینه هالتر", "Barbell bench press"), sets: "4×10" },
+  { name: tr("قفسه سینه دمبل", "Dumbbell fly"), sets: "3×12" },
+  { name: tr("پشت بازو سیم‌کش", "Cable triceps pushdown"), sets: "3×12" },
 ];
 
 export function AboutMockWorkout() {
+  const MOVES = moves();
   const { ref, step } = useLoop(5, 1200, 1);
   const done = Math.min(step, MOVES.length);
   return (
     <div ref={ref} className="ab-mock" aria-hidden="true">
       <div className="ab-mock-row" style={{ marginBottom: 6 }}>
-        <span className="ab-mock-strong">روز 1 — سینه و پشت بازو</span>
+        <span className="ab-mock-strong">{tr("روز 1 — سینه و پشت بازو", "Day 1 - chest and triceps")}</span>
         <span className="ab-ai-chip"><Sparkles size={11} /> AI</span>
       </div>
       <div className="ab-tasks">
@@ -155,13 +160,14 @@ export function AboutMockWorkout() {
 }
 
 /* ─── کالری ─── */
-const MACROS = [
-  { label: "پروتئین", v: 0.72, c: "var(--ring-1a)" },
-  { label: "کربوهیدرات", v: 0.58, c: "var(--ring-2a)" },
-  { label: "چربی", v: 0.44, c: "var(--ring-3a)" },
+const macros = () => [
+  { label: tr("پروتئین", "Protein"), v: 0.72, c: "var(--ring-1a)" },
+  { label: tr("کربوهیدرات", "Carbs"), v: 0.58, c: "var(--ring-2a)" },
+  { label: tr("چربی", "Fat"), v: 0.44, c: "var(--ring-3a)" },
 ];
 
 export function AboutMockCalorie() {
+  const MACROS = macros();
   const ref = useRef<HTMLDivElement>(null);
   const inView = useInView(ref, { once: true, margin: "-40px" });
   const reduce = useReducedMotion();
@@ -170,7 +176,7 @@ export function AboutMockCalorie() {
       <div className="ab-cal">
         <GradientRing value={1640 / 2200} size={86} stroke={8} grad={RING_AMBER}>
           <span className="ab-mono">1640</span>
-          <small>از 2200</small>
+          <small>{tr("از 2200", "of 2200")}</small>
         </GradientRing>
         <div className="ab-macros">
           {MACROS.map((m, i) => (
@@ -189,9 +195,9 @@ export function AboutMockCalorie() {
         </div>
       </div>
       <div className="ab-foods">
-        <span>نان سنگک<b className="ab-mono">260</b></span>
-        <span>جوجه‌کباب<b className="ab-mono">190</b></span>
-        <span>دوغ<b className="ab-mono">30</b></span>
+        <span>{tr("نان سنگک", "Sangak bread")}<b className="ab-mono">260</b></span>
+        <span>{tr("جوجه‌کباب", "Chicken kebab")}<b className="ab-mono">190</b></span>
+        <span>{tr("دوغ", "Doogh")}<b className="ab-mono">30</b></span>
       </div>
     </div>
   );
@@ -208,12 +214,12 @@ export function AboutMockTrade() {
     <div ref={ref} className="ab-trade" aria-hidden="true">
       <div className="ab-mock">
         <div className="ab-mock-row">
-          <span className="ab-mock-strong">حساب اصلی</span>
-          <span className="ab-sync"><i /> MT5 همگام شد</span>
+          <span className="ab-mock-strong">{tr("حساب اصلی", "Main account")}</span>
+          <span className="ab-sync"><i /> {tr("MT5 همگام شد", "MT5 synced")}</span>
         </div>
         <div className="ab-mock-row" style={{ marginTop: 6 }}>
           <span className="ab-pnl ab-mono" dir="ltr">+4.8%</span>
-          <span className="ab-mock-label">نرخ برد <b className="ab-mono" style={{ color: "var(--text)" }}>62%</b></span>
+          <span className="ab-mock-label">{tr("نرخ برد", "Win rate")} <b className="ab-mono" style={{ color: "var(--text)" }}>62%</b></span>
         </div>
         <svg className="ab-equity" viewBox="0 0 300 80" preserveAspectRatio="none">
           <defs>
@@ -247,7 +253,7 @@ export function AboutMockTrade() {
         <div className="ab-cal-ev-head">
           <span className="ab-impact"><i /><i /><i /></span>
           <span className="ab-mono" dir="ltr">USD · CPI</span>
-          <span className="ab-mock-label" style={{ marginInlineStart: "auto" }}><RefreshCw size={11} style={{ display: "inline", verticalAlign: "-1px" }} /> تقویم اقتصادی</span>
+          <span className="ab-mock-label" style={{ marginInlineStart: "auto" }}><RefreshCw size={11} style={{ display: "inline", verticalAlign: "-1px" }} /> {tr("تقویم اقتصادی", "Economic calendar")}</span>
         </div>
         <div className="ab-cal-nums ab-mono">
           <div className="is-actual">Actual<b>3.1%</b></div>
@@ -268,7 +274,7 @@ export function AboutMockMentor() {
   return (
     <div ref={ref} className="ab-mock" aria-hidden="true">
       <div className="ab-chat">
-        <div className="ab-bubble ab-bubble-peer">برنامه‌ی این هفته‌ت رو فرستادم.<small className="ab-mono">09:12</small></div>
+        <div className="ab-bubble ab-bubble-peer">{tr("برنامه‌ی این هفته‌ت رو فرستادم.", "I sent you this week's plan.")}<small className="ab-mono">09:12</small></div>
         {showTyping && <span className="ab-typing"><i /><i /><i /></span>}
         {showReply && (
           <motion.div
@@ -278,19 +284,20 @@ export function AboutMockMentor() {
             animate={{ opacity: 1, y: 0, scale: 1 }}
             transition={{ duration: 0.4, ease: EASE }}
           >
-            دیدم، از امروز شروع می‌کنم.<small className="ab-mono">09:15</small>
+            {tr("دیدم، از امروز شروع می‌کنم.", "Got it, I will start today.")}<small className="ab-mono">09:15</small>
           </motion.div>
         )}
       </div>
-      <div className="ab-e2ee-line"><Lock size={12} /> سرتاسر رمزنگاری‌شده</div>
+      <div className="ab-e2ee-line"><Lock size={12} /> {tr("سرتاسر رمزنگاری‌شده", "End-to-end encrypted")}</div>
     </div>
   );
 }
 
 /* ─── نومو: تایپ یک درخواست و ساخته‌شدن برنامه ─── */
-const NUMO_TEXT = "فردا ساعت 7 صبح پیاده‌روی بذار";
+const numoText = () => tr("فردا ساعت 7 صبح پیاده‌روی بذار", "Add a walk tomorrow at 7 am");
 
 export function AboutMockNumo() {
+  const NUMO_TEXT = numoText();
   const ref = useRef<HTMLDivElement>(null);
   const inView = useInView(ref, { margin: "-40px" });
   const reduce = useReducedMotion();
@@ -311,7 +318,7 @@ export function AboutMockNumo() {
         <span>{typed}{!finished && <span className="ab-caret" />}</span>
       </div>
       <div className="ab-numo-done" style={{ opacity: finished ? 1 : 0, transition: "opacity .3s ease" }}>
-        <Check size={14} /> «پیاده‌روی» به برنامه‌ی فردا ساعت <span className="ab-mono">07:00</span> اضافه شد
+        <Check size={14} /> {trv(<>«پیاده‌روی» به برنامه‌ی فردا ساعت <span className="ab-mono">07:00</span> اضافه شد</>, <>Walk added to tomorrow's plan at <span className="ab-mono">07:00</span></>)}
       </div>
     </div>
   );

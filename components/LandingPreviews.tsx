@@ -22,6 +22,7 @@ import {
   fa, MockAccountCard, MockCard, MockDateStrip, MockFilterButton, MockFriendsCard, MockMedicationCard,
   MockMentorCard, MockMentorChat, MockRoadmapCard, MockRoadmapStage, MockStreakTiers, MockTaskList,
 } from "@/components/LandingMockups";
+import { tr } from "@/lib/i18n";
 
 // ─── پیش‌نمایش‌های ویترین — هرکدام یک برش از صفحه‌ی واقعی همان بخش ────────
 // (نه UI ساختگی). هرجا کامپوننت اپ فقط نمایشی است، خودش رندر می‌شود
@@ -43,29 +44,29 @@ export function PreviewRoutine() {
       <div className="flex flex-col gap-2.5">
         <MockDateStrip />
         <div className="flex flex-wrap items-center gap-2">
-          <MockFilterButton label="تاریخچه" icon={<History size={15} />} />
-          <MockFilterButton label="امروز" icon={<Calendar size={15} />} active />
-          <MockFilterButton label="فیلتر" icon={<Filter size={15} />} />
+          <MockFilterButton label={tr("تاریخچه", "History")} icon={<History size={15} />} />
+          <MockFilterButton label={tr("امروز", "Today")} icon={<Calendar size={15} />} active />
+          <MockFilterButton label={tr("فیلتر", "Filter")} icon={<Filter size={15} />} />
         </div>
       </div>
       <MockTaskList
         tasks={[
-          { name: "مدیتیشن صبحگاهی", time: "07:00", importance: "medium", tag: "سلامتی", done: true },
-          { name: "جلسه کاری", time: "11:00", importance: "veryHigh", tag: "کار", missed: true },
-          { name: "مطالعه‌ی کتاب", time: "21:30", importance: "high", tag: "یادگیری" },
-          { name: "برنامه تمرینی امروز", exercise: true },
+          { name: tr("مدیتیشن صبحگاهی", "Morning meditation"), time: "07:00", importance: "medium", tag: tr("سلامتی", "Health"), done: true },
+          { name: tr("جلسه کاری", "Work meeting"), time: "11:00", importance: "veryHigh", tag: tr("کار", "Work"), missed: true },
+          { name: tr("مطالعه‌ی کتاب", "Reading a book"), time: "21:30", importance: "high", tag: tr("یادگیری", "Learning") },
+          { name: tr("برنامه تمرینی امروز", "Today's workout plan"), exercise: true },
         ]}
       />
       <MockMedicationCard meds={[
-        { name: "امگا 3", every: "هر 12 ساعت", times: "09:00 · 21:00", left: "18 روز مونده" },
+        { name: tr("امگا 3", "Omega 3"), every: tr("هر 12 ساعت", "Every 12 hours"), times: "09:00 · 21:00", left: tr("18 روز مونده", "18 days left") },
       ]} />
       {/* اعلان پوش واقعی (lib/reminderPlan.ts) */}
       <div className="lsc-push">
         {/* eslint-disable-next-line @next/next/no-img-element */}
         <img src="/images/logo-icon-dark-theme.png" alt="" width={28} height={28} className="lsc-push-ic" />
         <div className="min-w-0">
-          <b>یادآوری دارو</b>
-          <span>نوبت «امگا 3» ساعت 21:00 — 15 دقیقه‌ی دیگه.</span>
+          <b>{tr("یادآوری دارو", "Medication reminder")}</b>
+          <span>{tr("نوبت «امگا 3» ساعت 21:00 — 15 دقیقه‌ی دیگه.", "Omega 3 dose at 21:00, in 15 minutes.")}</span>
         </div>
       </div>
     </Pv>
@@ -78,8 +79,8 @@ export function PreviewStreak() {
     <Pv>
       <MockCard>
         <div className="mb-3 flex items-center justify-between text-[13px] font-bold">
-          <span>سطح‌های استریک</span>
-          <span className="text-[11px] font-semibold text-dash-muted">روزهای کامل پشت‌سرهم</span>
+          <span>{tr("سطح‌های استریک", "Streak levels")}</span>
+          <span className="text-[11px] font-semibold text-dash-muted">{tr("روزهای کامل پشت‌سرهم", "Full days in a row")}</span>
         </div>
         <MockStreakTiers />
       </MockCard>
@@ -89,25 +90,27 @@ export function PreviewStreak() {
 }
 
 /* ─── آنالیز هفتگی: خود WeeklyAnalysisHero و WeeklyAnalysisInsights ─── */
-const ANALYSIS = {
+const analysisData = () => ({
   isCurrentWeek: true,
   daysElapsed: 5,
-  headline: "5 روز از 7 روز بالای 70 بودی و خوابت 0.6 ساعت بیشتر شد",
-  archetype: { key: "steady", title: "ثابت‌قدم", description: "امتیاز روزهات خیلی به هم نزدیک بود.", tone: "good" },
+  headline: tr("5 روز از 7 روز بالای 70 بودی و خوابت 0.6 ساعت بیشتر شد", "5 of 7 days above 70 and your sleep went up by 0.6 hours"),
+  archetype: { key: "steady", title: tr("ثابت‌قدم", "Steady"), description: tr("امتیاز روزهات خیلی به هم نزدیک بود.", "Your daily scores were very close to each other."), tone: "good" },
   overall: {
     score: 82, prevScore: 74, delta: 8, grade: "A", confidence: "high", consistency: 86, activeDays: 5,
-    bestDay: { date: "", weekday: "سه‌شنبه", score: 94, isToday: false, isFuture: false },
-    worstDay: { date: "", weekday: "شنبه", score: 61, isToday: false, isFuture: false },
+    bestDay: { date: "", weekday: tr("سه‌شنبه", "Tuesday"), score: 94, isToday: false, isFuture: false },
+    worstDay: { date: "", weekday: tr("شنبه", "Saturday"), score: 61, isToday: false, isFuture: false },
   },
-  prediction: { projectedScore: 84, low: 79, high: 89, message: "با همین روند، هفته رو با حدود 84 (نمره‌ی A) تموم می‌کنی." },
-} as unknown as WeeklyAnalysis;
+  prediction: { projectedScore: 84, low: 79, high: 89, message: tr("با همین روند، هفته رو با حدود 84 (نمره‌ی A) تموم می‌کنی.", "At this pace you will finish the week with about 84 (grade A).") },
+} as unknown as WeeklyAnalysis);
 
-const INSIGHTS: Insight[] = [
-  { id: "corr", kind: "correlation", icon: "link", title: "خواب ↔ روتین", body: "روزهایی که خواب خوبی داشتی، امتیاز روتین 18 واحد بهتر بود.", domain: "routine", tone: "good" },
-  { id: "up", kind: "improvement", icon: "trend_up", title: "بهتر از هفته‌ی قبل", body: "امتیاز کلت از 74 به 82 رسید (+8).", tone: "good" },
+const insightsData = (): Insight[] => [
+  { id: "corr", kind: "correlation", icon: "link", title: tr("خواب ↔ روتین", "Sleep ↔ routine"), body: tr("روزهایی که خواب خوبی داشتی، امتیاز روتین 18 واحد بهتر بود.", "On days when you slept well, your routine score was 18 points better."), domain: "routine", tone: "good" },
+  { id: "up", kind: "improvement", icon: "trend_up", title: tr("بهتر از هفته‌ی قبل", "Better than last week"), body: tr("امتیاز کلت از 74 به 82 رسید (+8).", "Your overall score rose from 74 to 82 (+8)."), tone: "good" },
 ];
 
 export function PreviewAnalysis() {
+  const ANALYSIS = analysisData();
+  const INSIGHTS = insightsData();
   return (
     <Pv className="lsc-pv-wa wk-scope">
       <WeeklyAnalysisHero analysis={ANALYSIS} compact />
@@ -123,19 +126,19 @@ export function PreviewNumo({ live }: PreviewProps) {
     <Pv className="lsc-pv-numo">
       <div className="lsc-numo-panel">
         <div className="modal-head">
-          <div className="modal-title routine-ai-title">{orb("26px")}نومو</div>
+          <div className="modal-title routine-ai-title">{orb("26px")}{tr("نومو", "Nomo")}</div>
         </div>
         <div className="routine-ai-list">
           <AIMessage from="user" className="routine-ai-row-user">
-            <p>شنبه‌ها و سه‌شنبه‌ها ساعت 6 صبح پیاده‌روی</p>
+            <p>{tr("شنبه‌ها و سه‌شنبه‌ها ساعت 6 صبح پیاده‌روی", "Walk on Saturdays and Tuesdays at 6 am")}</p>
           </AIMessage>
           <AIMessage from="assistant" avatar={orb("24px")} className="routine-ai-row-bot tone-ok">
-            <p>«پیاده‌روی» شنبه ساعت 06:00 اضافه شد.</p>
-            <p className="mt-1">«پیاده‌روی» سه‌شنبه ساعت 06:00 اضافه شد.</p>
+            <p>{tr("«پیاده‌روی» شنبه ساعت 06:00 اضافه شد.", "Walk added for Saturday at 06:00.")}</p>
+            <p className="mt-1">{tr("«پیاده‌روی» سه‌شنبه ساعت 06:00 اضافه شد.", "Walk added for Tuesday at 06:00.")}</p>
           </AIMessage>
         </div>
         <div className="routine-ai-composer">
-          <span className="routine-ai-input lsc-numo-input">پیام…</span>
+          <span className="routine-ai-input lsc-numo-input">{tr("پیام…", "Message…")}</span>
           <span className="routine-ai-action lsc-numo-send"><span className="routine-ai-action-icon"><Send size={16} /></span></span>
         </div>
       </div>
@@ -144,30 +147,31 @@ export function PreviewNumo({ live }: PreviewProps) {
 }
 
 /* ─── بدنسازی: ExerciseTaskList در حال «شروع تمرین» ─── */
-const MOVES = [
-  { n: "پرس سینه هالتر", s: 4, r: 10, done: true },
-  { n: "پرس شیب‌دار دمبل", s: 3, r: 12, done: true },
-  { n: "فلای سیم‌کش", s: 3, r: 12 },
-  { n: "پشت‌بازو سیمکش", s: 3, r: 15 },
+const moves = () => [
+  { n: tr("پرس سینه هالتر", "Barbell bench press"), s: 4, r: 10, done: true },
+  { n: tr("پرس شیب‌دار دمبل", "Incline dumbbell press"), s: 3, r: 12, done: true },
+  { n: tr("فلای سیم‌کش", "Cable fly"), s: 3, r: 12 },
+  { n: tr("پشت‌بازو سیمکش", "Cable triceps pushdown"), s: 3, r: 15 },
 ];
 export function PreviewFitness() {
+  const MOVES = moves();
   const [mode, setMode] = useState<"skip" | "stay">("stay");
   return (
     <Pv>
       <MockCard>
-        <div className="mb-2 text-[12.5px] font-bold">روز تمرین جامانده</div>
+        <div className="mb-2 text-[12.5px] font-bold">{tr("روز تمرین جامانده", "Missed workout day")}</div>
         <SegmentedTabs
-          options={[{ value: "skip" as const, label: "رد شدن" }, { value: "stay" as const, label: "ماندن" }]}
+          options={[{ value: "skip" as const, label: tr("رد شدن", "Skip") }, { value: "stay" as const, label: tr("ماندن", "Stay") }]}
           active={mode}
           onChange={setMode}
         />
       </MockCard>
       <MockCard className="flex flex-col">
         <div className="flex items-center justify-between">
-          <span className="text-[16px] font-bold text-dash-text">برنامه تمرینی</span>
+          <span className="text-[16px] font-bold text-dash-text">{tr("برنامه تمرینی", "Workout plan")}</span>
           <span className="exercise-chrono" dir="ltr"><Timer className="h-[13px] w-[13px]" /><span className="mono">00:18:42</span></span>
         </div>
-        <div className="mt-1 text-[11px] text-dash-muted">سینه و پشت‌بازو</div>
+        <div className="mt-1 text-[11px] text-dash-muted">{tr("سینه و پشت‌بازو", "Chest and triceps")}</div>
         <table className="exercise-plan-table mt-3">
           <thead>
             <tr>
@@ -197,7 +201,7 @@ export function PreviewFitness() {
                         <Check className="h-3 w-3" strokeWidth={3} />
                       </span>
                     ) : (
-                      <span className="exercise-start-btn">شروع</span>
+                      <span className="exercise-start-btn">{tr("شروع", "Start")}</span>
                     )}
                   </div>
                 </td>
@@ -209,7 +213,7 @@ export function PreviewFitness() {
           className="mt-4 flex w-full items-center justify-center gap-2 rounded-2xl border py-3 text-[13px] font-bold"
           style={{ borderColor: "#E05252", color: "#E05252" }}
         >
-          پایان تمرین
+          {tr("پایان تمرین", "End workout")}
         </span>
       </MockCard>
     </Pv>
@@ -219,8 +223,8 @@ export function PreviewFitness() {
 /* ─── کالری ─── */
 export function PreviewCalorie() {
   const entries = [
-    { id: "1", customName: "جوجه‌کباب", grams: 200, customCalories: 330, proteinG: 52, carbsG: 2, fatG: 12 },
-    { id: "2", customName: "چلو مرغ", grams: 350, customCalories: 620, proteinG: 42, carbsG: 78, fatG: 14 },
+    { id: "1", customName: tr("جوجه‌کباب", "Chicken kebab"), grams: 200, customCalories: 330, proteinG: 52, carbsG: 2, fatG: 12 },
+    { id: "2", customName: tr("چلو مرغ", "Rice with chicken"), grams: 350, customCalories: 620, proteinG: 42, carbsG: 78, fatG: 14 },
   ];
   return (
     <Pv>
@@ -228,23 +232,23 @@ export function PreviewCalorie() {
         <div className="flex items-center justify-between">
           <div className="mono text-[15px] font-extrabold" style={{ color: "var(--accent)" }}>
             {fa(930)}<span className="mx-1 text-dash-muted">/</span>{fa(2100)}
-            <span className="mr-1.5 text-[10.5px] font-semibold text-dash-muted">کالری</span>
+            <span className="ms-1.5 text-[10.5px] font-semibold text-dash-muted">{tr("کالری", "kcal")}</span>
           </div>
-          <span className="text-[11px] font-semibold text-dash-green">تغییر برنامه</span>
+          <span className="text-[11px] font-semibold text-dash-green">{tr("تغییر برنامه", "Change plan")}</span>
         </div>
         <div className="lsc-kcal-bar"><i /></div>
         <div className="mt-4 flex items-center justify-between">
           <span className="flex items-center gap-1.5 text-[13px] font-bold text-dash-text">
-            <UtensilsCrossed className="h-4 w-4 text-dash-green" /> کالری‌شمار
+            <UtensilsCrossed className="h-4 w-4 text-dash-green" /> {tr("کالری‌شمار", "Calorie counter")}
           </span>
-          <span className="flex items-center gap-1 text-[11.5px] font-semibold text-dash-green"><Plus className="h-[15px] w-[15px]" /> افزودن</span>
+          <span className="flex items-center gap-1 text-[11.5px] font-semibold text-dash-green"><Plus className="h-[15px] w-[15px]" /> {tr("افزودن", "Add")}</span>
         </div>
         <div className="mt-3 flex flex-col gap-2">
           {entries.map((e) => (
             <div key={e.id} className="calorie-glass-field flex items-center justify-between gap-2.5 border px-4 py-2.5" style={{ borderRadius: 9999 }}>
               <div className="flex min-w-0 items-baseline gap-1.5">
                 <span className="truncate text-[11.5px] font-bold text-dash-text">{e.customName}</span>
-                <span className="mono shrink-0 text-[10px] text-dash-muted">{fa(e.grams)} گرم</span>
+                <span className="mono shrink-0 text-[10px] text-dash-muted">{fa(e.grams)} {tr("گرم", "g")}</span>
               </div>
               <span className="flex shrink-0 items-center gap-2.5">
                 <span className="mono flex items-baseline gap-1 rounded-lg px-2 py-1 text-[12px] font-extrabold" style={{ background: "rgba(var(--accent-rgb),.10)", color: "var(--accent)" }}>
@@ -258,17 +262,17 @@ export function PreviewCalorie() {
       </MockCard>
       {/* هدف روزانه — از lib/calorieCalc.ts (قد، وزن، سن، روزهای تمرین، هدف) */}
       <div className="lsc-goal-panel">
-        <div className="modal-head"><div className="modal-title">هدف روزانه‌ی تو</div></div>
+        <div className="modal-head"><div className="modal-title">{tr("هدف روزانه‌ی تو", "Your daily goal")}</div></div>
         <div className="flex flex-col gap-3">
           <div className="grid grid-cols-4 gap-2">
-            {[["کالری", 2100], ["پروتئین (گرم)", 140], ["کربوهیدرات (گرم)", 220], ["چربی (گرم)", 70]].map(([l, v]) => (
+            {[[tr("کالری", "Calories"), 2100], [tr("پروتئین (گرم)", "Protein (g)"), 140], [tr("کربوهیدرات (گرم)", "Carbs (g)"), 220], [tr("چربی (گرم)", "Fat (g)"), 70]].map(([l, v]) => (
               <div key={l} className="rounded-xl border border-dash-border bg-white/[0.02] px-1.5 py-2 text-center">
                 <div className="mono text-[13px] font-bold text-dash-text">{fa(v)}</div>
                 <div className="mt-0.5 text-[9px] text-dash-muted">{l}</div>
               </div>
             ))}
           </div>
-          <div className="text-[10.5px] text-dash-muted">بر اساس قد، وزن، سن، روزهای تمرین در هفته و هدفت (کاهش، حفظ یا افزایش وزن).</div>
+          <div className="text-[10.5px] text-dash-muted">{tr("بر اساس قد، وزن، سن، روزهای تمرین در هفته و هدفت (کاهش، حفظ یا افزایش وزن).", "Based on your height, weight, age, training days per week and goal (loss, maintenance or gain).")}</div>
         </div>
       </div>
       <CalorieMacrosCard entries={entries} target={{ proteinTargetG: 140, carbsTargetG: 220, fatTargetG: 70 }} />
@@ -279,9 +283,9 @@ export function PreviewCalorie() {
 /* ─── ژورنال ترید ─── */
 export function PreviewTrade() {
   const heads = [
-    { l: "بالانس کل", I: Wallet, v: "20542$" },
-    { l: "سود/زیان خالص", I: ArrowUp, v: "1242$", up: true },
-    { l: "نرخ برد", I: Percent, v: "61.5%", up: true },
+    { l: tr("بالانس کل", "Total balance"), I: Wallet, v: "20542$" },
+    { l: tr("سود/زیان خالص", "Net P/L"), I: ArrowUp, v: "1242$", up: true },
+    { l: tr("نرخ برد", "Win rate"), I: Percent, v: "61.5%", up: true },
   ];
   return (
     <Pv>
@@ -297,21 +301,21 @@ export function PreviewTrade() {
           </div>
         </div>
         <div className="flex flex-col gap-2">
-          <MockAccountCard a={{ name: "حساب پراپ", color: "#3E7BFA", balance: "10842$", pct: "8.4", up: true, trades: 24, win: 62, broker: "FTMO", mt: true }} />
-          <MockAccountCard a={{ name: "حساب شخصی", color: "#F5A524", balance: "9700$", pct: "3.1", up: true, trades: 41, win: 58, mt: true }} />
+          <MockAccountCard a={{ name: tr("حساب پراپ", "Prop account"), color: "#3E7BFA", balance: "10842$", pct: "8.4", up: true, trades: 24, win: 62, broker: "FTMO", mt: true }} />
+          <MockAccountCard a={{ name: tr("حساب شخصی", "Personal account"), color: "#F5A524", balance: "9700$", pct: "3.1", up: true, trades: 41, win: 58, mt: true }} />
         </div>
       </div>
       <div className="trade-surface trade-page-box trade-checklist-detail-box lsc-trade-box">
         <div className="trade-checklist-detail-head">
           <div className="trade-checklist-detail-title">
-            <span className="lsc-cl-name">چک‌لیست ورود</span>
+            <span className="lsc-cl-name">{tr("چک‌لیست ورود", "Entry checklist")}</span>
             <span className="trade-account-dot" style={{ background: "#16C79A" }} />
-            <span className="trade-account-type">الزامی</span>
+            <span className="trade-account-type">{tr("الزامی", "Required")}</span>
           </div>
-          <span className="trade-title-add-btn"><Pencil size={13} /> ویرایش</span>
+          <span className="trade-title-add-btn"><Pencil size={13} /> {tr("ویرایش", "Edit")}</span>
         </div>
         <div className="trade-checklist-items">
-          {[["روند تایم بالاتر هم‌جهته", true], ["حد ضرر پشت ساختار", true], ["خبر مهم تا 30 دقیقه‌ی بعد نیست", false]].map(([t, d]) => (
+          {[[tr("روند تایم بالاتر هم‌جهته", "Higher timeframe trend agrees"), true], [tr("حد ضرر پشت ساختار", "Stop loss behind structure"), true], [tr("خبر مهم تا 30 دقیقه‌ی بعد نیست", "No major news in the next 30 minutes"), false]].map(([t, d]) => (
             <div key={t as string} className={`trade-check-row readonly${d ? " done" : ""}`}>
               <TickButton as="span" checked={!!d} size={20} />
               <span>{t}</span>
@@ -361,10 +365,10 @@ export function PreviewMarket({ live }: PreviewProps) {
               <span className="fx-card-flag"><FlagCircle code={s.flagCode} /></span>
               <span className="fx-card-main">
                 <span className="fx-card-city">{s.label}</span>
-                <span className="fx-card-hours mono"><bdi>{fa(arc.openLabel)}</bdi> تا <bdi>{fa(arc.closeLabel)}</bdi></span>
+                <span className="fx-card-hours mono"><bdi>{fa(arc.openLabel)}</bdi> {tr("تا", "to")} <bdi>{fa(arc.closeLabel)}</bdi></span>
               </span>
               <span className="fx-card-state">
-                <span className="fx-card-label">{open ? "تا بسته شدن" : "تا باز شدن"}</span>
+                <span className="fx-card-label">{open ? tr("تا بسته شدن", "Closes in") : tr("تا باز شدن", "Opens in")}</span>
                 <span className={`fx-card-value${open ? " open" : ""}`}>{target && now ? durationLabel(target, now) : "—"}</span>
               </span>
             </div>
@@ -404,55 +408,56 @@ export function PreviewRoadmap() {
   return (
     <Pv>
       <MockRoadmapCard
-        topic="گیتار"
-        title="گیتار آکوستیک از صفر تا اولین آهنگ"
-        desc="از گرفتن درست گیتار و آکوردهای پایه تا ریتم و نواختن یک آهنگ کامل."
-        duration="10 هفته"
+        topic={tr("گیتار", "Guitar")}
+        title={tr("گیتار آکوستیک از صفر تا اولین آهنگ", "Acoustic guitar from zero to your first song")}
+        desc={tr("از گرفتن درست گیتار و آکوردهای پایه تا ریتم و نواختن یک آهنگ کامل.", "From holding the guitar properly and basic chords to rhythm and playing a whole song.")}
+        duration={tr("10 هفته", "10 weeks")}
         stages={5}
-        level="صفر مطلق"
+        level={tr("صفر مطلق", "Absolute beginner")}
         pct={40}
       />
       <ol className="lsc-stages">
-        <MockRoadmapStage n={1} title="آشنایی با ساز و آکوردهای پایه" duration="2 هفته" done tasksDone={4} tasks={4} />
+        <MockRoadmapStage n={1} title={tr("آشنایی با ساز و آکوردهای پایه", "Getting to know the instrument and basic chords")} duration={tr("2 هفته", "2 weeks")} done tasksDone={4} tasks={4} />
         <MockRoadmapStage
-          n={2} title="ریتم و الگوهای ضرب" duration="2 هفته" tasksDone={1} tasks={3}
+          n={2} title={tr("ریتم و الگوهای ضرب", "Rhythm and strumming patterns")} duration={tr("2 هفته", "2 weeks")} tasksDone={1} tasks={3}
           openTasks={[
-            { title: "الگوی ضرب پایین-بالا با مترونوم روی 70", checked: true },
-            { title: "تعویض روان آکوردهای G، C و D" },
+            { title: tr("الگوی ضرب پایین-بالا با مترونوم روی 70", "Down-up strumming pattern with the metronome at 70"), checked: true },
+            { title: tr("تعویض روان آکوردهای G، C و D", "Smooth changes between G, C and D chords") },
           ]}
         />
-        <MockRoadmapStage n={3} title="اولین آهنگ کامل" duration="3 هفته" tasksDone={0} tasks={4} />
+        <MockRoadmapStage n={3} title={tr("اولین آهنگ کامل", "Your first complete song")} duration={tr("3 هفته", "3 weeks")} tasksDone={0} tasks={4} />
       </ol>
     </Pv>
   );
 }
 
 /* ─── مربی‌ها ─── */
-const WEEK = [
-  { d: "ش", s: "done" }, { d: "ی", s: "done" }, { d: "د", s: "missed" }, { d: "س", s: "done" },
-  { d: "چ", s: "done" }, { d: "پ", s: "today" }, { d: "ج", s: "" },
+const weekCells = () => [
+  { d: tr("ش", "S"), s: "done" }, { d: tr("ی", "S"), s: "done" }, { d: tr("د", "M"), s: "missed" }, { d: tr("س", "T"), s: "done" },
+  { d: tr("چ", "W"), s: "done" }, { d: tr("پ", "T"), s: "today" }, { d: tr("ج", "F"), s: "" },
 ];
 export function PreviewMentor() {
+  const WEEK = weekCells();
   return (
     <Pv>
-      <MockMentorCard name="علی کاظمی" line="مربی بدنسازی · 8 سال تجربه" rating="4.8" count="52" since="مهر 1403" />
+      <MockMentorCard name={tr("علی کاظمی", "Ali Kazemi")} line={tr("مربی بدنسازی · 8 سال تجربه", "Bodybuilding mentor · 8 years of experience")} rating="4.8" count="52" since={tr("مهر 1403", "Sep 2024")} />
       <MockCard>
         <MockMentorChat
-          peer="علی کاظمی"
+          peer={tr("علی کاظمی", "Ali Kazemi")}
           msgs={[
-            { text: "این هفته چهار جلسه کامل بود، عالیه. از فردا وزنه‌ی پرس رو 2.5 کیلو ببر بالا.", time: "18:42" },
-            { mine: true, text: "حتما! دوشنبه جا موند، جبرانش کنم؟", time: "18:45" },
+            { text: tr("این هفته چهار جلسه کامل بود، عالیه. از فردا وزنه‌ی پرس رو 2.5 کیلو ببر بالا.", "Four full sessions this week, great. From tomorrow, add 2.5 kg to the press."), time: "18:42" },
+            { mine: true, text: tr("حتما! دوشنبه جا موند، جبرانش کنم؟", "Sure! I missed Monday, should I make it up?"), time: "18:45" },
           ]}
         />
       </MockCard>
       <MockCard>
         <div className="flex items-center justify-between text-[12.5px] font-bold">
-          <span>پیشرفت این هفته</span>
-          <span className="text-[11px] font-semibold text-dash-muted">از تیک‌های روتین شاگرد</span>
+          <span>{tr("پیشرفت این هفته", "This week's progress")}</span>
+          <span className="text-[11px] font-semibold text-dash-muted">{tr("از تیک‌های روتین شاگرد", "From the student's routine ticks")}</span>
         </div>
         <div className="lsc-week">
-          {WEEK.map((w) => (
-            <span key={w.d} className={`lsc-week-cell${w.s ? ` is-${w.s}` : ""}`}>
+          {WEEK.map((w, wi) => (
+            <span key={wi} className={`lsc-week-cell${w.s ? ` is-${w.s}` : ""}`}>
               <small>{w.d}</small>
               <i>{w.s === "done" ? <Check size={11} strokeWidth={3} /> : w.s === "missed" ? <X size={11} strokeWidth={3} /> : null}</i>
             </span>

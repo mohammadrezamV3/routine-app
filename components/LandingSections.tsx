@@ -14,13 +14,16 @@ import { AgentAvatar } from "@/components/AgentAvatar";
 import { GradientArc } from "@/components/GradientRing";
 import { DashProgressCircle } from "@/components/DashProgressCircle";
 import { StreakFlame } from "@/components/StreakFlame";
-import { FRIENDS, INERT, MockMentorChat, MockStreakTiers } from "@/components/LandingMockups";
+import { friends, INERT, MockMentorChat, MockStreakTiers } from "@/components/LandingMockups";
 import "@/components/landing-sections.css";
 import "@/components/landing-dashboard.css";
-import { FAQ_ITEMS } from "@/lib/landingFaq";
+import { getFaqItems } from "@/lib/landingFaq";
+import { brandName } from "@/lib/brand";
+import { jMonthName, weekdayName } from "@/lib/jalali";
 import { fillPriceCopy } from "@/lib/planPricing";
 import { usePlanPricing } from "@/lib/usePlanPricing";
 import { STATS_BASE, type PublicStats } from "@/lib/publicStatsBase";
+import { tr } from "@/lib/i18n";
 
 const EASE = [0.22, 1, 0.36, 1] as const;
 
@@ -97,14 +100,15 @@ function CountUp({ to, suffix = "" }: { to: number; suffix?: string }) {
 
 // عددها = واقعی + پایه (lib/publicStatsBase.ts)؛ تا پاسخ /api/public/stats برسه خود
 // پایه‌ها نشون داده می‌شن.
-const STATS: { key: keyof PublicStats; label: string }[] = [
-  { key: "users", label: "کاربر فعال" },
-  { key: "routinePrograms", label: "روتین ساخته‌شده" },
-  { key: "exercisePlans", label: "برنامه تمرینی" },
-  { key: "journalEntries", label: "معامله ثبت‌شده" },
+const stats_ = (): { key: keyof PublicStats; label: string }[] => [
+  { key: "users", label: tr("کاربر فعال", "active users") },
+  { key: "routinePrograms", label: tr("روتین ساخته‌شده", "routines created") },
+  { key: "exercisePlans", label: tr("برنامه تمرینی", "workout plans") },
+  { key: "journalEntries", label: tr("معامله ثبت‌شده", "trades logged") },
 ];
 
 export function LandingStats() {
+  const STATS = stats_();
   const [stats, setStats] = useState<PublicStats>(STATS_BASE);
   useEffect(() => {
     let alive = true;
@@ -140,17 +144,18 @@ export function LandingStats() {
 
 /* ───────────────────────── 2) How it works ───────────────────────── */
 
-const STEPS = [
-  { icon: UserPlus, title: "برنامه‌ات را بساز", body: "ثبت‌نام کن و روتینت را بچین؛ یا به «نومو» بگو چه می‌خواهی. «روتین من» 14 روز رایگان است." },
-  { icon: LayoutGrid, title: "اجرا کن", body: "کارهای امروزت را انجام بده و همان لحظه تیک بزن." },
-  { icon: CalendarCheck, title: "پیشرفتت را ببین", body: "استریک، تاریخچه و آنالیز هفتگی نشان می‌دهند مسیرت چطور پیش می‌رود." },
+const steps = () => [
+  { icon: UserPlus, title: tr("برنامه‌ات را بساز", "Build your plan"), body: tr("ثبت‌نام کن و روتینت را بچین؛ یا به «نومو» بگو چه می‌خواهی. «روتین من» 14 روز رایگان است.", "Sign up and lay out your routine, or tell Nomo what you want. My Routine is free for 14 days.") },
+  { icon: LayoutGrid, title: tr("اجرا کن", "Do it"), body: tr("کارهای امروزت را انجام بده و همان لحظه تیک بزن.", "Do today's tasks and tick them off the moment you finish.") },
+  { icon: CalendarCheck, title: tr("پیشرفتت را ببین", "See your progress"), body: tr("استریک، تاریخچه و آنالیز هفتگی نشان می‌دهند مسیرت چطور پیش می‌رود.", "Your streak, history and weekly review show how your journey is going.") },
 ];
 
 export function LandingHowItWorks() {
   const reduce = useReducedMotion();
+  const STEPS = steps();
   return (
     <div>
-      <SectionHead title="برنامه، اجرا،" accent="پیشرفت" />
+      <SectionHead title={tr("برنامه، اجرا،", "Plan, do,")} accent={tr("پیشرفت", "progress")} />
       <div className="ls-steps">
         <div className="ls-steps-line" aria-hidden="true">
           <motion.span
@@ -185,20 +190,21 @@ export function LandingHowItWorks() {
 // چون نکته‌ی اصلیش همینه: ثبت‌کردن بدون رفتن به صفحه‌ی دیگه. همه‌ی ادعاها با
 // کد DashboardClient/DashboardActions/DashboardCommand چک شده. تصویر inert.
 
-const DASH_RINGS = [
-  { label: "روتین", v: 0.78, a: "var(--ring-1a)", b: "var(--ring-1b)" },
-  { label: "تمرین", v: 0.6, a: "var(--ring-2a)", b: "var(--ring-2b)" },
-  { label: "کالری", v: 0.46, a: "var(--ring-3a)", b: "var(--ring-3b)" },
+const dashRings = () => [
+  { label: tr("روتین", "Routine"), v: 0.78, a: "var(--ring-1a)", b: "var(--ring-1b)" },
+  { label: tr("تمرین", "Workout"), v: 0.6, a: "var(--ring-2a)", b: "var(--ring-2b)" },
+  { label: tr("کالری", "Calories"), v: 0.46, a: "var(--ring-3a)", b: "var(--ring-3b)" },
 ];
 
-const DASH_POINTS: { icon: LucideIcon; title: string; body: string }[] = [
-  { icon: LayoutGrid, title: "امروزت را ببین", body: "برنامه‌های امروز، وضعیت انجام‌شدن و اولویت‌هایت را یک‌جا دنبال کن." },
-  { icon: Zap, title: "سریع ثبت کن", body: "کاری که انجام داده‌ای را همان لحظه ثبت کن و ادامه بده." },
-  { icon: RefreshCw, title: "پیشرفتت را دنبال کن", body: "عملکردت فقط یک لیست نیست؛ روندی است که می‌بینی. هر تیک همان لحظه در برنامه هفتگی، استریک و دستگاه‌های دیگرت هم دیده می‌شود." },
-  { icon: Sparkles, title: "جست‌وجوی سریع", body: "با Ctrl/⌘ + K و چند حرف به هر بخش برس." },
+const dashPoints = (): { icon: LucideIcon; title: string; body: string }[] => [
+  { icon: LayoutGrid, title: tr("امروزت را ببین", "See your day"), body: tr("برنامه‌های امروز، وضعیت انجام‌شدن و اولویت‌هایت را یک‌جا دنبال کن.", "Follow today's plans, their completion status and your priorities in one place.") },
+  { icon: Zap, title: tr("سریع ثبت کن", "Log quickly"), body: tr("کاری که انجام داده‌ای را همان لحظه ثبت کن و ادامه بده.", "Log what you have done the moment you do it, and move on.") },
+  { icon: RefreshCw, title: tr("پیشرفتت را دنبال کن", "Follow your progress"), body: tr("عملکردت فقط یک لیست نیست؛ روندی است که می‌بینی. هر تیک همان لحظه در برنامه هفتگی، استریک و دستگاه‌های دیگرت هم دیده می‌شود.", "Your performance is not just a list; it is a trend you can see. Every tick shows up instantly in the weekly plan, your streak and your other devices.") },
+  { icon: Sparkles, title: tr("جست‌وجوی سریع", "Quick search"), body: tr("با Ctrl/⌘ + K و چند حرف به هر بخش برس.", "Press Ctrl/⌘ + K and type a few letters to reach any section.") },
 ];
 
 function DashRings() {
+  const DASH_RINGS = dashRings();
   return (
     <svg viewBox="0 0 120 120" className="ls-dash-rings" aria-hidden="true" style={{ overflow: "visible" }}>
       {DASH_RINGS.map((r, i) => (
@@ -209,16 +215,17 @@ function DashRings() {
 }
 
 function DashMock() {
+  const DASH_RINGS = dashRings();
   return (
     <div className="ls-dash-mock" aria-hidden="true" {...INERT}>
       <div className="ls-dash-hero">
         <div className="ls-dash-hello">
-          <span className="ls-dash-date">سه‌شنبه، 8 مهر</span>
-          <b>صبح بخیر، سارا</b>
-          <span className="ls-dash-chip"><Flame size={12} /> 23 روز استریک</span>
+          <span className="ls-dash-date">{tr("سه‌شنبه، 8 مهر", `${weekdayName(2)}, ${jMonthName(6)} 8`)}</span>
+          <b>{tr("صبح بخیر، سارا", "Good morning, Sara")}</b>
+          <span className="ls-dash-chip"><Flame size={12} /> {tr("23 روز استریک", "23-day streak")}</span>
           <ul className="ls-dash-legend">
             {DASH_RINGS.map((r) => (
-              <li key={r.label}><i style={{ background: r.a }} />{r.label}<b>{fa(Math.round(r.v * 100))}٪</b></li>
+              <li key={r.label}><i style={{ background: r.a }} />{r.label}<b>{fa(Math.round(r.v * 100))}{tr("٪", "%")}</b></li>
             ))}
           </ul>
         </div>
@@ -227,10 +234,10 @@ function DashMock() {
 
       <div className="ls-dash-quick">
         {[
-          { l: "برنامه‌ی جدید", I: CalendarCheck, c: "var(--accent)" },
-          { l: "ثبت غذا", I: Apple, c: "#FFB547", on: true },
-          { l: "ثبت معامله", I: CandlestickChart, c: "#00C98D" },
-          { l: "شروع تمرین", I: Dumbbell, c: "#3D7DFF" },
+          { l: tr("برنامه‌ی جدید", "New plan"), I: CalendarCheck, c: "var(--accent)" },
+          { l: tr("ثبت غذا", "Log food"), I: Apple, c: "#FFB547", on: true },
+          { l: tr("ثبت معامله", "Log trade"), I: CandlestickChart, c: "#00C98D" },
+          { l: tr("شروع تمرین", "Start workout"), I: Dumbbell, c: "#3D7DFF" },
         ].map(({ l, I, c, on }) => (
           <span key={l} className={`ls-dash-q${on ? " is-on" : ""}`} style={{ ["--c" as string]: c }}>
             <span className="ls-dash-q-ic"><I size={15} /></span>{l}
@@ -240,11 +247,11 @@ function DashMock() {
 
       <div className="ls-dash-row">
         <div className="ls-dash-card">
-          <div className="ls-dash-card-h"><CalendarDays size={13} /> برنامه‌های امروز</div>
+          <div className="ls-dash-card-h"><CalendarDays size={13} /> {tr("برنامه‌های امروز", "Today's plans")}</div>
           {[
-            { t: "07:00", n: "مدیتیشن صبحگاهی", d: true },
-            { t: "11:00", n: "جلسه‌ی کاری", d: true },
-            { t: "21:30", n: "مطالعه‌ی کتاب", d: false },
+            { t: "07:00", n: tr("مدیتیشن صبحگاهی", "Morning meditation"), d: true },
+            { t: "11:00", n: tr("جلسه‌ی کاری", "Work meeting"), d: true },
+            { t: "21:30", n: tr("مطالعه‌ی کتاب", "Reading a book"), d: false },
           ].map((x) => (
             <div key={x.n} className={`ls-dash-tl${x.d ? " is-done" : ""}`}>
               <span className="mono">{x.t}</span>
@@ -254,32 +261,33 @@ function DashMock() {
           ))}
         </div>
         <div className="ls-dash-card">
-          <div className="ls-dash-card-h"><TrendingUp size={13} /> عملکرد ترید</div>
+          <div className="ls-dash-card-h"><TrendingUp size={13} /> {tr("عملکرد ترید", "Trading performance")}</div>
           <div className="ls-dash-pnl mono" dir="ltr">+1,242$</div>
           <svg viewBox="0 0 100 34" className="ls-dash-spark" preserveAspectRatio="none">
             <path d="M0 28 L12 24 L22 26 L34 18 L46 20 L58 12 L70 14 L82 7 L100 4" fill="none" stroke="var(--pnl-win, #00C98D)" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round" vectorEffect="non-scaling-stroke" />
           </svg>
-          <div className="ls-dash-sub">نرخ برد {fa(62)}٪ · {fa(24)} معامله</div>
+          <div className="ls-dash-sub">{tr(`نرخ برد ${fa(62)}٪ · ${fa(24)} معامله`, `Win rate ${fa(62)}% · ${fa(24)} trades`)}</div>
         </div>
       </div>
 
       {/* پاپ‌آپ «ثبت غذا» — روی خود داشبورد، نه صفحه‌ی جدید */}
       <div className="ls-dash-pop">
-        <div className="ls-dash-pop-h"><Apple size={14} /> افزودن غذا</div>
-        <div className="ls-dash-pop-f">جوجه‌کباب <span className="mono">200 گرم</span></div>
-        <div className="ls-dash-pop-btn">افزودن</div>
+        <div className="ls-dash-pop-h"><Apple size={14} /> {tr("افزودن غذا", "Add food")}</div>
+        <div className="ls-dash-pop-f">{tr("جوجه‌کباب", "Chicken kebab")} <span className="mono">{tr("200 گرم", "200 g")}</span></div>
+        <div className="ls-dash-pop-btn">{tr("افزودن", "Add")}</div>
       </div>
     </div>
   );
 }
 
 export function LandingDashboard() {
+  const DASH_POINTS = dashPoints();
   return (
     <div>
-      <SectionHead title="کل روزت،" accent="یک‌جا" />
+      <SectionHead title={tr("کل روزت،", "Your whole day,")} accent={tr("یک‌جا", "in one place")} />
       <Reveal>
         <p className="ls-dash-intro">
-          از برنامه امروز تا میزان پیشرفتت؛ مهم‌ترین چیزها را بدون جابه‌جایی بین چند ابزار ببین.
+          {tr("از برنامه امروز تا میزان پیشرفتت؛ مهم‌ترین چیزها را بدون جابه‌جایی بین چند ابزار ببین.", "From today's plan to how far you have come; see the most important things without switching between several tools.")}
         </p>
       </Reveal>
       <div className="ls-dash">
@@ -312,10 +320,10 @@ function VisE2EE() {
   return (
     <div className="ls-vis ls-vis-chat dash-scope" aria-hidden="true" {...INERT}>
       <MockMentorChat
-        peer="مربی"
+        peer={tr("مربی", "your mentor")}
         msgs={[
-          { text: "برنامه‌ی این هفته‌ت رو فرستادم.", time: "09:12" },
-          { mine: true, text: "دیدم، از امروز شروع می‌کنم.", time: "09:15" },
+          { text: tr("برنامه‌ی این هفته‌ت رو فرستادم.", "I sent you this week's plan."), time: "09:12" },
+          { mine: true, text: tr("دیدم، از امروز شروع می‌کنم.", "Got it, I will start today."), time: "09:15" },
         ]}
       />
     </div>
@@ -330,7 +338,7 @@ function VisPwa() {
         <div className="ls-toast">
           {/* eslint-disable-next-line @next/next/no-img-element */}
           <img src="/images/logo-icon-dark-theme.png" alt="" width={18} height={18} className="ls-toast-ic" />
-          <span className="ls-toast-tx"><b>یادآوری برنامه</b>تا 15 دقیقه دیگه وقت «پیاده‌روی عصر» می‌رسه.</span>
+          <span className="ls-toast-tx"><b>{tr("یادآوری برنامه", "Plan reminder")}</b>{tr("تا 15 دقیقه دیگه وقت «پیاده‌روی عصر» می‌رسه.", "Evening walk is due in 15 minutes.")}</span>
         </div>
         <div className="ls-phone-row" /><div className="ls-phone-row ls-w70" /><div className="ls-phone-row ls-w50" />
       </div>
@@ -347,6 +355,7 @@ function VisStreak() {
 }
 
 function VisFriends() {
+  const FRIENDS = friends();
   return (
     <div className="ls-vis ls-vis-friends dash-scope" aria-hidden="true" {...INERT}>
       {FRIENDS.slice(0, 2).map((f) => (
@@ -358,7 +367,7 @@ function VisFriends() {
                 <span className="text-[11.5px] font-semibold text-dash-text">{f.name}</span>
                 <StreakFlame streak={f.streak} className="text-[10px]" />
               </span>
-              <span className="mt-0.5 block text-[9.5px] text-dash-muted">{f.done} از {f.total} برنامه</span>
+              <span className="mt-0.5 block text-[9.5px] text-dash-muted">{tr(`${f.done} از ${f.total} برنامه`, `${f.done} of ${f.total} plans`)}</span>
             </span>
           </span>
           <DashProgressCircle value={Math.round((f.done / f.total) * 100)} size={34} strokeWidth={3.5} />
@@ -372,13 +381,13 @@ function VisMeta() {
   return (
     <div className="ls-vis ls-vis-meta" aria-hidden="true" {...INERT}>
       <div className="ls-meta-head">
-        <span>وضعیت اتصال</span>
-        <span className="ls-meta-on"><span className="ls-live" /> فعال</span>
+        <span>{tr("وضعیت اتصال", "Connection status")}</span>
+        <span className="ls-meta-on"><span className="ls-live" /> {tr("فعال", "Active")}</span>
       </div>
       <div className="ls-meta-cells">
-        <div className="trade-detail-cell"><span>نسخه</span><b>MT5</b></div>
-        <div className="trade-detail-cell"><span>اکوئیتی</span><b className="mono">10842.50</b></div>
-        <div className="trade-detail-cell"><span>آخرین همگام‌سازی</span><b>امروز 14:05</b></div>
+        <div className="trade-detail-cell"><span>{tr("نسخه", "Version")}</span><b>MT5</b></div>
+        <div className="trade-detail-cell"><span>{tr("اکوئیتی", "Equity")}</span><b className="mono">10842.50</b></div>
+        <div className="trade-detail-cell"><span>{tr("آخرین همگام‌سازی", "Last sync")}</span><b>{tr("امروز 14:05", "Today 14:05")}</b></div>
       </div>
     </div>
   );
@@ -388,12 +397,12 @@ function VisFood() {
   return (
     <div className="ls-vis ls-vis-food dash-scope" aria-hidden="true" {...INERT}>
       <div className="flex items-center gap-1.5 text-[12px] font-bold text-dash-text">
-        <Target className="h-4 w-4 text-dash-green" /> هدف روزانه‌ی تو
+        <Target className="h-4 w-4 text-dash-green" /> {tr("هدف روزانه‌ی تو", "Your daily goal")}
       </div>
       <div className="ls-food-grid">
         {[
-          { l: "کالری", v: "2100" }, { l: "پروتئین (گرم)", v: "140" },
-          { l: "کربوهیدرات (گرم)", v: "220" }, { l: "چربی (گرم)", v: "70" },
+          { l: tr("کالری", "Calories"), v: "2100" }, { l: tr("پروتئین (گرم)", "Protein (g)"), v: "140" },
+          { l: tr("کربوهیدرات (گرم)", "Carbs (g)"), v: "220" }, { l: tr("چربی (گرم)", "Fat (g)"), v: "70" },
         ].map((x) => (
           <div key={x.l} className="rounded-xl border border-dash-border bg-white/[0.02] px-2 py-1.5 text-center">
             <div className="mono text-[12px] font-bold text-dash-text">{x.v}</div>
@@ -405,21 +414,22 @@ function VisFood() {
   );
 }
 
-const BENTO = [
-  { key: "e2ee", cls: "ls-b-e2ee", icon: ShieldCheck, title: "حریم خصوصی، از ابتدا", body: "چت‌ها سرتاسر رمزنگاری‌شده‌اند؛ متنشان را جز خودتان کسی نمی‌بیند.", vis: VisE2EE },
-  { key: "pwa", cls: "ls-b-pwa", icon: Smartphone, title: "چیزی از قلم نیفتد", body: "آریون را روی گوشی نصب کن و برای کارها و برنامه‌های مهمت یادآوری داشته باش.", vis: VisPwa },
-  { key: "streak", cls: "ls-b-streak", icon: Flame, title: "پیوستگی، خودش یک دستاورد است", body: "روزهایی را که به برنامه‌ات عمل کرده‌ای ثبت کن و زنجیره پیشرفتت را ببین.", vis: VisStreak },
-  { key: "friends", cls: "ls-b-friends", icon: Users, title: "با هم جلو بروید", body: "پیشرفت دوستانت را ببین و مسیرت را در کنار آن‌ها ادامه بده.", vis: VisFriends },
-  { key: "meta", cls: "ls-b-meta", icon: TrendingUp, title: "کمتر ثبت کن، بیشتر تحلیل کن", body: "با اتصال MT4 و MT5، معاملاتت را مستقیما وارد ژورنال کن؛ رمز حساب معاملاتی هرگز خواسته نمی‌شود.", vis: VisMeta },
-  { key: "food", cls: "ls-b-food", icon: Target, title: "تغذیه‌ات را هم اندازه‌گیری کن", body: "کالری و ماکروهای روزانه‌ات را ثبت کن و ببین چقدر به هدفت نزدیک شده‌ای.", vis: VisFood },
+const bento = () => [
+  { key: "e2ee", cls: "ls-b-e2ee", icon: ShieldCheck, title: tr("حریم خصوصی، از ابتدا", "Privacy, from the start"), body: tr("چت‌ها سرتاسر رمزنگاری‌شده‌اند؛ متنشان را جز خودتان کسی نمی‌بیند.", "Chats are end-to-end encrypted; nobody but you can see their text."), vis: VisE2EE },
+  { key: "pwa", cls: "ls-b-pwa", icon: Smartphone, title: tr("چیزی از قلم نیفتد", "Never miss a thing"), body: tr("آریون را روی گوشی نصب کن و برای کارها و برنامه‌های مهمت یادآوری داشته باش.", `Install ${brandName()} on your phone and get reminders for your important tasks and plans.`), vis: VisPwa },
+  { key: "streak", cls: "ls-b-streak", icon: Flame, title: tr("پیوستگی، خودش یک دستاورد است", "Consistency is an achievement in itself"), body: tr("روزهایی را که به برنامه‌ات عمل کرده‌ای ثبت کن و زنجیره پیشرفتت را ببین.", "Log the days you followed your plan and watch your chain of progress grow."), vis: VisStreak },
+  { key: "friends", cls: "ls-b-friends", icon: Users, title: tr("با هم جلو بروید", "Move forward together"), body: tr("پیشرفت دوستانت را ببین و مسیرت را در کنار آن‌ها ادامه بده.", "See your friends' progress and keep going alongside them."), vis: VisFriends },
+  { key: "meta", cls: "ls-b-meta", icon: TrendingUp, title: tr("کمتر ثبت کن، بیشتر تحلیل کن", "Log less, analyze more"), body: tr("با اتصال MT4 و MT5، معاملاتت را مستقیما وارد ژورنال کن؛ رمز حساب معاملاتی هرگز خواسته نمی‌شود.", "Connect MT4 and MT5 to bring your trades straight into the journal; your trading account password is never requested."), vis: VisMeta },
+  { key: "food", cls: "ls-b-food", icon: Target, title: tr("تغذیه‌ات را هم اندازه‌گیری کن", "Measure your nutrition too"), body: tr("کالری و ماکروهای روزانه‌ات را ثبت کن و ببین چقدر به هدفت نزدیک شده‌ای.", "Log your daily calories and macros and see how close you are to your goal."), vis: VisFood },
 ];
 
 export function LandingBento() {
+  const BENTO = bento();
   const ref = useRef<HTMLDivElement>(null);
   const inView = useInView(ref, { margin: "80px" });
   return (
     <div>
-      <SectionHead title="جزئیاتی که" accent="فرق را می‌سازند" />
+      <SectionHead title={tr("جزئیاتی که", "The details that")} accent={tr("فرق را می‌سازند", "make the difference")} />
       <div ref={ref} className={`ls-bento${inView ? "" : " is-paused"}`}>
         {BENTO.map((b, i) => {
           const Icon = b.icon;
@@ -446,32 +456,33 @@ export function LandingBento() {
 // فهرست فشرده‌ی همه‌ی قابلیت‌ها — هر مورد با کد اپ چک شده و هرجا صفحه‌ی
 // توضیحی اختصاصی هست، به همان لینک می‌دهد (لینک داخلی برای سئو).
 
-const FEATURES: { icon: LucideIcon; title: string; body: string; href?: string }[] = [
-  { icon: LayoutGrid, title: "داشبورد", body: "کل روزت را در یک صفحه ببین و سریع ثبت کن." },
-  { icon: CalendarCheck, title: "روتین روزانه", body: "کارهای هر روز را با ساعت و اولویت بچین و تیک بزن.", href: "/routine" },
-  { icon: CalendarDays, title: "برنامه هفتگی و تاریخچه", body: "کل هفته در یک نگاه؛ به روزهای گذشته برگرد و بررسی کن.", href: "/daily-planner" },
-  { icon: Flame, title: "پیگیری عادت و استریک", body: "زنجیره روزهای پیوسته‌ات را ببین؛ 8 سطح، از 1 تا 365 روز.", href: "/habit-tracker" },
-  { icon: Bell, title: "یادآوری برنامه و دارو", body: "برای کارها و برنامه‌های مهمت و هر نوبت دارو یادآوری داشته باش." },
-  { icon: Bot, title: "مدیر برنامه هوشمند «نومو»", body: "به فارسی بگو چه می‌خواهی؛ نومو برنامه‌هایت را می‌سازد و جابه‌جا می‌کند.", href: "/ai-planner" },
-  { icon: BarChart3, title: "آنالیز هفتگی", body: "ببین کجا جلو رفته‌ای، کجا عقب مانده‌ای و هفته بعد روی چه چیزی تمرکز کنی." },
-  { icon: Dumbbell, title: "برنامه بدنسازی", body: "برنامه AI یا دستی، کرنومتر تمرین و 149 حرکت آماده.", href: "/bodybuilding-program" },
-  { icon: Apple, title: "کالری‌شمار", body: "کالری و ماکروهایت را با 264 خوراکی آماده ثبت کن و نمودار هفتگی را ببین.", href: "/calorie-counter" },
-  { icon: CandlestickChart, title: "ژورنال ترید", body: "معاملات هر حساب را با آمار، چک‌لیست و یادداشت بررسی کن.", href: "/trading-journal" },
-  { icon: RefreshCw, title: "همگام‌سازی متاتریدر", body: "MT4 و MT5 با اکسپرت و کد اتصال؛ بدون رمز حساب.", href: "/trading-journal" },
-  { icon: CalendarClock, title: "تقویم اقتصادی", body: "رویدادهای 9 ارز اصلی با Actual، Forecast، Previous و هشدار خبر.", href: "/economic-calendar" },
-  { icon: Clock, title: "ساعت سشن‌های فارکس", body: "پنج سشن اصلی به وقت خودت، با ساعت تابستانی واقعی.", href: "/forex-sessions" },
-  { icon: Route, title: "رودمپ یادگیری", body: "هدف بزرگت را با هوش مصنوعی به مسیر مرحله‌به‌مرحله تبدیل کن.", href: "/learning-roadmap" },
-  { icon: GraduationCap, title: "مربی‌ها", body: "مربی احراز هویت‌شده، دریافت برنامه و چت‌های سرتاسر رمزنگاری‌شده.", href: "/mentors" },
-  { icon: Users, title: "دوستان", body: "پیشرفت و استریک دوستانت را ببین و کنار هم ادامه بده." },
-  { icon: Megaphone, title: "اعلان‌ها و اطلاعیه‌ها", body: "اطلاعیه‌های آریون و اعلان‌هایت در یک پنل." },
-  { icon: Smartphone, title: "نصب روی گوشی", body: "وب‌اپ PWA؛ با «افزودن به صفحه‌ی اصلی» مثل یک اپ نصب می‌شود." },
-  { icon: SunMoon, title: "تم روشن و تیره", body: "هر دو تم، با ظاهری یکدست در همه بخش‌ها." },
+const features = (): { icon: LucideIcon; title: string; body: string; href?: string }[] => [
+  { icon: LayoutGrid, title: tr("داشبورد", "Dashboard"), body: tr("کل روزت را در یک صفحه ببین و سریع ثبت کن.", "See your whole day on one page and log quickly.") },
+  { icon: CalendarCheck, title: tr("روتین روزانه", "Daily routine"), body: tr("کارهای هر روز را با ساعت و اولویت بچین و تیک بزن.", "Lay out each day's tasks with a time and priority, and tick them off."), href: "/routine" },
+  { icon: CalendarDays, title: tr("برنامه هفتگی و تاریخچه", "Weekly plan and history"), body: tr("کل هفته در یک نگاه؛ به روزهای گذشته برگرد و بررسی کن.", "The whole week at a glance; go back to past days and review them."), href: "/daily-planner" },
+  { icon: Flame, title: tr("پیگیری عادت و استریک", "Habit tracking and streaks"), body: tr("زنجیره روزهای پیوسته‌ات را ببین؛ 8 سطح، از 1 تا 365 روز.", "See your chain of consecutive days; 8 levels, from 1 to 365 days."), href: "/habit-tracker" },
+  { icon: Bell, title: tr("یادآوری برنامه و دارو", "Plan and medication reminders"), body: tr("برای کارها و برنامه‌های مهمت و هر نوبت دارو یادآوری داشته باش.", "Get reminders for your important tasks and plans and for every medication dose.") },
+  { icon: Bot, title: tr("مدیر برنامه هوشمند «نومو»", "Nomo, the smart plan manager"), body: tr("به فارسی بگو چه می‌خواهی؛ نومو برنامه‌هایت را می‌سازد و جابه‌جا می‌کند.", "Say what you want in plain language; Nomo creates and moves your plans."), href: "/ai-planner" },
+  { icon: BarChart3, title: tr("آنالیز هفتگی", "Weekly review"), body: tr("ببین کجا جلو رفته‌ای، کجا عقب مانده‌ای و هفته بعد روی چه چیزی تمرکز کنی.", "See where you moved ahead, where you fell behind and what to focus on next week.") },
+  { icon: Dumbbell, title: tr("برنامه بدنسازی", "Workout plan"), body: tr("برنامه AI یا دستی، کرنومتر تمرین و 149 حرکت آماده.", "An AI or manual plan, a workout timer and 149 ready-made exercises."), href: "/bodybuilding-program" },
+  { icon: Apple, title: tr("کالری‌شمار", "Calorie counter"), body: tr("کالری و ماکروهایت را با 264 خوراکی آماده ثبت کن و نمودار هفتگی را ببین.", "Log your calories and macros with 264 ready-made foods and see the weekly chart."), href: "/calorie-counter" },
+  { icon: CandlestickChart, title: tr("ژورنال ترید", "Trading journal"), body: tr("معاملات هر حساب را با آمار، چک‌لیست و یادداشت بررسی کن.", "Review each account's trades with statistics, a checklist and notes."), href: "/trading-journal" },
+  { icon: RefreshCw, title: tr("همگام‌سازی متاتریدر", "MetaTrader sync"), body: tr("MT4 و MT5 با اکسپرت و کد اتصال؛ بدون رمز حساب.", "MT4 and MT5 with an Expert Advisor and connection code; no account password."), href: "/trading-journal" },
+  { icon: CalendarClock, title: tr("تقویم اقتصادی", "Economic calendar"), body: tr("رویدادهای 9 ارز اصلی با Actual، Forecast، Previous و هشدار خبر.", "Events for 9 major currencies with Actual, Forecast, Previous and news alerts."), href: "/economic-calendar" },
+  { icon: Clock, title: tr("ساعت سشن‌های فارکس", "Forex session hours"), body: tr("پنج سشن اصلی به وقت خودت، با ساعت تابستانی واقعی.", "The five main sessions in your own time, with real daylight saving."), href: "/forex-sessions" },
+  { icon: Route, title: tr("رودمپ یادگیری", "Learning roadmap"), body: tr("هدف بزرگت را با هوش مصنوعی به مسیر مرحله‌به‌مرحله تبدیل کن.", "Turn your big goal into a step-by-step path with AI."), href: "/learning-roadmap" },
+  { icon: GraduationCap, title: tr("مربی‌ها", "Mentors"), body: tr("مربی احراز هویت‌شده، دریافت برنامه و چت‌های سرتاسر رمزنگاری‌شده.", "Identity-verified mentors, plans delivered to you and end-to-end encrypted chats."), href: "/mentors" },
+  { icon: Users, title: tr("دوستان", "Friends"), body: tr("پیشرفت و استریک دوستانت را ببین و کنار هم ادامه بده.", "See your friends' progress and streaks and keep going together.") },
+  { icon: Megaphone, title: tr("اعلان‌ها و اطلاعیه‌ها", "Notifications and announcements"), body: tr("اطلاعیه‌های آریون و اعلان‌هایت در یک پنل.", `${brandName()} announcements and your notifications in one panel.`) },
+  { icon: Smartphone, title: tr("نصب روی گوشی", "Install on your phone"), body: tr("وب‌اپ PWA؛ با «افزودن به صفحه‌ی اصلی» مثل یک اپ نصب می‌شود.", "A PWA web app; with Add to Home Screen it installs like an app.") },
+  { icon: SunMoon, title: tr("تم روشن و تیره", "Light and dark themes"), body: tr("هر دو تم، با ظاهری یکدست در همه بخش‌ها.", "Both themes, with a consistent look across every section.") },
 ];
 
 export function LandingFeatureGrid() {
+  const FEATURES = features();
   return (
     <div>
-      <SectionHead title="هر چیزی که برای مدیریت" accent="مسیرت لازم داری" />
+      <SectionHead title={tr("هر چیزی که برای مدیریت", "Everything you need to manage")} accent={tr("مسیرت لازم داری", "your journey")} />
       <Reveal>
       <ul className="ls-feat">
         {FEATURES.map((f) => {
@@ -480,7 +491,7 @@ export function LandingFeatureGrid() {
             <>
               <span className="ls-feat-ic"><Icon size={17} /></span>
               <span className="ls-feat-txt">
-                <span className="ls-feat-title">{f.title}{f.href && <ArrowLeft size={13} className="ls-feat-arrow" />}</span>
+                <span className="ls-feat-title">{f.title}{f.href && <ArrowLeft size={13} className="ls-feat-arrow dir-flip" />}</span>
                 <span className="ls-feat-body">{f.body}</span>
               </span>
             </>
@@ -499,22 +510,23 @@ export function LandingFeatureGrid() {
 
 /* ───────────────────────── 4) Why us ───────────────────────── */
 
-const WHY_US = [
-  { icon: ShieldCheck, color: "#22C55E", title: "امن و خصوصی", body: "رمز عبور با bcrypt ذخیره می‌شود، اطلاعاتت فروخته نمی‌شود و چت‌ها سرتاسر رمزنگاری‌شده‌اند." },
-  { icon: TrendingUp, color: "#A855F7", title: "ساخته‌شده برای اجرا", body: "آریون فقط برای برنامه‌ریزی نیست؛ اجرای روزانه و پیشرفتت را هم دنبال می‌کند." },
-  { icon: Headset, color: "#3B82F6", title: "پشتیبانی واقعی", body: "پیامت را خود تیم آریون پاسخ می‌دهد." },
-  { icon: Lightbulb, color: "#F59E0B", title: "همه‌چیز کنار هم", body: "به‌جای پراکندگی بین چند ابزار، برنامه‌هایت را در یک سیستم مدیریت کن." },
-  { icon: Smartphone, color: "#EC4899", title: "همراه تو", body: "از دستگاه‌های مختلف به برنامه‌ها و اطلاعاتت دسترسی داشته باش." },
-  { icon: BarChart3, color: "#06B6D4", title: "تصویر واضح‌تر", body: "وقتی اطلاعاتت یک‌جا باشد، بهتر می‌توانی عملکردت را ببینی." },
-  { icon: Zap, color: "#F97316", title: "ساده و فارسی", body: "یک تجربه فارسی و منظم، بدون پیچیدگی اضافه." },
-  { icon: Users, color: "#14B8A6", title: "متناسب با تو", body: "برنامه‌ها را با هدف و سبک زندگی خودت تنظیم کن." },
-  { icon: Sparkles, color: "#8B5CF6", title: "قابل توسعه", body: "از روتین شروع کن و هر زمان نیاز داشتی بخش‌های دیگر را اضافه کن." },
+const whyUs = () => [
+  { icon: ShieldCheck, color: "#22C55E", title: tr("امن و خصوصی", "Safe and private"), body: tr("رمز عبور با bcrypt ذخیره می‌شود، اطلاعاتت فروخته نمی‌شود و چت‌ها سرتاسر رمزنگاری‌شده‌اند.", "Passwords are stored with bcrypt, your data is never sold and chats are end-to-end encrypted.") },
+  { icon: TrendingUp, color: "#A855F7", title: tr("ساخته‌شده برای اجرا", "Built for doing"), body: tr("آریون فقط برای برنامه‌ریزی نیست؛ اجرای روزانه و پیشرفتت را هم دنبال می‌کند.", `${brandName()} is not only for planning; it also follows your daily execution and progress.`) },
+  { icon: Headset, color: "#3B82F6", title: tr("پشتیبانی واقعی", "Real support"), body: tr("پیامت را خود تیم آریون پاسخ می‌دهد.", `The ${brandName()} team itself answers your message.`) },
+  { icon: Lightbulb, color: "#F59E0B", title: tr("همه‌چیز کنار هم", "Everything together"), body: tr("به‌جای پراکندگی بین چند ابزار، برنامه‌هایت را در یک سیستم مدیریت کن.", "Instead of scattering across several tools, manage your plans in one system.") },
+  { icon: Smartphone, color: "#EC4899", title: tr("همراه تو", "Always with you"), body: tr("از دستگاه‌های مختلف به برنامه‌ها و اطلاعاتت دسترسی داشته باش.", "Access your plans and data from different devices.") },
+  { icon: BarChart3, color: "#06B6D4", title: tr("تصویر واضح‌تر", "A clearer picture"), body: tr("وقتی اطلاعاتت یک‌جا باشد، بهتر می‌توانی عملکردت را ببینی.", "When your data is in one place, you can see your performance better.") },
+  { icon: Zap, color: "#F97316", title: tr("ساده و فارسی", "Simple and clear"), body: tr("یک تجربه فارسی و منظم، بدون پیچیدگی اضافه.", "A tidy, straightforward experience without extra complexity.") },
+  { icon: Users, color: "#14B8A6", title: tr("متناسب با تو", "Fits you"), body: tr("برنامه‌ها را با هدف و سبک زندگی خودت تنظیم کن.", "Adjust your plans to your own goals and lifestyle.") },
+  { icon: Sparkles, color: "#8B5CF6", title: tr("قابل توسعه", "Expandable"), body: tr("از روتین شروع کن و هر زمان نیاز داشتی بخش‌های دیگر را اضافه کن.", "Start with routine and add other sections whenever you need them.") },
 ];
 
 export function LandingWhyUs() {
+  const WHY_US = whyUs();
   return (
     <div>
-      <SectionHead title="چرا" accent="آریون؟" />
+      <SectionHead title={tr("چرا", "Why")} accent={`${brandName()}${tr("؟", "?")}`} />
       <div className="ls-why">
         {WHY_US.map((w, i) => {
           const Icon = w.icon;
@@ -536,19 +548,20 @@ export function LandingWhyUs() {
 /* ───────────────────────── 5) Quote ───────────────────────── */
 
 // فقط جمله‌هایی با گوینده‌ی مشخص و قابل‌استناد (یا ضرب‌المثل واقعی فارسی)
-const QUOTES = [
-  { text: "ما همان چیزی هستیم که بارها و بارها انجامش می‌دهیم.", author: "ویل دورانت" },
-  { text: "به سطح هدف‌هایت بالا نمی‌روی؛ به سطح سیستم‌هایت سقوط می‌کنی.", author: "جیمز کلیر" },
-  { text: "سفر هزار فرسنگی با یک قدم آغاز می‌شود.", author: "لائوتزو" },
-  { text: "هر کاری که انجام می‌دهی، رایی است به آدمی که می‌خواهی باشی.", author: "جیمز کلیر" },
-  { text: "قطره قطره جمع گردد، وانگهی دریا شود.", author: "ضرب‌المثل فارسی" },
-  { text: "انگیزه شروعت می‌کند؛ عادت ادامه‌ات می‌دهد.", author: "جیم رایون" },
-  { text: "کامیابی جمع تلاش‌های کوچکی است که روز به روز تکرار می‌شوند.", author: "رابرت کالیر" },
-  { text: "کار نیکو کردن از پر کردن است.", author: "ضرب‌المثل فارسی" },
-  { text: "برنامه‌ها هیچ‌اند؛ برنامه‌ریزی همه‌چیز است.", author: "دوایت آیزنهاور" },
+const quotes = () => [
+  { text: tr("ما همان چیزی هستیم که بارها و بارها انجامش می‌دهیم.", "We are what we repeatedly do."), author: tr("ویل دورانت", "Will Durant") },
+  { text: tr("به سطح هدف‌هایت بالا نمی‌روی؛ به سطح سیستم‌هایت سقوط می‌کنی.", "You do not rise to the level of your goals; you fall to the level of your systems."), author: tr("جیمز کلیر", "James Clear") },
+  { text: tr("سفر هزار فرسنگی با یک قدم آغاز می‌شود.", "A journey of a thousand miles begins with a single step."), author: tr("لائوتزو", "Lao Tzu") },
+  { text: tr("هر کاری که انجام می‌دهی، رایی است به آدمی که می‌خواهی باشی.", "Every action you take is a vote for the type of person you wish to become."), author: tr("جیمز کلیر", "James Clear") },
+  { text: tr("قطره قطره جمع گردد، وانگهی دریا شود.", "Drop by drop, a sea is made."), author: tr("ضرب‌المثل فارسی", "Persian proverb") },
+  { text: tr("انگیزه شروعت می‌کند؛ عادت ادامه‌ات می‌دهد.", "Motivation is what gets you started; habit is what keeps you going."), author: tr("جیم رایون", "Jim Rohn") },
+  { text: tr("کامیابی جمع تلاش‌های کوچکی است که روز به روز تکرار می‌شوند.", "Success is the sum of small efforts, repeated day in and day out."), author: tr("رابرت کالیر", "Robert Collier") },
+  { text: tr("کار نیکو کردن از پر کردن است.", "Good work comes from doing it fully."), author: tr("ضرب‌المثل فارسی", "Persian proverb") },
+  { text: tr("برنامه‌ها هیچ‌اند؛ برنامه‌ریزی همه‌چیز است.", "Plans are nothing; planning is everything."), author: tr("دوایت آیزنهاور", "Dwight D. Eisenhower") },
 ];
 
 export function LandingTestimonialQuote() {
+  const QUOTES = quotes();
   // رندر اول ثابت (QUOTES[0]) تا hydration mismatch نداشته باشیم؛ انتخاب
   // تصادفی و چرخش فقط بعد از mount.
   const reduce = useReducedMotion();
@@ -591,10 +604,10 @@ export function LandingTestimonialQuote() {
 export function LandingFAQ() {
   const [open, setOpen] = useState<number | null>(0);
   const { pricing } = usePlanPricing();
-  const faqItems = fillPriceCopy(FAQ_ITEMS, pricing);
+  const faqItems = fillPriceCopy(getFaqItems(), pricing);
   return (
     <div>
-      <SectionHead title="پرسش‌های" accent="پرتکرار" />
+      <SectionHead title={tr("پرسش‌های", "Frequently asked")} accent={tr("پرتکرار", "questions")} />
       <Reveal>
         <div className="ls-faq">
           {faqItems.map((f, i) => {
@@ -635,16 +648,16 @@ export function LandingFinalCTA() {
         <span className="ls-cta-glow" aria-hidden="true" />
         <span className="ls-cta-glow ls-cta-glow-2" aria-hidden="true" />
         <div className="ls-cta-in">
-          <span className="ls-cta-chip"><Sparkles size={14} /> 14 روز رایگان</span>
-          <h2 className="ls-cta-title">شروعش کن.</h2>
-          <p className="ls-cta-sub">مسیرت را مشخص کن، برنامه‌ات را بساز و از امروز اجرا کن.</p>
+          <span className="ls-cta-chip"><Sparkles size={14} /> {tr("14 روز رایگان", "14 days free")}</span>
+          <h2 className="ls-cta-title">{tr("شروعش کن.", "Get started.")}</h2>
+          <p className="ls-cta-sub">{tr("مسیرت را مشخص کن، برنامه‌ات را بساز و از امروز اجرا کن.", "Set your direction, build your plan and start today.")}</p>
           <div className="ls-cta-actions">
             <Link href="/auth/signup" className="ls-btn ls-btn-primary">
-              شروع رایگان <ArrowLeft size={16} />
+              {tr("شروع رایگان", "Start free")} <ArrowLeft size={16} className="dir-flip" />
             </Link>
-            <Link href="/auth/login" className="ls-btn ls-btn-ghost">ورود</Link>
+            <Link href="/auth/login" className="ls-btn ls-btn-ghost">{tr("ورود", "Log in")}</Link>
           </div>
-          <div className="ls-cta-note"><Check size={13} /> ثبت‌نام در کمتر از یک دقیقه</div>
+          <div className="ls-cta-note"><Check size={13} /> {tr("ثبت‌نام در کمتر از یک دقیقه", "Sign up in under a minute")}</div>
         </div>
       </div>
     </Reveal>
