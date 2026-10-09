@@ -1,5 +1,6 @@
 "use client";
 
+import { dirSign } from "./i18n";
 import { useCallback, useEffect, useLayoutEffect, useMemo, useRef, useState } from "react";
 import { isoLocal } from "@/lib/jalali";
 
@@ -172,7 +173,8 @@ export function useDayStrip(activeIso: string, recenterKey: number = 0) {
     const el = scrollRef.current;
     if (!el) return;
     const amount = (el.clientWidth || 300) * 0.92;
-    el.scrollBy({ left: dir === "prev" ? amount : -amount, behavior: "smooth" });
+    // «قبل» سمت ابتدای خط‌ه: در rtl راست (scrollLeft مثبت)، در ltr چپ (منفی)
+    el.scrollBy({ left: (dir === "prev" ? amount : -amount) * -dirSign(), behavior: "smooth" });
   }, []);
 
   return { scrollRef, days, todayIso: isoLocal(today), pageBy, desktop };

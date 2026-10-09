@@ -1,4 +1,5 @@
 import { faNum } from "@/lib/jalali";
+import { tr } from "@/lib/i18n";
 
 // ردیف‌های «فعالیت اخیر» داشبورد منتور از ثبت‌های پیشرفت.
 //
@@ -19,7 +20,7 @@ export type ActivityLogRow<S> = {
 
 export type LogActivity<S> = { type: "log"; at: Date; day: string; student: S; text: string; url: string };
 
-const LABEL = { COMPLETED: "انجام شد", PARTIAL: "نیمه‌کاره", MISSED: "انجام نشد" } as const;
+const label = () => ({ COMPLETED: tr("انجام شد", "Done"), PARTIAL: tr("نیمه‌کاره", "Partly done"), MISSED: tr("انجام نشد", "Not done") }) as const;
 
 export function groupLogActivity<S>(logs: ActivityLogRow<S>[]): LogActivity<S>[] {
   const groups = new Map<string, ActivityLogRow<S>[]>();
@@ -35,8 +36,8 @@ export function groupLogActivity<S>(logs: ActivityLogRow<S>[]): LogActivity<S>[]
     const partial = g.filter((l) => l.status === "PARTIAL").length;
     const text =
       g.length === 1
-        ? `${g[0].item.title}: ${LABEL[g[0].status]}`
-        : [done ? `${faNum(done)} آیتم انجام شد` : "", partial ? `${faNum(partial)} آیتم نیمه‌کاره` : ""].filter(Boolean).join("، ");
+        ? `${g[0].item.title}: ${label()[g[0].status]}`
+        : [done ? tr(`${faNum(done)} آیتم انجام شد`, `${faNum(done)} ${done === 1 ? "item" : "items"} done`) : "", partial ? tr(`${faNum(partial)} آیتم نیمه‌کاره`, `${faNum(partial)} ${partial === 1 ? "item" : "items"} partly done`) : ""].filter(Boolean).join(tr("، ", ", "));
     return { type: "log" as const, at, day: k.slice(k.indexOf("|") + 1), student: g[0].program.student, text, url: `/mentor-programs/${g[0].programId}` };
   });
 }

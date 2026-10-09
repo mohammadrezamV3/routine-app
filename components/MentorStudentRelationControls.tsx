@@ -5,6 +5,7 @@ import { MentorConfirmDialog } from "./MentorConfirmDialog";
 import { fa, mentorApi } from "./MentorDashKit";
 import { MentorField } from "./MentorUI";
 import { END_REASON_MAX, PAUSE_REASON_MAX } from "@/lib/mentorAvailability";
+import { tr } from "@/lib/i18n";
 
 export type StudentRelationDialog = "pause" | "resume" | "end";
 
@@ -34,7 +35,7 @@ export function MentorStudentRelationControls({
   async function confirm() {
     if (busy || !dialog) return;
     const max = dialog === "end" ? END_REASON_MAX : PAUSE_REASON_MAX;
-    if (reason.trim().length > max) { setError(`حداکثر ${fa(max)} حرف`); return; }
+    if (reason.trim().length > max) { setError(tr(`حداکثر ${fa(max)} حرف`, `At most ${fa(max)} characters`)); return; }
     setBusy(true);
     setError(null);
     const pauseUrl = `/api/mentor/students/${encodeURIComponent(studentId)}/pause`;
@@ -61,16 +62,16 @@ export function MentorStudentRelationControls({
   return (
     <MentorConfirmDialog
       message={
-        dialog === "pause" ? `همکاری با ${name} موقتا متوقف بشه؟`
-          : dialog === "resume" ? `همکاری با ${name} ادامه پیدا کنه؟`
-          : `همکاری با ${name} تموم بشه؟`
+        dialog === "pause" ? tr(`همکاری با ${name} موقتا متوقف بشه؟`, `Pause working with ${name}?`)
+          : dialog === "resume" ? tr(`همکاری با ${name} ادامه پیدا کنه؟`, `Resume working with ${name}?`)
+          : tr(`همکاری با ${name} تموم بشه؟`, `End working with ${name}?`)
       }
       hint={
-        dialog === "pause" ? "گفت‌وگو و برنامه‌های فعلی می‌مونن؛ به شاگرد خبر می‌دیم که همکاری متوقفه."
-          : dialog === "resume" ? "به شاگرد خبر می‌دیم که همکاری ادامه پیدا کرد."
-          : "برنامه‌های در جریان لغو می‌شن و گفت‌وگو فقط برای دیدن پیام‌های قبلی می‌مونه."
+        dialog === "pause" ? tr("گفت‌وگو و برنامه‌های فعلی می‌مونن؛ به شاگرد خبر می‌دیم که همکاری متوقفه.", "The chat and current programs stay. We will let the student know you paused.")
+          : dialog === "resume" ? tr("به شاگرد خبر می‌دیم که همکاری ادامه پیدا کرد.", "We will let the student know you are back on.")
+          : tr("برنامه‌های در جریان لغو می‌شن و گفت‌وگو فقط برای دیدن پیام‌های قبلی می‌مونه.", "Programs in progress are cancelled, and the chat stays only so you can read earlier messages.")
       }
-      confirmLabel={dialog === "pause" ? "توقف همکاری" : dialog === "resume" ? "ادامه‌ی همکاری" : "پایان همکاری"}
+      confirmLabel={dialog === "pause" ? tr("توقف همکاری", "Pause") : dialog === "resume" ? tr("ادامه‌ی همکاری", "Resume") : tr("پایان همکاری", "End")}
       danger={dialog === "end"}
       busy={busy}
       error={error}
@@ -79,13 +80,13 @@ export function MentorStudentRelationControls({
     >
       {dialog !== "resume" && (
         <MentorField
-          label={dialog === "end" ? "دلیل پایان" : "دلیل توقف"} htmlFor="mrc-reason" optional
-          hint={`به ${name} نشون داده می‌شه؛ حداکثر ${fa(dialog === "end" ? END_REASON_MAX : PAUSE_REASON_MAX)} حرف`}
+          label={dialog === "end" ? tr("دلیل پایان", "Reason for ending") : tr("دلیل توقف", "Reason for pausing")} htmlFor="mrc-reason" optional
+          hint={tr(`به ${name} نشون داده می‌شه؛ حداکثر ${fa(dialog === "end" ? END_REASON_MAX : PAUSE_REASON_MAX)} حرف`, `${name} will see this; at most ${fa(dialog === "end" ? END_REASON_MAX : PAUSE_REASON_MAX)} characters`)}
         >
           <textarea
             id="mrc-reason" className="wsearch-newform-name trade-glass-field" rows={2}
             maxLength={(dialog === "end" ? END_REASON_MAX : PAUSE_REASON_MAX) + 20} value={reason}
-            placeholder={dialog === "end" ? "مثلا «هدف دوره به نتیجه رسید»" : "مثلا «تا پایان امتحانات برنامه‌ی تازه نمی‌فرستم»"}
+            placeholder={dialog === "end" ? tr("مثلا «هدف دوره به نتیجه رسید»", "For example: \"We reached the goal of the course\"") : tr("مثلا «تا پایان امتحانات برنامه‌ی تازه نمی‌فرستم»", "For example: \"No new programs until exams are over\"")}
             onChange={(e) => { setReason(e.target.value); setError(null); }}
           />
         </MentorField>

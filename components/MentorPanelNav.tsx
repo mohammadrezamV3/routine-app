@@ -10,6 +10,7 @@ import { LayoutDashboard, LayoutTemplate, Settings, Users } from "lucide-react";
 import { mentorApi } from "./MentorDashKit";
 import { M_DUR, mT } from "./MentorMotion";
 import type { MentorSelf } from "@/lib/mentorTypes";
+import { tr } from "@/lib/i18n";
 
 /**
  * ناوبری خود پنل منتور (همه‌ی /mentor/*): یک نوار تب فشرده بالای پنل،
@@ -19,11 +20,11 @@ import type { MentorSelf } from "@/lib/mentorTypes";
  * می‌شود؛ تا وقتی معلوم نیست، جایش رزرو است (بدون پرش layout).
  */
 
-export const MENTOR_PANEL_TABS = [
-  { href: "/mentor", label: "امروز", Icon: LayoutDashboard, match: (p: string) => p === "/mentor" },
-  { href: "/mentor/students", label: "شاگردها", Icon: Users, match: (p: string) => p.startsWith("/mentor/students") || p.startsWith("/mentor/reports") },
-  { href: "/mentor/templates", label: "برنامه‌ها", Icon: LayoutTemplate, match: (p: string) => p.startsWith("/mentor/templates") || p.startsWith("/mentor/programs") },
-  { href: "/mentor/settings", label: "تنظیمات", Icon: Settings, match: (p: string) => p.startsWith("/mentor/settings") || p.startsWith("/mentor/profile") },
+export const mentorPanelTabs = () => [
+  { href: "/mentor", label: tr("امروز", "Today"), Icon: LayoutDashboard, match: (p: string) => p === "/mentor" },
+  { href: "/mentor/students", label: tr("شاگردها", "Students"), Icon: Users, match: (p: string) => p.startsWith("/mentor/students") || p.startsWith("/mentor/reports") },
+  { href: "/mentor/templates", label: tr("برنامه‌ها", "Programs"), Icon: LayoutTemplate, match: (p: string) => p.startsWith("/mentor/templates") || p.startsWith("/mentor/programs") },
+  { href: "/mentor/settings", label: tr("تنظیمات", "Settings"), Icon: Settings, match: (p: string) => p.startsWith("/mentor/settings") || p.startsWith("/mentor/profile") },
 ] as const;
 
 /* ── پروفایل منتوری خودم: یک درخواست برای نوار و صفحه‌ها ────────── */
@@ -95,9 +96,9 @@ export function MentorPanelNav() {
   if (!show) return null;
 
   return (
-    <nav className="mentor-panel-nav" aria-label="پنل مربی">
+    <nav className="mentor-panel-nav" aria-label={tr("پنل مربی", "Mentor panel")}>
       <div className="auth-tabs mentor-panel-tabs">
-        {MENTOR_PANEL_TABS.map(({ href, label, Icon, match }) => {
+        {mentorPanelTabs().map(({ href, label, Icon, match }) => {
           const on = match(pathname);
           return (
             <Link

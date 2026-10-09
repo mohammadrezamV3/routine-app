@@ -1,12 +1,13 @@
 "use client";
 
+import { tr } from "@/lib/i18n";
 import { useState } from "react";
 import { Hourglass, ListPlus, LogOut, PartyPopper, Send, TimerOff, X } from "lucide-react";
 import { MentorChip } from "./MentorUI";
 import { MentorConfirmDialog } from "./MentorConfirmDialog";
 import { MentorTermsAcceptance, isMentorTermsError, mentorTermsPayload, useMentorTermsStatus } from "./MentorTermsAcceptance";
 import { Spinner } from "./Spinner";
-import { NETWORK_ERROR, readApiError } from "@/lib/mentorFormat";
+import { networkError, readApiError } from "@/lib/mentorFormat";
 import { faNum } from "@/lib/jalali";
 import { offerRemainingLabel, positionLabel } from "@/lib/mentorWaitlist";
 import type { MyWaitlist } from "@/lib/mentorTypes";
@@ -44,7 +45,7 @@ export function MentorWaitlistAction({
   const [termsError, setTermsError] = useState<string | null>(null);
 
   async function join() {
-    if (needTerms && !termsAccepted) { setTermsError("برای ورود به صف، شرایط را بپذیر"); return; }
+    if (needTerms && !termsAccepted) { setTermsError(tr("برای ورود به صف، شرایط را بپذیر", "Accept the terms to join the waitlist")); return; }
     setBusy("join");
     setError(null);
     try {
@@ -56,18 +57,18 @@ export function MentorWaitlistAction({
       if (res.status === 400) {
         const j = await res.json().catch(() => null);
         if (isMentorTermsError(j)) { setTermsAccepted(false); setTermsError(j.error); terms.refresh(); return; }
-        setError(typeof j?.error === "string" ? j.error : NETWORK_ERROR);
+        setError(typeof j?.error === "string" ? j.error : networkError());
         return;
       }
       if (!res.ok) {
-        setError(await readApiError(res, "ورود به صف انجام نشد؛ دوباره تلاش کن"));
+        setError(await readApiError(res, tr("ورود به صف انجام نشد؛ دوباره تلاش کن", "Could not join the waitlist. Try again.")));
         if (res.status === 409 || res.status === 404) onStale();
         return;
       }
       const d = await res.json().catch(() => null);
       onChange(d?.waitlist ?? null);
     } catch {
-      setError(NETWORK_ERROR);
+      setError(networkError());
     } finally {
       setBusy(null);
     }
@@ -78,12 +79,12 @@ export function MentorWaitlistAction({
     setError(null);
     try {
       const res = await fetch(`/api/mentors/${mentorId}/waitlist`, { method: "DELETE" });
-      if (!res.ok && res.status !== 404) { setError(await readApiError(res, "انجام نشد؛ دوباره تلاش کن")); return; }
+      if (!res.ok && res.status !== 404) { setError(await readApiError(res, tr("انجام نشد؛ دوباره تلاش کن", "Something went wrong. Try again."))); return; }
       setConfirmLeave(false);
       onChange(null);
       onStale();
     } catch {
-      setError(NETWORK_ERROR);
+      setError(networkError());
     } finally {
       setBusy(null);
     }
@@ -93,15 +94,15 @@ export function MentorWaitlistAction({
   if (waitlist?.status === "OFFERED" && waitlist.offerExpiresAt) {
     body = (
       <>
-        <MentorChip tone="ok" icon={<PartyPopper {...CHIP} />} title={`یه جا پیش ${mentorName} برات نگه داشته شده`}>
-          نوبتت رسید · {offerRemainingLabel(waitlist.offerExpiresAt)}
+        <MentorChip tone="ok" icon={<PartyPopper {...CHIP} />} title={tr(`یه جا پیش ${mentorName} برات نگه داشته شده`, `A spot with ${mentorName} is being held for you`)}>
+          {tr("نوبتت رسید", "It is your turn")} · {offerRemainingLabel(waitlist.offerExpiresAt)}
         </MentorChip>
         <div className="mentor-btn-group" style={{ width: "100%" }}>
           <button type="button" className="account-outline-btn muted mentor-btn" onClick={() => { setError(null); setConfirmLeave(true); }} disabled={!!busy}>
-            <X {...BTN} /> رد نوبت
+            <X {...BTN} /> {tr("رد نوبت", "Decline turn")}
           </button>
           <button type="button" className="trade-primary-btn mentor-btn" onClick={onRequest} disabled={!!busy}>
-            <Send {...BTN} /> ارسال درخواست
+            <Send {...BTN} className="dir-flip" /> {tr("ارسال درخواست", "Send request")}
           </button>
         </div>
       </>
@@ -109,11 +110,11 @@ export function MentorWaitlistAction({
   } else if (waitlist?.status === "WAITING") {
     body = (
       <>
-        <MentorChip tone="info" icon={<Hourglass {...CHIP} />} title="وقتی جا خالی بشه خبرت می‌کنیم">
-          {waitlist.position ? positionLabel(waitlist.position) : "توی صفی"}
+        <MentorChip tone="info" icon={<Hourglass {...CHIP} />} title={tr("وقتی جا خالی بشه خبرت می‌کنیم", "We will let you know when a spot opens")}>
+          {waitlist.position ? positionLabel(waitlist.position) : tr("توی صفی", "You are in line")}
         </MentorChip>
         <button type="button" className="account-outline-btn muted mentor-btn is-sm" onClick={() => { setError(null); setConfirmLeave(true); }} disabled={!!busy}>
-          <LogOut {...BTN_SM} /> خروج از صف
+          <LogOut {...BTN_SM} /> {tr("خروج از صف", "Leave waitlist")}
         </button>
       </>
     );
@@ -121,10 +122,10 @@ export function MentorWaitlistAction({
     body = (
       <>
         {waitlist?.status === "EXPIRED" ? (
-          <MentorChip tone="neutral" icon={<TimerOff {...CHIP} />}>مهلت نوبتت تموم شد</MentorChip>
+          <MentorChip tone="neutral" icon={<TimerOff {...CHIP} />}>{tr("مهلت نوبتت تموم شد", "Your time is up")}</MentorChip>
         ) : (
           <MentorChip tone="neutral" icon={<Hourglass {...CHIP} />}>
-            {waitlistCount > 0 ? `ظرفیت تکمیل · ${faNum(waitlistCount)} نفر در صف` : "ظرفیت تکمیل"}
+            {waitlistCount > 0 ? tr(`ظرفیت تکمیل · ${faNum(waitlistCount)} نفر در صف`, `Full · ${faNum(waitlistCount)} in line`) : tr("ظرفیت تکمیل", "Full")}
           </MentorChip>
         )}
         {needTerms && (
@@ -139,7 +140,7 @@ export function MentorWaitlistAction({
           </div>
         )}
         <button type="button" className="trade-primary-btn mentor-btn" onClick={join} disabled={!!busy || terms.loading}>
-          {busy === "join" ? <Spinner size={14} /> : <><ListPlus {...BTN} /> ورود به صف</>}
+          {busy === "join" ? <Spinner size={14} /> : <><ListPlus {...BTN} /> {tr("ورود به صف", "Join waitlist")}</>}
         </button>
       </>
     );
@@ -152,9 +153,9 @@ export function MentorWaitlistAction({
       <div className="mentor-hero-actions">{body}</div>
       {confirmLeave && (
         <MentorConfirmDialog
-          message={offered ? "نوبتت رو رد می‌کنی؟" : "از صف بیرون میای؟"}
-          hint={offered ? "جا به نفر بعدی صف می‌رسه." : "اگه دوباره بیای، از ته صف شروع می‌کنی."}
-          confirmLabel={offered ? "رد نوبت" : "خروج از صف"}
+          message={offered ? tr("نوبتت رو رد می‌کنی؟", "Decline your turn?") : tr("از صف بیرون میای؟", "Leave the waitlist?")}
+          hint={offered ? tr("جا به نفر بعدی صف می‌رسه.", "The spot goes to the next person in line.") : tr("اگه دوباره بیای، از ته صف شروع می‌کنی.", "If you come back, you start at the end of the line.")}
+          confirmLabel={offered ? tr("رد نوبت", "Decline turn") : tr("خروج از صف", "Leave")}
           busy={busy === "leave"}
           error={error}
           onConfirm={leave}

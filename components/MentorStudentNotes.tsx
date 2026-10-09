@@ -14,6 +14,7 @@ import type { StudentNote } from "@/lib/mentorTypes";
 import type { Identity } from "@/lib/e2ee/client";
 import { openNote, sealNote, type OpenedNote } from "@/lib/e2ee/notes";
 import { MentorE2EEGate } from "./MentorE2EEGate";
+import { tr } from "@/lib/i18n";
 
 const ic = (Icon: typeof Pencil, size: number) => <Icon size={size} strokeWidth={MI_STROKE} aria-hidden />;
 
@@ -88,7 +89,7 @@ function NotesBody({ identity, studentId, initial, composeOpen, onComposeClose }
     e.preventDefault();
     const body = draft.trim();
     if (!body || busy) return;
-    if (body.length > NOTE_MAX) { setError(`یادداشت حداکثر ${fa(NOTE_MAX)} حرف باشه`); return; }
+    if (body.length > NOTE_MAX) { setError(tr(`یادداشت حداکثر ${fa(NOTE_MAX)} حرف باشه`, `A note can be at most ${fa(NOTE_MAX)} characters`)); return; }
     setBusy("add");
     setError(null);
     const r = await mentorApi<{ note: StudentNote }>(base, { method: "POST", body: { body: await sealNote(identity, studentId, body) } });
@@ -103,7 +104,7 @@ function NotesBody({ identity, studentId, initial, composeOpen, onComposeClose }
   async function saveEdit() {
     if (!editing || busy) return;
     const body = editing.body.trim();
-    if (!body) { setError("متن یادداشت را بنویس"); return; }
+    if (!body) { setError(tr("متن یادداشت را بنویس", "Write the note")); return; }
     setBusy(editing.id);
     setError(null);
     const r = await mentorApi<{ note: StudentNote }>(`${base}/${editing.id}`, { method: "PATCH", body: { body: await sealNote(identity, studentId, body) } });
@@ -126,22 +127,22 @@ function NotesBody({ identity, studentId, initial, composeOpen, onComposeClose }
 
   return (
     <MentorSection
-      title="یادداشت‌های خصوصی" icon={ic(NotebookPen, MI.section)} count={notes.length ? fa(notes.length) : undefined}
-      action={<button type="button" className="account-outline-btn mentor-btn is-sm" onClick={() => { setError(null); setSheet(true); }}>{ic(Plus, MI.btnSm)} یادداشت تازه</button>}
+      title={tr("یادداشت‌های خصوصی", "Private notes")} icon={ic(NotebookPen, MI.section)} count={notes.length ? fa(notes.length) : undefined}
+      action={<button type="button" className="account-outline-btn mentor-btn is-sm" onClick={() => { setError(null); setSheet(true); }}>{ic(Plus, MI.btnSm)} {tr("یادداشت تازه", "New note")}</button>}
     >
-      <MentorSheet open={sheet} onClose={closeSheet} title="یادداشت تازه" size="sm" dismissible={busy !== "add"}>
+      <MentorSheet open={sheet} onClose={closeSheet} title={tr("یادداشت تازه", "New note")} size="sm" dismissible={busy !== "add"}>
         <form onSubmit={add} noValidate className="mentor-form" style={{ gap: "var(--m-2)" }}>
           <textarea
-            className="wsearch-newform-name trade-glass-field" rows={4} maxLength={NOTE_MAX + 50} aria-label="یادداشت تازه" autoFocus
-            value={draft} placeholder="مثلا «هفته‌ی امتحانات؛ حجم برنامه رو کم کن»"
+            className="wsearch-newform-name trade-glass-field" rows={4} maxLength={NOTE_MAX + 50} aria-label={tr("یادداشت تازه", "New note")} autoFocus
+            value={draft} placeholder={tr("مثلا «هفته‌ی امتحانات؛ حجم برنامه رو کم کن»", "For example: \"Exam week; lighten the workload\"")}
             onChange={(e) => { setDraft(e.target.value); setError(null); }}
           />
-          <p className="mentor-muted">فقط خودت می‌بینی</p>
+          <p className="mentor-muted">{tr("فقط خودت می‌بینی", "Only you can see this")}</p>
           {error && <div className="form-inline-error" role="alert">{error}</div>}
           <div className="mentor-btn-group is-end">
-            <button type="button" className="account-outline-btn muted mentor-btn is-sm" onClick={closeSheet}>انصراف</button>
+            <button type="button" className="account-outline-btn muted mentor-btn is-sm" onClick={closeSheet}>{tr("انصراف", "Cancel")}</button>
             <button type="submit" className="trade-primary-btn mentor-btn is-sm" disabled={!draft.trim() || !!busy}>
-              {busy === "add" ? <Spinner size={14} /> : "ذخیره"}
+              {busy === "add" ? <Spinner size={14} /> : tr("ذخیره", "Save")}
             </button>
           </div>
         </form>
@@ -149,7 +150,7 @@ function NotesBody({ identity, studentId, initial, composeOpen, onComposeClose }
       {error && !confirm && !sheet && <div className="form-inline-error" role="alert">{error}</div>}
 
       {notes.length === 0 ? (
-        <MentorEmpty>هنوز یادداشتی ننوشته‌ای</MentorEmpty>
+        <MentorEmpty>{tr("هنوز یادداشتی ننوشته‌ای", "You have not written any notes yet")}</MentorEmpty>
       ) : (
         <div className="mentor-list mentor-notes">
           <MentorList>
@@ -158,15 +159,15 @@ function NotesBody({ identity, studentId, initial, composeOpen, onComposeClose }
             <div className="mentor-feedback">
               <div className="mentor-feedback-head">
                 <span>{fmtDateTime(n.createdAt)}</span>
-                {n.updatedAt && new Date(n.updatedAt).getTime() - new Date(n.createdAt).getTime() > 60_000 && <span>ویرایش‌شده</span>}
+                {n.updatedAt && new Date(n.updatedAt).getTime() - new Date(n.createdAt).getTime() > 60_000 && <span>{tr("ویرایش‌شده", "Edited")}</span>}
                 {editing?.id !== n.id && (
                   <span className="mentor-note-actions">
                     {textOf(n) !== null && (
-                      <button type="button" className="trade-icon-btn" aria-label="ویرایش یادداشت" onClick={() => { setError(null); setEditing({ id: n.id, body: textOf(n) ?? "" }); }}>
+                      <button type="button" className="trade-icon-btn" aria-label={tr("ویرایش یادداشت", "Edit note")} onClick={() => { setError(null); setEditing({ id: n.id, body: textOf(n) ?? "" }); }}>
                         {ic(Pencil, MI.btnSm)}
                       </button>
                     )}
-                    <button type="button" className="trade-icon-btn" aria-label="حذف یادداشت" onClick={() => { setError(null); setConfirm(n); }}>
+                    <button type="button" className="trade-icon-btn" aria-label={tr("حذف یادداشت", "Delete note")} onClick={() => { setError(null); setConfirm(n); }}>
                       {ic(Trash2, MI.btnSm)}
                     </button>
                   </span>
@@ -175,13 +176,13 @@ function NotesBody({ identity, studentId, initial, composeOpen, onComposeClose }
               {editing?.id === n.id ? (
                 <div className="mentor-form" style={{ gap: "var(--m-2)", marginTop: "var(--m-2)" }}>
                   <textarea
-                    className="wsearch-newform-name trade-glass-field" rows={3} maxLength={NOTE_MAX + 50} aria-label="متن یادداشت" autoFocus
+                    className="wsearch-newform-name trade-glass-field" rows={3} maxLength={NOTE_MAX + 50} aria-label={tr("متن یادداشت", "Note text")} autoFocus
                     value={editing.body} onChange={(e) => setEditing({ id: n.id, body: e.target.value })}
                   />
                   <div className="mentor-btn-group is-end">
-                    <button type="button" className="account-outline-btn muted mentor-btn is-sm" onClick={() => { setEditing(null); setError(null); }}>انصراف</button>
+                    <button type="button" className="account-outline-btn muted mentor-btn is-sm" onClick={() => { setEditing(null); setError(null); }}>{tr("انصراف", "Cancel")}</button>
                     <button type="button" className="trade-primary-btn mentor-btn is-sm" onClick={saveEdit} disabled={!!busy}>
-                      {busy === n.id ? <Spinner size={14} /> : "ذخیره"}
+                      {busy === n.id ? <Spinner size={14} /> : tr("ذخیره", "Save")}
                     </button>
                   </div>
                 </div>
@@ -189,8 +190,8 @@ function NotesBody({ identity, studentId, initial, composeOpen, onComposeClose }
                 <p className="mentor-feedback-body">
                   {!opened[n.id] ? <Spinner size={14} />
                     : textOf(n) !== null ? textOf(n)
-                    : opened[n.id].kind === "old-key" ? <span className="mentor-msg-unreadable">این یادداشت دیگه روی این دستگاه باز نمی‌شه</span>
-                    : <span className="mentor-msg-unreadable">این یادداشت باز نشد</span>}
+                    : opened[n.id].kind === "old-key" ? <span className="mentor-msg-unreadable">{tr("این یادداشت دیگه روی این دستگاه باز نمی‌شه", "This note can no longer be opened on this device")}</span>
+                    : <span className="mentor-msg-unreadable">{tr("این یادداشت باز نشد", "This note could not be opened")}</span>}
                 </p>
               )}
             </div>
@@ -202,9 +203,9 @@ function NotesBody({ identity, studentId, initial, composeOpen, onComposeClose }
 
       {confirm && (
         <MentorConfirmDialog
-          message="این یادداشت حذف شود؟"
-          hint="یادداشت حذف‌شده برنمی‌گردد."
-          confirmLabel="حذف یادداشت"
+          message={tr("این یادداشت حذف شود؟", "Delete this note?")}
+          hint={tr("یادداشت حذف‌شده برنمی‌گردد.", "A deleted note cannot be restored.")}
+          confirmLabel={tr("حذف یادداشت", "Delete note")}
           danger
           busy={busy === confirm.id}
           error={error}

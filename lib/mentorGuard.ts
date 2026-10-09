@@ -2,6 +2,7 @@ import { NextResponse } from "next/server";
 import type { Mentorship, MentorProfile } from "@prisma/client";
 import { prisma } from "@/lib/prisma";
 import { requireFeature, FeatureGuardResult } from "@/lib/featureFlagsServer";
+import { tr } from "@/lib/i18n";
 
 // نگهبان‌های سمت سرور اکوسیستم منتور. قانون طلایی: هیچ روتی به id‌ای که
 // از URL/بدنه اومده به‌تنهایی اعتماد نمی‌کنه — همیشه رابطه با userId خود
@@ -9,7 +10,7 @@ import { requireFeature, FeatureGuardResult } from "@/lib/featureFlagsServer";
 // نیست» یکیه (۴۰۴) تا وجود رکورد دیگران لو نره.
 
 export const notFound = () => NextResponse.json({ error: "not found" }, { status: 404 });
-export const forbidden = (msg = "اجازه‌ی این کار رو نداری") => NextResponse.json({ error: msg }, { status: 403 });
+export const forbidden = (msg = tr("اجازه‌ی این کار رو نداری", "You are not allowed to do this")) => NextResponse.json({ error: msg }, { status: 403 });
 export const badRequest = (msg: string) => NextResponse.json({ error: msg }, { status: 400 });
 export const conflict = (msg: string) => NextResponse.json({ error: msg }, { status: 409 });
 
@@ -27,8 +28,8 @@ export async function getActiveMentorProfile(
   userId: string
 ): Promise<{ ok: true; profile: MentorProfile } | { ok: false; response: NextResponse }> {
   const profile = await prisma.mentorProfile.findUnique({ where: { userId } });
-  if (!profile) return { ok: false, response: forbidden("اول پروفایل مربی‌گری بساز") };
-  if (profile.suspendedAt) return { ok: false, response: forbidden("حساب مربی‌گری تو تعلیق شده") };
+  if (!profile) return { ok: false, response: forbidden(tr("اول پروفایل مربی‌گری بساز", "Create your mentor profile first")) };
+  if (profile.suspendedAt) return { ok: false, response: forbidden(tr("حساب مربی‌گری تو تعلیق شده", "Your mentor account is temporarily closed")) };
   return { ok: true, profile };
 }
 

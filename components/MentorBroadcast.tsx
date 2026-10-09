@@ -6,7 +6,7 @@ import { useCallback, useEffect, useMemo, useState } from "react";
 import { Lock, Send } from "lucide-react";
 import { faNum } from "@/lib/jalali";
 import { publicUserName, type PublicUser } from "@/lib/mentorTypes";
-import { NETWORK_ERROR, readApiError } from "@/lib/mentorFormat";
+import { networkError, readApiError } from "@/lib/mentorFormat";
 import { broadcastCipher, type Identity } from "@/lib/e2ee/client";
 import { MentorSheet } from "./MentorSheet";
 import { LoadingBlock, Spinner } from "./Spinner";
@@ -14,6 +14,7 @@ import { MentorE2EEGate } from "./MentorE2EEGate";
 import { MentorEmpty, MentorField, MI, MI_STROKE } from "./MentorUI";
 import { MentorDashError } from "./MentorDashKit";
 import { SavedRepliesPicker } from "./MentorSavedReplies";
+import { tr } from "@/lib/i18n";
 
 const FIELD = "wsearch-newform-name trade-glass-field";
 const MAX_LEN = 2000;
@@ -32,9 +33,9 @@ type SendResult = { sent: number; failed: { mentorshipId: string; code: string }
 export function MentorBroadcastSheet({ open, onClose, activeCount }: { open: boolean; onClose: () => void; activeCount: number }) {
   const [busy, setBusy] = useState(false);
   return (
-    <MentorSheet open={open} onClose={onClose} title="پیام به همه" size="lg" dismissible={!busy}>
+    <MentorSheet open={open} onClose={onClose} title={tr("پیام به همه", "Message everyone")} size="lg" dismissible={!busy}>
       {open && (activeCount === 0
-        ? <MentorEmpty>شاگرد فعالی برای ارسال نیست</MentorEmpty>
+        ? <MentorEmpty>{tr("شاگرد فعالی برای ارسال نیست", "No active students to send to")}</MentorEmpty>
         : <MentorE2EEGate>{(identity) => <BroadcastForm identity={identity} busy={busy} setBusy={setBusy} onClose={onClose} />}</MentorE2EEGate>)}
     </MentorSheet>
   );
@@ -54,12 +55,12 @@ function BroadcastForm({ identity, busy, setBusy, onClose }: { identity: Identit
     setLoadError(null);
     try {
       const res = await fetch("/api/mentor/broadcast", { cache: "no-store" });
-      if (!res.ok) { setLoadError(await readApiError(res, "فهرست شاگردها دریافت نشد؛ دوباره تلاش کن")); return; }
+      if (!res.ok) { setLoadError(await readApiError(res, tr("فهرست شاگردها دریافت نشد؛ دوباره تلاش کن", "Could not load your students. Try again."))); return; }
       const d: RecipientsResponse = await res.json();
       setData(d);
       setSelected(new Set(d.recipients.filter((r) => r.key).map((r) => r.mentorshipId)));
     } catch {
-      setLoadError(NETWORK_ERROR);
+      setLoadError(networkError());
     }
   }, []);
   useEffect(() => { load(); }, [load]);
@@ -81,9 +82,9 @@ function BroadcastForm({ identity, busy, setBusy, onClose }: { identity: Identit
     e.preventDefault();
     if (busy) return;
     const body = text.trim();
-    if (!body) { setTextErr("متن پیام را بنویس"); return; }
-    if (body.length > MAX_LEN) { setTextErr(`پیام حداکثر ${faNum(MAX_LEN)} حرف است`); return; }
-    if (chosen.length === 0) { setError("حداقل یک شاگرد انتخاب کن"); return; }
+    if (!body) { setTextErr(tr("متن پیام را بنویس", "Write the message")); return; }
+    if (body.length > MAX_LEN) { setTextErr(tr(`پیام حداکثر ${faNum(MAX_LEN)} حرف است`, `The message can be at most ${faNum(MAX_LEN)} characters`)); return; }
+    if (chosen.length === 0) { setError(tr("حداقل یک شاگرد انتخاب کن", "Pick at least one student")); return; }
     setBusy(true);
     setError(null);
     setResult(null);
@@ -97,13 +98,13 @@ function BroadcastForm({ identity, busy, setBusy, onClose }: { identity: Identit
         items.push({ mentorshipId: r.mentorshipId, ...enc });
       }
       const res = await fetch("/api/mentor/broadcast", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ items }) });
-      if (!res.ok) { setError(await readApiError(res, "پیام ارسال نشد؛ دوباره تلاش کن")); return; }
+      if (!res.ok) { setError(await readApiError(res, tr("پیام ارسال نشد؛ دوباره تلاش کن", "The message was not sent. Try again."))); return; }
       const d: SendResult = await res.json();
       setResult(d);
       if (d.sent > 0 && d.failed.length === 0) setText("");
       if (d.failed.some((f) => f.code === "KEY_CHANGED" || f.code === "PEER_NO_KEY")) load();
     } catch {
-      setError(NETWORK_ERROR);
+      setError(networkError());
     } finally {
       setBusy(false);
     }
@@ -111,55 +112,55 @@ function BroadcastForm({ identity, busy, setBusy, onClose }: { identity: Identit
 
   if (loadError) return <MentorDashError message={loadError} onRetry={load} />;
   if (!data) return <LoadingBlock />;
-  if (data.recipients.length === 0) return <MentorEmpty>شاگرد فعالی برای ارسال نیست</MentorEmpty>;
+  if (data.recipients.length === 0) return <MentorEmpty>{tr("شاگرد فعالی برای ارسال نیست", "No active students to send to")}</MentorEmpty>;
 
   return (
     <form className="mentor-form" onSubmit={submit}>
       <p className="mentor-e2ee-line">
         <Lock size={13} strokeWidth={1.75} aria-hidden />
-        <span>هر شاگرد پیام را در گفت‌وگوی خودش با تو می‌بیند؛ شاگردها از هم خبر ندارند</span>
+        <span>{tr("هر شاگرد پیام را در گفت‌وگوی خودش با تو می‌بیند؛ شاگردها از هم خبر ندارند", "Each student sees the message in their own chat with you; students cannot see each other")}</span>
       </p>
 
       {data.labels.length > 0 && (
-        <MentorField label="گیرنده‌ها" htmlFor="bc-label">
+        <MentorField label={tr("گیرنده‌ها", "Recipients")} htmlFor="bc-label">
           <select id="bc-label" className={FIELD} value={label} onChange={(e) => { setLabel(e.target.value); setResult(null); }}>
-            <option value="">همه‌ی شاگردهای فعال</option>
+            <option value="">{tr("همه‌ی شاگردهای فعال", "All active students")}</option>
             {data.labels.map((l) => <option key={l.id} value={l.id}>{l.name}</option>)}
           </select>
         </MentorField>
       )}
 
-      <div className="mentor-broadcast-list thin-scroll" role="group" aria-label="شاگردها">
+      <div className="mentor-broadcast-list thin-scroll" role="group" aria-label={tr("شاگردها", "Students")}>
         {visible.length === 0 ? (
-          <MentorEmpty>شاگردی با این برچسب نیست</MentorEmpty>
+          <MentorEmpty>{tr("شاگردی با این برچسب نیست", "No students have this label")}</MentorEmpty>
         ) : visible.map((r) => (
           <label key={r.mentorshipId} className={`mentor-check${r.key ? "" : " is-disabled"}`}>
             <TickButton shape="square" size={22} disabled={!r.key || busy} checked={!!r.key && selected.has(r.mentorshipId)} onToggle={() => toggle(r.mentorshipId, !selected.has(r.mentorshipId))} />
             <span className="mentor-check-label">{publicUserName(r.student)}</span>
-            {!r.key && <span className="mentor-check-kind">هنوز وارد بخش مربی نشده</span>}
+            {!r.key && <span className="mentor-check-kind">{tr("هنوز وارد بخش مربی نشده", "Has not opened the mentor area yet")}</span>}
           </label>
         ))}
       </div>
       <p className="mentor-broadcast-summary">
-        {faNum(chosen.length)} گیرنده
-        {withoutKey > 0 ? `؛ ${faNum(withoutKey)} شاگرد هنوز وارد بخش مربی نشده و این پیام را نمی‌گیرد` : ""}
+        {tr(`${faNum(chosen.length)} گیرنده`, `${faNum(chosen.length)} ${chosen.length === 1 ? "recipient" : "recipients"}`)}
+        {withoutKey > 0 ? tr(`؛ ${faNum(withoutKey)} شاگرد هنوز وارد بخش مربی نشده و این پیام را نمی‌گیرد`, `; ${faNum(withoutKey)} ${withoutKey === 1 ? "student has" : "students have"} not opened the mentor area yet and will not get this message`) : ""}
       </p>
 
       <SavedRepliesPicker onPick={(t) => { setText((d) => (d ? d + "\n" : "") + t); setTextErr(null); }} disabled={busy} />
-      <MentorField label="متن پیام" htmlFor="bc-text" error={textErr}>
-        <textarea id="bc-text" className={FIELD} rows={4} maxLength={MAX_LEN + 200} value={text} onChange={(e) => { setText(e.target.value); setTextErr(null); setResult(null); }} placeholder="مثلا «برنامه‌ی هفته‌ی بعد از شنبه فعال می‌شود»" />
+      <MentorField label={tr("متن پیام", "Message text")} htmlFor="bc-text" error={textErr}>
+        <textarea id="bc-text" className={FIELD} rows={4} maxLength={MAX_LEN + 200} value={text} onChange={(e) => { setText(e.target.value); setTextErr(null); setResult(null); }} placeholder={tr("مثلا «برنامه‌ی هفته‌ی بعد از شنبه فعال می‌شود»", `For example: "Next week's program starts on Saturday"`)} />
       </MentorField>
 
       {error && <div className="form-inline-error" role="alert">{error}</div>}
       {result && result.failed.length > 0 && (
         <div className="form-inline-error" role="alert">
-          برای {faNum(result.failed.length)} شاگرد ارسال نشد{result.sent > 0 ? `؛ ${faNum(result.sent)} پیام ارسال شد` : ""}؛ دوباره تلاش کن
+          {tr(`برای ${faNum(result.failed.length)} شاگرد ارسال نشد`, `Could not send to ${faNum(result.failed.length)} ${result.failed.length === 1 ? "student" : "students"}`)}{result.sent > 0 ? tr(`؛ ${faNum(result.sent)} پیام ارسال شد`, `; ${faNum(result.sent)} sent`) : ""}{tr("؛ دوباره تلاش کن", ". Try again.")}
         </div>
       )}
       <div className="mentor-form-actions">
-        <button type="button" className="account-outline-btn muted mentor-btn" onClick={onClose} disabled={busy}>بستن</button>
+        <button type="button" className="account-outline-btn muted mentor-btn" onClick={onClose} disabled={busy}>{tr("بستن", "Close")}</button>
         <button type="submit" className="trade-primary-btn mentor-btn" disabled={busy || chosen.length === 0}>
-          {busy ? <Spinner size={14} /> : result && result.sent > 0 && result.failed.length === 0 ? `برای ${faNum(result.sent)} شاگرد ارسال شد` : <><Send size={MI.btn} strokeWidth={MI_STROKE} aria-hidden /> ارسال</>}
+          {busy ? <Spinner size={14} /> : result && result.sent > 0 && result.failed.length === 0 ? tr(`برای ${faNum(result.sent)} شاگرد ارسال شد`, `Sent to ${faNum(result.sent)} ${result.sent === 1 ? "student" : "students"}`) : <><Send size={MI.btn} strokeWidth={MI_STROKE} aria-hidden className="dir-flip" /> {tr("ارسال", "Send")}</>}
         </button>
       </div>
     </form>

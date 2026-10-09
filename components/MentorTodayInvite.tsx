@@ -8,6 +8,7 @@ import { MI, MI_STROKE, MentorEmpty, MentorField } from "./MentorUI";
 import { MentorSheet } from "./MentorMotion";
 import { categoryLabel } from "./MentorBadges";
 import { isValidUsername } from "@/lib/validate";
+import { isEn, tr } from "@/lib/i18n";
 
 /**
  * برگه‌ی «دعوت شاگرد» (از کاشی میان‌بر صفحه‌ی امروز): نام کاربری، حوزه‌ی همکاری و پیام.
@@ -31,9 +32,9 @@ export function MentorTodayInviteSheet({
     setError(null);
     setSent(false);
     const u = username.trim().replace(/^@/, "");
-    if (!u) { setUserErr("نام کاربری شاگرد را وارد کن"); return; }
-    if (!isValidUsername(u)) { setUserErr("نام کاربری درست نیست؛ فقط حرف انگلیسی، عدد و _ بنویس"); return; }
-    if (categories.length > 0 && cats.length === 0) { setCatErr("حداقل یک حوزه انتخاب کن"); return; }
+    if (!u) { setUserErr(tr("نام کاربری شاگرد را وارد کن", "Enter the student's username")); return; }
+    if (!isValidUsername(u)) { setUserErr(tr("نام کاربری درست نیست؛ فقط حرف انگلیسی، عدد و _ بنویس", "That username is not valid. Use only English letters, numbers and _.")); return; }
+    if (categories.length > 0 && cats.length === 0) { setCatErr(tr("حداقل یک حوزه انتخاب کن", "Pick at least one field")); return; }
     setSending(true);
     const body: { studentUsername: string; message?: string; categories?: string[] } = { studentUsername: u };
     if (categories.length > 0) body.categories = cats;
@@ -49,25 +50,25 @@ export function MentorTodayInviteSheet({
   }
 
   return (
-    <MentorSheet open={open} onClose={onClose} title="دعوت شاگرد" size="md" dismissible={!sending}>
+    <MentorSheet open={open} onClose={onClose} title={tr("دعوت شاگرد", "Invite a student")} size="md" dismissible={!sending}>
       {suspended ? (
-        <MentorEmpty>تا وقتی حساب مربی‌گری‌ت بسته است، دعوت شاگرد تازه ممکن نیست</MentorEmpty>
+        <MentorEmpty>{tr("تا وقتی حساب مربی‌گری‌ت بسته است، دعوت شاگرد تازه ممکن نیست", "You cannot invite new students while your mentor account is closed")}</MentorEmpty>
       ) : (
         <form onSubmit={invite} noValidate>
           <div className="mentor-form">
             <MentorField
-              label="نام کاربری" htmlFor="md-invite-user" error={userErr}
-              hint="شاگرد تا قبول کردن دعوت، چیزی با تو به اشتراک نمی‌ذاره"
+              label={tr("نام کاربری", "Username")} htmlFor="md-invite-user" error={userErr}
+              hint={tr("شاگرد تا قبول کردن دعوت، چیزی با تو به اشتراک نمی‌ذاره", "The student shares nothing with you until they accept the invite")}
             >
               <input
                 id="md-invite-user" type="text" className="wsearch-newform-name trade-glass-field mono" dir="ltr"
-                style={{ textAlign: "right" }} value={username} placeholder="ali_rezaei" autoComplete="off" maxLength={21}
+                style={{ textAlign: isEn() ? "left" : "right" }} value={username} placeholder="ali_rezaei" autoComplete="off" maxLength={21}
                 onChange={(e) => { setUsername(e.target.value); setUserErr(null); setError(null); setSent(false); }}
               />
             </MentorField>
             {categories.length > 1 && (
-              <MentorField label="حوزه‌ی همکاری" error={catErr}>
-                <div className="trade-choice-grid" role="group" aria-label="حوزه‌ی همکاری">
+              <MentorField label={tr("حوزه‌ی همکاری", "Field of work")} error={catErr}>
+                <div className="trade-choice-grid" role="group" aria-label={tr("حوزه‌ی همکاری", "Field of work")}>
                   {categories.map((c) => {
                     const on = cats.includes(c);
                     return (
@@ -82,19 +83,19 @@ export function MentorTodayInviteSheet({
                 </div>
               </MentorField>
             )}
-            <MentorField label="پیام" htmlFor="md-invite-msg" optional>
+            <MentorField label={tr("پیام", "Message")} htmlFor="md-invite-msg" optional>
               <textarea
                 id="md-invite-msg" className="wsearch-newform-name trade-glass-field" rows={2} maxLength={500}
                 value={message} onChange={(e) => setMessage(e.target.value)}
-                placeholder="مثلا «برای برنامه‌ی تمرینی این فصل با هم کار کنیم»"
+                placeholder={tr("مثلا «برای برنامه‌ی تمرینی این فصل با هم کار کنیم»", "For example: \"Let's work on this season's training plan together\"")}
               />
             </MentorField>
           </div>
           {error && <div className="form-inline-error" role="alert">{error}</div>}
           <div className="mentor-form-actions">
-            <button type="button" className="account-outline-btn muted mentor-btn" onClick={onClose} disabled={sending}>بستن</button>
+            <button type="button" className="account-outline-btn muted mentor-btn" onClick={onClose} disabled={sending}>{tr("بستن", "Close")}</button>
             <button type="submit" className="trade-primary-btn mentor-btn" disabled={sending}>
-              {sending ? <Spinner size={14} /> : sent ? <><Check size={MI.btn} strokeWidth={MI_STROKE} aria-hidden /> دعوت فرستاده شد</> : <><Send size={MI.btn} strokeWidth={MI_STROKE} aria-hidden /> فرستادن دعوت</>}
+              {sending ? <Spinner size={14} /> : sent ? <><Check size={MI.btn} strokeWidth={MI_STROKE} aria-hidden /> {tr("دعوت فرستاده شد", "Invite sent")}</> : <><Send size={MI.btn} strokeWidth={MI_STROKE} aria-hidden /> {tr("فرستادن دعوت", "Send invite")}</>}
             </button>
           </div>
         </form>

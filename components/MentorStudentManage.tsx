@@ -7,6 +7,7 @@ import { mentorApi } from "./MentorDashKit";
 import { MentorEmpty } from "./MentorUI";
 import { MentorSheet } from "./MentorSheet";
 import type { StudentManageResponse } from "@/lib/mentorTypes";
+import { tr } from "@/lib/i18n";
 
 /** داده مدیریتی خصوصی مربی برای یک شاگرد: یک بار برای کل صفحه */
 export function useStudentManage(studentId: string) {
@@ -42,11 +43,11 @@ export function MentorStudentManage({
   }
 
   return (
-    <MentorSheet open={open} onClose={onClose} title="برچسب‌ها" size="sm">
+    <MentorSheet open={open} onClose={onClose} title={tr("برچسب‌ها", "Labels")} size="sm">
       {data.labels.length === 0 ? (
-        <MentorEmpty>هنوز برچسبی نساختی</MentorEmpty>
+        <MentorEmpty>{tr("هنوز برچسبی نساختی", "You have not created any labels yet")}</MentorEmpty>
       ) : (
-        <div className="trade-choice-grid" role="group" aria-label="برچسب‌های این شاگرد">
+        <div className="trade-choice-grid" role="group" aria-label={tr("برچسب‌های این شاگرد", "Labels for this student")}>
           {data.labels.map((l) => {
             const on = data.labelIds.includes(l.id);
             return (
@@ -58,7 +59,7 @@ export function MentorStudentManage({
         </div>
       )}
       {error && <div className="form-inline-error" role="alert">{error}</div>}
-      <p className="mentor-muted"><Link href="/mentor/settings#labels" className="mentor-link">مدیریت برچسب‌ها</Link></p>
+      <p className="mentor-muted"><Link href="/mentor/settings#labels" className="mentor-link">{tr("مدیریت برچسب‌ها", "Manage labels")}</Link></p>
     </MentorSheet>
   );
 }

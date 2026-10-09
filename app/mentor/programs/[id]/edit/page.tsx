@@ -11,6 +11,7 @@ import { MI, MI_STROKE, MentorEmptyState } from "@/components/MentorUI";
 import { LoadingBlock } from "@/components/Spinner";
 import { publicUserName } from "@/lib/mentorTypes";
 import type { ProgramDetailResponse } from "@/lib/mentorTypes";
+import { tr } from "@/lib/i18n";
 
 type State = { loading: boolean; error: string | null; status: number; data: ProgramDetailResponse | null };
 
@@ -43,18 +44,18 @@ export default function EditMentorProgramPage() {
   const student = data?.role === "MENTOR" ? data.program.counterpart ?? null : null;
   const back = student
     ? { href: `/mentor/students/${student.id}`, label: publicUserName(student) }
-    : { href: "/mentor/templates", label: "برنامه‌ها" };
+    : { href: "/mentor/templates", label: tr("برنامه‌ها", "Programs") };
 
   let body: React.ReactNode;
   if (!id || state.loading) body = <LoadingBlock />;
   else if (state.error || !data) {
     const final = state.status === 404 || state.status === 403;
-    body = <MentorDashError message={state.error || "برنامه باز نشد؛ دوباره تلاش کن"} onRetry={final ? undefined : load} />;
+    body = <MentorDashError message={state.error || tr("برنامه باز نشد؛ دوباره تلاش کن", "Could not open the program. Try again.")} onRetry={final ? undefined : load} />;
   } else if (data.role !== "MENTOR") {
     body = (
       <MentorDashError
-        message="فقط مربی سازنده‌ی این برنامه می‌تونه ویرایشش کنه"
-        action={<Link href={`/mentor-programs/${data.program.id}`} className="account-outline-btn mentor-btn is-sm">مشاهده‌ی برنامه</Link>}
+        message={tr("فقط مربی سازنده‌ی این برنامه می‌تونه ویرایشش کنه", "Only the mentor who created this program can edit it")}
+        action={<Link href={`/mentor-programs/${data.program.id}`} className="account-outline-btn mentor-btn is-sm">{tr("مشاهده‌ی برنامه", "View program")}</Link>}
       />
     );
   } else if (data.program.status !== "DRAFT") {
@@ -62,9 +63,9 @@ export default function EditMentorProgramPage() {
       <>
       <MentorEmptyState
         icon={<ClipboardList size={MI.empty} strokeWidth={MI_STROKE} aria-hidden />}
-        title="این برنامه فرستاده شده و دیگه ویرایش نمی‌شه"
-        text="اگه شاگرد تغییر بخواد، دوباره قابل ویرایش می‌شه"
-        action={<Link href={`/mentor-programs/${data.program.id}`} className="account-outline-btn mentor-btn">مشاهده‌ی برنامه</Link>}
+        title={tr("این برنامه فرستاده شده و دیگه ویرایش نمی‌شه", "This program was sent and can no longer be edited")}
+        text={tr("اگه شاگرد تغییر بخواد، دوباره قابل ویرایش می‌شه", "If the student asks for changes, you can edit it again")}
+        action={<Link href={`/mentor-programs/${data.program.id}`} className="account-outline-btn mentor-btn">{tr("مشاهده‌ی برنامه", "View program")}</Link>}
       />
       <MentorProgramTools programId={data.program.id} title={data.program.title} studentId={student?.id} />
       </>
@@ -74,7 +75,7 @@ export default function EditMentorProgramPage() {
   }
 
   return (
-    <MentorDashShell title="ویرایش برنامه" back={back}>
+    <MentorDashShell title={tr("ویرایش برنامه", "Edit program")} back={back}>
       {body}
     </MentorDashShell>
   );

@@ -7,25 +7,26 @@ import { Spinner } from "./Spinner";
 import { mentorApi } from "./MentorDashKit";
 import { MI, MI_STROKE, MentorField } from "./MentorUI";
 import type { AlertsResponse } from "@/lib/mentorToolsTypes";
+import { tr } from "@/lib/i18n";
 
 export type AlertChoice = "off" | "2" | "3" | "5" | "7";
-const OPTIONS: { value: AlertChoice; label: string }[] = [
-  { value: "2", label: "2 روز" },
-  { value: "3", label: "3 روز" },
-  { value: "5", label: "5 روز" },
-  { value: "7", label: "7 روز" },
-  { value: "off", label: "خاموش" },
+const options = (): { value: AlertChoice; label: string }[] => [
+  { value: "2", label: tr("2 روز", "2 days") },
+  { value: "3", label: tr("3 روز", "3 days") },
+  { value: "5", label: tr("5 روز", "5 days") },
+  { value: "7", label: tr("7 روز", "7 days") },
+  { value: "off", label: tr("خاموش", "Off") },
 ];
 
 export function alertToChoice(n: number | null | undefined): AlertChoice {
   if (n == null) return "off";
   const s = String(n) as AlertChoice;
-  return OPTIONS.some((o) => o.value === s) ? s : "3";
+  return options().some((o) => o.value === s) ? s : "3";
 }
 
 export function alertValueText(c: AlertChoice | null): string {
   if (c === null) return "";
-  return c === "off" ? "خاموش" : `بعد از ${c} روز`;
+  return c === "off" ? tr("خاموش", "Off") : tr(`بعد از ${c} روز`, `After ${c} days`);
 }
 
 /**
@@ -56,15 +57,15 @@ export function MentorAlertsSettings({
   return (
     <form onSubmit={save} noValidate className="mentor-form mv2-set-form">
       <MentorField
-        label="وقتی شاگرد چند روز پشت سر هم برنامه رو انجام نداد خبرم کن"
-        hint="فقط روزهایی که طبق برنامه کاری داشته شمرده می‌شن؛ برای هر دوره یک اعلان"
+        label={tr("وقتی شاگرد چند روز پشت سر هم برنامه رو انجام نداد خبرم کن", "Let me know when a student skips their program for several days in a row")}
+        hint={tr("فقط روزهایی که طبق برنامه کاری داشته شمرده می‌شن؛ برای هر دوره یک اعلان", "Only days with planned tasks count; one notification per streak")}
         error={error}
       >
-        <SegmentedTabs<AlertChoice> active={value} onChange={(v) => { setValue(v); setSaved(false); setError(null); }} options={OPTIONS} />
+        <SegmentedTabs<AlertChoice> active={value} onChange={(v) => { setValue(v); setSaved(false); setError(null); }} options={options()} />
       </MentorField>
       <div className="mentor-form-actions" style={{ marginTop: 0 }}>
         <button type="submit" className="trade-primary-btn mentor-btn" disabled={saving}>
-          {saving ? <Spinner size={14} /> : saved ? <><Check size={MI.btn} strokeWidth={MI_STROKE} aria-hidden /> ذخیره شد</> : "ذخیره"}
+          {saving ? <Spinner size={14} /> : saved ? <><Check size={MI.btn} strokeWidth={MI_STROKE} aria-hidden /> {tr("ذخیره شد", "Saved")}</> : tr("ذخیره", "Save")}
         </button>
       </div>
     </form>

@@ -1,5 +1,6 @@
 "use client";
 
+import { tr } from "@/lib/i18n";
 import { useCallback, useEffect, useState } from "react";
 import { AlertCircle, CalendarClock, ClipboardCheck, Download, EyeOff, Flame, PauseCircle } from "lucide-react";
 import { MentorDashBar, MentorDashError, fa, mentorApi, pct } from "@/components/MentorDashKit";
@@ -35,16 +36,16 @@ export function MentorWeeklyReport({ offset = 0 }: { offset?: 0 | 1 | 2 }) {
 
   let body: React.ReactNode;
   if (loading) body = <LoadingBlock />;
-  else if (error || !data) body = <MentorDashError message={error?.msg || "گزارش دریافت نشد؛ دوباره تلاش کن"} onRetry={error?.final ? undefined : () => load(offset)} />;
+  else if (error || !data) body = <MentorDashError message={error?.msg || tr("گزارش دریافت نشد؛ دوباره تلاش کن", "Could not load the report. Try again.")} onRetry={error?.final ? undefined : () => load(offset)} />;
   else if (data.students.length === 0) {
-    body = <MentorEmptyState icon={ic(ClipboardCheck, MI.empty)} title="شاگرد فعالی نداری" text="گزارش پس از پذیرش اولین شاگرد ساخته می‌شود" />;
+    body = <MentorEmptyState icon={ic(ClipboardCheck, MI.empty)} title={tr("شاگرد فعالی نداری", "You have no active students")} text={tr("گزارش پس از پذیرش اولین شاگرد ساخته می‌شود", "The report appears after you accept your first student")} />;
   } else {
     const shown = [...data.students].sort((a, b) => Number(a.progressHidden) - Number(b.progressHidden) || a.rate - b.rate);
     const first = shown.find((s) => !s.progressHidden) ?? shown[0];
     body = (
       <MentorSection
         flush
-        action={<span className="mentor-range">{fmtDate(first.from)} تا {fmtDate(first.to)}</span>}
+        action={<span className="mentor-range">{tr(`${fmtDate(first.from)} تا ${fmtDate(first.to)}`, `${fmtDate(first.from)} to ${fmtDate(first.to)}`)}</span>}
       >
         {shown.map((s) => <StudentReportRow key={s.studentId} s={s} current={data.offset === 0} />)}
       </MentorSection>
@@ -63,22 +64,22 @@ function StudentReportRow({ s, current }: { s: WeeklyStudentReport; current: boo
       title={s.name}
       sub={
         s.progressHidden ? (
-          <span>{ic(EyeOff, MI.chip)} این بخش رو شاگرد خصوصی نگه داشته</span>
+          <span>{ic(EyeOff, MI.chip)} {tr("این بخش رو شاگرد خصوصی نگه داشته", "The student keeps this section private")}</span>
         ) : noPlan ? (
-          <span>در این بازه برنامه‌ی فعالی نداشت</span>
+          <span>{tr("در این بازه برنامه‌ی فعالی نداشت", "No active program in this period")}</span>
         ) : (
           <>
-            <span>{fa(s.completed)} انجام‌شده</span>
-            {s.partial > 0 && <span>{fa(s.partial)} ناقص</span>}
-            <span>{fa(s.missed + s.unlogged)} انجام‌نشده</span>
-            {s.streak > 0 && <span>{ic(Flame, MI.chip)} {fa(s.streak)} روز کامل پیاپی</span>}
-            <span>آخرین انجام {s.lastDoneDate ? fmtDate(s.lastDoneDate) : "ندارد"}</span>
+            <span>{tr(`${fa(s.completed)} انجام‌شده`, `${fa(s.completed)} done`)}</span>
+            {s.partial > 0 && <span>{tr(`${fa(s.partial)} ناقص`, `${fa(s.partial)} partial`)}</span>}
+            <span>{tr(`${fa(s.missed + s.unlogged)} انجام‌نشده`, `${fa(s.missed + s.unlogged)} not done`)}</span>
+            {s.streak > 0 && <span>{ic(Flame, MI.chip)} {tr(`${fa(s.streak)} روز کامل پیاپی`, `${fa(s.streak)} ${s.streak === 1 ? "full day" : "full days"} in a row`)}</span>}
+            <span>{tr("آخرین انجام", "Last done")} {s.lastDoneDate ? fmtDate(s.lastDoneDate) : tr("ندارد", "never")}</span>
           </>
         )
       }
       end={
         s.progressHidden || noPlan ? (
-          s.paused ? <MentorChip tone="neutral" icon={ic(PauseCircle, MI.chip)}>متوقف</MentorChip> : undefined
+          s.paused ? <MentorChip tone="neutral" icon={ic(PauseCircle, MI.chip)}>{tr("متوقف", "Paused")}</MentorChip> : undefined
         ) : (
           <span className="mentor-progress" style={{ marginTop: 0, width: 96 }}>
             <MentorDashBar rate={s.rate} />
@@ -95,34 +96,34 @@ function StudentReportDetails({ s, current }: { s: WeeklyStudentReport; current:
   const lines: React.ReactNode[] = [];
   if (!s.progressHidden && current && s.idleDays >= 2) {
     lines.push(
-      <MentorChip key="idle" tone="warn" icon={ic(AlertCircle, MI.chip)}>{fa(s.idleDays)} روز برنامه‌دار بدون انجام</MentorChip>,
+      <MentorChip key="idle" tone="warn" icon={ic(AlertCircle, MI.chip)}>{tr(`${fa(s.idleDays)} روز برنامه‌دار بدون انجام`, `${fa(s.idleDays)} planned ${s.idleDays === 1 ? "day" : "days"} with nothing done`)}</MentorChip>,
     );
   }
   if (s.paused && !(s.progressHidden || s.scheduled === 0)) {
-    lines.push(<MentorChip key="paused" tone="neutral" icon={ic(PauseCircle, MI.chip)}>همکاری متوقف است</MentorChip>);
+    lines.push(<MentorChip key="paused" tone="neutral" icon={ic(PauseCircle, MI.chip)}>{tr("همکاری متوقف است", "Paused")}</MentorChip>);
   }
   for (const p of s.scheduledPrograms.slice(0, 2)) {
     lines.push(
-      <MentorChip key={p.id} tone="info" icon={ic(CalendarClock, MI.chip)} title={`«${p.title}» پس از پذیرش در این روز خودکار فعال می‌شود`}>
-        شروع {fmtDate(p.startDate)}
+      <MentorChip key={p.id} tone="info" icon={ic(CalendarClock, MI.chip)} title={tr(`«${p.title}» پس از پذیرش در این روز خودکار فعال می‌شود`, `"${p.title}" starts automatically on this day once accepted`)}>
+        {tr("شروع", "Starts")} {fmtDate(p.startDate)}
       </MentorChip>,
     );
   }
   const missed = !s.progressHidden && s.missedItems.length > 0
-    ? s.missedItems.map((m) => `${m.title} (${fa(m.count)})`).join("، ")
+    ? s.missedItems.map((m) => `${m.title} (${fa(m.count)})`).join(tr("، ", ", "))
     : null;
 
   return (
     <div className="mentor-report-below">
       {lines.length > 0 && <div className="mentor-chips">{lines}</div>}
-      {missed && <p className="mentor-report-line"><b>بیشترین انجام‌نشده:</b> {missed}</p>}
+      {missed && <p className="mentor-report-line"><b>{tr("بیشترین انجام‌نشده:", "Most missed:")}</b> {missed}</p>}
       <p className="mentor-report-line">
-        {s.lastMessageAt ? <>آخرین پیام شاگرد {fmtRelative(s.lastMessageAt)}</> : "شاگرد هنوز پیامی نفرستاده است"}
+        {s.lastMessageAt ? <>{tr("آخرین پیام شاگرد", "Student's last message")} {fmtRelative(s.lastMessageAt)}</> : tr("شاگرد هنوز پیامی نفرستاده است", "The student has not sent a message yet")}
       </p>
       {!s.progressHidden && (
         <div className="mentor-btn-group is-end">
           <a href={exportCsvUrl(s.studentId)} download className="account-outline-btn mentor-btn is-sm">
-            {ic(Download, MI.btnSm)} خروجی 30 روز (CSV)
+            {ic(Download, MI.btnSm)} {tr("خروجی 30 روز (CSV)", "Export 30 days (CSV)")}
           </a>
         </div>
       )}
