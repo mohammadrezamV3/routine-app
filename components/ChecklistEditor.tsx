@@ -8,6 +8,7 @@ import { faNum } from "@/lib/jalali";
 import { LockBodyScroll } from "./LockBodyScroll";
 import { MAX_CHECKLIST_ITEMS, MIN_CHECKLIST_ITEMS, TAG_COLORS } from "@/lib/tradeTypes";
 import { Spinner } from "./Spinner";
+import { tr } from "@/lib/i18n";
 
 type Item = { id: string; text: string; order: number };
 type Checklist = { id: string; name: string; color: string; required: boolean; archived: boolean; order: number; note: string | null; items: Item[] };
@@ -44,8 +45,8 @@ export function ChecklistEditor({
 
   async function save() {
     if (saving) return;
-    if (!name.trim()) { setError("نام چک‌لیست را وارد کن"); return; }
-    if (items.length < MIN_CHECKLIST_ITEMS) { setError(`چک‌لیست باید حداقل ${faNum(MIN_CHECKLIST_ITEMS)} مورد داشته باشد`); return; }
+    if (!name.trim()) { setError(tr("نام چک‌لیست را وارد کن", "Enter a checklist name")); return; }
+    if (items.length < MIN_CHECKLIST_ITEMS) { setError(tr(`چک‌لیست باید حداقل ${faNum(MIN_CHECKLIST_ITEMS)} مورد داشته باشد`, `A checklist needs at least ${MIN_CHECKLIST_ITEMS} items`)); return; }
     setSaving(true);
     setError(null);
     const body = {
@@ -63,7 +64,7 @@ export function ChecklistEditor({
     });
     const data = await res.json().catch(() => null);
     setSaving(false);
-    if (!res.ok) { setError(data?.error || "خطا در ذخیره چک‌لیست"); return; }
+    if (!res.ok) { setError(data?.error || tr("خطا در ذخیره چک‌لیست", "Failed to save the checklist")); return; }
     onSaved();
   }
 
@@ -73,30 +74,33 @@ export function ChecklistEditor({
       <div className="modal-overlay open" onClick={onClose} />
       <div className="modal-panel open modal-panel-notransform" role="dialog" aria-modal="true">
         <div className="modal-head">
-          <div className="modal-title">{checklist ? "ویرایش چک‌لیست" : "چک‌لیست جدید"}</div>
-          <button type="button" className="trade-icon-btn" onClick={onClose} aria-label="بستن"><X size={16} /></button>
+          <div className="modal-title">{checklist ? tr("ویرایش چک‌لیست", "Edit checklist") : tr("چک‌لیست جدید", "New checklist")}</div>
+          <button type="button" className="trade-icon-btn" onClick={onClose} aria-label={tr("بستن", "Close")}><X size={16} /></button>
         </div>
 
-        <label className="exercise-form-label">نام چک‌لیست</label>
-        <input className="wsearch-newform-name trade-glass-field" autoFocus value={name} onChange={(e) => setName(e.target.value)} maxLength={60} placeholder="مثلا London Breakout" />
+        <label className="exercise-form-label">{tr("نام چک‌لیست", "Checklist name")}</label>
+        <input className="wsearch-newform-name trade-glass-field" autoFocus value={name} onChange={(e) => setName(e.target.value)} maxLength={60} placeholder={tr("مثلا London Breakout", "e.g. London Breakout")} />
 
-        <label className="exercise-form-label">رنگ</label>
+        <label className="exercise-form-label">{tr("رنگ", "Color")}</label>
         <div className="trade-color-row">
           {TAG_COLORS.map((c) => (
             <button key={c} type="button" className={`trade-color-dot${c === color ? " active" : ""}`} style={{ background: c }} onClick={() => setColor(c)} aria-label={c} />
           ))}
         </div>
 
-        <label className="exercise-form-label">الزام تکمیل برای ورود طبق پلن</label>
+        <label className="exercise-form-label">{tr("الزام تکمیل برای ورود طبق پلن", "Require completion before entering, per plan")}</label>
         <button type="button" className={`trade-toggle${required ? " on" : ""}`} onClick={() => setRequired((v) => !v)}>
           <TickButton as="span" checked={required} size={22} />
           <span className="trade-toggle-label">
-            {required ? "تکمیل‌نکردنش فقط هشدار می‌دهد — جلوی ثبت معامله را نمی‌گیرد" : "بدون الزام"}
+            {required ? tr("تکمیل‌نکردنش فقط هشدار می‌دهد — جلوی ثبت معامله را نمی‌گیرد", "Leaving it incomplete only shows a warning. It does not block logging a trade") : tr("بدون الزام", "Not required")}
           </span>
         </button>
 
         <label className="exercise-form-label">
-          موارد ({faNum(items.length)}/{faNum(MAX_CHECKLIST_ITEMS)}) — حداقل {faNum(MIN_CHECKLIST_ITEMS)} مورد لازم است
+          {tr(
+            `موارد (${faNum(items.length)}/${faNum(MAX_CHECKLIST_ITEMS)}) — حداقل ${faNum(MIN_CHECKLIST_ITEMS)} مورد لازم است`,
+            `Items (${items.length}/${MAX_CHECKLIST_ITEMS}) — at least ${MIN_CHECKLIST_ITEMS} required`
+          )}
         </label>
         <Reorder.Group axis="y" values={items} onReorder={setItems} className="trade-checklist-edit-list">
           {items.map((it) => (
@@ -112,7 +116,7 @@ export function ChecklistEditor({
                 className="trade-icon-btn danger"
                 disabled={items.length <= MIN_CHECKLIST_ITEMS}
                 onClick={() => setItems((prev) => (prev.length <= MIN_CHECKLIST_ITEMS ? prev : prev.filter((p) => p.key !== it.key)))}
-                aria-label="حذف"
+                aria-label={tr("حذف", "Delete")}
               >
                 <Trash2 size={14} />
               </button>
@@ -127,30 +131,30 @@ export function ChecklistEditor({
               onChange={(e) => setNewText(e.target.value)}
               onKeyDown={(e) => e.key === "Enter" && addItem()}
               maxLength={200}
-              placeholder="مورد جدید..."
+              placeholder={tr("مورد جدید...", "New item...")}
             />
-            <button type="button" className="trade-icon-btn" onClick={addItem} aria-label="افزودن"><Plus size={16} /></button>
+            <button type="button" className="trade-icon-btn" onClick={addItem} aria-label={tr("افزودن", "Add")}><Plus size={16} /></button>
           </div>
         )}
 
         {/* نکات آزاد — چیزهایی که مورد تیک‌خور نیستن ولی موقع اجرای ستاپ
             باید جلوی چشم باشن (شرایط بازار، ساعت مجاز، ...) */}
-        <label className="exercise-form-label">نکات (اختیاری)</label>
+        <label className="exercise-form-label">{tr("نکات (اختیاری)", "Notes (optional)")}</label>
         <textarea
           className="wsearch-newform-name trade-glass-field"
           rows={4}
           value={note}
           onChange={(e) => setNote(e.target.value)}
           maxLength={2000}
-          placeholder="مثلا: فقط توی سشن لندن، نه نیم‌ساعت قبل از خبر"
+          placeholder={tr("مثلا: فقط توی سشن لندن، نه نیم‌ساعت قبل از خبر", "e.g. London session only, not within 30 minutes of news")}
         />
 
         {error && <div className="trade-form-error">{error}</div>}
 
         <div className="trade-modal-actions">
-          <button type="button" className="account-outline-btn" onClick={onClose}>لغو</button>
+          <button type="button" className="account-outline-btn" onClick={onClose}>{tr("لغو", "Cancel")}</button>
           <button type="button" className="trade-primary-btn" onClick={save} disabled={saving || items.length < MIN_CHECKLIST_ITEMS}>
-            {saving ? <Spinner size={14} /> : "ذخیره"}
+            {saving ? <Spinner size={14} /> : tr("ذخیره", "Save")}
           </button>
         </div>
       </div>

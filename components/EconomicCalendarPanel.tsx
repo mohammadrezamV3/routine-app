@@ -4,8 +4,9 @@ import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { createPortal } from "react-dom";
 import { Bell, BellRing, Calendar, ChevronLeft, ChevronRight, Filter, History, Search, X } from "lucide-react";
 import { useDayStrip } from "@/lib/useDayStrip";
-import { FA_WEEKDAY, J_MONTHS, faNum, isoLocal, toJalali } from "@/lib/jalali";
-import { G_MONTHS } from "@/lib/gregorian";
+import { jMonthName, weekdayName, faNum, isoLocal, toJalali } from "@/lib/jalali";
+import { gMonthName } from "@/lib/gregorian";
+import { tr, isEn } from "@/lib/i18n";
 import { getSetting, setSetting } from "@/lib/storage";
 import { PanelSkeleton } from "./PanelSkeleton";
 import {
@@ -36,12 +37,12 @@ function isSameDay(a: Date, b: Date): boolean {
 }
 /** «سه‌شنبه ۱۷ شهریور» یا معادل میلادی‌اش — طبق calSystem انتخابی کاربر */
 function dayLabel(d: Date, calSystem: CalSystem): { weekday: string; date: string } {
-  const weekday = FA_WEEKDAY[d.getDay()];
+  const weekday = weekdayName(d.getDay());
   if (calSystem === "jalali") {
     const j = toJalali(d.getFullYear(), d.getMonth() + 1, d.getDate());
-    return { weekday, date: `${faNum(j[2])} ${J_MONTHS[j[1] - 1]}` };
+    return { weekday, date: `${faNum(j[2])} ${jMonthName(j[1] - 1)}` };
   }
-  return { weekday, date: `${faNum(d.getDate())} ${G_MONTHS[d.getMonth()]}` };
+  return { weekday, date: `${faNum(d.getDate())} ${gMonthName(d.getMonth())}` };
 }
 function fullDayLabel(d: Date, calSystem: CalSystem): string {
   const { weekday, date } = dayLabel(d, calSystem);
@@ -135,7 +136,7 @@ export function EconomicCalendarPanel() {
       const res = await fetch(`/api/trade/economic-calendar?${qs}`, { cache: "no-store" });
       if (seq !== reqSeq.current) return;
       if (!res.ok) {
-        setLoadError("گرفتن داده‌ی این روز ناموفق بود");
+        setLoadError(tr("گرفتن داده‌ی این روز ناموفق بود", "Failed to load data for this day"));
         setEvents([]);
         return;
       }
@@ -150,7 +151,7 @@ export function EconomicCalendarPanel() {
       }
     } catch {
       if (seq !== reqSeq.current) return;
-      setLoadError("مشکلی در اتصال به سرور پیش آمد");
+      setLoadError(tr("مشکلی در اتصال به سرور پیش آمد", "There was a problem connecting to the server"));
       setEvents([]);
     } finally {
       if (seq === reqSeq.current) {
@@ -248,11 +249,11 @@ export function EconomicCalendarPanel() {
               همون نوار روزها، نه یک پنجره‌ی جدا. */}
           <button
             type="button"
-            aria-label="روزهای قبل"
+            aria-label={tr("روزهای قبل", "Previous days")}
             className="trade-cal-week-arrow"
             onClick={() => pageWeekStrip("prev")}
           >
-            <ChevronRight size={16} />
+            <ChevronRight size={16} className="dir-flip" />
           </button>
           <div className="trade-cal-week-days" ref={weekStripRef}>
             {dayStrip.map(({ date: d, iso }) => {
@@ -276,32 +277,32 @@ export function EconomicCalendarPanel() {
           </div>
           <button
             type="button"
-            aria-label="روزهای بعد"
+            aria-label={tr("روزهای بعد", "Next days")}
             className="trade-cal-week-arrow"
             onClick={() => pageWeekStrip("next")}
           >
-            <ChevronLeft size={16} />
+            <ChevronLeft size={16} className="dir-flip" />
           </button>
         </div>
 
         {/* ── سه دکمه، دقیقا به همین ترتیب (راست به چپ): تاریخچه · امروز · فیلتر ── */}
         <div className="trade-cal-actions-row lg:order-1 lg:shrink-0 lg:flex-nowrap">
           <button type="button" className="trade-cal-pill-btn" onClick={() => setMonthPickerOpen((v) => !v)}>
-            <History size={15} /> تاریخچه
+            <History size={15} /> {tr("تاریخچه", "History")}
           </button>
           <button
             type="button"
             className={`trade-cal-pill-btn today${isSameDay(date, today) ? " active" : ""}`}
             onClick={() => { pickDate(today); setRecenterKey((k) => k + 1); }}
           >
-            <Calendar size={15} /> امروز
+            <Calendar size={15} /> {tr("امروز", "Today")}
           </button>
           <button
             type="button"
             className={`trade-cal-pill-btn${filtersOpen || activeFilterCount ? " on" : ""}`}
             onClick={() => setFiltersOpen((v) => !v)}
           >
-            <Filter size={15} /> فیلتر{activeFilterCount ? ` (${faNum(activeFilterCount)})` : ""}
+            <Filter size={15} /> {tr("فیلتر", "Filter")}{activeFilterCount ? ` (${faNum(activeFilterCount)})` : ""}
           </button>
         </div>
       </div>
@@ -309,7 +310,7 @@ export function EconomicCalendarPanel() {
       {/* ── پنل فیلتر ── */}
       {filtersOpen && (
         <div className="trade-surface trade-cal-filters trade-cal-below">
-          <label className="exercise-form-label">نام رویداد</label>
+          <label className="exercise-form-label">{tr("نام رویداد", "Event name")}</label>
           {/* ترتیب DOM عمدی‌ست: در RTL آخرین فرزند سمت چپ می‌نشیند، پس
               ذره‌بین بعد از input می‌آید تا طبق درخواست صریح چپ فیلد باشد. */}
           <div className="trade-cal-search">
@@ -317,21 +318,21 @@ export function EconomicCalendarPanel() {
               type="text"
               value={nameInput}
               onChange={(e) => setNameInput(e.target.value)}
-              placeholder="مثلا CPI یا Non-Farm"
+              placeholder={tr("مثلا CPI یا Non-Farm", "e.g. CPI or Non-Farm")}
               // متن از راست شروع شود (طبق درخواست صریح) ولی جهت نوشتن
               // همچنان LTR بماند، چون نام رویدادها انگلیسی‌ست.
               className="ltr-inline"
-              style={{ textAlign: "right" }}
+              style={{ textAlign: isEn() ? "left" : "right" }}
             />
             {nameInput && (
-              <button type="button" onClick={() => setNameInput("")} aria-label="پاک‌کردن نام رویداد">
+              <button type="button" onClick={() => setNameInput("")} aria-label={tr("پاک‌کردن نام رویداد", "Clear event name")}>
                 <X size={13} />
               </button>
             )}
             <Search size={14} />
           </div>
 
-          <label className="exercise-form-label">سطح تاثیر</label>
+          <label className="exercise-form-label">{tr("سطح تاثیر", "Impact level")}</label>
           <div className="trade-choice-grid">
             {IMPACT_ORDER.map((i) => (
               <button
@@ -346,7 +347,7 @@ export function EconomicCalendarPanel() {
             ))}
           </div>
 
-          <label className="exercise-form-label">ارز</label>
+          <label className="exercise-form-label">{tr("ارز", "Currency")}</label>
           <div className="trade-choice-grid">
             {CALENDAR_CURRENCIES.map((c) => (
               <button
@@ -363,7 +364,7 @@ export function EconomicCalendarPanel() {
               className={`trade-choice${otherCurrencies ? " active" : ""}`}
               onClick={() => setOtherCurrencies((v) => !v)}
             >
-              سایر ارزها
+              {tr("سایر ارزها", "Other currencies")}
             </button>
           </div>
 
@@ -374,7 +375,7 @@ export function EconomicCalendarPanel() {
               style={{ marginTop: 10 }}
               onClick={() => { setCurrencies([]); setImpacts([]); setOtherCurrencies(false); setNameInput(""); }}
             >
-              پاک‌کردن فیلترها
+              {tr("پاک‌کردن فیلترها", "Clear filters")}
             </button>
           )}
         </div>
@@ -388,7 +389,7 @@ export function EconomicCalendarPanel() {
 
       {!firstLoad && loadError && (
         <div className="item-line empty trade-cal-below">
-          {loadError} — <button type="button" className="trade-ghost-btn" onClick={() => load()}>تلاش دوباره</button>
+          {loadError} — <button type="button" className="trade-ghost-btn" onClick={() => load()}>{tr("تلاش دوباره", "Try again")}</button>
         </div>
       )}
 
@@ -399,10 +400,13 @@ export function EconomicCalendarPanel() {
               نیست. قبلا هر سه حالت یک پیام می‌گرفتند و روزهای بیرون بازه
               شبیه «لود نشد» دیده می‌شدند. */}
           {outOfRange && range
-            ? `منبع فعلی فقط از ${fullDayLabel(range.from, calSystem)} تا ${fullDayLabel(range.to, calSystem)} داده دارد — این تاریخ هنوز منتشر نشده.`
+            ? tr(
+                `منبع فعلی فقط از ${fullDayLabel(range.from, calSystem)} تا ${fullDayLabel(range.to, calSystem)} داده دارد — این تاریخ هنوز منتشر نشده.`,
+                `The current source only has data from ${fullDayLabel(range.from, calSystem)} to ${fullDayLabel(range.to, calSystem)}. This date has not been published yet.`
+              )
             : activeFilterCount
-              ? "با این فیلترها رویدادی پیدا نشد."
-              : "رویدادی برای این روز ثبت نشده است."}
+              ? tr("با این فیلترها رویدادی پیدا نشد.", "No events found with these filters.")
+              : tr("رویدادی برای این روز ثبت نشده است.", "No events are listed for this day.")}
         </div>
       )}
 
@@ -432,8 +436,8 @@ export function EconomicCalendarPanel() {
                       type="button"
                       className={`trade-cal-icon-btn tc-alert${watched ? " active" : ""}`}
                       onClick={() => toggleWatchEvent(e)}
-                      aria-label={watched ? "حذف هشدار برای این رویداد" : "هشدار برای این رویداد"}
-                      title={watched ? "هشدار روشن است" : "هشدار بده"}
+                      aria-label={watched ? tr("حذف هشدار برای این رویداد", "Remove alert for this event") : tr("هشدار برای این رویداد", "Alert for this event")}
+                      title={watched ? tr("هشدار روشن است", "Alert is on") : tr("هشدار بده", "Set alert")}
                     >
                       {watched ? <BellRing size={13} /> : <Bell size={13} />}
                     </button>
@@ -475,7 +479,7 @@ function EconMonthPicker({
   const today = startOfLocalDay(new Date());
 
   const monthLen = new Date(viewYear, viewMonth + 1, 0).getDate();
-  const startCol = (new Date(viewYear, viewMonth, 1).getDay() + 1) % 7;
+  const startCol = new Date(viewYear, viewMonth, 1).getDay();
 
   function prevMonth() { if (viewMonth === 0) { setViewMonth(11); setViewYear((y) => y - 1); } else setViewMonth((m) => m - 1); }
   function nextMonth() { if (viewMonth === 11) { setViewMonth(0); setViewYear((y) => y + 1); } else setViewMonth((m) => m + 1); }

@@ -5,6 +5,7 @@ import { getSetting } from "@/lib/storage";
 import { CAL_SYSTEM_KEY, CalSystem, TradeAccount } from "@/lib/tradeTypes";
 import { TradeMtLinkPanel } from "./TradeMtLinkPanel";
 import { PanelSkeleton } from "./PanelSkeleton";
+import { tr } from "@/lib/i18n";
 
 // از صفحه‌ی فهرست متاتریدر، انتخاب یک حساب فقط باکس اتصال رو نشون
 // می‌ده — نه کل صفحه‌ی حساب (آمار/لیست معاملات که به این بخش ربطی
@@ -34,7 +35,7 @@ export function TradeMtAccountPanel({ accountId }: { accountId: string }) {
   }, [accountId]);
 
   if (loading) return <PanelSkeleton />;
-  if (notFound || !account) return <div className="item-line empty">این حساب پیدا نشد.</div>;
+  if (notFound || !account) return <div className="item-line empty">{tr("این حساب پیدا نشد.", "This account was not found.")}</div>;
 
   return <TradeMtLinkPanel accountId={account.id} calSystem={calSystem} accountName={account.name} />;
 }

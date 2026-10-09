@@ -7,6 +7,7 @@
 // فیدرها عمدا همه رایگان و بدون نیاز به اشتراک تریدینگ‌ویو انتخاب شده‌اند.
 
 import { TRADE_PAIRS } from "./tradePairs";
+import { tr } from "./i18n";
 
 const EXPLICIT: Record<string, string> = {
   // فلزات و انرژی — OANDA و TVC پوشش رایگان خوبی دارند
@@ -45,13 +46,17 @@ export function tradingViewSymbol(code: string): string {
 }
 
 /** تایم‌فریم‌های چارت — مقدار سمت راست همان چیزی است که تریدینگ‌ویو می‌خواهد */
+function iv<T extends string>(fa: string, en: string, short: string, tv: T) {
+  return { get label(): string { return tr(fa, en); }, short, tv };
+}
+
 export const CHART_INTERVALS = [
-  { label: "1 دقیقه", short: "1m", tv: "1" },
-  { label: "5 دقیقه", short: "5m", tv: "5" },
-  { label: "15 دقیقه", short: "15m", tv: "15" },
-  { label: "1 ساعت", short: "1H", tv: "60" },
-  { label: "4 ساعت", short: "4H", tv: "240" },
-  { label: "روزانه", short: "1D", tv: "D" },
+  iv("1 دقیقه", "1 minute", "1m", "1"),
+  iv("5 دقیقه", "5 minutes", "5m", "5"),
+  iv("15 دقیقه", "15 minutes", "15m", "15"),
+  iv("1 ساعت", "1 hour", "1H", "60"),
+  iv("4 ساعت", "4 hours", "4H", "240"),
+  iv("روزانه", "Daily", "1D", "D"),
 ] as const;
 
 export type ChartInterval = (typeof CHART_INTERVALS)[number]["tv"];

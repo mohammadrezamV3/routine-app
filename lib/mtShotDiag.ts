@@ -6,6 +6,8 @@
 // نمی‌شد. اکسپرت 1.42 به بعد آخرین خطای خودش رو همراه sync می‌فرسته، سرور ردهای خودش رو
 // ثبت می‌کنه، و نسخه‌ی اکسپرت ذخیره می‌شه تا پنل بگه «اکسپرتت قدیمیه».
 
+import { tr } from "./i18n";
+
 /** آخرین نسخه‌ی اکسپرت قابل دانلود (public/ea) — با #property version هر دو فایل یکی بمونه */
 export const EA_LATEST_VERSION = "1.43";
 
@@ -54,13 +56,16 @@ export function shotErrorIsCurrent(errorAt: string | Date | null | undefined, la
   return new Date(errorAt).getTime() > new Date(lastShotAt).getTime();
 }
 
-/** توضیح فارسی کوتاه برای کد خطا (کد خام کنارش با فونت mono نشون داده می‌شه) */
+/** توضیح کوتاه برای کد خطا (کد خام کنارش با فونت mono نشون داده می‌شه) */
 export function shotErrorLabel(code: string): string {
-  if (code.startsWith("server:")) return "سایت اسکرین را رد کرد";
-  if (code.startsWith("chart_open")) return "متاتریدر نتوانست چارت موقت اسکرین را باز کند";
+  if (code.startsWith("server:")) return tr("سایت اسکرین را رد کرد", "The site rejected the screenshot");
+  if (code.startsWith("chart_open")) return tr("متاتریدر نتوانست چارت موقت اسکرین را باز کند", "MetaTrader could not open the temporary screenshot chart");
   if (code.startsWith("screenshot") || code.startsWith("file_missing")) {
-    return "متاتریدر نتوانست از چارت اسکرین بگیرد. پنجره‌ی متاتریدر نباید مینیمایز باشد (روی VPS هم پنجره را باز بگذارید)";
+    return tr(
+      "متاتریدر نتوانست از چارت اسکرین بگیرد. پنجره‌ی متاتریدر نباید مینیمایز باشد (روی VPS هم پنجره را باز بگذارید)",
+      "MetaTrader could not take a screenshot of the chart. The MetaTrader window must not be minimized (on a VPS, keep the window open too)"
+    );
   }
-  if (code.startsWith("upload")) return "فرستادن اسکرین به سایت ناموفق بود";
-  return "خطای اسکرین";
+  if (code.startsWith("upload")) return tr("فرستادن اسکرین به سایت ناموفق بود", "Sending the screenshot to the site failed");
+  return tr("خطای اسکرین", "Screenshot error");
 }

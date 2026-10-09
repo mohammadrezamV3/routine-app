@@ -4,7 +4,7 @@ import { useCallback, useEffect, useRef, useState } from "react";
 import { Flag, MessagesSquare, Send, ShieldAlert, Smile, Trash2, X } from "lucide-react";
 import { faNum } from "@/lib/jalali";
 import {
-  CHAT_REPORT_REASONS, CHAT_RULES, ChatMessageDto, ChatReportReason, ChatViewerModeration, MAX_CHAT_BODY,
+  CHAT_REPORT_REASONS, chatRules, ChatMessageDto, ChatReportReason, ChatViewerModeration, MAX_CHAT_BODY,
 } from "@/lib/tradeChat";
 import { getSetting, setSetting } from "@/lib/storage";
 import { SETTING_KEYS } from "@/lib/userSettingKeys";
@@ -12,6 +12,7 @@ import { pairLabel } from "@/lib/tradingView";
 import { useAsyncAction } from "@/lib/useAsyncAction";
 import { GoldenName } from "@/components/GoldenName";
 import { Spinner } from "./Spinner";
+import { tr, isEn } from "@/lib/i18n";
 
 // چت گروهی یک نماد. هر نماد اتاق خودش را دارد و پیام‌ها بین همه‌ی
 // کاربران دارای ماژول ترید مشترک است.
@@ -71,7 +72,7 @@ export function SymbolChatPanel({ symbol }: { symbol: string }) {
       // پولینگ پس‌زمینه خطا نشان نمی‌دهد (یک شکست موقت نباید هر ۸ثانیه
       // پیام خطا چشمک بزند) ولی بارگذاری اول باید — وگرنه اتاق «خالی» به
       // نظر می‌رسد درحالی‌که واقعا درخواست شکست خورده.
-      if (!incremental) { setLoading(false); setLoadError("اتاق بارگذاری نشد — اتصال یا دسترسی را چک کن"); }
+      if (!incremental) { setLoading(false); setLoadError(tr("اتاق بارگذاری نشد — اتصال یا دسترسی را چک کن", "Could not load the room. Check your connection or access")); }
       return;
     }
     if (!incremental) setLoadError(null);
@@ -177,7 +178,7 @@ export function SymbolChatPanel({ symbol }: { symbol: string }) {
     <div className="trade-surface trade-chat-panel">
       <div className="trade-panel-head">
         <span className="trade-panel-title">
-          <MessagesSquare size={16} /> گفت‌وگوی {pairLabel(symbol)}
+          <MessagesSquare size={16} /> {tr(`گفت‌وگوی ${pairLabel(symbol)}`, `${pairLabel(symbol)} chat`)}
         </span>
         <span className="trade-chat-room mono">{symbol}</span>
       </div>
@@ -191,11 +192,11 @@ export function SymbolChatPanel({ symbol }: { symbol: string }) {
           stickToBottom.current = e.currentTarget.scrollTop < 60;
         }}
       >
-        {loading && <div className="trade-chat-empty is-loading">در حال بارگذاری…</div>}
+        {loading && <div className="trade-chat-empty is-loading">{tr("در حال بارگذاری…", "Loading…")}</div>}
         {!loading && loadError && <div className="trade-chat-empty">{loadError}</div>}
         {!loading && !loadError && !messages.length && (
           <div className="trade-chat-empty">
-            هنوز پیامی در این اتاق نیست — تحلیلت را اولین نفر بنویس.
+            {tr("هنوز پیامی در این اتاق نیست — تحلیلت را اولین نفر بنویس.", "There are no messages in this room yet. Be the first to share your analysis.")}
           </div>
         )}
 
@@ -220,7 +221,7 @@ export function SymbolChatPanel({ symbol }: { symbol: string }) {
                       <button
                         type="button" className="trade-chat-action"
                         onClick={() => remove(m)} disabled={pendingKey === `del:${m.id}`}
-                        aria-label="حذف پیام"
+                        aria-label={tr("حذف پیام", "Delete message")}
                       >
                         {pendingKey === `del:${m.id}`
                           ? <Spinner size={12} />
@@ -230,11 +231,11 @@ export function SymbolChatPanel({ symbol }: { symbol: string }) {
                       <button
                         type="button" className="trade-chat-action"
                         onClick={() => setReporting(m)} disabled={m.reported}
-                        aria-label={m.reported ? "گزارش شده" : "گزارش پیام"}
-                        title={m.reported ? "این پیام را گزارش کرده‌ای" : "گزارش"}
+                        aria-label={m.reported ? tr("گزارش شده", "Reported") : tr("گزارش پیام", "Report message")}
+                        title={m.reported ? tr("این پیام را گزارش کرده‌ای", "You reported this message") : tr("گزارش", "Report")}
                       >
                         <Flag size={13} />
-                        {m.reported && <span className="trade-chat-reported">گزارش شد</span>}
+                        {m.reported && <span className="trade-chat-reported">{tr("گزارش شد", "Reported")}</span>}
                       </button>
                     )}
                   </div>
@@ -251,9 +252,9 @@ export function SymbolChatPanel({ symbol }: { symbol: string }) {
         <div className="trade-chat-warning">
           <ShieldAlert size={15} />
           <span>
-            اخطار از سمت مدیریت{moderation.warning.note ? `: ${moderation.warning.note}` : "."}
+            {tr("اخطار از سمت مدیریت", "Warning from the admins")}{moderation.warning.note ? `: ${moderation.warning.note}` : "."}
           </span>
-          <button type="button" className="trade-chat-warning-dismiss" onClick={dismissWarning} disabled={warningDismissing} aria-label="متوجه شدم">
+          <button type="button" className="trade-chat-warning-dismiss" onClick={dismissWarning} disabled={warningDismissing} aria-label={tr("متوجه شدم", "Got it")}>
             <X size={13} />
           </button>
         </div>
@@ -262,23 +263,26 @@ export function SymbolChatPanel({ symbol }: { symbol: string }) {
       {moderation && (moderation.disabled || moderation.bannedUntil) ? (
         <div className="trade-chat-restricted">
           {moderation.disabled
-            ? "دسترسی تو به این گفت‌وگو توسط مدیریت غیرفعال شده است."
-            : `تا ${new Date(moderation.bannedUntil!).toLocaleString("fa-IR-u-nu-latn", { timeZone: "Asia/Tehran" })} از ارسال پیام محروم شده‌ای.`}
+            ? tr("دسترسی تو به این گفت‌وگو توسط مدیریت غیرفعال شده است.", "Your access to this chat has been disabled by the admins.")
+            : (() => {
+                const until = new Date(moderation.bannedUntil!).toLocaleString(isEn() ? "en-US" : "fa-IR-u-nu-latn", { timeZone: "Asia/Tehran" });
+                return tr(`تا ${until} از ارسال پیام محروم شده‌ای.`, `You are banned from sending messages until ${until}.`);
+              })()}
         </div>
       ) : (
         <>
           {rulesAccepted === false && (
             <div className="chat-rules">
-              <div className="chat-rules-title">پیش از شرکت در گفت‌وگو</div>
+              <div className="chat-rules-title">{tr("پیش از شرکت در گفت‌وگو", "Before joining the chat")}</div>
               <ul className="chat-rules-list">
-                {CHAT_RULES.map((r) => <li key={r}>{r}</li>)}
+                {chatRules().map((r) => <li key={r}>{r}</li>)}
               </ul>
               <button
                 type="button"
                 className="trade-primary-btn chat-rules-accept"
                 onClick={() => { setRulesAccepted(true); setSetting(SETTING_KEYS.tradeChatRulesAccepted, true); }}
               >
-                قوانین را می‌پذیرم
+                {tr("قوانین را می‌پذیرم", "I accept the rules")}
               </button>
             </div>
           )}
@@ -296,22 +300,22 @@ export function SymbolChatPanel({ symbol }: { symbol: string }) {
                   value={draft}
                   maxLength={MAX_CHAT_BODY}
                   onChange={(e) => setDraft(e.target.value)}
-                  placeholder="پیام خود را بنویسید…"
-                  aria-label="متن پیام"
+                  placeholder={tr("پیام خود را بنویسید…", "Write your message…")}
+                  aria-label={tr("متن پیام", "Message text")}
                 />
                 {/* طبق درخواست صریح: دیگر پاپ‌آپ ایموجی سفارشی نیست —
                     این دکمه فقط فوکوس می‌کند تا کیبورد خود دستگاه بیاید؛
                     از همان‌جا کاربر با دکمه‌ی ایموجی خود کیبورد می‌نویسد. */}
                 <button
                   type="button" className="trade-chat-emoji-btn"
-                  onClick={() => draftInputRef.current?.focus()} aria-label="ایموجی"
+                  onClick={() => draftInputRef.current?.focus()} aria-label={tr("ایموجی", "Emoji")}
                 >
                   <Smile size={18} />
                 </button>
               </div>
               <button
                 type="submit" className="trade-chat-send"
-                disabled={!draft.trim() || pendingKey === "send"} aria-label="ارسال"
+                disabled={!draft.trim() || pendingKey === "send"} aria-label={tr("ارسال", "Send")}
               >
                 {pendingKey === "send" ? <Spinner size={18} /> : <Send size={24} strokeWidth={2.2} />}
               </button>
@@ -346,10 +350,10 @@ function ReportDialog({
 
   return (
     <div className="trade-chat-report-sheet">
-      <div className="trade-panel-title" style={{ marginBottom: 8 }}>گزارش پیام</div>
+      <div className="trade-panel-title" style={{ marginBottom: 8 }}>{tr("گزارش پیام", "Report message")}</div>
       <div className="trade-chat-report-quote">{message.body}</div>
 
-      <label className="exercise-form-label">دلیل گزارش</label>
+      <label className="exercise-form-label">{tr("دلیل گزارش", "Reason for report")}</label>
       <select
         className="wsearch-newform-name trade-glass-field"
         value={reason}
@@ -360,21 +364,21 @@ function ReportDialog({
         ))}
       </select>
 
-      <label className="exercise-form-label">توضیح (اختیاری)</label>
+      <label className="exercise-form-label">{tr("توضیح (اختیاری)", "Details (optional)")}</label>
       <input
         className="wsearch-newform-name trade-glass-field"
         value={note} maxLength={500}
         onChange={(e) => setNote(e.target.value)}
-        placeholder="اگر لازم است توضیح بده"
+        placeholder={tr("اگر لازم است توضیح بده", "Add details if needed")}
       />
 
       <div className="trade-modal-actions">
-        <button type="button" className="account-outline-btn" onClick={onCancel}>لغو</button>
+        <button type="button" className="account-outline-btn" onClick={onCancel}>{tr("لغو", "Cancel")}</button>
         <button
           type="button" className="trade-danger-btn"
           onClick={() => onSubmit(reason, note)} disabled={pending}
         >
-          {pending ? <Spinner size={13} /> : "ارسال گزارش"}
+          {pending ? <Spinner size={13} /> : tr("ارسال گزارش", "Submit report")}
         </button>
       </div>
     </div>

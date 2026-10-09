@@ -1,7 +1,8 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { FA_WEEKDAY, J_MONTHS, faNum, toJalali } from "@/lib/jalali";
+import { weekdayName, jMonthName, faNum, toJalali } from "@/lib/jalali";
+import { tr } from "@/lib/i18n";
 import { arcForDef, isForexOpen, nextOpenForDef } from "@/lib/forexSessions";
 import { CLOCK_SESSIONS } from "@/lib/forexClockSessions";
 import { ForexSessionsDial } from "./ForexSessionsDial";
@@ -23,7 +24,7 @@ function durationLabel(target: Date, now: Date): string {
 
 function jalaliLabel(d: Date): string {
   const [, jm, jd] = toJalali(d.getFullYear(), d.getMonth() + 1, d.getDate());
-  return `${FA_WEEKDAY[d.getDay()]}، ${faNum(jd)} ${J_MONTHS[jm - 1]}`;
+  return `${weekdayName(d.getDay())}${tr("،", ",")} ${faNum(jd)} ${jMonthName(jm - 1)}`;
 }
 
 export function ForexClockPanel() {
@@ -70,7 +71,7 @@ export function ForexClockPanel() {
       </div>
 
       {!marketOpen && (
-        <div className="fx-market-closed">بازار تعطیل است — آخر هفته</div>
+        <div className="fx-market-closed">{tr("بازار تعطیل است — آخر هفته", "The market is closed for the weekend")}</div>
       )}
 
       <div className="fx-cards">
@@ -81,12 +82,12 @@ export function ForexClockPanel() {
             <span className="fx-card-main">
               <span className="fx-card-city">{s.label}</span>
               <span className="fx-card-hours mono">
-                <bdi>{faNum(arc.openLabel)}</bdi> تا <bdi>{faNum(arc.closeLabel)}</bdi>
+                <bdi>{faNum(arc.openLabel)}</bdi> {tr("تا", "to")} <bdi>{faNum(arc.closeLabel)}</bdi>
               </span>
             </span>
 
             <span className="fx-card-state">
-              <span className="fx-card-label">{open ? "تا بسته شدن" : "تا باز شدن"}</span>
+              <span className="fx-card-label">{open ? tr("تا بسته شدن", "Closes in") : tr("تا باز شدن", "Opens in")}</span>
               <span className={`fx-card-value${open ? " open" : ""}`}>
                 {target ? durationLabel(target, now) : "—"}
               </span>
@@ -96,8 +97,10 @@ export function ForexClockPanel() {
       </div>
 
       <div className="item-line empty" style={{ marginTop: 14 }}>
-        ساعت‌ها به وقت محلی خودت است و باز و بسته شدن هر جلسه با احتساب ساعت
-        تابستانی همان کشور حساب می‌شود.
+        {tr(
+          "ساعت‌ها به وقت محلی خودت است و باز و بسته شدن هر جلسه با احتساب ساعت تابستانی همان کشور حساب می‌شود.",
+          "Times are in your local time, and each session's open and close accounts for that country's daylight saving time."
+        )}
       </div>
     </div>
   );

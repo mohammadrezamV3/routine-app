@@ -17,6 +17,7 @@
 //     خواسته‌شده بیشتر نشود. کمیسیون، اسپرد و سواپ حساب نمی‌شوند.
 
 import { contractSize, symbolKind } from "./tradeSymbols";
+import { tr } from "./i18n";
 
 export type RiskDirection = "BUY" | "SELL";
 export type RiskMode = "percent" | "amount";
@@ -149,21 +150,21 @@ const fin = (n: unknown): n is number => typeof n === "number" && Number.isFinit
 
 export function calcRisk(inp: RiskInput): RiskResult | RiskFailure {
   const { direction, entry, stopLoss } = inp;
-  if (!inp.symbol.trim()) return { ok: false, error: "نماد را انتخاب کن" };
-  if (!fin(entry) || entry <= 0) return { ok: false, error: "قیمت ورود را وارد کن" };
-  if (!fin(stopLoss) || stopLoss <= 0) return { ok: false, error: "حد ضرر را وارد کن" };
-  if (stopLoss === entry) return { ok: false, error: "حد ضرر نمی‌تواند با قیمت ورود برابر باشد" };
-  if (direction === "BUY" && stopLoss > entry) return { ok: false, error: "در خرید، حد ضرر باید پایین‌تر از قیمت ورود باشد" };
-  if (direction === "SELL" && stopLoss < entry) return { ok: false, error: "در فروش، حد ضرر باید بالاتر از قیمت ورود باشد" };
+  if (!inp.symbol.trim()) return { ok: false, error: tr("نماد را انتخاب کن", "Select a symbol") };
+  if (!fin(entry) || entry <= 0) return { ok: false, error: tr("قیمت ورود را وارد کن", "Enter the entry price") };
+  if (!fin(stopLoss) || stopLoss <= 0) return { ok: false, error: tr("حد ضرر را وارد کن", "Enter the stop loss") };
+  if (stopLoss === entry) return { ok: false, error: tr("حد ضرر نمی‌تواند با قیمت ورود برابر باشد", "Stop loss cannot be equal to the entry price") };
+  if (direction === "BUY" && stopLoss > entry) return { ok: false, error: tr("در خرید، حد ضرر باید پایین‌تر از قیمت ورود باشد", "For a buy, the stop loss must be below the entry price") };
+  if (direction === "SELL" && stopLoss < entry) return { ok: false, error: tr("در فروش، حد ضرر باید بالاتر از قیمت ورود باشد", "For a sell, the stop loss must be above the entry price") };
 
   let riskWanted: number;
   if (inp.mode === "percent") {
-    if (!fin(inp.balance) || inp.balance <= 0) return { ok: false, error: "موجودی حساب را وارد کن" };
-    if (!fin(inp.riskValue) || inp.riskValue <= 0) return { ok: false, error: "درصد ریسک را وارد کن" };
-    if (inp.riskValue > 100) return { ok: false, error: "درصد ریسک نمی‌تواند بیشتر از 100 باشد" };
+    if (!fin(inp.balance) || inp.balance <= 0) return { ok: false, error: tr("موجودی حساب را وارد کن", "Enter the account balance") };
+    if (!fin(inp.riskValue) || inp.riskValue <= 0) return { ok: false, error: tr("درصد ریسک را وارد کن", "Enter the risk percentage") };
+    if (inp.riskValue > 100) return { ok: false, error: tr("درصد ریسک نمی‌تواند بیشتر از 100 باشد", "Risk percentage cannot be more than 100") };
     riskWanted = (inp.balance * inp.riskValue) / 100;
   } else {
-    if (!fin(inp.riskValue) || inp.riskValue <= 0) return { ok: false, error: "مبلغ ریسک را وارد کن" };
+    if (!fin(inp.riskValue) || inp.riskValue <= 0) return { ok: false, error: tr("مبلغ ریسک را وارد کن", "Enter the risk amount") };
     riskWanted = inp.riskValue;
   }
 
@@ -171,7 +172,7 @@ export function calcRisk(inp: RiskInput): RiskResult | RiskFailure {
   const slDistance = Math.abs(entry - stopLoss);
   const slPips = slDistance / spec.pipSize;
   const pv = pipValuePerLot(spec, entry, inp.quoteToUsd);
-  if (!(pv.value > 0)) return { ok: false, error: "ارزش پیپ این نماد قابل محاسبه نیست" };
+  if (!(pv.value > 0)) return { ok: false, error: tr("ارزش پیپ این نماد قابل محاسبه نیست", "The pip value of this symbol cannot be calculated") };
 
   const step = inp.lotStep && inp.lotStep > 0 ? inp.lotStep : 0.01;
   const lotsRaw = riskWanted / (slPips * pv.value);
@@ -181,9 +182,9 @@ export function calcRisk(inp: RiskInput): RiskResult | RiskFailure {
   const riskAmount = lots * slPips * pv.value;
 
   const warnings: string[] = [];
-  if (lots <= 0) warnings.push("با این ریسک و فاصله‌ی حد ضرر، لات از حداقل (0.01) کمتر می‌شود");
-  if (pv.approx) warnings.push("نرخ تبدیل ارز دوم تقریبی است — برای عدد دقیق‌تر نرخ را وارد کن");
-  if (inp.mode === "percent" && inp.riskValue > 5) warnings.push("ریسک بیشتر از 5 درصد در هر معامله خطرناک است");
+  if (lots <= 0) warnings.push(tr("با این ریسک و فاصله‌ی حد ضرر، لات از حداقل (0.01) کمتر می‌شود", "With this risk and stop loss distance, the lot size falls below the minimum (0.01)"));
+  if (pv.approx) warnings.push(tr("نرخ تبدیل ارز دوم تقریبی است — برای عدد دقیق‌تر نرخ را وارد کن", "The conversion rate of the second currency is approximate. Enter the rate for a more accurate number"));
+  if (inp.mode === "percent" && inp.riskValue > 5) warnings.push(tr("ریسک بیشتر از 5 درصد در هر معامله خطرناک است", "Risking more than 5 percent per trade is dangerous"));
 
   // هدف‌ها: فقط سمت درست (در خرید بالاتر از ورود، در فروش پایین‌تر)
   const rawTps = (inp.takeProfits || []).filter((t) => fin(t.price) && t.price > 0);
@@ -192,7 +193,7 @@ export function calcRisk(inp: RiskInput): RiskResult | RiskFailure {
     if (!right) {
       return {
         ok: false,
-        error: direction === "BUY" ? "در خرید، حد سود باید بالاتر از قیمت ورود باشد" : "در فروش، حد سود باید پایین‌تر از قیمت ورود باشد",
+        error: direction === "BUY" ? tr("در خرید، حد سود باید بالاتر از قیمت ورود باشد", "For a buy, the take profit must be above the entry price") : tr("در فروش، حد سود باید پایین‌تر از قیمت ورود باشد", "For a sell, the take profit must be below the entry price"),
       };
     }
   }
@@ -258,9 +259,9 @@ export function nonUsdQuote(symbol: string): string | null {
 
 /** حالت ساده: پیپ و لات می‌دهی، مبلغ دلاری می‌گیری. */
 export function simplePipCalc(inp: SimplePipInput): SimplePipResult | RiskFailure {
-  if (!inp.symbol.trim()) return { ok: false, error: "نماد را انتخاب کن" };
-  if (!fin(inp.pips) || inp.pips <= 0) return { ok: false, error: "تعداد پیپ را وارد کن" };
-  if (!fin(inp.lots) || inp.lots <= 0) return { ok: false, error: "حجم (لات) را وارد کن" };
+  if (!inp.symbol.trim()) return { ok: false, error: tr("نماد را انتخاب کن", "Select a symbol") };
+  if (!fin(inp.pips) || inp.pips <= 0) return { ok: false, error: tr("تعداد پیپ را وارد کن", "Enter the number of pips") };
+  if (!fin(inp.lots) || inp.lots <= 0) return { ok: false, error: tr("حجم (لات) را وارد کن", "Enter the volume (lots)") };
   const spec = symbolSpec(inp.symbol);
   const inQuote = spec.pipSize * spec.contractSize;
   let value: number;
@@ -268,7 +269,7 @@ export function simplePipCalc(inp: SimplePipInput): SimplePipResult | RiskFailur
   if (!spec.quote || spec.quote === "USD") value = inQuote;
   else if (inp.quoteRate && inp.quoteRate > 0) value = inQuote * inp.quoteRate;
   else { value = inQuote * (APPROX_QUOTE_USD[spec.quote] ?? 1); approx = true; }
-  if (!(value > 0)) return { ok: false, error: "ارزش پیپ این نماد قابل محاسبه نیست" };
+  if (!(value > 0)) return { ok: false, error: tr("ارزش پیپ این نماد قابل محاسبه نیست", "The pip value of this symbol cannot be calculated") };
   const total = inp.pips * value * inp.lots;
   const percent = fin(inp.balance) && inp.balance > 0 ? (total / inp.balance) * 100 : null;
   return { ok: true, spec, pipValuePerLot: value, pipValueForLots: value * inp.lots, total, percent, approxQuoteRate: approx };

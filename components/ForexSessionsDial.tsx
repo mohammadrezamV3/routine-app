@@ -4,6 +4,7 @@ import { useMemo } from "react";
 import { faNum } from "@/lib/jalali";
 import { arcForDef, isForexOpen } from "@/lib/forexSessions";
 import { CLOCK_SESSIONS, ClockSessionKey } from "@/lib/forexClockSessions";
+import { tr } from "@/lib/i18n";
 
 // صفحه‌ی ساعت بازار فارکس — بازسازی همان چیدمان مرجع، راست‌چین.
 //
@@ -86,7 +87,7 @@ export function ForexSessionsDial({ now }: { now: Date }) {
   return (
     <div className="fx-dial-wrap">
       <svg viewBox={`0 0 ${SIZE} ${SIZE}`} className="fx-dial" role="img"
-           aria-label={`ساعت بازار فارکس، ${String(h).padStart(2, "0")}:${String(m).padStart(2, "0")}`}>
+           aria-label={tr(`ساعت بازار فارکس، ${String(h).padStart(2, "0")}:${String(m).padStart(2, "0")}`, `Forex market clock, ${String(h).padStart(2, "0")}:${String(m).padStart(2, "0")}`)}>
 
         {/* حلقه‌ی بیرونی سرمه‌ای */}
         <circle cx={C} cy={C} r={(R_BEZEL_OUT + R_BEZEL_IN) / 2}

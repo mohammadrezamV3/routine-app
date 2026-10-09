@@ -7,6 +7,7 @@ import { faNum } from "@/lib/jalali";
 import { PanelSkeleton } from "./PanelSkeleton";
 import { ChecklistEditor } from "./ChecklistEditor";
 import { TickButton } from "./TickButton";
+import { tr } from "@/lib/i18n";
 
 type Item = { id: string; text: string; order: number; checked: boolean };
 type Checklist = { id: string; name: string; color: string; required: boolean; archived: boolean; order: number; note: string | null; items: Item[] };
@@ -49,7 +50,7 @@ export function TradeChecklistDetailView({ checklistId }: { checklistId: string 
   }
 
   if (loading) return <PanelSkeleton />;
-  if (notFound || !checklist) return <div className="item-line empty">این چک‌لیست پیدا نشد.</div>;
+  if (notFound || !checklist) return <div className="item-line empty">{tr("این چک‌لیست پیدا نشد.", "This checklist was not found.")}</div>;
 
   const done = checklist.items.filter((i) => checkedState[i.id]).length;
 
@@ -63,10 +64,10 @@ export function TradeChecklistDetailView({ checklistId }: { checklistId: string 
             <h1 style={{ margin: 0 }}>{checklist.name}</h1>
             {/* توپ رنگی سمت چپ اسم، نه گوشه‌ی مطلق باکس */}
             <span className="trade-account-dot" style={{ background: checklist.color }} />
-            {checklist.required && <span className="trade-account-type">الزامی</span>}
+            {checklist.required && <span className="trade-account-type">{tr("الزامی", "Required")}</span>}
           </div>
           <button type="button" className="trade-title-add-btn" onClick={() => setEditing(true)}>
-            <Pencil size={13} /> ویرایش
+            <Pencil size={13} /> {tr("ویرایش", "Edit")}
           </button>
         </div>
 
@@ -82,7 +83,7 @@ export function TradeChecklistDetailView({ checklistId }: { checklistId: string 
               <span>{i.text}</span>
             </button>
           ))}
-          {!checklist.items.length && <div className="item-line empty">این چک‌لیست هنوز آیتمی ندارد</div>}
+          {!checklist.items.length && <div className="item-line empty">{tr("این چک‌لیست هنوز آیتمی ندارد", "This checklist has no items yet")}</div>}
         </div>
 
         <div className="trade-checklist-card-foot" style={{ marginTop: 14 }}>
@@ -93,7 +94,7 @@ export function TradeChecklistDetailView({ checklistId }: { checklistId: string 
             صفحه‌ی ثبت معامله (با همین چک‌لیست از پیش انتخاب‌شده) ظاهر شود. */}
         {done > 0 && done === checklist.items.length && (
           <Link href={`/trade/chart?checklist=${checklist.id}`} className="account-outline-btn" style={{ width: "100%", marginTop: 10 }}>
-            <NotebookPen size={15} /> ثبت معامله
+            <NotebookPen size={15} /> {tr("ثبت معامله", "Log trade")}
           </Link>
         )}
       </div>
