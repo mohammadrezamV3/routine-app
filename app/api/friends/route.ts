@@ -1,3 +1,4 @@
+import { tr } from "@/lib/i18n";
 import { NextRequest, NextResponse } from "next/server";
 import { getSessionFast } from "@/lib/serverSession";
 import { prisma } from "@/lib/prisma";
@@ -117,7 +118,7 @@ export async function GET(req: NextRequest) {
       return {
         friendshipId: r.id,
         id: other.id,
-        name: other.name || other.username || "کاربر",
+        name: other.name || other.username || tr("کاربر", "User"),
         username: other.username,
         avatarUrl: other.avatarUrl,
         ...nameFlags(other),
@@ -151,14 +152,14 @@ export async function POST(req: NextRequest) {
     target = await prisma.user.findUnique({ where: { id: targetUserId } });
   } else {
     if (!isValidUsername(username)) {
-      return NextResponse.json({ error: "یوزرنیم نامعتبر است" }, { status: 400 });
+      return NextResponse.json({ error: tr("یوزرنیم نامعتبر است", "Invalid username") }, { status: 400 });
     }
     // بدون حساسیت به بزرگ/کوچکی حروف — هم‌راستا با قاعده‌ی ورود (lib/auth.ts):
     // "Ali_2024" و "ali_2024" باید یک کاربر پیدا بشن.
     target = await prisma.user.findFirst({ where: { username: { equals: username, mode: "insensitive" } } });
   }
-  if (!target) return NextResponse.json({ error: "کاربری پیدا نشد" }, { status: 404 });
-  if (target.id === userId) return NextResponse.json({ error: "نمی‌تونی به خودت درخواست بدی" }, { status: 400 });
+  if (!target) return NextResponse.json({ error: tr("کاربری پیدا نشد", "User not found") }, { status: 404 });
+  if (target.id === userId) return NextResponse.json({ error: tr("نمی‌تونی به خودت درخواست بدی", "You can't send a request to yourself") }, { status: 400 });
 
   const existing = await prisma.friendship.findFirst({
     where: {
@@ -170,7 +171,7 @@ export async function POST(req: NextRequest) {
   });
   if (existing) {
     return NextResponse.json(
-      { error: existing.status === "ACCEPTED" ? "قبلا دوست هستید" : "درخواست قبلا ارسال شده" },
+      { error: existing.status === "ACCEPTED" ? tr("قبلا دوست هستید", "You are already friends") : tr("درخواست قبلا ارسال شده", "A request has already been sent") },
       { status: 409 }
     );
   }

@@ -1,3 +1,4 @@
+import { tr } from "@/lib/i18n";
 import { NextRequest, NextResponse } from "next/server";
 import { getSessionFast } from "@/lib/serverSession";
 import { getAdminFlags } from "@/lib/adminFlag";
@@ -27,12 +28,12 @@ export async function GET(req: NextRequest) {
 
   const flags = await getAdminFlags(userId);
   if (!flags?.isSuperAdmin && !(await checkRateLimit(`dashboard:${userId}`, 120, 10 * 60 * 1000))) {
-    return NextResponse.json({ error: "درخواست‌ها زیاد شد؛ کمی بعد دوباره امتحان کن" }, { status: 429 });
+    return NextResponse.json({ error: tr("درخواست‌ها زیاد شد؛ کمی بعد دوباره امتحان کن", "Too many requests — try again shortly") }, { status: 429 });
   }
 
   const day = resolveDay(req.nextUrl.searchParams.get("date"), req.nextUrl.searchParams.get("tz"));
   const data = await buildDashboard(userId, day);
   if (data === "notfound") return NextResponse.json({ error: "not found" }, { status: 404 });
-  if (data === "blocked") return NextResponse.json({ error: "حساب کاربری مسدود شده است" }, { status: 403 });
+  if (data === "blocked") return NextResponse.json({ error: tr("حساب کاربری مسدود شده است", "This account is blocked") }, { status: 403 });
   return NextResponse.json(data, { headers: { "Cache-Control": "private, no-store" } });
 }

@@ -1,3 +1,4 @@
+import { tr } from "@/lib/i18n";
 import { NextResponse } from "next/server";
 import { ModuleKey } from "@prisma/client";
 import { prisma } from "@/lib/prisma";
@@ -24,7 +25,7 @@ export async function GET() {
     { const off = await featureBlocked("weeklyAnalysis", guard.userId); if (off) return off; }
     const { userId, isSuperAdmin } = guard;
     if (!isSuperAdmin && !(await checkRateLimit(`weekly-letters:${userId}`, 60, 10 * 60 * 1000))) {
-      return NextResponse.json({ error: "تعداد درخواست بیش از حد مجاز — کمی صبر کن" }, { status: 429 });
+      return NextResponse.json({ error: tr("تعداد درخواست بیش از حد مجاز — کمی صبر کن", "Too many requests — wait a moment") }, { status: 429 });
     }
 
     await Promise.race([
@@ -44,6 +45,6 @@ export async function GET() {
     const letters = rows.map((r) => rowToSummary(r)).filter((x): x is LetterSummary => !!x);
     return NextResponse.json({ letters, unread });
   } catch (err: any) {
-    return NextResponse.json({ error: err?.message || "خطای غیرمنتظره" }, { status: 500 });
+    return NextResponse.json({ error: err?.message || tr("خطای غیرمنتظره", "Unexpected error") }, { status: 500 });
   }
 }

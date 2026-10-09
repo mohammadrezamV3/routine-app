@@ -1,3 +1,4 @@
+import { tr } from "@/lib/i18n";
 import { NextRequest, NextResponse } from "next/server";
 import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/auth";
@@ -16,14 +17,14 @@ export async function POST(req: NextRequest) {
 
   const ip = getClientIp(req.headers);
   if (!(await checkRateLimit(`discount-preview:${userId}:${ip}`, 15, 10 * 60 * 1000))) {
-    return NextResponse.json({ error: "تعداد تلاش‌ها بیش از حد مجازه — چند دقیقه دیگه دوباره امتحان کن" }, { status: 429 });
+    return NextResponse.json({ error: tr("تعداد تلاش‌ها بیش از حد مجازه — چند دقیقه دیگه دوباره امتحان کن", "Too many attempts — try again in a few minutes") }, { status: 429 });
   }
 
   try {
     const body = await req.json();
     const { code, planKey } = body as { code?: string; planKey?: string };
     if (!code?.trim() || !planKey) {
-      return NextResponse.json({ error: "کد تخفیف را وارد کن" }, { status: 400 });
+      return NextResponse.json({ error: tr("کد تخفیف را وارد کن", "Enter the discount code") }, { status: 400 });
     }
 
     const resolution = await resolveDiscountCode(code, userId, planKey);
@@ -33,8 +34,8 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ percentOff: resolution.percent });
   } catch (e: any) {
     if (e?.code?.startsWith?.("P")) {
-      return NextResponse.json({ error: "خطای داخلی سرور — لطفا بعدا دوباره امتحان کن" }, { status: 500 });
+      return NextResponse.json({ error: tr("خطای داخلی سرور — لطفا بعدا دوباره امتحان کن", "Internal server error — please try again later") }, { status: 500 });
     }
-    return NextResponse.json({ error: "خطایی پیش آمد — دوباره امتحان کن" }, { status: 502 });
+    return NextResponse.json({ error: tr("خطایی پیش آمد — دوباره امتحان کن", "Something went wrong — try again") }, { status: 502 });
   }
 }

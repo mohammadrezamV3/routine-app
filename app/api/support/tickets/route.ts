@@ -1,3 +1,4 @@
+import { tr } from "@/lib/i18n";
 import { NextRequest, NextResponse } from "next/server";
 import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/auth";
@@ -43,14 +44,14 @@ export async function POST(req: NextRequest) {
   if (!userId) return NextResponse.json({ error: "unauthorized" }, { status: 401 });
 
   if (!(await checkRateLimit(`support-ticket-create:${userId}`, 5, 60 * 60 * 1000))) {
-    return NextResponse.json({ error: "تعداد تیکت‌های ثبت‌شده زیاد بوده — کمی بعد دوباره امتحان کن" }, { status: 429 });
+    return NextResponse.json({ error: tr("تعداد تیکت‌های ثبت‌شده زیاد بوده — کمی بعد دوباره امتحان کن", "Too many tickets were submitted — try again shortly") }, { status: 429 });
   }
 
   const body = await req.json().catch(() => null);
   const subject = clampText(String(body?.subject || "").trim(), 120);
   const message = clampText(String(body?.message || "").trim(), 4000);
-  if (!subject) return NextResponse.json({ error: "موضوع تیکت الزامی است" }, { status: 400 });
-  if (!message) return NextResponse.json({ error: "متن پیام الزامی است" }, { status: 400 });
+  if (!subject) return NextResponse.json({ error: tr("موضوع تیکت الزامی است", "Ticket subject is required") }, { status: 400 });
+  if (!message) return NextResponse.json({ error: tr("متن پیام الزامی است", "Message text is required") }, { status: 400 });
 
   const ticket = await prisma.supportTicket.create({
     data: {

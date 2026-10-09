@@ -1,3 +1,4 @@
+import { tr } from "@/lib/i18n";
 import { featureBlocked } from "@/lib/featureFlagsServer";
 import { NextRequest, NextResponse } from "next/server";
 import { ModuleKey } from "@prisma/client";
@@ -20,7 +21,7 @@ export async function PUT(req: NextRequest) {
     const { userId, isSuperAdmin } = guard;
 
     if (!isSuperAdmin && !(await checkRateLimit(`weekly-analysis-reflection:${userId}`, 30, 10 * 60 * 1000))) {
-      return NextResponse.json({ error: "تعداد درخواست بیش از حد مجاز — کمی صبر کن" }, { status: 429 });
+      return NextResponse.json({ error: tr("تعداد درخواست بیش از حد مجاز — کمی صبر کن", "Too many requests — wait a moment") }, { status: 429 });
     }
 
     const body = await req.json().catch(() => ({}));
@@ -30,7 +31,7 @@ export async function PUT(req: NextRequest) {
     if (offsetRaw !== undefined && offsetRaw !== null) {
       const n = Number(offsetRaw);
       if (!Number.isInteger(n) || n > 0 || n < MAX_OFFSET_BACK) {
-        return NextResponse.json({ error: "offset نامعتبر است" }, { status: 400 });
+        return NextResponse.json({ error: tr("offset نامعتبر است", "Invalid offset") }, { status: 400 });
       }
       offset = n;
     }
@@ -44,7 +45,7 @@ export async function PUT(req: NextRequest) {
     if (body?.mood !== undefined && body?.mood !== null) {
       const n = Number(body.mood);
       if (!Number.isInteger(n) || n < 1 || n > 5) {
-        return NextResponse.json({ error: "mood باید عددی بین 1 تا 5 باشد" }, { status: 400 });
+        return NextResponse.json({ error: tr("mood باید عددی بین 1 تا 5 باشد", "mood must be a number between 1 and 5") }, { status: 400 });
       }
       mood = n;
     }
@@ -63,6 +64,6 @@ export async function PUT(req: NextRequest) {
       reflection: { wentWell: row.wentWell, improve: row.improve, mood: row.mood, updatedAt: row.updatedAt.toISOString() },
     });
   } catch (err: any) {
-    return NextResponse.json({ error: err?.message || "خطای غیرمنتظره" }, { status: 500 });
+    return NextResponse.json({ error: err?.message || tr("خطای غیرمنتظره", "Unexpected error") }, { status: 500 });
   }
 }

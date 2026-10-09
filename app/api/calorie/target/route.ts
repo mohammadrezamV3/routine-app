@@ -1,3 +1,4 @@
+import { tr } from "@/lib/i18n";
 import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 import { requireModule } from "@/lib/moduleAccess";
@@ -39,19 +40,19 @@ async function handlePOST(req: NextRequest) {
   };
 
   if (!goal || !VALID_GOALS.includes(goal)) {
-    return NextResponse.json({ error: "هدف کالری نامعتبر است" }, { status: 400 });
+    return NextResponse.json({ error: tr("هدف کالری نامعتبر است", "Invalid calorie goal") }, { status: 400 });
   }
   if (!mealsPerDay || mealsPerDay < 2 || mealsPerDay > 6) {
-    return NextResponse.json({ error: "تعداد وعده باید بین 2 تا 6 باشد" }, { status: 400 });
+    return NextResponse.json({ error: tr("تعداد وعده باید بین 2 تا 6 باشد", "Number of meals must be between 2 and 6") }, { status: 400 });
   }
   if (!sex || !VALID_SEX.includes(sex)) {
-    return NextResponse.json({ error: "جنسیت نامعتبر است" }, { status: 400 });
+    return NextResponse.json({ error: tr("جنسیت نامعتبر است", "Invalid gender") }, { status: 400 });
   }
   if (!heightCm || typeof heightCm !== "number" || heightCm < 50 || heightCm > 260) {
-    return NextResponse.json({ error: "قد وارد شده معتبر نیست" }, { status: 400 });
+    return NextResponse.json({ error: tr("قد وارد شده معتبر نیست", "The height entered is not valid") }, { status: 400 });
   }
   if (!weightKg || typeof weightKg !== "number" || weightKg < 20 || weightKg > 400) {
-    return NextResponse.json({ error: "وزن وارد شده معتبر نیست" }, { status: 400 });
+    return NextResponse.json({ error: tr("وزن وارد شده معتبر نیست", "The weight entered is not valid") }, { status: 400 });
   }
 
   const user = await prisma.user.findUnique({ where: { id: userId }, select: { birthDate: true } });
@@ -62,7 +63,7 @@ async function handlePOST(req: NextRequest) {
     age = ageYears;
   }
   if (age === null) {
-    return NextResponse.json({ error: "سن لازم است (تاریخ تولدت توی حسابت ثبت نشده)" }, { status: 400 });
+    return NextResponse.json({ error: tr("سن لازم است (تاریخ تولدت توی حسابت ثبت نشده)", "Age is required (your birth date is not saved on your account)") }, { status: 400 });
   }
 
   const activePlan = await prisma.exercisePlan.findFirst({ where: { userId, isActive: true } });
@@ -123,30 +124,30 @@ async function handlePATCH(req: NextRequest) {
   const carbs = macro(carbsTargetG);
   const fat = macro(fatTargetG);
   if (protein === "invalid" || carbs === "invalid" || fat === "invalid") {
-    return NextResponse.json({ error: "هدف درشت‌مغذی نامعتبر است" }, { status: 400 });
+    return NextResponse.json({ error: tr("هدف درشت‌مغذی نامعتبر است", "Invalid macronutrient goal") }, { status: 400 });
   }
 
   if (!Array.isArray(mealBreakdown) || mealBreakdown.length < 1 || mealBreakdown.length > 8) {
-    return NextResponse.json({ error: "بین 1 تا 8 وعده مجاز است" }, { status: 400 });
+    return NextResponse.json({ error: tr("بین 1 تا 8 وعده مجاز است", "Between 1 and 8 meals are allowed") }, { status: 400 });
   }
   const cleaned: { key: string; label: string; kcal: number }[] = [];
   for (const m of mealBreakdown) {
     if (!m || typeof m.label !== "string" || !m.label.trim()) {
-      return NextResponse.json({ error: "اسم وعده نمی‌تواند خالی باشد" }, { status: 400 });
+      return NextResponse.json({ error: tr("اسم وعده نمی‌تواند خالی باشد", "Meal name cannot be empty") }, { status: 400 });
     }
     if (typeof m.kcal !== "number" || !isFinite(m.kcal) || m.kcal < 0 || m.kcal > 10000) {
-      return NextResponse.json({ error: "مقدار کالری وعده نامعتبر است" }, { status: 400 });
+      return NextResponse.json({ error: tr("مقدار کالری وعده نامعتبر است", "Invalid meal calorie amount") }, { status: 400 });
     }
     const key = m.key || `meal_${cleaned.length}_${Date.now().toString(36)}`;
     cleaned.push({ key, label: clampText(m.label, 30), kcal: Math.round(m.kcal) });
   }
   const dailyTargetKcal = cleaned.reduce((s, m) => s + m.kcal, 0);
   if (dailyTargetKcal < 500) {
-    return NextResponse.json({ error: "جمع کالری وعده‌ها خیلی کم است" }, { status: 400 });
+    return NextResponse.json({ error: tr("جمع کالری وعده‌ها خیلی کم است", "The total calories of the meals is too low") }, { status: 400 });
   }
 
   const existing = await prisma.calorieTarget.findFirst({ where: { userId, effectiveTo: null }, orderBy: { effectiveFrom: "desc" } });
-  if (!existing) return NextResponse.json({ error: "اول باید هدف کالری‌ات را بسازی" }, { status: 400 });
+  if (!existing) return NextResponse.json({ error: tr("اول باید هدف کالری‌ات را بسازی", "Create your calorie goal first") }, { status: 400 });
 
   const target = await prisma.calorieTarget.update({
     where: { id: existing.id },

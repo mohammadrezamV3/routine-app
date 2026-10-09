@@ -1,3 +1,4 @@
+import { tr } from "@/lib/i18n";
 import { featureBlocked } from "@/lib/featureFlagsServer";
 import { NextRequest, NextResponse } from "next/server";
 import { AiFeatureKey, ModuleKey } from "@prisma/client";
@@ -25,11 +26,11 @@ export async function POST(req: NextRequest) {
     const { userId, isSuperAdmin } = guard;
 
     if (!isAiAvailable()) {
-      return NextResponse.json({ error: "مربی هوش‌مصنوعی در دسترس نیست" }, { status: 503 });
+      return NextResponse.json({ error: tr("مربی هوش‌مصنوعی در دسترس نیست", "The AI coach is not available") }, { status: 503 });
     }
 
     if (!isSuperAdmin && !(await checkRateLimit(`weekly-analysis-ai:${userId}`, 6, 60 * 60 * 1000))) {
-      return NextResponse.json({ error: "تعداد ساخت مربی AI امروز/این‌ساعت تمام شده — کمی بعد دوباره امتحان کن" }, { status: 429 });
+      return NextResponse.json({ error: tr("تعداد ساخت مربی AI امروز/این‌ساعت تمام شده — کمی بعد دوباره امتحان کن", "The AI coach build limit for today or this hour has been reached — try again shortly") }, { status: 429 });
     }
 
     const body = await req.json().catch(() => ({}));
@@ -38,7 +39,7 @@ export async function POST(req: NextRequest) {
     if (offsetRaw !== undefined && offsetRaw !== null) {
       const n = Number(offsetRaw);
       if (!Number.isInteger(n) || n > 0 || n < MAX_OFFSET_BACK) {
-        return NextResponse.json({ error: "offset نامعتبر است" }, { status: 400 });
+        return NextResponse.json({ error: tr("offset نامعتبر است", "Invalid offset") }, { status: 400 });
       }
       offset = n;
     }
@@ -59,13 +60,13 @@ export async function POST(req: NextRequest) {
       await quota.release();
       const msg: string = err?.message || "";
       if (msg.includes("ثانیه پاسخ نداد")) {
-        return NextResponse.json({ error: "گیت‌وی هوش‌مصنوعی به‌موقع پاسخ نداد" }, { status: 504 });
+        return NextResponse.json({ error: tr("گیت‌وی هوش‌مصنوعی به‌موقع پاسخ نداد", "The AI gateway did not respond in time") }, { status: 504 });
       }
-      return NextResponse.json({ error: msg || "ساخت مربی AI شکست خورد" }, { status: 502 });
+      return NextResponse.json({ error: msg || tr("ساخت مربی AI شکست خورد", "Building the AI coach failed") }, { status: 502 });
     }
     if (!ai) {
       await quota.release();
-      return NextResponse.json({ error: "مربی هوش‌مصنوعی در دسترس نیست" }, { status: 503 });
+      return NextResponse.json({ error: tr("مربی هوش‌مصنوعی در دسترس نیست", "The AI coach is not available") }, { status: 503 });
     }
 
     const { weekStart } = getWeekRange(timezone, offset);
@@ -77,6 +78,6 @@ export async function POST(req: NextRequest) {
 
     return NextResponse.json({ ai });
   } catch (err: any) {
-    return NextResponse.json({ error: err?.message || "خطای غیرمنتظره" }, { status: 500 });
+    return NextResponse.json({ error: err?.message || tr("خطای غیرمنتظره", "Unexpected error") }, { status: 500 });
   }
 }

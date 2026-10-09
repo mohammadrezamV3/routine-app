@@ -1,3 +1,4 @@
+import { tr } from "@/lib/i18n";
 import { NextRequest, NextResponse } from "next/server";
 import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/auth";
@@ -19,13 +20,13 @@ async function handlePATCH(req: NextRequest) {
   const ip = getClientIp(req.headers);
   const isSuperAdmin = !!(session!.user as any).isSuperAdmin;
   if (!isSuperAdmin && (!(await checkRateLimit(`username-change:${userId}`, 5, 60 * 60 * 1000)) || !(await checkRateLimit(`username-change-ip:${ip}`, 10, 60 * 60 * 1000)))) {
-    return NextResponse.json({ error: "درخواست‌های زیاد — کمی بعد دوباره امتحان کن" }, { status: 429 });
+    return NextResponse.json({ error: tr("درخواست‌های زیاد — کمی بعد دوباره امتحان کن", "Too many requests — try again shortly") }, { status: 429 });
   }
 
   const body = await req.json().catch(() => ({}));
   const username = String(body?.username || "").trim();
   if (!isValidUsername(username)) {
-    return NextResponse.json({ error: "یوزرنیم باید 3 تا 20 کاراکتر انگلیسی/عدد/آندرلاین باشد" }, { status: 400 });
+    return NextResponse.json({ error: tr("یوزرنیم باید 3 تا 20 کاراکتر انگلیسی/عدد/آندرلاین باشد", "Username must be 3 to 20 English letters, digits or underscores") }, { status: 400 });
   }
 
   const existing = await prisma.user.findFirst({
@@ -33,13 +34,13 @@ async function handlePATCH(req: NextRequest) {
     select: { id: true },
   });
   if (existing) {
-    return NextResponse.json({ error: "این یوزرنیم قبلا گرفته شده" }, { status: 409 });
+    return NextResponse.json({ error: tr("این یوزرنیم قبلا گرفته شده", "This username is already taken") }, { status: 409 });
   }
 
   try {
     await prisma.user.update({ where: { id: userId }, data: { username } });
   } catch {
-    return NextResponse.json({ error: "این یوزرنیم قبلا گرفته شده" }, { status: 409 });
+    return NextResponse.json({ error: tr("این یوزرنیم قبلا گرفته شده", "This username is already taken") }, { status: 409 });
   }
 
   return NextResponse.json({ ok: true, username });

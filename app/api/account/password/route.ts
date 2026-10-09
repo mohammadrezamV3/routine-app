@@ -1,3 +1,4 @@
+import { tr } from "@/lib/i18n";
 import { NextRequest, NextResponse } from "next/server";
 import { getServerSession } from "next-auth";
 import bcrypt from "bcryptjs";
@@ -18,7 +19,7 @@ export async function POST(req: NextRequest) {
 
   const ip = getClientIp(req.headers);
   if (!(await checkRateLimit(`password-change:${userId}`, 5, 60 * 60 * 1000)) || !(await checkRateLimit(`password-change-ip:${ip}`, 15, 60 * 60 * 1000))) {
-    return NextResponse.json({ error: "درخواست‌های زیاد — کمی بعد دوباره امتحان کن" }, { status: 429 });
+    return NextResponse.json({ error: tr("درخواست‌های زیاد — کمی بعد دوباره امتحان کن", "Too many requests — try again shortly") }, { status: 429 });
   }
 
   const body = await req.json().catch(() => ({}));
@@ -26,15 +27,15 @@ export async function POST(req: NextRequest) {
   const newPassword = String(body?.newPassword || "");
 
   const user = await prisma.user.findUnique({ where: { id: userId }, select: { passwordHash: true, email: true, username: true, phone: true } });
-  if (!user) return NextResponse.json({ error: "کاربر پیدا نشد" }, { status: 404 });
+  if (!user) return NextResponse.json({ error: tr("کاربر پیدا نشد", "User not found") }, { status: 404 });
 
   if (!user.passwordHash) {
-    return NextResponse.json({ error: "این حساب با گوگل وارد شده و رمز عبور جداگانه‌ای ندارد" }, { status: 400 });
+    return NextResponse.json({ error: tr("این حساب با گوگل وارد شده و رمز عبور جداگانه‌ای ندارد", "This account signed in with Google and has no separate password") }, { status: 400 });
   }
 
   const isValid = await bcrypt.compare(currentPassword, user.passwordHash);
   if (!isValid) {
-    return NextResponse.json({ error: "رمز عبور فعلی اشتباه است" }, { status: 401 });
+    return NextResponse.json({ error: tr("رمز عبور فعلی اشتباه است", "The current password is incorrect") }, { status: 401 });
   }
 
   const userInputs = [user.email, user.username, user.phone].filter((v): v is string => !!v);

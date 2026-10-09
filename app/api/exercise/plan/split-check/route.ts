@@ -1,3 +1,4 @@
+import { tr } from "@/lib/i18n";
 import { NextRequest, NextResponse } from "next/server";
 import { ModuleKey } from "@prisma/client";
 import { requireModule } from "@/lib/moduleAccess";
@@ -26,9 +27,9 @@ export async function POST(req: NextRequest) {
   const b = parsed.body as { level?: unknown; gymDays?: unknown; split?: unknown; goal?: unknown; hasPhysicalLimitation?: unknown };
 
   const level = VALID_LEVELS.includes(b.level as ExerciseLevel) ? (b.level as ExerciseLevel) : null;
-  if (!level) return NextResponse.json({ error: "سطح نامعتبر است" }, { status: 400 });
+  if (!level) return NextResponse.json({ error: tr("سطح نامعتبر است", "Invalid level") }, { status: 400 });
   if (!Array.isArray(b.gymDays) || !b.gymDays.length || !b.gymDays.every((d) => typeof d === "string" && FA_WEEKDAY.includes(d))) {
-    return NextResponse.json({ error: "روزهای باشگاه نامعتبر است" }, { status: 400 });
+    return NextResponse.json({ error: tr("روزهای باشگاه نامعتبر است", "Invalid gym days") }, { status: 400 });
   }
   const gymDays = [...new Set(b.gymDays as string[])];
   const v = validateUserSplit(b.split, gymDays);
