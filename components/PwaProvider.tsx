@@ -2,6 +2,8 @@
 
 import { useEffect, useState } from "react";
 import { Download, X } from "lucide-react";
+import { tr } from "@/lib/i18n";
+import { brandName } from "@/lib/brand";
 
 /**
  * دو کار که هردو لازمه‌ی «مثل یه اپ واقعی» بودن‌اند:
@@ -113,16 +115,16 @@ export function PwaProvider() {
   if (!visible) return null;
 
   return (
-    <div className="pwa-install-bar" role="dialog" aria-label="نصب آریون">
+    <div className="pwa-install-bar" role="dialog" aria-label={tr("نصب آریون", `Install ${brandName()}`)}>
       <div className="pwa-install-text">
-        <b>آریون را نصب کن</b>
-        <span>سریع‌تر باز می‌شود و بدون نوار مرورگر، مثل یک اپ واقعی.</span>
+        <b>{tr("آریون را نصب کن", `Install ${brandName()}`)}</b>
+        <span>{tr("سریع‌تر باز می‌شود و بدون نوار مرورگر، مثل یک اپ واقعی.", "Opens faster and without the browser bar, like a real app.")}</span>
       </div>
       <div className="pwa-install-actions">
         <button type="button" className="pwa-install-btn" onClick={install}>
-          <Download size={15} aria-hidden="true" /> نصب
+          <Download size={15} aria-hidden="true" /> {tr("نصب", "Install")}
         </button>
-        <button type="button" className="pwa-install-close" onClick={dismiss} aria-label="بستن">
+        <button type="button" className="pwa-install-close" onClick={dismiss} aria-label={tr("بستن", "Close")}>
           <X size={16} aria-hidden="true" />
         </button>
       </div>

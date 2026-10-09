@@ -40,7 +40,7 @@ export function registerServerLocaleGetter(getter: LocaleGetter) {
 
 export function currentLocale(): Locale {
   if (typeof document !== "undefined") {
-    return document.documentElement.lang === "en" ? "en" : "fa";
+    return document.documentElement?.lang === "en" ? "en" : "fa";
   }
   const getter = (globalThis as Record<string, unknown>)[GETTER_KEY] as LocaleGetter | undefined;
   if (getter) {

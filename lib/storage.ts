@@ -8,6 +8,7 @@ import { takePreloaded, getPreloadedBootstrap, clearPreloadedBootstrap } from ".
 import { BOOTSTRAP_SETTING_KEYS } from "./userSettingKeys";
 import type { SleepRecord } from "./sleep";
 import { ALL, broadcast, keyMatches, publishLocal, registerInvalidator, reportLiveError } from "./liveSync";
+import { tr } from "./i18n";
 
 const PREFIX = "panelMohammad:";
 
@@ -224,7 +225,7 @@ function enqueueWrite<T>(queueKey: string, run: () => Promise<T>): Promise<T> {
   return next;
 }
 
-const SAVE_FAILED = "ذخیره نشد — تغییر برگردانده شد. اتصال را چک کن و دوباره امتحان کن";
+const saveFailed = () => tr("ذخیره نشد — تغییر برگردانده شد. اتصال را چک کن و دوباره امتحان کن", "Not saved. The change was reverted. Check your connection and try again.");
 
 function dailyUrl(dateKey: string) {
   return `/api/tasks/daily?date=${encodeURIComponent(dateKey)}`;
@@ -410,7 +411,7 @@ export async function setDaily(dateKey: string, data: DailyRecord): Promise<void
       dropCache((url) => url.startsWith("/api/tasks/daily"));
       clearRangeCache();
       publishLocal(topic);
-      reportLiveError(SAVE_FAILED);
+      reportLiveError(saveFailed());
     });
     return;
   }
@@ -418,7 +419,7 @@ export async function setDaily(dateKey: string, data: DailyRecord): Promise<void
   try {
     window.localStorage.setItem(PREFIX + "daily:" + dateKey, JSON.stringify(data));
   } catch {
-    reportLiveError("حافظه‌ی مرورگر پر است — تغییر ذخیره نشد");
+    reportLiveError(tr("حافظه‌ی مرورگر پر است — تغییر ذخیره نشد", "Browser storage is full. The change was not saved."));
   }
   // بقیه‌ی تب‌ها رویداد `storage` خود مرورگر رو می‌گیرن
   publishLocal(topic);
@@ -556,10 +557,10 @@ async function writeSetting<T>(key: string, value: T, toastOnError: boolean): Pr
         });
         if (!res.ok) {
           const data = await res.json().catch(() => null);
-          error = data?.error || `ذخیره ناموفق بود (کد ${res.status})`;
+          error = data?.error || tr(`ذخیره ناموفق بود (کد ${res.status})`, `Save failed (code ${res.status})`);
         }
       } catch {
-        error = "ارتباط با سرور برقرار نشد — اتصال اینترنت را چک کن";
+        error = tr("ارتباط با سرور برقرار نشد — اتصال اینترنت را چک کن", "Could not reach the server. Check your internet connection.");
       }
       const latest = pendingSettings.get(key) === value;
       if (!error) {
@@ -575,17 +576,17 @@ async function writeSetting<T>(key: string, value: T, toastOnError: boolean): Pr
         pendingSettings.delete(key);
         dropCache((url) => url === settingsUrl(key));
         publishLocal(key);
-        if (toastOnError) reportLiveError(SAVE_FAILED);
+        if (toastOnError) reportLiveError(saveFailed());
       }
       return { ok: false as const, error };
     });
   }
-  if (typeof window === "undefined" || !hasLocalStorage()) return { ok: false, error: "ذخیره‌سازی در این مرورگر در دسترس نیست" };
+  if (typeof window === "undefined" || !hasLocalStorage()) return { ok: false, error: tr("ذخیره‌سازی در این مرورگر در دسترس نیست", "Storage is not available in this browser") };
   try {
     window.localStorage.setItem(PREFIX + "settings:" + key, JSON.stringify(value));
   } catch {
-    if (toastOnError) reportLiveError("حافظه‌ی مرورگر پر است — تغییر ذخیره نشد");
-    return { ok: false, error: "حافظه‌ی مرورگر پر است" };
+    if (toastOnError) reportLiveError(tr("حافظه‌ی مرورگر پر است — تغییر ذخیره نشد", "Browser storage is full. The change was not saved."));
+    return { ok: false, error: tr("حافظه‌ی مرورگر پر است", "Browser storage is full") };
   }
   publishLocal(key);
   return { ok: true };
@@ -617,12 +618,18 @@ export async function setRemovedOccurrences(arr: string[]): Promise<void> {
 // این فیلد رو ندارن هم همینطور رفتار می‌کنن). فقط موارد «زیاد»/«خیلی زیاد»
 // توی بخش «یادآوری‌ها»ی داشبورد نشون داده می‌شن.
 export type Importance = "low" | "medium" | "high" | "veryHigh";
+// getter: زبان موقع خواندن (رندر) انتخاب می‌شه، نه موقع بارگذاری ماژول
 export const IMPORTANCE_LABELS: Record<Importance, string> = {
-  low: "کم",
-  medium: "متوسط",
-  high: "زیاد",
-  veryHigh: "خیلی زیاد",
+  get low() { return tr("کم", "Low"); },
+  get medium() { return tr("متوسط", "Medium"); },
+  get high() { return tr("زیاد", "High"); },
+  get veryHigh() { return tr("خیلی زیاد", "Very high"); },
 };
+
+/** برچسب سطح اهمیت به زبان جاری */
+export function importanceLabel(i: Importance): string {
+  return IMPORTANCE_LABELS[i];
+}
 
 export type CustomOccurrence = {
   id: string;
@@ -723,10 +730,10 @@ export async function saveSleep(rec: SleepRecord): Promise<void> {
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify(rec),
     }).catch(() => null);
-    if (!res) throw new SleepSaveError("اتصال برقرار نشد — دوباره امتحان کن", 0);
+    if (!res) throw new SleepSaveError(tr("اتصال برقرار نشد — دوباره امتحان کن", "Could not connect. Try again."), 0);
     if (!res.ok) {
       const j = await res.json().catch(() => null);
-      throw new SleepSaveError(j?.error || "ذخیره نشد", res.status);
+      throw new SleepSaveError(j?.error || tr("ذخیره نشد", "Not saved"), res.status);
     }
     publishLocal("sleep");
     return;
@@ -735,7 +742,7 @@ export async function saveSleep(rec: SleepRecord): Promise<void> {
   try {
     window.localStorage.setItem(PREFIX + "sleep:" + rec.date, JSON.stringify(rec));
   } catch {
-    throw new SleepSaveError("حافظه‌ی مرورگر پر است — ذخیره نشد", 0);
+    throw new SleepSaveError(tr("حافظه‌ی مرورگر پر است — ذخیره نشد", "Browser storage is full. Not saved."), 0);
   }
   publishLocal("sleep");
 }
@@ -743,7 +750,7 @@ export async function saveSleep(rec: SleepRecord): Promise<void> {
 export async function deleteSleep(dateIso: string): Promise<void> {
   if (await isLoggedIn()) {
     const res = await fetch(`/api/sleep?date=${dateIso}`, { method: "DELETE" }).catch(() => null);
-    if (!res?.ok) throw new SleepSaveError("حذف نشد", res?.status ?? 0);
+    if (!res?.ok) throw new SleepSaveError(tr("حذف نشد", "Could not delete"), res?.status ?? 0);
     publishLocal("sleep");
     return;
   }

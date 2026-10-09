@@ -2,6 +2,7 @@
 
 import { motion, AnimatePresence } from "framer-motion";
 import { Sparkles } from "lucide-react";
+import { tr } from "@/lib/i18n";
 
 // انیمیشن «کاربر پریمیوم شد» — بعد پرداخت موفق اشتراک، یک‌بار روی
 // صفحه‌ی اشتراک نشون داده می‌شه (نگاه کن به app/subscription/page.tsx).
@@ -50,9 +51,9 @@ export function PremiumUnlockCelebration({ onClose }: { onClose: () => void }) {
               <Sparkles size={30} />
             </motion.div>
           </div>
-          <div className="premium-celebration-title">به جمع کاربران پریمیوم خوش اومدی!</div>
-          <div className="premium-celebration-sub">پلنت با موفقیت فعال شد — حالا به همه‌ی امکاناتش دسترسی داری.</div>
-          <button type="button" className="premium-celebration-close" onClick={onClose}>باشه</button>
+          <div className="premium-celebration-title">{tr("به جمع کاربران پریمیوم خوش اومدی!", "Welcome to the premium users!")}</div>
+          <div className="premium-celebration-sub">{tr("پلنت با موفقیت فعال شد — حالا به همه‌ی امکاناتش دسترسی داری.", "Your plan is now active. You have access to all its features.")}</div>
+          <button type="button" className="premium-celebration-close" onClick={onClose}>{tr("باشه", "Got it")}</button>
         </motion.div>
       </motion.div>
     </AnimatePresence>

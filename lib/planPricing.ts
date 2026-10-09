@@ -1,3 +1,4 @@
+import { tr } from "@/lib/i18n";
 // قیمت‌گذاری پلن‌ها — منطق خالص و بدون import سروری (هم سمت سرور، هم کلاینت).
 //
 // منبع واقعی قیمت‌ها از این به بعد پنل ادمین است (/admin/pricing → AppSetting
@@ -24,6 +25,18 @@ export const PLAN_NAMES_FA: Record<PaidPlanKey, string> = {
   trade: "پلن ترید",
   max: "پلن مکس",
 };
+
+const PLAN_NAMES_EN: Record<PaidPlanKey, string> = {
+  basic: "My Routine plan",
+  exercise: "Workout plan",
+  trade: "Trading plan",
+  max: "Max plan",
+};
+
+/** اسم پلن به زبان جاری */
+export function planNameLabel(key: PaidPlanKey): string {
+  return tr(PLAN_NAMES_FA[key], PLAN_NAMES_EN[key]);
+}
 
 export const PLAN_PRICING_SETTING_KEY = "plan_pricing";
 
@@ -104,48 +117,51 @@ function validMonths(v: unknown): v is number {
  * (هیچ مقداری بی‌صدا اصلاح نمی‌شه). خروجی یک کپی تمیز فقط با فیلدهای شناخته‌شده‌ست.
  */
 export function validatePricingConfig(input: unknown): { ok: true; config: PricingConfig } | { ok: false; error: string } {
-  if (!input || typeof input !== "object") return { ok: false, error: "ورودی نامعتبر است" };
+  if (!input || typeof input !== "object") return { ok: false, error: tr("ورودی نامعتبر است", "Invalid input") };
   const raw = input as { durations?: any; plans?: any };
-  if (!raw.durations || typeof raw.durations !== "object") return { ok: false, error: "مدت‌ها ارسال نشده" };
-  if (!raw.plans || typeof raw.plans !== "object") return { ok: false, error: "قیمت پلن‌ها ارسال نشده" };
+  if (!raw.durations || typeof raw.durations !== "object") return { ok: false, error: tr("مدت‌ها ارسال نشده", "Durations were not sent") };
+  if (!raw.plans || typeof raw.plans !== "object") return { ok: false, error: tr("قیمت پلن‌ها ارسال نشده", "Plan prices were not sent") };
 
   const durations = {} as Record<Duration, DurationConfig>;
   for (const d of DURATIONS) {
     const dc = raw.durations[d];
-    if (!dc || typeof dc !== "object") return { ok: false, error: `مدت ${d} ارسال نشده` };
+    if (!dc || typeof dc !== "object") return { ok: false, error: tr(`مدت ${d} ارسال نشده`, `Duration ${d} was not sent`) };
     if (!validMonths(dc.months)) {
-      return { ok: false, error: `تعداد ماه باید عدد صحیح بین ${PRICING_LIMITS.minMonths} و ${PRICING_LIMITS.maxMonths} باشد` };
+      return { ok: false, error: tr(`تعداد ماه باید عدد صحیح بین ${PRICING_LIMITS.minMonths} و ${PRICING_LIMITS.maxMonths} باشد`, `Months must be a whole number between ${PRICING_LIMITS.minMonths} and ${PRICING_LIMITS.maxMonths}`) };
     }
-    if (typeof dc.enabled !== "boolean") return { ok: false, error: "وضعیت فعال بودن مدت نامعتبر است" };
+    if (typeof dc.enabled !== "boolean") return { ok: false, error: tr("وضعیت فعال بودن مدت نامعتبر است", "Invalid enabled state for the duration") };
     durations[d] = { months: dc.months, enabled: dc.enabled };
   }
-  if (!DURATIONS.some((d) => durations[d].enabled)) return { ok: false, error: "حداقل یک مدت باید فعال باشد" };
+  if (!DURATIONS.some((d) => durations[d].enabled)) return { ok: false, error: tr("حداقل یک مدت باید فعال باشد", "At least one duration must be enabled") };
   const monthsSeen = new Set<number>();
   for (const d of DURATIONS) {
-    if (monthsSeen.has(durations[d].months)) return { ok: false, error: "تعداد ماه دو مدت نمی‌تواند یکسان باشد" };
+    if (monthsSeen.has(durations[d].months)) return { ok: false, error: tr("تعداد ماه دو مدت نمی‌تواند یکسان باشد", "Two durations cannot have the same number of months") };
     monthsSeen.add(durations[d].months);
   }
 
   const plans = {} as Record<PaidPlanKey, Record<Duration, PriceCell>>;
   for (const key of PAID_PLAN_KEYS) {
     const rp = raw.plans[key];
-    if (!rp || typeof rp !== "object") return { ok: false, error: `قیمت ${PLAN_NAMES_FA[key]} ارسال نشده` };
+    if (!rp || typeof rp !== "object") return { ok: false, error: tr(`قیمت ${PLAN_NAMES_FA[key]} ارسال نشده`, `The price of ${planNameLabel(key)} was not sent`) };
     const row = {} as Record<Duration, PriceCell>;
     for (const d of DURATIONS) {
       const cell = rp[d];
-      if (!cell || typeof cell !== "object") return { ok: false, error: `قیمت ${PLAN_NAMES_FA[key]} ارسال نشده` };
+      if (!cell || typeof cell !== "object") return { ok: false, error: tr(`قیمت ${PLAN_NAMES_FA[key]} ارسال نشده`, `The price of ${planNameLabel(key)} was not sent`) };
       if (!validPrice(cell.price)) {
         return {
           ok: false,
-          error: `قیمت ${PLAN_NAMES_FA[key]} (${durations[d].months} ماهه) باید عدد صحیح بین ${PRICING_LIMITS.minPriceToman.toLocaleString("en-US")} و ${PRICING_LIMITS.maxPriceToman.toLocaleString("en-US")} تومان باشد`,
+          error: tr(
+            `قیمت ${PLAN_NAMES_FA[key]} (${durations[d].months} ماهه) باید عدد صحیح بین ${PRICING_LIMITS.minPriceToman.toLocaleString("en-US")} و ${PRICING_LIMITS.maxPriceToman.toLocaleString("en-US")} تومان باشد`,
+            `The price of ${planNameLabel(key)} (${durations[d].months} months) must be a whole number between ${PRICING_LIMITS.minPriceToman.toLocaleString("en-US")} and ${PRICING_LIMITS.maxPriceToman.toLocaleString("en-US")} Toman`,
+          ),
         };
       }
       const original = cell.original ?? 0;
       if (!isInt(original) || original < 0 || original > PRICING_LIMITS.maxPriceToman) {
-        return { ok: false, error: `قیمت قبل از تخفیف ${PLAN_NAMES_FA[key]} (${durations[d].months} ماهه) نامعتبر است` };
+        return { ok: false, error: tr(`قیمت قبل از تخفیف ${PLAN_NAMES_FA[key]} (${durations[d].months} ماهه) نامعتبر است`, `The pre-discount price of ${planNameLabel(key)} (${durations[d].months} months) is invalid`) };
       }
       if (original !== 0 && original < cell.price) {
-        return { ok: false, error: `قیمت قبل از تخفیف ${PLAN_NAMES_FA[key]} (${durations[d].months} ماهه) نباید از قیمت نهایی کمتر باشد` };
+        return { ok: false, error: tr(`قیمت قبل از تخفیف ${PLAN_NAMES_FA[key]} (${durations[d].months} ماهه) نباید از قیمت نهایی کمتر باشد`, `The pre-discount price of ${planNameLabel(key)} (${durations[d].months} months) must not be lower than the final price`) };
       }
       row[d] = { price: cell.price, original };
     }
@@ -174,7 +190,8 @@ export function durationMonths(cfg: PricingConfig, d: Duration): number {
 }
 
 export function durationLabel(cfg: PricingConfig, d: Duration): string {
-  return `${cfg.durations[d].months} ماهه`;
+  const m = cfg.durations[d].months;
+  return tr(`${m} ماهه`, `${m} ${m === 1 ? "month" : "months"}`);
 }
 
 /** درصد تخفیف نمایشی یک خانه (یک رقم اعشار)، 0 اگه قیمت خط‌خورده نداره */
@@ -190,12 +207,12 @@ export function priceFromDiscount(original: number, percent: number): number {
 }
 
 export function formatToman(toman: number): string {
-  return `${Math.round(toman).toLocaleString("en-US")} تومان`;
+  return tr(`${Math.round(toman).toLocaleString("en-US")} تومان`, `${Math.round(toman).toLocaleString("en-US")} Toman`);
 }
 
 /** «99 هزار تومان» برای متن‌های توضیحی؛ اگه رند هزار نبود عدد کامل */
 export function formatTomanShort(toman: number): string {
-  return toman % 1000 === 0 ? `${(toman / 1000).toLocaleString("en-US")} هزار تومان` : formatToman(toman);
+  return toman % 1000 === 0 ? tr(`${(toman / 1000).toLocaleString("en-US")} هزار تومان`, `${Math.round(toman).toLocaleString("en-US")} Toman`) : formatToman(toman);
 }
 
 /**
@@ -240,7 +257,7 @@ export function entryOffer(cfg: PricingConfig, plan: PaidPlanKey): { duration: D
   const duration = ds.find((d) => cfg.durations[d].months === 1) ?? ds[0];
   const months = cfg.durations[duration].months;
   const price = cfg.plans[plan][duration].price;
-  return { duration, months, price, label: `${months === 1 ? "ماهانه" : `${months} ماهه`} ${formatToman(price)}` };
+  return { duration, months, price, label: `${months === 1 ? tr("ماهانه", "Monthly") : tr(`${months} ماهه`, `${months} months`)} ${formatToman(price)}` };
 }
 
 // متن‌های ثابت توضیحی (FAQ، صفحه‌های سئو، llms.txt، متن تریال) به‌جای عدد
@@ -250,7 +267,7 @@ export const ROUTINE_MONTHLY_TOKEN = "{{routine_monthly}}";
 
 /** مثلا «ماهانه 99 هزار تومان» */
 export function routineMonthlyCopyFa(cfg: PricingConfig): string {
-  return `ماهانه ${formatTomanShort(monthlyPriceToman(cfg, "basic"))}`;
+  return tr(`ماهانه ${formatTomanShort(monthlyPriceToman(cfg, "basic"))}`, `${formatTomanShort(monthlyPriceToman(cfg, "basic"))} per month`);
 }
 
 /** همه‌ی رشته‌های داخل value (رشته/آرایه/آبجکت ساده) با نشانه‌های قیمت پر می‌شن */

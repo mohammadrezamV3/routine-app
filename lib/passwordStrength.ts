@@ -1,3 +1,4 @@
+import { tr } from "./i18n";
 // اندازه‌گیری واقعی قدرت رمز به‌جای شمارش ساده نوع کاراکتر — zxcvbn (متن‌باز
 // Dropbox) الگوهای واقعی مهاجم‌ها رو می‌سنجه: کلمات رایج، تاریخ، الگوی صفحه‌کلید،
 // تکرار و جایگزینی حروف با عدد (leet speak)، نه فقط «آیا عدد داره یا نه».
@@ -9,11 +10,12 @@
 // واقعا لازمه (کاربر رمز تایپ کرد) بارگذاریش می‌کنه.
 export type PasswordTier = "weak" | "medium" | "good" | "strong";
 
+// getter: زبان موقع خواندن (رندر) انتخاب می‌شه، نه موقع بارگذاری ماژول
 export const PASSWORD_TIER_LABELS: Record<PasswordTier, string> = {
-  weak: "ضعیف",
-  medium: "متوسط",
-  good: "خوب",
-  strong: "قوی",
+  get weak() { return tr("ضعیف", "Weak"); },
+  get medium() { return tr("متوسط", "Fair"); },
+  get good() { return tr("خوب", "Good"); },
+  get strong() { return tr("قوی", "Strong"); },
 };
 
 export const PASSWORD_TIER_ORDER: PasswordTier[] = ["weak", "medium", "good", "strong"];
@@ -41,6 +43,6 @@ export function isPasswordAcceptable(tier: PasswordTier): boolean {
 
 export function passwordTierError(tier: PasswordTier): string | null {
   if (isPasswordAcceptable(tier)) return null;
-  if (tier === "weak") return "رمز عبور خیلی ضعیفه — یه رمز طولانی‌تر و غیرقابل‌حدس‌تر انتخاب کن";
-  return "رمز عبور در حد متوسطه — برای ادامه باید حداقل در سطح «خوب» باشه";
+  if (tier === "weak") return tr("رمز عبور خیلی ضعیفه — یه رمز طولانی‌تر و غیرقابل‌حدس‌تر انتخاب کن", "Your password is too weak. Choose a longer, harder-to-guess one.");
+  return tr("رمز عبور در حد متوسطه — برای ادامه باید حداقل در سطح «خوب» باشه", "Your password is only fair. It must be at least \"Good\" to continue.");
 }

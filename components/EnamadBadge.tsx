@@ -1,3 +1,4 @@
+import { tr } from "@/lib/i18n";
 // کد رسمی نماد اعتماد الکترونیکی — دقیقا همون snippetی که پنل اینماد
 // برای این سایت صادر کرده (id/Code مخصوص این دامنه‌ست، دست‌کاری نکن).
 // alt رو (برخلاف خروجی خام اینماد که alt='' می‌ده) یه متن معنادار گذاشتم
@@ -15,7 +16,7 @@ export function EnamadBadge() {
       <img
         referrerPolicy="origin"
         src="https://trustseal.enamad.ir/logo.aspx?id=7422181&Code=pq9jwdSFVxQnPZsFD15gTuWGn4q37IIc"
-        alt="نماد اعتماد الکترونیکی"
+        alt={tr("نماد اعتماد الکترونیکی", "Electronic trust seal (Enamad)")}
         style={{ cursor: "pointer" }}
       />
     </a>

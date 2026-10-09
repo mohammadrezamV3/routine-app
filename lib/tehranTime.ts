@@ -1,4 +1,4 @@
-import { toJalali, J_MONTHS } from "@/lib/jalali";
+import { toJalali, jMonthName } from "@/lib/jalali";
 
 const TEHRAN_PARTS = new Intl.DateTimeFormat("en-CA", {
   timeZone: "Asia/Tehran",
@@ -24,7 +24,7 @@ export function formatTehranDateTime(iso: string | Date | null | undefined): str
   if (isNaN(d.getTime())) return "—";
   const p = tehranParts(d);
   const [, jm, jd] = toJalali(p.year, p.month, p.day);
-  return `${jd} ${J_MONTHS[jm - 1]} · ${String(p.hour).padStart(2, "0")}:${String(p.minute).padStart(2, "0")}`;
+  return `${jd} ${jMonthName(jm - 1)} · ${String(p.hour).padStart(2, "0")}:${String(p.minute).padStart(2, "0")}`;
 }
 
 /** دیرترین تاریخ بین چند مقدار (null/نامعتبر نادیده گرفته می‌شود) */

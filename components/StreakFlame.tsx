@@ -1,6 +1,7 @@
 import { faNum } from "@/lib/jalali";
 import { cn } from "@/lib/utils";
 import { getStreakTier } from "@/lib/streakTier";
+import { tr } from "@/lib/i18n";
 
 // نمایش شعله + عدد استریک برای یک عدد داده‌شده — presentational محض، بدون
 // خودش fetch کردن. هم برای استریک خودمون (StreakBadge) هم برای استریک
@@ -20,7 +21,7 @@ export function StreakFlame({
   compact?: boolean;
 }) {
   const { tier, name } = getStreakTier(streak);
-  const label = streak === null ? "در حال بارگذاری استریک" : `${faNum(streak)} روز — ${name}`;
+  const label = streak === null ? tr("در حال بارگذاری استریک", "Loading streak") : tr(`${faNum(streak)} روز — ${name}`, `${streak} ${streak === 1 ? "day" : "days"} - ${name}`);
 
   return (
     <span

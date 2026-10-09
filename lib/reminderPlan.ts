@@ -17,6 +17,7 @@
 import { tasksForDate, timeStartMinutes, toEnDigits } from "./schedule";
 import { addDaysIso, localIso, localMinuteOfDay, safeTimezone } from "./weeklyAnalysis/week";
 import { Medication, doseMinutesOfDay, isMedicationActiveOn, minutesToDoseTime } from "./medicationSchedule";
+import { tr } from "./i18n";
 
 /** یادآوری «به‌زودی» چند دقیقه قبل از شروع برنامه باز می‌شه */
 export const ROUTINE_SOON_MIN = 30;
@@ -131,15 +132,15 @@ export function planRoutineReminders(opts: {
       out.push({
         key: `soon:${t.id}:${iso}`, kind: "routine", dateIso: iso, itemId: t.id,
         from: soonFrom, until: startFrom, deadline: start,
-        title: "یادآوری برنامه",
-        body: `تا ${minutesLeftText(start, nowMs)} دقیقه دیگه وقت «${t.name}» می‌رسه.`,
+        title: tr("یادآوری برنامه", "Plan reminder"),
+        body: tr(`تا ${minutesLeftText(start, nowMs)} دقیقه دیگه وقت «${t.name}» می‌رسه.`, `"${t.name}" is due in ${minutesLeftText(start, nowMs)} minutes.`),
         url: "/weekly",
       });
       out.push({
         key: `start:${t.id}:${iso}`, kind: "routine", dateIso: iso, itemId: t.id,
         from: startFrom, until: start, deadline: start,
-        title: "یادآوری برنامه",
-        body: `«${t.name}» همین الان شروع می‌شه.`,
+        title: tr("یادآوری برنامه", "Plan reminder"),
+        body: tr(`«${t.name}» همین الان شروع می‌شه.`, `"${t.name}" is starting now.`),
         url: "/weekly",
       });
     }
@@ -163,8 +164,11 @@ export function planMedicationReminders(opts: { tz: string; now: Date; meds: Med
         out.push({
           key: `med:${med.id}:${iso}:${doseMin}`, kind: "med", dateIso: iso, itemId: med.id,
           from: dose - MED_LEAD_MIN * 60_000, until: dose, deadline: dose,
-          title: "یادآوری دارو",
-          body: `نوبت «${med.name}» ساعت ${toEnDigits(minutesToDoseTime(doseMin))} — ${minutesLeftText(dose, nowMs)} دقیقه‌ی دیگه.${med.note ? " " + med.note : ""}`,
+          title: tr("یادآوری دارو", "Medication reminder"),
+          body: tr(
+            `نوبت «${med.name}» ساعت ${toEnDigits(minutesToDoseTime(doseMin))} — ${minutesLeftText(dose, nowMs)} دقیقه‌ی دیگه.${med.note ? " " + med.note : ""}`,
+            `Time for "${med.name}" at ${toEnDigits(minutesToDoseTime(doseMin))}, in ${minutesLeftText(dose, nowMs)} minutes.${med.note ? " " + med.note : ""}`,
+          ),
           url: "/",
         });
       }
@@ -180,8 +184,8 @@ export function planExerciseReminder(opts: { tz: string; now: Date }): PlannedRe
   return {
     key: `exercise:${today}`, kind: "exercise", dateIso: today,
     from: zonedToUtcMs(today, EXERCISE_REMINDER_HOUR * 60, tz), until: end, deadline: end,
-    title: "یادآوری تمرین",
-    body: "برنامه‌ی ورزشی امروز هنوز ثبت نشده.",
+    title: tr("یادآوری تمرین", "Workout reminder"),
+    body: tr("برنامه‌ی ورزشی امروز هنوز ثبت نشده.", "Today's workout plan has not been logged yet."),
     url: "/exercise",
   };
 }

@@ -7,6 +7,7 @@ import { getAccount, activeModulesOf } from "@/lib/accountCache";
 import { ROUTINE_PLAN_KEY, ROUTINE_TRIAL_DAYS } from "@/lib/trial";
 import { entryOffer } from "@/lib/planPricing";
 import { usePlanPricing } from "@/lib/usePlanPricing";
+import { tr } from "@/lib/i18n";
 
 type GateModule = "ROUTINE" | "SLEEP" | "EXERCISE" | "CALORIE" | "TRADE" | "ROADMAP" | "AI_INSIGHT";
 
@@ -81,15 +82,15 @@ function GateDenied({ module }: { module: GateModule }) {
           <svg viewBox="0 0 24 24" fill="none"><rect x="4.5" y="10.5" width="15" height="10" rx="2.2" stroke="currentColor" strokeWidth="1.7" /><path d="M8 10.5V7.8a4 4 0 0 1 8 0v2.7" stroke="currentColor" strokeWidth="1.7" strokeLinecap="round" /></svg>
         </span>
         <div className="module-gate-msg">
-          {routine ? `دوره‌ی ${ROUTINE_TRIAL_DAYS} روزه‌ی رایگان «روتین من» تموم شد` : "اشتراک این بخش رو نداری"}
+          {routine ? tr(`دوره‌ی ${ROUTINE_TRIAL_DAYS} روزه‌ی رایگان «روتین من» تموم شد`, `Your ${ROUTINE_TRIAL_DAYS}-day free trial of My Routine has ended`) : tr("اشتراک این بخش رو نداری", "You do not have a subscription for this section")}
         </div>
-        {routine && <div className="module-gate-sub">{ready ? `برای ادامه، پلن «روتین من» ${offer.label}` : "برای ادامه، پلن «روتین من» رو بخر"}</div>}
+        {routine && <div className="module-gate-sub">{ready ? tr(`برای ادامه، پلن «روتین من» ${offer.label}`, `To continue, get the My Routine plan: ${offer.label}`) : tr("برای ادامه، پلن «روتین من» رو بخر", "To continue, get the My Routine plan")}</div>}
         <button
           type="button"
           className="module-gate-cta"
           onClick={() => router.push(target)}
         >
-          {routine ? "خرید «روتین من»" : "خرید اشتراک"}
+          {routine ? tr("خرید «روتین من»", "Get My Routine") : tr("خرید اشتراک", "Get a subscription")}
         </button>
       </div>
     </div>

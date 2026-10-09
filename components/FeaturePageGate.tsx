@@ -3,6 +3,7 @@ import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/auth";
 import type { FeatureKey } from "@/lib/featureFlags";
 import { resolveFeaturesFor } from "@/lib/featureFlagsServer";
+import { tr } from "@/lib/i18n";
 
 /**
  * گیت سمت سرور صفحه‌های هر بخش برای فلگ‌های پنل ادمین (/admin/features).
@@ -37,8 +38,8 @@ export function FeatureOffNotice({ home }: { home: string }) {
       <span className="module-gate-icon" aria-hidden="true">
         <svg viewBox="0 0 24 24" fill="none"><rect x="4.5" y="10.5" width="15" height="10" rx="2.2" stroke="currentColor" strokeWidth="1.7" /><path d="M8 10.5V7.8a4 4 0 0 1 8 0v2.7" stroke="currentColor" strokeWidth="1.7" strokeLinecap="round" /></svg>
       </span>
-      <div className="module-gate-msg">این بخش موقتا غیرفعال است</div>
-      <Link href={home} className="account-outline-btn feature-off-link">برگشت به صفحه اصلی</Link>
+      <div className="module-gate-msg">{tr("این بخش موقتا غیرفعال است", "This section is temporarily disabled")}</div>
+      <Link href={home} className="account-outline-btn feature-off-link">{tr("برگشت به صفحه اصلی", "Back to home")}</Link>
     </section>
   );
 }

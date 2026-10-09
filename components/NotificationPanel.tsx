@@ -12,6 +12,7 @@ import { fmtRelative } from "@/lib/mentorFormat";
 import { Spinner } from "./Spinner";
 import type { InAppNotification, NotificationsResponse } from "@/lib/mentorTypes";
 import { SETTING_KEYS } from "@/lib/userSettingKeys";
+import { tr, isEn } from "@/lib/i18n";
 import { ANNOUNCEMENT_READ_KEEP, type PublicAnnouncement } from "@/lib/announcements";
 
 type ServerNotif = { kind: "server"; id: string; title: string; body: string; url: string | null; readAt: string | null; createdAt: string };
@@ -75,24 +76,28 @@ const EXERCISE_REMINDER_HOUR = 17;
 // نشون داده می‌شن — برخلاف بقیه‌ی آیتم‌ها که هر بار از نو محاسبه می‌شن،
 // اینا فقط یک‌بار (با کلیک) به‌ازای هر کاربر/دستگاه بسته می‌شن، توی همون
 // UserSetting عمومی (کلید dismissedStaticNotifs) که برای مهمون هم localStorage کار می‌کنه.
-const STATIC_NOTIFS: Extract<NotifItem, { kind: "static" }>[] = [
+const staticNotifs = (): Extract<NotifItem, { kind: "static" }>[] => [
   {
     kind: "static",
     id: "welcome",
-    title: "به آریون خوش اومدی!",
-    body: "یه نگاه سریع به این‌که آریون چیکار برات می‌کنه.",
-    modalTitle: "به آریون خوش اومدی! 👋",
-    modalBody:
+    title: tr("به آریون خوش اومدی!", "Welcome to Arion!"),
+    body: tr("یه نگاه سریع به این‌که آریون چیکار برات می‌کنه.", "A quick look at what Arion does for you."),
+    modalTitle: tr("به آریون خوش اومدی! 👋", "Welcome to Arion! 👋"),
+    modalBody: tr(
       "آریون همه‌ی برنامه‌ات رو یه‌جا نگه می‌داره: روتین روزانه، خواب، بدنسازی و کالری، ژورنال ترید، و رودمپ یادگیری — بدون اینکه لازم باشه بین چندتا اپ جابه‌جا بشی.\n\nهر بخش رو از منوی همبرگری (بالا-راست) پیدا می‌کنی. اگه سوالی داشتی یا چیزی گیر کرد، از همین‌جا (زنگوله‌ی بالای صفحه) یا بخش «درباره ما» می‌تونی پیگیرش بشی.\n\nامیدواریم روزهای بهتری رو با آریون بسازی.",
+      "Arion keeps your whole plan in one place: daily routine, sleep, workout and calories, trading journal, and learning roadmaps, without switching between apps.\n\nYou can find every section in the menu (top-left). If you have a question or get stuck, follow up here (the bell at the top of the page) or in the \"About us\" section.\n\nWe hope you build better days with Arion.",
+    ),
   },
   {
     kind: "static",
     id: "pwa",
-    title: "آریون رو نصب کن",
-    body: "برای تجربه‌ی بهتر و سریع‌تر، به‌جای مرورگر، به‌صورت اپ نصبش کن.",
-    modalTitle: "نصب آریون به‌عنوان اپ (PWA)",
-    modalBody:
+    title: tr("آریون رو نصب کن", "Install Arion"),
+    body: tr("برای تجربه‌ی بهتر و سریع‌تر، به‌جای مرورگر، به‌صورت اپ نصبش کن.", "For a faster, better experience, install it as an app instead of using the browser."),
+    modalTitle: tr("نصب آریون به‌عنوان اپ (PWA)", "Install Arion as an app (PWA)"),
+    modalBody: tr(
       "آریون رو می‌تونی مثل یه اپ واقعی روی گوشیت نصب کنی — بدون کافه‌بازار/گوگل‌پلی، مستقیم از همین مرورگر:\n\nآیفون (سافاری): پایین صفحه، آیکون Share (مربع با فلش رو به بالا) رو بزن، بعد «Add to Home Screen» رو انتخاب کن.\n\nاندروید (کروم): از منوی سه‌نقطه‌ی بالای مرورگر، «Add to Home screen» یا «Install app» رو بزن.\n\nبعد نصب، آیکون آریون میاد رو صفحه‌ی اصلی گوشیت و بازش کردن دقیقا مثل یه اپ معمولیه — سریع‌تر بالا میاد و نوار آدرس مرورگر هم نشون داده نمی‌شه.",
+      "You can install Arion on your phone like a real app, straight from this browser, no app store needed:\n\niPhone (Safari): tap the Share icon at the bottom of the page (a square with an arrow pointing up), then choose \"Add to Home Screen\".\n\nAndroid (Chrome): open the three-dot menu at the top of the browser and tap \"Add to Home screen\" or \"Install app\".\n\nAfter installing, the Arion icon appears on your home screen and opens just like a normal app: it loads faster and the browser address bar is hidden.",
+    ),
   },
 ];
 
@@ -108,7 +113,7 @@ async function loadExerciseReminder(): Promise<NotifItem | null> {
     const logRes = await fetch(`/api/exercise/log?planId=${plan.id}&date=${isoLocal(new Date())}`);
     const logData = logRes.ok ? await logRes.json() : {};
     if (logData.completed) return null;
-    return { kind: "info", id: "exercise-today", title: "یادآوری تمرین", body: `برنامه‌ی ورزشی امروز (${todayPlan.focus}) هنوز ثبت نشده.` };
+    return { kind: "info", id: "exercise-today", title: tr("یادآوری تمرین", "Workout reminder"), body: tr(`برنامه‌ی ورزشی امروز (${todayPlan.focus}) هنوز ثبت نشده.`, `Today's workout plan (${todayPlan.focus}) has not been logged yet.`) };
   } catch {
     return null;
   }
@@ -133,7 +138,7 @@ export async function loadPendingNotifications(): Promise<NotifItem[]> {
   const annItems: AnnouncementNotif[] = announcements.map((a) => ({
     kind: "announcement", id: `ann:${a.id}`, title: a.title, body: a.body, createdAt: a.createdAt, read: readAnn.includes(a.id),
   }));
-  const staticItems = STATIC_NOTIFS.filter((n) => !dismissed.includes(n.id));
+  const staticItems = staticNotifs().filter((n) => !dismissed.includes(n.id));
   const items: NotifItem[] = [];
 
   const wantsExercise = prefs.exerciseReminders && new Date().getHours() >= EXERCISE_REMINDER_HOUR;
@@ -156,9 +161,9 @@ export async function loadPendingNotifications(): Promise<NotifItem[]> {
       if (daily.tasks[t.id]) continue;
 
       if (nowMinutes >= startMinutes - 30 && nowMinutes < startMinutes) {
-        items.push({ kind: "info", id: `soon:${t.id}`, title: "یادآوری برنامه", body: `تا 30 دقیقه دیگه وقت «${t.name}» می‌رسه.` });
+        items.push({ kind: "info", id: `soon:${t.id}`, title: tr("یادآوری برنامه", "Plan reminder"), body: tr(`تا 30 دقیقه دیگه وقت «${t.name}» می‌رسه.`, `"${t.name}" is due in 30 minutes.`) });
       } else if (nowMinutes >= startMinutes) {
-        items.push({ kind: "info", id: `now:${t.id}`, title: "یادآوری برنامه", body: `وقت «${t.name}» رسیده.` });
+        items.push({ kind: "info", id: `now:${t.id}`, title: tr("یادآوری برنامه", "Plan reminder"), body: tr(`وقت «${t.name}» رسیده.`, `It is time for "${t.name}".`) });
       }
     }
   }
@@ -194,7 +199,7 @@ export async function preloadNotifications(): Promise<NotifItem[]> {
 }
 
 // closing: والد منو رو برای پخش انیمیشن خروج (menu-motion) چند لحظه بعد از بسته‌شدن نگه می‌داره
-export function NotificationPanel({ onClose, anchor, closing = false }: { onClose: () => void; anchor: { top: number; right: number }; closing?: boolean }) {
+export function NotificationPanel({ onClose, anchor, closing = false }: { onClose: () => void; anchor: { top: number; edge: number }; closing?: boolean }) {
   useLockBodyScroll();
   const [items, setItems] = useState<NotifItem[] | null>(cachedItems);
   const [openStatic, setOpenStatic] = useState<{ modalTitle: string; modalBody: string } | null>(null);
@@ -241,7 +246,7 @@ export function NotificationPanel({ onClose, anchor, closing = false }: { onClos
       if (!res.ok) throw new Error();
     } catch {
       if (snapshot) updateItems(() => snapshot);
-      setServerError("علامت‌گذاری انجام نشد — دوباره تلاش کن");
+      setServerError(tr("علامت‌گذاری انجام نشد — دوباره تلاش کن", "Could not mark as read. Try again."));
     } finally {
       setMarkAllBusy(false);
     }
@@ -254,7 +259,7 @@ export function NotificationPanel({ onClose, anchor, closing = false }: { onClos
     setServerError(null);
     const res = await loadServerNotifications(oldest);
     setMoreBusy(false);
-    if (!res) { setServerError("بارگذاری نشد — دوباره تلاش کن"); return; }
+    if (!res) { setServerError(tr("بارگذاری نشد — دوباره تلاش کن", "Could not load. Try again.")); return; }
     serverHasMore = res.hasMore;
     setHasMore(res.hasMore);
     updateItems((prev) => [...prev, ...res.items.filter((n) => !prev.some((p) => p.id === n.id))]);
@@ -321,21 +326,21 @@ export function NotificationPanel({ onClose, anchor, closing = false }: { onClos
         className="notif-panel dash-scope open"
         data-state={closing ? "closed" : "open"}
         ref={panelRef}
-        style={{ position: "fixed", top: anchor.top, right: anchor.right, left: "auto" }}
+        style={{ position: "fixed", top: anchor.top, ...(isEn() ? { left: anchor.edge, right: "auto" } : { right: anchor.edge, left: "auto" }) }}
       >
         <div className="notif-panel-head" style={{ display: "flex", alignItems: "center", justifyContent: "space-between", gap: 8 }}>
-          <span>اطلاعیه‌ها</span>
+          <span>{tr("اطلاعیه‌ها", "Notifications")}</span>
           {items?.some((x) => x.kind === "server" && !x.readAt) && (
             <button type="button" className="trade-ghost-btn" style={{ padding: "3px 8px", fontSize: 11 }} onClick={markAllRead} disabled={markAllBusy}>
-              خواندن همه
+              {tr("خواندن همه", "Mark all read")}
             </button>
           )}
         </div>
         {serverError && <div className="trade-form-error" style={{ margin: "0 4px 6px" }}>{serverError}</div>}
         {items === null ? (
-          <div className="item-line is-loading" style={{ padding: "10px 4px" }}>در حال بارگذاری…</div>
+          <div className="item-line is-loading" style={{ padding: "10px 4px" }}>{tr("در حال بارگذاری…", "Loading…")}</div>
         ) : items.length === 0 ? (
-          <div className="item-line empty" style={{ padding: "10px 4px" }}>چیزی برای نمایش نیست</div>
+          <div className="item-line empty" style={{ padding: "10px 4px" }}>{tr("چیزی برای نمایش نیست", "Nothing to show")}</div>
         ) : (
           <div className="notif-panel-list">
             {items.map((it) =>
@@ -348,7 +353,7 @@ export function NotificationPanel({ onClose, anchor, closing = false }: { onClos
                   style={{ cursor: it.url ? "pointer" : "default", opacity: it.readAt ? 0.62 : 1 }}
                 >
                   <div className="notif-panel-item-title">
-                    {!it.readAt && <span aria-label="نخوانده" style={{ color: "var(--accent)", marginInlineEnd: 5 }}>●</span>}
+                    {!it.readAt && <span aria-label={tr("نخوانده", "Unread")} style={{ color: "var(--accent)", marginInlineEnd: 5 }}>●</span>}
                     {it.title}
                   </div>
                   {it.body && <div className="notif-panel-item-body">{it.body}</div>}
@@ -362,7 +367,7 @@ export function NotificationPanel({ onClose, anchor, closing = false }: { onClos
                   style={{ cursor: "pointer", opacity: it.read ? 0.62 : 1 }}
                 >
                   <div className="notif-panel-item-title">
-                    {!it.read && <span aria-label="نخوانده" style={{ color: "var(--accent)", marginInlineEnd: 5 }}>●</span>}
+                    {!it.read && <span aria-label={tr("نخوانده", "Unread")} style={{ color: "var(--accent)", marginInlineEnd: 5 }}>●</span>}
                     {it.title}
                   </div>
                   <div className="notif-panel-item-body notif-panel-item-clamp">{it.body}</div>
@@ -382,7 +387,7 @@ export function NotificationPanel({ onClose, anchor, closing = false }: { onClos
             )}
             {hasMore && (
               <button type="button" className="trade-ghost-btn" style={{ alignSelf: "center", margin: "6px auto 2px", display: "flex" }} onClick={loadMore} disabled={moreBusy}>
-                {moreBusy ? <Spinner size={13} /> : "اعلان‌های قبلی"}
+                {moreBusy ? <Spinner size={13} /> : tr("اعلان‌های قبلی", "Earlier notifications")}
               </button>
             )}
           </div>

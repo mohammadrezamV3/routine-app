@@ -23,6 +23,8 @@ import { getNotificationPermission, requestNotificationPermission, notifications
 import { subscribeToPush } from "@/lib/pushClient";
 import { takePreloaded, getPreloadedBootstrap } from "@/lib/preload";
 import { logoutAndRedirect } from "@/lib/logout";
+import { tr, isEn } from "@/lib/i18n";
+import { brandName } from "@/lib/brand";
 
 // این فقط با کلیک باز می‌شه (نه توی رندر اولیه‌ی هیچ صفحه‌ای لازمه)، ولی
 // NavDrawer خودش توی root layout هست و همه‌جا مانت می‌شه — پس اگه معمولی
@@ -145,43 +147,43 @@ function isGroup(item: NavItem): item is NavGroup {
   return "children" in item;
 }
 
-const LINKS: NavItem[] = [
+const getLinks = (): NavItem[] => [
   // داشبورد — نمای کلی همه‌ی بخش‌ها و صفحه‌ی اصلی بعد از ورود؛ پشت فلگ `dashboard` (پیش‌فرض روشن برای همه)
-  { href: "/dashboard", label: "داشبورد", icon: "dashboard", feature: "dashboard" },
+  { href: "/dashboard", label: tr("داشبورد", "Dashboard"), icon: "dashboard", feature: "dashboard" },
   // «روتین من»: برنامه‌ی روزانه و خواب دو صفحه و سیستم کاملا جدا، فقط در منو کنار هم
   {
-    label: "روتین من", icon: "weekly",
+    label: tr("روتین من", "My Routine"), icon: "weekly",
     children: [
-      { href: "/weekly", label: "برنامه روزانه", icon: "weekly", feature: "routine" },
-      { href: "/sleep", label: "خواب", icon: "sleep", module: "SLEEP", feature: "sleep" },
+      { href: "/weekly", label: tr("برنامه روزانه", "Daily plan"), icon: "weekly", feature: "routine" },
+      { href: "/sleep", label: tr("خواب", "Sleep"), icon: "sleep", module: "SLEEP", feature: "sleep" },
     ],
   },
-  { href: "/roadmaps", label: "رودمپ‌ها", icon: "roadmaps", feature: "roadmaps" },
+  { href: "/roadmaps", label: tr("رودمپ‌ها", "Roadmaps"), icon: "roadmaps", feature: "roadmaps" },
   // منتورها درست زیر رودمپ‌ها. گروه فقط صفحه‌های سمت شاگرد را دارد؛
   // «پنل منتور» (برای کسی که منتوری می‌کند) این‌جا نیست — در پاپ‌آپ پروفایل،
   // زیر «پنل کاربری»، کنار بقیه‌ی پنل‌ها. آیکون زیرمجموعه‌ها در داده هست ولی طبق درخواست قبلی
   // کاربر زیرمجموعه‌های منو آیکون رندر نمی‌کنند (globals.css → .nav-link-sub-item).
   {
-    label: "مربی‌ها", icon: "mentors", feature: "mentors",
+    label: tr("مربی‌ها", "Mentors"), icon: "mentors", feature: "mentors",
     children: [
-      { href: "/mentors", label: "مربی‌ها", icon: "mentorsDiscover" },
-      { href: "/mentorship", label: "مربی‌های من", icon: "mentorsMine" },
+      { href: "/mentors", label: tr("مربی‌ها", "Mentors"), icon: "mentorsDiscover" },
+      { href: "/mentorship", label: tr("مربی‌های من", "My mentors"), icon: "mentorsMine" },
     ],
   },
   {
-    label: "بدنسازی", icon: "exercise",
+    label: tr("بدنسازی", "Workout"), icon: "exercise",
     children: [
-      { href: "/exercise?tab=exercise", label: "برنامه تمرینی", icon: "exercise", module: "EXERCISE", feature: "exercise" },
-      { href: "/exercise?tab=calorie", label: "کالری‌شمار", icon: "food", module: "CALORIE", feature: "calorie" },
+      { href: "/exercise?tab=exercise", label: tr("برنامه تمرینی", "Workout plan"), icon: "exercise", module: "EXERCISE", feature: "exercise" },
+      { href: "/exercise?tab=calorie", label: tr("کالری‌شمار", "Calorie tracker"), icon: "food", module: "CALORIE", feature: "calorie" },
     ],
   },
   // ترید زیرمنو ندارد — با یک کلیک مستقیم می‌رود به هاب خودش، و انتخاب
   // بخش (ژورنال/چک‌لیست/تقویم/…) داخل همان صفحه انجام می‌شود.
-  { href: "/trade", label: "ترید", icon: "trade", module: "TRADE", feature: "trade" },
-  { href: "/analysis/weekly", label: "آنالیز هفتگی", icon: "weeklyReport", module: "AI_INSIGHT", feature: "weeklyAnalysis" },
-  { href: "/blog", label: "مقاله‌ها", icon: "blog", feature: "blog" },
-  { href: "/tools", label: "ابزارهای رایگان", icon: "tools" },
-  { href: "/about", label: "درباره ما", icon: "about", feature: "about" },
+  { href: "/trade", label: tr("ترید", "Trading"), icon: "trade", module: "TRADE", feature: "trade" },
+  { href: "/analysis/weekly", label: tr("آنالیز هفتگی", "Weekly review"), icon: "weeklyReport", module: "AI_INSIGHT", feature: "weeklyAnalysis" },
+  { href: "/blog", label: tr("مقاله‌ها", "Articles"), icon: "blog", feature: "blog" },
+  { href: "/tools", label: tr("ابزارهای رایگان", "Free tools"), icon: "tools" },
+  { href: "/about", label: tr("درباره ما", "About us"), icon: "about", feature: "about" },
 ];
 
 // کش‌شده بیرون کامپوننت — مثل الگوی NotificationPanel/AccountPanel، تا
@@ -214,8 +216,8 @@ export function NavDrawer() {
   // backdrop-filter داره، و یه پنل توی فرزندانش که خودش هم backdrop-filter
   // داره فقط لایه‌ی از‌قبل‌بلورشده‌ی تقریبا خالی همون stacking context رو
   // می‌بینه، نه محتوای واقعی پشت صفحه — پس هیچ‌وقت واقعا مات نمی‌شد.
-  const [profileAnchor, setProfileAnchor] = useState<{ top: number; right: number } | null>(null);
-  const [bellAnchor, setBellAnchor] = useState<{ top: number; right: number } | null>(null);
+  const [profileAnchor, setProfileAnchor] = useState<{ top: number; edge: number } | null>(null);
+  const [bellAnchor, setBellAnchor] = useState<{ top: number; edge: number } | null>(null);
   const [avatarUrl, setAvatarUrl] = useState<string | null>(cachedAvatarUrl);
   const { theme, toggle } = useTheme();
   const router = useRouter();
@@ -225,7 +227,7 @@ export function NavDrawer() {
   const authSlotRef = useRef<HTMLDivElement>(null);
   // بخش‌هایی که از پنل ادمین (/admin/features) برای این کاربر خاموشن از منو
   // حذف می‌شن؛ گروهی که همه‌ی زیرمجموعه‌هاش خاموشن هم کامل حذف می‌شه.
-  const visibleLinks = LINKS.filter((item) => {
+  const visibleLinks = getLinks().filter((item) => {
     if (item.feature && !featureVisible(features, item.feature)) return false;
     if (isGroup(item)) return item.children.some((c) => !c.feature || featureVisible(features, c.feature));
     return true;
@@ -269,7 +271,7 @@ export function NavDrawer() {
         setOpen(false);
         setNotifPanelOpen(false);
         const r = profileBtnRef.current?.getBoundingClientRect();
-        if (r) setProfileAnchor({ top: r.bottom + 12, right: window.innerWidth - r.right });
+        if (r) setProfileAnchor({ top: r.bottom + 12, edge: isEn() ? r.left : window.innerWidth - r.right });
       }
       return next;
     });
@@ -392,7 +394,7 @@ export function NavDrawer() {
         setProfileMenuOpen(false);
         setNotifCount(0);
         const r = bellBtnRef.current?.getBoundingClientRect();
-        if (r) setBellAnchor({ top: r.bottom + 12, right: window.innerWidth - r.right });
+        if (r) setBellAnchor({ top: r.bottom + 12, edge: isEn() ? r.left : window.innerWidth - r.right });
       }
       return next;
     });
@@ -422,10 +424,10 @@ export function NavDrawer() {
                 تعویض تم، تصویر تم جدید (که تا اون لحظه fetch نشده) یه تاخیر
                 دیدنی داشت تا دانلود بشه. */}
             {/* کاربر واردشده مستقیم به صفحه‌ی اصلی خودش (داشبورد) می‌ره، نه لندینگ و بعد ریدایرکت */}
-            <Link href={status === "authenticated" ? "/dashboard" : "/"} aria-label="رفتن به صفحه اصلی" className="topbar-logo-lockup-wrap">
+            <Link href={status === "authenticated" ? "/dashboard" : "/"} aria-label={tr("رفتن به صفحه اصلی", "Go to home")} className="topbar-logo-lockup-wrap">
               <Image
                 src="/images/logo-lockup-dark-theme.png"
-                alt="آریون"
+                alt={brandName()}
                 width={138}
                 height={34}
                 className={`topbar-logo-lockup${theme === "light" ? " topbar-logo-lockup-hidden" : ""}`}
@@ -433,7 +435,7 @@ export function NavDrawer() {
               />
               <Image
                 src="/images/logo-lockup-light-theme.webp"
-                alt="آریون"
+                alt={brandName()}
                 width={138}
                 height={34}
                 className={`topbar-logo-lockup${theme === "light" ? "" : " topbar-logo-lockup-hidden"}`}
@@ -445,7 +447,7 @@ export function NavDrawer() {
             <button
               id="menuBtn"
               className={`hamburger${open ? " active" : ""}`}
-              aria-label="باز کردن منو"
+              aria-label={tr("باز کردن منو", "Open menu")}
               onClick={openHamburgerDrawer}
             >
               <span></span><span></span><span></span>
@@ -455,7 +457,7 @@ export function NavDrawer() {
             ) : status === "authenticated" ? (
               <>
                 <div ref={authSlotRef} className="profile-chip-wrap">
-                  <button ref={profileBtnRef} className="profile-chip" aria-label="پروفایل" onClick={toggleProfileMenu}>
+                  <button ref={profileBtnRef} className="profile-chip" aria-label={tr("پروفایل", "Profile")} onClick={toggleProfileMenu}>
                     <span className="profile-chip-avatar">
                       {avatarUrl ? (
                         <img src={avatarUrl} alt="" className="profile-chip-avatar-img" />
@@ -469,7 +471,7 @@ export function NavDrawer() {
                       ref={profilePanelRef}
                       className="notif-panel profile-menu-panel open"
                       data-state={profilePresence.state}
-                      style={{ position: "fixed", top: profileAnchor.top, right: profileAnchor.right, left: "auto" }}
+                      style={{ position: "fixed", top: profileAnchor.top, ...(isEn() ? { left: profileAnchor.edge, right: "auto" } : { right: profileAnchor.edge, left: "auto" }) }}
                     >
                       <div className="notif-panel-list">
                         <div
@@ -477,7 +479,7 @@ export function NavDrawer() {
                           onClick={() => { setProfileMenuOpen(false); router.push("/account"); }}
                         >
                           <span className="nav-link-icon-svg">{ICONS.account}</span>
-                          <span>پنل کاربری</span>
+                          <span>{tr("پنل کاربری", "Account")}</span>
                         </div>
                         {features?.mentors === true && (
                           <div
@@ -485,7 +487,7 @@ export function NavDrawer() {
                             onClick={() => { setProfileMenuOpen(false); router.push("/mentor"); }}
                           >
                             <span className="nav-link-icon-svg">{ICONS.mentorPanel}</span>
-                            <span>پنل مربی</span>
+                            <span>{tr("پنل مربی", "Mentor panel")}</span>
                           </div>
                         )}
                         {((session?.user as any)?.isAdmin || (session?.user as any)?.isSuperAdmin) && (
@@ -494,7 +496,7 @@ export function NavDrawer() {
                             onClick={() => { setProfileMenuOpen(false); router.push("/admin"); }}
                           >
                             <span className="nav-link-icon-svg">{ICONS.admin}</span>
-                            <span>پنل ادمین</span>
+                            <span>{tr("پنل ادمین", "Admin panel")}</span>
                           </div>
                         )}
                         <div
@@ -502,7 +504,7 @@ export function NavDrawer() {
                           onClick={() => { setProfileMenuOpen(false); router.push("/subscription"); }}
                         >
                           <span className="nav-link-icon-svg">{ICONS.subscription}</span>
-                          <span>اشتراک</span>
+                          <span>{tr("اشتراک", "Subscription")}</span>
                         </div>
                         <div
                           className="notif-panel-item profile-menu-item"
@@ -510,7 +512,7 @@ export function NavDrawer() {
                           onClick={() => { setProfileMenuOpen(false); logoutAndRedirect(); }}
                         >
                           <span className="nav-link-icon-svg">{ICONS.logout}</span>
-                          <span>خروج از حساب</span>
+                          <span>{tr("خروج از حساب", "Log out")}</span>
                         </div>
                       </div>
                     </div>,
@@ -518,7 +520,7 @@ export function NavDrawer() {
                   )}
                 </div>
                 {featureVisible(features, "notifications") && <div className="bell-btn-wrap">
-                  <button ref={bellBtnRef} className="bell-btn" aria-label="اعلان‌ها" onClick={handleBellClick}>
+                  <button ref={bellBtnRef} className="bell-btn" aria-label={tr("اعلان‌ها", "Notifications")} onClick={handleBellClick}>
                     <svg viewBox="0 0 24 24" fill="none"><path d="M6 9.5a6 6 0 1 1 12 0c0 4 1.4 5.6 2 6.5H4c.6-.9 2-2.5 2-6.5Z" stroke="currentColor" strokeWidth="1.7" strokeLinecap="round" strokeLinejoin="round" /><path d="M9.5 19a2.6 2.6 0 0 0 5 0" stroke="currentColor" strokeWidth="1.7" strokeLinecap="round" /></svg>
                     {(notifCount > 0 || notifPermission !== "granted") && <span className="bell-dot" />}
                   </button>
@@ -533,7 +535,7 @@ export function NavDrawer() {
               <div ref={authSlotRef}>
                 <button className="topbar-signin-btn" onClick={() => router.push("/auth/login")}>
                   <span className="topbar-signin-icon">{ICONS.login}</span>
-                  <span>ورود</span>
+                  <span>{tr("ورود", "Log in")}</span>
                 </button>
               </div>
             )}
@@ -544,10 +546,10 @@ export function NavDrawer() {
 
       <div className={`nav-overlay${open ? " open" : ""}`} onClick={() => setOpen(false)} />
 
-      <nav className={`nav-drawer${open ? " open" : ""}`}>
+      <nav className={`nav-drawer${open ? " open" : ""}`} style={isEn() && !open ? { transform: "translateZ(0) translateX(-130%) scale(.94)" } : undefined}>
         <div className="nav-drawer-glass">
           <div className="nav-title">
-            <button onClick={toggle} className="theme-switch" aria-label="تغییر حالت نمایش">
+            <button onClick={toggle} className="theme-switch" aria-label={tr("تغییر حالت نمایش", "Toggle theme")}>
               <span className="ts-knob">
                 <span className="ts-icon ts-sun">
                   <svg viewBox="0 0 24 24" fill="none">
@@ -567,7 +569,7 @@ export function NavDrawer() {
                 </span>
               </span>
             </button>
-            <button onClick={() => setOpen(false)} className="nav-close" aria-label="بستن منو">×</button>
+            <button onClick={() => setOpen(false)} className="nav-close" aria-label={tr("بستن منو", "Close menu")}>×</button>
           </div>
           <LanguageSwitch className="nav-lang-switch" />
 
@@ -641,11 +643,11 @@ export function NavDrawer() {
             <div style={{ borderTop: "1px solid var(--line)", marginTop: 6, paddingTop: 6 }}>
               <Link href="/auth/login" prefetch onClick={() => setOpen(false)} className="nav-link nav-link-icon">
                 <span className="nav-link-icon-svg">{ICONS.login}</span>
-                <span>ورود</span>
+                <span>{tr("ورود", "Log in")}</span>
               </Link>
               <Link href="/auth/signup" prefetch onClick={() => setOpen(false)} className="nav-link nav-link-icon">
                 <span className="nav-link-icon-svg">{ICONS.signup}</span>
-                <span>ثبت‌نام</span>
+                <span>{tr("ثبت‌نام", "Sign up")}</span>
               </Link>
             </div>
           )}

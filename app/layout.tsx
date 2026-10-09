@@ -17,7 +17,7 @@ import { prisma } from "@/lib/prisma";
 import { PERF_INIT_SCRIPT } from "@/lib/perfTier";
 import { ADMIN_THEME_INIT_SCRIPT } from "@/lib/adminTheme";
 import { TAP_FEEDBACK_INIT_SCRIPT } from "@/lib/tapFeedback";
-import { BRAND_FA, BRAND_EN, BRAND_CATEGORY_FA, BRAND_TITLE, BRAND_DESC, OG_BASE } from "@/lib/brand";
+import { brandName, BRAND_FA, BRAND_EN, BRAND_CATEGORY_FA, BRAND_TITLE, BRAND_DESC, OG_BASE } from "@/lib/brand";
 import { SITE_URL, organizationJsonLd, websiteJsonLd, softwareApplicationJsonLd, siteNavigationJsonLd } from "@/lib/seo";
 import { PUBLIC_PAGES } from "@/lib/llmsContent";
 import { InlineBootstrap } from "@/components/InlineBootstrap";
@@ -35,7 +35,7 @@ import { MaintenanceBanner } from "@/components/MaintenanceBanner";
 import { getActiveEventThemeId } from "@/lib/eventThemeServer";
 import { EVENT_PREVIEW_KEY } from "@/lib/eventThemeState";
 import { getLocale } from "@/lib/i18nServer";
-import { dirOf } from "@/lib/i18n";
+import { dirOf, isEn } from "@/lib/i18n";
 import { I18nProvider } from "@/components/I18nProvider";
 
 // پیش‌نمایش تم مناسبتی فقط روی دستگاه ادمین: شناسه = اعمال همون تم، "none" = بدون تم.
@@ -72,24 +72,34 @@ const latin = Inter({
 
 // وریفیکیشن موتورهای جست‌وجو/نقشه — فقط وقتی env مقدار داره اضافه می‌شه؛
 // خالی‌بودنش نباید یک متاتگ verification خالی/نامعتبر توی <head> بذاره.
-const verification: Metadata["verification"] = {
+const verification: NonNullable<Metadata["verification"]> = {
   ...(process.env.GOOGLE_SITE_VERIFICATION ? { google: process.env.GOOGLE_SITE_VERIFICATION } : {}),
   ...(process.env.YANDEX_VERIFICATION ? { yandex: process.env.YANDEX_VERIFICATION } : {}),
   ...(process.env.BING_SITE_VERIFICATION ? { other: { "msvalidate.01": process.env.BING_SITE_VERIFICATION } } : {}),
 };
 
-export const metadata: Metadata = {
+const EN_TITLE = `${BRAND_EN} | Daily planner, workout, calorie tracker and trading journal`;
+const EN_DESC =
+  `${BRAND_EN} is an app for managing everyday life: daily and weekly routine, habit and task tracking, ` +
+  `AI-assisted workout plans, calorie counting, and a trading journal, all under one account.`;
+
+export function generateMetadata(): Metadata {
+  // انگلیسی: عنوان/توضیح/کلمات کلیدی انگلیسی؛ فارسی دقیقا همون قبلی
+  const en = isEn();
+  const title = en ? EN_TITLE : BRAND_TITLE;
+  const desc = en ? EN_DESC : BRAND_DESC;
+  return {
   metadataBase: new URL(SITE_URL),
   title: {
-    default: BRAND_TITLE,
+    default: title,
     // صفحات داخلی با metadata خودشون این default رو override می‌کنن؛
     // اگه صفحه‌ای عمدا metadata نده (صفحات خصوصی که noindex هستن)، همین
     // fallback عمومی نشون داده می‌شه — قابل قبوله چون این صفحات ایندکس
     // نمی‌شن، فقط برای عنوان تب مرورگر لازمه.
-    template: `%s | ${BRAND_FA}`,
+    template: `%s | ${brandName()}`,
   },
-  description: BRAND_DESC,
-  applicationName: BRAND_FA,
+  description: desc,
+  applicationName: brandName(),
   category: "productivity",
   creator: BRAND_EN,
   publisher: BRAND_EN,
@@ -106,20 +116,26 @@ export const metadata: Metadata = {
   // کلمه‌کلیدی صریح لازم نیست (گوگل سال‌هاست meta keywords رو نادیده
   // می‌گیره)، ولی این‌ها سیگنال برند رو تقویت می‌کنن — پوشش همه‌ی بخش‌های
   // واقعی محصول، نه فقط روتین.
-  keywords: [
-    BRAND_FA, BRAND_EN, BRAND_CATEGORY_FA, `${BRAND_CATEGORY_FA} ${BRAND_FA}`,
-    "برنامه روتین روزانه", "مدیریت عادت", "برنامه‌ریزی روزانه", "تقویم شمسی",
-    "برنامه بدنسازی هوشمند", "کالری‌شمار فارسی", "ژورنال ترید", "ژورنال معاملاتی فارسی",
-    "رودمپ یادگیری هوش مصنوعی", "اتصال متاتریدر", "تقویم اقتصادی فارکس",
-  ],
+  keywords: en
+    ? [
+        BRAND_EN, "daily routine planner", "habit tracker", "Jalali calendar planner",
+        "AI workout plan", "calorie tracker", "trading journal", "MetaTrader sync", "forex economic calendar",
+      ]
+    : [
+        BRAND_FA, BRAND_EN, BRAND_CATEGORY_FA, `${BRAND_CATEGORY_FA} ${BRAND_FA}`,
+        "برنامه روتین روزانه", "مدیریت عادت", "برنامه‌ریزی روزانه", "تقویم شمسی",
+        "برنامه بدنسازی هوشمند", "کالری‌شمار فارسی", "ژورنال ترید", "ژورنال معاملاتی فارسی",
+        "رودمپ یادگیری هوش مصنوعی", "اتصال متاتریدر", "تقویم اقتصادی فارکس",
+      ],
   // images این‌جا هم عمدا حذف شده — همون دلیل توضیح زیر twitter؛
   // app/opengraph-image.tsx تصویر ریشه رو خودکار تزریق می‌کنه.
   openGraph: {
     ...OG_BASE,
+    ...(en ? { locale: "en_US", siteName: BRAND_EN } : {}),
     images: undefined,
     url: SITE_URL,
-    title: BRAND_TITLE,
-    description: BRAND_DESC,
+    title,
+    description: desc,
   },
   // images عمدا این‌جا هاردکد نیست: نکست به‌صورت خودکار opengraph-image.tsx
   // خود هر مسیر رو (یا در نبودش، همین app/opengraph-image.tsx ریشه رو)
@@ -129,8 +145,8 @@ export const metadata: Metadata = {
   // /og.png عمومی رو نشون بده.
   twitter: {
     card: "summary_large_image",
-    title: BRAND_TITLE,
-    description: BRAND_DESC,
+    title,
+    description: desc,
   },
   // سافاری آیفون display:"standalone" manifest.ts رو نمی‌خونه — «افزودن به
   // صفحه‌ی اصلی» فقط با همین متاتگ‌ها یه اپ واقعی standalone می‌سازه (بدون
@@ -139,9 +155,10 @@ export const metadata: Metadata = {
   appleWebApp: {
     capable: true,
     statusBarStyle: "black-translucent",
-    title: BRAND_FA,
+    title: brandName(),
   },
 };
+}
 
 // Organization + WebSite + SoftwareApplication — یک گراف واحد (با @id)
 // که واقعا روی این پروژه صدق می‌کنه (یه اپ واقعی با برند مشخص)، بدون هیچ
