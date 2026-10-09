@@ -16,6 +16,7 @@ import { LoadingBlock, Spinner } from "@/components/Spinner";
 import { SegmentedTabs } from "@/components/SegmentedTabs";
 import { MentorConfirmDialog } from "@/components/MentorConfirmDialog";
 import { useLiveRefresh } from "@/lib/liveSync";
+import { tr } from "@/lib/i18n";
 import { hoursLabel, levelLabel, type PlanStage, type RoadmapPlan } from "@/lib/roadmapPlan";
 
 type Detail = {
@@ -102,7 +103,7 @@ export default function RoadmapDetailPage() {
     if (!data || busy) return;
     const stage = n ? data.plan.stages.find((s) => s.n === n) : undefined;
     // ساخت دوباره‌ی مرحله‌ای که جزئیات دارد، تیک کارهایش را هم می‌برد.
-    if (stage?.detailed && !window.confirm("جزئیات این مرحله دوباره ساخته شود؟ تیک کارهایش پاک می‌شود.")) return;
+    if (stage?.detailed && !window.confirm(tr("جزئیات این مرحله دوباره ساخته شود؟ تیک کارهایش پاک می‌شود.", "Rebuild this stage's details? Its task ticks will be cleared."))) return;
 
     const tag = target === "guide" ? "guide" : `stage-${n}`;
     setBusy(tag);
@@ -114,7 +115,7 @@ export default function RoadmapDetailPage() {
         body: JSON.stringify({ target, n }),
       });
       const out = await res.json().catch(() => null);
-      if (!res.ok) { setError(out?.error || "ساخته نشد — دوباره امتحان کن"); return; }
+      if (!res.ok) { setError(out?.error || tr("ساخته نشد — دوباره امتحان کن", "Could not build — please try again")); return; }
       setData((prev) => {
         if (!prev) return prev;
         if (target === "guide") return { ...prev, plan: { ...prev.plan, guide: out.guide } };
@@ -127,7 +128,7 @@ export default function RoadmapDetailPage() {
         };
       });
     } catch {
-      setError("ارتباط با سرور برقرار نشد — دوباره امتحان کن");
+      setError(tr("ارتباط با سرور برقرار نشد — دوباره امتحان کن", "Could not reach the server — please try again"));
     } finally {
       setBusy(null);
     }
@@ -175,7 +176,7 @@ export default function RoadmapDetailPage() {
     const res = await fetch(`/api/roadmaps/${params.id}`, { method: "DELETE" }).catch(() => null);
     if (!res?.ok) {
       setDeleting(false);
-      setDeleteError(res ? "حذف نشد — دوباره امتحان کن" : "ارتباط با سرور برقرار نشد — اتصال را چک کن");
+      setDeleteError(res ? tr("حذف نشد — دوباره امتحان کن", "Could not delete — please try again") : tr("ارتباط با سرور برقرار نشد — اتصال را چک کن", "Could not reach the server — check your connection"));
       return;
     }
     router.push("/roadmaps");
@@ -187,8 +188,8 @@ export default function RoadmapDetailPage() {
   if (data === null) {
     return (
       <section className="roadmaps-desktop rp-page">
-        <Link href="/roadmaps" className="trade-back-link"><ChevronRight size={15} /> رودمپ‌ها</Link>
-        <div className="trade-empty-state"><p>این مسیر پیدا نشد</p></div>
+        <Link href="/roadmaps" className="trade-back-link"><ChevronRight size={15} className="dir-flip" /> {tr("رودمپ‌ها", "Roadmaps")}</Link>
+        <div className="trade-empty-state"><p>{tr("این مسیر پیدا نشد", "This path was not found")}</p></div>
       </section>
     );
   }
@@ -201,14 +202,14 @@ export default function RoadmapDetailPage() {
 
   return (
     <section className="roadmaps-desktop rp-page">
-      <Link href="/roadmaps" className="trade-back-link"><ChevronRight size={15} /> رودمپ‌ها</Link>
+      <Link href="/roadmaps" className="trade-back-link"><ChevronRight size={15} className="dir-flip" /> {tr("رودمپ‌ها", "Roadmaps")}</Link>
 
       <RoadmapBuildStatus build={data.build} />
 
       <header className="trade-surface rp-hero">
         <div className="rp-hero-top">
-          <span className="rp-eyebrow">مسیر یادگیری · {roadmap.topic}</span>
-          <button type="button" className="trade-icon-btn danger" aria-label="حذف مسیر" onClick={openDeleteConfirm}>
+          <span className="rp-eyebrow">{tr("مسیر یادگیری", "Learning path")} · {roadmap.topic}</span>
+          <button type="button" className="trade-icon-btn danger" aria-label={tr("حذف مسیر", "Delete path")} onClick={openDeleteConfirm}>
             <Trash2 size={16} />
           </button>
         </div>
@@ -218,7 +219,7 @@ export default function RoadmapDetailPage() {
             <h1>{plan.title}</h1>
             {plan.summary && <p>{plan.summary}</p>}
           </div>
-          <div className="rp-ring" aria-label={`${progress.pct} درصد`}>
+          <div className="rp-ring" aria-label={tr(`${progress.pct} درصد`, `${progress.pct} percent`)}>
             <GradientRing value={progress.pct / 100} size={74} stroke={5} />
             <div className="rp-ring-text">
               <b>{faNum(progress.pct)}٪</b>
@@ -228,29 +229,29 @@ export default function RoadmapDetailPage() {
         </div>
 
         {roadmap.goal && (
-          <div className="rp-hero-goal"><Target size={14} /><span><b>هدفت:</b> {roadmap.goal}</span></div>
+          <div className="rp-hero-goal"><Target size={14} /><span><b>{tr("هدفت:", "Your goal:")}</b> {roadmap.goal}</span></div>
         )}
 
         <div className="rp-stats">
-          {plan.totalDuration && <Stat icon={<Clock size={14} />} label="مدت کل" value={plan.totalDuration} />}
-          <Stat icon={<Layers size={14} />} label="مرحله" value={faNum(plan.stages.length)} />
-          {levelLabel(plan.meta.level) && <Stat icon={<Gauge size={14} />} label="سطح شروع" value={levelLabel(plan.meta.level)!} />}
-          {hoursLabel(plan.meta.weeklyHours) && <Stat icon={<Timer size={14} />} label="در هفته" value={hoursLabel(plan.meta.weeklyHours)!} />}
+          {plan.totalDuration && <Stat icon={<Clock size={14} />} label={tr("مدت کل", "Total duration")} value={plan.totalDuration} />}
+          <Stat icon={<Layers size={14} />} label={tr("مرحله", "Stages")} value={faNum(plan.stages.length)} />
+          {levelLabel(plan.meta.level) && <Stat icon={<Gauge size={14} />} label={tr("سطح شروع", "Starting level")} value={levelLabel(plan.meta.level)!} />}
+          {hoursLabel(plan.meta.weeklyHours) && <Stat icon={<Timer size={14} />} label={tr("در هفته", "Per week")} value={hoursLabel(plan.meta.weeklyHours)!} />}
         </div>
 
         {nextStage && (
           <button type="button" className="rp-next" onClick={() => openStage(nextStage.n)}>
-            <span className="rp-next-label">قدم بعدی</span>
-            <span className="rp-next-title">مرحله‌ی {faNum(nextStage.n)} — {nextStage.title}</span>
-            <ChevronLeft size={16} />
+            <span className="rp-next-label">{tr("قدم بعدی", "Next step")}</span>
+            <span className="rp-next-title">{tr("مرحله‌ی", "Stage")} {faNum(nextStage.n)} — {nextStage.title}</span>
+            <ChevronLeft size={16} className="dir-flip" />
           </button>
         )}
       </header>
 
       {confirmDelete && (
         <MentorConfirmDialog
-          message={`مسیر «${plan.title}» و همه‌ی پیشرفتش حذف شود؟ این کار برگشت‌پذیر نیست.`}
-          confirmLabel="حذف مسیر"
+          message={tr(`مسیر «${plan.title}» و همه‌ی پیشرفتش حذف شود؟ این کار برگشت‌پذیر نیست.`, `Delete the path "${plan.title}" and all its progress? This cannot be undone.`)}
+          confirmLabel={tr("حذف مسیر", "Delete path")}
           busy={deleting}
           error={deleteError}
           onConfirm={removeRoadmap}
@@ -260,7 +261,7 @@ export default function RoadmapDetailPage() {
 
       {!!pending && (
         <div className="rp-notice">
-          جزئیات {faNum(pending)} مرحله در ساخت اول نرسید — مرحله را باز کن و «ساخت جزئیات» را بزن.
+          {tr(`جزئیات ${faNum(pending)} مرحله در ساخت اول نرسید — مرحله را باز کن و «ساخت جزئیات» را بزن.`, `Details for ${faNum(pending)} ${pending === 1 ? "stage" : "stages"} were not ready in the first build — open the stage and press "Build this stage's details".`)}
         </div>
       )}
       {error && <div className="trade-form-error">{error}</div>}
@@ -270,9 +271,9 @@ export default function RoadmapDetailPage() {
           active={tab}
           onChange={setTab}
           options={[
-            { value: "stages" as const, label: "مرحله‌ها" },
-            { value: "guide" as const, label: "راهنما" },
-            { value: "overview" as const, label: "نمای کلی" },
+            { value: "stages" as const, label: tr("مرحله‌ها", "Stages") },
+            { value: "guide" as const, label: tr("راهنما", "Guide") },
+            { value: "overview" as const, label: tr("نمای کلی", "Overview") },
           ]}
         />
       </div>
@@ -317,10 +318,10 @@ export default function RoadmapDetailPage() {
             )
           ) : (
             <div className="rp-pending-box">
-              <p>متن راهنمای این مسیر هنوز ساخته نشده.</p>
+              <p>{tr("متن راهنمای این مسیر هنوز ساخته نشده.", "The guide for this path has not been built yet.")}</p>
               <button type="button" className="trade-primary-btn" onClick={() => regenerate("guide")} disabled={!!busy}>
                 {busy === "guide" ? <Spinner size={13} /> : <Sparkles size={14} />}
-                {busy === "guide" ? "در حال ساخت…" : "ساخت راهنما"}
+                {busy === "guide" ? tr("در حال ساخت…", "Building…") : tr("ساخت راهنما", "Build guide")}
               </button>
             </div>
           )}
@@ -330,26 +331,26 @@ export default function RoadmapDetailPage() {
       {tab === "overview" && (
         <div className="rp-overview">
           {plan.meta.audience && (
-            <OverviewCard icon={<UserRound size={15} />} title="این مسیر برای کیه">
+            <OverviewCard icon={<UserRound size={15} />} title={tr("این مسیر برای کیه", "Who this path is for")}>
               <p className="rp-ov-text">{plan.meta.audience}</p>
             </OverviewCard>
           )}
           {!!plan.meta.outcomes.length && (
-            <OverviewCard icon={<Target size={15} />} title="آخر مسیر چه کارهایی ازت برمیاد">
+            <OverviewCard icon={<Target size={15} />} title={tr("آخر مسیر چه کارهایی ازت برمیاد", "What you will be able to do by the end")}>
               <ul className="rp-done">
                 {plan.meta.outcomes.map((o, i) => <li key={i}><Target size={13} /><span>{o}</span></li>)}
               </ul>
             </OverviewCard>
           )}
           {!!plan.meta.prerequisites.length && (
-            <OverviewCard icon={<Flag size={15} />} title="قبل از شروع">
+            <OverviewCard icon={<Flag size={15} />} title={tr("قبل از شروع", "Before you start")}>
               <div className="rp-tags">
                 {plan.meta.prerequisites.map((p, i) => <span key={i} className="rp-tag">{p}</span>)}
               </div>
             </OverviewCard>
           )}
           {!!plan.tools.length && (
-            <OverviewCard icon={<Wrench size={15} />} title="ابزارهای کل مسیر">
+            <OverviewCard icon={<Wrench size={15} />} title={tr("ابزارهای کل مسیر", "Tools for the whole path")}>
               <ul className="rp-tools">
                 {plan.tools.map((t, i) => (
                   <li key={i}>
@@ -363,7 +364,7 @@ export default function RoadmapDetailPage() {
             </OverviewCard>
           )}
           {!!plan.meta.certifications.length && (
-            <OverviewCard icon={<Award size={15} />} title="مدرک‌ها">
+            <OverviewCard icon={<Award size={15} />} title={tr("مدرک‌ها", "Certifications")}>
               <ul className="rp-tools">
                 {plan.meta.certifications.map((c, i) => (
                   <li key={i}><b className="rp-tool-name">{c.name}</b>{c.note && <span>{c.note}</span>}</li>
@@ -371,7 +372,7 @@ export default function RoadmapDetailPage() {
               </ul>
             </OverviewCard>
           )}
-          <OverviewCard icon={<Layers size={15} />} title="همه‌ی مرحله‌ها">
+          <OverviewCard icon={<Layers size={15} />} title={tr("همه‌ی مرحله‌ها", "All stages")}>
             <ol className="rp-mini-stages">
               {plan.stages.map((s) => (
                 <li key={s.n} className={data.stepProgress[String(s.n)] ? "done" : ""}>

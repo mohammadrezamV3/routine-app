@@ -17,6 +17,7 @@ import {
 } from "@/lib/routineAssistant";
 import { addDaysIso } from "@/lib/schedule";
 import type { CustomOccurrence } from "@/lib/storage";
+import { tr, isEn } from "@/lib/i18n";
 import { publishDataChanged, clientTabId } from "@/lib/realtime";
 
 // دستیار «مدیر برنامه» — تنها نقطه‌ای که مدل زبانی اجازه دارد برنامه‌های
@@ -34,8 +35,8 @@ export const dynamic = "force-dynamic";
 const MAX_MESSAGE_LEN = 500;
 
 /** متن ثابت رد پیام خارج از موضوع — عمدا از خود کد، نه از مدل. */
-const OFF_TOPIC_REPLY =
-  "من نومو‌ام، مدیر برنامه‌ات — بگو چه برنامه‌ای اضافه/جابه‌جا/حذف کنم.";
+const offTopicReply = () =>
+  tr("من نومو‌ام، مدیر برنامه‌ات — بگو چه برنامه‌ای اضافه/جابه‌جا/حذف کنم.", "I am Nomo, your schedule manager — tell me which plan to add, move or remove.");
 
 /**
  * آیا این کاربر اشتراک فعال دارد؟
@@ -167,7 +168,7 @@ export async function POST(req: NextRequest) {
   // و برای پیام‌های خارج از موضوع که سهمیه مصرف نمی‌کنند.
   if (!(await checkRateLimit(`routine-assistant:${userId}`, 15, 10 * 60 * 1000))) {
     return NextResponse.json(
-      { error: "پیام‌ها را خیلی سریع پشت هم فرستادی. چند دقیقه صبر کن و دوباره امتحان کن." },
+      { error: tr("پیام‌ها را خیلی سریع پشت هم فرستادی. چند دقیقه صبر کن و دوباره امتحان کن.", "You are sending messages too quickly. Wait a few minutes and try again.") },
       { status: 429 }
     );
   }
@@ -177,11 +178,11 @@ export async function POST(req: NextRequest) {
 
   const message = typeof parsed.body?.message === "string" ? parsed.body.message.trim() : "";
   if (!message) {
-    return NextResponse.json({ error: "چیزی ننوشتی. بگو با برنامه‌ات چه کار کنم." }, { status: 400 });
+    return NextResponse.json({ error: tr("چیزی ننوشتی. بگو با برنامه‌ات چه کار کنم.", "You did not write anything. Tell me what to do with your schedule.") }, { status: 400 });
   }
   if (message.length > MAX_MESSAGE_LEN) {
     return NextResponse.json(
-      { error: `پیامت خیلی بلند است (حداکثر ${MAX_MESSAGE_LEN} کاراکتر). کوتاه‌تر و مشخص‌تر بنویس.` },
+      { error: tr(`پیامت خیلی بلند است (حداکثر ${MAX_MESSAGE_LEN} کاراکتر). کوتاه‌تر و مشخص‌تر بنویس.`, `Your message is too long (max ${MAX_MESSAGE_LEN} characters). Make it shorter and more specific.`) },
       { status: 400 }
     );
   }
@@ -217,9 +218,11 @@ export async function POST(req: NextRequest) {
     if (usesBefore >= freeLimit) {
       return NextResponse.json(
         {
-          error:
+          error: tr(
             `${freeLimit} پیام رایگان نومو تمام شده. با فعال‌کردن اشتراک، ` +
             `بدون محدودیت می‌توانی برنامه‌هایت را با گفت‌وگو بچینی.`,
+            `Your ${freeLimit} free Nomo messages are used up. Activate a subscription to organise your schedule by chat without limits.`
+          ),
           quotaExhausted: true,
           quota: { unlimited: false, used: usesBefore, limit: freeLimit, remaining: 0 },
         },
@@ -256,7 +259,8 @@ export async function POST(req: NextRequest) {
       userId,
       history,
       (mentionText ? `تاریخ‌هایی که کاربر گفته (سیستم دقیق حساب کرده — همین‌ها را بنویس):\n${mentionText}\n\n` : "") +
-        `جدول تاریخ‌ها (میلادی | روز هفته و تاریخ جلالی):\n${buildCalendarTable(todayIso)}`
+        `جدول تاریخ‌ها (میلادی | روز هفته و تاریخ جلالی):\n${buildCalendarTable(todayIso)}` +
+        (isEn() ? "\n\nReply to the user in English; keep JSON keys and Persian day names as they are." : "")
     );
   } catch (err: any) {
     await refundQuota();
@@ -264,7 +268,7 @@ export async function POST(req: NextRequest) {
       context: { feature: "ROUTINE_ASSISTANT" },
     });
     return NextResponse.json(
-      { error: "الان نتوانستم به دستیار وصل شوم. یک دقیقه‌ی دیگر دوباره بفرست — این پیام سهمیه‌ات را مصرف نکرد." },
+      { error: tr("الان نتوانستم به دستیار وصل شوم. یک دقیقه‌ی دیگر دوباره بفرست — این پیام سهمیه‌ات را مصرف نکرد.", "I could not reach the assistant right now. Send it again in a minute — this message did not use your quota.") },
       { status: 503 }
     );
   }
@@ -280,11 +284,11 @@ export async function POST(req: NextRequest) {
   if (plan.offTopic) {
     await refundQuota();
     return NextResponse.json({
-      reply: OFF_TOPIC_REPLY,
+      reply: offTopicReply(),
       offTopic: true,
       applied: [],
       problems: [],
-      options: ["برنامه‌های امروزم را نشانم بده", "یک برنامه‌ی جدید اضافه کن"],
+      options: [tr("برنامه‌های امروزم را نشانم بده", "Show me today's plans"), tr("یک برنامه‌ی جدید اضافه کن", "Add a new plan")],
       changed: false,
       quota: quotaAfter(usesBefore),
     });
@@ -306,7 +310,7 @@ export async function POST(req: NextRequest) {
   // ---------- فقط سوال، بدون تغییر ----------
   if (!plan.ops.length) {
     return NextResponse.json({
-      reply: plan.reply || "چیزی برای تغییر پیدا نکردم. دقیق‌تر بگو با کدام برنامه چه کار کنم.",
+      reply: plan.reply || tr("چیزی برای تغییر پیدا نکردم. دقیق‌تر بگو با کدام برنامه چه کار کنم.", "I did not find anything to change. Be more specific about which plan and what to do."),
       applied: [],
       problems: [],
       options: [],
@@ -349,7 +353,7 @@ export async function POST(req: NextRequest) {
   const lines: string[] = [];
   if (outcome.applied.length) lines.push(...outcome.applied);
   if (outcome.problems.length) lines.push(...outcome.problems);
-  if (!lines.length) lines.push(plan.reply || "تغییری لازم نبود.");
+  if (!lines.length) lines.push(plan.reply || tr("تغییری لازم نبود.", "No change was needed."));
 
   return NextResponse.json({
     reply: lines.join("\n"),

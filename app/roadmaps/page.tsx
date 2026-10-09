@@ -14,6 +14,7 @@ import { MentorConfirmDialog } from "@/components/MentorConfirmDialog";
 import { faNum } from "@/lib/jalali";
 import { levelLabel } from "@/lib/roadmapPlan";
 import { useLiveRefresh } from "@/lib/liveSync";
+import { tr, pick } from "@/lib/i18n";
 
 type RoadmapCard = {
   id: string;
@@ -31,7 +32,14 @@ type RoadmapCard = {
 
 // چند موضوع نمونه برای حالت خالی — یک کلیک ویزارد را با همان موضوع باز
 // می‌کند، تا کاربری که نمی‌داند چه بنویسد جلوی یک فیلد خالی نماند.
-const SUGGESTIONS = ["برنامه‌نویسی وب", "امنیت شبکه", "تحلیل داده با پایتون", "طراحی UI/UX", "زبان انگلیسی", "ادیت ویدیو"];
+const SUGGESTIONS: { fa: string; en: string }[] = [
+  { fa: "برنامه‌نویسی وب", en: "Web development" },
+  { fa: "امنیت شبکه", en: "Network security" },
+  { fa: "تحلیل داده با پایتون", en: "Data analysis with Python" },
+  { fa: "طراحی UI/UX", en: "UI/UX design" },
+  { fa: "زبان انگلیسی", en: "English language" },
+  { fa: "ادیت ویدیو", en: "Video editing" },
+];
 
 export default function RoadmapsHub() {
   const { status } = useSession();
@@ -78,7 +86,7 @@ export default function RoadmapsHub() {
     const res = await fetch(`/api/roadmaps/${deleteTarget.id}`, { method: "DELETE" }).catch(() => null);
     if (!res?.ok) {
       setDeleting(false);
-      setDeleteError(res ? "حذف نشد — دوباره امتحان کن" : "ارتباط با سرور برقرار نشد — اتصال را چک کن");
+      setDeleteError(res ? tr("حذف نشد — دوباره امتحان کن", "Could not delete — please try again") : tr("ارتباط با سرور برقرار نشد — اتصال را چک کن", "Could not reach the server — check your connection"));
       return;
     }
     setDeleting(false);
@@ -89,10 +97,10 @@ export default function RoadmapsHub() {
   return (
     <section className="roadmaps-desktop rp-hub">
       <div className="trade-head-row">
-        <h1>رودمپ‌ها</h1>
+        <h1>{tr("رودمپ‌ها", "Roadmaps")}</h1>
         {status === "authenticated" && (
           <button type="button" className="trade-title-add-btn" onClick={() => setWizard({ topic: "" })}>
-            + مسیر جدید
+            {tr("+ مسیر جدید", "+ New path")}
           </button>
         )}
       </div>
@@ -104,20 +112,20 @@ export default function RoadmapsHub() {
           ) : !roadmaps.length ? (
             <div className="trade-surface rp-empty">
               <span className="rp-empty-icon"><Map size={26} /></span>
-              <h2>اولین مسیرت رو بساز</h2>
+              <h2>{tr("اولین مسیرت رو بساز", "Build your first path")}</h2>
               <p>
-                بگو چی می‌خوای یاد بگیری و برای چی. یه مسیر مرحله‌به‌مرحله می‌گیری که هر مرحله‌ش سرفصل‌های ریز،
-                کارهای عملی، پروژه، ابزار، منبع و معیار تموم‌شدن داره.
+                {tr(`بگو چی می‌خوای یاد بگیری و برای چی. یه مسیر مرحله‌به‌مرحله می‌گیری که هر مرحله‌ش سرفصل‌های ریز،
+                کارهای عملی، پروژه، ابزار، منبع و معیار تموم‌شدن داره.`, "Tell us what you want to learn and why. You get a step-by-step path where every stage has detailed topics, practical tasks, a project, tools, resources and a finish line.")}
               </p>
               <div className="rp-empty-chips">
                 {SUGGESTIONS.map((s) => (
-                  <button key={s} type="button" className="rp-chip-btn" onClick={() => setWizard({ topic: s })}>
-                    {s}
+                  <button key={s.fa} type="button" className="rp-chip-btn" onClick={() => setWizard({ topic: pick(s) })}>
+                    {pick(s)}
                   </button>
                 ))}
               </div>
               <button type="button" className="trade-primary-btn rp-empty-cta" onClick={() => setWizard({ topic: "" })}>
-                <Plus size={15} /> ساخت مسیر
+                <Plus size={15} /> {tr("ساخت مسیر", "Create path")}
               </button>
             </div>
           ) : (
@@ -130,7 +138,7 @@ export default function RoadmapsHub() {
                       <button
                         type="button"
                         className="trade-icon-btn danger rp-card-delete"
-                        aria-label="حذف مسیر"
+                        aria-label={tr("حذف مسیر", "Delete path")}
                         onClick={(e) => openDeleteConfirm(e, r)}
                       >
                         <Trash2 size={15} />
@@ -141,7 +149,7 @@ export default function RoadmapsHub() {
 
                     <div className="rp-card-meta">
                       {r.totalDuration && <span><Clock size={12} /> {r.totalDuration}</span>}
-                      {r.stageCount > 0 && <span><Layers size={12} /> {faNum(r.stageCount)} مرحله</span>}
+                      {r.stageCount > 0 && <span><Layers size={12} /> {faNum(r.stageCount)} {tr("مرحله", r.stageCount === 1 ? "stage" : "stages")}</span>}
                       {levelLabel(r.level) && <span>{levelLabel(r.level)}</span>}
                     </div>
 
@@ -150,7 +158,7 @@ export default function RoadmapsHub() {
                     <div className="rp-card-foot">
                       <div className="rp-bar"><span style={{ width: `${r.pct}%` }} /></div>
                       <span className="rp-card-pct">{faNum(r.pct)}٪</span>
-                      <ChevronLeft size={16} className="rp-card-arrow" />
+                      <ChevronLeft size={16} className="rp-card-arrow dir-flip" />
                     </div>
                   </Link>
                 ))}
@@ -160,7 +168,7 @@ export default function RoadmapsHub() {
           <RoadmapDisclaimer />
         </FeatureGate>
       ) : (
-        <AuthGate message="برای استفاده از این سرویس وارد شوید" />
+        <AuthGate message={tr("برای استفاده از این سرویس وارد شوید", "Sign in to use this service")} />
       )}
 
       {wizard && (
@@ -169,8 +177,8 @@ export default function RoadmapsHub() {
 
       {deleteTarget && (
         <MentorConfirmDialog
-          message={`مسیر «${deleteTarget.title}» و همه‌ی پیشرفتش حذف شود؟ این کار برگشت‌پذیر نیست.`}
-          confirmLabel="حذف مسیر"
+          message={tr(`مسیر «${deleteTarget.title}» و همه‌ی پیشرفتش حذف شود؟ این کار برگشت‌پذیر نیست.`, `Delete the path "${deleteTarget.title}" and all its progress? This cannot be undone.`)}
+          confirmLabel={tr("حذف مسیر", "Delete path")}
           busy={deleting}
           error={deleteError}
           onConfirm={removeRoadmap}
