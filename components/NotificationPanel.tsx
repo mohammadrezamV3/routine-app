@@ -326,7 +326,7 @@ export function NotificationPanel({ onClose, anchor, closing = false }: { onClos
         className="notif-panel dash-scope open"
         data-state={closing ? "closed" : "open"}
         ref={panelRef}
-        style={{ position: "fixed", top: anchor.top, ...(isEn() ? { left: anchor.edge, right: "auto" } : { right: anchor.edge, left: "auto" }) }}
+        style={{ position: "fixed", top: anchor.top, right: anchor.edge, left: "auto" }}
       >
         <div className="notif-panel-head" style={{ display: "flex", alignItems: "center", justifyContent: "space-between", gap: 8 }}>
           <span>{tr("اطلاعیه‌ها", "Notifications")}</span>

@@ -271,7 +271,7 @@ export function NavDrawer() {
         setOpen(false);
         setNotifPanelOpen(false);
         const r = profileBtnRef.current?.getBoundingClientRect();
-        if (r) setProfileAnchor({ top: r.bottom + 12, edge: isEn() ? r.left : window.innerWidth - r.right });
+        if (r) setProfileAnchor({ top: r.bottom + 12, edge: window.innerWidth - r.right });
       }
       return next;
     });
@@ -394,7 +394,7 @@ export function NavDrawer() {
         setProfileMenuOpen(false);
         setNotifCount(0);
         const r = bellBtnRef.current?.getBoundingClientRect();
-        if (r) setBellAnchor({ top: r.bottom + 12, edge: isEn() ? r.left : window.innerWidth - r.right });
+        if (r) setBellAnchor({ top: r.bottom + 12, edge: window.innerWidth - r.right });
       }
       return next;
     });
@@ -471,7 +471,7 @@ export function NavDrawer() {
                       ref={profilePanelRef}
                       className="notif-panel profile-menu-panel open"
                       data-state={profilePresence.state}
-                      style={{ position: "fixed", top: profileAnchor.top, ...(isEn() ? { left: profileAnchor.edge, right: "auto" } : { right: profileAnchor.edge, left: "auto" }) }}
+                      style={{ position: "fixed", top: profileAnchor.top, right: profileAnchor.edge, left: "auto" }}
                     >
                       <div className="notif-panel-list">
                         <div
@@ -546,7 +546,7 @@ export function NavDrawer() {
 
       <div className={`nav-overlay${open ? " open" : ""}`} onClick={() => setOpen(false)} />
 
-      <nav className={`nav-drawer${open ? " open" : ""}`} style={isEn() && !open ? { transform: "translateZ(0) translateX(-130%) scale(.94)" } : undefined}>
+      <nav className={`nav-drawer${open ? " open" : ""}`}>
         <div className="nav-drawer-glass">
           <div className="nav-title">
             <button onClick={toggle} className="theme-switch" aria-label={tr("تغییر حالت نمایش", "Toggle theme")}>

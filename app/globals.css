@@ -10098,9 +10098,12 @@ html[dir="ltr"] .wsearch-newform,
 html[dir="ltr"] .trade-cal-pnl,
 html[dir="ltr"] .outing-remove{ left:50%; right:auto; }
 
-/* کشوی منو از سمت چپ میاد */
-html[dir="ltr"] .nav-drawer{ transform:translateZ(0) translateX(-130%) scale(.94); }
-html[dir="ltr"] .nav-drawer.open{ transform:translateZ(0) translateX(0) scale(1); }
+/* هدر انگلیسی مثل سایت‌های انگلیسی: لوگو چپ، دکمه‌های هدر (منو، پروفایل، اعلان) راست؛
+   کشوی منو هم از همون سمت دکمه‌ی منو (راست) باز می‌شه — فارسی دقیقا همون قبلی */
+html[dir="ltr"] .topbar-actions{ inset-inline-start:auto; inset-inline-end:18px; flex-direction:row-reverse; }
+html[dir="ltr"] .topbar-actions-left{ inset-inline-end:auto; inset-inline-start:18px; }
+html[dir="ltr"] .nav-drawer{ inset-inline-start:auto; inset-inline-end:26px; }
+@media (max-width:700px){ html[dir="ltr"] .nav-drawer{ inset-inline-start:auto; inset-inline-end:14px; } }
 /* دستگیره‌ی سوییچ تم: حالت روشن در ltr به چپ می‌ره */
 html[dir="ltr"] body[data-theme="light"] .theme-switch .ts-knob{ transform:translateX(-22px); }
 /* خط زمان هفتگی: آیتم‌ها از چپ چیده می‌شن، پس وسط‌چینی با translateX(-50%) */

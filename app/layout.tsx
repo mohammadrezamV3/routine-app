@@ -1,6 +1,13 @@
 import type { Metadata, Viewport } from "next";
 import { Vazirmatn, Inter } from "next/font/google";
 import "./globals.css";
+import "@/components/ltr-shell.css";
+import "@/components/ltr-routine.css";
+import "@/components/ltr-trade.css";
+import "@/components/ltr-mentor.css";
+import "@/components/ltr-review.css";
+import "@/components/ltr-admin.css";
+import "@/components/ltr-public.css";
 import "./event-themes.css";
 import "./admin-theme.css";
 import { ThemeProvider } from "@/components/ThemeProvider";
