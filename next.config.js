@@ -174,6 +174,13 @@ const nextConfig = {
   async redirects() {
     return [
       ...canonicalHostRedirects(),
+      // بخش «ابزارهای رایگان» حذف شد؛ لینک‌های قدیمی به نزدیک‌ترین صفحه‌ی عمومی می‌روند
+      { source: "/tools", destination: "/", permanent: true },
+      { source: "/tools/bmi-calculator", destination: "/calorie-counter", permanent: true },
+      { source: "/tools/calorie-calculator", destination: "/calorie-counter", permanent: true },
+      { source: "/tools/lot-size-calculator", destination: "/trading-journal", permanent: true },
+      { source: "/tools/sleep-calculator", destination: "/", permanent: true },
+      { source: "/tools/:path*", destination: "/", permanent: true },
       {
         source: "/report/weekly",
         destination: "/analysis/weekly",

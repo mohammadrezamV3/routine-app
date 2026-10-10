@@ -2,7 +2,6 @@ import { BRAND_DESC, BRAND_FA, SOCIAL, SUPPORT_EMAIL } from "./brand";
 import { FEATURE_LIST_FA } from "./seo";
 import { sortedPosts } from "./blogPosts";
 import { BLOG_CATEGORIES, BLOG_CATEGORY_KEYS } from "./blog/categories";
-import { PUBLIC_TOOLS } from "./tools";
 
 /**
  * منبع مشترک برای llms.txt و llms-full.txt (کانونشن llmstxt.org).
@@ -27,19 +26,11 @@ export const PUBLIC_PAGES: { path: string; label: string; note: string }[] = [
   { path: "/forex-sessions", label: "ساعت جلسه‌های بازار فارکس", note: "زمان باز/بسته‌شدن بازارهای فارکس" },
   { path: "/learning-roadmap", label: "رودمپ یادگیری هوش‌مصنوعی", note: "به‌زودی برای عموم — فعلا در دسترس نیست" },
   { path: "/blog", label: "مقاله‌ها", note: "راهنماهای کاربردی درباره‌ی روتین، عادت و ترید" },
-  { path: "/tools", label: "ابزارهای رایگان", note: "ماشین‌حساب‌های رایگان: ساعت خواب، کالری روزانه، BMI و حجم لات فارکس" },
   { path: "/faq", label: "سوالات متداول", note: "پاسخ سوال‌های رایج درباره‌ی همه‌ی بخش‌ها" },
   { path: "/about", label: "درباره آریون", note: "معرفی تیم، تماس و شبکه‌های اجتماعی" },
 ];
 
-// ابزارهای رایگان و دسته‌های بلاگ — همان فهرست‌های lib/tools.ts و
-// lib/blog/categories.ts، تا llms و sitemap هیچ‌وقت از هم واگرا نشوند.
-export const TOOL_PAGES: { path: string; label: string; note: string }[] = PUBLIC_TOOLS.map((t) => ({
-  path: t.path,
-  label: t.label,
-  note: t.description,
-}));
-
+// دسته‌های بلاگ — همان فهرست lib/blog/categories.ts، تا llms و sitemap هیچ‌وقت از هم واگرا نشوند.
 export const BLOG_CATEGORY_PAGES: { path: string; label: string; note: string }[] = BLOG_CATEGORY_KEYS.map((key) => ({
   path: `/blog/category/${key}`,
   label: BLOG_CATEGORIES[key].title,
