@@ -8,7 +8,7 @@ import { Bookmark } from "lucide-react";
 import type { MentorCard as MentorCardData, SavedMentorsResponse } from "@/lib/mentorTypes";
 import { networkError, readApiError } from "@/lib/mentorFormat";
 import { M_DUR, mT } from "./MentorMotion";
-import { tr } from "@/lib/i18n";
+import { tr, iso } from "@/lib/i18n";
 
 // «ذخیره‌شده‌ها» (نشانک منتور) — یک منبع حالت برای همه‌ی کارت‌ها و پروفایل،
 // تا نشانک یک منتور در ویترین، نتیجه‌ها و تب ذخیره‌شده‌ها هم‌زمان عوض شود.
@@ -141,7 +141,7 @@ export function MentorSaveButton({ mentor, size = 16, className }: { mentor: Men
       type="button"
       className={`trade-icon-btn m-press mentor-save-btn${saved ? " is-on" : ""}${className ? ` ${className}` : ""}`}
       aria-pressed={saved}
-      aria-label={saved ? tr(`برداشتن ${name} از ذخیره‌شده‌ها`, `Remove ${name} from saved`) : tr(`ذخیره‌ی ${name}`, `Save ${name}`)}
+      aria-label={saved ? tr(`برداشتن ${name} از ذخیره‌شده‌ها`, `Remove ${iso(name)} from saved`) : tr(`ذخیره‌ی ${name}`, `Save ${iso(name)}`)}
       title={saved ? tr("برداشتن از ذخیره‌شده‌ها", "Remove from saved") : tr("ذخیره برای بعد", "Save for later")}
       onClick={(e) => { e.preventDefault(); e.stopPropagation(); ctx.toggle(mentor as MentorCardData); }}
     >

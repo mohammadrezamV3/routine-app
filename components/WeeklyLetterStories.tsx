@@ -14,7 +14,7 @@ import { AnimatePresence, motion, useReducedMotion, type Variants } from "framer
 import {
   Activity, ChevronLeft, ChevronRight, Compass, Crown, Flame, Gauge, Lightbulb, Medal, Pause, PenLine, Play, Quote, RotateCcw, Sparkles, Target, TrendingDown, TrendingUp, X, Zap, type LucideIcon,
 } from "lucide-react";
-import { isEn, tr, trv } from "@/lib/i18n";
+import { isEn, tr, trv, iso } from "@/lib/i18n";
 import { ANALYSIS_DOMAIN_LABELS } from "@/lib/weeklyAnalysis/types";
 import type { WeeklyLetterData } from "@/lib/weeklyLetter/types";
 import { useLockBodyScroll } from "@/lib/useLockBodyScroll";
@@ -146,7 +146,7 @@ function IntroSlide({ letter }: { letter: WeeklyLetterData }) {
         <span>{letterYear(letter.weekEnd)}</span>
       </div>
       <SItem className="wl-st-greet">
-        <b>{letter.greetingName ? tr(`سلام ${letter.greetingName}`, `Hi ${letter.greetingName}`) : tr("سلام", "Hi")}</b>
+        <b>{letter.greetingName ? tr(`سلام ${letter.greetingName}`, `Hi ${iso(letter.greetingName)}`) : tr("سلام", "Hi")}</b>
         <span>{tr("بیا هفته‌ات رو با هم مرور کنیم", "Let's look back at your week together")}</span>
       </SItem>
       <SItem className="wl-st-hint"><ChevronLeft size={16} className="dir-flip" />{tr("برای ادامه بزن", "Tap to continue")}</SItem>

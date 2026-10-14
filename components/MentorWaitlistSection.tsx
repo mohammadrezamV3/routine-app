@@ -13,7 +13,7 @@ import { offerRemainingLabel, positionLabel } from "@/lib/mentorWaitlist";
 import { publicUserName } from "@/lib/mentorTypes";
 import type { MentorWaitlistResponse, MentorWaitlistRow } from "@/lib/mentorTypes";
 import { GoldenName } from "@/components/GoldenName";
-import { tr } from "@/lib/i18n";
+import { tr, iso } from "@/lib/i18n";
 
 const ic = (Icon: typeof Hourglass, size: number) => <Icon size={size} strokeWidth={MI_STROKE} aria-hidden />;
 
@@ -85,7 +85,7 @@ export function MentorWaitlistSection() {
                         type="button"
                         className="trade-icon-btn"
                         onClick={() => { setError(null); setRemove(e); }}
-                        aria-label={tr(`خارج کردن ${name} از صف`, `Remove ${name} from the waitlist`)}
+                        aria-label={tr(`خارج کردن ${name} از صف`, `Remove ${iso(name)} from the waitlist`)}
                         title={tr("خارج کردن از صف", "Remove from waitlist")}
                       >
                         {ic(UserMinus, MI.btnSm)}
@@ -101,7 +101,7 @@ export function MentorWaitlistSection() {
       </div>
       {remove && (
         <MentorConfirmDialog
-          message={tr(`${publicUserName(remove.user)} از صف خارج بشه؟`, `Remove ${publicUserName(remove.user)} from the waitlist?`)}
+          message={tr(`${publicUserName(remove.user)} از صف خارج بشه؟`, `Remove ${iso(publicUserName(remove.user))} from the waitlist?`)}
           hint={remove.status === "OFFERED" ? tr("نوبتش به نفر بعدی صف می‌رسه.", "Their turn goes to the next person in line.") : tr("بهش خبر می‌دیم که فعلا جایی براش نیست.", "We will let them know there is no spot for them for now.")}
           confirmLabel={tr("خارج کردن", "Remove")}
           busy={busy}

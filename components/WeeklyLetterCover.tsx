@@ -10,7 +10,7 @@ import {
 import type { WeekArchetypeKey } from "@/lib/weeklyAnalysis/types";
 import type { WeeklyLetterData } from "@/lib/weeklyLetter/types";
 import { CountText, DOM_GRAD, GradeStamp, WL_EASE, useLite } from "./WeeklyLetterShared";
-import { tr } from "@/lib/i18n";
+import { tr, iso } from "@/lib/i18n";
 import { GradientRing } from "./GradientRing";
 import { letterYear, scoreIntensity } from "./WeeklyLetterUtils";
 
@@ -175,7 +175,7 @@ export function WeeklyLetterCover({
           )}
 
           <motion.div className="wl-intro" variants={item}>
-            <p className="wl-greet">{letter.greetingName ? tr(`سلام ${letter.greetingName}`, `Hi ${letter.greetingName}`) : tr("سلام", "Hi")}</p>
+            <p className="wl-greet">{letter.greetingName ? tr(`سلام ${letter.greetingName}`, `Hi ${iso(letter.greetingName)}`) : tr("سلام", "Hi")}</p>
             {letter.intro && <p className="wl-intro-text">{letter.intro}</p>}
           </motion.div>
         </div>

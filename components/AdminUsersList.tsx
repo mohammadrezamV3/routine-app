@@ -1,7 +1,7 @@
 "use client";
 
 import { Suspense, useCallback, useEffect, useRef, useState } from "react";
-import { tr } from "@/lib/i18n";
+import { tr, iso } from "@/lib/i18n";
 import Link from "next/link";
 import { usePathname, useRouter, useSearchParams } from "next/navigation";
 import { ArrowDown, ArrowUp, ArrowUpDown, Download, Search, X } from "lucide-react";
@@ -177,7 +177,7 @@ function Inner() {
           {meta.segments.map((s) => (
             <span key={s.id} className="au-chip au-seg">
               <button type="button" className="au-seg-btn" onClick={() => applySegment(s.filters)}>{s.name}</button>
-              {can("users.edit") && <button type="button" className="au-chip-x" aria-label={tr(`حذف بخش ${s.name}`, `Delete segment ${s.name}`)} onClick={() => deleteSegment(s.id)}><X size={11} /></button>}
+              {can("users.edit") && <button type="button" className="au-chip-x" aria-label={tr(`حذف بخش ${s.name}`, `Delete segment ${iso(s.name)}`)} onClick={() => deleteSegment(s.id)}><X size={11} /></button>}
             </span>
           ))}
         </div>
@@ -255,7 +255,7 @@ function Inner() {
                     {rows.map((u) => (
                       <tr key={u.id} className={`au-row-tr${selected.has(u.id) ? " is-selected" : ""}${openId === u.id ? " is-open" : ""}`} onClick={() => setParams({ u: u.id }, true)}>
                         <td className="admin-check-col" onClick={(e) => e.stopPropagation()}>
-                          <TickButton shape="square" size={20} checked={selected.has(u.id)} label={tr(`انتخاب ${displayName(u)}`, `Select ${displayName(u)}`)}
+                          <TickButton shape="square" size={20} checked={selected.has(u.id)} label={tr(`انتخاب ${displayName(u)}`, `Select ${iso(displayName(u))}`)}
                             onToggle={() => setSelected((s) => { const n = new Set(s); if (n.has(u.id)) n.delete(u.id); else n.add(u.id); return n; })} />
                         </td>
                         <td>

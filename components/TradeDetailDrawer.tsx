@@ -14,7 +14,7 @@ import {
   TradeEntryDetail,
 } from "@/lib/tradeTypes";
 import { TickButton } from "./TickButton";
-import { tr } from "@/lib/i18n";
+import { tr, iso } from "@/lib/i18n";
 
 // جزئیات کامل یک معامله. عمدا کشویی (نه صفحه‌ی جدا): کاربر معمولا چند
 // معامله را پشت‌سرهم مرور می‌کند و برگشتن به لیست نباید هربار یک ناوبری
@@ -172,7 +172,7 @@ export function TradeDetailDrawer({
             )}
 
             {entry.checklistSnapshot && entry.checklistSnapshot.length > 0 && (
-              <Section title={tr(`چک‌لیست: ${entry.checklistName || ""}`, `Checklist: ${entry.checklistName || ""}`)}>
+              <Section title={tr(`چک‌لیست: ${entry.checklistName || ""}`, `Checklist: ${iso(entry.checklistName)}`)}>
                 <div className="trade-checklist-progress">
                   <b className="mono">{faNum(entry.checklistDone ?? 0)} / {faNum(entry.checklistTotal ?? 0)}</b>
                   <span>{tr("وضعیت در لحظه‌ی ثبت", "Status when the trade was logged")}</span>

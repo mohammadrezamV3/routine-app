@@ -17,7 +17,7 @@
 import { tasksForDate, timeStartMinutes, toEnDigits } from "./schedule";
 import { addDaysIso, localIso, localMinuteOfDay, safeTimezone } from "./weeklyAnalysis/week";
 import { Medication, doseMinutesOfDay, isMedicationActiveOn, minutesToDoseTime } from "./medicationSchedule";
-import { tr } from "./i18n";
+import { tr, iso as bidiIso } from "./i18n";
 
 /** یادآوری «به‌زودی» چند دقیقه قبل از شروع برنامه باز می‌شه */
 export const ROUTINE_SOON_MIN = 30;
@@ -133,14 +133,14 @@ export function planRoutineReminders(opts: {
         key: `soon:${t.id}:${iso}`, kind: "routine", dateIso: iso, itemId: t.id,
         from: soonFrom, until: startFrom, deadline: start,
         title: tr("یادآوری برنامه", "Plan reminder"),
-        body: tr(`تا ${minutesLeftText(start, nowMs)} دقیقه دیگه وقت «${t.name}» می‌رسه.`, `"${t.name}" is due in ${minutesLeftText(start, nowMs)} minutes.`),
+        body: tr(`تا ${minutesLeftText(start, nowMs)} دقیقه دیگه وقت «${t.name}» می‌رسه.`, `"${bidiIso(t.name)}" is due in ${minutesLeftText(start, nowMs)} minutes.`),
         url: "/weekly",
       });
       out.push({
         key: `start:${t.id}:${iso}`, kind: "routine", dateIso: iso, itemId: t.id,
         from: startFrom, until: start, deadline: start,
         title: tr("یادآوری برنامه", "Plan reminder"),
-        body: tr(`«${t.name}» همین الان شروع می‌شه.`, `"${t.name}" is starting now.`),
+        body: tr(`«${t.name}» همین الان شروع می‌شه.`, `"${bidiIso(t.name)}" is starting now.`),
         url: "/weekly",
       });
     }
@@ -167,7 +167,7 @@ export function planMedicationReminders(opts: { tz: string; now: Date; meds: Med
           title: tr("یادآوری دارو", "Medication reminder"),
           body: tr(
             `نوبت «${med.name}» ساعت ${toEnDigits(minutesToDoseTime(doseMin))} — ${minutesLeftText(dose, nowMs)} دقیقه‌ی دیگه.${med.note ? " " + med.note : ""}`,
-            `Time for "${med.name}" at ${toEnDigits(minutesToDoseTime(doseMin))}, in ${minutesLeftText(dose, nowMs)} minutes.${med.note ? " " + med.note : ""}`,
+            `Time for "${bidiIso(med.name)}" at ${toEnDigits(minutesToDoseTime(doseMin))}, in ${minutesLeftText(dose, nowMs)} minutes.${med.note ? " " + bidiIso(med.note) : ""}`,
           ),
           url: "/",
         });

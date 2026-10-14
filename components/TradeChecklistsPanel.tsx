@@ -11,7 +11,7 @@ import { useAsyncAction } from "@/lib/useAsyncAction";
 import { TradeKebabMenu } from "./TradeKebabMenu";
 import { ChecklistEditor } from "./ChecklistEditor";
 import { useLiveRefresh } from "@/lib/liveSync";
-import { tr } from "@/lib/i18n";
+import { tr, iso } from "@/lib/i18n";
 
 type Item = { id: string; text: string; order: number };
 type Checklist = { id: string; name: string; color: string; required: boolean; archived: boolean; order: number; note: string | null; items: Item[] };
@@ -94,7 +94,7 @@ export function TradeChecklistsPanel({
             >
               <div className="trade-checklist-row-kebab">
                 <TradeKebabMenu
-                  label={tr(`گزینه‌های ${c.name}`, `Options for ${c.name}`)}
+                  label={tr(`گزینه‌های ${c.name}`, `Options for ${iso(c.name)}`)}
                   actions={[
                     { label: tr("ویرایش", "Edit"), icon: <Pencil size={14} />, onClick: () => setEditing(c) },
                     { label: tr("کپی", "Duplicate"), icon: <Copy size={14} />, onClick: () => duplicate(c.id), disabled: pendingKey === `dup:${c.id}` },

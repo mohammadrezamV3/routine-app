@@ -16,7 +16,7 @@ import { LoadingBlock, Spinner } from "@/components/Spinner";
 import { SegmentedTabs } from "@/components/SegmentedTabs";
 import { MentorConfirmDialog } from "@/components/MentorConfirmDialog";
 import { useLiveRefresh } from "@/lib/liveSync";
-import { tr } from "@/lib/i18n";
+import { tr, iso } from "@/lib/i18n";
 import { hoursLabel, levelLabel, type PlanStage, type RoadmapPlan } from "@/lib/roadmapPlan";
 
 type Detail = {
@@ -250,7 +250,7 @@ export default function RoadmapDetailPage() {
 
       {confirmDelete && (
         <MentorConfirmDialog
-          message={tr(`مسیر «${plan.title}» و همه‌ی پیشرفتش حذف شود؟ این کار برگشت‌پذیر نیست.`, `Delete the path "${plan.title}" and all its progress? This cannot be undone.`)}
+          message={tr(`مسیر «${plan.title}» و همه‌ی پیشرفتش حذف شود؟ این کار برگشت‌پذیر نیست.`, `Delete the path "${iso(plan.title)}" and all its progress? This cannot be undone.`)}
           confirmLabel={tr("حذف مسیر", "Delete path")}
           busy={deleting}
           error={deleteError}

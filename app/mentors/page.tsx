@@ -15,7 +15,7 @@ import { LoadingBlock, Spinner } from "@/components/Spinner";
 import { MENTOR_CATEGORIES, MENTOR_CATEGORY_META, isMentorCategory, type MentorCategory } from "@/lib/mentorCategories";
 import type { MentorCard as MentorCardData, MentorsListResponse, MentorsPopularResponse } from "@/lib/mentorTypes";
 import { networkError, readApiError } from "@/lib/mentorFormat";
-import { tr } from "@/lib/i18n";
+import { tr, iso } from "@/lib/i18n";
 import { faNum } from "@/lib/jalali";
 import {
   DEFAULT_FILTERS, MAX_RESPONSE_OPTIONS, MIN_RATING_OPTIONS, SEARCH_QUERY_MAX,
@@ -316,7 +316,7 @@ function Results({ filters, allView, onClear, onBack }: { filters: MentorFilters
             ) : (
               <div className="mentor-empty-search">
                 <MentorEmpty icon={<SearchX size={16} {...IC} />}>
-                  {filters.q ? tr(`مربی‌ای برای «${filters.q}» پیدا نشد`, `No mentors found for "${filters.q}"`) : tr("مربی‌ای با این فیلترها پیدا نشد", "No mentors match these filters")}
+                  {filters.q ? tr(`مربی‌ای برای «${filters.q}» پیدا نشد`, `No mentors found for "${iso(filters.q)}"`) : tr("مربی‌ای با این فیلترها پیدا نشد", "No mentors match these filters")}
                 </MentorEmpty>
                 <button type="button" className="account-outline-btn mentor-btn is-sm" onClick={onClear}>{tr("پاک کردن فیلترها", "Clear filters")}</button>
               </div>

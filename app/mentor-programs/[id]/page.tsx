@@ -24,7 +24,7 @@ import type { Feedback, Item, ProgramDetailResponse, ProgramTransitionAction } f
 import { publicUserName } from "@/lib/mentorTypes";
 import { fmtDateTime, fmtDay, networkError, readApiError } from "@/lib/mentorFormat";
 import { weekdayName, faNum, isoLocal } from "@/lib/jalali";
-import { tr } from "@/lib/i18n";
+import { tr, iso } from "@/lib/i18n";
 import { GoldenName } from "@/components/GoldenName";
 
 const FEEDBACK_MAX = 2000;
@@ -486,7 +486,7 @@ function FeedbackBlock({
       {canWrite && (
         <div className="mentor-field" style={{ marginTop: 12 }}>
           <div className="mentor-btn-group">
-            <label className="mentor-field-label" htmlFor="mentor-feedback-body">{tr(`بازخورد به ${target ? target.label : "کل برنامه"}`, `Feedback on ${target ? target.label : "the whole program"}`)}</label>
+            <label className="mentor-field-label" htmlFor="mentor-feedback-body">{tr(`بازخورد به ${target ? target.label : "کل برنامه"}`, `Feedback on ${target ? iso(target.label) : "the whole program"}`)}</label>
             {target && <button type="button" className="mentor-text-btn" onClick={onClearTarget}>{tr("تغییر به کل برنامه", "Switch to the whole program")}</button>}
           </div>
           <form className="routine-ai-composer" style={{ borderTop: "none", paddingTop: 0 }} onSubmit={(e) => { e.preventDefault(); send(); }}>

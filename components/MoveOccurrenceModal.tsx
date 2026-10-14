@@ -11,7 +11,7 @@ import { CustomOccurrence, Importance, setCustomOccurrences, setRemovedOccurrenc
 import { focusNextOnEnter } from "@/lib/formNav";
 import { useLockBodyScroll } from "@/lib/useLockBodyScroll";
 import { Spinner } from "./Spinner";
-import { tr } from "@/lib/i18n";
+import { tr, iso } from "@/lib/i18n";
 
 type Occ = { dayName: string; jsDay: number; time: string; id: string; custom?: boolean; importance?: Importance; tag?: string };
 type ScheduleOpts = { removedOccurrences: Set<string>; customOccurrences: CustomOccurrence[] };
@@ -76,7 +76,7 @@ export function MoveOccurrenceModal({
     if (conflict) {
       setFormError(null);
       setStatus("error");
-      setFormError(tr(`تداخل زمانی با «${conflict.name}» — منتقل نشد`, `Time conflict with "${conflict.name}" — not moved`));
+      setFormError(tr(`تداخل زمانی با «${conflict.name}» — منتقل نشد`, `Time conflict with "${iso(conflict.name)}" — not moved`));
       setTimeout(() => setStatus("idle"), 900);
       return;
     }
@@ -137,7 +137,7 @@ export function MoveOccurrenceModal({
       <div className="wsearch-newform dash-scope open">
         <div className="relative z-[1] add-program-glass" ref={formRef} onKeyDown={(e) => focusNextOnEnter(e, formRef)}>
           <div className="wsearch-newform-head">
-            <div className="wsearch-newform-title accent">{tr(`انتقال «${name}» به یک روز دیگر`, `Move "${name}" to another day`)}</div>
+            <div className="wsearch-newform-title accent">{tr(`انتقال «${name}» به یک روز دیگر`, `Move "${iso(name)}" to another day`)}</div>
             <button className="nav-close" onClick={onClose} aria-label={tr("بستن", "Close")}>×</button>
           </div>
 

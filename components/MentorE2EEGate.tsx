@@ -18,7 +18,7 @@ import {
   type LinkState,
 } from "@/lib/e2ee/client";
 import { faNum } from "@/lib/jalali";
-import { tr } from "@/lib/i18n";
+import { tr, iso } from "@/lib/i18n";
 import { LoadingBlock, Spinner } from "./Spinner";
 import { MentorConfirmDialog } from "./MentorConfirmDialog";
 
@@ -140,7 +140,7 @@ function ApproveDialog({ link }: { link: Extract<LinkState, { role: "approver" }
   return (
     <MentorConfirmDialog
       message={tr("آوردن پیام‌های قبلی به دستگاه تازه", "Bring earlier messages to the new device")}
-      hint={tr(`کد روی ${link.deviceLabel || "دستگاه تازه"}: ${faNum(link.code)}. فقط اگه همین کد رو اون‌جا می‌بینی تایید کن.`, `Code on ${link.deviceLabel || "the new device"}: ${faNum(link.code)}. Only confirm if you see the same code there.`)}
+      hint={tr(`کد روی ${link.deviceLabel || "دستگاه تازه"}: ${faNum(link.code)}. فقط اگه همین کد رو اون‌جا می‌بینی تایید کن.`, `Code on ${iso(link.deviceLabel) || "the new device"}: ${faNum(link.code)}. Only confirm if you see the same code there.`)}
       confirmLabel={busy ? (moved ? tr(`${faNum(moved)} مورد آورده شد`, `${faNum(moved)} brought over`) : tr("در حال آوردن", "Bringing over")) : tr("تایید", "Confirm")}
       danger={false}
       busy={busy}

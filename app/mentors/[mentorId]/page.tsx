@@ -22,7 +22,7 @@ import { MentorTermsAcceptance, isMentorTermsError, mentorTermsPayload, useMento
 import { LoadingBlock, Spinner } from "@/components/Spinner";
 import type { MentorProfileResponse, MyMentorship, Review, ReportTargetType } from "@/lib/mentorTypes";
 import { fmtDate, fmtRelative, networkError, readApiError } from "@/lib/mentorFormat";
-import { tr } from "@/lib/i18n";
+import { tr, iso } from "@/lib/i18n";
 import { faNum } from "@/lib/jalali";
 import { INTAKE_ANSWER_MAX, availabilityShort, responseTimeLabel } from "@/lib/mentorAvailability";
 import type { AvailabilityState, MyWaitlist } from "@/lib/mentorTypes";
@@ -375,7 +375,7 @@ function ConnectAction({
       )}
       {confirmCancel && (
         <MentorConfirmDialog
-          message={tr(`درخواست به ${mentorName} لغو شود؟`, `Cancel your request to ${mentorName}?`)}
+          message={tr(`درخواست به ${mentorName} لغو شود؟`, `Cancel your request to ${iso(mentorName)}?`)}
           hint={tr("بعدا می‌توانی دوباره درخواست بدهی.", "You can send a request again later.")}
           confirmLabel={tr("لغو درخواست", "Cancel request")}
           busy={busy === "cancel"}
@@ -464,7 +464,7 @@ function RequestModal({
   }
 
   return (
-    <MentorSheet open={open} onClose={onClose} title={tr(`درخواست مربی‌گری از ${mentorName}`, `Mentorship request to ${mentorName}`)} dismissible={!busy}>
+    <MentorSheet open={open} onClose={onClose} title={tr(`درخواست مربی‌گری از ${mentorName}`, `Mentorship request to ${iso(mentorName)}`)} dismissible={!busy}>
       <div className="mentor-form">
         <p className="mentor-muted">{tr("مربی تا وقتی در بخش دسترسی‌ها اجازه ندهی، هیچ بخشی از برنامه‌هایت را نمی‌بیند.", "Your mentor can't see any part of your programs until you allow it in the access settings.")}</p>
         {mentorCategories.length > 1 && (

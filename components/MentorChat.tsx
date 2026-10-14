@@ -10,7 +10,7 @@ import {
 } from "lucide-react";
 import type { ChatMessage, MessagesResponse } from "@/lib/mentorTypes";
 import { networkError, fmtDate, readApiError } from "@/lib/mentorFormat";
-import { isEn, tr } from "@/lib/i18n";
+import { isEn, tr, iso } from "@/lib/i18n";
 import { faNum, isoLocal } from "@/lib/jalali";
 import {
   ConversationCipher,
@@ -551,7 +551,7 @@ function ChatBody({
   return (
     <div className="mc-body">
       <div className="mc-thread thin-scroll" ref={threadRef} onScroll={onScroll}>
-        <div className="mc-thread-inner" role="log" aria-live="polite" aria-label={tr(`گفت‌وگو با ${peerLabel}`, `Chat with ${peerLabel}`)}>
+        <div className="mc-thread-inner" role="log" aria-live="polite" aria-label={tr(`گفت‌وگو با ${peerLabel}`, `Chat with ${iso(peerLabel)}`)}>
           {olderBusy && <div className="mc-older"><Spinner size={16} /></div>}
           {olderError && (
             <div className="mc-older">
@@ -693,7 +693,7 @@ function ChatBody({
           <div className="mv2-ms-syscard" role="status">
             <Smartphone size={18} strokeWidth={1.75} aria-hidden />
             <span className="mv2-ms-syscard-body">
-              <span>{tr(`${peerLabel} با یه دستگاه تازه وارد شده. اگه مطمئن نیستی، کد تایید رو با هم چک کنید.`, `${peerLabel} signed in on a new device. If you're not sure it's them, check the verification code together.`)}</span>
+              <span>{tr(`${peerLabel} با یه دستگاه تازه وارد شده. اگه مطمئن نیستی، کد تایید رو با هم چک کنید.`, `${iso(peerLabel)} signed in on a new device. If you're not sure it's them, check the verification code together.`)}</span>
               <span className="mv2-ms-syscard-actions">
                 <button type="button" className="mentor-text-btn" onClick={() => onOpenSheet?.("e2ee")}>{tr("چک کردن", "Check")}</button>
                 <button type="button" className="mentor-text-btn" onClick={async () => { await cipher?.acceptPeerKey(); setPeerChanged(false); }}>{tr("باشه", "OK")}</button>
@@ -709,12 +709,12 @@ function ChatBody({
           </div>
         ) : !peerReady ? (
           <div className="mc-notice">
-            <span>{tr(`${peerLabel} هنوز وارد بخش مربی نشده؛ با اولین ورودش می‌تونی پیام بدی`, `${peerLabel} hasn't opened the mentor section yet. You can message them once they do`)}</span>
+            <span>{tr(`${peerLabel} هنوز وارد بخش مربی نشده؛ با اولین ورودش می‌تونی پیام بدی`, `${iso(peerLabel)} hasn't opened the mentor section yet. You can message them once they do`)}</span>
             {nudge === "sent" ? (
-              <span className="mentor-muted">{tr(`به ${peerLabel} خبر دادیم`, `We let ${peerLabel} know`)}</span>
+              <span className="mentor-muted">{tr(`به ${peerLabel} خبر دادیم`, `We let ${iso(peerLabel)} know`)}</span>
             ) : (
               <button type="button" className="mentor-text-btn" onClick={askPeerToEnable} disabled={nudge === "busy"}>
-                {nudge === "busy" ? <Spinner size={14} /> : <><BellRing size={14} strokeWidth={1.75} aria-hidden /> {tr(`خبر دادن به ${peerLabel}`, `Notify ${peerLabel}`)}</>}
+                {nudge === "busy" ? <Spinner size={14} /> : <><BellRing size={14} strokeWidth={1.75} aria-hidden /> {tr(`خبر دادن به ${peerLabel}`, `Notify ${iso(peerLabel)}`)}</>}
               </button>
             )}
           </div>
@@ -755,7 +755,7 @@ function ChatBody({
                 value={draft}
                 maxLength={MAX_LEN + 200}
                 placeholder={tr("پیام بنویس...", "Write a message...")}
-                aria-label={tr(`پیام به ${peerLabel}`, `Message to ${peerLabel}`)}
+                aria-label={tr(`پیام به ${peerLabel}`, `Message to ${iso(peerLabel)}`)}
                 enterKeyHint={coarse ? "enter" : "send"}
                 onChange={(e) => setDraft(e.target.value)}
                 onKeyDown={(e) => {

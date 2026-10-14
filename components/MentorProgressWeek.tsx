@@ -8,7 +8,7 @@ import type { Item, ProgressCell, ProgressState, ProgressView } from "@/lib/ment
 import { summarizeDay } from "@/lib/mentorProgressCore";
 import { fmtWeekday, networkError, readApiError } from "@/lib/mentorFormat";
 import { weekdayShort, jMonthName, faNum, toJalali } from "@/lib/jalali";
-import { tr } from "@/lib/i18n";
+import { tr, iso } from "@/lib/i18n";
 
 // نمای هفتگی «پیشرفت خودکار» — فقط‌خواندنی. وضعیت هر آیتم از تیک‌های خود
 // شاگرد در «روتین من» می‌آید (lib/mentorProgress.ts)؛ شاگرد فقط می‌تواند برای
@@ -185,7 +185,7 @@ export function MentorProgressWeek({
                     type="button"
                     className="mentor-text-btn"
                     style={{ marginTop: 4 }}
-                    onClick={() => onFeedback(c.logId ? { itemId: it.id, logId: c.logId, label: tr(`اجرای «${it.title}»`, `Session of "${it.title}"`) } : { itemId: it.id, label: `«${it.title}»` })}
+                    onClick={() => onFeedback(c.logId ? { itemId: it.id, logId: c.logId, label: tr(`اجرای «${it.title}»`, `Session of "${iso(it.title)}"`) } : { itemId: it.id, label: `«${it.title}»` })}
                   >
                     <MessageSquareText {...BTN_SM} /> {c.logId ? tr("بازخورد به این اجرا", "Give feedback on this session") : tr("بازخورد به این کار", "Give feedback on this task")}
                   </button>

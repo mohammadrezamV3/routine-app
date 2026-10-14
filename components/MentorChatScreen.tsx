@@ -21,7 +21,7 @@ import { M_DUR, mT } from "./MentorMotion";
 import { publicUserName } from "@/lib/mentorTypes";
 import { fmtDate } from "@/lib/mentorFormat";
 import { GoldenName } from "@/components/GoldenName";
-import { dirSign, isEn, tr } from "@/lib/i18n";
+import { dirSign, isEn, tr, iso } from "@/lib/i18n";
 
 /**
  * صفحه‌ی گفت‌وگو (/mentorship/[id]/chat) — یک صفحه‌ی کامل مثل پیام‌رسان‌ها:
@@ -150,7 +150,7 @@ function ChatScreenBody({ id }: { id: string }) {
           <ChevronRight size={22} strokeWidth={1.75} aria-hidden className="dir-flip" />
         </Link>
         {rel ? (
-          <Link href={`/mentorship/${id}`} className="mc-pill mc-title" aria-label={tr(`${name}؛ صفحه‌ی همکاری`, `${name}, mentorship page`)}>
+          <Link href={`/mentorship/${id}`} className="mc-pill mc-title" aria-label={tr(`${name}؛ صفحه‌ی همکاری`, `${iso(name)}, mentorship page`)}>
             <b><GoldenName golden={rel?.row.counterpart.golden} staff={rel?.row.counterpart.staff}>{name}</GoldenName></b>
             <span>{statusLine}</span>
           </Link>

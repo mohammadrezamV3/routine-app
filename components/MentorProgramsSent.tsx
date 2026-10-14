@@ -16,7 +16,7 @@ import { fmtDate } from "@/lib/mentorFormat";
 import { exportCsvUrl } from "@/lib/mentorToolsTypes";
 import { publicUserName } from "@/lib/mentorTypes";
 import type { ProgramRow, ProgramsResponse } from "@/lib/mentorTypes";
-import { tr } from "@/lib/i18n";
+import { tr, iso } from "@/lib/i18n";
 
 const ic = (Icon: typeof Copy, size: number) => <Icon size={size} strokeWidth={MI_STROKE} aria-hidden />;
 
@@ -90,7 +90,7 @@ export function MentorProgramsSent() {
             <li key={p.id} className="mv2-pg-card">
               <div className="mv2-pg-card-top">
                 <ProgramStatusBadge status={p.status} changeRequested={cr} />
-                <MentorKebabMenu actions={actions} label={tr(`کارهای بیشتر روی ${p.title}`, `More actions for ${p.title}`)} />
+                <MentorKebabMenu actions={actions} label={tr(`کارهای بیشتر روی ${p.title}`, `More actions for ${iso(p.title)}`)} />
               </div>
               <h3 className="mv2-pg-card-title">
                 <Link href={`/mentor-programs/${p.id}`} prefetch={false}>{p.title}</Link>
@@ -104,7 +104,7 @@ export function MentorProgramsSent() {
               </p>
               {showBar && (
                 <div className="mv2-pg-card-bar">
-                  <MentorDashBar rate={p.progress.rate} label={tr(`پیشرفت ${p.title}`, `Progress on ${p.title}`)} />
+                  <MentorDashBar rate={p.progress.rate} label={tr(`پیشرفت ${p.title}`, `Progress on ${iso(p.title)}`)} />
                   <b>{fa(Math.round(normRate(p.progress.rate) * 100))}{tr("٪", "%")}</b>
                 </div>
               )}
@@ -117,7 +117,7 @@ export function MentorProgramsSent() {
       {tplFor && <MentorTemplateSaveDialog defaultName={tplFor.title} programId={tplFor.id} onClose={() => setTplFor(null)} />}
       {delFor && (
         <MentorConfirmDialog
-          message={tr(`برنامه‌ی «${delFor.title}» حذف بشه؟`, `Delete the program "${delFor.title}"?`)}
+          message={tr(`برنامه‌ی «${delFor.title}» حذف بشه؟`, `Delete the program "${iso(delFor.title)}"?`)}
           hint={tr("برنامه‌ی حذف‌شده برنمی‌گرده", "A deleted program cannot be restored")}
           confirmLabel={tr("حذف برنامه", "Delete program")}
           busy={delBusy}

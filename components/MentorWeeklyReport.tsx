@@ -1,6 +1,6 @@
 "use client";
 
-import { tr } from "@/lib/i18n";
+import { tr, iso } from "@/lib/i18n";
 import { useCallback, useEffect, useState } from "react";
 import { AlertCircle, CalendarClock, ClipboardCheck, Download, EyeOff, Flame, PauseCircle } from "lucide-react";
 import { MentorDashBar, MentorDashError, fa, mentorApi, pct } from "@/components/MentorDashKit";
@@ -104,7 +104,7 @@ function StudentReportDetails({ s, current }: { s: WeeklyStudentReport; current:
   }
   for (const p of s.scheduledPrograms.slice(0, 2)) {
     lines.push(
-      <MentorChip key={p.id} tone="info" icon={ic(CalendarClock, MI.chip)} title={tr(`«${p.title}» پس از پذیرش در این روز خودکار فعال می‌شود`, `"${p.title}" starts automatically on this day once accepted`)}>
+      <MentorChip key={p.id} tone="info" icon={ic(CalendarClock, MI.chip)} title={tr(`«${p.title}» پس از پذیرش در این روز خودکار فعال می‌شود`, `"${iso(p.title)}" starts automatically on this day once accepted`)}>
         {tr("شروع", "Starts")} {fmtDate(p.startDate)}
       </MentorChip>,
     );

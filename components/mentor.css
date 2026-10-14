@@ -1040,6 +1040,9 @@ body .mc-screen .mc-pill:focus-visible{ outline:2px solid var(--accent); outline
 }
 .mc-day{ position:sticky; top:calc(var(--mc-head-h) - 2px); z-index:1; pointer-events:none; }
 .mc-service span{ font-weight:500; }
+/* بنر رمزگذاری بالای رشته می‌شینه؛ رشته و جداکننده‌ی روز زیرش شروع بشن تا روی هم نیفتن */
+.mc-main:has(> .mentor-e2ee-line) .mc-thread-inner{ padding-top:calc(var(--mc-head-h) + 64px); }
+.mc-main:has(> .mentor-e2ee-line) .mc-day{ top:calc(var(--mc-head-h) + 56px); }
 
 /* ── حباب ───────────────────────────────────────────────────── */
 .mc-row{ display:flex; flex-direction:column; margin-top:3px; }

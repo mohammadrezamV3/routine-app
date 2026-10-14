@@ -13,7 +13,7 @@ import {
   Medication, MAX_MEDICATIONS, doseIntervalHours, doseMinutesOfDay, getMedications,
   medicationDaysLeft, minutesToDoseTime, setMedications, setMedicationsChecked,
 } from "@/lib/medications";
-import { tr, isEn } from "@/lib/i18n";
+import { tr, isEn, iso } from "@/lib/i18n";
 
 const todayIso = isoLocal(new Date());
 
@@ -135,7 +135,7 @@ export function DashMedicationCard({ delay }: { delay?: number }) {
                   <div className="flex shrink-0 items-center">
                     <button
                       type="button"
-                      aria-label={tr(`گزینه‌های ${m.name}`, `Options for ${m.name}`)}
+                      aria-label={tr(`گزینه‌های ${m.name}`, `Options for ${iso(m.name)}`)}
                       onClick={(e) => openMenu(e, m.id)}
                       className="flex h-6 w-6 items-center justify-center rounded-full bg-transparent p-0 text-dash-muted transition hover:text-dash-text"
                     >
@@ -158,7 +158,7 @@ export function DashMedicationCard({ delay }: { delay?: number }) {
 
                   <span
                     role="button"
-                    aria-label={notifyOn ? tr(`خاموش‌کردن یادآوری ${m.name}`, `Turn off reminder for ${m.name}`) : tr(`روشن‌کردن یادآوری ${m.name}`, `Turn on reminder for ${m.name}`)}
+                    aria-label={notifyOn ? tr(`خاموش‌کردن یادآوری ${m.name}`, `Turn off reminder for ${iso(m.name)}`) : tr(`روشن‌کردن یادآوری ${m.name}`, `Turn on reminder for ${iso(m.name)}`)}
                     onClick={() => toggleNotify(m)}
                     className={cn(
                       "flex h-7 w-7 shrink-0 cursor-pointer items-center justify-center rounded-xl transition hover:brightness-125 sm:h-9 sm:w-9",

@@ -4,7 +4,7 @@
 // ماژول‌ها از همون lib/adminAnalytics.ts میاد. هر بخش فقط وقتی حساب می‌شه که
 // ادمین دسترسی مربوطه رو داره.
 
-import { tr } from "@/lib/i18n";
+import { tr, iso } from "@/lib/i18n";
 import { planDisplayName } from "@/lib/subscriptionI18n";
 import { prisma } from "@/lib/prisma";
 import { hasPermission, type AdminPermission } from "@/lib/adminPermissions";
@@ -277,7 +277,7 @@ export async function buildOverview(access: Access, rangeKey: DashRange): Promis
   if (cu) {
     tasks.push((async () => {
       const rows = await prisma.user.findMany({ where: { deletedAt: null }, orderBy: { createdAt: "desc" }, take: 10, select: { id: true, name: true, lastName: true, username: true, createdAt: true } });
-      feedLists.push(rows.map((u) => ({ id: u.id, kind: "signup", text: tr(`${displayName(u)} ثبت‌نام کرد`, `${displayName(u)} signed up`), at: u.createdAt.toISOString(), href: `/admin/users/${u.id}` })));
+      feedLists.push(rows.map((u) => ({ id: u.id, kind: "signup", text: tr(`${displayName(u)} ثبت‌نام کرد`, `${iso(displayName(u))} signed up`), at: u.createdAt.toISOString(), href: `/admin/users/${u.id}` })));
     })());
   }
   if (cf) {
@@ -287,8 +287,8 @@ export async function buildOverview(access: Access, rangeKey: DashRange): Promis
         prisma.payment.findMany({ where: { paidAt: { not: null } }, orderBy: { paidAt: "desc" }, take: 10, include }),
         prisma.payment.findMany({ where: { paidAt: null }, orderBy: { createdAt: "desc" }, take: 10, include }),
       ]);
-      feedLists.push(okRows.map((p) => ({ id: p.id, kind: "purchase", text: tr(`${displayName(p.subscription.user)} پلن ${p.subscription.plan.nameFa} خرید`, `${displayName(p.subscription.user)} bought the ${planDisplayName(p.subscription.plan)} plan`), at: (p.paidAt as Date).toISOString(), href: "/admin/transactions" })));
-      feedLists.push(badRows.map((p) => ({ id: p.id, kind: "failed_payment", text: tr(`پرداخت ناموفق ${displayName(p.subscription.user)}`, `Failed payment: ${displayName(p.subscription.user)}`), at: p.createdAt.toISOString(), href: "/admin/transactions" })));
+      feedLists.push(okRows.map((p) => ({ id: p.id, kind: "purchase", text: tr(`${displayName(p.subscription.user)} پلن ${p.subscription.plan.nameFa} خرید`, `${iso(displayName(p.subscription.user))} bought the ${planDisplayName(p.subscription.plan)} plan`), at: (p.paidAt as Date).toISOString(), href: "/admin/transactions" })));
+      feedLists.push(badRows.map((p) => ({ id: p.id, kind: "failed_payment", text: tr(`پرداخت ناموفق ${displayName(p.subscription.user)}`, `Failed payment: ${iso(displayName(p.subscription.user))}`), at: p.createdAt.toISOString(), href: "/admin/transactions" })));
     })());
     tasks.push((async () => {
       const rows = await prisma.payment.findMany({
@@ -306,13 +306,13 @@ export async function buildOverview(access: Access, rangeKey: DashRange): Promis
   if (csup) {
     tasks.push((async () => {
       const rows = await prisma.supportTicket.findMany({ orderBy: { createdAt: "desc" }, take: 10, select: { id: true, subject: true, createdAt: true } });
-      feedLists.push(rows.map((t) => ({ id: t.id, kind: "ticket", text: tr(`تیکت جدید: ${t.subject.length > 40 ? t.subject.slice(0, 40) + "…" : t.subject}`, `New ticket: ${t.subject.length > 40 ? t.subject.slice(0, 40) + "…" : t.subject}`), at: t.createdAt.toISOString(), href: "/admin/support" })));
+      feedLists.push(rows.map((t) => ({ id: t.id, kind: "ticket", text: tr(`تیکت جدید: ${t.subject.length > 40 ? t.subject.slice(0, 40) + "…" : t.subject}`, `New ticket: ${iso(t.subject.length > 40 ? t.subject.slice(0, 40) + "…" : t.subject)}`), at: t.createdAt.toISOString(), href: "/admin/support" })));
     })());
   }
   if (cm) {
     tasks.push((async () => {
       const rows = await prisma.mentorProfile.findMany({ orderBy: { createdAt: "desc" }, take: 10, select: { id: true, createdAt: true, user: { select: { name: true, lastName: true, username: true } } } });
-      feedLists.push(rows.map((m) => ({ id: m.id, kind: "mentor", text: tr(`درخواست منتوری از ${displayName(m.user)}`, `Mentor request from ${displayName(m.user)}`), at: m.createdAt.toISOString(), href: "/admin/mentors" })));
+      feedLists.push(rows.map((m) => ({ id: m.id, kind: "mentor", text: tr(`درخواست منتوری از ${displayName(m.user)}`, `Mentor request from ${iso(displayName(m.user))}`), at: m.createdAt.toISOString(), href: "/admin/mentors" })));
     })());
   }
 

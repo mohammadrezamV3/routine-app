@@ -7,7 +7,7 @@ import { getAccount, activeModulesOf } from "@/lib/accountCache";
 import { ROUTINE_PLAN_KEY, ROUTINE_TRIAL_DAYS } from "@/lib/trial";
 import { entryOffer } from "@/lib/planPricing";
 import { usePlanPricing } from "@/lib/usePlanPricing";
-import { tr } from "@/lib/i18n";
+import { tr, iso } from "@/lib/i18n";
 
 type GateModule = "ROUTINE" | "SLEEP" | "EXERCISE" | "CALORIE" | "TRADE" | "ROADMAP" | "AI_INSIGHT";
 

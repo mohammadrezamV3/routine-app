@@ -5,7 +5,7 @@ import { TickButton } from "./TickButton";
 import { useEffect, useMemo, useState } from "react";
 import type { ReportTargetType } from "@/lib/mentorTypes";
 import { networkError, fmtDateTime, readApiError } from "@/lib/mentorFormat";
-import { tr } from "@/lib/i18n";
+import { tr, iso } from "@/lib/i18n";
 import { faNum } from "@/lib/jalali";
 import { Spinner } from "./Spinner";
 import { MentorField } from "./MentorUI";
@@ -244,7 +244,7 @@ export function MentorConversationReportSheet({
     if (!reason) { setReasonError(tr("یک دلیل انتخاب کن", "Choose a reason")); return; }
     if (reason === OTHER && !details.trim()) { setDetailsError(tr("برای «سایر» یه توضیح بنویس", "Add a few details for \"Other\"")); return; }
     const chosen = list.filter((c) => picked.has(c.id));
-    if (!chosen.some((c) => !c.mine)) { setPickError(tr(`حداقل یک پیام از ${peerName} انتخاب کن`, `Select at least one message from ${peerName}`)); return; }
+    if (!chosen.some((c) => !c.mine)) { setPickError(tr(`حداقل یک پیام از ${peerName} انتخاب کن`, `Select at least one message from ${iso(peerName)}`)); return; }
     setBusy(true);
     setError(null);
     try {

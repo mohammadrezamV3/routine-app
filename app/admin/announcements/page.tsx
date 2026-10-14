@@ -38,7 +38,7 @@ import {
   type AnnouncementStatus,
   type AnnouncementTone,
 } from "@/lib/announcements";
-import { tr } from "@/lib/i18n";
+import { tr, iso } from "@/lib/i18n";
 
 type Row = {
   id: string; title: string; body: string; active: boolean;
@@ -493,10 +493,10 @@ export default function AdminAnnouncementsPage() {
                           <button type="button" className="admin-btn sm" onClick={() => toggleActive(a)} disabled={toggling === a.id}>
                             {a.active ? tr("غیرفعال‌کردن", "Turn off") : tr("فعال‌کردن", "Turn on")}
                           </button>
-                          <button type="button" className="admin-btn sm" onClick={() => startEdit(a)} aria-label={tr(`ویرایش ${a.title}`, `Edit ${a.title}`)} title={tr("ویرایش", "Edit")}>
+                          <button type="button" className="admin-btn sm" onClick={() => startEdit(a)} aria-label={tr(`ویرایش ${a.title}`, `Edit ${iso(a.title)}`)} title={tr("ویرایش", "Edit")}>
                             <Pencil size={14} />
                           </button>
-                          <button type="button" className="admin-btn danger sm" onClick={() => setPendingDelete(a)} aria-label={tr(`حذف ${a.title}`, `Delete ${a.title}`)} title={tr("حذف", "Delete")}>
+                          <button type="button" className="admin-btn danger sm" onClick={() => setPendingDelete(a)} aria-label={tr(`حذف ${a.title}`, `Delete ${iso(a.title)}`)} title={tr("حذف", "Delete")}>
                             <Trash2 size={14} />
                           </button>
                         </div>

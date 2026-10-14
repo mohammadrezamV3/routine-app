@@ -14,7 +14,7 @@ import { TradeTagField } from "./TradeTagField";
 import { CAL_SYSTEM_KEY, CalSystem, TAG_COLORS, TradeTag } from "@/lib/tradeTypes";
 import { useLiveRefresh } from "@/lib/liveSync";
 import { Spinner } from "./Spinner";
-import { tr } from "@/lib/i18n";
+import { tr, iso } from "@/lib/i18n";
 
 type Note = {
   id: string; title: string; content: string; color: string; pinned: boolean;
@@ -149,7 +149,7 @@ export function TradeNotesPanel({
               <div className="trade-note-head">
                 <div className="trade-note-kebab" onClick={(e) => e.stopPropagation()}>
                   <TradeKebabMenu
-                    label={tr(`گزینه‌های ${n.title}`, `Options for ${n.title}`)}
+                    label={tr(`گزینه‌های ${n.title}`, `Options for ${iso(n.title)}`)}
                     actions={[
                       { label: tr("ویرایش", "Edit"), icon: <Pencil size={14} />, onClick: () => setEditing(n) },
                       {

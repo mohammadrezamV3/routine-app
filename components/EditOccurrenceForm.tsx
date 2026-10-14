@@ -8,7 +8,7 @@ import { findScheduleConflict, rangesOverlap } from "@/lib/conflict";
 import { TimeInput } from "./TimeInput";
 import { CustomOccurrence, Importance, IMPORTANCE_LABELS, setCustomOccurrences, setRemovedOccurrences } from "@/lib/storage";
 import { isoLocal, weekdayShort } from "@/lib/jalali";
-import { tr } from "@/lib/i18n";
+import { tr, iso } from "@/lib/i18n";
 import { SegmentedTabs } from "./SegmentedTabs";
 import { focusNextOnEnter } from "@/lib/formNav";
 import { useLockBodyScroll } from "@/lib/useLockBodyScroll";
@@ -126,7 +126,7 @@ export function EditOccurrenceForm({
             }
           }
         }
-        if (conflict) { conflictMsg = tr(`تداخل زمانی با «${conflict.name}» — ذخیره نشد`, `Time conflict with "${conflict.name}" — not saved`); break outer; }
+        if (conflict) { conflictMsg = tr(`تداخل زمانی با «${conflict.name}» — ذخیره نشد`, `Time conflict with "${iso(conflict.name)}" — not saved`); break outer; }
         normalizedRows.push({ jsDay, start: startFa, end: endFa, startMin, endMin });
       }
     }
@@ -201,7 +201,7 @@ export function EditOccurrenceForm({
       <div className="wsearch-newform occ-edit-form dash-scope open">
         <div className="relative z-[1] add-program-glass" ref={formRef} onKeyDown={(e) => focusNextOnEnter(e, formRef)}>
           <div className="wsearch-newform-head">
-            <div className="wsearch-newform-title accent">{tr(`ویرایش «${name}»`, `Edit "${name}"`)}</div>
+            <div className="wsearch-newform-title accent">{tr(`ویرایش «${name}»`, `Edit "${iso(name)}"`)}</div>
             <button className="nav-close" onClick={onClose} aria-label={tr("بستن", "Close")}>×</button>
           </div>
 

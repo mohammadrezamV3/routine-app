@@ -16,7 +16,7 @@
 import type { CustomOccurrence, Importance } from "./storage";
 import { addDaysIso, dayBeforeIso, jsDayOfIso, sameWeekIso, timeStartMinutes, toEnDigits, WEEK_ORDER } from "./schedule";
 import { isoLocal, J_MONTHS, jMonthName, weekdayName, jalaliToIso, toJalali, faNum } from "./jalali";
-import { tr } from "./i18n";
+import { tr, iso as bidiIso } from "./i18n";
 import { normalizeTimeToFa } from "./timeUtils";
 import { rangesOverlap } from "./conflict";
 
@@ -373,10 +373,10 @@ export function invalidDateMessage(m: DateMention): string {
     const len = month <= 6 ? 31 : month <= 11 ? 30 : 29;
     return tr(
       `«${m.text}» وجود ندارد — ${jMonthName(month - 1)} ${len} روز دارد${month === 12 ? " (در سال کبیسه 30)" : ""}. کدام روز را می‌گویی؟`,
-      `"${m.text}" doesn't exist — ${jMonthName(month - 1)} has ${len} days${month === 12 ? " (30 in a leap year)" : ""}. Which day do you mean?`
+      `"${bidiIso(m.text)}" doesn't exist — ${jMonthName(month - 1)} has ${len} days${month === 12 ? " (30 in a leap year)" : ""}. Which day do you mean?`
     );
   }
-  return tr(`تاریخ «${m.text}» را نفهمیدم.`, `I didn't understand the date "${m.text}".`);
+  return tr(`تاریخ «${m.text}» را نفهمیدم.`, `I didn't understand the date "${bidiIso(m.text)}".`);
 }
 
 /** خلاصه‌ی تاریخ‌های حل‌شده برای مدل: «30 مهر» = 2026-10-22 (چهارشنبه 30 مهر 1405) */
@@ -769,12 +769,12 @@ export function applyOps(
 
   function parseTimeSpec(raw: RawOp, name: string): TimeSpec | { error: string } {
     if (isBlank(raw.start) && isBlank(raw.end)) return { kind: "keep" };
-    if (isBlank(raw.start)) return { error: tr(`ساعت شروع «${name}» را نفهمیدم.`, `I didn't understand the start time of "${name}".`) };
+    if (isBlank(raw.start)) return { error: tr(`ساعت شروع «${name}» را نفهمیدم.`, `I didn't understand the start time of "${bidiIso(name)}".`) };
     const start = parseClock(raw.start);
-    if (!start) return { error: tr(`ساعت شروع «${name}» را نفهمیدم. مثلا «8:30» بنویس.`, `I didn't understand the start time of "${name}". Write something like "8:30".`) };
+    if (!start) return { error: tr(`ساعت شروع «${name}» را نفهمیدم. مثلا «8:30» بنویس.`, `I didn't understand the start time of "${bidiIso(name)}". Write something like "8:30".`) };
     const end = isBlank(raw.end) ? null : parseClock(raw.end);
-    if (!isBlank(raw.end) && !end) return { error: tr(`ساعت پایان «${name}» را نفهمیدم.`, `I didn't understand the end time of "${name}".`) };
-    if (end && end.min <= start.min) return { error: tr(`ساعت پایان «${name}» باید بعد از ساعت شروع باشد.`, `The end time of "${name}" must be after its start time.`) };
+    if (!isBlank(raw.end) && !end) return { error: tr(`ساعت پایان «${name}» را نفهمیدم.`, `I didn't understand the end time of "${bidiIso(name)}".`) };
+    if (end && end.min <= start.min) return { error: tr(`ساعت پایان «${name}» باید بعد از ساعت شروع باشد.`, `The end time of "${bidiIso(name)}" must be after its start time.`) };
     return { kind: "set", start, end };
   }
 
@@ -783,14 +783,14 @@ export function applyOps(
     let from = defaults.from;
     if (!isBlank(raw.from)) {
       const f = parseDateInput(raw.from, todayIso);
-      if (!f) return { error: tr(`تاریخ شروع «${name}» را نفهمیدم.`, `I didn't understand the start date of "${name}".`) };
+      if (!f) return { error: tr(`تاریخ شروع «${name}» را نفهمیدم.`, `I didn't understand the start date of "${bidiIso(name)}".`) };
       from = f;
     }
     let to = defaults.to;
     if (raw.until === null) to = undefined;
     else if (!isBlank(raw.until)) {
       const u = parseDateInput(raw.until, todayIso);
-      if (!u) return { error: tr(`تاریخ پایان «${name}» را نفهمیدم.`, `I didn't understand the end date of "${name}".`) };
+      if (!u) return { error: tr(`تاریخ پایان «${name}» را نفهمیدم.`, `I didn't understand the end date of "${bidiIso(name)}".`) };
       to = u;
     } else if (!isBlank(raw.weeks) || !isBlank(raw.months)) {
       const base = from ?? todayIso;
@@ -802,10 +802,10 @@ export function applyOps(
         d.setMonth(d.getMonth() + months);
         to = addDaysIso(isoLocal(d), -1);
       } else {
-        return { error: tr(`طول دوره‌ی «${name}» را نفهمیدم.`, `I didn't understand the length of the period for "${name}".`) };
+        return { error: tr(`طول دوره‌ی «${name}» را نفهمیدم.`, `I didn't understand the length of the period for "${bidiIso(name)}".`) };
       }
     }
-    if (from && to && to < from) return { error: tr(`تاریخ پایان «${name}» قبل از شروعش است.`, `The end date of "${name}" is before its start.`) };
+    if (from && to && to < from) return { error: tr(`تاریخ پایان «${name}» قبل از شروعش است.`, `The end date of "${bidiIso(name)}" is before its start.`) };
     return { from, to };
   }
 
@@ -818,11 +818,11 @@ export function applyOps(
     const slot = suggestFreeSlot(list, jsDay, start.min, end?.min ?? null, excludeId, period);
     problems.push(
       slot
-        ? tr(`${dayFa} ساعت ${timeLabel(start.fa, end?.fa)} با «${conflict.name}» پر است. نزدیک‌ترین وقت آزاد ${timeLabel(slot.startFa, slot.endFa)} است.`, `${dayFa} at ${timeLabel(start.fa, end?.fa)} is taken by "${conflict.name}". The nearest free time is ${timeLabel(slot.startFa, slot.endFa)}.`)
-        : tr(`${dayFa} ساعت ${timeLabel(start.fa, end?.fa)} با «${conflict.name}» پر است و تا آخر آن روز هم جای خالی هم‌اندازه نمانده.`, `${dayFa} at ${timeLabel(start.fa, end?.fa)} is taken by "${conflict.name}", and there is no free slot of the same length for the rest of that day.`)
+        ? tr(`${dayFa} ساعت ${timeLabel(start.fa, end?.fa)} با «${conflict.name}» پر است. نزدیک‌ترین وقت آزاد ${timeLabel(slot.startFa, slot.endFa)} است.`, `${dayFa} at ${timeLabel(start.fa, end?.fa)} is taken by "${bidiIso(conflict.name)}". The nearest free time is ${timeLabel(slot.startFa, slot.endFa)}.`)
+        : tr(`${dayFa} ساعت ${timeLabel(start.fa, end?.fa)} با «${conflict.name}» پر است و تا آخر آن روز هم جای خالی هم‌اندازه نمانده.`, `${dayFa} at ${timeLabel(start.fa, end?.fa)} is taken by "${bidiIso(conflict.name)}", and there is no free slot of the same length for the rest of that day.`)
     );
-    if (slot) offer(tr(`«${name}» را ${singleDay ? "همان روز" : dayFa} ساعت ${slot.startFa} بگذار`, `Put "${name}" ${singleDay ? "on the same day" : "on " + dayFa} at ${slot.startFa}`));
-    offer(tr(`«${name}» را یک روز دیگر بگذار`, `Put "${name}" on another day`), tr(`«${conflict.name}» را جابه‌جا کن`, `Move "${conflict.name}"`));
+    if (slot) offer(tr(`«${name}» را ${singleDay ? "همان روز" : dayFa} ساعت ${slot.startFa} بگذار`, `Put "${bidiIso(name)}" ${singleDay ? "on the same day" : "on " + dayFa} at ${slot.startFa}`));
+    offer(tr(`«${name}» را یک روز دیگر بگذار`, `Put "${bidiIso(name)}" on another day`), tr(`«${conflict.name}» را جابه‌جا کن`, `Move "${bidiIso(conflict.name)}"`));
   }
 
   for (const raw of ops.slice(0, MAX_OPS_PER_MESSAGE)) {
@@ -844,8 +844,8 @@ export function applyOps(
         if (!iso) { badDate = true; continue; }
         if (!dates.includes(iso)) dates.push(iso);
       }
-      if (badDate && !dates.length) { problems.push(tr(`تاریخ «${name}» را نفهمیدم.`, `I didn't understand the date of "${name}".`)); continue; }
-      if (badDate) problems.push(tr(`یکی از تاریخ‌های «${name}» را نفهمیدم و از آن گذشتم.`, `I didn't understand one of the dates of "${name}" and skipped it.`));
+      if (badDate && !dates.length) { problems.push(tr(`تاریخ «${name}» را نفهمیدم.`, `I didn't understand the date of "${bidiIso(name)}".`)); continue; }
+      if (badDate) problems.push(tr(`یکی از تاریخ‌های «${name}» را نفهمیدم و از آن گذشتم.`, `I didn't understand one of the dates of "${bidiIso(name)}" and skipped it.`));
 
       type Target = { jsDay: number; period: Period };
       let targets: Target[];
@@ -854,8 +854,8 @@ export function applyOps(
       } else {
         const days = parseDays(raw.days);
         if (!days.length) {
-          problems.push(tr(`برای «${name}» روزی مشخص نکردی — کدام روز هفته؟`, `You didn't specify a day for "${name}" — which day of the week?`));
-          offer(tr(`«${name}» را برای امروز بگذار`, `Put "${name}" today`), tr(`«${name}» را برای فردا بگذار`, `Put "${name}" tomorrow`), tr(`«${name}» را هر روز بگذار`, `Put "${name}" every day`));
+          problems.push(tr(`برای «${name}» روزی مشخص نکردی — کدام روز هفته؟`, `You didn't specify a day for "${bidiIso(name)}" — which day of the week?`));
+          offer(tr(`«${name}» را برای امروز بگذار`, `Put "${bidiIso(name)}" today`), tr(`«${name}» را برای فردا بگذار`, `Put "${bidiIso(name)}" tomorrow`), tr(`«${name}» را هر روز بگذار`, `Put "${bidiIso(name)}" every day`));
           continue;
         }
         const period = parsePeriod(raw, name, { from: todayIso });
@@ -866,11 +866,11 @@ export function applyOps(
       // ساعت *اختیاری* است. نبودش یعنی برنامه‌ی بی‌ساعت، نه ساعت حدسی.
       const hasStart = !isBlank(raw.start);
       const start = hasStart ? parseClock(raw.start) : null;
-      if (hasStart && !start) { problems.push(tr(`ساعت شروع «${name}» را نفهمیدم. مثلا «8:30» بنویس.`, `I didn't understand the start time of "${name}". Write something like "8:30".`)); continue; }
+      if (hasStart && !start) { problems.push(tr(`ساعت شروع «${name}» را نفهمیدم. مثلا «8:30» بنویس.`, `I didn't understand the start time of "${bidiIso(name)}". Write something like "8:30".`)); continue; }
       const end = isBlank(raw.end) ? null : parseClock(raw.end);
-      if (!isBlank(raw.end) && !end) { problems.push(tr(`ساعت پایان «${name}» را نفهمیدم.`, `I didn't understand the end time of "${name}".`)); continue; }
+      if (!isBlank(raw.end) && !end) { problems.push(tr(`ساعت پایان «${name}» را نفهمیدم.`, `I didn't understand the end time of "${bidiIso(name)}".`)); continue; }
       if (start && end && end.min <= start.min) {
-        problems.push(tr(`ساعت پایان «${name}» باید بعد از ساعت شروع باشد.`, `The end time of "${name}" must be after its start time.`));
+        problems.push(tr(`ساعت پایان «${name}» باید بعد از ساعت شروع باشد.`, `The end time of "${bidiIso(name)}" must be after its start time.`));
         continue;
       }
 
@@ -889,19 +889,19 @@ export function applyOps(
       if (!isBlank(raw.repeatEveryMin)) {
         const everyRaw = Number(toEnDigits(String(raw.repeatEveryMin)));
         if (!Number.isFinite(everyRaw) || !Number.isInteger(everyRaw) || everyRaw < MIN_REPEAT_EVERY_MIN || everyRaw > MAX_REPEAT_EVERY_MIN) {
-          problems.push(tr(`بازه‌ی تکرار «${name}» را نفهمیدم — بین ${MIN_REPEAT_EVERY_MIN} تا ${MAX_REPEAT_EVERY_MIN} دقیقه بنویس.`, `I didn't understand the repeat interval of "${name}" — write between ${MIN_REPEAT_EVERY_MIN} and ${MAX_REPEAT_EVERY_MIN} minutes.`));
+          problems.push(tr(`بازه‌ی تکرار «${name}» را نفهمیدم — بین ${MIN_REPEAT_EVERY_MIN} تا ${MAX_REPEAT_EVERY_MIN} دقیقه بنویس.`, `I didn't understand the repeat interval of "${bidiIso(name)}" — write between ${MIN_REPEAT_EVERY_MIN} and ${MAX_REPEAT_EVERY_MIN} minutes.`));
           continue;
         }
         const hasRepeatUntil = !isBlank(raw.repeatUntil);
         const repeatUntilParsed = hasRepeatUntil ? parseClock(raw.repeatUntil) : null;
         if (hasRepeatUntil && !repeatUntilParsed) {
-          problems.push(tr(`ساعت پایان تکرار «${name}» را نفهمیدم.`, `I didn't understand when the repeats of "${name}" end.`));
+          problems.push(tr(`ساعت پایان تکرار «${name}» را نفهمیدم.`, `I didn't understand when the repeats of "${bidiIso(name)}" end.`));
           continue;
         }
         const anchor = start ?? { fa: minutesToFa(awake.startMin), min: awake.startMin };
         const duration = end ? end.min - anchor.min : DEFAULT_REPEAT_DURATION_MIN;
         if (duration <= 0) {
-          problems.push(tr(`ساعت پایان «${name}» باید بعد از ساعت شروع باشد.`, `The end time of "${name}" must be after its start time.`));
+          problems.push(tr(`ساعت پایان «${name}» باید بعد از ساعت شروع باشد.`, `The end time of "${bidiIso(name)}" must be after its start time.`));
           continue;
         }
         const repeatUntilMin = repeatUntilParsed ? repeatUntilParsed.min : awake.endMin;
@@ -923,11 +923,11 @@ export function applyOps(
             const everyLabel = everyRaw % 60 === 0
               ? tr(`${toEnDigits(String(everyRaw / 60))} ساعت`, `${toEnDigits(String(everyRaw / 60))} ${everyRaw / 60 === 1 ? "hour" : "hours"}`)
               : tr(`${toEnDigits(String(everyRaw))} دقیقه`, `${toEnDigits(String(everyRaw))} minutes`);
-            let msg = tr(`«${name}» ${where(t)} هر ${everyLabel} یک‌بار (${toEnDigits(String(duration))} دقیقه‌ای) از ${minutesToFa(anchor.min)} تا ${minutesToFa(repeatUntilMin)} — ${toEnDigits(String(created))} بار اضافه شد.`, `"${name}" ${where(t)} every ${everyLabel} (${toEnDigits(String(duration))} min each) from ${minutesToFa(anchor.min)} to ${minutesToFa(repeatUntilMin)} — added ${toEnDigits(String(created))} ${created === 1 ? "time" : "times"}.`);
+            let msg = tr(`«${name}» ${where(t)} هر ${everyLabel} یک‌بار (${toEnDigits(String(duration))} دقیقه‌ای) از ${minutesToFa(anchor.min)} تا ${minutesToFa(repeatUntilMin)} — ${toEnDigits(String(created))} بار اضافه شد.`, `"${bidiIso(name)}" ${where(t)} every ${everyLabel} (${toEnDigits(String(duration))} min each) from ${minutesToFa(anchor.min)} to ${minutesToFa(repeatUntilMin)} — added ${toEnDigits(String(created))} ${created === 1 ? "time" : "times"}.`);
             if (skipped > 0) msg += tr(` (${toEnDigits(String(skipped))} بار به‌خاطر تداخل با برنامه‌های دیگر رد شد)`, ` (${toEnDigits(String(skipped))} ${skipped === 1 ? "time was" : "times were"} skipped due to conflicts with other plans)`);
             applied.push(msg);
           } else if (!capped) {
-            problems.push(tr(`«${name}» ${where(t)} هیچ‌کدام از بازه‌های تکرار آزاد نبود — همه با برنامه‌ی دیگری تداخل داشتند.`, `None of the repeat slots for "${name}" ${where(t)} were free — all of them conflicted with another plan.`));
+            problems.push(tr(`«${name}» ${where(t)} هیچ‌کدام از بازه‌های تکرار آزاد نبود — همه با برنامه‌ی دیگری تداخل داشتند.`, `None of the repeat slots for "${bidiIso(name)}" ${where(t)} were free — all of them conflicted with another plan.`));
           }
           if (capped) break;
         }
@@ -941,8 +941,8 @@ export function applyOps(
         }
         if (!start) {
           list.push({ ...base(t), id: newOccId(), time: "" });
-          applied.push(tr(`«${name}» ${where(t)} بدون ساعت اضافه شد.`, `Added "${name}" ${where(t)} with no time.`));
-          offer(tr(`برای «${name}» ساعت هم بگذار`, `Set a time for "${name}" too`));
+          applied.push(tr(`«${name}» ${where(t)} بدون ساعت اضافه شد.`, `Added "${bidiIso(name)}" ${where(t)} with no time.`));
+          offer(tr(`برای «${name}» ساعت هم بگذار`, `Set a time for "${bidiIso(name)}" too`));
           continue;
         }
         const conflict = findConflict(list, t.jsDay, start.min, end?.min ?? null, undefined, t.period);
@@ -951,7 +951,7 @@ export function applyOps(
           continue;
         }
         list.push({ ...base(t), id: newOccId(), time: timeLabel(start.fa, end?.fa) });
-        applied.push(tr(`«${name}» ${where(t)} ساعت ${timeLabel(start.fa, end?.fa)} اضافه شد.`, `Added "${name}" ${where(t)} at ${timeLabel(start.fa, end?.fa)}.`));
+        applied.push(tr(`«${name}» ${where(t)} ساعت ${timeLabel(start.fa, end?.fa)} اضافه شد.`, `Added "${bidiIso(name)}" ${where(t)} at ${timeLabel(start.fa, end?.fa)}.`));
       }
       continue;
     }
@@ -965,13 +965,13 @@ export function applyOps(
       let spec = parseTimeSpec(raw, target.name);
       if ("error" in spec) { problems.push(spec.error); continue; }
       if (op === "retime" && spec.kind === "keep") spec = { kind: "clear" };
-      if (spec.kind === "clear" && !target.time) { problems.push(tr(`«${target.name}» از قبل بی‌ساعت است.`, `"${target.name}" already has no time.`)); continue; }
+      if (spec.kind === "clear" && !target.time) { problems.push(tr(`«${target.name}» از قبل بی‌ساعت است.`, `"${bidiIso(target.name)}" already has no time.`)); continue; }
 
       // ── فقط یک روز («فقط همین شنبه») ──
       const singleIso = isBlank(raw.date) ? null : parseDateInput(raw.date, todayIso);
-      if (!isBlank(raw.date) && !singleIso) { problems.push(tr(`تاریخ «${target.name}» را نفهمیدم.`, `I didn't understand the date for "${target.name}".`)); continue; }
+      if (!isBlank(raw.date) && !singleIso) { problems.push(tr(`تاریخ «${target.name}» را نفهمیدم.`, `I didn't understand the date for "${bidiIso(target.name)}".`)); continue; }
       if (singleIso && !occursOn(target, singleIso)) {
-        problems.push(tr(`«${target.name}» در ${faDateLabel(singleIso)} (${dayLbl(jsDayOfIso(singleIso))}) برنامه‌ای ندارد.`, `"${target.name}" has nothing planned on ${faDateLabel(singleIso)} (${dayLbl(jsDayOfIso(singleIso))}).`));
+        problems.push(tr(`«${target.name}» در ${faDateLabel(singleIso)} (${dayLbl(jsDayOfIso(singleIso))}) برنامه‌ای ندارد.`, `"${bidiIso(target.name)}" has nothing planned on ${faDateLabel(singleIso)} (${dayLbl(jsDayOfIso(singleIso))}).`));
         continue;
       }
 
@@ -979,7 +979,7 @@ export function applyOps(
       let destIso: string | null = singleIso;
       if (op === "move") {
         const toDateIso = isBlank(raw.toDate) ? null : parseDateInput(raw.toDate, todayIso);
-        if (!isBlank(raw.toDate) && !toDateIso) { problems.push(tr(`نفهمیدم «${target.name}» را به کدام تاریخ ببرم.`, `I didn't understand which date to move "${target.name}" to.`)); continue; }
+        if (!isBlank(raw.toDate) && !toDateIso) { problems.push(tr(`نفهمیدم «${target.name}» را به کدام تاریخ ببرم.`, `I didn't understand which date to move "${bidiIso(target.name)}" to.`)); continue; }
         const toDay = parseDay(raw.toDay);
         if (toDateIso) {
           // مقصد تاریخ‌دار همیشه یعنی «فقط همان روز»
@@ -994,11 +994,11 @@ export function applyOps(
           newJsDay = toDay;
           if (singleIso) destIso = sameWeekIso(singleIso, toDay);
         } else {
-          problems.push(tr(`نفهمیدم «${target.name}» را به کدام روز ببرم.`, `I didn't understand which day to move "${target.name}" to.`));
+          problems.push(tr(`نفهمیدم «${target.name}» را به کدام روز ببرم.`, `I didn't understand which day to move "${bidiIso(target.name)}" to.`));
           continue;
         }
         if (newJsDay === target.jsDay && spec.kind === "keep" && (!destIso || destIso === singleIso)) {
-          problems.push(tr(`«${target.name}» همین حالا هم ${dayLbl(newJsDay)} است.`, `"${target.name}" is already on ${dayLbl(newJsDay)}.`));
+          problems.push(tr(`«${target.name}» همین حالا هم ${dayLbl(newJsDay)} است.`, `"${bidiIso(target.name)}" is already on ${dayLbl(newJsDay)}.`));
           continue;
         }
       }
@@ -1033,7 +1033,7 @@ export function applyOps(
         if (destIso !== sourceIso) {
           const dayPart = tr(`از ${dayLbl(target.jsDay)} ${faDateLabel(sourceIso)} به ${dayLbl(newJsDay)} ${faDateLabel(destIso)} منتقل شد`, `moved from ${dayLbl(target.jsDay)} ${faDateLabel(sourceIso)} to ${dayLbl(newJsDay)} ${faDateLabel(destIso)}`);
           const timePart = spec.kind === "set" ? tr(` ساعت ${newTime}`, ` at ${newTime}`) : spec.kind === "clear" ? tr(" بدون ساعت", " with no time") : "";
-          applied.push(tr(`«${target.name}» فقط برای همان یک روز ${dayPart}${timePart}.`, `"${target.name}" ${dayPart}${timePart} (that one day only).`));
+          applied.push(tr(`«${target.name}» فقط برای همان یک روز ${dayPart}${timePart}.`, `"${bidiIso(target.name)}" ${dayPart}${timePart} (that one day only).`));
         } else {
           const dayPart = tr(`در ${dayLbl(newJsDay)} ${faDateLabel(destIso)}`, `on ${dayLbl(newJsDay)} ${faDateLabel(destIso)}`);
           applied.push(tr(`«${target.name}» فقط ${dayPart}${spec.kind === "clear" ? " ساعتش برداشته شد" : ` ساعت ${newTime} شد`}.`, `"${target.name}" ${dayPart} only ${spec.kind === "clear" ? "had its time removed" : `is now at ${newTime}`}.`));
@@ -1043,7 +1043,7 @@ export function applyOps(
 
       // ── کل تکرارها، از امروز به بعد ──
       const effectiveFrom = target.startDate && target.startDate > todayIso ? target.startDate : todayIso;
-      if (target.endDate && target.endDate < effectiveFrom) { problems.push(tr(`«${target.name}» تمام شده است.`, `"${target.name}" has already ended.`)); continue; }
+      if (target.endDate && target.endDate < effectiveFrom) { problems.push(tr(`«${target.name}» تمام شده است.`, `"${bidiIso(target.name)}" has already ended.`)); continue; }
       const period: Period = { from: effectiveFrom, to: target.endDate };
       if (checkStart) {
         const conflict = findConflict(list, newJsDay, checkStart.min, checkEnd?.min ?? null, target.id, period);
@@ -1062,8 +1062,8 @@ export function applyOps(
       successor.set(target.id, next.id);
       if (op === "retime") {
         applied.push(spec.kind === "clear"
-          ? tr(`ساعت «${target.name}» (${toEnDigits(target.time ?? "")}) برداشته شد.`, `Removed the time of "${target.name}" (${toEnDigits(target.time ?? "")}).`)
-          : tr(`ساعت «${target.name}» از ${target.time ? toEnDigits(target.time) : "بی‌ساعت"} به ${newTime} تغییر کرد.`, `Changed the time of "${target.name}" from ${target.time ? toEnDigits(target.time) : "no time"} to ${newTime}.`));
+          ? tr(`ساعت «${target.name}» (${toEnDigits(target.time ?? "")}) برداشته شد.`, `Removed the time of "${bidiIso(target.name)}" (${toEnDigits(target.time ?? "")}).`)
+          : tr(`ساعت «${target.name}» از ${target.time ? toEnDigits(target.time) : "بی‌ساعت"} به ${newTime} تغییر کرد.`, `Changed the time of "${bidiIso(target.name)}" from ${target.time ? toEnDigits(target.time) : "no time"} to ${newTime}.`));
       } else {
         applied.push(tr(`«${target.name}» از ${dayLbl(target.jsDay)} به ${dayLbl(newJsDay)}${newTime ? ` ساعت ${newTime}` : ""} منتقل شد${newTime ? "" : " (همچنان بدون ساعت)"}.`, `Moved "${target.name}" from ${dayLbl(target.jsDay)} to ${dayLbl(newJsDay)}${newTime ? ` at ${newTime}` : ""}${newTime ? "" : " (still no time)"}.`));
       }
@@ -1078,7 +1078,7 @@ export function applyOps(
       const notes: string[] = [];
       if (typeof raw.name === "string" && raw.name.trim() && raw.name.trim() !== target.name) {
         patch.name = raw.name.trim().slice(0, 60);
-        notes.push(tr(`اسم «${patch.name}» شد`, `renamed to "${patch.name}"`));
+        notes.push(tr(`اسم «${patch.name}» شد`, `renamed to "${bidiIso(patch.name)}"`));
       }
       const imp = parseImportance(raw.importance);
       if (imp && imp !== target.importance) { patch.importance = imp; notes.push(tr("اهمیتش عوض شد", "importance changed")); }
@@ -1086,7 +1086,7 @@ export function applyOps(
         if (target.tag) { patch.tag = undefined; notes.push(tr("تگش برداشته شد", "tag removed")); }
       } else if (typeof raw.tag === "string" && raw.tag.trim() !== (target.tag ?? "")) {
         patch.tag = raw.tag.trim().slice(0, 30);
-        notes.push(tr(`تگ «${patch.tag}» گرفت`, `tagged "${patch.tag}"`));
+        notes.push(tr(`تگ «${patch.tag}» گرفت`, `tagged "${bidiIso(patch.tag)}"`));
       }
       if (typeof raw.notify === "boolean" && raw.notify !== (target.notify !== false)) {
         patch.notify = raw.notify ? undefined : false;
@@ -1099,17 +1099,17 @@ export function applyOps(
         const s = occStart(target);
         if (s !== null) {
           const conflict = findConflict(list, target.jsDay, s, occEnd(target), target.id, period);
-          if (conflict) { problems.push(tr(`با این دوره، «${target.name}» با «${conflict.name}» تداخل پیدا می‌کند.`, `With this period, "${target.name}" would conflict with "${conflict.name}".`)); continue; }
+          if (conflict) { problems.push(tr(`با این دوره، «${target.name}» با «${conflict.name}» تداخل پیدا می‌کند.`, `With this period, "${bidiIso(target.name)}" would conflict with "${bidiIso(conflict.name)}".`)); continue; }
         }
         patch.startDate = period.from;
         patch.endDate = period.to;
         notes.push(period.to ? tr(`دوره‌اش ${periodLabel(period, todayIso) || `تا ${faDateLabel(period.to)}`} شد`, `period is now ${periodLabel(period, todayIso) || `until ${faDateLabel(period.to)}`}`) : tr("دیگر تاریخ پایان ندارد", "no longer has an end date"));
       }
-      if (!notes.length) { problems.push(tr(`برای «${target.name}» تغییری نگفتی.`, `You didn't specify any change for "${target.name}".`)); continue; }
+      if (!notes.length) { problems.push(tr(`برای «${target.name}» تغییری نگفتی.`, `You didn't specify any change for "${bidiIso(target.name)}".`)); continue; }
       const updated: CustomOccurrence = { ...target, ...patch };
       (Object.keys(updated) as (keyof CustomOccurrence)[]).forEach((k) => { if (updated[k] === undefined) delete updated[k]; });
       list = list.map((o) => (o.id === target.id ? updated : o));
-      applied.push(`${tr(`«${target.name}»`, `"${target.name}"`)}: ${notes.join(tr("، ", ", "))}.`);
+      applied.push(`${tr(`«${target.name}»`, `"${bidiIso(target.name)}"`)}: ${notes.join(tr("، ", ", "))}.`);
       continue;
     }
 
@@ -1121,25 +1121,25 @@ export function applyOps(
 
       if (!isBlank(raw.date)) {
         const iso = parseDateInput(raw.date, todayIso);
-        if (!iso) { problems.push(tr(`تاریخ «${target.name}» را نفهمیدم.`, `I didn't understand the date for "${target.name}".`)); continue; }
-        if (!occursOn(target, iso)) { problems.push(tr(`«${target.name}» در ${faDateLabel(iso)} برنامه‌ای ندارد.`, `"${target.name}" has nothing planned on ${faDateLabel(iso)}.`)); continue; }
+        if (!iso) { problems.push(tr(`تاریخ «${target.name}» را نفهمیدم.`, `I didn't understand the date for "${bidiIso(target.name)}".`)); continue; }
+        if (!occursOn(target, iso)) { problems.push(tr(`«${target.name}» در ${faDateLabel(iso)} برنامه‌ای ندارد.`, `"${bidiIso(target.name)}" has nothing planned on ${faDateLabel(iso)}.`)); continue; }
         replaceRow(target.id, carveOut(target, iso));
         if (!list.some((o) => o.id === target.id)) successor.set(target.id, null);
-        applied.push(tr(`«${target.name}» فقط برای ${dayLbl(target.jsDay)} ${faDateLabel(iso)} حذف شد.`, `Deleted "${target.name}" for ${dayLbl(target.jsDay)} ${faDateLabel(iso)} only.`));
+        applied.push(tr(`«${target.name}» فقط برای ${dayLbl(target.jsDay)} ${faDateLabel(iso)} حذف شد.`, `Deleted "${bidiIso(target.name)}" for ${dayLbl(target.jsDay)} ${faDateLabel(iso)} only.`));
         continue;
       }
 
       let fromIso = todayIso;
       if (!isBlank(raw.from)) {
         const f = parseDateInput(raw.from, todayIso);
-        if (!f) { problems.push(tr(`تاریخ «${target.name}» را نفهمیدم.`, `I didn't understand the date for "${target.name}".`)); continue; }
+        if (!f) { problems.push(tr(`تاریخ «${target.name}» را نفهمیدم.`, `I didn't understand the date for "${bidiIso(target.name)}".`)); continue; }
         fromIso = f;
       }
       replaceRow(target.id, closeFrom(target, fromIso));
       successor.set(target.id, null);
       applied.push(fromIso > todayIso
-        ? tr(`«${target.name}» (${whenLabel}) از ${faDateLabel(fromIso)} به بعد حذف شد.`, `Deleted "${target.name}" (${whenLabel}) from ${faDateLabel(fromIso)} onward.`)
-        : tr(`«${target.name}» (${whenLabel}) حذف شد.`, `Deleted "${target.name}" (${whenLabel}).`));
+        ? tr(`«${target.name}» (${whenLabel}) از ${faDateLabel(fromIso)} به بعد حذف شد.`, `Deleted "${bidiIso(target.name)}" (${whenLabel}) from ${faDateLabel(fromIso)} onward.`)
+        : tr(`«${target.name}» (${whenLabel}) حذف شد.`, `Deleted "${bidiIso(target.name)}" (${whenLabel}).`));
       continue;
     }
 

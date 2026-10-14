@@ -22,7 +22,7 @@ import type { ProgramDetailResponse, ProgramRow, ProgramsResponse } from "@/lib/
 import { publicUserName } from "@/lib/mentorTypes";
 import { categoryLabel } from "@/components/MentorBadges";
 import { fmtDate, fmtDay, fmtRelative, networkError, readApiError } from "@/lib/mentorFormat";
-import { tr } from "@/lib/i18n";
+import { tr, iso } from "@/lib/i18n";
 import { faNum } from "@/lib/jalali";
 import { GoldenName } from "@/components/GoldenName";
 
@@ -279,7 +279,7 @@ function Relationship({ rel, reload }: { rel: Relation; reload: () => void }) {
       {iMustAnswer && (
         <section className="mv2-ms-invite" aria-label={role === "student" ? tr("دعوت مربی", "Mentor invitation") : tr("درخواست شاگرد", "Student request")}>
           <p className="mv2-ms-invite-text">
-            {role === "student" ? tr(`${name} دعوتت کرده مربی‌ت باشه`, `${name} invited you to be your mentor`) : tr(`${name} می‌خواد شاگردت باشه`, `${name} wants to be your student`)}
+            {role === "student" ? tr(`${name} دعوتت کرده مربی‌ت باشه`, `${iso(name)} invited you to be your mentor`) : tr(`${name} می‌خواد شاگردت باشه`, `${iso(name)} wants to be your student`)}
             {row.categories.length > 0 && <span className="mv2-ms-meta">{row.categories.map((c) => categoryLabel(c)).join(tr("، ", ", "))}</span>}
           </p>
           {row.message && <p className="mentor-quote">{row.message}</p>}

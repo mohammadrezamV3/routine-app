@@ -9,7 +9,7 @@ import type { Relation } from "./useMentorshipRelation";
 import { useAsyncAction } from "@/lib/useAsyncAction";
 import type { MentorshipAction } from "@/lib/mentorTypes";
 import { publicUserName } from "@/lib/mentorTypes";
-import { tr } from "@/lib/i18n";
+import { tr, iso } from "@/lib/i18n";
 
 const MENU_ICON = { size: 15, strokeWidth: 1.75, "aria-hidden": true } as const;
 
@@ -68,7 +68,7 @@ export function useMentorshipActions({
 
   const dialogs = confirm ? (
     <MentorConfirmDialog
-      message={confirm === "end" ? tr(`همکاری با ${name} تموم بشه؟`, `End your mentorship with ${name}?`) : confirm === "cancel" ? tr(`درخواست به ${name} لغو بشه؟`, `Cancel your request to ${name}?`) : tr(`${name} مسدود بشه؟`, `Block ${name}?`)}
+      message={confirm === "end" ? tr(`همکاری با ${name} تموم بشه؟`, `End your mentorship with ${iso(name)}?`) : confirm === "cancel" ? tr(`درخواست به ${name} لغو بشه؟`, `Cancel your request to ${iso(name)}?`) : tr(`${name} مسدود بشه؟`, `Block ${iso(name)}?`)}
       hint={
         confirm === "end" ? tr("برنامه‌های در جریان لغو می‌شن و فقط می‌تونی پیام‌های قبلی رو ببینی.", "Programs in progress will be cancelled and you will only be able to see earlier messages.")
           : confirm === "cancel" ? tr("بعدا می‌تونی دوباره درخواست بدی.", "You can send a request again later.")

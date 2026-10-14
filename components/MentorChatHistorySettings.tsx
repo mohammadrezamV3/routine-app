@@ -13,7 +13,7 @@ import { useFeature } from "@/lib/useFeatures";
 import type { ChatHistoryResponse } from "@/lib/mentorTypes";
 import { publicUserName } from "@/lib/mentorTypes";
 import { fmtDate, fmtRelative, networkError, readApiError } from "@/lib/mentorFormat";
-import { tr } from "@/lib/i18n";
+import { tr, iso } from "@/lib/i18n";
 import { faNum } from "@/lib/jalali";
 import { GoldenName } from "@/components/GoldenName";
 
@@ -132,7 +132,7 @@ export function MentorChatHistorySettings({ index = 0, showEmpty = false }: { in
 
       {confirm && (
         <MentorConfirmDialog
-          message={confirm.kind === "all" ? tr("سابقه‌ی همه‌ی گفت‌وگوها پاک بشه؟", "Clear the history of all chats?") : tr(`سابقه‌ی گفت‌وگو با ${publicUserName(confirm.conv.counterpart)} پاک بشه؟`, `Clear your chat history with ${publicUserName(confirm.conv.counterpart)}?`)}
+          message={confirm.kind === "all" ? tr("سابقه‌ی همه‌ی گفت‌وگوها پاک بشه؟", "Clear the history of all chats?") : tr(`سابقه‌ی گفت‌وگو با ${publicUserName(confirm.conv.counterpart)} پاک بشه؟`, `Clear your chat history with ${iso(publicUserName(confirm.conv.counterpart))}?`)}
           hint={tr("پیام‌های تا الان فقط برای تو پاک می‌شن و برنمی‌گردن؛ طرف مقابل همچنان می‌بینه‌شون.", "Messages up to now are cleared only for you and can't be restored. The other person can still see them.")}
           confirmLabel={confirm.kind === "all" ? tr("پاک کردن همه", "Clear all") : tr("پاک کردن سابقه", "Clear history")}
           busy={busy}

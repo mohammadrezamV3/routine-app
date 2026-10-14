@@ -9,7 +9,7 @@
 import { useState } from "react";
 import { GripVertical, Plus, X } from "lucide-react";
 import { Reorder, useDragControls } from "framer-motion";
-import { tr } from "@/lib/i18n";
+import { tr, iso } from "@/lib/i18n";
 import { MAX_CHECKLIST_ITEMS, newItemId, type ChecklistItem } from "@/lib/routineChecklist";
 
 function ItemRow({ item, index, count, onRename, onRemove, onMove }: {
@@ -46,7 +46,7 @@ function ItemRow({ item, index, count, onRename, onRemove, onMove }: {
         aria-label={tr(`آیتم ${index + 1}`, `Item ${index + 1}`)}
         onChange={(e) => onRename(e.target.value)}
       />
-      <button type="button" className="wsearch-newrow-remove-text" onClick={onRemove} aria-label={tr(`حذف ${item.name}`, `Remove ${item.name}`)}>
+      <button type="button" className="wsearch-newrow-remove-text" onClick={onRemove} aria-label={tr(`حذف ${item.name}`, `Remove ${iso(item.name)}`)}>
         <X size={14} />
       </button>
     </Reorder.Item>

@@ -8,7 +8,7 @@ import { MentorConfirmDialog } from "./MentorConfirmDialog";
 import { MentorDashError, fa, mentorApi } from "./MentorDashKit";
 import { MI, MI_STROKE, MentorEmpty, MentorEmptyState, MentorField, MentorRow } from "./MentorUI";
 import type { SavedRepliesResponse, SavedReply } from "@/lib/mentorToolsTypes";
-import { tr, trv } from "@/lib/i18n";
+import { tr, trv, iso } from "@/lib/i18n";
 
 const ic = (Icon: typeof Check, size: number) => <Icon size={size} strokeWidth={MI_STROKE} aria-hidden />;
 const TITLE_MAX = 40;
@@ -139,10 +139,10 @@ export function MentorSavedRepliesManager() {
                   sub={<span className="mentor-reply-preview">{r.body}</span>}
                   end={
                     <>
-                      <button type="button" className="trade-icon-btn" onClick={() => { setEditing(r.id); setAdding(false); }} aria-label={tr(`ویرایش پیام ${r.title}`, `Edit message ${r.title}`)} title={tr("ویرایش", "Edit")}>
+                      <button type="button" className="trade-icon-btn" onClick={() => { setEditing(r.id); setAdding(false); }} aria-label={tr(`ویرایش پیام ${r.title}`, `Edit message ${iso(r.title)}`)} title={tr("ویرایش", "Edit")}>
                         <Pencil size={MI.btnSm} strokeWidth={MI_STROKE} aria-hidden />
                       </button>
-                      <button type="button" className="trade-icon-btn danger" onClick={() => { setDelError(null); setConfirm(r); }} aria-label={tr(`حذف پیام ${r.title}`, `Delete message ${r.title}`)} title={tr("حذف", "Delete")}>
+                      <button type="button" className="trade-icon-btn danger" onClick={() => { setDelError(null); setConfirm(r); }} aria-label={tr(`حذف پیام ${r.title}`, `Delete message ${iso(r.title)}`)} title={tr("حذف", "Delete")}>
                         <Trash2 size={MI.btnSm} strokeWidth={MI_STROKE} aria-hidden />
                       </button>
                     </>
@@ -170,7 +170,7 @@ export function MentorSavedRepliesManager() {
       </MentorSheet>
       {confirm && (
         <MentorConfirmDialog
-          message={tr(`پیام «${confirm.title}» حذف بشه؟`, `Delete the message "${confirm.title}"?`)}
+          message={tr(`پیام «${confirm.title}» حذف بشه؟`, `Delete the message "${iso(confirm.title)}"?`)}
           hint={tr("پیام‌هایی که قبلا باهاش فرستادی تغییر نمی‌کنن", "Messages you already sent with it are not changed")}
           confirmLabel={tr("حذف پیام", "Delete message")}
           busy={delBusy}

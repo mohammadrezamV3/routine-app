@@ -12,7 +12,7 @@ import { ROUTINE_PLAN_KEY, ROUTINE_TRIAL_DAYS } from "@/lib/trial";
 import { entryOffer } from "@/lib/planPricing";
 import { usePlanPricing } from "@/lib/usePlanPricing";
 import { useLiveRefresh } from "@/lib/liveSync";
-import { tr, isEn } from "@/lib/i18n";
+import { tr, isEn, iso } from "@/lib/i18n";
 
 export function routineTrialDaysLeft(data: Awaited<ReturnType<typeof getAccount>>): number | null {
   const u = data?.user;

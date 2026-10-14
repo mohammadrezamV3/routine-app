@@ -13,7 +13,7 @@ import { Spinner } from "./Spinner";
 import { GradientRing } from "./GradientRing";
 import { FriendWeekStrip } from "./FriendWeekStrip";
 import { fullDays, type WeekPcts } from "@/lib/friendWeek";
-import { tr, isEn } from "@/lib/i18n";
+import { tr, isEn, iso } from "@/lib/i18n";
 
 type Relation = "none" | "friends" | "pending_sent" | "pending_received";
 
@@ -179,7 +179,7 @@ export function FriendProfileModal({
               <div className="friend-profile-banner-bar">
                 <div className="friend-profile-banner-kebab">
                   <TradeKebabMenu
-                    label={tr(`گزینه‌های ${profile.name}`, `Options for ${profile.name}`)}
+                    label={tr(`گزینه‌های ${profile.name}`, `Options for ${iso(profile.name)}`)}
                     actions={[
                       ...(profile.relation === "friends" && profile.friendshipId
                         ? [{ label: tr("حذف از دوستان", "Remove friend"), icon: <UserMinus size={14} />, danger: true, onClick: () => setConfirmRemove(true) }]
@@ -344,7 +344,7 @@ export function FriendProfileModal({
           <div className="modal-panel open" role="dialog" aria-modal="true" style={{ zIndex: 91, maxWidth: 340 }}>
             <div className="modal-body" style={{ paddingTop: 4, textAlign: "center" }}>
               <div className="text-[13px] font-bold" style={{ color: "var(--text)" }}>
-                {tr(`«${profile?.name}» از دوستات حذف بشه؟`, `Remove "${profile?.name}" from your friends?`)}
+                {tr(`«${profile?.name}» از دوستات حذف بشه؟`, `Remove "${iso(profile?.name)}" from your friends?`)}
               </div>
               <div className="trade-modal-actions">
                 <button type="button" className="account-outline-btn" onClick={() => setConfirmRemove(false)} disabled={relBusy}>
@@ -365,7 +365,7 @@ export function FriendProfileModal({
           <div className="modal-panel open" role="dialog" aria-modal="true" style={{ zIndex: 91, maxWidth: 340 }}>
             <div className="modal-body" style={{ paddingTop: 4, textAlign: "center" }}>
               <div className="text-[13px] font-bold" style={{ color: "var(--text)" }}>
-                {tr(`«${profile?.name}» بلاک بشه؟ دیگه توی جست‌وجوی دوستان دیده نمی‌شه.`, `Block "${profile?.name}"? They will no longer appear in friend search.`)}
+                {tr(`«${profile?.name}» بلاک بشه؟ دیگه توی جست‌وجوی دوستان دیده نمی‌شه.`, `Block "${iso(profile?.name)}"? They will no longer appear in friend search.`)}
               </div>
               <div className="trade-modal-actions">
                 <button type="button" className="account-outline-btn" onClick={() => setConfirmBlock(false)} disabled={blockBusy}>

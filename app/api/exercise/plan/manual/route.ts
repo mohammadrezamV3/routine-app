@@ -1,4 +1,4 @@
-import { tr } from "@/lib/i18n";
+import { tr, iso } from "@/lib/i18n";
 import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 import { requireModule } from "@/lib/moduleAccess";
@@ -34,13 +34,13 @@ async function handlePOST(req: NextRequest) {
       return NextResponse.json({ error: tr("روز نامعتبر در برنامه", "Invalid day in the plan") }, { status: 400 });
     }
     if (seenDays.has(d.day)) {
-      return NextResponse.json({ error: tr(`روز «${d.day}» بیش از یک بار انتخاب شده`, `Day "${d.day}" was selected more than once`) }, { status: 400 });
+      return NextResponse.json({ error: tr(`روز «${d.day}» بیش از یک بار انتخاب شده`, `Day "${iso(d.day)}" was selected more than once`) }, { status: 400 });
     }
     seenDays.add(d.day);
 
     const items = Array.isArray(d.items) ? d.items.map((i) => String(i).trim()).filter(Boolean) : [];
     if (items.length === 0) {
-      return NextResponse.json({ error: tr(`برای روز «${d.day}» حداقل یک حرکت لازم است`, `Day "${d.day}" needs at least one exercise`) }, { status: 400 });
+      return NextResponse.json({ error: tr(`برای روز «${d.day}» حداقل یک حرکت لازم است`, `Day "${iso(d.day)}" needs at least one exercise`) }, { status: 400 });
     }
     cleanDays.push({ day: d.day, focus: String(d.focus || "").trim() || "برنامه‌ی شخصی", items });
   }

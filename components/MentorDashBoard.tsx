@@ -20,7 +20,7 @@ import { MentorTodayRequestSheet } from "./MentorTodayRequest";
 import { MentorList, MentorListItem } from "./MentorMotion";
 import { fmtRelative } from "@/lib/mentorFormat";
 import { publicUserName } from "@/lib/mentorTypes";
-import { tr, trv } from "@/lib/i18n";
+import { tr, trv, iso } from "@/lib/i18n";
 import type {
   MentorDashboard, MentorSelf, MentorshipRow, MentorshipsResponse, ProgramRow, ProgramsResponse,
 } from "@/lib/mentorTypes";
@@ -224,7 +224,7 @@ export function MentorDashBoard({ self }: { self: MentorSelf }) {
       )}
 
       <MentorHero
-        title={first ? tr(`سلام ${first}`, `Hi ${first}`) : tr("سلام", "Hi")}
+        title={first ? tr(`سلام ${first}`, `Hi ${iso(first)}`) : tr("سلام", "Hi")}
         summary={summary}
         trailing={<MentorAvailabilityQuick variant="pill" />}
         stats={[
@@ -277,9 +277,9 @@ export function MentorDashBoard({ self }: { self: MentorSelf }) {
               const c = completionBy.get(r.counterpart.id);
               const has = !!c && c.completed + c.partial + c.missed > 0;
               const progress = has ? normRate(c!.rate) : null;
-              const label = r.pausedAt ? tr(`${name}، متوقف`, `${name}, paused`)
-                : !c ? tr(`${name}، پیشرفت رو شاگرد خصوصی نگه داشته`, `${name}, keeps their progress private`)
-                  : has ? tr(`${name}، ${Math.round(normRate(c.rate) * 100)} درصد در 7 روز اخیر`, `${name}, ${Math.round(normRate(c.rate) * 100)} percent in the last 7 days`) : tr(`${name}، هنوز داده‌ای نیست`, `${name}, no data yet`);
+              const label = r.pausedAt ? tr(`${name}، متوقف`, `${iso(name)}, paused`)
+                : !c ? tr(`${name}، پیشرفت رو شاگرد خصوصی نگه داشته`, `${iso(name)}, keeps their progress private`)
+                  : has ? tr(`${name}، ${Math.round(normRate(c.rate) * 100)} درصد در 7 روز اخیر`, `${iso(name)}, ${Math.round(normRate(c.rate) * 100)} percent in the last 7 days`) : tr(`${name}، هنوز داده‌ای نیست`, `${iso(name)}, no data yet`);
               return (
                 <li key={r.id}>
                   <Link href={`/mentor/students/${r.counterpart.id}`} className="mv2-today-person" aria-label={label}>

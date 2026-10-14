@@ -15,7 +15,7 @@ import { nextPeriodStart, rangeDuration, shiftedRange } from "@/lib/mentorProgra
 import { publicUserName } from "@/lib/mentorTypes";
 import type { MentorshipRow, ProgramDetailResponse, ProgramRow, ProgramsResponse, ProgramType } from "@/lib/mentorTypes";
 import type { TemplateResponse, TemplateRow, TemplatesResponse } from "@/lib/mentorToolsTypes";
-import { tr } from "@/lib/i18n";
+import { tr, iso } from "@/lib/i18n";
 
 const ic = (Icon: typeof Copy, size: number) => <Icon size={size} strokeWidth={MI_STROKE} aria-hidden />;
 const typeIcon = (t: ProgramType) => (t === "WORKOUT" ? ic(Dumbbell, MI.row) : ic(CalendarCheck, MI.row));
@@ -138,7 +138,7 @@ function TemplateSource({
     const range = t.durationDays != null ? shiftedRange(t.durationDays, isoLocal(new Date())) : { startDate: null, endDate: null };
     onLoaded({
       key: `t:${t.id}`,
-      label: tr(`قالب «${t.name}»`, `Template "${t.name}"`),
+      label: tr(`قالب «${t.name}»`, `Template "${iso(t.name)}"`),
       prefill: {
         type: t.type, title: t.title, description: t.description, note: t.note, ...range,
         items: t.items.map((it) => ({ ...it, id: "" })), templateId: t.id,
@@ -216,7 +216,7 @@ function CopySource({
     const range = duration != null ? shiftedRange(duration, sameStudent ? nextPeriodStart(p.endDate, today) : today) : { startDate: null, endDate: null };
     onLoaded({
       key: `p:${p.id}`,
-      label: tr(`کپی «${p.title}»`, `Copy of "${p.title}"`),
+      label: tr(`کپی «${p.title}»`, `Copy of "${iso(p.title)}"`),
       prefill: { type: p.type, title: p.title, description: p.description, note: p.note, ...range, items },
     });
   }, [allowedTypes, onLoaded, row.counterpart.id]);

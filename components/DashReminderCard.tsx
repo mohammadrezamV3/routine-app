@@ -12,7 +12,7 @@ import { weekdayName } from "@/lib/jalali";
 import { getCustomOccurrences, setCustomOccurrences } from "@/lib/storage";
 import { useLiveRefresh } from "@/lib/liveSync";
 import { getNotificationPermission, requestNotificationPermission } from "@/lib/notifications";
-import { tr } from "@/lib/i18n";
+import { tr, iso } from "@/lib/i18n";
 
 // برنامه‌های «خیلی زیاد»/«زیاد» همین هفته — واقعا از customOccurrences
 // (با تگ اهمیتی که موقع افزودن/ویرایش برنامه انتخاب می‌شه) فیلتر می‌شه،
@@ -52,8 +52,8 @@ export function DashReminderCard({ delay }: { delay?: number }) {
 
     setToast(
       nextNotify
-        ? tr(`نیم‌ساعت قبل از شروع «${occ.name}» بهت اطلاع داده می‌شه.`, `You will be notified 30 minutes before "${occ.name}" starts.`)
-        : tr(`دیگه برای «${occ.name}» یادآوری نمی‌شه.`, `You will no longer be reminded about "${occ.name}".`)
+        ? tr(`نیم‌ساعت قبل از شروع «${occ.name}» بهت اطلاع داده می‌شه.`, `You will be notified 30 minutes before "${iso(occ.name)}" starts.`)
+        : tr(`دیگه برای «${occ.name}» یادآوری نمی‌شه.`, `You will no longer be reminded about "${iso(occ.name)}".`)
     );
   }
 
@@ -110,7 +110,7 @@ export function DashReminderCard({ delay }: { delay?: number }) {
                   </div>
                   <span
                     role="button"
-                    aria-label={r.notify ? tr(`خاموش‌کردن یادآوری ${r.name}`, `Turn off reminder for ${r.name}`) : tr(`روشن‌کردن یادآوری ${r.name}`, `Turn on reminder for ${r.name}`)}
+                    aria-label={r.notify ? tr(`خاموش‌کردن یادآوری ${r.name}`, `Turn off reminder for ${iso(r.name)}`) : tr(`روشن‌کردن یادآوری ${r.name}`, `Turn on reminder for ${iso(r.name)}`)}
                     onClick={(e) => handleBellClick(e, r)}
                     className={cn(
                       "flex h-7 w-7 shrink-0 cursor-pointer items-center justify-center rounded-xl transition hover:brightness-125 sm:h-9 sm:w-9",

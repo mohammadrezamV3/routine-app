@@ -12,7 +12,7 @@ import { TradeKebabMenu } from "./TradeKebabMenu";
 import { Spinner } from "./Spinner";
 import { sortFriends, type FriendRowData } from "./FriendRow";
 import { useLiveRefresh } from "@/lib/liveSync";
-import { tr, isEn } from "@/lib/i18n";
+import { tr, isEn, iso } from "@/lib/i18n";
 
 type Person = { friendshipId: string; id: string; name: string; username: string | null; avatarUrl: string | null; golden?: boolean; staff?: boolean };
 type SearchStatus = "none" | "friends" | "pending_sent" | "pending_received";
@@ -137,7 +137,7 @@ export function FriendsManageSheet({ friends, onClose, onChanged }: { friends: M
               {list.map((f) => (
                 <PersonRow key={f.id} p={f} onOpen={() => setViewing(f.id)} star={f.favorite}>
                   <TradeKebabMenu
-                    label={tr(`گزینه‌های ${f.name}`, `Options for ${f.name}`)}
+                    label={tr(`گزینه‌های ${f.name}`, `Options for ${iso(f.name)}`)}
                     actions={[
                       { label: f.favorite ? tr("حذف از فیوریت‌ها", "Remove from favorites") : tr("افزودن به فیوریت‌ها", "Add to favorites"), icon: <Star size={14} />, onClick: () => toggleFavorite(f) },
                       { label: tr("حذف از دوستان", "Remove friend"), icon: <UserMinus size={14} />, danger: true, onClick: () => setConfirmRemove(f) },
@@ -165,7 +165,7 @@ export function FriendsManageSheet({ friends, onClose, onChanged }: { friends: M
           <div className="modal-panel open" role="dialog" aria-modal="true" style={{ zIndex: 96, maxWidth: 340 }}>
             <div className="modal-body" style={{ paddingTop: 4, textAlign: "center" }}>
               <div className="text-[13px] font-bold" style={{ color: "var(--text)" }}>
-                {tr(`«${confirmRemove.name}» از دوستات حذف بشه؟`, `Remove "${confirmRemove.name}" from your friends?`)}
+                {tr(`«${confirmRemove.name}» از دوستات حذف بشه؟`, `Remove "${iso(confirmRemove.name)}" from your friends?`)}
               </div>
               <div className="trade-modal-actions">
                 <button type="button" className="account-outline-btn" onClick={() => setConfirmRemove(null)} disabled={!!busy}>{tr("انصراف", "Cancel")}</button>

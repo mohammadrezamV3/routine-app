@@ -14,7 +14,7 @@ import { MentorConfirmDialog } from "@/components/MentorConfirmDialog";
 import { faNum } from "@/lib/jalali";
 import { levelLabel } from "@/lib/roadmapPlan";
 import { useLiveRefresh } from "@/lib/liveSync";
-import { tr, pick } from "@/lib/i18n";
+import { tr, pick, iso } from "@/lib/i18n";
 
 type RoadmapCard = {
   id: string;
@@ -177,7 +177,7 @@ export default function RoadmapsHub() {
 
       {deleteTarget && (
         <MentorConfirmDialog
-          message={tr(`مسیر «${deleteTarget.title}» و همه‌ی پیشرفتش حذف شود؟ این کار برگشت‌پذیر نیست.`, `Delete the path "${deleteTarget.title}" and all its progress? This cannot be undone.`)}
+          message={tr(`مسیر «${deleteTarget.title}» و همه‌ی پیشرفتش حذف شود؟ این کار برگشت‌پذیر نیست.`, `Delete the path "${iso(deleteTarget.title)}" and all its progress? This cannot be undone.`)}
           confirmLabel={tr("حذف مسیر", "Delete path")}
           busy={deleting}
           error={deleteError}

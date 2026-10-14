@@ -7,7 +7,7 @@ import { faNum, weekdayShort, isoLocal, jMonthName, toJalali } from "@/lib/jalal
 import { cn } from "@/lib/utils";
 import { SegmentedTabs } from "./SegmentedTabs";
 import { DashCard } from "./DashCard";
-import { tr } from "@/lib/i18n";
+import { tr, iso } from "@/lib/i18n";
 
 type Entry = { customCalories: number; date?: string; createdAt?: string };
 type ChartRange = "weekly" | "monthly";

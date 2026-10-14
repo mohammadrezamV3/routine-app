@@ -26,7 +26,7 @@ import { REFERRAL_DISCOUNT_PERCENT } from "@/lib/referral";
 import { canvasToBlob, renderShareCard, shareText, type ShareCardInput } from "@/lib/shareCard";
 import { AnimatedStreakFlame } from "./AnimatedStreakFlame";
 import { Spinner } from "./Spinner";
-import { tr, isEn } from "@/lib/i18n";
+import { tr, isEn, iso } from "@/lib/i18n";
 
 const WEEK_FA = ["ش", "ی", "د", "س", "چ", "پ", "ج"];
 /** برچسب روزهای هفته (شنبه تا جمعه) به زبان جاری */

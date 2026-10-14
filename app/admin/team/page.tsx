@@ -11,7 +11,7 @@ import {
   TEAM_BIO_MAX, TEAM_LINK_KINDS, TEAM_MAX_MEMBERS, TEAM_NAME_MAX, TEAM_ROLES_MAX, TEAM_ROLE_MAX,
   type TeamLinkKind, type TeamMember,
 } from "@/lib/teamMembers";
-import { tr } from "@/lib/i18n";
+import { tr, iso } from "@/lib/i18n";
 
 // مدیریت اعضای تیم Arion Group (نمایش در /about پس از زدن روی «Arion Group»).
 // ترتیب این فهرست همون ترتیب نمایشه. هر تغییر کل فهرست رو ذخیره می‌کنه.
@@ -209,7 +209,7 @@ function MemberForm({ draft, onClose, onSave }: { draft: Draft; onClose: () => v
               {d.roles.map((r) => (
                 <span key={r} className="admin-team-role-chip">
                   {r}
-                  <button type="button" className="admin-team-role-x" aria-label={tr(`حذف ${r}`, `Delete ${r}`)} onClick={() => setD({ ...d, roles: d.roles.filter((x) => x !== r) })}><X size={12} /></button>
+                  <button type="button" className="admin-team-role-x" aria-label={tr(`حذف ${r}`, `Delete ${iso(r)}`)} onClick={() => setD({ ...d, roles: d.roles.filter((x) => x !== r) })}><X size={12} /></button>
                 </span>
               ))}
             </div>

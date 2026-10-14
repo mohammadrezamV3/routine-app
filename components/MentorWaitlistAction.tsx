@@ -1,6 +1,6 @@
 "use client";
 
-import { tr } from "@/lib/i18n";
+import { tr, iso } from "@/lib/i18n";
 import { useState } from "react";
 import { Hourglass, ListPlus, LogOut, PartyPopper, Send, TimerOff, X } from "lucide-react";
 import { MentorChip } from "./MentorUI";
@@ -94,7 +94,7 @@ export function MentorWaitlistAction({
   if (waitlist?.status === "OFFERED" && waitlist.offerExpiresAt) {
     body = (
       <>
-        <MentorChip tone="ok" icon={<PartyPopper {...CHIP} />} title={tr(`یه جا پیش ${mentorName} برات نگه داشته شده`, `A spot with ${mentorName} is being held for you`)}>
+        <MentorChip tone="ok" icon={<PartyPopper {...CHIP} />} title={tr(`یه جا پیش ${mentorName} برات نگه داشته شده`, `A spot with ${iso(mentorName)} is being held for you`)}>
           {tr("نوبتت رسید", "It is your turn")} · {offerRemainingLabel(waitlist.offerExpiresAt)}
         </MentorChip>
         <div className="mentor-btn-group" style={{ width: "100%" }}>

@@ -5,7 +5,7 @@ import { MentorConfirmDialog } from "./MentorConfirmDialog";
 import { fa, mentorApi } from "./MentorDashKit";
 import { MentorField } from "./MentorUI";
 import { END_REASON_MAX, PAUSE_REASON_MAX } from "@/lib/mentorAvailability";
-import { tr } from "@/lib/i18n";
+import { tr, iso } from "@/lib/i18n";
 
 export type StudentRelationDialog = "pause" | "resume" | "end";
 
@@ -62,9 +62,9 @@ export function MentorStudentRelationControls({
   return (
     <MentorConfirmDialog
       message={
-        dialog === "pause" ? tr(`همکاری با ${name} موقتا متوقف بشه؟`, `Pause working with ${name}?`)
-          : dialog === "resume" ? tr(`همکاری با ${name} ادامه پیدا کنه؟`, `Resume working with ${name}?`)
-          : tr(`همکاری با ${name} تموم بشه؟`, `End working with ${name}?`)
+        dialog === "pause" ? tr(`همکاری با ${name} موقتا متوقف بشه؟`, `Pause working with ${iso(name)}?`)
+          : dialog === "resume" ? tr(`همکاری با ${name} ادامه پیدا کنه؟`, `Resume working with ${iso(name)}?`)
+          : tr(`همکاری با ${name} تموم بشه؟`, `End working with ${iso(name)}?`)
       }
       hint={
         dialog === "pause" ? tr("گفت‌وگو و برنامه‌های فعلی می‌مونن؛ به شاگرد خبر می‌دیم که همکاری متوقفه.", "The chat and current programs stay. We will let the student know you paused.")
@@ -81,7 +81,7 @@ export function MentorStudentRelationControls({
       {dialog !== "resume" && (
         <MentorField
           label={dialog === "end" ? tr("دلیل پایان", "Reason for ending") : tr("دلیل توقف", "Reason for pausing")} htmlFor="mrc-reason" optional
-          hint={tr(`به ${name} نشون داده می‌شه؛ حداکثر ${fa(dialog === "end" ? END_REASON_MAX : PAUSE_REASON_MAX)} حرف`, `${name} will see this; at most ${fa(dialog === "end" ? END_REASON_MAX : PAUSE_REASON_MAX)} characters`)}
+          hint={tr(`به ${name} نشون داده می‌شه؛ حداکثر ${fa(dialog === "end" ? END_REASON_MAX : PAUSE_REASON_MAX)} حرف`, `${iso(name)} will see this; at most ${fa(dialog === "end" ? END_REASON_MAX : PAUSE_REASON_MAX)} characters`)}
         >
           <textarea
             id="mrc-reason" className="wsearch-newform-name trade-glass-field" rows={2}

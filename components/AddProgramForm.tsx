@@ -24,7 +24,7 @@ import {
   type ProgramKind,
   type TimeRow,
 } from "@/lib/programForm";
-import { isEn, tr } from "@/lib/i18n";
+import { isEn, tr, iso } from "@/lib/i18n";
 import "./add-program.css";
 
 type ScheduleOpts = { removedOccurrences: Set<string>; customOccurrences: CustomOccurrence[] };
@@ -251,7 +251,7 @@ export function AddProgramForm({
     const live = computeConflicts();
     const hit = usedRows.map((r) => live[r.id]).find((c) => c);
     if (hit) {
-      setFormError(tr(`تداخل زمانی با «${hit}» — این برنامه اضافه نشد`, `Time conflict with "${hit}" — this plan was not added`));
+      setFormError(tr(`تداخل زمانی با «${hit}» — این برنامه اضافه نشد`, `Time conflict with "${iso(hit)}" — this plan was not added`));
       setStatus("error");
       setTimeout(() => setStatus("idle"), 900);
       return;

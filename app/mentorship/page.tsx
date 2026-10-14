@@ -15,7 +15,7 @@ import { useAsyncAction } from "@/lib/useAsyncAction";
 import type { MentorshipAction, MentorshipRow, MentorshipsResponse, ProgramRow, ProgramsResponse } from "@/lib/mentorTypes";
 import { publicUserName } from "@/lib/mentorTypes";
 import { fmtDate, fmtRelative, networkError, readApiError } from "@/lib/mentorFormat";
-import { tr } from "@/lib/i18n";
+import { tr, iso } from "@/lib/i18n";
 import { faNum } from "@/lib/jalali";
 import { MENTOR_CATEGORIES, MENTOR_CATEGORY_META } from "@/lib/mentorCategories";
 import { categoryLabel } from "@/components/MentorBadges";
@@ -302,7 +302,7 @@ function MentorshipHome() {
 
       {confirmCancel && (
         <MentorConfirmDialog
-          message={tr(`درخواست به ${publicUserName(confirmCancel.counterpart)} لغو بشه؟`, `Cancel your request to ${publicUserName(confirmCancel.counterpart)}?`)}
+          message={tr(`درخواست به ${publicUserName(confirmCancel.counterpart)} لغو بشه؟`, `Cancel your request to ${iso(publicUserName(confirmCancel.counterpart))}?`)}
           hint={tr("بعدا می‌تونی دوباره درخواست بدی.", "You can send a request again later.")}
           confirmLabel={tr("لغو درخواست", "Cancel request")}
           busy={busy(`cancel:${confirmCancel.id}`)}

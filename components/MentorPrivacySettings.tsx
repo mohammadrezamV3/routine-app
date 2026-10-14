@@ -12,7 +12,7 @@ import { LoadingBlock } from "@/components/Spinner";
 import { getCustomOccurrences, IMPORTANCE_LABELS, type CustomOccurrence, type Importance } from "@/lib/storage";
 import type { PrivacyResponse, PrivacyScope, PrivacySettings } from "@/lib/mentorTypes";
 import { networkError, readApiError } from "@/lib/mentorFormat";
-import { tr } from "@/lib/i18n";
+import { tr, iso } from "@/lib/i18n";
 
 const SECTION = { size: 15, strokeWidth: 1.75, "aria-hidden": true } as const;
 
@@ -120,7 +120,7 @@ export function MentorPrivacySettings({ mentorshipId, mentorName, active }: { me
       <MentorSection
         title={tr("برنامه‌های قابل مشاهده", "Visible programs")}
         icon={<ShieldCheck {...SECTION} />}
-        desc={tr(`فقط ${mentorName} می‌بینه و هرچی اجازه ندی براش فرستاده نمی‌شه.${active ? "" : " تا همکاری شروع نشه چیزی نمی‌بینه."}`, `Only ${mentorName} can see these, and anything you don't allow is never sent to them.${active ? "" : " They won't see anything until the mentorship starts."}`)}
+        desc={tr(`فقط ${mentorName} می‌بینه و هرچی اجازه ندی براش فرستاده نمی‌شه.${active ? "" : " تا همکاری شروع نشه چیزی نمی‌بینه."}`, `Only ${iso(mentorName)} can see these, and anything you don't allow is never sent to them.${active ? "" : " They won't see anything until the mentorship starts."}`)}
       >
         <label className="mentor-check">
           <TickButton shape="square" size={22} checked={allOn} onToggle={() => patch({ shareAllPrograms: !allOn })} />

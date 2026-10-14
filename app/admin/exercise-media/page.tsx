@@ -10,7 +10,7 @@ import { EXERCISE_CATALOG, exerciseSearchText, matchesExerciseQuery } from "@/li
 import { MAX_MEDIA_DATA_URL_LENGTH, MEDIA_MAX_EDGE, mediaKey } from "@/lib/exerciseMedia";
 import { normalizeFa } from "@/lib/utils";
 import { Spinner } from "@/components/Spinner";
-import { tr } from "@/lib/i18n";
+import { tr, iso } from "@/lib/i18n";
 
 type Item = { nameKey: string; name: string; updatedAt: string };
 
@@ -323,7 +323,7 @@ export default function AdminExerciseMediaPage() {
             <div className="admin-field">
               <span>{tr("پیش‌نمایش", "Preview")}</span>
               <div className={`admin-media-preview${loadingPreview ? " is-loading" : ""}`}>
-                {dataUrl ? <img src={dataUrl} alt={name ? tr(`عکس ${name}`, `Image of ${name}`) : ""} /> : !loadingPreview && <ImageOff size={22} />}
+                {dataUrl ? <img src={dataUrl} alt={name ? tr(`عکس ${name}`, `Image of ${iso(name)}`) : ""} /> : !loadingPreview && <ImageOff size={22} />}
               </div>
             </div>
           </div>
@@ -369,7 +369,7 @@ export default function AdminExerciseMediaPage() {
                 type="button"
                 className="admin-icon-btn admin-icon-danger"
                 onClick={() => setDeleting(item)}
-                aria-label={tr(`حذف عکس ${item.name}`, `Delete image of ${item.name}`)}
+                aria-label={tr(`حذف عکس ${item.name}`, `Delete image of ${iso(item.name)}`)}
                 title={tr("حذف عکس", "Delete image")}
               >
                 <Trash2 size={15} />

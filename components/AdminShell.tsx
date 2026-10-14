@@ -14,7 +14,7 @@ import { AdminToastProvider } from "@/components/admin/useAdminToast";
 import { AdminAccessContext } from "@/components/admin/AdminAccess";
 import { hasPermission, permissionForPath } from "@/lib/adminPermissions";
 import { navGroups, type NavGroup, type NavItem, type NavLeaf, type NavAccess } from "@/components/adminNavConfig";
-import { tr } from "@/lib/i18n";
+import { tr, iso } from "@/lib/i18n";
 import { useIsEn } from "@/components/I18nProvider";
 import { AdminAlertsProvider, useAdminAlerts } from "@/components/AdminAlerts";
 import { AdminAlertsBell } from "@/components/AdminAlertsBell";

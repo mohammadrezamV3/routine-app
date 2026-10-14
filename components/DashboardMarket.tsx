@@ -14,7 +14,7 @@ import { durationParts } from "@/lib/dashboardCompute";
 import type { DashEvent } from "@/lib/dashboardTypes";
 import { BentoCard, CardHead, D_EASE, Skel } from "./DashboardKit";
 import { FlagCircle } from "./FlagCircle";
-import { tr } from "@/lib/i18n";
+import { tr, iso } from "@/lib/i18n";
 
 const SESSION_FLAG = { SYDNEY: "AU", TOKYO: "JP", LONDON: "GB", NEWYORK: "US" } as const;
 const impactLabel = (i: "HIGH" | "MEDIUM" | "LOW") => ({ HIGH: tr("مهم", "High"), MEDIUM: tr("متوسط", "Medium"), LOW: tr("کم", "Low") })[i];

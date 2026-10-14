@@ -10,7 +10,7 @@ import { formatDateTime, toLocalInputValue } from "@/lib/adminFormat";
 import { CALENDAR_CURRENCIES, EconomicImpact, IMPACT_LABELS, IMPACT_ORDER } from "@/lib/economicCalendar";
 import { normalizeFa } from "@/lib/utils";
 import { Spinner } from "@/components/Spinner";
-import { tr } from "@/lib/i18n";
+import { tr, iso } from "@/lib/i18n";
 
 type EventRow = {
   id: string; title: string; country: string; currency: string; impact: EconomicImpact;
@@ -200,7 +200,7 @@ export default function AdminEconomicCalendarPage() {
 
       <div className="admin-card admin-econ-form" ref={formRef}>
         <div className="admin-chart-head">
-          <span className="admin-chart-title">{editing ? tr(`ویرایش: ${editing.title}`, `Edit: ${editing.title}`) : tr("ثبت رویداد جدید", "Add a new event")}</span>
+          <span className="admin-chart-title">{editing ? tr(`ویرایش: ${editing.title}`, `Edit: ${iso(editing.title)}`) : tr("ثبت رویداد جدید", "Add a new event")}</span>
         </div>
         {/* رویداد همگام‌شده را sync بعدی دوباره می‌نویسد — جز توضیحات، که
             عمدا محافظت شده (lib/economicCalendar.ts). بدون این هشدار،

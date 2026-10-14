@@ -17,7 +17,7 @@ import { Spinner } from "@/components/Spinner";
 import { formatCurrencyAmount, formatDateShort, formatDateTime, formatNumber } from "@/lib/adminFormat";
 import { auditLabel } from "@/lib/adminAuditLabels";
 import { localizedRecord } from "@/lib/localizedRecord";
-import { tr } from "@/lib/i18n";
+import { tr, iso } from "@/lib/i18n";
 import { useIsEn } from "@/components/I18nProvider";
 import { MAX_NOTE_LEN, STATUS_LABELS, UserStatus } from "@/lib/adminUsersView";
 import {
@@ -172,7 +172,7 @@ export function AdminUserProfile({ id, variant, onClose, onChanged }: { id: stri
               <span key={t} className="au-chip">
                 {t}
                 {can("users.edit") && canAct && (
-                  <button type="button" className="au-chip-x" aria-label={tr(`حذف برچسب ${t}`, `Remove tag ${t}`)}
+                  <button type="button" className="au-chip-x" aria-label={tr(`حذف برچسب ${t}`, `Remove tag ${iso(t)}`)}
                     onClick={() => act(() => adminFetch(`/api/admin/users/${id}/tags?tag=${encodeURIComponent(t)}`, { method: "DELETE" }), tr("برچسب حذف شد", "Tag removed"))}>
                     <X size={11} />
                   </button>

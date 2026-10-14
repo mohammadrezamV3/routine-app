@@ -10,7 +10,7 @@ import { AdminTabBar } from "@/components/admin/TabBar";
 import { UserAvatar, displayName } from "@/components/admin/UserAvatar";
 import { formatDateShort, formatNumber } from "@/lib/adminFormat";
 import { MENTOR_CATEGORY_META, VERIFICATION_LABELS, VERIFICATION_SHORT, isMentorCategory } from "@/lib/mentorCategories";
-import { tr } from "@/lib/i18n";
+import { tr, iso } from "@/lib/i18n";
 
 type VStatus = keyof typeof VERIFICATION_LABELS;
 type MentorRow = {
@@ -207,7 +207,7 @@ function MentorsInner() {
                     <td className="admin-ltr">{formatNumber(m.students)}</td>
                     <td className="admin-ltr">{formatDateShort(m.createdAt)}</td>
                     <td>
-                      <Link href={`/admin/mentors/${m.profileId}`} className="admin-icon-btn" aria-label={tr(`جزئیات ${displayName(m.user)}`, `Details of ${displayName(m.user)}`)}>
+                      <Link href={`/admin/mentors/${m.profileId}`} className="admin-icon-btn" aria-label={tr(`جزئیات ${displayName(m.user)}`, `Details of ${iso(displayName(m.user))}`)}>
                         <Eye size={15} strokeWidth={1.75} aria-hidden />
                       </Link>
                     </td>

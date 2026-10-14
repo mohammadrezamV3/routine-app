@@ -91,3 +91,14 @@ export function switchLocale(locale: Locale) {
   writeLocaleCookie(locale);
   if (typeof window !== "undefined") window.location.reload();
 }
+
+/**
+ * جداسازی دوجهته (FSI ... PDI) برای مقدار ذخیره‌شده/کاربرنوشته (اسم برنامه، اسم کاربر، عنوان …)
+ * وقتی داخل جمله‌ی انگلیسی میاد: متن فارسی داخل جمله‌ی انگلیسی بدون اون، عددها و نقطه‌گذاری
+ * کنارش رو جابه‌جا می‌کنه («1905 · پایین‌تنه kcal»). فقط در شاخه‌ی انگلیسی tr() استفاده کن؛
+ * شاخه‌ی فارسی دست‌نخورده می‌مونه.
+ */
+export function iso(value: string | number | null | undefined): string {
+  if (value === null || value === undefined || value === "") return "";
+  return `\u2068${value}\u2069`;
+}

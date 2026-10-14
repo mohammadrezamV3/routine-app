@@ -9,7 +9,7 @@ import { fa, mentorApi } from "./MentorDashKit";
 import { MI, MI_STROKE, MentorEmpty, MentorField } from "./MentorUI";
 import { LABELS_MAX, LABEL_NAME_MAX } from "@/lib/mentorAvailability";
 import type { StudentLabel } from "@/lib/mentorTypes";
-import { tr } from "@/lib/i18n";
+import { tr, iso } from "@/lib/i18n";
 
 const ic = (Icon: typeof Tag, size: number) => <Icon size={size} strokeWidth={MI_STROKE} aria-hidden />;
 
@@ -90,10 +90,10 @@ export function MentorLabelManager({ initial, onChange }: { initial: StudentLabe
             <div className="mentor-row">
               <span className="mentor-row-body"><span className="mentor-row-title">{l.name}</span></span>
               <span className="mentor-row-end">
-                <button type="button" className="trade-icon-btn" aria-label={tr(`تغییر نام ${l.name}`, `Rename ${l.name}`)} onClick={() => { setError(null); setEditing({ id: l.id, name: l.name }); }}>
+                <button type="button" className="trade-icon-btn" aria-label={tr(`تغییر نام ${l.name}`, `Rename ${iso(l.name)}`)} onClick={() => { setError(null); setEditing({ id: l.id, name: l.name }); }}>
                   {ic(Pencil, MI.btnSm)}
                 </button>
-                <button type="button" className="trade-icon-btn" aria-label={tr(`حذف ${l.name}`, `Delete ${l.name}`)} onClick={() => { setError(null); setConfirm(l); }}>
+                <button type="button" className="trade-icon-btn" aria-label={tr(`حذف ${l.name}`, `Delete ${iso(l.name)}`)} onClick={() => { setError(null); setConfirm(l); }}>
                   {ic(Trash2, MI.btnSm)}
                 </button>
               </span>
@@ -123,7 +123,7 @@ export function MentorLabelManager({ initial, onChange }: { initial: StudentLabe
 
       {confirm && (
         <MentorConfirmDialog
-          message={tr(`برچسب «${confirm.name}» حذف بشه؟`, `Delete the label "${confirm.name}"?`)}
+          message={tr(`برچسب «${confirm.name}» حذف بشه؟`, `Delete the label "${iso(confirm.name)}"?`)}
           hint={tr("برچسب از روی همه‌ی شاگردها برداشته می‌شه.", "The label is removed from all students.")}
           confirmLabel={tr("حذف برچسب", "Delete label")}
           danger

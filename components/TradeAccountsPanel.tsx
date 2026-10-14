@@ -18,7 +18,7 @@ import { LockBodyScroll } from "./LockBodyScroll";
 import { PanelSkeleton } from "./PanelSkeleton";
 import { useLiveRefresh } from "@/lib/liveSync";
 import { Spinner } from "./Spinner";
-import { tr } from "@/lib/i18n";
+import { tr, iso } from "@/lib/i18n";
 
 // صفحه‌ی «ژورنال‌نویسی»: اول حساب‌ها، فقط به‌شکل فشرده (اسم + سود/زیان +
 // برچسب) — جزئیات کامل (بالانس/تعداد معاملات/نرخ برد/هدف) جاش صفحه‌ی
@@ -338,7 +338,7 @@ function AccountRow({
         href={`/trade/accounts/${a.id}`}
         className="trade-account-hit"
         prefetch
-        aria-label={tr(`باز کردن حساب ${a.name}`, `Open account ${a.name}`)}
+        aria-label={tr(`باز کردن حساب ${a.name}`, `Open account ${iso(a.name)}`)}
         tabIndex={-1}
       />
 
@@ -431,7 +431,7 @@ function PurgeConfirm({ account, onCancel, onConfirm, busy }: { account: TradeAc
       <div className="modal-panel open" role="dialog" aria-modal="true">
         <div className="modal-head"><div className="modal-title">{tr("حذف کامل حساب", "Delete account permanently")}</div></div>
         <div className="item-line">
-          {tr(`با این کار تمام معاملات، عکس‌ها و آمار «${account.name}» برای همیشه پاک می‌شوند. این کار برگشت‌پذیر نیست.`, `This permanently deletes all trades, images and stats of "${account.name}". This cannot be undone.`)}
+          {tr(`با این کار تمام معاملات، عکس‌ها و آمار «${account.name}» برای همیشه پاک می‌شوند. این کار برگشت‌پذیر نیست.`, `This permanently deletes all trades, images and stats of "${iso(account.name)}". This cannot be undone.`)}
         </div>
         <label className="exercise-form-label">{tr("برای تایید، نام حساب را تایپ کن", "To confirm, type the account name")}</label>
         <input className="wsearch-newform-name trade-glass-field" value={typed} onChange={(e) => setTyped(e.target.value)} placeholder={account.name} />

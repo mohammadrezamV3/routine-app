@@ -4,7 +4,7 @@ import "./mentor.css";
 import { useState } from "react";
 import { ChevronDown, Lock } from "lucide-react";
 import { faNum } from "@/lib/jalali";
-import { tr } from "@/lib/i18n";
+import { tr, iso } from "@/lib/i18n";
 import { forgetThisDevice, removeDevice, useE2EEIdentity, type Identity } from "@/lib/e2ee/client";
 import { MentorSheet } from "./MentorSheet";
 import { MentorConfirmDialog } from "./MentorConfirmDialog";
@@ -61,7 +61,7 @@ export function MentorE2EESettings({
       <MentorSheet open onClose={onClose} title={tr("امنیت گفت‌وگو", "Chat security")} dismissible={busy === null && !confirm}>
         <div className="mv2-ms-secure">
           <span className="mv2-ms-secure-lock" aria-hidden><Lock size={34} strokeWidth={1.75} /></span>
-          <p className="mv2-ms-secure-title">{tr(`فقط تو و ${peerName || "طرف مقابل"} این پیام‌ها رو می‌بینید`, `Only you and ${peerName || "the other person"} can see these messages`)}</p>
+          <p className="mv2-ms-secure-title">{tr(`فقط تو و ${peerName || "طرف مقابل"} این پیام‌ها رو می‌بینید`, `Only you and ${iso(peerName) || "the other person"} can see these messages`)}</p>
           <p className="mv2-ms-secure-text">{tr("حتی آریون هم نمی‌تونه بخونه‌شون. لازم نیست کاری بکنی؛ همه‌چیز خودکاره.", "Not even Arion can read them. You don't need to do anything; it's all automatic.")}</p>
           <button type="button" className="mentor-text-btn mv2-ms-more" aria-expanded={more} aria-controls="mv2-ms-more-body" onClick={() => setMore((v) => !v)}>
             {tr("جزئیات بیشتر", "More details")} <ChevronDown size={16} strokeWidth={1.75} className={more ? "is-open" : ""} aria-hidden />
@@ -74,7 +74,7 @@ export function MentorE2EESettings({
                 <div className="mentor-field-label">{tr("کد تایید", "Verification code")}</div>
                 <p className="mentor-e2ee-code" dir="ltr">{faNum(safetyCode)}</p>
                 <p className="mentor-field-hint">
-                  {tr(`اگه همین کد روی دستگاه ${peerName || "طرف مقابل"} هم دیده می‌شه، همه‌چیز درسته. کد رو حضوری یا از یه راه دیگه با هم مقایسه کنید.`, `If the same code shows on ${peerName || "the other person"}'s device, everything is fine. Compare the code in person or another way.`)}
+                  {tr(`اگه همین کد روی دستگاه ${peerName || "طرف مقابل"} هم دیده می‌شه، همه‌چیز درسته. کد رو حضوری یا از یه راه دیگه با هم مقایسه کنید.`, `If the same code shows on ${iso(peerName) || "the other person"}'s device, everything is fine. Compare the code in person or another way.`)}
                 </p>
               </div>
             )}
@@ -127,7 +127,7 @@ export function MentorE2EESettings({
       )}
       {confirm && confirm !== "forget" && (
         <MentorConfirmDialog
-          message={tr(`«${confirm.label}» حذف بشه؟`, `Remove "${confirm.label}"?`)}
+          message={tr(`«${confirm.label}» حذف بشه؟`, `Remove "${iso(confirm.label)}"?`)}
           hint={tr("پیام‌های بعدی دیگه روی اون دستگاه باز نمی‌شن.", "New messages will no longer open on that device.")}
           confirmLabel={tr("حذف دستگاه", "Remove device")}
           busy={busy === confirm.version}

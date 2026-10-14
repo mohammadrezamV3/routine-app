@@ -1,4 +1,4 @@
-import { tr } from "@/lib/i18n";
+import { tr, iso } from "@/lib/i18n";
 import { planDisplayName } from "@/lib/subscriptionI18n";
 import { prisma } from "@/lib/prisma";
 import { activeDayStreak, countActiveLastDays } from "@/lib/adminUsersView";
@@ -48,7 +48,7 @@ export async function getUserProfileExtras(userId: string, createdAt: Date) {
     if (p.refundedAt) events.push({ kind: "refund", title: tr("بازگشت وجه", "Refunded"), at: p.refundedAt.toISOString() });
   });
   subs.forEach((s) => events.push({ kind: "subscription", title: tr(`شروع اشتراک ${s.plan.nameFa}`, `${planDisplayName(s.plan)} subscription started`), at: s.createdAt.toISOString() }));
-  tickets.forEach((t) => events.push({ kind: "ticket", title: tr(`تیکت پشتیبانی: ${t.subject.slice(0, 60)}`, `Support ticket: ${t.subject.slice(0, 60)}`), at: t.createdAt.toISOString() }));
+  tickets.forEach((t) => events.push({ kind: "ticket", title: tr(`تیکت پشتیبانی: ${t.subject.slice(0, 60)}`, `Support ticket: ${iso(t.subject.slice(0, 60))}`), at: t.createdAt.toISOString() }));
   events.sort((a, b) => (a.at < b.at ? 1 : -1));
 
   return {

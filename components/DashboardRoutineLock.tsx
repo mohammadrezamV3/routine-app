@@ -10,7 +10,7 @@ import { entryOffer } from "@/lib/planPricing";
 import { usePlanPricing } from "@/lib/usePlanPricing";
 import { BentoCard, CardHead } from "./DashboardKit";
 import { DashIcon } from "./DashboardIcons";
-import { tr, isEn } from "@/lib/i18n";
+import { tr, isEn, iso } from "@/lib/i18n";
 
 export function DashboardRoutineLock({ area }: { area: "today" | "heat" }) {
   const today = area === "today";

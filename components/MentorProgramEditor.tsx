@@ -17,7 +17,7 @@ import { fa, mentorApi } from "./MentorDashKit";
 import { MI, MI_STROKE, MentorChip, MentorField, MentorNotice } from "./MentorUI";
 import { WEEK_ORDER, toEnDigits } from "@/lib/schedule";
 import { weekdayName, JalaliDate, formatJalali, jalaliToIso, toJalali } from "@/lib/jalali";
-import { tr, trv, isEn } from "@/lib/i18n";
+import { tr, trv, isEn, iso } from "@/lib/i18n";
 import { publicUserName } from "@/lib/mentorTypes";
 import type { Item, ItemInput, Program, ProgramType, PublicUser } from "@/lib/mentorTypes";
 
@@ -437,7 +437,7 @@ export function MentorProgramEditor(props: MentorProgramEditorProps) {
   return (
     <div className="mv2-pg-editor">
       {initialProgram?.changeRequestNote && (
-        <MentorNotice tone="warn" icon={ic(MessageSquareText, MI.row)} title={tr(`${studentFirst} تغییر خواسته`, `${studentFirst} asked for changes`)}>
+        <MentorNotice tone="warn" icon={ic(MessageSquareText, MI.row)} title={tr(`${studentFirst} تغییر خواسته`, `${iso(studentFirst)} asked for changes`)}>
           {initialProgram.changeRequestNote}
         </MentorNotice>
       )}
@@ -584,7 +584,7 @@ export function MentorProgramEditor(props: MentorProgramEditorProps) {
                 {busy === "save" ? <Spinner size={14} /> : saved ? tr("ذخیره شد", "Saved") : tr("ذخیره", "Save")}
               </button>
               <button type="button" className="trade-primary-btn mentor-btn" disabled={!!busy} onClick={send}>
-                {busy === "send" ? <Spinner size={14} /> : tr(`فرستادن برای ${studentFirst}`, `Send to ${studentFirst}`)}
+                {busy === "send" ? <Spinner size={14} /> : tr(`فرستادن برای ${studentFirst}`, `Send to ${iso(studentFirst)}`)}
               </button>
             </div>
           </div>
@@ -593,7 +593,7 @@ export function MentorProgramEditor(props: MentorProgramEditorProps) {
 
       {confirmDelete && (
         <MentorConfirmDialog
-          message={title.trim() ? tr(`برنامه‌ی «${title.trim()}» حذف بشه؟`, `Delete the program "${title.trim()}"?`) : tr("این برنامه حذف بشه؟", "Delete this program?")}
+          message={title.trim() ? tr(`برنامه‌ی «${title.trim()}» حذف بشه؟`, `Delete the program "${iso(title.trim())}"?`) : tr("این برنامه حذف بشه؟", "Delete this program?")}
           hint={tr("برنامه‌ی حذف‌شده برنمی‌گرده", "A deleted program cannot be restored")}
           confirmLabel={tr("حذف برنامه", "Delete program")}
           busy={busy === "delete"}
@@ -658,7 +658,7 @@ function MentorProgramEditorItem({
     >
       <div className="mv2-pg-item-head">
         <button
-          type="button" className="mv2-pg-grip" aria-label={tr(`جابه‌جایی ${name}`, `Move ${name}`)}
+          type="button" className="mv2-pg-grip" aria-label={tr(`جابه‌جایی ${name}`, `Move ${iso(name)}`)}
           onPointerDown={(e) => { e.preventDefault(); controls.start(e); }}
           onKeyDown={(e) => {
             if (e.key === "ArrowUp" && index > 0) { e.preventDefault(); e.stopPropagation(); onMove(-1); }
@@ -673,7 +673,7 @@ function MentorProgramEditorItem({
           {hasErr && !open && <span className="mv2-pg-item-err">{tr("نیاز به اصلاح داره", "Needs fixing")}</span>}
           <ChevronDown size={18} strokeWidth={MI_STROKE} className={`mv2-pg-chev${open ? " is-open" : ""}`} aria-hidden />
         </button>
-        <button type="button" className="trade-icon-btn danger" onClick={onRemove} aria-label={tr(`حذف ${name}`, `Delete ${name}`)}>
+        <button type="button" className="trade-icon-btn danger" onClick={onRemove} aria-label={tr(`حذف ${name}`, `Delete ${iso(name)}`)}>
           <X size={16} strokeWidth={MI_STROKE} aria-hidden />
         </button>
       </div>

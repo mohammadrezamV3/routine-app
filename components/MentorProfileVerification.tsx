@@ -1,6 +1,6 @@
 "use client";
 
-import { tr } from "@/lib/i18n";
+import { tr, iso } from "@/lib/i18n";
 import { brandName } from "@/lib/brand";
 import { useRef, useState } from "react";
 import {
@@ -215,14 +215,14 @@ function MentorDocRow({
                     <>
                       <button
                         type="button" className="trade-icon-btn mv2-set-iconbtn" disabled={!!busyDoc}
-                        onClick={() => download(d)} aria-label={tr(`دریافت ${d.fileName}`, `Download ${d.fileName}`)}
+                        onClick={() => download(d)} aria-label={tr(`دریافت ${d.fileName}`, `Download ${iso(d.fileName)}`)}
                       >
                         {busyDoc === d.id + ":get" ? <Spinner size={14} /> : <Download size={MI.btnSm} strokeWidth={MI_STROKE} />}
                       </button>
                       {canDelete && (
                         <button
                           type="button" className="trade-icon-btn danger mv2-set-iconbtn" disabled={!!busyDoc || uploading}
-                          onClick={() => { setDelError(null); setConfirmDel(d); }} aria-label={tr(`حذف ${d.fileName}`, `Delete ${d.fileName}`)}
+                          onClick={() => { setDelError(null); setConfirmDel(d); }} aria-label={tr(`حذف ${d.fileName}`, `Delete ${iso(d.fileName)}`)}
                         >
                           <Trash2 size={MI.btnSm} strokeWidth={MI_STROKE} />
                         </button>
@@ -254,7 +254,7 @@ function MentorDocRow({
 
           {confirmDel && (
             <MentorConfirmDialog
-              message={tr(`«${confirmDel.fileName}» حذف شود؟`, `Delete "${confirmDel.fileName}"?`)}
+              message={tr(`«${confirmDel.fileName}» حذف شود؟`, `Delete "${iso(confirmDel.fileName)}"?`)}
               hint={tr("فایل حذف‌شده برای بررسی ادمین در دسترس نیست", "A deleted file is no longer available to the admins for review")}
               confirmLabel={tr("حذف فایل", "Delete file")}
               busy={busyDoc === confirmDel.id + ":del"}

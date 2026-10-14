@@ -5,7 +5,7 @@ import { CloudMoon, Coffee, Hourglass, Moon, Sparkles, Sunrise, TrendingDown, Tr
 import { GradientRing, RING_AMBER, RING_BLUE, RING_GREEN } from "./GradientRing";
 import { chronotypeLabel, durationLabel, type SleepInsights } from "@/lib/sleep";
 import { faNum } from "@/lib/jalali";
-import { tr } from "@/lib/i18n";
+import { tr, iso } from "@/lib/i18n";
 import "./sleep-insights.css";
 
 // تحلیل‌ها و آمار خواب: کاشی‌های عددی + کارت‌های هوشمند که فقط وقتی داده‌اش

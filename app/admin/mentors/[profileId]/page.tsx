@@ -18,7 +18,7 @@ import { MentorRankingBreakdown } from "@/components/admin/MentorRankingBreakdow
 import "@/components/mentor.css";
 import { formatDateShort, formatDateTime, formatNumber } from "@/lib/adminFormat";
 import { MENTOR_CATEGORY_META, VERIFICATION_LABELS, VERIFICATION_SHORT, isMentorCategory } from "@/lib/mentorCategories";
-import { tr } from "@/lib/i18n";
+import { tr, iso } from "@/lib/i18n";
 
 type VStatus = keyof typeof VERIFICATION_LABELS;
 type DocKind = "IDENTITY" | "CERTIFICATE";
@@ -155,7 +155,7 @@ export default function AdminMentorDetailPage() {
           <div className="admin-user-hero-sub admin-ltr">{u.username ? `@${u.username}` : "—"}</div>
           {p.suspendedAt && (
             <div className="admin-user-hero-sub">
-              {tr("تعلیق از ", "Suspended since ")}{formatDateShort(p.suspendedAt)}{p.suspendedReason ? tr(`؛ دلیل: ${p.suspendedReason}`, `; reason: ${p.suspendedReason}`) : ""}
+              {tr("تعلیق از ", "Suspended since ")}{formatDateShort(p.suspendedAt)}{p.suspendedReason ? tr(`؛ دلیل: ${p.suspendedReason}`, `; reason: ${iso(p.suspendedReason)}`) : ""}
             </div>
           )}
           <button type="button" className="admin-id-chip" onClick={() => { navigator.clipboard?.writeText(p.id).then(() => toast(tr("آیدی پروفایل کپی شد", "Profile ID copied")), () => toast(tr("کپی ناموفق بود", "Copy failed"), "err")); }}>
@@ -192,8 +192,8 @@ export default function AdminMentorDetailPage() {
             {p.categories.length === 0 ? <span>—</span> : (
               <span className="admin-badge-row" style={{ justifyContent: "flex-end" }}>
                 {p.categories.map((c) => (
-                  <span key={c} className="admin-badge gray" title={c === "ROUTINE" && routineRole ? tr(`نقش در روتین: ${routineRole}`, `Role in routine: ${routineRole}`) : undefined}>
-                    {categoryLabel(c)}{c === "ROUTINE" && routineRole ? tr(`؛ ${routineRole}`, `; ${routineRole}`) : ""}
+                  <span key={c} className="admin-badge gray" title={c === "ROUTINE" && routineRole ? tr(`نقش در روتین: ${routineRole}`, `Role in routine: ${iso(routineRole)}`) : undefined}>
+                    {categoryLabel(c)}{c === "ROUTINE" && routineRole ? tr(`؛ ${routineRole}`, `; ${iso(routineRole)}`) : ""}
                   </span>
                 ))}
               </span>
@@ -420,7 +420,7 @@ function VerificationRow({
                   {formatSize(d.sizeBytes)}{tr("؛ ", "; ")}{formatDateShort(d.createdAt)}
                 </span>
                 {canReview && (
-                  <button type="button" className="admin-icon-btn" aria-label={tr(`مشاهده‌ی ${d.fileName}`, `View ${d.fileName}`)} onClick={() => onView(d)}>
+                  <button type="button" className="admin-icon-btn" aria-label={tr(`مشاهده‌ی ${d.fileName}`, `View ${iso(d.fileName)}`)} onClick={() => onView(d)}>
                     <Eye {...I} aria-hidden />
                   </button>
                 )}

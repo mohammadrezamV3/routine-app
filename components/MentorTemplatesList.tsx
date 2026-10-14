@@ -11,7 +11,7 @@ import { MentorDashError, fa, mentorApi } from "./MentorDashKit";
 import { MI, MI_STROKE, MentorEmptyState, MentorField, MentorRow } from "./MentorUI";
 import { fmtRelative } from "@/lib/mentorFormat";
 import { weekdayName } from "@/lib/jalali";
-import { tr } from "@/lib/i18n";
+import { tr, iso } from "@/lib/i18n";
 import { WEEK_ORDER } from "@/lib/schedule";
 import type { TemplateDetail, TemplateItem, TemplateRow, TemplatesResponse, TemplateResponse } from "@/lib/mentorToolsTypes";
 
@@ -80,7 +80,7 @@ export function MentorTemplatesList() {
       </div>
       {confirm && (
         <MentorConfirmDialog
-          message={tr(`قالب «${confirm.name}» حذف بشه؟`, `Delete the template "${confirm.name}"?`)}
+          message={tr(`قالب «${confirm.name}» حذف بشه؟`, `Delete the template "${iso(confirm.name)}"?`)}
           hint={tr("برنامه‌هایی که از این قالب ساختی تغییر نمی‌کنن", "Programs you made from this template are not changed")}
           confirmLabel={tr("حذف قالب", "Delete template")}
           busy={delBusy}
@@ -142,7 +142,7 @@ function TemplateRowView({ t, onRenamed, onDelete }: { t: TemplateRow; onRenamed
       }
       end={
         <MentorKebabMenu
-          label={tr(`کارهای بیشتر روی قالب ${t.name}`, `More actions for template ${t.name}`)}
+          label={tr(`کارهای بیشتر روی قالب ${t.name}`, `More actions for template ${iso(t.name)}`)}
           actions={[
             { label: tr("تغییر اسم", "Rename"), icon: <Pencil size={MI.btn} strokeWidth={MI_STROKE} aria-hidden />, onClick: () => { setMode("rename"); setErr(null); } },
             { label: tr("حذف قالب", "Delete template"), icon: <Trash2 size={MI.btn} strokeWidth={MI_STROKE} aria-hidden />, danger: true, onClick: onDelete },

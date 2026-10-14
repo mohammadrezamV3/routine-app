@@ -1,4 +1,4 @@
-import { tr } from "@/lib/i18n";
+import { tr, iso } from "@/lib/i18n";
 import { pl } from "./plural";
 import { ANALYSIS_DOMAIN_LABELS, type AnalysisDomain } from "./types";
 

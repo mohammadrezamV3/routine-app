@@ -25,7 +25,7 @@ import { isoLocal } from "@/lib/jalali";
 import { exportCsvUrl } from "@/lib/mentorToolsTypes";
 import { publicUserName } from "@/lib/mentorTypes";
 import type { StudentView } from "@/components/MentorStudentTypes";
-import { tr } from "@/lib/i18n";
+import { tr, iso } from "@/lib/i18n";
 
 const ic = (Icon: typeof Tag, size: number) => <Icon size={size} strokeWidth={MI_STROKE} aria-hidden />;
 const privateText = () => tr("این بخش رو شاگرد خصوصی نگه داشته", "The student keeps this section private");
@@ -189,7 +189,7 @@ export default function MentorStudentPage() {
                       {showProgress && p.progress.hidden && <span className="mentor-muted">{privateText()}</span>}
                       {showProgress && !p.progress.hidden && (
                         <div className="mentor-progress" style={{ marginTop: 0 }}>
-                          <MentorDashBar rate={p.progress.rate} label={tr(`پیشرفت ${p.title}`, `Progress on ${p.title}`)} />
+                          <MentorDashBar rate={p.progress.rate} label={tr(`پیشرفت ${p.title}`, `Progress on ${iso(p.title)}`)} />
                           <span className="mentor-progress-value">{pct(p.progress.rate)}</span>
                         </div>
                       )}

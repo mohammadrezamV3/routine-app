@@ -1,6 +1,6 @@
 "use client";
 
-import { tr } from "@/lib/i18n";
+import { tr, iso } from "@/lib/i18n";
 import { useState } from "react";
 import { Ban, Check, Plus, Tag, X } from "lucide-react";
 import { TickOption } from "./TickOption";
@@ -172,7 +172,7 @@ export function MentorProfileForm({ profile, onSaved }: { profile: MentorSelf | 
                   <button
                     type="button" className="mentor-text-btn mv2-set-spec-x"
                     onClick={() => { setSpecialties((xs) => xs.filter((x) => x !== sp)); touched(); }}
-                    aria-label={tr(`حذف تخصص ${sp}`, `Remove specialty ${sp}`)}
+                    aria-label={tr(`حذف تخصص ${sp}`, `Remove specialty ${iso(sp)}`)}
                   >
                     {ic(X, MI.chip)}
                   </button>
