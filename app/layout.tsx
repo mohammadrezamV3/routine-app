@@ -10,6 +10,8 @@ import "@/components/ltr-admin.css";
 import "@/components/ltr-public.css";
 import "./event-themes.css";
 import "./admin-theme.css";
+// سیستم حرکت (توکن‌ها، ابزارها، ورود صفحه/بخش) — بعد از globals تا در اسپسیفیسیتی برابر برنده باشه
+import "./motion.css";
 import { ThemeProvider } from "@/components/ThemeProvider";
 import { NavDrawer } from "@/components/NavDrawer";
 import { BackgroundCanvasLoader } from "@/components/BackgroundCanvasLoader";
@@ -32,6 +34,7 @@ import { InlineMeta } from "@/components/InlineMeta";
 import { PwaProvider } from "@/components/PwaProvider";
 import { InviteRefCapture } from "@/components/InviteRefCapture";
 import { PopupExitAnimator } from "@/components/PopupExitAnimator";
+import { MotionRuntime } from "@/components/MotionRuntime";
 import { BoxHoverTracker } from "@/components/BoxHoverTracker";
 import { RouteProgress } from "@/components/RouteProgress";
 import { Suspense } from "react";
@@ -313,6 +316,8 @@ export default async function RootLayout({ children }: { children: React.ReactNo
         <AssetRecovery />
         {/* خروج نرم همه‌ی پاپ‌آپ‌ها — lib/popupExit.ts */}
         <PopupExitAnimator />
+        {/* ورود نرم محتوای تازه‌رسیده + ظاهرشدن با اسکرول در صفحه‌های عمومی — app/motion.css */}
+        <MotionRuntime />
         {/* نور هاور دور همه‌ی باکس‌ها — lib/boxHover.ts */}
         <BoxHoverTracker />
         <I18nProvider locale={locale}>

@@ -25,6 +25,8 @@ const BACKDROP_SEL = [
   ".trade-lightbox",
   ".photo-lightbox",
   ".popup-backdrop",
+  ".au-backdrop",
+  ".ads-pal-backdrop",
 ].join(",");
 
 const PANEL_SEL = [
@@ -38,9 +40,13 @@ const PANEL_SEL = [
   ".exercise-catalog-popup-panel",
   ".premium-celebration-card",
   ".popup-panel",
+  ".au-drawer-panel",
+  ".ads-pal",
 ].join(",");
 
-const MENU_SEL = [".dash-context-menu", ".notif-panel"].join(",");
+const MENU_SEL = [".dash-context-menu", ".notif-panel", ".calorie-unit-dropdown"].join(",");
+// کشوی کناری: خروج افقی به سمت شروع (RTL راست، LTR چپ) هم‌جهت با ورودش
+const DRAWER_SEL = ".au-drawer-panel";
 
 const ANY_SEL = `${BACKDROP_SEL},${PANEL_SEL},${MENU_SEL}`;
 const EXCLUDE_SEL = '.m-sheet-wrap, [data-popup-exit="self"], [data-popup-ghost]';
@@ -149,7 +155,8 @@ function animateGhost(ghost: HTMLElement, reduced: boolean) {
     }
     if (!reduced && (isPanel || isMenu)) {
       from.translate = "0 0";
-      to.translate = isMenu ? "0 -6px" : "0 24px";
+      if (el.matches(DRAWER_SEL)) to.translate = `${document.documentElement.dir === "ltr" ? -24 : 24}px 0`;
+      else to.translate = isMenu ? "0 -6px" : "0 24px";
     }
     if (Object.keys(from).length === 0) continue;
     try {
