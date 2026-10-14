@@ -12,7 +12,7 @@ import { displayName } from "@/components/admin/UserAvatar";
 import { adminFetch, useAdminToast } from "@/components/admin/useAdminToast";
 import { Spinner } from "@/components/Spinner";
 import { formatDateTime, formatNumber } from "@/lib/adminFormat";
-import { tr } from "@/lib/i18n";
+import { isEn, tr } from "@/lib/i18n";
 
 type PublicUser = { id: string; name: string | null; lastName: string | null; username: string | null; avatarUrl: string | null };
 type Review = {
@@ -118,7 +118,7 @@ export default function AdminMentorReviewsPage() {
                     </span>
                   </div>
                   <Stars n={r.rating} />
-                  <div className="trade-row-main" style={{ whiteSpace: "pre-wrap", fontSize: 13, lineHeight: 1.9 }}>{r.body || <span className="admin-muted">{tr("بدون متن", "No text")}</span>}</div>
+                  <div className="trade-row-main" dir={isEn() ? "auto" : undefined} style={{ whiteSpace: "pre-wrap", fontSize: 13, lineHeight: 1.9 }}>{r.body || <span className="admin-muted">{tr("بدون متن", "No text")}</span>}</div>
                   {r.status === "HIDDEN" && r.hiddenReason && <div className="trade-row-sub">{tr("دلیل پنهان شدن: ", "Reason for hiding: ")}{r.hiddenReason}</div>}
                   <div style={ROW_LINE}>
                     <span className="trade-row-sub admin-ltr">{formatDateTime(r.createdAt)}</span>
@@ -176,7 +176,7 @@ function ReviewActionModal({ review, to, onClose, onDone }: { review: Review; to
 
   return (
     <AdminModal title={hiding ? tr("پنهان کردن نظر", "Hide review") : tr("بازگردانی نظر", "Restore review")} eyebrow={tr("تایید اقدام", "Confirm action")} onClose={onClose}>
-      <div className="admin-modal-text" style={{ whiteSpace: "pre-wrap" }}>
+      <div className="admin-modal-text" dir={isEn() ? "auto" : undefined} style={{ whiteSpace: "pre-wrap" }}>
         {review.body || <span className="admin-muted">{tr("بدون متن", "No text")}</span>}
       </div>
       <label className="admin-field">

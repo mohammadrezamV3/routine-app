@@ -13,7 +13,7 @@ import { adminFetch, useAdminToast } from "@/components/admin/useAdminToast";
 import { useAdminAccess } from "@/components/admin/AdminAccess";
 import { Spinner } from "@/components/Spinner";
 import { formatDateTime, formatNumber } from "@/lib/adminFormat";
-import { tr } from "@/lib/i18n";
+import { isEn, tr } from "@/lib/i18n";
 
 type PublicUser = { id: string; name: string | null; lastName: string | null; username: string | null; avatarUrl: string | null };
 type Target =
@@ -99,7 +99,7 @@ function TargetSnippet({ t }: { t: Target }) {
             {[1, 2, 3, 4, 5].map((i) => <Star key={i} size={13} fill={i <= (t.rating || 0) ? "currentColor" : "none"} strokeWidth={1.75} aria-hidden />)}
           </span>
         )}
-        <div className="trade-row-main" style={{ whiteSpace: "pre-wrap", fontSize: 13, lineHeight: 1.9 }}>{t.body || <span className="admin-muted">{tr("بدون متن", "No text")}</span>}</div>
+        <div className="trade-row-main" dir={isEn() ? "auto" : undefined} style={{ whiteSpace: "pre-wrap", fontSize: 13, lineHeight: 1.9 }}>{t.body || <span className="admin-muted">{tr("بدون متن", "No text")}</span>}</div>
       </>
     );
   }
@@ -111,7 +111,7 @@ function TargetSnippet({ t }: { t: Target }) {
           {t.createdAt && <span className="admin-ltr" style={{ display: "inline-block", margin: "0 6px" }}>{formatDateTime(t.createdAt)}</span>}
           {!t.exists && tr("؛ حذف‌شده", "; deleted")}
         </div>
-        <div className="trade-row-main" style={{ whiteSpace: "pre-wrap", fontSize: 13, lineHeight: 1.9 }}>{t.body || <span className="admin-muted">{tr("متن در دسترس نیست", "Text not available")}</span>}</div>
+        <div className="trade-row-main" dir={isEn() ? "auto" : undefined} style={{ whiteSpace: "pre-wrap", fontSize: 13, lineHeight: 1.9 }}>{t.body || <span className="admin-muted">{tr("متن در دسترس نیست", "Text not available")}</span>}</div>
         <div className="trade-row-sub">
           {t.verified
             ? tr("متن با تعهد رمزنگاری فرستنده تایید شده؛ پیام‌های دیگر این گفت‌وگو برای ادمین قابل خواندن نیست", "The text is verified by the sender's encryption commitment. The admin can't read the other messages in this conversation.")
@@ -135,7 +135,7 @@ function TargetSnippet({ t }: { t: Target }) {
                 <span className="admin-ltr" style={{ display: "inline-block", margin: "0 6px" }}>{formatDateTime(m.createdAt)}</span>
                 {!m.verified && tr("؛ بدون تایید رمزنگاری", "; no encryption verification")}
               </div>
-              <div className="trade-row-main" style={{ whiteSpace: "pre-wrap", fontSize: 13, lineHeight: 1.9 }}>{m.text || <span className="admin-muted">{tr("متن در دسترس نیست", "Text not available")}</span>}</div>
+              <div className="trade-row-main" dir={isEn() ? "auto" : undefined} style={{ whiteSpace: "pre-wrap", fontSize: 13, lineHeight: 1.9 }}>{m.text || <span className="admin-muted">{tr("متن در دسترس نیست", "Text not available")}</span>}</div>
             </div>
           ))}
         </div>

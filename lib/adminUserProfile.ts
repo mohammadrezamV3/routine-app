@@ -44,7 +44,7 @@ export async function getUserProfileExtras(userId: string, createdAt: Date) {
   const events: TimelineEvent[] = [{ kind: "signup", title: tr("ثبت‌نام", "Signed up"), at: createdAt.toISOString() }];
   logins.forEach((l) => events.push({ kind: "login", title: tr(`ورود (${providerLabel(l.provider)})`, `Signed in (${providerLabel(l.provider)})`), at: l.createdAt.toISOString() }));
   pays.forEach((p) => {
-    if (p.paidAt) events.push({ kind: "payment", title: tr(`پرداخت پلن ${p.subscription.plan.nameFa}`, `Paid for ${planDisplayName(p.subscription.plan)} plan`), at: p.paidAt.toISOString() });
+    if (p.paidAt) events.push({ kind: "payment", title: tr(`پرداخت پلن ${p.subscription.plan.nameFa}`, `Paid for ${planDisplayName(p.subscription.plan)}`), at: p.paidAt.toISOString() });
     if (p.refundedAt) events.push({ kind: "refund", title: tr("بازگشت وجه", "Refunded"), at: p.refundedAt.toISOString() });
   });
   subs.forEach((s) => events.push({ kind: "subscription", title: tr(`شروع اشتراک ${s.plan.nameFa}`, `${planDisplayName(s.plan)} subscription started`), at: s.createdAt.toISOString() }));
