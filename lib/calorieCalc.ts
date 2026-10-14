@@ -9,7 +9,7 @@ export type Sex = "male" | "female";
 export const CALORIE_GOAL_LABELS: Record<CalorieGoal, string> = {
   get lose() { return tr("کاهش وزن", "Lose weight"); },
   get maintain() { return tr("حفظ وزن", "Maintain weight"); },
-  get gain() { return tr("افزایش وزن/عضله", "Gain weight/muscle"); },
+  get gain() { return tr("افزایش وزن/عضله", "Gain muscle"); },
 };
 
 // Mifflin-St Jeor — دقیق‌ترین فرمول رایج BMR بدون نیاز به ابزار تخصصی

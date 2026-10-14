@@ -5,7 +5,7 @@ import { Check, Trophy } from "lucide-react";
 import { faNum, weekdayShort, isoLocal } from "@/lib/jalali";
 import { DashCard } from "./DashCard";
 import { StreakFlame } from "./StreakFlame";
-import { tr } from "@/lib/i18n";
+import { isEn, tr } from "@/lib/i18n";
 
 type Entry = { customCalories: number; date?: string };
 
@@ -48,13 +48,15 @@ export function CalorieStreakCard({ rangeEntries, targetKcal, delay }: { rangeEn
 
   // امروز باید اولین فرزند DOM باشه — توی چیدمان RTL یعنی سمت راست (دقیقا
   // مثل رفرنس: «ش» امروز و خالیه، سمت راست؛ روزهای قدیمی‌تر به چپ می‌رن)
-  const days = Array.from({ length: WINDOW_DAYS }, (_, i) => {
+  const daysRaw = Array.from({ length: WINDOW_DAYS }, (_, i) => {
     const offset = i;
     const d = new Date(Date.now() - offset * 24 * 60 * 60 * 1000);
     const key = isoLocal(d);
     const isToday = key === todayKey;
     return { key, letter: weekdayShort(d.getDay()), done: !isToday && isSuccess(key), isToday };
   });
+  // انگلیسی (ltr): امروز سمت راست بمونه، پس ترتیب DOM برعکس می‌شه
+  const days = isEn() ? [...daysRaw].reverse() : daysRaw;
 
   return (
     <DashCard delay={delay}>

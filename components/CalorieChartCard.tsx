@@ -93,7 +93,7 @@ export function CalorieChartCard({
     <DashCard delay={delay} className="flex h-full flex-col p-3 sm:p-4">
       {/* دکمه‌ی سوییچ هم‌ردیف تایتل و چپ‌چین (توی RTL یعنی انتهای ردیف) —
           دیگه روی موبایل هم به خط بعد نمی‌ره. */}
-      <div className="flex shrink-0 items-center justify-between gap-2">
+      <div className="flex shrink-0 flex-wrap items-center justify-between gap-x-2 gap-y-2">
         <h2 className="flex shrink-0 items-center gap-1.5 text-[13px] font-bold text-dash-text sm:text-[15px]">
           <LineChart className="h-4 w-4 text-dash-green sm:h-[18px] sm:w-[18px]" />
           {tr("نمودار کالری", "Calorie chart")}

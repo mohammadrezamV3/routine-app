@@ -207,11 +207,11 @@ export function CalorieAddEntryModal({
               <SegmentedTabs active={mealType} onChange={setMealType} options={mealTypes.map((m) => ({ value: m.key, label: m.label }))} />
             </div>
 
-            <label className="calorie-field-label mt-2.5">{tr("درشت‌مغذی‌ها (اختیاری)", "Macros (optional)")}</label>
+            <label className="calorie-field-label mt-2.5">{tr("درشت‌مغذی‌ها (اختیاری)", "Macros in grams (optional)")}</label>
             <div className="mt-1.5 flex gap-2">
-              <NumberInput className="wsearch-newform-name calorie-glass-field flex-1" placeholder={tr("پروتئین (گرم)", "Protein (g)")} value={proteinG} onChange={(v) => setProteinG(v)} />
-              <NumberInput className="wsearch-newform-name calorie-glass-field flex-1" placeholder={tr("کربوهیدرات (گرم)", "Carbs (g)")} value={carbsG} onChange={(v) => setCarbsG(v)} />
-              <NumberInput className="wsearch-newform-name calorie-glass-field flex-1" placeholder={tr("چربی (گرم)", "Fat (g)")} value={fatG} onChange={(v) => setFatG(v)} />
+              <NumberInput className="wsearch-newform-name calorie-glass-field flex-1" placeholder={tr("پروتئین (گرم)", "Protein")} value={proteinG} onChange={(v) => setProteinG(v)} />
+              <NumberInput className="wsearch-newform-name calorie-glass-field flex-1" placeholder={tr("کربوهیدرات (گرم)", "Carbs")} value={carbsG} onChange={(v) => setCarbsG(v)} />
+              <NumberInput className="wsearch-newform-name calorie-glass-field flex-1" placeholder={tr("چربی (گرم)", "Fat")} value={fatG} onChange={(v) => setFatG(v)} />
             </div>
 
             <button

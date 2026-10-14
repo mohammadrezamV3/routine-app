@@ -12,3 +12,5 @@ html[dir="ltr"] .wsearch-add-btn > .wsearch-add-btn-icon{ order:-1; }
 /* catalog "Instructions": numbered list should not also get the dash bullet */
 html[dir="ltr"] .tm-extra ol > li{ padding-inline-start:0; }
 html[dir="ltr"] .tm-extra ol > li::before{ content:none; }
+/* accordion chevron: must point down when closed (it pointed left in LTR) */
+html[dir="ltr"] .week-day-chevron{ border-inline-start:0; border-inline-end:1.5px solid var(--muted2); }
