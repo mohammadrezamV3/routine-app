@@ -2,3 +2,6 @@
 
 /* لیست‌های صفحه‌ی اکسپرت مدیریت سرمایه: display:flex نشانه‌ی لیست رو برمی‌داره، پس تو‌رفتگی بی‌نشانه در انگلیسی اضافه‌ست */
 html[dir="ltr"] .mm-list, html[dir="ltr"] .mm-steps{ padding-inline-start:0; }
+
+/* مرحله‌ی اول اتصال متاتریدر: دکمه‌ی دانلود inline-flex خط اول رو بلند می‌کرد و شماره‌ی مرحله بالای متن می‌موند */
+html[dir="ltr"] .trade-mt-steps li > .trade-mt-download{ display:flex; width:fit-content; }
