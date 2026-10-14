@@ -1,6 +1,6 @@
 "use client";
 
-import { motion } from "framer-motion";
+import { m as motion } from "framer-motion";
 import { Check, Trophy } from "lucide-react";
 import { faNum, weekdayShort, isoLocal } from "@/lib/jalali";
 import { DashCard } from "./DashCard";

@@ -1,10 +1,10 @@
 import { clsx, type ClassValue } from "clsx";
-import { twMerge } from "tailwind-merge";
 
-// همون کمک‌تابع استاندارد shadcn/ui — ادغام کلاس‌های Tailwind با اولویت
-// درست (آخری برنده می‌شه)، فقط برای کامپوننت‌های داشبورد (app/dashboard) استفاده می‌شه.
+// فقط clsx (بدون tailwind-merge: ۲۶ کیلوبایت از باندل هر صفحه بود). هیچ call-site
+// به ادغام کلاس‌های متعارض تکیه نمی‌کنه، به‌جز padding پیش‌فرض DashCard که خودش
+// دستی حل می‌کنه. اگه جایی نیاز به override شد، همون‌جا صریح حلش کن.
 export function cn(...inputs: ClassValue[]) {
-  return twMerge(clsx(inputs));
+  return clsx(inputs);
 }
 
 // یک برنامه با «ي»/«ك» عربی تایپ‌شده (کیبوردهای عربی/بعضی موبایل‌ها) با

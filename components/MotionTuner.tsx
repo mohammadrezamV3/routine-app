@@ -1,10 +1,15 @@
 "use client";
 
-import { MotionConfig } from "framer-motion";
+import { LazyMotion, MotionConfig } from "framer-motion";
 import { useEffect, useState } from "react";
 import { isLowPerfDevice } from "@/lib/perfTier";
 
 /**
+ * LazyMotion: کامپوننت‌های `m.*` (نسخه‌ی سبک motion) فقط پوسته‌ان و موتور انیمیشن
+ * (domAnimation، حدود ۶۸ کیلوبایت) به‌صورت async و جدا از باندل layout لود می‌شه.
+ * دانلود هم‌زمان با هیدریشن شروع می‌شه (پایین، سطح ماژول). کامپوننت‌هایی که drag/layout/
+ * Reorder می‌خوان `motion` کامل رو مستقیم import می‌کنن (strict={false}).
+ *
  * روی دستگاه‌های رده پایین، انیمیشن‌های framer-motion را خاموش می‌کند.
  *
  * چرا این‌جا و نه در ۴۲ فایل جداگانه: `MotionConfig` مقدارش را از طریق
@@ -20,8 +25,15 @@ import { isLowPerfDevice } from "@/lib/perfTier";
  * اسکریپت inline قبل از هیدریت می‌گذارد؛ خواندنش در رندر سرور غیرممکن است
  * و باعث عدم‌تطابق هیدریت می‌شد.
  */
+const loadFeatures = () => import("@/lib/motionFeatures").then((r) => r.default);
+if (typeof window !== "undefined") void loadFeatures();
+
 export function MotionTuner({ children }: { children: React.ReactNode }) {
   const [low, setLow] = useState(false);
   useEffect(() => setLow(isLowPerfDevice()), []);
-  return <MotionConfig reducedMotion={low ? "always" : "user"}>{children}</MotionConfig>;
+  return (
+    <MotionConfig reducedMotion={low ? "always" : "user"}>
+      <LazyMotion features={loadFeatures} strict={false}>{children}</LazyMotion>
+    </MotionConfig>
+  );
 }

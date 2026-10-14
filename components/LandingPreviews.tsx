@@ -63,7 +63,7 @@ export function PreviewRoutine() {
       {/* اعلان پوش واقعی (lib/reminderPlan.ts) */}
       <div className="lsc-push">
         {/* eslint-disable-next-line @next/next/no-img-element */}
-        <img src="/images/logo-icon-dark-theme.png" alt="" width={28} height={28} className="lsc-push-ic" />
+        <img src="/images/logo-icon-dark-theme.png" alt="" width={28} height={28} loading="lazy" decoding="async" className="lsc-push-ic" />
         <div className="min-w-0">
           <b>{tr("یادآوری دارو", "Medication reminder")}</b>
           <span>{tr("نوبت «امگا 3» ساعت 21:00 — 15 دقیقه‌ی دیگه.", "Omega 3 dose at 21:00, in 15 minutes.")}</span>

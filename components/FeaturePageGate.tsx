@@ -1,4 +1,4 @@
-import Link from "next/link";
+import { SmartLink as Link } from "@/components/SmartLink";
 import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/auth";
 import type { FeatureKey } from "@/lib/featureFlags";

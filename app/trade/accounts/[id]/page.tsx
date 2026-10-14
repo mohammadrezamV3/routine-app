@@ -1,7 +1,7 @@
 "use client";
 
 import { useSession } from "next-auth/react";
-import { motion } from "framer-motion";
+import { m as motion } from "framer-motion";
 import { ModuleGate } from "@/components/ModuleGate";
 import { AuthGate } from "@/components/AuthGate";
 import { PanelSkeleton } from "@/components/PanelSkeleton";

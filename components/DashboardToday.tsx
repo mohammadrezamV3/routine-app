@@ -9,10 +9,10 @@
 // دیده می‌شه. فقط امروز قابل تیکه (هم‌قانون /weekly). بک‌گراند تازه‌ای اضافه
 // نشده: کارت‌ها فقط بوردر دارن و تاکید «بعدی/در جریان» نور روی بوردره.
 
-import Link from "next/link";
+import { SmartLink as Link } from "@/components/SmartLink";
 import { TickButton } from "./TickButton";
 import { Fragment, useEffect, useMemo, useState } from "react";
-import { AnimatePresence, motion } from "framer-motion";
+import { AnimatePresence, m as motion } from "framer-motion";
 import { faNum, weekdayShort, CAL_WEEK_ORDER } from "@/lib/jalali";
 import { timeEndMinutes, toEnDigits } from "@/lib/schedule";
 import type { TodayTask } from "@/lib/useDashboardRoutine";

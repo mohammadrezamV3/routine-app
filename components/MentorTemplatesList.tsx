@@ -2,7 +2,7 @@
 
 import { MentorCollapse, MentorList, MentorListItem } from "./MentorMotion";
 import { useCallback, useEffect, useState } from "react";
-import Link from "next/link";
+import { SmartLink as Link } from "@/components/SmartLink";
 import { CalendarCheck, Check, ChevronDown, Dumbbell, LayoutTemplate, Pencil, Plus, Trash2 } from "lucide-react";
 import { MentorKebabMenu } from "./MentorKebabMenu";
 import { LoadingBlock, Spinner } from "./Spinner";

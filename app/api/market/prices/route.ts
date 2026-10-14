@@ -1,7 +1,6 @@
 import { tr } from "@/lib/i18n";
 import { NextRequest, NextResponse } from "next/server";
-import { getServerSession } from "next-auth";
-import { authOptions } from "@/lib/auth";
+import { getSessionFast } from "@/lib/serverSession";
 import { checkRateLimit } from "@/lib/rateLimit";
 import { sessionFeatureBlocked } from "@/lib/featureFlagsServer";
 
@@ -77,7 +76,7 @@ export async function GET(req: NextRequest) {
   // قبلا کاملا باز بود: هرکسی بدون حساب می‌تونست از این سرور به‌عنوان یه
   // پروکسی رایگان یاهو استفاده کنه (هزینه‌ی پهنای‌باند و ریسک بلاک‌شدن IP
   // سرور). حالا هم لاگین لازمه هم سقف نرخ داره.
-  const session = await getServerSession(authOptions);
+  const session = await getSessionFast();
   const userId = (session?.user as any)?.id;
   if (!userId) return NextResponse.json({ error: "unauthorized" }, { status: 401 });
 
@@ -92,5 +91,6 @@ export async function GET(req: NextRequest) {
 
   const results = await Promise.all(symbols.map(fetchQuote));
   const quotes = results.filter((q): q is Quote => q !== null);
-  return NextResponse.json({ quotes });
+  // سرور خودش ۳۰ثانیه کش می‌کنه؛ مرورگر هم کوتاه نگه می‌داره (فقط private چون پشت لاگینه)
+  return NextResponse.json({ quotes }, { headers: { "Cache-Control": "private, max-age=15" } });
 }

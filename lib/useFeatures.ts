@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from "react";
 import { FeatureKey } from "@/lib/featureFlags";
+import { takeInlineFeatures } from "@/lib/inlineMeta";
 
 // وضعیت قابلیت‌ها برای کاربر فعلی — یک fetch مشترک برای همه‌ی کامپوننت‌ها
 // (کش در سطح ماژول با TTL کوتاه). تا وقتی جواب نیومده null برمی‌گرده تا
@@ -13,6 +14,9 @@ const TTL = 60_000;
 
 function load(): Promise<Map | null> {
   if (cached && Date.now() - cached.at < TTL) return Promise.resolve(cached.value);
+  // اولین بار: همون مقداری که سرور داخل HTML گذاشته (بدون درخواست)
+  const inline = takeInlineFeatures();
+  if (inline) { cached = { at: Date.now(), value: inline }; return Promise.resolve(inline); }
   if (!inflight) {
     inflight = fetch("/api/features")
       .then((r) => (r.ok ? r.json() : null))
@@ -23,7 +27,7 @@ function load(): Promise<Map | null> {
   return inflight;
 }
 
-export function invalidateFeatures() { cached = null; }
+export function invalidateFeatures() { cached = null; takeInlineFeatures(); }
 
 // هوک‌های mountشده (منو، داشبورد) باید نتیجه‌ی تازه‌سازی رو ببینن — وگرنه بعد از
 // ورود کلاینتی (بدون ریلود) منو همون فلگ‌های حالت مهمان رو نگه می‌داشت.
@@ -32,6 +36,7 @@ const listeners = new Set<(m: Map) => void>();
 /** کش رو دور می‌ریزه، دوباره می‌گیره و به همه‌ی هوک‌های باز خبر می‌ده (بعد از ورود) */
 export function refreshFeatures(): Promise<Map | null> {
   cached = null;
+  takeInlineFeatures(); // مقدار داخل HTML مال قبل از ورود/خروجه
   inflight = null;
   return load().then((m) => {
     if (m) listeners.forEach((fn) => fn(m));

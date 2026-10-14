@@ -1,4 +1,4 @@
-import Link from "next/link";
+import { SmartLink as Link } from "@/components/SmartLink";
 import { ArrowLeft, ChevronLeft, Lightbulb } from "lucide-react";
 import { localizedBlogCategory } from "@/lib/blog/categories";
 import { brandName } from "@/lib/brand";

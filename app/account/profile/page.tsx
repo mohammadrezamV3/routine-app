@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useRef, useState } from "react";
-import { motion } from "framer-motion";
+import { m as motion } from "framer-motion";
 import {
   Camera, Trash2, Phone, Cake, AtSign, User as UserIcon,
   Dumbbell, IdCard, Ruler, Weight, VenetianMask, ChevronDown, NotebookPen, Gift,

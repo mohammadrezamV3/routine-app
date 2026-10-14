@@ -8,15 +8,22 @@
 
 import { createContext, useCallback, useContext, useEffect, useMemo, useState } from "react";
 import { createPortal } from "react-dom";
-import { AddProgramForm } from "./AddProgramForm";
-import { CalorieAddEntryModal } from "./CalorieAddEntryModal";
-import { TradeFormModal } from "./TradeFormModal";
+import dynamic from "next/dynamic";
 import { getSetting } from "@/lib/storage";
 import { isoLocal } from "@/lib/jalali";
 import { publishChange } from "@/lib/liveSync";
 import type { ScheduleOpts } from "@/lib/schedule";
 import { CAL_SYSTEM_KEY, type CalSystem, type TradeAccount, type TradeTag } from "@/lib/tradeTypes";
 import { tr, isEn } from "@/lib/i18n";
+
+// فرم‌ها فقط با زدن کار سریع باز می‌شن، پس کدشون توی باندل اولیه‌ی داشبورد
+// نمی‌شینه؛ با شروع کار (openAction) موازی با fetchها پیش‌لود می‌شه.
+const loadAddProgram = () => import("./AddProgramForm").then((m) => m.AddProgramForm);
+const loadFoodModal = () => import("./CalorieAddEntryModal").then((m) => m.CalorieAddEntryModal);
+const loadTradeForm = () => import("./TradeFormModal").then((m) => m.TradeFormModal);
+const AddProgramForm = dynamic(loadAddProgram, { ssr: false });
+const CalorieAddEntryModal = dynamic(loadFoodModal, { ssr: false });
+const TradeFormModal = dynamic(loadTradeForm, { ssr: false });
 
 export type DashAction = "program" | "food" | "trade";
 
@@ -56,6 +63,7 @@ export function DashboardActionsProvider({
   useEffect(() => setMounted(true), []);
 
   const openAction = useCallback((a: DashAction) => {
+    void (a === "program" ? loadAddProgram() : a === "food" ? loadFoodModal() : loadTradeForm());
     if (a === "food") {
       setOpen("food");
       // وعده‌های سفارشی کاربر (اگه تعریف کرده) — تا اون موقع پیش‌فرض‌ها

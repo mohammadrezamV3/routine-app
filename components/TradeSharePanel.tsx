@@ -11,7 +11,7 @@ import "@/app/dashboard/dashboard.css";
 import "./trade-share.css";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { createPortal } from "react-dom";
-import { AnimatePresence, motion } from "framer-motion";
+import { AnimatePresence, m as motion } from "framer-motion";
 import { Check, ChevronDown, ChevronLeft, ChevronRight, Download, Share2, X } from "lucide-react";
 import { isoLocal, jalaliMonthLength, jalaliToIso, toJalali } from "@/lib/jalali";
 import { useLockBodyScroll } from "@/lib/useLockBodyScroll";

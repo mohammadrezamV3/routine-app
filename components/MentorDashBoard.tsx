@@ -1,7 +1,7 @@
 "use client";
 
 import { useCallback, useEffect, useMemo, useState } from "react";
-import Link from "next/link";
+import { SmartLink as Link } from "@/components/SmartLink";
 import { useSession } from "next-auth/react";
 import {
   Ban, CheckCircle2, Clock, Hourglass, MessageCircle, Pencil, Send, ShieldCheck, UserPlus, FilePlus2,

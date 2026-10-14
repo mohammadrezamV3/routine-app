@@ -4,7 +4,7 @@ import "./mentor.css";
 import "./mentor-student-ltr.css";
 import { useCallback, useEffect, useId, useLayoutEffect, useRef, useState } from "react";
 import { createPortal } from "react-dom";
-import { AnimatePresence, motion } from "framer-motion";
+import { AnimatePresence, m as motion } from "framer-motion";
 import { Medal, Star } from "lucide-react";
 import { MENTOR_CATEGORY_META, isMentorCategory } from "@/lib/mentorCategories";
 import { faNum } from "@/lib/jalali";

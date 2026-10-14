@@ -2,7 +2,7 @@
 
 import { MentorList, MentorListItem } from "./MentorMotion";
 import { useMemo, useState } from "react";
-import Link from "next/link";
+import { SmartLink as Link } from "@/components/SmartLink";
 import { ChevronLeft, Plus, Search, SearchX, Users } from "lucide-react";
 import { SegmentedTabs } from "./SegmentedTabs";
 import { fa, normRate, pct } from "./MentorDashKit";

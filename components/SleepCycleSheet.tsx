@@ -3,7 +3,7 @@
 import "./sleep-cycle.css";
 import { useEffect, useMemo, useState } from "react";
 import { createPortal } from "react-dom";
-import { motion, useReducedMotion } from "framer-motion";
+import { m as motion, useReducedMotion } from "framer-motion";
 import { SegmentedTabs } from "./SegmentedTabs";
 import { TimeInput } from "./TimeInput";
 import { SleepCycleList } from "./SleepCycleList";

@@ -1,7 +1,7 @@
 "use client";
 
 import "./mentor.css";
-import Link from "next/link";
+import { SmartLink as Link } from "@/components/SmartLink";
 import type { MentorTone } from "./MentorUI";
 
 type Action =

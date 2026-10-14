@@ -2,7 +2,7 @@
 
 import "./mentor.css";
 import { TickButton } from "./TickButton";
-import Link from "next/link";
+import { SmartLink as Link } from "@/components/SmartLink";
 import { useEffect, useState } from "react";
 import { MENTOR_TERMS_PATH, MENTOR_TERMS_VERSION, type MentorTermsRole } from "@/lib/mentorTerms";
 import { isEn, tr } from "@/lib/i18n";

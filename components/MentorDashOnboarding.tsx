@@ -1,6 +1,6 @@
 "use client";
 
-import Link from "next/link";
+import { SmartLink as Link } from "@/components/SmartLink";
 import { Check } from "lucide-react";
 import { MI_STROKE } from "./MentorUI";
 import { MentorHero } from "./MentorHero";

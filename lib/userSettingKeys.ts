@@ -97,4 +97,6 @@ export const BOOTSTRAP_SETTING_KEYS = [
   SETTING_KEYS.dashboardPrefs,
   SETTING_KEYS.notifPrefs,
   SETTING_KEYS.dismissedStaticNotifs,
+  // زنگوله‌ی هدر موقع لود می‌خونه؛ اینجا باشه یک درخواست جدا کمتر می‌شه
+  SETTING_KEYS.readAnnouncements,
 ] as const;

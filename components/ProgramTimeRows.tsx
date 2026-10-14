@@ -1,7 +1,7 @@
 "use client";
 
 import { AlertTriangle, Plus, Trash2 } from "lucide-react";
-import { AnimatePresence, motion, useReducedMotion } from "framer-motion";
+import { AnimatePresence, m as motion, useReducedMotion } from "framer-motion";
 import { TimeInput } from "@/components/TimeInput";
 import { WEEK_ORDER } from "@/lib/schedule";
 import {

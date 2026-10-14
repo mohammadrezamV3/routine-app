@@ -1,14 +1,14 @@
 "use client";
 
 import { useCallback, useEffect, useRef, useState } from "react";
-import Link from "next/link";
+import { SmartLink as Link } from "@/components/SmartLink";
 import {
   ArrowLeft, BarChart3, CalendarClock, CalendarDays, Check, Dumbbell, Flame, GraduationCap, Route, Sparkles,
   TrendingUp, UtensilsCrossed,
 } from "lucide-react";
 import type { LucideIcon } from "lucide-react";
 import { SegmentedTabs } from "@/components/SegmentedTabs";
-import { useThemeTokens } from "@/components/PlanShowcase";
+import { useThemeTokens } from "@/components/useThemeTokens";
 import { tr, trv } from "@/lib/i18n";
 import { faNum } from "@/components/LandingHero";
 import { INERT } from "@/components/LandingMockups";

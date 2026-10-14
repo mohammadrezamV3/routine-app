@@ -13,7 +13,7 @@
 
 import { useCallback, useEffect, useLayoutEffect, useMemo, useRef, useState } from "react";
 import { createPortal } from "react-dom";
-import { AnimatePresence, motion } from "framer-motion";
+import { AnimatePresence, m as motion } from "framer-motion";
 import { Check, Download, Share2 } from "lucide-react";
 import { faNum, weekdayShort, CAL_WEEK_ORDER } from "@/lib/jalali";
 import { getStreakTier, STREAK_MILESTONES } from "@/lib/streakTier";

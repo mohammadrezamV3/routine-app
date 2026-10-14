@@ -2,7 +2,7 @@
 
 // فصل «خلاصه در اعداد»: کاشی‌های WeekNumber با شمارش از صفر + مسیر 8 هفته.
 import { useEffect, useId, useMemo, useRef, useState } from "react";
-import { motion, useInView } from "framer-motion";
+import { m as motion, useInView } from "framer-motion";
 import { Activity } from "lucide-react";
 import type { WeeklyLetterData } from "@/lib/weeklyLetter/types";
 import { ANALYSIS_DOMAINS, ANALYSIS_DOMAIN_LABELS, type AnalysisDomain, type TrendPoint } from "@/lib/weeklyAnalysis/types";

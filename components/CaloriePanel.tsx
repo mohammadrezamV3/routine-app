@@ -12,20 +12,23 @@ import { DashDateSelector } from "./DashDateSelector";
 import { LockBodyScroll } from "./LockBodyScroll";
 import { DashFilterButton } from "./DashFilterButton";
 import { DashFriendsCard } from "./DashFriendsCard";
-import { CalorieGoalModal } from "./CalorieGoalModal";
 import { CalorieChartCard } from "./CalorieChartCard";
 import { CalorieStreakCard } from "./CalorieStreakCard";
 import { CalorieMacrosCard } from "./CalorieMacrosCard";
 import { CalorieMealBreakdownCard } from "./CalorieMealBreakdownCard";
 import { CalorieFoodPlanCard } from "./CalorieFoodPlanCard";
 import { CalorieHistoryCalendar } from "./CalorieHistoryCalendar";
-import { CalorieTutorial, hasSeenCalorieTutorial } from "./CalorieTutorial";
+import { hasSeenCalorieTutorial } from "@/lib/tutorialSeen";
 import { getBodyMetrics, isWeightStale, saveBodyMetrics } from "@/lib/bodyMetrics";
 import { useDashboardPrefs } from "@/lib/dashboardPrefs";
 import { NumberInput } from "./NumberInput";
 import { reportLiveError, useLiveRefresh } from "@/lib/liveSync";
 import { Spinner } from "./Spinner";
 import { tr } from "@/lib/i18n";
+import dynamic from "next/dynamic";
+// تنبل: فقط با کنش کاربر باز می‌شه و کدش توی باندل اولیه نیست
+const CalorieTutorial = dynamic(() => import("./CalorieTutorial").then((m) => m.CalorieTutorial), { ssr: false });
+const CalorieGoalModal = dynamic(() => import("./CalorieGoalModal").then((m) => m.CalorieGoalModal), { ssr: false });
 
 const now = new Date();
 const todayIso = isoLocal(now);

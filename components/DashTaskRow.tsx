@@ -2,7 +2,7 @@
 
 import { useEffect, useRef, useState } from "react";
 import { createPortal } from "react-dom";
-import { motion, AnimatePresence } from "framer-motion";
+import { m as motion, AnimatePresence } from "framer-motion";
 import { ChevronDown, MoreVertical, Pencil, Play, Trash2, CalendarClock } from "lucide-react";
 import { TickButton } from "./TickButton";
 import { cn } from "@/lib/utils";

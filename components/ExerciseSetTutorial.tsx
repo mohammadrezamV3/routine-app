@@ -6,7 +6,8 @@ import { ChevronRight, MousePointerClick, Timer, CheckCircle2, PartyPopper } fro
 import { useLockBodyScroll } from "@/lib/useLockBodyScroll";
 import { isEn, tr } from "@/lib/i18n";
 
-export const EXERCISE_TUTORIAL_SEEN_KEY = "exercise-set-tutorial-seen";
+import { EXERCISE_TUTORIAL_SEEN_KEY } from "@/lib/tutorialSeen";
+export { EXERCISE_TUTORIAL_SEEN_KEY };
 
 const steps = () => [
   {

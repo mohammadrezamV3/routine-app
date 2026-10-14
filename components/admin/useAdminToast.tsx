@@ -3,7 +3,7 @@
 import { tr } from "@/lib/i18n";
 
 import { createContext, useCallback, useContext, useState } from "react";
-import { AnimatePresence, motion } from "framer-motion";
+import { AnimatePresence, m as motion } from "framer-motion";
 
 type Toast = { id: number; text: string; tone: "ok" | "err" };
 const Ctx = createContext<(text: string, tone?: "ok" | "err") => void>(() => {});

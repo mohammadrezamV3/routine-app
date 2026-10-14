@@ -6,12 +6,8 @@ import { ChevronRight, Flame, LineChart, PlusCircle, Trophy } from "lucide-react
 import { useLockBodyScroll } from "@/lib/useLockBodyScroll";
 import { isEn, tr } from "@/lib/i18n";
 
-export const CALORIE_TUTORIAL_SEEN_KEY = "calorie-tutorial-seen";
-
-export function hasSeenCalorieTutorial(): boolean {
-  if (typeof window === "undefined") return true;
-  try { return localStorage.getItem(CALORIE_TUTORIAL_SEEN_KEY) === "1"; } catch { return true; }
-}
+import { CALORIE_TUTORIAL_SEEN_KEY, hasSeenCalorieTutorial } from "@/lib/tutorialSeen";
+export { CALORIE_TUTORIAL_SEEN_KEY, hasSeenCalorieTutorial };
 
 const steps = () => [
   {

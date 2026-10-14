@@ -1,7 +1,7 @@
 "use client";
 
 import { useCallback, useEffect, useMemo, useState } from "react";
-import Link from "next/link";
+import { SmartLink as Link } from "@/components/SmartLink";
 import { useRouter } from "next/navigation";
 import { CalendarCheck, ClipboardList, Copy, Download, Dumbbell, LayoutTemplate, Trash2 } from "lucide-react";
 import { LoadingBlock } from "./Spinner";

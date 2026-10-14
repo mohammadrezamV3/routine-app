@@ -1,16 +1,16 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { AnimatePresence, motion } from "framer-motion";
+import { AnimatePresence, m as motion } from "framer-motion";
 import { Check, ChevronDown } from "lucide-react";
-import { FoodSeedItem } from "@/lib/foodSeed";
+import type { FoodSeedItem } from "@/lib/foodSeed";
 import { FoodUnit, UNIT_LABELS, UNIT_TO_GRAMS } from "@/lib/calorieCalc";
 import { SegmentedTabs } from "./SegmentedTabs";
 import { useLockBodyScroll } from "@/lib/useLockBodyScroll";
 import { NumberInput } from "./NumberInput";
 import { Spinner } from "./Spinner";
 import { isEn, tr } from "@/lib/i18n";
-import { foodNameDisplay, searchFoodNamesEn } from "@/lib/foodNamesEn";
+import { foodNameDisplay, loadFoodNamesEn, searchFoodNamesEn, useFoodNamesEn } from "@/lib/foodNamesEnLazy";
 
 const LAST_UNIT_KEY = "arion-calorie-last-unit";
 
@@ -36,6 +36,7 @@ export function CalorieAddEntryModal({
   onAdded: () => void;
 }) {
   useLockBodyScroll();
+  useFoodNamesEn();
   const [query, setQuery] = useState("");
   const [suggestions, setSuggestions] = useState<FoodSeedItem[]>([]);
   const [selectedFood, setSelectedFood] = useState<FoodSeedItem | null>(null);
@@ -62,7 +63,7 @@ export function CalorieAddEntryModal({
     const id = setTimeout(() => {
       // جستجوی لاتین در حالت انگلیسی: روی نام‌های انگلیسی کاتالوگ (سمت کلاینت)
       if (isEn() && /[a-z]/i.test(query)) {
-        import("@/lib/foodSeed").then(({ FOOD_SEED }) => {
+        Promise.all([import("@/lib/foodSeed"), loadFoodNamesEn()]).then(([{ FOOD_SEED }]) => {
           const names = searchFoodNamesEn(query);
           setSuggestions(names.map((n) => FOOD_SEED.find((f) => f.name === n)).filter((f): f is FoodSeedItem => !!f));
         });

@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { motion } from "framer-motion";
+import { m as motion } from "framer-motion";
 import { Wallet, Link2, Copy, Check, Share2, Users, Receipt } from "lucide-react";
 import { toJalali, jMonthName } from "@/lib/jalali";
 import { walletDescriptionText } from "@/lib/subscriptionI18n";

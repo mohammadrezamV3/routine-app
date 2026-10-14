@@ -2,15 +2,13 @@
 
 import { useEffect, useMemo, useRef, useState } from "react";
 import { createPortal } from "react-dom";
-import { AnimatePresence, motion } from "framer-motion";
+import { AnimatePresence, m as motion } from "framer-motion";
 import { ImageOff, Star } from "lucide-react";
 import {
-  EXERCISE_CATALOG,
   EQUIPMENT_LABEL,
   ExerciseCatalogEntry,
   ExerciseEquipment,
   MuscleKey,
-  exerciseSearchText,
   getExerciseDifficulty,
   getExerciseEquipment,
   matchesExerciseQuery,
@@ -20,8 +18,8 @@ import { normalizeFa } from "@/lib/utils";
 import { useLockBodyScroll } from "@/lib/useLockBodyScroll";
 import { useProgressiveList } from "@/lib/useProgressiveList";
 import { isEn, tr } from "@/lib/i18n";
-import { localizeExercise } from "@/lib/exerciseI18n";
-import { EXERCISE_EN } from "@/lib/exerciseCatalogData/en";
+import { localizeExercise, useExerciseEn } from "@/lib/exerciseI18n";
+import { useExerciseSearchIndex } from "@/lib/exerciseSearchIndex";
 
 const MUSCLE_LABEL: Record<MuscleKey, string> = {
   get chest() { return tr("سینه", "Chest"); },
@@ -50,16 +48,6 @@ const MUSCLE_FILTERS: MuscleKey[] = [
 const EQUIPMENT_FILTERS: ExerciseEquipment[] = [
   "bodyweight", "dumbbell", "barbell", "cable", "machine", "smith", "kettlebell", "band", "suspension", "other",
 ];
-
-// متن جستجو و تجهیزات هر حرکت یک بار برای کل کاتالوگ ساخته می‌شه (نه با هر
-// حرف تایپ‌شده) — با 700+ حرکت این فرق محسوسه.
-const INDEXED = EXERCISE_CATALOG.map((entry) => ({
-  entry,
-  // نام و گروه عضلانی انگلیسی هم قابل جستجوست (فارسی و انگلیسی مستقل از زبان جاری)
-  text: normalizeFa(`${exerciseSearchText(entry)} | ${EXERCISE_EN[entry.name]?.name ?? ""} | ${EXERCISE_EN[entry.name]?.muscleGroup ?? ""}`),
-  equipment: getExerciseEquipment(entry),
-  level: getExerciseDifficulty(entry),
-}));
 
 export function DifficultyStars({ level, className }: { level: number; className?: string }) {
   return (
@@ -122,15 +110,17 @@ export function ExerciseCatalogModal({ onClose }: { onClose: () => void }) {
   }, [selected, mediaKeys]);
 
   const normalizedQuery = normalizeFa(query).replace(/\s+/g, " ");
+  const indexed = useExerciseSearchIndex(query);
+  useExerciseEn();
   const visible = useMemo(
     () =>
-      INDEXED.filter(
+      indexed.filter(
         (x) =>
           matchesExerciseQuery(x.text, normalizedQuery) &&
           (!muscleFilter || x.entry.muscleKeys.includes(muscleFilter)) &&
           (!equipmentFilter || x.equipment === equipmentFilter)
       ),
-    [normalizedQuery, muscleFilter, equipmentFilter]
+    [indexed, normalizedQuery, muscleFilter, equipmentFilter]
   );
   const sel = selected ? localizeExercise(selected) : null;
   const { limit, onScroll, listRef } = useProgressiveList(

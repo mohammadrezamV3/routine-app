@@ -1,4 +1,4 @@
-import Link from "next/link";
+import { SmartLink as Link } from "@/components/SmartLink";
 import { Calculator, Flame, Moon, Scale } from "lucide-react";
 import { ToolPageShell } from "@/components/ToolPageShell";
 import type { Metadata } from "next";

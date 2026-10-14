@@ -3,7 +3,7 @@
 import "./mentor.css";
 import { createContext, useCallback, useContext, useEffect, useMemo, useRef, useState } from "react";
 import { createPortal } from "react-dom";
-import { AnimatePresence, motion } from "framer-motion";
+import { AnimatePresence, m as motion } from "framer-motion";
 import { Bookmark } from "lucide-react";
 import type { MentorCard as MentorCardData, SavedMentorsResponse } from "@/lib/mentorTypes";
 import { networkError, readApiError } from "@/lib/mentorFormat";

@@ -2,7 +2,7 @@
 
 // فصل «نقشه‌ی هفته»: ردیف = بخش دارای داده، ستون = روز؛ رنگ خانه از امتیاز.
 // زدن هر روز به کارت همون روز در فصل روز به روز می‌پره.
-import Link from "next/link";
+import { SmartLink as Link } from "@/components/SmartLink";
 import { LayoutGrid } from "lucide-react";
 import { ANALYSIS_DOMAIN_LABELS, type DomainResult } from "@/lib/weeklyAnalysis/types";
 import type { LetterChapterProps } from "./WeeklyLetterCtx";

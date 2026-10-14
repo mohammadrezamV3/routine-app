@@ -13,9 +13,10 @@ import "@/app/dashboard/dashboard.css";
 import { useCallback, useEffect, useMemo, useState } from "react";
 import dynamic from "next/dynamic";
 import { preloadWhenIdle } from "@/lib/preloadIdle";
+import { prefetchWhenIdle } from "@/lib/prefetchPolicy";
 import { useRouter } from "next/navigation";
 import { useSession } from "next-auth/react";
-import { MotionConfig, motion } from "framer-motion";
+import { MotionConfig, m as motion } from "framer-motion";
 import { AuthGate } from "./AuthGate";
 import { SuperAdminGate } from "./SuperAdminGate";
 import { useFeatures } from "@/lib/useFeatures";
@@ -112,6 +113,8 @@ function DashboardBody({ initial }: { initial: { key: string; data: DashboardDat
   const router = useRouter();
   const refreshNow = useCallback(() => refresh(true), [refresh]);
   const goTo = useCallback((href: string) => router.push(href), [router]);
+  // تنها مقصد واقعا محتمل بعدی؛ بعد از اولین پینت، زمان بیکاری، و نه روی اتصال کند/صرفه‌جویی داده
+  useEffect(() => prefetchWhenIdle((h) => router.prefetch(h), "/weekly"), [router]);
   const routine = useDashboardRoutine();
   const flagFeatures = useFeatures();
   const { data: session } = useSession();

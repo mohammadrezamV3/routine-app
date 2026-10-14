@@ -2,7 +2,7 @@
 
 import "./weekly-analysis.css";
 import { useEffect, useRef, useState, type ReactNode } from "react";
-import { animate, motion, useInView, useReducedMotion, type Variants } from "framer-motion";
+import { animate, m as motion, useInView, useReducedMotion, type Variants } from "framer-motion";
 import {
   Apple, ArrowDownRight, ArrowUpRight, CandlestickChart, CheckCheck, Dumbbell, GraduationCap, Minus, Moon, Repeat,
   type LucideIcon,

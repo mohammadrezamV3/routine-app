@@ -4,13 +4,15 @@ import { useEffect, useState } from "react";
 import { useSession } from "next-auth/react";
 import { Dumbbell } from "lucide-react";
 import { AuthGate } from "./AuthGate";
-import { AiExercisePlanWizard } from "./AiExercisePlanWizard";
 import { ExerciseDashboard } from "./ExerciseDashboard";
 import { ExercisePlan } from "@/lib/exerciseTypes";
 import { takePreloaded } from "@/lib/preload";
 import { useFeature } from "@/lib/useFeatures";
 import { AddExerciseProgramForm } from "./AddExerciseProgramForm";
 import { tr } from "@/lib/i18n";
+import dynamic from "next/dynamic";
+// تنبل: فقط با کنش کاربر باز می‌شه و کدش توی باندل اولیه نیست
+const AiExercisePlanWizard = dynamic(() => import("./AiExercisePlanWizard").then((m) => m.AiExercisePlanWizard), { ssr: false });
 
 export function ExercisePanel() {
   const { status } = useSession();

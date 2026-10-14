@@ -1,7 +1,7 @@
 "use client";
 
 import { useCallback, useEffect, useState } from "react";
-import Link from "next/link";
+import { SmartLink as Link } from "@/components/SmartLink";
 import { Pencil, NotebookPen } from "lucide-react";
 import { faNum } from "@/lib/jalali";
 import { PanelSkeleton } from "./PanelSkeleton";

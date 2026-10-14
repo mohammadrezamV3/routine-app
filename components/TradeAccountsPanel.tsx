@@ -1,8 +1,8 @@
 "use client";
 
 import { CSSProperties, useCallback, useEffect, useState } from "react";
-import Link from "next/link";
-import { motion } from "framer-motion";
+import { SmartLink as Link } from "@/components/SmartLink";
+import { m as motion } from "framer-motion";
 import { Archive, ArchiveRestore, ArrowDown, ArrowUp, Hash, Pencil, Percent, Target, Trash2, Wallet, X } from "lucide-react";
 import { TradeAccountModal } from "./TradeAccountModal";
 import {

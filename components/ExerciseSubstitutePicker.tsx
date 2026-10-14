@@ -1,10 +1,10 @@
 "use client";
 
-import { motion } from "framer-motion";
+import { m as motion } from "framer-motion";
 import { useLockBodyScroll } from "@/lib/useLockBodyScroll";
 import { toEnDigits } from "@/lib/schedule";
 import { tr } from "@/lib/i18n";
-import { exerciseDisplayName } from "@/lib/exerciseI18n";
+import { exerciseDisplayName, useExerciseEn } from "@/lib/exerciseI18n";
 
 // وقتی «این تجهیزات رو ندارم» می‌زنی، به‌جای سوییچ خودکار به یک حرکت
 // تصادفی، سه حرکت جایگزین آماده (از کاتالوگ، هم‌الگو/هم‌عضله با حرکت
@@ -22,6 +22,7 @@ export function ExerciseSubstitutePicker({
   onClose: () => void;
   picking: boolean;
 }) {
+  useExerciseEn();
   useLockBodyScroll();
   return (
     <>

@@ -1,13 +1,13 @@
 "use client";
 
-import Link from "next/link";
-import { motion } from "framer-motion";
+import { SmartLink as Link } from "@/components/SmartLink";
+import { m as motion } from "framer-motion";
 import { ChevronLeft, ChevronRight } from "lucide-react";
 import { useSession } from "next-auth/react";
 import { ModuleGate } from "@/components/ModuleGate";
 import { AuthGate } from "@/components/AuthGate";
 import { PanelSkeleton } from "@/components/PanelSkeleton";
-import { ICONS } from "@/components/NavDrawer";
+import { ICONS } from "@/components/NavIcons";
 import { TradeShareButton } from "@/components/TradeShareButton";
 import { featureVisible, type FeatureKey } from "@/lib/featureFlags";
 import { useFeatures } from "@/lib/useFeatures";

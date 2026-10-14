@@ -1,6 +1,6 @@
 "use client";
 
-import Link from "next/link";
+import { SmartLink as Link } from "@/components/SmartLink";
 import { StreakBadge } from "./StreakBadge";
 import { tr } from "@/lib/i18n";
 

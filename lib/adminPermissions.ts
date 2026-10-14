@@ -7,28 +7,9 @@ import { pick, type Localized } from "@/lib/i18n";
 // قرارداد: isSuperAdmin (Owner) همیشه همه‌ی کلیدها رو داره. ادمین محدود
 // فقط کلیدهای User.adminPermissions خودش رو. آرایه‌ی خالی = ادمین نیست.
 
-export const ADMIN_PERMISSIONS = [
-  "users.view",
-  "users.edit",
-  "users.access",
-  "users.delete",
-  "admins.manage",
-  "subscriptions",
-  "finance",
-  "discounts",
-  "pricing",
-  "support",
-  "chat",
-  "content",
-  "mentors",
-  "ai_usage",
-  "analytics",
-  "system",
-  "settings",
-  "audit",
-] as const;
-
-export type AdminPermission = (typeof ADMIN_PERMISSIONS)[number];
+import { ADMIN_PERMISSIONS, isAdminPermission, sanitizePermissions, hasPermission, type AdminPermission } from "./adminPermissionKeys";
+export { ADMIN_PERMISSIONS, isAdminPermission, sanitizePermissions, hasPermission };
+export type { AdminPermission };
 
 type PermMeta = { readonly label: string; readonly hint: string; readonly group: string };
 
@@ -84,21 +65,6 @@ export const ROLE_PRESETS: { key: string; readonly label: string; permissions: A
   { key: "finance", get label() { return pick({ fa: "مالی", en: "Finance" }); }, permissions: ["users.view", "subscriptions", "finance", "discounts"] },
   { key: "full", get label() { return pick({ fa: "ادمین کامل", en: "Full admin" }); }, permissions: [...ADMIN_PERMISSIONS] },
 ];
-
-export function isAdminPermission(v: unknown): v is AdminPermission {
-  return typeof v === "string" && (ADMIN_PERMISSIONS as readonly string[]).includes(v);
-}
-
-export function sanitizePermissions(v: unknown): AdminPermission[] {
-  if (!Array.isArray(v)) return [];
-  return Array.from(new Set(v.filter(isAdminPermission)));
-}
-
-export function hasPermission(ctx: { isSuperAdmin: boolean; permissions: readonly string[] }, perm?: AdminPermission): boolean {
-  if (ctx.isSuperAdmin) return true;
-  if (ctx.permissions.length === 0) return false;
-  return !perm || ctx.permissions.includes(perm);
-}
 
 // هر مسیر پنل به کدوم دسترسی نیاز داره — ترتیب مهمه (خاص‌تر اول).
 // null = هر ادمینی (داشبورد).

@@ -2,8 +2,8 @@
 
 // فصل‌های روایی هفته‌نامه: بینش‌ها، بردها و جای پیشرفت، اهداف، دستاوردها،
 // حرف مربی، یادداشت خودت. همه بدون بک‌گراند اضافه؛ فقط سطح کارت سایت.
-import Link from "next/link";
-import { motion } from "framer-motion";
+import { SmartLink as Link } from "@/components/SmartLink";
+import { m as motion } from "framer-motion";
 import {
   AlertTriangle, ArrowUpRight, CalendarDays, Check, Flame, Link2, Target, TrendingDown, TrendingUp, Trophy, Zap,
   type LucideIcon,

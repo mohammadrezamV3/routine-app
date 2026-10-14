@@ -1,7 +1,7 @@
 "use client";
 
 import { useMemo, useState } from "react";
-import { AnimatePresence, motion } from "framer-motion";
+import { AnimatePresence, m as motion } from "framer-motion";
 import { Bell, Tablets, BarChart3, Users } from "lucide-react";
 import { DashReminderCard } from "./DashReminderCard";
 import { DashMedicationCard } from "./DashMedicationCard";

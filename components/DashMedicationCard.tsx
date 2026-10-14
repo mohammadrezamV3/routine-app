@@ -6,7 +6,6 @@ import { Bell, MoreVertical, Pencil, Tablets, Plus, Trash2 } from "lucide-react"
 import { cn } from "@/lib/utils";
 import { useMenuPresence } from "@/lib/useMenuPresence";
 import { DashCard } from "./DashCard";
-import { MedicationForm } from "./MedicationForm";
 import { isoLocal } from "@/lib/jalali";
 import { getNotificationPermission, requestNotificationPermission } from "@/lib/notifications";
 import {
@@ -14,6 +13,9 @@ import {
   medicationDaysLeft, minutesToDoseTime, setMedications, setMedicationsChecked,
 } from "@/lib/medications";
 import { tr, isEn, iso } from "@/lib/i18n";
+import dynamic from "next/dynamic";
+// تنبل: فقط با کنش کاربر باز می‌شه و کدش توی باندل اولیه نیست
+const MedicationForm = dynamic(() => import("./MedicationForm").then((m) => m.MedicationForm), { ssr: false });
 
 const todayIso = isoLocal(new Date());
 

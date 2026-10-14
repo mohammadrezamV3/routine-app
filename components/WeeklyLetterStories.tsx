@@ -9,8 +9,8 @@
 import "./weekly-letter.css";
 import { useCallback, useContext, createContext, useEffect, useId, useLayoutEffect, useMemo, useRef, useState, type CSSProperties, type ReactNode } from "react";
 import { createPortal } from "react-dom";
-import Link from "next/link";
-import { AnimatePresence, motion, useReducedMotion, type Variants } from "framer-motion";
+import { SmartLink as Link } from "@/components/SmartLink";
+import { AnimatePresence, m as motion, useReducedMotion, type Variants } from "framer-motion";
 import {
   Activity, ChevronLeft, ChevronRight, Compass, Crown, Flame, Gauge, Lightbulb, Medal, Pause, PenLine, Play, Quote, RotateCcw, Sparkles, Target, TrendingDown, TrendingUp, X, Zap, type LucideIcon,
 } from "lucide-react";

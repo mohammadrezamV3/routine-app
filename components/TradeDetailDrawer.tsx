@@ -2,7 +2,7 @@
 
 import { CSSProperties, useEffect, useState } from "react";
 import { createPortal } from "react-dom";
-import Link from "next/link";
+import { SmartLink as Link } from "@/components/SmartLink";
 import { Pencil, Trash2, X } from "lucide-react";
 import { LockBodyScroll } from "./LockBodyScroll";
 import { faNum } from "@/lib/jalali";

@@ -1,6 +1,6 @@
 "use client";
 
-import { AnimatePresence, motion, useReducedMotion } from "framer-motion";
+import { AnimatePresence, m as motion, useReducedMotion } from "framer-motion";
 import { Globe } from "lucide-react";
 import { AgentAvatar } from "@/components/AgentAvatar";
 import { InstagramIcon, TelegramIcon } from "@/components/SocialIcons";

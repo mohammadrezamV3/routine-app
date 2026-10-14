@@ -6,8 +6,8 @@
 // (DashboardActions) نه صفحه‌ی جدید؛ بقیه لینک‌ان. قفل ماژول پولی فقط
 // نشانه‌ست — روی آیتم قفل همون لینک می‌مونه تا مقصد گیت/خرید رو نشون بده.
 
-import Link from "next/link";
-import { motion } from "framer-motion";
+import { SmartLink as Link } from "@/components/SmartLink";
+import { m as motion } from "framer-motion";
 import { tr, pick, type Localized } from "@/lib/i18n";
 import { featureVisible, type FeatureKey } from "@/lib/featureFlags";
 import { DashIcon, type DashIconName } from "./DashboardIcons";

@@ -1,9 +1,9 @@
 "use client";
 
 import Image from "next/image";
-import Link from "next/link";
+import { SmartLink as Link } from "@/components/SmartLink";
 import { Mail } from "lucide-react";
-import { useThemeTokens } from "@/components/PlanShowcase";
+import { useThemeTokens } from "@/components/useThemeTokens";
 import { EnamadBadge } from "@/components/EnamadBadge";
 import { TelegramIcon, InstagramIcon } from "@/components/SocialIcons";
 import { SOCIAL, SUPPORT_EMAIL, brandName } from "@/lib/brand";

@@ -28,6 +28,7 @@ import { brandName, BRAND_FA, BRAND_EN, BRAND_CATEGORY_FA, BRAND_TITLE, BRAND_DE
 import { SITE_URL, organizationJsonLd, websiteJsonLd, softwareApplicationJsonLd, siteNavigationJsonLd } from "@/lib/seo";
 import { PUBLIC_PAGES } from "@/lib/llmsContent";
 import { InlineBootstrap } from "@/components/InlineBootstrap";
+import { InlineMeta } from "@/components/InlineMeta";
 import { PwaProvider } from "@/components/PwaProvider";
 import { InviteRefCapture } from "@/components/InviteRefCapture";
 import { PopupExitAnimator } from "@/components/PopupExitAnimator";
@@ -301,6 +302,8 @@ export default async function RootLayout({ children }: { children: React.ReactNo
         {/* باید *قبل* از PRELOAD_SCRIPT بیاید — آن اسکریپت همین تگ را
             می‌خواند تا بفهمد لازم است داده را از شبکه بگیرد یا نه. */}
         <InlineBootstrap />
+        {/* قابلیت‌ها + نوار تعمیر داخل HTML — بدون دو درخواست بعد از هیدریت (lib/inlineMeta.ts) */}
+        <InlineMeta />
         {/* پیش‌درخواست داده‌های بحرانی — دلیلش کاملا توی lib/preload.ts نوشته شده.
             باید همین‌جا (اول body، سینکرون) بمونه تا قبل از دانلود باندل JS اجرا بشه. */}
         <script dangerouslySetInnerHTML={{ __html: PRELOAD_SCRIPT }} />

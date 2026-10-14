@@ -4,7 +4,7 @@ import "./weekly-analysis.css";
 import "./wa-cards.css";
 import "./wa-bottom.css";
 import { useRef, useState } from "react";
-import { motion } from "framer-motion";
+import { m as motion } from "framer-motion";
 import { ANALYSIS_DOMAIN_LABELS, type Insight } from "@/lib/weeklyAnalysis/types";
 import { tr } from "@/lib/i18n";
 import { V_WK_CARD, toneColor } from "./WeeklyAnalysisKit";

@@ -5,7 +5,7 @@
 // می‌کنن تا چیزی که ادمین می‌بینه دقیقا همونی باشه که کاربر می‌بینه.
 // متن همیشه به‌صورت text رندر می‌شه (بدون HTML).
 
-import Link from "next/link";
+import { SmartLink as Link } from "@/components/SmartLink";
 import { X } from "lucide-react";
 import { isExternalUrl, type AnnouncementTone } from "@/lib/announcements";
 import { tr } from "@/lib/i18n";

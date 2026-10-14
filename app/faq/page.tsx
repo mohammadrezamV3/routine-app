@@ -4,7 +4,7 @@ import { getFaqs } from "@/lib/faqContent";
 import { brandName } from "@/lib/brand";
 import { fillPriceCopy } from "@/lib/planPricing";
 import { getPricingConfig } from "@/lib/planPricingServer";
-import Link from "next/link";
+import { SmartLink as Link } from "@/components/SmartLink";
 import { tr } from "@/lib/i18n";
 
 export function generateMetadata(): Metadata {

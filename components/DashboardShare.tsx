@@ -20,7 +20,7 @@
 import "@/app/dashboard/dashboard.css";
 import { useEffect, useMemo, useRef, useState } from "react";
 import { createPortal } from "react-dom";
-import { AnimatePresence, motion } from "framer-motion";
+import { AnimatePresence, m as motion } from "framer-motion";
 import { Check, Download, Share2, X } from "lucide-react";
 import { weekdayName, jMonthName, faNum, toJalali } from "@/lib/jalali";
 import type { DashboardData } from "@/lib/dashboardTypes";

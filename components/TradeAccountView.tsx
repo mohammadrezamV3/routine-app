@@ -2,7 +2,7 @@
 
 import { GradientRing } from "./GradientRing";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
-import Link from "next/link";
+import { SmartLink as Link } from "@/components/SmartLink";
 import { useRouter } from "next/navigation";
 import {
   Award, Building2, ChevronLeft, ChevronRight, Flame, Gauge, Hash,
@@ -22,8 +22,6 @@ import {
 } from "@/lib/tradeTypes";
 import { SESSION_LABELS } from "@/lib/forexSessions";
 import { TradeAccountModal } from "./TradeAccountModal";
-import { TradeFormModal } from "./TradeFormModal";
-import { TradeDetailDrawer } from "./TradeDetailDrawer";
 import { TradeCalendarPanel } from "./TradeCalendarPanel";
 import { TradeStatsCollapse } from "./TradeStatsCollapse";
 import { PanelSkeleton } from "./PanelSkeleton";
@@ -32,6 +30,10 @@ import { useAsyncAction } from "@/lib/useAsyncAction";
 import { useLiveRefresh } from "@/lib/liveSync";
 import { rowActivateProps } from "@/lib/rowActivate";
 import { isEn, tr } from "@/lib/i18n";
+import dynamic from "next/dynamic";
+// تنبل: فقط با کنش کاربر باز می‌شه و کدش توی باندل اولیه نیست
+const TradeFormModal = dynamic(() => import("./TradeFormModal").then((m) => m.TradeFormModal), { ssr: false });
+const TradeDetailDrawer = dynamic(() => import("./TradeDetailDrawer").then((m) => m.TradeDetailDrawer), { ssr: false });
 
 // علامت درصد: فارسی ٪ و انگلیسی %
 const pctSign = () => (isEn() ? "%" : "٪");

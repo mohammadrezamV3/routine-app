@@ -7,9 +7,11 @@ import { useFeature } from "@/lib/useFeatures";
 import { RiskCalculator } from "./RiskCalculator";
 import { TradeAccount, TradeTag, CalSystem } from "@/lib/tradeTypes";
 import { pairLabel } from "@/lib/tradingView";
-import { TradeFormModal } from "./TradeFormModal";
 import { tr } from "@/lib/i18n";
 import "./risk-calc.css";
+import dynamic from "next/dynamic";
+// تنبل: فقط با کنش کاربر باز می‌شه و کدش توی باندل اولیه نیست
+const TradeFormModal = dynamic(() => import("./TradeFormModal").then((m) => m.TradeFormModal), { ssr: false });
 
 type ChecklistItem = { id: string; text: string; order: number };
 type Checklist = { id: string; name: string; color: string; required: boolean; archived: boolean; items: ChecklistItem[] };

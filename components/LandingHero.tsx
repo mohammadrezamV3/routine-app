@@ -1,12 +1,12 @@
 "use client";
 
 import { useEffect, useRef, useState } from "react";
-import Link from "next/link";
+import { SmartLink as Link } from "@/components/SmartLink";
 import {
   ArrowLeft, Calendar, Filter, History, Lock, ShieldCheck, Sparkles, UtensilsCrossed, Hash, Percent, ArrowUp,
 } from "lucide-react";
 import { brandName } from "@/lib/brand";
-import { useThemeTokens } from "@/components/PlanShowcase";
+import { useThemeTokens } from "@/components/useThemeTokens";
 import { DashProgressCircle } from "@/components/DashProgressCircle";
 import { StreakFlame } from "@/components/StreakFlame";
 import SiriOrb from "@/components/smoothui/components/siri-orb";
@@ -285,9 +285,9 @@ export function LandingHero() {
                         <span className="lh-ph-streak"><StreakFlame streak={42} compact /></span>
                       </span>
                       {/* eslint-disable-next-line @next/next/no-img-element */}
-                      <img src="/images/logo-lockup-dark-theme.png" alt="" width={110} height={27} className="lh-ph-logo lh-ph-logo-dark" />
+                      <img src="/images/logo-lockup-dark-theme.png" alt="" width={110} height={27} loading="lazy" decoding="async" className="lh-ph-logo lh-ph-logo-dark" />
                       {/* eslint-disable-next-line @next/next/no-img-element */}
-                      <img src="/images/logo-lockup-light-theme.webp" alt="" width={110} height={27} className="lh-ph-logo lh-ph-logo-light" />
+                      <img src="/images/logo-lockup-light-theme.webp" alt="" width={110} height={27} loading="lazy" decoding="async" className="lh-ph-logo lh-ph-logo-light" />
                     </div>
 
                     <div className="lh-ph-body">

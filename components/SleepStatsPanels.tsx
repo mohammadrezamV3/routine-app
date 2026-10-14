@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import { AnimatePresence, motion } from "framer-motion";
+import { AnimatePresence, m as motion } from "framer-motion";
 import { CalendarDays, TrendingUp, Lightbulb } from "lucide-react";
 import { SleepTrendChart } from "./SleepTrendChart";
 import { SleepMonthMap } from "./SleepMonthMap";

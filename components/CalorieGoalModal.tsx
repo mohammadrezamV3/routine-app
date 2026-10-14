@@ -3,7 +3,7 @@
 import { useEffect, useRef, useState } from "react";
 import { createPortal } from "react-dom";
 import { Check, ChevronRight, MoreVertical, PenLine, Plus } from "lucide-react";
-import { AnimatePresence, motion } from "framer-motion";
+import { AnimatePresence, m as motion } from "framer-motion";
 import { faNum } from "@/lib/jalali";
 import { CalorieGoal, CALORIE_GOAL_LABELS, Sex, splitMeals, MealBreakdownItem, mealLabelDisplay } from "@/lib/calorieCalc";
 import { getBodyMetrics, saveBodyMetrics } from "@/lib/bodyMetrics";

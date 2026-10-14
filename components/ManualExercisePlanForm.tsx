@@ -7,7 +7,8 @@ import { ChevronRight, GripVertical, Pencil, Plus, X } from "lucide-react";
 import { FA_WEEKDAY, CAL_WEEK_ORDER } from "@/lib/jalali";
 import type { ExerciseDay } from "@/lib/exercisePlans";
 import { computeDayFocus } from "@/lib/exerciseCatalogUtils";
-import { EXERCISE_CATALOG, ExerciseCatalogEntry, exerciseSearchText, getExerciseDifficulty, matchesExerciseQuery } from "@/lib/exerciseCatalog";
+import { ExerciseCatalogEntry, getExerciseDifficulty, matchesExerciseQuery } from "@/lib/exerciseCatalog";
+import { useExerciseSearchIndex } from "@/lib/exerciseSearchIndex";
 import { useProgressiveList } from "@/lib/useProgressiveList";
 import { stripSetSuffix } from "@/lib/exerciseSets";
 import { normalizeFa } from "@/lib/utils";
@@ -18,8 +19,7 @@ import { NumberInput } from "./NumberInput";
 import { SegmentedTabs } from "./SegmentedTabs";
 import { Spinner } from "./Spinner";
 import { isEn, tr } from "@/lib/i18n";
-import { dayNameDisplay, exerciseDisplayName, focusDisplay, localizeExercise } from "@/lib/exerciseI18n";
-import { EXERCISE_EN } from "@/lib/exerciseCatalogData/en";
+import { dayNameDisplay, exerciseDisplayName, focusDisplay, localizeExercise, useExerciseEn } from "@/lib/exerciseI18n";
 
 // نوع ورودی (زمان‌محور یا ست‌وتکرار) از روی الگوی حرکت خود حرکت تعیین
 // می‌شه، نه با یه سوال از کاربر — کاردیو/انعطاف‌پذیری زمانی‌ان، بقیه ست‌وتکراری.
@@ -39,6 +39,7 @@ function ManualQuantityPrompt({
   onConfirm: (formattedItem: string) => void;
   onCancel: () => void;
 }) {
+  useExerciseEn();
   const timed = isTimedExercise(entry);
   const [sets, setSets] = useState("3");
   const [reps, setReps] = useState("10");
@@ -97,13 +98,6 @@ function ManualQuantityPrompt({
   );
 }
 
-// متن جستجوی هر حرکت (اسم + اسم‌های دیگه + عضلات) یک بار ساخته می‌شه.
-// نام و گروه عضلانی انگلیسی هم قابل جستجوست (مستقل از زبان جاری)
-const SEARCH_INDEX = EXERCISE_CATALOG.map((entry) => ({
-  entry,
-  text: normalizeFa(`${exerciseSearchText(entry)} | ${EXERCISE_EN[entry.name]?.name ?? ""} | ${EXERCISE_EN[entry.name]?.muscleGroup ?? ""}`),
-}));
-
 // پاپ‌آپ مستقل «افزودن حرکت» — قبلا این جستجو/لیست همون‌جا توی نمای روز
 // اینلاین رندر می‌شد و صفحه رو شلوغ می‌کرد؛ حالا مثل ExerciseCatalogModal یه
 // پاپ‌آپ پورتال‌شده‌ست، مستقل از باکس «حرکات این روز» زیرش.
@@ -121,9 +115,10 @@ function ManualExerciseAddPopup({
   const [adding, setAdding] = useState<ExerciseCatalogEntry | null>(null);
 
   const normalizedQuery = normalizeFa(query).replace(/\s+/g, " ");
+  const searchIndex = useExerciseSearchIndex(query);
   const visible = useMemo(
-    () => SEARCH_INDEX.filter((x) => !excludeNames.has(x.entry.name) && matchesExerciseQuery(x.text, normalizedQuery)).map((x) => x.entry),
-    [excludeNames, normalizedQuery]
+    () => searchIndex.filter((x) => !excludeNames.has(x.entry.name) && matchesExerciseQuery(x.text, normalizedQuery)).map((x) => x.entry),
+    [searchIndex, excludeNames, normalizedQuery]
   );
   const { limit, onScroll, listRef } = useProgressiveList(visible.length, normalizedQuery);
 
@@ -190,6 +185,7 @@ function ManualExerciseRow({
   onRemove: () => void;
 }) {
   const controls = useDragControls();
+  useExerciseEn();
   return (
     <Reorder.Item
       value={item}
@@ -235,6 +231,7 @@ export function ManualExercisePlanForm({
   onCancel?: () => void;
   onClose?: () => void;
 }) {
+  useExerciseEn();
   const [dayItems, setDayItems] = useState<Record<string, string[]>>({});
   const [openDay, setOpenDay] = useState<string | null>(null);
   const [editDay, setEditDay] = useState<string | null>(null);

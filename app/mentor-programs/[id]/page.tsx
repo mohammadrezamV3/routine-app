@@ -2,7 +2,7 @@
 
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { useLiveRefresh, useVisiblePolling } from "@/lib/liveSync";
-import Link from "next/link";
+import { SmartLink as Link } from "@/components/SmartLink";
 import { useParams } from "next/navigation";
 import {
   CalendarCheck, CalendarDays, Check, CheckCircle2, CircleSlash, ClipboardList, Clock, Dumbbell, EyeOff, Flag,

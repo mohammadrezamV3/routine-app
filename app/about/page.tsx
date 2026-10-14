@@ -5,7 +5,7 @@ import { breadcrumbJsonLd, pageMetadata } from "@/lib/seo";
 import { AboutHero } from "@/components/AboutHero";
 import {
   AboutContact, AboutFinalCTA, AboutInside, AboutPrivacy, AboutStats, AboutStory, AboutValues,
-} from "@/components/AboutSections";
+} from "@/components/AboutLazy";
 import { getTeamMembers } from "@/lib/teamServer";
 import "./about.css";
 

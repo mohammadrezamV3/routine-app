@@ -2,14 +2,15 @@
 
 import { useState } from "react";
 import { createPortal } from "react-dom";
-import { motion } from "framer-motion";
+import { m as motion } from "framer-motion";
 import { Plus, UtensilsCrossed, X } from "lucide-react";
 import { faNum } from "@/lib/jalali";
 import { DashCard } from "./DashCard";
-import { CalorieAddEntryModal } from "./CalorieAddEntryModal";
+import dynamic from "next/dynamic";
+const CalorieAddEntryModal = dynamic(() => import("./CalorieAddEntryModal").then((m) => m.CalorieAddEntryModal), { ssr: false });
 import type { Target } from "./CaloriePanel";
 import { tr, isEn } from "@/lib/i18n";
-import { foodNameDisplay } from "@/lib/foodNamesEn";
+import { foodNameDisplay, useFoodNamesEn } from "@/lib/foodNamesEnLazy";
 
 type Entry = { id: string; customName: string; customCalories: number; grams: number; date?: string };
 
@@ -47,6 +48,7 @@ export function CalorieFoodPlanCard({
   onEditGoal: () => void;
   delay?: number;
 }) {
+  useFoodNamesEn();
   const [addOpen, setAddOpen] = useState(false);
   const overGoal = pct > 100;
   const barColor = overGoal ? "#E05252" : "var(--accent)";

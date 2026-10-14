@@ -1,6 +1,6 @@
 "use client";
 
-import Link from "next/link";
+import { SmartLink as Link } from "@/components/SmartLink";
 import { MessageSquare, NotebookPen, Plus } from "lucide-react";
 import { MentorAvatarRing } from "./MentorAvatarRing";
 import { MI, MI_STROKE } from "./MentorUI";

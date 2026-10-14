@@ -1,8 +1,8 @@
 "use client";
 
 import { useEffect, useRef, useState } from "react";
-import Link from "next/link";
-import { motion, useInView, useReducedMotion, useScroll, useTransform, type MotionValue } from "framer-motion";
+import { SmartLink as Link } from "@/components/SmartLink";
+import { m as motion, useInView, useReducedMotion, useScroll, useTransform, type MotionValue } from "framer-motion";
 import {
   Apple, ArrowLeft, Bot, CalendarCheck, CandlestickChart, Check, Dumbbell, FileSpreadsheet, Flame, GraduationCap,
   Headset, Heart, KeyRound, Languages, Layers, Lock, Mail, Moon, ShieldCheck, Smartphone, Sparkles, Target, UserRound,

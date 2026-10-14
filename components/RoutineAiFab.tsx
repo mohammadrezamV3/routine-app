@@ -3,7 +3,7 @@
 import { Fragment, useEffect, useLayoutEffect, useRef, useState } from "react";
 import { createPortal } from "react-dom";
 import { useSession } from "next-auth/react";
-import Link from "next/link";
+import { SmartLink as Link } from "@/components/SmartLink";
 import { Send, X } from "lucide-react";
 import { LockBodyScroll } from "./LockBodyScroll";
 import { primeSettingCache } from "@/lib/storage";

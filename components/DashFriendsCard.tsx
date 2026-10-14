@@ -7,12 +7,14 @@ import { useFeature } from "@/lib/useFeatures";
 import { useSession } from "next-auth/react";
 import { DashCard } from "./DashCard";
 import { AgentAvatar } from "./AgentAvatar";
-import { FriendProfileModal } from "./FriendProfileModal";
 import { FriendRow, sortFriends, type FriendRowData } from "./FriendRow";
-import { FriendsManageSheet } from "./FriendsManageSheet";
 import { getPreloadedBootstrap } from "@/lib/preload";
 import { useLiveRefresh } from "@/lib/liveSync";
 import { tr, isEn } from "@/lib/i18n";
+import dynamic from "next/dynamic";
+// تنبل: فقط با کنش کاربر باز می‌شه و کدش توی باندل اولیه نیست
+const FriendProfileModal = dynamic(() => import("./FriendProfileModal").then((m) => m.FriendProfileModal), { ssr: false });
+const FriendsManageSheet = dynamic(() => import("./FriendsManageSheet").then((m) => m.FriendsManageSheet), { ssr: false });
 
 export type FriendListItem = FriendRowData & { friendshipId: string; username: string | null; favorite: boolean };
 type FriendRequest = { friendshipId: string; id: string; name: string; username: string | null; avatarUrl: string | null; golden?: boolean; staff?: boolean };

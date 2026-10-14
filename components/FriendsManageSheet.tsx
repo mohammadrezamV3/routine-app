@@ -6,13 +6,15 @@ import { createPortal } from "react-dom";
 import { Star, UserMinus, X } from "lucide-react";
 import { LockBodyScroll } from "./LockBodyScroll";
 import { FriendAvatar } from "./FriendAvatar";
-import { FriendProfileModal } from "./FriendProfileModal";
 import { GoldenName } from "./GoldenName";
 import { TradeKebabMenu } from "./TradeKebabMenu";
 import { Spinner } from "./Spinner";
 import { sortFriends, type FriendRowData } from "./FriendRow";
 import { useLiveRefresh } from "@/lib/liveSync";
 import { tr, isEn, iso } from "@/lib/i18n";
+import dynamic from "next/dynamic";
+// تنبل: فقط با کنش کاربر باز می‌شه و کدش توی باندل اولیه نیست
+const FriendProfileModal = dynamic(() => import("./FriendProfileModal").then((m) => m.FriendProfileModal), { ssr: false });
 
 type Person = { friendshipId: string; id: string; name: string; username: string | null; avatarUrl: string | null; golden?: boolean; staff?: boolean };
 type SearchStatus = "none" | "friends" | "pending_sent" | "pending_received";

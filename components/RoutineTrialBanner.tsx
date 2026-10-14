@@ -4,7 +4,7 @@
 // (ردیف ROUTINE انقضا داره و هیچ اشتراک فعالی نداره). بعد از تموم‌شدنش
 // ModuleGate خودش پیام خرید رو نشون می‌ده؛ این نوار فقط هشدار قبل از اونه.
 
-import Link from "next/link";
+import { SmartLink as Link } from "@/components/SmartLink";
 import { useEffect, useState } from "react";
 import { useSession } from "next-auth/react";
 import { getAccount } from "@/lib/accountCache";

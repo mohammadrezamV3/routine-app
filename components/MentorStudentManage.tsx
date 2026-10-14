@@ -1,7 +1,7 @@
 "use client";
 
 import { useCallback, useEffect, useState } from "react";
-import Link from "next/link";
+import { SmartLink as Link } from "@/components/SmartLink";
 import { Spinner } from "./Spinner";
 import { mentorApi } from "./MentorDashKit";
 import { MentorEmpty } from "./MentorUI";

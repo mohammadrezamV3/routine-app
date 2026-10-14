@@ -4,7 +4,7 @@
 // جای «برنامه‌های امروز» و «نقشه‌ی ثبات» می‌شینن تا چیدمان بنتو خالی نمونه.
 // هیچ داده‌ی واقعی‌ای نشون داده نمی‌شه — فقط پیام خرید (گیت واقعی سمت سرور).
 
-import Link from "next/link";
+import { SmartLink as Link } from "@/components/SmartLink";
 import { ROUTINE_PLAN_KEY, ROUTINE_TRIAL_DAYS } from "@/lib/trial";
 import { entryOffer } from "@/lib/planPricing";
 import { usePlanPricing } from "@/lib/usePlanPricing";

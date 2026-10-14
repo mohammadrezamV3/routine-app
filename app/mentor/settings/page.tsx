@@ -1,7 +1,7 @@
 "use client";
 
 import { useCallback, useEffect, useState } from "react";
-import Link from "next/link";
+import { SmartLink as Link } from "@/components/SmartLink";
 import { useSession } from "next-auth/react";
 import { BadgeCheck, Bell, DoorOpen, Eye, MessageSquare, ShieldCheck, Tag, UserRound, Users, HelpCircle } from "lucide-react";
 import { MentorDashShell, MentorDashError, fa, mentorApi } from "@/components/MentorDashKit";

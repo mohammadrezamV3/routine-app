@@ -1,7 +1,7 @@
 "use client";
 
 import { memo } from "react";
-import { motion, useReducedMotion } from "framer-motion";
+import { m as motion, useReducedMotion } from "framer-motion";
 import { MAX_CYCLES, type CycleOption } from "@/lib/sleepCycles";
 import { durationLabel } from "@/lib/sleep";
 import { tr } from "@/lib/i18n";

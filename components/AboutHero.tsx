@@ -1,8 +1,8 @@
 "use client";
 
 import { useEffect, useRef, useState } from "react";
-import Link from "next/link";
-import { motion, useMotionValue, useReducedMotion, useSpring, useTransform } from "framer-motion";
+import { SmartLink as Link } from "@/components/SmartLink";
+import { m as motion, useMotionValue, useReducedMotion, useSpring, useTransform } from "framer-motion";
 import {
   Apple, ArrowLeft, CalendarCheck, CandlestickChart, Dumbbell, GraduationCap, Moon, ShieldCheck, Smartphone, Sparkles,
 } from "lucide-react";
@@ -33,9 +33,9 @@ function BrandLogo({ className }: { className?: string }) {
   return (
     <>
       {/* eslint-disable-next-line @next/next/no-img-element */}
-      <img src="/images/logo-icon-dark-theme.png" alt="" width={256} height={217} className={`ab-logo-dark ${className ?? ""}`} />
+      <img src="/images/logo-icon-dark-theme.png" alt="" width={256} height={217} decoding="async" className={`ab-logo-dark ${className ?? ""}`} />
       {/* eslint-disable-next-line @next/next/no-img-element */}
-      <img src="/images/logo-icon-light-theme.webp" alt="" width={256} height={217} className={`ab-logo-light ${className ?? ""}`} />
+      <img src="/images/logo-icon-light-theme.webp" alt="" width={256} height={217} decoding="async" className={`ab-logo-light ${className ?? ""}`} />
     </>
   );
 }

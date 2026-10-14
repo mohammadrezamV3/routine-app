@@ -4,7 +4,7 @@
 // بعد شماره‌های ثبت‌شده به‌صورت کارت، گروه‌بندی بر اساس ماه جلالی، نقطه‌ی
 // خوانده‌نشده و حالت خالی. لینک هر کارت خود خواننده‌ست (?week=).
 import { useCallback, useEffect, useMemo, useState } from "react";
-import Link from "next/link";
+import { SmartLink as Link } from "@/components/SmartLink";
 import { MotionConfig } from "framer-motion";
 import { ArrowLeft, BarChart3, Inbox, Newspaper } from "lucide-react";
 import type { LetterSummary } from "@/lib/weeklyAnalysis/types";

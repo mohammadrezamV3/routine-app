@@ -1,7 +1,7 @@
 "use client";
 
 import { useCallback, useEffect, useState } from "react";
-import Link from "next/link";
+import { SmartLink as Link } from "@/components/SmartLink";
 import { useSession } from "next-auth/react";
 import { ChevronLeft, Clock, Layers, Map, Plus, Trash2 } from "lucide-react";
 import { FeatureGate } from "@/components/FeatureGate";

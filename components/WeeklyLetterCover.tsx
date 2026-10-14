@@ -3,7 +3,7 @@
 // جلد هفته‌نامه: سرصفحه‌ی مجله‌ای (شماره / عنوان / هفته)، حلقه‌ی بزرگ امتیاز،
 // تیتر کلمه‌به‌کلمه، تیپ هفته، سلام و مقدمه. ورود پله‌ای فقط با transform/opacity.
 import { Fragment, type ReactNode } from "react";
-import { motion, useScroll, useTransform, type Variants } from "framer-motion";
+import { m as motion, useScroll, useTransform, type Variants } from "framer-motion";
 import {
   Activity, Anchor, Crown, Feather, Hammer, Play, Scale, Trophy, TrendingDown, TrendingUp, Undo2, Zap, type LucideIcon,
 } from "lucide-react";

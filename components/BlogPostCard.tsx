@@ -1,4 +1,4 @@
-import Link from "next/link";
+import { SmartLink as Link } from "@/components/SmartLink";
 import { localizedBlogCategory } from "@/lib/blog/categories";
 import { tr } from "@/lib/i18n";
 import type { BlogPost } from "@/lib/blogPosts";

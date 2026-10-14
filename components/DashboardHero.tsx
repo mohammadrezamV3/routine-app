@@ -5,9 +5,9 @@
 // بیداری تا خواب خود کاربر که خورشید روی ساعت فعلی می‌شینه و برنامه‌های
 // امروز به‌شکل نقطه روش هستن (پر = انجام‌شده).
 
-import Link from "next/link";
+import { SmartLink as Link } from "@/components/SmartLink";
 import { useEffect, useMemo, useRef, useState } from "react";
-import { motion } from "framer-motion";
+import { m as motion } from "framer-motion";
 import { weekdayName, jMonthName, faNum, toJalali } from "@/lib/jalali";
 import { awakeProgress, dayPhase, PHASE_GREETING, type DayPhase } from "@/lib/dashboardCompute";
 import { getStreakTier } from "@/lib/streakTier";

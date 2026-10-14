@@ -1,6 +1,6 @@
 "use client";
 
-import { motion } from "framer-motion";
+import { m as motion } from "framer-motion";
 import { CalendarDays, Check, X } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { tr } from "@/lib/i18n";

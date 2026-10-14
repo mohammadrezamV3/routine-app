@@ -1,7 +1,7 @@
 "use client";
 
 import { useMemo, useState } from "react";
-import { motion } from "framer-motion";
+import { m as motion } from "framer-motion";
 import { LineChart } from "lucide-react";
 import { faNum, weekdayShort, isoLocal, jMonthName, toJalali } from "@/lib/jalali";
 import { cn } from "@/lib/utils";

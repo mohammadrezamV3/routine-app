@@ -6,7 +6,7 @@ import Link from "next/link";
 import { usePathname, useSearchParams } from "next/navigation";
 import { useSession } from "next-auth/react";
 import { logoutAndRedirect } from "@/lib/logout";
-import { motion, AnimatePresence } from "framer-motion";
+import { m as motion, AnimatePresence } from "framer-motion";
 import { ChevronDown, Menu, X, Home, Sun, Moon, Lock, LogOut, Search, PanelRightClose, PanelRightOpen, PanelLeftClose, PanelLeftOpen, LayoutGrid, Users, Coins, Headset, Ellipsis } from "lucide-react";
 import { useTheme } from "@/components/ThemeProvider";
 import { useLockBodyScroll } from "@/lib/useLockBodyScroll";

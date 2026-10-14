@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useRef, useState } from "react";
-import { motion, useInView, useReducedMotion } from "framer-motion";
+import { m as motion, useInView, useReducedMotion } from "framer-motion";
 import { Check, Lock, RefreshCw, Sparkles, Bot } from "lucide-react";
 import { TickButton } from "@/components/TickButton";
 import { GradientRing, RING_AMBER, RING_BLUE, RING_GREEN } from "@/components/GradientRing";

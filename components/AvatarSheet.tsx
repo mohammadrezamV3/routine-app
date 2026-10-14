@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from "react";
 import { createPortal } from "react-dom";
-import { AnimatePresence, motion } from "framer-motion";
+import { AnimatePresence, m as motion } from "framer-motion";
 import { ImagePlus, Trash2 } from "lucide-react";
 import { useLockBodyScroll } from "@/lib/useLockBodyScroll";
 import { Spinner } from "@/components/Spinner";

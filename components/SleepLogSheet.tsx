@@ -3,7 +3,7 @@
 import "./sleep-log.css";
 import { useEffect, useMemo, useState } from "react";
 import { createPortal } from "react-dom";
-import Link from "next/link";
+import { SmartLink as Link } from "@/components/SmartLink";
 import { ChevronDown, ChevronLeft, ChevronRight } from "lucide-react";
 import { GradientRing, RING_AMBER, RING_BLUE, RING_GREEN, RING_OVER, type RingGrad } from "./GradientRing";
 import { NumberInput } from "./NumberInput";

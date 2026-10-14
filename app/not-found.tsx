@@ -1,5 +1,5 @@
 import type { Metadata } from "next";
-import Link from "next/link";
+import { SmartLink as Link } from "@/components/SmartLink";
 import { tr } from "@/lib/i18n";
 
 // بدون این فایل، نکست یه صفحه‌ی ۴۰۴ی کاملا پیش‌فرض/بدون‌برند نشون می‌داد.

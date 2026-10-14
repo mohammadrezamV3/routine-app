@@ -10,9 +10,9 @@
 //   • همه‌ی حرکت‌ها با MotionConfig reducedMotion="user" (در DashboardClient)
 //     برای کسی که «کاهش حرکت» رو روشن کرده خاموش می‌شن.
 
-import Link from "next/link";
+import { SmartLink as Link } from "@/components/SmartLink";
 import { ReactNode, useEffect, useId, useRef, useState } from "react";
-import { animate, motion, useInView, useMotionValue, useReducedMotion, useTransform, type Variants } from "framer-motion";
+import { animate, m as motion, useInView, useMotionValue, useReducedMotion, useTransform, type Variants } from "framer-motion";
 import { faNum } from "@/lib/jalali";
 import { sparkPath } from "@/lib/dashboardCompute";
 import { DashIcon, type DashIconName } from "./DashboardIcons";

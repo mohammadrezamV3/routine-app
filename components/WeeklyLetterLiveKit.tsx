@@ -2,7 +2,7 @@
 
 // ابزار مشترک فصل‌های تعاملی هفته‌نامه‌ی زنده (مربی، هدف‌ها، یادداشت).
 import { useEffect, type ReactNode } from "react";
-import { motion } from "framer-motion";
+import { m as motion } from "framer-motion";
 import type { LucideIcon } from "lucide-react";
 import type { AnalysisDomain } from "@/lib/weeklyAnalysis/types";
 import { tr } from "@/lib/i18n";

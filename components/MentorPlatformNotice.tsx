@@ -1,5 +1,5 @@
 import "./mentor.css";
-import Link from "next/link";
+import { SmartLink as Link } from "@/components/SmartLink";
 import { MENTOR_TERMS_PATH } from "@/lib/mentorTerms";
 import { tr } from "@/lib/i18n";
 

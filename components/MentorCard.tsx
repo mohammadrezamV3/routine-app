@@ -2,7 +2,7 @@
 
 import "./mentor.css";
 import "./mentor-student-ltr.css";
-import Link from "next/link";
+import { SmartLink as Link } from "@/components/SmartLink";
 import { CalendarDays, ChevronLeft, CircleSlash } from "lucide-react";
 import type { MentorCard as MentorCardData } from "@/lib/mentorTypes";
 import { availabilityShort } from "@/lib/mentorAvailability";

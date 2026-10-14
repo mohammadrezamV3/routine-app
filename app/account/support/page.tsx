@@ -1,9 +1,9 @@
 "use client";
 
 import { useCallback, useEffect, useState } from "react";
-import Link from "next/link";
+import { SmartLink as Link } from "@/components/SmartLink";
 import { useRouter } from "next/navigation";
-import { motion } from "framer-motion";
+import { m as motion } from "framer-motion";
 import { Plus, MessageCircleQuestion, Inbox } from "lucide-react";
 import { AccountBackButton } from "@/components/AccountBackButton";
 import { SupportTicketModal } from "@/components/SupportTicketModal";

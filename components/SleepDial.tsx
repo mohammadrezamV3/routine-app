@@ -2,7 +2,7 @@
 
 import "./sleep-dial.css";
 import { useEffect, useId, useMemo, useState } from "react";
-import { motion, useReducedMotion } from "framer-motion";
+import { m as motion, useReducedMotion } from "framer-motion";
 import { Moon, Sun } from "lucide-react";
 import { faNum } from "@/lib/jalali";
 import { tr } from "@/lib/i18n";

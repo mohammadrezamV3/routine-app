@@ -4,6 +4,7 @@ import { useEffect, useState } from "react";
 import { maintenanceDismissKey, type MaintenanceState } from "@/lib/maintenance";
 import { formatDateTime } from "@/lib/adminFormat";
 import { tr } from "@/lib/i18n";
+import { takeInlineMaintenance } from "@/lib/inlineMeta";
 
 // نوار نازک اطلاع‌رسانی تعمیر (تنظیم از /admin/settings). اپ هیچ‌وقت بسته نمی‌شه.
 // بعد از mount می‌خونه (SSR چیزی رندر نمی‌کنه) پس وقتی خاموشه هیچ جابه‌جایی چیدمان نیست.
@@ -22,9 +23,12 @@ export function MaintenanceBanner() {
     let cancelled = false;
     async function load() {
       try {
-        const r = await fetch("/api/maintenance");
-        if (!r.ok) return;
-        const d = (await r.json()) as MaintenanceState;
+        let d = takeInlineMaintenance();
+        if (!d) {
+          const r = await fetch("/api/maintenance");
+          if (!r.ok) return;
+          d = (await r.json()) as MaintenanceState;
+        }
         if (cancelled) return;
         if (d.enabled && d.message) { setState(d); setHidden(wasDismissed(d)); } else setState(null);
       } catch {

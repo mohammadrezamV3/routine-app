@@ -1,7 +1,7 @@
 "use client";
 
 import "./mentor.css";
-import Link from "next/link";
+import { SmartLink as Link } from "@/components/SmartLink";
 import { usePathname } from "next/navigation";
 import { useSession } from "next-auth/react";
 import { useCallback, useEffect, useState, useSyncExternalStore } from "react";

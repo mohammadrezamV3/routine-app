@@ -192,7 +192,21 @@ let cachedItems: NotifItem[] | null = null;
 // روی خود زنگوله) — همون فچ رو توی cachedItems می‌ذاره، پس وقتی کاربر
 // واقعا زنگوله رو می‌زنه، پنل به‌جای «در حال بارگذاری…» بلافاصله همین
 // دیتای از‌قبل‌آماده رو نشون می‌ده.
+// اولین بار بعد از اولین پینت و در زمان بیکاری مرورگر (نقطه‌ی زنگوله حیاتی نیست و چهار پنج درخواست
+// داشت که با JS/داده‌ی اصلی صفحه سر پهنای باند دعوا می‌کردن). بارهای بعدی (زنده/پولینگ) فوری‌ان.
+let firstIdle: Promise<void> | null = null;
+
+function whenIdle(): Promise<void> {
+  if (typeof window === "undefined") return Promise.resolve();
+  const w = window as Window & { requestIdleCallback?: (cb: () => void, o?: { timeout: number }) => number };
+  return new Promise((resolve) => {
+    if (w.requestIdleCallback) w.requestIdleCallback(() => resolve(), { timeout: 3000 });
+    else setTimeout(resolve, 1500);
+  });
+}
+
 export async function preloadNotifications(): Promise<NotifItem[]> {
+  await (firstIdle ??= whenIdle());
   const res = await loadPendingNotifications();
   cachedItems = res;
   return res;

@@ -16,6 +16,8 @@ export function EnamadBadge() {
       <img
         referrerPolicy="origin"
         src="https://trustseal.enamad.ir/logo.aspx?id=7422181&Code=pq9jwdSFVxQnPZsFD15gTuWGn4q37IIc"
+        loading="lazy"
+        decoding="async"
         alt={tr("نماد اعتماد الکترونیکی", "Electronic trust seal (Enamad)")}
         style={{ cursor: "pointer" }}
       />

@@ -4,7 +4,7 @@ import { SpinnerCheck } from "@/components/SpinnerCheck";
 import { TickButton } from "@/components/TickButton";
 import { useRef, useState } from "react";
 import { signIn, getSession } from "next-auth/react";
-import Link from "next/link";
+import { SmartLink as Link } from "@/components/SmartLink";
 import { User, Lock, ShieldCheck } from "lucide-react";
 import { AuthField, useAuthFieldsStagger } from "@/components/AuthField";
 import { AuthBackButton, AuthBrandMark } from "@/components/AuthChrome";

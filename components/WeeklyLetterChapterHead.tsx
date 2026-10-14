@@ -2,7 +2,7 @@
 
 // سرفصل فصل‌های داده (نقشه، خواب): همون ظاهر Chapter ولی شماره‌ی فصل اختیاریه
 // (فصل‌هایی که پشت فلگ یا بی‌داده پنهان می‌شن شماره‌ی ثابت ندارن).
-import { motion } from "framer-motion";
+import { m as motion } from "framer-motion";
 import type { LucideIcon } from "lucide-react";
 import { tr } from "@/lib/i18n";
 import { Reveal, WL_EASE, useLite } from "./WeeklyLetterShared";

@@ -1,6 +1,6 @@
 "use client";
 
-import Link from "next/link";
+import { SmartLink as Link } from "@/components/SmartLink";
 import { ChevronRight, ChevronLeft } from "lucide-react";
 import { tr, isEn } from "@/lib/i18n";
 

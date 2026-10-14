@@ -1,7 +1,6 @@
 import type { Metadata } from "next";
-import { getServerSession } from "next-auth";
 import { ModuleKey } from "@prisma/client";
-import { authOptions } from "@/lib/auth";
+import { getSessionFast } from "@/lib/serverSession";
 import { prisma } from "@/lib/prisma";
 import { isFeatureEnabled } from "@/lib/featureFlagsServer";
 import { buildLiveWeek } from "@/lib/weeklyLetter/live";
@@ -32,7 +31,7 @@ type SP = { week?: string; offset?: string; story?: string };
  * (روت API همچنان requireModule + featureBlocked داره).
  */
 export default async function WeeklyAnalysisPage({ searchParams }: { searchParams?: SP }) {
-  const session = await getServerSession(authOptions);
+  const session = await getSessionFast();
   const user = session?.user as { id?: string; isSuperAdmin?: boolean } | undefined;
   const userId = user?.id;
   const query = { week: searchParams?.week ?? null, offset: searchParams?.offset ?? null };

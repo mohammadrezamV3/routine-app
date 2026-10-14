@@ -9,7 +9,9 @@ import { tasksForDate } from "@/lib/schedule";
 import { getCustomOccurrences, getDailyRange, getRemovedOccurrences, getOutingDates } from "@/lib/storage";
 import { keyMatches, useLiveRefresh } from "@/lib/liveSync";
 import { DEFAULT_SLEEP, DEFAULT_WAKE } from "@/lib/wakeSleep";
-import { DayModal } from "@/components/DayModal";
+import dynamic from "next/dynamic";
+// تنبل: فقط با کنش کاربر باز می‌شه و کدش توی باندل اولیه نیست
+const DayModal = dynamic(() => import("@/components/DayModal").then((m) => m.DayModal), { ssr: false });
 
 const now = new Date();
 const todayKey = isoLocal(now);

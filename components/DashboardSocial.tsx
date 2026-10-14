@@ -3,8 +3,8 @@
 // ردیف پایین بنتو: مربی‌ها، رودمپ‌ها و صندوق اعلان‌ها/اطلاعیه‌ها.
 // متن پیام‌های منتور هیچ‌وقت این‌جا نیست (رمزگذاری سرتاسری) — فقط شمارش.
 
-import Link from "next/link";
-import { motion } from "framer-motion";
+import { SmartLink as Link } from "@/components/SmartLink";
+import { m as motion } from "framer-motion";
 import { faNum } from "@/lib/jalali";
 import type { DashboardData, DashMentors, DashRoadmap } from "@/lib/dashboardTypes";
 import { BentoCard, CardHead, CountUp, EmptyState, Meter, Skel } from "./DashboardKit";

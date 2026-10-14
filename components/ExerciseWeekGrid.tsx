@@ -1,6 +1,6 @@
 "use client";
 
-import { motion } from "framer-motion";
+import { m as motion } from "framer-motion";
 import { CalendarDays } from "lucide-react";
 import { CAL_WEEK_ORDER, FA_WEEKDAY } from "@/lib/jalali";
 import type { ExerciseDay } from "@/lib/exercisePlans";
@@ -8,7 +8,7 @@ import { toEnDigits } from "@/lib/schedule";
 import { cn } from "@/lib/utils";
 import { TickButton } from "./TickButton";
 import { tr } from "@/lib/i18n";
-import { dayNameDisplay, exerciseDisplayName, focusDisplay } from "@/lib/exerciseI18n";
+import { dayNameDisplay, exerciseDisplayName, focusDisplay, useExerciseEn } from "@/lib/exerciseI18n";
 
 // «برنامه هفتگی» بدنسازی — یک باکس واحد، با پدینگ دورش تا خط جداکننده‌ی
 // بین روزها به لبه‌ی باکس نچسبه. موبایل: تک‌ستونی (زیر هم)، بدون تغییر
@@ -28,6 +28,7 @@ export function ExerciseWeekGrid({
    *  روز استراحتی که رسیده و خودکار تیک می‌خوره) */
   dayStatus?: Record<string, "done" | "missed" | "rest">;
 }) {
+  useExerciseEn();
   const byDay = new Map(planData.map((d) => [d.day, d]));
 
   return (

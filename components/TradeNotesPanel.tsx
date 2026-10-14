@@ -1,7 +1,7 @@
 "use client";
 
 import { CSSProperties, useCallback, useEffect, useState } from "react";
-import { motion } from "framer-motion";
+import { m as motion } from "framer-motion";
 import { Pencil, Pin, PinOff, Search, StickyNote, Trash2, X } from "lucide-react";
 import { TradeKebabMenu } from "./TradeKebabMenu";
 import { faNum } from "@/lib/jalali";

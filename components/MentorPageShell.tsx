@@ -1,7 +1,7 @@
 "use client";
 
 import "./mentor.css";
-import Link from "next/link";
+import { SmartLink as Link } from "@/components/SmartLink";
 import { AlertTriangle, ChevronRight, RefreshCw } from "lucide-react";
 import { useSession } from "next-auth/react";
 import { AuthGate } from "./AuthGate";

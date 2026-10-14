@@ -3,7 +3,7 @@
 import { GradientRing } from "@/components/GradientRing";
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { useParams, useRouter } from "next/navigation";
-import Link from "next/link";
+import { SmartLink as Link } from "@/components/SmartLink";
 import {
   Award, ChevronLeft, ChevronRight, Clock, Flag, Gauge, Layers, Sparkles, Target,
   Timer, Trash2, UserRound, Wrench,

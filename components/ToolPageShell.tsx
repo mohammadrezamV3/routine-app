@@ -1,8 +1,8 @@
 "use client";
 
-import Link from "next/link";
+import { SmartLink as Link } from "@/components/SmartLink";
 import { ArrowLeft, ChevronLeft } from "lucide-react";
-import { useThemeTokens } from "@/components/PlanShowcase";
+import { useThemeTokens } from "@/components/useThemeTokens";
 import type { SeoFaq, SeoRelatedLink, SeoSection } from "@/components/SeoLanding";
 import "./tools.css";
 import { tr } from "@/lib/i18n";

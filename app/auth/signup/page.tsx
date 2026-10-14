@@ -5,7 +5,7 @@ import { faNum } from "@/lib/jalali";
 import { signIn, getSession } from "next-auth/react";
 import { PWA_OFFER_KEY } from "@/components/PwaProvider";
 import { useRouter } from "next/navigation";
-import Link from "next/link";
+import { SmartLink as Link } from "@/components/SmartLink";
 import { User, AtSign, Lock, Phone } from "lucide-react";
 import { AuthField, useAuthFieldsStagger } from "@/components/AuthField";
 import { AuthBackButton, AuthBrandMark } from "@/components/AuthChrome";

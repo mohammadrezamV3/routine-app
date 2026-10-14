@@ -2,7 +2,7 @@
 
 import "./mentor.css";
 import { useEffect, useRef } from "react";
-import { motion } from "framer-motion";
+import { m as motion } from "framer-motion";
 import { ArrowLeft } from "lucide-react";
 import type { MentorCard as MentorCardData } from "@/lib/mentorTypes";
 import { MentorCard } from "./MentorCard";

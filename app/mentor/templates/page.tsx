@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import Link from "next/link";
+import { SmartLink as Link } from "@/components/SmartLink";
 import { Plus } from "lucide-react";
 import { MentorDashShell } from "@/components/MentorDashKit";
 import { MentorProgramsSent } from "@/components/MentorProgramsSent";

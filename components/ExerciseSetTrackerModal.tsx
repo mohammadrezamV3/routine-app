@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { AnimatePresence, motion } from "framer-motion";
+import { AnimatePresence, m as motion } from "framer-motion";
 import { Check, PartyPopper, Play, SkipForward } from "lucide-react";
 import { parseExerciseItem } from "@/lib/exerciseSets";
 import { fireTimerDone } from "@/lib/notifications";
@@ -11,7 +11,7 @@ import {
 import { ProgressRing } from "./ProgressRing";
 import { useLockBodyScroll } from "@/lib/useLockBodyScroll";
 import { tr } from "@/lib/i18n";
-import { exerciseDisplayName } from "@/lib/exerciseI18n";
+import { exerciseDisplayName, useExerciseEn } from "@/lib/exerciseI18n";
 
 const REST_SECONDS = 90;
 
@@ -52,6 +52,7 @@ export function ExerciseSetTrackerModal({
   onComplete: () => void;
 }) {
   useLockBodyScroll();
+  useExerciseEn();
   const spec = parseExerciseItem(item);
   const { baseName, sets: setCount, isTimed, seconds } = spec;
   const soloTimer = isTimed && setCount === 1 && seconds !== null;

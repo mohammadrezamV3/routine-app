@@ -5,8 +5,8 @@
 // به‌روز می‌شن. جلد، فهرست چسبان، فصل‌ها و ناوبری هفته‌ی قبل/بعد؛ هر فصل
 // ناقص بی‌سروصدا حذف می‌شه.
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
-import Link from "next/link";
-import { MotionConfig, motion, useScroll, useSpring } from "framer-motion";
+import { SmartLink as Link } from "@/components/SmartLink";
+import { MotionConfig, m as motion, useScroll, useSpring } from "framer-motion";
 import {
   ArrowLeft, ArrowRight, Award, CalendarDays, Compass, LayoutGrid, Lightbulb, Moon, Newspaper, PenLine, Sparkles, Target, Trophy, BarChart3, Grid3x3,
   type LucideIcon,
@@ -32,11 +32,13 @@ import { WeeklyLetterWeekPicker } from "./WeeklyLetterWeekPicker";
 import { WeeklyLetterMatrix } from "./WeeklyLetterMatrix";
 import { WeeklyLetterSleep } from "./WeeklyLetterSleep";
 import { WeeklyLetterEmpty } from "./WeeklyLetterEmpty";
-import { WeeklyLetterStories } from "./WeeklyLetterStories";
 import { buildStorySlides, storySeconds } from "./WeeklyLetterStoriesData";
 import { normalizeLetter } from "./WeeklyLetterUtils";
 import { dedupeNumbers, dedupeWins } from "@/lib/weeklyLetter/dedupe";
 import type { LetterCtx } from "./WeeklyLetterCtx";
+import dynamic from "next/dynamic";
+// تنبل: فقط با کنش کاربر باز می‌شه و کدش توی باندل اولیه نیست
+const WeeklyLetterStories = dynamic(() => import("./WeeklyLetterStories").then((m) => m.WeeklyLetterStories), { ssr: false });
 
 const STORY_MIN = 3;
 const STALE_MS = 45_000;
@@ -122,6 +124,9 @@ function WeekNav({ prev, next, onGo }: { prev: string | null; next: string | nul
 function LetterBody({ data, onGo, reload }: { data: LiveWeekPayload; onGo: (w: string) => void; reload: () => void }) {
   const { letter, analysis } = data;
   const [storyOpen, setStoryOpen] = useState(false);
+  // داستان بعد از اولین بازشدن mount می‌مونه تا انیمیشن بسته‌شدنش پخش بشه؛ قبلش کدش لود نمی‌شه
+  const [storyMounted, setStoryMounted] = useState(false);
+  useEffect(() => { if (storyOpen) setStoryMounted(true); }, [storyOpen]);
   const slides = useMemo(() => buildStorySlides(letter), [letter]);
   const sleepOn = useFeature("sleep") === true;
 
@@ -200,7 +205,9 @@ function LetterBody({ data, onGo, reload }: { data: LiveWeekPayload; onGo: (w: s
         onPlayStory={() => setStoryOpen(true)}
         prediction={data.isCurrent ? <WeeklyLetterPrediction letter={letter} ctx={ctx} /> : null}
       />
-      <WeeklyLetterStories open={storyOpen} onClose={() => setStoryOpen(false)} letter={letter} slides={slides} />
+      {(storyOpen || storyMounted) && (
+        <WeeklyLetterStories open={storyOpen} onClose={() => setStoryOpen(false)} letter={letter} slides={slides} />
+      )}
       <WeeklyLetterToc items={chapters} />
 
       <div className="wl-chapters">

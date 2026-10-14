@@ -1,6 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
-import { getServerSession } from "next-auth";
-import { authOptions } from "@/lib/auth";
+import { getSessionFast } from "@/lib/serverSession";
 import { prisma } from "@/lib/prisma";
 import { parseDateRange } from "@/lib/validate";
 import { sessionFeatureBlocked } from "@/lib/featureFlagsServer";
@@ -13,7 +12,7 @@ function toIso(d: Date) { return `${d.getUTCFullYear()}-${pad(d.getUTCMonth() + 
 // باشه برای هر روز جدا fetch بزنه (که با ۳۰-۹۰ روز، لود اولیه رو خیلی کند می‌کرد).
 export async function GET(req: NextRequest) {
   { const off = await sessionFeatureBlocked("routine"); if (off) return off; }
-  const session = await getServerSession(authOptions);
+  const session = await getSessionFast();
   const userId = (session?.user as any)?.id;
   if (!userId) return NextResponse.json({ error: "unauthorized" }, { status: 401 });
 

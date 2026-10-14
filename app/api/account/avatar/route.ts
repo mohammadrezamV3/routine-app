@@ -1,7 +1,6 @@
 import { tr } from "@/lib/i18n";
 import { NextRequest, NextResponse } from "next/server";
-import { getServerSession } from "next-auth";
-import { authOptions } from "@/lib/auth";
+import { getSessionFast } from "@/lib/serverSession";
 import { prisma } from "@/lib/prisma";
 import { checkRateLimit } from "@/lib/rateLimit";
 import { withLiveSync } from "@/lib/realtime";
@@ -13,7 +12,7 @@ import { withLiveSync } from "@/lib/realtime";
 const MAX_DATA_URL_LENGTH = 400_000;
 
 export async function GET() {
-  const session = await getServerSession(authOptions);
+  const session = await getSessionFast();
   const userId = (session?.user as any)?.id;
   if (!userId) return NextResponse.json({ error: "unauthorized" }, { status: 401 });
   const user = await prisma.user.findUnique({ where: { id: userId }, select: { avatarUrl: true } });
@@ -21,7 +20,7 @@ export async function GET() {
 }
 
 async function handlePATCH(req: NextRequest) {
-  const session = await getServerSession(authOptions);
+  const session = await getSessionFast();
   const userId = (session?.user as any)?.id;
   if (!userId) return NextResponse.json({ error: "unauthorized" }, { status: 401 });
 
@@ -43,7 +42,7 @@ async function handlePATCH(req: NextRequest) {
 }
 
 async function handleDELETE() {
-  const session = await getServerSession(authOptions);
+  const session = await getSessionFast();
   const userId = (session?.user as any)?.id;
   if (!userId) return NextResponse.json({ error: "unauthorized" }, { status: 401 });
 

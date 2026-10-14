@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from "react";
 import { createPortal } from "react-dom";
-import { AnimatePresence, motion } from "framer-motion";
+import { AnimatePresence, m as motion } from "framer-motion";
 import { Bell, BellRing } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { DashCard } from "./DashCard";

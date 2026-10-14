@@ -1,7 +1,7 @@
 "use client";
 
 import { memo, useId, useMemo } from "react";
-import { motion, useReducedMotion } from "framer-motion";
+import { m as motion, useReducedMotion } from "framer-motion";
 import { tr } from "@/lib/i18n";
 import { CYCLE_MIN, stageLabel, hypnogram, type Stage } from "@/lib/sleepCycles";
 

@@ -7,7 +7,7 @@ import { faNum } from "@/lib/jalali";
 import { useSession } from "next-auth/react";
 import { XCircle } from "lucide-react";
 import { useRouter } from "next/navigation";
-import Link from "next/link";
+import { SmartLink as Link } from "@/components/SmartLink";
 import { AuthGate } from "@/components/AuthGate";
 import { priceText as formatPriceAmount } from "@/lib/subscriptionI18n";
 import { findPlanCard, formatJalaliLong, UpgradeOffer } from "@/components/PlanShowcase";

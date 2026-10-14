@@ -4,6 +4,7 @@ import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import { SegmentedTabs } from "./SegmentedTabs";
 import { tr } from "@/lib/i18n";
+import { prefetchWhenIdle } from "@/lib/prefetchPolicy";
 
 type Tab = "login" | "signup";
 const HREF: Record<Tab, string> = { login: "/auth/login", signup: "/auth/signup" };
@@ -20,10 +21,10 @@ export function AuthTabs({ active }: { active: Tab }) {
   const [pending, setPending] = useState<Tab | null>(null);
 
   // صفحه‌ی مقابل از قبل آماده باشه تا سوییچ منتظر شبکه نمونه
-  useEffect(() => {
-    router.prefetch(HREF.login);
-    router.prefetch(HREF.signup);
-  }, [router]);
+  useEffect(
+    () => prefetchWhenIdle((h) => router.prefetch(h), HREF[active === "login" ? "signup" : "login"]),
+    [router, active],
+  );
 
   useEffect(() => { setPending(null); }, [active]);
 

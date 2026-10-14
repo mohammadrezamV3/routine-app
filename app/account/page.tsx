@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
-import { motion } from "framer-motion";
+import { m as motion } from "framer-motion";
 import { LogOut } from "lucide-react";
 import { AccountRowLink, AccountRowButton } from "@/components/AccountRow";
 import { logoutAndRedirect } from "@/lib/logout";

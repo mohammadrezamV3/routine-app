@@ -1,7 +1,7 @@
 "use client";
 
 import { useCallback, useEffect, useState } from "react";
-import Link from "next/link";
+import { SmartLink as Link } from "@/components/SmartLink";
 import { useParams } from "next/navigation";
 import { ClipboardList } from "lucide-react";
 import { MentorDashShell, MentorDashError, mentorApi } from "@/components/MentorDashKit";

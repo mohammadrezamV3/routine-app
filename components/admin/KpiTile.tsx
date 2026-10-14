@@ -1,6 +1,6 @@
 "use client";
 
-import { motion } from "framer-motion";
+import { m as motion } from "framer-motion";
 import { tr } from "@/lib/i18n";
 
 export function KpiGrid({ children }: { children: React.ReactNode }) {

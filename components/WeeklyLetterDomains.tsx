@@ -3,8 +3,8 @@
 // فصل «فصل‌ها»: هر دامنه یک کارت با قوس گرادیانی، یادداشت تحلیلی، آمار،
 // ستون‌های کوچک 7 روز (MeterColumn) و بهترین/ضعیف‌ترین روز.
 import { useMemo, useRef, useState } from "react";
-import Link from "next/link";
-import { motion, useInView } from "framer-motion";
+import { SmartLink as Link } from "@/components/SmartLink";
+import { m as motion, useInView } from "framer-motion";
 import { ArrowLeft, TrendingDown, TrendingUp } from "lucide-react";
 import { ANALYSIS_DOMAIN_LABELS } from "@/lib/weeklyAnalysis/types";
 import type { LetterDomain } from "@/lib/weeklyLetter/types";

@@ -1,9 +1,9 @@
 "use client";
 
 import "./mentor.css";
-import Link from "next/link";
+import { SmartLink as Link } from "@/components/SmartLink";
 import { createContext, useContext, useRef, useState } from "react";
-import { motion } from "framer-motion";
+import { m as motion } from "framer-motion";
 import { ChevronLeft } from "lucide-react";
 import { M_DUR, mT } from "./MentorMotion";
 import { tr } from "@/lib/i18n";

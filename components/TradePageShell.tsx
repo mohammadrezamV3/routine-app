@@ -1,7 +1,7 @@
 "use client";
 
-import Link from "next/link";
-import { motion } from "framer-motion";
+import { SmartLink as Link } from "@/components/SmartLink";
+import { m as motion } from "framer-motion";
 import { ChevronLeft, ChevronRight } from "lucide-react";
 import { isEn, tr } from "@/lib/i18n";
 import { useSession } from "next-auth/react";

@@ -2,7 +2,7 @@
 
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { useLiveRefresh, useVisiblePolling } from "@/lib/liveSync";
-import Link from "next/link";
+import { SmartLink as Link } from "@/components/SmartLink";
 import { useParams, useRouter } from "next/navigation";
 import { CalendarCheck, ClipboardList, Dumbbell, MessageCircle, Plus, ShieldCheck, User } from "lucide-react";
 import { MentorPageShell, MentorErrorState } from "@/components/MentorPageShell";

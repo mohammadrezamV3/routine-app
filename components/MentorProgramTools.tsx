@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import Link from "next/link";
+import { SmartLink as Link } from "@/components/SmartLink";
 import { Check, Copy, Download, LayoutTemplate } from "lucide-react";
 import { MI, MI_STROKE } from "./MentorUI";
 import { MentorTemplateSaveDialog } from "./MentorTemplateSaveDialog";

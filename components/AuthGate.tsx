@@ -1,4 +1,4 @@
-import Link from "next/link";
+import { SmartLink as Link } from "@/components/SmartLink";
 import { LogIn } from "lucide-react";
 import { tr } from "@/lib/i18n";
 

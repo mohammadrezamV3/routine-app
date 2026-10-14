@@ -2,7 +2,7 @@
 
 import { useCallback, useEffect, useState } from "react";
 import { TickButton } from "@/components/TickButton";
-import Link from "next/link";
+import { SmartLink as Link } from "@/components/SmartLink";
 import { useParams } from "next/navigation";
 import { useSession } from "next-auth/react";
 import {

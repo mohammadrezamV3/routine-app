@@ -2,7 +2,7 @@
 
 import { usePathname } from "next/navigation";
 import { useSession } from "next-auth/react";
-import Link from "next/link";
+import { SmartLink as Link } from "@/components/SmartLink";
 import { motion } from "framer-motion";
 import { LogOut } from "lucide-react";
 import { AuthGate } from "@/components/AuthGate";

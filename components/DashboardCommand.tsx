@@ -9,7 +9,7 @@
 import { useEffect, useMemo, useRef, useState } from "react";
 import { createPortal } from "react-dom";
 import { useRouter } from "next/navigation";
-import { AnimatePresence, motion } from "framer-motion";
+import { AnimatePresence, m as motion } from "framer-motion";
 import { normalizeFa } from "@/lib/utils";
 import { useLockBodyScroll } from "@/lib/useLockBodyScroll";
 import { featureVisible, type FeatureKey } from "@/lib/featureFlags";

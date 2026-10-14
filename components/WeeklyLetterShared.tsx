@@ -4,7 +4,7 @@
 // ورودی‌های حرکتی (reveal، شمارنده، حلقه‌ی تنبل) و گیت صفحه. همه‌ی حرکت‌ها
 // فقط transform/opacity و روی «کاهش حرکت» و html[data-perf="low"] ساده می‌شن.
 import { useEffect, useId, useRef, useState, type CSSProperties, type ReactNode } from "react";
-import { animate, motion, useInView, useReducedMotion } from "framer-motion";
+import { animate, m as motion, useInView, useReducedMotion } from "framer-motion";
 import { useSession } from "next-auth/react";
 import {
   Apple, CandlestickChart, CheckCheck, Dumbbell, GraduationCap, Moon, Repeat, type LucideIcon,

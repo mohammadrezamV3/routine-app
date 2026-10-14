@@ -2,7 +2,7 @@
 
 // حالت «این هفته هیچ‌چیز ثبت نشده»: به‌جای صفحه‌ی خالی، لینک به بخش‌هایی که
 // ثبت از اون‌ها شروع می‌شه. وقتی هفته داده داره null می‌ده.
-import Link from "next/link";
+import { SmartLink as Link } from "@/components/SmartLink";
 import { ArrowLeft, Newspaper } from "lucide-react";
 import { ANALYSIS_DOMAIN_LABELS, type AnalysisDomain } from "@/lib/weeklyAnalysis/types";
 import { tr } from "@/lib/i18n";

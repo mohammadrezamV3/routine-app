@@ -4,14 +4,16 @@
 // کاشی‌های امروز/هفته/وین‌ریت/پرافیت‌فکتور، حساب‌ها با پیشرفت هدف، و آخرین
 // معامله‌ها. سبز/قرمز سود و زیان از توکن‌های --pnl-* (بیرون پالت تم).
 
-import Link from "next/link";
+import { SmartLink as Link } from "@/components/SmartLink";
 import { useEffect, useState } from "react";
-import { motion } from "framer-motion";
+import { m as motion } from "framer-motion";
 import { faNum } from "@/lib/jalali";
 import { getSetting } from "@/lib/storage";
 import { rowActivateProps } from "@/lib/rowActivate";
 import { CAL_SYSTEM_KEY, type CalSystem } from "@/lib/tradeTypes";
-import { TradeDetailDrawer } from "./TradeDetailDrawer";
+import dynamic from "next/dynamic";
+// فقط با کلیک روی یک معامله باز می‌شه — کدش توی باندل اولیه‌ی داشبورد نمی‌شینه
+const TradeDetailDrawer = dynamic(() => import("./TradeDetailDrawer").then((m) => m.TradeDetailDrawer), { ssr: false });
 import { compactNumber, equityPoints } from "@/lib/dashboardCompute";
 import type { DashTrade } from "@/lib/dashboardTypes";
 import { BentoCard, CardHead, CountUp, EmptyState, Meter, Skel, Sparkline } from "./DashboardKit";

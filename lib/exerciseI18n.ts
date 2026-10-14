@@ -2,9 +2,13 @@
 // (اسم حرکت در پلن، کلید عکس) همیشه فارسی می‌مونه؛ فقط موقع نمایش ترجمه می‌شه.
 import { isEn, tr } from "./i18n";
 import { dayNameDisplay } from "./exerciseDay";
-import { EXERCISE_EN } from "./exerciseCatalogData/en";
-import { findCatalogEntry } from "./exerciseCatalogUtils";
+import { getExerciseEnMap, getFindCatalogEntry, loadCatalogLookup, useExerciseEn } from "./exerciseEnStore";
 import { stripSetSuffix } from "./exerciseSets";
+
+// دیکشنری انگلیسی و کاتالوگ کامل به‌صورت تنبل و فقط در انگلیسی لود می‌شن
+// (lib/exerciseEnStore.ts). کامپوننتی که این توابع رو در رندر صدا می‌زنه باید
+// `useExerciseEn()` رو هم صدا بزنه تا بعد از آماده‌شدن دیتا دوباره رندر بشه.
+export { useExerciseEn };
 import type { ExerciseCatalogEntry } from "./exerciseCatalogMeta";
 
 const ASCII_ALIAS = /^[\x20-\x7E]+$/;
@@ -18,9 +22,17 @@ export { dayNameDisplay };
 /** اسم نمایشی یک حرکت بدون پسوند ست/تکرار: فارسی در حالت فارسی؛ در انگلیسی اول دیکشنری، بعد اولین نام مستعار ASCII. */
 function baseNameDisplay(nameFa: string): string {
   if (!isEn()) return nameFa;
+  const EXERCISE_EN = getExerciseEnMap();
+  if (!EXERCISE_EN) return nameFa;
   const en = EXERCISE_EN[nameFa]?.name;
   if (en) return en;
-  const entry = findCatalogEntry(nameFa);
+  // اسم مستعار / اسم انگلیسی AI: کاتالوگ کامل فقط همین‌جا (اولین miss) لود می‌شه
+  const find = getFindCatalogEntry();
+  if (!find) {
+    void loadCatalogLookup();
+    return nameFa;
+  }
+  const entry = find(nameFa);
   if (entry) {
     const viaEntry = EXERCISE_EN[entry.name]?.name;
     if (viaEntry) return viaEntry;
@@ -79,7 +91,7 @@ export function localizeExercise(entry: ExerciseCatalogEntry): {
   benefits: string;
 } {
   if (!isEn()) return { name: entry.name, muscleGroup: entry.muscleGroup, howTo: entry.howTo, benefits: entry.benefits };
-  const en = EXERCISE_EN[entry.name];
+  const en = getExerciseEnMap()?.[entry.name];
   const alias = (entry.aliases ?? []).find((a) => ASCII_ALIAS.test(a));
   return {
     name: en?.name ?? (alias ? capitalize(alias) : entry.name),

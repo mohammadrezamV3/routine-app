@@ -1,8 +1,8 @@
 "use client";
 
 import { useEffect, useRef, useState } from "react";
-import Link from "next/link";
-import { motion, useInView, useReducedMotion } from "framer-motion";
+import { SmartLink as Link } from "@/components/SmartLink";
+import { m as motion, useInView, useReducedMotion } from "framer-motion";
 import {
   ArrowLeft, Bell, Bot, Check, ChevronDown, Flame, Quote,
   ShieldCheck, TrendingUp, Headset, Lightbulb, Smartphone, BarChart3, Zap,
@@ -337,7 +337,7 @@ function VisPwa() {
         <span className="ls-phone-notch" />
         <div className="ls-toast">
           {/* eslint-disable-next-line @next/next/no-img-element */}
-          <img src="/images/logo-icon-dark-theme.png" alt="" width={18} height={18} className="ls-toast-ic" />
+          <img src="/images/logo-icon-dark-theme.png" alt="" width={18} height={18} loading="lazy" decoding="async" className="ls-toast-ic" />
           <span className="ls-toast-tx"><b>{tr("یادآوری برنامه", "Plan reminder")}</b>{tr("تا 15 دقیقه دیگه وقت «پیاده‌روی عصر» می‌رسه.", "Evening walk is due in 15 minutes.")}</span>
         </div>
         <div className="ls-phone-row" /><div className="ls-phone-row ls-w70" /><div className="ls-phone-row ls-w50" />

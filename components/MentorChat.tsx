@@ -3,7 +3,7 @@
 import "./mentor.css";
 import "./mentor-student-ltr.css";
 import { useCallback, useEffect, useLayoutEffect, useMemo, useRef, useState } from "react";
-import { AnimatePresence, motion } from "framer-motion";
+import { AnimatePresence, m as motion } from "framer-motion";
 import {
   AlertCircle, BellRing, Check, CheckCheck, ChevronDown, Clock, Copy, Flag, Lock, Megaphone, MessageSquareQuote,
   RefreshCw, Send, Smartphone, Trash2,

@@ -3,7 +3,7 @@
 import "./sleep-dial.css";
 import { useMemo } from "react";
 import { Plus } from "lucide-react";
-import { motion, useReducedMotion } from "framer-motion";
+import { m as motion, useReducedMotion } from "framer-motion";
 import { weekdayShort, faNum } from "@/lib/jalali";
 import { tr } from "@/lib/i18n";
 import { addDaysIso, scoreBand, sleepMinutes, type SleepInsights, type SleepRecord } from "@/lib/sleep";

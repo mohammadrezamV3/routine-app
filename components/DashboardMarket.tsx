@@ -5,9 +5,9 @@
 // خبر مهم و فهرست رویدادهای پیش‌رو از جدول تقویم خودمون (نه سرویس بیرونی).
 // فقط شمارنده ثانیه‌ای رندر می‌شه؛ بقیه‌ی کارت دقیقه‌ای.
 
-import Link from "next/link";
+import { SmartLink as Link } from "@/components/SmartLink";
 import { useEffect, useMemo, useState } from "react";
-import { motion } from "framer-motion";
+import { m as motion } from "framer-motion";
 import { faNum } from "@/lib/jalali";
 import { isForexOpen, sessionArcs, upcomingSession, SESSION_LABELS, SESSION_OVERLAPS } from "@/lib/forexSessions";
 import { durationParts } from "@/lib/dashboardCompute";

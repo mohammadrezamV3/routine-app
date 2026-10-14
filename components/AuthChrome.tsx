@@ -1,7 +1,7 @@
 "use client";
 
 import Image from "next/image";
-import Link from "next/link";
+import { SmartLink as Link } from "@/components/SmartLink";
 import { useTheme } from "./ThemeProvider";
 import { tr } from "@/lib/i18n";
 

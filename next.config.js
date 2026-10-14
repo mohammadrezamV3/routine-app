@@ -167,11 +167,17 @@ const nextConfig = {
       headers: [{ key: "X-Robots-Tag", value: "noindex, nofollow" }],
     }));
     if (!isProd) return noindexHeaders; // روی dev هیچ هدر امنیتی سخت‌گیرانه‌ای اعمال نمی‌شه، ولی noindex بی‌ضرره
+    // دارایی‌های public بدون هش (لوگو/آیکون) پیش‌فرض نکست `max-age=0` می‌گیرن، یعنی هر بازدید دوباره
+    // اعتبارسنجی. یک روز تازه + یک هفته stale-while-revalidate: اگه لوگو عوض شد حداکثر یک روز بعد می‌رسه.
+    const staticAssetCache = [{ key: "Cache-Control", value: "public, max-age=86400, stale-while-revalidate=604800" }];
     return [
       {
         source: "/:path*",
         headers: securityHeaders,
       },
+      { source: "/images/:path*", headers: staticAssetCache },
+      { source: "/icon.png", headers: staticAssetCache },
+      { source: "/apple-icon.png", headers: staticAssetCache },
       ...noindexHeaders,
     ];
   },

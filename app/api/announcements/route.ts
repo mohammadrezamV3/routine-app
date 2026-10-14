@@ -1,6 +1,5 @@
 import { NextResponse } from "next/server";
-import { getServerSession } from "next-auth";
-import { authOptions } from "@/lib/auth";
+import { getSessionFast } from "@/lib/serverSession";
 import { ANNOUNCEMENT_PUBLIC_LIMIT, type PublicAnnouncement } from "@/lib/announcements";
 import { announcementViewer, listAnnouncementsFor } from "@/lib/announcementsServer";
 
@@ -10,7 +9,7 @@ export const dynamic = "force-dynamic";
 // بیننده: فعال، در بازه‌ی زمانی، showInList و مخاطب‌خورده (سمت سرور).
 // عمومی‌ست (مهمان هم می‌بینه) — فقط فیلدهای نمایشی برمی‌گردن.
 export async function GET() {
-  const session = await getServerSession(authOptions);
+  const session = await getSessionFast();
   const userId = (session?.user as { id?: string } | undefined)?.id ?? null;
   const viewer = await announcementViewer(userId);
   const rows = await listAnnouncementsFor(viewer, ANNOUNCEMENT_PUBLIC_LIMIT);

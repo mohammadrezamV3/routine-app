@@ -6,7 +6,7 @@ import { ExercisePanel } from "@/components/ExercisePanel";
 import { CaloriePanel } from "@/components/CaloriePanel";
 import { ModuleGate } from "@/components/ModuleGate";
 import { PanelSkeleton } from "@/components/PanelSkeleton";
-import { ICONS } from "@/components/NavDrawer";
+import { ICONS } from "@/components/NavIcons";
 import { featureVisible } from "@/lib/featureFlags";
 import { useFeatures } from "@/lib/useFeatures";
 import { tr } from "@/lib/i18n";

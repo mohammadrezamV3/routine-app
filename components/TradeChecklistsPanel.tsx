@@ -1,8 +1,8 @@
 "use client";
 
 import { useCallback, useEffect, useState } from "react";
-import Link from "next/link";
-import { motion } from "framer-motion";
+import { SmartLink as Link } from "@/components/SmartLink";
+import { m as motion } from "framer-motion";
 import { ClipboardList, Copy, Pencil, Trash2 } from "lucide-react";
 import { faNum } from "@/lib/jalali";
 import { PanelSkeleton } from "./PanelSkeleton";

@@ -2,11 +2,10 @@
 
 import { useEffect, useRef, useState } from "react";
 import { useFeature } from "@/lib/useFeatures";
-import { motion } from "framer-motion";
+import { m as motion } from "framer-motion";
 import { PenLine, Trash2 } from "lucide-react";
 import { Spinner } from "./Spinner";
 import { AiSparkleIcon } from "./AiSparkleIcon";
-import { AiExercisePlanWizard } from "./AiExercisePlanWizard";
 import dynamic from "next/dynamic";
 
 // همون دلیل ExerciseCatalogCard: این فرم هم کل کاتالوگ حرکات رو می‌کشه و
@@ -20,6 +19,8 @@ import type { ExerciseDay } from "@/lib/exercisePlans";
 import { focusNextOnEnter } from "@/lib/formNav";
 import { useLockBodyScroll } from "@/lib/useLockBodyScroll";
 import { tr } from "@/lib/i18n";
+// تنبل: فقط با کنش کاربر باز می‌شه و کدش توی باندل اولیه نیست
+const AiExercisePlanWizard = dynamic(() => import("./AiExercisePlanWizard").then((m) => m.AiExercisePlanWizard), { ssr: false });
 
 type Mode = "choice" | "ai" | "manual";
 

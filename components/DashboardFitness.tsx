@@ -4,8 +4,8 @@
 // (شروع تمرین، ثبت غذا) در صفحه‌ی خود همون بخش انجام می‌شه و رویداد زنده
 // (exercise/calorie) این کارت‌ها رو خودکار تازه می‌کنه.
 
-import Link from "next/link";
-import { motion } from "framer-motion";
+import { SmartLink as Link } from "@/components/SmartLink";
+import { m as motion } from "framer-motion";
 import { weekdayShort, weekdayName, faNum } from "@/lib/jalali";
 import type { DashCalorie, DashExercise } from "@/lib/dashboardTypes";
 import { BentoCard, CardHead, CountUp, D_EASE, EmptyState, Meter, Ring, Skel } from "./DashboardKit";

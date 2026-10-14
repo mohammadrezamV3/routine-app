@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useRef, useState } from "react";
-import { AnimatePresence, motion } from "framer-motion";
+import { AnimatePresence, m as motion } from "framer-motion";
 import { AlertCircle, ChevronRight } from "lucide-react";
 import { FA_WEEKDAY, weekdayShort, CAL_WEEK_ORDER } from "@/lib/jalali";
 import { LEVEL_LABELS, ExerciseLevel } from "@/lib/exercisePlans";

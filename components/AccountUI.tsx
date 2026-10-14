@@ -1,6 +1,6 @@
 "use client";
 
-import { motion } from "framer-motion";
+import { m as motion } from "framer-motion";
 import { AlertTriangle, Check } from "lucide-react";
 import { AccountBackButton } from "./AccountBackButton";
 import { Spinner } from "./Spinner";

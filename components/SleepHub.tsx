@@ -2,10 +2,10 @@
 
 import "./sleep.css";
 import { useCallback, useEffect, useMemo, useState } from "react";
-import Link from "next/link";
+import { SmartLink as Link } from "@/components/SmartLink";
 import dynamic from "next/dynamic";
 import { BarChart3 } from "lucide-react";
-import { ICONS } from "./NavDrawer";
+import { ICONS } from "./NavIcons";
 import { RoutineTrialBanner } from "./RoutineTrialBanner";
 import { PanelSkeleton } from "./PanelSkeleton";
 import { SleepDial } from "./SleepDial";

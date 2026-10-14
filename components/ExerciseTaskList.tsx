@@ -2,7 +2,7 @@
 
 import { useEffect, useRef, useState } from "react";
 import { createPortal } from "react-dom";
-import { motion } from "framer-motion";
+import { m as motion } from "framer-motion";
 import { TickButton } from "./TickButton";
 import { Check, Dumbbell, Lock, Pencil, Play, Repeat2, RotateCw, Timer, X } from "lucide-react";
 import { DashCard } from "./DashCard";
@@ -10,11 +10,14 @@ import type { ExerciseDay } from "@/lib/exercisePlans";
 import { isoLocal } from "@/lib/jalali";
 import { reportLiveError } from "@/lib/liveSync";
 import { parseExerciseItem } from "@/lib/exerciseSets";
-import { ExerciseSetTrackerModal } from "./ExerciseSetTrackerModal";
-import { ExerciseSetTutorial, EXERCISE_TUTORIAL_SEEN_KEY } from "./ExerciseSetTutorial";
+import dynamic from "next/dynamic";
+import { EXERCISE_TUTORIAL_SEEN_KEY } from "@/lib/tutorialSeen";
+// فقط با شروع تمرین / زدن یک حرکت لازم می‌شن — کدشون توی باندل اولیه نیست
+const ExerciseSetTrackerModal = dynamic(() => import("./ExerciseSetTrackerModal").then((m) => m.ExerciseSetTrackerModal), { ssr: false });
+const ExerciseSetTutorial = dynamic(() => import("./ExerciseSetTutorial").then((m) => m.ExerciseSetTutorial), { ssr: false });
 import { Spinner } from "./Spinner";
 import { isEn, tr } from "@/lib/i18n";
-import { exerciseDisplayName, focusDisplay } from "@/lib/exerciseI18n";
+import { exerciseDisplayName, focusDisplay, useExerciseEn } from "@/lib/exerciseI18n";
 
 function formatElapsed(sec: number): string {
   const m = Math.floor(sec / 60).toString().padStart(2, "0");
@@ -69,6 +72,7 @@ export function ExerciseTaskList({
   onStarted?: () => void;
   delay?: number;
 }) {
+  useExerciseEn();
   const todayPlan = dayPlan;
   const isFutureDay = dateIso > isoLocal(new Date());
   const isPastDay = dateIso < isoLocal(new Date());

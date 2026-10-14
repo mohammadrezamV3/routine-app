@@ -1,5 +1,5 @@
 import type { Metadata } from "next";
-import Link from "next/link";
+import { SmartLink as Link } from "@/components/SmartLink";
 import { SUPPORT_EMAIL, brandName } from "@/lib/brand";
 import { isEn, tr } from "@/lib/i18n";
 import { breadcrumbJsonLd, pageMetadata } from "@/lib/seo";
