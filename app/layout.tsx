@@ -51,11 +51,15 @@ const EVENT_PREVIEW_SCRIPT = `try{var v=localStorage.getItem(${JSON.stringify(EV
 
 // وزن variable به‌جای ۵ فایل فونت جدا برای هر وزن — همون طیف وزن‌ها رو از یک
 // فایل واحد می‌ده، حجم دانلود فونت رو به‌شدت کم می‌کنه (بزرگ‌ترین بخش payload).
+// فقط subset عربی/فارسی: همه‌ی استک‌های فونت سایت `var(--font-latin), var(--font-vazir)` ـن، پس حروف
+// لاتین و اعداد همیشه با Inter رسم می‌شن و subset لاتین وزیرمتن (۳۴KB، preload‌شده روی هر صفحه)
+// هیچ‌وقت استفاده نمی‌شد. display:swap: متن همون لحظه با فونت جایگزین دیده می‌شه، نه نامرئی تا رسیدن
+// فونت (block روی موبایل کند تا ۳ ثانیه متن رو پنهان نگه می‌داشت و FCP/LCP رو عقب می‌انداخت).
 const vazir = Vazirmatn({
-  subsets: ["arabic", "latin"],
+  subsets: ["arabic"],
   weight: "variable",
   variable: "--font-vazir",
-  display: "block",
+  display: "swap",
   adjustFontFallback: false,
 });
 
@@ -70,7 +74,7 @@ const latin = Inter({
   subsets: ["latin"],
   weight: "variable",
   variable: "--font-latin",
-  display: "block",
+  display: "swap",
   // پیش‌فرض next/font یک فونت جایگزین با src:local(Arial) می‌سازه که *همه‌ی* کاراکترها رو
   // ادعا می‌کنه؛ روی آیفون Arial وجود داره و متن فارسی به‌جای وزیرمتن با Arial (فونت
   // دستگاه) رسم می‌شد — دقیقا باگ «فونت PWA به فونت گوشی بستگی داره».
