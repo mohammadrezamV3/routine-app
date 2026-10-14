@@ -17,7 +17,7 @@ import { fa, mentorApi } from "./MentorDashKit";
 import { MI, MI_STROKE, MentorChip, MentorField, MentorNotice } from "./MentorUI";
 import { WEEK_ORDER, toEnDigits } from "@/lib/schedule";
 import { weekdayName, JalaliDate, formatJalali, jalaliToIso, toJalali } from "@/lib/jalali";
-import { tr, trv } from "@/lib/i18n";
+import { tr, trv, isEn } from "@/lib/i18n";
 import { publicUserName } from "@/lib/mentorTypes";
 import type { Item, ItemInput, Program, ProgramType, PublicUser } from "@/lib/mentorTypes";
 
@@ -719,7 +719,7 @@ function MentorProgramEditorItem({
               </span>
             </MentorField>
             <MentorField label={tr("مدت (دقیقه)", "Duration (minutes)")} htmlFor={id("dur")} optional error={errors.durationMin}>
-              <NumberInput id={id("dur")} className="wsearch-newform-name trade-glass-field" dir="ltr" style={{ textAlign: "right" }} value={d.durationMin} onChange={(v) => onPatch({ durationMin: v })} maxLength={4} />
+              <NumberInput id={id("dur")} className="wsearch-newform-name trade-glass-field" dir="ltr" style={{ textAlign: isEn() ? "left" : "right" }} value={d.durationMin} onChange={(v) => onPatch({ durationMin: v })} maxLength={4} />
             </MentorField>
           </div>
 
@@ -727,11 +727,11 @@ function MentorProgramEditorItem({
             <>
               <div className="mentor-field-row">
                 <MentorField label={tr("ست", "Sets")} htmlFor={id("sets")} optional error={errors.sets}>
-                  <NumberInput id={id("sets")} className="wsearch-newform-name trade-glass-field" dir="ltr" style={{ textAlign: "right" }} value={d.sets} onChange={(v) => onPatch({ sets: v })} maxLength={3} />
+                  <NumberInput id={id("sets")} className="wsearch-newform-name trade-glass-field" dir="ltr" style={{ textAlign: isEn() ? "left" : "right" }} value={d.sets} onChange={(v) => onPatch({ sets: v })} maxLength={3} />
                 </MentorField>
                 <MentorField label={tr("تکرار در هر ست", "Reps per set")} htmlFor={id("reps")} optional error={errors.reps}>
                   <input
-                    id={id("reps")} type="text" inputMode="numeric" className="wsearch-newform-name trade-glass-field" dir="ltr" style={{ textAlign: "right" }}
+                    id={id("reps")} type="text" inputMode="numeric" className="wsearch-newform-name trade-glass-field" dir="ltr" style={{ textAlign: isEn() ? "left" : "right" }}
                     value={d.reps} placeholder="8-12" maxLength={7}
                     onChange={(e) => onPatch({ reps: toEnDigits(e.target.value).replace(/[^\d-]/g, "") })}
                   />
@@ -739,10 +739,10 @@ function MentorProgramEditorItem({
               </div>
               <div className="mentor-field-row">
                 <MentorField label={tr("وزنه (کیلوگرم)", "Weight (kg)")} htmlFor={id("w")} optional error={errors.weightKg}>
-                  <NumberInput decimal id={id("w")} className="wsearch-newform-name trade-glass-field" dir="ltr" style={{ textAlign: "right" }} value={d.weightKg} onChange={(v) => onPatch({ weightKg: v })} maxLength={6} />
+                  <NumberInput decimal id={id("w")} className="wsearch-newform-name trade-glass-field" dir="ltr" style={{ textAlign: isEn() ? "left" : "right" }} value={d.weightKg} onChange={(v) => onPatch({ weightKg: v })} maxLength={6} />
                 </MentorField>
                 <MentorField label={tr("استراحت (ثانیه)", "Rest (seconds)")} htmlFor={id("rest")} optional error={errors.restSec}>
-                  <NumberInput id={id("rest")} className="wsearch-newform-name trade-glass-field" dir="ltr" style={{ textAlign: "right" }} value={d.restSec} onChange={(v) => onPatch({ restSec: v })} maxLength={4} />
+                  <NumberInput id={id("rest")} className="wsearch-newform-name trade-glass-field" dir="ltr" style={{ textAlign: isEn() ? "left" : "right" }} value={d.restSec} onChange={(v) => onPatch({ restSec: v })} maxLength={4} />
                 </MentorField>
               </div>
             </>

@@ -27,7 +27,7 @@ export default function AccountSettingsPage() {
         {settingsSections().map((s, i) => (
           <AccountRowLink key={s.href} href={s.href} icon={s.icon} label={s.label} desc={s.desc} index={i} />
         ))}
-        <AccountControlRow icon={<Languages size={15} />} label={tr("زبان", "Language")} desc={tr("زبان نمایش سایت", "Display language of the site")} control={<LanguageSwitch />} index={8} />
+        <AccountControlRow icon={<Languages size={15} />} label={tr("زبان", "Language")} desc={tr("زبان نمایش سایت", "Site language")} control={<LanguageSwitch />} index={8} />
       </div>
     </section>
   );

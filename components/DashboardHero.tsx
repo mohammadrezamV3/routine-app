@@ -213,7 +213,7 @@ export function DashboardHero({
 
         <button type="button" className="db-cmd-trigger" onClick={onOpenCommand} aria-label={tr("جست‌وجو و دسترسی سریع", "Search and quick access")}>
           <DashIcon name="command" />
-          <span>{tr("کجا بریم؟ جست‌وجو در همه‌ی بخش‌ها…", "Where to? Search every section…")}</span>
+          <span>{tr("کجا بریم؟ جست‌وجو در همه‌ی بخش‌ها…", "Search every section…")}</span>
           <span className="db-cmd-trigger-keys" aria-hidden="true"><kbd className="db-kbd">Ctrl</kbd><kbd className="db-kbd">K</kbd></span>
         </button>
       </div>

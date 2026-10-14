@@ -115,7 +115,7 @@ export function AccountControlRow({
       icon={icon}
       label={label}
       desc={desc}
-      end={<span style={{ display: "flex", width: 168, flexShrink: 0 }}>{control}</span>}
+      end={<span style={{ display: "flex", width: isEn() ? 190 : 168, flexShrink: 0 }}>{control}</span>}
     />
   );
 }

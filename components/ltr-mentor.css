@@ -1,1 +1,7 @@
 /* اصلاح‌های ظاهری چیدمان چپ‌به‌راست (انگلیسی) — بخش mentor. همه‌ی قاعده‌ها زیر html[dir="ltr"] تا فارسی بی‌تغییر بمونه. */
+/* Card bookmark: the negative offset pulls it toward the card edge (end side). */
+html[dir="ltr"] .mentor-card-save{ margin:-4px -6px 0 0; }
+/* Bullet indent of the system-card list sits on the start side. */
+html[dir="ltr"] .mv2-ms-items{ padding:0 0 0 var(--m-4); }
+/* Longer English values wrap instead of being cut with an ellipsis. */
+html[dir="ltr"] .mv2-srow-value{ white-space:normal; overflow:visible; text-overflow:clip; text-align:end; line-height:1.5; }

@@ -1,1 +1,11 @@
 /* اصلاح‌های ظاهری چیدمان چپ‌به‌راست (انگلیسی) — بخش shell. همه‌ی قاعده‌ها زیر html[dir="ltr"] تا فارسی بی‌تغییر بمونه. */
+
+/* اعلان‌های ذخیره‌شده‌ی فارسی در داشبورد انگلیسی: نقطه‌گذاری درست، تراز چپ */
+html[dir="ltr"] .db-note-body b,
+html[dir="ltr"] .db-note-body span{ unicode-bidi:plaintext; text-align:left; }
+
+/* تیکت جدید: textarea داخل پنجره (پورتال) گردی چندخطی نگرفته بود */
+html[dir="ltr"] .modal-panel textarea.wsearch-newform-name{ border-radius:var(--field-radius-multi); padding-inline:16px; }
+
+/* چک‌اوت: برچسب «Discount code» بالای فیلد تا فیلد جای پلیس‌هولدر و دکمه‌ی Apply رو داشته باشه */
+html[dir="ltr"] .checkout-discount-row .checkout-field-label{ flex-basis:100%; }

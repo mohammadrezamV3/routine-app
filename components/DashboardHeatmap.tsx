@@ -113,7 +113,7 @@ export function DashboardHeatmap({ heat, streak, ready, memberSince }: { heat: H
         <dl className="db-heat-stats">
           <div><dt>{tr("استریک فعلی", "Current streak")}</dt><dd>{streak === null ? <Skel w={22} h={13} /> : <CountUp value={streak} />}<small> {dayUnit(streak ?? 0)}</small></dd></div>
           <div><dt>{tr("بهترین رکورد", "Best streak")}</dt><dd><CountUp value={summary.best} /><small> {dayUnit(summary.best)}</small></dd></div>
-          <div><dt>{tr("میانگین 30 روز", "30-day average")}</dt><dd><CountUp value={summary.avg} suffix={tr("٪", "%")} /></dd></div>
+          <div><dt>{tr("میانگین 30 روز", "30-day avg")}</dt><dd><CountUp value={summary.avg} suffix={tr("٪", "%")} /></dd></div>
           <div><dt>{tr("روزهای کامل", "Perfect days")}</dt><dd><CountUp value={summary.perfect} /></dd></div>
         </dl>
       </div>

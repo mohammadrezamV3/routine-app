@@ -88,7 +88,7 @@ export function ExercisePanel() {
       </div>
       <div className="disclaimer-note">
         <span className="disclaimer-warn">{tr("توجه: ", "Note: ")}</span>
-        این برنامه پیشنهاد تمرینی است، نه توصیه‌ی پزشکی؛ اجرای آن بر عهده‌ی کاربر است.
+        {tr("این برنامه پیشنهاد تمرینی است، نه توصیه‌ی پزشکی؛ اجرای آن بر عهده‌ی کاربر است.", "This plan is a training suggestion, not medical advice; following it is the user's responsibility.")}
       </div>
     </div>
   );
