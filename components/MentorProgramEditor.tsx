@@ -16,7 +16,7 @@ import { MentorTemplateSaveDialog } from "./MentorTemplateSaveDialog";
 import { fa, mentorApi } from "./MentorDashKit";
 import { MI, MI_STROKE, MentorChip, MentorField, MentorNotice } from "./MentorUI";
 import { WEEK_ORDER, toEnDigits } from "@/lib/schedule";
-import { weekdayName, JalaliDate, formatJalali, jalaliToIso, toJalali } from "@/lib/jalali";
+import { weekdayName, weekdayShort, JalaliDate, formatJalali, jalaliToIso, toJalali } from "@/lib/jalali";
 import { tr, trv, isEn, iso } from "@/lib/i18n";
 import { publicUserName } from "@/lib/mentorTypes";
 import type { Item, ItemInput, Program, ProgramType, PublicUser } from "@/lib/mentorTypes";
@@ -704,7 +704,7 @@ function MentorProgramEditorItem({
                       key={o.jsDay} type="button" aria-pressed={on} aria-label={weekdayName(o.jsDay)}
                       className={`day-pill${on ? " on" : ""}`} onClick={() => toggleDay(o.jsDay)}
                     >
-                      {o.short}
+                      {tr(o.short, weekdayShort(o.jsDay))}
                     </button>
                   );
                 })}

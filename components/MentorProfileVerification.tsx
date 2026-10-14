@@ -92,7 +92,7 @@ export function MentorProfileVerification({ profile, onChanged }: { profile: Men
         return (
           <MentorDocRow
             key={c}
-            title={MENTOR_CATEGORY_META[c].certLabel}
+            title={MENTOR_CATEGORY_META[c].certLabel.replace(/^[a-z]/, (ch) => ch.toUpperCase())}
             hint={tr(`${MENTOR_CATEGORY_META[c].label}، اختیاری`, `${MENTOR_CATEGORY_META[c].label}, optional`)}
             icon={ic(Award, MI.row)}
             status={cred?.status ?? "NOT_PROVIDED"}

@@ -26,3 +26,17 @@ html[dir="ltr"] .mentor-bio,
 html[dir="ltr"] .mentor-review-text,
 html[dir="ltr"] .mentor-program-note > div,
 html[dir="ltr"] .mentor-note-box > div{ text-align:left; }
+/* Toasts and the privacy preview line are forced rtl in the base CSS; in English they read left to right. */
+html[dir="ltr"] .mentor-toast,
+html[dir="ltr"] .mentor-preview-line{ direction:ltr; }
+/* Notice: English separator, and the (often Persian, user-written) body is isolated so it cannot scramble the English title. */
+html[dir="ltr"] .mentor-notice-title + .mentor-notice-body::before{ content:"; "; }
+html[dir="ltr"] .mentor-notice-body{ unicode-bidi:isolate; }
+/* MentorSheet places itself with flex; the generic ltr rule that centres .modal-panel with left:50% must not shift it. */
+html[dir="ltr"] .modal-panel.m-sheet:not(.modal-panel-notransform){ left:auto; right:auto; }
+/* Persian user-written notes and feedback inside the English UI: own punctuation direction, left-aligned. */
+html[dir="ltr"] .mentor-feedback-body{ unicode-bidi:plaintext; text-align:left; }
+/* Hero meta: keep "Member since 28 Farvardin 1405" and similar items on one line each (the row wraps between items). */
+html[dir="ltr"] .mentor-hero-meta > *{ white-space:nowrap; }
+/* Longer English row titles wrap instead of being cut ("workout coaching cert..."). */
+html[dir="ltr"] .mentor-row-title{ white-space:normal; overflow:visible; text-overflow:clip; }
