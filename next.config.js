@@ -135,6 +135,10 @@ function canonicalHostRedirects() {
 
 const nextConfig = {
   reactStrictMode: true,
+  // پوشه‌ی خروجی build قابل‌تنظیمه تا چند build موازی (تحلیل حجم/اندازه‌گیری) همدیگه رو خراب نکنن
+  distDir: process.env.NEXT_DIST_DIR || ".next",
+  // فقط برای تحلیل حجم باندل (SOURCEMAPS=1 next build، بعد source-map-explorer) — روی production عادی خاموشه
+  productionBrowserSourceMaps: process.env.SOURCEMAPS === "1",
   // نسخه‌ی اپ که ته پنل کاربری نشان داده می‌شود. تک‌منبع حقیقت خود
   // package.json است تا هیچ‌وقت با نسخه‌ی واقعی بیلد فرق نکند.
   env: { NEXT_PUBLIC_APP_VERSION: require("./package.json").version },
