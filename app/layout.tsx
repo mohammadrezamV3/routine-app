@@ -8,11 +8,15 @@ import "@/components/ltr-mentor.css";
 import "@/components/ltr-review.css";
 import "@/components/ltr-admin.css";
 import "@/components/ltr-public.css";
-import "./event-themes.css";
 import "./admin-theme.css";
 // سیستم حرکت (توکن‌ها، ابزارها، ورود صفحه/بخش) — بعد از globals تا در اسپسیفیسیتی برابر برنده باشه
 import "./motion.css";
+import dynamic from "next/dynamic";
+import { EventThemeCssPreview } from "@/components/EventThemeCssPreview";
 import { ThemeProvider } from "@/components/ThemeProvider";
+
+// فقط وقتی تم مناسبتی فعاله (پایین‌تر) رندر می‌شه؛ CSS تم از bundle مشترک بیرونه
+const EventThemeCss = dynamic(() => import("@/components/EventThemeCss"));
 import { NavDrawer } from "@/components/NavDrawer";
 import { BackgroundCanvasLoader } from "@/components/BackgroundCanvasLoader";
 import { SvgFilters } from "@/components/SvgFilters";
@@ -289,6 +293,8 @@ export default async function RootLayout({ children }: { children: React.ReactNo
           «قابل‌انتظار و بی‌خطر» با همون چیزی که سرور رندر کرده (مثلا وقتی
           ThemeProvider بعدا تم ذخیره‌شده‌ی حساب رو اعمال می‌کنه) */}
       <body data-theme={theme} suppressHydrationWarning>
+        {eventThemeId ? <EventThemeCss /> : null}
+        <EventThemeCssPreview serverActive={!!eventThemeId} />
         <script
           type="application/ld+json"
           dangerouslySetInnerHTML={{ __html: JSON.stringify(JSON_LD_GRAPH) }}
