@@ -11,7 +11,7 @@ import { tr } from "@/lib/i18n";
 
 type Props = {
   state: "open" | "closed";
-  anchor: { top: number; edge: number };
+  anchor: { top: number; edge: number; start?: boolean };
   showMentor: boolean;
   showAdmin: boolean;
   onClose: () => void;
@@ -25,7 +25,7 @@ export default function NavProfileMenu({ state, anchor, showMentor, showAdmin, o
       ref={panelRef}
       className="notif-panel profile-menu-panel open"
       data-state={state}
-      style={{ position: "fixed", top: anchor.top, right: anchor.edge, left: "auto" }}
+      style={anchor.start ? { position: "fixed", top: anchor.top, left: anchor.edge, right: "auto" } : { position: "fixed", top: anchor.top, right: anchor.edge, left: "auto" }}
     >
       <div className="notif-panel-list">
         <div

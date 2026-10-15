@@ -213,7 +213,7 @@ export async function preloadNotifications(): Promise<NotifItem[]> {
 }
 
 // closing: والد منو رو برای پخش انیمیشن خروج (menu-motion) چند لحظه بعد از بسته‌شدن نگه می‌داره
-export function NotificationPanel({ onClose, anchor, closing = false }: { onClose: () => void; anchor: { top: number; edge: number }; closing?: boolean }) {
+export function NotificationPanel({ onClose, anchor, closing = false }: { onClose: () => void; anchor: { top: number; edge: number; start?: boolean }; closing?: boolean }) {
   useLockBodyScroll();
   const [items, setItems] = useState<NotifItem[] | null>(cachedItems);
   const [openStatic, setOpenStatic] = useState<{ modalTitle: string; modalBody: string } | null>(null);
@@ -340,7 +340,7 @@ export function NotificationPanel({ onClose, anchor, closing = false }: { onClos
         className="notif-panel dash-scope open"
         data-state={closing ? "closed" : "open"}
         ref={panelRef}
-        style={{ position: "fixed", top: anchor.top, right: anchor.edge, left: "auto" }}
+        style={anchor.start ? { position: "fixed", top: anchor.top, left: anchor.edge, right: "auto" } : { position: "fixed", top: anchor.top, right: anchor.edge, left: "auto" }}
       >
         <div className="notif-panel-head" style={{ display: "flex", alignItems: "center", justifyContent: "space-between", gap: 8 }}>
           <span>{tr("اطلاعیه‌ها", "Notifications")}</span>
