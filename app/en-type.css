@@ -1,0 +1,46 @@
+/* English only typography layer (html[lang="en"]). Persian output is untouched: every rule
+   below is gated by lang, and the Figtree woff2 is only fetched when --font-latin points at it.
+
+   Why: sizes, weights (800/900), tracking and leading across the site were tuned for
+   Vazirmatn. In English the same values with a neutral UI grotesque looked heavy, loose
+   and small. Figtree (round geometric, centered digits, readable at 11-13px) matches the
+   pill buttons and glass cards. The family itself is declared in app/layout.tsx. */
+
+/* Latin-only fallback with Figtree metrics so the swap does not shift layout (CLS).
+   unicode-range keeps Persian characters out of it, they continue to Vazirmatn. */
+@font-face {
+  font-family: "Figtree Fallback";
+  src: local("Arial");
+  ascent-override: 94.32%;
+  descent-override: 24.82%;
+  line-gap-override: 0%;
+  size-adjust: 100.72%;
+  unicode-range: U+0000-00FF, U+0131, U+0152-0153, U+02BB-02BC, U+02C6, U+02DA, U+02DC, U+2000-206F, U+20AC, U+2122, U+2212;
+}
+
+html[lang="en"] {
+  --font-latin: var(--font-latin-en), "Figtree Fallback";
+  /* Figtree x-height is a little lower than Inter, keep the apparent size of small UI text */
+  font-size-adjust: 0.53;
+}
+html[lang="en"] button,
+html[lang="en"] input,
+html[lang="en"] textarea,
+html[lang="en"] select { font-size-adjust: inherit; }
+
+/* Leading: Persian wants 1.8-2.0, Latin reads best at 1.5-1.65 */
+html[lang="en"] p,
+html[lang="en"] li { line-height: 1.6; }
+
+/* Headings: tighter tracking than Persian-tuned values; weight is capped at 760 by the face */
+html[lang="en"] h1,
+html[lang="en"] h2 { letter-spacing: -0.02em; }
+html[lang="en"] h3,
+html[lang="en"] h4 { letter-spacing: -0.012em; }
+
+/* Numbers that change live must not make neighbours jump */
+html[lang="en"] time,
+html[lang="en"] td,
+html[lang="en"] [class*="clock"],
+html[lang="en"] [class*="timer"],
+html[lang="en"] [class*="countdown"] { font-variant-numeric: tabular-nums; }

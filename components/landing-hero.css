@@ -682,6 +682,10 @@ body[data-theme="light"] .lsc-kcal-bar{ background:rgba(0,0,0,.08); }
    ================================================================ */
 html[dir="ltr"] .lh-phone-screen,
 html[dir="ltr"] .lh-card{ direction:ltr; }
+/* لبه‌ی روشن قاب گوشی: در فارسی گوشه‌ی بالا-چپ دیده می‌شه (کارت‌های شناور سمت راست‌ان)؛ در انگلیسی کارت‌ها
+   همون گوشه رو می‌پوشونن، پس نور قاب قرینه می‌شه تا قاب خالی و شفاف دیده نشه */
+html[dir="ltr"] .lh-phone{ background:linear-gradient(200deg, #2a2f33, #0b0d0e 45%, #1c2023); }
+html[dir="ltr"] body[data-theme="light"] .lh-phone{ background:linear-gradient(200deg, #6b4f3d, #2b2118 45%, #4a3829); }
 html[dir="ltr"] .lh-pos-trade{ transform-origin:0 0; }
 html[dir="ltr"] .lh-pos-cal{ transform-origin:100% 0; }
 html[dir="ltr"] .lh-pos-ai{ transform-origin:0 100%; }

@@ -13,6 +13,7 @@ import { Spinner } from "./Spinner";
 import type { InAppNotification, NotificationsResponse } from "@/lib/mentorTypes";
 import { SETTING_KEYS } from "@/lib/userSettingKeys";
 import { tr, isEn, iso } from "@/lib/i18n";
+import { focusDisplay } from "@/lib/exerciseI18n";
 import { ANNOUNCEMENT_READ_KEEP, type PublicAnnouncement } from "@/lib/announcements";
 
 type ServerNotif = { kind: "server"; id: string; title: string; body: string; url: string | null; readAt: string | null; createdAt: string };
@@ -113,7 +114,7 @@ async function loadExerciseReminder(): Promise<NotifItem | null> {
     const logRes = await fetch(`/api/exercise/log?planId=${plan.id}&date=${isoLocal(new Date())}`);
     const logData = logRes.ok ? await logRes.json() : {};
     if (logData.completed) return null;
-    return { kind: "info", id: "exercise-today", title: tr("یادآوری تمرین", "Workout reminder"), body: tr(`برنامه‌ی ورزشی امروز (${todayPlan.focus}) هنوز ثبت نشده.`, `Today's workout plan (${iso(todayPlan.focus)}) has not been logged yet.`) };
+    return { kind: "info", id: "exercise-today", title: tr("یادآوری تمرین", "Workout reminder"), body: tr(`برنامه‌ی ورزشی امروز (${todayPlan.focus}) هنوز ثبت نشده.`, `Today's workout plan (${iso(focusDisplay(todayPlan.focus))}) has not been logged yet.`) };
   } catch {
     return null;
   }
@@ -213,7 +214,7 @@ export async function preloadNotifications(): Promise<NotifItem[]> {
 }
 
 // closing: والد منو رو برای پخش انیمیشن خروج (menu-motion) چند لحظه بعد از بسته‌شدن نگه می‌داره
-export function NotificationPanel({ onClose, anchor, closing = false }: { onClose: () => void; anchor: { top: number; edge: number }; closing?: boolean }) {
+export function NotificationPanel({ onClose, anchor, closing = false }: { onClose: () => void; anchor: { top: number; edge: number; start?: boolean }; closing?: boolean }) {
   useLockBodyScroll();
   const [items, setItems] = useState<NotifItem[] | null>(cachedItems);
   const [openStatic, setOpenStatic] = useState<{ modalTitle: string; modalBody: string } | null>(null);
@@ -340,7 +341,7 @@ export function NotificationPanel({ onClose, anchor, closing = false }: { onClos
         className="notif-panel dash-scope open"
         data-state={closing ? "closed" : "open"}
         ref={panelRef}
-        style={{ position: "fixed", top: anchor.top, right: anchor.edge, left: "auto" }}
+        style={anchor.start ? { position: "fixed", top: anchor.top, left: anchor.edge, right: "auto" } : { position: "fixed", top: anchor.top, right: anchor.edge, left: "auto" }}
       >
         <div className="notif-panel-head" style={{ display: "flex", alignItems: "center", justifyContent: "space-between", gap: 8 }}>
           <span>{tr("اطلاعیه‌ها", "Notifications")}</span>

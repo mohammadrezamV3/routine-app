@@ -8,7 +8,6 @@ import dynamic from "next/dynamic";
 import Image from "next/image";
 import { SmartLink as Link } from "./SmartLink";
 import { useTheme } from "./ThemeProvider";
-import { useLocale } from "./I18nProvider";
 import { useRouter, usePathname } from "next/navigation";
 import { useSession } from "next-auth/react";
 import { useLiveRefresh, useVisiblePolling } from "@/lib/liveSync";
@@ -28,7 +27,8 @@ import "./site-header.css";
 //  - محتوای کشو (لینک‌ها، ICONS، سوییچ تم/زبان): بعد از اولین پینت در زمان بیکاری،
 //    یا همون لحظه‌ی هاور/لمس/فوکوس دکمه‌ی منو لود می‌شه تا باز شدنش فوری باشه.
 //  - پنل پروفایل و پنل اعلان: با اولین کلیک (پیش‌لود روی هاور/لمس/بیکاری).
-//  - منوی افقی دسکتاپ انگلیسی (DesktopNav / DesktopNavEnd): فقط وقتی زبان انگلیسیه.
+//  - منوی افقی دسکتاپ (DesktopNav / DesktopNavEnd): برای هر دو زبان، SSR می‌شن
+//    (بدون پرش چیدمان)؛ زیر 1024px با CSS مخفیان.
 const loadDrawer = () => import("./NavDrawerContent");
 const loadProfileMenu = () => import("./NavProfileMenu");
 const loadNotifPanel = () => import("./NotificationPanel");
@@ -57,6 +57,13 @@ function whenIdle(fn: () => void, timeout = 2500): () => void {
 // هدر (که توی همه‌ی صفحه‌ها mount می‌شه) هر بار عکس رو دوباره فچ نکنه.
 let cachedAvatarUrl: string | null = null;
 
+// لنگر پنل‌های پروفایل/اعلان: در دسکتاپ rtl گروه دکمه‌ها سمت چپ صفحه‌ست، پس پنل
+// به لبه‌ی چپ دکمه می‌چسبه و به راست باز می‌شه (آینه‌ی ltr). موبایل بدون تغییر.
+function anchorOf(r: DOMRect) {
+  const start = document.documentElement.dir === "rtl" && window.innerWidth >= 1024;
+  return { top: r.bottom + 12, edge: start ? r.left : window.innerWidth - r.right, start };
+}
+
 export function NavDrawer() {
   const [open, setOpen] = useState(false);
   // لود محتوای کشو: بعد از بیکاری/هاور/لمس/باز شدن (پایین‌تر)
@@ -77,12 +84,10 @@ export function NavDrawer() {
   // محرک حساب کنیم. علت پورتال‌کردن: app-topbar خودش backdrop-filter داره، و یه
   // پنل توی فرزندانش که خودش هم backdrop-filter داره فقط لایه‌ی از‌قبل‌بلورشده‌ی
   // تقریبا خالی همون stacking context رو می‌بینه، نه محتوای واقعی پشت صفحه.
-  const [profileAnchor, setProfileAnchor] = useState<{ top: number; edge: number } | null>(null);
-  const [bellAnchor, setBellAnchor] = useState<{ top: number; edge: number } | null>(null);
+  const [profileAnchor, setProfileAnchor] = useState<{ top: number; edge: number; start?: boolean } | null>(null);
+  const [bellAnchor, setBellAnchor] = useState<{ top: number; edge: number; start?: boolean } | null>(null);
   const [avatarUrl, setAvatarUrl] = useState<string | null>(cachedAvatarUrl);
   const { theme } = useTheme();
-  const locale = useLocale();
-  const isEnglish = locale === "en";
   const router = useRouter();
   const pathname = usePathname();
   const { data: session, status } = useSession();
@@ -133,7 +138,7 @@ export function NavDrawer() {
         setOpen(false);
         setNotifPanelOpen(false);
         const r = profileBtnRef.current?.getBoundingClientRect();
-        if (r) setProfileAnchor({ top: r.bottom + 12, edge: window.innerWidth - r.right });
+        if (r) setProfileAnchor(anchorOf(r));
       }
       return next;
     });
@@ -240,7 +245,7 @@ export function NavDrawer() {
         setProfileMenuOpen(false);
         setNotifCount(0);
         const r = bellBtnRef.current?.getBoundingClientRect();
-        if (r) setBellAnchor({ top: r.bottom + 12, edge: window.innerWidth - r.right });
+        if (r) setBellAnchor(anchorOf(r));
       }
       return next;
     });
@@ -262,7 +267,7 @@ export function NavDrawer() {
               روی موبایل) هم باید موقع اسکرول بلور بماند. این عنصر مستقل، فقط
               همان نوار را (به ارتفاع safe-area-inset-top) می‌پوشاند. */}
           <div className="app-topbar-statusbar-blur" aria-hidden="true" />
-          <header className="app-topbar" data-site-header={isEnglish ? "en" : undefined}>
+          <header className="app-topbar" data-site-header="1">
           <div className="topbar-actions-left">
             {/* هر دو نسخه (روز/شب) هم‌زمان با اولین رندر لود می‌شن (هردو priority)،
                 فقط با opacity جابه‌جا می‌شن — نه اینکه src عوض بشه، وگرنه موقع
@@ -288,13 +293,11 @@ export function NavDrawer() {
               />
             </Link>
           </div>
-          {isEnglish && (
-            <DesktopNav
-              pathname={pathname || ""}
-              features={features}
-              activeModules={activeModules}
-            />
-          )}
+          <DesktopNav
+            pathname={pathname || ""}
+            features={features}
+            activeModules={activeModules}
+          />
           <div className="topbar-actions">
             <button
               id="menuBtn"
@@ -358,7 +361,8 @@ export function NavDrawer() {
                 </button>
               </div>
             )}
-            {isEnglish && <DesktopNavEnd guest={status === "unauthenticated"} />}
+            <DesktopNavEnd guest={status === "unauthenticated"} />
+
           </div>
         </header>
         </>
