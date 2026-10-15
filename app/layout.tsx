@@ -1,5 +1,5 @@
 import type { Metadata, Viewport } from "next";
-import { Vazirmatn, Inter } from "next/font/google";
+import { Vazirmatn, Inter, Plus_Jakarta_Sans, Manrope, DM_Sans, Figtree } from "next/font/google";
 import "./globals.css";
 import "@/components/ltr-shell.css";
 import "@/components/ltr-routine.css";
@@ -84,6 +84,13 @@ const latin = Inter({
   // دستگاه) رسم می‌شد — دقیقا باگ «فونت PWA به فونت گوشی بستگی داره».
   adjustFontFallback: false,
 });
+
+// TMPFONT-START (candidates for comparison; removed after choosing)
+const candJakarta = Plus_Jakarta_Sans({ subsets: ["latin"], weight: "variable", variable: "--font-cand-jakarta", display: "swap", preload: false });
+const candManrope = Manrope({ subsets: ["latin"], weight: "variable", variable: "--font-cand-manrope", display: "swap", preload: false });
+const candDm = DM_Sans({ subsets: ["latin"], weight: "variable", variable: "--font-cand-dm", display: "swap", preload: false });
+const candGeist = Figtree({ subsets: ["latin"], weight: "variable", variable: "--font-cand-geist", display: "swap", preload: false });
+// TMPFONT-END
 
 // وریفیکیشن موتورهای جست‌وجو/نقشه — فقط وقتی env مقدار داره اضافه می‌شه؛
 // خالی‌بودنش نباید یک متاتگ verification خالی/نامعتبر توی <head> بذاره.
@@ -272,7 +279,7 @@ export default async function RootLayout({ children }: { children: React.ReactNo
       data-theme-src={fromAccount ? "account" : undefined}
       data-event-theme={eventThemeId ?? undefined}
       suppressHydrationWarning
-      className={`${vazir.variable} ${latin.variable}`}
+      className={`${vazir.variable} ${latin.variable} ${candJakarta.variable} ${candManrope.variable} ${candDm.variable} ${candGeist.variable}`}
     >
       <head>
         {/* نوار وضعیت اندروید از همون اولین پینت هم‌رنگ تم — نه بعد از
