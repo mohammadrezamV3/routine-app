@@ -55,7 +55,7 @@ export function MotionRuntime() {
             if (++budget > 24) continue;
             // اگه خودش انیمیشن داره (framer/CSS) دخالت نکن
             if (getComputedStyle(n).animationName !== "none") continue;
-            const idx = Math.min(Array.prototype.indexOf.call(rec.target.children, n), 6);
+            const idx = Math.min(n.parentElement ? Array.prototype.indexOf.call(n.parentElement.children, n) : 0, 6);
             if (idx > 0) n.style.setProperty("--i", String(idx));
             n.setAttribute("data-m-in", "rise");
             n.addEventListener("animationend", () => { n.removeAttribute("data-m-in"); n.style.removeProperty("--i"); }, { once: true });

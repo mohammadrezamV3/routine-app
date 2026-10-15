@@ -115,7 +115,7 @@ html[dir="ltr"] .m-bar{ animation-name:m-bar-ltr; }
    transform خود المان جمع بشه؛ و فقط بعد از اولین ناوبری داخلی (همون شرط
    قبلی، پس لود اول بدون تاخیر LCP). wrapper خودش دیگه انیمیشن نداره. */
 html[data-navigated] .page-enter{ animation:none; }
-html[data-navigated] .page-enter > *{
+html[data-navigated] .page-enter > :not(.page-loader){
   animation:m-rise var(--m-dur-4) var(--m-ease-out) backwards;
   animation-delay:calc(min(var(--i, 0), 6) * var(--m-step));
 }
@@ -193,7 +193,7 @@ html[dir="ltr"] .adb-fill, html[dir="ltr"] .slw-fill, html[dir="ltr"] .wt-fill-t
 @media (prefers-reduced-motion:reduce){
   :root{ --m-dur-1:1ms; --m-dur-2:1ms; --m-dur-3:1ms; --m-dur-4:1ms; --m-dur-5:1ms; --m-rise:0px; --m-x:0px; --m-step:0ms; }
   .m-fade-in, .m-rise, .m-rise-soft, .m-pop, .m-slide-in, .m-stagger > *, .m-bar, .m-grow, .m-draw, .m-swap,
-  [data-m-in], html[data-navigated] .page-enter > *,
+  [data-m-in], html[data-navigated] .page-enter > :not(.page-loader),
   .module-gate, .module-gate-overlay > *, .trade-chat-report-sheet, .calorie-unit-dropdown,
   .au-backdrop, .ads-pal-backdrop, .ads-pal,
   .trade-account-goalbar-fill, .tm-progress-bar-fill, .admin-funnel-fill, .adb-fill, .slw-fill, .wt-fill-track{ animation:none !important; }
