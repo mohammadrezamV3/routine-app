@@ -147,8 +147,10 @@ export function DashboardHero({
   }, [routine.ready, routine.stats, ex, cal]);
 
 
+  // ورود هیرو با CSS (m-rise)، نه framer: هیرو عنصر LCP داشبورده؛ با initial:{opacity:0} فریمر تا رسیدن
+  // chunk انیمیشن نامرئی می‌موند و LCP عقب می‌افتاد. CSS از همون اولین پینت کار می‌کنه.
   return (
-    <motion.section ref={heroRef as any} className="db-hero" initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.55, ease: D_EASE }}>
+    <section ref={heroRef as any} className="db-hero m-rise">
       {onShare && (
         // اشتراک موفقیت — فقط آیکون، گوشه‌ی بالا-چپ هیرو. تا روتین امروز خونده
         // نشده کارت عدد درستی نداره: غیرفعال با دایره‌ی لودینگ به‌جای آیکون.
@@ -234,7 +236,7 @@ export function DashboardHero({
       </div>
 
       <DayRibbon now={now} tasks={routine.tasks} wake={routine.wakeSleep.wake} sleep={routine.wakeSleep.sleep} configured={routine.hasWakeSleep} />
-    </motion.section>
+    </section>
   );
 }
 

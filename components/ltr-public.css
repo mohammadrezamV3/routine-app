@@ -1,12 +1,6 @@
 /* اصلاح‌های ظاهری چیدمان چپ‌به‌راست (انگلیسی) — بخش public. همه‌ی قاعده‌ها زیر html[dir="ltr"] تا فارسی بی‌تغییر بمونه. */
 
 /* مراحل لندینگ (موبایل): عنوان و توضیح زیر هم کنار بج، نه دو ستون باریک کنار هم */
-@media (max-width:767px){
-  html[dir="ltr"] .ls-step{ display:grid; grid-template-columns:56px minmax(0,1fr); column-gap:16px; row-gap:0; align-items:start; }
-  html[dir="ltr"] .ls-step-badge{ grid-row:1 / span 2; }
-  html[dir="ltr"] .ls-step-title{ grid-column:2; grid-row:1; }
-  html[dir="ltr"] .ls-step-body{ grid-column:2; grid-row:2; }
-}
 
 /* بلاگ: خط‌فاصله‌های فارسی برای انگلیسی بازن */
 html[dir="ltr"] .blog-hero h1, html[dir="ltr"] .blog-head h1{ line-height:1.25; }

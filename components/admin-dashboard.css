@@ -6,7 +6,6 @@
 .adb-title{ font-size:26px; font-weight:800; }
 .adb-sub{ font-size:13px; color:var(--muted); }
 .adb-actions{ display:flex; gap:8px; flex-wrap:wrap; }
-.adb-toolbar{ display:flex; align-items:center; justify-content:space-between; gap:12px; flex-wrap:wrap; }
 
 .adb-kpis{ display:grid; grid-template-columns:repeat(6, minmax(0,1fr)); gap:12px; }
 .adb-card{ border:1px solid var(--surface-line); border-radius:22px; padding:22px; background:var(--box-bg); display:flex; flex-direction:column; gap:14px; min-width:0; }
@@ -21,7 +20,7 @@
 .adb-spark{ width:72px; height:26px; flex:none; }
 
 .adb-grid{ display:grid; grid-template-columns:repeat(12, minmax(0,1fr)); gap:16px; }
-.adb-span-8{ grid-column:span 8; } .adb-span-4{ grid-column:span 4; } .adb-span-5{ grid-column:span 5; } .adb-span-7{ grid-column:span 7; } .adb-span-12{ grid-column:span 12; }
+.adb-span-8{ grid-column:span 8; } .adb-span-4{ grid-column:span 4; } .adb-span-5{ grid-column:span 5; } .adb-span-7{ grid-column:span 7; }
 .adb-card-head{ display:flex; justify-content:space-between; align-items:flex-start; flex-wrap:wrap; gap:12px; }
 .adb-card-title{ font-size:17px; font-weight:800; }
 .adb-card-title.sm{ font-size:16px; }

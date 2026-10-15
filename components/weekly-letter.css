@@ -496,20 +496,6 @@ section.wl-ch{ padding:0; border-top:none; margin-top:36px; scroll-margin-top:ca
 .wl-rec-meta{ display:flex; gap:6px; flex-wrap:wrap; margin-top:8px; }
 .wl-rec.is-high .wl-tag:first-child{ color:var(--text); border-color:color-mix(in srgb, var(--text) 40%, transparent); }
 
-/* ── یادداشت خودت ──────────────────────────────────────── */
-.wl-refl{ display:flex; flex-direction:column; gap:12px; }
-.wl-mood{ display:flex; align-items:center; gap:12px; flex-wrap:wrap; }
-.wl-mood-k{ font-size:12.5px; font-weight:700; color:var(--muted); }
-.wl-mood-row{ display:inline-flex; gap:6px; }
-.wl-mood-row span{ font-size:24px; line-height:1; opacity:.28; filter:grayscale(1); transition:transform .3s ease; }
-.wl-mood-row span.is-on{ opacity:1; filter:none; transform:scale(1.3); }
-.wl-mood b{ font-size:13px; font-weight:900; color:var(--accent); }
-.wl-root .wl-quote{ --tone:var(--wl-good); display:flex; flex-direction:column; gap:8px; padding-top:22px; }
-.wl-quote.is-improve{ --tone:var(--muted); }
-.wl-quote h3{ font-size:12.5px !important; font-weight:800; color:var(--tone); }
-.wl-quote-mark{ position:absolute; top:14px; inset-inline-end:16px; color:var(--tone); opacity:.28; transform:scaleX(-1); }
-.wl-quote blockquote{ font-size:15px; line-height:2.1; font-weight:600; white-space:pre-wrap; overflow-wrap:anywhere; padding-inline-start:12px; border-inline-start:2px solid color-mix(in srgb, var(--tone) 70%, transparent); }
-
 /* ── هفته‌ی بعد ─────────────────────────────────────────── */
 .wl-root .wl-next{ display:flex; flex-direction:column; gap:18px; border-color:color-mix(in srgb, var(--wl-da) 38%, var(--box-line)); }
 .wl-next-top{ display:flex; align-items:flex-start; gap:14px; flex-wrap:wrap; }
@@ -1187,14 +1173,12 @@ body[data-theme="light"] .wl-root button.wl-live-mood{ background:none; box-shad
 .wl-root .wl-dp-mx-cell.s1{ background:color-mix(in srgb, var(--wl-da) 16%, var(--box-bg)); }
 .wl-root .wl-dp-mx-cell.s2{ background:color-mix(in srgb, var(--wl-da) 36%, var(--box-bg)); }
 .wl-root .wl-dp-mx-cell.s3{ background:color-mix(in srgb, var(--wl-da) 64%, var(--box-bg)); }
-.wl-root .wl-dp-mx-cell.s4{ background:var(--wl-da); color:var(--bg); }
 .wl-dp-mx-foot{ display:flex; flex-wrap:wrap; align-items:center; justify-content:space-between; gap:8px 14px; font-size:11.5px; font-weight:600; color:var(--muted); }
 .wl-dp-mx-legend{ display:inline-flex; align-items:center; gap:5px; }
 .wl-dp-mx-legend i{ width:13px; height:13px; border-radius:4px; display:block; }
 .wl-dp-mx-legend i.s1{ background:color-mix(in srgb, var(--wl-da) 16%, var(--box-bg)); }
 .wl-dp-mx-legend i.s2{ background:color-mix(in srgb, var(--wl-da) 36%, var(--box-bg)); }
 .wl-dp-mx-legend i.s3{ background:color-mix(in srgb, var(--wl-da) 64%, var(--box-bg)); }
-.wl-dp-mx-legend i.s4{ background:var(--wl-da); }
 .wl-dp-mx-nodata a{ color:var(--accent); font-weight:700; }
 @media (min-width:640px){
   .wl-root .wl-dp-mx{ padding:22px 24px; }
@@ -1289,7 +1273,7 @@ html[dir="ltr"] .wl-cover-stamp{ right:auto; left:-22px; }
 html[dir="ltr"] .wl-ch-line{ transform-origin:0 50%; background:linear-gradient(90deg, var(--wl-da), color-mix(in srgb, var(--wl-db) 60%, transparent) 38%, transparent); }
 html[dir="ltr"] .wl-meter i{ transform-origin:0 50%; background:linear-gradient(90deg, var(--wl-da, var(--accent)), var(--wl-db, var(--accent))); }
 html[dir="ltr"] .wl-dov-track i{ background:linear-gradient(90deg, var(--wl-da), var(--wl-db)); }
-html[dir="ltr"] .wl-quote-mark, html[dir="ltr"] .wl-st-qmark{ transform:none; }
+html[dir="ltr"] .wl-st-qmark{ transform:none; }
 html[dir="ltr"] .wl-skel::after{ transform:translateX(-100%); animation-name:wl-shimmer-ltr; }
 @keyframes wl-shimmer-ltr{ to{ transform:translateX(100%); } }
 html[dir="ltr"] .wl-st-bar i{ transform-origin:0 50%; }

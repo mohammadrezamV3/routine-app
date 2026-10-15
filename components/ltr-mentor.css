@@ -1,42 +1,10 @@
 /* اصلاح‌های ظاهری چیدمان چپ‌به‌راست (انگلیسی) — بخش mentor. همه‌ی قاعده‌ها زیر html[dir="ltr"] تا فارسی بی‌تغییر بمونه. */
-/* Card bookmark: the negative offset pulls it toward the card edge (end side). */
-html[dir="ltr"] .mentor-card-save{ margin:-4px -6px 0 0; }
-/* Bullet indent of the system-card list sits on the start side. */
-html[dir="ltr"] .mv2-ms-items{ padding:0 0 0 var(--m-4); }
 /* Longer English values wrap instead of being cut with an ellipsis. */
 html[dir="ltr"] .mv2-srow-value{ white-space:normal; overflow:visible; text-overflow:clip; text-align:end; line-height:1.5; }
-/* Card footer: the longer English date shrinks instead of pushing the arrow out of the card. */
-html[dir="ltr"] .mentor-card-foot{ gap:8px; }
 html[dir="ltr"] .mentor-card-since{ min-width:0; overflow:hidden; text-overflow:ellipsis; }
-html[dir="ltr"] .mentor-card-foot .rp-card-arrow{ flex-shrink:0; }
-/* Persian user text (headline) in the English UI: cut at its end, not its start. */
-html[dir="ltr"] .mentor-card .mentor-card-headline{ unicode-bidi:plaintext; text-align:left; }
-html[dir="ltr"] .mentor-card-since > svg{ display:none; }
-html[dir="ltr"] .mentor-card-foot{ gap:6px; }
-html[dir="ltr"] .mentor-card-since{ font-size:11.5px; }
-/* Persian user-written text inside the English UI takes its own direction (punctuation stays on the right side). */
-html[dir="ltr"] .mentor-hero-headline,
-html[dir="ltr"] .mentor-bio,
-html[dir="ltr"] .mentor-review-text{ unicode-bidi:plaintext; }
-html[dir="ltr"] .mentor-program-note > div,
-html[dir="ltr"] .mentor-note-box > div{ unicode-bidi:plaintext; }
 /* Persian user-written text in the English UI: left-aligned like the rest of the page. */
 html[dir="ltr"] .mentor-hero-headline,
 html[dir="ltr"] .mentor-bio,
 html[dir="ltr"] .mentor-review-text,
 html[dir="ltr"] .mentor-program-note > div,
 html[dir="ltr"] .mentor-note-box > div{ text-align:left; }
-/* Toasts and the privacy preview line are forced rtl in the base CSS; in English they read left to right. */
-html[dir="ltr"] .mentor-toast,
-html[dir="ltr"] .mentor-preview-line{ direction:ltr; }
-/* Notice: English separator, and the (often Persian, user-written) body is isolated so it cannot scramble the English title. */
-html[dir="ltr"] .mentor-notice-title + .mentor-notice-body::before{ content:"; "; }
-html[dir="ltr"] .mentor-notice-body{ unicode-bidi:isolate; }
-/* MentorSheet places itself with flex; the generic ltr rule that centres .modal-panel with left:50% must not shift it. */
-html[dir="ltr"] .modal-panel.m-sheet:not(.modal-panel-notransform){ left:auto; right:auto; }
-/* Persian user-written notes and feedback inside the English UI: own punctuation direction, left-aligned. */
-html[dir="ltr"] .mentor-feedback-body{ unicode-bidi:plaintext; text-align:left; }
-/* Hero meta: keep "Member since 28 Farvardin 1405" and similar items on one line each (the row wraps between items). */
-html[dir="ltr"] .mentor-hero-meta > *{ white-space:nowrap; }
-/* Longer English row titles wrap instead of being cut ("workout coaching cert..."). */
-html[dir="ltr"] .mentor-row-title{ white-space:normal; overflow:visible; text-overflow:clip; }

@@ -1,45 +1,3 @@
-/* ============================================================
-   پوسته‌ی آنالیز هفتگی (wa-): ریتم صفحه، سوییچر هفته، هیرو، تب‌های فصل.
-   هیچ بک‌گراند تازه‌ای روی دکمه/کارت اضافه نمی‌شه؛ فقط داده (حلقه،
-   میله‌ها) رنگ پر داره. سطح کارت‌ها همون --box-bg سایته.
-   ============================================================ */
-
-/* ── ریتم عمودی صفحه ──────────────────────────────────────── */
-.wa-stack{ display:flex; flex-direction:column; gap:40px; min-width:0; }
-.wa-stack > *{ min-width:0; }
-@media (max-width:767px){ .wa-stack{ gap:28px; } }
-.wa-ch{ min-width:0; scroll-margin-top:calc(130px + env(safe-area-inset-top)); }
-.wa-ch-grid{ display:grid; grid-template-columns:minmax(0,1fr); gap:24px; align-items:stretch; }
-.wa-ch-grid > *{ min-width:0; }
-@media (min-width:1024px){
-  .wa-ch-grid{ grid-template-columns:repeat(12, minmax(0,1fr)); }
-  .wa-c12{ grid-column:span 12; } .wa-c8{ grid-column:span 8; } .wa-c7{ grid-column:span 7; }
-  .wa-c6{ grid-column:span 6; } .wa-c5{ grid-column:span 5; } .wa-c4{ grid-column:span 4; }
-}
-
-/* ── سوییچر هفته (یک قرص فشرده) ───────────────────────────── */
-.wa-switch{
-  display:flex; align-items:center; gap:8px; padding:6px; border:1px solid var(--box-line); border-radius:999px; min-width:0;
-}
-.wk-page button.wk-ghost.wa-sw-btn{
-  flex-shrink:0; width:36px; height:36px; border-radius:50%; display:inline-flex; align-items:center; justify-content:center; color:var(--text);
-  transition:color .18s ease, transform .15s ease, opacity .18s ease;
-}
-.wk-page button.wk-ghost.wa-sw-btn:disabled{ color:var(--muted); opacity:.45; }
-.wk-page button.wk-ghost.wa-sw-btn:focus-visible{ outline:2px solid var(--accent); outline-offset:1px; }
-@media (hover:hover){ .wk-page button.wk-ghost.wa-sw-btn:hover:not(:disabled){ color:var(--accent); } }
-.wa-sw-center{ position:relative; flex:1; min-width:150px; padding:0 10px; display:flex; flex-direction:column; align-items:center; text-align:center; }
-.wa-sw-label{ font-size:14px; font-weight:700; line-height:1.5; font-family:var(--font-latin), var(--font-vazir), sans-serif; }
-.wa-sw-sub{ font-size:11px; line-height:1.5; color:var(--muted); }
-.wa-sw-sub.is-now{ color:var(--accent); }
-.wk-page button.wk-ghost.wa-sw-sub.is-link{ color:var(--accent); font-size:11px; font-family:inherit; }
-.wk-page button.wk-ghost.wa-sw-sub.is-link:focus-visible{ outline:2px solid var(--accent); outline-offset:2px; border-radius:6px; }
-.wa-sw-spin{ position:absolute; inset-inline-end:2px; top:50%; margin-top:-6px; width:12px; height:12px; color:var(--accent); }
-@media (max-width:767px){
-  .wa-switch{ justify-content:space-between; padding:4px; }
-  .wk-page button.wk-ghost.wa-sw-btn{ width:44px; height:44px; }
-}
-
 /* ── هیرو (باز، بدون قاب) ─────────────────────────────────── */
 .wa-hero{
   --wk-aura:1;
@@ -110,33 +68,11 @@ body[data-theme="light"] .wa-ring-box::before{
   .wa-forecast{ width:min(280px, 100%); }
 }
 
-/* ── تب‌های فصل (فقط موبایل/تبلت باریک) ───────────────────── */
-.wa-tabs{ display:none; }
-@media (max-width:767px){
-  .wa-tabs{
-    display:block; position:sticky; top:calc(84px + env(safe-area-inset-top)); z-index:25; margin-bottom:20px;
-    border-bottom:1px solid var(--box-line); background:var(--bg);
-  }
-  .wa-tabs-row{ display:flex; gap:18px; overflow-x:auto; scrollbar-width:none; -ms-overflow-style:none; overscroll-behavior-x:contain; }
-  .wa-tabs-row::-webkit-scrollbar{ display:none; }
-  .wk-page button.wk-ghost.wa-tab{
-    position:relative; flex:0 0 auto; padding:8px 0 10px; font-size:13px; font-weight:600; color:var(--muted); white-space:nowrap;
-    transition:color .2s ease;
-  }
-  .wk-page button.wk-ghost.wa-tab.is-on{ color:var(--accent); font-weight:700; }
-  .wk-page button.wk-ghost.wa-tab:focus-visible{ outline:2px solid var(--accent); outline-offset:-2px; border-radius:6px; }
-  .wa-tab-line{ position:absolute; inset-inline:0; bottom:-1px; height:2px; border-radius:2px; background:var(--accent); }
-}
-
 /* ── کاهش حرکت / دستگاه ضعیف ─────────────────────────────── */
 @media (prefers-reduced-motion:reduce){
   .wa-ring-box::before{ animation:none !important; }
-  .wk-page button.wk-ghost.wa-sw-btn, .wk-page button.wk-ghost.wa-tab{ transition:none !important; }
 }
 html[data-perf="low"] .wa-ring-box::before{ animation:none; }
-
-/* ستون خالی (مثلا لحظه‌های هفته بدون محتوا) جا نمی‌گیره */
-.wa-ch-grid > :empty{ display:none; }
 
 /* LTR: نشان نمره روی گوشه‌ی بالا-راست حلقه (قرینه‌ی گوشه‌ی بالا-چپ فارسی) */
 html[dir="ltr"] .wa-grade-badge{ left:auto; right:18px; }
