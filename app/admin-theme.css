@@ -101,12 +101,6 @@ html[data-admin-theme="noir"] body:not([data-theme="light"]) .trade-primary-btn{
   }
 }
 
-/* ── دکمه‌ی خطی: شفاف با بوردر سفید نئونی ── */
-html[data-admin-theme="noir"] body:not([data-theme="light"]) .admin-btn:not(.primary):not(.danger){
-  background:transparent; border-color:rgba(255,255,255,.7); color:var(--text);
-  box-shadow:0 0 10px rgba(255,255,255,.10);
-}
-
 /* ── فوکوس فیلدها: هاله‌ی نئونی سفید ── */
 html[data-admin-theme="noir"] body:not([data-theme="light"]) input:focus,
 html[data-admin-theme="noir"] body:not([data-theme="light"]) textarea:focus,
@@ -120,10 +114,7 @@ html[data-admin-theme="noir"] body:not([data-theme="light"]) :focus-visible{
 }
 
 /* ── عکس‌ها: فقط لوگو و آواتار خاکستری (نه کل صفحه) ── */
-html[data-admin-theme="noir"] body:not([data-theme="light"]) .topbar-logo-lockup,
-html[data-admin-theme="noir"] body:not([data-theme="light"]) .account-avatar-img,
-html[data-admin-theme="noir"] body:not([data-theme="light"]) img[class*="avatar"],
-html[data-admin-theme="noir"] body:not([data-theme="light"]) canvas.agent-avatar{
+html[data-admin-theme="noir"] body:not([data-theme="light"]) .topbar-logo-lockup, html[data-admin-theme="noir"] body:not([data-theme="light"]) img[class*="avatar"], html[data-admin-theme="noir"] body:not([data-theme="light"]) canvas.agent-avatar{
   filter:grayscale(1) contrast(1.1);
 }
 /* نقطه‌ی اعلان قرمز نمی‌مونه: سفید با هاله‌ی نئونی */
@@ -174,35 +165,5 @@ html[data-perf="low"][data-admin-theme="noir"] body:not([data-theme="light"])::b
 html[data-perf="low"][data-admin-theme="noir"] body:not([data-theme="light"])::after{ animation:none; opacity:.03; }
 html[data-perf-weak][data-admin-theme="noir"] body:not([data-theme="light"])::before,
 html[data-perf-weak][data-admin-theme="noir"] body:not([data-theme="light"])::after{ display:none; }
-
-/* ── ماژول‌های رنگی که توکن خودشون رو دارن: همه خاکستری ── */
-html[data-admin-theme="noir"] body:not([data-theme="light"]) .db-page,
-html[data-admin-theme="noir"] body:not([data-theme="light"]) .db-cmd-root{
-  --ring-1a:#FFFFFF; --ring-1b:#BDBDBD;
-  --ring-2a:#E0E0E0; --ring-2b:#8C8C8C;
-  --ring-3a:#C8C8C8; --ring-3b:#6E6E6E;
-  --ring-over:#FFFFFF;
-  --tl-warn:#BDBDBD;
-}
-html[data-admin-theme="noir"] body:not([data-theme="light"]) .golden-name{
-  --g1:#FFFFFF; --g2:#D6D6D6; --g3:#8C8C8C; --g4:#F0F0F0;
-  filter:drop-shadow(0 0 6px rgba(255,255,255,.35));
-}
-html[data-admin-theme="noir"] body:not([data-theme="light"]) .toxic-name{
-  --t1:#FFFFFF; --t2:#D6D6D6; --t3:#8C8C8C; --t4:#F0F0F0;
-  --tx-glow-lo:rgba(255,255,255,.25); --tx-glow-hi:rgba(255,255,255,.5);
-}
-html[data-admin-theme="noir"] body:not([data-theme="light"]) .db-ribbon-fill{
-  background:linear-gradient(270deg, #FFFFFF 0%, #BDBDBD 40%, #6E6E6E 75%, #2A2A2A 100%);
-}
-html[data-admin-theme="noir"] body:not([data-theme="light"]) .db-ribbon-sun-core{
-  background:#FFFFFF; box-shadow:0 0 0 4px rgba(255,255,255,.2), 0 0 18px 4px rgba(255,255,255,.5);
-}
 /* ابرهای aurora کم‌رنگ‌تر تا فقط دود محو بمونن */
 html[data-admin-theme="noir"] body:not([data-theme="light"]) .aurora-blob{ opacity:.45; }
-
-/* خواب: درجه‌های کیفیت به‌جای رنگ، پله‌های خاکستری می‌شن */
-html[data-admin-theme="noir"] body:not([data-theme="light"]) .sleep-scope{
-  --slp-great:#FFFFFF; --slp-good:#D0D0D0; --slp-fair:#A0A0A0; --slp-poor:#6E6E6E;
-  --slp-ink:#E8E8E8; --slp-ink-2:#B0B0B0; --slp-moon:#F4F4F4;
-}

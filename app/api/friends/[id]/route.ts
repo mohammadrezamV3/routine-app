@@ -1,3 +1,4 @@
+import { tr } from "@/lib/i18n";
 import { NextRequest, NextResponse } from "next/server";
 import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/auth";
@@ -17,7 +18,7 @@ export async function PATCH(req: NextRequest, { params }: { params: { id: string
     return NextResponse.json({ error: "not found" }, { status: 404 });
   }
   if (friendship.status !== "PENDING") {
-    return NextResponse.json({ error: "این درخواست قبلا پاسخ داده شده" }, { status: 409 });
+    return NextResponse.json({ error: tr("این درخواست قبلا پاسخ داده شده", "This request has already been answered") }, { status: 409 });
   }
 
   await prisma.friendship.update({ where: { id: params.id }, data: { status: "ACCEPTED" } });

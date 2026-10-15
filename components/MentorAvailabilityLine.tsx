@@ -4,6 +4,7 @@ import { CalendarDays, Clock } from "lucide-react";
 import { MI, MI_STROKE, MentorChip } from "./MentorUI";
 import { fmtDate } from "@/lib/mentorFormat";
 import { responseTimeLabel } from "@/lib/mentorAvailability";
+import { tr } from "@/lib/i18n";
 
 const ic = (Icon: typeof Clock, size: number) => <Icon size={size} strokeWidth={MI_STROKE} aria-hidden />;
 
@@ -20,7 +21,7 @@ export function MentorAvailabilityLine({
     <div className="mentor-state-notes" style={{ marginTop: "var(--m-3)", marginBottom: 0 }}>
       {awayUntil && (
         <p className="mentor-state-note">
-          <MentorChip tone="info" icon={ic(CalendarDays, MI.chip)}>تا {fmtDate(awayUntil)} در دسترس نیست</MentorChip>
+          <MentorChip tone="info" icon={ic(CalendarDays, MI.chip)}>{tr(`تا ${fmtDate(awayUntil)} در دسترس نیست`, `Unavailable until ${fmtDate(awayUntil)}`)}</MentorChip>
           {awayMessage && <span>{awayMessage}</span>}
         </p>
       )}

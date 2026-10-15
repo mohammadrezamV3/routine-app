@@ -11,6 +11,7 @@ import { TickOption } from "@/components/TickOption";
 import { AdminMaintenanceCard } from "@/components/AdminMaintenanceCard";
 import { useTheme } from "@/components/ThemeProvider";
 import { readAdminNoir, writeAdminNoir } from "@/lib/adminTheme";
+import { tr } from "@/lib/i18n";
 import { MAX_TRIAL_AI_LIMIT, TRIAL_AI_FEATURES, TRIAL_AI_FEATURE_LABELS_FA, TRIAL_DAYS, type TrialAiFeature, type TrialAiLimits } from "@/lib/trial";
 
 type Rate = { inputPer1kUsdMicros: number; outputPer1kUsdMicros: number };
@@ -77,10 +78,10 @@ export default function AdminSettingsPage() {
 
   async function save() {
     if (saving || !settings) return;
-    if (inputRate === "" || outputRate === "") { setFormError("هر دو نرخ را وارد کن"); return; }
+    if (inputRate === "" || outputRate === "") { setFormError(tr("هر دو نرخ را وارد کن", "Enter both rates")); return; }
     const inRate = Number(inputRate), outRate = Number(outputRate);
     if (!Number.isFinite(inRate) || !Number.isFinite(outRate) || inRate > MAX_RATE || outRate > MAX_RATE) {
-      setFormError(`نرخ باید عددی بین 0 تا ${formatNumber(MAX_RATE)} باشد`);
+      setFormError(tr(`نرخ باید عددی بین 0 تا ${formatNumber(MAX_RATE)} باشد`, `The rate must be a number from 0 to ${formatNumber(MAX_RATE)}`));
       return;
     }
     setFormError(null);
@@ -93,7 +94,7 @@ export default function AdminSettingsPage() {
       setSettings({ ...settings, aiCostRate: d.aiCostRate });
       setInputRate(String(d.aiCostRate.inputPer1kUsdMicros));
       setOutputRate(String(d.aiCostRate.outputPer1kUsdMicros));
-      toast("نرخ هزینه‌ی AI ذخیره شد");
+      toast(tr("نرخ هزینه‌ی AI ذخیره شد", "AI cost rate saved"));
       loadAudit();
     } catch (e: any) {
       setFormError(e.message);
@@ -110,7 +111,7 @@ export default function AdminSettingsPage() {
     for (const f of TRIAL_AI_FEATURES) {
       const n = trialDraft[f] === "" ? NaN : Number(trialDraft[f]);
       if (!Number.isInteger(n) || n < 0 || n > MAX_TRIAL_AI_LIMIT) {
-        setTrialError(`هر سقف باید عدد صحیحی بین 0 تا ${formatNumber(MAX_TRIAL_AI_LIMIT)} باشد`);
+        setTrialError(tr(`هر سقف باید عدد صحیحی بین 0 تا ${formatNumber(MAX_TRIAL_AI_LIMIT)} باشد`, `Each limit must be a whole number from 0 to ${formatNumber(MAX_TRIAL_AI_LIMIT)}`));
         return;
       }
       limits[f] = n;
@@ -121,7 +122,7 @@ export default function AdminSettingsPage() {
       const d = await adminFetch<{ trialAiLimits: TrialAiLimits }>("/api/admin/settings", { method: "PATCH", json: { trialAiLimits: limits } });
       setSettings({ ...settings, trialAiLimits: d.trialAiLimits });
       setTrialDraft(toDraft(d.trialAiLimits));
-      toast("سقف‌های AI دوره‌ی آزمایشی ذخیره شد");
+      toast(tr("سقف‌های AI دوره‌ی آزمایشی ذخیره شد", "Trial AI limits saved"));
       loadAudit();
     } catch (e: any) {
       setTrialError(e.message);
@@ -136,7 +137,7 @@ export default function AdminSettingsPage() {
     if (nomoSaving || !settings) return;
     const n = nomoDraft === "" ? NaN : Number(nomoDraft);
     if (!Number.isInteger(n) || n < 0 || n > MAX_TRIAL_AI_LIMIT) {
-      setNomoError(`تعداد باید عدد صحیحی بین 0 تا ${formatNumber(MAX_TRIAL_AI_LIMIT)} باشد`);
+      setNomoError(tr(`تعداد باید عدد صحیحی بین 0 تا ${formatNumber(MAX_TRIAL_AI_LIMIT)} باشد`, `The count must be a whole number from 0 to ${formatNumber(MAX_TRIAL_AI_LIMIT)}`));
       return;
     }
     setNomoError(null);
@@ -145,7 +146,7 @@ export default function AdminSettingsPage() {
       const d = await adminFetch<{ nomoFreeUses: number }>("/api/admin/settings", { method: "PATCH", json: { nomoFreeUses: n } });
       setSettings({ ...settings, nomoFreeUses: d.nomoFreeUses });
       setNomoDraft(String(d.nomoFreeUses));
-      toast("پیام‌های رایگان نومو ذخیره شد");
+      toast(tr("پیام‌های رایگان نومو ذخیره شد", "Free Nomo messages saved"));
       loadAudit();
     } catch (e: any) {
       setNomoError(e.message);
@@ -160,10 +161,10 @@ export default function AdminSettingsPage() {
     setIndexNowMsg(null);
     try {
       const d = await adminFetch<{ submitted: number }>("/api/admin/seo/indexnow", { method: "POST" });
-      setIndexNowMsg({ text: `${formatNumber(d.submitted)} آدرس ارسال شد`, tone: "ok" });
+      setIndexNowMsg({ text: tr(`${formatNumber(d.submitted)} آدرس ارسال شد`, `${formatNumber(d.submitted)} URLs sent`), tone: "ok" });
       loadAudit();
     } catch (e: any) {
-      setIndexNowMsg({ text: e?.message || "ارسال ناموفق بود", tone: "err" });
+      setIndexNowMsg({ text: e?.message || tr("ارسال ناموفق بود", "Sending failed"), tone: "err" });
     } finally {
       setIndexNowBusy(false);
     }
@@ -172,14 +173,17 @@ export default function AdminSettingsPage() {
   return (
     <section>
       <div className="admin-chart-card">
-        <div className="admin-chart-head"><span className="admin-chart-title">ایندکس فوری سایت (IndexNow)</span></div>
+        <div className="admin-chart-head"><span className="admin-chart-title">{tr("ایندکس فوری سایت (IndexNow)", "Instant site indexing (IndexNow)")}</span></div>
         <div className="admin-section-hint admin-settings-hint">
-          همه‌ی آدرس‌های sitemap رو به Bing/Yandex اطلاع می‌ده تا زودتر از کراول دوره‌ای ایندکس بشن —
-          نیاز به تنظیم <code className="mono">INDEXNOW_KEY</code> در env داره.
+          {tr(
+            "همه‌ی آدرس‌های sitemap رو به Bing/Yandex اطلاع می‌ده تا زودتر از کراول دوره‌ای ایندکس بشن — نیاز به تنظیم ",
+            "Notifies Bing/Yandex of every sitemap URL so they get indexed sooner than with periodic crawling. Requires setting ",
+          )}
+          <code className="mono">INDEXNOW_KEY</code>{tr(" در env داره.", " in the env.")}
         </div>
         <div className="admin-settings-actions">
           <button type="button" className="admin-btn primary" onClick={submitIndexNow} disabled={indexNowBusy}>
-            {indexNowBusy ? "در حال ارسال…" : "ارسال به IndexNow"}
+            {indexNowBusy ? tr("در حال ارسال…", "Sending…") : tr("ارسال به IndexNow", "Send to IndexNow")}
           </button>
           {indexNowMsg && (
             <span className={`admin-settings-msg ${indexNowMsg.tone}`} role={indexNowMsg.tone === "err" ? "alert" : "status"}>{indexNowMsg.text}</span>
@@ -188,31 +192,31 @@ export default function AdminSettingsPage() {
       </div>
 
       <div className="admin-chart-card">
-        <div className="admin-chart-head"><span className="admin-chart-title">نرخ تخمین هزینه AI</span></div>
+        <div className="admin-chart-head"><span className="admin-chart-title">{tr("نرخ تخمین هزینه AI", "AI cost estimate rates")}</span></div>
         <div className="admin-section-hint admin-settings-hint">
-          به میکرو-دلار به‌ازای هر 1000 توکن — پیش‌فرض بر اساس نرخ عمومی gpt-4o-mini
+          {tr("به میکرو-دلار به‌ازای هر 1000 توکن — پیش‌فرض بر اساس نرخ عمومی gpt-4o-mini", "In micro-dollars per 1,000 tokens. Default is based on the public gpt-4o-mini rate")}
           {settings && <> (<span className="admin-ltr mono">{settings.defaultAiCostRate.inputPer1kUsdMicros}/{settings.defaultAiCostRate.outputPer1kUsdMicros}</span>)</>}.
         </div>
         {settingsError && !settings ? (
           <EmptyState message={settingsError} />
         ) : !settings ? (
-          <div className="admin-empty is-loading">در حال بارگذاری…</div>
+          <div className="admin-empty is-loading">{tr("در حال بارگذاری…", "Loading…")}</div>
         ) : (
           <form onSubmit={(e) => { e.preventDefault(); save(); }} noValidate>
             <div className="admin-form-grid">
               <label className="admin-field">
-                <span>نرخ ورودی (میکرو-دلار/1000 توکن)</span>
+                <span>{tr("نرخ ورودی (میکرو-دلار/1000 توکن)", "Input rate (micro-dollars / 1,000 tokens)")}</span>
                 <NumberInput className="admin-input admin-ltr" dir="ltr" maxLength={9} value={inputRate} onChange={setInputRate} />
               </label>
               <label className="admin-field">
-                <span>نرخ خروجی (میکرو-دلار/1000 توکن)</span>
+                <span>{tr("نرخ خروجی (میکرو-دلار/1000 توکن)", "Output rate (micro-dollars / 1,000 tokens)")}</span>
                 <NumberInput className="admin-input admin-ltr" dir="ltr" maxLength={9} value={outputRate} onChange={setOutputRate} />
               </label>
             </div>
             {formError && <div className="admin-form-error" role="alert">{formError}</div>}
             <div className="admin-modal-actions">
               <button type="submit" className="admin-btn primary" disabled={saving || !dirty}>
-                {saving ? "در حال ذخیره…" : "ذخیره"}
+                {saving ? tr("در حال ذخیره…", "Saving…") : tr("ذخیره", "Save")}
               </button>
             </div>
           </form>
@@ -222,26 +226,29 @@ export default function AdminSettingsPage() {
       <AdminMaintenanceCard />
 
       <div className="admin-chart-card">
-        <div className="admin-chart-head"><span className="admin-chart-title">تم آزمایشی (فقط برای خودت)</span></div>
-        <TickOption checked={noir} onChange={changeNoir}>تم نوآر سیاه و سفید</TickOption>
-        <div className="admin-section-hint admin-settings-hint">فقط روی همین دستگاه ذخیره می‌شود و روی تم تیره اعمال می‌شود.</div>
+        <div className="admin-chart-head"><span className="admin-chart-title">{tr("تم آزمایشی (فقط برای خودت)", "Experimental theme (just for you)")}</span></div>
+        <TickOption checked={noir} onChange={changeNoir}>{tr("تم نوآر سیاه و سفید", "Noir black and white theme")}</TickOption>
+        <div className="admin-section-hint admin-settings-hint">{tr("فقط روی همین دستگاه ذخیره می‌شود و روی تم تیره اعمال می‌شود.", "Saved on this device only, and applied on the dark theme.")}</div>
       </div>
 
       <div className="admin-chart-card">
-        <div className="admin-chart-head"><span className="admin-chart-title">سقف AI دوره‌ی آزمایشی</span></div>
+        <div className="admin-chart-head"><span className="admin-chart-title">{tr("سقف AI دوره‌ی آزمایشی", "Trial period AI limits")}</span></div>
         <div className="admin-section-hint admin-settings-hint">
-          هر حساب تازه {TRIAL_DAYS} روز به بدنسازی، کالری‌شمار و ژورنال ترید دسترسی دارد؛ این‌ها سقف کل استفاده از هر امکان AI در همان دوره‌اند (0 یعنی بسته).
+          {tr(
+            `هر حساب تازه ${TRIAL_DAYS} روز به بدنسازی، کالری‌شمار و ژورنال ترید دسترسی دارد؛ این‌ها سقف کل استفاده از هر امکان AI در همان دوره‌اند (0 یعنی بسته).`,
+            `Each new account gets ${TRIAL_DAYS} days of access to Workout, Calories and the trading journal. These are the total AI usage caps per feature for that period (0 means off).`,
+          )}
         </div>
         {settingsError && !settings ? (
           <EmptyState message={settingsError} />
         ) : !settings || !trialDraft ? (
-          <div className="admin-empty is-loading">در حال بارگذاری…</div>
+          <div className="admin-empty is-loading">{tr("در حال بارگذاری…", "Loading…")}</div>
         ) : (
           <form onSubmit={(e) => { e.preventDefault(); saveTrial(); }} noValidate>
             <div className="admin-form-grid">
               {TRIAL_AI_FEATURES.map((f) => (
                 <label key={f} className="admin-field">
-                  <span>{TRIAL_AI_FEATURE_LABELS_FA[f]} (پیش‌فرض {settings.defaultTrialAiLimits[f]})</span>
+                  <span>{TRIAL_AI_FEATURE_LABELS_FA[f]} {tr(`(پیش‌فرض ${settings.defaultTrialAiLimits[f]})`, `(default ${settings.defaultTrialAiLimits[f]})`)}</span>
                   <NumberInput
                     className="admin-input admin-ltr" dir="ltr" maxLength={4} value={trialDraft[f]}
                     onChange={(v) => setTrialDraft((d) => (d ? { ...d, [f]: v } : d))}
@@ -252,7 +259,7 @@ export default function AdminSettingsPage() {
             {trialError && <div className="admin-form-error" role="alert">{trialError}</div>}
             <div className="admin-modal-actions">
               <button type="submit" className="admin-btn primary" disabled={trialSaving || !trialDirty}>
-                {trialSaving ? "در حال ذخیره…" : "ذخیره"}
+                {trialSaving ? tr("در حال ذخیره…", "Saving…") : tr("ذخیره", "Save")}
               </button>
             </div>
           </form>
@@ -260,26 +267,29 @@ export default function AdminSettingsPage() {
       </div>
 
       <div className="admin-chart-card">
-        <div className="admin-chart-head"><span className="admin-chart-title">پیام‌های رایگان نومو</span></div>
+        <div className="admin-chart-head"><span className="admin-chart-title">{tr("پیام‌های رایگان نومو", "Free Nomo messages")}</span></div>
         <div className="admin-section-hint admin-settings-hint">
-          تعداد کل پیام‌هایی که کاربر بدون اشتراک می‌تواند به دستیار «نومو» بدهد؛ مشترک‌ها نامحدودند.
+          {tr(
+            "تعداد کل پیام‌هایی که کاربر بدون اشتراک می‌تواند به دستیار «نومو» بدهد؛ مشترک‌ها نامحدودند.",
+            "The total number of messages a user without a subscription can send to the Nomo assistant. Subscribers are unlimited.",
+          )}
         </div>
         {settingsError && !settings ? (
           <EmptyState message={settingsError} />
         ) : !settings ? (
-          <div className="admin-empty is-loading">در حال بارگذاری…</div>
+          <div className="admin-empty is-loading">{tr("در حال بارگذاری…", "Loading…")}</div>
         ) : (
           <form onSubmit={(e) => { e.preventDefault(); saveNomo(); }} noValidate>
             <div className="admin-form-grid">
               <label className="admin-field">
-                <span>پیام رایگان (پیش‌فرض {settings.defaultNomoFreeUses})</span>
+                <span>{tr(`پیام رایگان (پیش‌فرض ${settings.defaultNomoFreeUses})`, `Free messages (default ${settings.defaultNomoFreeUses})`)}</span>
                 <NumberInput className="admin-input admin-ltr" dir="ltr" maxLength={4} value={nomoDraft} onChange={setNomoDraft} />
               </label>
             </div>
             {nomoError && <div className="admin-form-error" role="alert">{nomoError}</div>}
             <div className="admin-modal-actions">
               <button type="submit" className="admin-btn primary" disabled={nomoSaving || !nomoDirty}>
-                {nomoSaving ? "در حال ذخیره…" : "ذخیره"}
+                {nomoSaving ? tr("در حال ذخیره…", "Saving…") : tr("ذخیره", "Save")}
               </button>
             </div>
           </form>
@@ -289,19 +299,19 @@ export default function AdminSettingsPage() {
       {canAudit && (
         <div className="admin-chart-card">
           <div className="admin-chart-head">
-            <span className="admin-chart-title">فعالیت اخیر ادمین‌ها</span>
-            <Link href="/admin/audit" className="admin-btn sm">همه‌ی فعالیت‌ها</Link>
+            <span className="admin-chart-title">{tr("فعالیت اخیر ادمین‌ها", "Recent admin activity")}</span>
+            <Link href="/admin/audit" className="admin-btn sm">{tr("همه‌ی فعالیت‌ها", "All activity")}</Link>
           </div>
           {auditError && !audit ? (
             <EmptyState message={auditError} />
           ) : !audit ? (
-            <div className="admin-empty is-loading">در حال بارگذاری…</div>
+            <div className="admin-empty is-loading">{tr("در حال بارگذاری…", "Loading…")}</div>
           ) : audit.length === 0 ? (
-            <EmptyState message="هنوز فعالیتی ثبت نشده" />
+            <EmptyState message={tr("هنوز فعالیتی ثبت نشده", "No activity recorded yet")} />
           ) : (
             <div className="admin-table-wrap">
               <table className="admin-table">
-                <thead><tr><th>اقدام</th><th>هدف</th><th>توسط</th><th>زمان</th></tr></thead>
+                <thead><tr><th>{tr("اقدام", "Action")}</th><th>{tr("هدف", "Target")}</th><th>{tr("توسط", "By")}</th><th>{tr("زمان", "Time")}</th></tr></thead>
                 <tbody>
                   {audit.map((a) => (
                     <tr key={a.id}>

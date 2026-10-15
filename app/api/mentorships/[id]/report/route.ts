@@ -6,6 +6,7 @@ import { checkRateLimit } from "@/lib/rateLimit";
 import { isUniqueViolation } from "@/lib/mentorServer";
 import { clearedBeforeFor } from "@/lib/mentorChatHistory";
 import { sealReportMessage, verifyConversationMessages } from "@/lib/mentorConversationReport";
+import { tr } from "@/lib/i18n";
 
 type Ctx = { params: { id: string } };
 const REASON_MAX = 200;
@@ -25,22 +26,22 @@ export async function POST(req: Request, { params }: Ctx) {
 
   // همان سقف گزارش تکی (مشترک)
   if (!(await checkRateLimit(`mentor-report:${me}`, 10, 60 * 60 * 1000))) {
-    return NextResponse.json({ error: "تعداد گزارش‌ها زیاد بوده؛ کمی بعد دوباره تلاش کن" }, { status: 429 });
+    return NextResponse.json({ error: tr(tr("تعداد گزارش‌ها زیاد بوده؛ کمی بعد دوباره تلاش کن", "There were too many reports; try again shortly"), "There were too many reports; try again shortly") }, { status: 429 });
   }
 
   const parsed = await readJsonBody(req, 256 * 1024);
   if (!parsed.ok) return NextResponse.json({ error: parsed.error }, { status: parsed.status });
   const b = parsed.body || {};
-  if (typeof b.reason !== "string" || !b.reason.trim()) return badRequest("دلیل گزارش لازمه");
+  if (typeof b.reason !== "string" || !b.reason.trim()) return badRequest(tr(tr("دلیل گزارش لازمه", "A report reason is required"), "A report reason is required"));
   const reason = b.reason.trim().slice(0, REASON_MAX);
-  if (b.details !== undefined && b.details !== null && typeof b.details !== "string") return badRequest("توضیحات نامعتبره");
+  if (b.details !== undefined && b.details !== null && typeof b.details !== "string") return badRequest(tr(tr("توضیحات نامعتبره", "Invalid details"), "Invalid details"));
   const details = typeof b.details === "string" ? b.details.trim().slice(0, DETAILS_MAX) || null : null;
 
   const v = await verifyConversationMessages(m.id, b.messages, clearedBeforeFor(m, me));
   if (!v.ok) return NextResponse.json({ error: v.error, messageId: v.messageId }, { status: 400 });
 
   const counterpart = m.mentorId === me ? m.studentId : m.mentorId;
-  if (!v.messages.some((x) => x.senderId === counterpart)) return badRequest("حداقل یک پیام از طرف مقابل انتخاب کن");
+  if (!v.messages.some((x) => x.senderId === counterpart)) return badRequest(tr(tr("حداقل یک پیام از طرف مقابل انتخاب کن", "Select at least one message from the other party"), "Select at least one message from the other party"));
 
   try {
     const report = await prisma.$transaction(async (tx) => {
@@ -66,7 +67,7 @@ export async function POST(req: Request, { params }: Ctx) {
     });
     return NextResponse.json({ ok: true, report, messages: v.messages.length });
   } catch (e) {
-    if (isUniqueViolation(e)) return conflict("این گفت‌وگو را قبلا گزارش داده‌ای");
+    if (isUniqueViolation(e)) return conflict(tr(tr("این گفت‌وگو را قبلا گزارش داده‌ای", "You have already reported this conversation"), "You have already reported this conversation"));
     throw e;
   }
 }

@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useSyncExternalStore } from "react";
 import { getSetting, setSetting } from "./storage";
 
 // شخصی‌سازی چیدمان داشبورد — کاربر می‌تونه کارت‌های اختیاری (نه ماژول‌های
@@ -45,7 +45,7 @@ function loadDashboardPrefsOnce(): Promise<DashboardPrefs> {
   if (cachedDashboardPrefs) return Promise.resolve(cachedDashboardPrefs);
   if (!inFlightDashboardPrefs) {
     inFlightDashboardPrefs = getDashboardPrefs()
-      .then((p) => { cachedDashboardPrefs = p; return p; })
+      .then((p) => { cachedDashboardPrefs = p; emitPrefs(); return p; })
       .finally(() => { inFlightDashboardPrefs = null; });
   }
   return inFlightDashboardPrefs;
@@ -56,17 +56,23 @@ function loadDashboardPrefsOnce(): Promise<DashboardPrefs> {
 // باز دیگه بدون رفرش کامل صفحه بلافاصله می‌بینن.
 export function setCachedDashboardPrefs(prefs: DashboardPrefs) {
   cachedDashboardPrefs = prefs;
+  emitPrefs();
 }
 
+// useSyncExternalStore: موقع هیدریشن همیشه DEFAULT (همون که سرور رندر کرده) و بعدش مقدار کش،
+// تا کامپوننتی که دیرتر هیدریت می‌شه (بعد از پر شدن کش) خروجی متفاوت از HTML سرور نده.
+const prefsSubs = new Set<() => void>();
+function emitPrefs() { prefsSubs.forEach((fn) => fn()); }
+function subscribePrefs(fn: () => void) { prefsSubs.add(fn); return () => { prefsSubs.delete(fn); }; }
+const getPrefsSnapshot = () => cachedDashboardPrefs || DEFAULT_DASHBOARD_PREFS;
+const getPrefsServerSnapshot = () => DEFAULT_DASHBOARD_PREFS;
+
 export function useDashboardPrefs(): DashboardPrefs {
-  const [prefs, setPrefs] = useState<DashboardPrefs>(cachedDashboardPrefs || DEFAULT_DASHBOARD_PREFS);
+  const prefs = useSyncExternalStore(subscribePrefs, getPrefsSnapshot, getPrefsServerSnapshot);
   useEffect(() => {
-    if (!cachedDashboardPrefs) loadDashboardPrefsOnce().then(setPrefs);
-    function onUpdated() {
-      if (cachedDashboardPrefs) setPrefs(cachedDashboardPrefs);
-    }
-    window.addEventListener("dashboard-prefs-updated", onUpdated);
-    return () => window.removeEventListener("dashboard-prefs-updated", onUpdated);
+    if (!cachedDashboardPrefs) loadDashboardPrefsOnce().catch(() => {});
+    window.addEventListener("dashboard-prefs-updated", emitPrefs);
+    return () => window.removeEventListener("dashboard-prefs-updated", emitPrefs);
   }, []);
   return prefs;
 }

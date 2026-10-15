@@ -1,6 +1,7 @@
 "use client";
 
 import { Eye, EyeOff } from "lucide-react";
+import { tr } from "@/lib/i18n";
 
 /**
  * دکمه‌ی نمایش/مخفی‌کردن رمز.
@@ -20,7 +21,7 @@ export function PasswordVisibilityToggle({ visible, onToggle }: { visible: boole
       type="button"
       className="field-toggle-visibility-btn"
       tabIndex={-1}
-      aria-label={visible ? "مخفی‌کردن رمز عبور" : "نمایش رمز عبور"}
+      aria-label={visible ? tr("مخفی‌کردن رمز عبور", "Hide password") : tr("نمایش رمز عبور", "Show password")}
       aria-pressed={visible}
       onClick={onToggle}
     >

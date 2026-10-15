@@ -5,6 +5,7 @@ import { checkRateLimit } from "@/lib/rateLimit";
 import { prisma } from "@/lib/prisma";
 import { parseBroadcastInput, canCancelBroadcast } from "@/lib/broadcast";
 import { cancelBroadcast, createBroadcast, estimateRecipients, readBroadcasts, runBroadcast } from "@/lib/broadcastServer";
+import { tr } from "@/lib/i18n";
 
 // دسترسی: «content» (کلید موجود برای اطلاعیه‌ها). متن پیام هیچ‌وقت در AuditLog ذخیره نمی‌شه، فقط شناسه/مخاطب/کانال.
 
@@ -20,7 +21,7 @@ export async function POST(req: NextRequest) {
   const guard = await requireAdmin("content");
   if (!guard.ok) return guard.response;
   if (!(await checkRateLimit(`broadcast:${guard.userId}`, 10, 60 * 60 * 1000))) {
-    return NextResponse.json({ error: "تعداد ارسال در یک ساعت از سقف گذشت؛ کمی بعد دوباره امتحان کن" }, { status: 429 });
+    return NextResponse.json({ error: tr("تعداد ارسال در یک ساعت از سقف گذشت؛ کمی بعد دوباره امتحان کن", "Too many sends within an hour; try again shortly") }, { status: 429 });
   }
   const parsed = parseBroadcastInput(await req.json().catch(() => null));
   if (!parsed.ok) return NextResponse.json({ error: parsed.error }, { status: 400 });
@@ -44,9 +45,9 @@ export async function DELETE(req: NextRequest) {
   if (!guard.ok) return guard.response;
   const id = new URL(req.url).searchParams.get("id") || "";
   const rec = (await readBroadcasts()).find((b) => b.id === id);
-  if (!rec) return NextResponse.json({ error: "پیدا نشد" }, { status: 404 });
+  if (!rec) return NextResponse.json({ error: tr("پیدا نشد", "Not found") }, { status: 404 });
   if (!canCancelBroadcast(rec) || !(await cancelBroadcast(id))) {
-    return NextResponse.json({ error: "فقط پیام‌های زمان‌بندی‌شده قابل لغو هستند" }, { status: 409 });
+    return NextResponse.json({ error: tr("فقط پیام‌های زمان‌بندی‌شده قابل لغو هستند", "Only scheduled messages can be cancelled") }, { status: 409 });
   }
   await writeAuditLog(guard.userId, "broadcast.cancel", "Broadcast", id);
   return NextResponse.json({ ok: true });

@@ -1,3 +1,4 @@
+import { tr } from "@/lib/i18n";
 import { NextRequest, NextResponse } from "next/server";
 import { getServerSession } from "next-auth";
 import { getToken } from "next-auth/jwt";
@@ -43,14 +44,14 @@ export async function DELETE(req: NextRequest) {
 
   const { searchParams } = new URL(req.url);
   if (searchParams.get("others") === "1") {
-    if (!auth.sid) return NextResponse.json({ error: "نشست فعلی شناسایی نشد" }, { status: 400 });
+    if (!auth.sid) return NextResponse.json({ error: tr("نشست فعلی شناسایی نشد", "Current session could not be identified") }, { status: 400 });
     const count = await revokeOtherDeviceSessions(auth.userId, auth.sid);
     return NextResponse.json({ ok: true, revoked: count });
   }
 
   const id = searchParams.get("id");
-  if (!id) return NextResponse.json({ error: "شناسه‌ی نشست لازم است" }, { status: 400 });
+  if (!id) return NextResponse.json({ error: tr("شناسه‌ی نشست لازم است", "Session ID is required") }, { status: 400 });
   const ok = await revokeDeviceSession(auth.userId, id);
-  if (!ok) return NextResponse.json({ error: "این نشست پیدا نشد" }, { status: 404 });
+  if (!ok) return NextResponse.json({ error: tr("این نشست پیدا نشد", "This session was not found") }, { status: 404 });
   return NextResponse.json({ ok: true, revoked: 1 });
 }

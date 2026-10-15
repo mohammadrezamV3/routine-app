@@ -1,5 +1,6 @@
 import { NextResponse } from "next/server";
 import { logError } from "@/lib/errorLog";
+import { tr } from "@/lib/i18n";
 
 // منطق مشترک تبدیل ویس به متن — قبلا فقط داخل
 // app/api/routine/assistant/voice/route.ts بود؛ حالا پشتیبانی (تیکت) هم
@@ -16,13 +17,13 @@ export async function transcribeVoice(file: File, feature: string): Promise<SttR
   const sttUrl = process.env.ARVAN_AI_STT_URL;
   const apiKey = process.env.ARVAN_AI_STT_API_KEY || process.env.ARVAN_AI_API_KEY;
   if (!sttUrl || !apiKey) {
-    return { ok: false, status: 503, error: "تبدیل ویس به متن روی این سرور فعال نیست. فعلا پیامت را تایپ کن." };
+    return { ok: false, status: 503, error: tr("تبدیل ویس به متن روی این سرور فعال نیست. فعلا پیامت را تایپ کن.", "Voice to text is not enabled on this server. Type your message for now.") };
   }
-  if (file.size === 0) return { ok: false, status: 400, error: "چیزی ضبط نشد. دوباره امتحان کن." };
-  if (file.size > MAX_AUDIO_BYTES) return { ok: false, status: 413, error: "ویس خیلی طولانی است. کوتاه‌تر بگو." };
+  if (file.size === 0) return { ok: false, status: 400, error: tr("چیزی ضبط نشد. دوباره امتحان کن.", "Nothing was recorded. Try again.") };
+  if (file.size > MAX_AUDIO_BYTES) return { ok: false, status: 413, error: tr("ویس خیلی طولانی است. کوتاه‌تر بگو.", "The voice message is too long. Keep it shorter.") };
   const type = (file.type || "").toLowerCase();
   if (type && !ALLOWED_AUDIO_PREFIXES.some((p) => type.startsWith(p))) {
-    return { ok: false, status: 415, error: "قالب فایل صوتی پشتیبانی نمی‌شود." };
+    return { ok: false, status: 415, error: tr("قالب فایل صوتی پشتیبانی نمی‌شود.", "This audio format is not supported.") };
   }
 
   const upstream = new FormData();
@@ -47,18 +48,18 @@ export async function transcribeVoice(file: File, feature: string): Promise<SttR
   } catch (e: any) {
     const timedOut = e?.name === "TimeoutError" || e?.name === "AbortError";
     logError("ai-gateway", `تبدیل ویس شکست خورد: ${e?.message || e}`, { context: { feature } });
-    return { ok: false, status: 503, error: timedOut ? "تبدیل ویس طول کشید. دوباره بفرست." : "به سرویس تبدیل ویس وصل نشدم." };
+    return { ok: false, status: 503, error: timedOut ? tr("تبدیل ویس طول کشید. دوباره بفرست.", "Voice conversion took too long. Send it again.") : tr("به سرویس تبدیل ویس وصل نشدم.", "Could not reach the voice conversion service.") };
   }
 
   if (!res.ok) {
     const body = await res.text().catch(() => "");
     logError("ai-gateway", `سرویس تبدیل ویس ${res.status} داد: ${body.slice(0, 200)}`, { context: { feature } });
-    return { ok: false, status: 503, error: "تبدیل ویس انجام نشد. دوباره امتحان کن." };
+    return { ok: false, status: 503, error: tr("تبدیل ویس انجام نشد. دوباره امتحان کن.", "Voice conversion failed. Try again.") };
   }
 
   const data = await res.json().catch(() => null);
   const text = typeof data?.text === "string" ? data.text.trim() : "";
-  if (!text) return { ok: false, status: 422, error: "چیزی از ویس فهمیده نشد. واضح‌تر بگو." };
+  if (!text) return { ok: false, status: 422, error: tr("چیزی از ویس فهمیده نشد. واضح‌تر بگو.", "Could not make out anything. Speak more clearly.") };
   return { ok: true, text: text.slice(0, 500) };
 }
 
@@ -68,11 +69,11 @@ export async function readAudioFromRequest(req: Request): Promise<File | NextRes
   try {
     form = await req.formData();
   } catch {
-    return NextResponse.json({ error: "فایل صوتی خوانده نشد." }, { status: 400 });
+    return NextResponse.json({ error: tr("فایل صوتی خوانده نشد.", "The audio file could not be read.") }, { status: 400 });
   }
   const file = form.get("audio");
   if (!(file instanceof File)) {
-    return NextResponse.json({ error: "فایل صوتی فرستاده نشد." }, { status: 400 });
+    return NextResponse.json({ error: tr("فایل صوتی فرستاده نشد.", "No audio file was sent.") }, { status: 400 });
   }
   return file;
 }

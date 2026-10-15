@@ -6,6 +6,7 @@ import { readJsonBody } from "@/lib/validate";
 import { checkRateLimit } from "@/lib/rateLimit";
 import { recomputeMentorRating, isUniqueViolation } from "@/lib/mentorServer";
 import { displayName } from "@/lib/inAppNotify";
+import { tr } from "@/lib/i18n";
 
 const REVIEW_BODY_MAX = 1000;
 
@@ -21,9 +22,9 @@ async function parseReview(req: Request): Promise<{ ok: true; rating: number; bo
   const b = parsed.body || {};
   const rating = b.rating;
   if (typeof rating !== "number" || !Number.isInteger(rating) || rating < 1 || rating > 5) {
-    return { ok: false, response: badRequest("امتیاز باید عددی بین 1 تا 5 باشد") };
+    return { ok: false, response: badRequest(tr("امتیاز باید عددی بین 1 تا 5 باشد", "The rating must be a number between 1 and 5")) };
   }
-  if (b.body !== undefined && b.body !== null && typeof b.body !== "string") return { ok: false, response: badRequest("متن نظر نامعتبره") };
+  if (b.body !== undefined && b.body !== null && typeof b.body !== "string") return { ok: false, response: badRequest(tr("متن نظر نامعتبره", "Invalid review text")) };
   const body = typeof b.body === "string" ? b.body.trim().slice(0, REVIEW_BODY_MAX) || null : null;
   return { ok: true, rating, body };
 }
@@ -50,7 +51,7 @@ export async function POST(req: Request, { params }: Ctx) {
   if (!validId(params.mentorId) || params.mentorId === me) return notFound();
 
   if (!(await checkRateLimit(`mentor-review:${me}`, 10, 60 * 60 * 1000))) {
-    return NextResponse.json({ error: "درخواست‌ها زیاد بوده؛ کمی بعد دوباره تلاش کن" }, { status: 429 });
+    return NextResponse.json({ error: tr("درخواست‌ها زیاد بوده؛ کمی بعد دوباره تلاش کن", "There were too many requests; try again shortly") }, { status: 429 });
   }
 
   const input = await parseReview(req);
@@ -60,7 +61,7 @@ export async function POST(req: Request, { params }: Ctx) {
     where: { mentorId: params.mentorId, studentId: me, startedAt: { not: null }, status: { in: ["ACTIVE", "ENDED"] } },
     select: { id: true },
   });
-  if (!mentorship) return forbidden("فقط شاگردهای این مربی می‌تونن نظر بدن");
+  if (!mentorship) return forbidden(tr("فقط شاگردهای این مربی می‌تونن نظر بدن", "Only this mentor's students can leave a review"));
 
   let review;
   try {
@@ -69,7 +70,7 @@ export async function POST(req: Request, { params }: Ctx) {
       select: REVIEW_SELECT,
     });
   } catch (e) {
-    if (isUniqueViolation(e)) return conflict("قبلا برای این مربی نظر ثبت کردی");
+    if (isUniqueViolation(e)) return conflict(tr("قبلا برای این مربی نظر ثبت کردی", "You've already left a review for this mentor"));
     throw e;
   }
   await recomputeMentorRating(params.mentorId);

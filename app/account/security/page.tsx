@@ -9,6 +9,7 @@ import { getAccount, invalidateAccountCache, AccountData } from "@/lib/accountCa
 import { formatTehranDateTime } from "@/lib/tehranTime";
 import { GoldenName } from "@/components/GoldenName";
 import { Spinner } from "@/components/Spinner";
+import { tr } from "@/lib/i18n";
 
 type BlockedUser = { id: string; name: string | null; username: string | null; avatarUrl: string | null; golden?: boolean; staff?: boolean };
 type DeviceSession = {
@@ -16,24 +17,24 @@ type DeviceSession = {
   createdAt: string; lastSeenAt: string; current: boolean;
 };
 
-const PROVIDER_FA: Record<string, string> = {
-  credentials: "ورود با رمز عبور",
-  google: "ورود با گوگل",
-  "email-otp": "ورود با کد ایمیل",
-  "sms-2fa": "ورود دومرحله‌ای",
-};
+const providerLabels = (): Record<string, string> => ({
+  credentials: tr(tr("ورود با رمز عبور", "Password login"), "Password login"),
+  google: tr(tr("ورود با گوگل", "Google login"), "Google login"),
+  "email-otp": tr(tr("ورود با کد ایمیل", "Email code login"), "Email code login"),
+  "sms-2fa": tr(tr("ورود دومرحله‌ای", "Two-step login"), "Two-step login"),
+});
 
 // یه حدس خیلی سبک از روی User-Agent — فقط برای نمایش خوانا، نه parsing دقیق
 function guessDevice(ua: string | null): string {
-  if (!ua) return "دستگاه نامشخص";
+  if (!ua) return tr("دستگاه نامشخص", "Unknown device");
   const isMobile = /Android|iPhone|iPad/i.test(ua);
-  let browser = "مرورگر";
+  let browser = tr("مرورگر", "Browser");
   if (/Edg\//i.test(ua)) browser = "Edge";
   else if (/Chrome\//i.test(ua) && !/Chromium/i.test(ua)) browser = "Chrome";
   else if (/Firefox\//i.test(ua)) browser = "Firefox";
   else if (/Safari\//i.test(ua) && !/Chrome/i.test(ua)) browser = "Safari";
-  const os = /Android/i.test(ua) ? "اندروید" : /iPhone|iPad/i.test(ua) ? "iOS" : /Windows/i.test(ua) ? "ویندوز" : /Mac OS/i.test(ua) ? "مک" : /Linux/i.test(ua) ? "لینوکس" : "";
-  return `${browser}${os ? " · " + os : ""}${isMobile ? " · موبایل" : ""}`;
+  const os = /Android/i.test(ua) ? tr("اندروید", "Android") : /iPhone|iPad/i.test(ua) ? "iOS" : /Windows/i.test(ua) ? tr("ویندوز", "Windows") : /Mac OS/i.test(ua) ? tr("مک", "Mac") : /Linux/i.test(ua) ? tr("لینوکس", "Linux") : "";
+  return `${browser}${os ? " · " + os : ""}${isMobile ? tr(" · موبایل", " · Mobile") : ""}`;
 }
 
 // تاریخ/ساعت با ارقام **انگلیسی** — `toLocaleString("fa-IR")` ارقام فارسی
@@ -109,7 +110,7 @@ export default function SecurityPage() {
     setSessionError(null);
     try {
       const res = await fetch(`/api/account/sessions?id=${encodeURIComponent(id)}`, { method: "DELETE" });
-      if (!res.ok) { setSessionError("بیرون‌انداختن این دستگاه ناموفق بود"); return; }
+      if (!res.ok) { setSessionError(tr("بیرون‌انداختن این دستگاه ناموفق بود", "Could not sign this device out")); return; }
       setSessions((prev) => prev && prev.filter((s) => s.id !== id));
     } finally {
       setSessionBusy(null);
@@ -121,7 +122,7 @@ export default function SecurityPage() {
     setSessionError(null);
     try {
       const res = await fetch("/api/account/sessions?others=1", { method: "DELETE" });
-      if (!res.ok) { setSessionError("بیرون‌انداختن دستگاه‌های دیگر ناموفق بود"); return; }
+      if (!res.ok) { setSessionError(tr("بیرون‌انداختن دستگاه‌های دیگر ناموفق بود", "Could not sign the other devices out")); return; }
       setSessions((prev) => prev && prev.filter((s) => s.current));
     } finally {
       setSessionBusy(null);
@@ -139,11 +140,11 @@ export default function SecurityPage() {
         body: JSON.stringify({ enabled: next }),
       });
       const data = await res.json().catch(() => ({}));
-      if (!res.ok) { setTwoFactorError(data.error || "خطایی پیش اومد"); return; }
+      if (!res.ok) { setTwoFactorError(data.error || tr("خطایی پیش اومد", "Something went wrong")); return; }
       setTwoFactor(next);
       invalidateAccountCache();
     } catch {
-      setTwoFactorError("مشکلی در اتصال به سرور پیش اومد");
+      setTwoFactorError(tr("مشکلی در اتصال به سرور پیش اومد", "Could not reach the server"));
     } finally {
       setTwoFactorSaving(false);
     }
@@ -189,7 +190,7 @@ export default function SecurityPage() {
 
   async function changePassword() {
     setPwError(null);
-    if (newPassword !== confirmPassword) { setPwError("رمز جدید با تکرارش یکی نیست"); return; }
+    if (newPassword !== confirmPassword) { setPwError(tr("رمز جدید با تکرارش یکی نیست", "The new password and its confirmation do not match")); return; }
     setPwSaving(true);
     try {
       // کلید رمزگذاری سرتاسری با رمز تازه دوباره بسته‌بندی می‌شود (روی دستگاه؛ lib/e2ee/client.ts)
@@ -200,13 +201,13 @@ export default function SecurityPage() {
         body: JSON.stringify({ currentPassword, newPassword }),
       });
       const data = await res.json().catch(() => ({}));
-      if (!res.ok) { setPwError(data.error || "خطایی پیش اومد"); return; }
+      if (!res.ok) { setPwError(data.error || tr("خطایی پیش اومد", "Something went wrong")); return; }
       if (commitE2EE) await commitE2EE().catch(() => {});
       setCurrentPassword(""); setNewPassword(""); setConfirmPassword("");
       setPwSuccess(true);
       setTimeout(() => setPwSuccess(false), 2500);
     } catch {
-      setPwError("مشکلی در اتصال به سرور پیش اومد");
+      setPwError(tr("مشکلی در اتصال به سرور پیش اومد", "Could not reach the server"));
     } finally {
       setPwSaving(false);
     }
@@ -219,13 +220,13 @@ export default function SecurityPage() {
     // توضیح‌ها یک‌خطی — قبلا بین چهار بخش فضای خالی زیادی می‌افتاد.
     <section className="acc-compact">
       {/* تغییر یوزرنیم طبق درخواست کاربر فقط از «پروفایل» انجام می‌شه، نه این‌جا */}
-      <AccountPageHead title="امنیت" hint="رمز عبور، ورود دومرحله‌ای، دستگاه‌های فعال و حریم خصوصی" />
+      <AccountPageHead title={tr("امنیت", "Security")} hint={tr("رمز عبور، ورود دومرحله‌ای، دستگاه‌های فعال و حریم خصوصی", "Password, two-step login, active devices and privacy")} />
 
-      <AccountBlock icon={<KeyRound size={15} />} title="تغییر رمز عبور" index={0}>
+      <AccountBlock icon={<KeyRound size={15} />} title={tr("تغییر رمز عبور", "Change password")} index={0}>
         <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
-          <input type="password" placeholder="رمز عبور فعلی" value={currentPassword} onChange={(e) => setCurrentPassword(e.target.value)} className="wsearch-newform-name" dir="ltr" />
-          <input type="password" placeholder="رمز عبور جدید" value={newPassword} onChange={(e) => setNewPassword(e.target.value)} className="wsearch-newform-name" dir="ltr" />
-          <input type="password" placeholder="تکرار رمز عبور جدید" value={confirmPassword} onChange={(e) => setConfirmPassword(e.target.value)} className="wsearch-newform-name" dir="ltr" />
+          <input type="password" placeholder={tr("رمز عبور فعلی", "Current password")} value={currentPassword} onChange={(e) => setCurrentPassword(e.target.value)} className="wsearch-newform-name" dir="ltr" />
+          <input type="password" placeholder={tr("رمز عبور جدید", "New password")} value={newPassword} onChange={(e) => setNewPassword(e.target.value)} className="wsearch-newform-name" dir="ltr" />
+          <input type="password" placeholder={tr("تکرار رمز عبور جدید", "Repeat the new password")} value={confirmPassword} onChange={(e) => setConfirmPassword(e.target.value)} className="wsearch-newform-name" dir="ltr" />
           {pwError && <div className="field-error-msg" style={{ display: "block" }}>{pwError}</div>}
           {/* مثل دکمه‌ی ذخیره‌ی بقیه‌ی پنل: سمت چپ، موقع ذخیره فقط دایره‌ی
               لودینگ، بعدش تیک — بدون هیچ متن «ذخیره شد». */}
@@ -234,36 +235,36 @@ export default function SecurityPage() {
             onClick={changePassword}
             disabled={pwSaving || !currentPassword || !newPassword || !confirmPassword}
             style={{ alignSelf: "flex-end" }}
-            aria-label="ذخیره رمز جدید"
+            aria-label={tr("ذخیره رمز جدید", "Save new password")}
           >
             {pwSaving ? <Spinner size={15} />
               : pwSuccess ? <Check size={16} />
               : pwError ? <AlertTriangle size={16} />
-              : "ذخیره رمز جدید"}
+              : tr("ذخیره رمز جدید", "Save new password")}
           </button>
         </div>
       </AccountBlock>
 
-      <AccountBlock icon={<ShieldCheck size={15} />} title="ورود دومرحله‌ای" index={1}>
+      <AccountBlock icon={<ShieldCheck size={15} />} title={tr("ورود دومرحله‌ای", "Two-step login")} index={1}>
         <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", gap: 10 }}>
           <div style={{ minWidth: 0 }}>
-            <div style={{ fontSize: 13, fontWeight: 600, color: "var(--text)" }}>تایید ورود با پیامک</div>
+            <div style={{ fontSize: 13, fontWeight: 600, color: "var(--text)" }}>{tr("تایید ورود با پیامک", "Confirm login by SMS")}</div>
             <div className="item-line" style={{ marginTop: 2 }}>
-              بعد از رمز درست، یک کد به شماره‌ی حسابت پیامک می‌شه.
+              {tr("بعد از رمز درست، یک کد به شماره‌ی حسابت پیامک می‌شه.", "After the correct password, a code is sent by SMS to your account number.")}
             </div>
           </div>
           {twoFactor !== null && (
-            <ToggleSwitch checked={twoFactor} onChange={toggleTwoFactor} label="ورود دومرحله‌ای" />
+            <ToggleSwitch checked={twoFactor} onChange={toggleTwoFactor} label={tr("ورود دومرحله‌ای", "Two-step login")} />
           )}
         </div>
         {twoFactorError && <div className="field-error-msg" style={{ display: "block", marginTop: 8 }}>{twoFactorError}</div>}
       </AccountBlock>
 
-      <AccountBlock icon={<MonitorSmartphone size={15} />} title="دستگاه‌های فعال" index={2}>
+      <AccountBlock icon={<MonitorSmartphone size={15} />} title={tr("دستگاه‌های فعال", "Active devices")} index={2}>
         {!sessions ? (
-          <div className="item-line is-loading">در حال بارگذاری…</div>
+          <div className="item-line is-loading">{tr("در حال بارگذاری…", "Loading…")}</div>
         ) : sessions.length === 0 ? (
-          <div className="item-line empty">نشست فعالی پیدا نشد.</div>
+          <div className="item-line empty">{tr("نشست فعالی پیدا نشد.", "No active sessions found.")}</div>
         ) : (
           <>
           <div className="acc-scroll-box">
@@ -272,16 +273,16 @@ export default function SecurityPage() {
                 <div style={{ minWidth: 0 }}>
                   <div style={{ fontSize: 12.5, color: "var(--text)", fontWeight: 600 }}>
                     {guessDevice(s.userAgent)}
-                    {s.current && <span style={{ color: "var(--accent)", fontWeight: 700 }}> · همین دستگاه</span>}
+                    {s.current && <span style={{ color: "var(--accent)", fontWeight: 700 }}>{tr(" · همین دستگاه", " · This device")}</span>}
                   </div>
                   <div className="item-line" style={{ marginTop: 2 }}>
-                    {PROVIDER_FA[s.provider || ""] || "ورود"} · آخرین فعالیت{" "}
+                    {providerLabels()[s.provider || ""] || tr("ورود", "Login")} · {tr("آخرین فعالیت", "Last active")}{" "}
                     <span className="mono" dir="ltr">{formatDateTimeEn(s.lastSeenAt)}</span>
                   </div>
                 </div>
                 {!s.current && (
                   <button className="account-outline-btn muted" onClick={() => revokeSession(s.id)} disabled={sessionBusy === s.id}>
-                    {sessionBusy === s.id ? "…" : "بیرون انداختن"}
+                    {sessionBusy === s.id ? "…" : tr("بیرون انداختن", "Sign out")}
                   </button>
                 )}
               </div>
@@ -289,7 +290,7 @@ export default function SecurityPage() {
           </div>
           {otherSessionCount > 0 && (
             <button className="account-outline-btn" onClick={revokeOthers} disabled={sessionBusy === "others"} style={{ marginTop: 10, display: "block", marginInlineStart: "auto" }}>
-              {sessionBusy === "others" ? "در حال انجام…" : `خروج از دستگاه‌های دیگر (${otherSessionCount})`}
+              {sessionBusy === "others" ? tr("در حال انجام…", "Working…") : tr(`خروج از دستگاه‌های دیگر (${otherSessionCount})`, `Sign out other devices (${otherSessionCount})`)}
             </button>
           )}
           </>
@@ -297,42 +298,42 @@ export default function SecurityPage() {
         {sessionError && <div className="field-error-msg" style={{ display: "block", marginTop: 8 }}>{sessionError}</div>}
       </AccountBlock>
 
-      <AccountBlock icon={<Lock size={15} />} title="حریم خصوصی" index={3}>
+      <AccountBlock icon={<Lock size={15} />} title={tr("حریم خصوصی", "Privacy")} index={3}>
         <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", gap: 10 }}>
           <div style={{ minWidth: 0 }}>
-            <div style={{ fontSize: 13, fontWeight: 600, color: "var(--text)" }}>قابل‌جست‌وجو بودن با یوزرنیم</div>
-            <div className="item-line" style={{ marginTop: 2 }}>خاموش یعنی توی جست‌وجوی دوستان دیده نمی‌شی</div>
+            <div style={{ fontSize: 13, fontWeight: 600, color: "var(--text)" }}>{tr("قابل‌جست‌وجو بودن با یوزرنیم", "Discoverable by username")}</div>
+            <div className="item-line" style={{ marginTop: 2 }}>{tr("خاموش یعنی توی جست‌وجوی دوستان دیده نمی‌شی", "When off, you do not appear in friend search")}</div>
           </div>
           {discoverable !== null && (
-            <ToggleSwitch checked={discoverable} onChange={toggleDiscoverable} label="قابل‌جست‌وجو بودن" />
+            <ToggleSwitch checked={discoverable} onChange={toggleDiscoverable} label={tr("قابل‌جست‌وجو بودن", "Discoverable")} />
           )}
         </div>
 
         <div style={{ marginTop: 14, paddingTop: 12, borderTop: "1px solid var(--line)", display: "flex", alignItems: "center", justifyContent: "space-between", gap: 10 }}>
           <div style={{ minWidth: 0 }}>
-            <div style={{ fontSize: 13, fontWeight: 600, color: "var(--text)" }}>اشتراک‌گذاری شماره با دوستان</div>
+            <div style={{ fontSize: 13, fontWeight: 600, color: "var(--text)" }}>{tr("اشتراک‌گذاری شماره با دوستان", "Share phone number with friends")}</div>
             <div className="item-line" style={{ marginTop: 2 }}>
-              {hasPhone ? "روشن یعنی شماره‌ات توی پاپ‌آپ پروفایل برای دوستانت دیده می‌شه" : "اول باید شماره‌ای روی حسابت ثبت باشه"}
+              {hasPhone ? tr("روشن یعنی شماره‌ات توی پاپ‌آپ پروفایل برای دوستانت دیده می‌شه", "When on, your number is visible to friends in your profile popup") : tr("اول باید شماره‌ای روی حسابت ثبت باشه", "Add a phone number to your account first")}
             </div>
           </div>
           {sharePhone !== null && (
-            <ToggleSwitch checked={sharePhone} onChange={toggleSharePhone} disabled={!hasPhone} label="اشتراک‌گذاری شماره" />
+            <ToggleSwitch checked={sharePhone} onChange={toggleSharePhone} disabled={!hasPhone} label={tr("اشتراک‌گذاری شماره", "Share phone number")} />
           )}
         </div>
 
         <div style={{ marginTop: 14, paddingTop: 12, borderTop: "1px solid var(--line)" }}>
           <div style={{ display: "flex", alignItems: "center", gap: 6, fontSize: 13, fontWeight: 600, color: "var(--text)" }}>
-            <UserX size={15} /> افراد بلاک‌شده
+            <UserX size={15} /> {tr("افراد بلاک‌شده", "Blocked people")}
           </div>
           {!blocked?.length ? (
             <div className="item-line" style={{ marginTop: 6 }}>
-              {blocked === null ? "در حال بارگذاری…" : "کسی رو بلاک نکردی"}
+              {blocked === null ? tr("در حال بارگذاری…", "Loading…") : tr("کسی رو بلاک نکردی", "You have not blocked anyone")}
             </div>
           ) : (
             <div style={{ display: "flex", flexDirection: "column", gap: 10, marginTop: 10 }}>
               {blocked.map((u) => (
                 <div key={u.id} style={{ display: "flex", alignItems: "center", justifyContent: "space-between", gap: 10 }}>
-                  <span style={{ fontSize: 12.5, color: "var(--text)" }}><GoldenName golden={u.golden} staff={u.staff}>{u.name || u.username || "کاربر"}</GoldenName></span>
+                  <span style={{ fontSize: 12.5, color: "var(--text)" }}><GoldenName golden={u.golden} staff={u.staff}>{u.name || u.username || tr("کاربر", "User")}</GoldenName></span>
                   <button
                     type="button"
                     className="account-outline-btn"
@@ -340,7 +341,7 @@ export default function SecurityPage() {
                     onClick={() => unblock(u.id)}
                     disabled={unblocking === u.id}
                   >
-                    آنبلاک
+                    {tr("آنبلاک", "Unblock")}
                   </button>
                 </div>
               ))}

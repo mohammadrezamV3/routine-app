@@ -1,3 +1,4 @@
+import { tr } from "@/lib/i18n";
 import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 import { requireMentorsUser, badRequest } from "@/lib/mentorGuard";
@@ -23,7 +24,7 @@ export async function GET(req: NextRequest) {
   let before: Date | null = null;
   if (beforeRaw) {
     before = new Date(beforeRaw);
-    if (Number.isNaN(before.getTime())) return badRequest("پارامتر before نامعتبره");
+    if (Number.isNaN(before.getTime())) return badRequest(tr("پارامتر before نامعتبره", "The before parameter is invalid"));
   }
 
   const [rows, unread] = await Promise.all([
@@ -55,8 +56,8 @@ export async function PATCH(req: Request) {
     void publishToUser(me, { type: "notification.read", keys: ["notifications"] });
     return NextResponse.json({ ok: true });
   }
-  if (!Array.isArray(b.ids) || b.ids.length === 0) return badRequest("ids یا all لازمه");
-  if (b.ids.length > MAX_IDS) return badRequest(`حداکثر ${MAX_IDS} اعلان در هر درخواست`);
+  if (!Array.isArray(b.ids) || b.ids.length === 0) return badRequest(tr("ids یا all لازمه", "ids or all is required"));
+  if (b.ids.length > MAX_IDS) return badRequest(tr(`حداکثر ${MAX_IDS} اعلان در هر درخواست`, `Up to ${MAX_IDS} notifications per request`));
   const ids = b.ids.filter((x: unknown): x is string => typeof x === "string" && x.length > 0 && x.length <= 64);
   if (ids.length > 0) {
     // userId در where: id اعلان کس دیگه بی‌اثر می‌مونه

@@ -1,0 +1,208 @@
+/* ============================================================
+   سیستم حرکت (motion foundation) — فقط transform/opacity
+   ============================================================
+   قواعد:
+   - فقط opacity و transform (از طریق ویژگی‌های جدا translate/scale تا با
+     transform خود عنصر، مثلا مرکز-کردن مودال، جمع بشن و جایگزینش نشن).
+   - هر انیمیشن ورودی fill-mode:backwards داره: حالت پایانی همون استایل
+     پایه‌ست، پس اگه انیمیشن اجرا نشه (یا JS نباشه) محتوا هیچ‌وقت نامرئی
+     نمی‌مونه.
+   - reduced-motion: همه‌ی ابزارهای m-* خاموش. دستگاه ضعیف (data-perf-weak):
+     فقط opacity، بدون جابه‌جایی و بدون stagger. دستگاه لمسی (data-perf=low):
+     مدت کوتاه‌تر و جابه‌جایی کمتر.
+   - جهت: آفست‌های افقی با --m-dir (RTL=1، LTR=-1) برمی‌گردن.
+   - بک‌گراند/رنگ/چیدمان هیچ‌جا عوض نمی‌شه.
+   ============================================================ */
+
+:root{
+  /* مدت‌ها */
+  --m-dur-1:120ms;   /* بازخورد لمس/هاور */
+  --m-dur-2:200ms;   /* تغییر وضعیت کوچک */
+  --m-dur-3:300ms;   /* ورود المان */
+  --m-dur-4:420ms;   /* ورود صفحه/بخش */
+  --m-dur-5:700ms;   /* نوار/حلقه */
+  /* منحنی‌ها */
+  --m-ease-out:cubic-bezier(.22,1,.36,1);
+  --m-ease-io:cubic-bezier(.4,0,.2,1);
+  /* فنر شبیه iOS: بدون پشتیبانی از linear() به یک cubic-bezier کم‌پرش برمی‌گرده */
+  --m-ease-spring:cubic-bezier(.34,1.32,.5,1);
+  /* آفست‌ها */
+  --m-rise:10px;
+  --m-x:16px;
+  --m-pop-scale:.96;
+  --m-step:42ms;     /* فاصله‌ی stagger؛ سقف 8 قدم */
+  --m-dir:1;
+}
+@supports (transition-timing-function:linear(0, 1)){
+  :root{
+    --m-ease-spring:linear(0, .16 4%, .46 9%, .74 15%, .92 21%, 1.026 28%, 1.05 34%, 1.038 41%, 1.018 50%, 1.004 62%, .999 78%, 1);
+  }
+}
+html[dir="ltr"]{ --m-dir:-1; }
+
+/* دستگاه لمسی: کوتاه‌تر و کم‌جابه‌جایی */
+html[data-perf="low"]{
+  --m-dur-3:220ms; --m-dur-4:300ms; --m-dur-5:480ms;
+  --m-rise:6px; --m-x:10px; --m-step:28ms;
+}
+/* دستگاه ضعیف: فقط محو/ظاهرشدن، بدون حرکت و بدون stagger */
+html[data-perf-weak]{
+  --m-dur-3:160ms; --m-dur-4:200ms; --m-dur-5:1ms;
+  --m-rise:0px; --m-x:0px; --m-pop-scale:1; --m-step:0ms;
+}
+
+/* ── keyframe ها (حالت پایانی = استایل پایه) ─────────────────────────── */
+@keyframes m-fade{ from{ opacity:0; } }
+@keyframes m-rise{ from{ opacity:0; translate:0 var(--m-rise); } }
+@keyframes m-rise-soft{ from{ opacity:0; translate:0 calc(var(--m-rise) * .6); } }
+@keyframes m-pop{ from{ opacity:0; scale:var(--m-pop-scale); } }
+@keyframes m-slide-x{ from{ opacity:0; translate:calc(var(--m-x) * var(--m-dir)) 0; } }
+@keyframes m-bar{ from{ clip-path:inset(0 0 0 100%); } to{ clip-path:inset(0); } }
+@keyframes m-bar-ltr{ from{ clip-path:inset(0 100% 0 0); } to{ clip-path:inset(0); } }
+@keyframes m-grow-y{ from{ transform:scaleY(0); } }
+@keyframes m-draw{ from{ stroke-dashoffset:var(--m-len, 1); } to{ stroke-dashoffset:0; } }
+
+/* ── ابزارهای عمومی ─────────────────────────────────────────────────── */
+.m-fade-in{ animation:m-fade var(--m-dur-3) var(--m-ease-out) backwards; }
+.m-rise{
+  animation:m-rise var(--m-dur-4) var(--m-ease-out) backwards;
+  animation-delay:calc(min(var(--i, 0), 8) * var(--m-step));
+}
+.m-rise-soft{
+  animation:m-rise-soft var(--m-dur-3) var(--m-ease-out) backwards;
+  animation-delay:calc(min(var(--i, 0), 8) * var(--m-step));
+}
+.m-pop{
+  animation:m-pop var(--m-dur-3) var(--m-ease-spring) backwards;
+  transform-origin:var(--m-origin, 50% 50%);
+}
+.m-slide-in{ animation:m-slide-x var(--m-dur-4) var(--m-ease-out) backwards; }
+/* فرزندهای پشت‌سرهم: ایندکس از موقعیت (سقف 8) */
+.m-stagger > *{
+  animation:m-rise var(--m-dur-4) var(--m-ease-out) backwards;
+  animation-delay:calc(min(var(--i, 0), 8) * var(--m-step));
+}
+.m-stagger > :nth-child(1){ --i:0; }
+.m-stagger > :nth-child(2){ --i:1; }
+.m-stagger > :nth-child(3){ --i:2; }
+.m-stagger > :nth-child(4){ --i:3; }
+.m-stagger > :nth-child(5){ --i:4; }
+.m-stagger > :nth-child(6){ --i:5; }
+.m-stagger > :nth-child(7){ --i:6; }
+.m-stagger > :nth-child(8){ --i:7; }
+.m-stagger > :nth-child(n+9){ --i:8; }
+/* نوار پیشرفت: افشای یک‌طرفه با clip-path (بدون تغییر عرض/چیدمان) */
+.m-bar{ animation:m-bar var(--m-dur-5) var(--m-ease-out) backwards; animation-delay:calc(min(var(--i, 0), 8) * var(--m-step)); }
+html[dir="ltr"] .m-bar{ animation-name:m-bar-ltr; }
+/* ستون نمودار: رشد از خط پایه */
+.m-grow{ transform-origin:50% 100%; animation:m-grow-y var(--m-dur-5) var(--m-ease-out) backwards; animation-delay:calc(min(var(--i, 0), 8) * var(--m-step)); }
+/* مسیر SVG (خط نمودار): رسم از صفر؛ --m-len اندازه‌ی pathLength=1 */
+.m-draw{ stroke-dasharray:var(--m-len, 1); animation:m-draw var(--m-dur-5) var(--m-ease-out) backwards; }
+
+/* اسکلت -> محتوا: محتوای تازه‌رسیده نرم ظاهر می‌شه (به‌جای پرش) */
+.m-swap{ animation:m-fade var(--m-dur-3) var(--m-ease-out) backwards; }
+
+/* ── ورود عناصری که بعد از هیدریشن وارد DOM می‌شن ─────────────────────────
+   components/MotionRuntime.tsx روی گره‌های تازه‌اضافه‌شده data-m-in می‌ذاره
+   (هیچ‌وقت روی HTML سروری/اولین رندر، پس LCP و اولین پینت دست‌نخورده‌ن). */
+[data-m-in="rise"]{ animation:m-rise var(--m-dur-3) var(--m-ease-out) backwards; animation-delay:calc(min(var(--i, 0), 8) * var(--m-step)); }
+[data-m-in="fade"]{ animation:m-fade var(--m-dur-3) var(--m-ease-out) backwards; }
+[data-m-in="pop"]{ animation:m-pop var(--m-dur-3) var(--m-ease-spring) backwards; }
+
+/* ── انتقال صفحه (app/template.tsx) ─────────────────────────────────────
+   قبلا wrapper کل صفحه فقط opacity می‌گرفت. حالا فرزندهای سطح اول صفحه
+   (بخش‌ها) با stagger کوتاه fade+rise می‌شن. translate (نه transform) تا با
+   transform خود المان جمع بشه؛ و فقط بعد از اولین ناوبری داخلی (همون شرط
+   قبلی، پس لود اول بدون تاخیر LCP). wrapper خودش دیگه انیمیشن نداره. */
+html[data-navigated] .page-enter{ animation:none; }
+html[data-navigated] .page-enter > :not(.page-loader){
+  animation:m-rise var(--m-dur-4) var(--m-ease-out) backwards;
+  animation-delay:calc(min(var(--i, 0), 6) * var(--m-step));
+}
+html[data-navigated] .page-enter > :nth-child(1){ --i:0; }
+html[data-navigated] .page-enter > :nth-child(2){ --i:1; }
+html[data-navigated] .page-enter > :nth-child(3){ --i:2; }
+html[data-navigated] .page-enter > :nth-child(4){ --i:3; }
+html[data-navigated] .page-enter > :nth-child(5){ --i:4; }
+html[data-navigated] .page-enter > :nth-child(n+6){ --i:5; }
+/* عنصر ثابت/چسبان سطح اول (دکمه‌ی شناور، مودال) فقط fade می‌شه، جابه‌جا نمی‌شه */
+html[data-navigated] .page-enter > [style*="position: fixed"],
+html[data-navigated] .page-enter > [style*="position:fixed"]{ animation-name:m-fade; }
+
+/* ── ورود حالت‌های ناگهانی (فقط عناصری که هیچ‌وقت از سرور رندر نمی‌شن) ───── */
+.module-gate{ animation:m-fade var(--m-dur-4) var(--m-ease-out) backwards; }
+.module-gate-overlay > *{ animation:m-rise var(--m-dur-4) var(--m-ease-out) backwards; }
+.module-gate-overlay > :nth-child(2){ animation-delay:var(--m-step); }
+.module-gate-overlay > :nth-child(3){ animation-delay:calc(var(--m-step) * 2); }
+.module-gate-overlay > :nth-child(n+4){ animation-delay:calc(var(--m-step) * 3); }
+.trade-chat-report-sheet{ animation:m-rise-soft var(--m-dur-3) var(--m-ease-out) backwards; }
+.calorie-unit-dropdown{ animation:m-pop var(--m-dur-2) var(--m-ease-out) backwards; transform-origin:50% 0; }
+.au-backdrop, .ads-pal-backdrop{ animation:m-fade var(--m-dur-3) var(--m-ease-out) backwards; }
+.ads-pal{ animation:m-pop var(--m-dur-3) var(--m-ease-spring) backwards; transform-origin:50% 0; }
+
+/* ── بازخورد لمس/هاور/فوکوس مشترک ─────────────────────────────────────
+   <button> قاعده‌ی خودش رو داره (globals.css). این‌جا فقط خانواده‌هایی که
+   دکمه‌ی واقعی نیستن: لینک، role=button/tab/menuitem، ردیف/کارت قابل‌کلیک.
+   با scale (نه transform) تا روی انیمیشن‌های :active اختصاصی جمع بشه و
+   با :where اسپسیفیسیتی صفره (هر قاعده‌ی اختصاصی برنده‌ست). نور هاور دور
+   باکس‌ها فقط از lib/boxHover.ts می‌آد؛ این‌جا تکرارش نکردیم. */
+:where(a[href], [role="button"], [role="tab"], [role="menuitem"], [role="option"], summary, label[for], .is-clickable, [data-clickable]){
+  transition:scale var(--m-dur-1) var(--m-ease-out), opacity var(--m-dur-2) var(--m-ease-out);
+  -webkit-tap-highlight-color:transparent;
+}
+:where(a[href], [role="button"], [role="tab"], [role="menuitem"], summary, .is-clickable, [data-clickable]):where(:not([class*="active:scale"]):not(.tick-btn)):where(:active){ scale:.98; }
+@media (hover:hover) and (pointer:fine){
+  :where([role="button"], [role="tab"], [role="menuitem"], .is-clickable, [data-clickable]):hover{ opacity:.92; }
+}
+/* حلقه‌ی فوکوس یکدست برای کیبورد (فقط وقتی قاعده‌ی خود المان نیست) */
+:where(a[href], button, [role="button"], [role="tab"], [role="menuitem"], summary, [tabindex]:not([tabindex="-1"])):focus-visible{
+  outline:2px solid rgba(var(--accent-rgb, 0,168,107), .85); outline-offset:2px;
+}
+@media (prefers-reduced-motion:no-preference){
+  :where(a[href], button, [role="button"], [role="tab"], summary):focus-visible{ transition:outline-offset var(--m-dur-1) var(--m-ease-out), scale var(--m-dur-1) var(--m-ease-out); }
+}
+
+/* ── نوارهایی که فقط موقع mount بدون ورودی بودن ──────────────────────────
+   (عرضشون با inline-style ست می‌شه؛ ورود با clip-path، بدون تغییر عرض) */
+.trade-account-goalbar-fill, .tm-progress-bar-fill, .admin-funnel-fill, .adb-fill, .slw-fill, .wt-fill-track{
+  animation:m-bar var(--m-dur-5) var(--m-ease-out) backwards;
+}
+html[dir="ltr"] .trade-account-goalbar-fill, html[dir="ltr"] .tm-progress-bar-fill, html[dir="ltr"] .admin-funnel-fill,
+html[dir="ltr"] .adb-fill, html[dir="ltr"] .slw-fill, html[dir="ltr"] .wt-fill-track{ animation-name:m-bar-ltr; }
+
+/* ── ظاهرشدن با اسکرول (صفحه‌های عمومی) ───────────────────────────────────
+   روی عناصری که components/MotionRuntime.tsx بعد از لود .m-reveal می‌کنه (فقط زیر فولد، صفحه‌های عمومی). مرورگر با
+   animation-timeline:view() همه‌چیز رو روی کامپوزیتور انجام می‌ده؛ مرورگر
+   بدون پشتیبانی fallback ی IntersectionObserver داره (MotionRuntime) و
+   بدون JS هم محتوا همیشه دیده می‌شه. */
+@supports (animation-timeline:view()){
+  @media (prefers-reduced-motion:no-preference){
+    html:not([data-perf-weak]) .m-reveal:not(.m-pre){
+      animation:m-rise-scroll linear both;
+      animation-timeline:view();
+      animation-range:entry 0% entry 45%;
+    }
+  }
+}
+@keyframes m-rise-scroll{ from{ opacity:0; translate:0 18px; } to{ opacity:1; translate:0 0; } }
+/* fallback ی IO: کلاس m-pre (نامرئی) فقط توسط JS روی عناصر زیر صفحه گذاشته می‌شه */
+.m-reveal.m-pre{ opacity:0; translate:0 14px; }
+.m-reveal.m-pre.m-seen{ opacity:1; translate:0 0; transition:opacity var(--m-dur-4) var(--m-ease-out), translate var(--m-dur-4) var(--m-ease-out); }
+
+/* ── خاموش‌کردن‌ها ─────────────────────────────────────────────────── */
+@media (prefers-reduced-motion:reduce){
+  :root{ --m-dur-1:1ms; --m-dur-2:1ms; --m-dur-3:1ms; --m-dur-4:1ms; --m-dur-5:1ms; --m-rise:0px; --m-x:0px; --m-step:0ms; }
+  .m-fade-in, .m-rise, .m-rise-soft, .m-pop, .m-slide-in, .m-stagger > *, .m-bar, .m-grow, .m-draw, .m-swap,
+  [data-m-in], html[data-navigated] .page-enter > :not(.page-loader),
+  .module-gate, .module-gate-overlay > *, .trade-chat-report-sheet, .calorie-unit-dropdown,
+  .au-backdrop, .ads-pal-backdrop, .ads-pal,
+  .trade-account-goalbar-fill, .tm-progress-bar-fill, .admin-funnel-fill, .adb-fill, .slw-fill, .wt-fill-track{ animation:none !important; }
+  .m-reveal, .m-reveal.m-pre{ opacity:1 !important; translate:none !important; animation:none !important; transition:none !important; }
+  :where(a[href], [role="button"], [role="tab"], [role="menuitem"], [role="option"], summary, label[for], .is-clickable, [data-clickable]){ transition:none; }
+  :where(a[href], [role="button"], [role="tab"], [role="menuitem"], summary, .is-clickable, [data-clickable]):where(:active){ scale:1; }
+}
+/* دستگاه ضعیف: همه‌ی ورودی‌ها فقط opacity (آفست‌ها صفرن) و لمس بدون scale */
+html[data-perf-weak] :where(a[href], [role="button"], [role="tab"], [role="menuitem"], summary, .is-clickable, [data-clickable]):where(:active){ scale:1; }
+html[data-perf-weak] .m-bar, html[data-perf-weak] .m-grow, html[data-perf-weak] .m-draw,
+html[data-perf-weak] .trade-account-goalbar-fill, html[data-perf-weak] .tm-progress-bar-fill, html[data-perf-weak] .admin-funnel-fill,
+html[data-perf-weak] .adb-fill, html[data-perf-weak] .slw-fill, html[data-perf-weak] .wt-fill-track{ animation:none; }

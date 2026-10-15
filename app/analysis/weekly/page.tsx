@@ -1,20 +1,22 @@
 import type { Metadata } from "next";
-import { getServerSession } from "next-auth";
 import { ModuleKey } from "@prisma/client";
-import { authOptions } from "@/lib/auth";
+import { getSessionFast } from "@/lib/serverSession";
 import { prisma } from "@/lib/prisma";
 import { isFeatureEnabled } from "@/lib/featureFlagsServer";
 import { buildLiveWeek } from "@/lib/weeklyLetter/live";
 import { resolveWeekOffset } from "@/lib/weeklyLetter/weekParam";
 import { getWeekRange, safeTimezone } from "@/lib/weeklyAnalysis/week";
 import type { LiveWeekPayload } from "@/lib/weeklyLetter/types";
+import { tr } from "@/lib/i18n";
 import { WeeklyLetterReader } from "@/components/WeeklyLetterReader";
 
 // صفحه‌ی فقط‌ورودیه، پس ایندکس نمی‌شه (هم‌الگوی /dashboard و بقیه‌ی صفحه‌های حساب).
-export const metadata: Metadata = {
-  title: "آنالیز هفتگی",
-  robots: { index: false, follow: false },
-};
+export function generateMetadata(): Metadata {
+  return {
+    title: tr("آنالیز هفتگی", "Weekly review"),
+    robots: { index: false, follow: false },
+  };
+}
 export const dynamic = "force-dynamic";
 
 type SP = { week?: string; offset?: string; story?: string };
@@ -29,7 +31,7 @@ type SP = { week?: string; offset?: string; story?: string };
  * (روت API همچنان requireModule + featureBlocked داره).
  */
 export default async function WeeklyAnalysisPage({ searchParams }: { searchParams?: SP }) {
-  const session = await getServerSession(authOptions);
+  const session = await getSessionFast();
   const user = session?.user as { id?: string; isSuperAdmin?: boolean } | undefined;
   const userId = user?.id;
   const query = { week: searchParams?.week ?? null, offset: searchParams?.offset ?? null };

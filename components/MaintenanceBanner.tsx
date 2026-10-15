@@ -3,6 +3,8 @@
 import { useEffect, useState } from "react";
 import { maintenanceDismissKey, type MaintenanceState } from "@/lib/maintenance";
 import { formatDateTime } from "@/lib/adminFormat";
+import { tr } from "@/lib/i18n";
+import { takeInlineMaintenance } from "@/lib/inlineMeta";
 
 // نوار نازک اطلاع‌رسانی تعمیر (تنظیم از /admin/settings). اپ هیچ‌وقت بسته نمی‌شه.
 // بعد از mount می‌خونه (SSR چیزی رندر نمی‌کنه) پس وقتی خاموشه هیچ جابه‌جایی چیدمان نیست.
@@ -21,9 +23,12 @@ export function MaintenanceBanner() {
     let cancelled = false;
     async function load() {
       try {
-        const r = await fetch("/api/maintenance");
-        if (!r.ok) return;
-        const d = (await r.json()) as MaintenanceState;
+        let d = takeInlineMaintenance();
+        if (!d) {
+          const r = await fetch("/api/maintenance");
+          if (!r.ok) return;
+          d = (await r.json()) as MaintenanceState;
+        }
         if (cancelled) return;
         if (d.enabled && d.message) { setState(d); setHidden(wasDismissed(d)); } else setState(null);
       } catch {
@@ -53,9 +58,9 @@ export function MaintenanceBanner() {
     >
       <span style={{ flex: 1, minWidth: 0 }}>
         {state.message}
-        {state.until ? <span style={{ color: "var(--muted)" }}> · تا {formatDateTime(state.until)}</span> : null}
+        {state.until ? <span style={{ color: "var(--muted)" }}> · {tr("تا", "until")} {formatDateTime(state.until)}</span> : null}
       </span>
-      <button type="button" onClick={dismiss} aria-label="بستن"
+      <button type="button" onClick={dismiss} aria-label={tr("بستن", "Close")}
         style={{ background: "transparent", border: 0, boxShadow: "none", backdropFilter: "none", WebkitBackdropFilter: "none", padding: "2px 6px", color: "var(--muted)", cursor: "pointer", fontSize: 18, lineHeight: 1 }}>
         ×
       </button>

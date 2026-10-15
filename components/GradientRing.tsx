@@ -3,7 +3,7 @@
 // حلقه‌ی پیشرفت مشترک کل اپ — عین حلقه‌ی داشبورد: قوس گرادیانی شبه‌conic،
 // سر درخشان، سر گرد قوس و انیمیشن ورود. رنگ‌ها از توکن‌های --ring-* میان.
 import { ReactNode, useEffect, useId } from "react";
-import { animate, motion, useMotionValue, useReducedMotion, useTransform } from "framer-motion";
+import { animate, m as motion, useMotionValue, useReducedMotion, useTransform } from "framer-motion";
 
 const EASE = [0.22, 1, 0.36, 1] as const;
 

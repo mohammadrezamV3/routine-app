@@ -6,6 +6,7 @@ import { sanitizeCategories } from "@/lib/mentorCategories";
 import { loadMentorSelf, isUniqueViolation } from "@/lib/mentorServer";
 import { validateRoutineRole } from "@/lib/mentorValidate";
 import { decideMentorTerms, MENTOR_TERMS_ERROR_CODE } from "@/lib/mentorTerms";
+import { tr } from "@/lib/i18n";
 
 const HEADLINE_MAX = 120;
 const BIO_MAX = 2000;
@@ -44,15 +45,15 @@ export async function PUT(req: Request) {
   } = {};
 
   if (b.headline !== undefined) {
-    if (b.headline !== null && typeof b.headline !== "string") return badRequest("عنوان نامعتبره");
+    if (b.headline !== null && typeof b.headline !== "string") return badRequest(tr("عنوان نامعتبره", "Invalid headline"));
     data.headline = typeof b.headline === "string" ? b.headline.trim().slice(0, HEADLINE_MAX) || null : null;
   }
   if (b.bio !== undefined) {
-    if (b.bio !== null && typeof b.bio !== "string") return badRequest("بیوگرافی نامعتبره");
+    if (b.bio !== null && typeof b.bio !== "string") return badRequest(tr("بیوگرافی نامعتبره", "Invalid bio"));
     data.bio = typeof b.bio === "string" ? b.bio.trim().slice(0, BIO_MAX) || null : null;
   }
   if (b.specialties !== undefined) {
-    if (!Array.isArray(b.specialties)) return badRequest("تخصص‌ها باید فهرست باشد");
+    if (!Array.isArray(b.specialties)) return badRequest(tr("تخصص‌ها باید فهرست باشد", "Specialties must be a list"));
     const set = new Set<string>();
     for (const s of b.specialties) {
       if (typeof s !== "string") continue;
@@ -63,7 +64,7 @@ export async function PUT(req: Request) {
     data.specialties = Array.from(set);
   }
   if (b.categories !== undefined) {
-    if (!Array.isArray(b.categories)) return badRequest("دسته‌ها باید فهرست باشد");
+    if (!Array.isArray(b.categories)) return badRequest(tr("دسته‌ها باید فهرست باشد", "Categories must be a list"));
     data.categories = sanitizeCategories(b.categories);
   }
   if (b.routineRole !== undefined) {
@@ -72,11 +73,11 @@ export async function PUT(req: Request) {
     data.routineRole = r.data;
   }
   if (b.published !== undefined) {
-    if (typeof b.published !== "boolean") return badRequest("وضعیت انتشار نامعتبره");
+    if (typeof b.published !== "boolean") return badRequest(tr("وضعیت انتشار نامعتبره", "Invalid publish status"));
     data.published = b.published;
   }
   if (b.acceptingStudents !== undefined) {
-    if (typeof b.acceptingStudents !== "boolean") return badRequest("وضعیت پذیرش شاگرد نامعتبره");
+    if (typeof b.acceptingStudents !== "boolean") return badRequest(tr("وضعیت پذیرش شاگرد نامعتبره", "Invalid student acceptance status"));
     data.acceptingStudents = b.acceptingStudents;
   }
 
@@ -109,7 +110,7 @@ export async function PUT(req: Request) {
   // متن قدیمی بعدا بی‌صدا دوباره روی کارت ظاهر نشه
   if (!finalCategories.includes("ROUTINE")) data.routineRole = null;
   if (finalPublished && (finalCategories.length === 0 || !finalBio)) {
-    return badRequest("برای انتشار پروفایل، حداقل یک دسته و بیوگرافی لازمه");
+    return badRequest(tr("برای انتشار پروفایل، حداقل یک دسته و بیوگرافی لازمه", "To publish your profile, you need at least one category and a bio"));
   }
 
   try {
@@ -128,7 +129,7 @@ export async function PUT(req: Request) {
     });
   } catch (e) {
     // دو درخواست هم‌زمان «ساخت اولین پروفایل» — دومی به‌جای ۵۰۰، ۴۰۹ می‌گیره
-    if (isUniqueViolation(e)) return conflict("پروفایل هم‌زمان در حال ساخته‌شدنه؛ دوباره تلاش کن");
+    if (isUniqueViolation(e)) return conflict(tr("پروفایل هم‌زمان در حال ساخته‌شدنه؛ دوباره تلاش کن", "Your profile is being created at the same time; try again"));
     throw e;
   }
 

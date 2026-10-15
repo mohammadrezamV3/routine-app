@@ -3,7 +3,8 @@
 import { Fragment, useEffect, useState } from "react";
 import { TickButton } from "./TickButton";
 import { checklistOf, isOccDone, itemKey, toggleTask as toggleChecklist } from "@/lib/routineChecklist";
-import { FA_WEEKDAY, J_MONTHS, faNum, isoLocal, toJalali } from "@/lib/jalali";
+import { weekdayName, jMonthName, faNum, isoLocal, toJalali } from "@/lib/jalali";
+import { tr } from "@/lib/i18n";
 import { tasksForDate, ScheduleTask, isDayOver } from "@/lib/schedule";
 import { DailyRecord, getDaily, setDaily, getOutingDates, toggleOutingDate } from "@/lib/storage";
 import { DEFAULT_SLEEP, DEFAULT_WAKE, isWakeOnTime as isWakeOnTimeShared, timeToMinutes } from "@/lib/wakeSleep";
@@ -89,16 +90,16 @@ export function DayModal({
         <div className="modal-head">
           <div>
             <div className="modal-eyebrow">
-              {FA_WEEKDAY[date.getDay()]} —{" "}
+              {weekdayName(date.getDay())} —{" "}
               <span style={{ color: isPast ? "#bf0a30" : isFuture ? "#0077b6" : "var(--accent)" }}>
-                {isPast ? "بسته شده" : isFuture ? "باز نشده" : "باز است"}
+                {isPast ? tr("بسته شده", "Closed") : isFuture ? tr("باز نشده", "Not open yet") : tr("باز است", "Open")}
               </span>
             </div>
             <div className="modal-title">
-              {faNum(jd[2])} {J_MONTHS[jd[1] - 1]} {faNum(jd[0])}
+              {faNum(jd[2])} {jMonthName(jd[1] - 1)} {faNum(jd[0])}
             </div>
           </div>
-          <button className="nav-close" onClick={onClose}>×</button>
+          <button className="nav-close" onClick={onClose} aria-label={tr("بستن", "Close")}>×</button>
         </div>
 
         <div className="modal-body">
@@ -126,7 +127,7 @@ export function DayModal({
                       {t.time}
                       {missed && (
                         <span className="task-state missed">
-                          {t.time ? " · " : ""}وقتش گذشته
+                          {t.time ? " · " : ""}{tr("وقتش گذشته", "Overdue")}
                         </span>
                       )}
                     </div>
@@ -138,7 +139,7 @@ export function DayModal({
                       const on = !!daily.tasks[itemKey(t.id, it.id)];
                       return (
                         <li key={it.id} className={on ? "is-done" : ""}>
-                          <TickButton checked={on} size={20} disabled={isFuture || isPast} onToggle={() => toggleTask(t.id, it.id)} label={`${on ? "برداشتن تیک" : "تیک‌زدن"} ${it.name}`} />
+                          <TickButton checked={on} size={20} disabled={isFuture || isPast} onToggle={() => toggleTask(t.id, it.id)} label={`${on ? tr("برداشتن تیک", "Uncheck") : tr("تیک‌زدن", "Check")} ${it.name}`} />
                           <span>{it.name}</span>
                         </li>
                       );
@@ -149,36 +150,36 @@ export function DayModal({
               );
             })
           ) : (
-            <div className="item-line empty">برای این روز کاری تعریف نشده</div>
+            <div className="item-line empty">{tr("برای این روز کاری تعریف نشده", "Nothing planned for this day")}</div>
           )}
 
           <div className="task" onClick={() => toggleOuting()}>
             <TickButton as="span" checked={isOuting} size={24} />
-            <div className={`task-name${isOuting ? " done" : ""}`}>بیرون رفتن این روز</div>
+            <div className={`task-name${isOuting ? " done" : ""}`}>{tr("بیرون رفتن این روز", "Went out this day")}</div>
           </div>
 
           <div className="wake">
             {isFuture ? (
-              <span className="wake-text">روز آینده — هنوز قابل ثبت نیست</span>
+              <span className="wake-text">{tr("روز آینده — هنوز قابل ثبت نیست", "Future day — can't be logged yet")}</span>
             ) : daily.wake ? (
               <span className="wake-text">
-                بیداری:{" "}
+                {tr("بیداری:", "Woke up:")}{" "}
                 <b>
                   {new Date(daily.wake).getHours().toString().padStart(2, "0")}:
                   {new Date(daily.wake).getMinutes().toString().padStart(2, "0")}
                 </b>{" "}
                 —{" "}
                 <span style={{ color: isWakeOnTime(daily.wake) ? "var(--accent)" : "var(--muted)" }}>
-                  {isWakeOnTime(daily.wake) ? "به‌موقع" : "دیرتر از هدف"}
+                  {isWakeOnTime(daily.wake) ? tr("به‌موقع", "On time") : tr("دیرتر از هدف", "Later than goal")}
                 </span>
               </span>
             ) : iso === todayKey ? (
               <>
-                <span className="wake-text">هدف: خواب {sleep} — بیداری {wake}</span>
-                <button onClick={registerWake}>ثبت بیداری الان</button>
+                <span className="wake-text">{tr("هدف: خواب", "Goal: sleep")} {sleep} — {tr("بیداری", "wake")} {wake}</span>
+                <button onClick={registerWake}>{tr("ثبت بیداری الان", "Log wake-up now")}</button>
               </>
             ) : (
-              <span className="wake-text">هدف: خواب {sleep} — بیداری {wake} — این روز بسته شده، چیزی ثبت نشد</span>
+              <span className="wake-text">{tr("هدف: خواب", "Goal: sleep")} {sleep} — {tr("بیداری", "wake")} {wake} — {tr("این روز بسته شده، چیزی ثبت نشد", "this day is closed, nothing was logged")}</span>
             )}
           </div>
         </div>

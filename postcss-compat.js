@@ -13,6 +13,7 @@
 //    امن نیست دست‌نخورده می‌مونن)
 //  - واحدهای dvh/svh/lvh: نسخه‌ی vh قبلش گذاشته می‌شه (اگه از قبل دستی نباشه)
 const valueParser = require("postcss-value-parser");
+const postcssApi = require("postcss");
 
 // تقسیم مقدار به اجزای سطح‌بالا (جدا شده با فاصله)؛ توابع مثل calc() یک جزء‌اند
 function parts(value) {
@@ -57,12 +58,47 @@ function expandInset(decl) {
   insertBefore(decl, "left", left);
 }
 
+// جایگزین فیزیکی ویژگی منطقی فقط برای مرورگری که خود ویژگی منطقی رو نمی‌شناسه:
+// داخل `@supports not (<prop>: inherit)` درست بعد از همون قاعده (هم‌سلکتور، هم‌جا
+// در آبشار). قبلا جایگزین مستقیم قبل از اعلام منطقی گذاشته می‌شد؛ در rtl بی‌ضرر
+// بود ولی در چیدمان انگلیسی (ltr، docs/i18n.md) مرورگر مدرن هر دو رو اعمال
+// می‌کرد — مثلا `left:18px` جایگزین + `inset-inline-end:18px` (یعنی right) با هم.
+function fallbackTarget(decl) {
+  const rule = decl.parent;
+  if (!rule || rule.type !== "rule") return null;
+  let p = rule.parent;
+  while (p) { if (p.type === "atrule" && /keyframes/i.test(p.name)) return null; p = p.parent; }
+  if (!rule.__arionFb) rule.__arionFb = new Map();
+  const cond = `not (${decl.prop}: inherit)`;
+  let target = rule.__arionFb.get(cond);
+  if (!target) {
+    const at = postcssApi.atRule({ name: "supports", params: cond });
+    target = postcssApi.rule({ selector: rule.selector });
+    target.__arionIs = true;
+    at.append(target);
+    const last = rule.__arionFbLast || rule;
+    last.after(at);
+    rule.__arionFbLast = at;
+    rule.__arionFb.set(cond, target);
+  }
+  return target;
+}
+
+function addFallback(decl, prop, value) {
+  const target = fallbackTarget(decl);
+  if (!target) { insertBefore(decl, prop, value); return; }
+  const d = postcssApi.decl({ prop, value, important: decl.important });
+  d.__arionDone = true;
+  target.append(d);
+}
+
 function expandLogical(decl) {
   const m = LOGICAL_RE.exec(decl.prop);
   if (!m) return;
   const [, base, axis, edge, suffix] = m;
   const val = decl.value;
   if (/^(inherit|initial|unset|revert)$/.test(val.trim())) return;
+  const insertBefore = addFallback;
   if (edge) {
     insertBefore(decl, physicalProp(base, SIDE[`${axis}-${edge}`], suffix), val);
     return;

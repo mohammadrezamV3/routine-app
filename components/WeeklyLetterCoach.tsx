@@ -4,13 +4,15 @@
 import { useEffect, useState } from "react";
 import { Plus, RotateCw, Sparkles } from "lucide-react";
 import { ANALYSIS_DOMAIN_LABELS, type AiCoach } from "@/lib/weeklyAnalysis/types";
+import { tr } from "@/lib/i18n";
 import { Spinner } from "./Spinner";
 import { Reveal } from "./WeeklyLetterShared";
 import { LiveChapter, humanAiError, sendGoalDraft, type LetterChapterExtra } from "./WeeklyLetterLiveKit";
 import type { LetterChapterProps } from "./WeeklyLetterCtx";
 import { waFetch } from "./WeeklyAnalysisKit";
 
-const PRIORITY: Record<string, string> = { high: "اولویت بالا", medium: "اولویت متوسط", low: "اولویت پایین" };
+const priorityLabel = (p: string): string =>
+  p === "high" ? tr("اولویت بالا", "High priority") : p === "low" ? tr("اولویت پایین", "Low priority") : tr("اولویت متوسط", "Medium priority");
 
 function hhmm(iso: string): string {
   const d = new Date(iso);
@@ -51,14 +53,14 @@ export function WeeklyLetterCoach({ ctx, no }: LetterChapterProps & LetterChapte
   }
 
   return (
-    <LiveChapter id="coach" no={no} title="حرف مربی" icon={Sparkles}>
+    <LiveChapter id="coach" no={no} title={tr("حرف مربی", "Coach's note")} icon={Sparkles}>
       <div className="wl-coach" aria-busy={busy}>
         {!ai ? (
           <Reveal className="wl-card wl-live-coach-empty">
             <span className="wl-coach-ico"><Sparkles size={18} /></span>
-            <p>مربی اعداد همین هفته رو می‌خونه و یک جمع‌بندی کوتاه با چند پیشنهاد عملی برای هفته‌ی بعد می‌نویسه.</p>
+            <p>{tr("مربی اعداد همین هفته رو می‌خونه و یک جمع‌بندی کوتاه با چند پیشنهاد عملی برای هفته‌ی بعد می‌نویسه.", "The coach reads this week's numbers and writes a short summary with a few practical suggestions for next week.")}</p>
             <button type="button" className="account-outline-btn wl-live-btn" onClick={generate} disabled={busy}>
-              {busy ? <Spinner size={14} label={null} /> : <><Sparkles size={14} />ساختن حرف مربی</>}
+              {busy ? <Spinner size={14} label={null} /> : <><Sparkles size={14} />{tr("ساختن حرف مربی", "Generate coach's note")}</>}
             </button>
           </Reveal>
         ) : (
@@ -76,11 +78,11 @@ export function WeeklyLetterCoach({ ctx, no }: LetterChapterProps & LetterChapte
                       <h3>{r.title}</h3>
                       <p>{r.description}</p>
                       <div className="wl-rec-meta">
-                        <span className="wl-tag">{PRIORITY[r.priority] ?? PRIORITY.medium}</span>
+                        <span className="wl-tag">{priorityLabel(r.priority)}</span>
                         {r.domain && <span className="wl-tag">{ANALYSIS_DOMAIN_LABELS[r.domain]}</span>}
                         {ctx.isCurrent && (
                           <button type="button" className="wl-live-ghost wl-live-addgoal" onClick={() => addGoal(r)}>
-                            <Plus size={13} />افزودن به هدف‌ها
+                            <Plus size={13} />{tr("افزودن به هدف‌ها", "Add to goals")}
                           </button>
                         )}
                       </div>
@@ -90,10 +92,10 @@ export function WeeklyLetterCoach({ ctx, no }: LetterChapterProps & LetterChapte
               </ol>
             )}
             <div className="wl-live-coach-foot">
-              {ai.generatedAt && <span className="wl-live-note">ساخته‌شده ساعت <b>{hhmm(ai.generatedAt)}</b></span>}
+              {ai.generatedAt && <span className="wl-live-note">{tr("ساخته‌شده ساعت", "Generated at")} <b>{hhmm(ai.generatedAt)}</b></span>}
               {a.aiAvailable && (
-                <button type="button" className="wl-live-ghost" onClick={generate} disabled={busy} aria-label="ساختن دوباره‌ی حرف مربی">
-                  {busy ? <Spinner size={13} label={null} /> : <><RotateCw size={13} />تحلیل دوباره</>}
+                <button type="button" className="wl-live-ghost" onClick={generate} disabled={busy} aria-label={tr("ساختن دوباره‌ی حرف مربی", "Regenerate coach's note")}>
+                  {busy ? <Spinner size={13} label={null} /> : <><RotateCw size={13} />{tr("تحلیل دوباره", "Re-analyze")}</>}
                 </button>
               )}
             </div>

@@ -1,3 +1,4 @@
+import { tr } from "@/lib/i18n";
 import { accountUserSelect, toAccountUser } from "@/lib/accountPayload";
 import { NextRequest, NextResponse } from "next/server";
 import { getSessionFast } from "@/lib/serverSession";
@@ -13,7 +14,18 @@ export async function GET() {
   const userId = (session?.user as any)?.id;
   if (!userId) return NextResponse.json({ error: "unauthorized" }, { status: 401 });
 
-  const user = await prisma.user.findUnique({ where: { id: userId }, select: accountUserSelect() });
+  // nameEn پلن هم برمی‌گرده (کنار nameFa) — select پایه‌ی مشترک دست نمی‌خوره
+  const base = accountUserSelect();
+  const user = await prisma.user.findUnique({
+    where: { id: userId },
+    select: {
+      ...base,
+      subscriptions: {
+        ...base.subscriptions,
+        select: { ...base.subscriptions.select, plan: { select: { nameFa: true, nameEn: true, key: true } } },
+      },
+    },
+  });
   if (!user) return NextResponse.json({ error: "not found" }, { status: 404 });
   return NextResponse.json({ user: toAccountUser(user) });
 }
@@ -31,7 +43,7 @@ async function handlePATCH(req: NextRequest) {
   const ip = getClientIp(req.headers);
   const isSuperAdmin = !!(session!.user as any).isSuperAdmin;
   if (!isSuperAdmin && (!(await checkRateLimit(`profile-edit:${userId}`, 20, 60 * 60 * 1000)) || !(await checkRateLimit(`profile-edit-ip:${ip}`, 40, 60 * 60 * 1000)))) {
-    return NextResponse.json({ error: "درخواست‌های زیاد — کمی بعد دوباره امتحان کن" }, { status: 429 });
+    return NextResponse.json({ error: tr("درخواست‌های زیاد — کمی بعد دوباره امتحان کن", "Too many requests — try again shortly") }, { status: 429 });
   }
 
   const body = await req.json().catch(() => ({}));
@@ -42,14 +54,14 @@ async function handlePATCH(req: NextRequest) {
   if (body.name !== undefined) {
     const v = clampText(String(body.name || "").trim(), 60);
     if (v && !isValidPersianName(v)) {
-      return NextResponse.json({ error: "نام باید فقط با حروف فارسی نوشته شود" }, { status: 400 });
+      return NextResponse.json({ error: tr("نام باید فقط با حروف فارسی نوشته شود", "Name must contain Persian letters only") }, { status: 400 });
     }
     data.name = v || null;
   }
   if (body.lastName !== undefined) {
     const v = clampText(String(body.lastName || "").trim(), 60);
     if (v && !isValidPersianName(v)) {
-      return NextResponse.json({ error: "نام خانوادگی باید فقط با حروف فارسی نوشته شود" }, { status: 400 });
+      return NextResponse.json({ error: tr("نام خانوادگی باید فقط با حروف فارسی نوشته شود", "Last name must contain Persian letters only") }, { status: 400 });
     }
     data.lastName = v || null;
   }
@@ -61,7 +73,7 @@ async function handlePATCH(req: NextRequest) {
   if (body.gender !== undefined) {
     const v = body.gender === null ? null : String(body.gender);
     if (v !== null && !GENDER_VALUES.has(v)) {
-      return NextResponse.json({ error: "جنسیت نامعتبر است" }, { status: 400 });
+      return NextResponse.json({ error: tr("جنسیت نامعتبر است", "Invalid gender") }, { status: 400 });
     }
     data.gender = v;
   }
@@ -70,7 +82,7 @@ async function handlePATCH(req: NextRequest) {
       data.birthDate = null;
     } else {
       const d = parseIsoDate(body.birthDate);
-      if (!d) return NextResponse.json({ error: "تاریخ تولد نامعتبر است" }, { status: 400 });
+      if (!d) return NextResponse.json({ error: tr("تاریخ تولد نامعتبر است", "Invalid birth date") }, { status: 400 });
       data.birthDate = d;
     }
   }
@@ -86,7 +98,7 @@ async function handlePATCH(req: NextRequest) {
     } else {
       const v = Number(body.heightCm);
       if (!Number.isFinite(v) || v < 100 || v > 250) {
-        return NextResponse.json({ error: "قد نامعتبر است" }, { status: 400 });
+        return NextResponse.json({ error: tr("قد نامعتبر است", "Invalid height") }, { status: 400 });
       }
       data.heightCm = Math.round(v);
     }
@@ -97,14 +109,14 @@ async function handlePATCH(req: NextRequest) {
     } else {
       const v = Number(body.weightKg);
       if (!Number.isFinite(v) || v < 20 || v > 300) {
-        return NextResponse.json({ error: "وزن نامعتبر است" }, { status: 400 });
+        return NextResponse.json({ error: tr("وزن نامعتبر است", "Invalid weight") }, { status: 400 });
       }
       data.weightKg = Math.round(v * 10) / 10;
     }
   }
 
   if (Object.keys(data).length === 0) {
-    return NextResponse.json({ error: "هیچ فیلدی برای ذخیره ارسال نشده" }, { status: 400 });
+    return NextResponse.json({ error: tr("هیچ فیلدی برای ذخیره ارسال نشده", "No fields were sent to save") }, { status: 400 });
   }
 
   await prisma.user.update({ where: { id: userId }, data });

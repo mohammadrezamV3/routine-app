@@ -1,3 +1,4 @@
+import { tr } from "@/lib/i18n";
 import { NextRequest, NextResponse } from "next/server";
 import bcrypt from "bcryptjs";
 import { prisma } from "@/lib/prisma";
@@ -13,7 +14,7 @@ export async function POST(req: NextRequest) {
   // انبوه حساب یا سوءاستفاده خودکار از این فرم.
   const ip = getClientIp(req.headers);
   if (!(await checkRateLimit(`signup:${ip}`, 5, 10 * 60 * 1000))) {
-    return NextResponse.json({ error: "تعداد تلاش‌ها بیش از حد مجازه — چند دقیقه دیگه دوباره امتحان کن" }, { status: 429 });
+    return NextResponse.json({ error: tr("تعداد تلاش‌ها بیش از حد مجازه — چند دقیقه دیگه دوباره امتحان کن", "Too many attempts — try again in a few minutes") }, { status: 429 });
   }
 
   const body = await req.json();
@@ -30,17 +31,17 @@ export async function POST(req: NextRequest) {
   };
 
   if (!phone || !username || !password || !name || !lastName) {
-    return NextResponse.json({ error: "نام، نام‌خانوادگی، شماره موبایل، یوزرنیم و رمز عبور الزامی است" }, { status: 400 });
+    return NextResponse.json({ error: tr("نام، نام‌خانوادگی، شماره موبایل، یوزرنیم و رمز عبور الزامی است", "Name, last name, mobile number, username and password are required") }, { status: 400 });
   }
   // نام/نام‌خانوادگی فقط فارسی — بررسی سمت کلاینت قابل دور زدن است
   if (!isValidPersianName(name) || !isValidPersianName(lastName)) {
-    return NextResponse.json({ error: "نام و نام‌خانوادگی باید فقط با حروف فارسی نوشته شود" }, { status: 400 });
+    return NextResponse.json({ error: tr("نام و نام‌خانوادگی باید فقط با حروف فارسی نوشته شود", "Name and last name must contain Persian letters only") }, { status: 400 });
   }
   if (!isValidIranPhone(phone)) {
-    return NextResponse.json({ error: "شماره موبایل معتبر نیست (فرمت: 09xxxxxxxxx)" }, { status: 400 });
+    return NextResponse.json({ error: tr("شماره موبایل معتبر نیست (فرمت: 09xxxxxxxxx)", "Invalid mobile number (format: 09xxxxxxxxx)") }, { status: 400 });
   }
   if (!isValidUsername(username)) {
-    return NextResponse.json({ error: "یوزرنیم باید 3 تا 20 کاراکتر و فقط شامل حروف انگلیسی/عدد/آندرلاین باشه" }, { status: 400 });
+    return NextResponse.json({ error: tr("یوزرنیم باید 3 تا 20 کاراکتر و فقط شامل حروف انگلیسی/عدد/آندرلاین باشه", "Username must be 3 to 20 characters and contain only English letters, digits or underscores") }, { status: 400 });
   }
   const passwordError = await validatePassword(password, [username, name, lastName, phone]);
   if (passwordError) {
@@ -51,7 +52,7 @@ export async function POST(req: NextRequest) {
     dob = new Date(birthDate);
     const ageYears = (Date.now() - dob.getTime()) / (365.25 * 24 * 60 * 60 * 1000);
     if (isNaN(dob.getTime()) || ageYears < 10 || ageYears > 100) {
-      return NextResponse.json({ error: "تاریخ تولد معتبر نیست" }, { status: 400 });
+      return NextResponse.json({ error: tr("تاریخ تولد معتبر نیست", "Invalid birth date") }, { status: 400 });
     }
   }
 
@@ -63,7 +64,7 @@ export async function POST(req: NextRequest) {
     orderBy: { createdAt: "desc" },
   });
   if (!verifiedOtp) {
-    return NextResponse.json({ error: "شماره موبایل هنوز تایید نشده — دوباره از اول امتحان کن" }, { status: 400 });
+    return NextResponse.json({ error: tr("شماره موبایل هنوز تایید نشده — دوباره از اول امتحان کن", "Mobile number not verified yet — start again from the beginning") }, { status: 400 });
   }
 
   const existing = await prisma.user.findFirst({
@@ -72,7 +73,7 @@ export async function POST(req: NextRequest) {
   if (existing) {
     // پیام عمدا کلیه (نه «شماره موبایل تکراریه» / «یوزرنیم تکراریه» جدا) تا
     // مهاجم نتونه با امتحان‌کردن شماره‌های مختلف بفهمه کدوم شماره ثبت‌نام شده.
-    return NextResponse.json({ error: "امکان ثبت‌نام با این اطلاعات وجود ندارد" }, { status: 409 });
+    return NextResponse.json({ error: tr("امکان ثبت‌نام با این اطلاعات وجود ندارد", "Sign-up is not possible with these details") }, { status: 409 });
   }
 
   await prisma.signupOtp.update({ where: { id: verifiedOtp.id }, data: { usedAt: new Date() } });

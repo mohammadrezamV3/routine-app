@@ -10,15 +10,16 @@
 //   • همه‌ی حرکت‌ها با MotionConfig reducedMotion="user" (در DashboardClient)
 //     برای کسی که «کاهش حرکت» رو روشن کرده خاموش می‌شن.
 
-import Link from "next/link";
+import { SmartLink as Link } from "@/components/SmartLink";
 import { ReactNode, useEffect, useId, useRef, useState } from "react";
-import { animate, motion, useInView, useMotionValue, useReducedMotion, useTransform, type Variants } from "framer-motion";
+import { animate, m as motion, useInView, useMotionValue, useReducedMotion, useTransform, type Variants } from "framer-motion";
 import { faNum } from "@/lib/jalali";
 import { sparkPath } from "@/lib/dashboardCompute";
 import { DashIcon, type DashIconName } from "./DashboardIcons";
 import { cn } from "@/lib/utils";
 import { GradientArc } from "./GradientRing";
 import { useDashAction, type DashAction } from "./DashboardActions";
+import { tr, isEn } from "@/lib/i18n";
 
 export const D_EASE = [0.22, 1, 0.36, 1] as const;
 
@@ -79,7 +80,7 @@ export function BentoCard({
 }
 
 /** سرتیتر کارت: آیکون زنده + عنوان + (اختیاری) لینک «همه» */
-export function CardHead({ icon, title, href, hrefLabel = "مشاهده", extra }: { icon: DashIconName; title: string; href?: string; hrefLabel?: string; extra?: ReactNode }) {
+export function CardHead({ icon, title, href, hrefLabel = tr("مشاهده", "View"), extra }: { icon: DashIconName; title: string; href?: string; hrefLabel?: string; extra?: ReactNode }) {
   return (
     <header className="db-card-head">
       <span className="db-card-icon"><DashIcon name={icon} /></span>
@@ -238,7 +239,7 @@ export function Meter({ value, color = "var(--accent)", delay = 0 }: { value: nu
     <span className="db-meter">
       <motion.span
         className="db-meter-fill"
-        style={{ background: color, transformOrigin: "right" }}
+        style={{ background: color, transformOrigin: isEn() ? "left" : "right" }}
         initial={{ scaleX: 0 }}
         animate={{ scaleX: v }}
         transition={{ duration: 1, ease: D_EASE, delay }}

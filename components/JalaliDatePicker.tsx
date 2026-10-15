@@ -2,9 +2,9 @@
 
 import { useEffect, useRef, useState } from "react";
 import {
-  FA_WEEKDAY_SHORT,
+  weekdayShort,
   CAL_WEEK_ORDER,
-  J_MONTHS,
+  jMonths,
   faNum,
   jalaliMonthLength,
   jalaliToGregorianApprox,
@@ -12,6 +12,7 @@ import {
   JalaliDate,
 } from "@/lib/jalali";
 import { useLockBodyScroll } from "@/lib/useLockBodyScroll";
+import { tr } from "@/lib/i18n";
 
 // دراپ‌داون سفارشی ماه/سال — قبلا <select> بومی مرورگر بود که برای
 // لیست بلند سال‌ها (۱۰۰+ گزینه) یه اسکرول‌بار خام مرورگری نشون می‌داد و
@@ -146,24 +147,24 @@ export function JalaliDatePicker({
       <div className="jdate-popup open">
         {title && <div className="jdate-popup-title" key={title}>{title}</div>}
         <div className="jdate-popup-head">
-          <button type="button" className="jdate-popup-close" onClick={onClose} aria-label="بستن">×</button>
+          <button type="button" className="jdate-popup-close" onClick={onClose} aria-label={tr("بستن", "Close")}>×</button>
           <div className="jdate-popup-title-nav">
             <JdateMiniSelect
               value={view.jm}
-              options={J_MONTHS.map((m, i) => ({ value: i + 1, label: m }))}
+              options={jMonths().map((m, i) => ({ value: i + 1, label: m }))}
               onChange={(jm) => setView((v) => ({ ...v, jm }))}
-              ariaLabel="ماه"
+              ariaLabel={tr("ماه", "Month")}
             />
             <JdateMiniSelect
               value={view.jy}
               options={yearOptions.map((y) => ({ value: y, label: String(y) }))}
               onChange={(jy) => setView((v) => ({ ...v, jy }))}
-              ariaLabel="سال"
+              ariaLabel={tr("سال", "Year")}
             />
           </div>
         </div>
         <div className="jdate-weekdays">
-          {CAL_WEEK_ORDER.map((d) => <div key={d} className="jdate-weekday">{FA_WEEKDAY_SHORT[d]}</div>)}
+          {CAL_WEEK_ORDER.map((d) => <div key={d} className="jdate-weekday">{weekdayShort(d)}</div>)}
         </div>
         <div className="jdate-grid">{cells}</div>
       </div>

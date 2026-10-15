@@ -7,6 +7,7 @@ import {
   DEFAULT_TRIAL_AI_LIMITS, MAX_TRIAL_AI_LIMIT, TRIAL_AI_FEATURES, TRIAL_AI_LIMITS_SETTING_KEY, type TrialAiLimits,
 } from "@/lib/trial";
 import { writeAuditLog } from "@/lib/adminAnalytics";
+import { tr } from "@/lib/i18n";
 
 export async function GET() {
   const guard = await requireAdmin("settings");
@@ -34,7 +35,7 @@ export async function PATCH(req: NextRequest) {
     const v = (body as any).nomoFreeUses;
     const n = v === null || v === undefined || (typeof v === "string" && !v.trim()) ? NaN : Number(v);
     if (!Number.isInteger(n) || n < 0 || n > MAX_NOMO_FREE_USES) {
-      return NextResponse.json({ error: `تعداد باید عدد صحیحی بین 0 تا ${MAX_NOMO_FREE_USES} باشد` }, { status: 400 });
+      return NextResponse.json({ error: tr(`تعداد باید عدد صحیحی بین 0 تا ${MAX_NOMO_FREE_USES} باشد`, `The count must be a whole number between 0 and ${MAX_NOMO_FREE_USES}`) }, { status: 400 });
     }
     await setAppSetting(NOMO_FREE_USES_SETTING_KEY, n);
     await writeAuditLog(guard.userId, "setting.nomo_free_uses", "AppSetting", NOMO_FREE_USES_SETTING_KEY, { value: n });
@@ -46,14 +47,14 @@ export async function PATCH(req: NextRequest) {
   if (body && typeof body === "object" && "trialAiLimits" in body) {
     const raw = (body as any).trialAiLimits;
     if (!raw || typeof raw !== "object") {
-      return NextResponse.json({ error: "سقف‌های دوره‌ی آزمایشی معتبر نیستند" }, { status: 400 });
+      return NextResponse.json({ error: tr("سقف‌های دوره‌ی آزمایشی معتبر نیستند", "Trial limits are not valid") }, { status: 400 });
     }
     const limits = {} as TrialAiLimits;
     for (const f of TRIAL_AI_FEATURES) {
       const v = raw[f];
       const n = v === null || v === undefined || (typeof v === "string" && !v.trim()) ? NaN : Number(v);
       if (!Number.isInteger(n) || n < 0 || n > MAX_TRIAL_AI_LIMIT) {
-        return NextResponse.json({ error: `هر سقف باید عدد صحیحی بین 0 تا ${MAX_TRIAL_AI_LIMIT} باشد` }, { status: 400 });
+        return NextResponse.json({ error: tr(`هر سقف باید عدد صحیحی بین 0 تا ${MAX_TRIAL_AI_LIMIT} باشد`, `Each limit must be a whole number between 0 and ${MAX_TRIAL_AI_LIMIT}`) }, { status: 400 });
       }
       limits[f] = n;
     }
@@ -69,7 +70,7 @@ export async function PATCH(req: NextRequest) {
   const MAX_RATE = 100_000_000; // ۱۰۰ دلار به‌ازای هر ۱۰۰۰ توکن — سقف منطقی برای جلوگیری از اشتباه تایپی
   const valid = (n: number) => Number.isFinite(n) && n >= 0 && n <= MAX_RATE;
   if (!valid(inputRate) || !valid(outputRate)) {
-    return NextResponse.json({ error: "نرخ‌های وارد شده معتبر نیستند" }, { status: 400 });
+    return NextResponse.json({ error: tr("نرخ‌های وارد شده معتبر نیستند", "The entered rates are not valid") }, { status: 400 });
   }
 
   const rate = { inputPer1kUsdMicros: Math.round(inputRate), outputPer1kUsdMicros: Math.round(outputRate) };

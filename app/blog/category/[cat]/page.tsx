@@ -1,8 +1,9 @@
 import type { Metadata } from "next";
 import { notFound } from "next/navigation";
 import { BlogList } from "@/components/BlogList";
-import { BLOG_CATEGORIES, BLOG_CATEGORY_KEYS, isBlogCategory } from "@/lib/blog/categories";
-import { BRAND_FA } from "@/lib/brand";
+import { BLOG_CATEGORY_KEYS, isBlogCategory, localizedBlogCategory } from "@/lib/blog/categories";
+import { brandName } from "@/lib/brand";
+import { tr } from "@/lib/i18n";
 import { postsInCategory } from "@/lib/blogPosts";
 import { absoluteUrl, breadcrumbJsonLd, pageMetadata } from "@/lib/seo";
 
@@ -11,10 +12,10 @@ export function generateStaticParams() {
 }
 
 export function generateMetadata({ params }: { params: { cat: string } }): Metadata {
-  if (!isBlogCategory(params.cat)) return { title: { absolute: "صفحه پیدا نشد" }, robots: { index: false, follow: false } };
-  const cat = BLOG_CATEGORIES[params.cat];
+  if (!isBlogCategory(params.cat)) return { title: { absolute: tr("صفحه پیدا نشد", "Page not found") }, robots: { index: false, follow: false } };
+  const cat = localizedBlogCategory(params.cat);
   return pageMetadata({
-    title: `${cat.title} | ${BRAND_FA}`,
+    title: `${cat.title} | ${brandName()}`,
     description: cat.intro,
     path: `/blog/category/${params.cat}`,
     ogTitle: cat.title,
@@ -25,14 +26,14 @@ export function generateMetadata({ params }: { params: { cat: string } }): Metad
 export default function BlogCategoryPage({ params }: { params: { cat: string } }) {
   if (!isBlogCategory(params.cat)) notFound();
   const key = params.cat;
-  const cat = BLOG_CATEGORIES[key];
+  const cat = localizedBlogCategory(key);
   const posts = postsInCategory(key);
   const path = `/blog/category/${key}`;
 
   const jsonLd = [
     breadcrumbJsonLd([
-      { name: BRAND_FA, path: "/" },
-      { name: "مقاله‌ها", path: "/blog" },
+      { name: brandName(), path: "/" },
+      { name: tr("مقاله‌ها", "Articles"), path: "/blog" },
       { name: cat.label, path },
     ]),
     {

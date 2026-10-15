@@ -1,7 +1,7 @@
 "use client";
 
 import { cn } from "@/lib/utils";
-import { motion, useAnimationFrame, useReducedMotion } from "framer-motion";
+import { m as motion, useAnimationFrame, useReducedMotion } from "framer-motion";
 import { useRef, useState } from "react";
 
 // منبع: SmoothUI (ai-loader). تنها تغییر عمدی، عوض‌شدن `motion/react` با

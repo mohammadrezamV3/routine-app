@@ -1,7 +1,9 @@
 "use client";
 
+import { tr } from "@/lib/i18n";
+
 export function displayName(u: { name?: string | null; lastName?: string | null; username?: string | null }) {
-  return [u.name, u.lastName].filter(Boolean).join(" ") || (u.username ? `@${u.username}` : "بدون نام");
+  return [u.name, u.lastName].filter(Boolean).join(" ") || (u.username ? `@${u.username}` : tr("بدون نام", "No name"));
 }
 
 export function UserAvatar({ user, size = 34 }: { user: { name?: string | null; username?: string | null; avatarUrl?: string | null }; size?: number }) {

@@ -6,6 +6,7 @@ import { NAME_STYLE_SELECT, nameFlags } from "@/lib/nameStyle";
 import { BOOTSTRAP_SETTING_KEYS } from "@/lib/userSettingKeys";
 import { AUTH_HINT_COOKIE, INLINE_BOOTSTRAP_ID } from "@/lib/preload";
 import { routineStatsForUsers } from "@/lib/friendStats";
+import { tr } from "@/lib/i18n";
 
 /**
  * داده لود اولیه را **داخل خود HTML** می‌فرستد، نه با یک درخواست جدا.
@@ -104,7 +105,7 @@ export async function InlineBootstrap() {
         return {
           friendshipId: r.id,
           id: other.id,
-          name: other.name || other.username || "کاربر",
+          name: other.name || other.username || tr("کاربر", "User"),
           username: other.username,
           avatarUrl: other.avatarUrl,
           ...nameFlags(other),
@@ -123,7 +124,7 @@ export async function InlineBootstrap() {
       friendRequests: requestRows.map((r) => ({
         friendshipId: r.id,
         id: r.requester.id,
-        name: r.requester.name || r.requester.username || "کاربر",
+        name: r.requester.name || r.requester.username || tr("کاربر", "User"),
         username: r.requester.username,
         avatarUrl: r.requester.avatarUrl,
         ...nameFlags(r.requester),

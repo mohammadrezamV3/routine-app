@@ -66,6 +66,7 @@ import { createPortal } from "react-dom";
 import { useEffect, useId, useRef, useState } from "react";
 import { X } from "lucide-react";
 import { LockBodyScroll } from "./LockBodyScroll";
+import { tr } from "@/lib/i18n";
 
 export const M_EASE = [0.22, 1, 0.36, 1] as const;
 export const M_DUR = { fast: 0.16, base: 0.22, slow: 0.32 } as const;
@@ -341,7 +342,7 @@ export function MentorSheet({
               <div className="m-sheet-head">
                 <h2 id={titleId} className="m-sheet-title">{title}</h2>
                 {dismissible && (
-                  <button type="button" className="trade-icon-btn mentor-icon-btn" aria-label="بستن" onClick={onClose}>
+                  <button type="button" className="trade-icon-btn mentor-icon-btn" aria-label={tr("بستن", "Close")} onClick={onClose}>
                     <X size={16} strokeWidth={1.75} aria-hidden />
                   </button>
                 )}

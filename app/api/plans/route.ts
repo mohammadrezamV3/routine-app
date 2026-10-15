@@ -1,6 +1,5 @@
 import { NextResponse } from "next/server";
-import { getServerSession } from "next-auth";
-import { authOptions } from "@/lib/auth";
+import { getSessionFast } from "@/lib/serverSession";
 import { prisma } from "@/lib/prisma";
 import { durationMonths, enabledDurations, findPlanPricing } from "@/lib/planPricing";
 import { getPricingConfig } from "@/lib/planPricingServer";
@@ -11,7 +10,7 @@ import { findUpgradeSource, computeUpgradePricing, UPGRADE_TARGET_PLAN_KEY } fro
 // برای صفحه‌ی «اشتراک». قیمت‌گذاری بازاری‌ست (هر پلن مخصوص یک Market)، پس
 // همیشه فقط پلن‌های هم‌بازار خود کاربر برمی‌گرده.
 export async function GET() {
-  const session = await getServerSession(authOptions);
+  const session = await getSessionFast();
   const userId = (session?.user as any)?.id;
   if (!userId) return NextResponse.json({ error: "unauthorized" }, { status: 401 });
 

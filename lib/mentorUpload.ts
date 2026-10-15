@@ -1,4 +1,5 @@
 import { createHash } from "crypto";
+import { tr } from "@/lib/i18n";
 
 // اعتبارسنجی فایل مدارک منتور (هویت/مدرک) — سمت سرور و از روی *محتوا*.
 // نوع اعلام‌شده توسط کلاینت (Content-Type/پسوند) قابل‌اعتماد نیست؛ فقط
@@ -30,10 +31,10 @@ export type ValidatedDocument = { data: Buffer; mimeType: DocumentMime; sizeByte
 
 export function validateDocument(bytes: ArrayBuffer | Uint8Array, name: unknown): { ok: true; doc: ValidatedDocument } | { ok: false; error: string; status: number } {
   const buf = Buffer.from(bytes instanceof Uint8Array ? bytes : new Uint8Array(bytes));
-  if (buf.length === 0) return { ok: false, error: "فایل خالیه", status: 400 };
-  if (buf.length > MAX_DOCUMENT_BYTES) return { ok: false, error: "حجم فایل حداکثر 5 مگابایت است", status: 413 };
+  if (buf.length === 0) return { ok: false, error: tr("فایل خالیه", "The file is empty"), status: 400 };
+  if (buf.length > MAX_DOCUMENT_BYTES) return { ok: false, error: tr("حجم فایل حداکثر 5 مگابایت است", "The file can be at most 5 MB"), status: 413 };
   const mime = sniffDocumentMime(buf);
-  if (!mime) return { ok: false, error: "فقط تصویر (JPG/PNG/WebP) یا PDF قابل قبوله", status: 415 };
+  if (!mime) return { ok: false, error: tr("فقط تصویر (JPG/PNG/WebP) یا PDF قابل قبوله", "Only images (JPG/PNG/WebP) or PDF files are accepted"), status: 415 };
   return {
     ok: true,
     doc: { data: buf, mimeType: mime, sizeBytes: buf.length, sha256: createHash("sha256").update(buf).digest("hex"), fileName: sanitizeFileName(name, mime) },

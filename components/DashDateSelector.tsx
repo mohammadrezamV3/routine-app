@@ -3,9 +3,10 @@
 import { useEffect, useRef, useState } from "react";
 import { ChevronLeft, ChevronRight } from "lucide-react";
 import { cn } from "@/lib/utils";
-import { J_MONTHS, faNum, toJalali } from "@/lib/jalali";
-import { WEEK_ORDER, addDaysIso } from "@/lib/schedule";
+import { jMonthName, weekdayName, faNum, toJalali } from "@/lib/jalali";
+import { addDaysIso } from "@/lib/schedule";
 import { useDayStrip, useDesktopDayStrip } from "@/lib/useDayStrip";
+import { tr, isEn } from "@/lib/i18n";
 
 // محوشدن لبه‌ها — با mask-image روی *خود* نوار اسکرول، نه لایه‌های
 // backdrop-filter روی آن (آن‌ها روی کروم اندروید لبه‌ی مستطیلی تیره و
@@ -20,9 +21,8 @@ function edgeMask(fadeRight: boolean, fadeLeft: boolean): string | undefined {
 }
 
 function dayLabels(d: Date): { weekday: string; dateLabel: string } {
-  const order = WEEK_ORDER.find((w) => w.jsDay === d.getDay())!;
   const j = toJalali(d.getFullYear(), d.getMonth() + 1, d.getDate());
-  return { weekday: order.name, dateLabel: `${faNum(j[2])} ${J_MONTHS[j[1] - 1]}` };
+  return { weekday: weekdayName(d.getDay()), dateLabel: `${faNum(j[2])} ${jMonthName(j[1] - 1)}` };
 }
 
 // نوار انتخاب تاریخ (روتین من / بدنسازی / کالری). موبایل: نوار آزاد
@@ -98,11 +98,11 @@ function DesktopDateSelector({ activeIso, onSelect, className, recenterKey }: Da
     >
       <button
         type="button"
-        aria-label="روزهای قبل"
+        aria-label={tr("روزهای قبل", "Previous days")}
         onClick={() => setAnchor((a) => addDaysIso(a, -count))}
         className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full text-dash-muted transition hover:bg-white/5 hover:text-dash-text"
       >
-        <ChevronRight size={18} />
+        <ChevronRight size={18} className="dir-flip" />
       </button>
       <div className="min-w-0 flex-1">
         <div ref={stripRef} className="flex items-center gap-1.5 overflow-hidden px-3 py-2.5">
@@ -133,11 +133,11 @@ function DesktopDateSelector({ activeIso, onSelect, className, recenterKey }: Da
       </div>
       <button
         type="button"
-        aria-label="روزهای بعد"
+        aria-label={tr("روزهای بعد", "Next days")}
         onClick={() => setAnchor((a) => addDaysIso(a, count))}
         className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full text-dash-muted transition hover:bg-white/5 hover:text-dash-text"
       >
-        <ChevronLeft size={18} />
+        <ChevronLeft size={18} className="dir-flip" />
       </button>
     </div>
   );
@@ -158,8 +158,13 @@ function MobileDateSelector({ activeIso, onSelect, className, recenterKey }: Das
         setCanScrollLeft(false);
         return;
       }
-      setCanScrollRight(el.scrollLeft < -1);
-      setCanScrollLeft(el.scrollLeft > -max + 1);
+      if (isEn()) {
+        setCanScrollRight(el.scrollLeft < max - 1);
+        setCanScrollLeft(el.scrollLeft > 1);
+      } else {
+        setCanScrollRight(el.scrollLeft < -1);
+        setCanScrollLeft(el.scrollLeft > -max + 1);
+      }
     };
     update();
     el.addEventListener("scroll", update, { passive: true });
@@ -184,11 +189,11 @@ function MobileDateSelector({ activeIso, onSelect, className, recenterKey }: Das
       {/* فلش «روزهای قبل» — فقط دسکتاپ (lg:flex)، هم‌شکل نسخه‌ی قدیم. */}
       <button
         type="button"
-        aria-label="روزهای قبل"
+        aria-label={tr("روزهای قبل", "Previous days")}
         onClick={() => pageBy("prev")}
         className="hidden h-8 w-8 shrink-0 items-center justify-center rounded-full text-dash-muted transition hover:bg-white/5 hover:text-dash-text lg:flex"
       >
-        <ChevronRight size={18} />
+        <ChevronRight size={18} className="dir-flip" />
       </button>
 
       <div className="min-w-0 flex-1">
@@ -239,11 +244,11 @@ function MobileDateSelector({ activeIso, onSelect, className, recenterKey }: Das
       {/* فلش «روزهای بعد» — فقط دسکتاپ. */}
       <button
         type="button"
-        aria-label="روزهای بعد"
+        aria-label={tr("روزهای بعد", "Next days")}
         onClick={() => pageBy("next")}
         className="hidden h-8 w-8 shrink-0 items-center justify-center rounded-full text-dash-muted transition hover:bg-white/5 hover:text-dash-text lg:flex"
       >
-        <ChevronLeft size={18} />
+        <ChevronLeft size={18} className="dir-flip" />
       </button>
     </div>
   );

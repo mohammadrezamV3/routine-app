@@ -1,0 +1,819 @@
+/* auto-split from the global CSS (css-split): rules used only by this route group. Imported first thing by its layout/page. */
+
+.thin-scroll::-webkit-scrollbar-button{ display:none; width:0; height:0; }
+
+.footer{color:var(--muted2); font-size:11px; font-family:var(--font-latin), var(--font-vazir), sans-serif; text-align:end; padding-top:30px;}
+
+/* نسخه‌ی لیکوئید گلس پاپ‌آپ (فقط دوستان) — عینا همون بک‌گراند/بلور
+     .app-topbar (هدر سایت)، نه گرادیان تقریبا توپر قبلی. */
+
+.modal-panel.liquid-glass-panel{ overflow-x:hidden; background:var(--surface-2); }
+
+.jdate-btn.placeholder{color:var(--muted2); font-family:var(--font-latin), var(--font-vazir), sans-serif; direction:rtl;}
+
+/* وقتی همین پاپ‌آپ پشت‌سرهم برای دو فیلد (مثلا شروع بعد پایان) دوباره
+     باز می‌مونه، فقط عوض‌شدن متن به چشم نمیاد — با key={title} روی این
+     المان (توی JalaliDatePicker) هر بار عنوان عوض بشه دوباره mount می‌شه و
+     انیمیشن pop از نو اجرا می‌شه، تا واضح باشه که context عوض شده. */
+
+.jdate-popup-title{
+    color:var(--accent); font-size:12.5px; font-weight:700; text-align:center;
+    margin-bottom:10px; animation:wnsPop .35s cubic-bezier(.34,1.56,.64,1);
+  }
+
+.jdate-popup-head{display:flex; align-items:center; justify-content:space-between; margin-bottom:12px;}
+
+.jdate-popup-title-nav{display:flex; align-items:center; gap:6px;}
+
+/* دراپ‌داون سفارشی ماه/سال — بک‌گراندش هم‌رنگ حالت انتخاب‌شده‌ی بقیه‌ی
+     اپ (همون accent-dim که day-pill.on و امثالش استفاده می‌کنن)، به‌جای
+     بک‌گراند خنثی قبلی jdate-select. */
+
+.jdate-mini-select{ position:relative; }
+
+.jdate-mini-btn{
+    display:flex; align-items:center; gap:4px; padding:6px 12px; border-radius:10px;
+    background:var(--accent-dim); border:1px solid var(--accent); color:var(--accent);
+    font-family:var(--font-latin), var(--font-vazir), sans-serif; font-size:12.5px; font-weight:700; cursor:pointer;
+    transition:opacity .15s ease;
+  }
+
+.jdate-mini-item{
+    padding:8px 10px; border-radius:8px; font-size:12.5px; font-family:var(--font-latin), var(--font-vazir), sans-serif;
+    text-align:center; cursor:pointer; color:var(--text); transition:background .12s ease;
+  }
+
+@media (hover:hover) {
+  .jdate-mini-item:hover{ background:rgba(var(--bg-rgb),.4); }
+  body:not([data-theme="light"]) .jdate-mini-item:hover{ background:rgba(255,255,255,.06); } }
+
+.jdate-mini-item.active{ background:var(--accent-dim); color:var(--accent); font-weight:700; }
+
+.jdate-popup-close{background:none; border:none; color:var(--muted); font-size:18px; cursor:pointer; line-height:1; padding:0;}
+
+@media (hover:hover) {
+  body[data-theme="light"] .jdate-popup-close:hover, body:not([data-theme="light"]) .jdate-popup-close:hover{
+    background:none;
+  } }
+
+.jdate-weekdays{display:grid; grid-template-columns:repeat(7,1fr); gap:4px; margin-bottom:6px;}
+
+.jdate-weekday{font-size:10px; text-align:center; color:var(--accent); font-family:var(--font-latin), var(--font-vazir), sans-serif;}
+
+.jdate-grid{display:grid; grid-template-columns:repeat(7,1fr); gap:4px;}
+
+.jdate-cell{
+    aspect-ratio:1; display:flex; align-items:center; justify-content:center; border-radius:8px; font-size:12px;
+    font-family:var(--font-latin), var(--font-vazir), sans-serif; cursor:pointer; color:var(--text); transition:.15s; border:1px solid transparent;
+  }
+
+.jdate-cell.empty{cursor:default; visibility:hidden;}
+
+@media (hover:hover) {
+  .jdate-cell.disabled:hover{border-color:transparent;} }
+
+.add-program-glass .day-pill{
+    border-radius:999px;
+    backdrop-filter:blur(14px) saturate(160%); -webkit-backdrop-filter:blur(14px) saturate(160%);
+  }
+
+body:not([data-theme="light"]) .add-program-glass .day-pill{
+    background:rgba(255,255,255,.05); border-color:rgba(255,255,255,.1);
+  }
+
+body[data-theme="light"] .add-program-glass .day-pill{
+    background:rgba(255,255,255,.35); border-color:rgba(0,0,0,.08);
+  }
+
+.add-program-glass .day-pill.on::after{ border-radius:999px; }
+
+@media (hover:hover) {
+  .add-program-glass .wsearch-add-btn:hover{ color:var(--accent); opacity:.8; } }
+
+/* مثال‌های داخل فیلد (placeholder) قبلا با var(--muted2) خیلی کم‌کنتراست
+     بودن و دیده نمی‌شدن؛ var(--muted) خواناتره. */
+
+.add-program-glass .wsearch-newform-name::placeholder,
+  .add-program-glass .wsearch-add-time::placeholder{ color:var(--muted); opacity:.85; }
+
+/* پاپ‌آپ‌های افزودن/ویرایش/انتقال برنامه — بک‌گراند پشت پاپ‌آپ خیلی بیشتر بلور می‌شه.
+     روی خود کلاس (نه فقط .open) تا بلور حین فید هم ثابت بماند. */
+
+.wsearch-newform-overlay.strong-blur{
+    backdrop-filter:var(--popup-backdrop-filter-strong); -webkit-backdrop-filter:var(--popup-backdrop-filter-strong);
+    background:rgba(0,0,0,.55);
+  }
+
+/* پاپ‌آپ‌های افزودن/ویرایش/انتقال برنامه (شناسایی با add-program-glass
+     داخلشون) یه‌کوچولو بزرگ‌تر می‌شن تا معمولا محتوا/دکمه‌ها جا بشن بدون
+     اسکرول، و اسکرول‌بار (در صورت لزوم، مثلا چندتا ردیف روز) کاملا مخفیه. */
+
+.wsearch-newform:has(.add-program-glass){
+    max-height:min(84vh, 560px);
+    scrollbar-width:none; -ms-overflow-style:none;
+  }
+
+/* پاپ‌آپ «افزودن برنامه»ی بدنسازی (AI/دستی) یه‌کوچولو عریض‌تر از بقیه‌ی
+     پاپ‌آپ‌های add-program-glass لازم داره تا دو باکس انتخاب جا باشن */
+
+.wsearch-newform:has(.exercise-add-glass){ max-width:500px; }
+
+.wsearch-newform:has(.add-program-glass)::-webkit-scrollbar{ display:none; width:0; height:0; }
+
+.wsearch-newform-title.accent{color:var(--accent);}
+
+.time-field-label{font-size:9.5px; color:var(--muted2); font-family:var(--font-latin), var(--font-vazir), sans-serif; text-align:start; padding-inline-start:2px;}
+
+.wsearch-newform label{display:block; font-size:11px; color:var(--muted2); margin:8px 0 5px; font-family:var(--font-latin), var(--font-vazir), sans-serif;}
+
+/* برچسب بالای فیلدهای فرم افزودن غذا (نام غذا / مقدار / واحد اندازه‌گیری / …) */
+
+.calorie-field-label{
+    display:block; margin-bottom:5px;
+    font-size:10.5px; font-weight:700; color:var(--muted);
+  }
+
+@media (min-width:640px) {
+  .calorie-field-label{ font-size:11.5px; } }
+
+input.calorie-qty-field{ display:block; }
+
+.wsearch-newrow-remove-text svg{ flex-shrink:0; }
+
+.wsearch-submit-btn:disabled{ cursor:default; }
+
+.wsearch-submit-btn.error, body[data-theme="light"] .wsearch-submit-btn.error{
+    background:#E05252; border-color:#E05252; color:#fff; box-shadow:none;
+    animation:wnsShake .4s ease;
+  }
+
+@keyframes wnsPop{ 0%{transform:scale(.3);} 60%{transform:scale(1.3);} 100%{transform:scale(1);} }
+
+@keyframes wnsShake{
+    0%,100%{transform:translateX(0);}
+    20%{transform:translateX(-4px);}
+    40%{transform:translateX(4px);}
+    60%{transform:translateX(-3px);}
+    80%{transform:translateX(3px);}
+  }
+
+/* حالت خطا برای فیلدهای فرم ورود/ثبت‌نام — تکمیل کلاس field-error که قبلا
+   فقط جای آیکون رو رزرو می‌کرد ولی هیچ رنگ قرمزی واقعا اعمال نمی‌شد */
+
+.field-error .wsearch-newform-name{ border-color:#E05252; }
+
+.jdate-btn.field-error{ border-color:#E05252; }
+
+@media (hover:hover) {
+  body[data-theme="light"] .module-gate-cta:hover, body:not([data-theme="light"]) .module-gate-cta:hover{
+  background:var(--accent);
+} }
+
+.trade-pair-suggest-item{
+  display:flex; align-items:center; justify-content:space-between; gap:8px;
+  padding:8px 10px; cursor:pointer; font-size:12px; border-bottom:1px solid var(--line);
+}
+
+.trade-pair-suggest-item:last-child{ border-bottom:none; }
+
+@media (hover:hover) {
+  .trade-pair-suggest-item:hover{ background:rgba(var(--accent-rgb),.08); } }
+
+.trade-pair-suggest-label{ color:var(--muted2); font-size:11px; }
+
+.no-scrollbar::-webkit-scrollbar{ display:none; width:0; height:0; }
+
+@media (pointer: coarse) {
+  .modal-panel.liquid-glass-panel{ backdrop-filter:blur(10px) saturate(160%); -webkit-backdrop-filter:blur(10px) saturate(160%); }
+  .wsearch-newform:has(.add-program-glass){ backdrop-filter:blur(10px) saturate(160%); -webkit-backdrop-filter:blur(10px) saturate(160%); }
+  .calorie-unit-dropdown{ backdrop-filter:blur(11px) saturate(180%); -webkit-backdrop-filter:blur(11px) saturate(180%); } }
+
+/* .wsearch-newform (افزودن/ویرایش برنامه و مشابه‌هاش) توی تم تاریک از قبل
+   یه fallback توپر داشت (خط ۲۰۷۱)؛ توی تم روشن اصلا نداشت — روی
+   data-perf=low بدون بلور فقط ۹٪ سفید می‌موند، تقریبا کاملا شفاف. */
+
+html[data-perf="low"] body[data-theme="light"] .wsearch-newform{ background:rgba(255,255,255,.97) !important; }
+
+/* بدون بلور هیچ درصد شفافیتی «شیشه» نمی‌سازد، فقط پشتش را نشان می‌دهد.
+   روی دستگاه‌های لمسی این سطح‌ها کاملا کدر می‌شوند تا هیچ‌وقت دورنگ نشوند.
+   (سلکتور با :has اسپسیفیسیتی بالاتری از قانون پایه دارد، پس اینجا هم
+   همان :has تکرار می‌شود تا واقعا غالب شود.) */
+
+html[data-perf="low"] .wsearch-newform:has(.add-program-glass),
+html[data-perf="low"] body:not([data-theme="light"]) .wsearch-newform:has(.add-program-glass),
+html[data-perf="low"] body[data-theme="light"] .wsearch-newform:has(.add-program-glass),
+html[data-perf="low"] .trade-drawer{ background:var(--surface-2) !important; }
+
+@media (hover:hover) {
+  .trade-danger-btn:hover:not(:disabled){ background:rgba(224,82,82,.1); border-color:#E05252; color:#E05252; } }
+
+.trade-danger-btn:active:not(:disabled){ transform:scale(.97); }
+
+.trade-danger-btn:disabled{ opacity:.45; cursor:default; }
+
+.trade-modal-actions{ display:flex; gap:9px; margin-top:18px; }
+
+.trade-modal-actions button{ flex:1; }
+
+.trade-field-row{ display:grid; grid-template-columns:1fr; gap:16px 11px; }
+
+@media (min-width:520px) {
+  .trade-field-row{ grid-template-columns:1fr 1fr; } }
+
+.trade-field-row > div{ min-width:0; }
+
+/* ── رنگ و برچسب ──────────────────────────────────────────── */
+
+.trade-color-row{ display:flex; flex-wrap:wrap; gap:9px; }
+
+@media (hover:hover) {
+  .trade-color-dot:hover{ transform:scale(1.1); } }
+
+.trade-color-dot.active{ border-color:var(--text); transform:scale(1.08); }
+
+.trade-tag-row{ display:flex; flex-wrap:wrap; gap:7px; }
+
+.trade-tag-chip.active{ color:var(--tag-c); background:color-mix(in srgb, var(--tag-c) 16%, transparent); }
+
+@media (hover:hover) {
+  .trade-tag-chip.active:hover{ background:color-mix(in srgb, var(--tag-c) 24%, transparent); }
+  .trade-tag-chip:hover{ background:rgba(var(--accent-rgb),.06); } }
+
+.trade-tag-chip:active{ transform:scale(.96); }
+
+.trade-tag-chip.active{ font-weight:700; --tag-c:var(--accent); }
+
+/* نقطه‌ی برچسب باید سمت چپ نام بنشیند، نه قبلش (سمت راست). چون این چیپ
+   توی چهار جای مختلف (یادداشت‌ها، حساب‌ها، فیلد برچسب، کارت جزئیات) با
+   همین ترتیب DOM رندر می‌شود، جابه‌جایی با order یک‌بار همه‌جا را درست
+   می‌کند — به‌جای چهار بار ویرایش JSX که یکی‌اش فراموش می‌شود. */
+
+.trade-tag-chip .trade-tag-dot{ order:1; }
+
+.trade-tag-add{ border-style:dashed; }
+
+/* ── فرم تب‌دار معامله ────────────────────────────────────── */
+
+.trade-form-panel{ max-width:600px; width:94%; }
+
+@media (hover:hover) and (pointer:fine) {
+  .trade-tabs-arrow{ display:inline-flex; }
+  .trade-tabs-arrow:hover{ color:var(--accent); background:none; box-shadow:none; } }
+
+.trade-form-stepper{ display:flex; gap:9px; margin-top:16px; }
+
+.trade-form-stepper button{ flex:1; min-width:0; }
+
+.trade-form-tabs::-webkit-scrollbar{ display:none; width:0; height:0; }
+
+@media (hover:hover) {
+  .trade-form-tab:hover{ color:var(--text); background:rgba(var(--accent-rgb),.06); } }
+
+.trade-form-tab.active{ color:var(--accent); border-color:var(--accent); background:var(--accent-dim); }
+
+.trade-volume-row{ display:flex; gap:9px; align-items:center; }
+
+.trade-volume-row input{ flex:1; min-width:0; }
+
+.trade-volume-row .auth-tab{ font-size:11px; padding:9px 0; }
+
+@media (hover:hover) {
+  .trade-suggest-btn:hover{ color:var(--accent); background:none; }
+  .trade-toggle:hover{ border-color:var(--accent); background:none; } }
+
+.trade-toggle-label{ font-size:11.5px; color:var(--muted); font-weight:500; line-height:1.7; }
+
+@media (hover:hover) {
+  .trade-optional-head:hover{ border-color:var(--accent); color:var(--accent); background:none; } }
+
+.trade-choice-grid{ display:flex; flex-wrap:wrap; gap:7px; }
+
+@media (hover:hover) {
+  .trade-choice:hover{ color:var(--text); background:rgba(var(--accent-rgb),.06); } }
+
+.trade-choice:active{ transform:scale(.96); }
+
+.trade-choice.active{ border-color:var(--accent); color:var(--accent); background:var(--accent-dim); font-weight:700; }
+
+.trade-choice-grid.readonly .trade-choice{ cursor:default; }
+
+.trade-choice-grid.readonly .trade-choice:active{ transform:none; }
+
+.trade-range:focus{ outline:none; }
+
+.trade-range::-webkit-slider-runnable-track{
+  height:4px; border-radius:999px;
+  background:linear-gradient(to right, var(--accent) var(--tr-pos), var(--line) var(--tr-pos));
+}
+
+.trade-range::-moz-range-track{
+  height:4px; border-radius:999px;
+  background:linear-gradient(to right, var(--accent) var(--tr-pos), var(--line) var(--tr-pos));
+}
+
+.trade-range:dir(rtl)::-webkit-slider-runnable-track{
+  background:linear-gradient(to left, var(--accent) var(--tr-pos), var(--line) var(--tr-pos));
+}
+
+.trade-range:dir(rtl)::-moz-range-track{
+  background:linear-gradient(to left, var(--accent) var(--tr-pos), var(--line) var(--tr-pos));
+}
+
+.trade-range::-webkit-slider-thumb{
+  -webkit-appearance:none; appearance:none; width:var(--tr-thumb); height:var(--tr-thumb);
+  margin-top:-7px; border:0; border-radius:50%; background:var(--accent);
+  transition:transform .15s ease;
+}
+
+.trade-range::-moz-range-thumb{
+  width:var(--tr-thumb); height:var(--tr-thumb); border:0; border-radius:50%; background:var(--accent);
+}
+
+.trade-range:active::-webkit-slider-thumb{ transform:scale(1.12); }
+
+.trade-range:focus-visible::-webkit-slider-thumb{ box-shadow:0 0 0 4px rgba(var(--accent-rgb),.25); }
+
+@media (prefers-reduced-motion:reduce) {
+  .trade-range::-webkit-slider-thumb{ transition:none; } }
+
+/* ── چک‌لیست ──────────────────────────────────────────────── */
+
+.trade-checklist-progress{
+  display:flex; align-items:baseline; gap:7px; margin:14px 0 8px; font-size:11.5px; color:var(--muted);
+}
+
+.trade-checklist-items{ display:flex; flex-direction:column; }
+
+.trade-check-row:last-child{ border-bottom:none; }
+
+@media (hover:hover) {
+  .trade-check-row:hover{ background:rgba(var(--surface-rgb),.12); border-radius:10px; } }
+
+.trade-check-row.done{ color:var(--text); }
+
+.trade-check-row.readonly{ cursor:default; }
+
+.trade-warn-note{
+  display:flex; align-items:flex-start; gap:9px; margin-top:14px; padding:12px 14px;
+  border:1px solid rgba(224,164,82,.5); border-radius:14px; background:rgba(224,164,82,.08);
+  color:#E0A452; font-size:11.5px; line-height:1.9;
+}
+
+/* ── تصاویر ───────────────────────────────────────────────── */
+
+.trade-image-grid{ display:flex; flex-wrap:wrap; gap:9px; margin-bottom:11px; }
+
+.trade-image-cell{ position:relative; }
+
+.trade-image-thumb{ cursor:zoom-in; }
+
+@media (hover:hover) {
+  .trade-image-thumb:hover{ border-color:var(--accent); transform:scale(1.03); }
+  .trade-image-remove:hover{ background:rgba(224,82,82,.85); } }
+
+.trade-image-remove:active{ transform:scale(.9); }
+
+.trade-image-drop{
+  display:flex; flex-direction:column; align-items:center; justify-content:center; gap:6px;
+  padding:24px; border:1.5px dashed var(--line); border-radius:16px;
+  color:var(--secondary); font-size:12.5px; font-weight:600; cursor:pointer;
+  transition:border-color .18s ease, color .18s ease, background .18s ease;
+}
+
+@media (hover:hover) {
+  .trade-image-drop:hover{ border-color:var(--accent); color:var(--accent); background:rgba(var(--accent-rgb),.05); } }
+
+.trade-image-hint{ font-size:10.5px; color:var(--muted2); font-weight:400; }
+
+.trade-lightbox img{ max-width:100%; max-height:100%; border-radius:14px; }
+
+/* ── فیلد تاریخ و ساعت ────────────────────────────────────── */
+
+.trade-datetime-field{ display:flex; align-items:center; gap:7px; }
+
+@media (hover:hover) {
+  .trade-datetime-btn:hover{ border-color:var(--accent); } }
+
+.trade-datetime-btn svg{ color:var(--muted2); flex-shrink:0; }
+
+.trade-time-input{ width:80px; flex-shrink:0; text-align:center; }
+
+.trade-drawer-head{ display:flex; align-items:flex-start; justify-content:space-between; gap:10px; margin-bottom:15px; }
+
+.trade-drawer-actions{ display:flex; align-items:center; gap:2px; }
+
+.trade-detail-grid{ display:grid; grid-template-columns:repeat(2,1fr); gap:11px 15px; margin-top:14px; }
+
+@media (min-width:520px) {
+  .trade-detail-grid{ grid-template-columns:repeat(3,1fr); } }
+
+.trade-detail-section{ margin-top:20px; padding-top:16px; border-top:1px solid var(--line); }
+
+.trade-detail-section-title{ font-size:11px; color:var(--muted2); font-weight:700; margin-bottom:10px; }
+
+.trade-detail-note{ font-size:12.5px; color:var(--muted); line-height:1.95; margin-top:9px; white-space:pre-wrap; }
+
+/* آیتم‌های لیست پیشنهاد نماد حالا <button>اند (تا انتخاب با یک تپ و پیش از
+   blur ثبت شود). ریست سراسری `button{}` به آن‌ها بک‌گراند شیشه‌ای و بردر
+   می‌دهد — این‌جا صریح خنثی می‌شود تا ظاهرشان دقیقا همان ردیف ساده‌ی قبل
+   بماند. */
+
+button.trade-pair-suggest-item{
+  width:100%; text-align:start; border:none; border-bottom:1px solid var(--line);
+  border-radius:0; color:var(--text); font-weight:500;
+  background:none; box-shadow:none; backdrop-filter:none; -webkit-backdrop-filter:none;
+}
+
+button.trade-pair-suggest-item:last-child{ border-bottom:none; }
+
+.fx-flag-svg{ display:block; border-radius:50%; }
+
+/* ── جاگیر سبک داخل صفحه (components/PageLoader.tsx) ─────────────────────
+   فقط یک اسکلت ساده داخل محتوا (زیر هدر، بدون پرده و بدون لوگو). تا 200ms هیچی
+   دیده نمی‌شه (animation-delay)، پس ناوبری سریع هیچ چشمک و لودینگی نداره. */
+
+.page-loader{
+  width:100%; display:flex; flex-direction:column; gap:12px; padding:8px 0 24px;
+  opacity:0; animation:pl-in .3s ease .2s forwards;
+}
+
+@keyframes pl-in{ to{ opacity:1; } }
+
+.page-loader-skel{ width:100%; display:flex; flex-direction:column; gap:12px; }
+
+.pls-line, .pls-card{ display:block; position:relative; overflow:hidden; border-radius:10px; background:rgba(var(--accent-rgb),.07); }
+
+.pls-line{ height:16px; }
+
+.pls-line.pls-thin{ height:11px; opacity:.7; }
+
+.pls-grid{ display:grid; grid-template-columns:1fr 1fr; gap:12px; margin-top:8px; }
+
+.pls-card{ height:120px; border-radius:18px; border:1px solid var(--box-line); background:var(--box-bg); }
+
+.pls-card.pls-wide{ grid-column:1 / -1; height:150px; }
+
+.pls-line::after, .pls-card::after{
+  content:""; position:absolute; inset:0; transform:translateX(100%);
+  background:linear-gradient(90deg, transparent, rgba(255,255,255,.06), transparent);
+  animation:pl-shimmer 1.3s ease-in-out infinite;
+}
+
+body[data-theme="light"] .pls-line::after, body[data-theme="light"] .pls-card::after{ background:linear-gradient(90deg, transparent, rgba(255,255,255,.6), transparent); }
+
+@keyframes pl-shimmer{ to{ transform:translateX(-100%); } }
+
+@media (prefers-reduced-motion:reduce) {
+  .pls-line::after, .pls-card::after{ animation:none; } }
+
+/* ── ویزارد (داخل همان پاپ‌آپ مشترک .wsearch-newform) ── */
+
+.wsearch-newform:has(.rp-wiz){ max-height:min(90vh, 680px); }
+
+html[data-perf="low"] .wsearch-newform-overlay.strong-blur{
+  backdrop-filter:var(--popup-backdrop-filter-strong) !important;
+  -webkit-backdrop-filter:var(--popup-backdrop-filter-strong) !important;
+}
+
+/* حین ورود دکمه کم‌رنگ نشه (دایره/تیک باید کاملا دیده بشه) و ارتفاعش ثابت بمونه. */
+
+.auth-full-btn.is-busy > *{ vertical-align:middle; }
+
+.auth-full-btn.is-busy:disabled{ opacity:1; }
+
+.gring{ position:relative; display:inline-block; flex-shrink:0; }
+
+.gring svg{ display:block; }
+
+.gring-center{ position:absolute; inset:0; display:flex; align-items:center; justify-content:center; }
+
+.gring-cap{ filter:drop-shadow(0 0 3px rgba(0,0,0,.45)); }
+
+body[data-theme="light"] .gring-cap{ filter:drop-shadow(0 0 2px rgba(80,50,20,.35)); }
+
+/* ── نام طلایی (components/GoldenName.tsx) ─────────────────────────
+   دو طلای متفاوت (روشن لیمویی و عسلی گرم) که روی حروف جریان دارن؛ برق
+   روشن (--g1) جزو خود گرادیانه، پس جاروی جدایی که قطع/وصل بشه نداره.
+   فقط background-clip:text — عنصر خودش هیچ بک‌گراندی نمی‌گیره.
+
+   حلقه‌ی بی‌درز: گرادیان افقی (90deg، تا لبه‌ی کاشی‌ها کج نیفتن) که اول و
+   آخرش یک رنگه، پس کاشی تکرارشونده (repeat-x) بی‌درزه. عرض کاشی = 200%
+   عنصر، و جابه‌جایی 0% → 200% با این اندازه دقیقا یک کاشی کامله
+   ((W - 2W) × 2 = -2W)؛ پس فریم آخر پیکسل‌به‌پیکسل همون فریم اوله و با
+   timing خطی هیچ پرش یا مکثی دیده نمی‌شه. */
+
+.golden-name{
+  --g1:#fff3b0; --g2:#f5c542; --g3:#d4891a; --g4:#ffe27a;
+  background-image:linear-gradient(90deg, var(--g3) 0%, var(--g2) 13%, var(--g1) 25%, var(--g2) 37%, var(--g3) 50%, var(--g4) 63%, var(--g2) 76%, var(--g4) 88%, var(--g3) 100%);
+  background-size:200% 100%;
+  background-repeat:repeat-x;
+  background-position:0% 50%;
+  -webkit-background-clip:text; background-clip:text;
+  -webkit-text-fill-color:transparent; color:transparent;
+  animation:goldenFlow 6s linear infinite;
+  font-weight:800;
+}
+
+body[data-theme="light"] .golden-name{ --g1:#f7d774; --g2:#d9a21b; --g3:#9a5b06; --g4:#e8b830; }
+
+/* درخشش (GoldenName): کپی شفاف متن با text-shadow زیر حروف گرادیانی، بدون
+   filter — drop-shadow داخل کارت‌های شیشه‌ای مستطیل کم‌رنگ پشت اسم می‌انداخت */
+
+.name-glow{ position:relative; font-weight:800; --name-glow:rgba(245,197,66,.45); }
+
+.name-glow[data-text]::before{
+  content:attr(data-text); position:absolute; inset:0; pointer-events:none;
+  color:transparent; -webkit-text-fill-color:transparent; white-space:inherit;
+  text-shadow:0 0 8px var(--name-glow);
+}
+
+body[data-theme="light"] .golden-name-glow{ --name-glow:rgba(217,162,27,.32); }
+
+@keyframes goldenFlow{ from{ background-position:0% 50%; } to{ background-position:200% 50%; } }
+
+@media (prefers-reduced-motion: reduce) {
+  .golden-name{ animation:none; background-position:30% 50%; } }
+
+/* ── نام بنفش سمی (components/GoldenName.tsx با staff) ─────────────
+   Owner و ادمین‌ها: همون تکنیک حلقه‌ی بی‌درز .golden-name (گرادیان افقی با
+   اول و آخر یک‌رنگ، کاشی 200%، جابه‌جایی خطی 0% → 200% = دقیقا یک کاشی؛
+   فریم آخر = فریم اول) ولی با پالت بنفش نئون: بنفش عمیق ↔ بنفش برقی با
+   برق یاسی-سرخابی اسیدی. درخشش با --name-glow روی .toxic-name-glow.
+   فقط background-clip:text — عنصر خودش هیچ بک‌گراندی نمی‌گیره. */
+
+.toxic-name{
+  --t1:#f3c9ff; --t2:#b44dff; --t3:#7a1fe0; --t4:#e15cff;
+  background-image:linear-gradient(90deg, var(--t3) 0%, var(--t2) 13%, var(--t1) 25%, var(--t2) 37%, var(--t3) 50%, var(--t4) 63%, var(--t2) 76%, var(--t4) 88%, var(--t3) 100%);
+  background-size:200% 100%;
+  background-repeat:repeat-x;
+  background-position:0% 50%;
+  -webkit-background-clip:text; background-clip:text;
+  -webkit-text-fill-color:transparent; color:transparent;
+  animation:goldenFlow 6s linear infinite;
+  font-weight:800;
+}
+
+.toxic-name-glow{ --name-glow:rgba(190,80,255,.55); }
+
+body[data-theme="light"] .toxic-name-glow{ --name-glow:rgba(140,40,225,.3); }
+
+body[data-theme="light"] .toxic-name{
+  --t1:#b23cf0; --t2:#7b1fd6; --t3:#4a0f9e; --t4:#a51fc8;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .toxic-name{ animation:none; background-position:30% 50%; } }
+
+/* ── تیک واحد اپ (components/TickButton.tsx) — کپی .db-tl-node  داشبورد ──
+   عمدا بیرون .db-page تا همه‌جا یکسان باشه. بک‌گراند فقط در حالت تیک‌خورده
+   (همون گرادیان داشبورد)؛ حالت خالی کاملا شفافه.
+
+   باگ «مربع داخل دایره» (ریشه):
+   (۱) گرادیان حالت تیک‌خورده با background-origin پیش‌فرض (padding-box) و
+       repeat کشیده می‌شد؛ با بوردر شفاف ۲px، کاشی گرادیان توی حلقه‌ی بوردر
+       تکرار می‌شد و لبه‌ی padding-box یک مربع روشن وسط دایره می‌ساخت — همه‌جا،
+       حتی داخل .dash-scope. حالا گرادیان صریحا border-box و no-repeat‌ه.
+   (۲) بیرون .dash-scope ریست سراسری button{} (لیکوئید گلس) backdrop-filter و
+       سایه‌ی inset می‌داد و در تم روشن body[data-theme="light"] button
+       (اسپسیفیسیتی 0,1,2) بک‌گراند شیشه‌ای/بوردر/سایه رو روی .tick-btn می‌نشوند.
+       برای همین همه‌ی قانون‌های تیک با پیشوند html body و کلاس دوبل
+       (0,2,2) نوشته شدن تا هیچ قانون سراسری (هاور/دیزیبل/تم روشن) بهشون نرسه.
+
+   رنگ: --tick-a / --tick-b (پیش‌فرض پالت روتین --ring-1)؛ .tick-exercise
+   همون تیک با پالت تمرین (--ring-2، آبی→بنفش) برای حرکت‌های برنامه‌ی تمرین. */
+
+.tick-btn{ --tick-size:26px; --tick-a:var(--ring-1a); --tick-b:var(--ring-1b); }
+
+.tick-btn.tick-exercise{ --tick-a:var(--ring-2a); --tick-b:var(--ring-2b); }
+
+html body .tick-btn.tick-btn.is-square{ border-radius:calc(var(--tick-size) * .3); }
+
+.tick-btn svg{ width:calc(var(--tick-size) * .58); height:calc(var(--tick-size) * .58); position:relative; z-index:1; overflow:visible; }
+
+@media (hover:hover) {
+  html body .tick-btn.tick-btn:not(.is-disabled):not(.is-checked):hover{
+    border-color:var(--tick-a); color:#fff; background:transparent;
+    box-shadow:0 0 0 4px color-mix(in srgb, var(--tick-a) 16%, transparent);
+  } }
+
+html body .tick-btn.tick-btn.is-checked{
+  border-color:transparent;
+  background:linear-gradient(135deg, var(--tick-a), var(--tick-b)) border-box no-repeat;
+  box-shadow:0 0 14px color-mix(in srgb, var(--tick-a) 55%, transparent);
+}
+
+html body .tick-btn.tick-btn.is-missed{ border-color:var(--tl-warn, #F0A94B); border-style:dashed; }
+
+html body .tick-btn.tick-btn.is-disabled{ cursor:not-allowed; opacity:.5; }
+
+html body .tick-btn.tick-btn.is-disabled.is-checked, html body .tick-btn.tick-btn.is-disabled.is-missed{ opacity:.75; }
+
+.tick-ripple{ position:absolute; inset:-2px; border-radius:inherit; border:2px solid var(--tick-b); background:none; pointer-events:none; }
+
+.tick-spark{ position:absolute; left:50%; top:50%; pointer-events:none; }
+
+.tick-spark i{
+  position:absolute; width:4px; height:4px; margin:-2px; border-radius:50%;
+  background:var(--tick-b); animation:tick-burst .75s cubic-bezier(.22,1,.36,1) forwards;
+  transform:rotate(calc(var(--i) * 45deg)) translateX(0);
+}
+
+@keyframes tick-burst{ to{ transform:rotate(calc(var(--i) * 45deg)) translateX(var(--tick-size)); opacity:0; } }
+
+@media (prefers-reduced-motion: reduce) {
+  .tick-spark{ display:none; } }
+
+/* ── گزینه‌ی تیک‌خوردنی (components/TickOption.tsx) — بی‌بک‌گراند ── */
+
+.tick-option{
+  display:flex; align-items:center; gap:10px; width:100%; padding:6px 0; margin:0; border:none;
+  background:transparent; color:var(--text); font:inherit; font-size:13px; font-weight:600; text-align:start; cursor:pointer;
+  -webkit-tap-highlight-color:transparent;
+}
+
+.tick-option:disabled{ cursor:not-allowed; opacity:.6; }
+
+.tick-option-text{ flex:1; min-width:0; }
+
+/* ── ویرایشگر آیتم‌های برنامه‌ی لیستی (components/RoutineChecklistEditor.tsx) ── */
+
+.checklist-editor{ display:flex; flex-direction:column; gap:8px; margin-top:8px; }
+
+.checklist-editor-row{ display:flex; align-items:center; gap:8px; }
+
+.checklist-editor-row input{ flex:1; min-width:0; margin:0; }
+
+.checklist-editor-list{ display:flex; flex-direction:column; gap:8px; }
+
+.checklist-editor-spacer{ width:28px; flex-shrink:0; }
+
+/* دستگیره‌ی درگ: بی‌بک‌گراند (ریست شیشه‌ای سراسری button{} با اسپسیفیسیتی بالاتر) و touch-action:none تا لمس درگ رو نبره */
+
+html body .checklist-editor-grip{
+  flex:none; width:28px; height:36px; padding:0; border:none; border-radius:10px;
+  background:none; background-image:none; box-shadow:none; backdrop-filter:none; -webkit-backdrop-filter:none;
+  color:var(--muted2); display:flex; align-items:center; justify-content:center;
+  cursor:grab; touch-action:none; user-select:none; -webkit-user-select:none; -webkit-tap-highlight-color:transparent;
+  transition:color .15s ease;
+}
+
+.checklist-editor-add{ width:auto; flex-shrink:0; margin:0; }
+
+/* دکمه‌ی «حذف»  ردیف‌های ساعت flex:1 1 100% داره — این‌جا نباید فیلد رو له کنه */
+
+.checklist-editor-row .wsearch-newrow-remove-text{ order:0; flex:0 0 auto; width:auto; padding:0 2px; margin:0; }
+
+.checklist-editor-row input.wsearch-newform-name{ width:auto; flex:1 1 auto; min-width:0; }
+
+.checklist-editor-add:disabled{ opacity:.5; cursor:not-allowed; }
+
+/* ── برنامه‌ی لیستی در «روتین من» (DashTaskRow) ── */
+
+.checklist-chip{
+  display:inline-flex; align-items:center; gap:3px; flex-shrink:0; padding:2px 7px; border-radius:999px;
+  border:1px solid var(--box-line, rgba(255,255,255,.12)); background:transparent; color:var(--muted);
+  font-size:10.5px; font-weight:700; font-variant-numeric:tabular-nums; cursor:pointer;
+}
+
+@media (min-width:640px) {
+  .checklist-chip{ font-size:12px; padding:3px 9px; } }
+
+@supports not (aspect-ratio:1) {
+  .db-share-preview{ display:block; height:0; padding-bottom:125%; }
+  .db-share-preview .db-share-canvas{ position:absolute; top:0; left:0; }
+  .db-wdot i{ height:16px; }
+  .cal-cell, .jdate-cell{ min-height:40px; } }
+
+@supports not (width:1cqi) {
+
+/* بدون container query: خانه‌های نقشه‌ی ثبات از عرض صفحه حساب می‌شن */
+  .db-heat-wrap > *{ --cell:clamp(12px, calc((100vw - 130px) / 13), 22px); } }
+
+@supports not (height:1dvh) {
+  .db-share{ --share-w:min(440px, calc((100vh - 32px - 220px) * .8)); } }
+
+/* فیلدها و دکمه‌هایی که قبلا direction:rtl صریح داشتن */
+
+html[dir="ltr"] .field-error-wrap .jdate-btn, html[dir="ltr"] .jdate-btn.placeholder, html[dir="ltr"] .fx-clock, html[dir="ltr"] .friend-profile-banner-bar, html[dir="ltr"] .admin-root, html[dir="ltr"] .admin-kpi-delta{ direction:ltr; }
+
+/* درخشش اسکلت لودینگ از چپ به راست */
+
+@keyframes pl-shimmer-ltr{ to{ transform:translateX(100%); } }
+
+html[dir="ltr"] .pls-line::after, html[dir="ltr"] .pls-card::after{ transform:translateX(-100%); }
+
+@media (prefers-reduced-motion:no-preference) {
+  html[dir="ltr"] .pls-line::after, html[dir="ltr"] .pls-card::after{ animation-name:pl-shimmer-ltr; } }
+
+/* ── ماژول‌های رنگی که توکن خودشون رو دارن: همه خاکستری ── */
+
+html[data-admin-theme="noir"] body:not([data-theme="light"]) .db-page,
+html[data-admin-theme="noir"] body:not([data-theme="light"]) .db-cmd-root{
+  --ring-1a:#FFFFFF; --ring-1b:#BDBDBD;
+  --ring-2a:#E0E0E0; --ring-2b:#8C8C8C;
+  --ring-3a:#C8C8C8; --ring-3b:#6E6E6E;
+  --ring-over:#FFFFFF;
+  --tl-warn:#BDBDBD;
+}
+
+html[data-admin-theme="noir"] body:not([data-theme="light"]) .golden-name{
+  --g1:#FFFFFF; --g2:#D6D6D6; --g3:#8C8C8C; --g4:#F0F0F0;
+  filter:drop-shadow(0 0 6px rgba(255,255,255,.35));
+}
+
+html[data-admin-theme="noir"] body:not([data-theme="light"]) .toxic-name{
+  --t1:#FFFFFF; --t2:#D6D6D6; --t3:#8C8C8C; --t4:#F0F0F0;
+  --tx-glow-lo:rgba(255,255,255,.25); --tx-glow-hi:rgba(255,255,255,.5);
+}
+
+html[data-admin-theme="noir"] body:not([data-theme="light"]) .db-ribbon-fill{
+  background:linear-gradient(270deg, #FFFFFF 0%, #BDBDBD 40%, #6E6E6E 75%, #2A2A2A 100%);
+}
+
+html[data-admin-theme="noir"] body:not([data-theme="light"]) .db-ribbon-sun-core{
+  background:#FFFFFF; box-shadow:0 0 0 4px rgba(255,255,255,.2), 0 0 18px 4px rgba(255,255,255,.5);
+}
+
+[data-m-in="rise"]{ animation:m-rise var(--m-dur-3) var(--m-ease-out) backwards; animation-delay:calc(min(var(--i, 0), 8) * var(--m-step)); }
+
+[data-m-in="fade"]{ animation:m-fade var(--m-dur-3) var(--m-ease-out) backwards; }
+
+[data-m-in="pop"]{ animation:m-pop var(--m-dur-3) var(--m-ease-spring) backwards; }
+
+html[data-navigated] .page-enter > :not(.page-loader){
+  animation:m-rise var(--m-dur-4) var(--m-ease-out) backwards;
+  animation-delay:calc(min(var(--i, 0), 6) * var(--m-step));
+}
+
+html[data-navigated] .page-enter > [style*="position: fixed"],
+html[data-navigated] .page-enter > [style*="position:fixed"]{ animation-name:m-fade; }
+
+.module-gate{ animation:m-fade var(--m-dur-4) var(--m-ease-out) backwards; }
+
+.module-gate-overlay > *{ animation:m-rise var(--m-dur-4) var(--m-ease-out) backwards; }
+
+.module-gate-overlay > :nth-child(2){ animation-delay:var(--m-step); }
+
+.module-gate-overlay > :nth-child(3){ animation-delay:calc(var(--m-step) * 2); }
+
+.module-gate-overlay > :nth-child(n+4){ animation-delay:calc(var(--m-step) * 3); }
+
+.trade-chat-report-sheet{ animation:m-rise-soft var(--m-dur-3) var(--m-ease-out) backwards; }
+
+.calorie-unit-dropdown{ animation:m-pop var(--m-dur-2) var(--m-ease-out) backwards; transform-origin:50% 0; }
+
+.au-backdrop, .ads-pal-backdrop{ animation:m-fade var(--m-dur-3) var(--m-ease-out) backwards; }
+
+.ads-pal{ animation:m-pop var(--m-dur-3) var(--m-ease-spring) backwards; transform-origin:50% 0; }
+
+@media (hover:hover) and (pointer:fine) {
+  :where([role="button"], [role="tab"], [role="menuitem"], .is-clickable, [data-clickable]):hover{ opacity:.92; } }
+
+@media (prefers-reduced-motion:no-preference) {
+  :where(a[href], button, [role="button"], [role="tab"], summary):focus-visible{ transition:outline-offset var(--m-dur-1) var(--m-ease-out), scale var(--m-dur-1) var(--m-ease-out); } }
+
+.trade-account-goalbar-fill, .admin-funnel-fill, .adb-fill, .slw-fill{
+  animation:m-bar var(--m-dur-5) var(--m-ease-out) backwards;
+}
+
+@supports (animation-timeline:view()) {
+
+@media (prefers-reduced-motion:no-preference) {
+  html:not([data-perf-weak]) .m-reveal:not(.m-pre){
+      animation:m-rise-scroll linear both;
+      animation-timeline:view();
+      animation-range:entry 0% entry 45%;
+    } } }
+
+.m-reveal.m-pre{ opacity:0; translate:0 14px; }
+
+.m-reveal.m-pre.m-seen{ opacity:1; translate:0 0; transition:opacity var(--m-dur-4) var(--m-ease-out), translate var(--m-dur-4) var(--m-ease-out); }
+
+.topbar-auth-pop{ animation:topbarAuthPop .38s cubic-bezier(.34,1.56,.64,1); }
+
+@media (prefers-reduced-motion:reduce) {
+  .topbar-auth-pop{ animation:none; } }
+
+@media (min-width:1024px) {
+  .dnav-chev{ transition:transform .2s ease; opacity:.7; flex-shrink:0; }
+  .dnav :focus-visible, .dnav-end :focus-visible{ outline:2px solid var(--accent); outline-offset:2px; }
+  .dnav-ind{
+    position:absolute; left:0; bottom:0; width:1px; height:2px; background:var(--accent);
+    transform-origin:0 0; opacity:0; pointer-events:none; will-change:transform;
+  }
+  html[dir="ltr"] .dnav-panel.notif-panel{
+    position:absolute; top:calc(100% - 6px); inset-inline-start:0; inset-inline-end:auto;
+    width:max-content; min-width:190px; max-width:280px; max-height:none; overflow:visible;
+    padding:6px; z-index:50;
+    animation:none; transform-origin:top left;
+    visibility:hidden; opacity:0; pointer-events:none;
+    transform:translate3d(0,-6px,0) scale(.97);
+    transition:opacity .16s ease, transform .24s cubic-bezier(.34,1.45,.64,1), visibility 0s linear .24s;
+  }
+  html[dir="ltr"] .dnav-lang-panel.notif-panel{ inset-inline-start:auto; inset-inline-end:0; min-width:150px; top:calc(100% + 6px); transform-origin:top right; } }
+
+@media (min-width:1024px) and (prefers-reduced-motion:reduce) {
+  .dnav-ind.is-ready, .dnav-chev{ transition:none; }
+  html[dir="ltr"] .dnav-panel.notif-panel, html[dir="ltr"] .dnav-panel.notif-panel[data-open="true"]{
+    transform:none; transition:opacity .12s ease, visibility 0s;
+  } }

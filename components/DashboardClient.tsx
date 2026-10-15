@@ -13,9 +13,10 @@ import "@/app/dashboard/dashboard.css";
 import { useCallback, useEffect, useMemo, useState } from "react";
 import dynamic from "next/dynamic";
 import { preloadWhenIdle } from "@/lib/preloadIdle";
+import { prefetchWhenIdle } from "@/lib/prefetchPolicy";
 import { useRouter } from "next/navigation";
 import { useSession } from "next-auth/react";
-import { MotionConfig, motion } from "framer-motion";
+import { MotionConfig, m as motion } from "framer-motion";
 import { AuthGate } from "./AuthGate";
 import { SuperAdminGate } from "./SuperAdminGate";
 import { useFeatures } from "@/lib/useFeatures";
@@ -36,6 +37,7 @@ import { DashboardActionsProvider } from "./DashboardActions";
 import { useCommandHotkey } from "./DashboardCommand";
 import { V_GRID } from "./DashboardKit";
 import { DashIcon } from "./DashboardIcons";
+import { tr, isEn } from "@/lib/i18n";
 
 export type DashboardGate = "guest" | "off" | "on";
 
@@ -46,7 +48,7 @@ export type DashboardGate = "guest" | "off" | "on";
  */
 export function DashboardClient({ gate, initial }: { gate: DashboardGate; initial: { key: string; data: DashboardData } | null }) {
   if (gate === "guest") {
-    return <section className="db-page"><AuthGate message="برای دیدن داشبورد وارد شوید" /></section>;
+    return <section className="db-page"><AuthGate message={tr("برای دیدن داشبورد وارد شوید", "Sign in to view the dashboard")} /></section>;
   }
   if (gate === "off") {
     return <section className="db-page dash-scope"><SuperAdminGate forceLocked><DashboardShellSkeleton /></SuperAdminGate></section>;
@@ -111,6 +113,8 @@ function DashboardBody({ initial }: { initial: { key: string; data: DashboardDat
   const router = useRouter();
   const refreshNow = useCallback(() => refresh(true), [refresh]);
   const goTo = useCallback((href: string) => router.push(href), [router]);
+  // تنها مقصد واقعا محتمل بعدی؛ بعد از اولین پینت، زمان بیکاری، و نه روی اتصال کند/صرفه‌جویی داده
+  useEffect(() => prefetchWhenIdle((h) => router.prefetch(h), "/weekly"), [router]);
   const routine = useDashboardRoutine();
   const flagFeatures = useFeatures();
   const { data: session } = useSession();
@@ -155,7 +159,7 @@ function DashboardBody({ initial }: { initial: { key: string; data: DashboardDat
   const routineLocked = !!modules && !modules.has("ROUTINE");
 
   if (status === "forbidden" && !data) {
-    return <div className="db-error"><DashIcon name="lock" /> این بخش موقتا غیرفعال است</div>;
+    return <div className="db-error"><DashIcon name="lock" /> {tr("این بخش موقتا غیرفعال است", "This section is temporarily disabled")}</div>;
   }
 
   return (
@@ -166,8 +170,8 @@ function DashboardBody({ initial }: { initial: { key: string; data: DashboardDat
 
       {status === "error" && !data && (
         <div className="db-error">
-          <DashIcon name="bell" /> دریافت اطلاعات ناموفق بود.
-          <button type="button" className="account-outline-btn mentor-btn is-sm" onClick={() => refresh(true)}>تلاش دوباره</button>
+          <DashIcon name="bell" /> {tr("دریافت اطلاعات ناموفق بود.", "Could not load data.")}
+          <button type="button" className="account-outline-btn mentor-btn is-sm" onClick={() => refresh(true)}>{tr("تلاش دوباره", "Try again")}</button>
         </div>
       )}
 

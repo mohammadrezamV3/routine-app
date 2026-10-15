@@ -4,6 +4,7 @@ import { useEffect, useRef, useState } from "react";
 import { createPortal } from "react-dom";
 import { MoreVertical } from "lucide-react";
 import { useMenuPresence } from "@/lib/useMenuPresence";
+import { isEn, tr } from "@/lib/i18n";
 
 export type KebabAction = {
   label: string;
@@ -21,9 +22,9 @@ export type KebabAction = {
  * هم `position:fixed` نسبت به خود دکمه محاسبه می‌شود، پس اسکرول شدن لیست
  * منو را جا نمی‌گذارد (با اسکرول بسته می‌شود).
  */
-export function TradeKebabMenu({ actions, label = "گزینه‌ها" }: { actions: KebabAction[]; label?: string }) {
+export function TradeKebabMenu({ actions, label }: { actions: KebabAction[]; label?: string }) {
   const [open, setOpen] = useState(false);
-  const [pos, setPos] = useState<{ top: number; right: number } | null>(null);
+  const [pos, setPos] = useState<{ top: number; right?: number; left?: number } | null>(null);
   const btnRef = useRef<HTMLButtonElement>(null);
   const menuRef = useRef<HTMLDivElement>(null);
   // خروج نرم منو (حرکت مشترک menu-motion)
@@ -53,13 +54,13 @@ export function TradeKebabMenu({ actions, label = "گزینه‌ها" }: { actio
         ref={btnRef}
         type="button"
         className="trade-icon-btn trade-kebab-trigger"
-        aria-label={label}
+        aria-label={label ?? tr("گزینه‌ها", "Options")}
         onClick={(e) => {
           e.preventDefault();
           e.stopPropagation();
           if (open) { setOpen(false); return; }
           const r = e.currentTarget.getBoundingClientRect();
-          setPos({ top: r.bottom + 6, right: window.innerWidth - r.right });
+          setPos(isEn() ? { top: r.bottom + 6, left: Math.max(8, Math.min(r.left, window.innerWidth - 158)) } : { top: r.bottom + 6, right: window.innerWidth - r.right });
           setOpen(true);
         }}
       >
@@ -74,14 +75,14 @@ export function TradeKebabMenu({ actions, label = "گزینه‌ها" }: { actio
         <div
           ref={menuRef}
           data-state={presence.state}
-          style={{ top: pos.top, right: pos.right }}
+          style={{ top: pos.top, right: pos.right, left: pos.left }}
           className="mm-menu dash-context-menu fixed z-[96] min-w-[150px] overflow-hidden rounded-2xl border border-dash-border p-1.5 shadow-[0_16px_40px_rgba(0,0,0,.5)]"
         >
           {actions.map((a) => (
             <div
               key={a.label}
               onClick={() => { if (a.disabled) return; setOpen(false); a.onClick(); }}
-              className={`flex items-center gap-2 rounded-xl px-3 py-2 text-right text-[12px] transition sm:text-[13px] ${
+              className={`flex items-center gap-2 rounded-xl px-3 py-2 text-start text-[12px] transition sm:text-[13px] ${
                 a.disabled
                   ? "cursor-default opacity-45"
                   : a.danger

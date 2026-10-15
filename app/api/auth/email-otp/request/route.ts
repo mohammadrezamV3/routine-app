@@ -1,3 +1,4 @@
+import { tr } from "@/lib/i18n";
 import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 import { checkRateLimit, getClientIp } from "@/lib/rateLimit";
@@ -16,17 +17,17 @@ export async function POST(req: NextRequest) {
   const rawEmail = body?.email;
 
   if (typeof rawEmail !== "string" || !isValidEmail(rawEmail.trim())) {
-    return NextResponse.json({ error: "ایمیل معتبر نیست" }, { status: 400 });
+    return NextResponse.json({ error: tr("ایمیل معتبر نیست", "Invalid email address") }, { status: 400 });
   }
   const email = rawEmail.trim().toLowerCase();
 
   // ۱ درخواست در ۶۰ ثانیه به‌ازای همین ایمیل (طبق الزام صریح)، به‌علاوه یک
   // سقف سست‌تر IP تا کسی با چرخوندن ایمیل‌های مختلف از سقف per-email فرار نکنه
   if (!(await checkRateLimit(`email-otp-req-email:${email}`, 1, 60 * 1000))) {
-    return NextResponse.json({ error: "چند لحظه صبر کن و دوباره امتحان کن" }, { status: 429 });
+    return NextResponse.json({ error: tr("چند لحظه صبر کن و دوباره امتحان کن", "Wait a moment and try again") }, { status: 429 });
   }
   if (!(await checkRateLimit(`email-otp-req-ip:${ip}`, 10, 10 * 60 * 1000))) {
-    return NextResponse.json({ error: "تعداد درخواست‌ها بیش از حد مجازه — چند دقیقه دیگه دوباره امتحان کن" }, { status: 429 });
+    return NextResponse.json({ error: tr("تعداد درخواست‌ها بیش از حد مجازه — چند دقیقه دیگه دوباره امتحان کن", "Too many requests — try again in a few minutes") }, { status: 429 });
   }
 
   const code = generateEmailOtp();
@@ -42,7 +43,7 @@ export async function POST(req: NextRequest) {
   if (!result.ok) {
     // این شکست ربطی به وجودداشتن حساب نداره (برای هر ایمیلی یکسان شکست
     // می‌خوره) — پس نشونش‌دادن enumeration نیست، یک خطای واقعی زیرساختیه
-    return NextResponse.json({ error: "ارسال ایمیل با مشکل مواجه شد — بعدا دوباره امتحان کن" }, { status: 502 });
+    return NextResponse.json({ error: tr("ارسال ایمیل با مشکل مواجه شد — بعدا دوباره امتحان کن", "Sending the email failed — try again later") }, { status: 502 });
   }
 
   return NextResponse.json({ ok: true });

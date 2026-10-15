@@ -2,6 +2,7 @@
 
 import { useEffect, useMemo, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
+import dynamic from "next/dynamic";
 import { useSession } from "next-auth/react";
 import { LockBodyScroll } from "@/components/LockBodyScroll";
 import { ModuleGate } from "@/components/ModuleGate";
@@ -33,17 +34,12 @@ import { getTodayStats } from "@/lib/routineStats";
 import { checklistOf, isOccDone, itemKey, toggleTask } from "@/lib/routineChecklist";
 import { keyMatches, useLiveRefresh } from "@/lib/liveSync";
 import { DEFAULT_SLEEP, DEFAULT_WAKE, getWakeSleepTimes, WakeSleepTimes } from "@/lib/wakeSleep";
-import { isoLocal, toJalali, faNum, J_MONTHS } from "@/lib/jalali";
-import { ProgramCard } from "@/components/ProgramCard";
-import { AddProgramForm } from "@/components/AddProgramForm";
-import { EditOccurrenceForm } from "@/components/EditOccurrenceForm";
-import { MoveOccurrenceModal } from "@/components/MoveOccurrenceModal";
+import { isoLocal, toJalali, faNum, J_MONTHS, weekdayName } from "@/lib/jalali";
+import { tr } from "@/lib/i18n";
 import { WakeSleepSetup } from "@/components/WakeSleepSetup";
-import { HistoryCalendar } from "@/components/HistoryCalendar";
 import { DashHeader } from "@/components/DashHeader";
 import { DashDateSelector } from "@/components/DashDateSelector";
 import { DashFilterButton } from "@/components/DashFilterButton";
-import { DashFilterModal } from "@/components/DashFilterModal";
 import { DashTaskList } from "@/components/DashTaskList";
 import { DashTaskItem } from "@/components/DashTaskRow";
 import { DashQuickPanels } from "@/components/DashQuickPanels";
@@ -52,10 +48,18 @@ import { DashMedicationCard } from "@/components/DashMedicationCard";
 import { DashSidebar } from "@/components/DashSidebar";
 import { useDashboardPrefs } from "@/lib/dashboardPrefs";
 import { AuthGate } from "@/components/AuthGate";
-import { RoutineAiFab } from "@/components/RoutineAiFab";
 import { WeekPlanGrid, WeekPlanGridDay } from "@/components/WeekPlanGrid";
 import { useFeature } from "@/lib/useFeatures";
 import { activeModulesOf, getAccount } from "@/lib/accountCache";
+
+// پنجره‌ها و فرم‌هایی که فقط با کنش کاربر باز می‌شن: کدشون توی باندل اولیه نیست
+const ProgramCard = dynamic(() => import("@/components/ProgramCard").then((m) => m.ProgramCard), { ssr: false });
+const AddProgramForm = dynamic(() => import("@/components/AddProgramForm").then((m) => m.AddProgramForm), { ssr: false });
+const EditOccurrenceForm = dynamic(() => import("@/components/EditOccurrenceForm").then((m) => m.EditOccurrenceForm), { ssr: false });
+const MoveOccurrenceModal = dynamic(() => import("@/components/MoveOccurrenceModal").then((m) => m.MoveOccurrenceModal), { ssr: false });
+const HistoryCalendar = dynamic(() => import("@/components/HistoryCalendar").then((m) => m.HistoryCalendar), { ssr: false });
+const DashFilterModal = dynamic(() => import("@/components/DashFilterModal").then((m) => m.DashFilterModal), { ssr: false });
+const RoutineAiFab = dynamic(() => import("@/components/RoutineAiFab").then((m) => m.RoutineAiFab), { ssr: false });
 
 const now = new Date();
 const todayKey = isoLocal(now);
@@ -339,7 +343,7 @@ function WeeklyPageInner() {
     if (dayName && gymDays?.includes(dayName)) {
       list.push({
         id: EXERCISE_TASK_ID,
-        name: "برنامه تمرینی امروز",
+        name: tr("برنامه تمرینی امروز", "Today's workout plan"),
         time: "",
         importance: undefined,
         tag: undefined,
@@ -372,13 +376,13 @@ function WeeklyPageInner() {
       const items = tasksForDate(d, opts).map((t) => ({
         id: t.id,
         label: t.name,
-        meta: t.time ? toEnDigits(t.time) : "بدون ساعت",
+        meta: t.time ? toEnDigits(t.time) : tr("بدون ساعت", "No time"),
       }));
       return {
         key: dIso,
-        dayName: WEEK_ORDER.find((o) => o.jsDay === d.getDay())!.name,
+        dayName: weekdayName(d.getDay()),
         isToday: dIso === todayKey,
-        subtitle: items.length ? `${faNum(items.length)} برنامه` : undefined,
+        subtitle: items.length ? tr(`${faNum(items.length)} برنامه`, `${items.length} ${items.length === 1 ? "plan" : "plans"}`) : undefined,
         items,
       };
     });
@@ -538,19 +542,19 @@ function WeeklyPageInner() {
 
             <div className="flex flex-wrap items-center gap-2 lg:order-1 lg:shrink-0 lg:flex-nowrap">
               <DashFilterButton
-                label="تاریخچه"
+                label={tr("تاریخچه", "History")}
                 icon={<History size={15} />}
                 active={!isSelectedToday}
                 onClick={() => setHistoryPickerOpen(true)}
               />
               <DashFilterButton
-                label="امروز"
+                label={tr("امروز", "Today")}
                 icon={<Calendar size={15} />}
                 active={isSelectedToday}
                 onClick={() => { setSelectedIso(isoLocal(now)); setRecenterKey((k) => k + 1); }}
               />
               <DashFilterButton
-                label="فیلتر"
+                label={tr("فیلتر", "Filter")}
                 icon={<Filter size={15} />}
                 active={importanceFilter !== "all" || programFilter !== null}
                 onClick={() => setFilterModalOpen(true)}
@@ -574,7 +578,7 @@ function WeeklyPageInner() {
             }
           >
             {status === "unauthenticated" ? (
-              <AuthGate message="برای مدیریت برنامه‌های امروز وارد شوید" />
+              <AuthGate message={tr("برای مدیریت برنامه‌های امروز وارد شوید", "Sign in to manage today's plans")} />
             ) : (
               <DashTaskList
                 tasks={dashTasks}
@@ -676,8 +680,8 @@ function WeeklyPageInner() {
             <div className="modal-overlay open" onClick={() => setHistoryPickerOpen(false)} />
             <div className="modal-panel dash-scope open">
               <div className="modal-head">
-                <div className="modal-title">انتخاب تاریخ</div>
-                <button className="nav-close" onClick={() => setHistoryPickerOpen(false)} aria-label="بستن">×</button>
+                <div className="modal-title">{tr("انتخاب تاریخ", "Pick a date")}</div>
+                <button className="nav-close" onClick={() => setHistoryPickerOpen(false)} aria-label={tr("بستن", "Close")}>×</button>
               </div>
               <div className="modal-body">
                 <HistoryCalendar

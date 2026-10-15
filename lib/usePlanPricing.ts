@@ -13,10 +13,10 @@ let inflight: Promise<PricingConfig> | null = null;
 const TTL = 60_000;
 const listeners = new Set<(p: PricingConfig) => void>();
 
-function load(): Promise<PricingConfig> {
+function load(fresh = false): Promise<PricingConfig> {
   if (cached && Date.now() - cached.at < TTL) return Promise.resolve(cached.value);
   if (!inflight) {
-    inflight = fetch("/api/pricing", { cache: "no-store" })
+    inflight = fetch("/api/pricing", fresh ? { cache: "reload" } : undefined)
       .then((r) => (r.ok ? r.json() : null))
       .then((d) => {
         const value = normalizePricingConfig(d?.pricing ?? null);
@@ -33,13 +33,15 @@ function load(): Promise<PricingConfig> {
 export function invalidatePlanPricing() {
   cached = null;
   inflight = null;
-  load().then((p) => listeners.forEach((fn) => fn(p)));
+  load(true).then((p) => listeners.forEach((fn) => fn(p)));
 }
 
 export function usePlanPricing(): { pricing: PricingConfig; ready: boolean } {
-  const [v, setV] = useState<PricingConfig | null>(cached?.value ?? null);
+  // اولین رندر همیشه null (هم‌خوان با HTML سرور حتی وقتی کش پر شده و این کامپوننت دیرتر هیدریت می‌شه)
+  const [v, setV] = useState<PricingConfig | null>(null);
   useEffect(() => {
     let alive = true;
+    if (cached?.value) setV(cached.value);
     load().then((p) => { if (alive) setV(p); });
     const on = (p: PricingConfig) => { if (alive) setV(p); };
     listeners.add(on);

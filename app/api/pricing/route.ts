@@ -3,10 +3,10 @@ import { getPricingConfig } from "@/lib/planPricingServer";
 
 // قیمت پلن‌ها برای نمایش عمومی (لندینگ، اشتراک، چک‌اوت، بنرهای خرید). فقط
 // نمایشیه — مبلغ واقعی پرداخت همیشه سمت سرور در api/subscription/checkout
-// از همین پیکربندی (تازه از دیتابیس) حساب می‌شه.
+// از همین پیکربندی (تازه از دیتابیس) حساب می‌شه. کش کوتاه مرورگر/CDN: ادمین بعد ذخیره با cache:"reload" تازه می‌گیره.
 export const dynamic = "force-dynamic";
 
 export async function GET() {
   const pricing = await getPricingConfig();
-  return NextResponse.json({ pricing }, { headers: { "Cache-Control": "no-store" } });
+  return NextResponse.json({ pricing }, { headers: { "Cache-Control": "public, max-age=30, stale-while-revalidate=120" } });
 }

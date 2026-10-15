@@ -1,3 +1,4 @@
+import { tr } from "@/lib/i18n";
 import { prisma } from "@/lib/prisma";
 import { verifyCommitment } from "@/lib/e2ee/core";
 import { openAtRest, sealAtRest, verifyServerFrankingTag } from "@/lib/e2ee/server";
@@ -44,16 +45,16 @@ export async function verifyConversationMessages(
   input: unknown,
   visibleAfter: Date | null
 ): Promise<{ ok: true; messages: VerifiedConversationMessage[] } | { ok: false; error: string; messageId?: string }> {
-  if (!Array.isArray(input) || input.length === 0) return { ok: false, error: "حداقل یک پیام برای گزارش انتخاب کن" };
-  if (input.length > CONVERSATION_REPORT_MAX) return { ok: false, error: `حداکثر ${CONVERSATION_REPORT_MAX} پیام را می‌توانی پیوست کنی` };
+  if (!Array.isArray(input) || input.length === 0) return { ok: false, error: tr("حداقل یک پیام برای گزارش انتخاب کن", "Select at least one message to report") };
+  if (input.length > CONVERSATION_REPORT_MAX) return { ok: false, error: tr(`حداکثر ${CONVERSATION_REPORT_MAX} پیام را می‌توانی پیوست کنی`, `You can attach up to ${CONVERSATION_REPORT_MAX} messages`) };
 
   const items = input as ConversationReportItem[];
   const ids: string[] = [];
   for (const it of items) {
     if (!it || typeof it !== "object" || typeof it.id !== "string" || !it.id || it.id.length > 64) {
-      return { ok: false, error: "پیام نامعتبر است" };
+      return { ok: false, error: tr("پیام نامعتبر است", "Invalid message") };
     }
-    if (ids.includes(it.id)) return { ok: false, error: "پیام تکراری است", messageId: it.id };
+    if (ids.includes(it.id)) return { ok: false, error: tr("پیام تکراری است", "Duplicate message"), messageId: it.id };
     ids.push(it.id);
   }
 
@@ -66,22 +67,22 @@ export async function verifyConversationMessages(
   const out: VerifiedConversationMessage[] = [];
   for (const it of items) {
     const msg = byId.get(it.id);
-    if (!msg) return { ok: false, error: "پیام پیدا نشد", messageId: it.id };
+    if (!msg) return { ok: false, error: tr("پیام پیدا نشد", "Message not found"), messageId: it.id };
 
     if (msg.legacyBody != null) {
       out.push({ messageId: msg.id, senderId: msg.senderId, text: msg.legacyBody.slice(0, REPORTED_TEXT_MAX), messageAt: msg.createdAt, verified: false });
       continue;
     }
     if (typeof it.text !== "string" || typeof it.frankingKey !== "string" || it.text.length > REPORTED_TEXT_MAX * 2) {
-      return { ok: false, error: "متن و کلید تایید هر پیام لازم است", messageId: it.id };
+      return { ok: false, error: tr("متن و کلید تایید هر پیام لازم است", "Each message needs its text and verification data"), messageId: it.id };
     }
-    if (!msg.clientId || !msg.commitment) return { ok: false, error: "این پیام قابل تایید نیست", messageId: it.id };
+    if (!msg.clientId || !msg.commitment) return { ok: false, error: tr("این پیام قابل تایید نیست", "This message can't be verified"), messageId: it.id };
     const ctx = { mentorshipId: msg.mentorshipId, senderId: msg.senderId, clientId: msg.clientId };
     if (!verifyServerFrankingTag(msg.serverTag, { ...ctx, commitment: msg.commitment, createdAt: msg.createdAt })) {
-      return { ok: false, error: "این پیام قابل تایید نیست", messageId: it.id };
+      return { ok: false, error: tr("این پیام قابل تایید نیست", "This message can't be verified"), messageId: it.id };
     }
     if (!(await verifyCommitment(it.frankingKey, msg.commitment, ctx, it.text))) {
-      return { ok: false, error: "متن گزارش با پیام ثبت‌شده نمی‌خواند", messageId: it.id };
+      return { ok: false, error: tr("متن گزارش با پیام ثبت‌شده نمی‌خواند", "The report text doesn't match the recorded message"), messageId: it.id };
     }
     out.push({ messageId: msg.id, senderId: msg.senderId, text: it.text, messageAt: msg.createdAt, verified: true });
   }

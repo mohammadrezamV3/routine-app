@@ -11,11 +11,12 @@ import {
   DEFAULT_MISSED_DAY_PREF, MISSED_DAY_MODE_OPTIONS, MissedDayMode, MissedDayPref,
   normalizeMissedDayPref, prefForMode,
 } from "@/lib/exerciseProgression";
+import { tr } from "@/lib/i18n";
 
-const MODE_HINT: Record<MissedDayMode, string> = {
-  skip: "اگه روز تمرین بدون «شروع تمرین» بگذره، برنامه طبق تقویم جلو می‌ره — مثلا پا جا موند، فردا سرشانه.",
-  stay: "تمرین جامانده فردا دوباره میاد و تا وقتی «شروع تمرین» رو براش نزنی همون می‌مونه؛ بقیه‌ی برنامه هم به همون اندازه عقب می‌ره.",
-};
+const modeHint = (): Record<MissedDayMode, string> => ({
+  skip: tr("اگه روز تمرین بدون «شروع تمرین» بگذره، برنامه طبق تقویم جلو می‌ره — مثلا پا جا موند، فردا سرشانه.", "If a training day passes without pressing Start workout, the plan follows the calendar: if legs were missed, tomorrow is still shoulders."),
+  stay: tr("تمرین جامانده فردا دوباره میاد و تا وقتی «شروع تمرین» رو براش نزنی همون می‌مونه؛ بقیه‌ی برنامه هم به همون اندازه عقب می‌ره.", "A missed workout comes back tomorrow and stays until you press Start workout for it; the rest of the plan shifts back by the same amount."),
+});
 
 // «تنظیمات › بدنسازی» — رفتار برنامه با روز جامانده (lib/exerciseProgression.ts).
 export function ExerciseSettings() {
@@ -34,9 +35,9 @@ export function ExerciseSettings() {
   }
 
   return (
-    <AccountBlock icon={<Dumbbell size={15} />} title="بدنسازی">
-      <AccountOption label="روز تمرین جامانده">
-        <div className="item-line" style={{ marginBottom: 10 }}>{MODE_HINT[pref.mode]}</div>
+    <AccountBlock icon={<Dumbbell size={15} />} title={tr("بدنسازی", "Workout")}>
+      <AccountOption label={tr("روز تمرین جامانده", "Missed training day")}>
+        <div className="item-line" style={{ marginBottom: 10 }}>{modeHint()[pref.mode]}</div>
         <SegmentedTabs options={MISSED_DAY_MODE_OPTIONS} active={pref.mode} onChange={changeMode} />
       </AccountOption>
     </AccountBlock>

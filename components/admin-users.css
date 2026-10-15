@@ -103,6 +103,9 @@ body[data-theme="light"] button.au-th, body:not([data-theme="light"]) button.au-
 }
 .au-drawer-panel .au-profile{ min-height:100%; }
 @keyframes au-in{ from{ transform:translateX(24px); opacity:0; } to{ transform:none; opacity:1; } }
+/* کشو از سمت شروع (چپ در LTR): قرینه‌ی حرکت RTL */
+@keyframes au-in-ltr{ from{ transform:translateX(-24px); opacity:0; } to{ transform:none; opacity:1; } }
+html[dir="ltr"] .au-drawer-panel{ animation-name:au-in-ltr; }
 @media (max-width:720px){
   .au-drawer-panel{ width:100vw; border-inline-end:0; padding:16px; }
   .au-title{ font-size:20px; }

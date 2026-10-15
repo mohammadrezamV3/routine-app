@@ -5,6 +5,7 @@ import { useEffect, useRef } from "react";
 import { createPortal } from "react-dom";
 import { LockBodyScroll } from "./LockBodyScroll";
 import { Spinner } from "./Spinner";
+import { tr } from "@/lib/i18n";
 
 // پاپ‌آپ تایید اقدام مخرب (پایان/مسدودی/لغو/حذف) — همان مارک‌آپ تایید
 // «بلاک» در FriendProfileModal، فقط عمومی‌شده. خطا داخل خود پاپ‌آپ دیده
@@ -62,7 +63,7 @@ export function MentorConfirmDialog({
           {error && <div className="trade-form-error">{error}</div>}
           <div className="trade-modal-actions">
             <button type="button" className="mentor-btn account-outline-btn" onClick={onCancel} disabled={busy}>
-              انصراف
+              {tr("انصراف", "Cancel")}
             </button>
             <button type="button" className={`mentor-btn ${danger ? "trade-danger-btn" : "trade-primary-btn"}`} onClick={onConfirm} disabled={busy}>
               {busy ? <Spinner size={14} /> : confirmLabel}

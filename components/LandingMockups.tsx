@@ -8,6 +8,8 @@ import { AgentAvatar } from "@/components/AgentAvatar";
 import { DashProgressCircle } from "@/components/DashProgressCircle";
 import { StreakFlame } from "@/components/StreakFlame";
 import { STREAK_MILESTONES } from "@/lib/streakTier";
+import { jMonthName, weekdayName } from "@/lib/jalali";
+import { tr } from "@/lib/i18n";
 
 // ─── ماکت‌های لندینگ که «همون خود اپ» ـن ─────────────────────────────────
 // هر تکه این‌جا یا *خود* کامپوننت نمایشی اپ است (StreakFlame،
@@ -44,9 +46,9 @@ export function MockTaskRow({ task }: { task: MockTask }) {
           </span>
         )}
       </div>
-      <div className="flex min-w-0 flex-1 items-center justify-between gap-2 text-right">
+      <div className="flex min-w-0 flex-1 items-center justify-between gap-2 text-start">
         <div className="flex min-w-0 items-center gap-1.5">
-          <span className="min-w-0 truncate text-right text-[13px] font-medium text-dash-text">{task.name}</span>
+          <span className="min-w-0 truncate text-start text-[13px] font-medium text-dash-text">{task.name}</span>
           {task.tag && (
             <span className="max-w-[72px] shrink-0 truncate whitespace-nowrap rounded-full border border-dash-border px-2 py-0.5 text-center text-[9.5px] font-semibold text-dash-muted">
               {task.tag}
@@ -57,10 +59,10 @@ export function MockTaskRow({ task }: { task: MockTask }) {
           {task.time ? (
             <span className="shrink-0 font-mono text-[10.5px] text-dash-muted" dir="ltr">{task.time}</span>
           ) : (
-            <span className="shrink-0 text-[10.5px] text-dash-muted">بدون ساعت</span>
+            <span className="shrink-0 text-[10.5px] text-dash-muted">{tr("بدون ساعت", "No time")}</span>
           )}
           {!task.exercise && task.missed && !task.done && (
-            <span className="shrink-0 text-[9.5px] font-semibold leading-none" style={{ color: "#E05252" }}>وقتش گذشته</span>
+            <span className="shrink-0 text-[9.5px] font-semibold leading-none" style={{ color: "#E05252" }}>{tr("وقتش گذشته", "Overdue")}</span>
           )}
         </div>
       </div>
@@ -71,7 +73,7 @@ export function MockTaskRow({ task }: { task: MockTask }) {
             className="lm-pop flex shrink-0 items-center rounded-full px-2.5 py-1.5 text-[11px] font-bold"
             style={{ background: "rgba(var(--accent-rgb),.14)", color: "var(--accent)" }}
           >
-            انجام دادی
+            {tr("انجام دادی", "Done")}
           </span>
         ) : (
           <span
@@ -80,7 +82,7 @@ export function MockTaskRow({ task }: { task: MockTask }) {
             style={{ background: "rgba(var(--accent-rgb),.14)", color: "var(--accent)" }}
           >
             <Play className="h-3 w-3" fill="currentColor" />
-            شروع
+            {tr("شروع", "Start")}
           </span>
         )
       ) : (
@@ -119,11 +121,11 @@ export function MockTaskList({ tasks }: { tasks: MockTask[] }) {
       <div className="flex items-center justify-between">
         <span className="flex items-center gap-1.5 text-[16px] font-bold text-dash-text">
           <ListChecks className="h-[18px] w-[18px] text-dash-green" />
-          برنامه‌های امروز
+          {tr("برنامه‌های امروز", "Today's plans")}
         </span>
         <span className="flex items-center gap-1 text-[11.5px] font-semibold text-dash-green">
           <Plus className="h-[15px] w-[15px]" />
-          افزودن برنامه
+          {tr("افزودن برنامه", "Add plan")}
         </span>
       </div>
       <div className="mt-4 flex flex-col gap-1">
@@ -140,16 +142,16 @@ export function MockMedicationCard({ meds }: { meds: { name: string; every: stri
       <div className="flex items-center justify-between">
         <span className="flex items-center gap-1.5 text-[13px] font-bold text-dash-text">
           <Tablets className="h-4 w-4 text-dash-green" />
-          یادآوری دارو
+          {tr("یادآوری دارو", "Medication reminder")}
         </span>
         <span className="flex items-center gap-1 text-[11.5px] font-semibold text-dash-green">
           <Plus className="h-[15px] w-[15px]" />
-          افزودن
+          {tr("افزودن", "Add")}
         </span>
       </div>
       <div className="mt-3 flex flex-col gap-2">
         {meds.map((m) => (
-          <div key={m.name} className="med-row flex items-center gap-2 rounded-2xl border border-dash-border px-3 py-2.5 text-right">
+          <div key={m.name} className="med-row flex items-center gap-2 rounded-2xl border border-dash-border px-3 py-2.5 text-start">
             <span className="flex h-6 w-6 shrink-0 items-center justify-center rounded-full text-dash-muted">
               <MoreVertical className="h-[15px] w-[15px]" />
             </span>
@@ -175,11 +177,18 @@ export function MockMedicationCard({ meds }: { meds: { name: string; every: stri
 }
 
 /** نوار انتخاب روز (DashDateSelector موبایل) — پنج روز در دید */
-const STRIP = [
-  { w: "شنبه", d: "4 مهر" }, { w: "یکشنبه", d: "5 مهر" }, { w: "دوشنبه", d: "6 مهر", on: true },
-  { w: "سه‌شنبه", d: "7 مهر" }, { w: "چهارشنبه", d: "8 مهر" },
-];
+const strip = () => {
+  const mehr = jMonthName(6);
+  return [
+    { w: tr("شنبه", weekdayName(6)), d: tr("4 مهر", `4 ${mehr}`) },
+    { w: tr("یکشنبه", weekdayName(0)), d: tr("5 مهر", `5 ${mehr}`) },
+    { w: tr("دوشنبه", weekdayName(1)), d: tr("6 مهر", `6 ${mehr}`), on: true },
+    { w: tr("سه‌شنبه", weekdayName(2)), d: tr("7 مهر", `7 ${mehr}`) },
+    { w: tr("چهارشنبه", weekdayName(3)), d: tr("8 مهر", `8 ${mehr}`) },
+  ];
+};
 export function MockDateStrip() {
+  const STRIP = strip();
   return (
     <div className="flex min-w-0 flex-1 items-center gap-1 rounded-dash border border-dash-border" style={{ background: "rgba(var(--bg-rgb), .16)" }}>
       <div className="min-w-0 flex-1">
@@ -214,8 +223,9 @@ export function MockFilterButton({ label, icon, active }: { label: string; icon:
 }
 
 /* ───────────── استریک: هر هشت سطح واقعی ───────────── */
-const TIER_SHORT = ["شروع", "3 روزه", "هفتگی", "ماهانه", "60 روزه", "فصلی", "نیم‌ساله", "افسانه‌ای"];
+const tierShort = () => [tr("شروع", "Start"), tr("3 روزه", "3 days"), tr("هفتگی", "Weekly"), tr("ماهانه", "Monthly"), tr("60 روزه", "60 days"), tr("فصلی", "Seasonal"), tr("نیم‌ساله", "Half-year"), tr("افسانه‌ای", "Legendary")];
 export function MockStreakTiers({ labels = true }: { labels?: boolean }) {
+  const TIER_SHORT = tierShort();
   return (
     <div className="lm-tiers">
       {STREAK_MILESTONES.map((d, i) => (
@@ -229,32 +239,33 @@ export function MockStreakTiers({ labels = true }: { labels?: boolean }) {
 }
 
 /* ───────────── DashFriendsCard ───────────── */
-export const FRIENDS = [
-  { name: "نیما", streak: 38, done: 5, total: 6 },
-  { name: "مریم", streak: 12, done: 3, total: 4 },
-  { name: "آرش", streak: 4, done: 2, total: 5 },
+export const friends = () => [
+  { name: tr("نیما", "Nima"), streak: 38, done: 5, total: 6 },
+  { name: tr("مریم", "Maryam"), streak: 12, done: 3, total: 4 },
+  { name: tr("آرش", "Arash"), streak: 4, done: 2, total: 5 },
 ];
-export function MockFriendsCard({ unit = "برنامه" }: { unit?: string }) {
+export function MockFriendsCard({ unit = tr("برنامه", "plans") }: { unit?: string }) {
+  const FRIENDS = friends();
   return (
     <MockCard>
       <div className="flex items-center justify-between">
         <span className="flex items-center gap-1.5 text-[13px] font-bold text-dash-text">
           <Users className="h-4 w-4 text-dash-green" />
-          دوستان
+          {tr("دوستان", "Friends")}
         </span>
-        <span className="text-[11px] font-semibold text-dash-green">مشاهده همه</span>
+        <span className="text-[11px] font-semibold text-dash-green">{tr("مشاهده همه", "View all")}</span>
       </div>
       <div className="mt-4 flex flex-col gap-4">
         {FRIENDS.map((f) => (
           <div key={f.name} className="flex items-center justify-between gap-3">
-            <span className="flex flex-1 items-center justify-start gap-2.5 text-right">
+            <span className="flex flex-1 items-center justify-start gap-2.5 text-start">
               <AgentAvatar seed={f.name} size={32} animated={false} className="shrink-0" />
-              <span className="text-right">
+              <span className="text-start">
                 <span className="flex items-center justify-end gap-1.5">
                   <span className="text-[11.5px] font-semibold text-dash-text">{f.name}</span>
                   <StreakFlame streak={f.streak} className="text-[10px]" />
                 </span>
-                <span className="mt-0.5 block text-[9.5px] text-dash-muted">{f.done} از {f.total} {unit}</span>
+                <span className="mt-0.5 block text-[9.5px] text-dash-muted">{tr(`${f.done} از ${f.total} ${unit}`, `${f.done} of ${f.total} ${unit}`)}</span>
               </span>
             </span>
             <DashProgressCircle value={Math.round((f.done / f.total) * 100)} size={34} strokeWidth={3.5} />
@@ -285,10 +296,10 @@ export function MockAccountCard({ a }: { a: MockAccount }) {
         </span>
       </div>
       <div className="trade-account-facts">
-        <span><Hash size={12} /> {a.trades} معامله</span>
-        <span><Percent size={12} /> {a.win}% برد</span>
+        <span><Hash size={12} /> {tr(`${a.trades} معامله`, `${a.trades} trades`)}</span>
+        <span><Percent size={12} /> {tr(`${a.win}% برد`, `${a.win}% win`)}</span>
         {a.broker && <span className="trade-account-facts-broker">{a.broker}</span>}
-        {a.mt && <span className="trade-account-facts-mt">متاتریدر</span>}
+        {a.mt && <span className="trade-account-facts-mt">{tr("متاتریدر", "MetaTrader")}</span>}
       </div>
     </div>
   );
@@ -311,8 +322,8 @@ export function MockMentorCard({ name, line, rating, count, since }: { name: str
       </div>
       <div className="rp-card-foot lm-mentor-foot">
         <span className="lm-rating"><Star size={13} strokeWidth={1.75} fill="currentColor" /><b>{rating}</b><span>({count})</span></span>
-        <span className="lm-since"><CalendarDays size={12} strokeWidth={1.75} /> از {since}</span>
-        <ChevronLeft size={16} strokeWidth={1.75} className="rp-card-arrow" />
+        <span className="lm-since"><CalendarDays size={12} strokeWidth={1.75} /> {tr(`از ${since}`, `Since ${since}`)}</span>
+        <ChevronLeft size={16} strokeWidth={1.75} className="rp-card-arrow dir-flip" />
       </div>
     </div>
   );
@@ -323,7 +334,7 @@ export function MockMentorChat({ peer, msgs }: { peer: string; msgs: { mine?: bo
   return (
     <div className="lm-chat">
       <div className="lm-chat-service">
-        <span><Lock size={12} strokeWidth={1.75} /> چت‌ها سرتاسر رمزنگاری‌شده‌اند؛ فقط تو و {peer} پیام‌ها را می‌خوانید</span>
+        <span><Lock size={12} strokeWidth={1.75} /> {tr(`چت‌ها سرتاسر رمزنگاری‌شده‌اند؛ فقط تو و ${peer} پیام‌ها را می‌خوانید`, `Chats are end-to-end encrypted; only you and ${peer} can read the messages`)}</span>
       </div>
       {msgs.map((m, i) => (
         <div key={i} className={`lm-chat-row${m.mine ? " is-mine" : ""}`}>
@@ -348,13 +359,13 @@ export function MockRoadmapCard({ topic, title, desc, duration, stages, level, p
       <p className="rp-card-desc">{desc}</p>
       <div className="rp-card-meta">
         <span><Clock size={12} /> {duration}</span>
-        <span><Layers size={12} /> {fa(stages)} مرحله</span>
+        <span><Layers size={12} /> {tr(`${fa(stages)} مرحله`, `${fa(stages)} stages`)}</span>
         <span>{level}</span>
       </div>
       <div className="rp-card-foot">
         <div className="rp-bar"><span style={{ width: `${pct}%` }} /></div>
-        <span className="rp-card-pct">{fa(pct)}٪</span>
-        <ChevronLeft size={16} className="rp-card-arrow" />
+        <span className="rp-card-pct">{fa(pct)}{tr("٪", "%")}</span>
+        <ChevronLeft size={16} className="rp-card-arrow dir-flip" />
       </div>
     </div>
   );
@@ -374,7 +385,7 @@ export function MockRoadmapStage({ n, title, duration, done, tasksDone, tasks, o
             <h3>{title}</h3>
             <div className="rp-stage-sub">
               <span>{duration}</span>
-              <span>{fa(tasksDone)} از {fa(tasks)} کار</span>
+              <span>{tr(`${fa(tasksDone)} از ${fa(tasks)} کار`, `${fa(tasksDone)} of ${fa(tasks)} tasks`)}</span>
             </div>
           </div>
           <ChevronDown size={18} className="rp-stage-chevron" />
@@ -382,7 +393,7 @@ export function MockRoadmapStage({ n, title, duration, done, tasksDone, tasks, o
         {open && (
           <div className="rp-stage-body">
             <div className="rp-sec lm-rp-sec">
-              <div className="rp-sec-title"><Hammer size={14} /> کارهای عملی</div>
+              <div className="rp-sec-title"><Hammer size={14} /> {tr("کارهای عملی", "Practical tasks")}</div>
             <ul className="rp-tasks">
               {openTasks!.map((t) => (
                 <li key={t.title} className={t.checked ? "checked" : ""}>

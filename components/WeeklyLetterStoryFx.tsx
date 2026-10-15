@@ -5,7 +5,7 @@
 // نوار عمودی 0 تا 9 که تا رقم نهایی می‌چرخه). فقط transform/opacity.
 // کاهش حرکت و دستگاه ضعیف (useLite): کلمه‌ها فقط محو می‌شن، رقم‌ها مستقیم می‌شینن.
 import { Fragment, useMemo } from "react";
-import { motion, type Variants } from "framer-motion";
+import { m as motion, type Variants } from "framer-motion";
 import { WL_EASE, useLite } from "./WeeklyLetterShared";
 import { odometerCells } from "./WeeklyLetterUtils";
 

@@ -3,6 +3,7 @@ import { prisma } from "@/lib/prisma";
 import { requireMentorsUser, badRequest, forbidden, conflict } from "@/lib/mentorGuard";
 import { validateDocument, MAX_DOCUMENT_BYTES } from "@/lib/mentorUpload";
 import { checkRateLimit } from "@/lib/rateLimit";
+import { tr } from "@/lib/i18n";
 
 // سقف تعداد مدارک یک پروفایل — فایل‌ها داخل دیتابیسن (Bytes)، پس بدون
 // سقف یک حساب می‌تونست با آپلود پشت‌سرهم دیتابیس رو پر کنه.
@@ -17,7 +18,7 @@ export async function POST(req: Request) {
   const userId = g.userId;
 
   if (!(await checkRateLimit(`mentor-doc:${userId}`, 10, 60 * 60 * 1000))) {
-    return NextResponse.json({ error: "تعداد ارسال مدرک زیاد بوده؛ کمی بعد دوباره تلاش کن" }, { status: 429 });
+    return NextResponse.json({ error: tr("تعداد ارسال مدرک زیاد بوده؛ کمی بعد دوباره تلاش کن", "Too many document uploads; try again shortly") }, { status: 429 });
   }
 
   // سقف حجم *حین* خوندن: Content-Length قابل‌جعله و درخواست chunked اصلا نداره،
@@ -25,37 +26,37 @@ export async function POST(req: Request) {
   // req.formData() مستقیم کل بدنه رو بی‌حد توی حافظه می‌کشید.
   const MAX_BODY = MAX_DOCUMENT_BYTES + 64 * 1024;
   const declared = Number(req.headers.get("content-length") || 0);
-  if (declared > MAX_BODY) return NextResponse.json({ error: "حجم فایل حداکثر 5 مگابایت است" }, { status: 413 });
+  if (declared > MAX_BODY) return NextResponse.json({ error: tr("حجم فایل حداکثر 5 مگابایت است", "The file can be at most 5 MB") }, { status: 413 });
   const body = await readBodyCapped(req, MAX_BODY);
-  if (body === "too_large") return NextResponse.json({ error: "حجم فایل حداکثر 5 مگابایت است" }, { status: 413 });
+  if (body === "too_large") return NextResponse.json({ error: tr("حجم فایل حداکثر 5 مگابایت است", "The file can be at most 5 MB") }, { status: 413 });
 
   const profile = await prisma.mentorProfile.findUnique({ where: { userId }, select: { id: true, categories: true, identityStatus: true } });
-  if (!profile) return forbidden("اول پروفایل مربی‌گری بساز");
+  if (!profile) return forbidden(tr("اول پروفایل مربی‌گری بساز", "Create your mentor profile first"));
 
   let form: FormData;
   try {
     form = await new Response(body, { headers: { "content-type": req.headers.get("content-type") || "" } }).formData();
   } catch {
-    return badRequest("فرم ارسالی نامعتبره");
+    return badRequest(tr("فرم ارسالی نامعتبره", "The submitted form is invalid"));
   }
 
   const kind = form.get("kind");
-  if (kind !== "IDENTITY" && kind !== "CERTIFICATE") return badRequest("نوع مدرک نامعتبره");
+  if (kind !== "IDENTITY" && kind !== "CERTIFICATE") return badRequest(tr("نوع مدرک نامعتبره", "Invalid document type"));
   let category: string | null = null;
   if (kind === "CERTIFICATE") {
     const c = form.get("category");
-    if (typeof c !== "string" || !profile.categories.includes(c)) return badRequest("دسته‌ی مدرک باید یکی از دسته‌های پروفایلت باشد");
+    if (typeof c !== "string" || !profile.categories.includes(c)) return badRequest(tr("دسته‌ی مدرک باید یکی از دسته‌های پروفایلت باشد", "The document category must be one of your profile's categories"));
     category = c;
   }
 
   const file = form.get("file");
-  if (!file || typeof file === "string") return badRequest("فایلی ارسال نشده");
-  if (file.size > MAX_DOCUMENT_BYTES) return NextResponse.json({ error: "حجم فایل حداکثر 5 مگابایت است" }, { status: 413 });
+  if (!file || typeof file === "string") return badRequest(tr("فایلی ارسال نشده", "No file was sent"));
+  if (file.size > MAX_DOCUMENT_BYTES) return NextResponse.json({ error: tr("حجم فایل حداکثر 5 مگابایت است", "The file can be at most 5 MB") }, { status: 413 });
   const v = validateDocument(await file.arrayBuffer(), (file as File).name);
   if (!v.ok) return NextResponse.json({ error: v.error }, { status: v.status });
 
   const count = await prisma.mentorDocument.count({ where: { profileId: profile.id } });
-  if (count >= MAX_DOCUMENTS_PER_PROFILE) return conflict("تعداد مدارک به سقف رسیده؛ اول چندتا از قبلی‌ها رو حذف کن");
+  if (count >= MAX_DOCUMENTS_PER_PROFILE) return conflict(tr("تعداد مدارک به سقف رسیده؛ اول چندتا از قبلی‌ها رو حذف کن", "You've reached the document limit; delete some old ones first"));
 
   const document = await prisma.$transaction(async (tx) => {
     const doc = await tx.mentorDocument.create({

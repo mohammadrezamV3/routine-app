@@ -14,6 +14,7 @@ import {
 import { useLockBodyScroll } from "@/lib/useLockBodyScroll";
 import { focusNextOnEnter } from "@/lib/formNav";
 import { Spinner } from "./Spinner";
+import { tr } from "@/lib/i18n";
 
 const now = new Date();
 
@@ -76,19 +77,19 @@ export function MedicationForm({
     clearErrors();
 
     const trimmed = name.trim();
-    if (!trimmed) { setNameError("اسم دارو رو وارد کن"); return; }
+    if (!trimmed) { setNameError(tr("اسم دارو رو وارد کن", "Enter the medication name")); return; }
 
     const times = Number(timesPerDay);
     if (!Number.isFinite(times) || times < MIN_TIMES_PER_DAY || times > MAX_TIMES_PER_DAY) {
-      setTimesError(`تعداد دفعات در روز باید بین ${MIN_TIMES_PER_DAY} تا ${MAX_TIMES_PER_DAY} باشه`);
+      setTimesError(tr(`تعداد دفعات در روز باید بین ${MIN_TIMES_PER_DAY} تا ${MAX_TIMES_PER_DAY} باشه`, `Doses per day must be between ${MIN_TIMES_PER_DAY} and ${MAX_TIMES_PER_DAY}`));
       return;
     }
     const time = toEnDigits(firstDoseTime).trim();
-    if (!/^\d{1,2}:\d{2}$/.test(time)) { setTimeError("ساعت اولین نوبت رو کامل وارد کن"); return; }
+    if (!/^\d{1,2}:\d{2}$/.test(time)) { setTimeError(tr("ساعت اولین نوبت رو کامل وارد کن", "Enter the full time of the first dose")); return; }
 
     const days = Number(durationDays);
     if (!Number.isFinite(days) || days < 1 || days > MAX_DURATION_DAYS) {
-      setDurationError(`طول دوره باید بین 1 تا ${MAX_DURATION_DAYS} روز باشه`);
+      setDurationError(tr(`طول دوره باید بین 1 تا ${MAX_DURATION_DAYS} روز باشه`, `Course length must be between 1 and ${MAX_DURATION_DAYS} days`));
       return;
     }
 
@@ -113,7 +114,7 @@ export function MedicationForm({
       });
     } catch (err) {
       setStatus("idle");
-      setSaveError(err instanceof Error ? err.message : "ثبت دارو ناموفق بود — دوباره امتحان کن");
+      setSaveError(err instanceof Error ? err.message : tr("ثبت دارو ناموفق بود — دوباره امتحان کن", "Couldn't save the medication — please try again"));
       return;
     }
     setStatus("success");
@@ -126,37 +127,37 @@ export function MedicationForm({
       <div className="wsearch-newform dash-scope open">
         <div className="relative z-[1] add-program-glass" ref={formRef} onKeyDown={(e) => focusNextOnEnter(e, formRef)}>
           <div className="wsearch-newform-head">
-            <div className="wsearch-newform-title accent">{initial ? "ویرایش دارو" : "افزودن دارو"}</div>
-            <button className="nav-close" onClick={onClose} aria-label="بستن">×</button>
+            <div className="wsearch-newform-title accent">{initial ? tr("ویرایش دارو", "Edit medication") : tr("افزودن دارو", "Add medication")}</div>
+            <button className="nav-close" onClick={onClose} aria-label={tr("بستن", "Close")}>×</button>
           </div>
 
-          <label htmlFor="medName">اسم دارو</label>
+          <label htmlFor="medName">{tr("اسم دارو", "Medication name")}</label>
           <input
             id="medName"
             type="text"
             className="wsearch-newform-name"
-            placeholder="مثلا آموکسی‌سیلین"
+            placeholder={tr("مثلا آموکسی‌سیلین", "e.g. Amoxicillin")}
             value={name}
             onChange={(e) => { setName(e.target.value); setNameError(null); }}
           />
           {nameError && <div className="field-error-msg" style={{ display: "block", marginTop: 4 }}>{nameError}</div>}
 
-          <label style={{ marginTop: 14, display: "block" }}>چند بار در روز؟</label>
+          <label style={{ marginTop: 14, display: "block" }}>{tr("چند بار در روز؟", "How many times a day?")}</label>
           <SegmentedTabs
             active={timesPerDay}
             onChange={(v) => { setTimesPerDay(v); setTimesError(null); }}
-            options={["1", "2", "3", "4", "6"].map((n) => ({ value: n, label: `${n} بار` }))}
+            options={["1", "2", "3", "4", "6"].map((n) => ({ value: n, label: tr(`${n} بار`, `${n}x`) }))}
           />
           {timesError && <div className="field-error-msg" style={{ display: "block", marginTop: 4 }}>{timesError}</div>}
 
           <div className="wsearch-date-row" style={{ marginTop: 14 }}>
             <div className="time-field">
-              <span className="time-field-label">ساعت اولین نوبت</span>
+              <span className="time-field-label">{tr("ساعت اولین نوبت", "First dose time")}</span>
               <TimeInput value={firstDoseTime} onChange={(v) => { setFirstDoseTime(v); setTimeError(null); }} />
               {timeError && <div className="field-error-msg" style={{ display: "block", marginTop: 4 }}>{timeError}</div>}
             </div>
             <div className="time-field">
-              <span className="time-field-label">طول دوره (روز)</span>
+              <span className="time-field-label">{tr("طول دوره (روز)", "Course length (days)")}</span>
               <NumberInput
                 className="wsearch-add-time"
                 value={durationDays}
@@ -168,25 +169,25 @@ export function MedicationForm({
           </div>
 
           <div className="time-field" style={{ marginTop: 14 }}>
-            <span className="time-field-label">تاریخ شروع دوره</span>
+            <span className="time-field-label">{tr("تاریخ شروع دوره", "Course start date")}</span>
             <button type="button" className="jdate-btn" onClick={() => setPickerOpen(true)}>
               {formatJalali(startJalali)}
             </button>
           </div>
 
-          <label htmlFor="medNote" style={{ marginTop: 14, display: "block" }}>یادداشت (اختیاری)</label>
+          <label htmlFor="medNote" style={{ marginTop: 14, display: "block" }}>{tr("یادداشت (اختیاری)", "Note (optional)")}</label>
           <input
             id="medNote"
             type="text"
             className="wsearch-newform-name"
-            placeholder="بعد از غذا، با آب زیاد…"
+            placeholder={tr("بعد از غذا، با آب زیاد…", "After meals, with plenty of water…")}
             value={note}
             onChange={(e) => setNote(e.target.value)}
           />
 
           <div className="med-preview">
             <span className="med-preview-label">
-              هر {intervalHours % 1 === 0 ? intervalHours : intervalHours.toFixed(1)} ساعت یک‌بار
+              {tr(`هر ${intervalHours % 1 === 0 ? intervalHours : intervalHours.toFixed(1)} ساعت یک‌بار`, `Every ${intervalHours % 1 === 0 ? intervalHours : intervalHours.toFixed(1)} hours`)}
             </span>
             <span className="med-preview-times mono" dir="ltr">{doseTimes.join(" · ")}</span>
           </div>
@@ -197,7 +198,7 @@ export function MedicationForm({
             <button type="button" className="wsearch-submit-btn" onClick={submit} disabled={status !== "idle"}>
               {status === "loading" ? (
                 <Spinner size={15} />
-              ) : status === "success" ? "ثبت شد" : initial ? "ذخیره تغییرات" : "ثبت دارو"}
+              ) : status === "success" ? tr("ثبت شد", "Saved") : initial ? tr("ذخیره تغییرات", "Save changes") : tr("ثبت دارو", "Save medication")}
             </button>
           </div>
         </div>
@@ -206,7 +207,7 @@ export function MedicationForm({
       {pickerOpen && (
         <JalaliDatePicker
           initial={startJalali}
-          title="تاریخ شروع دوره"
+          title={tr("تاریخ شروع دوره", "Course start date")}
           onClose={() => setPickerOpen(false)}
           onPick={(d) => { setStartJalali(d); setPickerOpen(false); }}
         />

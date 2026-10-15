@@ -1,3 +1,4 @@
+import { tr } from "@/lib/i18n";
 import { NextRequest, NextResponse } from "next/server";
 import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/auth";
@@ -28,7 +29,7 @@ export async function POST(req: NextRequest) {
   if (!userId) return NextResponse.json({ error: "unauthorized" }, { status: 401 });
 
   if (!(session!.user as any).isSuperAdmin && !(await checkRateLimit(`push-subscribe:${userId}`, 20, 60 * 60 * 1000))) {
-    return NextResponse.json({ error: "درخواست‌های زیاد — کمی بعد دوباره امتحان کن" }, { status: 429 });
+    return NextResponse.json({ error: tr("درخواست‌های زیاد — کمی بعد دوباره امتحان کن", "Too many requests — try again shortly") }, { status: 429 });
   }
 
   const body = await req.json().catch(() => null);
@@ -36,10 +37,10 @@ export async function POST(req: NextRequest) {
   const p256dh = body?.keys?.p256dh;
   const auth = body?.keys?.auth;
   if (typeof endpoint !== "string" || typeof p256dh !== "string" || typeof auth !== "string") {
-    return NextResponse.json({ error: "اطلاعات سابسکریپشن ناقص است" }, { status: 400 });
+    return NextResponse.json({ error: tr("اطلاعات سابسکریپشن ناقص است", "Subscription details are incomplete") }, { status: 400 });
   }
   if (endpoint.length > 2048 || !/^https:\/\//.test(endpoint) || p256dh.length > 256 || auth.length > 256) {
-    return NextResponse.json({ error: "اطلاعات سابسکریپشن نامعتبر است" }, { status: 400 });
+    return NextResponse.json({ error: tr("اطلاعات سابسکریپشن نامعتبر است", "Subscription details are invalid") }, { status: 400 });
   }
 
   // زمان‌بند سرور یادآوری‌ها رو به وقت User.timezone حساب می‌کنه؛ همون
@@ -80,11 +81,11 @@ export async function POST(req: NextRequest) {
         return NextResponse.json({ ok: true, userId });
       } catch (retryErr: any) {
         console.error(`[push/subscribe] retry after P2002 failed: ${retryErr?.code || ""} ${retryErr?.message || retryErr}`);
-        return NextResponse.json({ error: "ثبت نوتیفیکیشن ناموفق بود" }, { status: 503 });
+        return NextResponse.json({ error: tr("ثبت نوتیفیکیشن ناموفق بود", "Failed to register notifications") }, { status: 503 });
       }
     }
     console.error(`[push/subscribe] ${err?.code || ""} ${err?.message || err}`);
-    return NextResponse.json({ error: "ثبت نوتیفیکیشن ناموفق بود" }, { status: 503 });
+    return NextResponse.json({ error: tr("ثبت نوتیفیکیشن ناموفق بود", "Failed to register notifications") }, { status: 503 });
   }
 
   return NextResponse.json({ ok: true, userId });
@@ -99,7 +100,7 @@ export async function DELETE(req: NextRequest) {
   const body = await req.json().catch(() => null);
   const endpoint = body?.endpoint;
   if (typeof endpoint !== "string") {
-    return NextResponse.json({ error: "endpoint الزامی است" }, { status: 400 });
+    return NextResponse.json({ error: tr("endpoint الزامی است", "endpoint is required") }, { status: 400 });
   }
 
   await prisma.pushSubscription.deleteMany({ where: { endpoint, userId } });

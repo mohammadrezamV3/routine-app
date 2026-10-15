@@ -6,6 +6,7 @@ import { isUniqueViolation } from "@/lib/mentorServer";
 import { LABELS_MAX, validateLabelName } from "@/lib/mentorAvailability";
 import { readLabels } from "@/lib/mentorManageServer";
 import { faNum } from "@/lib/jalali";
+import { tr } from "@/lib/i18n";
 
 // برچسب‌های خصوصی منتور برای دسته‌بندی شاگردها — فقط خود منتور می‌بیند.
 
@@ -19,7 +20,7 @@ export async function GET() {
   const g = await requireMentorsUser();
   if (!g.ok) return g.response;
   const profileId = await myProfileId(g.userId);
-  if (!profileId) return forbidden("اول پروفایل مربی‌گری بساز");
+  if (!profileId) return forbidden(tr(tr("اول پروفایل مربی‌گری بساز", "Create your mentor profile first"), "Create your mentor profile first"));
   return NextResponse.json({ labels: await readLabels(profileId) });
 }
 
@@ -28,7 +29,7 @@ export async function POST(req: Request) {
   const g = await requireMentorsUser();
   if (!g.ok) return g.response;
   const profileId = await myProfileId(g.userId);
-  if (!profileId) return forbidden("اول پروفایل مربی‌گری بساز");
+  if (!profileId) return forbidden(tr(tr("اول پروفایل مربی‌گری بساز", "Create your mentor profile first"), "Create your mentor profile first"));
 
   const parsed = await readJsonBody(req, 4 * 1024);
   if (!parsed.ok) return NextResponse.json({ error: parsed.error }, { status: parsed.status });
@@ -36,12 +37,12 @@ export async function POST(req: Request) {
   if (!v.ok) return badRequest(v.error);
 
   const count = await prisma.mentorStudentLabel.count({ where: { profileId } });
-  if (count >= LABELS_MAX) return conflict(`حداکثر ${faNum(LABELS_MAX)} برچسب`);
+  if (count >= LABELS_MAX) return conflict(tr(tr(`حداکثر ${faNum(LABELS_MAX)} برچسب`, `Up to ${faNum(LABELS_MAX)} labels`), `Up to ${faNum(LABELS_MAX)} labels`));
   try {
     const label = await prisma.mentorStudentLabel.create({ data: { profileId, name: v.data }, select: { id: true, name: true } });
     return NextResponse.json({ label, labels: await readLabels(profileId) });
   } catch (e) {
-    if (isUniqueViolation(e)) return conflict("برچسبی با این نام داری");
+    if (isUniqueViolation(e)) return conflict(tr(tr("برچسبی با این نام داری", "You already have a label with this name"), "You already have a label with this name"));
     throw e;
   }
 }

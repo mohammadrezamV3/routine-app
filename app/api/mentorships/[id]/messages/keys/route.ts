@@ -5,6 +5,7 @@ import { checkRateLimit } from "@/lib/rateLimit";
 import { notifyUser, displayName } from "@/lib/inAppNotify";
 import { PUBLIC_USER_SELECT } from "@/lib/mentorServer";
 import { publicKeysFor } from "@/lib/e2ee/server";
+import { tr } from "@/lib/i18n";
 
 type Ctx = { params: { id: string } };
 const NUDGE_THROTTLE_MS = 24 * 60 * 60 * 1000;
@@ -16,7 +17,7 @@ export async function GET(_req: Request, { params }: Ctx) {
   if (!g.ok) return g.response;
   const m = await getMentorshipForUser(params.id, g.userId);
   if (!m) return notFound();
-  if (m.status !== "ACTIVE" && m.status !== "ENDED") return forbidden("گفت‌وگو برای این رابطه در دسترس نیست");
+  if (m.status !== "ACTIVE" && m.status !== "ENDED") return forbidden(tr(tr("گفت‌وگو برای این رابطه در دسترس نیست", "The conversation is not available for this relationship"), "The conversation is not available for this relationship"));
   const keys = await publicKeysFor([m.mentorId, m.studentId]);
   return NextResponse.json({ mentorId: m.mentorId, studentId: m.studentId, keys });
 }
@@ -30,9 +31,9 @@ export async function POST(_req: Request, { params }: Ctx) {
   const me = g.userId;
   const m = await getMentorshipForUser(params.id, me);
   if (!m) return notFound();
-  if (m.status !== "ACTIVE") return forbidden("این رابطه فعال نیست");
+  if (m.status !== "ACTIVE") return forbidden(tr(tr("این رابطه فعال نیست", "This relationship is not active"), "This relationship is not active"));
   if (!(await checkRateLimit(`e2ee-nudge:${me}`, 20, 60 * 60 * 1000))) {
-    return NextResponse.json({ error: "تعداد درخواست‌ها زیاد بوده؛ کمی بعد دوباره تلاش کن" }, { status: 429 });
+    return NextResponse.json({ error: tr(tr("تعداد درخواست‌ها زیاد بوده؛ کمی بعد دوباره تلاش کن", "There were too many requests; try again shortly"), "There were too many requests; try again shortly") }, { status: 429 });
   }
   const peer = m.mentorId === me ? m.studentId : m.mentorId;
   const hasKey = await prisma.userE2EKey.count({ where: { userId: peer, retiredAt: null } });

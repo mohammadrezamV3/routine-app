@@ -1,14 +1,16 @@
 "use client";
 
 import { useCallback, useEffect, useMemo, useState } from "react";
-import { FEATURE_GROUPS, FEATURE_KEYS, FEATURE_META, FEATURE_MODE_LABELS, FeatureFlags, FeatureKey, FeatureMode } from "@/lib/featureFlags";
+import { FEATURE_GROUPS, FEATURE_KEYS, FEATURE_META, FeatureFlags, FeatureKey, FeatureMode, featureGroupLabel, featureHint, featureLabel, featureModeLabel } from "@/lib/featureFlags";
 import { adminFetch, useAdminToast } from "@/components/admin/useAdminToast";
 import { invalidateFeatures } from "@/lib/useFeatures";
 import { SegmentedTabs } from "@/components/SegmentedTabs";
 import { faNum } from "@/lib/jalali";
+import { tr } from "@/lib/i18n";
 
 const MODES: FeatureMode[] = ["on", "admins", "off"];
-const MODE_OPTIONS = MODES.map((m) => ({ value: m, label: FEATURE_MODE_LABELS[m] }));
+// تابع، نه ثابت سطح ماژول: برچسب‌ها موقع رندر به زبان جاری وابسته‌ان.
+const modeOptions = () => MODES.map((m) => ({ value: m, label: featureModeLabel(m) }));
 
 // یکسان‌سازی ساده برای جست‌وجو (ی/ك عربی، نیم‌فاصله، حروف بزرگ)
 function norm(s: string) {
@@ -46,7 +48,9 @@ export default function AdminFeaturesPage() {
       const d = await adminFetch<{ flags: FeatureFlags }>("/api/admin/features", { method: "PUT", json: { flags: { [key]: mode } } });
       setFlags((f) => (f ? { ...f, [key]: d.flags[key] } : d.flags));
       invalidateFeatures();
-      toast(`«${FEATURE_META[key].label}»: ${FEATURE_MODE_LABELS[d.flags[key]]}`);
+      const l = featureLabel(key);
+      const m = featureModeLabel(d.flags[key]);
+      toast(tr(`«${l}»: ${m}`, `"${l}": ${m}`));
     } catch (e: any) {
       setFlags((f) => (f ? { ...f, [key]: prevMode } : f));
       toast(e.message, "err");
@@ -58,9 +62,9 @@ export default function AdminFeaturesPage() {
   const q = norm(query);
   const groups = useMemo(() => FEATURE_GROUPS.map((g) => {
     const keys = FEATURE_KEYS.filter((k) => FEATURE_META[k].group === g.key);
-    const shown = !q || norm(g.label).includes(q)
+    const shown = !q || norm(featureGroupLabel(g.key)).includes(q)
       ? keys
-      : keys.filter((k) => norm(`${FEATURE_META[k].label} ${FEATURE_META[k].hint} ${k}`).includes(q));
+      : keys.filter((k) => norm(`${featureLabel(k)} ${featureHint(k)} ${k}`).includes(q));
     return { ...g, keys: shown };
   }).filter((g) => g.keys.length), [q]);
 
@@ -75,18 +79,20 @@ export default function AdminFeaturesPage() {
     const p = FEATURE_META[k].parent;
     if (!p || !flags || flags[p] === "on") return null;
     return flags[p] === "off"
-      ? `تا وقتی «${FEATURE_META[p].label}» خاموشه، این بخش هم برای همه خاموشه`
-      : `تا وقتی «${FEATURE_META[p].label}» فقط برای ادمین‌هاست، این بخش هم همین‌طوره`;
+      ? tr(`تا وقتی «${featureLabel(p)}» خاموشه، این بخش هم برای همه خاموشه`, `While "${featureLabel(p)}" is off, this section is off for everyone too`)
+      : tr(`تا وقتی «${featureLabel(p)}» فقط برای ادمین‌هاست، این بخش هم همین‌طوره`, `While "${featureLabel(p)}" is for admins only, this section is too`);
   }
 
   return (
     <section>
       <div className="admin-page-head">
         <div>
-          <div className="admin-page-kicker">قابلیت‌ها</div>
+          <div className="admin-page-kicker">{tr("قابلیت‌ها", "Features")}</div>
           <div className="admin-section-hint admin-page-sub">
-            هر بخش رو برای همه روشن کن، فقط برای ادمین‌ها نگه دار (برای تست)، یا کامل خاموشش کن. Owner همیشه همه‌چیز رو می‌بینه.
-            بخش‌های پولی همچنان به اشتراک همون ماژول نیاز دارن. تغییرات حداکثر تا یک دقیقه همه‌جا اعمال می‌شن.
+            {tr(
+              "هر بخش رو برای همه روشن کن، فقط برای ادمین‌ها نگه دار (برای تست)، یا کامل خاموشش کن. Owner همیشه همه‌چیز رو می‌بینه. بخش‌های پولی همچنان به اشتراک همون ماژول نیاز دارن. تغییرات حداکثر تا یک دقیقه همه‌جا اعمال می‌شن.",
+              "Turn each section on for everyone, keep it for admins only (for testing), or switch it off completely. Owner always sees everything. Paid sections still need a subscription to the same module. Changes apply everywhere within a minute.",
+            )}
           </div>
         </div>
       </div>
@@ -94,10 +100,10 @@ export default function AdminFeaturesPage() {
       {!flags ? (
         failed ? (
           <div className="admin-empty">
-            <span>خطا در دریافت اطلاعات</span>
-            <button type="button" className="admin-btn sm" onClick={load}>تلاش دوباره</button>
+            <span>{tr("خطا در دریافت اطلاعات", "Couldn't load the data")}</span>
+            <button type="button" className="admin-btn sm" onClick={load}>{tr("تلاش دوباره", "Try again")}</button>
           </div>
-        ) : <div className="admin-empty is-loading">در حال بارگذاری…</div>
+        ) : <div className="admin-empty is-loading">{tr("در حال بارگذاری…", "Loading…")}</div>
       ) : (
         <>
           <div className="admin-feature-toolbar">
@@ -106,37 +112,37 @@ export default function AdminFeaturesPage() {
               type="search"
               value={query}
               onChange={(e) => setQuery(e.target.value)}
-              placeholder="جست‌وجوی بخش…"
-              aria-label="جست‌وجوی بخش"
+              placeholder={tr("جست‌وجوی بخش…", "Search sections…")}
+              aria-label={tr("جست‌وجوی بخش", "Search sections")}
             />
             <div className="admin-feature-counts" aria-live="polite">
-              <span><b>{faNum(counts.on)}</b> روشن</span>
-              <span><b>{faNum(counts.admins)}</b> فقط ادمین‌ها</span>
-              <span className={counts.off ? "is-off" : undefined}><b>{faNum(counts.off)}</b> خاموش</span>
+              <span><b>{faNum(counts.on)}</b> {tr("روشن", "on")}</span>
+              <span><b>{faNum(counts.admins)}</b> {tr("فقط ادمین‌ها", "admins only")}</span>
+              <span className={counts.off ? "is-off" : undefined}><b>{faNum(counts.off)}</b> {tr("خاموش", "off")}</span>
             </div>
           </div>
 
           {groups.length === 0 ? (
-            <div className="admin-empty">بخشی با این عنوان پیدا نشد</div>
+            <div className="admin-empty">{tr("بخشی با این عنوان پیدا نشد", "No section matches this search")}</div>
           ) : (
             <div className="admin-feature-grid">
               {groups.map((g) => (
                 <div key={g.key} className="admin-chart-card admin-feature-card">
                   <div className="admin-perm-group">
-                    <div className="admin-perm-group-title">{g.label}</div>
+                    <div className="admin-perm-group-title">{featureGroupLabel(g.key)}</div>
                     {g.keys.map((k) => {
                       const note = parentNote(k);
                       return (
                         <div key={k} className={`admin-perm-row admin-feature-row${FEATURE_META[k].parent ? " is-child" : ""}`}>
                           <div className="admin-feature-text">
-                            <div className="admin-perm-label">{FEATURE_META[k].label}</div>
-                            <div className="admin-perm-hint">{FEATURE_META[k].hint}</div>
+                            <div className="admin-perm-label">{featureLabel(k)}</div>
+                            <div className="admin-perm-hint">{featureHint(k)}</div>
                             {note && <div className="admin-perm-hint admin-feature-note">{note}</div>}
                           </div>
                           <SegmentedTabs
                             className="admin-seg admin-feature-modes"
-                            ariaLabel={FEATURE_META[k].label}
-                            options={MODE_OPTIONS}
+                            ariaLabel={featureLabel(k)}
+                            options={modeOptions()}
                             active={flags[k]}
                             disabled={saving.has(k)}
                             onChange={(m) => change(k, m)}

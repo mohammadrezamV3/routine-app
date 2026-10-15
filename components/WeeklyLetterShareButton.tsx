@@ -3,6 +3,7 @@
 // دکمه‌ی اشتراک کارت خلاصه‌ی هفته (همون کارت canvas آنالیز هفتگی).
 import { useState } from "react";
 import { Share2 } from "lucide-react";
+import { tr } from "@/lib/i18n";
 import { Spinner } from "./Spinner";
 import { shareWeeklyCard } from "./WeeklyAnalysisShare";
 import type { LetterCtx } from "./WeeklyLetterCtx";
@@ -26,8 +27,8 @@ export function WeeklyLetterShareButton({ ctx }: { ctx: LetterCtx }) {
   }
 
   return (
-    <button type="button" className="account-outline-btn wl-live-btn wl-live-share" onClick={share} disabled={busy} aria-label="اشتراک‌گذاری کارت این هفته">
-      {busy ? <Spinner size={14} label={null} /> : <><Share2 size={14} />{failed ? "تلاش دوباره" : "اشتراک‌گذاری"}</>}
+    <button type="button" className="account-outline-btn wl-live-btn wl-live-share" onClick={share} disabled={busy} aria-label={tr("اشتراک‌گذاری کارت این هفته", "Share this week's card")}>
+      {busy ? <Spinner size={14} label={null} /> : <><Share2 size={14} />{failed ? tr("تلاش دوباره", "Try again") : tr("اشتراک‌گذاری", "Share")}</>}
     </button>
   );
 }

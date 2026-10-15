@@ -3,11 +3,12 @@ import type { MentorProgramStatus, Prisma } from "@prisma/client";
 import { prisma } from "@/lib/prisma";
 import { requireMentorsUser, getActiveMentorProfile, notFound, conflict, badRequest, touchMentorActivity } from "@/lib/mentorGuard";
 import { readJsonBody } from "@/lib/validate";
-import { PROGRAM_TYPE_BLOCKED_MSG, programTypeAllowed } from "@/lib/mentorCategories";
+import { programTypeAllowed, programTypeBlockedMsg } from "@/lib/mentorCategories";
 import { validateProgramInput } from "@/lib/mentorValidate";
 import { PROGRAM_WITH_USERS_INCLUDE, buildProgramRows, loadProgramWithUsers, serializeProgram } from "@/lib/mentorServer";
 import { activateDueForUser } from "@/lib/mentorSchedule";
 import { publishToUsers } from "@/lib/realtime";
+import { tr } from "@/lib/i18n";
 
 const STATUSES: MentorProgramStatus[] = ["DRAFT", "PENDING", "ACCEPTED", "REJECTED", "ACTIVE", "COMPLETED", "CANCELLED"];
 // سقف پیش‌نویس‌های هم‌زمان یک منتور — جلوی پرکردن دیتابیس با برنامه‌ی خالی
@@ -23,10 +24,10 @@ export async function GET(req: NextRequest) {
   const role = sp.get("role") === "mentor" ? "mentor" : "student";
 
   const statusRaw = sp.get("status");
-  if (statusRaw && !STATUSES.includes(statusRaw as MentorProgramStatus)) return badRequest("وضعیت نامعتبره");
+  if (statusRaw && !STATUSES.includes(statusRaw as MentorProgramStatus)) return badRequest(tr("وضعیت نامعتبره", "Invalid status"));
   const status = statusRaw as MentorProgramStatus | null;
   const mentorshipId = sp.get("mentorshipId");
-  if (mentorshipId && mentorshipId.length > 64) return badRequest("رابطه نامعتبره");
+  if (mentorshipId && mentorshipId.length > 64) return badRequest(tr("رابطه نامعتبره", "Invalid relationship"));
 
   const where: Prisma.MentorProgramWhereInput = {
     ...(role === "mentor" ? { mentorId: me } : { studentId: me, NOT: { status: "DRAFT", sentAt: null } }),
@@ -55,17 +56,17 @@ export async function POST(req: Request) {
   if (!parsed.ok) return NextResponse.json({ error: parsed.error }, { status: parsed.status });
   const b = parsed.body || {};
 
-  if (typeof b.mentorshipId !== "string" || !b.mentorshipId || b.mentorshipId.length > 64) return badRequest("رابطه نامعتبره");
+  if (typeof b.mentorshipId !== "string" || !b.mentorshipId || b.mentorshipId.length > 64) return badRequest(tr("رابطه نامعتبره", "Invalid relationship"));
   const v = validateProgramInput(b);
   if (!v.ok) return badRequest(v.error);
 
   const m = await prisma.mentorship.findFirst({ where: { id: b.mentorshipId, mentorId: me }, select: { id: true, studentId: true, status: true, categories: true } });
   if (!m) return notFound();
-  if (m.status !== "ACTIVE") return conflict("رابطه با این شاگرد فعال نیست");
-  if (!programTypeAllowed(v.data.type, m.categories, mp.profile.categories)) return badRequest(PROGRAM_TYPE_BLOCKED_MSG);
+  if (m.status !== "ACTIVE") return conflict(tr("رابطه با این شاگرد فعال نیست", "The relationship with this student is not active"));
+  if (!programTypeAllowed(v.data.type, m.categories, mp.profile.categories)) return badRequest(programTypeBlockedMsg());
 
   const drafts = await prisma.mentorProgram.count({ where: { mentorId: me, status: "DRAFT" } });
-  if (drafts >= MAX_DRAFTS_PER_MENTOR) return conflict("تعداد پیش‌نویس‌ها به سقف رسیده؛ چندتا رو ارسال یا حذف کن");
+  if (drafts >= MAX_DRAFTS_PER_MENTOR) return conflict(tr("تعداد پیش‌نویس‌ها به سقف رسیده؛ چندتا رو ارسال یا حذف کن", "You've reached the draft limit; send or delete some"));
 
   const { items, ...fields } = v.data;
   const created = await prisma.mentorProgram.create({

@@ -5,6 +5,8 @@ import { faNum } from "@/lib/jalali";
 import { DashCard } from "./DashCard";
 import { ProgressRing } from "./ProgressRing";
 import type { Target } from "./CaloriePanel";
+import { tr } from "@/lib/i18n";
+import { mealLabelDisplay } from "@/lib/calorieCalc";
 
 type Entry = { customCalories: number; mealType: string | null };
 
@@ -27,7 +29,7 @@ export function CalorieMealBreakdownCard({
     <DashCard delay={delay} className="p-3 sm:p-4">
       <h2 className="flex items-center gap-1.5 text-[13px] font-bold text-dash-text sm:text-[15px]">
         <UtensilsCrossed className="h-4 w-4 text-dash-green sm:h-[18px] sm:w-[18px]" />
-        کالری هر وعده
+        {tr("کالری هر وعده", "Calories per meal")}
       </h2>
 
       {/* سه باکس در هر ردیف حتی روی موبایل (درخواست صریح کاربر) — پس
@@ -41,15 +43,15 @@ export function CalorieMealBreakdownCard({
             <div key={m.key} className="flex flex-col items-center gap-1.5 rounded-2xl border border-dash-border bg-white/[0.02] px-1 py-2 text-center sm:px-2 sm:py-2.5">
               <span className="shrink-0 sm:hidden">
                 <ProgressRing pct={mealPct} size={32} strokeWidth={3.5} color={over ? "#E05252" : "var(--accent)"}>
-                  <span className="mono text-[7.5px] font-extrabold" style={{ color: "var(--text)" }}>{faNum(Math.round(mealPct * 100))}٪</span>
+                  <span className="mono text-[7.5px] font-extrabold" style={{ color: "var(--text)" }}>{faNum(Math.round(mealPct * 100))}{tr("٪", "%")}</span>
                 </ProgressRing>
               </span>
               <span className="hidden shrink-0 sm:inline-flex">
                 <ProgressRing pct={mealPct} size={44} strokeWidth={4.5} color={over ? "#E05252" : "var(--accent)"}>
-                  <span className="mono text-[9.5px] font-extrabold" style={{ color: "var(--text)" }}>{faNum(Math.round(mealPct * 100))}٪</span>
+                  <span className="mono text-[9.5px] font-extrabold" style={{ color: "var(--text)" }}>{faNum(Math.round(mealPct * 100))}{tr("٪", "%")}</span>
                 </ProgressRing>
               </span>
-              <div className="w-full truncate text-[8.5px] font-semibold text-dash-muted sm:text-[10.5px]">{m.label}</div>
+              <div className="w-full truncate text-[8.5px] font-semibold text-dash-muted sm:text-[10.5px]">{mealLabelDisplay(m.key, m.label)}</div>
               <div className="mono text-[9.5px] font-bold text-dash-text sm:text-[12px]">
                 {faNum(consumed)}<span className="text-[8.5px] font-semibold text-dash-muted sm:text-[10.5px]"> / {faNum(m.kcal)}</span>
               </div>

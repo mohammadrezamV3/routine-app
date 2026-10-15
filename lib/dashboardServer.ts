@@ -24,6 +24,8 @@ import { getAdminFlags } from "./adminFlag";
 import { resolveFeaturesFor } from "./featureFlagsServer";
 import { announcementViewer, listAnnouncementsFor } from "./announcementsServer";
 import type { DashCalorie, DashEvent, DashExercise, DashMentors, DashNotification, DashRoadmap, DashTrade, DashboardData } from "./dashboardTypes";
+import { tr } from "@/lib/i18n";
+import { planDisplayName } from "@/lib/subscriptionI18n";
 
 // ── تاریخ ────────────────────────────────────────────────────
 const DAY = 86_400_000;
@@ -422,7 +424,7 @@ export async function buildDashboard(userId: string, day: { date: string; tz: nu
   return {
     generatedAt: new Date().toISOString(),
     user: {
-      name: [user.name, user.lastName].filter(Boolean).join(" ") || user.username || "کاربر",
+      name: [user.name, user.lastName].filter(Boolean).join(" ") || user.username || tr("کاربر", "User"),
       avatarUrl: user.avatarUrl ?? null,
       isAdmin: !!flags?.isAdmin || isSuperAdmin,
       isSuperAdmin,
@@ -430,7 +432,7 @@ export async function buildDashboard(userId: string, day: { date: string; tz: nu
       ...nameFlags(user),
     },
     routineTrial,
-    plan: sub ? { name: sub.plan.nameFa, key: sub.plan.key, status: sub.status as "ACTIVE" | "TRIAL", endsAt: sub.currentPeriodEnd.toISOString() } : null,
+    plan: sub ? { name: planDisplayName(sub.plan), key: sub.plan.key, status: sub.status as "ACTIVE" | "TRIAL", endsAt: sub.currentPeriodEnd.toISOString() } : null,
     modules: Array.from(mods),
     features,
     exercise,

@@ -1,0 +1,2154 @@
+/* auto-split from the global CSS (css-split): rules used only by this route group. Imported first thing by its layout/page. */
+
+.thin-scroll::-webkit-scrollbar-button{ display:none; width:0; height:0; }
+
+/* آمار ژورنال ترید — کارت‌های کوچیک KPI، عدد اصلی proportional (نه tabular)
+     چون تک‌عددن نه ستون هم‌تراز؛ رنگ فقط برای وضعیت سود/زیانه */
+
+.trade-stats-grid{ display:grid; grid-template-columns:repeat(2, 1fr); gap:7px; }
+
+@media (min-width:480px) {
+  .trade-stats-grid{ grid-template-columns:repeat(3, 1fr); } }
+
+/* GradientRing اندازه رو inline می‌ده (72)؛ اینجا اندازه رو قاب تعیین می‌کنه (46/58)
+     وگرنه حلقه از قاب بیرون می‌زد، بریده می‌شد و درصد از وسطش در می‌رفت */
+
+.trade-goal-ring{ width:100% !important; height:100% !important; }
+
+.trade-goal-ring-pct{
+    position:absolute; inset:0; display:flex; align-items:center; justify-content:center;
+    font-size:11px; font-weight:700; color:var(--text);
+  }
+
+@media (min-width:1024px) {
+  .trade-desktop .trade-stats-grid{ grid-template-columns:repeat(5, 1fr); } }
+
+.trade-stat-label{
+    display:flex; align-items:center; gap:4px; font-size:9.5px; font-weight:700; color:var(--muted2);
+    font-family:var(--font-latin), var(--font-vazir), sans-serif; text-transform:uppercase; letter-spacing:.05em;
+  }
+
+.trade-stat-label svg{ flex-shrink:0; opacity:.75; }
+
+.trade-stat-value{ font-size:16px; font-weight:800; margin-top:4px; font-variant-numeric:proportional-nums; }
+
+/* تقویم سود/زیان حساب — همون قاب .cal-grid موجود، خانه‌ها رنگ‌شده طبق
+     سود/زیان روز (dailyPnl) به‌جای وضعیت انجام‌شده/نشده‌ی روتین. */
+
+.trade-calendar-box{ padding:14px 16px 16px; margin-top:14px; }
+
+.trade-cal-grid{ margin-top:2px; }
+
+.trade-cal-cell.win{ background:linear-gradient(155deg, rgba(var(--pnl-win-rgb),.24), rgba(var(--pnl-win-rgb),.06)); border-color:rgba(var(--pnl-win-rgb),.5); }
+
+.trade-cal-cell.loss{ background:linear-gradient(155deg, rgba(var(--pnl-loss-rgb),.18), rgba(var(--pnl-loss-rgb),.05)); border-color:rgba(var(--pnl-loss-rgb),.5); }
+
+.trade-cal-cell.selected{ border-color:var(--secondary); box-shadow:0 0 0 1px var(--secondary); }
+
+/* خانه‌ی تقویم روی موبایل جای عدد ندارد (سه‌رقمی + نماد ارز می‌شکند)، پس
+     آن‌جا فقط یک نقطه‌ی رنگی سود/ضرر را می‌رساند و عدد از ۷۰۱px به بالا
+     برمی‌گردد — همان نقطه‌ای که .cal-grid هم عریض‌تر می‌شود. */
+
+.trade-cal-pnl{ display:none; font-size:8.5px; font-weight:700; line-height:1; white-space:nowrap; }
+
+.trade-cal-cell.win .trade-cal-pnl{ color:var(--pnl-win); }
+
+.trade-cal-cell.loss .trade-cal-pnl{ color:var(--pnl-loss); }
+
+.trade-cal-cell.win .trade-cal-dot{ background:var(--pnl-win); }
+
+.trade-cal-cell.loss .trade-cal-dot{ background:var(--pnl-loss); }
+
+@media (min-width:701px) {
+  .trade-cal-pnl{ display:block; }
+  .trade-cal-dot{ display:none; } }
+
+/* ── صفحه‌ی ژورنال‌نویسی (حساب) ───────────────────────────────────────
+     چیدمان طبق شماتیک: تایتل، خط «نام حساب ↔ بالانس اولیه»، یک باکس
+     دوبخشی آمار+تقویم، بعد بخش تریدهای همان روز. */
+
+.trade-journal-title{ font-size:20px; font-weight:800; margin:0 0 10px; }
+
+.trade-journal-idrow-balance{ display:flex; align-items:baseline; gap:7px; font-size:11.5px; color:var(--muted); }
+
+.trade-journal-submeta span{ display:inline-flex; align-items:center; gap:4px; }
+
+.trade-journal-submeta svg{ flex-shrink:0; opacity:.7; }
+
+.trade-journal-stats-part{ padding:14px 14px 0; }
+
+/* سه ستون هم‌عرض با خط عمودی بینشان */
+
+.trade-headline-stats{ display:grid; grid-template-columns:repeat(3, 1fr); align-items:center; gap:0; }
+
+.trade-headline-stat .trade-stat-label{ justify-content:center; white-space:nowrap; }
+
+.trade-headline-value{
+    font-size:15px; font-weight:800; margin-top:5px;
+    font-variant-numeric:proportional-nums; white-space:nowrap;
+  }
+
+@media (min-width:480px) {
+  .trade-headline-stat{ padding-inline:10px; }
+  .trade-headline-value{ font-size:16px; } }
+
+/* ستون وسط: دایره سمت راست، لیبل و مقدار هدف سمت چپش. روی موبایل عرض
+     هر ستون ~۱۱۰px است، پس دایره و فاصله‌ها کوچک‌ترند تا لیبل دوخطی نشود. */
+
+.trade-headline-goal{
+    display:flex; align-items:center; justify-content:center; gap:7px; padding-inline:6px;
+    border-inline-start:1px solid var(--line); border-inline-end:1px solid var(--line);
+  }
+
+.trade-headline-goal-text .trade-stat-label{ white-space:nowrap; }
+
+.trade-headline-goal-target{
+    font-size:11.5px; font-weight:700; color:var(--text); margin-top:3px; white-space:nowrap;
+  }
+
+.trade-headline-goal .trade-goal-ring-pct{ font-size:9.5px; }
+
+@media (min-width:480px) {
+  .trade-headline-goal{ gap:10px; padding-inline:10px; }
+  .trade-headline-goal .trade-goal-ring-wrap{ width:58px; height:58px; }
+  .trade-headline-goal .trade-goal-ring-pct{ font-size:11px; } }
+
+.trade-add-btn:active{ transform:scale(.95); }
+
+/* حالت disabled (مثلا «همگام‌سازی» در حال انتظار) هم نباید بک‌گراند
+     button:disabled:hover سراسری را بگیرد. */
+
+body[data-theme="light"] button.trade-add-btn:disabled:hover,
+  body:not([data-theme="light"]) button.trade-add-btn:disabled:hover{
+    background:none; box-shadow:none; border:none; color:var(--accent);
+  }
+
+.trade-stats-collapse{
+    display:grid; grid-template-rows:0fr; opacity:0;
+    transition:grid-template-rows .32s cubic-bezier(.22,1,.36,1), opacity .24s ease;
+  }
+
+.trade-stats-collapse .trade-stats-grid{ padding:6px 0 10px; }
+
+@media (prefers-reduced-motion:reduce) {
+  .trade-stats-handle svg{ animation:none; opacity:.8; }
+  .trade-stats-collapse{ transition:none; } }
+
+@media (min-width:1024px) {
+  .trade-desktop .trade-stat-tile{
+      border:1px solid var(--surface-line); border-radius:18px;
+      background:var(--box-bg); padding:14px 16px;
+    } }
+
+/* فاصله‌ی پیش‌فرض .cal-controls برای صفحه‌ی روتین است؛ این‌جا آمارها باید
+     به تقویم بچسبند، پس حاشیه‌ی بالایش برداشته می‌شود. */
+
+.trade-calendar-box.embedded .cal-controls{ margin:0 0 12px; }
+
+@media (min-width:1024px) {
+  .trade-desktop .trade-calendar-box.embedded .cal-grid,
+    .trade-desktop .trade-calendar-box.embedded .cal-controls{
+      max-width:620px; margin-inline:auto;
+    }
+  .trade-desktop .trade-calendar-box.embedded .cal-controls{ margin-bottom:12px; }
+  .trade-desktop .trade-journal-box .trade-journal-stats-part{ padding:16px; order:2; }
+
+/* ستون آمار حالا نصف عرض است، پس ۵ ستون کاشی آمار آن‌جا خرد می‌شد. */
+  .trade-desktop .trade-journal-box .trade-stats-grid{ grid-template-columns:repeat(3, 1fr); }
+  .trade-desktop .trade-journal-box .trade-calendar-box.embedded{
+      padding:16px; order:1;
+      /* در RTL، inline-end یعنی لبه‌ی چپ تقویم — همان مرز بین دو ستون
+         (تقویم حالا ستون راست است، پس مرز با ستون آمار سمت چپ خودش است). */
+      border-inline-end:1px solid var(--line);
+    }
+  .trade-desktop .trade-journal-box .trade-calendar-box.embedded .cal-grid,
+    .trade-desktop .trade-journal-box .trade-calendar-box.embedded .cal-controls{
+      max-width:none; margin-inline:0;
+    } }
+
+/* بخش تریدهای روز انتخاب‌شده */
+
+.trade-day-label{ font-size:11.5px; font-weight:600; color:var(--muted); margin-inline-start:8px; }
+
+.trade-day-box{ margin-top:10px; padding:4px 14px; }
+
+.trade-day-row{ padding:12px 0; border-bottom:1px solid var(--line); }
+
+.trade-day-row:last-child{ border-bottom:none; }
+
+.trade-day-row-pnl{ margin-inline-start:auto; font-size:14px; font-weight:800; }
+
+@media (hover:hover) {
+  .trade-detail-btn:hover{ background:rgba(var(--accent-rgb),.1); } }
+
+/* کل ردیف معامله جزئیات را باز می‌کند (کلیک/لمس/Enter) — بدون بک‌گراند؛
+     فقط نشانگر دست و یک حلقه‌ی فوکوس برای کیبورد */
+
+.trade-day-row.is-clickable{ cursor:pointer; border-radius:10px; -webkit-tap-highlight-color:transparent; }
+
+.trade-day-row.is-clickable .trade-detail-btn{ cursor:pointer; }
+
+.trade-day-row.is-clickable:focus-visible{ outline:2px solid var(--accent); outline-offset:2px; }
+
+@media (min-width:1024px) {
+  .trade-desktop .trade-day-row .trade-row-badges{ margin-top:0; flex-wrap:nowrap; flex-shrink:0; } }
+
+/* calendar */
+
+.cal-controls{display:flex; align-items:center; justify-content:space-between; margin:20px 0 16px;}
+
+@media (min-width:701px) {
+  .cal-controls{position:relative;} }
+
+.cal-grid{display:grid; grid-template-columns:repeat(7,1fr); gap:7px;}
+
+.cal-weekday{font-family:var(--font-latin), var(--font-vazir), sans-serif; font-size:13.5px; font-weight:700; color:var(--accent); text-align:center; padding-bottom:6px;}
+
+@media (hover:hover) {
+  .cal-cell:hover{border-color:var(--accent); transform:translateY(-1px);}
+  .cal-cell:hover .cal-daynum{color:var(--accent);} }
+
+.cal-cell.empty{border-color:transparent; cursor:default; background:transparent; backdrop-filter:none; -webkit-backdrop-filter:none; box-shadow:none;}
+
+@media (hover:hover) {
+  .cal-cell.empty:hover{border-color:transparent; transform:none;} }
+
+.cal-cell.today{border-color:var(--accent); box-shadow:0 0 0 1px var(--accent), 0 0 14px rgba(var(--accent-rgb),.25);}
+
+.cal-cell.today .cal-daynum{color:var(--accent); font-weight:700;}
+
+.cal-cell.done{
+    background:linear-gradient(155deg, rgba(var(--accent-rgb),.24), rgba(var(--accent-rgb),.06));
+    border-color:var(--accent);
+  }
+
+.cal-cell.done .cal-daynum{color:var(--accent); font-weight:700;}
+
+.cal-cell.missed{
+    background:linear-gradient(155deg, rgba(224,82,82,.18), rgba(224,82,82,.05));
+    border-color:rgba(224,82,82,.5);
+  }
+
+.cal-daynum{font-family:var(--font-latin), var(--font-vazir), sans-serif; font-size:12.5px; color:var(--text); transition:color .15s ease;}
+
+/* نسخه‌ی لیکوئید گلس پاپ‌آپ (فقط دوستان) — عینا همون بک‌گراند/بلور
+     .app-topbar (هدر سایت)، نه گرادیان تقریبا توپر قبلی. */
+
+.modal-panel.liquid-glass-panel{ overflow-x:hidden; background:var(--surface-2); }
+
+.acc-select-wrap{ position:relative; display:block; }
+
+/* فلش سمت «پایان» فیلد می‌نشیند (چپ در RTL) — سمت شروع، جای آیکون
+     خود AuthField است و روی هم می‌افتادند. */
+
+.acc-select-wrap > svg{
+    position:absolute; inset-inline-end:12px; top:50%; transform:translateY(-50%);
+    pointer-events:none; color:var(--muted);
+  }
+
+.jdate-btn.placeholder{color:var(--muted2); font-family:var(--font-latin), var(--font-vazir), sans-serif; direction:rtl;}
+
+/* وقتی همین پاپ‌آپ پشت‌سرهم برای دو فیلد (مثلا شروع بعد پایان) دوباره
+     باز می‌مونه، فقط عوض‌شدن متن به چشم نمیاد — با key={title} روی این
+     المان (توی JalaliDatePicker) هر بار عنوان عوض بشه دوباره mount می‌شه و
+     انیمیشن pop از نو اجرا می‌شه، تا واضح باشه که context عوض شده. */
+
+.jdate-popup-title{
+    color:var(--accent); font-size:12.5px; font-weight:700; text-align:center;
+    margin-bottom:10px; animation:wnsPop .35s cubic-bezier(.34,1.56,.64,1);
+  }
+
+.jdate-popup-head{display:flex; align-items:center; justify-content:space-between; margin-bottom:12px;}
+
+.jdate-popup-title-nav{display:flex; align-items:center; gap:6px;}
+
+/* دراپ‌داون سفارشی ماه/سال — بک‌گراندش هم‌رنگ حالت انتخاب‌شده‌ی بقیه‌ی
+     اپ (همون accent-dim که day-pill.on و امثالش استفاده می‌کنن)، به‌جای
+     بک‌گراند خنثی قبلی jdate-select. */
+
+.jdate-mini-select{ position:relative; }
+
+.jdate-mini-btn{
+    display:flex; align-items:center; gap:4px; padding:6px 12px; border-radius:10px;
+    background:var(--accent-dim); border:1px solid var(--accent); color:var(--accent);
+    font-family:var(--font-latin), var(--font-vazir), sans-serif; font-size:12.5px; font-weight:700; cursor:pointer;
+    transition:opacity .15s ease;
+  }
+
+.jdate-mini-item{
+    padding:8px 10px; border-radius:8px; font-size:12.5px; font-family:var(--font-latin), var(--font-vazir), sans-serif;
+    text-align:center; cursor:pointer; color:var(--text); transition:background .12s ease;
+  }
+
+@media (hover:hover) {
+  .jdate-mini-item:hover{ background:rgba(var(--bg-rgb),.4); }
+  body:not([data-theme="light"]) .jdate-mini-item:hover{ background:rgba(255,255,255,.06); } }
+
+.jdate-mini-item.active{ background:var(--accent-dim); color:var(--accent); font-weight:700; }
+
+.jdate-popup-close{background:none; border:none; color:var(--muted); font-size:18px; cursor:pointer; line-height:1; padding:0;}
+
+@media (hover:hover) {
+  body[data-theme="light"] .jdate-popup-close:hover, body:not([data-theme="light"]) .jdate-popup-close:hover{
+    background:none;
+  } }
+
+.jdate-weekdays{display:grid; grid-template-columns:repeat(7,1fr); gap:4px; margin-bottom:6px;}
+
+.jdate-weekday{font-size:10px; text-align:center; color:var(--accent); font-family:var(--font-latin), var(--font-vazir), sans-serif;}
+
+.jdate-grid{display:grid; grid-template-columns:repeat(7,1fr); gap:4px;}
+
+.jdate-cell{
+    aspect-ratio:1; display:flex; align-items:center; justify-content:center; border-radius:8px; font-size:12px;
+    font-family:var(--font-latin), var(--font-vazir), sans-serif; cursor:pointer; color:var(--text); transition:.15s; border:1px solid transparent;
+  }
+
+.jdate-cell.empty{cursor:default; visibility:hidden;}
+
+@media (hover:hover) {
+  .jdate-cell.disabled:hover{border-color:transparent;} }
+
+.add-program-glass .day-pill{
+    border-radius:999px;
+    backdrop-filter:blur(14px) saturate(160%); -webkit-backdrop-filter:blur(14px) saturate(160%);
+  }
+
+body:not([data-theme="light"]) .add-program-glass .day-pill{
+    background:rgba(255,255,255,.05); border-color:rgba(255,255,255,.1);
+  }
+
+body[data-theme="light"] .add-program-glass .day-pill{
+    background:rgba(255,255,255,.35); border-color:rgba(0,0,0,.08);
+  }
+
+.add-program-glass .day-pill.on::after{ border-radius:999px; }
+
+@media (hover:hover) {
+  .add-program-glass .wsearch-add-btn:hover{ color:var(--accent); opacity:.8; } }
+
+/* مثال‌های داخل فیلد (placeholder) قبلا با var(--muted2) خیلی کم‌کنتراست
+     بودن و دیده نمی‌شدن؛ var(--muted) خواناتره. */
+
+.add-program-glass .wsearch-newform-name::placeholder,
+  .add-program-glass .wsearch-add-time::placeholder{ color:var(--muted); opacity:.85; }
+
+/* منوی سه‌نقطه‌ی «برنامه‌های امروز» — bg-dash-card (۲٪ سفید) + backdrop-blur
+     پشتش تقریبا شفاف دیده می‌شد. یه بک‌گراند تقریبا توپر مثل بقیه‌ی
+     منوهای شناور (wsearch-fab-menu) به‌جای تکیه‌کردن به backdrop-filter. */
+
+.dash-context-menu{ background:var(--surface-2); border-color:var(--surface-line); }
+
+/* پاپ‌آپ‌های افزودن/ویرایش/انتقال برنامه — بک‌گراند پشت پاپ‌آپ خیلی بیشتر بلور می‌شه.
+     روی خود کلاس (نه فقط .open) تا بلور حین فید هم ثابت بماند. */
+
+.wsearch-newform-overlay.strong-blur{
+    backdrop-filter:var(--popup-backdrop-filter-strong); -webkit-backdrop-filter:var(--popup-backdrop-filter-strong);
+    background:rgba(0,0,0,.55);
+  }
+
+/* پاپ‌آپ‌های افزودن/ویرایش/انتقال برنامه (شناسایی با add-program-glass
+     داخلشون) یه‌کوچولو بزرگ‌تر می‌شن تا معمولا محتوا/دکمه‌ها جا بشن بدون
+     اسکرول، و اسکرول‌بار (در صورت لزوم، مثلا چندتا ردیف روز) کاملا مخفیه. */
+
+.wsearch-newform:has(.add-program-glass){
+    max-height:min(84vh, 560px);
+    scrollbar-width:none; -ms-overflow-style:none;
+  }
+
+/* پاپ‌آپ «افزودن برنامه»ی بدنسازی (AI/دستی) یه‌کوچولو عریض‌تر از بقیه‌ی
+     پاپ‌آپ‌های add-program-glass لازم داره تا دو باکس انتخاب جا باشن */
+
+.wsearch-newform:has(.exercise-add-glass){ max-width:500px; }
+
+.wsearch-newform:has(.add-program-glass)::-webkit-scrollbar{ display:none; width:0; height:0; }
+
+.wsearch-newform-title.accent{color:var(--accent);}
+
+.time-field-label{font-size:9.5px; color:var(--muted2); font-family:var(--font-latin), var(--font-vazir), sans-serif; text-align:start; padding-inline-start:2px;}
+
+.wsearch-newform label{display:block; font-size:11px; color:var(--muted2); margin:8px 0 5px; font-family:var(--font-latin), var(--font-vazir), sans-serif;}
+
+/* برچسب بالای فیلدهای فرم افزودن غذا (نام غذا / مقدار / واحد اندازه‌گیری / …) */
+
+.calorie-field-label{
+    display:block; margin-bottom:5px;
+    font-size:10.5px; font-weight:700; color:var(--muted);
+  }
+
+@media (min-width:640px) {
+  .calorie-field-label{ font-size:11.5px; } }
+
+input.calorie-qty-field{ display:block; }
+
+.wsearch-newrow-remove-text svg{ flex-shrink:0; }
+
+.wsearch-submit-btn:disabled{ cursor:default; }
+
+.wsearch-submit-btn.error, body[data-theme="light"] .wsearch-submit-btn.error{
+    background:#E05252; border-color:#E05252; color:#fff; box-shadow:none;
+    animation:wnsShake .4s ease;
+  }
+
+@keyframes wnsPop{ 0%{transform:scale(.3);} 60%{transform:scale(1.3);} 100%{transform:scale(1);} }
+
+@keyframes wnsShake{
+    0%,100%{transform:translateX(0);}
+    20%{transform:translateX(-4px);}
+    40%{transform:translateX(4px);}
+    60%{transform:translateX(-3px);}
+    80%{transform:translateX(3px);}
+  }
+
+/* حالت خطا برای فیلدهای فرم ورود/ثبت‌نام — تکمیل کلاس field-error که قبلا
+   فقط جای آیکون رو رزرو می‌کرد ولی هیچ رنگ قرمزی واقعا اعمال نمی‌شد */
+
+.field-error .wsearch-newform-name{ border-color:#E05252; }
+
+.jdate-btn.field-error{ border-color:#E05252; }
+
+@media (hover:hover) {
+  body[data-theme="light"] .module-gate-cta:hover, body:not([data-theme="light"]) .module-gate-cta:hover{
+  background:var(--accent);
+} }
+
+/* هر روز تقویم معاملات (حتی بدون معامله) قابل‌انتخابه — تاریخچه‌ی زیر
+   تقویم همیشه همون روز انتخاب‌شده رو نشون می‌ده. روز انتخاب‌شده یک رنگ
+   جدا از «امروز» می‌گیره تا قاطی نشن. عدد سود/زیان ریز زیر شماره‌ی روز. */
+
+.cal-cell.selected{ border-color:var(--secondary); box-shadow:0 0 0 1px var(--secondary); }
+
+.trade-cal-pnl{
+  position:absolute; bottom:4px; inset-inline-end:50%; transform:translateX(-50%);
+  font-size:7.5px; font-weight:700; line-height:1;
+}
+
+.trade-pair-suggest-item{
+  display:flex; align-items:center; justify-content:space-between; gap:8px;
+  padding:8px 10px; cursor:pointer; font-size:12px; border-bottom:1px solid var(--line);
+}
+
+.trade-pair-suggest-item:last-child{ border-bottom:none; }
+
+@media (hover:hover) {
+  .trade-pair-suggest-item:hover{ background:rgba(var(--accent-rgb),.08); } }
+
+.trade-pair-suggest-label{ color:var(--muted2); font-size:11px; }
+
+.no-scrollbar::-webkit-scrollbar{ display:none; width:0; height:0; }
+
+@media (pointer: coarse) {
+  .cal-cell{ backdrop-filter:blur(13px) saturate(180%); -webkit-backdrop-filter:blur(13px) saturate(180%); }
+  .modal-panel.liquid-glass-panel{ backdrop-filter:blur(10px) saturate(160%); -webkit-backdrop-filter:blur(10px) saturate(160%); }
+  .dash-context-menu{ backdrop-filter:blur(11px) saturate(180%); -webkit-backdrop-filter:blur(11px) saturate(180%); }
+  .wsearch-newform:has(.add-program-glass){ backdrop-filter:blur(10px) saturate(160%); -webkit-backdrop-filter:blur(10px) saturate(160%); }
+  .calorie-unit-dropdown{ backdrop-filter:blur(11px) saturate(180%); -webkit-backdrop-filter:blur(11px) saturate(180%); } }
+
+/* .wsearch-newform (افزودن/ویرایش برنامه و مشابه‌هاش) توی تم تاریک از قبل
+   یه fallback توپر داشت (خط ۲۰۷۱)؛ توی تم روشن اصلا نداشت — روی
+   data-perf=low بدون بلور فقط ۹٪ سفید می‌موند، تقریبا کاملا شفاف. */
+
+html[data-perf="low"] body[data-theme="light"] .wsearch-newform{ background:rgba(255,255,255,.97) !important; }
+
+/* بدون بلور هیچ درصد شفافیتی «شیشه» نمی‌سازد، فقط پشتش را نشان می‌دهد.
+   روی دستگاه‌های لمسی این سطح‌ها کاملا کدر می‌شوند تا هیچ‌وقت دورنگ نشوند.
+   (سلکتور با :has اسپسیفیسیتی بالاتری از قانون پایه دارد، پس اینجا هم
+   همان :has تکرار می‌شود تا واقعا غالب شود.) */
+
+html[data-perf="low"] .wsearch-newform:has(.add-program-glass),
+html[data-perf="low"] body:not([data-theme="light"]) .wsearch-newform:has(.add-program-glass),
+html[data-perf="low"] body[data-theme="light"] .wsearch-newform:has(.add-program-glass),
+html[data-perf="low"] .trade-drawer{ background:var(--surface-2) !important; }
+
+.trade-back-link{
+  display:inline-flex; align-items:center; gap:6px; font-size:14px; font-weight:600; color:var(--muted);
+  text-decoration:none; margin-bottom:14px; padding:4px 2px; transition:color .18s ease;
+}
+
+@media (hover:hover) {
+  .trade-back-link:hover{ color:var(--accent); } }
+
+/* ── هاب ترید ─────────────────────────────────────────────── */
+
+.trade-hub-grid{ display:flex; flex-direction:column; gap:12px; margin-top:18px; }
+
+@media (min-width:640px) {
+  .trade-hub-grid{ display:grid; grid-template-columns:repeat(2, 1fr); } }
+
+.trade-hub-box{
+  display:flex; align-items:center; gap:13px; padding:16px 17px;
+  text-decoration:none; color:var(--text);
+}
+
+@media (hover:hover) {
+  .trade-hub-box:hover{ border-color:var(--accent); background:var(--accent-dim); } }
+
+.trade-hub-box:active{ transform:scale(.985); }
+
+@media (hover:hover) {
+  .trade-hub-box:hover .trade-hub-icon{ background:rgba(var(--accent-rgb),.18); } }
+
+.trade-hub-title{ display:block; font-size:13.5px; font-weight:700; }
+
+.trade-hub-desc{ display:block; font-size:11.5px; color:var(--muted); line-height:1.6; }
+
+@media (hover:hover) {
+  .trade-hub-box:hover .trade-hub-desc{ color:var(--accent); } }
+
+.trade-hub-chevron{ color:var(--muted2); flex-shrink:0; transition:transform .18s ease, color .18s ease; }
+
+@media (hover:hover) {
+  .trade-hub-box:hover .trade-hub-chevron{ transform:translateX(-3px); color:var(--accent); }
+  .trade-danger-btn:hover:not(:disabled){ background:rgba(224,82,82,.1); border-color:#E05252; color:#E05252; } }
+
+.trade-danger-btn:active:not(:disabled){ transform:scale(.97); }
+
+.trade-danger-btn:disabled{ opacity:.45; cursor:default; }
+
+.trade-modal-actions{ display:flex; gap:9px; margin-top:18px; }
+
+.trade-modal-actions button{ flex:1; }
+
+/* اسپینر دکمه در حال کار — تا درخواست در راه است کاربر ببیند کلیکش گرفته */
+
+.trade-spin{ animation:tradeSpin .75s linear infinite; }
+
+@keyframes tradeSpin{ to{ transform:rotate(360deg); } }
+
+.trade-field-row{ display:grid; grid-template-columns:1fr; gap:16px 11px; }
+
+@media (min-width:520px) {
+  .trade-field-row{ grid-template-columns:1fr 1fr; } }
+
+.trade-field-row > div{ min-width:0; }
+
+/* ── رنگ و برچسب ──────────────────────────────────────────── */
+
+.trade-color-row{ display:flex; flex-wrap:wrap; gap:9px; }
+
+@media (hover:hover) {
+  .trade-color-dot:hover{ transform:scale(1.1); } }
+
+.trade-color-dot.active{ border-color:var(--text); transform:scale(1.08); }
+
+.trade-tag-row{ display:flex; flex-wrap:wrap; gap:7px; }
+
+.trade-tag-chip.active{ color:var(--tag-c); background:color-mix(in srgb, var(--tag-c) 16%, transparent); }
+
+@media (hover:hover) {
+  .trade-tag-chip.active:hover{ background:color-mix(in srgb, var(--tag-c) 24%, transparent); }
+  .trade-tag-chip:hover{ background:rgba(var(--accent-rgb),.06); } }
+
+.trade-tag-chip:active{ transform:scale(.96); }
+
+.trade-tag-chip.active{ font-weight:700; --tag-c:var(--accent); }
+
+/* نقطه‌ی برچسب باید سمت چپ نام بنشیند، نه قبلش (سمت راست). چون این چیپ
+   توی چهار جای مختلف (یادداشت‌ها، حساب‌ها، فیلد برچسب، کارت جزئیات) با
+   همین ترتیب DOM رندر می‌شود، جابه‌جایی با order یک‌بار همه‌جا را درست
+   می‌کند — به‌جای چهار بار ویرایش JSX که یکی‌اش فراموش می‌شود. */
+
+.trade-tag-chip .trade-tag-dot{ order:1; }
+
+.trade-tag-add{ border-style:dashed; }
+
+/* ── فرم تب‌دار معامله ────────────────────────────────────── */
+
+.trade-form-panel{ max-width:600px; width:94%; }
+
+@media (hover:hover) and (pointer:fine) {
+  .trade-tabs-arrow{ display:inline-flex; }
+  .trade-tabs-arrow:hover{ color:var(--accent); background:none; box-shadow:none; } }
+
+.trade-form-stepper{ display:flex; gap:9px; margin-top:16px; }
+
+.trade-form-stepper button{ flex:1; min-width:0; }
+
+.trade-form-tabs::-webkit-scrollbar{ display:none; width:0; height:0; }
+
+@media (hover:hover) {
+  .trade-form-tab:hover{ color:var(--text); background:rgba(var(--accent-rgb),.06); } }
+
+.trade-form-tab.active{ color:var(--accent); border-color:var(--accent); background:var(--accent-dim); }
+
+.trade-volume-row{ display:flex; gap:9px; align-items:center; }
+
+.trade-volume-row input{ flex:1; min-width:0; }
+
+.trade-volume-row .auth-tab{ font-size:11px; padding:9px 0; }
+
+@media (hover:hover) {
+  .trade-suggest-btn:hover{ color:var(--accent); background:none; }
+  .trade-toggle:hover{ border-color:var(--accent); background:none; } }
+
+.trade-toggle-label{ font-size:11.5px; color:var(--muted); font-weight:500; line-height:1.7; }
+
+@media (hover:hover) {
+  .trade-optional-head:hover{ border-color:var(--accent); color:var(--accent); background:none; } }
+
+.trade-choice-grid{ display:flex; flex-wrap:wrap; gap:7px; }
+
+@media (hover:hover) {
+  .trade-choice:hover{ color:var(--text); background:rgba(var(--accent-rgb),.06); } }
+
+.trade-choice:active{ transform:scale(.96); }
+
+.trade-choice.active{ border-color:var(--accent); color:var(--accent); background:var(--accent-dim); font-weight:700; }
+
+.trade-choice-grid.readonly .trade-choice{ cursor:default; }
+
+.trade-choice-grid.readonly .trade-choice:active{ transform:none; }
+
+.trade-range:focus{ outline:none; }
+
+.trade-range::-webkit-slider-runnable-track{
+  height:4px; border-radius:999px;
+  background:linear-gradient(to right, var(--accent) var(--tr-pos), var(--line) var(--tr-pos));
+}
+
+.trade-range::-moz-range-track{
+  height:4px; border-radius:999px;
+  background:linear-gradient(to right, var(--accent) var(--tr-pos), var(--line) var(--tr-pos));
+}
+
+.trade-range:dir(rtl)::-webkit-slider-runnable-track{
+  background:linear-gradient(to left, var(--accent) var(--tr-pos), var(--line) var(--tr-pos));
+}
+
+.trade-range:dir(rtl)::-moz-range-track{
+  background:linear-gradient(to left, var(--accent) var(--tr-pos), var(--line) var(--tr-pos));
+}
+
+.trade-range::-webkit-slider-thumb{
+  -webkit-appearance:none; appearance:none; width:var(--tr-thumb); height:var(--tr-thumb);
+  margin-top:-7px; border:0; border-radius:50%; background:var(--accent);
+  transition:transform .15s ease;
+}
+
+.trade-range::-moz-range-thumb{
+  width:var(--tr-thumb); height:var(--tr-thumb); border:0; border-radius:50%; background:var(--accent);
+}
+
+.trade-range:active::-webkit-slider-thumb{ transform:scale(1.12); }
+
+.trade-range:focus-visible::-webkit-slider-thumb{ box-shadow:0 0 0 4px rgba(var(--accent-rgb),.25); }
+
+@media (prefers-reduced-motion:reduce) {
+  .trade-range::-webkit-slider-thumb{ transition:none; } }
+
+/* ── چک‌لیست ──────────────────────────────────────────────── */
+
+.trade-checklist-progress{
+  display:flex; align-items:baseline; gap:7px; margin:14px 0 8px; font-size:11.5px; color:var(--muted);
+}
+
+.trade-checklist-items{ display:flex; flex-direction:column; }
+
+.trade-check-row:last-child{ border-bottom:none; }
+
+@media (hover:hover) {
+  .trade-check-row:hover{ background:rgba(var(--surface-rgb),.12); border-radius:10px; } }
+
+.trade-check-row.done{ color:var(--text); }
+
+.trade-check-row.readonly{ cursor:default; }
+
+.trade-warn-note{
+  display:flex; align-items:flex-start; gap:9px; margin-top:14px; padding:12px 14px;
+  border:1px solid rgba(224,164,82,.5); border-radius:14px; background:rgba(224,164,82,.08);
+  color:#E0A452; font-size:11.5px; line-height:1.9;
+}
+
+.trade-checklist-card-foot{
+  display:flex; align-items:center; justify-content:space-between; gap:10px;
+  margin-top:14px; padding-top:13px; border-top:1px solid var(--line);
+}
+
+.trade-checklist-card-foot .mono{ font-size:12.5px; color:var(--muted); }
+
+.trade-checklist-edit-list{ list-style:none; display:flex; flex-direction:column; gap:7px; }
+
+.trade-checklist-edit-row{ display:flex; align-items:center; gap:8px; background:none; }
+
+.trade-checklist-edit-row input{ flex:1; min-width:0; }
+
+.trade-grip{ color:var(--muted2); cursor:grab; flex-shrink:0; }
+
+.trade-grip:active{ cursor:grabbing; }
+
+.trade-checklist-add-row{ display:flex; align-items:center; gap:8px; margin-top:9px; }
+
+.trade-checklist-add-row input{ flex:1; min-width:0; }
+
+/* ── تصاویر ───────────────────────────────────────────────── */
+
+.trade-image-grid{ display:flex; flex-wrap:wrap; gap:9px; margin-bottom:11px; }
+
+.trade-image-cell{ position:relative; }
+
+.trade-image-thumb{ cursor:zoom-in; }
+
+@media (hover:hover) {
+  .trade-image-thumb:hover{ border-color:var(--accent); transform:scale(1.03); }
+  .trade-image-remove:hover{ background:rgba(224,82,82,.85); } }
+
+.trade-image-remove:active{ transform:scale(.9); }
+
+.trade-image-drop{
+  display:flex; flex-direction:column; align-items:center; justify-content:center; gap:6px;
+  padding:24px; border:1.5px dashed var(--line); border-radius:16px;
+  color:var(--secondary); font-size:12.5px; font-weight:600; cursor:pointer;
+  transition:border-color .18s ease, color .18s ease, background .18s ease;
+}
+
+@media (hover:hover) {
+  .trade-image-drop:hover{ border-color:var(--accent); color:var(--accent); background:rgba(var(--accent-rgb),.05); } }
+
+.trade-image-hint{ font-size:10.5px; color:var(--muted2); font-weight:400; }
+
+.trade-lightbox img{ max-width:100%; max-height:100%; border-radius:14px; }
+
+/* ── فیلد تاریخ و ساعت ────────────────────────────────────── */
+
+.trade-datetime-field{ display:flex; align-items:center; gap:7px; }
+
+@media (hover:hover) {
+  .trade-datetime-btn:hover{ border-color:var(--accent); } }
+
+.trade-datetime-btn svg{ color:var(--muted2); flex-shrink:0; }
+
+.trade-time-input{ width:80px; flex-shrink:0; text-align:center; }
+
+/* طبق درخواست صریح: «حساب‌های معاملاتی» و «نمایش آرشیو» دیگه بالای
+   باکس نیستن — اولین ردیف داخل خود باکسن (نگاه کن به
+   TradeAccountsPanel.tsx)، پس دیگه margin-top نمی‌خواد؛ یک بردر پایین
+   جداش می‌کنه از ردیف‌های حساب زیرش. */
+
+.trade-accounts-head{
+  display:flex; align-items:center; justify-content:space-between; gap:10px;
+  padding-bottom:11px; border-bottom:1px solid var(--line);
+}
+
+/* «حساب‌های معاملاتی» دیگه یک لیبل کوچیک خنثیه نیست — عملا تایتل همین
+   بخشه (تایتل صفحه «ژورنال‌نویسی»ی)، پس فونت تایتل‌مانند + سبز می‌گیره. */
+
+.trade-section-title{ font-size:15px; font-weight:800; color:var(--text); }
+
+.trade-account-card:active, .trade-mt-row:active{ transform:scale(.99); }
+
+@media (hover:hover) {
+  .trade-account-card:hover, .trade-mt-row:hover{ background:rgba(var(--surface-rgb),.3); } }
+
+/* لینک کششی نامرئی — کل سطح کارت را کلیک‌پذیر می‌کند (باگ «روی حساب
+   می‌زنم نمی‌ره تو»). زیر همه‌ی محتوا می‌ماند، پس سه‌نقطه و برچسب‌ها
+   همچنان کلیک خودشان را می‌گیرند. */
+
+.trade-account-hit{ position:absolute; inset:0; z-index:0; }
+
+.trade-account-top-row .trade-account-kebab-inline,
+.trade-account-top-row .trade-account-title-link{ pointer-events:auto; }
+
+.trade-account-kebab-inline{ flex-shrink:0; display:flex; align-items:center; margin-inline-start:-7px; }
+
+.trade-account-title-link .trade-account-name{ overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
+
+.trade-account-pnl-inline{
+  display:inline-flex; align-items:center; gap:6px; flex-shrink:0;
+  font-size:14.5px; font-weight:800;
+}
+
+.trade-account-pnl-inline svg{ flex-shrink:0; }
+
+.trade-account-pnl-pct{ font-size:12px; font-weight:700; opacity:.8; }
+
+@media (hover:hover) {
+  .trade-account-card:hover{ border-color:var(--accent); } }
+
+.trade-account-card.archived{ opacity:.6; }
+
+.trade-account-main{ display:block; text-decoration:none; color:var(--text); }
+
+/* ── ژورنال‌نویسی: چیدمان مخصوص دسکتاپ ─────────────────────────────
+   طبق درخواست صریح، صفحه‌ی ژورنال روی دسکتاپ دیزاین *جدا* دارد، با
+   دقیقا همان امکانات. سه چیز فقط این‌جا اضافه می‌شود و زیر ۱۰۲۴px هیچ‌کدام
+   وجود بصری ندارند (کارت فشرده‌ی موبایل مو‌به‌مو دست‌نخورده می‌ماند):
+     • نوار جمع کل بالای فهرست
+     • دو ستون به‌جای یک ستون باریک وسط ۱۱۰۰ پیکسل فضای خالی
+     • ردیف حقایق و نوار هدف داخل هر کارت
+   مخفی‌سازی با CSS انجام می‌شود نه شرط جاوااسکریپتی، چون تشخیص عرض در
+   رندر سرور ممکن نیست و هر راه JSای این‌جا یعنی hydration mismatch. */
+
+.trade-account-facts,
+.trade-account-goalbar{ display:none; }
+
+/* حالا همان مدل صفحه‌ی ژورنال‌نویسی: ردیف سه‌تایی سرخط + «جزئیات بیشتر». */
+
+.trade-journal-kpis{ display:block; margin:2px 0 10px; }
+
+@media (min-width:1024px) {
+  .trade-journal-grid{
+    display:grid; grid-template-columns:repeat(2, minmax(0, 1fr));
+    gap:12px; align-content:start; padding:14px;
+  }
+
+/* سرصفحه، جمع کل، خطا و حالت خالی هرکدام یک ردیف کاملند، نه یک خانه‌ی گرید. */
+  .trade-journal-grid > .trade-accounts-head,
+  .trade-journal-grid > .trade-journal-kpis,
+  .trade-journal-grid > .trade-form-error,
+  .trade-journal-grid > .trade-empty-state{ grid-column:1 / -1; }
+  .trade-journal-kpis{ margin:2px 0 2px; }
+  .trade-journal-kpis .trade-stats-grid{ grid-template-columns:repeat(4, minmax(0, 1fr)); }
+  .trade-journal-grid .trade-account-card .trade-account-main{ margin-top:auto; }
+  .trade-journal-grid .trade-account-name{ font-size:15.5px; }
+  .trade-journal-grid .trade-account-skel{ height:132px; margin:0; }
+  .trade-account-facts{
+    display:flex; align-items:center; flex-wrap:wrap; gap:6px 14px;
+    margin-top:11px; font-size:11.5px; font-weight:600; color:var(--muted2);
+  }
+  .trade-account-facts span{ display:inline-flex; align-items:center; gap:4px; white-space:nowrap; }
+  .trade-account-facts svg{ opacity:.7; flex-shrink:0; }
+
+/* نام بروکر لاتین است و کنار متن فارسی جهتش می‌پرد. */
+  .trade-account-facts-broker{ unicode-bidi:plaintext; }
+  .trade-account-facts-mt{ color:var(--accent); }
+  .trade-account-goalbar{
+    display:flex; align-items:center; gap:8px; margin-top:10px;
+    font-size:11px; font-weight:700; color:var(--muted2);
+  } }
+
+.trade-account-type, .trade-account-archived-badge{
+  font-size:10px; color:var(--muted2); border:1px solid var(--line); border-radius:999px; padding:3px 9px;
+}
+
+.trade-search{
+  display:flex; align-items:center; gap:7px; padding:0 13px; color:var(--muted2);
+  border:1px solid var(--surface-line); border-radius:14px;
+  background:var(--surface-1);
+  transition:border-color .18s ease;
+}
+
+.trade-search:focus-within{ border-color:var(--accent); }
+
+@media (max-width:640px) {
+  .trade-search input.trade-glass-field{ font-size:16px; } }
+
+.trade-search input::placeholder{ color:var(--muted2); }
+
+/* حالت خالی بخش‌های ترید (یادداشت‌ها/چک‌لیست‌ها) — آیکون وسط‌چین به‌جای
+   یک خط متن تنها. */
+
+.trade-empty-state{
+  display:flex; flex-direction:column; align-items:center; justify-content:center; gap:12px;
+  padding:52px 20px; text-align:center; color:var(--muted2);
+}
+
+.trade-empty-state svg{ opacity:.45; }
+
+/* سرصفحه‌ی تک‌ردیفه: «‹ ترید» و عنوان کنار هم، نه زیر هم. هر ردیف جدا
+   در صفحه‌ی چارت یعنی همان‌قدر ارتفاع کمتر برای خود چارت. */
+
+.trade-head-row h1{ margin-bottom:0; }
+
+@media (hover:hover) {
+  .trade-title-add-btn:hover{ opacity:.78; } }
+
+.trade-title-add-btn:active{ transform:scale(.97); }
+
+.trade-row-dir{
+  font-size:10px; font-weight:700; padding:5px 9px; border-radius:999px; white-space:nowrap;
+  border:1px solid var(--line); color:var(--muted); flex-shrink:0;
+}
+
+.trade-row-dir.buy{ color:var(--accent); border-color:var(--accent); background:var(--accent-dim); }
+
+.trade-row-dir.sell{ color:#E05252; border-color:#E05252; background:rgba(224,82,82,.1); }
+
+.trade-row-symbol{ font-size:13.5px; font-weight:700; transition:color .18s ease; }
+
+.trade-row-badges{ display:flex; flex-wrap:wrap; gap:5px; margin-top:3px; }
+
+.trade-row-badge{
+  font-size:9.5px; padding:3px 8px; border-radius:999px;
+  border:1px solid var(--line); color:var(--muted2);
+}
+
+.trade-row-badge.warn{ border-color:#E0A452; color:#E0A452; }
+
+.trade-row-status{ font-size:11.5px; color:var(--muted); font-weight:600; }
+
+.trade-drawer-head{ display:flex; align-items:flex-start; justify-content:space-between; gap:10px; margin-bottom:15px; }
+
+.trade-drawer-actions{ display:flex; align-items:center; gap:2px; }
+
+.trade-detail-grid{ display:grid; grid-template-columns:repeat(2,1fr); gap:11px 15px; margin-top:14px; }
+
+@media (min-width:520px) {
+  .trade-detail-grid{ grid-template-columns:repeat(3,1fr); } }
+
+.trade-detail-section{ margin-top:20px; padding-top:16px; border-top:1px solid var(--line); }
+
+.trade-detail-section-title{ font-size:11px; color:var(--muted2); font-weight:700; margin-bottom:10px; }
+
+.trade-detail-note{ font-size:12.5px; color:var(--muted); line-height:1.95; margin-top:9px; white-space:pre-wrap; }
+
+.trade-cal-search:focus-within{ border-color:var(--accent); color:var(--text); }
+
+.trade-cal-search input{
+  flex:1; min-width:0; border:none; background:none; outline:none; padding:0;
+  font-size:12.5px; color:var(--text);
+}
+
+.trade-cal-search input::placeholder{ color:var(--muted2); }
+
+.trade-cal-search button{ display:flex; color:var(--muted2); border:none; background:none; padding:0; cursor:pointer; flex-shrink:0; }
+
+/* طبق درخواست صریح، جستجوی نام رویداد دیگر یک دکمه/نوار جدا کنار
+   «تاریخچه/امروز/فیلتر» نیست — یک فیلد تمام‌عرض داخل خود پنل فیلتره. */
+
+.trade-cal-filters .trade-cal-search{ width:100%; margin-bottom:4px; }
+
+.trade-cal-filters .trade-cal-search > button{ order:1; }
+
+.trade-cal-impact{ width:4px; align-self:stretch; border-radius:999px; flex-shrink:0; }
+
+.trade-cal-values{ display:flex; flex-wrap:wrap; gap:4px 14px; font-size:10.5px; color:var(--muted2); }
+
+/* هر رویداد دو ردیف است (طبق درخواست صریح): ردیف اول زمان/حساسیت/ارز/
+   نام رویداد/هشدار، ردیف دوم Actual/Previous/Forecast. جدول گرید قبلی
+   حذف شد چون با دو ردیف، هدر ستونی بی‌معنی می‌شد و همان هدر بود که روی
+   موبایل ستون Actual را بیرون کادر می‌برد. */
+
+.trade-cal-list{ display:flex; flex-direction:column; }
+
+/* خود ناحیه‌ی اسکرول باید LTR باشد: جدول `ltr-inline` است ولی ظرف
+   اسکرول RTL بود، پس مرورگر اسکرول را از انتهای LTR شروع می‌کرد و
+   Time/Currency بیرون کادر می‌افتادند (Actual/Forecast اول دیده می‌شد). */
+
+.trade-cal-item{ padding:10px 0; border-bottom:1px solid var(--line); }
+
+/* جدول ردیفی صفحه‌ی اصلی تقویم اقتصادی (/trade/calendar).
+   طبق شماتیک صریح کاربر ترتیب ستون‌های داده دقیقا این است:
+   Time · Currency · Event · Actual · Forecast · Previous — و «Detail»
+   (بازشدن ردیف و باکس هیستوری) کاملا حذف شد، چون منبع رایگان
+   انتشارهای قبلی را نمی‌دهد. فقط ستون باریک Alert (زنگوله‌ی هر رویداد)
+   بعد از آن‌ها می‌ماند، چون یک قابلیت واقعی مستقل است، نه داده‌ی جدول.
+   طبق درخواست صریح، زیر ۵۶۰px هیچ اسکرول افقی‌ای نیست — grid ثابت به
+   یک چیدمان فلکس دورچین تبدیل می‌شود (پایین‌تر). */
+
+.trade-cal-item:first-child{ padding-top:0; }
+
+.trade-cal-item:last-child{ padding-bottom:0; border-bottom:none; }
+
+.tc-time{ font-weight:700; flex-shrink:0; }
+
+.tc-cur{ flex-shrink:0; }
+
+.tc-alert{ flex-shrink:0; margin-inline-start:auto; }
+
+.tc-line2{ display:flex; align-items:center; gap:14px; margin-top:5px; padding-inline-start:2px; }
+
+/* برچسب کوچک بالای عدد لازم است — بدون هدر ستونی، سه عدد لخت از هم
+   قابل تشخیص نیستند. */
+
+.tc-stat{ display:flex; align-items:baseline; gap:4px; }
+
+.tc-stat i{ font-style:normal; font-size:8.5px; font-weight:700; color:var(--muted2); text-transform:uppercase; letter-spacing:.03em; }
+
+/* رویداد گذشته — فقط زمان/نام کم‌رنگ می‌شوند، نه اعداد Actual که رنگ
+   سبز/قرمزشان خودش اطلاعات است. */
+
+.trade-cal-item.past .tc-time, .trade-cal-item.past .tc-title{ opacity:.55; }
+
+.trade-cal-card-row.past .trade-cal-card-when, .trade-cal-card-row.past .trade-cal-card-title{ opacity:.55; }
+
+/* دکمه‌های ستون Alert/Detail — ریز و بی‌بک‌گراند، فقط رنگشون عوض می‌شه */
+
+.trade-cal-icon-btn{
+  display:flex; align-items:center; justify-content:center; padding:4px; border-radius:8px;
+  color:var(--muted2); border:none; background:none; cursor:pointer; transition:color .15s ease, background .15s ease;
+}
+
+@media (hover:hover) {
+  .trade-cal-icon-btn:hover{ color:var(--accent); background:rgba(var(--accent-rgb),.08); } }
+
+.trade-cal-icon-btn.active{ color:var(--accent); }
+
+/* دقیقا هم‌چیدمان ردیف DashDateSelector+DashFilterButton «روتین من»
+   (app/weekly/page.tsx): روی دسکتاپ نوار و دکمه‌ها کنار همند (دکمه‌ها
+   سمت راست)، روی موبایل زیر هم — فاصله‌ی بالای این ردیف (که قبلا روی
+   خود week-strip بود) حالا این‌جاست چون week-strip دیگر همیشه اولین
+   فرزند نیست (روی دسکتاپ ترتیب بصری‌اش با order عوض می‌شود). */
+
+.trade-cal-header-row{ margin-top:14px; }
+
+.trade-cal-week-days.is-dragging{ cursor:grabbing; user-select:none; }
+
+.trade-cal-week-days::-webkit-scrollbar{ width:0; height:0; display:none; }
+
+@media (hover:hover) {
+  .trade-cal-week-arrow:hover{ color:var(--text); background:rgba(255,255,255,.05); } }
+
+@media (min-width:1024px) {
+  .trade-cal-week-arrow{ display:flex; }
+  .trade-cal-week-strip{ padding:2px 12px; } }
+
+/* line-height صریح ۱.۶ — همان چیزی که پیل‌های روتین من از اسکوپ خودشان
+   می‌گیرند؛ بدونش پیل ۲پیکسل بلندتر می‌شد. */
+
+.trade-cal-day-pill-wd{ font-size:10px; line-height:1.6; font-weight:600; white-space:nowrap; color:var(--text); }
+
+/* روز غیرفعال: نام روز پررنگ، تاریخ کم‌رنگ — همان تفکیک روتین من
+   (text-dash-text در برابر text-dash-muted)، نه هردو خاکستری. */
+
+.trade-cal-day-pill-num{ font-size:9px; line-height:1.6; white-space:nowrap; color:var(--muted); }
+
+.trade-cal-day-pill.today{ box-shadow:inset 0 0 0 1px rgba(var(--accent-rgb),.4); }
+
+.trade-cal-day-pill.today .trade-cal-day-pill-wd{ color:var(--accent); }
+
+/* طبق درخواست صریح، روز فعال دوباره بک‌گراند توپر اکسنت دارد — دقیقا
+   هم‌شکل پیل فعال نوار «روتین من» (DashDateSelector). */
+
+.trade-cal-day-pill.active{
+  background:var(--accent);
+  box-shadow:0 0 0 1px rgba(var(--accent-rgb),.4), 0 0 8px rgba(var(--accent-rgb),.3);
+}
+
+.trade-cal-day-pill.active .trade-cal-day-pill-wd{ color:var(--bg); }
+
+.trade-cal-day-pill.active .trade-cal-day-pill-num{ color:var(--bg); opacity:.8; }
+
+@media (hover:hover) {
+  .trade-cal-day-pill:not(.active):hover{ background:rgba(255,255,255,.05); } }
+
+/* تم روشن: ریست سراسری body[data-theme="light"] button{} (tag+attr+tag)
+   اسپسیفیسیتی بیشتری از .trade-cal-day-pill دارد و به هر روز بک‌گراند
+   شیشه‌ای/بوردر/سایه می‌داد — باگ. روزها مثل تم تیره شفاف می‌مانند؛
+   حلقه‌ی «امروز» و پرشدگی روز فعال همان قبلی‌اند. */
+
+body[data-theme="light"] button.trade-cal-day-pill{ background:none; border:none; box-shadow:none; }
+
+body[data-theme="light"] button.trade-cal-day-pill.today{ box-shadow:inset 0 0 0 1px rgba(var(--accent-rgb),.4); }
+
+body[data-theme="light"] button.trade-cal-day-pill.active{
+  background:var(--accent);
+  box-shadow:0 0 0 1px rgba(var(--accent-rgb),.4), 0 0 8px rgba(var(--accent-rgb),.3);
+}
+
+@media (hover:hover) {
+  body[data-theme="light"] button.trade-cal-day-pill:not(.active):hover{ background:none; border:none; color:var(--muted); }
+  body[data-theme="light"] button.trade-cal-day-pill:not(.active):not(.today):hover{ box-shadow:none; } }
+
+@media (min-width:640px) {
+  .trade-cal-day-pill-wd{ font-size:13px; }
+  .trade-cal-day-pill-num{ font-size:12px; } }
+
+/* ردیف فیلتر/امروز/تاریخچه — سه قرص هم‌شکل، «امروز» وقتی روز انتخابی
+   خود امروزه پر/سبز می‌شه (دقیقا هم‌رنگ پیل‌های فعال استریپ بالا).
+   فاصله‌ی بالاش دیگه اینجا نیست — الان کنار نوار روزهاست، توی همون
+   ردیف flex `.trade-cal-header-row` (فاصله‌شون با gap-2.5/sm:gap-3
+   تنظیم می‌شه، نه margin-top). */
+
+.trade-cal-actions-row{ display:flex; align-items:center; gap:8px; flex-wrap:wrap; }
+
+@media (min-width:640px) {
+  .trade-cal-pill-btn{ gap:6px; padding:10px 16px; font-size:13px; } }
+
+@media (hover:hover) {
+  .trade-cal-pill-btn:hover{ border-color:var(--accent); color:var(--accent); } }
+
+.trade-cal-pill-btn.today.active{
+  background:var(--accent); border-color:rgba(var(--accent-rgb),.4); color:var(--bg); font-weight:700;
+  box-shadow:0 0 8px rgba(var(--accent-rgb),.25);
+}
+
+body[data-theme="light"] .trade-cal-pill-btn.today.active, body:not([data-theme="light"]) .trade-cal-pill-btn.today.active{ background:var(--accent); }
+
+@media (hover:hover) {
+  .trade-cal-pill-btn.today.active:hover{ color:var(--bg); filter:brightness(1.06); } }
+
+/* «فیلتر» وقتی بازه یا فیلتر فعالی دارد فقط لبه/متنش اکسنت می‌شود — پر
+   نمی‌شود، چون پر بودن در این ردیف معنی «روز انتخابی = امروز» را دارد. */
+
+.trade-cal-pill-btn.on{ border-color:var(--accent); color:var(--accent); }
+
+/* دکمه‌ی «تاریخچه» یک ماه‌شمار کامل باز می‌کند — هم‌الگوی ماه‌شمار روتین
+   من (cal-grid/cal-cell). باگ «کار نمی‌کند»: قبلا این دو با position:fixed
+   *داخل* .trade-cal-box (که خودش backdrop-filter دارد) رندر می‌شدند —
+   طبق اسپک CSS Filter Effects هر جد دارای filter/backdrop-filter برای
+   فرزند fixed یک containing-block تازه می‌سازد، پس inset:0/سنترشدن نسبت‌به
+   همان باکس کوچک حساب می‌شد نه ویوپورت. حالا با createPortal (نگاه کن به
+   EconomicCalendarPanel.tsx) مستقیم زیر body می‌نشینند، پس اینجا هم باید
+   مثل یک مودال واقعی روی صفحه سنتر شوند، نه مثل قبل بخشی از فلو عادی. */
+
+.trade-econ-monthpicker-backdrop{ position:fixed; inset:0; z-index:60; }
+
+/* ── یادداشت‌ها ────────────────────────────────────────────── */
+
+.trade-note-box{ margin-top:16px; padding:14px; }
+
+/* جست‌وجو دیگر باکس جداگانه‌ی خودش را ندارد — طبق درخواست صریح («باکسش با
+   باکس یادداشت‌ها یکی باشه») همین ردیف داخل خود .trade-note-box نشسته و
+   با یک خط جداکننده از گرید کارت‌ها زیرش فاصله می‌گیرد، نه یک کپسول
+   شیشه‌ای تودرتوی دیگر. */
+
+.trade-note-search-row{
+  display:flex; flex-direction:column; gap:10px;
+  padding-bottom:12px; margin-bottom:12px; border-bottom:1px solid var(--surface-line);
+}
+
+.trade-note-search.trade-search{ border:none; background:none; padding:0; }
+
+.trade-note-grid{ display:flex; flex-direction:column; gap:11px; align-content:start; }
+
+@media (min-width:700px) {
+  .trade-note-grid{ display:grid; grid-template-columns:repeat(2,1fr); } }
+
+@media (hover:hover) {
+  .trade-note-card:hover{ border-color:var(--accent); box-shadow:0 4px 18px rgba(0,0,0,.14); } }
+
+.trade-note-card:active{ transform:scale(.99); }
+
+.trade-note-title{ font-size:14px; font-weight:700; }
+
+.trade-note-foot{
+  display:flex; flex-direction:column; align-items:flex-start; gap:6px;
+  font-size:10px; color:var(--muted2);
+}
+
+.trade-note-foot .trade-tag-row{ margin:0; }
+
+.trade-note-foot .trade-tag-chip{ font-size:9px; padding:2px 7px; }
+
+.trade-note-view-box{
+  margin-top:12px; padding:14px; border-radius:14px;
+  background:rgba(var(--surface-rgb),.14); border:1px solid rgba(var(--surface-rgb),.22);
+  display:flex; flex-direction:column; gap:14px;
+}
+
+.trade-note-view-empty{ color:var(--muted2); font-style:italic; }
+
+/* ── اتصال متاتریدر ────────────────────────────────────────── */
+
+.trade-mt-panel{ margin-top:24px; padding:18px 20px; }
+
+/* طبق درخواست صریح: اسم حساب دیگر باکس جدا (.trade-account-header)
+   ندارد — همین یک خط بالای پنل توضیحات اتصال است. */
+
+.trade-mt-account-name-line{ font-size:13px; color:var(--muted); margin-bottom:10px; }
+
+.trade-mt-panel-head{ display:flex; align-items:center; justify-content:space-between; gap:10px; flex-wrap:wrap; margin-bottom:6px; }
+
+/* تایتل داخل پنل متاتریدر — .domain-sub سبز و ریز بود؛ درخواست صریح:
+   بزرگ‌تر و سفید (رنگ متن اصلی). */
+
+.trade-mt-panel-head .domain-sub{ font-size:17px; font-weight:800; color:var(--text); }
+
+body[data-theme="light"] .trade-mt-panel-head .domain-sub{ color:var(--text); }
+
+/* نشان فعال/غیرفعال کوچک، کنار خود تایتل — دات با موج پالسی، سبز وقتی
+   وصله، قرمز وقتی نیست؛ جایگزین بنر جداگانه‌ی قبلی. */
+
+.trade-mt-live{ display:inline-flex; align-items:center; gap:6px; font-size:11px; font-weight:700; color:#E05252; }
+
+.trade-mt-live.connected{ color:var(--accent); }
+
+.trade-mt-live-dot::after{
+  content:""; position:absolute; inset:-4px; border-radius:50%; background:currentColor; opacity:.55;
+  animation:mtLivePulse 1.8s ease-out infinite;
+}
+
+@keyframes mtLivePulse{ 0%{ transform:scale(.6); opacity:.55; } 100%{ transform:scale(2.4); opacity:0; } }
+
+/* همون وضعیت روی ردیف فهرست حساب‌ها (صفحه‌ی اصلی متاتریدر) */
+
+.trade-mt-status{
+  display:inline-flex; align-items:center; gap:8px; font-size:12px; font-weight:700; color:#E05252;
+  border:1px solid rgba(224,82,82,.35); border-radius:999px; padding:7px 14px; background:rgba(224,82,82,.08);
+}
+
+.trade-mt-status.connected{ color:var(--accent); border-color:var(--accent); background:var(--accent-dim); }
+
+.trade-mt-status .forex-dot{ position:relative; }
+
+.trade-mt-status .forex-dot::after{
+  content:""; position:absolute; inset:-4px; border-radius:50%; background:currentColor; opacity:.55;
+  animation:mtLivePulse 1.8s ease-out infinite;
+}
+
+/* مراحل نصب — شماره‌گذاری دایره‌ای به‌جای مارکر خام مرورگر (که توی
+   RTL هم‌ردیف عددهای فارسی بقیه‌ی سایت نبود)، و هر تکه‌ی انگلیسی
+   (نام منو/فایل/کلید) با .ltr-inline ایزوله می‌شه — وگرنه توی یک پاراگراف
+   RTL، الگوریتم bidi ترتیب کلمات/فلش‌های انگلیسی رو بهم می‌ریخت. */
+
+.trade-mt-steps{
+  counter-reset:mtstep; list-style:none;
+  margin:18px 0 0; padding:0; display:flex; flex-direction:column; gap:14px;
+  font-size:12.5px; color:var(--muted); line-height:1.95;
+}
+
+.trade-mt-steps li{ counter-increment:mtstep; position:relative; padding-inline-start:32px; }
+
+.ltr-inline{ unicode-bidi:isolate; direction:ltr; }
+
+.trade-mt-download{
+  display:inline-flex; align-items:center; gap:7px; margin-top:8px;
+  font-size:12px; color:var(--accent); text-decoration:none; font-weight:700;
+  border:1px solid var(--accent); border-radius:13px; padding:9px 14px;
+  transition:background .18s ease, transform .15s ease;
+}
+
+@media (hover:hover) {
+  .trade-mt-download:hover{ background:rgba(var(--accent-rgb),.08); } }
+
+.trade-mt-download:active{ transform:scale(.97); }
+
+.trade-mt-note{ display:block; margin-top:7px; font-size:11px; color:var(--muted2); line-height:1.9; }
+
+.trade-mt-note-warn{
+  display:block; margin-top:14px; padding:11px 13px; border-radius:13px;
+  background:rgba(229,168,60,.12); border:1px solid rgba(229,168,60,.3);
+  color:#E5A83C; font-size:11.5px; line-height:1.9;
+}
+
+.trade-mt-code-row{ display:flex; align-items:center; justify-content:center; gap:10px; margin:9px 0 5px; }
+
+.trade-mt-code{
+  font-size:22px; font-weight:800; letter-spacing:.14em;
+  direction:ltr; color:var(--accent);
+}
+
+.trade-mt-copy-btn{ flex-shrink:0; color:var(--accent); }
+
+/* هر حساب یک خط: اسم/برچسب از راست، وضعیت چپ‌چین در همان خط (درخواست صریح) */
+
+.trade-mt-row{
+  text-decoration:none; color:var(--text);
+  display:flex; align-items:center; justify-content:space-between; gap:10px;
+}
+
+@media (hover:hover) {
+  .trade-mt-row:hover{ background:rgba(var(--surface-rgb),.4); } }
+
+/* خط وضعیت متاتریدر روی صفحه‌ی خود حساب — جزئیات کامل جاش صفحه‌ی
+   اختصاصی /trade/metatrader/[id]ه، این‌جا فقط یک ردیف. */
+
+.trade-mt-line{
+  display:flex; align-items:center; justify-content:space-between; gap:10px;
+  margin-top:22px; padding:14px 18px; text-decoration:none; color:var(--text);
+  font-size:12.5px; font-weight:600;
+}
+
+@media (hover:hover) {
+  .trade-mt-line:hover{ border-color:var(--accent); } }
+
+@media (prefers-reduced-motion: reduce) {
+  .trade-mt-live-dot::after, .trade-mt-status .forex-dot::after{ animation:none; opacity:.55; } }
+
+/* آیتم‌های لیست پیشنهاد نماد حالا <button>اند (تا انتخاب با یک تپ و پیش از
+   blur ثبت شود). ریست سراسری `button{}` به آن‌ها بک‌گراند شیشه‌ای و بردر
+   می‌دهد — این‌جا صریح خنثی می‌شود تا ظاهرشان دقیقا همان ردیف ساده‌ی قبل
+   بماند. */
+
+button.trade-pair-suggest-item{
+  width:100%; text-align:start; border:none; border-bottom:1px solid var(--line);
+  border-radius:0; color:var(--text); font-weight:500;
+  background:none; box-shadow:none; backdrop-filter:none; -webkit-backdrop-filter:none;
+}
+
+button.trade-pair-suggest-item:last-child{ border-bottom:none; }
+
+.trade-checklist-box{ margin-top:14px; padding:12px; display:flex; flex-direction:column; gap:9px; }
+
+.trade-checklist-detail-box{ padding:14px; }
+
+/* هدر صفحه‌ی اختصاصی چک‌لیست دیگر باکس جدا نیست — طبق درخواست صریح
+   («دوتا باکس جدا نباشه یه باکس باشه») نام + ویرایش همین ردیف بالای
+   .trade-checklist-detail-box است، لیست هم زیرش. */
+
+.trade-checklist-detail-head{
+  position:relative; display:flex; align-items:center; justify-content:space-between; gap:10px;
+  flex-wrap:wrap; padding-bottom:12px; margin-bottom:12px;
+  /* قبلا var(--surface-line) بود که رنگش از var(--line) (خط بین آیتم‌های
+     چک‌لیست) پررنگ‌تره — همین اختلاف رنگ بود که خط اول رو نسبت‌به خط‌های
+     بین آیتم‌ها «بزرگ‌تر/پررنگ‌تر» جلوه می‌داد. */
+  border-bottom:1px solid var(--line);
+}
+
+/* هر ردیف چک‌لیست حالا خودش یک کارت مجزا با گوشه‌ی کاملا گرد است (نه
+   ردیف flat قبلی با فقط یک خط جداکننده) — طبق درخواست صریح: «باکس‌های
+   داخل هر بخش» باید کاملا کرو باشند؛ فقط خود باکس بزرگ صفحه
+   (.trade-page-box) دست‌نخورده می‌ماند. */
+
+.trade-checklist-row{
+  position:relative; display:flex; align-items:center; gap:8px;
+  padding:13px 12px; padding-inline-start:15px; border-radius:16px;
+  background:rgba(var(--surface-rgb),.22); border:1px solid var(--surface-line);
+  transition:background .18s ease, border-color .18s ease, transform .15s ease;
+}
+
+.trade-checklist-row:active{ transform:scale(.99); }
+
+@media (hover:hover) {
+  .trade-checklist-row:hover{ background:rgba(var(--surface-rgb),.3); border-color:var(--accent); } }
+
+.trade-checklist-row-kebab{ flex-shrink:0; display:flex; align-items:center; margin-inline-start:-4px; }
+
+.trade-checklist-row-main .trade-account-name{ overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
+
+.trade-checklist-row-count{ margin-inline-start:auto; flex-shrink:0; font-size:11.5px; color:var(--muted); }
+
+/* کارت یادداشت — فقط عنوان، سه‌نقطه سمت راست عنوان */
+
+.trade-note-kebab{ flex-shrink:0; display:flex; align-items:center; margin-inline-start:-6px; }
+
+.trade-note-pinned-mark{ flex-shrink:0; color:var(--accent); }
+
+@media (max-width:1023px) {
+  .tv-chart-card{ order:1; }
+  .tv-page > .trade-chat-panel{ order:2; }
+  .tv-page > .tv-cell-tools{ order:3; }
+  .tv-page > .trade-cal-card{ order:4; } }
+
+/* خانه‌ی ابزارها: ردیف باکس‌های کوچیک + یک باکس برای ابزار فعال */
+
+.tv-cell-tools{ display:flex; flex-direction:column; gap:14px; }
+
+.tv-tools-row{ display:flex; align-items:flex-start; justify-content:center; gap:10px; flex:none; }
+
+@media (min-width:640px) {
+  .tv-tools-row{ gap:14px; } }
+
+.tv-tool-pane:not([hidden]){ animation:tv-tool-in .22s ease-out; }
+
+@keyframes tv-tool-in{ from{ opacity:0; transform:translateY(10px); } to{ opacity:1; transform:none; } }
+
+@media (prefers-reduced-motion:reduce) {
+  .tv-tool-pane:not([hidden]){ animation:none; } }
+
+@media (min-width:1024px) {
+  .trade-desktop-full .trade-head-row{ margin-bottom:12px; }
+  .trade-desktop-full .trade-head-block .trade-back-link{ margin-bottom:0; }
+  .tv-page > .tv-chart-card{ grid-area:chart; }
+  .tv-page > .trade-chat-panel{ grid-area:chat; }
+  .tv-page > .trade-cal-card{ grid-area:cal; }
+  .tv-page > .tv-cell-tools{ grid-area:tools; }
+  .tv-cell-tools .tv-tool-pane:not([hidden]){ flex:1; min-height:0; display:flex; flex-direction:column; } }
+
+/* طبق درخواست صریح: تایتل «چارت» دیگه داخل باکس شیشه‌ای نیست، بیرون
+   ازشه — پس .tv-chart-card (که همچنان خود خانه‌ی گرید .tv-page ست، طبق
+   `.tv-page > .tv-chart-card{grid-area:chart}`) دیگه خودش باکس نیست، فقط
+   یک ستون ساده‌ست که تایتل و باکس واقعی (.tv-chart-box) رو زیر هم نگه
+   می‌داره. اگه یک لایه‌ی جدید wrapper دور .tv-chart-card اضافه می‌شد،
+   grid-area دیگه روی فرزند مستقیم .tv-page اعمال نمی‌شد و کل گرید
+   دسکتاپ می‌شکست — برای همین باکس واقعی یک بچه‌ی جدید شد، نه یک جد جدید. */
+
+.tv-chart-card{ display:flex; flex-direction:column; gap:8px; }
+
+.tv-chart-box{
+  background:var(--surface-glass);
+  backdrop-filter:blur(22px) saturate(170%); -webkit-backdrop-filter:blur(22px) saturate(170%);
+  border:1px solid var(--surface-line); border-radius:18px;
+  padding:11px; display:flex; flex-direction:column; gap:11px;
+  flex:1; min-height:0;
+}
+
+/* موبایل: ارتفاع ثابت سخاوتمندانه (نه بیشتر — طبق اصلاح صریح کاربر،
+   خواسته «عریض‌تر» بود نه «درازتر»؛ عرض با breakout زیر حل می‌شود، نه
+   این ارتفاع). دسکتاپ (پایین‌تر): هرچه از خانه‌ی گرید مانده، یعنی چارت
+   خودش تا کف صفحه کش می‌آید. */
+
+.tv-chart-frame{
+  position:relative; width:100%; border-radius:13px; overflow:hidden;
+  height:clamp(440px, calc(100vh - 190px), 820px);
+  background:rgba(var(--surface-rgb),.06);
+}
+
+@media (min-width:1024px) {
+  .tv-chart-frame{ flex:1; height:auto; min-height:0; } }
+
+/* حالت تمام‌صفحه (Fullscreen API روی خود این باکس، نه کل صفحه) — رادیوس
+   برداشته می‌شود چون دیگر داخل یک کارت نیست، خودش کل صفحه‌ی نمایشه. */
+
+.tv-chart-frame:fullscreen{ height:100%; border-radius:0; background:var(--bg); }
+
+.tv-fullscreen-btn{
+  position:absolute; top:10px; inset-inline-start:10px; z-index:3;
+  width:30px; height:30px; padding:0; border-radius:9px;
+  display:flex; align-items:center; justify-content:center;
+  color:var(--text); background:rgba(var(--surface-rgb),.55);
+  backdrop-filter:blur(10px); -webkit-backdrop-filter:blur(10px);
+  border:1px solid var(--surface-line); box-shadow:none;
+  opacity:.75; transition:opacity .15s ease, background .15s ease;
+}
+
+@media (hover:hover) {
+  .tv-fullscreen-btn:hover{ opacity:1; background:rgba(var(--surface-rgb),.8); color:var(--accent); } }
+
+.tv-fullscreen-btn:active{ transform:scale(.92); }
+
+@media (max-width:700px) {
+  .tv-fullscreen-btn{ display:none; } }
+
+@media (max-width:1023px) {
+  .tv-chart-card{
+    width:100vw; max-width:none; position:relative; inset-inline-end:50%; inset-inline-start:50%;
+    margin-inline-end:-50vw; margin-inline-start:-50vw;
+    padding:0; box-sizing:border-box;
+  }
+
+/* طبق درخواست صریح: خود چارت هیچ فاصله‌ای از چپ و راست ندارد — نه
+     پدینگ کارت، نه پدینگ باکس، نه گوشه‌ی گرد. فقط تایتل (که بیرون باکس
+     است) هم‌تراز متن بقیه‌ی صفحه نگه داشته می‌شود. */
+  .tv-chart-box{
+    border-radius:0; border-inline-end:none; border-inline-start:none;
+    padding-inline:0;
+  }
+  .tv-chart-frame{ border-radius:0; } }
+
+.tv-chart-frame iframe{ width:100%; height:100%; border:0; display:block; transition:opacity .3s ease; }
+
+.tv-chart-loading{
+  position:absolute; inset:0; z-index:2;
+  display:flex; flex-direction:column; align-items:center; justify-content:center; gap:12px;
+  font-size:12.5px; color:var(--muted);
+}
+
+.tv-chart-spinner{ color:var(--accent); }
+
+/* ── پنل‌های صفحه‌ی چارت: چک‌لیست/ثبت معامله، گفت‌وگو، تقویم ─────────── */
+
+.trade-panel-head{ display:flex; align-items:center; justify-content:space-between; gap:10px; margin-bottom:10px; }
+
+.trade-panel-title{ display:inline-flex; align-items:center; gap:7px; font-size:13px; font-weight:700; color:var(--text); }
+
+.trade-chat-room{ font-size:11px; color:var(--muted); }
+
+.trade-chart-side, .trade-chat-panel, .trade-cal-card{
+  background:var(--surface-glass);
+  backdrop-filter:blur(22px) saturate(170%); -webkit-backdrop-filter:blur(22px) saturate(170%);
+  border:1px solid var(--surface-line); border-radius:18px;
+  padding:15px;
+}
+
+.trade-chat-panel, .trade-cal-card{ display:flex; flex-direction:column; min-height:300px; }
+
+/* انتخابگر چک‌لیست بالای فهرست تیک‌ها (صفحه‌ی چارت) */
+
+.trade-chart-check-picker{ margin:2px 0 10px; font-size:12px; }
+
+/* پنل کناری: چک‌لیست + ثبت معامله */
+
+.trade-chart-checklist{ display:flex; flex-direction:column; gap:2px; }
+
+.trade-chart-check-row{
+  display:flex; align-items:center; justify-content:space-between; gap:10px;
+  padding:9px 2px; font-size:12.5px; line-height:1.7; color:var(--text); cursor:pointer;
+  border-bottom:1px solid rgba(var(--surface-rgb),.1);
+}
+
+.trade-chart-check-row:last-child{ border-bottom:none; }
+
+.trade-chart-check-row input{ width:17px; height:17px; accent-color:var(--accent); cursor:pointer; flex-shrink:0; }
+
+.trade-chart-side-symbol{ margin-top:10px; font-size:11.5px; color:var(--muted); }
+
+/* تقویم */
+
+.trade-cal-card-actions{ display:flex; align-items:center; gap:4px; }
+
+.trade-cal-card-list{ display:flex; flex-direction:column; gap:9px; overflow-y:auto; max-height:320px; padding-inline-end:4px; }
+
+.trade-cal-card-row{ display:flex; align-items:flex-start; gap:9px; }
+
+.trade-cal-card-when{ display:flex; flex-direction:column; gap:2px; min-width:62px; font-size:10.5px; color:var(--muted); }
+
+.trade-cal-card-main{ display:flex; flex-direction:column; gap:3px; min-width:0; flex:1; }
+
+.trade-cal-card-title{ font-size:12px; color:var(--text); line-height:1.7; }
+
+/* گفت‌وگو — طبق درخواست صریح، مثل تلگرام از پایین شروع می‌شود: خود
+   لیست column معمولی می‌ماند (برای حالت‌های خالی/لودینگ که باید بالا/وسط
+   بمانند)، ولی پیام‌های واقعی داخل .trade-chat-list-inner با
+   column-reverse چیده می‌شوند — یعنی مرورگر خودش موقعیت اولیه‌ی اسکرول را
+   روی «پایین‌ترین» (جدیدترین پیام) می‌گذارد، بدون نیاز به scrollTop
+   دستی موقع باز شدن. `margin-top:auto` باعث می‌شود وقتی پیام‌ها کوتاه‌تر
+   از ارتفاع باکس‌اند هم به پایین بچسبند، نه بالا. */
+
+.trade-chat-list{ flex:1; display:flex; flex-direction:column; overflow-y:auto; max-height:300px; padding:2px 0; padding-inline-start:4px; }
+
+.trade-chat-list-inner{ display:flex; flex-direction:column-reverse; gap:11px; margin-top:auto; }
+
+.trade-chat-empty{ font-size:12px; color:var(--muted); text-align:center; padding:22px 8px; line-height:1.9; }
+
+.trade-chat-row{ display:flex; flex-direction:column; gap:4px; align-items:flex-start; max-width:86%; }
+
+.trade-chat-row.mine{ align-self:flex-end; align-items:flex-end; }
+
+.trade-chat-meta{ display:flex; align-items:center; gap:7px; font-size:10.5px; color:var(--muted); }
+
+.trade-chat-author{ font-weight:600; color:var(--secondary); }
+
+.trade-chat-bubble{
+  position:relative; padding:9px 12px; border-radius:14px;
+  background:rgba(var(--surface-rgb),.16); border:1px solid rgba(var(--surface-rgb),.2);
+}
+
+.trade-chat-row.mine .trade-chat-bubble{ background:var(--accent-dim); border-color:rgba(var(--accent-rgb),.28); }
+
+.trade-chat-body{ margin:0; font-size:12.5px; line-height:1.9; color:var(--text); white-space:pre-wrap; overflow-wrap:anywhere; }
+
+.trade-chat-actions{ display:flex; gap:6px; margin-top:5px; }
+
+.trade-chat-action{
+  display:inline-flex; align-items:center; gap:4px; padding:2px 4px;
+  font-size:10px; color:var(--muted); background:none; border:none; box-shadow:none;
+  backdrop-filter:none; -webkit-backdrop-filter:none; transition:color .18s ease;
+}
+
+@media (hover:hover) {
+  .trade-chat-action:hover:not(:disabled){ color:#E05252; background:none; box-shadow:none; } }
+
+.trade-chat-action:disabled{ opacity:.6; cursor:default; }
+
+.trade-chat-reported{ font-size:9.5px; }
+
+/* قوانین گفت‌وگو — داخل خود باکس، درست جای فیلد نوشتن. قانونی که
+   برای خواندنش باید صفحه عوض کنی، خوانده نمی‌شود. */
+
+.chat-rules{
+  margin-top:11px; padding:13px; border-radius:14px;
+  background:rgba(var(--surface-rgb),.12); border:1px solid rgba(var(--surface-rgb),.22);
+}
+
+.chat-rules-title{ font-size:12.5px; font-weight:700; color:var(--text); margin-bottom:8px; }
+
+.chat-rules-list{ margin:0 0 12px; padding-inline-start:16px; display:flex; flex-direction:column; gap:6px; }
+
+.chat-rules-list li{ font-size:11.5px; line-height:1.85; color:var(--muted); }
+
+.chat-rules-list li::marker{ color:var(--accent); }
+
+.chat-rules-accept{ width:100%; }
+
+.trade-chat-warning{
+  display:flex; align-items:center; gap:8px; margin-top:11px; padding:10px 12px;
+  border-radius:12px; background:rgba(229,168,60,.12); border:1px solid rgba(229,168,60,.3);
+  color:#E5A83C; font-size:11.5px; line-height:1.8;
+}
+
+.trade-chat-warning span{ flex:1; }
+
+.trade-chat-warning-dismiss{
+  flex-shrink:0; width:22px; height:22px; border-radius:999px; padding:0;
+  display:inline-flex; align-items:center; justify-content:center; color:inherit; background:transparent;
+}
+
+@media (hover:hover) {
+  .trade-chat-warning-dismiss:hover{ background:rgba(229,168,60,.18); } }
+
+.trade-chat-restricted{
+  margin-top:11px; padding:12px; border-radius:12px; text-align:center;
+  background:rgba(224,82,82,.1); border:1px solid rgba(224,82,82,.25);
+  color:#E05252; font-size:12px; line-height:1.9;
+}
+
+.trade-chat-composer-wrap{ position:relative; }
+
+.trade-chat-composer{ display:flex; gap:8px; align-items:center; margin-top:11px; }
+
+/* طبق درخواست صریح: دیگر پاپ‌آپ ایموجی سفارشی نیست — دکمه‌ی ایموجی
+   حالا *داخل* خود فیلد (سمت چپ متن، چون RTL) نشسته و فقط فوکوس می‌کند
+   تا کیبورد خود دستگاه بیاید بالا؛ از آن‌جا کاربر با دکمه‌ی ایموجی
+   خود کیبورد می‌نویسد. */
+
+.trade-chat-input-wrap{ position:relative; flex:1; min-width:0; }
+
+.trade-chat-input{ width:100%; margin:0; padding-inline-end:38px; box-sizing:border-box; }
+
+.trade-chat-emoji-btn{
+  position:absolute; inset-inline-end:2px; top:50%; transform:translateY(-50%);
+  width:32px; height:32px; border-radius:50%; padding:0;
+  display:inline-flex; align-items:center; justify-content:center;
+  color:var(--muted); background:none; border:none; box-shadow:none;
+  backdrop-filter:none; -webkit-backdrop-filter:none;
+  transition:color .18s ease, background .18s ease;
+}
+
+@media (hover:hover) {
+  .trade-chat-emoji-btn:hover{ color:var(--accent); background:rgba(var(--accent-rgb),.08); box-shadow:none; } }
+
+/* دکمه‌ی ارسال — طبق درخواست صریح بزرگ‌تر از قبل (بود ۳۸px با آیکون
+   فقط ۱۶، الان آیکون تقریبا نصف خود دایره است). */
+
+.trade-chat-send{
+  flex-shrink:0; width:42px; height:42px; border-radius:50%;
+  display:inline-flex; align-items:center; justify-content:center;
+  color:#fff; background:var(--accent); border:none; box-shadow:none;
+  backdrop-filter:none; -webkit-backdrop-filter:none;
+  transition:filter .18s ease, transform .12s ease;
+}
+
+@media (hover:hover) {
+  .trade-chat-send:hover:not(:disabled){ filter:brightness(1.08); background:var(--accent); box-shadow:none; } }
+
+.trade-chat-send:active:not(:disabled){ transform:scale(.94); }
+
+.trade-chat-send:disabled{ opacity:.45; cursor:default; }
+
+.trade-chat-report-sheet{
+  margin-top:12px; padding:13px; border-radius:14px;
+  background:rgba(var(--surface-rgb),.14); border:1px solid rgba(var(--surface-rgb),.22);
+}
+
+.trade-chat-report-quote{
+  font-size:11.5px; color:var(--muted); line-height:1.9; margin-bottom:10px;
+  padding:8px 10px; border-radius:10px; background:rgba(var(--surface-rgb),.12); border:1px solid var(--surface-line);
+  max-height:76px; overflow:auto; overflow-wrap:anywhere;
+}
+
+/* ── ساعت بازار فارکس ────────────────────────────────────────────────
+   بازسازی چیدمان مرجع: حلقه‌ی سرمه‌ای با اعداد ۱–۲۴، صفحه‌ی روشن،
+   مقیاس دقیقه، پره‌های شعاعی، نوار جلسه‌ها با نام منحنی، و سه عقربه.
+   خود صفحه آینه نمی‌شود — راست‌چینی به متن و کارت‌ها مربوط است، نه به
+   جهت چرخش ساعت. */
+
+.fx-clock{ direction:rtl; }
+
+.fx-dial-wrap{ position:relative; width:100%; max-width:460px; margin:0 auto; aspect-ratio:1; }
+
+.fx-dial{ width:100%; height:100%; display:block; }
+
+.fx-bezel{ fill:none; stroke:#1E2A38; }
+
+.fx-bezel-tick{ stroke:rgba(255,255,255,.34); stroke-width:1.4; }
+
+/* صفحه‌ی داخلی با تم اپ هماهنگ می‌شود. در تم روشن سفید است مثل مرجع؛
+   در تم تیره یک اسلیت خیلی تیره، وگرنه یک دیسک سفید وسط اپ تاریک
+   می‌افتاد و با بقیه‌ی صفحه‌ها ناجور می‌شد. */
+
+.fx-face{ fill:#FFFFFF; stroke:rgba(30,42,56,.10); stroke-width:1; }
+
+body:not([data-theme="light"]) .fx-face{ fill:#101820; stroke:rgba(255,255,255,.07); }
+
+.fx-hour-num{ fill:#FFFFFF; font-size:17px; font-weight:700; font-variant-numeric:tabular-nums; }
+
+.fx-min-num{ fill:#9AA3AC; font-size:15px; font-weight:600; font-variant-numeric:tabular-nums; }
+
+body:not([data-theme="light"]) .fx-min-num{ fill:#6C767F; }
+
+.fx-spoke{ stroke:rgba(30,42,56,.07); stroke-width:1; }
+
+.fx-spoke.major{ stroke:rgba(30,42,56,.12); }
+
+body:not([data-theme="light"]) .fx-spoke{ stroke:rgba(255,255,255,.05); }
+
+body:not([data-theme="light"]) .fx-spoke.major{ stroke:rgba(255,255,255,.09); }
+
+/* نوار جلسه: خاکستری وقتی بسته، سبز وقتی باز — مثل مرجع.
+   هر دو تم در یک سطح specificity نوشته می‌شوند، وگرنه قاعده‌ی تم
+   رنگ «باز» را می‌خورد و هیچ جلسه‌ای سبز نمی‌شد. */
+
+.fx-band{ fill:none; stroke:#BFC5CB; stroke-linecap:round; transition:stroke .45s ease; }
+
+body[data-theme="light"] .fx-band{ stroke:#BFC5CB; }
+
+body:not([data-theme="light"]) .fx-band{ stroke:#39424B; }
+
+body[data-theme="light"] .fx-band.open,
+body:not([data-theme="light"]) .fx-band.open{ stroke:var(--accent); }
+
+.fx-band-label{
+  fill:rgba(255,255,255,.94); font-size:13px; font-weight:700;
+  letter-spacing:.2em; text-transform:uppercase;
+}
+
+.fx-hand-hour{ stroke:#1E2A38; stroke-width:6; stroke-linecap:round; }
+
+.fx-hand-min{ stroke:#1E2A38; stroke-width:4; stroke-linecap:round; }
+
+.fx-hand-sec{ stroke:#E03B3B; stroke-width:2; stroke-linecap:round; }
+
+.fx-hub{ fill:#1E2A38; }
+
+.fx-hub-dot{ fill:#FFFFFF; }
+
+body:not([data-theme="light"]) .fx-hand-hour,
+body:not([data-theme="light"]) .fx-hand-min{ stroke:#E8ECEF; }
+
+body:not([data-theme="light"]) .fx-hub{ fill:#E8ECEF; }
+
+body:not([data-theme="light"]) .fx-hub-dot{ fill:#101820; }
+
+/* ردیف تاریخ و ساعت — راست‌چین، پس تاریخ راست و ساعت چپ */
+
+.fx-meta{
+  display:flex; align-items:baseline; justify-content:space-between;
+  margin:22px 4px 14px; gap:12px;
+}
+
+.fx-meta-date{ font-size:13px; font-weight:700; color:var(--muted); letter-spacing:.02em; }
+
+.fx-meta-time{
+  font-size:19px; font-weight:800; color:var(--text);
+  direction:ltr; font-variant-numeric:tabular-nums;
+}
+
+.fx-market-closed{
+  margin:0 4px 12px; padding:10px 14px; border-radius:12px;
+  font-size:12px; color:var(--muted);
+  background:rgba(var(--surface-rgb),.13); border:1px solid rgba(var(--surface-rgb),.2);
+}
+
+/* کارت هر جلسه */
+
+.fx-cards{ display:flex; flex-direction:column; gap:11px; }
+
+.fx-card{
+  display:flex; align-items:center; gap:14px; padding:15px 16px;
+  border-radius:16px; background:rgba(var(--surface-rgb),.13);
+  border:1px solid rgba(var(--surface-rgb),.2);
+  backdrop-filter:blur(22px) saturate(180%); -webkit-backdrop-filter:blur(22px) saturate(180%);
+  transition:border-color .3s ease;
+}
+
+.fx-card.open{ border-color:rgba(var(--accent-rgb),.42); }
+
+.fx-card-flag{
+  width:46px; height:46px; flex-shrink:0; border-radius:50%;
+  display:inline-flex; align-items:center; justify-content:center;
+  /* حلقه بیرون از خود پرچم کشیده می‌شود تا لبه‌ی پرچم بریده نشود */
+  box-shadow:0 0 0 2px rgba(var(--surface-rgb),.3);
+  transition:box-shadow .3s ease;
+}
+
+.fx-card.open .fx-card-flag{ box-shadow:0 0 0 2px var(--accent); }
+
+.fx-flag-svg{ display:block; border-radius:50%; }
+
+.fx-card-main{ flex:1; min-width:0; }
+
+.fx-card-city{ display:flex; align-items:center; gap:7px; font-size:15px; font-weight:800; color:var(--text); }
+
+.fx-card-hours{
+  display:block; margin-top:4px; font-size:12px; color:var(--muted);
+  font-variant-numeric:tabular-nums;
+}
+
+.fx-card-hours bdi{ direction:ltr; unicode-bidi:isolate; }
+
+.fx-card-state{ flex-shrink:0; text-align:start; }
+
+.fx-card-label{ display:block; font-size:11px; color:var(--muted); }
+
+.fx-card-value{
+  display:block; margin-top:3px; font-size:15px; font-weight:800; color:var(--muted);
+  direction:ltr; font-variant-numeric:tabular-nums; letter-spacing:.01em;
+}
+
+.fx-card-value.open{ color:var(--accent); }
+
+/* ── جاگیر سبک داخل صفحه (components/PageLoader.tsx) ─────────────────────
+   فقط یک اسکلت ساده داخل محتوا (زیر هدر، بدون پرده و بدون لوگو). تا 200ms هیچی
+   دیده نمی‌شه (animation-delay)، پس ناوبری سریع هیچ چشمک و لودینگی نداره. */
+
+.page-loader{
+  width:100%; display:flex; flex-direction:column; gap:12px; padding:8px 0 24px;
+  opacity:0; animation:pl-in .3s ease .2s forwards;
+}
+
+@keyframes pl-in{ to{ opacity:1; } }
+
+.page-loader-skel{ width:100%; display:flex; flex-direction:column; gap:12px; }
+
+.pls-line, .pls-card{ display:block; position:relative; overflow:hidden; border-radius:10px; background:rgba(var(--accent-rgb),.07); }
+
+.pls-line{ height:16px; }
+
+.pls-line.pls-thin{ height:11px; opacity:.7; }
+
+.pls-grid{ display:grid; grid-template-columns:1fr 1fr; gap:12px; margin-top:8px; }
+
+.pls-card{ height:120px; border-radius:18px; border:1px solid var(--box-line); background:var(--box-bg); }
+
+.pls-card.pls-wide{ grid-column:1 / -1; height:150px; }
+
+.pls-line::after, .pls-card::after{
+  content:""; position:absolute; inset:0; transform:translateX(100%);
+  background:linear-gradient(90deg, transparent, rgba(255,255,255,.06), transparent);
+  animation:pl-shimmer 1.3s ease-in-out infinite;
+}
+
+body[data-theme="light"] .pls-line::after, body[data-theme="light"] .pls-card::after{ background:linear-gradient(90deg, transparent, rgba(255,255,255,.6), transparent); }
+
+@keyframes pl-shimmer{ to{ transform:translateX(-100%); } }
+
+@media (prefers-reduced-motion:reduce) {
+  .pls-line::after, .pls-card::after{ animation:none; } }
+
+/* ── ویزارد (داخل همان پاپ‌آپ مشترک .wsearch-newform) ── */
+
+.wsearch-newform:has(.rp-wiz){ max-height:min(90vh, 680px); }
+
+body[data-theme] :where(
+  .account-card, .acc-block-body, .trade-account-card, .trade-mt-row, .trade-note-card,
+  .trade-checklist-card, .trade-journal-box, .rp-stage-card, .ls-card, .overflow-hidden
+)::before{ inset:0; }
+
+html[data-perf="low"] .wsearch-newform-overlay.strong-blur{
+  backdrop-filter:var(--popup-backdrop-filter-strong) !important;
+  -webkit-backdrop-filter:var(--popup-backdrop-filter-strong) !important;
+}
+
+body[data-theme] .dash-quick-tile.is-on{ width:76px; height:76px; border-color:var(--accent); color:var(--accent); }
+
+body[data-theme] .dash-quick-tile:not(.is-on){ gap:0; }
+
+@media (hover:hover) {
+  body[data-theme] .dash-quick-tile:hover:not(.is-on){ color:var(--text); } }
+
+.dash-quick-tile-icon{ display:block; }
+
+.dash-quick-tile.is-on .dash-quick-tile-icon svg{ width:26px; height:26px; }
+
+/* اسم همیشه رندر می‌شه؛ ظاهر/محوشدنش فقط با max-height + opacity + کمی
+   بالا اومدن — بدون هیچ scale، پس هیچ‌وقت بزرگ‌نمایی نمی‌شه. */
+
+.dash-quick-tile-label{
+  display:block; font-size:10.5px; font-weight:700; line-height:1.2; text-align:center; white-space:nowrap;
+  max-height:0; opacity:0; transform:translateY(5px);
+  transition:max-height .32s cubic-bezier(.22,1,.36,1), opacity .14s ease, transform .32s cubic-bezier(.22,1,.36,1);
+}
+
+.dash-quick-tile.is-on .dash-quick-tile-label{
+  max-height:16px; opacity:1; transform:none;
+  transition:max-height .32s cubic-bezier(.22,1,.36,1), opacity .22s ease .1s, transform .32s cubic-bezier(.22,1,.36,1) .04s;
+}
+
+@media (min-width:640px) {
+  body[data-theme="light"] .dash-quick-tile, body:not([data-theme="light"]) .dash-quick-tile{ width:62px; height:62px; }
+  body[data-theme] .dash-quick-tile.is-on{ width:88px; height:88px; }
+  .dash-quick-tile.is-on .dash-quick-tile-icon svg{ width:30px; height:30px; }
+  .dash-quick-tile-label{ font-size:12px; } }
+
+.gring{ position:relative; display:inline-block; flex-shrink:0; }
+
+.gring svg{ display:block; }
+
+.gring-center{ position:absolute; inset:0; display:flex; align-items:center; justify-content:center; }
+
+.gring-cap{ filter:drop-shadow(0 0 3px rgba(0,0,0,.45)); }
+
+body[data-theme="light"] .gring-cap{ filter:drop-shadow(0 0 2px rgba(80,50,20,.35)); }
+
+/* ── نام طلایی (components/GoldenName.tsx) ─────────────────────────
+   دو طلای متفاوت (روشن لیمویی و عسلی گرم) که روی حروف جریان دارن؛ برق
+   روشن (--g1) جزو خود گرادیانه، پس جاروی جدایی که قطع/وصل بشه نداره.
+   فقط background-clip:text — عنصر خودش هیچ بک‌گراندی نمی‌گیره.
+
+   حلقه‌ی بی‌درز: گرادیان افقی (90deg، تا لبه‌ی کاشی‌ها کج نیفتن) که اول و
+   آخرش یک رنگه، پس کاشی تکرارشونده (repeat-x) بی‌درزه. عرض کاشی = 200%
+   عنصر، و جابه‌جایی 0% → 200% با این اندازه دقیقا یک کاشی کامله
+   ((W - 2W) × 2 = -2W)؛ پس فریم آخر پیکسل‌به‌پیکسل همون فریم اوله و با
+   timing خطی هیچ پرش یا مکثی دیده نمی‌شه. */
+
+.golden-name{
+  --g1:#fff3b0; --g2:#f5c542; --g3:#d4891a; --g4:#ffe27a;
+  background-image:linear-gradient(90deg, var(--g3) 0%, var(--g2) 13%, var(--g1) 25%, var(--g2) 37%, var(--g3) 50%, var(--g4) 63%, var(--g2) 76%, var(--g4) 88%, var(--g3) 100%);
+  background-size:200% 100%;
+  background-repeat:repeat-x;
+  background-position:0% 50%;
+  -webkit-background-clip:text; background-clip:text;
+  -webkit-text-fill-color:transparent; color:transparent;
+  animation:goldenFlow 6s linear infinite;
+  font-weight:800;
+}
+
+body[data-theme="light"] .golden-name{ --g1:#f7d774; --g2:#d9a21b; --g3:#9a5b06; --g4:#e8b830; }
+
+/* درخشش (GoldenName): کپی شفاف متن با text-shadow زیر حروف گرادیانی، بدون
+   filter — drop-shadow داخل کارت‌های شیشه‌ای مستطیل کم‌رنگ پشت اسم می‌انداخت */
+
+.name-glow{ position:relative; font-weight:800; --name-glow:rgba(245,197,66,.45); }
+
+.name-glow[data-text]::before{
+  content:attr(data-text); position:absolute; inset:0; pointer-events:none;
+  color:transparent; -webkit-text-fill-color:transparent; white-space:inherit;
+  text-shadow:0 0 8px var(--name-glow);
+}
+
+body[data-theme="light"] .golden-name-glow{ --name-glow:rgba(217,162,27,.32); }
+
+@keyframes goldenFlow{ from{ background-position:0% 50%; } to{ background-position:200% 50%; } }
+
+@media (prefers-reduced-motion: reduce) {
+  .golden-name{ animation:none; background-position:30% 50%; } }
+
+/* ── نام بنفش سمی (components/GoldenName.tsx با staff) ─────────────
+   Owner و ادمین‌ها: همون تکنیک حلقه‌ی بی‌درز .golden-name (گرادیان افقی با
+   اول و آخر یک‌رنگ، کاشی 200%، جابه‌جایی خطی 0% → 200% = دقیقا یک کاشی؛
+   فریم آخر = فریم اول) ولی با پالت بنفش نئون: بنفش عمیق ↔ بنفش برقی با
+   برق یاسی-سرخابی اسیدی. درخشش با --name-glow روی .toxic-name-glow.
+   فقط background-clip:text — عنصر خودش هیچ بک‌گراندی نمی‌گیره. */
+
+.toxic-name{
+  --t1:#f3c9ff; --t2:#b44dff; --t3:#7a1fe0; --t4:#e15cff;
+  background-image:linear-gradient(90deg, var(--t3) 0%, var(--t2) 13%, var(--t1) 25%, var(--t2) 37%, var(--t3) 50%, var(--t4) 63%, var(--t2) 76%, var(--t4) 88%, var(--t3) 100%);
+  background-size:200% 100%;
+  background-repeat:repeat-x;
+  background-position:0% 50%;
+  -webkit-background-clip:text; background-clip:text;
+  -webkit-text-fill-color:transparent; color:transparent;
+  animation:goldenFlow 6s linear infinite;
+  font-weight:800;
+}
+
+.toxic-name-glow{ --name-glow:rgba(190,80,255,.55); }
+
+body[data-theme="light"] .toxic-name-glow{ --name-glow:rgba(140,40,225,.3); }
+
+body[data-theme="light"] .toxic-name{
+  --t1:#b23cf0; --t2:#7b1fd6; --t3:#4a0f9e; --t4:#a51fc8;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .toxic-name{ animation:none; background-position:30% 50%; } }
+
+/* ── تیک واحد اپ (components/TickButton.tsx) — کپی .db-tl-node  داشبورد ──
+   عمدا بیرون .db-page تا همه‌جا یکسان باشه. بک‌گراند فقط در حالت تیک‌خورده
+   (همون گرادیان داشبورد)؛ حالت خالی کاملا شفافه.
+
+   باگ «مربع داخل دایره» (ریشه):
+   (۱) گرادیان حالت تیک‌خورده با background-origin پیش‌فرض (padding-box) و
+       repeat کشیده می‌شد؛ با بوردر شفاف ۲px، کاشی گرادیان توی حلقه‌ی بوردر
+       تکرار می‌شد و لبه‌ی padding-box یک مربع روشن وسط دایره می‌ساخت — همه‌جا،
+       حتی داخل .dash-scope. حالا گرادیان صریحا border-box و no-repeat‌ه.
+   (۲) بیرون .dash-scope ریست سراسری button{} (لیکوئید گلس) backdrop-filter و
+       سایه‌ی inset می‌داد و در تم روشن body[data-theme="light"] button
+       (اسپسیفیسیتی 0,1,2) بک‌گراند شیشه‌ای/بوردر/سایه رو روی .tick-btn می‌نشوند.
+       برای همین همه‌ی قانون‌های تیک با پیشوند html body و کلاس دوبل
+       (0,2,2) نوشته شدن تا هیچ قانون سراسری (هاور/دیزیبل/تم روشن) بهشون نرسه.
+
+   رنگ: --tick-a / --tick-b (پیش‌فرض پالت روتین --ring-1)؛ .tick-exercise
+   همون تیک با پالت تمرین (--ring-2، آبی→بنفش) برای حرکت‌های برنامه‌ی تمرین. */
+
+.tick-btn{ --tick-size:26px; --tick-a:var(--ring-1a); --tick-b:var(--ring-1b); }
+
+.tick-btn.tick-exercise{ --tick-a:var(--ring-2a); --tick-b:var(--ring-2b); }
+
+html body .tick-btn.tick-btn.is-square{ border-radius:calc(var(--tick-size) * .3); }
+
+.tick-btn svg{ width:calc(var(--tick-size) * .58); height:calc(var(--tick-size) * .58); position:relative; z-index:1; overflow:visible; }
+
+@media (hover:hover) {
+  html body .tick-btn.tick-btn:not(.is-disabled):not(.is-checked):hover{
+    border-color:var(--tick-a); color:#fff; background:transparent;
+    box-shadow:0 0 0 4px color-mix(in srgb, var(--tick-a) 16%, transparent);
+  } }
+
+html body .tick-btn.tick-btn.is-checked{
+  border-color:transparent;
+  background:linear-gradient(135deg, var(--tick-a), var(--tick-b)) border-box no-repeat;
+  box-shadow:0 0 14px color-mix(in srgb, var(--tick-a) 55%, transparent);
+}
+
+html body .tick-btn.tick-btn.is-missed{ border-color:var(--tl-warn, #F0A94B); border-style:dashed; }
+
+html body .tick-btn.tick-btn.is-disabled{ cursor:not-allowed; opacity:.5; }
+
+html body .tick-btn.tick-btn.is-disabled.is-checked, html body .tick-btn.tick-btn.is-disabled.is-missed{ opacity:.75; }
+
+.tick-ripple{ position:absolute; inset:-2px; border-radius:inherit; border:2px solid var(--tick-b); background:none; pointer-events:none; }
+
+.tick-spark{ position:absolute; left:50%; top:50%; pointer-events:none; }
+
+.tick-spark i{
+  position:absolute; width:4px; height:4px; margin:-2px; border-radius:50%;
+  background:var(--tick-b); animation:tick-burst .75s cubic-bezier(.22,1,.36,1) forwards;
+  transform:rotate(calc(var(--i) * 45deg)) translateX(0);
+}
+
+@keyframes tick-burst{ to{ transform:rotate(calc(var(--i) * 45deg)) translateX(var(--tick-size)); opacity:0; } }
+
+@media (prefers-reduced-motion: reduce) {
+  .tick-spark{ display:none; } }
+
+/* ── گزینه‌ی تیک‌خوردنی (components/TickOption.tsx) — بی‌بک‌گراند ── */
+
+.tick-option{
+  display:flex; align-items:center; gap:10px; width:100%; padding:6px 0; margin:0; border:none;
+  background:transparent; color:var(--text); font:inherit; font-size:13px; font-weight:600; text-align:start; cursor:pointer;
+  -webkit-tap-highlight-color:transparent;
+}
+
+.tick-option:disabled{ cursor:not-allowed; opacity:.6; }
+
+.tick-option-text{ flex:1; min-width:0; }
+
+/* ── ویرایشگر آیتم‌های برنامه‌ی لیستی (components/RoutineChecklistEditor.tsx) ── */
+
+.checklist-editor{ display:flex; flex-direction:column; gap:8px; margin-top:8px; }
+
+.checklist-editor-row{ display:flex; align-items:center; gap:8px; }
+
+.checklist-editor-row input{ flex:1; min-width:0; margin:0; }
+
+.checklist-editor-list{ display:flex; flex-direction:column; gap:8px; }
+
+.checklist-editor-spacer{ width:28px; flex-shrink:0; }
+
+/* دستگیره‌ی درگ: بی‌بک‌گراند (ریست شیشه‌ای سراسری button{} با اسپسیفیسیتی بالاتر) و touch-action:none تا لمس درگ رو نبره */
+
+html body .checklist-editor-grip{
+  flex:none; width:28px; height:36px; padding:0; border:none; border-radius:10px;
+  background:none; background-image:none; box-shadow:none; backdrop-filter:none; -webkit-backdrop-filter:none;
+  color:var(--muted2); display:flex; align-items:center; justify-content:center;
+  cursor:grab; touch-action:none; user-select:none; -webkit-user-select:none; -webkit-tap-highlight-color:transparent;
+  transition:color .15s ease;
+}
+
+.checklist-editor-add{ width:auto; flex-shrink:0; margin:0; }
+
+/* دکمه‌ی «حذف»  ردیف‌های ساعت flex:1 1 100% داره — این‌جا نباید فیلد رو له کنه */
+
+.checklist-editor-row .wsearch-newrow-remove-text{ order:0; flex:0 0 auto; width:auto; padding:0 2px; margin:0; }
+
+.checklist-editor-row input.wsearch-newform-name{ width:auto; flex:1 1 auto; min-width:0; }
+
+.checklist-editor-add:disabled{ opacity:.5; cursor:not-allowed; }
+
+@supports not (aspect-ratio:1) {
+  .fx-dial-wrap, .wr-root{ height:0; padding-bottom:100%; }
+  .fx-dial{ position:absolute; top:0; left:0; }
+  .db-share-preview{ display:block; height:0; padding-bottom:125%; }
+  .db-share-preview .db-share-canvas{ position:absolute; top:0; left:0; }
+  .cal-cell, .jdate-cell{ min-height:40px; } }
+
+@supports not (height:1dvh) {
+  .db-share{ --share-w:min(440px, calc((100vh - 32px - 220px) * .8)); }
+  .ts-share{ --share-w:min(440px, max(250px, calc((100vh - 32px - 300px) * .8))); } }
+
+@media (min-width:701px) {
+  html[dir="ltr"] .cal-label{ left:50%; right:auto; } }
+
+/* فیلدها و دکمه‌هایی که قبلا direction:rtl صریح داشتن */
+
+html[dir="ltr"] .field-error-wrap .jdate-btn, html[dir="ltr"] .jdate-btn.placeholder, html[dir="ltr"] .fx-clock, html[dir="ltr"] .friend-profile-banner-bar, html[dir="ltr"] .admin-root, html[dir="ltr"] .admin-kpi-delta{ direction:ltr; }
+
+@media (hover:hover) {
+  html[dir="ltr"] .trade-back-link:hover svg{ transform:translateX(-2px); }
+  html[dir="ltr"] .trade-back-link:hover svg.dir-flip{ transform:scaleX(-1) translateX(2px); }
+  html[dir="ltr"] .trade-hub-box:hover .trade-hub-chevron{ transform:translateX(3px); }
+  html[dir="ltr"] .trade-hub-box:hover .trade-hub-chevron.dir-flip{ transform:scaleX(-1) translateX(-3px); } }
+
+/* درخشش اسکلت لودینگ از چپ به راست */
+
+@keyframes pl-shimmer-ltr{ to{ transform:translateX(100%); } }
+
+html[dir="ltr"] .pls-line::after, html[dir="ltr"] .pls-card::after{ transform:translateX(-100%); }
+
+@media (prefers-reduced-motion:no-preference) {
+  html[dir="ltr"] .pls-line::after, html[dir="ltr"] .pls-card::after{ animation-name:pl-shimmer-ltr; } }
+
+/* لیست‌های صفحه‌ی اکسپرت مدیریت سرمایه: display:flex نشانه‌ی لیست رو برمی‌داره، پس تو‌رفتگی بی‌نشانه در انگلیسی اضافه‌ست */
+
+html[dir="ltr"] .mm-list, html[dir="ltr"] .mm-steps{ padding-inline-start:0; }
+
+/* مرحله‌ی اول اتصال متاتریدر: دکمه‌ی دانلود inline-flex خط اول رو بلند می‌کرد و شماره‌ی مرحله بالای متن می‌موند */
+
+html[dir="ltr"] .trade-mt-steps li > .trade-mt-download{ display:flex; width:fit-content; }
+
+html[data-admin-theme="noir"] body:not([data-theme="light"]) .golden-name{
+  --g1:#FFFFFF; --g2:#D6D6D6; --g3:#8C8C8C; --g4:#F0F0F0;
+  filter:drop-shadow(0 0 6px rgba(255,255,255,.35));
+}
+
+html[data-admin-theme="noir"] body:not([data-theme="light"]) .toxic-name{
+  --t1:#FFFFFF; --t2:#D6D6D6; --t3:#8C8C8C; --t4:#F0F0F0;
+  --tx-glow-lo:rgba(255,255,255,.25); --tx-glow-hi:rgba(255,255,255,.5);
+}
+
+[data-m-in="rise"]{ animation:m-rise var(--m-dur-3) var(--m-ease-out) backwards; animation-delay:calc(min(var(--i, 0), 8) * var(--m-step)); }
+
+[data-m-in="fade"]{ animation:m-fade var(--m-dur-3) var(--m-ease-out) backwards; }
+
+[data-m-in="pop"]{ animation:m-pop var(--m-dur-3) var(--m-ease-spring) backwards; }
+
+html[data-navigated] .page-enter > :not(.page-loader){
+  animation:m-rise var(--m-dur-4) var(--m-ease-out) backwards;
+  animation-delay:calc(min(var(--i, 0), 6) * var(--m-step));
+}
+
+html[data-navigated] .page-enter > [style*="position: fixed"],
+html[data-navigated] .page-enter > [style*="position:fixed"]{ animation-name:m-fade; }
+
+.module-gate{ animation:m-fade var(--m-dur-4) var(--m-ease-out) backwards; }
+
+.module-gate-overlay > *{ animation:m-rise var(--m-dur-4) var(--m-ease-out) backwards; }
+
+.module-gate-overlay > :nth-child(2){ animation-delay:var(--m-step); }
+
+.module-gate-overlay > :nth-child(3){ animation-delay:calc(var(--m-step) * 2); }
+
+.module-gate-overlay > :nth-child(n+4){ animation-delay:calc(var(--m-step) * 3); }
+
+.trade-chat-report-sheet{ animation:m-rise-soft var(--m-dur-3) var(--m-ease-out) backwards; }
+
+.calorie-unit-dropdown{ animation:m-pop var(--m-dur-2) var(--m-ease-out) backwards; transform-origin:50% 0; }
+
+.au-backdrop, .ads-pal-backdrop{ animation:m-fade var(--m-dur-3) var(--m-ease-out) backwards; }
+
+.ads-pal{ animation:m-pop var(--m-dur-3) var(--m-ease-spring) backwards; transform-origin:50% 0; }
+
+@media (hover:hover) and (pointer:fine) {
+  :where([role="button"], [role="tab"], [role="menuitem"], .is-clickable, [data-clickable]):hover{ opacity:.92; } }
+
+@media (prefers-reduced-motion:no-preference) {
+  :where(a[href], button, [role="button"], [role="tab"], summary):focus-visible{ transition:outline-offset var(--m-dur-1) var(--m-ease-out), scale var(--m-dur-1) var(--m-ease-out); } }
+
+.trade-account-goalbar-fill, .admin-funnel-fill, .adb-fill, .slw-fill{
+  animation:m-bar var(--m-dur-5) var(--m-ease-out) backwards;
+}
+
+@supports (animation-timeline:view()) {
+
+@media (prefers-reduced-motion:no-preference) {
+  html:not([data-perf-weak]) .m-reveal:not(.m-pre){
+      animation:m-rise-scroll linear both;
+      animation-timeline:view();
+      animation-range:entry 0% entry 45%;
+    } } }
+
+.m-reveal.m-pre{ opacity:0; translate:0 14px; }
+
+.m-reveal.m-pre.m-seen{ opacity:1; translate:0 0; transition:opacity var(--m-dur-4) var(--m-ease-out), translate var(--m-dur-4) var(--m-ease-out); }
+
+.topbar-auth-pop{ animation:topbarAuthPop .38s cubic-bezier(.34,1.56,.64,1); }
+
+@media (prefers-reduced-motion:reduce) {
+  .topbar-auth-pop{ animation:none; } }
+
+@media (min-width:1024px) {
+  .dnav-chev{ transition:transform .2s ease; opacity:.7; flex-shrink:0; }
+  .dnav :focus-visible, .dnav-end :focus-visible{ outline:2px solid var(--accent); outline-offset:2px; }
+  .dnav .dnav-panel :focus-visible, .dnav-end .dnav-panel :focus-visible{ outline-offset:-2px; }
+  .dnav-ind{
+    position:absolute; left:0; bottom:0; width:1px; height:2px; background:var(--accent);
+    transform-origin:0 0; opacity:0; pointer-events:none; will-change:transform;
+  }
+  html[dir="ltr"] .dnav-panel.notif-panel{
+    position:absolute; top:calc(100% - 6px); inset-inline-start:0; inset-inline-end:auto;
+    width:max-content; min-width:190px; max-width:280px; max-height:none; overflow:visible;
+    padding:6px; z-index:50;
+    animation:none; transform-origin:top left;
+    visibility:hidden; opacity:0; pointer-events:none;
+    transform:translate3d(0,-6px,0) scale(.97);
+    transition:opacity .16s ease, transform .24s cubic-bezier(.34,1.45,.64,1), visibility 0s linear .24s;
+  }
+  html[dir="ltr"] .dnav-lang-panel.notif-panel{ inset-inline-start:auto; inset-inline-end:0; min-width:150px; top:calc(100% + 6px); transform-origin:top right; } }
+
+@media (min-width:1024px) and (prefers-reduced-motion:reduce) {
+  .dnav-ind.is-ready, .dnav-chev{ transition:none; }
+  html[dir="ltr"] .dnav-panel.notif-panel, html[dir="ltr"] .dnav-panel.notif-panel[data-open="true"]{
+    transform:none; transition:opacity .12s ease, visibility 0s;
+  } }

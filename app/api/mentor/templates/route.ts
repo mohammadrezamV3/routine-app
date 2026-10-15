@@ -5,6 +5,7 @@ import { readJsonBody } from "@/lib/validate";
 import { isoDate } from "@/lib/mentorServer";
 import { requireMentorTools, validId } from "@/lib/mentorToolsGuard";
 import { MAX_TEMPLATES_PER_MENTOR, templateDataFromBody, toTemplateRow, validateTemplateName } from "@/lib/mentorTemplates";
+import { tr } from "@/lib/i18n";
 
 // GET /api/mentor/templates → قالب‌های برنامه‌ی خود منتور (بدون آیتم‌ها)
 export async function GET() {
@@ -53,14 +54,14 @@ export async function POST(req: Request) {
   } else if (b.program && typeof b.program === "object") {
     source = b.program;
   } else {
-    return badRequest("برنامه‌ی مبدا لازم است");
+    return badRequest(tr(tr("برنامه‌ی مبدا لازم است", "Source program is required"), "Source program is required"));
   }
 
   const t = templateDataFromBody(source);
   if (!t.ok) return badRequest(t.error);
 
   const count = await prisma.mentorProgramTemplate.count({ where: { profileId: g.profile.id } });
-  if (count >= MAX_TEMPLATES_PER_MENTOR) return conflict(`حداکثر ${MAX_TEMPLATES_PER_MENTOR} قالب مجاز است؛ چند قالب قدیمی را حذف کن`);
+  if (count >= MAX_TEMPLATES_PER_MENTOR) return conflict(tr(tr(`حداکثر ${MAX_TEMPLATES_PER_MENTOR} قالب مجاز است؛ چند قالب قدیمی را حذف کن`, `You can have up to ${MAX_TEMPLATES_PER_MENTOR} templates; delete some old ones`), `You can have up to ${MAX_TEMPLATES_PER_MENTOR} templates; delete some old ones`));
 
   const created = await prisma.mentorProgramTemplate.create({ data: { profileId: g.profile.id, name: n.name, ...t.data } });
   touchMentorActivity(g.userId);

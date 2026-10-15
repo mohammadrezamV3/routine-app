@@ -5,9 +5,10 @@
 // می‌کنن تا چیزی که ادمین می‌بینه دقیقا همونی باشه که کاربر می‌بینه.
 // متن همیشه به‌صورت text رندر می‌شه (بدون HTML).
 
-import Link from "next/link";
+import { SmartLink as Link } from "@/components/SmartLink";
 import { X } from "lucide-react";
 import { isExternalUrl, type AnnouncementTone } from "@/lib/announcements";
+import { tr } from "@/lib/i18n";
 
 export type AnnouncementViewItem = {
   id: string;
@@ -57,7 +58,7 @@ export function AnnouncementView({
 }) {
   const toneCls = `ann-tone-${item.tone.toLowerCase()}`;
   const close = closable ? (
-    <button type="button" className="trade-icon-btn ann-close" onClick={onClose} aria-label="بستن">
+    <button type="button" className="trade-icon-btn ann-close" onClick={onClose} aria-label={tr("بستن", "Close")}>
       <X size={16} />
     </button>
   ) : null;

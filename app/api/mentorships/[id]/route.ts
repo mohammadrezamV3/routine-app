@@ -8,9 +8,10 @@ import { MENTORSHIP_WITH_USERS_INCLUDE, PUBLIC_USER_SELECT, buildMentorshipRows,
 import { removeProgramMirrors } from "@/lib/mentorProgramMirror";
 import { END_REASON_MAX, validateOptionalText } from "@/lib/mentorAvailability";
 import { countActiveStudents, readWelcomeMessage } from "@/lib/mentorManageServer";
-import { decideMentorTerms, MENTOR_TERMS_ERROR_CODE, MENTOR_TERMS_STALE_MESSAGE, MENTOR_TERMS_VERSION } from "@/lib/mentorTerms";
+import { decideMentorTerms, MENTOR_TERMS_ERROR_CODE, MENTOR_TERMS_VERSION } from "@/lib/mentorTerms";
 import { publishToUsers } from "@/lib/realtime";
 import { advanceWaitlist, countReservedSeats } from "@/lib/mentorWaitlistServer";
+import { tr } from "@/lib/i18n";
 
 type Ctx = { params: { id: string } };
 const ACTIONS = ["accept", "reject", "cancel", "end", "block", "unblock"] as const;
@@ -48,7 +49,7 @@ export async function PATCH(req: Request, { params }: Ctx) {
   const parsed = await readJsonBody(req, 4 * 1024);
   if (!parsed.ok) return NextResponse.json({ error: parsed.error }, { status: parsed.status });
   const action = parsed.body?.action as Action;
-  if (!ACTIONS.includes(action)) return badRequest("اقدام نامعتبره");
+  if (!ACTIONS.includes(action)) return badRequest(tr(tr("اقدام نامعتبره", "Invalid action"), "Invalid action"));
 
   const isInitiator = m.initiatedBy === role;
   const counterpartId = role === "MENTOR" ? m.studentId : m.mentorId;
@@ -63,15 +64,15 @@ export async function PATCH(req: Request, { params }: Ctx) {
   switch (action) {
     case "accept":
     case "reject":
-      if (m.status !== "PENDING") return conflict("این درخواست دیگه در انتظار پاسخ نیست");
-      if (isInitiator) return forbidden("فقط طرف مقابل می‌تونه به درخواست پاسخ بده");
+      if (m.status !== "PENDING") return conflict(tr(tr("این درخواست دیگه در انتظار پاسخ نیست", "This request is no longer awaiting a response"), "This request is no longer awaiting a response"));
+      if (isInitiator) return forbidden(tr(tr("فقط طرف مقابل می‌تونه به درخواست پاسخ بده", "Only the other party can respond to this request"), "Only the other party can respond to this request"));
       if (action === "accept") {
         // منتور معلق شاگرد جدید نمی‌پذیره — چه خودش قبول کنه، چه شاگرد دعوتش رو
         const mp = await prisma.mentorProfile.findUnique({ where: { userId: m.mentorId }, select: { suspendedAt: true, maxActiveStudents: true, identityStatus: true } });
-        if (!mp) return conflict("این کاربر دیگه پروفایل مربی‌گری نداره");
-        if (mp.suspendedAt) return forbidden(role === "MENTOR" ? "حساب مربی‌گری تو تعلیق شده" : "این مربی فعلا امکان پذیرش شاگرد نداره");
+        if (!mp) return conflict(tr(tr("این کاربر دیگه پروفایل مربی‌گری نداره", "This user no longer has a mentor profile"), "This user no longer has a mentor profile"));
+        if (mp.suspendedAt) return forbidden(role === "MENTOR" ? tr(tr("حساب مربی‌گری تو تعلیق شده", "Your mentor account is suspended"), "Your mentor account is suspended") : tr(tr("این مربی فعلا امکان پذیرش شاگرد نداره", "This mentor cannot accept students right now"), "This mentor cannot accept students right now"));
         // احراز هویت منتور اجباریه (lib/mentorServer.ts → IDENTITY_VERIFIED_WHERE)
-        if (mp.identityStatus !== "VERIFIED") return forbidden(role === "MENTOR" ? MENTOR_IDENTITY_REQUIRED_MSG : "این مربی فعلا امکان پذیرش شاگرد نداره");
+        if (mp.identityStatus !== "VERIFIED") return forbidden(role === "MENTOR" ? tr(MENTOR_IDENTITY_REQUIRED_MSG, "Until the Arion admins verify your identity, you cannot accept students") : tr(tr("این مربی فعلا امکان پذیرش شاگرد نداره", "This mentor cannot accept students right now"), "This mentor cannot accept students right now"));
         // سقف ظرفیت فقط جلوی پذیرش *درخواست شاگرد* رو می‌گیره؛ دعوت خود منتور انتخاب خودشه.
         // صندلی رزرو صف انتظار (نوبت زنده یا درخواست دیگری که از صف اومده) هم پر حساب می‌شه
         // تا درخواست مستقیم از نفر صف جلو نزنه؛ درخواست خود همین رابطه از رزروها کم می‌شه
@@ -79,10 +80,10 @@ export async function PATCH(req: Request, { params }: Ctx) {
           await advanceWaitlist(m.mentorId, now);
           const [active, reserved] = await Promise.all([countActiveStudents(m.mentorId), countReservedSeats(m.mentorId, now, m.id)]);
           if (active >= mp.maxActiveStudents) {
-            return conflict("ظرفیت شاگردهایت تکمیل است؛ برای پذیرش، سقف ظرفیت را در تنظیمات بالا ببر");
+            return conflict(tr(tr("ظرفیت شاگردهایت تکمیل است؛ برای پذیرش، سقف ظرفیت را در تنظیمات بالا ببر", "Your student capacity is full; to accept, raise the capacity limit in settings"), "Your student capacity is full; to accept, raise the capacity limit in settings"));
           }
           if (active + reserved >= mp.maxActiveStudents) {
-            return conflict("جای خالی برای نفر صف انتظارت نگه داشته شده؛ برای پذیرش این درخواست، سقف ظرفیت را بالا ببر");
+            return conflict(tr(tr("جای خالی برای نفر صف انتظارت نگه داشته شده؛ برای پذیرش این درخواست، سقف ظرفیت را بالا ببر", "A seat is being held for someone on your waitlist; to accept this request, raise the capacity limit"), "A seat is being held for someone on your waitlist; to accept this request, raise the capacity limit"));
           }
         }
         data = { status: "ACTIVE", startedAt: now, endedAt: null, pausedAt: null, pauseReason: null, endReason: null, endedBy: null };
@@ -90,7 +91,7 @@ export async function PATCH(req: Request, { params }: Ctx) {
           const meRow = await prisma.user.findUnique({ where: { id: me }, select: { mentorStudentTermsVersion: true } });
           const terms = decideMentorTerms("student", meRow?.mentorStudentTermsVersion, parsed.body?.acceptMentorTerms);
           if (!terms.ok) {
-            const error = terms.message === MENTOR_TERMS_STALE_MESSAGE ? terms.message : "برای پذیرش دعوت، شرایط استفاده از بخش مربی‌ها را بخوان و بپذیر";
+            const error = terms.stale ? terms.message : tr(tr("برای پذیرش دعوت، شرایط استفاده از بخش مربی‌ها را بخوان و بپذیر", "To accept the invitation, read and accept the mentor terms"), "To accept the invitation, read and accept the mentor terms");
             return NextResponse.json({ error, code: MENTOR_TERMS_ERROR_CODE }, { status: 400 });
           }
           recordStudentTerms = terms.record;
@@ -102,14 +103,14 @@ export async function PATCH(req: Request, { params }: Ctx) {
       from = ["PENDING"];
       break;
     case "cancel":
-      if (m.status !== "PENDING") return conflict("این درخواست دیگه در انتظار پاسخ نیست");
-      if (!isInitiator) return forbidden("فقط فرستنده‌ی درخواست می‌تونه لغوش کنه");
+      if (m.status !== "PENDING") return conflict(tr(tr("این درخواست دیگه در انتظار پاسخ نیست", "This request is no longer awaiting a response"), "This request is no longer awaiting a response"));
+      if (!isInitiator) return forbidden(tr(tr("فقط فرستنده‌ی درخواست می‌تونه لغوش کنه", "Only the sender of the request can cancel it"), "Only the sender of the request can cancel it"));
       from = ["PENDING"];
       data = { status: "ENDED", endedAt: now };
       break;
     case "end": {
-      if (m.status !== "ACTIVE") return conflict("این رابطه فعال نیست");
-      const r = validateOptionalText(parsed.body?.reason, END_REASON_MAX, "دلیل پایان");
+      if (m.status !== "ACTIVE") return conflict(tr(tr("این رابطه فعال نیست", "This relationship is not active"), "This relationship is not active"));
+      const r = validateOptionalText(parsed.body?.reason, END_REASON_MAX, tr(tr("دلیل پایان", "End reason"), "End reason"));
       if (!r.ok) return badRequest(r.error);
       endReason = r.data;
       from = ["ACTIVE"];
@@ -117,12 +118,12 @@ export async function PATCH(req: Request, { params }: Ctx) {
       break;
     }
     case "block":
-      if (m.status === "BLOCKED") return conflict("این رابطه از قبل مسدوده");
+      if (m.status === "BLOCKED") return conflict(tr(tr("این رابطه از قبل مسدوده", "This relationship is already blocked"), "This relationship is already blocked"));
       from = [m.status];
       data = { status: "BLOCKED", blockedById: me, endedAt: now, pausedAt: null, pauseReason: null };
       break;
     case "unblock":
-      if (m.status !== "BLOCKED") return conflict("این رابطه مسدود نیست");
+      if (m.status !== "BLOCKED") return conflict(tr(tr("این رابطه مسدود نیست", "This relationship is not blocked"), "This relationship is not blocked"));
       // فقط کسی که بلاک کرده؛ برای طرف دیگه همون ۴۰۴ تا جزئیات لو نره
       if (m.blockedById !== me) return notFound();
       from = ["BLOCKED"];
@@ -137,7 +138,7 @@ export async function PATCH(req: Request, { params }: Ctx) {
     }
     return r;
   });
-  if (res.count === 0) return conflict("وضعیت رابطه هم‌زمان تغییر کرد؛ دوباره تلاش کن");
+  if (res.count === 0) return conflict(tr(tr("وضعیت رابطه هم‌زمان تغییر کرد؛ دوباره تلاش کن", "The relationship status changed at the same time; try again"), "The relationship status changed at the same time; try again"));
 
   if ((action === "end" || action === "block") && (m.status === "ACTIVE" || m.status === "PENDING")) {
     await closeOpenPrograms(m.id, m.studentId);

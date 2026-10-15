@@ -1,6 +1,7 @@
 "use client";
 
 import { useCallback, useState } from "react";
+import { tr } from "@/lib/i18n";
 
 /**
  * اجرای یک عملیات شبکه‌ای کوتاه (آرشیو، حذف، کپی، سنجاق) با سه چیزی که
@@ -32,12 +33,12 @@ export function useAsyncAction() {
         const res = await fn();
         if (res && !res.ok) {
           const body = await res.json().catch(() => null);
-          setError(body?.error || "انجام نشد؛ دوباره تلاش کن");
+          setError(body?.error || tr("انجام نشد؛ دوباره تلاش کن", "Failed. Try again."));
           return false;
         }
         return true;
       } catch {
-        setError("ارتباط با سرور برقرار نشد");
+        setError(tr("ارتباط با سرور برقرار نشد", "Could not reach the server"));
         return false;
       } finally {
         setPendingKey(null);

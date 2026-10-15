@@ -12,7 +12,7 @@
 // • tone="exercise": همون تیک با پالت تمرین (--ring-2، آبی→بنفش) برای حرکت‌های برنامه‌ی تمرین
 
 import { useEffect, useRef, useState } from "react";
-import { AnimatePresence, motion } from "framer-motion";
+import { AnimatePresence, m as motion } from "framer-motion";
 
 const EASE = [0.22, 1, 0.36, 1] as const;
 

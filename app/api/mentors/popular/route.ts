@@ -3,6 +3,7 @@ import { requireMentorsUser } from "@/lib/mentorGuard";
 import { checkRateLimit } from "@/lib/rateLimit";
 import { DISCOVERABLE_PROFILE_WHERE, blockedUserIds } from "@/lib/mentorServer";
 import { loadNewcomerCards, loadPopularMentorCards } from "@/lib/mentorRankingStats";
+import { tr } from "@/lib/i18n";
 
 const TOP_N = 12;
 const NEWCOMERS_N = 6;
@@ -17,7 +18,7 @@ export async function GET() {
   const g = await requireMentorsUser();
   if (!g.ok) return g.response;
   if (!(await checkRateLimit(`mentors:popular:${g.userId}`, 60, 60_000))) {
-    return NextResponse.json({ error: "درخواست‌ها زیاده؛ کمی بعد دوباره امتحان کن" }, { status: 429 });
+    return NextResponse.json({ error: tr("درخواست‌ها زیاده؛ کمی بعد دوباره امتحان کن", "Too many requests; try again shortly") }, { status: 429 });
   }
 
   const blocked = await blockedUserIds(g.userId);

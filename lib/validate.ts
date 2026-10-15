@@ -2,6 +2,7 @@
 // هدف: رد کردن زودهنگام ورودی‌های بدشکل قبل از رسیدن به دیتابیس.
 
 import { passwordTier, passwordTierError } from "./passwordStrength";
+import { tr, isEn } from "./i18n";
 
 export function isValidEmail(v: string): boolean {
   return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(v) && v.length <= 254;
@@ -24,9 +25,13 @@ export function isValidUsername(v: string): boolean {
 // حساب می‌شود و اعتبارسنجی نمی‌خورد — جای بررسی‌اش نبود مقدار است، نه این‌جا.
 const PERSIAN_NAME_RE = /^[\u0621-\u063A\u0641-\u064A\u064B-\u0652\u0654\u067E\u0686\u0698\u06A9\u06AF\u06CC\u0622\u0623\u0624\u0626\u0629\u200c ]+$/;
 
+const LATIN_NAME_RE = /^[A-Za-z][A-Za-z '\-.]*$/;
+
 export function isValidPersianName(v: string): boolean {
   const t = v.trim();
-  return t.length > 0 && t.length <= 60 && PERSIAN_NAME_RE.test(t);
+  if (t.length > 0 && t.length <= 60 && PERSIAN_NAME_RE.test(t)) return true;
+  // انگلیسی: حروف لاتین، فاصله، آپستروف، خط تیره و نقطه
+  return isEn() && t.length > 0 && t.length <= 60 && LATIN_NAME_RE.test(t);
 }
 
 /**
@@ -35,8 +40,8 @@ export function isValidPersianName(v: string): boolean {
  * برمی‌گردونه: null اگه معتبر بود، وگرنه پیام خطا برای نمایش به کاربر.
  */
 export async function validatePassword(v: string, userInputs: string[] = []): Promise<string | null> {
-  if (v.length < 8) return "رمز عبور باید حداقل 8 کاراکتر باشد";
-  if (v.length > 128) return "رمز عبور خیلی طولانی است";
+  if (v.length < 8) return tr("رمز عبور باید حداقل 8 کاراکتر باشد", "Password must be at least 8 characters");
+  if (v.length > 128) return tr("رمز عبور خیلی طولانی است", "Password is too long");
   return passwordTierError(await passwordTier(v, userInputs));
 }
 
@@ -89,10 +94,10 @@ export function parseDateRange(
 ): { from: Date; to: Date } | { error: string } {
   const from = parseIsoDate(fromRaw);
   const to = parseIsoDate(toRaw);
-  if (!from || !to) return { error: "بازه‌ی تاریخ نامعتبر است (قالب درست: YYYY-MM-DD)" };
-  if (from > to) return { error: "شروع بازه بعد از پایان آن است" };
+  if (!from || !to) return { error: tr("بازه‌ی تاریخ نامعتبر است (قالب درست: YYYY-MM-DD)", "Invalid date range (correct format: YYYY-MM-DD)") };
+  if (from > to) return { error: tr("شروع بازه بعد از پایان آن است", "The range starts after it ends") };
   const days = (to.getTime() - from.getTime()) / 86_400_000;
-  if (days > maxDays) return { error: `بازه‌ی درخواستی طولانی‌تر از ${maxDays} روز است` };
+  if (days > maxDays) return { error: tr(`بازه‌ی درخواستی طولانی‌تر از ${maxDays} روز است`, `The requested range is longer than ${maxDays} days`) };
   return { from, to };
 }
 
@@ -117,22 +122,22 @@ export async function readJsonBody<T = any>(
 ): Promise<{ ok: true; body: T } | { ok: false; status: number; error: string }> {
   const declared = Number(req.headers.get("content-length") || 0);
   if (declared > maxBytes) {
-    return { ok: false, status: 413, error: "حجم درخواست بیش از حد مجاز است" };
+    return { ok: false, status: 413, error: tr("حجم درخواست بیش از حد مجاز است", "The request is too large") };
   }
   let text: string;
   try {
     text = await req.text();
   } catch {
-    return { ok: false, status: 400, error: "بدنه‌ی درخواست خوانده نشد" };
+    return { ok: false, status: 400, error: tr("بدنه‌ی درخواست خوانده نشد", "The request body could not be read") };
   }
   // طول رشته کاراکتره نه بایت؛ برای متن فارسی بایت‌ها بیشترن، پس واقعیش رو می‌سنجیم
   if (new TextEncoder().encode(text).length > maxBytes) {
-    return { ok: false, status: 413, error: "حجم درخواست بیش از حد مجاز است" };
+    return { ok: false, status: 413, error: tr("حجم درخواست بیش از حد مجاز است", "The request is too large") };
   }
   try {
     return { ok: true, body: (text ? JSON.parse(text) : {}) as T };
   } catch {
-    return { ok: false, status: 400, error: "بدنه‌ی درخواست JSON معتبر نیست" };
+    return { ok: false, status: 400, error: tr("بدنه‌ی درخواست JSON معتبر نیست", "The request body is not valid JSON") };
   }
 }
 

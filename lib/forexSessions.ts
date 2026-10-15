@@ -7,6 +7,8 @@
 // جنوبی است و برعکس بقیه جابه‌جا می‌شود). هر عدد UTC هاردکدشده سالی چند
 // هفته غلط می‌شود. با تبدیل به ساعت محلی خود آن شهر، DST خودکار درست است.
 
+import { pick } from "./i18n";
+
 export type SessionKey = "SYDNEY" | "TOKYO" | "LONDON" | "NEWYORK";
 
 type SessionDef = {
@@ -20,17 +22,17 @@ type SessionDef = {
 };
 
 export const FOREX_SESSIONS: SessionDef[] = [
-  { key: "SYDNEY",  label: "سیدنی",   tz: "Australia/Sydney",  openMin: 7 * 60, closeMin: 16 * 60,      flag: "🇦🇺" },
-  { key: "TOKYO",   label: "توکیو",   tz: "Asia/Tokyo",        openMin: 9 * 60, closeMin: 18 * 60,      flag: "🇯🇵" },
-  { key: "LONDON",  label: "لندن",    tz: "Europe/London",     openMin: 8 * 60, closeMin: 16 * 60 + 30, flag: "🇬🇧" },
-  { key: "NEWYORK", label: "نیویورک", tz: "America/New_York",  openMin: 8 * 60, closeMin: 17 * 60,      flag: "🇺🇸" },
+  { key: "SYDNEY",  get label() { return pick({ fa: "سیدنی", en: "Sydney" }); },   tz: "Australia/Sydney",  openMin: 7 * 60, closeMin: 16 * 60,      flag: "🇦🇺" },
+  { key: "TOKYO",   get label() { return pick({ fa: "توکیو", en: "Tokyo" }); },   tz: "Asia/Tokyo",        openMin: 9 * 60, closeMin: 18 * 60,      flag: "🇯🇵" },
+  { key: "LONDON",  get label() { return pick({ fa: "لندن", en: "London" }); },    tz: "Europe/London",     openMin: 8 * 60, closeMin: 16 * 60 + 30, flag: "🇬🇧" },
+  { key: "NEWYORK", get label() { return pick({ fa: "نیویورک", en: "New York" }); }, tz: "America/New_York",  openMin: 8 * 60, closeMin: 17 * 60,      flag: "🇺🇸" },
 ];
 
 export const SESSION_LABELS: Record<SessionKey, string> = {
-  SYDNEY: "سیدنی",
-  TOKYO: "توکیو",
-  LONDON: "لندن",
-  NEWYORK: "نیویورک",
+  get SYDNEY() { return pick({ fa: "سیدنی", en: "Sydney" }); },
+  get TOKYO() { return pick({ fa: "توکیو", en: "Tokyo" }); },
+  get LONDON() { return pick({ fa: "لندن", en: "London" }); },
+  get NEWYORK() { return pick({ fa: "نیویورک", en: "New York" }); },
 };
 
 const WEEKDAY_INDEX: Record<string, number> = { Sun: 0, Mon: 1, Tue: 2, Wed: 3, Thu: 4, Fri: 5, Sat: 6 };
@@ -90,8 +92,8 @@ export function sessionsAt(date: Date): SessionKey[] {
 
 /** جفت‌های همپوشان پرنقدینگی که ارزش نمایش دارند */
 export const SESSION_OVERLAPS: { a: SessionKey; b: SessionKey; label: string }[] = [
-  { a: "LONDON", b: "NEWYORK", label: "لندن × نیویورک" },
-  { a: "SYDNEY", b: "TOKYO", label: "سیدنی × توکیو" },
+  { a: "LONDON", b: "NEWYORK", get label() { return pick({ fa: "لندن × نیویورک", en: "London × New York" }); } },
+  { a: "SYDNEY", b: "TOKYO", get label() { return pick({ fa: "سیدنی × توکیو", en: "Sydney × Tokyo" }); } },
 ];
 
 /** ساعت فعلی یک شهر به شکل HH:MM (ارقام لاتین — نمایش هم با همین ارقام) */

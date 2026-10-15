@@ -3,7 +3,7 @@ import { prisma } from "@/lib/prisma";
 import { requireMentorsUser, getActiveMentorProfile, notFound, conflict, badRequest, touchMentorActivity, isMentorSuspended } from "@/lib/mentorGuard";
 import { readJsonBody, parseDateRange } from "@/lib/validate";
 import { visibleToStudent } from "@/lib/mentorProgramState";
-import { PROGRAM_TYPE_BLOCKED_MSG, programTypeAllowed } from "@/lib/mentorCategories";
+import { programTypeAllowed, programTypeBlockedMsg } from "@/lib/mentorCategories";
 import { validateProgramInput } from "@/lib/mentorValidate";
 import {
   PROGRAM_WITH_USERS_INCLUDE,
@@ -20,6 +20,7 @@ import { activateDuePrograms, ensureLegacyWorkoutMirror } from "@/lib/mentorProg
 import { dayInTz, loadProgressView, syncProgramProgress } from "@/lib/mentorProgress";
 import { isoAddDays, weekStartIso } from "@/lib/mentorProgressCore";
 import { publishToUsers } from "@/lib/realtime";
+import { tr } from "@/lib/i18n";
 
 type Ctx = { params: { id: string } };
 const MAX_LOGS = 1000;
@@ -126,13 +127,13 @@ export async function PUT(req: Request, { params }: Ctx) {
 
   const current = await prisma.mentorProgram.findFirst({ where: { id: params.id, mentorId: me }, select: { id: true, type: true, status: true, mentorship: { select: { categories: true } } } });
   if (!current) return notFound();
-  if (current.status !== "DRAFT") return conflict("فقط پیش‌نویس قابل ویرایشه");
+  if (current.status !== "DRAFT") return conflict(tr("فقط پیش‌نویس قابل ویرایشه", "Only drafts can be edited"));
 
   const parsed = await readJsonBody(req, 128 * 1024);
   if (!parsed.ok) return NextResponse.json({ error: parsed.error }, { status: parsed.status });
   const v = validateProgramInput(parsed.body, current.type);
   if (!v.ok) return badRequest(v.error);
-  if (!programTypeAllowed(v.data.type, current.mentorship.categories, mp.profile.categories)) return badRequest(PROGRAM_TYPE_BLOCKED_MSG);
+  if (!programTypeAllowed(v.data.type, current.mentorship.categories, mp.profile.categories)) return badRequest(programTypeBlockedMsg());
   const { items, ...fields } = v.data;
 
   const ok = await prisma.$transaction(async (tx) => {
@@ -143,7 +144,7 @@ export async function PUT(req: Request, { params }: Ctx) {
     if (items.length > 0) await tx.mentorProgramItem.createMany({ data: items.map((it) => ({ ...it, programId: current.id })) });
     return true;
   });
-  if (!ok) return conflict("این برنامه هم‌زمان تغییر کرد؛ دیگه پیش‌نویس نیست");
+  if (!ok) return conflict(tr("این برنامه هم‌زمان تغییر کرد؛ دیگه پیش‌نویس نیست", "This program changed at the same time; it is no longer a draft"));
   touchMentorActivity(me);
   void publishToUsers([me], { type: "mentor.program", data: { id: current.id } });
 
@@ -162,7 +163,7 @@ export async function DELETE(_req: Request, { params }: Ctx) {
   const res = await prisma.mentorProgram.deleteMany({ where: { id: params.id, mentorId: me, status: "DRAFT", sentAt: null } });
   if (res.count === 0) {
     const exists = await prisma.mentorProgram.findFirst({ where: { id: params.id, mentorId: me }, select: { id: true } });
-    return exists ? conflict("فقط پیش‌نویسی که هنوز ارسال نشده قابل حذفه") : notFound();
+    return exists ? conflict(tr("فقط پیش‌نویسی که هنوز ارسال نشده قابل حذفه", "Only drafts that haven't been sent can be deleted")) : notFound();
   }
   void publishToUsers([me], { type: "mentor.program", data: { id: params.id } });
   return NextResponse.json({ ok: true });

@@ -5,6 +5,7 @@ import { checkRateLimit } from "@/lib/rateLimit";
 import { addDaysIso, isoDate, todayIsoForUser } from "@/lib/mentorServer";
 import { requireMentorTools, validId } from "@/lib/mentorToolsGuard";
 import { EXPORT_MAX_DAYS, buildProgressCsv } from "@/lib/mentorReports";
+import { tr } from "@/lib/i18n";
 
 // GET /api/mentor/export?studentId=&from=YYYY-MM-DD&to=YYYY-MM-DD → CSV پیشرفت یک شاگرد.
 // پیش‌فرض ۳۰ روز اخیر؛ حداکثر ۱۲۰ روز. فقط رابطه‌ی ACTIVE همین منتور
@@ -12,7 +13,7 @@ import { EXPORT_MAX_DAYS, buildProgressCsv } from "@/lib/mentorReports";
 export async function GET(req: NextRequest) {
   const g = await requireMentorTools();
   if (!g.ok) return g.response;
-  if (g.profile.suspendedAt) return forbidden("حساب مربی‌گری تو تعلیق شده");
+  if (g.profile.suspendedAt) return forbidden(tr(tr("حساب مربی‌گری تو تعلیق شده", "Your mentor account is suspended"), "Your mentor account is suspended"));
 
   const sp = req.nextUrl.searchParams;
   const studentId = sp.get("studentId");
@@ -31,12 +32,12 @@ export async function GET(req: NextRequest) {
   }
 
   if (!(await checkRateLimit(`mentor-export:${g.userId}`, 30, 60 * 60 * 1000))) {
-    return NextResponse.json({ error: "تعداد خروجی‌ها زیاد بوده؛ کمی بعد دوباره تلاش کن" }, { status: 429 });
+    return NextResponse.json({ error: tr(tr("تعداد خروجی‌ها زیاد بوده؛ کمی بعد دوباره تلاش کن", "There were too many exports; try again shortly"), "There were too many exports; try again shortly") }, { status: 429 });
   }
 
   const out = await buildProgressCsv(g.userId, studentId, from, to);
   if (!out) return notFound();
-  if (out === "hidden") return forbidden("شاگرد نمایش پیشرفت را برای تو خاموش کرده است");
+  if (out === "hidden") return forbidden(tr(tr("شاگرد نمایش پیشرفت را برای تو خاموش کرده است", "The student has turned off progress sharing for you"), "The student has turned off progress sharing for you"));
 
   const file = `progress-${from}-${to}.csv`;
   return new NextResponse(out.csv, {

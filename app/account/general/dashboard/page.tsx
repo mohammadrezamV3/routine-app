@@ -5,14 +5,15 @@ import { Bell, Users, BarChart3, Tablets } from "lucide-react";
 import { AccountToggleRow } from "@/components/AccountRow";
 import { AccountPageHead, AccountBlock } from "@/components/AccountUI";
 import { getDashboardPrefs, saveDashboardPrefs, setCachedDashboardPrefs, DashboardPrefs, DEFAULT_DASHBOARD_PREFS } from "@/lib/dashboardPrefs";
+import { tr } from "@/lib/i18n";
 
 const PREF_ICONS = [<Bell size={16} key="b" />, <Tablets size={16} key="m" />, <Users size={16} key="u" />, <BarChart3 size={16} key="c" />];
 
-const DASHBOARD_PREFS: [keyof DashboardPrefs, string, string?][] = [
-  ["showReminders", "کارت «یادآوری‌ها»"],
-  ["showMedications", "کارت «یادآوری دارو»", "خاموش‌کردنش هم کارت رو مخفی می‌کنه هم اعلان نوبت‌های دارو رو قطع می‌کنه"],
-  ["showFriends", "کارت «دوستان»"],
-  ["showChart", "نمودارها"],
+const dashboardPrefs = (): [keyof DashboardPrefs, string, string?][] => [
+  ["showReminders", tr("کارت «یادآوری‌ها»", "Reminders card")],
+  ["showMedications", tr("کارت «یادآوری دارو»", "Medication reminders card"), tr("خاموش‌کردنش هم کارت رو مخفی می‌کنه هم اعلان نوبت‌های دارو رو قطع می‌کنه", "Turning it off hides the card and also stops medication notifications")],
+  ["showFriends", tr("کارت «دوستان»", "Friends card")],
+  ["showChart", tr("نمودارها", "Charts")],
 ];
 
 
@@ -34,9 +35,9 @@ export default function DashboardSettingsPage() {
 
   return (
     <section>
-      <AccountPageHead title="داشبورد" hint="کارت‌هایی که در داشبوردها نمایش داده می‌شوند" backHref="/account/general" backLabel="تنظیمات" />
+      <AccountPageHead title={tr("داشبورد", "Dashboard")} hint={tr("کارت‌هایی که در داشبوردها نمایش داده می‌شوند", "Cards shown on the dashboards")} backHref="/account/general" backLabel={tr("تنظیمات", "Settings")} />
       <AccountBlock flush index={0}>
-        {DASHBOARD_PREFS.map(([key, label, desc], i) => (
+        {dashboardPrefs().map(([key, label, desc], i) => (
           <AccountToggleRow
             key={key}
             index={i}

@@ -6,6 +6,7 @@ import {
 import { faNum } from "@/lib/jalali";
 import { ToggleSwitch } from "./ToggleSwitch";
 import { useLockBodyScroll } from "@/lib/useLockBodyScroll";
+import { tr } from "@/lib/i18n";
 
 // انتخاب اینکه کدام جزئیات ترید بدون باز کردن کارت جزئیات، همان‌جا توی
 // ردیف ترید دیده شوند. سقف دارد (هشت‌تا) چون ردیف روی دسکتاپ تک‌خطی‌ست و
@@ -28,14 +29,14 @@ export function TradeFactsPicker({
       <div className="modal-overlay open" onClick={onClose} />
       <div className="modal-panel open">
         <div className="modal-head">
-          <div className="modal-title">جزئیات ترید در لیست</div>
-          <button className="nav-close" onClick={onClose} aria-label="بستن">×</button>
+          <div className="modal-title">{tr("جزئیات ترید در لیست", "Trade details in the list")}</div>
+          <button className="nav-close" onClick={onClose} aria-label={tr("بستن", "Close")}>×</button>
         </div>
         <div className="modal-body">
           <div className="section-note" style={{ marginTop: 0 }}>
-            کدوم جزئیات هر ترید توی لیست نشون داده بشه رو انتخاب کن — حداکثر
-            {` ${faNum(MAX_VISIBLE_TRADE_FACTS)} `}مورد.
-            {atMax && " به سقف رسیدی؛ برای اضافه‌کردن یکی رو خاموش کن."}
+            {tr("کدوم جزئیات هر ترید توی لیست نشون داده بشه رو انتخاب کن — حداکثر", "Choose which details of each trade show in the list. Up to")}
+            {` ${faNum(MAX_VISIBLE_TRADE_FACTS)} `}{tr("مورد.", "items.")}
+            {atMax && tr(" به سقف رسیدی؛ برای اضافه‌کردن یکی رو خاموش کن.", " You hit the limit; turn one off to add another.")}
           </div>
           <div className="tm-extra" style={{ marginTop: 10 }}>
             {TRADE_FACT_ORDER.map((key) => {

@@ -3,6 +3,7 @@
 import { Beef, Droplet, Sparkles, Wheat } from "lucide-react";
 import { faNum } from "@/lib/jalali";
 import { DashCard } from "./DashCard";
+import { tr } from "@/lib/i18n";
 
 type Entry = { proteinG?: number | null; carbsG?: number | null; fatG?: number | null };
 
@@ -33,16 +34,16 @@ export function CalorieMacrosCard({
     <DashCard delay={delay} className="p-3 sm:p-4">
       <h2 className="flex items-center gap-1.5 text-[13px] font-bold text-dash-text sm:text-[15px]">
         <Sparkles className="h-4 w-4 text-dash-green sm:h-[18px] sm:w-[18px]" />
-        درشت مغذی‌ها
+        {tr("درشت مغذی‌ها", "Macros")}
       </h2>
 
       {/* اگه کاربر توی «وارد کردن دستی» هدف درشت‌مغذی گذاشته باشه، هر باکس
           علاوه‌بر مصرف، هدف و یه نوار پیشرفت کوچیک هم نشون می‌ده. */}
       <div className="mt-3 grid grid-cols-3 gap-2 sm:gap-2.5">
         {[
-          { icon: Beef, label: "پروتئین", value: totals.protein, goal: target?.proteinTargetG ?? null },
-          { icon: Wheat, label: "کربوهیدرات", value: totals.carbs, goal: target?.carbsTargetG ?? null },
-          { icon: Droplet, label: "چربی", value: totals.fat, goal: target?.fatTargetG ?? null },
+          { icon: Beef, label: tr("پروتئین", "Protein"), value: totals.protein, goal: target?.proteinTargetG ?? null },
+          { icon: Wheat, label: tr("کربوهیدرات", "Carbs"), value: totals.carbs, goal: target?.carbsTargetG ?? null },
+          { icon: Droplet, label: tr("چربی", "Fat"), value: totals.fat, goal: target?.fatTargetG ?? null },
         ].map((m) => {
           const pct = m.goal && m.goal > 0 ? Math.min(100, Math.round((m.value / m.goal) * 100)) : null;
           const over = !!m.goal && m.goal > 0 && m.value > m.goal;
@@ -52,7 +53,7 @@ export function CalorieMacrosCard({
               <div className="mono text-[12px] font-bold text-dash-text sm:text-[13.5px]">
                 {faNum(Math.round(m.value))}
                 {m.goal ? <span className="text-[9px] font-semibold text-dash-muted">/{faNum(m.goal)}</span> : null}
-                <span className="text-[9px] font-semibold text-dash-muted"> گرم</span>
+                <span className="text-[9px] font-semibold text-dash-muted">{tr(" گرم", " g")}</span>
               </div>
               {pct !== null && (
                 <div className="h-[3px] w-full overflow-hidden rounded-full" style={{ background: "rgba(255,255,255,.08)" }}>

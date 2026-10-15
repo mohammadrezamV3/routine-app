@@ -9,6 +9,7 @@
 // تقریبا تمامش داخل لندن است، برچسب «لندن» برای ژورنال درست می‌ماند.
 
 import { FOREX_SESSIONS } from "./forexSessions";
+import { tr } from "./i18n";
 
 export type ClockSessionKey = "SYDNEY" | "TOKYO" | "FRANKFURT" | "LONDON" | "NEWYORK";
 
@@ -28,7 +29,7 @@ export type ClockSession = {
 
 const FRANKFURT: ClockSession = {
   key: "FRANKFURT",
-  label: "فرانکفورت",
+  get label() { return tr("فرانکفورت", "Frankfurt"); },
   latin: "FRANKFURT",
   tz: "Europe/Berlin",
   openMin: 8 * 60,
@@ -51,12 +52,12 @@ const LATIN: Record<string, string> = {
 /** ترتیب از داخل به بیرون — همان چیدمانی که روی حلقه‌ها رسم می‌شود */
 export const CLOCK_SESSIONS: ClockSession[] = [
   ...FOREX_SESSIONS.filter((s) => s.key === "SYDNEY" || s.key === "TOKYO").map((s) => ({
-    key: s.key as ClockSessionKey, label: s.label, latin: LATIN[s.key],
+    key: s.key as ClockSessionKey, get label() { return s.label; }, latin: LATIN[s.key],
     tz: s.tz, openMin: s.openMin, closeMin: s.closeMin, flagCode: FLAG[s.key],
   })),
   FRANKFURT,
   ...FOREX_SESSIONS.filter((s) => s.key === "LONDON" || s.key === "NEWYORK").map((s) => ({
-    key: s.key as ClockSessionKey, label: s.label, latin: LATIN[s.key],
+    key: s.key as ClockSessionKey, get label() { return s.label; }, latin: LATIN[s.key],
     tz: s.tz, openMin: s.openMin, closeMin: s.closeMin, flagCode: FLAG[s.key],
   })),
 ];

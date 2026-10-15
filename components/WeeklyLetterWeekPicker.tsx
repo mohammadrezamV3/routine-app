@@ -2,6 +2,7 @@
 
 // انتخاب هفته: قرص جمع‌وجور با قبلی/بعدی (تا 52 هفته‌ی قبل) و میان‌بر «این هفته».
 import { ChevronLeft, ChevronRight } from "lucide-react";
+import { tr } from "@/lib/i18n";
 import type { LetterCtx } from "./WeeklyLetterCtx";
 import "./weekly-letter.css";
 
@@ -19,23 +20,23 @@ export function WeeklyLetterWeekPicker({ ctx, onPick }: { ctx: LetterCtx; onPick
   const canPrev = ctx.offset > -MAX_BACK;
   const canNext = ctx.offset < 0;
   return (
-    <div className="wl-live-picker" role="group" aria-label="انتخاب هفته">
+    <div className="wl-live-picker" role="group" aria-label={tr("انتخاب هفته", "Choose week")}>
       <button
         type="button"
         className="wl-live-ghost wl-live-pick-btn"
         onClick={() => canPrev && onPick(shiftWeek(ctx.weekStart, -1))}
         disabled={!canPrev}
-        aria-label="هفته‌ی قبل"
+        aria-label={tr("هفته‌ی قبل", "Previous week")}
       >
-        <ChevronRight size={20} />
+        <ChevronRight size={20} className="dir-flip" />
       </button>
       <div className="wl-live-pick-mid" aria-live="polite">
-        <strong>هفته‌ی {ctx.analysis.weekLabel}</strong>
+        <strong>{tr("هفته‌ی", "Week of")} {ctx.analysis.weekLabel}</strong>
         {ctx.isCurrent ? (
-          <span className="wl-live-pick-now">این هفته</span>
+          <span className="wl-live-pick-now">{tr("این هفته", "This week")}</span>
         ) : (
           <button type="button" className="wl-live-ghost wl-live-pick-link" onClick={() => onPick(currentStart)}>
-            برو به این هفته
+            {tr("برو به این هفته", "Go to this week")}
           </button>
         )}
       </div>
@@ -44,9 +45,9 @@ export function WeeklyLetterWeekPicker({ ctx, onPick }: { ctx: LetterCtx; onPick
         className="wl-live-ghost wl-live-pick-btn"
         onClick={() => canNext && onPick(shiftWeek(ctx.weekStart, 1))}
         disabled={!canNext}
-        aria-label="هفته‌ی بعد"
+        aria-label={tr("هفته‌ی بعد", "Next week")}
       >
-        <ChevronLeft size={20} />
+        <ChevronLeft size={20} className="dir-flip" />
       </button>
     </div>
   );

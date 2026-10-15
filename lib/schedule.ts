@@ -4,7 +4,8 @@
 // RoutineItem (schema.prisma) هم بخونه تا برنامه‌های تکرارشونده واقعا در
 // دیتابیس ذخیره بشن، نه فقط localStorage/UserSetting.
 
-import { isoLocal } from "./jalali";
+import { isoLocal, weekdayName, weekdayShort } from "./jalali";
+import { isEn } from "./i18n";
 import { toEnglishDigits } from "./validate";
 
 export type ScheduleTask = {
@@ -181,6 +182,11 @@ export function isWakeOnTime(iso: string): boolean {
   const h = d.getHours(),
     m = d.getMinutes();
   return h < 9 || (h === 9 && m <= 30);
+}
+
+/** اسم/مخفف روز هفته به زبان جاری (WEEK_ORDER فارسی می‌مونه چون name کلید ذخیره‌شده‌ست) */
+export function weekOrderLabel(o: { name: string; short: string; jsDay: number }): { name: string; short: string } {
+  return isEn() ? { name: weekdayName(o.jsDay), short: weekdayShort(o.jsDay) } : { name: o.name, short: o.short };
 }
 
 export const WEEK_ORDER = [

@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from "react";
 import { ChevronDown } from "lucide-react";
+import { tr } from "@/lib/i18n";
 
 // «جزئیات بیشتر»: دستگیره‌ی پیکان اکسنت‌رنگ با نبض آرام که بقیه‌ی آمارها
 // را نرم باز/بسته می‌کند — طبق درخواست صریح همان مدل قبلی برگشت، و حالا
@@ -34,9 +35,9 @@ export function TradeStatsCollapse({ children }: { children: React.ReactNode }) 
           className={`trade-stats-handle${open ? " open" : ""}`}
           onClick={() => setOpen((v) => !v)}
           aria-expanded={open}
-          aria-label={open ? "بستن جزئیات" : "جزئیات بیشتر"}
+          aria-label={open ? tr("بستن جزئیات", "Hide details") : tr("جزئیات بیشتر", "More details")}
         >
-          <span className="trade-stats-handle-text">{open ? "بستن جزئیات" : "جزئیات بیشتر"}</span>
+          <span className="trade-stats-handle-text">{open ? tr("بستن جزئیات", "Hide details") : tr("جزئیات بیشتر", "More details")}</span>
           <ChevronDown size={18} aria-hidden="true" />
         </button>
       )}

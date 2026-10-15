@@ -5,6 +5,7 @@ import { Maximize, Minimize } from "lucide-react";
 import { useTheme } from "./ThemeProvider";
 import { tradingViewSymbol } from "@/lib/tradingView";
 import { Spinner } from "./Spinner";
+import { tr, isEn } from "@/lib/i18n";
 
 // اگر تا این مدت iframe سیگنال لود ندهد، خودمان دوباره تلاش می‌کنیم.
 const ATTEMPT_TIMEOUT_MS = 7_000;
@@ -55,7 +56,7 @@ export function TradingViewChart({ symbol }: { symbol: string }) {
       interval: "60",
       theme: theme === "light" ? "light" : "dark",
       style: "1", // کندل‌استیک
-      locale: "fa_IR",
+      locale: isEn() ? "en" : "fa_IR",
       timezone: "Asia/Tehran",
       // طبق درخواست صریح («ابزار خط‌کشیدن/فیبو هم اضافه شه»): نوار
       // کناری ابزارهای رسم (خط روند، فیبوناچی، …) همیشه بازه، حتی روی
@@ -153,11 +154,11 @@ export function TradingViewChart({ symbol }: { symbol: string }) {
         <div className="tv-chart-loading">
           <span style={{ maxWidth: 340, textAlign: "center", lineHeight: 1.9 }}>
             {blocked
-              ? "دسترسی به سرورهای تریدینگ‌ویو از این اینترنت برقرار نشد — معمولا یعنی دامنه‌شان فیلتر است. یک VPN روشن کن و دوباره تلاش کن."
-              : "چارت در چند تلاش بالا نیامد — یک VPN روشن کن و دوباره تلاش کن."}
+              ? tr("دسترسی به سرورهای تریدینگ‌ویو از این اینترنت برقرار نشد — معمولا یعنی دامنه‌شان فیلتر است. یک VPN روشن کن و دوباره تلاش کن.", "Could not reach TradingView servers from this connection. This usually means their domain is blocked. Turn on a VPN and try again.")
+              : tr("چارت در چند تلاش بالا نیامد — یک VPN روشن کن و دوباره تلاش کن.", "The chart did not load after several attempts. Turn on a VPN and try again.")}
           </span>
           <button type="button" className="trade-ghost-btn" style={{ marginTop: 10 }} onClick={restart}>
-            تلاش دوباره
+            {tr("تلاش دوباره", "Try again")}
           </button>
         </div>
       </div>
@@ -169,22 +170,22 @@ export function TradingViewChart({ symbol }: { symbol: string }) {
       {!loaded && (
         <div className="tv-chart-loading">
           <Spinner size={26} className="tv-chart-spinner" label={null} />
-          <span>در حال بارگذاری چارت…</span>
+          <span>{tr("در حال بارگذاری چارت…", "Loading chart…")}</span>
         </div>
       )}
       <button
         type="button"
         className="tv-fullscreen-btn"
         onClick={toggleFullscreen}
-        aria-label={isFullscreen ? "خروج از تمام‌صفحه" : "تمام‌صفحه"}
-        title={isFullscreen ? "خروج از تمام‌صفحه" : "تمام‌صفحه"}
+        aria-label={isFullscreen ? tr("خروج از تمام‌صفحه", "Exit full screen") : tr("تمام‌صفحه", "Full screen")}
+        title={isFullscreen ? tr("خروج از تمام‌صفحه", "Exit full screen") : tr("تمام‌صفحه", "Full screen")}
       >
         {isFullscreen ? <Minimize size={15} /> : <Maximize size={15} />}
       </button>
       <iframe
         key={src}
         src={src}
-        title="چارت تریدینگ‌ویو"
+        title={tr("چارت تریدینگ‌ویو", "TradingView chart")}
         onLoad={() => setLoaded(true)}
         loading="eager"
         referrerPolicy="origin"

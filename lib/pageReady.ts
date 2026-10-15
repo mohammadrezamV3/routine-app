@@ -48,6 +48,14 @@ export function pageBusy(): boolean {
   return false;
 }
 
+/** بعد از پینت فریم بعدی اجرا می‌شه؛ تب پنهان (rAF متوقف) با تایمر پشتیبان */
+function afterPaint(fn: () => void): void {
+  let done = false;
+  const run = () => { if (done) return; done = true; fn(); };
+  requestAnimationFrame(() => setTimeout(run, 0));
+  setTimeout(run, 150);
+}
+
 /**
  * وقتی صفحه SETTLE_MS پشت‌سرهم بدون لودر بود resolve می‌شه (حداکثر capMs).
  * signal برای لغو (مثلا ناوبری تازه قبل از آماده‌شدن قبلی).
@@ -65,8 +73,10 @@ export function whenPageReady(capMs = 8000, signal?: { cancelled: boolean }): Pr
       if (pageBusy()) quietSince = 0;
       else if (!quietSince) quietSince = now;
       else if (now - quietSince >= SETTLE_MS) return resolve();
-      // هر ~60ms یک بار؛ ارزون‌تر از MutationObserver روی کل درخت در وسط رندر سنگین
-      raf = window.setTimeout(tick, 60) as unknown as number;
+      // هر ~60ms یک بار؛ ارزون‌تر از MutationObserver روی کل درخت در وسط رندر سنگین.
+      // اجرا بعد از پینت فریم (afterPaint): آن لحظه چیدمان تمیزه و getClientRects
+      // یک layout همزمان اجباری وسط رندر React نمی‌سازه.
+      raf = window.setTimeout(() => afterPaint(tick), 60) as unknown as number;
     };
     tick();
     void raf;

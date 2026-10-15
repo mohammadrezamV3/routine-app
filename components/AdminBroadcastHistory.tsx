@@ -8,6 +8,7 @@ import {
   BROADCAST_MODULE_LABEL, BROADCAST_SEGMENT_LABEL, BROADCAST_STATUS_LABEL, canCancelBroadcast,
   type BroadcastRecord, type BroadcastStatus,
 } from "@/lib/broadcast";
+import { tr } from "@/lib/i18n";
 
 export type PublicBroadcast = Omit<BroadcastRecord, "cursor" | "leaseUntil" | "runs">;
 
@@ -22,7 +23,7 @@ export function AdminBroadcastHistory({ items, onChanged }: { items: PublicBroad
     setBusyId(id);
     try {
       await adminFetch(`/api/admin/broadcast?id=${encodeURIComponent(id)}`, { method: "DELETE" });
-      toast("پیام لغو شد");
+      toast(tr("پیام لغو شد", "Message canceled"));
     } catch (e: any) {
       toast(e.message, "err");
     } finally {
@@ -34,23 +35,23 @@ export function AdminBroadcastHistory({ items, onChanged }: { items: PublicBroad
   return (
     <div className="admin-chart-card">
       <div className="admin-chart-head">
-        <span className="admin-chart-title">تاریخچه</span>
-        <button type="button" className="admin-btn sm" onClick={onChanged}>تازه‌سازی</button>
+        <span className="admin-chart-title">{tr("تاریخچه", "History")}</span>
+        <button type="button" className="admin-btn sm" onClick={onChanged}>{tr("تازه‌سازی", "Refresh")}</button>
       </div>
       {!items ? (
-        <div className="admin-empty is-loading">در حال بارگذاری…</div>
+        <div className="admin-empty is-loading">{tr("در حال بارگذاری…", "Loading…")}</div>
       ) : items.length === 0 ? (
-        <EmptyState message="هنوز پیامی ارسال نشده" />
+        <EmptyState message={tr(tr("هنوز پیامی ارسال نشده", "No messages sent yet"), "No messages sent yet")} />
       ) : (
         <div className="admin-table-wrap">
           <table className="admin-table">
-            <thead><tr><th>پیام</th><th>مخاطب</th><th>وضعیت</th><th>گیرنده</th><th>زمان</th><th>ارسال‌کننده</th><th /></tr></thead>
+            <thead><tr><th>{tr("پیام", "Message")}</th><th>{tr("مخاطب", "Audience")}</th><th>{tr("وضعیت", "Status")}</th><th>{tr("گیرنده", "Recipients")}</th><th>{tr("زمان", "Time")}</th><th>{tr("ارسال‌کننده", "Sent by")}</th><th /></tr></thead>
             <tbody>
               {items.map((b) => (
                 <tr key={b.id}>
                   <td>
                     <div>{b.title}</div>
-                    <div className="admin-muted">{b.channels.map((c) => (c === "push" ? "پوش" : "درون‌برنامه")).join(" + ")}</div>
+                    <div className="admin-muted">{b.channels.map((c) => (c === "push" ? tr("پوش", "Push") : tr("درون‌برنامه", "In-app"))).join(" + ")}</div>
                   </td>
                   <td>
                     {BROADCAST_SEGMENT_LABEL[b.segment.kind]}
@@ -65,7 +66,7 @@ export function AdminBroadcastHistory({ items, onChanged }: { items: PublicBroad
                   <td>{b.createdByName || "—"}</td>
                   <td>
                     {canCancelBroadcast(b) && (
-                      <button type="button" className="admin-btn sm danger" disabled={busyId === b.id} onClick={() => cancel(b.id)}>لغو</button>
+                      <button type="button" className="admin-btn sm danger" disabled={busyId === b.id} onClick={() => cancel(b.id)}>{tr("لغو", "Cancel")}</button>
                     )}
                   </td>
                 </tr>

@@ -1,3 +1,4 @@
+import { tr } from "@/lib/i18n";
 import { NextRequest, NextResponse } from "next/server";
 import { getSessionFast } from "@/lib/serverSession";
 import { prisma } from "@/lib/prisma";
@@ -15,7 +16,7 @@ const ROUTINE_KEYS = new Set(["customOccurrences", "removedOccurrences", "wakeSl
 // تنظیمات کاربر (lib/userSettingKeys.ts) از این‌جا رد می‌شن. دلیلش اون‌جا
 // کامل توضیح داده شده.
 function rejectUnknownKey(key: string) {
-  return NextResponse.json({ error: "کلید تنظیمات نامعتبر است" }, { status: 400 });
+  return NextResponse.json({ error: tr("کلید تنظیمات نامعتبر است", "Invalid settings key") }, { status: 400 });
 }
 
 // GET /api/settings/theme  →  { value: ... }  (یا null اگه ذخیره نشده)
@@ -55,7 +56,7 @@ async function handlePOST(req: NextRequest, { params }: { params: { key: string 
   // حتی بعد از سقف بدنه، خود مقدار هم جدا سنجیده می‌شه — بدنه ممکنه فیلدهای
   // دیگه هم داشته باشه و فقط همینه که ذخیره می‌شه.
   if (new TextEncoder().encode(JSON.stringify(value ?? null)).length > MAX_SETTING_VALUE_BYTES) {
-    return NextResponse.json({ error: "حجم مقدار بیش از حد مجاز است" }, { status: 413 });
+    return NextResponse.json({ error: tr("حجم مقدار بیش از حد مجاز است", "The value is too large") }, { status: 413 });
   }
 
   await prisma.userSetting.upsert({

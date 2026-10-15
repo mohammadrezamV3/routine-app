@@ -14,6 +14,7 @@ import {
 } from "@/lib/mentorAvailability";
 import { AVAILABILITY_SELECT, availabilityOf, availabilityToday, countActiveStudents } from "@/lib/mentorManageServer";
 import { advanceWaitlist, countReservedSeats } from "@/lib/mentorWaitlistServer";
+import { tr } from "@/lib/i18n";
 
 const SETTINGS_SELECT = { ...AVAILABILITY_SELECT, welcomeMessage: true, intakeQuestions: true } as const;
 
@@ -23,7 +24,7 @@ async function respond(userId: string) {
     countActiveStudents(userId),
     countReservedSeats(userId),
   ]);
-  if (!p) return forbidden("اول پروفایل مربی‌گری بساز");
+  if (!p) return forbidden(tr(tr("اول پروفایل مربی‌گری بساز", "Create your mentor profile first"), "Create your mentor profile first"));
   // صندلی‌های رزرو صف انتظار هم «پر» حساب می‌شوند (lib/mentorWaitlistServer.ts)
   const availability = availabilityOf(p, active + reserved);
   return NextResponse.json({
@@ -64,12 +65,12 @@ export async function PUT(req: Request) {
   const userId = g.userId;
 
   const exists = await prisma.mentorProfile.findUnique({ where: { userId }, select: { id: true } });
-  if (!exists) return forbidden("اول پروفایل مربی‌گری بساز");
+  if (!exists) return forbidden(tr(tr("اول پروفایل مربی‌گری بساز", "Create your mentor profile first"), "Create your mentor profile first"));
 
   const parsed = await readJsonBody(req, 16 * 1024);
   if (!parsed.ok) return NextResponse.json({ error: parsed.error }, { status: parsed.status });
   const b = parsed.body || {};
-  if (typeof b !== "object" || Array.isArray(b)) return badRequest("بدنه‌ی درخواست معتبر نیست");
+  if (typeof b !== "object" || Array.isArray(b)) return badRequest(tr(tr("بدنه‌ی درخواست معتبر نیست", "Invalid request body"), "Invalid request body"));
 
   const data: {
     acceptingStudents?: boolean;
@@ -83,7 +84,7 @@ export async function PUT(req: Request) {
   } = {};
 
   if (b.acceptingStudents !== undefined) {
-    if (typeof b.acceptingStudents !== "boolean") return badRequest("وضعیت پذیرش معتبر نیست");
+    if (typeof b.acceptingStudents !== "boolean") return badRequest(tr(tr("وضعیت پذیرش معتبر نیست", "Acceptance status is not valid"), "Acceptance status is not valid"));
     data.acceptingStudents = b.acceptingStudents;
   }
   if (b.maxActiveStudents !== undefined) {
@@ -102,12 +103,12 @@ export async function PUT(req: Request) {
     }
   }
   if (b.awayMessage !== undefined && data.awayUntil !== null) {
-    const r = validateOptionalText(b.awayMessage, AWAY_MESSAGE_MAX, "پیام عدم حضور");
+    const r = validateOptionalText(b.awayMessage, AWAY_MESSAGE_MAX, tr(tr("پیام عدم حضور", "Away message"), "Away message"));
     if (!r.ok) return badRequest(r.error);
     data.awayMessage = r.data;
   }
   if (b.awayPausesRequests !== undefined) {
-    if (typeof b.awayPausesRequests !== "boolean") return badRequest("تنظیم توقف درخواست‌ها معتبر نیست");
+    if (typeof b.awayPausesRequests !== "boolean") return badRequest(tr(tr("تنظیم توقف درخواست‌ها معتبر نیست", "The request pause setting is not valid"), "The request pause setting is not valid"));
     data.awayPausesRequests = b.awayPausesRequests;
   }
   if (b.responseTimeHours !== undefined) {
@@ -116,7 +117,7 @@ export async function PUT(req: Request) {
     data.responseTimeHours = r.data;
   }
   if (b.welcomeMessage !== undefined) {
-    const r = validateOptionalText(b.welcomeMessage, WELCOME_MAX, "پیام خوش‌آمد");
+    const r = validateOptionalText(b.welcomeMessage, WELCOME_MAX, tr(tr("پیام خوش‌آمد", "Welcome message"), "Welcome message"));
     if (!r.ok) return badRequest(r.error);
     data.welcomeMessage = r.data;
   }

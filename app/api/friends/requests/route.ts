@@ -1,3 +1,4 @@
+import { tr } from "@/lib/i18n";
 import { NextResponse } from "next/server";
 import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/auth";
@@ -32,7 +33,7 @@ export async function GET() {
     requests: rows.map((r) => ({
       friendshipId: r.id,
       id: r.requester.id,
-      name: r.requester.name || r.requester.username || "کاربر",
+      name: r.requester.name || r.requester.username || tr("کاربر", "User"),
       username: r.requester.username,
       avatarUrl: r.requester.avatarUrl,
       ...nameFlags(r.requester),
@@ -40,7 +41,7 @@ export async function GET() {
     sent: sentRows.map((r) => ({
       friendshipId: r.id,
       id: r.addressee.id,
-      name: r.addressee.name || r.addressee.username || "کاربر",
+      name: r.addressee.name || r.addressee.username || tr("کاربر", "User"),
       username: r.addressee.username,
       avatarUrl: r.addressee.avatarUrl,
       ...nameFlags(r.addressee),

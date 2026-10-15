@@ -2,11 +2,12 @@
 
 import "./sleep-dial.css";
 import { useEffect, useId, useMemo, useState } from "react";
-import { motion, useReducedMotion } from "framer-motion";
+import { m as motion, useReducedMotion } from "framer-motion";
 import { Moon, Sun } from "lucide-react";
 import { faNum } from "@/lib/jalali";
+import { tr } from "@/lib/i18n";
 import {
-  SCORE_BAND_LABEL, clockOf, durationLabel, goalFromTargets, minuteOfDay, minutesUntil, scoreBand,
+  scoreBandLabel, clockOf, durationLabel, goalFromTargets, minuteOfDay, minutesUntil, scoreBand,
   sleepMinutes, sleepPhase, wakeTimesFor, type SleepRecord,
 } from "@/lib/sleep";
 import { arcPath, fitFontSize, hhmmToMin, minuteToAngle, pointAt } from "@/lib/sleepDial";
@@ -72,12 +73,6 @@ export function SleepDial({
   const uid = useId().replace(/:/g, "");
   const reduce = useReducedMotion();
   const [now, setNow] = useState<Date | null>(null);
-  useEffect(() => {
-    setNow(new Date());
-    const t = setInterval(() => setNow(new Date()), 1000);
-    return () => clearInterval(t);
-  }, []);
-
   const nowMin = now ? now.getHours() * 60 + now.getMinutes() + now.getSeconds() / 60 : null;
   const phase = sleepPhase(Math.floor(nowMin ?? 12 * 60), target);
   const bedMin = hhmmToMin(target.sleep) ?? 23 * 60 + 30;
@@ -98,32 +93,45 @@ export function SleepDial({
   let caption = "";
   let bigCls = "";
   if (tracking) {
-    kicker = "در حال خواب";
+    kicker = tr("در حال خواب", "Sleeping");
     big = now ? hms((now.getTime() - new Date(tracking.startedAt).getTime()) / 1000) : "00:00:00";
-    caption = `از ${clockOf(tracking.startedAt)}`;
+    caption = tr(`از ${clockOf(tracking.startedAt)}`, `Since ${clockOf(tracking.startedAt)}`);
     bigCls = "is-clock is-hms";
   } else if (showLast && band) {
-    kicker = "امتیاز دیشب";
+    kicker = tr("امتیاز دیشب", "Last night's score");
     big = faNum(lastScore!);
-    caption = `${SCORE_BAND_LABEL[band]} · ${durationLabel(sleepMinutes(lastNight!))}`;
+    caption = `${scoreBandLabel(band)} · ${durationLabel(sleepMinutes(lastNight!))}`;
     bigCls = `is-score slp-c-${band}`;
   } else if (phase === "bedtime" || phase === "night") {
-    kicker = "وقت خوابه";
+    kicker = tr("وقت خوابه", "Bedtime");
     big = now ? `${String(now.getHours()).padStart(2, "0")}:${String(now.getMinutes()).padStart(2, "0")}` : "--:--";
-    caption = "الان";
+    caption = tr("الان", "Now");
     bigCls = "is-clock";
   } else if (phase === "morning" && !lastNight) {
-    kicker = "صبح بخیر";
-    big = "دیشب؟";
-    caption = "هنوز ثبت نشده";
+    kicker = tr("صبح بخیر", "Good morning");
+    big = tr("دیشب؟", "Last night?");
+    caption = tr("هنوز ثبت نشده", "Not logged yet");
     bigCls = "is-word";
   } else {
-    kicker = "تا وقت خواب";
+    kicker = tr("تا وقت خواب", "Until bedtime");
     const toBed = minutesUntil(Math.floor(nowMin ?? 0), target.sleep) ?? 0;
     big = now ? hms(toBed * 60 - now.getSeconds()) : "--:--:--";
-    caption = `ساعت ${target.sleep}`;
+    caption = tr(`ساعت ${target.sleep}`, `At ${target.sleep}`);
     bigCls = "is-clock is-hms";
   }
+
+  // ثانیه فقط وقتی دیده می‌شه که وسط صفحه ساعت h:m:s باشه (ردیاب زنده/شمارش معکوس)؛
+  // در بقیه حالت‌ها هر دقیقه (روی مرز دقیقه) یک رندر کافیه، نه هر ثانیه کل SVG.
+  const fast = bigCls.includes("is-hms");
+  useEffect(() => {
+    let t: ReturnType<typeof setTimeout>;
+    const step = () => {
+      setNow(new Date());
+      t = setTimeout(step, fast ? 1000 : 60_000 - (Date.now() % 60_000) + 30);
+    };
+    step();
+    return () => clearTimeout(t);
+  }, [fast]);
 
   // یک خط راهنما فقط شب: بهترین ساعت‌های بیداری اگه همین الان بخوابی
   const wakeHint = !tracking && (phase === "bedtime" || phase === "night" || phase === "winddown") && nowMin !== null
@@ -219,24 +227,24 @@ export function SleepDial({
         </svg>
       </div>
 
-      <button type="button" className="sld-goal-row" onClick={onEditGoal} aria-label="ویرایش هدف خواب">
+      <button type="button" className="sld-goal-row" onClick={onEditGoal} aria-label={tr("ویرایش هدف خواب", "Edit sleep goal")}>
         <span className="sld-goal-item">
           <Moon aria-hidden />
-          <span><small>خواب</small><b>{target.sleep}</b></span>
+          <span><small>{tr("خواب", "Sleep")}</small><b>{target.sleep}</b></span>
         </span>
         <span className="sld-goal-mid">
-          <small>هدف</small>
+          <small>{tr("هدف", "Goal")}</small>
           <b>{durationLabel(goalMin)}</b>
         </span>
         <span className="sld-goal-item">
           <Sun aria-hidden />
-          <span><small>بیداری</small><b>{target.wake}</b></span>
+          <span><small>{tr("بیداری", "Wake")}</small><b>{target.wake}</b></span>
         </span>
       </button>
 
       {wakeHint && (
         <p className="sld-hint">
-          اگه الان بخوابی، بهترین ساعت بیداری: <b>{wakeHint[0]}</b> یا <b>{wakeHint[1]}</b>
+          {tr("اگه الان بخوابی، بهترین ساعت بیداری:", "If you fall asleep now, the best wake-up times:")} <b>{wakeHint[0]}</b> {tr("یا", "or")} <b>{wakeHint[1]}</b>
         </p>
       )}
 
@@ -245,17 +253,17 @@ export function SleepDial({
       <div className="sld-actions">
         {tracking ? (
           <>
-            <button type="button" className="trade-primary-btn" onClick={onWakeUp}>بیدار شدم</button>
-            <button type="button" className="account-outline-btn muted" onClick={() => stopTracking()}>لغو</button>
+            <button type="button" className="trade-primary-btn" onClick={onWakeUp}>{tr("بیدار شدم", "I'm awake")}</button>
+            <button type="button" className="account-outline-btn muted" onClick={() => stopTracking()}>{tr("لغو", "Cancel")}</button>
           </>
         ) : phase === "winddown" || phase === "bedtime" || phase === "night" ? (
           <>
-            <button type="button" className="trade-primary-btn" onClick={() => startTracking()}>دارم می‌خوابم</button>
-            <button type="button" className="account-outline-btn" onClick={onLog}>{lastNight ? "ویرایش دیشب" : "ثبت دیشب"}</button>
+            <button type="button" className="trade-primary-btn" onClick={() => startTracking()}>{tr("دارم می‌خوابم", "I'm going to sleep")}</button>
+            <button type="button" className="account-outline-btn" onClick={onLog}>{lastNight ? tr("ویرایش دیشب", "Edit last night") : tr("ثبت دیشب", "Log last night")}</button>
           </>
         ) : (
           <button type="button" className={lastNight ? "account-outline-btn" : "trade-primary-btn"} onClick={onLog}>
-            {lastNight ? "ویرایش خواب دیشب" : "ثبت خواب دیشب"}
+            {lastNight ? tr("ویرایش خواب دیشب", "Edit last night's sleep") : tr("ثبت خواب دیشب", "Log last night's sleep")}
           </button>
         )}
       </div>

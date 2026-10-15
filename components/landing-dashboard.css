@@ -59,7 +59,7 @@
 }
 .ls-dash-tl.is-done i{ border-color:#00C98D; background:#00C98D; }
 .ls-dash-tl.is-done .ls-dash-tl-n{ color:var(--muted); text-decoration:line-through; text-decoration-color:rgba(127,127,127,.5); }
-.ls-dash-pnl{ font-size:18px; font-weight:800; color:var(--pnl-win, #00C98D); text-align:left; }
+.ls-dash-pnl{ font-size:18px; font-weight:800; color:var(--pnl-win, #00C98D); text-align:end; }
 .ls-dash-spark{ width:100%; height:34px; }
 .ls-dash-sub{ font-size:10px; color:var(--muted); }
 

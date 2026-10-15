@@ -3,7 +3,7 @@
 import { cn } from "@/lib/utils";
 import {
   type MotionStyle,
-  motion,
+  m as motion,
   type TargetAndTransition,
   type Transition,
   useReducedMotion,

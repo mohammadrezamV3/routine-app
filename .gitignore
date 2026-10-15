@@ -15,3 +15,6 @@ build
 # روی هر مرج یه تداخلِ بی‌معنی می‌ساخت. CLAUDE.md هم از اول گفته بود باید
 # ignore بشه.
 tsconfig.tsbuildinfo
+
+# خروجی build موازی ایجنت‌ها/تحلیل حجم (NEXT_DIST_DIR=.next-<tag>)
+.next-*/

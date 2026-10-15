@@ -1,0 +1,6 @@
+/* اصلاح‌های ظاهری چیدمان چپ‌به‌راست (انگلیسی) — بخش admin. همه‌ی قاعده‌ها زیر html[dir="ltr"] تا فارسی بی‌تغییر بمونه. */
+
+/* داشبورد ادمین: عددهای direction:ltr با text-align:end در RTL کنار شروع می‌نشستن؛ در ltr باید چپ بمونن */
+html[dir="ltr"] .adb-kpi-value,
+html[dir="ltr"] .adb-num strong,
+html[dir="ltr"] .adb-amount{ text-align:left; }

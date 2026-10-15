@@ -8,6 +8,7 @@ import {
 import { withLiveSync } from "@/lib/realtime";
 import { loadAccountMoney } from "@/lib/tradeCashflowServer";
 import { sessionFeatureBlocked } from "@/lib/featureFlagsServer";
+import { tr } from "@/lib/i18n";
 
 // مدیریت اتصال متاتریدر یک حساب، از سمت کاربر لاگین‌کرده.
 // (اندپوینت‌هایی که خود EA صدا می‌زند جدا هستند: /api/mt/pair و /api/mt/sync)
@@ -70,7 +71,7 @@ export async function GET(req: NextRequest) {
 
   const accountId = req.nextUrl.searchParams.get("accountId") || "";
   if (!(await ownedAccount(guard.userId, accountId))) {
-    return NextResponse.json({ error: "حساب پیدا نشد" }, { status: 404 });
+    return NextResponse.json({ error: tr(tr("حساب پیدا نشد", "Account not found"), "Account not found") }, { status: 404 });
   }
 
   const link = await prisma.tradeMtLink.findUnique({
@@ -106,7 +107,7 @@ async function handlePOST(req: NextRequest) {
   const accountId = String(body?.accountId || "");
   const platform: MtPlatform = body?.platform === "MT5" ? "MT5" : "MT4";
   if (!(await ownedAccount(userId, accountId))) {
-    return NextResponse.json({ error: "حساب پیدا نشد" }, { status: 404 });
+    return NextResponse.json({ error: tr(tr("حساب پیدا نشد", "Account not found"), "Account not found") }, { status: 404 });
   }
 
   const code = generatePairingCode();
@@ -134,7 +135,7 @@ async function handleDELETE(req: NextRequest) {
 
   const accountId = req.nextUrl.searchParams.get("accountId") || "";
   if (!(await ownedAccount(guard.userId, accountId))) {
-    return NextResponse.json({ error: "حساب پیدا نشد" }, { status: 404 });
+    return NextResponse.json({ error: tr(tr("حساب پیدا نشد", "Account not found"), "Account not found") }, { status: 404 });
   }
 
   await prisma.tradeMtLink.updateMany({

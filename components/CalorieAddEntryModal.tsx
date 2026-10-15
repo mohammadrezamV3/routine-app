@@ -1,14 +1,16 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { AnimatePresence, motion } from "framer-motion";
+import { AnimatePresence, m as motion } from "framer-motion";
 import { Check, ChevronDown } from "lucide-react";
-import { FoodSeedItem } from "@/lib/foodSeed";
+import type { FoodSeedItem } from "@/lib/foodSeed";
 import { FoodUnit, UNIT_LABELS, UNIT_TO_GRAMS } from "@/lib/calorieCalc";
 import { SegmentedTabs } from "./SegmentedTabs";
 import { useLockBodyScroll } from "@/lib/useLockBodyScroll";
 import { NumberInput } from "./NumberInput";
 import { Spinner } from "./Spinner";
+import { isEn, tr } from "@/lib/i18n";
+import { foodNameDisplay, loadFoodNamesEn, searchFoodNamesEn, useFoodNamesEn } from "@/lib/foodNamesEnLazy";
 
 const LAST_UNIT_KEY = "arion-calorie-last-unit";
 
@@ -34,6 +36,7 @@ export function CalorieAddEntryModal({
   onAdded: () => void;
 }) {
   useLockBodyScroll();
+  useFoodNamesEn();
   const [query, setQuery] = useState("");
   const [suggestions, setSuggestions] = useState<FoodSeedItem[]>([]);
   const [selectedFood, setSelectedFood] = useState<FoodSeedItem | null>(null);
@@ -58,6 +61,14 @@ export function CalorieAddEntryModal({
 
   useEffect(() => {
     const id = setTimeout(() => {
+      // جستجوی لاتین در حالت انگلیسی: روی نام‌های انگلیسی کاتالوگ (سمت کلاینت)
+      if (isEn() && /[a-z]/i.test(query)) {
+        Promise.all([import("@/lib/foodSeed"), loadFoodNamesEn()]).then(([{ FOOD_SEED }]) => {
+          const names = searchFoodNamesEn(query);
+          setSuggestions(names.map((n) => FOOD_SEED.find((f) => f.name === n)).filter((f): f is FoodSeedItem => !!f));
+        });
+        return;
+      }
       fetch(`/api/calorie/foods?q=${encodeURIComponent(query)}`)
         .then((r) => r.json())
         .then((d) => setSuggestions(d.results || []));
@@ -102,18 +113,18 @@ export function CalorieAddEntryModal({
       <div className="modal-overlay open" onClick={onClose} />
       <div className="modal-panel liquid-glass-panel dash-scope open">
         <div className="modal-head">
-          <div className="modal-title">افزودن غذا</div>
-          <button className="nav-close" onClick={onClose} aria-label="بستن">×</button>
+          <div className="modal-title">{tr("افزودن غذا", "Add food")}</div>
+          <button className="nav-close" onClick={onClose} aria-label={tr("بستن", "Close")}>×</button>
         </div>
         <div className="modal-body" style={{ position: "relative" }}>
           <motion.div animate={{ filter: submitted ? "blur(6px)" : "blur(0px)", opacity: submitted ? 0.35 : 1 }} transition={{ duration: 0.3 }}>
             <div className="relative">
-              <label className="calorie-field-label" htmlFor="calorie-food-name">نام غذا</label>
+              <label className="calorie-field-label" htmlFor="calorie-food-name">{tr("نام غذا", "Food name")}</label>
               <input
                 id="calorie-food-name"
                 type="text"
                 className="wsearch-newform-name calorie-glass-field w-full"
-                placeholder="جستجوی غذا…"
+                placeholder={tr("جستجوی غذا…", "Search food…")}
                 value={query}
                 onChange={(e) => { setQuery(e.target.value); setSelectedFood(null); }}
               />
@@ -122,10 +133,10 @@ export function CalorieAddEntryModal({
                   {suggestions.map((f) => (
                     <div
                       key={f.name}
-                      onClick={() => { setSelectedFood(f); setQuery(f.name); setCustomPer100(""); }}
+                      onClick={() => { setSelectedFood(f); setQuery(foodNameDisplay(f.name)); setCustomPer100(""); }}
                       className="flex cursor-pointer items-center justify-between gap-2 rounded-xl border border-dash-border bg-white/[0.02] px-3 py-2 transition hover:border-dash-green/40"
                     >
-                      <span className="text-[11.5px] font-semibold text-dash-text sm:text-[12.5px]">{f.name}</span>
+                      <span className="text-[11.5px] font-semibold text-dash-text sm:text-[12.5px]">{foodNameDisplay(f.name)}</span>
                       <span className="mono text-[10.5px] text-dash-muted sm:text-[11.5px]" dir="ltr">{f.caloriesPer100g} kcal/100g</span>
                     </div>
                   ))}
@@ -133,10 +144,10 @@ export function CalorieAddEntryModal({
               )}
               {isManual && (
                 <div className="mt-2 flex flex-col gap-2">
-                  <div className="text-[10.5px] text-dash-muted sm:text-[11.5px]">غذا در لیست پیدا نشد — کالری هر 100 گرمش رو دستی وارد کن</div>
+                  <div className="text-[10.5px] text-dash-muted sm:text-[11.5px]">{tr("غذا در لیست پیدا نشد — کالری هر 100 گرمش رو دستی وارد کن", "Food not found in the list. Enter its calories per 100 g manually")}</div>
                   <NumberInput
                     className="wsearch-newform-name calorie-glass-field w-full"
-                    placeholder="کالری به‌ازای هر 100 گرم"
+                    placeholder={tr("کالری به‌ازای هر 100 گرم", "Calories per 100 g")}
                     value={customPer100}
                     onChange={(v) => setCustomPer100(v)}
                   />
@@ -151,18 +162,18 @@ export function CalorieAddEntryModal({
                 یکی درمی‌اومد نه ارتفاعشون. */}
             <div className="mt-2.5 flex items-end gap-2">
               <div className="min-w-0 flex-1">
-                <label className="calorie-field-label" htmlFor="calorie-qty">مقدار</label>
+                <label className="calorie-field-label" htmlFor="calorie-qty">{tr("مقدار", "Amount")}</label>
                 <NumberInput
                   id="calorie-qty"
                   decimal
                   className="wsearch-newform-name calorie-glass-field calorie-qty-field w-full text-center"
-                  placeholder="مقدار"
+                  placeholder={tr("مقدار", "Amount")}
                   value={qty}
                   onChange={(v) => setQty(v)}
                 />
               </div>
               <div className="relative min-w-0 flex-1">
-                <label className="calorie-field-label">واحد اندازه‌گیری</label>
+                <label className="calorie-field-label">{tr("واحد اندازه‌گیری", "Unit")}</label>
                 <button
                   type="button"
                   onClick={() => setUnitPickerOpen((v) => !v)}
@@ -193,15 +204,15 @@ export function CalorieAddEntryModal({
             </div>
 
             <div className="mt-2.5">
-              <label className="calorie-field-label">وعده</label>
+              <label className="calorie-field-label">{tr("وعده", "Meal")}</label>
               <SegmentedTabs active={mealType} onChange={setMealType} options={mealTypes.map((m) => ({ value: m.key, label: m.label }))} />
             </div>
 
-            <label className="calorie-field-label mt-2.5">درشت‌مغذی‌ها (اختیاری)</label>
+            <label className="calorie-field-label mt-2.5">{tr("درشت‌مغذی‌ها (اختیاری)", "Macros in grams (optional)")}</label>
             <div className="mt-1.5 flex gap-2">
-              <NumberInput className="wsearch-newform-name calorie-glass-field flex-1" placeholder="پروتئین (گرم)" value={proteinG} onChange={(v) => setProteinG(v)} />
-              <NumberInput className="wsearch-newform-name calorie-glass-field flex-1" placeholder="کربوهیدرات (گرم)" value={carbsG} onChange={(v) => setCarbsG(v)} />
-              <NumberInput className="wsearch-newform-name calorie-glass-field flex-1" placeholder="چربی (گرم)" value={fatG} onChange={(v) => setFatG(v)} />
+              <NumberInput className="wsearch-newform-name calorie-glass-field flex-1" placeholder={tr("پروتئین (گرم)", "Protein")} value={proteinG} onChange={(v) => setProteinG(v)} />
+              <NumberInput className="wsearch-newform-name calorie-glass-field flex-1" placeholder={tr("کربوهیدرات (گرم)", "Carbs")} value={carbsG} onChange={(v) => setCarbsG(v)} />
+              <NumberInput className="wsearch-newform-name calorie-glass-field flex-1" placeholder={tr("چربی (گرم)", "Fat")} value={fatG} onChange={(v) => setFatG(v)} />
             </div>
 
             <button
@@ -211,7 +222,7 @@ export function CalorieAddEntryModal({
               className="mt-3 flex w-full items-center justify-center gap-2 rounded-2xl py-3 text-[13px] font-bold disabled:opacity-40 sm:text-[15px]"
               style={{ background: "var(--accent)", color: "var(--bg)", boxShadow: "0 8px 22px rgba(var(--accent-rgb),.3)" }}
             >
-              {saving ? <Spinner size={15} /> : "افزودن"}
+              {saving ? <Spinner size={15} /> : tr("افزودن", "Add")}
             </button>
           </motion.div>
 
@@ -232,7 +243,7 @@ export function CalorieAddEntryModal({
                 >
                   <Check className="h-7 w-7" style={{ color: "var(--bg)" }} strokeWidth={3} />
                 </motion.div>
-                <div className="text-[12.5px] font-bold text-dash-text sm:text-[13.5px]">با موفقیت اضافه شد</div>
+                <div className="text-[12.5px] font-bold text-dash-text sm:text-[13.5px]">{tr("با موفقیت اضافه شد", "Added successfully")}</div>
               </motion.div>
             )}
           </AnimatePresence>

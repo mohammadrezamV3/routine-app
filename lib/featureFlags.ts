@@ -7,6 +7,8 @@
 //   off    → خاموش؛ فقط Owner می‌بینه تا بتونه تستش کنه
 // enforcement واقعی سمت سروره (lib/featureFlagsServer.ts)؛ کلاینت فقط UI رو مخفی می‌کنه.
 
+import { isEn } from "@/lib/i18n";
+
 export type FeatureMode = "on" | "admins" | "off";
 
 // ترتیب همین فهرست ترتیب نمایش در /admin/features ـه (داخل هر گروه).
@@ -88,6 +90,60 @@ export function featureChain(key: FeatureKey): FeatureKey[] {
 }
 
 export const FEATURE_MODE_LABELS: Record<FeatureMode, string> = { on: "روشن برای همه", admins: "فقط ادمین‌ها", off: "خاموش" };
+
+// ---- متن انگلیسی برای پنل ادمین (داده‌ی فارسی بالا دست‌نخورده می‌مونه؛ این‌ها با tr/isEn انتخاب می‌شن) ----
+const FEATURE_EN: Record<FeatureKey, { label: string; hint: string }> = {
+  dashboard: { label: "Dashboard", hint: "The /dashboard page: overview of every section and the home page after login" },
+  notifications: { label: "Notifications", hint: "Header bell, in-app notification list and push notification registration" },
+  blog: { label: "Blog", hint: "The /blog pages and every article" },
+  about: { label: "About us", hint: "The /about page and its menu link" },
+  routine: { label: "Daily and weekly routine", hint: "The /weekly page, plan ticks and the dashboard routine section" },
+  sleep: { label: "Sleep", hint: "The /sleep page and sleep logging" },
+  streak: { label: "Streak and achievements", hint: "The /streak page and achievements" },
+  shareCards: { label: "Share today's activity", hint: "The activity card share button in the dashboard hero" },
+  exercise: { label: "Workout plan", hint: "The workout tab in /exercise, plans and session logging" },
+  calorie: { label: "Calorie tracker", hint: "The calorie tab in /exercise, food logging and calorie goal" },
+  trade: { label: "Trading (whole section)", hint: "The /trade hub and all its sub-sections; off turns every trading sub-section off too" },
+  tradeJournal: { label: "Journal and accounts", hint: "/trade/journal, each account page and trade logging" },
+  tradeChecklists: { label: "Trading checklists", hint: "/trade/checklists" },
+  economicCalendar: { label: "Economic calendar", hint: "/trade/calendar and dashboard events" },
+  forexClock: { label: "Forex clock", hint: "/trade/clock: trading session status" },
+  tradeNotes: { label: "Trading notes", hint: "/trade/notes" },
+  metatrader: { label: "MetaTrader connection", hint: "/trade/metatrader and expert advisor sync" },
+  tradeChart: { label: "Symbol charts", hint: "/trade/chart and live prices" },
+  tradeChat: { label: "Symbol chat", hint: "User conversation under each symbol chart" },
+  tradeRisk: { label: "Risk and profit", hint: "/trade/risk and the in-chart risk tool" },
+  tradeMoneyMgmt: { label: "Money management expert advisor", hint: "/trade/money and the expert advisor download" },
+  tradeShare: { label: "Share trading report", hint: "Share button in /trade and the account page" },
+  mentors: { label: "Mentors", hint: "Mentor and student connection, plans, chat and reviews (/mentors)" },
+  friends: { label: "Friends", hint: "Friends card, search and friend requests" },
+  routineAssistant: { label: "Smart routine assistant", hint: "The AI button on the routine page" },
+  aiExercisePlan: { label: "AI workout plan builder", hint: "Automatic plan generation; manual plans keep working" },
+  roadmaps: { label: "Learning roadmap", hint: "AI roadmap builder and the /roadmaps page" },
+  weeklyAnalysis: { label: "Weekly review", hint: "The weekly review page (week by week, with AI coach, goals and notes); still requires the AI Insight module" },
+};
+
+const FEATURE_GROUP_EN: Record<FeatureGroup, string> = {
+  general: "General", routine: "Routine", exercise: "Workout", trade: "Trading", social: "Social", ai: "AI",
+};
+
+const FEATURE_MODE_EN: Record<FeatureMode, string> = { on: "On for everyone", admins: "Admins only", off: "Off" };
+
+export function featureLabel(key: FeatureKey): string {
+  return isEn() ? FEATURE_EN[key].label : FEATURE_META[key].label;
+}
+
+export function featureHint(key: FeatureKey): string {
+  return isEn() ? FEATURE_EN[key].hint : FEATURE_META[key].hint;
+}
+
+export function featureGroupLabel(g: FeatureGroup): string {
+  return isEn() ? FEATURE_GROUP_EN[g] : (FEATURE_GROUPS.find((x) => x.key === g)?.label ?? g);
+}
+
+export function featureModeLabel(m: FeatureMode): string {
+  return isEn() ? FEATURE_MODE_EN[m] : FEATURE_MODE_LABELS[m];
+}
 
 export type FeatureFlags = Record<FeatureKey, FeatureMode>;
 

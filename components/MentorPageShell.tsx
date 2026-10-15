@@ -1,13 +1,14 @@
 "use client";
 
 import "./mentor.css";
-import Link from "next/link";
+import { SmartLink as Link } from "@/components/SmartLink";
 import { AlertTriangle, ChevronRight, RefreshCw } from "lucide-react";
 import { useSession } from "next-auth/react";
 import { AuthGate } from "./AuthGate";
 import { FeatureGate } from "./FeatureGate";
 import { PanelSkeleton } from "./PanelSkeleton";
 import { MentorPage, useMentorFlat } from "./MentorUI";
+import { tr } from "@/lib/i18n";
 
 /**
  * سرصفحه‌ی مشترک همه‌ی صفحه‌های منتور — همان مارک‌آپ TradePageShell:
@@ -29,7 +30,7 @@ export function MentorPageHead({
     <div className="trade-head-block">
       {back && (
         <Link href={back.href} prefetch className="trade-back-link">
-          <ChevronRight size={15} /> {back.label}
+          <ChevronRight size={15} className="dir-flip" /> {back.label}
         </Link>
       )}
       {head ?? (
@@ -82,7 +83,7 @@ export function MentorPageShell({
       />
 
       {status === "loading" && <PanelSkeleton />}
-      {status === "unauthenticated" && <AuthGate message="برای استفاده از بخش مربی‌ها وارد شوید" />}
+      {status === "unauthenticated" && <AuthGate message={tr("برای استفاده از بخش مربی‌ها وارد شوید", "Sign in to use the mentors area")} />}
       {status === "authenticated" && (
         <FeatureGate feature="mentors">{surface ? <MentorPage>{children}</MentorPage> : children}</FeatureGate>
       )}
@@ -110,7 +111,7 @@ export function MentorErrorState({
         <div className="mentor-btn-group">
           {onRetry && (
             <button type="button" className="account-outline-btn mentor-btn is-sm" onClick={onRetry}>
-              <RefreshCw size={14} strokeWidth={1.75} /> تلاش دوباره
+              <RefreshCw size={14} strokeWidth={1.75} /> {tr("تلاش دوباره", "Try again")}
             </button>
           )}
           {action}

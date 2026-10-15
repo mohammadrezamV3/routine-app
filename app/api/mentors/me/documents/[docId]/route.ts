@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 import { requireMentorsUser, notFound, conflict } from "@/lib/mentorGuard";
+import { tr } from "@/lib/i18n";
 
 type Ctx = { params: { docId: string } };
 
@@ -57,7 +58,7 @@ export async function DELETE(_req: Request, { params }: Ctx) {
             select: { status: true },
           })
         )?.status ?? "NOT_PROVIDED";
-  if (status === "VERIFIED") return conflict("مدرک تاییدشده قابل حذف نیست");
+  if (status === "VERIFIED") return conflict(tr("مدرک تاییدشده قابل حذف نیست", "A verified document can't be deleted"));
 
   await prisma.$transaction(async (tx) => {
     await tx.mentorDocument.delete({ where: { id: doc.id } });

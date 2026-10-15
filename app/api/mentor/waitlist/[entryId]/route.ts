@@ -5,6 +5,7 @@ import { notifyUser, displayName } from "@/lib/inAppNotify";
 import { publishToUsers } from "@/lib/realtime";
 import { PUBLIC_USER_SELECT } from "@/lib/mentorServer";
 import { advanceWaitlist } from "@/lib/mentorWaitlistServer";
+import { tr } from "@/lib/i18n";
 
 // DELETE /api/mentor/waitlist/:entryId → منتور یک نفر را از صفش بیرون می‌برد.
 // where همیشه {id, mentorId: من} (ضد IDOR)؛ «وجود ندارد» و «مال تو نیست» هر دو ۴۰۴.
@@ -25,7 +26,7 @@ export async function DELETE(_req: Request, { params }: { params: { entryId: str
     where: { id, mentorId: me, status: entry.status },
     data: { status: "CANCELLED", closedBy: "MENTOR", closedAt: now },
   });
-  if (res.count === 0) return NextResponse.json({ error: "وضعیت صف هم‌زمان تغییر کرد؛ دوباره تلاش کن" }, { status: 409 });
+  if (res.count === 0) return NextResponse.json({ error: tr(tr("وضعیت صف هم‌زمان تغییر کرد؛ دوباره تلاش کن", "The queue status changed at the same time; try again"), "The queue status changed at the same time; try again") }, { status: 409 });
 
   const mentor = await prisma.user.findUnique({ where: { id: me }, select: PUBLIC_USER_SELECT });
   await notifyUser(entry.userId, {

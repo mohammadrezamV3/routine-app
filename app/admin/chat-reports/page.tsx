@@ -10,6 +10,7 @@ import { useAdminAccess } from "@/components/admin/AdminAccess";
 import { adminFetch, useAdminToast } from "@/components/admin/useAdminToast";
 import { formatDateTime, formatNumber } from "@/lib/adminFormat";
 import { CHAT_REPORT_REASON_LABELS, CHAT_REPORT_STATUS_LABELS } from "@/lib/tradeChat";
+import { tr } from "@/lib/i18n";
 
 type ReportStatus = "OPEN" | "ACTIONED" | "DISMISSED";
 type Report = {
@@ -20,11 +21,11 @@ type Report = {
 type Data = { openCount: number; reports: Report[] };
 
 const TABS = ["ACTIONED", "OPEN", "DISMISSED"] as const;
-const TAB_LABELS: Record<ReportStatus, string> = {
-  ACTIONED: "حذف‌شده (به‌محض گزارش)",
-  OPEN: "بررسی‌نشده",
-  DISMISSED: "رد شده",
-};
+const tabLabels = (): Record<ReportStatus, string> => ({
+  ACTIONED: tr("حذف‌شده (به‌محض گزارش)", "Deleted (on report)"),
+  OPEN: tr("بررسی‌نشده", "Not reviewed"),
+  DISMISSED: tr("رد شده", "Dismissed"),
+});
 const STATUS_BADGE: Record<ReportStatus, "amber" | "red" | "gray"> = { OPEN: "amber", ACTIONED: "red", DISMISSED: "gray" };
 
 // صف گزارش‌های چت ترید. طبق تصمیم ثابت‌شده در app/api/trade/chat/report،
@@ -61,29 +62,31 @@ export default function AdminChatReportsPage() {
     if (!acting) return;
     try {
       await adminFetch("/api/admin/chat-reports", { method: "PATCH", json: { id: acting.report.id, action: acting.action } });
-      toast(acting.action === "delete" ? "پیام حذف شد" : "گزارش رد شد");
+      toast(acting.action === "delete" ? tr("پیام حذف شد", "Message deleted") : tr("گزارش رد شد", "Report dismissed"));
       setActing(null);
       reload();
     } catch (e) {
-      toast(e instanceof Error ? e.message : "خطا در انجام درخواست", "err");
+      toast(e instanceof Error ? e.message : tr("خطا در انجام درخواست", "Couldn't complete the request"), "err");
     }
   }
 
   const reports = data?.reports || [];
+  const labels = tabLabels();
   const tabItems = TABS.map((t) => ({
     key: t,
-    label: t === "OPEN" && data?.openCount ? `${TAB_LABELS[t]} (${formatNumber(data.openCount)})` : TAB_LABELS[t],
+    label: t === "OPEN" && data?.openCount ? `${labels[t]} (${formatNumber(data.openCount)})` : labels[t],
   }));
 
   return (
     <section>
       <div className="admin-page-head">
         <div>
-          <div className="admin-page-kicker">گزارش‌های چت</div>
+          <div className="admin-page-kicker">{tr("گزارش‌های چت", "Chat reports")}</div>
           <div className="admin-section-hint" style={{ margin: 0 }}>
-            هر پیام گزارش‌شده همان لحظه از اتاق گفت‌وگو حذف می‌شود — این صفحه متن
-            کامل همان پیام‌ها را نشان می‌دهد. اگر نویسنده‌ای مکرر گزارش می‌شود، از
-            روی نامش وارد پنل کاربری‌اش شو و اخطار/بن/غیرفعال‌سازی چت را از آن‌جا بده.
+            {tr(
+              "هر پیام گزارش‌شده همان لحظه از اتاق گفت‌وگو حذف می‌شود — این صفحه متن کامل همان پیام‌ها را نشان می‌دهد. اگر نویسنده‌ای مکرر گزارش می‌شود، از روی نامش وارد پنل کاربری‌اش شو و اخطار/بن/غیرفعال‌سازی چت را از آن‌جا بده.",
+              "Every reported message is removed from the chat room right away. This page shows the full text of those messages. If an author is reported repeatedly, open their user panel from their name and issue a warning, ban or chat disable from there.",
+            )}
           </div>
         </div>
       </div>
@@ -93,26 +96,26 @@ export default function AdminChatReportsPage() {
       {!data ? (
         loading || !failed ? <LoadingState /> : <ErrorState onRetry={reload} />
       ) : reports.length === 0 ? (
-        <EmptyState message="گزارشی در این دسته نیست" />
+        <EmptyState message={tr("گزارشی در این دسته نیست", "No reports in this category")} />
       ) : (
         <div className={`trade-list${loading ? " admin-list-dim" : ""}`}>
           {reports.map((r) => (
             <div key={r.id} className="trade-row admin-stack-row">
               <div className="admin-row-top">
                 <span className="trade-row-sub">
-                  <span className="admin-ltr-inline">{r.message.symbol}</span> · نویسنده:{" "}
+                  <span className="admin-ltr-inline">{r.message.symbol}</span> · {tr("نویسنده:", "Author:")}{" "}
                   {can("users.view")
                     ? <Link href={`/admin/users/${r.message.authorId}`} className="admin-link">{r.message.author}</Link>
                     : r.message.author}
-                  {" "}· گزارش‌دهنده: {r.reporter} · {CHAT_REPORT_REASON_LABELS[r.reason] || r.reason}
+                  {" "}· {tr("گزارش‌دهنده:", "Reporter:")} {r.reporter} · {CHAT_REPORT_REASON_LABELS[r.reason] || r.reason}
                 </span>
                 <span className="admin-badge-row">
-                  {r.message.deleted && r.status !== "ACTIONED" && <span className="admin-badge red">پیام حذف شده</span>}
+                  {r.message.deleted && r.status !== "ACTIONED" && <span className="admin-badge red">{tr("پیام حذف شده", "Message deleted")}</span>}
                   <span className={`admin-badge ${STATUS_BADGE[r.status] || "gray"}`}>{CHAT_REPORT_STATUS_LABELS[r.status] || r.status}</span>
                 </span>
               </div>
               <div className="admin-row-body">{r.message.body}</div>
-              {r.note && <div className="trade-row-sub">یادداشت گزارش‌دهنده: {r.note}</div>}
+              {r.note && <div className="trade-row-sub">{tr("یادداشت گزارش‌دهنده:", "Reporter's note:")} {r.note}</div>}
               <div className="admin-row-foot">
                 <span className="trade-row-sub admin-ltr">
                   {formatDateTime(r.message.createdAt)}
@@ -120,11 +123,11 @@ export default function AdminChatReportsPage() {
                 {r.status === "OPEN" && (
                   <span className="admin-head-actions">
                     <button type="button" className="admin-btn sm" onClick={() => setActing({ report: r, action: "dismiss" })}>
-                      <XCircle size={14} /> رد گزارش
+                      <XCircle size={14} /> {tr("رد گزارش", "Dismiss report")}
                     </button>
                     {!r.message.deleted && (
                       <button type="button" className="admin-btn sm danger" onClick={() => setActing({ report: r, action: "delete" })}>
-                        <Trash2 size={14} /> حذف پیام
+                        <Trash2 size={14} /> {tr("حذف پیام", "Delete message")}
                       </button>
                     )}
                   </span>
@@ -137,11 +140,11 @@ export default function AdminChatReportsPage() {
 
       {acting && (
         <ConfirmModal
-          title={acting.action === "delete" ? "حذف پیام" : "رد گزارش"}
+          title={acting.action === "delete" ? tr("حذف پیام", "Delete message") : tr("رد گزارش", "Dismiss report")}
           message={acting.action === "delete"
-            ? "پیام از اتاق گفت‌وگو برداشته می‌شه و همه‌ی گزارش‌های باز همین پیام بسته می‌شن."
-            : "گزارش بدون اقدام بسته می‌شه و پیام سر جاش می‌مونه."}
-          confirmLabel={acting.action === "delete" ? "حذف پیام" : "رد گزارش"}
+            ? tr("پیام از اتاق گفت‌وگو برداشته می‌شه و همه‌ی گزارش‌های باز همین پیام بسته می‌شن.", "The message will be removed from the chat room, and all open reports for it will be closed.")
+            : tr("گزارش بدون اقدام بسته می‌شه و پیام سر جاش می‌مونه.", "The report will be closed without action, and the message stays where it is.")}
+          confirmLabel={acting.action === "delete" ? tr("حذف پیام", "Delete message") : tr("رد گزارش", "Dismiss report")}
           danger={acting.action === "delete"}
           onConfirm={act}
           onClose={() => setActing(null)}

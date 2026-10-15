@@ -5,6 +5,7 @@ import { readJsonBody } from "@/lib/validate";
 import { checkRateLimit } from "@/lib/rateLimit";
 import { verifyCommitment } from "@/lib/e2ee/core";
 import { activeKeysFor, checkWrapTargets, parseEncryptedMessage, serverFrankingTag } from "@/lib/e2ee/server";
+import { tr } from "@/lib/i18n";
 
 type Ctx = { params: { id: string } };
 const MAX_ITEMS = 50;
@@ -23,18 +24,18 @@ export async function POST(req: Request, { params }: Ctx) {
   const me = g.userId;
   const m = await getMentorshipForUser(params.id, me);
   if (!m) return notFound();
-  if (m.status !== "ACTIVE" && m.status !== "ENDED") return forbidden("گفت‌وگو برای این رابطه در دسترس نیست");
+  if (m.status !== "ACTIVE" && m.status !== "ENDED") return forbidden(tr(tr("گفت‌وگو برای این رابطه در دسترس نیست", "The conversation is not available for this relationship"), "The conversation is not available for this relationship"));
   if (!(await checkRateLimit(`mentor-legacy:${me}`, 20, 60 * 1000))) {
-    return NextResponse.json({ error: "درخواست‌ها زیاد بوده؛ کمی بعد دوباره تلاش کن" }, { status: 429 });
+    return NextResponse.json({ error: tr("درخواست‌ها زیاد بوده؛ کمی بعد دوباره تلاش کن", "There were too many requests; try again shortly") }, { status: 429 });
   }
 
   const parsed = await readJsonBody(req, 512 * 1024);
   if (!parsed.ok) return NextResponse.json({ error: parsed.error }, { status: parsed.status });
   const items = parsed.body?.items;
-  if (!Array.isArray(items) || items.length === 0 || items.length > MAX_ITEMS) return badRequest("فهرست پیام‌ها نامعتبر است");
+  if (!Array.isArray(items) || items.length === 0 || items.length > MAX_ITEMS) return badRequest(tr(tr("فهرست پیام‌ها نامعتبر است", "Invalid message list"), "Invalid message list"));
 
   const active = await activeKeysFor([m.mentorId, m.studentId]);
-  if (!active[m.mentorId].length || !active[m.studentId].length) return NextResponse.json({ error: "هر دو طرف باید کلید رمزگذاری داشته باشند", code: "PEER_NO_KEY" }, { status: 409 });
+  if (!active[m.mentorId].length || !active[m.studentId].length) return NextResponse.json({ error: tr(tr("هر دو طرف باید کلید رمزگذاری داشته باشند", "Both sides must have encryption keys"), "Both sides must have encryption keys"), code: "PEER_NO_KEY" }, { status: 409 });
 
   let migrated = 0;
   for (const it of items) {

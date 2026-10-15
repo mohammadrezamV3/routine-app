@@ -8,6 +8,7 @@
 // رنگ سود/زیان از توکن‌های --pnl-* میاد که عمدا به تم بستگی ندارن.
 // قرارداد داده: lib/tradeShareTypes.ts.
 import type { TradeShareData } from "./tradeShareTypes";
+import { isEn, tr } from "./i18n";
 import {
   SHARE_DPR, SHARE_PAD, SHARE_BOTTOM, SHARE_W,
   beginShareCanvas, drawGradientArc, drawShareHeader, loadLogo, loadShareFonts,
@@ -89,7 +90,19 @@ function smoothPath(ctx: CanvasRenderingContext2D, pts: [number, number][], move
   }
 }
 
-type Ctx = { ctx: CanvasRenderingContext2D; text: ShareTextFn; f: ShareFont; p: Palette; c: TradeColors; hair: string };
+// text: مختصات طراحی راست‌به‌چپ (فارسی) رو می‌گیره و در انگلیسی خودکار قرینه می‌کنه
+// (x → W - x، تراز چپ/راست عوض، جهت متن ltr). rawText بدون قرینه‌سازی، مختصات واقعی.
+// x(n): قرینه‌ی یک مختصات برای شکل‌ها (کمان/مستطیل)؛ در فارسی همون n.
+type Ctx = {
+  ctx: CanvasRenderingContext2D; text: ShareTextFn; rawText: ShareTextFn; f: ShareFont; p: Palette; c: TradeColors; hair: string;
+  en: boolean; dir: CanvasDirection; x: (n: number) => number;
+};
+
+const flipAlign = (a: CanvasTextAlign): CanvasTextAlign => (a === "right" ? "left" : a === "left" ? "right" : a);
+
+function mirroredText(raw: ShareTextFn): ShareTextFn {
+  return (s, x, y, font, color, align, _dir, maxW) => raw(s, W - x, y, font, color, flipAlign(align), "ltr", maxW);
+}
 
 /** ردیف حساب: نقطه‌ی رنگ حساب + اسم (راست)، ارز (چپ) */
 function drawAccountRow(k: Ctx, d: TradeShareData, y: number) {
@@ -98,29 +111,29 @@ function drawAccountRow(k: Ctx, d: TradeShareData, y: number) {
   if (d.account) {
     ctx.fillStyle = d.account.color || p.accent;
     ctx.beginPath();
-    ctx.arc(R - 11, base - 11, 11, 0, Math.PI * 2);
+    ctx.arc(k.x(R - 11), base - 11, 11, 0, Math.PI * 2);
     ctx.fill();
     text(d.account.name, R - 36, base, f(800, 32), p.text, "right", "rtl", 520);
   } else {
     // چند نقطه‌ی هم‌پوشان = چند حساب
     for (let i = 2; i >= 0; i--) {
       ctx.beginPath();
-      ctx.arc(R - 11 - i * 14, base - 11, 11, 0, Math.PI * 2);
+      ctx.arc(k.x(R - 11 - i * 14), base - 11, 11, 0, Math.PI * 2);
       ctx.fillStyle = rgba(p.accent, 1 - i * 0.28);
       ctx.fill();
       ctx.lineWidth = 3;
       ctx.strokeStyle = p.bg;
       ctx.stroke();
     }
-    const label = "همه‌ی حساب‌ها";
+    const label = tr("همه‌ی حساب‌ها", "All accounts");
     const x = R - 64;
     text(label, x, base, f(800, 32), p.text, "right");
     ctx.font = f(800, 32);
-    ctx.direction = "rtl";
+    ctx.direction = k.dir;
     const w = ctx.measureText(label).width;
-    text(`${d.accountCount} حساب`, x - w - 20, base, f(600, 28), p.muted, "right");
+    text(tr(`${d.accountCount} حساب`, `${d.accountCount} ${d.accountCount === 1 ? "account" : "accounts"}`), x - w - 20, base, f(600, 28), p.muted, "right");
   }
-  const cur = d.currencyMixed ? "چند ارز" : d.currency ?? "";
+  const cur = d.currencyMixed ? tr("چند ارز", "Multiple currencies") : d.currency ?? "";
   if (cur) text(cur, L, base, f(700, 28), p.muted, "left", d.currencyMixed ? "rtl" : "ltr");
 }
 
@@ -137,22 +150,22 @@ function drawHero(k: Ctx, d: TradeShareData, y: number, h: number) {
     drawGradientArc(ctx, p, cx, cy, r, sw, wr / 100, c.ring);
     const size = fitSize(ctx, f, 900, wrText, 76, 40, (r - sw / 2) * 1.55);
     text(wrText, cx, cy + size * 0.3, f(900, size), p.text, "center", "ltr");
-    text("وین‌ریت", cx, cy + size * 0.3 + 44, f(700, 28), p.muted, "center");
-    text("ارز حساب‌ها یکی نیست؛ مبلغی نمایش داده نمی‌شه", cx, y + h + 6, f(600, 26), p.muted, "center", "rtl", CW);
+    text(tr("وین‌ریت", "Win rate"), cx, cy + size * 0.3 + 44, f(700, 28), p.muted, "center");
+    text(tr("ارز حساب‌ها یکی نیست؛ مبلغی نمایش داده نمی‌شه", "Accounts use different currencies; no amount is shown"), cx, y + h + 6, f(600, 26), p.muted, "center", "rtl", CW);
     return;
   }
 
   // حلقه‌ی وین‌ریت (چپ)
   const sw = 30, outer = Math.min(136, h / 2 - 6), cx = L + outer, cy = y + h / 2;
-  drawGradientArc(ctx, p, cx, cy, outer - sw / 2, sw, wr / 100, c.ring);
+  drawGradientArc(ctx, p, k.x(cx), cy, outer - sw / 2, sw, wr / 100, c.ring);
   text(wrText, cx, cy + 14, f(900, 50), p.text, "center", "ltr");
-  text("وین‌ریت", cx, cy + 52, f(700, 24), p.muted, "center");
+  text(tr("وین‌ریت", "Win rate"), cx, cy + 52, f(700, 24), p.muted, "center");
 
   // سود/زیان خالص (راست)
   const pnl = d.stats.netPnl;
   const col = pnl >= 0 ? c.win : c.loss;
   const colX = L + outer * 2 + 48, colW = R - colX;
-  text(pnl >= 0 ? "سود خالص" : "زیان خالص", R, y + 58, f(700, 30), p.muted, "right");
+  text(pnl >= 0 ? tr("سود خالص", "Net profit") : tr("زیان خالص", "Net loss"), R, y + 58, f(700, 30), p.muted, "right");
   const cur = d.currency ?? "";
   ctx.font = f(800, 36);
   ctx.direction = "ltr";
@@ -160,11 +173,18 @@ function drawHero(k: Ctx, d: TradeShareData, y: number, h: number) {
   const amount = fmtMoney(pnl);
   const size = fitSize(ctx, f, 900, amount, 104, 48, colW - curW);
   const by = y + 58 + 30 + size * 0.86;
-  if (cur) text(cur, R, by, f(800, 36), p.muted, "right", "ltr");
+  if (k.en) {
+    // انگلیسی: عدد اول، ارز بعدش (چپ‌به‌راست)
+    ctx.font = f(900, size);
+    const amountW = ctx.measureText(amount).width;
+    if (cur) k.rawText(cur, L + amountW + 16, by, f(800, 36), p.muted, "left", "ltr");
+  } else if (cur) {
+    text(cur, R, by, f(800, 36), p.muted, "right", "ltr");
+  }
   ctx.save();
   ctx.shadowColor = rgba(col, 0.35);
   ctx.shadowBlur = 28;
-  text(amount, R - curW, by, f(900, size), col, "right", "ltr");
+  text(amount, k.en ? R : R - curW, by, f(900, size), col, "right", "ltr");
   ctx.restore();
 
   // بازده نسبت به موجودی ابتدای بازه
@@ -175,14 +195,15 @@ function drawHero(k: Ctx, d: TradeShareData, y: number, h: number) {
     ctx.direction = "ltr";
     const pw = ctx.measureText(pct).width;
     ctx.font = f(700, 26);
-    ctx.direction = "rtl";
-    const lw = ctx.measureText("بازده").width;
+    ctx.direction = k.dir;
+    const retLabel = tr("بازده", "Return");
+    const lw = ctx.measureText(retLabel).width;
     const pillW = pw + lw + 56, pillH = 52, py = by + 30;
-    roundRect(ctx, R - pillW, py, pillW, pillH, pillH / 2);
+    roundRect(ctx, k.en ? L : R - pillW, py, pillW, pillH, pillH / 2);
     ctx.lineWidth = 2;
     ctx.strokeStyle = rgba(rc, 0.55);
     ctx.stroke();
-    text("بازده", R - 20, py + 35, f(700, 26), p.muted, "right");
+    text(retLabel, R - 20, py + 35, f(700, 26), p.muted, "right");
     text(pct, R - pillW + 20, py + 36, f(800, 30), rc, "left", "ltr");
   }
 }
@@ -193,22 +214,22 @@ function drawTiles(k: Ctx, d: TradeShareData, y: number, h: number) {
   const s = d.stats;
   const gap = 20, n = 4, tw = (CW - gap * (n - 1)) / n;
   const tiles: { label: string; draw: (cx: number, by: number) => void }[] = [
-    { label: "معاملات", draw: (cx, by) => text(String(s.trades), cx, by, f(900, 48), p.text, "center", "ltr") },
+    { label: tr("معاملات", "Trades"), draw: (cx, by) => text(String(s.trades), cx, by, f(900, 48), p.text, "center", "ltr") },
     {
-      label: "برد / باخت",
+      label: tr("برد / باخت", "Wins / losses"),
       draw: (cx, by) => {
         // سه تکه با رنگ خودشون، کل عبارت وسط کاشی
         const parts: [string, string][] = [[String(s.wins), c.win], [" / ", p.muted], [String(s.losses), c.loss]];
         ctx.font = f(900, 48);
         ctx.direction = "ltr";
         const ws = parts.map(([t]) => ctx.measureText(t).width);
-        let x = cx - ws.reduce((a, b) => a + b, 0) / 2;
-        parts.forEach(([t, col], i) => { text(t, x, by, f(900, 48), col, "left", "ltr"); x += ws[i]; });
+        let x = k.x(cx) - ws.reduce((a, b) => a + b, 0) / 2;
+        parts.forEach(([t, col], i) => { k.rawText(t, x, by, f(900, 48), col, "left", "ltr"); x += ws[i]; });
       },
     },
-    { label: "پرافیت فکتور", draw: (cx, by) => text(s.profitFactor == null ? "-" : s.profitFactor.toFixed(2), cx, by, f(900, 48), p.text, "center", "ltr") },
+    { label: tr("پرافیت فکتور", "Profit factor"), draw: (cx, by) => text(s.profitFactor == null ? "-" : s.profitFactor.toFixed(2), cx, by, f(900, 48), p.text, "center", "ltr") },
     {
-      label: "میانگین R",
+      label: tr("میانگین R", "Average R"),
       draw: (cx, by) => {
         const v = s.avgR;
         const col = v == null ? p.text : v > 0 ? c.win : v < 0 ? c.loss : p.text;
@@ -218,7 +239,7 @@ function drawTiles(k: Ctx, d: TradeShareData, y: number, h: number) {
   ];
   tiles.forEach((t, i) => {
     const x = R - tw - i * (tw + gap); // راست‌به‌چپ
-    roundRect(ctx, x, y, tw, h, 28);
+    roundRect(ctx, k.en ? W - x - tw : x, y, tw, h, 28);
     ctx.lineWidth = 2;
     ctx.strokeStyle = hair;
     ctx.stroke();
@@ -233,7 +254,7 @@ function drawCurve(k: Ctx, d: TradeShareData, y: number, h: number) {
   const vals = d.curve;
   const last = vals[vals.length - 1];
   const col = last >= 0 ? c.win : c.loss;
-  text("منحنی سود و زیان", R, y + 26, f(700, 26), p.muted, "right");
+  text(tr("منحنی سود و زیان", "P/L curve"), R, y + 26, f(700, 26), p.muted, "right");
 
   const top = y + 58, bot = y + h - 8, left = L + 8, right = R - 8;
   let lo = Math.min(0, ...vals), hi = Math.max(0, ...vals);
@@ -309,7 +330,7 @@ function drawSymbols(k: Ctx, d: TradeShareData, y: number, h: number) {
     const col = it.netPnl == null || d.currencyMixed ? null : it.netPnl >= 0 ? c.win : c.loss;
     const pieces: Piece[] = [
       { s: it.symbol, font: f(800, 28), color: p.text, dir: "ltr", w: 0 },
-      { s: `${it.count} معامله`, font: f(600, 24), color: p.muted, dir: "rtl", w: 0 },
+      { s: tr(`${it.count} معامله`, `${it.count} ${it.count === 1 ? "trade" : "trades"}`), font: f(600, 24), color: p.muted, dir: k.en ? "ltr" : "rtl", w: 0 },
     ];
     if (col && it.netPnl != null) pieces.push({ s: fmtCompact(it.netPnl), font: f(800, 26), color: col, dir: "ltr", w: 0 });
     pieces.forEach((pc) => { ctx.font = pc.font; ctx.direction = pc.dir; pc.w = ctx.measureText(pc.s).width; });
@@ -319,21 +340,23 @@ function drawSymbols(k: Ctx, d: TradeShareData, y: number, h: number) {
   // اگه جا نشد، همه با یک ضریب کوچک می‌شن
   const total = chips.reduce((a, ch) => a + ch.w, 0) + gap * Math.max(0, chips.length - 1);
   const k2 = Math.min(1, CW / total);
+  // فارسی: از راست به چپ؛ انگلیسی: از چپ به راست (sg = جهت پیشروی)
+  const sg = k.en ? 1 : -1;
   ctx.save();
-  ctx.translate(R, y);
+  ctx.translate(k.en ? L : R, y);
   ctx.scale(k2, k2);
   let x = 0;
   chips.forEach((ch) => {
-    roundRect(ctx, x - ch.w, 0, ch.w, h, h / 2);
+    roundRect(ctx, k.en ? x : x - ch.w, 0, ch.w, h, h / 2);
     ctx.lineWidth = 2;
     ctx.strokeStyle = ch.col ? rgba(ch.col, 0.5) : hair;
     ctx.stroke();
-    let px = x - 26;
+    let px = x + sg * 26;
     ch.pieces.forEach((pc) => {
-      text(pc.s, px, h / 2 + 10, pc.font, pc.color, "right", pc.dir);
-      px -= pc.w + inner;
+      k.rawText(pc.s, px, h / 2 + 10, pc.font, pc.color, k.en ? "left" : "right", pc.dir);
+      px += sg * (pc.w + inner);
     });
-    x -= ch.w + gap;
+    x += sg * (ch.w + gap);
   });
   ctx.restore();
 }
@@ -364,20 +387,25 @@ function drawEmpty(k: Ctx, y: number, h: number) {
     ctx.lineWidth = 4;
     ctx.stroke();
   });
-  text("معامله‌ای در این بازه ثبت نشده", cx, cy + 150, f(800, 44), p.text, "center", "rtl", CW - 80);
+  text(tr("معامله‌ای در این بازه ثبت نشده", "No trades logged in this period"), cx, cy + 150, f(800, 44), p.text, "center", "rtl", CW - 80);
 }
 
 export async function renderTradeShareCard(data: TradeShareData, opts: TradeShareRenderOpts = {}): Promise<HTMLCanvasElement> {
   const f = shareFont();
   const p = readPalette();
-  const [logo] = await Promise.all([loadLogo(p.light), loadShareFonts(f, ["کارنامه ترید", "+1,234.50 USD %"])]);
+  const [logo] = await Promise.all([loadLogo(p.light), loadShareFonts(f, ["کارنامه ترید", isEn() ? "Trading report 1,234.50 USD %" : "+1,234.50 USD %"])]);
   const dpr = opts.dpr ?? SHARE_DPR;
   const { canvas, ctx } = beginShareCanvas(p, dpr);
-  const text = shareTextFn(ctx);
-  const k: Ctx = { ctx, text, f, p, c: readTradeColors(), hair: shareHair(p) };
+  const en = isEn();
+  const rawText = shareTextFn(ctx);
+  const text = en ? mirroredText(rawText) : rawText;
+  const k: Ctx = {
+    ctx, text, rawText, f, p, c: readTradeColors(), hair: shareHair(p),
+    en, dir: en ? "ltr" : "rtl", x: en ? (n) => W - n : (n) => n,
+  };
 
-  const top = drawShareHeader(ctx, text, f, p, logo, {
-    title: "کارنامه‌ی ترید",
+  const top = drawShareHeader(ctx, rawText, f, p, logo, {
+    title: tr("کارنامه‌ی ترید", "Trading report"),
     subtitle: data.rangeLabel,
     inviteCode: opts.inviteCode,
     host: opts.siteHost ?? shareHost(),

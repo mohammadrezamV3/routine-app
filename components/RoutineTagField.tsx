@@ -2,6 +2,7 @@
 
 import { useMemo } from "react";
 import type { CustomOccurrence } from "@/lib/storage";
+import { tr } from "@/lib/i18n";
 import { toEnDigits } from "@/lib/schedule";
 
 // فیلد تگ برنامه‌ی روتین: تایپ آزاد + پیشنهاد تگ‌هایی که کاربر قبلا روی
@@ -40,13 +41,13 @@ export function RoutineTagField({
         id={id}
         type="text"
         className="wsearch-newform-name"
-        placeholder="درس، ورزش، کار…"
+        placeholder={tr("درس، ورزش، کار…", "Study, workout, work…")}
         maxLength={30}
         value={value}
         onChange={(e) => onChange(e.target.value)}
       />
       {suggestions.length > 0 && (
-        <div className="trade-tag-row" style={{ marginTop: 8 }} aria-label="تگ‌های قبلی">
+        <div className="trade-tag-row" style={{ marginTop: 8 }} aria-label={tr("تگ‌های قبلی", "Previous tags")}>
           {suggestions.map((t) => {
             const active = t === current;
             return (

@@ -13,6 +13,8 @@
 // مرحله‌ای که جزئیاتش نرسید `detailed:false` می‌ماند و کاربر از روی
 // صفحه دوباره می‌سازدش — مسیر هیچ‌وقت به‌خاطر یک مرحله کلا شکست نمی‌خورد.
 
+import { pick } from "@/lib/i18n";
+
 export const PLAN_LIMITS = {
   maxStages: 16,
   minStages: 3,
@@ -29,17 +31,17 @@ export const PLAN_LIMITS = {
 // همین enum‌اند نه متن آزاد، تا مدل همیشه یک عدد قابل استدلال بگیرد.
 
 export const LEVEL_OPTIONS = [
-  { value: "zero", label: "صفر مطلق", prompt: "هیچ پیش‌زمینه‌ای ندارد؛ از پایه‌ای‌ترین مفهوم شروع کن." },
-  { value: "basic", label: "یه چیزایی بلدم", prompt: "مفاهیم ابتدایی را پراکنده بلد است ولی منسجم نه؛ پایه‌ها را مرور سریع کن نه آموزش از صفر." },
-  { value: "mid", label: "متوسطم", prompt: "پایه‌ها را بلد است و تجربه‌ی کار کوچک دارد؛ از مرور پایه‌ها بگذر و روی عمق و پروژه‌ی واقعی تمرکز کن." },
-  { value: "pro", label: "حرفه‌ای‌ام، می‌خوام عمیق‌تر شم", prompt: "در این حوزه کار کرده؛ فقط مباحث پیشرفته، معماری، بهینه‌سازی و سطح ارشد." },
+  { value: "zero", label: { fa: "صفر مطلق", en: "Complete beginner" }, prompt: "هیچ پیش‌زمینه‌ای ندارد؛ از پایه‌ای‌ترین مفهوم شروع کن." },
+  { value: "basic", label: { fa: "یه چیزایی بلدم", en: "I know a bit" }, prompt: "مفاهیم ابتدایی را پراکنده بلد است ولی منسجم نه؛ پایه‌ها را مرور سریع کن نه آموزش از صفر." },
+  { value: "mid", label: { fa: "متوسطم", en: "Intermediate" }, prompt: "پایه‌ها را بلد است و تجربه‌ی کار کوچک دارد؛ از مرور پایه‌ها بگذر و روی عمق و پروژه‌ی واقعی تمرکز کن." },
+  { value: "pro", label: { fa: "حرفه‌ای‌ام، می‌خوام عمیق‌تر شم", en: "Advanced, I want to go deeper" }, prompt: "در این حوزه کار کرده؛ فقط مباحث پیشرفته، معماری، بهینه‌سازی و سطح ارشد." },
 ] as const;
 
 export const HOURS_OPTIONS = [
-  { value: "3", label: "کمتر از 5 ساعت", hours: 3 },
-  { value: "8", label: "5 تا 10 ساعت", hours: 8 },
-  { value: "15", label: "10 تا 20 ساعت", hours: 15 },
-  { value: "25", label: "بیشتر از 20 ساعت", hours: 25 },
+  { value: "3", label: { fa: "کمتر از 5 ساعت", en: "Under 5 hours" }, hours: 3 },
+  { value: "8", label: { fa: "5 تا 10 ساعت", en: "5 to 10 hours" }, hours: 8 },
+  { value: "15", label: { fa: "10 تا 20 ساعت", en: "10 to 20 hours" }, hours: 15 },
+  { value: "25", label: { fa: "بیشتر از 20 ساعت", en: "Over 20 hours" }, hours: 25 },
 ] as const;
 
 export type LevelValue = (typeof LEVEL_OPTIONS)[number]["value"];
@@ -52,10 +54,12 @@ export function parseHours(v: unknown): HoursValue | undefined {
   return HOURS_OPTIONS.find((o) => o.value === v)?.value;
 }
 export function levelLabel(v?: string | null): string | undefined {
-  return LEVEL_OPTIONS.find((o) => o.value === v)?.label;
+  const o = LEVEL_OPTIONS.find((x) => x.value === v);
+  return o ? pick(o.label) : undefined;
 }
 export function hoursLabel(v?: string | null): string | undefined {
-  return HOURS_OPTIONS.find((o) => o.value === v)?.label;
+  const o = HOURS_OPTIONS.find((x) => x.value === v);
+  return o ? pick(o.label) : undefined;
 }
 
 // ── شکل داده ──────────────────────────────────────────────────────────

@@ -13,6 +13,7 @@ import { formatJalali, isoLocal, jalaliToIso, toJalali, type JalaliDate } from "
 import { nextPeriodStart, rangeDuration, shiftedRange } from "@/lib/mentorProgramCopy";
 import { publicUserName } from "@/lib/mentorTypes";
 import type { MentorshipRow, MentorshipsResponse, Program, ProgramDetailResponse } from "@/lib/mentorTypes";
+import { tr } from "@/lib/i18n";
 
 const ic = (Icon: typeof Copy, size: number) => <Icon size={size} strokeWidth={MI_STROKE} aria-hidden />;
 const TITLE_MAX = 120;
@@ -51,7 +52,7 @@ export default function DuplicateMentorProgramPage() {
       mentorApi<MentorshipsResponse>("/api/mentorships?role=mentor"),
     ]);
     if (!p.ok) { setLoadError({ msg: p.error, final: p.status === 404 || p.status === 403 }); return; }
-    if (p.data.role !== "MENTOR") { setLoadError({ msg: "فقط مربی سازنده‌ی این برنامه می‌تواند آن را کپی کند", final: true }); return; }
+    if (p.data.role !== "MENTOR") { setLoadError({ msg: tr("فقط مربی سازنده‌ی این برنامه می‌تواند آن را کپی کند", "Only the mentor who created this program can copy it"), final: true }); return; }
     if (!m.ok) { setLoadError({ msg: m.error, final: false }); return; }
     const program = p.data.program;
     const students = (m.data.mentorships || []).filter(
@@ -90,8 +91,8 @@ export default function DuplicateMentorProgramPage() {
     if (busy || !program) return;
     setError(null);
     const t = title.trim();
-    if (!t) { setTitleErr("عنوان برنامه لازم است"); return; }
-    if (!mentorshipId) { setError("شاگرد مقصد را انتخاب کن"); return; }
+    if (!t) { setTitleErr(tr("عنوان برنامه لازم است", "A program title is required")); return; }
+    if (!mentorshipId) { setError(tr("شاگرد مقصد را انتخاب کن", "Pick the student to copy it to")); return; }
     setBusy(true);
     const r = await mentorApi<{ program: Program }>(`/api/mentor-programs/${encodeURIComponent(program.id)}/duplicate`, {
       method: "POST",
@@ -103,40 +104,40 @@ export default function DuplicateMentorProgramPage() {
 
   let body: React.ReactNode;
   if (!id || (!data && !loadError)) body = <LoadingBlock />;
-  else if (loadError || !data || !program) body = <MentorDashError message={loadError?.msg || "برنامه دریافت نشد؛ دوباره تلاش کن"} onRetry={loadError?.final ? undefined : load} />;
-  else if (data.students.length === 0) body = <MentorDashError message="شاگرد فعالی با حوزه‌ی این نوع برنامه نداری" />;
+  else if (loadError || !data || !program) body = <MentorDashError message={loadError?.msg || tr("برنامه دریافت نشد؛ دوباره تلاش کن", "Could not load the program. Try again.")} onRetry={loadError?.final ? undefined : load} />;
+  else if (data.students.length === 0) body = <MentorDashError message={tr("شاگرد فعالی با حوزه‌ی این نوع برنامه نداری", "You have no active students in the field of this kind of program")} />;
   else {
     body = (
       <>
-        <MentorSection title="برنامه‌ی مبدا" icon={ic(Copy, MI.section)} flush>
+        <MentorSection title={tr("برنامه‌ی مبدا", "Original program")} icon={ic(Copy, MI.section)} flush>
           <MentorRow
             title={program.title}
             sub={
               <>
                 <span>{publicUserName(program.counterpart)}</span>
-                <span>{fa(data.itemCount)} {program.type === "WORKOUT" ? "حرکت" : "کار"}</span>
-                {program.startDate && <span>{fmtDate(program.startDate)}{program.endDate ? ` تا ${fmtDate(program.endDate)}` : ""}</span>}
+                <span>{fa(data.itemCount)} {program.type === "WORKOUT" ? tr("حرکت", data.itemCount === 1 ? "exercise" : "exercises") : tr("کار", data.itemCount === 1 ? "task" : "tasks")}</span>
+                {program.startDate && <span>{fmtDate(program.startDate)}{program.endDate ? tr(` تا ${fmtDate(program.endDate)}`, ` to ${fmtDate(program.endDate)}`) : ""}</span>}
               </>
             }
           />
         </MentorSection>
 
-        <MentorSection title="کپی برای">
+        <MentorSection title={tr("کپی برای", "Copy for")}>
           <form className="mentor-form" onSubmit={submit} noValidate>
-            <MentorField label="شاگرد" htmlFor="dup-student">
+            <MentorField label={tr("شاگرد", "Student")} htmlFor="dup-student">
               <select
                 id="dup-student" className="wsearch-newform-name trade-glass-field" value={mentorshipId}
                 onChange={(e) => onStudentChange(e.target.value)}
               >
                 {data.students.map((s) => (
                   <option key={s.id} value={s.id}>
-                    {publicUserName(s.counterpart)}{s.id === program.mentorshipId ? " (همین شاگرد، دوره‌ی بعد)" : ""}
+                    {publicUserName(s.counterpart)}{s.id === program.mentorshipId ? tr(" (همین شاگرد، دوره‌ی بعد)", " (same student, next period)") : ""}
                   </option>
                 ))}
               </select>
             </MentorField>
 
-            <MentorField label="عنوان" htmlFor="dup-title" error={titleErr}>
+            <MentorField label={tr("عنوان", "Title")} htmlFor="dup-title" error={titleErr}>
               <input
                 id="dup-title" type="text" className="wsearch-newform-name trade-glass-field" maxLength={TITLE_MAX} value={title}
                 onChange={(e) => { setTitle(e.target.value); setTitleErr(null); }}
@@ -144,38 +145,38 @@ export default function DuplicateMentorProgramPage() {
             </MentorField>
 
             <MentorField
-              label="تاریخ شروع" optional
+              label={tr("تاریخ شروع", "Start date")} optional
               hint={range.startDate
                 ? range.endDate
-                  ? `پایان: ${fmtDate(range.endDate)} (همان ${fa((duration ?? 0) + 1)} روز برنامه‌ی مبدا)؛ پس از پذیرش در روز شروع خودکار فعال می‌شود`
-                  : "پس از پذیرش در روز شروع خودکار فعال می‌شود"
-                : "بدون تاریخ، برنامه از روز پذیرش شاگرد شروع می‌شود"}
+                  ? tr(`پایان: ${fmtDate(range.endDate)} (همان ${fa((duration ?? 0) + 1)} روز برنامه‌ی مبدا)؛ پس از پذیرش در روز شروع خودکار فعال می‌شود`, `Ends: ${fmtDate(range.endDate)} (the same ${fa((duration ?? 0) + 1)} days as the original). After the student accepts, it starts automatically on the start date.`)
+                  : tr("پس از پذیرش در روز شروع خودکار فعال می‌شود", "After the student accepts, it starts automatically on the start date")
+                : tr("بدون تاریخ، برنامه از روز پذیرش شاگرد شروع می‌شود", "With no date, the program starts the day the student accepts")}
             >
               <div className="wsearch-date-row" style={{ marginTop: 0 }}>
                 <div className="time-field">
-                  <button type="button" className={`jdate-btn${start ? "" : " placeholder"}`} aria-label="تاریخ شروع" onClick={() => setPicker(true)}>
-                    {start ? formatJalali(start) : "روز / ماه / سال"}
+                  <button type="button" className={`jdate-btn${start ? "" : " placeholder"}`} aria-label={tr("تاریخ شروع", "Start date")} onClick={() => setPicker(true)}>
+                    {start ? formatJalali(start) : tr("روز / ماه / سال", "Day / month / year")}
                   </button>
                 </div>
               </div>
               {start && (
                 <div>
-                  <button type="button" className="mentor-text-btn" onClick={() => setStart(null)}>{ic(X, MI.btnSm)} بدون تاریخ</button>
+                  <button type="button" className="mentor-text-btn" onClick={() => setStart(null)}>{ic(X, MI.btnSm)} {tr("بدون تاریخ", "No date")}</button>
                 </div>
               )}
             </MentorField>
 
             {target && target.id !== program.mentorshipId && (
               <p className="mentor-field-hint" style={{ margin: 0 }}>
-                کارها، توضیح و یادداشت کپی می‌شه؛ پیشرفت، بازخورد و وضعیت برنامه‌ی اصلی نه
+                {tr("کارها، توضیح و یادداشت کپی می‌شه؛ پیشرفت، بازخورد و وضعیت برنامه‌ی اصلی نه", "Tasks, description and note are copied; progress, feedback and the status of the original are not")}
               </p>
             )}
 
             {error && <div className="form-inline-error" role="alert">{error}</div>}
             <div className="mentor-form-actions">
-              <button type="button" className="account-outline-btn muted mentor-btn" onClick={() => router.back()} disabled={busy}>انصراف</button>
+              <button type="button" className="account-outline-btn muted mentor-btn" onClick={() => router.back()} disabled={busy}>{tr("انصراف", "Cancel")}</button>
               <button type="submit" className="trade-primary-btn mentor-btn" disabled={busy}>
-                {busy ? <Spinner size={14} /> : <>{ic(Copy, MI.btn)} ساخت کپی</>}
+                {busy ? <Spinner size={14} /> : <>{ic(Copy, MI.btn)} {tr("ساخت کپی", "Make a copy")}</>}
               </button>
             </div>
           </form>
@@ -184,7 +185,7 @@ export default function DuplicateMentorProgramPage() {
         {picker && (
           <JalaliDatePicker
             initial={start}
-            title="تاریخ شروع برنامه"
+            title={tr("تاریخ شروع برنامه", "Program start date")}
             disablePast
             onClose={() => setPicker(false)}
             onPick={(v) => { setStart(v); setPicker(false); setError(null); }}
@@ -196,8 +197,8 @@ export default function DuplicateMentorProgramPage() {
 
   return (
     <MentorDashShell
-      title="کپی برنامه"
-      back={program ? { href: `/mentor-programs/${program.id}`, label: program.title } : { href: "/mentor/templates", label: "برنامه‌ها" }}
+      title={tr("کپی برنامه", "Copy program")}
+      back={program ? { href: `/mentor-programs/${program.id}`, label: program.title } : { href: "/mentor/templates", label: tr("برنامه‌ها", "Programs") }}
     >
       {body}
     </MentorDashShell>

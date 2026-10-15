@@ -1,3 +1,4 @@
+import { tr } from "@/lib/i18n";
 import { NextRequest, NextResponse } from "next/server";
 import { getSessionFast } from "@/lib/serverSession";
 import { prisma } from "@/lib/prisma";
@@ -20,7 +21,7 @@ export async function GET(req: NextRequest) {
   // `new Date(userInput)` مستقیم استفاده نمی‌شه: یه ورودی بدشکل یه
   // Invalid Date می‌داد که Prisma باهاش throw می‌کرد و روت ۵۰۰ می‌شد.
   const date = parseIsoDate(req.nextUrl.searchParams.get("date"));
-  if (!date) return NextResponse.json({ error: "تاریخ نامعتبر است (قالب درست: YYYY-MM-DD)" }, { status: 400 });
+  if (!date) return NextResponse.json({ error: tr("تاریخ نامعتبر است (قالب درست: YYYY-MM-DD)", "Invalid date (format: YYYY-MM-DD)") }, { status: 400 });
 
   const entry = await prisma.dailyEntry.findUnique({
     where: { userId_date: { userId, date } },
@@ -46,7 +47,7 @@ async function handlePOST(req: NextRequest) {
   const { tasks, wake } = parsed.body;
 
   const date = parseIsoDate(parsed.body?.date);
-  if (!date) return NextResponse.json({ error: "تاریخ نامعتبر است (قالب درست: YYYY-MM-DD)" }, { status: 400 });
+  if (!date) return NextResponse.json({ error: tr("تاریخ نامعتبر است (قالب درست: YYYY-MM-DD)", "Invalid date (format: YYYY-MM-DD)") }, { status: 400 });
 
   // `wake` یه timestamp کامله (نه فقط روز)؛ اگه بدشکل بود باید null بشه نه
   // Invalid Date — وگرنه همون ۵۰۰ قبلی از مسیر دیگه‌ای برمی‌گرده.

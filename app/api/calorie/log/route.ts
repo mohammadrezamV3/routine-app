@@ -1,3 +1,4 @@
+import { tr } from "@/lib/i18n";
 import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 import { requireModule } from "@/lib/moduleAccess";
@@ -15,7 +16,7 @@ export async function GET(req: NextRequest) {
   const userId = guard.userId;
 
   const date = parseIsoDate(req.nextUrl.searchParams.get("date"));
-  if (!date) return NextResponse.json({ error: "تاریخ نامعتبر است (قالب درست: YYYY-MM-DD)" }, { status: 400 });
+  if (!date) return NextResponse.json({ error: tr("تاریخ نامعتبر است (قالب درست: YYYY-MM-DD)", "Invalid date (format: YYYY-MM-DD)") }, { status: 400 });
 
   const entries = await prisma.foodLogEntry.findMany({
     where: { userId, date },
@@ -41,25 +42,25 @@ async function handlePOST(req: NextRequest) {
   };
 
   const date = parseIsoDate(parsed.body?.date);
-  if (!date) return NextResponse.json({ error: "تاریخ نامعتبر است (قالب درست: YYYY-MM-DD)" }, { status: 400 });
+  if (!date) return NextResponse.json({ error: tr("تاریخ نامعتبر است (قالب درست: YYYY-MM-DD)", "Invalid date (format: YYYY-MM-DD)") }, { status: 400 });
   if (!customName || typeof customName !== "string" || !customCalories || !grams) {
-    return NextResponse.json({ error: "اطلاعات ناقص است" }, { status: 400 });
+    return NextResponse.json({ error: tr("اطلاعات ناقص است", "Incomplete information") }, { status: 400 });
   }
   if (typeof customCalories !== "number" || typeof grams !== "number" || customCalories < 0 || grams <= 0 || grams > 10000) {
-    return NextResponse.json({ error: "عدد وارد شده معتبر نیست" }, { status: 400 });
+    return NextResponse.json({ error: tr("عدد وارد شده معتبر نیست", "The number entered is not valid") }, { status: 400 });
   }
   // نوع وعده دیگه enum ثابت نیست — چون تعداد/چیدمان وعده‌ها رو خود کاربر توی
   // هدف کالری‌اش تعیین می‌کنه (۲ تا ۶ وعده، کلیدهایی مثل snack1/snack2)؛
   // فقط طول رشته رو محدود می‌کنیم.
   if (mealType && (typeof mealType !== "string" || mealType.length > 20)) {
-    return NextResponse.json({ error: "نوع وعده نامعتبر است" }, { status: 400 });
+    return NextResponse.json({ error: tr("نوع وعده نامعتبر است", "Invalid meal type") }, { status: 400 });
   }
   // درشت‌مغذی‌ها فقط وقتی معتبرن که هر سه با هم بیان و عدد نامنفی باشن —
   // یا هر سه ثبت می‌شن یا هیچ‌کدوم.
   const hasMacros = proteinG !== undefined || carbsG !== undefined || fatG !== undefined;
   const macrosValid = [proteinG, carbsG, fatG].every((v) => typeof v === "number" && v >= 0 && v <= 2000);
   if (hasMacros && !macrosValid) {
-    return NextResponse.json({ error: "مقادیر درشت‌مغذی نامعتبره" }, { status: 400 });
+    return NextResponse.json({ error: tr("مقادیر درشت‌مغذی نامعتبره", "Macronutrient values are invalid") }, { status: 400 });
   }
 
   const entry = await prisma.foodLogEntry.create({

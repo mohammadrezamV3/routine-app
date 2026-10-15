@@ -19,11 +19,12 @@ import {
 } from "@/lib/mentorServer";
 import { decideMentorTerms, MENTOR_TERMS_ERROR_CODE, MENTOR_TERMS_VERSION } from "@/lib/mentorTerms";
 import { publishToUsers } from "@/lib/realtime";
+import { tr } from "@/lib/i18n";
 
 const MESSAGE_MAX = 500;
-const OFFER_GONE_MSG = "مهلت نوبتت همین الان تموم شد؛ دوباره وارد صف شو";
+const offerGoneMsg = () => tr("مهلت نوبتت همین الان تموم شد؛ دوباره وارد صف شو", "Your turn has just expired; join the queue again");
 // پیام عمومی برای هر حالت «بلاک» — تا معلوم نشه دقیقا کی کی رو بلاک کرده
-const BLOCKED_MSG = "امکان ارسال درخواست به این کاربر وجود ندارد";
+const blockedMsg = () => tr("امکان ارسال درخواست به این کاربر وجود ندارد", "A request to this user is not possible");
 
 // GET /api/mentorships?role=student|mentor → رابطه‌های من از یک نقش
 export async function GET(req: NextRequest) {
@@ -53,13 +54,13 @@ export async function POST(req: Request) {
   const me = g.userId;
 
   if (!(await checkRateLimit(`mentorship-req:${me}`, 10, 60 * 60 * 1000))) {
-    return NextResponse.json({ error: "تعداد درخواست‌ها زیاد بوده؛ کمی بعد دوباره تلاش کن" }, { status: 429 });
+    return NextResponse.json({ error: tr(tr("تعداد درخواست‌ها زیاد بوده؛ کمی بعد دوباره تلاش کن", "There were too many requests; try again shortly"), "There were too many requests; try again shortly") }, { status: 429 });
   }
 
   const parsed = await readJsonBody(req, 16 * 1024);
   if (!parsed.ok) return NextResponse.json({ error: parsed.error }, { status: parsed.status });
   const b = parsed.body || {};
-  if (b.message !== undefined && b.message !== null && typeof b.message !== "string") return badRequest("متن پیام نامعتبره");
+  if (b.message !== undefined && b.message !== null && typeof b.message !== "string") return badRequest(tr(tr("متن پیام نامعتبره", "Message text is invalid"), "Message text is invalid"));
   const message = typeof b.message === "string" ? b.message.trim().slice(0, MESSAGE_MAX) || null : null;
 
   let mentorId: string;
@@ -75,8 +76,8 @@ export async function POST(req: Request) {
   const now = new Date();
 
   if (b.mentorId !== undefined) {
-    if (typeof b.mentorId !== "string" || !b.mentorId || b.mentorId.length > 64) return badRequest("مربی نامعتبره");
-    if (b.mentorId === me) return badRequest("نمی‌تونی به خودت درخواست بدی");
+    if (typeof b.mentorId !== "string" || !b.mentorId || b.mentorId.length > 64) return badRequest(tr(tr("مربی نامعتبره", "Invalid mentor"), "Invalid mentor"));
+    if (b.mentorId === me) return badRequest(tr(tr("نمی‌تونی به خودت درخواست بدی", "You can't send a request to yourself"), "You can't send a request to yourself"));
     const profile = await prisma.mentorProfile.findFirst({
       // همان شرط قابل کشف: منتشرشده، غیرمعلق، هویت تاییدشده (احراز اجباری)
       where: { userId: b.mentorId, ...DISCOVERABLE_PROFILE_WHERE },
@@ -112,22 +113,22 @@ export async function POST(req: Request) {
     const mp = await getActiveMentorProfile(me);
     if (!mp.ok) return mp.response;
     // احراز هویت برای منتور اجباریه — بدون تایید، دعوت شاگرد هم ممکن نیست
-    if (mp.profile.identityStatus !== IDENTITY_VERIFIED_WHERE.identityStatus) return forbidden(MENTOR_IDENTITY_REQUIRED_MSG);
+    if (mp.profile.identityStatus !== IDENTITY_VERIFIED_WHERE.identityStatus) return forbidden(tr(MENTOR_IDENTITY_REQUIRED_MSG, "Until the Arion admins verify your identity, you cannot accept students"));
     const username = typeof b.studentUsername === "string" ? b.studentUsername.trim().replace(/^@/, "") : "";
-    if (!isValidUsername(username)) return badRequest("یوزرنیم نامعتبره");
+    if (!isValidUsername(username)) return badRequest(tr(tr("یوزرنیم نامعتبره", "Invalid username"), "Invalid username"));
     // بدون حساسیت به بزرگ/کوچکی — هم‌راستا با ورود و جست‌وجوی دوستان
     const target = await prisma.user.findFirst({
       where: { username: { equals: username, mode: "insensitive" }, isBlocked: false, deletedAt: null },
       select: { id: true },
     });
-    if (!target) return NextResponse.json({ error: "کاربری پیدا نشد" }, { status: 404 });
-    if (target.id === me) return badRequest("نمی‌تونی خودت رو دعوت کنی");
+    if (!target) return NextResponse.json({ error: tr(tr("کاربری پیدا نشد", "User not found"), "User not found") }, { status: 404 });
+    if (target.id === me) return badRequest(tr(tr("نمی‌تونی خودت رو دعوت کنی", "You can't invite yourself"), "You can't invite yourself"));
     mentorId = me;
     studentId = target.id;
     initiatedBy = "MENTOR";
     mentorCategories = mp.profile.categories;
   } else {
-    return badRequest("مربی یا یوزرنیم شاگرد لازمه");
+    return badRequest(tr(tr("مربی یا یوزرنیم شاگرد لازمه", "A mentor or a student username is required"), "A mentor or a student username is required"));
   }
 
   // حوزه‌های این رابطه (مثلا فقط «روتین») — باید زیرمجموعه‌ی دسته‌های منتور باشه؛
@@ -136,25 +137,25 @@ export async function POST(req: Request) {
   if (b.categories === undefined || b.categories === null) {
     categories = mentorCategories;
   } else {
-    if (!Array.isArray(b.categories)) return badRequest("حوزه‌ها نامعتبره");
+    if (!Array.isArray(b.categories)) return badRequest(tr(tr("حوزه‌ها نامعتبره", "Invalid areas"), "Invalid areas"));
     categories = Array.from(new Set(b.categories.filter((c: unknown): c is string => typeof c === "string" && mentorCategories.includes(c))));
-    if (categories.length === 0 || categories.length !== new Set(b.categories).size) return badRequest("حداقل یک حوزه از حوزه‌های این مربی انتخاب کن");
+    if (categories.length === 0 || categories.length !== new Set(b.categories).size) return badRequest(tr(tr("حداقل یک حوزه از حوزه‌های این مربی انتخاب کن", "Select at least one of this mentor's areas"), "Select at least one of this mentor's areas"));
   }
 
   // برای دعوت با یوزرنیم، «بلاک» و «وجود نداره» یک پاسخ دارن تا نشه یوزرنیم‌ها یا
   // «چه کسی من رو بلاک کرده» رو با این روت کاوید
-  const hidden = () => (initiatedBy === "MENTOR" ? NextResponse.json({ error: "کاربری پیدا نشد" }, { status: 404 }) : forbidden(BLOCKED_MSG));
+  const hidden = () => (initiatedBy === "MENTOR" ? NextResponse.json({ error: tr(tr("کاربری پیدا نشد", "User not found"), "User not found") }, { status: 404 }) : forbidden(blockedMsg()));
   if (await usersBlockEachOther(mentorId, studentId)) return hidden();
 
   const existing = await prisma.mentorship.findUnique({ where: { mentorId_studentId: { mentorId, studentId } } });
   let id: string;
   if (existing) {
-    if (existing.status === "ACTIVE") return conflict("این رابطه همین الان فعاله");
-    if (existing.status === "PENDING") return conflict("یک درخواست در انتظار پاسخ از قبل وجود داره");
+    if (existing.status === "ACTIVE") return conflict(tr(tr("این رابطه همین الان فعاله", "This relationship is already active"), "This relationship is already active"));
+    if (existing.status === "PENDING") return conflict(tr(tr("یک درخواست در انتظار پاسخ از قبل وجود داره", "A request awaiting a response already exists"), "A request awaiting a response already exists"));
     if (existing.status === "BLOCKED") return hidden();
     // بعد از رد، همون طرف تا یک هفته نمی‌تونه دوباره درخواست بده (ضد مزاحمت)
     if (existing.status === "REJECTED" && existing.initiatedBy === initiatedBy && Date.now() - existing.updatedAt.getTime() < REREQUEST_COOLDOWN_MS) {
-      return conflict("این درخواست به‌تازگی رد شده؛ بعدا دوباره امتحان کن");
+      return conflict(tr(tr("این درخواست به‌تازگی رد شده؛ بعدا دوباره امتحان کن", "This request was recently declined; try again later"), "This request was recently declined; try again later"));
     }
     // REJECTED/ENDED → همون ردیف دوباره PENDING می‌شه و حریم خصوصی به
     // پیش‌فرض (هیچ برنامه‌ای مشترک نیست) برمی‌گرده؛ اجازه‌ی رابطه‌ی قبلی
@@ -176,8 +177,8 @@ export async function POST(req: Request) {
       if (e instanceof WaitlistOfferGoneError) return -1;
       throw e;
     });
-    if (count === -1) return conflict(OFFER_GONE_MSG);
-    if (count === 0) return conflict("وضعیت رابطه هم‌زمان تغییر کرد؛ دوباره تلاش کن");
+    if (count === -1) return conflict(offerGoneMsg());
+    if (count === 0) return conflict(tr(tr("وضعیت رابطه هم‌زمان تغییر کرد؛ دوباره تلاش کن", "The relationship status changed at the same time; try again"), "The relationship status changed at the same time; try again"));
     id = existing.id;
   } else {
     try {
@@ -189,8 +190,8 @@ export async function POST(req: Request) {
         return created.id;
       });
     } catch (e) {
-      if (e instanceof WaitlistOfferGoneError) return conflict(OFFER_GONE_MSG);
-      if (isUniqueViolation(e)) return conflict("یک درخواست در انتظار پاسخ از قبل وجود داره");
+      if (e instanceof WaitlistOfferGoneError) return conflict(offerGoneMsg());
+      if (isUniqueViolation(e)) return conflict(tr(tr("یک درخواست در انتظار پاسخ از قبل وجود داره", "A request awaiting a response already exists"), "A request awaiting a response already exists"));
       throw e;
     }
   }

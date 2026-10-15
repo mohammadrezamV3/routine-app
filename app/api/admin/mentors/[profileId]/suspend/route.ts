@@ -4,6 +4,7 @@ import { requireAdmin } from "@/lib/requireAdmin";
 import { clampText } from "@/lib/validate";
 import { adminErrorResponse, loadTarget } from "@/lib/adminUsers";
 import { notifyUser } from "@/lib/inAppNotify";
+import { tr } from "@/lib/i18n";
 
 // POST /api/admin/mentors/:profileId/suspend  بدنه { suspend: bool, reason? }
 // فقط «منتوری» رو تعلیق می‌کنه (از کشف حذف، پذیرش شاگرد/ساخت برنامه بسته)؛
@@ -13,7 +14,7 @@ export async function POST(req: NextRequest, { params }: { params: { profileId: 
   if (!g.ok) return g.response;
 
   const body = await req.json().catch(() => null);
-  if (!body || typeof body.suspend !== "boolean") return NextResponse.json({ error: "ورودی نامعتبر است" }, { status: 400 });
+  if (!body || typeof body.suspend !== "boolean") return NextResponse.json({ error: tr("ورودی نامعتبر است", "Invalid input") }, { status: 400 });
   const suspend: boolean = body.suspend;
   const reason = typeof body.reason === "string" ? clampText(body.reason.trim(), 500) : "";
 
@@ -21,7 +22,7 @@ export async function POST(req: NextRequest, { params }: { params: { profileId: 
     where: { id: params.profileId },
     select: { id: true, userId: true, suspendedAt: true },
   });
-  if (!profile) return NextResponse.json({ error: "مربی پیدا نشد" }, { status: 404 });
+  if (!profile) return NextResponse.json({ error: tr("مربی پیدا نشد", "Mentor not found") }, { status: 404 });
 
   try {
     // همیشه destructive: خود-تعلیق‌برداری یا اقدام روی Owner/ادمین دیگه نباید ممکن باشه
@@ -31,10 +32,10 @@ export async function POST(req: NextRequest, { params }: { params: { profileId: 
   }
 
   // دلیل تعلیق به منتور نشون داده می‌شه — مثل «رد» در احراز، بدون دلیل پذیرفته نیست
-  if (suspend && !reason) return NextResponse.json({ error: "برای تعلیق، نوشتن دلیل الزامیه" }, { status: 400 });
+  if (suspend && !reason) return NextResponse.json({ error: tr("برای تعلیق، نوشتن دلیل الزامیه", "A reason is required to suspend") }, { status: 400 });
 
   if (suspend === !!profile.suspendedAt) {
-    return NextResponse.json({ error: suspend ? "این مربی از قبل تعلیقه" : "این مربی تعلیق نیست" }, { status: 409 });
+    return NextResponse.json({ error: suspend ? tr("این مربی از قبل تعلیقه", "This mentor is already suspended") : tr("این مربی تعلیق نیست", "This mentor is not suspended") }, { status: 409 });
   }
 
   await prisma.$transaction([

@@ -1,3 +1,4 @@
+import { tr } from "@/lib/i18n";
 import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 import { checkRateLimit } from "@/lib/rateLimit";
@@ -32,7 +33,7 @@ export async function GET() {
   // «نمی‌تواند صد بار پشت‌سرهم بزند». سقف روزانه همان کاری را می‌کند که
   // برای refresh گزارش هفتگی هم کردیم.
   if (!guard.isSuperAdmin && !(await checkRateLimit(`exercise-plan-generate:${guard.userId}`, 10, 24 * 60 * 60 * 1000))) {
-    return NextResponse.json({ error: "تعداد ساخت برنامه‌ی امروز تمام شده — فردا دوباره امتحان کن" }, { status: 429 });
+    return NextResponse.json({ error: tr("تعداد ساخت برنامه‌ی امروز تمام شده — فردا دوباره امتحان کن", "Today's plan build limit has been reached — try again tomorrow") }, { status: 429 });
   }
 
   const plan = await prisma.exercisePlan.findFirst({
@@ -66,34 +67,34 @@ async function handlePOST(req: NextRequest) {
   };
 
   if (!level || !VALID_LEVELS.includes(level)) {
-    return NextResponse.json({ error: "سطح نامعتبر است" }, { status: 400 });
+    return NextResponse.json({ error: tr("سطح نامعتبر است", "Invalid level") }, { status: 400 });
   }
   if (!goal || typeof goal !== "string" || !goal.trim() || goal.trim().length > MAX_GOAL_LEN) {
-    return NextResponse.json({ error: "هدف تمرین نامعتبر است" }, { status: 400 });
+    return NextResponse.json({ error: tr("هدف تمرین نامعتبر است", "Invalid training goal") }, { status: 400 });
   }
   if (!equipment || typeof equipment !== "string" || !equipment.trim() || equipment.trim().length > MAX_DESCRIPTION_LEN) {
-    return NextResponse.json({ error: "تجهیزات وارد شده نامعتبر است" }, { status: 400 });
+    return NextResponse.json({ error: tr("تجهیزات وارد شده نامعتبر است", "The equipment entered is not valid") }, { status: 400 });
   }
   if (trainingMonth !== undefined && (typeof trainingMonth !== "number" || !Number.isInteger(trainingMonth) || trainingMonth < 1 || trainingMonth > 600)) {
-    return NextResponse.json({ error: "ماه تمرین وارد شده معتبر نیست" }, { status: 400 });
+    return NextResponse.json({ error: tr("ماه تمرین وارد شده معتبر نیست", "The training month entered is not valid") }, { status: 400 });
   }
   if (!Array.isArray(gymDays) || gymDays.length === 0 || !gymDays.every((d) => FA_WEEKDAY.includes(d))) {
-    return NextResponse.json({ error: "روزهای باشگاه نامعتبر است" }, { status: 400 });
+    return NextResponse.json({ error: tr("روزهای باشگاه نامعتبر است", "Invalid gym days") }, { status: 400 });
   }
   if (heightCm !== undefined && (typeof heightCm !== "number" || heightCm < 50 || heightCm > 260)) {
-    return NextResponse.json({ error: "قد وارد شده معتبر نیست" }, { status: 400 });
+    return NextResponse.json({ error: tr("قد وارد شده معتبر نیست", "The height entered is not valid") }, { status: 400 });
   }
   if (weightKg !== undefined && (typeof weightKg !== "number" || weightKg < 20 || weightKg > 400)) {
-    return NextResponse.json({ error: "وزن وارد شده معتبر نیست" }, { status: 400 });
+    return NextResponse.json({ error: tr("وزن وارد شده معتبر نیست", "The weight entered is not valid") }, { status: 400 });
   }
   if (description !== undefined && (typeof description !== "string" || description.length > MAX_DESCRIPTION_LEN)) {
-    return NextResponse.json({ error: "توضیحات خیلی طولانی است" }, { status: 400 });
+    return NextResponse.json({ error: tr("توضیحات خیلی طولانی است", "The description is too long") }, { status: 400 });
   }
   if (limitationDetails !== undefined && (typeof limitationDetails !== "string" || limitationDetails.length > MAX_DESCRIPTION_LEN)) {
-    return NextResponse.json({ error: "توضیح محدودیت خیلی طولانی است" }, { status: 400 });
+    return NextResponse.json({ error: tr("توضیح محدودیت خیلی طولانی است", "The limitation description is too long") }, { status: 400 });
   }
   if (!rulesAccepted) {
-    return NextResponse.json({ error: "قبول‌کردن قوانین الزامی است" }, { status: 400 });
+    return NextResponse.json({ error: tr("قبول‌کردن قوانین الزامی است", "Accepting the rules is required") }, { status: 400 });
   }
 
   const uniqueDays = [...new Set(gymDays)];

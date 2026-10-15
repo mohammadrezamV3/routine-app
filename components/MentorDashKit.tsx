@@ -8,6 +8,7 @@ import { PanelSkeleton } from "./PanelSkeleton";
 import { MentorErrorState, MentorPageHead } from "./MentorPageShell";
 import { MentorEmpty, MentorNotice, MentorPage } from "./MentorUI";
 import { faNum } from "@/lib/jalali";
+import { tr } from "@/lib/i18n";
 
 /**
  * تکه‌های مشترک صفحه‌های سمت منتور (/mentor/**): پوسته با گیت ورود + فلگ
@@ -20,16 +21,16 @@ export type ApiResult<T> = { ok: true; data: T; status: number } | { ok: false; 
 
 /** پیام خطای عمومی بر اساس کد وضعیت — وقتی سرور `error` نفرستاده باشه */
 export function statusMessage(status: number): string {
-  if (status === 0) return "ارتباط با سرور برقرار نشد؛ اتصال اینترنت را بررسی کن";
-  if (status === 401) return "نشستت تمام شده است؛ دوباره وارد شو";
-  if (status === 403) return "اجازه‌ی این کار را نداری";
-  if (status === 404) return "پیدا نشد یا به آن دسترسی نداری";
-  if (status === 409) return "وضعیت تغییر کرده است؛ صفحه را تازه کن";
-  if (status === 413) return "حجم فایل حداکثر 5 مگابایت است";
-  if (status === 415) return "فقط تصویر (JPG، PNG، WebP) یا PDF پذیرفته می‌شود";
-  if (status === 429) return "تعداد درخواست‌ها زیاد است؛ چند دقیقه بعد دوباره تلاش کن";
-  if (status >= 500) return "خطای سرور؛ چند دقیقه بعد دوباره تلاش کن";
-  return "انجام نشد؛ دوباره تلاش کن";
+  if (status === 0) return tr("ارتباط با سرور برقرار نشد؛ اتصال اینترنت را بررسی کن", "Could not reach the server. Check your internet connection.");
+  if (status === 401) return tr("نشستت تمام شده است؛ دوباره وارد شو", "Your session has ended. Sign in again.");
+  if (status === 403) return tr("اجازه‌ی این کار را نداری", "You are not allowed to do this");
+  if (status === 404) return tr("پیدا نشد یا به آن دسترسی نداری", "Not found, or you do not have access to it");
+  if (status === 409) return tr("وضعیت تغییر کرده است؛ صفحه را تازه کن", "Things have changed. Refresh the page.");
+  if (status === 413) return tr("حجم فایل حداکثر 5 مگابایت است", "The file can be at most 5 MB");
+  if (status === 415) return tr("فقط تصویر (JPG، PNG، WebP) یا PDF پذیرفته می‌شود", "Only images (JPG, PNG, WebP) or PDF files are accepted");
+  if (status === 429) return tr("تعداد درخواست‌ها زیاد است؛ چند دقیقه بعد دوباره تلاش کن", "Too many requests. Try again in a few minutes.");
+  if (status >= 500) return tr("خطای سرور؛ چند دقیقه بعد دوباره تلاش کن", "Server error. Try again in a few minutes.");
+  return tr("انجام نشد؛ دوباره تلاش کن", "Something went wrong. Try again.");
 }
 
 /** fetch با JSON و خطای یک‌دست؛ هیچ‌وقت throw نمی‌کنه */
@@ -58,9 +59,9 @@ export async function mentorApi<T>(url: string, init?: { method?: string; body?:
 export const fa = (n: number | string | null | undefined) => faNum(n ?? 0);
 
 export function formatBytes(n: number): string {
-  if (n < 1024) return `${fa(n)} بایت`;
-  if (n < 1024 * 1024) return `${fa(Math.round(n / 1024))} کیلوبایت`;
-  return `${fa((n / (1024 * 1024)).toFixed(1))} مگابایت`;
+  if (n < 1024) return tr(`${fa(n)} بایت`, `${fa(n)} B`);
+  if (n < 1024 * 1024) return tr(`${fa(Math.round(n / 1024))} کیلوبایت`, `${fa(Math.round(n / 1024))} KB`);
+  return tr(`${fa((n / (1024 * 1024)).toFixed(1))} مگابایت`, `${fa((n / (1024 * 1024)).toFixed(1))} MB`);
 }
 
 /**
@@ -92,7 +93,7 @@ export function MentorDashShell({
       />
 
       {status === "loading" && <PanelSkeleton />}
-      {status === "unauthenticated" && <AuthGate message="برای استفاده از بخش مربی‌ها وارد شوید" />}
+      {status === "unauthenticated" && <AuthGate message={tr("برای استفاده از بخش مربی‌ها وارد شوید", "Sign in to use the mentors area")} />}
       {status === "authenticated" && (
         <FeatureGate feature="mentors">
           {surface ? <MentorPage>{children}</MentorPage> : children}
@@ -132,7 +133,7 @@ export function MentorDashNotice({
 export function MentorDashBar({ rate, label }: { rate: number | null | undefined; label?: string }) {
   const pct = Math.round(normRate(rate) * 100);
   return (
-    <div className="rp-bar" role="progressbar" aria-label={label} aria-valuetext={`${pct} درصد`} aria-valuenow={pct} aria-valuemin={0} aria-valuemax={100}>
+    <div className="rp-bar" role="progressbar" aria-label={label} aria-valuetext={tr(`${pct} درصد`, `${pct} percent`)} aria-valuenow={pct} aria-valuemin={0} aria-valuemax={100}>
       <span style={{ width: `${pct}%` }} />
     </div>
   );
@@ -146,5 +147,5 @@ export function normRate(rate: number | null | undefined): number {
 
 export function pct(rate: number | null | undefined): string {
   const v = Math.round(normRate(rate) * 100);
-  return `${fa(v)}٪`;
+  return tr(`${fa(v)}٪`, `${fa(v)}%`);
 }

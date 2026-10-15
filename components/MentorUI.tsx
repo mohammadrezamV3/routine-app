@@ -1,11 +1,12 @@
 "use client";
 
 import "./mentor.css";
-import Link from "next/link";
+import { SmartLink as Link } from "@/components/SmartLink";
 import { createContext, useContext, useRef, useState } from "react";
-import { motion } from "framer-motion";
+import { m as motion } from "framer-motion";
 import { ChevronLeft } from "lucide-react";
 import { M_DUR, mT } from "./MentorMotion";
+import { tr } from "@/lib/i18n";
 
 /**
  * پایه‌های مشترک بخش منتورها (سمت شاگرد و سمت منتور). همه از کلاس‌های
@@ -187,7 +188,7 @@ export function MentorRow({
       {(end || showChevron) && (
         <span className="mentor-row-end">
           {end}
-          {showChevron && <ChevronLeft size={MI.row} strokeWidth={MI_STROKE} className="mentor-row-chevron" aria-hidden />}
+          {showChevron && <ChevronLeft size={MI.row} strokeWidth={MI_STROKE} className="mentor-row-chevron dir-flip" aria-hidden />}
         </span>
       )}
     </>
@@ -304,7 +305,7 @@ export function MentorField({
     <div className="mentor-field">
       <label className="mentor-field-label" htmlFor={htmlFor}>
         {label}
-        {optional && <span className="is-optional">(اختیاری)</span>}
+        {optional && <span className="is-optional">{tr("(اختیاری)", "(optional)")}</span>}
       </label>
       {children}
       {error ? <p className="mentor-field-error" role="alert">{error}</p> : hint ? <p className="mentor-field-hint">{hint}</p> : null}

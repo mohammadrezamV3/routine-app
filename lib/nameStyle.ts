@@ -1,4 +1,4 @@
-import { sanitizePermissions } from "@/lib/adminPermissions";
+import { sanitizePermissions } from "@/lib/adminPermissionKeys";
 
 // سبک نام کاربر در کل اپ (components/GoldenName.tsx):
 //  - "toxic": Owner (isSuperAdmin) یا ادمین (adminPermissions معتبر غیرخالی) —

@@ -9,11 +9,13 @@
  * با رنگ عادی متن؛ فقط پیشوند «توجه:» قرمزه — همون قرارداد
  * disclaimer-note/disclaimer-warn که در ExercisePanel/CaloriePanel هم هست.
  */
+import { tr } from "@/lib/i18n";
+
 export function RoadmapDisclaimer() {
   return (
     <p className="rp-disclaimer" role="note">
-      <span className="disclaimer-warn">توجه: </span>
-      هوش مصنوعی ممکنه اشتباه کنه — خودت هم تحقیق کن.
+      <span className="disclaimer-warn">{tr("توجه: ", "Note: ")}</span>
+      {tr("هوش مصنوعی ممکنه اشتباه کنه — خودت هم تحقیق کن.", "AI can make mistakes — do your own research too.")}
     </p>
   );
 }

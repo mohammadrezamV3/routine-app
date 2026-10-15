@@ -1,3 +1,4 @@
+import { tr } from "@/lib/i18n";
 import { NextRequest, NextResponse } from "next/server";
 import { ModuleKey } from "@prisma/client";
 import { prisma } from "@/lib/prisma";
@@ -22,14 +23,14 @@ export async function GET(_req: NextRequest, { params }: { params: { week: strin
     const week = params.week;
     const weekStart = WEEK_RE.test(week) ? isoToUtcDate(week) : null;
     if (!weekStart || Number.isNaN(weekStart.getTime()) || weekStart.toISOString().slice(0, 10) !== week) {
-      return NextResponse.json({ error: "تاریخ هفته نامعتبر است" }, { status: 400 });
+      return NextResponse.json({ error: tr("تاریخ هفته نامعتبر است", "Invalid week date") }, { status: 400 });
     }
 
     const row = await prisma.weeklyLetter.findUnique({
       where: { userId_weekStart: { userId, weekStart } },
       select: { id: true, status: true, data: true, readAt: true },
     });
-    if (!row || row.status !== "READY") return NextResponse.json({ error: "این هفته‌نامه پیدا نشد" }, { status: 404 });
+    if (!row || row.status !== "READY") return NextResponse.json({ error: tr("این هفته‌نامه پیدا نشد", "This weekly letter was not found") }, { status: 404 });
 
     const [prev, next] = await Promise.all([
       prisma.weeklyLetter.findFirst({ where: { userId, status: "READY", weekStart: { lt: weekStart } }, orderBy: { weekStart: "desc" }, select: { weekStart: true } }),
@@ -53,6 +54,6 @@ export async function GET(_req: NextRequest, { params }: { params: { week: strin
       next: next ? next.weekStart.toISOString().slice(0, 10) : null,
     });
   } catch (err: any) {
-    return NextResponse.json({ error: err?.message || "خطای غیرمنتظره" }, { status: 500 });
+    return NextResponse.json({ error: err?.message || tr("خطای غیرمنتظره", "Unexpected error") }, { status: 500 });
   }
 }

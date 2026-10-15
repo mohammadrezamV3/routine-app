@@ -4,6 +4,7 @@ import { dateFromIso, dateIsoInTz, isoDate, isUniqueViolation, progressFromCount
 import { projectRoutineForMentor } from "@/lib/mentorPrivacy";
 import { syncProgramProgress, windowFor } from "@/lib/mentorProgress";
 import { faNum } from "@/lib/jalali";
+import { tr } from "@/lib/i18n";
 import {
   doneStreak, idleRun, isoRange, rollupDays, topMissedItems,
   type LogLite, type SchedProgram,
@@ -279,7 +280,7 @@ export async function runAdherenceAlerts(mentorId: string): Promise<number> {
 // ───────────────────────── خروجی CSV ─────────────────────────
 
 export const EXPORT_MAX_DAYS = 120;
-const STATUS_FA: Record<string, string> = { COMPLETED: "انجام شد", PARTIAL: "ناقص", MISSED: "انجام نشد" };
+const statusLabel = (): Record<string, string> => ({ COMPLETED: tr("انجام شد", "Done"), PARTIAL: tr("ناقص", "Partial"), MISSED: tr("انجام نشد", "Not done") });
 
 /** یک خانه‌ی CSV — نقل‌قول در صورت نیاز و خنثی‌کردن فرمول (=, +, -, @) در اکسل */
 export function csvCell(v: string | number | null | undefined): string {
@@ -321,7 +322,8 @@ export async function buildProgressCsv(mentorId: string, studentId: string, from
     : [];
   const logMap = new Map(logs.map((l) => [`${l.itemId}|${isoDate(l.date)}`, l]));
 
-  const lines: string[] = [csvLine(["تاریخ", "منبع", "برنامه", "آیتم", "وضعیت", "ست انجام‌شده", "یادداشت شاگرد"])];
+  const lines: string[] = [csvLine([tr("تاریخ", "Date"), tr("منبع", "Source"), tr("برنامه", "Program"), tr("آیتم", "Item"), tr("وضعیت", "Status"), tr("ست انجام‌شده", "Sets done"), tr("یادداشت شاگرد", "Student note")])];
+  const STATUS_FA = statusLabel();
   for (const date of dates) {
     const js = new Date(date + "T00:00:00.000Z").getUTCDay();
     for (const p of programs) {
@@ -330,7 +332,7 @@ export async function buildProgressCsv(mentorId: string, studentId: string, from
         if (!it.days.includes(js)) continue;
         const l = logMap.get(`${it.id}|${date}`);
         if (!l && date >= today) continue;
-        lines.push(csvLine([date, "برنامه‌ی مربی", p.title, it.title, l ? STATUS_FA[l.status] : "ثبت‌نشده", l?.setsDone ?? "", l?.note ?? ""]));
+        lines.push(csvLine([date, tr("برنامه‌ی مربی", "Mentor program"), p.title, it.title, l ? STATUS_FA[l.status] : tr("ثبت‌نشده", "Not logged"), l?.setsDone ?? "", l?.note ?? ""]));
       }
     }
   }
@@ -340,7 +342,7 @@ export async function buildProgressCsv(mentorId: string, studentId: string, from
     if (!s.done) continue; // پیشرفت مخفی است
     for (const [date, done] of Object.entries(s.done).sort()) {
       if (date > today) continue;
-      lines.push(csvLine([date, "روتین شاگرد", s.program ?? "مخفی", s.title, done ? "انجام شد" : date === today ? "" : "انجام نشد", "", ""]));
+      lines.push(csvLine([date, tr("روتین شاگرد", "Student routine"), s.program ?? tr("مخفی", "Hidden"), s.title, done ? tr("انجام شد", "Done") : date === today ? "" : tr("انجام نشد", "Not done"), "", ""]));
     }
   }
 

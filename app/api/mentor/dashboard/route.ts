@@ -21,6 +21,7 @@ import {
   progressFromCounts,
   userTimezone,
 } from "@/lib/mentorServer";
+import { tr } from "@/lib/i18n";
 
 const ACTIVITY_LIMIT = 15;
 
@@ -125,7 +126,7 @@ export async function GET() {
       studentName: displayName(m.sender),
       studentGolden: !!m.sender.goldenSince,
       studentStaff: isStaffUser(m.sender),
-      text: "پیام جدید",
+      text: tr(tr("پیام جدید", "New message"), "New message"),
       url: `/mentorship/${m.mentorshipId}`,
     })),
   ]
@@ -182,8 +183,8 @@ export async function GET() {
   for (const r of visibleRels) {
     const missed = missedMap.get(r.studentId) ?? 0;
     let reason: string | null = null;
-    if (missed >= MISSED_THRESHOLD) reason = `${faNum(missed)} آیتم انجام‌نشده در 7 روز اخیر`;
-    else if (silentStudents.has(r.studentId)) reason = `${faNum(SILENT_DAYS)} روز است هیچ آیتمی از برنامه‌ی فعال انجام نشده`;
+    if (missed >= MISSED_THRESHOLD) reason = tr(tr(`${faNum(missed)} آیتم انجام‌نشده در 7 روز اخیر`, `${faNum(missed)} unfinished items in the last 7 days`), `${faNum(missed)} unfinished items in the last 7 days`);
+    else if (silentStudents.has(r.studentId)) reason = tr(tr(`${faNum(SILENT_DAYS)} روز است هیچ آیتمی از برنامه‌ی فعال انجام نشده`, `No items from the active program have been done for ${faNum(SILENT_DAYS)} days`), `No items from the active program have been done for ${faNum(SILENT_DAYS)} days`);
     if (reason) attention.push({ studentId: r.studentId, name: displayName(r.student), avatarUrl: r.student.avatarUrl, ...nameFlags(r.student), reason });
   }
 

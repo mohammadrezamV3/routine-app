@@ -1,3 +1,4 @@
+import { tr } from "@/lib/i18n";
 import { NextRequest, NextResponse } from "next/server";
 import { ModuleKey } from "@prisma/client";
 import { prisma } from "@/lib/prisma";
@@ -20,7 +21,7 @@ export async function GET(req: NextRequest) {
     { const off = await featureBlocked("weeklyAnalysis", guard.userId); if (off) return off; }
     const { userId, isSuperAdmin } = guard;
     if (!isSuperAdmin && !(await checkRateLimit(`weekly-live:${userId}`, 120, 10 * 60 * 1000))) {
-      return NextResponse.json({ error: "تعداد درخواست بیش از حد مجاز — کمی صبر کن" }, { status: 429 });
+      return NextResponse.json({ error: tr("تعداد درخواست بیش از حد مجاز — کمی صبر کن", "Too many requests — wait a moment") }, { status: 429 });
     }
 
     const user = await prisma.user.findUnique({ where: { id: userId }, select: { timezone: true } });
@@ -31,17 +32,17 @@ export async function GET(req: NextRequest) {
     let offset = 0;
     if (weekRaw) {
       const o = offsetOfWeekParam(timezone, weekRaw);
-      if (o === null) return NextResponse.json({ error: `هفته نامعتبر است (حداکثر ${MAX_WEEKS_BACK} هفته‌ی گذشته)` }, { status: 400 });
+      if (o === null) return NextResponse.json({ error: tr(`هفته نامعتبر است (حداکثر ${MAX_WEEKS_BACK} هفته‌ی گذشته)`, `Invalid week (up to ${MAX_WEEKS_BACK} past weeks)`) }, { status: 400 });
       offset = o;
     } else if (sp.get("offset") !== null) {
       const o = offsetOfLegacyParam(sp.get("offset"));
-      if (o === null) return NextResponse.json({ error: "offset نامعتبر است" }, { status: 400 });
+      if (o === null) return NextResponse.json({ error: tr("offset نامعتبر است", "Invalid offset") }, { status: 400 });
       offset = o;
     }
 
     const payload = await buildLiveWeek(userId, { timezone, isSuperAdmin, offset });
     return NextResponse.json(payload);
   } catch (err: any) {
-    return NextResponse.json({ error: err?.message || "خطای غیرمنتظره" }, { status: 500 });
+    return NextResponse.json({ error: err?.message || tr("خطای غیرمنتظره", "Unexpected error") }, { status: 500 });
   }
 }

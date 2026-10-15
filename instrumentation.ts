@@ -9,6 +9,8 @@ export async function register() {
   // این هوک هم روی رانتایم nodejs اجرا می‌شه هم edge؛ Prisma فقط روی nodejs
   // کار می‌کنه، پس روی edge اصلا importش نمی‌کنیم.
   if (process.env.NEXT_RUNTIME !== "nodejs") return;
+  // زبان درخواست برای tr() در روت‌های API و lib (lib/i18nServer.ts)
+  await import("@/lib/i18nServer");
   const { warmUpDatabase } = await import("@/lib/prisma");
   warmUpDatabase();
 

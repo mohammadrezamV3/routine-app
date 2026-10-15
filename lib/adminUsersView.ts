@@ -1,3 +1,4 @@
+import { localizedRecord } from "@/lib/localizedRecord";
 // منطق خالص لیست و پرونده‌ی کاربران پنل ادمین (بدون prisma؛ هم سرور هم
 // کلاینت و تست‌پذیر). کوئری‌های دیتابیس در lib/adminUsersList.ts هستن.
 
@@ -6,9 +7,9 @@ export type UsersTab = (typeof TABS)[number];
 // فیلترهای قدیمی همچنان در API پذیرفته می‌شن
 export const LEGACY_TABS = ["inactive", "free", "admins"] as const;
 
-export const TAB_LABELS: Record<UsersTab, string> = {
-  all: "همه", new: "تازه", active: "فعال", paid: "پولی", risk: "در خطر ریزش", blocked: "مسدود", deleted: "حذف‌شده",
-};
+export const TAB_LABELS: Record<UsersTab, string> = localizedRecord<UsersTab>({
+  all: ["همه", "All"], new: ["تازه", "New"], active: ["فعال", "Active"], paid: ["پولی", "Paid"], risk: ["در خطر ریزش", "At risk of churn"], blocked: ["مسدود", "Blocked"], deleted: ["حذف‌شده", "Deleted"],
+});
 
 export const SEEN_RANGES = ["1d", "7d", "30d", "90d", "never"] as const;
 export const SIGNUP_RANGES = ["7d", "30d", "90d", "365d"] as const;
@@ -73,9 +74,9 @@ export type SubLite = { status: string; currentPeriodEnd: Date | string; priceMo
 
 export type UserStatus = "deleted" | "blocked" | "paid" | "trial" | "expired" | "free";
 
-export const STATUS_LABELS: Record<UserStatus, string> = {
-  deleted: "حذف‌شده", blocked: "مسدود", paid: "فعال", trial: "آزمایشی", expired: "منقضی", free: "رایگان",
-};
+export const STATUS_LABELS: Record<UserStatus, string> = localizedRecord<UserStatus>({
+  deleted: ["حذف‌شده", "Deleted"], blocked: ["مسدود", "Blocked"], paid: ["فعال", "Active"], trial: ["آزمایشی", "Trial"], expired: ["منقضی", "Expired"], free: ["رایگان", "Free"],
+});
 
 /**
  * وضعیت نمایشی (یک چیپ):

@@ -1,4 +1,5 @@
-import { toJalali, J_MONTHS, FA_WEEKDAY } from "@/lib/jalali";
+import { toJalali, jMonthName, weekdayName } from "@/lib/jalali";
+import { tr } from "@/lib/i18n";
 
 // تنها منبع «هفته» توی آنالیز هفتگی — شنبه تا جمعه، به وقت محلی کاربر.
 //
@@ -78,7 +79,7 @@ export function isoWeekday(iso: string): number {
 }
 
 export function weekdayFa(iso: string): string {
-  return FA_WEEKDAY[isoWeekday(iso)];
+  return weekdayName(isoWeekday(iso));
 }
 
 export function todayIso(timezone: string, refDate: Date = new Date()): string {
@@ -122,8 +123,9 @@ export function weekLabelFa(weekStartIso: string): string {
   const e = new Date(s.getTime() + 6 * DAY_MS);
   const [, sm, sd] = toJalali(s.getUTCFullYear(), s.getUTCMonth() + 1, s.getUTCDate());
   const [, em, ed] = toJalali(e.getUTCFullYear(), e.getUTCMonth() + 1, e.getUTCDate());
-  if (sm === em) return `${faDigits(sd)} تا ${faDigits(ed)} ${J_MONTHS[em - 1]}`;
-  return `${faDigits(sd)} ${J_MONTHS[sm - 1]} تا ${faDigits(ed)} ${J_MONTHS[em - 1]}`;
+  const to = tr("تا", "to");
+  if (sm === em) return `${faDigits(sd)} ${to} ${faDigits(ed)} ${jMonthName(em - 1)}`;
+  return `${faDigits(sd)} ${jMonthName(sm - 1)} ${to} ${faDigits(ed)} ${jMonthName(em - 1)}`;
 }
 
 export function isCurrentWeek(timezone: string, weekStartIso: string, refDate: Date = new Date()): boolean {

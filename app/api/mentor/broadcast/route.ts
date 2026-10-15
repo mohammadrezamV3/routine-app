@@ -8,6 +8,7 @@ import { requireMentorTools, validId } from "@/lib/mentorToolsGuard";
 import { randomId } from "@/lib/e2ee/encoding";
 import { activeKeysFor, checkWrapTargets, parseEncryptedMessage } from "@/lib/e2ee/server";
 import { encryptedMessageData, notifyNewMessage } from "@/lib/mentorChatServer";
+import { tr } from "@/lib/i18n";
 
 // «ارسال گروهی»: منتور یک متن را برای چند شاگرد فعال می‌فرستد. رمزگذاری سرتاسری
 // می‌ماند: کلاینت منتور همان متن را *جداگانه* برای هر گفت‌وگو (CEK، IV و کلید
@@ -51,16 +52,16 @@ export async function POST(req: Request) {
   if (!g.ok) return g.response;
   const me = g.userId;
   if (!(await checkRateLimit(`mentor-broadcast:${me}`, 5, 60 * 60 * 1000))) {
-    return NextResponse.json({ error: "ارسال گروهی در یک ساعت حداکثر 5 بار ممکن است" }, { status: 429 });
+    return NextResponse.json({ error: tr(tr("ارسال گروهی در یک ساعت حداکثر 5 بار ممکن است", "Group messages can be sent at most 5 times an hour"), "Group messages can be sent at most 5 times an hour") }, { status: 429 });
   }
 
   const parsed = await readJsonBody(req, 3 * 1024 * 1024);
   if (!parsed.ok) return NextResponse.json({ error: parsed.error }, { status: parsed.status });
   const items = parsed.body?.items;
-  if (!Array.isArray(items) || items.length === 0) return badRequest("حداقل یک گیرنده لازم است");
-  if (items.length > MAX_RECIPIENTS) return badRequest(`حداکثر ${MAX_RECIPIENTS} گیرنده در هر ارسال`);
+  if (!Array.isArray(items) || items.length === 0) return badRequest(tr(tr("حداقل یک گیرنده لازم است", "At least one recipient is required"), "At least one recipient is required"));
+  if (items.length > MAX_RECIPIENTS) return badRequest(tr(tr(`حداکثر ${MAX_RECIPIENTS} گیرنده در هر ارسال`, `At most ${MAX_RECIPIENTS} recipients per send`), `At most ${MAX_RECIPIENTS} recipients per send`));
 
-  if (!(await activeKeysFor([me]))[me].length) return NextResponse.json({ error: "کلید رمزگذاری این حساب هنوز ساخته نشده؛ صفحه را تازه کن", code: "NO_KEY" }, { status: 409 });
+  if (!(await activeKeysFor([me]))[me].length) return NextResponse.json({ error: tr("کلید رمزگذاری این حساب هنوز ساخته نشده؛ صفحه را تازه کن", "The encryption key for this account hasn't been created yet; refresh the page"), code: "NO_KEY" }, { status: 409 });
 
   const seen = new Set<string>();
   const failed: { mentorshipId: string; code: string }[] = [];

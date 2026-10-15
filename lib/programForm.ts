@@ -2,7 +2,8 @@
 // components/ProgramTimeRows.tsx). [قرارداد — پیاده‌سازی و تست با ایجنت C]
 
 import { toEnDigits } from "./schedule";
-import { toJalali, J_MONTHS } from "./jalali";
+import { toJalali, jMonthName, weekdayName } from "./jalali";
+import { tr } from "./i18n";
 import { WEEK_ORDER } from "./schedule";
 
 export type ProgramKind = "weekly" | "once" | "period";
@@ -12,10 +13,10 @@ export type TimeRow = { id: string; jsDays: number[]; start: string; end: string
 
 export type DayPresetKey = "all" | "work" | "weekend";
 /** میان‌برهای روز: هر روز / روزهای کاری (شنبه تا چهارشنبه) / آخر هفته (پنجشنبه و جمعه) */
-export const DAY_PRESETS: { key: DayPresetKey; label: string; jsDays: number[] }[] = [
-  { key: "all", label: "هر روز", jsDays: [6, 0, 1, 2, 3, 4, 5] },
-  { key: "work", label: "روزهای کاری", jsDays: [6, 0, 1, 2, 3] },
-  { key: "weekend", label: "آخر هفته", jsDays: [4, 5] },
+export const DAY_PRESETS: { key: DayPresetKey; label: string; en: string; jsDays: number[] }[] = [
+  { key: "all", label: "هر روز", en: "Every day", jsDays: [6, 0, 1, 2, 3, 4, 5] },
+  { key: "work", label: "روزهای کاری", en: "Work days", jsDays: [6, 0, 1, 2, 3] },
+  { key: "weekend", label: "آخر هفته", en: "Weekend", jsDays: [4, 5] },
 ];
 
 export function newTimeRow(jsDays: number[] = []): TimeRow {
@@ -46,14 +47,14 @@ export function rowDurationMin(row: Pick<TimeRow, "start" | "end">): number | nu
 /** «1 ساعت و 30 دقیقه» */
 export function durationText(min: number): string {
   if (min < 60) {
-    return `${min} دقیقه`;
+    return tr(`${min} دقیقه`, `${min} min`);
   }
   const h = Math.floor(min / 60);
   const m = min % 60;
   if (m === 0) {
-    return `${h} ساعت`;
+    return tr(`${h} ساعت`, `${h} h`);
   }
-  return `${h} ساعت و ${m} دقیقه`;
+  return tr(`${h} ساعت و ${m} دقیقه`, `${h} h ${m} min`);
 }
 
 /** HH:mm + دقیقه → HH:mm (دور 24 ساعت می‌چرخه) */
@@ -118,7 +119,7 @@ export function describeSchedule(
     const [year, month, day] = isoDate.split("-").map((x) => parseInt(x, 10));
     const [jy, jm, jd] = toJalali(year, month, day);
 
-    return `فقط ${jd} ${J_MONTHS[jm - 1]}، ${start} تا ${end}`;
+    return tr(`فقط ${jd} ${jMonthName(jm - 1)}، ${start} تا ${end}`, `Only ${jd} ${jMonthName(jm - 1)}, ${start} to ${end}`);
   }
 
   if (kind === "period") {
@@ -127,7 +128,7 @@ export function describeSchedule(
       const daysText = formatDaysText(row.jsDays);
       const start = normalizeTimeToHHmm(row.start);
       const end = normalizeTimeToHHmm(row.end);
-      return `${daysText}، ${start} تا ${end}`;
+      return tr(`${daysText}، ${start} تا ${end}`, `${daysText}, ${start} to ${end}`);
     });
 
     let result = descriptions.join(" · ");
@@ -137,7 +138,7 @@ export function describeSchedule(
       const [tyear, tmonth, tday] = opts.periodToIso.split("-").map((x) => parseInt(x, 10));
       const [fjy, fjm, fjd] = toJalali(fyear, fmonth, fday);
       const [tjy, tjm, tjd] = toJalali(tyear, tmonth, tday);
-      result += ` · از ${fjd} ${J_MONTHS[fjm - 1]} تا ${tjd} ${J_MONTHS[tjm - 1]}`;
+      result += tr(` · از ${fjd} ${jMonthName(fjm - 1)} تا ${tjd} ${jMonthName(tjm - 1)}`, ` · from ${fjd} ${jMonthName(fjm - 1)} to ${tjd} ${jMonthName(tjm - 1)}`);
     }
 
     return result;
@@ -148,7 +149,7 @@ export function describeSchedule(
     const daysText = formatDaysText(row.jsDays);
     const start = normalizeTimeToHHmm(row.start);
     const end = normalizeTimeToHHmm(row.end);
-    return `${daysText}، ${start} تا ${end}`;
+    return tr(`${daysText}، ${start} تا ${end}`, `${daysText}, ${start} to ${end}`);
   });
 
   return descriptions.join(" · ");
@@ -166,19 +167,19 @@ function normalizeTimeToHHmm(time: string): string | null {
 /** توصیف روزهای هفته (ترتیب شنبه اول، بدون اعراب) */
 function formatDaysText(jsDays: number[]): string {
   const preset = matchDayPreset(jsDays);
-  if (preset === "all") return "هر روز";
-  if (preset === "work") return "روزهای کاری";
-  if (preset === "weekend") return "آخر هفته";
+  if (preset === "all") return tr("هر روز", "Every day");
+  if (preset === "work") return tr("روزهای کاری", "Work days");
+  if (preset === "weekend") return tr("آخر هفته", "Weekend");
 
   // روزهای دلخواه: ترتیب شنبه اول
   const daysByOrder = WEEK_ORDER.filter((w) => jsDays.includes(w.jsDay));
-  const dayNames = daysByOrder.map((w) => w.name);
+  const dayNames = daysByOrder.map((w) => tr(w.name, weekdayName(w.jsDay)));
 
   if (dayNames.length === 1) {
-    return `هر ${dayNames[0]}`;
+    return tr(`هر ${dayNames[0]}`, `Every ${dayNames[0]}`);
   }
 
   // جوین با " و " برای آخری و " ، " برای بقیه
   const first = dayNames.slice(0, -1).join("، ");
-  return `هر ${first} و ${dayNames[dayNames.length - 1]}`;
+  return tr(`هر ${first} و ${dayNames[dayNames.length - 1]}`, `Every ${dayNames.slice(0, -1).join(", ")} and ${dayNames[dayNames.length - 1]}`);
 }

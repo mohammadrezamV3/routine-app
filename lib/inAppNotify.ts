@@ -1,6 +1,7 @@
 import { prisma } from "@/lib/prisma";
 import { sendPushToUser } from "@/lib/webPush";
 import { publishToUser } from "@/lib/realtime";
+import { tr } from "@/lib/i18n";
 
 // اعلان پایدار درون‌برنامه‌ای + پوش best-effort. هیچ‌وقت نباید خود اقدام
 // اصلی (قبول درخواست، ارسال پیام، …) رو به‌خاطر شکست اعلان fail کنه.
@@ -21,7 +22,7 @@ export async function notifyUser(userId: string, n: NotifyInput): Promise<void> 
 
 /** اسم نمایشی کاربر برای متن اعلان‌ها — هیچ‌وقت ایمیل/شماره نه */
 export function displayName(u: { name?: string | null; lastName?: string | null; username?: string | null } | null | undefined): string {
-  if (!u) return "یک کاربر";
+  if (!u) return tr("یک کاربر", "A user");
   const full = [u.name, u.lastName].filter(Boolean).join(" ").trim();
-  return full || u.username || "یک کاربر";
+  return full || u.username || tr("یک کاربر", "A user");
 }

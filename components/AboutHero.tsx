@@ -1,13 +1,14 @@
 "use client";
 
 import { useEffect, useRef, useState } from "react";
-import Link from "next/link";
-import { motion, useMotionValue, useReducedMotion, useSpring, useTransform } from "framer-motion";
+import { SmartLink as Link } from "@/components/SmartLink";
+import { m as motion, useMotionValue, useReducedMotion, useSpring, useTransform } from "framer-motion";
 import {
   Apple, ArrowLeft, CalendarCheck, CandlestickChart, Dumbbell, GraduationCap, Moon, ShieldCheck, Smartphone, Sparkles,
 } from "lucide-react";
 import type { LucideIcon } from "lucide-react";
-import { BRAND_FA } from "@/lib/brand";
+import { brandName } from "@/lib/brand";
+import { tr, trv } from "@/lib/i18n";
 
 // ─── هیروی صفحه‌ی «درباره» ─────────────────────────────────────────────
 // پس‌زمینه = چند گرادیان شعاعی (بدون filter:blur) که فقط transform می‌گیرند؛
@@ -17,30 +18,39 @@ import { BRAND_FA } from "@/lib/brand";
 
 const EASE = [0.22, 1, 0.36, 1] as const;
 
-const WORDS = ["همه‌ی", "نظم", "زندگی‌ات،"];
+const words = () => trv(["همه‌ی", "نظم", "زندگی‌ات،"], ["All", "your", "life", "in"]);
 
-const ORBIT: { label: string; icon: LucideIcon }[] = [
-  { label: "روتین", icon: CalendarCheck },
-  { label: "خواب", icon: Moon },
-  { label: "بدنسازی", icon: Dumbbell },
-  { label: "کالری", icon: Apple },
-  { label: "ترید", icon: CandlestickChart },
-  { label: "مربی‌ها", icon: GraduationCap },
+const orbit = (): { label: string; icon: LucideIcon }[] => [
+  { label: tr("روتین", "Routine"), icon: CalendarCheck },
+  { label: tr("خواب", "Sleep"), icon: Moon },
+  { label: tr("بدنسازی", "Workout"), icon: Dumbbell },
+  { label: tr("کالری", "Calories"), icon: Apple },
+  { label: tr("ترید", "Trading"), icon: CandlestickChart },
+  { label: tr("مربی‌ها", "Mentors"), icon: GraduationCap },
 ];
 
 function BrandLogo({ className }: { className?: string }) {
   return (
     <>
       {/* eslint-disable-next-line @next/next/no-img-element */}
-      <img src="/images/logo-icon-dark-theme.png" alt="" width={256} height={217} className={`ab-logo-dark ${className ?? ""}`} />
+      <img src="/images/logo-icon-dark-theme.png" alt="" width={256} height={217} decoding="async" className={`ab-logo-dark ${className ?? ""}`} />
       {/* eslint-disable-next-line @next/next/no-img-element */}
-      <img src="/images/logo-icon-light-theme.webp" alt="" width={256} height={217} className={`ab-logo-light ${className ?? ""}`} />
+      <img src="/images/logo-icon-light-theme.webp" alt="" width={256} height={217} decoding="async" className={`ab-logo-light ${className ?? ""}`} />
     </>
   );
 }
 export { BrandLogo as AboutBrandLogo };
 
+// ورود متن‌های هیرو با CSS (نه framer): خروجی سرور از اول قابل‌دیدنه و منتظر JS
+// نمی‌مونه؛ fill-mode backwards یعنی بعد از پایان انیمیشن لایه‌ی انیمیت‌شده
+// نمی‌مونه (متن می‌تونه کاندید LCP بشه). حرکت‌کاهی: app/about/about.css.
+function abRise(dur: number, delay: number, y: number): React.CSSProperties {
+  return { "--ab-d": `${dur}s`, "--ab-dl": `${delay}s`, "--ab-y": `${y}px` } as React.CSSProperties;
+}
+
 export function AboutHero() {
+  const WORDS = words();
+  const ORBIT = orbit();
   const reduce = useReducedMotion();
   const stageRef = useRef<HTMLDivElement>(null);
   const [paused, setPaused] = useState(false);
@@ -88,31 +98,21 @@ export function AboutHero() {
 
       <div className="ab-hero-grid">
         <div>
-          <motion.span
-            className="ab-badge"
-            initial={reduce ? false : { opacity: 0, y: 10 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.6, ease: EASE }}
-          >
+          <span className="ab-badge ab-rise" style={abRise(0.6, 0, 10)}>
             <span className="ab-badge-dot" aria-hidden="true" />
-            داستان آریون
-          </motion.span>
+            {tr("داستان آریون", "The Arion story")}
+          </span>
 
           <h1 id="ab-h1" className="ab-h1" style={{ perspective: 600 }}>
-            <motion.span
-              className="ab-h1-kicker"
-              initial={reduce ? false : { opacity: 0 }}
-              animate={{ opacity: 1 }}
-              transition={{ duration: 0.6, delay: 0.05 }}
-            >
-              {`درباره ${BRAND_FA}`}
-            </motion.span>
+            <span className="ab-h1-kicker ab-rise" style={abRise(0.6, 0.05, 0)}>
+              {tr(`درباره ${brandName()}`, `About ${brandName()}`)}
+            </span>
             <span className="ab-h1-line">
               {WORDS.map((w, i) => (
                 <motion.span key={w} className="ab-word" {...word(i)}>{w}</motion.span>
               ))}
               <motion.span className="ab-word ab-word-accent" {...word(WORDS.length)}>
-                یک‌جا.
+                {tr("یک‌جا.", "one place.")}
                 <svg className="ab-swash" viewBox="0 0 200 20" preserveAspectRatio="none" aria-hidden="true">
                   <motion.path
                     d="M4 14 C 50 4, 120 4, 196 10"
@@ -129,38 +129,31 @@ export function AboutHero() {
             </span>
           </h1>
 
-          <motion.p
-            className="ab-sub"
-            initial={reduce ? false : { opacity: 0, y: 14 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.7, delay: 0.55, ease: EASE }}
-          >
-            {BRAND_FA} یک اپلیکیشن فارسی برای نظم‌دادن به زندگی روزمره است. <b>روتین، خواب، ورزش، تغذیه و ترید</b>
-            {" "}به‌جای چند اپ جدا، زیر یک حساب کاربری کنار هم‌اند؛ همه‌چیز فارسی، با تقویم شمسی، و روی موبایل و کامپیوتر یکسان.
-          </motion.p>
+          <p className="ab-sub ab-rise" style={abRise(0.7, 0.55, 14)}>
+            {trv(
+              <>
+                {brandName()} یک اپلیکیشن فارسی برای نظم‌دادن به زندگی روزمره است. <b>روتین، خواب، ورزش، تغذیه و ترید</b>
+                {" "}به‌جای چند اپ جدا، زیر یک حساب کاربری کنار هم‌اند؛ همه‌چیز فارسی، با تقویم شمسی، و روی موبایل و کامپیوتر یکسان.
+              </>,
+              <>
+                {brandName()} is an app for bringing order to everyday life. <b>Routine, sleep, workouts, nutrition and trading</b>
+                {" "}live side by side under one account instead of several separate apps, and it works the same on phone and desktop.
+              </>,
+            )}
+          </p>
 
-          <motion.div
-            className="ab-ctas"
-            initial={reduce ? false : { opacity: 0, y: 14 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.7, delay: 0.7, ease: EASE }}
-          >
+          <div className="ab-ctas ab-rise" style={abRise(0.7, 0.7, 14)}>
             <Link href="/auth/signup" className="ls-btn ls-btn-primary">
-              شروع رایگان <ArrowLeft size={16} />
+              {tr("شروع رایگان", "Start free")} <ArrowLeft size={16} className="dir-flip" />
             </Link>
-            <a href="#inside" className="ls-btn ls-btn-ghost">داخل آریون</a>
-          </motion.div>
+            <a href="#inside" className="ls-btn ls-btn-ghost">{tr("داخل آریون", "Inside Arion")}</a>
+          </div>
 
-          <motion.div
-            className="ab-trust"
-            initial={reduce ? false : { opacity: 0 }}
-            animate={{ opacity: 1 }}
-            transition={{ duration: 0.7, delay: 0.9 }}
-          >
-            <span><Sparkles size={14} /> «روتین من» 14 روز رایگان</span>
-            <span><ShieldCheck size={14} /> چت‌های سرتاسر رمزنگاری‌شده</span>
-            <span><Smartphone size={14} /> نصب روی گوشی (PWA)</span>
-          </motion.div>
+          <div className="ab-trust ab-rise" style={abRise(0.7, 0.9, 0)}>
+            <span><Sparkles size={14} /> {tr("«روتین من» 14 روز رایگان", "My Routine free for 14 days")}</span>
+            <span><ShieldCheck size={14} /> {tr("چت‌های سرتاسر رمزنگاری‌شده", "End-to-end encrypted chats")}</span>
+            <span><Smartphone size={14} /> {tr("نصب روی گوشی (PWA)", "Install on your phone (PWA)")}</span>
+          </div>
         </div>
 
         <div className="ab-stage-wrap" onPointerMove={onMove} onPointerLeave={onLeave}>

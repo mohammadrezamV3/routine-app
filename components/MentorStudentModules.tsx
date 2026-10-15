@@ -7,8 +7,9 @@ import { fmtDate, fmtWeekday } from "@/lib/mentorFormat";
 import { GOAL_LABELS, LEVEL_LABELS } from "@/lib/exercisePlans";
 import { CALORIE_GOAL_LABELS } from "@/lib/calorieCalc";
 import type { StudentView } from "./MentorStudentTypes";
+import { tr } from "@/lib/i18n";
 
-const PHASE_LABELS: Record<string, string> = { bulk: "افزایش حجم", cut: "کم‌کردن وزن", maintenance: "حفظ وزن", none: "بدون مرحله" };
+const phaseLabels = (): Record<string, string> => ({ bulk: tr("افزایش حجم", "Muscle gain"), cut: tr("کم‌کردن وزن", "Weight loss"), maintenance: tr("حفظ وزن", "Maintenance"), none: tr("بدون مرحله", "No phase") });
 
 const ic = (Icon: typeof Flame, size: number) => <Icon size={size} strokeWidth={MI_STROKE} aria-hidden />;
 
@@ -47,43 +48,43 @@ export function MentorStudentModules({ modules }: { modules: StudentView["module
   return (
     <>
       {exercise && (
-        <MentorSection title="بدنسازی" icon={ic(Dumbbell, MI.section)}>
+        <MentorSection title={tr("بدنسازی", "Workout")} icon={ic(Dumbbell, MI.section)}>
           {!exercise.hasPlan ? (
-            <MentorEmpty>شاگرد هنوز برنامه‌ی تمرینی فعالی نداره</MentorEmpty>
+            <MentorEmpty>{tr("شاگرد هنوز برنامه‌ی تمرینی فعالی نداره", "The student has no active workout plan yet")}</MentorEmpty>
           ) : (
             <>
               <Facts
                 items={[
-                  { k: "سطح", v: label(LEVEL_LABELS, exercise.level) ?? "نامشخص" },
-                  { k: "هدف", v: label(GOAL_LABELS, exercise.goal) ?? "نامشخص" },
-                  { k: "مرحله", v: label(PHASE_LABELS, exercise.trainingPhase) ?? "نامشخص" },
-                  { k: "شروع", v: fmtDate(exercise.startDate) || "نامشخص" },
+                  { k: tr("سطح", "Level"), v: label(LEVEL_LABELS, exercise.level) ?? tr("نامشخص", "Unknown") },
+                  { k: tr("هدف", "Goal"), v: label(GOAL_LABELS, exercise.goal) ?? tr("نامشخص", "Unknown") },
+                  { k: tr("مرحله", "Phase"), v: label(phaseLabels(), exercise.trainingPhase) ?? tr("نامشخص", "Unknown") },
+                  { k: tr("شروع", "Start"), v: fmtDate(exercise.startDate) || tr("نامشخص", "Unknown") },
                 ]}
               />
               <div style={{ marginTop: "var(--m-3)" }}>
                 {exercise.gymDays === null ? (
-                  <Hidden>این بخش رو شاگرد خصوصی نگه داشته</Hidden>
+                  <Hidden>{tr("این بخش رو شاگرد خصوصی نگه داشته", "The student keeps this section private")}</Hidden>
                 ) : (
                   <p className="mentor-muted">
-                    {exercise.gymDays.length ? `روزهای تمرین: ${exercise.gymDays.join("، ")}` : "روز تمرینی مشخص نشده است"}
+                    {exercise.gymDays.length ? tr(`روزهای تمرین: ${exercise.gymDays.join("، ")}`, `Workout days: ${exercise.gymDays.join(", ")}`) : tr("روز تمرینی مشخص نشده است", "No workout days set")}
                   </p>
                 )}
               </div>
               {exercise.progress === null ? (
-                <Hidden>این بخش رو شاگرد خصوصی نگه داشته</Hidden>
+                <Hidden>{tr("این بخش رو شاگرد خصوصی نگه داشته", "The student keeps this section private")}</Hidden>
               ) : (
                 <div style={{ marginTop: "var(--m-2)" }}>
                   <p className="mentor-muted">
-                    {fa(exercise.progress.completed)} از {fa(exercise.progress.planned)} جلسه‌ی برنامه‌ریزی‌شده انجام شد
+                    {tr(`${fa(exercise.progress.completed)} از ${fa(exercise.progress.planned)} جلسه‌ی برنامه‌ریزی‌شده انجام شد`, `${fa(exercise.progress.completed)} of ${fa(exercise.progress.planned)} planned sessions done`)}
                   </p>
                   {exercise.progress.days.map((d) => (
                     <MentorRow
                       key={d.date}
                       title={fmtWeekday(d.date)}
-                      sub={<span>{fa(d.itemsDone)} حرکت</span>}
+                      sub={<span>{tr(`${fa(d.itemsDone)} حرکت`, `${fa(d.itemsDone)} ${d.itemsDone === 1 ? "exercise" : "exercises"}`)}</span>}
                       end={d.completed
-                        ? <MentorChip tone="ok" icon={ic(CheckCircle2, MI.chip)}>انجام شد</MentorChip>
-                        : <MentorChip tone="danger" icon={ic(XCircle, MI.chip)}>انجام نشد</MentorChip>}
+                        ? <MentorChip tone="ok" icon={ic(CheckCircle2, MI.chip)}>{tr("انجام شد", "Done")}</MentorChip>
+                        : <MentorChip tone="danger" icon={ic(XCircle, MI.chip)}>{tr("انجام نشد", "Not done")}</MentorChip>}
                     />
                   ))}
                 </div>
@@ -94,40 +95,40 @@ export function MentorStudentModules({ modules }: { modules: StudentView["module
       )}
 
       {calorie && (
-        <MentorSection title="کالری" icon={ic(Flame, MI.section)}>
+        <MentorSection title={tr("کالری", "Calories")} icon={ic(Flame, MI.section)}>
           {!calorie.hasTarget ? (
-            <MentorEmpty>شاگرد هنوز هدف کالری نذاشته</MentorEmpty>
+            <MentorEmpty>{tr("شاگرد هنوز هدف کالری نذاشته", "The student has not set a calorie goal yet")}</MentorEmpty>
           ) : (
             <Facts
               items={[
-                { k: "هدف روزانه", v: calorie.dailyTargetKcal != null ? `${fa(calorie.dailyTargetKcal)} کالری` : "نامشخص" },
-                { k: "هدف", v: label(CALORIE_GOAL_LABELS, calorie.goal) ?? "نامشخص" },
+                { k: tr("هدف روزانه", "Daily goal"), v: calorie.dailyTargetKcal != null ? tr(`${fa(calorie.dailyTargetKcal)} کالری`, `${fa(calorie.dailyTargetKcal)} kcal`) : tr("نامشخص", "Unknown") },
+                { k: tr("هدف", "Goal"), v: label(CALORIE_GOAL_LABELS, calorie.goal) ?? tr("نامشخص", "Unknown") },
                 ...(calorie.macros
                   ? [
-                      { k: "پروتئین", v: calorie.macros.proteinG != null ? `${fa(calorie.macros.proteinG)} گرم` : "نامشخص" },
-                      { k: "کربوهیدرات / چربی", v: `${calorie.macros.carbsG != null ? fa(calorie.macros.carbsG) : "نامشخص"} / ${calorie.macros.fatG != null ? fa(calorie.macros.fatG) : "نامشخص"} گرم` },
+                      { k: tr("پروتئین", "Protein"), v: calorie.macros.proteinG != null ? tr(`${fa(calorie.macros.proteinG)} گرم`, `${fa(calorie.macros.proteinG)} g`) : tr("نامشخص", "Unknown") },
+                      { k: tr("کربوهیدرات / چربی", "Carbs / fat"), v: tr(`${calorie.macros.carbsG != null ? fa(calorie.macros.carbsG) : "نامشخص"} / ${calorie.macros.fatG != null ? fa(calorie.macros.fatG) : "نامشخص"} گرم`, `${calorie.macros.carbsG != null ? fa(calorie.macros.carbsG) : "Unknown"} / ${calorie.macros.fatG != null ? fa(calorie.macros.fatG) : "Unknown"} g`) },
                     ]
-                  : [{ k: "پروتئین، کربوهیدرات، چربی", v: "خصوصی" }]),
+                  : [{ k: tr("پروتئین، کربوهیدرات، چربی", "Protein, carbs, fat"), v: tr("خصوصی", "Private") }]),
               ]}
             />
           )}
           {calorie.progress === null ? (
-            <Hidden>این بخش رو شاگرد خصوصی نگه داشته</Hidden>
+            <Hidden>{tr("این بخش رو شاگرد خصوصی نگه داشته", "The student keeps this section private")}</Hidden>
           ) : (
             <div style={{ marginTop: "var(--m-3)" }}>
               {calorie.hasTarget && (
-                <p className="mentor-muted">{fa(calorie.progress.successDays)} روز در محدوده‌ی هدف</p>
+                <p className="mentor-muted">{tr(`${fa(calorie.progress.successDays)} روز در محدوده‌ی هدف`, `${fa(calorie.progress.successDays)} ${calorie.progress.successDays === 1 ? "day" : "days"} within the goal`)}</p>
               )}
               {calorie.progress.days.length === 0 ? (
-                <MentorEmpty>در این هفته ثبتی نیست</MentorEmpty>
+                <MentorEmpty>{tr("در این هفته ثبتی نیست", "Nothing logged this week")}</MentorEmpty>
               ) : calorie.progress.days.map((d) => {
                 const over = calorie.dailyTargetKcal != null && d.kcal > calorie.dailyTargetKcal;
                 return (
                   <MentorRow
                     key={d.date}
                     title={fmtWeekday(d.date)}
-                    sub={<span>{fa(d.kcal)} کالری</span>}
-                    end={over ? <MentorChip tone="warn" icon={ic(AlertCircle, MI.chip)}>بیش از هدف</MentorChip> : undefined}
+                    sub={<span>{tr(`${fa(d.kcal)} کالری`, `${fa(d.kcal)} kcal`)}</span>}
+                    end={over ? <MentorChip tone="warn" icon={ic(AlertCircle, MI.chip)}>{tr("بیش از هدف", "Over goal")}</MentorChip> : undefined}
                   />
                 );
               })}

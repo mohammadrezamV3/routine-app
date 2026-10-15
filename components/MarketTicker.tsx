@@ -10,6 +10,7 @@ import {
 import { useSeamlessMarquee } from "@/lib/useSeamlessMarquee";
 import { MarketPicker } from "./MarketPicker";
 import { SETTING_KEYS } from "@/lib/userSettingKeys";
+import { tr } from "@/lib/i18n";
 
 const ONBOARDED_KEY = SETTING_KEYS.tradeMarketsOnboarded;
 const POLL_MS = 30_000;
@@ -109,20 +110,20 @@ export function MarketTicker() {
                 <span className="ticker-symbol">{tickerLabelFor(q.symbol)}</span>
                 <span className="mono ticker-price">{q.price.toFixed(q.price < 10 ? 4 : 2)}</span>
                 <span className={`mono ticker-change ${q.changePercent >= 0 ? "up" : "down"}`}>
-                  {q.changePercent >= 0 ? "↗" : "↘"} {q.changePercent >= 0 ? "+" : ""}{q.changePercent.toFixed(2)}٪
+                  {q.changePercent >= 0 ? "↗" : "↘"} {q.changePercent >= 0 ? "+" : ""}{q.changePercent.toFixed(2)}{tr("٪", "%")}
                 </span>
               </span>
             ))}
           </div>
         </div>
       ) : (
-        <div className="ticker-viewport ticker-empty-msg">قیمت‌ها موقتا در دسترس نیست</div>
+        <div className="ticker-viewport ticker-empty-msg">{tr("قیمت‌ها موقتا در دسترس نیست", "Prices are temporarily unavailable")}</div>
       )}
 
       {onboardOpen && (
         <MarketPicker
-          title="کدوم بازارها رو دنبال کنی؟"
-          intro="بازارهایی که می‌خوای توی نوار بالای صفحه ببینی رو انتخاب کن — هروقت خواستی از پنل کاربری عوضش کن."
+          title={tr("کدوم بازارها رو دنبال کنی؟", "Which markets do you want to follow?")}
+          intro={tr("بازارهایی که می‌خوای توی نوار بالای صفحه ببینی رو انتخاب کن — هروقت خواستی از پنل کاربری عوضش کن.", "Pick the markets you want to see in the bar at the top of the page. You can change them any time from your account panel.")}
           symbols={symbols}
           onToggle={toggleSymbol}
           onClose={closeOnboarding}

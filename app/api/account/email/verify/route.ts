@@ -1,3 +1,4 @@
+import { tr } from "@/lib/i18n";
 import { NextRequest, NextResponse } from "next/server";
 import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/auth";
@@ -19,13 +20,13 @@ export async function POST(req: NextRequest) {
   const rawEmail = body?.newEmail;
   const code = body?.code;
   if (typeof rawEmail !== "string" || !isValidEmail(rawEmail.trim()) || typeof code !== "string" || !code.trim()) {
-    return NextResponse.json({ error: "اطلاعات وارد شده کامل نیست" }, { status: 400 });
+    return NextResponse.json({ error: tr("اطلاعات وارد شده کامل نیست", "The information entered is incomplete") }, { status: 400 });
   }
   const newEmail = rawEmail.trim().toLowerCase();
   const cleanCode = code.trim();
 
   if (!(await checkRateLimit(`email-change-verify-user:${userId}`, 8, 10 * 60 * 1000)) || !(await checkRateLimit(`email-change-verify-ip:${ip}`, 20, 10 * 60 * 1000))) {
-    return NextResponse.json({ error: "تعداد تلاش‌ها بیش از حد مجازه — چند دقیقه دیگه دوباره امتحان کن" }, { status: 429 });
+    return NextResponse.json({ error: tr("تعداد تلاش‌ها بیش از حد مجازه — چند دقیقه دیگه دوباره امتحان کن", "Too many attempts — try again in a few minutes") }, { status: 429 });
   }
 
   const otp = await prisma.emailChangeOtp.findFirst({
@@ -33,19 +34,19 @@ export async function POST(req: NextRequest) {
     orderBy: { createdAt: "desc" },
   });
   if (!otp || otp.attempts >= EMAIL_OTP_MAX_ATTEMPTS) {
-    return NextResponse.json({ error: "کد نامعتبر یا منقضی‌شده است" }, { status: 400 });
+    return NextResponse.json({ error: tr("کد نامعتبر یا منقضی‌شده است", "The code is invalid or has expired") }, { status: 400 });
   }
   if (!hashesMatch(otp.codeHash, hashEmailOtp(cleanCode))) {
     await prisma.emailChangeOtp.update({ where: { id: otp.id }, data: { attempts: { increment: 1 } } });
     const remaining = EMAIL_OTP_MAX_ATTEMPTS - (otp.attempts + 1);
-    return NextResponse.json({ error: remaining > 0 ? "کد وارد شده اشتباه است" : "کد نامعتبر یا منقضی‌شده است" }, { status: 400 });
+    return NextResponse.json({ error: remaining > 0 ? tr("کد وارد شده اشتباه است", "The code entered is incorrect") : tr("کد نامعتبر یا منقضی‌شده است", "The code is invalid or has expired") }, { status: 400 });
   }
 
   // بین ارسال کد و همین لحظه ممکنه یکی دیگه همین ایمیل رو گرفته باشه —
   // دوباره چک می‌کنیم قبل از commit.
   const existing = await prisma.user.findUnique({ where: { email: newEmail }, select: { id: true } });
   if (existing && existing.id !== userId) {
-    return NextResponse.json({ error: "این ایمیل قبلا برای حساب دیگری ثبت شده" }, { status: 409 });
+    return NextResponse.json({ error: tr("این ایمیل قبلا برای حساب دیگری ثبت شده", "This email is already registered to another account") }, { status: 409 });
   }
 
   await prisma.$transaction([

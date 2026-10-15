@@ -7,6 +7,7 @@ import { MentorProgramEditor } from "@/components/MentorProgramEditor";
 import { MentorProgramStart, type StartLoaded, type StartSource } from "@/components/MentorProgramStart";
 import { LoadingBlock } from "@/components/Spinner";
 import type { MentorshipRow, MentorshipsResponse, ProgramType } from "@/lib/mentorTypes";
+import { tr } from "@/lib/i18n";
 
 // پارامترها از window.location خوانده می‌شوند (نه useSearchParams) تا
 // Suspense لازم نباشد؛ هم‌الگوی بقیه‌ی صفحه‌های اپ.
@@ -64,8 +65,8 @@ export default function NewMentorProgramPage() {
 
   const row = rows?.find((m) => m.id === mentorshipId) ?? null;
   const back = row
-    ? { href: `/mentor/students/${row.counterpart.id}`, label: "برگشت" }
-    : { href: "/mentor/templates", label: "برنامه‌ها" };
+    ? { href: `/mentor/students/${row.counterpart.id}`, label: tr("برگشت", "Back") }
+    : { href: "/mentor/templates", label: tr("برنامه‌ها", "Programs") };
 
   let body: React.ReactNode;
   if (loadError) body = <MentorDashError message={loadError} onRetry={load} />;
@@ -73,7 +74,7 @@ export default function NewMentorProgramPage() {
   else {
     const allowedTypes = row ? allowedTypesFor(row) : [];
     if (row && allowedTypes.length === 0) {
-      body = <MentorDashError message="حوزه‌ی همکاری با این شاگرد برنامه نداره؛ از گفت‌وگو و بازخورد استفاده کن" />;
+      body = <MentorDashError message={tr("حوزه‌ی همکاری با این شاگرد برنامه نداره؛ از گفت‌وگو و بازخورد استفاده کن", "The field you work on with this student has no programs. Use the chat and feedback instead.")} />;
     } else {
       const ready = !!row && (source === "blank" || !!loaded);
       body = (
@@ -110,7 +111,7 @@ export default function NewMentorProgramPage() {
   }
 
   return (
-    <MentorDashShell title="برنامه‌ی تازه" back={back}>
+    <MentorDashShell title={tr("برنامه‌ی تازه", "New program")} back={back}>
       {body}
     </MentorDashShell>
   );

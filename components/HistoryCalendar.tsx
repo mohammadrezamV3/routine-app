@@ -2,14 +2,16 @@
 
 import { useEffect, useMemo, useState } from "react";
 import {
-  CAL_WEEK_ORDER, FA_WEEKDAY_SHORT, J_MONTHS, faNum,
+  CAL_WEEK_ORDER, weekdayShort, jMonthName, faNum,
   isoLocal, jalaliMonthLength, jalaliToGregorianApprox, toJalali,
 } from "@/lib/jalali";
 import { tasksForDate } from "@/lib/schedule";
 import { getCustomOccurrences, getDailyRange, getRemovedOccurrences, getOutingDates } from "@/lib/storage";
 import { keyMatches, useLiveRefresh } from "@/lib/liveSync";
 import { DEFAULT_SLEEP, DEFAULT_WAKE } from "@/lib/wakeSleep";
-import { DayModal } from "@/components/DayModal";
+import dynamic from "next/dynamic";
+// تنبل: فقط با کنش کاربر باز می‌شه و کدش توی باندل اولیه نیست
+const DayModal = dynamic(() => import("@/components/DayModal").then((m) => m.DayModal), { ssr: false });
 
 const now = new Date();
 const todayKey = isoLocal(now);
@@ -125,11 +127,11 @@ export function HistoryCalendar({
     <div>
       <div className="cal-controls">
         <button className="small mono" onClick={() => { if (calMonth === 1) { setCalMonth(12); setCalYear((y) => y - 1); } else setCalMonth((m) => m - 1); }}>‹</button>
-        <div className="cal-label">{J_MONTHS[calMonth - 1]} {faNum(calYear)}</div>
+        <div className="cal-label">{jMonthName(calMonth - 1)} {faNum(calYear)}</div>
         <button className="small mono" onClick={() => { if (calMonth === 12) { setCalMonth(1); setCalYear((y) => y + 1); } else setCalMonth((m) => m + 1); }}>›</button>
       </div>
       <div className="cal-grid">
-        {CAL_WEEK_ORDER.map((d) => <div key={d} className="cal-weekday">{FA_WEEKDAY_SHORT[d]}</div>)}
+        {CAL_WEEK_ORDER.map((d) => <div key={d} className="cal-weekday">{weekdayShort(d)}</div>)}
         {cells}
       </div>
 

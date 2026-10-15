@@ -1,6 +1,7 @@
 "use client";
 
 import { createContext, useCallback, useContext, useEffect, useMemo, useState } from "react";
+import { tr } from "@/lib/i18n";
 
 export type AlertItem = {
   key: string; label: string; count: number; href: string; tone: "warn" | "danger" | "info";
@@ -49,7 +50,8 @@ export function AdminAlertsProvider({ children }: { children: React.ReactNode })
 export function relAge(iso?: string | null): string {
   if (!iso) return "";
   const h = Math.floor((Date.now() - new Date(iso).getTime()) / 3600_000);
-  if (h < 1) return "کمتر از 1 ساعت پیش";
-  if (h < 24) return `${h} ساعت پیش`;
-  return `${Math.floor(h / 24)} روز پیش`;
+  if (h < 1) return tr("کمتر از 1 ساعت پیش", "less than 1 hour ago");
+  if (h < 24) return tr(`${h} ساعت پیش`, `${h} h ago`);
+  const d = Math.floor(h / 24);
+  return tr(`${d} روز پیش`, `${d} ${d === 1 ? "day" : "days"} ago`);
 }

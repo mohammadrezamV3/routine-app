@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import { tr } from "@/lib/i18n";
 import { TradePageShell } from "@/components/TradePageShell";
 import { TradeNotesPanel } from "@/components/TradeNotesPanel";
 
@@ -9,11 +10,11 @@ export default function TradeNotesPage() {
 
   return (
     <TradePageShell
-      title="یادداشت‌ها"
+      title={tr("یادداشت‌ها", "Notes")}
       noScroll
       titleAction={
         <button type="button" className="trade-title-add-btn" onClick={() => setCreating(true)}>
-          + افزودن یادداشت
+          {tr("+ افزودن یادداشت", "+ Add note")}
         </button>
       }
     >

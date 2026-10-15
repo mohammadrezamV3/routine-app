@@ -16,6 +16,7 @@
 
 import { useEffect, useRef, useState } from "react";
 import { usePathname, useSearchParams } from "next/navigation";
+import { isEn } from "@/lib/i18n";
 
 type Phase = "idle" | "loading" | "done";
 const ATTR = "data-route-loading";
@@ -125,5 +126,6 @@ export function RouteProgress() {
   }, []);
 
   if (phase === "idle") return null;
-  return <span className={`route-progress rpg-${phase}`} aria-hidden="true" />;
+  // نوار از سمت شروع صفحه رشد می‌کنه (راست در فارسی، چپ در انگلیسی)
+  return <span className={`route-progress rpg-${phase}`} style={isEn() ? { transformOrigin: "left" } : undefined} aria-hidden="true" />;
 }

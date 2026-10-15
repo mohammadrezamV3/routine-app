@@ -2,14 +2,18 @@
 
 import { useEffect, useState } from "react";
 import { useRouter, usePathname, useSearchParams } from "next/navigation";
+import { tr } from "@/lib/i18n";
 
-const PRESETS: { key: string; label: string }[] = [
-  { key: "today", label: "امروز" },
-  { key: "7d", label: "7 روز" },
-  { key: "30d", label: "30 روز" },
-  { key: "3m", label: "3 ماه" },
-  { key: "12m", label: "12 ماه" },
-];
+// تابع (نه ثابت ماژول) تا برچسب‌ها با زبان جاری حل بشن
+function presets(): { key: string; label: string }[] {
+  return [
+    { key: "today", label: tr("امروز", "Today") },
+    { key: "7d", label: tr("7 روز", "7 days") },
+    { key: "30d", label: tr("30 روز", "30 days") },
+    { key: "3m", label: tr("3 ماه", "3 months") },
+    { key: "12m", label: tr("12 ماه", "12 months") },
+  ];
+}
 
 const DATE_RE = /^\d{4}-\d{2}-\d{2}$/;
 
@@ -71,8 +75,8 @@ export function RangePicker() {
 
   return (
     <div className="admin-range-picker">
-      <div className="admin-range-presets" role="group" aria-label="بازه‌ی زمانی">
-        {PRESETS.map((p) => (
+      <div className="admin-range-presets" role="group" aria-label={tr("بازه‌ی زمانی", "Date range")}>
+        {presets().map((p) => (
           <button
             key={p.key}
             type="button"
@@ -89,23 +93,23 @@ export function RangePicker() {
           className={`admin-range-btn${active === "custom" ? " active" : ""}${customOpen ? " is-open" : ""}`}
           onClick={() => setCustomOpen((v) => !v)}
         >
-          بازه دلخواه
+          {tr("بازه دلخواه", "Custom range")}
         </button>
       </div>
       {customOpen && (
         <form className="admin-range-custom" onSubmit={(e) => { e.preventDefault(); applyCustom(); }}>
           <label className="admin-range-date">
-            <span>از</span>
+            <span>{tr("از", "From")}</span>
             <input type="date" className="admin-input" value={from} max={to || max} onChange={(e) => setFrom(e.target.value)} />
           </label>
           <label className="admin-range-date">
-            <span>تا</span>
+            <span>{tr("تا", "To")}</span>
             <input type="date" className="admin-input" value={to} min={from || undefined} max={max} onChange={(e) => setTo(e.target.value)} />
           </label>
           <button type="submit" className="admin-btn primary sm" disabled={!valid || reversed}>
-            اعمال
+            {tr("اعمال", "Apply")}
           </button>
-          {reversed && <span className="admin-form-error">تاریخ «از» باید قبل از «تا» باشه</span>}
+          {reversed && <span className="admin-form-error">{tr("تاریخ «از» باید قبل از «تا» باشه", "The «From» date must be before the «To» date")}</span>}
         </form>
       )}
     </div>

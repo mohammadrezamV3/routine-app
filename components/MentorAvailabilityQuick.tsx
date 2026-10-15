@@ -14,6 +14,7 @@ import { fmtDate } from "@/lib/mentorFormat";
 import { formatJalali, jalaliToIso, toJalali, type JalaliDate } from "@/lib/jalali";
 import { AWAY_MESSAGE_MAX } from "@/lib/mentorAvailability";
 import type { MentorSettingsResponse } from "@/lib/mentorTypes";
+import { tr, trv } from "@/lib/i18n";
 
 const ic = (Icon: typeof UserPlus, size: number) => <Icon size={size} strokeWidth={MI_STROKE} aria-hidden />;
 
@@ -69,7 +70,7 @@ export function MentorAvailabilityQuick({
   }
 
   if (loadError) return null; // داشبورد بدون این بخش هم کار می‌کند
-  const title = "وضعیت پذیرش";
+  const title = tr("وضعیت پذیرش", "Accepting students");
   const icon = ic(UserPlus, MI.section);
   if (!data) {
     if (variant === "pill") return <span className="mv2-today-pill is-loading" aria-hidden><Spinner size={14} /></span>;
@@ -86,8 +87,8 @@ export function MentorAvailabilityQuick({
   const mode: Mode = away ? "away" : s.acceptingStudents ? "open" : "closed";
   const full = s.maxActiveStudents != null && activeStudents >= s.maxActiveStudents;
   const capacity = s.maxActiveStudents != null
-    ? `${fa(activeStudents)} از ${fa(s.maxActiveStudents)} شاگرد فعال`
-    : `${fa(activeStudents)} شاگرد فعال؛ بدون سقف`;
+    ? tr(`${fa(activeStudents)} از ${fa(s.maxActiveStudents)} شاگرد فعال`, `${fa(activeStudents)} of ${fa(s.maxActiveStudents)} active students`)
+    : tr(`${fa(activeStudents)} شاگرد فعال؛ بدون سقف`, `${fa(activeStudents)} active ${activeStudents === 1 ? "student" : "students"}; no limit`);
 
   function pick(v: Mode) {
     if (v === mode || busy) return;
@@ -102,8 +103,8 @@ export function MentorAvailabilityQuick({
         <div className="mentor-avail-line">
           {ic(CalendarClock, MI.row)}
           <span>
-            <b>تا {fmtDate(s.awayUntil)}</b> در دسترس نیستی
-            {s.awayPausesRequests ? "؛ درخواست‌های تازه متوقف است" : "؛ درخواست‌ها باز است"}
+            {trv(<b>تا {fmtDate(s.awayUntil)}</b>, <b>Until {fmtDate(s.awayUntil)}</b>)}{tr(" در دسترس نیستی", " you are away")}
+            {s.awayPausesRequests ? tr("؛ درخواست‌های تازه متوقف است", "; new requests are paused") : tr("؛ درخواست‌ها باز است", "; requests stay open")}
           </span>
         </div>
         {s.awayMessage && <p className="mentor-quote">{s.awayMessage}</p>}
@@ -112,10 +113,10 @@ export function MentorAvailabilityQuick({
             type="button" className="trade-primary-btn mentor-btn is-sm" disabled={!!busy}
             onClick={() => save("end", { awayUntil: null })}
           >
-            {busy === "end" ? <Spinner size={14} /> : <>{ic(CheckCircle2, MI.btnSm)} برگشتم</>}
+            {busy === "end" ? <Spinner size={14} /> : <>{ic(CheckCircle2, MI.btnSm)} {tr("برگشتم", "I am back")}</>}
           </button>
           <button type="button" className="account-outline-btn mentor-btn is-sm" disabled={!!busy} onClick={() => { setPanel(false); setSheet(true); }}>
-            {ic(Pencil, MI.btnSm)} ویرایش
+            {ic(Pencil, MI.btnSm)} {tr("ویرایش", "Edit")}
           </button>
         </div>
       </div>
@@ -124,14 +125,14 @@ export function MentorAvailabilityQuick({
     status = (
       <div className="mentor-avail-line">
         {ic(CircleSlash, MI.row)}
-        <span>درخواست تازه نمی‌رسد؛ شاگردهای فعلی و دعوت‌های تو می‌مانند</span>
+        <span>{tr("درخواست تازه نمی‌رسد؛ شاگردهای فعلی و دعوت‌های تو می‌مانند", "No new requests will arrive; your current students and your invites stay")}</span>
       </div>
     );
   } else {
     status = (
       <div className={`mentor-avail-line${full ? " is-warn" : ""}`}>
         {full ? ic(AlertCircle, MI.row) : ic(CheckCircle2, MI.row)}
-        <span>{full ? "ظرفیت تکمیل است؛ درخواست تازه‌ای پذیرفته نمی‌شود" : "شاگردها از پروفایلت درخواست می‌دهند"}</span>
+        <span>{full ? tr("ظرفیت تکمیل است؛ درخواست تازه‌ای پذیرفته نمی‌شود", "You are at capacity; new requests are not accepted") : tr("شاگردها از پروفایلت درخواست می‌دهند", "Students can send requests from your profile")}</span>
       </div>
     );
   }
@@ -143,9 +144,9 @@ export function MentorAvailabilityQuick({
             active={mode}
             onChange={pick}
             options={[
-              { value: "open", label: "پذیرش باز" },
-              { value: "closed", label: "پذیرش بسته" },
-              { value: "away", label: "در دسترس نیستم" },
+              { value: "open", label: tr("پذیرش باز", "Open") },
+              { value: "closed", label: tr("پذیرش بسته", "Closed") },
+              { value: "away", label: tr("در دسترس نیستم", "Away") },
             ]}
           />
         </div>
@@ -172,20 +173,20 @@ export function MentorAvailabilityQuick({
   );
 
   if (variant === "pill") {
-    const label = mode === "away" ? `در دسترس نیستم تا ${fmtDate(s.awayUntil)}`
-      : mode === "closed" ? "فعلا نمی‌پذیرم"
-      : full ? "ظرفیت پره" : "درخواست می‌پذیرم";
+    const label = mode === "away" ? tr(`در دسترس نیستم تا ${fmtDate(s.awayUntil)}`, `Away until ${fmtDate(s.awayUntil)}`)
+      : mode === "closed" ? tr("فعلا نمی‌پذیرم", "Not accepting for now")
+      : full ? tr("ظرفیت پره", "Full") : tr("درخواست می‌پذیرم", "Accepting requests");
     const tone = mode === "open" && !full ? "ok" : mode === "closed" ? "neutral" : "warn";
     return (
       <>
         <button
           type="button" className={`mv2-today-pill is-${tone}`} aria-haspopup="dialog"
-          aria-label={`وضعیت پذیرش: ${label}؛ برای تغییر بزن`} onClick={() => { setError(null); setPanel(true); }}
+          aria-label={tr(`وضعیت پذیرش: ${label}؛ برای تغییر بزن`, `Accepting students: ${label}. Tap to change.`)} onClick={() => { setError(null); setPanel(true); }}
         >
           <span className="mv2-today-pill-dot" aria-hidden />
           <span>{label}</span>
         </button>
-        <MentorSheet open={panel} onClose={() => setPanel(false)} title="وضعیت پذیرش" size="sm" dismissible={!busy}>
+        <MentorSheet open={panel} onClose={() => setPanel(false)} title={tr("وضعیت پذیرش", "Accepting students")} size="sm" dismissible={!busy}>
           <div className="mv2-today-avail">
             <p className="mv2-today-avail-cap">{capacity}</p>
             {body}
@@ -249,8 +250,8 @@ function AwaySheet({
     e.preventDefault();
     const iso = date ? jalaliToIso(...date) : null;
     const errs: typeof err = {};
-    if (!iso) errs.date = "تاریخ بازگشت را انتخاب کن";
-    if (message.trim().length > AWAY_MESSAGE_MAX) errs.message = `حداکثر ${fa(AWAY_MESSAGE_MAX)} حرف`;
+    if (!iso) errs.date = tr("تاریخ بازگشت را انتخاب کن", "Pick a return date");
+    if (message.trim().length > AWAY_MESSAGE_MAX) errs.message = tr(`حداکثر ${fa(AWAY_MESSAGE_MAX)} حرف`, `At most ${fa(AWAY_MESSAGE_MAX)} characters`);
     setErr(errs);
     if (Object.keys(errs).length) return;
     await onSave({ awayUntil: iso, awayMessage: message.trim() || null, awayPausesRequests: pause });
@@ -258,39 +259,39 @@ function AwaySheet({
 
   return (
     <>
-      <MentorSheet open={open} onClose={onClose} title="در دسترس نیستم" size="sm" dismissible={!busy && !picker}>
+      <MentorSheet open={open} onClose={onClose} title={tr("در دسترس نیستم", "I am away")} size="sm" dismissible={!busy && !picker}>
         <form className="mentor-form" onSubmit={submit} noValidate>
-          <MentorField label="تاریخ بازگشت" error={err.date}>
+          <MentorField label={tr("تاریخ بازگشت", "Return date")} error={err.date}>
             <button
               type="button" className={`jdate-btn wsearch-newform-name trade-glass-field mentor-date-btn${date ? "" : " placeholder"}`}
               onClick={() => setPicker(true)}
             >
               {ic(CalendarClock, MI.btnSm)}
-              <span>{date ? formatJalali(date) : "روز / ماه / سال"}</span>
+              <span>{date ? formatJalali(date) : tr("روز / ماه / سال", "Day / month / year")}</span>
             </button>
           </MentorField>
           <MentorField
-            label="پیام برای شاگردها" htmlFor="away-msg" optional error={err.message}
-            hint={`${fa(message.trim().length)} از ${fa(AWAY_MESSAGE_MAX)} حرف`}
+            label={tr("پیام برای شاگردها", "Message for students")} htmlFor="away-msg" optional error={err.message}
+            hint={tr(`${fa(message.trim().length)} از ${fa(AWAY_MESSAGE_MAX)} حرف`, `${fa(message.trim().length)} of ${fa(AWAY_MESSAGE_MAX)} characters`)}
           >
             <textarea
               id="away-msg" className="wsearch-newform-name trade-glass-field" rows={2} maxLength={AWAY_MESSAGE_MAX + 20}
-              value={message} placeholder="مثلا «در سفرم؛ پیام‌ها را پس از بازگشت جواب می‌دهم»"
+              value={message} placeholder={tr("مثلا «در سفرم؛ پیام‌ها را پس از بازگشت جواب می‌دهم»", "For example: \"I am travelling; I will reply when I am back\"")}
               onChange={(e) => { setMessage(e.target.value); setErr((x) => ({ ...x, message: undefined })); }}
             />
           </MentorField>
           <div className="mentor-toggle-row" style={{ padding: 0 }}>
             <div className="mentor-toggle-text">
-              <div className="mentor-toggle-title">توقف درخواست‌های تازه</div>
-              <div className="mentor-toggle-desc">تا روز بازگشت، شاگرد جدید درخواست نمی‌دهد</div>
+              <div className="mentor-toggle-title">{tr("توقف درخواست‌های تازه", "Pause new requests")}</div>
+              <div className="mentor-toggle-desc">{tr("تا روز بازگشت، شاگرد جدید درخواست نمی‌دهد", "Until you are back, new students cannot send requests")}</div>
             </div>
-            <ToggleSwitch checked={pause} label="توقف درخواست‌های تازه" onChange={setPause} />
+            <ToggleSwitch checked={pause} label={tr("توقف درخواست‌های تازه", "Pause new requests")} onChange={setPause} />
           </div>
           {error && <div className="form-inline-error" role="alert" style={{ margin: 0 }}>{error}</div>}
           <div className="mentor-form-actions" style={{ marginTop: 0 }}>
-            <button type="button" className="account-outline-btn muted mentor-btn" onClick={onClose} disabled={busy}>انصراف</button>
+            <button type="button" className="account-outline-btn muted mentor-btn" onClick={onClose} disabled={busy}>{tr("انصراف", "Cancel")}</button>
             <button type="submit" className="trade-primary-btn mentor-btn" disabled={busy}>
-              {busy ? <Spinner size={14} /> : settings.awayUntil ? "ذخیره" : "ثبت"}
+              {busy ? <Spinner size={14} /> : settings.awayUntil ? tr("ذخیره", "Save") : tr("ثبت", "Set")}
             </button>
           </div>
         </form>
@@ -299,7 +300,7 @@ function AwaySheet({
         <div className="m-date-over">
           <JalaliDatePicker
             initial={date}
-            title="تاریخ بازگشت"
+            title={tr("تاریخ بازگشت", "Return date")}
             disablePast
             onClose={() => setPicker(false)}
             onPick={(v) => { setDate(v); setPicker(false); setErr((x) => ({ ...x, date: undefined })); }}

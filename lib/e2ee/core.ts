@@ -16,11 +16,12 @@
 //     (PBKDF2-SHA256، ۶۰۰هزار دور، نمک اختصاصی + زمینه‌ی جدا) → AES-256-GCM.
 //     پشتیبان قدیمی «رمز گفت‌وگو» (PBKDF2 ≥ ۶۰۰هزار دور) فقط برای یک بار باز کردن می‌ماند.
 
+import { tr } from "@/lib/i18n";
 import { concat, fromB64, fromUtf8, lp, normalizeDigits, toB64, utf8 } from "./encoding";
 
 export class E2EEUnsupportedError extends Error {
   constructor() {
-    super("WebCrypto در این مرورگر در دسترس نیست");
+    super(tr("WebCrypto در این مرورگر در دسترس نیست", "This browser doesn't support secure chat"));
   }
 }
 /** رمزگشایی/احراز اصالت شکست خورد (کلید اشتباه، داده‌ی دست‌کاری‌شده، رمز نادرست) */

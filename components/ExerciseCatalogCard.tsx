@@ -5,6 +5,7 @@ import { AnimatePresence } from "framer-motion";
 import { ListChecks } from "lucide-react";
 import { DashCard } from "./DashCard";
 import dynamic from "next/dynamic";
+import { tr } from "@/lib/i18n";
 
 // این مودال کل EXERCISE_CATALOG (~۸۵KB سورس) رو import می‌کنه، ولی فقط وقتی
 // کاربر روی «مشاهده حرکات» بزنه رندر می‌شه. بدون dynamic، اون حجم توی باندل
@@ -30,7 +31,7 @@ export function ExerciseCatalogCard({ delay }: { delay?: number }) {
         className="flex flex-col items-center gap-2.5 py-6 text-[13px] font-bold text-dash-text sm:text-[15px]"
       >
         <ListChecks className="h-6 w-6 text-dash-green sm:h-7 sm:w-7" />
-        مشاهده حرکات
+        {tr("مشاهده حرکات", "Browse exercises")}
       </button>
 
       <AnimatePresence>{open && <ExerciseCatalogModal onClose={() => setOpen(false)} />}</AnimatePresence>

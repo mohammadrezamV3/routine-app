@@ -7,6 +7,7 @@
 // «صندلی رزرو»: نوبت زنده (OFFERED و منقضی‌نشده) + درخواست PENDINGی که از
 // صف آمده. این‌ها در ظرفیت حساب می‌شوند تا درخواست تازه از صف جلو نزند.
 import { faNum } from "@/lib/jalali";
+import { tr } from "@/lib/i18n";
 import type { AvailabilityState } from "@/lib/mentorAvailability";
 
 export const WAITLIST_OFFER_HOURS = 48;
@@ -76,16 +77,16 @@ export function queuePosition(
 
 /** «نفر N در صف» */
 export function positionLabel(position: number): string {
-  return `نفر ${faNum(position)} در صف`;
+  return tr(`نفر ${faNum(position)} در صف`, `#${faNum(position)} in line`);
 }
 
 /** مهلت باقی‌مانده‌ی نوبت، کوتاه و خودمانی؛ `them` برای دید مربی («… وقت داره») */
 export function offerRemainingLabel(expiresAt: Date | string, now: Date = new Date(), them = false): string {
   const ms = new Date(expiresAt).getTime() - now.getTime();
-  if (ms <= 0) return them ? "مهلتش تموم شد" : "مهلتت تموم شد";
-  const tail = them ? "وقت داره" : "وقت داری";
+  if (ms <= 0) return them ? tr("مهلتش تموم شد", "Their time is up") : tr("مهلتت تموم شد", "Your time is up");
+  const tail = them ? tr("وقت داره", "left") : tr("وقت داری", "left");
   const hours = Math.floor(ms / (60 * 60 * 1000));
-  if (hours >= 1) return `${faNum(hours)} ساعت ${tail}`;
+  if (hours >= 1) return tr(`${faNum(hours)} ساعت ${tail}`, `${faNum(hours)} ${hours === 1 ? "hour" : "hours"} ${tail}`);
   const minutes = Math.max(1, Math.floor(ms / (60 * 1000)));
-  return `${faNum(minutes)} دقیقه ${tail}`;
+  return tr(`${faNum(minutes)} دقیقه ${tail}`, `${faNum(minutes)} ${minutes === 1 ? "minute" : "minutes"} ${tail}`);
 }

@@ -1,7 +1,7 @@
 "use client";
 
 import { ReactNode } from "react";
-import { motion } from "framer-motion";
+import { m as motion } from "framer-motion";
 import { cn } from "@/lib/utils";
 
 // قاب کارت عمومی داشبورد — رادیوس/بوردر/بک‌گراند یکسان برای همه‌ی
@@ -14,7 +14,13 @@ export function DashCard({ children, className, delay = 0, label, dataCard }: { 
       transition={{ duration: 0.45, ease: "easeOut", delay }}
       aria-label={label}
       data-card={dataCard}
-      className={cn("rounded-dash border border-dash-border bg-dash-card p-3.5 backdrop-blur-xl sm:p-5", className)}
+      className={cn(
+        "rounded-dash border border-dash-border bg-dash-card backdrop-blur-xl",
+        // پدینگ پیش‌فرض فقط وقتی کاربر خودش p-* / sm:p-* نداده (جایگزین tailwind-merge)
+        !/(^|\s)p-/.test(className ?? "") && "p-3.5",
+        !/(^|\s)sm:p-/.test(className ?? "") && "sm:p-5",
+        className
+      )}
     >
       {children}
     </motion.div>

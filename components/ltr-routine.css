@@ -1,0 +1,7 @@
+/* اصلاح‌های ظاهری چیدمان چپ‌به‌راست (انگلیسی) — بخش routine. همه‌ی قاعده‌ها زیر html[dir="ltr"] تا فارسی بی‌تغییر بمونه. */
+/* ===== My Routine / Sleep / Workout / Calories — English (LTR) ===== */
+/* long English weekday names ("Wednesday") must fit the 5-up day strip on phones */
+@media (max-width:639px){
+  html[dir="ltr"] [data-day-pill]{ padding-inline:0; }
+  html[dir="ltr"] [data-day-pill] > span:first-child{ font-size:9.5px; letter-spacing:-.01em; }
+}

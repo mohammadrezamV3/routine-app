@@ -4,6 +4,7 @@ import { useEffect, useRef, useState } from "react";
 import { createPortal } from "react-dom";
 import { MoreVertical } from "lucide-react";
 import { useMenuPresence } from "@/lib/useMenuPresence";
+import { isEn, tr } from "@/lib/i18n";
 
 export type MentorMenuAction = {
   label: string;
@@ -22,7 +23,7 @@ type Anchor = { top: number; bottom: number; left: number; right: number };
  * (MentorMenuAt) باز می‌شود. پورتال به body، موقعیت fixed؛ با اسکرول بسته می‌شود.
  */
 export function MentorMenuAt({
-  anchor, actions, onClose, label = "گزینه‌ها", align = "end",
+  anchor, actions, onClose, label = tr("گزینه‌ها", "Options"), align = "end",
 }: {
   anchor: Anchor | null;
   actions: MentorMenuAction[];
@@ -80,7 +81,9 @@ export function MentorMenuAt({
     const estH = shown.actions.length * 40 + 14;
     fromBelow = a.bottom + 6 + estH <= vh - 8 || a.top < estH + 14;
     const vert = fromBelow ? { top: Math.min(a.bottom + 6, vh - estH - 8) } : { bottom: vh - a.top + 6 };
-    const horiz = shown.align === "end"
+    // end = سمت انتهای ردیف: در فارسی لبه‌ی چپ، در انگلیسی لبه‌ی راست
+    const leftEdge = (shown.align === "end") !== isEn();
+    const horiz = leftEdge
       ? { left: Math.max(8, a.left) }
       : { right: Math.max(8, window.innerWidth - a.right) };
     style = { ...vert, ...horiz };
@@ -93,7 +96,7 @@ export function MentorMenuAt({
         role="menu"
         aria-label={label}
         data-state={presence.state}
-        style={{ ...style, ["--mm-origin" as string]: `${shown.align === "end" ? "left" : "right"} ${fromBelow ? "top" : "bottom"}` }}
+        style={{ ...style, ["--mm-origin" as string]: `${(shown.align === "end") !== isEn() ? "left" : "right"} ${fromBelow ? "top" : "bottom"}` }}
         className="mm-menu dash-context-menu mentor-menu fixed z-[96] min-w-[168px] overflow-hidden rounded-2xl border border-dash-border p-1.5 shadow-[0_16px_40px_rgba(0,0,0,.5)]"
       >
         {shown.actions.map((a) => (
@@ -113,7 +116,7 @@ export function MentorMenuAt({
                 items[(i + (e.key === "ArrowDown" ? 1 : -1) + items.length) % items.length]?.focus();
               }
             }}
-            className={`flex items-center gap-2 rounded-xl px-3 py-2 text-right text-[12px] outline-none transition sm:text-[13px] ${
+            className={`flex items-center gap-2 rounded-xl px-3 py-2 text-start text-[12px] outline-none transition sm:text-[13px] ${
               a.disabled
                 ? "cursor-default opacity-45"
                 : a.danger
@@ -133,7 +136,7 @@ export function MentorMenuAt({
 
 /** دکمه‌ی سه‌نقطه + منو (همان trade-kebab-trigger سایت) */
 export function MentorKebabMenu({
-  actions, label = "گزینه‌ها", className = "trade-icon-btn trade-kebab-trigger", iconSize = 16,
+  actions, label = tr("گزینه‌ها", "Options"), className = "trade-icon-btn trade-kebab-trigger", iconSize = 16,
 }: {
   actions: MentorMenuAction[];
   label?: string;

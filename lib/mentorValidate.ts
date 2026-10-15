@@ -1,5 +1,6 @@
 import type { MentorProgramType } from "@prisma/client";
 import { parseIsoDate, toEnglishDigits } from "@/lib/validate";
+import { tr } from "@/lib/i18n";
 
 // اعتبارسنجی بدنه‌ی ساخت/ویرایش برنامه‌ی منتور. خروجی فقط فیلدهای
 // لیست‌شده‌ست — بدنه‌ی خام هیچ‌وقت به Prisma نمی‌رسه (mass assignment)، پس
@@ -69,37 +70,37 @@ function optInt(v: unknown, min: number, max: number): number | null | "bad" {
 }
 
 function validateItem(raw: any, idx: number, type: MentorProgramType): Result<ItemData> {
-  const where = `آیتم ${idx + 1}`;
-  if (!raw || typeof raw !== "object") return { ok: false, error: `${where} نامعتبره` };
+  const where = tr(`آیتم ${idx + 1}`, `Item ${idx + 1}`);
+  if (!raw || typeof raw !== "object") return { ok: false, error: tr(`${where} نامعتبره`, `${where} is not valid`) };
 
   const title = typeof raw.title === "string" ? raw.title.trim().slice(0, ITEM_TITLE_MAX) : "";
-  if (!title) return { ok: false, error: `${where}: عنوان لازمه` };
+  if (!title) return { ok: false, error: tr(`${where}: عنوان لازمه`, `${where}: a title is required`) };
 
   const repeat = raw.repeat === "DAILY" ? "DAILY" : raw.repeat === "WEEKLY" || raw.repeat === undefined ? "WEEKLY" : null;
-  if (!repeat) return { ok: false, error: `${where}: نوع تکرار نامعتبره` };
+  if (!repeat) return { ok: false, error: tr(`${where}: نوع تکرار نامعتبره`, `${where}: invalid repeat type`) };
 
   let days: number[];
   if (repeat === "DAILY") {
     days = ALL_DAYS.slice();
   } else {
-    if (!Array.isArray(raw.days) || raw.days.length > 7) return { ok: false, error: `${where}: روزهای هفته نامعتبره` };
+    if (!Array.isArray(raw.days) || raw.days.length > 7) return { ok: false, error: tr(`${where}: روزهای هفته نامعتبره`, `${where}: invalid weekdays`) };
     const set = new Set<number>();
     for (const d of raw.days) {
-      if (typeof d !== "number" || !Number.isInteger(d) || d < 0 || d > 6) return { ok: false, error: `${where}: روزهای هفته نامعتبره` };
+      if (typeof d !== "number" || !Number.isInteger(d) || d < 0 || d > 6) return { ok: false, error: tr(`${where}: روزهای هفته نامعتبره`, `${where}: invalid weekdays`) };
       set.add(d);
     }
-    if (set.size === 0) return { ok: false, error: `${where}: حداقل یک روز هفته رو انتخاب کن` };
+    if (set.size === 0) return { ok: false, error: tr(`${where}: حداقل یک روز هفته رو انتخاب کن`, `${where}: pick at least one weekday`) };
     days = Array.from(set).sort((a, b) => a - b);
   }
 
   let startTime: string | null = null;
   if (!isBlank(raw.startTime)) {
     startTime = parseHHmm(raw.startTime);
-    if (!startTime) return { ok: false, error: `${where}: ساعت شروع باید به شکل HH:mm باشه` };
+    if (!startTime) return { ok: false, error: tr(`${where}: ساعت شروع باید به شکل HH:mm باشه`, `${where}: start time must look like HH:mm`) };
   }
 
   const durationMin = optInt(raw.durationMin, 1, 1440);
-  if (durationMin === "bad") return { ok: false, error: `${where}: مدت (دقیقه) باید بین 1 تا 1440 باشد` };
+  if (durationMin === "bad") return { ok: false, error: tr(`${where}: مدت (دقیقه) باید بین 1 تا 1440 باشد`, `${where}: duration must be between 1 and 1440 minutes`) };
 
   // فیلدهای حرکتی فقط برای برنامه‌ی تمرینی معنا دارن؛ برای روتین دور ریخته می‌شن
   let sets: number | null = null;
@@ -108,23 +109,23 @@ function validateItem(raw: any, idx: number, type: MentorProgramType): Result<It
   let restSec: number | null = null;
   if (type === "WORKOUT") {
     const s = optInt(raw.sets, 1, 100);
-    if (s === "bad") return { ok: false, error: `${where}: تعداد ست باید بین 1 تا 100 باشد` };
+    if (s === "bad") return { ok: false, error: tr(`${where}: تعداد ست باید بین 1 تا 100 باشد`, `${where}: sets must be between 1 and 100`) };
     sets = s;
 
     if (!isBlank(raw.reps)) {
       const r = toEnglishDigits(String(raw.reps)).trim();
-      if (!REPS_RE.test(r)) return { ok: false, error: `${where}: تکرار باید عدد یا بازه (مثل 8-12) باشه` };
+      if (!REPS_RE.test(r)) return { ok: false, error: tr(`${where}: تکرار باید عدد یا بازه (مثل 8-12) باشه`, `${where}: reps must be a number or a range (like 8-12)`) };
       reps = r;
     }
 
     if (!isBlank(raw.weightKg)) {
       const w = typeof raw.weightKg === "string" ? Number(toEnglishDigits(raw.weightKg)) : raw.weightKg;
-      if (typeof w !== "number" || !Number.isFinite(w) || w < 0 || w > 1000) return { ok: false, error: `${where}: وزنه باید بین 0 تا 1000 کیلوگرم باشد` };
+      if (typeof w !== "number" || !Number.isFinite(w) || w < 0 || w > 1000) return { ok: false, error: tr(`${where}: وزنه باید بین 0 تا 1000 کیلوگرم باشد`, `${where}: weight must be between 0 and 1000 kg`) };
       weightKg = Math.round(w * 10) / 10;
     }
 
     const rs = optInt(raw.restSec, 0, 3600);
-    if (rs === "bad") return { ok: false, error: `${where}: استراحت باید بین 0 تا 3600 ثانیه باشد` };
+    if (rs === "bad") return { ok: false, error: tr(`${where}: استراحت باید بین 0 تا 3600 ثانیه باشد`, `${where}: rest must be between 0 and 3600 seconds`) };
     restSec = rs;
   }
 
@@ -139,28 +140,28 @@ function validateItem(raw: any, idx: number, type: MentorProgramType): Result<It
  * mentorshipId)، ولی روت PUT می‌تونه نوع فعلی برنامه رو به‌عنوان پیش‌فرض بده.
  */
 export function validateProgramInput(body: any, fallbackType?: MentorProgramType): Result<ProgramData> {
-  if (!body || typeof body !== "object") return { ok: false, error: "بدنه‌ی درخواست نامعتبره" };
+  if (!body || typeof body !== "object") return { ok: false, error: tr("بدنه‌ی درخواست نامعتبره", "Invalid request") };
 
   const type = body.type === "ROUTINE" || body.type === "WORKOUT" ? (body.type as MentorProgramType) : body.type === undefined ? fallbackType : undefined;
-  if (!type) return { ok: false, error: "نوع برنامه نامعتبره" };
+  if (!type) return { ok: false, error: tr("نوع برنامه نامعتبره", "Invalid program type") };
 
   const title = typeof body.title === "string" ? body.title.trim().slice(0, PROGRAM_TITLE_MAX) : "";
-  if (!title) return { ok: false, error: "عنوان برنامه لازمه" };
+  if (!title) return { ok: false, error: tr("عنوان برنامه لازمه", "A program title is required") };
 
   let startDate: Date | null = null;
   let endDate: Date | null = null;
   if (!isBlank(body.startDate)) {
     startDate = parseIsoDate(body.startDate);
-    if (!startDate) return { ok: false, error: "تاریخ شروع نامعتبره (YYYY-MM-DD)" };
+    if (!startDate) return { ok: false, error: tr("تاریخ شروع نامعتبره (YYYY-MM-DD)", "Invalid start date (YYYY-MM-DD)") };
   }
   if (!isBlank(body.endDate)) {
     endDate = parseIsoDate(body.endDate);
-    if (!endDate) return { ok: false, error: "تاریخ پایان نامعتبره (YYYY-MM-DD)" };
+    if (!endDate) return { ok: false, error: tr("تاریخ پایان نامعتبره (YYYY-MM-DD)", "Invalid end date (YYYY-MM-DD)") };
   }
-  if (startDate && endDate && endDate < startDate) return { ok: false, error: "تاریخ پایان قبل از تاریخ شروعه" };
+  if (startDate && endDate && endDate < startDate) return { ok: false, error: tr("تاریخ پایان قبل از تاریخ شروعه", "The end date is before the start date") };
 
-  if (!Array.isArray(body.items)) return { ok: false, error: "آیتم‌های برنامه لازمه" };
-  if (body.items.length > MAX_PROGRAM_ITEMS) return { ok: false, error: `حداکثر ${MAX_PROGRAM_ITEMS} آیتم مجازه` };
+  if (!Array.isArray(body.items)) return { ok: false, error: tr("آیتم‌های برنامه لازمه", "Program items are required") };
+  if (body.items.length > MAX_PROGRAM_ITEMS) return { ok: false, error: tr(`حداکثر ${MAX_PROGRAM_ITEMS} آیتم مجازه`, `At most ${MAX_PROGRAM_ITEMS} items are allowed`) };
 
   const items: ItemData[] = [];
   for (let i = 0; i < body.items.length; i++) {
@@ -169,7 +170,7 @@ export function validateProgramInput(body: any, fallbackType?: MentorProgramType
     items.push(r.data);
   }
 
-  if (body.note !== undefined && body.note !== null && typeof body.note !== "string") return { ok: false, error: "یادداشت برنامه نامعتبره" };
+  if (body.note !== undefined && body.note !== null && typeof body.note !== "string") return { ok: false, error: tr("یادداشت برنامه نامعتبره", "Invalid program note") };
 
   return {
     ok: true,
@@ -192,9 +193,9 @@ export function validateProgramInput(body: any, fallbackType?: MentorProgramType
  */
 export function validateRoutineRole(v: unknown): Result<string | null> {
   if (v === undefined || v === null) return { ok: true, data: null };
-  if (typeof v !== "string") return { ok: false, error: "نقش روتین نامعتبره" };
+  if (typeof v !== "string") return { ok: false, error: tr("نقش روتین نامعتبره", "Invalid routine role") };
   const t = v.replace(/\s+/g, " ").trim();
   if (!t) return { ok: true, data: null };
-  if (t.length > ROUTINE_ROLE_MAX) return { ok: false, error: `نقش روتین حداکثر ${ROUTINE_ROLE_MAX} حرفه` };
+  if (t.length > ROUTINE_ROLE_MAX) return { ok: false, error: tr(`نقش روتین حداکثر ${ROUTINE_ROLE_MAX} حرفه`, `Routine role can be at most ${ROUTINE_ROLE_MAX} characters`) };
   return { ok: true, data: t };
 }

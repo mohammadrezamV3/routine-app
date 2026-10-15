@@ -6,6 +6,7 @@ import { getNotificationPermission, requestNotificationPermission } from "@/lib/
 import { getNotifPrefs, saveNotifPrefs, NotifPrefs, DEFAULT_NOTIF_PREFS } from "@/lib/notifPrefs";
 import { AccountToggleRow } from "@/components/AccountRow";
 import { AccountBlock, AccountOption } from "@/components/AccountUI";
+import { tr } from "@/lib/i18n";
 
 // اعلان‌ها — طبق درخواست صریح دیگر صفحه‌ی جدایی ندارد و بخشی از
 // «تنظیمات» است (/account/general).
@@ -14,9 +15,9 @@ import { AccountBlock, AccountOption } from "@/components/AccountUI";
 // اعلان زنده (NotificationPanel) بهشون رسیدگی می‌شه؛ بقیه‌ی دسته‌ها
 // قبلا سوییچ داشتن ولی هیچ‌جا خونده نمی‌شدن — سوییچی که هیچ اثری نداره
 // بدتر از نبودنشه، پس حذف شدن.
-const ROWS: [keyof NotifPrefs, string, React.ReactNode][] = [
-  ["taskReminders", "اعلان‌های روتین", <CalendarCheck2 size={16} key="r" />],
-  ["exerciseReminders", "اعلان‌های بدنسازی", <Dumbbell size={16} key="e" />],
+const rows = (): [keyof NotifPrefs, string, React.ReactNode][] => [
+  ["taskReminders", tr("اعلان‌های روتین", "Routine notifications"), <CalendarCheck2 size={16} key="r" />],
+  ["exerciseReminders", tr("اعلان‌های بدنسازی", "Workout notifications"), <Dumbbell size={16} key="e" />],
 ];
 
 export function NotificationSettings({ index = 0 }: { index?: number }) {
@@ -41,26 +42,26 @@ export function NotificationSettings({ index = 0 }: { index?: number }) {
   }
 
   return (
-    <AccountBlock icon={<BellRing size={15} />} title="اعلان‌ها" index={index}>
+    <AccountBlock icon={<BellRing size={15} />} title={tr("اعلان‌ها", "Notifications")} index={index}>
       {notifPermission !== "granted" && (
-        <AccountOption label="اجازه‌ی نوتیفیکیشن مرورگر">
+        <AccountOption label={tr("اجازه‌ی نوتیفیکیشن مرورگر", "Browser notification permission")}>
           {notifPermission === "unsupported" ? (
-            <div className="item-line empty">مرورگرت از نوتیف پشتیبانی نمی‌کنه.</div>
+            <div className="item-line empty">{tr("مرورگرت از نوتیف پشتیبانی نمی‌کنه.", "Your browser does not support notifications.")}</div>
           ) : notifPermission === "denied" ? (
-            <div className="item-line empty">مرورگر مسدودش کرده — از تنظیمات سایت مرورگرت بازش کن.</div>
+            <div className="item-line empty">{tr("مرورگر مسدودش کرده — از تنظیمات سایت مرورگرت بازش کن.", "Your browser has blocked it. Unblock it in your browser site settings.")}</div>
           ) : (
             <>
-              <div className="item-line">وقتی برنامه‌ی امروزت (یا تمرینت) به وقتش برسه، یادآوری می‌گیری.</div>
+              <div className="item-line">{tr("وقتی برنامه‌ی امروزت (یا تمرینت) به وقتش برسه، یادآوری می‌گیری.", "You get a reminder when today's plan (or workout) is due.")}</div>
               <button className="account-outline-btn" onClick={enableNotifications} style={{ marginTop: 10 }}>
-                فعال‌کردن یادآوری‌ها
+                {tr("فعال‌کردن یادآوری‌ها", "Enable reminders")}
               </button>
             </>
           )}
         </AccountOption>
       )}
 
-      <AccountOption label="کدوم دسته‌ها یادآوری بگیرن">
-        {ROWS.map(([key, label, icon], i) => (
+      <AccountOption label={tr("کدوم دسته‌ها یادآوری بگیرن", "Which categories send reminders")}>
+        {rows().map(([key, label, icon], i) => (
           <AccountToggleRow key={key} index={i} icon={icon} label={label} checked={prefs[key]} onChange={(v) => toggle(key, v)} />
         ))}
       </AccountOption>

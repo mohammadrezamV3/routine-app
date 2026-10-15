@@ -1,3 +1,4 @@
+import { tr } from "@/lib/i18n";
 import { NextRequest, NextResponse } from "next/server";
 import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/auth";
@@ -33,25 +34,25 @@ async function handlePATCH(req: NextRequest) {
 
   const ip = getClientIp(req.headers);
   if (!(await checkRateLimit(`referral-code:${userId}`, 5, 60 * 60 * 1000)) || !(await checkRateLimit(`referral-code-ip:${ip}`, 10, 60 * 60 * 1000))) {
-    return NextResponse.json({ error: "درخواست‌های زیاد — کمی بعد دوباره امتحان کن" }, { status: 429 });
+    return NextResponse.json({ error: tr("درخواست‌های زیاد — کمی بعد دوباره امتحان کن", "Too many requests — try again shortly") }, { status: 429 });
   }
 
   const body = await req.json().catch(() => ({}));
   const code = normalizeReferralCode(String(body?.code || ""));
   if (!CUSTOM_REFERRAL_CODE_RE.test(code)) {
-    return NextResponse.json({ error: "کد دعوت باید 4 تا 16 حرف انگلیسی یا عدد باشه" }, { status: 400 });
+    return NextResponse.json({ error: tr("کد دعوت باید 4 تا 16 حرف انگلیسی یا عدد باشه", "Invite code must be 4 to 16 English letters or digits") }, { status: 400 });
   }
 
   const [taken, promo] = await Promise.all([
     prisma.referralCode.findFirst({ where: { code, userId: { not: userId } }, select: { id: true } }),
     prisma.discountCode.findUnique({ where: { code }, select: { id: true } }),
   ]);
-  if (taken || promo) return NextResponse.json({ error: "این کد قبلا گرفته شده — یه اسم دیگه امتحان کن" }, { status: 409 });
+  if (taken || promo) return NextResponse.json({ error: tr("این کد قبلا گرفته شده — یه اسم دیگه امتحان کن", "This code is already taken — try another name") }, { status: 409 });
 
   try {
     await prisma.referralCode.upsert({ where: { userId }, update: { code }, create: { userId, code } });
   } catch {
-    return NextResponse.json({ error: "این کد قبلا گرفته شده — یه اسم دیگه امتحان کن" }, { status: 409 });
+    return NextResponse.json({ error: tr("این کد قبلا گرفته شده — یه اسم دیگه امتحان کن", "This code is already taken — try another name") }, { status: 409 });
   }
   return NextResponse.json({ ok: true, code });
 }

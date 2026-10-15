@@ -9,6 +9,7 @@ import { AdminTabBar } from "@/components/admin/TabBar";
 import { adminFetch } from "@/components/admin/useAdminToast";
 import { useAdminAccess } from "@/components/admin/AdminAccess";
 import { formatCurrencyAmount, formatDateShort, formatNumber } from "@/lib/adminFormat";
+import { pick, tr, type Localized } from "@/lib/i18n";
 
 type Tx = {
   id: string; amount: number; currency: string; provider: string; providerRef: string | null;
@@ -19,10 +20,10 @@ type Tx = {
 type Resp = { transactions: Tx[]; total: number; page: number; pageSize: number };
 
 const FILTERS = [
-  { key: "all", label: "همه" },
-  { key: "paid", label: "موفق" },
-  { key: "refunded", label: "بازپرداخت‌شده" },
-] as const;
+  { key: "all", label: { fa: "همه", en: "All" } },
+  { key: "paid", label: { fa: "موفق", en: "Successful" } },
+  { key: "refunded", label: { fa: "بازپرداخت‌شده", en: "Refunded" } },
+] as const satisfies readonly { key: string; label: Localized }[];
 type FilterKey = (typeof FILTERS)[number]["key"];
 
 function userLabel(u: Tx["user"]) {
@@ -30,9 +31,9 @@ function userLabel(u: Tx["user"]) {
 }
 
 function StatusBadge({ status }: { status: Tx["status"] }) {
-  if (status === "refunded") return <span className="admin-badge red">بازپرداخت‌شده</span>;
-  if (status === "pending") return <span className="admin-badge amber">در انتظار</span>;
-  return <span className="admin-badge green">موفق</span>;
+  if (status === "refunded") return <span className="admin-badge red">{tr("بازپرداخت‌شده", "Refunded")}</span>;
+  if (status === "pending") return <span className="admin-badge amber">{tr("در انتظار", "Pending")}</span>;
+  return <span className="admin-badge green">{tr("موفق", "Successful")}</span>;
 }
 
 function TransactionsInner() {
@@ -73,21 +74,25 @@ function TransactionsInner() {
   return (
     <section>
       <div className="admin-commerce-head">
-        <AdminTabBar items={[...FILTERS]} active={filter} onChange={setFilter} />
-        {data && <span className="admin-commerce-count">{formatNumber(data.total)} تراکنش</span>}
+        <AdminTabBar items={FILTERS.map((f) => ({ key: f.key, label: pick(f.label) }))} active={filter} onChange={setFilter} />
+        {data && (
+          <span className="admin-commerce-count">
+            {tr(`${formatNumber(data.total)} تراکنش`, `${formatNumber(data.total)} ${data.total === 1 ? "transaction" : "transactions"}`)}
+          </span>
+        )}
       </div>
 
       {error ? (
         <EmptyState message={error} />
       ) : !data ? (
-        <div className="admin-empty is-loading">در حال بارگذاری…</div>
+        <div className="admin-empty is-loading">{tr("در حال بارگذاری…", "Loading…")}</div>
       ) : data.transactions.length === 0 ? (
-        <EmptyState message={page > 1 ? "این صفحه خالیه — به صفحه‌ی اول برگرد" : "تراکنشی با این فیلتر پیدا نشد"} />
+        <EmptyState message={page > 1 ? tr("این صفحه خالیه — به صفحه‌ی اول برگرد", "This page is empty. Go back to the first page.") : tr("تراکنشی با این فیلتر پیدا نشد", "No transactions match this filter")} />
       ) : (
         <>
           <div className={`admin-table-wrap${loading ? " is-refreshing" : ""}`} aria-busy={loading}>
             <table className="admin-table">
-              <thead><tr><th>کاربر</th><th>پلن</th><th>مبلغ</th><th>تاریخ</th><th>وضعیت</th><th>شناسه تراکنش</th></tr></thead>
+              <thead><tr><th>{tr("کاربر", "User")}</th><th>{tr("پلن", "Plan")}</th><th>{tr("مبلغ", "Amount")}</th><th>{tr("تاریخ", "Date")}</th><th>{tr("وضعیت", "Status")}</th><th>{tr("شناسه تراکنش", "Transaction ID")}</th></tr></thead>
               <tbody>
                 {data.transactions.map((t) => (
                   <tr key={t.id}>
@@ -112,7 +117,10 @@ function TransactionsInner() {
       )}
 
       <div className="admin-section-hint admin-commerce-foot">
-        تلاش‌های ناموفق توی این جدول نمایش داده نمی‌شن چون درگاه فعلی فقط برای پرداخت‌های تاییدشده ردیف Payment می‌سازه — تلاش‌های ناموفق را در بخش «خطاها» می‌بینید.
+        {tr(
+          "تلاش‌های ناموفق توی این جدول نمایش داده نمی‌شن چون درگاه فعلی فقط برای پرداخت‌های تاییدشده ردیف Payment می‌سازه — تلاش‌های ناموفق را در بخش «خطاها» می‌بینید.",
+          "Failed attempts aren't shown in this table, because the current gateway only creates a Payment row for confirmed payments. You can see failed attempts under Errors.",
+        )}
       </div>
     </section>
   );
@@ -120,7 +128,7 @@ function TransactionsInner() {
 
 export default function AdminTransactionsPage() {
   return (
-    <Suspense fallback={<div className="admin-empty is-loading">در حال بارگذاری…</div>}>
+    <Suspense fallback={<div className="admin-empty is-loading">{tr("در حال بارگذاری…", "Loading…")}</div>}>
       <TransactionsInner />
     </Suspense>
   );

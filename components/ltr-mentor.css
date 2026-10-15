@@ -1,0 +1,10 @@
+/* اصلاح‌های ظاهری چیدمان چپ‌به‌راست (انگلیسی) — بخش mentor. همه‌ی قاعده‌ها زیر html[dir="ltr"] تا فارسی بی‌تغییر بمونه. */
+/* Longer English values wrap instead of being cut with an ellipsis. */
+html[dir="ltr"] .mv2-srow-value{ white-space:normal; overflow:visible; text-overflow:clip; text-align:end; line-height:1.5; }
+html[dir="ltr"] .mentor-card-since{ min-width:0; overflow:hidden; text-overflow:ellipsis; }
+/* Persian user-written text in the English UI: left-aligned like the rest of the page. */
+html[dir="ltr"] .mentor-hero-headline,
+html[dir="ltr"] .mentor-bio,
+html[dir="ltr"] .mentor-review-text,
+html[dir="ltr"] .mentor-program-note > div,
+html[dir="ltr"] .mentor-note-box > div{ text-align:left; }

@@ -20,7 +20,6 @@ body[data-theme="light"] .sleep-scope{
 .slp-page{ max-width:640px; margin-inline:auto; }
 .slp-hub{ display:flex; flex-direction:column; gap:14px; margin-top:14px; }
 @media (min-width:1024px){ .slp-hub{ gap:16px; } }
-.slp-col{ display:flex; flex-direction:column; gap:14px; min-width:0; }
 
 /* لینک «آمار» کنار عنوان صفحه → /analysis/weekly#sleep — بی‌بک‌گراند */
 .slp-stats-link{
@@ -61,16 +60,6 @@ body[data-theme="light"] .sleep-scope{
 .slp-goal-bare{ display:flex; flex-direction:column; gap:14px; }
 .slp-goal-panel{ max-width:420px; }
 .slp-goal-field input{ width:100%; text-align:center; direction:ltr; }
-
-/* ── آمار خواب در آنالیز هفتگی (components/WeeklyAnalysisSleep.tsx) ── */
-.wa-sleep{ margin-top:22px; scroll-margin-top:110px; display:flex; flex-direction:column; gap:14px; }
-.wa-sleep-title{ display:flex; align-items:center; gap:8px; margin:0; font-size:17px; font-weight:800; }
-.wa-sleep-title svg{ width:19px; height:19px; color:var(--slp-ink); }
-.wa-sleep-grid{ display:flex; flex-direction:column; gap:14px; }
-@media (min-width:1024px){
-  .wa-sleep-grid{ display:grid; grid-template-columns:minmax(0,1fr) minmax(0,1fr); align-items:start; gap:18px; }
-  .wa-sleep-wide{ grid-column:1 / -1; }
-}
 
 /* دکمه‌ی خطی داخل هیرو/پنجره: .account-outline-btn فقط داخل پنل کاربری شکل کامل داره،
    این‌جا قالب دکمه‌ی خطی سایت (هم‌اندازه‌ی trade-primary-btn) صریح داده می‌شه؛ بی‌بک‌گراند. */

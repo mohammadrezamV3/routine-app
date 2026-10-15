@@ -1,0 +1,554 @@
+/* auto-split from the global CSS (css-split): rules used only by this route group. Imported first thing by its layout/page. */
+
+.thin-scroll::-webkit-scrollbar-button{ display:none; width:0; height:0; }
+
+@media (min-width:1024px) {
+  .roadmaps-desktop{ width:900px; max-width:900px; margin-inline-start:-140px; }
+  .account-shell{
+      /* وسط‌چینی متقارن حول مرکز ستون ۶۲۰پیکسلی سایت (همون ترفند
+         `.dash-breakout`)، با سقف عرض ۱۱۲۰. */
+      --acc-w: min(1120px, calc(100vw - 64px));
+      width: var(--acc-w); max-width: var(--acc-w);
+      margin-inline-start: calc((620px - var(--acc-w)) / 2);
+    } }
+
+.acc-block-title svg{ color:var(--accent); }
+
+/* حالت flush برای وقتی‌ست که بدنه خودش ردیف‌های لبه‌به‌لبه دارد
+     (مثل AccountToggleRow/AccountRowLink) — ولی تایتل بالای همان ردیف‌ها
+     همچنان پدینگ خودش را لازم دارد، وگرنه به لبه‌ی باکس می‌چسبد. */
+
+.acc-block-body.flush{ padding:0; overflow:hidden; }
+
+.acc-block-body.flush > .acc-block-title{ margin:14px 16px 4px; }
+
+.account-shell .wsearch-newform-name:focus,
+  .account-shell .jdate-btn:focus{ border-color:var(--accent); }
+
+/* فیلدهای قفل (شماره/ایمیل/یوزرنیم) نباید مثل فیلد خاموش کم‌رنگ بشن */
+
+.account-shell .wsearch-newform-name:disabled{ opacity:1; color:var(--text); cursor:default; }
+
+/* منوی سه‌نقطه‌ی «برنامه‌های امروز» — bg-dash-card (۲٪ سفید) + backdrop-blur
+     پشتش تقریبا شفاف دیده می‌شد. یه بک‌گراند تقریبا توپر مثل بقیه‌ی
+     منوهای شناور (wsearch-fab-menu) به‌جای تکیه‌کردن به backdrop-filter. */
+
+.dash-context-menu{ background:var(--surface-2); border-color:var(--surface-line); }
+
+/* بنر خطای بالای صفحه حذف شد — درخواست صریح کاربر: «تمام ارورهای بالای
+     صفحه رو حذف کن». به‌جایش هر فرم/پاپ‌آپ خطایش را داخل خودش نشان می‌دهد،
+     یعنی دقیقا همان‌جایی که کاربر دارد نگاه می‌کند. */
+
+.form-inline-error{
+    margin-top:10px; padding:9px 12px; border-radius:12px;
+    font-size:12px; font-weight:600; line-height:1.8; text-align:center;
+    color:#E05252; border:1px solid rgba(224,82,82,.35);
+  }
+
+@media (hover:hover) {
+  body[data-theme="light"] .module-gate-cta:hover, body:not([data-theme="light"]) .module-gate-cta:hover{
+  background:var(--accent);
+} }
+
+@media (pointer: coarse) {
+  .dash-context-menu{ backdrop-filter:blur(11px) saturate(180%); -webkit-backdrop-filter:blur(11px) saturate(180%); } }
+
+.trade-back-link{
+  display:inline-flex; align-items:center; gap:6px; font-size:14px; font-weight:600; color:var(--muted);
+  text-decoration:none; margin-bottom:14px; padding:4px 2px; transition:color .18s ease;
+}
+
+@media (hover:hover) {
+  .trade-back-link:hover{ color:var(--accent); }
+  .trade-danger-btn:hover:not(:disabled){ background:rgba(224,82,82,.1); border-color:#E05252; color:#E05252; } }
+
+.trade-danger-btn:active:not(:disabled){ transform:scale(.97); }
+
+.trade-danger-btn:disabled{ opacity:.45; cursor:default; }
+
+.trade-modal-actions{ display:flex; gap:9px; margin-top:18px; }
+
+.trade-modal-actions button{ flex:1; }
+
+/* سرصفحه‌ی تک‌ردیفه: «‹ ترید» و عنوان کنار هم، نه زیر هم. هر ردیف جدا
+   در صفحه‌ی چارت یعنی همان‌قدر ارتفاع کمتر برای خود چارت. */
+
+.trade-head-row h1{ margin-bottom:0; }
+
+/* ── جاگیر سبک داخل صفحه (components/PageLoader.tsx) ─────────────────────
+   فقط یک اسکلت ساده داخل محتوا (زیر هدر، بدون پرده و بدون لوگو). تا 200ms هیچی
+   دیده نمی‌شه (animation-delay)، پس ناوبری سریع هیچ چشمک و لودینگی نداره. */
+
+.page-loader{
+  width:100%; display:flex; flex-direction:column; gap:12px; padding:8px 0 24px;
+  opacity:0; animation:pl-in .3s ease .2s forwards;
+}
+
+@keyframes pl-in{ to{ opacity:1; } }
+
+.page-loader-skel{ width:100%; display:flex; flex-direction:column; gap:12px; }
+
+.pls-line, .pls-card{ display:block; position:relative; overflow:hidden; border-radius:10px; background:rgba(var(--accent-rgb),.07); }
+
+.pls-line{ height:16px; }
+
+.pls-line.pls-thin{ height:11px; opacity:.7; }
+
+.pls-grid{ display:grid; grid-template-columns:1fr 1fr; gap:12px; margin-top:8px; }
+
+.pls-card{ height:120px; border-radius:18px; border:1px solid var(--box-line); background:var(--box-bg); }
+
+.pls-card.pls-wide{ grid-column:1 / -1; height:150px; }
+
+.pls-line::after, .pls-card::after{
+  content:""; position:absolute; inset:0; transform:translateX(100%);
+  background:linear-gradient(90deg, transparent, rgba(255,255,255,.06), transparent);
+  animation:pl-shimmer 1.3s ease-in-out infinite;
+}
+
+body[data-theme="light"] .pls-line::after, body[data-theme="light"] .pls-card::after{ background:linear-gradient(90deg, transparent, rgba(255,255,255,.6), transparent); }
+
+@keyframes pl-shimmer{ to{ transform:translateX(-100%); } }
+
+@media (prefers-reduced-motion:reduce) {
+  .pls-line::after, .pls-card::after{ animation:none; } }
+
+/* نوار نوشتن — چیدمان مرجع: قرص ورودی، و دکمه‌ی گرد در انتهای سمت راست.
+   `row-reverse` لازم است چون صفحه RTL است: در RTL محور `row` از راست شروع
+   می‌شود و اولین فرزند (خود ورودی) سمت راست می‌افتاد، یعنی دکمه سمت چپ. */
+
+.routine-ai-composer{
+  display:flex; flex-direction:row-reverse; align-items:center; gap:8px;
+  padding-top:10px; border-top:1px solid var(--line);
+}
+
+/* شیشه‌ی واقعی، نه یک قرص توپر کم‌رنگ: پرشدگی خیلی کم است و بلور کار
+   دیدنی‌شدن را می‌کند، پس هرچه پشتش هست از داخلش پیداست. */
+
+.routine-ai-input{
+  flex:1 1 auto; min-width:0; resize:none;
+  max-height:96px; padding:12px 16px; border-radius:999px;
+  font-size:12.5px; line-height:1.7; font-family:inherit;
+  background:rgba(255,255,255,.05);
+  border:1px solid rgba(255,255,255,.10);
+  backdrop-filter:blur(18px) saturate(180%);
+  -webkit-backdrop-filter:blur(18px) saturate(180%);
+  color:var(--text); outline:none;
+}
+
+.routine-ai-input::placeholder{ color:var(--muted); }
+
+.routine-ai-input:focus{ border-color:rgba(var(--accent-rgb),.45); }
+
+/* یک دکمه با سه حالت. خود عنصر ثابت می‌ماند و فقط آیکون داخلش عوض
+   می‌شود — همین چیزی است که اجازه‌ی انیمیشن می‌دهد. */
+
+.routine-ai-action{
+  position:relative; flex:0 0 auto; width:42px; height:42px; border-radius:50%;
+  display:flex; align-items:center; justify-content:center;
+  padding:0; color:var(--text);
+  background:rgba(255,255,255,.05);
+  border:1px solid rgba(255,255,255,.10);
+  backdrop-filter:blur(18px) saturate(180%);
+  -webkit-backdrop-filter:blur(18px) saturate(180%);
+  box-shadow:none;
+  transition:background .22s ease, border-color .22s ease, color .22s ease, transform .18s ease;
+}
+
+/* در تم روز قانون بالا (0,2,1) بر .is-send/.has-text (0,2,0) می‌چربید: دکمه‌ی ارسال
+   پر نمی‌شد و آیکونش (color:var(--bg)) روی زمینه‌ی روشن ناپیدا بود */
+
+body[data-theme="light"] .routine-ai-action.is-send,
+body[data-theme="light"] .routine-ai-action.has-text{
+  background:var(--accent); border-color:var(--accent);
+}
+
+body[data-theme="light"] .routine-ai-action.is-recording{ background:#E05252; border-color:#E05252; }
+
+@media (hover:hover) {
+  .routine-ai-action:hover:not(:disabled){ border-color:var(--accent); } }
+
+.routine-ai-action:active:not(:disabled){ transform:scale(.92); }
+
+.routine-ai-action:disabled{ opacity:.45; }
+
+.routine-ai-action-icon{
+  position:absolute; inset:0;
+  display:flex; align-items:center; justify-content:center;
+  opacity:0; transform:scale(.4) rotate(-40deg);
+  transition:opacity .22s cubic-bezier(.22,1,.36,1), transform .22s cubic-bezier(.22,1,.36,1);
+}
+
+/* حالت پیش‌فرض: میکروفون */
+
+.routine-ai-action .routine-ai-action-icon:nth-child(1){ opacity:1; transform:none; }
+
+.routine-ai-action.is-recording .routine-ai-action-icon:nth-child(1),
+.routine-ai-action.is-send .routine-ai-action-icon:nth-child(1){ opacity:0; transform:scale(.4) rotate(40deg); }
+
+/* در حال ضبط: مربع توقف */
+
+.routine-ai-action.is-recording .routine-ai-action-icon:nth-child(2){ opacity:1; transform:none; }
+
+/* چیزی نوشته شده: ارسال */
+
+.routine-ai-action.is-send .routine-ai-action-icon:nth-child(3){ opacity:1; transform:none; }
+
+/* دکمه‌ی ارسال پر می‌شود — همان تفاوت بصری مرجع بین «حرف بزن» و «بفرست» */
+
+.routine-ai-action.is-send{
+  background:var(--accent); border-color:var(--accent); color:var(--bg);
+  backdrop-filter:none; -webkit-backdrop-filter:none;
+}
+
+.routine-ai-action.is-recording{
+  background:#E05252; border-color:#E05252; color:#fff;
+  backdrop-filter:none; -webkit-backdrop-filter:none;
+  animation:routineMicPulse 1.4s ease-in-out infinite;
+}
+
+@keyframes routineMicPulse{
+  0%,100%{ box-shadow:0 0 0 0 rgba(224,82,82,.45); }
+  60%{ box-shadow:0 0 0 7px rgba(224,82,82,0); }
+}
+
+html[data-perf="low"] .routine-ai-action.is-recording{ animation:none; }
+
+/* دکمه‌ی ارسال «مدیر برنامه» — بعد حذف قابلیت ویس دیگر سه‌حالته نیست،
+   فقط یک آیکون ارسال دارد (nth-child(1)، پیش‌فرض already opacity:1 است،
+   بدون نیاز به کلاس is-send که مال الگوی سه‌آیکونی بالا/پشتیبانی است).
+   این کلاس جدا فقط رنگ پر را می‌دهد، بدون دست‌زدن به قواعد is-send/
+   is-recording بالا که همچنان composer پشتیبانی (سه‌حالته) از آن‌ها استفاده می‌کند. */
+
+.routine-ai-action.has-text{
+  background:var(--accent); border-color:var(--accent); color:var(--bg);
+  backdrop-filter:none; -webkit-backdrop-filter:none;
+}
+
+.rp-bar{ height:6px; border-radius:999px; background:rgba(var(--surface-rgb),.22); overflow:hidden; }
+
+.rp-bar span{ display:block; height:100%; border-radius:999px; background:var(--accent); transition:width .4s cubic-bezier(.22,1,.36,1); }
+
+.rp-empty{
+  margin-top:16px; padding:34px 20px 28px; text-align:center;
+  display:flex; flex-direction:column; align-items:center;
+}
+
+.rp-empty-icon{
+  width:54px; height:54px; border-radius:16px; display:flex; align-items:center; justify-content:center;
+  color:var(--accent); border:1px solid rgba(var(--accent-rgb),.35);
+}
+
+.rp-empty h2{ margin:14px 0 0; font-size:16px; font-weight:800; color:var(--text); }
+
+.rp-empty p{ margin:8px auto 0; max-width:440px; font-size:12.5px; line-height:2.05; color:var(--muted); }
+
+body[data-theme] :where(
+  .account-card, .acc-block-body, .trade-account-card, .trade-mt-row, .trade-note-card,
+  .trade-checklist-card, .trade-journal-box, .rp-stage-card, .ls-card, .overflow-hidden
+)::before{ inset:0; }
+
+/* حین ورود دکمه کم‌رنگ نشه (دایره/تیک باید کاملا دیده بشه) و ارتفاعش ثابت بمونه. */
+
+.auth-full-btn.is-busy > *{ vertical-align:middle; }
+
+.auth-full-btn.is-busy:disabled{ opacity:1; }
+
+.gring{ position:relative; display:inline-block; flex-shrink:0; }
+
+.gring svg{ display:block; }
+
+.gring-center{ position:absolute; inset:0; display:flex; align-items:center; justify-content:center; }
+
+.gring-cap{ filter:drop-shadow(0 0 3px rgba(0,0,0,.45)); }
+
+body[data-theme="light"] .gring-cap{ filter:drop-shadow(0 0 2px rgba(80,50,20,.35)); }
+
+/* ── نام طلایی (components/GoldenName.tsx) ─────────────────────────
+   دو طلای متفاوت (روشن لیمویی و عسلی گرم) که روی حروف جریان دارن؛ برق
+   روشن (--g1) جزو خود گرادیانه، پس جاروی جدایی که قطع/وصل بشه نداره.
+   فقط background-clip:text — عنصر خودش هیچ بک‌گراندی نمی‌گیره.
+
+   حلقه‌ی بی‌درز: گرادیان افقی (90deg، تا لبه‌ی کاشی‌ها کج نیفتن) که اول و
+   آخرش یک رنگه، پس کاشی تکرارشونده (repeat-x) بی‌درزه. عرض کاشی = 200%
+   عنصر، و جابه‌جایی 0% → 200% با این اندازه دقیقا یک کاشی کامله
+   ((W - 2W) × 2 = -2W)؛ پس فریم آخر پیکسل‌به‌پیکسل همون فریم اوله و با
+   timing خطی هیچ پرش یا مکثی دیده نمی‌شه. */
+
+.golden-name{
+  --g1:#fff3b0; --g2:#f5c542; --g3:#d4891a; --g4:#ffe27a;
+  background-image:linear-gradient(90deg, var(--g3) 0%, var(--g2) 13%, var(--g1) 25%, var(--g2) 37%, var(--g3) 50%, var(--g4) 63%, var(--g2) 76%, var(--g4) 88%, var(--g3) 100%);
+  background-size:200% 100%;
+  background-repeat:repeat-x;
+  background-position:0% 50%;
+  -webkit-background-clip:text; background-clip:text;
+  -webkit-text-fill-color:transparent; color:transparent;
+  animation:goldenFlow 6s linear infinite;
+  font-weight:800;
+}
+
+body[data-theme="light"] .golden-name{ --g1:#f7d774; --g2:#d9a21b; --g3:#9a5b06; --g4:#e8b830; }
+
+/* درخشش (GoldenName): کپی شفاف متن با text-shadow زیر حروف گرادیانی، بدون
+   filter — drop-shadow داخل کارت‌های شیشه‌ای مستطیل کم‌رنگ پشت اسم می‌انداخت */
+
+.name-glow{ position:relative; font-weight:800; --name-glow:rgba(245,197,66,.45); }
+
+.name-glow[data-text]::before{
+  content:attr(data-text); position:absolute; inset:0; pointer-events:none;
+  color:transparent; -webkit-text-fill-color:transparent; white-space:inherit;
+  text-shadow:0 0 8px var(--name-glow);
+}
+
+body[data-theme="light"] .golden-name-glow{ --name-glow:rgba(217,162,27,.32); }
+
+/* ظرف اسم با سه‌نقطه (.name-clip): درخشش GoldenName بیرون از جعبه‌ی متن
+   می‌زنه و overflow:hidden اون رو لبه‌ی صاف می‌بره (همون «مستطیل کم‌رنگ»).
+   راه‌حل عمومی: ظرف به اندازه‌ی شعاع درخشش از هر طرف پدینگ می‌گیره و همون
+   مقدار margin منفی، پس چیدمان دست نمی‌خوره ولی برش خیلی بیرون‌تر از
+   درخششه و text-overflow:ellipsis همون‌طور کار می‌کنه (بدون هیچ بک‌گراند).
+   ظرف جدید اسم‌دار با overflow:hidden باید این کلاس رو بگیره یا به این
+   فهرست اضافه بشه. */
+
+.fr-name, .friend-profile-banner-name, .mentor-row-title, .mentor-card-name{
+  padding:10px 16px; margin:-10px -16px;
+  /* درخشش کپی نابریده‌ی اسم بلند هم تا لبه‌ی ظرف می‌رسه؛ محو شدن افقی توی
+     پدینگ جلوی لبه‌ی صاف همون برش رو می‌گیره (متن داخل جعبه‌ی محتواست). */
+  -webkit-mask-image:linear-gradient(to right, transparent 0, #000 14px, #000 calc(100% - 14px), transparent 100%);
+  mask-image:linear-gradient(to right, transparent 0, #000 14px, #000 calc(100% - 14px), transparent 100%);
+}
+
+@keyframes goldenFlow{ from{ background-position:0% 50%; } to{ background-position:200% 50%; } }
+
+@media (prefers-reduced-motion: reduce) {
+  .golden-name{ animation:none; background-position:30% 50%; } }
+
+/* ── نام بنفش سمی (components/GoldenName.tsx با staff) ─────────────
+   Owner و ادمین‌ها: همون تکنیک حلقه‌ی بی‌درز .golden-name (گرادیان افقی با
+   اول و آخر یک‌رنگ، کاشی 200%، جابه‌جایی خطی 0% → 200% = دقیقا یک کاشی؛
+   فریم آخر = فریم اول) ولی با پالت بنفش نئون: بنفش عمیق ↔ بنفش برقی با
+   برق یاسی-سرخابی اسیدی. درخشش با --name-glow روی .toxic-name-glow.
+   فقط background-clip:text — عنصر خودش هیچ بک‌گراندی نمی‌گیره. */
+
+.toxic-name{
+  --t1:#f3c9ff; --t2:#b44dff; --t3:#7a1fe0; --t4:#e15cff;
+  background-image:linear-gradient(90deg, var(--t3) 0%, var(--t2) 13%, var(--t1) 25%, var(--t2) 37%, var(--t3) 50%, var(--t4) 63%, var(--t2) 76%, var(--t4) 88%, var(--t3) 100%);
+  background-size:200% 100%;
+  background-repeat:repeat-x;
+  background-position:0% 50%;
+  -webkit-background-clip:text; background-clip:text;
+  -webkit-text-fill-color:transparent; color:transparent;
+  animation:goldenFlow 6s linear infinite;
+  font-weight:800;
+}
+
+.toxic-name-glow{ --name-glow:rgba(190,80,255,.55); }
+
+body[data-theme="light"] .toxic-name-glow{ --name-glow:rgba(140,40,225,.3); }
+
+body[data-theme="light"] .toxic-name{
+  --t1:#b23cf0; --t2:#7b1fd6; --t3:#4a0f9e; --t4:#a51fc8;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .toxic-name{ animation:none; background-position:30% 50%; } }
+
+/* ── تیک واحد اپ (components/TickButton.tsx) — کپی .db-tl-node  داشبورد ──
+   عمدا بیرون .db-page تا همه‌جا یکسان باشه. بک‌گراند فقط در حالت تیک‌خورده
+   (همون گرادیان داشبورد)؛ حالت خالی کاملا شفافه.
+
+   باگ «مربع داخل دایره» (ریشه):
+   (۱) گرادیان حالت تیک‌خورده با background-origin پیش‌فرض (padding-box) و
+       repeat کشیده می‌شد؛ با بوردر شفاف ۲px، کاشی گرادیان توی حلقه‌ی بوردر
+       تکرار می‌شد و لبه‌ی padding-box یک مربع روشن وسط دایره می‌ساخت — همه‌جا،
+       حتی داخل .dash-scope. حالا گرادیان صریحا border-box و no-repeat‌ه.
+   (۲) بیرون .dash-scope ریست سراسری button{} (لیکوئید گلس) backdrop-filter و
+       سایه‌ی inset می‌داد و در تم روشن body[data-theme="light"] button
+       (اسپسیفیسیتی 0,1,2) بک‌گراند شیشه‌ای/بوردر/سایه رو روی .tick-btn می‌نشوند.
+       برای همین همه‌ی قانون‌های تیک با پیشوند html body و کلاس دوبل
+       (0,2,2) نوشته شدن تا هیچ قانون سراسری (هاور/دیزیبل/تم روشن) بهشون نرسه.
+
+   رنگ: --tick-a / --tick-b (پیش‌فرض پالت روتین --ring-1)؛ .tick-exercise
+   همون تیک با پالت تمرین (--ring-2، آبی→بنفش) برای حرکت‌های برنامه‌ی تمرین. */
+
+.tick-btn{ --tick-size:26px; --tick-a:var(--ring-1a); --tick-b:var(--ring-1b); }
+
+.tick-btn.tick-exercise{ --tick-a:var(--ring-2a); --tick-b:var(--ring-2b); }
+
+html body .tick-btn.tick-btn.is-square{ border-radius:calc(var(--tick-size) * .3); }
+
+.tick-btn svg{ width:calc(var(--tick-size) * .58); height:calc(var(--tick-size) * .58); position:relative; z-index:1; overflow:visible; }
+
+@media (hover:hover) {
+  html body .tick-btn.tick-btn:not(.is-disabled):not(.is-checked):hover{
+    border-color:var(--tick-a); color:#fff; background:transparent;
+    box-shadow:0 0 0 4px color-mix(in srgb, var(--tick-a) 16%, transparent);
+  } }
+
+html body .tick-btn.tick-btn.is-checked{
+  border-color:transparent;
+  background:linear-gradient(135deg, var(--tick-a), var(--tick-b)) border-box no-repeat;
+  box-shadow:0 0 14px color-mix(in srgb, var(--tick-a) 55%, transparent);
+}
+
+html body .tick-btn.tick-btn.is-missed{ border-color:var(--tl-warn, #F0A94B); border-style:dashed; }
+
+html body .tick-btn.tick-btn.is-disabled{ cursor:not-allowed; opacity:.5; }
+
+html body .tick-btn.tick-btn.is-disabled.is-checked, html body .tick-btn.tick-btn.is-disabled.is-missed{ opacity:.75; }
+
+.tick-ripple{ position:absolute; inset:-2px; border-radius:inherit; border:2px solid var(--tick-b); background:none; pointer-events:none; }
+
+.tick-spark{ position:absolute; left:50%; top:50%; pointer-events:none; }
+
+.tick-spark i{
+  position:absolute; width:4px; height:4px; margin:-2px; border-radius:50%;
+  background:var(--tick-b); animation:tick-burst .75s cubic-bezier(.22,1,.36,1) forwards;
+  transform:rotate(calc(var(--i) * 45deg)) translateX(0);
+}
+
+@keyframes tick-burst{ to{ transform:rotate(calc(var(--i) * 45deg)) translateX(var(--tick-size)); opacity:0; } }
+
+@media (prefers-reduced-motion: reduce) {
+  .tick-spark{ display:none; } }
+
+/* نوار نوشتن: ورودی چپ، دکمه‌ی ارسال انتهای راست (row-reverse فقط برای rtl لازم بود) */
+
+html[dir="ltr"] .routine-ai-composer{ flex-direction:row; }
+
+@media (hover:hover) {
+  html[dir="ltr"] .trade-back-link:hover svg{ transform:translateX(-2px); }
+  html[dir="ltr"] .trade-back-link:hover svg.dir-flip{ transform:scaleX(-1) translateX(2px); } }
+
+/* درخشش اسکلت لودینگ از چپ به راست */
+
+@keyframes pl-shimmer-ltr{ to{ transform:translateX(100%); } }
+
+html[dir="ltr"] .pls-line::after, html[dir="ltr"] .pls-card::after{ transform:translateX(-100%); }
+
+@media (prefers-reduced-motion:no-preference) {
+  html[dir="ltr"] .pls-line::after, html[dir="ltr"] .pls-card::after{ animation-name:pl-shimmer-ltr; } }
+
+/* Persian user-written text inside the English UI takes its own direction (punctuation stays on the right side). */
+
+html[dir="ltr"] .mentor-hero-headline,
+html[dir="ltr"] .mentor-bio,
+html[dir="ltr"] .mentor-review-text{ unicode-bidi:plaintext; }
+
+html[dir="ltr"] .mentor-program-note > div,
+html[dir="ltr"] .mentor-note-box > div{ unicode-bidi:plaintext; }
+
+/* Notice: English separator, and the (often Persian, user-written) body is isolated so it cannot scramble the English title. */
+
+html[dir="ltr"] .mentor-notice-title + .mentor-notice-body::before{ content:"; "; }
+
+html[dir="ltr"] .mentor-notice-body{ unicode-bidi:isolate; }
+
+/* MentorSheet places itself with flex; the generic ltr rule that centres .modal-panel with left:50% must not shift it. */
+
+html[dir="ltr"] .modal-panel.m-sheet:not(.modal-panel-notransform){ left:auto; right:auto; }
+
+/* Persian user-written notes and feedback inside the English UI: own punctuation direction, left-aligned. */
+
+html[dir="ltr"] .mentor-feedback-body{ unicode-bidi:plaintext; text-align:left; }
+
+/* Longer English row titles wrap instead of being cut ("workout coaching cert..."). */
+
+html[dir="ltr"] .mentor-row-title{ white-space:normal; overflow:visible; text-overflow:clip; }
+
+html[data-admin-theme="noir"] body:not([data-theme="light"]) .golden-name{
+  --g1:#FFFFFF; --g2:#D6D6D6; --g3:#8C8C8C; --g4:#F0F0F0;
+  filter:drop-shadow(0 0 6px rgba(255,255,255,.35));
+}
+
+html[data-admin-theme="noir"] body:not([data-theme="light"]) .toxic-name{
+  --t1:#FFFFFF; --t2:#D6D6D6; --t3:#8C8C8C; --t4:#F0F0F0;
+  --tx-glow-lo:rgba(255,255,255,.25); --tx-glow-hi:rgba(255,255,255,.5);
+}
+
+[data-m-in="rise"]{ animation:m-rise var(--m-dur-3) var(--m-ease-out) backwards; animation-delay:calc(min(var(--i, 0), 8) * var(--m-step)); }
+
+[data-m-in="fade"]{ animation:m-fade var(--m-dur-3) var(--m-ease-out) backwards; }
+
+[data-m-in="pop"]{ animation:m-pop var(--m-dur-3) var(--m-ease-spring) backwards; }
+
+html[data-navigated] .page-enter > :not(.page-loader){
+  animation:m-rise var(--m-dur-4) var(--m-ease-out) backwards;
+  animation-delay:calc(min(var(--i, 0), 6) * var(--m-step));
+}
+
+html[data-navigated] .page-enter > [style*="position: fixed"],
+html[data-navigated] .page-enter > [style*="position:fixed"]{ animation-name:m-fade; }
+
+.module-gate{ animation:m-fade var(--m-dur-4) var(--m-ease-out) backwards; }
+
+.module-gate-overlay > *{ animation:m-rise var(--m-dur-4) var(--m-ease-out) backwards; }
+
+.module-gate-overlay > :nth-child(2){ animation-delay:var(--m-step); }
+
+.module-gate-overlay > :nth-child(3){ animation-delay:calc(var(--m-step) * 2); }
+
+.module-gate-overlay > :nth-child(n+4){ animation-delay:calc(var(--m-step) * 3); }
+
+.trade-chat-report-sheet{ animation:m-rise-soft var(--m-dur-3) var(--m-ease-out) backwards; }
+
+.calorie-unit-dropdown{ animation:m-pop var(--m-dur-2) var(--m-ease-out) backwards; transform-origin:50% 0; }
+
+.au-backdrop, .ads-pal-backdrop{ animation:m-fade var(--m-dur-3) var(--m-ease-out) backwards; }
+
+.ads-pal{ animation:m-pop var(--m-dur-3) var(--m-ease-spring) backwards; transform-origin:50% 0; }
+
+@media (hover:hover) and (pointer:fine) {
+  :where([role="button"], [role="tab"], [role="menuitem"], .is-clickable, [data-clickable]):hover{ opacity:.92; } }
+
+:where(a[href], button, [role="button"], [role="tab"], [role="menuitem"], summary, [tabindex]:not([tabindex="-1"])):focus-visible{
+  outline:2px solid rgba(var(--accent-rgb, 0,168,107), .85); outline-offset:2px;
+}
+
+@media (prefers-reduced-motion:no-preference) {
+  :where(a[href], button, [role="button"], [role="tab"], summary):focus-visible{ transition:outline-offset var(--m-dur-1) var(--m-ease-out), scale var(--m-dur-1) var(--m-ease-out); } }
+
+.trade-account-goalbar-fill, .admin-funnel-fill, .adb-fill, .slw-fill{
+  animation:m-bar var(--m-dur-5) var(--m-ease-out) backwards;
+}
+
+@supports (animation-timeline:view()) {
+
+@media (prefers-reduced-motion:no-preference) {
+  html:not([data-perf-weak]) .m-reveal:not(.m-pre){
+      animation:m-rise-scroll linear both;
+      animation-timeline:view();
+      animation-range:entry 0% entry 45%;
+    } } }
+
+.m-reveal.m-pre{ opacity:0; translate:0 14px; }
+
+.m-reveal.m-pre.m-seen{ opacity:1; translate:0 0; transition:opacity var(--m-dur-4) var(--m-ease-out), translate var(--m-dur-4) var(--m-ease-out); }
+
+.topbar-auth-pop{ animation:topbarAuthPop .38s cubic-bezier(.34,1.56,.64,1); }
+
+@media (prefers-reduced-motion:reduce) {
+  .topbar-auth-pop{ animation:none; } }
+
+@media (min-width:1024px) {
+  .dnav-chev{ transition:transform .2s ease; opacity:.7; flex-shrink:0; }
+  .dnav-ind{
+    position:absolute; left:0; bottom:0; width:1px; height:2px; background:var(--accent);
+    transform-origin:0 0; opacity:0; pointer-events:none; will-change:transform;
+  }
+  html[dir="ltr"] .dnav-panel.notif-panel{
+    position:absolute; top:calc(100% - 6px); inset-inline-start:0; inset-inline-end:auto;
+    width:max-content; min-width:190px; max-width:280px; max-height:none; overflow:visible;
+    padding:6px; z-index:50;
+    animation:none; transform-origin:top left;
+    visibility:hidden; opacity:0; pointer-events:none;
+    transform:translate3d(0,-6px,0) scale(.97);
+    transition:opacity .16s ease, transform .24s cubic-bezier(.34,1.45,.64,1), visibility 0s linear .24s;
+  }
+  html[dir="ltr"] .dnav-lang-panel.notif-panel{ inset-inline-start:auto; inset-inline-end:0; min-width:150px; top:calc(100% + 6px); transform-origin:top right; } }
+
+@media (min-width:1024px) and (prefers-reduced-motion:reduce) {
+  .dnav-ind.is-ready, .dnav-chev{ transition:none; }
+  html[dir="ltr"] .dnav-panel.notif-panel, html[dir="ltr"] .dnav-panel.notif-panel[data-open="true"]{
+    transform:none; transition:opacity .12s ease, visibility 0s;
+  } }

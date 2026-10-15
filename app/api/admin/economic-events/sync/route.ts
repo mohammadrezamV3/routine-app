@@ -5,6 +5,7 @@ import { writeAuditLog } from "@/lib/adminAnalytics";
 import { checkRateLimit } from "@/lib/rateLimit";
 import { logError } from "@/lib/errorLog";
 import { syncEconomicCalendar } from "@/lib/economicCalendar";
+import { tr } from "@/lib/i18n";
 
 // همون کاری که کران روزانه (/api/cron/economic-calendar) انجام می‌ده، ولی
 // دستی و فوری — برای وقتی که ادمین نمی‌خواد تا اجرای بعدی کران یا تازه‌سازی
@@ -17,7 +18,7 @@ export async function POST() {
   // فراخوانی یک سرویس بیرونی — یه سقف سبک تا کلیک تکراری/اسکریپت اتفاقی
   // منبع رو اسپم نکنه.
   if (!(await checkRateLimit(`economic-calendar-sync:${guard.userId}`, 10, 60 * 60 * 1000))) {
-    return NextResponse.json({ error: "درخواست‌های زیاد — کمی بعد دوباره امتحان کن" }, { status: 429 });
+    return NextResponse.json({ error: tr("درخواست‌های زیاد — کمی بعد دوباره امتحان کن", "Too many requests — try again shortly") }, { status: 429 });
   }
 
   try {
@@ -32,6 +33,6 @@ export async function POST() {
       `همگام‌سازی دستی تقویم اقتصادی شکست خورد: ${err instanceof Error ? err.message : err}`,
       { context: { userId: guard.userId } }
     );
-    return NextResponse.json({ error: err instanceof Error ? err.message : "همگام‌سازی ناموفق بود" }, { status: 502 });
+    return NextResponse.json({ error: err instanceof Error ? err.message : tr("همگام‌سازی ناموفق بود", "Sync failed") }, { status: 502 });
   }
 }

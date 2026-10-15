@@ -1,5 +1,6 @@
 import type { Mentorship, Prisma } from "@prisma/client";
 import { NextResponse } from "next/server";
+import { tr } from "@/lib/i18n";
 import { prisma } from "@/lib/prisma";
 import { notifyUser, displayName } from "@/lib/inAppNotify";
 import { PUBLIC_USER_SELECT } from "@/lib/mentorServer";
@@ -75,11 +76,11 @@ export function serializeMessage(r: MessageRow, viewerId: string) {
 }
 
 export const keyChanged = () =>
-  NextResponse.json({ error: "کلید رمزگذاری یکی از دو طرف عوض شده؛ دوباره تلاش کن", code: "KEY_CHANGED" }, { status: 409 });
+  NextResponse.json({ error: tr("کلید رمزگذاری یکی از دو طرف عوض شده؛ دوباره تلاش کن", "The chat setup changed for one of you. Try again"), code: "KEY_CHANGED" }, { status: 409 });
 export const peerNoKey = () =>
-  NextResponse.json({ error: "طرف مقابل هنوز وارد بخش مربی نشده است", code: "PEER_NO_KEY" }, { status: 409 });
+  NextResponse.json({ error: tr("طرف مقابل هنوز وارد بخش مربی نشده است", "The other person hasn't opened the mentor section yet"), code: "PEER_NO_KEY" }, { status: 409 });
 export const senderNoKey = () =>
-  NextResponse.json({ error: "کلید رمزگذاری این دستگاه هنوز آماده نیست؛ صفحه را دوباره باز کن", code: "NO_KEY" }, { status: 409 });
+  NextResponse.json({ error: tr("کلید رمزگذاری این دستگاه هنوز آماده نیست؛ صفحه را دوباره باز کن", "Chat isn't ready on this device yet. Reopen the page"), code: "NO_KEY" }, { status: 409 });
 
 /**
  * بسته‌بندی‌های پیام باید دقیقا کلیدهای فعال *هر دو طرف* (همه‌ی دستگاه‌ها) را پوشش

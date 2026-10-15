@@ -1,0 +1,11 @@
+/* English (LTR) layout for student-side mentor chat and popovers.
+   Every rule is scoped to html[dir="ltr"]; RTL stays untouched. */
+/* Own messages on the right, the other person on the left (usual convention). */
+html[dir="ltr"] .mc-row.is-mine{ align-items:flex-end; }
+html[dir="ltr"] .mc-row.is-peer{ align-items:flex-start; }
+/* Time and ticks in the bottom-right corner; the reserved spacer sits at the end of the last line. */
+html[dir="ltr"] .mc-meta{ left:auto; right:10px; }
+html[dir="ltr"] .mc-meta > span:not(.mc-time){ direction:ltr; }
+html[dir="ltr"] .mc-send-icon{ transform:none; }
+html[dir="ltr"] body .mc-screen .mc-jump{ left:auto; right:var(--mc-gutter); }
+html[dir="ltr"] .mentor-pop{ direction:ltr; }

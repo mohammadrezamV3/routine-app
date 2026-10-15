@@ -1,3 +1,4 @@
+import { tr } from "@/lib/i18n";
 import { NextRequest, NextResponse } from "next/server";
 import bcrypt from "bcryptjs";
 import { prisma } from "@/lib/prisma";
@@ -18,7 +19,7 @@ import { sendOtpSms } from "@/lib/sms";
 export async function POST(req: NextRequest) {
   const ip = getClientIp(req.headers as any);
   if (!(await checkRateLimit(`2fa-start-ip:${ip}`, 10, 10 * 60 * 1000))) {
-    return NextResponse.json({ error: "تعداد تلاش‌ها زیاد بود — کمی بعد دوباره امتحان کن" }, { status: 429 });
+    return NextResponse.json({ error: tr("تعداد تلاش‌ها زیاد بود — کمی بعد دوباره امتحان کن", "Too many attempts — try again shortly") }, { status: 429 });
   }
 
   const body = await req.json().catch(() => ({}));
@@ -27,7 +28,7 @@ export async function POST(req: NextRequest) {
   if (!identifier || !password) return NextResponse.json({ required: false });
 
   if (!(await checkRateLimit(`2fa-start-id:${identifier}`, 8, 10 * 60 * 1000))) {
-    return NextResponse.json({ error: "تعداد تلاش‌ها زیاد بود — کمی بعد دوباره امتحان کن" }, { status: 429 });
+    return NextResponse.json({ error: tr("تعداد تلاش‌ها زیاد بود — کمی بعد دوباره امتحان کن", "Too many attempts — try again shortly") }, { status: 429 });
   }
 
   const user = await prisma.user.findFirst({
@@ -51,7 +52,7 @@ export async function POST(req: NextRequest) {
   const code = await issueTwoFactorOtp(user.id);
   const sent = await sendOtpSms(user.phone, code);
   if (!sent.ok) {
-    return NextResponse.json({ error: "ارسال پیامک ناموفق بود — کمی بعد دوباره امتحان کن" }, { status: 502 });
+    return NextResponse.json({ error: tr("ارسال پیامک ناموفق بود — کمی بعد دوباره امتحان کن", "Sending the SMS failed — try again shortly") }, { status: 502 });
   }
 
   // فقط چهار رقم آخر شماره نشون داده می‌شه، نه کل شماره

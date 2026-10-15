@@ -4,6 +4,7 @@ import { useEffect, useRef, useState } from "react";
 import { createPortal } from "react-dom";
 import { useLockBodyScroll } from "@/lib/useLockBodyScroll";
 import { centeredView, clampView, sourceRect, zoomAt, type CropView, type Size } from "@/lib/cropMath";
+import { tr, isEn } from "@/lib/i18n";
 
 // پیش‌نمایش و کراپ عکس قبل از آپلود (بنر و عکس پروفایل). طبق درخواست صریح
 // هیچ دکمه/اسلایدری برای زوم و جابه‌جایی نیست — همه‌چیز لمسی‌ه:
@@ -53,12 +54,12 @@ export function ImageCropModal({ file, outputW, outputH, title, shape = "rect", 
 
   useEffect(() => {
     const reader = new FileReader();
-    reader.onerror = () => setError("خواندن فایل ناموفق بود");
+    reader.onerror = () => setError(tr("خواندن فایل ناموفق بود", "Could not read the file"));
     reader.onload = () => {
       const url = String(reader.result || "");
       const img = new Image();
       img.onload = () => { setNatural({ w: img.naturalWidth, h: img.naturalHeight }); setSrc(url); };
-      img.onerror = () => setError("این فرمت عکس پشتیبانی نمی‌شه (JPG یا PNG انتخاب کن)");
+      img.onerror = () => setError(tr("این فرمت عکس پشتیبانی نمی‌شه (JPG یا PNG انتخاب کن)", "This image format is not supported (choose JPG or PNG)"));
       img.src = url;
     };
     reader.readAsDataURL(file);
@@ -162,7 +163,7 @@ export function ImageCropModal({ file, outputW, outputH, title, shape = "rect", 
       canvas.width = outputW;
       canvas.height = outputH;
       const ctx = canvas.getContext("2d");
-      if (!ctx) { setError("Canvas در دسترس نیست"); return; }
+      if (!ctx) { setError(tr("Canvas در دسترس نیست", "Canvas is not available")); return; }
       ctx.imageSmoothingQuality = "high";
       const { sx, sy, sw, sh } = sourceRect(view, natural, frame);
       ctx.drawImage(img, sx, sy, sw, sh, 0, 0, outputW, outputH);
@@ -177,7 +178,7 @@ export function ImageCropModal({ file, outputW, outputH, title, shape = "rect", 
   return createPortal(
     <>
       <div className="modal-overlay open" onClick={onCancel} />
-      <div className="modal-panel open crop-modal" role="dialog" aria-modal="true" aria-label={title} dir="rtl">
+      <div className="modal-panel open crop-modal" role="dialog" aria-modal="true" aria-label={title} dir={isEn() ? "ltr" : "rtl"}>
         <div className="modal-head">
           <div className="modal-title">{title}</div>
         </div>
@@ -204,13 +205,13 @@ export function ImageCropModal({ file, outputW, outputH, title, shape = "rect", 
               )}
               {shape === "circle" && <span className="crop-ring" aria-hidden="true" />}
             </div>
-            <div className="crop-hint">برای جابه‌جایی بکش، برای بزرگ و کوچیک کردن با دو انگشت باز و بسته کن</div>
+            <div className="crop-hint">{tr("برای جابه‌جایی بکش، برای بزرگ و کوچیک کردن با دو انگشت باز و بسته کن", "Drag to move, pinch with two fingers to zoom")}</div>
           </>
         )}
 
         <div className="crop-actions">
-          <button type="button" className="account-outline-btn muted" onClick={onCancel}>انصراف</button>
-          <button type="button" className="account-outline-btn" onClick={confirm} disabled={!src || !!error}>ذخیره</button>
+          <button type="button" className="account-outline-btn muted" onClick={onCancel}>{tr("انصراف", "Cancel")}</button>
+          <button type="button" className="account-outline-btn" onClick={confirm} disabled={!src || !!error}>{tr("ذخیره", "Save")}</button>
         </div>
       </div>
     </>,

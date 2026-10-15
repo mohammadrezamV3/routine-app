@@ -1,3 +1,4 @@
+import { tr } from "@/lib/i18n";
 import { NextRequest, NextResponse } from "next/server";
 import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/auth";
@@ -19,7 +20,7 @@ export async function GET(req: NextRequest) {
   const ip = getClientIp(req.headers);
   const isSuperAdmin = !!(session!.user as any).isSuperAdmin;
   if (!isSuperAdmin && (!(await checkRateLimit(`friends-search:${userId}`, 30, 60 * 1000)) || !(await checkRateLimit(`friends-search-ip:${ip}`, 60, 60 * 1000)))) {
-    return NextResponse.json({ error: "درخواست‌های زیاد — کمی بعد دوباره امتحان کن" }, { status: 429 });
+    return NextResponse.json({ error: tr("درخواست‌های زیاد — کمی بعد دوباره امتحان کن", "Too many requests — try again shortly") }, { status: 429 });
   }
 
   const q = clampQuery(req.nextUrl.searchParams.get("q"), 60);
@@ -67,7 +68,7 @@ export async function GET(req: NextRequest) {
   return NextResponse.json({
     users: users.map((u) => ({
       id: u.id,
-      name: u.name || u.username || "کاربر",
+      name: u.name || u.username || tr("کاربر", "User"),
       username: u.username,
       // avatarUrl از اول select می‌شد ولی هیچ‌وقت برنمی‌گشت — نتایج همیشه آواتار پیش‌فرض داشتن
       avatarUrl: u.avatarUrl,

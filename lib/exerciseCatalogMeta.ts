@@ -3,6 +3,7 @@
 // کاتالوگ (چند صد حرکت، `lib/exerciseCatalogData/*`) توی باندلشون نشینه.
 
 import { normalizeFa } from "./utils";
+import { tr } from "./i18n";
 
 export type MuscleKey =
   | "chest" | "back" | "traps" | "shoulders" | "biceps" | "triceps" | "forearms"
@@ -47,16 +48,16 @@ export const MOVEMENT_PATTERNS: MovementPattern[] = [
 ];
 
 export const EQUIPMENT_LABEL: Record<ExerciseEquipment, string> = {
-  barbell: "هالتر",
-  dumbbell: "دمبل",
-  cable: "سیم‌کش",
-  machine: "دستگاه",
-  smith: "اسمیت",
-  kettlebell: "کتل‌بل",
-  band: "کش",
-  suspension: "TRX",
-  bodyweight: "وزن بدن",
-  other: "سایر",
+  get barbell() { return tr("هالتر", "Barbell"); },
+  get dumbbell() { return tr("دمبل", "Dumbbell"); },
+  get cable() { return tr("سیم‌کش", "Cable"); },
+  get machine() { return tr("دستگاه", "Machine"); },
+  get smith() { return tr("اسمیت", "Smith machine"); },
+  get kettlebell() { return tr("کتل‌بل", "Kettlebell"); },
+  get band() { return tr("کش", "Band"); },
+  get suspension() { return "TRX"; },
+  get bodyweight() { return tr("وزن بدن", "Bodyweight"); },
+  get other() { return tr("سایر", "Other"); },
 };
 
 // میزان سختی (1 تا 5) بر اساس الگوی حرکتی حساب می‌شه — نه فیلد دستی روی

@@ -4,7 +4,7 @@
 // (ردیف ROUTINE انقضا داره و هیچ اشتراک فعالی نداره). بعد از تموم‌شدنش
 // ModuleGate خودش پیام خرید رو نشون می‌ده؛ این نوار فقط هشدار قبل از اونه.
 
-import Link from "next/link";
+import { SmartLink as Link } from "@/components/SmartLink";
 import { useEffect, useState } from "react";
 import { useSession } from "next-auth/react";
 import { getAccount } from "@/lib/accountCache";
@@ -12,6 +12,7 @@ import { ROUTINE_PLAN_KEY, ROUTINE_TRIAL_DAYS } from "@/lib/trial";
 import { entryOffer } from "@/lib/planPricing";
 import { usePlanPricing } from "@/lib/usePlanPricing";
 import { useLiveRefresh } from "@/lib/liveSync";
+import { tr, isEn, iso } from "@/lib/i18n";
 
 export function routineTrialDaysLeft(data: Awaited<ReturnType<typeof getAccount>>): number | null {
   const u = data?.user;
@@ -31,7 +32,6 @@ export function RoutineTrialBanner({ className }: { className?: string }) {
   const [v, setV] = useState(0);
   useLiveRefresh(["account"], () => setV((x) => x + 1));
   const { pricing, ready } = usePlanPricing();
-  const offer = entryOffer(pricing, ROUTINE_PLAN_KEY);
 
   useEffect(() => {
     if (status !== "authenticated") return;
@@ -41,13 +41,14 @@ export function RoutineTrialBanner({ className }: { className?: string }) {
   }, [status, v]);
 
   if (left === null) return null;
+  const offer = entryOffer(pricing, ROUTINE_PLAN_KEY);
   return (
     <div className={`routine-trial-strip${left <= 3 ? " is-urgent" : ""}${className ? ` ${className}` : ""}`} role="status">
       <span>
-        <b>{left}</b> روز از دوره‌ی رایگان «روتین من» مونده
+        {isEn() ? <><b>{left}</b> {left === 1 ? "day" : "days"} left in your free My Routine trial</> : <><b>{left}</b> روز از دوره‌ی رایگان «روتین من» مونده</>}
       </span>
       <Link href={`/subscription/checkout?plan=${ROUTINE_PLAN_KEY}&duration=${offer.duration}`} prefetch={false}>
-        {ready ? `خرید — ${offer.label}` : "خرید"}
+        {ready ? tr(`خرید — ${offer.label}`, `Buy: ${offer.label}`) : tr("خرید", "Buy")}
       </Link>
     </div>
   );

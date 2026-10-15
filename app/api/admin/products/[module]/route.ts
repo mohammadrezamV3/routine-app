@@ -3,6 +3,7 @@ import { ModuleKey } from "@prisma/client";
 import { requireAdmin } from "@/lib/requireAdmin";
 import { parseAdminRange } from "@/lib/adminRangeParams";
 import { getProductAnalytics } from "@/lib/adminAnalytics";
+import { tr } from "@/lib/i18n";
 
 const VALID_MODULES: ModuleKey[] = [ModuleKey.ROUTINE, ModuleKey.EXERCISE, ModuleKey.CALORIE, ModuleKey.TRADE, ModuleKey.ROADMAP];
 
@@ -12,7 +13,7 @@ export async function GET(req: NextRequest, { params }: { params: { module: stri
 
   const moduleKey = params.module.toUpperCase() as ModuleKey;
   if (!VALID_MODULES.includes(moduleKey)) {
-    return NextResponse.json({ error: "ماژول نامعتبر است" }, { status: 400 });
+    return NextResponse.json({ error: tr("ماژول نامعتبر است", "Invalid module") }, { status: 400 });
   }
 
   const parsed = parseAdminRange(req.nextUrl.searchParams);

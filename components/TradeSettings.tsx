@@ -24,6 +24,7 @@ import {
   MAX_VISIBLE_TRADE_FACTS,
 } from "@/lib/tradeTypes";
 import { TradeFactsPicker } from "@/components/TradeFactsPicker";
+import { tr } from "@/lib/i18n";
 
 // تنظیمات بخش «ترید» — مثل RoutineSettings، مستقیم داخل صفحه‌ی تنظیمات.
 //
@@ -113,53 +114,52 @@ export function TradeSettings() {
   }
 
   return (
-    <AccountBlock icon={<CandlestickChart size={15} />} title="ترید" index={3}>
+    <AccountBlock icon={<CandlestickChart size={15} />} title={tr("ترید", "Trading")} index={3}>
 
-      <AccountOption label="بازارهای دنبال‌شده">
-        <div className="item-line">{tickerSymbols.length} بازار برای نوار قیمت بالای صفحه‌ی ترید انتخاب شده</div>
+      <AccountOption label={tr("بازارهای دنبال‌شده", "Followed markets")}>
+        <div className="item-line">{tr(`${tickerSymbols.length} بازار برای نوار قیمت بالای صفحه‌ی ترید انتخاب شده`, `${tickerSymbols.length} ${tickerSymbols.length === 1 ? "market" : "markets"} selected for the price bar at the top of the trading page`)}</div>
         <button className="account-outline-btn" onClick={() => setMarketPickerOpen(true)} style={{ marginTop: 10 }}>
-          تغییر بازارها
+          {tr("تغییر بازارها", "Change markets")}
         </button>
       </AccountOption>
 
-      <AccountOption label="تقویم ژورنال ترید">
-        <div className="item-line" style={{ marginBottom: 10 }}>تاریخ‌های ژورنال ترید به چه تقویمی نمایش داده بشه</div>
+      <AccountOption label={tr("تقویم ژورنال ترید", "Journal calendar")}>
+        <div className="item-line" style={{ marginBottom: 10 }}>{tr("تاریخ‌های ژورنال ترید به چه تقویمی نمایش داده بشه", "Which calendar to use for dates in the trading journal")}</div>
         <SegmentedTabs
-          options={[{ value: "jalali", label: "شمسی" }, { value: "gregorian", label: "میلادی" }]}
+          options={[{ value: "jalali", label: tr("شمسی", "Jalali") }, { value: "gregorian", label: tr("میلادی", "Gregorian") }]}
           active={calSystem}
           onChange={changeCalSystem}
         />
       </AccountOption>
 
-      <AccountOption label="آمارهای صفحه ترید">
-        <div className="item-line" style={{ marginBottom: 10 }}>{visibleStats.length} از {TRADE_STAT_ORDER.length} آمار برای نمایش توی صفحه‌ی ترید انتخاب شده</div>
+      <AccountOption label={tr("آمارهای صفحه ترید", "Trading page stats")}>
+        <div className="item-line" style={{ marginBottom: 10 }}>{tr(`${visibleStats.length} از ${TRADE_STAT_ORDER.length} آمار برای نمایش توی صفحه‌ی ترید انتخاب شده`, `${visibleStats.length} of ${TRADE_STAT_ORDER.length} stats selected for the trading page`)}</div>
         <button className="account-outline-btn" onClick={() => setStatsPickerOpen(true)}>
-          تغییر
+          {tr("تغییر", "Change")}
         </button>
       </AccountOption>
 
-      <AccountOption label="آمارهای کل حساب‌ها">
+      <AccountOption label={tr("آمارهای کل حساب‌ها", "All-accounts stats")}>
         <div className="item-line" style={{ marginBottom: 10 }}>
-          {visibleTotals.length} از {TRADE_TOTALS_STAT_ORDER.length} آمار برای بالای صفحه‌ی حساب‌ها انتخاب شده — سه‌تای اول سرخط، بقیه پشت «جزئیات بیشتر»
+          {tr(`${visibleTotals.length} از ${TRADE_TOTALS_STAT_ORDER.length} آمار برای بالای صفحه‌ی حساب‌ها انتخاب شده — سه‌تای اول سرخط، بقیه پشت «جزئیات بیشتر»`, `${visibleTotals.length} of ${TRADE_TOTALS_STAT_ORDER.length} stats selected for the top of the accounts page. The first three are headlines, the rest are behind "More details"`)}
         </div>
         <button className="account-outline-btn" onClick={() => setTotalsPickerOpen(true)}>
-          تغییر
+          {tr("تغییر", "Change")}
         </button>
       </AccountOption>
 
-      <AccountOption label="جزئیات ترید در لیست">
+      <AccountOption label={tr("جزئیات ترید در لیست", "Trade details in the list")}>
         <div className="item-line" style={{ marginBottom: 10 }}>
-          {visibleFacts.length} از {MAX_VISIBLE_TRADE_FACTS} جزئیات برای نمایش کنار هر ترید انتخاب شده
+          {tr(`${visibleFacts.length} از ${MAX_VISIBLE_TRADE_FACTS} جزئیات برای نمایش کنار هر ترید انتخاب شده`, `${visibleFacts.length} of ${MAX_VISIBLE_TRADE_FACTS} details selected to show next to each trade`)}
         </div>
         <button className="account-outline-btn" onClick={() => setFactsPickerOpen(true)}>
-          تغییر
+          {tr("تغییر", "Change")}
         </button>
       </AccountOption>
 
-      <AccountOption label="هشدار قبل از اخبار مهم">
+      <AccountOption label={tr("هشدار قبل از اخبار مهم", "Alert before important news")}>
         <div className="item-line" style={{ marginBottom: 10 }}>
-          قبل از انتشار رویدادهای تقویم اقتصادی، نوتیفیکیشن بگیر. برای رسیدن نوتیف باید
-          اجازه‌ی نوتیفیکیشن مرورگر را هم داده باشی.
+          {tr("قبل از انتشار رویدادهای تقویم اقتصادی، نوتیفیکیشن بگیر. برای رسیدن نوتیف باید اجازه‌ی نوتیفیکیشن مرورگر را هم داده باشی.", "Get a notification before economic calendar events are released. You also need to allow browser notifications for it to arrive.")}
         </div>
 
         <button
@@ -168,19 +168,19 @@ export function TradeSettings() {
           onClick={() => patchAlerts({ enabled: !alerts.enabled })}
         >
           <TickButton as="span" checked={alerts.enabled} size={22} />
-          <span className="trade-toggle-label">{alerts.enabled ? "روشن" : "خاموش"}</span>
+          <span className="trade-toggle-label">{alerts.enabled ? tr("روشن", "On") : tr("خاموش", "Off")}</span>
         </button>
 
         {alerts.enabled && (
           <>
-            <label className="exercise-form-label">چند دقیقه قبل</label>
+            <label className="exercise-form-label">{tr("چند دقیقه قبل", "Minutes before")}</label>
             <SegmentedTabs
               active={String(alerts.minutesBefore)}
               onChange={(v) => patchAlerts({ minutesBefore: Number(v) })}
-              options={MINUTES_BEFORE_OPTIONS.map((m) => ({ value: String(m), label: `${m} دقیقه` }))}
+              options={MINUTES_BEFORE_OPTIONS.map((m) => ({ value: String(m), label: tr(`${m} دقیقه`, `${m} min`) }))}
             />
 
-            <label className="exercise-form-label">برای کدام سطح تاثیر</label>
+            <label className="exercise-form-label">{tr("برای کدام سطح تاثیر", "Impact levels")}</label>
             <div className="trade-choice-grid">
               {IMPACT_ORDER.map((i) => (
                 <button
@@ -199,7 +199,7 @@ export function TradeSettings() {
             </div>
 
             <label className="exercise-form-label">
-              ارزها {alerts.currencies.length ? "" : "(خالی یعنی همه)"}
+              {tr("ارزها", "Currencies")} {alerts.currencies.length ? "" : tr("(خالی یعنی همه)", "(empty means all)")}
             </label>
             <div className="trade-choice-grid">
               {CALENDAR_CURRENCIES.map((c) => (
@@ -223,7 +223,7 @@ export function TradeSettings() {
 
       {marketPickerOpen && (
         <MarketPicker
-          title="بازارهای دنبال‌شده"
+          title={tr("بازارهای دنبال‌شده", "Followed markets")}
           symbols={tickerSymbols}
           onToggle={toggleTickerSymbol}
           onClose={() => setMarketPickerOpen(false)}
@@ -232,8 +232,8 @@ export function TradeSettings() {
 
       {totalsPickerOpen && (
         <TradeStatsPicker<TradeTotalsStatKey>
-          title="آمارهای کل حساب‌ها"
-          note="کدوم آمارها بالای صفحه‌ی حساب‌ها نشون داده بشن رو انتخاب کن. سه‌تای اول سرخط می‌شن."
+          title={tr("آمارهای کل حساب‌ها", "All-accounts stats")}
+          note={tr("کدوم آمارها بالای صفحه‌ی حساب‌ها نشون داده بشن رو انتخاب کن. سه‌تای اول سرخط می‌شن.", "Choose which stats show at the top of the accounts page. The first three become headlines.")}
           order={TRADE_TOTALS_STAT_ORDER}
           labels={TRADE_TOTALS_STAT_LABELS}
           visible={visibleTotals}

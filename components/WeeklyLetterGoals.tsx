@@ -6,6 +6,7 @@ import { Check, Plus, Target, Trash2, X } from "lucide-react";
 import {
   ANALYSIS_DOMAIN_LABELS, type AnalysisDomain, type WeeklyGoalDto, type WeeklyGoalStatus,
 } from "@/lib/weeklyAnalysis/types";
+import { tr } from "@/lib/i18n";
 import { Spinner } from "./Spinner";
 import { TickOption } from "./TickOption";
 import { DOMAIN_ICONS, MeterBar, Reveal } from "./WeeklyLetterShared";
@@ -15,9 +16,9 @@ import { waFetch } from "./WeeklyAnalysisKit";
 
 const MAX_GOALS = 3;
 const STATUS = {
-  DONE: { label: "انجام شد", Icon: Check, cls: "is-good" },
-  MISSED: { label: "نشد", Icon: X, cls: "is-bad" },
-  ACTIVE: { label: "در جریان", Icon: Target, cls: "" },
+  DONE: { label: () => tr("انجام شد", "Done"), Icon: Check, cls: "is-good" },
+  MISSED: { label: () => tr("نشد", "Missed"), Icon: X, cls: "is-bad" },
+  ACTIVE: { label: () => tr("در جریان", "In progress"), Icon: Target, cls: "" },
 } as const satisfies Record<WeeklyGoalStatus, unknown>;
 
 const DOMAIN_KEYS = Object.keys(ANALYSIS_DOMAIN_LABELS) as AnalysisDomain[];
@@ -35,18 +36,18 @@ function GoalCard({ g, live, onDelete, deleting }: { g: WeeklyGoalDto; live: num
         <div className="wl-goal-meta">
           {g.domain && <span className="wl-tag">{ANALYSIS_DOMAIN_LABELS[g.domain]}</span>}
           {g.target !== null && score !== null && (
-            <span className="wl-goal-prog">رسیدی به <b>{Math.round(score)}</b> از <b>{Math.round(g.target)}</b></span>
+            <span className="wl-goal-prog">{tr("رسیدی به", "You reached")} <b>{Math.round(score)}</b> {tr("از", "of")} <b>{Math.round(g.target)}</b></span>
           )}
-          {g.target !== null && score === null && <span className="wl-goal-prog">هدف: <b>{Math.round(g.target)}</b></span>}
+          {g.target !== null && score === null && <span className="wl-goal-prog">{tr("هدف:", "Target:")} <b>{Math.round(g.target)}</b></span>}
         </div>
         {ratio !== null && <MeterBar ratio={ratio} />}
       </div>
       {onDelete ? (
-        <button type="button" className="wl-live-ghost wl-live-icon" onClick={onDelete} disabled={deleting} aria-label="حذف هدف">
+        <button type="button" className="wl-live-ghost wl-live-icon" onClick={onDelete} disabled={deleting} aria-label={tr("حذف هدف", "Delete goal")}>
           {deleting ? <Spinner size={14} label={null} /> : <Trash2 size={16} />}
         </button>
       ) : (
-        <span className={`wl-status ${st.cls}`}><st.Icon size={13} />{st.label}</span>
+        <span className={`wl-status ${st.cls}`}><st.Icon size={13} />{st.label()}</span>
       )}
     </Reveal>
   );
@@ -112,7 +113,7 @@ export function WeeklyLetterGoals({ ctx, no }: LetterChapterProps & LetterChapte
     e.preventDefault();
     if (saving || full) return;
     const t = title.trim();
-    if (!t) { setError("عنوان هدف رو بنویس"); return; }
+    if (!t) { setError(tr("عنوان هدف رو بنویس", "Write a goal title")); return; }
     setSaving(true);
     setError(null);
     try {
@@ -148,11 +149,11 @@ export function WeeklyLetterGoals({ ctx, no }: LetterChapterProps & LetterChapte
   if (!canEdit && a.goals.length === 0) return null;
 
   return (
-    <LiveChapter id="goals" no={no} title="هدف‌ها" icon={Target}>
+    <LiveChapter id="goals" no={no} title={tr("هدف‌ها", "Goals")} icon={Target}>
       <div className="wl-live-goals">
         {a.goals.length > 0 && (
           <div className="wl-live-group">
-            <h3 className="wl-live-sub">هدف‌های این هفته</h3>
+            <h3 className="wl-live-sub">{tr("هدف‌های این هفته", "This week's goals")}</h3>
             <ul className="wl-goals">
               {a.goals.map((g) => <GoalCard key={g.id} g={g} live={liveOf(g.domain)} />)}
             </ul>
@@ -162,8 +163,8 @@ export function WeeklyLetterGoals({ ctx, no }: LetterChapterProps & LetterChapte
         {canEdit && (
           <div className="wl-live-group">
             <div className="wl-live-subrow">
-              <h3 className="wl-live-sub">هدف‌های هفته‌ی بعد</h3>
-              <span className="wl-live-count">{next.length} از {MAX_GOALS}</span>
+              <h3 className="wl-live-sub">{tr("هدف‌های هفته‌ی بعد", "Next week's goals")}</h3>
+              <span className="wl-live-count">{next.length} {tr("از", "of")} {MAX_GOALS}</span>
             </div>
             {next.length > 0 && (
               <ul className="wl-goals">
@@ -171,7 +172,7 @@ export function WeeklyLetterGoals({ ctx, no }: LetterChapterProps & LetterChapte
               </ul>
             )}
             {full ? (
-              <p className="wl-live-note">حداکثر {MAX_GOALS} هدف برای هر هفته. برای هدف تازه یکی رو حذف کن.</p>
+              <p className="wl-live-note">{tr(`حداکثر ${MAX_GOALS} هدف برای هر هفته. برای هدف تازه یکی رو حذف کن.`, `Up to ${MAX_GOALS} goals per week. Delete one to add a new goal.`)}</p>
             ) : (
               <form ref={formRef} className="wl-card wl-live-form" onSubmit={add}>
                 <div className="wl-live-row">
@@ -179,9 +180,9 @@ export function WeeklyLetterGoals({ ctx, no }: LetterChapterProps & LetterChapte
                     className="wsearch-newform-name wl-live-sel"
                     value={domain}
                     onChange={(e) => setDomain(e.target.value as AnalysisDomain | "")}
-                    aria-label="بخش هدف"
+                    aria-label={tr("بخش هدف", "Goal area")}
                   >
-                    <option value="">عمومی</option>
+                    <option value="">{tr("عمومی", "General")}</option>
                     {a.domains.map((d) => <option key={d.domain} value={d.domain}>{ANALYSIS_DOMAIN_LABELS[d.domain]}</option>)}
                   </select>
                   <input
@@ -190,12 +191,12 @@ export function WeeklyLetterGoals({ ctx, no }: LetterChapterProps & LetterChapte
                     value={title}
                     maxLength={120}
                     onChange={(e) => setTitle(e.target.value)}
-                    placeholder="مثلا: هر شب قبل از 12 بخوابم"
-                    aria-label="عنوان هدف"
+                    placeholder={tr("مثلا: هر شب قبل از 12 بخوابم", "e.g. Sleep before 12 every night")}
+                    aria-label={tr("عنوان هدف", "Goal title")}
                   />
                 </div>
                 <div className="wl-live-row wl-live-target">
-                  <TickOption checked={useTarget} onChange={setUseTarget}>هدف امتیازی</TickOption>
+                  <TickOption checked={useTarget} onChange={setUseTarget}>{tr("هدف امتیازی", "Score target")}</TickOption>
                   {useTarget && <b className="wl-live-targetnum">{target}</b>}
                 </div>
                 {useTarget && (
@@ -204,12 +205,12 @@ export function WeeklyLetterGoals({ ctx, no }: LetterChapterProps & LetterChapte
                     value={target}
                     onChange={(e) => setTarget(Number(e.target.value))}
                     className="trade-range"
-                    aria-label="امتیاز هدف"
+                    aria-label={tr("امتیاز هدف", "Target score")}
                     data-noswipe
                   />
                 )}
                 <button type="submit" className="account-outline-btn wl-live-btn" disabled={saving || !title.trim()}>
-                  {saving ? <Spinner size={14} label={null} /> : <><Plus size={14} />افزودن هدف</>}
+                  {saving ? <Spinner size={14} label={null} /> : <><Plus size={14} />{tr("افزودن هدف", "Add goal")}</>}
                 </button>
               </form>
             )}

@@ -5,6 +5,7 @@ import { createPortal } from "react-dom";
 import { SleepGoalCard } from "./SleepGoalCard";
 import { useLockBodyScroll } from "@/lib/useLockBodyScroll";
 import type { SleepGoal } from "@/lib/sleepGoal";
+import { isEn, tr } from "@/lib/i18n";
 
 // پنجره‌ی ویرایش هدف خواب — از زدن روی ساعت‌های هدف زیر صفحه‌ی ساعت (SleepDial)
 // باز می‌شه، تا خود صفحه‌ی خواب کارت جدای تنظیمات نداشته باشه.
@@ -39,10 +40,10 @@ function Body({ goal, custom, goalMin, onClose, onSaved }: { goal: SleepGoal; cu
   return (
     <>
       <div className="modal-overlay open" onClick={onClose} />
-      <div className="modal-panel liquid-glass-panel open sleep-scope slp-goal-panel" role="dialog" aria-modal="true" aria-label="هدف خواب" dir="rtl">
+      <div className="modal-panel liquid-glass-panel open sleep-scope slp-goal-panel" role="dialog" aria-modal="true" aria-label={tr("هدف خواب", "Sleep goal")} dir={isEn() ? "ltr" : "rtl"}>
         <div className="modal-head">
-          <div className="modal-title">هدف خواب</div>
-          <button type="button" className="nav-close" onClick={onClose} aria-label="بستن">×</button>
+          <div className="modal-title">{tr("هدف خواب", "Sleep goal")}</div>
+          <button type="button" className="nav-close" onClick={onClose} aria-label={tr("بستن", "Close")}>×</button>
         </div>
         <SleepGoalCard bare goal={goal} custom={custom} goalMin={goalMin} onSaved={() => { onSaved(); onClose(); }} />
       </div>

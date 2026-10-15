@@ -10,6 +10,7 @@ import { DISCOVERABLE_PROFILE_WHERE, isUniqueViolation, usersBlockEachOther } fr
 import { decideMentorTerms, MENTOR_TERMS_ERROR_CODE, MENTOR_TERMS_VERSION } from "@/lib/mentorTerms";
 import { WAITLIST_MAX, canJoinWaitlist } from "@/lib/mentorWaitlist";
 import { advanceWaitlist, countOccupiedSeats, countWaiting, loadMyWaitlist } from "@/lib/mentorWaitlistServer";
+import { tr } from "@/lib/i18n";
 
 // صف انتظار منتور پر — سمت کاربر (lib/mentorWaitlistServer.ts).
 //   GET    → { waitlist: MyWaitlist | null }
@@ -19,7 +20,7 @@ import { advanceWaitlist, countOccupiedSeats, countWaiting, loadMyWaitlist } fro
 // نوبت زنده سقف ظرفیت را برای همان کاربر باز می‌کند.
 
 type Ctx = { params: { mentorId: string } };
-const BLOCKED_MSG = "امکان ارسال درخواست به این کاربر وجود ندارد";
+const blockedMsg = () => tr("امکان ارسال درخواست به این کاربر وجود ندارد", "A request to this user is not possible");
 const REREQUEST_COOLDOWN_MS = 7 * 24 * 60 * 60 * 1000;
 
 function validMentorId(v: unknown): v is string {
@@ -41,10 +42,10 @@ export async function POST(req: Request, { params }: Ctx) {
   const me = g.userId;
   const mentorId = params.mentorId;
   if (!validMentorId(mentorId)) return notFound();
-  if (mentorId === me) return badRequest("نمی‌تونی توی صف خودت بری");
+  if (mentorId === me) return badRequest(tr("نمی‌تونی توی صف خودت بری", "You can't join your own waitlist"));
 
   if (!(await checkRateLimit(`mentor-waitlist:${me}`, 20, 60 * 60 * 1000))) {
-    return NextResponse.json({ error: "تعداد درخواست‌ها زیاد بوده؛ کمی بعد دوباره تلاش کن" }, { status: 429 });
+    return NextResponse.json({ error: tr("تعداد درخواست‌ها زیاد بوده؛ کمی بعد دوباره تلاش کن", "There were too many requests; try again shortly") }, { status: 429 });
   }
 
   const parsed = await readJsonBody(req, 4 * 1024);
@@ -57,17 +58,17 @@ export async function POST(req: Request, { params }: Ctx) {
     select: AVAILABILITY_SELECT,
   });
   if (!profile) return notFound();
-  if (await usersBlockEachOther(me, mentorId)) return forbidden(BLOCKED_MSG);
+  if (await usersBlockEachOther(me, mentorId)) return forbidden(blockedMsg());
 
   const rel = await prisma.mentorship.findUnique({
     where: { mentorId_studentId: { mentorId, studentId: me } },
     select: { status: true, initiatedBy: true, updatedAt: true },
   });
-  if (rel?.status === "ACTIVE") return conflict("این رابطه همین الان فعاله");
-  if (rel?.status === "PENDING") return conflict("یک درخواست در انتظار پاسخ از قبل وجود داره");
-  if (rel?.status === "BLOCKED") return forbidden(BLOCKED_MSG);
+  if (rel?.status === "ACTIVE") return conflict(tr("این رابطه همین الان فعاله", "This relationship is already active"));
+  if (rel?.status === "PENDING") return conflict(tr("یک درخواست در انتظار پاسخ از قبل وجود داره", "A request awaiting a response already exists"));
+  if (rel?.status === "BLOCKED") return forbidden(blockedMsg());
   if (rel?.status === "REJECTED" && rel.initiatedBy === "STUDENT" && Date.now() - rel.updatedAt.getTime() < REREQUEST_COOLDOWN_MS) {
-    return conflict("این درخواست به‌تازگی رد شده؛ بعدا دوباره امتحان کن");
+    return conflict(tr("این درخواست به‌تازگی رد شده؛ بعدا دوباره امتحان کن", "This request was recently declined; try again later"));
   }
 
   // اول صف جلو برود تا «پر بودن» با صندلی‌های رزرو به‌روز سنجیده شود
@@ -75,7 +76,7 @@ export async function POST(req: Request, { params }: Ctx) {
   const now = new Date();
   const availability = availabilityOf(profile, await countOccupiedSeats(mentorId, now));
   if (!canJoinWaitlist(availability.state)) {
-    if (availability.state === "OPEN") return conflict("ظرفیت این مربی باز شده؛ همین الان می‌تونی درخواست بدی");
+    if (availability.state === "OPEN") return conflict(tr("ظرفیت این مربی باز شده؛ همین الان می‌تونی درخواست بدی", "This mentor's capacity has opened; you can send a request now"));
     return conflict(requestBlockedMessage(availability.state, availability.awayUntil));
   }
 
@@ -88,9 +89,9 @@ export async function POST(req: Request, { params }: Ctx) {
     select: { id: true, status: true, offerExpiresAt: true },
   });
   if (existing && (existing.status === "WAITING" || (existing.status === "OFFERED" && existing.offerExpiresAt && existing.offerExpiresAt > now))) {
-    return conflict("از قبل توی صف این مربی هستی");
+    return conflict(tr("از قبل توی صف این مربی هستی", "You're already on this mentor's waitlist"));
   }
-  if ((await countWaiting(mentorId)) >= WAITLIST_MAX) return conflict("صف این مربی فعلا پره؛ کمی بعد دوباره سر بزن");
+  if ((await countWaiting(mentorId)) >= WAITLIST_MAX) return conflict(tr("صف این مربی فعلا پره؛ کمی بعد دوباره سر بزن", "This mentor's waitlist is full for now; check back later"));
 
   const recordTerms = async (tx: Parameters<Parameters<typeof prisma.$transaction>[0]>[0]) => {
     if (terms.record) {
@@ -113,9 +114,9 @@ export async function POST(req: Request, { params }: Ctx) {
       await recordTerms(tx);
       return true;
     });
-    if (!ok) return conflict("وضعیت صف هم‌زمان تغییر کرد؛ دوباره تلاش کن");
+    if (!ok) return conflict(tr("وضعیت صف هم‌زمان تغییر کرد؛ دوباره تلاش کن", "The queue status changed at the same time; try again"));
   } catch (e) {
-    if (isUniqueViolation(e)) return conflict("از قبل توی صف این مربی هستی");
+    if (isUniqueViolation(e)) return conflict(tr("از قبل توی صف این مربی هستی", "You're already on this mentor's waitlist"));
     throw e;
   }
 

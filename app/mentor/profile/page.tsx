@@ -6,6 +6,7 @@ import { MentorProfileForm } from "@/components/MentorProfileForm";
 import { MentorProfileVerification } from "@/components/MentorProfileVerification";
 import { setMentorSelf, useMentorSelf } from "@/components/MentorPanelNav";
 import { LoadingBlock } from "@/components/Spinner";
+import { tr } from "@/lib/i18n";
 
 function MentorProfileContent() {
   const self = useMentorSelf();
@@ -19,7 +20,7 @@ function MentorProfileContent() {
   }, [loading]);
 
   if (loading) return <LoadingBlock />;
-  if (self.status === "error" && !self.profile) return <MentorDashError message={self.error || "پروفایل دریافت نشد؛ دوباره تلاش کن"} onRetry={() => self.reload()} />;
+  if (self.status === "error" && !self.profile) return <MentorDashError message={self.error || tr("پروفایل دریافت نشد؛ دوباره تلاش کن", "Could not load the profile. Try again.")} onRetry={() => self.reload()} />;
 
   return (
     <div className="mv2-set-profile-page">
@@ -33,10 +34,10 @@ export default function MentorProfilePage() {
   const self = useMentorSelf();
   // بدون پروفایل (مرحله‌ی شروع) بازگشت به پنل؛ با پروفایل این صفحه زیر «تنظیمات» است
   const back = self.status === "ready" && !self.profile
-    ? { href: "/mentor", label: "پنل مربی" }
-    : { href: "/mentor/settings", label: "تنظیمات" };
+    ? { href: "/mentor", label: tr("پنل مربی", "Mentor panel") }
+    : { href: "/mentor/settings", label: tr("تنظیمات", "Settings") };
   return (
-    <MentorDashShell title="پروفایل عمومی" back={back}>
+    <MentorDashShell title={tr("پروفایل عمومی", "Public profile")} back={back}>
       <MentorProfileContent />
     </MentorDashShell>
   );

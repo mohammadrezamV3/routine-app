@@ -1,3 +1,4 @@
+import { tr } from "@/lib/i18n";
 // اتصال به درگاه زیبال. مرچنت‌کد از env می‌آد (ZIBAL_MERCHANT_KEY)، هیچ‌وقت
 // توی سورس هاردکد نمی‌شه — همون قاعده‌ی lib/zarinpal.ts. مبلغ به ریاله.
 const BASE = "https://gateway.zibal.ir";
@@ -19,14 +20,14 @@ const GATEWAY_TIMEOUT_MS = 12_000;
 
 // کدهای خطای زیبال به فارسی. پیام خام خود زیبال انگلیسی و برای کاربر
 // نهایی بی‌معنی است.
-const RESULT_MESSAGES: Record<number, string> = {
-  102: "مرچنت‌کد درگاه نامعتبر است",
-  103: "مرچنت‌کد درگاه غیرفعال است",
-  104: "مرچنت‌کد درگاه نامعتبر است",
-  105: "مبلغ باید بیشتر از 1000 ریال باشد",
-  106: "آدرس بازگشت (callback) نامعتبر است — باید با http یا https شروع شود",
-  113: "مبلغ تراکنش از سقف مجاز درگاه بیشتر است",
-};
+const resultMessages = (): Record<number, string> => ({
+  102: tr("مرچنت‌کد درگاه نامعتبر است", "The gateway merchant code is invalid"),
+  103: tr("مرچنت‌کد درگاه غیرفعال است", "The gateway merchant code is disabled"),
+  104: tr("مرچنت‌کد درگاه نامعتبر است", "The gateway merchant code is invalid"),
+  105: tr("مبلغ باید بیشتر از 1000 ریال باشد", "The amount must be more than 1,000 rials"),
+  106: tr("آدرس بازگشت (callback) نامعتبر است — باید با http یا https شروع شود", "The return (callback) URL is invalid. It must start with http or https"),
+  113: tr("مبلغ تراکنش از سقف مجاز درگاه بیشتر است", "The transaction amount exceeds the gateway limit"),
+});
 
 async function postJson(path: string, payload: unknown): Promise<any> {
   let res: Response;
@@ -40,9 +41,9 @@ async function postJson(path: string, payload: unknown): Promise<any> {
   } catch (e: any) {
     // TimeoutError وقتی AbortSignal.timeout عمل کند؛ بقیه یعنی DNS/شبکه.
     if (e?.name === "TimeoutError" || e?.name === "AbortError") {
-      throw new Error("درگاه زیبال در زمان مقرر پاسخ نداد — چند لحظه دیگر دوباره امتحان کن");
+      throw new Error(tr("درگاه زیبال در زمان مقرر پاسخ نداد — چند لحظه دیگر دوباره امتحان کن", "The Zibal gateway did not respond in time. Please try again in a moment"));
     }
-    throw new Error("اتصال به درگاه زیبال برقرار نشد — چند لحظه دیگر دوباره امتحان کن");
+    throw new Error(tr("اتصال به درگاه زیبال برقرار نشد — چند لحظه دیگر دوباره امتحان کن", "Could not connect to the Zibal gateway. Please try again in a moment"));
   }
   // درگاه ممکن است در خطاهای زیرساختی HTML بدهد نه JSON؛ آن‌وقت `res.json()`
   // یک خطای بی‌ربط پارس می‌داد. این‌جا صریح مدیریت می‌شود.
@@ -50,7 +51,7 @@ async function postJson(path: string, payload: unknown): Promise<any> {
   try {
     return JSON.parse(text);
   } catch {
-    throw new Error(`پاسخ نامعتبر از درگاه زیبال (کد ${res.status})`);
+    throw new Error(tr(`پاسخ نامعتبر از درگاه زیبال (کد ${res.status})`, `Invalid response from the Zibal gateway (code ${res.status})`));
   }
 }
 
@@ -68,7 +69,7 @@ export async function zibalRequest(amountRial: number, callbackUrl: string, desc
     description,
   });
   if (data.result !== 100) {
-    throw new Error(RESULT_MESSAGES[data.result] || `خطای درگاه زیبال (کد ${data.result})`);
+    throw new Error(resultMessages()[data.result] || tr(`خطای درگاه زیبال (کد ${data.result})`, `Zibal gateway error (code ${data.result})`));
   }
   return {
     trackId: data.trackId as number,

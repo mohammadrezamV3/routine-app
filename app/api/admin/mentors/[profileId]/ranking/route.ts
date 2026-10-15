@@ -3,6 +3,7 @@ import { prisma } from "@/lib/prisma";
 import { requireAdmin } from "@/lib/requireAdmin";
 import { adminErrorResponse, loadTarget } from "@/lib/adminUsers";
 import { loadRankingBreakdown } from "@/lib/mentorRankingStats";
+import { tr } from "@/lib/i18n";
 
 // GET /api/admin/mentors/:profileId/ranking — جزئیات امتیاز شایستگی یک منتور
 // (هر مؤلفه، ضریب‌ها، نمونه‌ها و دلیل ماندن بیرون «منتورهای محبوب») برای
@@ -12,7 +13,7 @@ export async function GET(_req: NextRequest, { params }: { params: { profileId: 
   if (!g.ok) return g.response;
 
   const profile = await prisma.mentorProfile.findUnique({ where: { id: params.profileId }, select: { id: true, userId: true } });
-  if (!profile) return NextResponse.json({ error: "مربی پیدا نشد" }, { status: 404 });
+  if (!profile) return NextResponse.json({ error: tr("مربی پیدا نشد", "Mentor not found") }, { status: 404 });
   try {
     await loadTarget(g, profile.userId);
   } catch (e) {

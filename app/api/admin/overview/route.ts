@@ -5,6 +5,7 @@ import { getOverviewKpis, getUserGrowthSeries, getPlanBreakdown } from "@/lib/ad
 import { buildOverview } from "@/lib/adminOverviewServer";
 import { parseDashRange } from "@/lib/adminOverview";
 import { hasPermission } from "@/lib/adminPermissions";
+import { tr } from "@/lib/i18n";
 
 // GET /api/admin/overview?range=today|7d|30d|90d
 // داشبورد /admin: هر ادمینی می‌تونه صداش کنه ولی هر بخش فقط با دسترسی
@@ -17,7 +18,7 @@ export async function GET(req: NextRequest) {
 
   const sp = req.nextUrl.searchParams;
   if (sp.get("legacy") === "1") {
-    if (!hasPermission(guard, "analytics")) return NextResponse.json({ error: "به این بخش دسترسی نداری" }, { status: 403 });
+    if (!hasPermission(guard, "analytics")) return NextResponse.json({ error: tr("به این بخش دسترسی نداری", "You don't have access to this section") }, { status: 403 });
     const parsed = parseAdminRange(sp);
     if (!parsed.ok) return parsed.response;
     const [kpis, growthSeries, planBreakdown] = await Promise.all([

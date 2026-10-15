@@ -1,8 +1,9 @@
 "use client";
 
 import { ToggleSwitch } from "@/components/ToggleSwitch";
-import { ADMIN_PERMISSIONS, AdminPermission, PERMISSION_GROUPS, PERMISSION_META, ROLE_PRESETS } from "@/lib/adminPermissions";
+import { ADMIN_PERMISSIONS, AdminPermission, PERMISSION_GROUPS, PERMISSION_META, ROLE_PRESETS, permissionGroupLabel } from "@/lib/adminPermissions";
 import { useAdminAccess } from "@/components/admin/AdminAccess";
+import { tr } from "@/lib/i18n";
 
 // کلیدهای «کاربران» که بدون «مشاهده کاربران» معنایی ندارن (صفحه‌ی کاربران
 // با users.view باز می‌شه)
@@ -56,16 +57,16 @@ export function PermissionEditor({
           );
         })}
         <button type="button" className="admin-tab" disabled={disabled || value.every((p) => !editable(p))} onClick={() => emit(new Set(lockedHeld))}>
-          پاک‌کردن
+          {tr("پاک‌کردن", "Clear")}
         </button>
       </div>
       {!isSuperAdmin && !disabled && (
-        <div className="admin-perm-hint">فقط دسترسی‌هایی رو می‌تونی بدی یا بگیری که خودت داری؛ بقیه قفلن و دست نمی‌خورن.</div>
+        <div className="admin-perm-hint">{tr("فقط دسترسی‌هایی رو می‌تونی بدی یا بگیری که خودت داری؛ بقیه قفلن و دست نمی‌خورن.", "You can only grant or remove permissions you have yourself; the rest are locked and stay unchanged.")}</div>
       )}
 
       {PERMISSION_GROUPS.map((g) => (
         <div key={g} className="admin-perm-group">
-          <div className="admin-perm-group-title">{g}</div>
+          <div className="admin-perm-group-title">{permissionGroupLabel(g)}</div>
           {ADMIN_PERMISSIONS.filter((p) => PERMISSION_META[p].group === g).map((p) => (
             <div key={p} className={`admin-perm-row${editable(p) ? "" : " is-locked"}`}>
               <div>

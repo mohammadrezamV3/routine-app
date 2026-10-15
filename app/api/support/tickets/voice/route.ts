@@ -1,3 +1,4 @@
+import { tr } from "@/lib/i18n";
 import { NextRequest, NextResponse } from "next/server";
 import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/auth";
@@ -20,7 +21,7 @@ export async function POST(req: NextRequest) {
 
   if (!(await checkRateLimit(`support-voice:${userId}`, 20, 10 * 60 * 1000))) {
     return NextResponse.json(
-      { error: "ویس‌ها را خیلی سریع پشت هم فرستادی. چند دقیقه صبر کن." },
+      { error: tr("ویس‌ها را خیلی سریع پشت هم فرستادی. چند دقیقه صبر کن.", "You're sending voice messages too quickly. Wait a few minutes.") },
       { status: 429 }
     );
   }

@@ -6,6 +6,7 @@ import { EmptyState } from "@/components/admin/EmptyState";
 import { AdminPagination } from "@/components/admin/Pagination";
 import { formatDateTime } from "@/lib/adminFormat";
 import { auditLabel } from "@/lib/adminAuditLabels";
+import { tr } from "@/lib/i18n";
 
 type Entry = {
   id: string; action: string; targetType: string | null; targetId: string | null; meta: any; createdAt: string; actorUserId: string;
@@ -38,32 +39,32 @@ export default function AdminAuditPage() {
     <section>
       <div className="admin-page-head">
         <div>
-          <div className="admin-page-kicker">لاگ فعالیت ادمین‌ها</div>
-          <div className="admin-section-hint admin-page-sub">همه‌ی اقدامات انجام‌شده در پنل — غیرقابل ویرایش و حذف.</div>
+          <div className="admin-page-kicker">{tr("لاگ فعالیت ادمین‌ها", "Admin activity log")}</div>
+          <div className="admin-section-hint admin-page-sub">{tr("همه‌ی اقدامات انجام‌شده در پنل — غیرقابل ویرایش و حذف.", "Every action taken in the panel. It can't be edited or deleted.")}</div>
         </div>
       </div>
       {failed && !loading && (
         <div className="admin-empty">
-          <span>خطا در دریافت اطلاعات</span>
-          <button type="button" className="admin-btn sm" onClick={() => setReload((n) => n + 1)}>تلاش دوباره</button>
+          <span>{tr("خطا در دریافت اطلاعات", "Couldn't load the data")}</span>
+          <button type="button" className="admin-btn sm" onClick={() => setReload((n) => n + 1)}>{tr("تلاش دوباره", "Try again")}</button>
         </div>
       )}
       {!data ? (
-        !failed && <div className="admin-empty is-loading">در حال بارگذاری…</div>
-      ) : data.entries.length === 0 ? <EmptyState message="هنوز اقدامی ثبت نشده" /> : (
+        !failed && <div className="admin-empty is-loading">{tr("در حال بارگذاری…", "Loading…")}</div>
+      ) : data.entries.length === 0 ? <EmptyState message={tr("هنوز اقدامی ثبت نشده", "No actions recorded yet")} /> : (
         <>
           <div className={`admin-table-wrap${loading ? " is-refreshing" : ""}`} aria-busy={loading}>
             <table className="admin-table">
-              <thead><tr><th>ادمین</th><th>اقدام</th><th>هدف</th><th>زمان</th></tr></thead>
+              <thead><tr><th>{tr("ادمین", "Admin")}</th><th>{tr("اقدام", "Action")}</th><th>{tr("هدف", "Target")}</th><th>{tr("زمان", "Time")}</th></tr></thead>
               <tbody>
                 {data.entries.map((e) => (
                   <tr key={e.id}>
                     <td>
                       {e.actor ? (
                         <Link href={`/admin/users/${e.actorUserId}`} className="admin-user-cell-name">
-                          {[e.actor.name, e.actor.lastName].filter(Boolean).join(" ") || (e.actor.username ? `@${e.actor.username}` : "بدون نام")}
+                          {[e.actor.name, e.actor.lastName].filter(Boolean).join(" ") || (e.actor.username ? `@${e.actor.username}` : tr("بدون نام", "No name"))}
                         </Link>
-                      ) : <span className="admin-muted">حساب حذف‌شده</span>}
+                      ) : <span className="admin-muted">{tr("حساب حذف‌شده", "Deleted account")}</span>}
                     </td>
                     <td>{auditLabel(e.action)}</td>
                     <td>

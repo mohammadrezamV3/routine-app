@@ -11,6 +11,7 @@ import {
   userTimezone,
 } from "@/lib/mentorServer";
 import { liveLabelIds, readLabels } from "@/lib/mentorManageServer";
+import { tr } from "@/lib/i18n";
 
 const MAX_STUDENTS = 500;
 
@@ -24,7 +25,7 @@ export async function GET() {
   const me = g.userId;
 
   const profile = await prisma.mentorProfile.findUnique({ where: { userId: me }, select: { id: true, suspendedAt: true, maxActiveStudents: true } });
-  if (!profile) return forbidden("اول پروفایل مربی‌گری بساز");
+  if (!profile) return forbidden(tr(tr("اول پروفایل مربی‌گری بساز", "Create your mentor profile first"), "Create your mentor profile first"));
 
   const rels = await prisma.mentorship.findMany({
     where: { mentorId: me, status: "ACTIVE", student: { isBlocked: false, deletedAt: null } },

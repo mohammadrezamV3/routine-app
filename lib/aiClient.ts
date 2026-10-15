@@ -18,6 +18,7 @@ import { AiFeatureKey } from "@prisma/client";
 import { prisma } from "@/lib/prisma";
 import { logError } from "@/lib/errorLog";
 import { toEnglishDigits } from "@/lib/validate";
+import { tr, isEn } from "@/lib/i18n";
 import { getAiCostRate, estimateAiCostUsdMicros } from "@/lib/appSettings";
 import {
   HOURS_OPTIONS, HoursValue, LEVEL_OPTIONS, LevelValue, PLAN_LIMITS, PlanIssue, PlanStage, RoadmapPlan,
@@ -132,6 +133,20 @@ export const AI_IDENTITY_PROMPT =
   "فقط بگو «من نومو هستم، دستیار هوشمند آریون» و هیچ اطلاعات دیگری درباره‌ی مدل، نسخه، " +
   "سازنده، شرکت یا زیرساخت نده. هرگز خودت را با نام دیگری معرفی نکن.";
 
+// زبان خروجی: در حالت انگلیسی (isEn داخل درخواست) متن قابل‌نمایش به انگلیسی
+// نوشته می‌شود؛ ساختار JSON، کلیدها و مقدارهای enum دست‌نخورده می‌مانند.
+// در حالت فارسی چیزی به prompt اضافه نمی‌شود.
+const EN_OUTPUT_INSTRUCTION =
+  "\n\nOUTPUT LANGUAGE: Write every user-visible text value (titles, descriptions, explanations, names of topics, tasks, tips, replies, questions, options) in clear natural English instead of Persian. " +
+  "Keep the JSON structure, all JSON keys and all enum/code values (such as day keys, types, ids and fixed identifiers) exactly as specified above, unchanged. " +
+  "Persian day names that the instructions require you to use as keys or values must stay in Persian.";
+
+// برنامه‌ی ورزشی: اسم حرکت (کلید کاتالوگ، عکس و ردیابی ست) و عضله (اعتبارسنجی کف
+// حرکت هر عضله) باید فارسی بمونن؛ نمایش انگلیسی‌شون با lib/exerciseI18n.ts ـه.
+function persianOnlyPrompt(system: string): boolean {
+  return system === EXERCISE_SPLIT_PROMPT || system === EXERCISE_DAY_PROMPT;
+}
+
 export async function callAiChat(
   system: string,
   userContent: string | ChatContentPart[],
@@ -168,7 +183,7 @@ export async function callAiChat(
         ...(typeof temperature === "number" ? { temperature } : {}),
         response_format: { type: "json_object" },
         messages: [
-          { role: "system", content: `${AI_IDENTITY_PROMPT}\n\n${system}` },
+          { role: "system", content: `${AI_IDENTITY_PROMPT}\n\n${system}${isEn() && !persianOnlyPrompt(system) ? EN_OUTPUT_INSTRUCTION : ""}` },
           { role: "user", content: userContent },
         ],
       }),
@@ -176,9 +191,9 @@ export async function callAiChat(
     });
   } catch (e: any) {
     if (e?.name === "TimeoutError" || e?.name === "AbortError") {
-      throw new Error(`گیت‌وی هوش مصنوعی در ${Math.round(timeoutMs / 1000)} ثانیه پاسخ نداد`);
+      throw new Error(tr(`گیت‌وی هوش مصنوعی در ${Math.round(timeoutMs / 1000)} ثانیه پاسخ نداد`, `The AI gateway did not respond within ${Math.round(timeoutMs / 1000)} seconds`));
     }
-    throw new Error("اتصال به گیت‌وی هوش مصنوعی برقرار نشد");
+    throw new Error(tr("اتصال به گیت‌وی هوش مصنوعی برقرار نشد", "Could not connect to the AI gateway"));
   }
   const durationMs = Date.now() - startedAt;
 
@@ -193,7 +208,7 @@ export async function callAiChat(
     inputTokens: Number(data?.usage?.prompt_tokens) || 0,
     outputTokens: Number(data?.usage?.completion_tokens) || 0,
   };
-  if (!text) throw new Error("پاسخ مدل خالی بود");
+  if (!text) throw new Error(tr("پاسخ مدل خالی بود", "The model response was empty"));
   // «length» یعنی سقف توکن خروجی وسط پاسخ رسید و JSON نصفه‌ست
   const truncated = data?.choices?.[0]?.finish_reason === "length";
   return { text, usage, durationMs, truncated };
@@ -204,7 +219,7 @@ export function parseJsonResponse(text: string): any {
   try {
     return JSON.parse(cleaned);
   } catch {
-    throw new Error("پاسخ مدل قابل تبدیل به JSON نبود");
+    throw new Error(tr("پاسخ مدل قابل تبدیل به JSON نبود", "The model response could not be parsed"));
   }
 }
 
@@ -259,9 +274,9 @@ function profileBlock(p: RoadmapProfile): string {
     p.goal
       ? `هدف کاربر: ${p.goal}`
       : "هدف: مشخص نکرده — مسیری بساز که هم به توان کار واقعی برسد هم برای علاقه‌ی شخصی بی‌ربط نباشد.",
-    level ? `سطح فعلی: ${level.label} — ${level.prompt}` : "سطح فعلی: نگفته — فرض کن تازه‌کار است ولی آدم باهوشی‌ست.",
+    level ? `سطح فعلی: ${level.label.fa} — ${level.prompt}` : "سطح فعلی: نگفته — فرض کن تازه‌کار است ولی آدم باهوشی‌ست.",
     hours
-      ? `وقت هفتگی: حدود ${hours.hours} ساعت در هفته (${hours.label}). همه‌ی مدت‌زمان‌ها را با همین عدد حساب کن.`
+      ? `وقت هفتگی: حدود ${hours.hours} ساعت در هفته (${hours.label.fa}). همه‌ی مدت‌زمان‌ها را با همین عدد حساب کن.`
       : "وقت هفتگی: نگفته — حدود 8 ساعت در هفته فرض کن.",
     p.background ? `چیزهای مرتبطی که الان بلد است: ${p.background}` : "",
   ].filter(Boolean).join("\n");
@@ -486,7 +501,7 @@ export async function generateStageDetail(
   timeoutMs: number = AI_TIMEOUT_MS
 ): Promise<PlanStage> {
   const base = ctx.plan.stages.find((s) => s.n === n);
-  if (!base) throw new Error("این مرحله در مسیر نیست");
+  if (!base) throw new Error(tr("این مرحله در مسیر نیست", "This stage is not in the path"));
   const { text, usage, durationMs } = await callAiChat(
     STAGE_SYSTEM_PROMPT, stageUserMessage(ctx, base), STAGE_MAX_TOKENS, AI_MODEL_NAME, timeoutMs
   );
@@ -496,7 +511,7 @@ export async function generateStageDetail(
     { ...raw, title: base.title, goal: base.goal, focus: base.focus, duration: base.duration, why: raw?.why || base.why },
     n - 1
   );
-  if (!merged) throw new Error("جزئیات مرحله قابل استفاده نبود");
+  if (!merged) throw new Error(tr("جزئیات مرحله قابل استفاده نبود", "The stage details were not usable"));
   const issues = validateStageDetail(merged);
   // حداقل قابل اجرا: یک سرفصل و یک کار. کمبود جزئی (مثلا ۳ سرفصل به‌جای ۴)
   // فقط لاگ می‌شود؛ یک مرحله‌ی نسبتا کامل از «بدون جزئیات» خیلی بهتر است.
@@ -574,7 +589,7 @@ export async function generateRoadmapPlan(profile: RoadmapProfile, userId: strin
     throw new Error(
       fatal.length
         ? `اسکلت مسیر کامل نبود: ${fatal.map((i) => i.message).join(" | ")}`
-        : lastErr?.message || "ساخت مسیر انجام نشد — گیت‌وی هوش مصنوعی پاسخ قابل استفاده نداد"
+        : lastErr?.message || tr("ساخت مسیر انجام نشد — گیت‌وی هوش مصنوعی پاسخ قابل استفاده نداد", "The path could not be built — the AI gateway returned no usable answer")
     );
   }
 

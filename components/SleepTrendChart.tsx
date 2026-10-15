@@ -4,7 +4,7 @@ import { useEffect, useMemo, useRef, useState } from "react";
 import { BarChart3 } from "lucide-react";
 import { SegmentedTabs } from "./SegmentedTabs";
 import {
-  SCORE_BAND_LABEL,
+  scoreBandLabel,
   addDaysIso,
   clockOf,
   durationLabel,
@@ -17,7 +17,8 @@ import {
   type SleepInsights,
   type SleepRecord,
 } from "@/lib/sleep";
-import { FA_WEEKDAY, FA_WEEKDAY_SHORT, J_MONTHS, faNum, toJalali } from "@/lib/jalali";
+import { weekdayName, weekdayShort, jMonthName, faNum, toJalali } from "@/lib/jalali";
+import { isEn, tr } from "@/lib/i18n";
 import "./sleep-charts.css";
 
 // نمودار شب‌ها: دو نمای هم‌ستون در یک SVG — بالا «خط زمانی» (کپسول از ساعت
@@ -102,13 +103,18 @@ export function SleepTrendChart({ entries, insights, target, todayIso, onPick }:
   const active = nights.find((x) => x.iso === activeIso) ?? nights[nights.length - 1];
 
   // هندسه
-  const GW = 38; // ستون برچسب محور (سمت راست)
+  // فارسی: برچسب محور سمت راست و قدیمی‌ترین ستون راست؛ انگلیسی: محور چپ و قدیمی‌ترین چپ
+  const en = isEn();
+  const GW = 38; // ستون برچسب محور
   const PAD_L = 6;
   const plotW = width - GW - PAD_L;
   const cw = plotW / n;
   const bw = Math.max(4, Math.min(cw * 0.62, 20));
-  const plotRight = width - GW;
-  const colX = (i: number) => plotRight - (i + 1) * cw; // i=0 قدیمی‌ترین، سمت راست
+  const plotRight = en ? width - PAD_L : width - GW;
+  const plotLeft = en ? GW : PAD_L;
+  const axisX = en ? 2 : width - 2;
+  const axisAnchor = en ? "start" : "end";
+  const colX = (i: number) => (en ? plotLeft + i * cw : plotRight - (i + 1) * cw); // i=0 قدیمی‌ترین
   const colCx = (i: number) => colX(i) + cw / 2;
 
   const T_TOP = 10, T_H = 176; // خط زمانی
@@ -135,9 +141,9 @@ export function SleepTrendChart({ entries, insights, target, todayIso, onPick }:
     return vals.map((p, k) => {
       const win = vals.slice(Math.max(0, k - 1), k + 2);
       const avg = win.reduce((s, q) => s + q.v, 0) / win.length;
-      return { x: plotRight - (p.i + 1) * cw + cw / 2, y: D_TOP + D_H - (Math.min(avg, dMax) / dMax) * D_H };
+      return { x: colX(p.i) + cw / 2, y: D_TOP + D_H - (Math.min(avg, dMax) / dMax) * D_H };
     });
-  }, [nights, plotRight, cw, dMax, D_TOP, D_H]);
+  }, [nights, plotRight, plotLeft, en, cw, dMax, D_TOP, D_H]);
 
   const gridMins = [0, 240, 480, 720, 960];
   const durTicks: number[] = [];
@@ -152,7 +158,7 @@ export function SleepTrendChart({ entries, insights, target, todayIso, onPick }:
 
   const readDate = (iso: string) => {
     const j = jalaliParts(iso);
-    return `${FA_WEEKDAY[j.dow]} ${faNum(j.jd)} ${J_MONTHS[j.jm - 1]}`;
+    return `${weekdayName(j.dow)} ${faNum(j.jd)} ${jMonthName(j.jm - 1)}`;
   };
 
   const animKey = `${range}-${nights.length}`;
@@ -160,15 +166,15 @@ export function SleepTrendChart({ entries, insights, target, todayIso, onPick }:
   return (
     <section className="sl-card slc">
       <div className="sl-head-row">
-        <h3 className="sl-card-title"><BarChart3 aria-hidden="true" />شب‌های اخیر</h3>
+        <h3 className="sl-card-title"><BarChart3 aria-hidden="true" />{tr("شب‌های اخیر", "Recent nights")}</h3>
         <SegmentedTabs<Range>
           className="slc-tabs"
-          ariaLabel="بازه‌ی نمودار"
+          ariaLabel={tr("بازه‌ی نمودار", "Chart range")}
           active={range}
           onChange={setRange}
           options={[
-            { value: "7", label: "7 شب" },
-            { value: "30", label: "30 شب" },
+            { value: "7", label: tr("7 شب", "7 nights") },
+            { value: "30", label: tr("30 شب", "30 nights") },
           ]}
         />
       </div>
@@ -181,27 +187,27 @@ export function SleepTrendChart({ entries, insights, target, todayIso, onPick }:
           height={H}
           viewBox={`0 0 ${width} ${H}`}
           role="group"
-          aria-label="نمودار ساعت خواب و مدت خواب شب‌های اخیر"
+          aria-label={tr("نمودار ساعت خواب و مدت خواب شب‌های اخیر", "Chart of bedtimes and sleep duration for recent nights")}
         >
           {/* خط زمانی: بازه‌ی هدف و شبکه */}
-          <rect className="slc-goal-band" x={PAD_L} y={tY(tSpan.from)} width={plotW} height={Math.max(0, tY(tSpan.to) - tY(tSpan.from))} rx={6} />
+          <rect className="slc-goal-band" x={plotLeft} y={tY(tSpan.from)} width={plotW} height={Math.max(0, tY(tSpan.to) - tY(tSpan.from))} rx={6} />
           {gridMins.map((m) => (
             <g key={m}>
-              <line className="slc-grid" x1={PAD_L} x2={plotRight} y1={tY(m)} y2={tY(m)} />
-              <text className="slc-axis" x={width - 2} y={tY(m) + 3.5} textAnchor="end">{minutesToClock(AXIS_START + m)}</text>
+              <line className="slc-grid" x1={plotLeft} x2={plotRight} y1={tY(m)} y2={tY(m)} />
+              <text className="slc-axis" x={axisX} y={tY(m) + 3.5} textAnchor={axisAnchor}>{minutesToClock(AXIS_START + m)}</text>
             </g>
           ))}
-          <line className="slc-target" x1={PAD_L} x2={plotRight} y1={tY(tSpan.from)} y2={tY(tSpan.from)} />
-          <line className="slc-target" x1={PAD_L} x2={plotRight} y1={tY(tSpan.to)} y2={tY(tSpan.to)} />
+          <line className="slc-target" x1={plotLeft} x2={plotRight} y1={tY(tSpan.from)} y2={tY(tSpan.from)} />
+          <line className="slc-target" x1={plotLeft} x2={plotRight} y1={tY(tSpan.to)} y2={tY(tSpan.to)} />
 
           {/* مدت: شبکه و خط هدف */}
           {durTicks.map((m) => (
             <g key={m}>
-              <line className="slc-grid" x1={PAD_L} x2={plotRight} y1={dY(m)} y2={dY(m)} />
-              <text className="slc-axis" x={width - 2} y={dY(m) + 3.5} textAnchor="end">{faNum(m / 60)} س</text>
+              <line className="slc-grid" x1={plotLeft} x2={plotRight} y1={dY(m)} y2={dY(m)} />
+              <text className="slc-axis" x={axisX} y={dY(m) + 3.5} textAnchor={axisAnchor}>{tr(`${faNum(m / 60)} س`, `${m / 60} h`)}</text>
             </g>
           ))}
-          <line className="slc-target" x1={PAD_L} x2={plotRight} y1={dY(goalMin)} y2={dY(goalMin)} />
+          <line className="slc-target" x1={plotLeft} x2={plotRight} y1={dY(goalMin)} y2={dY(goalMin)} />
 
           {/* ستون‌ها */}
           {nights.map((x, i) => {
@@ -223,7 +229,7 @@ export function SleepTrendChart({ entries, insights, target, todayIso, onPick }:
                 <rect className={`slc-dur-bar slc-b-${x.band}`} style={delay} x={cx - bw / 2} y={D_TOP + D_H - bh} width={bw} height={bh} rx={Math.min(4, bw / 2)} />
               );
             }
-            const label = x.rec ? `${readDate(x.iso)}، ${durationLabel(x.dur)}` : `${readDate(x.iso)}، بدون ثبت`;
+            const label = x.rec ? `${readDate(x.iso)}، ${durationLabel(x.dur)}` : tr(`${readDate(x.iso)}، بدون ثبت`, `${readDate(x.iso)}, not logged`);
             return (
               <g
                 key={x.iso}
@@ -255,7 +261,7 @@ export function SleepTrendChart({ entries, insights, target, todayIso, onPick }:
             const j = jalaliParts(x.iso);
             return (
               <text key={x.iso} className={`slc-day${x.iso === todayIso ? " is-today" : ""}`} x={colCx(i)} y={LBL_Y} textAnchor="middle">
-                {n === 7 ? FA_WEEKDAY_SHORT[j.dow] : faNum(j.jd)}
+                {n === 7 ? weekdayShort(j.dow) : faNum(j.jd)}
               </text>
             );
           })}
@@ -266,10 +272,10 @@ export function SleepTrendChart({ entries, insights, target, todayIso, onPick }:
       </div>
 
       <div className="slc-legend" aria-hidden="true">
-        <span><i className="slc-sw slc-sw-line" />ساعت هدف</span>
-        <span><i className="slc-sw slc-sw-avg" />میانگین مدت</span>
+        <span><i className="slc-sw slc-sw-line" />{tr("ساعت هدف", "Target time")}</span>
+        <span><i className="slc-sw slc-sw-avg" />{tr("میانگین مدت", "Average duration")}</span>
         {(["great", "good", "fair", "poor"] as ScoreBand[]).map((b) => (
-          <span key={b}><i className={`slc-sw slc-sw-${b}`} />{SCORE_BAND_LABEL[b]}</span>
+          <span key={b}><i className={`slc-sw slc-sw-${b}`} />{scoreBandLabel(b)}</span>
         ))}
       </div>
 
@@ -277,15 +283,15 @@ export function SleepTrendChart({ entries, insights, target, todayIso, onPick }:
         <b className="slc-read-date">{readDate(active.iso)}</b>
         {active.rec && active.band ? (
           <>
-            <span className="slc-read-item"><em>خواب</em>{faNum(clockOf(active.rec.sleptAt))}</span>
-            <span className="slc-read-item"><em>بیداری</em>{faNum(clockOf(active.rec.wokeAt))}</span>
-            <span className="slc-read-item"><em>مدت</em>{durationLabel(active.dur)}</span>
+            <span className="slc-read-item"><em>{tr("خواب", "Sleep")}</em>{faNum(clockOf(active.rec.sleptAt))}</span>
+            <span className="slc-read-item"><em>{tr("بیداری", "Wake")}</em>{faNum(clockOf(active.rec.wokeAt))}</span>
+            <span className="slc-read-item"><em>{tr("مدت", "Duration")}</em>{durationLabel(active.dur)}</span>
             <span className={`slc-read-item slp-c-${active.band}`}>
-              <em>امتیاز</em>{faNum(active.score ?? 0)} ({SCORE_BAND_LABEL[active.band]})
+              <em>{tr("امتیاز", "Score")}</em>{faNum(active.score ?? 0)} ({scoreBandLabel(active.band)})
             </span>
           </>
         ) : (
-          <span className="sl-sub">ثبتی برای این شب نیست؛ بزن تا ثبت کنی.</span>
+          <span className="sl-sub">{tr("ثبتی برای این شب نیست؛ بزن تا ثبت کنی.", "Nothing logged for this night; tap to log it.")}</span>
         )}
       </div>
     </section>

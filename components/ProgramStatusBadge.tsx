@@ -4,13 +4,14 @@ import "./mentor.css";
 import { Ban, CheckCircle2, CircleDot, CircleSlash, Clock, FileEdit, Flag, XCircle } from "lucide-react";
 import { programStatusText } from "@/lib/mentorStatus";
 import type { ProgramStatus } from "@/lib/mentorTypes";
+import { pick, type Localized } from "@/lib/i18n";
 
-const MENTORSHIP_LABELS: Record<string, string> = {
-  PENDING: "در انتظار پاسخ",
-  ACTIVE: "فعال",
-  REJECTED: "ردشده",
-  BLOCKED: "مسدود",
-  ENDED: "پایان‌یافته",
+const MENTORSHIP_LABELS: Record<string, Localized> = {
+  PENDING: { fa: "در انتظار پاسخ", en: "Awaiting reply" },
+  ACTIVE: { fa: "فعال", en: "Active" },
+  REJECTED: { fa: "ردشده", en: "Declined" },
+  BLOCKED: { fa: "مسدود", en: "Blocked" },
+  ENDED: { fa: "پایان‌یافته", en: "Ended" },
 };
 
 const ICON_PROPS = { size: 13, strokeWidth: 1.75, "aria-hidden": true } as const;
@@ -38,7 +39,7 @@ export function ProgramStatusBadge({ status, changeRequested }: { status: string
     return (
       <span className={`mentor-status is-${status.toLowerCase()}`}>
         {statusIcon(status)}
-        {MENTORSHIP_LABELS[status] ?? status}
+        {MENTORSHIP_LABELS[status] ? pick(MENTORSHIP_LABELS[status]) : status}
       </span>
     );
   }
@@ -56,7 +57,7 @@ export function MentorshipStatusBadge({ status }: { status: string }) {
   return (
     <span className={`mentor-status is-${status.toLowerCase()}`}>
       {statusIcon(status)}
-      {MENTORSHIP_LABELS[status] ?? status}
+      {MENTORSHIP_LABELS[status] ? pick(MENTORSHIP_LABELS[status]) : status}
     </span>
   );
 }

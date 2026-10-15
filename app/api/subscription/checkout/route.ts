@@ -1,3 +1,4 @@
+import { tr } from "@/lib/i18n";
 import { NextRequest, NextResponse } from "next/server";
 import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/auth";
@@ -39,7 +40,7 @@ export async function POST(req: NextRequest) {
 
     const ip = getClientIp(req.headers);
     if (!(await checkRateLimit(`sub-checkout:${userId}:${ip}`, 8, 10 * 60 * 1000))) {
-      return NextResponse.json({ error: "تعداد تلاش‌ها بیش از حد مجازه — چند دقیقه دیگه دوباره امتحان کن" }, { status: 429 });
+      return NextResponse.json({ error: tr("تعداد تلاش‌ها بیش از حد مجازه — چند دقیقه دیگه دوباره امتحان کن", "Too many attempts — try again in a few minutes") }, { status: 429 });
     }
 
     const body = await req.json();
@@ -49,7 +50,7 @@ export async function POST(req: NextRequest) {
     const gateway: Gateway = GATEWAYS.includes(rawGateway as Gateway) ? (rawGateway as Gateway) : "zibal";
 
     if (!planKey || !DURATIONS.includes(duration)) {
-      return NextResponse.json({ error: "پلن یا مدت انتخاب‌شده معتبر نیست" }, { status: 400 });
+      return NextResponse.json({ error: tr("پلن یا مدت انتخاب‌شده معتبر نیست", "The selected plan or duration is not valid") }, { status: 400 });
     }
 
     // نسخه‌ی بین‌المللی طبق درخواست صریح کامل حذف شد؛ همه‌ی کاربرها بازار
@@ -62,17 +63,17 @@ export async function POST(req: NextRequest) {
     const pricingConfig = await getPricingConfig({ fresh: true });
     const pricing = findPlanPricing(planKey, pricingConfig);
     if (!pricing) {
-      return NextResponse.json({ error: "این پلن قابل خرید نیست" }, { status: 400 });
+      return NextResponse.json({ error: tr("این پلن قابل خرید نیست", "This plan cannot be purchased") }, { status: 400 });
     }
     const listAmount = chargeAmountRial(pricingConfig, planKey, duration);
     if (listAmount == null) {
-      return NextResponse.json({ error: "این مدت فعلا برای خرید فعال نیست" }, { status: 400 });
+      return NextResponse.json({ error: tr("این مدت فعلا برای خرید فعال نیست", "This duration is not available for purchase right now") }, { status: 400 });
     }
     const months = durationMonths(pricingConfig, duration);
 
     const plan = await prisma.plan.findUnique({ where: { key_market: { key: planKey, market: "IRAN" } } });
     if (!plan || !plan.isActive) {
-      return NextResponse.json({ error: "این پلن فعلا در دسترس نیست" }, { status: 400 });
+      return NextResponse.json({ error: tr("این پلن فعلا در دسترس نیست", "This plan is not available right now") }, { status: 400 });
     }
 
     let discountPercent = 0;
@@ -180,13 +181,13 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ paymentUrl, discountApplied });
   } catch (e: any) {
     if (e?.message?.includes("MERCHANT_ID") || e?.message?.includes("MERCHANT_KEY")) {
-      return NextResponse.json({ error: "درگاه پرداخت انتخاب‌شده هنوز روی این سرور راه‌اندازی نشده — به‌زودی" }, { status: 502 });
+      return NextResponse.json({ error: tr("درگاه پرداخت انتخاب‌شده هنوز روی این سرور راه‌اندازی نشده — به‌زودی", "The selected payment gateway is not set up on this server yet — coming soon") }, { status: 502 });
     }
     // خطاهای دیتابیس (مثلا P2021: جدول وجود نداره چون migration اجرا نشده)
     // کد مشخصی دارن که برای کاربر معنی نداره — پیام عمومی‌تر ولی هنوز JSON.
     if (e?.code?.startsWith?.("P")) {
-      return NextResponse.json({ error: "خطای داخلی سرور — لطفا بعدا دوباره امتحان کن" }, { status: 500 });
+      return NextResponse.json({ error: tr("خطای داخلی سرور — لطفا بعدا دوباره امتحان کن", "Internal server error — please try again later") }, { status: 500 });
     }
-    return NextResponse.json({ error: e?.message || "خطا در اتصال به درگاه پرداخت" }, { status: 502 });
+    return NextResponse.json({ error: e?.message || tr("خطا در اتصال به درگاه پرداخت", "Failed to connect to the payment gateway") }, { status: 502 });
   }
 }

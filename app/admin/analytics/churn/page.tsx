@@ -8,6 +8,7 @@ import { BarChart } from "@/components/admin/BarChart";
 import { ErrorState, LoadingState } from "@/components/admin/EmptyState";
 import { useAdminData } from "@/components/admin/useAdminData";
 import { formatNumber } from "@/lib/adminFormat";
+import { tr } from "@/lib/i18n";
 
 type Resp = { churn: { canceledInRange: number; expiredInRange: number; churnRatePercent: number | null; atRiskCount: number; series: { bucket: string; canceled: number }[] } };
 
@@ -30,18 +31,21 @@ function ChurnInner() {
         <div className={loading ? "admin-refreshing" : undefined} aria-busy={loading}>
           {error && <ErrorState message={error} onRetry={reload} />}
           <KpiGrid>
-            <KpiTile label="لغو اشتراک" value={formatNumber(data.churn.canceledInRange)} index={0} />
-            <KpiTile label="منقضی‌شده در بازه" value={formatNumber(data.churn.expiredInRange)} index={1} />
-            <KpiTile label="نرخ Churn" value={formatRate(data.churn.churnRatePercent)} index={2} />
-            <KpiTile label="در معرض ریزش (7 روز آینده)" value={formatNumber(data.churn.atRiskCount)} index={3} />
+            <KpiTile label={tr("لغو اشتراک", "Cancellations")} value={formatNumber(data.churn.canceledInRange)} index={0} />
+            <KpiTile label={tr("منقضی‌شده در بازه", "Expired in period")} value={formatNumber(data.churn.expiredInRange)} index={1} />
+            <KpiTile label={tr("نرخ Churn", "Churn rate")} value={formatRate(data.churn.churnRatePercent)} index={2} />
+            <KpiTile label={tr("در معرض ریزش (7 روز آینده)", "At risk (next 7 days)")} value={formatNumber(data.churn.atRiskCount)} index={3} />
           </KpiGrid>
 
           <div className="admin-chart-card">
-            <div className="admin-chart-head"><span className="admin-chart-title">روند لغو اشتراک</span></div>
+            <div className="admin-chart-head"><span className="admin-chart-title">{tr("روند لغو اشتراک", "Cancellation trend")}</span></div>
             <BarChart data={data.churn.series.map((p) => ({ bucket: p.bucket, value: p.canceled }))} color="var(--adm-red)" />
           </div>
           <div className="admin-section-hint">
-            نرخ Churn = لغوهای این بازه تقسیم بر اشتراک‌های فعالی که قبل از شروع بازه شروع شده بودن.
+            {tr(
+              "نرخ Churn = لغوهای این بازه تقسیم بر اشتراک‌های فعالی که قبل از شروع بازه شروع شده بودن.",
+              "Churn rate = cancellations in this period divided by the active subscriptions that started before the period began.",
+            )}
           </div>
         </div>
       )}

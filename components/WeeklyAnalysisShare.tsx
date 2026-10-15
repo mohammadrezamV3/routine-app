@@ -4,7 +4,8 @@ import { useState } from "react";
 import "./weekly-analysis.css";
 import { Share2 } from "lucide-react";
 import { ANALYSIS_DOMAIN_LABELS, type WeeklyAnalysis } from "@/lib/weeklyAnalysis/types";
-import { BRAND_EN, BRAND_FA } from "@/lib/brand";
+import { BRAND_EN, brandName } from "@/lib/brand";
+import { isEn, tr } from "@/lib/i18n";
 import { Spinner } from "./Spinner";
 
 const W = 1080;
@@ -77,7 +78,13 @@ async function renderCard(a: WeeklyAnalysis): Promise<HTMLCanvasElement> {
   const ctx = canvas.getContext("2d");
   if (!ctx) throw new Error("canvas");
 
-  const text = (s: string, x: number, y: number, font: string, color: string, align: CanvasTextAlign, dir: CanvasDirection = "rtl") => {
+  // چیدمان قرینه در انگلیسی: لبه‌ی شروع چپ، متن چپ‌به‌راست
+  const en = isEn();
+  const SX = en ? 120 : W - 120; // x لبه‌ی شروع
+  const EX = en ? W - 120 : 120; // x لبه‌ی پایان
+  const SA: CanvasTextAlign = en ? "left" : "right";
+  const EA: CanvasTextAlign = en ? "right" : "left";
+  const text = (s: string, x: number, y: number, font: string, color: string, align: CanvasTextAlign, dir: CanvasDirection = en ? "ltr" : "rtl") => {
     ctx.font = font;
     ctx.fillStyle = color;
     ctx.textAlign = align;
@@ -104,9 +111,9 @@ async function renderCard(a: WeeklyAnalysis): Promise<HTMLCanvasElement> {
   ctx.strokeStyle = p.line;
   ctx.stroke();
 
-  text("آنالیز هفتگی", W - 120, 175, f(800, 58), p.text, "right");
-  text(a.weekLabel, W - 120, 235, f(500, 34), p.muted, "right");
-  text(BRAND_EN, 120, 175, f(800, 44), p.accent, "left", "ltr");
+  text(tr("آنالیز هفتگی", "Weekly review"), SX, 175, f(800, 58), p.text, SA);
+  text(a.weekLabel, SX, 235, f(500, 34), p.muted, SA);
+  text(BRAND_EN, EX, 175, f(800, 44), p.accent, EA, "ltr");
 
   // حلقه‌ی امتیاز
   const cx = W / 2, cy = 540, r = 190, sw = 34;
@@ -143,7 +150,7 @@ async function renderCard(a: WeeklyAnalysis): Promise<HTMLCanvasElement> {
     const color = d > 0 ? p.ringA : d < 0 ? p.loss : p.muted;
     const arrow = d > 0 ? "▲" : d < 0 ? "▼" : "•";
     // عدد علامت‌دار داخل ایزوله‌ی LTR، وگرنه bidi «+6» رو «6+» نشون می‌ده
-    text(`${arrow} \u2066${d > 0 ? "+" : ""}${d}\u2069  نسبت به هفته‌ی قبل`, cx, 820, f(700, 38), color, "center");
+    text(`${arrow} \u2066${d > 0 ? "+" : ""}${d}\u2069  ${tr("نسبت به هفته‌ی قبل", "vs last week")}`, cx, 820, f(700, 38), color, "center");
   }
 
   // سه بخش برتر
@@ -151,31 +158,32 @@ async function renderCard(a: WeeklyAnalysis): Promise<HTMLCanvasElement> {
     .filter((d) => d.hasData && d.score !== null)
     .sort((x, y) => (y.score as number) - (x.score as number))
     .slice(0, 3);
-  text("بهترین بخش‌ها", W - 120, 920, f(800, 40), p.text, "right");
+  text(tr("بهترین بخش‌ها", "Top areas"), SX, 920, f(800, 40), p.text, SA);
   if (top.length === 0) {
-    text("این هفته هنوز داده‌ای ثبت نشده", W - 120, 1000, f(500, 34), p.muted, "right");
+    text(tr("این هفته هنوز داده‌ای ثبت نشده", "No data has been logged yet this week"), SX, 1000, f(500, 34), p.muted, SA);
   }
   top.forEach((d, i) => {
     const y = 1005 + i * 88;
     const s = Math.round(d.score as number);
-    text(ANALYSIS_DOMAIN_LABELS[d.domain], W - 120, y, f(700, 36), p.text, "right");
-    const barRight = W - 330, barLeft = 250, barH = 18;
+    text(ANALYSIS_DOMAIN_LABELS[d.domain], SX, y, f(700, 36), p.text, SA);
+    const barRight = en ? W - 250 : W - 330, barLeft = en ? 330 : 250, barH = 18;
     roundRect(ctx, barLeft, y - 24, barRight - barLeft, barH, 9);
     ctx.fillStyle = p.ringA;
     ctx.globalAlpha = 0.14;
     ctx.fill();
     ctx.globalAlpha = 1;
     const fillW = Math.max(barH, ((barRight - barLeft) * Math.min(100, s)) / 100);
-    roundRect(ctx, barRight - fillW, y - 24, fillW, barH, 9);
-    const bg = ctx.createLinearGradient(barRight - fillW, 0, barRight, 0);
+    const fillX = en ? barLeft : barRight - fillW; // پر شدن از لبه‌ی شروع
+    roundRect(ctx, fillX, y - 24, fillW, barH, 9);
+    const bg = en ? ctx.createLinearGradient(barLeft + fillW, 0, barLeft, 0) : ctx.createLinearGradient(barRight - fillW, 0, barRight, 0);
     bg.addColorStop(0, p.ringB);
     bg.addColorStop(1, p.ringA);
     ctx.fillStyle = bg;
     ctx.fill();
-    text(String(s), 120, y, f(800, 40), p.text, "left", "ltr");
+    text(String(s), EX, y, f(800, 40), p.text, EA, "ltr");
   });
 
-  text(BRAND_FA, cx, H - 110, f(600, 30), p.muted, "center");
+  text(brandName(), cx, H - 110, f(600, 30), p.muted, "center");
   return canvas;
 }
 
@@ -189,7 +197,7 @@ export async function shareWeeklyCard(analysis: WeeklyAnalysis): Promise<void> {
   const nav = navigator as Navigator & { canShare?: (d: ShareData) => boolean };
   if (nav.share && nav.canShare?.({ files: [file] })) {
     try {
-      await nav.share({ files: [file], title: "آنالیز هفتگی" });
+      await nav.share({ files: [file], title: tr("آنالیز هفتگی", "Weekly review") });
       return;
     } catch (e) {
       if ((e as Error)?.name === "AbortError") return; // کاربر خودش بست
@@ -218,7 +226,7 @@ export function WeeklyAnalysisShare({ analysis }: { analysis: WeeklyAnalysis | n
     try {
       await shareWeeklyCard(analysis);
     } catch {
-      setError("ساخت تصویر ممکن نشد");
+      setError(tr("ساخت تصویر ممکن نشد", "Could not create the image"));
     } finally {
       setBusy(false);
     }
@@ -227,7 +235,7 @@ export function WeeklyAnalysisShare({ analysis }: { analysis: WeeklyAnalysis | n
   return (
     <div className="wk-share">
       <button type="button" className="account-outline-btn wk-small-btn" onClick={share} disabled={!analysis || busy}>
-        {busy ? <Spinner size={13} label={null} /> : <><Share2 size={14} />اشتراک‌گذاری</>}
+        {busy ? <Spinner size={13} label={null} /> : <><Share2 size={14} />{tr("اشتراک‌گذاری", "Share")}</>}
       </button>
       {error && <span className="wk-error-inline">{error}</span>}
     </div>

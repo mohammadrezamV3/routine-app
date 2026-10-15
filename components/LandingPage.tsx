@@ -1,24 +1,62 @@
 "use client";
 
-import { PlansSection } from "@/components/PlanShowcase";
-import { LandingFooter } from "@/components/LandingFooter";
 import { LandingHero } from "@/components/LandingHero";
-import { LandingShowcase } from "@/components/LandingShowcase";
-import {
-  LandingStats,
-  LandingDashboard,
-  LandingHowItWorks,
-  LandingBento,
-  LandingFeatureGrid,
-  LandingWhyUs,
-  LandingTestimonialQuote,
-  LandingFAQ,
-  LandingFinalCTA,
-} from "@/components/LandingSections";
+import { lazySection } from "@/components/lazyOnView";
 
 // لندینگ کاربر واردنشده — طراحی از نو: هیرو با ماکت زنده‌ی اپ، معرفی
 // تعاملی ماژول‌ها، و بخش‌های اعتمادسازی تا CTA پایانی. هیرو و ویترین
 // idهای sec-landing-hero / sec-landing-features رو خودشون دارن.
+//
+// سرعت: فقط هیرو توی باندل اولیه‌ست. بقیه‌ی بخش‌ها HTML کامل سرور رو دارن
+// (سئو: تیترها، متن، سوالات متداول) ولی JS و هیدریشنشون تا نزدیک‌شدن به
+// دید عقب می‌افته (components/lazyOnView.tsx).
+/* eslint-disable @typescript-eslint/no-var-requires */
+// require فقط داخل شاخه‌ی typeof window === "undefined": webpack روی کلاینت
+// اون شاخه رو حذف می‌کنه، پس این ماژول‌ها فقط با import پویا (تنبل) میان.
+type Mod = Record<string, React.ComponentType>;
+const isServer = typeof window === "undefined";
+const serverSections = isServer ? () => require("@/components/LandingSections") as Mod : null;
+const serverShowcase = isServer ? () => require("@/components/LandingShowcase") as Mod : null;
+const serverPlans = isServer ? () => require("@/components/PlanShowcase") as Mod : null;
+const serverFooter = isServer ? () => require("@/components/LandingFooter") as Mod : null;
+
+const S = (name: string, h: number, cv?: [number, number]) =>
+  lazySection(
+    () => import("@/components/LandingSections").then((m) => ({ default: (m as unknown as Mod)[name] })),
+    serverSections && (() => serverSections()[name]),
+    h,
+    cv,
+  );
+
+const Stats = S("LandingStats", 120, [201, 118]);
+const Dashboard = S("LandingDashboard", 900, [985, 585]);
+const Showcase = lazySection(
+  () => import("@/components/LandingShowcase").then((m) => ({ default: m.LandingShowcase })),
+  serverShowcase && (() => serverShowcase().LandingShowcase),
+  900,
+);
+const How = S("LandingHowItWorks", 450, [286, 220]);
+const Bento = S("LandingBento", 1300, [1901, 925]);
+const Features = S("LandingFeatureGrid", 900, [1775, 737]);
+const WhyUs = S("LandingWhyUs", 500, [939, 370]);
+const Trust = S("LandingTestimonialQuote", 350, [204, 204]);
+const Plans = lazySection(
+  () => import("@/components/PlanShowcase").then((m) => ({ default: function LandingPlans() { return <m.PlansSection mode="landing" />; } })),
+  serverPlans && (() => function LandingPlansSsr() {
+    const P = serverPlans().PlansSection as React.ComponentType<{ mode: "landing" }>;
+    return <P mode="landing" />;
+  }),
+  1200,
+);
+const Faq = S("LandingFAQ", 700, [738, 671]);
+const FinalCta = S("LandingFinalCTA", 300, [338, 342]);
+const Footer = lazySection(
+  () => import("@/components/LandingFooter").then((m) => ({ default: m.LandingFooter })),
+  serverFooter && (() => serverFooter().LandingFooter),
+  700,
+  [798, 495],
+);
+
 function Sec({ id, children }: { id: string; children: React.ReactNode }) {
   return <section id={id} style={{ paddingTop: 32 }}>{children}</section>;
 }
@@ -27,18 +65,18 @@ export function LandingPage() {
   return (
     <>
       <LandingHero />
-      <Sec id="sec-landing-stats"><LandingStats /></Sec>
-      <Sec id="sec-landing-dashboard"><LandingDashboard /></Sec>
-      <LandingShowcase />
-      <Sec id="sec-landing-how"><LandingHowItWorks /></Sec>
-      <Sec id="sec-landing-bento"><LandingBento /></Sec>
-      <Sec id="sec-landing-allfeatures"><LandingFeatureGrid /></Sec>
-      <Sec id="sec-landing-whyus"><LandingWhyUs /></Sec>
-      <Sec id="sec-landing-trust"><LandingTestimonialQuote /></Sec>
-      <Sec id="sec-landing-plans"><PlansSection mode="landing" /></Sec>
-      <Sec id="faq"><LandingFAQ /></Sec>
-      <Sec id="sec-landing-cta"><LandingFinalCTA /></Sec>
-      <LandingFooter />
+      <Sec id="sec-landing-stats"><Stats /></Sec>
+      <Sec id="sec-landing-dashboard"><Dashboard /></Sec>
+      <Showcase />
+      <Sec id="sec-landing-how"><How /></Sec>
+      <Sec id="sec-landing-bento"><Bento /></Sec>
+      <Sec id="sec-landing-allfeatures"><Features /></Sec>
+      <Sec id="sec-landing-whyus"><WhyUs /></Sec>
+      <Sec id="sec-landing-trust"><Trust /></Sec>
+      <Sec id="sec-landing-plans"><Plans /></Sec>
+      <Sec id="faq"><Faq /></Sec>
+      <Sec id="sec-landing-cta"><FinalCta /></Sec>
+      <Footer />
     </>
   );
 }

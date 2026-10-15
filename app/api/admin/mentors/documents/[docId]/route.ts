@@ -3,6 +3,7 @@ import { prisma } from "@/lib/prisma";
 import { requireAdmin } from "@/lib/requireAdmin";
 import { adminErrorResponse, loadTarget } from "@/lib/adminUsers";
 import { ALLOWED_DOCUMENT_MIME } from "@/lib/mentorUpload";
+import { tr } from "@/lib/i18n";
 
 // GET /api/admin/mentors/documents/:docId — فایل مدرک برای بررسی ادمین.
 // inline فقط این‌جا مجازه چون نوع ذخیره‌شده از magic bytes (تصویر/PDF)
@@ -26,7 +27,7 @@ export async function GET(_req: NextRequest, { params }: { params: { docId: stri
       profile: { select: { userId: true } },
     },
   });
-  if (!doc) return NextResponse.json({ error: "فایل پیدا نشد" }, { status: 404 });
+  if (!doc) return NextResponse.json({ error: tr("فایل پیدا نشد", "File not found") }, { status: 404 });
   // قوانین «کی روی کی»: نه روی خودش (تضاد منافع — جز Owner که همه رو، حتی خودش رو، تایید می‌کنه)، نه روی Owner، روی ادمین دیگه فقط با admins.manage
   try {
     await loadTarget(g, doc.profile.userId, { destructive: !g.isSuperAdmin });

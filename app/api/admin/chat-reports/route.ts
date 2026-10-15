@@ -3,6 +3,7 @@ import { TradeChatReportStatus } from "@prisma/client";
 import { prisma } from "@/lib/prisma";
 import { requireAdmin } from "@/lib/requireAdmin";
 import { writeAuditLog } from "@/lib/adminAnalytics";
+import { tr } from "@/lib/i18n";
 
 // صف بررسی گزارش‌های چت — دسترسی «chat».
 //
@@ -44,14 +45,14 @@ export async function GET(req: NextRequest) {
       note: r.note,
       status: r.status,
       createdAt: r.createdAt.toISOString(),
-      reporter: r.reporter.name?.trim() || r.reporter.username || "کاربر",
+      reporter: r.reporter.name?.trim() || r.reporter.username || tr("کاربر", "User"),
       message: {
         id: r.message.id,
         symbol: r.message.symbol,
         body: r.message.body,
         createdAt: r.message.createdAt.toISOString(),
         deleted: !!r.message.deletedAt,
-        author: r.message.user.name?.trim() || r.message.user.username || "کاربر",
+        author: r.message.user.name?.trim() || r.message.user.username || tr("کاربر", "User"),
         authorId: r.message.user.id,
       },
     })),
@@ -67,18 +68,18 @@ export async function PATCH(req: NextRequest) {
   const id = typeof payload?.id === "string" ? payload.id : "";
   const action = payload?.action;
   if (!id || (action !== "delete" && action !== "dismiss")) {
-    return NextResponse.json({ error: "درخواست نامعتبر است" }, { status: 400 });
+    return NextResponse.json({ error: tr("درخواست نامعتبر است", "Invalid request") }, { status: 400 });
   }
 
   const report = await prisma.tradeChatReport.findUnique({
     where: { id },
     select: { id: true, messageId: true, status: true },
   });
-  if (!report) return NextResponse.json({ error: "گزارش پیدا نشد" }, { status: 404 });
+  if (!report) return NextResponse.json({ error: tr("گزارش پیدا نشد", "Report not found") }, { status: 404 });
   // گزارش بسته‌شده دوباره قابل تغییر نیست — وگرنه «رد» روی یک گزارش
   // ACTIONED وضعیتش رو برخلاف واقعیت (پیامی که واقعا حذف شده) عوض می‌کرد.
   if (report.status !== "OPEN") {
-    return NextResponse.json({ error: "این گزارش قبلا بررسی شده" }, { status: 409 });
+    return NextResponse.json({ error: tr("این گزارش قبلا بررسی شده", "This report was already reviewed") }, { status: 409 });
   }
 
   const now = new Date();

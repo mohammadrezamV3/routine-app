@@ -12,6 +12,7 @@ import {
 } from "@/lib/tradeTypes";
 import { NumberInput } from "./NumberInput";
 import { Spinner } from "./Spinner";
+import { tr } from "@/lib/i18n";
 
 // ساخت/ویرایش حساب معاملاتی. همان یک فرم برای هر دو حالت است — تفاوتشان
 // فقط در متد درخواست (POST یا PATCH) و عنوان پاپ‌آپ است.
@@ -69,10 +70,10 @@ export function TradeAccountModal({
         body: JSON.stringify(body),
       });
       const data = await res.json().catch(() => null);
-      if (!res.ok) { setError(data?.error || "خطا در ذخیره حساب"); return; }
+      if (!res.ok) { setError(data?.error || tr("خطا در ذخیره حساب", "Could not save the account")); return; }
       onSaved();
     } catch {
-      setError("ارتباط با سرور برقرار نشد — دوباره تلاش کن");
+      setError(tr("ارتباط با سرور برقرار نشد — دوباره تلاش کن", "Could not reach the server. Try again"));
     } finally {
       setSaving(false);
     }
@@ -86,14 +87,14 @@ export function TradeAccountModal({
       <div className="modal-overlay open" onClick={onClose} />
       <div className="modal-panel open" role="dialog" aria-modal="true">
         <div className="modal-head">
-          <div className="modal-title">{account ? "ویرایش حساب" : "حساب جدید"}</div>
-          <button type="button" className="trade-icon-btn" onClick={onClose} aria-label="بستن"><X size={16} /></button>
+          <div className="modal-title">{account ? tr("ویرایش حساب", "Edit account") : tr("حساب جدید", "New account")}</div>
+          <button type="button" className="trade-icon-btn" onClick={onClose} aria-label={tr("بستن", "Close")}><X size={16} /></button>
         </div>
 
-        <label className="exercise-form-label">نام حساب</label>
-        <input className="wsearch-newform-name trade-glass-field" autoFocus value={name} onChange={(e) => setName(e.target.value)} maxLength={60} placeholder="مثلا حساب اصلی" />
+        <label className="exercise-form-label">{tr("نام حساب", "Account name")}</label>
+        <input className="wsearch-newform-name trade-glass-field" autoFocus value={name} onChange={(e) => setName(e.target.value)} maxLength={60} placeholder={tr("مثلا حساب اصلی", "e.g. Main account")} />
 
-        <label className="exercise-form-label">نوع حساب</label>
+        <label className="exercise-form-label">{tr("نوع حساب", "Account type")}</label>
         <SegmentedTabs
           active={type}
           onChange={setType}
@@ -102,11 +103,11 @@ export function TradeAccountModal({
 
         <div className="trade-field-row">
           <div>
-            <label className="exercise-form-label">بروکر</label>
-            <input className="wsearch-newform-name trade-glass-field" value={broker} onChange={(e) => setBroker(e.target.value)} maxLength={60} placeholder="اختیاری" />
+            <label className="exercise-form-label">{tr("بروکر", "Broker")}</label>
+            <input className="wsearch-newform-name trade-glass-field" value={broker} onChange={(e) => setBroker(e.target.value)} maxLength={60} placeholder={tr("اختیاری", "Optional")} />
           </div>
           <div>
-            <label className="exercise-form-label">ارز حساب</label>
+            <label className="exercise-form-label">{tr("ارز حساب", "Account currency")}</label>
             {/* انتخابی‌ست نه تایپ آزاد: بالانس اولیه باید بتواند دلار/یورو/
                 تومان باشد و کد ارز در بقیه‌ی صفحه‌ها (سود/زیان، ریسک، هدف)
                 همان‌جا استفاده می‌شود، پس نباید غلط تایپ شود. */}
@@ -120,46 +121,46 @@ export function TradeAccountModal({
 
         <div className="trade-field-row">
           <div>
-            <label className="exercise-form-label">بالانس اولیه</label>
+            <label className="exercise-form-label">{tr("بالانس اولیه", "Initial balance")}</label>
             <NumberInput decimal className="wsearch-newform-name trade-glass-field" value={initialBalance} onChange={(v) => setInitialBalance(v)} placeholder="0" disabled={!!account?.initialFromMt} />
             {/* با واریزهای متاتریدر، اولین واریز خودش بالانس اولیه‌ست و عدد دستی جمع زده نمی‌شه */}
-            {account?.initialFromMt && <span className="trade-mt-note">از اولین واریز متاتریدر</span>}
+            {account?.initialFromMt && <span className="trade-mt-note">{tr("از اولین واریز متاتریدر", "From the first MetaTrader deposit")}</span>}
           </div>
           <div>
-            <label className="exercise-form-label">اهرم</label>
-            <NumberInput className="wsearch-newform-name trade-glass-field" value={leverage} onChange={(v) => setLeverage(v)} placeholder="اختیاری" />
+            <label className="exercise-form-label">{tr("اهرم", "Leverage")}</label>
+            <NumberInput className="wsearch-newform-name trade-glass-field" value={leverage} onChange={(v) => setLeverage(v)} placeholder={tr("اختیاری", "Optional")} />
           </div>
         </div>
 
-        <label className="exercise-form-label">هدف سود</label>
+        <label className="exercise-form-label">{tr("هدف سود", "Profit goal")}</label>
         <SegmentedTabs
           active={goalType}
           onChange={setGoalType}
-          options={[{ value: "AMOUNT" as const, label: "مبلغ" }, { value: "PERCENT" as const, label: "درصد بالانس" }]}
+          options={[{ value: "AMOUNT" as const, label: tr("مبلغ", "Amount") }, { value: "PERCENT" as const, label: tr("درصد بالانس", "% of balance") }]}
         />
         <NumberInput decimal className="wsearch-newform-name trade-glass-field" value={goalValue} onChange={(v) => setGoalValue(v)}
-          placeholder={goalType === "PERCENT" ? "مثلا 5 (یعنی 5%)" : "مثلا 500"} style={{ marginTop: 8 }}
+          placeholder={goalType === "PERCENT" ? tr("مثلا 5 (یعنی 5%)", "e.g. 5 (meaning 5%)") : tr("مثلا 500", "e.g. 500")} style={{ marginTop: 8 }}
         />
 
-        <label className="exercise-form-label">رنگ حساب</label>
+        <label className="exercise-form-label">{tr("رنگ حساب", "Account color")}</label>
         <div className="trade-color-row">
           {TAG_COLORS.map((c) => (
             <button key={c} type="button" className={`trade-color-dot${c === color ? " active" : ""}`} style={{ background: c }} onClick={() => setColor(c)} aria-label={c} />
           ))}
         </div>
 
-        <label className="exercise-form-label">برچسب‌ها</label>
+        <label className="exercise-form-label">{tr("برچسب‌ها", "Tags")}</label>
         <TradeTagField tags={tags} value={tagIds} onChange={setTagIds} onCreated={onTagCreated} />
 
-        <label className="exercise-form-label">توضیح</label>
-        <textarea className="wsearch-newform-name trade-glass-field" value={note} onChange={(e) => setNote(e.target.value)} maxLength={500} rows={2} placeholder="اختیاری" />
+        <label className="exercise-form-label">{tr("توضیح", "Description")}</label>
+        <textarea className="wsearch-newform-name trade-glass-field" value={note} onChange={(e) => setNote(e.target.value)} maxLength={500} rows={2} placeholder={tr("اختیاری", "Optional")} />
 
         {error && <div className="trade-form-error">{error}</div>}
 
         <div className="trade-modal-actions">
-          <button type="button" className="account-outline-btn" onClick={onClose}>لغو</button>
+          <button type="button" className="account-outline-btn" onClick={onClose}>{tr("لغو", "Cancel")}</button>
           <button type="button" className="trade-primary-btn" onClick={save} disabled={!name.trim() || saving}>
-            {saving ? <Spinner size={14} /> : account ? "ذخیره" : "ایجاد حساب"}
+            {saving ? <Spinner size={14} /> : account ? tr("ذخیره", "Save") : tr("ایجاد حساب", "Create account")}
           </button>
         </div>
       </div>

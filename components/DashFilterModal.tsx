@@ -6,13 +6,14 @@ import { SegmentedTabs } from "./SegmentedTabs";
 import { ToggleSwitch } from "./ToggleSwitch";
 import { normalizeFa } from "@/lib/utils";
 import { useLockBodyScroll } from "@/lib/useLockBodyScroll";
+import { tr, isEn } from "@/lib/i18n";
 
-const IMPORTANCE_TABS: { value: "all" | Importance; label: string }[] = [
-  { value: "all", label: "همه" },
-  { value: "low", label: IMPORTANCE_LABELS.low },
-  { value: "medium", label: IMPORTANCE_LABELS.medium },
-  { value: "high", label: IMPORTANCE_LABELS.high },
-  { value: "veryHigh", label: IMPORTANCE_LABELS.veryHigh },
+const importanceTabs = (): { value: "all" | Importance; label: string }[] => [
+  { value: "all", label: tr("همه", "All") },
+  { value: "low", label: tr(IMPORTANCE_LABELS.low, "Low") },
+  { value: "medium", label: tr(IMPORTANCE_LABELS.medium, "Medium") },
+  { value: "high", label: tr(IMPORTANCE_LABELS.high, "High") },
+  { value: "veryHigh", label: tr(IMPORTANCE_LABELS.veryHigh, "Very high") },
 ];
 
 // پاپ‌آپ واحد فیلتر — هم میزان اهمیت هم انتخاب برنامه‌ها (به‌جای دو
@@ -60,20 +61,20 @@ export function DashFilterModal({
       <div className="modal-overlay open" onClick={onClose} />
       <div className="modal-panel dash-scope open">
         <div className="modal-head">
-          <div className="modal-title">فیلتر برنامه‌ها</div>
-          <button className="nav-close" onClick={onClose} aria-label="بستن">×</button>
+          <div className="modal-title">{tr("فیلتر برنامه‌ها", "Filter programs")}</div>
+          <button className="nav-close" onClick={onClose} aria-label={tr("بستن", "Close")}>×</button>
         </div>
         <div className="modal-body">
           <div className="tm-extra" style={{ marginTop: 0 }}>
-            <div className="domain-sub">میزان اهمیت</div>
-            <SegmentedTabs active={importance} onChange={onImportanceChange} options={IMPORTANCE_TABS} />
+            <div className="domain-sub">{tr("میزان اهمیت", "Importance")}</div>
+            <SegmentedTabs active={importance} onChange={onImportanceChange} options={importanceTabs()} />
           </div>
 
           <div className="tm-extra">
             <div className="domain-sub" style={{ display: "flex", alignItems: "center", justifyContent: "space-between" }}>
-              <span>برنامه‌ها</span>
+              <span>{tr("برنامه‌ها", "Programs")}</span>
               <button type="button" className="small" onClick={onSelectAll} style={{ borderColor: "var(--accent)", color: "var(--accent)" }}>
-                همه
+                {tr("همه", "All")}
               </button>
             </div>
 
@@ -82,7 +83,7 @@ export function DashFilterModal({
                 type="text"
                 dir="auto"
                 className="wsearch-newform-name trade-glass-field pill-glass-field"
-                placeholder="جستجوی برنامه یا تگ…"
+                placeholder={tr("جستجوی برنامه یا تگ…", "Search programs or tags…")}
                 value={query}
                 onChange={(e) => setQuery(e.target.value)}
                 style={{ marginTop: 8 }}
@@ -90,16 +91,16 @@ export function DashFilterModal({
             )}
 
             {programNames.length === 0 ? (
-              <div className="item-line empty">هنوز برنامه‌ای ثبت نکردی.</div>
+              <div className="item-line empty">{tr("هنوز برنامه‌ای ثبت نکردی.", "You have not added any programs yet.")}</div>
             ) : visibleNames.length === 0 ? (
               <div className="item-line empty">
-                {importance !== "all" ? "برنامه‌ای با این میزان اهمیت پیدا نشد." : "برنامه‌ای پیدا نشد."}
+                {importance !== "all" ? tr("برنامه‌ای با این میزان اهمیت پیدا نشد.", "No programs with this importance.") : tr("برنامه‌ای پیدا نشد.", "No programs found.")}
               </div>
             ) : (
               <div style={{ display: "flex", flexDirection: "column", gap: 10, marginTop: 10 }}>
                 {visibleNames.map((name) => (
                   <div key={name} style={{ display: "flex", alignItems: "center", justifyContent: "space-between", gap: 10 }}>
-                    <span className="item-line" style={{ textAlign: "right" }}>{name}</span>
+                    <span className="item-line" style={{ textAlign: "start" }}>{name}</span>
                     <ToggleSwitch checked={isChecked(name)} onChange={() => onToggleProgram(name)} label={name} />
                   </div>
                 ))}
@@ -108,7 +109,7 @@ export function DashFilterModal({
           </div>
 
           <div className="wsearch-newform-actions">
-            <button type="button" className="wsearch-newform-submit" onClick={onClose} aria-label="اعمال تغییرات">
+            <button type="button" className="wsearch-newform-submit" onClick={onClose} aria-label={tr("اعمال تغییرات", "Apply changes")}>
               <svg className="wns-check" viewBox="0 0 24 24" fill="none">
                 <path d="M5 13l4 4L19 7" stroke="currentColor" strokeWidth="2.4" strokeLinecap="round" strokeLinejoin="round" />
               </svg>

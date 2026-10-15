@@ -5,6 +5,7 @@
 import type { AnalysisDomain, DayCell, Grade, Insight, WeekArchetype, WeekNumber } from "@/lib/weeklyAnalysis/types";
 import type { LetterAchievement, WeeklyLetterData } from "@/lib/weeklyLetter/types";
 import type { RadarAxis } from "@/lib/weeklyRadar";
+import { tr } from "@/lib/i18n";
 import { bestWorstIndex, dayRows, domainRadarAxes, type DayRow } from "./WeeklyLetterUtils";
 
 export type StoryBase = { dur: number; label: string };
@@ -88,19 +89,19 @@ export function trendStory(trend: WeeklyLetterData["trend"]): Extract<StorySlide
   let caption: string;
   if (lastPoint >= Math.max(...prior)) {
     mode = "best";
-    caption = `بهترین هفته از ${count} هفته‌ی اخیر`;
+    caption = tr(`بهترین هفته از ${count} هفته‌ی اخیر`, `Best of the last ${count} weeks`);
   } else if (diff === 0) {
     mode = "even";
-    caption = "هم‌سطح میانگین هفته‌های اخیر";
+    caption = tr("هم‌سطح میانگین هفته‌های اخیر", "In line with your recent average");
   } else if (lastPoint > avg) {
     mode = "above";
-    caption = `${diff} امتیاز بهتر از میانگین`;
+    caption = tr(`${diff} امتیاز بهتر از میانگین`, `${diff} ${diff === 1 ? "point" : "points"} above your average`);
   } else {
     mode = "below";
-    caption = `${diff} امتیاز پایین‌تر از میانگین`;
+    caption = tr(`${diff} امتیاز پایین‌تر از میانگین`, `${diff} ${diff === 1 ? "point" : "points"} below your average`);
   }
   return {
-    id: "trend", dur: 5600, label: "مسیر هفته‌ها",
+    id: "trend", dur: 5600, label: tr("مسیر هفته‌ها", "Weekly trend"),
     points, weekStarts: trend.map((t) => t.weekStart), last: lastPoint, count, mode, diff, caption,
   };
 }
@@ -127,17 +128,17 @@ export function buildStorySlides(letter: WeeklyLetterData): StorySlide[] {
   const slides: StorySlide[] = [];
   const o = letter.overall;
 
-  slides.push({ id: "intro", dur: 3800, label: "شروع" });
+  slides.push({ id: "intro", dur: 3800, label: tr("شروع", "Start") });
 
   if (o.score !== null && Number.isFinite(o.score)) {
     slides.push({
-      id: "score", dur: 5600, label: "امتیاز هفته",
+      id: "score", dur: 5600, label: tr("امتیاز هفته", "Week score"),
       score: o.score, grade: o.grade, delta: o.delta, prevScore: o.prevScore, rank: o.rank,
     });
   }
 
   if (letter.archetype) {
-    slides.push({ id: "archetype", dur: 5000, label: "تیپ هفته", archetype: letter.archetype });
+    slides.push({ id: "archetype", dur: 5000, label: tr("تیپ هفته", "Week type"), archetype: letter.archetype });
   }
 
   const { best, worst } = bestWorstIndex(letter.days);
@@ -151,7 +152,7 @@ export function buildStorySlides(letter: WeeklyLetterData): StorySlide[] {
     const max = Math.max(...vals);
     if (max > min && best >= 0 && worst >= 0) {
       slides.push({
-        id: "rhythm", dur: 5400, label: "ریتم هفته",
+        id: "rhythm", dur: 5400, label: tr("ریتم هفته", "Week rhythm"),
         bars: letter.days.map((d, i) => ({ score: isNum(d.score) ? d.score : null, best: i === best, worst: i === worst, label: dayInitial(d.weekday), weekday: d.weekday })),
         min: Math.round(min), max: Math.round(max), avg: Math.round(vals.reduce((a, b) => a + b, 0) / vals.length),
         bestDay: letter.days[best].weekday, worstDay: letter.days[worst].weekday,
@@ -164,7 +165,7 @@ export function buildStorySlides(letter: WeeklyLetterData): StorySlide[] {
     const rows = dayRows(day.details, !!day.isToday)
       .sort((a, b) => (TONE_ORDER[a.tone ?? "neutral"] ?? 1) - (TONE_ORDER[b.tone ?? "neutral"] ?? 1))
       .slice(0, 3);
-    slides.push({ id: "best", dur: 5400, label: "بهترین روز", day, rows });
+    slides.push({ id: "best", dur: 5400, label: tr("بهترین روز", "Best day"), day, rows });
   }
 
   // قوی‌ترین بخش + بیشترین پیشرفت
@@ -174,7 +175,7 @@ export function buildStorySlides(letter: WeeklyLetterData): StorySlide[] {
     const rising = withScore.filter((d) => isNum(d.delta) && Math.round(d.delta as number) >= 1);
     const riserDom = rising.length ? rising.reduce((a, b) => ((b.delta as number) > (a.delta as number) ? b : a)) : null;
     slides.push({
-      id: "domains", dur: 5200, label: "قوی‌ترین بخش",
+      id: "domains", dur: 5200, label: tr("قوی‌ترین بخش", "Strongest area"),
       top: { domain: top.domain, score: top.score as number, note: firstSentence(top.note) },
       riser: riserDom ? { domain: riserDom.domain, delta: Math.round(riserDom.delta as number) } : null,
       radar: domainRadarAxes(letter.domains),
@@ -183,19 +184,19 @@ export function buildStorySlides(letter: WeeklyLetterData): StorySlide[] {
 
   const nums = letter.numbers.filter((n) => n && n.value !== undefined && n.value !== "").slice(0, 4);
   if (nums.length >= 2) {
-    slides.push({ id: "numbers", dur: 5600, label: "هفته در اعداد", items: nums });
+    slides.push({ id: "numbers", dur: 5600, label: tr("هفته در اعداد", "Week in numbers"), items: nums });
   }
 
-  const tr = trendStory(letter.trend);
-  if (tr) slides.push(tr);
+  const trendSlide = trendStory(letter.trend);
+  if (trendSlide) slides.push(trendSlide);
 
   const ins = pickInsight(letter.insights);
-  if (ins) slides.push({ id: "insight", dur: 6000, label: "یک بینش", insight: ins });
+  if (ins) slides.push({ id: "insight", dur: 6000, label: tr("یک بینش", "An insight"), insight: ins });
 
   const ach = letter.achievements.slice(0, 3);
   if (letter.streak || ach.length) {
     slides.push({
-      id: "streak", dur: 4800, label: "استریک و دستاوردها",
+      id: "streak", dur: 4800, label: tr("استریک و دستاوردها", "Streak and achievements"),
       streak: letter.streak ? letter.streak.days : null, achievements: ach,
     });
   }
@@ -206,22 +207,22 @@ export function buildStorySlides(letter: WeeklyLetterData): StorySlide[] {
   if (r && (went || impr)) {
     const mood = r.mood && r.mood >= 1 && r.mood <= 5 ? r.mood : null;
     slides.push({
-      id: "reflection", dur: 6200, label: "حرف خودت", mood,
-      primary: went ? { label: "چی خوب پیش رفت", text: went } : { label: "چی بهتر می‌شد", text: impr },
-      secondary: went && impr ? { label: "چی بهتر می‌شد", text: impr } : null,
+      id: "reflection", dur: 6200, label: tr("حرف خودت", "In your words"), mood,
+      primary: went ? { label: tr("چی خوب پیش رفت", "What went well"), text: went } : { label: tr("چی بهتر می‌شد", "What could be better"), text: impr },
+      secondary: went && impr ? { label: tr("چی بهتر می‌شد", "What could be better"), text: impr } : null,
     });
   }
 
   // آخرین اسلاید: خلاصه در یک نگاه + تمرکز هفته‌ی بعد + دکمه‌ها
   const bestDay = best >= 0 && scored >= 2 && isNum(letter.days[best]?.score) ? { weekday: letter.days[best].weekday, score: Math.round(letter.days[best].score as number) } : null;
   slides.push({
-    id: "summary", dur: 9000, label: "خلاصه در یک نگاه",
+    id: "summary", dur: 9000, label: tr("خلاصه در یک نگاه", "Summary at a glance"),
     score: o.score !== null && Number.isFinite(o.score) ? o.score : null,
     grade: o.grade,
     archetype: letter.archetype ? { key: letter.archetype.key, title: letter.archetype.title } : null,
     bestDay,
     numbers: nums.slice(0, 3),
-    focus: { title: letter.nextWeek.focusTitle || "هفته‌ی بعد", domain: letter.nextWeek.focusDomain, target: letter.nextWeek.suggestedTarget },
+    focus: { title: letter.nextWeek.focusTitle || tr("هفته‌ی بعد", "Next week"), domain: letter.nextWeek.focusDomain, target: letter.nextWeek.suggestedTarget },
   });
 
   return capSlides(slides);

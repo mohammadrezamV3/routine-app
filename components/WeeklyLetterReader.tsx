@@ -5,14 +5,15 @@
 // به‌روز می‌شن. جلد، فهرست چسبان، فصل‌ها و ناوبری هفته‌ی قبل/بعد؛ هر فصل
 // ناقص بی‌سروصدا حذف می‌شه.
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
-import Link from "next/link";
-import { MotionConfig, motion, useScroll, useSpring } from "framer-motion";
+import { SmartLink as Link } from "@/components/SmartLink";
+import { MotionConfig, m as motion, useScroll, useSpring } from "framer-motion";
 import {
   ArrowLeft, ArrowRight, Award, CalendarDays, Compass, LayoutGrid, Lightbulb, Moon, Newspaper, PenLine, Sparkles, Target, Trophy, BarChart3, Grid3x3,
   type LucideIcon,
 } from "lucide-react";
 import type { LiveWeekPayload } from "@/lib/weeklyLetter/types";
 import { weekLabelFa } from "@/lib/weeklyAnalysis/week";
+import { tr } from "@/lib/i18n";
 import { useFeature } from "@/lib/useFeatures";
 import { Spinner } from "./Spinner";
 import { Chapter, Reveal, WeeklyLetterGate, WlError, wlFetch } from "./WeeklyLetterShared";
@@ -31,11 +32,13 @@ import { WeeklyLetterWeekPicker } from "./WeeklyLetterWeekPicker";
 import { WeeklyLetterMatrix } from "./WeeklyLetterMatrix";
 import { WeeklyLetterSleep } from "./WeeklyLetterSleep";
 import { WeeklyLetterEmpty } from "./WeeklyLetterEmpty";
-import { WeeklyLetterStories } from "./WeeklyLetterStories";
 import { buildStorySlides, storySeconds } from "./WeeklyLetterStoriesData";
 import { normalizeLetter } from "./WeeklyLetterUtils";
 import { dedupeNumbers, dedupeWins } from "@/lib/weeklyLetter/dedupe";
 import type { LetterCtx } from "./WeeklyLetterCtx";
+import dynamic from "next/dynamic";
+// تنبل: فقط با کنش کاربر باز می‌شه و کدش توی باندل اولیه نیست
+const WeeklyLetterStories = dynamic(() => import("./WeeklyLetterStories").then((m) => m.WeeklyLetterStories), { ssr: false });
 
 const STORY_MIN = 3;
 const STALE_MS = 45_000;
@@ -64,7 +67,7 @@ function store(key: string, p: LiveWeekPayload) {
 async function fetchLive(key: string): Promise<LiveWeekPayload> {
   const res = await wlFetch<Partial<LiveWeekPayload>>(`/api/analysis/letters/live${key ? `?${key}` : ""}`);
   const letter = normalizeLetter(res.letter);
-  if (!letter || !res.analysis) throw new WlError("داده‌ی این هفته پیدا نشد", 404);
+  if (!letter || !res.analysis) throw new WlError(tr("داده‌ی این هفته پیدا نشد", "This week's data was not found"), 404);
   const p: LiveWeekPayload = {
     letter,
     analysis: res.analysis,
@@ -111,9 +114,9 @@ function WeekNav({ prev, next, onGo }: { prev: string | null; next: string | nul
     </a>
   );
   return (
-    <nav className="wl-issue-nav" aria-label="هفته‌های دیگر">
-      {prev ? link(prev, "is-prev", <><ArrowRight size={20} /><span><small>هفته‌ی قبل</small><b>{weekLabelFa(prev)}</b></span></>) : <span className="wl-nav-gap" />}
-      {next ? link(next, "is-next", <><span><small>هفته‌ی بعد</small><b>{weekLabelFa(next)}</b></span><ArrowLeft size={20} /></>) : <span className="wl-nav-gap" />}
+    <nav className="wl-issue-nav" aria-label={tr("هفته‌های دیگر", "Other weeks")}>
+      {prev ? link(prev, "is-prev", <><ArrowRight size={20} className="dir-flip" /><span><small>{tr("هفته‌ی قبل", "Previous week")}</small><b>{weekLabelFa(prev)}</b></span></>) : <span className="wl-nav-gap" />}
+      {next ? link(next, "is-next", <><span><small>{tr("هفته‌ی بعد", "Next week")}</small><b>{weekLabelFa(next)}</b></span><ArrowLeft size={20} className="dir-flip" /></>) : <span className="wl-nav-gap" />}
     </nav>
   );
 }
@@ -121,6 +124,9 @@ function WeekNav({ prev, next, onGo }: { prev: string | null; next: string | nul
 function LetterBody({ data, onGo, reload }: { data: LiveWeekPayload; onGo: (w: string) => void; reload: () => void }) {
   const { letter, analysis } = data;
   const [storyOpen, setStoryOpen] = useState(false);
+  // داستان بعد از اولین بازشدن mount می‌مونه تا انیمیشن بسته‌شدنش پخش بشه؛ قبلش کدش لود نمی‌شه
+  const [storyMounted, setStoryMounted] = useState(false);
+  useEffect(() => { if (storyOpen) setStoryMounted(true); }, [storyOpen]);
   const slides = useMemo(() => buildStorySlides(letter), [letter]);
   const sleepOn = useFeature("sleep") === true;
 
@@ -152,18 +158,18 @@ function LetterBody({ data, onGo, reload }: { data: LiveWeekPayload; onGo: (w: s
   // ترتیب و شماره‌ی فصل‌ها؛ شرط هر فصل همون شرط نمایش خود فصله
   const chapters = useMemo(() => {
     const c: (TocItem & { show: boolean })[] = [
-      { id: "wl-days", label: "روز به روز", show: hasData && letter.days.length > 0 },
-      { id: "wl-domains", label: "بخش‌ها", show: hasData && letter.domains.length > 0 },
-      { id: "matrix", label: "نقشه‌ی هفته", show: hasMatrix },
-      { id: "wl-numbers", label: "عددها و روند", show: hasData && (numbers.length > 0 || letter.trend.length > 1) },
-      { id: "wl-insights", label: "بینش‌ها", show: letter.insights.length > 0 },
-      { id: "wl-wins", label: "بردها", show: wins.length > 0 || letter.improve.length > 0 },
-      { id: "coach", label: "حرف مربی", show: hasCoach },
-      { id: "wl-ach", label: "مدال‌ها", show: letter.achievements.length > 0 || !!letter.streak },
-      { id: "wl-next", label: "هفته‌ی بعد", show: data.isCurrent && hasData },
-      { id: "goals", label: "هدف‌ها", show: hasGoals },
-      { id: "reflection", label: "یادداشت خودت", show: true },
-      { id: "sleep", label: "خواب", show: sleepOn },
+      { id: "wl-days", label: tr("روز به روز", "Day by day"), show: hasData && letter.days.length > 0 },
+      { id: "wl-domains", label: tr("بخش‌ها", "Areas"), show: hasData && letter.domains.length > 0 },
+      { id: "matrix", label: tr("نقشه‌ی هفته", "Week map"), show: hasMatrix },
+      { id: "wl-numbers", label: tr("عددها و روند", "Numbers and trend"), show: hasData && (numbers.length > 0 || letter.trend.length > 1) },
+      { id: "wl-insights", label: tr("بینش‌ها", "Insights"), show: letter.insights.length > 0 },
+      { id: "wl-wins", label: tr("بردها", "Wins"), show: wins.length > 0 || letter.improve.length > 0 },
+      { id: "coach", label: tr("حرف مربی", "Coach's note"), show: hasCoach },
+      { id: "wl-ach", label: tr("مدال‌ها", "Medals"), show: letter.achievements.length > 0 || !!letter.streak },
+      { id: "wl-next", label: tr("هفته‌ی بعد", "Next week"), show: data.isCurrent && hasData },
+      { id: "goals", label: tr("هدف‌ها", "Goals"), show: hasGoals },
+      { id: "reflection", label: tr("یادداشت خودت", "Your notes"), show: true },
+      { id: "sleep", label: tr("خواب", "Sleep"), show: sleepOn },
     ];
     return c.filter((x) => x.show);
   }, [letter, numbers, wins, data.isCurrent, hasData, hasMatrix, hasCoach, hasGoals, sleepOn]);
@@ -185,7 +191,7 @@ function LetterBody({ data, onGo, reload }: { data: LiveWeekPayload; onGo: (w: s
     <>
       <ProgressBar />
       <div className="wl-top wl-rd-top">
-        <Link href="/analysis/weekly/letters" className="wl-back"><ArrowRight size={16} />آرشیو</Link>
+        <Link href="/analysis/weekly/letters" className="wl-back"><ArrowRight size={16} className="dir-flip" />{tr("آرشیو", "Archive")}</Link>
         <div className="wl-rd-tools">
           <WeeklyLetterWeekPicker ctx={ctx} onPick={onGo} />
           <WeeklyLetterShareButton ctx={ctx} />
@@ -199,45 +205,47 @@ function LetterBody({ data, onGo, reload }: { data: LiveWeekPayload; onGo: (w: s
         onPlayStory={() => setStoryOpen(true)}
         prediction={data.isCurrent ? <WeeklyLetterPrediction letter={letter} ctx={ctx} /> : null}
       />
-      <WeeklyLetterStories open={storyOpen} onClose={() => setStoryOpen(false)} letter={letter} slides={slides} />
+      {(storyOpen || storyMounted) && (
+        <WeeklyLetterStories open={storyOpen} onClose={() => setStoryOpen(false)} letter={letter} slides={slides} />
+      )}
       <WeeklyLetterToc items={chapters} />
 
       <div className="wl-chapters">
         {!hasData && <WeeklyLetterEmpty ctx={ctx} />}
         {has("wl-days") && (
-          <Chapter id="wl-days" no={no("wl-days")} icon={CH_ICONS["wl-days"]} title="روز به روز">
+          <Chapter id="wl-days" no={no("wl-days")} icon={CH_ICONS["wl-days"]} title={tr("روز به روز", "Day by day")}>
             <WeeklyLetterTimeline days={letter.days} domains={letter.domains} />
           </Chapter>
         )}
         {has("wl-domains") && (
-          <Chapter id="wl-domains" no={no("wl-domains")} icon={CH_ICONS["wl-domains"]} title="بخش‌ها">
+          <Chapter id="wl-domains" no={no("wl-domains")} icon={CH_ICONS["wl-domains"]} title={tr("بخش‌ها", "Areas")}>
             <WeeklyLetterDomains domains={letter.domains} />
           </Chapter>
         )}
         {has("matrix") && <WeeklyLetterMatrix letter={letter} ctx={ctx} no={no("matrix")} />}
         {has("wl-numbers") && (
-          <Chapter id="wl-numbers" no={no("wl-numbers")} icon={CH_ICONS["wl-numbers"]} title="عددها و روند">
+          <Chapter id="wl-numbers" no={no("wl-numbers")} icon={CH_ICONS["wl-numbers"]} title={tr("عددها و روند", "Numbers and trend")}>
             <WeeklyLetterNumbers numbers={numbers} trend={letter.trend} onJumpWeek={onGo} />
           </Chapter>
         )}
         {has("wl-insights") && (
-          <Chapter id="wl-insights" no={no("wl-insights")} icon={CH_ICONS["wl-insights"]} title="بینش‌ها">
+          <Chapter id="wl-insights" no={no("wl-insights")} icon={CH_ICONS["wl-insights"]} title={tr("بینش‌ها", "Insights")}>
             <WeeklyLetterInsights insights={letter.insights} />
           </Chapter>
         )}
         {has("wl-wins") && (
-          <Chapter id="wl-wins" no={no("wl-wins")} icon={CH_ICONS["wl-wins"]} title="بردها و جای پیشرفت">
+          <Chapter id="wl-wins" no={no("wl-wins")} icon={CH_ICONS["wl-wins"]} title={tr("بردها و جای پیشرفت", "Wins and room to grow")}>
             <WeeklyLetterWins wins={wins} improve={letter.improve} />
           </Chapter>
         )}
         {has("coach") && <WeeklyLetterCoach letter={letter} ctx={ctx} no={no("coach")} />}
         {has("wl-ach") && (
-          <Chapter id="wl-ach" no={no("wl-ach")} icon={CH_ICONS["wl-ach"]} title="مدال‌ها">
+          <Chapter id="wl-ach" no={no("wl-ach")} icon={CH_ICONS["wl-ach"]} title={tr("مدال‌ها", "Medals")}>
             <WeeklyLetterAchievements achievements={letter.achievements} streak={letter.streak} />
           </Chapter>
         )}
         {has("wl-next") && (
-          <Chapter id="wl-next" no={no("wl-next")} icon={CH_ICONS["wl-next"]} title="هفته‌ی بعد">
+          <Chapter id="wl-next" no={no("wl-next")} icon={CH_ICONS["wl-next"]} title={tr("هفته‌ی بعد", "Next week")}>
             <WeeklyLetterNext letter={letter} />
           </Chapter>
         )}
@@ -248,7 +256,7 @@ function LetterBody({ data, onGo, reload }: { data: LiveWeekPayload; onGo: (w: s
 
       <Reveal className="wl-nav-wrap">
         <WeekNav prev={data.prev} next={data.next} onGo={onGo} />
-        <Link href="/analysis/weekly/letters" className="wl-rd-archive-link"><Newspaper size={15} />آرشیو آنالیز هفتگی</Link>
+        <Link href="/analysis/weekly/letters" className="wl-rd-archive-link"><Newspaper size={15} />{tr("آرشیو آنالیز هفتگی", "Weekly review archive")}</Link>
       </Reveal>
     </>
   );
@@ -288,7 +296,7 @@ function ReaderInner({ initial, query, currentWeek }: { initial: LiveWeekPayload
       })
       .catch((e) => {
         if (target.current !== key || silent) return;
-        setError(e instanceof WlError ? e.message : "مشکلی پیش اومد");
+        setError(e instanceof WlError ? e.message : tr("مشکلی پیش اومد", "Something went wrong"));
       })
       .finally(() => { if (target.current === key) setBusy(false); });
   }, []);
@@ -377,7 +385,7 @@ function ReaderInner({ initial, query, currentWeek }: { initial: LiveWeekPayload
           <div className="wl-card wl-state">
             <span className="wl-state-ico"><Newspaper size={26} /></span>
             <p>{error}</p>
-            <button type="button" className="account-outline-btn wl-cta-btn" onClick={() => load(initKey)}>تلاش دوباره</button>
+            <button type="button" className="account-outline-btn wl-cta-btn" onClick={() => load(initKey)}>{tr("تلاش دوباره", "Try again")}</button>
           </div>
         </section>
       );
@@ -386,11 +394,11 @@ function ReaderInner({ initial, query, currentWeek }: { initial: LiveWeekPayload
   }
   return (
     <section className={`wl-root wl-page wl-reader${busy ? " wl-rd-busy" : ""}`} aria-busy={busy}>
-      {busy && <span className="wl-rd-chip" role="status"><Spinner size={13} label={null} />در حال بارگذاری</span>}
+      {busy && <span className="wl-rd-chip" role="status"><Spinner size={13} label={null} />{tr("در حال بارگذاری", "Loading")}</span>}
       {error && (
         <div className="wl-card wl-rd-err" role="alert">
           <span>{error}</span>
-          <button type="button" className="account-outline-btn wl-cta-btn" onClick={() => load(weekKey(data.weekStart))}>تلاش دوباره</button>
+          <button type="button" className="account-outline-btn wl-cta-btn" onClick={() => load(weekKey(data.weekStart))}>{tr("تلاش دوباره", "Try again")}</button>
         </div>
       )}
       <LetterBody key={data.weekStart} data={data} onGo={onGo} reload={reload} />

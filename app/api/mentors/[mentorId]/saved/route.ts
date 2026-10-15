@@ -2,6 +2,7 @@ import { NextResponse } from "next/server";
 import { requireMentorsUser, notFound } from "@/lib/mentorGuard";
 import { checkRateLimit } from "@/lib/rateLimit";
 import { SAVED_MENTORS_MAX, saveMentor, unsaveMentor, type SaveResult } from "@/lib/savedMentors";
+import { tr } from "@/lib/i18n";
 
 type Ctx = { params: { mentorId: string } };
 
@@ -17,7 +18,7 @@ async function guard() {
   const g = await requireMentorsUser();
   if (!g.ok) return g;
   if (!(await checkRateLimit(`mentors:saved:${g.userId}`, 60, 60_000))) {
-    return { ok: false as const, response: NextResponse.json({ error: "درخواست‌ها زیاد بوده؛ کمی بعد دوباره تلاش کن" }, { status: 429 }) };
+    return { ok: false as const, response: NextResponse.json({ error: tr("درخواست‌ها زیاد بوده؛ کمی بعد دوباره تلاش کن", "There were too many requests; try again shortly") }, { status: 429 }) };
   }
   return g;
 }

@@ -3,6 +3,7 @@ import { requireAdmin } from "@/lib/requireAdmin";
 import { prisma } from "@/lib/prisma";
 import { writeAuditLog } from "@/lib/adminAnalytics";
 import { MAX_SEGMENT_NAME, sanitizeFilters } from "@/lib/adminUsersView";
+import { tr } from "@/lib/i18n";
 
 // بخش ذخیره‌شده = اسم + مجموعه‌ی فیلترهای لیست کاربران
 
@@ -19,8 +20,8 @@ export async function POST(req: NextRequest) {
   if (!guard.ok) return guard.response;
   const body = await req.json().catch(() => null);
   const name = typeof body?.name === "string" ? body.name.trim().slice(0, MAX_SEGMENT_NAME) : "";
-  if (!name) return NextResponse.json({ error: "اسم بخش لازمه" }, { status: 400 });
-  if ((await prisma.adminSegment.count()) >= 100) return NextResponse.json({ error: "حداکثر 100 بخش ذخیره می‌شه" }, { status: 409 });
+  if (!name) return NextResponse.json({ error: tr("اسم بخش لازمه", "Segment name is required") }, { status: 400 });
+  if ((await prisma.adminSegment.count()) >= 100) return NextResponse.json({ error: tr("حداکثر 100 بخش ذخیره می‌شه", "You can save up to 100 segments") }, { status: 409 });
   const filters = sanitizeFilters(body?.filters);
   const seg = await prisma.adminSegment.create({ data: { name, filters, createdById: guard.userId }, select: { id: true, name: true, filters: true } });
   await writeAuditLog(guard.userId, "user.segment_create", "AdminSegment", seg.id, { name });
@@ -33,7 +34,7 @@ export async function DELETE(req: NextRequest) {
   if (!guard.ok) return guard.response;
   const id = req.nextUrl.searchParams.get("id") || "";
   const seg = await prisma.adminSegment.findUnique({ where: { id }, select: { id: true, name: true } });
-  if (!seg) return NextResponse.json({ error: "پیدا نشد" }, { status: 404 });
+  if (!seg) return NextResponse.json({ error: tr("پیدا نشد", "Not found") }, { status: 404 });
   await prisma.adminSegment.delete({ where: { id } });
   await writeAuditLog(guard.userId, "user.segment_delete", "AdminSegment", id, { name: seg.name });
   return NextResponse.json({ ok: true });

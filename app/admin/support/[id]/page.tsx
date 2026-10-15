@@ -10,6 +10,7 @@ import { useAdminAccess } from "@/components/admin/AdminAccess";
 import { useAdminToast } from "@/components/admin/useAdminToast";
 import { formatDateTime } from "@/lib/adminFormat";
 import { Spinner } from "@/components/Spinner";
+import { tr } from "@/lib/i18n";
 
 type TicketStatus = "OPEN" | "ANSWERED" | "CLOSED";
 type Message = { id: string; body: string; fromAdmin: boolean; createdAt: string };
@@ -20,7 +21,11 @@ type TicketDetail = {
 };
 
 const STATUS_BADGE: Record<TicketStatus, "amber" | "green" | "gray"> = { OPEN: "amber", ANSWERED: "green", CLOSED: "gray" };
-const STATUS_LABEL: Record<TicketStatus, string> = { OPEN: "در انتظار پاسخ", ANSWERED: "پاسخ داده‌شده", CLOSED: "بسته‌شده" };
+const statusLabels = (): Record<TicketStatus, string> => ({
+  OPEN: tr("در انتظار پاسخ", "Awaiting reply"),
+  ANSWERED: tr("پاسخ داده‌شده", "Answered"),
+  CLOSED: tr("بسته‌شده", "Closed"),
+});
 const MAX_REPLY = 4000;
 
 export default function AdminSupportTicketPage() {
@@ -74,11 +79,11 @@ export default function AdminSupportTicketPage() {
         body: JSON.stringify({ message: body }),
       });
       const data = await res.json().catch(() => null);
-      if (!res.ok) { setError(data?.error || "ارسال پیام ناموفق بود"); return; }
+      if (!res.ok) { setError(data?.error || tr("ارسال پیام ناموفق بود", "Couldn't send the message")); return; }
       setReply("");
       await load();
     } catch {
-      setError("ارتباط با سرور برقرار نشد");
+      setError(tr("ارتباط با سرور برقرار نشد", "Couldn't reach the server"));
     } finally {
       sendingRef.current = false;
       setSending(false);
@@ -93,22 +98,22 @@ export default function AdminSupportTicketPage() {
         body: JSON.stringify({ status: "CLOSED" }),
       });
       const data = await res.json().catch(() => null);
-      if (!res.ok) { toast(data?.error || "بستن تیکت ناموفق بود", "err"); return; }
-      toast("تیکت بسته شد");
+      if (!res.ok) { toast(data?.error || tr("بستن تیکت ناموفق بود", "Couldn't close the ticket"), "err"); return; }
+      toast(tr("تیکت بسته شد", "Ticket closed"));
       setConfirmClose(false);
       await load();
     } catch {
-      toast("ارتباط با سرور برقرار نشد", "err");
+      toast(tr("ارتباط با سرور برقرار نشد", "Couldn't reach the server"), "err");
     }
   }
 
   const back = (
     <Link href="/admin/support" className="admin-btn sm admin-back-btn">
-      <ArrowRight size={14} /> بازگشت به تیکت‌ها
+      <ArrowRight size={14} className="dir-flip" /> {tr("بازگشت به تیکت‌ها", "Back to tickets")}
     </Link>
   );
 
-  if (loadState === "notfound") return <section>{back}<EmptyState message="تیکت پیدا نشد" /></section>;
+  if (loadState === "notfound") return <section>{back}<EmptyState message={tr("تیکت پیدا نشد", "Ticket not found")} /></section>;
   if (loadState === "error" || (!ticket && loadState !== "loading")) {
     return (
       <section>
@@ -120,7 +125,7 @@ export default function AdminSupportTicketPage() {
   if (!ticket) return <LoadingState />;
 
   const u = ticket.user;
-  const userLabel = [u.name, u.lastName].filter(Boolean).join(" ") || u.username || u.email || u.phone || "کاربر";
+  const userLabel = [u.name, u.lastName].filter(Boolean).join(" ") || u.username || u.email || u.phone || tr("کاربر", "User");
   const canSend = !!reply.trim() && !sending;
 
   return (
@@ -135,17 +140,17 @@ export default function AdminSupportTicketPage() {
             : <span className="admin-muted admin-support-user">{userLabel}</span>}
         </div>
         <div className="admin-head-actions">
-          <span className={`admin-badge ${STATUS_BADGE[ticket.status]}`}>{STATUS_LABEL[ticket.status]}</span>
+          <span className={`admin-badge ${STATUS_BADGE[ticket.status]}`}>{statusLabels()[ticket.status]}</span>
           {ticket.status !== "CLOSED" && (
             <button type="button" className="admin-btn sm" onClick={() => setConfirmClose(true)}>
-              <CheckCircle2 size={14} /> بستن تیکت
+              <CheckCircle2 size={14} /> {tr("بستن تیکت", "Close ticket")}
             </button>
           )}
         </div>
       </div>
 
       <div className="support-thread admin-support-thread thin-scroll" ref={threadRef}>
-        {ticket.messages.length === 0 && <div className="admin-empty">پیامی در این تیکت نیست</div>}
+        {ticket.messages.length === 0 && <div className="admin-empty">{tr("پیامی در این تیکت نیست", "No messages in this ticket")}</div>}
         {/* قرارداد .support-msg: توی پنل ادمین «mine» = پیام ادمین (راست/اکسنت)،
             «admin» = طرف مقابل یعنی کاربر. */}
         {ticket.messages.map((m) => (
@@ -171,21 +176,21 @@ export default function AdminSupportTicketPage() {
           maxLength={MAX_REPLY}
           rows={2}
           disabled={sending}
-          placeholder={ticket.status === "CLOSED" ? "جواب بدی، تیکت دوباره باز می‌شه…" : "جواب رو بنویس…"}
-          aria-label="متن پاسخ"
+          placeholder={ticket.status === "CLOSED" ? tr("جواب بدی، تیکت دوباره باز می‌شه…", "Replying will reopen the ticket…") : tr("جواب رو بنویس…", "Write your reply…")}
+          aria-label={tr("متن پاسخ", "Reply text")}
         />
-        <button type="submit" className="admin-btn primary" disabled={!canSend} aria-label="ارسال">
+        <button type="submit" className="admin-btn primary" disabled={!canSend} aria-label={tr("ارسال", "Send")}>
           {sending ? <Spinner size={14} /> : <Send size={15} />}
-          <span className="admin-support-send-label">ارسال</span>
+          <span className="admin-support-send-label">{tr("ارسال", "Send")}</span>
         </button>
       </form>
-      <div className="admin-support-hint">Enter برای ارسال · Shift+Enter برای خط جدید</div>
+      <div className="admin-support-hint">{tr("Enter برای ارسال · Shift+Enter برای خط جدید", "Enter to send · Shift+Enter for a new line")}</div>
 
       {confirmClose && (
         <ConfirmModal
-          title="بستن تیکت"
-          message="تیکت بسته می‌شه؛ اگه کاربر دوباره پیام بده، خودکار باز می‌شه."
-          confirmLabel="بستن تیکت"
+          title={tr("بستن تیکت", "Close ticket")}
+          message={tr("تیکت بسته می‌شه؛ اگه کاربر دوباره پیام بده، خودکار باز می‌شه.", "The ticket will be closed. If the user sends another message, it reopens automatically.")}
+          confirmLabel={tr("بستن تیکت", "Close ticket")}
           danger={false}
           onConfirm={closeTicket}
           onClose={() => setConfirmClose(false)}

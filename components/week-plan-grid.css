@@ -1,0 +1,4 @@
+/* جداکننده‌ی بین روزها در چیدمان چپ به راست: خط سمت چپ هر سلول (در فارسی سمت راست) */
+@media (min-width:1024px){
+  html[dir="ltr"] .exercise-week-cell-divider{ background-position:left; }
+}

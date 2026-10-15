@@ -1,3 +1,4 @@
+import { tr } from "@/lib/i18n";
 import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 import { requireModule } from "@/lib/moduleAccess";
@@ -16,7 +17,7 @@ export async function GET(req: NextRequest) {
   const userId = guard.userId;
 
   const planId = req.nextUrl.searchParams.get("planId");
-  if (!planId) return NextResponse.json({ error: "planId الزامی است" }, { status: 400 });
+  if (!planId) return NextResponse.json({ error: tr("planId الزامی است", "planId is required") }, { status: 400 });
 
   const range = parseDateRange(req.nextUrl.searchParams.get("start"), req.nextUrl.searchParams.get("end"));
   if ("error" in range) return NextResponse.json({ error: range.error }, { status: 400 });

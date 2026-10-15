@@ -1,0 +1,261 @@
+/* auto-split from the global CSS (css-split): rules used only by this route group. Imported first thing by its layout/page. */
+
+.weekly-glass table{margin:0;}
+
+.weekly-head-row h1{margin-bottom:0;}
+
+@media (hover:hover) {
+  body[data-theme="light"] .module-gate-cta:hover, body:not([data-theme="light"]) .module-gate-cta:hover{
+  background:var(--accent);
+}}
+
+.trade-range:focus{ outline:none; }
+
+.trade-range::-webkit-slider-runnable-track{
+  height:4px; border-radius:999px;
+  background:linear-gradient(to right, var(--accent) var(--tr-pos), var(--line) var(--tr-pos));
+}
+
+.trade-range::-moz-range-track{
+  height:4px; border-radius:999px;
+  background:linear-gradient(to right, var(--accent) var(--tr-pos), var(--line) var(--tr-pos));
+}
+
+.trade-range:dir(rtl)::-webkit-slider-runnable-track{
+  background:linear-gradient(to left, var(--accent) var(--tr-pos), var(--line) var(--tr-pos));
+}
+
+.trade-range:dir(rtl)::-moz-range-track{
+  background:linear-gradient(to left, var(--accent) var(--tr-pos), var(--line) var(--tr-pos));
+}
+
+.trade-range::-webkit-slider-thumb{
+  -webkit-appearance:none; appearance:none; width:var(--tr-thumb); height:var(--tr-thumb);
+  margin-top:-7px; border:0; border-radius:50%; background:var(--accent);
+  transition:transform .15s ease;
+}
+
+.trade-range::-moz-range-thumb{
+  width:var(--tr-thumb); height:var(--tr-thumb); border:0; border-radius:50%; background:var(--accent);
+}
+
+.trade-range:active::-webkit-slider-thumb{ transform:scale(1.12); }
+
+.trade-range:focus-visible::-webkit-slider-thumb{ box-shadow:0 0 0 4px rgba(var(--accent-rgb),.25); }
+
+@media (prefers-reduced-motion:reduce) {
+  .trade-range::-webkit-slider-thumb{ transition:none; }}
+
+/* ── جاگیر سبک داخل صفحه (components/PageLoader.tsx) ─────────────────────
+   فقط یک اسکلت ساده داخل محتوا (زیر هدر، بدون پرده و بدون لوگو). تا 200ms هیچی
+   دیده نمی‌شه (animation-delay)، پس ناوبری سریع هیچ چشمک و لودینگی نداره. */
+
+.page-loader{
+  width:100%; display:flex; flex-direction:column; gap:12px; padding:8px 0 24px;
+  opacity:0; animation:pl-in .3s ease .2s forwards;
+}
+
+@keyframes pl-in{ to{ opacity:1; } }
+
+.page-loader-skel{ width:100%; display:flex; flex-direction:column; gap:12px; }
+
+.pls-line, .pls-card{ display:block; position:relative; overflow:hidden; border-radius:10px; background:rgba(var(--accent-rgb),.07); }
+
+.pls-line{ height:16px; }
+
+.pls-line.pls-thin{ height:11px; opacity:.7; }
+
+.pls-grid{ display:grid; grid-template-columns:1fr 1fr; gap:12px; margin-top:8px; }
+
+.pls-card{ height:120px; border-radius:18px; border:1px solid var(--box-line); background:var(--box-bg); }
+
+.pls-card.pls-wide{ grid-column:1 / -1; height:150px; }
+
+.pls-line::after, .pls-card::after{
+  content:""; position:absolute; inset:0; transform:translateX(100%);
+  background:linear-gradient(90deg, transparent, rgba(255,255,255,.06), transparent);
+  animation:pl-shimmer 1.3s ease-in-out infinite;
+}
+
+body[data-theme="light"] .pls-line::after, body[data-theme="light"] .pls-card::after{ background:linear-gradient(90deg, transparent, rgba(255,255,255,.6), transparent); }
+
+@keyframes pl-shimmer{ to{ transform:translateX(-100%); } }
+
+@media (prefers-reduced-motion:reduce) {
+  .pls-line::after, .pls-card::after{ animation:none; }}
+
+/* حین ورود دکمه کم‌رنگ نشه (دایره/تیک باید کاملا دیده بشه) و ارتفاعش ثابت بمونه. */
+
+.auth-full-btn.is-busy > *{ vertical-align:middle; }
+
+.auth-full-btn.is-busy:disabled{ opacity:1; }
+
+.gring{ position:relative; display:inline-block; flex-shrink:0; }
+
+.gring svg{ display:block; }
+
+.gring-center{ position:absolute; inset:0; display:flex; align-items:center; justify-content:center; }
+
+.gring-cap{ filter:drop-shadow(0 0 3px rgba(0,0,0,.45)); }
+
+body[data-theme="light"] .gring-cap{ filter:drop-shadow(0 0 2px rgba(80,50,20,.35)); }
+
+/* ── تیک واحد اپ (components/TickButton.tsx) — کپی .db-tl-node  داشبورد ──
+   عمدا بیرون .db-page تا همه‌جا یکسان باشه. بک‌گراند فقط در حالت تیک‌خورده
+   (همون گرادیان داشبورد)؛ حالت خالی کاملا شفافه.
+
+   باگ «مربع داخل دایره» (ریشه):
+   (۱) گرادیان حالت تیک‌خورده با background-origin پیش‌فرض (padding-box) و
+       repeat کشیده می‌شد؛ با بوردر شفاف ۲px، کاشی گرادیان توی حلقه‌ی بوردر
+       تکرار می‌شد و لبه‌ی padding-box یک مربع روشن وسط دایره می‌ساخت — همه‌جا،
+       حتی داخل .dash-scope. حالا گرادیان صریحا border-box و no-repeat‌ه.
+   (۲) بیرون .dash-scope ریست سراسری button{} (لیکوئید گلس) backdrop-filter و
+       سایه‌ی inset می‌داد و در تم روشن body[data-theme="light"] button
+       (اسپسیفیسیتی 0,1,2) بک‌گراند شیشه‌ای/بوردر/سایه رو روی .tick-btn می‌نشوند.
+       برای همین همه‌ی قانون‌های تیک با پیشوند html body و کلاس دوبل
+       (0,2,2) نوشته شدن تا هیچ قانون سراسری (هاور/دیزیبل/تم روشن) بهشون نرسه.
+
+   رنگ: --tick-a / --tick-b (پیش‌فرض پالت روتین --ring-1)؛ .tick-exercise
+   همون تیک با پالت تمرین (--ring-2، آبی→بنفش) برای حرکت‌های برنامه‌ی تمرین. */
+
+.tick-btn{ --tick-size:26px; --tick-a:var(--ring-1a); --tick-b:var(--ring-1b); }
+
+.tick-btn.tick-exercise{ --tick-a:var(--ring-2a); --tick-b:var(--ring-2b); }
+
+html body .tick-btn.tick-btn.is-square{ border-radius:calc(var(--tick-size) * .3); }
+
+.tick-btn svg{ width:calc(var(--tick-size) * .58); height:calc(var(--tick-size) * .58); position:relative; z-index:1; overflow:visible; }
+
+@media (hover:hover) {
+  html body .tick-btn.tick-btn:not(.is-disabled):not(.is-checked):hover{
+    border-color:var(--tick-a); color:#fff; background:transparent;
+    box-shadow:0 0 0 4px color-mix(in srgb, var(--tick-a) 16%, transparent);
+  }}
+
+html body .tick-btn.tick-btn.is-checked{
+  border-color:transparent;
+  background:linear-gradient(135deg, var(--tick-a), var(--tick-b)) border-box no-repeat;
+  box-shadow:0 0 14px color-mix(in srgb, var(--tick-a) 55%, transparent);
+}
+
+html body .tick-btn.tick-btn.is-missed{ border-color:var(--tl-warn, #F0A94B); border-style:dashed; }
+
+html body .tick-btn.tick-btn.is-disabled{ cursor:not-allowed; opacity:.5; }
+
+html body .tick-btn.tick-btn.is-disabled.is-checked, html body .tick-btn.tick-btn.is-disabled.is-missed{ opacity:.75; }
+
+.tick-ripple{ position:absolute; inset:-2px; border-radius:inherit; border:2px solid var(--tick-b); background:none; pointer-events:none; }
+
+.tick-spark{ position:absolute; left:50%; top:50%; pointer-events:none; }
+
+.tick-spark i{
+  position:absolute; width:4px; height:4px; margin:-2px; border-radius:50%;
+  background:var(--tick-b); animation:tick-burst .75s cubic-bezier(.22,1,.36,1) forwards;
+  transform:rotate(calc(var(--i) * 45deg)) translateX(0);
+}
+
+@keyframes tick-burst{ to{ transform:rotate(calc(var(--i) * 45deg)) translateX(var(--tick-size)); opacity:0; } }
+
+@media (prefers-reduced-motion: reduce) {
+  .tick-spark{ display:none; }}
+
+/* ── گزینه‌ی تیک‌خوردنی (components/TickOption.tsx) — بی‌بک‌گراند ── */
+
+.tick-option{
+  display:flex; align-items:center; gap:10px; width:100%; padding:6px 0; margin:0; border:none;
+  background:transparent; color:var(--text); font:inherit; font-size:13px; font-weight:600; text-align:start; cursor:pointer;
+  -webkit-tap-highlight-color:transparent;
+}
+
+.tick-option:disabled{ cursor:not-allowed; opacity:.6; }
+
+.tick-option-text{ flex:1; min-width:0; }
+
+/* آیتم‌های برنامه‌ی لیستی در پاپ‌آپ روز (DayModal) */
+
+.day-task-items{ list-style:none; margin:-4px 0 6px; padding:0; padding-inline-start:40px; display:flex; flex-direction:column; gap:6px; }
+
+.day-task-items li{ display:flex; align-items:center; gap:9px; font-size:12.5px; font-weight:600; }
+
+@supports not (aspect-ratio:1) {
+  .fx-dial-wrap, .wr-root{ height:0; padding-bottom:100%; }}
+
+@supports not (width:1cqi) {
+  .wr-label{ font-size:11px; }}
+
+/* درخشش اسکلت لودینگ از چپ به راست */
+
+@keyframes pl-shimmer-ltr{ to{ transform:translateX(100%); } }
+
+html[dir="ltr"] .pls-line::after, html[dir="ltr"] .pls-card::after{ transform:translateX(-100%); }
+
+@media (prefers-reduced-motion:no-preference) {
+  html[dir="ltr"] .pls-line::after, html[dir="ltr"] .pls-card::after{ animation-name:pl-shimmer-ltr; }}
+
+/* radar labels: html overlay was forced rtl for Persian */
+
+html[dir="ltr"] .wr-root{ direction:ltr; }
+
+@media (max-width:719px) {
+  html[dir="ltr"] .wl-mast{ grid-template-columns:minmax(0,1fr) minmax(0,1fr); grid-template-areas:"center center" "a b"; row-gap:10px; align-items:start; }
+  html[dir="ltr"] .wl-mast-center{ grid-area:center; }
+  html[dir="ltr"] .wl-mast > .wl-mast-side:first-child{ grid-area:a; }
+  html[dir="ltr"] .wl-mast > .wl-mast-side.is-end{ grid-area:b; }}
+
+html[dir="ltr"] .wl-arch-txt small{ line-height:1.5; }
+
+html[dir="ltr"] .wl-issue-head{ line-height:1.55; }
+
+html[dir="ltr"] .wl-day-main, html[dir="ltr"] .wl-day-txt small{ line-height:1.5; }
+
+/* خواب: درجه‌های کیفیت به‌جای رنگ، پله‌های خاکستری می‌شن */
+
+html[data-admin-theme="noir"] body:not([data-theme="light"]) .sleep-scope{
+  --slp-great:#FFFFFF; --slp-good:#D0D0D0; --slp-fair:#A0A0A0; --slp-poor:#6E6E6E;
+  --slp-ink:#E8E8E8; --slp-ink-2:#B0B0B0; --slp-moon:#F4F4F4;
+}
+
+[data-m-in="rise"]{ animation:m-rise var(--m-dur-3) var(--m-ease-out) backwards; animation-delay:calc(min(var(--i, 0), 8) * var(--m-step)); }
+
+[data-m-in="fade"]{ animation:m-fade var(--m-dur-3) var(--m-ease-out) backwards; }
+
+[data-m-in="pop"]{ animation:m-pop var(--m-dur-3) var(--m-ease-spring) backwards; }
+
+.module-gate{ animation:m-fade var(--m-dur-4) var(--m-ease-out) backwards; }
+
+.module-gate-overlay > *{ animation:m-rise var(--m-dur-4) var(--m-ease-out) backwards; }
+
+.trade-chat-report-sheet{ animation:m-rise-soft var(--m-dur-3) var(--m-ease-out) backwards; }
+
+.calorie-unit-dropdown{ animation:m-pop var(--m-dur-2) var(--m-ease-out) backwards; transform-origin:50% 0; }
+
+.au-backdrop, .ads-pal-backdrop{ animation:m-fade var(--m-dur-3) var(--m-ease-out) backwards; }
+
+.ads-pal{ animation:m-pop var(--m-dur-3) var(--m-ease-spring) backwards; transform-origin:50% 0; }
+
+@media (hover:hover) and (pointer:fine) {
+  :where([role="button"], [role="tab"], [role="menuitem"], .is-clickable, [data-clickable]):hover{ opacity:.92; }}
+
+.trade-account-goalbar-fill, .admin-funnel-fill, .adb-fill, .slw-fill{
+  animation:m-bar var(--m-dur-5) var(--m-ease-out) backwards;
+}
+
+.m-reveal.m-pre{ opacity:0; translate:0 14px; }
+
+.m-reveal.m-pre.m-seen{ opacity:1; translate:0 0; transition:opacity var(--m-dur-4) var(--m-ease-out), translate var(--m-dur-4) var(--m-ease-out); }
+
+.topbar-auth-pop{ animation:topbarAuthPop .38s cubic-bezier(.34,1.56,.64,1); }
+
+@media (prefers-reduced-motion:reduce) {
+  .topbar-auth-pop{ animation:none; }}
+
+@media (min-width:1024px) {
+  .dnav-chev{ transition:transform .2s ease; opacity:.7; flex-shrink:0; }
+  .dnav :focus-visible, .dnav-end :focus-visible{ outline:2px solid var(--accent); outline-offset:2px; }
+  .dnav-ind{
+    position:absolute; left:0; bottom:0; width:1px; height:2px; background:var(--accent);
+    transform-origin:0 0; opacity:0; pointer-events:none; will-change:transform;
+  }}
+
+@media (min-width:1024px) and (prefers-reduced-motion:reduce) {
+  .dnav-ind.is-ready, .dnav-chev{ transition:none; }}

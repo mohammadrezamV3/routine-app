@@ -3,6 +3,7 @@ import { requireAdmin } from "@/lib/requireAdmin";
 import { getSiteUrl } from "@/lib/siteUrl";
 import { prisma } from "@/lib/prisma";
 import { migrationState } from "@/lib/migrationState";
+import { tr } from "@/lib/i18n";
 
 /**
  * تست اتصال خروجی سرور به سرویس‌های بیرونی.
@@ -39,7 +40,7 @@ function probes(): Probe[] {
       // مرچنت تستی خود زیبال. پاسخش هرچه باشد (حتی خطای مرچنت) یعنی
       // «شبکه سالم است» — چیزی که این‌جا می‌سنجیم همین است، نه صحت کلید.
       body: { merchant: "zibal", amount: 10000, callbackUrl: "https://arionapp.ir/cb" },
-      note: "درگاه پرداخت زیبال",
+      note: tr("درگاه پرداخت زیبال", "Zibal payment gateway"),
     },
   ];
 
@@ -58,23 +59,23 @@ function probes(): Probe[] {
             username: process.env.MELIPAYAMAK_USERNAME,
             password: process.env.MELIPAYAMAK_PASSWORD,
           },
-          note: "سرویس پیامک (کد ورود/ثبت‌نام) — اعتبار پنل",
+          note: tr("سرویس پیامک (کد ورود/ثبت‌نام) — اعتبار پنل", "SMS service (login/signup codes) — panel credit"),
         }
-      : { name: "melipayamak", url: "", note: "MELIPAYAMAK_USERNAME/PASSWORD تنظیم نشده — هیچ پیامکی ارسال نمی‌شود" }
+      : { name: "melipayamak", url: "", note: tr("MELIPAYAMAK_USERNAME/PASSWORD تنظیم نشده — هیچ پیامکی ارسال نمی‌شود", "MELIPAYAMAK_USERNAME/PASSWORD not set — no SMS is sent") }
   );
 
   const aiBase = process.env.ARVAN_AI_BASE_URL;
   list.push(
     aiBase
-      ? { name: "ai-gateway", url: `${aiBase.replace(/\/+$/, "")}/models`, note: "گیت‌وی هوش مصنوعی (رودمپ و گزارش هفتگی)" }
-      : { name: "ai-gateway", url: "", note: "ARVAN_AI_BASE_URL تنظیم نشده" }
+      ? { name: "ai-gateway", url: `${aiBase.replace(/\/+$/, "")}/models`, note: tr("گیت‌وی هوش مصنوعی (رودمپ و گزارش هفتگی)", "AI gateway (roadmap and weekly report)") }
+      : { name: "ai-gateway", url: "", note: tr("ARVAN_AI_BASE_URL تنظیم نشده", "ARVAN_AI_BASE_URL not set") }
   );
   return list;
 }
 
 async function runProbe(p: Probe) {
   if (!p.url) {
-    return { name: p.name, note: p.note, ok: false, reason: "env تنظیم نشده", ms: 0 };
+    return { name: p.name, note: p.note, ok: false, reason: tr("env تنظیم نشده", "env not set"), ms: 0 };
   }
   const started = Date.now();
   try {
@@ -104,14 +105,14 @@ async function runProbe(p: Probe) {
       try {
         const j = JSON.parse(raw);
         if (j?.RetStatus === 1) credit = Number(j?.Value ?? j?.StrRetStatus) || 0;
-        else rejected = j?.StrRetStatus || `کد ${j?.RetStatus}`;
+        else rejected = j?.StrRetStatus || tr(`کد ${j?.RetStatus}`, `code ${j?.RetStatus}`);
       } catch {
         rejected = raw.slice(0, 120) || null;
       }
       return {
         name: p.name, note: p.note, ok: !rejected, status: res.status, ms,
         ...(credit !== null ? { credit } : {}),
-        ...(rejected ? { reason: `پنل پاسخ داد: ${rejected}` } : {}),
+        ...(rejected ? { reason: tr(`پنل پاسخ داد: ${rejected}`, `Panel responded: ${rejected}`) } : {}),
       };
     }
 
@@ -122,12 +123,12 @@ async function runProbe(p: Probe) {
     const ms = Date.now() - started;
     const kind =
       e?.name === "TimeoutError" || e?.name === "AbortError"
-        ? `تایم‌اوت (بیش از ${PROBE_TIMEOUT_MS / 1000} ثانیه جواب نداد)`
+        ? tr(`تایم‌اوت (بیش از ${PROBE_TIMEOUT_MS / 1000} ثانیه جواب نداد)`, `Timeout (no response for more than ${PROBE_TIMEOUT_MS / 1000} seconds)`)
         : e?.cause?.code === "ENOTFOUND"
-          ? "DNS حل نشد"
+          ? tr("DNS حل نشد", "DNS lookup failed")
           : e?.cause?.code === "ECONNREFUSED"
-            ? "اتصال رد شد"
-            : e?.cause?.code || e?.message || "خطای ناشناخته";
+            ? tr("اتصال رد شد", "Connection refused")
+            : e?.cause?.code || e?.message || tr("خطای ناشناخته", "Unknown error");
     return { name: p.name, note: p.note, ok: false, reason: kind, ms };
   }
 }
@@ -144,7 +145,7 @@ async function dbLatency() {
     await prisma.appSetting.findFirst({ select: { key: true } });
     return { ok: true, ms: Date.now() - started };
   } catch (e: any) {
-    return { ok: false, ms: Date.now() - started, reason: e?.message?.slice(0, 160) || "خطای ناشناخته" };
+    return { ok: false, ms: Date.now() - started, reason: e?.message?.slice(0, 160) || tr("خطای ناشناخته", "Unknown error") };
   }
 }
 
@@ -222,7 +223,7 @@ export async function GET() {
     // سفید می‌رود — همان باگی که با `0.0.0.0:3000` گزارش شد.
     resolvedSiteUrl: {
       value: getSiteUrl(),
-      note: "لینک‌های بازگشت از این ساخته می‌شوند — باید دامنه‌ی واقعی باشد",
+      note: tr("لینک‌های بازگشت از این ساخته می‌شوند — باید دامنه‌ی واقعی باشد", "Return links are built from this — it must be the real domain"),
     },
     outbound: results,
   });

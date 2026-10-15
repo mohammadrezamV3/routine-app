@@ -1,4 +1,5 @@
 import type { MentorProgramStatus } from "@prisma/client";
+import { tr } from "@/lib/i18n";
 
 // ماشین حالت برنامه‌ی منتور — تک‌منبع تصمیم «کی می‌تونه کدوم انتقال رو بزنه».
 // هر روتی که وضعیت رو عوض می‌کنه *باید* از canTransition رد بشه و update رو
@@ -43,12 +44,17 @@ export function visibleToStudent(p: { status: MentorProgramStatus; sentAt: Date 
   return p.status !== "DRAFT" || p.sentAt !== null;
 }
 
-export const PROGRAM_STATUS_LABELS: Record<MentorProgramStatus, string> = {
-  DRAFT: "پیش‌نویس",
-  PENDING: "در انتظار تایید",
-  ACCEPTED: "پذیرفته‌شده",
-  REJECTED: "ردشده",
-  ACTIVE: "فعال",
-  COMPLETED: "تکمیل‌شده",
-  CANCELLED: "لغوشده",
-};
+export const programStatusLabels = (): Record<MentorProgramStatus, string> => ({
+  DRAFT: tr("پیش‌نویس", "Draft"),
+  PENDING: tr("در انتظار تایید", "Awaiting approval"),
+  ACCEPTED: tr("پذیرفته‌شده", "Accepted"),
+  REJECTED: tr("ردشده", "Declined"),
+  ACTIVE: tr("فعال", "Active"),
+  COMPLETED: tr("تکمیل‌شده", "Completed"),
+  CANCELLED: tr("لغوشده", "Cancelled"),
+});
+
+/** سازگاری با کدهای قدیمی: هر خواندن زبان جاری را می‌گیرد (Proxy، نه ثابت یک‌بارمصرف) */
+export const PROGRAM_STATUS_LABELS: Record<MentorProgramStatus, string> = new Proxy({} as Record<MentorProgramStatus, string>, {
+  get: (_t, key: string) => programStatusLabels()[key as MentorProgramStatus],
+});

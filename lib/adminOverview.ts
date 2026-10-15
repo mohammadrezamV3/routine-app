@@ -1,6 +1,8 @@
 // توابع خالص تجمیع داشبورد ادمین (/admin) — بدون دیتابیس و بدون وابستگی
 // سروری، تا هم سمت سرور هم کلاینت و تست قابل استفاده باشن.
 
+import { tr } from "@/lib/i18n";
+
 const TEHRAN_OFFSET_MS = 3.5 * 3600_000; // ایران DST نداره
 
 /** کلید روز تهران به شکل YYYY-MM-DD */
@@ -94,14 +96,15 @@ export function barHeights(values: number[], maxH: number): number[] {
 export function relativeTimeFa(at: Date | string | number, now: Date | number = Date.now()): string {
   const diff = Math.max(0, new Date(now).getTime() - new Date(at).getTime());
   const s = Math.floor(diff / 1000);
-  if (s < 45) return "لحظاتی پیش";
+  if (s < 45) return tr("لحظاتی پیش", "just now");
   const m = Math.floor(s / 60);
-  if (m < 60) return `${m} دقیقه پیش`;
+  if (m < 60) return tr(`${m} دقیقه پیش`, `${m} min ago`);
   const h = Math.floor(m / 60);
-  if (h < 24) return `${h} ساعت پیش`;
+  if (h < 24) return tr(`${h} ساعت پیش`, `${h} h ago`);
   const d = Math.floor(h / 24);
-  if (d < 30) return `${d} روز پیش`;
-  return `${Math.floor(d / 30)} ماه پیش`;
+  if (d < 30) return tr(`${d} روز پیش`, `${d} ${d === 1 ? "day" : "days"} ago`);
+  const mo = Math.floor(d / 30);
+  return tr(`${mo} ماه پیش`, `${mo} ${mo === 1 ? "month" : "months"} ago`);
 }
 
 export type FeedKind = "signup" | "purchase" | "ticket" | "mentor" | "failed_payment";

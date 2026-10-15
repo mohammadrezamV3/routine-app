@@ -2,7 +2,7 @@
 
 import { useEffect, useRef, useState } from "react";
 import { createPortal } from "react-dom";
-import { motion } from "framer-motion";
+import { m as motion } from "framer-motion";
 import { TickButton } from "./TickButton";
 import { Check, Dumbbell, Lock, Pencil, Play, Repeat2, RotateCw, Timer, X } from "lucide-react";
 import { DashCard } from "./DashCard";
@@ -10,9 +10,14 @@ import type { ExerciseDay } from "@/lib/exercisePlans";
 import { isoLocal } from "@/lib/jalali";
 import { reportLiveError } from "@/lib/liveSync";
 import { parseExerciseItem } from "@/lib/exerciseSets";
-import { ExerciseSetTrackerModal } from "./ExerciseSetTrackerModal";
-import { ExerciseSetTutorial, EXERCISE_TUTORIAL_SEEN_KEY } from "./ExerciseSetTutorial";
+import dynamic from "next/dynamic";
+import { EXERCISE_TUTORIAL_SEEN_KEY } from "@/lib/tutorialSeen";
+// فقط با شروع تمرین / زدن یک حرکت لازم می‌شن — کدشون توی باندل اولیه نیست
+const ExerciseSetTrackerModal = dynamic(() => import("./ExerciseSetTrackerModal").then((m) => m.ExerciseSetTrackerModal), { ssr: false });
+const ExerciseSetTutorial = dynamic(() => import("./ExerciseSetTutorial").then((m) => m.ExerciseSetTutorial), { ssr: false });
 import { Spinner } from "./Spinner";
+import { isEn, tr } from "@/lib/i18n";
+import { exerciseDisplayName, focusDisplay, useExerciseEn } from "@/lib/exerciseI18n";
 
 function formatElapsed(sec: number): string {
   const m = Math.floor(sec / 60).toString().padStart(2, "0");
@@ -23,8 +28,8 @@ function formatElapsed(sec: number): string {
 /** ثانیه‌ها رو به یه لیبل کوتاه برای جدول مشخصات تبدیل می‌کنه — «30 ثانیه» یا «25 دقیقه» */
 function formatSpecDuration(seconds: number | null): string {
   if (!seconds) return "—";
-  if (seconds % 60 === 0) return `${seconds / 60} دقیقه`;
-  if (seconds < 60) return `${seconds} ثانیه`;
+  if (seconds % 60 === 0) return tr(`${seconds / 60} دقیقه`, `${seconds / 60} min`);
+  if (seconds < 60) return tr(`${seconds} ثانیه`, `${seconds} sec`);
   return `${Math.floor(seconds / 60)}:${(seconds % 60).toString().padStart(2, "0")}`;
 }
 
@@ -38,8 +43,8 @@ export function ExerciseTaskList({
   dayPlan,
   dateIso,
   editable,
-  title = "برنامه تمرینی",
-  restDayLabel = "امروز روز استراحته — چیزی برنامه‌ریزی نشده.",
+  title = tr("برنامه تمرینی", "Workout plan"),
+  restDayLabel = tr("امروز روز استراحته — چیزی برنامه‌ریزی نشده.", "Today is a rest day. Nothing is planned."),
   initialCompleted,
   initialCompletedItems,
   onSubstitute,
@@ -67,6 +72,7 @@ export function ExerciseTaskList({
   onStarted?: () => void;
   delay?: number;
 }) {
+  useExerciseEn();
   const todayPlan = dayPlan;
   const isFutureDay = dateIso > isoLocal(new Date());
   const isPastDay = dateIso < isoLocal(new Date());
@@ -112,7 +118,7 @@ export function ExerciseTaskList({
       body: JSON.stringify({ planId, date: dateIso, completed, completedItems: Array.from(nextChecked) }),
     }).catch(() => null);
     if (res?.ok) return true;
-    reportLiveError("ذخیره نشد — تغییر برگردانده شد. اتصال را چک کن و دوباره امتحان کن");
+    reportLiveError(tr("ذخیره نشد — تغییر برگردانده شد. اتصال را چک کن و دوباره امتحان کن", "Not saved. The change was reverted. Check your connection and try again"));
     return false;
   }
 
@@ -198,7 +204,7 @@ export function ExerciseTaskList({
             className="flex items-center gap-1 text-[11.5px] font-semibold text-dash-green transition hover:brightness-110 sm:gap-1.5 sm:text-[13.5px]"
           >
             <Pencil className="h-[15px] w-[15px] sm:h-[17px] sm:w-[17px]" />
-            تغییر برنامه
+            {tr("تغییر برنامه", "Change plan")}
           </button>
         )}
       </div>
@@ -211,7 +217,7 @@ export function ExerciseTaskList({
         </div>
       ) : (
         <>
-          <div className="mt-1 shrink-0 text-[11px] text-dash-muted sm:text-[12.5px]">{todayPlan.focus}</div>
+          <div className="mt-1 shrink-0 text-[11px] text-dash-muted sm:text-[12.5px]">{focusDisplay(todayPlan.focus)}</div>
 
           {/* کارت با تعداد حرکت‌ها بزرگ نمی‌شه (درخواست صریح) — خود لیست
               سقف ارتفاع داره و داخلش اسکرول می‌شه. باگ قبلی: سقف روی قاب بیرونی
@@ -219,7 +225,7 @@ export function ExerciseTaskList({
               پس اسکرولر هیچ‌وقت اسکرول نمی‌کرد و ردیف‌ها از کارت بیرون می‌زدن.
               حالا max-height مستقیم روی خود عنصر overflow نشسته. */}
           <div className="mt-4 shrink-0" dir="ltr">
-          <div className="exercise-list-scroll thin-scroll overflow-y-auto overflow-x-hidden px-1" dir="rtl" style={{ maxHeight: 360 }}>
+          <div className="exercise-list-scroll thin-scroll overflow-y-auto overflow-x-hidden px-1" dir={isEn() ? "ltr" : "rtl"} style={{ maxHeight: 360 }}>
             <table className="exercise-plan-table">
               {active && (
                 <thead>
@@ -242,7 +248,7 @@ export function ExerciseTaskList({
                   return (
                     <tr key={item}>
                       <td className="epc-idx mono">{idx + 1}-</td>
-                      <td className="epc-name">{spec.baseName}</td>
+                      <td className="epc-name">{exerciseDisplayName(spec.baseName)}</td>
                       {active && <td className="epc-num mono">{spec.sets > 1 ? spec.sets : "—"}</td>}
                       {active && (
                         <td className="epc-num mono">
@@ -253,8 +259,8 @@ export function ExerciseTaskList({
                         <div className="flex shrink-0 items-center justify-end gap-2.5 sm:gap-3.5">
                           <button
                             type="button"
-                            aria-label="جایگزینی این حرکت"
-                            title="این تجهیزات رو ندارم — جایگزین کن"
+                            aria-label={tr("جایگزینی این حرکت", "Replace this exercise")}
+                            title={tr("این تجهیزات رو ندارم — جایگزین کن", "I don't have this equipment. Replace it")}
                             disabled={!editable || isSubbing || active || ended}
                             onClick={() => onSubstitute(todayPlan.day, item)}
                             className="flex h-7 w-7 shrink-0 items-center justify-center rounded-full text-dash-muted transition hover:bg-white/5 hover:text-dash-text disabled:opacity-30 sm:h-8 sm:w-8"
@@ -271,7 +277,7 @@ export function ExerciseTaskList({
                               onClick={() => setSetTrackerItem(item)}
                               className="exercise-start-btn"
                             >
-                              شروع
+                              {tr("شروع", "Start")}
                             </motion.button>
                           ) : (
                             <TickButton as="span" tone="exercise" size={24} checked={isChecked} state={showMiss ? "missed" : "idle"} />
@@ -289,19 +295,19 @@ export function ExerciseTaskList({
           {isFutureDay ? (
             <div className="exercise-locked-box mt-5 shrink-0">
               <Lock size={14} />
-              هنوز وقتش نرسیده
+              {tr("هنوز وقتش نرسیده", "Not yet")}
             </div>
           ) : ended && !active ? (
             // تمرین این روز «تمام» ثبت شده (ExerciseLog.completed) — همون
             // باکس وضعیت «هنوز وقتش نرسیده»، فقط با متن/رنگ خودش.
             <div className="exercise-locked-box exercise-state-done mt-5 shrink-0">
               <Check size={14} strokeWidth={3} />
-              انجام دادی
+              {tr("انجام دادی", "Done")}
             </div>
           ) : isPastDay && !active ? (
             <div className="exercise-locked-box exercise-state-missed mt-5 shrink-0">
               <X size={14} strokeWidth={3} />
-              وقتش گذشته
+              {tr("وقتش گذشته", "Overdue")}
             </div>
           ) : (
             editable && (!ended || active) && (
@@ -314,7 +320,7 @@ export function ExerciseTaskList({
                     style={{ borderColor: "var(--accent)", color: "var(--accent)" }}
                   >
                     <Play size={16} />
-                    شروع تمرین
+                    {tr("شروع تمرین", "Start workout")}
                   </button>
                 )}
                 {active && (
@@ -325,7 +331,7 @@ export function ExerciseTaskList({
                     className="flex w-full items-center justify-center gap-2 rounded-2xl border py-3 text-[13px] font-bold sm:text-[15px]"
                     style={{ borderColor: "#E05252", color: "#E05252" }}
                   >
-                    {ending ? <Spinner size={14} /> : "پایان تمرین"}
+                    {ending ? <Spinner size={14} /> : tr("پایان تمرین", "Finish workout")}
                   </button>
                 )}
               </div>
@@ -346,13 +352,13 @@ export function ExerciseTaskList({
           <div className="modal-overlay open" onClick={() => setConfirmEnd(false)} />
           <div className="modal-panel liquid-glass-panel dash-scope open">
             <div className="modal-head">
-              <div className="modal-title">هنوز تمرین مونده</div>
-              <button className="nav-close" onClick={() => setConfirmEnd(false)} aria-label="بستن">×</button>
+              <div className="modal-title">{tr("هنوز تمرین مونده", "Workout not finished")}</div>
+              <button className="nav-close" onClick={() => setConfirmEnd(false)} aria-label={tr("بستن", "Close")}>×</button>
             </div>
             <div className="modal-body">
               <div className="text-[12.5px] leading-relaxed text-dash-text sm:text-[13.5px]">
-                {remainingCount} حرکت از برنامه‌ی امروزت هنوز انجام نشده. اگه الان تمرین رو ببندی،
-                همون‌ها «انجام‌نشده» ثبت می‌شن.
+                {tr(`${remainingCount} حرکت از برنامه‌ی امروزت هنوز انجام نشده. اگه الان تمرین رو ببندی،
+                همون‌ها «انجام‌نشده» ثبت می‌شن.`, `${remainingCount} ${remainingCount === 1 ? "exercise" : "exercises"} from today's plan ${remainingCount === 1 ? "is" : "are"} still not done. If you finish now, they will be marked as not done.`)}
               </div>
               <div className="mt-4 flex flex-col gap-2.5">
                 <button
@@ -361,7 +367,7 @@ export function ExerciseTaskList({
                   className="flex w-full items-center justify-center gap-2 rounded-2xl py-3 text-[13px] font-bold sm:text-[14px]"
                   style={{ background: "var(--accent)", color: "var(--bg)", boxShadow: "0 8px 22px rgba(var(--accent-rgb),.3)" }}
                 >
-                  ادامه تمرین
+                  {tr("ادامه تمرین", "Continue workout")}
                 </button>
                 <button
                   type="button"
@@ -370,7 +376,7 @@ export function ExerciseTaskList({
                   className="flex w-full items-center justify-center gap-2 rounded-2xl border bg-transparent py-3 text-[13px] font-bold sm:text-[14px]"
                   style={{ borderColor: "#E05252", color: "#E05252" }}
                 >
-                  {ending ? <Spinner size={14} /> : "پایان تمرین"}
+                  {ending ? <Spinner size={14} /> : tr("پایان تمرین", "Finish workout")}
                 </button>
               </div>
             </div>

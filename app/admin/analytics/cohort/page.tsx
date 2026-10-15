@@ -3,6 +3,7 @@
 import { EmptyState, ErrorState, LoadingState } from "@/components/admin/EmptyState";
 import { useAdminData } from "@/components/admin/useAdminData";
 import { formatNumber } from "@/lib/adminFormat";
+import { tr } from "@/lib/i18n";
 
 type CohortRow = { monthKey: string; size: number; week1: number | null; month1: number | null; month2: number | null; month3: number | null };
 
@@ -21,7 +22,7 @@ export default function AdminCohortPage() {
   return (
     <section>
       <div className="admin-chart-card">
-        <div className="admin-chart-head"><span className="admin-chart-title">Cohort — کاربران بر اساس ماه ثبت‌نام</span></div>
+        <div className="admin-chart-head"><span className="admin-chart-title">{tr("Cohort — کاربران بر اساس ماه ثبت‌نام", "Cohort — users by sign-up month")}</span></div>
         {!rows ? (
           error ? <ErrorState message={error} onRetry={reload} /> : <LoadingState />
         ) : rows.length === 0 || rows.every((r) => r.size === 0) ? (
@@ -30,7 +31,7 @@ export default function AdminCohortPage() {
           <div className="admin-table-wrap">
             <table className="admin-table admin-cohort-table">
               <thead>
-                <tr><th>ماه</th><th>تعداد کاربر</th><th>باقی‌مانده هفته اول</th><th>ماه اول</th><th>ماه دوم</th><th>ماه سوم</th></tr>
+                <tr><th>{tr("ماه", "Month")}</th><th>{tr("تعداد کاربر", "Users")}</th><th>{tr("باقی‌مانده هفته اول", "Retained, week 1")}</th><th>{tr("ماه اول", "Month 1")}</th><th>{tr("ماه دوم", "Month 2")}</th><th>{tr("ماه سوم", "Month 3")}</th></tr>
               </thead>
               <tbody>
                 {rows.map((r) => (
@@ -48,7 +49,10 @@ export default function AdminCohortPage() {
         )}
       </div>
       <div className="admin-section-hint">
-        سلول «—» یعنی هنوز زمان کافی از ثبت‌نام این کوهورت نگذشته تا آن نقطه اندازه‌گیری بشه (یا کوهورت خالیه).
+        {tr(
+          "سلول «—» یعنی هنوز زمان کافی از ثبت‌نام این کوهورت نگذشته تا آن نقطه اندازه‌گیری بشه (یا کوهورت خالیه).",
+          "A «—» cell means not enough time has passed since this cohort signed up to measure that point yet (or the cohort is empty).",
+        )}
       </div>
     </section>
   );

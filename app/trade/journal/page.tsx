@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import { tr } from "@/lib/i18n";
 import { TradePageShell } from "@/components/TradePageShell";
 import { TradeAccountsPanel } from "@/components/TradeAccountsPanel";
 
@@ -9,11 +10,11 @@ export default function TradeJournalPage() {
 
   return (
     <TradePageShell
-      title="ژورنال‌نویسی"
+      title={tr("ژورنال‌نویسی", "Journal")}
       noScroll
       titleAction={
         <button type="button" className="trade-title-add-btn" onClick={() => setCreating(true)}>
-          + افزودن حساب
+          {tr("+ افزودن حساب", "+ Add account")}
         </button>
       }
     >

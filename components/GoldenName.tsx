@@ -11,6 +11,8 @@
 
 import type { ReactNode } from "react";
 import { resolveNameStyle } from "@/lib/nameStyle";
+import { tr } from "@/lib/i18n";
+import { brandName } from "@/lib/brand";
 
 export function GoldenName({ golden, staff, children, className }: { golden?: boolean | null; staff?: boolean | null; children: ReactNode; className?: string }) {
   const style = resolveNameStyle({ golden, staff });
@@ -22,7 +24,7 @@ export function GoldenName({ golden, staff, children, className }: { golden?: bo
   // حروف گرادیانی می‌شینه — هیچ بک‌گراند و هیچ filter‌ای در کار نیست.
   const text = typeof children === "string" || typeof children === "number" ? String(children) : undefined;
   return (
-    <span className={`name-glow ${cls}-glow${className ? ` ${className}` : ""}`} data-text={text} title={style === "toxic" ? "تیم آریون" : "همه‌ی اچیومنت‌ها باز شده"}>
+    <span className={`name-glow ${cls}-glow${className ? ` ${className}` : ""}`} data-text={text} title={style === "toxic" ? tr("تیم آریون", `${brandName()} team`) : tr("همه‌ی اچیومنت‌ها باز شده", "All achievements unlocked")}>
       <span className={cls}>{children}</span>
     </span>
   );

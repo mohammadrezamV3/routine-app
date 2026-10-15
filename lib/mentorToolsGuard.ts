@@ -2,6 +2,7 @@ import type { NextResponse } from "next/server";
 import type { MentorProfile } from "@prisma/client";
 import { prisma } from "@/lib/prisma";
 import { requireMentorsUser, forbidden } from "@/lib/mentorGuard";
+import { tr } from "@/lib/i18n";
 
 // نگهبان مشترک روت‌های ابزار منتور (/api/mentor/templates|replies|alerts|reports|export).
 // کاربر لاگین‌کرده + فلگ mentors (requireMentorsUser) + پروفایل منتوری.
@@ -16,8 +17,8 @@ export async function requireMentorTools(opts: { write?: boolean } = {}): Promis
   const g = await requireMentorsUser();
   if (!g.ok) return g;
   const profile = await prisma.mentorProfile.findUnique({ where: { userId: g.userId } });
-  if (!profile) return { ok: false, response: forbidden("اول پروفایل مربی‌گری بساز") };
-  if (opts.write && profile.suspendedAt) return { ok: false, response: forbidden("حساب مربی‌گری تو تعلیق شده") };
+  if (!profile) return { ok: false, response: forbidden(tr("اول پروفایل مربی‌گری بساز", "Create your mentor profile first")) };
+  if (opts.write && profile.suspendedAt) return { ok: false, response: forbidden(tr("حساب مربی‌گری تو تعلیق شده", "Your mentor account is temporarily closed")) };
   return { ok: true, userId: g.userId, profile };
 }
 

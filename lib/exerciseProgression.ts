@@ -17,6 +17,7 @@
 // ذخیره می‌شود — همان قرارداد مهمان/لاگین. نشانگر (since, lag) گاهی جلو
 // کشیده می‌شود (rebase) تا بازه‌ی لاگ‌هایی که باید خوانده شود کوتاه بماند.
 import { FA_WEEKDAY, isoLocal } from "./jalali";
+import { tr } from "./i18n";
 import type { ExerciseLogEntry, ExerciseLogRange } from "./exerciseStats";
 
 export type MissedDayMode = "skip" | "stay";
@@ -34,8 +35,8 @@ export type MissedDayPref = {
 export const DEFAULT_MISSED_DAY_PREF: MissedDayPref = { mode: "skip", since: null, lag: 0, planId: null };
 
 export const MISSED_DAY_MODE_OPTIONS: { value: MissedDayMode; label: string }[] = [
-  { value: "skip", label: "رد شدن" },
-  { value: "stay", label: "ماندن" },
+  { value: "skip", get label() { return tr("رد شدن", "Skip"); } },
+  { value: "stay", get label() { return tr("ماندن", "Stay"); } },
 ];
 
 const ISO_RE = /^\d{4}-\d{2}-\d{2}$/;

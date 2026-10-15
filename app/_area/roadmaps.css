@@ -1,0 +1,921 @@
+/* auto-split from the global CSS (css-split): rules used only by this route group. Imported first thing by its layout/page. */
+
+.disclaimer-note{font-size:11px; color:var(--text); margin-top:14px; line-height:1.7;}
+
+.disclaimer-warn{color:#E05252; font-weight:700;}
+
+@media (min-width:1024px) {
+  .roadmaps-desktop{ width:900px; max-width:900px; margin-inline-start:-140px; }}
+
+.add-program-glass .day-pill{
+    border-radius:999px;
+    backdrop-filter:blur(14px) saturate(160%); -webkit-backdrop-filter:blur(14px) saturate(160%);
+  }
+
+body:not([data-theme="light"]) .add-program-glass .day-pill{
+    background:rgba(255,255,255,.05); border-color:rgba(255,255,255,.1);
+  }
+
+body[data-theme="light"] .add-program-glass .day-pill{
+    background:rgba(255,255,255,.35); border-color:rgba(0,0,0,.08);
+  }
+
+.add-program-glass .day-pill.on::after{ border-radius:999px; }
+
+/* مثال‌های داخل فیلد (placeholder) قبلا با var(--muted2) خیلی کم‌کنتراست
+     بودن و دیده نمی‌شدن؛ var(--muted) خواناتره. */
+
+.add-program-glass .wsearch-newform-name::placeholder,
+  .add-program-glass .wsearch-add-time::placeholder{ color:var(--muted); opacity:.85; }
+
+/* پاپ‌آپ‌های افزودن/ویرایش/انتقال برنامه — بک‌گراند پشت پاپ‌آپ خیلی بیشتر بلور می‌شه.
+     روی خود کلاس (نه فقط .open) تا بلور حین فید هم ثابت بماند. */
+
+.wsearch-newform-overlay.strong-blur{
+    backdrop-filter:var(--popup-backdrop-filter-strong); -webkit-backdrop-filter:var(--popup-backdrop-filter-strong);
+    background:rgba(0,0,0,.55);
+  }
+
+/* پاپ‌آپ‌های افزودن/ویرایش/انتقال برنامه (شناسایی با add-program-glass
+     داخلشون) یه‌کوچولو بزرگ‌تر می‌شن تا معمولا محتوا/دکمه‌ها جا بشن بدون
+     اسکرول، و اسکرول‌بار (در صورت لزوم، مثلا چندتا ردیف روز) کاملا مخفیه. */
+
+.wsearch-newform:has(.add-program-glass){
+    max-height:min(84vh, 560px);
+    scrollbar-width:none; -ms-overflow-style:none;
+  }
+
+/* پاپ‌آپ «افزودن برنامه»ی بدنسازی (AI/دستی) یه‌کوچولو عریض‌تر از بقیه‌ی
+     پاپ‌آپ‌های add-program-glass لازم داره تا دو باکس انتخاب جا باشن */
+
+.wsearch-newform:has(.exercise-add-glass){ max-width:500px; }
+
+.wsearch-newform:has(.add-program-glass)::-webkit-scrollbar{ display:none; width:0; height:0; }
+
+.wsearch-newform-title.accent{color:var(--accent);}
+
+.wsearch-newform label{display:block; font-size:11px; color:var(--muted2); margin:8px 0 5px; font-family:var(--font-latin), var(--font-vazir), sans-serif;}
+
+.wsearch-submit-btn:disabled{ cursor:default; }
+
+.wsearch-submit-btn.error, body[data-theme="light"] .wsearch-submit-btn.error{
+    background:#E05252; border-color:#E05252; color:#fff; box-shadow:none;
+    animation:wnsShake .4s ease;
+  }
+
+@keyframes wnsShake{
+    0%,100%{transform:translateX(0);}
+    20%{transform:translateX(-4px);}
+    40%{transform:translateX(4px);}
+    60%{transform:translateX(-3px);}
+    80%{transform:translateX(3px);}
+  }
+
+/* بنر خطای بالای صفحه حذف شد — درخواست صریح کاربر: «تمام ارورهای بالای
+     صفحه رو حذف کن». به‌جایش هر فرم/پاپ‌آپ خطایش را داخل خودش نشان می‌دهد،
+     یعنی دقیقا همان‌جایی که کاربر دارد نگاه می‌کند. */
+
+.form-inline-error{
+    margin-top:10px; padding:9px 12px; border-radius:12px;
+    font-size:12px; font-weight:600; line-height:1.8; text-align:center;
+    color:#E05252; border:1px solid rgba(224,82,82,.35);
+  }
+
+@media (hover:hover) {
+  body[data-theme="light"] .module-gate-cta:hover, body:not([data-theme="light"]) .module-gate-cta:hover{
+  background:var(--accent);
+}}
+
+@media (pointer: coarse) {
+  .wsearch-newform:has(.add-program-glass){ backdrop-filter:blur(10px) saturate(160%); -webkit-backdrop-filter:blur(10px) saturate(160%); }}
+
+/* .wsearch-newform (افزودن/ویرایش برنامه و مشابه‌هاش) توی تم تاریک از قبل
+   یه fallback توپر داشت (خط ۲۰۷۱)؛ توی تم روشن اصلا نداشت — روی
+   data-perf=low بدون بلور فقط ۹٪ سفید می‌موند، تقریبا کاملا شفاف. */
+
+html[data-perf="low"] body[data-theme="light"] .wsearch-newform{ background:rgba(255,255,255,.97) !important; }
+
+/* بدون بلور هیچ درصد شفافیتی «شیشه» نمی‌سازد، فقط پشتش را نشان می‌دهد.
+   روی دستگاه‌های لمسی این سطح‌ها کاملا کدر می‌شوند تا هیچ‌وقت دورنگ نشوند.
+   (سلکتور با :has اسپسیفیسیتی بالاتری از قانون پایه دارد، پس اینجا هم
+   همان :has تکرار می‌شود تا واقعا غالب شود.) */
+
+html[data-perf="low"] .wsearch-newform:has(.add-program-glass),
+html[data-perf="low"] body:not([data-theme="light"]) .wsearch-newform:has(.add-program-glass),
+html[data-perf="low"] body[data-theme="light"] .wsearch-newform:has(.add-program-glass),
+html[data-perf="low"] .trade-drawer{ background:var(--surface-2) !important; }
+
+.trade-back-link{
+  display:inline-flex; align-items:center; gap:6px; font-size:14px; font-weight:600; color:var(--muted);
+  text-decoration:none; margin-bottom:14px; padding:4px 2px; transition:color .18s ease;
+}
+
+@media (hover:hover) {
+  .trade-back-link:hover{ color:var(--accent); }
+  .trade-danger-btn:hover:not(:disabled){ background:rgba(224,82,82,.1); border-color:#E05252; color:#E05252; }}
+
+.trade-danger-btn:active:not(:disabled){ transform:scale(.97); }
+
+.trade-danger-btn:disabled{ opacity:.45; cursor:default; }
+
+.trade-modal-actions{ display:flex; gap:9px; margin-top:18px; }
+
+.trade-modal-actions button{ flex:1; }
+
+/* حالت خالی بخش‌های ترید (یادداشت‌ها/چک‌لیست‌ها) — آیکون وسط‌چین به‌جای
+   یک خط متن تنها. */
+
+.trade-empty-state{
+  display:flex; flex-direction:column; align-items:center; justify-content:center; gap:12px;
+  padding:52px 20px; text-align:center; color:var(--muted2);
+}
+
+.trade-empty-state svg{ opacity:.45; }
+
+/* سرصفحه‌ی تک‌ردیفه: «‹ ترید» و عنوان کنار هم، نه زیر هم. هر ردیف جدا
+   در صفحه‌ی چارت یعنی همان‌قدر ارتفاع کمتر برای خود چارت. */
+
+.trade-head-row h1{ margin-bottom:0; }
+
+@media (hover:hover) {
+  .trade-title-add-btn:hover{ opacity:.78; }}
+
+.trade-title-add-btn:active{ transform:scale(.97); }
+
+/* ── جاگیر سبک داخل صفحه (components/PageLoader.tsx) ─────────────────────
+   فقط یک اسکلت ساده داخل محتوا (زیر هدر، بدون پرده و بدون لوگو). تا 200ms هیچی
+   دیده نمی‌شه (animation-delay)، پس ناوبری سریع هیچ چشمک و لودینگی نداره. */
+
+.page-loader{
+  width:100%; display:flex; flex-direction:column; gap:12px; padding:8px 0 24px;
+  opacity:0; animation:pl-in .3s ease .2s forwards;
+}
+
+@keyframes pl-in{ to{ opacity:1; } }
+
+.page-loader-skel{ width:100%; display:flex; flex-direction:column; gap:12px; }
+
+.pls-line, .pls-card{ display:block; position:relative; overflow:hidden; border-radius:10px; background:rgba(var(--accent-rgb),.07); }
+
+.pls-line{ height:16px; }
+
+.pls-line.pls-thin{ height:11px; opacity:.7; }
+
+.pls-grid{ display:grid; grid-template-columns:1fr 1fr; gap:12px; margin-top:8px; }
+
+.pls-card{ height:120px; border-radius:18px; border:1px solid var(--box-line); background:var(--box-bg); }
+
+.pls-card.pls-wide{ grid-column:1 / -1; height:150px; }
+
+.pls-line::after, .pls-card::after{
+  content:""; position:absolute; inset:0; transform:translateX(100%);
+  background:linear-gradient(90deg, transparent, rgba(255,255,255,.06), transparent);
+  animation:pl-shimmer 1.3s ease-in-out infinite;
+}
+
+body[data-theme="light"] .pls-line::after, body[data-theme="light"] .pls-card::after{ background:linear-gradient(90deg, transparent, rgba(255,255,255,.6), transparent); }
+
+@keyframes pl-shimmer{ to{ transform:translateX(-100%); } }
+
+@media (prefers-reduced-motion:reduce) {
+  .pls-line::after, .pls-card::after{ animation:none; }}
+
+/* ============================================================
+   رودمپ (rp-) — هاب، صفحه‌ی مسیر، کارت مرحله، ویزارد
+   ------------------------------------------------------------
+   سطح‌ها همان .trade-surface بقیه‌ی اپ‌اند؛ این‌جا فقط چیدمان. ریست
+   سراسری `button{}` به هر دکمه بک‌گراند شیشه‌ای می‌دهد — همه‌ی دکمه‌های
+   این بخش (به‌جز trade-primary/danger که خودشان تعریف دارند) صریح
+   background:none/box-shadow:none/backdrop-filter:none می‌گیرند تا شفاف
+   بمانند.
+   ============================================================ */
+
+.rp-hub, .rp-page{ padding-bottom:40px; }
+
+/* باکس بیرونی مشترک: همه‌ی کارت‌های رودمپ زیر یک .trade-surface واحد. */
+
+.rp-grid-box{ margin-top:16px; padding:14px; }
+
+/* ── هاب ── */
+
+.rp-grid{ display:grid; grid-template-columns:1fr; gap:12px; }
+
+@media (min-width:720px) {
+  .rp-grid{ grid-template-columns:1fr 1fr; }}
+
+.rp-card{
+  position:relative; display:flex; flex-direction:column; padding:16px 17px; text-decoration:none; color:var(--text);
+}
+
+@media (hover:hover) and (pointer:fine) {
+  .rp-card:hover{ border-color:var(--accent); }}
+
+.rp-card:active{ transform:scale(.99); }
+
+/* عنوان/زیرعنوان در یک ردیف flex کنار دکمه‌ی حذف‌اند (نه absolute روی
+   متن) تا هیچ‌وقت زیر آیکون سطل‌زباله نروند — چه فارسی چه انگلیسی. */
+
+.rp-card-head{ display:flex; align-items:flex-start; justify-content:space-between; gap:8px; }
+
+.rp-card-delete{ flex-shrink:0; margin:-6px 0 0; margin-inline-start:-6px; }
+
+.rp-card-eyebrow{
+  flex:1; min-width:0; font-size:10.5px; font-weight:700; color:var(--accent);
+  unicode-bidi:plaintext; text-align:start;
+}
+
+.rp-card-title{
+  margin-top:4px; font-size:15px; font-weight:800; line-height:1.7;
+  unicode-bidi:plaintext; text-align:start;
+}
+
+.rp-card-desc{
+  margin:5px 0 0; font-size:12px; line-height:1.95; color:var(--muted);
+  display:-webkit-box; -webkit-line-clamp:2; -webkit-box-orient:vertical; overflow:hidden;
+}
+
+.rp-card-meta{ display:flex; flex-wrap:wrap; gap:6px 12px; margin-top:11px; font-size:11px; color:var(--muted); }
+
+.rp-card-meta span{ display:inline-flex; align-items:center; gap:4px; }
+
+.rp-card-foot{ display:flex; align-items:center; gap:10px; margin-top:auto; padding-top:14px; }
+
+.rp-card-foot .rp-bar{ flex:1; }
+
+/* وضعیت ساخت پس‌زمینه (RoadmapBuildStatus) — بدون بک‌گراند جدید؛ فقط بوردر،
+   متن و همان .rp-bar. */
+
+.rp-build{ display:flex; flex-direction:column; gap:8px; margin:0 0 14px; padding:12px 14px; border:1px solid rgba(var(--accent-rgb),.35); border-radius:16px; }
+
+.rp-build.compact{ margin:12px 0 0; padding:9px 11px; border-radius:12px; }
+
+.rp-build-head{ display:flex; align-items:center; gap:7px; font-size:12px; font-weight:700; color:var(--accent); }
+
+.rp-build-count{ margin-inline-start:auto; font-size:11px; color:var(--muted); font-weight:700; }
+
+.rp-build-bar span{ transition:width .6s cubic-bezier(.22,1,.36,1); }
+
+.rp-build-hint{ margin:0; font-size:11.5px; color:var(--muted); line-height:1.8; }
+
+.rp-build.is-failed{ flex-direction:row; align-items:center; gap:7px; border-color:rgba(var(--pnl-loss-rgb),.4); color:var(--pnl-loss); font-size:12px; }
+
+.rp-card-pct{ flex-shrink:0; font-size:11px; font-weight:800; color:var(--accent); }
+
+.rp-card-arrow{ flex-shrink:0; color:var(--muted2); transition:transform .18s ease, color .18s ease; }
+
+@media (hover:hover) and (pointer:fine) {
+  .rp-card:hover .rp-card-arrow{ color:var(--accent); transform:translateX(-3px); }}
+
+.rp-bar{ height:6px; border-radius:999px; background:rgba(var(--surface-rgb),.22); overflow:hidden; }
+
+.rp-bar span{ display:block; height:100%; border-radius:999px; background:var(--accent); transition:width .4s cubic-bezier(.22,1,.36,1); }
+
+.rp-empty{
+  margin-top:16px; padding:34px 20px 28px; text-align:center;
+  display:flex; flex-direction:column; align-items:center;
+}
+
+.rp-empty-icon{
+  width:54px; height:54px; border-radius:16px; display:flex; align-items:center; justify-content:center;
+  color:var(--accent); border:1px solid rgba(var(--accent-rgb),.35);
+}
+
+.rp-empty h2{ margin:14px 0 0; font-size:16px; font-weight:800; color:var(--text); }
+
+.rp-empty p{ margin:8px auto 0; max-width:440px; font-size:12.5px; line-height:2.05; color:var(--muted); }
+
+.rp-empty-chips{ display:flex; flex-wrap:wrap; justify-content:center; gap:7px; margin-top:16px; max-width:480px; }
+
+.rp-chip-btn{
+  padding:7px 13px; border-radius:999px; font-size:11.5px; font-weight:600; color:var(--muted);
+  background:none; border:1px solid var(--surface-line); box-shadow:none;
+  backdrop-filter:none; -webkit-backdrop-filter:none;
+  transition:color .15s ease, border-color .15s ease;
+}
+
+@media (hover:hover) and (pointer:fine) {
+  .rp-chip-btn:hover{ color:var(--accent); border-color:var(--accent); background:none; box-shadow:none; }}
+
+.rp-empty-cta{ margin-top:18px; }
+
+/* ── هیروی صفحه‌ی مسیر ── */
+
+.rp-hero{ padding:18px 20px 20px; }
+
+.rp-hero-top{ display:flex; align-items:center; justify-content:space-between; gap:12px; }
+
+.rp-eyebrow{ font-size:11px; font-weight:700; color:var(--accent); unicode-bidi:plaintext; }
+
+.rp-hero-main{ display:flex; align-items:flex-start; gap:18px; margin-top:6px; }
+
+.rp-hero-text{ flex:1; min-width:0; }
+
+.rp-hero-text h1{ margin:0; font-size:21px; font-weight:800; line-height:1.65; color:var(--text); }
+
+.rp-hero-text p{ margin:8px 0 0; font-size:12.5px; line-height:2.05; color:var(--muted); }
+
+.rp-ring{ position:relative; flex-shrink:0; width:74px; height:74px; }
+
+.rp-ring-text{ position:absolute; inset:0; display:flex; flex-direction:column; align-items:center; justify-content:center; line-height:1.3; }
+
+.rp-hero-goal{
+  display:flex; gap:8px; margin-top:14px; padding:10px 13px; border-radius:12px;
+  font-size:12.5px; line-height:2; color:var(--text); border:1px solid rgba(var(--accent-rgb),.3);
+}
+
+.rp-hero-goal svg{ flex-shrink:0; margin-top:5px; color:var(--accent); }
+
+.rp-stats{
+  display:grid; grid-template-columns:repeat(2, 1fr); gap:1px; margin-top:14px;
+  border:1px solid var(--surface-line); border-radius:14px; overflow:hidden;
+}
+
+@media (min-width:640px) {
+  .rp-stats{ grid-template-columns:repeat(4, 1fr); }}
+
+.rp-stat{ display:flex; flex-direction:column; gap:3px; padding:10px 12px; outline:1px solid var(--surface-line); }
+
+.rp-stat-label{ display:inline-flex; align-items:center; gap:5px; font-size:10.5px; color:var(--muted); }
+
+.rp-stat-label svg{ color:var(--accent); }
+
+.rp-stat-value{ font-size:12.5px; font-weight:700; color:var(--text); line-height:1.7; }
+
+.rp-next{
+  display:flex; align-items:center; gap:10px; width:100%; margin-top:14px; padding:11px 14px;
+  border-radius:13px; text-align:start; font:inherit; color:var(--text); cursor:pointer;
+  background:none; border:1px dashed rgba(var(--accent-rgb),.5); box-shadow:none;
+  backdrop-filter:none; -webkit-backdrop-filter:none; transition:border-color .16s ease;
+}
+
+@media (hover:hover) and (pointer:fine) {
+  .rp-next:hover{ border-color:var(--accent); background:none; box-shadow:none; }}
+
+.rp-next-label{ flex-shrink:0; font-size:10.5px; font-weight:800; color:var(--accent); }
+
+.rp-next-title{ flex:1; min-width:0; font-size:12.5px; font-weight:700; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
+
+.rp-next svg{ flex-shrink:0; color:var(--accent); }
+
+.rp-notice{
+  margin-top:14px; padding:10px 14px; border-radius:12px; font-size:12px; line-height:1.95;
+  color:#E0A452; border:1px solid rgba(224,164,82,.35);
+}
+
+.rp-tabs{ margin:18px 0 6px; }
+
+/* ── تایم‌لاین مرحله‌ها ── */
+
+.rp-timeline{ list-style:none; margin:14px 0 0; padding:0; display:flex; flex-direction:column; }
+
+.rp-stage{ position:relative; display:flex; gap:12px; padding-bottom:14px; scroll-margin-top:84px; }
+
+.rp-stage::before{
+  content:""; position:absolute; top:36px; bottom:0; inset-inline-start:17px;
+  width:2px; background:rgba(var(--surface-rgb),.24);
+}
+
+.rp-stage:last-child::before{ display:none; }
+
+.rp-stage.done::before{ background:rgba(var(--accent-rgb),.45); }
+
+.rp-stage-num{
+  position:relative; z-index:1; flex-shrink:0; margin-top:10px;
+  width:36px; height:36px; padding:0; border-radius:50%;
+  display:flex; align-items:center; justify-content:center;
+  font-size:13px; font-weight:800; color:var(--muted);
+  background:var(--surface-2); border:1.5px solid var(--surface-line); box-shadow:none;
+  backdrop-filter:none; -webkit-backdrop-filter:none;
+  transition:color .2s ease, border-color .2s ease, background .2s ease;
+}
+
+@media (hover:hover) {
+  .rp-stage-num:hover{ border-color:var(--accent); color:var(--accent); background:var(--surface-2); box-shadow:none; }}
+
+.rp-stage.done .rp-stage-num, .rp-stage.done .rp-stage-num:hover{ color:#fff; background:var(--accent); border-color:var(--accent); }
+
+.rp-stage-card{ flex:1; min-width:0; overflow:hidden; }
+
+.rp-stage.open .rp-stage-card{ border-color:rgba(var(--accent-rgb),.4); }
+
+.rp-stage-head{
+  display:flex; align-items:center; gap:10px; width:100%; padding:13px 15px;
+  text-align:start; font:inherit; color:var(--text); cursor:pointer; border-radius:0;
+  background:none; border:0; box-shadow:none; backdrop-filter:none; -webkit-backdrop-filter:none;
+}
+
+@media (hover:hover) {
+  .rp-stage-head:hover{ background:none; box-shadow:none; }}
+
+.rp-stage-head-main{ flex:1; min-width:0; }
+
+.rp-stage-head h3{ margin:0; font-size:14.5px; font-weight:800; line-height:1.75; }
+
+.rp-stage.done .rp-stage-head h3{ color:var(--muted); }
+
+.rp-stage-sub{ display:flex; flex-wrap:wrap; gap:4px 12px; margin-top:2px; font-size:10.5px; color:var(--muted); }
+
+.rp-pending{ color:#E0A452; }
+
+.rp-stage-chevron{ flex-shrink:0; color:var(--muted2); transition:transform .22s ease; }
+
+.rp-stage.open .rp-stage-chevron{ transform:rotate(180deg); color:var(--accent); }
+
+.rp-stage-body{ padding:2px 15px 16px; animation:tradeFadeIn .24s ease both; }
+
+.rp-goal{ display:flex; gap:7px; font-size:12.5px; line-height:1.95; color:var(--accent-soft); font-weight:600; }
+
+.rp-goal svg{ flex-shrink:0; margin-top:5px; }
+
+.rp-why{ margin:6px 0 0; font-size:12px; line-height:2; color:var(--muted); }
+
+.rp-sec{ margin-top:16px; padding-top:14px; border-top:1px solid var(--surface-line); }
+
+.rp-sec-title{
+  display:flex; align-items:center; gap:7px; margin-bottom:10px;
+  font-size:12.5px; font-weight:800; color:var(--text);
+}
+
+.rp-sec-title svg{ color:var(--accent); flex-shrink:0; }
+
+.rp-sec.warn .rp-sec-title svg{ color:#E0A452; }
+
+.rp-tags{ display:flex; flex-wrap:wrap; gap:6px; }
+
+.rp-tag{
+  padding:4px 10px; border-radius:8px; font-size:11px; font-weight:600; color:var(--muted);
+  border:1px solid var(--surface-line); unicode-bidi:plaintext;
+}
+
+/* سرفصل‌ها: شماره‌ی فارسی، عنوان، توضیح، ریزمبحث‌ها */
+
+.rp-topics{ margin:0; padding-inline-start:20px; list-style-type:persian; display:flex; flex-direction:column; gap:13px; }
+
+.rp-topics > li::marker{ color:var(--accent); font-weight:800; }
+
+.rp-topic-title{ font-size:13px; font-weight:800; color:var(--text); line-height:1.8; }
+
+.rp-topic-detail{ margin:3px 0 0; font-size:12px; line-height:2; color:var(--muted); }
+
+.rp-points{ margin:7px 0 0; padding:0; list-style:none; display:flex; flex-direction:column; gap:5px; }
+
+.rp-points li{
+  position:relative; padding-inline-start:14px; font-size:12px; line-height:1.95; color:var(--text);
+}
+
+.rp-points.warn li::before{ background:#E0A452; }
+
+/* کارهای عملی — چک‌لیست */
+
+.rp-tasks{ margin:0; padding:0; list-style:none; display:flex; flex-direction:column; gap:10px; }
+
+.rp-tasks li{ display:flex; gap:10px; }
+
+.rp-task-body{ flex:1; min-width:0; }
+
+.rp-task-title{ font-size:12.5px; font-weight:700; color:var(--text); line-height:1.9; }
+
+.rp-tasks li.checked .rp-task-title{ color:var(--muted); text-decoration:line-through; text-decoration-color:rgba(var(--accent-rgb),.6); }
+
+.rp-task-body p{ margin:2px 0 0; font-size:12px; line-height:2; color:var(--muted); }
+
+.rp-task-output{ margin-top:4px; font-size:11.5px; line-height:1.9; color:var(--text); }
+
+.rp-project{
+  margin-top:16px; padding:13px 15px; border-radius:14px;
+  border:1px dashed rgba(var(--accent-rgb),.55);
+}
+
+.rp-project-label{ display:flex; align-items:center; gap:6px; font-size:11px; font-weight:800; color:var(--accent); }
+
+.rp-project-title{ margin-top:5px; font-size:13.5px; font-weight:800; color:var(--text); line-height:1.8; }
+
+.rp-project p{ margin:4px 0 0; font-size:12px; line-height:2; color:var(--muted); }
+
+.rp-tools{ margin:0; padding:0; list-style:none; display:flex; flex-direction:column; gap:8px; }
+
+.rp-tools li{ display:flex; flex-direction:column; gap:1px; font-size:12px; line-height:1.9; color:var(--muted); }
+
+.rp-tool-name{
+  align-self:flex-start; font-size:12.5px; font-weight:800; color:var(--text); text-decoration:none;
+  unicode-bidi:plaintext; transition:color .15s ease;
+}
+
+.rp-resources{ margin:0; padding:0; list-style:none; display:flex; flex-direction:column; gap:10px; }
+
+.rp-resources li{ display:flex; gap:9px; align-items:flex-start; }
+
+.rp-res-type{
+  flex-shrink:0; min-width:44px; margin-top:2px; padding:2px 7px; border-radius:7px; text-align:center;
+  font-size:10px; font-weight:700; color:var(--accent); border:1px solid rgba(var(--accent-rgb),.35);
+}
+
+.rp-res-body{ flex:1; min-width:0; }
+
+.rp-res-body a{
+  display:inline-flex; align-items:baseline; gap:5px; font-size:12.5px; font-weight:700;
+  color:var(--text); text-decoration:none; unicode-bidi:plaintext; transition:color .15s ease;
+}
+
+.rp-res-body a svg{ opacity:.45; flex-shrink:0; }
+
+.rp-res-source{ margin-inline-start:7px; font-size:10.5px; color:var(--muted2); }
+
+.rp-res-body p{ margin:1px 0 0; font-size:11.5px; line-height:1.9; color:var(--muted); }
+
+.rp-done{ margin:0; padding:0; list-style:none; display:flex; flex-direction:column; gap:7px; }
+
+.rp-done li{ display:flex; gap:8px; font-size:12px; line-height:1.95; color:var(--text); }
+
+.rp-done svg{ flex-shrink:0; margin-top:5px; color:var(--accent); }
+
+.rp-pending-box{ margin-top:12px; display:flex; flex-direction:column; align-items:flex-start; gap:11px; }
+
+.rp-pending-box p{ margin:0; font-size:12px; line-height:2; color:var(--muted); }
+
+.rp-stage-actions{ display:flex; flex-wrap:wrap; gap:8px; margin-top:18px; padding-top:14px; border-top:1px solid var(--surface-line); }
+
+.rp-ghost-btn{
+  display:inline-flex; align-items:center; gap:6px;
+  padding:7px 13px; border-radius:999px; font-size:11.5px; font-weight:700;
+  color:var(--muted); background:none; border:1px solid var(--surface-line);
+  box-shadow:none; backdrop-filter:none; -webkit-backdrop-filter:none;
+  transition:color .16s ease, border-color .16s ease;
+}
+
+@media (hover:hover) {
+  .rp-ghost-btn:hover{ color:var(--accent); border-color:var(--accent); background:none; box-shadow:none; }}
+
+.rp-ghost-btn.on{ color:var(--accent); border-color:var(--accent); }
+
+.rp-ghost-btn:disabled{ opacity:.55; cursor:default; }
+
+/* افزودن مرحله به برنامه‌ی هفتگی (RoadmapStepToProgram) */
+
+.rp-toprogram{ margin-top:10px; }
+
+.rp-toprogram > .rp-ghost-btn{ color:var(--accent); border-color:rgba(var(--accent-rgb),.4); }
+
+.rp-add-panel{ margin-top:4px; padding:14px; border-radius:14px; border:1px solid var(--surface-line); }
+
+.rp-add-title{ font-size:12px; font-weight:700; color:var(--text); margin-bottom:10px; }
+
+.rp-day-row{ display:flex; flex-wrap:wrap; gap:6px; }
+
+.rp-day{
+  padding:6px 11px; border-radius:999px; font-size:11px; font-weight:600;
+  color:var(--muted); background:none; border:1px solid var(--surface-line);
+  box-shadow:none; backdrop-filter:none; -webkit-backdrop-filter:none;
+  transition:color .16s ease, border-color .16s ease;
+}
+
+@media (hover:hover) {
+  .rp-day:hover{ color:var(--text); background:none; box-shadow:none; }}
+
+.rp-day.on, .rp-day.on:hover{ color:var(--accent); border-color:var(--accent); }
+
+.rp-time-row{ display:flex; gap:11px; margin-top:12px; }
+
+.rp-time-row label{ flex:1; display:flex; flex-direction:column; gap:5px; }
+
+.rp-time-row input{
+  width:100%; box-sizing:border-box; padding:9px 11px; border-radius:10px;
+  font-size:12.5px; color:var(--text); direction:ltr; text-align:center;
+  background:none; border:1px solid var(--surface-line); outline:none;
+}
+
+.rp-add-actions{ display:flex; gap:9px; margin-top:14px; }
+
+.rp-add-actions button{ flex:1; }
+
+.rp-added{ display:inline-flex; align-items:center; gap:6px; margin-top:12px; font-size:11.5px; font-weight:700; color:var(--accent); }
+
+/* ── راهنما ── */
+
+.rp-guide{ margin-top:14px; padding:18px 20px 22px; }
+
+.rp-guide h2{ margin:22px 0 0; font-size:14.5px; font-weight:800; color:var(--accent); line-height:1.9; }
+
+.rp-guide h2:first-child{ margin-top:0; }
+
+.rp-guide p{ margin:9px 0 0; font-size:13px; line-height:2.2; color:var(--text); }
+
+.rp-guide-li{
+  position:relative; margin:7px 0 0; padding-inline-start:16px;
+  font-size:12.5px; line-height:2.05; color:var(--text);
+}
+
+.rp-guide-li::before{
+  content:""; position:absolute; inset-inline-start:4px; top:13px;
+  width:5px; height:5px; border-radius:50%; background:var(--accent);
+}
+
+/* ── نمای کلی ── */
+
+.rp-overview{ display:grid; grid-template-columns:1fr; gap:12px; margin-top:14px; }
+
+@media (min-width:720px) {
+  .rp-overview{ grid-template-columns:1fr 1fr; }
+  .rp-ov-card:last-child{ grid-column:1 / -1; }}
+
+.rp-ov-card{ padding:15px 17px; }
+
+.rp-ov-text{ margin:0; font-size:12.5px; line-height:2; color:var(--text); }
+
+.rp-mini-stages{ margin:0; padding:0; list-style:none; display:flex; flex-direction:column; gap:2px; }
+
+.rp-mini-stages button{
+  display:flex; align-items:center; gap:10px; width:100%; padding:8px 6px; border-radius:10px;
+  text-align:start; font:inherit; color:var(--text); cursor:pointer;
+  background:none; border:0; box-shadow:none; backdrop-filter:none; -webkit-backdrop-filter:none;
+}
+
+.rp-mini-n{
+  flex-shrink:0; width:24px; height:24px; border-radius:50%; display:flex; align-items:center; justify-content:center;
+  font-size:11px; font-weight:800; color:var(--muted); border:1.5px solid var(--surface-line);
+}
+
+.rp-mini-stages li.done .rp-mini-n{ color:#fff; background:var(--accent); border-color:var(--accent); }
+
+.rp-mini-title{ flex:1; min-width:0; font-size:12.5px; font-weight:700; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
+
+.rp-mini-stages li.done .rp-mini-title{ color:var(--muted); }
+
+.rp-mini-dur{ flex-shrink:0; font-size:10.5px; color:var(--muted2); }
+
+/* ── فوتر هشدار AI — فقط متن قرمز، یک خط (درخواست صریح) ── */
+
+.rp-disclaimer{
+  margin:20px 0 0; font-size:11px; line-height:1.6; color:var(--text); text-align:start;
+  white-space:nowrap; overflow:hidden; text-overflow:ellipsis;
+}
+
+/* ── ویزارد (داخل همان پاپ‌آپ مشترک .wsearch-newform) ── */
+
+.wsearch-newform:has(.rp-wiz){ max-height:min(90vh, 680px); }
+
+.rp-wiz-steps{ display:flex; gap:5px; margin:2px 0 14px; }
+
+.rp-wiz-steps span{ flex:1; height:3px; border-radius:999px; background:rgba(var(--surface-rgb),.25); transition:background .3s ease; }
+
+.rp-wiz-label{ display:block; margin-top:16px; }
+
+.rp-wiz-optional{ font-weight:400; color:var(--muted2); }
+
+.rp-wiz-hint{ margin-top:11px; font-size:11.5px; line-height:2; color:var(--muted); }
+
+.rp-wiz-chips{ display:flex; flex-wrap:wrap; gap:7px; margin-top:10px; }
+
+.rp-wiz-chip{
+  flex:0 0 auto; padding:9px 14px; border-radius:11px; cursor:pointer;
+  border:1px solid var(--line); background:rgba(var(--bg-rgb),.5);
+  color:var(--muted); font:inherit; font-size:12px; font-weight:700; line-height:1.5;
+  box-shadow:none; backdrop-filter:none; -webkit-backdrop-filter:none;
+  transition:border-color .15s ease, background .15s ease, color .15s ease, transform .1s ease;
+}
+
+@media (hover:hover) and (pointer:fine) {
+  .rp-wiz-chip:hover{ border-color:var(--accent); color:var(--text); }}
+
+.rp-wiz-chip:active{ transform:scale(.97); }
+
+.rp-wiz-chip.on,
+body:not([data-theme="light"]) .rp-wiz-chip.on,
+body[data-theme="light"] .rp-wiz-chip.on{ color:var(--accent); border-color:var(--accent); background:var(--accent-dim); }
+
+.rp-wiz-loading{ display:flex; flex-direction:column; align-items:center; gap:10px; padding:22px 6px 16px; text-align:center; }
+
+.rp-wiz-spinner{ color:var(--accent); }
+
+.rp-wiz-loading-title{ font-size:13.5px; font-weight:800; color:var(--text); unicode-bidi:plaintext; }
+
+.rp-wiz-phases{ margin:4px 0 0; padding:0; list-style:none; display:flex; flex-direction:column; gap:5px; text-align:start; }
+
+.rp-wiz-phases li{
+  position:relative; padding-inline-start:18px; font-size:11.5px; line-height:1.9; color:var(--muted2);
+  transition:color .3s ease;
+}
+
+.rp-wiz-phases li.done{ color:var(--muted); }
+
+.rp-wiz-phases li.done::before{ background:var(--accent); border-color:var(--accent); }
+
+.rp-wiz-phases li.now{ color:var(--text); font-weight:700; }
+
+.rp-wiz-phases li.now::before{ border-color:var(--accent); animation:rpPulse 1.2s ease-in-out infinite; }
+
+@keyframes rpPulse{ 50%{ box-shadow:0 0 0 4px rgba(var(--accent-rgb),.18); } }
+
+.rp-wiz-loading-hint{ margin-top:6px; font-size:10.5px; color:var(--muted2); }
+
+.wsearch-newform-actions.rp-wiz-actions{ display:flex; align-items:center; gap:10px; }
+
+.rp-wiz-actions .wsearch-submit-btn{ flex:1; width:auto; }
+
+.rp-wiz-back{
+  flex:0 0 auto; width:44px; height:44px; padding:0; border-radius:14px;
+  display:flex; align-items:center; justify-content:center;
+  border:1px solid var(--line); background:none; box-shadow:none;
+  backdrop-filter:none; -webkit-backdrop-filter:none; color:var(--muted); cursor:pointer;
+  transition:border-color .15s ease, color .15s ease;
+}
+
+@media (hover:hover) and (pointer:fine) {
+  .rp-wiz-back:hover{ border-color:var(--accent); color:var(--accent); background:none; box-shadow:none; }}
+
+@media (prefers-reduced-motion:reduce) {
+  .rp-stage-body, .rp-wiz-phases li.now::before{ animation:none; }}
+
+body[data-theme] :where(
+  .account-card, .acc-block-body, .trade-account-card, .trade-mt-row, .trade-note-card,
+  .trade-checklist-card, .trade-journal-box, .rp-stage-card, .ls-card, .overflow-hidden
+)::before{ inset:0; }
+
+html[data-perf="low"] .wsearch-newform-overlay.strong-blur{
+  backdrop-filter:var(--popup-backdrop-filter-strong) !important;
+  -webkit-backdrop-filter:var(--popup-backdrop-filter-strong) !important;
+}
+
+.gring{ position:relative; display:inline-block; flex-shrink:0; }
+
+.gring svg{ display:block; }
+
+.gring-center{ position:absolute; inset:0; display:flex; align-items:center; justify-content:center; }
+
+.gring-cap{ filter:drop-shadow(0 0 3px rgba(0,0,0,.45)); }
+
+body[data-theme="light"] .gring-cap{ filter:drop-shadow(0 0 2px rgba(80,50,20,.35)); }
+
+/* ── تیک واحد اپ (components/TickButton.tsx) — کپی .db-tl-node  داشبورد ──
+   عمدا بیرون .db-page تا همه‌جا یکسان باشه. بک‌گراند فقط در حالت تیک‌خورده
+   (همون گرادیان داشبورد)؛ حالت خالی کاملا شفافه.
+
+   باگ «مربع داخل دایره» (ریشه):
+   (۱) گرادیان حالت تیک‌خورده با background-origin پیش‌فرض (padding-box) و
+       repeat کشیده می‌شد؛ با بوردر شفاف ۲px، کاشی گرادیان توی حلقه‌ی بوردر
+       تکرار می‌شد و لبه‌ی padding-box یک مربع روشن وسط دایره می‌ساخت — همه‌جا،
+       حتی داخل .dash-scope. حالا گرادیان صریحا border-box و no-repeat‌ه.
+   (۲) بیرون .dash-scope ریست سراسری button{} (لیکوئید گلس) backdrop-filter و
+       سایه‌ی inset می‌داد و در تم روشن body[data-theme="light"] button
+       (اسپسیفیسیتی 0,1,2) بک‌گراند شیشه‌ای/بوردر/سایه رو روی .tick-btn می‌نشوند.
+       برای همین همه‌ی قانون‌های تیک با پیشوند html body و کلاس دوبل
+       (0,2,2) نوشته شدن تا هیچ قانون سراسری (هاور/دیزیبل/تم روشن) بهشون نرسه.
+
+   رنگ: --tick-a / --tick-b (پیش‌فرض پالت روتین --ring-1)؛ .tick-exercise
+   همون تیک با پالت تمرین (--ring-2، آبی→بنفش) برای حرکت‌های برنامه‌ی تمرین. */
+
+.tick-btn{ --tick-size:26px; --tick-a:var(--ring-1a); --tick-b:var(--ring-1b); }
+
+.tick-btn.tick-exercise{ --tick-a:var(--ring-2a); --tick-b:var(--ring-2b); }
+
+html body .tick-btn.tick-btn.is-square{ border-radius:calc(var(--tick-size) * .3); }
+
+.tick-btn svg{ width:calc(var(--tick-size) * .58); height:calc(var(--tick-size) * .58); position:relative; z-index:1; overflow:visible; }
+
+@media (hover:hover) {
+  html body .tick-btn.tick-btn:not(.is-disabled):not(.is-checked):hover{
+    border-color:var(--tick-a); color:#fff; background:transparent;
+    box-shadow:0 0 0 4px color-mix(in srgb, var(--tick-a) 16%, transparent);
+  }}
+
+html body .tick-btn.tick-btn.is-checked{
+  border-color:transparent;
+  background:linear-gradient(135deg, var(--tick-a), var(--tick-b)) border-box no-repeat;
+  box-shadow:0 0 14px color-mix(in srgb, var(--tick-a) 55%, transparent);
+}
+
+html body .tick-btn.tick-btn.is-missed{ border-color:var(--tl-warn, #F0A94B); border-style:dashed; }
+
+html body .tick-btn.tick-btn.is-disabled{ cursor:not-allowed; opacity:.5; }
+
+html body .tick-btn.tick-btn.is-disabled.is-checked, html body .tick-btn.tick-btn.is-disabled.is-missed{ opacity:.75; }
+
+.tick-ripple{ position:absolute; inset:-2px; border-radius:inherit; border:2px solid var(--tick-b); background:none; pointer-events:none; }
+
+.tick-spark{ position:absolute; left:50%; top:50%; pointer-events:none; }
+
+.tick-spark i{
+  position:absolute; width:4px; height:4px; margin:-2px; border-radius:50%;
+  background:var(--tick-b); animation:tick-burst .75s cubic-bezier(.22,1,.36,1) forwards;
+  transform:rotate(calc(var(--i) * 45deg)) translateX(0);
+}
+
+@keyframes tick-burst{ to{ transform:rotate(calc(var(--i) * 45deg)) translateX(var(--tick-size)); opacity:0; } }
+
+@media (prefers-reduced-motion: reduce) {
+  .tick-spark{ display:none; }}
+
+@media (hover:hover) {
+  html[dir="ltr"] .trade-back-link:hover svg{ transform:translateX(-2px); }
+  html[dir="ltr"] .trade-back-link:hover svg.dir-flip{ transform:scaleX(-1) translateX(2px); }}
+
+@media (hover:hover) and (pointer:fine) {
+  html[dir="ltr"] .rp-card:hover .rp-card-arrow{ transform:translateX(3px); }
+  html[dir="ltr"] .rp-card:hover .rp-card-arrow.dir-flip{ transform:scaleX(-1) translateX(-3px); }}
+
+/* درخشش اسکلت لودینگ از چپ به راست */
+
+@keyframes pl-shimmer-ltr{ to{ transform:translateX(100%); } }
+
+html[dir="ltr"] .pls-line::after, html[dir="ltr"] .pls-card::after{ transform:translateX(-100%); }
+
+@media (prefers-reduced-motion:no-preference) {
+  html[dir="ltr"] .pls-line::after, html[dir="ltr"] .pls-card::after{ animation-name:pl-shimmer-ltr; }}
+
+/* رودمپ: شماره‌ی سرفصل‌ها لاتین و خط‌فاصله‌ی انگلیسی */
+
+html[dir="ltr"] .rp-topics{ list-style-type:decimal; }
+
+html[dir="ltr"] .rp-points li::before{ top:8px; }
+
+html[dir="ltr"] .rp-task-title, html[dir="ltr"] .rp-task-output{ line-height:1.5; }
+
+[data-m-in="rise"]{ animation:m-rise var(--m-dur-3) var(--m-ease-out) backwards; animation-delay:calc(min(var(--i, 0), 8) * var(--m-step)); }
+
+[data-m-in="fade"]{ animation:m-fade var(--m-dur-3) var(--m-ease-out) backwards; }
+
+[data-m-in="pop"]{ animation:m-pop var(--m-dur-3) var(--m-ease-spring) backwards; }
+
+html[data-navigated] .page-enter > :not(.page-loader){
+  animation:m-rise var(--m-dur-4) var(--m-ease-out) backwards;
+  animation-delay:calc(min(var(--i, 0), 6) * var(--m-step));
+}
+
+html[data-navigated] .page-enter > [style*="position: fixed"],
+html[data-navigated] .page-enter > [style*="position:fixed"]{ animation-name:m-fade; }
+
+.module-gate{ animation:m-fade var(--m-dur-4) var(--m-ease-out) backwards; }
+
+.module-gate-overlay > *{ animation:m-rise var(--m-dur-4) var(--m-ease-out) backwards; }
+
+.module-gate-overlay > :nth-child(2){ animation-delay:var(--m-step); }
+
+.module-gate-overlay > :nth-child(3){ animation-delay:calc(var(--m-step) * 2); }
+
+.module-gate-overlay > :nth-child(n+4){ animation-delay:calc(var(--m-step) * 3); }
+
+.trade-chat-report-sheet{ animation:m-rise-soft var(--m-dur-3) var(--m-ease-out) backwards; }
+
+.calorie-unit-dropdown{ animation:m-pop var(--m-dur-2) var(--m-ease-out) backwards; transform-origin:50% 0; }
+
+.au-backdrop, .ads-pal-backdrop{ animation:m-fade var(--m-dur-3) var(--m-ease-out) backwards; }
+
+.ads-pal{ animation:m-pop var(--m-dur-3) var(--m-ease-spring) backwards; transform-origin:50% 0; }
+
+@media (hover:hover) and (pointer:fine) {
+  :where([role="button"], [role="tab"], [role="menuitem"], .is-clickable, [data-clickable]):hover{ opacity:.92; }}
+
+:where(a[href], button, [role="button"], [role="tab"], [role="menuitem"], summary, [tabindex]:not([tabindex="-1"])):focus-visible{
+  outline:2px solid rgba(var(--accent-rgb, 0,168,107), .85); outline-offset:2px;
+}
+
+@media (prefers-reduced-motion:no-preference) {
+  :where(a[href], button, [role="button"], [role="tab"], summary):focus-visible{ transition:outline-offset var(--m-dur-1) var(--m-ease-out), scale var(--m-dur-1) var(--m-ease-out); }}
+
+.trade-account-goalbar-fill, .admin-funnel-fill, .adb-fill, .slw-fill{
+  animation:m-bar var(--m-dur-5) var(--m-ease-out) backwards;
+}
+
+@supports (animation-timeline:view()) {
+
+@media (prefers-reduced-motion:no-preference) {
+  html:not([data-perf-weak]) .m-reveal:not(.m-pre){
+      animation:m-rise-scroll linear both;
+      animation-timeline:view();
+      animation-range:entry 0% entry 45%;
+    }}}
+
+.m-reveal.m-pre{ opacity:0; translate:0 14px; }
+
+.topbar-auth-pop{ animation:topbarAuthPop .38s cubic-bezier(.34,1.56,.64,1); }
+
+@media (prefers-reduced-motion:reduce) {
+  .topbar-auth-pop{ animation:none; }}
+
+@media (min-width:1024px) {
+  .dnav-chev{ transition:transform .2s ease; opacity:.7; flex-shrink:0; }
+  .dnav-ind{
+    position:absolute; left:0; bottom:0; width:1px; height:2px; background:var(--accent);
+    transform-origin:0 0; opacity:0; pointer-events:none; will-change:transform;
+  }
+  html[dir="ltr"] .dnav-panel.notif-panel{
+    position:absolute; top:calc(100% - 6px); inset-inline-start:0; inset-inline-end:auto;
+    width:max-content; min-width:190px; max-width:280px; max-height:none; overflow:visible;
+    padding:6px; z-index:50;
+    animation:none; transform-origin:top left;
+    visibility:hidden; opacity:0; pointer-events:none;
+    transform:translate3d(0,-6px,0) scale(.97);
+    transition:opacity .16s ease, transform .24s cubic-bezier(.34,1.45,.64,1), visibility 0s linear .24s;
+  }
+  html[dir="ltr"] .dnav-lang-panel.notif-panel{ inset-inline-start:auto; inset-inline-end:0; min-width:150px; top:calc(100% + 6px); transform-origin:top right; }}
+
+@media (min-width:1024px) {
+
+@media (hover:hover) {
+  html[dir="ltr"] .dnav-login:hover{ color:var(--text); }}}
+
+@media (min-width:1024px) and (prefers-reduced-motion:reduce) {
+  .dnav-ind.is-ready, .dnav-chev{ transition:none; }
+  html[dir="ltr"] .dnav-panel.notif-panel, html[dir="ltr"] .dnav-panel.notif-panel[data-open="true"]{
+    transform:none; transition:opacity .12s ease, visibility 0s;
+  }}

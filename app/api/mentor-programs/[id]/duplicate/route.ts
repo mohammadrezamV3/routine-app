@@ -2,11 +2,12 @@ import { NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 import { requireMentorsUser, getActiveMentorProfile, notFound, conflict, badRequest, touchMentorActivity } from "@/lib/mentorGuard";
 import { readJsonBody } from "@/lib/validate";
-import { PROGRAM_TYPE_BLOCKED_MSG, programTypeAllowed } from "@/lib/mentorCategories";
+import { programTypeAllowed, programTypeBlockedMsg } from "@/lib/mentorCategories";
 import { validateProgramInput } from "@/lib/mentorValidate";
 import { isoDate, loadProgramWithUsers, serializeProgram, todayIsoForUser } from "@/lib/mentorServer";
 import { rangeDuration, shiftedRange, isoDay } from "@/lib/mentorProgramCopy";
 import { validId } from "@/lib/mentorToolsGuard";
+import { tr } from "@/lib/i18n";
 
 type Ctx = { params: { id: string } };
 const MAX_DRAFTS_PER_MENTOR = 200; // همان سقف POST /api/mentor-programs
@@ -28,21 +29,21 @@ export async function POST(req: Request, { params }: Ctx) {
   const parsed = await readJsonBody(req, 8 * 1024);
   if (!parsed.ok) return NextResponse.json({ error: parsed.error }, { status: parsed.status });
   const b = parsed.body || {};
-  if (!validId(b.mentorshipId)) return badRequest("شاگرد مقصد معتبر نیست");
+  if (!validId(b.mentorshipId)) return badRequest(tr("شاگرد مقصد معتبر نیست", "The target student is not valid"));
 
   const src = await prisma.mentorProgram.findFirst({ where: { id: params.id, mentorId: me }, include: { items: { orderBy: { order: "asc" } } } });
   if (!src) return notFound();
 
   const m = await prisma.mentorship.findFirst({ where: { id: b.mentorshipId, mentorId: me }, select: { id: true, studentId: true, status: true, categories: true } });
   if (!m) return notFound();
-  if (m.status !== "ACTIVE") return conflict("رابطه با این شاگرد فعال نیست");
-  if (!programTypeAllowed(src.type, m.categories, mp.profile.categories)) return badRequest(PROGRAM_TYPE_BLOCKED_MSG);
+  if (m.status !== "ACTIVE") return conflict(tr("رابطه با این شاگرد فعال نیست", "The relationship with this student is not active"));
+  if (!programTypeAllowed(src.type, m.categories, mp.profile.categories)) return badRequest(programTypeBlockedMsg());
 
   let newStart: string | null = null;
   if (b.startDate !== undefined && b.startDate !== null && b.startDate !== "") {
     newStart = typeof b.startDate === "string" ? isoDay(b.startDate) : null;
-    if (!newStart || b.startDate.length !== 10) return badRequest("تاریخ شروع معتبر نیست");
-    if (newStart < (await todayIsoForUser(m.studentId))) return badRequest("تاریخ شروع نمی‌تواند در گذشته باشد");
+    if (!newStart || b.startDate.length !== 10) return badRequest(tr("تاریخ شروع معتبر نیست", "Start date is not valid"));
+    if (newStart < (await todayIsoForUser(m.studentId))) return badRequest(tr("تاریخ شروع نمی‌تواند در گذشته باشد", "Start date can't be in the past"));
   }
   const duration = rangeDuration(src.startDate ? isoDate(src.startDate) : null, src.endDate ? isoDate(src.endDate) : null);
   const range = shiftedRange(duration, newStart);
@@ -60,7 +61,7 @@ export async function POST(req: Request, { params }: Ctx) {
   if (!v.ok) return badRequest(v.error);
 
   const drafts = await prisma.mentorProgram.count({ where: { mentorId: me, status: "DRAFT" } });
-  if (drafts >= MAX_DRAFTS_PER_MENTOR) return conflict("تعداد پیش‌نویس‌ها به سقف رسیده؛ چندتا را ارسال یا حذف کن");
+  if (drafts >= MAX_DRAFTS_PER_MENTOR) return conflict(tr("تعداد پیش‌نویس‌ها به سقف رسیده؛ چندتا را ارسال یا حذف کن", "You've reached the draft limit; send or delete some"));
 
   const { items, ...fields } = v.data;
   const created = await prisma.mentorProgram.create({

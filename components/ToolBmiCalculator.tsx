@@ -2,8 +2,9 @@
 
 import { useEffect, useState } from "react";
 import { NumberInput } from "./NumberInput";
-import { BMI_CATEGORIES, bmiScalePercent, calcBmi, type BmiResult } from "@/lib/bmi";
+import { BMI_CATEGORIES, bmiCategoryLabel, bmiScalePercent, calcBmi, type BmiResult } from "@/lib/bmi";
 import { fmtNum } from "@/lib/riskCalc";
+import { tr, trv } from "@/lib/i18n";
 
 const LS_KEY = "arion:tool:bmi";
 // رنگ‌های مقیاس: فقط نشانگر وضعیت (کم‌وزن تا چاقی)
@@ -39,41 +40,41 @@ export function ToolBmiCalculator() {
       <div className="tl-form">
         <div className="tl-row">
           <div>
-            <label className="exercise-form-label" htmlFor="tl-bmi-h">قد (سانتی‌متر)</label>
+            <label className="exercise-form-label" htmlFor="tl-bmi-h">{tr("قد (سانتی‌متر)", "Height (cm)")}</label>
             <NumberInput id="tl-bmi-h" decimal dir="ltr" className="wsearch-newform-name trade-glass-field"
               value={height} onChange={setHeight} placeholder="170" />
           </div>
           <div>
-            <label className="exercise-form-label" htmlFor="tl-bmi-w">وزن (کیلوگرم)</label>
+            <label className="exercise-form-label" htmlFor="tl-bmi-w">{tr("وزن (کیلوگرم)", "Weight (kg)")}</label>
             <NumberInput id="tl-bmi-w" decimal dir="ltr" className="wsearch-newform-name trade-glass-field"
               value={weight} onChange={setWeight} placeholder="70" />
           </div>
         </div>
         {res && !res.ok && <div className="trade-form-error" role="alert">{res.error}</div>}
-        <button type="submit" className="trade-primary-btn tl-btn">محاسبه</button>
+        <button type="submit" className="trade-primary-btn tl-btn">{tr("محاسبه", "Calculate")}</button>
       </div>
 
       <div className="tl-out" aria-live="polite">
-        {!ok && <p className="tl-note">قد و وزن را وارد کن و روی محاسبه بزن.</p>}
+        {!ok && <p className="tl-note">{tr("قد و وزن را وارد کن و روی محاسبه بزن.", "Enter your height and weight, then press Calculate.")}</p>}
         {ok && (
           <div className="tl-fade" key={`${ok.bmi}`}>
             <div className="tl-tiles">
               <div className="trade-stat-tile tl-tile strong">
-                <div className="tl-tile-label">BMI شما</div>
+                <div className="tl-tile-label">{tr("BMI شما", "Your BMI")}</div>
                 <div className="tl-tile-value"><Ltr>{fmtNum(ok.bmi, 1)}</Ltr></div>
               </div>
               <div className="trade-stat-tile tl-tile">
-                <div className="tl-tile-label">وضعیت</div>
-                <div className="tl-tile-value">{ok.category.label}</div>
+                <div className="tl-tile-label">{tr("وضعیت", "Status")}</div>
+                <div className="tl-tile-value">{bmiCategoryLabel(ok.category)}</div>
               </div>
               <div className="trade-stat-tile tl-tile wide">
-                <div className="tl-tile-label">بازه‌ی وزن طبیعی برای قد شما</div>
-                <div className="tl-tile-value"><Ltr>{fmtNum(ok.minKg, 1)}</Ltr> تا <Ltr>{fmtNum(ok.maxKg, 1)}</Ltr> کیلوگرم</div>
+                <div className="tl-tile-label">{tr("بازه‌ی وزن طبیعی برای قد شما", "Normal weight range for your height")}</div>
+                <div className="tl-tile-value"><Ltr>{fmtNum(ok.minKg, 1)}</Ltr> {tr("تا", "to")} <Ltr>{fmtNum(ok.maxKg, 1)}</Ltr> {tr("کیلوگرم", "kg")}</div>
               </div>
             </div>
 
             <div className="tl-scale-wrap">
-              <div className="tl-scale" role="img" aria-label={`BMI ${fmtNum(ok.bmi, 1)} در بازه ${ok.category.label}`}>
+              <div className="tl-scale" role="img" aria-label={tr(`BMI ${fmtNum(ok.bmi, 1)} در بازه ${ok.category.label}`, `BMI ${fmtNum(ok.bmi, 1)}, ${ok.category.labelEn}`)}>
                 {BMI_CATEGORIES.slice(0, 5).map((c, i) => (
                   <span key={c.key} style={{ flex: SCALE_FLEX[i], background: SCALE_COLORS[i] }} />
                 ))}
@@ -86,11 +87,11 @@ export function ToolBmiCalculator() {
 
             <p className="tl-note" style={{ marginTop: 10 }}>
               {ok.diffKg === 0
-                ? "وزن شما داخل بازه‌ی وزن طبیعی است."
+                ? tr("وزن شما داخل بازه‌ی وزن طبیعی است.", "Your weight is within the normal range.")
                 : ok.diffKg > 0
-                  ? <>تا رسیدن به کف بازه‌ی وزن طبیعی حدود <Ltr>{fmtNum(ok.diffKg, 1)}</Ltr> کیلوگرم فاصله هست.</>
-                  : <>تا رسیدن به سقف بازه‌ی وزن طبیعی حدود <Ltr>{fmtNum(Math.abs(ok.diffKg), 1)}</Ltr> کیلوگرم فاصله هست.</>}
-              {" "}BMI یک شاخص غربالگری است و جایگزین نظر پزشک نیست.
+                  ? trv(<>تا رسیدن به کف بازه‌ی وزن طبیعی حدود <Ltr>{fmtNum(ok.diffKg, 1)}</Ltr> کیلوگرم فاصله هست.</>, <>You are about <Ltr>{fmtNum(ok.diffKg, 1)}</Ltr> kg from the bottom of the normal weight range.</>)
+                  : trv(<>تا رسیدن به سقف بازه‌ی وزن طبیعی حدود <Ltr>{fmtNum(Math.abs(ok.diffKg), 1)}</Ltr> کیلوگرم فاصله هست.</>, <>You are about <Ltr>{fmtNum(Math.abs(ok.diffKg), 1)}</Ltr> kg from the top of the normal weight range.</>)}
+              {" "}{tr("BMI یک شاخص غربالگری است و جایگزین نظر پزشک نیست.", "BMI is a screening index and is not a substitute for medical advice.")}
             </p>
           </div>
         )}

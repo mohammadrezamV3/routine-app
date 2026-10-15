@@ -3,14 +3,11 @@
 import { useState } from "react";
 import { CalendarPlus, Check } from "lucide-react";
 import { CustomOccurrence, getCustomOccurrences, setCustomOccurrences } from "@/lib/storage";
-import { isoLocal } from "@/lib/jalali";
+import { isoLocal, weekdayName } from "@/lib/jalali";
+import { tr } from "@/lib/i18n";
 import { Spinner } from "./Spinner";
 
-const DAYS = [
-  { jsDay: 6, label: "شنبه" }, { jsDay: 0, label: "یکشنبه" }, { jsDay: 1, label: "دوشنبه" },
-  { jsDay: 2, label: "سه‌شنبه" }, { jsDay: 3, label: "چهارشنبه" }, { jsDay: 4, label: "پنجشنبه" },
-  { jsDay: 5, label: "جمعه" },
-];
+const DAYS = [6, 0, 1, 2, 3, 4, 5].map((jsDay) => ({ jsDay }));
 
 /**
  * «این مرحله را به برنامه‌هایم اضافه کن».
@@ -30,8 +27,8 @@ export function RoadmapStepToProgram({ title, topic }: { title: string; topic: s
   const [error, setError] = useState<string | null>(null);
 
   async function save() {
-    if (!days.length) { setError("حداقل یک روز را انتخاب کن"); return; }
-    if (end <= start) { setError("ساعت پایان باید بعد از ساعت شروع باشد"); return; }
+    if (!days.length) { setError(tr("حداقل یک روز را انتخاب کن", "Select at least one day")); return; }
+    if (end <= start) { setError(tr("ساعت پایان باید بعد از ساعت شروع باشد", "End time must be after start time")); return; }
     setSaving(true);
     setError(null);
     try {
@@ -48,7 +45,7 @@ export function RoadmapStepToProgram({ title, topic }: { title: string; topic: s
       setAdded(true);
       setOpen(false);
     } catch {
-      setError("ذخیره نشد — دوباره تلاش کن");
+      setError(tr("ذخیره نشد — دوباره تلاش کن", "Could not save — please try again"));
     } finally {
       setSaving(false);
     }
@@ -56,7 +53,7 @@ export function RoadmapStepToProgram({ title, topic }: { title: string; topic: s
 
   if (added) {
     return (
-      <div className="rp-added"><Check size={14} /> به برنامه‌های هفتگی اضافه شد</div>
+      <div className="rp-added"><Check size={14} /> {tr("به برنامه‌های هفتگی اضافه شد", "Added to your weekly plans")}</div>
     );
   }
 
@@ -64,11 +61,11 @@ export function RoadmapStepToProgram({ title, topic }: { title: string; topic: s
     <div className="rp-toprogram">
       {!open ? (
         <button type="button" className="rp-ghost-btn" onClick={() => setOpen(true)}>
-          <CalendarPlus size={14} /> افزودن به برنامه‌هایم
+          <CalendarPlus size={14} /> {tr("افزودن به برنامه‌هایم", "Add to my plans")}
         </button>
       ) : (
         <div className="rp-add-panel">
-          <div className="rp-add-title">کدام روزها روی این مرحله کار می‌کنی؟</div>
+          <div className="rp-add-title">{tr("کدام روزها روی این مرحله کار می‌کنی؟", "Which days will you work on this stage?")}</div>
           <div className="rp-day-row">
             {DAYS.map((d) => (
               <button
@@ -77,25 +74,25 @@ export function RoadmapStepToProgram({ title, topic }: { title: string; topic: s
                 className={`rp-day${days.includes(d.jsDay) ? " on" : ""}`}
                 onClick={() => setDays((p) => p.includes(d.jsDay) ? p.filter((x) => x !== d.jsDay) : [...p, d.jsDay])}
               >
-                {d.label}
+                {weekdayName(d.jsDay)}
               </button>
             ))}
           </div>
           <div className="rp-time-row">
             <label>
-              <span>ساعت شروع</span>
+              <span>{tr("ساعت شروع", "Start time")}</span>
               <input type="time" value={start} onChange={(e) => setStart(e.target.value)} />
             </label>
             <label>
-              <span>ساعت پایان</span>
+              <span>{tr("ساعت پایان", "End time")}</span>
               <input type="time" value={end} onChange={(e) => setEnd(e.target.value)} />
             </label>
           </div>
           {error && <div className="trade-form-error">{error}</div>}
           <div className="rp-add-actions">
-            <button type="button" className="account-outline-btn" onClick={() => setOpen(false)}>لغو</button>
+            <button type="button" className="account-outline-btn" onClick={() => setOpen(false)}>{tr("لغو", "Cancel")}</button>
             <button type="button" className="trade-primary-btn" onClick={save} disabled={saving}>
-              {saving ? <Spinner size={13} /> : "افزودن"}
+              {saving ? <Spinner size={13} /> : tr("افزودن", "Add")}
             </button>
           </div>
         </div>

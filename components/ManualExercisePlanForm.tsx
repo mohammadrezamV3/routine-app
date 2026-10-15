@@ -7,7 +7,8 @@ import { ChevronRight, GripVertical, Pencil, Plus, X } from "lucide-react";
 import { FA_WEEKDAY, CAL_WEEK_ORDER } from "@/lib/jalali";
 import type { ExerciseDay } from "@/lib/exercisePlans";
 import { computeDayFocus } from "@/lib/exerciseCatalogUtils";
-import { EXERCISE_CATALOG, ExerciseCatalogEntry, exerciseSearchText, getExerciseDifficulty, matchesExerciseQuery } from "@/lib/exerciseCatalog";
+import { ExerciseCatalogEntry, getExerciseDifficulty, matchesExerciseQuery } from "@/lib/exerciseCatalog";
+import { useExerciseSearchIndex } from "@/lib/exerciseSearchIndex";
 import { useProgressiveList } from "@/lib/useProgressiveList";
 import { stripSetSuffix } from "@/lib/exerciseSets";
 import { normalizeFa } from "@/lib/utils";
@@ -17,6 +18,8 @@ import { useLockBodyScroll } from "@/lib/useLockBodyScroll";
 import { NumberInput } from "./NumberInput";
 import { SegmentedTabs } from "./SegmentedTabs";
 import { Spinner } from "./Spinner";
+import { isEn, tr } from "@/lib/i18n";
+import { dayNameDisplay, exerciseDisplayName, focusDisplay, localizeExercise, useExerciseEn } from "@/lib/exerciseI18n";
 
 // نوع ورودی (زمان‌محور یا ست‌وتکرار) از روی الگوی حرکت خود حرکت تعیین
 // می‌شه، نه با یه سوال از کاربر — کاردیو/انعطاف‌پذیری زمانی‌ان، بقیه ست‌وتکراری.
@@ -36,6 +39,7 @@ function ManualQuantityPrompt({
   onConfirm: (formattedItem: string) => void;
   onCancel: () => void;
 }) {
+  useExerciseEn();
   const timed = isTimedExercise(entry);
   const [sets, setSets] = useState("3");
   const [reps, setReps] = useState("10");
@@ -52,32 +56,32 @@ function ManualQuantityPrompt({
   return (
     <div className="manual-exercise-qty">
       <div className="modal-head" style={{ marginBottom: 6 }}>
-        <div className="domain-sub" style={{ marginTop: 0 }}>{entry.name}</div>
-        <button type="button" className="nav-close" onClick={onCancel} aria-label="بازگشت">×</button>
+        <div className="domain-sub" style={{ marginTop: 0 }}>{localizeExercise(entry).name}</div>
+        <button type="button" className="nav-close" onClick={onCancel} aria-label={tr("بازگشت", "Back")}>×</button>
       </div>
       {!timed ? (
         <div style={{ display: "flex", gap: 10, marginTop: 10 }}>
           <div style={{ flex: 1 }}>
-            <label className="exercise-form-label">تعداد ست</label>
+            <label className="exercise-form-label">{tr("تعداد ست", "Number of sets")}</label>
             <NumberInput className="wsearch-newform-name calorie-glass-field" value={sets} onChange={(v) => setSets(v)} />
           </div>
           <div style={{ flex: 1 }}>
-            <label className="exercise-form-label">تکرار در هر ست</label>
+            <label className="exercise-form-label">{tr("تکرار در هر ست", "Reps per set")}</label>
             <NumberInput className="wsearch-newform-name calorie-glass-field" value={reps} onChange={(v) => setReps(v)} />
           </div>
         </div>
       ) : (
         <div style={{ display: "flex", gap: 10, marginTop: 12 }}>
           <div style={{ flex: 1 }}>
-            <label className="exercise-form-label">مدت زمان</label>
+            <label className="exercise-form-label">{tr("مدت زمان", "Duration")}</label>
             <NumberInput className="wsearch-newform-name calorie-glass-field" value={amount} onChange={(v) => setAmount(v)} />
           </div>
           <div style={{ flex: 1 }}>
-            <label className="exercise-form-label">واحد</label>
+            <label className="exercise-form-label">{tr("واحد", "Unit")}</label>
             <SegmentedTabs
               className="seg-flush manual-timer-unit-tabs"
-              ariaLabel="واحد"
-              options={[{ value: "ثانیه", label: "ثانیه" }, { value: "دقیقه", label: "دقیقه" }]}
+              ariaLabel={tr("واحد", "Unit")}
+              options={[{ value: "ثانیه", label: tr("ثانیه", "Seconds") }, { value: "دقیقه", label: tr("دقیقه", "Minutes") }]}
               active={unit}
               onChange={setUnit}
             />
@@ -87,15 +91,12 @@ function ManualQuantityPrompt({
 
       <div style={{ display: "flex", justifyContent: "flex-start", marginTop: 16 }}>
         <button type="button" className="manual-plan-submit-btn" onClick={confirm}>
-          افزودن به برنامه
+          {tr("افزودن به برنامه", "Add to plan")}
         </button>
       </div>
     </div>
   );
 }
-
-// متن جستجوی هر حرکت (اسم + اسم‌های دیگه + عضلات) یک بار ساخته می‌شه.
-const SEARCH_INDEX = EXERCISE_CATALOG.map((entry) => ({ entry, text: exerciseSearchText(entry) }));
 
 // پاپ‌آپ مستقل «افزودن حرکت» — قبلا این جستجو/لیست همون‌جا توی نمای روز
 // اینلاین رندر می‌شد و صفحه رو شلوغ می‌کرد؛ حالا مثل ExerciseCatalogModal یه
@@ -114,9 +115,10 @@ function ManualExerciseAddPopup({
   const [adding, setAdding] = useState<ExerciseCatalogEntry | null>(null);
 
   const normalizedQuery = normalizeFa(query).replace(/\s+/g, " ");
+  const searchIndex = useExerciseSearchIndex(query);
   const visible = useMemo(
-    () => SEARCH_INDEX.filter((x) => !excludeNames.has(x.entry.name) && matchesExerciseQuery(x.text, normalizedQuery)).map((x) => x.entry),
-    [excludeNames, normalizedQuery]
+    () => searchIndex.filter((x) => !excludeNames.has(x.entry.name) && matchesExerciseQuery(x.text, normalizedQuery)).map((x) => x.entry),
+    [searchIndex, excludeNames, normalizedQuery]
   );
   const { limit, onScroll, listRef } = useProgressiveList(visible.length, normalizedQuery);
 
@@ -132,15 +134,15 @@ function ManualExerciseAddPopup({
         ) : (
           <>
             <div className="modal-head">
-              <div className="modal-title">افزودن حرکت</div>
-              <button type="button" className="nav-close" onClick={onClose} aria-label="بستن">×</button>
+              <div className="modal-title">{tr("افزودن حرکت", "Add exercise")}</div>
+              <button type="button" className="nav-close" onClick={onClose} aria-label={tr("بستن", "Close")}>×</button>
             </div>
 
             <input
               type="text"
-              dir="rtl"
+              dir={isEn() ? "ltr" : "rtl"}
               className="manual-exercise-picker-search"
-              placeholder="جستجوی حرکت…"
+              placeholder={tr("جستجوی حرکت…", "Search exercises…")}
               value={query}
               onChange={(e) => setQuery(e.target.value)}
               autoFocus
@@ -148,16 +150,16 @@ function ManualExerciseAddPopup({
 
             <div ref={listRef} className="no-scrollbar manual-exercise-picker-list" onScroll={onScroll}>
               {visible.length === 0 ? (
-                <div className="item-line empty">حرکتی پیدا نشد.</div>
+                <div className="item-line empty">{tr("حرکتی پیدا نشد.", "No exercises found.")}</div>
               ) : (
                 visible.slice(0, limit).map((e) => (
                   <div key={e.name} className="exercise-catalog-row">
-                    <div className="min-w-0 flex-1 truncate text-right text-[12.5px] font-semibold text-dash-text sm:text-[13.5px]">
-                      {e.name}
+                    <div className="min-w-0 flex-1 truncate text-start text-[12.5px] font-semibold text-dash-text sm:text-[13.5px]">
+                      {localizeExercise(e).name}
                     </div>
                     <DifficultyStars level={getExerciseDifficulty(e)} className="exercise-catalog-row-stars" />
                     <button type="button" className="manual-exercise-row-add-btn" onClick={() => setAdding(e)}>
-                      افزودن
+                      {tr("افزودن", "Add")}
                     </button>
                   </div>
                 ))
@@ -183,6 +185,7 @@ function ManualExerciseRow({
   onRemove: () => void;
 }) {
   const controls = useDragControls();
+  useExerciseEn();
   return (
     <Reorder.Item
       value={item}
@@ -195,14 +198,14 @@ function ManualExerciseRow({
           type="button"
           className="manual-reorder-handle"
           onPointerDown={(e) => controls.start(e)}
-          aria-label="جابه‌جایی این حرکت"
+          aria-label={tr("جابه‌جایی این حرکت", "Move this exercise")}
         >
           <GripVertical size={15} />
         </button>
       )}
-      <span className="truncate">{item}</span>
+      <span className="truncate">{exerciseDisplayName(item)}</span>
       {isEditing && (
-        <button type="button" onClick={onRemove} aria-label="حذف حرکت">
+        <button type="button" onClick={onRemove} aria-label={tr("حذف حرکت", "Remove exercise")}>
           <X size={14} />
         </button>
       )}
@@ -228,6 +231,7 @@ export function ManualExercisePlanForm({
   onCancel?: () => void;
   onClose?: () => void;
 }) {
+  useExerciseEn();
   const [dayItems, setDayItems] = useState<Record<string, string[]>>({});
   const [openDay, setOpenDay] = useState<string | null>(null);
   const [editDay, setEditDay] = useState<string | null>(null);
@@ -250,7 +254,7 @@ export function ManualExercisePlanForm({
 
   function submit() {
     const gymDays = CAL_WEEK_ORDER.map((i) => FA_WEEKDAY[i]).filter((d) => (dayItems[d] || []).length > 0);
-    if (gymDays.length === 0) { setError("حداقل برای یک روز حرکت اضافه کن"); return; }
+    if (gymDays.length === 0) { setError(tr("حداقل برای یک روز حرکت اضافه کن", "Add exercises to at least one day")); return; }
     setError(null);
     const days: ExerciseDay[] = gymDays.map((d) => ({
       day: d,
@@ -267,15 +271,15 @@ export function ManualExercisePlanForm({
       {(onCancel || onClose) && (
         <div className="exercise-wizard-head">
           {onCancel ? (
-            <button type="button" className="exercise-catalog-back-btn" onClick={onCancel} aria-label="بازگشت">
-              <ChevronRight size={20} />
+            <button type="button" className="exercise-catalog-back-btn" onClick={onCancel} aria-label={tr("بازگشت", "Back")}>
+              <ChevronRight size={20} className="dir-flip" />
             </button>
           ) : <span />}
-          {onClose && <button type="button" className="nav-close" onClick={onClose} aria-label="بستن">×</button>}
+          {onClose && <button type="button" className="nav-close" onClick={onClose} aria-label={tr("بستن", "Close")}>×</button>}
         </div>
       )}
 
-      <label className="exercise-wizard-title">برنامه تمرینیت رو بساز</label>
+      <label className="exercise-wizard-title">{tr("برنامه تمرینیت رو بساز", "Build your workout plan")}</label>
 
       <div className="manual-week-accordion">
         {CAL_WEEK_ORDER.map((i) => {
@@ -286,8 +290,8 @@ export function ManualExercisePlanForm({
           return (
             <div key={day} className={`week-day${isOpen ? " open" : ""}`}>
               <div className="week-day-head" onClick={() => toggleDay(day)}>
-                <span className="week-day-name">{day}</span>
-                {items.length > 0 && <span className="manual-day-count-badge">{items.length} حرکت</span>}
+                <span className="week-day-name">{dayNameDisplay(day)}</span>
+                {items.length > 0 && <span className="manual-day-count-badge">{tr(`${items.length} حرکت`, `${items.length} ${items.length === 1 ? "exercise" : "exercises"}`)}</span>}
                 <span className="week-day-chevron" />
               </div>
               {/* بدون انیمیشن height:auto — همون دلیل آکاردئون «برنامه هفتگی»:
@@ -298,27 +302,27 @@ export function ManualExercisePlanForm({
                     <div className="manual-day-panel">
                       <div className="manual-day-panel-head">
                         <div className="manual-day-panel-headinfo">
-                          {items.length > 0 && <div className="manual-day-exercises-focus" style={{ margin: 0 }}>{computeDayFocus(items)}</div>}
+                          {items.length > 0 && <div className="manual-day-exercises-focus" style={{ margin: 0 }}>{focusDisplay(computeDayFocus(items))}</div>}
                           {items.length > 0 && (
                             <button
                               type="button"
                               className="manual-day-edit-btn"
                               onClick={() => setEditDay(isEditing ? null : day)}
-                              aria-label={isEditing ? "پایان ویرایش" : `ویرایش روز ${day}`}
+                              aria-label={isEditing ? tr("پایان ویرایش", "Done editing") : tr(`ویرایش روز ${day}`, `Edit ${dayNameDisplay(day)}`)}
                             >
                               <Pencil size={13} />
-                              {isEditing ? "پایان ویرایش" : "ویرایش"}
+                              {isEditing ? tr("پایان ویرایش", "Done editing") : tr("ویرایش", "Edit")}
                             </button>
                           )}
                         </div>
                         <button type="button" className="manual-day-add-btn" onClick={() => setPickerOpenFor(day)}>
                           <Plus size={14} />
-                          افزودن
+                          {tr("افزودن", "Add")}
                         </button>
                       </div>
 
                       {items.length === 0 ? (
-                        <div className="item-line empty">هنوز حرکتی اضافه نکردی — امروز استراحته</div>
+                        <div className="item-line empty">{tr("هنوز حرکتی اضافه نکردی — امروز استراحته", "No exercises added yet. This is a rest day")}</div>
                       ) : (
                         <Reorder.Group
                           axis="y"
@@ -351,7 +355,7 @@ export function ManualExercisePlanForm({
 
       <div className="manual-submit-row">
         <button type="button" onClick={submit} disabled={submitting || !hasAnyItems} className="manual-plan-submit-btn">
-          {submitting ? <Spinner size={15} /> : "ثبت برنامه"}
+          {submitting ? <Spinner size={15} /> : tr("ثبت برنامه", "Save plan")}
         </button>
       </div>
     </div>

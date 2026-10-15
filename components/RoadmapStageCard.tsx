@@ -9,6 +9,7 @@ import { faNum } from "@/lib/jalali";
 import { taskKey, type PlanStage } from "@/lib/roadmapPlan";
 import { RoadmapStepToProgram } from "@/components/RoadmapStepToProgram";
 import { Spinner } from "./Spinner";
+import { tr, pick } from "@/lib/i18n";
 
 // منبعی که مدل لینک قابل اعتماد برایش نداده (سمت سرور فیلتر شده) به یک
 // جست‌وجوی واقعی وصل می‌شود، نه یک URL ساختگی.
@@ -16,9 +17,10 @@ export function searchUrl(query: string, topic: string): string {
   return `https://www.google.com/search?q=${encodeURIComponent(`${query} ${topic}`)}`;
 }
 
-const RESOURCE_TYPES: Record<string, string> = {
-  article: "مقاله", documentation: "مستند", video: "ویدیو", course: "دوره",
-  lab: "تمرین", book: "کتاب", tool: "ابزار",
+const RESOURCE_TYPES: Record<string, { fa: string; en: string }> = {
+  article: { fa: "مقاله", en: "Article" }, documentation: { fa: "مستند", en: "Docs" },
+  video: { fa: "ویدیو", en: "Video" }, course: { fa: "دوره", en: "Course" },
+  lab: { fa: "تمرین", en: "Lab" }, book: { fa: "کتاب", en: "Book" }, tool: { fa: "ابزار", en: "Tool" },
 };
 
 /**
@@ -58,7 +60,7 @@ export function RoadmapStageCard({
         type="button"
         className="rp-stage-num"
         onClick={onToggleStage}
-        aria-label={isDone ? "برگرداندن به انجام‌نشده" : "این مرحله تمام شد"}
+        aria-label={isDone ? tr("برگرداندن به انجام‌نشده", "Mark as not done") : tr("این مرحله تمام شد", "This stage is done")}
       >
         {isDone ? <Check size={15} /> : faNum(stage.n)}
       </button>
@@ -70,9 +72,9 @@ export function RoadmapStageCard({
             <div className="rp-stage-sub">
               {stage.duration && <span>{stage.duration}</span>}
               {stage.detailed && !!stage.tasks.length && (
-                <span>{faNum(tasksDone)} از {faNum(stage.tasks.length)} کار</span>
+                <span>{tr(`${faNum(tasksDone)} از ${faNum(stage.tasks.length)} کار`, `${faNum(tasksDone)} of ${faNum(stage.tasks.length)} tasks`)}</span>
               )}
-              {!stage.detailed && <span className="rp-pending">جزئیات ساخته نشده</span>}
+              {!stage.detailed && <span className="rp-pending">{tr("جزئیات ساخته نشده", "Details not built yet")}</span>}
             </div>
           </div>
           <ChevronDown size={18} className="rp-stage-chevron" />
@@ -90,13 +92,13 @@ export function RoadmapStageCard({
                 {stage.focus && <p>{stage.focus}</p>}
                 <button type="button" className="trade-primary-btn" onClick={onRegenerate} disabled={regenerating}>
                   {regenerating ? <Spinner size={13} /> : <Sparkles size={14} />}
-                  {regenerating ? "در حال ساخت…" : "ساخت جزئیات این مرحله"}
+                  {regenerating ? tr("در حال ساخت…", "Building…") : tr("ساخت جزئیات این مرحله", "Build this stage's details")}
                 </button>
               </div>
             ) : (
               <>
                 {!!stage.prerequisites.length && (
-                  <Section icon={<Flag size={14} />} title="قبل از شروع باید بلد باشی">
+                  <Section icon={<Flag size={14} />} title={tr("قبل از شروع باید بلد باشی", "What you should know first")}>
                     <div className="rp-tags">
                       {stage.prerequisites.map((p, i) => <span key={i} className="rp-tag">{p}</span>)}
                     </div>
@@ -104,7 +106,7 @@ export function RoadmapStageCard({
                 )}
 
                 {!!stage.topics.length && (
-                  <Section icon={<BookOpen size={14} />} title="چی یاد بگیری — به همین ترتیب">
+                  <Section icon={<BookOpen size={14} />} title={tr("چی یاد بگیری — به همین ترتیب", "What to learn — in this order")}>
                     <ol className="rp-topics">
                       {stage.topics.map((t, i) => (
                         <li key={i}>
@@ -122,17 +124,17 @@ export function RoadmapStageCard({
                 )}
 
                 {!!stage.tasks.length && (
-                  <Section icon={<Hammer size={14} />} title="کارهای عملی">
+                  <Section icon={<Hammer size={14} />} title={tr("کارهای عملی", "Practical tasks")}>
                     <ul className="rp-tasks">
                       {stage.tasks.map((t, i) => {
                         const checked = !!progress[taskKey(stage.n, i)];
                         return (
                           <li key={i} className={checked ? "checked" : ""}>
-                            <TickButton size={22} checked={checked} onToggle={() => onToggleTask(i)} label={checked ? "برداشتن تیک" : "انجام شد"} />
+                            <TickButton size={22} checked={checked} onToggle={() => onToggleTask(i)} label={checked ? tr("برداشتن تیک", "Untick") : tr("انجام شد", "Done")} />
                             <div className="rp-task-body">
                               <div className="rp-task-title">{t.title}</div>
                               {t.detail && <p>{t.detail}</p>}
-                              {t.output && <div className="rp-task-output"><b>تحویل:</b> {t.output}</div>}
+                              {t.output && <div className="rp-task-output"><b>{tr("تحویل:", "Deliverable:")}</b> {t.output}</div>}
                             </div>
                           </li>
                         );
@@ -143,7 +145,7 @@ export function RoadmapStageCard({
 
                 {stage.project && (
                   <div className="rp-project">
-                    <div className="rp-project-label"><Package size={14} /> پروژه‌ی جمع‌بندی</div>
+                    <div className="rp-project-label"><Package size={14} /> {tr("پروژه‌ی جمع‌بندی", "Capstone project")}</div>
                     <div className="rp-project-title">{stage.project.title}</div>
                     {stage.project.brief && <p>{stage.project.brief}</p>}
                     {!!stage.project.deliverables.length && (
@@ -155,7 +157,7 @@ export function RoadmapStageCard({
                 )}
 
                 {!!stage.tools.length && (
-                  <Section icon={<Wrench size={14} />} title="ابزارها">
+                  <Section icon={<Wrench size={14} />} title={tr("ابزارها", "Tools")}>
                     <ul className="rp-tools">
                       {stage.tools.map((t, i) => (
                         <li key={i}>
@@ -170,11 +172,11 @@ export function RoadmapStageCard({
                 )}
 
                 {!!stage.resources.length && (
-                  <Section icon={<BookOpen size={14} />} title="منابع">
+                  <Section icon={<BookOpen size={14} />} title={tr("منابع", "Resources")}>
                     <ul className="rp-resources">
                       {stage.resources.map((r, i) => (
                         <li key={i}>
-                          <span className="rp-res-type">{RESOURCE_TYPES[r.type] || r.type}</span>
+                          <span className="rp-res-type">{RESOURCE_TYPES[r.type] ? pick(RESOURCE_TYPES[r.type]) : r.type === "منبع" ? tr("منبع", "Resource") : r.type}</span>
                           <div className="rp-res-body">
                             {/* لینک مستقیم فقط برای دامنه‌های شناخته‌شده (sanitizeUrl)؛ بقیه جست‌وجو. */}
                             <a href={r.url || searchUrl(r.title, topic)} target="_blank" rel="noopener noreferrer">
@@ -190,7 +192,7 @@ export function RoadmapStageCard({
                 )}
 
                 {!!stage.pitfalls.length && (
-                  <Section icon={<AlertTriangle size={14} />} title="اشتباه‌های رایج" tone="warn">
+                  <Section icon={<AlertTriangle size={14} />} title={tr("اشتباه‌های رایج", "Common mistakes")} tone="warn">
                     <ul className="rp-points warn">
                       {stage.pitfalls.map((p, i) => <li key={i}>{p}</li>)}
                     </ul>
@@ -198,7 +200,7 @@ export function RoadmapStageCard({
                 )}
 
                 {!!stage.done.length && (
-                  <Section icon={<ListChecks size={14} />} title="کی این مرحله تمومه؟">
+                  <Section icon={<ListChecks size={14} />} title={tr("کی این مرحله تمومه؟", "When is this stage done?")}>
                     <ul className="rp-done">
                       {stage.done.map((d, i) => <li key={i}><Check size={13} /><span>{d}</span></li>)}
                     </ul>
@@ -209,7 +211,7 @@ export function RoadmapStageCard({
 
             <div className="rp-stage-actions">
               <button type="button" className={`rp-ghost-btn${isDone ? " on" : ""}`} onClick={onToggleStage}>
-                <Check size={14} /> {isDone ? "تمام شده" : "این مرحله تمام شد"}
+                <Check size={14} /> {isDone ? tr("تمام شده", "Completed") : tr("این مرحله تمام شد", "Mark stage as done")}
               </button>
               {stage.detailed && (
                 <button
@@ -217,10 +219,10 @@ export function RoadmapStageCard({
                   className="rp-ghost-btn"
                   onClick={onRegenerate}
                   disabled={regenerating}
-                  title="جزئیات این مرحله را دوباره بساز"
+                  title={tr("جزئیات این مرحله را دوباره بساز", "Rebuild this stage's details")}
                 >
                   {regenerating ? <Spinner size={13} /> : <RefreshCw size={14} />}
-                  {regenerating ? "در حال ساخت…" : "ساخت دوباره"}
+                  {regenerating ? tr("در حال ساخت…", "Building…") : tr("ساخت دوباره", "Rebuild")}
                 </button>
               )}
             </div>

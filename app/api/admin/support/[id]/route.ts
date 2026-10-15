@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 import { requireAdmin } from "@/lib/requireAdmin";
 import { writeAuditLog } from "@/lib/adminAnalytics";
+import { tr } from "@/lib/i18n";
 
 // GET /api/admin/support/:id — جزئیات یک تیکت (هر تیکتی، نه فقط تیکت خود ادمین).
 export async function GET(_req: NextRequest, { params }: { params: { id: string } }) {
@@ -16,7 +17,7 @@ export async function GET(_req: NextRequest, { params }: { params: { id: string 
       messages: { orderBy: { createdAt: "asc" }, select: { id: true, body: true, fromAdmin: true, createdAt: true } },
     },
   });
-  if (!ticket) return NextResponse.json({ error: "تیکت پیدا نشد" }, { status: 404 });
+  if (!ticket) return NextResponse.json({ error: tr("تیکت پیدا نشد", "Ticket not found") }, { status: 404 });
 
   return NextResponse.json({
     ticket: {
@@ -34,10 +35,10 @@ export async function PATCH(req: NextRequest, { params }: { params: { id: string
   if (!guard.ok) return guard.response;
 
   const body = await req.json().catch(() => null);
-  if (body?.status !== "CLOSED") return NextResponse.json({ error: "درخواست نامعتبر است" }, { status: 400 });
+  if (body?.status !== "CLOSED") return NextResponse.json({ error: tr("درخواست نامعتبر است", "Invalid request") }, { status: 400 });
 
   const result = await prisma.supportTicket.updateMany({ where: { id: params.id }, data: { status: "CLOSED" } });
-  if (!result.count) return NextResponse.json({ error: "تیکت پیدا نشد" }, { status: 404 });
+  if (!result.count) return NextResponse.json({ error: tr("تیکت پیدا نشد", "Ticket not found") }, { status: 404 });
   await writeAuditLog(guard.userId, "support.close", "SupportTicket", params.id);
   return NextResponse.json({ ok: true });
 }

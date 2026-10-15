@@ -1,6 +1,7 @@
 "use client";
 
 import { useCallback, useRef, useState } from "react";
+import { tr } from "@/lib/i18n";
 
 // ضبط ویس برای دستیار روتین.
 //
@@ -48,9 +49,9 @@ export function useVoiceRecorder(getStream: () => MediaStream | null) {
 
   const start = useCallback(() => {
     const stream = getStream();
-    if (!stream) { setError("میکروفون در دسترس نیست."); setState("error"); return false; }
+    if (!stream) { setError(tr("میکروفون در دسترس نیست.", "The microphone is not available.")); setState("error"); return false; }
     if (typeof MediaRecorder === "undefined") {
-      setError("مرورگرت ضبط صدا را پشتیبانی نمی‌کند.");
+      setError(tr("مرورگرت ضبط صدا را پشتیبانی نمی‌کند.", "Your browser does not support voice recording."));
       setState("error");
       return false;
     }
@@ -63,7 +64,7 @@ export function useVoiceRecorder(getStream: () => MediaStream | null) {
         audioBitsPerSecond: VOICE_BITS_PER_SECOND,
       });
     } catch {
-      setError("ضبط صدا شروع نشد.");
+      setError(tr("ضبط صدا شروع نشد.", "Voice recording could not start."));
       setState("error");
       return false;
     }

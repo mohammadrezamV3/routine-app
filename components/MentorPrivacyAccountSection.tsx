@@ -8,6 +8,7 @@ import { SegmentedTabs } from "@/components/SegmentedTabs";
 import { MentorPrivacySettings } from "@/components/MentorPrivacySettings";
 import type { MentorshipRow, MentorshipsResponse } from "@/lib/mentorTypes";
 import { publicUserName } from "@/lib/mentorTypes";
+import { tr } from "@/lib/i18n";
 
 // بخش «دسترسی منتورها» در تنظیمات پنل کاربری — برای هر رابطه‌ی فعال/در
 // انتظار من به‌عنوان شاگرد، «برنامه‌های قابل مشاهده» و «جزئیات قابل مشاهده».
@@ -34,7 +35,7 @@ export function MentorPrivacyAccountSection() {
   }, [wanted]);
 
   if (!rows) return <LoadingBlock />;
-  if (rows.length === 0) return <MentorEmpty>هنوز مربی‌ای نداری؛ وقتی با یه مربی شروع کنی، این‌جا تنظیم می‌کنی چی ببینه</MentorEmpty>;
+  if (rows.length === 0) return <MentorEmpty>{tr("هنوز مربی‌ای نداری؛ وقتی با یه مربی شروع کنی، این‌جا تنظیم می‌کنی چی ببینه", "You don't have a mentor yet. Once you start with one, you can choose here what they can see")}</MentorEmpty>;
   const current = rows.find((m) => m.id === selected) ?? rows[0];
 
   return (

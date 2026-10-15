@@ -4,6 +4,7 @@
 import { useEffect, useRef, useState } from "react";
 import { Check, PenLine } from "lucide-react";
 import type { ReflectionDto } from "@/lib/weeklyAnalysis/types";
+import { tr } from "@/lib/i18n";
 import { Spinner } from "./Spinner";
 import { Reveal } from "./WeeklyLetterShared";
 import { LiveChapter, type LetterChapterExtra } from "./WeeklyLetterLiveKit";
@@ -11,7 +12,7 @@ import type { LetterChapterProps } from "./WeeklyLetterCtx";
 import { waFetch } from "./WeeklyAnalysisKit";
 
 const FACES = ["", "😞", "🙁", "😐", "🙂", "😄"];
-const MOOD_NAMES = ["", "خیلی بد", "بد", "معمولی", "خوب", "عالی"];
+const moodNames = () => ["", tr("خیلی بد", "Very bad"), tr("بد", "Bad"), tr("معمولی", "Okay"), tr("خوب", "Good"), tr("عالی", "Great")];
 const DEBOUNCE_MS = 900;
 
 type Draft = { wentWell: string; improve: string; mood: number | null };
@@ -82,15 +83,15 @@ function ReflectionEditor({ ctx, no }: { ctx: LetterChapterProps["ctx"]; no?: nu
   }, [offset]);
 
   return (
-    <LiveChapter id="reflection" no={no} title="یادداشت خودت" icon={PenLine}>
+    <LiveChapter id="reflection" no={no} title={tr("یادداشت خودت", "Your notes")} icon={PenLine}>
       <Reveal className="wl-card wl-live-refl">
         <div className="wl-live-refl-top">
-          <span className="wl-live-sub">حال این هفته</span>
+          <span className="wl-live-sub">{tr("حال این هفته", "How this week felt")}</span>
           <span className={`wl-live-save is-${state}`} aria-live="polite">
-            {state === "saving" ? <Spinner size={12} label={null} /> : state === "saved" ? <><Check size={12} />ذخیره شد</> : state === "error" ? "ذخیره نشد" : null}
+            {state === "saving" ? <Spinner size={12} label={null} /> : state === "saved" ? <><Check size={12} />{tr("ذخیره شد", "Saved")}</> : state === "error" ? tr("ذخیره نشد", "Not saved") : null}
           </span>
         </div>
-        <div className="wl-live-moods" role="radiogroup" aria-label="حال کلی این هفته" data-noswipe>
+        <div className="wl-live-moods" role="radiogroup" aria-label={tr("حال کلی این هفته", "Overall mood this week")} data-noswipe>
           {[1, 2, 3, 4, 5].map((n) => {
             const on = draft.mood === n;
             return (
@@ -99,8 +100,8 @@ function ReflectionEditor({ ctx, no }: { ctx: LetterChapterProps["ctx"]; no?: nu
                 type="button"
                 role="radio"
                 aria-checked={on}
-                aria-label={MOOD_NAMES[n]}
-                title={MOOD_NAMES[n]}
+                aria-label={moodNames()[n]}
+                title={moodNames()[n]}
                 className={`wl-live-mood${on ? " is-on" : ""}`}
                 onClick={() => update({ mood: on ? null : n })}
               >
@@ -110,25 +111,25 @@ function ReflectionEditor({ ctx, no }: { ctx: LetterChapterProps["ctx"]; no?: nu
           })}
         </div>
         <label className="wl-live-field">
-          <span className="wl-live-sub">چی خوب پیش رفت؟</span>
+          <span className="wl-live-sub">{tr("چی خوب پیش رفت؟", "What went well?")}</span>
           <textarea
             className="wsearch-newform-name"
             rows={3}
             maxLength={1000}
             value={draft.wentWell}
             onChange={(e) => update({ wentWell: e.target.value })}
-            placeholder="یه چیز کوچیک هم حسابه…"
+            placeholder={tr("یه چیز کوچیک هم حسابه…", "Even one small thing counts…")}
           />
         </label>
         <label className="wl-live-field">
-          <span className="wl-live-sub">چی رو بهتر کنم؟</span>
+          <span className="wl-live-sub">{tr("چی رو بهتر کنم؟", "What should I improve?")}</span>
           <textarea
             className="wsearch-newform-name"
             rows={3}
             maxLength={1000}
             value={draft.improve}
             onChange={(e) => update({ improve: e.target.value })}
-            placeholder="هفته‌ی بعد روی چی تمرکز کنی؟"
+            placeholder={tr("هفته‌ی بعد روی چی تمرکز کنی؟", "What will you focus on next week?")}
           />
         </label>
         {error && <div className="wl-live-error" role="alert">{error}</div>}

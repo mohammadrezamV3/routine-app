@@ -3,6 +3,7 @@
 
 import { isoLocal, jalaliToIso, toJalali } from "./jalali";
 import { tasksForDate, ScheduleOpts } from "./schedule";
+import type { Localized } from "./i18n";
 
 // ── سلام و «فاز» روز ─────────────────────────────────────────
 export type DayPhase = "dawn" | "day" | "dusk" | "night";
@@ -16,11 +17,11 @@ export function dayPhase(d: Date): DayPhase {
   return "night";
 }
 
-export const PHASE_GREETING: Record<DayPhase, string> = {
-  dawn: "صبح بخیر",
-  day: "روز بخیر",
-  dusk: "عصر بخیر",
-  night: "شب بخیر",
+export const PHASE_GREETING: Record<DayPhase, Localized> = {
+  dawn: { fa: "صبح بخیر", en: "Good morning" },
+  day: { fa: "روز بخیر", en: "Good afternoon" },
+  dusk: { fa: "عصر بخیر", en: "Good evening" },
+  night: { fa: "شب بخیر", en: "Good night" },
 };
 
 // ── قوس روز (بیداری → خواب) ──────────────────────────────────

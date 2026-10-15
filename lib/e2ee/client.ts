@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import { tr } from "@/lib/i18n";
 import {
   E2EEDecryptError,
   decryptMessage,
@@ -157,10 +158,10 @@ async function api<T>(url: string, init?: RequestInit): Promise<T> {
   try {
     res = await fetch(url, { cache: "no-store", ...init, headers: { "Content-Type": "application/json", ...(init?.headers || {}) } });
   } catch {
-    throw new E2EEApiError("اتصال برقرار نشد؛ دوباره تلاش کن", 0);
+    throw new E2EEApiError(tr("اتصال برقرار نشد؛ دوباره تلاش کن", "Couldn't connect. Try again"), 0);
   }
   const data = await res.json().catch(() => null);
-  if (!res.ok) throw new E2EEApiError(data?.error || "درخواست انجام نشد؛ دوباره تلاش کن", res.status, data?.code);
+  if (!res.ok) throw new E2EEApiError(data?.error || tr("درخواست انجام نشد؛ دوباره تلاش کن", "The request failed. Try again"), res.status, data?.code);
   return data as T;
 }
 
@@ -391,7 +392,7 @@ export function refreshIdentity(): Promise<void> {
     .catch((e) => {
       // خطای شبکه/سرور وقتی کلید از قبل آماده است، وضعیت آماده را خراب نمی‌کند
       if (state.status === "ready") return;
-      setState({ status: "error", message: e instanceof Error && e.message ? e.message : "رمزگذاری آماده نشد؛ دوباره تلاش کن" });
+      setState({ status: "error", message: e instanceof Error && e.message ? e.message : tr("رمزگذاری آماده نشد؛ دوباره تلاش کن", "Couldn't get chat ready. Try again") });
     })
     .finally(() => {
       loading = null;
@@ -551,7 +552,7 @@ export async function unlockLegacyPasscode(passcode: string): Promise<void> {
   try {
     key = await unwrapPrivateKey(b.backup, passcode, ctx, true);
   } catch (e) {
-    if (e instanceof E2EEDecryptError) throw new WrongPasscodeError("این رمز درست نیست");
+    if (e instanceof E2EEDecryptError) throw new WrongPasscodeError(tr("این رمز درست نیست", "That password is wrong"));
     throw e;
   }
   const kek = await getKek(userId);
@@ -672,11 +673,11 @@ export async function cancelHistoryLink(id: string): Promise<void> {
 
 /** دستگاه قدیمی، پس از تطبیق کد: سابقه برای کلید دستگاه تازه بسته‌بندی می‌شود */
 export async function approveHistoryLink(link: Extract<LinkState, { role: "approver" }>, onProgress?: (n: number) => void): Promise<number> {
-  if (state.status !== "ready") throw new E2EEApiError("رمزگذاری آماده نیست", 409);
+  if (state.status !== "ready") throw new E2EEApiError(tr("رمزگذاری آماده نیست", "Chat isn't ready yet"), 409);
   const { identity } = state;
   const me = await fetchState();
   const target = me.keys.find((k) => k.version === link.targetVersion && k.active);
-  if (!target) throw new E2EEApiError("دستگاه تازه دیگر فعال نیست", 409);
+  if (!target) throw new E2EEApiError(tr("دستگاه تازه دیگر فعال نیست", "The new device is no longer active"), 409);
   const sources = identity.ring.filter((r) => r.version !== link.targetVersion).map((r) => ({ ref: { u: identity.userId, k: r.version }, privateKey: r.privateKey }));
   const moved = await transferHistory(identity.userId, sources, { ref: { u: identity.userId, k: target.version }, publicKey: target.publicKey }, onProgress);
   await api(`/api/e2ee/link/${encodeURIComponent(link.id)}`, { method: "POST", body: JSON.stringify({ action: "done", moved }) });
@@ -780,7 +781,7 @@ export class ConversationCipher {
 
   /** senderId ≠ من فقط برای بازرمزگذاری پیام قدیمی طرف مقابل (بسته‌بندی‌ها را کلید من می‌سازد) */
   private async encryptAs(senderId: string, text: string, clientId: string) {
-    if (!this.peerCurrent()) throw new E2EEApiError("طرف مقابل هنوز کلید رمزگذاری ندارد", 409, "PEER_NO_KEY");
+    if (!this.peerCurrent()) throw new E2EEApiError(tr("طرف مقابل هنوز کلید رمزگذاری ندارد", "The other person hasn't set up chat yet"), 409, "PEER_NO_KEY");
     const from: OwnKey = { ref: { u: this.me.userId, k: this.me.version }, privateKey: this.me.privateKey };
     return encryptMessageV2(text, { mentorshipId: this.mentorshipId, senderId, clientId }, from, this.targets());
   }

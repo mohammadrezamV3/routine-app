@@ -1,3 +1,4 @@
+import { tr } from "@/lib/i18n";
 import { NextRequest, NextResponse } from "next/server";
 import { ModuleKey } from "@prisma/client";
 import { getSessionFast } from "@/lib/serverSession";
@@ -78,18 +79,18 @@ async function handlePOST(req: NextRequest) {
   const sleptAt = typeof b.sleptAt === "string" ? new Date(b.sleptAt) : null;
   const wokeAt = typeof b.wokeAt === "string" ? new Date(b.wokeAt) : null;
   if (!date || !sleptAt || !wokeAt || Number.isNaN(sleptAt.getTime()) || Number.isNaN(wokeAt.getTime())) {
-    return NextResponse.json({ error: "زمان خواب یا بیداری نامعتبر است" }, { status: 400 });
+    return NextResponse.json({ error: tr("زمان خواب یا بیداری نامعتبر است", "Invalid sleep or wake time") }, { status: 400 });
   }
   const minutes = (wokeAt.getTime() - sleptAt.getTime()) / 60000;
   if (minutes < SLEEP_MIN_MIN || minutes > SLEEP_MAX_MIN) {
-    return NextResponse.json({ error: "مدت خواب باید بین 30 دقیقه تا 20 ساعت باشد" }, { status: 400 });
+    return NextResponse.json({ error: tr("مدت خواب باید بین 30 دقیقه تا 20 ساعت باشد", "Sleep duration must be between 30 minutes and 20 hours") }, { status: 400 });
   }
   if (wokeAt.getTime() > Date.now() + 12 * 3600_000) {
-    return NextResponse.json({ error: "زمان بیداری در آینده است" }, { status: 400 });
+    return NextResponse.json({ error: tr("زمان بیداری در آینده است", "Wake time is in the future") }, { status: 400 });
   }
   // روز ثبت باید همون حوالی بیداری باشه (±۱ روز برای اختلاف منطقه‌ی زمانی)
   if (Math.abs(wokeAt.getTime() - date.getTime()) > 2 * 86_400_000) {
-    return NextResponse.json({ error: "تاریخ با زمان بیداری جور نیست" }, { status: 400 });
+    return NextResponse.json({ error: tr("تاریخ با زمان بیداری جور نیست", "The date does not match the wake time") }, { status: 400 });
   }
   const quality = typeof b.quality === "number" && Number.isInteger(b.quality) && b.quality >= 1 && b.quality <= 5 ? b.quality : null;
   const note = typeof b.note === "string" && b.note.trim() ? b.note.trim().slice(0, 200) : null;
@@ -114,7 +115,7 @@ async function handleDELETE(req: NextRequest) {
   const guard = await requireModule(ModuleKey.SLEEP);
   if (!guard.ok) return guard.response;
   const date = parseIsoDate(req.nextUrl.searchParams.get("date"));
-  if (!date) return NextResponse.json({ error: "تاریخ نامعتبر است" }, { status: 400 });
+  if (!date) return NextResponse.json({ error: tr("تاریخ نامعتبر است", "Invalid date") }, { status: 400 });
   await prisma.sleepEntry.deleteMany({ where: { userId: guard.userId, date } });
   return NextResponse.json({ ok: true });
 }

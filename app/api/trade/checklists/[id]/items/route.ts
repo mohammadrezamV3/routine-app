@@ -4,6 +4,7 @@ import { prisma } from "@/lib/prisma";
 import { requireModule } from "@/lib/moduleAccess";
 import { withLiveSync } from "@/lib/realtime";
 import { sessionFeatureBlocked } from "@/lib/featureFlagsServer";
+import { tr } from "@/lib/i18n";
 
 // PATCH /api/trade/checklists/[id]/items  { itemId, checked } | { resetAll: true }
 //
@@ -23,7 +24,7 @@ async function handlePATCH(req: NextRequest, { params }: { params: { id: string 
     where: { id: params.id, userId: guard.userId },
     select: { id: true },
   });
-  if (!checklist) return NextResponse.json({ error: "چک‌لیست پیدا نشد" }, { status: 404 });
+  if (!checklist) return NextResponse.json({ error: tr(tr("چک‌لیست پیدا نشد", "Checklist not found"), "Checklist not found") }, { status: 404 });
 
   const body = await req.json().catch(() => null);
 
@@ -37,14 +38,14 @@ async function handlePATCH(req: NextRequest, { params }: { params: { id: string 
 
   const itemId = typeof body?.itemId === "string" ? body.itemId : "";
   if (!itemId || typeof body?.checked !== "boolean") {
-    return NextResponse.json({ error: "درخواست نامعتبر است" }, { status: 400 });
+    return NextResponse.json({ error: tr("درخواست نامعتبر است", "Invalid request") }, { status: 400 });
   }
 
   const updated = await prisma.tradeChecklistItem.updateMany({
     where: { id: itemId, checklistId: params.id },
     data: { checked: body.checked },
   });
-  if (updated.count === 0) return NextResponse.json({ error: "آیتم پیدا نشد" }, { status: 404 });
+  if (updated.count === 0) return NextResponse.json({ error: tr(tr("آیتم پیدا نشد", "Item not found"), "Item not found") }, { status: 404 });
 
   return NextResponse.json({ ok: true });
 }

@@ -31,7 +31,6 @@ body[data-theme="light"]{ --m-warn:#9A6414; --m-ok:#0A7D5E; }
 .mentor-page .trade-head-block h1{ margin:0; }
 .mentor-page .trade-head-block .section-note{ margin:var(--m-1) 0 0; }
 .mentor-page .trade-head-row{ margin:0; }
-.mentor-head-custom{ display:flex; align-items:center; gap:var(--m-3); min-width:0; }
 
 /* کلاس‌های مشترک سایت در هاور جابه‌جا نمی‌شوند (فقط رنگ)؛ فیدبک فشار در
    بلوک «حرکت» انتهای فایل تعریف شده است */
@@ -115,30 +114,22 @@ a.mentor-row:focus-visible{ outline:2px solid var(--accent); outline-offset:2px;
 
 /* ── چیپ وضعیت (MentorChip) ────────────────────────────────────
    یک خط، کوچک: آیکون 13 + متن کوتاه. فقط رنگ متن و بوردر. */
-.mentor-chip,
-.mentor-status,
-.mentor-badge,
-.mentor-log-chip{
+.mentor-chip, .mentor-status{
   display:inline-flex; align-items:center; gap:var(--m-1); flex-shrink:0;
   max-width:100%; padding:2px 8px; border-radius:999px;
   font-size:12px; font-weight:700; line-height:1.7; white-space:nowrap;
   color:var(--muted); border:1px solid var(--surface-line);
 }
-.mentor-chip svg, .mentor-status svg, .mentor-badge svg, .mentor-log-chip svg{ flex-shrink:0; }
+.mentor-chip svg, .mentor-status svg{ flex-shrink:0; }
 .mentor-chip > span{ overflow:hidden; text-overflow:ellipsis; }
-.mentor-chip.is-accent, .mentor-badge.is-verified,
-.mentor-status.is-active{ color:var(--accent); border-color:rgba(var(--accent-rgb),.45); }
-.mentor-chip.is-ok, .mentor-status.is-completed, .mentor-status.is-accepted,
-.mentor-log-chip.is-completed{ color:var(--m-ok); border-color:rgba(var(--pnl-win-rgb),.45); }
-.mentor-chip.is-warn, .mentor-status.is-pending,
-.mentor-log-chip.is-partial{ color:var(--m-warn); border-color:currentColor; border-color:color-mix(in srgb, currentColor 45%, transparent); }
-.mentor-chip.is-danger, .mentor-status.is-rejected, .mentor-status.is-blocked,
-.mentor-log-chip.is-missed{ color:var(--m-danger); border-color:rgba(var(--pnl-loss-rgb),.45); }
+.mentor-chip.is-accent, .mentor-status.is-active{ color:var(--accent); border-color:rgba(var(--accent-rgb),.45); }
+.mentor-chip.is-ok, .mentor-status.is-completed, .mentor-status.is-accepted{ color:var(--m-ok); border-color:rgba(var(--pnl-win-rgb),.45); }
+.mentor-chip.is-warn, .mentor-status.is-pending{ color:var(--m-warn); border-color:currentColor; border-color:color-mix(in srgb, currentColor 45%, transparent); }
+.mentor-chip.is-danger, .mentor-status.is-rejected, .mentor-status.is-blocked{ color:var(--m-danger); border-color:rgba(var(--pnl-loss-rgb),.45); }
 .mentor-chip.is-info{ color:var(--m-info); border-color:currentColor; border-color:color-mix(in srgb, currentColor 45%, transparent); }
-.mentor-chip.is-neutral, .mentor-status.is-draft, .mentor-status.is-cancelled, .mentor-status.is-ended,
-.mentor-log-chip.is-none{ color:var(--muted); border-color:var(--surface-line); }
-.mentor-badge.is-cat, .mentor-chip.is-cat{ color:var(--text); border-color:var(--surface-line); }
-.mentor-chips, .mentor-badges, .mentor-chip-list{ display:flex; flex-wrap:wrap; align-items:center; gap:6px; }
+.mentor-chip.is-neutral, .mentor-status.is-draft, .mentor-status.is-cancelled, .mentor-status.is-ended{ color:var(--muted); border-color:var(--surface-line); }
+.mentor-chip.is-cat{ color:var(--text); border-color:var(--surface-line); }
+.mentor-chips{ display:flex; flex-wrap:wrap; align-items:center; gap:6px; }
 
 /* شمارنده‌ی نخوانده — عدد داخل حلقه، بی‌بک‌گراند */
 .mentor-unread{
@@ -210,12 +201,6 @@ a.mentor-btn.trade-danger-btn{ border-color:#E05252; color:#E05252; }
 }
 @media (max-width:480px){
   .mentor-form-actions > *{ flex:1 1 0; }
-}
-
-/* ناحیه‌ی اقدام مخرب — پایین صفحه، جدا از بقیه */
-.mentor-danger-zone{
-  display:flex; flex-wrap:wrap; gap:var(--m-2); margin-top:var(--m-5);
-  padding-top:var(--m-4); border-top:1px solid var(--surface-line);
 }
 
 /* لینک متنی بی‌قاب */
@@ -297,14 +282,9 @@ body[data-theme="light"] .mentor-text-btn, body:not([data-theme="light"]) .mento
 
 @media (hover:hover) and (pointer:fine){ .mentor-card:hover .mentor-card-name{ color:var(--accent); } }
 .mentor-card:focus-visible{ outline:2px solid var(--accent); outline-offset:2px; }
-
-/* ── کشف: جست‌وجو/فیلتر ─────────────────────────────────────── */
-.mentor-filter{ display:flex; flex-direction:column; gap:var(--m-2); margin-bottom:var(--m-4); }
-.mentor-filter-row{ display:flex; flex-wrap:wrap; align-items:center; gap:var(--m-2); }
 .mentor-search{ position:relative; flex:1 1 180px; min-width:0; }
 .mentor-search svg{ position:absolute; top:50%; inset-inline-start:13px; transform:translateY(-50%); color:var(--muted2); pointer-events:none; }
 .mentor-search input.wsearch-newform-name{ width:100%; padding-inline-start:38px; }
-select.wsearch-newform-name.mentor-sort{ flex:0 0 auto; width:auto; min-width:120px; }
 .mentor-popular-row{
   display:grid; grid-auto-flow:column; grid-auto-columns:minmax(260px, 82%); gap:var(--m-3);
   overflow-x:auto; padding-bottom:6px; scroll-snap-type:x mandatory;
@@ -340,16 +320,7 @@ body[data-theme="light"] .mentor-star-input button, body:not([data-theme="light"
 .mentor-hero-id{ flex:1; min-width:0; display:flex; flex-direction:column; gap:var(--m-1); }
 .mentor-hero-name{ margin:0; font-size:18px; font-weight:800; color:var(--text); line-height:1.6; }
 .mentor-hero-headline{ margin:0; font-size:12.5px; color:var(--muted); line-height:1.8; }
-.mentor-hero .mentor-badges{ margin-top:var(--m-3); }
 .mentor-hero-actions{ display:flex; flex-wrap:wrap; align-items:center; gap:var(--m-2); margin-top:var(--m-4); }
-.mentor-stats{ display:grid; grid-template-columns:repeat(2, 1fr); gap:var(--m-2); margin-top:var(--m-4); }
-@media (min-width:560px){ .mentor-stats{ grid-template-columns:repeat(4, 1fr); } }
-.mentor-stat{
-  display:flex; flex-direction:column; gap:2px; padding:var(--m-2) var(--m-3); border-radius:12px;
-  border:1px solid var(--surface-line);
-}
-.mentor-stat b{ font-size:15px; font-weight:800; color:var(--text); }
-.mentor-stat span{ display:inline-flex; align-items:center; gap:var(--m-1); font-size:12px; color:var(--muted); }
 .mentor-bio{ margin:0; font-size:12.5px; line-height:2; color:var(--text); white-space:pre-wrap; word-break:break-word; }
 
 /* ── نظرها ─────────────────────────────────────────────────── */
@@ -360,59 +331,17 @@ body[data-theme="light"] .mentor-star-input button, body:not([data-theme="light"
 .mentor-review-name{ font-size:12.5px; font-weight:700; color:var(--text); }
 .mentor-review-date{ font-size:12px; color:var(--muted2); }
 .mentor-review-text{ margin:6px 0 0; font-size:12px; line-height:1.95; color:var(--muted); white-space:pre-wrap; word-break:break-word; }
-
-/* ── ردیف‌های قدیمی رابطه/برنامه (سازگاری؛ الگوی جدید: .mentor-row) ── */
-.mentor-row-actions{ display:flex; flex-wrap:wrap; align-items:center; gap:6px; flex-shrink:0; }
-.mentor-row-actions .account-outline-btn, .mentor-row-actions .trade-danger-btn, .mentor-row-actions .trade-primary-btn{
-  min-height:32px; padding:5px 12px; border-radius:10px; font-size:12px; gap:5px;
-}
-.mentor-row-stack{ display:flex; flex-direction:column; gap:var(--m-2); padding:var(--m-3) var(--m-4); border-bottom:1px solid var(--surface-line); }
-.account-card .mentor-row-stack:last-child{ border-bottom:none; }
 .mentor-row-main{ display:flex; align-items:center; gap:var(--m-3); min-width:0; text-decoration:none; color:inherit; }
 .mentor-quote{
   margin:0; padding-inline-start:10px; border-inline-start:2px solid var(--surface-line);
   font-size:12px; color:var(--muted); line-height:1.9; white-space:pre-wrap; word-break:break-word;
 }
-@media (max-width:480px){
-  .mentor-row-stack .mentor-row-actions{ width:100%; }
-  .mentor-row-stack .mentor-row-actions > *{ flex:1; }
-}
-
-/* ── صفحه‌ی رابطه ──────────────────────────────────────────── */
-.mentor-rel-head{ display:flex; align-items:center; gap:var(--m-3); margin-bottom:var(--m-4); }
-.mentor-rel-head h1{ margin:0; font-size:18px; }
-.mentor-rel-id{ flex:1; min-width:0; }
-.mentor-rel-sub{ display:flex; flex-wrap:wrap; align-items:center; gap:6px; margin-top:2px; font-size:12px; color:var(--muted); }
 .mentor-tabs{ margin-bottom:var(--m-4); }
 
 /* ── چت ───────────────────────────────────────────────────── */
 .mentor-chat{ display:flex; flex-direction:column; }
 .mentor-chat .support-thread{ height:max(260px, min(58vh, calc(100dvh - 350px), 560px)); flex:none; margin-top:0; }
-.mentor-chat-empty{ margin:auto; text-align:center; font-size:12px; color:var(--muted); line-height:1.9; }
-.mentor-msg-meta{ display:flex; align-items:center; gap:5px; margin-top:5px; font-size:12px; opacity:.75; }
-.mentor-msg-meta .mono{ direction:ltr; }
 .support-msg.is-failed{ opacity:.65; }
-.mentor-msg-actions{ display:flex; gap:var(--m-1); margin-top:var(--m-1); }
-.mentor-msg-actions button{
-  display:inline-flex; align-items:center; gap:var(--m-1); padding:2px 4px; border:none; font-size:12px; color:inherit; cursor:pointer;
-  background:none; box-shadow:none; backdrop-filter:none; -webkit-backdrop-filter:none; opacity:.8;
-}
-@media (hover:hover){ .mentor-msg-actions button:hover{ opacity:1; text-decoration:underline; background:none; } }
-body[data-theme="light"] .mentor-msg-actions button, body:not([data-theme="light"]) .mentor-msg-actions button{ background:none; box-shadow:none; }
-.mentor-chat-older{ align-self:center; }
-/* گزارش پیام: فقط آیکون، هم‌خط ساعت (نه یک ردیف جدا زیر هر پیام) */
-.mentor-msg-report{
-  display:inline-flex; align-items:center; margin-inline-start:auto; padding:2px; border:none; border-radius:6px;
-  color:inherit; cursor:pointer; opacity:.7;
-  background:none; box-shadow:none; backdrop-filter:none; -webkit-backdrop-filter:none;
-}
-body[data-theme="light"] .mentor-msg-report, body:not([data-theme="light"]) .mentor-msg-report{ background:none; box-shadow:none; }
-@media (hover:hover){ .mentor-msg-report:hover{ opacity:1; color:var(--m-danger); background:none; } }
-.mentor-msg-report:focus-visible{ outline:2px solid var(--accent); outline-offset:1px; }
-.mentor-chat-disabled{
-  margin-top:var(--m-3); padding:var(--m-2) var(--m-3); border-radius:12px; border:1px dashed var(--surface-line);
-  text-align:center; font-size:12px; color:var(--muted); line-height:1.9;
-}
 .mentor-chat .routine-ai-composer{ margin-top:var(--m-3); }
 
 /* ── پیش‌نمایش حریم خصوصی ──────────────────────────────────── */
@@ -424,13 +353,6 @@ body[data-theme="light"] .mentor-msg-report, body:not([data-theme="light"]) .men
 .mentor-preview-tag{ font-size:12px; font-weight:700; color:var(--muted); min-width:74px; }
 .mentor-preview-line{ color:var(--text); font-weight:700; direction:rtl; }
 .mentor-preview-line.is-mentor{ color:var(--accent); }
-
-/* ── اجرای برنامه ─────────────────────────────────────────── */
-.mentor-week-nav{ display:flex; align-items:center; gap:6px; margin-bottom:var(--m-3); }
-.mentor-week-nav .day-picker{ flex:1; min-width:0; }
-.mentor-week-nav .day-pill{ padding:7px 0; display:flex; flex-direction:column; align-items:center; gap:1px; font-size:12px; }
-.mentor-week-nav .day-pill small{ font-size:12px; font-weight:600; opacity:.8; }
-.mentor-week-nav .day-pill.is-future{ opacity:.55; }
 .mentor-week-label{ font-size:12px; color:var(--muted); text-align:center; margin-bottom:var(--m-3); }
 .mentor-item{ padding:var(--m-3) 0; border-bottom:1px solid var(--surface-line); }
 .mentor-item:last-child{ border-bottom:none; }
@@ -439,26 +361,11 @@ body[data-theme="light"] .mentor-msg-report, body:not([data-theme="light"]) .men
 .mentor-item-meta{ display:flex; flex-wrap:wrap; gap:var(--m-1) var(--m-3); margin-top:var(--m-1); font-size:12px; color:var(--muted); }
 .mentor-item-meta span{ display:inline-flex; align-items:center; gap:var(--m-1); }
 .mentor-item-details{ margin:6px 0 0; font-size:12px; color:var(--muted); line-height:1.9; white-space:pre-wrap; word-break:break-word; }
-.mentor-log-status{ display:flex; gap:6px; margin-top:var(--m-3); }
-.mentor-log-status .day-pill{ font-size:12px; padding:8px 0; }
-.mentor-log-status .day-pill.on.is-partial{ color:var(--m-warn); border-color:var(--m-warn); box-shadow:0 0 0 1px var(--m-warn); }
-.mentor-log-status .day-pill.on.is-missed{ color:var(--m-danger); border-color:var(--m-danger); box-shadow:0 0 0 1px var(--m-danger); }
-/* هاله و ته‌رنگ سبز day-pill.on روی «نیمه‌کاره/انجام نشد» رنگ همان وضعیت را می‌گیرد */
-.mentor-log-status .day-pill.on.is-partial{ background:color-mix(in srgb, var(--m-warn) 12%, transparent); }
-.mentor-log-status .day-pill.on.is-missed{ background:color-mix(in srgb, var(--m-danger) 12%, transparent); }
-.mentor-log-status .day-pill.on.is-partial::after,
-.mentor-log-status .day-pill.on.is-missed::after{ box-shadow:none; }
-.mentor-log-extra{ display:grid; grid-template-columns:1fr; gap:var(--m-2); margin-top:var(--m-2); }
-@media (min-width:520px){ .mentor-log-extra.has-sets{ grid-template-columns:120px 1fr; } }
-.mentor-log-foot{ display:flex; align-items:center; justify-content:flex-end; gap:var(--m-2); margin-top:var(--m-2); }
-.mentor-log-foot .trade-form-error{ margin:0; flex:1; }
-.mentor-log-saved{ display:inline-flex; align-items:center; gap:var(--m-1); font-size:12px; color:var(--accent); }
 .mentor-log-note{ margin:6px 0 0; font-size:12px; color:var(--muted); line-height:1.8; white-space:pre-wrap; word-break:break-word; }
 
 .mentor-progress{ display:flex; align-items:center; gap:var(--m-3); margin-top:var(--m-3); }
 .mentor-progress .rp-bar{ flex:1; }
 .mentor-progress-value{ flex-shrink:0; font-size:12px; font-weight:800; color:var(--accent); }
-.mentor-progress-legend{ display:flex; flex-wrap:wrap; gap:var(--m-1) var(--m-3); margin-top:6px; font-size:12px; color:var(--muted); }
 /* نوار پیشرفت در این بخش بدون انیمیشن عرض */
 .mentor-page .rp-bar span{ transition:none; }
 
@@ -473,10 +380,6 @@ body[data-theme="light"] .mentor-msg-report, body:not([data-theme="light"]) .men
   font-size:12px; line-height:1.9; color:var(--muted); white-space:pre-wrap; word-break:break-word;
 }
 .mentor-note-box b{ color:var(--text); }
-.mentor-actions-bar{ display:flex; flex-wrap:wrap; gap:var(--m-2); margin-top:var(--m-4); }
-.mentor-actions-bar > button, .mentor-actions-bar > a{ flex:1 1 140px; }
-.mentor-date-group{ margin-top:6px; }
-.mentor-date-group-title{ font-size:12px; font-weight:800; color:var(--text); margin:var(--m-3) 0 2px; }
 
 /* ── فایل‌ها (مدارک) ───────────────────────────────────────── */
 .mentor-file-name{ unicode-bidi:plaintext; }
@@ -555,15 +458,9 @@ body[data-theme="light"] .mentor-msg-report, body:not([data-theme="light"]) .men
 .mentor-intake-edit > input, .mentor-inline-add > input{ flex:1; min-width:0; }
 .mentor-list .mentor-row > input.wsearch-newform-name{ flex:1; min-width:0; }
 
-/* فهرست شاگردها: تب مرتب‌سازی بدون حاشیه‌ی خود auth-tabs */
-.mentor-sort-tabs > .auth-tabs{ margin:0; }
-
 /* یادداشت‌های خصوصی */
 .mentor-notes{ margin-top:var(--m-2); }
 .mentor-note-actions{ display:inline-flex; align-items:center; gap:var(--m-1); margin-inline-start:auto; }
-
-/* کنترل‌های رابطه: وضعیت توقف بالای دکمه‌ها */
-.mentor-pause-state{ flex:1 1 100%; display:flex; flex-wrap:wrap; align-items:center; gap:var(--m-2); }
 
 /* خط‌های وضعیت (توقف، عدم حضور، دلیل پایان، پیام خوش‌آمد، زمان پاسخ) */
 .mentor-state-notes{ display:flex; flex-direction:column; gap:var(--m-2); margin-bottom:var(--m-4); }
@@ -596,8 +493,6 @@ body[data-theme="light"] .mentor-msg-report, body:not([data-theme="light"]) .men
 
 /* پیامی که خوانده نمی‌شود (کلید قبلی/تاییدنشده) */
 .mentor-msg-unreadable{ font-size:12px; font-style:italic; opacity:.75; }
-/* پیام خوش‌آمد از تنظیمات منتور — همان حباب پیام، با خط نقطه‌چین به‌جای پر */
-.support-msg.mentor-msg-welcome{ border-style:dashed; }
 
 /* پاپ‌آپ جزئیات رمزگذاری: بخش‌ها با خط مو جدا می‌شوند */
 .mentor-e2ee-block{ padding-top:var(--m-3); border-top:1px solid var(--surface-line); }
@@ -619,12 +514,8 @@ body[data-theme="light"] .mentor-msg-report, body:not([data-theme="light"]) .men
 .mentor-program-tools .acc-block{ margin:0; }
 .mentor-program-tools .acc-block-body{ padding:0; border:none; background:none; }
 .mentor-program-tools .mentor-section-head{ display:none; }
-/* آیکون گفت‌وگو در انتهای ردیف منتور فعال (/mentorship) */
-.mentor-row-chat{ color:var(--muted2); flex-shrink:0; }
 
 /* ── QA round 2 ─────────────────────────────────────────────── */
-/* فیلتر تک‌انتخابی داخل یک بخش flush (SegmentedTabs) */
-.mentor-section-filter{ padding:0 var(--m-4) var(--m-3); }
 
 /* ── شرایط منتورها (agent J) — MentorPlatformNotice و MentorTermsAcceptance ── */
 /* خط ثابت «آریون فقط بستر است» — متن کم‌رنگ، بدون پس‌زمینه و قاب */
@@ -724,7 +615,6 @@ section.mentor-section.is-flat.flush{ padding:0 0 var(--m-1); }
 section.mentor-section.is-flat.flush > .mentor-section-head{ margin:0; padding:var(--m-4) var(--m-4) var(--m-1); }
 section.mentor-section.is-flat.flush .mentor-row{ padding-inline:var(--m-4); }
 section.mentor-section.is-flat.flush > .mentor-empty{ padding-inline:var(--m-4); }
-section.mentor-section.is-flat.flush > .mentor-section-filter{ padding:0 var(--m-4) var(--m-3); }
 /* بخش بی‌عنوان (مثلا یک ردیف تنها) */
 section.mentor-section.is-flat.flush > .mentor-row:first-child{ padding-top:var(--m-3); }
 /* خالی/خطا داخل ظرف: بدون قاب دوم */
@@ -778,13 +668,6 @@ section.mentor-section.is-flat.flush > .mentor-row:first-child{ padding-top:var(
 /* تقویم روی شیت (z-index شیت 90) */
 .m-date-over .jdate-overlay{ z-index:96; }
 .m-date-over .jdate-popup{ z-index:97; }
-
-/* ── مراحل فعال‌سازی (MentorSetupSteps) ─────────────────── */
-.mentor-step-mark{
-  display:inline-flex; align-items:center; justify-content:center; width:26px; height:26px;
-  border-radius:50%; border:1px solid var(--surface-line); font-size:12px; font-weight:800; color:var(--muted);
-}
-.mentor-step-mark.is-done{ border-color:var(--accent); color:var(--accent); }
 .mentor-doc-rules{ padding:var(--m-2) 0 0; }
 #verification{ scroll-margin-top:80px; }
 .mentor-range{ font-size:12px; font-weight:600; color:var(--muted); white-space:nowrap; }
@@ -947,7 +830,7 @@ body[data-theme="light"] .mentor-pop-title.is-gold{ color:#B7860B; }
 .mentor-profile .mentor-bio + .mentor-tags{ margin-top:var(--m-3); }
 .mentor-profile section.mentor-section.is-flat > .mentor-tags:first-of-type{ margin-top:var(--m-2); }
 @media (prefers-reduced-motion: reduce){
-  .mentor-results, .mentor-filter-more svg, .mentor-cert-mark{ transition:none; }
+  .mentor-results, .mentor-cert-mark{ transition:none; }
 }
 
 /* ============================================================
@@ -1040,6 +923,9 @@ body .mc-screen .mc-pill:focus-visible{ outline:2px solid var(--accent); outline
 }
 .mc-day{ position:sticky; top:calc(var(--mc-head-h) - 2px); z-index:1; pointer-events:none; }
 .mc-service span{ font-weight:500; }
+/* بنر رمزگذاری بالای رشته می‌شینه؛ رشته و جداکننده‌ی روز زیرش شروع بشن تا روی هم نیفتن */
+.mc-main:has(> .mentor-e2ee-line) .mc-thread-inner{ padding-top:calc(var(--mc-head-h) + 64px); }
+.mc-main:has(> .mentor-e2ee-line) .mc-day{ top:calc(var(--mc-head-h) + 56px); }
 
 /* ── حباب ───────────────────────────────────────────────────── */
 .mc-row{ display:flex; flex-direction:column; margin-top:3px; }
@@ -1166,9 +1052,6 @@ body .mc-screen .mc-jump{
 @media (prefers-reduced-motion: reduce){ body .mc-screen .mc-pill:active{ transform:none; } }
 /* ============ پایان G · صفحه‌ی گفت‌وگو ============ */
 .mentor-terms-row{ padding-bottom:var(--m-3); }
-/* آمار داشبورد داخل ظرف: فاصله از بخش قبل/بعد */
-.mentor-dash-stats{ margin:0 0 var(--m-4); }
-section.mentor-section.is-flat + .mentor-dash-stats{ margin-top:var(--m-4); }
 
 /* ── H: رمزگذاری خودکار — خط «رمز گفت‌وگوی قبلی» و فهرست دستگاه‌ها (MentorE2EEGate / MentorE2EESettings) ── */
 .mentor-e2ee-legacy-row{ display:flex; flex-wrap:wrap; align-items:center; gap:var(--m-2, 8px); margin-top:var(--m-2, 8px); }
@@ -1178,31 +1061,6 @@ section.mentor-section.is-flat + .mentor-dash-stats{ margin-top:var(--m-4); }
 .mentor-e2ee-devices > li{ display:flex; align-items:center; gap:var(--m-2, 8px); padding:8px 0; border-top:1px solid var(--surface-line); font-size:12.5px; }
 .mentor-e2ee-devices > li:first-child{ border-top:none; }
 .mentor-e2ee-devices > li > span{ flex:1 1 0; min-width:0; }
-
-/* ============================================================
-   G · رابطه، فهرست منتورها، سابقه‌ی گفت‌وگو
-   ============================================================ */
-/* نشان قرمز «دعوت‌ها» داخل تب SegmentedTabs */
-.mentor-tab-label{ display:inline-flex; align-items:center; gap:6px; }
-.mentor-tab-badge{
-  min-width:18px; height:18px; padding:0 5px; border-radius:999px;
-  display:inline-flex; align-items:center; justify-content:center;
-  font-size:12px; font-weight:800; line-height:1; color:#fff; background:var(--m-danger);
-}
-.mentor-invite-terms{ padding:var(--m-2) var(--m-4) 0; }
-.mentor-section.is-flat.flush .mentor-invite-terms{ padding-inline:0; }
-
-/* برنامه‌ی منتظر پاسخ: عنوان (لینک به جزئیات) + واقعیت‌ها + یادداشت منتور + سه دکمه */
-.mentor-decision-card{ display:flex; flex-direction:column; gap:var(--m-2); padding:var(--m-3) 0; border-bottom:1px solid var(--surface-line); }
-.mentor-li:last-child > .mentor-decision-card{ border-bottom:none; padding-bottom:0; }
-.mentor-li:first-child > .mentor-decision-card{ padding-top:0; }
-.mentor-decision-title{
-  display:flex; align-items:center; gap:var(--m-2); color:var(--text); text-decoration:none;
-  font-size:14px; font-weight:800; min-width:0;
-}
-.mentor-decision-title > span{ flex:1; min-width:0; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
-@media (hover:hover){ .mentor-decision-title:hover > span{ color:var(--accent); } }
-.mentor-decision .mentor-form-actions, .mentor-decision-card .mentor-form-actions{ margin-top:var(--m-1); }
 .mentor-note-box.mentor-program-note{ margin-top:0; }
 .mentor-row.is-stacked .mentor-program-note{ margin-inline-start:44px; }
 @media (max-width:480px){ .mentor-row.is-stacked .mentor-program-note{ margin-inline-start:0; } }
@@ -1227,11 +1085,6 @@ section.mentor-section.is-flat + .mentor-dash-stats{ margin-top:var(--m-4); }
 section.mentor-section.is-flat .mentor-toggle-row:last-child{ padding-bottom:0; }
 .mentor-terms-row .mentor-check{ padding-top:var(--m-1); }
 /* شاگردها: جست‌وجو و فیلتر در موبایل در یک ردیف (نه نیم‌ردیف تنها) */
-@media (max-width:480px){
-  .mentor-filter-row{ flex-wrap:nowrap; }
-  .mentor-filter-row .mentor-search{ flex:1 1 0; }
-  .mentor-filter-row select.wsearch-newform-name.mentor-sort{ flex:0 0 156px; min-width:0; }
-}
 /* ادمین/جزئیات منتور: `.admin-onebox > .admin-chart-card{margin:0;padding:0}` فاصله‌ی بین بخش‌ها را صفر می‌کرد
    و عنوان هر بخش به محتوای قبلی می‌چسبید */
 .admin-onebox > * + .admin-chart-card,
@@ -1763,4 +1616,16 @@ body[data-theme="light"] .mv2-pg-item-main, body:not([data-theme="light"]) .mv2-
 @media (min-width:900px){
   .mv2-task-body{ flex:0 1 560px; }
   .mv2-task-end{ margin-inline-start:var(--m-4, 16px); }
+}
+
+/* ── انگلیسی / چپ‌به‌راست ───────────────────────────────────────
+   در فارسی هیچ‌کدام از این قانون‌ها اثری ندارد. */
+html[dir="ltr"] .mentor-pop,
+html[dir="ltr"] .mentor-toast,
+html[dir="ltr"] .mentor-preview-line{ direction:ltr; }
+/* فلش‌های جهت‌دار (dir-flip) هنگام هاور نباید transform را از دست بدهند */
+@media (hover:hover){
+  html[dir="ltr"] .mentor-page .trade-back-link:hover svg.dir-flip,
+  html[dir="ltr"] .mentor-page .rp-card:hover .rp-card-arrow.dir-flip,
+  html[dir="ltr"] .mentor-page a.account-row2:hover .account-row2-chevron.dir-flip{ transform:scaleX(-1); }
 }

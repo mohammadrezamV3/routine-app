@@ -1,3 +1,4 @@
+import { tr } from "@/lib/i18n";
 // حالت تعمیر/اطلاع‌رسانی سراسری — منطق خالص (بدون import سروری). کلید AppSetting: `maintenance`.
 // اپ هیچ‌وقت بسته نمی‌شه؛ فقط یک نوار نازک بالای صفحه نشون داده می‌شه.
 
@@ -22,16 +23,16 @@ export function normalizeMaintenance(raw: unknown): MaintenanceState {
 export type MaintenanceParse = { ok: true; value: MaintenanceState } | { ok: false; error: string };
 
 export function parseMaintenanceInput(raw: unknown): MaintenanceParse {
-  if (!raw || typeof raw !== "object") return { ok: false, error: "ورودی نامعتبر است" };
+  if (!raw || typeof raw !== "object") return { ok: false, error: tr("ورودی نامعتبر است", "Invalid input") };
   const r = raw as Record<string, unknown>;
-  if (typeof r.enabled !== "boolean") return { ok: false, error: "وضعیت نامعتبر است" };
+  if (typeof r.enabled !== "boolean") return { ok: false, error: tr("وضعیت نامعتبر است", "Invalid status") };
   const message = typeof r.message === "string" ? r.message.trim() : "";
-  if (message.length > MAINTENANCE_MESSAGE_MAX) return { ok: false, error: `پیام حداکثر ${MAINTENANCE_MESSAGE_MAX} حرف` };
-  if (r.enabled && !message) return { ok: false, error: "برای روشن‌کردن، پیام را بنویس" };
+  if (message.length > MAINTENANCE_MESSAGE_MAX) return { ok: false, error: tr(`پیام حداکثر ${MAINTENANCE_MESSAGE_MAX} حرف`, `The message can be at most ${MAINTENANCE_MESSAGE_MAX} characters`) };
+  if (r.enabled && !message) return { ok: false, error: tr("برای روشن‌کردن، پیام را بنویس", "Write a message before turning it on") };
   let until: string | null = null;
   if (typeof r.until === "string" && r.until.trim()) {
     const d = new Date(r.until);
-    if (Number.isNaN(d.getTime())) return { ok: false, error: "زمان پایان نامعتبر است" };
+    if (Number.isNaN(d.getTime())) return { ok: false, error: tr("زمان پایان نامعتبر است", "Invalid end time") };
     until = d.toISOString();
   }
   return { ok: true, value: { enabled: r.enabled, message, until } };

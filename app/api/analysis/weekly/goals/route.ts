@@ -1,3 +1,4 @@
+import { tr } from "@/lib/i18n";
 import { featureBlocked } from "@/lib/featureFlagsServer";
 import { NextRequest, NextResponse } from "next/server";
 import { ModuleKey } from "@prisma/client";
@@ -26,21 +27,21 @@ export async function POST(req: NextRequest) {
     const { userId, isSuperAdmin } = guard;
 
     if (!isSuperAdmin && !(await checkRateLimit(`weekly-analysis-goal-create:${userId}`, 20, 10 * 60 * 1000))) {
-      return NextResponse.json({ error: "تعداد درخواست بیش از حد مجاز — کمی صبر کن" }, { status: 429 });
+      return NextResponse.json({ error: tr("تعداد درخواست بیش از حد مجاز — کمی صبر کن", "Too many requests — wait a moment") }, { status: 429 });
     }
 
     const body = await req.json().catch(() => ({}));
 
     const titleRaw = typeof body?.title === "string" ? body.title.trim() : "";
     if (!titleRaw) {
-      return NextResponse.json({ error: "عنوان هدف الزامی است" }, { status: 400 });
+      return NextResponse.json({ error: tr("عنوان هدف الزامی است", "Goal title is required") }, { status: 400 });
     }
     const title = clampText(titleRaw, MAX_TITLE_LEN);
 
     let domain: AnalysisDomain | null = null;
     if (body?.domain !== undefined && body?.domain !== null) {
       if (!isValidDomain(body.domain)) {
-        return NextResponse.json({ error: "دامنه نامعتبر است" }, { status: 400 });
+        return NextResponse.json({ error: tr("دامنه نامعتبر است", "Invalid domain") }, { status: 400 });
       }
       domain = body.domain;
     }
@@ -49,7 +50,7 @@ export async function POST(req: NextRequest) {
     if (body?.target !== undefined && body?.target !== null) {
       const n = Number(body.target);
       if (!Number.isInteger(n) || n < 0 || n > 100) {
-        return NextResponse.json({ error: "target باید عددی بین 0 تا 100 باشد" }, { status: 400 });
+        return NextResponse.json({ error: tr("target باید عددی بین 0 تا 100 باشد", "target must be a number between 0 and 100") }, { status: 400 });
       }
       target = n;
     }
@@ -60,7 +61,7 @@ export async function POST(req: NextRequest) {
 
     const existingCount = await prisma.weeklyAnalysisGoal.count({ where: { userId, weekStart } });
     if (existingCount >= MAX_GOALS_PER_WEEK) {
-      return NextResponse.json({ error: `حداکثر ${MAX_GOALS_PER_WEEK} هدف برای یک هفته مجاز است` }, { status: 400 });
+      return NextResponse.json({ error: tr(`حداکثر ${MAX_GOALS_PER_WEEK} هدف برای یک هفته مجاز است`, `Up to ${MAX_GOALS_PER_WEEK} goals are allowed per week`) }, { status: 400 });
     }
 
     const goal = await prisma.weeklyAnalysisGoal.create({
@@ -80,7 +81,7 @@ export async function POST(req: NextRequest) {
       },
     });
   } catch (err: any) {
-    return NextResponse.json({ error: err?.message || "خطای غیرمنتظره" }, { status: 500 });
+    return NextResponse.json({ error: err?.message || tr("خطای غیرمنتظره", "Unexpected error") }, { status: 500 });
   }
 }
 
@@ -95,16 +96,16 @@ export async function DELETE(req: NextRequest) {
 
     const id = req.nextUrl.searchParams.get("id");
     if (!id) {
-      return NextResponse.json({ error: "id الزامی است" }, { status: 400 });
+      return NextResponse.json({ error: tr("id الزامی است", "id is required") }, { status: 400 });
     }
 
     const { count } = await prisma.weeklyAnalysisGoal.deleteMany({ where: { id, userId } });
     if (count === 0) {
-      return NextResponse.json({ error: "هدف پیدا نشد" }, { status: 404 });
+      return NextResponse.json({ error: tr("هدف پیدا نشد", "Goal not found") }, { status: 404 });
     }
 
     return NextResponse.json({ ok: true });
   } catch (err: any) {
-    return NextResponse.json({ error: err?.message || "خطای غیرمنتظره" }, { status: 500 });
+    return NextResponse.json({ error: err?.message || tr("خطای غیرمنتظره", "Unexpected error") }, { status: 500 });
   }
 }

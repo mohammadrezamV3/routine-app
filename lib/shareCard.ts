@@ -12,6 +12,7 @@
 
 import { faNum } from "./jalali";
 import { FLAME_BOX, flamePalette, toonFlameShape } from "./streakFlameShape";
+import { tr, isEn } from "./i18n";
 
 /** display=null یعنی عدد این حلقه پنهانه (مثلا کالری) — خود حلقه کشیده می‌شه، عددش نه */
 export type ShareRing = { label: string; value: number; display: string | null; colors: [string, string] };
@@ -391,7 +392,7 @@ export type ShareTextFn = (s: string, x: number, y: number, font: string, color:
 
 /** کشیدن متن روی کارت — اعراب همیشه پاک می‌شه */
 export function shareTextFn(ctx: CanvasRenderingContext2D): ShareTextFn {
-  return (s, x, y, font, color, align, dir = "rtl", maxW) => {
+  return (s, x, y, font, color, align, dir = isEn() ? "ltr" : "rtl", maxW) => {
     ctx.font = font;
     ctx.fillStyle = color;
     ctx.textAlign = align;
@@ -424,31 +425,45 @@ export function drawShareHeader(
   h: { title: string; subtitle?: string; inviteCode?: string | null; host: string },
 ): number {
   const PAD = SHARE_PAD, R = W - PAD, L = PAD;
+  // فارسی: لوگو چپ و عنوان راست؛ انگلیسی: آینه (لوگو راست، عنوان چپ)
+  const en = isEn();
+  const textDir: CanvasDirection = en ? "ltr" : "rtl";
+  const aX = en ? R : L; // لبه‌ی ستون لوگو
+  const aAlign: CanvasTextAlign = en ? "right" : "left";
+  const tX = en ? L : R; // لبه‌ی ستون عنوان
+  const tAlign: CanvasTextAlign = en ? "left" : "right";
   if (logo) {
     const lh = 66, lw = (logo.naturalWidth / logo.naturalHeight) * lh;
-    ctx.drawImage(logo, L, 118, lw, lh);
+    ctx.drawImage(logo, en ? R - lw : L, 118, lw, lh);
   } else {
-    text("ARION", L, 172, f(900, 52), p.accent, "left", "ltr");
+    text("ARION", aX, 172, f(900, 52), p.accent, aAlign, "ltr");
   }
-  text(h.host, L, 232, f(600, 28), p.muted, "left", "ltr");
+  text(h.host, aX, 232, f(600, 28), p.muted, aAlign, "ltr");
   if (h.inviteCode) {
+    const labText = tr("کد دعوت", "Invite code");
     ctx.font = f(800, 26);
     ctx.direction = "ltr";
     const codeW = ctx.measureText(h.inviteCode).width;
-    ctx.direction = "rtl";
+    ctx.direction = textDir;
     ctx.font = f(700, 24);
-    const labW = ctx.measureText("کد دعوت").width;
+    const labW = ctx.measureText(labText).width;
     const pillW = codeW + labW + 56, pillY = 254;
-    roundRect(ctx, L, pillY, pillW, 46, 23);
+    const pX = en ? R - pillW : L;
+    roundRect(ctx, pX, pillY, pillW, 46, 23);
     ctx.lineWidth = 2;
     ctx.strokeStyle = `rgba(${p.accentRgb},.55)`;
     ctx.stroke();
-    text(h.inviteCode, L + 20, pillY + 32, f(800, 26), p.accent, "left", "ltr");
-    text("کد دعوت", L + pillW - 20, pillY + 31, f(700, 24), p.muted, "right");
+    if (en) {
+      text(labText, pX + 20, pillY + 31, f(700, 24), p.muted, "left");
+      text(h.inviteCode, pX + pillW - 20, pillY + 32, f(800, 26), p.accent, "right", "ltr");
+    } else {
+      text(h.inviteCode, pX + 20, pillY + 32, f(800, 26), p.accent, "left", "ltr");
+      text(labText, pX + pillW - 20, pillY + 31, f(700, 24), p.muted, "right");
+    }
   }
   // عنوان هیچ‌وقت روی لوگو نمی‌افته — عرضش سقف داره
-  text(h.title, R, 170, f(900, 58), p.text, "right", "rtl", 520);
-  if (h.subtitle) text(h.subtitle, R, 244, f(500, 30), p.muted, "right", "rtl", 520);
+  text(h.title, tX, 170, f(900, 58), p.text, tAlign, textDir, 520);
+  if (h.subtitle) text(h.subtitle, tX, 244, f(500, 30), p.muted, tAlign, textDir, 520);
 
   // بدون کد دعوت، سربرگ کوتاه‌تره و فضا به محتوا می‌رسه
   const top = h.inviteCode ? 334 : 290;
@@ -559,11 +574,11 @@ export async function renderShareCard(input: ShareCardInput, opts: RenderOpts = 
     const k = Math.max(0.55, Math.min(1, inner / 170));
     if (b.center === "percent") {
       text(`${faNum(Math.max(0, Math.min(100, Math.round(b.percent))))}%`, cx, cy + 14 * k, f(900, 92 * k), p.text, "center", "ltr");
-      text("تکمیل امروز", cx, cy + 58 * k, f(700, 28 * k), p.muted, "center");
+      text(tr("تکمیل امروز", "Done today"), cx, cy + 58 * k, f(700, 28 * k), p.muted, "center");
     } else {
       drawFlame(ctx, cx, cy - 34 * k, 78 * k, b.streak, false);
       text(faNum(b.streak), cx, cy + 62 * k, f(900, 92 * k), p.text, "center", "ltr");
-      text("روز استریک", cx, cy + 106 * k, f(700, 28 * k), p.muted, "center");
+      text(tr("روز استریک", "day streak"), cx, cy + 106 * k, f(700, 28 * k), p.muted, "center");
     }
 
     // لیجند: یک ستون برای هر حلقه
@@ -571,7 +586,7 @@ export async function renderShareCard(input: ShareCardInput, opts: RenderOpts = 
       const ly = bottom - legendH + 20;
       const colW = (R - L) / n;
       b.items.forEach((it, i) => {
-        const x = R - colW * i - colW / 2; // راست‌به‌چپ
+        const x = isEn() ? L + colW * i + colW / 2 : R - colW * i - colW / 2; // فارسی راست‌به‌چپ، انگلیسی چپ‌به‌راست
         ctx.fillStyle = it.colors[1];
         ctx.beginPath();
         ctx.arc(x, ly + 12, 11, 0, Math.PI * 2);
@@ -596,7 +611,7 @@ export async function renderShareCard(input: ShareCardInput, opts: RenderOpts = 
     const pal = flamePalette(b.streak);
     const span = R - L - 60, step = span / 6, wy = top + 790;
     for (let i = 0; i < 7; i++) {
-      const x = R - 30 - i * step; // هفته از شنبه، راست‌به‌چپ
+      const x = isEn() ? L + 30 + i * step : R - 30 - i * step; // هفته از شنبه؛ فارسی راست‌به‌چپ، انگلیسی چپ‌به‌راست
       text(wk.labels[i], x, wy, f(700, 30), i === wk.todayIdx ? p.text : p.muted, "center");
       const cy = wy + 70;
       ctx.beginPath();
@@ -682,6 +697,6 @@ export function downloadBlob(blob: Blob, name: string) {
 /** متن همراه تصویر — کد دعوت و آدرس سایت فقط این‌جا (نه روی خود تصویر) */
 export function shareText(lead: string, invite: { code: string | null; url: string; percent: number } | null): string {
   if (!invite) return lead;
-  const offer = invite.code ? ` با کد دعوت من (${invite.code}) ${faNum(invite.percent)}% تخفیف بگیر:` : "";
-  return `${lead}\nتو هم بیا روتینت رو بساز —${offer} ${invite.url}`;
+  const offer = invite.code ? tr(` با کد دعوت من (${invite.code}) ${faNum(invite.percent)}% تخفیف بگیر:`, ` get ${invite.percent}% off with my invite code (${invite.code}):`) : "";
+  return `${lead}\n${tr("تو هم بیا روتینت رو بساز —", "Come build your routine too —")}${offer} ${invite.url}`;
 }

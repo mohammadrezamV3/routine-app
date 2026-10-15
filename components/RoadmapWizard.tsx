@@ -5,6 +5,7 @@ import { useRouter } from "next/navigation";
 import { ChevronRight } from "lucide-react";
 import { HOURS_OPTIONS, LEVEL_OPTIONS, type HoursValue, type LevelValue } from "@/lib/roadmapPlan";
 import { Spinner } from "./Spinner";
+import { tr, pick } from "@/lib/i18n";
 
 /**
  * ویزارد ساخت مسیر — سه گام کوتاه.
@@ -21,34 +22,34 @@ const MAX_GOAL = 300;
 const MAX_BACKGROUND = 300;
 
 const GOAL_CHIPS = [
-  "استخدام و کار واقعی",
-  "ارتقا توی شغل فعلی",
-  "فریلنسری و درآمد",
-  "ساختن یه پروژه‌ی شخصی",
-  "گرفتن مدرک/سرتیفیکیت",
-  "علاقه و کنجکاوی",
+  { fa: "استخدام و کار واقعی", en: "Getting hired and real work" },
+  { fa: "ارتقا توی شغل فعلی", en: "Moving up in my current job" },
+  { fa: "فریلنسری و درآمد", en: "Freelancing and income" },
+  { fa: "ساختن یه پروژه‌ی شخصی", en: "Building a personal project" },
+  { fa: "گرفتن مدرک/سرتیفیکیت", en: "Earning a degree/certificate" },
+  { fa: "علاقه و کنجکاوی", en: "Interest and curiosity" },
 ];
 
 // ساخت دوفازی است و تا ~۵۵ ثانیه طول می‌کشد؛ جمله‌ها همان فازهای واقعی‌اند
 // تا کاربر بداند الان دقیقا چه اتفاقی می‌افتد، نه یک اسپینر بی‌حرف.
 const BUILD_LINES = [
-  "دارم هدفت رو تحلیل می‌کنم…",
-  "دارم پیش‌نیازها رو از هم جدا می‌کنم…",
-  "دارم مسیر رو به مرحله‌ها می‌برم…",
-  "دارم برای هر مرحله سرفصل‌های ریز می‌نویسم…",
-  "دارم کارهای عملی و پروژه‌ها رو طراحی می‌کنم…",
-  "دارم منابع و ابزارهای هر مرحله رو انتخاب می‌کنم…",
-  "دارم معیارهای تموم‌شدن هر مرحله رو می‌نویسم…",
-  "دارم نامه‌ی راهنمای مسیر رو می‌نویسم…",
+  { fa: "دارم هدفت رو تحلیل می‌کنم…", en: "Analysing your goal…" },
+  { fa: "دارم پیش‌نیازها رو از هم جدا می‌کنم…", en: "Separating out the prerequisites…" },
+  { fa: "دارم مسیر رو به مرحله‌ها می‌برم…", en: "Splitting the path into stages…" },
+  { fa: "دارم برای هر مرحله سرفصل‌های ریز می‌نویسم…", en: "Writing detailed topics for each stage…" },
+  { fa: "دارم کارهای عملی و پروژه‌ها رو طراحی می‌کنم…", en: "Designing practical tasks and projects…" },
+  { fa: "دارم منابع و ابزارهای هر مرحله رو انتخاب می‌کنم…", en: "Choosing resources and tools for each stage…" },
+  { fa: "دارم معیارهای تموم‌شدن هر مرحله رو می‌نویسم…", en: "Writing the finish line for each stage…" },
+  { fa: "دارم نامه‌ی راهنمای مسیر رو می‌نویسم…", en: "Writing the guide letter for your path…" },
 ];
 
 type Step = "topic" | "goal" | "profile";
 const STEPS: Step[] = ["topic", "goal", "profile"];
-const TITLES: Record<Step, string> = {
-  topic: "می‌خوای چی یاد بگیری؟",
-  goal: "هدفت چیه؟",
-  profile: "از خودت بگو",
-};
+const titles = (): Record<Step, string> => ({
+  topic: tr("می‌خوای چی یاد بگیری؟", "What do you want to learn?"),
+  goal: tr("هدفت چیه؟", "What is your goal?"),
+  profile: tr("از خودت بگو", "Tell us about yourself"),
+});
 
 export function RoadmapWizard({
   onClose,
@@ -111,11 +112,11 @@ export function RoadmapWizard({
       });
       data = await res.json().catch(() => null);
       if (!res.ok) {
-        flashError(data?.error || "ساخت مسیر انجام نشد — دوباره امتحان کن");
+        flashError(data?.error || tr("ساخت مسیر انجام نشد — دوباره امتحان کن", "The path could not be built — please try again"));
         return;
       }
     } catch {
-      flashError("ارتباط با سرور برقرار نشد — دوباره امتحان کن");
+      flashError(tr("ارتباط با سرور برقرار نشد — دوباره امتحان کن", "Could not reach the server — please try again"));
       return;
     }
 
@@ -130,7 +131,7 @@ export function RoadmapWizard({
   function next() {
     if (busy) return;
     if (step === "topic") {
-      if (!topic.trim()) return flashError("بگو چی می‌خوای یاد بگیری");
+      if (!topic.trim()) return flashError(tr("بگو چی می‌خوای یاد بگیری", "Tell us what you want to learn"));
       setError(null);
       setStep("goal");
       return;
@@ -154,8 +155,8 @@ export function RoadmapWizard({
       <div className="wsearch-newform dash-scope open">
         <div className="relative z-[1] add-program-glass rp-wiz">
           <div className="wsearch-newform-head">
-            <div className="wsearch-newform-title accent">{busy ? "در حال ساخت مسیرت" : TITLES[step]}</div>
-            {!busy && <button className="nav-close" onClick={onClose} aria-label="بستن">×</button>}
+            <div className="wsearch-newform-title accent">{busy ? tr("در حال ساخت مسیرت", "Building your path") : titles()[step]}</div>
+            {!busy && <button className="nav-close" onClick={onClose} aria-label={tr("بستن", "Close")}>×</button>}
           </div>
 
           <div className="rp-wiz-steps" aria-hidden>
@@ -170,65 +171,68 @@ export function RoadmapWizard({
               <div className="rp-wiz-loading-title">«{topic.trim()}»</div>
               <ul className="rp-wiz-phases">
                 {BUILD_LINES.map((line, i) => (
-                  <li key={i} className={i < buildLine ? "done" : i === buildLine ? "now" : ""}>{line}</li>
+                  <li key={i} className={i < buildLine ? "done" : i === buildLine ? "now" : ""}>{pick(line)}</li>
                 ))}
               </ul>
-              <div className="rp-wiz-loading-hint">چند ثانیه — بعدش ساخت در پس‌زمینه ادامه پیدا می‌کنه.</div>
+              <div className="rp-wiz-loading-hint">{tr("چند ثانیه — بعدش ساخت در پس‌زمینه ادامه پیدا می‌کنه.", "A few seconds — then the build continues in the background.")}</div>
             </div>
           ) : (
             <>
               {step === "topic" && (
                 <>
-                  <label>چی می‌خوای یاد بگیری؟</label>
+                  <label>{tr("چی می‌خوای یاد بگیری؟", "What do you want to learn?")}</label>
                   <input
                     ref={inputRef}
                     type="text"
                     className="wsearch-newform-name"
-                    placeholder="مثلا امنیت شبکه، ادیت ویدیو، گیتار، React"
+                    placeholder={tr("مثلا امنیت شبکه، ادیت ویدیو، گیتار، React", "e.g. network security, video editing, guitar, React")}
                     value={topic}
                     maxLength={MAX_TOPIC}
                     onChange={(e) => { setTopic(e.target.value); setError(null); }}
                     onKeyDown={(e) => { if (e.key === "Enter") next(); }}
                   />
                   <div className="rp-wiz-hint">
-                    لازم نیست بدونی از کجا شروع کنی. خودم تشخیص می‌دم چیا باید بخونی، با چه ترتیبی،
-                    با چه ابزاری — و برای هر مرحله سرفصل‌های ریز، کارهای عملی، پروژه و منبع می‌نویسم.
+                    {tr(`لازم نیست بدونی از کجا شروع کنی. خودم تشخیص می‌دم چیا باید بخونی، با چه ترتیبی،
+                    با چه ابزاری — و برای هر مرحله سرفصل‌های ریز، کارهای عملی، پروژه و منبع می‌نویسم.`, "You do not need to know where to start. I will work out what you need to study, in what order and with which tools — and write detailed topics, practical tasks, a project and resources for every stage.")}
                   </div>
                 </>
               )}
 
               {step === "goal" && (
                 <>
-                  <label>هدفت از یادگیریش چیه؟</label>
+                  <label>{tr("هدفت از یادگیریش چیه؟", "Why do you want to learn it?")}</label>
                   <input
                     ref={inputRef}
                     type="text"
                     className="wsearch-newform-name"
-                    placeholder="مثلا می‌خوام تا یک سال دیگه تو همین حوزه استخدام بشم"
+                    placeholder={tr("مثلا می‌خوام تا یک سال دیگه تو همین حوزه استخدام بشم", "e.g. I want to get hired in this field within a year")}
                     value={goal}
                     maxLength={MAX_GOAL}
                     onChange={(e) => setGoal(e.target.value)}
                     onKeyDown={(e) => { if (e.key === "Enter") next(); }}
                   />
                   <div className="rp-wiz-chips">
-                    {GOAL_CHIPS.map((c) => (
+                    {GOAL_CHIPS.map((chip) => {
+                      const c = pick(chip);
+                      return (
                       <button
-                        key={c}
+                        key={chip.fa}
                         type="button"
                         className={`rp-wiz-chip${goal === c ? " on" : ""}`}
                         onClick={() => setGoal(goal === c ? "" : c)}
                       >
                         {c}
                       </button>
-                    ))}
+                      );
+                    })}
                   </div>
-                  <div className="rp-wiz-hint">هدفت مسیر رو از ریشه عوض می‌کنه. اگه هدف مشخصی نداری خالی بذار.</div>
+                  <div className="rp-wiz-hint">{tr("هدفت مسیر رو از ریشه عوض می‌کنه. اگه هدف مشخصی نداری خالی بذار.", "Your goal changes the path completely. If you do not have a specific goal, leave it empty.")}</div>
                 </>
               )}
 
               {step === "profile" && (
                 <>
-                  <label>الان چقدر بلدی؟</label>
+                  <label>{tr("الان چقدر بلدی؟", "How much do you know now?")}</label>
                   <div className="rp-wiz-chips">
                     {LEVEL_OPTIONS.map((o) => (
                       <button
@@ -237,12 +241,12 @@ export function RoadmapWizard({
                         className={`rp-wiz-chip${level === o.value ? " on" : ""}`}
                         onClick={() => setLevel(level === o.value ? "" : o.value)}
                       >
-                        {o.label}
+                        {pick(o.label)}
                       </button>
                     ))}
                   </div>
 
-                  <label className="rp-wiz-label">هفته‌ای چقدر وقت می‌ذاری؟</label>
+                  <label className="rp-wiz-label">{tr("هفته‌ای چقدر وقت می‌ذاری؟", "How much time can you spend per week?")}</label>
                   <div className="rp-wiz-chips">
                     {HOURS_OPTIONS.map((o) => (
                       <button
@@ -251,23 +255,23 @@ export function RoadmapWizard({
                         className={`rp-wiz-chip${hours === o.value ? " on" : ""}`}
                         onClick={() => setHours(hours === o.value ? "" : o.value)}
                       >
-                        {o.label}
+                        {pick(o.label)}
                       </button>
                     ))}
                   </div>
 
-                  <label className="rp-wiz-label">چیز مرتبطی بلدی؟ <span className="rp-wiz-optional">(اختیاری)</span></label>
+                  <label className="rp-wiz-label">{tr("چیز مرتبطی بلدی؟", "Do you know anything related?")} <span className="rp-wiz-optional">{tr("(اختیاری)", "(optional)")}</span></label>
                   <input
                     ref={inputRef}
                     type="text"
                     className="wsearch-newform-name"
-                    placeholder="مثلا پایتون در حد مقدماتی، انگلیسی خوب"
+                    placeholder={tr("مثلا پایتون در حد مقدماتی، انگلیسی خوب", "e.g. basic Python, good English")}
                     value={background}
                     maxLength={MAX_BACKGROUND}
                     onChange={(e) => setBackground(e.target.value)}
                     onKeyDown={(e) => { if (e.key === "Enter") next(); }}
                   />
-                  <div className="rp-wiz-hint">مدت هر مرحله رو با همین وقت هفتگی حساب می‌کنم و چیزی که بلدی رو دوباره درس نمی‌دم.</div>
+                  <div className="rp-wiz-hint">{tr("مدت هر مرحله رو با همین وقت هفتگی حساب می‌کنم و چیزی که بلدی رو دوباره درس نمی‌دم.", "I calculate each stage's length from this weekly time, and I will not re-teach what you already know.")}</div>
                 </>
               )}
 
@@ -275,8 +279,8 @@ export function RoadmapWizard({
 
               <div className="wsearch-newform-actions rp-wiz-actions">
                 {step !== "topic" && (
-                  <button type="button" className="rp-wiz-back" onClick={back} aria-label="برگشت">
-                    <ChevronRight size={16} />
+                  <button type="button" className="rp-wiz-back" onClick={back} aria-label={tr("برگشت", "Back")}>
+                    <ChevronRight size={16} className="dir-flip" />
                   </button>
                 )}
                 <button
@@ -284,7 +288,7 @@ export function RoadmapWizard({
                   className={`wsearch-submit-btn${status === "error" ? " error" : ""}`}
                   onClick={next}
                 >
-                  {step === "profile" ? "مسیرم رو بساز" : "بعدی"}
+                  {step === "profile" ? tr("مسیرم رو بساز", "Build my path") : tr("بعدی", "Next")}
                 </button>
               </div>
             </>

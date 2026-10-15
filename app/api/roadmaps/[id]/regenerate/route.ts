@@ -1,3 +1,4 @@
+import { tr } from "@/lib/i18n";
 import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 import { requireFeature } from "@/lib/featureFlagsServer";
@@ -35,17 +36,17 @@ async function handlePOST(req: NextRequest, { params }: { params: { id: string }
   const userId = guard.userId;
 
   if (!(await checkRateLimit(`roadmap-part:${userId}`, LIMIT, WINDOW_MS))) {
-    return NextResponse.json({ error: "تعداد درخواست زیاد شد — کمی بعد دوباره امتحان کن" }, { status: 429 });
+    return NextResponse.json({ error: tr("تعداد درخواست زیاد شد — کمی بعد دوباره امتحان کن", "Too many requests — try again shortly") }, { status: 429 });
   }
 
   const body = await req.json().catch(() => null);
   const target = (body as any)?.target;
   const n = (body as any)?.n;
   if (target !== "guide" && target !== "stage") {
-    return NextResponse.json({ error: "ورودی نامعتبر است" }, { status: 400 });
+    return NextResponse.json({ error: tr("ورودی نامعتبر است", "Invalid input") }, { status: 400 });
   }
   if (target === "stage" && (typeof n !== "number" || !Number.isInteger(n))) {
-    return NextResponse.json({ error: "ورودی نامعتبر است" }, { status: 400 });
+    return NextResponse.json({ error: tr("ورودی نامعتبر است", "Invalid input") }, { status: 400 });
   }
 
   const row = await prisma.roadmap.findFirst({
@@ -59,7 +60,7 @@ async function handlePOST(req: NextRequest, { params }: { params: { id: string }
   // تا وقتی ساخت پس‌زمینه همین ردیف را می‌نویسد، ساخت دستی یعنی دو نویسنده
   // روی یک steps — یکی کار دیگری را پاک می‌کند.
   if (buildStatusOf(row.meta)?.status === "building") {
-    return NextResponse.json({ error: "این مسیر هنوز در حال ساخته‌شدن است — چند لحظه صبر کن" }, { status: 409 });
+    return NextResponse.json({ error: tr("این مسیر هنوز در حال ساخته‌شدن است — چند لحظه صبر کن", "This roadmap is still being built — wait a moment") }, { status: 409 });
   }
 
   const plan = normalizePlan({
@@ -100,7 +101,7 @@ async function handlePOST(req: NextRequest, { params }: { params: { id: string }
   } catch (err: any) {
     console.error("roadmap regenerate failed", err);
     await quota.release();
-    return NextResponse.json({ error: err?.message || "ساخته نشد — دوباره امتحان کن" }, { status: 502 });
+    return NextResponse.json({ error: err?.message || tr("ساخته نشد — دوباره امتحان کن", "It could not be created — try again") }, { status: 502 });
   }
 }
 

@@ -14,7 +14,7 @@ body[data-theme="light"]{
   --ls-shadow:0 15px 45px rgba(107,79,61,.10);
 }
 
-.ls-head{ text-align:right; margin-bottom:18px; }
+.ls-head{ text-align:start; margin-bottom:18px; }
 body[data-theme="light"] h2.ls-title, body:not([data-theme="light"]) h2.ls-title{
   color:var(--text); font-size:clamp(20px,3.4vw,28px); line-height:1.4; margin:0;
 }
@@ -39,7 +39,7 @@ body[data-theme="light"] h2.ls-title, body:not([data-theme="light"]) h2.ls-title
 
 /* ───── How it works ───── */
 .ls-steps{ position:relative; display:grid; grid-template-columns:minmax(0,1fr); gap:26px; }
-.ls-step{ position:relative; z-index:1; display:flex; flex-direction:row; gap:16px; align-items:flex-start; text-align:right; }
+.ls-step{ position:relative; z-index:1; display:flex; flex-direction:row; gap:16px; align-items:flex-start; text-align:start; }
 .ls-step-badge{
   position:relative; flex:0 0 auto; width:56px; height:56px; border-radius:18px;
   display:flex; align-items:center; justify-content:center; color:var(--accent);
@@ -47,7 +47,7 @@ body[data-theme="light"] h2.ls-title, body:not([data-theme="light"]) h2.ls-title
   box-shadow:0 0 0 6px var(--bg), 0 10px 28px rgba(var(--accent-rgb),.20);
 }
 .ls-step-n{
-  position:absolute; top:-8px; right:-8px; min-width:22px; height:22px; border-radius:11px; padding:0 5px;
+  position:absolute; top:-8px; inset-inline-start:-8px; min-width:22px; height:22px; border-radius:11px; padding:0 5px;
   display:flex; align-items:center; justify-content:center;
   background:var(--accent); color:#fff; font-size:11.5px; font-weight:800;
 }
@@ -55,7 +55,7 @@ body[data-theme="light"] h2.ls-title, body:not([data-theme="light"]) h2.ls-title
 .ls-step-body{ margin:0; font-size:13px; line-height:1.9; color:var(--muted); }
 /* موبایل: خط عمودی از مرکز بج‌ها (راست) */
 .ls-steps-line{
-  position:absolute; top:28px; bottom:28px; right:27px; width:2px; border-radius:2px;
+  position:absolute; top:28px; bottom:28px; inset-inline-start:27px; width:2px; border-radius:2px;
   background:var(--ls-line); overflow:hidden;
 }
 .ls-steps-line-fill{
@@ -66,7 +66,7 @@ body[data-theme="light"] h2.ls-title, body:not([data-theme="light"]) h2.ls-title
   .ls-steps{ grid-template-columns:repeat(3,minmax(0,1fr)); gap:20px; }
   .ls-step{ flex-direction:column; align-items:center; text-align:center; gap:14px; }
   .ls-step-title{ margin-top:0; }
-  .ls-steps-line{ top:27px; bottom:auto; height:2px; width:auto; right:16.66%; left:16.66%; }
+  .ls-steps-line{ top:27px; bottom:auto; height:2px; width:auto; inset-inline-start:16.66%; inset-inline-end:16.66%; }
   .ls-steps-line-fill{
     transform-origin:right center;
     background:linear-gradient(to left, var(--accent), rgba(var(--accent-rgb),.25));
@@ -97,7 +97,7 @@ body[data-theme="light"] h2.ls-title, body:not([data-theme="light"]) h2.ls-title
 }
 @media (hover:hover){ .ls-card:hover{ border-color:rgba(var(--accent-rgb),.45); } }
 .ls-card-inner{ position:relative; z-index:1; display:flex; flex-direction:column; gap:16px; height:100%; padding:22px; }
-.ls-card-text{ text-align:right; }
+.ls-card-text{ text-align:start; }
 .ls-card-ic{
   display:inline-flex; width:38px; height:38px; align-items:center; justify-content:center; border-radius:12px;
   background:rgba(var(--accent-rgb),.13); color:var(--accent); margin-bottom:12px;
@@ -120,7 +120,7 @@ body[data-theme="light"] h2.ls-title, body:not([data-theme="light"]) h2.ls-title
 .ls-phone-row:first-of-type{ margin-top:44px; }
 .ls-w70{ width:70%; } .ls-w50{ width:50%; }
 .ls-toast{
-  position:absolute; top:16px; right:-26px; left:-26px; z-index:2; direction:rtl; text-align:right;
+  position:absolute; top:16px; inset-inline-start:-26px; inset-inline-end:-26px; z-index:2; direction:rtl; text-align:start;
   display:flex; align-items:flex-start; gap:7px; padding:7px 9px; border-radius:13px;
   background:var(--surface-2); border:1px solid var(--surface-line);
   box-shadow:0 10px 24px rgba(0,0,0,.28); font-size:9.5px; line-height:1.6; color:var(--muted);
@@ -172,7 +172,7 @@ body[data-theme="light"] .ls-toast{ box-shadow:0 10px 24px rgba(107,79,61,.18); 
   flex:none; width:34px; height:34px; border-radius:11px; display:flex; align-items:center; justify-content:center;
   color:var(--accent); background:rgba(var(--accent-rgb),.12);
 }
-.ls-feat-txt{ min-width:0; display:flex; flex-direction:column; gap:2px; text-align:right; }
+.ls-feat-txt{ min-width:0; display:flex; flex-direction:column; gap:2px; text-align:start; }
 .ls-feat-title{ display:inline-flex; align-items:center; gap:5px; font-size:13.5px; font-weight:800; }
 .ls-feat-arrow{ color:var(--accent); transition:transform .2s ease; }
 @media (hover:hover){ .ls-feat-item.is-link:hover .ls-feat-arrow{ transform:translateX(-3px); } }
@@ -192,7 +192,7 @@ body[data-theme="light"] .ls-toast{ box-shadow:0 10px 24px rgba(107,79,61,.18); 
   flex:none; width:42px; height:42px; border-radius:14px; display:flex; align-items:center; justify-content:center;
   color:var(--c); background:color-mix(in srgb, var(--c) 14%, transparent);
 }
-.ls-why-txt{ min-width:0; text-align:right; }
+.ls-why-txt{ min-width:0; text-align:start; }
 .ls-why-title{ font-size:14px; font-weight:800; color:var(--text); }
 .ls-why-body{ margin-top:2px; font-size:12px; line-height:1.8; color:var(--muted); }
 
@@ -224,7 +224,7 @@ body[data-theme="light"] .ls-toast{ box-shadow:0 10px 24px rgba(107,79,61,.18); 
 body[data-theme="light"] .ls-faq-btn, body:not([data-theme="light"]) .ls-faq-btn{
   width:100%; display:flex; align-items:center; justify-content:space-between; gap:12px;
   padding:16px 18px; border:none; border-radius:0; background:none; box-shadow:none;
-  backdrop-filter:none; -webkit-backdrop-filter:none; text-align:right;
+  backdrop-filter:none; -webkit-backdrop-filter:none; text-align:start;
   font-size:14px; font-weight:700; line-height:1.8; color:var(--text);
 }
 @media (hover:hover){
@@ -300,3 +300,20 @@ body[data-theme="light"] h2.ls-cta-title, body:not([data-theme="light"]) h2.ls-c
 
 /* بیرون دید: حلقه‌های بی‌پایان بنتو (شعله‌ها، اعلان، نشان زنده) متوقف */
 .ls-bento.is-paused *, .ls-bento.is-paused *::before{ animation-play-state:paused !important; }
+
+/* ───── انگلیسی (چپ‌به‌راست): ماکت‌های داخل کارت‌ها قرینه می‌شن ───── */
+html[dir="ltr"] .ls-vis-chat,
+html[dir="ltr"] .ls-vis-streak,
+html[dir="ltr"] .ls-vis-friends,
+html[dir="ltr"] .ls-vis-meta,
+html[dir="ltr"] .ls-vis-food,
+html[dir="ltr"] .ls-toast{ direction:ltr; }
+@media (min-width:768px){
+  html[dir="ltr"] .ls-steps-line-fill{
+    transform-origin:left center;
+    background:linear-gradient(to right, var(--accent), rgba(var(--accent-rgb),.25));
+  }
+}
+@media (hover:hover){
+  html[dir="ltr"] .ls-feat-item.is-link:hover .ls-feat-arrow{ transform:translateX(3px); }
+}
