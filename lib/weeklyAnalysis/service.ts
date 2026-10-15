@@ -108,6 +108,8 @@ export type WeeklyAnalysisOptions = {
   now?: Date;
   /** false = کوئری هفته‌نامه‌ی خوانده‌نشده رد می‌شه (ساخت هفته‌نامه به‌اش نیاز نداره) */
   withUnreadLetter?: boolean;
+  /** فقط این دامنه‌ها محاسبه می‌شن (زیردامنه‌ی یک بخش)؛ undefined = همه */
+  domains?: readonly AnalysisDomain[];
 };
 
 export async function getWeeklyAnalysis(userId: string, opts: WeeklyAnalysisOptions): Promise<WeeklyAnalysis> {
@@ -122,7 +124,7 @@ export async function getWeeklyAnalysis(userId: string, opts: WeeklyAnalysisOpti
   const nextWeekRange = getWeekRange(timezone, offset + 1, now);
 
   const [base, aiRow, reflectionRow, goalRows, nextGoalRows, unreadLetter] = await Promise.all([
-    computeWeeklyAnalysis(userId, { timezone, offset, isSuperAdmin, now }),
+    computeWeeklyAnalysis(userId, { timezone, offset, isSuperAdmin, now, domains: opts.domains }),
     prisma.weeklyAnalysisAi.findUnique({ where: { userId_weekStart: { userId, weekStart: weekRange.weekStart } } }),
     prisma.weeklyReflection.findUnique({ where: { userId_weekStart: { userId, weekStart: weekRange.weekStart } } }),
     prisma.weeklyAnalysisGoal.findMany({ where: { userId, weekStart: weekRange.weekStart }, orderBy: { createdAt: "asc" } }),

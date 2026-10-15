@@ -11,6 +11,8 @@ import { addDaysIso, isoToUtcDate, localIso, safeTimezone } from "@/lib/weeklyAn
 import { noonOfIso, type OccLike } from "@/lib/weeklyAnalysis/domains";
 import type { TrendPoint, WeeklyAnalysis } from "@/lib/weeklyAnalysis/types";
 import { WEEKLY_LETTER_VERSION, type LetterAchievement, type LetterDomain, type WeeklyLetterData } from "./types";
+import { sectionAchievementCategory, sectionShowsRoutineStreak } from "./section";
+import type { SectionKey } from "@/lib/sections";
 import { buildIntro, buildNextWeek, buildWinsAndImprove, domainBestWorst, domainNote, factsOfDays } from "./text";
 
 export type LetterExtras = {
@@ -141,7 +143,7 @@ async function routineStreakAt(userId: string, weekEndIso: string): Promise<{ da
   return res.streak > 0 ? { days: res.streak } : null;
 }
 
-async function globalAchievementsOfWeek(userId: string, tz: string, weekStartIso: string, weekEndIso: string): Promise<LetterAchievement[]> {
+async function globalAchievementsOfWeek(userId: string, tz: string, weekStartIso: string, weekEndIso: string, section: SectionKey | null): Promise<LetterAchievement[]> {
   const rows = await prisma.userAchievement.findMany({
     where: { userId, unlockedAt: { gte: isoToUtcDate(addDaysIso(weekStartIso, -1)), lt: isoToUtcDate(addDaysIso(weekEndIso, 2)) } },
     select: { achievementId: true, unlockedAt: true },
@@ -152,7 +154,7 @@ async function globalAchievementsOfWeek(userId: string, tz: string, weekStartIso
     const day = localIso(tz, r.unlockedAt);
     if (day < weekStartIso || day > weekEndIso) continue;
     const def = ACHIEVEMENT_BY_ID[r.achievementId];
-    if (!def) continue;
+    if (!def || !sectionAchievementCategory(section, def.category)) continue;
     const goal = def.progress({} as AchievementMetrics).goal;
     out.push({ key: def.id, title: def.name, description: achievementDesc(def, goal, true), emoji: CATEGORY_EMOJI[def.category] ?? "🏆", source: "global" });
   }
@@ -162,13 +164,15 @@ async function globalAchievementsOfWeek(userId: string, tz: string, weekStartIso
 export async function gatherLetterExtras(
   userId: string,
   a: Pick<WeeklyAnalysis, "weekStart" | "weekEnd">,
-  opts: { timezone: string; issueNo: number; now: Date }
+  opts: { timezone: string; issueNo: number; now: Date; section?: SectionKey | null }
 ): Promise<LetterExtras> {
   const tz = safeTimezone(opts.timezone);
+  const section = opts.section ?? null;
   const [user, streak, globalAchievements] = await Promise.all([
     prisma.user.findUnique({ where: { id: userId }, select: { name: true } }),
-    routineStreakAt(userId, a.weekEnd).catch(() => null),
-    globalAchievementsOfWeek(userId, tz, a.weekStart, a.weekEnd).catch(() => [] as LetterAchievement[]),
+    // استریک روتین فقط مال بخش روتینه
+    sectionShowsRoutineStreak(section) ? routineStreakAt(userId, a.weekEnd).catch(() => null) : Promise.resolve(null),
+    globalAchievementsOfWeek(userId, tz, a.weekStart, a.weekEnd, section).catch(() => [] as LetterAchievement[]),
   ]);
   return { issueNo: opts.issueNo, greetingName: greetingNameOf(user?.name), streak, globalAchievements, now: opts.now };
 }

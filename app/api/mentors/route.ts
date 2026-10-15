@@ -6,6 +6,8 @@ import { DISCOVERABLE_PROFILE_WHERE, blockedUserIds } from "@/lib/mentorServer";
 import { filtersFromParams } from "@/lib/mentorSearch";
 import { searchMentors } from "@/lib/mentorSearchServer";
 import { tr } from "@/lib/i18n";
+import { getSection } from "@/lib/sectionServer";
+import { SECTION_META } from "@/lib/sections";
 
 const PAGE_SIZE = 20;
 const MAX_PAGE = 50;
@@ -30,6 +32,10 @@ export async function GET(req: NextRequest) {
 
   const sp = req.nextUrl.searchParams;
   const filters = filtersFromParams(sp, isMentorCategory);
+  // روی زیردامنه‌ی یک بخش فقط منتورهای حوزه‌های همون بخش (سمت سرور؛ کلاینت قابل دور زدنه)
+  const section = getSection();
+  const allowed = section ? SECTION_META[section].mentorCategories : null;
+  if (allowed && filters.category && !allowed.includes(filters.category)) filters.category = "";
   const pageNum = Number(sp.get("page") || 1);
   const page = Number.isInteger(pageNum) && pageNum >= 1 ? Math.min(pageNum, MAX_PAGE) : 1;
 
@@ -37,6 +43,6 @@ export async function GET(req: NextRequest) {
   const blocked = await blockedUserIds(g.userId);
   const base = { ...DISCOVERABLE_PROFILE_WHERE, ...(blocked.length ? { userId: { notIn: blocked } } : {}) };
 
-  const { cards, hasMore } = await searchMentors(filters, base, page, PAGE_SIZE);
+  const { cards, hasMore } = await searchMentors(filters, base, page, PAGE_SIZE, allowed);
   return NextResponse.json({ mentors: cards, hasMore });
 }

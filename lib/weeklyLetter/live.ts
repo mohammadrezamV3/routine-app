@@ -6,15 +6,33 @@ import { getWeeklyAnalysis } from "@/lib/weeklyAnalysis/service";
 import { addDaysIso, isoToUtcDate, safeTimezone } from "@/lib/weeklyAnalysis/week";
 import { buildLetterData, gatherLetterExtras } from "./build";
 import { MAX_WEEKS_BACK } from "./weekParam";
+import { aiForSection, goalInSection, sectionDomains } from "./section";
+import type { SectionKey } from "@/lib/sections";
 import type { LiveWeekPayload } from "./types";
 
 export async function buildLiveWeek(
   userId: string,
-  opts: { timezone: string | null | undefined; isSuperAdmin: boolean; offset: number; now?: Date; markRead?: boolean },
+  opts: {
+    timezone: string | null | undefined; isSuperAdmin: boolean; offset: number; now?: Date; markRead?: boolean;
+    /** بخش زیردامنه (routine/workout/trade)؛ null/undefined = دامنه‌ی اصلی، همه‌ی دامنه‌ها */
+    section?: SectionKey | null;
+  },
 ): Promise<LiveWeekPayload> {
   const tz = safeTimezone(opts.timezone);
   const now = opts.now ?? new Date();
-  const analysis = await getWeeklyAnalysis(userId, { timezone: tz, offset: opts.offset, isSuperAdmin: opts.isSuperAdmin, now, withUnreadLetter: false });
+  const section = opts.section ?? null;
+  // روی زیردامنه فقط دامنه‌های همون بخش محاسبه می‌شن (نه محاسبه و بعد پنهان‌کردن)
+  const full = await getWeeklyAnalysis(userId, {
+    timezone: tz, offset: opts.offset, isSuperAdmin: opts.isSuperAdmin, now, withUnreadLetter: false, domains: sectionDomains(section),
+  });
+  const analysis = section
+    ? {
+        ...full,
+        goals: full.goals.filter((g) => goalInSection(g, section)),
+        nextWeekGoals: full.nextWeekGoals.filter((g) => goalInSection(g, section)),
+        ai: aiForSection(full.ai, section),
+      }
+    : { ...full, ai: aiForSection(full.ai, null) };
   const weekStart = isoToUtcDate(analysis.weekStart);
 
   const row = await prisma.weeklyLetter.findUnique({
@@ -24,7 +42,7 @@ export async function buildLiveWeek(
   const stored = row && row.status === "READY" ? row : null;
   const issue = stored ? stored.issueNo : null;
 
-  const extras = await gatherLetterExtras(userId, analysis, { timezone: tz, issueNo: issue ?? 0, now });
+  const extras = await gatherLetterExtras(userId, analysis, { timezone: tz, issueNo: issue ?? 0, now, section });
   const letter = buildLetterData(analysis, extras);
 
   // خوندن شماره‌ی ثبت‌شده = خوانده‌شده (و اعلان زنگوله‌ی همون هفته)

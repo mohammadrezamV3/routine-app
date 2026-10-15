@@ -6,11 +6,13 @@ import { requireModule } from "@/lib/moduleAccess";
 import { checkRateLimit } from "@/lib/rateLimit";
 import { featureBlocked } from "@/lib/featureFlagsServer";
 import { buildLiveWeek } from "@/lib/weeklyLetter/live";
+import { getSection } from "@/lib/sectionServer";
 import { MAX_WEEKS_BACK, offsetOfLegacyParam, offsetOfWeekParam } from "@/lib/weeklyLetter/weekParam";
 
 // GET /api/analysis/letters/live?week=YYYY-MM-DD  (یا ?offset=-1؛ بدون پارامتر = هفته‌ی جاری)
 // → LiveWeekPayload { letter, analysis, issue, prev, next, weekStart, offset, isCurrent }
 // همیشه زنده از getWeeklyAnalysis ساخته می‌شه (هفته‌ی جاری و هفته‌های بدون شماره هم)؛
+// روی زیردامنه‌ی یک بخش فقط دامنه‌های همون بخش محاسبه می‌شن (getSection، سمت سرور).
 // بدون فراخوانی AI. سقف: 52 هفته‌ی گذشته، آینده نامعتبره.
 export const maxDuration = 30;
 
@@ -40,7 +42,7 @@ export async function GET(req: NextRequest) {
       offset = o;
     }
 
-    const payload = await buildLiveWeek(userId, { timezone, isSuperAdmin, offset });
+    const payload = await buildLiveWeek(userId, { timezone, isSuperAdmin, offset, section: getSection() });
     return NextResponse.json(payload);
   } catch (err: any) {
     return NextResponse.json({ error: err?.message || tr("خطای غیرمنتظره", "Unexpected error") }, { status: 500 });

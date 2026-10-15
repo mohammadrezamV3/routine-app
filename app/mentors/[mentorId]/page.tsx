@@ -28,6 +28,8 @@ import { INTAKE_ANSWER_MAX, availabilityShort, responseTimeLabel } from "@/lib/m
 import type { AvailabilityState, MyWaitlist } from "@/lib/mentorTypes";
 import { MentorWaitlistAction } from "@/components/MentorWaitlistAction";
 import { fetchMentorProfile } from "@/lib/mentorProfileCache";
+import { useSection } from "@/components/SectionProvider";
+import { SECTION_META } from "@/lib/sections";
 import { GoldenName } from "@/components/GoldenName";
 
 const MESSAGE_MAX = 500;
@@ -402,7 +404,12 @@ function RequestModal({
 }) {
   const [message, setMessage] = useState("");
   // حوزه‌ی منتوری (مثلا فقط «روتین») — پیش‌فرض همه‌ی حوزه‌های منتور
-  const [cats, setCats] = useState<string[]>(mentorCategories);
+  // روی زیردامنه‌ی یک بخش، حوزه‌های همون بخش پیش‌انتخابن تا رابطه تو همون بخش دیده بشه
+  const section = useSection();
+  const [cats, setCats] = useState<string[]>(() => {
+    const inSection = section ? mentorCategories.filter((c) => SECTION_META[section].mentorCategories.includes(c)) : [];
+    return inSection.length ? inSection : mentorCategories;
+  });
   const [busy, setBusy] = useState(false);
   const [catsError, setCatsError] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);

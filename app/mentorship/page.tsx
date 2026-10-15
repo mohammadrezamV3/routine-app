@@ -17,7 +17,9 @@ import { publicUserName } from "@/lib/mentorTypes";
 import { fmtDate, fmtRelative, networkError, readApiError } from "@/lib/mentorFormat";
 import { tr, iso } from "@/lib/i18n";
 import { faNum } from "@/lib/jalali";
-import { MENTOR_CATEGORIES, MENTOR_CATEGORY_META } from "@/lib/mentorCategories";
+import { MENTOR_CATEGORIES, MENTOR_CATEGORY_META, intersectsCategories } from "@/lib/mentorCategories";
+import { useSection } from "@/components/SectionProvider";
+import { SECTION_META } from "@/lib/sections";
 import { categoryLabel } from "@/components/MentorBadges";
 import { MentorTermsAcceptance, isMentorTermsError, mentorTermsPayload, useMentorTermsStatus } from "@/components/MentorTermsAcceptance";
 import { GoldenName } from "@/components/GoldenName";
@@ -43,7 +45,14 @@ function adherence(programs: ProgramRow[], mentorshipId: string): number | null 
 const pastLabel = (): Record<string, string> => ({ ENDED: tr("همکاری تموم شده", "Mentorship ended"), REJECTED: tr("قبول نشد", "Declined"), BLOCKED: tr("مسدود شده", "Blocked") });
 
 function MentorshipHome() {
-  const [rows, setRows] = useState<MentorshipRow[] | null>(null);
+  // روی زیردامنه‌ی یک بخش فقط رابطه‌هایی که حوزه‌ی مؤثرشون با اون بخش اشتراک داره؛ بقیه فقط پنهان می‌شن
+  const section = useSection();
+  const [rawRows, setRows] = useState<MentorshipRow[] | null>(null);
+  const rows = useMemo(() => {
+    if (!rawRows || !section) return rawRows;
+    const allowed = SECTION_META[section].mentorCategories;
+    return rawRows.filter((r) => intersectsCategories(r.categories, allowed));
+  }, [rawRows, section]);
   const [programs, setPrograms] = useState<ProgramRow[] | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [area, setArea] = useState<string>("");

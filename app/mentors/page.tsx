@@ -12,7 +12,9 @@ import { SavedMentorsProvider, useSavedMentors } from "@/components/MentorSaved"
 import { MentorPlatformNotice } from "@/components/MentorPlatformNotice";
 import { MentorCollapse, MentorStagger, MentorStaggerItem, MentorSwap } from "@/components/MentorMotion";
 import { LoadingBlock, Spinner } from "@/components/Spinner";
-import { MENTOR_CATEGORIES, MENTOR_CATEGORY_META, isMentorCategory, type MentorCategory } from "@/lib/mentorCategories";
+import { MENTOR_CATEGORIES, MENTOR_CATEGORY_META, isMentorCategory, restrictCategories, type MentorCategory } from "@/lib/mentorCategories";
+import { useSection } from "@/components/SectionProvider";
+import { SECTION_META } from "@/lib/sections";
 import type { MentorCard as MentorCardData, MentorsListResponse, MentorsPopularResponse } from "@/lib/mentorTypes";
 import { networkError, readApiError } from "@/lib/mentorFormat";
 import { tr, iso } from "@/lib/i18n";
@@ -33,7 +35,13 @@ const sortOptions = (): { value: MentorSort; label: string }[] => [
   { value: "rating", label: tr("بالاترین امتیاز", "Highest rated") },
   { value: "new", label: tr("تازه‌ترین", "Newest") },
 ];
-const categoryOptions = () => [{ value: "", label: tr("همه", "All") }, ...MENTOR_CATEGORIES.map((c) => ({ value: c as string, label: MENTOR_CATEGORY_META[c].short }))];
+const categoryOptions = (cats: readonly MentorCategory[]) => [{ value: "", label: tr("همه", "All") }, ...cats.map((c) => ({ value: c as string, label: MENTOR_CATEGORY_META[c].short }))];
+
+/** حوزه‌های قابل نمایش روی این میزبان: روی زیردامنه‌ی یک بخش فقط حوزه‌های همون بخش (سرور هم همین رو اعمال می‌کنه) */
+function useVisibleCategories(): MentorCategory[] {
+  const section = useSection();
+  return useMemo(() => restrictCategories(MENTOR_CATEGORIES, section ? SECTION_META[section].mentorCategories : null), [section]);
+}
 const ratingOptions = () => [{ value: "0", label: tr("همه", "All") }, ...MIN_RATING_OPTIONS.map((r) => ({ value: String(r), label: tr(`${faNum(r)} به بالا`, `${faNum(r)} and up`) }))];
 const responseOptions = () => [{ value: "0", label: tr("همه", "All") }, ...MAX_RESPONSE_OPTIONS.map((h) => ({ value: String(h), label: tr(`تا ${faNum(h)} ساعت`, `Within ${faNum(h)} ${"hours"}`) }))];
 
@@ -62,7 +70,11 @@ function Discovery() {
   const sp = useSearchParams();
   const router = useRouter();
   const pathname = usePathname();
-  const filters = useMemo(() => filtersFromParams(sp, isMentorCategory), [sp]);
+  const cats = useVisibleCategories();
+  const filters = useMemo(() => {
+    const f = filtersFromParams(sp, isMentorCategory);
+    return f.category && !(cats as readonly string[]).includes(f.category) ? { ...f, category: "" } : f;
+  }, [sp, cats]);
   const viewRaw = sp.get("view");
   const view: View = viewRaw === "saved" ? "saved" : viewRaw === "all" ? "all" : "rows";
 
@@ -110,10 +122,12 @@ function Discovery() {
             onQInput={setQInput}
             onChange={setFilters}
             onClear={clearAll}
+            categories={cats}
           />
           <MentorSwap swapKey={showRows ? "rows" : "list"}>
             {showRows ? (
               <Rows
+                categories={cats}
                 onPopular={() => openAll({}, "all")}
                 onNew={() => openAll({ sort: "new" })}
                 onCategory={(c) => openAll({ category: c })}
@@ -133,8 +147,9 @@ function Discovery() {
  *  چپ جستجو در RTL)؛ بقیه‌ی فیلترها داخل پنل جمع‌شونده: بخش/ترتیب/امتیاز/پاسخ
  *  فیلد کشویی، مدرک/پذیرش چک‌باکس، با دکمه‌ی «اعمال» که همه را یک‌جا می‌فرستد */
 function FilterPanel({
-  filters, qInput, onQInput, onChange, onClear,
+  filters, qInput, onQInput, onChange, onClear, categories,
 }: {
+  categories: readonly MentorCategory[];
   filters: MentorFilters;
   qInput: string;
   onQInput: (v: string) => void;
@@ -186,7 +201,9 @@ function FilterPanel({
 
       <MentorCollapse open={open} id="mentor-filter-panel">
         <div className="mentor-filter-grid">
-          <SelectField label={tr("بخش", "Category")} value={draft.category} onChange={(v) => setDraft((d) => ({ ...d, category: v }))} options={categoryOptions()} />
+          {categories.length > 1 && (
+            <SelectField label={tr("بخش", "Category")} value={draft.category} onChange={(v) => setDraft((d) => ({ ...d, category: v }))} options={categoryOptions(categories)} />
+          )}
           <SelectField label={tr("ترتیب", "Sort by")} value={draft.sort} onChange={(v) => setDraft((d) => ({ ...d, sort: v as MentorSort }))} options={sortOptions()} />
           <SelectField label={tr("حداقل امتیاز", "Minimum rating")} value={String(draft.minRating)} onChange={(v) => setDraft((d) => ({ ...d, minRating: Number(v) }))} options={ratingOptions()} />
           <SelectField label={tr("زمان پاسخ", "Response time")} value={String(draft.maxResponse)} onChange={(v) => setDraft((d) => ({ ...d, maxResponse: Number(v) }))} options={responseOptions()} />
@@ -343,8 +360,9 @@ function Results({ filters, allView, onClear, onBack }: { filters: MentorFilters
 
 /** نمای پیش‌فرض: ذخیره‌شده‌ها (اگر بود) اول، بعد ردیف‌های افقی محبوب، تازه و هر حوزه (MentorCarousel) */
 function Rows({
-  onPopular, onNew, onCategory, onSaved,
+  categories, onPopular, onNew, onCategory, onSaved,
 }: {
+  categories: readonly MentorCategory[];
   onPopular: () => void;
   onNew: () => void;
   onCategory: (c: MentorCategory) => void;
@@ -365,7 +383,7 @@ function Rows({
         setPopular(d.mentors ?? []);
         setNewcomers(d.newcomers ?? []);
       });
-    const catReqs = MENTOR_CATEGORIES.map((c) =>
+    const catReqs = categories.map((c) =>
       fetch(`/api/mentors?cat=${c}&page=1`, { cache: "no-store" })
         .then((r) => (r.ok ? r.json() : Promise.reject()))
         .then((d: MentorsListResponse) => setByCategory((prev) => ({ ...prev, [c]: d.mentors }))),
@@ -375,13 +393,13 @@ function Rows({
       if (res.every((r) => r.status === "rejected")) setFailed(true);
       setPopular((p) => p ?? []);
     });
-  }, []);
+  }, [categories]);
   useEffect(load, [load]);
 
   if (failed) return <MentorErrorState message={tr("فهرست مربی‌ها دریافت نشد؛ دوباره تلاش کن", "Couldn't load mentors. Try again")} onRetry={load} />;
   if (popular === null) return <LoadingBlock />;
 
-  const categoryRows = MENTOR_CATEGORIES.filter((c) => (byCategory[c]?.length ?? 0) > 0);
+  const categoryRows = categories.filter((c) => (byCategory[c]?.length ?? 0) > 0);
   if (popular.length === 0 && newcomers.length === 0 && categoryRows.length === 0) {
     return <MentorEmptyState icon={<Users size={24} {...IC} />} title={tr("هنوز مربی‌ای منتشر نشده است", "No mentors have been published yet")} />;
   }

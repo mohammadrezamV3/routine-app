@@ -4,6 +4,8 @@ import { checkRateLimit } from "@/lib/rateLimit";
 import { DISCOVERABLE_PROFILE_WHERE, blockedUserIds } from "@/lib/mentorServer";
 import { loadNewcomerCards, loadPopularMentorCards } from "@/lib/mentorRankingStats";
 import { tr } from "@/lib/i18n";
+import { getSection } from "@/lib/sectionServer";
+import { SECTION_META } from "@/lib/sections";
 
 const TOP_N = 12;
 const NEWCOMERS_N = 6;
@@ -22,7 +24,15 @@ export async function GET() {
   }
 
   const blocked = await blockedUserIds(g.userId);
-  const where = { ...DISCOVERABLE_PROFILE_WHERE, acceptingStudents: true, ...(blocked.length ? { userId: { notIn: blocked } } : {}) };
+  // روی زیردامنه‌ی یک بخش فقط منتورهای حوزه‌های همون بخش
+  const section = getSection();
+  const allowed = section ? SECTION_META[section].mentorCategories : null;
+  const where = {
+    ...DISCOVERABLE_PROFILE_WHERE,
+    acceptingStudents: true,
+    ...(blocked.length ? { userId: { notIn: blocked } } : {}),
+    ...(allowed ? { categories: { hasSome: [...allowed] } } : {}),
+  };
   const mentors = await loadPopularMentorCards(where, TOP_N);
   const newcomers = await loadNewcomerCards(where, [], NEWCOMERS_N);
   // یک منتور هم‌زمان در هر دو ویترین نمیاد

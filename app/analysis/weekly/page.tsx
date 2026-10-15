@@ -8,6 +8,7 @@ import { resolveWeekOffset } from "@/lib/weeklyLetter/weekParam";
 import { getWeekRange, safeTimezone } from "@/lib/weeklyAnalysis/week";
 import type { LiveWeekPayload } from "@/lib/weeklyLetter/types";
 import { tr } from "@/lib/i18n";
+import { getSection } from "@/lib/sectionServer";
 import { WeeklyLetterReader } from "@/components/WeeklyLetterReader";
 
 // صفحه‌ی فقط‌ورودیه، پس ایندکس نمی‌شه (هم‌الگوی /dashboard و بقیه‌ی صفحه‌های حساب).
@@ -59,7 +60,7 @@ export default async function WeeklyAnalysisPage({ searchParams }: { searchParam
       const hasModule = !!db.isSuperAdmin || (!!access && access.active && (!access.expiresAt || access.expiresAt.getTime() > Date.now()));
       if (!db.isBlocked && enabled && hasModule) {
         const { offset } = resolveWeekOffset(tz, query);
-        initial = await buildLiveWeek(userId, { timezone: tz, isSuperAdmin: !!db.isSuperAdmin, offset });
+        initial = await buildLiveWeek(userId, { timezone: tz, isSuperAdmin: !!db.isSuperAdmin, offset, section: getSection() });
       }
     }
   } catch (e) {
