@@ -34,6 +34,8 @@ type Importance = "veryHigh" | "high" | "medium" | "low";
 export type MockTask = {
   name: string; time?: string; importance?: Importance; tag?: string;
   done?: boolean; missed?: boolean; exercise?: boolean;
+  /** ردیفی که ساعت ندارد و «بدون ساعت» هم نباید نشان بدهد (مثلا چک‌لیست) */
+  hideTime?: boolean;
 };
 
 export function MockTaskRow({ task }: { task: MockTask }) {
@@ -58,7 +60,7 @@ export function MockTaskRow({ task }: { task: MockTask }) {
         <div className="flex shrink-0 flex-col items-end gap-0.5">
           {task.time ? (
             <span className="shrink-0 font-mono text-[10.5px] text-dash-muted" dir="ltr">{task.time}</span>
-          ) : (
+          ) : task.hideTime ? null : (
             <span className="shrink-0 text-[10.5px] text-dash-muted">{tr("بدون ساعت", "No time")}</span>
           )}
           {!task.exercise && task.missed && !task.done && (
@@ -115,18 +117,20 @@ export function MockCard({ children, className = "" }: { children: React.ReactNo
 }
 
 /** DashTaskList — «برنامه‌های امروز» */
-export function MockTaskList({ tasks }: { tasks: MockTask[] }) {
+export function MockTaskList({ tasks, title, hideAdd }: { tasks: MockTask[]; title?: string; hideAdd?: boolean }) {
   return (
     <MockCard className="flex flex-col">
       <div className="flex items-center justify-between">
         <span className="flex items-center gap-1.5 text-[16px] font-bold text-dash-text">
           <ListChecks className="h-[18px] w-[18px] text-dash-green" />
-          {tr("برنامه‌های امروز", "Today's plans")}
+          {title ?? tr("برنامه‌های امروز", "Today's plans")}
         </span>
-        <span className="flex items-center gap-1 text-[11.5px] font-semibold text-dash-green">
-          <Plus className="h-[15px] w-[15px]" />
-          {tr("افزودن برنامه", "Add plan")}
-        </span>
+        {!hideAdd && (
+          <span className="flex items-center gap-1 text-[11.5px] font-semibold text-dash-green">
+            <Plus className="h-[15px] w-[15px]" />
+            {tr("افزودن برنامه", "Add plan")}
+          </span>
+        )}
       </div>
       <div className="mt-4 flex flex-col gap-1">
         {tasks.map((t) => <MockTaskRow key={t.name} task={t} />)}

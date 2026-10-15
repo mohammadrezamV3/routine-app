@@ -696,3 +696,40 @@ html[dir="ltr"] .lsc-kcal-bar i{ transform-origin:0 50%; }
 /* بخش‌های زیر صفحه: تا نزدیک دید نیان استایل/چیدمان/نقاشی نمی‌گیرن (lazyOnView) */
 .lz-cv{ content-visibility:auto; contain-intrinsic-size:auto var(--lz-m); }
 @media (min-width:1024px){ .lz-cv{ contain-intrinsic-size:auto var(--lz-d); } }
+
+/* ================================================================
+   لندینگ زیردامنه‌ها (routine / trade / workout)
+   پوشش display:contents چیدمان رو تغییر نمی‌ده؛ فقط --section-from/-to رو می‌رسونه.
+   رنگ بخش فقط روی نوشته‌ی گرادیانی تیتر هیرو (و تیتر ویترین) می‌شینه، بدون هیچ بک‌گراند تازه.
+   ================================================================ */
+.lsec-root{ display:contents; }
+.lsec-root .lh-brand,
+.lsec-root .lh-rot-word{
+  background-image:linear-gradient(100deg, var(--section-from), var(--section-to));
+}
+/* تم روشن: همون گرادیان ولی تیره‌تر تا روی زمینه‌ی روشن خوانا بمونه (قاعده‌ی عمومی تم روشن اسپسیفیسیتی بالاتری داره) */
+body[data-theme="light"] .lsec-root .lh-brand,
+body[data-theme="light"] .lsec-root .lh-rot-word{
+  background-image:linear-gradient(100deg,
+    color-mix(in srgb, var(--section-from) 62%, #000),
+    color-mix(in srgb, var(--section-to) 78%, #000));
+}
+
+/* کارت استریک (بخش روتین) */
+.lh-streak-row{ display:flex; align-items:center; gap:8px; font-size:15px; font-weight:800; }
+
+/* کارت جلسه‌ی تمرین (بخش ورزش) */
+.lh-wk-list{ list-style:none; margin:8px 0 0; padding:0; display:flex; flex-direction:column; gap:5px; }
+.lh-wk-list li{ display:flex; align-items:center; justify-content:space-between; gap:8px; font-size:11px; font-weight:600; }
+.lh-wk-list li span{ min-width:0; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
+.lh-wk-list li b{ flex:none; color:var(--accent); font-size:11px; font-weight:800; }
+
+/* کارت خبر اقتصادی (بخش ترید) */
+.lh-card-news{ display:flex; flex-direction:column; gap:8px; }
+.lh-news-title{ display:flex; align-items:center; gap:6px; font-size:12px; font-weight:800; }
+.lh-news-row{ display:flex; align-items:center; gap:8px; font-size:10.5px; font-weight:600; }
+.lh-news-row .mono{ flex:none; color:var(--muted); }
+.lh-news-row span:nth-child(2){ min-width:0; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
+.lh-news-dot{ flex:none; display:block; width:7px; height:7px; border-radius:50%; margin-inline-start:auto; }
+.lh-news-high{ background:#E05252; }
+.lh-news-med{ background:#FFB547; }

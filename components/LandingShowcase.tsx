@@ -10,6 +10,8 @@ import type { LucideIcon } from "lucide-react";
 import { SegmentedTabs } from "@/components/SegmentedTabs";
 import { useThemeTokens } from "@/components/useThemeTokens";
 import { tr, trv } from "@/lib/i18n";
+import { pathAllowedIn, type SectionKey } from "@/lib/sections";
+import { SECTION_SHOWCASE_KEYS, getSectionCopy } from "@/lib/sectionLanding";
 import { faNum } from "@/components/LandingHero";
 import { INERT } from "@/components/LandingMockups";
 import {
@@ -168,10 +170,15 @@ const PREVIEWS: Record<ModKey, (p: PreviewProps) => JSX.Element> = {
   mentor: PreviewMentor,
 };
 
-export function LandingShowcase() {
-  const MODS = mods();
+export function LandingShowcase({ section = null }: { section?: SectionKey | null }) {
+  // زیردامنه: فقط تب‌های همان بخش و به ترتیب خودش؛ دامنه‌ی اصلی همه‌ی تب‌ها مثل قبل
+  const all = mods();
+  const MODS = section
+    ? SECTION_SHOWCASE_KEYS[section].map((k) => all.find((m) => m.key === k)).filter((m): m is Mod => !!m)
+    : all;
+  const copy = section ? getSectionCopy(section) : null;
   const t = useThemeTokens();
-  const [active, setActive] = useState<ModKey>("routine");
+  const [active, setActive] = useState<ModKey>(MODS[0].key);
   const [hover, setHover] = useState(false);
   const [stopped, setStopped] = useState(false);
   const [inView, setInView] = useState(false);
@@ -228,7 +235,9 @@ export function LandingShowcase() {
       <div className="lsc-head">
         <span className="lh-eyebrow"><span className="lh-eyebrow-dot" aria-hidden="true" /> {tr("برش‌هایی از خود اپ", "Snapshots from the app itself")}</span>
         <h2 id="lsc-title" className={`lsc-title ${t.heading}`}>
-          {trv(<>همه‌چیز وقتی <span className="lh-brand">کنار هم</span> باشد، ساده‌تر می‌شود.</>, <>Everything gets simpler when it is <span className="lh-brand">together</span>.</>)}
+          {copy
+            ? <>{copy.showcaseTitle.before} <span className="lh-brand">{copy.showcaseTitle.accent}</span>{copy.showcaseTitle.after}</>
+            : trv(<>همه‌چیز وقتی <span className="lh-brand">کنار هم</span> باشد، ساده‌تر می‌شود.</>, <>Everything gets simpler when it is <span className="lh-brand">together</span>.</>)}
         </h2>
       </div>
 
@@ -285,7 +294,7 @@ export function LandingShowcase() {
               >
                 {mod.cta} <ArrowLeft size={16} className="dir-flip" />
               </Link>
-              {mod.href !== "/auth/signup" && (
+              {mod.href !== "/auth/signup" && pathAllowedIn(section, mod.href) && (
                 <Link href={mod.href} className="lh-link lsc-more">{tr("بیشتر بخوانید", "Read more")}</Link>
               )}
             </div>

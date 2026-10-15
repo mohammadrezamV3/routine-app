@@ -5,6 +5,7 @@ import { useRouter } from "next/navigation";
 import { useSession } from "next-auth/react";
 import { LandingPage } from "@/components/LandingPage";
 import { DASHBOARD_HOME } from "@/lib/homePath";
+import type { SectionKey } from "@/lib/sections";
 
 // تایم/استریک کاربر لاگین‌کرده دیگه این‌جا نیست — رفته توی هدر (سمت چپ
 // دکمه‌ی نوتیف، HeaderStreakClock)، چون از هر صفحه‌ای باید دیده بشه، نه فقط
@@ -15,7 +16,8 @@ import { DASHBOARD_HOME } from "@/lib/homePath";
 // نازکه) صرفا برای اینکه اون فایل بتونه metadata/JSON-LD صادر کنه —
 // Next.js App Router فقط به Server Component ها اجازه‌ی export کردن
 // metadata رو می‌ده. هیچ رفتاری تغییر نکرده.
-export function HomeClient() {
+// section: بخش زیردامنه (از app/page.tsx)؛ null = دامنه‌ی اصلی، لندینگ همه‌ی بخش‌ها مثل قبل.
+export function HomeClient({ section = null }: { section?: SectionKey | null }) {
   const { status } = useSession();
   const router = useRouter();
 
@@ -42,5 +44,5 @@ export function HomeClient() {
   if (status === "authenticated") {
     return null;
   }
-  return <LandingPage />;
+  return <LandingPage section={section} />;
 }
