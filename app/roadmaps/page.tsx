@@ -157,7 +157,7 @@ export default function RoadmapsHub() {
 
                     <div className="rp-card-foot">
                       <div className="rp-bar"><span style={{ width: `${r.pct}%` }} /></div>
-                      <span className="rp-card-pct">{faNum(r.pct)}٪</span>
+                      <span className="rp-card-pct">{faNum(r.pct)}{tr("٪", "%")}</span>
                       <ChevronLeft size={16} className="rp-card-arrow dir-flip" />
                     </div>
                   </Link>
