@@ -12,7 +12,7 @@
 .ssw-panel{
   position:fixed; z-index:60; box-sizing:border-box;
   padding:8px; border-radius:26px; isolation:isolate; overflow:hidden;
-  background:color-mix(in srgb, var(--surface-2) 56%, transparent);
+  background:color-mix(in srgb, var(--surface-2) 70%, transparent);
   backdrop-filter:blur(26px) saturate(190%); -webkit-backdrop-filter:blur(26px) saturate(190%);
   border:1px solid color-mix(in srgb, var(--text) 13%, transparent);
   box-shadow:0 28px 64px -14px rgba(0,0,0,.5), inset 0 1px 0 rgba(255,255,255,.18), inset 0 0 0 1px rgba(255,255,255,.05);
@@ -20,7 +20,7 @@
   animation:sswIn .34s var(--popup-ease-in) backwards;
 }
 body[data-theme="light"] .ssw-panel{
-  background:color-mix(in srgb, var(--surface-2) 66%, transparent);
+  background:color-mix(in srgb, var(--surface-2) 78%, transparent);
   box-shadow:0 28px 60px -16px rgba(60,40,10,.28), inset 0 1px 0 rgba(255,255,255,.8), inset 0 0 0 1px rgba(255,255,255,.4);
 }
 .ssw-panel[data-state="closed"]{ animation:sswOut .12s var(--popup-ease-out) forwards; pointer-events:none; }
@@ -96,11 +96,9 @@ body[data-theme="light"] .ssw-panel::before{ opacity:.55; }
 
 .ssw-panel[data-state="closed"] .ssw-row, .ssw-panel[data-state="closed"] .ssw-all{ animation:none; }
 
-@media (pointer:coarse){
-  .ssw-panel{ backdrop-filter:blur(16px) saturate(180%); -webkit-backdrop-filter:blur(16px) saturate(180%); }
-}
-html[data-perf="low"] .ssw-panel{ background:color-mix(in srgb, var(--surface-2) 94%, transparent); }
-html[data-perf="low"] .ssw-panel::before{ opacity:.4; }
+/* شیشه‌ی مات این پنجره درخواست صریح صاحب محصوله: مثل .nav-drawer-glass و .notif-panel از خاموشی
+   سراسری بلور روی دستگاه لمسی (globals: html[data-perf="low"] *) مستثناست. یک لایه‌ی کوچک و ثابت. */
+html[data-perf="low"] .ssw-panel{ backdrop-filter:blur(24px) saturate(180%) !important; -webkit-backdrop-filter:blur(24px) saturate(180%) !important; }
 
 html[data-perf="low"] .ssw-panel, html[data-perf-weak] .ssw-panel{ animation:sswFade .12s ease backwards; }
 html[data-perf="low"] .ssw-panel[data-state="closed"], html[data-perf-weak] .ssw-panel[data-state="closed"]{ animation:sswFadeOut .09s ease forwards; }

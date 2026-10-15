@@ -177,6 +177,8 @@ body[data-theme] .topbar-logo-lockup-wrap:focus-visible{ outline:2px solid var(-
    بقیه‌ی اندازه‌ها نسبت به همون (--tl-h). متن بخش گرادیان رنگ همون بخشه. */
 .topbar-logo-lockup-wrap.topbar-logo-section{
   --tl-h:22px;
+  /* ترتیب لوگو همیشه چپ به راست، مثل طرح رسمی (A ARION | TRADE)، حتی روی صفحه‌ی rtl */
+  direction:ltr;
   display:inline-flex; align-items:center; gap:calc(var(--tl-h) * .3);
   height:auto; aspect-ratio:auto; min-width:0; max-width:calc(100vw - 232px); flex-shrink:1;
   font-family:var(--font-latin), var(--font-vazir), sans-serif;
