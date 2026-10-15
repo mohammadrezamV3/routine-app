@@ -10,6 +10,10 @@
 //    سطح ماژول یا تابع می‌شن یا جفت `{ fa, en }` نگه می‌دارن و موقع رندر با
 //    `pick()` انتخاب می‌شن.
 
+// نوشتن کوکی زبان بین زیردامنه‌ها مشترکه (lib/clientCookie.ts، فقط داخل تابع صدا زده می‌شه؛
+// import دایره‌ای با lib/sections.ts بی‌خطره چون هیچ‌کدوم در سطح ماژول از اون یکی استفاده نمی‌کنه)
+import { setSharedCookie } from "@/lib/clientCookie";
+
 export type Locale = "fa" | "en";
 
 export const LOCALES: readonly Locale[] = ["fa", "en"];
@@ -83,7 +87,7 @@ export function dirSign(): 1 | -1 {
 /** ساخت کوکی زبان (کلاینت) — یک سال */
 export function writeLocaleCookie(locale: Locale) {
   if (typeof document === "undefined") return;
-  document.cookie = `${LOCALE_COOKIE}=${locale}; path=/; max-age=31536000; samesite=lax`;
+  setSharedCookie(LOCALE_COOKIE, locale, "path=/; max-age=31536000; samesite=lax");
 }
 
 /** عوض‌کردن زبان: کوکی + بارگذاری کامل (layout و همه‌ی صفحه‌های سرور دوباره با زبان جدید ساخته می‌شن) */

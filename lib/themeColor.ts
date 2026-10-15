@@ -17,6 +17,9 @@
 // راه‌حل: `themeColor` از `viewport` برداشته شد تا نکست اصلا این تگ رو
 // نسازه؛ حالا خود اپ تنها مالکشه و همیشه دقیقا یکی نگهش می‌داره.
 
+import { sectionBaseDomain } from "@/lib/sections";
+import { setSharedCookie } from "@/lib/clientCookie";
+
 export const THEME_COLORS = {
   dark: "#0E1011",
   light: "#F4E3C9",
@@ -41,7 +44,8 @@ export const THEME_COOKIE = "theme";
 export function writeThemeCookie(theme: ThemeName) {
   if (typeof document === "undefined") return;
   const secure = typeof location !== "undefined" && location.protocol === "https:" ? "; secure" : "";
-  document.cookie = `${THEME_COOKIE}=${theme}; path=/; max-age=31536000; samesite=lax${secure}`;
+  // کوکی تم بین زیردامنه‌های بخش‌ها مشترکه (lib/clientCookie.ts)
+  setSharedCookie(THEME_COOKIE, theme, `path=/; max-age=31536000; samesite=lax${secure}`);
 }
 
 /**
@@ -91,14 +95,21 @@ export function applyThemeAttribute(theme: ThemeName) {
 // (`data-theme-src="account"` روی html)، کوکی دیگر حق بازنویسی ندارد —
 // برعکس، همین‌جا کوکی با تم حساب هم‌گام می‌شود تا صفحه‌های بعدی (و حتی
 // نسخه‌ی کش‌شده‌ی آفلاین سرویس‌ورکر) هم از اولین پینت درست باشند.
+//
+// کوکی تم بین زیردامنه‌ها (routine./trade./workout.) مشترکه: دامنه‌ی پایه موقع build داخل اسکریپت
+// می‌ره (NEXT_PUBLIC_SECTION_BASE_DOMAIN) و دامنه‌ی کوکی از روی location.hostname حساب می‌شه
+// (هم‌قاعده‌ی cookieDomainForHost). هر نوشتن با دامنه اول نسخه‌ی host-only قدیمی رو منقضی می‌کنه.
 export const THEME_INIT_SCRIPT = `(function(){try{
 var d=document.documentElement;
 var m=document.cookie.match(/(?:^|; )theme=(dark|light)/);
+var B=${JSON.stringify(sectionBaseDomain())},D="",h=location.hostname;
+if(B&&B!=="localhost"&&!/^[\\d.]+$/.test(B)&&(h===B||h.slice(-B.length-1)==="."+B))D="; domain=."+B;
+var w=function(v){if(D)document.cookie="${THEME_COOKIE}=; path=/; max-age=0";document.cookie="${THEME_COOKIE}="+v+"; path=/; max-age=31536000; samesite=lax"+(location.protocol==="https:"?"; secure":"")+D};
 var t;
 if(d.getAttribute("data-theme-src")==="account"){
 t=d.getAttribute("data-theme")==="light"?"light":"dark";
-if(!m||m[1]!==t)document.cookie="${THEME_COOKIE}="+t+"; path=/; max-age=31536000; samesite=lax"+(location.protocol==="https:"?"; secure":"");
-}else t=m?m[1]:"${"dark"}";
+if(!m||m[1]!==t)w(t);
+}else{t=m?m[1]:"${"dark"}";if(D&&m)w(t)}
 d.setAttribute("data-theme",t);
 document.body.setAttribute("data-theme",t);
 var c=${JSON.stringify(THEME_COLORS)}[t];

@@ -1,5 +1,7 @@
 import type { MetadataRoute } from "next";
 import { SITE_URL } from "@/lib/seo";
+import { getSection } from "@/lib/sectionServer";
+import { isSectionHostingEnabled, sectionOrigin } from "@/lib/sections";
 
 // فقط صفحات عمومی بازاریابی/محتوایی قابل کراله؛ همه‌چیز دیگه (داشبورد
 // شخصی کاربر، پنل ادمین، فرم‌های auth، API) نباید crawl بشه — چون یا
@@ -78,5 +80,9 @@ export default function robots(): MetadataRoute.Robots {
   // `Host:` عمدا دیگه نیست: دستور غیراستاندارد یاندکس بود (خودش هم
   // منسوخش کرده) و گزارش robots.txt سرچ‌کنسول اون رو «قانون ناشناخته»
   // علامت می‌زد. دامنه‌ی اصلی با 301 www→apex و canonical مشخص می‌شه.
-  return { rules, sitemap: `${SITE_URL}/sitemap.xml` };
+  // با زیردامنه‌ها هر میزبان نقشه‌ی سایت خودش رو معرفی می‌کنه (app/sitemap.ts). بدون
+  // NEXT_PUBLIC_SECTION_BASE_DOMAIN headers() صدا زده نمی‌شه و خروجی مثل قبل ایستاست.
+  const section = isSectionHostingEnabled() ? getSection() : null;
+  const origin = section ? sectionOrigin(section, SITE_URL) ?? SITE_URL : SITE_URL;
+  return { rules, sitemap: `${origin}/sitemap.xml` };
 }

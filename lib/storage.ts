@@ -9,6 +9,7 @@ import { BOOTSTRAP_SETTING_KEYS } from "./userSettingKeys";
 import type { SleepRecord } from "./sleep";
 import { ALL, broadcast, keyMatches, publishLocal, registerInvalidator, reportLiveError } from "./liveSync";
 import { tr } from "./i18n";
+import { setSharedCookie } from "./clientCookie";
 
 const PREFIX = "panelMohammad:";
 
@@ -683,7 +684,7 @@ export async function setThemeSetting(value: "dark" | "light"): Promise<void> {
     // روی https فلگ Secure هم می‌گیرد تا روی یک درخواست اتفاقی http لو
     // نرود — این کوکی حساس نیست، ولی بی‌دلیل هم نباید cleartext برود.
     const secure = typeof location !== "undefined" && location.protocol === "https:" ? "; secure" : "";
-    document.cookie = `theme=${value}; path=/; max-age=31536000; samesite=lax${secure}`;
+    setSharedCookie("theme", value, `path=/; max-age=31536000; samesite=lax${secure}`);
   }
   return setSetting("theme", value);
 }

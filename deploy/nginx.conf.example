@@ -41,7 +41,11 @@ upstream nextjs_upstream {
 server {
     listen 80;
     listen [::]:80;
-    server_name your-domain.example www.your-domain.example;
+    # زیردامنه‌های بخش‌ها (routine./trade./workout.) همان اپ‌اند؛ بخش را خود اپ از Host تشخیص می‌دهد
+    # (middleware.ts). فقط وقتی NEXT_PUBLIC_SECTION_BASE_DOMAIN را می‌گذاری لازم‌اند. گواهی باید
+    # این سه نام را هم داشته باشد (certbot: -d routine.your-domain.example ... یا گواهی wildcard).
+    # راهنمای کامل: docs/sections.md
+    server_name your-domain.example www.your-domain.example routine.your-domain.example trade.your-domain.example workout.your-domain.example;
 
     # فشرده‌سازی — بزرگ‌ترین بخش payload این اپ JS و CSSه.
     gzip on;
@@ -61,6 +65,8 @@ server {
         proxy_http_version 1.1;
         proxy_set_header Connection "";
         proxy_set_header Host $host;
+        # مقدار خود nginx (هدر مشابه ارسالی کلاینت را بازنویسی می‌کند)؛ middleware.ts بخش را از آن می‌خواند
+        proxy_set_header X-Forwarded-Host $host;
         add_header Cache-Control "public, max-age=31536000, immutable";
         access_log off;
     }
@@ -70,6 +76,8 @@ server {
         proxy_http_version 1.1;
         proxy_set_header Connection "";
         proxy_set_header Host $host;
+        # مقدار خود nginx (هدر مشابه ارسالی کلاینت را بازنویسی می‌کند)؛ middleware.ts بخش را از آن می‌خواند
+        proxy_set_header X-Forwarded-Host $host;
         add_header Cache-Control "public, max-age=86400";
         access_log off;
     }
@@ -107,6 +115,8 @@ server {
         proxy_http_version 1.1;
         proxy_set_header Connection "";
         proxy_set_header Host $host;
+        # مقدار خود nginx (هدر مشابه ارسالی کلاینت را بازنویسی می‌کند)؛ middleware.ts بخش را از آن می‌خواند
+        proxy_set_header X-Forwarded-Host $host;
         proxy_set_header X-Real-IP $remote_addr;
         proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
         proxy_set_header X-Forwarded-Proto https;
@@ -121,6 +131,8 @@ server {
         proxy_http_version 1.1;
         proxy_set_header Connection "";
         proxy_set_header Host $host;
+        # مقدار خود nginx (هدر مشابه ارسالی کلاینت را بازنویسی می‌کند)؛ middleware.ts بخش را از آن می‌خواند
+        proxy_set_header X-Forwarded-Host $host;
         proxy_set_header X-Real-IP $real_client_ip;
         proxy_set_header X-Forwarded-For $real_client_ip;
         proxy_set_header X-Forwarded-Proto https;
@@ -146,6 +158,8 @@ server {
         proxy_set_header Upgrade $http_upgrade;
         proxy_set_header Connection "upgrade";
         proxy_set_header Host $host;
+        # مقدار خود nginx (هدر مشابه ارسالی کلاینت را بازنویسی می‌کند)؛ middleware.ts بخش را از آن می‌خواند
+        proxy_set_header X-Forwarded-Host $host;
         proxy_set_header X-Real-IP $real_client_ip;
         proxy_set_header X-Forwarded-For $real_client_ip;
         proxy_set_header X-Forwarded-Proto https;
@@ -163,6 +177,8 @@ server {
         # `Connection ""` یعنی keepalive به سمت Node فعال بمونه.
         proxy_set_header Connection "";
         proxy_set_header Host $host;
+        # مقدار خود nginx (هدر مشابه ارسالی کلاینت را بازنویسی می‌کند)؛ middleware.ts بخش را از آن می‌خواند
+        proxy_set_header X-Forwarded-Host $host;
         proxy_set_header X-Real-IP $real_client_ip;
         proxy_set_header X-Forwarded-For $real_client_ip;
         proxy_set_header X-Forwarded-Proto https;

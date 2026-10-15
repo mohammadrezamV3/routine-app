@@ -12,6 +12,7 @@ import { verifyAndConsumeEmailOtp } from "@/lib/emailOtp";
 import { verifyAndConsumeTwoFactorOtp } from "@/lib/twoFactor";
 import { createDeviceSession, isSessionLive, newSessionId } from "@/lib/deviceSessions";
 import { getAdminFlags } from "@/lib/adminFlag";
+import { sessionCookieDomain } from "@/lib/authCookies";
 
 // موقع ورود با گوگل، اگه کاربر جدید بود، دقیقا همون تدارک ثبت‌نام معمولی
 // (پایه‌ی همیشه‌رایگان + دوره آزمایشی ۳روزه + کد رفرال) رو براش انجام می‌دیم — تا تجربه‌ی
@@ -25,6 +26,30 @@ async function provisionNewUser(userId: string) {
     },
   });
 }
+
+// امنیت کوکی نشست نباید بی‌صدا به پروتکل NEXTAUTH_URL وابسته باشد (توضیح کامل پایین‌تر)
+const USE_SECURE_COOKIES =
+  process.env.AUTH_COOKIE_SECURE != null
+    ? process.env.AUTH_COOKIE_SECURE === "1"
+    : process.env.NODE_ENV === "production";
+
+// ورود مشترک بین زیردامنه‌ها (routine./trade./workout.): کوکی نشست و callback-url با Domain=.base.
+// اسم کوکی‌ها دقیقا همون اسم‌های پیش‌فرض next-auth می‌مونن (بقیه‌ی کد، مثل WebSocket، اسم رو می‌خونه).
+// کوکی csrf عمدا host-only می‌مونه (پیشوند __Host- ویژگی Domain رو ممنوع می‌کنه). بدون دامنه
+// (زیردامنه‌ها خاموش و AUTH_COOKIE_DOMAIN خالی) اصلا `cookies` ست نمی‌شه = رفتار قبلی.
+// مهاجرت کوکی قدیمی host-only: app/api/auth/[...nextauth]/route.ts + lib/authCookies.ts
+function sharedCookies(): NextAuthOptions["cookies"] | undefined {
+  const domain = sessionCookieDomain();
+  if (!domain) return undefined;
+  const prefix = USE_SECURE_COOKIES ? "__Secure-" : "";
+  const options = { httpOnly: true, sameSite: "lax" as const, path: "/", secure: USE_SECURE_COOKIES, domain };
+  return {
+    sessionToken: { name: `${prefix}next-auth.session-token`, options },
+    callbackUrl: { name: `${prefix}next-auth.callback-url`, options },
+  };
+}
+
+const SHARED_COOKIES = sharedCookies();
 
 export const authOptions: NextAuthOptions = {
   session: { strategy: "jwt" },
@@ -40,10 +65,8 @@ export const authOptions: NextAuthOptions = {
   //
   // پس در production همیشه Secure می‌کنیم (پشت https کاملا درست کار می‌کند)،
   // با یک در فرار برای دیپلوی واقعا plain-http:  AUTH_COOKIE_SECURE=0.
-  useSecureCookies:
-    process.env.AUTH_COOKIE_SECURE != null
-      ? process.env.AUTH_COOKIE_SECURE === "1"
-      : process.env.NODE_ENV === "production",
+  useSecureCookies: USE_SECURE_COOKIES,
+  ...(SHARED_COOKIES ? { cookies: SHARED_COOKIES } : {}),
   jwt: {
     // encode پیش‌فرض next-auth فقط از پارامتر maxAge استفاده می‌کنه و اصلا
     // token.exp رو نمی‌خونه؛ برای اینکه «به‌یاد داشته باش» تیک‌نخورده واقعا
