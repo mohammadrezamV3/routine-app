@@ -11,6 +11,7 @@ import { getNotifPrefs } from "@/lib/notifPrefs";
 import { hasServerPush, subscribeToPush } from "@/lib/pushClient";
 import { isDue, planExerciseReminder, planMedicationReminders, planRoutineReminders } from "@/lib/reminderPlan";
 import { tr, iso } from "@/lib/i18n";
+import { focusDisplay } from "@/lib/exerciseI18n";
 
 // بی‌صداست (چیزی رندر نمی‌کنه). دو کار:
 //
@@ -99,7 +100,7 @@ export function NotificationEngine() {
         const logData = logRes.ok ? await logRes.json() : {};
         if (cancelled || logData.completed) return;
 
-        fireReminder(r.key, r.title, tr(`برنامه‌ی ورزشی امروز (${todayPlan.focus}) هنوز ثبت نشده.`, `Today's workout plan (${iso(todayPlan.focus)}) has not been logged yet.`), { deadline: r.deadline, url: r.url });
+        fireReminder(r.key, r.title, tr(`برنامه‌ی ورزشی امروز (${todayPlan.focus}) هنوز ثبت نشده.`, `Today's workout plan (${iso(focusDisplay(todayPlan.focus))}) has not been logged yet.`), { deadline: r.deadline, url: r.url });
       } catch {}
     }
 

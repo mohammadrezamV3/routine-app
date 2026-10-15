@@ -1594,6 +1594,8 @@
   .account-row2-body{ flex:1; min-width:0; display:flex; flex-direction:column; gap:2px; }
   .account-row2-label{ font-size:13.5px; font-weight:700; color:var(--text); }
   .account-row2-desc{ font-size:11.5px; color:var(--muted); line-height:1.5; }
+  /* کنترل انتهای ردیف (مثلا انتخاب زبان): کل عرض ثابت ردیف رو پر کنه و فاصله‌ی بالای پیش‌فرض تب‌ها رو نداشته باشه */
+  .account-row2-control > .auth-tabs{ flex:1 1 auto; min-width:0; margin-top:0; }
   .account-row2-chevron{ color:var(--muted2); flex-shrink:0; transition:transform .18s ease, color .18s ease; }
   @media (hover:hover) and (pointer:fine){
     button.account-row2-danger:hover{ background:rgba(224,82,82,.06); }
@@ -5756,8 +5758,6 @@ textarea.wsearch-newform-name,
    آیکون جهت‌دار (فلش/شورون «بعدی»/«برگشت») در ltr آینه می‌شه. فقط روی عنصری که
    خودش transform دیگه‌ای نداره (وگرنه داخل یک span جدا). در rtl هیچ اثری نداره. */
 html[dir="ltr"] .dir-flip{ transform:scaleX(-1); }
-/* انتخاب زبان داخل منوی کشویی (components/LanguageSwitch.tsx) */
-.nav-lang-switch{ margin:0 0 10px; }
 
 /* ===== جهت LTR (انگلیسی) — بازتاب قاعده‌هایی که فقط برای RTL نوشته شده بودن =====
    همه‌ی این قاعده‌ها فقط زیر html[dir="ltr"] ان و در فارسی هیچ اثری ندارن. هر کدوم

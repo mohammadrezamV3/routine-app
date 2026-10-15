@@ -1,6 +1,6 @@
 "use client";
 
-// محتوای کشوی همبرگری (لینک‌ها، گروه‌ها، سوییچ تم، انتخاب زبان). این بخش از
+// محتوای کشوی همبرگری (لینک‌ها، گروه‌ها، سوییچ تم). این بخش از
 // NavDrawer جدا شده و lazy لود می‌شه (بعد از اولین پینت/هاور/لمس دکمه‌ی منو)،
 // تا باندل ریشه فقط نوار هدر رو داشته باشه. پوسته‌ی کشو (.nav-drawer) و پرده
 // توی NavDrawer می‌مونن، پس انیمیشن باز/بسته‌شدن دقیقا قبلیه.
@@ -8,7 +8,6 @@ import { useEffect, useState } from "react";
 import { SmartLink as Link } from "./SmartLink";
 import { ChevronDown, Lock } from "lucide-react";
 import { useTheme } from "./ThemeProvider";
-import { LanguageSwitch } from "./LanguageSwitch";
 import { ICONS } from "./NavIcons";
 import { getVisibleLinks, isGroup, isLockedModule, visibleChildren } from "./navLinks";
 import type { FeatureKey } from "@/lib/featureFlags";
@@ -56,7 +55,6 @@ export default function NavDrawerContent({ open, onClose, authed, features, acti
         </button>
         <button onClick={onClose} className="nav-close" aria-label={tr("بستن منو", "Close menu")}>×</button>
       </div>
-      <LanguageSwitch className="nav-lang-switch" />
 
       {visibleLinks.map((item) => {
         const isLocked = (m?: string) => isLockedModule(activeModules, m);
