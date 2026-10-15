@@ -38,7 +38,7 @@ export function SleepStatsPanels({
 
   return (
     <div className="flex flex-col gap-4 sm:gap-6">
-      <div className="flex items-end justify-center gap-2.5 sm:gap-3.5" role="tablist" aria-label={tr("آمار خواب", "Sleep stats")}>
+      <div className="flex items-start justify-center gap-2.5 sm:gap-3.5" role="tablist" aria-label={tr("آمار خواب", "Sleep stats")}>
         {ORDER.map((key) => {
           const on = key === active;
           return (

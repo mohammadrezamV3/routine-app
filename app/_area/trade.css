@@ -1312,12 +1312,9 @@ button.trade-pair-suggest-item:last-child{ border-bottom:none; }
 
 /* خانه‌ی ابزارها: ردیف باکس‌های کوچیک + یک باکس برای ابزار فعال */
 
-.tv-cell-tools{ display:flex; flex-direction:column; gap:16px; }
+.tv-cell-tools{ display:flex; flex-direction:column; gap:14px; }
 
-@media (min-width:640px) {
-  .tv-cell-tools{ gap:24px; } }
-
-.tv-tools-row{ display:flex; align-items:flex-end; justify-content:center; gap:10px; flex:none; }
+.tv-tools-row{ display:flex; align-items:flex-start; justify-content:center; gap:10px; flex:none; }
 
 @media (min-width:640px) {
   .tv-tools-row{ gap:14px; } }

@@ -43,7 +43,7 @@ function buildEntries(features: Features): Entry[] {
   link("roadmaps", byHref("/roadmaps"));
   group("mentors", "mentors");
   link("blog", byHref("/blog"));
-  const more = ["/analysis/weekly", "/tools", "/about"].map(byHref).filter(Boolean) as NavLink[];
+  const more = ["/analysis/weekly", "/about"].map(byHref).filter(Boolean) as NavLink[];
   if (more.length) out.push({ id: "more", label: tr("بیشتر", "More"), children: more });
   return out;
 }

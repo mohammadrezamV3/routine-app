@@ -88,6 +88,8 @@
   .stk-top{ grid-template-columns:minmax(0,560px) minmax(0,1fr); align-items:start; }
   .stk-hero-main{ flex-wrap:nowrap; }
   .stk-hero-info{ min-width:0; }
+  .stk-side{ grid-template-columns:repeat(2, minmax(0,1fr)); }
+  .stk-side .stk-rewards{ grid-column:1 / -1; }
 }
 .stk-golden-body{ display:flex; align-items:center; gap:16px; }
 .stk-golden-pct{ font-size:17px; font-weight:900; font-variant-numeric:tabular-nums; }

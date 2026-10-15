@@ -1,5 +1,5 @@
 import { BRAND_EN, BRAND_FA } from "@/lib/brand";
-import { BLOG_CATEGORY_PAGES, DESCRIPTION_FA, FACTS_FA, FEATURES_FA, PUBLIC_PAGES, TOOL_PAGES } from "@/lib/llmsContent";
+import { BLOG_CATEGORY_PAGES, DESCRIPTION_FA, FACTS_FA, FEATURES_FA, PUBLIC_PAGES } from "@/lib/llmsContent";
 import { absoluteUrl } from "@/lib/seo";
 import { fillPriceCopy } from "@/lib/planPricing";
 import { getPricingConfig } from "@/lib/planPricingServer";
@@ -57,13 +57,6 @@ function build(): string {
   for (const f of FAQS) {
     lines.push(`### ${f.q}`);
     lines.push(f.a);
-    lines.push("");
-  }
-  lines.push("## ابزارهای رایگان");
-  for (const t of TOOL_PAGES) {
-    lines.push(`### ${t.label}`);
-    lines.push(`آدرس: ${absoluteUrl(t.path)}`);
-    lines.push(t.note);
     lines.push("");
   }
   lines.push("## دسته‌های مقاله‌ها");

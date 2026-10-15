@@ -51,7 +51,6 @@ export const getLinks = (): NavItem[] => [
   { href: "/trade", label: tr("ترید", "Trading"), icon: "trade", module: "TRADE", feature: "trade" },
   { href: "/analysis/weekly", label: tr("آنالیز هفتگی", "Weekly review"), icon: "weeklyReport", module: "AI_INSIGHT", feature: "weeklyAnalysis" },
   { href: "/blog", label: tr("مقاله‌ها", "Articles"), icon: "blog", feature: "blog" },
-  { href: "/tools", label: tr("ابزارهای رایگان", "Free tools"), icon: "tools" },
   { href: "/about", label: tr("درباره ما", "About us"), icon: "about", feature: "about" },
 ];
 

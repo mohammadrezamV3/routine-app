@@ -7,7 +7,6 @@ import { useThemeTokens } from "@/components/useThemeTokens";
 import { EnamadBadge } from "@/components/EnamadBadge";
 import { TelegramIcon, InstagramIcon } from "@/components/SocialIcons";
 import { SOCIAL, SUPPORT_EMAIL, brandName } from "@/lib/brand";
-import { PUBLIC_TOOLS, toolLabel } from "@/lib/tools";
 import { isEn, tr } from "@/lib/i18n";
 
 // فوتر صفحه‌ی لندینگ — بدون کارت و بدون بک‌گراند (طبق قانون پروژه: هیچ
@@ -41,9 +40,6 @@ const groups = (): { title: string; links: { href: string; label: string }[] }[]
     title: tr("منابع", "Resources"),
     links: [
       { href: "/blog", label: tr("مقاله‌ها", "Articles") },
-      // ابزارهای رایگان: هاب و هر ابزار از فهرست مشترک lib/tools.ts
-      { href: "/tools", label: tr("ابزارهای رایگان", "Free tools") },
-      ...PUBLIC_TOOLS.map((t) => ({ href: t.path, label: toolLabel(t) })),
       { href: "/faq", label: tr("سوالات متداول", "FAQ") },
     ],
   },

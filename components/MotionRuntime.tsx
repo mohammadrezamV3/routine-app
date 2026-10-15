@@ -26,7 +26,7 @@ function isExpandedBody(n: HTMLElement) {
 }
 
 // صفحه‌های عمومی/محتوایی که ظاهرشدن با اسکرول می‌گیرن
-const REVEAL_PATHS = ["/faq", "/blog", "/tools", "/terms", "/habit-tracker", "/daily-planner", "/trading-journal", "/ai-planner",
+const REVEAL_PATHS = ["/faq", "/blog", "/terms", "/habit-tracker", "/daily-planner", "/trading-journal", "/ai-planner",
   "/bodybuilding-program", "/calorie-counter", "/economic-calendar", "/forex-sessions", "/learning-roadmap", "/mentor-programs", "/mentorship"];
 const REVEAL_SEL = ".page-enter main > section, .page-enter main > article, .blog-grid > *";
 
