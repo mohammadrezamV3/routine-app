@@ -692,3 +692,7 @@ html[dir="ltr"] .lsc-kcal-bar i{ transform-origin:0 50%; }
 @supports not (zoom:1){
   html[dir="ltr"] .lh-canvas{ transform-origin:0 0; }
 }
+
+/* بخش‌های زیر صفحه: تا نزدیک دید نیان استایل/چیدمان/نقاشی نمی‌گیرن (lazyOnView) */
+.lz-cv{ content-visibility:auto; contain-intrinsic-size:auto var(--lz-m); }
+@media (min-width:1024px){ .lz-cv{ contain-intrinsic-size:auto var(--lz-d); } }

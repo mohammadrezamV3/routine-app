@@ -514,3 +514,7 @@ html[dir="ltr"] .ab-macro-bar i{ transform-origin:left; }
 .ab-rise{ animation:ab-rise var(--ab-d,.6s) cubic-bezier(.22,1,.36,1) var(--ab-dl,0s) backwards; }
 @keyframes ab-rise{ from{ opacity:0; transform:translate3d(0,var(--ab-y,0),0); } }
 @media (prefers-reduced-motion:reduce){ .ab-rise{ animation:none; } }
+
+/* بخش‌های زیر صفحه: تا نزدیک دید نیان استایل/چیدمان/نقاشی نمی‌گیرن (lazyOnView) */
+.lz-cv{ content-visibility:auto; contain-intrinsic-size:auto var(--lz-m); }
+@media (min-width:1024px){ .lz-cv{ contain-intrinsic-size:auto var(--lz-d); } }

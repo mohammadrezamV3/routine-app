@@ -20,25 +20,26 @@ const serverShowcase = isServer ? () => require("@/components/LandingShowcase") 
 const serverPlans = isServer ? () => require("@/components/PlanShowcase") as Mod : null;
 const serverFooter = isServer ? () => require("@/components/LandingFooter") as Mod : null;
 
-const S = (name: string, h: number) =>
+const S = (name: string, h: number, cv?: [number, number]) =>
   lazySection(
     () => import("@/components/LandingSections").then((m) => ({ default: (m as unknown as Mod)[name] })),
     serverSections && (() => serverSections()[name]),
     h,
+    cv,
   );
 
-const Stats = S("LandingStats", 120);
-const Dashboard = S("LandingDashboard", 900);
+const Stats = S("LandingStats", 120, [201, 118]);
+const Dashboard = S("LandingDashboard", 900, [985, 585]);
 const Showcase = lazySection(
   () => import("@/components/LandingShowcase").then((m) => ({ default: m.LandingShowcase })),
   serverShowcase && (() => serverShowcase().LandingShowcase),
   900,
 );
-const How = S("LandingHowItWorks", 450);
-const Bento = S("LandingBento", 1300);
-const Features = S("LandingFeatureGrid", 900);
-const WhyUs = S("LandingWhyUs", 500);
-const Trust = S("LandingTestimonialQuote", 350);
+const How = S("LandingHowItWorks", 450, [286, 220]);
+const Bento = S("LandingBento", 1300, [1901, 925]);
+const Features = S("LandingFeatureGrid", 900, [1775, 737]);
+const WhyUs = S("LandingWhyUs", 500, [939, 370]);
+const Trust = S("LandingTestimonialQuote", 350, [204, 204]);
 const Plans = lazySection(
   () => import("@/components/PlanShowcase").then((m) => ({ default: function LandingPlans() { return <m.PlansSection mode="landing" />; } })),
   serverPlans && (() => function LandingPlansSsr() {
@@ -47,12 +48,13 @@ const Plans = lazySection(
   }),
   1200,
 );
-const Faq = S("LandingFAQ", 700);
-const FinalCta = S("LandingFinalCTA", 300);
+const Faq = S("LandingFAQ", 700, [738, 671]);
+const FinalCta = S("LandingFinalCTA", 300, [338, 342]);
 const Footer = lazySection(
   () => import("@/components/LandingFooter").then((m) => ({ default: m.LandingFooter })),
   serverFooter && (() => serverFooter().LandingFooter),
   700,
+  [798, 495],
 );
 
 function Sec({ id, children }: { id: string; children: React.ReactNode }) {

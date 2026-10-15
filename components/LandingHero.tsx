@@ -71,7 +71,17 @@ export function LandingHero() {
   // در دید است سوار می‌شود — بیرون دید یک دایره‌ی ساکن هم‌اندازه جایش است.
   const [mounted, setMounted] = useState(false);
 
-  useEffect(() => { setReduced(prefersReducedMotion()); setMounted(true); }, []);
+  useEffect(() => {
+    setReduced(prefersReducedMotion());
+    // گوی‌ها (framer + بلور) بعد از اولین نقاشی و در زمان بیکاری سوار می‌شن، نه
+    // وسط هیدریشن؛ تا اون موقع همون دایره‌ی ساکن جاشونه.
+    const ric = (window as unknown as { requestIdleCallback?: (cb: () => void, o?: { timeout: number }) => number }).requestIdleCallback;
+    let id = 0;
+    let t = 0;
+    if (ric) id = ric(() => setMounted(true), { timeout: 2500 });
+    else t = window.setTimeout(() => setMounted(true), 1200);
+    return () => { if (id && (window as unknown as { cancelIdleCallback?: (n: number) => void }).cancelIdleCallback) (window as unknown as { cancelIdleCallback: (n: number) => void }).cancelIdleCallback(id); if (t) clearTimeout(t); };
+  }, []);
 
   // حلقه‌ها فقط وقتی هیرو واقعا دیده می‌شه
   useEffect(() => {
@@ -182,12 +192,6 @@ export function LandingHero() {
       className={`lh${inView ? "" : " is-paused"}`}
       aria-labelledby="lh-title"
     >
-      <div className="lh-aurora" aria-hidden="true">
-        <span className="lh-aurora-a" />
-        <span className="lh-aurora-b" />
-        <span className="lh-aurora-c" />
-      </div>
-
       <div className="lh-grid">
         {/* ── متن ── */}
         <div className="lh-copy">
@@ -384,6 +388,15 @@ export function LandingHero() {
             </div>
           </div>
         </div>
+      </div>
+
+      {/* آخر هیرو (نه اول): HTML سرور استریم می‌شه و قبل از رسیدن بقیه‌ی هیرو یک
+          فریم نقاشی می‌شه؛ لکه‌های شفق با bottom:px به ته هیرو می‌چسبن و با
+          رشد هیرو می‌پریدن (CLS). z-index:-1 پس ترتیب DOM روی نقاشی اثر نداره. */}
+      <div className="lh-aurora" aria-hidden="true">
+        <span className="lh-aurora-a" />
+        <span className="lh-aurora-b" />
+        <span className="lh-aurora-c" />
       </div>
     </section>
   );

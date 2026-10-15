@@ -40,7 +40,10 @@ function whenNear(el: HTMLElement, margin: string): Promise<void> {
  */
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 type AnyComp = ComponentType<any>;
-export function lazySection<P extends object = object>(load: () => Promise<{ default: AnyComp }>, sync: (() => AnyComp) | null, minHeight: number, margin = "350px 0px") {
+export function lazySection<P extends object = object>(load: () => Promise<{ default: AnyComp }>, sync: (() => AnyComp) | null, minHeight: number, cv?: [number, number], margin = "150px 0px") {
+  // cv = [ارتفاع موبایل, ارتفاع دسکتاپ]: content-visibility:auto تا بخش بیرون از دید
+  // استایل/چیدمان/نقاشی نگیره (کلاس .lz-cv در landing-hero.css و about.css).
+  const cvProps = cv ? { className: "lz-cv", style: { "--lz-m": `${cv[0]}px`, "--lz-d": `${cv[1]}px` } as React.CSSProperties } : {};
   return function LazySectionBody(props: P) {
     const ref = useRef<HTMLDivElement>(null);
     const uid = useId();
@@ -65,9 +68,9 @@ export function lazySection<P extends object = object>(load: () => Promise<{ def
 
     if (sync) {
       const S = sync();
-      return <div ref={ref} data-lz={uid}><S {...props} /></div>;
+      return <div ref={ref} data-lz={uid} {...cvProps}><S {...props} /></div>;
     }
-    if (!Body) return <div ref={ref} data-lz={uid} suppressHydrationWarning dangerouslySetInnerHTML={{ __html: html }} />;
-    return <div ref={ref} data-lz={uid}><Body {...props} /></div>;
+    if (!Body) return <div ref={ref} data-lz={uid} {...cvProps} suppressHydrationWarning dangerouslySetInnerHTML={{ __html: html }} />;
+    return <div ref={ref} data-lz={uid} {...cvProps}><Body {...props} /></div>;
   };
 }
