@@ -48,6 +48,8 @@ import { EVENT_PREVIEW_KEY } from "@/lib/eventThemeState";
 import { getLocale } from "@/lib/i18nServer";
 import { dirOf, isEn } from "@/lib/i18n";
 import { I18nProvider } from "@/components/I18nProvider";
+import { SectionProvider } from "@/components/SectionProvider";
+import { getSection } from "@/lib/sectionServer";
 
 // پیش‌نمایش تم مناسبتی فقط روی دستگاه ادمین: شناسه = اعمال همون تم، "none" = بدون تم.
 // قبل از اولین پینت اجرا می‌شه و تم زنده‌ی سرور رو فقط روی همین دستگاه override می‌کنه.
@@ -258,6 +260,8 @@ export default async function RootLayout({ children }: { children: React.ReactNo
     getActiveEventThemeId().catch((): string | null => null),
   ]);
   const locale = getLocale();
+  // بخش زیردامنه (routine/trade/workout)؛ null = دامنه‌ی اصلی با همه‌ی بخش‌ها — lib/sections.ts
+  const section = getSection();
   return (
     // data-theme روی html هم هست (نه فقط body): پس‌زمینه‌ی خود <html> همونیه
     // که سافاری توی ناحیه‌ی امن (زیر ناچ / بالای نوار خانه) و موقع اورراسکرول
@@ -271,6 +275,7 @@ export default async function RootLayout({ children }: { children: React.ReactNo
       // کند (برعکس: کوکی را با آن هم‌گام می‌کند) — lib/themeColor.ts
       data-theme-src={fromAccount ? "account" : undefined}
       data-event-theme={eventThemeId ?? undefined}
+      data-section={section ?? undefined}
       suppressHydrationWarning
       className={`${vazir.variable} ${latin.variable}`}
     >
@@ -322,6 +327,7 @@ export default async function RootLayout({ children }: { children: React.ReactNo
         {/* نور هاور دور همه‌ی باکس‌ها — lib/boxHover.ts */}
         <BoxHoverTracker />
         <I18nProvider locale={locale}>
+        <SectionProvider section={section}>
         <AuthSessionProvider session={session}>
           <ThemeProvider initialTheme={theme}>
             <MotionTuner>
@@ -342,6 +348,7 @@ export default async function RootLayout({ children }: { children: React.ReactNo
             </MotionTuner>
           </ThemeProvider>
         </AuthSessionProvider>
+        </SectionProvider>
         </I18nProvider>
       </body>
     </html>
