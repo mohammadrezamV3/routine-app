@@ -65,6 +65,7 @@ export default function DesktopNav({ pathname, features, activeModules }: Props)
   const timer = useRef<ReturnType<typeof setTimeout> | null>(null);
   const openedBy = useRef<"hover" | "click" | "key">("hover");
   const focusFirst = useRef(false);
+  const skipFocusOpen = useRef(false);
 
   const isActive = (e: Entry) => {
     const hrefs = e.href ? [e.href] : (e.children ?? []).map((c) => c.href);
@@ -150,7 +151,7 @@ export default function DesktopNav({ pathname, features, activeModules }: Props)
     const inMenu = !!t.closest('[role="menu"]');
     const trigger = () => navRef.current?.querySelector<HTMLElement>(`[data-trigger="${entry.id}"]`);
     if (e.key === "Escape") {
-      if (openId) { e.preventDefault(); setOpenId(null); if (inMenu) trigger()?.focus(); }
+      if (openId) { e.preventDefault(); setOpenId(null); if (inMenu) { skipFocusOpen.current = true; trigger()?.focus(); } }
       return;
     }
     if (inMenu) {
@@ -162,6 +163,7 @@ export default function DesktopNav({ pathname, features, activeModules }: Props)
       else if (e.key === "End") { e.preventDefault(); items[items.length - 1]?.focus(); }
       else if (e.key === "ArrowRight" || e.key === "ArrowLeft") {
         e.preventDefault(); setOpenId(null);
+        skipFocusOpen.current = true;
         const trg = trigger();
         if (trg) { trg.focus(); moveTop(trg, e.key === "ArrowRight" ? 1 : -1); }
       }
@@ -197,6 +199,7 @@ export default function DesktopNav({ pathname, features, activeModules }: Props)
               onPointerLeave={e.children ? (ev) => { if (ev.pointerType === "mouse") schedule(null, 170); } : undefined}
               onFocus={e.children ? (ev) => {
                 // فقط فوکوس کیبوردی؛ فوکوس ناشی از کلیک ماوس خودش با onClick مدیریت می‌شه
+                if (skipFocusOpen.current) { skipFocusOpen.current = false; return; }
                 if ((ev.target as HTMLElement).matches(":focus-visible") && !(ev.target as HTMLElement).closest('[role="menu"]')) openNow(e.id, "key");
               } : undefined}
               onBlur={e.children ? (ev) => {

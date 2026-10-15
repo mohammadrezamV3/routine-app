@@ -12,11 +12,16 @@ import { tr } from "./i18n";
 
 const PREFIX = "panelMohammad:";
 
+// نتیجه‌ی مثبت کش می‌شه: این تابع در هر خواندن/نوشتن صدا زده می‌شه و هر بار یک
+// setItem+removeItem (نوشتن واقعی روی دیسک) می‌زد. منفی دوباره چک می‌شه (حالت خصوصی/سهمیه).
+let lsOk = false;
 function hasLocalStorage() {
+  if (lsOk) return true;
   try {
     const k = "__test__";
     window.localStorage.setItem(k, "1");
     window.localStorage.removeItem(k);
+    lsOk = true;
     return true;
   } catch {
     return false;

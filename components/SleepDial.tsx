@@ -73,12 +73,6 @@ export function SleepDial({
   const uid = useId().replace(/:/g, "");
   const reduce = useReducedMotion();
   const [now, setNow] = useState<Date | null>(null);
-  useEffect(() => {
-    setNow(new Date());
-    const t = setInterval(() => setNow(new Date()), 1000);
-    return () => clearInterval(t);
-  }, []);
-
   const nowMin = now ? now.getHours() * 60 + now.getMinutes() + now.getSeconds() / 60 : null;
   const phase = sleepPhase(Math.floor(nowMin ?? 12 * 60), target);
   const bedMin = hhmmToMin(target.sleep) ?? 23 * 60 + 30;
@@ -125,6 +119,19 @@ export function SleepDial({
     caption = tr(`ساعت ${target.sleep}`, `At ${target.sleep}`);
     bigCls = "is-clock is-hms";
   }
+
+  // ثانیه فقط وقتی دیده می‌شه که وسط صفحه ساعت h:m:s باشه (ردیاب زنده/شمارش معکوس)؛
+  // در بقیه حالت‌ها هر دقیقه (روی مرز دقیقه) یک رندر کافیه، نه هر ثانیه کل SVG.
+  const fast = bigCls.includes("is-hms");
+  useEffect(() => {
+    let t: ReturnType<typeof setTimeout>;
+    const step = () => {
+      setNow(new Date());
+      t = setTimeout(step, fast ? 1000 : 60_000 - (Date.now() % 60_000) + 30);
+    };
+    step();
+    return () => clearTimeout(t);
+  }, [fast]);
 
   // یک خط راهنما فقط شب: بهترین ساعت‌های بیداری اگه همین الان بخوابی
   const wakeHint = !tracking && (phase === "bedtime" || phase === "night" || phase === "winddown") && nowMin !== null

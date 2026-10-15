@@ -206,13 +206,17 @@ export function priceFromDiscount(original: number, percent: number): number {
   return Math.round((original * (100 - p)) / 100 / 1000) * 1000;
 }
 
+// ساخت Intl.NumberFormat گرونه (toLocaleString هر بار یکی می‌سازه) و این تابع در رندر صدا زده می‌شه
+const NUM_EN = new Intl.NumberFormat("en-US");
+
 export function formatToman(toman: number): string {
-  return tr(`${Math.round(toman).toLocaleString("en-US")} تومان`, `${Math.round(toman).toLocaleString("en-US")} Toman`);
+  const n = NUM_EN.format(Math.round(toman));
+  return tr(`${n} تومان`, `${n} Toman`);
 }
 
 /** «99 هزار تومان» برای متن‌های توضیحی؛ اگه رند هزار نبود عدد کامل */
 export function formatTomanShort(toman: number): string {
-  return toman % 1000 === 0 ? tr(`${(toman / 1000).toLocaleString("en-US")} هزار تومان`, `${Math.round(toman).toLocaleString("en-US")} Toman`) : formatToman(toman);
+  return toman % 1000 === 0 ? tr(`${NUM_EN.format(toman / 1000)} هزار تومان`, `${NUM_EN.format(Math.round(toman))} Toman`) : formatToman(toman);
 }
 
 /**

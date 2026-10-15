@@ -84,7 +84,7 @@ body[data-theme="light"] .lh-aurora-b{ background:radial-gradient(closest-side, 
 .lh-copy{ min-width:0; }
 
 /* ورود پله‌ای متن — پایه همیشه دیده‌شدنی است (بدون JS هم) */
-.lh-rise{ animation:lh-rise .8s cubic-bezier(.2,.8,.2,1) both; animation-delay:calc(var(--i,0) * 90ms + 60ms); }
+.lh-rise{ animation:lh-rise .8s cubic-bezier(.2,.8,.2,1) backwards; animation-delay:calc(var(--i,0) * 90ms + 60ms); }
 @keyframes lh-rise{ from{ opacity:0; transform:translate3d(0,18px,0); } to{ opacity:1; transform:none; } }
 
 .lh-eyebrow{

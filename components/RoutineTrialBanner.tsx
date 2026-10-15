@@ -32,7 +32,6 @@ export function RoutineTrialBanner({ className }: { className?: string }) {
   const [v, setV] = useState(0);
   useLiveRefresh(["account"], () => setV((x) => x + 1));
   const { pricing, ready } = usePlanPricing();
-  const offer = entryOffer(pricing, ROUTINE_PLAN_KEY);
 
   useEffect(() => {
     if (status !== "authenticated") return;
@@ -42,6 +41,7 @@ export function RoutineTrialBanner({ className }: { className?: string }) {
   }, [status, v]);
 
   if (left === null) return null;
+  const offer = entryOffer(pricing, ROUTINE_PLAN_KEY);
   return (
     <div className={`routine-trial-strip${left <= 3 ? " is-urgent" : ""}${className ? ` ${className}` : ""}`} role="status">
       <span>

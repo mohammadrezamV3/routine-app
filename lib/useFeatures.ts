@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useSyncExternalStore } from "react";
 import { FeatureKey } from "@/lib/featureFlags";
 import { takeInlineFeatures } from "@/lib/inlineMeta";
 
@@ -29,9 +29,28 @@ function load(): Promise<Map | null> {
 
 export function invalidateFeatures() { cached = null; takeInlineFeatures(); }
 
-// هوک‌های mountشده (منو، داشبورد) باید نتیجه‌ی تازه‌سازی رو ببینن — وگرنه بعد از
-// ورود کلاینتی (بدون ریلود) منو همون فلگ‌های حالت مهمان رو نگه می‌داشت.
-const listeners = new Set<(m: Map) => void>();
+// آخرین مقداری که به هوک‌ها نشون داده شده. با useSyncExternalStore خونده می‌شه:
+// موقع هیدریشن React از getServerSnapshot (null، همون چیزی که سرور رندر کرده) استفاده می‌کنه
+// و بعدش خودش با مقدار واقعی دوباره رندر می‌کنه؛ mountهای کلاینتی (ناوبری) همون لحظه مقدار
+// کش‌شده رو می‌گیرن. قبلا یه پرچم سراسری «hydrated» بود که با اولین effect روشن می‌شد و
+// مرزهای Suspense که دیرتر هیدریت می‌شدن (مثل /weekly و /sleep) خروجی متفاوت از سرور
+// می‌دادن (خطاهای #418/#422 و دور ریختن HTML سرور).
+let shown: Map | null = null;
+const subs = new Set<() => void>();
+
+function publish(m: Map) {
+  if (shown === m) return;
+  shown = m;
+  subs.forEach((fn) => fn());
+}
+
+function subscribe(fn: () => void) {
+  subs.add(fn);
+  return () => { subs.delete(fn); };
+}
+
+const getSnapshot = () => shown;
+const getServerSnapshot = (): Map | null => null;
 
 /** کش رو دور می‌ریزه، دوباره می‌گیره و به همه‌ی هوک‌های باز خبر می‌ده (بعد از ورود) */
 export function refreshFeatures(): Promise<Map | null> {
@@ -39,24 +58,17 @@ export function refreshFeatures(): Promise<Map | null> {
   takeInlineFeatures(); // مقدار داخل HTML مال قبل از ورود/خروجه
   inflight = null;
   return load().then((m) => {
-    if (m) listeners.forEach((fn) => fn(m));
+    if (m) publish(m);
     return m;
   });
 }
 
-// فقط اولین رندر بعد از لود کامل باید null باشه تا هیدریشن با SSR جور بمونه؛
-// بعد از اون، mountهای تازه (ناوبری کلاینتی) همون کش رو بی‌چشمک می‌گیرن.
-let hydrated = false;
-
 export function useFeatures(): Map | null {
-  const [v, setV] = useState<Map | null>(() => (hydrated ? cached?.value ?? null : null));
+  const v = useSyncExternalStore(subscribe, getSnapshot, getServerSnapshot);
   useEffect(() => {
-    hydrated = true;
     let alive = true;
-    load().then((m) => { if (alive && m) setV(m); });
-    const on = (m: Map) => { if (alive) setV(m); };
-    listeners.add(on);
-    return () => { alive = false; listeners.delete(on); };
+    load().then((m) => { if (alive && m) publish(m); });
+    return () => { alive = false; };
   }, []);
   return v;
 }
