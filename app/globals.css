@@ -4604,7 +4604,7 @@ body[data-theme="light"] .calorie-chart-bar-btn, body:not([data-theme="light"]) 
 /* طبق درخواست صریح: توی نسخه‌ی روز (تم روشن) این دکمه سفید/کم‌رنگ دیده
    می‌شد؛ این‌جا صریح و مستقل از هر قاعده‌ی دیگری قهوه‌ای‌اش می‌کنیم —
    هم‌رنگ --accent خود تم روشن (#B36B2F). */
-body[data-theme="light"] .trade-chat-send{ background:#B36B2F; color:#fff; }
+body[data-theme="light"] .trade-chat-send{ background:var(--accent); color:#fff; }
 
 
 /* ===================== لودینگ مشترک ===================== */

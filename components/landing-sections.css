@@ -10,8 +10,8 @@ body{
 body[data-theme="light"]{
   --ls-card:rgba(255,255,255,.5);
   --ls-card-hi:rgba(255,255,255,.75);
-  --ls-line:rgba(107,79,61,.14);
-  --ls-shadow:0 15px 45px rgba(107,79,61,.10);
+  --ls-line:rgba(var(--text-rgb,107,79,61),.14);
+  --ls-shadow:0 15px 45px rgba(var(--text-rgb,107,79,61),.10);
 }
 
 .ls-head{ text-align:start; margin-bottom:18px; }
@@ -128,7 +128,7 @@ body[data-theme="light"] h2.ls-title, body:not([data-theme="light"]) h2.ls-title
   box-shadow:0 10px 24px rgba(0,0,0,.28); font-size:9.5px; line-height:1.6; color:var(--muted);
   animation:ls-toast 4.5s ease-in-out infinite;
 }
-body[data-theme="light"] .ls-toast{ box-shadow:0 10px 24px rgba(107,79,61,.18); }
+body[data-theme="light"] .ls-toast{ box-shadow:0 10px 24px rgba(var(--text-rgb,107,79,61),.18); }
 .ls-toast-ic{ width:18px; height:18px; border-radius:5px; flex:none; margin-top:1px; }
 .ls-toast-tx{ display:flex; flex-direction:column; min-width:0; }
 .ls-toast-tx b{ font-size:10px; font-weight:800; color:var(--text); }

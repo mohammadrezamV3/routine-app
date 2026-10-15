@@ -1,6 +1,6 @@
 import type { MetadataRoute } from "next";
 import { BRAND_FA } from "@/lib/brand";
-import { THEME_COLORS } from "@/lib/themeColor";
+import { THEME_COLORS, themeColorFor } from "@/lib/themeColor";
 import { tr } from "@/lib/i18n";
 import { getSection } from "@/lib/sectionServer";
 import { SECTION_META, isSectionHostingEnabled, type SectionKey } from "@/lib/sections";
@@ -60,8 +60,9 @@ export default function manifest(): MetadataRoute.Manifest {
       description: meta.tagline,
       start_url: "/",
       display: "standalone",
-      background_color: THEME_COLORS.dark,
-      theme_color: THEME_COLORS.dark,
+      // اسپلش و نوار اپ نصب‌شده هم‌رنگ پالت شب همون بخش (ترید/تمرین؛ روتین = رنگ پایه)
+      background_color: themeColorFor("dark", section),
+      theme_color: themeColorFor("dark", section),
       dir: tr("rtl", "ltr") as "rtl" | "ltr",
       lang: tr("fa", "en"),
       icons: sectionIcons(section),

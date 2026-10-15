@@ -1,6 +1,8 @@
 import type { Metadata, Viewport } from "next";
 import { Vazirmatn, Inter } from "next/font/google";
 import "./globals.css";
+// تم رنگی بخش‌ها (ترید/تمرین) — هسته‌ی مشترک، بعد از globals و قبل از تم نوآر ادمین
+import "./section-themes.css";
 import "@/components/ltr-shell.css";
 import "@/components/ltr-routine.css";
 import "@/components/ltr-trade.css";
@@ -20,7 +22,7 @@ import { AuthSessionProvider } from "@/components/AuthSessionProvider";
 import { MotionTuner } from "@/components/MotionTuner";
 import { getSessionFast } from "@/lib/serverSession";
 import { PRELOAD_SCRIPT } from "@/lib/preload";
-import { THEME_INIT_SCRIPT, THEME_COLORS, THEME_COOKIE } from "@/lib/themeColor";
+import { THEME_INIT_SCRIPT, THEME_COOKIE, themeColorFor } from "@/lib/themeColor";
 import { cookies } from "next/headers";
 import { prisma } from "@/lib/prisma";
 import { PERF_INIT_SCRIPT } from "@/lib/perfTier";
@@ -284,7 +286,7 @@ export default async function RootLayout({ children }: { children: React.ReactNo
             اجرای اسکریپت. مالک این تگ هنوز خود اپه (نه metadata نکست؛
             دلیلش lib/themeColor.ts)، پس دوباره‌تزریق نمی‌شه و
             syncThemeColorMeta همین یکی رو آپدیت می‌کنه. */}
-        <meta name="theme-color" content={THEME_COLORS[theme]} />
+        <meta name="theme-color" content={themeColorFor(theme, section, !!eventThemeId)} />
         <script dangerouslySetInnerHTML={{ __html: EVENT_PREVIEW_SCRIPT }} />
         {/* تم آزمایشی ادمین (lib/adminTheme.ts) — قبل از اولین پینت */}
         <script dangerouslySetInnerHTML={{ __html: ADMIN_THEME_INIT_SCRIPT }} />
