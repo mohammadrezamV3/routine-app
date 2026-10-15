@@ -41,6 +41,13 @@ function BrandLogo({ className }: { className?: string }) {
 }
 export { BrandLogo as AboutBrandLogo };
 
+// ورود متن‌های هیرو با CSS (نه framer): خروجی سرور از اول قابل‌دیدنه و منتظر JS
+// نمی‌مونه؛ fill-mode backwards یعنی بعد از پایان انیمیشن لایه‌ی انیمیت‌شده
+// نمی‌مونه (متن می‌تونه کاندید LCP بشه). حرکت‌کاهی: app/about/about.css.
+function abRise(dur: number, delay: number, y: number): React.CSSProperties {
+  return { "--ab-d": `${dur}s`, "--ab-dl": `${delay}s`, "--ab-y": `${y}px` } as React.CSSProperties;
+}
+
 export function AboutHero() {
   const WORDS = words();
   const ORBIT = orbit();
@@ -91,25 +98,15 @@ export function AboutHero() {
 
       <div className="ab-hero-grid">
         <div>
-          <motion.span
-            className="ab-badge"
-            initial={reduce ? false : { opacity: 0, y: 10 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.6, ease: EASE }}
-          >
+          <span className="ab-badge ab-rise" style={abRise(0.6, 0, 10)}>
             <span className="ab-badge-dot" aria-hidden="true" />
             {tr("داستان آریون", "The Arion story")}
-          </motion.span>
+          </span>
 
           <h1 id="ab-h1" className="ab-h1" style={{ perspective: 600 }}>
-            <motion.span
-              className="ab-h1-kicker"
-              initial={reduce ? false : { opacity: 0 }}
-              animate={{ opacity: 1 }}
-              transition={{ duration: 0.6, delay: 0.05 }}
-            >
+            <span className="ab-h1-kicker ab-rise" style={abRise(0.6, 0.05, 0)}>
               {tr(`درباره ${brandName()}`, `About ${brandName()}`)}
-            </motion.span>
+            </span>
             <span className="ab-h1-line">
               {WORDS.map((w, i) => (
                 <motion.span key={w} className="ab-word" {...word(i)}>{w}</motion.span>
@@ -132,12 +129,7 @@ export function AboutHero() {
             </span>
           </h1>
 
-          <motion.p
-            className="ab-sub"
-            initial={reduce ? false : { opacity: 0, y: 14 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.7, delay: 0.55, ease: EASE }}
-          >
+          <p className="ab-sub ab-rise" style={abRise(0.7, 0.55, 14)}>
             {trv(
               <>
                 {brandName()} یک اپلیکیشن فارسی برای نظم‌دادن به زندگی روزمره است. <b>روتین، خواب، ورزش، تغذیه و ترید</b>
@@ -148,30 +140,20 @@ export function AboutHero() {
                 {" "}live side by side under one account instead of several separate apps, and it works the same on phone and desktop.
               </>,
             )}
-          </motion.p>
+          </p>
 
-          <motion.div
-            className="ab-ctas"
-            initial={reduce ? false : { opacity: 0, y: 14 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.7, delay: 0.7, ease: EASE }}
-          >
+          <div className="ab-ctas ab-rise" style={abRise(0.7, 0.7, 14)}>
             <Link href="/auth/signup" className="ls-btn ls-btn-primary">
               {tr("شروع رایگان", "Start free")} <ArrowLeft size={16} className="dir-flip" />
             </Link>
             <a href="#inside" className="ls-btn ls-btn-ghost">{tr("داخل آریون", "Inside Arion")}</a>
-          </motion.div>
+          </div>
 
-          <motion.div
-            className="ab-trust"
-            initial={reduce ? false : { opacity: 0 }}
-            animate={{ opacity: 1 }}
-            transition={{ duration: 0.7, delay: 0.9 }}
-          >
+          <div className="ab-trust ab-rise" style={abRise(0.7, 0.9, 0)}>
             <span><Sparkles size={14} /> {tr("«روتین من» 14 روز رایگان", "My Routine free for 14 days")}</span>
             <span><ShieldCheck size={14} /> {tr("چت‌های سرتاسر رمزنگاری‌شده", "End-to-end encrypted chats")}</span>
             <span><Smartphone size={14} /> {tr("نصب روی گوشی (PWA)", "Install on your phone (PWA)")}</span>
-          </motion.div>
+          </div>
         </div>
 
         <div className="ab-stage-wrap" onPointerMove={onMove} onPointerLeave={onLeave}>

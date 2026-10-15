@@ -509,3 +509,8 @@ button.ab-team-toggle:focus-visible{ outline:2px solid var(--accent); outline-of
 
 /* ───── انگلیسی (چپ‌به‌راست) ───── */
 html[dir="ltr"] .ab-macro-bar i{ transform-origin:left; }
+
+/* ورود هیرو با CSS (جایگزین framer؛ همون منحنی و زمان‌بندی) */
+.ab-rise{ animation:ab-rise var(--ab-d,.6s) cubic-bezier(.22,1,.36,1) var(--ab-dl,0s) backwards; }
+@keyframes ab-rise{ from{ opacity:0; transform:translate3d(0,var(--ab-y,0),0); } }
+@media (prefers-reduced-motion:reduce){ .ab-rise{ animation:none; } }

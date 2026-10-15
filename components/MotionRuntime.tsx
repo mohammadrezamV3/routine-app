@@ -45,23 +45,41 @@ export function MotionRuntime() {
     let mo: MutationObserver | null = null;
     const start = () => {
       let budget = 0;
+      // علامت‌گذاری در یک rAF جمع می‌شه: getComputedStyle داخل خود MutationObserver (درست بعد از
+      // هر commit ریاکت) یک style recalc همزمان اجباری می‌ساخت و با commit بعدی دوباره تکرار می‌شد؛
+      // داخل rAF همون recalc‌ایه که خود فریم هم می‌خواد، پس کار اضافه نیست. نتیجه همون فریم، همون ظاهر.
+      let pending: HTMLElement[] = [];
+      let queued = false;
+      const flush = () => {
+        queued = false;
+        budget = 0;
+        const list = pending;
+        pending = [];
+        for (const n of list) {
+          if (!n.isConnected || n.hasAttribute("data-m-in")) continue;
+          // اگه خودش انیمیشن داره (framer/CSS) دخالت نکن
+          if (getComputedStyle(n).animationName !== "none") continue;
+          const idx = Math.min(n.parentElement ? Array.prototype.indexOf.call(n.parentElement.children, n) : 0, 6);
+          if (idx > 0) n.style.setProperty("--i", String(idx));
+          n.setAttribute("data-m-in", "rise");
+          n.addEventListener("animationend", () => { n.removeAttribute("data-m-in"); n.style.removeProperty("--i"); }, { once: true });
+        }
+      };
       mo = new MutationObserver((records) => {
         if (root.hasAttribute("data-logging-out") || document.visibilityState === "hidden") return;
         for (const rec of records) {
-          for (const n of Array.from(rec.addedNodes)) {
+          const added = rec.addedNodes;
+          for (let k = 0; k < added.length; k++) {
+            const n = added[k];
             if (!(n instanceof HTMLElement) || n.hasAttribute("data-m-in") || n.hasAttribute("data-popup-ghost")) continue;
             if (!(n.matches(IN_SEL) || isExpandedBody(n)) || n.closest("[data-m-skip], [data-popup-ghost]")) continue;
             // حداکثر چند عنصر در هر فریم؛ جلوگیری از هزینه‌ی دسته‌ای
             if (++budget > 24) continue;
-            // اگه خودش انیمیشن داره (framer/CSS) دخالت نکن
-            if (getComputedStyle(n).animationName !== "none") continue;
-            const idx = Math.min(n.parentElement ? Array.prototype.indexOf.call(n.parentElement.children, n) : 0, 6);
-            if (idx > 0) n.style.setProperty("--i", String(idx));
-            n.setAttribute("data-m-in", "rise");
-            n.addEventListener("animationend", () => { n.removeAttribute("data-m-in"); n.style.removeProperty("--i"); }, { once: true });
+            pending.push(n);
           }
         }
-        requestAnimationFrame(() => { budget = 0; });
+        if (pending.length && !queued) { queued = true; requestAnimationFrame(flush); }
+        else if (!queued) requestAnimationFrame(() => { budget = 0; });
       });
       mo.observe(document.body, { childList: true, subtree: true });
     };

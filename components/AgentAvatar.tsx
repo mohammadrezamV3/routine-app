@@ -258,16 +258,40 @@ export function AgentAvatar({
       ctx.stroke();
       ctx.restore();
 
-      if (shouldAnimate) {
+      if (shouldAnimate && running) {
         rafRef.current = requestAnimationFrame(draw);
       }
     };
 
-    const handleMotionChange = () => {
+    // حلقه‌ی انیمیشن فقط وقتی اجرا می‌شه که کانواس واقعا دیده بشه (داخل viewport و تب
+    // رو به کاربر). قبلا هر آواتار، حتی بیرون صفحه/داخل کشوی بسته/تب پس‌زمینه، با ۶۰fps و
+    // ۳۷ سایه‌ی بلور در هر فریم می‌کشید. آخرین فریم روی کانواس می‌مونه، پس ظاهر عوض نمی‌شه.
+    let running = false;
+    let inView = true;
+    const start = () => {
+      if (running || !shouldAnimate || !inView || document.hidden) return;
+      running = true;
+      rafRef.current = requestAnimationFrame(draw);
+    };
+    const stop = () => {
+      running = false;
       cancelAnimationFrame(rafRef.current);
+    };
+    const io = typeof IntersectionObserver !== "undefined"
+      ? new IntersectionObserver((entries) => {
+          inView = entries[entries.length - 1].isIntersecting;
+          if (inView) start(); else stop();
+        })
+      : null;
+    io?.observe(canvas);
+    const onVis = () => { if (document.hidden) stop(); else start(); };
+    document.addEventListener("visibilitychange", onVis);
+
+    const handleMotionChange = () => {
+      stop();
       shouldAnimate = animated && !motionQuery.matches;
       if (shouldAnimate) {
-        rafRef.current = requestAnimationFrame(draw);
+        start();
       } else {
         draw(0);
       }
@@ -276,13 +300,15 @@ export function AgentAvatar({
     motionQuery.addEventListener("change", handleMotionChange);
 
     if (shouldAnimate) {
-      rafRef.current = requestAnimationFrame(draw);
+      start();
     } else {
       draw(0);
     }
 
     return () => {
-      cancelAnimationFrame(rafRef.current);
+      stop();
+      io?.disconnect();
+      document.removeEventListener("visibilitychange", onVis);
       motionQuery.removeEventListener("change", handleMotionChange);
     };
   }, [seed, size, animated, theme]);

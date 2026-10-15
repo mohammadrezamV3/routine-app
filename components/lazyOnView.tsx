@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useRef, useState, type ComponentType } from "react";
+import { useEffect, useId, useRef, useState, type ComponentType } from "react";
 
 // هیدریشن تنبل بخش‌های زیر صفحه (لندینگ، درباره ما، ...): HTML کامل بخش از
 // سرور میاد (سئو + اولین نقاشی + بدون پرش چیدمان)، ولی JS اون بخش فقط وقتی
@@ -43,6 +43,11 @@ type AnyComp = ComponentType<any>;
 export function lazySection<P extends object = object>(load: () => Promise<{ default: AnyComp }>, sync: (() => AnyComp) | null, minHeight: number, margin = "350px 0px") {
   return function LazySectionBody(props: P) {
     const ref = useRef<HTMLDivElement>(null);
+    const uid = useId();
+    // HTML سروریِ همین بخش (فقط هنگام هیدریشن موجوده). اگه ری‌اکت innerHTML رو
+    // دوباره بنویسه، همین رشته نوشته می‌شه و محتوا نمی‌پره.
+    const [html] = useState(() =>
+      typeof document === "undefined" ? "" : document.querySelector(`[data-lz="${uid}"]`)?.innerHTML ?? "");
     const [Body, setBody] = useState<AnyComp | null>(null);
 
     useEffect(() => {
@@ -53,16 +58,16 @@ export function lazySection<P extends object = object>(load: () => Promise<{ def
       let alive = true;
       whenNear(el, margin)
         .then(load)
-        .then((m) => { if (alive) setBody(() => m.default); })
+        .then((m) => { if (alive) { el.style.minHeight = ""; setBody(() => m.default); } })
         .catch(() => {});
       return () => { alive = false; };
     }, []);
 
     if (sync) {
       const S = sync();
-      return <div ref={ref}><S {...props} /></div>;
+      return <div ref={ref} data-lz={uid}><S {...props} /></div>;
     }
-    if (!Body) return <div ref={ref} suppressHydrationWarning dangerouslySetInnerHTML={{ __html: "" }} />;
-    return <div ref={ref} style={{ minHeight: 0 }}><Body {...props} /></div>;
+    if (!Body) return <div ref={ref} data-lz={uid} suppressHydrationWarning dangerouslySetInnerHTML={{ __html: html }} />;
+    return <div ref={ref} data-lz={uid}><Body {...props} /></div>;
   };
 }
