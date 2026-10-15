@@ -10,7 +10,7 @@ import { createPortal } from "react-dom";
 import Image from "next/image";
 import { SmartLink as Link } from "./SmartLink";
 import { tr } from "@/lib/i18n";
-import { SECTION_KEYS, SECTION_META, isSectionHostingEnabled, sectionUrl, type SectionKey } from "@/lib/sections";
+import { SECTION_META, isSectionHostingEnabled, sectionUrl, type SectionKey } from "@/lib/sections";
 import "./section-switcher.css";
 
 type Props = {
@@ -24,20 +24,25 @@ type Props = {
 // وقتی زیردامنه‌ها خاموشن (یک دامنه) هر بخش به صفحه‌ی اصلی خودش می‌ره
 const FALLBACK_HOME: Record<SectionKey, string> = { routine: "/weekly", trade: "/trade", workout: "/exercise" };
 
-const PANEL_MAX = 348;
+// ترتیب طرح رسمی: ترید، ورزش، روتین
+const ORDER: readonly SectionKey[] = ["trade", "workout", "routine"];
+
+const PANEL_MAX = 232;
 const EDGE = 12;
+const GAP = 6;
 
 type Pos = { top: number; left: number; width: number; originX: number };
 
+// پنجره درست زیر نشان هدر باز می‌شه: لبه‌ی چپ پنجره = لبه‌ی چپ نشان (لوگو همیشه چپ به راسته)
 function measure(anchor: HTMLElement | null): Pos {
   const vw = typeof window === "undefined" ? 360 : window.innerWidth;
   const width = Math.min(PANEL_MAX, vw - EDGE * 2);
   const r = anchor?.getBoundingClientRect();
-  if (!r) return { top: 76, left: EDGE, width, originX: 40 };
+  if (!r) return { top: 60, left: EDGE, width, originX: 18 };
   const left = Math.max(EDGE, Math.min(r.left, vw - width - EDGE));
-  // مبدا انیمیشن: وسط لوگو (نسبت به پنل)، تا پنل از خود لوگو باز بشه
-  const originX = Math.max(16, Math.min(width - 16, r.left + Math.min(r.width, 120) / 2 - left));
-  return { top: r.bottom + 12, left, width, originX };
+  // مبدا انیمیشن: وسط نشان (نسبت به پنل)، تا پنل از خود نشان باز بشه
+  const originX = Math.max(12, Math.min(width - 12, r.left + Math.min(r.width, 34) / 2 - left));
+  return { top: r.bottom + GAP, left, width, originX };
 }
 
 export default function SectionSwitcher({ state, anchorRef, section, signedIn, onClose }: Props) {
@@ -127,24 +132,20 @@ export default function SectionSwitcher({ state, anchorRef, section, signedIn, o
         ["--ssw-workout" as string]: SECTION_META.workout.colors.mid,
       }}
     >
-      <div className="ssw-head">{tr("بخش‌های آریون", "Arion sections")}</div>
       <div className="ssw-list">
-        {SECTION_KEYS.map((key, i) => {
+        {ORDER.map((key, i) => {
           const meta = SECTION_META[key];
           const current = section === key;
           const rp = rowProps(key);
           const inner = (
             <>
               <Image src={meta.icon} alt="" width={256} height={217} className="ssw-icon" />
-              <span className="ssw-text">
-                <span className="ssw-brand" dir="ltr">
-                  <span className="ssw-brand-name">ARION</span>
-                  <span className="ssw-brand-sep" aria-hidden="true" />
-                  <span className="ssw-brand-word">{meta.wordmark}</span>
-                </span>
-                <span className="ssw-label">{meta.label}</span>
-                <span className="ssw-tagline">{meta.tagline}</span>
+              <span className="ssw-wm" aria-hidden="true">
+                <Image src="/images/sections/wordmark-dark.png" alt="" width={358} height={49} className="ssw-wm-dark" />
+                <Image src="/images/sections/wordmark-light.webp" alt="" width={328} height={46} className="ssw-wm-light" />
               </span>
+              <span className="ssw-sep" aria-hidden="true" />
+              <span className="ssw-word" aria-hidden="true">{meta.wordmark}</span>
             </>
           );
           const cls = `ssw-row${current ? " is-current" : ""}`;
@@ -154,7 +155,12 @@ export default function SectionSwitcher({ state, anchorRef, section, signedIn, o
             ["--sec-mid" as string]: meta.colors.mid,
             ["--sec-to" as string]: meta.colors.to,
           } as React.CSSProperties;
-          const aria = { role: "menuitemradio", "aria-checked": current, "aria-current": current ? ("true" as const) : undefined };
+          const aria = {
+            role: "menuitemradio",
+            "aria-label": `Arion ${meta.label}`,
+            "aria-checked": current,
+            "aria-current": current ? ("true" as const) : undefined,
+          };
           return rp.client ? (
             <Link key={key} href={rp.href} className={cls} style={style} {...aria} {...common}>{inner}</Link>
           ) : (
@@ -162,17 +168,6 @@ export default function SectionSwitcher({ state, anchorRef, section, signedIn, o
           );
         })}
       </div>
-      {hosting && section && (
-        <a
-          href={sectionUrl(null, home, origin)}
-          className="ssw-all"
-          role="menuitem"
-          {...common}
-          style={{ ["--i" as string]: SECTION_KEYS.length }}
-        >
-          {tr("همه بخش‌ها", "All of Arion")}
-        </a>
-      )}
     </div>,
     document.body,
   );

@@ -173,17 +173,33 @@ body[data-theme] .topbar-logo-lockup-wrap:focus{
 }
 body[data-theme] .topbar-logo-lockup-wrap:focus-visible{ outline:2px solid var(--accent); outline-offset:6px; border-radius:8px; }
 
+/* دکمه‌ی لوگو (هر دو حالت): [لوگو] [فلش کوچیک]؛ همیشه چپ به راست. فلش داخل همون دکمه‌ست
+   تا کل لوگو + فلش یک هدف کلیک باشه. بدون بک‌گراند (ریست سراسری button بالا خنثی شده). */
+body[data-theme] .topbar-logo-lockup-wrap{
+  direction:ltr; display:inline-flex; align-items:center; gap:6px;
+  height:auto; aspect-ratio:auto; min-width:0;
+}
+.tl-apex{ position:relative; display:block; flex-shrink:0; height:22px; aspect-ratio:256/63; }
+@media (min-width:701px){ .tl-apex{ height:30px; } }
+.tl-chev{
+  flex-shrink:0; display:block; width:13px; height:13px; background:none;
+  color:var(--muted); opacity:.85; transform-origin:50% 50%;
+  transition:transform .22s var(--popup-ease-in, ease), color .18s ease;
+}
+.topbar-logo-lockup-wrap[aria-expanded="true"] .tl-chev{ transform:rotate(180deg); color:var(--text); }
+@media (hover:hover){ .topbar-logo-lockup-wrap:hover .tl-chev{ color:var(--text); } }
+@media (prefers-reduced-motion:reduce){ .tl-chev{ transition:none; } }
+
 /* روی زیردامنه‌ی بخش: [نشان رنگی] [ARION] | [TRADE]. ارتفاع نشان = ارتفاع لوگوی قبلی؛
    بقیه‌ی اندازه‌ها نسبت به همون (--tl-h). متن بخش گرادیان رنگ همون بخشه. */
-.topbar-logo-lockup-wrap.topbar-logo-section{
+body[data-theme] .topbar-logo-lockup-wrap.topbar-logo-section{
   --tl-h:22px;
   /* ترتیب لوگو همیشه چپ به راست، مثل طرح رسمی (A ARION | TRADE)، حتی روی صفحه‌ی rtl */
-  direction:ltr;
-  display:inline-flex; align-items:center; gap:calc(var(--tl-h) * .3);
-  height:auto; aspect-ratio:auto; min-width:0; max-width:calc(100vw - 232px); flex-shrink:1;
+  gap:calc(var(--tl-h) * .3);
+  max-width:calc(100vw - 244px); flex-shrink:1;
   font-family:var(--font-latin), var(--font-vazir), sans-serif;
 }
-@media (min-width:701px){ .topbar-logo-lockup-wrap.topbar-logo-section{ --tl-h:30px; max-width:none; } }
+@media (min-width:701px){ body[data-theme] .topbar-logo-lockup-wrap.topbar-logo-section{ --tl-h:30px; max-width:none; } }
 .topbar-logo-section .tls-icon{ height:var(--tl-h); width:calc(var(--tl-h) * 256 / 217); flex-shrink:0; }
 .tls-word{ position:relative; display:block; flex-shrink:0; height:calc(var(--tl-h) * .4); aspect-ratio:358/49; }
 .tls-sep{ flex-shrink:0; width:1px; height:calc(var(--tl-h) * .64); background:color-mix(in srgb, var(--text) 30%, transparent); }

@@ -336,7 +336,7 @@ export function NavDrawer() {
                   <span className="tls-label" dir="ltr">{SECTION_META[section].wordmark}</span>
                 </>
               ) : (
-                <>
+                <span className="tl-apex">
                   <Image
                     src="/images/logo-lockup-dark-theme.png"
                     alt={brandName()}
@@ -353,8 +353,12 @@ export function NavDrawer() {
                     className={`topbar-logo-lockup${theme === "light" ? "" : " topbar-logo-lockup-hidden"}`}
                     priority
                   />
-                </>
+                </span>
               )}
+              {/* فلش کوچیک: نشون می‌ده لوگو منو باز می‌کنه؛ داخل همون دکمه تا یک هدف کلیک باشه */}
+              <svg className="tl-chev" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.7" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true" focusable="false">
+                <path d="m6 9 6 6 6-6" />
+              </svg>
             </button>
             {switcherPresence.present && (
               <SectionSwitcher
