@@ -1,3 +1,4 @@
+import "@/app/_area/weekly.css";
 import { FeaturePageGate } from "@/components/FeaturePageGate";
 
 // خاموش/روشن از پنل ادمین (/admin/features) — فلگ «routine»

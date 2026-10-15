@@ -1,3 +1,4 @@
+import "@/app/_area/home.css";
 import type { Metadata } from "next";
 import { HomeClient } from "@/components/HomeClient";
 import { BRAND_FA, BRAND_EN, BRAND_TITLE } from "@/lib/brand";

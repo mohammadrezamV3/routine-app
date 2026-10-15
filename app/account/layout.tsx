@@ -1,5 +1,6 @@
 "use client";
 
+import "@/app/_area/account.css";
 import { usePathname } from "next/navigation";
 import { useSession } from "next-auth/react";
 import { SmartLink as Link } from "@/components/SmartLink";

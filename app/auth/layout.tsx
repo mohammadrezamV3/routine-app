@@ -1,3 +1,4 @@
+import "@/app/_area/auth.css";
 import { AuthFrame } from "@/components/AuthFrame";
 
 // قاب مشترک (شل + تب‌های ورود/ثبت‌نام) بین صفحه‌های auth پایدار می‌مونه و با

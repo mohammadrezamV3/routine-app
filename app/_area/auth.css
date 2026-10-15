@@ -1,0 +1,304 @@
+/* auto-split from the global CSS (css-split): rules used only by this route group. Imported first thing by its layout/page. */
+
+.task-name{font-size:14.5px;}
+
+.task-name.done{color:var(--muted2); text-decoration:line-through;}
+
+/* فیلدهای dir="ltr" (ایمیل/یوزرنیم/شماره) آینه‌ی فیلدهای فارسی‌اند:
+     `padding-inline-*` روی خود input با جهت خودش حساب می‌شود، ولی آیکون و
+     دکمه با جهت قاب RTL جا می‌گیرند — بدون این سه قانون، متن راست‌چین
+     دقیقا روی آیکون می‌افتاد. */
+
+.field-error-wrap.has-icon:not(.has-end-action) > input[dir="ltr"]{ padding-inline-start:11px; padding-inline-end:34px; }
+
+.field-error-wrap.has-end-action:not(.has-icon) > input[dir="ltr"]{ padding-inline-start:56px; padding-inline-end:11px; }
+
+.field-error-wrap.has-icon.has-end-action > input[dir="ltr"]{ padding-inline-start:56px; padding-inline-end:34px; }
+
+.field-error-wrap{position:relative;}
+
+.field-toggle-visibility-btn:active, .field-toggle-visibility-btn:focus-visible{ background:none; box-shadow:none; }
+
+@media (hover:hover) {
+  .field-toggle-visibility-btn:hover{ background:none; box-shadow:none; }
+  .field-toggle-visibility-btn:hover{ filter:brightness(1.15); }}
+
+.field-error-msg{font-size:10.5px; color:#E05252; font-family:var(--font-latin), var(--font-vazir), sans-serif; margin-top:3px; display:none;}
+
+.name-field-wrap{position:relative;}
+
+.name-field-wrap label{
+    display:block; margin-bottom:6px;
+    font-size:12.5px; font-weight:600; color:var(--muted);
+  }
+
+.auth-shell{ max-width:440px; margin:0 auto; width:100%; flex:1; display:flex; flex-direction:column; justify-content:center; padding-bottom:40px; }
+
+/* مرورگر (کروم/سافاری) وقتی فیلد رو با یوزرنیم/رمز ذخیره‌شده تطبیق می‌ده،
+   خودش یه بک‌گراند زرد کرمی داخلی روی input می‌ذاره (پسودوکلاس
+   -webkit-autofill) که هیچ‌جوره با background معمولی override نمی‌شه —
+   فقط با box-shadow inset به‌همون‌اندازه‌ی خود فیلد قابل خنثی‌کردنه.
+   transition با تاخیر خیلی زیاد (به‌جای !important روی background-color)
+   ترفند شناخته‌شده‌ست چون خود مرورگر مستقیم روی background-color ست
+   می‌کنه، نه از راه CSS ما. */
+
+.auth-box .wsearch-newform-name:-webkit-autofill, .auth-box .wsearch-newform-name:-webkit-autofill:focus{
+  -webkit-text-fill-color:var(--text);
+  transition:background-color 5000s ease-in-out 0s;
+}
+
+@media (hover:hover) {
+  .auth-box .wsearch-newform-name:-webkit-autofill:hover{
+  -webkit-text-fill-color:var(--text);
+  transition:background-color 5000s ease-in-out 0s;
+}}
+
+body:not([data-theme="light"]) .auth-box .wsearch-newform-name:-webkit-autofill{
+  box-shadow:0 0 0 1000px rgba(255,255,255,.05) inset, 0 0 0 1px rgba(255,255,255,.1) inset;
+}
+
+body[data-theme="light"] .auth-box .wsearch-newform-name:-webkit-autofill{
+  box-shadow:0 0 0 1000px rgba(255,255,255,.35) inset, 0 0 0 1px rgba(0,0,0,.08) inset;
+}
+
+.auth-field-grid{ display:grid; grid-template-columns:1fr 1fr; gap:14px 12px; }
+
+.auth-remember-row{ display:flex; align-items:center; justify-content:space-between; margin-top:14px; gap:12px; }
+
+.auth-remember-label{
+  display:inline-flex; align-items:center; gap:9px; cursor:pointer;
+  font-size:12.5px; font-weight:600; color:var(--muted); user-select:none;
+  transition:color .2s ease;
+}
+
+@media (hover:hover) {
+  .auth-remember-label:hover{ color:var(--text); }}
+
+/* حالت خطا برای فیلدهای فرم ورود/ثبت‌نام — تکمیل کلاس field-error که قبلا
+   فقط جای آیکون رو رزرو می‌کرد ولی هیچ رنگ قرمزی واقعا اعمال نمی‌شد */
+
+.field-error .wsearch-newform-name{ border-color:#E05252; }
+
+.auth-terms-row{ border-bottom:none; padding:10px 0; }
+
+/* گام‌های ثبت‌نام چندمرحله‌ای — هر گام موقع ورود محو-بالا میاد، دقیقا مثل
+   خود باکس؛ استفاده دوباره از همون keyframe */
+
+.auth-step{ animation:authBoxIn .32s ease both; }
+
+@media (hover:hover) {
+  .auth-resend-btn:hover:not(:disabled){ color:var(--accent); background:none; box-shadow:none; }}
+
+.auth-resend-btn:active, .auth-resend-btn:focus-visible{
+  background:none; box-shadow:none; backdrop-filter:none; -webkit-backdrop-filter:none;
+}
+
+@media (hover:hover) {
+  .auth-resend-btn:hover{
+  background:none; box-shadow:none; backdrop-filter:none; -webkit-backdrop-filter:none;
+}}
+
+/* فیلد شماره‌همراه توی ثبت‌نام — دکمه‌ی «ارسال کد» داخل خود فیلده (سمت
+   چپ)، نه یه دکمه‌ی جدا زیرش. پدینگ چپ اینپوت به‌اندازه‌ی عرض دکمه باز
+   می‌شه که متن زیر دکمه نره. بعد ارسال موفق، فیلد قفل می‌شه (readOnly) و
+   دکمه به یه لینک «تغییر شماره» تبدیل می‌شه. */
+
+.auth-phone-wrap{ position:relative; }
+
+.field-error-wrap.has-icon .auth-phone-wrap input[dir="ltr"]{ padding-inline-start:92px; padding-inline-end:34px; text-align:right; }
+
+@media (hover:hover) {
+  .auth-phone-send-btn:hover:not(:disabled){ filter:brightness(1.15); background:none; box-shadow:none; }}
+
+/* عرض ثابت (نه min-width): متن این دکمه سه حالت دارد — «ارسال کد»،
+   «در حال ارسال…»، «تغییر شماره». با min-width لبه‌ی چپ ثابت می‌ماند ولی
+   پهنا عوض می‌شود و لبه‌ی راست تکان می‌خورد. عرض ثابت هر سه را در یک
+   جعبه‌ی یکسان می‌نشاند. */
+
+.auth-phone-send-btn{ width:80px; padding-inline-end:0; padding-inline-start:0; }
+
+.auth-phone-wrap.sent .wsearch-newform-name{ opacity:.7; }
+
+/* قبلا animation:authBoxIn (فید+اسلاید) داشت که چون بقیه‌ی فیلدها
+   (قوانین/دکمه‌ی ثبت‌نام) زیرش می‌ایستن، هر بار ظاهرشدنش انگار کل فرم
+   «جابه‌جا» می‌شد — طبق درخواست صریح حذف شد، الان بی‌انیمیشن سرجاش میاد. */
+
+.auth-otp-reveal{ margin-top:14px; }
+
+/* سنجه قدرت رمز — ۴ قطعه که به‌نسبت سطح (zxcvbn) پر و رنگ می‌شن */
+
+.pw-strength{ margin-top:8px; }
+
+.pw-strength-bars{ display:flex; gap:4px; }
+
+.pw-strength-label{ font-size:11px; margin-top:5px; font-weight:600; }
+
+.pw-strength-weak .pw-strength-bar.filled{ background:#E05252; }
+
+.pw-strength-weak .pw-strength-label{ color:#E05252; }
+
+.pw-strength-medium .pw-strength-bar.filled{ background:var(--secondary); }
+
+.pw-strength-medium .pw-strength-label{ color:var(--secondary); }
+
+.pw-strength-good .pw-strength-bar.filled{ background:var(--accent-soft); }
+
+.pw-strength-good .pw-strength-label{ color:var(--accent-soft); }
+
+.pw-strength-strong .pw-strength-bar.filled{ background:var(--accent); }
+
+.pw-strength-strong .pw-strength-label{ color:var(--accent); }
+
+@media (hover:hover) {
+  .auth-home-btn:hover{ color:var(--accent); transform:translateX(-3px); }}
+
+.auth-home-btn-right{ inset-inline-end:auto; inset-inline-start:16px; }
+
+@media (hover:hover) {
+  .auth-home-btn-right:hover{ transform:translateX(3px); }}
+
+/* نشان برند داخل باکس — جای عنوان h1 تکراری رو می‌گیره (تب‌ها خودشون
+   "ورود"/"ثبت‌نام" رو می‌گن، عنوان دوباره لازم نیست). عمدا بدون بک‌گراند/
+   بردر — خود آیکون رنگی کافیه، قاب اضافه لازم نداره. */
+
+.auth-brand-mark-wrap{ margin:0 auto 4px; text-align:center; }
+
+.auth-brand-subtitle{
+  margin-top:8px; font-size:15px; font-weight:700; color:var(--muted);
+}
+
+/* معرفی دوره‌ی آزمایشی زیر خوش‌آمد (فقط ثبت‌نام) — متن ساده، بدون بک‌گراند */
+
+.auth-brand-note{
+  margin-top:4px; font-size:12px; font-weight:500; line-height:1.8; color:var(--muted);
+}
+
+/* لینک فراموشی رمز عبور — زیر فیلد رمز، سمت چپ */
+
+.auth-forgot-link{
+  display:block; margin-top:8px; text-align:end;
+  font-size:12px; color:var(--muted); text-decoration:none; transition:color .2s ease;
+}
+
+@media (hover:hover) {
+  .auth-forgot-link:hover{ color:var(--accent); }}
+
+@media (pointer: coarse) {
+  .auth-box{ backdrop-filter:blur(9px) saturate(160%); -webkit-backdrop-filter:blur(9px) saturate(160%); }}
+
+/* حین ورود دکمه کم‌رنگ نشه (دایره/تیک باید کاملا دیده بشه) و ارتفاعش ثابت بمونه. */
+
+.auth-full-btn.is-busy > *{ vertical-align:middle; }
+
+.auth-full-btn.is-busy:disabled{ opacity:1; }
+
+/* ── تیک واحد اپ (components/TickButton.tsx) — کپی .db-tl-node  داشبورد ──
+   عمدا بیرون .db-page تا همه‌جا یکسان باشه. بک‌گراند فقط در حالت تیک‌خورده
+   (همون گرادیان داشبورد)؛ حالت خالی کاملا شفافه.
+
+   باگ «مربع داخل دایره» (ریشه):
+   (۱) گرادیان حالت تیک‌خورده با background-origin پیش‌فرض (padding-box) و
+       repeat کشیده می‌شد؛ با بوردر شفاف ۲px، کاشی گرادیان توی حلقه‌ی بوردر
+       تکرار می‌شد و لبه‌ی padding-box یک مربع روشن وسط دایره می‌ساخت — همه‌جا،
+       حتی داخل .dash-scope. حالا گرادیان صریحا border-box و no-repeat‌ه.
+   (۲) بیرون .dash-scope ریست سراسری button{} (لیکوئید گلس) backdrop-filter و
+       سایه‌ی inset می‌داد و در تم روشن body[data-theme="light"] button
+       (اسپسیفیسیتی 0,1,2) بک‌گراند شیشه‌ای/بوردر/سایه رو روی .tick-btn می‌نشوند.
+       برای همین همه‌ی قانون‌های تیک با پیشوند html body و کلاس دوبل
+       (0,2,2) نوشته شدن تا هیچ قانون سراسری (هاور/دیزیبل/تم روشن) بهشون نرسه.
+
+   رنگ: --tick-a / --tick-b (پیش‌فرض پالت روتین --ring-1)؛ .tick-exercise
+   همون تیک با پالت تمرین (--ring-2، آبی→بنفش) برای حرکت‌های برنامه‌ی تمرین. */
+
+.tick-btn{ --tick-size:26px; --tick-a:var(--ring-1a); --tick-b:var(--ring-1b); }
+
+.tick-btn.tick-exercise{ --tick-a:var(--ring-2a); --tick-b:var(--ring-2b); }
+
+html body .tick-btn.tick-btn.is-square{ border-radius:calc(var(--tick-size) * .3); }
+
+.tick-btn svg{ width:calc(var(--tick-size) * .58); height:calc(var(--tick-size) * .58); position:relative; z-index:1; overflow:visible; }
+
+@media (hover:hover) {
+  html body .tick-btn.tick-btn:not(.is-disabled):not(.is-checked):hover{
+    border-color:var(--tick-a); color:#fff; background:transparent;
+    box-shadow:0 0 0 4px color-mix(in srgb, var(--tick-a) 16%, transparent);
+  }}
+
+html body .tick-btn.tick-btn.is-checked{
+  border-color:transparent;
+  background:linear-gradient(135deg, var(--tick-a), var(--tick-b)) border-box no-repeat;
+  box-shadow:0 0 14px color-mix(in srgb, var(--tick-a) 55%, transparent);
+}
+
+html body .tick-btn.tick-btn.is-missed{ border-color:var(--tl-warn, #F0A94B); border-style:dashed; }
+
+html body .tick-btn.tick-btn.is-disabled{ cursor:not-allowed; opacity:.5; }
+
+html body .tick-btn.tick-btn.is-disabled.is-checked, html body .tick-btn.tick-btn.is-disabled.is-missed{ opacity:.75; }
+
+.tick-ripple{ position:absolute; inset:-2px; border-radius:inherit; border:2px solid var(--tick-b); background:none; pointer-events:none; }
+
+.tick-spark{ position:absolute; left:50%; top:50%; pointer-events:none; }
+
+.tick-spark i{
+  position:absolute; width:4px; height:4px; margin:-2px; border-radius:50%;
+  background:var(--tick-b); animation:tick-burst .75s cubic-bezier(.22,1,.36,1) forwards;
+  transform:rotate(calc(var(--i) * 45deg)) translateX(0);
+}
+
+@keyframes tick-burst{ to{ transform:rotate(calc(var(--i) * 45deg)) translateX(var(--tick-size)); opacity:0; } }
+
+@media (prefers-reduced-motion: reduce) {
+  .tick-spark{ display:none; }}
+
+html[dir="ltr"] .field-error-wrap.has-icon:not(.has-end-action) > input[dir="ltr"]{ padding-inline-start:34px; padding-inline-end:11px; }
+
+html[dir="ltr"] .field-error-wrap.has-end-action:not(.has-icon) > input[dir="ltr"]{ padding-inline-start:11px; padding-inline-end:56px; }
+
+html[dir="ltr"] .field-error-wrap.has-icon.has-end-action > input[dir="ltr"]{ padding-inline-start:34px; padding-inline-end:56px; }
+
+html[dir="ltr"] .auth-phone-wrap .wsearch-newform-name{ padding-inline-start:18px; padding-inline-end:92px; text-align:left; }
+
+html[dir="ltr"] .field-error-wrap.has-icon .auth-phone-wrap input[dir="ltr"]{ padding-inline-start:34px; padding-inline-end:92px; text-align:left; }
+
+@media (hover:hover) {
+  html[dir="ltr"] .auth-home-btn:hover{ transform:translateX(3px); }
+  html[dir="ltr"] .auth-home-btn-right:hover{ transform:translateX(-3px); }}
+
+[data-m-in="rise"]{ animation:m-rise var(--m-dur-3) var(--m-ease-out) backwards; animation-delay:calc(min(var(--i, 0), 8) * var(--m-step)); }
+
+[data-m-in="fade"]{ animation:m-fade var(--m-dur-3) var(--m-ease-out) backwards; }
+
+[data-m-in="pop"]{ animation:m-pop var(--m-dur-3) var(--m-ease-spring) backwards; }
+
+.module-gate{ animation:m-fade var(--m-dur-4) var(--m-ease-out) backwards; }
+
+.module-gate-overlay > *{ animation:m-rise var(--m-dur-4) var(--m-ease-out) backwards; }
+
+.trade-chat-report-sheet{ animation:m-rise-soft var(--m-dur-3) var(--m-ease-out) backwards; }
+
+.calorie-unit-dropdown{ animation:m-pop var(--m-dur-2) var(--m-ease-out) backwards; transform-origin:50% 0; }
+
+.au-backdrop, .ads-pal-backdrop{ animation:m-fade var(--m-dur-3) var(--m-ease-out) backwards; }
+
+.ads-pal{ animation:m-pop var(--m-dur-3) var(--m-ease-spring) backwards; transform-origin:50% 0; }
+
+@media (prefers-reduced-motion:no-preference) {
+  :where(a[href], button, [role="button"], [role="tab"], summary):focus-visible{ transition:outline-offset var(--m-dur-1) var(--m-ease-out), scale var(--m-dur-1) var(--m-ease-out); }}
+
+.trade-account-goalbar-fill, .admin-funnel-fill, .adb-fill, .slw-fill{
+  animation:m-bar var(--m-dur-5) var(--m-ease-out) backwards;
+}
+
+.m-reveal.m-pre.m-seen{ opacity:1; translate:0 0; transition:opacity var(--m-dur-4) var(--m-ease-out), translate var(--m-dur-4) var(--m-ease-out); }
+
+.topbar-auth-pop{ animation:topbarAuthPop .38s cubic-bezier(.34,1.56,.64,1); }
+
+@media (prefers-reduced-motion:reduce) {
+  .topbar-auth-pop{ animation:none; }}
+
+@media (min-width:1024px) {
+  .dnav-chev{ transition:transform .2s ease; opacity:.7; flex-shrink:0; }}
+
+@media (min-width:1024px) and (prefers-reduced-motion:reduce) {
+  .dnav-ind.is-ready, .dnav-chev{ transition:none; }}

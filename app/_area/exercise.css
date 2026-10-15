@@ -1,0 +1,900 @@
+/* auto-split from the global CSS (css-split): rules used only by this route group. Imported first thing by its layout/page. */
+
+.thin-scroll::-webkit-scrollbar-button{ display:none; width:0; height:0; }
+
+.disclaimer-note{font-size:11px; color:var(--text); margin-top:14px; line-height:1.7;}
+
+.disclaimer-warn{color:#E05252; font-weight:700;}
+
+.task-state{font-weight:600;}
+
+.task-state.done{color:var(--accent);}
+
+.task-state.missed{color:#E05252;}
+
+.task-name{font-size:14.5px;}
+
+.task-name.done{color:var(--muted2); text-decoration:line-through;}
+
+.task-time{font-size:11.5px; color:var(--muted2); font-family:var(--font-latin), var(--font-vazir), sans-serif; margin-top:3px;}
+
+/* tips / extra lists */
+
+.tm-extra{margin-top:22px;}
+
+.tm-extra ul{list-style:none; display:flex; flex-direction:column; gap:7px;}
+
+.tm-extra li{
+    font-size:13px; color:var(--muted); line-height:1.7; padding-inline-start:14px; position:relative;
+  }
+
+@media (min-width:1024px) {
+  .bodybuilding-glass{ width:900px; max-width:900px; margin-inline-start:-140px; } }
+
+/* calendar */
+
+.cal-controls{display:flex; align-items:center; justify-content:space-between; margin:20px 0 16px;}
+
+@media (min-width:701px) {
+  .cal-controls{position:relative;} }
+
+.cal-grid{display:grid; grid-template-columns:repeat(7,1fr); gap:7px;}
+
+.cal-weekday{font-family:var(--font-latin), var(--font-vazir), sans-serif; font-size:13.5px; font-weight:700; color:var(--accent); text-align:center; padding-bottom:6px;}
+
+@media (hover:hover) {
+  .cal-cell:hover{border-color:var(--accent); transform:translateY(-1px);}
+  .cal-cell:hover .cal-daynum{color:var(--accent);} }
+
+.cal-cell.empty{border-color:transparent; cursor:default; background:transparent; backdrop-filter:none; -webkit-backdrop-filter:none; box-shadow:none;}
+
+@media (hover:hover) {
+  .cal-cell.empty:hover{border-color:transparent; transform:none;} }
+
+.cal-cell.today{border-color:var(--accent); box-shadow:0 0 0 1px var(--accent), 0 0 14px rgba(var(--accent-rgb),.25);}
+
+.cal-cell.today .cal-daynum{color:var(--accent); font-weight:700;}
+
+.cal-cell.done{
+    background:linear-gradient(155deg, rgba(var(--accent-rgb),.24), rgba(var(--accent-rgb),.06));
+    border-color:var(--accent);
+  }
+
+.cal-cell.done .cal-daynum{color:var(--accent); font-weight:700;}
+
+.cal-cell.missed{
+    background:linear-gradient(155deg, rgba(224,82,82,.18), rgba(224,82,82,.05));
+    border-color:rgba(224,82,82,.5);
+  }
+
+.cal-daynum{font-family:var(--font-latin), var(--font-vazir), sans-serif; font-size:12.5px; color:var(--text); transition:color .15s ease;}
+
+.cal-status-dot.missed{ background:#E05252; box-shadow:0 0 6px rgba(224,82,82,.45); }
+
+/* نسخه‌ی لیکوئید گلس پاپ‌آپ (فقط دوستان) — عینا همون بک‌گراند/بلور
+     .app-topbar (هدر سایت)، نه گرادیان تقریبا توپر قبلی. */
+
+.modal-panel.liquid-glass-panel{ overflow-x:hidden; background:var(--surface-2); }
+
+.tm-extra a svg{ flex-shrink:0; opacity:.6; }
+
+@media (hover:hover) {
+  .tm-extra a:hover svg{ opacity:1; } }
+
+.week-day-name.today{color:var(--accent);}
+
+.week-day.open .week-day-chevron{transform:rotate(-135deg);}
+
+@media (prefers-reduced-motion: reduce) {
+  .week-day-body{ animation:none; } }
+
+.bodybuilding-glass .day-pill{
+    border-radius:999px;
+    backdrop-filter:blur(14px) saturate(160%); -webkit-backdrop-filter:blur(14px) saturate(160%);
+  }
+
+body:not([data-theme="light"]) .bodybuilding-glass .day-pill{
+    background:rgba(255,255,255,.05); border-color:rgba(255,255,255,.1);
+  }
+
+body[data-theme="light"] .bodybuilding-glass .day-pill{
+    background:rgba(255,255,255,.35); border-color:rgba(0,0,0,.08);
+  }
+
+.bodybuilding-glass .day-pill.on::after{ border-radius:999px; }
+
+.add-program-glass .day-pill{
+    border-radius:999px;
+    backdrop-filter:blur(14px) saturate(160%); -webkit-backdrop-filter:blur(14px) saturate(160%);
+  }
+
+body:not([data-theme="light"]) .add-program-glass .day-pill{
+    background:rgba(255,255,255,.05); border-color:rgba(255,255,255,.1);
+  }
+
+body[data-theme="light"] .add-program-glass .day-pill{
+    background:rgba(255,255,255,.35); border-color:rgba(0,0,0,.08);
+  }
+
+.add-program-glass .day-pill.on::after{ border-radius:999px; }
+
+/* مثال‌های داخل فیلد (placeholder) قبلا با var(--muted2) خیلی کم‌کنتراست
+     بودن و دیده نمی‌شدن؛ var(--muted) خواناتره. */
+
+.add-program-glass .wsearch-newform-name::placeholder,
+  .add-program-glass .wsearch-add-time::placeholder{ color:var(--muted); opacity:.85; }
+
+/* منوی سه‌نقطه‌ی «برنامه‌های امروز» — bg-dash-card (۲٪ سفید) + backdrop-blur
+     پشتش تقریبا شفاف دیده می‌شد. یه بک‌گراند تقریبا توپر مثل بقیه‌ی
+     منوهای شناور (wsearch-fab-menu) به‌جای تکیه‌کردن به backdrop-filter. */
+
+.dash-context-menu{ background:var(--surface-2); border-color:var(--surface-line); }
+
+/* پاپ‌آپ‌های افزودن/ویرایش/انتقال برنامه — بک‌گراند پشت پاپ‌آپ خیلی بیشتر بلور می‌شه.
+     روی خود کلاس (نه فقط .open) تا بلور حین فید هم ثابت بماند. */
+
+.wsearch-newform-overlay.strong-blur{
+    backdrop-filter:var(--popup-backdrop-filter-strong); -webkit-backdrop-filter:var(--popup-backdrop-filter-strong);
+    background:rgba(0,0,0,.55);
+  }
+
+/* پاپ‌آپ‌های افزودن/ویرایش/انتقال برنامه (شناسایی با add-program-glass
+     داخلشون) یه‌کوچولو بزرگ‌تر می‌شن تا معمولا محتوا/دکمه‌ها جا بشن بدون
+     اسکرول، و اسکرول‌بار (در صورت لزوم، مثلا چندتا ردیف روز) کاملا مخفیه. */
+
+.wsearch-newform:has(.add-program-glass){
+    max-height:min(84vh, 560px);
+    scrollbar-width:none; -ms-overflow-style:none;
+  }
+
+/* پاپ‌آپ «افزودن برنامه»ی بدنسازی (AI/دستی) یه‌کوچولو عریض‌تر از بقیه‌ی
+     پاپ‌آپ‌های add-program-glass لازم داره تا دو باکس انتخاب جا باشن */
+
+.wsearch-newform:has(.exercise-add-glass){ max-width:500px; }
+
+.wsearch-newform:has(.add-program-glass)::-webkit-scrollbar{ display:none; width:0; height:0; }
+
+.wsearch-newform-title.accent{color:var(--accent);}
+
+.wsearch-newform label{display:block; font-size:11px; color:var(--muted2); margin:8px 0 5px; font-family:var(--font-latin), var(--font-vazir), sans-serif;}
+
+/* برچسب بالای فیلدهای فرم افزودن غذا (نام غذا / مقدار / واحد اندازه‌گیری / …) */
+
+.calorie-field-label{
+    display:block; margin-bottom:5px;
+    font-size:10.5px; font-weight:700; color:var(--muted);
+  }
+
+@media (min-width:640px) {
+  .calorie-field-label{ font-size:11.5px; } }
+
+input.calorie-qty-field{ display:block; }
+
+.field-error-msg{font-size:10.5px; color:#E05252; font-family:var(--font-latin), var(--font-vazir), sans-serif; margin-top:3px; display:none;}
+
+/* برنامه‌ای که ساعتش گذشته و تیک نخورده — یه هاله‌ی قرمز ملایم که مدام
+     محو/پررنگ می‌شه، تا چشم رو بکشه سمت اینکه یه چیزی جا مونده. */
+
+@keyframes taskMissedPulse{
+    0%,100%{ box-shadow:0 0 0 0 rgba(224,82,82,.55); }
+    50%{ box-shadow:0 0 9px 2px rgba(224,82,82,.55); }
+  }
+
+.task-check-missed{ animation:taskMissedPulse 1.8s ease-in-out infinite; }
+
+.calorie-col-food{ display:flex; }
+
+.calorie-col-mid, .calorie-col-side{ display:flex; flex-direction:column; gap:12px; }
+
+@media (min-width:1024px) {
+  .calorie-dash-grid{
+    display:grid; gap:16px;
+    grid-template-columns:2.3fr 1fr 1.15fr;
+    align-items:start;
+  }
+  .calorie-col-food{ align-self:stretch; }
+  .calorie-col-mid, .calorie-col-side{ gap:16px; } }
+
+/* گام‌های ثبت‌نام چندمرحله‌ای — هر گام موقع ورود محو-بالا میاد، دقیقا مثل
+   خود باکس؛ استفاده دوباره از همون keyframe */
+
+.auth-step{ animation:authBoxIn .32s ease both; }
+
+@media (hover:hover) {
+  body[data-theme="light"] .module-gate-cta:hover, body:not([data-theme="light"]) .module-gate-cta:hover{
+  background:var(--accent);
+} }
+
+/* هر روز تقویم معاملات (حتی بدون معامله) قابل‌انتخابه — تاریخچه‌ی زیر
+   تقویم همیشه همون روز انتخاب‌شده رو نشون می‌ده. روز انتخاب‌شده یک رنگ
+   جدا از «امروز» می‌گیره تا قاطی نشن. عدد سود/زیان ریز زیر شماره‌ی روز. */
+
+.cal-cell.selected{ border-color:var(--secondary); box-shadow:0 0 0 1px var(--secondary); }
+
+.exercise-wizard-dot.on{ background:var(--accent); transform:scale(1.3); }
+
+/* پیام خطای هر فیلد، با یه آیکون اخطار کنارش */
+
+.field-error-msg-inline{ display:flex !important; align-items:center; gap:4px; }
+
+.exercise-desc-textarea:focus{ border-color:var(--accent); }
+
+.exercise-desc-textarea::placeholder{ color:var(--muted2); }
+
+.manual-exercise-picker-search::placeholder{ color:var(--muted2); }
+
+.manual-week-accordion .week-day-head{ cursor:pointer; }
+
+@media (hover:hover) {
+  .manual-reorder-handle:hover{ color:var(--text); } }
+
+.manual-reorder-handle:active{ cursor:grabbing; }
+
+.manual-plan-submit-btn:disabled{ opacity:.5 !important; }
+
+.manual-meal-row-input::placeholder{ color:var(--muted2); }
+
+.manual-meal-total-unit{ font-size:11px; font-weight:700; margin-inline-start:5px; opacity:.75; }
+
+/* آیتم‌های منو (ویرایش/حذف) بی‌بک‌گراند می‌مانند. منو به body پورتال می‌شود
+   (بیرون .dash-scope)، پس ریست سراسری button{} (لیکوئید گلس: بک‌گراند،
+   بوردر، سایه، بلور — و نسخه‌ی تم روشن با body[data-theme="light"] button)
+   مستقیم رویشان می‌نشست. «html body» اسپسیفیسیتی را از همه‌ی آن قانون‌ها
+   (از جمله hover) بالاتر می‌برد. بازخورد هاور فقط با رنگ متن است. */
+
+html body .manual-meal-row-menu button,
+html body .manual-meal-row-menu button:hover,
+html body .manual-meal-row-menu button:active{
+  padding:8px 10px; border-radius:10px; text-align:start; font-size:12px; font-weight:600; color:var(--text);
+  background:transparent; border:1px solid transparent; box-shadow:none;
+  backdrop-filter:none; -webkit-backdrop-filter:none;
+}
+
+@media (hover:hover) {
+  html body .manual-meal-row-menu button:hover{ color:var(--accent); } }
+
+.manual-meal-row-menu-danger{ color:#E05252 !important; }
+
+@media (hover:hover) {
+  html body .manual-meal-row-menu button.manual-meal-row-menu-danger:hover{ opacity:.8; } }
+
+/* پاپ‌آپ افزودن حرکت وقتی از داخل برنامه‌ی دستی باز می‌شه، خودش زیرمجموعه‌ی
+   یه پاپ‌آپ دیگه‌ست (wsearch-newform با z-index:58) — z-index پایه‌ی
+   exercise-catalog-popup-wrap (۵۶) کافی نیست و پاپ‌آپ پشت فرم افزودن
+   برنامه گم می‌شد؛ اینجا بالاتر از همه‌ی لایه‌های شناخته‌شده‌ی اپ می‌بریمش */
+
+.exercise-catalog-popup-wrap.manual-exercise-popup-wrap{ z-index:64; }
+
+@media (hover:hover) {
+  .exercise-wizard-next-btn:hover{ filter:brightness(1.05); } }
+
+.exercise-wizard-next-btn:disabled{ opacity:.6 !important; }
+
+/* توی فرم «افزودن برنامه‌ی جدید» (AddProgramForm) این دکمه باید تمام‌عرض
+   و بزرگ‌تر باشه (نه اندازه‌ی کوچیک پیش‌فرض ویزارد AI) — چون خود کلاس
+   پایه با !important روی padding/font-size، استایل inline رو بی‌اثر
+   می‌کرد؛ یه مادیفایر اختصاصی با همون سطح !important لازم بود. */
+
+.exercise-wizard-next-btn.wide{
+  width:100%; padding:13px 0 !important; font-size:13.5px !important;
+}
+
+.exercise-add-glass .wsearch-newform-title{ font-size:17px; }
+
+.exercise-rules-accept-btn:active{ transform:scale(.98); }
+
+.exercise-rules-list li{
+  font-size:12.5px; color:var(--muted); line-height:1.7; padding-inline-start:16px; position:relative;
+}
+
+.ai-sparkle-icon{ transition:filter .2s ease; }
+
+@media (hover:hover) {
+  .exercise-choice-btn:hover .ai-sparkle-icon{ filter:drop-shadow(0 0 10px rgba(255,196,60,.9)) !important; } }
+
+.ai-sparkle-twinkle{
+  transform-box:fill-box; transform-origin:center;
+  animation:aiSparkleTwinkle 1.8s ease-in-out infinite;
+}
+
+@keyframes aiSparkleTwinkle{
+  0%,100%{ opacity:.5; transform:scale(.8); }
+  50%{ opacity:1; transform:scale(1.15); }
+}
+
+.exercise-catalog-filters.exercise-catalog-filters-sub{ padding-top:6px; }
+
+.exercise-catalog-chip.active{ border-color:var(--accent); color:var(--accent); background:var(--accent-dim); }
+
+@media (hover:hover) {
+  .exercise-catalog-row:hover{ border-color:rgba(255,255,255,.18); } }
+
+.exercise-locked-box.exercise-state-done{ color:var(--accent); }
+
+.exercise-locked-box.exercise-state-missed{ color:#E05252; }
+
+/* پاپ‌آپ ردیابی ست‌به‌ست («روش اول») */
+
+.exercise-set-tracker-panel{ max-width:400px; }
+
+/* ست فعلی «زنده»ست: یک موج پیوسته‌ی سبز از دورش بیرون می‌زنه تا کاربر
+   بدونه همین دایره‌ست که باید بزنه. فقط transform/opacityـه (روی یک
+   ::after ی جدا)، پس compositor-only و بی‌هزینه‌ست. */
+
+.exercise-set-circle-live{ position:relative; }
+
+.exercise-set-circle-live::after{
+  content:''; position:absolute; inset:-2px; border-radius:50%;
+  border:2px solid var(--accent); pointer-events:none;
+  animation:exerciseSetRipple 1.6s cubic-bezier(.22,1,.36,1) infinite;
+}
+
+@keyframes exerciseSetRipple{
+  0%{ transform:scale(1); opacity:.7; }
+  70%{ transform:scale(1.55); opacity:0; }
+  100%{ transform:scale(1.55); opacity:0; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .exercise-set-circle-live::after{ animation:none; opacity:.5; } }
+
+.exercise-chrono .mono{ font-size:13px; letter-spacing:.3px; }
+
+.exercise-plan-table thead th{ padding:0 6px 8px; font-weight:400; text-align:start; }
+
+.exercise-plan-table tbody tr{ border-bottom:1px solid var(--line); }
+
+.exercise-plan-table td{ padding:10px 6px; vertical-align:middle; }
+
+@media (hover:hover) {
+  .exercise-start-btn:hover{ background:rgba(var(--accent-rgb),.1); }
+  .exercise-substitute-option:hover:not(:disabled){ border-color:var(--accent); background:rgba(var(--accent-rgb),.08); } }
+
+/* دکمه‌ی پاز/ادامه‌ی تایمر — هم برای ست‌های زمان‌محور هم برای استراحت بین ست‌ها */
+
+.exercise-pause-btn{
+  display:flex; align-items:center; gap:5px; margin-top:6px; padding:5px 13px; border-radius:9999px;
+  border:1px solid var(--line); color:var(--muted); font-size:11px; font-weight:600; background:transparent;
+  transition:border-color .15s ease, color .15s ease;
+}
+
+@media (hover:hover) {
+  .exercise-pause-btn:hover{ border-color:var(--accent); color:var(--accent); } }
+
+/* راهنمای کشیدن انگشت روی آموزش موبایل/تبلت */
+
+.exercise-tutorial-swipe-hint{
+  display:flex; align-items:center; justify-content:center; gap:4px;
+  font-size:11px; color:var(--muted2); padding:8px 0 0;
+}
+
+/* حلقه‌ی پیشرفت عمومی (SVG) — کالری امروز + سهم هر وعده از همین استفاده می‌کنن */
+
+.progress-ring-wrap{ position:relative; flex-shrink:0; }
+
+.progress-ring-center{
+  position:absolute; inset:0; display:flex; flex-direction:column; align-items:center; justify-content:center;
+  text-align:center;
+}
+
+.no-scrollbar::-webkit-scrollbar{ display:none; width:0; height:0; }
+
+@media (pointer: coarse) {
+  .cal-cell{ backdrop-filter:blur(13px) saturate(180%); -webkit-backdrop-filter:blur(13px) saturate(180%); }
+  .modal-panel.liquid-glass-panel{ backdrop-filter:blur(10px) saturate(160%); -webkit-backdrop-filter:blur(10px) saturate(160%); }
+  .dash-context-menu{ backdrop-filter:blur(11px) saturate(180%); -webkit-backdrop-filter:blur(11px) saturate(180%); }
+  .wsearch-newform:has(.add-program-glass){ backdrop-filter:blur(10px) saturate(160%); -webkit-backdrop-filter:blur(10px) saturate(160%); }
+  .calorie-unit-dropdown{ backdrop-filter:blur(11px) saturate(180%); -webkit-backdrop-filter:blur(11px) saturate(180%); }
+  .manual-exercise-picker-search{ backdrop-filter:blur(10px) saturate(160%); -webkit-backdrop-filter:blur(10px) saturate(160%); }
+  .manual-meal-row-menu{ backdrop-filter:blur(11px) saturate(180%); -webkit-backdrop-filter:blur(11px) saturate(180%); }
+  .exercise-catalog-popup-panel{ backdrop-filter:blur(14px) saturate(170%); -webkit-backdrop-filter:blur(14px) saturate(170%); }
+  .exercise-catalog-detail-card{ backdrop-filter:blur(14px) saturate(170%); -webkit-backdrop-filter:blur(14px) saturate(170%); }
+  .exercise-locked-box{ backdrop-filter:blur(10px) saturate(160%); -webkit-backdrop-filter:blur(10px) saturate(160%); } }
+
+/* .wsearch-newform (افزودن/ویرایش برنامه و مشابه‌هاش) توی تم تاریک از قبل
+   یه fallback توپر داشت (خط ۲۰۷۱)؛ توی تم روشن اصلا نداشت — روی
+   data-perf=low بدون بلور فقط ۹٪ سفید می‌موند، تقریبا کاملا شفاف. */
+
+html[data-perf="low"] body[data-theme="light"] .wsearch-newform{ background:rgba(255,255,255,.97) !important; }
+
+/* بدون بلور هیچ درصد شفافیتی «شیشه» نمی‌سازد، فقط پشتش را نشان می‌دهد.
+   روی دستگاه‌های لمسی این سطح‌ها کاملا کدر می‌شوند تا هیچ‌وقت دورنگ نشوند.
+   (سلکتور با :has اسپسیفیسیتی بالاتری از قانون پایه دارد، پس اینجا هم
+   همان :has تکرار می‌شود تا واقعا غالب شود.) */
+
+html[data-perf="low"] .wsearch-newform:has(.add-program-glass),
+html[data-perf="low"] body:not([data-theme="light"]) .wsearch-newform:has(.add-program-glass),
+html[data-perf="low"] body[data-theme="light"] .wsearch-newform:has(.add-program-glass),
+html[data-perf="low"] .trade-drawer{ background:var(--surface-2) !important; }
+
+@media (hover:hover) {
+  .trade-danger-btn:hover:not(:disabled){ background:rgba(224,82,82,.1); border-color:#E05252; color:#E05252; } }
+
+.trade-danger-btn:active:not(:disabled){ transform:scale(.97); }
+
+.trade-danger-btn:disabled{ opacity:.45; cursor:default; }
+
+.trade-modal-actions{ display:flex; gap:9px; margin-top:18px; }
+
+.trade-modal-actions button{ flex:1; }
+
+/* حالت خالی بخش‌های ترید (یادداشت‌ها/چک‌لیست‌ها) — آیکون وسط‌چین به‌جای
+   یک خط متن تنها. */
+
+.trade-empty-state{
+  display:flex; flex-direction:column; align-items:center; justify-content:center; gap:12px;
+  padding:52px 20px; text-align:center; color:var(--muted2);
+}
+
+.trade-empty-state svg{ opacity:.45; }
+
+/* سرصفحه‌ی تک‌ردیفه: «‹ ترید» و عنوان کنار هم، نه زیر هم. هر ردیف جدا
+   در صفحه‌ی چارت یعنی همان‌قدر ارتفاع کمتر برای خود چارت. */
+
+.trade-head-row h1{ margin-bottom:0; }
+
+/* ── جاگیر سبک داخل صفحه (components/PageLoader.tsx) ─────────────────────
+   فقط یک اسکلت ساده داخل محتوا (زیر هدر، بدون پرده و بدون لوگو). تا 200ms هیچی
+   دیده نمی‌شه (animation-delay)، پس ناوبری سریع هیچ چشمک و لودینگی نداره. */
+
+.page-loader{
+  width:100%; display:flex; flex-direction:column; gap:12px; padding:8px 0 24px;
+  opacity:0; animation:pl-in .3s ease .2s forwards;
+}
+
+@keyframes pl-in{ to{ opacity:1; } }
+
+.page-loader-skel{ width:100%; display:flex; flex-direction:column; gap:12px; }
+
+.pls-line, .pls-card{ display:block; position:relative; overflow:hidden; border-radius:10px; background:rgba(var(--accent-rgb),.07); }
+
+.pls-line{ height:16px; }
+
+.pls-line.pls-thin{ height:11px; opacity:.7; }
+
+.pls-grid{ display:grid; grid-template-columns:1fr 1fr; gap:12px; margin-top:8px; }
+
+.pls-card{ height:120px; border-radius:18px; border:1px solid var(--box-line); background:var(--box-bg); }
+
+.pls-card.pls-wide{ grid-column:1 / -1; height:150px; }
+
+.pls-line::after, .pls-card::after{
+  content:""; position:absolute; inset:0; transform:translateX(100%);
+  background:linear-gradient(90deg, transparent, rgba(255,255,255,.06), transparent);
+  animation:pl-shimmer 1.3s ease-in-out infinite;
+}
+
+body[data-theme="light"] .pls-line::after, body[data-theme="light"] .pls-card::after{ background:linear-gradient(90deg, transparent, rgba(255,255,255,.6), transparent); }
+
+@keyframes pl-shimmer{ to{ transform:translateX(-100%); } }
+
+@media (prefers-reduced-motion:reduce) {
+  .pls-line::after, .pls-card::after{ animation:none; } }
+
+/* ── پاپ‌آپ پروفایل دوست — چیدمان شماتیک صریح کاربر ──────────────────
+   بنر و عکس پروفایل توی هم؛ آواتار روی لبه‌ی پایین بنر سمت راست؛ نام فرد
+   پایین-چپ *داخل* بنر؛ ستاره بالا-چپ؛ سه‌نقطه‌ی بلاک بالا-راست؛ زیر بنر
+   آیدی و بیو سمت چپ؛ بعد سه آمار (استار/استریک/بیشترین) و بعد دو آمار. */
+
+.friend-profile-banner{
+  position:relative; height:112px; overflow:visible;
+  margin:-24px -20px 0; border-radius:24px 24px 0 0;
+  background:linear-gradient(120deg,
+    rgba(var(--accent-rgb),.42), rgba(var(--accent-rgb),.14) 52%, rgba(var(--accent-rgb),.34));
+}
+
+.friend-profile-banner-img{
+  width:100%; height:100%; object-fit:cover; display:block; border-radius:24px 24px 0 0;
+}
+
+.friend-profile-banner-kebab{ display:flex; align-items:center; line-height:0; }
+
+.friend-profile-star-btn.on,
+body[data-theme="light"] .friend-profile-star-btn.on{ color:#F5C518; }
+
+.friend-profile-star-btn:disabled{ opacity:.55; cursor:default; }
+
+@media (hover:hover) {
+  .friend-profile-star-btn:not(:disabled):hover,
+  body[data-theme="light"] .friend-profile-star-btn:not(:disabled):hover{ color:#F5C518; background:none; border:none; box-shadow:none; }
+  .friend-profile-banner-bar .trade-kebab-trigger:hover,
+  body[data-theme="light"] .friend-profile-banner-bar .trade-kebab-trigger:hover{ color:#fff; background:none; border:none; box-shadow:none; } }
+
+.friend-profile-star-btn:not(:disabled):active{ transform:scale(.88); }
+
+/* طبق درخواست صریح تازه، اسم فرد به‌جای گوشه‌ی مخالف، *سمت چپ* خود
+   عکس پروفایل می‌نشیند (avatar right:20px تا right:92px، پس name از
+   right:100px شروع می‌شود و به چپ رشد می‌کند) — نه دیگر گوشه‌ی دوردست. */
+
+.friend-profile-banner-name{
+  position:absolute; bottom:16px; inset-inline-start:100px; z-index:2; max-width:calc(100% - 116px);
+  font-size:15px; font-weight:800; color:#fff; text-shadow:0 1px 6px rgba(0,0,0,.5);
+  overflow:hidden; text-overflow:ellipsis; white-space:nowrap; text-align:start;
+}
+
+/* آواتار سمت راست، نیمه‌آویزان از لبه‌ی پایین بنر */
+
+.friend-profile-banner .friend-profile-avatar{
+  position:absolute; bottom:-30px; inset-inline-start:20px; z-index:2;
+  width:72px; height:72px; border-radius:50%; object-fit:cover; margin:0;
+  border:4px solid var(--surface-2); background:var(--surface-1);
+}
+
+/* پلن/بیو/آیدی/شماره سمت چپ‌اند (طبق شماتیک). این پنل همیشه RTL است، پس
+   «چپ» یعنی flex-end — نه flex-start که سمت راست می‌افتد. */
+
+.friend-profile-body{
+  display:flex; flex-direction:column; align-items:flex-end;
+  padding-top:40px; text-align:end;
+}
+
+/* زیر بنر: پلن/بیو/آیدی/شماره، سمت چپ. پدینگ بالا باید از ۳۰پیکسل
+   آویزان آواتار بیشتر باشد وگرنه متن زیر عکس می‌رود. */
+
+.friend-profile-plan-row{ display:flex; justify-content:flex-end; width:100%; margin-bottom:6px; }
+
+/* هر جعبه (بیو/آیدی/شماره) یک بخش جداست، با خط‌جداکننده‌ی خودش — طبق
+   شماتیک صریح کاربر. چون این بخش‌ها شرطی رندر می‌شوند (اگه فیلد خالی
+   باشد، کل جعبه‌اش حذف می‌شود، نه فقط متنش)، اولین بخش دیده‌شده هرکدام
+   که باشد همین خط را دارد — دقیقا زیر بنر، جای همان خط شماتیک. */
+
+.friend-profile-section{
+  width:100%; display:flex; flex-direction:column; align-items:flex-end;
+  margin-top:10px; padding-top:10px; border-top:1px solid var(--surface-line);
+}
+
+.friend-profile-section-label{
+  font-size:10px; font-weight:700; color:var(--muted2); margin-bottom:4px;
+}
+
+/* آیدی حالا یک دکمه‌ی کپی‌شدنی است — طبق درخواست صریح */
+
+.friend-profile-username{
+  display:inline-flex; align-items:center; gap:5px; font-size:12px; color:var(--muted2); direction:ltr;
+  background:none; border:none; padding:0; cursor:pointer; transition:color .15s ease;
+}
+
+/* ریست سراسری button{} سایه‌ی inset + بلور + گردی می‌ده که آیدی رو شبیه یه
+   قرص با بک‌گراند نشون می‌داد — این‌جا کاملا ghost (تم روشن هم، چون
+   body[data-theme="light"] button از .friend-profile-username قوی‌تره). */
+
+button.friend-profile-username,
+body[data-theme="light"] button.friend-profile-username{
+  background:none; border:none; box-shadow:none; border-radius:0; padding:0;
+  backdrop-filter:none; -webkit-backdrop-filter:none;
+}
+
+.friend-profile-plan{
+  padding:3px 12px; border-radius:999px; font-size:10.5px; font-weight:700;
+  color:var(--accent); background:var(--accent-dim); border:1px solid var(--accent);
+}
+
+.friend-profile-bio{
+  margin:0; font-size:12px; line-height:1.9; color:var(--muted);
+  text-align:end; max-width:100%; overflow-wrap:anywhere; white-space:pre-line;
+}
+
+.friend-profile-stats{
+  display:grid; grid-template-columns:repeat(3,1fr); gap:8px; margin-top:18px; padding-top:16px;
+  border-top:1px solid var(--surface-line);
+}
+
+.friend-profile-stats.cols-2{ grid-template-columns:repeat(2,1fr); }
+
+.friend-profile-stat{
+  display:flex; flex-direction:column; align-items:center; gap:4px;
+  font-size:10px; color:var(--muted2); text-align:center;
+}
+
+.friend-profile-stat .header-streak-clock-streak{ font-size:15px; }
+
+.friend-profile-stat-icon{ color:var(--accent); }
+
+.friend-profile-stat-star{ display:inline-flex; align-items:center; gap:5px; font-size:15px; font-weight:800; color:var(--text); }
+
+/* پیشرفت امروز دوست (فقط دوست تاییدشده): حلقه + خط وضعیت + نوار 7 روز */
+
+.friend-profile-today{
+  display:flex; align-items:center; gap:14px; margin-top:14px; padding-top:14px;
+  border-top:1px solid var(--surface-line);
+}
+
+.friend-profile-today-text{ display:flex; flex-direction:column; gap:4px; min-width:0; flex:1; }
+
+.friend-profile-today-text .friend-profile-section-label{ margin-bottom:0; }
+
+.friend-profile-today-line{ font-size:12.5px; font-weight:700; color:var(--text); }
+
+.friend-profile-week{ display:flex; align-items:center; gap:8px; flex-wrap:wrap; margin-top:2px; }
+
+.friend-profile-week-count{ font-size:10.5px; color:var(--muted2); font-weight:700; }
+
+.friend-profile-relation{
+  display:flex; align-items:center; justify-content:center; gap:8px; flex-wrap:wrap;
+  margin-top:14px; padding-top:14px; border-top:1px solid var(--surface-line);
+}
+
+.friend-profile-relation > button{ flex:1; min-width:120px; }
+
+.friend-profile-relation-note{ width:100%; text-align:center; font-size:11.5px; color:var(--muted); }
+
+/* ── ویزارد (داخل همان پاپ‌آپ مشترک .wsearch-newform) ── */
+
+.wsearch-newform:has(.rp-wiz){ max-height:min(90vh, 680px); }
+
+body[data-theme] :where(
+  .account-card, .acc-block-body, .trade-account-card, .trade-mt-row, .trade-note-card,
+  .trade-checklist-card, .trade-journal-box, .rp-stage-card, .ls-card, .overflow-hidden
+)::before{ inset:0; }
+
+html[data-perf="low"] .wsearch-newform-overlay.strong-blur{
+  backdrop-filter:var(--popup-backdrop-filter-strong) !important;
+  -webkit-backdrop-filter:var(--popup-backdrop-filter-strong) !important;
+}
+
+.gring{ position:relative; display:inline-block; flex-shrink:0; }
+
+.gring svg{ display:block; }
+
+.gring-center{ position:absolute; inset:0; display:flex; align-items:center; justify-content:center; }
+
+.gring-cap{ filter:drop-shadow(0 0 3px rgba(0,0,0,.45)); }
+
+body[data-theme="light"] .gring-cap{ filter:drop-shadow(0 0 2px rgba(80,50,20,.35)); }
+
+/* ── نام طلایی (components/GoldenName.tsx) ─────────────────────────
+   دو طلای متفاوت (روشن لیمویی و عسلی گرم) که روی حروف جریان دارن؛ برق
+   روشن (--g1) جزو خود گرادیانه، پس جاروی جدایی که قطع/وصل بشه نداره.
+   فقط background-clip:text — عنصر خودش هیچ بک‌گراندی نمی‌گیره.
+
+   حلقه‌ی بی‌درز: گرادیان افقی (90deg، تا لبه‌ی کاشی‌ها کج نیفتن) که اول و
+   آخرش یک رنگه، پس کاشی تکرارشونده (repeat-x) بی‌درزه. عرض کاشی = 200%
+   عنصر، و جابه‌جایی 0% → 200% با این اندازه دقیقا یک کاشی کامله
+   ((W - 2W) × 2 = -2W)؛ پس فریم آخر پیکسل‌به‌پیکسل همون فریم اوله و با
+   timing خطی هیچ پرش یا مکثی دیده نمی‌شه. */
+
+.golden-name{
+  --g1:#fff3b0; --g2:#f5c542; --g3:#d4891a; --g4:#ffe27a;
+  background-image:linear-gradient(90deg, var(--g3) 0%, var(--g2) 13%, var(--g1) 25%, var(--g2) 37%, var(--g3) 50%, var(--g4) 63%, var(--g2) 76%, var(--g4) 88%, var(--g3) 100%);
+  background-size:200% 100%;
+  background-repeat:repeat-x;
+  background-position:0% 50%;
+  -webkit-background-clip:text; background-clip:text;
+  -webkit-text-fill-color:transparent; color:transparent;
+  animation:goldenFlow 6s linear infinite;
+  font-weight:800;
+}
+
+body[data-theme="light"] .golden-name{ --g1:#f7d774; --g2:#d9a21b; --g3:#9a5b06; --g4:#e8b830; }
+
+/* درخشش (GoldenName): کپی شفاف متن با text-shadow زیر حروف گرادیانی، بدون
+   filter — drop-shadow داخل کارت‌های شیشه‌ای مستطیل کم‌رنگ پشت اسم می‌انداخت */
+
+.name-glow{ position:relative; font-weight:800; --name-glow:rgba(245,197,66,.45); }
+
+.name-glow[data-text]::before{
+  content:attr(data-text); position:absolute; inset:0; pointer-events:none;
+  color:transparent; -webkit-text-fill-color:transparent; white-space:inherit;
+  text-shadow:0 0 8px var(--name-glow);
+}
+
+body[data-theme="light"] .golden-name-glow{ --name-glow:rgba(217,162,27,.32); }
+
+/* ظرف اسم با سه‌نقطه (.name-clip): درخشش GoldenName بیرون از جعبه‌ی متن
+   می‌زنه و overflow:hidden اون رو لبه‌ی صاف می‌بره (همون «مستطیل کم‌رنگ»).
+   راه‌حل عمومی: ظرف به اندازه‌ی شعاع درخشش از هر طرف پدینگ می‌گیره و همون
+   مقدار margin منفی، پس چیدمان دست نمی‌خوره ولی برش خیلی بیرون‌تر از
+   درخششه و text-overflow:ellipsis همون‌طور کار می‌کنه (بدون هیچ بک‌گراند).
+   ظرف جدید اسم‌دار با overflow:hidden باید این کلاس رو بگیره یا به این
+   فهرست اضافه بشه. */
+
+.fr-name, .friend-profile-banner-name, .mentor-row-title, .mentor-card-name{
+  padding:10px 16px; margin:-10px -16px;
+  /* درخشش کپی نابریده‌ی اسم بلند هم تا لبه‌ی ظرف می‌رسه؛ محو شدن افقی توی
+     پدینگ جلوی لبه‌ی صاف همون برش رو می‌گیره (متن داخل جعبه‌ی محتواست). */
+  -webkit-mask-image:linear-gradient(to right, transparent 0, #000 14px, #000 calc(100% - 14px), transparent 100%);
+  mask-image:linear-gradient(to right, transparent 0, #000 14px, #000 calc(100% - 14px), transparent 100%);
+}
+
+@keyframes goldenFlow{ from{ background-position:0% 50%; } to{ background-position:200% 50%; } }
+
+@media (prefers-reduced-motion: reduce) {
+  .golden-name{ animation:none; background-position:30% 50%; } }
+
+/* ── نام بنفش سمی (components/GoldenName.tsx با staff) ─────────────
+   Owner و ادمین‌ها: همون تکنیک حلقه‌ی بی‌درز .golden-name (گرادیان افقی با
+   اول و آخر یک‌رنگ، کاشی 200%، جابه‌جایی خطی 0% → 200% = دقیقا یک کاشی؛
+   فریم آخر = فریم اول) ولی با پالت بنفش نئون: بنفش عمیق ↔ بنفش برقی با
+   برق یاسی-سرخابی اسیدی. درخشش با --name-glow روی .toxic-name-glow.
+   فقط background-clip:text — عنصر خودش هیچ بک‌گراندی نمی‌گیره. */
+
+.toxic-name{
+  --t1:#f3c9ff; --t2:#b44dff; --t3:#7a1fe0; --t4:#e15cff;
+  background-image:linear-gradient(90deg, var(--t3) 0%, var(--t2) 13%, var(--t1) 25%, var(--t2) 37%, var(--t3) 50%, var(--t4) 63%, var(--t2) 76%, var(--t4) 88%, var(--t3) 100%);
+  background-size:200% 100%;
+  background-repeat:repeat-x;
+  background-position:0% 50%;
+  -webkit-background-clip:text; background-clip:text;
+  -webkit-text-fill-color:transparent; color:transparent;
+  animation:goldenFlow 6s linear infinite;
+  font-weight:800;
+}
+
+.toxic-name-glow{ --name-glow:rgba(190,80,255,.55); }
+
+body[data-theme="light"] .toxic-name-glow{ --name-glow:rgba(140,40,225,.3); }
+
+body[data-theme="light"] .toxic-name{
+  --t1:#b23cf0; --t2:#7b1fd6; --t3:#4a0f9e; --t4:#a51fc8;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .toxic-name{ animation:none; background-position:30% 50%; } }
+
+/* ── تیک واحد اپ (components/TickButton.tsx) — کپی .db-tl-node  داشبورد ──
+   عمدا بیرون .db-page تا همه‌جا یکسان باشه. بک‌گراند فقط در حالت تیک‌خورده
+   (همون گرادیان داشبورد)؛ حالت خالی کاملا شفافه.
+
+   باگ «مربع داخل دایره» (ریشه):
+   (۱) گرادیان حالت تیک‌خورده با background-origin پیش‌فرض (padding-box) و
+       repeat کشیده می‌شد؛ با بوردر شفاف ۲px، کاشی گرادیان توی حلقه‌ی بوردر
+       تکرار می‌شد و لبه‌ی padding-box یک مربع روشن وسط دایره می‌ساخت — همه‌جا،
+       حتی داخل .dash-scope. حالا گرادیان صریحا border-box و no-repeat‌ه.
+   (۲) بیرون .dash-scope ریست سراسری button{} (لیکوئید گلس) backdrop-filter و
+       سایه‌ی inset می‌داد و در تم روشن body[data-theme="light"] button
+       (اسپسیفیسیتی 0,1,2) بک‌گراند شیشه‌ای/بوردر/سایه رو روی .tick-btn می‌نشوند.
+       برای همین همه‌ی قانون‌های تیک با پیشوند html body و کلاس دوبل
+       (0,2,2) نوشته شدن تا هیچ قانون سراسری (هاور/دیزیبل/تم روشن) بهشون نرسه.
+
+   رنگ: --tick-a / --tick-b (پیش‌فرض پالت روتین --ring-1)؛ .tick-exercise
+   همون تیک با پالت تمرین (--ring-2، آبی→بنفش) برای حرکت‌های برنامه‌ی تمرین. */
+
+.tick-btn{ --tick-size:26px; --tick-a:var(--ring-1a); --tick-b:var(--ring-1b); }
+
+.tick-btn.tick-exercise{ --tick-a:var(--ring-2a); --tick-b:var(--ring-2b); }
+
+html body .tick-btn.tick-btn.is-square{ border-radius:calc(var(--tick-size) * .3); }
+
+.tick-btn svg{ width:calc(var(--tick-size) * .58); height:calc(var(--tick-size) * .58); position:relative; z-index:1; overflow:visible; }
+
+@media (hover:hover) {
+  html body .tick-btn.tick-btn:not(.is-disabled):not(.is-checked):hover{
+    border-color:var(--tick-a); color:#fff; background:transparent;
+    box-shadow:0 0 0 4px color-mix(in srgb, var(--tick-a) 16%, transparent);
+  } }
+
+html body .tick-btn.tick-btn.is-checked{
+  border-color:transparent;
+  background:linear-gradient(135deg, var(--tick-a), var(--tick-b)) border-box no-repeat;
+  box-shadow:0 0 14px color-mix(in srgb, var(--tick-a) 55%, transparent);
+}
+
+html body .tick-btn.tick-btn.is-missed{ border-color:var(--tl-warn, #F0A94B); border-style:dashed; }
+
+html body .tick-btn.tick-btn.is-disabled{ cursor:not-allowed; opacity:.5; }
+
+html body .tick-btn.tick-btn.is-disabled.is-checked, html body .tick-btn.tick-btn.is-disabled.is-missed{ opacity:.75; }
+
+.tick-ripple{ position:absolute; inset:-2px; border-radius:inherit; border:2px solid var(--tick-b); background:none; pointer-events:none; }
+
+.tick-spark{ position:absolute; left:50%; top:50%; pointer-events:none; }
+
+.tick-spark i{
+  position:absolute; width:4px; height:4px; margin:-2px; border-radius:50%;
+  background:var(--tick-b); animation:tick-burst .75s cubic-bezier(.22,1,.36,1) forwards;
+  transform:rotate(calc(var(--i) * 45deg)) translateX(0);
+}
+
+@keyframes tick-burst{ to{ transform:rotate(calc(var(--i) * 45deg)) translateX(var(--tick-size)); opacity:0; } }
+
+@media (prefers-reduced-motion: reduce) {
+  .tick-spark{ display:none; } }
+
+/* ── گزینه‌ی تیک‌خوردنی (components/TickOption.tsx) — بی‌بک‌گراند ── */
+
+.tick-option{
+  display:flex; align-items:center; gap:10px; width:100%; padding:6px 0; margin:0; border:none;
+  background:transparent; color:var(--text); font:inherit; font-size:13px; font-weight:600; text-align:start; cursor:pointer;
+  -webkit-tap-highlight-color:transparent;
+}
+
+.tick-option:disabled{ cursor:not-allowed; opacity:.6; }
+
+.tick-option-text{ flex:1; min-width:0; }
+
+/* آیتم‌های برنامه‌ی لیستی در پاپ‌آپ روز (DayModal) */
+
+.day-task-items{ list-style:none; margin:-4px 0 6px; padding:0; padding-inline-start:40px; display:flex; flex-direction:column; gap:6px; }
+
+.day-task-items li{ display:flex; align-items:center; gap:9px; font-size:12.5px; font-weight:600; }
+
+@supports not (aspect-ratio:1) {
+  .cal-cell, .jdate-cell{ min-height:40px; } }
+
+@media (min-width:701px) {
+  html[dir="ltr"] .cal-label{ left:50%; right:auto; } }
+
+/* فیلدها و دکمه‌هایی که قبلا direction:rtl صریح داشتن */
+
+html[dir="ltr"] .field-error-wrap .jdate-btn, html[dir="ltr"] .jdate-btn.placeholder, html[dir="ltr"] .fx-clock, html[dir="ltr"] .friend-profile-banner-bar, html[dir="ltr"] .admin-root, html[dir="ltr"] .admin-kpi-delta{ direction:ltr; }
+
+/* دم حباب پیام رد AI در ناحیه‌ی شروع (چپ در ltr) */
+
+html[dir="ltr"] .exercise-feasibility-reject{ border-radius:14px 14px 14px 4px; }
+
+/* درخشش اسکلت لودینگ از چپ به راست */
+
+@keyframes pl-shimmer-ltr{ to{ transform:translateX(100%); } }
+
+html[dir="ltr"] .pls-line::after, html[dir="ltr"] .pls-card::after{ transform:translateX(-100%); }
+
+@media (prefers-reduced-motion:no-preference) {
+  html[dir="ltr"] .pls-line::after, html[dir="ltr"] .pls-card::after{ animation-name:pl-shimmer-ltr; } }
+
+/* catalog "Instructions": numbered list should not also get the dash bullet */
+
+html[dir="ltr"] .tm-extra ol > li{ padding-inline-start:0; }
+
+html[dir="ltr"] .tm-extra ol > li::before{ content:none; }
+
+/* accordion chevron: must point down when closed (it pointed left in LTR) */
+
+html[dir="ltr"] .week-day-chevron{ border-inline-start:0; border-inline-end:1.5px solid var(--muted2); }
+
+html[data-admin-theme="noir"] body:not([data-theme="light"]) .golden-name{
+  --g1:#FFFFFF; --g2:#D6D6D6; --g3:#8C8C8C; --g4:#F0F0F0;
+  filter:drop-shadow(0 0 6px rgba(255,255,255,.35));
+}
+
+html[data-admin-theme="noir"] body:not([data-theme="light"]) .toxic-name{
+  --t1:#FFFFFF; --t2:#D6D6D6; --t3:#8C8C8C; --t4:#F0F0F0;
+  --tx-glow-lo:rgba(255,255,255,.25); --tx-glow-hi:rgba(255,255,255,.5);
+}
+
+[data-m-in="rise"]{ animation:m-rise var(--m-dur-3) var(--m-ease-out) backwards; animation-delay:calc(min(var(--i, 0), 8) * var(--m-step)); }
+
+[data-m-in="fade"]{ animation:m-fade var(--m-dur-3) var(--m-ease-out) backwards; }
+
+[data-m-in="pop"]{ animation:m-pop var(--m-dur-3) var(--m-ease-spring) backwards; }
+
+.module-gate{ animation:m-fade var(--m-dur-4) var(--m-ease-out) backwards; }
+
+.module-gate-overlay > *{ animation:m-rise var(--m-dur-4) var(--m-ease-out) backwards; }
+
+.trade-chat-report-sheet{ animation:m-rise-soft var(--m-dur-3) var(--m-ease-out) backwards; }
+
+.calorie-unit-dropdown{ animation:m-pop var(--m-dur-2) var(--m-ease-out) backwards; transform-origin:50% 0; }
+
+.au-backdrop, .ads-pal-backdrop{ animation:m-fade var(--m-dur-3) var(--m-ease-out) backwards; }
+
+.ads-pal{ animation:m-pop var(--m-dur-3) var(--m-ease-spring) backwards; transform-origin:50% 0; }
+
+@media (hover:hover) and (pointer:fine) {
+  :where([role="button"], [role="tab"], [role="menuitem"], .is-clickable, [data-clickable]):hover{ opacity:.92; } }
+
+@media (prefers-reduced-motion:no-preference) {
+  :where(a[href], button, [role="button"], [role="tab"], summary):focus-visible{ transition:outline-offset var(--m-dur-1) var(--m-ease-out), scale var(--m-dur-1) var(--m-ease-out); } }
+
+.trade-account-goalbar-fill, .admin-funnel-fill, .adb-fill, .slw-fill{
+  animation:m-bar var(--m-dur-5) var(--m-ease-out) backwards;
+}
+
+.m-reveal.m-pre{ opacity:0; translate:0 14px; }
+
+@media (prefers-reduced-motion:reduce) {
+  .m-reveal, .m-reveal.m-pre{ opacity:1 !important; translate:none !important; animation:none !important; transition:none !important; } }
+
+.topbar-auth-pop{ animation:topbarAuthPop .38s cubic-bezier(.34,1.56,.64,1); }
+
+@media (prefers-reduced-motion:reduce) {
+  .topbar-auth-pop{ animation:none; } }
+
+@media (min-width:1024px) {
+  .dnav-chev{ transition:transform .2s ease; opacity:.7; flex-shrink:0; }
+  .dnav-ind{
+    position:absolute; left:0; bottom:0; width:1px; height:2px; background:var(--accent);
+    transform-origin:0 0; opacity:0; pointer-events:none; will-change:transform;
+  } }
+
+@media (min-width:1024px) and (prefers-reduced-motion:reduce) {
+  .dnav-ind.is-ready, .dnav-chev{ transition:none; } }

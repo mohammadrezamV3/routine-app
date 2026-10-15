@@ -1,0 +1,275 @@
+/* auto-split from the global CSS (css-split): rules used only by this route group. Imported first thing by its layout/page. */
+
+.task-name{font-size:14.5px;}
+
+.task-name.done{color:var(--muted2); text-decoration:line-through;}
+
+/* بنر وضعیت چک‌اوت (موفق/ناموفق) — بالای صفحه‌ی اشتراک، بعد برگشت از درگاه */
+
+.checkout-status-banner{
+    display:flex; align-items:center; gap:10px; margin-top:14px; padding:14px 16px;
+    border-radius:14px; font-size:12.5px; font-weight:700;
+  }
+
+.checkout-status-banner.success{ background:var(--accent-dim); color:var(--accent); border:1px solid var(--accent); }
+
+.checkout-status-banner.failed{ background:rgba(224,82,82,.1); color:#E05252; border:1px solid rgba(224,82,82,.4); }
+
+/* صفحه‌ی چک‌اوت — خلاصه‌ی سفارش + کد تخفیف + قوانین + دکمه‌ی پرداخت.
+     دکمه‌ی بازگشت طبق قاعده‌ی ثابت سایت: همیشه بالا-راست، بدون بک‌گراند. */
+
+.checkout-page{ max-width:480px; position:relative; }
+
+@media (hover:hover) {
+  .checkout-back-btn:hover{ color:var(--accent); background:none; box-shadow:none; transform:translateX(3px); }}
+
+.checkout-back-btn:active{ transform:scale(.86); }
+
+.checkout-back-link{ display:inline-block; margin-top:14px; color:var(--accent); font-weight:700; font-size:12.5px; }
+
+.checkout-summary{
+    display:flex; align-items:center; gap:10px; margin-top:18px; padding:16px;
+    border:1px solid var(--line); border-radius:16px;
+    background:rgba(var(--surface-rgb), .13);
+    backdrop-filter:blur(20px) saturate(180%); -webkit-backdrop-filter:blur(20px) saturate(180%);
+  }
+
+.checkout-summary-icon{ background:var(--accent-dim); color:var(--accent); }
+
+.checkout-summary-name{ font-size:14.5px; font-weight:800; color:var(--text); }
+
+.checkout-summary-duration{ font-size:11.5px; color:var(--muted); margin-top:2px; }
+
+.checkout-summary-price{ font-size:15px; font-weight:800; color:var(--accent); white-space:nowrap; }
+
+.checkout-upgrade-note{
+    margin-top:12px; padding:10px 14px; border-radius:12px; border:1px solid var(--accent);
+    background:var(--accent-dim); color:var(--accent); font-size:11.5px; font-weight:600; line-height:1.8;
+  }
+
+.checkout-box{ margin-top:14px; }
+
+.checkout-field-label{ display:block; font-size:12px; color:var(--muted); margin-bottom:6px; font-weight:600; }
+
+.checkout-discount-field-wrap.applied .checkout-discount-input{ color:var(--accent); border-color:var(--accent); opacity:.85; }
+
+@media (hover:hover) {
+  .checkout-discount-apply-btn:hover:not(:disabled){ filter:brightness(1.15); background:none; box-shadow:none; }}
+
+/* عرض ثابت به همان دلیل auth-phone-send-btn — «اعمال» / «در حال
+     بررسی…» / «حذف» پهنای متفاوت دارند. */
+
+.checkout-discount-apply-btn{ width:92px; padding-inline-end:0; padding-inline-start:0; }
+
+.checkout-discount-apply-btn.remove{ background:none; color:#E05252; }
+
+@media (hover:hover) {
+  .checkout-discount-apply-btn.remove:hover:not(:disabled){ background:none; box-shadow:none; }}
+
+.checkout-discount-success{ margin-top:7px; font-size:11.5px; color:var(--accent); font-weight:600; }
+
+.checkout-invite-hint{ margin-top:7px; font-size:11.5px; color:var(--muted); font-weight:600; }
+
+.checkout-gateway-row{ display:flex; gap:8px; }
+
+@media (hover:hover) {
+  .checkout-gateway-pill:hover{ box-shadow:none; }}
+
+.checkout-gateway-pill.on{ border-color:var(--accent); color:var(--accent); background:var(--accent-dim); box-shadow:none; }
+
+.checkout-terms-row{ margin-top:16px; border-bottom:none; padding:10px 0; }
+
+.checkout-pay-btn-inner{ display:inline-flex; align-items:center; justify-content:center; gap:8px; }
+
+.checkout-pay-old-price{ text-decoration:line-through; opacity:.65; font-weight:500; font-size:.86em; }
+
+.field-error-msg{font-size:10.5px; color:#E05252; font-family:var(--font-latin), var(--font-vazir), sans-serif; margin-top:3px; display:none;}
+
+@media (hover:hover) {
+  body[data-theme="light"] .module-gate-cta:hover, body:not([data-theme="light"]) .module-gate-cta:hover{
+  background:var(--accent);
+}
+  body[data-theme="light"] .plan-details-btn:hover, body:not([data-theme="light"]) .plan-details-btn:hover{
+  background:none; box-shadow:none;
+}
+  body[data-theme="light"] .plan-duration-btn:hover, body:not([data-theme="light"]) .plan-duration-btn:hover{
+  border:none; box-shadow:none; backdrop-filter:none; -webkit-backdrop-filter:none;
+}}
+
+/* انیمیشن «کاربر پریمیوم شد» — نگاه کن به components/PremiumUnlockCelebration.tsx */
+
+.premium-celebration-backdrop{
+  position:fixed; inset:0; z-index:200; display:flex; align-items:center; justify-content:center;
+  background:rgba(0,0,0,.55); backdrop-filter:var(--popup-backdrop-filter); -webkit-backdrop-filter:var(--popup-backdrop-filter); padding:20px;
+}
+
+.premium-celebration-title{ font-size:16px; font-weight:800; color:var(--text); }
+
+.premium-celebration-sub{ margin-top:8px; font-size:12.5px; color:var(--muted); line-height:1.8; }
+
+@media (hover:hover) {
+  .premium-celebration-close:hover{ filter:brightness(1.08); }}
+
+@media (min-width:768px) {
+  .plans-breakout{
+    width:min(1240px, calc(100vw - 32px));
+    margin-inline:calc((620px - min(1240px, calc(100vw - 32px))) / 2);
+  }}
+
+/* ── جاگیر سبک داخل صفحه (components/PageLoader.tsx) ─────────────────────
+   فقط یک اسکلت ساده داخل محتوا (زیر هدر، بدون پرده و بدون لوگو). تا 200ms هیچی
+   دیده نمی‌شه (animation-delay)، پس ناوبری سریع هیچ چشمک و لودینگی نداره. */
+
+.page-loader{
+  width:100%; display:flex; flex-direction:column; gap:12px; padding:8px 0 24px;
+  opacity:0; animation:pl-in .3s ease .2s forwards;
+}
+
+@keyframes pl-in{ to{ opacity:1; } }
+
+.page-loader-skel{ width:100%; display:flex; flex-direction:column; gap:12px; }
+
+.pls-line, .pls-card{ display:block; position:relative; overflow:hidden; border-radius:10px; background:rgba(var(--accent-rgb),.07); }
+
+.pls-line{ height:16px; }
+
+.pls-line.pls-thin{ height:11px; opacity:.7; }
+
+.pls-grid{ display:grid; grid-template-columns:1fr 1fr; gap:12px; margin-top:8px; }
+
+.pls-card{ height:120px; border-radius:18px; border:1px solid var(--box-line); background:var(--box-bg); }
+
+.pls-card.pls-wide{ grid-column:1 / -1; height:150px; }
+
+.pls-line::after, .pls-card::after{
+  content:""; position:absolute; inset:0; transform:translateX(100%);
+  background:linear-gradient(90deg, transparent, rgba(255,255,255,.06), transparent);
+  animation:pl-shimmer 1.3s ease-in-out infinite;
+}
+
+body[data-theme="light"] .pls-line::after, body[data-theme="light"] .pls-card::after{ background:linear-gradient(90deg, transparent, rgba(255,255,255,.6), transparent); }
+
+@keyframes pl-shimmer{ to{ transform:translateX(-100%); } }
+
+@media (prefers-reduced-motion:reduce) {
+  .pls-line::after, .pls-card::after{ animation:none; }}
+
+/* ── تیک واحد اپ (components/TickButton.tsx) — کپی .db-tl-node  داشبورد ──
+   عمدا بیرون .db-page تا همه‌جا یکسان باشه. بک‌گراند فقط در حالت تیک‌خورده
+   (همون گرادیان داشبورد)؛ حالت خالی کاملا شفافه.
+
+   باگ «مربع داخل دایره» (ریشه):
+   (۱) گرادیان حالت تیک‌خورده با background-origin پیش‌فرض (padding-box) و
+       repeat کشیده می‌شد؛ با بوردر شفاف ۲px، کاشی گرادیان توی حلقه‌ی بوردر
+       تکرار می‌شد و لبه‌ی padding-box یک مربع روشن وسط دایره می‌ساخت — همه‌جا،
+       حتی داخل .dash-scope. حالا گرادیان صریحا border-box و no-repeat‌ه.
+   (۲) بیرون .dash-scope ریست سراسری button{} (لیکوئید گلس) backdrop-filter و
+       سایه‌ی inset می‌داد و در تم روشن body[data-theme="light"] button
+       (اسپسیفیسیتی 0,1,2) بک‌گراند شیشه‌ای/بوردر/سایه رو روی .tick-btn می‌نشوند.
+       برای همین همه‌ی قانون‌های تیک با پیشوند html body و کلاس دوبل
+       (0,2,2) نوشته شدن تا هیچ قانون سراسری (هاور/دیزیبل/تم روشن) بهشون نرسه.
+
+   رنگ: --tick-a / --tick-b (پیش‌فرض پالت روتین --ring-1)؛ .tick-exercise
+   همون تیک با پالت تمرین (--ring-2، آبی→بنفش) برای حرکت‌های برنامه‌ی تمرین. */
+
+.tick-btn{ --tick-size:26px; --tick-a:var(--ring-1a); --tick-b:var(--ring-1b); }
+
+.tick-btn.tick-exercise{ --tick-a:var(--ring-2a); --tick-b:var(--ring-2b); }
+
+html body .tick-btn.tick-btn.is-square{ border-radius:calc(var(--tick-size) * .3); }
+
+.tick-btn svg{ width:calc(var(--tick-size) * .58); height:calc(var(--tick-size) * .58); position:relative; z-index:1; overflow:visible; }
+
+@media (hover:hover) {
+  html body .tick-btn.tick-btn:not(.is-disabled):not(.is-checked):hover{
+    border-color:var(--tick-a); color:#fff; background:transparent;
+    box-shadow:0 0 0 4px color-mix(in srgb, var(--tick-a) 16%, transparent);
+  }}
+
+html body .tick-btn.tick-btn.is-checked{
+  border-color:transparent;
+  background:linear-gradient(135deg, var(--tick-a), var(--tick-b)) border-box no-repeat;
+  box-shadow:0 0 14px color-mix(in srgb, var(--tick-a) 55%, transparent);
+}
+
+html body .tick-btn.tick-btn.is-missed{ border-color:var(--tl-warn, #F0A94B); border-style:dashed; }
+
+html body .tick-btn.tick-btn.is-disabled{ cursor:not-allowed; opacity:.5; }
+
+html body .tick-btn.tick-btn.is-disabled.is-checked, html body .tick-btn.tick-btn.is-disabled.is-missed{ opacity:.75; }
+
+.tick-ripple{ position:absolute; inset:-2px; border-radius:inherit; border:2px solid var(--tick-b); background:none; pointer-events:none; }
+
+.tick-spark{ position:absolute; left:50%; top:50%; pointer-events:none; }
+
+.tick-spark i{
+  position:absolute; width:4px; height:4px; margin:-2px; border-radius:50%;
+  background:var(--tick-b); animation:tick-burst .75s cubic-bezier(.22,1,.36,1) forwards;
+  transform:rotate(calc(var(--i) * 45deg)) translateX(0);
+}
+
+@keyframes tick-burst{ to{ transform:rotate(calc(var(--i) * 45deg)) translateX(var(--tick-size)); opacity:0; } }
+
+@media (prefers-reduced-motion: reduce) {
+  .tick-spark{ display:none; }}
+
+@media (hover:hover) {
+  html[dir="ltr"] .checkout-back-btn:hover{ transform:translateX(-3px); }
+  html[dir="ltr"] .checkout-back-btn:active{ transform:scale(.86); }}
+
+/* درخشش اسکلت لودینگ از چپ به راست */
+
+@keyframes pl-shimmer-ltr{ to{ transform:translateX(100%); } }
+
+html[dir="ltr"] .pls-line::after, html[dir="ltr"] .pls-card::after{ transform:translateX(-100%); }
+
+@media (prefers-reduced-motion:no-preference) {
+  html[dir="ltr"] .pls-line::after, html[dir="ltr"] .pls-card::after{ animation-name:pl-shimmer-ltr; }}
+
+/* چک‌اوت: برچسب «Discount code» بالای فیلد تا فیلد جای پلیس‌هولدر و دکمه‌ی Apply رو داشته باشه */
+
+html[dir="ltr"] .checkout-discount-row .checkout-field-label{ flex-basis:100%; }
+
+[data-m-in="rise"]{ animation:m-rise var(--m-dur-3) var(--m-ease-out) backwards; animation-delay:calc(min(var(--i, 0), 8) * var(--m-step)); }
+
+[data-m-in="fade"]{ animation:m-fade var(--m-dur-3) var(--m-ease-out) backwards; }
+
+[data-m-in="pop"]{ animation:m-pop var(--m-dur-3) var(--m-ease-spring) backwards; }
+
+.module-gate{ animation:m-fade var(--m-dur-4) var(--m-ease-out) backwards; }
+
+.module-gate-overlay > *{ animation:m-rise var(--m-dur-4) var(--m-ease-out) backwards; }
+
+.trade-chat-report-sheet{ animation:m-rise-soft var(--m-dur-3) var(--m-ease-out) backwards; }
+
+.calorie-unit-dropdown{ animation:m-pop var(--m-dur-2) var(--m-ease-out) backwards; transform-origin:50% 0; }
+
+.au-backdrop, .ads-pal-backdrop{ animation:m-fade var(--m-dur-3) var(--m-ease-out) backwards; }
+
+.ads-pal{ animation:m-pop var(--m-dur-3) var(--m-ease-spring) backwards; transform-origin:50% 0; }
+
+@media (hover:hover) and (pointer:fine) {
+  :where([role="button"], [role="tab"], [role="menuitem"], .is-clickable, [data-clickable]):hover{ opacity:.92; }}
+
+.trade-account-goalbar-fill, .admin-funnel-fill, .adb-fill, .slw-fill{
+  animation:m-bar var(--m-dur-5) var(--m-ease-out) backwards;
+}
+
+.m-reveal.m-pre{ opacity:0; translate:0 14px; }
+
+.m-reveal.m-pre.m-seen{ opacity:1; translate:0 0; transition:opacity var(--m-dur-4) var(--m-ease-out), translate var(--m-dur-4) var(--m-ease-out); }
+
+.topbar-auth-pop{ animation:topbarAuthPop .38s cubic-bezier(.34,1.56,.64,1); }
+
+@media (prefers-reduced-motion:reduce) {
+  .topbar-auth-pop{ animation:none; }}
+
+@media (min-width:1024px) {
+  .dnav-chev{ transition:transform .2s ease; opacity:.7; flex-shrink:0; }
+  .dnav-ind{
+    position:absolute; left:0; bottom:0; width:1px; height:2px; background:var(--accent);
+    transform-origin:0 0; opacity:0; pointer-events:none; will-change:transform;
+  }}
+
+@media (min-width:1024px) and (prefers-reduced-motion:reduce) {
+  .dnav-ind.is-ready, .dnav-chev{ transition:none; }}

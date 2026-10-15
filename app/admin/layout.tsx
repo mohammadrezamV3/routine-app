@@ -1,3 +1,4 @@
+import "@/app/_area/admin.css";
 import type { Metadata } from "next";
 import { notFound } from "next/navigation";
 import { getAdminContext } from "@/lib/requireAdmin";

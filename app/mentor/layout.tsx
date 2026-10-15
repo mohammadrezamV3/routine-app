@@ -1,3 +1,4 @@
+import "@/app/_area/mentor.css";
 import { MentorPanelNav } from "@/components/MentorPanelNav";
 import { FeaturePageGate } from "@/components/FeaturePageGate";
 
