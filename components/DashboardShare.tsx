@@ -108,12 +108,12 @@ export function DashboardShare({
     mo.observe(document.body, { attributes: true, attributeFilter: ["data-theme"] });
     return () => mo.disconnect();
   }, [open]);
-  // بخش ورزش: همون حلقه‌های هیرو (تمرین و کالری)؛ استریک کارت مال روتینه، پس وسط حلقه‌ها همیشه
-  // درصد تکمیله و انتخاب «استریک» نمایش داده نمی‌شه
+  // بخش ورزش: همون حلقه‌های هیرو (تمرین و کالری)؛ وسط حلقه‌ها استریک جلسه‌های پشت‌سرهم تمرینه
+  // (همون data.exercise.streak که هیرو بخش ورزش نشون می‌ده) یا درصد تکمیل، مثل روتین
   const section = useSection();
   const workout = section === "workout";
   const rings = useMemo(() => heroRings(data, routine.stats, routineLocked, section), [data, routine.stats, routineLocked, section]);
-  const streak = routine.streak ?? 0;
+  const streak = workout ? (data?.exercise?.streak ?? 0) : (routine.streak ?? 0);
 
   // انتخاب کاربر برای همین بار باز بودن پنجره (بدون ذخیره)
   const [showValue, setShowValue] = useState<Record<HeroRing["key"], boolean>>(SHOW_VALUE);
@@ -125,7 +125,7 @@ export function DashboardShare({
       if (localStorage.getItem("arion:shareCenter") === "percent") setCenterState("percent");
     } catch {}
   }, []);
-  const centerMode: "streak" | "percent" = workout ? "percent" : center;
+  const centerMode: "streak" | "percent" = center;
   const setCenter = (v: "streak" | "percent") => {
     setCenterState(v);
     try { localStorage.setItem("arion:shareCenter", v); } catch {}
@@ -165,9 +165,17 @@ export function DashboardShare({
       title: tr("فعالیت امروز", "Today's activity"),
       subtitle: `${weekday} ${faNum(jd)} ${jMonthName(jm - 1)} ${faNum(jy)}`,
       inviteCode: showInvite ? (invite?.code ?? null) : null,
-      body: { kind: "rings", streak, center: centerMode, percent, items: cardRings },
+      body: {
+        kind: "rings",
+        streak,
+        center: centerMode,
+        percent,
+        items: cardRings,
+        // بخش ورزش: زیر عدد استریک «جلسه پشت سر هم»؛ روتین/آپکس همون کپشن پیش‌فرض کارت
+        streakLabel: workout ? tr("جلسه پشت سر هم", "session streak") : undefined,
+      },
     };
-  }, [invite?.code, showInvite, routine.todayIso, cardRings, streak, centerMode, percent]);
+  }, [invite?.code, showInvite, routine.todayIso, cardRings, streak, centerMode, percent, workout]);
 
   // کلید محتوایی ورودی — هویت شیء با هر رندر والد (مثلا stats تازه با همون
   // اعداد) عوض می‌شد و پیش‌نمایش بی‌دلیل دوباره ساخته و دکمه لحظه‌ای غیرفعال می‌شد
@@ -255,7 +263,7 @@ export function DashboardShare({
 
   function doShare() {
     if (!ready || !full) return;
-    const lead = centerMode === "percent" ? (workout ? tr(`امروز ${faNum(percent)}% هدف‌های ورزشیم رو کامل کردم 💪`, `I completed ${percent}% of my fitness goals today 💪`) : tr(`امروز ${faNum(percent)}% برنامه‌هام رو کامل کردم 💪`, `I completed ${percent}% of my programs today 💪`)) : streak ? tr(`${faNum(streak)} روز پشت‌سرهم روتینم رو کامل کردم 🔥`, `I have completed my routine ${streak} ${streak === 1 ? "day" : "days"} in a row 🔥`) : tr("امروزم توی آریون 💪", "My day on Arion 💪");
+    const lead = centerMode === "percent" ? (workout ? tr(`امروز ${faNum(percent)}% هدف‌های ورزشیم رو کامل کردم 💪`, `I completed ${percent}% of my fitness goals today 💪`) : tr(`امروز ${faNum(percent)}% برنامه‌هام رو کامل کردم 💪`, `I completed ${percent}% of my programs today 💪`)) : streak ? (workout ? tr(`${faNum(streak)} جلسه‌ی پشت‌سرهم ورزش کردم 🔥`, `I trained ${streak} ${streak === 1 ? "session" : "sessions"} in a row 🔥`) : tr(`${faNum(streak)} روز پشت‌سرهم روتینم رو کامل کردم 🔥`, `I have completed my routine ${streak} ${streak === 1 ? "day" : "days"} in a row 🔥`)) : tr("امروزم توی آریون 💪", "My day on Arion 💪");
     const inv = invite && showInvite ? { code: invite.code, url: invite.url, percent: REFERRAL_DISCOUNT_PERCENT } : null;
     share(full.blob, `arion-${routine.todayIso}.png`, tr("فعالیت امروز", "Today's activity"), shareText(lead, inv));
   }
@@ -360,7 +368,7 @@ export function DashboardShare({
               )}
             </div>
 
-            {input && !workout && (
+            {input && (
               <SegmentedTabs<"streak" | "percent">
                 className="db-share-center"
                 active={center}
