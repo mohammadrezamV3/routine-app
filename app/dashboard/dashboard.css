@@ -953,3 +953,26 @@ html[dir="ltr"] .db-tl-now-line{ background:linear-gradient(90deg, var(--pnl-los
 @media (hover:hover){ html[dir="ltr"] .db-tl-item:hover .db-tl-card, html[dir="ltr"] .db-acc:hover{ transform:translateX(3px); } }
 html[dir="ltr"] .db-heat-grid{ direction:ltr; }
 html[dir="ltr"] .db-cd-title, html[dir="ltr"] .db-ev-title{ text-align:left; }
+
+/* ── داشبورد هر بخش (زیردامنه‌ی روتین / ورزش / ترید) ───────────────
+   هیروی ترید نوار روز نداره (خلاصه‌ی ترید جاش رو می‌گیره)؛ کارت خواب فقط روی روتین و ورزشه. */
+.db-page .db-hero.is-noribbon{ grid-template-areas:"main orbit"; }
+@media (max-width:639px){ .db-page .db-hero.is-noribbon{ grid-template-areas:"main" "orbit"; } }
+/* وسط حلقه‌های ترید مبلغه نه شمارنده، پس کوچیک‌تر از عدد استریکه تا توی دایره جا بشه */
+.db-orbit-money{ font-size:18px; line-height:1.15; white-space:nowrap; font-variant-numeric:tabular-nums; }
+.db-orbit-money.is-win{ color:var(--pnl-win); }
+.db-orbit-money.is-loss{ color:var(--pnl-loss); }
+.db-page .db-hero-share{ text-decoration:none; }
+
+.db-sleep-body{ display:flex; flex-direction:column; gap:14px; }
+.db-sleep-top{ display:flex; flex-direction:column; gap:6px; }
+.db-sleep-dur{ font-size:24px; font-weight:900; letter-spacing:-.02em; font-variant-numeric:tabular-nums; }
+.db-sleep-sub{ font-size:11.5px; font-weight:600; color:var(--muted); line-height:1.7; }
+.db-sleep-week{ list-style:none; display:grid; grid-template-columns:repeat(7, minmax(0,1fr)); gap:6px; }
+.db-sleep-day{ display:flex; flex-direction:column; align-items:center; gap:6px; color:inherit; }
+.db-sleep-bar{ display:flex; align-items:flex-end; width:100%; max-width:26px; height:64px; overflow:hidden; border-radius:8px; border:1px solid var(--box-line); }
+.db-sleep-fill{ display:block; width:100%; border-radius:6px 6px 0 0; background:var(--moon); opacity:.5; transform-origin:50% 100%; }
+.db-sleep-day.is-ok .db-sleep-fill{ opacity:1; }
+.db-sleep-wd{ font-size:10.5px; font-weight:700; color:var(--muted); }
+.db-sleep-day.is-empty .db-sleep-wd{ opacity:.55; }
+@media (hover:hover){ .db-sleep-day:hover .db-sleep-bar{ border-color:color-mix(in srgb, var(--moon) 60%, transparent); } }

@@ -16,6 +16,8 @@ import { featureVisible, type FeatureKey } from "@/lib/featureFlags";
 import { DashIcon, type DashIconName } from "./DashboardIcons";
 import { D_EASE } from "./DashboardKit";
 import { useDashAction, type DashAction } from "./DashboardActions";
+import { useSection } from "./SectionProvider";
+import { hrefAllowedIn } from "@/lib/dashboardSection";
 import { tr, isEn } from "@/lib/i18n";
 
 export type CommandItem = {
@@ -119,6 +121,7 @@ export function DashboardCommand({
 }) {
   const router = useRouter();
   const run = useDashAction();
+  const section = useSection();
   const [q, setQ] = useState("");
   const [active, setActive] = useState(0);
   const inputRef = useRef<HTMLInputElement>(null);
@@ -126,8 +129,9 @@ export function DashboardCommand({
   useLockBodyScroll(open);
 
   const visible = useMemo(
-    () => COMMANDS.filter((c) => (!c.feature || featureVisible(features, c.feature)) && (!c.adminOnly || isAdmin)),
-    [features, isAdmin]
+    // فقط مقصدهای همین بخش (یا مشترک) — روی دامنه‌ی اصلی section = null و همه‌چیز هست
+    () => COMMANDS.filter((c) => (!c.feature || featureVisible(features, c.feature)) && (!c.adminOnly || isAdmin) && hrefAllowedIn(section, c.href)),
+    [features, isAdmin, section]
   );
   const results = useMemo(() => {
     const nq = normalizeFa(q);

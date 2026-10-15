@@ -13,8 +13,12 @@ import { featureVisible, type FeatureKey } from "@/lib/featureFlags";
 import { DashIcon, type DashIconName } from "./DashboardIcons";
 import { D_EASE } from "./DashboardKit";
 import { useDashAction, type DashAction } from "./DashboardActions";
+import { useSection } from "./SectionProvider";
+import { hrefAllowedIn } from "@/lib/dashboardSection";
+import type { SectionKey } from "@/lib/sections";
 
-type Item = { href: string; label: Localized; icon: DashIconName; module?: string; feature?: FeatureKey; tone?: string; action?: DashAction };
+/** only: کار سریعی که فقط روی همین زیردامنه‌ها هست (دامنه‌ی اصلی مثل قبل بدونشون می‌مونه) */
+type Item = { href: string; label: Localized; icon: DashIconName; module?: string; feature?: FeatureKey; tone?: string; action?: DashAction; only?: SectionKey[] };
 
 const QUICK: Item[] = [
   { href: "/weekly?add=1", label: { fa: "برنامه‌ی جدید", en: "New program" }, icon: "plus", feature: "routine", tone: "var(--accent)", action: "program" },
@@ -26,20 +30,26 @@ const QUICK: Item[] = [
   { href: "/trade/chart", label: { fa: "چارت", en: "Chart" }, icon: "chart", module: "TRADE", feature: "tradeChart", tone: "var(--accent-soft)" },
   { href: "/mentors", label: { fa: "مربی‌ها", en: "Mentors" }, icon: "mentors", feature: "mentors", tone: "var(--moon)" },
   { href: "/roadmaps/new", label: { fa: "رودمپ AI", en: "AI roadmap" }, icon: "spark", feature: "roadmaps", tone: "var(--orb-c2)" },
+  // فقط بخش ترید: چک‌لیست و ساعت فارکس (روی دامنه‌ی اصلی کارهای سریع همون ۹ تای قبلیه)
+  { href: "/trade/checklists", label: { fa: "چک‌لیست", en: "Checklists" }, icon: "checklist", module: "TRADE", feature: "tradeChecklists", tone: "var(--moon)", only: ["trade"] },
+  { href: "/trade/clock", label: { fa: "ساعت فارکس", en: "Forex clock" }, icon: "globeClock", module: "TRADE", feature: "forexClock", tone: "var(--sun)", only: ["trade"] },
 ];
 
-function visible(items: Item[], features: Partial<Record<FeatureKey, boolean>> | null) {
-  return items.filter((i) => !i.feature || featureVisible(features, i.feature));
+/** فقط مقصدهای همین بخش (یا مشترک): pathAllowedIn از lib/sections.ts روی href */
+function visible(items: Item[], features: Partial<Record<FeatureKey, boolean>> | null, section: SectionKey | null) {
+  return items.filter((i) => (!i.feature || featureVisible(features, i.feature)) && (!i.only || (section !== null && i.only.includes(section))) && hrefAllowedIn(section, i.href));
 }
 
 export function DashboardQuickActions({ features, modules }: { features: Partial<Record<FeatureKey, boolean>> | null; modules: Set<string> | null }) {
   const run = useDashAction();
-  const n = visible(QUICK, features).length;
+  const section = useSection();
+  const list = visible(QUICK, features, section);
+  const n = list.length;
   // موبایل/تبلت: تعداد ستون طوری که ردیف آخر یک خانه‌ی تنها نداشته باشه
   const qc = n <= 4 || n % 4 === 0 ? 4 : n % 3 === 0 ? 3 : 4;
   return (
     <motion.nav className="db-quick" style={{ ["--qn" as any]: n, ["--qc" as any]: Math.min(qc, n) }} aria-label={tr("کارهای سریع", "Quick actions")} initial="hidden" animate="show" variants={{ show: { transition: { staggerChildren: 0.04, delayChildren: 0.2 } } }}>
-      {visible(QUICK, features).map((q) => {
+      {list.map((q) => {
         const locked = !!q.module && modules !== null && !modules.has(q.module);
         return (
           <motion.div key={q.href} variants={{ hidden: { opacity: 0, y: 10, scale: 0.94 }, show: { opacity: 1, y: 0, scale: 1, transition: { duration: 0.4, ease: D_EASE } } }}>

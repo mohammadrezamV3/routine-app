@@ -12,12 +12,14 @@ import { weekdayName, jMonthName, faNum, toJalali } from "@/lib/jalali";
 import { awakeProgress, dayPhase, PHASE_GREETING, type DayPhase } from "@/lib/dashboardCompute";
 import { getStreakTier } from "@/lib/streakTier";
 import type { DashboardData } from "@/lib/dashboardTypes";
+import type { SectionKey } from "@/lib/sections";
 import type { TodayTask } from "@/lib/useDashboardRoutine";
 import { DashIcon, type DashIconName } from "./DashboardIcons";
 import { GoldenName } from "./GoldenName";
 import { Spinner } from "./Spinner";
 import { ROUTINE_PLAN_KEY } from "@/lib/trial";
 import { CountUp, D_EASE, GradientArc, Skel } from "./DashboardKit";
+import { money, tone } from "./DashboardTrade";
 import { tr, isEn, pick, iso } from "@/lib/i18n";
 
 const PHASE_ICON: Record<DayPhase, DashIconName> = { dawn: "sunrise", day: "sun", dusk: "sunset", night: "moon" };
@@ -76,6 +78,8 @@ export function DashboardHero({
   routineLocked = false,
   routineOff = false,
   streakOn = true,
+  section = null,
+  shareHref,
 }: {
   data: DashboardData | null;
   routine: {
@@ -94,6 +98,10 @@ export function DashboardHero({
   routineOff?: boolean;
   /** فلگ streak — چیپ استریک فقط وقتی /streak باز باشه لینک می‌شه */
   streakOn?: boolean;
+  /** زیردامنه‌ی بخش؛ null = دامنه‌ی اصلی (هیرو دقیقا مثل قبل) */
+  section?: SectionKey | null;
+  /** بخش ترید: اشتراک کارنامه‌ی ترید به‌جای کارت حلقه‌های روز (لینک به /trade?share=1) */
+  shareHref?: string;
 }) {
   const now = useNow();
   const heroRef = useRef<HTMLElement>(null);
@@ -125,33 +133,74 @@ export function DashboardHero({
     return `${weekdayName(now.getDay())} ${faNum(jd)} ${jMonthName(jm - 1)} ${faNum(jy)}`;
   }, [now]);
 
-  // ── سه حلقه ──
-  const shownRings = heroRings(data, routine.stats, routineLocked || routineOff).filter((r) => r.show);
+  // ── حلقه‌ها ──
+  // بخش روتین فقط حلقه‌ی روتین، بخش ورزش فقط تمرین و کالری (heroRings با section فیلتر می‌کنه)؛
+  // بخش ترید حلقه‌ی روز نداره و خلاصه‌ی ترید از همین داده‌ی داشبورد ساخته می‌شه.
+  const isTrade = section === "trade";
+  const isWorkout = section === "workout";
+  const shownRings = heroRings(data, routine.stats, routineLocked || routineOff, section).filter((r) => r.show);
   const ex = data?.exercise;
   const cal = data?.calorie;
+  const tradeData = data?.trade ?? null;
+  const tradeRings = useMemo(() => (isTrade ? tradeHeroRings(tradeData) : []), [isTrade, tradeData]);
+  const legend: LegendItem[] = isTrade ? tradeLegend(tradeData) : shownRings;
+  // وسط حلقه‌ها: استریک روتین؛ در بخش ورزش استریک جلسه‌های تمرین
+  const centerStreak = isWorkout ? (data ? (ex?.streak ?? 0) : null) : routine.streak;
+  const orbitReady = isTrade ? !!data : isWorkout ? !!data && routine.ready : routine.ready;
 
   // ── جمله‌ی خلاصه ──
   const insight = useMemo(() => {
     const parts: string[] = [];
+    if (isTrade) {
+      if (!data) return null;
+      const t = data.trade;
+      if (!t) return tr("ژورنال و بازار امروز، یک‌جا", "Your journal and today's market, in one place");
+      if (t.accountCount === 0) return tr("اولین حساب معاملاتیت رو بساز تا آمار این‌جا زنده بشه", "Create your first trading account to bring your stats to life here");
+      parts.push(t.today.count > 0 ? tr(`امروز ${faNum(t.today.count)} معامله · ${money(t.today.pnl, t.sumCurrency)}`, `Today ${t.today.count} ${t.today.count === 1 ? "trade" : "trades"} · ${money(t.today.pnl, t.sumCurrency)}`) : tr("امروز هنوز معامله‌ای نبوده", "No trades yet today"));
+      if (t.openTrades) parts.push(tr(`${faNum(t.openTrades)} معامله‌ی باز`, `${t.openTrades} open ${t.openTrades === 1 ? "trade" : "trades"}`));
+      const next = data.calendar?.events.find((e) => e.impact === "HIGH" && Date.parse(e.occursAt) > Date.now() - 30 * 60_000);
+      if (next) parts.push(tr(`خبر مهم بعدی: ${next.title}`, `Next major news: ${iso(next.title)}`));
+      return parts.join(" · ");
+    }
+    if (isWorkout) {
+      if (!data) return null;
+      if (!ex?.hasPlan) parts.push(tr("هنوز برنامه‌ی تمرینی نداری", "You do not have a workout plan yet"));
+      else if (!ex.today.isGymDay) parts.push(tr("امروز روز استراحته", "Today is a rest day"));
+      else if (ex.today.done) parts.push(tr("تمرین امروز انجام شد", "Today's workout is done"));
+      else parts.push(ex.today.focus ? tr(`تمرین امروز: ${ex.today.focus}`, `Today's workout: ${iso(ex.today.focus)}`) : tr("امروز روز تمرینه", "Today is a workout day"));
+      if (cal?.target) {
+        const left = Math.round(cal.target.kcal - cal.today.kcal);
+        parts.push(left >= 0 ? tr(`${faNum(left)} کالری تا هدف`, `${left} kcal to goal`) : tr(`${faNum(-left)} کالری بیشتر از هدف`, `${-left} kcal over goal`));
+      }
+      return parts.join(" · ");
+    }
     const { completed, total } = routine.stats;
     if (!routine.ready) return null;
     if (total === 0) parts.push(tr("امروز برنامه‌ای در روتینت نیست", "No programs in your routine today"));
     else if (completed === total) parts.push(tr("همه‌ی برنامه‌های امروز انجام شده", "All of today's programs are done"));
     else parts.push(tr(`${faNum(total - completed)} برنامه‌ی دیگه تا کامل‌شدن امروز`, `${total - completed} more ${total - completed === 1 ? "program" : "programs"} to complete today`));
-    if (ex?.hasPlan && ex.today.isGymDay && !ex.today.done) parts.push(ex.today.focus ? tr(`تمرین امروز: ${ex.today.focus}`, `Today's workout: ${iso(ex.today.focus)}`) : tr("امروز روز تمرینه", "Today is a workout day"));
-    if (cal?.target) {
-      const left = Math.round(cal.target.kcal - cal.today.kcal);
-      parts.push(left >= 0 ? tr(`${faNum(left)} کالری تا هدف`, `${left} kcal to goal`) : tr(`${faNum(-left)} کالری بیشتر از هدف`, `${-left} kcal over goal`));
+    // بخش روتین فقط از روتین حرف می‌زنه؛ تمرین و کالری مال بخش ورزشن
+    if (section !== "routine") {
+      if (ex?.hasPlan && ex.today.isGymDay && !ex.today.done) parts.push(ex.today.focus ? tr(`تمرین امروز: ${ex.today.focus}`, `Today's workout: ${iso(ex.today.focus)}`) : tr("امروز روز تمرینه", "Today is a workout day"));
+      if (cal?.target) {
+        const left = Math.round(cal.target.kcal - cal.today.kcal);
+        parts.push(left >= 0 ? tr(`${faNum(left)} کالری تا هدف`, `${left} kcal to goal`) : tr(`${faNum(-left)} کالری بیشتر از هدف`, `${-left} kcal over goal`));
+      }
     }
     return parts.join(" · ");
-  }, [routine.ready, routine.stats, ex, cal]);
+  }, [isTrade, isWorkout, section, data, routine.ready, routine.stats, ex, cal]);
 
 
   // ورود هیرو با CSS (m-rise)، نه framer: هیرو عنصر LCP داشبورده؛ با initial:{opacity:0} فریمر تا رسیدن
   // chunk انیمیشن نامرئی می‌موند و LCP عقب می‌افتاد. CSS از همون اولین پینت کار می‌کنه.
   return (
-    <section ref={heroRef as any} className="db-hero m-rise">
-      {onShare && (
+    <section ref={heroRef as any} className={`db-hero m-rise${isTrade ? " is-noribbon" : ""}`}>
+      {isTrade && shareHref && (
+        <Link href={shareHref} prefetch={false} className="db-hero-share" aria-label={tr("اشتراک کارنامه‌ی ترید", "Share trading report")} title={tr("اشتراک کارنامه", "Share report")}>
+          <DashIcon name="share" />
+        </Link>
+      )}
+      {!isTrade && onShare && (
         // اشتراک موفقیت — فقط آیکون، گوشه‌ی بالا-چپ هیرو. تا روتین امروز خونده
         // نشده کارت عدد درستی نداره: غیرفعال با دایره‌ی لودینگ به‌جای آیکون.
         <button
@@ -192,13 +241,13 @@ export function DashboardHero({
         <p className="db-hero-insight" aria-live="polite">{insight ?? <Skel w="70%" h={13} />}</p>
 
         <div className="db-hero-chips">
-          {data?.routineTrial && !routineOff && (
+          {data?.routineTrial && !routineOff && (!section || section === "routine") && (
             <Link href={`/subscription/checkout?plan=${ROUTINE_PLAN_KEY}&duration=1`} prefetch={false} className={`db-chip db-chip-trial${data.routineTrial.daysLeft <= 3 ? " is-urgent" : ""}`}>
               <DashIcon name="routine" />
               {isEn() ? <>My Routine: <b>{data.routineTrial.daysLeft}</b> free {data.routineTrial.daysLeft === 1 ? "day" : "days"} left</> : <>روتین من: <b>{faNum(data.routineTrial.daysLeft)}</b> روز رایگان مونده</>}
             </Link>
           )}
-          {routineLocked && !routineOff && (
+          {routineLocked && !routineOff && (!section || section === "routine") && (
             <Link href={`/subscription/checkout?plan=${ROUTINE_PLAN_KEY}&duration=1`} prefetch={false} className="db-chip db-chip-trial is-urgent">
               <DashIcon name="lock" />
               {tr("خرید «روتین من»", "Get My Routine")}
@@ -215,15 +264,19 @@ export function DashboardHero({
 
         <button type="button" className="db-cmd-trigger" onClick={onOpenCommand} aria-label={tr("جست‌وجو و دسترسی سریع", "Search and quick access")}>
           <DashIcon name="command" />
-          <span>{tr("کجا بریم؟ جست‌وجو در همه‌ی بخش‌ها…", "Search every section…")}</span>
+          <span>{section ? tr("کجا بریم؟ جست‌وجوی صفحه‌ها و کارها…", "Where to? Search pages and actions…") : tr("کجا بریم؟ جست‌وجو در همه‌ی بخش‌ها…", "Search every section…")}</span>
           <span className="db-cmd-trigger-keys" aria-hidden="true"><kbd className="db-kbd">Ctrl</kbd><kbd className="db-kbd">K</kbd></span>
         </button>
       </div>
 
       <div className="db-hero-orbit" aria-label={tr("پیشرفت امروز", "Today's progress")}>
-        <OrbitRings rings={shownRings} ready={routine.ready} streak={routine.streak} />
+        {isTrade ? (
+          <OrbitRings rings={tradeRings} ready={orbitReady} streak={null} center={tradeCenter(tradeData)} />
+        ) : (
+          <OrbitRings rings={shownRings} ready={orbitReady} streak={centerStreak} unit={isWorkout ? "sessions" : "days"} />
+        )}
         <ul className="db-orbit-legend">
-          {shownRings.map((r, i) => (
+          {legend.map((r, i) => (
             <li key={r.key}>
               <Link href={r.href} prefetch>
                 <span className="db-orbit-dot" style={{ background: `linear-gradient(135deg, ${r.grad[0]}, ${r.grad[1]})`, boxShadow: `0 0 10px color-mix(in srgb, ${r.grad[1]} 55%, transparent)` }} />
@@ -235,25 +288,31 @@ export function DashboardHero({
         </ul>
       </div>
 
-      <DayRibbon now={now} tasks={routine.tasks} wake={routine.wakeSleep.wake} sleep={routine.wakeSleep.sleep} configured={routine.hasWakeSleep} />
+      {!isTrade && <DayRibbon now={now} tasks={routine.tasks} wake={routine.wakeSleep.wake} sleep={routine.wakeSleep.sleep} configured={routine.hasWakeSleep} setHref={section && section !== "routine" ? "/sleep" : "/weekly"} />}
     </section>
   );
 }
 
 export type HeroRing = { key: "routine" | "exercise" | "calorie"; label: string; value: number; display: string; grad: [string, string]; show: boolean; href: string };
 
-/** سه حلقه‌ی روز (روتین/تمرین/کالری) — مشترک هیرو و کارت اشتراکی (DashboardShare) */
-export function heroRings(data: DashboardData | null, stats: { completed: number; total: number }, routineLocked = false): HeroRing[] {
+/**
+ * سه حلقه‌ی روز (روتین/تمرین/کالری) — مشترک هیرو و کارت اشتراکی (DashboardShare).
+ * `section` فقط فیلتر می‌کنه، فرمول‌ها یکی‌ان: دامنه‌ی اصلی (null) هر سه رو دارد؛ بخش
+ * روتین فقط روتین؛ بخش ورزش فقط تمرین و کالری (حتی بدون برنامه/هدف، تا هیرو خالی
+ * نمونه)؛ بخش ترید هیچ‌کدوم. کارت اشتراکی هم از همین خروجی می‌سازه، پس همیشه با هیرو یکیه.
+ */
+export function heroRings(data: DashboardData | null, stats: { completed: number; total: number }, routineLocked = false, section: SectionKey | null = null): HeroRing[] {
   const ex = data?.exercise;
   const cal = data?.calorie;
   // روزی که تمرین نداره (استراحت) حلقه کامله — هم‌قاعده‌ی تیک خودکار روز استراحت
   // (lib/exerciseStats.ts)؛ قبلا پیشرفت هفته رو نشون می‌داد و نصفه می‌موند.
   const exVal = ex?.today.isGymDay ? (ex.today.done ? 1 : ex.today.itemCount ? ex.today.doneItems / ex.today.itemCount : 0) : 1;
   const calVal = cal?.target?.kcal ? cal.today.kcal / cal.target.kcal : 0;
+  const workout = section === "workout";
   return [
-    { key: "routine", label: tr("روتین", "Routine"), value: stats.total ? stats.completed / stats.total : 0, display: stats.total ? `${faNum(stats.completed)}/${faNum(stats.total)}` : "—", grad: ["var(--ring-1a)", "var(--ring-1b)"], show: !routineLocked, href: "/weekly" },
-    { key: "exercise", label: tr("تمرین امروز", "Today's workout"), value: exVal, display: ex ? (ex.today.isGymDay ? `${faNum(ex.today.doneItems)}/${faNum(ex.today.itemCount)}` : tr("استراحت", "Rest")) : "—", grad: ["var(--ring-2a)", "var(--ring-2b)"], show: !!ex?.hasPlan, href: "/exercise?tab=exercise" },
-    { key: "calorie", label: tr("کالری", "Calories"), value: Math.min(calVal, 1), display: cal?.target ? `${faNum(Math.round(cal.today.kcal))}` : "—", grad: calVal > 1 ? ["var(--ring-3b)", "var(--ring-over)"] : ["var(--ring-3a)", "var(--ring-3b)"], show: !!cal?.target, href: "/exercise?tab=calorie" },
+    { key: "routine", label: tr("روتین", "Routine"), value: stats.total ? stats.completed / stats.total : 0, display: stats.total ? `${faNum(stats.completed)}/${faNum(stats.total)}` : "—", grad: ["var(--ring-1a)", "var(--ring-1b)"], show: !routineLocked && (!section || section === "routine"), href: "/weekly" },
+    { key: "exercise", label: tr("تمرین امروز", "Today's workout"), value: ex?.hasPlan ? exVal : 0, display: ex?.hasPlan ? (ex.today.isGymDay ? `${faNum(ex.today.doneItems)}/${faNum(ex.today.itemCount)}` : tr("استراحت", "Rest")) : "—", grad: ["var(--ring-2a)", "var(--ring-2b)"], show: workout || (!section && !!ex?.hasPlan), href: "/exercise?tab=exercise" },
+    { key: "calorie", label: tr("کالری", "Calories"), value: Math.min(calVal, 1), display: cal?.target ? `${faNum(Math.round(cal.today.kcal))}` : "—", grad: calVal > 1 ? ["var(--ring-3b)", "var(--ring-over)"] : ["var(--ring-3a)", "var(--ring-3b)"], show: workout || (!section && !!cal?.target), href: "/exercise?tab=calorie" },
   ];
 }
 
@@ -264,9 +323,51 @@ function daysLeft(iso: string) {
 // ── حلقه‌های هم‌مرکز ────────────────────────────────────────
 // هر حلقه گرادیان دورانی خودش رو داره (GradientArc) + سر درخشان؛ رنگ‌ها از
 // توکن‌های --ring-* در dashboard.css (دو پالت جدا برای شب و روز).
-function OrbitRings({ rings, ready, streak }: { rings: { key: string; value: number; grad: [string, string] }[]; ready: boolean; streak: number | null }) {
+type LegendItem = { key: string; href: string; label: string; display: string; grad: [string, string] };
+
+// ── خلاصه‌ی ترید (هیرو بخش ترید) ──────────────────────────
+// فقط از همون داده‌ی GET /api/dashboard (trade/calendar) ساخته می‌شه؛ هیچ درخواست جدایی نیست.
+const clamp01 = (n: number) => Math.max(0, Math.min(1, n));
+
+/** حلقه‌ها: وین‌ریت ۳۰ روز و (اگه حسابی هدف داشته باشه) میانگین پیشرفت هدف حساب‌ها */
+function tradeHeroRings(t: DashboardData["trade"]): { key: string; value: number; grad: [string, string] }[] {
+  if (!t || t.accountCount === 0) return [{ key: "win", value: 0, grad: ["var(--ring-1a)", "var(--ring-1b)"] }];
+  const out: { key: string; value: number; grad: [string, string] }[] = [{ key: "win", value: clamp01((t.month.winRate ?? 0) / 100), grad: ["var(--ring-1a)", "var(--ring-1b)"] }];
+  const goals = t.accounts.map((a) => a.goalProgress).filter((g): g is number => g !== null);
+  if (goals.length) out.push({ key: "goal", value: clamp01(goals.reduce((x, y) => x + y, 0) / goals.length), grad: ["var(--ring-2a)", "var(--ring-2b)"] });
+  return out;
+}
+
+function tradeLegend(t: DashboardData["trade"]): LegendItem[] {
+  const pct = tr("٪", "%");
+  const dash = "—";
+  const items: LegendItem[] = [
+    { key: "win", href: "/trade/journal", label: tr("وین‌ریت", "Win rate"), display: t?.month.winRate == null ? dash : `${faNum(t.month.winRate)}${pct}`, grad: ["var(--ring-1a)", "var(--ring-1b)"] },
+  ];
+  const goals = t ? t.accounts.map((a) => a.goalProgress).filter((g): g is number => g !== null) : [];
+  if (goals.length) items.push({ key: "goal", href: "/trade/journal", label: tr("هدف", "Goal"), display: `${faNum(Math.round((goals.reduce((x, y) => x + y, 0) / goals.length) * 100))}${pct}`, grad: ["var(--ring-2a)", "var(--ring-2b)"] });
+  items.push({ key: "pf", href: "/trade/journal", label: tr("پرافیت فکتور", "Profit factor"), display: t?.month.profitFactor == null ? dash : faNum(t.month.profitFactor.toFixed(2)), grad: ["var(--ring-3a)", "var(--ring-3b)"] });
+  items.push({ key: "open", href: "/trade/journal", label: tr("معامله‌ی باز", "Open trades"), display: t ? faNum(t.openTrades) : dash, grad: ["var(--ring-3a)", "var(--ring-3b)"] });
+  return items;
+}
+
+/** وسط حلقه‌ها: سود/زیان امروز (جمع حساب‌های هم‌ارز) */
+function tradeCenter(t: DashboardData["trade"]) {
+  if (!t || t.accountCount === 0) return <><span className="db-orbit-pct">—</span><span className="db-orbit-cap">{tr("امروز", "Today")}</span></>;
+  return (
+    <>
+      <span className={`db-orbit-pct db-orbit-money ${tone(t.today.pnl)}`} dir="ltr">{money(t.today.pnl, t.sumCurrency)}</span>
+      <span className="db-orbit-cap">{tr("سود/زیان امروز", "Today's P&L")}</span>
+    </>
+  );
+}
+
+// ── حلقه‌های هم‌مرکز ────────────────────────────────────────
+// هر حلقه گرادیان دورانی خودش رو داره (GradientArc) + سر درخشان؛ رنگ‌ها از
+// توکن‌های --ring-* در dashboard.css (دو پالت جدا برای شب و روز).
+// `center` (بخش ترید): محتوای دلخواه وسط به‌جای استریک. `unit`: برچسب زیر عدد استریک.
+function OrbitRings({ rings, ready, streak, center, unit = "days" }: { rings: { key: string; value: number; grad: [string, string] }[]; ready: boolean; streak: number | null; center?: React.ReactNode; unit?: "days" | "sessions" }) {
   const size = 176, stroke = 13, gap = 5;
-  const main = rings[0];
   return (
     <div className="db-orbit" style={{ width: size, height: size }}>
       <svg viewBox={`0 0 ${size} ${size}`} width={size} height={size} aria-hidden="true">
@@ -292,12 +393,13 @@ function OrbitRings({ rings, ready, streak }: { rings: { key: string; value: num
         </g>
       </svg>
       <div className={`db-orbit-center${rings.length >= 3 ? " is-tight" : ""}`}>
-        {/* وسط حلقه‌ها استریک، نه درصد (درصد هر حلقه کنارش در لیجند هست) */}
-        {main && ready && streak !== null ? (
+        {center !== undefined ? (
+          ready ? center : <Skel w={46} h={20} />
+        ) : /* وسط حلقه‌ها استریک، نه درصد (درصد هر حلقه کنارش در لیجند هست) */ ready && streak !== null ? (
           <>
             <span className={`db-orbit-flame tier-${getStreakTier(streak).tier}`}><DashIcon name="flame" className="dbi-live" /></span>
             <CountUp value={streak} className="db-orbit-pct" />
-            <span className="db-orbit-cap">{rings.length >= 3 ? tr("روز", "days") : tr("روز استریک", "day streak")}</span>
+            <span className="db-orbit-cap">{unit === "sessions" ? tr("جلسه", streak === 1 ? "session" : "sessions") : rings.length >= 3 ? tr("روز", "days") : tr("روز استریک", "day streak")}</span>
           </>
         ) : (
           <Skel w={46} h={20} />
@@ -313,7 +415,7 @@ function toMin(v: string) {
   return h * 60 + m;
 }
 
-export function DayRibbon({ now, tasks, wake, sleep, configured }: { now: Date | null; tasks: TodayTask[]; wake: string; sleep: string; configured: boolean }) {
+export function DayRibbon({ now, tasks, wake, sleep, configured, setHref = "/weekly" }: { now: Date | null; tasks: TodayTask[]; wake: string; sleep: string; configured: boolean; setHref?: string }) {
   const p = now ? awakeProgress(now, wake, sleep) : null;
   const w = toMin(wake);
   const span = ((toMin(sleep) <= w ? toMin(sleep) + 1440 : toMin(sleep)) - w) || 1440;
@@ -330,7 +432,7 @@ export function DayRibbon({ now, tasks, wake, sleep, configured }: { now: Date |
         <span className="db-ribbon-end"><DashIcon name="sunrise" /> <span dir="ltr">{wake}</span></span>
         <span className="db-ribbon-left">
           <LiveClock />
-          {!configured && <Link href="/weekly" prefetch className="db-ribbon-set">{tr("تنظیم ساعت خواب", "Set sleep times")}</Link>}
+          {!configured && <Link href={setHref} prefetch className="db-ribbon-set">{tr("تنظیم ساعت خواب", "Set sleep times")}</Link>}
         </span>
         <span className="db-ribbon-end"><span dir="ltr">{sleep}</span> <DashIcon name="bed" /></span>
       </div>

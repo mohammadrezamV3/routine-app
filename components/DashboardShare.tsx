@@ -30,6 +30,7 @@ import { REFERRAL_DISCOUNT_PERCENT } from "@/lib/referral";
 import { canvasToBlob, prepareShareBackground, renderShareCard, shareText, type ShareCardInput } from "@/lib/shareCard";
 import { useImageShare } from "@/lib/useImageShare";
 import { heroRings, type HeroRing } from "./DashboardHero";
+import { useSection } from "./SectionProvider";
 import { Spinner } from "./Spinner";
 import { TickOption } from "./TickOption";
 import { SegmentedTabs } from "./SegmentedTabs";
@@ -107,7 +108,11 @@ export function DashboardShare({
     mo.observe(document.body, { attributes: true, attributeFilter: ["data-theme"] });
     return () => mo.disconnect();
   }, [open]);
-  const rings = useMemo(() => heroRings(data, routine.stats, routineLocked), [data, routine.stats, routineLocked]);
+  // بخش ورزش: همون حلقه‌های هیرو (تمرین و کالری)؛ استریک کارت مال روتینه، پس وسط حلقه‌ها همیشه
+  // درصد تکمیله و انتخاب «استریک» نمایش داده نمی‌شه
+  const section = useSection();
+  const workout = section === "workout";
+  const rings = useMemo(() => heroRings(data, routine.stats, routineLocked, section), [data, routine.stats, routineLocked, section]);
   const streak = routine.streak ?? 0;
 
   // انتخاب کاربر برای همین بار باز بودن پنجره (بدون ذخیره)
@@ -120,6 +125,7 @@ export function DashboardShare({
       if (localStorage.getItem("arion:shareCenter") === "percent") setCenterState("percent");
     } catch {}
   }, []);
+  const centerMode: "streak" | "percent" = workout ? "percent" : center;
   const setCenter = (v: "streak" | "percent") => {
     setCenterState(v);
     try { localStorage.setItem("arion:shareCenter", v); } catch {}
@@ -159,9 +165,9 @@ export function DashboardShare({
       title: tr("فعالیت امروز", "Today's activity"),
       subtitle: `${weekday} ${faNum(jd)} ${jMonthName(jm - 1)} ${faNum(jy)}`,
       inviteCode: showInvite ? (invite?.code ?? null) : null,
-      body: { kind: "rings", streak, center, percent, items: cardRings },
+      body: { kind: "rings", streak, center: centerMode, percent, items: cardRings },
     };
-  }, [invite?.code, showInvite, routine.todayIso, cardRings, streak, center, percent]);
+  }, [invite?.code, showInvite, routine.todayIso, cardRings, streak, centerMode, percent]);
 
   // کلید محتوایی ورودی — هویت شیء با هر رندر والد (مثلا stats تازه با همون
   // اعداد) عوض می‌شد و پیش‌نمایش بی‌دلیل دوباره ساخته و دکمه لحظه‌ای غیرفعال می‌شد
@@ -249,7 +255,7 @@ export function DashboardShare({
 
   function doShare() {
     if (!ready || !full) return;
-    const lead = center === "percent" ? tr(`امروز ${faNum(percent)}% برنامه‌هام رو کامل کردم 💪`, `I completed ${percent}% of my programs today 💪`) : streak ? tr(`${faNum(streak)} روز پشت‌سرهم روتینم رو کامل کردم 🔥`, `I have completed my routine ${streak} ${streak === 1 ? "day" : "days"} in a row 🔥`) : tr("امروزم توی آریون 💪", "My day on Arion 💪");
+    const lead = centerMode === "percent" ? (workout ? tr(`امروز ${faNum(percent)}% هدف‌های ورزشیم رو کامل کردم 💪`, `I completed ${percent}% of my fitness goals today 💪`) : tr(`امروز ${faNum(percent)}% برنامه‌هام رو کامل کردم 💪`, `I completed ${percent}% of my programs today 💪`)) : streak ? tr(`${faNum(streak)} روز پشت‌سرهم روتینم رو کامل کردم 🔥`, `I have completed my routine ${streak} ${streak === 1 ? "day" : "days"} in a row 🔥`) : tr("امروزم توی آریون 💪", "My day on Arion 💪");
     const inv = invite && showInvite ? { code: invite.code, url: invite.url, percent: REFERRAL_DISCOUNT_PERCENT } : null;
     share(full.blob, `arion-${routine.todayIso}.png`, tr("فعالیت امروز", "Today's activity"), shareText(lead, inv));
   }
@@ -354,7 +360,7 @@ export function DashboardShare({
               )}
             </div>
 
-            {input && (
+            {input && !workout && (
               <SegmentedTabs<"streak" | "percent">
                 className="db-share-center"
                 active={center}

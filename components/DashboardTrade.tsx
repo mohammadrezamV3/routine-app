@@ -20,8 +20,8 @@ import { BentoCard, CardHead, CountUp, EmptyState, Meter, Skel, Sparkline } from
 import { tr, dirSign } from "@/lib/i18n";
 
 const CUR_SIGN: Record<string, string> = { USD: "$", EUR: "€", GBP: "£", JPY: "¥" };
-const money = (n: number, cur: string) => `${n < 0 ? "−" : n > 0 ? "+" : ""}${CUR_SIGN[cur] ?? ""}${faNum(compactNumber(Math.abs(n)))}${CUR_SIGN[cur] ? "" : ` ${cur}`}`;
-const tone = (n: number) => (n > 0 ? "is-win" : n < 0 ? "is-loss" : "");
+export const money = (n: number, cur: string) => `${n < 0 ? "−" : n > 0 ? "+" : ""}${CUR_SIGN[cur] ?? ""}${faNum(compactNumber(Math.abs(n)))}${CUR_SIGN[cur] ? "" : ` ${cur}`}`;
+export const tone = (n: number) => (n > 0 ? "is-win" : n < 0 ? "is-loss" : "");
 
 export function DashboardTrade({ trade, loading }: { trade: DashTrade | null; loading: boolean }) {
   return (
