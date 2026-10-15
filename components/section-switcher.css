@@ -1,0 +1,115 @@
+/* پنجره‌ی جابه‌جایی بین بخش‌ها (components/SectionSwitcher.tsx) — شیشه‌ی مات روی بادی
+   (پورتال، بیرون از .app-topbar). حرکت فقط transform/opacity؛ حرکت‌کاهی و دستگاه ضعیف:
+   فقط یک محو کوتاه. لایه‌ی بلور روی data-perf="low" با قانون سراسری globals خاموشه، پس
+   اونجا زمینه کدر می‌شه. */
+
+@keyframes sswIn{ from{ opacity:0; transform:translate3d(0,-6px,0) scale(.9); } to{ opacity:1; transform:none; } }
+@keyframes sswOut{ from{ opacity:1; transform:none; } to{ opacity:0; transform:scale(.96); } }
+@keyframes sswRow{ from{ opacity:0; transform:translate3d(0,10px,0) scale(.97); } to{ opacity:1; transform:none; } }
+@keyframes sswFade{ from{ opacity:0; } to{ opacity:1; } }
+@keyframes sswFadeOut{ from{ opacity:1; } to{ opacity:0; } }
+
+.ssw-panel{
+  position:fixed; z-index:60; box-sizing:border-box;
+  padding:8px; border-radius:26px; isolation:isolate; overflow:hidden;
+  background:color-mix(in srgb, var(--surface-2) 56%, transparent);
+  backdrop-filter:blur(26px) saturate(190%); -webkit-backdrop-filter:blur(26px) saturate(190%);
+  border:1px solid color-mix(in srgb, var(--text) 13%, transparent);
+  box-shadow:0 28px 64px -14px rgba(0,0,0,.5), inset 0 1px 0 rgba(255,255,255,.18), inset 0 0 0 1px rgba(255,255,255,.05);
+  transform-origin:var(--ssw-origin, 24px 0);
+  animation:sswIn .34s var(--popup-ease-in) backwards;
+}
+body[data-theme="light"] .ssw-panel{
+  background:color-mix(in srgb, var(--surface-2) 66%, transparent);
+  box-shadow:0 28px 60px -16px rgba(60,40,10,.28), inset 0 1px 0 rgba(255,255,255,.8), inset 0 0 0 1px rgba(255,255,255,.4);
+}
+.ssw-panel[data-state="closed"]{ animation:sswOut .12s var(--popup-ease-out) forwards; pointer-events:none; }
+
+/* هاله‌ی رنگی سه بخش پشت شیشه تا بلور چیزی برای نشون‌دادن داشته باشه */
+.ssw-panel::before{
+  content:""; position:absolute; inset:0; z-index:0; pointer-events:none; border-radius:inherit;
+  background:
+    radial-gradient(70% 55% at 6% 6%, color-mix(in srgb, var(--ssw-routine) 30%, transparent), transparent 70%),
+    radial-gradient(65% 50% at 96% 48%, color-mix(in srgb, var(--ssw-trade) 26%, transparent), transparent 70%),
+    radial-gradient(70% 55% at 18% 100%, color-mix(in srgb, var(--ssw-workout) 26%, transparent), transparent 70%);
+  opacity:.75;
+}
+body[data-theme="light"] .ssw-panel::before{ opacity:.55; }
+.ssw-panel > *{ position:relative; z-index:1; }
+
+.ssw-head{ padding:12px 14px 8px; font-size:11.5px; font-weight:700; color:var(--muted); }
+.ssw-list{ display:flex; flex-direction:column; gap:4px; }
+
+/* ردیف‌ها لینک‌ان (نه button) تا ریست شیشه‌ای سراسری دکمه‌ها روشون نیفته */
+.ssw-row{
+  display:flex; align-items:center; gap:14px; min-width:0;
+  padding:12px 14px; border-radius:20px;
+  border:1px solid transparent; text-decoration:none; color:var(--text); text-align:start;
+  cursor:pointer; -webkit-tap-highlight-color:transparent;
+  transition:border-color .2s ease, box-shadow .25s ease, background-color .15s ease, transform .15s ease;
+  animation:sswRow .38s var(--popup-ease-in) backwards;
+  animation-delay:calc(70ms + var(--i, 0) * 55ms);
+}
+.ssw-row:active{ transform:scale(.985); }
+@media (hover:hover){
+  .ssw-row:hover{ background:rgba(255,255,255,.07); }
+  body[data-theme="light"] .ssw-row:hover{ background:rgba(0,0,0,.045); }
+}
+.ssw-panel :focus-visible{ outline:2px solid var(--accent); outline-offset:-2px; }
+
+/* بخش جاری: لبه‌ی رنگی و درخشش ملایم به رنگ همون بخش */
+.ssw-row.is-current{
+  border-color:color-mix(in srgb, var(--sec-mid) 58%, transparent);
+  box-shadow:
+    0 0 0 3px color-mix(in srgb, var(--sec-mid) 14%, transparent),
+    0 12px 28px -14px var(--sec-mid),
+    inset 0 0 26px -10px color-mix(in srgb, var(--sec-mid) 55%, transparent);
+}
+
+.ssw-icon{ width:46px; height:auto; flex-shrink:0; }
+.ssw-text{ display:flex; flex-direction:column; gap:2px; min-width:0; flex:1; }
+
+.ssw-brand{
+  display:inline-flex; align-items:center; gap:9px; align-self:flex-start;
+  font-family:var(--font-latin), var(--font-vazir), sans-serif;
+  font-size:11.5px; font-weight:800; letter-spacing:.24em; line-height:1.3; text-transform:uppercase;
+}
+.ssw-brand-name{ color:var(--text); opacity:.78; }
+.ssw-brand-sep{ width:1px; height:11px; background:color-mix(in srgb, var(--text) 32%, transparent); }
+.ssw-brand-word{
+  background:linear-gradient(90deg, var(--sec-from), var(--sec-mid), var(--sec-to));
+  -webkit-background-clip:text; background-clip:text;
+  -webkit-text-fill-color:transparent; color:transparent;
+}
+.ssw-label{ font-size:15px; font-weight:700; color:var(--text); line-height:1.5; }
+.ssw-tagline{ font-size:12px; color:var(--muted); line-height:1.55; }
+
+.ssw-all{
+  display:block; margin:6px 6px 2px; padding:11px 10px; border-radius:0; text-align:center;
+  border-top:1px solid color-mix(in srgb, var(--text) 10%, transparent);
+  font-size:12.5px; font-weight:600; color:var(--muted); text-decoration:none;
+  transition:color .18s ease;
+  animation:sswRow .38s var(--popup-ease-in) backwards;
+  animation-delay:calc(70ms + var(--i, 0) * 55ms);
+}
+@media (hover:hover){ .ssw-all:hover{ color:var(--text); } }
+
+.ssw-panel[data-state="closed"] .ssw-row, .ssw-panel[data-state="closed"] .ssw-all{ animation:none; }
+
+@media (pointer:coarse){
+  .ssw-panel{ backdrop-filter:blur(16px) saturate(180%); -webkit-backdrop-filter:blur(16px) saturate(180%); }
+}
+html[data-perf="low"] .ssw-panel{ background:color-mix(in srgb, var(--surface-2) 94%, transparent); }
+html[data-perf="low"] .ssw-panel::before{ opacity:.4; }
+
+html[data-perf="low"] .ssw-panel, html[data-perf-weak] .ssw-panel{ animation:sswFade .12s ease backwards; }
+html[data-perf="low"] .ssw-panel[data-state="closed"], html[data-perf-weak] .ssw-panel[data-state="closed"]{ animation:sswFadeOut .09s ease forwards; }
+html[data-perf="low"] .ssw-row, html[data-perf-weak] .ssw-row,
+html[data-perf="low"] .ssw-all, html[data-perf-weak] .ssw-all{ animation:none; }
+
+@media (prefers-reduced-motion:reduce){
+  .ssw-panel{ animation:sswFade .12s ease backwards; }
+  .ssw-panel[data-state="closed"]{ animation:none; opacity:0; }
+  .ssw-row, .ssw-all{ animation:none; transition:none; }
+  .ssw-row:active{ transform:none; }
+}

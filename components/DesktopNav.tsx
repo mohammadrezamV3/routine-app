@@ -10,6 +10,8 @@ import { SmartLink as Link } from "./SmartLink";
 import { ChevronDown, Lock } from "lucide-react";
 import { featureVisible, type FeatureKey } from "@/lib/featureFlags";
 import { tr } from "@/lib/i18n";
+import type { SectionKey } from "@/lib/sections";
+import { useSection } from "./SectionProvider";
 import { getVisibleLinks, isGroup, isLockedModule, visibleChildren, type NavLink } from "./navLinks";
 
 type Entry = { id: string; label: string; href?: string; module?: string; children?: NavLink[] };
@@ -17,8 +19,8 @@ type Features = Partial<Record<FeatureKey, boolean>> | null;
 
 const baseOf = (h: string) => h.split("?")[0];
 
-function buildEntries(features: Features): Entry[] {
-  const links = getVisibleLinks(features);
+function buildEntries(features: Features, section: SectionKey | null): Entry[] {
+  const links = getVisibleLinks(features, section);
   const byHref = (href: string) => links.find((l) => !isGroup(l) && l.href === href) as NavLink | undefined;
   const groupBy = (icon: string) => links.find((l) => isGroup(l) && l.icon === icon);
   const out: Entry[] = [];
@@ -38,6 +40,8 @@ function buildEntries(features: Features): Entry[] {
 
   link("dashboard", byHref("/dashboard"));
   group("routine", "weekly");
+  // روی زیردامنه‌ی ورزش گروه «روتین من» فقط خواب داره و در getVisibleLinks لینک ساده شده
+  link("sleep", byHref("/sleep"));
   group("workout", "exercise");
   link("trade", byHref("/trade"));
   link("roadmaps", byHref("/roadmaps"));
@@ -55,7 +59,8 @@ type Props = {
 };
 
 export default function DesktopNav({ pathname, features, activeModules }: Props) {
-  const entries = buildEntries(features);
+  const section = useSection();
+  const entries = buildEntries(features, section);
   const [openId, setOpenId] = useState<string | null>(null);
   // پنل هر منو فقط بعد از اولین هاور/فوکوس/کلیک ساخته می‌شه
   const [armed, setArmed] = useState<Record<string, true>>({});

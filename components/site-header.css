@@ -159,3 +159,44 @@
     transform:none; transition:opacity .12s ease, visibility 0s;
   }
 }
+
+/* ---------- لوگوی هدر = دکمه‌ی پنجره‌ی بخش‌ها (components/SectionSwitcher.tsx) ----------
+   قبلا لینک بود؛ حالا <button>. ریست‌های شیشه‌ای سراسری دکمه (globals) با اسپسیفیسیتی
+   بالاتر خنثی می‌شن تا لوگو مثل قبل بی‌بک‌گراند بمونه. */
+body[data-theme] .topbar-logo-lockup-wrap,
+body[data-theme] .topbar-logo-lockup-wrap:hover,
+body[data-theme] .topbar-logo-lockup-wrap:active,
+body[data-theme] .topbar-logo-lockup-wrap:focus{
+  background:none; border:0; box-shadow:none; padding:0; border-radius:0; margin:0;
+  backdrop-filter:none; -webkit-backdrop-filter:none; color:inherit; transform:none; cursor:pointer;
+  -webkit-tap-highlight-color:transparent;
+}
+body[data-theme] .topbar-logo-lockup-wrap:focus-visible{ outline:2px solid var(--accent); outline-offset:6px; border-radius:8px; }
+
+/* روی زیردامنه‌ی بخش: [نشان رنگی] [ARION] | [TRADE]. ارتفاع نشان = ارتفاع لوگوی قبلی؛
+   بقیه‌ی اندازه‌ها نسبت به همون (--tl-h). متن بخش گرادیان رنگ همون بخشه. */
+.topbar-logo-lockup-wrap.topbar-logo-section{
+  --tl-h:22px;
+  display:inline-flex; align-items:center; gap:calc(var(--tl-h) * .3);
+  height:auto; aspect-ratio:auto; min-width:0; max-width:calc(100vw - 232px); flex-shrink:1;
+  font-family:var(--font-latin), var(--font-vazir), sans-serif;
+}
+@media (min-width:701px){ .topbar-logo-lockup-wrap.topbar-logo-section{ --tl-h:30px; max-width:none; } }
+.topbar-logo-section .tls-icon{ height:var(--tl-h); width:calc(var(--tl-h) * 256 / 217); flex-shrink:0; }
+.tls-word{ position:relative; display:block; flex-shrink:0; height:calc(var(--tl-h) * .4); aspect-ratio:358/49; }
+.tls-sep{ flex-shrink:0; width:1px; height:calc(var(--tl-h) * .64); background:color-mix(in srgb, var(--text) 30%, transparent); }
+.tls-label{
+  min-width:0; overflow:hidden; text-overflow:ellipsis; white-space:nowrap;
+  font-size:calc(var(--tl-h) * .42); font-weight:800; line-height:1.4; letter-spacing:.2em; text-transform:uppercase;
+  padding-inline-end:.1em;
+  background:linear-gradient(90deg, var(--sec-from), var(--sec-mid), var(--sec-to));
+  -webkit-background-clip:text; background-clip:text;
+  -webkit-text-fill-color:transparent; color:transparent;
+}
+/* عرض تنگ: اول اسم ARION کنار نشان کنار می‌ره (نشان + خط + اسم بخش می‌مونه)، بعد اسم بخش کوتاه می‌شه */
+@media (max-width:520px){
+  .topbar-logo-section .tls-word{ display:none; }
+}
+@media (max-width:360px){
+  .tls-label{ letter-spacing:.12em; }
+}
