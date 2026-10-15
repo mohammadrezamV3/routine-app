@@ -1,5 +1,6 @@
 import type { Metadata, Viewport } from "next";
-import { Vazirmatn, Inter, Plus_Jakarta_Sans, Manrope, DM_Sans, Figtree } from "next/font/google";
+import { Vazirmatn, Inter } from "next/font/google";
+import localFont from "next/font/local";
 import "./globals.css";
 import "@/components/ltr-shell.css";
 import "@/components/ltr-routine.css";
@@ -9,6 +10,8 @@ import "@/components/ltr-review.css";
 import "@/components/ltr-admin.css";
 import "@/components/ltr-public.css";
 import "./admin-theme.css";
+// لایه‌ی تایپوگرافی فقط انگلیسی (html[lang="en"]) — فارسی را تغییر نمی‌دهد
+import "./en-type.css";
 // سیستم حرکت (توکن‌ها، ابزارها، ورود صفحه/بخش) — بعد از globals تا در اسپسیفیسیتی برابر برنده باشه
 import "./motion.css";
 import { EventThemeCssPreview } from "@/components/EventThemeCssPreview";
@@ -85,12 +88,25 @@ const latin = Inter({
   adjustFontFallback: false,
 });
 
-// TMPFONT-START (candidates for comparison; removed after choosing)
-const candJakarta = Plus_Jakarta_Sans({ subsets: ["latin"], weight: "variable", variable: "--font-cand-jakarta", display: "swap", preload: false });
-const candManrope = Manrope({ subsets: ["latin"], weight: "variable", variable: "--font-cand-manrope", display: "swap", preload: false });
-const candDm = DM_Sans({ subsets: ["latin"], weight: "variable", variable: "--font-cand-dm", display: "swap", preload: false });
-const candGeist = Figtree({ subsets: ["latin"], weight: "variable", variable: "--font-cand-geist", display: "swap", preload: false });
-// TMPFONT-END
+// فونت انگلیسی Figtree، فایل محلی woff2 فقط ساب‌ست لاتین، ~20KB (فقط وقتی زبان انگلیسیه روی html فعال می‌شه: app/en-type.css →
+// html[lang="en"]{--font-latin:...}). فارسی همچنان Inter می‌گیره و چون هیچ المانی در حالت فارسی
+// این family رو استفاده نمی‌کنه، فایل woff2 اش اصلا دانلود نمی‌شه. preload:false چون preload در
+// next/font برای همه‌ی صفحه‌ها (از جمله فارسی) تگ می‌ذاره. adjustFontFallback:false چون
+// فال‌بک خودکار next همه‌ی کاراکترها (از جمله فارسی) رو ادعا می‌کنه؛ فال‌بک محدود به لاتین با همون
+// اعداد در en-type.css تعریف شده. Figtree: گرد و هندسی، هم‌خوان با دکمه‌ها و کارت‌های گرد سایت، اعداد
+// دقیقا وسط خط (offset صفر) و در اندازه‌های ریز خوانا.
+const enLatin = localFont({
+  src: "./fonts/Figtree-latin-var.woff2",
+  // بازه‌ی وزن اعلام‌شده تا 760: وزن 800 و 900 که برای وزیرمتن نوشته شدن، روی Figtree سنگین
+  // دیده می‌شدن؛ مرورگر درخواست بالاتر رو به همین سقف می‌رسونه (بدون دست‌زدن به صدها قاعده).
+  weight: "300 760",
+  style: "normal",
+  variable: "--font-latin-en",
+  display: "swap",
+  preload: false,
+  adjustFontFallback: false,
+});
+
 
 // وریفیکیشن موتورهای جست‌وجو/نقشه — فقط وقتی env مقدار داره اضافه می‌شه؛
 // خالی‌بودنش نباید یک متاتگ verification خالی/نامعتبر توی <head> بذاره.
@@ -279,7 +295,7 @@ export default async function RootLayout({ children }: { children: React.ReactNo
       data-theme-src={fromAccount ? "account" : undefined}
       data-event-theme={eventThemeId ?? undefined}
       suppressHydrationWarning
-      className={`${vazir.variable} ${latin.variable} ${candJakarta.variable} ${candManrope.variable} ${candDm.variable} ${candGeist.variable}`}
+      className={`${vazir.variable} ${latin.variable}${locale === "en" ? ` ${enLatin.variable}` : ""}`}
     >
       <head>
         {/* نوار وضعیت اندروید از همون اولین پینت هم‌رنگ تم — نه بعد از
