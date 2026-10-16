@@ -463,8 +463,8 @@ const FIXED_PREVIEWS: Record<"routine" | "trade" | "workout", { dark: PalettePre
     light: { bg: "#E7EDF4", accent: "#0A5BD6", secondary: "#0B1F3A" },
   },
   workout: {
-    dark: { bg: "#100A0C", accent: "#E8344F", secondary: "#E8B04A" },
-    light: { bg: "#F6E9E6", accent: "#8E1B33", secondary: "#3E1620" },
+    dark: { bg: "#0B0B0C", accent: "#EE4356", secondary: "#D9D9DE" },
+    light: { bg: "#F4F4F5", accent: "#C8102E", secondary: "#111113" },
   },
 };
 
@@ -490,7 +490,7 @@ export function paletteLogo(id: EffectivePalette, mode: "dark" | "light", custom
 export function paletteAvatarHue(id: EffectivePalette, mode: "dark" | "light", custom: string | null): number | undefined {
   if (id === "routine") return undefined;
   if (id === "trade") return mode === "dark" ? 196 : 217;
-  if (id === "workout") return mode === "dark" ? 349 : 347;
+  if (id === "workout") return mode === "dark" ? 354 : 350;
   const accent = palettePreview(id, mode, custom).accent;
   const [h, s] = rgbToHsl(hexToRgb(accent));
   return s < 0.06 ? 215 : Math.round(h);

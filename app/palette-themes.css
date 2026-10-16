@@ -2,8 +2,8 @@
    html[data-palette="..."]ـه که layout.tsx از اولین بایت HTML می‌ذاره (پالت موثر: تنظیم
    کاربر یا، در حالت «خودکار»، پالت بخش: ترید و ورزش پالت خودشون رو دارن و روتین و دامنه‌ی
    اصلی پالت پیش‌فرض). روتین = هیچ override ندارد (توکن‌های پیش‌فرض globals.css).
-   ترید = آبی سایبری (شب) و صدفی/یاقوتی/سرمه‌ای (روز)، ورزش = زرشکی برگاندی با طلایی
-   شامپاینی (شب) و عاجی صورتی/برگاندی/اکسبلاد (روز). amethyst/sunset/graphite با
+   ترید = آبی سایبری (شب) و صدفی/یاقوتی/سرمه‌ای (روز)، ورزش = مشکی و قرمز تک‌رنگ لوکس
+   (شب: مشکی با قرمز شاخص و نقره‌ای؛ روز: سفید با قرمز عمیق و مشکی). amethyst/sunset/graphite با
    tokensFromSpec ساخته شدن (تست __tests__/palette.test.ts هم‌خوانی این فایل با خروجی
    تابع رو چک می‌کنه؛ دستی ویرایششون نکن، بلاک پایین فایل رو دوباره بساز). پالت سفارشی
    (data-palette="custom") از یک <style> سمت سرور میاد (customPaletteCss)، نه این فایل.
@@ -104,49 +104,49 @@ html[data-palette="trade"]:not([data-event-theme]):not([data-admin-theme="noir"]
 html[data-palette="trade"]:not([data-event-theme]):not([data-admin-theme="noir"]) body[data-theme="light"] .lh-phone{ background:linear-gradient(160deg, #2B3F5E, #0B1F3A 45%, #1C2F4D); }
 
 /* ── workout ── */
-html[data-palette="workout"]:not([data-event-theme]):not([data-admin-theme="noir"]):not([data-theme="light"]){ background:#100A0C; }
-html[data-palette="workout"]:not([data-event-theme]):not([data-admin-theme="noir"])[data-theme="light"]{ background:#F6E9E6; }
+html[data-palette="workout"]:not([data-event-theme]):not([data-admin-theme="noir"]):not([data-theme="light"]){ background:#0B0B0C; }
+html[data-palette="workout"]:not([data-event-theme]):not([data-admin-theme="noir"])[data-theme="light"]{ background:#F4F4F5; }
 html[data-palette="workout"]:not([data-event-theme]):not([data-admin-theme="noir"]) body:not([data-theme="light"]){
-  --bg:#100A0C; --bg-rgb:16,10,12;
-  --surface-rgb:16,10,12;
-  --text:#F4ECEE; --text-rgb:244,236,238; --muted:#A38E95; --muted2:#5C4950;
-  --accent:#E8344F; --accent-rgb:232,52,79; --accent-dim:rgba(232,52,79,.20);
-  --accent-soft:#F0607A; --accent-deep:#6E0B1F;
-  --secondary:#E8B04A; --secondary-rgb:232,176,74; --secondary-dim:rgba(232,176,74,.18);
-  --card-bg:#0B0708; --input-bg:#0D0809; --line:#2C1D23;
-  --surface-1:#1A1114; --surface-2:#22171B; --surface-glass:rgba(34,23,27,.72); --surface-line:#33222A;
-  --box-bg:#1A1114; --box-line:#33222A;
-  --ring-1a:#E8344F; --ring-1b:#FF8FA3; --ring-2a:#B5176B; --ring-2b:#FF4FB0; --ring-3a:#E8B04A; --ring-3b:#FFD98A; --ring-over:#FF7A45;
+  --bg:#0B0B0C; --bg-rgb:11,11,12;
+  --surface-rgb:11,11,12;
+  --text:#F2F2F3; --text-rgb:242,242,243; --muted:#9A9AA1; --muted2:#4A4A50;
+  --accent:#EE4356; --accent-rgb:238,67,86; --accent-dim:rgba(238,67,86,.20);
+  --accent-soft:#F2697A; --accent-deep:#8E0F20;
+  --secondary:#D9D9DE; --secondary-rgb:217,217,222; --secondary-dim:rgba(217,217,222,.16);
+  --card-bg:#080809; --input-bg:#0A0A0B; --line:#232326;
+  --surface-1:#141416; --surface-2:#1B1B1E; --surface-glass:rgba(27,27,30,.72); --surface-line:#29292D;
+  --box-bg:#141416; --box-line:#29292D;
+  --ring-1a:#EC3347; --ring-1b:#FF6B7C; --ring-2a:#A3122A; --ring-2b:#EC3347; --ring-3a:#9A9AA1; --ring-3b:#E6E6EA; --ring-over:#FF3B30;
   --sec-head:var(--text); --sec-muted:var(--muted); --sec-line:var(--line); --sec-card-border:var(--surface-line);
   --sec-accent:var(--accent); --sec-accent-rgb:var(--accent-rgb);
   --sec-secondary:var(--secondary); --sec-secondary-rgb:var(--secondary-rgb);
   --sec-on-accent:var(--bg); --sec-on-secondary:var(--bg);
 }
 html[data-palette="workout"]:not([data-event-theme]):not([data-admin-theme="noir"]) body:not([data-theme="light"]) :is(.db-page, .db-cmd-root){
-  --ring-1a:#E8344F; --ring-1b:#FF8FA3; --ring-2a:#B5176B; --ring-2b:#FF4FB0; --ring-3a:#E8B04A; --ring-3b:#FFD98A; --ring-over:#FF7A45;
+  --ring-1a:#EC3347; --ring-1b:#FF6B7C; --ring-2a:#A3122A; --ring-2b:#EC3347; --ring-3a:#9A9AA1; --ring-3b:#E6E6EA; --ring-over:#FF3B30;
 }
 html[data-palette="workout"]:not([data-event-theme]):not([data-admin-theme="noir"]) body:not([data-theme="light"]) .blog-root{
   --b-head:var(--text); --b-muted:var(--muted); --b-line:var(--line); --b-border:var(--surface-line);
   --b-acc:var(--accent); --b-acc-rgb:var(--accent-rgb);
 }
 html[data-palette="workout"]:not([data-event-theme]):not([data-admin-theme="noir"]) body[data-theme="light"]{
-  --bg:#F6E9E6; --bg-rgb:246,233,230;
-  --surface-rgb:253,247,245;
-  --text:#4A1F2A; --text-rgb:74,31,42; --muted:#83606A; --muted2:#BC9AA2;
-  --accent:#8E1B33; --accent-rgb:142,27,51; --accent-dim:rgba(142,27,51,.14);
-  --accent-soft:#B04A60; --accent-deep:#5A0F20;
-  --secondary:#3E1620; --secondary-rgb:62,22,32; --secondary-dim:rgba(62,22,32,.16);
-  --card-bg:#F1DFDB; --input-bg:#EED8D3; --line:#E8D2CD;
-  --surface-1:#FCF5F3; --surface-2:#FFFBFA; --surface-glass:rgba(255,251,250,.72); --surface-line:#EBD6D1;
-  --box-bg:#FCF5F3; --box-line:#EBD6D1;
-  --ring-1a:#B8203F; --ring-1b:#E0566F; --ring-2a:#9A1A5E; --ring-2b:#D13C8C; --ring-3a:#C98A12; --ring-3b:#E8B04A; --ring-over:#D9531E;
+  --bg:#F4F4F5; --bg-rgb:244,244,245;
+  --surface-rgb:255,255,255;
+  --text:#111113; --text-rgb:17,17,19; --muted:#5E5E66; --muted2:#A1A1A8;
+  --accent:#C8102E; --accent-rgb:200,16,46; --accent-dim:rgba(200,16,46,.12);
+  --accent-soft:#E03A50; --accent-deep:#7A0A1B;
+  --secondary:#111113; --secondary-rgb:17,17,19; --secondary-dim:rgba(17,17,19,.14);
+  --card-bg:#EDEDEF; --input-bg:#E9E9EC; --line:#E2E2E5;
+  --surface-1:#FFFFFF; --surface-2:#FFFFFF; --surface-glass:rgba(255,255,255,.78); --surface-line:#E4E4E7;
+  --box-bg:#FFFFFF; --box-line:#E4E4E7;
+  --ring-1a:#C8102E; --ring-1b:#E8384E; --ring-2a:#7A0A1B; --ring-2b:#C8102E; --ring-3a:#2A2A2E; --ring-3b:#6B6B73; --ring-over:#E0201A;
   --sec-head:var(--text); --sec-muted:var(--muted); --sec-line:var(--line); --sec-card-border:var(--surface-line);
   --sec-accent:var(--accent); --sec-accent-rgb:var(--accent-rgb);
-  --sec-secondary:var(--accent); --sec-secondary-rgb:var(--accent-rgb);
+  --sec-secondary:var(--secondary); --sec-secondary-rgb:var(--secondary-rgb);
   --sec-on-accent:#fff; --sec-on-secondary:#fff;
 }
 html[data-palette="workout"]:not([data-event-theme]):not([data-admin-theme="noir"]) body[data-theme="light"] :is(.db-page, .db-cmd-root){
-  --ring-1a:#B8203F; --ring-1b:#E0566F; --ring-2a:#9A1A5E; --ring-2b:#D13C8C; --ring-3a:#C98A12; --ring-3b:#E8B04A; --ring-over:#D9531E;
+  --ring-1a:#C8102E; --ring-1b:#E8384E; --ring-2a:#7A0A1B; --ring-2b:#C8102E; --ring-3a:#2A2A2E; --ring-3b:#6B6B73; --ring-over:#E0201A;
 }
 html[data-palette="workout"]:not([data-event-theme]):not([data-admin-theme="noir"]) body[data-theme="light"] .blog-root{
   --b-head:var(--text); --b-muted:var(--muted); --b-line:var(--line); --b-border:var(--surface-line);
@@ -156,15 +156,26 @@ html[data-palette="workout"]:not([data-event-theme]):not([data-admin-theme="noir
 html[data-palette="workout"]:not([data-event-theme]):not([data-admin-theme="noir"]) body[data-theme="light"] .lh-brand{
   background-image:linear-gradient(100deg, var(--accent), var(--accent-deep) 70%);
 }
-html[data-palette="workout"]:not([data-event-theme]):not([data-admin-theme="noir"]) body[data-theme="light"] .lh-phone{ background:linear-gradient(160deg, #6B2535, #3E1620 45%, #54222F); }
+html[data-palette="workout"]:not([data-event-theme]):not([data-admin-theme="noir"]) body[data-theme="light"] .lh-phone{ background:linear-gradient(160deg, #2A2A2E, #111113 45%, #1E1E22); }
 
 /* هاله‌ی دوم هیروی لندینگ در تم روز روتین زرد/طلاییه (components/landing-hero.css)؛
    روی ترید و ورزش با رنگ لوکس همون بخش عوض می‌شه */
 html[data-palette="trade"]:not([data-event-theme]) body[data-theme="light"] .lh-aurora-b{
   background:radial-gradient(closest-side, rgba(74,134,232,.20), rgba(74,134,232,0));
 }
-html[data-palette="workout"]:not([data-event-theme]) body[data-theme="light"] .lh-aurora-b{
-  background:radial-gradient(closest-side, rgba(214,140,120,.22), rgba(214,140,120,0));
+html[data-palette="workout"]:not([data-event-theme]):not([data-admin-theme="noir"]) body[data-theme="light"] .lh-aurora-a{
+  background:radial-gradient(closest-side, rgba(200,16,46,.10), rgba(200,16,46,0));
+}
+html[data-palette="workout"]:not([data-event-theme]):not([data-admin-theme="noir"]) body[data-theme="light"] .lh-aurora-b{
+  background:radial-gradient(closest-side, rgba(17,17,19,.06), rgba(17,17,19,0));
+}
+
+/* هاله‌ی پس‌زمینه‌ی ورزش خیلی کم‌رنگ‌تره: شب سیاه بمونه نه زرشکی گل‌آلود، روز سفید نه صورتی */
+html[data-palette="workout"]:not([data-event-theme]):not([data-admin-theme="noir"]) body .aurora-blob-a{
+  background:radial-gradient(circle at 40% 40%, rgba(var(--accent-rgb),.14), rgba(var(--accent-rgb),0) 70%);
+}
+html[data-palette="workout"]:not([data-event-theme]):not([data-admin-theme="noir"]) body .aurora-blob-b{
+  background:radial-gradient(circle at 60% 60%, rgba(var(--accent-rgb),.09), rgba(var(--accent-rgb),0) 70%);
 }
 
 /* >>> generated presets (scripts/gen-palette-css.ts) — دستی ویرایش نکن */

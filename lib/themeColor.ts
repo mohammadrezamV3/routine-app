@@ -29,11 +29,11 @@ export const THEME_COLORS = {
 export type ThemeName = keyof typeof THEME_COLORS;
 
 // رنگ نوار وضعیت بخش‌های زیردامنه: همون --bg پالت app/palette-themes.css (ترید آبی سایبری،
-// تمرین زرشکی). روتین و دامنه‌ی اصلی همون THEME_COLORS بالان. وقتی تم مناسبتی فعاله پالت اعمال
+// تمرین مشکی و قرمز). روتین و دامنه‌ی اصلی همون THEME_COLORS بالان. وقتی تم مناسبتی فعاله پالت اعمال
 // نمی‌شه (palette-themes.css)، پس رنگ متا هم همون رنگ عادی می‌مونه.
 export const SECTION_THEME_COLORS = {
   trade: { dark: "#070B12", light: "#E7EDF4" },
-  workout: { dark: "#100A0C", light: "#F6E9E6" },
+  workout: { dark: "#0B0B0C", light: "#F4F4F5" },
 } as const;
 
 /** --bg هر پالت غیرروتین (ترید، ورزش و پالت‌های آماده). پالت سفارشی از `data-palette-meta` میاد. */

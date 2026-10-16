@@ -191,6 +191,47 @@ describe("palette-themes.css", () => {
   });
 });
 
+describe("workout palette (black + red only)", () => {
+  function block(mode: "dark" | "light"): Record<string, string> {
+    const re = mode === "dark"
+      ? /html\[data-palette="workout"\][^{]*body:not\(\[data-theme="light"\]\)\{([^}]*)\}/
+      : /html\[data-palette="workout"\][^{]*body\[data-theme="light"\]\{([^}]*)\}/;
+    const body = re.exec(CSS)![1];
+    const out: Record<string, string> = {};
+    for (const m of body.matchAll(/(--[a-z0-9-]+):\s*([^;]+);/gi)) out[m[1]] = m[2].trim();
+    return out;
+  }
+  for (const mode of ["dark", "light"] as const) {
+    it(`${mode}: meets AA for text, muted, accent, secondary and button text`, () => {
+      const m = block(mode);
+      const bg = m["--bg"];
+      expect(contrastRatio(m["--text"], bg)).toBeGreaterThanOrEqual(4.5);
+      expect(contrastRatio(m["--muted"], bg)).toBeGreaterThanOrEqual(4.5);
+      expect(contrastRatio(m["--accent"], bg)).toBeGreaterThanOrEqual(4.5);
+      expect(contrastRatio(m["--secondary"], bg)).toBeGreaterThanOrEqual(4.5);
+      expect(contrastRatio(bg, m["--accent"])).toBeGreaterThanOrEqual(4.5);
+      for (const k of ["--surface-1", "--surface-2"]) {
+        expect(contrastRatio(m["--text"], m[k]), `text/${k}`).toBeGreaterThanOrEqual(4.5);
+        expect(contrastRatio(m["--muted"], m[k]), `muted/${k}`).toBeGreaterThanOrEqual(4.5);
+        expect(contrastRatio(m["--accent"], m[k]), `accent/${k}`).toBeGreaterThanOrEqual(4.5);
+        expect(contrastRatio(m["--secondary"], m[k]), `secondary/${k}`).toBeGreaterThanOrEqual(4.5);
+      }
+      if (mode === "light") expect(contrastRatio("#FFFFFF", m["--accent"])).toBeGreaterThanOrEqual(4.5);
+    });
+    it(`${mode}: stays monochrome red/black (no gold, pink or orange hues)`, () => {
+      const m = block(mode);
+      for (const k of ["--accent", "--accent-soft", "--accent-deep", "--ring-1a", "--ring-1b", "--ring-2a", "--ring-2b", "--ring-over"]) {
+        const [h, s] = rgbToHsl(hexToRgb(m[k]));
+        expect(s, k).toBeGreaterThan(0.5);
+        expect(h >= 346 || h <= 6, `${k} hue ${h}`).toBe(true);
+      }
+      for (const k of ["--bg", "--text", "--muted", "--secondary", "--surface-1", "--surface-2", "--ring-3a", "--ring-3b"]) {
+        expect(rgbToHsl(hexToRgb(m[k]))[1], k).toBeLessThan(0.1);
+      }
+    });
+  }
+});
+
 describe("custom palette css", () => {
   it("is empty without a valid color and has only safe characters otherwise", () => {
     expect(customPaletteCss(null)).toBe("");
@@ -224,7 +265,7 @@ describe("previews and hues", () => {
   it("avatar hue keeps the old section hues and leaves routine to the theme", () => {
     expect(paletteAvatarHue("routine", "dark", null)).toBeUndefined();
     expect(paletteAvatarHue("trade", "dark", null)).toBe(196);
-    expect(paletteAvatarHue("workout", "light", null)).toBe(347);
+    expect(paletteAvatarHue("workout", "light", null)).toBe(350);
     expect(paletteAvatarHue("amethyst", "dark", null)).toBeGreaterThan(240);
   });
 });
@@ -274,7 +315,7 @@ describe("meta theme-color", () => {
     expect(run({ "data-palette": "custom", "data-palette-meta": "#0A1213,#E4F2F4", "data-theme": "light", "data-theme-src": "account" })).toBe("#E4F2F4");
     expect(run({ "data-palette": "custom", "data-palette-meta": "#0A1213,#E4F2F4", "data-theme": "dark", "data-theme-src": "account" })).toBe("#0A1213");
     expect(run({ "data-palette": "amethyst", "data-event-theme": "nowruz", "data-theme": "dark", "data-theme-src": "account" })).toBe("#0E1011");
-    expect(run({ "data-section": "workout", "data-theme": "dark", "data-theme-src": "account" })).toBe("#100A0C");
+    expect(run({ "data-section": "workout", "data-theme": "dark", "data-theme-src": "account" })).toBe("#0B0B0C");
   });
 });
 

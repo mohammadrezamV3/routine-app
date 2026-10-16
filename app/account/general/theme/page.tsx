@@ -29,7 +29,7 @@ const labelOf = (id: PaletteSetting): string => {
   }
 };
 
-const FIXED_DOTS = ["#00A86B", "#00B4FF", "#E8344F"] as const; // روتین، ترید، ورزش (برای پیش‌نمایش «خودکار»)
+const FIXED_DOTS = ["#00A86B", "#00B4FF", "#EE4356"] as const; // روتین، ترید، ورزش (برای پیش‌نمایش «خودکار»)
 const NEUTRAL_BG = { dark: "#101113", light: "#F2EEE8" } as const;
 
 function Half({ mode, id, custom }: { mode: "dark" | "light"; id: PaletteSetting; custom: string | null }) {

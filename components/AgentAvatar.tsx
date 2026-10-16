@@ -66,7 +66,7 @@ const GLOW_RADIUS_RATIO = 0.25;
 // #00A86B تاریک ≈ hue 158، #B85C1F روشن ≈ hue 24) تا با بقیه‌ی UI یکدست بمونه.
 const THEME_BASE_HUE: Record<"dark" | "light", number> = { dark: 158, light: 24 };
 // پالت رنگی سراسری (تنظیمات > تم و رنگ، lib/palette.ts): hue آواتار همون hue رنگ accent پالت موثره
-// (ترید 196/217، ورزش 349/347، پالت‌های آماده و سفارشی از accent خودشون). روتین بدون تغییر.
+// (ترید 196/217، ورزش 354/350، پالت‌های آماده و سفارشی از accent خودشون). روتین بدون تغییر.
 
 /** هش قطعی ساده از یه رشته */
 const hashSeed = (str: string): number => {
