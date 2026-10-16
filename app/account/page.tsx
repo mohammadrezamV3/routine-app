@@ -1,90 +1,56 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect } from "react";
 import { useRouter } from "next/navigation";
-import { m as motion } from "framer-motion";
 import { LogOut } from "lucide-react";
-import { AccountRowLink, AccountRowButton } from "@/components/AccountRow";
-import { logoutAndRedirect } from "@/lib/logout";
+import { AccountRows, AccountRowLink, AccountRowButton } from "@/components/AccountRow";
 import { AccountHeroCard } from "@/components/AccountHeroCard";
-import { getAccount, getAvatarUrl, AccountData } from "@/lib/accountCache";
-import { getAccountSections } from "@/components/accountSections";
-import { planDisplayName } from "@/lib/subscriptionI18n";
+import { useAccountSummary } from "@/components/AccountSummary";
+import { getAccountSections, type AccountSectionGroup } from "@/components/accountSections";
+import { logoutAndRedirect } from "@/lib/logout";
 import { tr } from "@/lib/i18n";
 
-type IndexUser = {
-  golden?: boolean; staff?: boolean; name: string | null; lastName: string | null; username: string | null;
-  subscriptions: { status: string; plan: { key: string; nameFa: string } }[];
-};
+const GROUP_ORDER: AccountSectionGroup[] = ["account", "preferences", "help"];
 
-// صفحه‌ی اول پنل کاربری — فقط سرصفحه (آواتار/نام/وضعیت پریمیوم) + فهرست
-// زبانه‌ها با آیکون؛ محتوای هر بخش (پروفایل، تنظیمات و...) توی صفحه‌ی
-// اختصاصی خودش با کلیک روی همین ردیف‌ها باز می‌شه.
+// صفحه‌ی اول پنل کاربری (موبایل/تبلت): سرصفحه‌ی حساب (آواتار، نام، پلن،
+// چند واقعیت کوتاه) + بخش‌ها در سه کارت جدا + خروج. روی دسکتاپ سایدبار
+// همین فهرسته، پس این صفحه با CSS پنهان و بلافاصله به «پروفایل» می‌ره.
 export default function AccountIndexPage() {
   const router = useRouter();
-  const ACCOUNT_SECTIONS = getAccountSections();
-  const [data, setData] = useState<IndexUser | null>(null);
-  const [avatarUrl, setAvatarUrl] = useState<string | null>(null);
+  const sections = getAccountSections();
+  const summary = useAccountSummary();
 
-  // طبق درخواست صریح: روی دسکتاپ سایدبار (app/account/layout.tsx) از قبل
-  // همین فهرست بخش‌ها را نشان می‌دهد، پس تکرارش این‌جا (توی ستون محتوا)
-  // یک باکس اضافه‌ی بی‌فایده بود — «سمت چپی» گزارش‌شده. روی دسکتاپ، پیش‌فرض
-  // مستقیم می‌رود روی «پروفایل»؛ موبایل (که سایدبار ندارد) دست‌نخورده می‌ماند.
   useEffect(() => {
     if (window.matchMedia("(min-width: 1024px)").matches) {
       router.replace("/account/profile");
     }
   }, [router]);
 
-  useEffect(() => {
-    getAccount().then((res: AccountData) => {
-      const u = res?.user as IndexUser | undefined;
-      if (u) setData(u);
-    });
-    getAvatarUrl().then(setAvatarUrl);
-  }, []);
-
-  // /api/account خودش `name` رو «نام + نام خانوادگی» برمی‌گردونه؛ چسبوندن
-  // دوباره‌ی lastName فامیل رو دوبار نشون می‌داد.
-  const fullName = data ? data.name?.trim() || tr("کاربر آریون", "Arion user") : "";
-  // /api/account فقط اشتراک واقعا فعال (ACTIVE/TRIAL منقضی‌نشده) رو برمی‌گردونه،
-  // پس این‌جا دیگه لازم نیست وضعیت دوباره چک بشه — قبلا «آخرین ردیف ساخته‌شده»
-  // می‌اومد و یه اشتراک منقضی هم «پریمیوم» نشون داده می‌شد.
-  const sub = data?.subscriptions?.[0];
-  const isPremium = !!sub;
-
-  // همون توالی خروج سایدبار دسکتاپ (app/account/layout.tsx) — طبق
-  // گزارش باگ، روی موبایل سایدبار دیده نمی‌شه و راه دیگه‌ای برای خروج از
-  // حساب نبود. این‌جا (صفحه‌ی اول پنل) تنها جایی‌ست که موبایل همیشه بهش
-  // می‌رسه، پس همین‌جا هم اضافه شد.
+  let i = 0;
   return (
-    <section>
-      {data && (
-        <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.35, ease: [0.22, 1, 0.36, 1] }}>
-          <AccountHeroCard fullName={fullName} username={data.username} avatarUrl={avatarUrl} isPremium={isPremium} planNameFa={sub ? planDisplayName(sub.plan) : null} golden={data.golden} staff={data.staff} />
-        </motion.div>
-      )}
+    <section className="ap-index">
+      <h1 className="ap-sr">{tr("پنل کاربری", "Account")}</h1>
 
-      {/* طبق درخواست صریح، «خروج از حساب» دیگر باکس جدا و مجزا نیست —
-          داخل همون یک کارت بخش‌ها می‌نشیند، درست مثل بقیه‌ی ردیف‌ها. */}
-      <div className="account-card account-card-full">
-        {ACCOUNT_SECTIONS.map((s, i) => (
-          <AccountRowLink key={s.href} href={s.href} icon={s.icon} label={s.label} desc={s.desc} index={i} />
-        ))}
-        <AccountRowButton
-          icon={<LogOut size={15} />}
-          label={tr("خروج از حساب", "Log out")}
-          onClick={logoutAndRedirect}
-          danger
-          index={ACCOUNT_SECTIONS.length}
-        />
-      </div>
+      {summary ? <AccountHeroCard summary={summary} /> : <span className="ap-skel ap-hero-skel" style={{ borderRadius: 22 }} />}
 
-      {/* طبق درخواست صریح، لینک‌های حقوقی/فوتر حذف شدند — فقط نسخه‌ی اپ
-          می‌ماند، آن‌هم دیگر وسط صفحه نیست: گوشه‌ی پایین-راست. */}
-      <div className="account-index-version mono" dir="ltr">
-        Arion v{process.env.NEXT_PUBLIC_APP_VERSION || "1.0.0"}
-      </div>
+      {GROUP_ORDER.map((g) => {
+        const items = sections.filter((s) => s.group === g);
+        if (!items.length) return null;
+        return (
+          <AccountRows key={g}>
+            {items.map((s) => (
+              <AccountRowLink key={s.href} href={s.href} icon={s.icon} label={s.label} desc={s.desc} index={i++} />
+            ))}
+          </AccountRows>
+        );
+      })}
+
+      {/* خروج داخل کارت جدای خودش (موبایل سایدبار نداره و این تنها راه خروجه) */}
+      <AccountRows>
+        <AccountRowButton icon={<LogOut size={17} />} label={tr("خروج از حساب", "Log out")} onClick={logoutAndRedirect} danger index={i} />
+      </AccountRows>
+
+      <div className="ap-version mono" dir="ltr">Arion v{process.env.NEXT_PUBLIC_APP_VERSION || "1.0.0"}</div>
     </section>
   );
 }

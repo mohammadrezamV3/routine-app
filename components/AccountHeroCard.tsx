@@ -1,46 +1,58 @@
 "use client";
 
-import { Crown } from "lucide-react";
+import { Crown, Sparkles } from "lucide-react";
+import { SmartLink as Link } from "@/components/SmartLink";
 import { AgentAvatar } from "@/components/AgentAvatar";
 import { GoldenName } from "@/components/GoldenName";
-import { tr, isEn } from "@/lib/i18n";
+import { formatAccountDate, type AccountSummary } from "@/components/AccountSummary";
+import { tr } from "@/lib/i18n";
 
-// کارت سرصفحه‌ی پنل کاربری (بالای /account).
-//
-// چیدمان طبق درخواست صریح کاربر، از راست به چپ (dir="rtl" + flex row یعنی
-// اولین فرزند DOM سمت راست می‌شینه):
-//   آواتار (کوچیک‌تر از قبل) → نام و آیدی → … → نشان اشتراک، چسبیده به لبه‌ی چپ باکس.
-// قبلا نشان اشتراک بلافاصله کنار آواتار بود (نه لبه‌ی چپ) و نام هم زیرش
-// می‌افتاد؛ حالا `account-hero-info` با flex:1 فاصله رو پر می‌کنه و نشان به چپ می‌ره.
-export function AccountHeroCard({
-  fullName, username, avatarUrl, isPremium, planNameFa, golden, staff,
-}: {
-  fullName: string;
-  username: string | null;
-  avatarUrl: string | null;
-  isPremium: boolean;
-  planNameFa?: string | null;
-  golden?: boolean;
-  staff?: boolean;
-}) {
+// کارت سرصفحه‌ی /account (موبایل): آواتار با حلقه‌ی اکسنت، نام، یوزرنیم،
+// نشان پلن و (از داده‌ی موجود حساب) چند واقعیت کوتاه: اعتبار تا، زمان باقی‌مانده، عضویت از.
+// نشان پلن به صفحه‌ی مستقل /subscription لینک می‌خوره.
+export function AccountHeroCard({ summary }: { summary: AccountSummary }) {
+  const { plan } = summary;
+  const planLabel = plan ? plan.name : tr("بدون پلن فعال", "No active plan");
+  const planChip = (
+    <Link href="/subscription" className={`ap-chip ${plan ? "is-gold" : "is-accent"}`}>
+      {plan ? <Crown size={12} aria-hidden="true" /> : <Sparkles size={12} aria-hidden="true" />}
+      {plan ? (plan.trial ? tr(`${planLabel} (آزمایشی)`, `${planLabel} (trial)`) : planLabel) : tr("مشاهده پلن‌ها", "View plans")}
+    </Link>
+  );
+  const facts: { label: string; value: string }[] = [];
+  if (plan?.end) facts.push({ label: plan.trial ? tr("پایان دوره‌ی آزمایشی", "Trial ends") : tr("اعتبار تا", "Valid until"), value: formatAccountDate(plan.end) });
+  if (plan?.daysLeft != null) facts.push({ label: tr("زمان باقی‌مانده", "Time left"), value: tr(`${plan.daysLeft} روز`, `${plan.daysLeft} ${plan.daysLeft === 1 ? "day" : "days"}`) });
+  if (summary.createdAt) facts.push({ label: tr("عضویت از", "Member since"), value: formatAccountDate(summary.createdAt) });
+
   return (
-    <div className="account-hero" dir={isEn() ? "ltr" : "rtl"}>
-      <div className="account-hero-avatar-wrap">
-        {avatarUrl ? (
-          <img src={avatarUrl} alt={tr("عکس پروفایل", "Profile photo")} className="account-hero-avatar-img" />
-        ) : (
-          <AgentAvatar seed={fullName || username || "؟"} size={44} className="account-hero-avatar-fallback" />
-        )}
+    <div className="ap-hero account-card ap-card m-rise">
+      <div className="ap-hero-top">
+        <div className="ap-hero-avatar">
+          {summary.avatarUrl ? (
+            // eslint-disable-next-line @next/next/no-img-element
+            <img src={summary.avatarUrl} alt={tr("عکس پروفایل", "Profile photo")} />
+          ) : (
+            <AgentAvatar seed={summary.name || summary.username || "?"} size={68} />
+          )}
+        </div>
+        <div className="ap-hero-id">
+          <div className="ap-hero-name"><GoldenName golden={summary.golden} staff={summary.staff}>{summary.name}</GoldenName></div>
+          {summary.username && <div className="ap-hero-user mono" dir="ltr">@{summary.username}</div>}
+          <div className="ap-hero-chips">
+            {planChip}
+          </div>
+        </div>
       </div>
-      <div className="account-hero-info">
-        {/* اسم کامل نوشته می‌شه (بدون کوتاه‌شدن با «…») و اگه جا نشد به خط بعد می‌ره */}
-        <div className="account-hero-name"><GoldenName golden={golden} staff={staff}>{fullName}</GoldenName></div>
-        {username && <div className="account-hero-username mono" dir="ltr">@{username}</div>}
-      </div>
-      <span className={`account-hero-badge${isPremium ? " premium" : ""}`}>
-        <Crown size={12} />
-        {planNameFa || (isPremium ? tr("پریمیوم", "Premium") : tr("بدون پلن فعال", "No active plan"))}
-      </span>
+      {facts.length > 0 && (
+        <div className="ap-hero-facts" style={{ "--n": facts.length } as React.CSSProperties}>
+          {facts.map((f) => (
+            <div className="ap-fact" key={f.label}>
+              <span className="ap-fact-label">{f.label}</span>
+              <span className="ap-fact-value">{f.value}</span>
+            </div>
+          ))}
+        </div>
+      )}
     </div>
   );
 }

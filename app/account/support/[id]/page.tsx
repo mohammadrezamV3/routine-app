@@ -3,8 +3,7 @@
 import { useCallback, useEffect, useRef, useState } from "react";
 import { useParams } from "next/navigation";
 import { Mic, Send, Square } from "lucide-react";
-import { AccountBackButton } from "@/components/AccountBackButton";
-import { PanelSkeleton } from "@/components/PanelSkeleton";
+import { AccountPageHead, AccountSkeleton } from "@/components/AccountUI";
 import { toJalali, faNum, jMonthName } from "@/lib/jalali";
 import { useVoiceRecorder, VOICE_CONSTRAINTS, VOICE_MAX_BYTES } from "@/components/useVoiceRecorder";
 import { tr } from "@/lib/i18n";
@@ -128,22 +127,28 @@ export default function SupportTicketPage() {
   if (notFound) {
     return (
       <section>
-        <div className="acc-head"><AccountBackButton /><h1>{tr("تیکت پیدا نشد", "Ticket not found")}</h1></div>
+        <AccountPageHead title={tr("تیکت پیدا نشد", "Ticket not found")} backHref="/account/support" backLabel={tr("پشتیبانی", "Support")} />
       </section>
     );
   }
 
-  if (!ticket) return <PanelSkeleton />;
+  if (!ticket) {
+    return (
+      <section>
+        <AccountPageHead title={tr("پشتیبانی", "Support")} backHref="/account/support" backLabel={tr("پشتیبانی", "Support")} />
+        <AccountSkeleton blocks={1} />
+      </section>
+    );
+  }
 
   return (
     <section className="support-ticket-page">
-      <div className="acc-head">
-        <AccountBackButton />
-        <div className="support-head-row">
-          <h1>{ticket.subject}</h1>
-          <span className={`support-status ${STATUS_CLASS[ticket.status]}`}>{statusLabel()[ticket.status]}</span>
-        </div>
-      </div>
+      <AccountPageHead
+        title={ticket.subject}
+        backHref="/account/support"
+        backLabel={tr("پشتیبانی", "Support")}
+        actions={<span className={`ap-status is-${STATUS_CLASS[ticket.status]}`}>{statusLabel()[ticket.status]}</span>}
+      />
 
       <div className="support-thread">
         {ticket.messages.map((m) => (

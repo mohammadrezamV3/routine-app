@@ -1,7 +1,6 @@
 "use client";
 
 import { useEffect, useRef, useState } from "react";
-import { m as motion } from "framer-motion";
 import {
   Camera, Trash2, Phone, Cake, AtSign, User as UserIcon,
   Dumbbell, IdCard, Ruler, Weight, VenetianMask, ChevronDown, NotebookPen, Gift,
@@ -10,7 +9,7 @@ import { AgentAvatar } from "@/components/AgentAvatar";
 import { AuthField } from "@/components/AuthField";
 import { NumberInput } from "@/components/NumberInput";
 import { JalaliDatePicker } from "@/components/JalaliDatePicker";
-import { AccountPageHead, AccountBlock, AccountSaveBar } from "@/components/AccountUI";
+import { AccountPageHead, AccountBlock, AccountSaveBar, AccountSkeleton } from "@/components/AccountUI";
 import { JalaliDate, formatJalali, jalaliToGregorianApprox, toJalali, isoLocal } from "@/lib/jalali";
 import { getAccount, getAvatarUrl, invalidateAccountCache, AccountData } from "@/lib/accountCache";
 import { getBodyMetrics, saveBodyMetrics } from "@/lib/bodyMetrics";
@@ -21,7 +20,8 @@ import { CUSTOM_REFERRAL_CODE_RE, REFERRAL_DISCOUNT_PERCENT, normalizeReferralCo
 import { priceText as formatPriceAmount } from "@/lib/subscriptionI18n";
 import { faNum } from "@/lib/jalali";
 import { Spinner } from "@/components/Spinner";
-import { tr, isEn } from "@/lib/i18n";
+import { GoldenName } from "@/components/GoldenName";
+import { tr } from "@/lib/i18n";
 
 type ProfileUser = {
   username: string | null;
@@ -35,6 +35,8 @@ type ProfileUser = {
   lastName: string | null;
   bio: string | null;
   birthDate: string | null;
+  golden?: boolean;
+  staff?: boolean;
 };
 
 const BIO_MAX = 200;
@@ -84,11 +86,12 @@ export default function AccountProfilePage() {
   const [saving, setSaving] = useState(false);
   const [saveError, setSaveError] = useState<string | null>(null);
   const [saved, setSaved] = useState(false);
+  const [loadFailed, setLoadFailed] = useState(false);
 
   useEffect(() => {
     getAccount().then((res: AccountData) => {
       const u = res?.user as ProfileUser | undefined;
-      if (!u) return;
+      if (!u) { setLoadFailed(true); return; }
       setData(u);
       setUsername(u.username ?? "");
       setSavedUsername(u.username ?? null);
@@ -287,6 +290,7 @@ export default function AccountProfilePage() {
       });
 
       invalidateAccountCache();
+      window.dispatchEvent(new Event("account-updated"));
       setData((d) => (d ? {
         ...d, firstName: name, name: [name, family].filter(Boolean).join(" ") || null, lastName: family, bio: bio.trim() || null, username: uname || null,
         birthDate: birthDate ? jalaliToGregorianApprox(birthDate[0], birthDate[1], birthDate[2]).toISOString() : null,
@@ -300,7 +304,21 @@ export default function AccountProfilePage() {
     }
   }
 
-  if (!data) return null;
+  if (!data) {
+    return (
+      <section>
+        <AccountPageHead title={tr("پروفایل", "Profile")} />
+        {loadFailed ? (
+          <div className="ap-card account-card">
+            <div className="ap-empty">
+              <div>{tr("اطلاعات پروفایل باز نشد", "Could not load your profile")}</div>
+              <button type="button" className="account-outline-btn ap-mini-btn" style={{ marginTop: 12 }} onClick={() => window.location.reload()}>{tr("تلاش دوباره", "Try again")}</button>
+            </div>
+          </div>
+        ) : <AccountSkeleton blocks={3} />}
+      </section>
+    );
+  }
 
   const fullName = [firstName, lastName].filter(Boolean).join(" ") || tr("کاربر آریون", "Arion user");
 
@@ -309,24 +327,24 @@ export default function AccountProfilePage() {
       <AccountPageHead title={tr("پروفایل", "Profile")} hint={tr("بنر و عکس پروفایل، مشخصات حساب و پروفایل ورزشی", "Banner and photo, account details and sports profile")} />
 
       {/* ── بنر + آواتار ── */}
-      <motion.div className="profile-hero" initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.32, ease: [0.22, 1, 0.36, 1] }}>
-        <div className="profile-banner">
-          {/* طبق درخواست صریح، دیگر دکمه‌ی جدای «افزودن/تغییر بنر» نیست —
-              خود بنر مثل عکس پروفایل کلیک‌پذیر است؛ یک لایه‌ی نیمه‌شفاف
-              دوربین فقط موقع هاور/فوکوس راهنمایی بصری می‌دهد. */}
+      <div className="ap-cover m-rise">
+        <div className="ap-cover-banner">
+          {/* بنر مثل عکس پروفایل خودش کلیک‌پذیره؛ لایه‌ی دوربین فقط موقع
+              هاور/فوکوس راهنمایی بصری می‌ده (بنر خالی همیشه نشونش می‌ده). */}
           <button
-            type="button" className="profile-banner-hit" onClick={() => bannerInputRef.current?.click()}
+            type="button" className={`ap-cover-hit${bannerUrl ? "" : " is-empty"}`} onClick={() => bannerInputRef.current?.click()}
             disabled={bannerSaving} aria-label={bannerUrl ? tr("تغییر بنر", "Change banner") : tr("افزودن بنر", "Add banner")}
           >
-            {bannerUrl && <img src={bannerUrl} alt="" className="profile-banner-img" />}
-            <span className="profile-banner-hint" aria-hidden="true">
+            {bannerUrl && <img src={bannerUrl} alt="" className="ap-cover-img" />}
+            <span className="ap-cover-hint" aria-hidden="true">
               {bannerSaving ? <Spinner size={15} /> : <Camera size={16} />}
+              {!bannerUrl && !bannerSaving && tr("افزودن بنر", "Add banner")}
             </span>
           </button>
 
           {bannerUrl && (
-            <div className="profile-banner-actions">
-              <button type="button" className="profile-banner-btn" onClick={removeBanner} disabled={bannerSaving} aria-label={tr("حذف بنر", "Remove banner")}>
+            <div className="ap-cover-remove">
+              <button type="button" className="ap-cover-remove-btn" onClick={removeBanner} disabled={bannerSaving} aria-label={tr("حذف بنر", "Remove banner")}>
                 <Trash2 size={14} />
               </button>
             </div>
@@ -335,30 +353,34 @@ export default function AccountProfilePage() {
             ref={bannerInputRef} type="file" accept="image/*" style={{ display: "none" }}
             onChange={(e) => { const f = e.target.files?.[0]; if (f) pickBannerFile(f); e.target.value = ""; }}
           />
+        </div>
 
-          {/* طبق درخواست صریح دکمه‌ی جدا ندارد — خود عکس کلیک‌پذیر است.
-              آیکون دوربین فقط یک نشانه‌ی بصری است (pointer-events ندارد). */}
+        <div className="ap-cover-row">
           <button
-            type="button" className="profile-hero-avatar-wrap" onClick={onAvatarTap}
+            type="button" className="ap-cover-avatar" onClick={onAvatarTap}
             disabled={avatarSaving} aria-label={tr("تغییر عکس پروفایل", "Change profile photo")}
           >
             {avatarUrl ? (
-              <img src={avatarUrl} alt={tr("عکس پروفایل", "Profile photo")} className="profile-hero-avatar-img" />
+              <img src={avatarUrl} alt={tr("عکس پروفایل", "Profile photo")} className="ap-cover-avatar-img" />
             ) : (
-              <AgentAvatar seed={fullName || username || "؟"} size={92} className="profile-hero-avatar-img" />
+              <AgentAvatar seed={fullName || username || "؟"} size={96} className="ap-cover-avatar-img" />
             )}
-            <span className="profile-hero-avatar-hint" aria-hidden="true">
-              {avatarSaving ? <Spinner size={14} /> : <Camera size={15} />}
+            <span className="ap-cover-avatar-badge" aria-hidden="true">
+              {avatarSaving ? <Spinner size={13} /> : <Camera size={14} />}
             </span>
           </button>
           <input
             ref={avatarInputRef} type="file" accept="image/*" style={{ display: "none" }}
             onChange={(e) => { const f = e.target.files?.[0]; if (f) pickAvatarFile(f); e.target.value = ""; }}
           />
+          <div className="ap-cover-meta">
+            <div className="ap-cover-name"><GoldenName golden={data.golden} staff={data.staff}>{fullName}</GoldenName></div>
+            {savedUsername && <div className="ap-cover-user mono" dir="ltr">@{savedUsername}</div>}
+          </div>
         </div>
 
-        {mediaError && <div className="field-error-msg" style={{ display: "block", padding: "0 16px 12px" }}>{mediaError}</div>}
-      </motion.div>
+        {mediaError && <div className="field-error-msg ap-cover-error" role="alert" style={{ display: "block" }}>{mediaError}</div>}
+      </div>
 
       {avatarSheet && avatarUrl && (
         <AvatarSheet
@@ -389,28 +411,27 @@ export default function AccountProfilePage() {
       )}
 
       {/* ── پروفایل عمومی ── */}
-      <AccountBlock title={tr("پروفایل عمومی", "Public profile")} icon={<IdCard size={15} />} index={0}>
-        {/* طبق درخواست صریح: فقط نام و نام‌خانوادگی هم‌ردیف‌اند، بقیه
-            هرکدام یک خط کامل می‌گیرند. */}
-        <div className="auth-field-grid">
+      <AccountBlock title={tr("پروفایل عمومی", "Public profile")} icon={<IdCard />} index={0}>
+        {/* فقط نام و نام‌خانوادگی هم‌ردیف‌اند، بقیه هرکدام یک خط کامل. */}
+        <div className="ap-field-grid">
           <AuthField id="pf-name" label={tr("نام", "First name")} icon={<UserIcon size={16} />}>
-            <input id="pf-name" type="text" className="wsearch-newform-name" value={firstName} onChange={(e) => setFirstName(e.target.value)} />
+            <input id="pf-name" type="text" className="wsearch-newform-name" autoComplete="given-name" value={firstName} onChange={(e) => setFirstName(e.target.value)} />
           </AuthField>
           <AuthField id="pf-lastname" label={tr("نام خانوادگی", "Last name")} icon={<UserIcon size={16} />}>
-            <input id="pf-lastname" type="text" className="wsearch-newform-name" value={lastName} onChange={(e) => setLastName(e.target.value)} />
+            <input id="pf-lastname" type="text" className="wsearch-newform-name" autoComplete="family-name" value={lastName} onChange={(e) => setLastName(e.target.value)} />
           </AuthField>
         </div>
 
-        <div className="acc-field-stack">
+        <div className="ap-field-stack">
           {/* شماره همراه عمدا فقط‌خواندنی است: تغییرش یعنی تغییر شناسه‌ی ورود
               و باید با تایید پیامکی انجام شود، نه با یک ذخیره‌ی ساده. */}
           <AuthField id="pf-phone" label={tr("شماره همراه", "Phone number")} icon={<Phone size={16} />}>
-            <input id="pf-phone" type="text" className="wsearch-newform-name mono" dir="ltr" style={{ textAlign: isEn() ? "left" : "right" }} value={data.phone || tr("ثبت نشده", "Not set")} readOnly disabled />
+            <input id="pf-phone" type="text" className="wsearch-newform-name mono ap-ltr" dir="ltr" value={data.phone || tr("ثبت نشده", "Not set")} readOnly disabled />
           </AuthField>
 
           <AuthField id="pf-username" label={tr("یوزرنیم", "Username")} icon={<AtSign size={16} />}>
             <input
-              id="pf-username" type="text" className="wsearch-newform-name mono" dir="ltr" style={{ textAlign: isEn() ? "left" : "right" }}
+              id="pf-username" type="text" className="wsearch-newform-name mono ap-ltr" dir="ltr" autoComplete="username" autoCapitalize="none" spellCheck={false}
               value={username} onChange={(e) => setUsername(e.target.value)} placeholder="username"
             />
           </AuthField>
@@ -423,11 +444,11 @@ export default function AccountProfilePage() {
 
           <AuthField id="pf-bio" label={tr("بیوگرافی", "Bio")} icon={<NotebookPen size={16} />}>
             <textarea
-              id="pf-bio" className="wsearch-newform-name acc-textarea" rows={3} maxLength={BIO_MAX}
+              id="pf-bio" className="wsearch-newform-name ap-textarea" rows={3} maxLength={BIO_MAX}
               value={bio} onChange={(e) => setBio(e.target.value)}
               placeholder={tr("یک توضیح کوتاه درباره‌ی خودت — توی پروفایلی که دوستانت می‌بینن نشون داده می‌شه", "A short description about yourself, shown in the profile your friends see")}
             />
-            <span className="acc-field-counter mono" dir="ltr">{bio.length}/{BIO_MAX}</span>
+            <span className="ap-counter mono" dir="ltr">{bio.length}/{BIO_MAX}</span>
           </AuthField>
         </div>
       </AccountBlock>
@@ -435,22 +456,22 @@ export default function AccountProfilePage() {
       {/* ── کد دعوت ── */}
       <AccountBlock
         title={tr("کد دعوت", "Invite code")}
-        icon={<Gift size={15} />}
-        desc={tr(`دوستت با کدت روی اولین خریدش ${faNum(REFERRAL_DISCOUNT_PERCENT)}٪ تخفیف می‌گیره (هر نفر فقط یک بار)، و تو به‌ازای هر دوستی که با پول واقعی خرید کنه ۱۰٪ از همون مبلغ به‌صورت اعتبار داخلِ کیفِ خودت واریز می‌شه — فقط برای کم‌کردنِ قیمتِ خریدِ پلن بعدی، نه قابل‌برداشت.`, `Your friend gets ${faNum(REFERRAL_DISCOUNT_PERCENT)}% off their first purchase with your code (once per person), and for every friend who buys with real money, 10% of that amount is added to your wallet as credit. It can only reduce the price of your next plan and cannot be withdrawn.`)}
+        icon={<Gift />}
+        desc={tr(`دوستت با کدت روی اولین خریدش ${faNum(REFERRAL_DISCOUNT_PERCENT)}٪ تخفیف می‌گیره (هر نفر فقط یک بار)، و تو به‌ازای هر دوستی که با پول واقعی خرید کنه 10٪ از همون مبلغ به‌صورت اعتبار داخل کیف خودت واریز می‌شه — فقط برای کم‌کردن قیمت خرید پلن بعدی، نه قابل‌برداشت.`, `Your friend gets ${faNum(REFERRAL_DISCOUNT_PERCENT)}% off their first purchase with your code (once per person), and for every friend who buys with real money, 10% of that amount is added to your wallet as credit. It can only reduce the price of your next plan and cannot be withdrawn.`)}
         index={1}
       >
-        <div className="acc-field-stack">
+        <div className="ap-field-stack">
           <AuthField id="pf-refcode" label={tr("اسم کد (4 تا 16 حرف انگلیسی یا عدد)", "Code name (4 to 16 English letters or digits)")} icon={<Gift size={16} />}>
             <input
-              id="pf-refcode" type="text" className="wsearch-newform-name mono" dir="ltr" style={{ textAlign: isEn() ? "left" : "right" }}
+              id="pf-refcode" type="text" className="wsearch-newform-name mono ap-ltr" dir="ltr"
               value={refCode} maxLength={16} autoCapitalize="characters" spellCheck={false}
               onChange={(e) => setRefCode(e.target.value.toUpperCase().replace(/[^A-Z0-9]/g, ""))}
               placeholder="MYCODE"
             />
           </AuthField>
           {refStats && (
-            <p className="acc-option-desc">
-              {tr(`${faNum(refStats.invitedPaid)} دوست با کدت خرید کردن · موجودیِ کیف: ${formatPriceAmount(refStats.walletBalance)}`, `${faNum(refStats.invitedPaid)} ${refStats.invitedPaid === 1 ? "friend has" : "friends have"} purchased with your code · Wallet balance: ${formatPriceAmount(refStats.walletBalance)}`)}
+            <p className="ap-field-note">
+              {tr(`${faNum(refStats.invitedPaid)} دوست با کدت خرید کردن · موجودی کیف: ${formatPriceAmount(refStats.walletBalance)}`, `${faNum(refStats.invitedPaid)} ${refStats.invitedPaid === 1 ? "friend has" : "friends have"} purchased with your code · Wallet balance: ${formatPriceAmount(refStats.walletBalance)}`)}
             </p>
           )}
         </div>
@@ -459,19 +480,19 @@ export default function AccountProfilePage() {
       {/* ── پروفایل ورزشی ── */}
       <AccountBlock
         title={tr("پروفایل ورزشی", "Sports profile")}
-        icon={<Dumbbell size={15} />}
+        icon={<Dumbbell />}
         desc={tr("برای استفاده از بخش ورزش و کالری الزامی است — همین اطلاعات توی فرم‌های بدنسازی و کالری هم پر می‌شود.", "Required to use the workout and calorie sections. The same details are filled in the workout and calorie forms.")}
         index={2}
       >
-        <div className="auth-field-grid">
+        <div className="ap-field-grid">
           <AuthField id="pf-age" label={tr("سن", "Age")} icon={<Cake size={16} />}>
-            <NumberInput id="pf-age" dir="ltr" style={{ textAlign: isEn() ? "left" : "right" }} className="wsearch-newform-name" value={ageYears} onChange={setAgeYears} />
+            <NumberInput id="pf-age" dir="ltr" className="wsearch-newform-name ap-ltr" value={ageYears} onChange={setAgeYears} />
           </AuthField>
           <AuthField id="pf-height" label={tr("قد (سانتی‌متر)", "Height (cm)")} icon={<Ruler size={16} />}>
-            <NumberInput id="pf-height" dir="ltr" style={{ textAlign: isEn() ? "left" : "right" }} className="wsearch-newform-name" value={heightCm} onChange={setHeightCm} />
+            <NumberInput id="pf-height" dir="ltr" className="wsearch-newform-name ap-ltr" value={heightCm} onChange={setHeightCm} />
           </AuthField>
           <AuthField id="pf-weight" label={tr("وزن (کیلوگرم)", "Weight (kg)")} icon={<Weight size={16} />}>
-            <NumberInput decimal id="pf-weight" dir="ltr" style={{ textAlign: isEn() ? "left" : "right" }} className="wsearch-newform-name" value={weightKg} onChange={setWeightKg} />
+            <NumberInput decimal id="pf-weight" dir="ltr" className="wsearch-newform-name ap-ltr" value={weightKg} onChange={setWeightKg} />
           </AuthField>
           <AuthField id="pf-gender" label={tr("جنسیت", "Gender")} icon={<VenetianMask size={16} />}>
             <span className="acc-select-wrap">

@@ -4,14 +4,15 @@ import { SmartLink as Link } from "@/components/SmartLink";
 import { ChevronRight, ChevronLeft } from "lucide-react";
 import { tr, isEn } from "@/lib/i18n";
 
-// دکمه‌ی «بازگشت» بالای هر زیرصفحه‌ی پنل کاربری — دقیقا هم‌الگوی دکمه‌ی
-// بازگشت بخش ترید (TradePageShell): یک لینک آیکونی + متن، بدون بک‌گراند.
-// پیش‌فرض به /account برمی‌گرده (فهرست بخش‌ها)، ولی هر مقصد دیگه‌ای هم
-// می‌شه داد (مثلا از زیرصفحه‌های /account/modules به /account/general).
+// لینک «بازگشت» بالای هر زیرصفحه‌ی پنل کاربری (مسیر نان‌ریز).
+// وقتی مقصد خود /account باشه فقط روی موبایل/تبلت دیده می‌شه (روی دسکتاپ
+// سایدبار همیشه کنار صفحه‌ست)؛ وقتی مقصد یک صفحه‌ی میانی باشه (مثلا
+// تنظیمات > ترید) روی دسکتاپ هم دیده می‌شه تا راه برگشت یک‌کلیکی بمونه.
 export function AccountBackButton({ href = "/account", label = tr("بازگشت", "Back") }: { href?: string; label?: string }) {
+  const root = href === "/account";
   return (
-    <Link href={href} className="account-back-btn">
-      {isEn() ? <ChevronLeft size={17} /> : <ChevronRight size={17} />}
+    <Link href={href} className={`ap-crumb${root ? " is-root" : ""}`}>
+      {isEn() ? <ChevronLeft size={17} aria-hidden="true" /> : <ChevronRight size={17} aria-hidden="true" />}
       <span>{label}</span>
     </Link>
   );

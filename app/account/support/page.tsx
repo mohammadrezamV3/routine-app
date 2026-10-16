@@ -3,11 +3,9 @@
 import { useCallback, useEffect, useState } from "react";
 import { SmartLink as Link } from "@/components/SmartLink";
 import { useRouter } from "next/navigation";
-import { m as motion } from "framer-motion";
 import { Plus, MessageCircleQuestion, Inbox } from "lucide-react";
-import { AccountBackButton } from "@/components/AccountBackButton";
 import { SupportTicketModal } from "@/components/SupportTicketModal";
-import { PanelSkeleton } from "@/components/PanelSkeleton";
+import { AccountPageHead, AccountSkeleton } from "@/components/AccountUI";
 import { toJalali, faNum, jMonthName } from "@/lib/jalali";
 import { tr } from "@/lib/i18n";
 
@@ -45,55 +43,52 @@ export default function SupportPage() {
   const load = useCallback(() => {
     fetch("/api/support/tickets")
       .then((r) => (r.ok ? r.json() : null))
-      .then((d) => setTickets(d?.tickets || []));
+      .then((d) => setTickets(d?.tickets || []))
+      .catch(() => setTickets([]));
   }, []);
 
   useEffect(() => { load(); }, [load]);
 
   return (
     <section>
-      <div className="acc-head">
-        <AccountBackButton />
-        {/* طبق درخواست صریح: تایتل «پشتیبانی» هم‌ردیف دکمه‌ی «ایجاد تیکت»
-            (سمت چپ) — نه زیر هم مثل بقیه‌ی صفحه‌ها. */}
-        <div className="support-head-row">
-          <h1>{tr("پشتیبانی", "Support")}</h1>
+      {/* تایتل «پشتیبانی» هم‌ردیف دکمه‌ی «ایجاد تیکت» (درخواست صریح): دکمه
+          فقط متن+آیکون رنگیه، بدون قاب. */}
+      <AccountPageHead
+        title={tr("پشتیبانی", "Support")}
+        actions={
           <button type="button" className="account-outline-btn support-new-btn" onClick={() => setCreating(true)}>
             <Plus size={15} /> {tr("ایجاد تیکت", "New ticket")}
           </button>
-        </div>
-      </div>
+        }
+      />
 
-      {tickets === null && <PanelSkeleton />}
+      {tickets === null && <AccountSkeleton blocks={1} />}
 
       {tickets !== null && !tickets.length && (
-        <div className="trade-empty-state">
-          <MessageCircleQuestion size={32} />
-          <p>{tr("هنوز تیکتی نساختی", "You have not created any tickets yet")}</p>
+        <div className="ap-card account-card">
+          <div className="ap-ticket-empty">
+            <MessageCircleQuestion size={32} aria-hidden="true" />
+            <p>{tr("هنوز تیکتی نساختی", "You have not created any tickets yet")}</p>
+          </div>
         </div>
       )}
 
       {tickets !== null && !!tickets.length && (
-        <div className="account-card">
+        <div className="account-card ap-card is-clip m-rise">
           {tickets.map((t, i) => (
-            <motion.div
-              key={t.id}
-              initial={{ opacity: 0, y: 6 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ duration: 0.3, delay: Math.min(i, 8) * 0.035, ease: [0.22, 1, 0.36, 1] }}
-            >
-              <Link href={`/account/support/${t.id}`} className="account-row2">
-                <span className="account-row2-icon"><Inbox size={16} /></span>
-                <span className="account-row2-body">
-                  <span className="account-row2-label">{t.subject}</span>
-                  <span className="account-row2-desc">
+            <div key={t.id} className="ap-row-wrap m-rise" style={{ "--i": Math.min(i, 8) } as React.CSSProperties}>
+              <Link href={`/account/support/${t.id}`} className="ap-row">
+                <span className="ap-row-icon" aria-hidden="true"><Inbox size={17} /></span>
+                <span className="ap-row-body">
+                  <span className="ap-row-label">{t.subject}</span>
+                  <span className="ap-ticket-sub">
                     {t.lastMessage ? `${t.lastMessage.fromAdmin ? tr("پشتیبانی: ", "Support: ") : ""}${t.lastMessage.body}` : ""}
                   </span>
-                  <span className="support-ticket-time mono" dir="ltr">{formatTicketDate(t.updatedAt)}</span>
+                  <span className="ap-ticket-time mono" dir="ltr">{formatTicketDate(t.updatedAt)}</span>
                 </span>
-                <span className={`support-status ${STATUS_CLASS[t.status]}`}>{statusLabel()[t.status]}</span>
+                <span className={`ap-status is-${STATUS_CLASS[t.status]}`}>{statusLabel()[t.status]}</span>
               </Link>
-            </motion.div>
+            </div>
           ))}
         </div>
       )}
