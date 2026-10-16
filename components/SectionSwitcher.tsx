@@ -3,13 +3,15 @@
 // پنجره‌ی جابه‌جایی بین بخش‌های آریون (روتین / ترید / ورزش) که با زدن لوگوی هدر باز می‌شه.
 // فقط با اولین کلیک روی لوگو لود می‌شه (NavDrawer، dynamic) و به بادی پورتال می‌شه — چون
 // .app-topbar خودش backdrop-filter داره و شیشه‌ی داخلش بلور واقعی نمی‌گرفت.
-// ناوبری: وقتی زیردامنه‌ها روشنن بین بخش‌ها ناوبری *کامل* (لینک واقعی به origin بخش)،
-// وگرنه ناوبری کلاینتی به صفحه‌ی اصلی همون بخش. قرارداد: lib/sections.ts
+// ناوبری: دامنه هیچ‌وقت عوض نمی‌شه (تا اپ نصب‌شده‌ی PWA از scope بیرون نیفته). انتخاب بخش جدید
+// کوکی host-only `arion_section` رو ست می‌کنه و ناوبری *کامل* روی همون origin به داشبورد (واردشده)
+// یا صفحه‌ی اصلی (مهمان) می‌کنه؛ بخش جاری ناوبری کلاینتی به همون مقصده. قرارداد: lib/sections.ts
 import { useCallback, useEffect, useLayoutEffect, useRef, useState } from "react";
 import { createPortal } from "react-dom";
 import { SmartLink as Link } from "./SmartLink";
 import { tr } from "@/lib/i18n";
-import { SECTION_META, isSectionHostingEnabled, sectionUrl, type SectionKey } from "@/lib/sections";
+import { SECTION_META, type SectionKey } from "@/lib/sections";
+import { switchSectionAndGo } from "@/lib/sectionClient";
 import { SECTION_WORDMARK_DARK, SECTION_WORDMARK_LIGHT, warmSectionAssets } from "@/lib/sectionAssets";
 import "./section-switcher.css";
 
@@ -20,9 +22,6 @@ type Props = {
   signedIn: boolean;
   onClose: () => void;
 };
-
-// وقتی زیردامنه‌ها خاموشن (یک دامنه) هر بخش به صفحه‌ی اصلی خودش می‌ره
-const FALLBACK_HOME: Record<SectionKey, string> = { routine: "/weekly", trade: "/trade", workout: "/exercise" };
 
 // ترتیب طرح رسمی: ترید، ورزش، روتین
 const ORDER: readonly SectionKey[] = ["trade", "workout", "routine"];
@@ -48,8 +47,6 @@ function measure(anchor: HTMLElement | null): Pos {
 export default function SectionSwitcher({ state, anchorRef, section, signedIn, onClose }: Props) {
   const panelRef = useRef<HTMLDivElement>(null);
   const [pos, setPos] = useState<Pos>(() => measure(anchorRef.current));
-  const hosting = isSectionHostingEnabled();
-  const origin = typeof window === "undefined" ? undefined : window.location.origin;
   const home = signedIn ? "/dashboard" : "/";
   const open = state === "open";
 
@@ -103,15 +100,13 @@ export default function SectionSwitcher({ state, anchorRef, section, signedIn, o
     else if (e.key === "Tab") { e.preventDefault(); restoreFocus(); onClose(); }
   }
 
-  function rowProps(key: SectionKey) {
-    const current = section === key;
-    // بخش جاری یا وقتی زیردامنه‌ها خاموشن: ناوبری کلاینتی؛ بین بخش‌ها: لینک واقعی (بارگذاری کامل)
-    if (current) return { client: true as const, href: home };
-    if (hosting) return { client: false as const, href: sectionUrl(key, home, origin) };
-    return { client: true as const, href: FALLBACK_HOME[key] };
+  // کلیک روی بخش دیگه: کوکی + ناوبری کامل روی همین دامنه؛ کلیک میانی/Ctrl همون لینک ساده‌ی مقصد رو باز می‌کنه
+  function onPick(e: React.MouseEvent, key: SectionKey) {
+    onClose();
+    if (e.defaultPrevented || e.button !== 0 || e.metaKey || e.ctrlKey || e.shiftKey || e.altKey) return;
+    e.preventDefault();
+    switchSectionAndGo(key, home);
   }
-
-  const common = { "data-ssw-item": "", tabIndex: -1, onClick: onClose } as const;
 
   return createPortal(
     <div
@@ -137,7 +132,6 @@ export default function SectionSwitcher({ state, anchorRef, section, signedIn, o
         {ORDER.map((key, i) => {
           const meta = SECTION_META[key];
           const current = section === key;
-          const rp = rowProps(key);
           const inner = (
             <>
               {/* <img> ساده و eager (نه next/image): بدون بهینه‌ساز و بدون lazy، همون URLی که warmSectionAssets
@@ -164,10 +158,10 @@ export default function SectionSwitcher({ state, anchorRef, section, signedIn, o
             "aria-checked": current,
             "aria-current": current ? ("true" as const) : undefined,
           };
-          return rp.client ? (
-            <Link key={key} href={rp.href} className={cls} style={style} {...aria} {...common}>{inner}</Link>
+          return current ? (
+            <Link key={key} href={home} className={cls} style={style} {...aria} data-ssw-item="" tabIndex={-1} onClick={onClose}>{inner}</Link>
           ) : (
-            <a key={key} href={rp.href} className={cls} style={style} {...aria} {...common}>{inner}</a>
+            <a key={key} href={home} className={cls} style={style} {...aria} data-ssw-item="" tabIndex={-1} onClick={(e) => onPick(e, key)}>{inner}</a>
           );
         })}
       </div>

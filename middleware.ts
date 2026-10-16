@@ -1,14 +1,17 @@
 import { NextResponse } from "next/server";
 import type { NextRequest } from "next/server";
 import {
+  SECTION_COOKIE,
+  SECTION_COOKIE_MAX_AGE,
   SECTION_HEADER,
   isOwnHost,
   isSectionHostingEnabled,
-  pathAllowedIn,
+  resolveEffectiveSection,
   sectionFromHost,
   sectionOrigin,
-  sectionsOwningPath,
+  sectionToSwitchTo,
   seoLandingOwner,
+  type SectionKey,
 } from "@/lib/sections";
 
 // ─── دفاع سرور-محور CSRF: بررسی Origin روی درخواست‌های تغییردهنده ──────────
@@ -62,50 +65,76 @@ function currentOrigin(req: NextRequest, host: string): string {
   return `${proto}://${host}`;
 }
 
+/** پیش‌واکشی Next/مرورگر (hover روی لینک): نباید بخش کاربر رو عوض کنه */
+function isPrefetch(req: NextRequest): boolean {
+  const h = req.headers;
+  return (
+    h.get("next-router-prefetch") === "1" ||
+    h.get("x-middleware-prefetch") === "1" ||
+    /prefetch/i.test(h.get("purpose") || "") ||
+    /prefetch/i.test(h.get("sec-purpose") || "")
+  );
+}
+
 export function middleware(req: NextRequest) {
   const { pathname } = req.nextUrl;
   const isApi = pathname.startsWith("/api/");
   const enabled = isSectionHostingEnabled();
 
-  // هدر بخش هیچ‌وقت از کلاینت قبول نمی‌شه: همیشه پاک و از روی میزبان دوباره ساخته می‌شه.
+  // بخش موثر = کوکی host-only `arion_section` (اگه معتبر) وگرنه بخش میزبان. هر سه بخش روی هر میزبان
+  // در دسترسن (PWA از scope بیرون نمی‌افته)؛ دامنه فقط هویت اپ نصب‌شده/سئو رو تعیین می‌کنه.
+  // هدر بخش هیچ‌وقت از کلاینت قبول نمی‌شه: همیشه پاک و از روی کوکی/میزبان دوباره ساخته می‌شه.
   const host = requestHost(req);
-  const section = sectionFromHost(host);
+  const hostSection = sectionFromHost(host);
+  let section: SectionKey | null = resolveEffectiveSection(hostSection, req.cookies.get(SECTION_COOKIE)?.value);
+  let switchedTo: SectionKey | null = null;
   const hadSpoofed = req.headers.has(SECTION_HEADER);
-  const forward = () => {
-    if (!section && !hadSpoofed) return NextResponse.next();
-    const headers = new Headers(req.headers);
-    headers.delete(SECTION_HEADER);
-    if (section) headers.set(SECTION_HEADER, section);
-    return NextResponse.next({ request: { headers } });
-  };
+  const proto = req.headers.get("x-forwarded-proto")?.split(",")[0]?.trim() || req.nextUrl.protocol.replace(/:$/, "");
 
   const isRead = req.method === "GET" || req.method === "HEAD";
 
-  if (enabled && isRead && !isApi) {
-    // آیکون اپ رنگی هر بخش (فقط روی زیردامنه‌ی بخش)
+  if (isRead && !isApi) {
+    // آیکون اپ رنگی هر بخش (فقط روی زیردامنه‌ی بخش؛ هویت اپ نصب‌شده تابع میزبانه، نه کوکی)
     const iconSize = SECTION_ICON_PATHS[pathname];
-    if (section && iconSize) {
+    if (enabled && hostSection && iconSize) {
       const url = req.nextUrl.clone();
-      url.pathname = `/images/sections/app/${section}-${iconSize}.png`;
+      url.pathname = `/images/sections/app/${hostSection}-${iconSize}.png`;
       url.search = "";
       return NextResponse.rewrite(url);
     }
 
-    // ریدایرکت بین میزبان‌ها: ۳۰۸ (متد و مسیر و query حفظ می‌شن). فقط برای میزبان‌های خانواده‌ی ما.
-    if (isOwnHost(host)) {
-      const cur = currentOrigin(req, host);
-      let target: ReturnType<typeof sectionsOwningPath>[number] | null = null;
-      if (section) {
-        // مسیر مال بخش دیگه‌ست → زیردامنه‌ی صاحبش
-        if (!pathAllowedIn(section, pathname)) target = sectionsOwningPath(pathname)[0] ?? null;
-      } else {
-        // دامنه‌ی اصلی: صفحه‌ی فرود سئو به زیردامنه‌ی صاحبش (یکی‌شدن سئو)
-        target = seoLandingOwner(pathname);
-      }
-      const origin = target ? sectionOrigin(target, cur) : null;
+    // دامنه‌ی اصلی: صفحه‌ی فرود سئو به زیردامنه‌ی صاحبش ۳۰۸ می‌شه (یکی‌شدن سئو). تنها ریدایرکت بین میزبان‌ها.
+    if (enabled && !hostSection && isOwnHost(host)) {
+      const target = seoLandingOwner(pathname);
+      const origin = target ? sectionOrigin(target, currentOrigin(req, host)) : null;
       if (origin) return NextResponse.redirect(new URL(`${pathname}${req.nextUrl.search}`, origin), 308);
     }
+
+    // مسیر مال بخش دیگه‌ست: بدون عوض‌کردن دامنه بخش موثر عوض می‌شه (کوکی روی همین پاسخ ست می‌شه)
+    if (!isPrefetch(req)) {
+      const target = sectionToSwitchTo(section, pathname);
+      if (target) {
+        section = target;
+        switchedTo = target;
+      }
+    }
   }
+
+  const forward = () => {
+    let res: NextResponse;
+    if (!section && !hadSpoofed) {
+      res = NextResponse.next();
+    } else {
+      const headers = new Headers(req.headers);
+      headers.delete(SECTION_HEADER);
+      if (section) headers.set(SECTION_HEADER, section);
+      res = NextResponse.next({ request: { headers } });
+    }
+    if (switchedTo) {
+      res.cookies.set(SECTION_COOKIE, switchedTo, { path: "/", maxAge: SECTION_COOKIE_MAX_AGE, sameSite: "lax", secure: proto === "https" });
+    }
+    return res;
+  };
 
   // ─── دفاع CSRF روی API ───
   if (SAFE_METHODS.has(req.method)) return forward();
