@@ -12,6 +12,8 @@ import { SmartLink as Link } from "./SmartLink";
 import { tr } from "@/lib/i18n";
 import { SECTION_META, type SectionKey } from "@/lib/sections";
 import { switchSectionAndGo } from "@/lib/sectionClient";
+import { sectionWordmarkSm } from "@/lib/sectionAssets";
+import { useTheme } from "./ThemeProvider";
 import "./section-switcher.css";
 
 type Props = {
@@ -25,9 +27,10 @@ type Props = {
 // ترتیب طرح رسمی: ترید، ورزش، روتین
 const ORDER: readonly SectionKey[] = ["trade", "workout", "routine"];
 
-const PANEL_MAX = 232;
+// تخمین عرض پنل (خود پنل با CSS به اندازه‌ی محتوا درمیاد) فقط برای جا دادن در لبه‌ی صفحه
+const PANEL_MAX = 176;
 const EDGE = 12;
-const GAP = 6;
+const GAP = 5;
 
 type Pos = { top: number; left: number; width: number; originX: number };
 
@@ -48,6 +51,8 @@ export default function SectionSwitcher({ state, anchorRef, section, signedIn, o
   const [pos, setPos] = useState<Pos>(() => measure(anchorRef.current));
   const home = signedIn ? "/dashboard" : "/";
   const open = state === "open";
+  const { theme } = useTheme();
+  const wordmarkSrc = sectionWordmarkSm(theme === "light" ? "light" : "dark");
 
   useLayoutEffect(() => { setPos(measure(anchorRef.current)); }, [anchorRef]);
   useEffect(() => {
@@ -118,7 +123,6 @@ export default function SectionSwitcher({ state, anchorRef, section, signedIn, o
       style={{
         top: pos.top,
         left: pos.left,
-        width: pos.width,
         ["--ssw-origin" as string]: `${pos.originX}px 0`,
         // رنگ هر بخش برای هاله‌ی پس‌زمینه‌ی شیشه
         ["--ssw-routine" as string]: SECTION_META.routine.colors.mid,
@@ -132,8 +136,8 @@ export default function SectionSwitcher({ state, anchorRef, section, signedIn, o
           const current = section === key;
           const inner = (
             <>
-              {/* فقط متن (بدون هیچ تصویر): اسم اپ + خط نازک + اسم بخش به رنگ همون بخش، همیشه چپ به راست */}
-              <span className="ssw-brand" aria-hidden="true">ARION</span>
+              {/* دقیقا همون لوگوی هدر: تصویر حروف ARION تم جاری + خط نازک + اسم بخش به رنگ همون بخش، همیشه چپ به راست */}
+              <img className="ssw-brand" src={wordmarkSrc} alt="" width={264} height={36} loading="eager" decoding="sync" draggable={false} aria-hidden="true" />
               <span className="ssw-sep" aria-hidden="true" />
               <span className="ssw-word" aria-hidden="true">{meta.wordmark}</span>
             </>

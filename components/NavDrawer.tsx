@@ -60,9 +60,8 @@ function whenIdle(fn: () => void, timeout = 2500): () => void {
 // کش‌شده بیرون کامپوننت — مثل الگوی NotificationPanel/AccountPanel، تا
 // هدر (که توی همه‌ی صفحه‌ها mount می‌شه) هر بار عکس رو دوباره فچ نکنه.
 let cachedAvatarUrl: string | null = null;
-// ارجاع به تصویر گرم‌شده تا دانلودش وسط راه رها نشه
-let warmedWordmark: HTMLImageElement | null = null;
-
+// ارجاع به تصویرهای گرم‌شده تا دانلودشون وسط راه رها نشه
+let warmedWordmarks: HTMLImageElement[] = [];
 // لنگر پنل‌های پروفایل/اعلان: در دسکتاپ rtl گروه دکمه‌ها سمت چپ صفحه‌ست، پس پنل
 // به لبه‌ی چپ دکمه می‌چسبه و به راست باز می‌شه (آینه‌ی ltr). موبایل بدون تغییر.
 function anchorOf(r: DOMRect) {
@@ -133,14 +132,19 @@ export function NavDrawer() {
   }, [status]);
   // بعد از اولین پینت در بیکاری (سقف 2.5 ثانیه): چانک پنجره‌ی بخش‌ها
   useEffect(() => whenIdle(() => { loadSwitcher(); }, 2500), []);
-  // حروف ARION تم مقابل: فقط نسخه‌ی تم جاری توی DOMه (دانلود بی‌مورد نداریم)؛ نسخه‌ی تم دیگه بعد از
-  // اولین پینت در بیکاری گرم می‌شه تا سوییچ تم بدون تاخیر باشه.
+  // حروف ARION هر دو تم: هدر دسکتاپ فقط تم جاری رو داره و موبایل اصلا نداره، ولی ردیف‌های پنجره‌ی
+  // بخش‌ها (SectionSwitcher) همین تصویرها رو دارن؛ بعد از اولین پینت در بیکاری با همون URL و همون
+  // ویژگی‌ها گرم می‌شن (بدون preload پرالویت) تا اولین باز شدن پنجره بدون پاپ‌این باشه.
   useEffect(() => whenIdle(() => {
-    if (typeof Image === "undefined") return;
-    warmedWordmark = new Image();
-    warmedWordmark.decoding = "async";
-    warmedWordmark.src = sectionWordmarkSm(theme === "light" ? "dark" : "light");
-  }, 4000), [theme]);
+    if (typeof Image === "undefined" || warmedWordmarks.length) return;
+    warmedWordmarks = (["dark", "light"] as const).map((t) => {
+      const img = new Image(264, 36);
+      img.loading = "eager";
+      img.decoding = "sync";
+      img.src = sectionWordmarkSm(t);
+      return img;
+    });
+  }, 4000), []);
   // ناوبری = پنجره‌ی بخش‌ها بسته
   useEffect(() => { setSwitcherOpen(false); }, [pathname]);
 

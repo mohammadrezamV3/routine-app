@@ -11,7 +11,8 @@
 
 .ssw-panel{
   position:fixed; z-index:60; box-sizing:border-box;
-  padding:5px; border-radius:18px; isolation:isolate; overflow:hidden;
+  width:max-content; max-width:calc(100vw - 24px);
+  padding:5px; border-radius:14px; isolation:isolate; overflow:hidden;
   background:color-mix(in srgb, var(--surface-2) 70%, transparent);
   backdrop-filter:blur(26px) saturate(190%); -webkit-backdrop-filter:blur(26px) saturate(190%);
   border:1px solid color-mix(in srgb, var(--text) 13%, transparent);
@@ -37,14 +38,14 @@ body[data-theme="light"] .ssw-panel{
 body[data-theme="light"] .ssw-panel::before{ opacity:.55; }
 .ssw-panel > *{ position:relative; z-index:1; }
 
-.ssw-list{ display:flex; flex-direction:column; gap:2px; }
+.ssw-list{ display:flex; flex-direction:column; gap:1px; }
 
 /* ردیف‌ها لینک‌ان (نه button) تا ریست شیشه‌ای سراسری دکمه‌ها روشون نیفته.
-   هر ردیف فقط متنه: ARION | بخش (بدون تصویر)، همیشه چپ به راست */
+   هر ردیف: تصویر حروف ARION (همون لوگوی هدر) | بخش، همیشه چپ به راست */
 .ssw-row{
   --tl-h:24px;
   direction:ltr; display:flex; align-items:center; justify-content:flex-start; gap:calc(var(--tl-h) * .3); min-width:0;
-  height:38px; padding:0 14px; border-radius:13px; box-sizing:border-box;
+  height:35px; padding:0 7px; border-radius:10px; box-sizing:border-box;
   border:1px solid transparent; text-decoration:none; color:var(--text);
   font-family:var(--font-latin), var(--font-vazir), sans-serif;
   cursor:pointer; -webkit-tap-highlight-color:transparent;
@@ -59,20 +60,18 @@ body[data-theme="light"] .ssw-panel::before{ opacity:.55; }
 }
 .ssw-panel :focus-visible{ outline:2px solid var(--accent); outline-offset:-2px; }
 
-/* بخش جاری: لبه‌ی نازک و رنگ ملایم به رنگ همون بخش (بدون متن اضافه) */
+/* بخش جاری: لبه‌ی نازک و رنگ خیلی ملایم به رنگ همون بخش (بدون متن اضافه) */
 .ssw-row.is-current{
-  border-color:color-mix(in srgb, var(--sec-mid) 60%, transparent);
-  background:color-mix(in srgb, var(--sec-mid) 11%, transparent);
+  border-color:color-mix(in srgb, var(--sec-mid) 40%, transparent);
+  background:color-mix(in srgb, var(--sec-mid) 7%, transparent);
 }
 
-.ssw-brand{
-  flex-shrink:0; color:var(--text);
-  font-size:calc(var(--tl-h) * .42); font-weight:800; line-height:1.4; letter-spacing:.2em; text-transform:uppercase;
-}
+/* دقیقا اندازه‌ی نسبی لوگوی هدر (.tls-word): ارتفاع .4 از --tl-h و نسبت 358/49 */
+.ssw-brand{ display:block; flex-shrink:0; height:calc(var(--tl-h) * .4); aspect-ratio:358/49; width:auto; }
 .ssw-sep{ flex-shrink:0; width:1px; height:calc(var(--tl-h) * .64); background:color-mix(in srgb, var(--text) 30%, transparent); }
 .ssw-word{
   min-width:0; overflow:hidden; text-overflow:ellipsis; white-space:nowrap;
-  font-size:calc(var(--tl-h) * .42); font-weight:800; line-height:1.4; letter-spacing:.2em; text-transform:uppercase;
+  font-size:calc(var(--tl-h) * .42); font-weight:800; line-height:1.4; letter-spacing:.12em; text-transform:uppercase;
   padding-inline-end:.1em;
   background:linear-gradient(90deg, var(--sec-from), var(--sec-mid), var(--sec-to));
   -webkit-background-clip:text; background-clip:text;
