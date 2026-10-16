@@ -1,6 +1,6 @@
 "use client";
 
-import { BarChart3, Bell, CalendarCheck2, CandlestickChart, Dumbbell, GraduationCap, History, Languages, Vibrate } from "lucide-react";
+import { BarChart3, Bell, CalendarCheck2, CandlestickChart, Dumbbell, GraduationCap, History, Languages, Palette, Vibrate } from "lucide-react";
 import { AccountRows, AccountRowLink, AccountControlRow } from "@/components/AccountRow";
 import { LanguageSwitch } from "@/components/LanguageSwitch";
 import { AccountPageHead } from "@/components/AccountUI";
@@ -12,6 +12,7 @@ type Item = { href: string; label: string; desc: string; icon: React.ReactNode }
 // فهرست بخش‌هاست (در سه گروه) و با کلیک روی هرکدام تازه به تنظیمات همان
 // بخش می‌رسی. زبان سایت (مهم‌ترین جای تغییر زبان) همین‌جا، در گروه اول.
 const displayItems = (): Item[] => [
+  { href: "/account/general/theme", label: tr("تم و رنگ", "Theme and color"), desc: tr("حالت شب یا روز و رنگ کل اپ", "Day or night mode and the color of the whole app"), icon: <Palette size={17} /> },
   { href: "/account/general/dashboard", label: tr("داشبورد", "Dashboard"), desc: tr("کارت‌های داشبورد", "Dashboard cards"), icon: <BarChart3 size={17} /> },
   { href: "/account/general/haptics", label: tr("بازخورد لمسی", "Haptic feedback"), desc: tr("لرزش کوتاه هنگام لمس دکمه‌ها", "A short vibration when you tap buttons"), icon: <Vibrate size={17} /> },
 ];

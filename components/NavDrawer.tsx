@@ -344,6 +344,8 @@ export function NavDrawer() {
                 </>
               ) : (
                 <span className="tl-apex">
+                  {/* نشان A هم‌رنگ پالت انتخابی (فقط وقتی کاربر پالتی غیر از خودکار/روتین گذاشته؛ CSS: palette-themes.css) */}
+                  <span className="logo-tint tl-apex-mark" aria-hidden="true" />
                   <Image
                     src="/images/logo-lockup-dark-theme.png"
                     alt={brandName()}

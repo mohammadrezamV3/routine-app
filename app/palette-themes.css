@@ -310,3 +310,4 @@ html[data-palette="graphite"] body:not([data-theme="light"]){ --logo-from:#FFFFF
 html[data-palette="graphite"] body[data-theme="light"]{ --logo-from:#6B7280; --logo-mid:#374151; --logo-to:#1F2937; }
 /* <<< generated presets */
 
+

@@ -19,6 +19,7 @@
 
 import { sectionBaseDomain } from "@/lib/sections";
 import { setSharedCookie } from "@/lib/clientCookie";
+import { PRESET_META_COLORS, normalizeHex } from "@/lib/palette";
 
 export const THEME_COLORS = {
   dark: "#0E1011",
@@ -27,20 +28,44 @@ export const THEME_COLORS = {
 
 export type ThemeName = keyof typeof THEME_COLORS;
 
-// رنگ نوار وضعیت بخش‌های زیردامنه: همون --bg پالت app/section-themes.css (ترید آبی سایبری،
-// تمرین زرشکی). روتین و دامنه‌ی اصلی همون THEME_COLORS بالان. وقتی تم مناسبتی فعاله پالت بخش
-// اعمال نمی‌شه (section-themes.css)، پس رنگ متا هم همون رنگ عادی می‌مونه.
+// رنگ نوار وضعیت بخش‌های زیردامنه: همون --bg پالت app/palette-themes.css (ترید آبی سایبری،
+// تمرین زرشکی). روتین و دامنه‌ی اصلی همون THEME_COLORS بالان. وقتی تم مناسبتی فعاله پالت اعمال
+// نمی‌شه (palette-themes.css)، پس رنگ متا هم همون رنگ عادی می‌مونه.
 export const SECTION_THEME_COLORS = {
   trade: { dark: "#070B12", light: "#E7EDF4" },
   workout: { dark: "#100A0C", light: "#F6E9E6" },
 } as const;
 
-/** رنگ متای theme-color برای تم و بخش داده‌شده (بخش بدون رنگ اختصاصی = رنگ پایه). */
-export function themeColorFor(theme: ThemeName, section?: string | null, eventThemeActive = false): string {
-  if (!eventThemeActive && section && Object.prototype.hasOwnProperty.call(SECTION_THEME_COLORS, section)) {
-    return SECTION_THEME_COLORS[section as keyof typeof SECTION_THEME_COLORS][theme];
-  }
+/** --bg هر پالت غیرروتین (ترید، ورزش و پالت‌های آماده). پالت سفارشی از `data-palette-meta` میاد. */
+export const PALETTE_THEME_COLORS: Record<string, { dark: string; light: string }> = {
+  ...SECTION_THEME_COLORS,
+  ...PRESET_META_COLORS,
+};
+
+/**
+ * رنگ متای theme-color. `palette` پالت موثر (data-palette روی html) و `customBg` رنگ‌های --bg پالت
+ * سفارشی (شب/روز) ـه. بدون `palette` رفتار قدیمی: فقط بر اساس بخش (manifest و جاهای بدون تنظیم کاربر).
+ */
+export function themeColorFor(
+  theme: ThemeName,
+  section?: string | null,
+  eventThemeActive = false,
+  palette?: string | null,
+  customBg?: { dark: string; light: string } | null,
+): string {
+  if (eventThemeActive) return THEME_COLORS[theme];
+  const key = palette ?? section;
+  if (key === "custom") return customBg?.[theme] ?? THEME_COLORS[theme];
+  if (key && Object.prototype.hasOwnProperty.call(PALETTE_THEME_COLORS, key)) return PALETTE_THEME_COLORS[key][theme];
   return THEME_COLORS[theme];
+}
+
+/** مقدار صفت `data-palette-meta` («#شب,#روز») → رنگ‌های --bg پالت سفارشی، یا null */
+export function parsePaletteMeta(v: string | null | undefined): { dark: string; light: string } | null {
+  if (!v) return null;
+  const [d, l] = v.split(",");
+  const dark = normalizeHex(d), light = normalizeHex(l);
+  return dark && light ? { dark, light } : null;
 }
 
 /** نام کوکی تم — layout.tsx (سمت سرور) و اسکریپت inline هر دو از همین می‌خونن. */
@@ -80,7 +105,16 @@ export function syncThemeColorMeta(theme: ThemeName) {
     document.head.appendChild(meta);
   }
   const root = document.documentElement;
-  meta.setAttribute("content", themeColorFor(theme, root.getAttribute("data-section"), root.hasAttribute("data-event-theme")));
+  meta.setAttribute(
+    "content",
+    themeColorFor(
+      theme,
+      root.getAttribute("data-section"),
+      root.hasAttribute("data-event-theme"),
+      root.getAttribute("data-palette"),
+      parsePaletteMeta(root.getAttribute("data-palette-meta")),
+    ),
+  );
 }
 
 /**
@@ -130,8 +164,11 @@ if(!m||m[1]!==t)w(t);
 d.setAttribute("data-theme",t);
 document.body.setAttribute("data-theme",t);
 var c=${JSON.stringify(THEME_COLORS)}[t];
-var S=${JSON.stringify(SECTION_THEME_COLORS)},k=d.getAttribute("data-section");
-if(k&&!d.hasAttribute("data-event-theme")&&Object.prototype.hasOwnProperty.call(S,k))c=S[k][t];
+var S=${JSON.stringify(PALETTE_THEME_COLORS)},k=d.getAttribute("data-palette")||d.getAttribute("data-section");
+if(k&&!d.hasAttribute("data-event-theme")){
+if(k==="custom"){var q=(d.getAttribute("data-palette-meta")||"").split(",")[t==="light"?1:0];if(/^#[0-9A-Fa-f]{6}$/.test(q))c=q;}
+else if(Object.prototype.hasOwnProperty.call(S,k))c=S[k][t];
+}
 var all=document.querySelectorAll('meta[name="theme-color"]');
 for(var i=1;i<all.length;i++)all[i].remove();
 var e=all[0];
