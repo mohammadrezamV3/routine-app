@@ -6,6 +6,8 @@ import { readJsonBody } from "@/lib/validate";
 import { activateDueForUser } from "@/lib/mentorSchedule";
 import { publishToUser } from "@/lib/realtime";
 import { sessionFeatureBlocked } from "@/lib/featureFlagsServer";
+import { getSection } from "@/lib/sectionServer";
+import { hiddenNotificationUrls, notificationSectionWhere } from "@/lib/notificationSection";
 
 const PAGE_SIZE = 30;
 const MAX_IDS = 100;
@@ -27,14 +29,17 @@ export async function GET(req: NextRequest) {
     if (Number.isNaN(before.getTime())) return badRequest(tr("پارامتر before نامعتبره", "The before parameter is invalid"));
   }
 
+  // روی زیردامنه‌ی یک بخش، اعلان رابطه‌های منتوری بخش‌های دیگه پنهانه (lib/notificationSection.ts)
+  const sectionWhere = notificationSectionWhere(await hiddenNotificationUrls(me, getSection()));
+
   const [rows, unread] = await Promise.all([
     prisma.inAppNotification.findMany({
-      where: { userId: me, ...(before ? { createdAt: { lt: before } } : {}) },
+      where: { userId: me, ...sectionWhere, ...(before ? { createdAt: { lt: before } } : {}) },
       orderBy: { createdAt: "desc" },
       take: PAGE_SIZE + 1,
       select: { id: true, type: true, title: true, body: true, url: true, readAt: true, createdAt: true },
     }),
-    prisma.inAppNotification.count({ where: { userId: me, readAt: null } }),
+    prisma.inAppNotification.count({ where: { userId: me, readAt: null, ...sectionWhere } }),
   ]);
 
   return NextResponse.json({ notifications: rows.slice(0, PAGE_SIZE), unread, hasMore: rows.length > PAGE_SIZE });

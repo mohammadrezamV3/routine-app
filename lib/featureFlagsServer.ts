@@ -1,3 +1,4 @@
+import { getSection } from "@/lib/sectionServer";
 import { NextResponse } from "next/server";
 import { getSessionFast } from "@/lib/serverSession";
 import { prisma } from "@/lib/prisma";
@@ -54,7 +55,11 @@ export async function serverHomePath(userId: string | undefined): Promise<string
   if (!userId) return "/";
   const m = await resolveFeaturesFor(userId);
   if (m.dashboard) return "/dashboard";
-  if (m.routine) return "/weekly";
+  // روی زیردامنه‌ی یک بخش به صفحه‌ی خود همون بخش می‌ره (ریدایرکت به بخش دیگه ممنوعه)
+  const section = getSection();
+  if (section === "workout" && m.exercise) return "/exercise";
+  if (section === "trade" && m.trade) return "/trade";
+  if (m.routine && (!section || section === "routine")) return "/weekly";
   return "/account";
 }
 

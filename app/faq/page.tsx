@@ -5,6 +5,8 @@ import { brandName } from "@/lib/brand";
 import { fillPriceCopy } from "@/lib/planPricing";
 import { getPricingConfig } from "@/lib/planPricingServer";
 import { SmartLink as Link } from "@/components/SmartLink";
+import { getSection } from "@/lib/sectionServer";
+import { pathAllowedIn } from "@/lib/sections";
 import { tr } from "@/lib/i18n";
 
 export function generateMetadata(): Metadata {
@@ -33,7 +35,7 @@ export function generateMetadata(): Metadata {
 export const revalidate = 300;
 
 export default async function FaqPage() {
-  const faqs = fillPriceCopy(getFaqs(), await getPricingConfig());
+  const faqs = fillPriceCopy(getFaqs(getSection()), await getPricingConfig());
   const FAQ_JSON_LD = {
     "@context": "https://schema.org",
     "@type": "FAQPage",
@@ -43,6 +45,18 @@ export default async function FaqPage() {
       acceptedAnswer: { "@type": "Answer", text: f.a },
     })),
   };
+  // لینک صفحه‌های فرود فقط برای مسیرهایی که روی همین میزبان باز می‌شن (جداسازی بخش‌ها)
+  const section = getSection();
+  const detailLinks = [
+    { href: "/routine", label: tr("روتین روزانه در آریون", "Daily routine in Arion") },
+    { href: "/habit-tracker", label: tr("مدیریت عادت‌ها", "Habit tracking") },
+    { href: "/daily-planner", label: tr("برنامه‌ریزی روزانه", "Daily planning") },
+    { href: "/bodybuilding-program", label: tr("برنامه‌ی بدنسازی هوشمند", "Smart workout plan") },
+    { href: "/calorie-counter", label: tr("کالری‌شمار فارسی", "Calorie counter") },
+    { href: "/trading-journal", label: tr("ژورنال معاملاتی", "Trading journal") },
+    { href: "/economic-calendar", label: tr("تقویم اقتصادی", "Economic calendar") },
+    { href: "/forex-sessions", label: tr("ساعت بازار فارکس", "Forex market hours") },
+  ].filter((l) => pathAllowedIn(section, l.href));
   return (
     <section>
       <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(breadcrumbJsonLd([{ name: brandName(), path: "/" }, { name: tr("سوالات متداول", "FAQ"), path: "/faq" }])) }} />
@@ -60,21 +74,12 @@ export default async function FaqPage() {
           موضوع را کامل توضیح داده، نه یک «اینجا کلیک کنید». */}
       <div style={{ marginTop: 28, fontSize: 12.5, color: "var(--muted)", lineHeight: 2 }}>
         {tr("توضیح کامل هر بخش:", "Full details on each section:")}{" "}
-        <Link href="/routine" style={{ color: "var(--accent)" }}>{tr("روتین روزانه در آریون", "Daily routine in Arion")}</Link>
-        {tr("،", ",")}{" "}
-        <Link href="/habit-tracker" style={{ color: "var(--accent)" }}>{tr("مدیریت عادت‌ها", "Habit tracking")}</Link>
-        {tr("،", ",")}{" "}
-        <Link href="/daily-planner" style={{ color: "var(--accent)" }}>{tr("برنامه‌ریزی روزانه", "Daily planning")}</Link>
-        {tr("،", ",")}{" "}
-        <Link href="/bodybuilding-program" style={{ color: "var(--accent)" }}>{tr("برنامه‌ی بدنسازی هوشمند", "Smart workout plan")}</Link>
-        {tr("،", ",")}{" "}
-        <Link href="/calorie-counter" style={{ color: "var(--accent)" }}>{tr("کالری‌شمار فارسی", "Calorie counter")}</Link>
-        {tr("،", ",")}{" "}
-        <Link href="/trading-journal" style={{ color: "var(--accent)" }}>{tr("ژورنال معاملاتی", "Trading journal")}</Link>
-        {tr("،", ",")}{" "}
-        <Link href="/economic-calendar" style={{ color: "var(--accent)" }}>{tr("تقویم اقتصادی", "Economic calendar")}</Link>{" "}
-        {tr("و", "and")}{" "}
-        <Link href="/forex-sessions" style={{ color: "var(--accent)" }}>{tr("ساعت بازار فارکس", "Forex market hours")}</Link>
+        {detailLinks.map((l, i) => (
+          <span key={l.href}>
+            {i > 0 && (i === detailLinks.length - 1 ? <>{" "}{tr("و", "and")}{" "}</> : <>{tr("،", ",")}{" "}</>)}
+            <Link href={l.href} style={{ color: "var(--accent)" }}>{l.label}</Link>
+          </span>
+        ))}
         .
         <br />
         {tr("سوال دیگه‌ای داری؟", "Have another question?")} <Link href="/about" style={{ color: "var(--accent)" }}>{tr("با ما تماس بگیر", "Get in touch")}</Link>.

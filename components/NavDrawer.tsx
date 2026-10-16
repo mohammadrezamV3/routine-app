@@ -446,7 +446,8 @@ export function NavDrawer() {
                     <NotificationPanel onClose={() => setNotifPanelOpen(false)} anchor={bellAnchor} closing={!notifPanelOpen} />
                   )}
                 </div>}
-                {featureVisible(features, "routine") && featureVisible(features, "streak") && <HeaderStreakClock />}
+                {/* استریک روتین فقط روی روتین و دامنه‌ی اصلی؛ ورزش و ترید ندارن (جداسازی بخش‌ها) */}
+                {(!section || section === "routine") && featureVisible(features, "routine") && featureVisible(features, "streak") && <HeaderStreakClock />}
               </>
             ) : (
               <div ref={authSlotRef} className="topbar-auth-pop topbar-guest-slot">

@@ -25,6 +25,7 @@ import { resolveFeaturesFor } from "./featureFlagsServer";
 import { announcementViewer, listAnnouncementsFor } from "./announcementsServer";
 import type { DashCalorie, DashEvent, DashExercise, DashMentors, DashNotification, DashRoadmap, DashSleep, DashTrade, DashboardData } from "./dashboardTypes";
 import { dashboardBlocks } from "./dashboardSection";
+import { hiddenNotificationUrls, notificationSectionWhere } from "./notificationSection";
 import type { SectionKey } from "./sections";
 import { SETTING_KEYS } from "./userSettingKeys";
 import { goalFromTargets, SLEEP_MAX_MIN, SLEEP_MIN_MIN } from "./sleep";
@@ -361,15 +362,17 @@ export async function buildMentors({ userId }: Ctx): Promise<DashMentors> {
 }
 
 // ── اعلان‌ها و اطلاعیه‌ها ────────────────────────────────────
-export async function buildNotifications({ userId }: Ctx): Promise<DashboardData["notifications"]> {
+export async function buildNotifications({ userId }: Ctx, section: SectionKey | null = null): Promise<DashboardData["notifications"]> {
+  // همون فیلتر بخش زنگوله (lib/notificationSection.ts): اعلان رابطه‌های منتوری بخش‌های دیگه پنهانه
+  const sectionWhere = notificationSectionWhere(await hiddenNotificationUrls(userId, section));
   const [rows, unread] = await Promise.all([
     prisma.inAppNotification.findMany({
-      where: { userId },
+      where: { userId, ...sectionWhere },
       orderBy: { createdAt: "desc" },
       take: 5,
       select: { id: true, type: true, title: true, body: true, url: true, readAt: true, createdAt: true },
     }),
-    prisma.inAppNotification.count({ where: { userId, readAt: null } }),
+    prisma.inAppNotification.count({ where: { userId, readAt: null, ...sectionWhere } }),
   ]);
   const latest: DashNotification[] = rows.map((r) => ({ id: r.id, type: r.type, title: r.title, body: r.body, url: r.url, read: !!r.readAt, createdAt: r.createdAt.toISOString() }));
   return { unread, latest };
@@ -469,7 +472,7 @@ export async function buildDashboard(userId: string, day: { date: string; tz: nu
     blocks.roadmaps && has(ModuleKey.ROADMAP) && features.roadmaps ? safe("roadmaps", errors, () => buildRoadmaps(ctx)) : none,
     blocks.sleep && features.sleep ? safe("sleep", errors, () => buildSleep(ctx)) : none,
     features.mentors ? safe("mentors", errors, () => buildMentors(ctx)) : none,
-    features.notifications ? safe("notifications", errors, () => buildNotifications(ctx)) : none,
+    features.notifications ? safe("notifications", errors, () => buildNotifications(ctx, section)) : none,
     safe("announcements", errors, () => buildAnnouncements(ctx)),
   ]);
 

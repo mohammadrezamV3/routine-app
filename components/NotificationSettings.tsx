@@ -6,6 +6,8 @@ import { getNotificationPermission, requestNotificationPermission } from "@/lib/
 import { getNotifPrefs, saveNotifPrefs, NotifPrefs, DEFAULT_NOTIF_PREFS } from "@/lib/notifPrefs";
 import { AccountToggleRow } from "@/components/AccountRow";
 import { AccountBlock, AccountOption } from "@/components/AccountUI";
+import { useSection } from "@/components/SectionProvider";
+import type { SectionKey } from "@/lib/sections";
 import { tr } from "@/lib/i18n";
 
 // اعلان‌ها — طبق درخواست صریح دیگر صفحه‌ی جدایی ندارد و بخشی از
@@ -15,12 +17,17 @@ import { tr } from "@/lib/i18n";
 // اعلان زنده (NotificationPanel) بهشون رسیدگی می‌شه؛ بقیه‌ی دسته‌ها
 // قبلا سوییچ داشتن ولی هیچ‌جا خونده نمی‌شدن — سوییچی که هیچ اثری نداره
 // بدتر از نبودنشه، پس حذف شدن.
-const rows = (): [keyof NotifPrefs, string, React.ReactNode][] => [
-  ["taskReminders", tr("اعلان‌های روتین", "Routine notifications"), <CalendarCheck2 size={16} key="r" />],
-  ["exerciseReminders", tr("اعلان‌های بدنسازی", "Workout notifications"), <Dumbbell size={16} key="e" />],
-];
+// روی زیردامنه‌ی یک بخش فقط دسته‌ی همون بخش دیده می‌شه (ترید دسته‌ی یادآوری این‌جا نداره)
+const rows = (section: SectionKey | null): [keyof NotifPrefs, string, React.ReactNode][] => {
+  const all: [keyof NotifPrefs, string, React.ReactNode, SectionKey][] = [
+    ["taskReminders", tr("اعلان‌های روتین", "Routine notifications"), <CalendarCheck2 size={16} key="r" />, "routine"],
+    ["exerciseReminders", tr("اعلان‌های بدنسازی", "Workout notifications"), <Dumbbell size={16} key="e" />, "workout"],
+  ];
+  return all.filter((r) => !section || r[3] === section).map(([k, l, i]) => [k, l, i]);
+};
 
 export function NotificationSettings({ index = 0 }: { index?: number }) {
+  const section = useSection();
   const [notifPermission, setNotifPermission] = useState<NotificationPermission | "unsupported">("default");
   const [prefs, setPrefs] = useState<NotifPrefs>(DEFAULT_NOTIF_PREFS);
 
@@ -41,6 +48,8 @@ export function NotificationSettings({ index = 0 }: { index?: number }) {
     });
   }
 
+  const categoryRows = rows(section);
+
   return (
     <AccountBlock icon={<BellRing size={15} />} title={tr("اعلان‌ها", "Notifications")} index={index}>
       {notifPermission !== "granted" && (
@@ -51,7 +60,15 @@ export function NotificationSettings({ index = 0 }: { index?: number }) {
             <div className="item-line empty">{tr("مرورگر مسدودش کرده — از تنظیمات سایت مرورگرت بازش کن.", "Your browser has blocked it. Unblock it in your browser site settings.")}</div>
           ) : (
             <>
-              <div className="item-line">{tr("وقتی برنامه‌ی امروزت (یا تمرینت) به وقتش برسه، یادآوری می‌گیری.", "You get a reminder when today's plan (or workout) is due.")}</div>
+              <div className="item-line">
+                {section === "routine"
+                  ? tr("وقتی برنامه‌ی امروزت به وقتش برسه، یادآوری می‌گیری.", "You get a reminder when today's plan is due.")
+                  : section === "workout"
+                    ? tr("وقتی تمرینت به وقتش برسه، یادآوری می‌گیری.", "You get a reminder when your workout is due.")
+                    : section === "trade"
+                      ? tr("وقتی خبر مهم یا رویداد ترید برسه، اعلان می‌گیری.", "You get an alert when an important news event or trading update arrives.")
+                      : tr("وقتی برنامه‌ی امروزت (یا تمرینت) به وقتش برسه، یادآوری می‌گیری.", "You get a reminder when today's plan (or workout) is due.")}
+              </div>
               <button className="btn btn-tonal btn-sm" onClick={enableNotifications} style={{ marginTop: 10 }}>
                 {tr("فعال‌کردن یادآوری‌ها", "Enable reminders")}
               </button>
@@ -60,11 +77,13 @@ export function NotificationSettings({ index = 0 }: { index?: number }) {
         </AccountOption>
       )}
 
-      <AccountOption label={tr("کدوم دسته‌ها یادآوری بگیرن", "Which categories send reminders")}>
-        {rows().map(([key, label, icon], i) => (
-          <AccountToggleRow key={key} index={i} icon={icon} label={label} checked={prefs[key]} onChange={(v) => toggle(key, v)} />
-        ))}
-      </AccountOption>
+      {categoryRows.length > 0 && (
+        <AccountOption label={tr("کدوم دسته‌ها یادآوری بگیرن", "Which categories send reminders")}>
+          {categoryRows.map(([key, label, icon], i) => (
+            <AccountToggleRow key={key} index={i} icon={icon} label={label} checked={prefs[key]} onChange={(v) => toggle(key, v)} />
+          ))}
+        </AccountOption>
+      )}
     </AccountBlock>
   );
 }

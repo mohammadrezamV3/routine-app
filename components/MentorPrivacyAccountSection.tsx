@@ -8,6 +8,9 @@ import { SegmentedTabs } from "@/components/SegmentedTabs";
 import { MentorPrivacySettings } from "@/components/MentorPrivacySettings";
 import type { MentorshipRow, MentorshipsResponse } from "@/lib/mentorTypes";
 import { publicUserName } from "@/lib/mentorTypes";
+import { useSection } from "@/components/SectionProvider";
+import { SECTION_META } from "@/lib/sections";
+import { intersectsCategories } from "@/lib/mentorCategories";
 import { tr } from "@/lib/i18n";
 
 // بخش «دسترسی منتورها» در تنظیمات پنل کاربری — برای هر رابطه‌ی فعال/در
@@ -17,6 +20,7 @@ import { tr } from "@/lib/i18n";
 export function MentorPrivacyAccountSection() {
   const searchParams = useSearchParams();
   const wanted = searchParams.get("mentorship");
+  const section = useSection();
   const [rows, setRows] = useState<MentorshipRow[] | null>(null);
   const [selected, setSelected] = useState<string>("");
 
@@ -26,13 +30,15 @@ export function MentorPrivacyAccountSection() {
       .then((r) => (r.ok ? r.json() : null))
       .then((d: MentorshipsResponse | null) => {
         if (!alive) return;
-        const list = (d?.mentorships ?? []).filter((m) => m.status === "ACTIVE" || m.status === "PENDING");
+        // روی زیردامنه‌ی یک بخش فقط مربی‌های همون بخش
+        const allowed = section ? SECTION_META[section].mentorCategories : null;
+        const list = (d?.mentorships ?? []).filter((m) => (m.status === "ACTIVE" || m.status === "PENDING") && intersectsCategories(m.categories, allowed));
         setRows(list);
         setSelected((prev) => prev || (list.find((m) => m.id === wanted)?.id ?? list[0]?.id ?? ""));
       })
       .catch(() => { if (alive) setRows([]); });
     return () => { alive = false; };
-  }, [wanted]);
+  }, [wanted, section]);
 
   if (!rows) return <LoadingBlock />;
   if (rows.length === 0) return <MentorEmpty>{tr("هنوز مربی‌ای نداری؛ وقتی با یه مربی شروع کنی، این‌جا تنظیم می‌کنی چی ببینه", "You don't have a mentor yet. Once you start with one, you can choose here what they can see")}</MentorEmpty>;

@@ -10,6 +10,7 @@ import { FREE_ROUTINE_COPY_FA } from "@/lib/trial";
 import { planDisplayName, trialCopy, freeRoutineCopyEn } from "@/lib/subscriptionI18n";
 import { fillPriceCopy } from "@/lib/planPricing";
 import { usePlanPricing } from "@/lib/usePlanPricing";
+import { useSection } from "@/components/SectionProvider";
 import { tr } from "@/lib/i18n";
 
 type SubscriptionInfo = { planId: string; status: string; currentPeriodEnd: string; plan: { key: string; nameFa: string } } | null;
@@ -19,6 +20,7 @@ type SubscriptionInfo = { planId: string; status: string; currentPeriodEnd: stri
 // به‌جای بردن به ثبت‌نام، می‌بره به چک‌اوت واقعی — پلن فعلی کاربر هم
 // به‌جای دکمه‌ی خرید یه نشان «پلن فعلی تو» می‌گیره.
 export default function SubscriptionPage() {
+  const section = useSection();
   const { status } = useSession();
   const { pricing } = usePlanPricing();
   const [checkoutResult, setCheckoutResult] = useState<string | null>(null);
@@ -94,6 +96,8 @@ export default function SubscriptionPage() {
           ? tr("دسترسی نامحدود داری — نیازی به اشتراک نداری", "You have unlimited access, no subscription needed")
           : subscription
           ? tr(`پلن فعلی: ${subscription.plan.nameFa} — ${subscription.status === "TRIAL" ? "دوره آزمایشی" : "فعال"}`, `Current plan: ${planDisplayName(subscription.plan)} — ${subscription.status === "TRIAL" ? "trial" : "active"}`)
+          : section
+          ? tr("هنوز پلن پولی فعالی نداری؛ برای ادامه یکی از پلن‌ها رو انتخاب کن.", "You do not have an active paid plan yet. Pick a plan to continue.")
           : tr(`هنوز پلن پولی فعالی نداری. ${fillPriceCopy(FREE_ROUTINE_COPY_FA, pricing)} هر حساب تازه: ${trialCopy()}؛ بعدش برای ادامه یکی از پلن‌ها رو انتخاب کن.`, `You do not have an active paid plan yet. ${freeRoutineCopyEn(pricing)} Every new account gets: ${trialCopy()}. After that, pick a plan to continue.`)}
       </div>
 

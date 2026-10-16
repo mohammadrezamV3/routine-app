@@ -7,6 +7,7 @@ import { AgentAvatar } from "@/components/AgentAvatar";
 import { GoldenName } from "@/components/GoldenName";
 import { getAccountSections } from "@/components/accountSections";
 import { formatAccountDate, useAccountSummary } from "@/components/AccountSummary";
+import { useSection } from "@/components/SectionProvider";
 import { logoutAndRedirect } from "@/lib/logout";
 import { tr } from "@/lib/i18n";
 
@@ -17,7 +18,7 @@ import { tr } from "@/lib/i18n";
 // جداکننده «خروج از حساب» به رنگ خطر).
 export function AccountSidebar() {
   const pathname = usePathname() || "/account";
-  const sections = getAccountSections();
+  const sections = getAccountSections(useSection());
   const me = useAccountSummary();
   const plan = me?.plan ?? null;
 

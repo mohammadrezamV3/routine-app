@@ -20,6 +20,7 @@ import { priceText as formatPriceAmount } from "@/lib/subscriptionI18n";
 import { faNum } from "@/lib/jalali";
 import { Spinner } from "@/components/Spinner";
 import { GoldenName } from "@/components/GoldenName";
+import { useSection } from "@/components/SectionProvider";
 import { tr } from "@/lib/i18n";
 
 type ProfileUser = {
@@ -77,6 +78,9 @@ const draftKey = (d: Draft) => JSON.stringify([
  *     پنجره را می‌بندد؛ تنها راه دورریختن تغییرها دکمه‌ی «لغو» است.
  */
 export default function AccountProfilePage() {
+  // پروفایل ورزشی فقط روی ورزش و دامنه‌ی اصلی (جداسازی بخش‌ها، docs/sections.md)
+  const section = useSection();
+  const showSports = !section || section === "workout";
   const [data, setData] = useState<ProfileUser | null>(null);
   const [avatarUrl, setAvatarUrl] = useState<string | null>(null);
   const [avatarSaving, setAvatarSaving] = useState(false);
@@ -560,25 +564,27 @@ export default function AccountProfilePage() {
         </AccountBlock>
 
         {/* ── پروفایل ورزشی ── */}
-        <AccountBlock
-          title={tr("پروفایل ورزشی", "Sports profile")} icon={<Dumbbell />} index={1}
-          desc={tr("برای بخش ورزش و کالری لازمه؛ توی فرم‌های اون بخش‌ها هم پر می‌شه", "Needed for the workout and calorie sections; it also fills their forms")}
-        >
-          <div className="ap-field-grid is-3">
-            <AuthField id="pf-age" label={tr("سن", "Age")}>
-              <NumberInput id="pf-age" limit="ageYears" dir="ltr" className="wsearch-newform-name ap-ltr ap-pe-unit" value={ageYears} onChange={setAgeYears} />
-              <span className="ap-affix">{tr("سال", "yr")}</span>
-            </AuthField>
-            <AuthField id="pf-height" label={tr("قد", "Height")}>
-              <NumberInput id="pf-height" limit="heightCm" dir="ltr" className="wsearch-newform-name ap-ltr ap-pe-unit" value={heightCm} onChange={setHeightCm} />
-              <span className="ap-affix">{tr("سانتی‌متر", "cm")}</span>
-            </AuthField>
-            <AuthField id="pf-weight" label={tr("وزن", "Weight")}>
-              <NumberInput id="pf-weight" limit="weightKg" dir="ltr" className="wsearch-newform-name ap-ltr ap-pe-unit" value={weightKg} onChange={setWeightKg} />
-              <span className="ap-affix">{tr("کیلوگرم", "kg")}</span>
-            </AuthField>
-          </div>
-        </AccountBlock>
+        {showSports && (
+          <AccountBlock
+            title={tr("پروفایل ورزشی", "Sports profile")} icon={<Dumbbell />} index={1}
+            desc={tr("برای بخش ورزش و کالری لازمه؛ توی فرم‌های اون بخش‌ها هم پر می‌شه", "Needed for the workout and calorie sections; it also fills their forms")}
+          >
+            <div className="ap-field-grid is-3">
+              <AuthField id="pf-age" label={tr("سن", "Age")}>
+                <NumberInput id="pf-age" limit="ageYears" dir="ltr" className="wsearch-newform-name ap-ltr ap-pe-unit" value={ageYears} onChange={setAgeYears} />
+                <span className="ap-affix">{tr("سال", "yr")}</span>
+              </AuthField>
+              <AuthField id="pf-height" label={tr("قد", "Height")}>
+                <NumberInput id="pf-height" limit="heightCm" dir="ltr" className="wsearch-newform-name ap-ltr ap-pe-unit" value={heightCm} onChange={setHeightCm} />
+                <span className="ap-affix">{tr("سانتی‌متر", "cm")}</span>
+              </AuthField>
+              <AuthField id="pf-weight" label={tr("وزن", "Weight")}>
+                <NumberInput id="pf-weight" limit="weightKg" dir="ltr" className="wsearch-newform-name ap-ltr ap-pe-unit" value={weightKg} onChange={setWeightKg} />
+                <span className="ap-affix">{tr("کیلوگرم", "kg")}</span>
+              </AuthField>
+            </div>
+          </AccountBlock>
+        )}
 
         {/* ── کد دعوت ── */}
         <AccountBlock

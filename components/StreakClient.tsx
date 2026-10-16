@@ -24,9 +24,11 @@ import { DashIcon } from "./DashboardIcons";
 import { useDashboardRoutine } from "@/lib/useDashboardRoutine";
 import { useLiveRefresh, keyMatches } from "@/lib/liveSync";
 import { getStreakTier, STREAK_MILESTONES } from "@/lib/streakTier";
-import { ACHIEVEMENTS, ACHIEVEMENT_BY_ID, achievementDesc } from "@/lib/achievements";
+import { ACHIEVEMENTS, ACHIEVEMENT_BY_ID, achievementDesc, achievementVisibleIn } from "@/lib/achievements";
+import { useSection } from "./SectionProvider";
 import type { AchievementsPayload } from "@/lib/achievementsServer";
 import { weekdayShort, jMonthName, toJalali } from "@/lib/jalali";
+import type { SectionKey } from "@/lib/sections";
 import { tr } from "@/lib/i18n";
 
 export function StreakClient() {
@@ -80,11 +82,17 @@ function StreakBody() {
   const routine = useDashboardRoutine();
   const { data: session } = useSession();
   const ach = useAchievements();
+  const section = useSection();
+  // شمارنده فقط اچیومنت‌های دیده‌شده روی این بخش رو می‌شماره (دامنه‌ی اصلی همه)
+  const shown = ach.data ? ACHIEVEMENTS.filter((a) => achievementVisibleIn(a, section)) : [];
+  const shownUnlocked = ach.data ? shown.filter((a) => ach.data!.items.some((i) => i.id === a.id && i.unlocked)).length : 0;
   const [celebrate, setCelebrate] = useState<string[]>([]);
 
   useEffect(() => {
-    if (ach.data?.fresh.length) setCelebrate(ach.data.fresh);
-  }, [ach.data?.fresh]);
+    // جشن فقط برای اچیومنت‌های همین بخش
+    const fresh = (ach.data?.fresh ?? []).filter((id) => ACHIEVEMENT_BY_ID[id] && achievementVisibleIn(ACHIEVEMENT_BY_ID[id], section));
+    if (fresh.length) setCelebrate(fresh);
+  }, [ach.data?.fresh, section]);
 
   const name = ((session?.user as { name?: string } | undefined)?.name ?? "").split(" ")[0];
 
@@ -103,7 +111,7 @@ function StreakBody() {
         <CardHead
           icon="trophy"
           title={tr("اچیومنت‌ها", "Achievements")}
-          extra={ach.data ? <span className="stk-ach-count"><b>{ach.data.unlockedCount}</b>/{ach.data.total}</span> : null}
+          extra={ach.data ? <span className="stk-ach-count"><b>{shownUnlocked}</b>/{shown.length}</span> : null}
         />
         {ach.error && !ach.data ? (
           <div className="db-empty">
@@ -111,7 +119,7 @@ function StreakBody() {
             <button type="button" className="account-outline-btn mentor-btn is-sm" onClick={ach.reload}>{tr("تلاش دوباره", "Try again")}</button>
           </div>
         ) : (
-          <AchievementGrid data={ach.data} />
+          <AchievementGrid data={ach.data} section={section} />
         )}
       </BentoCard>
 
@@ -280,13 +288,13 @@ const V_ACH_ITEM = {
   show: { opacity: 1, y: 0, transition: { duration: 0.32, ease: D_EASE } },
 };
 
-function AchievementGrid({ data }: { data: AchievementsPayload | null }) {
+function AchievementGrid({ data, section }: { data: AchievementsPayload | null; section: SectionKey | null }) {
   const reduced = !!useReducedMotion();
   if (!data) {
     return <div className="stk-ach-grid">{Array.from({ length: 8 }, (_, i) => <Skel key={i} w="100%" h={148} r={18} />)}</div>;
   }
   const byId = new Map(data.items.map((i) => [i.id, i]));
-  const list = ACHIEVEMENTS.filter((a) => byId.has(a.id))
+  const list = ACHIEVEMENTS.filter((a) => byId.has(a.id) && achievementVisibleIn(a, section))
     .map((a, idx) => ({ a, st: byId.get(a.id)!, idx }))
     .sort((x, y) => Number(y.st.unlocked) - Number(x.st.unlocked) || x.idx - y.idx);
 
