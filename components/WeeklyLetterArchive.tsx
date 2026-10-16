@@ -20,9 +20,12 @@ function IssueCard({ l, featured, i }: { l: LetterSummary; featured: boolean; i:
   return (
     <Reveal className={featured ? "wl-issue-wrap is-featured" : "wl-issue-wrap"} delay={Math.min(i, 3) * 0.06}>
       <Link href={`/analysis/weekly?week=${l.weekStart}`} className={`wl-card wl-issue${featured ? " is-featured" : ""}${l.read ? "" : " is-unread"}`} style={{ ["--c" as string]: color } as React.CSSProperties} prefetch>
-        <LazyRing value={score === null ? 0 : score / 100} size={featured ? 92 : 68} stroke={featured ? 9 : 7} delay={0.1}>
-          <span className="wl-issue-score">{score === null ? "—" : Math.round(score)}</span>
-        </LazyRing>
+        {/* روی زیردامنه امتیاز کل ذخیره‌شده نمایش داده نمی‌شه (API خالیش می‌کنه) */}
+        {(score !== null || l.headline) && (
+          <LazyRing value={score === null ? 0 : score / 100} size={featured ? 92 : 68} stroke={featured ? 9 : 7} delay={0.1}>
+            <span className="wl-issue-score">{score === null ? "—" : Math.round(score)}</span>
+          </LazyRing>
+        )}
         <div className="wl-issue-body">
           <div className="wl-issue-top">
             <b className="wl-issue-no">{tr("شماره", "Issue")} {l.issueNo}</b>

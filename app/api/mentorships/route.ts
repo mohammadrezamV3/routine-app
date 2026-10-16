@@ -19,7 +19,7 @@ import {
 } from "@/lib/mentorServer";
 import { decideMentorTerms, MENTOR_TERMS_ERROR_CODE, MENTOR_TERMS_VERSION } from "@/lib/mentorTerms";
 import { publishToUsers } from "@/lib/realtime";
-import { tr } from "@/lib/i18n";
+import { tr, iso } from "@/lib/i18n";
 
 const MESSAGE_MAX = 500;
 const offerGoneMsg = () => tr("مهلت نوبتت همین الان تموم شد؛ دوباره وارد صف شو", "Your turn has just expired; join the queue again");
@@ -204,15 +204,15 @@ export async function POST(req: Request) {
   const [mentorship] = await buildMentorshipRows([row!], me);
 
   const sender = initiatedBy === "STUDENT" ? row!.student : row!.mentor;
-  await notifyUser(initiatedBy === "STUDENT" ? mentorId : studentId, {
+  await notifyUser(initiatedBy === "STUDENT" ? mentorId : studentId, () => ({
     type: "mentor.request",
-    title: initiatedBy === "STUDENT" ? "درخواست شاگردی جدید" : "دعوت به مربی‌گری",
+    title: initiatedBy === "STUDENT" ? tr("درخواست شاگردی جدید", "New student request") : tr("دعوت به مربی‌گری", "Mentoring invitation"),
     body:
       initiatedBy === "STUDENT"
-        ? `${displayName(sender)} می‌خواد شاگردت بشه.`
-        : `${displayName(sender)} دعوتت کرده که مربی‌ات باشه.`,
+        ? tr(`${displayName(sender)} می‌خواد شاگردت بشه.`, `${iso(displayName(sender))} wants to become your student.`)
+        : tr(`${displayName(sender)} دعوتت کرده که مربی‌ات باشه.`, `${iso(displayName(sender))} invited you to be their mentor.`),
     url: initiatedBy === "STUDENT" ? "/mentor" : "/mentorship",
-  });
+  }));
 
   return NextResponse.json({ mentorship });
 }

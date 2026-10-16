@@ -5,7 +5,7 @@ import { notifyUser, displayName } from "@/lib/inAppNotify";
 import { publishToUsers } from "@/lib/realtime";
 import { PUBLIC_USER_SELECT } from "@/lib/mentorServer";
 import { advanceWaitlist } from "@/lib/mentorWaitlistServer";
-import { tr } from "@/lib/i18n";
+import { tr, iso } from "@/lib/i18n";
 
 // DELETE /api/mentor/waitlist/:entryId → منتور یک نفر را از صفش بیرون می‌برد.
 // where همیشه {id, mentorId: من} (ضد IDOR)؛ «وجود ندارد» و «مال تو نیست» هر دو ۴۰۴.
@@ -29,12 +29,12 @@ export async function DELETE(_req: Request, { params }: { params: { entryId: str
   if (res.count === 0) return NextResponse.json({ error: tr(tr("وضعیت صف هم‌زمان تغییر کرد؛ دوباره تلاش کن", "The queue status changed at the same time; try again"), "The queue status changed at the same time; try again") }, { status: 409 });
 
   const mentor = await prisma.user.findUnique({ where: { id: me }, select: PUBLIC_USER_SELECT });
-  await notifyUser(entry.userId, {
+  await notifyUser(entry.userId, () => ({
     type: "mentor.waitlist.removed",
-    title: "از صف خارج شدی",
-    body: `${displayName(mentor)} فعلا نمی‌تونه شاگرد جدید از صفش بپذیره.`,
+    title: tr("از صف خارج شدی", "You were removed from the queue"),
+    body: tr(`${displayName(mentor)} فعلا نمی‌تونه شاگرد جدید از صفش بپذیره.`, `${iso(displayName(mentor))} can't accept new students from their queue right now.`),
     url: "/mentors",
-  });
+  }));
   if (entry.status === "OFFERED") await advanceWaitlist(me, now);
   void publishToUsers([me, entry.userId], { type: "mentor.mentorship", data: { mentorId: me } });
   return NextResponse.json({ ok: true });

@@ -23,7 +23,11 @@ import { ensureFreshCalendar } from "./economicCalendar";
 import { getAdminFlags } from "./adminFlag";
 import { resolveFeaturesFor } from "./featureFlagsServer";
 import { announcementViewer, listAnnouncementsFor } from "./announcementsServer";
-import type { DashCalorie, DashEvent, DashExercise, DashMentors, DashNotification, DashRoadmap, DashTrade, DashboardData } from "./dashboardTypes";
+import type { DashCalorie, DashEvent, DashExercise, DashMentors, DashNotification, DashRoadmap, DashSleep, DashTrade, DashboardData } from "./dashboardTypes";
+import { dashboardBlocks } from "./dashboardSection";
+import type { SectionKey } from "./sections";
+import { SETTING_KEYS } from "./userSettingKeys";
+import { goalFromTargets, SLEEP_MAX_MIN, SLEEP_MIN_MIN } from "./sleep";
 import { tr } from "@/lib/i18n";
 import { planDisplayName } from "@/lib/subscriptionI18n";
 
@@ -274,6 +278,48 @@ export async function buildCalendar(): Promise<{ events: DashEvent[] }> {
   return { events: rows.map((r) => ({ ...r, impact: r.impact as DashEvent["impact"], occursAt: r.occursAt.toISOString() })) };
 }
 
+// ── خواب ────────────────────────────────────────────────────
+/** ۷ شب اخیر + هدف خواب خود کاربر (sleepGoal، وگرنه ساعت‌های روتین) — فقط بخش روتین و ورزش */
+export async function buildSleep({ userId, date }: Ctx): Promise<DashSleep> {
+  const from = isoAdd(date, -6);
+  const [rows, settings] = await Promise.all([
+    prisma.sleepEntry.findMany({
+      where: { userId, date: { gte: dbDate(from), lte: dbDate(date) } },
+      select: { date: true, sleptAt: true, wokeAt: true, quality: true },
+    }),
+    prisma.userSetting.findMany({
+      where: { userId, key: { in: [SETTING_KEYS.sleepGoal, SETTING_KEYS.wakeSleepTimes] } },
+      select: { key: true, value: true },
+    }),
+  ]);
+  const HHMM = /^([01]\d|2[0-3]):[0-5]\d$/;
+  const readTimes = (key: string) => {
+    const v = settings.find((x) => x.key === key)?.value as { wake?: unknown; sleep?: unknown } | null | undefined;
+    return v && typeof v.wake === "string" && typeof v.sleep === "string" && HHMM.test(v.wake) && HHMM.test(v.sleep) ? { wake: v.wake, sleep: v.sleep } : null;
+  };
+  const goalMin = goalFromTargets(readTimes(SETTING_KEYS.sleepGoal) ?? readTimes(SETTING_KEYS.wakeSleepTimes));
+  const byIso = new Map<string, { minutes: number; quality: number | null }>();
+  for (const r of rows) {
+    if (!r.sleptAt || !r.wokeAt) continue;
+    const minutes = Math.round((r.wokeAt.getTime() - r.sleptAt.getTime()) / 60000);
+    if (minutes < SLEEP_MIN_MIN || minutes > SLEEP_MAX_MIN) continue;
+    byIso.set(dbIso(r.date), { minutes, quality: r.quality });
+  }
+  const week = Array.from({ length: 7 }, (_, i) => {
+    const iso = isoAdd(from, i);
+    return { iso, minutes: byIso.get(iso)?.minutes ?? 0 };
+  });
+  const logged = week.filter((w) => w.minutes > 0);
+  const lastIso = logged.length ? logged[logged.length - 1].iso : null;
+  const last = lastIso ? byIso.get(lastIso)! : null;
+  return {
+    goalMin,
+    lastNight: lastIso && last ? { iso: lastIso, minutes: last.minutes, quality: last.quality } : null,
+    week,
+    avgMin: logged.length ? Math.round(logged.reduce((a, w) => a + w.minutes, 0) / logged.length) : null,
+  };
+}
+
 // ── رودمپ ────────────────────────────────────────────────────
 export async function buildRoadmaps({ userId }: Ctx): Promise<{ items: DashRoadmap[]; total: number }> {
   const [rows, total] = await Promise.all([
@@ -372,8 +418,10 @@ export function dashboardKey(day: { date: string; tz: number }) {
 /**
  * همه‌ی بخش‌ها برای یک کاربر — مشترک روت API و رندر سمت سرور /dashboard.
  * گیت فلگ و rate limit با صدازننده‌ست؛ این‌جا فقط مسدودبودن و دسترسی ماژول‌ها.
+ * `section` (زیردامنه‌ی روتین/ورزش/ترید): بلوکی که اون بخش نشون نمی‌ده اصلا ساخته
+ * نمی‌شه و null برمی‌گرده (lib/dashboardSection.ts)؛ null = دامنه‌ی اصلی، مثل قبل.
  */
-export async function buildDashboard(userId: string, day: { date: string; tz: number }): Promise<DashboardData | "blocked" | "notfound"> {
+export async function buildDashboard(userId: string, day: { date: string; tz: number }, section: SectionKey | null = null): Promise<DashboardData | "blocked" | "notfound"> {
   const [user, flags, features] = await Promise.all([
     prisma.user.findUnique({
       where: { id: userId },
@@ -400,15 +448,17 @@ export async function buildDashboard(userId: string, day: { date: string; tz: nu
   const has = (m: ModuleKey) => mods.has(m);
   const errors: string[] = [];
   const none = Promise.resolve(null);
+  const blocks = dashboardBlocks(section);
 
-  const [exercise, calorie, trade, calendar, roadmaps, mentors, notifications, announcements] = await Promise.all([
+  const [exercise, calorie, trade, calendar, roadmaps, sleep, mentors, notifications, announcements] = await Promise.all([
     // هر بخش هم ماژول پولی خودش رو می‌خواد هم فلگ پنل ادمین (/admin/features)؛
     // فلگ خاموش → null، درست مثل ماژول خریده‌نشده
-    has(ModuleKey.EXERCISE) && features.exercise ? safe("exercise", errors, () => buildExercise(ctx)) : none,
-    has(ModuleKey.CALORIE) && features.calorie ? safe("calorie", errors, () => buildCalorie(ctx)) : none,
-    has(ModuleKey.TRADE) && features.tradeJournal ? safe("trade", errors, () => buildTrade(ctx)) : none,
-    has(ModuleKey.TRADE) && features.economicCalendar ? safe("calendar", errors, () => buildCalendar()) : none,
-    has(ModuleKey.ROADMAP) && features.roadmaps ? safe("roadmaps", errors, () => buildRoadmaps(ctx)) : none,
+    blocks.fitness && has(ModuleKey.EXERCISE) && features.exercise ? safe("exercise", errors, () => buildExercise(ctx)) : none,
+    blocks.fitness && has(ModuleKey.CALORIE) && features.calorie ? safe("calorie", errors, () => buildCalorie(ctx)) : none,
+    blocks.trade && has(ModuleKey.TRADE) && features.tradeJournal ? safe("trade", errors, () => buildTrade(ctx)) : none,
+    blocks.trade && has(ModuleKey.TRADE) && features.economicCalendar ? safe("calendar", errors, () => buildCalendar()) : none,
+    blocks.roadmaps && has(ModuleKey.ROADMAP) && features.roadmaps ? safe("roadmaps", errors, () => buildRoadmaps(ctx)) : none,
+    blocks.sleep && features.sleep ? safe("sleep", errors, () => buildSleep(ctx)) : none,
     features.mentors ? safe("mentors", errors, () => buildMentors(ctx)) : none,
     features.notifications ? safe("notifications", errors, () => buildNotifications(ctx)) : none,
     safe("announcements", errors, () => buildAnnouncements(ctx)),
@@ -440,6 +490,7 @@ export async function buildDashboard(userId: string, day: { date: string; tz: nu
     trade,
     calendar,
     roadmaps,
+    sleep,
     mentors,
     notifications: notifications ?? { unread: 0, latest: [] },
     announcements: announcements ?? [],

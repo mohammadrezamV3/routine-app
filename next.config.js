@@ -13,8 +13,25 @@ const isProd = process.env.NODE_ENV === "production";
 // می‌شه (نه `wss:` کلی، که اجازه‌ی وصل‌شدن به *هر* سروری رو می‌داد).
 // این هدرها موقع build ثابت می‌شن؛ اگه NEXTAUTH_URL/NEXT_PUBLIC_SITE_URL
 // اون لحظه در دسترس نباشن، دامنه‌ی اصلی پیش‌فرض (lib/siteUrl.ts) استفاده می‌شه.
+//
+// زیردامنه‌های بخش‌ها (NEXT_PUBLIC_SECTION_BASE_DOMAIN، lib/sections.ts): هر زیردامنه خودش یک
+// origin جداست و WebSocket همون host رو باز می‌کنه؛ پس routine./trade./workout. هم اضافه می‌شن.
+// بدون این env هیچ میزبان تازه‌ای اضافه نمی‌شه.
+const SECTION_SUBDOMAINS = ["routine", "trade", "workout"];
+function sectionBaseDomain() {
+  const raw = (process.env.NEXT_PUBLIC_SECTION_BASE_DOMAIN || "").trim().toLowerCase();
+  const base = raw.replace(/^https?:\/\//, "").replace(/\/.*$/, "").replace(/^\.+/, "").replace(/:\d+$/, "");
+  return base || null;
+}
+function sectionHosts() {
+  const base = sectionBaseDomain();
+  if (!base) return [];
+  return SECTION_SUBDOMAINS.map((s) => `${s}.${base}`);
+}
+
 function realtimeConnectSources() {
   const hosts = new Set(["arionapp.ir", "www.arionapp.ir"]);
+  for (const h of sectionHosts()) hosts.add(h);
   for (const u of [process.env.NEXTAUTH_URL, process.env.NEXT_PUBLIC_SITE_URL]) {
     try {
       const h = new URL(u).host;

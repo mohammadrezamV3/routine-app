@@ -5,6 +5,7 @@ import { getSessionFast } from "@/lib/serverSession";
 import { prisma } from "@/lib/prisma";
 import { isFeatureEnabled, serverHomePath } from "@/lib/featureFlagsServer";
 import { buildDashboard, dashboardKey, dayInTimezone } from "@/lib/dashboardServer";
+import { getSection } from "@/lib/sectionServer";
 import { DashboardClient, type DashboardGate } from "@/components/DashboardClient";
 
 // صفحه‌ی فقط‌ورودیه، پس ایندکس نمی‌شه (هم‌الگوی /admin و بقیه‌ی صفحه‌های حساب).
@@ -42,7 +43,8 @@ export default async function DashboardPage() {
   try {
     const u = await tzPromise;
     const day = dayInTimezone(u?.timezone);
-    const data = await buildDashboard(userId, day);
+    // زیردامنه‌ی بخش (روتین/ورزش/ترید): فقط بلوک‌های همون بخش ساخته می‌شن؛ دامنه‌ی اصلی null و مثل قبل
+    const data = await buildDashboard(userId, day, getSection());
     if (data === "blocked" || data === "notfound") gate = "off";
     else initial = { key: dashboardKey(day), data };
   } catch (e) {

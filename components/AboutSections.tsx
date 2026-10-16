@@ -2,6 +2,7 @@
 
 import { useEffect, useRef, useState } from "react";
 import { SmartLink as Link } from "@/components/SmartLink";
+import { AuthAwareCta } from "@/components/AuthAwareCta";
 import { m as motion, useInView, useReducedMotion, useScroll, useTransform, type MotionValue } from "framer-motion";
 import {
   Apple, ArrowLeft, Bot, CalendarCheck, CandlestickChart, Check, Dumbbell, FileSpreadsheet, Flame, GraduationCap,
@@ -462,12 +463,23 @@ export function AboutFinalCTA() {
           <h2 id="ab-final-h" className="ab-final-title">{tr("از امروز،", "From today,")} <em>{tr("یک‌جا.", "in one place.")}</em></h2>
           <p className="ab-final-sub">{tr("«روتین من» برای هر حساب تازه 14 روز رایگان است؛ روتینت را بچین و از همین امروز اجرا کن.", "My Routine is free for 14 days for every new account; lay out your routine and start today.")}</p>
           <div className="ab-ctas">
-            <Link href="/auth/signup" className="ls-btn ls-btn-primary">
-              {tr("ساخت حساب", "Create account")} <ArrowLeft size={16} className="dir-flip" />
-            </Link>
-            <Link href="/auth/login" className="ls-btn ls-btn-ghost">{tr("ورود", "Log in")}</Link>
+            <AuthAwareCta
+              guest={
+                <>
+                  <Link href="/auth/signup" className="ls-btn ls-btn-primary">
+                    {tr("ساخت حساب", "Create account")} <ArrowLeft size={16} className="dir-flip" />
+                  </Link>
+                  <Link href="/auth/login" className="ls-btn ls-btn-ghost">{tr("ورود", "Log in")}</Link>
+                </>
+              }
+              authed={
+                <Link href="/dashboard" className="ls-btn ls-btn-primary">
+                  {tr("رفتن به داشبورد", "Go to dashboard")} <ArrowLeft size={16} className="dir-flip" />
+                </Link>
+              }
+            />
           </div>
-          <div><span className="ab-final-note"><Check size={13} /> {tr("ثبت‌نام در کمتر از یک دقیقه", "Sign up in under a minute")}</span></div>
+          <AuthAwareCta guest={<div><span className="ab-final-note"><Check size={13} /> {tr("ثبت‌نام در کمتر از یک دقیقه", "Sign up in under a minute")}</span></div>} />
           <div className="ab-final-note" style={{ marginTop: 6 }}><Smartphone size={13} /> {tr("روی گوشی هم مثل یک اپ نصب می‌شود", "Installs on your phone like an app")}</div>
         </div>
       </Reveal>

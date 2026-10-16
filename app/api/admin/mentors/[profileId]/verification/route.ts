@@ -113,19 +113,22 @@ export async function POST(req: NextRequest, { params }: { params: { profileId: 
     throw e;
   }
 
-  const subject = kind === "IDENTITY"
-    ? "مدرک هویت"
-    : `«${MENTOR_CATEGORY_META[category as keyof typeof MENTOR_CATEGORY_META].certLabel}»`;
-  const text =
-    status === "VERIFIED" ? `${subject} شما تایید شد.`
-    : status === "REJECTED" ? `${subject} شما رد شد؛ دلیل: ${reason}`
-    : status === "PENDING" ? `${subject} شما در صف بررسی ادمین‌های آریون قرار گرفت.`
-    : `وضعیت ${subject} شما به «${VERIFICATION_LABELS[status]}» تغییر کرد؛ بررسی دوباره پس از ارسال مدرک تازه انجام می‌شود.`;
-  await notifyUser(profile.userId, {
-    type: "verification.result",
-    title: kind === "IDENTITY" ? "احراز هویت" : "مدرک تخصصی",
-    body: text,
-    url: "/mentor/profile",
+  // متن با زبان گیرنده (مربی) ساخته می‌شه نه ادمینی که وضعیت رو عوض کرده
+  await notifyUser(profile.userId, () => {
+    const subject = kind === "IDENTITY"
+      ? tr("مدرک هویت", "identity document")
+      : `«${MENTOR_CATEGORY_META[category as keyof typeof MENTOR_CATEGORY_META].certLabel}»`;
+    const text =
+      status === "VERIFIED" ? tr(`${subject} شما تایید شد.`, `Your ${subject} was verified.`)
+      : status === "REJECTED" ? tr(`${subject} شما رد شد؛ دلیل: ${reason}`, `Your ${subject} was rejected. Reason: ${reason}`)
+      : status === "PENDING" ? tr(`${subject} شما در صف بررسی ادمین‌های آریون قرار گرفت.`, `Your ${subject} is in the Arion review queue.`)
+      : tr(`وضعیت ${subject} شما به «${VERIFICATION_LABELS[status]}» تغییر کرد؛ بررسی دوباره پس از ارسال مدرک تازه انجام می‌شود.`, `The status of your ${subject} changed to "${VERIFICATION_LABELS[status]}". It will be reviewed again after you submit a new document.`);
+    return {
+      type: "verification.result",
+      title: kind === "IDENTITY" ? tr("احراز هویت", "Identity verification") : tr("مدرک تخصصی", "Professional certificate"),
+      body: text,
+      url: "/mentor/profile",
+    };
   });
 
   return NextResponse.json({ ok: true, fromStatus, status });

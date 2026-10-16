@@ -10,6 +10,10 @@
 //    سطح ماژول یا تابع می‌شن یا جفت `{ fa, en }` نگه می‌دارن و موقع رندر با
 //    `pick()` انتخاب می‌شن.
 
+// نوشتن کوکی زبان بین زیردامنه‌ها مشترکه (lib/clientCookie.ts، فقط داخل تابع صدا زده می‌شه؛
+// import دایره‌ای با lib/sections.ts بی‌خطره چون هیچ‌کدوم در سطح ماژول از اون یکی استفاده نمی‌کنه)
+import { setSharedCookie } from "@/lib/clientCookie";
+
 export type Locale = "fa" | "en";
 
 export const LOCALES: readonly Locale[] = ["fa", "en"];
@@ -83,12 +87,33 @@ export function dirSign(): 1 | -1 {
 /** ساخت کوکی زبان (کلاینت) — یک سال */
 export function writeLocaleCookie(locale: Locale) {
   if (typeof document === "undefined") return;
-  document.cookie = `${LOCALE_COOKIE}=${locale}; path=/; max-age=31536000; samesite=lax`;
+  setSharedCookie(LOCALE_COOKIE, locale, "path=/; max-age=31536000; samesite=lax");
 }
 
-/** عوض‌کردن زبان: کوکی + بارگذاری کامل (layout و همه‌ی صفحه‌های سرور دوباره با زبان جدید ساخته می‌شن) */
+/**
+ * ذخیره‌ی زبان روی حساب (UserSetting "lang") تا اعلان و پوشی که سرور برای این کاربر می‌سازه به همین
+ * زبان برسه. best-effort و بی‌انتظار: مهمان ۴۰۱ می‌گیره و بی‌اثره؛ keepalive می‌ذاره درخواست از
+ * ریلود بلافاصله‌ی صفحه جون سالم به در ببره.
+ */
+export function persistLocaleToAccount(locale: Locale) {
+  if (typeof window === "undefined" || typeof fetch === "undefined") return;
+  try {
+    void fetch("/api/settings/lang", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ locale }),
+      credentials: "same-origin",
+      keepalive: true,
+    }).catch(() => {});
+  } catch {
+    // ذخیره‌ی زبان روی حساب نباید عوض‌کردن زبان رو خراب کنه
+  }
+}
+
+/** عوض‌کردن زبان: کوکی + ذخیره روی حساب + بارگذاری کامل (layout و همه‌ی صفحه‌های سرور دوباره با زبان جدید ساخته می‌شن) */
 export function switchLocale(locale: Locale) {
   writeLocaleCookie(locale);
+  persistLocaleToAccount(locale);
   if (typeof window !== "undefined") window.location.reload();
 }
 

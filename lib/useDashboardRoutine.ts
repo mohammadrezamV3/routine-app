@@ -34,7 +34,17 @@ export type TodayTask = {
   items?: { id: string; name: string; done: boolean }[];
 };
 
-export function useDashboardRoutine() {
+/**
+ * scope (داشبورد بخش‌ها): "full" = همه‌چیز (روتین/دامنه‌ی اصلی)؛ "wake" = فقط ساعت
+ * بیداری و خواب برای نوار روز (بخش ورزش، بدون خوندن برنامه‌ها و تیک‌ها)؛
+ * "none" = هیچ (بخش ترید). ثابت بودن scope در طول عمر صفحه فرض شده (از میزبان میاد).
+ */
+export type RoutineScope = "full" | "wake" | "none";
+
+export function useDashboardRoutine(scope: RoutineScope = "full") {
+  const full = scope === "full";
+  const wakeOn = scope !== "none";
+  const [wakeTried, setWakeTried] = useState(false);
   const [custom, setCustom] = useState<CustomOccurrence[] | null>(null);
   const [removed, setRemoved] = useState<Set<string>>(new Set());
   const [daily, setDailyMap] = useState<Record<string, DailyRecord>>({});
@@ -48,18 +58,23 @@ export function useDashboardRoutine() {
   }, []);
 
   const loadOcc = useCallback(() => {
+    if (!full) return;
     getCustomOccurrences().then(setCustom).catch(() => setCustom([]));
     getRemovedOccurrences().then((a) => setRemoved(new Set(a))).catch(() => {});
-  }, []);
+  }, [full]);
   const loadRange = useCallback(() => {
+    if (!full) return;
     const now = new Date();
     const diffToSat = (now.getDay() + 1) % 7;
     const from = new Date(now.getFullYear(), now.getMonth(), now.getDate() - diffToSat - (HEAT_WEEKS - 1) * 7);
     getDailyRange(isoLocal(from), isoLocal(now))
       .then((m) => { setDailyMap(m); setRangeLoaded(true); })
       .catch(() => setRangeLoaded(true));
-  }, []);
-  const loadWake = useCallback(() => { getWakeSleepTimes().then(setWakeSleep).catch(() => {}); }, []);
+  }, [full]);
+  const loadWake = useCallback(() => {
+    if (!wakeOn) return;
+    getWakeSleepTimes().then(setWakeSleep).catch(() => {}).finally(() => setWakeTried(true));
+  }, [wakeOn]);
 
   useEffect(() => { loadOcc(); loadWake(); }, [loadOcc, loadWake]);
   useEffect(() => { loadRange(); }, [loadRange, todayIso]);
@@ -67,12 +82,12 @@ export function useDashboardRoutine() {
   // تیک خودمون (optimistic) رو دوباره از شبکه نمی‌خونیم — فقط تغییر
   // تب/دستگاه دیگه (remote) یا کلیدهای برنامه/ساعت خواب.
   const pendingTicks = useRef(0);
-  useLiveRefresh(["daily", "customOccurrences", "removedOccurrences", "wakeSleepTimes"], (changed, meta) => {
+  useLiveRefresh(full ? ["daily", "customOccurrences", "removedOccurrences", "wakeSleepTimes"] : ["wakeSleepTimes"], (changed, meta) => {
     const all = changed.includes("*");
     if (all || changed.some((c) => c === "customOccurrences" || c === "removedOccurrences")) loadOcc();
     if (all || changed.includes("wakeSleepTimes")) loadWake();
     if ((all || changed.some((c) => keyMatches("daily", c))) && (meta.remote || pendingTicks.current === 0)) loadRange();
-  });
+  }, { enabled: wakeOn });
 
   const opts: ScheduleOpts = useMemo(() => ({ removedOccurrences: removed, customOccurrences: custom ?? [] }), [removed, custom]);
 
@@ -116,7 +131,7 @@ export function useDashboardRoutine() {
   }, [daily, todayIso, custom]);
 
   return {
-    ready: custom !== null,
+    ready: scope === "none" ? true : full ? custom !== null : wakeTried,
     rangeLoaded,
     todayIso,
     tasks,

@@ -20,6 +20,8 @@
 // راهنماست؛ سرور همچنان خودش سشن واقعی رو چک می‌کنه. اگه نبود یا کهنه بود،
 // بدترین حالت اینه که پیش‌درخواست انجام نمی‌شه و مسیر عادی کار می‌کنه.
 
+import { clearSharedCookie, setSharedCookie } from "@/lib/clientCookie";
+
 export const AUTH_HINT_COOKIE = "arion-auth";
 
 // `/api/account` و `/api/account/avatar` هردو از NavDrawer صدا زده می‌شن که
@@ -144,11 +146,13 @@ export function setAuthHintCookie() {
   // روی https فلگ Secure هم می‌گیرد — این کوکی تصمیم امنیتی نمی‌گیرد
   // (فقط راهنمای پیش‌درخواست است) ولی دلیلی هم ندارد cleartext برود.
   const secure = location.protocol === "https:" ? "; Secure" : "";
-  document.cookie = `${AUTH_HINT_COOKIE}=1; path=/; max-age=${60 * 60 * 24 * 30}; SameSite=Lax${secure}`;
+  // نشانه‌ی ورود بین زیردامنه‌های بخش‌ها مشترکه (lib/clientCookie.ts)
+  setSharedCookie(AUTH_HINT_COOKIE, "1", `path=/; max-age=${60 * 60 * 24 * 30}; SameSite=Lax${secure}`);
 }
 
 /** بعد از خروج — وگرنه لود بعدی یه مهمون چند تا ۴۰۱ می‌فرسته */
 export function clearAuthHintCookie() {
   if (typeof document === "undefined") return;
-  document.cookie = `${AUTH_HINT_COOKIE}=; path=/; max-age=0; SameSite=Lax`;
+  // هم نسخه‌ی host-only (قدیمی) و هم نسخه‌ی دامنه‌دار پاک می‌شن
+  clearSharedCookie(AUTH_HINT_COOKIE, "SameSite=Lax");
 }

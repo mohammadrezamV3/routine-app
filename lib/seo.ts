@@ -3,6 +3,7 @@ import {
   BRAND_ALT_NAMES, BRAND_BOTH, BRAND_CATEGORY_FA, BRAND_DESC, BRAND_EN, BRAND_FA,
   BRAND_SAME_AS, OG_BASE, SUPPORT_EMAIL,
 } from "./brand";
+import { isSectionHostingEnabled, sectionOrigin, sectionsOwningPath, seoLandingOwner, type SectionKey } from "./sections";
 
 /**
  * تنها منبع آدرس سایت. هرجا آدرس مطلق لازم است (canonical، JSON-LD،
@@ -11,11 +12,38 @@ import {
  */
 export const SITE_URL = (process.env.NEXT_PUBLIC_SITE_URL || "https://arionapp.ir").replace(/\/$/, "");
 
+/**
+ * بخشی که این مسیر کانونیکالش روی زیردامنه‌ی اونه: صاحب صفحه‌ی فرود سئو، یا مسیری که دقیقا مال یک
+ * بخشه. فقط وقتی زیردامنه‌ها روشنن؛ وگرنه null و همه‌چیز مثل قبل روی دامنه‌ی اصلی می‌مونه.
+ */
+function canonicalSectionFor(cleanPath: string): SectionKey | null {
+  if (!isSectionHostingEnabled()) return null;
+  const landing = seoLandingOwner(cleanPath);
+  if (landing) return landing;
+  const owners = sectionsOwningPath(cleanPath);
+  return owners.length === 1 ? owners[0] : null;
+}
+
 /** آدرس مطلق کانونیکال از یک مسیر نسبی. همیشه بدون اسلش انتهایی (به‌جز ریشه). */
 export function absoluteUrl(path: string): string {
   if (!path || path === "/") return SITE_URL;
   const clean = `/${path.replace(/^\/+/, "").replace(/\/+$/, "")}`;
-  return `${SITE_URL}${clean}`;
+  // با زیردامنه‌ها: کانونیکال صفحه‌ی مال یک بخش به زیردامنه‌ی همون بخش اشاره می‌کنه
+  // (پروتکل و پورت از SITE_URL حفظ می‌شه)
+  const owner = canonicalSectionFor(clean);
+  const origin = owner ? sectionOrigin(owner, SITE_URL) : null;
+  return origin ? `${origin}${clean}` : `${SITE_URL}${clean}`;
+}
+
+/** کانونیکال صفحه‌ی اصلی (فرود) یک بخش: https://trade.arionapp.ir ؛ بدون زیردامنه‌ها = دامنه‌ی اصلی */
+export function sectionHomeUrl(section: SectionKey): string {
+  return sectionOrigin(section, SITE_URL) ?? SITE_URL;
+}
+
+/** مقدار canonical متادیتا: مسیر نسبی (با metadataBase) یا آدرس مطلق زیردامنه برای مسیرهای مال یک بخش */
+function canonicalFor(path: string): string {
+  const rel = path === "/" ? "/" : `/${path.replace(/^\/+/, "").replace(/\/+$/, "")}`;
+  return rel !== "/" && canonicalSectionFor(rel) ? absoluteUrl(rel) : rel;
 }
 
 /**
@@ -49,7 +77,7 @@ export function pageMetadata({
    */
   ownOgImage?: boolean;
 }): Metadata {
-  const canonical = path === "/" ? "/" : `/${path.replace(/^\/+/, "")}`;
+  const canonical = canonicalFor(path);
   const openGraph = ownOgImage
     ? { ...OG_BASE, images: undefined, url: canonical, title: ogTitle || title, description }
     : { ...OG_BASE, url: canonical, title: ogTitle || title, description };
@@ -76,7 +104,7 @@ export function pageMetadata({
  * بی‌صدا از دست می‌داد.
  */
 export function pageAlternates(path: string): NonNullable<Metadata["alternates"]> {
-  const canonical = path === "/" ? "/" : `/${path.replace(/^\/+/, "").replace(/\/+$/, "")}`;
+  const canonical = canonicalFor(path);
   return {
     canonical,
     languages: { "fa-IR": canonical, "x-default": canonical },

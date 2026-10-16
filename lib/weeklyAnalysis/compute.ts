@@ -23,15 +23,17 @@ import {
 const TREND_WEEKS = 8;
 
 /** دامنه‌های فعال کاربر — سوپریوزر همه، وگرنه ModuleAccess فعال و منقضی‌نشده. */
-async function activeDomains(userId: string, isSuperAdmin: boolean): Promise<AnalysisDomain[]> {
-  if (isSuperAdmin) return [...ANALYSIS_DOMAINS];
+async function activeDomains(userId: string, isSuperAdmin: boolean, only?: readonly AnalysisDomain[]): Promise<AnalysisDomain[]> {
+  // only = دامنه‌های مجاز بخش جاری (زیردامنه)؛ undefined = همه (دامنه‌ی اصلی، مثل قبل)
+  const pool = only ? ANALYSIS_DOMAINS.filter((d) => only.includes(d)) : ANALYSIS_DOMAINS;
+  if (isSuperAdmin) return [...pool];
   const rows = await prisma.moduleAccess.findMany({
     where: { userId, active: true },
     select: { module: true, expiresAt: true },
   });
   const now = Date.now();
   const ok = new Set(rows.filter((r) => !r.expiresAt || r.expiresAt.getTime() > now).map((r) => String(r.module)));
-  return ANALYSIS_DOMAINS.filter((d) => ok.has(ANALYSIS_DOMAIN_MODULE[d]));
+  return pool.filter((d) => ok.has(ANALYSIS_DOMAIN_MODULE[d]));
 }
 
 function weekSpecs(timezone: string, offset: number, count: number, now: Date): WeekSpec[] {
@@ -57,7 +59,7 @@ export type WeeklyAnalysisBase = Omit<WeeklyAnalysis, "ai" | "aiAvailable" | "go
 
 export async function computeWeeklyAnalysis(
   userId: string,
-  opts: { timezone: string; offset: number; isSuperAdmin: boolean; now?: Date }
+  opts: { timezone: string; offset: number; isSuperAdmin: boolean; now?: Date; domains?: readonly AnalysisDomain[] }
 ): Promise<WeeklyAnalysisBase> {
   const now = opts.now ?? new Date();
   const tz = safeTimezone(opts.timezone);
@@ -65,7 +67,7 @@ export async function computeWeeklyAnalysis(
   const env: DomainEnv = { timezone: tz, todayIso: todayIso(tz, now) };
 
   const weeks = weekSpecs(tz, offset, TREND_WEEKS, now);
-  const domains = await activeDomains(userId, opts.isSuperAdmin);
+  const domains = await activeDomains(userId, opts.isSuperAdmin, opts.domains);
   const all = await computeAll(userId, domains, weeks, env);
   const cur = TREND_WEEKS - 1;
   const week = weeks[cur];

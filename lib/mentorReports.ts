@@ -4,7 +4,7 @@ import { dateFromIso, dateIsoInTz, isoDate, isUniqueViolation, progressFromCount
 import { projectRoutineForMentor } from "@/lib/mentorPrivacy";
 import { syncProgramProgress, windowFor } from "@/lib/mentorProgress";
 import { faNum } from "@/lib/jalali";
-import { tr } from "@/lib/i18n";
+import { tr, iso } from "@/lib/i18n";
 import {
   doneStreak, idleRun, isoRange, rollupDays, topMissedItems,
   type LogLite, type SchedProgram,
@@ -264,12 +264,12 @@ export async function runAdherenceAlerts(mentorId: string): Promise<number> {
         throw e;
       }
       created++;
-      await notifyUser(mentorId, {
+      await notifyUser(mentorId, () => ({
         type: "mentor.adherence",
-        title: "پایبندی شاگرد",
-        body: `${r.name} ${faNum(run.days)} روز برنامه‌دار پشت‌سرهم هیچ آیتمی انجام نداده است.`,
+        title: tr("پایبندی شاگرد", "Student adherence"),
+        body: tr(`${r.name} ${faNum(run.days)} روز برنامه‌دار پشت‌سرهم هیچ آیتمی انجام نداده است.`, `${iso(r.name)} has completed no items for ${faNum(run.days)} scheduled days in a row.`),
         url: `/mentor/students/${r.studentId}`,
-      });
+      }));
     }
     return created;
   } catch {

@@ -170,12 +170,12 @@ export async function PATCH(req: NextRequest, { params }: { params: { id: string
 
   if (reviewMentorId) await recomputeMentorRating(reviewMentorId);
   if (suspendedNow && suspendProfile) {
-    await notifyUser(suspendProfile.userId, {
+    await notifyUser(suspendProfile.userId, () => ({
       type: "mentor.suspension",
-      title: "مربی‌گری شما تعلیق شد",
-      body: "در پی بررسی یک گزارش، پروفایل مربی‌گری شما تا اطلاع ثانوی از فهرست مربی‌ها حذف شد.",
+      title: tr("مربی‌گری شما تعلیق شد", "Your mentoring was suspended"),
+      body: tr("در پی بررسی یک گزارش، پروفایل مربی‌گری شما تا اطلاع ثانوی از فهرست مربی‌ها حذف شد.", "After a report review, your mentor profile was removed from the mentor list until further notice."),
       url: "/mentor/profile",
-    });
+    }));
   }
 
   return NextResponse.json({ ok: true });

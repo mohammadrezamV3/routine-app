@@ -13,6 +13,8 @@ import { prisma } from "@/lib/prisma";
 import { getFeatureFlags } from "@/lib/featureFlagsServer";
 import { featureKeyAllowed } from "@/lib/featureFlags";
 import { notifyUser } from "@/lib/inAppNotify";
+import { tr } from "@/lib/i18n";
+import { getUserLocale, runWithLocale } from "@/lib/i18nServer";
 import { logError } from "@/lib/errorLog";
 import { getWeeklyAnalysis } from "@/lib/weeklyAnalysis/service";
 import { generateAiCoach, isAiAvailable } from "@/lib/weeklyAnalysis/ai";
@@ -81,7 +83,7 @@ type Outcome = "created" | "skipped" | "exists" | "busy" | "failed" | "not_due";
 async function deliver(u: Candidate, data: Awaited<ReturnType<typeof buildLetterData>>, res: RunResult) {
   const url = `/analysis/weekly/letters/${data.weekStart}`;
   try {
-    await notifyUser(u.id, { type: "weekly.letter", title: `آنالیز هفتگی شماره ${data.issueNo} رسید`, body: data.headline, url });
+    await notifyUser(u.id, () => ({ type: "weekly.letter", title: tr(`آنالیز هفتگی شماره ${data.issueNo} رسید`, `Weekly review no. ${data.issueNo} is here`), body: data.headline, url }));
     res.notified++;
   } catch {
     // اعلان نباید ساخت شماره رو خراب کنه
@@ -224,7 +226,8 @@ export async function runWeeklyLetters(now: Date = new Date(), opts: RunOptions 
     res.considered = todo.length;
     await inBatches(todo, CONCURRENCY, async (u) => {
       try {
-        const out = await processUser(u, now, opts, res);
+        // تحلیل، مربی AI و متن اعلان همه با زبان ذخیره‌شده‌ی خود کاربر ساخته می‌شن
+        const out = await runWithLocale(await getUserLocale(u.id), () => processUser(u, now, opts, res));
         if (out === "skipped") res.skipped++;
         if (out === "failed") res.failed++;
       } catch (err: any) {

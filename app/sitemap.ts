@@ -1,18 +1,48 @@
 import type { MetadataRoute } from "next";
 import { BLOG_CATEGORY_KEYS } from "@/lib/blog/categories";
 import { postsInCategory, sortedPosts } from "@/lib/blogPosts";
-import { absoluteUrl, SITE_URL } from "@/lib/seo";
+import { absoluteUrl, sectionHomeUrl, SITE_URL } from "@/lib/seo";
+import { getSection } from "@/lib/sectionServer";
+import { isSectionHostingEnabled, seoLandingOwner } from "@/lib/sections";
 
 // تاریخ ثابت برای صفحه‌های ایستا: تغییر واقعی‌شان با تغییر این ثابت (هنگام
 // ویرایش محتوا) اعلام می‌شود. `new Date()` همیشه-امروز به گوگل سیگنال دروغ
 // «تازه به‌روز شد» می‌دهد.
 const STATIC_LASTMOD = new Date("2026-10-07");
 
+// صفحه‌های فرود سئو (مسیرها با seoLandingOwner در lib/sections.ts یکی بمونن) و اولویتشون
+const SECTION_LANDING_ENTRIES: { path: string; priority: number }[] = [
+  { path: "/routine", priority: 0.9 },
+  { path: "/habit-tracker", priority: 0.8 },
+  { path: "/daily-planner", priority: 0.8 },
+  { path: "/trading-journal", priority: 0.8 },
+  { path: "/bodybuilding-program", priority: 0.8 },
+  { path: "/calorie-counter", priority: 0.8 },
+  { path: "/ai-planner", priority: 0.8 },
+  { path: "/economic-calendar", priority: 0.8 },
+  { path: "/forex-sessions", priority: 0.8 },
+  { path: "/learning-roadmap", priority: 0.5 },
+];
+
 // فقط URLهای عمومی و کانونیکال — نه صفحات خصوصی/داشبورد (اون‌ها توی
 // robots.ts هم disallow شدن)، نه چک‌اوت (صفحه‌ی تراکنشی، نه محتوایی)، نه
 // /subscription (پشت AuthGate‌ـه؛ جدول پلن‌های عمومی همینجا، توی خود
 // صفحه‌ی اصلیه)، نه هیچ مسیر تکراری/موقتی.
 export default function sitemap(): MetadataRoute.Sitemap {
+  // با زیردامنه‌های بخش‌ها (lib/sections.ts): هر میزبان فقط URLهای خودش رو فهرست می‌کنه — خود صفحه‌ی
+  // اصلی بخش + صفحه‌های فرود سئوی همون بخش؛ دامنه‌ی اصلی صفحه‌هایی که حالا مال زیردامنه‌ان رو نمی‌آره
+  // (کانونیکالشون به زیردامنه‌ست). بدون NEXT_PUBLIC_SECTION_BASE_DOMAIN دقیقا مثل قبل.
+  const section = isSectionHostingEnabled() ? getSection() : null; // بدون زیردامنه‌ها headers() صدا زده نمی‌شه و مسیر ایستا می‌مونه
+  if (section) {
+    const landings: MetadataRoute.Sitemap = SECTION_LANDING_ENTRIES
+      .filter((e) => seoLandingOwner(e.path) === section)
+      .map((e) => ({ url: absoluteUrl(e.path), lastModified: STATIC_LASTMOD, changeFrequency: "monthly", priority: e.priority }));
+    return [
+      { url: sectionHomeUrl(section), lastModified: STATIC_LASTMOD, changeFrequency: "weekly", priority: 1 },
+      ...landings,
+    ];
+  }
+
   const staticPages: MetadataRoute.Sitemap = [
     { url: SITE_URL, lastModified: STATIC_LASTMOD, changeFrequency: "weekly", priority: 1 },
     // صفحه‌ی دسته‌ی روتین — مقصد اصلی جست‌وجوی «روتین اپ»/«برنامه روتین روزانه»
@@ -64,5 +94,9 @@ export default function sitemap(): MetadataRoute.Sitemap {
     };
   });
 
-  return [...staticPages, ...blogIndex, ...categoryPages, ...posts];
+  const apexStatic = isSectionHostingEnabled()
+    ? staticPages.filter((p) => !SECTION_LANDING_ENTRIES.some((e) => absoluteUrl(e.path) === p.url && seoLandingOwner(e.path)))
+    : staticPages;
+
+  return [...apexStatic, ...blogIndex, ...categoryPages, ...posts];
 }

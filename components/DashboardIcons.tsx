@@ -215,12 +215,6 @@ export const DI = {
       <path className="dbi-twinkle dbi-d2" d="M6 16.5v2.4M4.8 17.7h2.4" {...s} strokeWidth={1.3} />
     </svg>
   ),
-  command: (p: P) => (
-    <svg {...base} {...p}>
-      <circle cx="10.8" cy="10.8" r="6.3" {...s} />
-      <path className="dbi-seek" d="m15.5 15.5 4 4" {...s} strokeWidth={2} />
-    </svg>
-  ),
   plus: (p: P) => (
     <svg {...base} {...p}>
       <path className="dbi-spin-q" d="M12 5v14M5 12h14" {...s} strokeWidth={2} />

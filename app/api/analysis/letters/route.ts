@@ -8,6 +8,7 @@ import { featureBlocked } from "@/lib/featureFlagsServer";
 import { ensureLetterForUser } from "@/lib/weeklyLetter/dispatch";
 import { rowToSummary } from "@/lib/weeklyLetter/summary";
 import type { LetterSummary } from "@/lib/weeklyAnalysis/types";
+import { getSection } from "@/lib/sectionServer";
 
 // GET /api/analysis/letters → { letters: LetterSummary[], unread: number } (تازه‌ترین اول)
 // قبل از لیست‌کردن، شماره‌ی «هفته‌ی گذشته»ی همین کاربر اگه سر وقت ساخته نشده
@@ -42,7 +43,13 @@ export async function GET() {
       }),
       prisma.weeklyLetter.count({ where: { userId, status: "READY", readAt: null } }),
     ]);
-    const letters = rows.map((r) => rowToSummary(r)).filter((x): x is LetterSummary => !!x);
+    // امتیاز و تیتر ذخیره‌شده‌ی هر شماره از همه‌ی دامنه‌هاست؛ روی زیردامنه با امتیاز همون بخش
+    // (که خواننده نشون می‌ده) نمی‌خونه، پس فقط هفته و وضعیت خوانده‌شدن می‌مونه
+    const section = getSection();
+    const letters = rows
+      .map((r) => rowToSummary(r))
+      .filter((x): x is LetterSummary => !!x)
+      .map((l) => (section ? { ...l, score: null, grade: null, headline: "", archetype: null } : l));
     return NextResponse.json({ letters, unread });
   } catch (err: any) {
     return NextResponse.json({ error: err?.message || tr("خطای غیرمنتظره", "Unexpected error") }, { status: 500 });

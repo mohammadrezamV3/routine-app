@@ -5,7 +5,7 @@ import { readJsonBody } from "@/lib/validate";
 import { notifyUser, displayName } from "@/lib/inAppNotify";
 import { PUBLIC_USER_SELECT } from "@/lib/mentorServer";
 import { PAUSE_REASON_MAX, validateOptionalText } from "@/lib/mentorAvailability";
-import { tr } from "@/lib/i18n";
+import { tr, iso } from "@/lib/i18n";
 
 type Ctx = { params: { studentId: string } };
 
@@ -32,12 +32,14 @@ export async function POST(req: Request, { params }: Ctx) {
   if (res.count === 0) return conflict(tr(tr("وضعیت رابطه هم‌زمان تغییر کرد؛ دوباره تلاش کن", "The relationship status changed at the same time; try again"), "The relationship status changed at the same time; try again"));
 
   const mentor = await prisma.user.findUnique({ where: { id: me }, select: PUBLIC_USER_SELECT });
-  await notifyUser(m.studentId, {
+  await notifyUser(m.studentId, () => ({
     type: "mentor.paused",
-    title: "توقف موقت همکاری",
-    body: r.data ? `${displayName(mentor)} همکاری را موقتا متوقف کرد؛ دلیل: ${r.data}` : `${displayName(mentor)} همکاری را موقتا متوقف کرد.`,
+    title: tr("توقف موقت همکاری", "Mentorship paused"),
+    body: r.data
+      ? tr(`${displayName(mentor)} همکاری را موقتا متوقف کرد؛ دلیل: ${r.data}`, `${iso(displayName(mentor))} paused the mentorship. Reason: ${r.data}`)
+      : tr(`${displayName(mentor)} همکاری را موقتا متوقف کرد.`, `${iso(displayName(mentor))} paused the mentorship.`),
     url: `/mentorship/${m.id}`,
-  });
+  }));
   return NextResponse.json({ pausedAt: now, pauseReason: r.data });
 }
 
@@ -54,11 +56,11 @@ export async function DELETE(_req: Request, { params }: Ctx) {
   if (res.count === 0) return conflict(tr(tr("وضعیت رابطه هم‌زمان تغییر کرد؛ دوباره تلاش کن", "The relationship status changed at the same time; try again"), "The relationship status changed at the same time; try again"));
 
   const mentor = await prisma.user.findUnique({ where: { id: me }, select: PUBLIC_USER_SELECT });
-  await notifyUser(m.studentId, {
+  await notifyUser(m.studentId, () => ({
     type: "mentor.resumed",
-    title: "ادامه‌ی همکاری",
-    body: `${displayName(mentor)} همکاری را از سر گرفت.`,
+    title: tr("ادامه‌ی همکاری", "Mentorship resumed"),
+    body: tr(`${displayName(mentor)} همکاری را از سر گرفت.`, `${iso(displayName(mentor))} resumed the mentorship.`),
     url: `/mentorship/${m.id}`,
-  });
+  }));
   return NextResponse.json({ pausedAt: null, pauseReason: null });
 }

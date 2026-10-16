@@ -975,3 +975,8 @@ html[data-navigated] .page-enter > [style*="position:fixed"]{ animation-name:m-f
   html[dir="ltr"] .dnav-panel.notif-panel, html[dir="ltr"] .dnav-panel.notif-panel[data-open="true"]{
     transform:none; transition:opacity .12s ease, visibility 0s;
   }}
+
+/* لندینگ زیردامنه‌ها: کارت پلن مرتبط با همان بخش اول می‌آید (ترتیب پلن‌ها: روتین، ورزش، ترید، مکس).
+   فقط ترتیب بصری؛ قیمت‌ها و محتوای کارت‌ها دست‌نخورده از پیکربندی ادمین می‌آیند. */
+[data-landing-section="workout"] #sec-landing-plans .grid.gap-6 > :nth-child(2){ order:-1; }
+[data-landing-section="trade"] #sec-landing-plans .grid.gap-6 > :nth-child(3){ order:-1; }

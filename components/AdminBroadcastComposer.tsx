@@ -17,6 +17,8 @@ export function AdminBroadcastComposer({ onSent }: { onSent: (b: Omit<BroadcastR
   const toast = useAdminToast();
   const [title, setTitle] = useState("");
   const [body, setBody] = useState("");
+  const [titleEn, setTitleEn] = useState("");
+  const [bodyEn, setBodyEn] = useState("");
   const [url, setUrl] = useState("");
   const [inapp, setInapp] = useState(true);
   const [push, setPush] = useState(false);
@@ -46,11 +48,13 @@ export function AdminBroadcastComposer({ onSent }: { onSent: (b: Omit<BroadcastR
   }, [segment]);
 
   // هر تغییری در فرم، تایید دومرحله‌ای را لغو می‌کند
-  useEffect(() => { setConfirming(false); }, [title, body, url, inapp, push, kind, module, when, sendAtLocal]);
+  useEffect(() => { setConfirming(false); }, [title, body, titleEn, bodyEn, url, inapp, push, kind, module, when, sendAtLocal]);
 
   function validate(): string | null {
     if (!title.trim()) return tr("عنوان را بنویس", "Write a title");
     if (!body.trim()) return tr("متن پیام را بنویس", "Write the message");
+    // نسخه‌ی انگلیسی اختیاریه ولی باید جفت باشه: یا هر دو یا هیچ‌کدوم
+    if (!!titleEn.trim() !== !!bodyEn.trim()) return tr("برای نسخه‌ی انگلیسی هم عنوان و هم متن را بنویس", "Write both a title and a message for the English version");
     if (url.trim() && !isSafeBroadcastPath(url.trim())) return tr("لینک باید مسیر داخل اپ باشد (با / شروع شود)", "The link must be a path inside the app (starting with /)");
     if (channels.length === 0) return tr("حداقل یک کانال انتخاب کن", "Choose at least one channel");
     if (when === "later") {
@@ -73,13 +77,16 @@ export function AdminBroadcastComposer({ onSent }: { onSent: (b: Omit<BroadcastR
       const res = await adminFetch<{ broadcast: Omit<BroadcastRecord, "cursor" | "leaseUntil" | "runs"> }>("/api/admin/broadcast", {
         method: "POST",
         json: {
-          title: title.trim(), body: body.trim(), url: url.trim() || null, channels, segment,
+          title: title.trim(), body: body.trim(),
+          // نسخه‌ی انگلیسی فقط وقتی هر دو پر باشن می‌رود
+          ...(titleEn.trim() && bodyEn.trim() ? { titleEn: titleEn.trim(), bodyEn: bodyEn.trim() } : {}),
+          url: url.trim() || null, channels, segment,
           sendAt: when === "later" ? new Date(sendAtLocal).toISOString() : null,
         },
       });
       toast(when === "later" ? tr("پیام زمان‌بندی شد", "Message scheduled") : tr("ارسال شروع شد", "Sending started"));
       onSent(res.broadcast);
-      setTitle(""); setBody(""); setUrl(""); setConfirming(false);
+      setTitle(""); setBody(""); setTitleEn(""); setBodyEn(""); setUrl(""); setConfirming(false);
     } catch (e: any) {
       setError(e.message);
     } finally {
@@ -101,6 +108,14 @@ export function AdminBroadcastComposer({ onSent }: { onSent: (b: Omit<BroadcastR
           <label className="admin-field admin-field-full">
             <span>{tr("متن", "Message")} ({body.length}/{BROADCAST_BODY_MAX})</span>
             <textarea className="admin-input" rows={4} maxLength={BROADCAST_BODY_MAX} value={body} onChange={(e) => setBody(e.target.value)} />
+          </label>
+          <label className="admin-field admin-field-full">
+            <span>{tr("عنوان انگلیسی (اختیاری)", "English title (optional)")}</span>
+            <input className="admin-input" dir="ltr" maxLength={BROADCAST_TITLE_MAX} value={titleEn} onChange={(e) => setTitleEn(e.target.value)} />
+          </label>
+          <label className="admin-field admin-field-full">
+            <span>{tr("متن انگلیسی (اختیاری)", "English text (optional)")}</span>
+            <textarea className="admin-input" dir="ltr" rows={4} maxLength={BROADCAST_BODY_MAX} value={bodyEn} onChange={(e) => setBodyEn(e.target.value)} />
           </label>
           <label className="admin-field admin-field-full">
             <span>{tr("لینک داخل اپ (اختیاری)", "In-app link (optional)")}</span>

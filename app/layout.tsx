@@ -2,6 +2,8 @@ import type { Metadata, Viewport } from "next";
 import { Vazirmatn, Inter } from "next/font/google";
 import localFont from "next/font/local";
 import "./globals.css";
+// تم رنگی بخش‌ها (ترید/تمرین) — هسته‌ی مشترک، بعد از globals و قبل از تم نوآر ادمین
+import "./section-themes.css";
 import "@/components/ltr-shell.css";
 import "@/components/ltr-routine.css";
 import "@/components/ltr-trade.css";
@@ -23,7 +25,7 @@ import { AuthSessionProvider } from "@/components/AuthSessionProvider";
 import { MotionTuner } from "@/components/MotionTuner";
 import { getSessionFast } from "@/lib/serverSession";
 import { PRELOAD_SCRIPT } from "@/lib/preload";
-import { THEME_INIT_SCRIPT, THEME_COLORS, THEME_COOKIE } from "@/lib/themeColor";
+import { THEME_INIT_SCRIPT, THEME_COOKIE, themeColorFor } from "@/lib/themeColor";
 import { cookies } from "next/headers";
 import { prisma } from "@/lib/prisma";
 import { PERF_INIT_SCRIPT } from "@/lib/perfTier";
@@ -35,6 +37,7 @@ import { PUBLIC_PAGES } from "@/lib/llmsContent";
 import { InlineBootstrap } from "@/components/InlineBootstrap";
 import { InlineMeta } from "@/components/InlineMeta";
 import { PwaProvider } from "@/components/PwaProvider";
+import LangSync from "@/components/LangSync";
 import { InviteRefCapture } from "@/components/InviteRefCapture";
 import { PopupExitAnimator } from "@/components/PopupExitAnimator";
 import { MotionRuntime } from "@/components/MotionRuntime";
@@ -51,6 +54,8 @@ import { EVENT_PREVIEW_KEY } from "@/lib/eventThemeState";
 import { getLocale } from "@/lib/i18nServer";
 import { dirOf, isEn } from "@/lib/i18n";
 import { I18nProvider } from "@/components/I18nProvider";
+import { SectionProvider } from "@/components/SectionProvider";
+import { getSection } from "@/lib/sectionServer";
 
 // پیش‌نمایش تم مناسبتی فقط روی دستگاه ادمین: شناسه = اعمال همون تم، "none" = بدون تم.
 // قبل از اولین پینت اجرا می‌شه و تم زنده‌ی سرور رو فقط روی همین دستگاه override می‌کنه.
@@ -281,6 +286,8 @@ export default async function RootLayout({ children }: { children: React.ReactNo
     getActiveEventThemeId().catch((): string | null => null),
   ]);
   const locale = getLocale();
+  // بخش زیردامنه (routine/trade/workout)؛ null = دامنه‌ی اصلی با همه‌ی بخش‌ها — lib/sections.ts
+  const section = getSection();
   return (
     // data-theme روی html هم هست (نه فقط body): پس‌زمینه‌ی خود <html> همونیه
     // که سافاری توی ناحیه‌ی امن (زیر ناچ / بالای نوار خانه) و موقع اورراسکرول
@@ -294,6 +301,7 @@ export default async function RootLayout({ children }: { children: React.ReactNo
       // کند (برعکس: کوکی را با آن هم‌گام می‌کند) — lib/themeColor.ts
       data-theme-src={fromAccount ? "account" : undefined}
       data-event-theme={eventThemeId ?? undefined}
+      data-section={section ?? undefined}
       suppressHydrationWarning
       className={`${vazir.variable} ${latin.variable}${locale === "en" ? ` ${enLatin.variable}` : ""}`}
     >
@@ -302,7 +310,7 @@ export default async function RootLayout({ children }: { children: React.ReactNo
             اجرای اسکریپت. مالک این تگ هنوز خود اپه (نه metadata نکست؛
             دلیلش lib/themeColor.ts)، پس دوباره‌تزریق نمی‌شه و
             syncThemeColorMeta همین یکی رو آپدیت می‌کنه. */}
-        <meta name="theme-color" content={THEME_COLORS[theme]} />
+        <meta name="theme-color" content={themeColorFor(theme, section, !!eventThemeId)} />
         <script dangerouslySetInnerHTML={{ __html: EVENT_PREVIEW_SCRIPT }} />
         {/* تم آزمایشی ادمین (lib/adminTheme.ts) — قبل از اولین پینت */}
         <script dangerouslySetInnerHTML={{ __html: ADMIN_THEME_INIT_SCRIPT }} />
@@ -345,6 +353,7 @@ export default async function RootLayout({ children }: { children: React.ReactNo
         {/* نور هاور دور همه‌ی باکس‌ها — lib/boxHover.ts */}
         <BoxHoverTracker />
         <I18nProvider locale={locale}>
+        <SectionProvider section={section}>
         <AuthSessionProvider session={session}>
           <ThemeProvider initialTheme={theme}>
             <MotionTuner>
@@ -353,6 +362,8 @@ export default async function RootLayout({ children }: { children: React.ReactNo
               <NavDrawer />
               {/* ثبت سرویس‌ورکر (کش app shell) + پیشنهاد نصب اپ */}
               <PwaProvider />
+              {/* زبان کاربر واردشده یک بار روی حساب ذخیره می‌شه تا اعلان‌ها به زبان خودش برن — lib/i18nServer.ts */}
+              <LangSync />
               {/* لینک دعوت دوست (?ref=) — lib/invite.ts */}
               <InviteRefCapture />
               {/* یادآور + realtime + اطلاعیه + تبریک مناسبت — بعد از اولین پینت، در زمان بیکاری */}
@@ -365,6 +376,7 @@ export default async function RootLayout({ children }: { children: React.ReactNo
             </MotionTuner>
           </ThemeProvider>
         </AuthSessionProvider>
+        </SectionProvider>
         </I18nProvider>
       </body>
     </html>

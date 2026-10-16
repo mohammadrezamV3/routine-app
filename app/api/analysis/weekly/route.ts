@@ -6,6 +6,8 @@ import { prisma } from "@/lib/prisma";
 import { requireModule } from "@/lib/moduleAccess";
 import { checkRateLimit } from "@/lib/rateLimit";
 import { getWeeklyAnalysis } from "@/lib/weeklyAnalysis/service";
+import { getSection } from "@/lib/sectionServer";
+import { aiForSection, goalInSection, sectionDomains } from "@/lib/weeklyLetter/section";
 
 // GET /api/analysis/weekly?offset=0 — محاسبه‌ی زنده‌ی آنالیز هفتگی (بدون
 // فراخوانی AI، سریع). offset: ۰ = هفته‌ی جاری، منفی = هفته‌های قبل.
@@ -39,7 +41,15 @@ export async function GET(req: NextRequest) {
     const user = await prisma.user.findUnique({ where: { id: userId }, select: { timezone: true } });
     const timezone = user?.timezone || "Asia/Tehran";
 
-    const analysis = await getWeeklyAnalysis(userId, { timezone, offset, isSuperAdmin });
+    // روی زیردامنه‌ی یک بخش فقط دامنه‌ها، اهداف و مربی همون بخش
+    const section = getSection();
+    const full = await getWeeklyAnalysis(userId, { timezone, offset, isSuperAdmin, domains: sectionDomains(section) });
+    const analysis = {
+      ...full,
+      ai: aiForSection(full.ai, section),
+      goals: full.goals.filter((g) => goalInSection(g, section)),
+      nextWeekGoals: full.nextWeekGoals.filter((g) => goalInSection(g, section)),
+    };
     return NextResponse.json({ analysis });
   } catch (err: any) {
     return NextResponse.json({ error: err?.message || tr("خطای غیرمنتظره", "Unexpected error") }, { status: 500 });

@@ -1,10 +1,11 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { KeyRound, ShieldCheck, MonitorSmartphone, Lock, UserX, Check, AlertTriangle } from "lucide-react";
-import { ToggleSwitch } from "@/components/ToggleSwitch";
+import { KeyRound, ShieldCheck, MonitorSmartphone, Lock, UserX, Smartphone, Monitor, Search, Phone } from "lucide-react";
+import { AuthField } from "@/components/AuthField";
+import { AccountToggleRow } from "@/components/AccountRow";
 
-import { AccountPageHead, AccountBlock } from "@/components/AccountUI";
+import { AccountPageHead, AccountBlock, AccountSaveBar } from "@/components/AccountUI";
 import { getAccount, invalidateAccountCache, AccountData } from "@/lib/accountCache";
 import { formatTehranDateTime } from "@/lib/tehranTime";
 import { GoldenName } from "@/components/GoldenName";
@@ -214,140 +215,131 @@ export default function SecurityPage() {
   }
 
   const otherSessionCount = sessions ? sessions.filter((s) => !s.current).length : 0;
+  const canSavePassword = !!currentPassword && !!newPassword && !!confirmPassword;
 
   return (
-    // طبق درخواست صریح این صفحه جمع‌تر شد (acc-compact): فاصله‌ها کمتر و
-    // توضیح‌ها یک‌خطی — قبلا بین چهار بخش فضای خالی زیادی می‌افتاد.
-    <section className="acc-compact">
+    <section>
       {/* تغییر یوزرنیم طبق درخواست کاربر فقط از «پروفایل» انجام می‌شه، نه این‌جا */}
       <AccountPageHead title={tr("امنیت", "Security")} hint={tr("رمز عبور، ورود دومرحله‌ای، دستگاه‌های فعال و حریم خصوصی", "Password, two-step login, active devices and privacy")} />
 
-      <AccountBlock icon={<KeyRound size={15} />} title={tr("تغییر رمز عبور", "Change password")} index={0}>
-        <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
-          <input type="password" placeholder={tr("رمز عبور فعلی", "Current password")} value={currentPassword} onChange={(e) => setCurrentPassword(e.target.value)} className="wsearch-newform-name" dir="ltr" />
-          <input type="password" placeholder={tr("رمز عبور جدید", "New password")} value={newPassword} onChange={(e) => setNewPassword(e.target.value)} className="wsearch-newform-name" dir="ltr" />
-          <input type="password" placeholder={tr("تکرار رمز عبور جدید", "Repeat the new password")} value={confirmPassword} onChange={(e) => setConfirmPassword(e.target.value)} className="wsearch-newform-name" dir="ltr" />
-          {pwError && <div className="field-error-msg" style={{ display: "block" }}>{pwError}</div>}
-          {/* مثل دکمه‌ی ذخیره‌ی بقیه‌ی پنل: سمت چپ، موقع ذخیره فقط دایره‌ی
-              لودینگ، بعدش تیک — بدون هیچ متن «ذخیره شد». */}
-          <button
-            className={`account-outline-btn acc-save-btn is-${pwSaving ? "saving" : pwSuccess ? "ok" : pwError ? "bad" : "idle"}`}
-            onClick={changePassword}
-            disabled={pwSaving || !currentPassword || !newPassword || !confirmPassword}
-            style={{ alignSelf: "flex-end" }}
-            aria-label={tr("ذخیره رمز جدید", "Save new password")}
-          >
-            {pwSaving ? <Spinner size={15} />
-              : pwSuccess ? <Check size={16} />
-              : pwError ? <AlertTriangle size={16} />
-              : tr("ذخیره رمز جدید", "Save new password")}
-          </button>
-        </div>
-      </AccountBlock>
-
-      <AccountBlock icon={<ShieldCheck size={15} />} title={tr("ورود دومرحله‌ای", "Two-step login")} index={1}>
-        <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", gap: 10 }}>
-          <div style={{ minWidth: 0 }}>
-            <div style={{ fontSize: 13, fontWeight: 600, color: "var(--text)" }}>{tr("تایید ورود با پیامک", "Confirm login by SMS")}</div>
-            <div className="item-line" style={{ marginTop: 2 }}>
-              {tr("بعد از رمز درست، یک کد به شماره‌ی حسابت پیامک می‌شه.", "After the correct password, a code is sent by SMS to your account number.")}
-            </div>
+      <AccountBlock icon={<KeyRound />} title={tr("تغییر رمز عبور", "Change password")} index={0}>
+        <form onSubmit={(e) => { e.preventDefault(); if (canSavePassword && !pwSaving) changePassword(); }} noValidate>
+          <div className="ap-field-stack">
+            <AuthField id="sec-pw-current" label={tr("رمز عبور فعلی", "Current password")} icon={<Lock size={16} />}>
+              <input id="sec-pw-current" type="password" autoComplete="current-password" value={currentPassword} onChange={(e) => setCurrentPassword(e.target.value)} className="wsearch-newform-name" dir="ltr" />
+            </AuthField>
+            <AuthField id="sec-pw-new" label={tr("رمز عبور جدید", "New password")} icon={<KeyRound size={16} />}>
+              <input id="sec-pw-new" type="password" autoComplete="new-password" value={newPassword} onChange={(e) => setNewPassword(e.target.value)} className="wsearch-newform-name" dir="ltr" />
+            </AuthField>
+            <AuthField id="sec-pw-confirm" label={tr("تکرار رمز عبور جدید", "Repeat the new password")} icon={<KeyRound size={16} />}>
+              <input id="sec-pw-confirm" type="password" autoComplete="new-password" value={confirmPassword} onChange={(e) => setConfirmPassword(e.target.value)} className="wsearch-newform-name" dir="ltr" />
+            </AuthField>
           </div>
-          {twoFactor !== null && (
-            <ToggleSwitch checked={twoFactor} onChange={toggleTwoFactor} label={tr("ورود دومرحله‌ای", "Two-step login")} />
-          )}
-        </div>
-        {twoFactorError && <div className="field-error-msg" style={{ display: "block", marginTop: 8 }}>{twoFactorError}</div>}
+          {/* مثل دکمه‌ی ذخیره‌ی بقیه‌ی پنل: موقع ذخیره فقط دایره‌ی لودینگ،
+              بعدش تیک — بدون هیچ متن «ذخیره شد». */}
+          <AccountSaveBar submit saving={pwSaving} saved={pwSuccess} error={pwError} disabled={!canSavePassword} label={tr("ذخیره رمز جدید", "Save new password")} />
+        </form>
       </AccountBlock>
 
-      <AccountBlock icon={<MonitorSmartphone size={15} />} title={tr("دستگاه‌های فعال", "Active devices")} index={2}>
+      <AccountBlock icon={<ShieldCheck />} title={tr("ورود دومرحله‌ای", "Two-step login")} flush index={1}>
+        <AccountToggleRow
+          icon={<ShieldCheck size={17} />}
+          label={tr("تایید ورود با پیامک", "Confirm login by SMS")}
+          desc={tr("بعد از رمز درست، یک کد به شماره‌ی حسابت پیامک می‌شه.", "After the correct password, a code is sent by SMS to your account number.")}
+          checked={!!twoFactor}
+          onChange={toggleTwoFactor}
+          disabled={twoFactor === null || twoFactorSaving}
+        />
+        {twoFactorError && <div className="field-error-msg ap-note" role="alert" style={{ display: "block" }}>{twoFactorError}</div>}
+      </AccountBlock>
+
+      <AccountBlock icon={<MonitorSmartphone />} title={tr("دستگاه‌های فعال", "Active devices")} flush index={2}>
         {!sessions ? (
-          <div className="item-line is-loading">{tr("در حال بارگذاری…", "Loading…")}</div>
+          <div className="ap-empty is-loading"><Spinner size={16} /></div>
         ) : sessions.length === 0 ? (
-          <div className="item-line empty">{tr("نشست فعالی پیدا نشد.", "No active sessions found.")}</div>
+          <div className="ap-empty">{tr("نشست فعالی پیدا نشد.", "No active sessions found.")}</div>
         ) : (
           <>
-          <div className="acc-scroll-box">
-            {sessions.map((s) => (
-              <div key={s.id} style={{ display: "flex", alignItems: "center", justifyContent: "space-between", gap: 10 }}>
-                <div style={{ minWidth: 0 }}>
-                  <div style={{ fontSize: 12.5, color: "var(--text)", fontWeight: 600 }}>
-                    {guessDevice(s.userAgent)}
-                    {s.current && <span style={{ color: "var(--accent)", fontWeight: 700 }}>{tr(" · همین دستگاه", " · This device")}</span>}
+            <div className="ap-scroll">
+              {sessions.map((s, i) => {
+                const mobile = /Android|iPhone|iPad|Mobile/i.test(s.userAgent || "");
+                return (
+                  <div key={s.id} className="ap-row-wrap">
+                    <div className="ap-row">
+                      <span className="ap-row-icon" aria-hidden="true">{mobile ? <Smartphone size={17} /> : <Monitor size={17} />}</span>
+                      <span className="ap-row-body">
+                        <span className="ap-row-label">
+                          {guessDevice(s.userAgent)}
+                          {s.current && <span className="ap-chip is-accent" style={{ marginInlineStart: 8 }}>{tr("همین دستگاه", "This device")}</span>}
+                        </span>
+                        <span className="ap-row-desc">
+                          {providerLabels()[s.provider || ""] || tr("ورود", "Login")} · {tr("آخرین فعالیت", "Last active")}{" "}
+                          <span className="mono" dir="ltr">{formatDateTimeEn(s.lastSeenAt)}</span>
+                        </span>
+                      </span>
+                      {!s.current && (
+                        <span className="ap-row-end">
+                          <button type="button" className="account-outline-btn muted ap-mini-btn" onClick={() => revokeSession(s.id)} disabled={sessionBusy === s.id} aria-label={tr("بیرون انداختن", "Sign out")}>
+                            {sessionBusy === s.id ? <Spinner size={13} /> : tr("بیرون انداختن", "Sign out")}
+                          </button>
+                        </span>
+                      )}
+                    </div>
                   </div>
-                  <div className="item-line" style={{ marginTop: 2 }}>
-                    {providerLabels()[s.provider || ""] || tr("ورود", "Login")} · {tr("آخرین فعالیت", "Last active")}{" "}
-                    <span className="mono" dir="ltr">{formatDateTimeEn(s.lastSeenAt)}</span>
-                  </div>
-                </div>
-                {!s.current && (
-                  <button className="account-outline-btn muted" onClick={() => revokeSession(s.id)} disabled={sessionBusy === s.id}>
-                    {sessionBusy === s.id ? "…" : tr("بیرون انداختن", "Sign out")}
-                  </button>
-                )}
+                );
+              })}
+            </div>
+            {otherSessionCount > 0 && (
+              <div className="ap-block-foot">
+                <button type="button" className="account-outline-btn ap-mini-btn" onClick={revokeOthers} disabled={sessionBusy === "others"}>
+                  {sessionBusy === "others" ? <Spinner size={13} /> : tr(`خروج از دستگاه‌های دیگر (${otherSessionCount})`, `Sign out other devices (${otherSessionCount})`)}
+                </button>
+              </div>
+            )}
+          </>
+        )}
+        {sessionError && <div className="field-error-msg ap-note" role="alert" style={{ display: "block" }}>{sessionError}</div>}
+      </AccountBlock>
+
+      <AccountBlock icon={<Lock />} title={tr("حریم خصوصی", "Privacy")} flush index={3}>
+        <AccountToggleRow
+          icon={<Search size={17} />}
+          label={tr("قابل‌جست‌وجو بودن با یوزرنیم", "Discoverable by username")}
+          desc={tr("خاموش یعنی توی جست‌وجوی دوستان دیده نمی‌شی", "When off, you do not appear in friend search")}
+          checked={!!discoverable}
+          onChange={toggleDiscoverable}
+          disabled={discoverable === null}
+        />
+        <AccountToggleRow
+          icon={<Phone size={17} />}
+          label={tr("اشتراک‌گذاری شماره با دوستان", "Share phone number with friends")}
+          desc={hasPhone ? tr("روشن یعنی شماره‌ات توی پاپ‌آپ پروفایل برای دوستانت دیده می‌شه", "When on, your number is visible to friends in your profile popup") : tr("اول باید شماره‌ای روی حسابت ثبت باشه", "Add a phone number to your account first")}
+          checked={!!sharePhone}
+          onChange={toggleSharePhone}
+          disabled={sharePhone === null || !hasPhone}
+          index={1}
+        />
+
+        <div className="ap-subhead">
+          <UserX size={15} aria-hidden="true" /> {tr("افراد بلاک‌شده", "Blocked people")}
+          {!!blocked?.length && <span className="ap-count mono" dir="ltr">{blocked.length}</span>}
+        </div>
+        {!blocked?.length ? (
+          <div className="ap-note">
+            {blocked === null ? tr("در حال بارگذاری…", "Loading…") : tr("کسی رو بلاک نکردی", "You have not blocked anyone")}
+          </div>
+        ) : (
+          <div className="ap-scroll">
+            {blocked.map((u) => (
+              <div key={u.id} className="ap-person">
+                <span className="ap-person-name"><GoldenName golden={u.golden} staff={u.staff}>{u.name || u.username || tr("کاربر", "User")}</GoldenName></span>
+                <button type="button" className="account-outline-btn ap-mini-btn" onClick={() => unblock(u.id)} disabled={unblocking === u.id}>
+                  {unblocking === u.id ? <Spinner size={13} /> : tr("آنبلاک", "Unblock")}
+                </button>
               </div>
             ))}
           </div>
-          {otherSessionCount > 0 && (
-            <button className="account-outline-btn" onClick={revokeOthers} disabled={sessionBusy === "others"} style={{ marginTop: 10, display: "block", marginInlineStart: "auto" }}>
-              {sessionBusy === "others" ? tr("در حال انجام…", "Working…") : tr(`خروج از دستگاه‌های دیگر (${otherSessionCount})`, `Sign out other devices (${otherSessionCount})`)}
-            </button>
-          )}
-          </>
         )}
-        {sessionError && <div className="field-error-msg" style={{ display: "block", marginTop: 8 }}>{sessionError}</div>}
-      </AccountBlock>
-
-      <AccountBlock icon={<Lock size={15} />} title={tr("حریم خصوصی", "Privacy")} index={3}>
-        <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", gap: 10 }}>
-          <div style={{ minWidth: 0 }}>
-            <div style={{ fontSize: 13, fontWeight: 600, color: "var(--text)" }}>{tr("قابل‌جست‌وجو بودن با یوزرنیم", "Discoverable by username")}</div>
-            <div className="item-line" style={{ marginTop: 2 }}>{tr("خاموش یعنی توی جست‌وجوی دوستان دیده نمی‌شی", "When off, you do not appear in friend search")}</div>
-          </div>
-          {discoverable !== null && (
-            <ToggleSwitch checked={discoverable} onChange={toggleDiscoverable} label={tr("قابل‌جست‌وجو بودن", "Discoverable")} />
-          )}
-        </div>
-
-        <div style={{ marginTop: 14, paddingTop: 12, borderTop: "1px solid var(--line)", display: "flex", alignItems: "center", justifyContent: "space-between", gap: 10 }}>
-          <div style={{ minWidth: 0 }}>
-            <div style={{ fontSize: 13, fontWeight: 600, color: "var(--text)" }}>{tr("اشتراک‌گذاری شماره با دوستان", "Share phone number with friends")}</div>
-            <div className="item-line" style={{ marginTop: 2 }}>
-              {hasPhone ? tr("روشن یعنی شماره‌ات توی پاپ‌آپ پروفایل برای دوستانت دیده می‌شه", "When on, your number is visible to friends in your profile popup") : tr("اول باید شماره‌ای روی حسابت ثبت باشه", "Add a phone number to your account first")}
-            </div>
-          </div>
-          {sharePhone !== null && (
-            <ToggleSwitch checked={sharePhone} onChange={toggleSharePhone} disabled={!hasPhone} label={tr("اشتراک‌گذاری شماره", "Share phone number")} />
-          )}
-        </div>
-
-        <div style={{ marginTop: 14, paddingTop: 12, borderTop: "1px solid var(--line)" }}>
-          <div style={{ display: "flex", alignItems: "center", gap: 6, fontSize: 13, fontWeight: 600, color: "var(--text)" }}>
-            <UserX size={15} /> {tr("افراد بلاک‌شده", "Blocked people")}
-          </div>
-          {!blocked?.length ? (
-            <div className="item-line" style={{ marginTop: 6 }}>
-              {blocked === null ? tr("در حال بارگذاری…", "Loading…") : tr("کسی رو بلاک نکردی", "You have not blocked anyone")}
-            </div>
-          ) : (
-            <div style={{ display: "flex", flexDirection: "column", gap: 10, marginTop: 10 }}>
-              {blocked.map((u) => (
-                <div key={u.id} style={{ display: "flex", alignItems: "center", justifyContent: "space-between", gap: 10 }}>
-                  <span style={{ fontSize: 12.5, color: "var(--text)" }}><GoldenName golden={u.golden} staff={u.staff}>{u.name || u.username || tr("کاربر", "User")}</GoldenName></span>
-                  <button
-                    type="button"
-                    className="account-outline-btn"
-                    style={{ padding: "5px 12px", fontSize: 11.5 }}
-                    onClick={() => unblock(u.id)}
-                    disabled={unblocking === u.id}
-                  >
-                    {tr("آنبلاک", "Unblock")}
-                  </button>
-                </div>
-              ))}
-            </div>
-          )}
-        </div>
       </AccountBlock>
     </section>
   );

@@ -1,4 +1,5 @@
 import { SmartLink as Link } from "@/components/SmartLink";
+import { AuthAwareCta } from "@/components/AuthAwareCta";
 import { ArrowLeft, ChevronLeft, Lightbulb } from "lucide-react";
 import { localizedBlogCategory } from "@/lib/blog/categories";
 import { brandName } from "@/lib/brand";
@@ -168,12 +169,16 @@ export function BlogArticle({ post }: { post: BlogPost }) {
           <li><Link href="/blog">{tr("همه‌ی مقاله‌های آریون", `All ${brandName()} articles`)}</Link></li>
         </ul>
 
-        <div className="blog-signup">
-          <p>{tr("روتین، خواب، تمرین و ژورنال ترید در یک اپ.", "Routine, sleep, training and a trading journal in one app.")}</p>
-          <Link href="/auth/signup" className="blog-btn">
-            {tr("امتحان رایگان 14 روزه", "Try it free for 14 days")} <ArrowLeft size={16} aria-hidden="true" className="dir-flip" />
-          </Link>
-        </div>
+        <AuthAwareCta
+          guest={
+            <div className="blog-signup">
+              <p>{tr("روتین، خواب، تمرین و ژورنال ترید در یک اپ.", "Routine, sleep, training and a trading journal in one app.")}</p>
+              <Link href="/auth/signup" className="blog-btn">
+                {tr("امتحان رایگان 14 روزه", "Try it free for 14 days")} <ArrowLeft size={16} aria-hidden="true" className="dir-flip" />
+              </Link>
+            </div>
+          }
+        />
       </section>
     </main>
   );

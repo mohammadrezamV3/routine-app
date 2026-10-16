@@ -4,7 +4,7 @@ import { tr } from "@/lib/i18n";
 // دسته‌ی جدید = یک ردیف جدید همین‌جا؛ دیتابیس فقط رشته‌ی کلید رو نگه می‌داره
 // (MentorProfile.categories / MentorCredential.category)، پس مایگریشن لازم نیست.
 
-export const MENTOR_CATEGORIES = ["ROUTINE", "FITNESS", "NUTRITION"] as const;
+export const MENTOR_CATEGORIES = ["ROUTINE", "FITNESS", "NUTRITION", "TRADE"] as const;
 export type MentorCategory = (typeof MENTOR_CATEGORIES)[number];
 
 // فیلدها getter هستن تا متن موقع خواندن (نه موقع بارگذاری ماژول) به زبان جاری دربیاد
@@ -23,6 +23,11 @@ export const MENTOR_CATEGORY_META: Record<MentorCategory, { label: string; short
     get label() { return tr("تغذیه", "Nutrition"); },
     get short() { return tr("تغذیه", "Nutrition"); },
     get certLabel() { return tr("مدرک تغذیه", "nutrition certificate"); },
+  },
+  TRADE: {
+    get label() { return tr("ترید و بازارهای مالی", "Trading and markets"); },
+    get short() { return tr("ترید", "Trading"); },
+    get certLabel() { return tr("مدرک یا سابقه ترید", "trading certificate or track record"); },
   },
 };
 
@@ -51,7 +56,7 @@ export const VERIFICATION_SHORT: Record<keyof typeof VERIFICATION_LABELS, string
   get REJECTED() { return tr("رد شده", "Rejected"); },
 };
 
-// کدوم نوع برنامه زیر کدوم حوزه ساخته می‌شه — تغذیه هنوز نوع برنامه‌ی خودش رو نداره
+// کدوم نوع برنامه زیر کدوم حوزه ساخته می‌شه — تغذیه و ترید هنوز نوع برنامه‌ی خودشون رو ندارن
 // (فقط چت/فیدبک و دیدن کالری‌شمار شاگرد با اجازه‌ی خودش)
 export const PROGRAM_TYPE_CATEGORY = { ROUTINE: "ROUTINE", WORKOUT: "FITNESS" } as const;
 
@@ -70,4 +75,17 @@ export const PROGRAM_TYPE_BLOCKED_MSG = "این نوع برنامه خارج ا�
 /** نسخه‌ی زبان جاری PROGRAM_TYPE_BLOCKED_MSG */
 export function programTypeBlockedMsg(): string {
   return tr(PROGRAM_TYPE_BLOCKED_MSG, "This program type is outside the areas you work on with this student");
+}
+
+/**
+ * فیلتر یک فهرست حوزه به حوزه‌های مجاز یک بخش (SECTION_META[section].mentorCategories).
+ * allowed = null (دامنه‌ی اصلی) یعنی بدون محدودیت.
+ */
+export function restrictCategories<T extends string>(cats: readonly T[], allowed: readonly string[] | null | undefined): T[] {
+  return allowed ? cats.filter((c) => allowed.includes(c)) : [...cats];
+}
+
+/** رابطه/منتور با حوزه‌های مؤثر داده‌شده تو این بخش دیده می‌شه؟ (allowed = null → همیشه) */
+export function intersectsCategories(effective: readonly string[], allowed: readonly string[] | null | undefined): boolean {
+  return !allowed || effective.some((c) => allowed.includes(c));
 }

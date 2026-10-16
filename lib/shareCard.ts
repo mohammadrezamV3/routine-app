@@ -19,7 +19,7 @@ export type ShareRing = { label: string; value: number; display: string | null; 
 
 /** محتوای اصلی کارت — هر کارت دقیقا *یکی* از این‌هاست */
 export type ShareBody =
-  | { kind: "rings"; streak: number; center: "streak" | "percent"; percent: number; items: ShareRing[] }
+  | { kind: "rings"; streak: number; center: "streak" | "percent"; percent: number; items: ShareRing[]; /** زیر عدد استریک وسط حلقه‌ها (از قبل ترجمه‌شده)؛ نبود = «روز استریک» */ streakLabel?: string }
   | { kind: "streak"; streak: number; label: string; week: { labels: string[]; done: boolean[]; todayIdx: number } };
 
 export type ShareCardInput = {
@@ -578,7 +578,13 @@ export async function renderShareCard(input: ShareCardInput, opts: RenderOpts = 
     } else {
       drawFlame(ctx, cx, cy - 34 * k, 78 * k, b.streak, false);
       text(faNum(b.streak), cx, cy + 62 * k, f(900, 92 * k), p.text, "center", "ltr");
-      text(tr("روز استریک", "day streak"), cx, cy + 106 * k, f(700, 28 * k), p.muted, "center");
+      if (b.streakLabel) {
+        // برچسب سفارشی (مثلا جلسه‌های ورزشی) بلندتره: عرض را به وتر داخل حلقه‌ی داخلی محدود می‌کنه
+        const capW = 2 * Math.sqrt(Math.max(0, inner * inner - (106 * k) ** 2)) * 0.92;
+        text(b.streakLabel, cx, cy + 106 * k, f(700, 28 * k), p.muted, "center", undefined, Math.max(40, capW));
+      } else {
+        text(tr("روز استریک", "day streak"), cx, cy + 106 * k, f(700, 28 * k), p.muted, "center");
+      }
     }
 
     // لیجند: یک ستون برای هر حلقه

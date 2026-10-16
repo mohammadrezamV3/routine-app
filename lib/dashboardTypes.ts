@@ -82,6 +82,18 @@ export type DashEvent = {
   previous: string | null;
 };
 
+/** خواب (فقط داشبورد بخش روتین و ورزش): شب‌های اخیر از همان /api/dashboard، بدون درخواست جدا */
+export type DashSleep = {
+  /** هدف خواب به دقیقه (از ساعت‌های هدف خود کاربر) */
+  goalMin: number;
+  /** آخرین شب ثبت‌شده در ۷ شب اخیر؛ null = چیزی ثبت نشده */
+  lastNight: { iso: string; minutes: number; quality: number | null } | null;
+  /** ۷ شب اخیر تا امروز (قدیمی به جدید)؛ minutes = 0 یعنی ثبت نشده */
+  week: { iso: string; minutes: number }[];
+  /** میانگین شب‌های ثبت‌شده، یا null */
+  avgMin: number | null;
+};
+
 export type DashRoadmap = { id: string; title: string; topic: string; pct: number; done: number; total: number };
 
 export type DashMentors = {
@@ -120,6 +132,8 @@ export type DashboardData = {
   /** رویدادهای مهم پیش‌رو (نیازمند TRADE) */
   calendar: { events: DashEvent[] } | null;
   roadmaps: { items: DashRoadmap[]; total: number } | null;
+  /** فقط وقتی بخش (روتین یا ورزش) خواب رو نشون می‌ده ساخته می‌شه، وگرنه null */
+  sleep: DashSleep | null;
   mentors: DashMentors | null;
   notifications: { unread: number; latest: DashNotification[] };
   /** اطلاعیه‌های فعال خوانده‌نشده (حداکثر ۳) */

@@ -7,6 +7,8 @@ import {
   ANALYSIS_DOMAIN_LABELS, type AnalysisDomain, type WeeklyGoalDto, type WeeklyGoalStatus,
 } from "@/lib/weeklyAnalysis/types";
 import { tr } from "@/lib/i18n";
+import { useSection } from "./SectionProvider";
+import { sectionHasDomain } from "@/lib/weeklyLetter/section";
 import { Spinner } from "./Spinner";
 import { TickOption } from "./TickOption";
 import { DOMAIN_ICONS, MeterBar, Reveal } from "./WeeklyLetterShared";
@@ -72,6 +74,7 @@ function readQueryDraft(): GoalDraft | null {
 export function WeeklyLetterGoals({ ctx, no }: LetterChapterProps & LetterChapterExtra) {
   const a = ctx.analysis;
   const canEdit = ctx.isCurrent;
+  const section = useSection();
   const [next, setNext] = useState<WeeklyGoalDto[]>(a.nextWeekGoals);
   useEffect(() => { setNext(a.nextWeekGoals); }, [a.nextWeekGoals]);
 
@@ -86,9 +89,11 @@ export function WeeklyLetterGoals({ ctx, no }: LetterChapterProps & LetterChapte
   const formRef = useRef<HTMLFormElement>(null);
 
   function applyDraft(d: GoalDraft, scroll: boolean) {
-    setDomain(d.domain ?? "");
+    // دامنه‌ی بیرون از این بخش (مثلا از لینک) به «عمومی» برمی‌گرده
+    const dom = d.domain && sectionHasDomain(section, d.domain) ? d.domain : null;
+    setDomain(dom ?? "");
     setTitle(d.title.slice(0, 120));
-    setUseTarget(d.target !== null || !!d.domain);
+    setUseTarget(d.target !== null || !!dom);
     if (d.target !== null) setTarget(d.target);
     setError(null);
     if (scroll) setTimeout(() => titleRef.current?.focus({ preventScroll: true }), 450);

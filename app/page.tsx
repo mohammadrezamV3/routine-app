@@ -7,6 +7,8 @@ import { faqJsonLd, pageMetadata } from "@/lib/seo";
 import { getFaqItems } from "@/lib/landingFaq";
 import { fillPriceCopy } from "@/lib/planPricing";
 import { getPricingConfig } from "@/lib/planPricingServer";
+import { getSection } from "@/lib/sectionServer";
+import { sectionLandingJsonLd, sectionLandingMetadata } from "@/lib/sectionLandingSeo";
 
 // این فایل عمدا Server Component شده (نه "use client" مثل قبل) — فقط
 // برای اینکه بتونه metadata/JSON-LD صادر کنه؛ کل منطق/UI واقعی توی
@@ -26,6 +28,9 @@ const HOME_DESC =
   `برنامه بدنسازی با هوش مصنوعی، کالری شمار و ژورنال ترید — همه در یک حساب. رایگان شروع کن.`;
 
 export function generateMetadata(): Metadata {
+  // زیردامنه‌ی یک بخش: عنوان/توضیح/canonical مخصوص همون بخش (lib/sectionLandingSeo.ts)
+  const section = getSection();
+  if (section) return sectionLandingMetadata(section);
   const en = isEn();
   return {
     // absolute یعنی الگوی «%s | آریون» به این عنوان اضافه نشه؛ اسم برند از
@@ -54,14 +59,19 @@ export function generateMetadata(): Metadata {
 export const revalidate = 300;
 
 export default async function HomePage() {
-  const faqItems = fillPriceCopy(getFaqItems(), await getPricingConfig());
+  const section = getSection();
+  const faqItems = fillPriceCopy(getFaqItems(section), await getPricingConfig());
   // Organization/WebSite/SoftwareApplication (با @id) از root layout
   // میان — تکرار همون بلوک اینجا فقط یه کپی عینا یکسان توی <head> بود.
   // FAQPage سؤالات متداول لندینگ — همون الگوی صفحه‌های فرود (داده‌ی ثابت).
+  // روی زیردامنه: WebPage + SoftwareApplication مخصوص بخش + FAQPage همان بخش
+  const ld = section ? sectionLandingJsonLd(section, faqItems) : [faqJsonLd(faqItems)];
   return (
     <>
-      <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(faqJsonLd(faqItems)) }} />
-      <HomeClient />
+      {ld.map((block, i) => (
+        <script key={i} type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(block) }} />
+      ))}
+      <HomeClient section={section} />
     </>
   );
 }

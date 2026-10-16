@@ -42,6 +42,9 @@ export type BroadcastRecord = {
   id: string;
   title: string;
   body: string;
+  /** نسخه‌ی انگلیسی (اختیاری): به کاربرهایی می‌رسه که زبان ذخیره‌شده‌شون انگلیسیه؛ بقیه نسخه‌ی اصلی */
+  titleEn?: string | null;
+  bodyEn?: string | null;
   url: string | null;
   channels: BroadcastChannel[];
   segment: BroadcastSegment;
@@ -67,6 +70,8 @@ export type BroadcastRecord = {
 export type BroadcastInput = {
   title: string;
   body: string;
+  titleEn?: string | null;
+  bodyEn?: string | null;
   url: string | null;
   channels: BroadcastChannel[];
   segment: BroadcastSegment;
@@ -94,6 +99,13 @@ export function parseBroadcastInput(raw: unknown, now: Date = new Date()): Parse
   if (!body) return { ok: false, error: tr("متن پیام را بنویس", "Write the message") };
   if (body.length > BROADCAST_BODY_MAX) return { ok: false, error: tr(`متن حداکثر ${BROADCAST_BODY_MAX} حرف`, `Message can be at most ${BROADCAST_BODY_MAX} characters`) };
 
+  // نسخه‌ی انگلیسی اختیاریه ولی باید جفت باشه: یا هر دو یا هیچ‌کدوم
+  const titleEn = typeof r.titleEn === "string" ? r.titleEn.trim() : "";
+  const bodyEn = typeof r.bodyEn === "string" ? r.bodyEn.trim() : "";
+  if (!!titleEn !== !!bodyEn) return { ok: false, error: tr("برای نسخه‌ی انگلیسی هم عنوان و هم متن را بنویس", "Write both a title and a message for the English version") };
+  if (titleEn.length > BROADCAST_TITLE_MAX) return { ok: false, error: tr(`عنوان انگلیسی حداکثر ${BROADCAST_TITLE_MAX} حرف`, `The English title can be at most ${BROADCAST_TITLE_MAX} characters`) };
+  if (bodyEn.length > BROADCAST_BODY_MAX) return { ok: false, error: tr(`متن انگلیسی حداکثر ${BROADCAST_BODY_MAX} حرف`, `The English message can be at most ${BROADCAST_BODY_MAX} characters`) };
+
   let url: string | null = null;
   if (typeof r.url === "string" && r.url.trim()) {
     url = r.url.trim();
@@ -118,7 +130,7 @@ export function parseBroadcastInput(raw: unknown, now: Date = new Date()): Parse
       sendAt = t.toISOString();
     }
   }
-  return { ok: true, value: { title, body, url, channels, segment: seg, sendAt } };
+  return { ok: true, value: { title, body, ...(titleEn ? { titleEn, bodyEn } : {}), url, channels, segment: seg, sendAt } };
 }
 
 export function parseSegment(raw: unknown): BroadcastSegment | null {

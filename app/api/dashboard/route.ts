@@ -5,6 +5,7 @@ import { getAdminFlags } from "@/lib/adminFlag";
 import { checkRateLimit } from "@/lib/rateLimit";
 import { featureBlocked } from "@/lib/featureFlagsServer";
 import { buildDashboard, resolveDay } from "@/lib/dashboardServer";
+import { getSection } from "@/lib/sectionServer";
 
 export const dynamic = "force-dynamic";
 
@@ -16,7 +17,8 @@ export const dynamic = "force-dynamic";
  * پشت فلگ `dashboard` (پیش‌فرض روشن برای همه). هر بخش پولی جدا با دسترسی
  * واقعی دیتابیسی گیت می‌شه و بدون دسترسی null برمی‌گرده (lib/dashboardServer.ts).
  * بار اول همین داده سمت سرور در خود صفحه رندر می‌شه (app/dashboard/page.tsx)؛
- * این روت برای تازه‌سازی‌های بعدیه.
+ * این روت برای تازه‌سازی‌های بعدیه. روی زیردامنه‌ی یک بخش فقط بلوک‌های همون بخش
+ * ساخته می‌شن (بخش از getSection()، نه پارامتر آدرس).
  */
 export async function GET(req: NextRequest) {
   const session = await getSessionFast();
@@ -32,7 +34,8 @@ export async function GET(req: NextRequest) {
   }
 
   const day = resolveDay(req.nextUrl.searchParams.get("date"), req.nextUrl.searchParams.get("tz"));
-  const data = await buildDashboard(userId, day);
+  // بخش از میزبان درخواست (هدر middleware) — کلاینت چیزی نمی‌فرسته و نمی‌تونه عوضش کنه
+  const data = await buildDashboard(userId, day, getSection());
   if (data === "notfound") return NextResponse.json({ error: "not found" }, { status: 404 });
   if (data === "blocked") return NextResponse.json({ error: tr("حساب کاربری مسدود شده است", "This account is blocked") }, { status: 403 });
   return NextResponse.json(data, { headers: { "Cache-Control": "private, no-store" } });

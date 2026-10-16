@@ -6,6 +6,8 @@ import { SmartLink as Link } from "@/components/SmartLink";
 import { ArrowLeft, Newspaper } from "lucide-react";
 import { ANALYSIS_DOMAIN_LABELS, type AnalysisDomain } from "@/lib/weeklyAnalysis/types";
 import { tr } from "@/lib/i18n";
+import { useSection } from "./SectionProvider";
+import { sectionHasDomain } from "@/lib/weeklyLetter/section";
 import type { LetterCtx } from "./WeeklyLetterCtx";
 import { DOMAIN_HREFS, DOMAIN_ICONS, Reveal } from "./WeeklyLetterShared";
 import "./weekly-letter.css";
@@ -14,15 +16,20 @@ const SHOWN: AnalysisDomain[] = ["routine", "fitness", "sleep", "nutrition", "tr
 
 export function WeeklyLetterEmpty({ ctx }: { ctx: LetterCtx }) {
   const a = ctx.analysis;
+  const section = useSection();
   const hasData = a.domains.some((d) => d.hasData) || a.days.some((d) => d.score !== null);
   if (hasData) return null;
   return (
     <Reveal className="wl-card wl-dp-empty">
       <span className="wl-dp-empty-ico"><Newspaper size={26} /></span>
       <h3>{ctx.isCurrent ? tr("این هفته هنوز چیزی ثبت نشده", "Nothing logged yet this week") : tr("این هفته چیزی ثبت نشده بود", "Nothing was logged this week")}</h3>
-      <p>{ctx.isCurrent ? tr("با ثبت اولین روتین، خواب یا تمرین، آنالیز همین‌جا ساخته می‌شه.", "Once you log your first routine, sleep or workout, your analysis will be built right here.") : tr("برای هفته‌های بعدی، ثبت روزانه آنالیز رو پر می‌کنه.", "For the coming weeks, daily logging will fill in your analysis.")}</p>
+      <p>{ctx.isCurrent
+        ? section === "trade"
+          ? tr("با ثبت اولین معامله، آنالیز همین‌جا ساخته می‌شه.", "Once you log your first trade, your analysis will be built right here.")
+          : tr("با ثبت اولین روتین، خواب یا تمرین، آنالیز همین‌جا ساخته می‌شه.", "Once you log your first routine, sleep or workout, your analysis will be built right here.")
+        : tr("برای هفته‌های بعدی، ثبت روزانه آنالیز رو پر می‌کنه.", "For the coming weeks, daily logging will fill in your analysis.")}</p>
       <div className="wl-dp-empty-links">
-        {SHOWN.map((d) => {
+        {SHOWN.filter((d) => sectionHasDomain(section, d)).map((d) => {
           const Icon = DOMAIN_ICONS[d];
           return (
             <Link key={d} href={DOMAIN_HREFS[d]} className="wl-dp-empty-link" prefetch={false}>

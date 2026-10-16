@@ -36,6 +36,10 @@ export function logoutAndRedirect() {
   // باگ «موقع خروج صفحه گیر می‌کنه»: درخواست خروج هیچ سقف زمانی نداشت؛ روی
   // شبکه‌ی کند/قطع، پرده‌ی تار (pointer-events:none) برای همیشه روی صفحه می‌موند.
   // حالا هر مرحله سقف داره و در بدترین حالت پرده برداشته می‌شه تا کاربر گیر نکنه.
+  // کوکی نشست حالا بین زیردامنه‌ها مشترکه (Domain=.base). پاسخ signout همون کوکی دامنه‌دار رو منقضی
+  // می‌کنه و روت next-auth (app/api/auth/[...nextauth]/route.ts → lib/authCookies.ts) نسخه‌ی
+  // host-only قدیمی هم‌اسمش رو هم منقضی می‌کنه؛ پس خروج واقعا از همه‌ی زیردامنه‌ها انجام می‌شه.
+  // کوکی نشست httpOnlyه و از کلاینت قابل پاک‌کردن نیست، برای همین اینجا کار اضافه‌ای لازم نیست.
   const ctrl = new AbortController();
   const abortTimer = setTimeout(() => ctrl.abort(), 6000);
   const serverSignOut = (async () => {

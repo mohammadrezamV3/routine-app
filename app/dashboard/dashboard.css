@@ -17,14 +17,14 @@
 /* پالت هویتی ماژول‌ها برای حلقه‌ها/گیج‌ها — هر ماژول یک گرادیان دورنگ:
    روتین زمرد→نعنایی، تمرین آبی→بنفش، کالری کهربایی→مرجانی. تم روز نسخه‌ی
    عمیق‌تر همون‌ها رو داره تا روی زمینه‌ی کرمی کنتراست کافی داشته باشن. */
-.db-page, .db-cmd-root{
+.db-page{
   --ring-1a:#00C98D; --ring-1b:#7DF9CF;
   --ring-2a:#3D7DFF; --ring-2b:#B06DFF;
   --ring-3a:#FFB547; --ring-3b:#FF6F61;
   --ring-over:#FF3D6E;
   --tl-warn:#F0A94B;
 }
-body[data-theme="light"] .db-page, body[data-theme="light"] .db-cmd-root{
+body[data-theme="light"] .db-page{
   --ring-1a:#0A9A70; --ring-1b:#2ECB98;
   --ring-2a:#2F64E6; --ring-2b:#8A4DEB;
   --ring-3a:#EE920C; --ring-3b:#E5533E;
@@ -152,7 +152,7 @@ body[data-theme="light"] .db-skel::after{ background:linear-gradient(90deg, tran
 .db-page .db-hero{
   position:relative; isolation:isolate; overflow:hidden;
   display:grid; gap:18px; padding:20px 18px 18px;
-  border-radius:26px; background:var(--box-bg); border:1px solid var(--box-line);
+  border-radius:26px; background:var(--box-bg); border:1px solid var(--box-line); margin-bottom:var(--db-gap);
   grid-template-columns:1fr auto;
   grid-template-areas:"main orbit" "ribbon ribbon";
 }
@@ -204,6 +204,7 @@ body[data-theme="light"] .db-hero-phase:not(.is-night){ color:#D98A1E; }
 @media (min-width:1024px){ .db-hero-insight{ font-size:14.5px; } }
 
 .db-hero-chips{ display:flex; flex-wrap:wrap; gap:8px; }
+.db-hero-chips:empty{ display:none; }
 .db-chip{
   display:inline-flex; align-items:center; gap:6px; padding:6px 11px; border-radius:12px;
   font-size:11.5px; font-weight:700; color:var(--text); border:1px solid var(--box-line);
@@ -229,30 +230,6 @@ body[data-theme="light"] .db-hero-phase:not(.is-night){ color:#D98A1E; }
 .db-chip-trial svg{ color:var(--accent); }
 .db-chip-trial.is-urgent{ border-color:color-mix(in srgb, #f97316 55%, transparent); }
 .db-chip-trial.is-urgent svg, .db-chip-trial.is-urgent b{ color:#f97316; }
-
-.db-page .db-cmd-trigger{
-  display:flex; align-items:center; gap:10px; width:100%; max-width:520px; cursor:text;
-  padding:11px 14px; border-radius:14px; border:1px solid var(--box-line); border-width:1px;
-  color:var(--muted); font-size:12.5px; font-weight:600; text-align:start;
-  transition:border-color .2s ease, color .2s ease;
-}
-.db-page .db-cmd-trigger svg{ width:17px; height:17px; flex-shrink:0; }
-.db-page .db-cmd-trigger > span:nth-child(2){ flex:1; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
-@media (hover:hover){ .db-page .db-cmd-trigger:hover{ border-color:rgba(var(--accent-rgb),.55); color:var(--text); } }
-.db-cmd-trigger-keys{ display:none; gap:4px; }
-@media (hover:hover) and (pointer:fine){ .db-cmd-trigger-keys{ display:inline-flex; } }
-@media (hover:none), (pointer:coarse){ .db-cmd-trigger-keys{ display:none !important; } }
-.db-kbd{
-  display:inline-flex; align-items:center; justify-content:center; min-width:22px; height:20px; padding:0 5px;
-  border-radius:6px; border:1px solid var(--box-line); border-bottom-width:2px;
-  font-family:var(--font-latin), var(--font-vazir), sans-serif; font-size:10px; font-weight:700; color:var(--muted);
-}
-/* راهنمای کیبورد (Esc و پایین پالت) روی لمسی معنی نداره؛ بستن با زدن پس‌زمینه */
-@media (hover:none), (pointer:coarse){ .db-cmd-esc{ display:none; } }
-.db-cmd-foot{ display:none; gap:16px; padding:9px 16px; border-top:1px solid var(--surface-line); font-size:10.5px; color:var(--muted); }
-.db-cmd-foot span{ display:inline-flex; align-items:center; gap:4px; }
-@media (hover:hover) and (pointer:fine){ .db-cmd-foot{ display:flex; } }
-@media (hover:none), (pointer:coarse){ .db-cmd-foot{ display:none !important; } }
 
 /* حلقه‌های روز */
 .db-hero-orbit{ grid-area:orbit; display:flex; align-items:center; gap:18px; }
@@ -317,40 +294,6 @@ body[data-theme="light"] .db-orbit-arcs{ filter:none; }
   animation:db-sun-pulse 3.2s ease-in-out infinite;
 }
 @keyframes db-sun-pulse{ 50%{ box-shadow:0 0 0 7px color-mix(in srgb, var(--sun-c, #ffc94a) 12%, transparent), 0 0 26px 8px color-mix(in srgb, var(--sun-c, #ffc94a) 45%, transparent); } }
-
-/* ── کارهای سریع ───────────────────────────────────────────── */
-/* گرید، نه اسکرول افقی: روی موبایل کاشی چهارم نصفه بریده می‌شد و معلوم نبود
-   بقیه کجان. ۴ ستون تا تبلت، ۸ ستون روی دسکتاپ. */
-.db-quick{ display:grid; grid-template-columns:repeat(var(--qc, 4), minmax(0,1fr)); gap:8px; margin:var(--db-gap) 0; }
-@media (min-width:640px){ .db-quick{ gap:10px; } }
-/* تعداد ستون = تعداد کارهای سریع قابل‌نمایش (فلگ خاموش یک خانه‌ی خالی نمی‌ذاره) */
-@media (min-width:1024px){ .db-quick{ grid-template-columns:repeat(var(--qn, 8), minmax(0,1fr)); } }
-.db-quick > div{ min-width:0; }
-.db-quick-item{
-  position:relative; display:flex; flex-direction:column; align-items:center; gap:8px;
-  min-width:0; height:100%; padding:12px 4px 10px; border-radius:16px;
-  background:var(--box-bg); border:1px solid var(--box-line);
-  transition:transform .25s cubic-bezier(.22,1,.36,1), border-color .25s ease;
-}
-.db-quick-icon{
-  width:40px; height:40px; border-radius:14px; display:flex; align-items:center; justify-content:center;
-  color:var(--tone, var(--accent));
-  border:1px solid color-mix(in srgb, var(--tone, var(--accent)) 38%, transparent);
-  transition:transform .3s cubic-bezier(.34,1.56,.64,1);
-}
-.db-quick-icon svg{ width:21px; height:21px; }
-.db-quick-label{ font-size:10.5px; font-weight:700; text-align:center; line-height:1.5; max-width:100%; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
-@media (max-width:639px){ .db-quick-icon{ width:36px; height:36px; border-radius:12px; } .db-quick-icon svg{ width:19px; height:19px; } }
-@media (min-width:640px){ .db-quick-item{ padding:14px 8px 12px; border-radius:18px; } .db-quick-label{ font-size:11.5px; } }
-.db-quick-lock{ position:absolute; top:8px; inset-inline-end:8px; color:var(--muted); }
-.db-quick-lock svg{ width:12px; height:12px; }
-@media (hover:hover){
-  .db-quick-item:hover{ transform:translateY(-3px); border-color:color-mix(in srgb, var(--tone, var(--accent)) 55%, transparent); }
-  .db-quick-item:hover .db-quick-icon{ transform:scale(1.1) rotate(-4deg); }
-}
-.db-quick-item:active{ transform:scale(.96); }
-/* کارهای «ثبت» دکمه‌ان نه لینک (پاپ‌آپ باز می‌کنن) — باید عینا هم‌شکل لینک‌ها بمونن */
-.db-page button.db-quick-item{ width:100%; font:inherit; color:inherit; cursor:pointer; background:var(--box-bg); }
 
 /* ── بنتو ──────────────────────────────────────────────────── */
 .db-bento{ display:grid; gap:var(--db-gap); grid-template-columns:minmax(0,1fr); grid-template-areas:var(--areas-sm); }
@@ -522,8 +465,8 @@ a.db-tl-name{ text-decoration:underline dotted color-mix(in srgb, var(--ring-1a)
 }
 @container (min-width:360px){ .db-heat-wrap > *{ --gap:4px; --label:18px; } .db-heat-grid .db-heat-cell{ border-radius:4px; } }
 @container (min-width:520px){ .db-heat-wrap > *{ --gap:5px; } .db-heat-grid .db-heat-cell{ border-radius:5px; } .db-heat-grid .db-heat-day{ font-size:11px; } .db-heat-grid .db-heat-month{ font-size:11.5px; } }
-.db-heat-month{ grid-row:1; font-size:10px; line-height:14px; font-weight:600; color:var(--muted); white-space:nowrap; width:var(--cell); overflow:visible; }
-.db-heat-day{ grid-column:1; font-size:9.5px; line-height:var(--cell); color:var(--muted); padding-inline-end:4px; text-align:start; }
+.db-heat-month{ grid-row:1; font-size:10px; line-height:14px; font-weight:600; color:var(--muted); white-space:nowrap; min-width:0; overflow:visible; text-align:start; }
+.db-heat-day{ grid-column:1; display:flex; align-items:center; font-size:9.5px; line-height:1; color:var(--muted); padding-inline-end:4px; white-space:nowrap; }
 .db-heat-cell{
   display:block; width:var(--cell,12px); height:var(--cell,12px); border-radius:3px; box-sizing:border-box;
   --lv-none:color-mix(in srgb, var(--text) 7%, transparent);
@@ -745,42 +688,6 @@ a.db-tl-name{ text-decoration:underline dotted color-mix(in srgb, var(--ring-1a)
 .db-note-body span{ font-size:11px; color:var(--muted); overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
 .db-note-time{ font-size:10px; color:var(--muted); white-space:nowrap; }
 
-/* ── پالت فرمان ───────────────────────────────────────────── */
-.db-cmd-root{
-  position:fixed; inset:0; z-index:9000; display:flex; justify-content:center; align-items:flex-start;
-  padding:calc(90px + env(safe-area-inset-top)) 14px 14px; background:rgba(0,0,0,.5);
-}
-body[data-theme="light"] .db-cmd-root{ background:rgba(60,40,20,.28); }
-@media (min-width:640px){ .db-cmd-root{ padding-top:14vh; } }
-.db-cmd{
-  width:100%; max-width:600px; max-height:min(70vh, 560px); display:flex; flex-direction:column; overflow:hidden;
-  border-radius:22px; background:var(--surface-2); border:1px solid var(--surface-line);
-  box-shadow:0 30px 80px -20px rgba(0,0,0,.6), 0 0 0 1px rgba(var(--accent-rgb),.08);
-}
-body[data-theme="light"] .db-cmd{ box-shadow:0 30px 70px -20px rgba(80,50,20,.35); }
-.db-cmd-search{ display:flex; align-items:center; gap:10px; padding:14px 16px; border-bottom:1px solid var(--surface-line); color:var(--muted); }
-.db-cmd-search svg{ width:19px; height:19px; flex-shrink:0; color:var(--accent); }
-.db-cmd-search input{
-  flex:1; min-width:0; border:none; outline:none; background:transparent; color:var(--text);
-  font:inherit; font-size:14px; font-weight:600; padding:4px 0;
-}
-.db-cmd-list{ overflow-y:auto; padding:6px; overscroll-behavior:contain; }
-.db-cmd-group{ font-size:10.5px; font-weight:800; color:var(--muted); padding:10px 10px 4px; }
-.dash-scope .db-cmd-item{
-  display:flex; align-items:center; gap:11px; width:100%; padding:9px 10px; border-radius:12px; text-align:start;
-  font-size:13px; font-weight:700; color:var(--text); border:1px solid transparent; border-width:1px;
-  transition:border-color .12s ease;
-}
-.dash-scope .db-cmd-item.is-active{ border-color:rgba(var(--accent-rgb),.45); }
-.db-cmd-icon{ width:30px; height:30px; border-radius:10px; flex-shrink:0; display:flex; align-items:center; justify-content:center; color:var(--accent); border:1px solid rgba(var(--accent-rgb),.28); }
-.db-cmd-icon svg{ width:16px; height:16px; }
-.db-cmd-label{ flex:1; min-width:0; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
-.db-cmd-hint{ font-size:10.5px; color:var(--muted); font-weight:600; }
-.db-cmd-lock svg{ width:13px; height:13px; color:var(--muted); }
-.db-cmd-enter{ font-size:12px; color:var(--muted); opacity:0; transition:opacity .12s ease; }
-.db-cmd-item.is-active .db-cmd-enter{ opacity:1; color:var(--accent); }
-.db-cmd-empty{ padding:28px; text-align:center; font-size:12.5px; color:var(--muted); }
-
 /* ============================================================
    حرکت‌های آیکون (components/DashboardIcons.tsx)
    hover/focus کارت یا کاشی والد → یک‌بار؛ .dbi-live → آرام و دائمی.
@@ -803,37 +710,35 @@ body[data-theme="light"] .db-cmd{ box-shadow:0 30px 70px -20px rgba(80,50,20,.35
 .dbi.dbi-live .dbi-spin-q{ animation:none; }
 
 @media (hover:hover){
-  :is(.db-card, .db-quick-item, .dash-scope .db-cmd-item.is-active):hover .dbi .dbi-spin,
-  .dash-scope .db-cmd-item.is-active .dbi .dbi-spin{ animation:dbi-spin 3s linear infinite; }
-  :is(.db-card-head, .db-quick-item):hover .dbi .dbi-lift{ animation:dbi-lift .7s ease-in-out 2; }
-  :is(.db-card-head, .db-quick-item):hover .dbi .dbi-candle{ animation:dbi-candle .6s ease-in-out; }
-  :is(.db-card-head, .db-quick-item):hover .dbi .dbi-candle.dbi-d1{ animation-delay:.08s; }
-  :is(.db-card-head, .db-quick-item):hover .dbi .dbi-candle.dbi-d2{ animation-delay:.16s; }
-  :is(.db-card-head, .db-quick-item):hover .dbi .dbi-leaf{ animation:dbi-leaf .8s ease-in-out; transform-origin:0% 100%; }
-  :is(.db-card-head, .db-quick-item):hover .dbi .dbi-check,
-  :is(.db-card-head, .db-quick-item):hover .dbi .dbi-write,
-  :is(.db-card-head, .db-quick-item):hover .dbi .dbi-line,
-  :is(.db-card-head, .db-quick-item):hover .dbi .dbi-trail{ stroke-dasharray:1; animation:dbi-draw .7s ease forwards; }
-  :is(.db-card-head, .db-quick-item):hover .dbi .dbi-zap{ animation:dbi-zap .5s ease-in-out 2; }
-  :is(.db-card-head, .db-quick-item):hover .dbi .dbi-hand{ animation:dbi-spin 1.2s cubic-bezier(.4,0,.2,1); transform-origin:50% 100%; }
-  :is(.db-card-head, .db-quick-item):hover .dbi .dbi-nod{ animation:dbi-nod .6s ease-in-out 2; }
-  :is(.db-card-head, .db-quick-item):hover .dbi .dbi-flag{ animation:dbi-flag .7s ease-in-out 2; transform-origin:0% 100%; }
-  :is(.db-card-head, .db-quick-item):hover .dbi .dbi-bar{ animation:dbi-candle .55s ease-in-out; transform-origin:50% 100%; }
-  :is(.db-card-head, .db-quick-item):hover .dbi .dbi-bar.dbi-d1{ animation-delay:.08s; }
-  :is(.db-card-head, .db-quick-item):hover .dbi .dbi-bar.dbi-d2{ animation-delay:.16s; }
-  :is(.db-card-head, .db-quick-item):hover .dbi .dbi-spark,
-  :is(.db-card-head, .db-quick-item):hover .dbi .dbi-twinkle{ animation:dbi-twinkle .8s ease-in-out 2; }
-  :is(.db-card-head, .db-quick-item):hover .dbi .dbi-pen{ animation:dbi-pen .8s ease-in-out; }
-  :is(.db-card-head, .db-quick-item):hover .dbi .dbi-link-a{ animation:dbi-link-a .6s ease-in-out; }
-  :is(.db-card-head, .db-quick-item):hover .dbi .dbi-link-b{ animation:dbi-link-b .6s ease-in-out; }
-  :is(.db-card-head, .db-quick-item):hover .dbi .dbi-ring{ animation:dbi-ring-once .8s ease-in-out; transform-origin:50% 10%; }
-  :is(.db-card-head, .db-quick-item):hover .dbi .dbi-dot{ animation:dbi-dot .9s ease-in-out; }
-  :is(.db-card-head, .db-quick-item):hover .dbi .dbi-dot.dbi-d1{ animation-delay:.12s; }
-  :is(.db-card-head, .db-quick-item):hover .dbi .dbi-dot.dbi-d2{ animation-delay:.24s; }
-  :is(.db-card-head, .db-quick-item):hover .dbi .dbi-arrow{ animation:dbi-arrow .6s ease-in-out; }
-  :is(.db-card-head, .db-quick-item):hover .dbi .dbi-spin-q{ animation:dbi-quarter .45s cubic-bezier(.34,1.56,.64,1); }
-  :is(.db-card-head, .db-quick-item):hover .dbi .dbi-seek{ animation:dbi-seek .6s ease-in-out; }
-  :is(.db-card-head, .db-quick-item):hover .dbi .dbi-wave{ animation:dbi-lift .8s ease-in-out; }
+  .db-card:hover .dbi .dbi-spin{ animation:dbi-spin 3s linear infinite; }
+  .db-card-head:hover .dbi .dbi-lift{ animation:dbi-lift .7s ease-in-out 2; }
+  .db-card-head:hover .dbi .dbi-candle{ animation:dbi-candle .6s ease-in-out; }
+  .db-card-head:hover .dbi .dbi-candle.dbi-d1{ animation-delay:.08s; }
+  .db-card-head:hover .dbi .dbi-candle.dbi-d2{ animation-delay:.16s; }
+  .db-card-head:hover .dbi .dbi-leaf{ animation:dbi-leaf .8s ease-in-out; transform-origin:0% 100%; }
+  .db-card-head:hover .dbi .dbi-check,
+  .db-card-head:hover .dbi .dbi-write,
+  .db-card-head:hover .dbi .dbi-line,
+  .db-card-head:hover .dbi .dbi-trail{ stroke-dasharray:1; animation:dbi-draw .7s ease forwards; }
+  .db-card-head:hover .dbi .dbi-zap{ animation:dbi-zap .5s ease-in-out 2; }
+  .db-card-head:hover .dbi .dbi-hand{ animation:dbi-spin 1.2s cubic-bezier(.4,0,.2,1); transform-origin:50% 100%; }
+  .db-card-head:hover .dbi .dbi-nod{ animation:dbi-nod .6s ease-in-out 2; }
+  .db-card-head:hover .dbi .dbi-flag{ animation:dbi-flag .7s ease-in-out 2; transform-origin:0% 100%; }
+  .db-card-head:hover .dbi .dbi-bar{ animation:dbi-candle .55s ease-in-out; transform-origin:50% 100%; }
+  .db-card-head:hover .dbi .dbi-bar.dbi-d1{ animation-delay:.08s; }
+  .db-card-head:hover .dbi .dbi-bar.dbi-d2{ animation-delay:.16s; }
+  .db-card-head:hover .dbi .dbi-spark,
+  .db-card-head:hover .dbi .dbi-twinkle{ animation:dbi-twinkle .8s ease-in-out 2; }
+  .db-card-head:hover .dbi .dbi-pen{ animation:dbi-pen .8s ease-in-out; }
+  .db-card-head:hover .dbi .dbi-link-a{ animation:dbi-link-a .6s ease-in-out; }
+  .db-card-head:hover .dbi .dbi-link-b{ animation:dbi-link-b .6s ease-in-out; }
+  .db-card-head:hover .dbi .dbi-ring{ animation:dbi-ring-once .8s ease-in-out; transform-origin:50% 10%; }
+  .db-card-head:hover .dbi .dbi-dot{ animation:dbi-dot .9s ease-in-out; }
+  .db-card-head:hover .dbi .dbi-dot.dbi-d1{ animation-delay:.12s; }
+  .db-card-head:hover .dbi .dbi-dot.dbi-d2{ animation-delay:.24s; }
+  .db-card-head:hover .dbi .dbi-arrow{ animation:dbi-arrow .6s ease-in-out; }
+  .db-card-head:hover .dbi .dbi-spin-q{ animation:dbi-quarter .45s cubic-bezier(.34,1.56,.64,1); }
+  .db-card-head:hover .dbi .dbi-wave{ animation:dbi-lift .8s ease-in-out; }
 }
 
 @keyframes dbi-spin{ to{ transform:rotate(360deg); } }
@@ -857,14 +762,13 @@ body[data-theme="light"] .db-cmd{ box-shadow:0 30px 70px -20px rgba(80,50,20,.35
 @keyframes dbi-link-b{ 50%{ transform:translate(-1.2px,1.2px); } }
 @keyframes dbi-arrow{ 50%{ transform:translate(2px,-2px); } }
 @keyframes dbi-quarter{ to{ transform:rotate(90deg); } }
-@keyframes dbi-seek{ 50%{ transform:translate(1.5px,1.5px); } }
 
 /* ── دسترس‌پذیری و دستگاه‌های ضعیف ─────────────────────────── */
-.db-page a:focus-visible, .db-page button:focus-visible, .db-cmd-root button:focus-visible{
+.db-page a:focus-visible, .db-page button:focus-visible{
   outline:2px solid var(--accent); outline-offset:2px; border-radius:12px;
 }
 @media (prefers-reduced-motion:reduce){
-  .db-page *:not(.tg-spinner), .db-page *::before, .db-page *::after, .db-cmd-root *:not(.tg-spinner){ animation:none !important; transition:none !important; }
+  .db-page *:not(.tg-spinner), .db-page *::before, .db-page *::after{ animation:none !important; transition:none !important; }
 }
 html[data-perf-weak] .db-page .dbi-live *, html[data-perf-weak] .db-ribbon-sun-core{ animation:none !important; }
 
@@ -952,4 +856,28 @@ html[dir="ltr"] .db-sess-bar i{ background:linear-gradient(90deg, rgba(var(--pnl
 html[dir="ltr"] .db-tl-now-line{ background:linear-gradient(90deg, var(--pnl-loss), transparent); }
 @media (hover:hover){ html[dir="ltr"] .db-tl-item:hover .db-tl-card, html[dir="ltr"] .db-acc:hover{ transform:translateX(3px); } }
 html[dir="ltr"] .db-heat-grid{ direction:ltr; }
+html[dir="ltr"] .db-heat-wrap > *{ --label:20px; }
 html[dir="ltr"] .db-cd-title, html[dir="ltr"] .db-ev-title{ text-align:left; }
+
+/* ── داشبورد هر بخش (زیردامنه‌ی روتین / ورزش / ترید) ───────────────
+   هیروی ترید نوار روز نداره (خلاصه‌ی ترید جاش رو می‌گیره)؛ کارت خواب فقط روی روتین و ورزشه. */
+.db-page .db-hero.is-noribbon{ grid-template-areas:"main orbit"; }
+@media (max-width:639px){ .db-page .db-hero.is-noribbon{ grid-template-areas:"main" "orbit"; } }
+/* وسط حلقه‌های ترید مبلغه نه شمارنده، پس کوچیک‌تر از عدد استریکه تا توی دایره جا بشه */
+.db-orbit-money{ font-size:18px; line-height:1.15; white-space:nowrap; font-variant-numeric:tabular-nums; }
+.db-orbit-money.is-win{ color:var(--pnl-win); }
+.db-orbit-money.is-loss{ color:var(--pnl-loss); }
+.db-page .db-hero-share{ text-decoration:none; }
+
+.db-sleep-body{ display:flex; flex-direction:column; gap:14px; }
+.db-sleep-top{ display:flex; flex-direction:column; gap:6px; }
+.db-sleep-dur{ font-size:24px; font-weight:900; letter-spacing:-.02em; font-variant-numeric:tabular-nums; }
+.db-sleep-sub{ font-size:11.5px; font-weight:600; color:var(--muted); line-height:1.7; }
+.db-sleep-week{ list-style:none; display:grid; grid-template-columns:repeat(7, minmax(0,1fr)); gap:6px; }
+.db-sleep-day{ display:flex; flex-direction:column; align-items:center; gap:6px; color:inherit; }
+.db-sleep-bar{ display:flex; align-items:flex-end; width:100%; max-width:26px; height:64px; overflow:hidden; border-radius:8px; border:1px solid var(--box-line); }
+.db-sleep-fill{ display:block; width:100%; border-radius:6px 6px 0 0; background:var(--moon); opacity:.5; transform-origin:50% 100%; }
+.db-sleep-day.is-ok .db-sleep-fill{ opacity:1; }
+.db-sleep-wd{ font-size:10.5px; font-weight:700; color:var(--muted); }
+.db-sleep-day.is-empty .db-sleep-wd{ opacity:.55; }
+@media (hover:hover){ .db-sleep-day:hover .db-sleep-bar{ border-color:color-mix(in srgb, var(--moon) 60%, transparent); } }

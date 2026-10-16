@@ -15,6 +15,8 @@ import type { LiveWeekPayload } from "@/lib/weeklyLetter/types";
 import { weekLabelFa } from "@/lib/weeklyAnalysis/week";
 import { tr } from "@/lib/i18n";
 import { useFeature } from "@/lib/useFeatures";
+import { useSection } from "./SectionProvider";
+import { sectionHasDomain } from "@/lib/weeklyLetter/section";
 import { Spinner } from "./Spinner";
 import { Chapter, Reveal, WeeklyLetterGate, WlError, wlFetch } from "./WeeklyLetterShared";
 import { WeeklyLetterCover } from "./WeeklyLetterCover";
@@ -128,7 +130,10 @@ function LetterBody({ data, onGo, reload }: { data: LiveWeekPayload; onGo: (w: s
   const [storyMounted, setStoryMounted] = useState(false);
   useEffect(() => { if (storyOpen) setStoryMounted(true); }, [storyOpen]);
   const slides = useMemo(() => buildStorySlides(letter), [letter]);
-  const sleepOn = useFeature("sleep") === true;
+  // فصل خواب فقط توی بخش‌هایی که دامنه‌ی خواب دارن (روتین، ورزش) و دامنه‌ی اصلی؛ روی ترید نه.
+  // شرط نمایش اینجا و در chapters یکیه (فهرست چسبان از همین ساخته می‌شه)
+  const section = useSection();
+  const sleepOn = useFeature("sleep") === true && sectionHasDomain(section, "sleep");
 
   // ?story=1 داستان رو خودکار باز می‌کنه و پارامتر رو از آدرس برمی‌داره (تا ریلود دوباره باز نکنه)
   useEffect(() => {

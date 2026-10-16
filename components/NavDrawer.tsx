@@ -3,10 +3,9 @@
 import { useFeatures } from "@/lib/useFeatures";
 import { useMenuPresence } from "@/lib/useMenuPresence";
 import { featureVisible } from "@/lib/featureFlags";
-import { useEffect, useRef, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import dynamic from "next/dynamic";
 import Image from "next/image";
-import { SmartLink as Link } from "./SmartLink";
 import { useTheme } from "./ThemeProvider";
 import { useRouter, usePathname } from "next/navigation";
 import { useSession } from "next-auth/react";
@@ -20,6 +19,9 @@ import { subscribeToPush } from "@/lib/pushClient";
 import { getPreloadedBootstrap } from "@/lib/preload";
 import { tr } from "@/lib/i18n";
 import { brandName } from "@/lib/brand";
+import { SECTION_META } from "@/lib/sections";
+import { useSection } from "./SectionProvider";
+import HeaderLangButton from "./HeaderLangButton";
 import "./site-header.css";
 
 // NavDrawer توی root layout هست و روی هر صفحه mount می‌شه، پس فقط خود نوار هدر
@@ -32,8 +34,10 @@ import "./site-header.css";
 const loadDrawer = () => import("./NavDrawerContent");
 const loadProfileMenu = () => import("./NavProfileMenu");
 const loadNotifPanel = () => import("./NotificationPanel");
+const loadSwitcher = () => import("./SectionSwitcher");
 const NavDrawerContent = dynamic(loadDrawer, { ssr: false });
 const NavProfileMenu = dynamic(loadProfileMenu, { ssr: false });
+const SectionSwitcher = dynamic(loadSwitcher, { ssr: false });
 const NotificationPanel = dynamic(() => loadNotifPanel().then((m) => m.NotificationPanel), { ssr: false });
 const DesktopNav = dynamic(() => import("./DesktopNav"));
 const DesktopNavEnd = dynamic(() => import("./DesktopNavEnd"));
@@ -78,6 +82,11 @@ export function NavDrawer() {
   // خروج نرم منوی پروفایل و پنل اعلان (حرکت مشترک menu-motion)
   const profilePresence = useMenuPresence(profileMenuOpen);
   const notifPresence = useMenuPresence(notifPanelOpen);
+  // پنجره‌ی جابه‌جایی بخش‌ها (زدن لوگوی هدر)
+  const [switcherOpen, setSwitcherOpen] = useState(false);
+  const switcherPresence = useMenuPresence(switcherOpen);
+  const closeSwitcher = useCallback(() => setSwitcherOpen(false), []);
+  const section = useSection();
   useLockBodyScroll(open || profileMenuOpen);
   // موقعیت لنگر پنل‌های پروفایل/اعلان‌ها — چون این دو تا به بادی پورتال
   // می‌شن (نه دیگه فرزند app-topbar)، باید مختصاتشون رو خودمون از روی دکمه‌ی
@@ -95,11 +104,14 @@ export function NavDrawer() {
   const authSlotRef = useRef<HTMLDivElement>(null);
   const profileBtnRef = useRef<HTMLButtonElement>(null);
   const bellBtnRef = useRef<HTMLButtonElement>(null);
+  const logoBtnRef = useRef<HTMLButtonElement>(null);
   // صفحات ورود/ثبت‌نام هدر خودشونو دارن (فلش بازگشت + نشان برند) — هدر
   // سراسری سایت اونجا لازم نیست و فقط شلوغی اضافه می‌کنه.
   // پنل Owner (/admin) کاملا محیط جدایی‌ست — نه هدر/منوی سایت اصلی، نه
   // پس‌زمینه‌ی aurora (پایین‌تر در BackgroundCanvasLoader)
   const hideTopbar = pathname?.startsWith("/auth") || pathname?.startsWith("/admin");
+  // تغییر زبان فقط از تنظیمات و از هدر صفحه‌ی لندینگ (مهمان روی «/») ممکنه
+  const isLanding = pathname === "/" && status === "unauthenticated";
 
   // آیتم‌های منو عمدا `<Link>` واقعی‌اند، نه `<a onClick={router.push}>`:
   // با router.push هیچ prefetchی وجود ندارد و ضربه یعنی شروع دانلود صفحه از
@@ -117,6 +129,9 @@ export function NavDrawer() {
     if (status !== "authenticated") return;
     return whenIdle(() => { loadProfileMenu(); }, 4000);
   }, [status]);
+  useEffect(() => whenIdle(() => { loadSwitcher(); }, 5000), []);
+  // ناوبری = پنجره‌ی بخش‌ها بسته
+  useEffect(() => { setSwitcherOpen(false); }, [pathname]);
 
   function wantDrawer() {
     if (!drawerWanted) setDrawerWanted(true);
@@ -130,6 +145,16 @@ export function NavDrawer() {
     setOpen(true);
     setProfileMenuOpen(false);
     setNotifPanelOpen(false);
+    setSwitcherOpen(false);
+  }
+  function toggleSwitcher() {
+    loadSwitcher();
+    if (!switcherOpen) {
+      setOpen(false);
+      setProfileMenuOpen(false);
+      setNotifPanelOpen(false);
+    }
+    setSwitcherOpen(!switcherOpen);
   }
   function toggleProfileMenu() {
     setProfileMenuOpen((v) => {
@@ -137,6 +162,7 @@ export function NavDrawer() {
       if (next) {
         setOpen(false);
         setNotifPanelOpen(false);
+        setSwitcherOpen(false);
         const r = profileBtnRef.current?.getBoundingClientRect();
         if (r) setProfileAnchor(anchorOf(r));
       }
@@ -243,6 +269,7 @@ export function NavDrawer() {
       if (next) {
         setOpen(false);
         setProfileMenuOpen(false);
+        setSwitcherOpen(false);
         setNotifCount(0);
         const r = bellBtnRef.current?.getBoundingClientRect();
         if (r) setBellAnchor(anchorOf(r));
@@ -273,25 +300,82 @@ export function NavDrawer() {
                 فقط با opacity جابه‌جا می‌شن — نه اینکه src عوض بشه، وگرنه موقع
                 تعویض تم، تصویر تم جدید (که تا اون لحظه fetch نشده) یه تاخیر
                 دیدنی داشت تا دانلود بشه. */}
-            {/* کاربر واردشده مستقیم به صفحه‌ی اصلی خودش (داشبورد) می‌ره، نه لندینگ و بعد ریدایرکت */}
-            <Link href={status === "authenticated" ? "/dashboard" : "/"} aria-label={tr("رفتن به صفحه اصلی", "Go to home")} className="topbar-logo-lockup-wrap">
-              <Image
-                src="/images/logo-lockup-dark-theme.png"
-                alt={brandName()}
-                width={138}
-                height={34}
-                className={`topbar-logo-lockup${theme === "light" ? " topbar-logo-lockup-hidden" : ""}`}
-                priority
+            {/* لوگو دکمه‌ی پنجره‌ی بخش‌هاست (SectionSwitcher). روی دامنه‌ی اصلی همون لوگوی قبلی؛
+                روی زیردامنه‌ی بخش: فقط «ARION | TRADE» (بدون نشان A). */}
+            <button
+              ref={logoBtnRef}
+              type="button"
+              className={`topbar-logo-lockup-wrap${section ? " topbar-logo-section" : ""}`}
+              aria-label={`${tr("تغییر بخش آریون", "Switch Arion section")}${section ? ` (${SECTION_META[section].label})` : ""}`}
+              aria-haspopup="menu"
+              aria-expanded={switcherOpen}
+              onClick={toggleSwitcher}
+              onPointerEnter={() => { loadSwitcher(); }}
+              onTouchStart={() => { loadSwitcher(); }}
+              onFocus={() => { loadSwitcher(); }}
+              style={section ? ({
+                "--sec-from": SECTION_META[section].colors.from,
+                "--sec-mid": SECTION_META[section].colors.mid,
+                "--sec-to": SECTION_META[section].colors.to,
+              } as React.CSSProperties) : undefined}
+            >
+              {section ? (
+                <>
+                  <span className="tls-word">
+                    <Image
+                      src="/images/sections/wordmark-dark.png"
+                      alt={brandName()}
+                      width={358}
+                      height={49}
+                      className={`topbar-logo-lockup${theme === "light" ? " topbar-logo-lockup-hidden" : ""}`}
+                      priority
+                    />
+                    <Image
+                      src="/images/sections/wordmark-light.webp"
+                      alt={brandName()}
+                      width={328}
+                      height={46}
+                      className={`topbar-logo-lockup${theme === "light" ? "" : " topbar-logo-lockup-hidden"}`}
+                      priority
+                    />
+                  </span>
+                  <span className="tls-sep" aria-hidden="true" />
+                  <span className="tls-label" dir="ltr">{SECTION_META[section].wordmark}</span>
+                </>
+              ) : (
+                <span className="tl-apex">
+                  <Image
+                    src="/images/logo-lockup-dark-theme.png"
+                    alt={brandName()}
+                    width={138}
+                    height={34}
+                    className={`topbar-logo-lockup${theme === "light" ? " topbar-logo-lockup-hidden" : ""}`}
+                    priority
+                  />
+                  <Image
+                    src="/images/logo-lockup-light-theme.webp"
+                    alt={brandName()}
+                    width={138}
+                    height={34}
+                    className={`topbar-logo-lockup${theme === "light" ? "" : " topbar-logo-lockup-hidden"}`}
+                    priority
+                  />
+                </span>
+              )}
+              {/* فلش کوچیک: نشون می‌ده لوگو منو باز می‌کنه؛ داخل همون دکمه تا یک هدف کلیک باشه */}
+              <svg className="tl-chev" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.7" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true" focusable="false">
+                <path d="m6 9 6 6 6-6" />
+              </svg>
+            </button>
+            {switcherPresence.present && (
+              <SectionSwitcher
+                state={switcherPresence.state}
+                anchorRef={logoBtnRef}
+                section={section}
+                signedIn={status === "authenticated"}
+                onClose={closeSwitcher}
               />
-              <Image
-                src="/images/logo-lockup-light-theme.webp"
-                alt={brandName()}
-                width={138}
-                height={34}
-                className={`topbar-logo-lockup${theme === "light" ? "" : " topbar-logo-lockup-hidden"}`}
-                priority
-              />
-            </Link>
+            )}
           </div>
           <DesktopNav
             pathname={pathname || ""}
@@ -361,8 +445,8 @@ export function NavDrawer() {
                 </button>
               </div>
             )}
+            {isLanding && <HeaderLangButton />}
             <DesktopNavEnd guest={status === "unauthenticated"} />
-
           </div>
         </header>
         </>

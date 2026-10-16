@@ -8,6 +8,8 @@ import { checkRateLimit } from "@/lib/rateLimit";
 import { clampText } from "@/lib/validate";
 import { getWeekRange } from "@/lib/weeklyAnalysis/week";
 import { ANALYSIS_DOMAINS, AnalysisDomain } from "@/lib/weeklyAnalysis/types";
+import { getSection } from "@/lib/sectionServer";
+import { sectionHasDomain } from "@/lib/weeklyLetter/section";
 
 const MAX_TITLE_LEN = 80;
 const MAX_GOALS_PER_WEEK = 3;
@@ -42,6 +44,10 @@ export async function POST(req: NextRequest) {
     if (body?.domain !== undefined && body?.domain !== null) {
       if (!isValidDomain(body.domain)) {
         return NextResponse.json({ error: tr("دامنه نامعتبر است", "Invalid domain") }, { status: 400 });
+      }
+      // روی زیردامنه فقط دامنه‌های همون بخش (سمت سرور؛ فرم کلاینت فقط پیشنهاد می‌ده)
+      if (!sectionHasDomain(getSection(), body.domain)) {
+        return NextResponse.json({ error: tr("این دامنه برای این بخش نیست", "This area is not part of this section") }, { status: 400 });
       }
       domain = body.domain;
     }

@@ -1,15 +1,14 @@
 "use client";
 
 import { SmartLink as Link } from "@/components/SmartLink";
-import { m as motion } from "framer-motion";
 import { ChevronLeft, ChevronRight } from "lucide-react";
 import { isEn } from "@/lib/i18n";
 import { ToggleSwitch } from "@/components/ToggleSwitch";
 
-// ردیف استاندارد پنل کاربری — یا لینک به یه زیرصفحه‌ست (chevron)، یا یه
-// سوییچ دودویی این‌جا خود همین ردیف عوض می‌شه. هردو حالت دقیقا همون
-// آیکون-در-دایره‌ی نرم + عنوان/توضیح رو دارن؛ فقط سمت کنترل فرق می‌کنه.
-// stagger با delay بر پایه‌ی index — ورود مرحله‌ای وقتی چند ردیف کنار هم‌ان.
+// ردیف استاندارد پنل کاربری (ap-row) — یا لینک به یه زیرصفحه (شورون)، یا
+// اکشن، یا یه سوییچ دودویی که خود همین ردیف عوض می‌کنه. همه‌ی حالت‌ها
+// دقیقا یک هندسه دارن: ارتفاع حداقل 60، چیپ آیکون خط‌دار 36، عنوان/توضیح
+// و کنترل سمت پایان. ورود مرحله‌ای با کلاس m-rise و --i (حرکت مشترک اپ).
 function RowShell({
   index,
   icon,
@@ -21,29 +20,35 @@ function RowShell({
   ...rest
 }: {
   index?: number;
-  icon: React.ReactNode;
+  icon?: React.ReactNode;
   label: string;
   desc?: string;
-  end: React.ReactNode;
+  end?: React.ReactNode;
   as?: any;
   className?: string;
   [k: string]: any;
 }) {
   return (
-    <motion.div
-      initial={{ opacity: 0, y: 6 }}
-      animate={{ opacity: 1, y: 0 }}
-      transition={{ duration: 0.32, delay: (index ?? 0) * 0.035, ease: [0.22, 1, 0.36, 1] }}
-    >
-      <As className={`account-row2${className ? ` ${className}` : ""}`} {...rest}>
-        <span className="account-row2-icon">{icon}</span>
-        <span className="account-row2-body">
-          <span className="account-row2-label">{label}</span>
-          {desc && <span className="account-row2-desc">{desc}</span>}
+    <div className={`ap-row-wrap m-rise${icon ? "" : " no-icon"}`} style={{ "--i": Math.min(index ?? 0, 8) } as React.CSSProperties}>
+      <As className={`ap-row${className ? ` ${className}` : ""}`} {...rest}>
+        {icon && <span className="ap-row-icon" aria-hidden="true">{icon}</span>}
+        <span className="ap-row-body">
+          <span className="ap-row-label">{label}</span>
+          {desc && <span className="ap-row-desc">{desc}</span>}
         </span>
         {end}
       </As>
-    </motion.div>
+    </div>
+  );
+}
+
+/** کارت یک گروه از ردیف‌ها (با برچسب اختیاری بالای کارت) */
+export function AccountRows({ label, children }: { label?: string; children: React.ReactNode }) {
+  return (
+    <div className="ap-group">
+      {label && <div className="ap-group-label">{label}</div>}
+      <div className="account-card ap-card is-clip">{children}</div>
+    </div>
   );
 }
 
@@ -58,13 +63,14 @@ export function AccountRowLink({
       icon={icon}
       label={label}
       desc={desc}
-      end={isEn() ? <ChevronRight size={15} className="account-row2-chevron" /> : <ChevronLeft size={15} className="account-row2-chevron" />}
+      end={isEn()
+        ? <ChevronRight size={16} className="ap-row-chevron" aria-hidden="true" />
+        : <ChevronLeft size={16} className="ap-row-chevron" aria-hidden="true" />}
     />
   );
 }
 
-// ردیف اکشن (نه ناوبری) — برای «خروج از حساب» توی صفحه‌ی اول پنل، طبق
-// درخواست صریح («روی موبایل هیچ راهی برای خروج نبود، اضافه‌ش کن این‌جا»).
+// ردیف اکشن (نه ناوبری) — برای «خروج از حساب» توی صفحه‌ی اول پنل.
 export function AccountRowButton({
   icon, label, desc, onClick, index, danger,
 }: { icon: React.ReactNode; label: string; desc?: string; onClick: () => void; index?: number; danger?: boolean }) {
@@ -77,34 +83,34 @@ export function AccountRowButton({
       icon={icon}
       label={label}
       desc={desc}
-      className={danger ? "account-row2-danger" : undefined}
-      end={null}
+      className={`is-action${danger ? " is-danger" : ""}`}
     />
   );
 }
 
 export function AccountToggleRow({
-  icon, label, desc, checked, onChange, index,
-}: { icon: React.ReactNode; label: string; desc?: string; checked: boolean; onChange: (v: boolean) => void; index?: number }) {
+  icon, label, desc, checked, onChange, index, disabled,
+}: { icon: React.ReactNode; label: string; desc?: string; checked: boolean; onChange: (v: boolean) => void; index?: number; disabled?: boolean }) {
   return (
     <RowShell
       as="div"
-      onClick={() => onChange(!checked)}
+      onClick={disabled ? undefined : () => onChange(!checked)}
       index={index}
       icon={icon}
       label={label}
       desc={desc}
-      style={{ cursor: "pointer" }}
+      className={disabled ? undefined : "is-action"}
       end={
-        <span onClick={(e) => e.stopPropagation()} style={{ display: "flex" }}>
-          <ToggleSwitch checked={checked} onChange={onChange} label={label} />
+        <span className="ap-row-end" onClick={(e) => e.stopPropagation()}>
+          <ToggleSwitch checked={checked} onChange={onChange} label={label} disabled={disabled} />
         </span>
       }
     />
   );
 }
 
-// ردیف با کنترل دلخواه سمت انتهایی (مثلا انتخاب زبان) — همون ظاهر ردیف‌های دیگه
+// ردیف با کنترل دلخواه سمت انتهایی (مثلا انتخاب زبان) — روی موبایل باریک
+// کنترل زیر متن و تمام‌عرض می‌ره تا متن فشرده نشه.
 export function AccountControlRow({
   icon, label, desc, control, index,
 }: { icon: React.ReactNode; label: string; desc?: string; control: React.ReactNode; index?: number }) {
@@ -115,7 +121,8 @@ export function AccountControlRow({
       icon={icon}
       label={label}
       desc={desc}
-      end={<span className="account-row2-control" style={{ display: "flex", width: isEn() ? 190 : 168, flexShrink: 0 }}>{control}</span>}
+      className="is-control"
+      end={<span className="ap-row-control">{control}</span>}
     />
   );
 }

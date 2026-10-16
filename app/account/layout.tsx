@@ -3,48 +3,36 @@
 import "@/app/_area/account.css";
 import { usePathname } from "next/navigation";
 import { useSession } from "next-auth/react";
-import { SmartLink as Link } from "@/components/SmartLink";
-import { motion } from "framer-motion";
-import { LogOut } from "lucide-react";
 import { AuthGate } from "@/components/AuthGate";
-import { getAccountSections } from "@/components/accountSections";
-import { logoutAndRedirect } from "@/lib/logout";
+import { AccountSidebar } from "@/components/AccountSidebar";
 import { tr, isEn } from "@/lib/i18n";
 
 // پنل کاربری Arion — صفحه‌ی مستقل /account (نه مودال، نه داشبورد). مسیرها:
-//   /account                    → منوی بخش‌ها (فقط لیست زبانه‌ها، بدون محتوا)
-//   /account/profile            → پروفایل (دو بخش: «پروفایل عمومی» و
-//                                  «پروفایل ورزشی»، هردو توی همین یک صفحه)
+//   /account                    → صفحه‌ی اول (موبایل): سرصفحه‌ی حساب + فهرست بخش‌ها؛
+//                                  روی دسکتاپ مستقیم می‌ره روی «پروفایل»
+//   /account/profile            → پروفایل (بنر و عکس، پروفایل عمومی، کد دعوت،
+//                                  پروفایل ورزشی، همه با یک دکمه‌ی ذخیره)
 //   /account/sport-profile      → فقط ریدایرکت به /account/profile (مسیر قدیمی)
-//   /account/general            → «تنظیمات» — تنظیمات آریون + اعلان‌ها +
-//                                  تنظیمات روتین و ترید، همه یک‌جا و بدون
-//                                  ناوبری تودرتو
-//                                  (تم نمایش عمدا این‌جا نیست — همون سوییچ
-//                                  بالای منوی همبرگری کفایت می‌کنه)
-//   /account/subscription       → اشتراک
-//   /account/security           → امنیت
-//   /account/notifications      → فقط ریدایرکت به /account/general (ادغام شد)
-//   /account/support            → پشتیبانی
-
-// انیمیشن ورود صفحه‌های پنل. عمدا بدون فاز exit و بدون `mode="wait"`:
-// با اون‌ها هر کلیک اول باید ۰.۲۲ ثانیه صبر می‌کرد تا صفحه‌ی قبلی محو بشه و
-// تازه بعدش صفحه‌ی جدید می‌اومد — همون «کندی/گیرکردن»ی که گزارش شد. حالا
-// صفحه‌ی جدید بلافاصله میاد و فقط یک fade کوتاه می‌خوره.
-const pageTransition = {
-  initial: { opacity: 0, y: 6 },
-  animate: { opacity: 1, y: 0 },
-  transition: { duration: 0.16, ease: [0.22, 1, 0.36, 1] as const },
-};
-
+//   /account/general            → «تنظیمات» — فهرست گروه‌بندی‌شده: داشبورد، زبان،
+//                                  اعلان‌ها، روتین، بدنسازی، ترید، بازخورد لمسی،
+//                                  دسترسی مربی‌ها، سابقه‌ی گفت‌وگو (هر کدام صفحه‌ی خودش)
+//   /account/referral           → رفرال و کیف اعتبار
+//   /account/security           → امنیت و حریم خصوصی
+//   /account/support            → پشتیبانی (تیکت)
+//   /account/subscription       → ریدایرکت به /subscription
+//   /account/notifications      → ریدایرکت به /account/general/notifications
+//
+// چیدمان: دسکتاپ = سایدبار چسبان + ستون محتوا؛ موبایل = فقط محتوا (صفحه‌ی اول
+// فهرست بخش‌هاست و هر زیرصفحه نان‌ریز بازگشت داره). ورود صفحه با کلاس مشترک
+// حرکت اپ (m-rise-soft) انجام می‌شه، بدون فاز خروج تا کلیک هیچ‌وقت منتظر نمونه.
 export default function AccountLayout({ children }: { children: React.ReactNode }) {
   const pathname = usePathname() || "/account";
-  const SECTIONS = getAccountSections();
   const { status } = useSession();
   if (status === "loading") return null;
 
   if (status === "unauthenticated") {
     return (
-      <section className="account-shell">
+      <section className="account-shell ap-shell">
         <h1>{tr("پنل کاربری", "Account")}</h1>
         <AuthGate message={tr("برای دیدن پنل کاربری اول باید وارد حساب بشی", "Log in to see your account")} />
       </section>
@@ -52,37 +40,13 @@ export default function AccountLayout({ children }: { children: React.ReactNode 
   }
 
   return (
-    <div className="account-shell" dir={isEn() ? "ltr" : "rtl"}>
-      <div className="account-body">
-        <aside className="account-sidebar">
-          <div className="account-sidebar-title">{tr("پنل کاربری", "Account")}</div>
-          <div className="account-sidebar-links">
-            {SECTIONS.map((s) => {
-              const active = s.match(pathname);
-              return (
-                <Link key={s.href} href={s.href} className={`account-sidebar-link${active ? " active" : ""}`}>
-                  {active && <motion.span layoutId="account-sidebar-active-pill" className="account-sidebar-active-pill" transition={{ duration: 0.32, ease: [0.22, 1, 0.36, 1] }} />}
-                  <span className="account-sidebar-link-icon">{s.icon}</span>
-                  <span>{s.label}</span>
-                </Link>
-              );
-            })}
-          </div>
-          <button type="button" className="account-sidebar-logout" onClick={logoutAndRedirect}>
-            <span className="account-sidebar-link-icon"><LogOut size={15} /></span>
-            <span>{tr("خروج از حساب", "Log out")}</span>
-          </button>
-        </aside>
-
-        <main className="account-content">
-          <motion.div
-            key={pathname}
-            initial={pageTransition.initial}
-            animate={pageTransition.animate}
-            transition={pageTransition.transition}
-          >
+    <div className="account-shell ap-shell" dir={isEn() ? "ltr" : "rtl"}>
+      <div className="ap-grid">
+        <AccountSidebar />
+        <main className="ap-main">
+          <div key={pathname} className="m-rise-soft">
             {children}
-          </motion.div>
+          </div>
         </main>
       </div>
     </div>

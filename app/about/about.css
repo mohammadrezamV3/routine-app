@@ -14,9 +14,9 @@ body{
 }
 body[data-theme="light"]{
   --ab-card:rgba(255,255,255,.55);
-  --ab-line:rgba(107,79,61,.13);
-  --ab-line-hi:rgba(107,79,61,.22);
-  --ab-shadow:0 24px 60px -28px rgba(107,79,61,.30);
+  --ab-line:rgba(var(--text-rgb,107,79,61),.13);
+  --ab-line-hi:rgba(var(--text-rgb,107,79,61),.22);
+  --ab-shadow:0 24px 60px -28px rgba(var(--text-rgb,107,79,61),.30);
   --ab-glow:.20;
 }
 

@@ -118,6 +118,19 @@ export const PLANS_GRID_COLS = "grid-cols-1 sm:grid-cols-2 md:grid-cols-4";
 // می‌کند، مستقل از عرض واقعی و جهت (RTL/LTR).
 export const BREAKOUT = "plans-breakout";
 
+// برچسب پیل انتخاب مدت. «12 months» در پیل باریک چهارستونه (حدود 60px) جا نمی‌شه و روی پیل
+// کناری میفته؛ انگلیسی کوتاه می‌شه («12 mo») و پدینگ افقی کمتر می‌گیره. فارسی همون قبلی.
+function durationPillLabel(months: number): string {
+  return isEn() ? `${months} mo` : monthsText(months);
+}
+function durationPillStyle(selected: boolean, t: { accentColorRaw: string; isLight: boolean }) {
+  const base = selected
+    ? { background: t.accentColorRaw, color: "#fff" }
+    : { background: t.isLight ? "rgba(43,33,24,.07)" : "rgba(255,255,255,.06)" };
+  return isEn() ? { ...base, paddingInline: 4 } : base;
+}
+
+
 export { useThemeTokens } from "@/components/useThemeTokens";
 
 // mode="landing": دکمه‌ی هر پلن می‌بره به ثبت‌نام (کاربر هنوز حسابی نداره).
@@ -219,11 +232,9 @@ function PlanCardView({ p, mode, currentPlanKey, upgradeOffer, upgradeFromNameFa
                       type="button"
                       onClick={() => setDuration(d)}
                       className={`plan-duration-btn whitespace-nowrap rounded-full py-2 text-[10px] font-bold transition ${selected ? "" : t.muted}`}
-                      style={selected
-                        ? { background: t.accentColorRaw, color: "#fff" }
-                        : { background: t.isLight ? "rgba(43,33,24,.07)" : "rgba(255,255,255,.06)" }}
+                      style={durationPillStyle(selected, t)}
                     >
-                      {monthsText(pricing.durations[d].months)}
+                      {durationPillLabel(pricing.durations[d].months)}
                     </button>
                   );
                 })}
@@ -268,17 +279,15 @@ function PlanCardView({ p, mode, currentPlanKey, upgradeOffer, upgradeFromNameFa
                   type="button"
                   onClick={() => setDuration(d)}
                   className={`plan-duration-btn whitespace-nowrap rounded-full py-2 text-[10px] font-bold transition ${selected ? "" : t.muted}`}
-                  style={selected
-                    ? { background: t.accentColorRaw, color: "#fff" }
-                    : { background: t.isLight ? "rgba(43,33,24,.07)" : "rgba(255,255,255,.06)" }}
+                  style={durationPillStyle(selected, t)}
                 >
-                  {monthsText(pricing.durations[d].months)}
+                  {durationPillLabel(pricing.durations[d].months)}
                 </button>
               );
             })}
           </div>
 
-          <div className="mt-3 flex items-baseline gap-2">
+          <div className="mt-3 flex flex-wrap items-baseline gap-x-2 gap-y-0.5">
             <span className={`text-[15px] font-extrabold ${t.heading}`}>{offer ? (isEn() ? priceText(offer.amount) : offer.priceLabel) : priceLabel}</span>
             {originalPrice && (
               <span className={`text-[12px] font-semibold line-through ${t.muted}`}>{originalPrice}</span>
@@ -322,6 +331,10 @@ export function PlansSection({ mode, currentPlanKey, title = tr("از چیزی �
   const tablePlans = allPlans;
   const plans = mode === "account" ? allPlans.filter((p) => !p.free) : allPlans;
   const compareRows = getCompareRows();
+  // انگلیسی برچسب‌های بلندتری داره («Sharing with a mentor or friends»): ستون برچسب پهن‌تر،
+  // ستون‌های پلن باریک‌تر (جمع هر دو حالت 100%). فارسی همون 24/19.
+  const labelColW = isEn() ? "32%" : "24%";
+  const planColW = isEn() ? "17%" : "19%";
   const mainRows = compareRows.filter((r) => !r.upcoming);
   const upcomingRows = compareRows.filter((r) => r.upcoming);
   const upgradeFromNameFa = upgradeOffer ? plans.find((pp) => pp.key === upgradeOffer.fromPlanKey)?.nameFa : undefined;
@@ -357,8 +370,8 @@ export function PlansSection({ mode, currentPlanKey, title = tr("از چیزی �
       <div id="plans-compare-table" className={`mt-6 scroll-mt-[96px] rounded-[24px] border ${t.cardBorder} ${t.cardBg} p-6 ${t.shadow} backdrop-blur-2xl ${BREAKOUT}`}>
         <table className="w-full border-collapse" style={{ tableLayout: "fixed" }} aria-label={tr("مقایسه پلن‌ها", "Plan comparison")}>
           <colgroup>
-            <col style={{ width: "24%" }} />
-            {tablePlans.map((p) => <col key={p.key} style={{ width: "19%" }} />)}
+            <col style={{ width: labelColW }} />
+            {tablePlans.map((p) => <col key={p.key} style={{ width: planColW }} />)}
           </colgroup>
           <thead>
             <tr className={`border-b ${t.line}`}>
@@ -371,7 +384,7 @@ export function PlansSection({ mode, currentPlanKey, title = tr("از چیزی �
           <tbody>
             {mainRows.map((row) => (
               <tr key={row.label} className={`border-b ${t.line} last:border-none`}>
-                <th scope="row" dir={isLatinLabel(row.label) ? "ltr" : undefined} className={`py-3.5 text-[11.5px] font-normal ${t.muted} ${isLatinLabel(row.label) ? "text-left" : "text-start"}`}>{row.label}</th>
+                <th scope="row" dir={isLatinLabel(row.label) ? "ltr" : undefined} className={`py-3.5 text-[11.5px] font-normal ${isEn() ? "pe-2" : ""} ${t.muted} ${isLatinLabel(row.label) ? "text-left" : "text-start"}`}>{row.label}</th>
                 {tablePlans.map((p) => (
                   <td key={p.key} className="py-3.5">
                     <div className="flex justify-center">
@@ -393,13 +406,13 @@ export function PlansSection({ mode, currentPlanKey, title = tr("از چیزی �
                       aria-hidden="true"
                     >
                       <colgroup>
-                        <col style={{ width: "24%" }} />
-                        {tablePlans.map((p) => <col key={p.key} style={{ width: "19%" }} />)}
+                        <col style={{ width: labelColW }} />
+                        {tablePlans.map((p) => <col key={p.key} style={{ width: planColW }} />)}
                       </colgroup>
                       <tbody>
                         {upcomingRows.map((row) => (
                           <tr key={row.label}>
-                            <th scope="row" dir={isLatinLabel(row.label) ? "ltr" : undefined} className={`py-3.5 text-[11.5px] font-normal ${t.muted} ${isLatinLabel(row.label) ? "text-left" : "text-start"}`}>{row.label}</th>
+                            <th scope="row" dir={isLatinLabel(row.label) ? "ltr" : undefined} className={`py-3.5 text-[11.5px] font-normal ${isEn() ? "pe-2" : ""} ${t.muted} ${isLatinLabel(row.label) ? "text-left" : "text-start"}`}>{row.label}</th>
                             {tablePlans.map((p) => (
                               <td key={p.key} className="py-3.5">
                                 <div className="flex justify-center">

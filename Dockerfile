@@ -20,6 +20,9 @@ COPY . .
 # خودش .env رو برای همین ${...}ها می‌خونه) به‌عنوان build arg بیاد.
 ARG NEXT_PUBLIC_VAPID_PUBLIC_KEY
 ENV NEXT_PUBLIC_VAPID_PUBLIC_KEY=$NEXT_PUBLIC_VAPID_PUBLIC_KEY
+# دامنه‌ی پایه‌ی زیردامنه‌های بخش‌ها (docs/sections.md) — خالی = زیردامنه‌ها خاموش
+ARG NEXT_PUBLIC_SECTION_BASE_DOMAIN
+ENV NEXT_PUBLIC_SECTION_BASE_DOMAIN=$NEXT_PUBLIC_SECTION_BASE_DOMAIN
 # Prisma Client باید قبل از build ساخته بشه وگرنه import هاش fail می‌شن
 RUN npx prisma generate
 RUN npm run build

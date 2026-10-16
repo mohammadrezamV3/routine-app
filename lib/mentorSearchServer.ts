@@ -1,7 +1,7 @@
 import type { Prisma } from "@prisma/client";
 import { prisma } from "@/lib/prisma";
 import { displayName } from "@/lib/inAppNotify";
-import { MENTOR_CATEGORIES, MENTOR_CATEGORY_META, isMentorCategory } from "@/lib/mentorCategories";
+import { MENTOR_CATEGORIES, MENTOR_CATEGORY_META, isMentorCategory, restrictCategories } from "@/lib/mentorCategories";
 import { availabilityToday } from "@/lib/mentorManageServer";
 import { MENTOR_CARD_INCLUDE, buildMentorCards, dateFromIso, loadMentorStats, type MentorCard } from "@/lib/mentorServer";
 import { RANK_SCOPE_ALL, ensureFreshRankings, loadRankedCards, type RankScope } from "@/lib/mentorRankingStats";
@@ -24,16 +24,23 @@ export const CANDIDATE_CAP = 400;
 const RATING_EPS = 0.05; // میانگین ۴٫۴۶ روی کارت «۴٫۵» دیده می‌شه
 
 /** فیلترهای SQL-بیان‌شدنی روی MentorProfile (کنار شرط «قابل کشف») */
-export function filterWhere(f: MentorFilters, base: Prisma.MentorProfileWhereInput): Prisma.MentorProfileWhereInput {
+export function filterWhere(
+  f: MentorFilters,
+  base: Prisma.MentorProfileWhereInput,
+  /** حوزه‌های مجاز بخش جاری (SECTION_META[section].mentorCategories)؛ null = دامنه‌ی اصلی، بدون محدودیت */
+  allowed: readonly string[] | null = null
+): Prisma.MentorProfileWhereInput {
   const and: Prisma.MentorProfileWhereInput[] = [base];
-  const category = isMentorCategory(f.category) ? f.category : null;
+  // حوزه‌ی بیرون از بخش نادیده گرفته می‌شه (همون «همه‌ی حوزه‌های بخش»)
+  const category = isMentorCategory(f.category) && (!allowed || allowed.includes(f.category)) ? f.category : null;
   if (category) and.push({ categories: { has: category } });
+  else if (allowed) and.push({ categories: { hasSome: [...allowed] } });
   if (f.cert) {
     // مدرک فقط وقتی حسابه که حوزه‌اش هنوز روی پروفایل باشه (همون قاعده‌ی toMentorCard)
     and.push(
       category
         ? { credentials: { some: { category, status: "VERIFIED" } } }
-        : { OR: MENTOR_CATEGORIES.map((c) => ({ categories: { has: c }, credentials: { some: { category: c, status: "VERIFIED" as const } } })) }
+        : { OR: restrictCategories(MENTOR_CATEGORIES, allowed).map((c) => ({ categories: { has: c }, credentials: { some: { category: c, status: "VERIFIED" as const } } })) }
     );
   }
   if (f.open) {
@@ -56,14 +63,27 @@ async function cardsInOrder(profileIds: string[]): Promise<MentorCard[]> {
 
 const CATEGORY_LABEL = (c: string) => (isMentorCategory(c) ? `${MENTOR_CATEGORY_META[c].label} ${MENTOR_CATEGORY_META[c].short}` : c);
 
+/** دامنه‌ی رتبه‌بندی: حوزه‌ی انتخاب‌شده (اگه مجاز بود)، بخش تک‌حوزه‌ای همون حوزه، وگرنه کلی */
+export function rankScopeFor(category: string, allowed: readonly string[] | null): RankScope {
+  if (isMentorCategory(category) && (!allowed || allowed.includes(category))) return category;
+  if (allowed && allowed.length === 1 && isMentorCategory(allowed[0])) return allowed[0];
+  return RANK_SCOPE_ALL;
+}
+
 export type SearchPage = { cards: MentorCard[]; hasMore: boolean };
 
 /**
  * یک صفحه از نتیجه‌ی جستجو. `base` = شرط قابل کشف‌بودن (+ بلاک‌ها) از روت.
  */
-export async function searchMentors(f: MentorFilters, base: Prisma.MentorProfileWhereInput, page: number, pageSize: number): Promise<SearchPage> {
-  const where = filterWhere(f, base);
-  const scope: RankScope = isMentorCategory(f.category) ? f.category : RANK_SCOPE_ALL;
+export async function searchMentors(
+  f: MentorFilters,
+  base: Prisma.MentorProfileWhereInput,
+  page: number,
+  pageSize: number,
+  allowed: readonly string[] | null = null
+): Promise<SearchPage> {
+  const where = filterWhere(f, base, allowed);
+  const scope = rankScopeFor(f.category, allowed);
   const offset = (page - 1) * pageSize;
 
   // ── مسیر دیتابیسی: بدون عبارت و بدون نیاز به شمارش ظرفیت ──

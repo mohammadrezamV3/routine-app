@@ -67,12 +67,16 @@
   .dnav :focus-visible, .dnav-end :focus-visible{ outline:2px solid var(--accent); outline-offset:2px; }
   .dnav .dnav-panel :focus-visible, .dnav-end .dnav-panel :focus-visible{ outline-offset:-2px; }
 
-  /* نشانگر فعال: عنصر 1px که فقط translate/scaleX می‌شه (بدون layout) */
-  .dnav-ind{
-    position:absolute; left:0; bottom:0; width:1px; height:2px; background:var(--accent);
-    transform-origin:0 0; opacity:0; pointer-events:none; will-change:transform;
+  /* نشانگر فعال: عنصر 1px که فقط translate/scaleX می‌شه (بدون layout). افقی: دقیقا زیر
+     لیبل آیتم فعال (DesktopNav.measure). عمودی ثابت و برای همه‌ی آیتم‌ها یکی: لیبل
+     16px ارتفاع و وسط‌چین نوار (50%) داره، نشانگر 5px زیر کف لیبل می‌شینه. سلکتور
+     .dnav > .dnav-ind عمدا قوی‌تره تا کپی‌های قدیمی bottom:0 در app/_area اثر نکنن. */
+  html[dir] .dnav > .dnav-ind{
+    position:absolute; left:0; top:calc(50% + 13px); bottom:auto; width:1px; height:2px; border-radius:1px;
+    background:var(--accent); transform-origin:0 0; opacity:0; pointer-events:none; will-change:transform;
   }
-  .dnav-ind.is-ready{ transition:transform .42s cubic-bezier(.2,.9,.25,1.05), opacity .2s ease; }
+  html[dir] body[data-theme] .dnav .dnav-link > span:first-child{ display:block; line-height:16px; }
+  html[dir] .dnav > .dnav-ind.is-ready{ transition:transform .42s cubic-bezier(.2,.9,.25,1.05), opacity .2s ease; }
 
   /* ---------- پنل‌های کشویی (ظاهر همان .notif-panel) ---------- */
   html[dir] .dnav-panel.notif-panel{
@@ -154,8 +158,101 @@
 }
 
 @media (min-width:1024px) and (prefers-reduced-motion:reduce){
-  .dnav-ind.is-ready, .dnav-chev{ transition:none; }
+  .dnav > .dnav-ind.is-ready, .dnav-chev{ transition:none; }
   html[dir] .dnav-panel.notif-panel, html[dir] .dnav-panel.notif-panel[data-open="true"]{
     transform:none; transition:opacity .12s ease, visibility 0s;
   }
+}
+
+/* ---------- کنترل کوچیک زبان هدر (components/HeaderLangButton.tsx) ----------
+   فقط روی لندینگ مهمان رندر می‌شه. بی‌بک‌گراند و بی‌بوردر در همه‌ی حالت‌ها (ریست شیشه‌ای
+   سراسری button با اسپسیفیسیتی بالاتر خنثی می‌شه). روی دسکتاپ انگلیسی کره‌ی DesktopNavEnd
+   جاش رو می‌گیره. */
+body[data-theme] button.hdr-lang-btn,
+body[data-theme] button.hdr-lang-btn:hover,
+body[data-theme] button.hdr-lang-btn:active,
+body[data-theme] button.hdr-lang-btn:focus{
+  display:inline-flex; align-items:center; gap:4px; flex-shrink:0;
+  height:34px; min-width:0; margin:0; padding:0 6px; border:0; border-radius:10px;
+  background:none; box-shadow:none; backdrop-filter:none; -webkit-backdrop-filter:none;
+  color:var(--muted); cursor:pointer; -webkit-tap-highlight-color:transparent;
+  font-family:var(--font-latin), var(--font-vazir), sans-serif; font-size:12px; font-weight:700; letter-spacing:.04em;
+  transition:color .18s ease, transform .15s ease;
+}
+body[data-theme] button.hdr-lang-btn:active{ transform:scale(.94); }
+body[data-theme] button.hdr-lang-btn:focus-visible{ outline:2px solid var(--accent); outline-offset:2px; color:var(--text); }
+@media (hover:hover){
+  body[data-theme] button.hdr-lang-btn:hover{ color:var(--text); }
+}
+.hdr-lang-btn svg{ flex-shrink:0; display:block; }
+@media (prefers-reduced-motion:reduce){ body[data-theme] button.hdr-lang-btn{ transition:none; } }
+
+/* ---------- لوگوی هدر = دکمه‌ی پنجره‌ی بخش‌ها (components/SectionSwitcher.tsx) ----------
+   قبلا لینک بود؛ حالا <button>. ریست‌های شیشه‌ای سراسری دکمه (globals) با اسپسیفیسیتی
+   بالاتر خنثی می‌شن تا لوگو مثل قبل بی‌بک‌گراند بمونه. */
+body[data-theme] .topbar-logo-lockup-wrap,
+body[data-theme] .topbar-logo-lockup-wrap:hover,
+body[data-theme] .topbar-logo-lockup-wrap:active,
+body[data-theme] .topbar-logo-lockup-wrap:focus{
+  background:none; border:0; box-shadow:none; padding:0; border-radius:0; margin:0;
+  backdrop-filter:none; -webkit-backdrop-filter:none; color:inherit; transform:none; cursor:pointer;
+  -webkit-tap-highlight-color:transparent;
+}
+body[data-theme] .topbar-logo-lockup-wrap:focus-visible{ outline:2px solid var(--accent); outline-offset:6px; border-radius:8px; }
+
+/* دکمه‌ی لوگو (هر دو حالت): [لوگو] [فلش کوچیک]؛ همیشه چپ به راست. فلش داخل همون دکمه‌ست
+   تا کل لوگو + فلش یک هدف کلیک باشه. بدون بک‌گراند (ریست سراسری button بالا خنثی شده). */
+body[data-theme] .topbar-logo-lockup-wrap{
+  direction:ltr; display:inline-flex; align-items:center; gap:6px;
+  height:auto; aspect-ratio:auto; min-width:0;
+}
+.tl-apex{ position:relative; display:block; flex-shrink:0; height:22px; aspect-ratio:256/63; }
+@media (min-width:701px){ .tl-apex{ height:30px; } }
+.tl-chev{
+  flex-shrink:0; display:block; width:13px; height:13px; background:none;
+  color:var(--muted); opacity:.85; transform-origin:50% 50%;
+  transition:transform .22s var(--popup-ease-in, ease), color .18s ease;
+}
+.topbar-logo-lockup-wrap[aria-expanded="true"] .tl-chev{ transform:rotate(180deg); color:var(--text); }
+@media (hover:hover){ .topbar-logo-lockup-wrap:hover .tl-chev{ color:var(--text); } }
+@media (prefers-reduced-motion:reduce){ .tl-chev{ transition:none; } }
+
+/* روی زیردامنه‌ی بخش: [ARION] | [TRADE] + فلش (بدون نشان A؛ نشان فقط در ردیف‌های پنجره‌ی
+   بخش‌ها می‌مونه). همه‌ی اندازه‌ها نسبت به --tl-h. متن بخش گرادیان رنگ همون بخشه.
+   اسم ARION روی موبایل هم دیده می‌شه و با کوچک‌شدن --tl-h کوچیک می‌شه؛ سقف عرض
+   (100vw - 236px) جا برای ردیف دکمه‌های سمت دیگه‌ی هدر (حتی کاربر واردشده: همبرگر،
+   پروفایل، زنگوله، استریک) رو نگه می‌داره. */
+body[data-theme] .topbar-logo-lockup-wrap.topbar-logo-section{
+  --tl-h:22px;
+  /* ترتیب لوگو همیشه چپ به راست، مثل طرح رسمی (ARION | TRADE)، حتی روی صفحه‌ی rtl */
+  gap:calc(var(--tl-h) * .3);
+  max-width:calc(100vw - 236px); flex-shrink:1;
+  font-family:var(--font-latin), var(--font-vazir), sans-serif;
+}
+@media (min-width:701px){ body[data-theme] .topbar-logo-lockup-wrap.topbar-logo-section{ --tl-h:30px; max-width:none; } }
+.tls-word{ position:relative; display:block; flex-shrink:0; height:calc(var(--tl-h) * .4); aspect-ratio:358/49; }
+.tls-sep{ flex-shrink:0; width:1px; height:calc(var(--tl-h) * .64); background:color-mix(in srgb, var(--text) 30%, transparent); }
+.tls-label{
+  min-width:0; overflow:hidden; text-overflow:ellipsis; white-space:nowrap;
+  font-size:calc(var(--tl-h) * .42); font-weight:800; line-height:1.4; letter-spacing:.2em; text-transform:uppercase;
+  padding-inline-end:.1em;
+  background:linear-gradient(90deg, var(--sec-from), var(--sec-mid), var(--sec-to));
+  -webkit-background-clip:text; background-clip:text;
+  -webkit-text-fill-color:transparent; color:transparent;
+}
+/* موبایل: کل قفل کوچیک‌تر می‌شه (نه اینکه ARION حذف بشه) تا در 360px با ردیف دکمه‌ها
+   (حتی کاربر واردشده) جا بشه: بلندترین بخش (WORKOUT) در 360px حدود 112px عرض داره. */
+@media (max-width:520px){
+  body[data-theme] .topbar-logo-lockup-wrap.topbar-logo-section{ --tl-h:18px; }
+  .app-topbar .topbar-actions{ gap:6px; }
+}
+@media (max-width:420px){
+  body[data-theme] .topbar-logo-lockup-wrap.topbar-logo-section{ --tl-h:16px; }
+  .topbar-logo-section .tls-label{ letter-spacing:.14em; }
+  .topbar-logo-section .tl-chev{ width:10px; height:10px; }
+  .app-topbar .topbar-actions{ gap:4px; }
+}
+@media (max-width:340px){
+  body[data-theme] .topbar-logo-lockup-wrap.topbar-logo-section{ --tl-h:14px; }
+  .topbar-logo-section .tls-label{ letter-spacing:.1em; }
 }

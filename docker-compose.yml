@@ -30,11 +30,13 @@ services:
   app:
     build:
       context: .
-      # این دوتا NEXT_PUBLIC_* هستن — کد سمت کلاینت همین لحظه‌ی build ازشون
+      # این NEXT_PUBLIC_*ها هستن — کد سمت کلاینت همین لحظه‌ی build ازشون
       # پر می‌شه، نه در runtime؛ چون .env توی .dockerignoreست، باید صریح از
       # همین‌جا (که docker compose خودش .env رو برای ${...} می‌خونه) رد بشن.
       args:
         NEXT_PUBLIC_VAPID_PUBLIC_KEY: ${NEXT_PUBLIC_VAPID_PUBLIC_KEY:-}
+        # زیردامنه‌های بخش‌ها (routine./trade./workout.) — خالی = خاموش؛ docs/sections.md
+        NEXT_PUBLIC_SECTION_BASE_DOMAIN: ${NEXT_PUBLIC_SECTION_BASE_DOMAIN:-}
     restart: unless-stopped
     depends_on:
       db:

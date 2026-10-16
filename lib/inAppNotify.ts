@@ -2,12 +2,24 @@ import { prisma } from "@/lib/prisma";
 import { sendPushToUser } from "@/lib/webPush";
 import { publishToUser } from "@/lib/realtime";
 import { tr } from "@/lib/i18n";
+import { getUserLocale, runWithLocale } from "@/lib/i18nServer";
 
 // اعلان پایدار درون‌برنامه‌ای + پوش best-effort. هیچ‌وقت نباید خود اقدام
 // اصلی (قبول درخواست، ارسال پیام، …) رو به‌خاطر شکست اعلان fail کنه.
 export type NotifyInput = { type: string; title: string; body: string; url?: string };
 
-export async function notifyUser(userId: string, n: NotifyInput): Promise<void> {
+/**
+ * `n` می‌تونه تابع باشه: اون‌وقت متن با زبان ذخیره‌شده‌ی *گیرنده* ساخته می‌شه (tr() و displayName()
+ * داخلش به زبان گیرنده جواب می‌دن، نه زبان کسی که درخواست رو زده). زبان ناشناخته = فارسی.
+ */
+export async function notifyUser(userId: string, input: NotifyInput | (() => NotifyInput)): Promise<void> {
+  let n: NotifyInput;
+  if (typeof input === "function") {
+    const locale = await getUserLocale(userId);
+    n = runWithLocale(locale, input);
+  } else {
+    n = input;
+  }
   try {
     await prisma.inAppNotification.create({
       data: { userId, type: n.type, title: n.title.slice(0, 120), body: n.body.slice(0, 500), url: n.url ?? null },

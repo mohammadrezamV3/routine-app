@@ -3,6 +3,7 @@
 import { cn } from "@/lib/utils";
 import { useEffect, useRef } from "react";
 import { useTheme } from "./ThemeProvider";
+import { useSection } from "./SectionProvider";
 import { tr } from "@/lib/i18n";
 
 // آواتار پیش‌فرض پروفایل — کامپوننت agent-avatar از smoothui، عینا پورت
@@ -63,6 +64,12 @@ const GLOW_RADIUS_RATIO = 0.25;
 // تم روشن — دقیقا همون hue رنگ accent خود تم (--accent در globals.css:
 // #00A86B تاریک ≈ hue 158، #B85C1F روشن ≈ hue 24) تا با بقیه‌ی UI یکدست بمونه.
 const THEME_BASE_HUE: Record<"dark" | "light", number> = { dark: 158, light: 24 };
+// بخش ترید و تمرین (زیردامنه‌ها) پالت خودشون رو دارن (app/section-themes.css)؛ hue هم از همون accent:
+// ترید آبی سایبری (196 شب، 217 روز)، تمرین زرشکی (349 شب، 347 روز). روتین و دامنه‌ی اصلی بدون تغییر.
+const SECTION_BASE_HUE: Record<string, Record<"dark" | "light", number>> = {
+  trade: { dark: 196, light: 217 },
+  workout: { dark: 349, light: 347 },
+};
 
 /** هش قطعی ساده از یه رشته */
 const hashSeed = (str: string): number => {
@@ -143,6 +150,7 @@ export function AgentAvatar({
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const rafRef = useRef<number>(0);
   const { theme } = useTheme();
+  const section = useSection();
 
   useEffect(() => {
     const canvas = canvasRef.current;
@@ -161,7 +169,7 @@ export function AgentAvatar({
     ctx.scale(dpr, dpr);
 
     const hash = hashSeed(seed || "؟");
-    const palette = generatePalette(hash, THEME_BASE_HUE[theme]);
+    const palette = generatePalette(hash, (section && SECTION_BASE_HUE[section]?.[theme]) || THEME_BASE_HUE[theme]);
     const grid = generateGrid(hash);
     const cellSize = size / GRID_SIZE;
     const half = size / 2;
@@ -311,7 +319,7 @@ export function AgentAvatar({
       document.removeEventListener("visibilitychange", onVis);
       motionQuery.removeEventListener("change", handleMotionChange);
     };
-  }, [seed, size, animated, theme]);
+  }, [seed, size, animated, theme, section]);
 
   return (
     <canvas

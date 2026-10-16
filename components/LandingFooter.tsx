@@ -8,6 +8,8 @@ import { EnamadBadge } from "@/components/EnamadBadge";
 import { TelegramIcon, InstagramIcon } from "@/components/SocialIcons";
 import { SOCIAL, SUPPORT_EMAIL, brandName } from "@/lib/brand";
 import { isEn, tr } from "@/lib/i18n";
+import { SECTION_KEYS, SECTION_META, sectionUrl, type SectionKey } from "@/lib/sections";
+import { getSectionFooterFeatures } from "@/lib/sectionLanding";
 
 // فوتر صفحه‌ی لندینگ — بدون کارت و بدون بک‌گراند (طبق قانون پروژه: هیچ
 // عنصری خودسرانه بک‌گراند نمی‌گیرد)، فقط یک خط جداکننده و همان توکن‌های
@@ -20,7 +22,9 @@ import { isEn, tr } from "@/lib/i18n";
 // همه‌ی لینک‌های فوتر قبلی سر جایشان مانده‌اند: /about و /faq و /terms و
 // صفحه‌های فرود عمومی بدون این لینک‌ها برای کراولر یتیم‌اند (هیچ لینک
 // HTMLای از صفحه‌ی اصلی به آن‌ها نبود). فقط در سه گروه کوتاه چیده شده‌اند.
-const groups = (): { title: string; links: { href: string; label: string }[] }[] => [
+type Group = { title: string; links: { href: string; label: string }[] };
+
+const groups = (): Group[] => [
   {
     title: tr("امکانات", "Features"),
     links: [
@@ -61,10 +65,20 @@ function jalaliYear(): string {
   }
 }
 
-export function LandingFooter() {
+// section: بخش زیردامنه. امکانات همان بخش + گروه «بخش‌های دیگر» با لینک به ریشه‌ی زیردامنه‌های دیگر؛
+// دامنه‌ی اصلی (null) دقیقا فوتر قبلی.
+export function LandingFooter({ section = null }: { section?: SectionKey | null }) {
   const t = useThemeTokens();
   const year = jalaliYear();
-  const GROUPS = groups();
+  const base = groups();
+  const GROUPS: Group[] = section
+    ? [
+        { ...base[0], links: getSectionFooterFeatures(section) },
+        base[1],
+        base[2],
+      ]
+    : base;
+  const OTHERS = section ? SECTION_KEYS.filter((k) => k !== section) : [];
 
   return (
     <footer className={`mt-12 border-t ${t.line} px-1 pb-8 pt-8 text-start`}>
@@ -87,11 +101,11 @@ export function LandingFooter() {
             </span>
           </Link>
           <p className={`mt-3 text-[12px] leading-6 ${t.muted}`}>
-            {tr("برنامه‌ریزی کن، اجرا کن و پیشرفتت را ببین؛ همه در یک سیستم.", "Plan, do and see your progress, all in one system.")}
+            {section ? SECTION_META[section].tagline : tr("برنامه‌ریزی کن، اجرا کن و پیشرفتت را ببین؛ همه در یک سیستم.", "Plan, do and see your progress, all in one system.")}
           </p>
         </div>
 
-        <nav aria-label={tr("صفحه‌های آریون", `${brandName()} pages`)} className="grid grid-cols-2 gap-x-6 gap-y-8 sm:grid-cols-4 sm:gap-x-9">
+        <nav aria-label={tr("صفحه‌های آریون", `${brandName()} pages`)} className={`grid grid-cols-2 gap-x-6 gap-y-8 sm:gap-x-9 ${section ? "sm:grid-cols-3 lg:grid-cols-5" : "sm:grid-cols-4"}`}>
           {GROUPS.map((g) => (
             <div key={g.title}>
               <div className={`text-[12px] font-bold ${t.heading}`}>{g.title}</div>
@@ -106,6 +120,27 @@ export function LandingFooter() {
               </ul>
             </div>
           ))}
+
+          {/* بخش‌های دیگر آریون: لینک بین‌دامنه‌ای به ریشه‌ی هر زیردامنه (فقط روی لندینگ زیردامنه‌ها) */}
+          {OTHERS.length > 0 && (
+            <div>
+              <div className={`text-[12px] font-bold ${t.heading}`}>{tr("بخش‌های دیگر آریون", `Other ${brandName()} products`)}</div>
+              <ul className="mt-3 space-y-2">
+                {OTHERS.map((k) => (
+                  <li key={k}>
+                    <a href={sectionUrl(k, "/")} className={`whitespace-nowrap text-[12px] transition-colors ${t.muted} ${t.accentHoverText}`}>
+                      {brandName()} {SECTION_META[k].label}
+                    </a>
+                  </li>
+                ))}
+                <li>
+                  <a href={sectionUrl(null, "/")} className={`whitespace-nowrap text-[12px] transition-colors ${t.muted} ${t.accentHoverText}`}>
+                    {tr("همه‌ی بخش‌ها", "All products")}
+                  </a>
+                </li>
+              </ul>
+            </div>
+          )}
 
           {/* ستون تماس/شبکه‌های اجتماعی — دقیقا همون دیتای واقعی
               lib/brand.ts که صفحه‌ی «درباره ما» هم نشون می‌ده، لینک تازه‌ای

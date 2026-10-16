@@ -10,8 +10,8 @@ body{
 body[data-theme="light"]{
   --ls-card:rgba(255,255,255,.5);
   --ls-card-hi:rgba(255,255,255,.75);
-  --ls-line:rgba(107,79,61,.14);
-  --ls-shadow:0 15px 45px rgba(107,79,61,.10);
+  --ls-line:rgba(var(--text-rgb,107,79,61),.14);
+  --ls-shadow:0 15px 45px rgba(var(--text-rgb,107,79,61),.10);
 }
 
 .ls-head{ text-align:start; margin-bottom:18px; }
@@ -27,6 +27,8 @@ body[data-theme="light"] h2.ls-title, body:not([data-theme="light"]) h2.ls-title
   box-shadow:var(--ls-shadow);
 }
 @media (min-width:768px){ .ls-stats{ grid-template-columns:repeat(4,minmax(0,1fr)); } }
+/* زیردامنه‌ها: دو آمار مرتبط به‌جای چهار تا */
+@media (min-width:768px){ .ls-stats[data-count="2"]{ grid-template-columns:repeat(2,minmax(0,1fr)); } }
 .ls-stat{ background:var(--bg); padding:22px 12px; text-align:center; position:relative; }
 .ls-stat::before{ content:""; position:absolute; inset:0; background:var(--ls-card); }
 .ls-stat > *{ position:relative; }
@@ -126,7 +128,7 @@ body[data-theme="light"] h2.ls-title, body:not([data-theme="light"]) h2.ls-title
   box-shadow:0 10px 24px rgba(0,0,0,.28); font-size:9.5px; line-height:1.6; color:var(--muted);
   animation:ls-toast 4.5s ease-in-out infinite;
 }
-body[data-theme="light"] .ls-toast{ box-shadow:0 10px 24px rgba(107,79,61,.18); }
+body[data-theme="light"] .ls-toast{ box-shadow:0 10px 24px rgba(var(--text-rgb,107,79,61),.18); }
 .ls-toast-ic{ width:18px; height:18px; border-radius:5px; flex:none; margin-top:1px; }
 .ls-toast-tx{ display:flex; flex-direction:column; min-width:0; }
 .ls-toast-tx b{ font-size:10px; font-weight:800; color:var(--text); }
@@ -286,7 +288,7 @@ body[data-theme="light"] h2.ls-cta-title, body:not([data-theme="light"]) h2.ls-c
 /* دسکتاپ: بخش‌های پایینی هم مثل هیرو/ویترین از ستون ۶۲۰پیکسلی .wrap
    بیرون می‌زنن تا عرض صفحه یکدست باشه (FAQ عمدا باریک‌تر برای خوانایی). */
 @media (min-width:1024px){
-  #sec-landing-stats, #sec-landing-how, #sec-landing-bento, #sec-landing-allfeatures, #sec-landing-whyus, #sec-landing-trust, #sec-landing-cta{
+  #sec-landing-stats, #sec-landing-how, #sec-landing-bento, #sec-landing-allfeatures, #sec-landing-whyus, #sec-landing-trust, #sec-landing-cta, #sec-landing-others{
     --ls-w: min(1180px, calc(100vw - 64px));
     width:var(--ls-w);
     margin-inline:calc((100% - var(--ls-w)) / 2);
@@ -316,4 +318,30 @@ html[dir="ltr"] .ls-toast{ direction:ltr; }
 }
 @media (hover:hover){
   html[dir="ltr"] .ls-feat-item.is-link:hover .ls-feat-arrow{ transform:translateX(3px); }
+}
+
+/* ───── بخش‌های دیگر آریون (لندینگ زیردامنه‌ها) — بی‌بک‌گراند، فقط خط ───── */
+.lso{ margin-top:36px; text-align:start; }
+.lso-title{ font-size:12.5px; font-weight:800; color:var(--muted); margin-bottom:10px; }
+.lso-list{ list-style:none; margin:0; padding:0; display:grid; grid-template-columns:minmax(0,1fr); gap:10px; }
+@media (min-width:560px){ .lso-list{ grid-template-columns:repeat(2,minmax(0,1fr)); } }
+.lso-link{
+  display:flex; align-items:center; gap:12px; padding:12px 14px; border-radius:18px;
+  border:1px solid var(--ls-line); color:var(--text); text-decoration:none;
+  transition:border-color .2s ease;
+}
+@media (hover:hover){ .lso-link:hover{ border-color:var(--lso-c); } }
+.lso-link:focus-visible{ outline:2px solid var(--lso-c); outline-offset:2px; }
+.lso-ic{ flex:none; width:30px; height:30px; object-fit:contain; }
+.lso-txt{ min-width:0; display:flex; flex-direction:column; gap:1px; }
+.lso-txt b{ font-size:13.5px; font-weight:800; }
+.lso-txt span{ font-size:11.5px; line-height:1.7; color:var(--muted); }
+
+/* ───── بنتوی زیردامنه‌ها: تعداد کارت کمتره، پس شبکه‌ی دسکتاپ/تبلت جدا چیده می‌شه ───── */
+@media (min-width:1024px){
+  .ls-bento[data-section="trade"] .ls-b-meta{ grid-column:span 6; }
+}
+@media (min-width:640px) and (max-width:1023px){
+  .ls-bento[data-section] .ls-card{ grid-column:auto; }
+  .ls-bento[data-section] .ls-card:last-child:nth-child(odd){ grid-column:span 2; }
 }

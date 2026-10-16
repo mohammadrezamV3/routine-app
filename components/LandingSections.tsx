@@ -8,6 +8,7 @@ import {
   ShieldCheck, TrendingUp, Headset, Lightbulb, Smartphone, BarChart3, Zap,
   Users, Sparkles, RefreshCw, UserPlus, LayoutGrid, CalendarCheck,
   CalendarDays, Dumbbell, Apple, CandlestickChart, CalendarClock, Clock, Route, GraduationCap, Megaphone, SunMoon, Target,
+  Moon, Calculator, Share2,
 } from "lucide-react";
 import type { LucideIcon } from "lucide-react";
 import { AgentAvatar } from "@/components/AgentAvatar";
@@ -24,6 +25,13 @@ import { fillPriceCopy } from "@/lib/planPricing";
 import { usePlanPricing } from "@/lib/usePlanPricing";
 import { STATS_BASE, type PublicStats } from "@/lib/publicStatsBase";
 import { tr } from "@/lib/i18n";
+import { pathAllowedIn, type SectionKey } from "@/lib/sections";
+import {
+  SECTION_BENTO_KEYS, SECTION_FEATURE_KEYS, SECTION_STATS_KEYS, getSectionCopy,
+} from "@/lib/sectionLanding";
+
+// section = بخش زیردامنه (null = دامنه‌ی اصلی، دقیقا همان متن و چیدمان قبلی)
+type SecProp = { section?: SectionKey | null };
 
 const EASE = [0.22, 1, 0.36, 1] as const;
 
@@ -107,8 +115,8 @@ const stats_ = (): { key: keyof PublicStats; label: string }[] => [
   { key: "journalEntries", label: tr("معامله ثبت‌شده", "trades logged") },
 ];
 
-export function LandingStats() {
-  const STATS = stats_();
+export function LandingStats({ section = null }: SecProp) {
+  const STATS = section ? stats_().filter((x) => SECTION_STATS_KEYS[section].includes(x.key as never)) : stats_();
   const [stats, setStats] = useState<PublicStats>(STATS_BASE);
   useEffect(() => {
     let alive = true;
@@ -128,7 +136,7 @@ export function LandingStats() {
 
   return (
     <Reveal>
-      <div className="ls-stats" role="list">
+      <div className="ls-stats" role="list" data-count={section ? STATS.length : undefined}>
         {STATS.map((s) => (
           <div key={s.key} className="ls-stat" role="listitem">
             <div className="ls-stat-num">
@@ -150,12 +158,14 @@ const steps = () => [
   { icon: CalendarCheck, title: tr("پیشرفتت را ببین", "See your progress"), body: tr("استریک، تاریخچه و آنالیز هفتگی نشان می‌دهند مسیرت چطور پیش می‌رود.", "Your streak, history and weekly review show how your journey is going.") },
 ];
 
-export function LandingHowItWorks() {
+export function LandingHowItWorks({ section = null }: SecProp) {
   const reduce = useReducedMotion();
-  const STEPS = steps();
+  const base = steps();
+  const copy = section ? getSectionCopy(section) : null;
+  const STEPS = copy ? copy.steps.map((x, i) => ({ icon: base[i].icon, ...x })) : base;
   return (
     <div>
-      <SectionHead title={tr("برنامه، اجرا،", "Plan, do,")} accent={tr("پیشرفت", "progress")} />
+      <SectionHead title={copy ? copy.howTitle.title : tr("برنامه، اجرا،", "Plan, do,")} accent={copy ? copy.howTitle.accent : tr("پیشرفت", "progress")} />
       <div className="ls-steps">
         <div className="ls-steps-line" aria-hidden="true">
           <motion.span
@@ -186,9 +196,9 @@ export function LandingHowItWorks() {
 
 /* ───────────────────────── 2.5) Dashboard ───────────────────────── */
 // معرفی داشبورد (/dashboard) — ماکت ساده‌شده‌ی خود صفحه (حلقه‌های پیشرفت،
-// کارهای سریع، خط زمانی امروز، ترید) و یک پاپ‌آپ «ثبت غذا» روی همون صفحه،
+// خط زمانی امروز، ترید) و یک پاپ‌آپ «ثبت غذا» روی همون صفحه،
 // چون نکته‌ی اصلیش همینه: ثبت‌کردن بدون رفتن به صفحه‌ی دیگه. همه‌ی ادعاها با
-// کد DashboardClient/DashboardActions/DashboardCommand چک شده. تصویر inert.
+// کد DashboardClient/DashboardActions چک شده. تصویر inert.
 
 const dashRings = () => [
   { label: tr("روتین", "Routine"), v: 0.78, a: "var(--ring-1a)", b: "var(--ring-1b)" },
@@ -200,7 +210,6 @@ const dashPoints = (): { icon: LucideIcon; title: string; body: string }[] => [
   { icon: LayoutGrid, title: tr("امروزت را ببین", "See your day"), body: tr("برنامه‌های امروز، وضعیت انجام‌شدن و اولویت‌هایت را یک‌جا دنبال کن.", "Follow today's plans, their completion status and your priorities in one place.") },
   { icon: Zap, title: tr("سریع ثبت کن", "Log quickly"), body: tr("کاری که انجام داده‌ای را همان لحظه ثبت کن و ادامه بده.", "Log what you have done the moment you do it, and move on.") },
   { icon: RefreshCw, title: tr("پیشرفتت را دنبال کن", "Follow your progress"), body: tr("عملکردت فقط یک لیست نیست؛ روندی است که می‌بینی. هر تیک همان لحظه در برنامه هفتگی، استریک و دستگاه‌های دیگرت هم دیده می‌شود.", "Your performance is not just a list; it is a trend you can see. Every tick shows up instantly in the weekly plan, your streak and your other devices.") },
-  { icon: Sparkles, title: tr("جست‌وجوی سریع", "Quick search"), body: tr("با Ctrl/⌘ + K و چند حرف به هر بخش برس.", "Press Ctrl/⌘ + K and type a few letters to reach any section.") },
 ];
 
 function DashRings() {
@@ -214,8 +223,37 @@ function DashRings() {
   );
 }
 
-function DashMock() {
-  const DASH_RINGS = dashRings();
+function DashMock({ section = null }: SecProp) {
+  const allRings = dashRings();
+  // روتین: فقط حلقه‌ی روتین؛ ورزش: حلقه‌های تمرین و کالری؛ دامنه‌ی اصلی: هر سه
+  const DASH_RINGS = section === "routine" ? allRings.slice(0, 1) : section === "workout" ? allRings.slice(1) : allRings;
+  const quick = section === "routine"
+    ? [
+        { l: tr("برنامه‌ی جدید", "New plan"), I: CalendarCheck, c: "var(--accent)" },
+        { l: tr("ثبت خواب", "Log sleep"), I: Moon, c: "#7C6CFF" },
+      ]
+    : section === "workout"
+    ? [
+        { l: tr("ثبت غذا", "Log food"), I: Apple, c: "#FFB547", on: true },
+        { l: tr("شروع تمرین", "Start workout"), I: Dumbbell, c: "#3D7DFF" },
+      ]
+    : [
+        { l: tr("برنامه‌ی جدید", "New plan"), I: CalendarCheck, c: "var(--accent)" },
+        { l: tr("ثبت غذا", "Log food"), I: Apple, c: "#FFB547", on: true },
+        { l: tr("ثبت معامله", "Log trade"), I: CandlestickChart, c: "#00C98D" },
+        { l: tr("شروع تمرین", "Start workout"), I: Dumbbell, c: "#3D7DFF" },
+      ];
+  const plans = section === "workout"
+    ? [
+        { t: "18:00", n: tr("گرم کردن", "Warm-up"), d: true },
+        { t: "18:10", n: tr("پرس سینه", "Bench press"), d: true },
+        { t: "18:45", n: tr("زیربغل سیم‌کش", "Seated cable row"), d: false },
+      ]
+    : [
+        { t: "07:00", n: tr("مدیتیشن صبحگاهی", "Morning meditation"), d: true },
+        { t: "11:00", n: tr("جلسه‌ی کاری", "Work meeting"), d: true },
+        { t: "21:30", n: tr("مطالعه‌ی کتاب", "Reading a book"), d: false },
+      ];
   return (
     <div className="ls-dash-mock" aria-hidden="true" {...INERT}>
       <div className="ls-dash-hero">
@@ -233,12 +271,7 @@ function DashMock() {
       </div>
 
       <div className="ls-dash-quick">
-        {[
-          { l: tr("برنامه‌ی جدید", "New plan"), I: CalendarCheck, c: "var(--accent)" },
-          { l: tr("ثبت غذا", "Log food"), I: Apple, c: "#FFB547", on: true },
-          { l: tr("ثبت معامله", "Log trade"), I: CandlestickChart, c: "#00C98D" },
-          { l: tr("شروع تمرین", "Start workout"), I: Dumbbell, c: "#3D7DFF" },
-        ].map(({ l, I, c, on }) => (
+        {quick.map(({ l, I, c, on }: { l: string; I: LucideIcon; c: string; on?: boolean }) => (
           <span key={l} className={`ls-dash-q${on ? " is-on" : ""}`} style={{ ["--c" as string]: c }}>
             <span className="ls-dash-q-ic"><I size={15} /></span>{l}
           </span>
@@ -247,12 +280,11 @@ function DashMock() {
 
       <div className="ls-dash-row">
         <div className="ls-dash-card">
-          <div className="ls-dash-card-h"><CalendarDays size={13} /> {tr("برنامه‌های امروز", "Today's plans")}</div>
-          {[
-            { t: "07:00", n: tr("مدیتیشن صبحگاهی", "Morning meditation"), d: true },
-            { t: "11:00", n: tr("جلسه‌ی کاری", "Work meeting"), d: true },
-            { t: "21:30", n: tr("مطالعه‌ی کتاب", "Reading a book"), d: false },
-          ].map((x) => (
+          <div className="ls-dash-card-h">
+            {section === "workout" ? <Dumbbell size={13} /> : <CalendarDays size={13} />}{" "}
+            {section === "workout" ? tr("تمرین امروز", "Today's workout") : tr("برنامه‌های امروز", "Today's plans")}
+          </div>
+          {plans.map((x) => (
             <div key={x.n} className={`ls-dash-tl${x.d ? " is-done" : ""}`}>
               <span className="mono">{x.t}</span>
               <span className="ls-dash-tl-n">{x.n}</span>
@@ -261,37 +293,49 @@ function DashMock() {
           ))}
         </div>
         <div className="ls-dash-card">
-          <div className="ls-dash-card-h"><TrendingUp size={13} /> {tr("عملکرد ترید", "Trading performance")}</div>
-          <div className="ls-dash-pnl mono" dir="ltr">+1,242$</div>
+          <div className="ls-dash-card-h">
+            {section === "routine" ? <Moon size={13} /> : section === "workout" ? <Apple size={13} /> : <TrendingUp size={13} />}{" "}
+            {section === "routine" ? tr("خواب دیشب", "Last night's sleep") : section === "workout" ? tr("کالری امروز", "Today's calories") : tr("عملکرد ترید", "Trading performance")}
+          </div>
+          <div className="ls-dash-pnl mono" dir="ltr">{section === "routine" ? "7:30" : section === "workout" ? "1420 / 2100" : "+1,242$"}</div>
           <svg viewBox="0 0 100 34" className="ls-dash-spark" preserveAspectRatio="none">
             <path d="M0 28 L12 24 L22 26 L34 18 L46 20 L58 12 L70 14 L82 7 L100 4" fill="none" stroke="var(--pnl-win, #00C98D)" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round" vectorEffect="non-scaling-stroke" />
           </svg>
-          <div className="ls-dash-sub">{tr(`نرخ برد ${fa(62)}٪ · ${fa(24)} معامله`, `Win rate ${fa(62)}% · ${fa(24)} trades`)}</div>
+          <div className="ls-dash-sub">
+            {section === "routine"
+              ? tr(`امتیاز خواب ${fa(86)} · هدف ${fa(8)} ساعت`, `Sleep score ${fa(86)} · goal ${fa(8)} hours`)
+              : section === "workout"
+              ? tr(`پروتئین ${fa(98)} از ${fa(140)} گرم`, `Protein ${fa(98)} of ${fa(140)} g`)
+              : tr(`نرخ برد ${fa(62)}٪ · ${fa(24)} معامله`, `Win rate ${fa(62)}% · ${fa(24)} trades`)}
+          </div>
         </div>
       </div>
 
-      {/* پاپ‌آپ «ثبت غذا» — روی خود داشبورد، نه صفحه‌ی جدید */}
-      <div className="ls-dash-pop">
-        <div className="ls-dash-pop-h"><Apple size={14} /> {tr("افزودن غذا", "Add food")}</div>
-        <div className="ls-dash-pop-f">{tr("جوجه‌کباب", "Chicken kebab")} <span className="mono">{tr("200 گرم", "200 g")}</span></div>
-        <div className="ls-dash-pop-btn">{tr("افزودن", "Add")}</div>
-      </div>
+      {/* پاپ‌آپ «ثبت غذا» — روی خود داشبورد، نه صفحه‌ی جدید (روی بخش روتین نیست) */}
+      {section !== "routine" && (
+        <div className="ls-dash-pop">
+          <div className="ls-dash-pop-h"><Apple size={14} /> {tr("افزودن غذا", "Add food")}</div>
+          <div className="ls-dash-pop-f">{tr("جوجه‌کباب", "Chicken kebab")} <span className="mono">{tr("200 گرم", "200 g")}</span></div>
+          <div className="ls-dash-pop-btn">{tr("افزودن", "Add")}</div>
+        </div>
+      )}
     </div>
   );
 }
 
-export function LandingDashboard() {
+export function LandingDashboard({ section = null }: SecProp) {
   const DASH_POINTS = dashPoints();
+  const copy = section ? getSectionCopy(section) : null;
   return (
     <div>
-      <SectionHead title={tr("کل روزت،", "Your whole day,")} accent={tr("یک‌جا", "in one place")} />
+      <SectionHead title={copy ? copy.dashTitle.title : tr("کل روزت،", "Your whole day,")} accent={copy ? copy.dashTitle.accent : tr("یک‌جا", "in one place")} />
       <Reveal>
         <p className="ls-dash-intro">
-          {tr("از برنامه امروز تا میزان پیشرفتت؛ مهم‌ترین چیزها را بدون جابه‌جایی بین چند ابزار ببین.", "From today's plan to how far you have come; see the most important things without switching between several tools.")}
+          {copy ? copy.dashIntro : tr("از برنامه امروز تا میزان پیشرفتت؛ مهم‌ترین چیزها را بدون جابه‌جایی بین چند ابزار ببین.", "From today's plan to how far you have come; see the most important things without switching between several tools.")}
         </p>
       </Reveal>
       <div className="ls-dash">
-        <Reveal className="ls-dash-stage"><DashMock /></Reveal>
+        <Reveal className="ls-dash-stage"><DashMock section={section} /></Reveal>
         <ul className="ls-dash-points">
           {DASH_POINTS.map((p, i) => {
             const Icon = p.icon;
@@ -423,14 +467,15 @@ const bento = () => [
   { key: "food", cls: "ls-b-food", icon: Target, title: tr("تغذیه‌ات را هم اندازه‌گیری کن", "Measure your nutrition too"), body: tr("کالری و ماکروهای روزانه‌ات را ثبت کن و ببین چقدر به هدفت نزدیک شده‌ای.", "Log your daily calories and macros and see how close you are to your goal."), vis: VisFood },
 ];
 
-export function LandingBento() {
-  const BENTO = bento();
+export function LandingBento({ section = null }: SecProp) {
+  const all = bento();
+  const BENTO = section ? SECTION_BENTO_KEYS[section].map((k) => all.find((b) => b.key === k)).filter((b): b is (typeof all)[number] => !!b) : all;
   const ref = useRef<HTMLDivElement>(null);
   const inView = useInView(ref, { margin: "80px" });
   return (
     <div>
       <SectionHead title={tr("جزئیاتی که", "The details that")} accent={tr("فرق را می‌سازند", "make the difference")} />
-      <div ref={ref} className={`ls-bento${inView ? "" : " is-paused"}`}>
+      <div ref={ref} className={`ls-bento${inView ? "" : " is-paused"}`} data-section={section ?? undefined}>
         {BENTO.map((b, i) => {
           const Icon = b.icon;
           const Vis = b.vis;
@@ -456,33 +501,50 @@ export function LandingBento() {
 // فهرست فشرده‌ی همه‌ی قابلیت‌ها — هر مورد با کد اپ چک شده و هرجا صفحه‌ی
 // توضیحی اختصاصی هست، به همان لینک می‌دهد (لینک داخلی برای سئو).
 
-const features = (): { icon: LucideIcon; title: string; body: string; href?: string }[] => [
-  { icon: LayoutGrid, title: tr("داشبورد", "Dashboard"), body: tr("کل روزت را در یک صفحه ببین و سریع ثبت کن.", "See your whole day on one page and log quickly.") },
-  { icon: CalendarCheck, title: tr("روتین روزانه", "Daily routine"), body: tr("کارهای هر روز را با ساعت و اولویت بچین و تیک بزن.", "Lay out each day's tasks with a time and priority, and tick them off."), href: "/routine" },
-  { icon: CalendarDays, title: tr("برنامه هفتگی و تاریخچه", "Weekly plan and history"), body: tr("کل هفته در یک نگاه؛ به روزهای گذشته برگرد و بررسی کن.", "The whole week at a glance; go back to past days and review them."), href: "/daily-planner" },
-  { icon: Flame, title: tr("پیگیری عادت و استریک", "Habit tracking and streaks"), body: tr("زنجیره روزهای پیوسته‌ات را ببین؛ 8 سطح، از 1 تا 365 روز.", "See your chain of consecutive days; 8 levels, from 1 to 365 days."), href: "/habit-tracker" },
-  { icon: Bell, title: tr("یادآوری برنامه و دارو", "Plan and medication reminders"), body: tr("برای کارها و برنامه‌های مهمت و هر نوبت دارو یادآوری داشته باش.", "Get reminders for your important tasks and plans and for every medication dose.") },
-  { icon: Bot, title: tr("مدیر برنامه هوشمند «نومو»", "Nomo, the smart plan manager"), body: tr("به فارسی بگو چه می‌خواهی؛ نومو برنامه‌هایت را می‌سازد و جابه‌جا می‌کند.", "Say what you want in plain language; Nomo creates and moves your plans."), href: "/ai-planner" },
-  { icon: BarChart3, title: tr("آنالیز هفتگی", "Weekly review"), body: tr("ببین کجا جلو رفته‌ای، کجا عقب مانده‌ای و هفته بعد روی چه چیزی تمرکز کنی.", "See where you moved ahead, where you fell behind and what to focus on next week.") },
-  { icon: Dumbbell, title: tr("برنامه بدنسازی", "Workout plan"), body: tr("برنامه AI یا دستی، کرنومتر تمرین و 149 حرکت آماده.", "An AI or manual plan, a workout timer and 149 ready-made exercises."), href: "/bodybuilding-program" },
-  { icon: Apple, title: tr("کالری‌شمار", "Calorie counter"), body: tr("کالری و ماکروهایت را با 264 خوراکی آماده ثبت کن و نمودار هفتگی را ببین.", "Log your calories and macros with 264 ready-made foods and see the weekly chart."), href: "/calorie-counter" },
-  { icon: CandlestickChart, title: tr("ژورنال ترید", "Trading journal"), body: tr("معاملات هر حساب را با آمار، چک‌لیست و یادداشت بررسی کن.", "Review each account's trades with statistics, a checklist and notes."), href: "/trading-journal" },
-  { icon: RefreshCw, title: tr("همگام‌سازی متاتریدر", "MetaTrader sync"), body: tr("MT4 و MT5 با اکسپرت و کد اتصال؛ بدون رمز حساب.", "MT4 and MT5 with an Expert Advisor and connection code; no account password."), href: "/trading-journal" },
-  { icon: CalendarClock, title: tr("تقویم اقتصادی", "Economic calendar"), body: tr("رویدادهای 9 ارز اصلی با Actual، Forecast، Previous و هشدار خبر.", "Events for 9 major currencies with Actual, Forecast, Previous and news alerts."), href: "/economic-calendar" },
-  { icon: Clock, title: tr("ساعت سشن‌های فارکس", "Forex session hours"), body: tr("پنج سشن اصلی به وقت خودت، با ساعت تابستانی واقعی.", "The five main sessions in your own time, with real daylight saving."), href: "/forex-sessions" },
-  { icon: Route, title: tr("رودمپ یادگیری", "Learning roadmap"), body: tr("هدف بزرگت را با هوش مصنوعی به مسیر مرحله‌به‌مرحله تبدیل کن.", "Turn your big goal into a step-by-step path with AI."), href: "/learning-roadmap" },
-  { icon: GraduationCap, title: tr("مربی‌ها", "Mentors"), body: tr("مربی احراز هویت‌شده، دریافت برنامه و چت‌های سرتاسر رمزنگاری‌شده.", "Identity-verified mentors, plans delivered to you and end-to-end encrypted chats."), href: "/mentors" },
-  { icon: Users, title: tr("دوستان", "Friends"), body: tr("پیشرفت و استریک دوستانت را ببین و کنار هم ادامه بده.", "See your friends' progress and streaks and keep going together.") },
-  { icon: Megaphone, title: tr("اعلان‌ها و اطلاعیه‌ها", "Notifications and announcements"), body: tr("اطلاعیه‌های آریون و اعلان‌هایت در یک پنل.", `${brandName()} announcements and your notifications in one panel.`) },
-  { icon: Smartphone, title: tr("نصب روی گوشی", "Install on your phone"), body: tr("وب‌اپ PWA؛ با «افزودن به صفحه‌ی اصلی» مثل یک اپ نصب می‌شود.", "A PWA web app; with Add to Home Screen it installs like an app.") },
-  { icon: SunMoon, title: tr("تم روشن و تیره", "Light and dark themes"), body: tr("هر دو تم، با ظاهری یکدست در همه بخش‌ها.", "Both themes, with a consistent look across every section.") },
+type Feature = { key: string; icon: LucideIcon; title: string; body: string; href?: string; only?: SectionKey[] };
+
+const features = (): Feature[] => [
+  { key: "dashboard", icon: LayoutGrid, title: tr("داشبورد", "Dashboard"), body: tr("کل روزت را در یک صفحه ببین و سریع ثبت کن.", "See your whole day on one page and log quickly.") },
+  { key: "routine", icon: CalendarCheck, title: tr("روتین روزانه", "Daily routine"), body: tr("کارهای هر روز را با ساعت و اولویت بچین و تیک بزن.", "Lay out each day's tasks with a time and priority, and tick them off."), href: "/routine" },
+  { key: "weekly", icon: CalendarDays, title: tr("برنامه هفتگی و تاریخچه", "Weekly plan and history"), body: tr("کل هفته در یک نگاه؛ به روزهای گذشته برگرد و بررسی کن.", "The whole week at a glance; go back to past days and review them."), href: "/daily-planner" },
+  { key: "habit", icon: Flame, title: tr("پیگیری عادت و استریک", "Habit tracking and streaks"), body: tr("زنجیره روزهای پیوسته‌ات را ببین؛ 8 سطح، از 1 تا 365 روز.", "See your chain of consecutive days; 8 levels, from 1 to 365 days."), href: "/habit-tracker" },
+  { key: "remind", icon: Bell, title: tr("یادآوری برنامه و دارو", "Plan and medication reminders"), body: tr("برای کارها و برنامه‌های مهمت و هر نوبت دارو یادآوری داشته باش.", "Get reminders for your important tasks and plans and for every medication dose.") },
+  { key: "nomo", icon: Bot, title: tr("مدیر برنامه هوشمند «نومو»", "Nomo, the smart plan manager"), body: tr("به فارسی بگو چه می‌خواهی؛ نومو برنامه‌هایت را می‌سازد و جابه‌جا می‌کند.", "Say what you want in plain language; Nomo creates and moves your plans."), href: "/ai-planner" },
+  { key: "review", icon: BarChart3, title: tr("آنالیز هفتگی", "Weekly review"), body: tr("ببین کجا جلو رفته‌ای، کجا عقب مانده‌ای و هفته بعد روی چه چیزی تمرکز کنی.", "See where you moved ahead, where you fell behind and what to focus on next week.") },
+  { key: "workout", icon: Dumbbell, title: tr("برنامه بدنسازی", "Workout plan"), body: tr("برنامه AI یا دستی، کرنومتر تمرین و 149 حرکت آماده.", "An AI or manual plan, a workout timer and 149 ready-made exercises."), href: "/bodybuilding-program" },
+  { key: "calorie", icon: Apple, title: tr("کالری‌شمار", "Calorie counter"), body: tr("کالری و ماکروهایت را با 264 خوراکی آماده ثبت کن و نمودار هفتگی را ببین.", "Log your calories and macros with 264 ready-made foods and see the weekly chart."), href: "/calorie-counter" },
+  { key: "trade", icon: CandlestickChart, title: tr("ژورنال ترید", "Trading journal"), body: tr("معاملات هر حساب را با آمار، چک‌لیست و یادداشت بررسی کن.", "Review each account's trades with statistics, a checklist and notes."), href: "/trading-journal" },
+  { key: "meta", icon: RefreshCw, title: tr("همگام‌سازی متاتریدر", "MetaTrader sync"), body: tr("MT4 و MT5 با اکسپرت و کد اتصال؛ بدون رمز حساب.", "MT4 and MT5 with an Expert Advisor and connection code; no account password."), href: "/trading-journal" },
+  { key: "calendar", icon: CalendarClock, title: tr("تقویم اقتصادی", "Economic calendar"), body: tr("رویدادهای 9 ارز اصلی با Actual، Forecast، Previous و هشدار خبر.", "Events for 9 major currencies with Actual, Forecast, Previous and news alerts."), href: "/economic-calendar" },
+  { key: "sessions", icon: Clock, title: tr("ساعت سشن‌های فارکس", "Forex session hours"), body: tr("پنج سشن اصلی به وقت خودت، با ساعت تابستانی واقعی.", "The five main sessions in your own time, with real daylight saving."), href: "/forex-sessions" },
+  { key: "roadmap", icon: Route, title: tr("رودمپ یادگیری", "Learning roadmap"), body: tr("هدف بزرگت را با هوش مصنوعی به مسیر مرحله‌به‌مرحله تبدیل کن.", "Turn your big goal into a step-by-step path with AI."), href: "/learning-roadmap" },
+  { key: "mentors", icon: GraduationCap, title: tr("مربی‌ها", "Mentors"), body: tr("مربی احراز هویت‌شده، دریافت برنامه و چت‌های سرتاسر رمزنگاری‌شده.", "Identity-verified mentors, plans delivered to you and end-to-end encrypted chats."), href: "/mentors" },
+  { key: "friends", icon: Users, title: tr("دوستان", "Friends"), body: tr("پیشرفت و استریک دوستانت را ببین و کنار هم ادامه بده.", "See your friends' progress and streaks and keep going together.") },
+  { key: "notif", icon: Megaphone, title: tr("اعلان‌ها و اطلاعیه‌ها", "Notifications and announcements"), body: tr("اطلاعیه‌های آریون و اعلان‌هایت در یک پنل.", `${brandName()} announcements and your notifications in one panel.`) },
+  { key: "pwa", icon: Smartphone, title: tr("نصب روی گوشی", "Install on your phone"), body: tr("وب‌اپ PWA؛ با «افزودن به صفحه‌ی اصلی» مثل یک اپ نصب می‌شود.", "A PWA web app; with Add to Home Screen it installs like an app.") },
+  { key: "theme", icon: SunMoon, title: tr("تم روشن و تیره", "Light and dark themes"), body: tr("هر دو تم، با ظاهری یکدست در همه بخش‌ها.", "Both themes, with a consistent look across every section.") },
+  // فقط روی زیردامنه‌ها (دامنه‌ی اصلی فهرست قبلی را نگه می‌دارد)
+  { key: "sleep", only: ["routine", "workout"], icon: Moon, title: tr("ردیابی خواب", "Sleep tracking"), body: tr("امتیاز خواب، هدف خواب، چرخه‌های خواب و روند هفتگی.", "Sleep score, sleep goal, sleep cycles and the weekly trend.") },
+  { key: "risk", only: ["trade"], icon: Calculator, title: tr("ماشین‌حساب ریسک", "Risk calculator"), body: tr("حجم لات، ریسک و سود را با حالت ساده یا پیشرفته حساب کن.", "Work out lot size, risk and profit in simple or advanced mode.") },
+  { key: "share", only: ["trade"], icon: Share2, title: tr("اشتراک کارنامه", "Share your report"), body: tr("کارنامه‌ی روز، هفته یا ماه هر حساب را به‌صورت تصویر به اشتراک بگذار.", "Share the report of a day, week or month of any account as an image.") },
 ];
 
-export function LandingFeatureGrid() {
-  const FEATURES = features();
+export function LandingFeatureGrid({ section = null }: SecProp) {
+  const all = features();
+  // دامنه‌ی اصلی: همه به جز آیتم‌های مخصوص زیردامنه؛ زیردامنه: فقط کلیدهای همان بخش و بدون لینک به مسیر بخش دیگر
+  const FEATURES: Feature[] = section
+    ? SECTION_FEATURE_KEYS[section]
+        .map((k) => all.find((f) => f.key === k))
+        .filter((f): f is Feature => !!f)
+        .map((f) => (f.href && !pathAllowedIn(section, f.href) ? { ...f, href: undefined } : f))
+    : all.filter((f) => !f.only);
+  const copy = section ? getSectionCopy(section) : null;
   return (
     <div>
-      <SectionHead title={tr("هر چیزی که برای مدیریت", "Everything you need to manage")} accent={tr("مسیرت لازم داری", "your journey")} />
+      <SectionHead
+        title={copy ? copy.featuresTitle.title : tr("هر چیزی که برای مدیریت", "Everything you need to manage")}
+        accent={copy ? copy.featuresTitle.accent : tr("مسیرت لازم داری", "your journey")}
+      />
       <Reveal>
       <ul className="ls-feat">
         {FEATURES.map((f) => {
@@ -522,8 +584,13 @@ const whyUs = () => [
   { icon: Sparkles, color: "#8B5CF6", title: tr("قابل توسعه", "Expandable"), body: tr("از روتین شروع کن و هر زمان نیاز داشتی بخش‌های دیگر را اضافه کن.", "Start with routine and add other sections whenever you need them.") },
 ];
 
-export function LandingWhyUs() {
-  const WHY_US = whyUs();
+export function LandingWhyUs({ section = null }: SecProp) {
+  const base = whyUs();
+  // زیردامنه: دو آیتم عمومی («همه‌چیز کنار هم»، «قابل توسعه») با متن همان بخش عوض می‌شن
+  const copy = section ? getSectionCopy(section) : null;
+  const WHY_US = copy
+    ? base.map((w, i) => (i === 3 ? { ...w, ...copy.whyTogether } : i === 8 ? { ...w, icon: GraduationCap, ...copy.whyMentor } : w))
+    : base;
   return (
     <div>
       <SectionHead title={tr("چرا", "Why")} accent={`${brandName()}${tr("؟", "?")}`} />
@@ -601,10 +668,10 @@ export function LandingTestimonialQuote() {
 
 /* ───────────────────────── 6) FAQ ───────────────────────── */
 
-export function LandingFAQ() {
+export function LandingFAQ({ section = null }: SecProp) {
   const [open, setOpen] = useState<number | null>(0);
   const { pricing } = usePlanPricing();
-  const faqItems = fillPriceCopy(getFaqItems(), pricing);
+  const faqItems = fillPriceCopy(getFaqItems(section), pricing);
   return (
     <div>
       <SectionHead title={tr("پرسش‌های", "Frequently asked")} accent={tr("پرتکرار", "questions")} />
@@ -641,16 +708,17 @@ export function LandingFAQ() {
 
 /* ───────────────────────── 7) Final CTA ───────────────────────── */
 
-export function LandingFinalCTA() {
+export function LandingFinalCTA({ section = null }: SecProp) {
+  const copy = section ? getSectionCopy(section) : null;
   return (
     <Reveal>
       <div className="ls-cta">
         <span className="ls-cta-glow" aria-hidden="true" />
         <span className="ls-cta-glow ls-cta-glow-2" aria-hidden="true" />
         <div className="ls-cta-in">
-          <span className="ls-cta-chip"><Sparkles size={14} /> {tr("14 روز رایگان", "14 days free")}</span>
+          <span className="ls-cta-chip"><Sparkles size={14} /> {copy ? copy.ctaChip : tr("14 روز رایگان", "14 days free")}</span>
           <h2 className="ls-cta-title">{tr("شروعش کن.", "Get started.")}</h2>
-          <p className="ls-cta-sub">{tr("مسیرت را مشخص کن، برنامه‌ات را بساز و از امروز اجرا کن.", "Set your direction, build your plan and start today.")}</p>
+          <p className="ls-cta-sub">{copy ? copy.ctaSub : tr("مسیرت را مشخص کن، برنامه‌ات را بساز و از امروز اجرا کن.", "Set your direction, build your plan and start today.")}</p>
           <div className="ls-cta-actions">
             <Link href="/auth/signup" className="ls-btn ls-btn-primary">
               {tr("شروع رایگان", "Start free")} <ArrowLeft size={16} className="dir-flip" />

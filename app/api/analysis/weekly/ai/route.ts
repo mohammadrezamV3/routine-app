@@ -9,6 +9,8 @@ import { checkRateLimit } from "@/lib/rateLimit";
 import { computeWeeklyAnalysis } from "@/lib/weeklyAnalysis/compute";
 import { getWeekRange } from "@/lib/weeklyAnalysis/week";
 import { generateAiCoach, isAiAvailable } from "@/lib/weeklyAnalysis/ai";
+import { getSection } from "@/lib/sectionServer";
+import { aiToStore, sectionDomains } from "@/lib/weeklyLetter/section";
 
 // POST /api/analysis/weekly/ai { offset } — ساخت/بازسازی مربی AI برای
 // یک هفته‌ی مشخص. واقعا گیت‌وی AI رو صدا می‌زنه (هزینه/زمان داره)، پس
@@ -47,7 +49,9 @@ export async function POST(req: NextRequest) {
     const user = await prisma.user.findUnique({ where: { id: userId }, select: { timezone: true } });
     const timezone = user?.timezone || "Asia/Tehran";
 
-    const analysis = await computeWeeklyAnalysis(userId, { timezone, offset, isSuperAdmin });
+    // روی زیردامنه‌ی یک بخش مربی فقط از اعداد همون بخش حرف می‌زنه و با برچسب بخش ذخیره می‌شه
+    const section = getSection();
+    const analysis = await computeWeeklyAnalysis(userId, { timezone, offset, isSuperAdmin, domains: sectionDomains(section) });
 
     // سهمیه‌ی AI (سقف کل دوره‌ی آزمایشی برای حساب تازه — lib/trial.ts)
     const quota = await checkAndConsumeAiQuota(userId, isSuperAdmin, AiFeatureKey.WEEKLY_COACH_REPORT);
@@ -72,8 +76,8 @@ export async function POST(req: NextRequest) {
     const { weekStart } = getWeekRange(timezone, offset);
     await prisma.weeklyAnalysisAi.upsert({
       where: { userId_weekStart: { userId, weekStart } },
-      create: { userId, weekStart, data: ai as any, model: ai.model },
-      update: { data: ai as any, model: ai.model },
+      create: { userId, weekStart, data: aiToStore(ai, section) as any, model: ai.model },
+      update: { data: aiToStore(ai, section) as any, model: ai.model },
     });
 
     return NextResponse.json({ ai });

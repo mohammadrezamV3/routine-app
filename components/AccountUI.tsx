@@ -1,38 +1,39 @@
 "use client";
 
-import { m as motion } from "framer-motion";
 import { AlertTriangle, Check } from "lucide-react";
 import { AccountBackButton } from "./AccountBackButton";
 import { Spinner } from "./Spinner";
 import { tr } from "@/lib/i18n";
 
 /**
- * پایه‌های مشترک همه‌ی زیرصفحه‌های پنل کاربری.
+ * پایه‌های مشترک همه‌ی زیرصفحه‌های پنل کاربری (نسخه‌ی ap-*).
  *
- * قبلا هر صفحه ترکیب خودش را از `account-card` / `domain-sub` /
- * `AccountSectionCard` / کارت تودرتو می‌ساخت و نتیجه این بود که دو صفحه‌ی
- * کنار هم شبیه دو اپ متفاوت بودند. حالا همه از همین سه تکه استفاده
- * می‌کنند و فیلدهای ورودی هم همان `AuthField` صفحه‌های ورود/ثبت‌نام‌اند —
- * یعنی پنل کاربری با بقیه‌ی اپ یک‌زبان است.
+ * همه‌ی صفحه‌ها فقط از همین چند تکه ساخته می‌شن: سرصفحه، بلوک (کارت با
+ * تیتر آیکون‌دار مثل کارت‌های داشبورد)، گزینه، خط و نوار ذخیره. فیلدها
+ * همان `AuthField` صفحه‌های ورود/ثبت‌نام‌اند. استایل‌ها در
+ * app/_area/account.css (بخش ap-*).
  */
 
-/** سرصفحه‌ی هر زیرصفحه: بازگشت + عنوان + یک خط توضیح */
+/** سرصفحه‌ی هر زیرصفحه: بازگشت + عنوان (+ اکشن سمت پایان) + یک خط توضیح */
 export function AccountPageHead({
-  title, hint, backHref, backLabel,
-}: { title: string; hint?: string; backHref?: string; backLabel?: string }) {
+  title, hint, backHref, backLabel, actions,
+}: { title: string; hint?: string; backHref?: string; backLabel?: string; actions?: React.ReactNode }) {
   return (
-    <div className="acc-head">
+    <header className="ap-head">
       <AccountBackButton href={backHref} label={backLabel} />
-      <h1>{title}</h1>
-      {hint && <p className="acc-head-hint">{hint}</p>}
-    </div>
+      <div className="ap-head-row">
+        <h1>{title}</h1>
+        {actions && <div className="ap-head-actions">{actions}</div>}
+      </div>
+      {hint && <p className="ap-head-hint">{hint}</p>}
+    </header>
   );
 }
 
 /**
- * یک بخش صفحه: عنوان کوچک + (اختیاری) توضیح + بدنه.
- * عمدا بدون کارت تودرتو — فقط یک قاب مویی. `flush` برای وقتی‌ست که
- * بدنه خودش ردیف‌های جداشده دارد و نباید padding بگیرد.
+ * یک بخش صفحه: کارت با تیتر آیکون‌دار (+ توضیح اختیاری) و بدنه.
+ * `flush` برای وقتی‌ست که بدنه خودش ردیف‌های لبه‌به‌لبه و جداشده دارد.
+ * کلاس acc-block-body برای نور هاور مشترک باکس‌هاست (globals.css).
  */
 export function AccountBlock({
   title, desc, icon, children, flush = false, index = 0,
@@ -45,25 +46,18 @@ export function AccountBlock({
   index?: number;
 }) {
   return (
-    <motion.section
-      className="acc-block"
-      initial={{ opacity: 0, y: 8 }}
-      animate={{ opacity: 1, y: 0 }}
-      transition={{ duration: 0.28, delay: Math.min(index, 5) * 0.04, ease: [0.22, 1, 0.36, 1] }}
-    >
-      {/* طبق درخواست صریح، تایتل/توضیح دیگر بالای باکس شناور نیستند —
-          داخل همان باکس اطلاعات می‌نشینند. */}
-      <div className={`acc-block-body${flush ? " flush" : ""}`}>
+    <section className="ap-block m-rise" style={{ "--i": Math.min(index, 5) } as React.CSSProperties}>
+      <div className={`acc-block-body ap-card ap-block-body${flush ? " flush" : ""}`}>
         {title && (
-          <h2 className="acc-block-title">
-            {icon}
-            {title}
-          </h2>
+          <div className="ap-block-head">
+            {icon && <span className="ap-block-icon" aria-hidden="true">{icon}</span>}
+            <h2 className="ap-block-title">{title}</h2>
+          </div>
         )}
-        {desc && <p className="acc-block-desc">{desc}</p>}
-        {children}
+        {desc && <p className="ap-block-desc">{desc}</p>}
+        {title || desc ? <div className="ap-block-content">{children}</div> : children}
       </div>
-    </motion.section>
+    </section>
   );
 }
 
@@ -81,11 +75,11 @@ export function AccountLine({
 }) {
   const body = (
     <>
-      {icon && <span className="acc-line-icon">{icon}</span>}
-      <span className="acc-line-body">
-        <span className="acc-line-label">{label}</span>
+      {icon && <span className="ap-line-icon" aria-hidden="true">{icon}</span>}
+      <span className="ap-line-body">
+        <span className="ap-line-label">{label}</span>
         {value !== undefined && (
-          <span className={`acc-line-value${mono ? " mono" : ""}`} dir={mono ? "ltr" : undefined}>{value}</span>
+          <span className={`ap-line-value${mono ? " mono" : ""}`} dir={mono ? "ltr" : undefined}>{value}</span>
         )}
       </span>
       {action}
@@ -93,12 +87,12 @@ export function AccountLine({
   );
   if (href) {
     return (
-      <a className="acc-line" href={href} {...(external ? { target: "_blank", rel: "me noopener noreferrer" } : {})}>
+      <a className="ap-line" href={href} {...(external ? { target: "_blank", rel: "me noopener noreferrer" } : {})}>
         {body}
       </a>
     );
   }
-  return <div className="acc-line">{body}</div>;
+  return <div className="ap-line">{body}</div>;
 }
 
 /**
@@ -106,30 +100,31 @@ export function AccountLine({
  *
  * طبق درخواست صریح کاربر، خود دکمه سه حالت را نشان می‌دهد و دیگر هیچ
  * «ذخیره شد»ی زیرش نوشته نمی‌شود: موقع ذخیره فقط یک دایره‌ی لودینگ،
- * بعدش یک تیک سبز اگر موفق بود، و اگر نبود متن خطا (دکمه هم علامت
- * هشدار می‌گیرد).
+ * بعدش یک تیک اگر موفق بود، و اگر نبود متن خطا (دکمه هم علامت هشدار
+ * می‌گیرد). `submit` یعنی دکمه type=submit باشد (داخل <form>، با Enter).
  */
 export function AccountSaveBar({
-  onSave, saving, saved, error, label = tr("ذخیره تغییرات", "Save changes"), disabled,
+  onSave, saving, saved, error, label = tr("ذخیره تغییرات", "Save changes"), disabled, submit = false,
 }: {
-  onSave: () => void;
+  onSave?: () => void;
   saving?: boolean;
   saved?: boolean;
   error?: string | null;
   label?: string;
   disabled?: boolean;
+  submit?: boolean;
 }) {
   const state = saving ? "saving" : saved ? "ok" : error ? "bad" : "idle";
   return (
-    <div className="acc-savebar">
-      {error && <div className="field-error-msg" style={{ display: "block" }}>{error}</div>}
-      {/* دکمه سمت چپ (پایان ردیف در RTL) */}
+    <div className="ap-savebar">
+      {error && <div className="field-error-msg" role="alert" style={{ display: "block" }}>{error}</div>}
       <button
-        type="button"
-        className={`account-outline-btn acc-save-btn is-${state}`}
-        onClick={onSave}
+        type={submit ? "submit" : "button"}
+        className={`account-outline-btn ap-save-btn is-${state}`}
+        onClick={submit ? undefined : onSave}
         disabled={saving || disabled}
         aria-label={label}
+        aria-busy={saving || undefined}
       >
         {state === "saving" ? <Spinner size={15} />
           : state === "ok" ? <Check size={16} />
@@ -141,21 +136,30 @@ export function AccountSaveBar({
 }
 
 /**
- * یک «گزینه» داخل یک بخش — فقط نام گزینه بالای خودش، بدون قاب/کارت جدا.
- *
- * طبق درخواست صریح کاربر برای صفحه‌ی تنظیمات: «ترید یک بخش باشه، فقط
- * بالای هر گزینه اسمشو بنویسه». قبلا هر گزینه یک `AccountBlock` کامل
- * (تیتر + قاب مستقل) بود و یک صفحه‌ی تنظیمات شبیه هشت کارت پشت‌سرهم
- * می‌شد.
+ * یک «گزینه» داخل یک بلوک — نام گزینه بالای خودش، بدون قاب جدا؛ گزینه‌ها با
+ * یک خط مویی از هم جدا می‌شن (طبق درخواست صریح: «ترید یک بخش باشه، فقط
+ * بالای هر گزینه اسمشو بنویسه»).
  */
 export function AccountOption({
   label, desc, children,
 }: { label: string; desc?: string; children: React.ReactNode }) {
   return (
-    <div className="acc-option">
-      <div className="acc-option-label">{label}</div>
-      {desc && <p className="acc-option-desc">{desc}</p>}
+    <div className="ap-option">
+      <div className="ap-option-label">{label}</div>
+      {desc && <p className="ap-option-desc">{desc}</p>}
       {children}
+    </div>
+  );
+}
+
+/** اسکلت سبک صفحه‌ی پنل تا بارگذاری داده (بدون پرش چیدمان) */
+export function AccountSkeleton({ blocks = 2 }: { blocks?: number }) {
+  return (
+    <div className="ap-skel-page" role="status" aria-label={tr("در حال بارگذاری", "Loading")}>
+      <span className="ap-skel" style={{ width: "42%", height: 28 }} />
+      {Array.from({ length: blocks }, (_, i) => (
+        <span key={i} className="ap-skel" style={{ height: i === 0 ? 180 : 140, borderRadius: 22 }} />
+      ))}
     </div>
   );
 }

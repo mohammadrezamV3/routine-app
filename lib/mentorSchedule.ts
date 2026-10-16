@@ -37,8 +37,8 @@ export async function activateDueForUser(userId: string): Promise<string[]> {
     for (const id of activated) {
       const p = due.find((x) => x.id === id)!;
       const url = `/mentor-programs/${p.id}`;
-      await notifyUser(p.studentId, { type: "program.started", title: tr("شروع برنامه", "Program started"), body: tr(`برنامه‌ی «${p.title}» طبق زمان‌بندی از امروز فعال شد.`, `The program "${iso(p.title)}" became active today, as scheduled.`), url });
-      await notifyUser(p.mentorId, { type: "program.started", title: tr("شروع برنامه", "Program started"), body: tr(`برنامه‌ی «${p.title}» طبق زمان‌بندی برای شاگرد فعال شد.`, `The program "${iso(p.title)}" became active for your student, as scheduled.`), url });
+      await notifyUser(p.studentId, () => ({ type: "program.started", title: tr("شروع برنامه", "Program started"), body: tr(`برنامه‌ی «${p.title}» طبق زمان‌بندی از امروز فعال شد.`, `The program "${iso(p.title)}" became active today, as scheduled.`), url }));
+      await notifyUser(p.mentorId, () => ({ type: "program.started", title: tr("شروع برنامه", "Program started"), body: tr(`برنامه‌ی «${p.title}» طبق زمان‌بندی برای شاگرد فعال شد.`, `The program "${iso(p.title)}" became active for your student, as scheduled.`), url }));
     }
     return activated;
   } catch {

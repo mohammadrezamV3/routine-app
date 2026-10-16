@@ -54,14 +54,14 @@ export async function POST(req: NextRequest, { params }: { params: { profileId: 
     }),
   ]);
 
-  await notifyUser(profile.userId, {
+  await notifyUser(profile.userId, () => ({
     type: "mentor.suspension",
-    title: suspend ? "مربی‌گری شما تعلیق شد" : "تعلیق مربی‌گری برداشته شد",
+    title: suspend ? tr("مربی‌گری شما تعلیق شد", "Your mentoring was suspended") : tr("تعلیق مربی‌گری برداشته شد", "Your mentoring suspension was lifted"),
     body: suspend
-      ? `پروفایل مربی‌گری شما تا اطلاع ثانوی از فهرست مربی‌ها حذف شد.${reason ? ` دلیل: ${reason}` : ""}`
-      : "پروفایل مربی‌گری‌ات دوباره فعاله.",
+      ? tr(`پروفایل مربی‌گری شما تا اطلاع ثانوی از فهرست مربی‌ها حذف شد.${reason ? ` دلیل: ${reason}` : ""}`, `Your mentor profile was removed from the mentor list until further notice.${reason ? ` Reason: ${reason}` : ""}`)
+      : tr("پروفایل مربی‌گری‌ات دوباره فعاله.", "Your mentor profile is active again."),
     url: "/mentor/profile",
-  });
+  }));
 
   return NextResponse.json({ ok: true });
 }

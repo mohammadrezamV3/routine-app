@@ -3,7 +3,7 @@
 import { useEffect, useRef, useState } from "react";
 import { SmartLink as Link } from "@/components/SmartLink";
 import {
-  ArrowLeft, Calendar, Filter, History, Lock, ShieldCheck, Sparkles, UtensilsCrossed, Hash, Percent, ArrowUp,
+  ArrowLeft, Calendar, CalendarClock, Clock, Dumbbell, Filter, History, Lock, ShieldCheck, Sparkles, UtensilsCrossed, Hash, Percent, ArrowUp,
 } from "lucide-react";
 import { brandName } from "@/lib/brand";
 import { useThemeTokens } from "@/components/useThemeTokens";
@@ -11,8 +11,10 @@ import { DashProgressCircle } from "@/components/DashProgressCircle";
 import { StreakFlame } from "@/components/StreakFlame";
 import SiriOrb from "@/components/smoothui/components/siri-orb";
 import {
-  INERT, MockDateStrip, MockFilterButton, MockMedicationCard, MockMentorCard, MockTaskList, type MockTask,
+  INERT, MockAccountCard, MockDateStrip, MockFilterButton, MockMedicationCard, MockMentorCard, MockTaskList, type MockTask,
 } from "@/components/LandingMockups";
+import { getSectionHero, type HeroTrustIcon } from "@/lib/sectionLanding";
+import type { SectionKey } from "@/lib/sections";
 import "./landing-hero.css";
 import { tr } from "@/lib/i18n";
 
@@ -51,14 +53,23 @@ const seoLinks = () => [
   { href: "/ai-planner", label: tr("مدیر برنامه هوشمند", "Smart plan manager") },
 ];
 
+const TRUST_ICONS: Record<HeroTrustIcon, typeof Sparkles> = { spark: Sparkles, shield: ShieldCheck, lock: Lock };
+
 function prefersReducedMotion() {
   return typeof window !== "undefined" && !!window.matchMedia && window.matchMedia("(prefers-reduced-motion: reduce)").matches;
 }
 
-export function LandingHero() {
-  const ROT_WORDS = rotWords();
-  const PHONE_TASKS = phoneTasks();
-  const SEO_LINKS = seoLinks();
+// section: بخش زیردامنه (null = دامنه‌ی اصلی، هیرو دقیقا مثل قبل). با بخش، تیتر، متن، ماکت گوشی و کارت‌های
+// شناور فقط درباره‌ی همان حوزه‌ان؛ رنگ گرادیان تیتر از --section-from/--section-to می‌آید (landing-hero.css).
+export function LandingHero({ section = null }: { section?: SectionKey | null }) {
+  const H = section ? getSectionHero(section, brandName()) : null;
+  const ROT_WORDS = H ? H.rotWords : rotWords();
+  const PHONE_TASKS: MockTask[] = H ? H.phone.tasks : phoneTasks();
+  const SEO_LINKS = H ? H.links : seoLinks();
+  const showTrade = !section || section === "trade";
+  const showCal = !section || section === "workout";
+  const showAi = !section || section === "routine";
+  const showFab = !section || section === "routine";
   const t = useThemeTokens();
   const sectionRef = useRef<HTMLElement>(null);
   const stageRef = useRef<HTMLDivElement>(null);
@@ -197,15 +208,15 @@ export function LandingHero() {
         <div className="lh-copy">
           <span className="lh-eyebrow lh-rise" style={{ "--i": 0 } as React.CSSProperties}>
             <span className="lh-eyebrow-dot" aria-hidden="true" />
-            {tr("یک سیستم برای پیشرفت روزانه", "One system for daily progress")}
+            {H ? H.eyebrow : tr("یک سیستم برای پیشرفت روزانه", "One system for daily progress")}
           </span>
 
           {/* SEO: «روتین اپ» و «آریون» هر دو داخل خود h1 هستند (نه فقط متادیتا). */}
           <h1 id="lh-title" className={`lh-title lh-rise ${t.heading}`} style={{ "--i": 1 } as React.CSSProperties}>
             <span className="lh-title-kicker">
-              {tr("روتین اپ", "Routine app")} <span className="lh-brand">{brandName()}</span>
+              {H ? H.kicker : tr("روتین اپ", "Routine app")} <span className="lh-brand">{brandName()}</span>
             </span>
-            <span className="lh-title-main">{tr("تمام روتینت یک‌جا", "Everything in one place")}</span>
+            <span className="lh-title-main">{H ? H.main : tr("تمام روتینت یک‌جا", "Everything in one place")}</span>
             <span className="lh-title-main lh-title-rot">
               <span className="lh-rot" aria-hidden="true">
                 {ROT_WORDS.map((w, i) => (
@@ -217,12 +228,12 @@ export function LandingHero() {
                   </span>
                 ))}
               </span>
-              <span className="lh-sr">{tr("روتین", "Routine")}</span>
+              <span className="lh-sr">{H ? H.sr : tr("روتین", "Routine")}</span>
             </span>
           </h1>
 
           <p className={`lh-sub lh-rise ${t.muted}`} style={{ "--i": 2 } as React.CSSProperties}>
-            {tr(`روتین، خواب، تمرین، تغذیه و ترید را یک‌جا پیش ببر؛ آریون از همین تیک‌های ساده
+            {H ? H.sub : tr(`روتین، خواب، تمرین، تغذیه و ترید را یک‌جا پیش ببر؛ آریون از همین تیک‌های ساده
             استریک، نقشه‌ی ثبات و دستاوردهایت را می‌سازد.`, `Keep your routine, sleep, workouts, nutrition and trading moving in one place; ${brandName()} turns those simple ticks into streaks, a consistency map and achievements.`)}
           </p>
 
@@ -242,10 +253,15 @@ export function LandingHero() {
           </div>
 
           <ul className={`lh-trust lh-rise ${t.muted}`} style={{ "--i": 4 } as React.CSSProperties}>
+            {H ? H.trust.map((x) => {
+              const TI = TRUST_ICONS[x.icon];
+              return <li key={x.text}><TI size={14} aria-hidden="true" /> {x.text}</li>;
+            }) : (<>
             <li><Sparkles size={14} aria-hidden="true" /> {tr("14 روز رایگان", "14 days free")}</li>
             <li><Sparkles size={14} aria-hidden="true" /> {tr("3 روز بدنسازی، کالری‌شمار و ژورنال ترید", "3 days of workouts, calorie counter and trading journal")}</li>
             <li><ShieldCheck size={15} aria-hidden="true" /> {tr("روی گوشی و کامپیوتر", "On phone and desktop")}</li>
             <li><Lock size={14} aria-hidden="true" /> {tr("چت‌های سرتاسر رمزنگاری‌شده", "End-to-end encrypted chats")}</li>
+            </>)}
           </ul>
 
           {/* لینک‌های داخلی به صفحه‌های دسته — هم برای بازدیدکننده، هم انتقال اعتبار صفحه‌ی اصلی */}
@@ -302,35 +318,86 @@ export function LandingHero() {
                           <span className="whitespace-nowrap text-[9px] text-dash-muted">{tr("پیشرفت امروز", "Today's progress")}</span>
                         </div>
                         <div>
-                          <div className="text-[19px] font-bold text-dash-text">{tr("روتین من", "My Routine")}</div>
-                          <div className="mt-1 text-[11px] text-dash-muted">{tr("برنامه‌های روزانه خود را مدیریت و پیگیری کنید.", "Manage and track your daily plans.")}</div>
+                          <div className="text-[19px] font-bold text-dash-text">{H ? H.phone.title : tr("روتین من", "My Routine")}</div>
+                          <div className="mt-1 text-[11px] text-dash-muted">{H ? H.phone.sub : tr("برنامه‌های روزانه خود را مدیریت و پیگیری کنید.", "Manage and track your daily plans.")}</div>
                         </div>
                       </div>
 
-                      <div className="flex flex-col gap-2.5">
-                        <MockDateStrip />
-                        <div className="flex flex-wrap items-center gap-2">
-                          <MockFilterButton label={tr("تاریخچه", "History")} icon={<History size={15} />} />
-                          <MockFilterButton label={tr("امروز", "Today")} icon={<Calendar size={15} />} active />
-                          <MockFilterButton label={tr("فیلتر", "Filter")} icon={<Filter size={15} />} />
-                        </div>
-                      </div>
+                      {section === "trade" ? (
+                        <>
+                          <MockAccountCard a={{ name: tr("حساب پراپ", "Prop account"), color: "#3E7BFA", balance: "10842$", pct: "8.4", up: true, trades: 24, win: 62, mt: true }} />
+                          <MockAccountCard a={{ name: tr("حساب شخصی", "Personal account"), color: "#00C98D", balance: "2310$", pct: "3.1", up: true, trades: 11, win: 55 }} />
+                          <MockTaskList tasks={tasks} title={tr("چک‌لیست ورود", "Entry checklist")} hideAdd />
+                        </>
+                      ) : (
+                        <>
+                          <div className="flex flex-col gap-2.5">
+                            <MockDateStrip />
+                            <div className="flex flex-wrap items-center gap-2">
+                              <MockFilterButton label={tr("تاریخچه", "History")} icon={<History size={15} />} />
+                              <MockFilterButton label={tr("امروز", "Today")} icon={<Calendar size={15} />} active />
+                              <MockFilterButton label={tr("فیلتر", "Filter")} icon={<Filter size={15} />} />
+                            </div>
+                          </div>
 
-                      <MockTaskList tasks={tasks} />
+                          <MockTaskList tasks={tasks} />
 
-                      <MockMedicationCard meds={[{ name: tr("ویتامین D", "Vitamin D"), every: tr("هر 24 ساعت", "Every 24 hours"), times: "22:00", left: tr("12 روز مونده", "12 days left") }]} />
+                          {(!section || section === "routine") && (
+                            <MockMedicationCard meds={[{ name: tr("ویتامین D", "Vitamin D"), every: tr("هر 24 ساعت", "Every 24 hours"), times: "22:00", left: tr("12 روز مونده", "12 days left") }]} />
+                          )}
+                        </>
+                      )}
                     </div>
 
                     {/* گو «نومو» — همون جای routine-ai-fab روی صفحه‌ی روتین */}
-                    <span className="lh-ph-fab">
-                      {orbLive ? <SiriOrb size="52px" /> : <span className="lh-orb-still" />}
-                    </span>
+                    {showFab && (
+                      <span className="lh-ph-fab">
+                        {orbLive ? <SiriOrb size="52px" /> : <span className="lh-orb-still" />}
+                      </span>
+                    )}
                   </div>
                 </div>
               </div>
             </div>
 
+            {/* بخش روتین: کارت استریک به‌جای کارت ترید */}
+            {section === "routine" && (
+              <div className="lh-layer lh-pos-trade" data-d="34" data-f="0">
+                <div className="lh-float lh-card lh-card-trade">
+                  <div className="lh-streak-row">
+                    <StreakFlame streak={42} />
+                    <b>{tr("42 روز پیاپی", "42-day streak")}</b>
+                  </div>
+                  <div className="lh-trade-facts">
+                    <span><Hash size={11} /> {tr("3 از 4 برنامه‌ی امروز", "3 of 4 plans today")}</span>
+                  </div>
+                </div>
+              </div>
+            )}
+
+            {/* بخش ورزش: کارت یک جلسه‌ی تمرین */}
+            {section === "workout" && (
+              <div className="lh-layer lh-pos-trade" data-d="34" data-f="0">
+                <div className="lh-float lh-card lh-card-trade">
+                  <div className="lh-trade-name">
+                    <span className="trade-account-name">{tr("جلسه‌ی سینه", "Chest session")}</span>
+                    <Dumbbell size={13} />
+                  </div>
+                  <ul className="lh-wk-list">
+                    <li><span>{tr("پرس سینه", "Bench press")}</span><b className="mono" dir="ltr">4×10</b></li>
+                    <li><span>{tr("پرس بالا سینه", "Incline press")}</span><b className="mono" dir="ltr">3×12</b></li>
+                    <li><span>{tr("فلای دمبل", "Dumbbell fly")}</span><b className="mono" dir="ltr">3×12</b></li>
+                  </ul>
+                  <div className="lh-trade-facts">
+                    <span><Clock size={11} /> {tr("48 دقیقه", "48 min")}</span>
+                    <span><Hash size={11} /> {tr("5 حرکت", "5 exercises")}</span>
+                  </div>
+                </div>
+              </div>
+            )}
+
             {/* ژورنال ترید — کارت یک حساب (TradeAccountsPanel) */}
+            {showTrade && (
             <div className="lh-layer lh-pos-trade" data-d="34" data-f="0">
               <div className="lh-float lh-card lh-card-trade">
                 <div className="lh-trade-name">
@@ -347,8 +414,10 @@ export function LandingHero() {
                 </div>
               </div>
             </div>
+            )}
 
             {/* کالری‌شمار — سر CalorieFoodPlanCard */}
+            {showCal && (
             <div className="lh-layer lh-pos-cal" data-d="26" data-f="-2.2">
               <div className="lh-float lh-card lh-card-cal dash-scope">
                 <div className="mono text-[15px] font-extrabold" style={{ color: "var(--accent)" }}>
@@ -367,8 +436,29 @@ export function LandingHero() {
                 </div>
               </div>
             </div>
+            )}
+
+            {/* بخش ترید: خبر اقتصادی امروز به‌جای نومو */}
+            {section === "trade" && (
+              <div className="lh-layer lh-pos-ai" data-d="42" data-f="-4.1">
+                <div className="lh-float lh-card lh-card-ai lh-card-news">
+                  <div className="lh-news-title"><CalendarClock size={14} /> {tr("تقویم اقتصادی", "Economic calendar")}</div>
+                  <div className="lh-news-row">
+                    <span className="mono" dir="ltr">15:30</span>
+                    <span>USD · {tr("اشتغال غیرکشاورزی", "Non-farm payrolls")}</span>
+                    <i className="lh-news-dot lh-news-high" />
+                  </div>
+                  <div className="lh-news-row">
+                    <span className="mono" dir="ltr">17:00</span>
+                    <span>EUR · {tr("نرخ تورم", "Inflation rate")}</span>
+                    <i className="lh-news-dot lh-news-med" />
+                  </div>
+                </div>
+              </div>
+            )}
 
             {/* نومو — پنل RoutineAiFab */}
+            {showAi && (
             <div className="lh-layer lh-pos-ai" data-d="42" data-f="-4.1">
               <div className="lh-float lh-card lh-card-ai">
                 <div className="routine-ai-title lh-ai-title">
@@ -379,11 +469,17 @@ export function LandingHero() {
                 <div className="routine-ai-bubble-bot lh-ai-bubble lh-ai-bot">{tr("«باشگاه» سه‌شنبه ساعت 19:00 اضافه شد.", "Gym added for Tuesday at 19:00.")}</div>
               </div>
             </div>
+            )}
 
             {/* مربی — MentorCard + خط رمزگذاری گفت‌وگو */}
             <div className="lh-layer lh-pos-mentor" data-d="30" data-f="-1.2">
               <div className="lh-float lh-card-mentor">
-                <MockMentorCard name={tr("سارا رحیمی", "Sara Rahimi")} line={tr("مربی تغذیه", "Nutrition mentor")} rating="4.9" count="38" since={tr("فروردین 1404", "Mar 2025")} />
+                <MockMentorCard
+                  name={H ? H.mentor.name : tr("سارا رحیمی", "Sara Rahimi")}
+                  line={H ? H.mentor.line : tr("مربی تغذیه", "Nutrition mentor")}
+                  rating="4.9" count="38"
+                  since={H ? H.mentor.since : tr("فروردین 1404", "Mar 2025")}
+                />
               </div>
             </div>
           </div>

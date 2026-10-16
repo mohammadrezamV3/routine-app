@@ -9,6 +9,7 @@ import { SmartLink as Link } from "./SmartLink";
 import { ChevronDown, Lock } from "lucide-react";
 import { useTheme } from "./ThemeProvider";
 import { ICONS } from "./NavIcons";
+import { useSection } from "./SectionProvider";
 import { getVisibleLinks, isGroup, isLockedModule, visibleChildren } from "./navLinks";
 import type { FeatureKey } from "@/lib/featureFlags";
 import { tr } from "@/lib/i18n";
@@ -28,7 +29,8 @@ export default function NavDrawerContent({ open, onClose, authed, features, acti
   const [expandedGroup, setExpandedGroup] = useState<string | null>(null);
   // هر بار منو بسته می‌شه (از هر مسیری)، گروه بازشده هم ریست می‌شه.
   useEffect(() => { if (!open) setExpandedGroup(null); }, [open]);
-  const visibleLinks = getVisibleLinks(features);
+  const section = useSection();
+  const visibleLinks = getVisibleLinks(features, section);
 
   return (
     <>
