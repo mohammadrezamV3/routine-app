@@ -2,6 +2,7 @@
 
 import { useEffect, useRef, useState } from "react";
 import { SmartLink as Link } from "@/components/SmartLink";
+import { AuthAwareCta } from "@/components/AuthAwareCta";
 import { m as motion, useMotionValue, useReducedMotion, useSpring, useTransform } from "framer-motion";
 import {
   Apple, ArrowLeft, CalendarCheck, CandlestickChart, Dumbbell, GraduationCap, Moon, ShieldCheck, Smartphone, Sparkles,
@@ -143,9 +144,18 @@ export function AboutHero() {
           </p>
 
           <div className="ab-ctas ab-rise" style={abRise(0.7, 0.7, 14)}>
-            <Link href="/auth/signup" className="ls-btn ls-btn-primary">
-              {tr("شروع رایگان", "Start free")} <ArrowLeft size={16} className="dir-flip" />
-            </Link>
+            <AuthAwareCta
+              guest={
+                <Link href="/auth/signup" className="ls-btn ls-btn-primary">
+                  {tr("شروع رایگان", "Start free")} <ArrowLeft size={16} className="dir-flip" />
+                </Link>
+              }
+              authed={
+                <Link href="/dashboard" className="ls-btn ls-btn-primary">
+                  {tr("رفتن به داشبورد", "Go to dashboard")} <ArrowLeft size={16} className="dir-flip" />
+                </Link>
+              }
+            />
             <a href="#inside" className="ls-btn ls-btn-ghost">{tr("داخل آریون", "Inside Arion")}</a>
           </div>
 

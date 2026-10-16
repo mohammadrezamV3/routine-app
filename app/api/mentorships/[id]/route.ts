@@ -11,7 +11,7 @@ import { countActiveStudents, readWelcomeMessage } from "@/lib/mentorManageServe
 import { decideMentorTerms, MENTOR_TERMS_ERROR_CODE, MENTOR_TERMS_VERSION } from "@/lib/mentorTerms";
 import { publishToUsers } from "@/lib/realtime";
 import { advanceWaitlist, countReservedSeats } from "@/lib/mentorWaitlistServer";
-import { tr } from "@/lib/i18n";
+import { tr, iso } from "@/lib/i18n";
 
 type Ctx = { params: { id: string } };
 const ACTIONS = ["accept", "reject", "cancel", "end", "block", "unblock"] as const;
@@ -153,25 +153,30 @@ export async function PATCH(req: Request, { params }: Ctx) {
 
   if (action === "accept" || action === "reject" || action === "end") {
     const actor = await prisma.user.findUnique({ where: { id: me }, select: PUBLIC_USER_SELECT });
-    const name = displayName(actor);
     const url = counterpartId === m.mentorId ? "/mentor" : `/mentorship/${m.id}`;
-    const note =
-      action === "accept"
+    // متن با زبان گیرنده ساخته می‌شه (counterpartId)، نه کسی که اقدام رو زده
+    await notifyUser(counterpartId, () => {
+      const name = iso(displayName(actor));
+      return action === "accept"
         ? {
             type: "mentor.accepted",
-            title: "درخواست پذیرفته شد",
-            body: welcome ? `${name} درخواستت رو قبول کرد: ${welcome}` : `${name} درخواستت رو قبول کرد.`,
+            title: tr("درخواست پذیرفته شد", "Request accepted"),
+            body: welcome
+              ? tr(`${displayName(actor)} درخواستت رو قبول کرد: ${welcome}`, `${name} accepted your request: ${welcome}`)
+              : tr(`${displayName(actor)} درخواستت رو قبول کرد.`, `${name} accepted your request.`),
             url: `/mentorship/${m.id}`,
           }
         : action === "reject"
-          ? { type: "mentor.rejected", title: "درخواست رد شد", body: `${name} درخواستت رو نپذیرفت.`, url: counterpartId === m.mentorId ? "/mentor" : "/mentorship" }
+          ? { type: "mentor.rejected", title: tr("درخواست رد شد", "Request declined"), body: tr(`${displayName(actor)} درخواستت رو نپذیرفت.`, `${name} declined your request.`), url: counterpartId === m.mentorId ? "/mentor" : "/mentorship" }
           : {
               type: "mentor.ended",
-              title: "پایان رابطه",
-              body: endReason ? `${name} رابطه‌ی مربی‌گری رو تموم کرد؛ دلیل: ${endReason}` : `${name} رابطه‌ی مربی‌گری رو تموم کرد.`,
+              title: tr("پایان رابطه", "Mentorship ended"),
+              body: endReason
+                ? tr(`${displayName(actor)} رابطه‌ی مربی‌گری رو تموم کرد؛ دلیل: ${endReason}`, `${name} ended the mentorship. Reason: ${endReason}`)
+                : tr(`${displayName(actor)} رابطه‌ی مربی‌گری رو تموم کرد.`, `${name} ended the mentorship.`),
               url,
             };
-    await notifyUser(counterpartId, note);
+    });
   }
 
   const row = await prisma.mentorship.findUnique({ where: { id: m.id }, include: MENTORSHIP_WITH_USERS_INCLUDE });

@@ -10,7 +10,7 @@ import { isoDate, loadProgramWithUsers, serializeProgram, todayIsoForUser } from
 import { activateWithMirror, removeProgramMirrors } from "@/lib/mentorProgramMirror";
 import { fmtDate } from "@/lib/mentorFormat";
 import { publishToUsers } from "@/lib/realtime";
-import { tr } from "@/lib/i18n";
+import { tr, iso } from "@/lib/i18n";
 
 type Ctx = { params: { id: string } };
 const NOTE_MAX = 1000;
@@ -122,40 +122,54 @@ export async function POST(req: Request, { params }: Ctx) {
 
   // اعلان به طرف مقابل
   const url = `/mentor-programs/${p.id}`;
-  const mentorName = displayName(p.mentor);
-  const studentName = displayName(p.student);
+  // همه‌ی متن‌ها داخل بسته‌ی notifyUser و با زبان گیرنده ساخته می‌شن
   if (action === "send") {
     const resent = !!p.sentAt;
-    await notifyUser(p.studentId, {
-      type: resent ? "program.resent" : "program.new",
-      title: resent ? "نسخه‌ی جدید برنامه" : "برنامه‌ی جدید",
-      body: resent ? `${mentorName} برنامه‌ی «${p.title}» رو ویرایش و دوباره ارسال کرد.` : `${mentorName} برنامه‌ی «${p.title}» رو برات فرستاد.`,
-      url,
+    await notifyUser(p.studentId, () => {
+      const mentorName = displayName(p.mentor);
+      return {
+        type: resent ? "program.resent" : "program.new",
+        title: resent ? tr("نسخه‌ی جدید برنامه", "New version of the program") : tr("برنامه‌ی جدید", "New program"),
+        body: resent
+          ? tr(`${mentorName} برنامه‌ی «${p.title}» رو ویرایش و دوباره ارسال کرد.`, `${iso(mentorName)} edited and resent the program "${iso(p.title)}".`)
+          : tr(`${mentorName} برنامه‌ی «${p.title}» رو برات فرستاد.`, `${iso(mentorName)} sent you the program "${iso(p.title)}".`),
+        url,
+      };
     });
   } else if (action === "accept") {
     // شروع آینده = زمان‌بندی‌شده؛ در همان روز خودکار فعال می‌شود (lib/mentorSchedule.ts)
-    const scheduledFor = p.startDate && isoDate(p.startDate) > (await todayIsoForUser(p.studentId)) ? fmtDate(isoDate(p.startDate)) : null;
-    await notifyUser(p.mentorId, {
-      type: "program.accepted",
-      title: "برنامه پذیرفته شد",
-      body: scheduledFor
-        ? `${studentName} برنامه‌ی «${p.title}» را پذیرفت؛ ${scheduledFor} خودکار شروع می‌شود.`
-        : `${studentName} برنامه‌ی «${p.title}» رو قبول کرد.`,
-      url,
+    const scheduledForIso = p.startDate && isoDate(p.startDate) > (await todayIsoForUser(p.studentId)) ? isoDate(p.startDate) : null;
+    await notifyUser(p.mentorId, () => {
+      const studentName = displayName(p.student);
+      const scheduledFor = scheduledForIso ? fmtDate(scheduledForIso) : null;
+      return {
+        type: "program.accepted",
+        title: tr("برنامه پذیرفته شد", "Program accepted"),
+        body: scheduledFor
+          ? tr(`${studentName} برنامه‌ی «${p.title}» را پذیرفت؛ ${scheduledFor} خودکار شروع می‌شود.`, `${iso(studentName)} accepted the program "${iso(p.title)}". It will start automatically on ${scheduledFor}.`)
+          : tr(`${studentName} برنامه‌ی «${p.title}» رو قبول کرد.`, `${iso(studentName)} accepted the program "${iso(p.title)}".`),
+        url,
+      };
     });
   } else if (action === "reject") {
-    await notifyUser(p.mentorId, {
-      type: "program.rejected",
-      title: "برنامه رد شد",
-      body: `${studentName} برنامه‌ی «${p.title}» رو نپذیرفت.${note ? ` دلیل: ${note}` : ""}`,
-      url,
+    await notifyUser(p.mentorId, () => {
+      const studentName = displayName(p.student);
+      return {
+        type: "program.rejected",
+        title: tr("برنامه رد شد", "Program declined"),
+        body: tr(`${studentName} برنامه‌ی «${p.title}» رو نپذیرفت.${note ? ` دلیل: ${note}` : ""}`, `${iso(studentName)} declined the program "${iso(p.title)}".${note ? ` Reason: ${note}` : ""}`),
+        url,
+      };
     });
   } else if (action === "request_changes") {
-    await notifyUser(p.mentorId, {
-      type: "program.changes_requested",
-      title: "درخواست تغییر برنامه",
-      body: `${studentName} برای «${p.title}» تغییر خواسته: ${note}`,
-      url,
+    await notifyUser(p.mentorId, () => {
+      const studentName = displayName(p.student);
+      return {
+        type: "program.changes_requested",
+        title: tr("درخواست تغییر برنامه", "Program change requested"),
+        body: tr(`${studentName} برای «${p.title}» تغییر خواسته: ${note}`, `${iso(studentName)} requested changes to "${iso(p.title)}": ${note}`),
+        url,
+      };
     });
   }
 

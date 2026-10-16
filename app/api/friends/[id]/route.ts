@@ -1,9 +1,9 @@
-import { tr } from "@/lib/i18n";
+import { tr, iso } from "@/lib/i18n";
 import { NextRequest, NextResponse } from "next/server";
 import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
-import { sendPushToUser } from "@/lib/webPush";
+import { sendPushToUserLocalized } from "@/lib/webPush";
 import { sessionFeatureBlocked } from "@/lib/featureFlagsServer";
 
 // PATCH /api/friends/:id → قبول‌کردن یک درخواست دوستی در انتظار (فقط addressee)
@@ -25,10 +25,13 @@ export async function PATCH(req: NextRequest, { params }: { params: { id: string
 
   // به کسی که اول درخواست داده بود اطلاع بده که قبول شد — حتی وقتی اپش
   // بسته‌ست (best-effort، هیچ‌وقت نباید خود قبول‌کردن رو fail کنه).
-  const accepterName = session!.user!.name || "یک کاربر";
-  sendPushToUser(friendship.requesterId, {
-    title: "درخواست دوستی قبول شد",
-    body: `${accepterName} درخواست دوستیت رو قبول کرد.`,
+  const accepterRaw = session!.user!.name;
+  sendPushToUserLocalized(friendship.requesterId, () => {
+    const accepterName = accepterRaw || tr("یک کاربر", "A user");
+    return {
+      title: tr("درخواست دوستی قبول شد", "Friend request accepted"),
+      body: tr(`${accepterName} درخواست دوستیت رو قبول کرد.`, `${iso(accepterName)} accepted your friend request.`),
+    };
   }).catch(() => {});
 
   return NextResponse.json({ ok: true });

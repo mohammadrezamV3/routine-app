@@ -92,3 +92,19 @@ describe("misc", () => {
     expect(t[0].id).toBe(String(BROADCAST_KEEP + 4));
   });
 });
+
+describe("parseBroadcastInput English version", () => {
+  const base = { title: "عنوان", body: "متن", channels: ["inapp"], segment: { kind: "all" } };
+  it("accepts a complete English pair and omits it otherwise", async () => {
+    const { parseBroadcastInput } = await import("@/lib/broadcast");
+    const ok = parseBroadcastInput({ ...base, titleEn: "Title", bodyEn: "Body" });
+    expect(ok.ok && ok.value.titleEn).toBe("Title");
+    const none = parseBroadcastInput(base);
+    expect(none.ok && "titleEn" in none.value).toBe(false);
+  });
+  it("rejects a half-filled English pair", async () => {
+    const { parseBroadcastInput } = await import("@/lib/broadcast");
+    expect(parseBroadcastInput({ ...base, titleEn: "Title" }).ok).toBe(false);
+    expect(parseBroadcastInput({ ...base, bodyEn: "Body" }).ok).toBe(false);
+  });
+});

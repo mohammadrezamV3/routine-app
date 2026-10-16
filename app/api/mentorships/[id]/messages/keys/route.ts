@@ -5,7 +5,7 @@ import { checkRateLimit } from "@/lib/rateLimit";
 import { notifyUser, displayName } from "@/lib/inAppNotify";
 import { PUBLIC_USER_SELECT } from "@/lib/mentorServer";
 import { publicKeysFor } from "@/lib/e2ee/server";
-import { tr } from "@/lib/i18n";
+import { tr, iso } from "@/lib/i18n";
 
 type Ctx = { params: { id: string } };
 const NUDGE_THROTTLE_MS = 24 * 60 * 60 * 1000;
@@ -46,11 +46,11 @@ export async function POST(_req: Request, { params }: Ctx) {
   });
   if (recent) return NextResponse.json({ ok: true, sent: false });
   const sender = await prisma.user.findUnique({ where: { id: me }, select: PUBLIC_USER_SELECT });
-  await notifyUser(peer, {
+  await notifyUser(peer, () => ({
     type: "message.e2ee_setup",
-    title: "پیام مربی‌گری",
-    body: `${displayName(sender)} می‌خواهد به تو پیام بدهد؛ برای دریافت، یک بار گفت‌وگو را باز کن`,
+    title: tr("پیام مربی‌گری", "Mentoring message"),
+    body: tr(`${displayName(sender)} می‌خواهد به تو پیام بدهد؛ برای دریافت، یک بار گفت‌وگو را باز کن`, `${iso(displayName(sender))} wants to message you. Open the conversation once to receive it.`),
     url,
-  });
+  }));
   return NextResponse.json({ ok: true, sent: true });
 }

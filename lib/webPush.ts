@@ -1,5 +1,6 @@
 import webPush from "web-push";
 import { prisma } from "@/lib/prisma";
+import { getUserLocale, runWithLocale } from "@/lib/i18nServer";
 
 // نوتیف واقعی Web Push — برخلاف lib/notifications.ts (که فقط وقتی تب باز
 // باشه کار می‌کنه)، این حتی وقتی اپ/مرورگر کاملا بسته‌ست هم به کاربر می‌رسه،
@@ -101,4 +102,13 @@ export async function sendPushToUser(
   }
 
   return { sent, pruned: deadIds.length, failed };
+}
+
+/**
+ * مثل sendPushToUser ولی متن با زبان ذخیره‌شده‌ی *گیرنده* ساخته می‌شه: `build` داخل زبان گیرنده
+ * اجرا می‌شه، پس tr() های داخلش انگلیسی/فارسی درست می‌دن. زبان ناشناخته = فارسی.
+ */
+export async function sendPushToUserLocalized(userId: string, build: () => PushPayload) {
+  const locale = await getUserLocale(userId);
+  return sendPushToUser(userId, runWithLocale(locale, build));
 }

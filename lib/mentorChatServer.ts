@@ -1,6 +1,6 @@
 import type { Mentorship, Prisma } from "@prisma/client";
 import { NextResponse } from "next/server";
-import { tr } from "@/lib/i18n";
+import { tr, iso } from "@/lib/i18n";
 import { prisma } from "@/lib/prisma";
 import { notifyUser, displayName } from "@/lib/inAppNotify";
 import { PUBLIC_USER_SELECT } from "@/lib/mentorServer";
@@ -155,7 +155,7 @@ export async function notifyNewMessage(m: Pick<Mentorship, "id" | "mentorId" | "
   });
   if (recent) return;
   const sender = await prisma.user.findUnique({ where: { id: senderId }, select: PUBLIC_USER_SELECT });
-  await notifyUser(recipient, { type: "message.new", title: "پیام جدید", body: `${displayName(sender)} پیام تازه‌ای فرستاد`, url });
+  await notifyUser(recipient, () => ({ type: "message.new", title: tr("پیام جدید", "New message"), body: tr(`${displayName(sender)} پیام تازه‌ای فرستاد`, `${iso(displayName(sender))} sent you a new message`), url }));
 }
 
 /** پاک‌کردن پیام‌های قدیمی متن‌ساده‌ی منقضی (یک گفت‌وگو یا همه) */

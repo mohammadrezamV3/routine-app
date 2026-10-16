@@ -1,6 +1,7 @@
 import type { Prisma } from "@prisma/client";
 import { prisma } from "@/lib/prisma";
-import { tr } from "@/lib/i18n";
+import { tr, type Locale } from "@/lib/i18n";
+import { getUserLocales } from "@/lib/i18nServer";
 import { getAppSetting, setAppSetting } from "@/lib/appSettings";
 import { isPushConfigured, sendPushToUser } from "@/lib/webPush";
 import { publishToUser } from "@/lib/realtime";
@@ -97,6 +98,8 @@ export async function createBroadcast(input: BroadcastInput, author: { id: strin
     id: `bc_${now.getTime().toString(36)}${Math.random().toString(36).slice(2, 8)}`,
     title: input.title,
     body: input.body,
+    titleEn: input.titleEn ?? null,
+    bodyEn: input.bodyEn ?? null,
     url: input.url,
     channels: input.channels,
     segment: input.segment,
@@ -137,9 +140,16 @@ async function deliverChunk(b: BroadcastRecord, userIds: string[]): Promise<{ de
   const inapp = wantsInApp(b.channels);
   const push = wantsPush(b.channels);
   let delivered = 0;
+  // نسخه‌ی انگلیسی (اگه ادمین نوشته) برای کاربرهایی که زبان ذخیره‌شده‌شون انگلیسیه؛ یک کوئری برای کل تکه
+  const hasEn = !!(b.titleEn && b.bodyEn);
+  const locales = hasEn ? await getUserLocales(userIds) : new Map<string, Locale>();
+  const textFor = (uid: string) => (hasEn && locales.get(uid) === "en" ? { title: b.titleEn!, body: b.bodyEn! } : { title: b.title, body: b.body });
   if (inapp) {
     const r = await prisma.inAppNotification.createMany({
-      data: userIds.map((userId) => ({ userId, type: INAPP_TYPE, title: b.title.slice(0, 120), body: b.body.slice(0, 500), url: b.url })),
+      data: userIds.map((userId) => {
+        const t = textFor(userId);
+        return { userId, type: INAPP_TYPE, title: t.title.slice(0, 120), body: t.body.slice(0, 500), url: b.url };
+      }),
     });
     delivered = r.count;
     for (const userId of userIds) void publishToUser(userId, { type: "notification.new", keys: ["notifications"] });
@@ -150,7 +160,7 @@ async function deliverChunk(b: BroadcastRecord, userIds: string[]): Promise<{ de
     for (let i = 0; i < userIds.length; i += PUSH_CONCURRENCY) {
       const part = userIds.slice(i, i + PUSH_CONCURRENCY);
       const res = await Promise.all(
-        part.map((uid) => sendPushToUser(uid, { title: b.title, body: b.body, url: b.url ?? undefined, tag: `broadcast-${b.id}` }).catch(() => null))
+        part.map((uid) => sendPushToUser(uid, { ...textFor(uid), url: b.url ?? undefined, tag: `broadcast-${b.id}` }).catch(() => null))
       );
       pushSent += res.filter((x) => x && x.sent > 0).length;
     }

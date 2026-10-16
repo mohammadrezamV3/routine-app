@@ -34,6 +34,7 @@ import { PUBLIC_PAGES } from "@/lib/llmsContent";
 import { InlineBootstrap } from "@/components/InlineBootstrap";
 import { InlineMeta } from "@/components/InlineMeta";
 import { PwaProvider } from "@/components/PwaProvider";
+import LangSync from "@/components/LangSync";
 import { InviteRefCapture } from "@/components/InviteRefCapture";
 import { PopupExitAnimator } from "@/components/PopupExitAnimator";
 import { MotionRuntime } from "@/components/MotionRuntime";
@@ -338,6 +339,8 @@ export default async function RootLayout({ children }: { children: React.ReactNo
               <NavDrawer />
               {/* ثبت سرویس‌ورکر (کش app shell) + پیشنهاد نصب اپ */}
               <PwaProvider />
+              {/* زبان کاربر واردشده یک بار روی حساب ذخیره می‌شه تا اعلان‌ها به زبان خودش برن — lib/i18nServer.ts */}
+              <LangSync />
               {/* لینک دعوت دوست (?ref=) — lib/invite.ts */}
               <InviteRefCapture />
               {/* یادآور + realtime + اطلاعیه + تبریک مناسبت — بعد از اولین پینت، در زمان بیکاری */}

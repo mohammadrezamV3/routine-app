@@ -3,6 +3,8 @@ import { prisma } from "@/lib/prisma";
 import { isPushConfigured, sendPushToUser, PushPayload } from "@/lib/webPush";
 import { DEFAULT_NOTIF_PREFS, NotifPrefs } from "@/lib/notifPrefs";
 import { FA_WEEKDAY } from "@/lib/jalali";
+import { tr, iso, type Locale } from "@/lib/i18n";
+import { getUserLocales, runWithLocale } from "@/lib/i18nServer";
 import { currencyMeta } from "@/lib/economicCalendar";
 import { NEWS_ALERT_KEY, newsEventWatchKey, normalizeNewsAlertPrefs } from "@/lib/tradeNewsAlerts";
 import {
@@ -76,6 +78,8 @@ export async function runDueReminders(now: Date = new Date()): Promise<{ ok: tru
       prisma.user.findMany({ where: { id: { in: ids } }, select: { id: true, timezone: true } }),
       prisma.userSetting.findMany({ where: { userId: { in: ids }, key: { in: SETTING_KEYS_NEEDED } }, select: { userId: true, key: true, value: true } }),
     ]);
+    // زبان ذخیره‌شده‌ی هر کاربر (یک کوئری برای کل دسته) — متن یادآوری به زبان خود گیرنده ساخته می‌شه
+    const localeByUser = await getUserLocales(ids);
     const settingsByUser = new Map<string, Map<string, unknown>>();
     for (const r of settingRows) {
       let m = settingsByUser.get(r.userId);
@@ -84,31 +88,32 @@ export async function runDueReminders(now: Date = new Date()): Promise<{ ok: tru
     }
 
     // فقط یادآوری‌هایی که *همین الان* در بازه‌شون هستن
-    const due: { userId: string; r: PlannedReminder }[] = [];
+    const due: { userId: string; r: PlannedReminder; locale: Locale }[] = [];
     for (const u of users) {
       checked++;
       const s = settingsByUser.get(u.id) || new Map<string, unknown>();
       const prefs: NotifPrefs = { ...DEFAULT_NOTIF_PREFS, ...((s.get("notifPrefs") as Partial<NotifPrefs>) || {}) };
       const tz = u.timezone || "Asia/Tehran";
+      const locale = localeByUser.get(u.id) ?? "fa";
       if (prefs.taskReminders) {
-        const planned = planRoutineReminders({
+        const planned = runWithLocale(locale, () => planRoutineReminders({
           tz, now,
           customOccurrences: asArray<OccurrenceLike>(s.get("customOccurrences")),
           removedOccurrences: new Set(asArray<string>(s.get("removedOccurrences"))),
-        });
-        for (const r of planned) if (isDue(r, nowMs)) due.push({ userId: u.id, r });
+        }));
+        for (const r of planned) if (isDue(r, nowMs)) due.push({ userId: u.id, r, locale });
       }
       // مثل نسخه‌ی کلاینت: خاموش‌کردن کارت دارو از تنظیمات داشبورد، اعلان‌هاش رو هم قطع می‌کنه
       const dash = s.get("dashboardPrefs") as { showMedications?: boolean } | undefined;
       if (dash?.showMedications !== false) {
         const meds = asArray<Medication>(s.get("medications"));
         if (meds.length) {
-          for (const r of planMedicationReminders({ tz, now, meds })) if (isDue(r, nowMs)) due.push({ userId: u.id, r });
+          for (const r of runWithLocale(locale, () => planMedicationReminders({ tz, now, meds }))) if (isDue(r, nowMs)) due.push({ userId: u.id, r, locale });
         }
       }
       if (prefs.exerciseReminders) {
-        const r = planExerciseReminder({ tz, now });
-        if (isDue(r, nowMs)) due.push({ userId: u.id, r });
+        const r = runWithLocale(locale, () => planExerciseReminder({ tz, now }));
+        if (isDue(r, nowMs)) due.push({ userId: u.id, r, locale });
       }
     }
     if (!due.length) continue;
@@ -120,7 +125,7 @@ export async function runDueReminders(now: Date = new Date()): Promise<{ ok: tru
     });
     const sentSet = new Set(already.map((a) => `${a.userId}|${a.key}`));
 
-    for (const { userId, r } of due) {
+    for (const { userId, r, locale } of due) {
       if (sentSet.has(`${userId}|${r.key}`)) continue;
       try {
         if (r.kind === "routine" && r.itemId) {
@@ -140,7 +145,7 @@ export async function runDueReminders(now: Date = new Date()): Promise<{ ok: tru
           if (!todayPlan) continue; // امروز روز استراحته
           const log = await prisma.exerciseLog.findFirst({ where: { planId: plan.id, userId, date: new Date(r.dateIso) }, select: { completed: true } });
           if (log?.completed) continue;
-          body = `برنامه‌ی ورزشی امروز (${todayPlan.focus}) هنوز ثبت نشده.`;
+          body = runWithLocale(locale, () => tr(`برنامه‌ی ورزشی امروز (${todayPlan.focus}) هنوز ثبت نشده.`, `Today's workout (${iso(todayPlan.focus)}) has not been logged yet.`));
         }
         await claimAndSend(userId, r.key, r.deadline, { title: r.title, body, url: r.url }, stats);
       } catch (err: any) {
@@ -187,6 +192,7 @@ export async function runEconomicAlerts(now: Date = new Date()): Promise<Record<
   const prefsByUser = new Map(prefRows.map((r) => [r.userId, normalizeNewsAlertPrefs(r.value)]));
   const stats: SendStats = { pushed: 0, failed: 0, skipped: 0 };
   let checked = 0;
+  const localeByUser = await getUserLocales(eligible);
 
   for (const userId of eligible) {
     const prefs = prefsByUser.get(userId);
@@ -208,7 +214,7 @@ export async function runEconomicAlerts(now: Date = new Date()): Promise<Record<
       try {
         await claimAndSend(userId, `econ:${e.id}`, deadline, {
           title: `${flag} ${e.currency} — ${e.title}`,
-          body: `تا ${minutesAway} دقیقه دیگر منتشر می‌شود`,
+          body: runWithLocale(localeByUser.get(userId) ?? "fa", () => tr(`تا ${minutesAway} دقیقه دیگر منتشر می‌شود`, `Releases in ${minutesAway} min`)),
           url: "/trade/calendar",
         }, stats);
       } catch (err: any) {

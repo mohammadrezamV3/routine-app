@@ -1,4 +1,4 @@
-import { tr } from "@/lib/i18n";
+import { tr, iso } from "@/lib/i18n";
 import { NextRequest, NextResponse } from "next/server";
 import { getSessionFast } from "@/lib/serverSession";
 import { prisma } from "@/lib/prisma";
@@ -8,7 +8,7 @@ import { timeToMinutes, isWakeOnTime, DEFAULT_WAKE } from "@/lib/wakeSleep";
 import { isValidUsername } from "@/lib/validate";
 import { isoLocal, FA_WEEKDAY } from "@/lib/jalali";
 import { sessionsThisWeekTotal, sessionsThisWeekDone, weekProgressPct, computeExerciseStreak, ExerciseLogRange } from "@/lib/exerciseStats";
-import { sendPushToUser } from "@/lib/webPush";
+import { sendPushToUserLocalized } from "@/lib/webPush";
 import { sessionFeatureBlocked } from "@/lib/featureFlagsServer";
 
 // پیشرفت «بدنسازی» یک دوست — بر خلاف statsForUser (که روزانه‌ست، چون
@@ -183,10 +183,13 @@ export async function POST(req: NextRequest) {
   // پوش حتی وقتی اپ addressee کاملا بسته‌ست هم می‌رسه — best-effort، اگه
   // VAPID تنظیم نشده باشه یا سابسکریپشنی نباشه، درخواست دوستی خودش هیچ‌وقت
   // نباید fail کنه.
-  const requesterName = session!.user!.name || "یک کاربر";
-  sendPushToUser(target.id, {
-    title: "درخواست دوستی جدید",
-    body: `${requesterName} می‌خواد باهات دوست بشه.`,
+  const requesterRaw = session!.user!.name;
+  sendPushToUserLocalized(target.id, () => {
+    const requesterName = requesterRaw || tr("یک کاربر", "A user");
+    return {
+      title: tr("درخواست دوستی جدید", "New friend request"),
+      body: tr(`${requesterName} می‌خواد باهات دوست بشه.`, `${iso(requesterName)} wants to be your friend.`),
+    };
   }).catch(() => {});
 
   return NextResponse.json({ ok: true, friendshipId: friendship.id });

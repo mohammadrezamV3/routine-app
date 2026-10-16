@@ -7,7 +7,7 @@ import { notifyUser, displayName } from "@/lib/inAppNotify";
 import { PUBLIC_USER_SELECT, feedbackAad, toFeedbackRow } from "@/lib/mentorServer";
 import { sealAtRest } from "@/lib/e2ee/server";
 import { publishToUsers } from "@/lib/realtime";
-import { tr } from "@/lib/i18n";
+import { tr, iso } from "@/lib/i18n";
 
 type Ctx = { params: { id: string } };
 const BODY_MAX = 2000;
@@ -69,13 +69,13 @@ export async function POST(req: Request, { params }: Ctx) {
   void publishToUsers([p.studentId, me], { type: "mentor.program", data: { id: p.id } });
 
   const mentor = await prisma.user.findUnique({ where: { id: me }, select: PUBLIC_USER_SELECT });
-  await notifyUser(p.studentId, {
+  await notifyUser(p.studentId, () => ({
     type: "program.feedback",
-    title: "فیدبک جدید از مربی",
+    title: tr("فیدبک جدید از مربی", "New feedback from your mentor"),
     // متن فیدبک در اعلان/پوش نمی‌آید (اعلان رمز نمی‌شود و پوش از سرویس بیرونی رد می‌شود)
-    body: `${displayName(mentor)} درباره‌ی «${p.title}» فیدبک تازه‌ای نوشت`,
+    body: tr(`${displayName(mentor)} درباره‌ی «${p.title}» فیدبک تازه‌ای نوشت`, `${iso(displayName(mentor))} left new feedback on "${iso(p.title)}"`),
     url: `/mentor-programs/${p.id}`,
-  });
+  }));
 
   return NextResponse.json({ feedback: toFeedbackRow(fb) });
 }
