@@ -60,11 +60,18 @@ export function AvatarSheet({ avatarUrl, busy, onPickNew, onDelete, onClose }: P
               >
                 <div className="avatar-sheet-q">{tr("عکس پروفایل حذف بشه؟", "Delete your profile photo?")}</div>
                 <div className="avatar-sheet-row">
-                  <button type="button" className="account-outline-btn muted" onClick={() => setConfirming(false)} disabled={busy}>
+                  <button type="button" className="btn btn-ghost btn-sm" onClick={() => setConfirming(false)} disabled={busy}>
                     {tr("نه", "No")}
                   </button>
-                  <button type="button" className="account-outline-btn trade-danger-btn" onClick={() => onDelete()} disabled={busy}>
-                    {busy ? <Spinner size={14} /> : <Trash2 size={14} />} {tr("حذف کن", "Delete")}
+                  <button
+                    type="button"
+                    className={`btn btn-danger btn-sm${busy ? " is-loading" : ""}`}
+                    onClick={() => onDelete()}
+                    disabled={busy}
+                    aria-busy={busy || undefined}
+                  >
+                    <Trash2 size={14} /> {tr("حذف کن", "Delete")}
+                    {busy && <Spinner className="btn-spinner" size={16} label={null} />}
                   </button>
                 </div>
               </motion.div>
@@ -74,10 +81,10 @@ export function AvatarSheet({ avatarUrl, busy, onPickNew, onDelete, onClose }: P
                 initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -8 }}
                 transition={{ duration: 0.2, ease: EASE }}
               >
-                <button type="button" className="account-outline-btn" onClick={onPickNew} disabled={busy}>
+                <button type="button" className="btn btn-tonal btn-sm" onClick={onPickNew} disabled={busy}>
                   <ImagePlus size={15} /> {tr("عکس جدید", "New photo")}
                 </button>
-                <button type="button" className="account-outline-btn trade-danger-btn" onClick={() => setConfirming(true)} disabled={busy}>
+                <button type="button" className="btn btn-danger btn-sm" onClick={() => setConfirming(true)} disabled={busy}>
                   <Trash2 size={14} /> {tr("حذف", "Delete")}
                 </button>
               </motion.div>
