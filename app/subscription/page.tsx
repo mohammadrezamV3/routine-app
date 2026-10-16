@@ -88,7 +88,8 @@ export default function SubscriptionPage() {
         </div>
       )}
 
-      <div className="section-note">
+      {/* همون BREAKOUT تیتر: خط وضعیت باید لبه‌ی شروع و عرض همون تیتر رو داشته باشه */}
+      <div className={`section-note ${BREAKOUT}`}>
         {isSuperAdmin
           ? tr("دسترسی نامحدود داری — نیازی به اشتراک نداری", "You have unlimited access, no subscription needed")
           : subscription

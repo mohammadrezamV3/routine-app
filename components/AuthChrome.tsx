@@ -4,6 +4,8 @@ import Image from "next/image";
 import { SmartLink as Link } from "@/components/SmartLink";
 import { useTheme } from "./ThemeProvider";
 import { tr } from "@/lib/i18n";
+import { useSection } from "@/components/SectionProvider";
+import { SECTION_META } from "@/lib/sections";
 
 /** فلش بازگشت — داخل خود باکس، همیشه بالا-راست، بدون بک‌گراند، فقط آیکون.
  * پیش‌فرض به صفحه‌ی اصلی می‌ره؛ اگه onClick بدی (مثل ویزارد ثبت‌نام)
@@ -32,21 +34,34 @@ export function AuthBackButton({ onClick }: { onClick?: () => void }) {
  * تایتل بینشون یکسان بمونه. */
 export function AuthBrandMark({ subtitle, note }: { subtitle?: string; note?: string }) {
   const { theme } = useTheme();
+  const section = useSection();
   return (
     <div className="auth-brand-mark-wrap">
-      {/* هر دو نسخه هم‌زمان لود می‌شن (priority) و فقط با opacity جابه‌جا
-         می‌شن — سوییچ تم منتظر دانلود تصویر جدید نمی‌مونه. */}
+      {/* روی زیردامنه‌ی بخش، نشان رنگی همون بخش (PNG شفاف، هر دو تم) — همون
+         اندازه‌ی لوگوی اصلی. دامنه‌ی اصلی (apex) همون لوگوی سبز قبلی با دو تم. */}
       <div className="auth-brand-mark" aria-hidden="true">
-        <Image
-          src="/images/logo-icon-dark-theme.png"
-          alt="" fill sizes="38px" priority
-          className={`object-contain transition-opacity duration-150${theme === "light" ? " opacity-0" : " opacity-100"}`}
-        />
-        <Image
-          src="/images/logo-icon-light-theme.webp"
-          alt="" fill sizes="38px" priority
-          className={`object-contain transition-opacity duration-150${theme === "light" ? " opacity-100" : " opacity-0"}`}
-        />
+        {section ? (
+          <Image
+            src={SECTION_META[section].icon}
+            alt="" fill sizes="38px" priority
+            className="object-contain"
+          />
+        ) : (
+          <>
+            {/* هر دو نسخه هم‌زمان لود می‌شن (priority) و فقط با opacity جابه‌جا
+               می‌شن — سوییچ تم منتظر دانلود تصویر جدید نمی‌مونه. */}
+            <Image
+              src="/images/logo-icon-dark-theme.png"
+              alt="" fill sizes="38px" priority
+              className={`object-contain transition-opacity duration-150${theme === "light" ? " opacity-0" : " opacity-100"}`}
+            />
+            <Image
+              src="/images/logo-icon-light-theme.webp"
+              alt="" fill sizes="38px" priority
+              className={`object-contain transition-opacity duration-150${theme === "light" ? " opacity-100" : " opacity-0"}`}
+            />
+          </>
+        )}
       </div>
       {subtitle && <p className="auth-brand-subtitle">{subtitle}</p>}
       {note && <p className="auth-brand-note">{note}</p>}

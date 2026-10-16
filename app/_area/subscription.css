@@ -116,6 +116,10 @@
     margin-inline:calc((620px - min(1240px, calc(100vw - 32px))) / 2);
   }}
 
+/* تیتر «اشتراک» و خط وضعیت زیرش هم‌لبه‌ی شروع (text-align:start، هر دو جهت) و هم‌عرض با کارت‌های پلن */
+.subscription-page > h1,
+.subscription-page > .section-note{ text-align:start; }
+
 /* ── جاگیر سبک داخل صفحه (components/PageLoader.tsx) ─────────────────────
    فقط یک اسکلت ساده داخل محتوا (زیر هدر، بدون پرده و بدون لوگو). تا 200ms هیچی
    دیده نمی‌شه (animation-delay)، پس ناوبری سریع هیچ چشمک و لودینگی نداره. */
