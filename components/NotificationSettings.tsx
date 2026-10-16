@@ -52,7 +52,7 @@ export function NotificationSettings({ index = 0 }: { index?: number }) {
           ) : (
             <>
               <div className="item-line">{tr("وقتی برنامه‌ی امروزت (یا تمرینت) به وقتش برسه، یادآوری می‌گیری.", "You get a reminder when today's plan (or workout) is due.")}</div>
-              <button className="account-outline-btn" onClick={enableNotifications} style={{ marginTop: 10 }}>
+              <button className="btn btn-tonal btn-sm" onClick={enableNotifications} style={{ marginTop: 10 }}>
                 {tr("فعال‌کردن یادآوری‌ها", "Enable reminders")}
               </button>
             </>

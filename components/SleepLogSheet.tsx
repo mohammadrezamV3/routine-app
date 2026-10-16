@@ -235,15 +235,15 @@ function SheetBody({ initial, target, existing, onClose, onChanged }: SleepLogSh
               <div className="slg-nums">
                 <label className="slg-field">
                   <span>{tr("تا خواب رفتن (دقیقه)", "Time to fall asleep (min)")}</span>
-                  <NumberInput className="wsearch-newform-name" placeholder="0" maxLength={3} value={latency} onChange={setLatency} />
+                  <NumberInput className="wsearch-newform-name" placeholder="0" limit="sleepLatency" value={latency} onChange={setLatency} />
                 </label>
                 <label className="slg-field">
                   <span>{tr("بیدارشدن وسط شب", "Night awakenings")}</span>
-                  <NumberInput className="wsearch-newform-name" placeholder="0" maxLength={2} value={awake} onChange={setAwake} />
+                  <NumberInput className="wsearch-newform-name" placeholder="0" limit="sleepAwakenings" value={awake} onChange={setAwake} />
                 </label>
                 <label className="slg-field">
                   <span>{tr("چرت روز (دقیقه)", "Daytime nap (min)")}</span>
-                  <NumberInput className="wsearch-newform-name" placeholder="0" maxLength={3} value={nap} onChange={setNap} />
+                  <NumberInput className="wsearch-newform-name" placeholder="0" limit="sleepNap" value={nap} onChange={setNap} />
                 </label>
               </div>
               <div className="slg-block">

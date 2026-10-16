@@ -51,7 +51,7 @@ export function SupportTicketModal({
       <div className="modal-panel open" role="dialog" aria-modal="true">
         <div className="modal-head">
           <div className="modal-title">{tr("تیکت جدید", "New ticket")}</div>
-          <button type="button" className="trade-icon-btn" onClick={onClose} aria-label={tr("بستن", "Close")}><X size={16} /></button>
+          <button type="button" className="btn btn-icon btn-bare" onClick={onClose} aria-label={tr("بستن", "Close")}><X size={16} /></button>
         </div>
 
         <label className="exercise-form-label">{tr("موضوع", "Subject")}</label>
@@ -71,9 +71,16 @@ export function SupportTicketModal({
         {error && <div className="trade-form-error">{error}</div>}
 
         <div className="trade-modal-actions">
-          <button type="button" className="account-outline-btn" onClick={onClose}>{tr("لغو", "Cancel")}</button>
-          <button type="button" className="trade-primary-btn" onClick={submit} disabled={!subject.trim() || !message.trim() || saving}>
-            {saving ? <Spinner size={14} /> : tr("ارسال تیکت", "Send ticket")}
+          <button type="button" className="btn btn-ghost" onClick={onClose}>{tr("لغو", "Cancel")}</button>
+          <button
+            type="button"
+            className={`btn btn-primary${saving ? " is-loading" : ""}`}
+            onClick={submit}
+            disabled={!subject.trim() || !message.trim() || saving}
+            aria-busy={saving || undefined}
+          >
+            {tr("ارسال تیکت", "Send ticket")}
+            {saving && <Spinner className="btn-spinner" size={16} label={null} />}
           </button>
         </div>
       </div>

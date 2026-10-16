@@ -7,6 +7,7 @@ import {
   AboutContact, AboutFinalCTA, AboutInside, AboutPrivacy, AboutStats, AboutStory, AboutValues,
 } from "@/components/AboutLazy";
 import { getTeamMembers } from "@/lib/teamServer";
+import { getSessionFast } from "@/lib/serverSession";
 import "./about.css";
 
 // اعضای تیم از AppSetting خونده می‌شن؛ صفحه هر دقیقه تازه می‌شه
@@ -35,6 +36,9 @@ export function generateMetadata(): Metadata {
 // فقط لایه‌ی نمایشی‌اند و با حرکت‌کاهی (MotionTuner) خاموش می‌شوند.
 export default async function AboutPage() {
   const team = await getTeamMembers();
+  // کاربر واردشده بخش CTA پایانی (ساخت حساب/ورود) را اصلا نمی‌بیند؛ تصمیم سمت سرور
+  // گرفته می‌شود تا جای خالی یا جاگیر لودینگ هم نماند.
+  const authed = Boolean(await getSessionFast());
   return (
     <div className="ab-root">
       <script
@@ -48,7 +52,7 @@ export default async function AboutPage() {
       <AboutInside />
       <AboutPrivacy />
       <AboutContact team={team} />
-      <AboutFinalCTA />
+      {!authed && <AboutFinalCTA />}
     </div>
   );
 }

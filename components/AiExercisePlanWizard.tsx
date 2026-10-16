@@ -10,6 +10,7 @@ import { ExerciseRulesStep, hasSeenExerciseRules, markExerciseRulesSeen } from "
 import { focusNextOnEnter } from "@/lib/formNav";
 import { getBodyMetrics, saveBodyMetrics } from "@/lib/bodyMetrics";
 import { NumberInput } from "./NumberInput";
+import { readTyped } from "@/lib/numberLimits";
 import { SegmentedTabs } from "./SegmentedTabs";
 import { TickButton } from "./TickButton";
 import { Spinner } from "./Spinner";
@@ -136,8 +137,11 @@ export function AiExercisePlanWizard({
     setError(null);
     if (step === "hw") {
       const fe: typeof fieldErrors = {};
+      // قد/وزن با جدول مشترک (lib/numberLimits.ts) سنجیده می‌شن
       if (!form.heightCm) fe.heightCm = tr("قد رو وارد کن", "Enter your height");
+      else { const r = readTyped(form.heightCm, "heightCm"); if (!r.ok) fe.heightCm = r.error; }
       if (!form.weightKg) fe.weightKg = tr("وزن رو وارد کن", "Enter your weight");
+      else { const r = readTyped(form.weightKg, "weightKg"); if (!r.ok) fe.weightKg = r.error; }
       if (fe.heightCm || fe.weightKg) { setFieldErrors(fe); return; }
       setFieldErrors({});
       setStep("goal");
@@ -146,6 +150,8 @@ export function AiExercisePlanWizard({
       setStep("gear");
     } else if (step === "gear") {
       if (!form.trainingMonth) { setFieldErrors({ trainingMonth: tr("چندمین ماه تمرینت رو وارد کن", "Enter which month of training you are in") }); return; }
+      const monthRead = readTyped(form.trainingMonth, "trainingMonth");
+      if (!monthRead.ok) { setFieldErrors({ trainingMonth: monthRead.error }); return; }
       setFieldErrors({});
       if (!form.equipment) { setError(tr("یکی از گزینه‌ها رو انتخاب کن", "Pick one of the options")); return; }
       setStep("days");
@@ -198,7 +204,7 @@ export function AiExercisePlanWizard({
           <div style={{ display: "flex", gap: 10 }}>
             <div style={{ flex: 1 }}>
               <label className="exercise-form-label">{tr("قد (سانتی‌متر)", "Height (cm)")}</label>
-              <NumberInput className="wsearch-newform-name" value={form.heightCm} onChange={(v) => patch({ heightCm: v })} />
+              <NumberInput className="wsearch-newform-name" limit="heightCm" value={form.heightCm} onChange={(v) => patch({ heightCm: v })} />
               {fieldErrors.heightCm && (
                 <div className="field-error-msg field-error-msg-inline">
                   <AlertCircle size={12} />
@@ -208,7 +214,7 @@ export function AiExercisePlanWizard({
             </div>
             <div style={{ flex: 1 }}>
               <label className="exercise-form-label">{tr("وزن (کیلوگرم)", "Weight (kg)")}</label>
-              <NumberInput className="wsearch-newform-name" value={form.weightKg} onChange={(v) => patch({ weightKg: v })} />
+              <NumberInput className="wsearch-newform-name" limit="weightKg" value={form.weightKg} onChange={(v) => patch({ weightKg: v })} />
               {fieldErrors.weightKg && (
                 <div className="field-error-msg field-error-msg-inline">
                   <AlertCircle size={12} />
@@ -237,7 +243,7 @@ export function AiExercisePlanWizard({
       {step === "gear" && (
         <>
           <label className="exercise-wizard-title">{tr("چندمین ماهته که تمرین می‌کنی؟", "Which month of training are you in?")}</label>
-          <NumberInput className="wsearch-newform-name" placeholder={tr("مثلا 3", "e.g. 3")} value={form.trainingMonth} onChange={(v) => patch({ trainingMonth: v })} />
+          <NumberInput className="wsearch-newform-name" placeholder={tr("مثلا 3", "e.g. 3")} limit="trainingMonth" value={form.trainingMonth} onChange={(v) => patch({ trainingMonth: v })} />
           {fieldErrors.trainingMonth && (
             <div className="field-error-msg field-error-msg-inline">
               <AlertCircle size={12} />

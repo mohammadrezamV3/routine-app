@@ -11,7 +11,7 @@ import { tr, isEn } from "@/lib/i18n";
 export function AccountBackButton({ href = "/account", label = tr("بازگشت", "Back") }: { href?: string; label?: string }) {
   const root = href === "/account";
   return (
-    <Link href={href} className={`ap-crumb${root ? " is-root" : ""}`}>
+    <Link href={href} className={`btn btn-ghost btn-sm ap-crumb${root ? " is-root" : ""}`}>
       {isEn() ? <ChevronLeft size={17} aria-hidden="true" /> : <ChevronRight size={17} aria-hidden="true" />}
       <span>{label}</span>
     </Link>

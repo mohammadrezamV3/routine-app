@@ -10,6 +10,7 @@ import type { SleepRecord } from "./sleep";
 import { ALL, broadcast, keyMatches, publishLocal, registerInvalidator, reportLiveError } from "./liveSync";
 import { tr } from "./i18n";
 import { setSharedCookie } from "./clientCookie";
+import { PALETTE_COOKIE, PALETTE_CUSTOM_COOKIE, isPaletteSetting, normalizeHex, type PaletteSetting } from "./palette";
 
 const PREFIX = "panelMohammad:";
 
@@ -687,6 +688,49 @@ export async function setThemeSetting(value: "dark" | "light"): Promise<void> {
     setSharedCookie("theme", value, `path=/; max-age=31536000; samesite=lax${secure}`);
   }
   return setSetting("theme", value);
+}
+
+// ---------- تم رنگی سراسری (lib/palette.ts) ----------
+// همون قرارداد تم: مهمان → localStorage، کاربر واردشده → حساب (UserSetting). کوکی‌های
+// arion_palette / arion_palette_c هم (بین زیردامنه‌ها مشترک) نوشته می‌شن تا layout.tsx
+// از همون اولین بایت HTML پالت درست رو بذاره، نه با فلش بعد از خوندن تنظیم.
+
+function readCookie(name: string): string | null {
+  if (typeof document === "undefined") return null;
+  const m = document.cookie.match(new RegExp(`(?:^|; )${name}=([^;]*)`));
+  return m ? decodeURIComponent(m[1]) : null;
+}
+
+/**
+ * پالت ذخیره‌شده. کاربر واردشده: از حساب (مرجع). مهمان: از کوکی‌های مشترک (نه localStorage که
+ * برای هر زیردامنه جداست و می‌تونه بیات‌تر از کوکی همون انتخاب باشه).
+ */
+export async function getPaletteSettings(): Promise<{ palette: PaletteSetting | null; custom: string | null }> {
+  if (!(await isLoggedIn())) {
+    const p = readCookie(PALETTE_COOKIE);
+    return { palette: isPaletteSetting(p) ? p : null, custom: normalizeHex(readCookie(PALETTE_CUSTOM_COOKIE)) };
+  }
+  const [p, c] = await Promise.all([
+    getSetting<string | null>("palette", null),
+    getSetting<string | null>("paletteCustom", null),
+  ]);
+  return { palette: isPaletteSetting(p) ? p : null, custom: normalizeHex(c) };
+}
+
+export function writePaletteCookies(palette: PaletteSetting, custom: string | null): void {
+  if (typeof document === "undefined") return;
+  const secure = typeof location !== "undefined" && location.protocol === "https:" ? "; secure" : "";
+  const attrs = `path=/; max-age=31536000; samesite=lax${secure}`;
+  setSharedCookie(PALETTE_COOKIE, palette, attrs);
+  const hex = normalizeHex(custom);
+  if (hex) setSharedCookie(PALETTE_CUSTOM_COOKIE, hex.slice(1), attrs);
+}
+
+export async function setPaletteSettings(palette: PaletteSetting, custom: string | null): Promise<void> {
+  writePaletteCookies(palette, custom);
+  const hex = normalizeHex(custom);
+  await setSetting("palette", palette);
+  if (hex) await setSetting("paletteCustom", hex);
 }
 
 // ---------- روزهای «بیرون رفتن» (حالا فقط داخل تقویم اصلی نشون داده می‌شه) ----------

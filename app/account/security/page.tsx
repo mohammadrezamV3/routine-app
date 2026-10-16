@@ -279,8 +279,12 @@ export default function SecurityPage() {
                       </span>
                       {!s.current && (
                         <span className="ap-row-end">
-                          <button type="button" className="account-outline-btn muted ap-mini-btn" onClick={() => revokeSession(s.id)} disabled={sessionBusy === s.id} aria-label={tr("بیرون انداختن", "Sign out")}>
-                            {sessionBusy === s.id ? <Spinner size={13} /> : tr("بیرون انداختن", "Sign out")}
+                          <button
+                            type="button" className={`btn btn-danger btn-sm${sessionBusy === s.id ? " is-loading" : ""}`}
+                            onClick={() => revokeSession(s.id)} disabled={sessionBusy === s.id} aria-busy={sessionBusy === s.id || undefined}
+                          >
+                            {sessionBusy === s.id && <Spinner className="btn-spinner" size={14} label={null} />}
+                            {tr("بیرون انداختن", "Sign out")}
                           </button>
                         </span>
                       )}
@@ -291,8 +295,12 @@ export default function SecurityPage() {
             </div>
             {otherSessionCount > 0 && (
               <div className="ap-block-foot">
-                <button type="button" className="account-outline-btn ap-mini-btn" onClick={revokeOthers} disabled={sessionBusy === "others"}>
-                  {sessionBusy === "others" ? <Spinner size={13} /> : tr(`خروج از دستگاه‌های دیگر (${otherSessionCount})`, `Sign out other devices (${otherSessionCount})`)}
+                <button
+                  type="button" className={`btn btn-danger btn-sm${sessionBusy === "others" ? " is-loading" : ""}`}
+                  onClick={revokeOthers} disabled={sessionBusy === "others"} aria-busy={sessionBusy === "others" || undefined}
+                >
+                  {sessionBusy === "others" && <Spinner className="btn-spinner" size={14} label={null} />}
+                  {tr(`خروج از دستگاه‌های دیگر (${otherSessionCount})`, `Sign out other devices (${otherSessionCount})`)}
                 </button>
               </div>
             )}
@@ -333,8 +341,12 @@ export default function SecurityPage() {
             {blocked.map((u) => (
               <div key={u.id} className="ap-person">
                 <span className="ap-person-name"><GoldenName golden={u.golden} staff={u.staff}>{u.name || u.username || tr("کاربر", "User")}</GoldenName></span>
-                <button type="button" className="account-outline-btn ap-mini-btn" onClick={() => unblock(u.id)} disabled={unblocking === u.id}>
-                  {unblocking === u.id ? <Spinner size={13} /> : tr("آنبلاک", "Unblock")}
+                <button
+                  type="button" className={`btn btn-outline btn-sm${unblocking === u.id ? " is-loading" : ""}`}
+                  onClick={() => unblock(u.id)} disabled={unblocking === u.id} aria-busy={unblocking === u.id || undefined}
+                >
+                  {unblocking === u.id && <Spinner className="btn-spinner" size={14} label={null} />}
+                  {tr("آنبلاک", "Unblock")}
                 </button>
               </div>
             ))}

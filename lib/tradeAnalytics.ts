@@ -15,6 +15,7 @@
 
 import type { TradeEntry, TradeAccount, TradeSession, TradeStatKey } from "./tradeTypes";
 import { isEn } from "./i18n";
+import { clampDisplay, isInLimit } from "./numberLimits";
 
 export type TradeStats = {
   total: number;
@@ -56,7 +57,18 @@ export type StatAccount = Pick<TradeAccount, "initialBalance" | "goalType" | "go
   cashCharges?: number | null;
 };
 
-export function computeTradeStats(entries: StatEntry[], account?: StatAccount): TradeStats {
+export function computeTradeStats(rawEntries: StatEntry[], rawAccount?: StatAccount): TradeStats {
+  // داده‌ی قدیمی خارج از بازه (سود ده‌میلیاردی، بالانس نامتناهی …) آمار و نمودار رو
+  // منفجر نکنه — فقط موقع محاسبه گیره می‌شه، ردیف دیتابیس دست نمی‌خوره.
+  const entries = rawEntries.map((e) => (isInLimit(e.pnl, "tradePnl") ? e : { ...e, pnl: clampDisplay(e.pnl, "tradePnl") }));
+  const account = rawAccount
+    ? {
+        ...rawAccount,
+        initialBalance: clampDisplay(rawAccount.initialBalance, "accountBalance"),
+        ...(rawAccount.cashFunding != null ? { cashFunding: clampDisplay(rawAccount.cashFunding, "cashflowAmount") } : {}),
+        ...(rawAccount.cashCharges != null ? { cashCharges: clampDisplay(rawAccount.cashCharges, "cashflowAmount") } : {}),
+      }
+    : undefined;
   const closed = entries.filter((e) => e.status === "CLOSED").slice().sort(byOpenedAt);
   const wins = closed.filter((e) => e.pnl > 0);
   const losses = closed.filter((e) => e.pnl < 0);

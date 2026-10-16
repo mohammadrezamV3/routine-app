@@ -4,7 +4,7 @@ import { useTheme } from "@/components/ThemeProvider";
 
 // رنگ‌های «هویتی» با متغیر --sec-* و پیش‌فرض همون رنگ قبلی: روی دامنه‌ی اصلی و بخش
 // روتین این متغیرها تعریف نشدن (fallback = رنگ قبلی، بدون هیچ تغییری)، ولی
-// app/section-themes.css اونا رو برای بخش ترید و تمرین (زیردامنه‌ها) تعریف می‌کنه
+// app/palette-themes.css اونا رو برای پالت‌های ترید/ورزش و پالت‌های آماده/سفارشی تعریف می‌کنه
 // تا لندینگ و کارت‌های پلن رنگ همون بخش رو بگیرن. کلاس‌ها باید literal بمونن (tailwind).
 export function useThemeTokens() {
   const { theme } = useTheme();

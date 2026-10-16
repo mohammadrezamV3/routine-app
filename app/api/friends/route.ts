@@ -10,6 +10,7 @@ import { isoLocal, FA_WEEKDAY } from "@/lib/jalali";
 import { sessionsThisWeekTotal, sessionsThisWeekDone, weekProgressPct, computeExerciseStreak, ExerciseLogRange } from "@/lib/exerciseStats";
 import { sendPushToUserLocalized } from "@/lib/webPush";
 import { sessionFeatureBlocked } from "@/lib/featureFlagsServer";
+import { clampDisplay } from "@/lib/numberLimits";
 
 // پیشرفت «بدنسازی» یک دوست — بر خلاف statsForUser (که روزانه‌ست، چون
 // روتین هر روز تسک داره)، اینجا مبنا «جلسات این‌هفته» است، چون تمرین فقط
@@ -56,7 +57,7 @@ async function statsForUserCalorie(userId: string) {
   const byDate: Record<string, number> = {};
   rows.forEach((r) => {
     const key = isoLocal(r.date);
-    byDate[key] = (byDate[key] || 0) + (r.customCalories || 0);
+    byDate[key] = (byDate[key] || 0) + clampDisplay(r.customCalories || 0, "entryKcal");
   });
 
   function isSuccess(key: string): boolean {

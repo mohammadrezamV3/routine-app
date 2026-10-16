@@ -79,7 +79,7 @@ export function MentorChatHistorySettings({ index = 0, showEmpty = false }: { in
       {loadError ? (
         <div className="mentor-history-empty">
           <span className="form-inline-error" role="alert">{loadError}</span>
-          <button type="button" className="account-outline-btn mentor-btn is-sm" onClick={load}>{tr("تلاش دوباره", "Try again")}</button>
+          <button type="button" className="btn btn-outline btn-sm" onClick={load}>{tr("تلاش دوباره", "Try again")}</button>
         </div>
       ) : list === null ? (
         <div className="mentor-history-empty"><Spinner size={16} /></div>
@@ -104,7 +104,7 @@ export function MentorChatHistorySettings({ index = 0, showEmpty = false }: { in
                     <span className="mentor-row-end">
                       <button
                         type="button"
-                        className="account-outline-btn muted mentor-btn is-sm"
+                        className="btn btn-danger btn-sm"
                         onClick={() => { setError(null); setConfirm({ kind: "one", conv: c }); }}
                         disabled={c.messageCount === 0}
                       >
@@ -120,7 +120,7 @@ export function MentorChatHistorySettings({ index = 0, showEmpty = false }: { in
             <p className="mentor-field-hint">{tr("پیام‌ها فقط برای تو پاک می‌شن؛ طرف مقابل همچنان داره‌شون", "Messages are only cleared for you. The other person still has them")}</p>
             <button
               type="button"
-              className="trade-danger-btn mentor-btn is-sm"
+              className="btn btn-danger btn-sm"
               onClick={() => { setError(null); setConfirm({ kind: "all" }); }}
               disabled={withMessages.length === 0}
             >

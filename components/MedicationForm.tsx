@@ -160,6 +160,7 @@ export function MedicationForm({
               <span className="time-field-label">{tr("طول دوره (روز)", "Course length (days)")}</span>
               <NumberInput
                 className="wsearch-add-time"
+                limit="medicationDays"
                 value={durationDays}
                 onChange={(v) => { setDurationDays(v); setDurationError(null); }}
                 placeholder="7"

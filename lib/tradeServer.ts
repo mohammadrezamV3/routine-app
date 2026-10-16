@@ -8,6 +8,7 @@ import { sessionsAt } from "./forexSessions";
 import { computeR } from "./tradeSymbols";
 import { MAX_IMAGES_PER_TRADE } from "./tradeTypes";
 import { tr } from "./i18n";
+import { checkOptionalNumber, clampDisplay, type LimitSpec } from "./numberLimits";
 
 /** سقف طول data URL هر عکس. کلاینت از قبل فشرده می‌کند (lib/image.ts)؛
  *  این فقط تور ایمنی سرور در برابر پیلود بزرگ است. */
@@ -39,13 +40,14 @@ function subsetOf<T extends readonly string[]>(list: T, v: unknown): T[number][]
   return out as T[number][];
 }
 
-/** عدد اختیاری: undefined/null/'' یعنی «ندارد»، غیر آن باید عدد متناهی باشد */
-function optNumber(v: unknown, label: string, opts: { min?: number; max?: number } = {}): number | null | string {
-  if (v === undefined || v === null || v === "") return null;
-  if (typeof v !== "number" || !Number.isFinite(v)) return tr(`${label} نامعتبر است`, `${label} is invalid`);
-  if (opts.min !== undefined && v < opts.min) return tr(`${label} نمی‌تواند کمتر از ${opts.min} باشد`, `${label} cannot be less than ${opts.min}`);
-  if (opts.max !== undefined && v > opts.max) return tr(`${label} خیلی بزرگ است`, `${label} is too large`);
-  return v;
+/**
+ * عدد اختیاری با سقف/کف جدول مشترک (lib/numberLimits.ts): undefined/null/'' یعنی
+ * «ندارد»، غیر آن باید عدد متناهی توی بازه باشه. رشته‌ی عددی هم پذیرفته نمی‌شه
+ * (بدنه‌ی JSON کلاینت همیشه عدد می‌فرسته). اعشار اضافه گرد می‌شه.
+ */
+function optNumber(v: unknown, spec: LimitSpec): number | null | string {
+  const c = checkOptionalNumber(v, spec);
+  return c.ok ? c.value : c.error;
 }
 
 function parseDateTime(v: unknown): Date | null {
@@ -88,34 +90,36 @@ export function parseTradeInput(body: any): string | ParsedTradeInput {
   if (body.closedAt && !closedAt) return tr("تاریخ و ساعت خروج نامعتبر است", "Invalid exit date and time");
   if (closedAt && closedAt.getTime() < openedAt.getTime()) return tr("زمان خروج نمی‌تواند قبل از زمان ورود باشد", "The exit time cannot be before the entry time");
 
-  const volume = optNumber(body.volume, tr("حجم معامله", "Trade volume"), { min: 0, max: 1e9 });
+  // واحد دلار سقف بزرگ‌تری از لات داره (مقدار اسمی نه تعداد لات)
+  const volume = optNumber(body.volume, volumeUnit === "USD" ? "tradeVolumeUsd" : "tradeVolumeLot");
   if (typeof volume === "string") return volume;
   if (volume === null || volume <= 0) return tr("حجم معامله باید عدد مثبت باشد", "The trade volume must be a positive number");
 
-  const pnlRaw = optNumber(body.pnl, tr("سود/زیان", "Profit/loss"), { min: -1e12, max: 1e12 });
+  const pnlRaw = optNumber(body.pnl, "tradePnl");
   if (typeof pnlRaw === "string") return pnlRaw;
   const pnl = pnlRaw ?? 0;
   // ناسازگاری «نتیجه» با «علامت عدد» یعنی کلاینت خراب است، نه ورودی کاربر
   if (body.result === "PROFIT" && pnl < 0) return tr("برای نتیجه‌ی سود، مقدار نمی‌تواند منفی باشد", "For a profit result, the amount cannot be negative");
   if (body.result === "LOSS" && pnl > 0) return tr("برای نتیجه‌ی ضرر، مقدار نمی‌تواند مثبت باشد", "For a loss result, the amount cannot be positive");
 
-  const numericFields: [string, string, { min?: number; max?: number }][] = [
-    ["entryPrice", tr("قیمت ورود", "Entry price"), { min: 0 }],
-    ["exitPrice", tr("قیمت خروج", "Exit price"), { min: 0 }],
-    ["stopLoss", tr("حد ضرر", "Stop loss"), { min: 0 }],
-    ["takeProfit", tr("حد سود", "Take profit"), { min: 0 }],
-    ["commission", tr("کمیسیون", "Commission"), {}],
-    ["swap", tr("سواپ", "Swap"), {}],
-    ["riskAmount", tr("مقدار ریسک", "Risk amount"), { min: 0 }],
+  const numericFields: [string, LimitSpec][] = [
+    ["entryPrice", "tradePrice"],
+    ["exitPrice", "tradePrice"],
+    ["stopLoss", "tradePrice"],
+    ["takeProfit", "tradePrice"],
+    ["commission", "tradeFee"],
+    ["swap", "tradeFee"],
+    ["riskAmount", "tradeRisk"],
   ];
   const nums: Record<string, number | null> = {};
-  for (const [field, label, opts] of numericFields) {
-    const v = optNumber(body[field], label, opts);
+  for (const [field, spec] of numericFields) {
+    const v = optNumber(body[field], spec);
     if (typeof v === "string") return v;
     nums[field] = v;
   }
 
-  const confidence = optNumber(body.confidence, tr("میزان اطمینان", "Confidence"), { min: 1, max: 10 });
+  // ستون صحیحه: عدد اعشاری رد می‌شه (کلاینت همیشه گرد می‌کنه)
+  const confidence = optNumber(body.confidence, "tradeConfidence");
   if (typeof confidence === "string") return confidence;
 
   const entryReasons = subsetOf(ENTRY_REASONS, body.entryReasons);
@@ -206,11 +210,12 @@ export function parseAccountInput(body: any): string | Omit<Prisma.TradeAccountU
   if (!oneOf(GOAL_TYPES, body.goalType ?? "AMOUNT")) return tr("نوع هدف نامعتبر است", "Invalid goal type");
   if (body.color && !HEX_COLOR_RE.test(body.color)) return tr("رنگ نامعتبر است", "Invalid color");
 
-  const initialBalance = optNumber(body.initialBalance, tr("بالانس اولیه", "Initial balance"), { min: 0, max: 1e12 });
+  const initialBalance = optNumber(body.initialBalance, "accountBalance");
   if (typeof initialBalance === "string") return initialBalance;
-  const goalValue = optNumber(body.goalValue, tr("مقدار هدف", "Goal amount"), { min: 0, max: 1e12 });
+  // هدف درصدی بازه‌ی خودش رو داره (درصد سود، نه مبلغ)
+  const goalValue = optNumber(body.goalValue, (body.goalType ?? "AMOUNT") === "PERCENT" ? "goalPercent" : "goalAmount");
   if (typeof goalValue === "string") return goalValue;
-  const leverage = optNumber(body.leverage, tr("اهرم", "Leverage"), { min: 1, max: 10_000 });
+  const leverage = optNumber(body.leverage, "leverage");
   if (typeof leverage === "string") return leverage;
 
   return {
@@ -219,7 +224,7 @@ export function parseAccountInput(body: any): string | Omit<Prisma.TradeAccountU
     type: body.type ?? "REAL",
     currency: clampText(String(body.currency || "USD").trim().toUpperCase(), 8),
     initialBalance: initialBalance ?? 0,
-    leverage: leverage === null ? null : Math.round(leverage),
+    leverage,
     color: body.color || "#00A86B",
     note: body.note ? clampText(String(body.note), 500) : null,
     goalType: body.goalType ?? "AMOUNT",
@@ -254,6 +259,9 @@ export function serializeEntry(e: EntryRow) {
   const { _count, ...rest } = e;
   return {
     ...rest,
+    // داده‌ی قدیمی خارج از بازه (قبل از اعمال سقف‌ها) فقط موقع نمایش گیره می‌شه
+    pnl: clampDisplay(rest.pnl, "tradePnl"),
+    volume: clampDisplay(rest.volume, "tradeVolumeUsd"),
     openedAt: e.openedAt.toISOString(),
     closedAt: e.closedAt ? e.closedAt.toISOString() : null,
     imageCount: _count.images,

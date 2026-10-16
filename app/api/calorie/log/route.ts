@@ -7,6 +7,8 @@ import { clampText } from "@/lib/validate";
 import { parseIsoDate, readJsonBody } from "@/lib/validate";
 import { withLiveSync } from "@/lib/realtime";
 import { sessionFeatureBlocked } from "@/lib/featureFlagsServer";
+import { checkNumber, hasNumberValue } from "@/lib/numberLimits";
+import { sanitizeFoodRow } from "@/lib/foodLogSanitize";
 
 // GET /api/calorie/log?date=2026-07-25
 export async function GET(req: NextRequest) {
@@ -22,7 +24,7 @@ export async function GET(req: NextRequest) {
     where: { userId, date },
     orderBy: { createdAt: "asc" },
   });
-  return NextResponse.json({ entries });
+  return NextResponse.json({ entries: entries.map(sanitizeFoodRow) });
 }
 
 // POST /api/calorie/log  { date, customName, customCalories, grams, mealType }
@@ -36,37 +38,41 @@ async function handlePOST(req: NextRequest) {
 
   const parsed = await readJsonBody(req);
   if (!parsed.ok) return NextResponse.json({ error: parsed.error }, { status: parsed.status });
-  const { customName, customCalories, grams, mealType, proteinG, carbsG, fatG } = parsed.body as {
-    customName: string; customCalories: number; grams: number; mealType?: string;
-    proteinG?: number; carbsG?: number; fatG?: number;
-  };
+  const { customName, mealType } = parsed.body as { customName: string; mealType?: string };
 
   const date = parseIsoDate(parsed.body?.date);
   if (!date) return NextResponse.json({ error: tr("تاریخ نامعتبر است (قالب درست: YYYY-MM-DD)", "Invalid date (format: YYYY-MM-DD)") }, { status: 400 });
-  if (!customName || typeof customName !== "string" || !customCalories || !grams) {
+  if (!customName || typeof customName !== "string" || !hasNumberValue(parsed.body?.customCalories) || !hasNumberValue(parsed.body?.grams)) {
     return NextResponse.json({ error: tr("اطلاعات ناقص است", "Incomplete information") }, { status: 400 });
   }
-  if (typeof customCalories !== "number" || typeof grams !== "number" || customCalories < 0 || grams <= 0 || grams > 10000) {
-    return NextResponse.json({ error: tr("عدد وارد شده معتبر نیست", "The number entered is not valid") }, { status: 400 });
-  }
+  // سقف و کف همه‌ی عددها از جدول مشترک (lib/numberLimits.ts)
+  const kcal = checkNumber(parsed.body.customCalories, "entryKcal");
+  if (!kcal.ok) return NextResponse.json({ error: kcal.error }, { status: 400 });
+  const gramsCheck = checkNumber(parsed.body.grams, "foodGrams");
+  if (!gramsCheck.ok) return NextResponse.json({ error: gramsCheck.error }, { status: 400 });
+  const customCalories = kcal.value;
+  const grams = gramsCheck.value;
   // نوع وعده دیگه enum ثابت نیست — چون تعداد/چیدمان وعده‌ها رو خود کاربر توی
   // هدف کالری‌اش تعیین می‌کنه (۲ تا ۶ وعده، کلیدهایی مثل snack1/snack2)؛
   // فقط طول رشته رو محدود می‌کنیم.
   if (mealType && (typeof mealType !== "string" || mealType.length > 20)) {
     return NextResponse.json({ error: tr("نوع وعده نامعتبر است", "Invalid meal type") }, { status: 400 });
   }
-  // درشت‌مغذی‌ها فقط وقتی معتبرن که هر سه با هم بیان و عدد نامنفی باشن —
-  // یا هر سه ثبت می‌شن یا هیچ‌کدوم.
-  const hasMacros = proteinG !== undefined || carbsG !== undefined || fatG !== undefined;
-  const macrosValid = [proteinG, carbsG, fatG].every((v) => typeof v === "number" && v >= 0 && v <= 2000);
-  if (hasMacros && !macrosValid) {
-    return NextResponse.json({ error: tr("مقادیر درشت‌مغذی نامعتبره", "Macronutrient values are invalid") }, { status: 400 });
+  // درشت‌مغذی‌ها: یا هر سه با هم میان یا هیچ‌کدوم؛ هر کدوم عدد نامنفی توی بازه.
+  const rawMacros = [parsed.body?.proteinG, parsed.body?.carbsG, parsed.body?.fatG];
+  const hasMacros = rawMacros.some((v) => v !== undefined);
+  let proteinG: number | undefined, carbsG: number | undefined, fatG: number | undefined;
+  if (hasMacros) {
+    const checks = rawMacros.map((v) => checkNumber(v, "macroEntryG"));
+    const bad = checks.find((c) => !c.ok);
+    if (bad && !bad.ok) return NextResponse.json({ error: bad.error }, { status: 400 });
+    [proteinG, carbsG, fatG] = checks.map((c) => (c.ok ? c.value : 0));
   }
 
   const entry = await prisma.foodLogEntry.create({
     data: {
       userId, date, customName: clampText(customName, 80), customCalories, grams, mealType: mealType || null,
-      ...(hasMacros && macrosValid ? { proteinG, carbsG, fatG } : {}),
+      ...(hasMacros ? { proteinG, carbsG, fatG } : {}),
     },
   });
   return NextResponse.json({ ok: true, entry });

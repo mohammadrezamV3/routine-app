@@ -22,7 +22,7 @@ export function RoutineSettings() {
           {tr("بیداری", "Wake")} <b className="mono" style={{ color: "var(--accent)" }}>{wakeSleep?.wake || DEFAULT_WAKE}</b>
           {" — "}{tr("خواب", "Sleep")} <b className="mono" style={{ color: "var(--accent)" }}>{wakeSleep?.sleep || DEFAULT_SLEEP}</b>
         </div>
-        <button className="account-outline-btn" onClick={() => setEditing(true)} style={{ marginTop: 10 }}>
+        <button className="btn btn-tonal btn-sm" onClick={() => setEditing(true)} style={{ marginTop: 10 }}>
           {tr("تغییر ساعت‌ها", "Change times")}
         </button>
       </AccountOption>
