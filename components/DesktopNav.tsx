@@ -1,7 +1,7 @@
 "use client";
 
-// منوی افقی هدر برای دسکتاپ/تبلت انگلیسی (>= 1024px، html[dir="ltr"]) — مثل هدر
-// سایت‌های SaaS انگلیسی. همه‌ی لینک‌ها از همون منبع واحد navLinks.ts میان (فلگ
+// منوی افقی هدر برای دسکتاپ/تبلت (>= 1024px، هر دو زبان؛ rtl آینه‌ی ltr).
+// همه‌ی لینک‌ها از همون منبع واحد navLinks.ts میان (فلگ
 // ویژگی‌ها، قفل ماژول)، پس دقیقا هم‌خوان با کشوی همبرگری‌اند. فقط CSS (بدون
 // framer-motion): نشانگر فعال با transform می‌لغزه، پنل‌های کشویی فقط با اولین
 // هاور/فوکوس/کلیک ساخته می‌شن. زیر 1024px کل این بخش با CSS مخفیه.
@@ -18,6 +18,8 @@ type Entry = { id: string; label: string; href?: string; module?: string; childr
 type Features = Partial<Record<FeatureKey, boolean>> | null;
 
 const baseOf = (h: string) => h.split("?")[0];
+// در rtl فلش راست = آیتم قبلی (جهت دیداری)
+const rtlSign = (): 1 | -1 => (document.documentElement.dir === "rtl" ? -1 : 1);
 
 function buildEntries(features: Features, section: SectionKey | null): Entry[] {
   const links = getVisibleLinks(features, section);
@@ -147,7 +149,7 @@ export default function DesktopNav({ pathname, features, activeModules }: Props)
     return () => ro.disconnect();
   }, [measure, entries.length]);
 
-  function moveTop(from: HTMLElement, dir: 1 | -1) {
+  function moveTop(from: HTMLElement, dir: number) {
     const all = Array.from(navRef.current?.querySelectorAll<HTMLElement>(".dnav-list > li > .dnav-link") ?? []);
     const i = all.indexOf(from);
     if (i < 0) return;
@@ -173,12 +175,12 @@ export default function DesktopNav({ pathname, features, activeModules }: Props)
         e.preventDefault(); setOpenId(null);
         skipFocusOpen.current = true;
         const trg = trigger();
-        if (trg) { trg.focus(); moveTop(trg, e.key === "ArrowRight" ? 1 : -1); }
+        if (trg) { trg.focus(); moveTop(trg, (e.key === "ArrowRight" ? 1 : -1) * rtlSign()); }
       }
       return;
     }
-    if (e.key === "ArrowRight") { e.preventDefault(); moveTop(t, 1); }
-    else if (e.key === "ArrowLeft") { e.preventDefault(); moveTop(t, -1); }
+    if (e.key === "ArrowRight") { e.preventDefault(); moveTop(t, rtlSign()); }
+    else if (e.key === "ArrowLeft") { e.preventDefault(); moveTop(t, -rtlSign()); }
     else if (entry.children && (e.key === "ArrowDown" || e.key === "ArrowUp")) {
       e.preventDefault();
       focusFirst.current = true;

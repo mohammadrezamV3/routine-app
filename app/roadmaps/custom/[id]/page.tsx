@@ -222,7 +222,7 @@ export default function RoadmapDetailPage() {
           <div className="rp-ring" aria-label={tr(`${progress.pct} درصد`, `${progress.pct} percent`)}>
             <GradientRing value={progress.pct / 100} size={74} stroke={5} />
             <div className="rp-ring-text">
-              <b>{faNum(progress.pct)}٪</b>
+              <b>{faNum(progress.pct)}{tr("٪", "%")}</b>
               <span>{faNum(progress.done)}/{faNum(progress.total)}</span>
             </div>
           </div>

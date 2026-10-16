@@ -21,6 +21,7 @@ import { ROUTINE_PLAN_KEY } from "@/lib/trial";
 import { CountUp, D_EASE, GradientArc, Skel } from "./DashboardKit";
 import { money, tone } from "./DashboardTrade";
 import { tr, isEn, pick, iso } from "@/lib/i18n";
+import { focusDisplay } from "@/lib/exerciseI18n";
 
 const PHASE_ICON: Record<DayPhase, DashIconName> = { dawn: "sunrise", day: "sun", dusk: "sunset", night: "moon" };
 
@@ -179,7 +180,7 @@ export function DashboardHero({
     else parts.push(tr(`${faNum(total - completed)} برنامه‌ی دیگه تا کامل‌شدن امروز`, `${total - completed} more ${total - completed === 1 ? "program" : "programs"} to complete today`));
     // بخش روتین فقط از روتین حرف می‌زنه؛ تمرین و کالری مال بخش ورزشن
     if (section !== "routine") {
-      if (ex?.hasPlan && ex.today.isGymDay && !ex.today.done) parts.push(ex.today.focus ? tr(`تمرین امروز: ${ex.today.focus}`, `Today's workout: ${iso(ex.today.focus)}`) : tr("امروز روز تمرینه", "Today is a workout day"));
+      if (ex?.hasPlan && ex.today.isGymDay && !ex.today.done) parts.push(ex.today.focus ? tr(`تمرین امروز: ${ex.today.focus}`, `Today's workout: ${iso(focusDisplay(ex.today.focus))}`) : tr("امروز روز تمرینه", "Today is a workout day"));
       if (cal?.target) {
         const left = Math.round(cal.target.kcal - cal.today.kcal);
         parts.push(left >= 0 ? tr(`${faNum(left)} کالری تا هدف`, `${left} kcal to goal`) : tr(`${faNum(-left)} کالری بیشتر از هدف`, `${-left} kcal over goal`));

@@ -8,6 +8,7 @@ import { SmartLink as Link } from "@/components/SmartLink";
 import { m as motion } from "framer-motion";
 import { weekdayShort, weekdayName, faNum } from "@/lib/jalali";
 import type { DashCalorie, DashExercise } from "@/lib/dashboardTypes";
+import { focusDisplay, exerciseDisplayName, useExerciseEn } from "@/lib/exerciseI18n";
 import { BentoCard, CardHead, CountUp, D_EASE, EmptyState, Meter, Ring, Skel } from "./DashboardKit";
 import { DashIcon } from "./DashboardIcons";
 import { useDashAction } from "./DashboardActions";
@@ -31,6 +32,7 @@ export function DashboardExercise({ ex, loading }: { ex: DashExercise | null; lo
 }
 
 function ExerciseBody({ ex }: { ex: DashExercise }) {
+  useExerciseEn();
   const t = ex.today;
   // حلقه از حرکت‌های واقعا تیک‌خورده ساخته می‌شه، نه از «پایان تمرین»
   const frac = t.itemCount ? t.doneItems / t.itemCount : t.done ? 1 : 0;
@@ -46,7 +48,7 @@ function ExerciseBody({ ex }: { ex: DashExercise }) {
         </Ring>
         <div className="db-fit-info">
           <span className="db-fit-kicker">{t.isGymDay ? tr(`امروز، ${t.dayName}`, `Today, ${todayName}`) : tr("امروز روز استراحته", "Today is a rest day")}</span>
-          <strong className="db-fit-title">{t.isGymDay ? (t.focus ?? tr("تمرین امروز", "Today's workout")) : tr("ریکاوری و خواب کافی", "Recovery and enough sleep")}</strong>
+          <strong className="db-fit-title">{t.isGymDay ? (t.focus ? focusDisplay(t.focus) : tr("تمرین امروز", "Today's workout")) : tr("ریکاوری و خواب کافی", "Recovery and enough sleep")}</strong>
           <span className="db-fit-sub">
             <DashIcon name="flame" className="db-fit-flame" /> {tr(`${faNum(ex.streak)} جلسه‌ی پشت‌سرهم · ${faNum(ex.week.done)}/${faNum(ex.week.target)} این هفته`, `${ex.streak} ${ex.streak === 1 ? "session" : "sessions"} in a row · ${ex.week.done}/${ex.week.target} this week`)}
           </span>
@@ -72,7 +74,7 @@ function ExerciseBody({ ex }: { ex: DashExercise }) {
           {t.items.map((it, i) => (
             <motion.li key={it.name + i} className={it.done ? "is-done" : t.done ? "is-missed" : ""} initial={{ opacity: 0, y: 4 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.35 + i * 0.04 }}>
               <TickButton as="span" tone="exercise" size={18} checked={!!it.done} state={!it.done && t.done ? "missed" : "idle"} />
-              <span className="db-ex-name">{it.name}</span>
+              <span className="db-ex-name">{exerciseDisplayName(it.name)}</span>
             </motion.li>
           ))}
           {t.itemCount > t.items.length && <li className="db-ex-more">{tr(`+${faNum(t.itemCount - t.items.length)} حرکت دیگه`, `+${t.itemCount - t.items.length} more`)}</li>}

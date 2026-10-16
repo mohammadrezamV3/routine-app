@@ -323,7 +323,7 @@ export function AgentAvatar({
 
   return (
     <canvas
-      aria-label={tr(`آواتار ${seed}`, `Avatar ${seed}`)}
+      aria-label={tr(`آواتار ${seed}`, `Avatar ${seed === "؟" ? "?" : seed}`)}
       className={cn("agent-avatar rounded-full", className)}
       ref={canvasRef}
       role="img"
