@@ -50,7 +50,10 @@ export function AdminBroadcastHistory({ items, onChanged }: { items: PublicBroad
               {items.map((b) => (
                 <tr key={b.id}>
                   <td>
-                    <div>{b.title}</div>
+                    <div>
+                      {b.title}
+                      {b.titleEn && b.bodyEn && <span className="admin-badge gray" title={tr("نسخه‌ی انگلیسی دارد", "Has an English version")}> EN</span>}
+                    </div>
                     <div className="admin-muted">{b.channels.map((c) => (c === "push" ? tr("پوش", "Push") : tr("درون‌برنامه", "In-app"))).join(" + ")}</div>
                   </td>
                   <td>
