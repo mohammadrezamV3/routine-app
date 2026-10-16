@@ -1,27 +1,22 @@
-// تصویرهای لوگوی بخش‌ها (هدر + پنجره‌ی SectionSwitcher). مسیرها یک جا تا هدر، پنجره و گرم‌کردن کش
-// دقیقا یک URL رو بخونن (کش مرورگر روی URL کامله؛ next/image با /_next/image یک URL دیگه می‌ساخت
-// و اولین بار هم از بهینه‌ساز رد می‌شد).
-import { SECTION_KEYS, SECTION_META } from "@/lib/sections";
+// تصویرهای لوگوی هدر (نشان A رنگی بخش در موبایل، حروف ARION در دسکتاپ). مسیرها و نقطه‌ی شکست
+// CSS یک جا تا هدر (components/NavDrawer.tsx) و preload سمت سرور (app/layout.tsx) دقیقا یک URL و
+// یک media رو بخونن؛ کش و preload مرورگر روی URL کامله.
+// نسخه‌های *-sm.webp اندازه‌ی واقعی نمایش (حداکثر 3x) رو دارن؛ PNG اصلی‌ها دست‌نخورده می‌مونن.
+import type { SectionKey } from "@/lib/sections";
 
-export const SECTION_WORDMARK_DARK = "/images/sections/wordmark-dark.png";
-export const SECTION_WORDMARK_LIGHT = "/images/sections/wordmark-light.webp";
+/** نقطه‌ی شکست موبایل/دسکتاپ هدر (components/site-header.css: max-width:700px) */
+export const HEADER_MOBILE_MEDIA = "(max-width: 700px)";
+export const HEADER_DESKTOP_MEDIA = "(min-width: 701px)";
 
-let warmed: HTMLImageElement[] | null = null;
-
-/**
- * سه نشان بخش و هر دو نسخه‌ی حروف ARION رو از قبل می‌گیره و دیکد می‌کنه تا اولین باز شدن پنجره‌ی بخش‌ها
- * هر سه ردیف رو هم‌زمان (بدون ظاهر شدن دیرهنگام لوگوها) رنگ کنه. بی‌خطر و ایدمپوتنته؛ فقط سمت کلاینت.
- * ارجاع‌ها نگه داشته می‌شن تا دانلود/دیکد وسط راه رها نشه.
- */
-export function warmSectionAssets(): void {
-  if (warmed || typeof window === "undefined" || typeof Image === "undefined") return;
-  warmed = [];
-  const urls = [...SECTION_KEYS.map((k) => SECTION_META[k].icon), SECTION_WORDMARK_DARK, SECTION_WORDMARK_LIGHT];
-  for (const src of urls) {
-    const img = new Image();
-    img.decoding = "async";
-    img.src = src;
-    warmed.push(img);
-    try { img.decode?.().catch(() => {}); } catch { /* مرورگر قدیمی */ }
-  }
+/** نشان A رنگی بخش، 100x85 (موبایل) */
+export function sectionIconSm(key: SectionKey): string {
+  return `/images/sections/icon-${key}-sm.webp`;
 }
+
+/** حروف ARION، 264px عرض: سفید برای تم تیره، تیره برای تم روشن (دسکتاپ) */
+export function sectionWordmarkSm(theme: "dark" | "light"): string {
+  return theme === "light" ? "/images/sections/wordmark-light-sm.webp" : "/images/sections/wordmark-dark-sm.webp";
+}
+
+/** پیکسل شفاف 1x1 برای <img> داخل <picture> وقتی media منبع جاری جور نیست (از دانلود بی‌مورد جلوگیری می‌کنه) */
+export const BLANK_PIXEL = "data:image/gif;base64,R0lGODlhAQABAAAAACH5BAEKAAEALAAAAAABAAEAAAICTAEAOw==";

@@ -1,12 +1,12 @@
 "use client";
 
-// بخش جاری (routine/trade/workout یا null = همه‌ی بخش‌ها) برای کامپوننت‌های کلاینت.
+// بخش جاری (همیشه یکی از routine/trade/workout) برای کامپوننت‌های کلاینت.
 // مقدار از layout ریشه (هدر middleware، سمت سرور) میاد، پس رندر سرور و هیدریت یکی‌ان — lib/sections.ts
 import { createContext, useContext, useEffect } from "react";
 import { usePathname } from "next/navigation";
-import { pathAllowedIn, type SectionKey } from "@/lib/sections";
+import { DEFAULT_SECTION, pathAllowedIn, type SectionKey } from "@/lib/sections";
 
-const SectionContext = createContext<SectionKey | null>(null);
+const SectionContext = createContext<SectionKey>(DEFAULT_SECTION);
 
 const RELOAD_KEY = "arion:sectionSync";
 
@@ -15,7 +15,7 @@ const RELOAD_KEY = "arion:sectionSync";
  * درخواست RSC کوکی بخش رو عوض کرده؛ اینجا یک بارگذاری کامل می‌کنیم تا layout (data-section، پالت،
  * منو) با بخش تازه رندر بشه. نگهبان حلقه: برای یک آدرس در ۱۰ ثانیه فقط یک بار.
  */
-function SectionSync({ section }: { section: SectionKey | null }) {
+function SectionSync({ section }: { section: SectionKey }) {
   const pathname = usePathname();
   useEffect(() => {
     if (!pathname || pathAllowedIn(section, pathname)) return;
@@ -33,7 +33,7 @@ function SectionSync({ section }: { section: SectionKey | null }) {
   return null;
 }
 
-export function SectionProvider({ section, children }: { section: SectionKey | null; children: React.ReactNode }) {
+export function SectionProvider({ section, children }: { section: SectionKey; children: React.ReactNode }) {
   return (
     <SectionContext.Provider value={section}>
       <SectionSync section={section} />
@@ -42,6 +42,6 @@ export function SectionProvider({ section, children }: { section: SectionKey | n
   );
 }
 
-export function useSection(): SectionKey | null {
+export function useSection(): SectionKey {
   return useContext(SectionContext);
 }

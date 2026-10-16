@@ -4,6 +4,7 @@ import {
   SECTION_COOKIE,
   SECTION_COOKIE_MAX_AGE,
   SECTION_HEADER,
+  PATH_HEADER,
   isOwnHost,
   isSectionHostingEnabled,
   resolveEffectiveSection,
@@ -34,9 +35,9 @@ const SAFE_METHODS = new Set(["GET", "HEAD", "OPTIONS"]);
 // مرورگر نیست و Origin ندارند (کران، EA، وب‌پوش).
 const EXEMPT_PREFIXES = ["/api/auth/", "/api/cron/", "/api/mt/", "/api/push/"];
 
-// آیکون اپ هر بخش: روی زیردامنه‌ی بخش، فایل‌های آیکون پیش‌فرض سایت (app/icon.png،
-// app/apple-icon.png و مسیرهایی که iOS خودش بدون لینک امتحان می‌کنه) با آیکون رنگی همون
-// بخش جایگزین می‌شن (rewrite، نه ریدایرکت). روی دامنه‌ی اصلی هیچ تغییری نیست.
+// آیکون اپ هر بخش: فایل‌های آیکون پیش‌فرض سایت (app/icon.png، app/apple-icon.png و مسیرهایی که
+// iOS خودش بدون لینک امتحان می‌کنه) با آیکون رنگی یکی از سه بخش جایگزین می‌شن (rewrite، نه
+// ریدایرکت). بخش آیکون = بخش میزبان، وگرنه (دامنه‌ی اصلی) بخش موثر؛ آیکون عمومی/بی‌بخش وجود نداره.
 const SECTION_ICON_PATHS: Record<string, number> = {
   "/icon.png": 256,
   "/apple-icon.png": 180,
@@ -86,21 +87,22 @@ export function middleware(req: NextRequest) {
   // هدر بخش هیچ‌وقت از کلاینت قبول نمی‌شه: همیشه پاک و از روی کوکی/میزبان دوباره ساخته می‌شه.
   const host = requestHost(req);
   const hostSection = sectionFromHost(host);
-  let section: SectionKey | null = resolveEffectiveSection(hostSection, req.cookies.get(SECTION_COOKIE)?.value);
+  let section: SectionKey = resolveEffectiveSection(hostSection, req.cookies.get(SECTION_COOKIE)?.value);
   let switchedTo: SectionKey | null = null;
-  const hadSpoofed = req.headers.has(SECTION_HEADER);
   const proto = req.headers.get("x-forwarded-proto")?.split(",")[0]?.trim() || req.nextUrl.protocol.replace(/:$/, "");
 
   const isRead = req.method === "GET" || req.method === "HEAD";
 
   if (isRead && !isApi) {
-    // آیکون اپ رنگی هر بخش (فقط روی زیردامنه‌ی بخش؛ هویت اپ نصب‌شده تابع میزبانه، نه کوکی)
+    // آیکون اپ رنگی هر بخش: روی زیردامنه میزبان برنده‌ست (هویت اپ نصب‌شده تابع میزبانه، نه کوکی)،
+    // روی دامنه‌ی اصلی بخش موثر (کوکی، وگرنه روتین)
     const iconSize = SECTION_ICON_PATHS[pathname];
-    if (enabled && hostSection && iconSize) {
+    if (iconSize) {
       const url = req.nextUrl.clone();
-      url.pathname = `/images/sections/app/${hostSection}-${iconSize}.png`;
+      url.pathname = `/images/sections/app/${hostSection ?? section}-${iconSize}.png`;
       url.search = "";
-      return NextResponse.rewrite(url);
+      // دامنه‌ی اصلی: آیکون تابع کوکی بخشه، پس کش مرورگر/CDN باید با کوکی کلید بخوره (Vary)
+      return NextResponse.rewrite(url, hostSection ? undefined : { headers: { Vary: "Cookie" } });
     }
 
     // دامنه‌ی اصلی: صفحه‌ی فرود سئو به زیردامنه‌ی صاحبش ۳۰۸ می‌شه (یکی‌شدن سئو). تنها ریدایرکت بین میزبان‌ها.
@@ -122,14 +124,12 @@ export function middleware(req: NextRequest) {
 
   const forward = () => {
     let res: NextResponse;
-    if (!section && !hadSpoofed) {
-      res = NextResponse.next();
-    } else {
-      const headers = new Headers(req.headers);
-      headers.delete(SECTION_HEADER);
-      if (section) headers.set(SECTION_HEADER, section);
-      res = NextResponse.next({ request: { headers } });
-    }
+    const headers = new Headers(req.headers);
+    headers.delete(SECTION_HEADER);
+    headers.set(SECTION_HEADER, section);
+    // مسیر درخواست برای layout ریشه (مثلا preload لوگوی هدر فقط وقتی هدر رندر می‌شه)؛ همیشه از خود middleware
+    headers.set(PATH_HEADER, pathname);
+    res = NextResponse.next({ request: { headers } });
     if (switchedTo) {
       res.cookies.set(SECTION_COOKIE, switchedTo, { path: "/", maxAge: SECTION_COOKIE_MAX_AGE, sameSite: "lax", secure: proto === "https" });
     }

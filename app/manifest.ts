@@ -1,9 +1,8 @@
 import type { MetadataRoute } from "next";
-import { BRAND_FA } from "@/lib/brand";
-import { THEME_COLORS, themeColorFor } from "@/lib/themeColor";
+import { themeColorFor } from "@/lib/themeColor";
 import { tr } from "@/lib/i18n";
-import { getHostSection } from "@/lib/sectionServer";
-import { SECTION_META, isSectionHostingEnabled, type SectionKey } from "@/lib/sections";
+import { getIconSection } from "@/lib/sectionServer";
+import { SECTION_META, type SectionKey } from "@/lib/sections";
 
 // آیکون رنگی هر بخش برای «افزودن به صفحه‌ی اصلی» (public/images/sections/app/، پس‌زمینه‌ی سرمه‌ای
 // مثل app/icon.png و نشان A به رنگ بخش). maskable-512 برای اندروید با ناحیه‌ی امن بزرگ‌تره.
@@ -47,57 +46,24 @@ function sectionShortcuts(key: SectionKey): MetadataRoute.Manifest["shortcuts"] 
 // Next.js با همین فایل (app/manifest.ts) خودش تگ <link rel="manifest">
 // رو توی <head> تزریق می‌کنه — نیازی به کار دستی نیست.
 export default function manifest(): MetadataRoute.Manifest {
-  // روی زیردامنه‌ی هر بخش، اپ نصب‌شده اسم و آیکون و میان‌برهای همون بخش رو داره. بدون
-  // NEXT_PUBLIC_SECTION_BASE_DOMAIN headers() صدا زده نمی‌شه و خروجی دقیقا مثل قبله.
-  const section = isSectionHostingEnabled() ? getHostSection() : null;
-  if (section) {
-    const meta = SECTION_META[section];
-    const name = `${tr("آریون", "Arion")} ${meta.label}`;
-    return {
-      id: "/",
-      name,
-      short_name: name,
-      description: meta.tagline,
-      start_url: "/",
-      display: "standalone",
-      // اسپلش و نوار اپ نصب‌شده هم‌رنگ پالت شب همون بخش (ترید/تمرین؛ روتین = رنگ پایه)
-      background_color: themeColorFor("dark", section),
-      theme_color: themeColorFor("dark", section),
-      dir: tr("rtl", "ltr") as "rtl" | "ltr",
-      lang: tr("fa", "en"),
-      icons: sectionIcons(section),
-      shortcuts: sectionShortcuts(section),
-    };
-  }
+  // اپ نصب‌شده همیشه یکی از سه بخشه: روی زیردامنه‌ی بخش همون بخش (میزبان برنده‌ست)، روی دامنه‌ی اصلی
+  // بخش موثر (کوکی انتخاب کاربر، وگرنه روتین). آیکون عمومی/بی‌بخش وجود نداره.
+  const section = getIconSection();
+  const meta = SECTION_META[section];
+  const name = `${tr("آریون", "Arion")} ${meta.label}`;
   return {
     id: "/",
-    name: BRAND_FA,
-    short_name: BRAND_FA,
-    description:
-      "روتین روزانه و هفتگی، پیگیری عادت‌ها و کارها، برنامه‌ی بدنسازی با AI، کالری‌شماری، " +
-      "ژورنال معاملات ترید و رودمپ یادگیری — همه در یک اپ فارسی.",
+    name,
+    short_name: name,
+    description: meta.tagline,
     start_url: "/",
     display: "standalone",
-    // اسپلش‌اسکرین اندروید (قبل از اولین پینت صفحه) دقیقا با همین رنگ
-    // کشیده می‌شه. قبلا #0a0f0d بود — نه --bg (#0E1011) نه رنگ متای
-    // theme-color — یعنی هر بار باز کردن اپ نصب‌شده اول یک پس‌زمینه‌ی
-    // دیگه (اسپلش) دیده می‌شد و بعد صفحه با رنگ خودش. حالا از همون منبع
-    // واحد رنگ تم می‌آد (تم پیش‌فرض سرور = تاریک).
-    background_color: THEME_COLORS.dark,
-    theme_color: THEME_COLORS.dark,
-    dir: "rtl",
-    lang: "fa",
-    categories: ["productivity", "lifestyle", "health", "finance", "education"],
-    icons: [
-      { src: "/icon.png", sizes: "256x256", type: "image/png", purpose: "any" },
-      { src: "/apple-icon.png", sizes: "180x180", type: "image/png", purpose: "any" },
-    ],
-    // فقط مسیرهای واقعا عمومی/مجاز — نه صفحاتی مثل /roadmaps که فعلا
-    // کاملا مخصوص سوپریوزرند (lib/requireSuperAdmin.ts).
-    shortcuts: [
-      { name: "روتین هفتگی", url: "/weekly" },
-      { name: "بدنسازی و تغذیه", url: "/exercise" },
-      { name: "ژورنال ترید", url: "/trade" },
-    ],
+    // اسپلش و نوار اپ نصب‌شده هم‌رنگ پالت شب همون بخش (ترید/تمرین؛ روتین = رنگ پایه)
+    background_color: themeColorFor("dark", section),
+    theme_color: themeColorFor("dark", section),
+    dir: tr("rtl", "ltr") as "rtl" | "ltr",
+    lang: tr("fa", "en"),
+    icons: sectionIcons(section),
+    shortcuts: sectionShortcuts(section),
   };
 }

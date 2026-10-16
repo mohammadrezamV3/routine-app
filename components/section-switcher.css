@@ -40,11 +40,11 @@ body[data-theme="light"] .ssw-panel::before{ opacity:.55; }
 .ssw-list{ display:flex; flex-direction:column; gap:2px; }
 
 /* ردیف‌ها لینک‌ان (نه button) تا ریست شیشه‌ای سراسری دکمه‌ها روشون نیفته.
-   هر ردیف همون لوگوی رسمی هدره: [نشان] [ARION] | [بخش]، همیشه چپ به راست */
+   هر ردیف فقط متنه: ARION | بخش (بدون تصویر)، همیشه چپ به راست */
 .ssw-row{
   --tl-h:24px;
   direction:ltr; display:flex; align-items:center; justify-content:flex-start; gap:calc(var(--tl-h) * .3); min-width:0;
-  height:42px; padding:0 12px; border-radius:13px; box-sizing:border-box;
+  height:38px; padding:0 14px; border-radius:13px; box-sizing:border-box;
   border:1px solid transparent; text-decoration:none; color:var(--text);
   font-family:var(--font-latin), var(--font-vazir), sans-serif;
   cursor:pointer; -webkit-tap-highlight-color:transparent;
@@ -65,12 +65,10 @@ body[data-theme="light"] .ssw-panel::before{ opacity:.55; }
   background:color-mix(in srgb, var(--sec-mid) 11%, transparent);
 }
 
-.ssw-icon{ width:calc(var(--tl-h) * 256 / 217); height:var(--tl-h); flex-shrink:0; }
-.ssw-wm{ position:relative; display:block; flex-shrink:0; height:calc(var(--tl-h) * .4); aspect-ratio:358/49; }
-.ssw-wm img{ position:absolute; inset:0; width:100%; height:100%; object-fit:contain; }
-.ssw-wm-light{ display:none; }
-body[data-theme="light"] .ssw-wm-dark{ display:none; }
-body[data-theme="light"] .ssw-wm-light{ display:block; }
+.ssw-brand{
+  flex-shrink:0; color:var(--text);
+  font-size:calc(var(--tl-h) * .42); font-weight:800; line-height:1.4; letter-spacing:.2em; text-transform:uppercase;
+}
 .ssw-sep{ flex-shrink:0; width:1px; height:calc(var(--tl-h) * .64); background:color-mix(in srgb, var(--text) 30%, transparent); }
 .ssw-word{
   min-width:0; overflow:hidden; text-overflow:ellipsis; white-space:nowrap;

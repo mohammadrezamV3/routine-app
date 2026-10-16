@@ -72,7 +72,7 @@ describe("middleware: تعویض خودکار بخش بدون عوض‌شدن د
     const res = middleware(req("https://trade.arionapp.ir/dashboard", { headers: { host: "trade.arionapp.ir", cookie: "arion_section=hacker" } }));
     expect(sectionHeader(res)).toBe("trade");
     const apex = middleware(req("https://arionapp.ir/dashboard", { headers: { host: "arionapp.ir", cookie: "arion_section=hacker" } }));
-    expect(sectionHeader(apex)).toBeNull();
+    expect(sectionHeader(apex)).toBe("routine");
   });
 
   it("کوکی بخش بر مسیر بسته اثر می‌ذاره: با کوکی routine، مسیر /exercise به workout سوییچ می‌شه", async () => {
@@ -122,14 +122,15 @@ describe("middleware: تعویض خودکار بخش بدون عوض‌شدن د
     expect(cookieOf(res)).toMatch(/secure/i);
   });
 
-  it("بدون env: میزبان بخشی نیست ولی کوکی کار می‌کنه (تعویض روی یک دامنه)", async () => {
+  it("بدون env: میزبان بخشی نیست، پیش‌فرض روتین و کوکی کار می‌کنه (تعویض روی یک دامنه)", async () => {
     const { middleware } = await load(null);
     const plain = middleware(req("https://arionapp.ir/dashboard", { headers: { host: "arionapp.ir" } }));
-    expect(sectionHeader(plain)).toBeNull();
+    expect(sectionHeader(plain)).toBe("routine");
+    expect(cookieOf(plain)).toBe("");
     const free = middleware(req("https://arionapp.ir/trade", { headers: { host: "arionapp.ir" } }));
     expect(free.status).toBe(200);
-    expect(sectionHeader(free)).toBeNull();
-    expect(cookieOf(free)).toBe("");
+    expect(sectionHeader(free)).toBe("trade");
+    expect(cookieOf(free)).toContain("arion_section=trade");
     const withCookie = middleware(req("https://arionapp.ir/exercise", { headers: { host: "arionapp.ir", cookie: "arion_section=trade" } }));
     expect(sectionHeader(withCookie)).toBe("workout");
     expect(cookieOf(withCookie)).toContain("arion_section=workout");
@@ -180,19 +181,20 @@ describe("middleware: هدر بخش و آیکون", () => {
     expect(res.headers.get("x-middleware-request-x-arion-section")).toBe("trade");
     // کوکی هم نمی‌تونه هدر جعلی رو جایگزین کنه: فقط مقدار معتبر کوکی اعمال می‌شه
     const apex = middleware(req("https://arionapp.ir/dashboard", { headers: { host: "arionapp.ir", "x-arion-section": "workout" } }));
-    // دامنه‌ی اصلی: هدر جعلی حذف می‌شه (override ست‌شده خالی نیست)
-    expect(apex.headers.get("x-middleware-request-x-arion-section")).toBeNull();
-    expect(apex.headers.get("x-middleware-override-headers") || "").not.toContain("x-arion-section");
+    // دامنه‌ی اصلی: هدر جعلی نادیده گرفته می‌شه و بخش پیش‌فرض (روتین) ست می‌شه
+    expect(apex.headers.get("x-middleware-request-x-arion-section")).toBe("routine");
   });
 
-  it("آیکون‌ها روی زیردامنه rewrite می‌شن و روی دامنه‌ی اصلی نه", async () => {
+  it("آیکون‌ها همیشه rewrite می‌شن: زیردامنه = بخش میزبان، دامنه‌ی اصلی = بخش موثر (کوکی، وگرنه روتین)", async () => {
     const { middleware } = await load("arionapp.ir");
     const icon = middleware(req("https://trade.arionapp.ir/icon.png?abc", { headers: { host: "trade.arionapp.ir" } }));
     expect(icon.headers.get("x-middleware-rewrite")).toContain("/images/sections/app/trade-256.png");
     const apple = middleware(req("https://workout.arionapp.ir/apple-touch-icon-precomposed.png", { headers: { host: "workout.arionapp.ir" } }));
     expect(apple.headers.get("x-middleware-rewrite")).toContain("/images/sections/app/workout-180.png");
     const apex = middleware(req("https://arionapp.ir/icon.png", { headers: { host: "arionapp.ir" } }));
-    expect(apex.headers.get("x-middleware-rewrite")).toBeNull();
+    expect(apex.headers.get("x-middleware-rewrite")).toContain("/images/sections/app/routine-256.png");
+    const apexCookie = middleware(req("https://arionapp.ir/apple-icon.png", { headers: { host: "arionapp.ir", cookie: "arion_section=workout" } }));
+    expect(apexCookie.headers.get("x-middleware-rewrite")).toContain("/images/sections/app/workout-180.png");
     // هویت اپ نصب‌شده تابع میزبانه، نه کوکی بخش
     const cookied = middleware(req("https://trade.arionapp.ir/icon.png", { headers: { host: "trade.arionapp.ir", cookie: "arion_section=workout" } }));
     expect(cookied.headers.get("x-middleware-rewrite")).toContain("/images/sections/app/trade-256.png");

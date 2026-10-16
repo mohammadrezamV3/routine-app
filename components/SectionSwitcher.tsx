@@ -12,13 +12,12 @@ import { SmartLink as Link } from "./SmartLink";
 import { tr } from "@/lib/i18n";
 import { SECTION_META, type SectionKey } from "@/lib/sections";
 import { switchSectionAndGo } from "@/lib/sectionClient";
-import { SECTION_WORDMARK_DARK, SECTION_WORDMARK_LIGHT, warmSectionAssets } from "@/lib/sectionAssets";
 import "./section-switcher.css";
 
 type Props = {
   state: "open" | "closed";
   anchorRef: React.RefObject<HTMLElement>;
-  section: SectionKey | null;
+  section: SectionKey;
   signedIn: boolean;
   onClose: () => void;
 };
@@ -51,7 +50,6 @@ export default function SectionSwitcher({ state, anchorRef, section, signedIn, o
   const open = state === "open";
 
   useLayoutEffect(() => { setPos(measure(anchorRef.current)); }, [anchorRef]);
-  useEffect(() => { warmSectionAssets(); }, []);
   useEffect(() => {
     const on = () => setPos(measure(anchorRef.current));
     window.addEventListener("resize", on);
@@ -134,13 +132,8 @@ export default function SectionSwitcher({ state, anchorRef, section, signedIn, o
           const current = section === key;
           const inner = (
             <>
-              {/* <img> ساده و eager (نه next/image): بدون بهینه‌ساز و بدون lazy، همون URLی که warmSectionAssets
-                  از قبل گرفته؛ پس اولین باز شدن هر سه ردیف رو هم‌زمان با تصویر رنگ می‌کنه */}
-              <img src={meta.icon} alt="" width={256} height={217} loading="eager" decoding="sync" draggable={false} className="ssw-icon" />
-              <span className="ssw-wm" aria-hidden="true">
-                <img src={SECTION_WORDMARK_DARK} alt="" width={358} height={49} loading="eager" decoding="sync" draggable={false} className="ssw-wm-dark" />
-                <img src={SECTION_WORDMARK_LIGHT} alt="" width={328} height={46} loading="eager" decoding="sync" draggable={false} className="ssw-wm-light" />
-              </span>
+              {/* فقط متن (بدون هیچ تصویر): اسم اپ + خط نازک + اسم بخش به رنگ همون بخش، همیشه چپ به راست */}
+              <span className="ssw-brand" aria-hidden="true">ARION</span>
               <span className="ssw-sep" aria-hidden="true" />
               <span className="ssw-word" aria-hidden="true">{meta.wordmark}</span>
             </>

@@ -39,9 +39,6 @@ html[data-palette-set]:not([data-palette="routine"]) .logo-tint{
   -webkit-mask:url(/images/logo-icon-dark-theme.png) center / contain no-repeat;
   mask:url(/images/logo-icon-dark-theme.png) center / contain no-repeat;
 }
-/* لوگوی هدر دامنه‌ی اصلی: A از تصویر قفل بریده می‌شه (قفل همیشه چپ به راسته، پس بریدن فیزیکی درسته)
-   و جاش A هم‌رنگ پالت میاد؛ حروف ARION و شعار دست‌نخورده می‌مونن. 32% وسط فاصله‌ی A و حروفه. */
-html[data-palette-set]:not([data-palette="routine"]) .tl-apex .topbar-logo-lockup{ clip-path:inset(0 0 0 32%); }
 /* صفحه‌های ورود: به‌جای تصویر نشان، فقط همون A هم‌رنگ */
 html[data-palette-set]:not([data-palette="routine"]) .auth-brand-mark > img{ display:none; }
 html[data-palette-set]:not([data-palette="routine"]) .auth-brand-mark > .logo-tint{ inset:0; width:100%; aspect-ratio:auto; }

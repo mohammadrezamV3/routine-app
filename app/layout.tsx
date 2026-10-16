@@ -56,7 +56,8 @@ import { getLocale } from "@/lib/i18nServer";
 import { dirOf, isEn } from "@/lib/i18n";
 import { I18nProvider } from "@/components/I18nProvider";
 import { SectionProvider } from "@/components/SectionProvider";
-import { getSection } from "@/lib/sectionServer";
+import { getRequestPath, getSection } from "@/lib/sectionServer";
+import { HEADER_DESKTOP_MEDIA, HEADER_MOBILE_MEDIA, sectionIconSm, sectionWordmarkSm } from "@/lib/sectionAssets";
 import {
   PALETTE_COOKIE, PALETTE_CUSTOM_COOKIE, customPaletteCss, isPaletteSetting, normalizeHex, paletteMetaColors, resolvePalette,
   type PaletteSetting,
@@ -314,13 +315,19 @@ export default async function RootLayout({ children }: { children: React.ReactNo
     getActiveEventThemeId().catch((): string | null => null),
   ]);
   const locale = getLocale();
-  // بخش زیردامنه (routine/trade/workout)؛ null = دامنه‌ی اصلی با همه‌ی بخش‌ها — lib/sections.ts
+  // بخش موثر (کوکی، میزبان، وگرنه روتین)؛ همیشه یکی از routine/trade/workout — lib/sections.ts
   const section = getSection();
   // پالت موثر (تنظیم کاربر یا پالت بخش): از اولین بایت HTML روی <html data-palette> — بدون فلش.
   // پالت سفارشی: CSS فقط از هگز اعتبارسنجی‌شده ساخته می‌شه (lib/palette.ts)، رشته‌ی کاربر وارد نمی‌شه.
   const palette = resolvePalette(paletteSetting, paletteCustom, section);
   const customCss = palette === "custom" ? customPaletteCss(paletteCustom) : "";
   const customMeta = palette === "custom" ? paletteMetaColors(paletteCustom) : null;
+  // لوگوی هدر (components/NavDrawer.tsx) از اولین پینت: preload دقیقا همون تصویرهای هدر برای بخش و تم جاری،
+  // با همان media نقطه‌ی شکست CSS (فقط یکی از دو تصویر دانلود می‌شه). هدر روی /auth و /admin نیست. نشان A
+  // با پالت صریح غیر روتین جاش .logo-tint می‌آد (CSS)، پس اون‌جا preload نمی‌شه.
+  const reqPath = getRequestPath() ?? "";
+  const headerLogoShown = !(reqPath.startsWith("/auth") || reqPath.startsWith("/admin"));
+  const iconTinted = paletteSetting !== "auto" && palette !== "routine";
   return (
     // data-theme روی html هم هست (نه فقط body): پس‌زمینه‌ی خود <html> همونیه
     // که سافاری توی ناحیه‌ی امن (زیر ناچ / بالای نوار خانه) و موقع اورراسکرول
@@ -347,6 +354,12 @@ export default async function RootLayout({ children }: { children: React.ReactNo
             دلیلش lib/themeColor.ts)، پس دوباره‌تزریق نمی‌شه و
             syncThemeColorMeta همین یکی رو آپدیت می‌کنه. */}
         <meta name="theme-color" content={themeColorFor(theme, section, !!eventThemeId, palette, customMeta)} />
+        {headerLogoShown && (
+          <>
+            {!iconTinted && <link rel="preload" as="image" href={sectionIconSm(section)} media={HEADER_MOBILE_MEDIA} fetchPriority="high" />}
+            <link rel="preload" as="image" href={sectionWordmarkSm(theme)} media={HEADER_DESKTOP_MEDIA} fetchPriority="high" />
+          </>
+        )}
         {customCss && <style id="arion-palette-custom" dangerouslySetInnerHTML={{ __html: customCss }} />}
         <script dangerouslySetInnerHTML={{ __html: EVENT_PREVIEW_SCRIPT }} />
         {/* تم آزمایشی ادمین (lib/adminTheme.ts) — قبل از اولین پینت */}

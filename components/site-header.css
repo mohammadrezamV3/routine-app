@@ -206,8 +206,6 @@ body[data-theme] .topbar-logo-lockup-wrap{
   direction:ltr; display:inline-flex; align-items:center; gap:6px;
   height:auto; aspect-ratio:auto; min-width:0;
 }
-.tl-apex{ position:relative; display:block; flex-shrink:0; height:22px; aspect-ratio:256/63; }
-@media (min-width:701px){ .tl-apex{ height:30px; } }
 .tl-chev{
   flex-shrink:0; display:block; width:13px; height:13px; background:none;
   color:var(--muted); opacity:.85; transform-origin:50% 50%;
@@ -231,9 +229,10 @@ body[data-theme] .topbar-logo-lockup-wrap.topbar-logo-section{
 @media (min-width:701px){ body[data-theme] .topbar-logo-lockup-wrap.topbar-logo-section{ --tl-h:30px; max-width:none; } }
 .tls-word{ position:relative; display:block; flex-shrink:0; height:calc(var(--tl-h) * .4); aspect-ratio:358/49; }
 .tls-icon{ display:none; position:relative; flex-shrink:0; height:var(--tl-h); aspect-ratio:256/217; }
-.tls-icon > img{ display:block; width:100%; height:100%; }
-/* پالت صریح: همون A هم‌رنگ پالت (مثل دامنه‌ی اصلی) به‌جای نشان رنگ بخش */
-html[data-palette-set]:not([data-palette="routine"]) .tls-icon > img{ display:none; }
+.tls-icon picture{ display:block; width:100%; height:100%; }
+.tls-icon img{ display:block; width:100%; height:100%; }
+/* پالت صریح: همون A هم‌رنگ پالت به‌جای نشان رنگ بخش */
+html[data-palette-set]:not([data-palette="routine"]) .tls-icon picture{ display:none; }
 .tls-sep{ flex-shrink:0; width:1px; height:calc(var(--tl-h) * .64); background:color-mix(in srgb, var(--text) 30%, transparent); }
 .tls-label{
   min-width:0; overflow:hidden; text-overflow:ellipsis; white-space:nowrap;
