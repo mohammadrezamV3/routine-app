@@ -1,4 +1,5 @@
 import { tr } from "./i18n";
+import { NUMBER_LIMITS } from "./numberLimits";
 
 // خواب — منطق خالص مشترک کلاینت و سرور (بدون fetch/prisma). صفحه و سیستم
 // جدای خودش (/sleep)، جدا از صفحه‌ی روتین.
@@ -29,8 +30,9 @@ export type SleepRecord = {
   tags?: string[];
 };
 
-export const SLEEP_MIN_MIN = 30;
-export const SLEEP_MAX_MIN = 20 * 60;
+// سقف و کف‌ها از جدول مشترک می‌آن (lib/numberLimits.ts)
+export const SLEEP_MIN_MIN = NUMBER_LIMITS.sleepDuration.min;
+export const SLEEP_MAX_MIN = NUMBER_LIMITS.sleepDuration.max;
 /** بازه‌ی سالم (دقیقه) — هم‌راستا با اچیومنت «خواب کافی» */
 export const SLEEP_GOAL_MIN = 7 * 60;
 export const SLEEP_GOAL_MAX = 9 * 60;
@@ -140,9 +142,9 @@ export function summarizeSleep(entries: SleepRecord[]): SleepSummary {
 
 // ── بازسازی بخش خواب: امتیاز، تحلیل‌ها، چرخه‌ها ─────────────────────────────
 
-export const LATENCY_MAX = 240;
-export const AWAKENINGS_MAX = 20;
-export const NAP_MAX = 240;
+export const LATENCY_MAX = NUMBER_LIMITS.sleepLatency.max;
+export const AWAKENINGS_MAX = NUMBER_LIMITS.sleepAwakenings.max;
+export const NAP_MAX = NUMBER_LIMITS.sleepNap.max;
 
 /** عوامل قابل برچسب‌زدن روی هر شب — effect انتظار کلی (فقط برای رنگ/ترتیب UI) */
 export const SLEEP_TAGS = [

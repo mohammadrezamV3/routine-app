@@ -22,6 +22,7 @@ import { hasSeenCalorieTutorial } from "@/lib/tutorialSeen";
 import { getBodyMetrics, isWeightStale, saveBodyMetrics } from "@/lib/bodyMetrics";
 import { useDashboardPrefs } from "@/lib/dashboardPrefs";
 import { NumberInput } from "./NumberInput";
+import { readTyped, type LimitKey } from "@/lib/numberLimits";
 import { reportLiveError, useLiveRefresh } from "@/lib/liveSync";
 import { Spinner } from "./Spinner";
 import { tr } from "@/lib/i18n";
@@ -189,6 +190,14 @@ export function CaloriePanel() {
     if (!goalHeight || !goalWeight) { setGoalError(tr("قد و وزن لازمه", "Height and weight are required")); return; }
     if (needsAge && !age) { setGoalError(tr("چون تاریخ تولدت توی حساب ثبت نشده، سنت رو وارد کن", "Your birth date is not saved on your account, so please enter your age")); return; }
 
+    // قد/وزن/سن با جدول مشترک (lib/numberLimits.ts) سنجیده می‌شن؛ سرور هم دوباره می‌سنجه
+    const specs: [string, LimitKey][] = [[goalHeight, "heightCm"], [goalWeight, "weightKg"]];
+    if (needsAge) specs.push([age, "ageYears"]);
+    for (const [text, key] of specs) {
+      const r = readTyped(text, key);
+      if (!r.ok) { setGoalError(r.error); return; }
+    }
+
     setGoalError(null);
     setSavingGoal(true);
     const res = await fetch("/api/calorie/target", {
@@ -299,16 +308,16 @@ export function CaloriePanel() {
           <div style={{ display: "flex", gap: 10, marginTop: 14 }}>
             <div style={{ flex: 1 }}>
               <label className="exercise-form-label">{tr("قد (سانتی‌متر)", "Height (cm)")}</label>
-              <NumberInput className="wsearch-newform-name" value={goalHeight} onChange={(v) => setGoalHeight(v)} />
+              <NumberInput className="wsearch-newform-name" limit="heightCm" value={goalHeight} onChange={(v) => setGoalHeight(v)} />
             </div>
             <div style={{ flex: 1 }}>
               <label className="exercise-form-label">{tr("وزن (کیلوگرم)", "Weight (kg)")}</label>
-              <NumberInput className="wsearch-newform-name" value={goalWeight} onChange={(v) => setGoalWeight(v)} />
+              <NumberInput className="wsearch-newform-name" limit="weightKg" value={goalWeight} onChange={(v) => setGoalWeight(v)} />
             </div>
             {needsAge && (
               <div style={{ flex: 1 }}>
                 <label className="exercise-form-label">{tr("سن", "Age")}</label>
-                <NumberInput className="wsearch-newform-name" value={age} onChange={(v) => setAge(v)} />
+                <NumberInput className="wsearch-newform-name" limit="ageYears" value={age} onChange={(v) => setAge(v)} />
               </div>
             )}
           </div>

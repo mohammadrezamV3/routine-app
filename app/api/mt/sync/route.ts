@@ -12,6 +12,7 @@ import {
 import { publishDataChanged } from "@/lib/realtime";
 import { attachPendingShots, parseEaJson, recordShotDiag } from "@/lib/mtScreenshots";
 import { normalizeEaShotReport, normalizeEaVersion } from "@/lib/mtShotDiag";
+import { inLimitRange } from "@/lib/numberLimits";
 
 // POST /api/mt/sync — اندپوینتی که EA هر چند دقیقه صدا می‌زند.
 //   Authorization: Bearer <token>
@@ -203,8 +204,9 @@ export async function POST(req: NextRequest) {
   const skipped = rawCount - trades.length;
   if (skipped > 0) console.warn(`[mt/sync] ${link.id}: ${skipped} invalid row(s) skipped`);
 
-  const balance = typeof body.balance === "number" && Number.isFinite(body.balance) ? body.balance : null;
-  const equity = typeof body.equity === "number" && Number.isFinite(body.equity) ? body.equity : null;
+  // موجودی/اکوئیتی خارج از بازه (داده‌ی خراب اکسپرت) نادیده گرفته می‌شه
+  const balance = typeof body.balance === "number" && inLimitRange(body.balance, "cashflowAmount") ? body.balance : null;
+  const equity = typeof body.equity === "number" && inLimitRange(body.equity, "cashflowAmount") ? body.equity : null;
 
   await prisma.tradeMtLink.update({
     where: { id: link.id },

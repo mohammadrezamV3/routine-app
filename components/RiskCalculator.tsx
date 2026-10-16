@@ -217,24 +217,24 @@ export function RiskCalculator({
               <div>
                 <label className="exercise-form-label">{symbolSpec(symbol).unit === "point" ? tr("تعداد پوینت", "Number of points") : tr("تعداد پیپ", "Number of pips")}</label>
                 <NumberInput decimal className="wsearch-newform-name trade-glass-field" dir="ltr"
-                  value={pips} onChange={setPips} placeholder="10" aria-label={tr("تعداد پیپ", "Number of pips")} />
+                  limit="pips" value={pips} onChange={setPips} placeholder="10" aria-label={tr("تعداد پیپ", "Number of pips")} />
               </div>
               <div>
                 <label className="exercise-form-label">{tr("حجم (لات)", "Volume (lots)")}</label>
                 <NumberInput decimal className="wsearch-newform-name trade-glass-field" dir="ltr"
-                  value={lots} onChange={setLots} placeholder="0.10" aria-label={tr("حجم", "Volume")} />
+                  limit="tradeVolumeLot" value={lots} onChange={setLots} placeholder="0.10" aria-label={tr("حجم", "Volume")} />
               </div>
             </div>
             <div>
               <label className="exercise-form-label">{tr("موجودی حساب (دلار) — اختیاری", "Account balance (USD) — optional")}</label>
               <NumberInput decimal className="wsearch-newform-name trade-glass-field" dir="ltr"
-                value={balance} onChange={setBalance} placeholder="10000" />
+                limit="accountBalance" value={balance} onChange={setBalance} placeholder="10000" />
             </div>
             {simpleQuote && (
               <div>
                 <label className="exercise-form-label">{tr(`هر 1 ${simpleQuote} چند دلار است؟ (اختیاری)`, `How many USD is 1 ${simpleQuote}? (optional)`)}</label>
                 <NumberInput decimal className="wsearch-newform-name trade-glass-field" dir="ltr"
-                  value={quoteRate} onChange={setQuoteRate} placeholder={tr("مثلا 0.0067", "e.g. 0.0067")} />
+                  limit="quoteRate" value={quoteRate} onChange={setQuoteRate} placeholder={tr("مثلا 0.0067", "e.g. 0.0067")} />
               </div>
             )}
           </>
@@ -245,13 +245,13 @@ export function RiskCalculator({
           <div>
             <label className="exercise-form-label">{tr("موجودی حساب (دلار)", "Account balance (USD)")}</label>
             <NumberInput decimal className="wsearch-newform-name trade-glass-field" dir="ltr"
-              value={balance} onChange={setBalance} placeholder="10000" />
+              limit="accountBalance" value={balance} onChange={setBalance} placeholder="10000" />
           </div>
           <div>
             <label className="exercise-form-label">{tr("ریسک", "Risk")}</label>
             <div className="rk-risk-row">
               <NumberInput decimal className="wsearch-newform-name trade-glass-field" dir="ltr"
-                value={riskValue} onChange={setRiskValue} placeholder={mode === "percent" ? "1" : "100"} />
+                limit={mode === "percent" ? "riskPercent" : "tradeRisk"} value={riskValue} onChange={setRiskValue} placeholder={mode === "percent" ? "1" : "100"} />
               <SegmentedTabs
                 active={mode}
                 onChange={setMode}
@@ -266,7 +266,7 @@ export function RiskCalculator({
             <label className="exercise-form-label">{tr("قیمت ورود", "Entry price")}</label>
             <div className="rk-entry-row">
               <NumberInput decimal className="wsearch-newform-name trade-glass-field" dir="ltr"
-                value={entry} onChange={setEntry} placeholder="0.00000" />
+                limit="tradePrice" value={entry} onChange={setEntry} placeholder="0.00000" />
               <button type="button" className="account-outline-btn rk-live-btn" onClick={useLivePrice}
                 disabled={priceBusy} title={tr("قیمت لحظه‌ای", "Live price")} aria-label={tr("قیمت لحظه‌ای", "Live price")}>
                 {priceBusy ? <Spinner size={14} /> : <Crosshair size={15} />}
@@ -276,7 +276,7 @@ export function RiskCalculator({
           <div>
             <label className="exercise-form-label">{tr("حد ضرر (SL)", "Stop loss (SL)")}</label>
             <NumberInput decimal className="wsearch-newform-name trade-glass-field" dir="ltr"
-              value={sl} onChange={setSl} placeholder="0.00000" />
+              limit="tradePrice" value={sl} onChange={setSl} placeholder="0.00000" />
           </div>
         </div>
         {priceMsg && <div className="rk-note">{priceMsg}</div>}
@@ -287,7 +287,7 @@ export function RiskCalculator({
             {tps.map((t, i) => (
               <div key={i} className="rk-tp-row">
                 <NumberInput decimal className="wsearch-newform-name trade-glass-field" dir="ltr"
-                  value={t} onChange={(v) => setTps((p) => p.map((x, j) => (j === i ? v : x)))}
+                  limit="tradePrice" value={t} onChange={(v) => setTps((p) => p.map((x, j) => (j === i ? v : x)))}
                   placeholder={`TP${i + 1}`} aria-label={tr(`حد سود ${i + 1}`, `Take profit ${i + 1}`)} />
                 {tps.length > 1 && (
                   <button type="button" className="trade-icon-btn" aria-label={tr("حذف هدف", "Remove target")}
@@ -307,7 +307,7 @@ export function RiskCalculator({
           <div>
             <label className="exercise-form-label">{tr(`هر 1 ${cross} چند دلار است؟ (اختیاری)`, `How many USD is 1 ${cross}? (optional)`)}</label>
             <NumberInput decimal className="wsearch-newform-name trade-glass-field" dir="ltr"
-              value={quoteRate} onChange={setQuoteRate} placeholder={tr("مثلا 0.0067", "e.g. 0.0067")} />
+              limit="quoteRate" value={quoteRate} onChange={setQuoteRate} placeholder={tr("مثلا 0.0067", "e.g. 0.0067")} />
           </div>
         )}
         </>)}

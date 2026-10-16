@@ -11,6 +11,7 @@ import {
   TradeAccount, TradeAccountType, TradeGoalType, TradeTag,
 } from "@/lib/tradeTypes";
 import { NumberInput } from "./NumberInput";
+import { readTyped, type LimitKey } from "@/lib/numberLimits";
 import { Spinner } from "./Spinner";
 import { tr } from "@/lib/i18n";
 
@@ -47,6 +48,12 @@ export function TradeAccountModal({
 
   async function save() {
     if (!name.trim() || saving) return;
+    // عددها با جدول مشترک (lib/numberLimits.ts) سنجیده می‌شن؛ سرور هم دوباره می‌سنجه
+    const checks: [string, LimitKey][] = [[initialBalance, "accountBalance"], [leverage, "leverage"], [goalValue, goalType === "PERCENT" ? "goalPercent" : "goalAmount"]];
+    for (const [text, key] of checks) {
+      const r = readTyped(text, key);
+      if (!r.ok) { setError(r.error); return; }
+    }
     setSaving(true);
     setError(null);
     const body = {
@@ -122,13 +129,13 @@ export function TradeAccountModal({
         <div className="trade-field-row">
           <div>
             <label className="exercise-form-label">{tr("بالانس اولیه", "Initial balance")}</label>
-            <NumberInput decimal className="wsearch-newform-name trade-glass-field" value={initialBalance} onChange={(v) => setInitialBalance(v)} placeholder="0" disabled={!!account?.initialFromMt} />
+            <NumberInput limit="accountBalance" className="wsearch-newform-name trade-glass-field" value={initialBalance} onChange={(v) => setInitialBalance(v)} placeholder="0" disabled={!!account?.initialFromMt} />
             {/* با واریزهای متاتریدر، اولین واریز خودش بالانس اولیه‌ست و عدد دستی جمع زده نمی‌شه */}
             {account?.initialFromMt && <span className="trade-mt-note">{tr("از اولین واریز متاتریدر", "From the first MetaTrader deposit")}</span>}
           </div>
           <div>
             <label className="exercise-form-label">{tr("اهرم", "Leverage")}</label>
-            <NumberInput className="wsearch-newform-name trade-glass-field" value={leverage} onChange={(v) => setLeverage(v)} placeholder={tr("اختیاری", "Optional")} />
+            <NumberInput limit="leverage" className="wsearch-newform-name trade-glass-field" value={leverage} onChange={(v) => setLeverage(v)} placeholder={tr("اختیاری", "Optional")} />
           </div>
         </div>
 
@@ -138,7 +145,7 @@ export function TradeAccountModal({
           onChange={setGoalType}
           options={[{ value: "AMOUNT" as const, label: tr("مبلغ", "Amount") }, { value: "PERCENT" as const, label: tr("درصد بالانس", "% of balance") }]}
         />
-        <NumberInput decimal className="wsearch-newform-name trade-glass-field" value={goalValue} onChange={(v) => setGoalValue(v)}
+        <NumberInput limit={goalType === "PERCENT" ? "goalPercent" : "goalAmount"} className="wsearch-newform-name trade-glass-field" value={goalValue} onChange={(v) => setGoalValue(v)}
           placeholder={goalType === "PERCENT" ? tr("مثلا 5 (یعنی 5%)", "e.g. 5 (meaning 5%)") : tr("مثلا 500", "e.g. 500")} style={{ marginTop: 8 }}
         />
 

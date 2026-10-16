@@ -2,9 +2,14 @@
 
 import { useEffect, useState } from "react";
 import { NumberInput } from "./NumberInput";
+import { NUMBER_LIMITS } from "@/lib/numberLimits";
+
 import { BMI_CATEGORIES, bmiCategoryLabel, bmiScalePercent, calcBmi, type BmiResult } from "@/lib/bmi";
 import { fmtNum } from "@/lib/riskCalc";
 import { tr, trv } from "@/lib/i18n";
+
+// قد اینجا اعشاری هم می‌شه (170.5) و کف/سقف همون بازه‌ی محاسبه‌ی BMI (lib/bmi.ts)ه
+const BMI_HEIGHT_LIMIT = { ...NUMBER_LIMITS.heightCm, min: 100, max: 250, decimals: 1 };
 
 const LS_KEY = "arion:tool:bmi";
 // رنگ‌های مقیاس: فقط نشانگر وضعیت (کم‌وزن تا چاقی)
@@ -41,12 +46,12 @@ export function ToolBmiCalculator() {
         <div className="tl-row">
           <div>
             <label className="exercise-form-label" htmlFor="tl-bmi-h">{tr("قد (سانتی‌متر)", "Height (cm)")}</label>
-            <NumberInput id="tl-bmi-h" decimal dir="ltr" className="wsearch-newform-name trade-glass-field"
+            <NumberInput id="tl-bmi-h" limit={BMI_HEIGHT_LIMIT} dir="ltr" className="wsearch-newform-name trade-glass-field"
               value={height} onChange={setHeight} placeholder="170" />
           </div>
           <div>
             <label className="exercise-form-label" htmlFor="tl-bmi-w">{tr("وزن (کیلوگرم)", "Weight (kg)")}</label>
-            <NumberInput id="tl-bmi-w" decimal dir="ltr" className="wsearch-newform-name trade-glass-field"
+            <NumberInput id="tl-bmi-w" limit="weightKg" dir="ltr" className="wsearch-newform-name trade-glass-field"
               value={weight} onChange={setWeight} placeholder="70" />
           </div>
         </div>

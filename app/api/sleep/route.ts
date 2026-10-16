@@ -6,7 +6,8 @@ import { prisma } from "@/lib/prisma";
 import { requireModule } from "@/lib/moduleAccess";
 import { parseDateRange, parseIsoDate, readJsonBody } from "@/lib/validate";
 import { withLiveSync } from "@/lib/realtime";
-import { AWAKENINGS_MAX, LATENCY_MAX, NAP_MAX, SLEEP_MAX_MIN, SLEEP_MIN_MIN, sanitizeTags, type SleepRecord } from "@/lib/sleep";
+import { SLEEP_MAX_MIN, SLEEP_MIN_MIN, sanitizeTags, type SleepRecord } from "@/lib/sleep";
+import { checkOptionalNumber } from "@/lib/numberLimits";
 import { sessionFeatureBlocked } from "@/lib/featureFlagsServer";
 
 // ثبت خواب — سیستم جدای خواب (ماژول SLEEP، صفحه‌ی /sleep). هر شب یک ردیف با کلید
@@ -37,11 +38,6 @@ function toRecord(r: Row): SleepRecord | null {
     napMin: r.napMin,
     tags: r.tags ?? [],
   };
-}
-
-/** عدد صحیح در بازه یا null */
-function optInt(v: unknown, max: number): number | null {
-  return typeof v === "number" && Number.isInteger(v) && v >= 0 && v <= max ? v : null;
 }
 
 // GET /api/sleep?from=YYYY-MM-DD&to=YYYY-MM-DD — خوندن فقط سشن می‌خواد (مثل
@@ -92,13 +88,20 @@ async function handlePOST(req: NextRequest) {
   if (Math.abs(wokeAt.getTime() - date.getTime()) > 2 * 86_400_000) {
     return NextResponse.json({ error: tr("تاریخ با زمان بیداری جور نیست", "The date does not match the wake time") }, { status: 400 });
   }
-  const quality = typeof b.quality === "number" && Number.isInteger(b.quality) && b.quality >= 1 && b.quality <= 5 ? b.quality : null;
   const note = typeof b.note === "string" && b.note.trim() ? b.note.trim().slice(0, 200) : null;
-  const latencyMin = optInt(b.latencyMin, LATENCY_MAX);
-  const awakenings = optInt(b.awakenings, AWAKENINGS_MAX);
-  const napMin = optInt(b.napMin, NAP_MAX);
+  // عددهای اختیاری: خالی = ندارد؛ بیرون از بازه‌ی جدول مشترک (lib/numberLimits.ts) = خطای 400
+  const quality = checkOptionalNumber(b.quality, "sleepQuality");
+  const latency = checkOptionalNumber(b.latencyMin, "sleepLatency");
+  const awake = checkOptionalNumber(b.awakenings, "sleepAwakenings");
+  const nap = checkOptionalNumber(b.napMin, "sleepNap");
+  for (const c of [quality, latency, awake, nap]) {
+    if (!c.ok) return NextResponse.json({ error: c.error }, { status: 400 });
+  }
+  const latencyMin = latency.ok ? latency.value : null;
+  const awakenings = awake.ok ? awake.value : null;
+  const napMin = nap.ok ? nap.value : null;
   const tags = sanitizeTags(b.tags);
-  const data = { sleptAt, wokeAt, quality, note, latencyMin, awakenings, napMin, tags };
+  const data = { sleptAt, wokeAt, quality: quality.ok ? quality.value : null, note, latencyMin, awakenings, napMin, tags };
 
   const row = await prisma.sleepEntry.upsert({
     where: { userId_date: { userId, date } },

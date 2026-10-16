@@ -30,6 +30,8 @@ import { SETTING_KEYS } from "./userSettingKeys";
 import { goalFromTargets, SLEEP_MAX_MIN, SLEEP_MIN_MIN } from "./sleep";
 import { tr } from "@/lib/i18n";
 import { planDisplayName } from "@/lib/subscriptionI18n";
+import { clampDisplay, isInLimit } from "./numberLimits";
+import { safeDailyKcal } from "./foodLogSanitize";
 
 // ── تاریخ ────────────────────────────────────────────────────
 const DAY = 86_400_000;
@@ -156,17 +158,18 @@ export async function buildCalorie({ userId, date }: Ctx): Promise<DashCalorie> 
   const byIso = new Map(groups.map((g) => [dbIso(g.date), g]));
   const t = byIso.get(date);
   return {
-    target: target ? { kcal: target.dailyTargetKcal, protein: target.proteinTargetG, carbs: target.carbsTargetG, fat: target.fatTargetG } : null,
+    target: target ? { kcal: clampDisplay(target.dailyTargetKcal, "dailyTargetKcal"), protein: target.proteinTargetG == null ? null : clampDisplay(target.proteinTargetG, "macroTargetG"), carbs: target.carbsTargetG == null ? null : clampDisplay(target.carbsTargetG, "macroTargetG"), fat: target.fatTargetG == null ? null : clampDisplay(target.fatTargetG, "macroTargetG") } : null,
     today: {
-      kcal: Math.round(t?._sum.customCalories ?? 0),
-      protein: Math.round(t?._sum.proteinG ?? 0),
-      carbs: Math.round(t?._sum.carbsG ?? 0),
-      fat: Math.round(t?._sum.fatG ?? 0),
+      // داده‌ی قدیمی خارج از بازه جمع روز رو منفجر نکنه (lib/numberLimits.ts)
+      kcal: Math.round(safeDailyKcal(t?._sum.customCalories ?? 0)),
+      protein: Math.round(clampDisplay(t?._sum.proteinG ?? 0, "macroTargetG")),
+      carbs: Math.round(clampDisplay(t?._sum.carbsG ?? 0, "macroTargetG")),
+      fat: Math.round(clampDisplay(t?._sum.fatG ?? 0, "macroTargetG")),
       entries: t?._count._all ?? 0,
     },
     week: Array.from({ length: 7 }, (_, i) => {
       const iso = isoAdd(from, i);
-      return { iso, kcal: Math.round(byIso.get(iso)?._sum.customCalories ?? 0) };
+      return { iso, kcal: Math.round(safeDailyKcal(byIso.get(iso)?._sum.customCalories ?? 0)) };
     }),
   };
 }
@@ -197,7 +200,7 @@ export async function buildTrade({ userId, date, tz }: Ctx): Promise<DashTrade> 
   const sumAccounts = new Set(accounts.filter((a) => a.currency === sumCurrency).map((a) => a.id));
   const top = accounts.slice(0, 4);
 
-  const [windowRows, openTrades, recentRows, topRows, money] = await Promise.all([
+  const [windowRowsRaw, openTrades, recentRowsRaw, topRowsRaw, money] = await Promise.all([
     prisma.tradeEntry.findMany({
       where: { userId, status: "CLOSED", accountId: { in: Array.from(sumAccounts) }, openedAt: { gte: new Date(localMidnight(start30)) } },
       select: { pnl: true, result: true, openedAt: true },
@@ -218,6 +221,12 @@ export async function buildTrade({ userId, date, tz }: Ctx): Promise<DashTrade> 
     // پول حساب (همون قاعده‌ی صفحه‌ی حساب‌ها: lib/tradeCashflowServer.ts) تا موجودی یکی باشه
     loadAccountMoney(top),
   ]);
+
+  // سود/زیان قدیمی خارج از بازه (قبل از اعمال سقف‌ها) جمع‌ها رو منفجر نکنه
+  const safePnl = <T extends { pnl: number }>(rows: T[]): T[] => rows.map((r) => (isInLimit(r.pnl, "tradePnl") ? r : { ...r, pnl: clampDisplay(r.pnl, "tradePnl") }));
+  const windowRows = safePnl(windowRowsRaw);
+  const recentRows = safePnl(recentRowsRaw);
+  const topRows = safePnl(topRowsRaw);
 
   const weekStart = isoAdd(date, -((jsDayOf(date) + 1) % 7));
   const daily = new Map<string, number>();

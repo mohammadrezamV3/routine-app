@@ -16,6 +16,7 @@ import { tr } from "./i18n";
 import { addDaysIso, isoWeekday, localIso } from "./weeklyAnalysis/week";
 import { computeTradeStats } from "./tradeAnalytics";
 import type { TradeShareAccount, TradeShareData, TradeSharePeriod } from "./tradeShareTypes";
+import { clampDisplay, isInLimit } from "./numberLimits";
 
 export const TRADE_SHARE_TZ = "Asia/Tehran";
 
@@ -181,7 +182,9 @@ export function computeTradeShare(
   const closed = entries
     .filter((e) => e.status === "CLOSED" && ids.has(e.accountId))
     .filter((e) => { const t = ms(e); return t >= start && t < end; })
-    .sort((a, b) => ms(a) - ms(b));
+    .sort((a, b) => ms(a) - ms(b))
+    // سود/زیان قدیمی خارج از بازه کارنامه رو منفجر نکنه
+    .map((e) => (isInLimit(e.pnl, "tradePnl") ? e : { ...e, pnl: clampDisplay(e.pnl, "tradePnl") }));
 
   const currencies = new Set(accounts.map((a) => a.currency));
   const currencyMixed = currencies.size > 1;

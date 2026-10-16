@@ -15,6 +15,7 @@ import {
   toFeedbackRow,
   todayIsoForUser,
 } from "@/lib/mentorServer";
+import { safeDailyKcal } from "@/lib/foodLogSanitize";
 
 // سقف بازه ۳۱ روزه (from تا to شامل هر دو سر) — نمای منتور گزارش کوتاه‌مدته، نه آرشیو کامل
 const MAX_RANGE_DAYS = 30;
@@ -82,7 +83,7 @@ async function calorieSummary(studentId: string, p: PrivacySettings, dates: stri
       _sum: { customCalories: true },
     });
     const days = rows
-      .map((r) => ({ date: isoDate(r.date), kcal: Math.round(r._sum.customCalories ?? 0) }))
+      .map((r) => ({ date: isoDate(r.date), kcal: Math.round(safeDailyKcal(r._sum.customCalories ?? 0)) }))
       .sort((a, b) => a.date.localeCompare(b.date));
     // همون تعریف «روز موفق» در بخش دوستان: ثبت‌شده و نه بیشتر از هدف
     const successDays = target ? days.filter((d) => d.kcal > 0 && d.kcal <= target.dailyTargetKcal).length : 0;

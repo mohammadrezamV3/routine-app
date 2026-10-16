@@ -10,6 +10,7 @@ import { ACHIEVEMENTS, evaluateAchievements, type AchievementMetrics } from "./a
 import { computeAchievementMetrics } from "./achievementsCompute";
 import type { ScheduleOpts } from "./schedule";
 import { bestUnusedReward, reachedRewardTiers, rewardPercent, rewardStates, type AchievementRewardInfo, type AchievementRewardTier } from "./achievementRewards";
+import { clampDisplay } from "./numberLimits";
 
 export type AchievementsPayload = {
   metrics: AchievementMetrics;
@@ -65,7 +66,7 @@ export async function computeUserAchievements(userId: string): Promise<Achieveme
     prisma.sleepEntry.findMany({ where: { userId, sleptAt: { not: null }, wokeAt: { not: null } }, select: { date: true, sleptAt: true, wokeAt: true } }),
     prisma.userAchievement.findMany({ where: { userId }, select: { achievementId: true, unlockedAt: true } }),
     prisma.exerciseLog.findMany({ where: { userId, completed: true }, select: { date: true } }),
-    prisma.foodLogEntry.findMany({ where: { userId }, select: { date: true, grams: true, customCalories: true, foodItem: { select: { caloriesPer100g: true } } } }),
+    prisma.foodLogEntry.findMany({ where: { userId }, select: { date: true, grams: true, customCalories: true, foodItem: { select: { caloriesPer100g: true } } } }).then((rows) => rows.map((r) => ({ ...r, grams: clampDisplay(r.grams, "foodGrams"), customCalories: r.customCalories == null ? r.customCalories : clampDisplay(r.customCalories, "entryKcal") }))),
     prisma.calorieTarget.findMany({ where: { userId }, select: { dailyTargetKcal: true, effectiveFrom: true, effectiveTo: true } }),
     prisma.tradeEntry.findMany({
       where: { userId },

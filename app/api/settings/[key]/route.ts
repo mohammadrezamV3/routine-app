@@ -3,11 +3,12 @@ import { NextRequest, NextResponse } from "next/server";
 import { getSessionFast } from "@/lib/serverSession";
 import { prisma } from "@/lib/prisma";
 import { readJsonBody } from "@/lib/validate";
-import { isUserSettingKey, MAX_SETTING_VALUE_BYTES } from "@/lib/userSettingKeys";
+import { isUserSettingKey, MAX_SETTING_VALUE_BYTES, validateSettingValue } from "@/lib/userSettingKeys";
 import { withLiveSync } from "@/lib/realtime";
 import { ModuleKey } from "@prisma/client";
 import { requireModule } from "@/lib/moduleAccess";
 import { featureBlocked } from "@/lib/featureFlagsServer";
+import { validateSettingNumbers } from "@/lib/settingValueLimits";
 
 // کلیدهایی که خود «روتین من»ن — نوشتنشون بعد از ۱۴ روز آزمایشی پلن می‌خواد.
 const ROUTINE_KEYS = new Set(["customOccurrences", "removedOccurrences", "wakeSleepTimes"]);
@@ -52,17 +53,27 @@ async function handlePOST(req: NextRequest, { params }: { params: { key: string 
   const parsed = await readJsonBody<{ value?: unknown }>(req, MAX_SETTING_VALUE_BYTES);
   if (!parsed.ok) return NextResponse.json({ error: parsed.error }, { status: parsed.status });
 
-  const value = parsed.body?.value ?? null;
+  const rawValue = parsed.body?.value ?? null;
+  // عددهای داخل مقدار (قد/وزن، طول دوره‌ی دارو، تعداد آیتم‌ها …) با جدول مشترک سنجیده می‌شن
+  const numChecked = validateSettingNumbers(params.key, rawValue);
+  if (!numChecked.ok) return NextResponse.json({ error: numChecked.error }, { status: 400 });
+  const value = numChecked.value ?? null;
   // حتی بعد از سقف بدنه، خود مقدار هم جدا سنجیده می‌شه — بدنه ممکنه فیلدهای
   // دیگه هم داشته باشه و فقط همینه که ذخیره می‌شه.
   if (new TextEncoder().encode(JSON.stringify(value ?? null)).length > MAX_SETTING_VALUE_BYTES) {
     return NextResponse.json({ error: tr("حجم مقدار بیش از حد مجاز است", "The value is too large") }, { status: 413 });
   }
 
+  // کلیدهای با فرمت ثابت (پالت رنگی) سمت سرور هم سنجیده و نرمال می‌شن
+  const checked = validateSettingValue(params.key, value);
+  if (!checked.ok) {
+    return NextResponse.json({ error: tr("مقدار تنظیمات نامعتبر است", "Invalid settings value") }, { status: 400 });
+  }
+
   await prisma.userSetting.upsert({
     where: { userId_key: { userId, key: params.key } },
-    create: { userId, key: params.key, value: value as any },
-    update: { value: value as any },
+    create: { userId, key: params.key, value: checked.value as any },
+    update: { value: checked.value as any },
   });
 
   return NextResponse.json({ ok: true });

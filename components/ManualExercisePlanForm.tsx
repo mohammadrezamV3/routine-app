@@ -16,6 +16,7 @@ import { toEnDigits } from "@/lib/schedule";
 import { DifficultyStars } from "./ExerciseCatalogModal";
 import { useLockBodyScroll } from "@/lib/useLockBodyScroll";
 import { NumberInput } from "./NumberInput";
+import { limitError, readTyped, type LimitKey } from "@/lib/numberLimits";
 import { SegmentedTabs } from "./SegmentedTabs";
 import { Spinner } from "./Spinner";
 import { isEn, tr } from "@/lib/i18n";
@@ -46,7 +47,18 @@ function ManualQuantityPrompt({
   const [amount, setAmount] = useState("30");
   const [unit, setUnit] = useState<"ثانیه" | "دقیقه">("ثانیه");
 
+  const [error, setError] = useState<string | null>(null);
+  const amountKey: LimitKey = unit === "دقیقه" ? "exerciseMinutes" : "exerciseSeconds";
+
   function confirm() {
+    // ست/تکرار/مدت با جدول مشترک (lib/numberLimits.ts) سنجیده می‌شن؛ خالی = 1 مثل قبل
+    const checks: [string, LimitKey][] = timed ? [[amount, amountKey]] : [[sets, "sets"], [reps, "reps"]];
+    for (const [text, key] of checks) {
+      const r = readTyped(text, key);
+      if (!r.ok) { setError(r.error); return; }
+      if (timed && r.value === null) { setError(limitError(key)); return; }
+    }
+    setError(null);
     const formatted = timed
       ? `${entry.name} ${toEnDigits(amount || "0")} ${unit}`
       : `${entry.name} ${toEnDigits(sets || "1")}×${toEnDigits(reps || "1")}`;
@@ -63,18 +75,18 @@ function ManualQuantityPrompt({
         <div style={{ display: "flex", gap: 10, marginTop: 10 }}>
           <div style={{ flex: 1 }}>
             <label className="exercise-form-label">{tr("تعداد ست", "Number of sets")}</label>
-            <NumberInput className="wsearch-newform-name calorie-glass-field" value={sets} onChange={(v) => setSets(v)} />
+            <NumberInput className="wsearch-newform-name calorie-glass-field" limit="sets" value={sets} onChange={(v) => { setError(null); setSets(v); }} />
           </div>
           <div style={{ flex: 1 }}>
             <label className="exercise-form-label">{tr("تکرار در هر ست", "Reps per set")}</label>
-            <NumberInput className="wsearch-newform-name calorie-glass-field" value={reps} onChange={(v) => setReps(v)} />
+            <NumberInput className="wsearch-newform-name calorie-glass-field" limit="reps" value={reps} onChange={(v) => { setError(null); setReps(v); }} />
           </div>
         </div>
       ) : (
         <div style={{ display: "flex", gap: 10, marginTop: 12 }}>
           <div style={{ flex: 1 }}>
             <label className="exercise-form-label">{tr("مدت زمان", "Duration")}</label>
-            <NumberInput className="wsearch-newform-name calorie-glass-field" value={amount} onChange={(v) => setAmount(v)} />
+            <NumberInput className="wsearch-newform-name calorie-glass-field" limit={amountKey} value={amount} onChange={(v) => { setError(null); setAmount(v); }} />
           </div>
           <div style={{ flex: 1 }}>
             <label className="exercise-form-label">{tr("واحد", "Unit")}</label>
@@ -88,6 +100,8 @@ function ManualQuantityPrompt({
           </div>
         </div>
       )}
+
+      {error && <div className="field-error-msg" role="alert" style={{ display: "block", marginTop: 8 }}>{error}</div>}
 
       <div style={{ display: "flex", justifyContent: "flex-start", marginTop: 16 }}>
         <button type="button" className="manual-plan-submit-btn" onClick={confirm}>

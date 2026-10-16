@@ -146,7 +146,7 @@ export default function AdminDiscountCodesPage() {
             </label>
             <label className="admin-field">
               <span>{tr("حداکثر مصرف برای هر کاربر (اختیاری)", "Max uses per user (optional)")}</span>
-              <NumberInput className="admin-input" maxLength={6} value={maxUsesPerUser} onChange={setMaxUsesPerUser} placeholder={tr("بدون محدودیت", "No limit")} />
+              <NumberInput className="admin-input" limit="discountMaxUses" value={maxUsesPerUser} onChange={setMaxUsesPerUser} placeholder={tr("بدون محدودیت", "No limit")} />
             </label>
           </div>
           {error && <div className="admin-form-error" role="alert">{error}</div>}

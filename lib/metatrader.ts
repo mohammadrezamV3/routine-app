@@ -14,6 +14,7 @@
 //      هر درخواست مستقیم به دیتابیس می‌خورد، نه به یک JWT امضاشده).
 
 import { createHash, randomBytes } from "crypto";
+import { inLimitRange, type LimitSpec } from "./numberLimits";
 
 export type MtPlatform = "MT4" | "MT5";
 
@@ -76,9 +77,18 @@ function num(v: unknown): number | null {
   return Number.isFinite(n) ? n : null;
 }
 
+/**
+ * عدد خارجی (اکسپرت) که بیرون از بازه‌ی جدول مشترک (lib/numberLimits.ts) باشه
+ * یعنی داده‌ی خراب — «ندارد» حساب می‌شه، نه اینکه معامله کنار گذاشته بشه یا
+ * جمع آمار رو منفجر کنه.
+ */
+function bounded(n: number | null, spec: LimitSpec): number | null {
+  return inLimitRange(n, spec) ? n : null;
+}
+
 /** قیمت/حدضرر/حدسود: MQL «نداشتن» را با 0 نشان می‌دهد — 0 یعنی null، نه قیمت صفر */
 function price(v: unknown): number | null {
-  const n = num(v);
+  const n = bounded(num(v), "tradePrice");
   return n !== null && n > 0 ? n : null;
 }
 
@@ -142,7 +152,7 @@ export function normalizeMtTrades(raw: unknown): MtTradeInput[] {
     // اکسپرت‌های قدیمی حجم را با %.2f می‌فرستادند؛ ۰٫۰۰۱ لات (کریپتو/میکرو)
     // «0.00» می‌شد. معامله را به‌خاطرش دور نمی‌ریزیم — حجم ۰ ثبت می‌شود.
     const volRaw = num(r.volume ?? r.lots);
-    const volume = volRaw !== null && volRaw > 0 ? volRaw : 0;
+    const volume = volRaw !== null && volRaw > 0 && inLimitRange(volRaw, "tradeVolumeLot") ? volRaw : 0;
 
     const openTime = parseTime(r.openTime ?? r.open_time);
     if (!openTime) continue;
@@ -167,9 +177,9 @@ export function normalizeMtTrades(raw: unknown): MtTradeInput[] {
       closePrice: closed ? closePriceRaw : null,
       stopLoss: price(r.stopLoss ?? r.sl),
       takeProfit: price(r.takeProfit ?? r.tp),
-      profit: num(r.profit) ?? 0,
-      commission: num(r.commission),
-      swap: num(r.swap),
+      profit: bounded(num(r.profit), "tradePnl") ?? 0,
+      commission: bounded(num(r.commission), "tradeFee"),
+      swap: bounded(num(r.swap), "tradeFee"),
       openTime,
       // اکسپرت قدیمی MT5 برای معامله‌ی بسته closeTime نمی‌داد مگر همراه openTime
       closeTime: closed ? closeTime ?? openTime : null,
@@ -314,7 +324,7 @@ export function normalizeMtCashflows(raw: unknown): MtCashflowInput[] {
     const r = item as Record<string, unknown>;
     const externalId = String(r.ticket ?? r.id ?? "").trim().slice(0, 40);
     if (!externalId || externalId === "0") continue;
-    const amount = num(r.amount);
+    const amount = bounded(num(r.amount), "cashflowAmount");
     if (amount === null || amount === 0) continue;
     const occurredAt = parseTime(r.time);
     if (!occurredAt) continue;
