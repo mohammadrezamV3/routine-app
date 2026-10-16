@@ -6,6 +6,7 @@ import { HEALTH_POSTS_EN } from "./blog/posts/en/health";
 import { ROUTINE_POSTS_EN } from "./blog/posts/en/routine";
 import { TRADING_POSTS_EN } from "./blog/posts/en/trading";
 import { isEn } from "./i18n";
+import { SECTION_META, type SectionKey } from "./sections";
 
 /**
  * محتوای بلاگ، به‌صورت داده‌ی تایپ‌دار در همین ریپو (lib/blog/posts/*).
@@ -73,8 +74,12 @@ export function postsInCategory(cat: BlogCategoryKey): BlogPost[] {
   return sortedPosts().filter((p) => p.category === cat);
 }
 
-/** مقاله‌های مرتبط: اول هم‌دسته، بعد بقیه — خود مقاله هیچ‌وقت */
-export function relatedPosts(post: BlogPost, limit = 3): BlogPost[] {
-  const others = sortedPosts().filter((p) => p.slug !== post.slug);
+/**
+ * مقاله‌های مرتبط: اول هم‌دسته، بعد بقیه — خود مقاله هیچ‌وقت.
+ * روی زیردامنه‌ی یک بخش (section) فقط مقاله‌های دسته‌های همون بخش میان.
+ */
+export function relatedPosts(post: BlogPost, limit = 3, section: SectionKey | null = null): BlogPost[] {
+  const allowed = section ? SECTION_META[section].blogCategories : null;
+  const others = sortedPosts().filter((p) => p.slug !== post.slug && (!allowed || allowed.includes(p.category)));
   return [...others.filter((p) => p.category === post.category), ...others.filter((p) => p.category !== post.category)].slice(0, limit);
 }

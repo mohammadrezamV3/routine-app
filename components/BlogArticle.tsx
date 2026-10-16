@@ -5,6 +5,8 @@ import { localizedBlogCategory } from "@/lib/blog/categories";
 import { brandName } from "@/lib/brand";
 import { tr } from "@/lib/i18n";
 import { relatedPosts } from "@/lib/blogPosts";
+import { blogHrefAllowed, blogSignupCta, blogSignupLine } from "@/lib/sectionBlog";
+import type { SectionKey } from "@/lib/sections";
 import type { BlogBlock, BlogPost } from "@/lib/blogPosts";
 import { BlogPostCard } from "./BlogPostCard";
 import { BlogProgress } from "./BlogProgress";
@@ -18,7 +20,7 @@ import "./blog.css";
  * کلاینت‌اند). بلاک‌ها عمدا داده‌اند نه HTML خام: هم `dangerouslySetInnerHTML`
  * لازم نمی‌شود، هم سلسله‌مراتب تیترها (یک H1، بعد H2/H3) ساختاری می‌ماند.
  */
-function renderBlock(b: BlogBlock, i: number, h2Id?: string) {
+function renderBlock(b: BlogBlock, i: number, h2Id?: string, section: SectionKey | null = null) {
   switch (b.type) {
     case "h2":
       return <h2 key={i} id={h2Id}>{b.text}</h2>;
@@ -62,6 +64,8 @@ function renderBlock(b: BlogBlock, i: number, h2Id?: string) {
         </div>
       );
     case "cta":
+      // دعوت به صفحه‌ی بخش دیگه روی زیردامنه‌ی این بخش نمایش داده نمی‌شه
+      if (!blogHrefAllowed(section, b.href)) return null;
       return (
         <Link key={i} href={b.href} className="blog-inline-cta">
           <span>
@@ -76,7 +80,7 @@ function renderBlock(b: BlogBlock, i: number, h2Id?: string) {
   }
 }
 
-export function BlogArticle({ post }: { post: BlogPost }) {
+export function BlogArticle({ post, section = null }: { post: BlogPost; section?: SectionKey | null }) {
   const cat = localizedBlogCategory(post.category);
   // شناسه‌ی لنگر هر H2 به ترتیب: s-1، s-2، ...
   const toc: { id: string; text: string }[] = [];
@@ -88,7 +92,8 @@ export function BlogArticle({ post }: { post: BlogPost }) {
       ids.set(i, id);
     }
   });
-  const related = relatedPosts(post, 3);
+  const related = relatedPosts(post, 3, section);
+  const links = post.related.filter((r) => blogHrefAllowed(section, r.href));
   const modified = post.updated && post.updated !== post.published ? post.updated : undefined;
 
   return (
@@ -139,7 +144,7 @@ export function BlogArticle({ post }: { post: BlogPost }) {
             </section>
           )}
 
-          <div className="blog-prose">{post.blocks.map((b, i) => renderBlock(b, i, ids.get(i)))}</div>
+          <div className="blog-prose">{post.blocks.map((b, i) => renderBlock(b, i, ids.get(i), section))}</div>
 
           {post.faq && post.faq.length > 0 && (
             <section className="blog-faq">
@@ -163,7 +168,7 @@ export function BlogArticle({ post }: { post: BlogPost }) {
           {related.map((p) => <BlogPostCard key={p.slug} post={p} />)}
         </div>
         <ul className="blog-links">
-          {post.related.map((r) => (
+          {links.map((r) => (
             <li key={r.href}><Link href={r.href}>{r.label}</Link></li>
           ))}
           <li><Link href="/blog">{tr("همه‌ی مقاله‌های آریون", `All ${brandName()} articles`)}</Link></li>
@@ -172,9 +177,9 @@ export function BlogArticle({ post }: { post: BlogPost }) {
         <AuthAwareCta
           guest={
             <div className="blog-signup">
-              <p>{tr("روتین، خواب، تمرین و ژورنال ترید در یک اپ.", "Routine, sleep, training and a trading journal in one app.")}</p>
+              <p>{blogSignupLine(section)}</p>
               <Link href="/auth/signup" className="blog-btn">
-                {tr("امتحان رایگان 14 روزه", "Try it free for 14 days")} <ArrowLeft size={16} aria-hidden="true" className="dir-flip" />
+                {blogSignupCta(section)} <ArrowLeft size={16} aria-hidden="true" className="dir-flip" />
               </Link>
             </div>
           }

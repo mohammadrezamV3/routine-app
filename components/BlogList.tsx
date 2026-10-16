@@ -5,6 +5,7 @@ import { BlogCategoryChips } from "./BlogCategoryChips";
 import { BlogPostCard } from "./BlogPostCard";
 import { brandName } from "@/lib/brand";
 import { tr } from "@/lib/i18n";
+import type { SectionKey } from "@/lib/sections";
 import "./blog.css";
 
 /**
@@ -18,12 +19,14 @@ export function BlogList({
   heading,
   category,
   categoryLabel,
+  section = null,
 }: {
   posts: BlogPost[];
   intro: string;
   heading: string;
   category?: BlogCategoryKey;
   categoryLabel?: string;
+  section?: SectionKey | null;
 }) {
   const featured = category ? undefined : posts[0];
   const rest = featured ? posts.slice(1) : posts;
@@ -49,7 +52,7 @@ export function BlogList({
         <p>{intro}</p>
       </header>
 
-      <BlogCategoryChips active={category} />
+      <BlogCategoryChips active={category} section={section} />
 
       {featured && <BlogPostCard post={featured} featured />}
 

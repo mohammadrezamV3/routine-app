@@ -2,7 +2,7 @@ import type { MetadataRoute } from "next";
 import { BRAND_FA } from "@/lib/brand";
 import { THEME_COLORS, themeColorFor } from "@/lib/themeColor";
 import { tr } from "@/lib/i18n";
-import { getSection } from "@/lib/sectionServer";
+import { getHostSection } from "@/lib/sectionServer";
 import { SECTION_META, isSectionHostingEnabled, type SectionKey } from "@/lib/sections";
 
 // آیکون رنگی هر بخش برای «افزودن به صفحه‌ی اصلی» (public/images/sections/app/، پس‌زمینه‌ی سرمه‌ای
@@ -49,7 +49,7 @@ function sectionShortcuts(key: SectionKey): MetadataRoute.Manifest["shortcuts"] 
 export default function manifest(): MetadataRoute.Manifest {
   // روی زیردامنه‌ی هر بخش، اپ نصب‌شده اسم و آیکون و میان‌برهای همون بخش رو داره. بدون
   // NEXT_PUBLIC_SECTION_BASE_DOMAIN headers() صدا زده نمی‌شه و خروجی دقیقا مثل قبله.
-  const section = isSectionHostingEnabled() ? getSection() : null;
+  const section = isSectionHostingEnabled() ? getHostSection() : null;
   if (section) {
     const meta = SECTION_META[section];
     const name = `${tr("آریون", "Arion")} ${meta.label}`;

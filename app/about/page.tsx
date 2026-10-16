@@ -4,8 +4,11 @@ import { tr } from "@/lib/i18n";
 import { breadcrumbJsonLd, pageMetadata } from "@/lib/seo";
 import { AboutHero } from "@/components/AboutHero";
 import {
-  AboutContact, AboutFinalCTA, AboutInside, AboutPrivacy, AboutStats, AboutStory, AboutValues,
+  AboutContact, AboutFaq, AboutFinalCTA, AboutInside, AboutPrivacy, AboutStats, AboutStory, AboutValues,
 } from "@/components/AboutLazy";
+import { faqJsonLd } from "@/lib/seo";
+import { getSectionAbout, sectionAboutBreadcrumb, sectionAboutMetadata } from "@/lib/sectionAbout";
+import { getHostSection, getSection } from "@/lib/sectionServer";
 import { getTeamMembers } from "@/lib/teamServer";
 import { getSessionFast } from "@/lib/serverSession";
 import "./about.css";
@@ -14,6 +17,9 @@ import "./about.css";
 export const revalidate = 60;
 
 export function generateMetadata(): Metadata {
+  // زیردامنه‌ی یک بخش: درباره‌ی همون محصول با canonical روی خود زیردامنه
+  const section = getSection();
+  if (section) return sectionAboutMetadata(section, getHostSection());
   const brand = brandName();
   return pageMetadata({
     title: tr(`درباره ${brand} — اپ فارسی روتین و ورزش`, `About ${brand} - routine and fitness app`),
@@ -39,20 +45,25 @@ export default async function AboutPage() {
   // کاربر واردشده بخش CTA پایانی (ساخت حساب/ورود) را اصلا نمی‌بیند؛ تصمیم سمت سرور
   // گرفته می‌شود تا جای خالی یا جاگیر لودینگ هم نماند.
   const authed = Boolean(await getSessionFast());
+  const section = getSection();
+  const sa = section ? getSectionAbout(section) : null;
+  const ld = section
+    ? [sectionAboutBreadcrumb(section, getHostSection()), faqJsonLd(sa!.faq)]
+    : [breadcrumbJsonLd([{ name: brandName(), path: "/" }, { name: tr("درباره", "About"), path: "/about" }])];
   return (
     <div className="ab-root">
-      <script
-        type="application/ld+json"
-        dangerouslySetInnerHTML={{ __html: JSON.stringify(breadcrumbJsonLd([{ name: brandName(), path: "/" }, { name: tr("درباره", "About"), path: "/about" }])) }}
-      />
-      <AboutHero />
-      <AboutStats />
-      <AboutStory />
-      <AboutValues />
-      <AboutInside />
-      <AboutPrivacy />
-      <AboutContact team={team} />
-      {!authed && <AboutFinalCTA />}
+      {ld.map((block, i) => (
+        <script key={i} type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(block) }} />
+      ))}
+      <AboutHero section={section} hero={sa?.hero ?? null} />
+      <AboutStats section={section} />
+      <AboutStory section={section} />
+      <AboutValues section={section} />
+      <AboutInside section={section} />
+      <AboutPrivacy section={section} />
+      <AboutFaq section={section} />
+      <AboutContact team={team} section={section} />
+      {!authed && <AboutFinalCTA section={section} />}
     </div>
   );
 }

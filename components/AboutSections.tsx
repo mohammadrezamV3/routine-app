@@ -14,7 +14,7 @@ import { SOCIAL, SUPPORT_EMAIL, brandName } from "@/lib/brand";
 import { TelegramIcon, InstagramIcon } from "@/components/SocialIcons";
 import { EnamadBadge } from "@/components/EnamadBadge";
 import { LandingStats } from "@/components/LandingSections";
-import { AboutBrandLogo } from "@/components/AboutHero";
+import { ABOUT_ICONS, AboutBrandLogo } from "@/components/AboutHero";
 import { AboutTeamPanel } from "@/components/AboutTeam";
 import type { TeamMember } from "@/lib/teamMembers";
 import {
@@ -22,6 +22,11 @@ import {
   AboutMockWorkout,
 } from "@/components/AboutMockups";
 import { isEn, tr, trv } from "@/lib/i18n";
+import { getSectionAbout, type AboutMock } from "@/lib/sectionAbout";
+import { getSectionFooterFeatures } from "@/lib/sectionLanding";
+import { SECTION_META, type SectionKey } from "@/lib/sections";
+
+type SecProp = { section?: SectionKey | null };
 
 // ─── بخش‌های صفحه‌ی «درباره» ──────────────────────────────────────────────
 // هر ادعای متن این‌جا با کاری که اپ امروز واقعا انجام می‌دهد یکی است (همان
@@ -56,10 +61,10 @@ function Head({ kicker, title, accent, lead, center }: { kicker: string; title: 
 }
 
 /* ─────────────────── آمار ─────────────────── */
-export function AboutStats() {
+export function AboutStats({ section = null }: SecProp) {
   return (
     <section className="ab-stats" aria-label={tr(`${brandName()} تا امروز`, `${brandName()} so far`)}>
-      <LandingStats />
+      <LandingStats section={section} />
     </section>
   );
 }
@@ -95,9 +100,17 @@ const unified = (): { label: string; icon: LucideIcon }[] => [
   { label: tr("کالری", "Calories"), icon: Apple }, { label: tr("ترید", "Trading"), icon: CandlestickChart }, { label: tr("مربی", "Mentor"), icon: GraduationCap },
 ];
 
-function Converge() {
-  const TOOLS = tools();
-  const UNIFIED = unified();
+const TOOL_SLOTS: Omit<ToolDef, "label" | "icon">[] = [
+  { color: "#3E7BFA", x: -120, y: -118, r: -9 },
+  { color: "#8A5CFF", x: 116, y: -84, r: 8 },
+  { color: "#EE920C", x: -112, y: 104, r: 7 },
+  { color: "#16A34A", x: 118, y: 124, r: -6 },
+];
+
+function Converge({ section = null }: SecProp) {
+  const sa = section ? getSectionAbout(section).story : null;
+  const TOOLS = sa ? sa.tools.map((t, i) => ({ ...TOOL_SLOTS[i % TOOL_SLOTS.length], label: t.label, icon: ABOUT_ICONS[t.icon] })) : tools();
+  const UNIFIED = sa ? sa.unified.map((u) => ({ label: u.label, icon: ABOUT_ICONS[u.icon] })) : unified();
   const ref = useRef<HTMLDivElement>(null);
   const reduce = useReducedMotion();
   const { scrollYProgress } = useScroll({ target: ref, offset: ["start 0.95", "center 0.45"] });
@@ -142,8 +155,9 @@ const chapters = (): { step: string; title: string; body: string }[] => [
   },
 ];
 
-export function AboutStory() {
-  const CHAPTERS = chapters();
+export function AboutStory({ section = null }: SecProp) {
+  const sa = section ? getSectionAbout(section).story : null;
+  const CHAPTERS = sa ? sa.chapters : chapters();
   const listRef = useRef<HTMLDivElement>(null);
   const reduce = useReducedMotion();
   const { scrollYProgress } = useScroll({ target: listRef, offset: ["start 0.75", "end 0.55"] });
@@ -153,9 +167,9 @@ export function AboutStory() {
         <div>
           <Reveal className="ab-head">
             <span className="ab-kicker">{tr("چرا ساخته شد", "Why it was built")}</span>
-            <h2 id="ab-story-h" className="ab-title">{tr(`چرا ${brandName()}`, `Why was ${brandName()}`)} <em>{tr("ساخته شد؟", "built?")}</em></h2>
+            <h2 id="ab-story-h" className="ab-title">{sa ? sa.title : tr(`چرا ${brandName()}`, `Why was ${brandName()}`)} <em>{sa ? sa.accent : tr("ساخته شد؟", "built?")}</em></h2>
           </Reveal>
-          <Converge />
+          <Converge section={section} />
         </div>
         <div ref={listRef} className="ab-chapters">
           <div className="ab-chapters-rail" aria-hidden="true">
@@ -205,8 +219,10 @@ function ValueCard({ v, i }: { v: ValueDef; i: number }) {
   );
 }
 
-export function AboutValues() {
-  const VALUES = values();
+export function AboutValues({ section = null }: SecProp) {
+  const VALUES: ValueDef[] = section
+    ? getSectionAbout(section).values.map((v, i) => ({ ...v, icon: [Languages, Target, Layers, ShieldCheck, Heart, Headset][i] }))
+    : values();
   return (
     <section className="ab-sec" aria-labelledby="ab-values-h">
       <Reveal className="ab-head">
@@ -221,7 +237,7 @@ export function AboutValues() {
 }
 
 /* ─────────────────── داخل آریون ─────────────────── */
-type Tile = { icon: LucideIcon; title: string; body: string; href?: string; wide?: boolean; vis: React.ComponentType };
+type Tile = { icon: LucideIcon; title: string; body: string; href?: string; wide?: boolean; vis?: React.ComponentType };
 
 const tiles = (): Tile[] => [
   { icon: CalendarCheck, title: tr("روتین روزانه و هفتگی", "Daily and weekly routine"), body: tr("روتینت را برای روز و هفته بچین، کارها را همان لحظه تیک بزن و روند پایبندی‌ات را ببین.", "Lay out your routine for the day and week, tick tasks off the moment you do them and watch your consistency."), href: "/routine", wide: true, vis: AboutMockRoutine },
@@ -234,14 +250,20 @@ const tiles = (): Tile[] => [
   { icon: Bot, title: tr("«نومو»، مدیر برنامه هوشمند", "Nomo, the smart plan manager"), body: tr("به فارسی بنویس چه می‌خواهی تا برنامه‌های روتینت را بسازد یا جابه‌جا کند.", "Write in plain language what you want and it will create or move your routine plans."), href: "/ai-planner", wide: true, vis: AboutMockNumo },
 ];
 
-export function AboutInside() {
-  const TILES = tiles();
+const MOCKS: Record<AboutMock, React.ComponentType> = {
+  routine: AboutMockRoutine, streak: AboutMockStreak, sleep: AboutMockSleep, workout: AboutMockWorkout,
+  calorie: AboutMockCalorie, trade: AboutMockTrade, mentor: AboutMockMentor, numo: AboutMockNumo,
+};
+
+export function AboutInside({ section = null }: SecProp) {
+  const sa = section ? getSectionAbout(section).inside : null;
+  const TILES: Tile[] = sa ? sa.tiles.map((t) => ({ ...t, icon: ABOUT_ICONS[t.icon], vis: t.mock ? MOCKS[t.mock] : undefined })) : tiles();
   return (
     <section id="inside" className="ab-sec" aria-labelledby="ab-inside-h">
       <Reveal className="ab-head">
-        <span className="ab-kicker">{tr("داخل آریون", "Inside Arion")}</span>
-        <h2 id="ab-inside-h" className="ab-title">{tr(`داخل ${brandName()}`, `What is inside`)} <em>{tr("چه چیزهایی هست؟", brandName() + "?")}</em></h2>
-        <p className="ab-lead">{tr("هر بخش یک ابزار کامل است، ولی همه از یک حساب و یک تقویم می‌خوانند؛ پس تصویر روزت یک‌جا کنار هم می‌ماند.", "Every section is a complete tool, but all of them read from one account and one calendar, so the picture of your day stays together.")}</p>
+        <span className="ab-kicker">{section ? tr(`داخل ${SECTION_META[section].label}`, `Inside ${SECTION_META[section].label}`) : tr("داخل آریون", "Inside Arion")}</span>
+        <h2 id="ab-inside-h" className="ab-title">{sa ? sa.title : tr(`داخل ${brandName()}`, `What is inside`)} <em>{sa ? sa.accent : tr("چه چیزهایی هست؟", brandName() + "?")}</em></h2>
+        <p className="ab-lead">{sa ? sa.lead : tr("هر بخش یک ابزار کامل است، ولی همه از یک حساب و یک تقویم می‌خوانند؛ پس تصویر روزت یک‌جا کنار هم می‌ماند.", "Every section is a complete tool, but all of them read from one account and one calendar, so the picture of your day stays together.")}</p>
       </Reveal>
       <div className="ab-bento">
         {TILES.map((t, i) => {
@@ -255,7 +277,7 @@ export function AboutInside() {
                   <h3 className="ab-tile-title">{t.title}</h3>
                 </div>
                 <p className="ab-tile-body">{t.body}</p>
-                <div className="ab-tile-vis"><Vis /></div>
+                {Vis && <div className="ab-tile-vis"><Vis /></div>}
                 {t.href && (
                   <Link href={t.href} className="ab-tile-link">
                     {tr("بیشتر بخوان", "Read more")} <ArrowLeft size={14} className="dir-flip" />
@@ -266,9 +288,15 @@ export function AboutInside() {
           );
         })}
       </div>
-      <Reveal>
-        <p className="ab-soon">{trv(<>و در راه: <b>رودمپ یادگیری با کمک هوش مصنوعی</b>، که به‌زودی برای عموم کاربران باز می‌شود.</>, <>Coming soon: <b>an AI-assisted learning roadmap</b>, which will open to all users shortly.</>)}</p>
-      </Reveal>
+      {(!sa || sa.soon) && (
+        <Reveal>
+          <p className="ab-soon">
+            {sa?.soon
+              ? <>{sa.soon.pre}<b>{sa.soon.bold}</b>{sa.soon.post}</>
+              : trv(<>و در راه: <b>رودمپ یادگیری با کمک هوش مصنوعی</b>، که به‌زودی برای عموم کاربران باز می‌شود.</>, <>Coming soon: <b>an AI-assisted learning roadmap</b>, which will open to all users shortly.</>)}
+          </p>
+        </Reveal>
+      )}
     </section>
   );
 }
@@ -325,8 +353,9 @@ const facts = (): { icon: LucideIcon; title: string; body: string }[] => [
   { icon: ShieldCheck, title: tr("اطلاعاتت فروخته نمی‌شود.", "Your data is never sold."), body: tr("داده‌ای که ثبت می‌کنی برای کار خود اپ است، نه برای تبلیغ‌دهنده.", "The data you log is for the app's own work, not for advertisers.") },
 ];
 
-export function AboutPrivacy() {
-  const FACTS = facts();
+export function AboutPrivacy({ section = null }: SecProp) {
+  // نکته‌ی رمز حساب معاملاتی (سومی) فقط روی بخش ترید و دامنه‌ی اصلی میاد
+  const FACTS = facts().filter((_, i) => i !== 2 || !section || section === "trade");
   return (
     <section className="ab-sec" aria-labelledby="ab-privacy-h">
       <Reveal>
@@ -376,7 +405,16 @@ const moreLinks = () => [
   { href: "/terms", label: tr("قوانین و مقررات", "Terms and conditions") },
 ];
 
-export function AboutContact({ team = [] }: { team?: TeamMember[] }) {
+function sectionMoreLinks(section: SectionKey) {
+  return [
+    ...getSectionFooterFeatures(section),
+    { href: "/faq", label: tr("سوالات متداول", "FAQ") },
+    { href: "/blog", label: tr("مقاله‌ها", "Articles") },
+    { href: "/terms", label: tr("قوانین و مقررات", "Terms and conditions") },
+  ];
+}
+
+export function AboutContact({ team = [], section = null }: { team?: TeamMember[] } & SecProp) {
   const [teamOpen, setTeamOpen] = useState(false);
   const hasTeam = team.length > 0;
   const cards: { key: string; label: string; value: string; href?: string; icon: React.ReactNode }[] = [
@@ -385,7 +423,7 @@ export function AboutContact({ team = [] }: { team?: TeamMember[] }) {
     { key: "telegram", label: tr("تلگرام", "Telegram"), value: SOCIAL.telegram.handle, href: SOCIAL.telegram.url, icon: <TelegramIcon size={18} /> },
     { key: "instagram", label: tr("اینستاگرام", "Instagram"), value: SOCIAL.instagram.handle, href: SOCIAL.instagram.url, icon: <InstagramIcon size={18} /> },
   ];
-  const MORE_LINKS = moreLinks();
+  const MORE_LINKS = section ? sectionMoreLinks(section) : moreLinks();
   return (
     <section className="ab-sec" aria-labelledby="ab-contact-h">
       <Reveal className="ab-head">
@@ -451,7 +489,8 @@ export function AboutContact({ team = [] }: { team?: TeamMember[] }) {
 }
 
 /* ─────────────────── CTA پایانی ─────────────────── */
-export function AboutFinalCTA() {
+export function AboutFinalCTA({ section = null }: SecProp) {
+  const fin = section ? getSectionAbout(section).final : null;
   const ref = useRef<HTMLDivElement>(null);
   const inView = useInView(ref);
   return (
@@ -460,8 +499,8 @@ export function AboutFinalCTA() {
         <div ref={ref} className={`ab-final-box${inView ? "" : " is-paused"}`}>
           <span className="ab-final-ring" aria-hidden="true" />
           <div className="ab-final-mark-wrap" aria-hidden="true"><AboutBrandLogo className="ab-final-mark" /></div>
-          <h2 id="ab-final-h" className="ab-final-title">{tr("از امروز،", "From today,")} <em>{tr("یک‌جا.", "in one place.")}</em></h2>
-          <p className="ab-final-sub">{tr("«روتین من» برای هر حساب تازه 14 روز رایگان است؛ روتینت را بچین و از همین امروز اجرا کن.", "My Routine is free for 14 days for every new account; lay out your routine and start today.")}</p>
+          <h2 id="ab-final-h" className="ab-final-title">{fin ? fin.title : tr("از امروز،", "From today,")} <em>{fin ? fin.accent : tr("یک‌جا.", "in one place.")}</em></h2>
+          <p className="ab-final-sub">{fin ? fin.sub : tr("«روتین من» برای هر حساب تازه 14 روز رایگان است؛ روتینت را بچین و از همین امروز اجرا کن.", "My Routine is free for 14 days for every new account; lay out your routine and start today.")}</p>
           <div className="ab-ctas">
             <AuthAwareCta
               guest={
@@ -478,6 +517,29 @@ export function AboutFinalCTA() {
           <div className="ab-final-note" style={{ marginTop: 6 }}><Smartphone size={13} /> {tr("روی گوشی هم مثل یک اپ نصب می‌شود", "Installs on your phone like an app")}</div>
         </div>
       </Reveal>
+    </section>
+  );
+}
+
+
+/* ─────────────────── پرسش‌های متداول (فقط روی زیردامنه‌ی بخش‌ها) ─────────────────── */
+export function AboutFaq({ section = null }: SecProp) {
+  if (!section) return null;
+  const items = getSectionAbout(section).faq;
+  return (
+    <section className="ab-sec" aria-labelledby="ab-faq-h">
+      <Reveal className="ab-head">
+        <span className="ab-kicker">{tr("سوال‌ها", "Questions")}</span>
+        <h2 id="ab-faq-h" className="ab-title">{tr("پرسش‌های", "Frequently")} <em>{tr("متداول", "asked questions")}</em></h2>
+      </Reveal>
+      <div className="ab-faq">
+        {items.map((f) => (
+          <details key={f.q} className="ab-faq-item">
+            <summary><h3>{f.q}</h3><ChevronDown size={16} className="ab-faq-chev" aria-hidden="true" /></summary>
+            <p>{f.a}</p>
+          </details>
+        ))}
+      </div>
     </section>
   );
 }

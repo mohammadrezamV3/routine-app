@@ -5,7 +5,9 @@ import { brandName } from "@/lib/brand";
 import { localizedBlogCategory } from "@/lib/blog/categories";
 import { tr } from "@/lib/i18n";
 import { BLOG_POSTS, getPost, postWordCount } from "@/lib/blogPosts";
-import { articleJsonLd, breadcrumbJsonLd, faqJsonLd, pageMetadata } from "@/lib/seo";
+import { blogCanonicalUrl, blogMetadata, blogViewSection, hostOrigin } from "@/lib/sectionBlog";
+import { getHostSection, getSection } from "@/lib/sectionServer";
+import { articleJsonLd, breadcrumbJsonLd, faqJsonLd } from "@/lib/seo";
 
 /**
  * مقاله‌ها ثابت‌اند، پس در زمان build رندر می‌شوند: هم HTML کامل برای
@@ -20,10 +22,11 @@ export function generateMetadata({ params }: { params: { slug: string } }): Meta
   // اسلاگ ناموجود در ادامه به notFound می‌رسد؛ این‌جا فقط باید metadata
   // معتبر (و noindex) برگردد تا صفحه‌ی 404 ایندکس نشود.
   if (!post) return { title: { absolute: tr("صفحه پیدا نشد", "Page not found") }, robots: { index: false, follow: false } };
-  const meta = pageMetadata({
+  const meta = blogMetadata({
     title: `${post.metaTitle || post.title} | ${brandName()}`,
     description: post.description,
-    path: `/blog/${post.slug}`,
+    canonical: blogCanonicalUrl(`/blog/${post.slug}`, post.category),
+    section: getHostSection(),
     ogTitle: post.title,
     ownOgImage: true,
   });
@@ -46,6 +49,9 @@ export default function BlogPostPage({ params }: { params: { slug: string } }) {
   const post = getPost(params.slug);
   if (!post) notFound();
 
+  // مقاله‌ی دسته‌ی بخش دیگه: همین‌جا و با بخش صاحب دسته نمایش داده می‌شه (دامنه عوض نمی‌شه)
+  const section = blogViewSection(getSection(), post.category);
+
   const breadcrumb = [
     { name: brandName(), path: "/" },
     { name: tr("مقاله‌ها", "Articles"), path: "/blog" },
@@ -55,6 +61,7 @@ export default function BlogPostPage({ params }: { params: { slug: string } }) {
 
   const wordCount = postWordCount(post);
 
+  const canonical = blogCanonicalUrl(`/blog/${post.slug}`, post.category);
   const article = {
     ...articleJsonLd({
       title: post.title,
@@ -63,11 +70,18 @@ export default function BlogPostPage({ params }: { params: { slug: string } }) {
       published: post.published,
       modified: post.updated,
     }),
+    mainEntityOfPage: { "@type": "WebPage", "@id": canonical },
     articleSection: localizedBlogCategory(post.category).label,
     ...(post.keywords?.length ? { keywords: post.keywords.join("، ") } : {}),
     wordCount,
   };
-  const ld = [breadcrumbJsonLd(breadcrumb), article, ...(post.faq?.length ? [faqJsonLd(post.faq)] : [])];
+  const origin = hostOrigin(getHostSection());
+  const sectionBreadcrumb = {
+    "@context": "https://schema.org",
+    "@type": "BreadcrumbList",
+    itemListElement: breadcrumb.map((it, i) => ({ "@type": "ListItem", position: i + 1, name: it.name, item: `${origin}${it.path === "/" ? "" : it.path}` })),
+  };
+  const ld = [section ? sectionBreadcrumb : breadcrumbJsonLd(breadcrumb), article, ...(post.faq?.length ? [faqJsonLd(post.faq)] : [])];
 
   return (
     <>
@@ -77,7 +91,7 @@ export default function BlogPostPage({ params }: { params: { slug: string } }) {
           __html: JSON.stringify(ld),
         }}
       />
-      <BlogArticle post={post} />
+      <BlogArticle post={post} section={section} />
     </>
   );
 }

@@ -8,7 +8,8 @@ import { EnamadBadge } from "@/components/EnamadBadge";
 import { TelegramIcon, InstagramIcon } from "@/components/SocialIcons";
 import { SOCIAL, SUPPORT_EMAIL, brandName } from "@/lib/brand";
 import { isEn, tr } from "@/lib/i18n";
-import { SECTION_KEYS, SECTION_META, sectionUrl, type SectionKey } from "@/lib/sections";
+import { SECTION_KEYS, SECTION_META, type SectionKey } from "@/lib/sections";
+import { switchSectionAndGo } from "@/lib/sectionClient";
 import { getSectionFooterFeatures } from "@/lib/sectionLanding";
 
 // فوتر صفحه‌ی لندینگ — بدون کارت و بدون بک‌گراند (طبق قانون پروژه: هیچ
@@ -67,6 +68,13 @@ function jalaliYear(): string {
 
 // section: بخش زیردامنه. امکانات همان بخش + گروه «بخش‌های دیگر» با لینک به ریشه‌ی زیردامنه‌های دیگر؛
 // دامنه‌ی اصلی (null) دقیقا فوتر قبلی.
+// تعویض بخش بدون عوض‌شدن دامنه (کوکی + ناوبری کامل به "/")؛ کلیک میانی/Ctrl همون href ساده رو باز می‌کنه
+function onPick(e: React.MouseEvent, key: SectionKey) {
+  if (e.defaultPrevented || e.button !== 0 || e.metaKey || e.ctrlKey || e.shiftKey || e.altKey) return;
+  e.preventDefault();
+  switchSectionAndGo(key, "/");
+}
+
 export function LandingFooter({ section = null }: { section?: SectionKey | null }) {
   const t = useThemeTokens();
   const year = jalaliYear();
@@ -121,23 +129,18 @@ export function LandingFooter({ section = null }: { section?: SectionKey | null 
             </div>
           ))}
 
-          {/* بخش‌های دیگر آریون: لینک بین‌دامنه‌ای به ریشه‌ی هر زیردامنه (فقط روی لندینگ زیردامنه‌ها) */}
+          {/* بخش‌های دیگر آریون: تعویض بخش در همین دامنه (فقط روی لندینگ زیردامنه‌ها) */}
           {OTHERS.length > 0 && (
             <div>
               <div className={`text-[12px] font-bold ${t.heading}`}>{tr("بخش‌های دیگر آریون", `Other ${brandName()} products`)}</div>
               <ul className="mt-3 space-y-2">
                 {OTHERS.map((k) => (
                   <li key={k}>
-                    <a href={sectionUrl(k, "/")} className={`whitespace-nowrap text-[12px] transition-colors ${t.muted} ${t.accentHoverText}`}>
+                    <a href="/" onClick={(e) => onPick(e, k)} className={`whitespace-nowrap text-[12px] transition-colors ${t.muted} ${t.accentHoverText}`}>
                       {brandName()} {SECTION_META[k].label}
                     </a>
                   </li>
                 ))}
-                <li>
-                  <a href={sectionUrl(null, "/")} className={`whitespace-nowrap text-[12px] transition-colors ${t.muted} ${t.accentHoverText}`}>
-                    {tr("همه‌ی بخش‌ها", "All products")}
-                  </a>
-                </li>
               </ul>
             </div>
           )}

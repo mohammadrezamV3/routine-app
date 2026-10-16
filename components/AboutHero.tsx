@@ -5,11 +5,14 @@ import { SmartLink as Link } from "@/components/SmartLink";
 import { AuthAwareCta } from "@/components/AuthAwareCta";
 import { m as motion, useMotionValue, useReducedMotion, useSpring, useTransform } from "framer-motion";
 import {
-  Apple, ArrowLeft, CalendarCheck, CandlestickChart, Dumbbell, GraduationCap, Moon, ShieldCheck, Smartphone, Sparkles,
+  Apple, ArrowLeft, Bot, CalendarCheck, CalendarDays, CandlestickChart, Dumbbell, Flame, GraduationCap, Moon, RefreshCw,
+  Route, ShieldCheck, Smartphone, Sparkles, Calculator,
 } from "lucide-react";
 import type { LucideIcon } from "lucide-react";
 import { brandName } from "@/lib/brand";
 import { tr, trv } from "@/lib/i18n";
+import type { AboutIcon, SectionAbout } from "@/lib/sectionAbout";
+import { SECTION_META, type SectionKey } from "@/lib/sections";
 
 // ─── هیروی صفحه‌ی «درباره» ─────────────────────────────────────────────
 // پس‌زمینه = چند گرادیان شعاعی (بدون filter:blur) که فقط transform می‌گیرند؛
@@ -20,6 +23,13 @@ import { tr, trv } from "@/lib/i18n";
 const EASE = [0.22, 1, 0.36, 1] as const;
 
 const words = () => trv(["همه‌ی", "نظم", "زندگی‌ات،"], ["All", "your", "life", "in"]);
+
+/** نگاشت کلید آیکون متن بخش‌ها (lib/sectionAbout.ts) به lucide */
+export const ABOUT_ICONS: Record<AboutIcon, LucideIcon> = {
+  routine: CalendarCheck, sleep: Moon, workout: Dumbbell, calorie: Apple, trade: CandlestickChart, mentors: GraduationCap,
+  roadmap: Route, nomo: Bot, streak: Flame, sync: RefreshCw, calendar: CalendarDays, clock: CalendarDays, risk: Calculator,
+  planner: CalendarDays, habit: Flame, notes: CalendarDays, sheet: CalendarDays, food: Apple,
+};
 
 const orbit = (): { label: string; icon: LucideIcon }[] => [
   { label: tr("روتین", "Routine"), icon: CalendarCheck },
@@ -49,9 +59,11 @@ function abRise(dur: number, delay: number, y: number): React.CSSProperties {
   return { "--ab-d": `${dur}s`, "--ab-dl": `${delay}s`, "--ab-y": `${y}px` } as React.CSSProperties;
 }
 
-export function AboutHero() {
-  const WORDS = words();
-  const ORBIT = orbit();
+// متن بخش از سرور به‌صورت prop میاد (hero) تا متن سه بخش وارد باندل هیرو نشه
+export function AboutHero({ section = null, hero = null }: { section?: SectionKey | null; hero?: SectionAbout["hero"] | null }) {
+  const sa = hero ? { hero } : null;
+  const WORDS = sa ? sa.hero.words : words();
+  const ORBIT = sa ? sa.hero.orbit.map((o) => ({ label: o.label, icon: ABOUT_ICONS[o.icon] })) : orbit();
   const reduce = useReducedMotion();
   const stageRef = useRef<HTMLDivElement>(null);
   const [paused, setPaused] = useState(false);
@@ -101,19 +113,19 @@ export function AboutHero() {
         <div>
           <span className="ab-badge ab-rise" style={abRise(0.6, 0, 10)}>
             <span className="ab-badge-dot" aria-hidden="true" />
-            {tr("داستان آریون", "The Arion story")}
+            {section ? tr(`داستان ${SECTION_META[section].label}`, `The ${SECTION_META[section].label} story`) : tr("داستان آریون", "The Arion story")}
           </span>
 
           <h1 id="ab-h1" className="ab-h1" style={{ perspective: 600 }}>
             <span className="ab-h1-kicker ab-rise" style={abRise(0.6, 0.05, 0)}>
-              {tr(`درباره ${brandName()}`, `About ${brandName()}`)}
+              {section ? tr(`درباره ${brandName()} ${SECTION_META[section].label}`, `About ${brandName()} ${SECTION_META[section].label}`) : tr(`درباره ${brandName()}`, `About ${brandName()}`)}
             </span>
             <span className="ab-h1-line">
               {WORDS.map((w, i) => (
                 <motion.span key={w} className="ab-word" {...word(i)}>{w}</motion.span>
               ))}
               <motion.span className="ab-word ab-word-accent" {...word(WORDS.length)}>
-                {tr("یک‌جا.", "one place.")}
+                {sa ? sa.hero.accent : tr("یک‌جا.", "one place.")}
                 <svg className="ab-swash" viewBox="0 0 200 20" preserveAspectRatio="none" aria-hidden="true">
                   <motion.path
                     d="M4 14 C 50 4, 120 4, 196 10"
@@ -131,7 +143,9 @@ export function AboutHero() {
           </h1>
 
           <p className="ab-sub ab-rise" style={abRise(0.7, 0.55, 14)}>
-            {trv(
+            {sa ? (
+              <>{sa.hero.sub.pre}<b>{sa.hero.sub.bold}</b>{sa.hero.sub.post}</>
+            ) : trv(
               <>
                 {brandName()} یک اپلیکیشن فارسی برای نظم‌دادن به زندگی روزمره است. <b>روتین، خواب، ورزش، تغذیه و ترید</b>
                 {" "}به‌جای چند اپ جدا، زیر یک حساب کاربری کنار هم‌اند؛ همه‌چیز فارسی، با تقویم شمسی، و روی موبایل و کامپیوتر یکسان.
@@ -151,13 +165,13 @@ export function AboutHero() {
                 </Link>
               }
             />
-            <a href="#inside" className="ls-btn ls-btn-ghost">{tr("داخل آریون", "Inside Arion")}</a>
+            <a href="#inside" className="ls-btn ls-btn-ghost">{section ? tr(`داخل ${SECTION_META[section].label}`, `Inside ${SECTION_META[section].label}`) : tr("داخل آریون", "Inside Arion")}</a>
           </div>
 
           <div className="ab-trust ab-rise" style={abRise(0.7, 0.9, 0)}>
-            <span><Sparkles size={14} /> {tr("«روتین من» 14 روز رایگان", "My Routine free for 14 days")}</span>
-            <span><ShieldCheck size={14} /> {tr("چت‌های سرتاسر رمزنگاری‌شده", "End-to-end encrypted chats")}</span>
-            <span><Smartphone size={14} /> {tr("نصب روی گوشی (PWA)", "Install on your phone (PWA)")}</span>
+            <span><Sparkles size={14} /> {sa ? sa.hero.trust.free : tr("«روتین من» 14 روز رایگان", "My Routine free for 14 days")}</span>
+            <span><ShieldCheck size={14} /> {sa ? sa.hero.trust.secure : tr("چت‌های سرتاسر رمزنگاری‌شده", "End-to-end encrypted chats")}</span>
+            <span><Smartphone size={14} /> {sa ? sa.hero.trust.pwa : tr("نصب روی گوشی (PWA)", "Install on your phone (PWA)")}</span>
           </div>
         </div>
 
