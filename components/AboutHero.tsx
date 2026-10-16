@@ -150,11 +150,6 @@ export function AboutHero() {
                   {tr("شروع رایگان", "Start free")} <ArrowLeft size={16} className="dir-flip" />
                 </Link>
               }
-              authed={
-                <Link href="/dashboard" className="ls-btn ls-btn-primary">
-                  {tr("رفتن به داشبورد", "Go to dashboard")} <ArrowLeft size={16} className="dir-flip" />
-                </Link>
-              }
             />
             <a href="#inside" className="ls-btn ls-btn-ghost">{tr("داخل آریون", "Inside Arion")}</a>
           </div>

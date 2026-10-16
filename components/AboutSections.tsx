@@ -472,11 +472,6 @@ export function AboutFinalCTA() {
                   <Link href="/auth/login" className="ls-btn ls-btn-ghost">{tr("ورود", "Log in")}</Link>
                 </>
               }
-              authed={
-                <Link href="/dashboard" className="ls-btn ls-btn-primary">
-                  {tr("رفتن به داشبورد", "Go to dashboard")} <ArrowLeft size={16} className="dir-flip" />
-                </Link>
-              }
             />
           </div>
           <AuthAwareCta guest={<div><span className="ab-final-note"><Check size={13} /> {tr("ثبت‌نام در کمتر از یک دقیقه", "Sign up in under a minute")}</span></div>} />
