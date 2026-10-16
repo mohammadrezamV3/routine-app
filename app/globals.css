@@ -493,7 +493,12 @@ html body .btn.btn-icon{ width:var(--btn-h, 40px); padding:0; gap:0; }
 .btn-icon.btn-lg{ --btn-h:46px; }
 .btn-icon.btn-bare{ --btn-bd:transparent; }
 .btn-icon.btn-danger{ --btn-bg:transparent; --btn-bd:rgba(var(--pnl-loss-rgb), .38); --btn-hover-bd:var(--pnl-loss); --btn-hover-fg:var(--pnl-loss); }
-.btn-icon.btn-primary{ --btn-bd:var(--accent); --btn-hover-bd:var(--accent); --btn-hover-fg:var(--sec-on-accent, var(--bg)); }
+.btn-icon.btn-primary{
+  --btn-bg:var(--accent); --btn-bd:var(--accent); --btn-fg:var(--sec-on-accent, var(--bg));
+  --btn-hover-bd:var(--accent); --btn-hover-fg:var(--sec-on-accent, var(--bg));
+  --btn-hover-filter:brightness(1.08); --btn-hover-shadow:0 6px 18px -6px rgba(var(--accent-rgb), .6);
+}
+.btn-icon.btn-tonal{ --btn-bg:rgba(var(--accent-rgb), .14); --btn-bd:transparent; --btn-fg:var(--accent); --btn-hover-bg:rgba(var(--accent-rgb), .22); --btn-hover-bd:transparent; --btn-hover-fg:var(--accent); }
 .btn-icon.btn-round{ --btn-r:50%; }
 
 /* اندازه‌ها */
