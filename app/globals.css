@@ -5756,8 +5756,6 @@ textarea.wsearch-newform-name,
    آیکون جهت‌دار (فلش/شورون «بعدی»/«برگشت») در ltr آینه می‌شه. فقط روی عنصری که
    خودش transform دیگه‌ای نداره (وگرنه داخل یک span جدا). در rtl هیچ اثری نداره. */
 html[dir="ltr"] .dir-flip{ transform:scaleX(-1); }
-/* انتخاب زبان داخل منوی کشویی (components/LanguageSwitch.tsx) */
-.nav-lang-switch{ margin:0 0 10px; }
 
 /* ===== جهت LTR (انگلیسی) — بازتاب قاعده‌هایی که فقط برای RTL نوشته شده بودن =====
    همه‌ی این قاعده‌ها فقط زیر html[dir="ltr"] ان و در فارسی هیچ اثری ندارن. هر کدوم

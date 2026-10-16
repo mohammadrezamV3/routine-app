@@ -120,14 +120,17 @@ export default function DesktopNav({ pathname, features, activeModules }: Props)
     return () => cancelAnimationFrame(raf);
   }, [openId, armed]);
 
-  // نشانگر فعال: transform-only (translate + scaleX روی یک عنصر 1px)
+  // نشانگر فعال: transform-only (translate + scaleX روی یک عنصر 1px). همیشه زیر خود
+  // «لیبل» آیتم فعاله (نه کل دکمه): برای لینک ساده، منوی کشویی و آیتم قفل/شورون‌دار
+  // یک منطق و یک عرض؛ فاصله‌ی عمودی از لیبل در CSS ثابته (site-header.css).
   const measure = useCallback(() => {
-    const list = listRef.current, ind = indRef.current;
-    if (!list || !ind) return;
-    const el = list.querySelector<HTMLElement>('[data-active="true"] > .dnav-link');
-    if (!el || el.offsetWidth === 0) { ind.style.opacity = "0"; return; }
-    const inset = 12;
-    ind.style.transform = `translate3d(${el.parentElement!.offsetLeft + inset}px,0,0) scaleX(${Math.max(1, el.offsetWidth - inset * 2)})`;
+    const nav = navRef.current, list = listRef.current, ind = indRef.current;
+    if (!nav || !list || !ind) return;
+    const label = list.querySelector<HTMLElement>('[data-active="true"] > .dnav-link > span:first-child');
+    const lr = label?.getBoundingClientRect();
+    if (!label || !lr || lr.width === 0) { ind.style.opacity = "0"; return; }
+    const nr = nav.getBoundingClientRect();
+    ind.style.transform = `translate3d(${lr.left - nr.left}px,0,0) scaleX(${lr.width})`;
     ind.style.opacity = "1";
     requestAnimationFrame(() => ind.classList.add("is-ready"));
   }, []);

@@ -1,6 +1,6 @@
 "use client";
 
-// سمت راست هدر دسکتاپ انگلیسی: انتخاب زبان (آیکون کره + منو) و برای مهمان
+// سمت راست هدر دسکتاپ انگلیسی: انتخاب زبان (آیکون کره + منو، فقط روی لندینگ) و برای مهمان
 // «Log in» و «Start free». به‌علاوه سایه/بلور قوی‌تر هدر بعد از چند پیکسل
 // اسکرول (data-scrolled روی هدر، با یک لیسنر passive؛ روی دستگاه ضعیف
 // lib/perfTier.ts هیچ لیسنری نمی‌ذاره). زیر 1024px با CSS مخفیه.
@@ -16,7 +16,7 @@ const LANGS: { value: Locale; label: string }[] = [
   { value: "fa", label: "فارسی" },
 ];
 
-export default function DesktopNavEnd({ guest }: { guest: boolean }) {
+export default function DesktopNavEnd({ guest, showLang }: { guest: boolean; showLang: boolean }) {
   const locale = useLocale();
   const [open, setOpen] = useState(false);
   const [armed, setArmed] = useState(false);
@@ -58,7 +58,7 @@ export default function DesktopNavEnd({ guest }: { guest: boolean }) {
 
   return (
     <div ref={wrapRef} className="dnav-end" onKeyDown={onKeyDown}>
-      <div className="dnav-lang">
+      {showLang && <div className="dnav-lang">
         <button
           ref={btnRef}
           type="button"
@@ -88,7 +88,7 @@ export default function DesktopNavEnd({ guest }: { guest: boolean }) {
             ))}
           </div>
         )}
-      </div>
+      </div>}
       {guest && (
         <>
           <Link href="/auth/login" className="dnav-login">{tr("ورود", "Log in")}</Link>

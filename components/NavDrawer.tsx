@@ -22,6 +22,7 @@ import { tr } from "@/lib/i18n";
 import { brandName } from "@/lib/brand";
 import { SECTION_META } from "@/lib/sections";
 import { useSection } from "./SectionProvider";
+import HeaderLangButton from "./HeaderLangButton";
 import "./site-header.css";
 
 // NavDrawer توی root layout هست و روی هر صفحه mount می‌شه، پس فقط خود نوار هدر
@@ -104,6 +105,8 @@ export function NavDrawer() {
   // پنل Owner (/admin) کاملا محیط جدایی‌ست — نه هدر/منوی سایت اصلی، نه
   // پس‌زمینه‌ی aurora (پایین‌تر در BackgroundCanvasLoader)
   const hideTopbar = pathname?.startsWith("/auth") || pathname?.startsWith("/admin");
+  // تغییر زبان فقط از تنظیمات و از هدر صفحه‌ی لندینگ (مهمان روی «/») ممکنه
+  const isLanding = pathname === "/" && status === "unauthenticated";
 
   // آیتم‌های منو عمدا `<Link>` واقعی‌اند، نه `<a onClick={router.push}>`:
   // با router.push هیچ prefetchی وجود ندارد و ضربه یعنی شروع دانلود صفحه از
@@ -293,7 +296,7 @@ export function NavDrawer() {
                 تعویض تم، تصویر تم جدید (که تا اون لحظه fetch نشده) یه تاخیر
                 دیدنی داشت تا دانلود بشه. */}
             {/* لوگو دکمه‌ی پنجره‌ی بخش‌هاست (SectionSwitcher). روی دامنه‌ی اصلی همون لوگوی قبلی؛
-                روی زیردامنه‌ی بخش: نشان رنگی همون بخش + «ARION | TRADE». */}
+                روی زیردامنه‌ی بخش: فقط «ARION | TRADE» (بدون نشان A). */}
             <button
               ref={logoBtnRef}
               type="button"
@@ -313,7 +316,6 @@ export function NavDrawer() {
             >
               {section ? (
                 <>
-                  <Image src={SECTION_META[section].icon} alt="" width={256} height={217} className="tls-icon" priority />
                   <span className="tls-word">
                     <Image
                       src="/images/sections/wordmark-dark.png"
@@ -440,7 +442,8 @@ export function NavDrawer() {
                 </button>
               </div>
             )}
-            {isEnglish && <DesktopNavEnd guest={status === "unauthenticated"} />}
+            {isLanding && <HeaderLangButton />}
+            {isEnglish && <DesktopNavEnd guest={status === "unauthenticated"} showLang={isLanding} />}
           </div>
         </header>
         </>
