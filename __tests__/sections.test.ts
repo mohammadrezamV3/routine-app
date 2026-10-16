@@ -97,6 +97,29 @@ describe("pathAllowedIn", () => {
   });
 });
 
+describe("isolation: section-specific app pages", () => {
+  it("settings sub-pages and the routine streak home belong to one section", () => {
+    expect(sectionsOwningPath("/account/general/routine")).toEqual(["routine"]);
+    expect(sectionsOwningPath("/account/general/exercise")).toEqual(["workout"]);
+    expect(sectionsOwningPath("/account/general/trade")).toEqual(["trade"]);
+    expect(sectionsOwningPath("/streak")).toEqual(["routine"]);
+  });
+
+  it("shared settings pages stay open on every host", () => {
+    for (const p of ["/account/general", "/account/general/theme", "/account/general/dashboard", "/account/general/notifications", "/account/general/mentors", "/account/general/chats", "/account/profile", "/subscription"]) {
+      expect(sectionsOwningPath(p)).toEqual([]);
+      expect(pathAllowedIn("trade", p)).toBe(true);
+    }
+  });
+
+  it("other sections' settings sub-pages are blocked on a section host", () => {
+    expect(pathAllowedIn("trade", "/account/general/exercise")).toBe(false);
+    expect(pathAllowedIn("workout", "/account/general/trade")).toBe(false);
+    expect(pathAllowedIn("workout", "/streak")).toBe(false);
+    expect(pathAllowedIn("routine", "/account/general/routine")).toBe(true);
+  });
+});
+
 describe("seoLandingOwner", () => {
   it("returns the owning section for landing pages", () => {
     expect(seoLandingOwner("/routine")).toBe("routine");

@@ -6,6 +6,7 @@ import { prisma } from "@/lib/prisma";
 import { clampText, isValidPersianName, parseIsoDate } from "@/lib/validate";
 import { checkRateLimit, getClientIp } from "@/lib/rateLimit";
 import { withLiveSync } from "@/lib/realtime";
+import { checkNumber, NUMBER_LIMITS } from "@/lib/numberLimits";
 
 const GENDER_VALUES = new Set(["male", "female"]);
 
@@ -83,6 +84,11 @@ async function handlePATCH(req: NextRequest) {
     } else {
       const d = parseIsoDate(body.birthDate);
       if (!d) return NextResponse.json({ error: tr("تاریخ تولد نامعتبر است", "Invalid birth date") }, { status: 400 });
+      // سن واقعی: نه آینده (با یک روز ارفاق برای تبدیل تاریخ شمسی) و نه بیشتر از سقف سن
+      const ageYears = (Date.now() - d.getTime()) / (365.25 * 86_400_000);
+      if (ageYears < -1 / 365 || ageYears > NUMBER_LIMITS.ageYears.max + 1) {
+        return NextResponse.json({ error: tr("تاریخ تولد نامعتبر است", "Invalid birth date") }, { status: 400 });
+      }
       data.birthDate = d;
     }
   }
@@ -96,22 +102,20 @@ async function handlePATCH(req: NextRequest) {
     if (body.heightCm === null) {
       data.heightCm = null;
     } else {
-      const v = Number(body.heightCm);
-      if (!Number.isFinite(v) || v < 100 || v > 250) {
-        return NextResponse.json({ error: tr("قد نامعتبر است", "Invalid height") }, { status: 400 });
-      }
-      data.heightCm = Math.round(v);
+      // عدد اعشاری (مثلا 175.5) گرد می‌شه چون ستون صحیحه؛ بیرون از بازه رد می‌شه
+      const raw = typeof body.heightCm === "number" && Number.isFinite(body.heightCm) ? Math.round(body.heightCm) : body.heightCm;
+      const c = checkNumber(raw, "heightCm", { coerceString: true });
+      if (!c.ok) return NextResponse.json({ error: c.error }, { status: 400 });
+      data.heightCm = c.value;
     }
   }
   if (body.weightKg !== undefined) {
     if (body.weightKg === null) {
       data.weightKg = null;
     } else {
-      const v = Number(body.weightKg);
-      if (!Number.isFinite(v) || v < 20 || v > 300) {
-        return NextResponse.json({ error: tr("وزن نامعتبر است", "Invalid weight") }, { status: 400 });
-      }
-      data.weightKg = Math.round(v * 10) / 10;
+      const c = checkNumber(body.weightKg, "weightKg", { coerceString: true });
+      if (!c.ok) return NextResponse.json({ error: c.error }, { status: 400 });
+      data.weightKg = c.value;
     }
   }
 

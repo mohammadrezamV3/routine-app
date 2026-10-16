@@ -1,15 +1,14 @@
 "use client";
 
 import { useEffect, useRef, useState } from "react";
-import {
-  Camera, Trash2, Phone, Cake, AtSign, User as UserIcon,
-  Dumbbell, IdCard, Ruler, Weight, VenetianMask, ChevronDown, NotebookPen, Gift,
-} from "lucide-react";
+import { Camera, Trash2, CalendarDays, Dumbbell, IdCard, Gift, Copy, Check, Share2 } from "lucide-react";
 import { AgentAvatar } from "@/components/AgentAvatar";
 import { AuthField } from "@/components/AuthField";
 import { NumberInput } from "@/components/NumberInput";
+import { readTyped } from "@/lib/numberLimits";
 import { JalaliDatePicker } from "@/components/JalaliDatePicker";
-import { AccountPageHead, AccountBlock, AccountSaveBar, AccountSkeleton } from "@/components/AccountUI";
+import { SegmentedTabs } from "@/components/SegmentedTabs";
+import { AccountPageHead, AccountBlock, AccountActionBar, AccountSkeleton } from "@/components/AccountUI";
 import { JalaliDate, formatJalali, jalaliToGregorianApprox, toJalali, isoLocal } from "@/lib/jalali";
 import { getAccount, getAvatarUrl, invalidateAccountCache, AccountData } from "@/lib/accountCache";
 import { getBodyMetrics, saveBodyMetrics } from "@/lib/bodyMetrics";
@@ -21,6 +20,7 @@ import { priceText as formatPriceAmount } from "@/lib/subscriptionI18n";
 import { faNum } from "@/lib/jalali";
 import { Spinner } from "@/components/Spinner";
 import { GoldenName } from "@/components/GoldenName";
+import { useSection } from "@/components/SectionProvider";
 import { tr } from "@/lib/i18n";
 
 type ProfileUser = {
@@ -35,26 +35,52 @@ type ProfileUser = {
   lastName: string | null;
   bio: string | null;
   birthDate: string | null;
+  phoneVerifiedAt?: string | null;
   golden?: boolean;
   staff?: boolean;
 };
 
 const BIO_MAX = 200;
 
+type Gender = "male" | "female" | "unset";
+
+/** همه‌ی مقدارهای قابل‌ویرایش فرم — برای مقایسه‌ی «تغییر کرده؟» و برگرداندن با «لغو» */
+type Draft = {
+  firstName: string; lastName: string; username: string; bio: string;
+  birthDate: JalaliDate | null; gender: Gender;
+  ageYears: string; heightCm: string; weightKg: string; refCode: string;
+};
+const EMPTY_DRAFT: Draft = {
+  firstName: "", lastName: "", username: "", bio: "", birthDate: null, gender: "unset",
+  ageYears: "", heightCm: "", weightKg: "", refCode: "",
+};
+const draftKey = (d: Draft) => JSON.stringify([
+  d.firstName, d.lastName, d.username, d.bio, d.birthDate ? d.birthDate.join("-") : "", d.gender,
+  d.ageYears, d.heightCm, d.weightKg, d.refCode,
+]);
+
 /**
- * صفحه‌ی پروفایل:
- *   بنر (کلیک‌پذیر برای آپلود) با آواتار کلیک‌پذیر نشسته روی لبه‌اش
- *   ← «پروفایل عمومی»: نام | نام خانوادگی · شماره · یوزرنیم · تاریخ تولد · بیوگرافی
- *   ← «پروفایل ورزشی»: سن | قد · وزن | جنسیت
- *   ← یک دکمه‌ی «ذخیره تغییرات» برای همه‌چیز
+ * صفحه‌ی پروفایل (طرح «پنل کاربری، پروفایل»):
+ *   کارت بنر + آواتار (دکمه‌ی خطی «تغییر بنر» روی بنر، دکمه‌ی آیکونی اصلی دوربین روی آواتار)
+ *   ← «اطلاعات حساب» (دو ستون): نام | نام خانوادگی · شماره (تایید شده) | یوزرنیم ·
+ *       تاریخ تولد | جنسیت (SegmentedTabs) · بیوگرافی
+ *   ← «پروفایل ورزشی»: سن | قد | وزن با واحد داخل فیلد
+ *   ← «کد دعوت»: فیلد + کپی آیکونی + فرستادن لینک (تونال)
+ *   ← پاورقی چسبان «تغییرات ذخیره نشده داری» فقط وقتی فرم تغییر کرده:
+ *       «لغو» (بی‌زمینه، برمی‌گردونه به آخرین مقدار ذخیره‌شده) + «ذخیره تغییرات» (اصلی)
  *
  * طبق درخواست صریح کاربر:
  *   • ایمیل اصلا این‌جا نیست (نه نمایش، نه فلوی تغییر).
  *   • یوزرنیم دکمه‌ی «تغییر» ندارد — خود فیلد ویرایش‌پذیر است و با همان
- *     دکمه‌ی ذخیره‌ی پایین ثبت می‌شود (روت اختصاصی‌اش داخل saveAll صدا زده
+ *     دکمه‌ی ذخیره ثبت می‌شود (روت اختصاصی‌اش داخل saveAll صدا زده
  *     می‌شود، چون یکتایی‌اش سمت سرور چک می‌شود).
+ *   • اسکیپ هیچ‌وقت فرم را دور نمی‌ریزد: بستن پنجره‌ی تاریخ/عکس فقط همان
+ *     پنجره را می‌بندد؛ تنها راه دورریختن تغییرها دکمه‌ی «لغو» است.
  */
 export default function AccountProfilePage() {
+  // پروفایل ورزشی فقط روی ورزش و دامنه‌ی اصلی (جداسازی بخش‌ها، docs/sections.md)
+  const section = useSection();
+  const showSports = !section || section === "workout";
   const [data, setData] = useState<ProfileUser | null>(null);
   const [avatarUrl, setAvatarUrl] = useState<string | null>(null);
   const [avatarSaving, setAvatarSaving] = useState(false);
@@ -87,6 +113,13 @@ export default function AccountProfilePage() {
   const [saveError, setSaveError] = useState<string | null>(null);
   const [saved, setSaved] = useState(false);
   const [loadFailed, setLoadFailed] = useState(false);
+  const [codeCopied, setCodeCopied] = useState(false);
+  const [linkCopied, setLinkCopied] = useState(false);
+
+  // آخرین مقدار ذخیره‌شده (یا بارگذاری‌شده از سرور). «تغییر کرده؟» و «لغو» روی همین حساب می‌شن.
+  const [base, setBase] = useState<Draft>(EMPTY_DRAFT);
+  const draft: Draft = { firstName, lastName, username: username.replace(/^@+/, ""), bio, birthDate, gender, ageYears, heightCm, weightKg, refCode };
+  const dirty = draftKey(draft) !== draftKey(base);
 
   useEffect(() => {
     getAccount().then((res: AccountData) => {
@@ -103,16 +136,20 @@ export default function AccountProfilePage() {
       setFirstName(first);
       setLastName(u.lastName ?? "");
       setBio(u.bio ?? "");
+      let dob: JalaliDate | null = null;
       if (u.birthDate) {
         const d = new Date(u.birthDate);
-        setBirthDate(toJalali(d.getFullYear(), d.getMonth() + 1, d.getDate()));
+        dob = toJalali(d.getFullYear(), d.getMonth() + 1, d.getDate());
+        setBirthDate(dob);
       }
+      setBase((b) => ({ ...b, firstName: first, lastName: u.lastName ?? "", username: u.username ?? "", bio: u.bio ?? "", birthDate: dob }));
     });
     fetch("/api/account/referral")
       .then((r) => (r.ok ? r.json() : null))
       .then((d) => {
         if (!d) return;
         setRefCode(d.code ?? "");
+        setBase((b) => ({ ...b, refCode: d.code ?? "" }));
         setSavedRefCode(d.code ?? null);
         setRefStats({ invitedPaid: d.invitedPaid ?? 0, walletBalance: d.walletBalance ?? 0 });
       })
@@ -124,12 +161,25 @@ export default function AccountProfilePage() {
       .catch(() => {});
     getBodyMetrics().then(({ data: m }) => {
       if (!m) return;
-      setGender(m.gender ?? "unset");
-      setAgeYears(m.ageYears != null ? String(m.ageYears) : "");
-      setHeightCm(m.heightCm != null ? String(m.heightCm) : "");
-      setWeightKg(m.weightKg != null ? String(m.weightKg) : "");
+      const g: Gender = m.gender ?? "unset";
+      const age = m.ageYears != null ? String(m.ageYears) : "";
+      const h = m.heightCm != null ? String(m.heightCm) : "";
+      const w = m.weightKg != null ? String(m.weightKg) : "";
+      setGender(g);
+      setAgeYears(age);
+      setHeightCm(h);
+      setWeightKg(w);
+      setBase((b) => ({ ...b, gender: g, ageYears: age, heightCm: h, weightKg: w }));
     });
   }, []);
+
+  // تغییر ذخیره‌نشده هنگام بستن/رفرش تب هشدار می‌گیره (ناوبری داخلی اپ مثل قبل آزاده)
+  useEffect(() => {
+    if (!dirty) return;
+    const warn = (e: BeforeUnloadEvent) => { e.preventDefault(); e.returnValue = ""; };
+    window.addEventListener("beforeunload", warn);
+    return () => window.removeEventListener("beforeunload", warn);
+  }, [dirty]);
 
   // ورودی هر دو تابع خود File نیست، dataURL کراپ‌شده از ImageCropModal‌ه
   // (آواتار 256×256 با قاب دایره‌ای، بنر 1024×320).
@@ -238,9 +288,11 @@ export default function AccountProfilePage() {
     const height = heightCm.trim() ? Number(heightCm) : undefined;
     const weight = weightKg.trim() ? Number(weightKg) : undefined;
     const age = ageYears.trim() ? Number(ageYears) : undefined;
-    if (height != null && (!Number.isFinite(height) || height < 100 || height > 250)) { setSaveError(tr("قد باید بین 100 تا 250 سانتی‌متر باشه", "Height must be between 100 and 250 cm")); return; }
-    if (weight != null && (!Number.isFinite(weight) || weight < 20 || weight > 300)) { setSaveError(tr("وزن باید بین 20 تا 300 کیلوگرم باشه", "Weight must be between 20 and 300 kg")); return; }
-    if (age != null && (!Number.isFinite(age) || age < 10 || age > 100)) { setSaveError(tr("سن باید بین 10 تا 100 سال باشه", "Age must be between 10 and 100")); return; }
+    // قد/وزن/سن با جدول مشترک (lib/numberLimits.ts) سنجیده می‌شن؛ سرور هم دوباره می‌سنجه
+    for (const [text, key] of [[heightCm, "heightCm"], [weightKg, "weightKg"], [ageYears, "ageYears"]] as const) {
+      const r = readTyped(text, key);
+      if (!r.ok) { setSaveError(r.error); return; }
+    }
 
     setSaving(true);
     try {
@@ -295,13 +347,52 @@ export default function AccountProfilePage() {
         ...d, firstName: name, name: [name, family].filter(Boolean).join(" ") || null, lastName: family, bio: bio.trim() || null, username: uname || null,
         birthDate: birthDate ? jalaliToGregorianApprox(birthDate[0], birthDate[1], birthDate[2]).toISOString() : null,
       } : d));
+      // مقدارهای نرمال‌شده (بدون فاصله‌ی اضافه، بدون @) به فرم برمی‌گردن و می‌شن
+      // «آخرین مقدار ذخیره‌شده»؛ پس پاورقی تغییرات همین‌جا خودش می‌بنده.
+      const finalCode = code || savedRefCode || "";
+      setFirstName(name); setLastName(family); setBio(bio.trim()); setUsername(uname); setRefCode(finalCode);
+      setBase({
+        firstName: name, lastName: family, username: uname, bio: bio.trim(), birthDate, gender,
+        ageYears, heightCm, weightKg, refCode: finalCode,
+      });
       setSaved(true);
-      setTimeout(() => setSaved(false), 2400);
+      setTimeout(() => setSaved(false), 1600);
     } catch {
       setSaveError(tr("مشکلی در اتصال به سرور پیش اومد", "Could not reach the server"));
     } finally {
       setSaving(false);
     }
+  }
+
+  /** «لغو»: همه‌ی فیلدها به آخرین مقدار ذخیره‌شده برمی‌گردن */
+  function cancelChanges() {
+    setFirstName(base.firstName); setLastName(base.lastName); setUsername(base.username); setBio(base.bio);
+    setBirthDate(base.birthDate); setGender(base.gender);
+    setAgeYears(base.ageYears); setHeightCm(base.heightCm); setWeightKg(base.weightKg); setRefCode(base.refCode);
+    setSaveError(null);
+  }
+
+  // کپی/اشتراک فقط برای کدی که ذخیره شده (ویرایش‌نشده)
+  const inviteReady = !!savedRefCode && refCode === savedRefCode;
+  async function copyInviteCode() {
+    if (!savedRefCode) return;
+    try {
+      await navigator.clipboard.writeText(savedRefCode);
+      setCodeCopied(true);
+      setTimeout(() => setCodeCopied(false), 1500);
+    } catch { /* کلیپ‌بورد ممکنه رد کنه — دکمه همون‌طور می‌مونه */ }
+  }
+  async function shareInvite() {
+    if (!savedRefCode) return;
+    const url = `${window.location.origin}/subscription?ref=${savedRefCode}`;
+    try {
+      if (typeof (navigator as any).share === "function") await (navigator as any).share({ title: tr("کد دعوت", "Invite code"), url });
+      else {
+        await navigator.clipboard.writeText(url);
+        setLinkCopied(true);
+        setTimeout(() => setLinkCopied(false), 1500);
+      }
+    } catch { /* کاربر شیت اشتراک رو بست */ }
   }
 
   if (!data) {
@@ -312,7 +403,7 @@ export default function AccountProfilePage() {
           <div className="ap-card account-card">
             <div className="ap-empty">
               <div>{tr("اطلاعات پروفایل باز نشد", "Could not load your profile")}</div>
-              <button type="button" className="account-outline-btn ap-mini-btn" style={{ marginTop: 12 }} onClick={() => window.location.reload()}>{tr("تلاش دوباره", "Try again")}</button>
+              <button type="button" className="btn btn-outline btn-sm" style={{ marginTop: 12 }} onClick={() => window.location.reload()}>{tr("تلاش دوباره", "Try again")}</button>
             </div>
           </div>
         ) : <AccountSkeleton blocks={3} />}
@@ -321,34 +412,35 @@ export default function AccountProfilePage() {
   }
 
   const fullName = [firstName, lastName].filter(Boolean).join(" ") || tr("کاربر آریون", "Arion user");
+  const genderOptions: { value: Gender; label: string }[] = [
+    { value: "male", label: tr("مرد", "Male") },
+    { value: "female", label: tr("زن", "Female") },
+    { value: "unset", label: tr("نمی‌گم", "Prefer not to say") },
+  ];
 
   return (
-    <section>
-      <AccountPageHead title={tr("پروفایل", "Profile")} hint={tr("بنر و عکس پروفایل، مشخصات حساب و پروفایل ورزشی", "Banner and photo, account details and sports profile")} />
+    <section className="ap-profile">
+      <AccountPageHead title={tr("پروفایل", "Profile")} />
 
       {/* ── بنر + آواتار ── */}
-      <div className="ap-cover m-rise">
-        <div className="ap-cover-banner">
-          {/* بنر مثل عکس پروفایل خودش کلیک‌پذیره؛ لایه‌ی دوربین فقط موقع
-              هاور/فوکوس راهنمایی بصری می‌ده (بنر خالی همیشه نشونش می‌ده). */}
-          <button
-            type="button" className={`ap-cover-hit${bannerUrl ? "" : " is-empty"}`} onClick={() => bannerInputRef.current?.click()}
-            disabled={bannerSaving} aria-label={bannerUrl ? tr("تغییر بنر", "Change banner") : tr("افزودن بنر", "Add banner")}
-          >
-            {bannerUrl && <img src={bannerUrl} alt="" className="ap-cover-img" />}
-            <span className="ap-cover-hint" aria-hidden="true">
-              {bannerSaving ? <Spinner size={15} /> : <Camera size={16} />}
-              {!bannerUrl && !bannerSaving && tr("افزودن بنر", "Add banner")}
-            </span>
-          </button>
-
-          {bannerUrl && (
-            <div className="ap-cover-remove">
-              <button type="button" className="ap-cover-remove-btn" onClick={removeBanner} disabled={bannerSaving} aria-label={tr("حذف بنر", "Remove banner")}>
-                <Trash2 size={14} />
+      <div className="ap-cover account-card ap-card m-rise">
+        <div className={`ap-cover-banner${bannerUrl ? "" : " is-empty"}`}>
+          {bannerUrl && <img src={bannerUrl} alt="" className="ap-cover-img" />}
+          <div className="ap-cover-actions">
+            {bannerUrl && (
+              <button type="button" className="btn btn-icon btn-sm btn-danger btn-on-media" onClick={removeBanner} disabled={bannerSaving} aria-label={tr("حذف بنر", "Remove banner")}>
+                <Trash2 size={15} aria-hidden="true" />
               </button>
-            </div>
-          )}
+            )}
+            <button
+              type="button" className={`btn btn-outline btn-sm btn-on-media${bannerSaving ? " is-loading" : ""}`}
+              onClick={() => bannerInputRef.current?.click()} disabled={bannerSaving} aria-busy={bannerSaving || undefined}
+            >
+              {bannerSaving && <Spinner className="btn-spinner" size={15} label={null} />}
+              <Camera size={16} aria-hidden="true" />
+              {bannerUrl ? tr("تغییر بنر", "Change banner") : tr("افزودن بنر", "Add banner")}
+            </button>
+          </div>
           <input
             ref={bannerInputRef} type="file" accept="image/*" style={{ display: "none" }}
             onChange={(e) => { const f = e.target.files?.[0]; if (f) pickBannerFile(f); e.target.value = ""; }}
@@ -356,19 +448,23 @@ export default function AccountProfilePage() {
         </div>
 
         <div className="ap-cover-row">
-          <button
-            type="button" className="ap-cover-avatar" onClick={onAvatarTap}
-            disabled={avatarSaving} aria-label={tr("تغییر عکس پروفایل", "Change profile photo")}
-          >
-            {avatarUrl ? (
-              <img src={avatarUrl} alt={tr("عکس پروفایل", "Profile photo")} className="ap-cover-avatar-img" />
-            ) : (
-              <AgentAvatar seed={fullName || username || "؟"} size={96} className="ap-cover-avatar-img" />
-            )}
-            <span className="ap-cover-avatar-badge" aria-hidden="true">
-              {avatarSaving ? <Spinner size={13} /> : <Camera size={14} />}
-            </span>
-          </button>
+          <div className="ap-cover-avatar-wrap">
+            {/* خود عکس هم قابل‌لمسه ولی کنترل اصلی (قابل‌دسترس با کیبورد) دکمه‌ی دوربینه */}
+            <button type="button" className="ap-cover-avatar" onClick={onAvatarTap} disabled={avatarSaving} tabIndex={-1} aria-hidden="true">
+              {avatarUrl ? (
+                <img src={avatarUrl} alt="" className="ap-cover-avatar-img" />
+              ) : (
+                <AgentAvatar seed={fullName || username || "؟"} size={96} className="ap-cover-avatar-img" />
+              )}
+            </button>
+            <button
+              type="button" className={`btn btn-primary btn-icon btn-round ap-cover-cam${avatarSaving ? " is-loading" : ""}`}
+              onClick={onAvatarTap} disabled={avatarSaving} aria-busy={avatarSaving || undefined} aria-label={tr("تغییر عکس پروفایل", "Change profile photo")}
+            >
+              {avatarSaving && <Spinner className="btn-spinner" size={14} label={null} />}
+              <Camera size={15} aria-hidden="true" />
+            </button>
+          </div>
           <input
             ref={avatarInputRef} type="file" accept="image/*" style={{ display: "none" }}
             onChange={(e) => { const f = e.target.files?.[0]; if (f) pickAvatarFile(f); e.target.value = ""; }}
@@ -410,107 +506,127 @@ export default function AccountProfilePage() {
         />
       )}
 
-      {/* ── پروفایل عمومی ── */}
-      <AccountBlock title={tr("پروفایل عمومی", "Public profile")} icon={<IdCard />} index={0}>
-        {/* فقط نام و نام‌خانوادگی هم‌ردیف‌اند، بقیه هرکدام یک خط کامل. */}
-        <div className="ap-field-grid">
-          <AuthField id="pf-name" label={tr("نام", "First name")} icon={<UserIcon size={16} />}>
-            <input id="pf-name" type="text" className="wsearch-newform-name" autoComplete="given-name" value={firstName} onChange={(e) => setFirstName(e.target.value)} />
-          </AuthField>
-          <AuthField id="pf-lastname" label={tr("نام خانوادگی", "Last name")} icon={<UserIcon size={16} />}>
-            <input id="pf-lastname" type="text" className="wsearch-newform-name" autoComplete="family-name" value={lastName} onChange={(e) => setLastName(e.target.value)} />
-          </AuthField>
-        </div>
+      {/* همه‌ی کارت‌های فرم زیر یک <form> تا Enter هم ذخیره کنه؛ دکمه‌های داخلش همه type=button‌اند. */}
+      <form onSubmit={(e) => { e.preventDefault(); if (dirty && !saving) saveAll(); }} noValidate>
 
-        <div className="ap-field-stack">
-          {/* شماره همراه عمدا فقط‌خواندنی است: تغییرش یعنی تغییر شناسه‌ی ورود
-              و باید با تایید پیامکی انجام شود، نه با یک ذخیره‌ی ساده. */}
-          <AuthField id="pf-phone" label={tr("شماره همراه", "Phone number")} icon={<Phone size={16} />}>
-            <input id="pf-phone" type="text" className="wsearch-newform-name mono ap-ltr" dir="ltr" value={data.phone || tr("ثبت نشده", "Not set")} readOnly disabled />
-          </AuthField>
+        {/* ── اطلاعات حساب ── */}
+        <AccountBlock
+          title={tr("اطلاعات حساب", "Account details")} icon={<IdCard />} index={0}
+          desc={tr("چیزهایی که دوستان و مربی‌هات می‌بینن", "What your friends and mentors see")}
+        >
+          <div className="ap-field-grid">
+            <AuthField id="pf-name" label={tr("نام", "First name")}>
+              <input id="pf-name" type="text" className="wsearch-newform-name" autoComplete="given-name" value={firstName} onChange={(e) => setFirstName(e.target.value)} />
+            </AuthField>
+            <AuthField id="pf-lastname" label={tr("نام خانوادگی", "Last name")}>
+              <input id="pf-lastname" type="text" className="wsearch-newform-name" autoComplete="family-name" value={lastName} onChange={(e) => setLastName(e.target.value)} />
+            </AuthField>
 
-          <AuthField id="pf-username" label={tr("یوزرنیم", "Username")} icon={<AtSign size={16} />}>
-            <input
-              id="pf-username" type="text" className="wsearch-newform-name mono ap-ltr" dir="ltr" autoComplete="username" autoCapitalize="none" spellCheck={false}
-              value={username} onChange={(e) => setUsername(e.target.value)} placeholder="username"
-            />
-          </AuthField>
+            {/* شماره همراه عمدا فقط‌خواندنی است: تغییرش یعنی تغییر شناسه‌ی ورود
+                و باید با تایید پیامکی انجام شود، نه با یک ذخیره‌ی ساده. */}
+            <AuthField id="pf-phone" label={tr("شماره همراه", "Phone number")}>
+              <input id="pf-phone" type="text" className={`wsearch-newform-name mono ap-ltr${data.phone && data.phoneVerifiedAt ? " ap-pe-chip" : ""}`} dir="ltr" value={data.phone || tr("ثبت نشده", "Not set")} readOnly disabled />
+              {data.phone && data.phoneVerifiedAt && <span className="ap-affix is-ok">{tr("تایید شده", "Verified")}</span>}
+            </AuthField>
 
-          <AuthField id="pf-dob" label={tr("تاریخ تولد", "Birth date")} icon={<Cake size={16} />}>
-            <button type="button" id="pf-dob" className={`jdate-btn${birthDate ? "" : " placeholder"}`} onClick={() => setDobOpen(true)}>
-              {birthDate ? formatJalali(birthDate) : tr("انتخاب تاریخ تولد", "Select birth date")}
+            {/* یوزرنیم با @ جلوش نشون داده می‌شه (جزو متن فیلده، پس چسبیده به یوزرنیم می‌شینه)؛
+                در state بدون @ نگه داشته می‌شه. */}
+            <AuthField id="pf-username" label={tr("یوزرنیم", "Username")}>
+              <input
+                id="pf-username" type="text" className="wsearch-newform-name mono ap-ltr" dir="ltr" autoComplete="username" autoCapitalize="none" spellCheck={false}
+                value={username ? `@${username.replace(/^@+/, "")}` : ""} onChange={(e) => setUsername(e.target.value.replace(/^@+/, ""))} placeholder="@username"
+              />
+            </AuthField>
+
+            <AuthField id="pf-dob" label={tr("تاریخ تولد", "Birth date")}>
+              <button type="button" id="pf-dob" className={`jdate-btn ap-pe-icon${birthDate ? "" : " placeholder"}`} onClick={() => setDobOpen(true)}>
+                {birthDate ? formatJalali(birthDate) : tr("انتخاب تاریخ", "Select date")}
+              </button>
+              <span className="ap-affix is-icon" aria-hidden="true"><CalendarDays size={16} /></span>
+            </AuthField>
+
+            <div className="name-field-wrap" data-anim-field>
+              <span className="ap-field-label">{tr("جنسیت", "Gender")}</span>
+              <SegmentedTabs<Gender> className="seg-flush ap-seg" ariaLabel={tr("جنسیت", "Gender")} options={genderOptions} active={gender} onChange={setGender} />
+            </div>
+
+            <div className="ap-span-2">
+              <AuthField id="pf-bio" label={tr("بیوگرافی", "Bio")}>
+                <textarea
+                  id="pf-bio" className="wsearch-newform-name ap-textarea" rows={3} maxLength={BIO_MAX}
+                  value={bio} onChange={(e) => setBio(e.target.value)}
+                  placeholder={tr("یه توضیح کوتاه درباره‌ی خودت", "A short description about yourself")}
+                />
+                <span className="ap-counter mono" dir="ltr">{bio.length}/{BIO_MAX}</span>
+              </AuthField>
+            </div>
+          </div>
+        </AccountBlock>
+
+        {/* ── پروفایل ورزشی ── */}
+        {showSports && (
+          <AccountBlock
+            title={tr("پروفایل ورزشی", "Sports profile")} icon={<Dumbbell />} index={1}
+            desc={tr("برای بخش ورزش و کالری لازمه؛ توی فرم‌های اون بخش‌ها هم پر می‌شه", "Needed for the workout and calorie sections; it also fills their forms")}
+          >
+            <div className="ap-field-grid is-3">
+              <AuthField id="pf-age" label={tr("سن", "Age")}>
+                <NumberInput id="pf-age" limit="ageYears" dir="ltr" className="wsearch-newform-name ap-ltr ap-pe-unit" value={ageYears} onChange={setAgeYears} />
+                <span className="ap-affix">{tr("سال", "yr")}</span>
+              </AuthField>
+              <AuthField id="pf-height" label={tr("قد", "Height")}>
+                <NumberInput id="pf-height" limit="heightCm" dir="ltr" className="wsearch-newform-name ap-ltr ap-pe-unit" value={heightCm} onChange={setHeightCm} />
+                <span className="ap-affix">{tr("سانتی‌متر", "cm")}</span>
+              </AuthField>
+              <AuthField id="pf-weight" label={tr("وزن", "Weight")}>
+                <NumberInput id="pf-weight" limit="weightKg" dir="ltr" className="wsearch-newform-name ap-ltr ap-pe-unit" value={weightKg} onChange={setWeightKg} />
+                <span className="ap-affix">{tr("کیلوگرم", "kg")}</span>
+              </AuthField>
+            </div>
+          </AccountBlock>
+        )}
+
+        {/* ── کد دعوت ── */}
+        <AccountBlock
+          title={tr("کد دعوت", "Invite code")} icon={<Gift />} index={2}
+          desc={tr(`دوستت ${faNum(REFERRAL_DISCOUNT_PERCENT)}٪ روی اولین خرید تخفیف می‌گیره، تو ${faNum(10)}٪ اعتبار کیف`, `Your friend gets ${faNum(REFERRAL_DISCOUNT_PERCENT)}% off their first purchase, you get ${faNum(10)}% as wallet credit`)}
+        >
+          <div className="ap-invite-row">
+            <AuthField id="pf-refcode" label={tr("اسم کد (4 تا 16 حرف انگلیسی یا عدد)", "Code name (4 to 16 English letters or digits)")}>
+              <input
+                id="pf-refcode" type="text" className="wsearch-newform-name mono ap-ltr ap-code-input" dir="ltr"
+                value={refCode} maxLength={16} autoCapitalize="characters" spellCheck={false}
+                onChange={(e) => setRefCode(e.target.value.toUpperCase().replace(/[^A-Z0-9]/g, ""))}
+                placeholder="MYCODE"
+              />
+            </AuthField>
+            <button
+              type="button" className="btn btn-outline btn-icon btn-lg btn-round" onClick={copyInviteCode} disabled={!inviteReady}
+              aria-label={codeCopied ? tr("کپی شد", "Copied") : tr("کپی کد", "Copy code")} title={codeCopied ? tr("کپی شد", "Copied") : tr("کپی کد", "Copy code")}
+            >
+              {codeCopied ? <Check size={17} aria-hidden="true" /> : <Copy size={17} aria-hidden="true" />}
             </button>
-          </AuthField>
-
-          <AuthField id="pf-bio" label={tr("بیوگرافی", "Bio")} icon={<NotebookPen size={16} />}>
-            <textarea
-              id="pf-bio" className="wsearch-newform-name ap-textarea" rows={3} maxLength={BIO_MAX}
-              value={bio} onChange={(e) => setBio(e.target.value)}
-              placeholder={tr("یک توضیح کوتاه درباره‌ی خودت — توی پروفایلی که دوستانت می‌بینن نشون داده می‌شه", "A short description about yourself, shown in the profile your friends see")}
-            />
-            <span className="ap-counter mono" dir="ltr">{bio.length}/{BIO_MAX}</span>
-          </AuthField>
-        </div>
-      </AccountBlock>
-
-      {/* ── کد دعوت ── */}
-      <AccountBlock
-        title={tr("کد دعوت", "Invite code")}
-        icon={<Gift />}
-        desc={tr(`دوستت با کدت روی اولین خریدش ${faNum(REFERRAL_DISCOUNT_PERCENT)}٪ تخفیف می‌گیره (هر نفر فقط یک بار)، و تو به‌ازای هر دوستی که با پول واقعی خرید کنه 10٪ از همون مبلغ به‌صورت اعتبار داخل کیف خودت واریز می‌شه — فقط برای کم‌کردن قیمت خرید پلن بعدی، نه قابل‌برداشت.`, `Your friend gets ${faNum(REFERRAL_DISCOUNT_PERCENT)}% off their first purchase with your code (once per person), and for every friend who buys with real money, 10% of that amount is added to your wallet as credit. It can only reduce the price of your next plan and cannot be withdrawn.`)}
-        index={1}
-      >
-        <div className="ap-field-stack">
-          <AuthField id="pf-refcode" label={tr("اسم کد (4 تا 16 حرف انگلیسی یا عدد)", "Code name (4 to 16 English letters or digits)")} icon={<Gift size={16} />}>
-            <input
-              id="pf-refcode" type="text" className="wsearch-newform-name mono ap-ltr" dir="ltr"
-              value={refCode} maxLength={16} autoCapitalize="characters" spellCheck={false}
-              onChange={(e) => setRefCode(e.target.value.toUpperCase().replace(/[^A-Z0-9]/g, ""))}
-              placeholder="MYCODE"
-            />
-          </AuthField>
+            <button type="button" className="btn btn-tonal ap-h46" onClick={shareInvite} disabled={!inviteReady}>
+              {linkCopied ? <Check size={16} aria-hidden="true" /> : <Share2 size={16} aria-hidden="true" />}
+              {linkCopied ? tr("لینک کپی شد", "Link copied") : tr("فرستادن لینک دعوت", "Send invite link")}
+            </button>
+          </div>
           {refStats && (
-            <p className="ap-field-note">
-              {tr(`${faNum(refStats.invitedPaid)} دوست با کدت خرید کردن · موجودی کیف: ${formatPriceAmount(refStats.walletBalance)}`, `${faNum(refStats.invitedPaid)} ${refStats.invitedPaid === 1 ? "friend has" : "friends have"} purchased with your code · Wallet balance: ${formatPriceAmount(refStats.walletBalance)}`)}
-            </p>
+            <div className="ap-invite-stats">
+              <span>
+                <b>{faNum(refStats.invitedPaid)}</b>{" "}
+                {tr("دوست با کدت خرید کردن", refStats.invitedPaid === 1 ? "friend has purchased with your code" : "friends have purchased with your code")}
+              </span>
+              <span>{tr("موجودی کیف", "Wallet balance")} <b>{formatPriceAmount(refStats.walletBalance)}</b></span>
+            </div>
           )}
-        </div>
-      </AccountBlock>
+          <p className="ap-field-note">
+            {tr(`به‌ازای هر دوستی که با پول واقعی خرید کنه 10٪ از همون مبلغ به‌صورت اعتبار داخل کیف خودت واریز می‌شه و هر دوست فقط یک بار از تخفیف کدت استفاده می‌کنه. اعتبار فقط برای کم‌کردن قیمت خرید پلن بعدیه و قابل‌برداشت نیست.`, `For every friend who buys with real money, 10% of that amount is added to your wallet as credit, and each friend can use your code's discount only once. The credit can only reduce the price of your next plan and cannot be withdrawn.`)}
+          </p>
+        </AccountBlock>
 
-      {/* ── پروفایل ورزشی ── */}
-      <AccountBlock
-        title={tr("پروفایل ورزشی", "Sports profile")}
-        icon={<Dumbbell />}
-        desc={tr("برای استفاده از بخش ورزش و کالری الزامی است — همین اطلاعات توی فرم‌های بدنسازی و کالری هم پر می‌شود.", "Required to use the workout and calorie sections. The same details are filled in the workout and calorie forms.")}
-        index={2}
-      >
-        <div className="ap-field-grid">
-          <AuthField id="pf-age" label={tr("سن", "Age")} icon={<Cake size={16} />}>
-            <NumberInput id="pf-age" dir="ltr" className="wsearch-newform-name ap-ltr" value={ageYears} onChange={setAgeYears} />
-          </AuthField>
-          <AuthField id="pf-height" label={tr("قد (سانتی‌متر)", "Height (cm)")} icon={<Ruler size={16} />}>
-            <NumberInput id="pf-height" dir="ltr" className="wsearch-newform-name ap-ltr" value={heightCm} onChange={setHeightCm} />
-          </AuthField>
-          <AuthField id="pf-weight" label={tr("وزن (کیلوگرم)", "Weight (kg)")} icon={<Weight size={16} />}>
-            <NumberInput decimal id="pf-weight" dir="ltr" className="wsearch-newform-name ap-ltr" value={weightKg} onChange={setWeightKg} />
-          </AuthField>
-          <AuthField id="pf-gender" label={tr("جنسیت", "Gender")} icon={<VenetianMask size={16} />}>
-            <span className="acc-select-wrap">
-              <select
-                id="pf-gender" className="wsearch-newform-name acc-select"
-                value={gender} onChange={(e) => setGender(e.target.value as "male" | "female" | "unset")}
-              >
-                <option value="unset">{tr("نامشخص", "Unspecified")}</option>
-                <option value="male">{tr("مرد", "Male")}</option>
-                <option value="female">{tr("زن", "Female")}</option>
-              </select>
-              <ChevronDown size={15} />
-            </span>
-          </AuthField>
-        </div>
-      </AccountBlock>
-
-      <AccountSaveBar onSave={saveAll} saving={saving} saved={saved} error={saveError} />
+        <AccountActionBar visible={dirty || saved} saved={saved && !dirty} saving={saving} error={saveError} onCancel={cancelChanges} />
+      </form>
 
       {dobOpen && (
         <JalaliDatePicker

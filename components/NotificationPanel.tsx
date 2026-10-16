@@ -14,6 +14,7 @@ import type { InAppNotification, NotificationsResponse } from "@/lib/mentorTypes
 import { SETTING_KEYS } from "@/lib/userSettingKeys";
 import { tr, isEn, iso } from "@/lib/i18n";
 import { focusDisplay } from "@/lib/exerciseI18n";
+import { isSectionKey, type SectionKey } from "@/lib/sections";
 import { ANNOUNCEMENT_READ_KEEP, type PublicAnnouncement } from "@/lib/announcements";
 
 type ServerNotif = { kind: "server"; id: string; title: string; body: string; url: string | null; readAt: string | null; createdAt: string };
@@ -73,10 +74,24 @@ export function countUnreadNotifications(items: NotifItem[]): number {
 
 const EXERCISE_REMINDER_HOUR = 17;
 
+// بخش جاری از <html data-section> (layout ریشه ست می‌کنه)؛ این ماژول بیرون از ری‌اکت لود می‌کنه، پس هوک نه.
+function currentSection(): SectionKey | null {
+  if (typeof document === "undefined") return null;
+  const v = document.documentElement.getAttribute("data-section");
+  return isSectionKey(v) ? v : null;
+}
+
 // دو اطلاعیه‌ی ثابت که همیشه (تا وقتی کاربر روشون کلیک نکرده) اول لیست
 // نشون داده می‌شن — برخلاف بقیه‌ی آیتم‌ها که هر بار از نو محاسبه می‌شن،
 // اینا فقط یک‌بار (با کلیک) به‌ازای هر کاربر/دستگاه بسته می‌شن، توی همون
 // UserSetting عمومی (کلید dismissedStaticNotifs) که برای مهمون هم localStorage کار می‌کنه.
+const SECTION_WELCOME = (section: SectionKey | null): { fa: string; en: string } => {
+  if (section === "routine") return { fa: "روتین روزانه، خواب و رودمپ یادگیری", en: "daily routine, sleep and learning roadmaps" };
+  if (section === "workout") return { fa: "برنامه‌ی تمرینی، کالری و خواب", en: "workout plan, calories and sleep" };
+  if (section === "trade") return { fa: "ژورنال ترید، تقویم اقتصادی و اتصال متاتریدر", en: "trading journal, economic calendar and MetaTrader" };
+  return { fa: "روتین روزانه، خواب، بدنسازی و کالری، ژورنال ترید، و رودمپ یادگیری", en: "daily routine, sleep, workout and calories, trading journal, and learning roadmaps" };
+};
+
 const staticNotifs = (): Extract<NotifItem, { kind: "static" }>[] => [
   {
     kind: "static",
@@ -85,8 +100,8 @@ const staticNotifs = (): Extract<NotifItem, { kind: "static" }>[] => [
     body: tr("یه نگاه سریع به این‌که آریون چیکار برات می‌کنه.", "A quick look at what Arion does for you."),
     modalTitle: tr("به آریون خوش اومدی! 👋", "Welcome to Arion! 👋"),
     modalBody: tr(
-      "آریون همه‌ی برنامه‌ات رو یه‌جا نگه می‌داره: روتین روزانه، خواب، بدنسازی و کالری، ژورنال ترید، و رودمپ یادگیری — بدون اینکه لازم باشه بین چندتا اپ جابه‌جا بشی.\n\nهر بخش رو از منوی همبرگری (بالا-راست) پیدا می‌کنی. اگه سوالی داشتی یا چیزی گیر کرد، از همین‌جا (زنگوله‌ی بالای صفحه) یا بخش «درباره ما» می‌تونی پیگیرش بشی.\n\nامیدواریم روزهای بهتری رو با آریون بسازی.",
-      "Arion keeps your whole plan in one place: daily routine, sleep, workout and calories, trading journal, and learning roadmaps, without switching between apps.\n\nYou can find every section in the menu (top-left). If you have a question or get stuck, follow up here (the bell at the top of the page) or in the \"About us\" section.\n\nWe hope you build better days with Arion.",
+      `آریون همه‌ی برنامه‌ات رو یه‌جا نگه می‌داره: ${SECTION_WELCOME(currentSection()).fa} — بدون اینکه لازم باشه بین چندتا اپ جابه‌جا بشی.\n\nهر بخش رو از منوی همبرگری (بالا-راست) پیدا می‌کنی. اگه سوالی داشتی یا چیزی گیر کرد، از همین‌جا (زنگوله‌ی بالای صفحه) یا بخش «درباره ما» می‌تونی پیگیرش بشی.\n\nامیدواریم روزهای بهتری رو با آریون بسازی.`,
+      `Arion keeps your whole plan in one place: ${SECTION_WELCOME(currentSection()).en}, without switching between apps.\n\nYou can find every section in the menu (top-left). If you have a question or get stuck, follow up here (the bell at the top of the page) or in the \"About us\" section.\n\nWe hope you build better days with Arion.`,
     ),
   },
   {
@@ -142,7 +157,10 @@ export async function loadPendingNotifications(): Promise<NotifItem[]> {
   const staticItems = staticNotifs().filter((n) => !dismissed.includes(n.id));
   const items: NotifItem[] = [];
 
-  const wantsExercise = prefs.exerciseReminders && new Date().getHours() >= EXERCISE_REMINDER_HOUR;
+  // یادآورها مال بخش خودشونن: برنامه‌ی روتین فقط روی روتین، تمرین فقط روی ورزش (دامنه‌ی اصلی هر دو)
+  const section = currentSection();
+  const wantsRoutine = prefs.taskReminders && (!section || section === "routine");
+  const wantsExercise = prefs.exerciseReminders && (!section || section === "workout") && new Date().getHours() >= EXERCISE_REMINDER_HOUR;
   const [removedArr, customArr, daily, exerciseItem, server] = await Promise.all([
     getRemovedOccurrences(),
     getCustomOccurrences(),
@@ -153,7 +171,7 @@ export async function loadPendingNotifications(): Promise<NotifItem[]> {
   serverHasMore = !!server?.hasMore;
   const serverItems = server?.items ?? [];
 
-  if (prefs.taskReminders) {
+  if (wantsRoutine) {
     const tasks = tasksForDate(new Date(), { removedOccurrences: new Set(removedArr), customOccurrences: customArr });
     const nowMinutes = new Date().getHours() * 60 + new Date().getMinutes();
     for (const t of tasks) {

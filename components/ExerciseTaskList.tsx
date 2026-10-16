@@ -365,7 +365,7 @@ export function ExerciseTaskList({
                   type="button"
                   onClick={() => setConfirmEnd(false)}
                   className="flex w-full items-center justify-center gap-2 rounded-2xl py-3 text-[13px] font-bold sm:text-[14px]"
-                  style={{ background: "var(--accent)", color: "var(--bg)", boxShadow: "0 8px 22px rgba(var(--accent-rgb),.3)" }}
+                  style={{ background: "var(--accent)", color: "var(--sec-on-accent, var(--bg))", boxShadow: "0 8px 22px rgba(var(--accent-rgb),.3)" }}
                 >
                   {tr("ادامه تمرین", "Continue workout")}
                 </button>

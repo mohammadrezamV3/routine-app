@@ -3,50 +3,65 @@ import { BlogList } from "@/components/BlogList";
 import { BRAND_FA, brandName } from "@/lib/brand";
 import { tr } from "@/lib/i18n";
 import { sortedPosts } from "@/lib/blogPosts";
-import { absoluteUrl, breadcrumbJsonLd, pageMetadata } from "@/lib/seo";
+import { blogCanonicalUrl, blogIndexCanonical, blogIntro, blogMetadata, filterPostsForSection } from "@/lib/sectionBlog";
+import { getHostSection, getSection } from "@/lib/sectionServer";
+import { SECTION_META } from "@/lib/sections";
+import { breadcrumbJsonLd } from "@/lib/seo";
 
-function intro(): string {
-  return tr(
-    "راهنماهای کاربردی درباره‌ی روتین روزانه، عادت‌سازی، برنامه‌ریزی، خواب، بدنسازی، کالری و ژورنال " +
-      "معاملاتی. هر مقاله به یک سوال مشخص جواب می‌دهد، نه بیشتر.",
-    "Practical guides on daily routines, habit building, planning, sleep, workouts, calories and the trading " +
-      "journal. Each article answers one specific question, no more.",
-  );
+function titles(section: ReturnType<typeof getSection>) {
+  const brand = brandName();
+  if (section) {
+    const label = SECTION_META[section].label;
+    return {
+      meta: tr(`مقاله‌های ${BRAND_FA} ${label}`, `${brand} ${label} articles`),
+      heading: tr(`مقاله‌های ${BRAND_FA} ${label}`, `${brand} ${label} articles`),
+    };
+  }
+  return {
+    meta: tr(`مقاله‌های ${BRAND_FA} درباره روتین، سلامت و ترید`, `${brand} articles on routines, health and trading`),
+    heading: tr("مقاله‌های آریون درباره نظم، روتین، سلامت و ترید", `${brand} articles on discipline, routines, health and trading`),
+  };
 }
 
 export function generateMetadata(): Metadata {
-  const metadata = pageMetadata({
-    title: tr(
-      `مقاله‌های ${BRAND_FA} درباره روتین، سلامت و ترید`,
-      `${brandName()} articles on routines, health and trading`,
-    ),
-    description: intro(),
-    path: "/blog",
+  // متن از بخش موثر؛ canonical و فید از میزبان
+  const section = getSection();
+  const host = getHostSection();
+  return blogMetadata({
+    title: titles(section).meta,
+    description: blogIntro(section),
+    canonical: blogIndexCanonical(host),
+    section: host,
   });
-  // feed.xml برای فیدخوان‌ها/خزنده‌ها — pageMetadata فیلد `types` رو نمی‌سازه
-  // چون فقط توی همین یک صفحه لازمه، پس جدا merge می‌شه.
-  metadata.alternates = { ...metadata.alternates, types: { "application/rss+xml": absoluteUrl("/blog/feed.xml") } };
-  return metadata;
 }
 
 export default function BlogIndexPage() {
-  const posts = sortedPosts();
+  const section = getSection();
+  const posts = filterPostsForSection(sortedPosts(), section);
   const brand = brandName();
-  const breadcrumb = [
-    { name: brand, path: "/" },
-    { name: tr("مقاله‌ها", "Articles"), path: "/blog" },
-  ];
-  const introText = intro();
+  const origin = blogIndexCanonical(getHostSection()).replace(/\/blog$/, "");
+  const introText = blogIntro(section);
+  const t = titles(section);
+  const crumb = (path: string) => `${origin}${path === "/" ? "" : path}`;
+
+  const breadcrumb = {
+    "@context": "https://schema.org",
+    "@type": "BreadcrumbList",
+    itemListElement: [
+      { name: brand, path: "/" },
+      { name: tr("مقاله‌ها", "Articles"), path: "/blog" },
+    ].map((it, i) => ({ "@type": "ListItem", position: i + 1, name: it.name, item: crumb(it.path) })),
+  };
 
   // ItemList فهرست مقاله‌ها را توصیف می‌کند — دقیقا همان چیزی که روی صفحه
-  // دیده می‌شود، به همان ترتیب.
+  // دیده می‌شود، به همان ترتیب. آدرس هر مقاله canonical خودشه.
   const listJsonLd = {
     "@context": "https://schema.org",
     "@type": "ItemList",
     itemListElement: posts.map((p, i) => ({
       "@type": "ListItem",
       position: i + 1,
-      url: absoluteUrl(`/blog/${p.slug}`),
+      url: blogCanonicalUrl(`/blog/${p.slug}`, p.category),
       name: p.title,
     })),
   };
@@ -54,9 +69,9 @@ export default function BlogIndexPage() {
   const collectionJsonLd = {
     "@context": "https://schema.org",
     "@type": "CollectionPage",
-    name: tr(`مقاله‌های ${BRAND_FA}`, `${brand} articles`),
+    name: section ? t.meta : tr(`مقاله‌های ${BRAND_FA}`, `${brand} articles`),
     description: introText,
-    url: absoluteUrl("/blog"),
+    url: blogIndexCanonical(getHostSection()),
     inLanguage: "fa-IR",
   };
 
@@ -64,16 +79,9 @@ export default function BlogIndexPage() {
     <>
       <script
         type="application/ld+json"
-        dangerouslySetInnerHTML={{ __html: JSON.stringify([breadcrumbJsonLd(breadcrumb), collectionJsonLd, listJsonLd]) }}
+        dangerouslySetInnerHTML={{ __html: JSON.stringify(section ? [breadcrumb, collectionJsonLd, listJsonLd] : [breadcrumbJsonLd([{ name: brand, path: "/" }, { name: tr("مقاله‌ها", "Articles"), path: "/blog" }]), collectionJsonLd, listJsonLd]) }}
       />
-      <BlogList
-        posts={posts}
-        intro={introText}
-        heading={tr(
-          "مقاله‌های آریون درباره نظم، روتین، سلامت و ترید",
-          `${brand} articles on discipline, routines, health and trading`,
-        )}
-      />
+      <BlogList posts={posts} intro={introText} heading={t.heading} section={section} />
     </>
   );
 }

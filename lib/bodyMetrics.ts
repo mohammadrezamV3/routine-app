@@ -1,5 +1,6 @@
 import { SETTING_KEYS } from "./userSettingKeys";
 import { takePreloaded } from "./preload";
+import { isInLimit } from "./numberLimits";
 // قد/وزن/سن یک منبع مشترک واحد داره (نه یک فرم جدا برای هر ماژول) — یک‌بار
 // توی هر فرمی (کالری یا بدنسازی) وارد بشه، همون مقدار توی بقیه‌ی فرم‌ها هم
 // از قبل پر می‌شه. روی همون UserSetting عمومی کلید/مقدار ذخیره می‌شه (بدون
@@ -11,6 +12,18 @@ export type BodyMetrics = { heightCm?: number; weightKg?: number; ageYears?: num
 const KEY = SETTING_KEYS.bodyMetrics;
 const WEIGHT_REMINDER_DAYS = 14;
 
+// مقدار قدیمی خارج از بازه (قبل از اعمال سقف‌ها ذخیره شده) نه فرم‌ها رو با عدد
+// عجیب پر کنه و نه ذخیره‌ی بعدی رو (که سرور سنجش می‌کنه) برای همیشه خراب کنه.
+function sanitizeMetrics(m: BodyMetrics | null | undefined): BodyMetrics | null {
+  if (!m || typeof m !== "object") return null;
+  const out: BodyMetrics = {};
+  if (isInLimit(m.heightCm, "heightCm")) out.heightCm = m.heightCm;
+  if (isInLimit(m.weightKg, "weightKg")) out.weightKg = m.weightKg;
+  if (isInLimit(m.ageYears, "ageYears")) out.ageYears = m.ageYears;
+  if (m.gender === "male" || m.gender === "female") out.gender = m.gender;
+  return out;
+}
+
 export async function getBodyMetrics(): Promise<{ data: BodyMetrics | null; updatedAt: string | null }> {
   try {
     const pre = takePreloaded(`/api/settings/${KEY}`);
@@ -19,7 +32,7 @@ export async function getBodyMetrics(): Promise<{ data: BodyMetrics | null; upda
       return res.ok ? res.json() : null;
     })();
     if (!json) return { data: null, updatedAt: null };
-    return { data: (json.value as BodyMetrics) ?? null, updatedAt: json.updatedAt ?? null };
+    return { data: sanitizeMetrics(json.value as BodyMetrics), updatedAt: json.updatedAt ?? null };
   } catch {
     return { data: null, updatedAt: null };
   }

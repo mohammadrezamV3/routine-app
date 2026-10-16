@@ -3,7 +3,15 @@ import { requireMentorsUser, notFound, badRequest } from "@/lib/mentorGuard";
 import { readJsonBody } from "@/lib/validate";
 import { checkRateLimit } from "@/lib/rateLimit";
 import { clearChatHistory, listChatHistory } from "@/lib/mentorChatHistory";
+import { getSection } from "@/lib/sectionServer";
+import { SECTION_META } from "@/lib/sections";
 import { tr } from "@/lib/i18n";
+
+// روی زیردامنه‌ی یک بخش فقط گفت‌وگوهای مربی‌های همون بخش (جداسازی بخش‌ها)
+function allowedCategories(): readonly string[] | null {
+  const section = getSection();
+  return section ? SECTION_META[section].mentorCategories : null;
+}
 
 // «سابقه‌ی گفت‌وگو» در پنل کاربری. پاک‌کردن فقط برای خود کاربر است
 // (lib/mentorChatHistory.ts)؛ نسخه‌ی طرف مقابل دست نمی‌خورد.
@@ -12,7 +20,7 @@ import { tr } from "@/lib/i18n";
 export async function GET() {
   const g = await requireMentorsUser();
   if (!g.ok) return g.response;
-  return NextResponse.json({ conversations: await listChatHistory(g.userId) });
+  return NextResponse.json({ conversations: await listChatHistory(g.userId, allowedCategories()) });
 }
 
 // POST /api/mentorships/chat-history { mentorshipId } | { all: true }
@@ -27,11 +35,11 @@ export async function POST(req: Request) {
   const b = parsed.body || {};
 
   if (b.all === true) {
-    const cleared = await clearChatHistory(g.userId, "all");
+    const cleared = await clearChatHistory(g.userId, "all", new Date(), allowedCategories());
     return NextResponse.json({ ok: true, cleared });
   }
   if (typeof b.mentorshipId !== "string" || !b.mentorshipId || b.mentorshipId.length > 64) return badRequest(tr(tr("گفت‌وگو نامعتبره", "Invalid conversation"), "Invalid conversation"));
-  const cleared = await clearChatHistory(g.userId, b.mentorshipId);
+  const cleared = await clearChatHistory(g.userId, b.mentorshipId, new Date(), allowedCategories());
   if (!cleared) return notFound();
   return NextResponse.json({ ok: true, cleared });
 }

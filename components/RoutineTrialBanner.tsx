@@ -12,6 +12,7 @@ import { ROUTINE_PLAN_KEY, ROUTINE_TRIAL_DAYS } from "@/lib/trial";
 import { entryOffer } from "@/lib/planPricing";
 import { usePlanPricing } from "@/lib/usePlanPricing";
 import { useLiveRefresh } from "@/lib/liveSync";
+import { useSection } from "@/components/SectionProvider";
 import { tr, isEn, iso } from "@/lib/i18n";
 
 export function routineTrialDaysLeft(data: Awaited<ReturnType<typeof getAccount>>): number | null {
@@ -28,6 +29,7 @@ export function routineTrialDaysLeft(data: Awaited<ReturnType<typeof getAccount>
 
 export function RoutineTrialBanner({ className }: { className?: string }) {
   const { status } = useSession();
+  const section = useSection();
   const [left, setLeft] = useState<number | null>(null);
   const [v, setV] = useState(0);
   useLiveRefresh(["account"], () => setV((x) => x + 1));
@@ -40,7 +42,8 @@ export function RoutineTrialBanner({ className }: { className?: string }) {
     return () => { alive = false; };
   }, [status, v]);
 
-  if (left === null) return null;
+  // پلن «روتین من» فقط روی روتین و دامنه‌ی اصلی تبلیغ می‌شه (خواب روی ورزش هم هست)
+  if (left === null || (section && section !== "routine")) return null;
   const offer = entryOffer(pricing, ROUTINE_PLAN_KEY);
   return (
     <div className={`routine-trial-strip${left <= 3 ? " is-urgent" : ""}${className ? ` ${className}` : ""}`} role="status">

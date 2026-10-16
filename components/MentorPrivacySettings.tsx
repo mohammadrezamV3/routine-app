@@ -12,6 +12,7 @@ import { LoadingBlock } from "@/components/Spinner";
 import { getCustomOccurrences, IMPORTANCE_LABELS, type CustomOccurrence, type Importance } from "@/lib/storage";
 import type { PrivacyResponse, PrivacyScope, PrivacySettings } from "@/lib/mentorTypes";
 import { networkError, readApiError } from "@/lib/mentorFormat";
+import { useSection } from "@/components/SectionProvider";
 import { tr, iso } from "@/lib/i18n";
 
 const SECTION = { size: 15, strokeWidth: 1.75, "aria-hidden": true } as const;
@@ -37,6 +38,7 @@ const detailToggles = (): { key: keyof Omit<PrivacySettings, "shareAllPrograms" 
 ];
 
 export function MentorPrivacySettings({ mentorshipId, mentorName, active }: { mentorshipId: string; mentorName: string; active: boolean }) {
+  const section = useSection();
   const [data, setData] = useState<{ privacy: PrivacySettings; scopes: PrivacyScope[] } | null>(null);
   const [draft, setDraft] = useState<PrivacySettings | null>(null);
   const [error, setError] = useState<string | null>(null);
@@ -111,8 +113,9 @@ export function MentorPrivacySettings({ mentorshipId, mentorName, active }: { me
   }
 
   const allOn = draft.shareAllPrograms;
-  const routineScopes = data.scopes.filter((s) => s.kind === "routine");
-  const moduleScopes = data.scopes.filter((s) => s.kind === "module");
+  // روی زیردامنه‌ی یک بخش فقط برنامه‌های همون بخش: برنامه‌های روتین روی روتین، بخش‌های ورزش و کالری روی ورزش
+  const routineScopes = section && section !== "routine" ? [] : data.scopes.filter((s) => s.kind === "routine");
+  const moduleScopes = section && section !== "workout" ? [] : data.scopes.filter((s) => s.kind === "module");
   const scopeChecked = (k: string) => allOn || draft.sharedPrograms.includes(k);
 
   return (
@@ -129,7 +132,7 @@ export function MentorPrivacySettings({ mentorshipId, mentorName, active }: { me
             <div className="mentor-check-kind">{tr("برنامه‌هایی که بعدا بسازی هم خودکار دیده می‌شن", "Programs you create later are shared automatically too")}</div>
           </span>
         </label>
-        {routineScopes.length === 0 && <MentorEmpty>{tr("هنوز برنامه‌ای در روتینت نیست", "You have no programs in your routine yet")}</MentorEmpty>}
+        {(section === "workout" ? moduleScopes.length === 0 : routineScopes.length === 0) && <MentorEmpty>{tr("هنوز برنامه‌ای در روتینت نیست", "You have no programs in your routine yet")}</MentorEmpty>}
         {[...routineScopes, ...moduleScopes].map((s) => (
           <label key={s.key} className={`mentor-check${allOn ? " is-disabled" : ""}`}>
             <TickButton shape="square" size={22} checked={scopeChecked(s.key)} disabled={allOn} onToggle={() => toggleScope(s.key)} />

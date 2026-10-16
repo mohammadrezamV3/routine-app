@@ -81,7 +81,7 @@ export function CalorieStreakCard({ rangeEntries, targetKcal, delay }: { rangeEn
               className="flex h-6 w-6 shrink-0 items-center justify-center rounded-full border-[1.5px] sm:h-[30px] sm:w-[30px]"
               style={
                 d.done
-                  ? { borderColor: "var(--accent)", background: "var(--accent)", color: "var(--bg)" }
+                  ? { borderColor: "var(--accent)", background: "var(--accent)", color: "var(--sec-on-accent, var(--bg))" }
                   : { borderColor: "var(--line)", color: "var(--muted2)" }
               }
               initial={{ scale: 0.6, opacity: 0 }}

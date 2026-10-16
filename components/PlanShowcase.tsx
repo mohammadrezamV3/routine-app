@@ -1,5 +1,8 @@
 "use client";
 
+import { useSection } from "@/components/SectionProvider";
+import type { SectionKey } from "@/lib/sections";
+import { planVisibleIn } from "@/lib/planSection";
 import { useState } from "react";
 import { SmartLink as Link } from "@/components/SmartLink";
 import { Check, X, Sparkles, ShoppingCart } from "lucide-react";
@@ -39,6 +42,8 @@ export type PlanCard = {
   // که واقعا سقف دارن (lib/aiQuota.ts) — عددها فقط جایی نوشته می‌شن که یک
   // مکانیزم واقعی enforcement پشتشونه، نه یک ادعای تبلیغاتی بدون پشتوانه.
   features?: string[];
+  // برای هر مورد features فقط روی زیردامنه‌ی این بخش‌ها دیده می‌شه (undefined = همه)؛ دامنه‌ی اصلی همه رو می‌بینه
+  featureSections?: (SectionKey[] | undefined)[];
 };
 
 // ترتیب پلن‌ها: «روتین من» اول، بعد Plan Gym و Plan Trader، در پایان Plan Max
@@ -50,14 +55,17 @@ export function getPlans(): PlanCard[] {
     // «روتین من» دیگه رایگان دائمی نیست: 14 روز آزمایشی، بعد پلن پولی.
     note: tr("14 روز رایگان", "14 days free"),
     features: [tr("روتین روزانه و برنامه‌ی هفتگی", "Daily routine and weekly planner"), tr("یادآوری برنامه‌ها و دارو", "Reminders for plans and medication"), tr("ثبت خواب و پیوستگی روزها", "Sleep tracking and day streaks")],
+    featureSections: [undefined, undefined, undefined],
   },
   {
     key: "exercise", nameFa: tr("پلن بدنسازی", "Workout plan"), icon: ICONS.exercise,
     features: [tr("ساخت برنامه‌ی بدنسازی با هوش مصنوعی — 3 بار در ماه", "AI-built workout plans, 3 times a month"), tr("ثبت و پیگیری کالری و ماکروها", "Calorie and macro tracking"), tr("روتین روزانه", "Daily routine")],
+    featureSections: [undefined, undefined, ["routine"]],
   },
   {
     key: "trade", nameFa: tr("پلن ترید", "Trading plan"), icon: ICONS.trade,
     features: [tr("ژورنال ترید و چک‌لیست قبل از معامله", "Trading journal and pre-trade checklist"), tr("تقویم اقتصادی", "Economic calendar"), tr("ورود خودکار معاملات از MT4 و MT5", "Automatic trade import from MT4 and MT5"), tr("روتین روزانه", "Daily routine")],
+    featureSections: [undefined, undefined, undefined, ["routine"]],
   },
   {
     key: "max", nameFa: tr("پلن مکس", "Max plan"), highlight: true, icon: <Sparkles size={16} />,
@@ -65,28 +73,30 @@ export function getPlans(): PlanCard[] {
     // نیست — به بخش «به‌زودی»ی جدول جزئیات منتقل شده، getCompareRows
     // پایین همین فایل)؛ جایگزینش «مدیربرنامه هوشمند» است.
     features: [tr("ساخت برنامه‌ی بدنسازی با هوش مصنوعی — 5 بار در ماه", "AI-built workout plans, 5 times a month"), tr("ثبت و پیگیری کالری و ماکروها", "Calorie and macro tracking"), tr("ژورنال ترید و چک‌لیست قبل از معامله", "Trading journal and pre-trade checklist"), tr("تقویم اقتصادی", "Economic calendar"), tr("ورود خودکار معاملات از MT4 و MT5", "Automatic trade import from MT4 and MT5"), tr("نومو، مدیر برنامه هوشمند — با جمله‌ی فارسی بساز و ویرایش کن", "Nomo, the smart planner: create and edit plans with a plain sentence"), tr("روتین روزانه", "Daily routine")],
+    featureSections: [["workout"], ["workout"], ["trade"], ["trade"], ["trade"], ["routine"], ["routine"]],
   },
   ];
 }
 
 
-export type CompareRow = { label: string; included: Record<string, boolean>; upcoming?: boolean };
+// sections: ردیف فقط روی زیردامنه‌ی این بخش‌ها دیده می‌شه (undefined = مشترک، [] = فقط دامنه‌ی اصلی)
+export type CompareRow = { label: string; included: Record<string, boolean>; upcoming?: boolean; sections?: SectionKey[] };
 
 export function getCompareRows(): CompareRow[] {
   return [
-  { label: tr("روتین روزانه", "Daily routine"), included: { basic: true, exercise: true, trade: true, max: true } },
+  { label: tr("روتین روزانه", "Daily routine"), included: { basic: true, exercise: true, trade: true, max: true }, sections: ["routine"] },
   // طبق درخواست صریح: توی نسخه‌ی رایگان هم یادآوری دارو رایگانه — یک ردیف
   // جدا (نه فقط بخشی از «روتین روزانه») که واضح نشون بده حتی «روتین من» هم
   // این رو داره، در همه‌ی پلن‌ها همیشه فعاله.
-  { label: tr("یادآوری دارو", "Medication reminders"), included: { basic: true, exercise: true, trade: true, max: true } },
-  { label: tr("برنامه بدنسازی", "Workout plan"), included: { basic: false, exercise: true, trade: false, max: true } },
-  { label: tr("شمارش کالری", "Calorie counting"), included: { basic: false, exercise: true, trade: false, max: true } },
-  { label: tr("ژورنال ترید", "Trading journal"), included: { basic: false, exercise: false, trade: true, max: true } },
-  { label: tr("چک‌لیست ترید", "Trading checklist"), included: { basic: false, exercise: false, trade: true, max: true } },
-  { label: tr("تقویم اقتصادی", "Economic calendar"), included: { basic: false, exercise: false, trade: true, max: true } },
-  { label: tr("اتصال متاتریدر", "MetaTrader connection"), included: { basic: false, exercise: false, trade: true, max: true } },
-  { label: tr("رودمپ", "Roadmap"), included: { basic: false, exercise: true, trade: true, max: true } },
-  { label: tr("مدیر برنامه هوشمند", "Smart planner"), included: { basic: false, exercise: false, trade: false, max: true } },
+  { label: tr("یادآوری دارو", "Medication reminders"), included: { basic: true, exercise: true, trade: true, max: true }, sections: ["routine"] },
+  { label: tr("برنامه بدنسازی", "Workout plan"), included: { basic: false, exercise: true, trade: false, max: true }, sections: ["workout"] },
+  { label: tr("شمارش کالری", "Calorie counting"), included: { basic: false, exercise: true, trade: false, max: true }, sections: ["workout"] },
+  { label: tr("ژورنال ترید", "Trading journal"), included: { basic: false, exercise: false, trade: true, max: true }, sections: ["trade"] },
+  { label: tr("چک‌لیست ترید", "Trading checklist"), included: { basic: false, exercise: false, trade: true, max: true }, sections: ["trade"] },
+  { label: tr("تقویم اقتصادی", "Economic calendar"), included: { basic: false, exercise: false, trade: true, max: true }, sections: ["trade"] },
+  { label: tr("اتصال متاتریدر", "MetaTrader connection"), included: { basic: false, exercise: false, trade: true, max: true }, sections: ["trade"] },
+  { label: tr("رودمپ", "Roadmap"), included: { basic: false, exercise: true, trade: true, max: true }, sections: ["routine"] },
+  { label: tr("مدیر برنامه هوشمند", "Smart planner"), included: { basic: false, exercise: false, trade: false, max: true }, sections: ["routine"] },
   { label: tr("اپلیکیشن موبایل", "Mobile app"), included: { basic: false, exercise: false, trade: false, max: true }, upcoming: true },
   { label: tr("یکپارچه‌سازی با ساعت هوشمند", "Smartwatch integration"), included: { basic: false, exercise: false, trade: false, max: true }, upcoming: true },
   { label: tr("آنالیز هفتگی هوش مصنوعی", "AI weekly review"), included: { basic: false, exercise: false, trade: false, max: true }, upcoming: true },
@@ -94,7 +104,7 @@ export function getCompareRows(): CompareRow[] {
   // «به‌زودی» (تارشده در جدول) منتقل شد.
   { label: tr("تحلیل هوشمند", "Smart analysis"), included: { basic: false, exercise: false, trade: false, max: true }, upcoming: true },
   { label: tr("اشتراک‌گذاری با مربی یا دوستان", "Sharing with a mentor or friends"), included: { basic: false, exercise: false, trade: false, max: true }, upcoming: true },
-  { label: tr("ردیابی کدنویسی", "Coding tracker"), included: { basic: false, exercise: false, trade: false, max: true }, upcoming: true },
+  { label: tr("ردیابی کدنویسی", "Coding tracker"), included: { basic: false, exercise: false, trade: false, max: true }, upcoming: true, sections: [] },
   ];
 }
 
@@ -138,8 +148,10 @@ export { useThemeTokens } from "@/components/useThemeTokens";
 // پلن فعلیش (currentPlanKey) به‌جای دکمه‌ی خرید یه نشان «پلن فعلی تو» می‌گیره.
 function PlanCardView({ p, mode, currentPlanKey, upgradeOffer, upgradeFromNameFa }: { p: PlanCard; mode: "landing" | "account"; currentPlanKey?: string | null; upgradeOffer?: UpgradeOffer | null; upgradeFromNameFa?: string }) {
   const t = useThemeTokens();
+  const section = useSection();
   const { pricing, ready } = usePlanPricing();
   const durations = enabledDurations(pricing);
+  const features = (p.features ?? []).filter((_, i) => !section || !p.featureSections?.[i] || p.featureSections[i]!.includes(section));
   const [picked, setDuration] = useState<Duration | null>(null);
   // مدت انتخاب‌شده اگه از پنل خاموش شده باشه، اولین مدت فعال جاش می‌شینه
   const duration: Duration = picked && durations.includes(picked) ? picked : durations[0];
@@ -175,9 +187,9 @@ function PlanCardView({ p, mode, currentPlanKey, upgradeOffer, upgradeFromNameFa
         <div className={`text-start text-[15px] font-extrabold ${t.accentText}`}>{p.nameFa}</div>
       </div>
 
-      {p.features && p.features.length > 0 ? (
+      {features.length > 0 ? (
         <ul className={`mt-3 flex flex-1 flex-col gap-1.5 text-[11px] leading-relaxed ${t.muted}`}>
-          {p.features.map((f) => (
+          {features.map((f) => (
             <li key={f} className="flex items-start gap-1.5">
               <Check size={13} className={`mt-0.5 shrink-0 ${t.accentText}`} />
               <span>{f}</span>
@@ -327,17 +339,20 @@ export function PlansSection({ mode, currentPlanKey, title = tr("از چیزی �
   // این فقط کارت خرید بالای صفحه رو مخفی می‌کنه، نه دیتای پلن: PLANS_IRAN
   // دست‌نخورده می‌مونه و جدول مقایسه‌ی پایین (tablePlans) هم‌چنان ستون
   // رایگان رو داره، چون خود جدول برای مقایسه‌ست، نه خرید.
+  const section = useSection();
   const allPlans = getPlans();
-  const tablePlans = allPlans;
-  const plans = mode === "account" ? allPlans.filter((p) => !p.free) : allPlans;
-  const compareRows = getCompareRows();
+  // روی زیردامنه‌ی یک بخش فقط پلن همون بخش + مکس (ستون‌ها و ردیف‌های جدول مقایسه هم همین‌طور)
+  const sectionPlans = allPlans.filter((p) => planVisibleIn(p.key, section));
+  const tablePlans = sectionPlans;
+  const plans = mode === "account" ? sectionPlans.filter((p) => !p.free) : sectionPlans;
+  const compareRows = getCompareRows().filter((r) => !section || !r.sections || r.sections.includes(section));
   // انگلیسی برچسب‌های بلندتری داره («Sharing with a mentor or friends»): ستون برچسب پهن‌تر،
   // ستون‌های پلن باریک‌تر (جمع هر دو حالت 100%). فارسی همون 24/19.
   const labelColW = isEn() ? "32%" : "24%";
   const planColW = isEn() ? "17%" : "19%";
   const mainRows = compareRows.filter((r) => !r.upcoming);
   const upcomingRows = compareRows.filter((r) => r.upcoming);
-  const upgradeFromNameFa = upgradeOffer ? plans.find((pp) => pp.key === upgradeOffer.fromPlanKey)?.nameFa : undefined;
+  const upgradeFromNameFa = upgradeOffer ? allPlans.find((pp) => pp.key === upgradeOffer.fromPlanKey)?.nameFa : undefined;
 
   return (
     <>
@@ -348,7 +363,7 @@ export function PlansSection({ mode, currentPlanKey, title = tr("از چیزی �
       )}
       {/* دوره‌ی آزمایشی حساب تازه (lib/trial.ts) — فقط لندینگ؛ صفحه‌ی اشتراک
           همین متن رو توی یادداشت بالای خودش داره. متن ساده، بی‌بک‌گراند. */}
-      {mode === "landing" && (
+      {mode === "landing" && !section && (
         <p className={`text-center text-[13px] font-bold ${t.muted}`} style={{ marginBottom: 18 }}>
           {tr("14 روز رایگان امتحان کن و بعد بر اساس نیازت، امکانات موردنظرت را انتخاب کن. هر حساب تازه: ", "Try it free for 14 days, then pick the features you need. Every new account gets: ")}{trialCopy()}{tr(". «نومو» 10 پیام رایگان دارد و در پلن‌های پولی نامحدود است.", ". Nomo has 10 free messages and is unlimited on paid plans.")}
         </p>

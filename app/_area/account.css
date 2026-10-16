@@ -62,7 +62,7 @@
 .support-status.closed{ background:rgba(255,255,255,.06); color:var(--muted2); }
 
 .support-msg.mine{
-    align-self:flex-start; background:var(--accent); color:var(--bg); border-bottom-right-radius:4px;
+    align-self:flex-start; background:var(--accent); color:var(--sec-on-accent, var(--bg)); border-bottom-right-radius:4px;
   }
 
 .support-msg.admin{
@@ -354,7 +354,7 @@ body[data-theme="light"] .routine-ai-action.is-recording{ background:#E05252; bo
 /* دکمه‌ی ارسال پر می‌شود — همان تفاوت بصری مرجع بین «حرف بزن» و «بفرست» */
 
 .routine-ai-action.is-send{
-  background:var(--accent); border-color:var(--accent); color:var(--bg);
+  background:var(--accent); border-color:var(--accent); color:var(--sec-on-accent, var(--bg));
   backdrop-filter:none; -webkit-backdrop-filter:none;
 }
 
@@ -742,72 +742,73 @@ html[data-navigated] .page-enter > [style*="position:fixed"]{ animation-name:m-f
 .account-shell .ap-card.is-clip{ overflow:hidden; }
 
 /* ── سایدبار دسکتاپ ───────────────────────────────────────── */
+/* دو کارت زیر هم (کارت کاربر + پلن، کارت ناوبری)؛ خود aside فقط ستون چسبان است */
 .ap-nav{ display:none; }
 @media (min-width:1024px){
-  /* اسپسیفیسیتی بالاتر از .account-shell .ap-card (که position:relative می‌ده)؛
-     وگرنه top اینجا سایدبار رو 92px پایین‌تر از عنوان صفحه می‌برد. */
-  .account-shell .ap-card.ap-nav{
-    display:flex; flex-direction:column;
+  .account-shell .ap-nav{
+    display:flex; flex-direction:column; gap:14px;
     position:sticky; top:calc(92px + env(safe-area-inset-top));
     max-height:calc(100dvh - 112px - env(safe-area-inset-top)); overflow-y:auto;
     scrollbar-width:none;
   }
-  .account-shell .ap-card.ap-nav::-webkit-scrollbar{ display:none; }
+  .account-shell .ap-nav::-webkit-scrollbar{ display:none; }
 }
-.ap-nav-me{
-  display:flex; align-items:center; gap:12px; padding:16px; text-decoration:none; color:inherit;
-  border-bottom:1px solid var(--surface-line);
+.account-shell .ap-nav-card{ flex-shrink:0; }
+.account-shell .ap-nav-me-card{ display:flex; flex-direction:column; gap:14px; padding:18px; }
+.ap-nav-me{ display:flex; align-items:center; gap:12px; text-decoration:none; color:inherit; }
+.ap-nav-me-avatar{
+  width:52px; height:52px; flex-shrink:0; margin:4px; border-radius:50%; overflow:hidden;
+  box-shadow:0 0 0 2px var(--box-bg), 0 0 0 4px var(--accent);
 }
-.ap-nav-me-avatar{ width:44px; height:44px; flex-shrink:0; border-radius:50%; overflow:hidden; outline:2px solid rgba(var(--accent-rgb),.4); outline-offset:-2px; }
 .ap-nav-me-avatar img, .ap-nav-me-avatar canvas{ width:100% !important; height:100% !important; object-fit:cover; display:block; }
 .ap-nav-me-text{ min-width:0; display:flex; flex-direction:column; gap:1px; }
-.ap-nav-me-name{ font-size:14px; font-weight:800; color:var(--text); line-height:1.5; overflow-wrap:anywhere; }
-.ap-nav-me-user{ align-self:flex-start; unicode-bidi:isolate; font-size:11.5px; color:var(--muted); }
+.ap-nav-me-name{ font-size:15px; font-weight:700; color:var(--text); line-height:1.5; overflow-wrap:anywhere; }
+.ap-nav-me-user{ align-self:flex-start; unicode-bidi:isolate; font-size:12.5px; color:var(--muted); }
 .ap-nav-skel{ display:block; height:14px; border-radius:7px; }
-.ap-nav-links{ display:flex; flex-direction:column; gap:2px; padding:8px; }
+.ap-nav-plan{
+  display:flex; align-items:center; justify-content:space-between; gap:10px; min-height:32px; padding-top:12px;
+  border-top:1px solid var(--surface-line); font-size:12.5px; text-decoration:none; color:inherit;
+}
+.ap-nav-plan-label{ min-width:0; color:var(--muted); overflow-wrap:anywhere; transition:color .18s ease; }
+.ap-nav-plan-value{ flex-shrink:0; color:var(--accent); font-weight:600; }
+@media (hover:hover) and (pointer:fine){ .ap-nav-plan:hover .ap-nav-plan-label{ color:var(--text); } }
+.ap-nav-plan:focus-visible, .ap-nav-me:focus-visible{ outline:2px solid var(--accent); outline-offset:3px; border-radius:8px; }
+.account-shell .ap-nav-links{ display:flex; flex-direction:column; gap:2px; padding:8px; }
 .ap-nav-link{
-  position:relative; display:flex; align-items:center; gap:10px; min-height:44px; padding:8px 10px; border-radius:14px;
-  color:var(--muted); font-size:13.5px; font-weight:600; text-decoration:none; text-align:start; width:100%;
+  position:relative; display:flex; align-items:center; gap:12px; height:44px; padding:0 12px; border-radius:12px;
+  color:var(--muted); font-size:14px; font-weight:500; text-decoration:none; text-align:start; width:100%;
   transition:color .18s ease, background-color .18s ease;
 }
-.ap-nav-link-icon{
-  display:flex; align-items:center; justify-content:center; flex-shrink:0;
-  width:30px; height:30px; border-radius:10px; border:1px solid transparent;
-  transition:border-color .18s ease;
-}
-.ap-nav-link.is-active{ color:var(--accent); background:var(--accent-dim); }
-.ap-nav-link.is-active .ap-nav-link-icon{ border-color:rgba(var(--accent-rgb),.35); }
+.ap-nav-link-icon{ display:flex; align-items:center; justify-content:center; flex-shrink:0; width:18px; height:18px; }
+.ap-nav-link-icon svg{ width:18px; height:18px; }
+/* ردیف فعال: تونال (همان زبان .btn-tonal) */
+.ap-nav-link.is-active{ color:var(--accent); background:rgba(var(--accent-rgb), .12); font-weight:700; }
 @media (hover:hover) and (pointer:fine){
   .ap-nav-link:not(.is-active):hover{ color:var(--text); }
-  .ap-nav-link:not(.is-active):hover .ap-nav-link-icon{ border-color:var(--surface-line); }
 }
 .ap-nav-link:focus-visible, .ap-row:focus-visible{ outline:2px solid var(--accent); outline-offset:-2px; }
-.ap-nav-foot{ padding:8px; border-top:1px solid var(--surface-line); }
+.ap-nav-sep{ height:1px; margin:6px 8px; background:var(--surface-line); }
 
 /* دکمه‌های ساده‌ی بدون بک‌گراند (ریست button{} سراسری) */
 body[data-theme] button.ap-plain{
   background:none; border:none; box-shadow:none; backdrop-filter:none; -webkit-backdrop-filter:none;
   padding:0; border-radius:0; font:inherit; color:inherit;
 }
-body[data-theme] button.ap-nav-link{ padding:8px 10px; border-radius:14px; font-size:13.5px; font-weight:600; color:var(--muted); }
+body[data-theme] button.ap-nav-link{ height:44px; padding:0 12px; border-radius:12px; font-size:14px; font-weight:500; color:var(--muted); }
 body[data-theme] button.ap-nav-link.is-danger, body[data-theme] .ap-nav-link.is-danger{ color:var(--pnl-loss); }
-body[data-theme] button.ap-nav-link.is-danger .ap-nav-link-icon{ border-color:rgba(var(--pnl-loss-rgb),.3); }
 @media (hover:hover) and (pointer:fine){
   body[data-theme] button.ap-nav-link.is-danger:hover{ background:rgba(var(--pnl-loss-rgb),.08); color:var(--pnl-loss); }
 }
 
 /* ── سرصفحه‌ی هر زیرصفحه ──────────────────────────────────── */
 .ap-head{ margin-bottom:18px; }
-.ap-crumb{
-  display:inline-flex; align-items:center; gap:2px; min-height:32px; margin-bottom:6px;
-  font-size:12.5px; font-weight:600; color:var(--muted); text-decoration:none; transition:color .18s ease;
-}
-.ap-crumb svg{ flex-shrink:0; transition:translate .18s ease; }
+/* «برگشت» = دکمه‌ی بی‌زمینه (btn-ghost btn-sm)؛ فقط جای‌گیری: لبه‌ی متن هم‌تراز عنوان */
+html body .btn.ap-crumb{ margin-bottom:4px; margin-inline-start:-14px; }
+.ap-crumb svg{ transition:translate .18s ease; }
 @media (hover:hover){
-  .ap-crumb:hover{ color:var(--accent); }
   .ap-crumb:hover svg{ translate:calc(var(--m-dir, 1) * 2px) 0; }
 }
-@media (min-width:1024px){ .ap-crumb.is-root{ display:none; } }
+@media (min-width:1024px){ html body .btn.ap-crumb.is-root{ display:none; } }
 .ap-head-row{ display:flex; align-items:center; justify-content:space-between; gap:12px; min-height:36px; }
 .ap-head h1{ margin:0; font-size:22px; font-weight:800; letter-spacing:-.01em; line-height:1.4; min-width:0; overflow-wrap:anywhere; }
 .ap-head-hint{ margin:4px 0 0; max-width:62ch; font-size:12.5px; line-height:1.9; color:var(--muted); }
@@ -817,18 +818,20 @@ body[data-theme] button.ap-nav-link.is-danger .ap-nav-link-icon{ border-color:rg
 .ap-block{ margin-top:14px; }
 .ap-head + .ap-block, .ap-cover + .ap-block{ margin-top:0; }
 .account-shell .ap-block-body{ padding:16px; }
-@media (min-width:640px){ .account-shell .ap-block-body{ padding:20px; } }
+@media (min-width:640px){ .account-shell .ap-block-body{ padding:22px; } }
 .account-shell .ap-block-body.flush{ padding:0; overflow:hidden; }
-.ap-block-head{ display:flex; align-items:center; gap:10px; min-height:32px; }
+.ap-block-head{ display:flex; align-items:center; gap:12px; min-height:34px; }
+.ap-block-head-text{ flex:1; min-width:0; }
+.ap-block-sub{ margin:2px 0 0; font-size:12.5px; line-height:1.7; color:var(--muted); }
 .ap-block-icon{
   display:inline-flex; align-items:center; justify-content:center; flex-shrink:0;
-  width:32px; height:32px; border-radius:11px; color:var(--accent);
+  width:34px; height:34px; border-radius:11px; color:var(--accent);
   border:1px solid rgba(var(--accent-rgb),.28);
 }
 .ap-block-icon svg{ width:18px; height:18px; }
-.ap-block-title{ flex:1; min-width:0; margin:0; font-size:14.5px; font-weight:800; letter-spacing:-.01em; line-height:1.5; }
+.ap-block-title{ flex:1; min-width:0; margin:0; font-size:15px; font-weight:800; letter-spacing:-.01em; line-height:1.5; }
 .ap-block-desc{ margin:10px 0 0; font-size:12px; line-height:1.9; color:var(--muted); }
-.ap-block-content{ margin-top:14px; }
+.ap-block-content{ margin-top:18px; }
 .ap-block-head + .ap-block-content:empty{ display:none; }
 .ap-block-body.flush > .ap-block-head{ padding:14px 16px 10px; }
 .ap-block-body.flush > .ap-block-desc{ margin:0; padding:0 16px 12px; }
@@ -934,10 +937,13 @@ html[data-perf="low"] .ap-skel, html[data-perf-weak] .ap-skel{ animation:none; }
 @media (prefers-reduced-motion:reduce){ .ap-skel{ animation:none; } }
 
 /* ── فیلدها ───────────────────────────────────────────────── */
-.ap-field-grid{ display:grid; grid-template-columns:1fr 1fr; gap:14px; }
+.ap-field-grid{ display:grid; grid-template-columns:repeat(2, minmax(0, 1fr)); gap:16px; }
+.ap-field-grid.is-3{ grid-template-columns:repeat(3, minmax(0, 1fr)); }
+.ap-span-2{ grid-column:1 / -1; min-width:0; }
 .ap-field-stack{ display:flex; flex-direction:column; gap:14px; }
 .ap-field-grid + .ap-field-stack{ margin-top:14px; }
 @media (max-width:430px){ .ap-field-grid{ grid-template-columns:1fr; } }
+@media (max-width:560px){ .ap-field-grid.is-3{ grid-template-columns:1fr; } }
 .ap-shell .field-icon{ inset-inline-start:15px; }
 .ap-shell[dir="rtl"] .field-error-wrap.has-icon :is(input, textarea, .jdate-btn){ padding-right:42px; padding-left:16px; }
 .ap-shell[dir="ltr"] .field-error-wrap.has-icon :is(input, textarea, .jdate-btn){ padding-left:42px; padding-right:16px; }
@@ -951,78 +957,107 @@ html[data-perf="low"] .ap-skel, html[data-perf-weak] .ap-skel{ animation:none; }
 .ap-shell .wsearch-newform-name:focus, .ap-shell .jdate-btn:focus{ border-color:var(--accent); }
 .ap-shell .wsearch-newform-name:disabled{ opacity:1; color:var(--text); cursor:default; }
 .ap-textarea{ min-height:92px; padding-block:12px 26px; line-height:1.9; resize:vertical; }
-.ap-counter{ position:absolute; bottom:8px; inset-inline-start:16px; font-size:10px; color:var(--muted2); pointer-events:none; }
+.ap-counter{ position:absolute; bottom:8px; inset-inline-end:16px; font-size:10px; color:var(--muted2); pointer-events:none; }
 .ap-field-note{ margin:0; font-size:12px; line-height:1.9; color:var(--muted); }
 
-/* نوار ذخیره */
+/* ارتفاع یکسان 46 برای همه‌ی فیلدهای تک‌خطی پنل (متن، تاریخ، سلکت)، مثل طرح */
+.ap-shell .wsearch-newform-name:not(textarea), .ap-shell .jdate-btn{ min-height:46px; }
+.ap-field-label{ display:block; margin-bottom:6px; font-size:12.5px; font-weight:600; color:var(--muted); }
+.ap-seg{ min-height:46px; }
+.ap-seg .auth-tab{ display:flex; align-items:center; justify-content:center; padding:0; font-size:13px; }
+
+/* پیشوند/پسوند داخل فیلد (واحد، «تایید شده»، آیکون تقویم): خود ورودی ltr است و
+   پدینگ منطقی‌اش جهت ورودی را می‌گیرد، پس این‌جا فیزیکی و بر اساس جهت صفحه. */
+.ap-affix{
+  position:absolute; inset-inline-end:16px; top:50%; transform:translateY(-50%);
+  display:flex; align-items:center; font-size:12.5px; line-height:1; white-space:nowrap; color:var(--muted2); pointer-events:none;
+}
+.ap-affix.is-ok{ font-size:11.5px; font-weight:600; color:var(--accent); }
+.ap-affix.is-icon{ color:var(--muted); }
+.ap-shell[dir="rtl"] .ap-pe-unit{ padding-left:76px; }
+.ap-shell[dir="ltr"] .ap-pe-unit{ padding-right:76px; }
+.ap-shell[dir="rtl"] .ap-pe-chip{ padding-left:92px; }
+.ap-shell[dir="ltr"] .ap-pe-chip{ padding-right:92px; }
+.ap-shell[dir="rtl"] .ap-pe-icon{ padding-left:44px; }
+.ap-shell[dir="ltr"] .ap-pe-icon{ padding-right:44px; }
+.ap-code-input{ font-weight:700; letter-spacing:.08em; }
+
+/* کد دعوت: فیلد + کپی آیکونی + فرستادن لینک هم‌تراز کف فیلد */
+.ap-invite-row{ display:flex; flex-wrap:wrap; align-items:flex-end; gap:10px; }
+.ap-invite-row > .name-field-wrap{ flex:1 1 240px; min-width:0; }
+.ap-h46{ --btn-h:46px; }
+.ap-invite-stats{
+  display:flex; flex-wrap:wrap; gap:6px 24px; margin-top:18px; padding-top:14px;
+  border-top:1px solid var(--surface-line); font-size:13px; color:var(--muted);
+}
+.ap-invite-stats b{ color:var(--text); font-weight:700; }
+.ap-invite-stats + .ap-field-note{ margin-top:12px; }
+
+/* نوار ذخیره (ته بخش): دکمه‌ی اصلی آخر ردیف؛ در rtl همان لبه‌ی چپ */
 .ap-savebar{ display:flex; flex-direction:column; align-items:flex-end; gap:10px; margin-top:18px; }
 .ap-savebar .field-error-msg{ align-self:stretch; }
-.ap-savebar .account-outline-btn{ display:inline-flex; align-items:center; justify-content:center; gap:7px; }
-.ap-save-btn{ min-width:140px; min-height:40px; transition:color .2s ease, border-color .2s ease; }
-.ap-save-btn.is-ok{ border-color:var(--accent); color:var(--accent); }
-.ap-save-btn.is-bad{ border-color:var(--pnl-loss); color:var(--pnl-loss); }
-.ap-save-btn:disabled{ opacity:1; }
-.ap-save-btn:disabled.is-idle{ opacity:.5; }
+.ap-save-btn{ min-width:140px; }
 @media (max-width:520px){
   .ap-savebar{ align-items:stretch; }
-  .ap-save-btn{ width:100%; }
+  .ap-save-btn{ width:100%; --btn-h:50px; --btn-fs:15px; }
 }
 
-/* ── پروفایل: بنر و آواتار ────────────────────────────────── */
-.ap-cover{ position:relative; margin-bottom:18px; }
-.ap-cover-banner{ position:relative; height:132px; border-radius:22px; border:1px solid var(--box-line); overflow:hidden; }
+/* پاورقی چسبان «تغییرات ذخیره نشده» (AccountActionBar): پیام، لغو بی‌زمینه، ذخیره اصلی */
+.ap-actionbar{
+  position:sticky; inset-block-end:calc(16px + env(safe-area-inset-bottom)); z-index:20; margin-top:18px;
+  border:1px solid var(--box-line); border-radius:32px;
+  background:rgba(var(--surface-rgb), .92);
+  backdrop-filter:blur(14px) saturate(160%); -webkit-backdrop-filter:blur(14px) saturate(160%);
+  box-shadow:0 18px 40px -12px rgba(0,0,0,.45);
+  animation:ap-bar-in .26s cubic-bezier(.22,1,.36,1) backwards;
+}
+@keyframes ap-bar-in{ from{ opacity:0; translate:0 14px; } }
+.ap-actionbar-row{ display:flex; align-items:center; gap:10px; padding:10px; padding-inline-start:22px; }
+.ap-actionbar-msg{ flex:1; min-width:0; font-size:13.5px; color:var(--muted); }
+.ap-actionbar-error{ padding:10px 22px 0; }
+@media (max-width:520px){
+  .ap-actionbar{ border-radius:24px; }
+  .ap-actionbar-row{ flex-wrap:wrap; justify-content:flex-end; padding:12px; }
+  .ap-actionbar-msg{ flex:1 1 100%; padding-inline:6px; }
+  .ap-actionbar-row .btn-primary{ flex:1 1 auto; }
+}
+@media (prefers-reduced-motion:reduce){ .ap-actionbar{ animation:none; } }
+html[data-perf-weak] .ap-actionbar{ animation:none; backdrop-filter:none; -webkit-backdrop-filter:none; }
+
+/* ── پروفایل: کارت بنر و آواتار ────────────────────────────── */
+.account-shell .ap-cover{ padding:0; overflow:hidden; margin-bottom:18px; }
+.ap-cover-banner{ position:relative; height:132px; }
 @media (min-width:701px){ .ap-cover-banner{ height:168px; } }
 @media (min-width:1280px){ .ap-cover-banner{ height:184px; } }
-body[data-theme] button.ap-cover-hit{
-  position:absolute; inset:0; width:100%; height:100%; padding:0; border-radius:inherit; border:none;
-  background:none; box-shadow:none; backdrop-filter:none; -webkit-backdrop-filter:none;
-  display:flex; align-items:center; justify-content:center; cursor:pointer; color:var(--muted);
-}
-body[data-theme] button.ap-cover-hit.is-empty{ border:1px dashed rgba(var(--accent-rgb),.45); color:var(--accent); }
+/* بنر خالی: فقط الگوی نقطه‌ای محو روی خود کارت (بدون پرکردن رنگ) */
+.ap-cover-banner.is-empty{ background-image:radial-gradient(rgba(var(--accent-rgb), .22) 1px, transparent 1px); background-size:16px 16px; }
 .ap-cover-img{ position:absolute; inset:0; width:100%; height:100%; object-fit:cover; display:block; }
-.ap-cover-hint{
-  position:relative; display:inline-flex; align-items:center; gap:7px; font-size:12px; font-weight:700;
-  opacity:0; transition:opacity .2s ease;
-}
-.ap-cover-hit.is-empty .ap-cover-hint, .ap-cover-hit:focus-visible .ap-cover-hint, .ap-cover-hit:disabled .ap-cover-hint{ opacity:1; }
-.ap-cover-hit:focus-visible{ outline:2px solid var(--accent); outline-offset:-2px; }
-.ap-cover-hit:not(.is-empty) .ap-cover-hint{
-  /* روی عکس کاربر: لایه‌ی تیره‌ی عبوری برای خوانایی، مستقل از رنگ عکس */
-  color:#fff; padding:8px 12px; border-radius:99px; background:rgba(0,0,0,.45);
-}
-@media (hover:hover){ .ap-cover-hit:hover .ap-cover-hint{ opacity:1; } }
-@media (hover:none){ .ap-cover-hit:not(.is-empty) .ap-cover-hint{ opacity:0; } }
-.ap-cover-remove{ position:absolute; top:10px; inset-inline-end:10px; z-index:2; }
-body[data-theme] button.ap-cover-remove-btn{
-  display:inline-flex; align-items:center; justify-content:center; width:32px; height:32px; padding:0; border-radius:50%;
-  color:#fff; cursor:pointer; background:rgba(0,0,0,.5); border:1px solid rgba(255,255,255,.25);
-  box-shadow:none; backdrop-filter:blur(6px); -webkit-backdrop-filter:blur(6px);
-}
-body[data-theme] button.ap-cover-remove-btn:hover{ color:#fff; background:rgba(0,0,0,.65); border-color:rgba(255,255,255,.4); }
-.ap-cover-row{ position:relative; display:flex; align-items:flex-start; gap:14px; margin-top:-40px; padding-inline:16px; }
+.ap-cover-actions{ position:absolute; inset-block-start:14px; inset-inline-end:14px; z-index:2; display:flex; align-items:center; gap:8px; }
+.ap-cover-row{ position:relative; display:flex; align-items:flex-end; gap:16px; margin-top:-40px; padding:0 16px 16px; }
+.ap-cover-avatar-wrap{ position:relative; flex-shrink:0; width:84px; height:84px; }
 body[data-theme] button.ap-cover-avatar{
-  position:relative; flex-shrink:0; width:84px; height:84px; padding:0; border-radius:50%; border:none;
-  background:none; box-shadow:none; backdrop-filter:none; -webkit-backdrop-filter:none; cursor:pointer;
-  outline:5px solid var(--bg); outline-offset:0;
+  display:block; width:100%; height:100%; padding:0; border-radius:50%; border:none; overflow:hidden; cursor:pointer;
+  background:none; backdrop-filter:none; -webkit-backdrop-filter:none;
+  box-shadow:0 0 0 4px var(--box-bg), 0 0 0 6px var(--accent);
 }
-body[data-theme] button.ap-cover-avatar:hover{ background:none; box-shadow:none; outline-color:var(--bg); }
-body[data-theme] button.ap-cover-avatar:focus-visible{ outline-color:var(--accent); }
+body[data-theme] button.ap-cover-avatar:hover, body[data-theme] button.ap-cover-avatar:disabled:hover{
+  background:none; border:none; box-shadow:0 0 0 4px var(--box-bg), 0 0 0 6px var(--accent);
+}
 .ap-cover-avatar-img{ width:100% !important; height:100% !important; border-radius:50%; object-fit:cover; display:block; }
-.ap-cover-avatar-badge{
-  position:absolute; bottom:-2px; inset-inline-end:-2px; display:flex; align-items:center; justify-content:center;
-  width:28px; height:28px; border-radius:50%; color:var(--accent);
-  background:var(--box-bg); border:1px solid var(--box-line);
+/* دکمه‌ی آیکونی اصلی دوربین روی گوشه‌ی آواتار؛ حلقه‌ی هم‌رنگ کارت جداش می‌کنه */
+html body .btn.ap-cover-cam{
+  position:absolute; inset-block-end:0; inset-inline-end:-4px; border-width:2px;
+  --btn-h:32px; --btn-bd:var(--box-bg); --btn-hover-bd:var(--box-bg);
 }
-.ap-cover-meta{ flex:1; min-width:0; padding-top:44px; display:flex; flex-direction:column; gap:2px; }
-.ap-cover-name{ font-size:16px; font-weight:800; line-height:1.5; color:var(--text); overflow-wrap:anywhere; }
-.ap-cover-user{ align-self:flex-start; unicode-bidi:isolate; font-size:12px; color:var(--muted); }
+.ap-cover-meta{ flex:1; min-width:0; padding-bottom:6px; display:flex; flex-direction:column; gap:2px; }
+.ap-cover-name{ font-size:18px; font-weight:800; line-height:1.5; color:var(--text); overflow-wrap:anywhere; }
+.ap-cover-user{ align-self:flex-start; unicode-bidi:isolate; font-size:13px; color:var(--muted); }
 @media (min-width:701px){
-  .ap-cover-row{ margin-top:-46px; padding-inline:20px; }
-  body[data-theme] button.ap-cover-avatar{ width:96px; height:96px; }
-  .ap-cover-meta{ padding-top:52px; }
-  .ap-cover-name{ font-size:17px; }
+  .ap-cover-row{ margin-top:-44px; padding:0 22px 20px; }
+  .ap-cover-avatar-wrap{ width:96px; height:96px; }
+  .ap-cover-name{ font-size:20px; }
 }
-.ap-cover-error{ margin-top:10px; }
+.ap-cover-error{ margin:0 16px 14px; }
 
 /* ── وضعیت‌ها ─────────────────────────────────────────────── */
 .ap-status{
@@ -1061,17 +1096,100 @@ body[data-theme] button.ap-cover-avatar:focus-visible{ outline-color:var(--accen
 .ap-person-name{ min-width:0; font-size:13px; font-weight:600; color:var(--text); overflow-wrap:anywhere; }
 .ap-note{ padding:10px 16px 14px; font-size:12px; line-height:1.9; color:var(--muted2); }
 .ap-inline-error{ display:block; margin-top:8px; }
-.ap-mini-btn{ padding:6px 14px; font-size:11.5px; min-height:32px; }
 
 /* ── پشتیبانی ──────────────────────────────────────────────── */
 .ap-ticket-sub{ display:block; font-size:12px; color:var(--muted); line-height:1.7; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
 .ap-ticket-time{ font-size:10.5px; color:var(--muted2); margin-top:1px; }
 .ap-ticket-empty{ display:flex; flex-direction:column; align-items:center; gap:10px; padding:36px 16px; text-align:center; color:var(--muted); font-size:12.5px; }
 .ap-ticket-empty svg{ opacity:.5; }
-@media (hover:hover) and (pointer:fine){ .support-new-btn:hover{ background:none; } }
+
+/* ── نام‌های قدیمی دکمه داخل پنل کاربری → سیستم دکمه‌ها ─────────────────
+   کامپوننت‌های مشترک تنظیمات (NotificationSettings، RoutineSettings، TradeSettings،
+   MentorChatHistorySettings، ...) هنوز account-outline-btn / trade-danger-btn دارند.
+   تا وقتی کلاس‌هاشان به .btn-* عوض شود، فقط داخل .ap-shell همان ظاهر
+   سیستم دکمه‌ها را می‌گیرند: عادی = تونال کوچک، .muted = خطی کوچک،
+   trade-danger-btn = خطرناک کوچک. (پنجره‌های پورتال بیرون .ap-shell‌اند و دست‌نخورده‌اند.) */
+html body .ap-shell :is(.account-outline-btn, .trade-danger-btn){
+  display:inline-flex; align-items:center; justify-content:center; gap:6px; box-sizing:border-box; flex-shrink:0;
+  height:34px; padding:0 14px; border-radius:999px; font-size:13px; font-weight:700; line-height:1; white-space:nowrap;
+  border:1px solid transparent; box-shadow:none; backdrop-filter:none; -webkit-backdrop-filter:none;
+  background:rgba(var(--accent-rgb), .14); color:var(--accent);
+}
+html body .ap-shell .account-outline-btn.muted{ background:transparent; color:var(--text); border-color:var(--surface-line); }
+html body .ap-shell .trade-danger-btn{ background:rgba(var(--pnl-loss-rgb), .12); color:var(--pnl-loss); }
+@media (hover:hover) and (pointer:fine){
+  html body .ap-shell .account-outline-btn:hover:not(:disabled){ background:rgba(var(--accent-rgb), .22); color:var(--accent); border-color:transparent; box-shadow:none; }
+  html body .ap-shell .account-outline-btn.muted:hover:not(:disabled){ background:transparent; color:var(--accent); border-color:var(--accent); }
+  html body .ap-shell .trade-danger-btn:hover:not(:disabled){ background:rgba(var(--pnl-loss-rgb), .2); color:var(--pnl-loss); border-color:transparent; box-shadow:none; }
+}
+html body .ap-shell :is(.account-outline-btn, .trade-danger-btn):disabled{ opacity:.38; cursor:not-allowed; }
 
 /* ردیف‌های داخل یک بلوک پدینگ‌دار (مثل اعلان‌ها): پدینگ خود بلوک جای پدینگ ردیف رو می‌گیره */
 .ap-block-body:not(.flush) .ap-row, .ap-block-body:not(.flush) button.ap-row{ padding-inline:0; }
 .ap-block-body:not(.flush) .ap-row-wrap + .ap-row-wrap::before{ inset-inline-start:48px; }
 .ap-block-body:not(.flush) .ap-row-wrap.no-icon + .ap-row-wrap::before{ inset-inline-start:0; }
 .ap-head + .ap-group, .ap-head + .ap-block{ margin-top:0; }
+
+/* ── تنظیمات › تم و رنگ (app/account/general/theme) ───────────────────────
+   کارت‌های انتخاب پالت (radiogroup)، انتخابگر رنگ سفارشی و پیش‌نمایش لوگو. رنگ‌های پیش‌نمایش
+   (--pv-bg، --sw، --lg-*) داده‌ی خود پالت‌ان نه رنگ تم جاری. کارت‌ها بی‌بک‌گراندن. */
+.ap-pal-mode{ display:inline-flex; align-items:center; gap:6px; }
+.ap-pal-grid{ display:grid; grid-template-columns:repeat(2, minmax(0, 1fr)); gap:10px; }
+@media (min-width:640px){ .ap-pal-grid{ grid-template-columns:repeat(4, minmax(0, 1fr)); } }
+body[data-theme] button.ap-pal-card{
+  display:flex; flex-direction:column; align-items:stretch; gap:8px; width:100%; padding:8px; min-width:0;
+  font:inherit; color:var(--text); text-align:start; cursor:pointer;
+  background:none; border:1.5px solid var(--box-line); border-radius:18px; box-shadow:none;
+  backdrop-filter:none; -webkit-backdrop-filter:none;
+  transition:border-color .18s ease, transform .15s ease;
+}
+body[data-theme] button.ap-pal-card:active{ transform:scale(.97); }
+body[data-theme] button.ap-pal-card.is-on{ border-color:var(--accent); }
+body[data-theme] button.ap-pal-card:focus-visible{ outline:2px solid var(--accent); outline-offset:2px; }
+@media (hover:hover) and (pointer:fine){
+  body[data-theme] button.ap-pal-card:not(.is-on):hover{ border-color:rgba(var(--accent-rgb),.45); }
+}
+.ap-pal-prev{ display:flex; overflow:hidden; border-radius:12px; border:1px solid var(--box-line); }
+.ap-pal-half{
+  position:relative; flex:1 1 0; min-width:0; height:46px; background:var(--pv-bg);
+  display:flex; align-items:center; justify-content:center; gap:6px;
+}
+.ap-pal-half i{ display:block; width:14px; height:14px; border-radius:50%; }
+.ap-pal-name{ display:flex; align-items:center; flex-wrap:wrap; gap:2px 6px; padding-inline:4px; font-size:12.5px; font-weight:700; line-height:1.6; }
+.ap-pal-name small{ flex-basis:100%; order:3; font-size:10.5px; font-weight:500; color:var(--muted); line-height:1.5; }
+.ap-pal-check{ margin-inline-start:auto; color:var(--accent); flex-shrink:0; }
+@media (prefers-reduced-motion:reduce){ body[data-theme] button.ap-pal-card{ transition:none; } }
+
+.ap-pal-custom{ margin-top:16px; padding-top:16px; border-top:1px solid var(--surface-line); display:flex; flex-direction:column; gap:14px; }
+.ap-pal-custom-row{ display:flex; align-items:center; gap:12px; }
+input.ap-pal-picker{
+  -webkit-appearance:none; appearance:none; flex-shrink:0; width:46px; height:46px; padding:0; margin:0;
+  border:2px solid var(--box-line); border-radius:50%; overflow:hidden; cursor:pointer; background:none;
+}
+input.ap-pal-picker::-webkit-color-swatch-wrapper{ padding:0; }
+input.ap-pal-picker::-webkit-color-swatch{ border:0; border-radius:50%; }
+input.ap-pal-picker::-moz-color-swatch{ border:0; border-radius:50%; }
+input.ap-pal-picker:focus-visible{ outline:2px solid var(--accent); outline-offset:2px; }
+input.ap-pal-hex{ flex:1 1 auto; min-width:0; max-width:180px; text-transform:uppercase; letter-spacing:.06em; }
+.ap-pal-swatches{ display:flex; flex-wrap:wrap; gap:10px; }
+body[data-theme] button.ap-pal-swatch{
+  width:32px; height:32px; min-width:32px; padding:0; border-radius:50%; cursor:pointer; box-shadow:none;
+  background:var(--sw); border:2px solid var(--box-line);
+  backdrop-filter:none; -webkit-backdrop-filter:none; transition:transform .15s ease, border-color .18s ease;
+}
+body[data-theme] button.ap-pal-swatch:active{ transform:scale(.9); }
+body[data-theme] button.ap-pal-swatch.is-on{ border-color:var(--text); }
+body[data-theme] button.ap-pal-swatch:focus-visible{ outline:2px solid var(--accent); outline-offset:2px; }
+
+.ap-pal-logo{ display:flex; align-items:center; gap:12px; justify-content:flex-start; }
+.ap-pal-logo-mark{
+  display:block; width:46px; height:39px; flex-shrink:0;
+  background:linear-gradient(170deg, var(--lg-from), var(--lg-mid) 55%, var(--lg-to));
+  -webkit-mask:url(/images/logo-icon-dark-theme.png) center / contain no-repeat;
+  mask:url(/images/logo-icon-dark-theme.png) center / contain no-repeat;
+}
+.ap-pal-logo-word{
+  font-family:var(--font-latin), var(--font-vazir), sans-serif; font-size:26px; font-weight:800; letter-spacing:.28em; line-height:1;
+  background:linear-gradient(90deg, var(--lg-from), var(--lg-mid), var(--lg-to));
+  -webkit-background-clip:text; background-clip:text; -webkit-text-fill-color:transparent; color:transparent;
+}

@@ -9,6 +9,7 @@
 // (عدد هدف همیشه نشون داده می‌شه؛ «؟» فقط برای روزهای مایلستون استریک مونده).
 
 import { isEn, pick } from "./i18n";
+import type { SectionKey } from "./sections";
 
 export type AchievementMetrics = {
   currentStreak: number;
@@ -96,6 +97,25 @@ export const ACHIEVEMENT_CATEGORIES: Record<AchievementCategory, string> = {
   get trade() { return pick({ fa: "ترید", en: "Trading" }); },
   get special() { return pick({ fa: "ویژه", en: "Special" }); },
 };
+
+/**
+ * هر دسته روی زیردامنه‌ی کدوم بخش‌ها دیده می‌شه (جداسازی بخش‌ها، docs/sections.md). دامنه‌ی اصلی
+ * (section = null) همه رو می‌بینه. فقط نمایش: باز شدن و نام طلایی هنوز روی کل کاتالوگ سمت سرور حساب می‌شن.
+ */
+export const ACHIEVEMENT_CATEGORY_SECTIONS: Record<AchievementCategory, SectionKey[]> = {
+  streak: ["routine"],
+  perfect: ["routine"],
+  ticks: ["routine"],
+  consistency: ["routine"],
+  sleep: ["routine", "workout"],
+  body: ["workout"],
+  trade: ["trade"],
+  special: ["routine"],
+};
+
+export function achievementVisibleIn(a: Pick<AchievementDef, "category">, section: SectionKey | null): boolean {
+  return !section || ACHIEVEMENT_CATEGORY_SECTIONS[a.category].includes(section);
+}
 
 /** توضیح انگلیسی هر اچیومنت (کلید = id)؛ {n} = عدد هدف */
 const DESC_EN: Record<string, string> = {

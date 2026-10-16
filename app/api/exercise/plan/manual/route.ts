@@ -7,6 +7,8 @@ import { FA_WEEKDAY } from "@/lib/jalali";
 import { ExerciseDay } from "@/lib/exercisePlans";
 import { withLiveSync } from "@/lib/realtime";
 import { sessionFeatureBlocked } from "@/lib/featureFlagsServer";
+import { validateExerciseItem, MAX_EXERCISE_ITEMS_PER_DAY } from "@/lib/exerciseItemLimits";
+import { readJsonBody } from "@/lib/validate";
 
 // POST /api/exercise/plan/manual — برنامه‌ای که خود کاربر دستی وارد کرده
 // (بدون هوش مصنوعی/قالب آماده)، جایگزین /api/exercise/plan (که فقط
@@ -17,13 +19,15 @@ async function handlePOST(req: NextRequest) {
   if (!guard.ok) return guard.response;
   const userId = guard.userId;
 
-  const body = await req.json();
+  const parsedBody = await readJsonBody(req);
+  if (!parsedBody.ok) return NextResponse.json({ error: parsedBody.error }, { status: parsedBody.status });
+  const body = parsedBody.body;
   const { planData, rulesAccepted } = body as { planData: ExerciseDay[]; rulesAccepted: boolean };
 
   if (!rulesAccepted) {
     return NextResponse.json({ error: tr("قبول‌کردن قوانین الزامی است", "Accepting the rules is required") }, { status: 400 });
   }
-  if (!Array.isArray(planData) || planData.length === 0) {
+  if (!Array.isArray(planData) || planData.length === 0 || planData.length > 7) {
     return NextResponse.json({ error: tr("حداقل یک روز تمرینی لازم است", "At least one training day is required") }, { status: 400 });
   }
 
@@ -41,6 +45,14 @@ async function handlePOST(req: NextRequest) {
     const items = Array.isArray(d.items) ? d.items.map((i) => String(i).trim()).filter(Boolean) : [];
     if (items.length === 0) {
       return NextResponse.json({ error: tr(`برای روز «${d.day}» حداقل یک حرکت لازم است`, `Day "${iso(d.day)}" needs at least one exercise`) }, { status: 400 });
+    }
+    if (items.length > MAX_EXERCISE_ITEMS_PER_DAY) {
+      return NextResponse.json({ error: tr(`هر روز حداکثر ${MAX_EXERCISE_ITEMS_PER_DAY} حرکت می‌تواند داشته باشد`, `Each day can have at most ${MAX_EXERCISE_ITEMS_PER_DAY} exercises`) }, { status: 400 });
+    }
+    // ست/تکرار/مدت داخل متن هر حرکت («حرکت 3×10» یا «حرکت 30 ثانیه») هم سنجیده می‌شه
+    for (const item of items) {
+      const bad = validateExerciseItem(item);
+      if (bad) return NextResponse.json({ error: bad }, { status: 400 });
     }
     cleanDays.push({ day: d.day, focus: String(d.focus || "").trim() || "برنامه‌ی شخصی", items });
   }

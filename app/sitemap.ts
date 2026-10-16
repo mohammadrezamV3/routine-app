@@ -1,8 +1,9 @@
 import type { MetadataRoute } from "next";
 import { BLOG_CATEGORY_KEYS } from "@/lib/blog/categories";
 import { postsInCategory, sortedPosts } from "@/lib/blogPosts";
+import { blogCanonicalUrl, blogCategoryOwner, blogIndexCanonical } from "@/lib/sectionBlog";
 import { absoluteUrl, sectionHomeUrl, SITE_URL } from "@/lib/seo";
-import { getSection } from "@/lib/sectionServer";
+import { getHostSection } from "@/lib/sectionServer";
 import { isSectionHostingEnabled, seoLandingOwner } from "@/lib/sections";
 
 // تاریخ ثابت برای صفحه‌های ایستا: تغییر واقعی‌شان با تغییر این ثابت (هنگام
@@ -32,14 +33,44 @@ export default function sitemap(): MetadataRoute.Sitemap {
   // با زیردامنه‌های بخش‌ها (lib/sections.ts): هر میزبان فقط URLهای خودش رو فهرست می‌کنه — خود صفحه‌ی
   // اصلی بخش + صفحه‌های فرود سئوی همون بخش؛ دامنه‌ی اصلی صفحه‌هایی که حالا مال زیردامنه‌ان رو نمی‌آره
   // (کانونیکالشون به زیردامنه‌ست). بدون NEXT_PUBLIC_SECTION_BASE_DOMAIN دقیقا مثل قبل.
-  const section = isSectionHostingEnabled() ? getSection() : null; // بدون زیردامنه‌ها headers() صدا زده نمی‌شه و مسیر ایستا می‌مونه
+  const section = isSectionHostingEnabled() ? getHostSection() : null; // بدون زیردامنه‌ها headers() صدا زده نمی‌شه و مسیر ایستا می‌مونه
   if (section) {
     const landings: MetadataRoute.Sitemap = SECTION_LANDING_ENTRIES
       .filter((e) => seoLandingOwner(e.path) === section)
       .map((e) => ({ url: absoluteUrl(e.path), lastModified: STATIC_LASTMOD, changeFrequency: "monthly", priority: e.priority }));
+    // بلاگ: صفحه‌ی فهرست میزبان + دسته‌ها و مقاله‌هایی که canonicalشون همین میزبانه (دسته‌ی مشترک
+    // مثل «خواب» فقط در سایت‌مپ بخش صاحبش میاد، نه دوبار)
+    const owned = (cat: (typeof BLOG_CATEGORY_KEYS)[number]) => blogCategoryOwner(cat) === section;
+    const sectionPosts = sortedPosts().filter((p) => owned(p.category));
+    const newest = sectionPosts[0];
+    const blogEntries: MetadataRoute.Sitemap = [
+      {
+        url: blogIndexCanonical(section),
+        lastModified: newest ? new Date(newest.updated || newest.published) : STATIC_LASTMOD,
+        changeFrequency: "weekly",
+        priority: 0.7,
+      },
+      ...BLOG_CATEGORY_KEYS.filter(owned).map((key) => {
+        const top = postsInCategory(key)[0];
+        return {
+          url: blogCanonicalUrl(`/blog/category/${key}`, key),
+          lastModified: top ? new Date(top.updated || top.published) : STATIC_LASTMOD,
+          changeFrequency: "weekly" as const,
+          priority: 0.5,
+        };
+      }),
+      ...sectionPosts.map((p) => ({
+        url: blogCanonicalUrl(`/blog/${p.slug}`, p.category),
+        lastModified: new Date(p.updated || p.published),
+        changeFrequency: "yearly" as const,
+        priority: 0.6,
+      })),
+    ];
     return [
       { url: sectionHomeUrl(section), lastModified: STATIC_LASTMOD, changeFrequency: "weekly", priority: 1 },
       ...landings,
+      { url: `${sectionHomeUrl(section)}/about`, lastModified: STATIC_LASTMOD, changeFrequency: "monthly", priority: 0.6 },
+      ...blogEntries,
     ];
   }
 
@@ -65,7 +96,8 @@ export default function sitemap(): MetadataRoute.Sitemap {
   // lastModified مقاله‌ها از تاریخ واقعی خودشان می‌آید، نه `now` — تاریخ
   // همیشه-امروز به گوگل سیگنال دروغ «تازه به‌روز شد» می‌دهد و بعد از
   // چند بار، اعتبار کل sitemap را پایین می‌آورد.
-  const posts: MetadataRoute.Sitemap = sortedPosts().map((p) => ({
+  const hosting = isSectionHostingEnabled();
+  const posts: MetadataRoute.Sitemap = hosting ? [] : sortedPosts().map((p) => ({
     url: absoluteUrl(`/blog/${p.slug}`),
     lastModified: new Date(p.updated || p.published),
     changeFrequency: "yearly",
@@ -84,7 +116,7 @@ export default function sitemap(): MetadataRoute.Sitemap {
   ];
 
   // صفحه‌ی هر دسته‌ی بلاگ: تازگی از جدیدترین مقاله‌ی همان دسته
-  const categoryPages: MetadataRoute.Sitemap = BLOG_CATEGORY_KEYS.map((key) => {
+  const categoryPages: MetadataRoute.Sitemap = hosting ? [] : BLOG_CATEGORY_KEYS.map((key) => {
     const newest = postsInCategory(key)[0];
     return {
       url: absoluteUrl(`/blog/category/${key}`),

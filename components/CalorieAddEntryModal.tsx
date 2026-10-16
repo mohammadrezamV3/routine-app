@@ -10,6 +10,7 @@ import { useLockBodyScroll } from "@/lib/useLockBodyScroll";
 import { NumberInput } from "./NumberInput";
 import { Spinner } from "./Spinner";
 import { isEn, tr } from "@/lib/i18n";
+import { limitError, NUMBER_LIMITS, readTyped } from "@/lib/numberLimits";
 import { foodNameDisplay, loadFoodNamesEn, searchFoodNamesEn, useFoodNamesEn } from "@/lib/foodNamesEnLazy";
 
 const LAST_UNIT_KEY = "arion-calorie-last-unit";
@@ -50,6 +51,7 @@ export function CalorieAddEntryModal({
   const [mealType, setMealType] = useState(mealTypes[0]?.key ?? "lunch");
   const [saving, setSaving] = useState(false);
   const [submitted, setSubmitted] = useState(false);
+  const [error, setError] = useState<string | null>(null);
 
   useEffect(() => { setUnit(readLastUnit()); }, []);
 
@@ -78,12 +80,27 @@ export function CalorieAddEntryModal({
 
   const isManual = !selectedFood && query.trim() && suggestions.length === 0;
 
+  // سقف مقدار تایپ‌شده به واحد انتخابی: کل وزن یک ثبت (بعد از تبدیل واحد) از سقف
+  // foodGrams رد نشه — مثلا برای «پیمانه» (240 گرم) سقف کمتر از «گرم» می‌شه.
+  const qtyMax = Math.min(NUMBER_LIMITS.foodAmount.max, Math.floor((NUMBER_LIMITS.foodGrams.max / UNIT_TO_GRAMS[unit]) * 100) / 100);
+
   async function addEntry() {
+    setError(null);
     const name = selectedFood?.name || query.trim();
-    const per100 = selectedFood ? selectedFood.caloriesPer100g : +customPer100;
-    const g = +qty * UNIT_TO_GRAMS[unit];
+    // عددها با جدول مشترک (lib/numberLimits.ts) سنجیده می‌شن؛ سرور هم دوباره می‌سنجه
+    const per100Read = selectedFood ? { ok: true as const, value: selectedFood.caloriesPer100g } : readTyped(customPer100, "caloriesPer100g");
+    if (!per100Read.ok) { setError(per100Read.error); return; }
+    const qtyRead = readTyped(qty, "foodAmount", { max: qtyMax });
+    if (!qtyRead.ok) { setError(qtyRead.error); return; }
+    const per100 = per100Read.value ?? 0;
+    const g = (qtyRead.value ?? 0) * UNIT_TO_GRAMS[unit];
     if (!name || !per100 || per100 <= 0 || !g) return;
     const totalKcal = Math.round((per100 * g) / 100);
+    if (totalKcal > NUMBER_LIMITS.entryKcal.max) { setError(limitError("entryKcal")); return; }
+    for (const m of [proteinG, carbsG, fatG]) {
+      const r = readTyped(m, "macroEntryG");
+      if (!r.ok) { setError(r.error); return; }
+    }
 
     // درشت‌مغذی‌های دستی فقط وقتی ارسال می‌شن که واقعا چیزی وارد شده باشه —
     // یا هر سه‌تا با هم می‌رن، یا هیچ‌کدوم (تا API نصفه‌ونیمه رد نکنه).
@@ -103,10 +120,15 @@ export function CalorieAddEntryModal({
       onAdded();
       setSubmitted(true);
       setTimeout(onClose, 850);
+    } else {
+      // پیام سرور (مثلا عدد خارج از بازه) داخل همین فرم نشون داده می‌شه
+      const data = await res.json().catch(() => ({}));
+      setError(data?.error || tr("ثبت غذا ناموفق بود", "Could not add the food"));
     }
   }
 
   const canAdd = !!selectedFood || (query.trim() && +customPer100 > 0);
+  const num = (setter: (v: string) => void) => (v: string) => { setError(null); setter(v); };
 
   return (
     <>
@@ -148,8 +170,9 @@ export function CalorieAddEntryModal({
                   <NumberInput
                     className="wsearch-newform-name calorie-glass-field w-full"
                     placeholder={tr("کالری به‌ازای هر 100 گرم", "Calories per 100 g")}
+                    limit="caloriesPer100g"
                     value={customPer100}
-                    onChange={(v) => setCustomPer100(v)}
+                    onChange={num(setCustomPer100)}
                   />
                 </div>
               )}
@@ -168,8 +191,10 @@ export function CalorieAddEntryModal({
                   decimal
                   className="wsearch-newform-name calorie-glass-field calorie-qty-field w-full text-center"
                   placeholder={tr("مقدار", "Amount")}
+                  limit="foodAmount"
+                  max={qtyMax}
                   value={qty}
-                  onChange={(v) => setQty(v)}
+                  onChange={num(setQty)}
                 />
               </div>
               <div className="relative min-w-0 flex-1">
@@ -210,17 +235,19 @@ export function CalorieAddEntryModal({
 
             <label className="calorie-field-label mt-2.5">{tr("درشت‌مغذی‌ها (اختیاری)", "Macros in grams (optional)")}</label>
             <div className="mt-1.5 flex gap-2">
-              <NumberInput className="wsearch-newform-name calorie-glass-field flex-1" placeholder={tr("پروتئین (گرم)", "Protein")} value={proteinG} onChange={(v) => setProteinG(v)} />
-              <NumberInput className="wsearch-newform-name calorie-glass-field flex-1" placeholder={tr("کربوهیدرات (گرم)", "Carbs")} value={carbsG} onChange={(v) => setCarbsG(v)} />
-              <NumberInput className="wsearch-newform-name calorie-glass-field flex-1" placeholder={tr("چربی (گرم)", "Fat")} value={fatG} onChange={(v) => setFatG(v)} />
+              <NumberInput className="wsearch-newform-name calorie-glass-field flex-1" placeholder={tr("پروتئین (گرم)", "Protein")} limit="macroEntryG" value={proteinG} onChange={num(setProteinG)} />
+              <NumberInput className="wsearch-newform-name calorie-glass-field flex-1" placeholder={tr("کربوهیدرات (گرم)", "Carbs")} limit="macroEntryG" value={carbsG} onChange={num(setCarbsG)} />
+              <NumberInput className="wsearch-newform-name calorie-glass-field flex-1" placeholder={tr("چربی (گرم)", "Fat")} limit="macroEntryG" value={fatG} onChange={num(setFatG)} />
             </div>
+
+            {error && <div className="field-error-msg" role="alert" style={{ display: "block", marginTop: 8 }}>{error}</div>}
 
             <button
               type="button"
               onClick={addEntry}
               disabled={!canAdd || saving}
               className="mt-3 flex w-full items-center justify-center gap-2 rounded-2xl py-3 text-[13px] font-bold disabled:opacity-40 sm:text-[15px]"
-              style={{ background: "var(--accent)", color: "var(--bg)", boxShadow: "0 8px 22px rgba(var(--accent-rgb),.3)" }}
+              style={{ background: "var(--accent)", color: "var(--sec-on-accent, var(--bg))", boxShadow: "0 8px 22px rgba(var(--accent-rgb),.3)" }}
             >
               {saving ? <Spinner size={15} /> : tr("افزودن", "Add")}
             </button>
@@ -241,7 +268,7 @@ export function CalorieAddEntryModal({
                   className="flex h-14 w-14 items-center justify-center rounded-full"
                   style={{ background: "var(--accent)", boxShadow: "0 0 24px rgba(var(--accent-rgb),.5)" }}
                 >
-                  <Check className="h-7 w-7" style={{ color: "var(--bg)" }} strokeWidth={3} />
+                  <Check className="h-7 w-7" style={{ color: "var(--sec-on-accent, var(--bg))" }} strokeWidth={3} />
                 </motion.div>
                 <div className="text-[12.5px] font-bold text-dash-text sm:text-[13.5px]">{tr("با موفقیت اضافه شد", "Added successfully")}</div>
               </motion.div>

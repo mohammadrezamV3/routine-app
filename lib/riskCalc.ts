@@ -18,6 +18,7 @@
 
 import { contractSize, symbolKind } from "./tradeSymbols";
 import { tr } from "./i18n";
+import { inLimitRange, limitError, NUMBER_LIMITS, type LimitSpec } from "./numberLimits";
 
 export type RiskDirection = "BUY" | "SELL";
 export type RiskMode = "percent" | "amount";
@@ -148,6 +149,11 @@ export type RiskFailure = { ok: false; error: string };
 
 const fin = (n: unknown): n is number => typeof n === "number" && Number.isFinite(n);
 
+/** ورودی عددی بیرون از بازه‌ی جدول مشترک (lib/numberLimits.ts) → خطای استاندارد، وگرنه null */
+function outOfLimit(v: unknown, spec: LimitSpec): RiskFailure | null {
+  return fin(v) && !inLimitRange(v, spec) ? { ok: false, error: limitError(spec) } : null;
+}
+
 export function calcRisk(inp: RiskInput): RiskResult | RiskFailure {
   const { direction, entry, stopLoss } = inp;
   if (!inp.symbol.trim()) return { ok: false, error: tr("نماد را انتخاب کن", "Select a symbol") };
@@ -156,6 +162,15 @@ export function calcRisk(inp: RiskInput): RiskResult | RiskFailure {
   if (stopLoss === entry) return { ok: false, error: tr("حد ضرر نمی‌تواند با قیمت ورود برابر باشد", "Stop loss cannot be equal to the entry price") };
   if (direction === "BUY" && stopLoss > entry) return { ok: false, error: tr("در خرید، حد ضرر باید پایین‌تر از قیمت ورود باشد", "For a buy, the stop loss must be below the entry price") };
   if (direction === "SELL" && stopLoss < entry) return { ok: false, error: tr("در فروش، حد ضرر باید بالاتر از قیمت ورود باشد", "For a sell, the stop loss must be above the entry price") };
+
+  // سقف عددهای تایپ‌شده: قیمت‌ها، موجودی، ریسک (جلوی اعداد نجومی رو می‌گیره)
+  const bad =
+    outOfLimit(entry, "tradePrice") || outOfLimit(stopLoss, "tradePrice") ||
+    (inp.takeProfits || []).map((t) => outOfLimit(t.price, "tradePrice")).find(Boolean) ||
+    outOfLimit(inp.balance, "accountBalance") ||
+    outOfLimit(inp.riskValue, inp.mode === "percent" ? "riskPercent" : "tradeRisk") ||
+    outOfLimit(inp.quoteToUsd ?? undefined, "quoteRate");
+  if (bad) return bad;
 
   let riskWanted: number;
   if (inp.mode === "percent") {
@@ -180,6 +195,7 @@ export function calcRisk(inp: RiskInput): RiskResult | RiskFailure {
   const stepped = Math.floor(lotsRaw / step + 1e-9) * step;
   const lots = Number(stepped.toFixed(Math.max(0, Math.round(-Math.log10(step)))));
   const riskAmount = lots * slPips * pv.value;
+  if (!fin(lots) || lots > NUMBER_LIMITS.tradeVolumeLot.max) return { ok: false, error: limitError("tradeVolumeLot") };
 
   const warnings: string[] = [];
   if (lots <= 0) warnings.push(tr("با این ریسک و فاصله‌ی حد ضرر، لات از حداقل (0.01) کمتر می‌شود", "With this risk and stop loss distance, the lot size falls below the minimum (0.01)"));
@@ -262,6 +278,10 @@ export function simplePipCalc(inp: SimplePipInput): SimplePipResult | RiskFailur
   if (!inp.symbol.trim()) return { ok: false, error: tr("نماد را انتخاب کن", "Select a symbol") };
   if (!fin(inp.pips) || inp.pips <= 0) return { ok: false, error: tr("تعداد پیپ را وارد کن", "Enter the number of pips") };
   if (!fin(inp.lots) || inp.lots <= 0) return { ok: false, error: tr("حجم (لات) را وارد کن", "Enter the volume (lots)") };
+  const bad =
+    outOfLimit(inp.pips, "pips") || outOfLimit(inp.lots, "tradeVolumeLot") ||
+    outOfLimit(inp.balance, "accountBalance") || outOfLimit(inp.quoteRate ?? undefined, "quoteRate");
+  if (bad) return bad;
   const spec = symbolSpec(inp.symbol);
   const inQuote = spec.pipSize * spec.contractSize;
   let value: number;

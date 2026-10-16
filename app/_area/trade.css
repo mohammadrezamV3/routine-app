@@ -1014,9 +1014,9 @@ html[data-perf="low"] .trade-drawer{ background:var(--surface-2) !important; }
   box-shadow:0 0 0 1px rgba(var(--accent-rgb),.4), 0 0 8px rgba(var(--accent-rgb),.3);
 }
 
-.trade-cal-day-pill.active .trade-cal-day-pill-wd{ color:var(--bg); }
+.trade-cal-day-pill.active .trade-cal-day-pill-wd{ color:var(--sec-on-accent, var(--bg)); }
 
-.trade-cal-day-pill.active .trade-cal-day-pill-num{ color:var(--bg); opacity:.8; }
+.trade-cal-day-pill.active .trade-cal-day-pill-num{ color:var(--sec-on-accent, var(--bg)); opacity:.8; }
 
 @media (hover:hover) {
   .trade-cal-day-pill:not(.active):hover{ background:rgba(255,255,255,.05); } }
@@ -1058,14 +1058,14 @@ body[data-theme="light"] button.trade-cal-day-pill.active{
   .trade-cal-pill-btn:hover{ border-color:var(--accent); color:var(--accent); } }
 
 .trade-cal-pill-btn.today.active{
-  background:var(--accent); border-color:rgba(var(--accent-rgb),.4); color:var(--bg); font-weight:700;
+  background:var(--accent); border-color:rgba(var(--accent-rgb),.4); color:var(--sec-on-accent, var(--bg)); font-weight:700;
   box-shadow:0 0 8px rgba(var(--accent-rgb),.25);
 }
 
 body[data-theme="light"] .trade-cal-pill-btn.today.active, body:not([data-theme="light"]) .trade-cal-pill-btn.today.active{ background:var(--accent); }
 
 @media (hover:hover) {
-  .trade-cal-pill-btn.today.active:hover{ color:var(--bg); filter:brightness(1.06); } }
+  .trade-cal-pill-btn.today.active:hover{ color:var(--sec-on-accent, var(--bg)); filter:brightness(1.06); } }
 
 /* «فیلتر» وقتی بازه یا فیلتر فعالی دارد فقط لبه/متنش اکسنت می‌شود — پر
    نمی‌شود، چون پر بودن در این ردیف معنی «روز انتخابی = امروز» را دارد. */
@@ -2152,3 +2152,242 @@ html[data-navigated] .page-enter > [style*="position:fixed"]{ animation-name:m-f
   html[dir="ltr"] .dnav-panel.notif-panel, html[dir="ltr"] .dnav-panel.notif-panel[data-open="true"]{
     transform:none; transition:opacity .12s ease, visibility 0s;
   } }
+
+/* ============================================================
+   هاب ترید v2 (th-*) — components/TradeHub*.tsx
+   طرح: عنوان + برچسب زنده + اشتراک/ثبت معامله، ردیف KPI، ساعت فارکس و سه
+   گروه کارت. فقط توکن (--accent، --pnl-*، --box-bg، --surface-line، --muted)
+   و ویژگی‌های منطقی، پس با هر دو تم، تم‌های رنگی کاربر و rtl/ltr جور می‌شه.
+   کارت‌ها و کاشی‌ها کلاس .trade-surface هم دارن (بوردر/بک‌گراند/نور هاور
+   مشترک از globals)؛ این‌جا فقط چیدمان و اندازه. بک‌گراند به هیچ دکمه‌ای
+   اضافه نشده (آیکون‌ها فقط بوردر دارن).
+   موبایل (کمتر از 768): همین کارت‌ها ردیف‌های یک لیست گروه‌بندی‌شده‌ان.
+   ============================================================ */
+
+.th-page{ padding:0; border-top:0; }
+
+/* ── سرتیتر ── */
+.th-title-row{ display:flex; align-items:center; gap:14px; flex-wrap:wrap; min-height:44px; }
+.th-title-row h1{ margin:0; font-size:28px; font-weight:800; letter-spacing:0; }
+.th-title-chip{
+  display:inline-flex; align-items:center; justify-content:center; flex-shrink:0;
+  width:44px; height:44px; border-radius:14px;
+  border:1px solid rgba(var(--accent-rgb),.3); color:var(--accent);
+}
+.th-title-actions{ margin-inline-start:auto; display:flex; align-items:center; gap:10px; }
+.th-title-row .trade-icon-btn.th-share{
+  width:44px; height:44px; padding:0; border-radius:14px;
+  border:1px solid var(--surface-line); color:var(--muted);
+}
+@media (hover:hover){ .th-title-row .trade-icon-btn.th-share:hover{ border-color:var(--accent); color:var(--accent); } }
+.trade-primary-btn.th-cta{ height:44px; padding:0 20px; border-radius:14px; font-size:14px; font-weight:700; gap:8px; }
+
+.th-pill{
+  display:inline-flex; align-items:center; gap:6px; height:26px; padding:0 10px;
+  border-radius:999px; font-size:12px; font-weight:600; max-width:100%; min-width:0;
+}
+.th-pill-text{ overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
+.th-pill-dot{ width:7px; height:7px; border-radius:50%; background:currentColor; flex-shrink:0; }
+.th-pill.is-open{ background:rgba(var(--pnl-win-rgb),.12); color:var(--pnl-win); }
+.th-pill.is-quiet, .th-pill.is-closed{ background:rgba(var(--accent-rgb),.08); color:var(--muted); }
+
+.th-body-wrap{ display:flex; flex-direction:column; gap:28px; margin-top:28px; }
+
+/* ── KPI ── */
+.th-kpis{ display:grid; grid-template-columns:repeat(var(--th-n, 4), minmax(0, 1fr)); gap:14px; }
+.th-kpi{
+  display:flex; flex-direction:column; gap:6px; min-width:0; min-height:112px;
+  padding:18px 20px; border-radius:20px; box-sizing:border-box;
+}
+.th-kpi.is-alert{ border-color:rgba(var(--pnl-loss-rgb),.35); }
+.th-kl{ display:flex; align-items:center; gap:6px; font-size:12.5px; color:var(--muted); }
+.th-kv-row{ display:flex; align-items:center; gap:12px; }
+.th-kv{
+  font-family:var(--font-latin), var(--font-vazir), sans-serif;
+  font-size:clamp(21px, 2.3vw, 28px); font-weight:800; line-height:1.15; text-align:start;
+  color:var(--text); min-width:0; overflow-wrap:anywhere;
+}
+.th-kv.is-win{ color:var(--pnl-win); }
+.th-kv.is-loss{ color:var(--pnl-loss); }
+.th-ks{ font-size:12px; color:var(--muted); line-height:1.6; }
+.th-kring{ flex-shrink:0; }
+.th-num{ font-family:var(--font-latin), var(--font-vazir), sans-serif; }
+.th-muted{ color:var(--muted); }
+.th-m{ display:none; }
+
+.th-dot{ width:8px; height:8px; border-radius:50%; flex-shrink:0; display:inline-block; }
+.th-lbl{ display:inline-flex; align-items:center; gap:6px; }
+.th-kl .th-dot{ width:7px; height:7px; }
+.th-dot.is-high{ background:var(--pnl-loss); }
+.th-dot.is-med{ background:var(--ring-3a); }
+.th-dot.is-ok{ background:var(--pnl-win); }
+
+/* ── کارت پایه ── */
+.th-card{
+  display:flex; flex-direction:column; gap:16px; min-width:0; box-sizing:border-box;
+  padding:20px; border-radius:22px; color:var(--text); text-decoration:none;
+}
+@media (hover:hover){ .th-card:hover{ color:var(--text); } }
+.th-card:active{ transform:scale(.99); }
+.th-head{ display:flex; align-items:center; gap:12px; min-width:0; }
+.th-chip{
+  display:flex; align-items:center; justify-content:center; flex-shrink:0;
+  width:36px; height:36px; border-radius:12px;
+  border:1px solid rgba(var(--accent-rgb),.3); color:var(--accent);
+}
+.th-titles{ display:flex; flex-direction:column; gap:2px; min-width:0; flex:1; }
+.th-title{ display:block; font-size:15px; font-weight:700; color:var(--text); }
+.th-desc{ display:block; font-size:12.5px; color:var(--muted); line-height:1.6; }
+.th-sub, .th-end{ display:none; }
+.th-more{
+  margin-inline-start:auto; display:inline-flex; align-items:center; gap:4px;
+  font-size:12.5px; font-weight:600; color:var(--muted); flex-shrink:0; transition:color .18s ease;
+}
+@media (hover:hover){ .th-card:hover .th-more{ color:var(--accent); } }
+.th-more-foot{ margin-inline-start:0; margin-top:auto; }
+.th-body{ display:flex; flex-direction:column; gap:14px; flex:1; min-width:0; }
+.th-journal .th-body, .th-checklists .th-body, .th-notes .th-body, .th-money .th-body, .th-risk .th-body{ min-height:78px; }
+.th-body-skel{ gap:10px; }
+.th-hint{ margin:0; font-size:13px; line-height:1.8; color:var(--muted); text-align:start; }
+
+.th-group{ display:flex; flex-direction:column; gap:14px; }
+.th-group h2.th-sec{ margin:0; font-size:13px; font-weight:700; letter-spacing:.01em; color:var(--muted); }
+.th-grid{ display:grid; grid-template-columns:repeat(3, minmax(0, 1fr)); gap:14px; grid-auto-flow:dense; }
+.th-span-2{ grid-column:span 2; }
+.th-span-3{ grid-column:1 / -1; }
+.th-only-mob{ display:none; }
+
+/* ردیف‌های داخل کارت (تقویم، حساب‌ها) */
+.th-rows{ display:flex; flex-direction:column; }
+.th-row{
+  display:flex; align-items:center; gap:10px; padding:10px 0; min-width:0;
+  border-top:1px solid var(--surface-line); font-size:13.5px;
+}
+.th-row:first-child{ border-top:0; padding-top:0; }
+.th-row .th-num{ font-size:12.5px; color:var(--muted); flex-shrink:0; }
+.th-row b{ font-size:13.5px; font-weight:700; color:var(--text); }
+.th-row-t{ flex:1; min-width:0; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
+.th-row-t.is-strong{ font-weight:600; }
+.th-acc-dot{ width:8px; height:8px; border-radius:50%; flex-shrink:0; }
+.th-growth{ font-size:12px; }
+.th-growth.is-win{ color:var(--pnl-win); }
+.th-growth.is-loss{ color:var(--pnl-loss); }
+
+/* نماد/پلتفرم */
+.th-chips{ display:flex; gap:8px; flex-wrap:wrap; }
+.th-chip-sym{
+  display:inline-flex; align-items:center; height:26px; padding:0 10px; border-radius:999px;
+  border:1px solid var(--surface-line); color:var(--muted);
+  font-family:var(--font-latin), var(--font-vazir), sans-serif; font-size:12px; font-weight:600;
+}
+.th-chip-sym.is-on{ border-color:var(--accent); color:var(--accent); }
+
+/* پیش‌نمایش تزئینی کندل */
+.th-candles{ width:100%; height:150px; display:block; }
+.th-c-grid path{ fill:none; stroke:var(--surface-line); opacity:.7; vector-effect:non-scaling-stroke; }
+.th-c-up path{ stroke:var(--pnl-win); }
+.th-c-up rect{ fill:var(--pnl-win); }
+.th-c-dn path{ stroke:var(--pnl-loss); }
+.th-c-dn rect{ fill:var(--pnl-loss); }
+.th-c-up path, .th-c-dn path{ stroke-width:2; vector-effect:non-scaling-stroke; }
+.th-c-line{ fill:none; stroke:var(--accent); stroke-dasharray:4 5; vector-effect:non-scaling-stroke; }
+
+/* چک‌لیست */
+.th-prog{ display:flex; flex-direction:column; gap:10px; }
+.th-prog-top{ display:flex; justify-content:space-between; gap:8px; font-size:13px; }
+.th-bar{ height:6px; border-radius:4px; background:rgba(var(--accent-rgb),.12); overflow:hidden; }
+.th-bar > span{ display:block; height:100%; border-radius:4px; background:var(--accent); }
+
+/* یادداشت و آمار کوچک */
+.th-note, .th-stat{
+  margin:0; border:1px solid var(--surface-line); border-radius:14px; padding:12px 14px;
+  text-align:start; box-sizing:border-box;
+}
+.th-note{
+  font-size:13px; line-height:1.8; color:color-mix(in srgb, var(--text) 82%, transparent);
+  display:-webkit-box; -webkit-line-clamp:3; -webkit-box-orient:vertical; overflow:hidden; overflow-wrap:anywhere;
+}
+.th-stat{ display:flex; flex-direction:column; gap:2px; padding:10px 12px; }
+.th-stat b{ font-size:18px; font-weight:800; color:var(--text); }
+.th-mt-row{ display:flex; align-items:center; gap:8px; flex-wrap:wrap; }
+
+/* ── ساعت فارکس ── */
+.th-clock{ gap:14px; }
+.th-tl{ position:relative; display:flex; flex-direction:column; gap:8px; font-size:12.5px; }
+.th-tl-row{ display:grid; grid-template-columns:90px minmax(0, 1fr); column-gap:14px; align-items:center; min-height:18px; }
+.th-tl-label{ color:var(--muted); overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
+.th-tl-label.is-open{ color:var(--text); font-weight:600; }
+.th-tl-track{ position:relative; height:10px; border-radius:6px; background:rgba(var(--accent-rgb),.08); overflow:hidden; }
+.th-tl-seg{ position:absolute; inset-block:0; border-radius:6px; background:rgba(var(--accent-rgb),.3); }
+.th-tl-seg.is-open{ background:var(--accent); }
+/* ستون برچسب 90px + فاصله‌ی 14px؛ --p بین 0 و 1 جای «الان» روی محور 24 ساعته است */
+.th-tl-now{
+  position:absolute; inset-block:-4px; width:2px; border-radius:2px; background:var(--text);
+  inset-inline-start:calc(104px + (100% - 104px) * var(--p, 0));
+}
+
+/* ── اسکلت بارگذاری (هم‌اندازه‌ی محتوا، بدون پرش) ── */
+.th-skel{ display:block; position:relative; overflow:hidden; border-radius:8px; max-width:100%; background:rgba(var(--accent-rgb),.07); }
+.th-skel::after{
+  content:""; position:absolute; inset:0; transform:translateX(100%);
+  background:linear-gradient(90deg, transparent, rgba(255,255,255,.07), transparent);
+  animation:th-shimmer 1.4s ease-in-out infinite;
+}
+body[data-theme="light"] .th-skel::after{ background:linear-gradient(90deg, transparent, rgba(255,255,255,.55), transparent); }
+@keyframes th-shimmer{ to{ transform:translateX(-100%); } }
+@keyframes th-shimmer-ltr{ to{ transform:translateX(100%); } }
+html[dir="ltr"] .th-skel::after{ transform:translateX(-100%); animation-name:th-shimmer-ltr; }
+@media (prefers-reduced-motion:reduce){ .th-skel::after{ animation:none; } }
+html[data-perf-weak] .th-skel::after{ animation:none; }
+
+/* دسکتاپ: ردیف موبایلی ساعت و گروهی که فقط همان را دارد پنهان */
+@media (min-width:768px){
+  .th-group-mob{ display:none; }
+  .trade-primary-btn.th-cta-mob{ display:none; }
+}
+
+/* ── موبایل: لیست گروه‌بندی‌شده ── */
+@media (max-width:767.98px){
+  .th-title-row{ gap:10px; margin-top:6px; }
+  .th-title-row h1{ font-size:24px; }
+  .th-title-chip{ display:none; }
+  .th-pill{ height:24px; padding:0 9px; font-size:11.5px; flex-shrink:1; }
+  .th-title-row .trade-icon-btn.th-share{ width:40px; height:40px; border-radius:12px; }
+  .trade-primary-btn.th-cta-desk{ display:none; }
+
+  .th-body-wrap{ gap:14px; margin-top:16px; }
+  .th-kpis{ grid-template-columns:repeat(2, minmax(0, 1fr)); gap:10px; }
+  .th-kpi{ min-height:0; padding:14px; gap:4px; border-radius:18px; }
+  .th-kl{ font-size:11.5px; }
+  .th-kv{ font-size:22px; }
+  .th-ks, .th-kring, .th-skel-ks{ display:none; }
+  .th-kpi.is-alert .th-ks{ display:block; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
+  .th-d{ display:none; }
+  .th-m{ display:inline; }
+  .trade-primary-btn.th-cta-mob{ display:flex; width:100%; height:50px; border-radius:16px; font-size:15px; }
+  .th-clock{ display:none; }
+
+  .th-group{ gap:8px; }
+  .th-group h2.th-sec{ font-size:12.5px; margin:6px 4px 0; }
+  .th-grid{
+    display:block; border:1px solid var(--surface-line); border-radius:20px; overflow:hidden;
+    background:var(--box-bg);
+  }
+  .th-grid > .th-card{
+    flex-direction:row; align-items:center; gap:12px; min-height:64px; padding:14px 16px;
+    border:0; border-top:1px solid var(--surface-line); border-radius:0; background:none; box-shadow:none;
+  }
+  .th-grid > .th-card:first-child{ border-top:0; }
+  .th-grid > .th-card::before{ display:none; }
+  .th-grid > .th-card.th-only-mob{ display:flex; }
+  .th-grid > .th-card .th-head{ flex:1; }
+  .th-grid > .th-card .th-chip{ width:36px; height:36px; }
+  .th-title{ font-size:14.5px; }
+  .th-desc, .th-more, .th-body{ display:none; }
+  .th-sub{
+    display:block; margin:2px 0 0; font-size:12px; color:var(--muted); line-height:1.6;
+    overflow:hidden; text-overflow:ellipsis; white-space:nowrap;
+  }
+  .th-end{ display:flex; align-items:center; gap:8px; margin-inline-start:auto; color:var(--muted2); flex-shrink:0; }
+  .th-span-2, .th-span-3{ grid-column:auto; }
+}

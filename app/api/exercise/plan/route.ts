@@ -11,6 +11,8 @@ import { FA_WEEKDAY } from "@/lib/jalali";
 import { withLiveSync } from "@/lib/realtime";
 import { validateUserSplit, type UserSplitDay } from "@/lib/exerciseSplit";
 import { sessionFeatureBlocked } from "@/lib/featureFlagsServer";
+import { checkOptionalNumber } from "@/lib/numberLimits";
+import { readJsonBody } from "@/lib/validate";
 
 const VALID_LEVELS: ExerciseLevel[] = ["beginner", "intermediate", "advanced"];
 const MAX_DESCRIPTION_LEN = 500;
@@ -49,7 +51,9 @@ async function handlePOST(req: NextRequest) {
   if (!guard.ok) return guard.response;
   const userId = guard.userId;
 
-  const body = await req.json();
+  const parsedBody = await readJsonBody(req);
+  if (!parsedBody.ok) return NextResponse.json({ error: parsedBody.error }, { status: parsedBody.status });
+  const body = parsedBody.body;
   const { level, heightCm, weightKg, goal, trainingMonth, equipment, hasPhysicalLimitation, limitationDetails, gymDays, description, rulesAccepted, customSplit } = body as {
     level: ExerciseLevel;
     heightCm?: number;
@@ -75,17 +79,15 @@ async function handlePOST(req: NextRequest) {
   if (!equipment || typeof equipment !== "string" || !equipment.trim() || equipment.trim().length > MAX_DESCRIPTION_LEN) {
     return NextResponse.json({ error: tr("تجهیزات وارد شده نامعتبر است", "The equipment entered is not valid") }, { status: 400 });
   }
-  if (trainingMonth !== undefined && (typeof trainingMonth !== "number" || !Number.isInteger(trainingMonth) || trainingMonth < 1 || trainingMonth > 600)) {
-    return NextResponse.json({ error: tr("ماه تمرین وارد شده معتبر نیست", "The training month entered is not valid") }, { status: 400 });
-  }
+  // عددهای فرم (ماه تمرین، قد، وزن) با جدول مشترک lib/numberLimits.ts سنجیده می‌شن
+  const monthCheck = checkOptionalNumber(trainingMonth, "trainingMonth");
+  if (!monthCheck.ok) return NextResponse.json({ error: monthCheck.error }, { status: 400 });
+  const heightCheck = checkOptionalNumber(heightCm, "heightCm");
+  if (!heightCheck.ok) return NextResponse.json({ error: heightCheck.error }, { status: 400 });
+  const weightCheck = checkOptionalNumber(weightKg, "weightKg");
+  if (!weightCheck.ok) return NextResponse.json({ error: weightCheck.error }, { status: 400 });
   if (!Array.isArray(gymDays) || gymDays.length === 0 || !gymDays.every((d) => FA_WEEKDAY.includes(d))) {
     return NextResponse.json({ error: tr("روزهای باشگاه نامعتبر است", "Invalid gym days") }, { status: 400 });
-  }
-  if (heightCm !== undefined && (typeof heightCm !== "number" || heightCm < 50 || heightCm > 260)) {
-    return NextResponse.json({ error: tr("قد وارد شده معتبر نیست", "The height entered is not valid") }, { status: 400 });
-  }
-  if (weightKg !== undefined && (typeof weightKg !== "number" || weightKg < 20 || weightKg > 400)) {
-    return NextResponse.json({ error: tr("وزن وارد شده معتبر نیست", "The weight entered is not valid") }, { status: 400 });
   }
   if (description !== undefined && (typeof description !== "string" || description.length > MAX_DESCRIPTION_LEN)) {
     return NextResponse.json({ error: tr("توضیحات خیلی طولانی است", "The description is too long") }, { status: 400 });
@@ -129,8 +131,8 @@ async function handlePOST(req: NextRequest) {
   try {
     const result = await generateExercisePlan({
       level, goalLabel: cleanGoal, gymDays: uniqueDays,
-      heightCm: heightCm || null, weightKg: weightKg || null,
-      trainingMonth: trainingMonth || null, equipment: cleanEquipment,
+      heightCm: heightCheck.value, weightKg: weightCheck.value,
+      trainingMonth: monthCheck.value, equipment: cleanEquipment,
       hasPhysicalLimitation: !!hasPhysicalLimitation, limitationDetails: cleanLimitationDetails, description: cleanDescription,
       previousProgram: previousPlan?.planData ?? null,
       userSplit,
@@ -158,10 +160,10 @@ async function handlePOST(req: NextRequest) {
     data: {
       userId,
       level,
-      heightCm: heightCm || null,
-      weightKg: weightKg || null,
+      heightCm: heightCheck.value,
+      weightKg: weightCheck.value,
       goal: cleanGoal,
-      trainingMonth: trainingMonth || null,
+      trainingMonth: monthCheck.value,
       equipment: cleanEquipment,
       hasPhysicalLimitation: !!hasPhysicalLimitation,
       disclaimerAcceptedAt: new Date(),

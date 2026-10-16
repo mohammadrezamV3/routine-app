@@ -128,7 +128,7 @@ export function CalorieChartCard({
             {sel && (
               <span
                 className="rounded-full px-2.5 py-1 text-[10.5px] font-extrabold sm:text-[11.5px]"
-                style={{ background: "var(--accent)", color: "var(--bg)" }}
+                style={{ background: "var(--accent)", color: "var(--sec-on-accent, var(--bg))" }}
               >
                 {formatJalaliShort(sel.key)} — <span className="mono">{formatKcal(sel.value)}</span>{tr(" کالری", " kcal")}
               </span>

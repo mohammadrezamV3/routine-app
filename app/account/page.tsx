@@ -7,6 +7,7 @@ import { AccountRows, AccountRowLink, AccountRowButton } from "@/components/Acco
 import { AccountHeroCard } from "@/components/AccountHeroCard";
 import { useAccountSummary } from "@/components/AccountSummary";
 import { getAccountSections, type AccountSectionGroup } from "@/components/accountSections";
+import { useSection } from "@/components/SectionProvider";
 import { logoutAndRedirect } from "@/lib/logout";
 import { tr } from "@/lib/i18n";
 
@@ -17,7 +18,7 @@ const GROUP_ORDER: AccountSectionGroup[] = ["account", "preferences", "help"];
 // همین فهرسته، پس این صفحه با CSS پنهان و بلافاصله به «پروفایل» می‌ره.
 export default function AccountIndexPage() {
   const router = useRouter();
-  const sections = getAccountSections();
+  const sections = getAccountSections(useSection());
   const summary = useAccountSummary();
 
   useEffect(() => {

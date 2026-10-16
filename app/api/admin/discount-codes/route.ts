@@ -1,3 +1,4 @@
+import { checkNumber } from "@/lib/numberLimits";
 import { NextRequest, NextResponse } from "next/server";
 import { requireAdmin } from "@/lib/requireAdmin";
 import { prisma } from "@/lib/prisma";
@@ -61,10 +62,10 @@ export async function POST(req: NextRequest) {
   }
   let maxUses: number | null = null;
   if (maxUsesPerUser !== null && maxUsesPerUser !== undefined && String(maxUsesPerUser) !== "") {
-    maxUses = Number(maxUsesPerUser);
-    if (!Number.isInteger(maxUses) || maxUses < 1) {
-      return NextResponse.json({ error: tr("حداکثر دفعات مصرف باید عدد صحیح حداقل 1 باشد", "Maximum uses must be a whole number, at least 1") }, { status: 400 });
-    }
+    // ستون Int 32 بیتیه: بدون سقف، عدد بزرگ 500 می‌داد (سقف از lib/numberLimits.ts)
+    const m = checkNumber(typeof maxUsesPerUser === "string" ? Number(maxUsesPerUser) : maxUsesPerUser, "discountMaxUses");
+    if (!m.ok) return NextResponse.json({ error: m.error }, { status: 400 });
+    maxUses = m.value;
   }
 
   const normalizedPlanKey = typeof planKey === "string" && planKey.trim() ? planKey.trim() : null;

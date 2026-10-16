@@ -16,6 +16,8 @@
 // که سرور مدیریتشون می‌کنه صریحا ممنوع‌ن — حتی برای خوندن، چون حالت داخلی
 // سروره نه ترجیح کاربر.
 
+import { isPaletteSetting, normalizeHex } from "@/lib/palette";
+
 // تک‌منبع حقیقت نام کلیدها. ماژول‌های فیچر (tradeTypes، tickerSymbols،
 // bodyMetrics، …) کلیدشون رو از همین‌جا import می‌کنن، نه اینکه رشته‌ی خودشون
 // رو داشته باشن — وگرنه اضافه‌شدن یه کلید جدید بی‌سروصدا از allowlist جا
@@ -23,6 +25,11 @@
 // فایل افتاد: تست E2E شش کلید trade/bodyMetrics رو گرفت.)
 export const SETTING_KEYS = {
   theme: "theme",
+  // تم رنگی سراسری (lib/palette.ts): شناسه‌ی پالت و رنگ پالت سفارشی (#RRGGBB)
+  palette: "palette",
+  // زبان حساب برای اعلان‌ها (lib/i18nServer.ts)؛ نوشتنش از روت اختصاصی /api/settings/lang
+  lang: "lang",
+  paletteCustom: "paletteCustom",
   removedOccurrences: "removedOccurrences",
   customOccurrences: "customOccurrences",
   medications: "medications",
@@ -84,6 +91,25 @@ export function isUserSettingKey(key: string): boolean {
 }
 
 /**
+ * اعتبارسنجی مقدار برای کلیدهایی که فرمت ثابت دارن (سمت سرور، قبل از ذخیره). `ok:false` یعنی ۴۰۰؛
+ * `value` مقدار نرمال‌شده‌ای‌ه که باید ذخیره بشه (مثلا هگز بزرگ‌حرف). کلیدهای دیگه دست‌نخورده رد می‌شن.
+ */
+export function validateSettingValue(key: string, value: unknown): { ok: true; value: unknown } | { ok: false } {
+  if (key === SETTING_KEYS.palette) {
+    return isPaletteSetting(value) ? { ok: true, value } : { ok: false };
+  }
+  if (key === SETTING_KEYS.lang) {
+    return value === "fa" || value === "en" ? { ok: true, value } : { ok: false };
+  }
+  if (key === SETTING_KEYS.paletteCustom) {
+    if (value === null) return { ok: true, value: null };
+    const hex = normalizeHex(value);
+    return hex ? { ok: true, value: hex } : { ok: false };
+  }
+  return { ok: true, value };
+}
+
+/**
  * کلیدهایی که `/api/bootstrap` در همون یک درخواست برمی‌گردونه — همون‌هایی که
  * لایه‌ی چیدمان/داده روی *هر* صفحه لازم داره. لیست عمدی و کوچیک نگه داشته
  * می‌شه: هرچی این‌جا اضافه بشه به بار هر لود صفحه اضافه می‌شه.
@@ -94,6 +120,8 @@ export const BOOTSTRAP_SETTING_KEYS = [
   SETTING_KEYS.removedOccurrences,
   SETTING_KEYS.wakeSleepTimes,
   SETTING_KEYS.theme,
+  SETTING_KEYS.palette,
+  SETTING_KEYS.paletteCustom,
   SETTING_KEYS.dashboardPrefs,
   SETTING_KEYS.notifPrefs,
   SETTING_KEYS.dismissedStaticNotifs,

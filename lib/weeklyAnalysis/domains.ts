@@ -6,6 +6,7 @@ import { addDaysIso, isoToUtcDate, isoWeekday, localIso, localMinuteOfDay, utcIs
 import { FA_WEEKDAY } from "@/lib/jalali";
 import { tasksForDate } from "@/lib/schedule";
 import { tr } from "@/lib/i18n";
+import { clampDisplay } from "../numberLimits";
 
 // محاسبه‌ی امتیاز هر دامنه از داده‌ی واقعی.
 //
@@ -580,7 +581,14 @@ async function loadNutrition(userId: string, weeks: WeekSpec[]) {
       select: { effectiveFrom: true, dailyTargetKcal: true },
     }),
   ]);
-  return { logs, targets };
+  // داده‌ی قدیمی خارج از بازه (کالری/گرم/پروتئین) میانگین هفته رو منفجر نکنه
+  const safeLogs = logs.map((l) => ({
+    ...l,
+    grams: clampDisplay(l.grams, "foodGrams"),
+    customCalories: l.customCalories == null ? l.customCalories : clampDisplay(l.customCalories, "entryKcal"),
+    proteinG: l.proteinG == null ? l.proteinG : clampDisplay(l.proteinG, "macroEntryG"),
+  }));
+  return { logs: safeLogs, targets };
 }
 
 // ════════════════════════════════════════════════════════════════════

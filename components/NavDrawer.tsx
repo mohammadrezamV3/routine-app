@@ -5,7 +5,6 @@ import { useMenuPresence } from "@/lib/useMenuPresence";
 import { featureVisible } from "@/lib/featureFlags";
 import { useCallback, useEffect, useRef, useState } from "react";
 import dynamic from "next/dynamic";
-import Image from "next/image";
 import { useTheme } from "./ThemeProvider";
 import { useRouter, usePathname } from "next/navigation";
 import { useSession } from "next-auth/react";
@@ -20,6 +19,7 @@ import { getPreloadedBootstrap } from "@/lib/preload";
 import { tr } from "@/lib/i18n";
 import { brandName } from "@/lib/brand";
 import { SECTION_META } from "@/lib/sections";
+import { BLANK_PIXEL, HEADER_DESKTOP_MEDIA, HEADER_MOBILE_MEDIA, sectionIconSm, sectionWordmarkSm } from "@/lib/sectionAssets";
 import { useSection } from "./SectionProvider";
 import HeaderLangButton from "./HeaderLangButton";
 import "./site-header.css";
@@ -60,7 +60,8 @@ function whenIdle(fn: () => void, timeout = 2500): () => void {
 // کش‌شده بیرون کامپوننت — مثل الگوی NotificationPanel/AccountPanel، تا
 // هدر (که توی همه‌ی صفحه‌ها mount می‌شه) هر بار عکس رو دوباره فچ نکنه.
 let cachedAvatarUrl: string | null = null;
-
+// ارجاع به تصویرهای گرم‌شده تا دانلودشون وسط راه رها نشه
+let warmedWordmarks: HTMLImageElement[] = [];
 // لنگر پنل‌های پروفایل/اعلان: در دسکتاپ rtl گروه دکمه‌ها سمت چپ صفحه‌ست، پس پنل
 // به لبه‌ی چپ دکمه می‌چسبه و به راست باز می‌شه (آینه‌ی ltr). موبایل بدون تغییر.
 function anchorOf(r: DOMRect) {
@@ -129,7 +130,21 @@ export function NavDrawer() {
     if (status !== "authenticated") return;
     return whenIdle(() => { loadProfileMenu(); }, 4000);
   }, [status]);
-  useEffect(() => whenIdle(() => { loadSwitcher(); }, 5000), []);
+  // بعد از اولین پینت در بیکاری (سقف 2.5 ثانیه): چانک پنجره‌ی بخش‌ها
+  useEffect(() => whenIdle(() => { loadSwitcher(); }, 2500), []);
+  // حروف ARION هر دو تم: هدر دسکتاپ فقط تم جاری رو داره و موبایل اصلا نداره، ولی ردیف‌های پنجره‌ی
+  // بخش‌ها (SectionSwitcher) همین تصویرها رو دارن؛ بعد از اولین پینت در بیکاری با همون URL و همون
+  // ویژگی‌ها گرم می‌شن (بدون preload پرالویت) تا اولین باز شدن پنجره بدون پاپ‌این باشه.
+  useEffect(() => whenIdle(() => {
+    if (typeof Image === "undefined" || warmedWordmarks.length) return;
+    warmedWordmarks = (["dark", "light"] as const).map((t) => {
+      const img = new Image(264, 36);
+      img.loading = "eager";
+      img.decoding = "sync";
+      img.src = sectionWordmarkSm(t);
+      return img;
+    });
+  }, 4000), []);
   // ناوبری = پنجره‌ی بخش‌ها بسته
   useEffect(() => { setSwitcherOpen(false); }, [pathname]);
 
@@ -296,72 +311,44 @@ export function NavDrawer() {
           <div className="app-topbar-statusbar-blur" aria-hidden="true" />
           <header className="app-topbar" data-site-header="1">
           <div className="topbar-actions-left">
-            {/* هر دو نسخه (روز/شب) هم‌زمان با اولین رندر لود می‌شن (هردو priority)،
-                فقط با opacity جابه‌جا می‌شن — نه اینکه src عوض بشه، وگرنه موقع
-                تعویض تم، تصویر تم جدید (که تا اون لحظه fetch نشده) یه تاخیر
-                دیدنی داشت تا دانلود بشه. */}
-            {/* لوگو دکمه‌ی پنجره‌ی بخش‌هاست (SectionSwitcher). روی دامنه‌ی اصلی همون لوگوی قبلی؛
-                روی زیردامنه‌ی بخش: فقط «ARION | TRADE» (بدون نشان A). */}
+            {/* لوگو دکمه‌ی پنجره‌ی بخش‌هاست (SectionSwitcher). بخش موثر همیشه یکی از سه بخشه: دسکتاپ
+                «ARION | TRADE»، موبایل «نشان A رنگی | TRADE». تصویرها همون اولین رندر سرور داخل HTMLان و
+                preload اون‌ها از layout ریشه میاد (app/layout.tsx، با همین media و همین URL)؛ <picture>
+                باعث می‌شه فقط تصویر جور با عرض صفحه (و فقط تم جاری) دانلود بشه. */}
             <button
               ref={logoBtnRef}
               type="button"
-              className={`topbar-logo-lockup-wrap${section ? " topbar-logo-section" : ""}`}
-              aria-label={`${tr("تغییر بخش آریون", "Switch Arion section")}${section ? ` (${SECTION_META[section].label})` : ""}`}
+              className="topbar-logo-lockup-wrap topbar-logo-section"
+              aria-label={`${tr("تغییر بخش آریون", "Switch Arion section")} (${SECTION_META[section].label})`}
               aria-haspopup="menu"
               aria-expanded={switcherOpen}
               onClick={toggleSwitcher}
               onPointerEnter={() => { loadSwitcher(); }}
               onTouchStart={() => { loadSwitcher(); }}
               onFocus={() => { loadSwitcher(); }}
-              style={section ? ({
+              style={{
                 "--sec-from": SECTION_META[section].colors.from,
                 "--sec-mid": SECTION_META[section].colors.mid,
                 "--sec-to": SECTION_META[section].colors.to,
-              } as React.CSSProperties) : undefined}
+              } as React.CSSProperties}
             >
-              {section ? (
-                <>
-                  <span className="tls-word">
-                    <Image
-                      src="/images/sections/wordmark-dark.png"
-                      alt={brandName()}
-                      width={358}
-                      height={49}
-                      className={`topbar-logo-lockup${theme === "light" ? " topbar-logo-lockup-hidden" : ""}`}
-                      priority
-                    />
-                    <Image
-                      src="/images/sections/wordmark-light.webp"
-                      alt={brandName()}
-                      width={328}
-                      height={46}
-                      className={`topbar-logo-lockup${theme === "light" ? "" : " topbar-logo-lockup-hidden"}`}
-                      priority
-                    />
-                  </span>
-                  <span className="tls-sep" aria-hidden="true" />
-                  <span className="tls-label" dir="ltr">{SECTION_META[section].wordmark}</span>
-                </>
-              ) : (
-                <span className="tl-apex">
-                  <Image
-                    src="/images/logo-lockup-dark-theme.png"
-                    alt={brandName()}
-                    width={138}
-                    height={34}
-                    className={`topbar-logo-lockup${theme === "light" ? " topbar-logo-lockup-hidden" : ""}`}
-                    priority
-                  />
-                  <Image
-                    src="/images/logo-lockup-light-theme.webp"
-                    alt={brandName()}
-                    width={138}
-                    height={34}
-                    className={`topbar-logo-lockup${theme === "light" ? "" : " topbar-logo-lockup-hidden"}`}
-                    priority
-                  />
-                </span>
-              )}
+              {/* فقط موبایل (CSS): نشان A رنگی بخش به‌جای حروف ARION؛ با پالت صریح همون .logo-tint */}
+              <span className="tls-icon" aria-hidden="true">
+                <picture>
+                  <source media={HEADER_MOBILE_MEDIA} srcSet={sectionIconSm(section)} />
+                  <img src={BLANK_PIXEL} alt="" width={100} height={85} decoding="sync" fetchPriority="high" draggable={false} />
+                </picture>
+                <span className="logo-tint" />
+              </span>
+              {/* فقط دسکتاپ (CSS): حروف ARION تم جاری */}
+              <span className="tls-word">
+                <picture>
+                  <source media={HEADER_DESKTOP_MEDIA} srcSet={sectionWordmarkSm(theme === "light" ? "light" : "dark")} />
+                  <img src={BLANK_PIXEL} alt={brandName()} width={264} height={36} decoding="sync" fetchPriority="high" className="topbar-logo-lockup" />
+                </picture>
+              </span>
+              <span className="tls-sep" aria-hidden="true" />
+              <span className="tls-label" dir="ltr">{SECTION_META[section].wordmark}</span>
               {/* فلش کوچیک: نشون می‌ده لوگو منو باز می‌کنه؛ داخل همون دکمه تا یک هدف کلیک باشه */}
               <svg className="tl-chev" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.7" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true" focusable="false">
                 <path d="m6 9 6 6 6-6" />
@@ -435,7 +422,8 @@ export function NavDrawer() {
                     <NotificationPanel onClose={() => setNotifPanelOpen(false)} anchor={bellAnchor} closing={!notifPanelOpen} />
                   )}
                 </div>}
-                {featureVisible(features, "routine") && featureVisible(features, "streak") && <HeaderStreakClock />}
+                {/* استریک روتین فقط روی روتین و دامنه‌ی اصلی؛ ورزش و ترید ندارن (جداسازی بخش‌ها) */}
+                {section === "routine" && featureVisible(features, "routine") && featureVisible(features, "streak") && <HeaderStreakClock />}
               </>
             ) : (
               <div ref={authSlotRef} className="topbar-auth-pop topbar-guest-slot">

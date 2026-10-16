@@ -118,7 +118,7 @@ export function TradeSettings() {
 
       <AccountOption label={tr("بازارهای دنبال‌شده", "Followed markets")}>
         <div className="item-line">{tr(`${tickerSymbols.length} بازار برای نوار قیمت بالای صفحه‌ی ترید انتخاب شده`, `${tickerSymbols.length} ${tickerSymbols.length === 1 ? "market" : "markets"} selected for the price bar at the top of the trading page`)}</div>
-        <button className="account-outline-btn" onClick={() => setMarketPickerOpen(true)} style={{ marginTop: 10 }}>
+        <button className="btn btn-tonal btn-sm" onClick={() => setMarketPickerOpen(true)} style={{ marginTop: 10 }}>
           {tr("تغییر بازارها", "Change markets")}
         </button>
       </AccountOption>
@@ -134,7 +134,7 @@ export function TradeSettings() {
 
       <AccountOption label={tr("آمارهای صفحه ترید", "Trading page stats")}>
         <div className="item-line" style={{ marginBottom: 10 }}>{tr(`${visibleStats.length} از ${TRADE_STAT_ORDER.length} آمار برای نمایش توی صفحه‌ی ترید انتخاب شده`, `${visibleStats.length} of ${TRADE_STAT_ORDER.length} stats selected for the trading page`)}</div>
-        <button className="account-outline-btn" onClick={() => setStatsPickerOpen(true)}>
+        <button className="btn btn-tonal btn-sm" onClick={() => setStatsPickerOpen(true)}>
           {tr("تغییر", "Change")}
         </button>
       </AccountOption>
@@ -143,7 +143,7 @@ export function TradeSettings() {
         <div className="item-line" style={{ marginBottom: 10 }}>
           {tr(`${visibleTotals.length} از ${TRADE_TOTALS_STAT_ORDER.length} آمار برای بالای صفحه‌ی حساب‌ها انتخاب شده — سه‌تای اول سرخط، بقیه پشت «جزئیات بیشتر»`, `${visibleTotals.length} of ${TRADE_TOTALS_STAT_ORDER.length} stats selected for the top of the accounts page. The first three are headlines, the rest are behind "More details"`)}
         </div>
-        <button className="account-outline-btn" onClick={() => setTotalsPickerOpen(true)}>
+        <button className="btn btn-tonal btn-sm" onClick={() => setTotalsPickerOpen(true)}>
           {tr("تغییر", "Change")}
         </button>
       </AccountOption>
@@ -152,7 +152,7 @@ export function TradeSettings() {
         <div className="item-line" style={{ marginBottom: 10 }}>
           {tr(`${visibleFacts.length} از ${MAX_VISIBLE_TRADE_FACTS} جزئیات برای نمایش کنار هر ترید انتخاب شده`, `${visibleFacts.length} of ${MAX_VISIBLE_TRADE_FACTS} details selected to show next to each trade`)}
         </div>
-        <button className="account-outline-btn" onClick={() => setFactsPickerOpen(true)}>
+        <button className="btn btn-tonal btn-sm" onClick={() => setFactsPickerOpen(true)}>
           {tr("تغییر", "Change")}
         </button>
       </AccountOption>

@@ -8,6 +8,8 @@ vi.mock("next-auth", async (orig) => ({
   }),
 }));
 vi.mock("@/lib/webPush", () => ({ sendPushToUser: vi.fn(async () => ({ sent: 0, pruned: 0 })) }));
+// بخش موثر بیرون از درخواست = روتین (فقط دسته‌ی ROUTINE)؛ این تست مستقل از بخش و روی همه‌ی دسته‌هاست
+vi.mock("@/lib/sectionServer", () => ({ getSection: () => null, getHostSection: () => null }));
 
 import type { MentorProgramStatus, MentorProgramType, ProgramLogStatus } from "@prisma/client";
 import { prisma } from "@/lib/prisma";

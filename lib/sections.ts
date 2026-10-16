@@ -3,7 +3,8 @@
 // خالص و بدون import سروری: هم middleware (edge)، هم سرور، هم کلاینت از همین فایل می‌خونن.
 // همه‌چیز پشت یک env  عمومیه: NEXT_PUBLIC_SECTION_BASE_DOMAIN (مثلا arionapp.ir). تا ست نشده
 // زیردامنه‌ای در کار نیست، هیچ ریدایرکتی نمی‌شه و دامنه‌ی اصلی دقیقا مثل قبل همه‌ی بخش‌ها رو داره.
-// دامنه‌ی اصلی (apex/www) همیشه «همه‌ی بخش‌ها»ست (section = null)؛ زیردامنه‌ها متمرکزن.
+// فقط همین سه بخش وجود دارن: حالت «همه‌ی بخش‌ها» نیست و بخش موثر همیشه یکی از اوناست
+// (دامنه‌ی اصلی بدون کوکی = DEFAULT_SECTION).
 import { tr } from "@/lib/i18n";
 
 export const SECTION_KEYS = ["routine", "trade", "workout"] as const;
@@ -12,8 +13,37 @@ export type SectionKey = (typeof SECTION_KEYS)[number];
 /** هدری که middleware روی درخواست می‌ذاره تا سرور (layout، صفحه‌ها) بخش رو بدونه */
 export const SECTION_HEADER = "x-arion-section";
 
+/** هدر مسیر درخواست (pathname، بدون query) که middleware می‌ذاره؛ فقط برای تصمیم‌های سمت سرور در layout ریشه */
+export const PATH_HEADER = "x-arion-path";
+
+/** بخش پیش‌فرض: دامنه‌ی اصلی (apex/www) بدون کوکی انتخاب بخش */
+export const DEFAULT_SECTION: SectionKey = "routine";
+
 export function isSectionKey(v: unknown): v is SectionKey {
   return typeof v === "string" && (SECTION_KEYS as readonly string[]).includes(v);
+}
+
+// ─── بخش موثر (کوکی انتخاب کاربر) ───────────────────────────────────────────
+// هر سه بخش روی هر میزبان در دسترسن (تا اپ نصب‌شده‌ی PWA با عوض‌شدن دامنه از scope بیرون نیفته).
+// بخش موثر = کوکی host-only `arion_section` (اگه معتبر باشه) وگرنه بخش میزبان، وگرنه DEFAULT_SECTION (دامنه‌ی اصلی).
+// کوکی عمدا host-only ـه (نه دامنه‌ی مشترک) تا هر اپ نصب‌شده انتخاب خودش رو یادش بمونه.
+export const SECTION_COOKIE = "arion_section";
+export const SECTION_COOKIE_MAX_AGE = 60 * 60 * 24 * 365;
+
+/** بخش موثر از روی بخش میزبان و مقدار خام کوکی؛ کوکی نامعتبر نادیده گرفته می‌شه */
+export function resolveEffectiveSection(hostSection: SectionKey | null, cookieValue: string | null | undefined): SectionKey {
+  return isSectionKey(cookieValue) ? cookieValue : hostSection ?? DEFAULT_SECTION;
+}
+
+/** رشته‌ی Set-Cookie / document.cookie برای انتخاب بخش (host-only، یک سال، SameSite=Lax) */
+export function serializeSectionCookie(section: SectionKey, secure: boolean): string {
+  return `${SECTION_COOKIE}=${section}; Path=/; Max-Age=${SECTION_COOKIE_MAX_AGE}; SameSite=Lax${secure ? "; Secure" : ""}`;
+}
+
+/** اگه مسیر روی بخش موثر بسته‌ست، بخشی که باید بهش سوییچ بشه (اولین صاحب مسیر)؛ وگرنه null */
+export function sectionToSwitchTo(effective: SectionKey, pathname: string): SectionKey | null {
+  if (pathAllowedIn(effective, pathname)) return null;
+  return sectionsOwningPath(pathname)[0] ?? null;
 }
 
 export type SectionMeta = {
@@ -75,9 +105,9 @@ export const SECTION_META: Record<SectionKey, SectionMeta> = {
 // ورود، ادمین، منتورها، آنالیز، بلاگ، درباره، قوانین، اشتراک، استریک، API، ...).
 // مسیری که مال یک یا چند بخشه، روی زیردامنه‌ی بخش دیگه به زیردامنه‌ی صاحبش ریدایرکت می‌شه.
 const OWNED_PREFIXES: Record<SectionKey, string[]> = {
-  routine: ["/weekly", "/sleep", "/roadmaps", "/routine", "/habit-tracker", "/daily-planner", "/ai-planner", "/learning-roadmap"],
-  trade: ["/trade", "/trading-journal", "/economic-calendar", "/forex-sessions"],
-  workout: ["/exercise", "/sleep", "/bodybuilding-program", "/calorie-counter"],
+  routine: ["/weekly", "/sleep", "/roadmaps", "/routine", "/habit-tracker", "/daily-planner", "/ai-planner", "/learning-roadmap", "/account/general/routine", "/streak"],
+  trade: ["/trade", "/trading-journal", "/economic-calendar", "/forex-sessions", "/account/general/trade"],
+  workout: ["/exercise", "/sleep", "/bodybuilding-program", "/calorie-counter", "/account/general/exercise"],
 };
 
 /** صفحه‌های فرود عمومی (بدون داده‌ی کاربر) که روی دامنه‌ی اصلی هم به زیردامنه‌ی صاحبشون ۳۰۸ می‌شن (یکی‌شدن سئو) */

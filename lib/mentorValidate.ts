@@ -1,6 +1,7 @@
 import type { MentorProgramType } from "@prisma/client";
 import { parseIsoDate, toEnglishDigits } from "@/lib/validate";
 import { tr } from "@/lib/i18n";
+import { NUMBER_LIMITS as NL } from "@/lib/numberLimits";
 
 // اعتبارسنجی بدنه‌ی ساخت/ویرایش برنامه‌ی منتور. خروجی فقط فیلدهای
 // لیست‌شده‌ست — بدنه‌ی خام هیچ‌وقت به Prisma نمی‌رسه (mass assignment)، پس
@@ -99,8 +100,8 @@ function validateItem(raw: any, idx: number, type: MentorProgramType): Result<It
     if (!startTime) return { ok: false, error: tr(`${where}: ساعت شروع باید به شکل HH:mm باشه`, `${where}: start time must look like HH:mm`) };
   }
 
-  const durationMin = optInt(raw.durationMin, 1, 1440);
-  if (durationMin === "bad") return { ok: false, error: tr(`${where}: مدت (دقیقه) باید بین 1 تا 1440 باشد`, `${where}: duration must be between 1 and 1440 minutes`) };
+  const durationMin = optInt(raw.durationMin, NL.durationMin.min, NL.durationMin.max);
+  if (durationMin === "bad") return { ok: false, error: tr(`${where}: مدت (دقیقه) باید بین ${NL.durationMin.min} تا ${NL.durationMin.max} باشد`, `${where}: duration must be between ${NL.durationMin.min} and ${NL.durationMin.max} minutes`) };
 
   // فیلدهای حرکتی فقط برای برنامه‌ی تمرینی معنا دارن؛ برای روتین دور ریخته می‌شن
   let sets: number | null = null;
@@ -108,8 +109,8 @@ function validateItem(raw: any, idx: number, type: MentorProgramType): Result<It
   let weightKg: number | null = null;
   let restSec: number | null = null;
   if (type === "WORKOUT") {
-    const s = optInt(raw.sets, 1, 100);
-    if (s === "bad") return { ok: false, error: tr(`${where}: تعداد ست باید بین 1 تا 100 باشد`, `${where}: sets must be between 1 and 100`) };
+    const s = optInt(raw.sets, NL.sets.min, NL.sets.max);
+    if (s === "bad") return { ok: false, error: tr(`${where}: تعداد ست باید بین ${NL.sets.min} تا ${NL.sets.max} باشد`, `${where}: sets must be between ${NL.sets.min} and ${NL.sets.max}`) };
     sets = s;
 
     if (!isBlank(raw.reps)) {
@@ -120,12 +121,12 @@ function validateItem(raw: any, idx: number, type: MentorProgramType): Result<It
 
     if (!isBlank(raw.weightKg)) {
       const w = typeof raw.weightKg === "string" ? Number(toEnglishDigits(raw.weightKg)) : raw.weightKg;
-      if (typeof w !== "number" || !Number.isFinite(w) || w < 0 || w > 1000) return { ok: false, error: tr(`${where}: وزنه باید بین 0 تا 1000 کیلوگرم باشد`, `${where}: weight must be between 0 and 1000 kg`) };
+      if (typeof w !== "number" || !Number.isFinite(w) || w < NL.liftedWeightKg.min || w > NL.liftedWeightKg.max) return { ok: false, error: tr(`${where}: وزنه باید بین ${NL.liftedWeightKg.min} تا ${NL.liftedWeightKg.max} کیلوگرم باشد`, `${where}: weight must be between ${NL.liftedWeightKg.min} and ${NL.liftedWeightKg.max} kg`) };
       weightKg = Math.round(w * 10) / 10;
     }
 
-    const rs = optInt(raw.restSec, 0, 3600);
-    if (rs === "bad") return { ok: false, error: tr(`${where}: استراحت باید بین 0 تا 3600 ثانیه باشد`, `${where}: rest must be between 0 and 3600 seconds`) };
+    const rs = optInt(raw.restSec, NL.restSec.min, NL.restSec.max);
+    if (rs === "bad") return { ok: false, error: tr(`${where}: استراحت باید بین ${NL.restSec.min} تا ${NL.restSec.max} ثانیه باشد`, `${where}: rest must be between ${NL.restSec.min} and ${NL.restSec.max} seconds`) };
     restSec = rs;
   }
 

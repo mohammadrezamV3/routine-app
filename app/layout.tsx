@@ -2,8 +2,8 @@ import type { Metadata, Viewport } from "next";
 import { Vazirmatn, Inter } from "next/font/google";
 import localFont from "next/font/local";
 import "./globals.css";
-// تم رنگی بخش‌ها (ترید/تمرین) — هسته‌ی مشترک، بعد از globals و قبل از تم نوآر ادمین
-import "./section-themes.css";
+// تم رنگی سراسری (data-palette: ترید/ورزش/پالت‌های آماده) — هسته‌ی مشترک، بعد از globals و قبل از تم نوآر ادمین
+import "./palette-themes.css";
 import "@/components/ltr-shell.css";
 import "@/components/ltr-routine.css";
 import "@/components/ltr-trade.css";
@@ -18,6 +18,7 @@ import "./en-type.css";
 import "./motion.css";
 import { EventThemeCssPreview } from "@/components/EventThemeCssPreview";
 import { ThemeProvider } from "@/components/ThemeProvider";
+import { PaletteProvider } from "@/components/PaletteProvider";
 import { NavDrawer } from "@/components/NavDrawer";
 import { BackgroundCanvasLoader } from "@/components/BackgroundCanvasLoader";
 import { SvgFilters } from "@/components/SvgFilters";
@@ -55,7 +56,12 @@ import { getLocale } from "@/lib/i18nServer";
 import { dirOf, isEn } from "@/lib/i18n";
 import { I18nProvider } from "@/components/I18nProvider";
 import { SectionProvider } from "@/components/SectionProvider";
-import { getSection } from "@/lib/sectionServer";
+import { getRequestPath, getSection } from "@/lib/sectionServer";
+import { HEADER_DESKTOP_MEDIA, HEADER_MOBILE_MEDIA, sectionIconSm, sectionWordmarkSm } from "@/lib/sectionAssets";
+import {
+  PALETTE_COOKIE, PALETTE_CUSTOM_COOKIE, customPaletteCss, isPaletteSetting, normalizeHex, paletteMetaColors, resolvePalette,
+  type PaletteSetting,
+} from "@/lib/palette";
 
 // پیش‌نمایش تم مناسبتی فقط روی دستگاه ادمین: شناسه = اعمال همون تم، "none" = بدون تم.
 // قبل از اولین پینت اجرا می‌شه و تم زنده‌ی سرور رو فقط روی همین دستگاه override می‌کنه.
@@ -245,20 +251,43 @@ export const viewport: Viewport = {
 // این‌جا رندر تازه‌ای تحمیل نمی‌کند — ولی یک رفت‌وبرگشت کامل شبکه از هر
 // لود صفحه کم می‌کند، چون SessionProvider دیگر خودش `/api/auth/session` را
 // صدا نمی‌زند.
-async function resolveInitialTheme(userId: string | undefined): Promise<{ theme: "dark" | "light"; fromAccount: boolean }> {
-  const cookieTheme = cookies().get(THEME_COOKIE)?.value;
+type InitialAppearance = {
+  theme: "dark" | "light";
+  fromAccount: boolean;
+  paletteSetting: PaletteSetting;
+  paletteCustom: string | null;
+};
+
+async function resolveInitialAppearance(userId: string | undefined): Promise<InitialAppearance> {
+  const jar = cookies();
+  const cookieTheme = jar.get(THEME_COOKIE)?.value;
+  // تم رنگی: کوکی مشترک (مهمان و کاربری که هنوز چیزی روی حساب نذاشته)، حساب اگه مقدار داشت مرجعه
+  const cookiePalette = jar.get(PALETTE_COOKIE)?.value;
+  let paletteSetting: PaletteSetting = isPaletteSetting(cookiePalette) ? cookiePalette : "auto";
+  let paletteCustom = normalizeHex(jar.get(PALETTE_CUSTOM_COOKIE)?.value);
+  let accountTheme: "dark" | "light" | null = null;
   if (userId) {
     try {
-      const row = await prisma.userSetting.findUnique({
-        where: { userId_key: { userId, key: "theme" } },
-        select: { value: true },
+      // یک کوئری برای هر سه کلید (روی ایندکس یکتای userId+key)
+      const rows = await prisma.userSetting.findMany({
+        where: { userId, key: { in: ["theme", "palette", "paletteCustom"] } },
+        select: { key: true, value: true },
       });
-      if (row?.value === "light" || row?.value === "dark") return { theme: row.value, fromAccount: true };
+      for (const row of rows) {
+        if (row.key === "theme" && (row.value === "light" || row.value === "dark")) accountTheme = row.value;
+        else if (row.key === "palette" && isPaletteSetting(row.value)) paletteSetting = row.value;
+        else if (row.key === "paletteCustom") paletteCustom = normalizeHex(row.value) ?? paletteCustom;
+      }
     } catch {
-      // دیتابیس در دسترس نبود — همان کوکی
+      // دیتابیس در دسترس نبود — همان کوکی‌ها
     }
   }
-  return { theme: cookieTheme === "light" ? "light" : "dark", fromAccount: false };
+  return {
+    theme: accountTheme ?? (cookieTheme === "light" ? "light" : "dark"),
+    fromAccount: accountTheme !== null,
+    paletteSetting,
+    paletteCustom,
+  };
 }
 
 export default async function RootLayout({ children }: { children: React.ReactNode }) {
@@ -281,13 +310,24 @@ export default async function RootLayout({ children }: { children: React.ReactNo
   // آزمایشی با کوکی dark و تم حساب light. یک findUnique روی کلید یکتای
   // (userId, key)؛ فقط برای کاربر لاگین‌کرده.
   // تم مناسبتی زنده برای همه — از همون اولین بایت HTML (بدون فلش)؛ موازی با تم حساب
-  const [{ theme, fromAccount }, eventThemeId] = await Promise.all([
-    resolveInitialTheme((session?.user as { id?: string } | undefined)?.id),
+  const [{ theme, fromAccount, paletteSetting, paletteCustom }, eventThemeId] = await Promise.all([
+    resolveInitialAppearance((session?.user as { id?: string } | undefined)?.id),
     getActiveEventThemeId().catch((): string | null => null),
   ]);
   const locale = getLocale();
-  // بخش زیردامنه (routine/trade/workout)؛ null = دامنه‌ی اصلی با همه‌ی بخش‌ها — lib/sections.ts
+  // بخش موثر (کوکی، میزبان، وگرنه روتین)؛ همیشه یکی از routine/trade/workout — lib/sections.ts
   const section = getSection();
+  // پالت موثر (تنظیم کاربر یا پالت بخش): از اولین بایت HTML روی <html data-palette> — بدون فلش.
+  // پالت سفارشی: CSS فقط از هگز اعتبارسنجی‌شده ساخته می‌شه (lib/palette.ts)، رشته‌ی کاربر وارد نمی‌شه.
+  const palette = resolvePalette(paletteSetting, paletteCustom, section);
+  const customCss = palette === "custom" ? customPaletteCss(paletteCustom) : "";
+  const customMeta = palette === "custom" ? paletteMetaColors(paletteCustom) : null;
+  // لوگوی هدر (components/NavDrawer.tsx) از اولین پینت: preload دقیقا همون تصویرهای هدر برای بخش و تم جاری،
+  // با همان media نقطه‌ی شکست CSS (فقط یکی از دو تصویر دانلود می‌شه). هدر روی /auth و /admin نیست. نشان A
+  // با پالت صریح غیر روتین جاش .logo-tint می‌آد (CSS)، پس اون‌جا preload نمی‌شه.
+  const reqPath = getRequestPath() ?? "";
+  const headerLogoShown = !(reqPath.startsWith("/auth") || reqPath.startsWith("/admin"));
+  const iconTinted = paletteSetting !== "auto" && palette !== "routine";
   return (
     // data-theme روی html هم هست (نه فقط body): پس‌زمینه‌ی خود <html> همونیه
     // که سافاری توی ناحیه‌ی امن (زیر ناچ / بالای نوار خانه) و موقع اورراسکرول
@@ -302,6 +342,9 @@ export default async function RootLayout({ children }: { children: React.ReactNo
       data-theme-src={fromAccount ? "account" : undefined}
       data-event-theme={eventThemeId ?? undefined}
       data-section={section ?? undefined}
+      data-palette={palette}
+      data-palette-set={paletteSetting !== "auto" ? "1" : undefined}
+      data-palette-meta={customMeta ? `${customMeta.dark},${customMeta.light}` : undefined}
       suppressHydrationWarning
       className={`${vazir.variable} ${latin.variable}${locale === "en" ? ` ${enLatin.variable}` : ""}`}
     >
@@ -310,7 +353,14 @@ export default async function RootLayout({ children }: { children: React.ReactNo
             اجرای اسکریپت. مالک این تگ هنوز خود اپه (نه metadata نکست؛
             دلیلش lib/themeColor.ts)، پس دوباره‌تزریق نمی‌شه و
             syncThemeColorMeta همین یکی رو آپدیت می‌کنه. */}
-        <meta name="theme-color" content={themeColorFor(theme, section, !!eventThemeId)} />
+        <meta name="theme-color" content={themeColorFor(theme, section, !!eventThemeId, palette, customMeta)} />
+        {headerLogoShown && (
+          <>
+            {!iconTinted && <link rel="preload" as="image" href={sectionIconSm(section)} media={HEADER_MOBILE_MEDIA} fetchPriority="high" />}
+            <link rel="preload" as="image" href={sectionWordmarkSm(theme)} media={HEADER_DESKTOP_MEDIA} fetchPriority="high" />
+          </>
+        )}
+        {customCss && <style id="arion-palette-custom" dangerouslySetInnerHTML={{ __html: customCss }} />}
         <script dangerouslySetInnerHTML={{ __html: EVENT_PREVIEW_SCRIPT }} />
         {/* تم آزمایشی ادمین (lib/adminTheme.ts) — قبل از اولین پینت */}
         <script dangerouslySetInnerHTML={{ __html: ADMIN_THEME_INIT_SCRIPT }} />
@@ -355,6 +405,7 @@ export default async function RootLayout({ children }: { children: React.ReactNo
         <I18nProvider locale={locale}>
         <SectionProvider section={section}>
         <AuthSessionProvider session={session}>
+          <PaletteProvider initialSetting={paletteSetting} initialCustom={paletteCustom}>
           <ThemeProvider initialTheme={theme}>
             <MotionTuner>
               {/* نوار تعمیر (lib/maintenance.ts) — وقتی خاموشه چیزی رندر نمی‌کنه */}
@@ -375,6 +426,7 @@ export default async function RootLayout({ children }: { children: React.ReactNo
               <BootSplashRelease />
             </MotionTuner>
           </ThemeProvider>
+          </PaletteProvider>
         </AuthSessionProvider>
         </SectionProvider>
         </I18nProvider>

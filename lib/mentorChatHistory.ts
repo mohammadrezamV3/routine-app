@@ -1,3 +1,4 @@
+import { intersectsCategories } from "@/lib/mentorCategories";
 import type { Mentorship } from "@prisma/client";
 import { prisma } from "@/lib/prisma";
 import { PUBLIC_USER_SELECT, toPublicUser, type PublicUser } from "@/lib/mentorServer";
@@ -49,11 +50,15 @@ export type ChatHistoryRow = {
 };
 
 /** گفت‌وگوهایی که این کاربر در آن‌ها طرف است و پیامی (دیدنی یا پاک‌شده) دارند */
-export async function listChatHistory(userId: string): Promise<ChatHistoryRow[]> {
+// allowed: حوزه‌های مجاز بخش جاری (SECTION_META[section].mentorCategories)؛ null = دامنه‌ی اصلی، بدون محدودیت.
+// رابطه‌ی قدیمی با categories خالی همه‌ی بخش‌ها دیده می‌شه (lib/mentorCategories.ts → intersectsCategories).
+const inSection = (cats: readonly string[], allowed: readonly string[] | null | undefined) => cats.length === 0 || intersectsCategories(cats, allowed);
+
+export async function listChatHistory(userId: string, allowed: readonly string[] | null = null): Promise<ChatHistoryRow[]> {
   const rels = await prisma.mentorship.findMany({
     where: { OR: [{ mentorId: userId }, { studentId: userId }], messages: { some: {} } },
     select: {
-      id: true, status: true, mentorId: true, studentId: true, mentorClearedBefore: true, studentClearedBefore: true,
+      id: true, status: true, categories: true, mentorId: true, studentId: true, mentorClearedBefore: true, studentClearedBefore: true,
       mentor: { select: PUBLIC_USER_SELECT },
       student: { select: PUBLIC_USER_SELECT },
     },
@@ -62,6 +67,7 @@ export async function listChatHistory(userId: string): Promise<ChatHistoryRow[]>
   });
   const out: ChatHistoryRow[] = [];
   for (const r of rels) {
+    if (!inSection(r.categories, allowed)) continue;
     const role = chatRoleOf(r, userId)!;
     const cleared = clearedBeforeFor(r, userId);
     const where = { mentorshipId: r.id, ...visibleSinceWhere(cleared) };
@@ -87,14 +93,15 @@ export async function listChatHistory(userId: string): Promise<ChatHistoryRow[]>
  * ضد IDOR: فقط رابطه‌هایی که کاربر یکی از دو طرفشان است؛ برای رابطه‌ی دیگران
  * چیزی تغییر نمی‌کند و ۰ برمی‌گردد (روت ۴۰۴ می‌دهد).
  */
-export async function clearChatHistory(userId: string, target: string | "all", now = new Date()): Promise<number> {
-  const rels = await prisma.mentorship.findMany({
+export async function clearChatHistory(userId: string, target: string | "all", now = new Date(), allowed: readonly string[] | null = null): Promise<number> {
+  const found = await prisma.mentorship.findMany({
     where: {
       ...(target === "all" ? {} : { id: target }),
       OR: [{ mentorId: userId }, { studentId: userId }],
     },
-    select: { id: true, mentorId: true, studentId: true },
+    select: { id: true, mentorId: true, studentId: true, categories: true },
   });
+  const rels = found.filter((r) => inSection(r.categories, allowed));
   if (rels.length === 0) return 0;
   const asMentor = rels.filter((r) => r.mentorId === userId).map((r) => r.id);
   const asStudent = rels.filter((r) => r.studentId === userId && r.mentorId !== userId).map((r) => r.id);

@@ -5,6 +5,8 @@ import { Bell, Users, BarChart3, Tablets } from "lucide-react";
 import { AccountToggleRow } from "@/components/AccountRow";
 import { AccountPageHead, AccountBlock } from "@/components/AccountUI";
 import { getDashboardPrefs, saveDashboardPrefs, setCachedDashboardPrefs, DashboardPrefs, DEFAULT_DASHBOARD_PREFS } from "@/lib/dashboardPrefs";
+import type { SectionKey } from "@/lib/sections";
+import { useSection } from "@/components/SectionProvider";
 import { tr } from "@/lib/i18n";
 
 const PREF_ICONS = [<Bell size={16} key="b" />, <Tablets size={16} key="m" />, <Users size={16} key="u" />, <BarChart3 size={16} key="c" />];
@@ -17,8 +19,17 @@ const dashboardPrefs = (): [keyof DashboardPrefs, string, string?][] => [
 ];
 
 
+// کارت‌های هر بخش: یادآوری و دارو فقط روتین، دوستان و نمودار روی روتین و ورزش، ترید هیچ‌کدوم
+// (دامنه‌ی اصلی همه). جداسازی بخش‌ها — docs/sections.md
+function visibleIn(section: SectionKey | null, key: keyof DashboardPrefs): boolean {
+  if (!section) return true;
+  if (key === "showReminders" || key === "showMedications") return section === "routine";
+  return section !== "trade";
+}
+
 // «تنظیمات › داشبورد» — نمایش کارت‌ها در داشبوردها
 export default function DashboardSettingsPage() {
+  const section = useSection();
   const [prefs, setPrefs] = useState<DashboardPrefs>(DEFAULT_DASHBOARD_PREFS);
 
   useEffect(() => { getDashboardPrefs().then(setPrefs); }, []);
@@ -37,7 +48,7 @@ export default function DashboardSettingsPage() {
     <section>
       <AccountPageHead title={tr("داشبورد", "Dashboard")} hint={tr("کارت‌هایی که در داشبوردها نمایش داده می‌شوند", "Cards shown on the dashboards")} backHref="/account/general" backLabel={tr("تنظیمات", "Settings")} />
       <AccountBlock flush index={0}>
-        {dashboardPrefs().map(([key, label, desc], i) => (
+        {dashboardPrefs().map(([key, label, desc], i) => ({ key, label, desc, i })).filter(({ key }) => visibleIn(section, key)).map(({ key, label, desc, i }) => (
           <AccountToggleRow
             key={key}
             index={i}

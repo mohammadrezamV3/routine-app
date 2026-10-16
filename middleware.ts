@@ -1,14 +1,18 @@
 import { NextResponse } from "next/server";
 import type { NextRequest } from "next/server";
 import {
+  SECTION_COOKIE,
+  SECTION_COOKIE_MAX_AGE,
   SECTION_HEADER,
+  PATH_HEADER,
   isOwnHost,
   isSectionHostingEnabled,
-  pathAllowedIn,
+  resolveEffectiveSection,
   sectionFromHost,
   sectionOrigin,
-  sectionsOwningPath,
+  sectionToSwitchTo,
   seoLandingOwner,
+  type SectionKey,
 } from "@/lib/sections";
 
 // ─── دفاع سرور-محور CSRF: بررسی Origin روی درخواست‌های تغییردهنده ──────────
@@ -31,9 +35,9 @@ const SAFE_METHODS = new Set(["GET", "HEAD", "OPTIONS"]);
 // مرورگر نیست و Origin ندارند (کران، EA، وب‌پوش).
 const EXEMPT_PREFIXES = ["/api/auth/", "/api/cron/", "/api/mt/", "/api/push/"];
 
-// آیکون اپ هر بخش: روی زیردامنه‌ی بخش، فایل‌های آیکون پیش‌فرض سایت (app/icon.png،
-// app/apple-icon.png و مسیرهایی که iOS خودش بدون لینک امتحان می‌کنه) با آیکون رنگی همون
-// بخش جایگزین می‌شن (rewrite، نه ریدایرکت). روی دامنه‌ی اصلی هیچ تغییری نیست.
+// آیکون اپ هر بخش: فایل‌های آیکون پیش‌فرض سایت (app/icon.png، app/apple-icon.png و مسیرهایی که
+// iOS خودش بدون لینک امتحان می‌کنه) با آیکون رنگی یکی از سه بخش جایگزین می‌شن (rewrite، نه
+// ریدایرکت). بخش آیکون = بخش میزبان، وگرنه (دامنه‌ی اصلی) بخش موثر؛ آیکون عمومی/بی‌بخش وجود نداره.
 const SECTION_ICON_PATHS: Record<string, number> = {
   "/icon.png": 256,
   "/apple-icon.png": 180,
@@ -62,50 +66,75 @@ function currentOrigin(req: NextRequest, host: string): string {
   return `${proto}://${host}`;
 }
 
+/** پیش‌واکشی Next/مرورگر (hover روی لینک): نباید بخش کاربر رو عوض کنه */
+function isPrefetch(req: NextRequest): boolean {
+  const h = req.headers;
+  return (
+    h.get("next-router-prefetch") === "1" ||
+    h.get("x-middleware-prefetch") === "1" ||
+    /prefetch/i.test(h.get("purpose") || "") ||
+    /prefetch/i.test(h.get("sec-purpose") || "")
+  );
+}
+
 export function middleware(req: NextRequest) {
   const { pathname } = req.nextUrl;
   const isApi = pathname.startsWith("/api/");
   const enabled = isSectionHostingEnabled();
 
-  // هدر بخش هیچ‌وقت از کلاینت قبول نمی‌شه: همیشه پاک و از روی میزبان دوباره ساخته می‌شه.
+  // بخش موثر = کوکی host-only `arion_section` (اگه معتبر) وگرنه بخش میزبان. هر سه بخش روی هر میزبان
+  // در دسترسن (PWA از scope بیرون نمی‌افته)؛ دامنه فقط هویت اپ نصب‌شده/سئو رو تعیین می‌کنه.
+  // هدر بخش هیچ‌وقت از کلاینت قبول نمی‌شه: همیشه پاک و از روی کوکی/میزبان دوباره ساخته می‌شه.
   const host = requestHost(req);
-  const section = sectionFromHost(host);
-  const hadSpoofed = req.headers.has(SECTION_HEADER);
-  const forward = () => {
-    if (!section && !hadSpoofed) return NextResponse.next();
-    const headers = new Headers(req.headers);
-    headers.delete(SECTION_HEADER);
-    if (section) headers.set(SECTION_HEADER, section);
-    return NextResponse.next({ request: { headers } });
-  };
+  const hostSection = sectionFromHost(host);
+  let section: SectionKey = resolveEffectiveSection(hostSection, req.cookies.get(SECTION_COOKIE)?.value);
+  let switchedTo: SectionKey | null = null;
+  const proto = req.headers.get("x-forwarded-proto")?.split(",")[0]?.trim() || req.nextUrl.protocol.replace(/:$/, "");
 
   const isRead = req.method === "GET" || req.method === "HEAD";
 
-  if (enabled && isRead && !isApi) {
-    // آیکون اپ رنگی هر بخش (فقط روی زیردامنه‌ی بخش)
+  if (isRead && !isApi) {
+    // آیکون اپ رنگی هر بخش: روی زیردامنه میزبان برنده‌ست (هویت اپ نصب‌شده تابع میزبانه، نه کوکی)،
+    // روی دامنه‌ی اصلی بخش موثر (کوکی، وگرنه روتین)
     const iconSize = SECTION_ICON_PATHS[pathname];
-    if (section && iconSize) {
+    if (iconSize) {
       const url = req.nextUrl.clone();
-      url.pathname = `/images/sections/app/${section}-${iconSize}.png`;
+      url.pathname = `/images/sections/app/${hostSection ?? section}-${iconSize}.png`;
       url.search = "";
-      return NextResponse.rewrite(url);
+      // دامنه‌ی اصلی: آیکون تابع کوکی بخشه، پس کش مرورگر/CDN باید با کوکی کلید بخوره (Vary)
+      return NextResponse.rewrite(url, hostSection ? undefined : { headers: { Vary: "Cookie" } });
     }
 
-    // ریدایرکت بین میزبان‌ها: ۳۰۸ (متد و مسیر و query حفظ می‌شن). فقط برای میزبان‌های خانواده‌ی ما.
-    if (isOwnHost(host)) {
-      const cur = currentOrigin(req, host);
-      let target: ReturnType<typeof sectionsOwningPath>[number] | null = null;
-      if (section) {
-        // مسیر مال بخش دیگه‌ست → زیردامنه‌ی صاحبش
-        if (!pathAllowedIn(section, pathname)) target = sectionsOwningPath(pathname)[0] ?? null;
-      } else {
-        // دامنه‌ی اصلی: صفحه‌ی فرود سئو به زیردامنه‌ی صاحبش (یکی‌شدن سئو)
-        target = seoLandingOwner(pathname);
-      }
-      const origin = target ? sectionOrigin(target, cur) : null;
+    // دامنه‌ی اصلی: صفحه‌ی فرود سئو به زیردامنه‌ی صاحبش ۳۰۸ می‌شه (یکی‌شدن سئو). تنها ریدایرکت بین میزبان‌ها.
+    if (enabled && !hostSection && isOwnHost(host)) {
+      const target = seoLandingOwner(pathname);
+      const origin = target ? sectionOrigin(target, currentOrigin(req, host)) : null;
       if (origin) return NextResponse.redirect(new URL(`${pathname}${req.nextUrl.search}`, origin), 308);
     }
+
+    // مسیر مال بخش دیگه‌ست: بدون عوض‌کردن دامنه بخش موثر عوض می‌شه (کوکی روی همین پاسخ ست می‌شه)
+    if (!isPrefetch(req)) {
+      const target = sectionToSwitchTo(section, pathname);
+      if (target) {
+        section = target;
+        switchedTo = target;
+      }
+    }
   }
+
+  const forward = () => {
+    let res: NextResponse;
+    const headers = new Headers(req.headers);
+    headers.delete(SECTION_HEADER);
+    headers.set(SECTION_HEADER, section);
+    // مسیر درخواست برای layout ریشه (مثلا preload لوگوی هدر فقط وقتی هدر رندر می‌شه)؛ همیشه از خود middleware
+    headers.set(PATH_HEADER, pathname);
+    res = NextResponse.next({ request: { headers } });
+    if (switchedTo) {
+      res.cookies.set(SECTION_COOKIE, switchedTo, { path: "/", maxAge: SECTION_COOKIE_MAX_AGE, sameSite: "lax", secure: proto === "https" });
+    }
+    return res;
+  };
 
   // ─── دفاع CSRF روی API ───
   if (SAFE_METHODS.has(req.method)) return forward();

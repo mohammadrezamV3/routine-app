@@ -6,6 +6,7 @@ import { useTheme } from "./ThemeProvider";
 import { tr } from "@/lib/i18n";
 import { useSection } from "@/components/SectionProvider";
 import { SECTION_META } from "@/lib/sections";
+import { usePalette } from "@/components/PaletteProvider";
 
 /** فلش بازگشت — داخل خود باکس، همیشه بالا-راست، بدون بک‌گراند، فقط آیکون.
  * پیش‌فرض به صفحه‌ی اصلی می‌ره؛ اگه onClick بدی (مثل ویزارد ثبت‌نام)
@@ -35,14 +36,18 @@ export function AuthBackButton({ onClick }: { onClick?: () => void }) {
 export function AuthBrandMark({ subtitle, note }: { subtitle?: string; note?: string }) {
   const { theme } = useTheme();
   const section = useSection();
+  const { paletteSet } = usePalette();
+  // نشان بخش (آیکون رنگی ترید/ورزش) فقط وقتی کاربر پالت رو روی «خودکار» گذاشته؛ با پالت انتخابی
+  // نشان اصلی میاد و CSS (.logo-tint) اون رو با گرادیان --logo-* همرنگ پالت می‌کنه.
+  const sectionIcon = section && !paletteSet ? section : null;
   return (
     <div className="auth-brand-mark-wrap">
       {/* روی زیردامنه‌ی بخش، نشان رنگی همون بخش (PNG شفاف، هر دو تم) — همون
          اندازه‌ی لوگوی اصلی. دامنه‌ی اصلی (apex) همون لوگوی سبز قبلی با دو تم. */}
       <div className="auth-brand-mark" aria-hidden="true">
-        {section ? (
+        {sectionIcon ? (
           <Image
-            src={SECTION_META[section].icon}
+            src={SECTION_META[sectionIcon].icon}
             alt="" fill sizes="38px" priority
             className="object-contain"
           />
@@ -62,6 +67,7 @@ export function AuthBrandMark({ subtitle, note }: { subtitle?: string; note?: st
             />
           </>
         )}
+        <span className="logo-tint" aria-hidden="true" />
       </div>
       {subtitle && <p className="auth-brand-subtitle">{subtitle}</p>}
       {note && <p className="auth-brand-note">{note}</p>}

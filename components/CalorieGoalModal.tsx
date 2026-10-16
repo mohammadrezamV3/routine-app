@@ -12,6 +12,7 @@ import { AiSparkleIcon } from "./AiSparkleIcon";
 import { useLockBodyScroll } from "@/lib/useLockBodyScroll";
 import type { Target } from "./CaloriePanel";
 import { NumberInput } from "./NumberInput";
+import { readTyped, type LimitKey } from "@/lib/numberLimits";
 import { Spinner } from "./Spinner";
 import { useMenuPresence } from "@/lib/useMenuPresence";
 import { isEn, tr } from "@/lib/i18n";
@@ -121,6 +122,14 @@ export function CalorieGoalModal({
     if (!goalHeight || !goalWeight) { setGoalError(tr("قد و وزن لازمه", "Height and weight are required")); return; }
     if (needsAge && !age) { setGoalError(tr("چون تاریخ تولدت توی حساب ثبت نشده، سنت رو وارد کن", "Your birth date is not saved on your account, so please enter your age")); return; }
 
+    // قد/وزن/سن با جدول مشترک (lib/numberLimits.ts) سنجیده می‌شن؛ سرور هم دوباره می‌سنجه
+    const specs: [string, LimitKey][] = [[goalHeight, "heightCm"], [goalWeight, "weightKg"]];
+    if (needsAge) specs.push([age, "ageYears"]);
+    for (const [text, key] of specs) {
+      const r = readTyped(text, key);
+      if (!r.ok) { setGoalError(r.error); return; }
+    }
+
     setGoalError(null);
     setSaving(true);
     const res = await fetch("/api/calorie/target", {
@@ -145,6 +154,15 @@ export function CalorieGoalModal({
     for (const r of mealDraft) {
       if (!r.label.trim()) { setManualError(tr("اسم همه‌ی وعده‌ها رو وارد کن", "Enter a name for every meal")); return; }
       if (!r.kcal || +r.kcal <= 0) { setManualError(tr("کالری همه‌ی وعده‌ها باید عدد مثبت باشه", "Every meal needs a positive calorie number")); return; }
+      const mk = readTyped(r.kcal, "mealKcal");
+      if (!mk.ok) { setManualError(mk.error); return; }
+    }
+    // جمع وعده‌ها همون هدف کالری روزانه‌ست
+    const dailyCheck = readTyped(String(mealDraftSum), "dailyTargetKcal");
+    if (!dailyCheck.ok) { setManualError(dailyCheck.error); return; }
+    for (const m of [proteinTarget, carbsTarget, fatTarget]) {
+      const r = readTyped(m, "macroTargetG");
+      if (!r.ok) { setManualError(r.error); return; }
     }
     setManualError(null);
     setManualSaving(true);
@@ -233,7 +251,7 @@ export function CalorieGoalModal({
                 type="button"
                 onClick={() => setSmartStep("meals")}
                 className="mt-4 flex w-full items-center justify-center gap-2 rounded-2xl py-3.5 text-[13.5px] font-bold"
-                style={{ background: "var(--accent)", color: "var(--bg)", boxShadow: "0 8px 22px rgba(var(--accent-rgb),.3)" }}
+                style={{ background: "var(--accent)", color: "var(--sec-on-accent, var(--bg))", boxShadow: "0 8px 22px rgba(var(--accent-rgb),.3)" }}
               >
                 {tr("بعدی", "Next")}
               </button>
@@ -256,7 +274,7 @@ export function CalorieGoalModal({
                 type="button"
                 onClick={() => setSmartStep("specs")}
                 className="mt-4 flex w-full items-center justify-center gap-2 rounded-2xl py-3.5 text-[13.5px] font-bold"
-                style={{ background: "var(--accent)", color: "var(--bg)", boxShadow: "0 8px 22px rgba(var(--accent-rgb),.3)" }}
+                style={{ background: "var(--accent)", color: "var(--sec-on-accent, var(--bg))", boxShadow: "0 8px 22px rgba(var(--accent-rgb),.3)" }}
               >
                 {tr("بعدی", "Next")}
               </button>
@@ -284,16 +302,16 @@ export function CalorieGoalModal({
               <div className="mt-3.5 flex gap-2.5">
                 <div className="flex-1">
                   <label className="block text-[10.5px] font-semibold text-dash-muted sm:text-[11.5px]">{tr("قد (سانتی‌متر)", "Height (cm)")}</label>
-                  <NumberInput className="wsearch-newform-name calorie-glass-field mt-1.5 w-full" value={goalHeight} onChange={(v) => setGoalHeight(v)} />
+                  <NumberInput className="wsearch-newform-name calorie-glass-field mt-1.5 w-full" limit="heightCm" value={goalHeight} onChange={(v) => setGoalHeight(v)} />
                 </div>
                 <div className="flex-1">
                   <label className="block text-[10.5px] font-semibold text-dash-muted sm:text-[11.5px]">{tr("وزن (کیلوگرم)", "Weight (kg)")}</label>
-                  <NumberInput className="wsearch-newform-name calorie-glass-field mt-1.5 w-full" value={goalWeight} onChange={(v) => setGoalWeight(v)} />
+                  <NumberInput className="wsearch-newform-name calorie-glass-field mt-1.5 w-full" limit="weightKg" value={goalWeight} onChange={(v) => setGoalWeight(v)} />
                 </div>
                 {needsAge && (
                   <div className="flex-1">
                     <label className="block text-[10.5px] font-semibold text-dash-muted sm:text-[11.5px]">{tr("سن", "Age")}</label>
-                    <NumberInput className="wsearch-newform-name calorie-glass-field mt-1.5 w-full" value={age} onChange={(v) => setAge(v)} />
+                    <NumberInput className="wsearch-newform-name calorie-glass-field mt-1.5 w-full" limit="ageYears" value={age} onChange={(v) => setAge(v)} />
                   </div>
                 )}
               </div>
@@ -305,7 +323,7 @@ export function CalorieGoalModal({
                 onClick={saveSmart}
                 disabled={saving}
                 className="mt-4 flex w-full items-center justify-center gap-2 rounded-2xl py-3.5 text-[13.5px] font-bold disabled:opacity-40"
-                style={{ background: "var(--accent)", color: "var(--bg)", boxShadow: "0 8px 22px rgba(var(--accent-rgb),.3)" }}
+                style={{ background: "var(--accent)", color: "var(--sec-on-accent, var(--bg))", boxShadow: "0 8px 22px rgba(var(--accent-rgb),.3)" }}
               >
                 {saving ? <Spinner size={15} /> : tr("محاسبه‌ی برنامه کالری", "Calculate calorie plan")}
               </button>
@@ -359,6 +377,7 @@ export function CalorieGoalModal({
                             <NumberInput
                               className="manual-meal-row-input manual-meal-kcal-input mono"
                               placeholder="0"
+                              limit="mealKcal"
                               value={row.kcal}
                               onChange={(v) => updateMealDraftRow(row.key, { kcal: v })}
                             />
@@ -426,9 +445,9 @@ export function CalorieGoalModal({
                   براش تعیین نشده و کارت درشت‌مغذی‌ها فقط مصرف رو نشون می‌ده. */}
               <label className="calorie-field-label" style={{ marginTop: 16 }}>{tr("هدف درشت‌مغذی‌ها (اختیاری — گرم در روز)", "Macro targets (optional, grams per day)")}</label>
               <div className="flex gap-2">
-                <NumberInput className="wsearch-newform-name calorie-glass-field flex-1" placeholder={tr("پروتئین", "Protein")} value={proteinTarget} onChange={setProteinTarget} />
-                <NumberInput className="wsearch-newform-name calorie-glass-field flex-1" placeholder={tr("کربوهیدرات", "Carbs")} value={carbsTarget} onChange={setCarbsTarget} />
-                <NumberInput className="wsearch-newform-name calorie-glass-field flex-1" placeholder={tr("چربی", "Fat")} value={fatTarget} onChange={setFatTarget} />
+                <NumberInput className="wsearch-newform-name calorie-glass-field flex-1" placeholder={tr("پروتئین", "Protein")} limit="macroTargetG" value={proteinTarget} onChange={setProteinTarget} />
+                <NumberInput className="wsearch-newform-name calorie-glass-field flex-1" placeholder={tr("کربوهیدرات", "Carbs")} limit="macroTargetG" value={carbsTarget} onChange={setCarbsTarget} />
+                <NumberInput className="wsearch-newform-name calorie-glass-field flex-1" placeholder={tr("چربی", "Fat")} limit="macroTargetG" value={fatTarget} onChange={setFatTarget} />
               </div>
 
               {manualError && <div className="field-error-msg" style={{ display: "block", marginTop: 10 }}>{manualError}</div>}
@@ -438,7 +457,7 @@ export function CalorieGoalModal({
                 onClick={saveManual}
                 disabled={manualSaving}
                 className="mt-4 flex w-full items-center justify-center gap-2 rounded-2xl py-3.5 text-[13.5px] font-bold disabled:opacity-40"
-                style={{ background: "var(--accent)", color: "var(--bg)", boxShadow: "0 8px 22px rgba(var(--accent-rgb),.3)" }}
+                style={{ background: "var(--accent)", color: "var(--sec-on-accent, var(--bg))", boxShadow: "0 8px 22px rgba(var(--accent-rgb),.3)" }}
               >
                 {manualSaving ? <Spinner size={15} /> : tr("ثبت برنامه کالری", "Save calorie plan")}
               </button>
@@ -460,7 +479,7 @@ export function CalorieGoalModal({
                   className="flex h-14 w-14 items-center justify-center rounded-full"
                   style={{ background: "var(--accent)", boxShadow: "0 0 24px rgba(var(--accent-rgb),.5)" }}
                 >
-                  <Check className="h-7 w-7" style={{ color: "var(--bg)" }} strokeWidth={3} />
+                  <Check className="h-7 w-7" style={{ color: "var(--sec-on-accent, var(--bg))" }} strokeWidth={3} />
                 </motion.div>
                 <div className="text-[12.5px] font-bold text-dash-text sm:text-[13.5px]">{tr("با موفقیت ثبت شد", "Saved successfully")}</div>
               </motion.div>

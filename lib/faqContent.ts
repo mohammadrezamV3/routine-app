@@ -3,6 +3,7 @@
 // همین آرایه می‌خونن، تا این دو هیچ‌وقت از هم واگرا نشن. (این آرایه قبلا
 // مستقیم export یک page.tsx بود، ولی Next.js فقط export های خاصی رو از
 // یک فایل page.tsx قبول می‌کنه — پس به یک ماژول lib جدا منتقل شد.)
+import type { SectionKey } from "@/lib/sections";
 import { isEn } from "./i18n";
 
 export const FAQS: { q: string; a: string }[] = [
@@ -132,6 +133,11 @@ const FAQS_EN: { q: string; a: string }[] = [
   },
 ];
 
-export function getFaqs(): { q: string; a: string }[] {
-  return isEn() ? FAQS_EN : FAQS;
+// پرسش‌های مخصوص یک بخش (اندیس در FAQS/FAQS_EN، هر دو یک ترتیب)؛ بقیه عمومی‌ان.
+// روی زیردامنه‌ی یک بخش فقط پرسش‌های همون بخش و عمومی‌ها میان (جداسازی بخش‌ها).
+const FAQ_SECTION: Record<number, SectionKey> = { 7: "routine", 8: "trade", 9: "workout", 10: "workout", 11: "routine" };
+
+export function getFaqs(section: SectionKey | null = null): { q: string; a: string }[] {
+  const all = isEn() ? FAQS_EN : FAQS;
+  return section ? all.filter((_, i) => !FAQ_SECTION[i] || FAQ_SECTION[i] === section) : all;
 }

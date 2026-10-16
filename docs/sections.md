@@ -1,13 +1,19 @@
 # بخش‌ها روی زیردامنه‌ها (routine / trade / workout)
 
-یک اپ Next.js واحد، سه زیردامنه‌ی متمرکز. دامنه‌ی اصلی (`arionapp.ir`، `www`) مثل قبل «همه‌ی بخش‌ها»ست.
+یک اپ Next.js واحد، سه زیردامنه‌ی متمرکز. فقط همین سه بخش وجود دارد: حالت «همه‌ی بخش‌ها» نیست و بخش موثر همیشه یکی از سه بخش است (دامنه‌ی اصلی `arionapp.ir`، `www` بدون کوکی = `DEFAULT_SECTION` = روتین).
 منطق خالص: `lib/sections.ts`؛ سرور: `lib/sectionServer.ts`؛ کلاینت: `components/SectionProvider.tsx`؛
 زیرساخت (این سند): `middleware.ts`، `lib/authCookies.ts`، `lib/clientCookie.ts`، `lib/seo.ts`،
 `app/robots.ts`، `app/sitemap.ts`، `app/manifest.ts`، `next.config.js`، `deploy/`.
 
-**همه‌چیز پشت یک env است.** تا `NEXT_PUBLIC_SECTION_BASE_DOMAIN` ست نشده، بخشی در کار نیست
-(`getSection()` همه‌جا `null`)، هیچ ریدایرکتی نمی‌شود، کوکی‌ها host-only مثل قبل‌اند و هیچ خروجی
-(manifest، robots، sitemap، canonical، CSP) فرق نمی‌کند.
+**هر سه بخش روی هر میزبان در دسترس‌اند (بدون عوض‌شدن دامنه).** دلیل: اپ نصب‌شده روی صفحه‌ی اصلی گوشی (PWA)
+با رفتن به زیردامنه‌ی دیگر از scope بیرون می‌افتاد. حالا **بخش موثر** = کوکی host-only `arion_section`
+(routine|trade|workout، معتبر) وگرنه بخش میزبان، وگرنه `DEFAULT_SECTION` (`routine`؛ دامنه‌ی اصلی بدون کوکی). جداسازی بخش‌ها
+(منو، داشبورد، آنالیز، منتورها، درباره، تم) همچنان برقرار است؛ فقط «کدام بخش فعال است» از کوکی می‌آید.
+دامنه فقط هویت اپ نصب‌شده (manifest، آیکون)، سئو (canonical، robots، sitemap) و بخش پیش‌فرض مهمان/خزنده را تعیین می‌کند.
+
+بدون `NEXT_PUBLIC_SECTION_BASE_DOMAIN` میزبان بخشی ندارد (هیچ ریدایرکت سئو، کوکی دامنه‌دار و تفاوت در
+manifest/robots/sitemap/canonical/CSP نیست)، ولی کوکی `arion_section` هنوز کار می‌کند: کاربر روی یک دامنه
+هم می‌تواند بخش را عوض کند. بدون کوکی بخش موثر روتین است (`getSection()` = `DEFAULT_SECTION`، هرگز `null`).
 
 ## 1. میزبان‌ها و env
 
@@ -47,17 +53,37 @@
 | `/bodybuilding-program`, `/calorie-counter` | workout |
 | بقیه (داشبورد، حساب، ورود، ادمین، منتورها، آنالیز، بلاگ، درباره، قوانین، اشتراک، استریک، API) | مشترک: روی همه‌ی میزبان‌ها باز |
 
-## 4. ریدایرکت‌ها (`middleware.ts`)
+## 4. بخش موثر، تعویض خودکار و ریدایرکت (`middleware.ts`)
 
-فقط `GET`/`HEAD`، هرگز `/api`، کد **308**، مسیر و query حفظ می‌شود، پروتکل و پورت از درخواست
-(`x-forwarded-proto` و میزبان) می‌آید و فقط برای میزبان‌های خانواده‌ی دامنه‌ی ما (`isOwnHost`) اجرا می‌شود.
+**هیچ ریدایرکتی بین زیردامنه‌ها وجود ندارد.** هدر `x-arion-section` همیشه از درخواست ورودی پاک و دوباره ساخته
+می‌شود (کلاینت نمی‌تواند جعل کند): مقدار = بخش موثر (کوکی معتبر `arion_section`، وگرنه بخش میزبان؛ دامنه‌ی اصلی
+بدون کوکی = `DEFAULT_SECTION`؛ هدر همیشه ست می‌شود). کوکی نامعتبر نادیده گرفته می‌شود. روی `/api` هم هدر از کوکی ساخته می‌شود.
 
-1. روی زیردامنه‌ی بخش: اگر `!pathAllowedIn(section, path)` → زیردامنه‌ی **اولین** بخش صاحب مسیر.
-2. روی دامنه‌ی اصلی: اگر `seoLandingOwner(path)` → زیردامنه‌ی صاحبش (یکی‌شدن سئو). مسیرهای غیر فرود (مثل `/trade`) روی دامنه‌ی اصلی باز می‌مانند.
+1. **تعویض خودکار:** درخواست `GET`/`HEAD` صفحه (نه `/api`، نه پیش‌واکشی با `next-router-prefetch`/`purpose`) به مسیری که
+   روی بخش موثر بسته است (`!pathAllowedIn`) → بخش موثر می‌شود **اولین صاحب مسیر** (`sectionToSwitchTo`)،
+   هدر درخواست فورواردشده همان را می‌گیرد، کوکی `arion_section` روی پاسخ ست می‌شود و صفحه روی **همان میزبان**
+   سرو می‌شود. پیش‌واکشی هیچ‌وقت بخش را عوض نمی‌کند (hover روی یک لینک نباید کاربر را جابه‌جا کند).
+2. **تنها ریدایرکت (دامنه‌ی اصلی، سئو):** `GET`/`HEAD`، هرگز `/api`، کد **308**، مسیر و query حفظ، پروتکل و پورت از
+   درخواست (`x-forwarded-proto` و میزبان): روی دامنه‌ی اصلی اگر `seoLandingOwner(path)` → زیردامنه‌ی صاحبش (یکی‌شدن سئو).
+   مسیرهای غیر فرود (مثل `/trade`) روی دامنه‌ی اصلی باز می‌مانند. روی زیردامنه هیچ ریدایرکتی نیست.
+3. آیکون‌های اپ (`/icon.png`، `/apple-icon.png`، ...) و `manifest` **تابع میزبان‌اند، نه کوکی** (هویت PWA به دامنه بسته است).
 
-هدر `x-arion-section` همیشه از درخواست ورودی پاک و از روی میزبان دوباره ساخته می‌شود
-(کلاینت نمی‌تواند بخش را جعل کند). matcher: همه‌ی صفحه‌ها و `/api`، به‌جز `_next/static`، `_next/image`
-و هر مسیر با پسوند فایل؛ `robots.txt`، `sitemap.xml`، `manifest.webmanifest` و آیکون‌ها صریح اضافه شده‌اند.
+کوکی `arion_section`: **host-only** (عمدا بدون `Domain` تا هر اپ نصب‌شده انتخاب خودش را یادش بماند)، `Path=/`،
+`SameSite=Lax`، یک سال، `Secure` روی https. توابع خالص و یکتا در `lib/sections.ts`:
+`SECTION_COOKIE`, `resolveEffectiveSection`, `sectionToSwitchTo`, `serializeSectionCookie`.
+
+سمت سرور `getSection()` (`lib/sectionServer.ts`) = هدر (بخش موثر)؛ بدون هدر (تست) کوکی و بعد میزبان.
+`getHostSection()` فقط بخش میزبان را می‌دهد و برای هر چیزی که هویتش به دامنه بسته است (manifest، robots، sitemap،
+فید، canonical) باید استفاده شود. مهمان/خزنده بدون کوکی بخش میزبان را می‌گیرد، پس سئو مثل قبل می‌ماند.
+
+سمت کلاینت: `SectionSwitcher` کوکی را با `document.cookie` ست می‌کند (`lib/sectionClient.ts` → `switchSectionAndGo`)
+و ناوبری **کامل** روی همان origin به `/dashboard` (واردشده) یا `/` (مهمان) می‌کند. چون layout ریشه در ناوبری
+کلاینتی دوباره رندر نمی‌شود، `SectionSync` (داخل `SectionProvider`) وقتی `pathname` به مسیر بخش دیگری رفت یک
+بارگذاری کامل می‌کند (middleware در درخواست RSC کوکی را عوض کرده)؛ نگهبان حلقه: برای یک آدرس در ۱۰ ثانیه یک بار
+(`sessionStorage`). خروج/ورود کوکی را نگه می‌دارد (ترجیح ظاهری است). پالت «خودکار» از `data-section` layout تبعیت می‌کند.
+
+matcher: همه‌ی صفحه‌ها و `/api`، به‌جز `_next/static`، `_next/image` و هر مسیر با پسوند فایل؛ `robots.txt`،
+`sitemap.xml`، `manifest.webmanifest` و آیکون‌ها صریح اضافه شده‌اند.
 چک CSRF (`Origin` روی `/api`) علاوه بر قبل، Originهای خانواده‌ی دامنه (`isOwnHost`) را هم می‌پذیرد.
 
 ## 5. کوکی‌ها
@@ -66,6 +92,7 @@
 |---|---|
 | نشست `__Secure-next-auth.session-token` (یا بدون پیشوند بدون https) و `…callback-url` | `Domain=.<پایه>` (`lib/auth.ts` → `cookies`). اسم‌ها همان اسم‌های پیش‌فرض next-auth‌اند (WebSocket و `getSessionFast` اسم را می‌خوانند) |
 | `__Host-next-auth.csrf-token` | host-only (پیشوند `__Host-` دامنه را ممنوع می‌کند)؛ هر زیردامنه csrf خودش را دارد |
+| `arion_section` | **host-only** (بدون `Domain`، عمدا)، بخش موثر کاربر روی همین میزبان (بخش 4) |
 | `theme`, `arion_lang`, `arion-auth` | `Domain=.<پایه>` با `clientCookieDomainAttr()` (`lib/clientCookie.ts`؛ اسکریپت inline تم دامنه را از `location.hostname` حساب می‌کند) |
 
 **مهاجرت (مهم):** کاربر قدیمی کوکی نشست host-only روی دامنه‌ی اصلی دارد. بعد از دیپلوی، همان اسم با
@@ -80,7 +107,7 @@
   (`setSharedCookie`/`clearSharedCookie`).
 - محدودیت: کاربری که فقط کوکی قدیمی host-only دارد و **اول** یک زیردامنه را باز کند وارد نشده دیده می‌شود
   (کوکی دامنه‌ی اصلی به زیردامنه نمی‌رود) تا یک بار دامنه‌ی اصلی را باز کند یا دوباره وارد شود.
-  لینک‌های تعویض بخش از خود اپ می‌آیند، پس در عمل رخ نمی‌دهد.
+  تعویض بخش دیگر بین میزبان‌ها نیست، پس در عمل رخ نمی‌دهد.
 
 ## 6. سئو
 
@@ -91,11 +118,16 @@
 
 ## 7. اپ نصب‌شده و آیکون رنگی هر بخش
 
-- `app/manifest.ts` روی زیردامنه: اسم «آریون ترید / Arion Trade» (و routine / workout)، توضیح بخش، میان‌برهای همان بخش و آیکون‌های `public/images/sections/app/<بخش>-{192,512,maskable-512,180}.png` (پس‌زمینه‌ی سرمه‌ای مثل `app/icon.png`، نشان A به رنگ بخش). `start_url` همان `/` قبلی است (کاربر واردشده به داشبورد می‌رود).
-- `middleware.ts` روی زیردامنه با rewrite (نه ریدایرکت) `/icon.png` → `<بخش>-256.png` و `/apple-icon.png`، `/apple-touch-icon.png`، `/apple-touch-icon-precomposed.png` → `<بخش>-180.png` را می‌دهد؛ پس favicon تب و آیکون «افزودن به صفحه‌ی اصلی» iOS هم به رنگ بخش است. دامنه‌ی اصلی بدون تغییر. آدرس شامل میزبان است، پس کش مرورگر/CDN میزبان‌ها را قاطی نمی‌کند (هیچ کلید کش مشترکی ست نشده).
+- `app/manifest.ts`: آیکون عمومی/بی‌بخش وجود ندارد؛ بخش آیکون = بخش میزبان، وگرنه (دامنه‌ی اصلی) بخش موثر (کوکی، وگرنه روتین؛ `getIconSection()`). اسم «آریون ترید / Arion Trade» (و routine / workout)، توضیح بخش، میان‌برهای همان بخش و آیکون‌های `public/images/sections/app/<بخش>-{192,512,maskable-512,180}.png` (پس‌زمینه‌ی سرمه‌ای مثل `app/icon.png`، نشان A به رنگ بخش). `start_url` همان `/` قبلی است (کاربر واردشده به داشبورد می‌رود).
+- `middleware.ts` روی همه‌ی میزبان‌ها با rewrite (نه ریدایرکت) `/icon.png` → `<بخش>-256.png` و `/apple-icon.png`، `/apple-touch-icon.png`، `/apple-touch-icon-precomposed.png` → `<بخش>-180.png` را می‌دهد؛ پس favicon تب و آیکون «افزودن به صفحه‌ی اصلی» iOS هم به رنگ بخش است. روی زیردامنه بخش میزبان برنده است؛ روی دامنه‌ی اصلی بخش موثر (کوکی، وگرنه روتین) و پاسخ `Vary: Cookie` دارد تا کش مرورگر/CDN آیکون بخش‌ها را قاطی نکند. آدرس زیردامنه‌ها شامل میزبان است، پس آنجا Vary لازم نیست.
+
+- **لوگوی هدر از اولین پینت:** `middleware.ts` علاوه بر `x-arion-section` هدر `x-arion-path` (مسیر درخواست) را هم همیشه خودش می‌سازد؛ `app/layout.tsx` با آن و بخش و تم جاری فقط همان تصویرهای هدر را preload می‌کند (`<link rel="preload" as="image" fetchpriority="high">` با media نقطه‌ی شکست 700px: نشان A موبایل `icon-<بخش>-sm.webp`، حروف ARION دسکتاپ `wordmark-{dark,light}-sm.webp`؛ نام‌ها و media در `lib/sectionAssets.ts`). هدر با `<picture>` فقط تصویر جور با عرض صفحه و تم جاری را می‌گیرد؛ روی `/auth` و `/admin` که هدر ندارند preload نیست. تصویر تم مقابل بعد از اولین پینت در بیکاری گرم می‌شود.
 
 ## 8. محدودیت‌های شناخته‌شده
 
+- **تعویض بخش سمت کلاینت وابسته به کوکی است:** اگر مرورگر کوکی را مسدود کند، سوییچر بخش را عوض نمی‌کند (بدون خطا).
+  حالت «همه‌ی بخش‌ها» وجود ندارد؛ بدون کوکی بخش روتین است.
+  پیوندهای صفحه‌ی لندینگ (`LandingOtherSections`، `LandingFooter`) هنوز به زیردامنه‌ها لینک می‌دهند (فقط مهمان‌ها).
 - **`localStorage` و IndexedDB per-origin‌اند.** داده‌ی مهمان (روتین مهمان، تنظیمات) و هر چیز کلاینتی دیگر بین زیردامنه‌ها جابه‌جا نمی‌شود؛ کاربر واردشده همه‌چیز را از API می‌گیرد، پس فقط مهمان‌ها متوجه می‌شوند (هر زیردامنه برای مهمان یک دستگاه جدا حساب می‌شود). کش‌های `arion:*` (استریک، اشتراک، زبان در localStorage و …) از نو ساخته می‌شوند. ردیاب خواب زنده (`lib/sleepTracker.ts`) فقط روی همان زیردامنه‌ای که شروع شد می‌ماند.
 - **منتور و رمزگذاری سرتاسری** (`lib/e2ee/keyStore.ts`: IndexedDB `arion-e2ee`؛ کلیدها غیرقابل‌استخراج‌اند): کاربر واردشده با **رمز عبور** که اولین بار روی یک زیردامنه‌ی تازه بخش منتور را باز می‌کند:
   1. نشست مشترک است، پس وارد است؛ اما IndexedDB آن origin خالی است: نه کلید SYNCED محلی دارد نه KEK (KEK فقط لحظه‌ی ورود با رمز مشتق می‌شود و رمز را در این origin وارد نکرده).
@@ -118,5 +150,5 @@ NEXT_PUBLIC_SECTION_BASE_DOMAIN=localhost npm run dev   # NEXTAUTH_URL=http://lo
 روی `localhost` هیچ کوکی `Domain` ست نمی‌شود (مرورگر نمی‌پذیرد)، پس هر زیردامنه ورود جدا دارد. برای
 آزمایش ورود مشترک یک دامنه‌ی ساختگی بگیر: در `/etc/hosts` بنویس `127.0.0.1 arion.test routine.arion.test trade.arion.test workout.arion.test`،
 سپس `NEXT_PUBLIC_SECTION_BASE_DOMAIN=arion.test AUTH_COOKIE_SECURE=0 NEXTAUTH_URL=http://arion.test:3000 npm run dev`
-(پورت در آدرس‌های ریدایرکت خودکار حفظ می‌شود، چون از میزبان درخواست خوانده می‌شود).
-env را **بدون پورت** بگذار. تست‌های خودکار: `__tests__/sections.test.ts`، `__tests__/sectionsMiddleware.test.ts`.
+(پورت در آدرس‌های ریدایرکت سئو حفظ می‌شود، چون از میزبان درخواست خوانده می‌شود).
+env را **بدون پورت** بگذار. تست‌های خودکار: `__tests__/sections.test.ts`، `__tests__/sectionsEffective.test.ts`، `__tests__/sectionsMiddleware.test.ts`.

@@ -85,7 +85,7 @@ export function GrantDialog({ ids, onClose, onDone }: { ids: string[]; onClose: 
           ))}
         </div>
         <label className="admin-field"><span>{tr("تعداد روز (از انقضای فعلی یا از الان)", "Number of days (from current expiry or from now)")}</span>
-          <input className="admin-input admin-ltr" inputMode="numeric" value={days} onChange={(e) => setDays(e.target.value.replace(/[^0-9]/g, ""))} />
+          <input className="admin-input admin-ltr" inputMode="numeric" maxLength={4} value={days} onChange={(e) => setDays(e.target.value.replace(/[^0-9]/g, ""))} />
         </label>
       </div>
       <Footer busy={busy} label={tr("اعطا", "Grant")} onClose={onClose} disabled={!valid}
@@ -123,7 +123,7 @@ export function ExtendDialog({ id, onClose, onDone }: { id: string; onClose: () 
     <AdminModal title={tr("تمدید دستی اشتراک", "Manually extend subscription")} eyebrow={tr("اشتراک", "Subscription")} onClose={onClose}>
       <div className="au-form">
         <label className="admin-field"><span>{tr("تعداد روز", "Number of days")}</span>
-          <input className="admin-input admin-ltr" inputMode="numeric" value={days} onChange={(e) => setDays(e.target.value.replace(/[^0-9]/g, ""))} autoFocus />
+          <input className="admin-input admin-ltr" inputMode="numeric" maxLength={4} value={days} onChange={(e) => setDays(e.target.value.replace(/[^0-9]/g, ""))} autoFocus />
         </label>
       </div>
       <Footer busy={busy} label={tr("تمدید", "Extend")} onClose={onClose} disabled={!(n >= 1 && n <= 3650)}

@@ -1,0 +1,321 @@
+/* تم رنگی سراسری اپ (تنظیمات > تم و رنگ، lib/palette.ts): کلید همه‌ی قاعده‌ها
+   html[data-palette="..."]ـه که layout.tsx از اولین بایت HTML می‌ذاره (پالت موثر: تنظیم
+   کاربر یا، در حالت «خودکار»، پالت بخش: ترید و ورزش پالت خودشون رو دارن و روتین و دامنه‌ی
+   اصلی پالت پیش‌فرض). روتین = هیچ override ندارد (توکن‌های پیش‌فرض globals.css).
+   ترید = آبی سایبری (شب) و صدفی/یاقوتی/سرمه‌ای (روز)، ورزش = مشکی و قرمز تک‌رنگ لوکس
+   (شب: مشکی با قرمز شاخص و نقره‌ای؛ روز: سفید با قرمز عمیق و مشکی). amethyst/sunset/graphite با
+   tokensFromSpec ساخته شدن (تست __tests__/palette.test.ts هم‌خوانی این فایل با خروجی
+   تابع رو چک می‌کنه؛ دستی ویرایششون نکن، بلاک پایین فایل رو دوباره بساز). پالت سفارشی
+   (data-palette="custom") از یک <style> سمت سرور میاد (customPaletteCss)، نه این فایل.
+   قواعد:
+   - فقط توکن‌های رنگ عوض می‌شن (مثل app/event-themes.css)؛ سود/زیان (--pnl-*) و
+     گوی دستیار (--orb-*) دست نمی‌خورن.
+   - تم مناسبتی فعال برنده‌ست (:not([data-event-theme])) و تم نوآر ادمین هم
+     (:not([data-admin-theme="noir"])).
+   - داشبورد و استریک --ring-* رو روی خود .db-page و .db-cmd-root دوباره
+     تعریف می‌کنن، پس حلقه‌ها اون‌جا جدا پوشش داده می‌شن (بقیه‌ی توکن‌ها از body
+     ارث می‌رسن).
+   - --sec-* توکن‌های لندینگ/پلن‌ها هستن (components/useThemeTokens.ts) و
+     --text-rgb برای سایه‌های هم‌رنگ متن.
+   - --logo-from/mid/to گرادیان لوگوی برند هر پالت‌ان (هدر، صفحه‌های ورود) و عمدا
+     مستقل از تم مناسبتی و نوآرن. پیش‌فرض (روتین) = لوگوی سبز اصلی در شب و همون
+     هلویی/مسی تصویر لوگوی روز در روز. */
+
+/* ── لوگو: پیش‌فرض روتین ── */
+body:not([data-theme="light"]){ --logo-from:#34D26B; --logo-mid:#09C796; --logo-to:#00AAB1; }
+body[data-theme="light"]{ --logo-from:#FD9E61; --logo-mid:#F2AE7E; --logo-to:#E0B795; }
+html[data-palette="trade"] body{ --logo-from:#00B9F3; --logo-mid:#01A4F2; --logo-to:#0475F5; }
+html[data-palette="workout"] body{ --logo-from:#F11834; --logo-mid:#E9133D; --logo-to:#D0084B; }
+
+/* ── نشان برند هم‌رنگ پالت ──
+   .logo-tint (components/NavDrawer.tsx و AuthChrome.tsx) نشان A رو با ماسک روی گرادیان --logo-*
+   می‌کشه. فقط وقتی کاربر خودش پالتی غیر از «خودکار» و «روتین» انتخاب کرده دیده می‌شه؛ در غیر این
+   صورت همون تصویر اصلی (دقیقا مثل قبل) می‌مونه. سوییچر بخش‌ها (ردیف‌های رسمی) به این کاری نداره. */
+.logo-tint{ display:none; }
+html[data-palette-set]:not([data-palette="routine"]) .logo-tint{
+  display:block; position:absolute; inset-block:0; inset-inline-start:0;
+  height:100%; aspect-ratio:256 / 217; pointer-events:none;
+  background:linear-gradient(170deg, var(--logo-from), var(--logo-mid) 55%, var(--logo-to));
+  -webkit-mask:url(/images/logo-icon-dark-theme.png) center / contain no-repeat;
+  mask:url(/images/logo-icon-dark-theme.png) center / contain no-repeat;
+}
+/* صفحه‌های ورود: به‌جای تصویر نشان، فقط همون A هم‌رنگ */
+html[data-palette-set]:not([data-palette="routine"]) .auth-brand-mark > img{ display:none; }
+html[data-palette-set]:not([data-palette="routine"]) .auth-brand-mark > .logo-tint{ inset:0; width:100%; aspect-ratio:auto; }
+/* برچسب بخش کنار ARION در هدر زیردامنه (TRADE/WORKOUT/ROUTINE) با گرادیان پالت انتخابی */
+html[data-palette-set] .tls-label{ background-image:linear-gradient(90deg, var(--logo-from), var(--logo-mid), var(--logo-to)); }
+
+/* ── trade ── */
+html[data-palette="trade"]:not([data-event-theme]):not([data-admin-theme="noir"]):not([data-theme="light"]){ background:#070B12; }
+html[data-palette="trade"]:not([data-event-theme]):not([data-admin-theme="noir"])[data-theme="light"]{ background:#E7EDF4; }
+html[data-palette="trade"]:not([data-event-theme]):not([data-admin-theme="noir"]) body:not([data-theme="light"]){
+  --bg:#070B12; --bg-rgb:7,11,18;
+  --surface-rgb:7,11,18;
+  --text:#E8F1FA; --text-rgb:232,241,250; --muted:#7F92A8; --muted2:#3E4D60;
+  --accent:#00B4FF; --accent-rgb:0,180,255; --accent-dim:rgba(0,180,255,.20);
+  --accent-soft:#5FD0FF; --accent-deep:#005F8F;
+  --secondary:#7B5CFF; --secondary-rgb:123,92,255; --secondary-dim:rgba(123,92,255,.18);
+  --card-bg:#060A10; --input-bg:#080D15; --line:#1B2533;
+  --surface-1:#0E1520; --surface-2:#141D2B; --surface-glass:rgba(20,29,43,.72); --surface-line:#1F2A3A;
+  --box-bg:#0E1520; --box-line:#1F2A3A;
+  --ring-1a:#00B4FF; --ring-1b:#7DDCFF; --ring-2a:#3D7DFF; --ring-2b:#9B7BFF; --ring-3a:#19D3C2; --ring-3b:#A6F3EA; --ring-over:#FF3D6E;
+  --sec-head:var(--text); --sec-muted:var(--muted); --sec-line:var(--line); --sec-card-border:var(--surface-line);
+  --sec-accent:var(--accent); --sec-accent-rgb:var(--accent-rgb);
+  --sec-secondary:var(--secondary); --sec-secondary-rgb:var(--secondary-rgb);
+  --sec-on-accent:var(--bg); --sec-on-secondary:var(--bg);
+}
+html[data-palette="trade"]:not([data-event-theme]):not([data-admin-theme="noir"]) body:not([data-theme="light"]) :is(.db-page, .db-cmd-root){
+  --ring-1a:#00B4FF; --ring-1b:#7DDCFF; --ring-2a:#3D7DFF; --ring-2b:#9B7BFF; --ring-3a:#19D3C2; --ring-3b:#A6F3EA; --ring-over:#FF3D6E;
+}
+html[data-palette="trade"]:not([data-event-theme]):not([data-admin-theme="noir"]) body:not([data-theme="light"]) .blog-root{
+  --b-head:var(--text); --b-muted:var(--muted); --b-line:var(--line); --b-border:var(--surface-line);
+  --b-acc:var(--accent); --b-acc-rgb:var(--accent-rgb);
+}
+html[data-palette="trade"]:not([data-event-theme]):not([data-admin-theme="noir"]) body[data-theme="light"]{
+  --bg:#E7EDF4; --bg-rgb:231,237,244;
+  --surface-rgb:247,250,253;
+  --text:#1C2B44; --text-rgb:28,43,68; --muted:#576982; --muted2:#9AA9BC;
+  --accent:#0A5BD6; --accent-rgb:10,91,214; --accent-dim:rgba(10,91,214,.14);
+  --accent-soft:#4A86E8; --accent-deep:#08306E;
+  --secondary:#0B1F3A; --secondary-rgb:11,31,58; --secondary-dim:rgba(11,31,58,.16);
+  --card-bg:#E1E8F1; --input-bg:#DCE4EE; --line:#D3DCE7;
+  --surface-1:#F6F9FC; --surface-2:#FFFFFF; --surface-glass:rgba(255,255,255,.72); --surface-line:#D8E1EB;
+  --box-bg:#F6F9FC; --box-line:#D8E1EB;
+  --ring-1a:#0A78D6; --ring-1b:#3DA5F0; --ring-2a:#2F55E0; --ring-2b:#7048E8; --ring-3a:#0E8F8A; --ring-3b:#2CC0B4; --ring-over:#D6204E;
+  --sec-head:var(--text); --sec-muted:var(--muted); --sec-line:var(--line); --sec-card-border:var(--surface-line);
+  --sec-accent:var(--accent); --sec-accent-rgb:var(--accent-rgb);
+  --sec-secondary:var(--accent); --sec-secondary-rgb:var(--accent-rgb);
+  --sec-on-accent:#fff; --sec-on-secondary:#fff;
+}
+html[data-palette="trade"]:not([data-event-theme]):not([data-admin-theme="noir"]) body[data-theme="light"] :is(.db-page, .db-cmd-root){
+  --ring-1a:#0A78D6; --ring-1b:#3DA5F0; --ring-2a:#2F55E0; --ring-2b:#7048E8; --ring-3a:#0E8F8A; --ring-3b:#2CC0B4; --ring-over:#D6204E;
+}
+html[data-palette="trade"]:not([data-event-theme]):not([data-admin-theme="noir"]) body[data-theme="light"] .blog-root{
+  --b-head:var(--text); --b-muted:var(--muted); --b-line:var(--line); --b-border:var(--surface-line);
+  --b-acc:var(--accent); --b-acc-rgb:var(--accent-rgb);
+}
+html[data-palette="trade"]:not([data-event-theme]):not([data-admin-theme="noir"]) body[data-theme="light"] .lh-rot-word,
+html[data-palette="trade"]:not([data-event-theme]):not([data-admin-theme="noir"]) body[data-theme="light"] .lh-brand{
+  background-image:linear-gradient(100deg, var(--accent), var(--accent-deep) 70%);
+}
+html[data-palette="trade"]:not([data-event-theme]):not([data-admin-theme="noir"]) body[data-theme="light"] .lh-phone{ background:linear-gradient(160deg, #2B3F5E, #0B1F3A 45%, #1C2F4D); }
+
+/* ── workout ── */
+html[data-palette="workout"]:not([data-event-theme]):not([data-admin-theme="noir"]):not([data-theme="light"]){ background:#0B0B0C; }
+html[data-palette="workout"]:not([data-event-theme]):not([data-admin-theme="noir"])[data-theme="light"]{ background:#F4F4F5; }
+html[data-palette="workout"]:not([data-event-theme]):not([data-admin-theme="noir"]) body:not([data-theme="light"]){
+  --bg:#0B0B0C; --bg-rgb:11,11,12;
+  --surface-rgb:11,11,12;
+  --text:#F2F2F3; --text-rgb:242,242,243; --muted:#9A9AA1; --muted2:#4A4A50;
+  --accent:#D21F3C; --accent-rgb:210,31,60; --accent-dim:rgba(210,31,60,.20);
+  --accent-soft:#E2475D; --accent-deep:#6E0816;
+  --secondary:#D9D9DE; --secondary-rgb:217,217,222; --secondary-dim:rgba(217,217,222,.16);
+  --card-bg:#080809; --input-bg:#0A0A0B; --line:#232326;
+  --surface-1:#141416; --surface-2:#1B1B1E; --surface-glass:rgba(27,27,30,.72); --surface-line:#29292D;
+  --box-bg:#141416; --box-line:#29292D;
+  --ring-1a:#B0142E; --ring-1b:#E0304A; --ring-2a:#6E0816; --ring-2b:#B0142E; --ring-3a:#9A9AA1; --ring-3b:#E6E6EA; --ring-over:#FF3B30;
+  --sec-head:var(--text); --sec-muted:var(--muted); --sec-line:var(--line); --sec-card-border:var(--surface-line);
+  --sec-accent:var(--accent); --sec-accent-rgb:var(--accent-rgb);
+  --sec-secondary:var(--secondary); --sec-secondary-rgb:var(--secondary-rgb);
+  --sec-on-accent:#FFFFFF; --sec-on-secondary:var(--bg);
+}
+html[data-palette="workout"]:not([data-event-theme]):not([data-admin-theme="noir"]) body:not([data-theme="light"]) :is(.db-page, .db-cmd-root){
+  --ring-1a:#B0142E; --ring-1b:#E0304A; --ring-2a:#6E0816; --ring-2b:#B0142E; --ring-3a:#9A9AA1; --ring-3b:#E6E6EA; --ring-over:#FF3B30;
+}
+html[data-palette="workout"]:not([data-event-theme]):not([data-admin-theme="noir"]) body:not([data-theme="light"]) .blog-root{
+  --b-head:var(--text); --b-muted:var(--muted); --b-line:var(--line); --b-border:var(--surface-line);
+  --b-acc:var(--accent); --b-acc-rgb:var(--accent-rgb);
+}
+html[data-palette="workout"]:not([data-event-theme]):not([data-admin-theme="noir"]) body[data-theme="light"]{
+  --bg:#F4F4F5; --bg-rgb:244,244,245;
+  --surface-rgb:255,255,255;
+  --text:#111113; --text-rgb:17,17,19; --muted:#5E5E66; --muted2:#A1A1A8;
+  --accent:#A50E2A; --accent-rgb:165,14,42; --accent-dim:rgba(165,14,42,.12);
+  --accent-soft:#C8102E; --accent-deep:#5C0614;
+  --secondary:#111113; --secondary-rgb:17,17,19; --secondary-dim:rgba(17,17,19,.14);
+  --card-bg:#EDEDEF; --input-bg:#E9E9EC; --line:#E2E2E5;
+  --surface-1:#FFFFFF; --surface-2:#FFFFFF; --surface-glass:rgba(255,255,255,.78); --surface-line:#E4E4E7;
+  --box-bg:#FFFFFF; --box-line:#E4E4E7;
+  --ring-1a:#A50E2A; --ring-1b:#D6203E; --ring-2a:#5C0614; --ring-2b:#A50E2A; --ring-3a:#2A2A2E; --ring-3b:#6B6B73; --ring-over:#E0201A;
+  --sec-head:var(--text); --sec-muted:var(--muted); --sec-line:var(--line); --sec-card-border:var(--surface-line);
+  --sec-accent:var(--accent); --sec-accent-rgb:var(--accent-rgb);
+  --sec-secondary:var(--secondary); --sec-secondary-rgb:var(--secondary-rgb);
+  --sec-on-accent:#fff; --sec-on-secondary:#fff;
+}
+html[data-palette="workout"]:not([data-event-theme]):not([data-admin-theme="noir"]) body[data-theme="light"] :is(.db-page, .db-cmd-root){
+  --ring-1a:#A50E2A; --ring-1b:#D6203E; --ring-2a:#5C0614; --ring-2b:#A50E2A; --ring-3a:#2A2A2E; --ring-3b:#6B6B73; --ring-over:#E0201A;
+}
+html[data-palette="workout"]:not([data-event-theme]):not([data-admin-theme="noir"]) body[data-theme="light"] .blog-root{
+  --b-head:var(--text); --b-muted:var(--muted); --b-line:var(--line); --b-border:var(--surface-line);
+  --b-acc:var(--accent); --b-acc-rgb:var(--accent-rgb);
+}
+html[data-palette="workout"]:not([data-event-theme]):not([data-admin-theme="noir"]) body[data-theme="light"] .lh-rot-word,
+html[data-palette="workout"]:not([data-event-theme]):not([data-admin-theme="noir"]) body[data-theme="light"] .lh-brand{
+  background-image:linear-gradient(100deg, var(--accent), var(--accent-deep) 70%);
+}
+html[data-palette="workout"]:not([data-event-theme]):not([data-admin-theme="noir"]) body[data-theme="light"] .lh-phone{ background:linear-gradient(160deg, #2A2A2E, #111113 45%, #1E1E22); }
+
+/* هاله‌ی دوم هیروی لندینگ در تم روز روتین زرد/طلاییه (components/landing-hero.css)؛
+   روی ترید و ورزش با رنگ لوکس همون بخش عوض می‌شه */
+html[data-palette="trade"]:not([data-event-theme]) body[data-theme="light"] .lh-aurora-b{
+  background:radial-gradient(closest-side, rgba(74,134,232,.20), rgba(74,134,232,0));
+}
+html[data-palette="workout"]:not([data-event-theme]):not([data-admin-theme="noir"]) body[data-theme="light"] .lh-aurora-a{
+  background:radial-gradient(closest-side, rgba(165,14,42,.10), rgba(165,14,42,0));
+}
+html[data-palette="workout"]:not([data-event-theme]):not([data-admin-theme="noir"]) body[data-theme="light"] .lh-aurora-b{
+  background:radial-gradient(closest-side, rgba(17,17,19,.06), rgba(17,17,19,0));
+}
+
+/* هاله‌ی پس‌زمینه‌ی ورزش خیلی کم‌رنگ‌تره: شب سیاه بمونه نه زرشکی گل‌آلود، روز سفید نه صورتی */
+html[data-palette="workout"]:not([data-event-theme]):not([data-admin-theme="noir"]) body .aurora-blob-a{
+  background:radial-gradient(circle at 40% 40%, rgba(var(--accent-rgb),.14), rgba(var(--accent-rgb),0) 70%);
+}
+html[data-palette="workout"]:not([data-event-theme]):not([data-admin-theme="noir"]) body .aurora-blob-b{
+  background:radial-gradient(circle at 60% 60%, rgba(var(--accent-rgb),.09), rgba(var(--accent-rgb),0) 70%);
+}
+
+/* >>> generated presets (scripts/gen-palette-css.ts) — دستی ویرایش نکن */
+/* ── amethyst ── */
+html[data-palette="amethyst"]:not([data-event-theme]):not([data-admin-theme="noir"]):not([data-theme="light"]){ background:#0D0A14; }
+html[data-palette="amethyst"]:not([data-event-theme]):not([data-admin-theme="noir"]) body:not([data-theme="light"]){
+  --bg:#0D0A14; --bg-rgb:13,10,20; --surface-rgb:13,10,20; --text:#F1ECFA;
+  --text-rgb:241,236,250; --muted:#9A90B0; --muted2:#4C4560; --accent:#A87BFF;
+  --accent-rgb:168,123,255; --accent-dim:rgba(168,123,255,0.2); --accent-soft:#C4A5FF; --accent-deep:#4A2A94;
+  --secondary:#E9C77B; --secondary-rgb:233,199,123; --secondary-dim:rgba(233,199,123,0.18); --card-bg:#0B0911;
+  --input-bg:#0E0B16; --line:#241C35; --surface-1:#161221; --surface-2:#1F192D;
+  --surface-glass:rgba(31,25,45,0.72); --surface-line:#28213B; --box-bg:#161221; --box-line:#28213B;
+  --sec-head:var(--text); --sec-muted:var(--muted); --sec-line:var(--line); --sec-card-border:var(--surface-line);
+  --sec-accent:var(--accent); --sec-accent-rgb:var(--accent-rgb); --sec-secondary:var(--secondary); --sec-secondary-rgb:var(--secondary-rgb);
+  --sec-on-accent:var(--bg); --sec-on-secondary:var(--bg);
+  --ring-1a:#A87BFF; --ring-1b:#D2B8FF; --ring-2a:#E9C77B; --ring-2b:#FFE3A6; --ring-3a:#FF6FB5; --ring-3b:#FFB3D9; --ring-over:#FF3D6E;
+}
+html[data-palette="amethyst"]:not([data-event-theme]):not([data-admin-theme="noir"]) body:not([data-theme="light"]) :is(.db-page, .db-cmd-root){
+  --ring-1a:#A87BFF; --ring-1b:#D2B8FF; --ring-2a:#E9C77B; --ring-2b:#FFE3A6; --ring-3a:#FF6FB5; --ring-3b:#FFB3D9; --ring-over:#FF3D6E;
+}
+html[data-palette="amethyst"]:not([data-event-theme]):not([data-admin-theme="noir"]) body:not([data-theme="light"]) .blog-root{
+  --b-head:var(--text); --b-muted:var(--muted); --b-line:var(--line); --b-border:var(--surface-line);
+  --b-acc:var(--accent); --b-acc-rgb:var(--accent-rgb);
+}
+html[data-palette="amethyst"]:not([data-event-theme]):not([data-admin-theme="noir"])[data-theme="light"]{ background:#ECE7F7; }
+html[data-palette="amethyst"]:not([data-event-theme]):not([data-admin-theme="noir"]) body[data-theme="light"]{
+  --bg:#ECE7F7; --bg-rgb:236,231,247; --surface-rgb:248,246,251; --text:#2B1D4A;
+  --text-rgb:43,29,74; --muted:#5F5380; --muted2:#A79CC4; --accent:#6B3FD1;
+  --accent-rgb:107,63,209; --accent-dim:rgba(107,63,209,0.14); --accent-soft:#8F68E0; --accent-deep:#3E1F85;
+  --secondary:#3B1A4F; --secondary-rgb:59,26,79; --secondary-dim:rgba(59,26,79,0.16); --card-bg:#E6DFF4;
+  --input-bg:#E0D8F2; --line:#DAD2EE; --surface-1:#F8F6FB; --surface-2:#FDFCFD;
+  --surface-glass:rgba(255,255,255,.72); --surface-line:#DDD5EF; --box-bg:#F8F6FB; --box-line:#DDD5EF;
+  --sec-head:var(--text); --sec-muted:var(--muted); --sec-line:var(--line); --sec-card-border:var(--surface-line);
+  --sec-accent:var(--accent); --sec-accent-rgb:var(--accent-rgb); --sec-secondary:var(--accent); --sec-secondary-rgb:var(--accent-rgb);
+  --sec-on-accent:#fff; --sec-on-secondary:#fff;
+  --ring-1a:#6B3FD1; --ring-1b:#9A74EE; --ring-2a:#A82E86; --ring-2b:#D866B6; --ring-3a:#B07A0E; --ring-3b:#D9A53A; --ring-over:#D6204E;
+}
+html[data-palette="amethyst"]:not([data-event-theme]):not([data-admin-theme="noir"]) body[data-theme="light"] :is(.db-page, .db-cmd-root){
+  --ring-1a:#6B3FD1; --ring-1b:#9A74EE; --ring-2a:#A82E86; --ring-2b:#D866B6; --ring-3a:#B07A0E; --ring-3b:#D9A53A; --ring-over:#D6204E;
+}
+html[data-palette="amethyst"]:not([data-event-theme]):not([data-admin-theme="noir"]) body[data-theme="light"] .blog-root{
+  --b-head:var(--text); --b-muted:var(--muted); --b-line:var(--line); --b-border:var(--surface-line);
+  --b-acc:var(--accent); --b-acc-rgb:var(--accent-rgb);
+}
+html[data-palette="amethyst"]:not([data-event-theme]):not([data-admin-theme="noir"]) body[data-theme="light"] .lh-rot-word, html[data-palette="amethyst"]:not([data-event-theme]):not([data-admin-theme="noir"]) body[data-theme="light"] .lh-brand{ background-image:linear-gradient(100deg, var(--accent), var(--accent-deep) 70%); }
+html[data-palette="amethyst"]:not([data-event-theme]):not([data-admin-theme="noir"]) body[data-theme="light"] .lh-phone{ background:linear-gradient(160deg, #5D297D, #3B1A4F 45%, #4C2266); }
+html[data-palette="amethyst"]:not([data-event-theme]) body[data-theme="light"] .lh-aurora-b{ background:radial-gradient(closest-side, rgba(143,104,224,0.2), rgba(143,104,224,0)); }
+html[data-palette="amethyst"] body:not([data-theme="light"]){ --logo-from:#C9A8FF; --logo-mid:#A87BFF; --logo-to:#7C5CE6; }
+html[data-palette="amethyst"] body[data-theme="light"]{ --logo-from:#9A74EE; --logo-mid:#6B3FD1; --logo-to:#4B2AA0; }
+
+/* ── sunset ── */
+html[data-palette="sunset"]:not([data-event-theme]):not([data-admin-theme="noir"]):not([data-theme="light"]){ background:#140E0B; }
+html[data-palette="sunset"]:not([data-event-theme]):not([data-admin-theme="noir"]) body:not([data-theme="light"]){
+  --bg:#140E0B; --bg-rgb:20,14,11; --surface-rgb:20,14,11; --text:#F8EDE4;
+  --text-rgb:248,237,228; --muted:#B09A8A; --muted2:#62504A; --accent:#FF8A3D;
+  --accent-rgb:255,138,61; --accent-dim:rgba(255,138,61,0.2); --accent-soft:#FFB27A; --accent-deep:#8A3A0A;
+  --secondary:#FF5E7E; --secondary-rgb:255,94,126; --secondary-dim:rgba(255,94,126,0.18); --card-bg:#110C0A;
+  --input-bg:#160F0C; --line:#34251E; --surface-1:#201713; --surface-2:#2D211B;
+  --surface-glass:rgba(45,33,27,0.72); --surface-line:#392A23; --box-bg:#201713; --box-line:#392A23;
+  --sec-head:var(--text); --sec-muted:var(--muted); --sec-line:var(--line); --sec-card-border:var(--surface-line);
+  --sec-accent:var(--accent); --sec-accent-rgb:var(--accent-rgb); --sec-secondary:var(--secondary); --sec-secondary-rgb:var(--secondary-rgb);
+  --sec-on-accent:var(--bg); --sec-on-secondary:var(--bg);
+  --ring-1a:#FF8A3D; --ring-1b:#FFC08A; --ring-2a:#FF5E7E; --ring-2b:#FFA0B4; --ring-3a:#FFC93D; --ring-3b:#FFE48A; --ring-over:#FF4040;
+}
+html[data-palette="sunset"]:not([data-event-theme]):not([data-admin-theme="noir"]) body:not([data-theme="light"]) :is(.db-page, .db-cmd-root){
+  --ring-1a:#FF8A3D; --ring-1b:#FFC08A; --ring-2a:#FF5E7E; --ring-2b:#FFA0B4; --ring-3a:#FFC93D; --ring-3b:#FFE48A; --ring-over:#FF4040;
+}
+html[data-palette="sunset"]:not([data-event-theme]):not([data-admin-theme="noir"]) body:not([data-theme="light"]) .blog-root{
+  --b-head:var(--text); --b-muted:var(--muted); --b-line:var(--line); --b-border:var(--surface-line);
+  --b-acc:var(--accent); --b-acc-rgb:var(--accent-rgb);
+}
+html[data-palette="sunset"]:not([data-event-theme]):not([data-admin-theme="noir"])[data-theme="light"]{ background:#FCEBDC; }
+html[data-palette="sunset"]:not([data-event-theme]):not([data-admin-theme="noir"]) body[data-theme="light"]{
+  --bg:#FCEBDC; --bg-rgb:252,235,220; --surface-rgb:253,248,244; --text:#3A2216;
+  --text-rgb:58,34,22; --muted:#7A5A47; --muted2:#C2A592; --accent:#B04E0D;
+  --accent-rgb:176,78,13; --accent-dim:rgba(176,78,13,0.14); --accent-soft:#D8782F; --accent-deep:#6E2A04;
+  --secondary:#3B2418; --secondary-rgb:59,36,24; --secondary-dim:rgba(59,36,24,0.16); --card-bg:#FBE6D3;
+  --input-bg:#FAE0C9; --line:#F7DBC3; --surface-1:#FDF8F4; --surface-2:#FEFDFC;
+  --surface-glass:rgba(255,255,255,.72); --surface-line:#F7DEC7; --box-bg:#FDF8F4; --box-line:#F7DEC7;
+  --sec-head:var(--text); --sec-muted:var(--muted); --sec-line:var(--line); --sec-card-border:var(--surface-line);
+  --sec-accent:var(--accent); --sec-accent-rgb:var(--accent-rgb); --sec-secondary:var(--accent); --sec-secondary-rgb:var(--accent-rgb);
+  --sec-on-accent:#fff; --sec-on-secondary:#fff;
+  --ring-1a:#B04E0D; --ring-1b:#E8863E; --ring-2a:#C42B52; --ring-2b:#EC6E8C; --ring-3a:#A8780A; --ring-3b:#D9A53A; --ring-over:#D6204E;
+}
+html[data-palette="sunset"]:not([data-event-theme]):not([data-admin-theme="noir"]) body[data-theme="light"] :is(.db-page, .db-cmd-root){
+  --ring-1a:#B04E0D; --ring-1b:#E8863E; --ring-2a:#C42B52; --ring-2b:#EC6E8C; --ring-3a:#A8780A; --ring-3b:#D9A53A; --ring-over:#D6204E;
+}
+html[data-palette="sunset"]:not([data-event-theme]):not([data-admin-theme="noir"]) body[data-theme="light"] .blog-root{
+  --b-head:var(--text); --b-muted:var(--muted); --b-line:var(--line); --b-border:var(--surface-line);
+  --b-acc:var(--accent); --b-acc-rgb:var(--accent-rgb);
+}
+html[data-palette="sunset"]:not([data-event-theme]):not([data-admin-theme="noir"]) body[data-theme="light"] .lh-rot-word, html[data-palette="sunset"]:not([data-event-theme]):not([data-admin-theme="noir"]) body[data-theme="light"] .lh-brand{ background-image:linear-gradient(100deg, var(--accent), var(--accent-deep) 70%); }
+html[data-palette="sunset"]:not([data-event-theme]):not([data-admin-theme="noir"]) body[data-theme="light"] .lh-phone{ background:linear-gradient(160deg, #673F2A, #3B2418 45%, #513121); }
+html[data-palette="sunset"]:not([data-event-theme]) body[data-theme="light"] .lh-aurora-b{ background:radial-gradient(closest-side, rgba(216,120,47,0.2), rgba(216,120,47,0)); }
+html[data-palette="sunset"] body:not([data-theme="light"]){ --logo-from:#FFB27A; --logo-mid:#FF8A3D; --logo-to:#FF5E7E; }
+html[data-palette="sunset"] body[data-theme="light"]{ --logo-from:#E8863E; --logo-mid:#B04E0D; --logo-to:#8F3306; }
+
+/* ── graphite ── */
+html[data-palette="graphite"]:not([data-event-theme]):not([data-admin-theme="noir"]):not([data-theme="light"]){ background:#101113; }
+html[data-palette="graphite"]:not([data-event-theme]):not([data-admin-theme="noir"]) body:not([data-theme="light"]){
+  --bg:#101113; --bg-rgb:16,17,19; --surface-rgb:16,17,19; --text:#ECEEF0;
+  --text-rgb:236,238,240; --muted:#8D9399; --muted2:#474B50; --accent:#E6E8EB;
+  --accent-rgb:230,232,235; --accent-dim:rgba(230,232,235,0.2); --accent-soft:#FFFFFF; --accent-deep:#6B7280;
+  --secondary:#8FA3B8; --secondary-rgb:143,163,184; --secondary-dim:rgba(143,163,184,0.18); --card-bg:#0E0F11;
+  --input-bg:#111215; --line:#282A2E; --surface-1:#1A1B1E; --surface-2:#232529;
+  --surface-glass:rgba(35,37,41,0.72); --surface-line:#2D2F34; --box-bg:#1A1B1E; --box-line:#2D2F34;
+  --sec-head:var(--text); --sec-muted:var(--muted); --sec-line:var(--line); --sec-card-border:var(--surface-line);
+  --sec-accent:var(--accent); --sec-accent-rgb:var(--accent-rgb); --sec-secondary:var(--secondary); --sec-secondary-rgb:var(--secondary-rgb);
+  --sec-on-accent:var(--bg); --sec-on-secondary:var(--bg);
+  --ring-1a:#D4D8DD; --ring-1b:#FFFFFF; --ring-2a:#6E8CA8; --ring-2b:#A9C1D8; --ring-3a:#5E9AA0; --ring-3b:#9CCDD2; --ring-over:#FF5C5C;
+}
+html[data-palette="graphite"]:not([data-event-theme]):not([data-admin-theme="noir"]) body:not([data-theme="light"]) :is(.db-page, .db-cmd-root){
+  --ring-1a:#D4D8DD; --ring-1b:#FFFFFF; --ring-2a:#6E8CA8; --ring-2b:#A9C1D8; --ring-3a:#5E9AA0; --ring-3b:#9CCDD2; --ring-over:#FF5C5C;
+}
+html[data-palette="graphite"]:not([data-event-theme]):not([data-admin-theme="noir"]) body:not([data-theme="light"]) .blog-root{
+  --b-head:var(--text); --b-muted:var(--muted); --b-line:var(--line); --b-border:var(--surface-line);
+  --b-acc:var(--accent); --b-acc-rgb:var(--accent-rgb);
+}
+html[data-palette="graphite"]:not([data-event-theme]):not([data-admin-theme="noir"])[data-theme="light"]{ background:#E9ECEF; }
+html[data-palette="graphite"]:not([data-event-theme]):not([data-admin-theme="noir"]) body[data-theme="light"]{
+  --bg:#E9ECEF; --bg-rgb:233,236,239; --surface-rgb:248,249,250; --text:#111827;
+  --text-rgb:17,24,39; --muted:#4B5563; --muted2:#9CA3AF; --accent:#1F2937;
+  --accent-rgb:31,41,55; --accent-dim:rgba(31,41,55,0.14); --accent-soft:#4B5563; --accent-deep:#0B1220;
+  --secondary:#475569; --secondary-rgb:71,85,105; --secondary-dim:rgba(71,85,105,0.16); --card-bg:#E3E7EB;
+  --input-bg:#DDE2E6; --line:#D8DDE2; --surface-1:#F8F9FA; --surface-2:#FDFDFD;
+  --surface-glass:rgba(255,255,255,.72); --surface-line:#DBDFE4; --box-bg:#F8F9FA; --box-line:#DBDFE4;
+  --sec-head:var(--text); --sec-muted:var(--muted); --sec-line:var(--line); --sec-card-border:var(--surface-line);
+  --sec-accent:var(--accent); --sec-accent-rgb:var(--accent-rgb); --sec-secondary:var(--accent); --sec-secondary-rgb:var(--accent-rgb);
+  --sec-on-accent:#fff; --sec-on-secondary:#fff;
+  --ring-1a:#374151; --ring-1b:#6B7280; --ring-2a:#3B6A9A; --ring-2b:#6C9BCB; --ring-3a:#2F7F86; --ring-3b:#4DB0B8; --ring-over:#D6204E;
+}
+html[data-palette="graphite"]:not([data-event-theme]):not([data-admin-theme="noir"]) body[data-theme="light"] :is(.db-page, .db-cmd-root){
+  --ring-1a:#374151; --ring-1b:#6B7280; --ring-2a:#3B6A9A; --ring-2b:#6C9BCB; --ring-3a:#2F7F86; --ring-3b:#4DB0B8; --ring-over:#D6204E;
+}
+html[data-palette="graphite"]:not([data-event-theme]):not([data-admin-theme="noir"]) body[data-theme="light"] .blog-root{
+  --b-head:var(--text); --b-muted:var(--muted); --b-line:var(--line); --b-border:var(--surface-line);
+  --b-acc:var(--accent); --b-acc-rgb:var(--accent-rgb);
+}
+html[data-palette="graphite"]:not([data-event-theme]):not([data-admin-theme="noir"]) body[data-theme="light"] .lh-rot-word, html[data-palette="graphite"]:not([data-event-theme]):not([data-admin-theme="noir"]) body[data-theme="light"] .lh-brand{ background-image:linear-gradient(100deg, var(--accent), var(--accent-deep) 70%); }
+html[data-palette="graphite"]:not([data-event-theme]):not([data-admin-theme="noir"]) body[data-theme="light"] .lh-phone{ background:linear-gradient(160deg, #60738E, #475569 45%, #53647B); }
+html[data-palette="graphite"]:not([data-event-theme]) body[data-theme="light"] .lh-aurora-b{ background:radial-gradient(closest-side, rgba(75,85,99,0.2), rgba(75,85,99,0)); }
+html[data-palette="graphite"] body:not([data-theme="light"]){ --logo-from:#FFFFFF; --logo-mid:#E6E8EB; --logo-to:#8FA3B8; }
+html[data-palette="graphite"] body[data-theme="light"]{ --logo-from:#6B7280; --logo-mid:#374151; --logo-to:#1F2937; }
+/* <<< generated presets */
+
+

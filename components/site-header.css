@@ -206,8 +206,6 @@ body[data-theme] .topbar-logo-lockup-wrap{
   direction:ltr; display:inline-flex; align-items:center; gap:6px;
   height:auto; aspect-ratio:auto; min-width:0;
 }
-.tl-apex{ position:relative; display:block; flex-shrink:0; height:22px; aspect-ratio:256/63; }
-@media (min-width:701px){ .tl-apex{ height:30px; } }
 .tl-chev{
   flex-shrink:0; display:block; width:13px; height:13px; background:none;
   color:var(--muted); opacity:.85; transform-origin:50% 50%;
@@ -217,20 +215,24 @@ body[data-theme] .topbar-logo-lockup-wrap{
 @media (hover:hover){ .topbar-logo-lockup-wrap:hover .tl-chev{ color:var(--text); } }
 @media (prefers-reduced-motion:reduce){ .tl-chev{ transition:none; } }
 
-/* روی زیردامنه‌ی بخش: [ARION] | [TRADE] + فلش (بدون نشان A؛ نشان فقط در ردیف‌های پنجره‌ی
-   بخش‌ها می‌مونه). همه‌ی اندازه‌ها نسبت به --tl-h. متن بخش گرادیان رنگ همون بخشه.
-   اسم ARION روی موبایل هم دیده می‌شه و با کوچک‌شدن --tl-h کوچیک می‌شه؛ سقف عرض
-   (100vw - 236px) جا برای ردیف دکمه‌های سمت دیگه‌ی هدر (حتی کاربر واردشده: همبرگر،
-   پروفایل، زنگوله، استریک) رو نگه می‌داره. */
+/* روی زیردامنه‌ی بخش، همیشه چپ به راست. دسکتاپ (بیشتر از 700px): [ARION] | [TRADE] + فلش (بدون نشان A).
+   موبایل (حداکثر 700px): [نشان A رنگی بخش] | [TRADE] + فلش؛ حروف ARION حذف می‌شن تا جا بشه. نشان با
+   پالت صریح همون .logo-tint دامنه‌ی اصلی می‌شه (palette-themes.css). همه‌ی اندازه‌ها نسبت به --tl-h.
+   متن بخش گرادیان رنگ همون بخشه. سقف عرض (100vw - 236px) جا برای ردیف دکمه‌های سمت دیگه‌ی هدر
+   (کاربر واردشده: همبرگر، پروفایل، زنگوله، استریک؛ مهمان: ورود + زبان) رو نگه می‌داره. */
 body[data-theme] .topbar-logo-lockup-wrap.topbar-logo-section{
   --tl-h:22px;
-  /* ترتیب لوگو همیشه چپ به راست، مثل طرح رسمی (ARION | TRADE)، حتی روی صفحه‌ی rtl */
   gap:calc(var(--tl-h) * .3);
   max-width:calc(100vw - 236px); flex-shrink:1;
   font-family:var(--font-latin), var(--font-vazir), sans-serif;
 }
 @media (min-width:701px){ body[data-theme] .topbar-logo-lockup-wrap.topbar-logo-section{ --tl-h:30px; max-width:none; } }
 .tls-word{ position:relative; display:block; flex-shrink:0; height:calc(var(--tl-h) * .4); aspect-ratio:358/49; }
+.tls-icon{ display:none; position:relative; flex-shrink:0; height:var(--tl-h); aspect-ratio:256/217; }
+.tls-icon picture{ display:block; width:100%; height:100%; }
+.tls-icon img{ display:block; width:100%; height:100%; }
+/* پالت صریح: همون A هم‌رنگ پالت به‌جای نشان رنگ بخش */
+html[data-palette-set]:not([data-palette="routine"]) .tls-icon picture{ display:none; }
 .tls-sep{ flex-shrink:0; width:1px; height:calc(var(--tl-h) * .64); background:color-mix(in srgb, var(--text) 30%, transparent); }
 .tls-label{
   min-width:0; overflow:hidden; text-overflow:ellipsis; white-space:nowrap;
@@ -240,19 +242,27 @@ body[data-theme] .topbar-logo-lockup-wrap.topbar-logo-section{
   -webkit-background-clip:text; background-clip:text;
   -webkit-text-fill-color:transparent; color:transparent;
 }
-/* موبایل: کل قفل کوچیک‌تر می‌شه (نه اینکه ARION حذف بشه) تا در 360px با ردیف دکمه‌ها
-   (حتی کاربر واردشده) جا بشه: بلندترین بخش (WORKOUT) در 360px حدود 112px عرض داره. */
+/* موبایل: نشان + خط + اسم بخش. عرض واقعی بلندترین (WORKOUT، حدود 5.41em + حرف‌فاصله) در 360px
+   با --tl-h:20px: نشان 23.6 + سه فاصله 15.6 + خط 1 + فلش 10 + متن حدود 62 = حدود 112px از سقف 124px. */
+@media (max-width:700px){
+  .tls-word{ display:none; }
+  .tls-icon{ display:block; }
+  body[data-theme] .topbar-logo-lockup-wrap.topbar-logo-section{ --tl-h:26px; gap:calc(var(--tl-h) * .26); }
+  .topbar-logo-section .tls-label{ font-size:calc(var(--tl-h) * .46); letter-spacing:.14em; }
+}
 @media (max-width:520px){
-  body[data-theme] .topbar-logo-lockup-wrap.topbar-logo-section{ --tl-h:18px; }
+  body[data-theme] .topbar-logo-lockup-wrap.topbar-logo-section{ --tl-h:22px; }
+  .topbar-logo-section .tls-label{ font-size:calc(var(--tl-h) * .46); letter-spacing:.12em; }
   .app-topbar .topbar-actions{ gap:6px; }
 }
 @media (max-width:420px){
-  body[data-theme] .topbar-logo-lockup-wrap.topbar-logo-section{ --tl-h:16px; }
-  .topbar-logo-section .tls-label{ letter-spacing:.14em; }
+  body[data-theme] .topbar-logo-lockup-wrap.topbar-logo-section{ --tl-h:20px; }
+  .topbar-logo-section .tls-label{ font-size:calc(var(--tl-h) * .5); letter-spacing:.1em; }
   .topbar-logo-section .tl-chev{ width:10px; height:10px; }
   .app-topbar .topbar-actions{ gap:4px; }
 }
 @media (max-width:340px){
-  body[data-theme] .topbar-logo-lockup-wrap.topbar-logo-section{ --tl-h:14px; }
-  .topbar-logo-section .tls-label{ letter-spacing:.1em; }
+  body[data-theme] .topbar-logo-lockup-wrap.topbar-logo-section{ --tl-h:16px; }
+  .topbar-logo-section .tls-label{ font-size:calc(var(--tl-h) * .5); letter-spacing:.04em; }
+  .topbar-logo-section .tl-chev{ width:9px; height:9px; }
 }

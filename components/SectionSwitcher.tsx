@@ -3,33 +3,34 @@
 // پنجره‌ی جابه‌جایی بین بخش‌های آریون (روتین / ترید / ورزش) که با زدن لوگوی هدر باز می‌شه.
 // فقط با اولین کلیک روی لوگو لود می‌شه (NavDrawer، dynamic) و به بادی پورتال می‌شه — چون
 // .app-topbar خودش backdrop-filter داره و شیشه‌ی داخلش بلور واقعی نمی‌گرفت.
-// ناوبری: وقتی زیردامنه‌ها روشنن بین بخش‌ها ناوبری *کامل* (لینک واقعی به origin بخش)،
-// وگرنه ناوبری کلاینتی به صفحه‌ی اصلی همون بخش. قرارداد: lib/sections.ts
+// ناوبری: دامنه هیچ‌وقت عوض نمی‌شه (تا اپ نصب‌شده‌ی PWA از scope بیرون نیفته). انتخاب بخش جدید
+// کوکی host-only `arion_section` رو ست می‌کنه و ناوبری *کامل* روی همون origin به داشبورد (واردشده)
+// یا صفحه‌ی اصلی (مهمان) می‌کنه؛ بخش جاری ناوبری کلاینتی به همون مقصده. قرارداد: lib/sections.ts
 import { useCallback, useEffect, useLayoutEffect, useRef, useState } from "react";
 import { createPortal } from "react-dom";
-import Image from "next/image";
 import { SmartLink as Link } from "./SmartLink";
 import { tr } from "@/lib/i18n";
-import { SECTION_META, isSectionHostingEnabled, sectionUrl, type SectionKey } from "@/lib/sections";
+import { SECTION_META, type SectionKey } from "@/lib/sections";
+import { switchSectionAndGo } from "@/lib/sectionClient";
+import { sectionWordmarkSm } from "@/lib/sectionAssets";
+import { useTheme } from "./ThemeProvider";
 import "./section-switcher.css";
 
 type Props = {
   state: "open" | "closed";
   anchorRef: React.RefObject<HTMLElement>;
-  section: SectionKey | null;
+  section: SectionKey;
   signedIn: boolean;
   onClose: () => void;
 };
 
-// وقتی زیردامنه‌ها خاموشن (یک دامنه) هر بخش به صفحه‌ی اصلی خودش می‌ره
-const FALLBACK_HOME: Record<SectionKey, string> = { routine: "/weekly", trade: "/trade", workout: "/exercise" };
-
 // ترتیب طرح رسمی: ترید، ورزش، روتین
 const ORDER: readonly SectionKey[] = ["trade", "workout", "routine"];
 
-const PANEL_MAX = 232;
+// تخمین عرض پنل (خود پنل با CSS به اندازه‌ی محتوا درمیاد) فقط برای جا دادن در لبه‌ی صفحه
+const PANEL_MAX = 176;
 const EDGE = 12;
-const GAP = 6;
+const GAP = 5;
 
 type Pos = { top: number; left: number; width: number; originX: number };
 
@@ -48,10 +49,10 @@ function measure(anchor: HTMLElement | null): Pos {
 export default function SectionSwitcher({ state, anchorRef, section, signedIn, onClose }: Props) {
   const panelRef = useRef<HTMLDivElement>(null);
   const [pos, setPos] = useState<Pos>(() => measure(anchorRef.current));
-  const hosting = isSectionHostingEnabled();
-  const origin = typeof window === "undefined" ? undefined : window.location.origin;
   const home = signedIn ? "/dashboard" : "/";
   const open = state === "open";
+  const { theme } = useTheme();
+  const wordmarkSrc = sectionWordmarkSm(theme === "light" ? "light" : "dark");
 
   useLayoutEffect(() => { setPos(measure(anchorRef.current)); }, [anchorRef]);
   useEffect(() => {
@@ -102,15 +103,13 @@ export default function SectionSwitcher({ state, anchorRef, section, signedIn, o
     else if (e.key === "Tab") { e.preventDefault(); restoreFocus(); onClose(); }
   }
 
-  function rowProps(key: SectionKey) {
-    const current = section === key;
-    // بخش جاری یا وقتی زیردامنه‌ها خاموشن: ناوبری کلاینتی؛ بین بخش‌ها: لینک واقعی (بارگذاری کامل)
-    if (current) return { client: true as const, href: home };
-    if (hosting) return { client: false as const, href: sectionUrl(key, home, origin) };
-    return { client: true as const, href: FALLBACK_HOME[key] };
+  // کلیک روی بخش دیگه: کوکی + ناوبری کامل روی همین دامنه؛ کلیک میانی/Ctrl همون لینک ساده‌ی مقصد رو باز می‌کنه
+  function onPick(e: React.MouseEvent, key: SectionKey) {
+    onClose();
+    if (e.defaultPrevented || e.button !== 0 || e.metaKey || e.ctrlKey || e.shiftKey || e.altKey) return;
+    e.preventDefault();
+    switchSectionAndGo(key, home);
   }
-
-  const common = { "data-ssw-item": "", tabIndex: -1, onClick: onClose } as const;
 
   return createPortal(
     <div
@@ -124,7 +123,6 @@ export default function SectionSwitcher({ state, anchorRef, section, signedIn, o
       style={{
         top: pos.top,
         left: pos.left,
-        width: pos.width,
         ["--ssw-origin" as string]: `${pos.originX}px 0`,
         // رنگ هر بخش برای هاله‌ی پس‌زمینه‌ی شیشه
         ["--ssw-routine" as string]: SECTION_META.routine.colors.mid,
@@ -136,14 +134,10 @@ export default function SectionSwitcher({ state, anchorRef, section, signedIn, o
         {ORDER.map((key, i) => {
           const meta = SECTION_META[key];
           const current = section === key;
-          const rp = rowProps(key);
           const inner = (
             <>
-              <Image src={meta.icon} alt="" width={256} height={217} className="ssw-icon" />
-              <span className="ssw-wm" aria-hidden="true">
-                <Image src="/images/sections/wordmark-dark.png" alt="" width={358} height={49} className="ssw-wm-dark" />
-                <Image src="/images/sections/wordmark-light.webp" alt="" width={328} height={46} className="ssw-wm-light" />
-              </span>
+              {/* دقیقا همون لوگوی هدر: تصویر حروف ARION تم جاری + خط نازک + اسم بخش به رنگ همون بخش، همیشه چپ به راست */}
+              <img className="ssw-brand" src={wordmarkSrc} alt="" width={264} height={36} loading="eager" decoding="sync" draggable={false} aria-hidden="true" />
               <span className="ssw-sep" aria-hidden="true" />
               <span className="ssw-word" aria-hidden="true">{meta.wordmark}</span>
             </>
@@ -161,10 +155,10 @@ export default function SectionSwitcher({ state, anchorRef, section, signedIn, o
             "aria-checked": current,
             "aria-current": current ? ("true" as const) : undefined,
           };
-          return rp.client ? (
-            <Link key={key} href={rp.href} className={cls} style={style} {...aria} {...common}>{inner}</Link>
+          return current ? (
+            <Link key={key} href={home} className={cls} style={style} {...aria} data-ssw-item="" tabIndex={-1} onClick={onClose}>{inner}</Link>
           ) : (
-            <a key={key} href={rp.href} className={cls} style={style} {...aria} {...common}>{inner}</a>
+            <a key={key} href={home} className={cls} style={style} {...aria} data-ssw-item="" tabIndex={-1} onClick={(e) => onPick(e, key)}>{inner}</a>
           );
         })}
       </div>
