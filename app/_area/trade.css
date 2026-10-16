@@ -2360,7 +2360,8 @@ html[data-perf-weak] .th-skel::after{ animation:none; }
   .th-kpi{ min-height:0; padding:14px; gap:4px; border-radius:18px; }
   .th-kl{ font-size:11.5px; }
   .th-kv{ font-size:22px; }
-  .th-ks, .th-kring, .th-skel-ks, .th-kl .th-dot{ display:none; }
+  .th-ks, .th-kring, .th-skel-ks{ display:none; }
+  .th-kpi.is-alert .th-ks{ display:block; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
   .th-d{ display:none; }
   .th-m{ display:inline; }
   .trade-primary-btn.th-cta-mob{ display:flex; width:100%; height:50px; border-radius:16px; font-size:15px; }

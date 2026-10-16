@@ -176,9 +176,8 @@ function HubBody({ data, loading, now, show, riskPrefs, onExpire, mobileCta }: {
             <Kpi
               loading={loading}
               alert={!!news}
-              label={<span className="th-lbl"><span className="th-dot is-high" aria-hidden="true" />{tr("خبر مهم بعدی", "Next major news")}</span>}
-              labelMob={news ? tr(`${news.title} تا`, `${news.title} in`) : tr("خبر مهم بعدی", "Next major news")}
-              value={news ? <Num><NewsCountdown iso={news.occursAt} onExpire={onExpire} /></Num> : "—"}
+              label={<span className="th-lbl"><span className="th-dot is-high" aria-hidden="true" />{tr("خبر مهم بعدی", "Next key news")}</span>}
+              value={news ? <NewsCountdown iso={news.occursAt} onExpire={onExpire} /> : "—"}
               sub={news ? <><bdi dir="ltr">{news.title}</bdi> · <bdi dir="ltr">{news.currency}</bdi></> : tr("خبر مهمی در پیش نیست", "No major news ahead")}
             />
           )}

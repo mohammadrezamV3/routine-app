@@ -73,15 +73,25 @@ export const DEFAULT_CHART_SYMBOLS = ["XAUUSD", "EURUSD", "GBPJPY", "BTCUSD"];
 
 // ── شمارش معکوس و زمان ───────────────────────────────────────
 
-/** `01:42:10` یا (بیشتر از یک روز) `2d 04:10` — ارقام لاتین. compact = بدون ثانیه */
-export function formatCountdown(ms: number, compact = false): string {
+export type CountdownParts =
+  | { kind: "clock"; text: string }
+  | { kind: "days"; days: number; hours: number };
+
+/** کمتر از 24 ساعت: ساعت:دقیقه:ثانیه (compact: بدون ثانیه)؛ 24 ساعت یا بیشتر: روز + ساعت بدون رقم ساعت‌شمار */
+export function countdownParts(ms: number, compact = false): CountdownParts {
   const total = Math.max(0, Math.floor(ms / 1000));
   const d = Math.floor(total / 86400);
   const h = Math.floor((total % 86400) / 3600);
   const m = Math.floor((total % 3600) / 60);
   const s = total % 60;
-  if (d >= 1) return tr(`${d} روز و ${pad2(h)}:${pad2(m)}`, `${d}d ${pad2(h)}:${pad2(m)}`);
-  return compact ? `${pad2(h)}:${pad2(m)}` : `${pad2(h)}:${pad2(m)}:${pad2(s)}`;
+  if (d >= 1) return { kind: "days", days: d, hours: h };
+  return { kind: "clock", text: compact ? `${pad2(h)}:${pad2(m)}` : `${pad2(h)}:${pad2(m)}:${pad2(s)}` };
+}
+
+/** متن ساده‌ی شمارش معکوس: `01:42:10` یا `2 روز و 17 ساعت` / `2d 17h` — ارقام لاتین */
+export function formatCountdown(ms: number, compact = false): string {
+  const p = countdownParts(ms, compact);
+  return p.kind === "clock" ? p.text : tr(`${p.days} روز و ${p.hours} ساعت`, `${p.days}d ${p.hours}h`);
 }
 
 export function hhmm(d: Date): string {

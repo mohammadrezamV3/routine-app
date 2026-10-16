@@ -1,6 +1,6 @@
-import { describe, it, expect } from "vitest";
+import { describe, it, expect, afterEach } from "vitest";
 import {
-  accountGrowthPct, agoLabel, dayDiff, eventWhenLabel, formatCountdown, formatHubMoney, formatPct,
+  accountGrowthPct, agoLabel, countdownParts, dayDiff, eventWhenLabel, formatCountdown, formatHubMoney, formatPct,
   liveSessionPill, noteExcerpt, pickChartSymbols, relativeDayLabel, sessionTimeline,
 } from "@/lib/tradeHubCompute";
 
@@ -76,8 +76,27 @@ describe("formatCountdown", () => {
   it("منفی صفر می‌شود", () => {
     expect(formatCountdown(-5000)).toBe("00:00:00");
   });
-  it("بیشتر از یک روز با روز نمایش داده می‌شود", () => {
-    expect(formatCountdown((2 * 86400 + 4 * 3600 + 10 * 60) * 1000)).toMatch(/2.*04:10/);
+  it("24 ساعت یا بیشتر: روز و ساعت بدون رقم ساعت‌شمار (فارسی)", () => {
+    expect(formatCountdown((2 * 86400 + 17 * 3600 + 3 * 60 + 9) * 1000)).toBe("2 روز و 17 ساعت");
+    expect(formatCountdown((2 * 86400 + 17 * 3600) * 1000, true)).toBe("2 روز و 17 ساعت");
+    expect(formatCountdown(24 * 3600 * 1000)).toBe("1 روز و 0 ساعت");
+  });
+  it("کمتر از 24 ساعت همچنان ساعت:دقیقه:ثانیه", () => {
+    expect(formatCountdown((23 * 3600 + 59 * 60 + 59) * 1000)).toBe("23:59:59");
+    expect(countdownParts((23 * 3600 + 59 * 60 + 59) * 1000)).toEqual({ kind: "clock", text: "23:59:59" });
+  });
+  it("countdownParts: روز و ساعت", () => {
+    expect(countdownParts((3 * 86400 + 5 * 3600 + 59 * 60) * 1000)).toEqual({ kind: "days", days: 3, hours: 5 });
+  });
+  describe("انگلیسی", () => {
+    const g = globalThis as Record<string, unknown>;
+    const KEY = "__arionLocaleGetter";
+    afterEach(() => { delete g[KEY]; });
+    it("2d 17h و ساعت‌شمار", () => {
+      g[KEY] = () => "en";
+      expect(formatCountdown((2 * 86400 + 17 * 3600 + 3 * 60) * 1000)).toBe("2d 17h");
+      expect(formatCountdown((1 * 3600 + 42 * 60 + 10) * 1000)).toBe("01:42:10");
+    });
   });
 });
 

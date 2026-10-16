@@ -8,8 +8,8 @@ import { useEffect, useMemo, useRef, useState } from "react";
 import { ChevronLeft, Clock } from "lucide-react";
 import { SmartLink as Link } from "@/components/SmartLink";
 import { GradientRing, RING_BLUE } from "@/components/GradientRing";
-import { formatCountdown, sessionTimeline } from "@/lib/tradeHubCompute";
-import { tr } from "@/lib/i18n";
+import { countdownParts, sessionTimeline } from "@/lib/tradeHubCompute";
+import { isEn, tr } from "@/lib/i18n";
 
 export function Skel({ w = "100%", h = 12, className = "" }: { w?: number | string; h?: number; className?: string }) {
   return <span className={`th-skel ${className}`} style={{ width: w, height: h }} aria-hidden="true" />;
@@ -114,12 +114,22 @@ export function NewsCountdown({ iso, onExpire }: { iso: string; onExpire: () => 
     const id = setInterval(() => setT(Date.now()), 1000);
     return () => clearInterval(id);
   }, [iso]);
+  const en = isEn();
   const left = t === null ? null : Date.parse(iso) - t;
   useEffect(() => {
     if (left !== null && left <= 0 && fired.current !== iso) { fired.current = iso; onExpire(); }
   }, [left, iso, onExpire]);
-  if (left === null) return <>{"--:--:--"}</>;
-  return <><span className="th-d">{formatCountdown(left)}</span><span className="th-m">{formatCountdown(left, true)}</span></>;
+  if (left === null) return <bdi dir="ltr">{"--:--:--"}</bdi>;
+  // کمتر از 24 ساعت: ساعت‌شمار چپ‌به‌راست؛ بیشتر: «روز و ساعت» با هر عدد در جزیره‌ی bidi
+  // تا ترتیب کلمه و عدد در RTL بهم نخوره
+  const render = (compact: boolean) => {
+    const p = countdownParts(left, compact);
+    if (p.kind === "clock") return <bdi dir="ltr">{p.text}</bdi>;
+    return en
+      ? <><bdi dir="ltr">{p.days}d</bdi> <bdi dir="ltr">{p.hours}h</bdi></>
+      : <><bdi dir="ltr">{p.days}</bdi> {"روز و"} <bdi dir="ltr">{p.hours}</bdi> {"ساعت"}</>;
+  };
+  return <><span className="th-d">{render(false)}</span><span className="th-m">{render(true)}</span></>;
 }
 
 // ── ساعت فارکس ───────────────────────────────────────────────
