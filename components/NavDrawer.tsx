@@ -20,6 +20,7 @@ import { getPreloadedBootstrap } from "@/lib/preload";
 import { tr } from "@/lib/i18n";
 import { brandName } from "@/lib/brand";
 import { SECTION_META } from "@/lib/sections";
+import { SECTION_WORDMARK_DARK, SECTION_WORDMARK_LIGHT, warmSectionAssets } from "@/lib/sectionAssets";
 import { useSection } from "./SectionProvider";
 import HeaderLangButton from "./HeaderLangButton";
 import "./site-header.css";
@@ -34,7 +35,8 @@ import "./site-header.css";
 const loadDrawer = () => import("./NavDrawerContent");
 const loadProfileMenu = () => import("./NavProfileMenu");
 const loadNotifPanel = () => import("./NotificationPanel");
-const loadSwitcher = () => import("./SectionSwitcher");
+// هر بار که چانک پنجره‌ی بخش‌ها خواسته می‌شه، تصویرهای لوگوها هم گرم می‌شن (ایدمپوتنت)
+const loadSwitcher = () => { warmSectionAssets(); return import("./SectionSwitcher"); };
 const NavDrawerContent = dynamic(loadDrawer, { ssr: false });
 const NavProfileMenu = dynamic(loadProfileMenu, { ssr: false });
 const SectionSwitcher = dynamic(loadSwitcher, { ssr: false });
@@ -129,7 +131,8 @@ export function NavDrawer() {
     if (status !== "authenticated") return;
     return whenIdle(() => { loadProfileMenu(); }, 4000);
   }, [status]);
-  useEffect(() => whenIdle(() => { loadSwitcher(); }, 5000), []);
+  // بعد از اولین پینت در بیکاری (سقف 2.5 ثانیه): چانک پنجره + سه نشان + دو نسخه‌ی حروف ARION
+  useEffect(() => whenIdle(() => { loadSwitcher(); }, 2500), []);
   // ناوبری = پنجره‌ی بخش‌ها بسته
   useEffect(() => { setSwitcherOpen(false); }, [pathname]);
 
@@ -321,22 +324,28 @@ export function NavDrawer() {
             >
               {section ? (
                 <>
+                  {/* فقط موبایل (CSS): نشان A رنگی بخش به‌جای حروف ARION؛ با پالت صریح همون .logo-tint دامنه‌ی اصلی */}
+                  <span className="tls-icon" aria-hidden="true">
+                    <img src={SECTION_META[section].icon} alt="" width={256} height={217} loading="eager" decoding="sync" draggable={false} />
+                    <span className="logo-tint" />
+                  </span>
+                  {/* فقط دسکتاپ (CSS). <img> ساده با همون URLی که پنجره‌ی بخش‌ها استفاده می‌کنه (کش مشترک) */}
                   <span className="tls-word">
-                    <Image
-                      src="/images/sections/wordmark-dark.png"
+                    <img
+                      src={SECTION_WORDMARK_DARK}
                       alt={brandName()}
                       width={358}
                       height={49}
+                      decoding="sync"
                       className={`topbar-logo-lockup${theme === "light" ? " topbar-logo-lockup-hidden" : ""}`}
-                      priority
                     />
-                    <Image
-                      src="/images/sections/wordmark-light.webp"
+                    <img
+                      src={SECTION_WORDMARK_LIGHT}
                       alt={brandName()}
                       width={328}
                       height={46}
+                      decoding="sync"
                       className={`topbar-logo-lockup${theme === "light" ? "" : " topbar-logo-lockup-hidden"}`}
-                      priority
                     />
                   </span>
                   <span className="tls-sep" aria-hidden="true" />

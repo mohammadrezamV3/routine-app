@@ -7,10 +7,10 @@
 // وگرنه ناوبری کلاینتی به صفحه‌ی اصلی همون بخش. قرارداد: lib/sections.ts
 import { useCallback, useEffect, useLayoutEffect, useRef, useState } from "react";
 import { createPortal } from "react-dom";
-import Image from "next/image";
 import { SmartLink as Link } from "./SmartLink";
 import { tr } from "@/lib/i18n";
 import { SECTION_META, isSectionHostingEnabled, sectionUrl, type SectionKey } from "@/lib/sections";
+import { SECTION_WORDMARK_DARK, SECTION_WORDMARK_LIGHT, warmSectionAssets } from "@/lib/sectionAssets";
 import "./section-switcher.css";
 
 type Props = {
@@ -54,6 +54,7 @@ export default function SectionSwitcher({ state, anchorRef, section, signedIn, o
   const open = state === "open";
 
   useLayoutEffect(() => { setPos(measure(anchorRef.current)); }, [anchorRef]);
+  useEffect(() => { warmSectionAssets(); }, []);
   useEffect(() => {
     const on = () => setPos(measure(anchorRef.current));
     window.addEventListener("resize", on);
@@ -139,10 +140,12 @@ export default function SectionSwitcher({ state, anchorRef, section, signedIn, o
           const rp = rowProps(key);
           const inner = (
             <>
-              <Image src={meta.icon} alt="" width={256} height={217} className="ssw-icon" />
+              {/* <img> ساده و eager (نه next/image): بدون بهینه‌ساز و بدون lazy، همون URLی که warmSectionAssets
+                  از قبل گرفته؛ پس اولین باز شدن هر سه ردیف رو هم‌زمان با تصویر رنگ می‌کنه */}
+              <img src={meta.icon} alt="" width={256} height={217} loading="eager" decoding="sync" draggable={false} className="ssw-icon" />
               <span className="ssw-wm" aria-hidden="true">
-                <Image src="/images/sections/wordmark-dark.png" alt="" width={358} height={49} className="ssw-wm-dark" />
-                <Image src="/images/sections/wordmark-light.webp" alt="" width={328} height={46} className="ssw-wm-light" />
+                <img src={SECTION_WORDMARK_DARK} alt="" width={358} height={49} loading="eager" decoding="sync" draggable={false} className="ssw-wm-dark" />
+                <img src={SECTION_WORDMARK_LIGHT} alt="" width={328} height={46} loading="eager" decoding="sync" draggable={false} className="ssw-wm-light" />
               </span>
               <span className="ssw-sep" aria-hidden="true" />
               <span className="ssw-word" aria-hidden="true">{meta.wordmark}</span>
