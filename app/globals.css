@@ -405,6 +405,132 @@
   button:disabled{opacity:.4; cursor:default;}
   button.small{padding:4px 9px; font-size:12px;}
 
+/* ============================================================
+   سیستم دکمه‌ها (.btn)  —  مرجع طراحی: بوم «سیستم دکمه‌ها»
+   ------------------------------------------------------------
+   یک کلاس پایه + یک نوع + (اختیاری) یک اندازه:
+       <button type="button" class="btn btn-primary btn-lg">...</button>
+   روی <a> هم کار می‌کند (لینک‌ی که شکل دکمه دارد).
+
+   نوع (کدام را کجا بزنیم)
+     .btn-primary  اصلی     کار اصلی صفحه/فرم: ذخیره، ثبت، خرید. در هر
+                            صفحه یا پنجره فقط یکی؛ همیشه آخر ردیف اقدام‌ها.
+     .btn-tonal    ثانویه   کار مهم ولی نه اصلی: افزودن، اشتراک، انتخاب.
+     .btn-outline  خطی      کار جانبی روی کارت/تصویر: تغییر بنر، ویرایش،
+                            کپی، تلاش دوباره، برگرداندن (آنبلاک).
+     .btn-ghost    بی‌زمینه لغو، بستن، برگشت؛ کنار دکمه‌ی اصلی. هیچ‌وقت
+                            هیچ بک‌گراندی نمی‌گیرد (نه عادی نه هاور).
+     .btn-danger   خطرناک   حذف، خروج، قطع اتصال. جدا از بقیه‌ی ردیف
+                            اقدام‌ها (ابتدای ردیف یا خط جدا)، همیشه با
+                            تایید برای کار برگشت‌ناپذیر.
+     .btn-icon     آیکونی   کپی، اشتراک، منو، بستن. مربع گرد 12px؛ حتما
+                            aria-label. با .btn-round دایره می‌شود و با
+                            .btn-bare بدون خط دور.
+   اندازه
+     (پیش‌فرض) 44    .btn-lg 50 پاورقی چسبان و موبایل    .btn-sm 34 داخل کارت
+   افزودنی‌ها
+     .btn-block      تمام‌عرض            .btn-on-media  روی عکس کاربر (بنر):
+                                          زمینه‌ی نیمه‌شفاف برای خوانایی
+   حالت‌ها
+     هاور (فقط ماوس)، فوکوس‌کیبورد، فشار (scale)، :disabled (کم‌رنگ).
+     لودینگ: کلاس .is-loading + aria-busy + خود دکمه disabled و داخلش
+       <Spinner className="btn-spinner" size={16} label={null} /> — برچسب
+       نامرئی می‌ماند تا عرض دکمه نپرد.
+
+   فقط توکن‌ها (تم روز/شب و تم رنگی کاربر خودکار). اسپسیفیسیتی عمدا
+   `html body .btn` است تا ریست شیشه‌ای سراسری button{} بالا و نسخه‌ی
+   تم روشنش (body[data-theme="light"] button) بک‌گراند/بوردر/سایه/بلور
+   روی دکمه‌ها نیندازد — همان الگوی .tick-btn. نوع‌ها فقط متغیر ست
+   می‌کنند (اسپسیفیسیتی کم)، پس اندازه و نوع آزادانه ترکیب می‌شوند.
+
+   نام‌های قدیمی (account-outline-btn، trade-primary-btn، trade-danger-btn،
+   trade-ghost-btn، trade-icon-btn، mentor-btn، admin-btn) همچنان کار
+   می‌کنند و ظاهرشان دست‌نخورده است؛ کد تازه از .btn-* استفاده کند.
+   ============================================================ */
+html body .btn{
+  position:relative; display:inline-flex; align-items:center; justify-content:center; gap:var(--btn-gap, 8px);
+  box-sizing:border-box; flex-shrink:0; min-width:0;
+  height:var(--btn-h, 44px); padding:0 var(--btn-px, 20px); border-radius:var(--btn-r, 999px);
+  font-family:var(--font-latin), var(--font-vazir), sans-serif; font-size:var(--btn-fs, 14px); font-weight:700; line-height:1;
+  white-space:nowrap; text-decoration:none; text-align:center; cursor:pointer; user-select:none;
+  color:var(--btn-fg, var(--text)); background:var(--btn-bg, transparent);
+  border:1px solid var(--btn-bd, transparent); box-shadow:none;
+  backdrop-filter:var(--btn-blur, none); -webkit-backdrop-filter:var(--btn-blur, none);
+  filter:none; transition:background-color .18s ease, border-color .18s ease, color .18s ease, box-shadow .2s ease, filter .18s ease, transform .15s ease, opacity .15s ease;
+}
+html body .btn svg{ flex-shrink:0; }
+html body .btn:active:not(:disabled){ transform:scale(.97); }
+html body .btn:focus-visible{ outline:2px solid var(--accent); outline-offset:2px; }
+
+/* نوع‌ها: فقط متغیر */
+.btn-primary{
+  --btn-bg:var(--accent); --btn-bd:var(--accent); --btn-fg:var(--sec-on-accent, var(--bg));
+  --btn-hover-filter:brightness(1.08); --btn-hover-shadow:0 6px 18px -6px rgba(var(--accent-rgb), .6);
+}
+.btn-tonal{
+  --btn-bg:rgba(var(--accent-rgb), .14); --btn-fg:var(--accent); --btn-hover-bg:rgba(var(--accent-rgb), .22);
+}
+.btn-outline{
+  --btn-bg:transparent; --btn-fg:var(--text); --btn-bd:var(--surface-line);
+  --btn-hover-bd:var(--accent); --btn-hover-fg:var(--accent);
+}
+@supports (color:color-mix(in srgb, red, blue)){
+  .btn-outline{ --btn-bd:color-mix(in srgb, var(--text) 22%, transparent); }
+}
+.btn-ghost{
+  --btn-bg:transparent; --btn-fg:var(--muted); --btn-hover-fg:var(--text);
+}
+.btn-danger{
+  --btn-bg:rgba(var(--pnl-loss-rgb), .12); --btn-fg:var(--pnl-loss); --btn-hover-bg:rgba(var(--pnl-loss-rgb), .2);
+}
+.btn-icon{
+  --btn-h:40px; --btn-px:0; --btn-r:12px;
+  --btn-bg:transparent; --btn-bd:var(--surface-line); --btn-fg:var(--muted);
+  --btn-hover-bd:var(--accent); --btn-hover-fg:var(--accent);
+}
+html body .btn.btn-icon{ width:var(--btn-h, 40px); padding:0; gap:0; }
+.btn-icon.btn-sm{ --btn-h:34px; }
+.btn-icon.btn-lg{ --btn-h:46px; }
+.btn-icon.btn-bare{ --btn-bd:transparent; }
+.btn-icon.btn-danger{ --btn-bg:transparent; --btn-bd:rgba(var(--pnl-loss-rgb), .38); --btn-hover-bd:var(--pnl-loss); --btn-hover-fg:var(--pnl-loss); }
+.btn-icon.btn-primary{ --btn-bd:var(--accent); --btn-hover-bd:var(--accent); --btn-hover-fg:var(--sec-on-accent, var(--bg)); }
+.btn-icon.btn-round{ --btn-r:50%; }
+
+/* اندازه‌ها */
+.btn-lg{ --btn-h:50px; --btn-px:26px; --btn-fs:15px; }
+.btn-sm{ --btn-h:34px; --btn-px:14px; --btn-fs:13px; --btn-gap:6px; }
+html body .btn.btn-block{ display:flex; width:100%; }
+.btn-on-media{ --btn-blur:blur(10px) saturate(150%); }
+.btn-on-media.btn-outline{ --btn-bg:rgba(var(--bg-rgb), .72); }
+.btn-on-media.btn-icon{ --btn-bg:rgba(var(--bg-rgb), .72); }
+
+/* هاور فقط با ماوس (موبایل بعد از تپ در هاور گیر نکند) */
+@media (hover:hover) and (pointer:fine){
+  html body .btn:hover:not(:disabled):not(.is-loading){
+    background:var(--btn-hover-bg, var(--btn-bg, transparent));
+    border-color:var(--btn-hover-bd, var(--btn-bd, transparent));
+    color:var(--btn-hover-fg, var(--btn-fg, var(--text)));
+    filter:var(--btn-hover-filter, none);
+    box-shadow:var(--btn-hover-shadow, none);
+  }
+}
+
+/* غیرفعال و لودینگ — اسپسیفیسیتی بالاتر از button:disabled:hover سراسری (تم روشن) */
+html body .btn.btn:disabled{ opacity:.38; cursor:not-allowed; transform:none; }
+html body .btn.btn:disabled:hover{
+  background:var(--btn-bg, transparent); border-color:var(--btn-bd, transparent);
+  color:var(--btn-fg, var(--text)); box-shadow:none; filter:none;
+}
+html body .btn.is-loading, html body .btn[aria-busy="true"]{ color:transparent; cursor:progress; }
+html body .btn.btn.is-loading:disabled, html body .btn.btn[aria-busy="true"]:disabled{ opacity:1; cursor:progress; }
+html body .btn.is-loading:hover, html body .btn[aria-busy="true"]:hover{ color:transparent; }
+html body .btn .btn-spinner{
+  position:absolute; inset:0; margin:auto; color:var(--btn-fg, var(--text));
+}
+@media (prefers-reduced-motion:reduce){
+  html body .btn{ transition:none; }
+}
+
   table{width:100%; border-collapse:collapse; font-size:12.5px;}
   td{padding:9px 0; vertical-align:top; border-bottom:1px solid var(--line);}
   tr:last-child td{border-bottom:none;}

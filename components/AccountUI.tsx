@@ -51,10 +51,13 @@ export function AccountBlock({
         {title && (
           <div className="ap-block-head">
             {icon && <span className="ap-block-icon" aria-hidden="true">{icon}</span>}
-            <h2 className="ap-block-title">{title}</h2>
+            <div className="ap-block-head-text">
+              <h2 className="ap-block-title">{title}</h2>
+              {desc && <p className="ap-block-sub">{desc}</p>}
+            </div>
           </div>
         )}
-        {desc && <p className="ap-block-desc">{desc}</p>}
+        {desc && !title && <p className="ap-block-desc">{desc}</p>}
         {title || desc ? <div className="ap-block-content">{children}</div> : children}
       </div>
     </section>
@@ -96,12 +99,13 @@ export function AccountLine({
 }
 
 /**
- * نوار ذخیره‌ی ته بخش — یک دکمه و بس.
+ * نوار ذخیره‌ی ته بخش — یک دکمه‌ی اصلی (btn-primary) و بس، آخر ردیف.
  *
- * طبق درخواست صریح کاربر، خود دکمه سه حالت را نشان می‌دهد و دیگر هیچ
- * «ذخیره شد»ی زیرش نوشته نمی‌شود: موقع ذخیره فقط یک دایره‌ی لودینگ،
- * بعدش یک تیک اگر موفق بود، و اگر نبود متن خطا (دکمه هم علامت هشدار
- * می‌گیرد). `submit` یعنی دکمه type=submit باشد (داخل <form>، با Enter).
+ * طبق درخواست صریح کاربر، خود دکمه حالت‌ها را نشان می‌دهد و دیگر هیچ
+ * «ذخیره شد»ی زیرش نوشته نمی‌شود: موقع ذخیره فقط دایره‌ی لودینگ داخل
+ * دکمه (برچسب نامرئی، عرض ثابت)، بعدش یک تیک اگر موفق بود، و اگر نبود
+ * متن خطا بالای دکمه (دکمه علامت هشدار می‌گیرد). `submit` یعنی دکمه
+ * type=submit باشد (داخل <form>، با Enter). موبایل: تمام‌عرض و بزرگ (50).
  */
 export function AccountSaveBar({
   onSave, saving, saved, error, label = tr("ذخیره تغییرات", "Save changes"), disabled, submit = false,
@@ -120,17 +124,62 @@ export function AccountSaveBar({
       {error && <div className="field-error-msg" role="alert" style={{ display: "block" }}>{error}</div>}
       <button
         type={submit ? "submit" : "button"}
-        className={`account-outline-btn ap-save-btn is-${state}`}
+        className={`btn btn-primary ap-save-btn${saving ? " is-loading" : ""}`}
         onClick={submit ? undefined : onSave}
         disabled={saving || disabled}
         aria-label={label}
         aria-busy={saving || undefined}
       >
-        {state === "saving" ? <Spinner size={15} />
-          : state === "ok" ? <Check size={16} />
-          : state === "bad" ? <AlertTriangle size={16} />
+        {saving && <Spinner className="btn-spinner" size={16} label={null} />}
+        {state === "ok" ? <Check size={17} aria-hidden="true" />
+          : state === "bad" ? <><AlertTriangle size={16} aria-hidden="true" />{label}</>
           : label}
       </button>
+    </div>
+  );
+}
+
+/**
+ * پاورقی چسبان «تغییرات ذخیره‌نشده» (ردیف اقدام طراحی): فقط وقتی `visible`
+ * (فرم تغییر کرده) دیده می‌شود. ترتیب: پیام، «لغو» (btn-ghost)، «ذخیره
+ * تغییرات» (btn-primary، آخر ردیف). نقش status دارد تا صفحه‌خوان ظاهرشدنش
+ * را بگوید. خطا بالای نوار می‌آید و دکمه‌ها بسته نمی‌شوند.
+ */
+export function AccountActionBar({
+  visible, onSave, onCancel, saving, saved, error, saveLabel = tr("ذخیره تغییرات", "Save changes"), cancelLabel = tr("لغو", "Cancel"),
+  message = tr("تغییرات ذخیره نشده داری", "You have unsaved changes"), submit = true,
+}: {
+  visible: boolean;
+  onSave?: () => void;
+  onCancel: () => void;
+  saving?: boolean;
+  /** ذخیره تازه انجام شد: دکمه‌ی اصلی یک تیک نشان می‌دهد و «لغو» پنهان می‌شود (چند لحظه، قبل از بسته‌شدن نوار) */
+  saved?: boolean;
+  error?: string | null;
+  saveLabel?: string;
+  cancelLabel?: string;
+  message?: string;
+  submit?: boolean;
+}) {
+  if (!visible) return null;
+  return (
+    <div className="ap-actionbar" role="region" aria-label={message}>
+      {error && <div className="field-error-msg ap-actionbar-error" role="alert" style={{ display: "block" }}>{error}</div>}
+      <div className="ap-actionbar-row">
+        <span className="ap-actionbar-msg" role="status">{saved ? "" : message}</span>
+        {!saved && <button type="button" className="btn btn-ghost ap-actionbar-cancel" onClick={onCancel} disabled={saving}>{cancelLabel}</button>}
+        <button
+          type={submit ? "submit" : "button"}
+          className={`btn btn-primary${saving ? " is-loading" : ""}`}
+          onClick={submit ? undefined : onSave}
+          disabled={saving}
+          aria-busy={saving || undefined}
+          aria-label={saveLabel}
+        >
+          {saving && <Spinner className="btn-spinner" size={16} label={null} />}
+          {saved ? <Check size={17} aria-hidden="true" /> : saveLabel}
+        </button>
+      </div>
     </div>
   );
 }

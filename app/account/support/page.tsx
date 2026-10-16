@@ -51,13 +51,13 @@ export default function SupportPage() {
 
   return (
     <section>
-      {/* تایتل «پشتیبانی» هم‌ردیف دکمه‌ی «ایجاد تیکت» (درخواست صریح): دکمه
-          فقط متن+آیکون رنگیه، بدون قاب. */}
+      {/* تایتل «پشتیبانی» هم‌ردیف دکمه‌ی «ایجاد تیکت» — تنها کار اصلی صفحه، پس
+          دکمه‌ی اصلی (btn-primary) با آیکون. */}
       <AccountPageHead
         title={tr("پشتیبانی", "Support")}
         actions={
-          <button type="button" className="account-outline-btn support-new-btn" onClick={() => setCreating(true)}>
-            <Plus size={15} /> {tr("ایجاد تیکت", "New ticket")}
+          <button type="button" className="btn btn-primary" onClick={() => setCreating(true)}>
+            <Plus size={17} aria-hidden="true" /> {tr("ایجاد تیکت", "New ticket")}
           </button>
         }
       />

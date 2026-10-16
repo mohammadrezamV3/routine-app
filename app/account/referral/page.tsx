@@ -87,7 +87,7 @@ export default function ReferralPage() {
           <div className="ap-card account-card">
             <div className="ap-empty">
               <div>{tr("اطلاعات رفرال باز نشد", "Could not load your referral details")}</div>
-              <button type="button" className="account-outline-btn ap-mini-btn" style={{ marginTop: 12 }} onClick={load}>{tr("تلاش دوباره", "Try again")}</button>
+              <button type="button" className="btn btn-outline btn-sm" style={{ marginTop: 12 }} onClick={load}>{tr("تلاش دوباره", "Try again")}</button>
             </div>
           </div>
         ) : <AccountSkeleton blocks={3} />}
@@ -141,15 +141,16 @@ export default function ReferralPage() {
       <AccountBlock title={tr("کد و لینک دعوت", "Invite code and link")} icon={<Link2 />} index={1}>
         <div className="ap-invite-top">
           <span className="ap-invite-code mono" dir="ltr">{data.code}</span>
+          {/* ردیف اقدام: اشتراک‌گذاری (تونال) و بعد کپی لینک (اصلی، آخر ردیف) */}
           <div className="ap-invite-actions">
-            <button type="button" className="account-outline-btn ap-mini-btn" onClick={copyLink}>
-              {copied ? <Check size={14} /> : <Copy size={14} />} {copied ? tr("کپی شد", "Copied") : tr("کپی لینک", "Copy link")}
-            </button>
             {canShare && (
-              <button type="button" className="account-outline-btn ap-mini-btn" onClick={shareLink}>
-                <Share2 size={14} /> {tr("اشتراک‌گذاری", "Share")}
+              <button type="button" className="btn btn-tonal" onClick={shareLink}>
+                <Share2 size={16} aria-hidden="true" /> {tr("اشتراک‌گذاری", "Share")}
               </button>
             )}
+            <button type="button" className="btn btn-primary" onClick={copyLink}>
+              {copied ? <Check size={16} aria-hidden="true" /> : <Copy size={16} aria-hidden="true" />} {copied ? tr("کپی شد", "Copied") : tr("کپی لینک", "Copy link")}
+            </button>
           </div>
         </div>
         <span className="ap-invite-link mono" dir="ltr">{data.shareUrl}</span>

@@ -13,10 +13,17 @@ import { tr } from "@/lib/i18n";
 export function AccountHeroCard({ summary }: { summary: AccountSummary }) {
   const { plan } = summary;
   const planLabel = plan ? plan.name : tr("بدون پلن فعال", "No active plan");
-  const planChip = (
-    <Link href="/subscription" className={`ap-chip ${plan ? "is-gold" : "is-accent"}`}>
-      {plan ? <Crown size={12} aria-hidden="true" /> : <Sparkles size={12} aria-hidden="true" />}
-      {plan ? (plan.trial ? tr(`${planLabel} (آزمایشی)`, `${planLabel} (trial)`) : planLabel) : tr("مشاهده پلن‌ها", "View plans")}
+  // پلن فعال: نشان طلایی (وضعیت)؛ بدون پلن: دکمه‌ی تونال کوچک «مشاهده پلن‌ها»
+  // (سیستم دکمه‌ها: کار مهم ولی نه اصلی).
+  const planChip = plan ? (
+    <Link href="/subscription" className="ap-chip is-gold">
+      <Crown size={12} aria-hidden="true" />
+      {plan.trial ? tr(`${planLabel} (آزمایشی)`, `${planLabel} (trial)`) : planLabel}
+    </Link>
+  ) : (
+    <Link href="/subscription" className="btn btn-tonal btn-sm">
+      <Sparkles size={14} aria-hidden="true" />
+      {tr("مشاهده پلن‌ها", "View plans")}
     </Link>
   );
   const facts: { label: string; value: string }[] = [];
