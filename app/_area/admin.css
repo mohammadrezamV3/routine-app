@@ -22,7 +22,7 @@
 .crop-actions{ display:flex; justify-content:flex-end; gap:8px; margin-top:16px; }
 
 .support-msg.mine{
-    align-self:flex-start; background:var(--accent); color:var(--bg); border-bottom-right-radius:4px;
+    align-self:flex-start; background:var(--accent); color:var(--sec-on-accent, var(--bg)); border-bottom-right-radius:4px;
   }
 
 .support-msg.admin{
@@ -101,11 +101,11 @@ body[data-theme="light"] .admin-badge.gray{ background:rgba(58,42,24,.07); }
 .admin-btn:active:not(:disabled){ transform:scale(.97); }
 
 body[data-theme="light"] .admin-btn.primary, body:not([data-theme="light"]) .admin-btn.primary{
-  background:var(--accent); border-color:var(--accent); color:var(--bg); box-shadow:none;
+  background:var(--accent); border-color:var(--accent); color:var(--sec-on-accent, var(--bg)); box-shadow:none;
 }
 
 @media (hover:hover) {
-  body .admin-btn.primary:hover:not(:disabled){ background:var(--accent); border-color:var(--accent); color:var(--bg); filter:brightness(1.06); } }
+  body .admin-btn.primary:hover:not(:disabled){ background:var(--accent); border-color:var(--accent); color:var(--sec-on-accent, var(--bg)); filter:brightness(1.06); } }
 
 body[data-theme="light"] .admin-btn.danger, body:not([data-theme="light"]) .admin-btn.danger{
   background:none; border-color:var(--adm-red); color:var(--adm-red); box-shadow:none;

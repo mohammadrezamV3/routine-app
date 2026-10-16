@@ -247,7 +247,7 @@ export function CalorieAddEntryModal({
               onClick={addEntry}
               disabled={!canAdd || saving}
               className="mt-3 flex w-full items-center justify-center gap-2 rounded-2xl py-3 text-[13px] font-bold disabled:opacity-40 sm:text-[15px]"
-              style={{ background: "var(--accent)", color: "var(--bg)", boxShadow: "0 8px 22px rgba(var(--accent-rgb),.3)" }}
+              style={{ background: "var(--accent)", color: "var(--sec-on-accent, var(--bg))", boxShadow: "0 8px 22px rgba(var(--accent-rgb),.3)" }}
             >
               {saving ? <Spinner size={15} /> : tr("افزودن", "Add")}
             </button>
@@ -268,7 +268,7 @@ export function CalorieAddEntryModal({
                   className="flex h-14 w-14 items-center justify-center rounded-full"
                   style={{ background: "var(--accent)", boxShadow: "0 0 24px rgba(var(--accent-rgb),.5)" }}
                 >
-                  <Check className="h-7 w-7" style={{ color: "var(--bg)" }} strokeWidth={3} />
+                  <Check className="h-7 w-7" style={{ color: "var(--sec-on-accent, var(--bg))" }} strokeWidth={3} />
                 </motion.div>
                 <div className="text-[12.5px] font-bold text-dash-text sm:text-[13.5px]">{tr("با موفقیت اضافه شد", "Added successfully")}</div>
               </motion.div>

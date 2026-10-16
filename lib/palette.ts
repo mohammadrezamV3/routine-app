@@ -463,8 +463,8 @@ const FIXED_PREVIEWS: Record<"routine" | "trade" | "workout", { dark: PalettePre
     light: { bg: "#E7EDF4", accent: "#0A5BD6", secondary: "#0B1F3A" },
   },
   workout: {
-    dark: { bg: "#0B0B0C", accent: "#EE4356", secondary: "#D9D9DE" },
-    light: { bg: "#F4F4F5", accent: "#C8102E", secondary: "#111113" },
+    dark: { bg: "#0B0B0C", accent: "#D21F3C", secondary: "#D9D9DE" },
+    light: { bg: "#F4F4F5", accent: "#A50E2A", secondary: "#111113" },
   },
 };
 

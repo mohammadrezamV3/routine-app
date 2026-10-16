@@ -207,16 +207,19 @@ describe("workout palette (black + red only)", () => {
       const bg = m["--bg"];
       expect(contrastRatio(m["--text"], bg)).toBeGreaterThanOrEqual(4.5);
       expect(contrastRatio(m["--muted"], bg)).toBeGreaterThanOrEqual(4.5);
-      expect(contrastRatio(m["--accent"], bg)).toBeGreaterThanOrEqual(4.5);
       expect(contrastRatio(m["--secondary"], bg)).toBeGreaterThanOrEqual(4.5);
-      expect(contrastRatio(bg, m["--accent"])).toBeGreaterThanOrEqual(4.5);
+      // dark: deep crimson on black cannot reach 4.5 as text; owner decision, so the floor is 3.0 (AA large/UI)
+      const accentFloor = mode === "dark" ? 3.0 : 4.5;
+      expect(contrastRatio(m["--accent"], bg)).toBeGreaterThanOrEqual(accentFloor);
+      // button text on the accent: white in both modes
+      expect(m["--sec-on-accent"].toLowerCase()).toMatch(/^#(fff|ffffff)$/);
+      expect(contrastRatio("#FFFFFF", m["--accent"])).toBeGreaterThanOrEqual(4.5);
       for (const k of ["--surface-1", "--surface-2"]) {
         expect(contrastRatio(m["--text"], m[k]), `text/${k}`).toBeGreaterThanOrEqual(4.5);
         expect(contrastRatio(m["--muted"], m[k]), `muted/${k}`).toBeGreaterThanOrEqual(4.5);
-        expect(contrastRatio(m["--accent"], m[k]), `accent/${k}`).toBeGreaterThanOrEqual(4.5);
+        expect(contrastRatio(m["--accent"], m[k]), `accent/${k}`).toBeGreaterThanOrEqual(accentFloor);
         expect(contrastRatio(m["--secondary"], m[k]), `secondary/${k}`).toBeGreaterThanOrEqual(4.5);
       }
-      if (mode === "light") expect(contrastRatio("#FFFFFF", m["--accent"])).toBeGreaterThanOrEqual(4.5);
     });
     it(`${mode}: stays monochrome red/black (no gold, pink or orange hues)`, () => {
       const m = block(mode);

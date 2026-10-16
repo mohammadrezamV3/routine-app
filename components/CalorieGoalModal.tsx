@@ -251,7 +251,7 @@ export function CalorieGoalModal({
                 type="button"
                 onClick={() => setSmartStep("meals")}
                 className="mt-4 flex w-full items-center justify-center gap-2 rounded-2xl py-3.5 text-[13.5px] font-bold"
-                style={{ background: "var(--accent)", color: "var(--bg)", boxShadow: "0 8px 22px rgba(var(--accent-rgb),.3)" }}
+                style={{ background: "var(--accent)", color: "var(--sec-on-accent, var(--bg))", boxShadow: "0 8px 22px rgba(var(--accent-rgb),.3)" }}
               >
                 {tr("بعدی", "Next")}
               </button>
@@ -274,7 +274,7 @@ export function CalorieGoalModal({
                 type="button"
                 onClick={() => setSmartStep("specs")}
                 className="mt-4 flex w-full items-center justify-center gap-2 rounded-2xl py-3.5 text-[13.5px] font-bold"
-                style={{ background: "var(--accent)", color: "var(--bg)", boxShadow: "0 8px 22px rgba(var(--accent-rgb),.3)" }}
+                style={{ background: "var(--accent)", color: "var(--sec-on-accent, var(--bg))", boxShadow: "0 8px 22px rgba(var(--accent-rgb),.3)" }}
               >
                 {tr("بعدی", "Next")}
               </button>
@@ -323,7 +323,7 @@ export function CalorieGoalModal({
                 onClick={saveSmart}
                 disabled={saving}
                 className="mt-4 flex w-full items-center justify-center gap-2 rounded-2xl py-3.5 text-[13.5px] font-bold disabled:opacity-40"
-                style={{ background: "var(--accent)", color: "var(--bg)", boxShadow: "0 8px 22px rgba(var(--accent-rgb),.3)" }}
+                style={{ background: "var(--accent)", color: "var(--sec-on-accent, var(--bg))", boxShadow: "0 8px 22px rgba(var(--accent-rgb),.3)" }}
               >
                 {saving ? <Spinner size={15} /> : tr("محاسبه‌ی برنامه کالری", "Calculate calorie plan")}
               </button>
@@ -457,7 +457,7 @@ export function CalorieGoalModal({
                 onClick={saveManual}
                 disabled={manualSaving}
                 className="mt-4 flex w-full items-center justify-center gap-2 rounded-2xl py-3.5 text-[13.5px] font-bold disabled:opacity-40"
-                style={{ background: "var(--accent)", color: "var(--bg)", boxShadow: "0 8px 22px rgba(var(--accent-rgb),.3)" }}
+                style={{ background: "var(--accent)", color: "var(--sec-on-accent, var(--bg))", boxShadow: "0 8px 22px rgba(var(--accent-rgb),.3)" }}
               >
                 {manualSaving ? <Spinner size={15} /> : tr("ثبت برنامه کالری", "Save calorie plan")}
               </button>
@@ -479,7 +479,7 @@ export function CalorieGoalModal({
                   className="flex h-14 w-14 items-center justify-center rounded-full"
                   style={{ background: "var(--accent)", boxShadow: "0 0 24px rgba(var(--accent-rgb),.5)" }}
                 >
-                  <Check className="h-7 w-7" style={{ color: "var(--bg)" }} strokeWidth={3} />
+                  <Check className="h-7 w-7" style={{ color: "var(--sec-on-accent, var(--bg))" }} strokeWidth={3} />
                 </motion.div>
                 <div className="text-[12.5px] font-bold text-dash-text sm:text-[13.5px]">{tr("با موفقیت ثبت شد", "Saved successfully")}</div>
               </motion.div>

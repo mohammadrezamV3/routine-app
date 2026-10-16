@@ -3,7 +3,7 @@
 .landing-section-title{font-size:22px; font-weight:800; letter-spacing:-.01em; margin:0;}
 
 .support-msg.mine{
-    align-self:flex-start; background:var(--accent); color:var(--bg); border-bottom-right-radius:4px;
+    align-self:flex-start; background:var(--accent); color:var(--sec-on-accent, var(--bg)); border-bottom-right-radius:4px;
   }
 
 .support-msg.admin{

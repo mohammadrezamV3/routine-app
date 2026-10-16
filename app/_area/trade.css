@@ -1014,9 +1014,9 @@ html[data-perf="low"] .trade-drawer{ background:var(--surface-2) !important; }
   box-shadow:0 0 0 1px rgba(var(--accent-rgb),.4), 0 0 8px rgba(var(--accent-rgb),.3);
 }
 
-.trade-cal-day-pill.active .trade-cal-day-pill-wd{ color:var(--bg); }
+.trade-cal-day-pill.active .trade-cal-day-pill-wd{ color:var(--sec-on-accent, var(--bg)); }
 
-.trade-cal-day-pill.active .trade-cal-day-pill-num{ color:var(--bg); opacity:.8; }
+.trade-cal-day-pill.active .trade-cal-day-pill-num{ color:var(--sec-on-accent, var(--bg)); opacity:.8; }
 
 @media (hover:hover) {
   .trade-cal-day-pill:not(.active):hover{ background:rgba(255,255,255,.05); } }
@@ -1058,14 +1058,14 @@ body[data-theme="light"] button.trade-cal-day-pill.active{
   .trade-cal-pill-btn:hover{ border-color:var(--accent); color:var(--accent); } }
 
 .trade-cal-pill-btn.today.active{
-  background:var(--accent); border-color:rgba(var(--accent-rgb),.4); color:var(--bg); font-weight:700;
+  background:var(--accent); border-color:rgba(var(--accent-rgb),.4); color:var(--sec-on-accent, var(--bg)); font-weight:700;
   box-shadow:0 0 8px rgba(var(--accent-rgb),.25);
 }
 
 body[data-theme="light"] .trade-cal-pill-btn.today.active, body:not([data-theme="light"]) .trade-cal-pill-btn.today.active{ background:var(--accent); }
 
 @media (hover:hover) {
-  .trade-cal-pill-btn.today.active:hover{ color:var(--bg); filter:brightness(1.06); } }
+  .trade-cal-pill-btn.today.active:hover{ color:var(--sec-on-accent, var(--bg)); filter:brightness(1.06); } }
 
 /* «فیلتر» وقتی بازه یا فیلتر فعالی دارد فقط لبه/متنش اکسنت می‌شود — پر
    نمی‌شود، چون پر بودن در این ردیف معنی «روز انتخابی = امروز» را دارد. */

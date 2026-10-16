@@ -30,7 +30,7 @@
 .account-shell .wsearch-newform-name:disabled{ opacity:1; color:var(--text); cursor:default; }
 
 .support-msg.mine{
-    align-self:flex-start; background:var(--accent); color:var(--bg); border-bottom-right-radius:4px;
+    align-self:flex-start; background:var(--accent); color:var(--sec-on-accent, var(--bg)); border-bottom-right-radius:4px;
   }
 
 .support-msg.admin{
@@ -198,7 +198,7 @@ body[data-theme="light"] .routine-ai-action.is-recording{ background:#E05252; bo
 /* دکمه‌ی ارسال پر می‌شود — همان تفاوت بصری مرجع بین «حرف بزن» و «بفرست» */
 
 .routine-ai-action.is-send{
-  background:var(--accent); border-color:var(--accent); color:var(--bg);
+  background:var(--accent); border-color:var(--accent); color:var(--sec-on-accent, var(--bg));
   backdrop-filter:none; -webkit-backdrop-filter:none;
 }
 

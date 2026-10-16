@@ -264,13 +264,13 @@ body[data-theme="light"] .add-program-glass .day-pill{
   }
 
 @media (hover:hover) {
-  .wsearch-newform-submit:hover{background:var(--accent); color:var(--bg);} }
+  .wsearch-newform-submit:hover{background:var(--accent); color:var(--sec-on-accent, var(--bg));} }
 
 .wsearch-newform-submit.loading{pointer-events:none;}
 
 .wsearch-newform-submit.loading .wns-check{opacity:0; transform:scale(.5);}
 
-.wsearch-newform-submit.success{pointer-events:none; background:var(--accent); color:var(--bg); border-color:var(--accent);}
+.wsearch-newform-submit.success{pointer-events:none; background:var(--accent); color:var(--sec-on-accent, var(--bg)); border-color:var(--accent);}
 
 .wsearch-newform-submit.success .wns-check{opacity:1; animation:wnsPop .4s cubic-bezier(.34,1.56,.64,1);}
 
@@ -805,7 +805,7 @@ body[data-theme="light"] .routine-ai-action.has-text{
    is-recording بالا که همچنان composer پشتیبانی (سه‌حالته) از آن‌ها استفاده می‌کند. */
 
 .routine-ai-action.has-text{
-  background:var(--accent); border-color:var(--accent); color:var(--bg);
+  background:var(--accent); border-color:var(--accent); color:var(--sec-on-accent, var(--bg));
   backdrop-filter:none; -webkit-backdrop-filter:none;
 }
 
