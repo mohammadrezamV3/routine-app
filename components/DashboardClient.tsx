@@ -15,7 +15,6 @@ import dynamic from "next/dynamic";
 import { preloadWhenIdle } from "@/lib/preloadIdle";
 import { prefetchWhenIdle } from "@/lib/prefetchPolicy";
 import { useRouter } from "next/navigation";
-import { useSession } from "next-auth/react";
 import { MotionConfig, m as motion } from "framer-motion";
 import { AuthGate } from "./AuthGate";
 import { SuperAdminGate } from "./SuperAdminGate";
@@ -37,9 +36,7 @@ import { dashboardBlocks, sectionAreas, type DashArea } from "@/lib/dashboardSec
 import { DashboardTrade } from "./DashboardTrade";
 import { DashboardMarket } from "./DashboardMarket";
 import { DashboardInbox, DashboardMentors, DashboardRoadmaps } from "./DashboardSocial";
-import { DashboardQuickActions } from "./DashboardLauncher";
 import { DashboardActionsProvider } from "./DashboardActions";
-import { useCommandHotkey } from "./DashboardCommand";
 import { V_GRID } from "./DashboardKit";
 import { DashIcon } from "./DashboardIcons";
 import { tr, isEn } from "@/lib/i18n";
@@ -112,10 +109,8 @@ function bentoAreas(has: Set<Area>, section: SectionKey | null = null) {
   return { ["--areas-lg" as any]: lg.join(" "), ["--areas-md" as any]: md.join(" "), ["--areas-sm" as any]: sm } as React.CSSProperties;
 }
 
-// پنجره‌های جست‌وجو و اشتراک فقط با تعامل باز می‌شن؛ چانکشون خارج از مسیر لود اولیه‌ست
-const loadCommand = () => import("./DashboardCommand").then((m) => m.DashboardCommand);
+// پنجره‌ی اشتراک فقط با تعامل باز می‌شه؛ چانکش خارج از مسیر لود اولیه‌ست
 const loadShare = () => import("./DashboardShare").then((m) => m.DashboardShare);
-const DashboardCommand = dynamic(loadCommand, { ssr: false });
 const DashboardShare = dynamic(loadShare, { ssr: false });
 
 function DashboardBody({ initial }: { initial: { key: string; data: DashboardData } | null }) {
@@ -132,21 +127,14 @@ function DashboardBody({ initial }: { initial: { key: string; data: DashboardDat
   // روتین کامل فقط برای دامنه‌ی اصلی و بخش روتین؛ ورزش فقط ساعت‌های خواب (نوار روز)؛ ترید هیچ
   const routine = useDashboardRoutine(blocks.routine ? "full" : section === "workout" ? "wake" : "none");
   const flagFeatures = useFeatures();
-  const { data: session } = useSession();
-  const [cmdOpen, setCmdOpen] = useState(false);
   const [shareOpen, setShareOpen] = useState(false);
-  const toggleCmd = useCallback((fn: (v: boolean) => boolean) => setCmdOpen(fn), []);
-  useCommandHotkey(toggleCmd);
   // بعد از اولین باز شدن mount می‌مونه تا انیمیشن بسته‌شدن سر جاش بمونه
-  const [cmdEver, setCmdEver] = useState(false);
   const [shareEver, setShareEver] = useState(false);
-  useEffect(() => { if (cmdOpen) setCmdEver(true); }, [cmdOpen]);
   useEffect(() => { if (shareOpen) setShareEver(true); }, [shareOpen]);
-  useEffect(() => { preloadWhenIdle(loadCommand); preloadWhenIdle(loadShare); }, []);
+  useEffect(() => { preloadWhenIdle(loadShare); }, []);
 
   const features = data?.features ?? flagFeatures;
   const modules = useMemo(() => (data ? new Set(data.modules) : null), [data]);
-  const isAdmin = !!(data?.user.isAdmin ?? ((session?.user as any)?.isAdmin || (session?.user as any)?.isSuperAdmin));
   const loading = !data && status === "loading";
   // هر بخش ماژول پولی فقط با خرید همون بخش به داشبورد اضافه می‌شه (نه کارت
   // قفل برای همه). بخش‌های چندبخشی (هیرو، کارهای سریع، همه‌ی بخش‌ها، جست‌وجو)
@@ -199,8 +187,7 @@ function DashboardBody({ initial }: { initial: { key: string; data: DashboardDat
   return (
     <MotionConfig reducedMotion="user">
       <DashboardActionsProvider scheduleOpts={routine.opts} onChanged={refreshNow} onNeedPage={goTo}>
-      <DashboardHero data={data} routine={routine} routineLocked={routineLocked} routineOff={!routineOn} streakOn={on("streak")} section={section} shareHref={section === "trade" && on("tradeShare") && owns("TRADE") ? "/trade?share=1" : undefined} onOpenCommand={() => setCmdOpen(true)} onShare={section !== "trade" && on("shareCards") ? () => setShareOpen(true) : undefined} />
-      <DashboardQuickActions features={features} modules={modules} />
+      <DashboardHero data={data} routine={routine} routineLocked={routineLocked} routineOff={!routineOn} streakOn={on("streak")} section={section} shareHref={section === "trade" && on("tradeShare") && owns("TRADE") ? "/trade?share=1" : undefined} onShare={section !== "trade" && on("shareCards") ? () => setShareOpen(true) : undefined} />
 
       {status === "error" && !data && (
         <div className="db-error">
@@ -232,7 +219,6 @@ function DashboardBody({ initial }: { initial: { key: string; data: DashboardDat
       </motion.div>
 
       {shareEver && <DashboardShare open={shareOpen} onClose={() => setShareOpen(false)} data={data} routine={routine} routineLocked={routineLocked} />}
-      {cmdEver && <DashboardCommand open={cmdOpen} onClose={() => setCmdOpen(false)} features={features} modules={modules} isAdmin={isAdmin} />}
       </DashboardActionsProvider>
     </MotionConfig>
   );

@@ -7,14 +7,11 @@
 // عضویت خنثی‌ان نه «شکست».
 
 import { useMemo, useState } from "react";
-import { weekdayName, jMonthName, faNum, toJalali } from "@/lib/jalali";
+import { weekdayName, weekdayShort, jMonthName, faNum, toJalali } from "@/lib/jalali";
+import { heatLabelledRows, heatMonthMarks, heatRowWeekdays } from "@/lib/dashboardHeat";
 import { heatLevel, type HeatCell } from "@/lib/dashboardCompute";
 import { BentoCard, CardHead, CountUp, Skel } from "./DashboardKit";
-import { tr, isEn } from "@/lib/i18n";
-
-const rowLabels = () => (isEn() ? ["Sa", "", "Mo", "", "We", "", "Fr"] : ["ش", "", "د", "", "چ", "", "ج"]);
-/** حداقل فاصله‌ی ستونی بین دو اسم ماه تا روی هم نیفتن */
-const MONTH_GAP = 3;
+import { tr } from "@/lib/i18n";
 
 const dayUnit = (n: number) => tr("روز", n === 1 ? "day" : "days");
 
@@ -40,24 +37,12 @@ export function DashboardHeatmap({ heat, streak, ready, memberSince }: { heat: H
     return { avg, perfect, best };
   }, [heat, sinceIso]);
 
-  // اسم ماه شمسی بالای اولین ستونی که روز ۱ ماه توشه (مثل گیت‌هاب)؛ اسمی که
-  // به قبلی خیلی نزدیکه حذف می‌شه
-  const monthMarks = useMemo(() => {
-    const marks: string[] = heat.map(() => "");
-    let last = -MONTH_GAP;
-    heat.forEach((col, ci) => {
-      const first = ci === 0 ? col[0] : col.find((c) => jalaliOf(c.iso)[2] === 1);
-      if (!first) return;
-      const jm = jalaliOf(first.iso)[1];
-      if (ci === 0) {
-        // ستون اول فقط وقتی اسم می‌گیره که ماه بعدی بلافاصله شروع نشه
-        const next = heat.slice(1, MONTH_GAP).some((c2) => c2.some((c) => jalaliOf(c.iso)[2] === 1));
-        if (next) return;
-      } else if (ci - last < MONTH_GAP) return;
-      marks[ci] = jMonthName(jm - 1);
-      last = ci;
-    });
-    return marks;
+  // اسم ماه شمسی بالای اولین ستونی که روز ۱ ماه توشه (مثل گیت‌هاب)؛ منطق در lib/dashboardHeat.ts
+  const monthMarks = useMemo(() => heatMonthMarks(heat, jMonthName), [heat]);
+  // برچسب روز هفته از تاریخ واقعی هر ردیف (شنبه بالا)؛ یکی در میان تا خوانا بمونه
+  const dayMarks = useMemo(() => {
+    const wd = heatRowWeekdays(heat);
+    return heatLabelledRows().map((ri) => ({ ri, label: weekdayShort(wd[ri]) }));
   }, [heat]);
 
   const levelOf = (c: HeatCell) => (sinceIso && c.iso < sinceIso ? -1 : heatLevel(c.pct));
@@ -81,11 +66,11 @@ export function DashboardHeatmap({ heat, streak, ready, memberSince }: { heat: H
             <Skel w="100%" h={150} r={10} />
           ) : (
             <div className="db-heat-grid" onMouseLeave={() => setHover(null)}>
-              {monthMarks.map((m, ci) => (
-                <span key={`m${ci}`} className="db-heat-month" style={{ gridColumn: ci + 2 }}>{m}</span>
+              {monthMarks.map((m) => (
+                <span key={`m${m.month}`} className="db-heat-month" style={{ gridColumn: `${m.col + 2} / span ${m.span}` }}>{m.label}</span>
               ))}
-              {rowLabels().map((l, ri) => (
-                <span key={`r${ri}`} className="db-heat-day" style={{ gridRow: ri + 2 }} aria-hidden="true">{l}</span>
+              {dayMarks.map((d) => (
+                <span key={`r${d.ri}`} className="db-heat-day" style={{ gridRow: d.ri + 2 }} aria-hidden="true">{d.label}</span>
               ))}
               {heat.map((col, ci) =>
                 col.map((c, ri) => (

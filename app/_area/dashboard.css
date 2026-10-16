@@ -707,8 +707,7 @@ html[dir="ltr"] .pls-line::after, html[dir="ltr"] .pls-card::after{ transform:tr
 
 /* ── ماژول‌های رنگی که توکن خودشون رو دارن: همه خاکستری ── */
 
-html[data-admin-theme="noir"] body:not([data-theme="light"]) .db-page,
-html[data-admin-theme="noir"] body:not([data-theme="light"]) .db-cmd-root{
+html[data-admin-theme="noir"] body:not([data-theme="light"]) .db-page{
   --ring-1a:#FFFFFF; --ring-1b:#BDBDBD;
   --ring-2a:#E0E0E0; --ring-2b:#8C8C8C;
   --ring-3a:#C8C8C8; --ring-3b:#6E6E6E;

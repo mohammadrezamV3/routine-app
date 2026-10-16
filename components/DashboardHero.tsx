@@ -73,7 +73,6 @@ function sunColor(p: number) {
 export function DashboardHero({
   data,
   routine,
-  onOpenCommand,
   onShare,
   routineLocked = false,
   routineOff = false,
@@ -90,7 +89,6 @@ export function DashboardHero({
     wakeSleep: { wake: string; sleep: string };
     hasWakeSleep: boolean;
   };
-  onOpenCommand: () => void;
   /** «اشتراک موفقیت» — پاپ‌آپ DashboardShare */
   onShare?: () => void;
   routineLocked?: boolean;
@@ -261,12 +259,6 @@ export function DashboardHero({
             </Link>
           )}
         </div>
-
-        <button type="button" className="db-cmd-trigger" onClick={onOpenCommand} aria-label={tr("جست‌وجو و دسترسی سریع", "Search and quick access")}>
-          <DashIcon name="command" />
-          <span>{section ? tr("کجا بریم؟ جست‌وجوی صفحه‌ها و کارها…", "Where to? Search pages and actions…") : tr("کجا بریم؟ جست‌وجو در همه‌ی بخش‌ها…", "Search every section…")}</span>
-          <span className="db-cmd-trigger-keys" aria-hidden="true"><kbd className="db-kbd">Ctrl</kbd><kbd className="db-kbd">K</kbd></span>
-        </button>
       </div>
 
       <div className="db-hero-orbit" aria-label={tr("پیشرفت امروز", "Today's progress")}>

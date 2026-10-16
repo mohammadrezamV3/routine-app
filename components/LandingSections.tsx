@@ -196,9 +196,9 @@ export function LandingHowItWorks({ section = null }: SecProp) {
 
 /* ───────────────────────── 2.5) Dashboard ───────────────────────── */
 // معرفی داشبورد (/dashboard) — ماکت ساده‌شده‌ی خود صفحه (حلقه‌های پیشرفت،
-// کارهای سریع، خط زمانی امروز، ترید) و یک پاپ‌آپ «ثبت غذا» روی همون صفحه،
+// خط زمانی امروز، ترید) و یک پاپ‌آپ «ثبت غذا» روی همون صفحه،
 // چون نکته‌ی اصلیش همینه: ثبت‌کردن بدون رفتن به صفحه‌ی دیگه. همه‌ی ادعاها با
-// کد DashboardClient/DashboardActions/DashboardCommand چک شده. تصویر inert.
+// کد DashboardClient/DashboardActions چک شده. تصویر inert.
 
 const dashRings = () => [
   { label: tr("روتین", "Routine"), v: 0.78, a: "var(--ring-1a)", b: "var(--ring-1b)" },
@@ -210,7 +210,6 @@ const dashPoints = (): { icon: LucideIcon; title: string; body: string }[] => [
   { icon: LayoutGrid, title: tr("امروزت را ببین", "See your day"), body: tr("برنامه‌های امروز، وضعیت انجام‌شدن و اولویت‌هایت را یک‌جا دنبال کن.", "Follow today's plans, their completion status and your priorities in one place.") },
   { icon: Zap, title: tr("سریع ثبت کن", "Log quickly"), body: tr("کاری که انجام داده‌ای را همان لحظه ثبت کن و ادامه بده.", "Log what you have done the moment you do it, and move on.") },
   { icon: RefreshCw, title: tr("پیشرفتت را دنبال کن", "Follow your progress"), body: tr("عملکردت فقط یک لیست نیست؛ روندی است که می‌بینی. هر تیک همان لحظه در برنامه هفتگی، استریک و دستگاه‌های دیگرت هم دیده می‌شود.", "Your performance is not just a list; it is a trend you can see. Every tick shows up instantly in the weekly plan, your streak and your other devices.") },
-  { icon: Sparkles, title: tr("جست‌وجوی سریع", "Quick search"), body: tr("با Ctrl/⌘ + K و چند حرف به هر بخش برس.", "Press Ctrl/⌘ + K and type a few letters to reach any section.") },
 ];
 
 function DashRings() {
