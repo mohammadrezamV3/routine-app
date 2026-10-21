@@ -22,19 +22,33 @@ describe("getVisibleLinks per section", () => {
     expect(all.some((h) => h.startsWith("/exercise"))).toBe(false);
   });
 
-  it("workout collapses the routine group to a plain sleep link", () => {
+  it("sleep is its own top-level item and there is no routine or workout group", () => {
+    for (const sec of ["routine", "workout", null] as const) {
+      const items = getVisibleLinks(null, sec);
+      expect(items.some((i) => !isGroup(i) && i.href === "/sleep")).toBe(true);
+      expect(items.some((i) => isGroup(i) && (i.icon === "weekly" || i.icon === "exercise"))).toBe(false);
+    }
+  });
+
+  it("workout shows plan and calorie as top-level links", () => {
     const items = getVisibleLinks(null, "workout");
-    const sleep = items.find((i) => !isGroup(i) && i.href === "/sleep");
-    expect(sleep).toBeTruthy();
-    expect(items.some((i) => isGroup(i) && i.icon === "weekly")).toBe(false);
-    const workoutGroup = items.find((i) => isGroup(i) && i.icon === "exercise");
-    expect(workoutGroup && isGroup(workoutGroup) && workoutGroup.children.length).toBe(2);
+    const top = items.filter((i) => !isGroup(i)).map((i) => (i as { href: string }).href);
+    expect(top).toEqual(expect.arrayContaining(["/exercise?tab=exercise", "/exercise?tab=calorie", "/sleep", "/analysis/weekly"]));
     expect(hrefs(items)).not.toContain("/weekly");
     expect(hrefs(items)).not.toContain("/roadmaps");
   });
 
+  it("only two groups: Mentors and More (articles + about)", () => {
+    const groups = getVisibleLinks(null, "routine").filter(isGroup);
+    expect(groups.map((g) => g.icon)).toEqual(["mentors", "more"]);
+    expect(groups[0].children.map((c) => c.href)).toEqual(["/mentors", "/mentorship"]);
+    expect(groups[1].children.map((c) => c.href)).toEqual(["/blog", "/about"]);
+    const top = getVisibleLinks(null, "routine").filter((i) => !isGroup(i)).map((i) => (i as { href: string }).href);
+    expect(top).toEqual(["/dashboard", "/weekly", "/sleep", "/roadmaps", "/analysis/weekly"]);
+  });
+
   it("trade shows only trade plus shared items", () => {
     const all = hrefs(getVisibleLinks(null, "trade"));
-    expect(all).toEqual(["/dashboard", "/mentors", "/mentorship", "/trade", "/analysis/weekly", "/blog", "/about"]);
+    expect(all).toEqual(["/dashboard", "/trade", "/analysis/weekly", "/mentors", "/mentorship", "/blog", "/about"]);
   });
 });

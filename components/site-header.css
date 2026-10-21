@@ -146,10 +146,11 @@
   }
 }
 
-/* عرض تنگ (1024 تا 1279): کمی فشرده‌تر تا با طولانی‌ترین لیبل‌ها هم‌پوشانی نباشه */
+/* عرض تنگ (1024 تا 1279): فشرده‌تر تا با لینک‌های بالاسطحی بیشتر (خواب، برنامه، آنالیز و ...)
+   سرریز نکنه و با طولانی‌ترین لیبل‌ها هم‌پوشانی نباشه */
 @media (min-width:1024px) and (max-width:1279.98px){
   html[dir] body[data-theme] .app-topbar[data-site-header]{ gap:10px; padding-inline:16px; }
-  html[dir] body[data-theme] .dnav .dnav-link{ padding:0 8px; font-size:13px; gap:4px; }
+  html[dir] body[data-theme] .dnav .dnav-link{ padding:0 6px; font-size:12.5px; gap:3px; }
   .dnav-list{ gap:0; }
   html[dir] .app-topbar[data-site-header] .topbar-actions{ gap:4px; }
   html[dir] .app-topbar[data-site-header] .dnav-end{ gap:4px; }

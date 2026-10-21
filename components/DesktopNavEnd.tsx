@@ -1,6 +1,6 @@
 "use client";
 
-// سمت پایان هدر دسکتاپ (هر دو زبان): برای مهمان «ورود» و «شروع رایگان».
+// سمت پایان هدر دسکتاپ (هر دو زبان): سوییچ روز/شب (مشترک با کشو) برای همه + برای مهمان «ورود» و «شروع رایگان».
 // انتخاب زبان عمدا اینجا نیست (فقط در تنظیمات و صفحه‌های ورود). به‌علاوه
 // سایه/بلور قوی‌تر هدر بعد از چند پیکسل اسکرول (data-scrolled روی هدر، با یک
 // لیسنر passive؛ روی دستگاه ضعیف lib/perfTier.ts هیچ لیسنری نمی‌ذاره).
@@ -9,6 +9,7 @@ import { useEffect, useRef } from "react";
 import { SmartLink as Link } from "./SmartLink";
 import { isLowPerfDevice } from "@/lib/perfTier";
 import { tr } from "@/lib/i18n";
+import ThemeSwitch from "./ThemeSwitch";
 
 export default function DesktopNavEnd({ guest }: { guest: boolean }) {
   const wrapRef = useRef<HTMLDivElement>(null);
@@ -29,6 +30,7 @@ export default function DesktopNavEnd({ guest }: { guest: boolean }) {
 
   return (
     <div ref={wrapRef} className="dnav-end">
+      <ThemeSwitch />
       {guest && (
         <>
           <Link href="/auth/login" className="dnav-login">{tr("ورود", "Log in")}</Link>
