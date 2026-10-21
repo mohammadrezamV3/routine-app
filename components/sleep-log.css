@@ -86,3 +86,10 @@ body[data-theme="light"] .slg-tags .tick-option, body:not([data-theme="light"]) 
   .slg-danger:hover:not(:disabled){ color:var(--slp-poor); border-color:var(--slp-poor); }
 }
 
+
+.sleep-scope .slg-goal-fill{ align-self:center; margin-block:-4px; }
+.slg-goal-fill svg{ width:14px; height:14px; }
+/* دکمه‌ی ذخیره/حذف از .btn میان؛ فقط جاگیری ردیف */
+.slg-actions > .btn{ flex:1 1 120px; }
+.slg-actions > .btn.slg-save{ flex:2 1 160px; }
+.slg-danger.btn{ --btn-fg:var(--slp-poor); --btn-hover-fg:var(--slp-poor); --btn-hover-bd:var(--slp-poor); }

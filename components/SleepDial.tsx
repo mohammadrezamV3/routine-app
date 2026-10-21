@@ -3,7 +3,8 @@
 import "./sleep-dial.css";
 import { useEffect, useId, useMemo, useState } from "react";
 import { m as motion, useReducedMotion } from "framer-motion";
-import { Moon, Sun } from "lucide-react";
+import { Check, Moon, Sun } from "lucide-react";
+import { Spinner } from "./Spinner";
 import { faNum } from "@/lib/jalali";
 import { tr } from "@/lib/i18n";
 import {
@@ -56,6 +57,9 @@ export function SleepDial({
   latency = 15,
   onOpenCycles,
   onPreloadCycles,
+  onQuickLog,
+  quickBusy = false,
+  quickError = null,
 }: {
   loaded: boolean;
   target: { wake: string; sleep: string };
@@ -69,6 +73,10 @@ export function SleepDial({
   latency?: number;
   onOpenCycles?: () => void;
   onPreloadCycles?: () => void;
+  /** ثبت یک‌ضربه‌ی دیشب با ساعت‌های هدف (فقط وقتی دیشب ثبت نشده و ساعت بیداری هدف گذشته) */
+  onQuickLog?: () => void;
+  quickBusy?: boolean;
+  quickError?: string | null;
 }) {
   const uid = useId().replace(/:/g, "");
   const reduce = useReducedMotion();
@@ -91,6 +99,7 @@ export function SleepDial({
   let kicker = "";
   let big = "";
   let caption = "";
+  let caption2 = "";
   let bigCls = "";
   if (tracking) {
     kicker = tr("در حال خواب", "Sleeping");
@@ -100,7 +109,8 @@ export function SleepDial({
   } else if (showLast && band) {
     kicker = tr("امتیاز دیشب", "Last night's score");
     big = faNum(lastScore!);
-    caption = `${scoreBandLabel(band)} · ${durationLabel(sleepMinutes(lastNight!))}`;
+    caption = scoreBandLabel(band);
+    caption2 = durationLabel(sleepMinutes(lastNight!));
     bigCls = `is-score slp-c-${band}`;
   } else if (phase === "bedtime" || phase === "night") {
     kicker = tr("وقت خوابه", "Bedtime");
@@ -133,6 +143,10 @@ export function SleepDial({
     return () => clearTimeout(t);
   }, [fast]);
 
+  // ثبت یک‌ضربه: دیشب ثبت نشده، صبح/روز و ساعت بیداری هدف گذشته
+  const canQuick = !!onQuickLog && loaded && !lastNight && !tracking && (phase === "morning" || phase === "day")
+    && nowMin !== null && nowMin >= wakeMin;
+
   // یک خط راهنما فقط شب: بهترین ساعت‌های بیداری اگه همین الان بخوابی
   const wakeHint = !tracking && (phase === "bedtime" || phase === "night" || phase === "winddown") && nowMin !== null
     ? wakeTimesFor(Math.floor(nowMin), latency).slice(0, 2).reverse().map((w) => w.clock)
@@ -140,7 +154,7 @@ export function SleepDial({
 
   // اندازه و جای عمودی متن وسط (نسبت به مرکز)؛ امتیاز درشت‌تره و فاصله‌ها بازتر
   const baseBig = bigCls.includes("is-score") ? 56 : bigCls.includes("is-hms") ? 26 : bigCls.includes("is-word") ? 32 : 40;
-  const cy = bigCls.includes("is-score") ? { kicker: -40, big: 2, caption: 42 } : { kicker: -30, big: 2, caption: 32 };
+  const cy = bigCls.includes("is-score") ? { kicker: -43, big: -3, caption: 36, caption2: 52 } : { kicker: -30, big: 2, caption: 32, caption2: 0 };
 
   const nowAngle = nowMin !== null ? minuteToAngle(nowMin) : 0;
   const nowPt = pointAt(C, R_GOAL, nowAngle);
@@ -150,9 +164,9 @@ export function SleepDial({
   const draw = reduce ? { duration: 0 } : { duration: 1.2, ease: EASE };
 
   return (
-    <section className="sl-card sld" aria-live="polite">
+    <section className="sl-card sld m-rise" aria-live="polite">
       <div className="sld-dial">
-        <svg viewBox={`${VB} ${VB} ${S - 2 * VB} ${S - 2 * VB}`} className="sld-svg" preserveAspectRatio="xMidYMid meet" role="img" aria-label={`${kicker} ${big} ${caption}`}>
+        <svg viewBox={`${VB} ${VB} ${S - 2 * VB} ${S - 2 * VB}`} className="sld-svg" preserveAspectRatio="xMidYMid meet" role="img" aria-label={`${kicker} ${big} ${caption} ${caption2}`.trim()}>
           <defs>
             <linearGradient id={`sldg${uid}`} x1="0" y1="0" x2="1" y2="1">
               <stop offset="0%" style={{ stopColor: "var(--slp-ink)" }} />
@@ -224,6 +238,7 @@ export function SleepDial({
           <text x={C} y={C + cy.kicker} className="sld-kicker" textAnchor="middle" dominantBaseline="central" style={{ fontSize: fitFontSize(kicker, 12, CENTER_W) }}>{kicker}</text>
           <text x={C} y={C + cy.big} className={`sld-big ${bigCls}`} textAnchor="middle" dominantBaseline="central" style={{ fontSize: fitFontSize(big, baseBig, CENTER_W) }}>{big}</text>
           <text x={C} y={C + cy.caption} className="sld-caption" textAnchor="middle" dominantBaseline="central" style={{ fontSize: fitFontSize(caption, 11.5, CENTER_W) }}>{caption}</text>
+          {caption2 && <text x={C} y={C + cy.caption2} className="sld-caption is-sub" textAnchor="middle" dominantBaseline="central" style={{ fontSize: fitFontSize(caption2, 11, CENTER_W) }}>{caption2}</text>}
         </svg>
       </div>
 
@@ -253,20 +268,29 @@ export function SleepDial({
       <div className="sld-actions">
         {tracking ? (
           <>
-            <button type="button" className="trade-primary-btn" onClick={onWakeUp}>{tr("بیدار شدم", "I'm awake")}</button>
-            <button type="button" className="account-outline-btn muted" onClick={() => stopTracking()}>{tr("لغو", "Cancel")}</button>
+            <button type="button" className="btn btn-primary" onClick={onWakeUp}>{tr("بیدار شدم", "I'm awake")}</button>
+            <button type="button" className="btn btn-ghost sld-cancel" onClick={() => stopTracking()}>{tr("لغو", "Cancel")}</button>
           </>
         ) : phase === "winddown" || phase === "bedtime" || phase === "night" ? (
           <>
-            <button type="button" className="trade-primary-btn" onClick={() => startTracking()}>{tr("دارم می‌خوابم", "I'm going to sleep")}</button>
-            <button type="button" className="account-outline-btn" onClick={onLog}>{lastNight ? tr("ویرایش دیشب", "Edit last night") : tr("ثبت دیشب", "Log last night")}</button>
+            <button type="button" className="btn btn-primary" onClick={() => startTracking()}>{tr("دارم می‌خوابم", "I'm going to sleep")}</button>
+            <button type="button" className="btn btn-outline" onClick={onLog}>{lastNight ? tr("ویرایش دیشب", "Edit last night") : tr("ثبت دیشب", "Log last night")}</button>
           </>
         ) : (
-          <button type="button" className={lastNight ? "account-outline-btn" : "trade-primary-btn"} onClick={onLog}>
+          <button type="button" className={lastNight ? "btn btn-outline" : "btn btn-primary"} onClick={onLog}>
             {lastNight ? tr("ویرایش خواب دیشب", "Edit last night's sleep") : tr("ثبت خواب دیشب", "Log last night's sleep")}
           </button>
         )}
       </div>
+
+      {canQuick && (
+        <button type="button" className="btn btn-ghost btn-sm sld-quick" onClick={onQuickLog} disabled={quickBusy}>
+          {quickBusy && <Spinner label={null} />}
+          <Check aria-hidden />
+          <span>{tr(`طبق برنامه خوابیدم (${target.sleep} تا ${target.wake})`, `Slept as planned (${target.sleep} to ${target.wake})`)}</span>
+        </button>
+      )}
+      {quickError && <p className="sl-err sld-quick-err" role="alert">{quickError}</p>}
     </section>
   );
 }

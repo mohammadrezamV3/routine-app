@@ -12,7 +12,7 @@ import { SleepDial } from "./SleepDial";
 import { SleepWeek } from "./SleepWeek";
 import { SleepGoalSheet } from "./SleepGoalSheet";
 import { SleepLogSheet, type SleepLogSheetProps } from "./SleepLogSheet";
-import { getSleepRange } from "@/lib/storage";
+import { getSleepRange, saveSleep, SleepSaveError } from "@/lib/storage";
 import { DEFAULT_SLEEP, DEFAULT_WAKE } from "@/lib/wakeSleep";
 import { getSleepGoal } from "@/lib/sleepGoal";
 import { getSleepLatency, setSleepLatency } from "@/lib/sleepLatency";
@@ -21,7 +21,7 @@ import { useLiveRefresh } from "@/lib/liveSync";
 import { useFeature } from "@/lib/useFeatures";
 import { isoLocal } from "@/lib/jalali";
 import { tr } from "@/lib/i18n";
-import { addDaysIso, sleepInsights, sleepMinutes, type SleepRecord } from "@/lib/sleep";
+import { addDaysIso, buildSleepTimes, isFutureWake, sleepInsights, sleepMinutes, type SleepRecord } from "@/lib/sleep";
 import { getTracking, stopTracking, draftFromTracking, TRACKER_EVENT, type SleepTracking } from "@/lib/sleepTracker";
 
 // بخش خواب (/sleep) — صفحه و سیستم جدای خودش، نه داخل صفحه‌ی روتین. دو کارت
@@ -56,6 +56,8 @@ export function SleepHub() {
   const [goalOpen, setGoalOpen] = useState(false);
   const [cyclesOpen, setCyclesOpen] = useState(false);
   const [latency, setLatency] = useState<number>(DEFAULT_LATENCY);
+  const [quickBusy, setQuickBusy] = useState(false);
+  const [quickError, setQuickError] = useState<string | null>(null);
 
   // امروز با گذشتن نیمه‌شب (صفحه‌ی باز) عوض می‌شه
   useEffect(() => {
@@ -114,6 +116,27 @@ export function SleepHub() {
     setSheet({ initial: { ...(existing ?? {}), ...draft }, existing: !!existing, fromTracker: true });
   }, [tracking, byDate]);
 
+  // ثبت یک‌ضربه‌ی دیشب با ساعت‌های هدف (کاربر بعدا از ویرایش می‌تونه دقیق‌ترش کنه)
+  const quickLog = useCallback(async () => {
+    if (quickBusy || !todayIso) return;
+    const range = buildSleepTimes(todayIso, target.sleep, target.wake);
+    if (!range || isFutureWake(range.wokeAt)) return;
+    setQuickBusy(true); setQuickError(null);
+    try {
+      await saveSleep({
+        date: todayIso, sleptAt: range.sleptAt.toISOString(), wokeAt: range.wokeAt.toISOString(),
+        quality: null, note: null,
+      });
+      await load();
+    } catch (e) {
+      setQuickError(e instanceof SleepSaveError && e.status === 403
+        ? tr("دوره‌ی آزمایشی «روتین من» تموم شده؛ برای ثبت خواب پلن رو تهیه کن.", "Your My Routine trial has ended; get the plan to log sleep.")
+        : e instanceof Error ? e.message : tr("ذخیره نشد", "Couldn't save"));
+    } finally {
+      setQuickBusy(false);
+    }
+  }, [quickBusy, todayIso, target, load]);
+
   // لینک از آنالیز هفتگی (/sleep?date=YYYY-MM-DD) همون شب رو برای ویرایش باز می‌کنه
   useEffect(() => {
     if (!loaded) return;
@@ -156,6 +179,9 @@ export function SleepHub() {
           latency={latency}
           onOpenCycles={openCycles}
           onPreloadCycles={preloadCycles}
+          onQuickLog={quickLog}
+          quickBusy={quickBusy}
+          quickError={quickError}
         />
         {todayIso && <SleepWeek entries={entries} insights={insights} todayIso={todayIso} onPick={openDate} />}
         {todayIso && loaded && (

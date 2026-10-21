@@ -4,7 +4,7 @@ import "./sleep-log.css";
 import { useEffect, useMemo, useState } from "react";
 import { createPortal } from "react-dom";
 import { SmartLink as Link } from "@/components/SmartLink";
-import { ChevronDown, ChevronLeft, ChevronRight } from "lucide-react";
+import { ChevronDown, ChevronLeft, ChevronRight, RotateCcw } from "lucide-react";
 import { GradientRing, RING_AMBER, RING_BLUE, RING_GREEN, RING_OVER, type RingGrad } from "./GradientRing";
 import { NumberInput } from "./NumberInput";
 import { SegmentedTabs } from "./SegmentedTabs";
@@ -205,6 +205,17 @@ function SheetBody({ initial, target, existing, onClose, onChanged }: SleepLogSh
             </label>
           </div>
 
+          {(bed !== target.sleep || wake !== target.wake) && (
+            <button
+              type="button"
+              className="btn btn-ghost btn-sm slg-goal-fill"
+              onClick={() => { setBed(target.sleep); setWake(target.wake); setTimesDirty(true); }}
+            >
+              <RotateCcw aria-hidden />
+              <span>{tr(`ساعت‌های هدف (${target.sleep} تا ${target.wake})`, `Use goal times (${target.sleep} to ${target.wake})`)}</span>
+            </button>
+          )}
+
           <div className="slg-preview">
             <GradientRing value={score != null ? score / 100 : 0} size={64} stroke={7} grad={BAND_GRAD[band ?? "good"]}>
               <b className={`slg-ring-num${band ? ` slp-c-${band}` : ""}`}>{score != null ? faNum(score) : "-"}</b>
@@ -279,18 +290,18 @@ function SheetBody({ initial, target, existing, onClose, onChanged }: SleepLogSh
           {confirmDel ? (
             <div className="slg-actions">
               <span className="slg-confirm">{tr("این شب حذف بشه؟", "Delete this night?")}</span>
-              <button type="button" className="account-outline-btn slg-danger" onClick={onDelete} disabled={saving}>
+              <button type="button" className="btn btn-outline slg-danger" onClick={onDelete} disabled={saving}>
                 {saving && <Spinner label={null} />} {tr("حذف شود", "Delete")}
               </button>
-              <button type="button" className="account-outline-btn" onClick={() => setConfirmDel(false)} disabled={saving}>{tr("انصراف", "Cancel")}</button>
+              <button type="button" className="btn btn-ghost" onClick={() => setConfirmDel(false)} disabled={saving}>{tr("انصراف", "Cancel")}</button>
             </div>
           ) : (
             <div className="slg-actions">
-              <button type="button" className="trade-primary-btn slg-save" onClick={onSave} disabled={saving || !durOk}>
+              <button type="button" className="btn btn-primary slg-save" onClick={onSave} disabled={saving || !durOk}>
                 {saving && <Spinner label={null} />} {existing ? tr("ذخیره‌ی تغییرات", "Save changes") : tr("ذخیره", "Save")}
               </button>
               {existing && (
-                <button type="button" className="account-outline-btn slg-danger" onClick={() => setConfirmDel(true)} disabled={saving}>{tr("حذف", "Delete")}</button>
+                <button type="button" className="btn btn-outline slg-danger" onClick={() => setConfirmDel(true)} disabled={saving}>{tr("حذف", "Delete")}</button>
               )}
             </div>
           )}

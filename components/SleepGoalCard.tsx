@@ -71,7 +71,7 @@ export function SleepGoalCard({
       {!custom && !dirty && <span className="sl-sub">{tr("فعلا از ساعت‌های روتینت گرفته شده؛ هر وقت خواستی جدا تنظیمش کن.", "For now it uses your routine times; set it separately whenever you like.")}</span>}
       {err && <span className="sl-err">{err}</span>}
       {(dirty || ok) && (
-        <button type="button" className="trade-primary-btn" onClick={save} disabled={busy || !dirty}>
+        <button type="button" className="btn btn-primary" onClick={save} disabled={busy || !dirty}>
           {busy ? <Spinner size={14} /> : ok && !dirty ? tr("ذخیره شد", "Saved") : tr("ذخیره‌ی هدف", "Save goal")}
         </button>
       )}
