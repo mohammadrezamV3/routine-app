@@ -1,9 +1,11 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import "./sleep-log.css";
+import { useEffect, useRef, useState } from "react";
 import { createPortal } from "react-dom";
 import { SleepGoalCard } from "./SleepGoalCard";
 import { useLockBodyScroll } from "@/lib/useLockBodyScroll";
+import { useSheetFocus } from "@/lib/useSheetFocus";
 import type { SleepGoal } from "@/lib/sleepGoal";
 import { isEn, tr } from "@/lib/i18n";
 
@@ -32,6 +34,8 @@ export function SleepGoalSheet({
 
 function Body({ goal, custom, goalMin, onClose, onSaved }: { goal: SleepGoal; custom: boolean; goalMin: number; onClose: () => void; onSaved: () => void }) {
   useLockBodyScroll();
+  const panelRef = useRef<HTMLDivElement>(null);
+  useSheetFocus(panelRef);
   useEffect(() => {
     const k = (e: KeyboardEvent) => { if (e.key === "Escape") onClose(); };
     window.addEventListener("keydown", k);
@@ -40,7 +44,7 @@ function Body({ goal, custom, goalMin, onClose, onSaved }: { goal: SleepGoal; cu
   return (
     <>
       <div className="modal-overlay open" onClick={onClose} />
-      <div className="modal-panel liquid-glass-panel open sleep-scope slp-goal-panel" role="dialog" aria-modal="true" aria-label={tr("هدف خواب", "Sleep goal")} dir={isEn() ? "ltr" : "rtl"}>
+      <div ref={panelRef} tabIndex={-1} className="modal-panel liquid-glass-panel open sleep-scope slp-goal-panel slg-panel" role="dialog" aria-modal="true" aria-label={tr("هدف خواب", "Sleep goal")} dir={isEn() ? "ltr" : "rtl"}>
         <div className="modal-head">
           <div className="modal-title">{tr("هدف خواب", "Sleep goal")}</div>
           <button type="button" className="nav-close" onClick={onClose} aria-label={tr("بستن", "Close")}>×</button>

@@ -6,6 +6,7 @@ import { CalendarDays, TrendingUp, Lightbulb } from "lucide-react";
 import { SleepTrendChart } from "./SleepTrendChart";
 import { SleepMonthMap } from "./SleepMonthMap";
 import { SleepInsightsPanel } from "./SleepInsightsPanel";
+import "./sleep-charts.css";
 import type { sleepInsights, SleepRecord } from "@/lib/sleep";
 import { tr } from "@/lib/i18n";
 
@@ -37,8 +38,8 @@ export function SleepStatsPanels({
   const meta = panelMeta();
 
   return (
-    <div className="flex flex-col gap-4 sm:gap-6">
-      <div className="flex items-start justify-center gap-2.5 sm:gap-3.5" role="tablist" aria-label={tr("آمار خواب", "Sleep stats")}>
+    <div className="slst">
+      <div className="slst-tabs" role="tablist" aria-label={tr("آمار خواب", "Sleep stats")}>
         {ORDER.map((key) => {
           const on = key === active;
           return (
@@ -47,13 +48,11 @@ export function SleepStatsPanels({
               type="button"
               role="tab"
               aria-selected={on}
-              aria-label={meta[key].label}
-              title={meta[key].label}
               onClick={() => setActive(key)}
-              className={`dash-quick-tile rounded-dash border bg-dash-card backdrop-blur-xl${on ? " is-on" : ""}`}
+              className={`slst-tile${on ? " is-on" : ""}`}
             >
-              <span className="dash-quick-tile-icon">{meta[key].icon}</span>
-              <span className="dash-quick-tile-label" aria-hidden={!on}>{meta[key].label}</span>
+              <span className="slst-ic" aria-hidden="true">{meta[key].icon}</span>
+              <span className="slst-label">{meta[key].label}</span>
             </button>
           );
         })}

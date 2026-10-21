@@ -2,19 +2,19 @@
    هیچ بک‌گراندی به عنصری اضافه نشده: قوس‌ها و ستون‌ها SVG‌ان (stroke/fill)،
    دکمه‌های بی‌بک‌گراند با دو سلکتور تم قانون سراسری button{} رو خنثی می‌کنن. */
 
-body[data-theme="light"] .sld-goal-row, body:not([data-theme="light"]) .sld-goal-row,
+body[data-theme="light"] .sld-tile, body:not([data-theme="light"]) .sld-tile,
 body[data-theme="light"] .slw-col, body:not([data-theme="light"]) .slw-col{
   background:none; box-shadow:none; backdrop-filter:none; -webkit-backdrop-filter:none;
 }
 @media (hover:hover){
-  body[data-theme="light"] .sld-goal-row:hover, body:not([data-theme="light"]) .sld-goal-row:hover,
+  body[data-theme="light"] .sld-tile:hover, body:not([data-theme="light"]) .sld-tile:hover,
   body[data-theme="light"] .slw-col:hover, body:not([data-theme="light"]) .slw-col:hover{
     background:none; box-shadow:none;
   }
 }
 
 /* ── صفحه‌ی ساعت ───────────────────────────────────────── */
-.sld{ align-items:stretch; gap:18px; padding-top:22px; }
+.sld{ align-items:stretch; gap:16px; padding-top:22px; }
 /* صفحه‌ی ساعت یک مربع واقعیه: عرض مشخص و ارتفاع از خود SVG (viewBox) میاد؛ هیچ
    لایه‌ی HTML جدا، container-type یا درصد-روی-aspect-ratio نیست (وب‌کیت اون ترکیب رو
    بلندتر از عرضش می‌ساخت). aspect-ratio روی خود SVG فقط پشتیبانه. */
@@ -29,16 +29,27 @@ body[data-theme="light"] .slw-col, body:not([data-theme="light"]) .slw-col{
   fill:none; stroke-width:14; stroke-linecap:round;
   filter:drop-shadow(0 0 8px color-mix(in srgb, var(--slp-ink) 45%, transparent));
 }
+.sld-lane{ fill:none; stroke:var(--box-line); stroke-width:6; opacity:.55; }
 .sld-last{ fill:none; stroke:currentColor; stroke-width:6; stroke-linecap:round; }
 .sld-last:not([class*="slp-c-"]):not(.is-live){ color:var(--slp-good); }
-.sld-last.is-live{ color:var(--slp-ink-2); stroke-dasharray:1 9; animation:sldLive 1.6s linear infinite; }
-@keyframes sldLive{ to{ stroke-dashoffset:-20; } }
+.sld-last.is-live{ color:var(--slp-ink-2); }
+.sld-head{ fill:var(--slp-ink-2); }
+.sld-head-halo{
+  fill:none; stroke:var(--slp-ink-2); stroke-width:1.5; opacity:.4;
+  transform-box:fill-box; transform-origin:center; animation:sldPulse 2.4s ease-out infinite;
+}
+.sld-cyc{ fill:var(--box-bg); stroke:color-mix(in srgb, var(--slp-ink) 70%, transparent); stroke-width:1; }
 .sld-now{ fill:var(--text); }
 .sld-now-halo{ fill:none; stroke:var(--text); stroke-width:1.5; opacity:.28; transform-box:fill-box; transform-origin:center; animation:sldPulse 2.4s ease-out infinite; }
 @keyframes sldPulse{ 0%{ transform:scale(.6); opacity:.45; } 100%{ transform:scale(1.5); opacity:0; } }
 
 /* آیکون ماه/خورشید روی دو سر قوس هدف (داخل SVG، واحدهای viewBox) */
-.sld-pin{ color:#fff; stroke-width:2.4; pointer-events:none; overflow:visible; }
+.sld-disc{ stroke:var(--box-bg); stroke-width:2; }
+.sld-disc.is-moon{ fill:var(--slp-ink); }
+.sld-disc.is-sun{ fill:var(--slp-fair); }
+.sld-pin{ stroke-width:2.4; pointer-events:none; overflow:visible; }
+.sld-pin.is-moon{ color:#fff; }
+.sld-pin.is-sun{ color:#2A1B00; }
 
 /* متن وسط داخل SVG: اندازه‌ها از کد میان (fitFontSize) و دیگه به عرض کانتینر وابسته نیستن */
 .sld-kicker, .sld-caption{ fill:var(--muted); font-weight:700; }
@@ -48,31 +59,62 @@ body[data-theme="light"] .slw-col, body:not([data-theme="light"]) .slw-col{
 .sld-big.is-clock{ direction:ltr; unicode-bidi:isolate; }
 .sld-big.is-score{ fill:currentColor; }
 
-/* ساعت‌های هدف — زدن کل ردیف = ویرایش هدف */
-.sld-goal-row{
-  display:grid; grid-template-columns:1fr auto 1fr; align-items:center; gap:10px; width:100%;
-  padding:12px 14px; border-radius:18px; border:1px solid var(--box-line); color:var(--text);
-  cursor:pointer; transition:border-color .18s ease;
+/* نکته‌ی شخصی تک‌خطی زیر ساعت */
+.sld-insight{
+  margin:-4px auto 0; width:fit-content; max-width:100%; display:flex; align-items:flex-start; justify-content:center; gap:7px;
+  text-align:center; font-size:13px; font-weight:700; line-height:1.8; color:var(--muted);
 }
-@media (hover:hover){ .sld-goal-row:hover{ border-color:color-mix(in srgb, var(--slp-ink) 55%, var(--box-line)); } }
-.sld-goal-item{ display:flex; align-items:center; gap:8px; min-width:0; }
-.sld-goal-item:last-child{ justify-content:flex-end; }
-.sld-goal-item > svg{ width:16px; height:16px; flex:none; color:var(--slp-ink); }
-.sld-goal-item:last-child > svg{ color:var(--slp-fair); }
-.sld-goal-item span{ display:flex; flex-direction:column; line-height:1.25; text-align:start; }
-.sld-goal-item small, .sld-goal-mid small{ font-size:11px; color:var(--muted); font-weight:600; }
-.sld-goal-item b{ font-size:16px; font-weight:800; font-variant-numeric:tabular-nums; }
-.sld-goal-mid{ display:flex; flex-direction:column; align-items:center; line-height:1.3; }
-.sld-goal-mid{ text-align:center; min-width:0; }
-.sld-goal-mid b{ font-size:12.5px; font-weight:800; line-height:1.5; }
-.sld-goal-item b{ unicode-bidi:isolate; direction:ltr; }
+.sld-insight svg{ width:16px; height:16px; flex:none; margin-top:4px; }
+.sld-insight span{ text-wrap:balance; }
+.sld-insight.is-good{ color:var(--slp-great); }
+.sld-insight.is-warn{ color:var(--slp-fair); }
+.sld-insight.is-info{ color:var(--slp-ink); }
 
-.sld-hint{ margin:-4px 0 0; text-align:center; font-size:12.5px; color:var(--muted); line-height:1.9; }
-.sld-hint b{ color:var(--text); font-variant-numeric:tabular-nums; }
+/* ساعت‌های هدف (فقط نمایش؛ ویرایش از باکس هدف خواب) */
+.sld-times{
+  display:flex; align-items:center; gap:12px; padding:2px 6px; color:var(--text);
+}
+.sld-time{ display:flex; align-items:center; gap:8px; min-width:0; }
+.sld-time > svg{ width:18px; height:18px; flex:none; color:var(--slp-ink); }
+.sld-time.is-wake > svg{ color:var(--slp-fair); }
+.sld-time span{ display:flex; flex-direction:column; line-height:1.25; text-align:start; }
+.sld-time small{ font-size:11px; color:var(--muted); font-weight:600; }
+.sld-time b{ font-size:17px; font-weight:800; font-variant-numeric:tabular-nums; unicode-bidi:isolate; direction:ltr; }
+.sld-time-line{
+  flex:1 1 auto; min-width:12px; height:0; border-top:1.5px dashed var(--box-line);
+}
+
+/* دو باکس هوشمند: چرخه‌های خواب و هدف خواب */
+.sld-tiles{ display:grid; grid-template-columns:1fr 1fr; gap:10px; }
+.sld-tiles > :only-child{ grid-column:1 / -1; }
+.sld-tile{
+  position:relative; display:grid; grid-template-columns:auto minmax(0,1fr); align-items:start; gap:4px 10px;
+  padding:12px; border-radius:18px; border:1px solid var(--box-line); color:var(--text);
+  text-align:start; cursor:pointer; min-width:0; font-family:var(--font-latin), var(--font-vazir), sans-serif;
+  transition:border-color .18s ease, transform .15s ease;
+}
+@media (hover:hover){ .sld-tile:hover{ border-color:color-mix(in srgb, var(--slp-ink) 55%, var(--box-line)); } }
+.sld-tile:active{ transform:scale(.98); }
+.sld-tile:focus-visible{ outline:2px solid var(--accent); outline-offset:2px; }
+.sld-tile-ico{
+  width:34px; height:34px; border-radius:11px; display:grid; place-items:center; flex:none;
+  color:var(--slp-ink); background:color-mix(in srgb, var(--slp-ink) 14%, transparent);
+}
+.sld-tile.is-goal .sld-tile-ico{ color:var(--slp-fair); background:color-mix(in srgb, var(--slp-fair) 16%, transparent); }
+.sld-tile-ico svg{ width:18px; height:18px; }
+.sld-tile-txt{ display:flex; flex-direction:column; line-height:1.35; min-width:0; }
+.sld-tile-txt small{ font-size:11.5px; color:var(--muted); font-weight:700; }
+.sld-tile-txt b{ font-size:18px; font-weight:900; font-variant-numeric:tabular-nums; line-height:1.4;  unicode-bidi:isolate; }
+.sld-tile-txt em{ font-style:normal; font-size:11.5px; color:var(--muted); font-weight:600; line-height:1.6; }
+.sld-tile-go{
+  position:absolute; inset-block-start:12px; inset-inline-end:10px; width:15px; height:15px; color:var(--muted); opacity:.7;
+}
+.sld-tile.is-goal .sld-tile-txt b{ font-size:16px; }
 
 .sld-actions{ display:flex; gap:10px; }
 .sld-actions > *{ flex:1 1 0; min-width:0; }
 .sld-actions > .btn{ padding-inline:10px; }
+.sld-actions > .btn-primary:first-child:not(:last-child){ flex:1.4 1 0; }
 .sld-actions > .btn.sld-cancel{ flex:0 0 auto; padding-inline:18px; }
 .sleep-scope .sld-quick{ align-self:center; max-width:100%; white-space:normal; height:auto; min-height:34px; padding-block:8px; line-height:1.5; text-align:center; }
 .sld-quick svg{ width:15px; height:15px; color:var(--slp-great); }
@@ -117,16 +159,20 @@ body[data-theme="light"] .slw-col, body:not([data-theme="light"]) .slw-col{
   .slw-col.is-empty:hover .slw-val{ opacity:1; color:var(--accent); }
 }
 
+html[data-perf-weak] .sld-now-halo, html[data-perf-weak] .sld-head-halo{ animation:none; opacity:.3; }
+html[data-perf-weak] .sld-goal{ filter:none; }
 @media (prefers-reduced-motion: reduce){
-  .sld-now-halo, .sld-last.is-live{ animation:none; }
+  .sld-now-halo, .sld-head-halo{ animation:none; opacity:.3; }
+  .sld-tile{ transition:none; }
+  .sld-tile:active{ transform:none; }
   .slw-col{ transition:none; }
   .slw-col:active:not(:disabled){ transform:none; }
 }
 
 @media (max-width:400px){
   .sld{ padding-inline:12px; gap:14px; }
-  .sld-goal-row{ padding:10px 10px; gap:6px; }
-  .sld-goal-item{ gap:5px; }
-  .sld-goal-item > svg{ width:14px; height:14px; }
-  .sld-goal-item b{ font-size:15px; }
+  .sld-tile{ padding:10px; gap:4px 8px; }
+  .sld-tile-ico{ width:30px; height:30px; border-radius:10px; }
+  .sld-tile-txt b{ font-size:17px; }
+  .sld-tile-go{ inset-inline-end:8px; }
 }

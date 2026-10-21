@@ -1,14 +1,16 @@
 "use client";
 
 import "./sleep-cycle.css";
-import { useEffect, useMemo, useState } from "react";
+import "./sleep-log.css";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { createPortal } from "react-dom";
 import { m as motion, useReducedMotion } from "framer-motion";
 import { SegmentedTabs } from "./SegmentedTabs";
-import { TimeInput } from "./TimeInput";
+import { SleepTimeField } from "./SleepTimeField";
 import { SleepCycleList } from "./SleepCycleList";
 import { SleepCycleHypnogram } from "./SleepCycleHypnogram";
 import { useLockBodyScroll } from "@/lib/useLockBodyScroll";
+import { useSheetFocus } from "@/lib/useSheetFocus";
 import { isEn, tr } from "@/lib/i18n";
 import { clockOf, durationLabel, sleepMinutes, type SleepRecord } from "@/lib/sleep";
 import { hhmmToMin } from "@/lib/sleepDial";
@@ -67,6 +69,8 @@ function Body({
 }: Omit<Parameters<typeof SleepCycleSheet>[0], "open">) {
   useLockBodyScroll();
   const reduce = useReducedMotion();
+  const panelRef = useRef<HTMLDivElement>(null);
+  useSheetFocus(panelRef);
   const [mode, setMode] = useState<Mode>("now");
   const [wakeAt, setWakeAt] = useState(target.wake);
   const [bedAt, setBedAt] = useState(target.sleep);
@@ -94,15 +98,16 @@ function Body({
   return (
     <>
       <div className="modal-overlay open" onClick={onClose} />
-      <div className="modal-panel liquid-glass-panel open sleep-scope slc-panel" role="dialog" aria-modal="true" aria-label={tr("چرخه‌های خواب", "Sleep cycles")} dir={isEn() ? "ltr" : "rtl"}>
+      <div ref={panelRef} tabIndex={-1} className="modal-panel liquid-glass-panel open sleep-scope slg-panel slc-panel" role="dialog" aria-modal="true" aria-label={tr("چرخه‌های خواب", "Sleep cycles")} dir={isEn() ? "ltr" : "rtl"}>
         <div className="modal-head">
           <div className="modal-title">{tr("چرخه‌های خواب", "Sleep cycles")}</div>
           <button type="button" className="nav-close" onClick={onClose} aria-label={tr("بستن", "Close")}>×</button>
         </div>
 
-        <p className="slc-intro">{tr("هر چرخه حدود 90 دقیقه‌ست؛ بیدارشدن پایان چرخه سبک‌تر از وسط خواب عمیقه.", "Each cycle is about 90 minutes; waking at the end of a cycle feels lighter than waking in deep sleep.")}</p>
+        <div className="slg-body slc-body">
+          <p className="slc-intro">{tr("هر چرخه حدود 90 دقیقه‌ست؛ بیدارشدن پایان چرخه سبک‌تر از وسط خواب عمیقه.", "Each cycle is about 90 minutes; waking at the end of a cycle feels lighter than waking in deep sleep.")}</p>
 
-        <SegmentedTabs<Mode> options={modes()} active={mode} onChange={setMode} className="slc-tabs" ariaLabel={tr("بخش‌های چرخه‌ی خواب", "Sleep cycle sections")} />
+          <SegmentedTabs<Mode> options={modes()} active={mode} onChange={setMode} className="slc-tabs seg-flush" ariaLabel={tr("بخش‌های چرخه‌ی خواب", "Sleep cycle sections")} />
 
           <motion.div
             key={mode}
@@ -114,42 +119,35 @@ function Body({
             {mode === "now" && (
               <>
                 <h3 className="slc-q">{tr("اگه همین الان (", "If I fall asleep right now (")}<span dir="ltr">{nowClock}</span>{tr(") بخوابم، کی بیدار شم؟", "), when should I wake up?")}</h3>
-                <SleepCycleList options={nowOpts} listKey={`now-${nowMin}-${latency}`} />
+                <SleepCycleList kind="wake" options={nowOpts} listKey={`now-${nowMin}-${latency}`} />
               </>
             )}
 
             {mode === "wake" && (
               <>
-                <label className="slc-field">
-                  <span>{tr("می‌خوام ساعت", "I want to wake at")}</span>
-                  <TimeInput value={wakeAt} onChange={setWakeAt} className="wsearch-newform-name" />
-                  <span>{tr("بیدار شم، کی بخوابم؟", "— when should I go to bed?")}</span>
-                </label>
-                {wakeOpts ? <SleepCycleList options={wakeOpts} listKey={`wake-${wakeAt}-${latency}`} /> : <p className="slc-hint">{tr("ساعت رو کامل وارد کن، مثل 07:00", "Enter the full time, like 07:00")}</p>}
+                <SleepTimeField label={tr("می‌خوام این ساعت بیدار شم", "I want to wake up at")} value={wakeAt} fallback={target.wake} onChange={setWakeAt} />
+                {wakeOpts ? <SleepCycleList kind="bed" options={wakeOpts} listKey={`wake-${wakeAt}-${latency}`} /> : <p className="slc-hint">{tr("ساعت رو کامل وارد کن، مثل 07:00", "Enter the full time, like 07:00")}</p>}
               </>
             )}
 
             {mode === "bed" && (
               <>
-                <label className="slc-field">
-                  <span>{tr("اگه ساعت", "If I go to bed at")}</span>
-                  <TimeInput value={bedAt} onChange={setBedAt} className="wsearch-newform-name" />
-                  <span>{tr("بخوابم، کی بیدار شم؟", "— when should I wake up?")}</span>
-                </label>
-                {bedOpts ? <SleepCycleList options={bedOpts} listKey={`bed-${bedAt}-${latency}`} /> : <p className="slc-hint">{tr("ساعت رو کامل وارد کن، مثل 23:30", "Enter the full time, like 23:30")}</p>}
+                <SleepTimeField label={tr("می‌خوام این ساعت بخوابم", "I want to go to bed at")} value={bedAt} fallback={target.sleep} onChange={setBedAt} />
+                {bedOpts ? <SleepCycleList kind="wake" options={bedOpts} listKey={`bed-${bedAt}-${latency}`} /> : <p className="slc-hint">{tr("ساعت رو کامل وارد کن، مثل 23:30", "Enter the full time, like 23:30")}</p>}
               </>
             )}
 
             {mode === "last" && <LastNight lastNight={lastNight} latency={latency} />}
           </motion.div>
+        </div>
 
-        <div className="slc-latency">
-          <span className="slc-latency-title">{tr("چند دقیقه طول می‌کشه خوابت ببره؟", "How many minutes does it take you to fall asleep?")}</span>
+        <div className="slg-foot slc-latency">
+          <span className="slc-latency-title">{tr("چند دقیقه طول می‌کشه تا خوابت ببره؟", "How many minutes does it take you to fall asleep?")}</span>
           <SegmentedTabs<string>
-            options={LATENCY_PRESETS.map((p) => ({ value: String(p), label: <span dir="ltr">{p}</span> }))}
+            options={LATENCY_PRESETS.map((p) => ({ value: String(p), label: tr(`${p} د`, `${p}m`) }))}
             active={String(latency)}
             onChange={(v) => onLatencyChange(normalizeLatency(Number(v)))}
-            className="slc-latency-tabs"
+            className="slc-latency-tabs seg-flush"
             ariaLabel={tr("زمان به خواب رفتن به دقیقه", "Time to fall asleep in minutes")}
           />
         </div>
@@ -177,6 +175,11 @@ function LastNight({ lastNight, latency }: { lastNight: SleepRecord | null; late
         <b className="slc-last-big"><span dir="ltr">{info.a.fullCycles}</span> {tr("چرخه کامل", info.a.fullCycles === 1 ? "full cycle" : "full cycles")}</b>
         <small>{durationLabel(info.a.asleepMin)} {tr("خواب", "asleep")}</small>
       </div>
+      <dl className="slc-facts">
+        <div><dt>{tr("خواب", "Bedtime")}</dt><dd dir="ltr">{info.start}</dd></div>
+        <div><dt>{tr("بیداری", "Wake-up")}</dt><dd dir="ltr">{info.end}</dd></div>
+        <div><dt>{tr("تا مرز چرخه", "To cycle edge")}</dt><dd>{durationLabel(info.a.offBoundaryMin)}</dd></div>
+      </dl>
       <div className={`slc-verdict is-${info.a.verdict}`}>
         <b>{v.title}</b>
         <span>{v.text}</span>

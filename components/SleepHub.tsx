@@ -26,7 +26,7 @@ import { getTracking, stopTracking, draftFromTracking, TRACKER_EVENT, type Sleep
 
 // بخش خواب (/sleep) — صفحه و سیستم جدای خودش، نه داخل صفحه‌ی روتین. دو کارت
 // اصلی: صفحه‌ی ساعت 24 ساعته (SleepDial: هدف، دیشب، الان، دکمه‌ی اصلی؛ زدن
-// ساعت‌های هدف = SleepGoalSheet) و هفت شب اخیر (SleepWeek). زیرشون آمار خواب
+// باکس هدف خواب = SleepGoalSheet، باکس چرخه‌ها = SleepCycleSheet) و هفت شب اخیر (SleepWeek). زیرشون آمار خواب
 // با ردیف باکس‌های آیکونی (SleepStatsPanels: تقویم، روند، تحلیل) میاد و زدن
 // هر شب همون شب رو برای ویرایش باز می‌کنه. لینک «آمار خواب» به آنالیز هفتگی
 // هم می‌مونه. محاسبه‌ها خالص در lib/sleep.ts؛ persistence از lib/storage.ts.
@@ -34,7 +34,7 @@ import { getTracking, stopTracking, draftFromTracking, TRACKER_EVENT, type Sleep
 /** چند شب به عقب خونده می‌شه (تحلیل‌ها و تقویم ماهانه) */
 export const SLEEP_LOAD_DAYS = 120;
 
-// پنجره‌ی چرخه‌های خواب فقط بعد از زدن چیپ روی صفحه‌ی ساعت لود می‌شه
+// پنجره‌ی چرخه‌های خواب فقط بعد از hover/لمس/زدن باکس چرخه‌ها روی صفحه‌ی ساعت لود می‌شه
 const loadCycleSheet = () => import("./SleepCycleSheet");
 const SleepCycleSheet = dynamic(loadCycleSheet, { ssr: false });
 // پنل‌های آمار سنگین‌ترن؛ جدا از اولین رندر لود می‌شن (جاگیر سبک تا آماده شدن)
@@ -182,6 +182,8 @@ export function SleepHub() {
           onQuickLog={quickLog}
           quickBusy={quickBusy}
           quickError={quickError}
+          goalStreak={insights.goalStreak}
+          debt7Min={insights.debt7Min}
         />
         {todayIso && <SleepWeek entries={entries} insights={insights} todayIso={todayIso} onPick={openDate} />}
         {todayIso && loaded && (
