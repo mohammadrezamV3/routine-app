@@ -308,8 +308,10 @@
 
   #bgCanvas{position:fixed; inset:0; z-index:0; pointer-events:none; overflow:hidden;}
 
+  /* باکس‌هایی که section هستن و padding/border خودشون رو دارن از ریست first-child مستثنی‌ان؛
+     وگرنه section:first-child از کلاس باکس قوی‌تره و متن به بالای باکس می‌چسبه */
   section{padding:34px 0; border-top:1px solid var(--line);}
-  section:first-child{border-top:none; padding-top:0;}
+  section:first-child:not(.sl-card):not(.mm-card):not(.mentor-box){border-top:none; padding-top:0;}
 
   .eyebrow{
     font-family:var(--font-latin), var(--font-vazir), sans-serif; font-size:11px; letter-spacing:.12em;
