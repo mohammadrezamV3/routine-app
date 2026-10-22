@@ -84,6 +84,12 @@ export function getVisibleLinks(features: Features, section: SectionKey | null =
   if (section === "trade" && featureVisible(features, "dashboard")) {
     return out.filter((i) => isGroup(i) || i.href !== "/trade");
   }
+  // بخش ورزش: /exercise هم توی داشبورد («فضای تمرین») ادغام شده؛ دو زیرمنوی بدنسازی
+  // همون صفحه‌ی داشبورد رو با تب مناسب باز می‌کنن. داشبورد خاموش → /exercise می‌مونه.
+  if (section === "workout" && featureVisible(features, "dashboard")) {
+    const toDash = (l: NavLink): NavLink => (l.href.startsWith("/exercise?tab=") ? { ...l, href: l.href.replace("/exercise?tab=", "/dashboard?tab=") } : l);
+    return out.map((i) => (isGroup(i) ? { ...i, children: i.children.map(toDash) } : toDash(i)));
+  }
   return out;
 }
 

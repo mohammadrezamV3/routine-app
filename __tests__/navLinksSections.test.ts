@@ -33,6 +33,19 @@ describe("getVisibleLinks per section", () => {
     expect(hrefs(items)).not.toContain("/roadmaps");
   });
 
+  it("workout menu points both sub-items at the merged dashboard tabs", () => {
+    const all = hrefs(getVisibleLinks(null, "workout"));
+    expect(all).toContain("/dashboard?tab=exercise");
+    expect(all).toContain("/dashboard?tab=calorie");
+    expect(all.some((h) => h.startsWith("/exercise"))).toBe(false);
+  });
+
+  it("workout keeps /exercise links as a fallback when the dashboard flag is off", () => {
+    const all = hrefs(rawVisible({ ...ALL_ON, dashboard: false }, "workout"));
+    expect(all).toContain("/exercise?tab=exercise");
+    expect(all).not.toContain("/dashboard?tab=exercise");
+  });
+
   it("trade shows only the dashboard (the old /trade hub is merged into it) plus shared items", () => {
     const all = hrefs(getVisibleLinks(null, "trade"));
     expect(all).toEqual(["/dashboard", "/mentors", "/mentorship", "/analysis/weekly", "/blog", "/about"]);

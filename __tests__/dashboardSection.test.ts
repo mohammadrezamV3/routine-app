@@ -51,15 +51,18 @@ describe("sectionAreas", () => {
     expect(a.lg.startsWith('"today heat heat"')).toBe(true);
     expect(a.sm).toBe('"today" "heat" "sleep" "road" "mentor" "inbox"');
   });
-  it("ورزش: تمرین و کالری اول", () => {
-    const a = sectionAreas(set("inbox", "ex", "cal", "sleep", "mentor"), "workout");
-    expect(a.lg).toBe('"ex ex cal" "sleep mentor inbox"');
-    expect(a.md).toBe('"ex cal" "sleep mentor" "inbox inbox"');
-    expect(a.sm).toBe('"ex" "cal" "sleep" "mentor" "inbox"');
+  it("ورزش: فضای تمرین ردیف تمام‌عرض اول، بقیه متوازن", () => {
+    const a = sectionAreas(set("inbox", "space", "sleep", "mentor"), "workout");
+    expect(a.lg).toBe('"space space space" "sleep mentor inbox"');
+    expect(a.md).toBe('"space space" "sleep mentor" "inbox inbox"');
+    expect(a.sm).toBe('"space" "sleep" "mentor" "inbox"');
   });
-  it("ورزش بدون کالری: تمرین کل ردیف", () => {
-    const a = sectionAreas(set("inbox", "ex"), "workout");
-    expect(a.lg).toBe('"ex ex ex" "inbox inbox inbox"');
+  it("ورزش بدون فضای تمرین: فقط بقیه، و ex/cal دیگه چیده نمی‌شن", () => {
+    const a = sectionAreas(set("inbox"), "workout");
+    expect(a.lg).toBe('"inbox inbox inbox"');
+    const b = sectionAreas(set("inbox", "ex", "cal"), "workout");
+    expect(b.lg).not.toContain("ex");
+    expect(b.sm).toBe('"inbox"');
   });
   it("ترید: عملکرد و بازار اول و فقط کارت‌های موجود", () => {
     const a = sectionAreas(set("inbox", "trade", "market", "mentor"), "trade");

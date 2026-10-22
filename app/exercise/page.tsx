@@ -1,57 +1,20 @@
-"use client";
+import { redirect } from "next/navigation";
+import { BodybuildingPage } from "@/components/BodybuildingPage";
+import { getSessionFast } from "@/lib/serverSession";
+import { isFeatureEnabled } from "@/lib/featureFlagsServer";
 
-import { Suspense } from "react";
-import { useSearchParams } from "next/navigation";
-import { ExercisePanel } from "@/components/ExercisePanel";
-import { CaloriePanel } from "@/components/CaloriePanel";
-import { ModuleGate } from "@/components/ModuleGate";
-import { PanelSkeleton } from "@/components/PanelSkeleton";
-import { ICONS } from "@/components/NavIcons";
-import { featureVisible } from "@/lib/featureFlags";
-import { useFeatures } from "@/lib/useFeatures";
-import { tr } from "@/lib/i18n";
+export const dynamic = "force-dynamic";
 
-// انتخاب برنامه‌ی تمرینی/غذایی دیگه تب روی صفحه نداره — طبق درخواست
-// صریح کاربر فقط از منوی «بدنسازی» ← «برنامه تمرینی»/«برنامه غذایی» ممکنه؛
-// یعنی این‌جا باید هر تغییر ?tab= (حتی وقتی از قبل توی همین صفحه‌ای و فقط
-// کوئری‌استرینگ عوض می‌شه، نه کل صفحه) رو زنده ببینه — برای همینم برخلاف
-// قاعده‌ی معمول پروژه (خوندن مستقیم window.location برای دورزدن Suspense)
-// این‌جا از useSearchParams واقعی استفاده شده، چون فقط اون به تغییر کوئری
-// بعد ناوبری سمت کلاینت (بدون ریمانت شدن کامپوننت) واکنش نشون می‌ده.
-function BodybuildingTabContent() {
-  const searchParams = useSearchParams();
-  const features = useFeatures();
-  const requested = searchParams.get("tab") === "calorie" ? "calorie" : "exercise";
-  // هر تب فلگ خودش رو داره (/admin/features)؛ تب خاموش → تب دیگه. اگه هر دو
-  // خاموش باشن خود layout سمت سرور پیام «موقتا غیرفعال» رو نشون داده.
-  const tab = requested === "exercise" && !featureVisible(features, "exercise") ? "calorie"
-    : requested === "calorie" && !featureVisible(features, "calorie") ? "exercise"
-    : requested;
-
-  return (
-    <div style={{ marginTop: 14 }}>
-      {tab === "exercise" ? (
-        <ModuleGate module="EXERCISE"><ExercisePanel /></ModuleGate>
-      ) : (
-        <ModuleGate module="CALORIE"><CaloriePanel /></ModuleGate>
-      )}
-    </div>
-  );
-}
-
-export default function BodybuildingPage() {
-  return (
-    <section className="bodybuilding-glass exercise-dash-breakout">
-      {/* قبلا این صفحه هیچ عنوانی نداشت — با اینکه «بدنسازی» عنوان
-          واقعی همین صفحه‌ست (هم در منو، هم در هاب ترید مشابهش). تب
-          فعلی (برنامه‌ی تمرینی/کالری‌شمار) روی همین عنوان تاثیری ندارد. */}
-      <div className="trade-head-row" style={{ justifyContent: "flex-start" }}>
-        <span className="page-title-icon">{ICONS.exercise}</span>
-        <h1>{tr("بدنسازی", "Workout")}</h1>
-      </div>
-      <Suspense fallback={<PanelSkeleton />}>
-        <BodybuildingTabContent />
-      </Suspense>
-    </section>
-  );
+// صفحه‌ی بدنسازی توی داشبورد بخش ورزش ادغام شده (/dashboard?tab=exercise|calorie:
+// «فضای تمرین»). این‌جا فقط ریدایرکته. اگه فلگ داشبورد برای این کاربر خاموشه (یا
+// مهمانه)، صفحه‌ی قدیمی همین‌جا رندر می‌شه تا هیچ‌وقت بی‌صفحه نمونه.
+// کوکی بخش (arion_section) رو middleware روی همین پاسخ ست می‌کنه و با ریدایرکت هم می‌مونه.
+export default async function ExercisePage({ searchParams }: { searchParams?: { tab?: string | string[] } }) {
+  const session = await getSessionFast();
+  const userId = (session?.user as { id?: string } | undefined)?.id;
+  if (userId && (await isFeatureEnabled("dashboard", userId))) {
+    const tab = Array.isArray(searchParams?.tab) ? searchParams?.tab[0] : searchParams?.tab;
+    redirect(`/dashboard?tab=${tab === "calorie" ? "calorie" : "exercise"}`);
+  }
+  return <BodybuildingPage />;
 }

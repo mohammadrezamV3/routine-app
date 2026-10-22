@@ -326,8 +326,8 @@ export function heroRings(data: DashboardData | null, stats: { completed: number
   const workout = section === "workout";
   return [
     { key: "routine", label: tr("روتین", "Routine"), value: stats.total ? stats.completed / stats.total : 0, display: stats.total ? `${faNum(stats.completed)}/${faNum(stats.total)}` : "—", grad: ["var(--ring-1a)", "var(--ring-1b)"], show: !routineLocked && (!section || section === "routine"), href: "/weekly" },
-    { key: "exercise", label: tr("تمرین امروز", "Today's workout"), value: ex?.hasPlan ? exVal : 0, display: ex?.hasPlan ? (ex.today.isGymDay ? `${faNum(ex.today.doneItems)}/${faNum(ex.today.itemCount)}` : tr("استراحت", "Rest")) : "—", grad: ["var(--ring-2a)", "var(--ring-2b)"], show: workout || (!section && !!ex?.hasPlan), href: "/exercise?tab=exercise" },
-    { key: "calorie", label: tr("کالری", "Calories"), value: Math.min(calVal, 1), display: cal?.target ? `${faNum(Math.round(cal.today.kcal))}` : "—", grad: calVal > 1 ? ["var(--ring-3b)", "var(--ring-over)"] : ["var(--ring-3a)", "var(--ring-3b)"], show: workout || (!section && !!cal?.target), href: "/exercise?tab=calorie" },
+    { key: "exercise", label: tr("تمرین امروز", "Today's workout"), value: ex?.hasPlan ? exVal : 0, display: ex?.hasPlan ? (ex.today.isGymDay ? `${faNum(ex.today.doneItems)}/${faNum(ex.today.itemCount)}` : tr("استراحت", "Rest")) : "—", grad: ["var(--ring-2a)", "var(--ring-2b)"], show: workout || (!section && !!ex?.hasPlan), href: workout ? "/dashboard?tab=exercise" : "/exercise?tab=exercise" },
+    { key: "calorie", label: tr("کالری", "Calories"), value: Math.min(calVal, 1), display: cal?.target ? `${faNum(Math.round(cal.today.kcal))}` : "—", grad: calVal > 1 ? ["var(--ring-3b)", "var(--ring-over)"] : ["var(--ring-3a)", "var(--ring-3b)"], show: workout || (!section && !!cal?.target), href: workout ? "/dashboard?tab=calorie" : "/exercise?tab=calorie" },
   ];
 }
 

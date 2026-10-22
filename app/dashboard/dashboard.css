@@ -919,3 +919,21 @@ html[dir="ltr"] .db-cd-title, html[dir="ltr"] .db-ev-title{ text-align:left; }
 .db-tool-prog{ display:flex; align-items:center; gap:8px; font-size:10.5px; font-weight:800; color:var(--muted); font-family:var(--font-latin), var(--font-vazir), sans-serif; }
 .db-tool-prog .db-meter{ flex:1; height:4px; }
 @media (prefers-reduced-motion:reduce){ .db-tool{ transition:none; } }
+
+/* ── فضای تمرین (بخش ورزش): پنل‌های واقعی تمرین/تغذیه داخل کارت تمام‌عرض ── */
+/* قاعده‌ی بدنسازی (app/_area/exercise.css) عرض 900 و مارجین منفی می‌ده؛ این‌جا باید دقیقا پهنای کارت رو بگیره */
+.db-page .db-space .bodybuilding-glass,
+.db-page .db-space .bodybuilding-glass.exercise-dash-breakout{
+  width:auto; max-width:none; margin-inline-start:0; min-width:0;
+}
+.db-space{ gap:12px; }
+.db-space-tabs{ margin-inline-start:auto; display:inline-flex; min-width:0; }
+.db-space-tabs > *{ max-width:100%; }
+.db-space-panel{ min-width:0; }
+.db-space-body{ min-width:0; padding:0; }
+.db-space-skel{ display:grid; gap:12px; }
+@media (max-width:639px){
+  .db-space-tabs{ flex:1; }
+  .db-space-tabs > *{ width:100%; }
+}
+.db-space-tabs .auth-tabs{ margin-top:0; }

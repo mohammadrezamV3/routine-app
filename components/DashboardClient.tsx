@@ -30,6 +30,7 @@ import { DashboardHeatmap } from "./DashboardHeatmap";
 import { DashboardRoutineLock } from "./DashboardRoutineLock";
 import { DashboardCalorie, DashboardExercise } from "./DashboardFitness";
 import { DashboardSleep } from "./DashboardSleep";
+import { DashboardWorkoutSpace } from "./DashboardWorkoutSpace";
 import { DashboardModuleLock } from "./DashboardModuleLock";
 import { useSection } from "./SectionProvider";
 import { dashboardBlocks, sectionAreas, type DashArea } from "@/lib/dashboardSection";
@@ -123,7 +124,7 @@ function DashboardBody({ initial }: { initial: { key: string; data: DashboardDat
   const blocks = dashboardBlocks(section);
   // تنها مقصد واقعا محتمل بعدی؛ بعد از اولین پینت، زمان بیکاری، و نه روی اتصال کند/صرفه‌جویی داده
   // (روی زیردامنه‌ی ورزش/ترید، /weekly به دامنه‌ی دیگه‌ای ریدایرکت می‌شه، پس مقصد خود بخشه)
-  const nextHref = section === "workout" ? "/exercise" : section === "trade" ? "/trade/journal" : "/weekly";
+  const nextHref = section === "workout" ? "/sleep" : section === "trade" ? "/trade/journal" : "/weekly";
   useEffect(() => prefetchWhenIdle((h) => router.prefetch(h), nextHref), [router, nextHref]);
   // روتین کامل فقط برای دامنه‌ی اصلی و بخش روتین؛ ورزش فقط ساعت‌های خواب (نوار روز)؛ ترید هیچ
   const routine = useDashboardRoutine(blocks.routine ? "full" : section === "workout" ? "wake" : "none");
@@ -166,7 +167,11 @@ function DashboardBody({ initial }: { initial: { key: string; data: DashboardDat
     };
     if (blocks.routine && routineOn) { set.add("today"); set.add("heat"); }
     if (blocks.sleep && on("sleep")) set.add("sleep");
-    if (blocks.fitness) { paid("ex", "EXERCISE", "exercise"); paid("cal", "CALORIE", "calorie"); }
+    if (blocks.fitness) {
+      // ورزش: «فضای تمرین» (پنل‌های واقعی)؛ ماژول خریده‌نشده رو ModuleGate داخل خودش نشون می‌ده، پس کارت قفل جدا نداریم
+      if (section === "workout") { if (on("exercise") || on("calorie")) set.add("space"); }
+      else { paid("ex", "EXERCISE", "exercise"); paid("cal", "CALORIE", "calorie"); }
+    }
     if (blocks.trade) {
       paid("trade", "TRADE", "tradeJournal");
       if (owns("TRADE") && on("economicCalendar")) set.add("market");
@@ -212,6 +217,7 @@ function DashboardBody({ initial }: { initial: { key: string; data: DashboardDat
           </>
         )}
         {has.has("sleep") && <DashboardSleep sleep={data?.sleep ?? null} loading={loading} />}
+        {has.has("space") && <DashboardWorkoutSpace features={features} />}
         {has.has("ex") && (locked.has("ex") ? <DashboardModuleLock area="ex" /> : <DashboardExercise ex={data?.exercise ?? null} loading={loading} />)}
         {has.has("cal") && (locked.has("cal") ? <DashboardModuleLock area="cal" /> : <DashboardCalorie cal={data?.calorie ?? null} loading={loading} />)}
         {has.has("trade") && (locked.has("trade") ? <DashboardModuleLock area="trade" /> : <DashboardTrade trade={data?.trade ?? null} loading={loading} />)}
