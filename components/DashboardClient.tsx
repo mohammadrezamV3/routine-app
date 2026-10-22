@@ -222,7 +222,7 @@ function DashboardBody({ initial }: { initial: { key: string; data: DashboardDat
         {has.has("cal") && (locked.has("cal") ? <DashboardModuleLock area="cal" /> : <DashboardCalorie cal={data?.calorie ?? null} loading={loading} />)}
         {has.has("trade") && (locked.has("trade") ? <DashboardModuleLock area="trade" /> : <DashboardTrade trade={data?.trade ?? null} loading={loading} />)}
         {has.has("market") && <DashboardMarket events={data?.calendar?.events ?? null} loading={loading} />}
-        {has.has("tools") && <DashboardTradeTools tools={data?.tradeTools ?? null} accountCount={data?.trade?.accountCount ?? null} features={features} loading={loading} />}
+        {has.has("tools") && <DashboardTradeTools tools={data?.tradeTools ?? null} accountCount={data?.trade?.accountCount ?? null} accounts={data?.trade?.accounts ?? []} features={features} loading={loading} />}
         {has.has("mentor") && <DashboardMentors m={data?.mentors ?? null} loading={loading} />}
         {has.has("road") && <DashboardRoadmaps r={data?.roadmaps ?? null} loading={loading} />}
         <DashboardInbox data={data} loading={loading} />

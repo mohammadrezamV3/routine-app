@@ -157,6 +157,8 @@ export function DashboardHero({
   const legend: LegendItem[] = isTrade ? tradeLegend(tradeData) : shownRings;
   // وسط حلقه‌ها: استریک روتین؛ در بخش ورزش استریک جلسه‌های تمرین
   const centerStreak = isWorkout ? (data ? (ex?.streak ?? 0) : null) : routine.streak;
+  // دسکتاپ بخش ترید/ورزش: آمار لیجند به‌جای ردیف ریز زیر حلقه، ناحیه‌ی KPI درشت وسط هیرو می‌شه
+  const hasKpi = (isTrade || isWorkout) && legend.length >= 2;
   const orbitReady = isTrade ? !!data : isWorkout ? !!data && routine.ready : routine.ready;
 
   // ── جمله‌ی خلاصه ──
@@ -205,7 +207,7 @@ export function DashboardHero({
   // ورود هیرو با CSS (m-rise)، نه framer: هیرو عنصر LCP داشبورده؛ با initial:{opacity:0} فریمر تا رسیدن
   // chunk انیمیشن نامرئی می‌موند و LCP عقب می‌افتاد. CSS از همون اولین پینت کار می‌کنه.
   return (
-    <section ref={heroRef as any} className={`db-hero m-rise${isTrade ? " is-noribbon" : ""}`}>
+    <section ref={heroRef as any} className={`db-hero m-rise${isTrade ? " is-noribbon" : ""}${hasKpi ? " has-kpi" : ""}`}>
       {/* اشتراک کارنامه‌ی ترید — خود دکمه گیت ماژول و فلگ tradeShare رو داره؛ ?share=1 پنجره رو باز می‌کنه */}
       {isTrade && <TradeShareButton deepLink className="db-hero-share" size={20} />}
       {!isTrade && onShare && (
@@ -283,13 +285,29 @@ export function DashboardHero({
         </div>
       </div>
 
+      {hasKpi && (
+        <ul className="db-hero-kpis" aria-label={tr("آمار کلیدی", "Key stats")}>
+          {legend.map((r) => (
+            <li key={r.key}>
+              <Link href={r.href} prefetch className="db-kpi">
+                <span className="db-kpi-label">
+                  <span className="db-orbit-dot" style={{ background: `linear-gradient(135deg, ${r.grad[0]}, ${r.grad[1]})` }} aria-hidden="true" />
+                  {r.label}
+                </span>
+                <b className="db-kpi-val"><bdi dir="ltr">{r.display}</bdi></b>
+              </Link>
+            </li>
+          ))}
+        </ul>
+      )}
+
       <div className="db-hero-orbit" aria-label={tr("پیشرفت امروز", "Today's progress")}>
         {isTrade ? (
           <OrbitRings rings={tradeRings} ready={orbitReady} streak={null} center={tradeCenter(tradeData)} />
         ) : (
           <OrbitRings rings={shownRings} ready={orbitReady} streak={centerStreak} unit={isWorkout ? "sessions" : "days"} />
         )}
-        <ul className="db-orbit-legend">
+        <ul className={`db-orbit-legend${hasKpi ? " is-kpi-dup" : ""}`}>
           {legend.map((r, i) => (
             <li key={r.key}>
               <Link href={r.href} prefetch>

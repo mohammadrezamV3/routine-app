@@ -43,11 +43,13 @@ const V_TOOL: Variants = {
 
 const Num = ({ children }: { children: React.ReactNode }) => <bdi dir="ltr">{children}</bdi>;
 
-type Tool = { key: string; href: string; icon: DashIconName; title: string; sub: React.ReactNode; extra?: React.ReactNode; dot?: boolean };
+type Tool = { key: string; href: string; icon: DashIconName; title: string; sub: React.ReactNode; extra?: React.ReactNode; dot?: boolean; big?: React.ReactNode };
 
-export function DashboardTradeTools({ tools, accountCount, features, loading }: {
+export function DashboardTradeTools({ tools, accountCount, accounts = [], features, loading }: {
   tools: DashTradeTools | null;
   accountCount: number | null;
+  /** رنگ حساب‌ها برای نقطه‌های کاشی ژورنال */
+  accounts?: { id: string; color: string }[];
   features: Parameters<typeof featureVisible>[0];
   loading: boolean;
 }) {
@@ -78,7 +80,9 @@ export function DashboardTradeTools({ tools, accountCount, features, loading }: 
   if (on("tradeJournal")) {
     list.push({
       key: "journal", href: "/trade/journal", icon: "journal", title: tr("ژورنال", "Journal"),
-      sub: live(accountCount === null ? null : accountCount === 0 ? tr("اولین حساب معاملاتی‌ات رو بساز", "Create your first trading account") : tr(`${accountCount} حساب معاملاتی`, `${accountCount} trading ${accountCount === 1 ? "account" : "accounts"}`), tr("حساب‌های معاملاتی و ثبت معامله", "Trading accounts and trade logging")),
+      sub: live(accountCount === null ? null : accountCount === 0 ? tr("اولین حساب معاملاتی‌ات رو بساز", "Create your first trading account") : tr("حساب معاملاتی", accountCount === 1 ? "trading account" : "trading accounts"), tr("حساب‌های معاملاتی و ثبت معامله", "Trading accounts and trade logging")),
+      big: !loading && accountCount ? <Num>{accountCount}</Num> : null,
+      extra: accounts.length > 0 ? <span className="db-tool-dots" aria-hidden="true">{accounts.slice(0, 8).map((a) => <i key={a.id} style={{ background: a.color }} />)}</span> : null,
     });
   }
   if (on("tradeChecklists")) {
@@ -131,7 +135,7 @@ export function DashboardTradeTools({ tools, accountCount, features, loading }: 
   return (
     <BentoCard area="tools" className="db-tools" label={tr("ابزارها", "Tools")}>
       <CardHead icon="spark" title={tr("ابزارها", "Tools")} />
-      <motion.div className="db-tools-grid" variants={V_TOOLS}>
+      <motion.div className="db-tools-grid" data-n={list.length} variants={V_TOOLS}>
         {list.map((t) => (
           <motion.div key={t.key} variants={V_TOOL} className="db-tool-cell">
             <Link href={t.href} prefetch className="db-tool">
@@ -140,8 +144,11 @@ export function DashboardTradeTools({ tools, accountCount, features, loading }: 
                 <b className="db-tool-title">{t.title}</b>
                 {t.dot && <span className="db-tool-dot" aria-hidden="true" />}
               </span>
-              <span className="db-tool-sub">{t.sub}</span>
-              {t.extra}
+              <span className="db-tool-body">
+                {t.big ? <b className="db-tool-big">{t.big}</b> : null}
+                <span className="db-tool-sub">{t.sub}</span>
+                {t.extra}
+              </span>
             </Link>
           </motion.div>
         ))}

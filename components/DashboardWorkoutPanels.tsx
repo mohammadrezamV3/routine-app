@@ -12,9 +12,9 @@ export default function DashboardWorkoutPanels({ tab }: { tab: "exercise" | "cal
   return (
     <div className="bodybuilding-glass db-space-body">
       {tab === "exercise" ? (
-        <ModuleGate module="EXERCISE"><ExercisePanel /></ModuleGate>
+        <ModuleGate module="EXERCISE"><ExercisePanel inSpace /></ModuleGate>
       ) : (
-        <ModuleGate module="CALORIE"><CaloriePanel /></ModuleGate>
+        <ModuleGate module="CALORIE"><CaloriePanel inSpace /></ModuleGate>
       )}
     </div>
   );

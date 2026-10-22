@@ -937,3 +937,87 @@ html[dir="ltr"] .db-cd-title, html[dir="ltr"] .db-ev-title{ text-align:left; }
   .db-space-tabs > *{ width:100%; }
 }
 .db-space-tabs .auth-tabs{ margin-top:0; }
+
+/* ── trade-redesign start ── */
+/* هیرو: ناحیه‌ی KPI درشت وسط (دسکتاپ بخش ترید/ورزش)؛ موبایل همون لیجند کنار حلقه */
+.db-hero-kpis{ display:none; }
+@media (min-width:1024px){
+  .db-page .db-hero.has-kpi{ grid-template-columns:minmax(0,1fr) minmax(0,1.15fr) auto; grid-template-areas:"main kpi orbit" "ribbon ribbon ribbon"; }
+  .db-page .db-hero.is-noribbon.has-kpi{ grid-template-areas:"main kpi orbit"; }
+  .db-hero-kpis{ grid-area:kpi; display:flex; align-items:stretch; align-self:center; list-style:none; min-width:0; }
+  .db-hero-kpis li{ flex:1 1 0; min-width:0; }
+  .db-hero-kpis li + li .db-kpi{ border-inline-start:1px solid var(--box-line); }
+  .db-kpi{ display:flex; flex-direction:column; justify-content:center; gap:8px; padding:6px 18px; height:100%; min-width:0; transition:transform .2s ease; }
+  .db-kpi-label{ display:flex; align-items:center; gap:7px; font-size:12px; font-weight:700; color:var(--muted); white-space:nowrap; }
+  .db-kpi-val{ font-family:var(--font-latin), var(--font-vazir), sans-serif; font-size:32px; font-weight:900; letter-spacing:-.02em; line-height:1.1; font-variant-numeric:tabular-nums; white-space:nowrap; }
+  @media (hover:hover) and (pointer:fine){ .db-kpi:hover{ transform:translateY(-2px); } .db-kpi:hover .db-kpi-val{ color:var(--accent); } }
+  .db-orbit-legend.is-kpi-dup{ display:none; }
+}
+@media (min-width:1024px) and (max-width:1279px){ .db-kpi-val{ font-size:26px; } .db-kpi{ padding-inline:12px; } }
+@media (prefers-reduced-motion:reduce){ .db-kpi{ transition:none; } .db-kpi:hover{ transform:none !important; } }
+
+/* کارت عملکرد: خط هفته + نمودار بلندتر + ردیف‌های یکدست */
+.db-trade-week{ display:flex; align-items:baseline; flex-wrap:wrap; gap:4px 8px; margin-top:6px; font-size:12px; font-weight:700; }
+.db-trade-week-label{ color:var(--muted); }
+.db-trade-week b{ font-family:var(--font-latin), var(--font-vazir), sans-serif; font-weight:800; font-variant-numeric:tabular-nums; }
+.db-trade-week-sub{ color:var(--muted); font-weight:600; }
+.db-trade-pnl{ font-family:var(--font-latin), var(--font-vazir), sans-serif; font-size:34px; }
+.db-trade-flat{ height:150px; }
+.db-acc{ min-height:44px; }
+.db-acc-nums{ flex-direction:row; align-items:baseline; gap:10px; justify-self:end; }
+.db-acc-growth{ min-width:52px; text-align:end; }
+.db-acc-goal{ margin-top:-2px; }
+.db-trow{ gap:10px; padding:9px 6px; }
+.db-trow-sym{ font-size:13.5px; font-weight:900; min-width:0; }
+.db-dir{ width:auto; height:auto; padding:1px 7px; border-radius:7px; font-size:10px; font-weight:800; line-height:1.6; text-transform:uppercase; letter-spacing:.04em; }
+.db-trow-pnl, .db-trow-end{ margin-inline-start:auto; min-width:76px; text-align:end; justify-content:center; font-variant-numeric:tabular-nums; }
+.db-trow-pnl.is-flat{ color:var(--muted); }
+
+/* ابزارها: شبکه‌ی 12 ستونه تا ردیف آخر سوراخ نداشته باشه؛ بدنه‌ی هر کاشی ته کاشی */
+.db-tools-grid{ grid-template-columns:repeat(2, minmax(0,1fr)); }
+.db-tools-grid .db-tool-cell:last-child:nth-child(odd){ grid-column:1 / -1; }
+@media (min-width:720px){
+  .db-tools-grid{ grid-template-columns:repeat(12, minmax(0,1fr)); }
+  .db-tools-grid .db-tool-cell{ grid-column:span 4; }
+  .db-tools-grid .db-tool-cell:last-child:nth-child(odd){ grid-column:span 4; }
+  .db-tools-grid[data-n="1"] .db-tool-cell{ grid-column:span 12; }
+  .db-tools-grid[data-n="2"] .db-tool-cell{ grid-column:span 6; }
+  .db-tools-grid[data-n="4"] .db-tool-cell, .db-tools-grid[data-n="8"] .db-tool-cell{ grid-column:span 3; }
+  .db-tools-grid[data-n="5"] .db-tool-cell:nth-child(-n+2){ grid-column:span 6; }
+  .db-tools-grid[data-n="7"] .db-tool-cell:nth-child(-n+4){ grid-column:span 3; }
+}
+.db-tool{ min-height:92px; gap:10px; }
+.db-tool-body{ display:flex; flex-direction:column; gap:7px; margin-top:auto; min-width:0; }
+.db-tool-big{ font-family:var(--font-latin), var(--font-vazir), sans-serif; font-size:30px; font-weight:900; line-height:1.05; letter-spacing:-.02em; }
+.db-tool-dots{ display:flex; flex-wrap:wrap; gap:5px; }
+.db-tool-dots i{ width:9px; height:9px; border-radius:4px; display:block; }
+@media (hover:hover) and (pointer:fine){ .db-tool:hover{ transform:translateY(-3px); } }
+
+/* ردیف پایین بخش ترید (مربی/اعلان‌ها): خالی‌ها فشرده */
+.db-page:has(.db-trade) .db-empty{ padding:2px 6px 0; gap:8px; }
+.db-page:has(.db-trade) .db-empty-icon{ width:36px; height:36px; }
+/* ── trade-redesign end ── */
+
+/* ── workout-redesign start ── */
+/* فضای تمرین: بخش بی‌قاب داخل بنتو؛ کارت‌های خود پنل‌ها مستقیم روی صفحه می‌شینن */
+.db-page .db-card.db-space{ background:none; border:0; border-radius:0; padding:0; gap:var(--db-gap); }
+.db-page .db-card.db-space::before{ display:none; }
+.db-space > .db-card-head{ padding-inline:2px; min-height:38px; }
+.db-space-tabs .auth-tabs{ min-width:176px; }
+.db-space-tabs .auth-tab{ padding:8px 14px; white-space:nowrap; }
+.db-sp-stack{ gap:var(--db-gap); }
+.db-sp-bar{ gap:10px; }
+@media (min-width:1024px){ .db-sp-bar{ gap:var(--db-gap); } }
+.db-space .disclaimer-note{ margin-top:var(--db-gap); padding-inline:2px; font-size:10.5px; color:var(--muted); }
+.db-space .disclaimer-note .disclaimer-warn{ font-weight:700; }
+/* تغذیه: ستون اول = ثبت غذا + درشت‌مغذی؛ دوم = کالری هر وعده + استریک؛ سوم = دوستان + نمودار */
+.db-space .db-sp-cal{ gap:var(--db-gap); }
+.db-space .db-sp-cal .calorie-col-food{ flex-direction:column; gap:var(--db-gap); }
+.db-space .db-sp-cal .calorie-col-food > *{ flex:0 0 auto; }
+.db-space .db-sp-cal .calorie-col-mid,
+.db-space .db-sp-cal .calorie-col-side{ gap:var(--db-gap); }
+@media (min-width:1024px){
+  .db-space .db-sp-cal{ grid-template-columns:minmax(0,1.4fr) minmax(0,1fr) minmax(0,1fr); }
+  .db-space .db-sp-cal .calorie-col-food{ align-self:start; }
+}
+/* ── workout-redesign end ── */

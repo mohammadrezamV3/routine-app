@@ -70,7 +70,7 @@ export type Target = {
   fatTargetG?: number | null;
 };
 
-export function CaloriePanel() {
+export function CaloriePanel({ inSpace = false }: { inSpace?: boolean } = {}) {
   const { status } = useSession();
   const dashboardPrefs = useDashboardPrefs();
   const [target, setTarget] = useState<Target | null | undefined>(undefined);
@@ -331,8 +331,8 @@ export function CaloriePanel() {
         </div>
       ) : (
         <>
-          <div className="dash-scope flex flex-col gap-3 sm:gap-4">
-            <div className="flex flex-col gap-2.5 sm:gap-3 lg:flex-row lg:items-center lg:gap-4">
+          <div className={inSpace ? "dash-scope db-sp-stack flex flex-col" : "dash-scope flex flex-col gap-3 sm:gap-4"}>
+            <div className={inSpace ? "db-sp-bar flex flex-col lg:flex-row lg:items-center" : "flex flex-col gap-2.5 sm:gap-3 lg:flex-row lg:items-center lg:gap-4"}>
               <DashDateSelector
                 activeIso={selectedIso}
                 onSelect={setSelectedIso}
@@ -375,7 +375,7 @@ export function CaloriePanel() {
                 برنامه‌ی غذایی رو ستون اصلی راست می‌کنه و بقیه رو توی دو
                 ردیف سمت چپ می‌چینه — نمودار/استریک/دوستان بالا،
                 ریز درشت‌مغذی‌ها/کالری هر وعده پایین. */}
-            <div className="calorie-dash-grid">
+            <div className={inSpace ? "calorie-dash-grid db-sp-cal" : "calorie-dash-grid"}>
               <div className="calorie-col-food">
                 <CalorieFoodPlanCard
                   date={selectedIso}
@@ -390,18 +390,33 @@ export function CaloriePanel() {
                   onEditGoal={() => setEditingGoal(true)}
                   delay={0.06}
                 />
+                {inSpace && <CalorieMacrosCard entries={entries} target={target} delay={0.19} />}
               </div>
 
-              <div className="calorie-col-mid">
-                <CalorieMealBreakdownCard target={target} entries={entries} delay={0.16} />
-                <CalorieMacrosCard entries={entries} target={target} delay={0.19} />
-              </div>
-
-              <div className="calorie-col-side">
-                {dashboardPrefs.showFriends && <DashFriendsCard delay={0.12} module="calorie" />}
-                <CalorieStreakCard rangeEntries={historyEntries} targetKcal={target.dailyTargetKcal} delay={0.1} />
-                {dashboardPrefs.showChart && <CalorieChartCard rangeEntries={historyEntries} targetKcal={target.dailyTargetKcal} delay={0.22} />}
-              </div>
+              {inSpace ? (
+                <>
+                  <div className="calorie-col-mid">
+                    <CalorieMealBreakdownCard target={target} entries={entries} delay={0.16} />
+                    <CalorieStreakCard rangeEntries={historyEntries} targetKcal={target.dailyTargetKcal} delay={0.1} />
+                  </div>
+                  <div className="calorie-col-side">
+                    {dashboardPrefs.showFriends && <DashFriendsCard delay={0.12} module="calorie" />}
+                    {dashboardPrefs.showChart && <CalorieChartCard rangeEntries={historyEntries} targetKcal={target.dailyTargetKcal} delay={0.22} />}
+                  </div>
+                </>
+              ) : (
+                <>
+                  <div className="calorie-col-mid">
+                    <CalorieMealBreakdownCard target={target} entries={entries} delay={0.16} />
+                    <CalorieMacrosCard entries={entries} target={target} delay={0.19} />
+                  </div>
+                  <div className="calorie-col-side">
+                    {dashboardPrefs.showFriends && <DashFriendsCard delay={0.12} module="calorie" />}
+                    <CalorieStreakCard rangeEntries={historyEntries} targetKcal={target.dailyTargetKcal} delay={0.1} />
+                    {dashboardPrefs.showChart && <CalorieChartCard rangeEntries={historyEntries} targetKcal={target.dailyTargetKcal} delay={0.22} />}
+                  </div>
+                </>
+              )}
             </div>
           </div>
 
