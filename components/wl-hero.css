@@ -1,0 +1,168 @@
+/* جلد هفته‌نامه (WeeklyLetterCover) و فصل «بخش‌ها» (WeeklyLetterDomains).
+   زبان مشترک: شماره‌ی توخالی بزرگ، اسکوربورد، اکولایزر 7 روزه. فقط ویژگی‌های منطقی؛
+   حرکت فقط transform/opacity (خاموشی در حرکت‌کاهی و data-perf را خود کامپوننت‌ها با useLite انجام می‌دن). */
+
+/* ── جلد ─────────────────────────────────────────────────── */
+.wl-reader > .wlh{ grid-area:cover; }
+.wlh{
+  position:relative; isolation:isolate; overflow:hidden; margin-bottom:12px;
+  display:flex; flex-direction:column; gap:18px;
+  padding:18px 16px 18px; border-radius:28px;
+  background:var(--box-bg); border:1px solid var(--box-line);
+  box-shadow:var(--wl-hi), 0 26px 60px -36px rgba(0,0,0,.6);
+}
+.wlh::after{
+  content:""; position:absolute; inset:-1px; border-radius:inherit; padding:1.2px; pointer-events:none; z-index:-1;
+  background:linear-gradient(135deg, color-mix(in srgb, var(--wl-da) 80%, transparent), transparent 34%, transparent 66%, color-mix(in srgb, var(--text) 30%, transparent));
+  -webkit-mask:linear-gradient(#000 0 0) content-box, linear-gradient(#000 0 0);
+  -webkit-mask-composite:xor; mask-composite:exclude; opacity:.7;
+}
+.wlh > *:not(.wlh-mark){ position:relative; z-index:1; min-width:0; }
+
+/* شماره‌ی توخالی: از لبه‌ی ابتدای جلد بیرون می‌زنه، پشت محتوا */
+.wlh-mark{ position:absolute; inset:0; z-index:0; overflow:hidden; border-radius:inherit; pointer-events:none; }
+.wlh-mark span{
+  position:absolute; inset-inline-start:-.08em; top:-.2em; white-space:nowrap;
+  font-family:var(--font-latin), var(--font-vazir), sans-serif; font-size:220px; font-weight:900; line-height:1; letter-spacing:-.06em;
+  color:transparent; -webkit-text-stroke:1px color-mix(in srgb, var(--text) 16%, transparent); will-change:transform;
+  -webkit-mask-image:linear-gradient(180deg, #000 20%, transparent 88%); mask-image:linear-gradient(180deg, #000 20%, transparent 88%);
+}
+body[data-theme="light"] .wlh-mark span{ -webkit-text-stroke-color:color-mix(in srgb, var(--text) 18%, transparent); }
+
+.wlh-top{ display:flex; align-items:flex-start; justify-content:space-between; gap:12px; flex-wrap:wrap; }
+.wlh-meta{ display:flex; flex-direction:column; gap:4px; min-width:0; }
+.wlh-kicker{
+  display:inline-flex; align-items:center; gap:8px; align-self:flex-start;
+  font-family:var(--font-latin), var(--font-vazir), sans-serif; font-size:11px; font-weight:800; letter-spacing:.18em; text-transform:uppercase; color:var(--muted);
+}
+.wlh-kicker .wl-brand{ height:14px; }
+.wlh-kicker .wl-logo{ height:14px; width:auto; }
+.wlh-week{ display:flex; align-items:center; flex-wrap:wrap; gap:8px; font-size:14px; font-weight:800; color:var(--text); }
+.wlh-live{ display:inline-flex; align-items:center; gap:6px; font-size:12px; font-weight:800; color:var(--accent); padding:2px 10px 2px 10px; border:1px solid color-mix(in srgb, var(--accent) 45%, transparent); border-radius:99px; }
+.wlh-arch{
+  display:inline-flex; align-items:center; gap:7px; min-height:32px; padding:0 14px; border-radius:99px;
+  font-size:13px; font-weight:800; color:var(--text);
+  border:1px solid color-mix(in srgb, var(--accent) 55%, transparent);
+}
+.wlh-arch svg{ color:var(--accent); flex-shrink:0; }
+.wlh-arch.is-bad{ border-color:var(--box-line); }
+.wlh-arch.is-bad svg{ color:var(--muted); }
+
+.wlh-body{ display:flex; flex-direction:column; gap:20px; }
+.wlh-text{ display:flex; flex-direction:column; gap:14px; }
+.wlh-headline{
+  margin:0 !important; font-size:34px !important; font-weight:900; line-height:1.4; letter-spacing:-.025em; text-wrap:balance;
+}
+.wlh-word{ display:inline-block; }
+.wlh-intro{ display:flex; flex-direction:column; gap:6px; }
+.wlh-greet{ font-size:14px; font-weight:900; color:var(--accent); }
+.wlh-intro-text{ font-size:14px; line-height:2; color:var(--muted); font-weight:500; }
+.wlh-arch-desc{ font-size:12.5px; line-height:1.9; color:var(--muted); font-weight:600; opacity:.85; }
+
+/* اسکوربورد */
+.wlh-side{ display:flex; flex-direction:column; gap:12px; }
+.wlh-board{ display:flex; flex-direction:column; gap:16px; padding:16px; border-radius:24px; border:1px solid var(--box-line); }
+.wlh-board-main{ display:flex; align-items:center; gap:16px; }
+.wlh-score{ display:flex; align-items:center; justify-content:center; line-height:1; }
+.wlh-score-num{
+  font-family:var(--font-latin), var(--font-vazir), sans-serif; font-size:46px; font-weight:900; letter-spacing:-.05em;
+  background:linear-gradient(180deg, var(--ring-1a), var(--ring-1b)); -webkit-background-clip:text; background-clip:text; color:transparent;
+  filter:saturate(calc(.6 + .4 * var(--wl-k, 1)));
+}
+.wlh-none{ font-size:12px; font-weight:700; color:var(--muted); }
+.wlh-board-info{ flex:1; min-width:0; display:flex; flex-direction:column; gap:8px; }
+.wlh-board-k{ display:flex; align-items:center; gap:8px; font-size:12.5px; font-weight:800; color:var(--muted); }
+.wlh-grade{ font-family:var(--font-latin), var(--font-vazir), sans-serif; font-size:11px; font-weight:900; color:var(--text); padding:1px 8px; border-radius:99px; border:1px solid var(--box-line); }
+.wlh-rank{ display:flex; align-items:center; gap:5px; font-size:11px; font-weight:700; color:var(--muted); margin-top:-4px; }
+.wlh-rank.is-gold{ color:var(--text); }
+.wlh-rank.is-gold svg{ color:var(--accent); }
+.wlh-doms{ display:flex; flex-direction:column; gap:9px; margin:2px 0 0; padding:0; list-style:none; }
+.wlh-dom-row{ display:flex; align-items:center; gap:6px; font-size:12px; font-weight:700; color:var(--muted); }
+.wlh-dom-row svg{ flex-shrink:0; }
+.wlh-dom-name{ flex:1; min-width:0; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
+.wlh-dom-row b{ font-family:var(--font-latin), var(--font-vazir), sans-serif; font-size:13px; font-weight:900; color:var(--text); font-variant-numeric:tabular-nums; }
+.wlh-dom-track{ display:block; height:5px; margin-top:5px; border-radius:99px; overflow:hidden; background:color-mix(in srgb, var(--text) 9%, transparent); }
+.wlh-dom-track i{ display:block; height:100%; border-radius:99px; transform-origin:100% 50%; background:linear-gradient(90deg, var(--ring-1b), var(--ring-1a)); }
+html[dir="ltr"] .wlh-dom-track i{ transform-origin:0 50%; background:linear-gradient(90deg, var(--ring-1a), var(--ring-1b)); }
+
+/* اکولایزر 7 روز: ستون اول (شنبه) در ابتدای خط */
+.wlh-eq{ display:grid; grid-template-columns:repeat(7, minmax(0,1fr)); gap:8px; padding-top:14px; border-top:1px solid var(--box-line); }
+.wlh-eq-col{ display:flex; flex-direction:column; align-items:center; gap:6px; }
+.wlh-eq-slot{ position:relative; display:flex; align-items:flex-end; width:100%; max-width:30px; height:60px; border-radius:8px; overflow:hidden; background:color-mix(in srgb, var(--text) 7%, transparent); }
+.wlh-eq-slot i{ display:block; width:100%; border-radius:8px; transform-origin:50% 100%; background:color-mix(in srgb, var(--text) 26%, transparent); }
+.wlh-eq-col.is-good .wlh-eq-slot i{ background:linear-gradient(180deg, var(--ring-1a), var(--ring-1b)); }
+.wlh-eq-lbl{ font-size:10.5px; font-weight:700; color:var(--muted); }
+.wlh-eq-col.is-today .wlh-eq-lbl{ color:var(--accent); font-weight:900; }
+
+/* سه آمار */
+.wlh-stats{ display:grid; grid-template-columns:repeat(3, minmax(0,1fr)); gap:8px; }
+.wlh-stat{
+  display:flex; flex-direction:column; align-items:flex-start; gap:2px; padding:10px 12px; border-radius:16px;
+  border:1px solid var(--box-line); color:var(--muted); min-width:0;
+}
+.wlh-stat b{ font-family:var(--font-latin), var(--font-vazir), sans-serif; font-size:22px; font-weight:900; line-height:1.2; color:var(--text); font-variant-numeric:tabular-nums; }
+.wlh-stat b small{ font-size:12px; font-weight:700; color:var(--muted); }
+.wlh-stat span{ font-size:11px; font-weight:700; line-height:1.4; }
+.wlh-stat.is-good, .wlh-stat.is-good b{ color:var(--wl-good); }
+.wlh-stat.is-bad, .wlh-stat.is-bad b{ color:var(--wl-bad); }
+.wlh-stat.is-good span, .wlh-stat.is-bad span{ color:var(--muted); }
+.wlh .wlh-play{ width:100%; }
+.wlh-pred{ margin-top:2px; }
+
+@media (min-width:720px){
+  .wlh{ padding:26px 30px 26px; gap:22px; }
+  .wlh-mark span{ font-size:300px; }
+  .wlh-week{ font-size:15px; }
+}
+@media (min-width:1024px){
+  .wlh{ padding:36px 48px 40px; gap:30px; border-radius:32px; }
+  .wlh-mark span{ font-size:340px; top:-.18em; }
+  .wlh-body{ display:grid; grid-template-columns:minmax(0,1fr) 420px; gap:56px; align-items:center; }
+  .wlh-text{ gap:20px; }
+  .wlh-headline{ font-size:clamp(40px, 3.8vw, 54px) !important; line-height:1.45; }
+  .wlh-intro-text{ font-size:16px; line-height:2.1; max-width:58ch; }
+  .wlh-board{ padding:22px; }
+  .wlh-eq-slot{ height:72px; }
+}
+@media (min-width:1024px) and (max-width:1199px){ .wlh-body{ grid-template-columns:minmax(0,1fr) 360px; gap:36px; } }
+
+/* ── فصل «بخش‌ها»: کارت‌های دامنه ─────────────────────────── */
+.wld-grid{ display:grid; grid-template-columns:minmax(0,1fr); gap:12px; }
+@media (min-width:720px){ .wld-grid{ grid-template-columns:repeat(2, minmax(0,1fr)); gap:14px; } }
+@media (min-width:1100px){
+  .wld-grid{ grid-template-columns:repeat(3, minmax(0,1fr)); gap:16px; }
+  .wld-grid:has(> :nth-child(4):last-child){ grid-template-columns:repeat(2, minmax(0,1fr)); }
+}
+.wl-root .wld{ display:flex; flex-direction:column; gap:14px; padding:18px; scroll-margin-top:calc(138px + env(safe-area-inset-top)); }
+.wld-head{ display:flex; align-items:center; gap:10px; }
+.wld-ico{ display:grid; place-items:center; width:34px; height:34px; border-radius:12px; flex-shrink:0; color:var(--accent); border:1px solid color-mix(in srgb, var(--accent) 40%, transparent); }
+.wl-root .wld-name{ font-size:16px !important; font-weight:900; flex:1; min-width:0; }
+.wld-delta{
+  display:inline-flex; align-items:center; gap:3px; padding:2px 9px; border-radius:99px; font-size:11.5px; font-weight:800;
+  font-family:var(--font-latin), var(--font-vazir), sans-serif; color:var(--muted); border:1px solid var(--box-line);
+}
+.wld-delta.is-good{ color:var(--wl-good); border-color:color-mix(in srgb, var(--wl-good) 45%, transparent); }
+.wld-delta.is-bad{ color:var(--wl-bad); border-color:color-mix(in srgb, var(--wl-bad) 45%, transparent); }
+.wld-score{ display:flex; align-items:baseline; gap:6px; line-height:1; }
+.wld-score b{
+  font-family:var(--font-latin), var(--font-vazir), sans-serif; font-size:48px; font-weight:900; letter-spacing:-.05em; font-variant-numeric:tabular-nums;
+  background:var(--wl-sheen); -webkit-background-clip:text; background-clip:text; color:transparent;
+}
+.wld-score small{ font-family:var(--font-latin), var(--font-vazir), sans-serif; font-size:13px; font-weight:700; color:var(--muted); }
+.wld-eq{ display:grid; grid-template-columns:repeat(7, minmax(0,1fr)); gap:6px; }
+.wld-eq-col{ display:flex; flex-direction:column; align-items:center; gap:5px; }
+.wld-eq-slot{ display:flex; align-items:flex-end; width:100%; max-width:30px; height:56px; border-radius:7px; overflow:hidden; background:color-mix(in srgb, var(--text) 7%, transparent); }
+.wld-eq-slot i{ display:block; width:100%; border-radius:7px; transform-origin:50% 100%; background:color-mix(in srgb, var(--text) 26%, transparent); }
+.wld-eq-col.is-good .wld-eq-slot i{ background:linear-gradient(180deg, var(--ring-1a), var(--ring-1b)); }
+.wld-eq-lbl{ font-size:10.5px; font-weight:700; color:var(--muted); }
+.wld-eq-col.is-best .wld-eq-lbl{ color:var(--text); font-weight:900; }
+.wld-days{ display:flex; flex-wrap:wrap; gap:6px; }
+.wld-note{ font-size:13px; line-height:1.95; color:var(--text); opacity:.9; }
+.wld.is-empty .wld-note{ color:var(--muted); }
+.wld-stats{ display:grid; grid-template-columns:repeat(auto-fit, minmax(82px,1fr)); gap:8px; margin:0; }
+.wld-stat{ display:flex; flex-direction:column-reverse; gap:1px; padding:8px 10px; border-radius:14px; border:1px solid var(--box-line); min-width:0; }
+.wld-stat dt{ font-size:10.5px; font-weight:600; color:var(--muted); line-height:1.5; }
+.wld-stat dd{ font-size:13.5px; font-weight:900; line-height:1.4; font-variant-numeric:tabular-nums; }
+.wld-stat dd.is-good{ color:var(--wl-good); }
+.wld-stat dd.is-bad{ color:var(--wl-bad); }
+.wld .wl-link{ margin-top:auto; }
