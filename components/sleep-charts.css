@@ -164,29 +164,6 @@ html[data-perf="low"] .slc-avg, html[data-perf="low"] .slm-fill{ animation:none;
 html[data-perf-weak] .slw .slw-grow, html[data-perf-weak] .slw-detail,
 html[data-perf="low"] .slw .slw-grow, html[data-perf="low"] .slw-detail{ animation:none; }
 
-/* ── ردیف تب‌های آمار (SleepStatsPanels): سه کاشی هم‌اندازه، هم‌عرض کارت‌ها ── */
-.slst{ display:flex; flex-direction:column; gap:14px; min-width:0; }
-@media (min-width:1024px){ .slst{ gap:16px; } }
-.slst-tabs{ display:grid; grid-template-columns:repeat(3, minmax(0,1fr)); gap:10px; }
-@media (min-width:640px){ .slst-tabs{ gap:14px; } }
-body[data-theme="light"] .sleep-scope button.slst-tile, body:not([data-theme="light"]) .sleep-scope button.slst-tile{
-  width:100%; min-height:64px; padding:10px 6px; border-radius:18px;
-  background:var(--box-bg); border:1px solid var(--box-line); box-shadow:none;
-  display:flex; flex-direction:column; align-items:center; justify-content:center; gap:5px;
-  color:var(--muted); font-family:inherit;
-  transition:border-color .2s ease, color .2s ease, transform .15s ease;
-}
-.slst-ic svg{ width:21px; height:21px; display:block; }
-.slst-label{ font-size:12px; font-weight:700; line-height:1.2; white-space:nowrap; }
-body[data-theme] .sleep-scope button.slst-tile.is-on{ border-color:var(--slp-ink); color:var(--slp-ink); }
-body[data-theme] .sleep-scope button.slst-tile.is-on .slst-label{ font-weight:800; }
-.sleep-scope button.slst-tile:active{ transform:scale(.97); }
-.sleep-scope button.slst-tile:focus-visible{ outline:2px solid var(--slp-ink); outline-offset:2px; }
-@media (hover:hover){
-  body[data-theme] .sleep-scope button.slst-tile:hover:not(.is-on){ color:var(--text); }
-}
-@media (prefers-reduced-motion:reduce){ .sleep-scope button.slst-tile{ transition:none; } .sleep-scope button.slst-tile:active{ transform:none; } }
-
 .slc-tip{ fill:var(--text); font-size:10.5px; font-weight:800; font-variant-numeric:tabular-nums; pointer-events:none; paint-order:stroke; stroke:var(--bg, transparent); stroke-width:3px; stroke-linejoin:round; }
 .slc-read-edit{ margin-inline-start:auto; }
 .slc-axis{ font-size:10px; }

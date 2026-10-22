@@ -26,9 +26,9 @@ import { getTracking, stopTracking, draftFromTracking, TRACKER_EVENT, type Sleep
 
 // بخش خواب (/sleep) — صفحه و سیستم جدای خودش، نه داخل صفحه‌ی روتین. دو کارت
 // اصلی: صفحه‌ی ساعت 24 ساعته (SleepDial: هدف، دیشب، الان، دکمه‌ی اصلی؛ زدن
-// باکس هدف خواب = SleepGoalSheet، باکس چرخه‌ها = SleepCycleSheet) و هفت شب اخیر (SleepWeek). زیرشون آمار خواب
-// با ردیف باکس‌های آیکونی (SleepStatsPanels: تقویم، روند، تحلیل) میاد و زدن
-// هر شب همون شب رو برای ویرایش باز می‌کنه. لینک «آمار خواب» به آنالیز هفتگی
+// باکس هدف خواب = SleepGoalSheet، باکس چرخه‌ها = SleepCycleSheet) و هفت شب اخیر (SleepWeek). زیرشون یک ردیف چهار
+// کاشی ابزار (SleepToolsPanels: صداها، تنفس، چرت، آمار) میاد و انتخاب یک شب
+// در آمار همون شب رو برای ویرایش باز می‌کنه. لینک «آمار خواب» به آنالیز هفتگی
 // هم می‌مونه. محاسبه‌ها خالص در lib/sleep.ts؛ persistence از lib/storage.ts.
 
 /** چند شب به عقب خونده می‌شه (تحلیل‌ها و تقویم ماهانه) */
@@ -37,10 +37,10 @@ export const SLEEP_LOAD_DAYS = 120;
 // پنجره‌ی چرخه‌های خواب فقط بعد از hover/لمس/زدن باکس چرخه‌ها روی صفحه‌ی ساعت لود می‌شه
 const loadCycleSheet = () => import("./SleepCycleSheet");
 const SleepCycleSheet = dynamic(loadCycleSheet, { ssr: false });
-// پنل‌های آمار سنگین‌ترن؛ جدا از اولین رندر لود می‌شن (جاگیر سبک تا آماده شدن)
-const SleepStatsPanels = dynamic(() => import("./SleepStatsPanels").then((m) => m.SleepStatsPanels), {
+// ردیف ابزارها (صدا، تنفس، چرت، آمار) جدا از اولین رندر لود می‌شه؛ تایمر چرت اونجا mount می‌مونه
+const SleepToolsPanels = dynamic(() => import("./SleepToolsPanels").then((m) => m.SleepToolsPanels), {
   ssr: false,
-  loading: () => <PanelSkeleton rows={3} />,
+  loading: () => <PanelSkeleton rows={1} />,
 });
 
 type SheetState = { initial: SleepLogSheetProps["initial"]; existing: boolean; fromTracker?: boolean } | null;
@@ -187,7 +187,7 @@ export function SleepHub() {
         />
         {todayIso && <SleepWeek entries={entries} insights={insights} todayIso={todayIso} onPick={openDate} />}
         {todayIso && loaded && (
-          <SleepStatsPanels entries={entries} insights={insights} target={target} todayIso={todayIso} onPick={openDate} />
+          <SleepToolsPanels entries={entries} insights={insights} target={target} todayIso={todayIso} latency={latency} onPick={openDate} />
         )}
       </div>
 

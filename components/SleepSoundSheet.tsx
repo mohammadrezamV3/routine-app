@@ -8,7 +8,7 @@ import { CloudRain, Cloud, Fan, Mountain, Pause, Play, Waves, Wind, type LucideI
 import { SegmentedTabs } from "./SegmentedTabs";
 import { useLockBodyScroll } from "@/lib/useLockBodyScroll";
 import { useSheetFocus } from "@/lib/useSheetFocus";
-import { tr } from "@/lib/i18n";
+import { isEn, tr } from "@/lib/i18n";
 import {
   SLEEP_SOUND_KINDS, SLEEP_SOUND_TIMERS, formatRemaining, remainingMs, useSleepSound, type SleepSoundKind,
 } from "@/lib/sleepSound";
@@ -64,7 +64,7 @@ function SheetBody({ onClose }: { onClose: () => void }) {
   return (
     <>
       <div className="modal-overlay open" onClick={onClose} />
-      <div ref={panelRef} tabIndex={-1} className="modal-panel liquid-glass-panel open sleep-scope slg-panel sns-panel" role="dialog" aria-modal="true" aria-label={tr("صداهای خواب", "Sleep sounds")}>
+      <div ref={panelRef} tabIndex={-1} className="modal-panel liquid-glass-panel open sleep-scope slg-panel sns-panel" role="dialog" aria-modal="true" aria-label={tr("صداهای خواب", "Sleep sounds")} dir={isEn() ? "ltr" : "rtl"}>
         <div className="modal-head">
           <div className="modal-title">{tr("صداهای خواب", "Sleep sounds")}</div>
           <button className="nav-close" onClick={onClose} aria-label={tr("بستن", "Close")}>×</button>

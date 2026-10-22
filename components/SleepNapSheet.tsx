@@ -9,7 +9,7 @@ import { GradientRing, RING_AMBER, RING_GREEN } from "./GradientRing";
 import { SegmentedTabs } from "./SegmentedTabs";
 import { useLockBodyScroll } from "@/lib/useLockBodyScroll";
 import { useSheetFocus } from "@/lib/useSheetFocus";
-import { tr } from "@/lib/i18n";
+import { isEn, tr } from "@/lib/i18n";
 import { NAP_PRESETS, formatCountdown, napClockOf, napWakeClock, normalizeNapLatency, useNapTimer } from "@/lib/sleepNap";
 
 // چرت: انتخاب مدت، نمایش ساعت بیدارشدن، شمارش معکوس بزرگ و صفحه‌ی «بیدار شو».
@@ -64,7 +64,7 @@ function SheetBody({ onClose, latency }: SleepNapSheetProps) {
   return (
     <>
       <div className="modal-overlay open" onClick={onClose} />
-      <div ref={panelRef} tabIndex={-1} className="modal-panel liquid-glass-panel open sleep-scope slg-panel" role="dialog" aria-modal="true" aria-label={tr("چرت", "Nap")}>
+      <div ref={panelRef} tabIndex={-1} className="modal-panel liquid-glass-panel open sleep-scope slg-panel" role="dialog" aria-modal="true" aria-label={tr("چرت", "Nap")} dir={isEn() ? "ltr" : "rtl"}>
         <div className="modal-head">
           <div className="modal-title">{tr("چرت", "Nap")}</div>
           <button className="nav-close" onClick={onClose} aria-label={tr("بستن", "Close")}>×</button>

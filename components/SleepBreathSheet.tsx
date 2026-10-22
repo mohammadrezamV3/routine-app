@@ -9,7 +9,7 @@ import { GradientRing, RING_BLUE } from "./GradientRing";
 import { SegmentedTabs } from "./SegmentedTabs";
 import { useLockBodyScroll } from "@/lib/useLockBodyScroll";
 import { useSheetFocus } from "@/lib/useSheetFocus";
-import { tr } from "@/lib/i18n";
+import { isEn, tr } from "@/lib/i18n";
 import {
   BREATH_MINUTES, BREATH_PATTERNS, BREATH_PATTERN_IDS, DEFAULT_BREATH_MINUTES, DEFAULT_BREATH_PATTERN,
   breathProgress, normalizeMinutes, normalizePattern, scaleAt, sessionSec, stateAt, targetScale, totalRounds,
@@ -124,7 +124,7 @@ function SheetBody({ onClose }: SleepBreathSheetProps) {
   return (
     <>
       <div className="modal-overlay open" onClick={onClose} />
-      <div ref={panelRef} tabIndex={-1} className="modal-panel liquid-glass-panel open sleep-scope slg-panel" role="dialog" aria-modal="true" aria-label={tr("تنفس آرام", "Calm breathing")}>
+      <div ref={panelRef} tabIndex={-1} className="modal-panel liquid-glass-panel open sleep-scope slg-panel" role="dialog" aria-modal="true" aria-label={tr("تنفس آرام", "Calm breathing")} dir={isEn() ? "ltr" : "rtl"}>
         <div className="modal-head">
           <div className="modal-title">{tr("تنفس آرام", "Calm breathing")}</div>
           <button className="nav-close" onClick={onClose} aria-label={tr("بستن", "Close")}>×</button>
