@@ -79,6 +79,11 @@ export function getVisibleLinks(features: Features, section: SectionKey | null =
     }
     out.push(item);
   }
+  // بخش ترید: هاب قدیمی /trade توی داشبورد ادغام شده (/trade ریدایرکت به /dashboardه)،
+  // پس با داشبورد دیدنی دو آیتم برای یک صفحه نشون نمی‌دیم. داشبورد خاموش → «ترید» می‌مونه.
+  if (section === "trade" && featureVisible(features, "dashboard")) {
+    return out.filter((i) => isGroup(i) || i.href !== "/trade");
+  }
   return out;
 }
 

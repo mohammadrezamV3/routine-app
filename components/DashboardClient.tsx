@@ -35,6 +35,7 @@ import { useSection } from "./SectionProvider";
 import { dashboardBlocks, sectionAreas, type DashArea } from "@/lib/dashboardSection";
 import { DashboardTrade } from "./DashboardTrade";
 import { DashboardMarket } from "./DashboardMarket";
+import { DashboardTradeTools, TRADE_TOOL_FLAGS } from "./DashboardTradeTools";
 import { DashboardInbox, DashboardMentors, DashboardRoadmaps } from "./DashboardSocial";
 import { DashboardActionsProvider } from "./DashboardActions";
 import { V_GRID } from "./DashboardKit";
@@ -122,7 +123,7 @@ function DashboardBody({ initial }: { initial: { key: string; data: DashboardDat
   const blocks = dashboardBlocks(section);
   // تنها مقصد واقعا محتمل بعدی؛ بعد از اولین پینت، زمان بیکاری، و نه روی اتصال کند/صرفه‌جویی داده
   // (روی زیردامنه‌ی ورزش/ترید، /weekly به دامنه‌ی دیگه‌ای ریدایرکت می‌شه، پس مقصد خود بخشه)
-  const nextHref = section === "workout" ? "/exercise" : section === "trade" ? "/trade" : "/weekly";
+  const nextHref = section === "workout" ? "/exercise" : section === "trade" ? "/trade/journal" : "/weekly";
   useEffect(() => prefetchWhenIdle((h) => router.prefetch(h), nextHref), [router, nextHref]);
   // روتین کامل فقط برای دامنه‌ی اصلی و بخش روتین؛ ورزش فقط ساعت‌های خواب (نوار روز)؛ ترید هیچ
   const routine = useDashboardRoutine(blocks.routine ? "full" : section === "workout" ? "wake" : "none");
@@ -169,6 +170,8 @@ function DashboardBody({ initial }: { initial: { key: string; data: DashboardDat
     if (blocks.trade) {
       paid("trade", "TRADE", "tradeJournal");
       if (owns("TRADE") && on("economicCalendar")) set.add("market");
+      // ابزارهای ترید (جای هاب قدیمی /trade): فقط با ماژول و حداقل یک ابزار روشن
+      if (section === "trade" && owns("TRADE") && TRADE_TOOL_FLAGS.some(on)) set.add("tools");
     }
     if (on("mentors")) set.add("mentor");
     if (blocks.roadmaps && owns("ROADMAP") && features?.roadmaps === true) set.add("road");
@@ -187,7 +190,7 @@ function DashboardBody({ initial }: { initial: { key: string; data: DashboardDat
   return (
     <MotionConfig reducedMotion="user">
       <DashboardActionsProvider scheduleOpts={routine.opts} onChanged={refreshNow} onNeedPage={goTo}>
-      <DashboardHero data={data} routine={routine} routineLocked={routineLocked} routineOff={!routineOn} streakOn={on("streak")} section={section} shareHref={section === "trade" && on("tradeShare") && owns("TRADE") ? "/trade?share=1" : undefined} onShare={section !== "trade" && on("shareCards") ? () => setShareOpen(true) : undefined} />
+      <DashboardHero data={data} routine={routine} routineLocked={routineLocked} routineOff={!routineOn} streakOn={on("streak")} section={section} tradeCta={section === "trade" && owns("TRADE") && on("tradeJournal")} sessionPill={on("forexClock")} onTradeSaved={refreshNow} onShare={section !== "trade" && on("shareCards") ? () => setShareOpen(true) : undefined} />
 
       {status === "error" && !data && (
         <div className="db-error">
@@ -213,6 +216,7 @@ function DashboardBody({ initial }: { initial: { key: string; data: DashboardDat
         {has.has("cal") && (locked.has("cal") ? <DashboardModuleLock area="cal" /> : <DashboardCalorie cal={data?.calorie ?? null} loading={loading} />)}
         {has.has("trade") && (locked.has("trade") ? <DashboardModuleLock area="trade" /> : <DashboardTrade trade={data?.trade ?? null} loading={loading} />)}
         {has.has("market") && <DashboardMarket events={data?.calendar?.events ?? null} loading={loading} />}
+        {has.has("tools") && <DashboardTradeTools tools={data?.tradeTools ?? null} accountCount={data?.trade?.accountCount ?? null} features={features} loading={loading} />}
         {has.has("mentor") && <DashboardMentors m={data?.mentors ?? null} loading={loading} />}
         {has.has("road") && <DashboardRoadmaps r={data?.roadmaps ?? null} loading={loading} />}
         <DashboardInbox data={data} loading={loading} />

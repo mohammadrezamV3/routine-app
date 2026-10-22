@@ -68,6 +68,14 @@ describe("sectionAreas", () => {
     const b = sectionAreas(set("inbox", "trade"), "trade");
     expect(b.lg).toBe('"trade trade trade" "inbox inbox inbox"');
   });
+  it("ترید با ابزارها: ردیف تمام‌عرض بعد از عملکرد و بازار", () => {
+    const a = sectionAreas(set("inbox", "trade", "market", "tools", "mentor"), "trade");
+    expect(a.lg).toBe('"trade trade market" "tools tools tools" "mentor mentor inbox"');
+    expect(a.md).toBe('"trade trade" "market market" "tools tools" "mentor inbox"');
+    expect(a.sm).toBe('"trade" "market" "tools" "mentor" "inbox"');
+    const b = sectionAreas(set("inbox", "tools"), "trade");
+    expect(b.lg).toBe('"tools tools tools" "inbox inbox inbox"');
+  });
   it("هر ناحیه فقط یک بار و فقط از کارت‌های موجود", () => {
     const has = set("inbox", "today", "heat", "sleep", "mentor");
     const a = sectionAreas(has, "routine");

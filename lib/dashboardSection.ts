@@ -5,7 +5,7 @@
 
 import { pathAllowedIn, type SectionKey } from "./sections";
 
-export type DashArea = "today" | "heat" | "ex" | "cal" | "trade" | "market" | "mentor" | "road" | "inbox" | "sleep";
+export type DashArea = "today" | "heat" | "ex" | "cal" | "trade" | "market" | "mentor" | "road" | "inbox" | "sleep" | "tools";
 
 export type DashBlocks = {
   /** کارت‌های برنامه‌ی امروز و نقشه‌ی ثبات */
@@ -92,10 +92,12 @@ export function sectionAreas(has: Set<DashArea>, section: SectionKey): { lg: str
     lg.push(...packRows(rest, 3));
     md.push(...packRows(rest, 2));
   } else {
-    order = ["trade", "market", "mentor", "inbox"];
+    order = ["trade", "market", "tools", "mentor", "inbox"];
     const main = pick("trade", "market");
     if (main.length === 2) { lg.push(q(["trade", "trade", "market"])); md.push(q(["trade", "trade"]), q(["market", "market"])); }
     else if (main.length === 1) { lg.push(q(fitRow(main, 3))); md.push(q(fitRow(main, 2))); }
+    // ابزارها: ردیف تمام‌عرض زیر عملکرد و بازار (جای هاب قدیمی /trade)
+    if (has.has("tools")) { lg.push(q(["tools", "tools", "tools"])); md.push(q(["tools", "tools"])); }
     const rest = pick("mentor", "inbox");
     lg.push(...packRows(rest, 3));
     md.push(...packRows(rest, 2));

@@ -50,7 +50,7 @@ export function TradePageShell({
   children: React.ReactNode;
 }) {
   const { status } = useSession();
-  const backLink = back === undefined ? { href: "/trade", label: tr("ترید", "Trading") } : back;
+  const backLink = back === undefined ? { href: "/dashboard", label: tr("ترید", "Trading") } : back;
   const boxRef = useRef<HTMLDivElement>(null);
   useEffect(() => {
     if (!noScroll) return;

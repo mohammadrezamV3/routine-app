@@ -17,6 +17,7 @@ const TradeDetailDrawer = dynamic(() => import("./TradeDetailDrawer").then((m) =
 import { compactNumber, equityPoints } from "@/lib/dashboardCompute";
 import type { DashTrade } from "@/lib/dashboardTypes";
 import { BentoCard, CardHead, CountUp, EmptyState, Meter, Skel, Sparkline } from "./DashboardKit";
+import { formatPct } from "@/lib/tradeHubCompute";
 import { tr, dirSign } from "@/lib/i18n";
 
 const CUR_SIGN: Record<string, string> = { USD: "$", EUR: "€", GBP: "£", JPY: "¥" };
@@ -80,7 +81,10 @@ function TradeBody({ t }: { t: DashTrade }) {
             <Link key={a.id} href={`/trade/accounts/${a.id}`} prefetch className="db-acc">
               <span className="db-acc-dot" style={{ background: a.color }} />
               <span className="db-acc-name">{a.name}</span>
-              <span className={`db-acc-pnl ${tone(a.netPnl)}`} dir="ltr">{money(a.netPnl, a.currency)}</span>
+              <span className="db-acc-nums">
+                <span className={`db-acc-pnl ${tone(a.netPnl)}`} dir="ltr">{money(a.netPnl, a.currency)}</span>
+                {a.growthPct != null && <bdi dir="ltr" className={`db-acc-growth ${tone(a.growthPct)}`}>{formatPct(a.growthPct, true)}</bdi>}
+              </span>
               {a.goalProgress !== null && (
                 <span className="db-acc-goal" title={tr(`${faNum(Math.round(a.goalProgress * 100))}٪ از هدف`, `${Math.round(a.goalProgress * 100)}% of goal`)}>
                   <Meter value={a.goalProgress} color={a.color} delay={0.5 + i * 0.08} />

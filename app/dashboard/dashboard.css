@@ -599,6 +599,10 @@ a.db-tl-name{ text-decoration:underline dotted color-mix(in srgb, var(--ring-1a)
 .db-acc-dot{ width:10px; height:10px; border-radius:4px; }
 .db-acc-name{ font-size:12.5px; font-weight:700; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
 .db-acc-pnl{ font-size:12px; font-weight:800; font-family:var(--font-latin), var(--font-vazir), sans-serif; }
+.db-acc-nums{ display:inline-flex; flex-direction:column; align-items:flex-end; line-height:1.25; }
+.db-acc-growth{ font-size:10.5px; font-weight:800; color:var(--muted); font-family:var(--font-latin), var(--font-vazir), sans-serif; }
+.db-acc-growth.is-win{ color:var(--pnl-win); }
+.db-acc-growth.is-loss{ color:var(--pnl-loss); }
 .db-acc-goal{ grid-column:2 / 4; }
 .db-acc-goal .db-meter{ height:4px; }
 .db-trow{ display:flex; align-items:center; gap:9px; padding:7px 6px; border-bottom:1px solid var(--box-line); }
@@ -881,3 +885,37 @@ html[dir="ltr"] .db-cd-title, html[dir="ltr"] .db-ev-title{ text-align:left; }
 .db-sleep-wd{ font-size:10.5px; font-weight:700; color:var(--muted); }
 .db-sleep-day.is-empty .db-sleep-wd{ opacity:.55; }
 @media (hover:hover){ .db-sleep-day:hover .db-sleep-bar{ border-color:color-mix(in srgb, var(--moon) 60%, transparent); } }
+
+/* ── هیروی ترید: برچسب زنده‌ی جلسه + دکمه‌ی اصلی «ثبت معامله» ───────── */
+.db-live-pill{
+  display:inline-flex; align-items:center; gap:7px; padding:6px 11px; border-radius:12px; max-width:100%;
+  font-size:11.5px; font-weight:700; color:var(--muted); border:1px solid var(--box-line);
+}
+.db-live-pill-dot{ width:7px; height:7px; border-radius:50%; background:currentColor; flex-shrink:0; }
+.db-live-pill.is-open{ color:var(--pnl-win); border-color:rgba(var(--pnl-win-rgb),.4); }
+.db-live-pill.is-open .db-live-pill-dot{ box-shadow:0 0 0 3px rgba(var(--pnl-win-rgb),.22); }
+.db-hero-cta{ height:38px; padding:0 16px; border-radius:12px; font-size:13px; font-weight:700; gap:7px; display:inline-flex; align-items:center; }
+.db-hero-cta svg{ width:17px; height:17px; }
+
+/* ── ابزارهای ترید (جای هاب قدیمی /trade): کاشی‌های لینکی بدون بک‌گراند ── */
+.db-tools-grid{ display:grid; grid-template-columns:repeat(2, minmax(0,1fr)); gap:10px; }
+@media (min-width:720px){ .db-tools-grid{ grid-template-columns:repeat(4, minmax(0,1fr)); } }
+.db-tool-cell{ display:flex; min-width:0; }
+.db-tool{
+  display:flex; flex-direction:column; gap:7px; flex:1; min-width:0; padding:12px; border-radius:15px;
+  border:1px solid var(--box-line); transition:border-color .2s ease, transform .2s ease;
+}
+@media (hover:hover){ .db-tool:hover{ border-color:rgba(var(--accent-rgb),.55); transform:translateY(-2px); } }
+.db-tool:active{ transform:scale(.98); }
+.db-tool:focus-visible{ outline:2px solid var(--accent); outline-offset:2px; }
+.db-tool-head{ display:flex; align-items:center; gap:8px; min-width:0; }
+.db-tool-icon{ display:inline-flex; flex-shrink:0; color:var(--accent); }
+.db-tool-icon svg{ width:18px; height:18px; }
+.db-tool-title{ font-size:13px; font-weight:800; flex:1; min-width:0; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
+.db-tool-dot{ width:8px; height:8px; border-radius:50%; background:var(--pnl-win); flex-shrink:0; box-shadow:0 0 0 3px rgba(var(--pnl-win-rgb),.22); }
+.db-tool-sub{ display:block; min-width:0; font-size:11px; font-weight:600; color:var(--muted); overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
+.db-tool-chips{ display:flex; gap:5px; flex-wrap:wrap; }
+.db-tool-chips span{ font-size:10px; font-weight:800; padding:1px 6px; border-radius:7px; border:1px solid var(--box-line); color:var(--muted); font-family:var(--font-latin), var(--font-vazir), sans-serif; }
+.db-tool-prog{ display:flex; align-items:center; gap:8px; font-size:10.5px; font-weight:800; color:var(--muted); font-family:var(--font-latin), var(--font-vazir), sans-serif; }
+.db-tool-prog .db-meter{ flex:1; height:4px; }
+@media (prefers-reduced-motion:reduce){ .db-tool{ transition:none; } }

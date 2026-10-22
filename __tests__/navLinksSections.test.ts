@@ -33,8 +33,14 @@ describe("getVisibleLinks per section", () => {
     expect(hrefs(items)).not.toContain("/roadmaps");
   });
 
-  it("trade shows only trade plus shared items", () => {
+  it("trade shows only the dashboard (the old /trade hub is merged into it) plus shared items", () => {
     const all = hrefs(getVisibleLinks(null, "trade"));
-    expect(all).toEqual(["/dashboard", "/mentors", "/mentorship", "/trade", "/analysis/weekly", "/blog", "/about"]);
+    expect(all).toEqual(["/dashboard", "/mentors", "/mentorship", "/analysis/weekly", "/blog", "/about"]);
+  });
+
+  it("trade keeps the /trade entry as a fallback when the dashboard flag is off", () => {
+    const all = hrefs(rawVisible({ ...ALL_ON, dashboard: false }, "trade"));
+    expect(all).toContain("/trade");
+    expect(all).not.toContain("/dashboard");
   });
 });
