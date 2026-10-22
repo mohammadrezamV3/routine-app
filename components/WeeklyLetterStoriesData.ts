@@ -242,3 +242,19 @@ export function goalCtaHref(focus: { title?: string | null; domain?: string | nu
 export function weekCtaHref(weekStart: string): string {
   return `/analysis/weekly?week=${weekStart}`;
 }
+
+/** معنی کوتاه و ثابت هر تیپ هفته (یک خط زیر عنوان اسلاید تیپ). تابعه تا زبان موقع رندر خونده بشه. */
+export function archetypeMeaning(key: string): string {
+  switch (key) {
+    case "perfect": return tr("تقریبا هر روز هفته رو با کیفیت بالا کامل کردی.", "You finished almost every day of the week at a high level.");
+    case "steady": return tr("روزهات از نظر کیفیت نزدیک به هم بودن و ریتم ثابتی داشتی.", "Your days were close in quality and your rhythm stayed steady.");
+    case "comeback": return tr("هفته آروم شروع شد و با برگشت قوی تموم شد.", "The week started slow and ended with a strong comeback.");
+    case "fast_start": return tr("اول هفته پرانرژی بودی و بعد کمی افت کرد.", "You started the week strong, then eased off a little.");
+    case "rollercoaster": return tr("امتیاز روزهات بین اوج و افت زیاد جابه‌جا شد.", "Your daily scores swung widely between highs and lows.");
+    case "rising": return tr("روز به روز بهتر شدی و هفته رو در اوج بستی.", "You got better day after day and closed the week on a high.");
+    case "quiet": return tr("این هفته کم ثبت کردی، پس تصویرش کامل نیست.", "You logged little this week, so the picture is incomplete.");
+    case "balanced": return tr("چند حوزه‌ی زندگیت تقریبا هم‌سطح پیش رفتن.", "Several areas of your life moved at a similar level.");
+    case "building": return tr("هفته‌ی ساختن عادت: نه اوج بزرگ، نه افت بزرگ.", "A habit-building week: no big peak and no big drop.");
+    default: return "";
+  }
+}
