@@ -1,34 +1,19 @@
 "use client";
 
 import { useCallback, useEffect, useState } from "react";
-import { SmartLink as Link } from "@/components/SmartLink";
 import { useSession } from "next-auth/react";
-import { ChevronLeft, Clock, Layers, Map, Plus, Trash2 } from "lucide-react";
+import { Map as MapIcon, Plus } from "lucide-react";
 import { FeatureGate } from "@/components/FeatureGate";
 import { AuthGate } from "@/components/AuthGate";
 import { RoadmapWizard } from "@/components/RoadmapWizard";
 import { RoadmapDisclaimer } from "@/components/RoadmapDisclaimer";
 import { LoadingBlock } from "@/components/Spinner";
-import { RoadmapBuildStatus, BuildInfo } from "@/components/RoadmapBuildStatus";
+import {
+  RoadmapCreateCta, RoadmapFeaturedCard, RoadmapGridCard, RoadmapStepper, isContinuable, type RoadmapCardData,
+} from "@/components/RoadmapCards";
 import { MentorConfirmDialog } from "@/components/MentorConfirmDialog";
-import { faNum } from "@/lib/jalali";
-import { levelLabel } from "@/lib/roadmapPlan";
 import { useLiveRefresh } from "@/lib/liveSync";
 import { tr, pick, iso } from "@/lib/i18n";
-
-type RoadmapCard = {
-  id: string;
-  topic: string;
-  title: string;
-  summary: string | null;
-  goal: string | null;
-  totalDuration: string | null;
-  level: string | null;
-  stageCount: number;
-  doneCount: number;
-  pct: number;
-  build: BuildInfo;
-};
 
 // چند موضوع نمونه برای حالت خالی — یک کلیک ویزارد را با همان موضوع باز
 // می‌کند، تا کاربری که نمی‌داند چه بنویسد جلوی یک فیلد خالی نماند.
@@ -43,10 +28,10 @@ const SUGGESTIONS: { fa: string; en: string }[] = [
 
 export default function RoadmapsHub() {
   const { status } = useSession();
-  const [roadmaps, setRoadmaps] = useState<RoadmapCard[]>([]);
+  const [roadmaps, setRoadmaps] = useState<RoadmapCardData[]>([]);
   const [loaded, setLoaded] = useState(false);
   const [wizard, setWizard] = useState<{ topic: string } | null>(null);
-  const [deleteTarget, setDeleteTarget] = useState<RoadmapCard | null>(null);
+  const [deleteTarget, setDeleteTarget] = useState<RoadmapCardData | null>(null);
   const [deleting, setDeleting] = useState(false);
   const [deleteError, setDeleteError] = useState<string | null>(null);
 
@@ -72,9 +57,7 @@ export default function RoadmapsHub() {
     return () => clearInterval(t);
   }, [anyBuilding, load]);
 
-  function openDeleteConfirm(e: React.MouseEvent, r: RoadmapCard) {
-    e.preventDefault();
-    e.stopPropagation();
+  function openDeleteConfirm(r: RoadmapCardData) {
     setDeleteError(null);
     setDeleteTarget(r);
   }
@@ -94,76 +77,63 @@ export default function RoadmapsHub() {
     load();
   }
 
+  const featured = roadmaps.find(isContinuable);
+
   return (
-    <section className="roadmaps-desktop rp-hub">
-      <div className="trade-head-row">
-        <h1>{tr("رودمپ‌ها", "Roadmaps")}</h1>
-        {status === "authenticated" && (
-          <button type="button" className="trade-title-add-btn" onClick={() => setWizard({ topic: "" })}>
-            {tr("+ مسیر جدید", "+ New path")}
+    <section className="roadmaps-desktop rmx-hub">
+      <header className="rmx-head">
+        <div className="rmx-head-text">
+          <span className="rmx-kicker">{tr("مسیر یادگیری", "Learning path")}</span>
+          <h1 className="rmx-title">{tr("هر مهارتی رو قدم‌به‌قدم یاد بگیر", "Learn any skill, one step at a time")}</h1>
+        </div>
+        {status === "authenticated" && roadmaps.length > 0 && (
+          <button type="button" className="btn btn-outline btn-sm rmx-head-btn" onClick={() => setWizard({ topic: "" })}>
+            <Plus size={16} /> {tr("مسیر تازه", "New path")}
           </button>
         )}
-      </div>
+      </header>
 
       {status === "authenticated" ? (
         <FeatureGate feature="roadmaps">
           {!loaded ? (
             <LoadingBlock />
           ) : !roadmaps.length ? (
-            <div className="trade-surface rp-empty">
-              <span className="rp-empty-icon"><Map size={26} /></span>
+            <div className="trade-surface rmx-empty">
+              <div className="rmx-empty-art" aria-hidden="true">
+                <RoadmapStepper total={5} done={1} />
+                <span className="rmx-empty-icon"><MapIcon size={26} strokeWidth={1.7} /></span>
+              </div>
               <h2>{tr("اولین مسیرت رو بساز", "Build your first path")}</h2>
               <p>
-                {tr(`بگو چی می‌خوای یاد بگیری و برای چی. یه مسیر مرحله‌به‌مرحله می‌گیری که هر مرحله‌ش سرفصل‌های ریز،
-                کارهای عملی، پروژه، ابزار، منبع و معیار تموم‌شدن داره.`, "Tell us what you want to learn and why. You get a step-by-step path where every stage has detailed topics, practical tasks, a project, tools, resources and a finish line.")}
+                {tr("بگو چی می‌خوای یاد بگیری و برای چی. یه مسیر مرحله‌به‌مرحله می‌گیری که هر مرحله‌ش سرفصل، کار عملی، پروژه، منبع و معیار تموم‌شدن داره.", "Tell us what you want to learn and why. You get a step-by-step path where every stage has topics, practical tasks, a project, resources and a finish line.")}
               </p>
-              <div className="rp-empty-chips">
+              <div className="rmx-chips">
                 {SUGGESTIONS.map((s) => (
-                  <button key={s.fa} type="button" className="rp-chip-btn" onClick={() => setWizard({ topic: pick(s) })}>
+                  <button key={s.fa} type="button" className="rmx-chip" onClick={() => setWizard({ topic: pick(s) })}>
                     {pick(s)}
                   </button>
                 ))}
               </div>
-              <button type="button" className="trade-primary-btn rp-empty-cta" onClick={() => setWizard({ topic: "" })}>
-                <Plus size={15} /> {tr("ساخت مسیر", "Create path")}
+              <button type="button" className="btn btn-primary btn-lg rmx-empty-cta" onClick={() => setWizard({ topic: "" })}>
+                <Plus size={17} /> {tr("ساخت مسیر", "Create path")}
               </button>
             </div>
           ) : (
-            <div className="trade-surface rp-grid-box">
-              <div className="rp-grid">
+            <>
+              {featured && <RoadmapFeaturedCard r={featured} onDelete={openDeleteConfirm} />}
+
+              <div className="rmx-section-head">
+                <h2>{tr("رودمپ‌های من", "My roadmaps")}</h2>
+                <span className="rmx-count">{roadmaps.length}</span>
+              </div>
+              <div className="rmx-grid">
                 {roadmaps.map((r) => (
-                  <Link key={r.id} href={`/roadmaps/custom/${r.id}`} className="trade-surface rp-card">
-                    <div className="rp-card-head">
-                      <div className="rp-card-eyebrow">{r.topic}</div>
-                      <button
-                        type="button"
-                        className="trade-icon-btn danger rp-card-delete"
-                        aria-label={tr("حذف مسیر", "Delete path")}
-                        onClick={(e) => openDeleteConfirm(e, r)}
-                      >
-                        <Trash2 size={15} />
-                      </button>
-                    </div>
-                    <div className="rp-card-title">{r.title}</div>
-                    {r.summary && <p className="rp-card-desc">{r.summary}</p>}
-
-                    <div className="rp-card-meta">
-                      {r.totalDuration && <span><Clock size={12} /> {r.totalDuration}</span>}
-                      {r.stageCount > 0 && <span><Layers size={12} /> {faNum(r.stageCount)} {tr("مرحله", r.stageCount === 1 ? "stage" : "stages")}</span>}
-                      {levelLabel(r.level) && <span>{levelLabel(r.level)}</span>}
-                    </div>
-
-                    {r.build && r.build.status !== "ready" && <RoadmapBuildStatus build={r.build} compact />}
-
-                    <div className="rp-card-foot">
-                      <div className="rp-bar"><span style={{ width: `${r.pct}%` }} /></div>
-                      <span className="rp-card-pct">{faNum(r.pct)}{tr("٪", "%")}</span>
-                      <ChevronLeft size={16} className="rp-card-arrow dir-flip" />
-                    </div>
-                  </Link>
+                  <RoadmapGridCard key={r.id} r={r} onDelete={openDeleteConfirm} />
                 ))}
               </div>
-            </div>
+
+              <RoadmapCreateCta onClick={() => setWizard({ topic: "" })} />
+            </>
           )}
           <RoadmapDisclaimer />
         </FeatureGate>
