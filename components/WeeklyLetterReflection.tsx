@@ -1,19 +1,19 @@
 "use client";
 
-// فصل «یادداشت خودت»: بازتاب قابل‌ویرایش هر هفته با ذخیره‌ی خودکار.
+// فصل «یادداشت خودت»: بازتاب قابل‌ویرایش هر هفته؛ ذخیره با دکمه‌ی «ثبت» (خروج از صفحه با تغییر ذخیره‌نشده هم آخرین نسخه رو می‌فرسته).
 import { useEffect, useRef, useState } from "react";
 import { Check, PenLine } from "lucide-react";
 import type { ReflectionDto } from "@/lib/weeklyAnalysis/types";
 import { tr } from "@/lib/i18n";
 import { Spinner } from "./Spinner";
 import { Reveal } from "./WeeklyLetterShared";
+import { WeeklyMoodFace } from "./WeeklyMoodFace";
 import { LiveChapter, type LetterChapterExtra } from "./WeeklyLetterLiveKit";
 import type { LetterChapterProps } from "./WeeklyLetterCtx";
 import { waFetch } from "./WeeklyAnalysisKit";
+import "./wl-medals.css";
 
-const FACES = ["", "😞", "🙁", "😐", "🙂", "😄"];
 const moodNames = () => ["", tr("خیلی بد", "Very bad"), tr("بد", "Bad"), tr("معمولی", "Okay"), tr("خوب", "Good"), tr("عالی", "Great")];
-const DEBOUNCE_MS = 900;
 
 type Draft = { wentWell: string; improve: string; mood: number | null };
 type Save = "idle" | "dirty" | "saving" | "saved" | "error";
@@ -25,7 +25,6 @@ function ReflectionEditor({ ctx, no }: { ctx: LetterChapterProps["ctx"]; no?: nu
   const [state, setState] = useState<Save>("idle");
   const [error, setError] = useState<string | null>(null);
   const pending = useRef<Draft | null>(null);
-  const timer = useRef<ReturnType<typeof setTimeout> | null>(null);
   const seq = useRef(0);
   const savedOnce = useRef(false);
   const reloadRef = useRef(ctx.reload);
@@ -45,6 +44,7 @@ function ReflectionEditor({ ctx, no }: { ctx: LetterChapterProps["ctx"]; no?: nu
       savedOnce.current = true;
       if (my !== seq.current) return;
       setState(pending.current ? "dirty" : "saved");
+      if (!pending.current) reloadRef.current();
     } catch (e) {
       if (my !== seq.current) return;
       setState("error");
@@ -56,15 +56,12 @@ function ReflectionEditor({ ctx, no }: { ctx: LetterChapterProps["ctx"]; no?: nu
     const next = { ...draft, ...patch };
     setDraft(next);
     pending.current = next;
-    if (timer.current) clearTimeout(timer.current);
-    timer.current = setTimeout(() => { if (pending.current) void save(pending.current); }, DEBOUNCE_MS);
     setState("dirty");
   }
 
-  // خروج از صفحه/هفته قبل از تموم‌شدن تاخیر: آخرین نسخه گم نشه
+  // خروج از صفحه/هفته با تغییر ذخیره‌نشده: آخرین نسخه گم نشه
   useEffect(() => {
     return () => {
-      if (timer.current) clearTimeout(timer.current);
       const d = pending.current;
       if (d) {
         try {
@@ -82,57 +79,87 @@ function ReflectionEditor({ ctx, no }: { ctx: LetterChapterProps["ctx"]; no?: nu
     };
   }, [offset]);
 
+  // رادیوگروپ: فلش‌ها بین پنج حالت جابه‌جا می‌شن (در rtl جهت فلش‌ها برعکسه)
+  function onMoodKey(e: React.KeyboardEvent<HTMLDivElement>) {
+    const dir = ({ ArrowRight: 1, ArrowDown: 1, ArrowLeft: -1, ArrowUp: -1 } as Record<string, number>)[e.key];
+    if (!dir) return;
+    e.preventDefault();
+    const rtl = document.documentElement.dir === "rtl";
+    const step = e.key === "ArrowUp" || e.key === "ArrowDown" ? dir : rtl ? -dir : dir;
+    const n = Math.min(5, Math.max(1, (draft.mood ?? (step > 0 ? 0 : 6)) + step));
+    update({ mood: n });
+    requestAnimationFrame(() => (e.currentTarget.querySelector(`[data-mood="${n}"]`) as HTMLElement | null)?.focus());
+  }
+
   return (
     <LiveChapter id="reflection" no={no} title={tr("یادداشت خودت", "Your notes")} icon={PenLine}>
-      <Reveal className="wl-card wl-live-refl">
-        <div className="wl-live-refl-top">
-          <span className="wl-live-sub">{tr("حال این هفته", "How this week felt")}</span>
-          <span className={`wl-live-save is-${state}`} aria-live="polite">
-            {state === "saving" ? <Spinner size={12} label={null} /> : state === "saved" ? <><Check size={12} />{tr("ذخیره شد", "Saved")}</> : state === "error" ? tr("ذخیره نشد", "Not saved") : null}
-          </span>
+      <Reveal className="wl-card wlr-card">
+        <div className="wlr-block">
+          <span className="wl-live-sub" id={`mood-${ctx.weekStart}`}>{tr("حال این هفته", "How this week felt")}</span>
+          <div className="wlr-moods" role="radiogroup" aria-labelledby={`mood-${ctx.weekStart}`} data-noswipe onKeyDown={onMoodKey}>
+            {([1, 2, 3, 4, 5] as const).map((n) => {
+              const on = draft.mood === n;
+              const tab = on || (draft.mood === null && n === 1);
+              return (
+                <button
+                  key={n}
+                  type="button"
+                  role="radio"
+                  aria-checked={on}
+                  aria-label={moodNames()[n]}
+                  title={moodNames()[n]}
+                  tabIndex={tab ? 0 : -1}
+                  data-mood={n}
+                  className={`wlr-mood${on ? " is-on" : ""}`}
+                  onClick={() => update({ mood: on ? null : n })}
+                >
+                  <WeeklyMoodFace level={n} />
+                </button>
+              );
+            })}
+          </div>
+          <span className={`wlr-mood-name${draft.mood ? " is-set" : ""}`} aria-live="polite">{draft.mood ? moodNames()[draft.mood] : ""}</span>
         </div>
-        <div className="wl-live-moods" role="radiogroup" aria-label={tr("حال کلی این هفته", "Overall mood this week")} data-noswipe>
-          {[1, 2, 3, 4, 5].map((n) => {
-            const on = draft.mood === n;
-            return (
-              <button
-                key={n}
-                type="button"
-                role="radio"
-                aria-checked={on}
-                aria-label={moodNames()[n]}
-                title={moodNames()[n]}
-                className={`wl-live-mood${on ? " is-on" : ""}`}
-                onClick={() => update({ mood: on ? null : n })}
-              >
-                <span aria-hidden="true">{FACES[n]}</span>
-              </button>
-            );
-          })}
+        <div className="wlr-fields">
+          <label className="wlr-field">
+            <span className="wl-live-sub">{tr("چی خوب پیش رفت؟", "What went well?")}</span>
+            <textarea
+              className="wsearch-newform-name"
+              rows={3}
+              maxLength={1000}
+              value={draft.wentWell}
+              onChange={(e) => update({ wentWell: e.target.value })}
+              placeholder={tr("یه چیز کوچیک هم حسابه…", "Even one small thing counts…")}
+            />
+          </label>
+          <label className="wlr-field">
+            <span className="wl-live-sub">{tr("چی رو بهتر کنم؟", "What should I improve?")}</span>
+            <textarea
+              className="wsearch-newform-name"
+              rows={3}
+              maxLength={1000}
+              value={draft.improve}
+              onChange={(e) => update({ improve: e.target.value })}
+              placeholder={tr("هفته‌ی بعد روی چی تمرکز کنی؟", "What will you focus on next week?")}
+            />
+          </label>
         </div>
-        <label className="wl-live-field">
-          <span className="wl-live-sub">{tr("چی خوب پیش رفت؟", "What went well?")}</span>
-          <textarea
-            className="wsearch-newform-name"
-            rows={3}
-            maxLength={1000}
-            value={draft.wentWell}
-            onChange={(e) => update({ wentWell: e.target.value })}
-            placeholder={tr("یه چیز کوچیک هم حسابه…", "Even one small thing counts…")}
-          />
-        </label>
-        <label className="wl-live-field">
-          <span className="wl-live-sub">{tr("چی رو بهتر کنم؟", "What should I improve?")}</span>
-          <textarea
-            className="wsearch-newform-name"
-            rows={3}
-            maxLength={1000}
-            value={draft.improve}
-            onChange={(e) => update({ improve: e.target.value })}
-            placeholder={tr("هفته‌ی بعد روی چی تمرکز کنی؟", "What will you focus on next week?")}
-          />
-        </label>
         {error && <div className="wl-live-error" role="alert">{error}</div>}
+        <div className="wlr-foot">
+          <span className={`wlr-state is-${state}`} aria-live="polite">
+            {state === "saved" ? <><Check size={14} />{tr("ثبت شد", "Saved")}</> : state === "error" ? tr("ثبت نشد", "Not saved") : state === "dirty" ? tr("تغییر ثبت‌نشده", "Unsaved changes") : null}
+          </span>
+          <button
+            type="button"
+            className={`btn btn-primary${state === "saving" ? " is-loading" : ""}`}
+            disabled={state === "saving" || state === "idle" || state === "saved"}
+            aria-busy={state === "saving" || undefined}
+            onClick={() => { if (pending.current) void save(pending.current); }}
+          >
+            {state === "saving" && <Spinner className="btn-spinner" size={16} label={null} />}
+            {tr("ثبت", "Save")}
+          </button>
+        </div>
       </Reveal>
     </LiveChapter>
   );
