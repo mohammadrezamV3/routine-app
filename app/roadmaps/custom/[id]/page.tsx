@@ -1,7 +1,7 @@
 "use client";
 
 import { GradientRing } from "@/components/GradientRing";
-import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import { useCallback, useEffect, useMemo, useState } from "react";
 import { useParams, useRouter } from "next/navigation";
 import { SmartLink as Link } from "@/components/SmartLink";
 import {
@@ -10,7 +10,9 @@ import {
 } from "lucide-react";
 import { faNum } from "@/lib/jalali";
 import { RoadmapDisclaimer } from "@/components/RoadmapDisclaimer";
-import { RoadmapStageCard, searchUrl } from "@/components/RoadmapStageCard";
+import { RoadmapStagePanel } from "@/components/RoadmapStagePanel";
+import { searchUrl } from "@/components/RoadmapStagePanel";
+import { RoadmapStageNav } from "@/components/RoadmapStageNav";
 import { RoadmapBuildStatus, BuildInfo } from "@/components/RoadmapBuildStatus";
 import { LoadingBlock, Spinner } from "@/components/Spinner";
 import { SegmentedTabs } from "@/components/SegmentedTabs";
@@ -39,7 +41,7 @@ export default function RoadmapDetailPage() {
   const router = useRouter();
   const [data, setData] = useState<Detail | null | undefined>(undefined);
   const [tab, setTab] = useState<Tab>("stages");
-  const [openStages, setOpenStages] = useState<Set<number>>(new Set());
+  const [selected, setSelected] = useState<number | null>(null); // null = مرحله‌ی جاری
   const [busy, setBusy] = useState<string | null>(null); // "guide" | "stage-3"
   const [error, setError] = useState<string | null>(null);
   const [confirmDelete, setConfirmDelete] = useState(false);
@@ -51,11 +53,6 @@ export default function RoadmapDetailPage() {
       .then((r) => (r.ok ? r.json() : null))
       .then((d: Detail | null) => {
         setData(d ?? null);
-        // اولین مرحله‌ی تمام‌نشده خودش باز می‌شود — همان جایی که کاربر باید ادامه دهد.
-        if (d) {
-          const next = d.plan.stages.find((s) => !d.stepProgress[String(s.n)]);
-          setOpenStages((prev) => (prev.size ? prev : new Set(next ? [next.n] : [])));
-        }
       })
       .catch(() => setData(null));
   }, [params.id]);
@@ -156,12 +153,18 @@ export default function RoadmapDetailPage() {
   }, [data, busy, autoFillStopped]);
   useEffect(() => { if (error) setAutoFillStopped(true); }, [error]);
 
+  // پرش به بالای ناحیه‌ی مرحله‌ها (نوار/ناوبر + محتوا)
+  function scrollToStages() {
+    requestAnimationFrame(() => {
+      const reduce = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+      document.getElementById("rmx-stages-top")?.scrollIntoView({ behavior: reduce ? "auto" : "smooth", block: "start" });
+    });
+  }
+
   function openStage(n: number) {
     setTab("stages");
-    setOpenStages((prev) => new Set(prev).add(n));
-    requestAnimationFrame(() =>
-      document.getElementById(`stage-${n}`)?.scrollIntoView({ behavior: "smooth", block: "start" })
-    );
+    setSelected(n);
+    scrollToStages();
   }
 
   function openDeleteConfirm() {
@@ -182,24 +185,6 @@ export default function RoadmapDetailPage() {
     router.push("/roadmaps");
   }
 
-  // اولین باری که مسیر با پیشرفت قبلی باز می‌شه، مرحله‌ی جاری (که خودش باز
-  // شده) وسط صفحه میاد. مسیر تازه (هیچ مرحله‌ای تمام نشده) بالای صفحه می‌مونه.
-  const scrolledRef = useRef(false);
-  useEffect(() => {
-    if (scrolledRef.current || !data || tab !== "stages") return;
-    scrolledRef.current = true;
-    const cur = data.plan.stages.find((s) => !data.stepProgress[String(s.n)]);
-    if (!cur || cur.n === data.plan.stages[0]?.n) return;
-    const t = setTimeout(() => {
-      const el = document.getElementById(`stage-${cur.n}`);
-      if (!el) return;
-      const reduce = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
-      el.scrollIntoView({ behavior: reduce ? "auto" : "smooth", block: "start" });
-    }, 350);
-    return () => clearTimeout(t);
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [data === undefined || data === null]);
-
   const guideBlocks = useMemo(() => parseGuide(data?.plan.guide || ""), [data?.plan.guide]);
 
   if (data === undefined) return <section className="roadmaps-desktop rmx-page"><LoadingBlock /></section>;
@@ -218,55 +203,52 @@ export default function RoadmapDetailPage() {
   const tasksTotal = plan.stages.reduce((n, st) => n + st.tasks.length, 0);
   const tasksDone = Object.keys(data.stepProgress).filter((k) => k.includes(".") && data.stepProgress[k]).length;
 
+  // مرحله‌ی انتخاب‌شده: پیش‌فرض مرحله‌ی جاری؛ اگر همه تمام شده‌اند آخری.
+  const selStage =
+    plan.stages.find((s) => s.n === selected) ?? nextStage ?? plan.stages[plan.stages.length - 1];
+  const selIdx = selStage ? plan.stages.indexOf(selStage) : -1;
+  const statItems: { key: string; icon: React.ReactNode; label: string; value: React.ReactNode }[] = [
+    { key: "stages", icon: <Layers size={14} />, label: tr("مرحله", "Stages"), value: <bdi dir="ltr">{`${faNum(progress.done)} / ${faNum(progress.total)}`}</bdi> },
+  ];
+  if (tasksTotal > 0) statItems.push({ key: "tasks", icon: <ListChecks size={14} />, label: tr("کار انجام‌شده", "Tasks done"), value: <bdi dir="ltr">{`${faNum(tasksDone)} / ${faNum(tasksTotal)}`}</bdi> });
+  if (plan.totalDuration) statItems.push({ key: "time", icon: <Clock size={14} />, label: tr("زمان تخمینی", "Estimated time"), value: plan.totalDuration });
+  if (levelLabel(plan.meta.level)) statItems.push({ key: "level", icon: <Gauge size={14} />, label: tr("سطح شروع", "Starting level"), value: levelLabel(plan.meta.level)! });
+  if (hoursLabel(plan.meta.weeklyHours)) statItems.push({ key: "hours", icon: <Timer size={14} />, label: tr("در هفته", "Per week"), value: hoursLabel(plan.meta.weeklyHours)! });
+
   return (
     <section className="roadmaps-desktop rmx-page">
-      <Link href="/roadmaps" className="trade-back-link"><ChevronRight size={15} className="dir-flip" /> {tr("رودمپ‌ها", "Roadmaps")}</Link>
+      <div className="rmx-toolbar">
+        <Link href="/roadmaps" className="trade-back-link"><ChevronRight size={15} className="dir-flip" /> {tr("رودمپ‌ها", "Roadmaps")}</Link>
+        <button type="button" className="btn btn-ghost btn-icon btn-bare btn-sm" aria-label={tr("حذف مسیر", "Delete path")} onClick={openDeleteConfirm}>
+          <Trash2 size={16} />
+        </button>
+      </div>
 
       <RoadmapBuildStatus build={data.build} />
 
-      <div className="rmx-layout">
-        <aside className="rmx-aside">
-          <header className="trade-surface rmx-hero">
-            <div className="rmx-hero-top">
-              <span className="rmx-kicker">{tr("مسیر یادگیری", "Learning path")}</span>
-              <button type="button" className="btn btn-ghost btn-icon btn-bare btn-sm" aria-label={tr("حذف مسیر", "Delete path")} onClick={openDeleteConfirm}>
-                <Trash2 size={16} />
-              </button>
-            </div>
+      <header className="trade-surface rmx-box rmx-hero">
+        <div className="rmx-hero-text">
+          <span className="rmx-kicker">{tr("مسیر یادگیری", "Learning path")} <i>·</i> <bdi className="rmx-topic-inline">{roadmap.topic}</bdi></span>
+          <h1>{plan.title}</h1>
+          {plan.summary && <p className="rmx-hero-summary">{plan.summary}</p>}
+          {roadmap.goal && (
+            <div className="rmx-hero-goal"><Target size={15} /><span><b>{tr("هدفت:", "Your goal:")}</b> {roadmap.goal}</span></div>
+          )}
+        </div>
+        <GradientRing value={progress.pct / 100} size={96} stroke={8} className="rmx-hero-ring">
+          <span className="rmx-ring-num">{faNum(progress.pct)}<small>{tr("٪", "%")}</small></span>
+        </GradientRing>
+        {nextStage && (
+          <button type="button" className="btn btn-primary rmx-hero-cta" onClick={() => openStage(nextStage.n)}>
+            {tr("ادامه", "Continue")} · {tr("مرحله", "Stage")} {faNum(nextStage.n)}
+            <ChevronLeft size={16} className="dir-flip" />
+          </button>
+        )}
+        <div className="rmx-stats" style={{ ["--rmx-n" as string]: statItems.length }}>
+          {statItems.map((it) => <Stat key={it.key} icon={it.icon} label={it.label} value={it.value} />)}
+        </div>
+      </header>
 
-            <div className="rmx-hero-main">
-              <div className="rmx-hero-text">
-                <span className="rmx-topic">{roadmap.topic}</span>
-                <h1>{plan.title}</h1>
-              </div>
-              <GradientRing value={progress.pct / 100} size={88} stroke={7} className="rmx-hero-ring">
-                <span className="rmx-ring-num">{faNum(progress.pct)}<small>{tr("٪", "%")}</small></span>
-              </GradientRing>
-            </div>
-            {plan.summary && <p className="rmx-hero-summary">{plan.summary}</p>}
-
-            {roadmap.goal && (
-              <div className="rmx-hero-goal"><Target size={15} /><span><b>{tr("هدفت:", "Your goal:")}</b> {roadmap.goal}</span></div>
-            )}
-
-            <div className="rmx-stats">
-              <Stat icon={<Layers size={14} />} label={tr("مرحله", "Stages")} value={<bdi dir="ltr">{`${faNum(progress.done)} / ${faNum(progress.total)}`}</bdi>} />
-              {tasksTotal > 0 && <Stat icon={<ListChecks size={14} />} label={tr("کار انجام‌شده", "Tasks done")} value={<bdi dir="ltr">{`${faNum(tasksDone)} / ${faNum(tasksTotal)}`}</bdi>} />}
-              {plan.totalDuration && <Stat icon={<Clock size={14} />} label={tr("زمان تخمینی", "Estimated time")} value={plan.totalDuration} />}
-              {levelLabel(plan.meta.level) && <Stat icon={<Gauge size={14} />} label={tr("سطح شروع", "Starting level")} value={levelLabel(plan.meta.level)!} />}
-              {hoursLabel(plan.meta.weeklyHours) && <Stat icon={<Timer size={14} />} label={tr("در هفته", "Per week")} value={hoursLabel(plan.meta.weeklyHours)!} />}
-            </div>
-
-            {nextStage && (
-              <button type="button" className="btn btn-primary btn-block rmx-next" onClick={() => openStage(nextStage.n)}>
-                <span className="rmx-next-text">{tr("ادامه", "Continue")} · {tr("مرحله", "Stage")} {faNum(nextStage.n)}</span>
-                <ChevronLeft size={16} className="dir-flip" />
-              </button>
-            )}
-          </header>
-        </aside>
-
-        <div className="rmx-main">
       {confirmDelete && (
         <MentorConfirmDialog
           message={tr(`مسیر «${plan.title}» و همه‌ی پیشرفتش حذف شود؟ این کار برگشت‌پذیر نیست.`, `Delete the path "${iso(plan.title)}" and all its progress? This cannot be undone.`)}
@@ -297,32 +279,30 @@ export default function RoadmapDetailPage() {
         />
       </div>
 
-      {tab === "stages" && (
-        <ol className="rmx-timeline">
-          {plan.stages.map((st, idx) => (
-            <RoadmapStageCard
-              key={st.n}
-              phase={data.stepProgress[String(st.n)] ? "done" : st.n === nextStage?.n ? "now" : "next"}
-              last={idx === plan.stages.length - 1}
-              stage={st}
-              topic={roadmap.topic}
-              open={openStages.has(st.n)}
-              onToggleOpen={() =>
-                setOpenStages((prev) => {
-                  const next = new Set(prev);
-                  if (next.has(st.n)) next.delete(st.n);
-                  else next.add(st.n);
-                  return next;
-                })
-              }
-              progress={data.stepProgress}
-              onToggleStage={() => toggleStage(st)}
-              onToggleTask={(i) => toggleTask(st, i)}
-              onRegenerate={() => regenerate("stage", st.n)}
-              regenerating={busy === `stage-${st.n}`}
-            />
-          ))}
-        </ol>
+      {tab === "stages" && selStage && (
+        <div className="rmx-stages" id="rmx-stages-top">
+          <RoadmapStageNav
+            stages={plan.stages}
+            progress={data.stepProgress}
+            selected={selStage.n}
+            current={nextStage?.n}
+            onSelect={(n) => setSelected(n)}
+          />
+          <RoadmapStagePanel
+            key={selStage.n}
+            stage={selStage}
+            topic={roadmap.topic}
+            phase={data.stepProgress[String(selStage.n)] ? "done" : selStage.n === nextStage?.n ? "now" : "next"}
+            progress={data.stepProgress}
+            onToggleStage={() => toggleStage(selStage)}
+            onToggleTask={(i) => toggleTask(selStage, i)}
+            onRegenerate={() => regenerate("stage", selStage.n)}
+            regenerating={busy === `stage-${selStage.n}`}
+            prev={selIdx > 0 ? plan.stages[selIdx - 1] : null}
+            next={selIdx < plan.stages.length - 1 ? plan.stages[selIdx + 1] : null}
+            onGo={openStage}
+          />
+        </div>
       )}
 
       {tab === "guide" && (
@@ -408,8 +388,6 @@ export default function RoadmapDetailPage() {
           </OverviewCard>
         </div>
       )}
-        </div>
-      </div>
 
       <RoadmapDisclaimer />
     </section>

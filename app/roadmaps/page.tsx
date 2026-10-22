@@ -9,22 +9,11 @@ import { RoadmapWizard } from "@/components/RoadmapWizard";
 import { RoadmapDisclaimer } from "@/components/RoadmapDisclaimer";
 import { LoadingBlock } from "@/components/Spinner";
 import {
-  RoadmapCreateCta, RoadmapFeaturedCard, RoadmapGridCard, RoadmapStepper, isContinuable, type RoadmapCardData,
+  RoadmapComposer, RoadmapContinueCard, RoadmapList, RoadmapStepper, RoadmapSummary, isContinuable, type RoadmapCardData,
 } from "@/components/RoadmapCards";
 import { MentorConfirmDialog } from "@/components/MentorConfirmDialog";
 import { useLiveRefresh } from "@/lib/liveSync";
-import { tr, pick, iso } from "@/lib/i18n";
-
-// چند موضوع نمونه برای حالت خالی — یک کلیک ویزارد را با همان موضوع باز
-// می‌کند، تا کاربری که نمی‌داند چه بنویسد جلوی یک فیلد خالی نماند.
-const SUGGESTIONS: { fa: string; en: string }[] = [
-  { fa: "برنامه‌نویسی وب", en: "Web development" },
-  { fa: "امنیت شبکه", en: "Network security" },
-  { fa: "تحلیل داده با پایتون", en: "Data analysis with Python" },
-  { fa: "طراحی UI/UX", en: "UI/UX design" },
-  { fa: "زبان انگلیسی", en: "English language" },
-  { fa: "ادیت ویدیو", en: "Video editing" },
-];
+import { tr, iso } from "@/lib/i18n";
 
 export default function RoadmapsHub() {
   const { status } = useSession();
@@ -79,15 +68,17 @@ export default function RoadmapsHub() {
 
   const featured = roadmaps.find(isContinuable);
 
+  const hasData = status === "authenticated" && loaded && roadmaps.length > 0;
+
   return (
     <section className="roadmaps-desktop rmx-hub">
       <header className="rmx-head">
         <div className="rmx-head-text">
           <span className="rmx-kicker">{tr("مسیر یادگیری", "Learning path")}</span>
-          <h1 className="rmx-title">{tr("هر مهارتی رو قدم‌به‌قدم یاد بگیر", "Learn any skill, one step at a time")}</h1>
+          <h1 className="rmx-title">{tr("رودمپ‌ها", "Roadmaps")}</h1>
         </div>
-        {status === "authenticated" && roadmaps.length > 0 && (
-          <button type="button" className="btn btn-outline btn-sm rmx-head-btn" onClick={() => setWizard({ topic: "" })}>
+        {hasData && (
+          <button type="button" className="btn btn-primary btn-sm rmx-head-btn" onClick={() => setWizard({ topic: "" })}>
             <Plus size={16} /> {tr("مسیر تازه", "New path")}
           </button>
         )}
@@ -98,44 +89,33 @@ export default function RoadmapsHub() {
           {!loaded ? (
             <LoadingBlock />
           ) : !roadmaps.length ? (
-            <div className="trade-surface rmx-empty">
-              <div className="rmx-empty-art" aria-hidden="true">
-                <RoadmapStepper total={5} done={1} />
-                <span className="rmx-empty-icon"><MapIcon size={26} strokeWidth={1.7} /></span>
-              </div>
-              <h2>{tr("اولین مسیرت رو بساز", "Build your first path")}</h2>
-              <p>
-                {tr("بگو چی می‌خوای یاد بگیری و برای چی. یه مسیر مرحله‌به‌مرحله می‌گیری که هر مرحله‌ش سرفصل، کار عملی، پروژه، منبع و معیار تموم‌شدن داره.", "Tell us what you want to learn and why. You get a step-by-step path where every stage has topics, practical tasks, a project, resources and a finish line.")}
-              </p>
-              <div className="rmx-chips">
-                {SUGGESTIONS.map((s) => (
-                  <button key={s.fa} type="button" className="rmx-chip" onClick={() => setWizard({ topic: pick(s) })}>
-                    {pick(s)}
-                  </button>
-                ))}
-              </div>
-              <button type="button" className="btn btn-primary btn-lg rmx-empty-cta" onClick={() => setWizard({ topic: "" })}>
-                <Plus size={17} /> {tr("ساخت مسیر", "Create path")}
-              </button>
-            </div>
-          ) : (
             <>
-              {featured && <RoadmapFeaturedCard r={featured} onDelete={openDeleteConfirm} />}
-
-              <div className="rmx-section-head">
-                <h2>{tr("رودمپ‌های من", "My roadmaps")}</h2>
-                <span className="rmx-count">{roadmaps.length}</span>
+              <div className="trade-surface rmx-box rmx-empty">
+                <div className="rmx-empty-art" aria-hidden="true">
+                  <span className="rmx-empty-icon"><MapIcon size={24} strokeWidth={1.7} /></span>
+                  <RoadmapStepper total={5} done={1} />
+                </div>
+                <h2>{tr("اولین مسیرت رو بساز", "Build your first path")}</h2>
+                <p>
+                  {tr("بگو چی می‌خوای یاد بگیری. یه مسیر مرحله‌به‌مرحله می‌گیری که هر مرحله‌ش سرفصل، کار عملی، پروژه، منبع و معیار تموم‌شدن داره.", "Tell us what you want to learn. You get a step-by-step path where every stage has topics, practical tasks, a project, resources and a finish line.")}
+                </p>
+                <RoadmapComposer bare onStart={(topic) => setWizard({ topic })} />
               </div>
-              <div className="rmx-grid">
-                {roadmaps.map((r) => (
-                  <RoadmapGridCard key={r.id} r={r} onDelete={openDeleteConfirm} />
-                ))}
-              </div>
-
-              <RoadmapCreateCta onClick={() => setWizard({ topic: "" })} />
+              <RoadmapDisclaimer />
             </>
+          ) : (
+            <div className="rmx-cols">
+              <div className="rmx-col-main">
+                {featured && <RoadmapContinueCard r={featured} />}
+                <RoadmapList roadmaps={roadmaps} onDelete={openDeleteConfirm} />
+              </div>
+              <aside className="rmx-col-side">
+                <RoadmapComposer onStart={(topic) => setWizard({ topic })} />
+                <RoadmapSummary roadmaps={roadmaps} />
+                <RoadmapDisclaimer />
+              </aside>
+            </div>
           )}
-          <RoadmapDisclaimer />
         </FeatureGate>
       ) : (
         <AuthGate message={tr("برای استفاده از این سرویس وارد شوید", "Sign in to use this service")} />

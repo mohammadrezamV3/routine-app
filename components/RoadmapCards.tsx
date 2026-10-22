@@ -1,20 +1,21 @@
 "use client";
 
+import { useEffect, useState } from "react";
 import type { LucideIcon } from "lucide-react";
 import {
-  ArrowLeft, BookOpen, Brain, Camera, Code2, Compass, Dumbbell, Languages, LineChart, Map as MapIcon,
-  Music, Palette, Plus, Rocket, Shield, Trash2,
+  ArrowLeft, BookOpen, Brain, Camera, Check, ChevronLeft, Code2, Compass, Dumbbell, Languages, LineChart, Map as MapIcon,
+  Music, Palette, Rocket, Shield, Trash2,
 } from "lucide-react";
 import { SmartLink as Link } from "@/components/SmartLink";
 import { GradientRing } from "@/components/GradientRing";
 import { RoadmapBuildStatus, type BuildInfo } from "@/components/RoadmapBuildStatus";
 import { faNum } from "@/lib/jalali";
 import { levelLabel } from "@/lib/roadmapPlan";
-import { tr } from "@/lib/i18n";
+import { tr, pick } from "@/lib/i18n";
 
-// کارت‌های صفحه‌ی فهرست رودمپ‌ها: کارت «ادامه بده»، کارت فشرده‌ی شبکه،
-// گام‌شمار افقی و دکمه‌ی ساخت. همه بدون بک‌گراند اضافه؛ سطح کارت همان
-// .trade-surface مشترک اپ است.
+// اجزای صفحه‌ی فهرست رودمپ‌ها: کارت «ادامه بده»، فهرست ردیفی، سازنده‌ی
+// سریع (فیلد + پیشنهادها) و خلاصه‌ی آمار. همه بدون بک‌گراند اضافه؛ سطح
+// باکس‌ها همان .trade-surface مشترک اپ است.
 
 export type RoadmapCardData = {
   id: string;
@@ -60,21 +61,51 @@ export function isContinuable(r: RoadmapCardData): boolean {
   return r.stageCount > 0 && r.doneCount < r.stageCount && (!r.build || r.build.status === "ready");
 }
 
+// موضوع‌های پیشنهادی سازنده‌ی سریع — یک کلیک موضوع را در فیلد می‌گذارد.
+export const ROADMAP_SUGGESTIONS: { fa: string; en: string }[] = [
+  { fa: "برنامه‌نویسی وب", en: "Web development" },
+  { fa: "امنیت شبکه", en: "Network security" },
+  { fa: "تحلیل داده با پایتون", en: "Data analysis with Python" },
+  { fa: "طراحی UI/UX", en: "UI/UX design" },
+  { fa: "زبان انگلیسی", en: "English language" },
+  { fa: "ادیت ویدیو", en: "Video editing" },
+];
+
+/** عنوان مرحله‌ها برای گام‌شمار؛ لیست فقط شمارش دارد، پس یک بار از همان روت جزئیات خوانده می‌شود. */
+function useStageTitles(id: string, total: number): string[] {
+  const [titles, setTitles] = useState<string[] | null>(null);
+  useEffect(() => {
+    let alive = true;
+    fetch(`/api/roadmaps/${id}`)
+      .then((r) => (r.ok ? r.json() : null))
+      .then((d) => {
+        if (!alive || !d?.plan?.stages) return;
+        setTitles((d.plan.stages as { title?: string }[]).map((s) => s?.title || ""));
+      })
+      .catch(() => {});
+    return () => { alive = false; };
+  }, [id]);
+  return Array.from({ length: total }, (_, i) => titles?.[i] || tr(`مرحله ${faNum(i + 1)}`, `Stage ${faNum(i + 1)}`));
+}
+
 /**
- * گام‌شمار افقی مرحله‌ها: انجام‌شده = نقطه‌ی پر اکسنتی + خط اتصال، مرحله‌ی
- * جاری = حلقه، آینده = نقطه‌ی توخالی کم‌رنگ. فقط نمایشی است (aria-hidden)؛
- * خلاصه‌ی متنی کنارش هست.
+ * گام‌شمار افقی مرحله‌ها: انجام‌شده = نقطه‌ی پر اکسنتی با تیک + خط اتصال،
+ * مرحله‌ی جاری = نقطه‌ی حلقه‌دار، آینده = نقطه‌ی توخالی. اگر labels داده شود
+ * عنوان کوتاه هر مرحله زیر نقطه‌اش می‌آید (بیش از 8 مرحله: فقط مرحله‌ی جاری).
+ * فقط نمایشی است (aria-hidden)؛ خلاصه‌ی متنی کنارش هست.
  */
-export function RoadmapStepper({ total, done }: { total: number; done: number }) {
+export function RoadmapStepper({ total, done, labels }: { total: number; done: number; labels?: string[] }) {
   const items = Array.from({ length: total }, (_, i) => i);
+  const sparse = total > 8;
   return (
-    <ol className="rmx-stepper" aria-hidden="true" style={{ ["--rmx-n" as string]: total }}>
+    <ol className={`rmx-stepper${labels ? " has-labels" : ""}${sparse ? " is-sparse" : ""}`} aria-hidden="true" style={{ ["--rmx-n" as string]: total }}>
       {items.map((i) => {
         const state = i < done ? "done" : i === done ? "now" : "next";
         return (
           <li key={i} className={`rmx-step is-${state}`}>
-            <span className="rmx-step-dot" />
+            <span className="rmx-step-dot">{state === "done" && <Check size={9} strokeWidth={3.4} />}</span>
             {i < total - 1 && <span className="rmx-step-line" />}
+            {labels && <span className="rmx-step-label">{labels[i]}</span>}
           </li>
         );
       })}
@@ -95,86 +126,136 @@ function DeleteButton({ onClick, title }: { onClick: () => void; title: string }
   );
 }
 
-/** کارت بزرگ «ادامه بده» برای آخرین مسیر در جریان. */
-export function RoadmapFeaturedCard({ r, onDelete }: { r: RoadmapCardData; onDelete: (r: RoadmapCardData) => void }) {
+/** کارت فشرده‌ی «ادامه بده»: حلقه | عنوان و قدم بعدی | دکمه، و زیرش گام‌شمار عنوان‌دار. */
+export function RoadmapContinueCard({ r }: { r: RoadmapCardData }) {
   const stageNo = Math.min(r.doneCount + 1, r.stageCount);
+  const titles = useStageTitles(r.id, r.stageCount);
   return (
-    <article className="trade-surface rmx-feature">
-      <div className="rmx-feature-top">
-        <span className="rmx-kicker">{tr("ادامه بده", "Pick up where you left off")}</span>
-        <DeleteButton onClick={() => onDelete(r)} title={r.title} />
-      </div>
-
-      <div className="rmx-feature-main">
-        <div className="rmx-feature-text">
-          <span className="rmx-topic">{r.topic}</span>
-          <h2 className="rmx-feature-title">{r.title}</h2>
+    <article className="trade-surface rmx-box rmx-cont">
+      <div className="rmx-cont-main">
+        <GradientRing value={r.pct / 100} size={88} stroke={7} className="rmx-cont-ring">
+          <span className="rmx-ring-num">{faNum(r.pct)}<small>{tr("٪", "%")}</small></span>
+        </GradientRing>
+        <div className="rmx-cont-text">
+          <span className="rmx-kicker">{tr("ادامه بده", "Pick up where you left off")}</span>
+          <h2 className="rmx-cont-title">{r.title}</h2>
           <div className="rmx-meta">
             {r.totalDuration && <span>{r.totalDuration}</span>}
             <span>{faNum(r.stageCount)} {tr("مرحله", r.stageCount === 1 ? "stage" : "stages")}</span>
             {levelLabel(r.level) && <span>{levelLabel(r.level)}</span>}
           </div>
+          <p className="rmx-next-line">
+            <b>{tr("قدم بعدی:", "Next step:")}</b>
+            <span className="rmx-next-title">{titles[stageNo - 1]}</span>
+            <em>{tr(`مرحله ${faNum(stageNo)} از ${faNum(r.stageCount)}`, `Stage ${faNum(stageNo)} of ${faNum(r.stageCount)}`)}</em>
+          </p>
         </div>
-        <GradientRing value={r.pct / 100} size={92} stroke={7} className="rmx-feature-ring">
-          <span className="rmx-ring-num">{faNum(r.pct)}<small>{tr("٪", "%")}</small></span>
-        </GradientRing>
-      </div>
-
-      <RoadmapStepper total={r.stageCount} done={r.doneCount} />
-
-      <div className="rmx-feature-foot">
-        <p className="rmx-next-line">
-          <b>{tr("قدم بعدی", "Next step")}</b>
-          <span>{tr(`مرحله ${faNum(stageNo)} از ${faNum(r.stageCount)}`, `Stage ${faNum(stageNo)} of ${faNum(r.stageCount)}`)}</span>
-        </p>
-        <Link href={`/roadmaps/custom/${r.id}`} className="btn btn-primary">
+        <Link href={`/roadmaps/custom/${r.id}`} className="btn btn-primary rmx-cont-cta">
           {tr("ادامه", "Continue")} <ArrowLeft size={16} className="dir-flip" />
         </Link>
       </div>
+      <RoadmapStepper total={r.stageCount} done={r.doneCount} labels={titles} />
     </article>
   );
 }
 
-/** کارت فشرده‌ی شبکه‌ی «رودمپ‌های من». */
-export function RoadmapGridCard({ r, onDelete }: { r: RoadmapCardData; onDelete: (r: RoadmapCardData) => void }) {
+function RoadmapRow({ r, onDelete }: { r: RoadmapCardData; onDelete: (r: RoadmapCardData) => void }) {
   const Icon = topicIcon(`${r.topic} ${r.title}`);
   const building = r.build && r.build.status !== "ready";
   const complete = r.stageCount > 0 && r.doneCount >= r.stageCount;
   return (
-    <div className="trade-surface rmx-card">
-      <Link href={`/roadmaps/custom/${r.id}`} className="rmx-card-link" aria-label={r.title} />
-      <div className="rmx-card-top">
-        <span className="rmx-tile"><Icon size={20} strokeWidth={1.8} /></span>
-        <DeleteButton onClick={() => onDelete(r)} title={r.title} />
-      </div>
-      <h3 className="rmx-card-title">{r.title}</h3>
-      <div className="rmx-meta">
-        {r.stageCount > 0 && <span>{faNum(r.stageCount)} {tr("مرحله", r.stageCount === 1 ? "stage" : "stages")}</span>}
-        {r.totalDuration && <span>{r.totalDuration}</span>}
-      </div>
-      {building ? (
-        <RoadmapBuildStatus build={r.build} compact />
-      ) : (
-        <div className="rmx-card-foot">
-          <div className="rmx-bar" role="progressbar" aria-valuenow={r.pct} aria-valuemin={0} aria-valuemax={100}>
-            <span style={{ width: `${r.pct}%` }} />
-          </div>
-          <span className={`rmx-pct${complete ? " is-done" : ""}`}>{faNum(r.pct)}{tr("٪", "%")}</span>
+    <li className="rmx-row">
+      <span className="rmx-tile"><Icon size={19} strokeWidth={1.8} /></span>
+      <div className="rmx-row-text">
+        <Link href={`/roadmaps/custom/${r.id}`} className="rmx-row-link">{r.title}</Link>
+        <div className="rmx-meta">
+          {r.stageCount > 0 && <span>{faNum(r.stageCount)} {tr("مرحله", r.stageCount === 1 ? "stage" : "stages")}</span>}
+          {r.totalDuration && <span>{r.totalDuration}</span>}
         </div>
-      )}
+      </div>
+      <div className="rmx-row-prog">
+        {building ? (
+          <RoadmapBuildStatus build={r.build} inline />
+        ) : (
+          <>
+            <div className="rmx-bar" role="progressbar" aria-valuenow={r.pct} aria-valuemin={0} aria-valuemax={100}>
+              <span style={{ width: `${r.pct}%` }} />
+            </div>
+            <span className={`rmx-pct${complete ? " is-done" : ""}`}>{faNum(r.pct)}{tr("٪", "%")}</span>
+          </>
+        )}
+      </div>
+      <DeleteButton onClick={() => onDelete(r)} title={r.title} />
+      <ChevronLeft size={16} className="rmx-row-chev dir-flip" aria-hidden="true" />
+    </li>
+  );
+}
+
+/** «رودمپ‌های من»: همه‌ی ردیف‌ها در یک باکس، جداشده با خط مو. */
+export function RoadmapList({ roadmaps, onDelete }: { roadmaps: RoadmapCardData[]; onDelete: (r: RoadmapCardData) => void }) {
+  return (
+    <div className="trade-surface rmx-box rmx-list">
+      <header className="rmx-box-head">
+        <h2>{tr("رودمپ‌های من", "My roadmaps")}</h2>
+        <span className="rmx-count">{faNum(roadmaps.length)}</span>
+      </header>
+      <ul className="rmx-rows">
+        {roadmaps.map((r) => <RoadmapRow key={r.id} r={r} onDelete={onDelete} />)}
+      </ul>
     </div>
   );
 }
 
-/** دکمه‌ی خط‌چین «ساخت رودمپ تازه» — بی‌بک‌گراند. */
-export function RoadmapCreateCta({ onClick }: { onClick: () => void }) {
+/** سازنده‌ی سریع: فیلد موضوع + چیپ‌های پیشنهاد + دکمه‌ای که ویزارد را با همان موضوع باز می‌کند. */
+export function RoadmapComposer({ onStart, bare = false }: { onStart: (topic: string) => void; bare?: boolean }) {
+  const [topic, setTopic] = useState("");
+  const form = (
+    <form
+      className="rmx-compose"
+      onSubmit={(e) => { e.preventDefault(); onStart(topic.trim()); }}
+    >
+      <input
+        type="text"
+        className="wsearch-newform-name rmx-field"
+        aria-label={tr("چی می‌خوای یاد بگیری؟", "What do you want to learn?")}
+        placeholder={tr("چی می‌خوای یاد بگیری؟", "What do you want to learn?")}
+        value={topic}
+        maxLength={120}
+        onChange={(e) => setTopic(e.target.value)}
+      />
+      <div className="rmx-chips">
+        {ROADMAP_SUGGESTIONS.map((s) => (
+          <button key={s.fa} type="button" className="rmx-chip" onClick={() => setTopic(pick(s))}>
+            {pick(s)}
+          </button>
+        ))}
+      </div>
+      <button type="submit" className="btn btn-primary btn-block">
+        {tr("ساخت مسیر", "Create path")} <ArrowLeft size={16} className="dir-flip" />
+      </button>
+    </form>
+  );
+  if (bare) return form;
   return (
-    <button type="button" className="rmx-cta" onClick={onClick}>
-      <span className="rmx-cta-plus"><Plus size={20} /></span>
-      <span className="rmx-cta-text">
-        <b>{tr("ساخت رودمپ تازه", "Build a new roadmap")}</b>
-        <small>{tr("بگو چی می‌خوای یاد بگیری، مسیرش رو می‌سازم", "Tell us what to learn and we will map the way")}</small>
-      </span>
-    </button>
+    <div className="trade-surface rmx-box rmx-composer">
+      <h2 className="rmx-box-title">{tr("ساخت رودمپ تازه", "Build a new roadmap")}</h2>
+      {form}
+    </div>
+  );
+}
+
+/** سه عدد خلاصه: دسکتاپ سه خط زیر هم، موبایل یک ردیف سه‌ستونه. */
+export function RoadmapSummary({ roadmaps }: { roadmaps: RoadmapCardData[] }) {
+  const withStages = roadmaps.filter((r) => r.stageCount > 0);
+  const active = withStages.filter((r) => r.doneCount < r.stageCount).length;
+  const done = withStages.reduce((n, r) => n + r.doneCount, 0);
+  const total = withStages.reduce((n, r) => n + r.stageCount, 0);
+  const avg = withStages.length ? Math.round(withStages.reduce((n, r) => n + r.pct, 0) / withStages.length) : 0;
+  return (
+    <div className="trade-surface rmx-box rmx-sum" role="group" aria-label={tr("خلاصه", "Summary")}>
+      <div className="rmx-sum-item"><b>{faNum(active)}</b><span>{tr("مسیر فعال", "Active paths")}</span></div>
+      <div className="rmx-sum-item"><b><bdi dir="ltr">{faNum(done)}/{faNum(total)}</bdi></b><span>{tr("مرحله‌ی انجام‌شده", "Stages done")}</span></div>
+      <div className="rmx-sum-item"><b>{faNum(avg)}{tr("٪", "%")}</b><span>{tr("میانگین پیشرفت", "Avg. progress")}</span></div>
+    </div>
   );
 }
