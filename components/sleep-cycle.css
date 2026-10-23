@@ -2,13 +2,14 @@
    هیچ بک‌گراندی به عنصری اضافه نشده: فقط بوردر و رنگ متن؛ نشانه‌های ریز SVG‌ان. */
 
 .slc-panel{ max-width:460px; }
-.slc-body{ gap:14px; }
-.slc-intro{ margin:0; font-size:12.5px; line-height:1.9; color:var(--muted); }
+@media (min-width:1024px){ .slc-panel.slg-panel.modal-panel{ max-width:620px; } }
+.slc-body{ gap:10px; }
+.slc-intro{ margin:0; font-size:12px; line-height:1.7; color:var(--muted); }
 .slc-tabs{ width:100%; }
-.slc-section{ display:flex; flex-direction:column; gap:12px; }
-.slc-q{ margin:0; font-size:14px; font-weight:800; line-height:1.8; }
+.slc-section{ display:flex; flex-direction:column; gap:10px; }
+.slc-q{ margin:0; font-size:13.5px; font-weight:800; line-height:1.6; }
 .slc-q [dir="ltr"]{ font-variant-numeric:tabular-nums; }
-.slc-hint{ margin:0; font-size:12.5px; line-height:1.9; color:var(--muted); }
+.slc-hint{ margin:0; font-size:12px; line-height:1.7; color:var(--muted); }
 
 /* انتخاب ساعت: جمله‌ی دو تکه با فیلد استاندارد وسطش */
 .slc-field{ display:flex; align-items:center; flex-wrap:wrap; gap:8px; font-size:13px; font-weight:700; }
@@ -16,40 +17,39 @@
 .slc-field input{ width:92px; flex:none; text-align:center; direction:ltr; font-variant-numeric:tabular-nums; }
 
 /* فهرست گزینه‌ها */
-.slc-list{ list-style:none; margin:0; padding:0; display:flex; flex-direction:column; gap:8px; }
+.slc-list{ list-style:none; margin:0; padding:6px 0 0; display:grid; grid-template-columns:repeat(2, minmax(0,1fr)); gap:10px 8px; }
 .slc-row{
-  position:relative; display:grid; grid-template-columns:auto 1fr auto; align-items:center; gap:12px;
-  padding:10px 14px; border-radius:16px; border:1px solid var(--box-line); min-width:0;
+  position:relative; display:grid; grid-template-columns:minmax(0,1fr) auto; grid-template-areas:"time pips" "meta meta";
+  align-items:center; gap:3px 8px; padding:8px 12px; border-radius:16px; border:1px solid var(--box-line); min-width:0;
 }
 .slc-row.is-best{ border-color:var(--slp-ink); }
-.slc-time{ display:flex; flex-direction:column; line-height:1.3; min-width:72px; }
+.slc-time{ grid-area:time; display:flex; flex-direction:column; line-height:1.25; min-width:0; }
 .slc-time small{ font-size:10.5px; color:var(--muted); font-weight:700; }
-.slc-clock{ font-size:24px; font-weight:900; font-variant-numeric:tabular-nums; letter-spacing:.3px; }
+.slc-clock{ font-size:22px; font-weight:900; font-variant-numeric:tabular-nums; letter-spacing:.3px; }
 .slc-row.is-best .slc-clock{ color:var(--slp-ink); }
-.slc-meta{ display:flex; flex-direction:column; line-height:1.4; min-width:0; }
-.slc-cyc{ font-size:13px; font-weight:800; }
-.slc-meta small{ font-size:11.5px; color:var(--muted); font-weight:600; }
-.slc-pips{ width:46px; height:6px; display:block; color:var(--slp-ink); }
+.slc-meta{ grid-area:meta; display:flex; flex-direction:column; line-height:1.4; min-width:0; }
+.slc-cyc{ font-size:12.5px; font-weight:800; }
+.slc-meta small{ font-size:11px; color:var(--muted); font-weight:600; }
+.slc-pips{ grid-area:pips; width:46px; height:6px; display:block; color:var(--slp-ink); }
 .slc-pips .on{ fill:currentColor; }
 .slc-pips .off{ fill:currentColor; opacity:.18; }
 .slc-badge{
   position:absolute; inset-block-start:-9px; inset-inline-end:12px; padding:0 8px; font-size:10.5px; font-weight:800;
   line-height:18px; color:var(--slp-ink); border-radius:9px;
 }
-.slc-row.is-best{ margin-top:2px; }
 .slc-badge{ border:1px solid color-mix(in srgb, var(--slp-ink) 60%, transparent); }
 
 /* دیشب */
 .slc-last-head{ display:flex; align-items:baseline; justify-content:space-between; gap:10px; flex-wrap:wrap; }
-.slc-last-big{ font-size:22px; font-weight:900; }
+.slc-last-big{ font-size:20px; font-weight:900; }
 .slc-last-big [dir="ltr"]{ font-variant-numeric:tabular-nums; display:inline-block; }
 .slc-last-head small{ font-size:12px; color:var(--muted); font-weight:600; }
 .slc-verdict{
-  display:flex; flex-direction:column; gap:2px; padding:10px 14px; border-radius:16px;
+  display:flex; flex-direction:column; gap:1px; padding:8px 12px; border-radius:16px;
   border:1px solid var(--box-line); border-inline-start-width:3px;
 }
 .slc-verdict b{ font-size:13px; font-weight:800; }
-.slc-verdict span{ font-size:12px; line-height:1.8; color:var(--muted); }
+.slc-verdict span{ font-size:11.5px; line-height:1.6; color:var(--muted); }
 .slc-verdict.is-good{ border-inline-start-color:var(--slp-great); }
 .slc-verdict.is-good b{ color:var(--slp-great); }
 .slc-verdict.is-ok{ border-inline-start-color:var(--slp-good); }
@@ -71,27 +71,32 @@
 .slc-hypno-track{ position:relative; height:16px; }
 .slc-hypno-track span{ position:absolute; top:0; white-space:nowrap; }
 .slc-ax-tick{ transform:translateX(-50%); opacity:.75; }
-.slc-legend{ list-style:none; margin:4px 0 0; padding:0; display:grid; grid-template-columns:repeat(2, minmax(0,1fr)); gap:6px 12px; }
-.slc-legend li{ display:flex; align-items:center; gap:6px; font-size:12px; font-weight:700; min-width:0; }
-.slc-legend i{ width:10px; height:10px; border-radius:50%; flex:none; }
-.slc-legend small{ margin-inline-start:auto; font-size:11.5px; color:var(--muted); font-weight:600; font-variant-numeric:tabular-nums; }
+.slc-hlegend{ list-style:none; margin:2px 0 0; padding:0; display:grid; grid-template-columns:repeat(2, minmax(0,1fr)); gap:4px 14px; }
+.slc-hlegend li{ display:flex; align-items:center; gap:6px; font-size:11.5px; font-weight:700; min-width:0; white-space:nowrap; }
+.slc-hlegend i{ width:10px; height:10px; border-radius:50%; flex:none; }
+.slc-hlegend small{ margin-inline-start:auto; font-size:11px; color:var(--muted); font-weight:600; font-variant-numeric:tabular-nums; }
 .slc-hypno-link{ stroke:var(--muted); stroke-width:1; opacity:.4; }
 
 .slc-facts{ display:grid; grid-template-columns:repeat(3, minmax(0,1fr)); gap:8px; margin:0; }
-.slc-facts > div{ display:flex; flex-direction:column; gap:2px; padding:8px 10px; border-radius:14px; border:1px solid var(--box-line); min-width:0; }
+.slc-facts > div{ display:flex; flex-direction:column; gap:1px; padding:6px 10px; border-radius:14px; border:1px solid var(--box-line); min-width:0; }
 .slc-facts dt{ font-size:11px; color:var(--muted); font-weight:700; }
-.slc-facts dd{ margin:0; font-size:14px; font-weight:800; font-variant-numeric:tabular-nums; }
+.slc-facts dd{ margin:0; font-size:13.5px; font-weight:800; font-variant-numeric:tabular-nums; }
 
 /* زمان به خواب رفتن */
-.slc-latency{ gap:8px; }
+.slc-latency{ gap:6px; }
 .slc-latency-title{ font-size:12.5px; font-weight:700; color:var(--muted); }
 .slc-latency-tabs{ width:100%; }
 
 @media (max-width:360px){
-  .slc-row{ gap:8px; padding-inline:10px; }
-  .slc-clock{ font-size:21px; }
-  .slc-time{ min-width:60px; }
+  .slc-row{ padding-inline:10px; }
+  .slc-clock{ font-size:20px; }
   .slc-pips{ width:38px; }
+}
+
+/* دیشب: روی دسکتاپ خلاصه و نمودار کنار هم */
+.slc-last, .slc-last-a, .slc-last-b{ display:flex; flex-direction:column; gap:10px; min-width:0; }
+@media (min-width:1024px){
+  .slc-last{ display:grid; grid-template-columns:minmax(0,1fr) minmax(0,1.25fr); column-gap:22px; align-items:start; }
 }
 
 /* مرز چرخه‌ها روی قوس هدف صفحه‌ی ساعت */

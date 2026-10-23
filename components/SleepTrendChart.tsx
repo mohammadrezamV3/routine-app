@@ -31,6 +31,8 @@ export type SleepTrendChartProps = {
   target: { wake: string; sleep: string };
   todayIso: string;
   onPick: (dateIso: string) => void;
+  /** داخل پنجره: ارتفاع نمودار با ارتفاع صفحه تنظیم می‌شه تا اسکرول لازم نباشه */
+  fit?: boolean;
 };
 
 type Range = "7" | "30";
@@ -61,11 +63,19 @@ function smoothPath(pts: { x: number; y: number }[]): string {
   return d;
 }
 
-export function SleepTrendChart({ entries, insights, target, todayIso, onPick }: SleepTrendChartProps) {
+export function SleepTrendChart({ entries, insights, target, todayIso, onPick, fit = false }: SleepTrendChartProps) {
   const [range, setRange] = useState<Range>("7");
   const [sel, setSel] = useState<string | null>(null);
   const [width, setWidth] = useState(320);
   const wrapRef = useRef<HTMLDivElement>(null);
+  const [vh, setVh] = useState(900);
+  useEffect(() => {
+    if (!fit) return;
+    const apply = () => setVh(window.innerHeight);
+    apply();
+    window.addEventListener("resize", apply);
+    return () => window.removeEventListener("resize", apply);
+  }, [fit]);
 
   useEffect(() => {
     const el = wrapRef.current;
@@ -117,8 +127,10 @@ export function SleepTrendChart({ entries, insights, target, todayIso, onPick }:
   const colX = (i: number) => (en ? plotLeft + i * cw : plotRight - (i + 1) * cw); // i=0 قدیمی‌ترین
   const colCx = (i: number) => colX(i) + cw / 2;
 
-  const T_TOP = 10, T_H = 176; // خط زمانی
-  const D_TOP = T_TOP + T_H + 34, D_H = 96; // مدت
+  // داخل پنجره: بودجه‌ی ارتفاع از ارتفاع صفحه میاد (بخش ثابت پنجره حدود 490px)
+  const budget = Math.max(0, vh - 490);
+  const T_TOP = 10, T_H = fit ? Math.min(176, Math.max(84, Math.round(budget * 0.64))) : 176; // خط زمانی
+  const D_TOP = T_TOP + T_H + 34, D_H = fit ? Math.min(96, Math.max(48, Math.round(budget * 0.36))) : 96; // مدت
   const LBL_Y = D_TOP + D_H + 16;
   const H = LBL_Y + (n === 7 ? 20 : 8);
 

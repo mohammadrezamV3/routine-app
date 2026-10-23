@@ -1,11 +1,11 @@
 "use client";
 
-import type { ReactNode } from "react";
-import { CloudMoon, Coffee, Hourglass, Moon, Sparkles, Sunrise, TrendingDown, TrendingUp, Zap } from "lucide-react";
+import { useState, type ReactNode } from "react";
+import { ChevronLeft, ChevronRight, CloudMoon, Coffee, Hourglass, Moon, Sparkles, Sunrise, TrendingDown, TrendingUp, Zap } from "lucide-react";
 import { GradientRing, RING_AMBER, RING_BLUE, RING_GREEN } from "./GradientRing";
 import { chronotypeLabel, durationLabel, type SleepInsights } from "@/lib/sleep";
 import { faNum } from "@/lib/jalali";
-import { tr, iso } from "@/lib/i18n";
+import { tr, iso, isEn } from "@/lib/i18n";
 import "./sleep-insights.css";
 
 // تحلیل‌ها و آمار خواب: کاشی‌های عددی + کارت‌های هوشمند که فقط وقتی داده‌اش
@@ -13,9 +13,11 @@ import "./sleep-insights.css";
 export type SleepInsightsPanelProps = {
   insights: SleepInsights;
   target: { wake: string; sleep: string };
+  /** all = هر دو (پیش‌فرض)، stats = فقط عددها، tips = فقط نکته‌ها؛ پنجره‌ی آمار دو بخش جدا نشون می‌ده */
+  part?: "all" | "stats" | "tips";
 };
 
-const MIN_NIGHTS = 3;
+export const MIN_NIGHTS = 3;
 
 type Smart = { key: string; icon: ReactNode; tone: "good" | "fair" | "poor" | "ink"; title: string; text: string; extra?: ReactNode };
 
@@ -147,7 +149,7 @@ function renderClocks(text: string): ReactNode[] {
   return text.split(/(\d{2}:\d{2})/).map((part, i) => (/^\d{2}:\d{2}$/.test(part) ? <bdi key={i} dir="ltr" className="sli-ltr">{part}</bdi> : part));
 }
 
-export function SleepInsightsPanel({ insights }: SleepInsightsPanelProps) {
+export function SleepInsightsPanel({ insights, part = "all" }: SleepInsightsPanelProps) {
   const ins = insights;
 
   if (ins.nights < MIN_NIGHTS) {
@@ -176,11 +178,11 @@ export function SleepInsightsPanel({ insights }: SleepInsightsPanelProps) {
   return (
     <section className="sl-card" aria-label={tr("تحلیل خواب", "Sleep analysis")}>
       <div className="sl-head-row">
-        <h3 className="sl-card-title"><Sparkles />{tr("تحلیل خواب", "Sleep analysis")}</h3>
+        <h3 className="sl-card-title"><Sparkles />{part === "tips" ? tr("نکته‌های خواب", "Sleep tips") : tr("تحلیل خواب", "Sleep analysis")}</h3>
         <span className="sl-sub">{tr(`${faNum(ins.nights)} شب ثبت‌شده`, `${ins.nights} ${ins.nights === 1 ? "night" : "nights"} logged`)}</span>
       </div>
 
-      <div className="sli-grid">
+      {part !== "tips" && <div className="sli-grid">
         <div className="sl-stat">
           <span>{tr("میانگین خواب", "Average sleep")}</span>
           <b className={durTone}>{ins.avgMin !== null ? durationLabel(ins.avgMin) : "-"}</b>
@@ -208,9 +210,11 @@ export function SleepInsightsPanel({ insights }: SleepInsightsPanelProps) {
           <span>{tr("رشته‌ی خواب کافی", "Good-sleep streak")}</span>
           <b className="sli-streak">{ins.goalStreak > 0 && <Zap />}{tr(`${faNum(ins.goalStreak)} شب`, `${ins.goalStreak} ${ins.goalStreak === 1 ? "night" : "nights"}`)}</b>
         </div>
-      </div>
+      </div>}
 
-      {cards.length > 0 && (
+      {part === "tips" && cards.length > 0 && <TipsPager cards={cards} />}
+
+      {part === "all" && cards.length > 0 && (
         <ul className="sli-list">
           {cards.map((c) => (
             <li key={c.key} className={`sli-card sli-t-${c.tone}`}>
@@ -225,5 +229,39 @@ export function SleepInsightsPanel({ insights }: SleepInsightsPanelProps) {
         </ul>
       )}
     </section>
+  );
+}
+
+// نکته‌ها یکی‌یکی با قبلی/بعدی نشون داده می‌شن تا پنجره‌ی آمار هیچ‌وقت اسکرول نخواد
+function TipsPager({ cards }: { cards: Smart[] }) {
+  const [i, setI] = useState(0);
+  const n = cards.length;
+  const at = Math.min(i, n - 1);
+  const c = cards[at];
+  const en = isEn();
+  return (
+    <div className="sli-pager">
+      <ul className="sli-list">
+        <li key={c.key} className={`sli-card sli-t-${c.tone} sli-swap`} aria-live="polite">
+          <span className="sli-ic">{c.icon}</span>
+          <div className="sli-body">
+            <b>{c.title}</b>
+            <p>{renderClocks(c.text)}</p>
+            {c.extra}
+          </div>
+        </li>
+      </ul>
+      {n > 1 && (
+        <div className="sli-pager-nav">
+          <button type="button" className="btn btn-ghost btn-icon" onClick={() => setI((at - 1 + n) % n)} aria-label={tr("نکته‌ی قبلی", "Previous tip")}>
+            {en ? <ChevronLeft aria-hidden /> : <ChevronRight aria-hidden />}
+          </button>
+          <span className="sli-pager-count" dir="ltr">{faNum(at + 1)} / {faNum(n)}</span>
+          <button type="button" className="btn btn-ghost btn-icon" onClick={() => setI((at + 1) % n)} aria-label={tr("نکته‌ی بعدی", "Next tip")}>
+            {en ? <ChevronRight aria-hidden /> : <ChevronLeft aria-hidden />}
+          </button>
+        </div>
+      )}
+    </div>
   );
 }

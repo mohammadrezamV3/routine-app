@@ -105,7 +105,7 @@ function Body({
         </div>
 
         <div className="slg-body slc-body">
-          <p className="slc-intro">{tr("هر چرخه حدود 90 دقیقه‌ست؛ بیدارشدن پایان چرخه سبک‌تر از وسط خواب عمیقه.", "Each cycle is about 90 minutes; waking at the end of a cycle feels lighter than waking in deep sleep.")}</p>
+          {mode !== "last" && <p className="slc-intro">{tr("هر چرخه حدود 90 دقیقه‌ست؛ بیدارشدن پایان چرخه سبک‌تر از وسط خواب عمیقه.", "Each cycle is about 90 minutes; waking at the end of a cycle feels lighter than waking in deep sleep.")}</p>}
 
           <SegmentedTabs<Mode> options={modes()} active={mode} onChange={setMode} className="slc-tabs seg-flush" ariaLabel={tr("بخش‌های چرخه‌ی خواب", "Sleep cycle sections")} />
 
@@ -170,7 +170,8 @@ function LastNight({ lastNight, latency }: { lastNight: SleepRecord | null; late
   }
   const v = verdictText()[info.a.verdict];
   return (
-    <>
+    <div className="slc-last">
+     <div className="slc-last-a">
       <div className="slc-last-head">
         <b className="slc-last-big"><span dir="ltr">{info.a.fullCycles}</span> {tr("چرخه کامل", info.a.fullCycles === 1 ? "full cycle" : "full cycles")}</b>
         <small>{durationLabel(info.a.asleepMin)} {tr("خواب", "asleep")}</small>
@@ -184,11 +185,14 @@ function LastNight({ lastNight, latency }: { lastNight: SleepRecord | null; late
         <b>{v.title}</b>
         <span>{v.text}</span>
       </div>
+     </div>
+     <div className="slc-last-b">
       <div className="slc-hypno-head">
         <span>{tr("مراحل خواب", "Sleep stages")}</span>
         <em>{tr("تخمینی", "Estimated")}</em>
       </div>
       <SleepCycleHypnogram totalMin={info.total} latency={info.lat} startClock={info.start} endClock={info.end} />
-    </>
+     </div>
+    </div>
   );
 }

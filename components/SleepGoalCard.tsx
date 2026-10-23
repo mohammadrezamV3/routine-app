@@ -81,7 +81,10 @@ export function SleepGoalCard({
         <span className="sl-sub">{tr("هر شب", "per night")}</span>
       </div>
 
-      <SleepTimeField label={tr("ساعت بیداری", "Wake-up time")} value={wake} fallback={goal.wake} onChange={(v) => edit(bed, v)} />
+      <div className="slg-times">
+        <SleepTimeField label={tr("ساعت بیداری", "Wake-up time")} value={wake} fallback={goal.wake} onChange={(v) => edit(bed, v)} />
+        <SleepTimeField label={tr("ساعت خواب", "Bedtime")} value={bed} fallback={goal.sleep} onChange={(v) => edit(v, wake)} />
+      </div>
 
       <div className="slg-block">
         <span className="slg-label">{tr("مدت هدف (ساعت خواب خودکار حساب می‌شه)", "Target length (bedtime is worked out for you)")}</span>
@@ -93,8 +96,6 @@ export function SleepGoalCard({
           onChange={(v) => { const b = bedForDuration(wake, Number(v)); if (b) edit(b, wake); }}
         />
       </div>
-
-      <SleepTimeField label={tr("ساعت خواب", "Bedtime")} value={bed} fallback={goal.sleep} onChange={(v) => edit(v, wake)} />
 
       {sugg.length > 0 && (
         <div className="slg-block">

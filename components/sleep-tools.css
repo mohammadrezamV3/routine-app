@@ -1,13 +1,13 @@
 /* ابزارهای خواب: تنفس آرام (SleepBreathSheet) و چرت (SleepNapSheet).
    پنل و پاورقی از sleep-log.css میان. هیچ بک‌گراندی اضافه نشده. */
 
-.stl-body{ align-items:center; gap:18px; }
+.stl-body{ align-items:center; gap:12px; }
 .stl-opts{ display:flex; flex-direction:column; gap:12px; width:100%; min-width:0; }
 .stl-hint{ font-size:12px; line-height:1.8; color:var(--muted); text-align:center; }
 
 /* صحنه‌ی تنفس: دایره پشت حلقه‌ی پیشرفت، متن وسط */
 .stl-stage{
-  position:relative; width:250px; max-width:100%; aspect-ratio:1; flex:none;
+  position:relative; width:min(250px, 100%, 34vh); width:min(250px, 100%, 34dvh); aspect-ratio:1; flex:none;
   display:flex; align-items:center; justify-content:center;
 }
 .stl-circle{
@@ -18,6 +18,10 @@
   will-change:transform;
 }
 .stl-ring{ position:relative; }
+/* حلقه‌ها با ارتفاع صفحه کوچیک می‌شن تا اسکرول لازم نباشه (viewBox مقیاس می‌کنه) */
+.stl-stage .gring, .stl-fit{ width:100% !important; height:100% !important; }
+.stl-fit{ width:min(230px, 100%, 32vh) !important; width:min(230px, 100%, 32dvh) !important; height:auto !important; aspect-ratio:1; }
+.stl-stage .gring svg, .stl-fit svg{ width:100%; height:100%; }
 .stl-center{ display:flex; flex-direction:column; align-items:center; justify-content:center; gap:2px; text-align:center; }
 .stl-phase{ font-size:20px; font-weight:800; }
 .stl-num{ font-size:34px; font-weight:900; font-variant-numeric:tabular-nums; line-height:1.1; }
@@ -27,7 +31,7 @@
 }
 
 /* چرت */
-.stl-run, .stl-end{ display:flex; flex-direction:column; align-items:center; gap:14px; }
+.stl-run, .stl-end{ display:flex; flex-direction:column; align-items:center; gap:10px; }
 .stl-big{ font-size:44px; font-weight:900; font-variant-numeric:tabular-nums; letter-spacing:1px; line-height:1.1; }
 .stl-wake{ font-size:28px; font-weight:900; }
 .stl-wakeat{
