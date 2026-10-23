@@ -12,7 +12,7 @@ import { faNum } from "@/lib/jalali";
 import { RoadmapDisclaimer } from "@/components/RoadmapDisclaimer";
 import { RoadmapStagePanel } from "@/components/RoadmapStagePanel";
 import { searchUrl } from "@/components/RoadmapStagePanel";
-import { RoadmapStageNav } from "@/components/RoadmapStageNav";
+import { RoadmapJourney } from "@/components/RoadmapJourney";
 import { RoadmapBuildStatus, BuildInfo } from "@/components/RoadmapBuildStatus";
 import { LoadingBlock, Spinner } from "@/components/Spinner";
 import { SegmentedTabs } from "@/components/SegmentedTabs";
@@ -281,13 +281,20 @@ export default function RoadmapDetailPage() {
 
       {tab === "stages" && selStage && (
         <div className="rmx-stages" id="rmx-stages-top">
-          <RoadmapStageNav
-            stages={plan.stages}
-            progress={data.stepProgress}
-            selected={selStage.n}
-            current={nextStage?.n}
-            onSelect={(n) => setSelected(n)}
-          />
+          <div className="trade-surface rmx-box rmx-journey">
+            <div className="rmx-box-head">
+              <h2>{tr("مسیر مرحله‌ها", "Stage journey")}</h2>
+              <span className="rmx-count"><bdi dir="ltr">{faNum(progress.done)}/{faNum(progress.total)}</bdi></span>
+            </div>
+            <RoadmapJourney
+              variant="full"
+              label={tr("مرحله‌ها", "Stages")}
+              current={nextStage?.n}
+              selected={selStage.n}
+              onSelect={(n) => setSelected(n)}
+              stages={plan.stages.map((s) => ({ n: s.n, title: s.title, duration: s.duration, done: !!data.stepProgress[String(s.n)] }))}
+            />
+          </div>
           <RoadmapStagePanel
             key={selStage.n}
             stage={selStage}

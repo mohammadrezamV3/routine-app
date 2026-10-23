@@ -9,6 +9,7 @@ import {
 import { SmartLink as Link } from "@/components/SmartLink";
 import { GradientRing } from "@/components/GradientRing";
 import { RoadmapBuildStatus, type BuildInfo } from "@/components/RoadmapBuildStatus";
+import { RoadmapJourney } from "@/components/RoadmapJourney";
 import { faNum } from "@/lib/jalali";
 import { levelLabel } from "@/lib/roadmapPlan";
 import { tr, pick } from "@/lib/i18n";
@@ -71,41 +72,40 @@ export const ROADMAP_SUGGESTIONS: { fa: string; en: string }[] = [
   { fa: "ادیت ویدیو", en: "Video editing" },
 ];
 
-/** عنوان مرحله‌ها برای گام‌شمار؛ لیست فقط شمارش دارد، پس یک بار از همان روت جزئیات خوانده می‌شود. */
-function useStageTitles(id: string, total: number): string[] {
-  const [titles, setTitles] = useState<string[] | null>(null);
+/** عنوان و مدت مرحله‌ها برای نقشه‌ی سفر؛ لیست فقط شمارش دارد، پس یک بار از همان روت جزئیات خوانده می‌شود. */
+function useStageInfo(id: string, total: number): { title: string; duration: string }[] {
+  const [info, setInfo] = useState<{ title: string; duration: string }[] | null>(null);
   useEffect(() => {
     let alive = true;
     fetch(`/api/roadmaps/${id}`)
       .then((r) => (r.ok ? r.json() : null))
       .then((d) => {
         if (!alive || !d?.plan?.stages) return;
-        setTitles((d.plan.stages as { title?: string }[]).map((s) => s?.title || ""));
+        setInfo((d.plan.stages as { title?: string; duration?: string }[]).map((s) => ({ title: s?.title || "", duration: s?.duration || "" })));
       })
       .catch(() => {});
     return () => { alive = false; };
   }, [id]);
-  return Array.from({ length: total }, (_, i) => titles?.[i] || tr(`مرحله ${faNum(i + 1)}`, `Stage ${faNum(i + 1)}`));
+  return Array.from({ length: total }, (_, i) => ({
+    title: info?.[i]?.title || tr(`مرحله ${faNum(i + 1)}`, `Stage ${faNum(i + 1)}`),
+    duration: info?.[i]?.duration || "",
+  }));
 }
 
 /**
- * گام‌شمار افقی مرحله‌ها: انجام‌شده = نقطه‌ی پر اکسنتی با تیک + خط اتصال،
- * مرحله‌ی جاری = نقطه‌ی حلقه‌دار، آینده = نقطه‌ی توخالی. اگر labels داده شود
- * عنوان کوتاه هر مرحله زیر نقطه‌اش می‌آید (بیش از 8 مرحله: فقط مرحله‌ی جاری).
- * فقط نمایشی است (aria-hidden)؛ خلاصه‌ی متنی کنارش هست.
+ * گام‌شمار ساده‌ی نمایشی (فقط حالت خالی): نقطه‌های متصل بدون عنوان.
+ * نقشه‌ی سفر واقعی مرحله‌ها RoadmapJourney است.
  */
-export function RoadmapStepper({ total, done, labels }: { total: number; done: number; labels?: string[] }) {
+export function RoadmapStepper({ total, done }: { total: number; done: number }) {
   const items = Array.from({ length: total }, (_, i) => i);
-  const sparse = total > 8;
   return (
-    <ol className={`rmx-stepper${labels ? " has-labels" : ""}${sparse ? " is-sparse" : ""}`} aria-hidden="true" style={{ ["--rmx-n" as string]: total }}>
+    <ol className="rmx-stepper" aria-hidden="true" style={{ ["--rmx-n" as string]: total }}>
       {items.map((i) => {
         const state = i < done ? "done" : i === done ? "now" : "next";
         return (
           <li key={i} className={`rmx-step is-${state}`}>
             <span className="rmx-step-dot">{state === "done" && <Check size={9} strokeWidth={3.4} />}</span>
             {i < total - 1 && <span className="rmx-step-line" />}
-            {labels && <span className="rmx-step-label">{labels[i]}</span>}
           </li>
         );
       })}
@@ -129,7 +129,8 @@ function DeleteButton({ onClick, title }: { onClick: () => void; title: string }
 /** کارت فشرده‌ی «ادامه بده»: حلقه | عنوان و قدم بعدی | دکمه، و زیرش گام‌شمار عنوان‌دار. */
 export function RoadmapContinueCard({ r }: { r: RoadmapCardData }) {
   const stageNo = Math.min(r.doneCount + 1, r.stageCount);
-  const titles = useStageTitles(r.id, r.stageCount);
+  const info = useStageInfo(r.id, r.stageCount);
+  const current = r.doneCount < r.stageCount ? r.doneCount + 1 : undefined;
   return (
     <article className="trade-surface rmx-box rmx-cont">
       <div className="rmx-cont-main">
@@ -146,7 +147,7 @@ export function RoadmapContinueCard({ r }: { r: RoadmapCardData }) {
           </div>
           <p className="rmx-next-line">
             <b>{tr("قدم بعدی:", "Next step:")}</b>
-            <span className="rmx-next-title">{titles[stageNo - 1]}</span>
+            <span className="rmx-next-title">{info[stageNo - 1]?.title}</span>
             <em>{tr(`مرحله ${faNum(stageNo)} از ${faNum(r.stageCount)}`, `Stage ${faNum(stageNo)} of ${faNum(r.stageCount)}`)}</em>
           </p>
         </div>
@@ -154,7 +155,12 @@ export function RoadmapContinueCard({ r }: { r: RoadmapCardData }) {
           {tr("ادامه", "Continue")} <ArrowLeft size={16} className="dir-flip" />
         </Link>
       </div>
-      <RoadmapStepper total={r.stageCount} done={r.doneCount} labels={titles} />
+      <RoadmapJourney
+        variant="compact"
+        current={current}
+        label={tr("مرحله‌ها", "Stages")}
+        stages={info.map((x, i) => ({ n: i + 1, title: x.title, duration: x.duration, done: i < r.doneCount }))}
+      />
     </article>
   );
 }

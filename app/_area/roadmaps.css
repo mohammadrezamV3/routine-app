@@ -242,8 +242,6 @@ body[data-theme="light"] .pls-line::after, body[data-theme="light"] .pls-card::a
 
 .rmx-title{ margin:0; font-size:26px; font-weight:900; line-height:1.45; color:var(--text); }
 
-.rmx-head-btn{ flex-shrink:0; }
-
 @media (min-width:1024px) {
   .rmx-title{ font-size:32px; }
 }
@@ -252,10 +250,20 @@ body[data-theme="light"] .pls-line::after, body[data-theme="light"] .pls-card::a
 
 .rmx-cols{ display:flex; flex-direction:column; gap:var(--rmx-gap); }
 
-.rmx-col-main, .rmx-col-side{ display:flex; flex-direction:column; gap:var(--rmx-gap); min-width:0; }
+/* موبایل: ستون‌ها محو می‌شن و با order چیده می‌شن (ادامه، ساخت تازه، فهرست، خلاصه) */
+.rmx-col-main, .rmx-col-side{ display:contents; }
+
+.rmx-cols > * , .rmx-col-main > *, .rmx-col-side > *{ min-width:0; }
+
+.rmx-cont{ order:1; }
+.rmx-composer{ order:2; }
+.rmx-list{ order:3; }
+.rmx-sum{ order:4; }
+.rmx-col-side .rmx-disclaimer{ order:5; }
 
 @media (min-width:1024px) {
   .rmx-cols{ display:grid; grid-template-columns:minmax(0, 1fr) 340px; gap:var(--rmx-gap); align-items:start; }
+  .rmx-col-main, .rmx-col-side{ display:flex; flex-direction:column; gap:var(--rmx-gap); min-width:0; }
   .rmx-col-side{ position:sticky; top:84px; }
 }
 
@@ -299,7 +307,7 @@ html body .btn.rmx-cont-cta{ grid-column:1 / -1; display:flex; width:100%; }
   .rmx-cont-title{ font-size:20px; }
 }
 
-/* ── گام‌شمار: نقطه + خط اتصال + عنوان کوتاه زیر هر نقطه ── */
+/* ── گام‌شمار ساده (فقط حالت خالی): نقطه + خط اتصال ── */
 
 .rmx-stepper{ list-style:none; margin:0; padding:0; display:grid; grid-template-columns:repeat(var(--rmx-n), minmax(0, 1fr)); }
 
@@ -321,17 +329,134 @@ html body .btn.rmx-cont-cta{ grid-column:1 / -1; display:flex; width:100%; }
 
 .rmx-step.is-done .rmx-step-line{ background:var(--accent); }
 
-.rmx-step-label{
-  display:none; margin-top:9px; padding-inline:4px; max-width:100%; text-align:center; unicode-bidi:plaintext;
-  font-size:11.5px; line-height:1.55; color:var(--muted);
-  -webkit-line-clamp:2; -webkit-box-orient:vertical; overflow:hidden;
-}
+/* ── نقشه‌ی سفر مرحله‌ها (RoadmapJourney): full در صفحه‌ی جزئیات، compact در کارت ادامه ── */
 
-.rmx-step.is-now .rmx-step-label{ color:var(--text); font-weight:700; }
+.rmj{ --rmj-w:96px; --rmj-d:36px; --rmj-dn:44px; position:relative; min-width:0; }
+
+.rmj.is-compact{ --rmj-w:72px; --rmj-d:24px; --rmj-dn:30px; }
 
 @media (min-width:640px) {
-  .rmx-stepper.has-labels:not(.is-sparse) .rmx-step-label{ display:-webkit-box; min-height:calc(2 * 1.55em); }
+  .rmj.is-full{ --rmj-w:120px; --rmj-d:40px; --rmj-dn:50px; }
+  .rmj.is-compact.has-titles{ --rmj-w:104px; }
 }
+
+.rmj-scroll{ padding-block:8px; margin-block:-8px; overflow-x:auto; overflow-y:hidden; scrollbar-width:none; scroll-snap-type:x proximity; overscroll-behavior-x:contain; }
+
+.rmj-scroll::-webkit-scrollbar{ display:none; }
+
+.rmj.is-scroll .rmj-scroll{
+  padding-inline:var(--rmx-pad); margin-inline:calc(-1 * var(--rmx-pad));
+  -webkit-mask-image:linear-gradient(to right, transparent 0, #000 28px, #000 calc(100% - 28px), transparent 100%);
+  mask-image:linear-gradient(to right, transparent 0, #000 28px, #000 calc(100% - 28px), transparent 100%);
+}
+
+.rmj-list{
+  list-style:none; margin:0; padding:0; display:grid; grid-template-columns:repeat(var(--rmj-n), minmax(0, 1fr));
+  width:max(100%, calc(var(--rmj-n) * var(--rmj-w)));
+}
+
+.rmj-node{ position:relative; min-width:0; scroll-snap-align:center; }
+
+.rmj-btn{
+  position:relative; display:flex; flex-direction:column; align-items:center; width:100%; box-sizing:border-box;
+  padding:0 6px 6px; text-align:center; color:var(--text);
+}
+
+html body button.rmj-btn{
+  background:none; border:0; border-radius:var(--rmx-r-in); box-shadow:none; backdrop-filter:none; -webkit-backdrop-filter:none;
+  font:inherit; cursor:pointer; transition:transform .15s ease;
+}
+
+html body button.rmj-btn:active{ transform:scale(.97); }
+
+html body button.rmj-btn:focus-visible{ outline:2px solid var(--accent); outline-offset:2px; }
+
+/* دایره: ارتفاع ردیف دایره ثابت = قطر دایره‌ی جاری تا خط اتصال هم‌تراز بماند */
+.rmj-dot{
+  display:inline-flex; align-items:center; justify-content:center; box-sizing:border-box; flex-shrink:0;
+  width:var(--rmj-d); height:var(--rmj-d); margin-block:calc((var(--rmj-dn) - var(--rmj-d)) / 2);
+  border-radius:50%; border:2px solid var(--muted2); color:var(--muted);
+  font-family:var(--font-latin), var(--font-vazir), sans-serif; font-size:14px; font-weight:800; line-height:1;
+  transition:transform .18s ease, border-color .18s ease;
+}
+
+.rmj.is-compact .rmj-dot{ font-size:11px; border-width:1.5px; }
+
+.rmj-node.is-done .rmj-dot{ background:var(--accent); border-color:var(--accent); color:var(--bg); }
+
+.rmj-node.is-now .rmj-dot{
+  width:var(--rmj-dn); height:var(--rmj-dn); margin-block:0; border-color:var(--accent); color:var(--accent);
+  font-size:17px; box-shadow:0 0 0 6px rgba(var(--accent-rgb), .16);
+  animation:rmjPop .5s cubic-bezier(.22, 1, .36, 1) both;
+}
+
+.rmj.is-compact .rmj-node.is-now .rmj-dot{ font-size:13px; box-shadow:0 0 0 4px rgba(var(--accent-rgb), .16); }
+
+@media (hover:hover) and (pointer:fine) {
+  html body button.rmj-btn:hover .rmj-dot{ border-color:color-mix(in srgb, var(--accent) 60%, var(--muted2)); transform:translateY(-1px); }
+  .rmj-node.is-done button.rmj-btn:hover .rmj-dot, .rmj-node.is-now button.rmj-btn:hover .rmj-dot{ border-color:var(--accent); }
+}
+
+/* خط اتصال بین دو گره: از لبه‌ی یک دایره تا لبه‌ی بعدی، پر شدنش با scaleX */
+.rmj-seg{
+  position:absolute; z-index:0; top:calc(var(--rmj-dn) / 2 - 1.5px); height:3px; border-radius:3px;
+  inset-inline-start:calc(50% + var(--rmj-dn) / 2 + 5px); width:calc(100% - var(--rmj-dn) - 10px);
+  background:color-mix(in srgb, var(--text) 14%, transparent);
+}
+
+.rmj.is-compact .rmj-seg{ height:2px; top:calc(var(--rmj-dn) / 2 - 1px); }
+
+.rmj-seg-fill{
+  position:absolute; inset:0; border-radius:inherit; transform-origin:right center;
+  background:linear-gradient(to left, var(--ring-1, var(--accent)), var(--accent));
+  animation:rmjFill .5s cubic-bezier(.22, 1, .36, 1) backwards; animation-delay:calc(var(--rmj-i) * 90ms);
+}
+
+html[dir="ltr"] .rmj-seg-fill{ transform-origin:left center; background:linear-gradient(to right, var(--ring-1, var(--accent)), var(--accent)); }
+
+@keyframes rmjFill{ from{ transform:scaleX(0); } to{ transform:none; } }
+
+@keyframes rmjPop{ from{ transform:scale(.82); opacity:.5; } to{ transform:none; opacity:1; } }
+
+.rmj-text{ display:flex; flex-direction:column; align-items:center; gap:2px; max-width:100%; min-width:0; margin-top:10px; }
+
+.rmj-eyebrow{ font-style:normal; font-size:10.5px; font-weight:700; line-height:1.5; color:var(--muted); }
+
+.rmj-title{
+  font-size:12.5px; font-weight:700; line-height:1.6; color:var(--text); unicode-bidi:plaintext; text-align:center; max-width:100%;
+  display:-webkit-box; -webkit-line-clamp:2; -webkit-box-orient:vertical; overflow:hidden; overflow-wrap:anywhere;
+}
+
+.rmj-dur{ font-style:normal; font-size:11px; line-height:1.5; color:var(--muted); }
+
+.rmj-node.is-done .rmj-title{ color:var(--muted); }
+
+.rmj-node.is-now .rmj-title, .rmj-node.is-now .rmj-eyebrow{ color:var(--accent); font-weight:800; }
+
+/* نشانگر مرحله‌ی انتخاب‌شده: خط زیر عنوان (جدا از «جاری» که حلقه‌ی دایره است) */
+.rmj-node.is-selected .rmj-btn::after{
+  content:""; display:block; width:28px; height:3px; margin-top:8px; border-radius:3px; background:var(--accent);
+}
+
+.rmj-node.is-selected .rmj-title{ color:var(--text); font-weight:800; }
+.rmj-node.is-selected.is-now .rmj-title{ color:var(--accent); }
+
+.rmj.is-compact .rmj-text{ margin-top:8px; display:none; }
+
+.rmj.is-compact .rmj-title{ font-size:11.5px; font-weight:600; }
+
+.rmj-cap{ display:flex; align-items:baseline; gap:8px; min-width:0; margin:12px 0 0; font-size:12.5px; line-height:1.7; color:var(--text); }
+
+.rmj-cap b{ flex-shrink:0; font-weight:800; color:var(--accent); }
+
+.rmj-cap span{ min-width:0; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; unicode-bidi:plaintext; color:var(--muted); }
+
+@media (min-width:640px) {
+  .rmj.is-compact.has-titles .rmj-text{ display:flex; }
+  .rmj.is-compact.has-titles .rmj-cap{ display:none; }
+}
+
+.rmx-journey{ display:flex; flex-direction:column; gap:20px; }
 
 /* ── فهرست ردیفی «رودمپ‌های من» ── */
 
@@ -658,76 +783,9 @@ html body .btn.rmx-hero-cta{ grid-area:cta; display:flex; width:100%; justify-co
   .rmx-tabs{ max-width:400px; }
 }
 
-/* ── ناحیه‌ی مرحله‌ها: ناوبر (دسکتاپ کناری چسبان، موبایل نوار افقی) + محتوا ── */
+/* ── ناحیه‌ی مرحله‌ها: یک ستون تمام‌عرض (نقشه‌ی سفر، بعد محتوای مرحله) ── */
 
 .rmx-stages{ display:flex; flex-direction:column; gap:var(--rmx-gap); min-width:0; scroll-margin-top:84px; }
-
-.rmx-nav-title{ display:none; }
-
-.rmx-nav-list{ list-style:none; margin:0; padding:0; display:flex; gap:10px; overflow-x:auto; scroll-snap-type:x mandatory; scrollbar-width:none; }
-
-.rmx-nav-list::-webkit-scrollbar{ display:none; }
-
-.rmx-nav-li{ flex:0 0 auto; scroll-snap-align:start; }
-
-.rmx-nav.trade-surface{ border:0; border-radius:0; background:none; padding:0; }
-
-@media (max-width:659px) {
-  .rmx-nav-list{ margin-inline:-20px; padding-inline:20px; scroll-padding-inline:20px; }
-}
-
-html body button.rmx-nav-item{
-  display:flex; align-items:center; gap:10px; width:184px; box-sizing:border-box; padding:10px 12px; text-align:start; color:var(--text);
-  font-size:inherit; font-weight:inherit; border:1px solid var(--surface-line); border-radius:var(--rmx-r-in);
-  background:var(--box-bg); box-shadow:none; backdrop-filter:none; -webkit-backdrop-filter:none;
-  transition:border-color .18s ease, transform .15s ease;
-}
-
-html body button.rmx-nav-item.is-selected{ border-color:var(--accent); }
-
-html body button.rmx-nav-item:active{ transform:scale(.98); }
-
-.rmx-nav-mark{
-  display:inline-flex; align-items:center; justify-content:center; flex-shrink:0; width:26px; height:26px; box-sizing:border-box; border-radius:50%;
-  border:1.5px solid var(--muted2); font-family:var(--font-latin), var(--font-vazir), sans-serif; font-size:12px; font-weight:800; color:var(--muted);
-}
-
-.rmx-nav-item.is-now .rmx-nav-mark{ border-color:var(--accent); color:var(--accent); }
-
-.rmx-nav-item.is-done .rmx-nav-mark{ background:var(--accent); border-color:var(--accent); color:var(--bg); }
-
-.rmx-nav-text{ display:flex; flex-direction:column; gap:1px; min-width:0; }
-
-.rmx-nav-text em{ display:flex; align-items:center; gap:6px; font-style:normal; font-size:11px; font-weight:700; color:var(--muted); }
-
-.rmx-nav-text em i{ font-style:normal; font-size:10px; font-weight:800; padding:0 7px; border-radius:999px; color:var(--accent); border:1px solid rgba(var(--accent-rgb), .45); }
-
-.rmx-nav-item.is-done .rmx-nav-text b{ color:var(--muted); }
-
-.rmx-nav-text b{
-  font-size:13px; font-weight:700; line-height:1.55; color:var(--text); unicode-bidi:plaintext; text-align:start;
-  display:-webkit-box; -webkit-line-clamp:2; -webkit-box-orient:vertical; overflow:hidden;
-}
-
-@media (min-width:1024px) {
-  .rmx-stages{ display:grid; grid-template-columns:260px minmax(0, 1fr); gap:var(--rmx-gap); align-items:start; }
-  .rmx-nav.trade-surface{
-    position:sticky; top:84px; max-height:calc(100dvh - 108px); overflow-y:auto; scrollbar-width:none;
-    padding:14px 12px 12px; border:1px solid var(--surface-line); border-radius:var(--rmx-r); background:var(--box-bg);
-  }
-  .rmx-nav::-webkit-scrollbar{ display:none; }
-  .rmx-nav-title{ display:flex; align-items:center; justify-content:space-between; padding:0 8px 10px; font-size:13px; font-weight:800; color:var(--text); }
-  .rmx-nav-title b{ font-family:var(--font-latin), var(--font-vazir), sans-serif; font-size:12px; color:var(--muted); }
-  .rmx-nav-list{ flex-direction:column; gap:4px; overflow:visible; scroll-snap-type:none; }
-  .rmx-nav-li{ flex:none; }
-  html body button.rmx-nav-item{ width:100%; border-color:transparent; background:none; }
-  html body button.rmx-nav-item.is-selected{ border-color:var(--accent); }
-}
-
-@media (hover:hover) and (pointer:fine) {
-  html body button.rmx-nav-item:hover{ border-color:color-mix(in srgb, var(--accent) 55%, transparent); color:var(--text); }
-  html body button.rmx-nav-item.is-selected:hover{ border-color:var(--accent); }
-}
 
 /* ── محتوای مرحله‌ی انتخاب‌شده: یک باکس ── */
 
@@ -735,11 +793,24 @@ html body button.rmx-nav-item:active{ transform:scale(.98); }
 
 @keyframes rmxBody{ from{ transform:translateY(6px); opacity:0; } to{ transform:none; opacity:1; } }
 
-.rmx-sp-head{ display:flex; align-items:flex-start; justify-content:space-between; gap:16px; padding:var(--rmx-pad); border-bottom:1px solid var(--surface-line); }
+.rmx-sp-head{
+  display:grid; align-items:center; gap:14px 16px; padding:var(--rmx-pad); border-bottom:1px solid var(--surface-line);
+  grid-template-columns:auto minmax(0, 1fr); grid-template-areas:"badge main" "done done";
+}
 
-.rmx-sp-head-main{ min-width:0; }
+.rmx-sp-badge{
+  grid-area:badge; display:inline-flex; align-items:center; justify-content:center; box-sizing:border-box; width:52px; height:52px; border-radius:16px;
+  border:1.5px solid var(--muted2); color:var(--muted);
+  font-family:var(--font-latin), var(--font-vazir), sans-serif; font-size:24px; font-weight:900; line-height:1;
+}
 
-.rmx-sp-head h2{ margin:4px 0 0; font-size:20px; font-weight:900; line-height:1.55; color:var(--text); unicode-bidi:plaintext; text-align:start; }
+.rmx-sp.is-now .rmx-sp-badge{ border-color:var(--accent); color:var(--accent); box-shadow:0 0 0 5px rgba(var(--accent-rgb), .14); }
+
+.rmx-sp.is-done .rmx-sp-badge{ background:var(--accent); border-color:var(--accent); color:var(--bg); }
+
+.rmx-sp-head-main{ grid-area:main; min-width:0; }
+
+.rmx-sp-head h2{ margin:2px 0 0; font-size:20px; font-weight:900; line-height:1.55; color:var(--text); unicode-bidi:plaintext; text-align:start; }
 
 .rmx-sp.is-done .rmx-sp-head h2{ color:var(--muted); }
 
@@ -747,9 +818,37 @@ html body button.rmx-nav-item:active{ transform:scale(.98); }
 
 .rmx-sp.is-now .rmx-stage-eyebrow{ color:var(--accent); }
 
-.rmx-stage-eyebrow em{ font-style:normal; font-size:10.5px; font-weight:800; padding:1px 8px; border-radius:999px; color:var(--accent); border:1px solid rgba(var(--accent-rgb), .45); }
+.rmx-chip-state{ font-style:normal; font-size:10.5px; font-weight:800; padding:1px 9px; border-radius:999px; color:var(--muted); border:1px solid var(--surface-line); }
 
-.rmx-stage-sub{ display:flex; flex-wrap:wrap; gap:2px 14px; margin-top:3px; font-size:12px; color:var(--muted); }
+.rmx-chip-state.is-now{ color:var(--accent); border-color:rgba(var(--accent-rgb), .45); }
+
+.rmx-chip-state.is-done{ color:var(--accent); border-color:rgba(var(--accent-rgb), .45); }
+
+.rmx-stage-sub{ display:flex; flex-wrap:wrap; align-items:center; gap:4px 16px; margin-top:4px; font-size:12px; color:var(--muted); }
+
+.rmx-sub-dur, .rmx-sub-prog{ display:inline-flex; align-items:center; gap:6px; }
+
+.rmx-sub-dur svg{ color:var(--accent); flex-shrink:0; }
+
+.rmx-sub-bar{ position:relative; display:inline-block; width:64px; height:4px; border-radius:4px; overflow:hidden; background:color-mix(in srgb, var(--text) 14%, transparent); }
+
+.rmx-sub-bar i{ position:absolute; inset-block:0; inset-inline-start:0; border-radius:inherit; background:var(--accent); }
+
+/* دکمه‌ی تیک مرحله با برچسب: ردیف تمام‌عرض زیر عنوان در موبایل، انتهای ردیف در دسکتاپ */
+label.rmx-sp-done{
+  grid-area:done; display:flex; align-items:center; justify-content:space-between; gap:12px; cursor:pointer;
+  padding:10px 14px; border:1px solid var(--surface-line); border-radius:var(--rmx-r-in);
+}
+
+.rmx-sp-done-text{ font-size:13px; font-weight:800; color:var(--text); }
+
+.rmx-sp.is-done .rmx-sp-done-text{ color:var(--accent); }
+
+@media (min-width:640px) {
+  .rmx-sp-head{ grid-template-columns:auto minmax(0, 1fr) auto; grid-template-areas:"badge main done"; gap:20px; }
+  .rmx-sp-badge{ width:60px; height:60px; border-radius:18px; font-size:28px; }
+  label.rmx-sp-done{ padding:10px 14px 10px 16px; }
+}
 
 .rmx-pending{ color:#E0A452; }
 
@@ -761,9 +860,23 @@ html body button.rmx-nav-item:active{ transform:scale(.98); }
 
 .rmx-sec-grid{ display:grid; grid-template-columns:minmax(0, 1fr); column-gap:32px; }
 
+.rmx-sp-cols{ display:grid; grid-template-columns:minmax(0, 1fr); gap:0; }
+
+.rmx-sp-main{ min-width:0; }
+
+.rmx-sp-main > .rmx-sec:first-child{ margin-top:0; padding-top:0; border-top:0; }
+
 @container (min-width:640px) {
   .rmx-sec-grid{ grid-template-columns:repeat(2, minmax(0, 1fr)); }
   .rmx-sec-grid > .rmx-sec:last-child:nth-child(odd){ grid-column:1 / -1; }
+}
+
+/* دسکتاپ عریض: متن اصلی (حداکثر خوانا) در ستون اول، ابزار/منبع/اشتباه/معیار در ستون کناری */
+@container (min-width:960px) {
+  .rmx-sp-cols{ grid-template-columns:minmax(0, 1fr) minmax(300px, 380px); column-gap:40px; align-items:start; }
+  .rmx-sp-main{ max-width:760px; }
+  .rmx-sp-aside.rmx-sec-grid{ grid-template-columns:minmax(0, 1fr); padding-inline-start:32px; border-inline-start:1px solid var(--surface-line); }
+  .rmx-sp-aside .rmx-sec:first-child{ margin-top:0; padding-top:0; border-top:0; }
 }
 
 .rmx-goal{ display:flex; gap:8px; font-size:13px; line-height:2; color:var(--accent); font-weight:700; }
@@ -973,16 +1086,18 @@ html[dir="ltr"] :is(.rmx-title, .rmx-cont-title, .rmx-hero-text h1, .rmx-sp-head
 /* ── حرکت‌کاهی و دستگاه ضعیف ── */
 
 @media (prefers-reduced-motion:reduce) {
-  .rmx-wz, .rmx-wz-step, .rmx-sp, .rmx-wz-phases li.is-now .rmx-wz-phase-dot, .rmx-shake{ animation:none; }
+  .rmx-wz, .rmx-wz-step, .rmx-sp, .rmx-wz-phases li.is-now .rmx-wz-phase-dot, .rmx-shake, .rmj-seg-fill, .rmj-node.is-now .rmj-dot{ animation:none; }
+  .rmj-dot, html body button.rmj-btn{ transition:none; }
   .rmx-bar span, .rmx-row-chev, .rmx-build-bar span, .rmx-row .rmx-del{ transition:none; }
 }
 
 html[data-perf-weak] .rmx-wz, html[data-perf-weak] .rmx-wz-step, html[data-perf-weak] .rmx-sp,
-html[data-perf-weak] .rmx-wz-phases li.is-now .rmx-wz-phase-dot{ animation:none; }
+html[data-perf-weak] .rmx-wz-phases li.is-now .rmx-wz-phase-dot,
+html[data-perf-weak] .rmj-seg-fill, html[data-perf-weak] .rmj-node.is-now .rmj-dot{ animation:none; }
 
 body[data-theme] :where(
   .account-card, .acc-block-body, .trade-account-card, .trade-mt-row, .trade-note-card,
-  .trade-checklist-card, .trade-journal-box, .rmx-nav, .ls-card, .overflow-hidden
+  .trade-checklist-card, .trade-journal-box, .ls-card, .overflow-hidden
 )::before{ inset:0; }
 
 html[data-perf="low"] .wsearch-newform-overlay.strong-blur{

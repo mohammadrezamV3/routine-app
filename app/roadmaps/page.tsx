@@ -2,7 +2,7 @@
 
 import { useCallback, useEffect, useState } from "react";
 import { useSession } from "next-auth/react";
-import { Map as MapIcon, Plus } from "lucide-react";
+import { Map as MapIcon } from "lucide-react";
 import { FeatureGate } from "@/components/FeatureGate";
 import { AuthGate } from "@/components/AuthGate";
 import { RoadmapWizard } from "@/components/RoadmapWizard";
@@ -68,8 +68,6 @@ export default function RoadmapsHub() {
 
   const featured = roadmaps.find(isContinuable);
 
-  const hasData = status === "authenticated" && loaded && roadmaps.length > 0;
-
   return (
     <section className="roadmaps-desktop rmx-hub">
       <header className="rmx-head">
@@ -77,11 +75,6 @@ export default function RoadmapsHub() {
           <span className="rmx-kicker">{tr("مسیر یادگیری", "Learning path")}</span>
           <h1 className="rmx-title">{tr("رودمپ‌ها", "Roadmaps")}</h1>
         </div>
-        {hasData && (
-          <button type="button" className="btn btn-primary btn-sm rmx-head-btn" onClick={() => setWizard({ topic: "" })}>
-            <Plus size={16} /> {tr("مسیر تازه", "New path")}
-          </button>
-        )}
       </header>
 
       {status === "authenticated" ? (
