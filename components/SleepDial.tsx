@@ -3,15 +3,16 @@
 import "./sleep-dial.css";
 import { useEffect, useId, useMemo, useRef, useState } from "react";
 import { m as motion, useReducedMotion } from "framer-motion";
-import { Check, ChevronLeft, Flame, Moon, Sun, Target, TrendingDown, TrendingUp, BatteryLow, PenLine, Clock } from "lucide-react";
+import { BarChart3, Check, ChevronLeft, Flame, Moon, MoonStar, Sun, Sunrise, Sunset, Target, TrendingDown, TrendingUp, BatteryLow, PenLine, Clock } from "lucide-react";
+import { SmartLink as Link } from "@/components/SmartLink";
 import { Spinner } from "./Spinner";
-import { faNum } from "@/lib/jalali";
+import { faNum, jMonthName, toJalali, weekdayName } from "@/lib/jalali";
 import { tr } from "@/lib/i18n";
 import {
   scoreBandLabel, clockOf, durationLabel, goalFromTargets, minuteOfDay, minutesUntil, scoreBand,
   sleepMinutes, sleepPhase, type SleepRecord,
 } from "@/lib/sleep";
-import { arcPath, fitFontSize, hhmmToMin, minuteToAngle, pointAt } from "@/lib/sleepDial";
+import { arcPath, fitFontSize, greetKey, hhmmToMin, minuteToAngle, pointAt, starField } from "@/lib/sleepDial";
 import { cycleBoundaries } from "@/lib/sleepCycles";
 import { SleepCycleButton } from "./SleepCycleButton";
 import { startTracking, stopTracking, type SleepTracking } from "@/lib/sleepTracker";
@@ -56,14 +57,20 @@ function useCountUp(value: number | null, off: boolean): number | null {
 // ترکیب aspect-ratio و container-type باکس رو بلندتر از عرضش می‌کرد و آیکون‌ها
 // و متن وسط از جاشون سر می‌خوردن.
 
-const S = 300;
+const S = 320;
 const C = S / 2;
-const R_GOAL = 124;
-const R_LAST = 102;
-const PIN = 12;
-const PIN_R = 10.5;
-// حاشیه‌ی خالی دور حلقه (واحد SVG) کم می‌شه تا زیر صفحه‌ی ساعت فضای خالی نمونه؛ هنوز جا برای درخشش قوس و نبض نقطه هست
-const VB = 8;
+const R_FACE = 156;
+const R_NUM = 144;
+const R_GOAL = 111;
+const W_GOAL = 15;
+const R_LAST = 90;
+const W_LAST = 8;
+const R_HAND_IN = 98;
+const R_HAND_OUT = 128;
+const PIN = 14;
+const PIN_R = 12.5;
+// حاشیه‌ی خالی دور صفحه (واحد SVG)
+const VB = 2;
 const EASE = [0.22, 1, 0.36, 1] as const;
 
 function hms(totalSec: number): string {
@@ -73,7 +80,7 @@ function hms(totalSec: number): string {
 }
 
 // بیشینه‌ی عرض متن وسط (واحد SVG): فاصله‌ی بین عددهای 06 و 18 منهای حاشیه
-const CENTER_W = 124;
+const CENTER_W = 136;
 
 export function SleepDial({
   loaded,
@@ -92,6 +99,7 @@ export function SleepDial({
   quickError = null,
   goalStreak = 0,
   debt7Min = 0,
+  showStats = false,
 }: {
   loaded: boolean;
   target: { wake: string; sleep: string };
@@ -113,6 +121,8 @@ export function SleepDial({
   goalStreak?: number;
   /** بدهی خواب 7 شب اخیر (دقیقه) */
   debt7Min?: number;
+  /** لینک «آمار خواب» (به آنالیز هفتگی) در سرتیتر کارت */
+  showStats?: boolean;
 }) {
   const uid = useId().replace(/:/g, "");
   const reduce = useReducedMotion();
@@ -198,38 +208,86 @@ export function SleepDial({
   if (bedState?.state === "until") bedSub = tr(`تا وقت خواب ${durationLabel(bedState.min)}`, `${durationLabel(bedState.min)} to bedtime`);
   else if (bedState?.state === "now") bedSub = tr("وقت خوابه", "It's bedtime");
   else if (bedState?.state === "past") bedSub = tr(`${durationLabel(bedState.min)} از وقت خواب گذشته`, `${durationLabel(bedState.min)} past bedtime`);
-  // اندازه و جای عمودی متن وسط (نسبت به مرکز)؛ امتیاز درشت‌تره و فاصله‌ها بازتر
-  const baseBig = bigCls.includes("is-score") ? 56 : bigCls.includes("is-hms") ? 26 : bigCls.includes("is-word") ? 32 : 40;
-  const cy = bigCls.includes("is-score") ? { kicker: -43, big: -3, caption: 36, caption2: 52 } : { kicker: -30, big: 2, caption: 32, caption2: 0 };
+  // اندازه و جای عمودی متن وسط (نسبت به مرکز)؛ امتیاز درشت و فاصله‌ها بازتر
+  const isScore = bigCls.includes("is-score");
+  const baseBig = isScore ? 68 : bigCls.includes("is-hms") ? 30 : bigCls.includes("is-word") ? 34 : 46;
+  const cy = isScore ? { kicker: -50, big: -8, caption: 31, caption2: 49 } : { kicker: -32, big: 0, caption: 32, caption2: 0 };
 
   const nowAngle = nowMin !== null ? minuteToAngle(nowMin) : 0;
-  const nowPt = pointAt(C, R_GOAL, nowAngle);
+  const handA = pointAt(C, R_HAND_IN, nowAngle);
+  const handB = pointAt(C, R_HAND_OUT, nowAngle);
   const bedPt = pointAt(C, R_GOAL, minuteToAngle(bedMin));
   const wakePt = pointAt(C, R_GOAL, minuteToAngle(wakeMin));
   const cycleDots = useMemo(() => cycleBoundaries(bedMin, wakeMin, latency).map((m) => pointAt(C, R_GOAL, minuteToAngle(m))), [bedMin, wakeMin, latency]);
+  const stars = useMemo(() => starField(30, 11, C, 120, 68, 64), []);
   const draw = reduce ? { duration: 0 } : { duration: 1.2, ease: EASE };
 
   const glow = isMorning && !tracking ? "var(--slp-fair)" : "var(--slp-ink)";
   const trackPt = tracking && nowMin !== null ? pointAt(C, R_LAST, minuteToAngle(nowMin)) : null;
 
+  // سلام و تاریخ امروز (بعد از mount، تا بین سرور و کلاینت اختلافی نباشه)
+  const gk = now ? greetKey(now.getHours()) : null;
+  const GreetIcon = gk === "morning" ? Sunrise : gk === "afternoon" ? Sun : gk === "evening" ? Sunset : MoonStar;
+  const greet = gk === "morning" ? tr("صبح بخیر", "Good morning")
+    : gk === "afternoon" ? tr("عصر بخیر", "Good afternoon")
+    : gk === "evening" ? tr("شب بخیر", "Good evening")
+    : tr("شب بخیر", "Good night");
+  const dateText = now ? (() => {
+    const [, jm, jd] = toJalali(now.getFullYear(), now.getMonth() + 1, now.getDate());
+    return `${weekdayName(now.getDay())} ${faNum(jd)} ${jMonthName(jm - 1)}`;
+  })() : "";
+
   return (
     <section className="sl-card sld m-rise" aria-live="polite" data-phase={tracking ? "tracking" : phase}>
+      <header className="sld-head">
+        <div className="sld-greet" aria-hidden={!now}>
+          <span className="sld-greet-k">{now && <GreetIcon aria-hidden />}{greet}</span>
+          <b>{dateText}</b>
+        </div>
+        {showStats && (
+          <Link href="/analysis/weekly#sleep" prefetch={false} className="slp-stats-link">
+            <BarChart3 aria-hidden /> {tr("آمار خواب", "Sleep stats")}
+          </Link>
+        )}
+      </header>
+
       <div className="sld-dial">
         <svg viewBox={`${VB} ${VB} ${S - 2 * VB} ${S - 2 * VB}`} className="sld-svg" preserveAspectRatio="xMidYMid meet" role="img" aria-label={`${kicker} ${big} ${caption} ${caption2}`.trim()}>
           <defs>
             <linearGradient id={`sldg${uid}`} gradientUnits="userSpaceOnUse" x1={bedPt.x} y1={bedPt.y} x2={wakePt.x} y2={wakePt.y}>
-              <stop offset="0%" style={{ stopColor: "var(--slp-ink)" }} />
-              <stop offset="100%" style={{ stopColor: "var(--slp-ink-2)" }} />
+              <stop offset="0%" style={{ stopColor: "var(--sld-arc-a)" }} />
+              <stop offset="100%" style={{ stopColor: "var(--sld-arc-b)" }} />
             </linearGradient>
+            <radialGradient id={`sldf${uid}`} cx="50%" cy="42%" r="64%">
+              <stop offset="0%" style={{ stopColor: "var(--sld-face-a)" }} />
+              <stop offset="100%" style={{ stopColor: "var(--sld-face-b)" }} />
+            </radialGradient>
             <radialGradient id={`sldr${uid}`} cx="50%" cy="50%" r="50%">
-              <stop offset="0%" style={{ stopColor: glow }} stopOpacity=".16" />
-              <stop offset="70%" style={{ stopColor: glow }} stopOpacity=".05" />
+              <stop offset="0%" style={{ stopColor: glow }} stopOpacity=".2" />
+              <stop offset="65%" style={{ stopColor: glow }} stopOpacity=".06" />
               <stop offset="100%" style={{ stopColor: glow }} stopOpacity="0" />
             </radialGradient>
+            <linearGradient id={`sldm${uid}`} x1="0" y1="0" x2="1" y2="1">
+              <stop offset="0%" style={{ stopColor: "var(--sld-moon-a)" }} />
+              <stop offset="100%" style={{ stopColor: "var(--sld-moon-b)" }} />
+            </linearGradient>
+            <linearGradient id={`sldn${uid}`} x1="0" y1="0" x2="1" y2="1">
+              <stop offset="0%" style={{ stopColor: "var(--sld-sun-a)" }} />
+              <stop offset="100%" style={{ stopColor: "var(--sld-sun-b)" }} />
+            </linearGradient>
+            <filter id={`sldb${uid}`} x="-25%" y="-25%" width="150%" height="150%">
+              <feGaussianBlur stdDeviation="6" />
+            </filter>
           </defs>
 
-          {/* درخشش ثابت و نرم پشت متن وسط (رنگش با زمان روز عوض می‌شه) */}
+          {/* صفحه‌ی ساعت: آسمان شب با کم‌رنگ‌شدن به لبه */}
+          <circle cx={C} cy={C} r={R_FACE} fill={`url(#sldf${uid})`} className="sld-face" />
+          <circle cx={C} cy={C} r={R_FACE} className="sld-rim" />
+          <g className="sld-stars" aria-hidden="true">
+            {stars.map((st, i) => <circle key={i} cx={st.x} cy={st.y} r={st.r} opacity={st.o} />)}
+          </g>
           <circle cx={C} cy={C} r={R_GOAL - 12} fill={`url(#sldr${uid})`} aria-hidden="true" />
+          <circle cx={C} cy={C} r={R_LAST - 15} className="sld-bezel" aria-hidden="true" />
 
           {/* خط زمان 24 ساعته */}
           <circle cx={C} cy={C} r={R_GOAL} className="sld-track" />
@@ -237,16 +295,27 @@ export function SleepDial({
           {Array.from({ length: 24 }, (_, h) => {
             const a = minuteToAngle(h * 60);
             const major = h % 6 === 0;
-            const p0 = pointAt(C, R_GOAL - 20, a);
-            const p1 = pointAt(C, R_GOAL - (major ? 30 : 25), a);
+            const p0 = pointAt(C, 123, a);
+            const p1 = pointAt(C, major ? 132 : 127.5, a);
             return <line key={h} x1={p0.x} y1={p0.y} x2={p1.x} y2={p1.y} className={major ? "sld-tick is-major" : "sld-tick"} />;
           })}
-          {[0, 6, 12, 18].map((h) => {
-            const p = pointAt(C, R_GOAL - 44, minuteToAngle(h * 60));
-            return <text key={h} x={p.x} y={p.y} className="sld-hour" textAnchor="middle" dominantBaseline="central">{String(h).padStart(2, "0")}</text>;
+          {Array.from({ length: 8 }, (_, k) => {
+            const h = k * 3;
+            const p = pointAt(C, R_NUM, minuteToAngle(h * 60));
+            return <text key={h} x={p.x} y={p.y} className={h % 6 === 0 ? "sld-hour is-major" : "sld-hour"} textAnchor="middle" dominantBaseline="central">{String(h).padStart(2, "0")}</text>;
           })}
 
-          {/* پنجره‌ی هدف خواب */}
+          {/* پنجره‌ی هدف خواب: درخشش ثابت نرم + قوس گرادیانی */}
+          <motion.path
+            d={arcPath(C, R_GOAL, bedMin, wakeMin)}
+            className="sld-goal-glow"
+            stroke={`url(#sldg${uid})`}
+            filter={`url(#sldb${uid})`}
+            aria-hidden="true"
+            initial={{ pathLength: 0 }}
+            animate={{ pathLength: 1 }}
+            transition={draw}
+          />
           <motion.path
             d={arcPath(C, R_GOAL, bedMin, wakeMin)}
             className="sld-goal"
@@ -263,7 +332,7 @@ export function SleepDial({
             animate={{ opacity: 1 }}
             transition={reduce ? { duration: 0 } : { duration: 0.6, delay: 1 }}
           >
-            {cycleDots.map((p, i) => <circle key={i} cx={p.x} cy={p.y} r={2.1} className="sld-cyc" />)}
+            {cycleDots.map((p, i) => <circle key={i} cx={p.x} cy={p.y} r={2} className="sld-cyc" />)}
           </motion.g>
 
           {/* خواب واقعی دیشب یا ردیاب زنده */}
@@ -288,45 +357,43 @@ export function SleepDial({
             </g>
           )}
 
-          {/* همین لحظه */}
-          {nowMin !== null && !tracking && (
-            <g>
-              <circle cx={nowPt.x} cy={nowPt.y} r={11} className="sld-now-halo" />
-              <circle cx={nowPt.x} cy={nowPt.y} r={5.5} className="sld-now" />
+          {/* عقربه‌ی همین لحظه: از شیار داخلی تا حلقه‌ی بیرونی */}
+          {nowMin !== null && (
+            <g aria-hidden="true">
+              <line x1={handA.x} y1={handA.y} x2={handB.x} y2={handB.y} className="sld-hand" />
+              <circle cx={handB.x} cy={handB.y} r={8} className="sld-now-halo" />
+              <circle cx={handB.x} cy={handB.y} r={4} className="sld-now" />
             </g>
           )}
 
-          {/* ماه و خورشید: دو دایره‌ی رنگی روی دو سر قوس هدف */}
-          <circle cx={bedPt.x} cy={bedPt.y} r={PIN_R} className="sld-disc is-moon" />
+          {/* ماه و خورشید: دو دیسک روی دو سر قوس هدف */}
+          <circle cx={bedPt.x} cy={bedPt.y} r={PIN_R} fill={`url(#sldm${uid})`} className="sld-disc" />
           <Moon className="sld-pin is-moon" x={bedPt.x - PIN / 2} y={bedPt.y - PIN / 2} width={PIN} height={PIN} />
-          <circle cx={wakePt.x} cy={wakePt.y} r={PIN_R} className="sld-disc is-sun" />
+          <circle cx={wakePt.x} cy={wakePt.y} r={PIN_R} fill={`url(#sldn${uid})`} className="sld-disc" />
           <Sun className="sld-pin is-sun" x={wakePt.x - PIN / 2} y={wakePt.y - PIN / 2} width={PIN} height={PIN} />
 
           {/* متن وسط: داخل دایره‌ی درونی، شمارش‌های بلند کوچیک می‌شن */}
-          <text x={C} y={C + cy.kicker} className="sld-kicker" textAnchor="middle" dominantBaseline="central" style={{ fontSize: fitFontSize(kicker, 12, CENTER_W) }}>{kicker}</text>
+          <text x={C} y={C + cy.kicker} className="sld-kicker" textAnchor="middle" dominantBaseline="central" style={{ fontSize: fitFontSize(kicker, 12.5, CENTER_W) }}>{kicker}</text>
           <text x={C} y={C + cy.big} className={`sld-big ${bigCls}`} textAnchor="middle" dominantBaseline="central" style={{ fontSize: fitFontSize(big, baseBig, CENTER_W) }}>{big}</text>
-          <text x={C} y={C + cy.caption} className="sld-caption" textAnchor="middle" dominantBaseline="central" style={{ fontSize: fitFontSize(caption, 11.5, CENTER_W) }}>{caption}</text>
-          {caption2 && <text x={C} y={C + cy.caption2} className="sld-caption is-sub" textAnchor="middle" dominantBaseline="central" style={{ fontSize: fitFontSize(caption2, 11, CENTER_W) }}>{caption2}</text>}
+          <text x={C} y={C + cy.caption} className={`sld-caption${isScore && band ? ` is-band slp-c-${band}` : ""}`} textAnchor="middle" dominantBaseline="central" style={{ fontSize: fitFontSize(caption, 13, CENTER_W) }}>{caption}</text>
+          {caption2 && <text x={C} y={C + cy.caption2} className="sld-caption is-sub" textAnchor="middle" dominantBaseline="central" style={{ fontSize: fitFontSize(caption2, 12, CENTER_W) }}>{caption2}</text>}
         </svg>
       </div>
 
-      {/* نکته‌ی شخصی تک‌خطی */}
-      {hint && HintIcon && (
-        <p className={`sld-insight is-${hint.tone}`}>
-          <HintIcon aria-hidden /><span>{dialHintText(hint)}</span>
-        </p>
-      )}
-
-      {/* ساعت‌های هدف (فقط نمایش) */}
+      {/* ساعت‌های هدف (فقط نمایش؛ ویرایش از باکس هدف خواب) */}
       <div className="sld-times" dir="auto">
         <span className="sld-time">
-          <Moon aria-hidden />
-          <span><small>{tr("خواب", "Sleep")}</small><b>{target.sleep}</b></span>
+          <span className="sld-time-ico" aria-hidden><Moon /></span>
+          <span className="sld-time-txt"><small>{tr("خواب", "Sleep")}</small><b>{target.sleep}</b></span>
         </span>
-        <span className="sld-time-line" aria-hidden />
+        <span className="sld-span" aria-label={tr(`هدف ${durationLabel(goalMin)}`, `Goal ${durationLabel(goalMin)}`)}>
+          <i aria-hidden />
+          <em>{durationLabel(goalMin)}</em>
+          <i aria-hidden />
+        </span>
         <span className="sld-time is-wake">
-          <Sun aria-hidden />
-          <span><small>{tr("بیداری", "Wake")}</small><b>{target.wake}</b></span>
+          <span className="sld-time-ico" aria-hidden><Sun /></span>
+          <span className="sld-time-txt"><small>{tr("بیداری", "Wake")}</small><b>{target.wake}</b></span>
         </span>
       </div>
 
@@ -337,14 +404,21 @@ export function SleepDial({
         ) : null}
         <button type="button" className="sld-tile is-goal" onClick={onEditGoal}>
           <span className="sld-tile-ico" aria-hidden><Target /></span>
+          <ChevronLeft className="sld-tile-go dir-flip" aria-hidden />
           <span className="sld-tile-txt">
             <small>{tr("هدف خواب", "Sleep goal")}</small>
             <b>{durationLabel(goalMin)}</b>
             <em>{bedSub}</em>
           </span>
-          <ChevronLeft className="sld-tile-go dir-flip" aria-hidden />
         </button>
       </div>
+
+      {/* نکته‌ی شخصی تک‌خطی */}
+      {hint && HintIcon && (
+        <p className={`sld-insight is-${hint.tone}`}>
+          <HintIcon aria-hidden /><span>{dialHintText(hint)}</span>
+        </p>
+      )}
 
       <div className="sld-actions">
         {tracking ? (

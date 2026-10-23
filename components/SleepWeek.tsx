@@ -15,8 +15,8 @@ import { barHeight, bestNight, buildWeekNights, goalDiffKind, lastLogged, signed
 // ستون‌ها SVG‌ان (fill، نه بک‌گراند CSS). تاریخچه‌ی بلندتر در آنالیز هفتگیه.
 
 const MAX_MIN = 10 * 60;
-const BAR_H = 96;
-const BAR_W = 14;
+const BAR_H = 124;
+const BAR_W = 18;
 
 function hm(min: number): string {
   const h = Math.floor(min / 60), m = Math.round(min % 60);
@@ -59,7 +59,7 @@ export function SleepWeek({
     <section className="sl-card slw m-rise" style={{ "--i": 1 } as React.CSSProperties}>
       <div className="sl-head-row">
         <h3 className="sl-card-title">{tr("هفت شب اخیر", "Last 7 nights")}</h3>
-        <span className="slw-key" aria-hidden="true"><i />{tr("هدف", "Goal")} <bdi dir="ltr">{faNum(hm(insights.goalMin))}</bdi></span>
+        <span className="slw-legend" aria-hidden="true"><i className="slp-c-poor" /><i className="slp-c-fair" /><i className="slp-c-good" /><i className="slp-c-great" /></span>
       </div>
       <div className="slw-grid">
         <svg width="0" height="0" className="slw-defs" aria-hidden="true" focusable="false">
@@ -72,7 +72,9 @@ export function SleepWeek({
             ))}
           </defs>
         </svg>
-        <span className="slw-goal" style={{ top: `calc(var(--slw-top) + ${goalY}px)` }} aria-hidden="true" />
+        <span className="slw-goal" style={{ top: `calc(var(--slw-top) + ${goalY}px)` }} aria-hidden="true">
+          <em>{tr("هدف", "Goal")} <bdi dir="ltr">{faNum(hm(insights.goalMin))}</bdi></em><i />
+        </span>
         {nights.map((n, i) => {
           const [y, m, d] = n.iso.split("-").map(Number);
           const wd = weekdayShort(new Date(y, m - 1, d).getDay());
@@ -91,6 +93,7 @@ export function SleepWeek({
               <span className="slw-val">{n.rec ? faNum(hm(n.min)) : <Plus aria-hidden />}</span>
               <svg className="slw-bar" width={BAR_W} height={BAR_H} viewBox={`0 0 ${BAR_W} ${BAR_H}`} aria-hidden="true">
                 <rect x={0} y={0} width={BAR_W} height={BAR_H} rx={BAR_W / 2} className="slw-slot" />
+                {isToday && <rect x={BAR_W / 2 - 6} y={-5} width={12} height={3} rx={1.5} className="slw-cap" />}
                 {n.rec && (
                   <rect
                     x={0}
@@ -101,6 +104,9 @@ export function SleepWeek({
                     className={`slw-fill slw-grow${n.band ? ` slp-c-${n.band}` : ""}`}
                     style={{ fill: `url(#slwg-${n.band ?? "good"}-${uid})`, ["--d" as string]: `${i * 50}ms` } as React.CSSProperties}
                   />
+                )}
+                {n.rec && h > 22 && (
+                  <rect x={4} y={BAR_H - h + 5} width={3} height={Math.min(h - 18, 26)} rx={1.5} className="slw-gloss" />
                 )}
               </svg>
               <span className="slw-day">{wd}</span>

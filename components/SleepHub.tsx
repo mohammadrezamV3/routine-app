@@ -2,9 +2,7 @@
 
 import "./sleep.css";
 import { useCallback, useEffect, useMemo, useState } from "react";
-import { SmartLink as Link } from "@/components/SmartLink";
 import dynamic from "next/dynamic";
-import { BarChart3 } from "lucide-react";
 import { ICONS } from "./NavIcons";
 import { RoutineTrialBanner } from "./RoutineTrialBanner";
 import { PanelSkeleton } from "./PanelSkeleton";
@@ -26,7 +24,8 @@ import { getTracking, stopTracking, draftFromTracking, TRACKER_EVENT, type Sleep
 
 // بخش خواب (/sleep) — صفحه و سیستم جدای خودش، نه داخل صفحه‌ی روتین. دو کارت
 // اصلی: صفحه‌ی ساعت 24 ساعته (SleepDial: هدف، دیشب، الان، دکمه‌ی اصلی؛ زدن
-// باکس هدف خواب = SleepGoalSheet، باکس چرخه‌ها = SleepCycleSheet) و هفت شب اخیر (SleepWeek). زیرشون یک ردیف چهار
+// باکس هدف خواب = SleepGoalSheet، باکس چرخه‌ها = SleepCycleSheet؛ لینک «آمار خواب» در سرتیتر همین کارته) و هفت شب اخیر (SleepWeek).
+// روی دسکتاپ دو ستونه‌ست (ستون شروع = ساعت، ستون پایان = هفت شب + ابزارها)؛ زیر هفت شب چهار
 // کاشی ابزار (SleepToolsPanels: صداها، تنفس، چرت، آمار) میاد و انتخاب یک شب
 // در آمار همون شب رو برای ویرایش باز می‌کنه. لینک «آمار خواب» به آنالیز هفتگی
 // هم می‌مونه. محاسبه‌ها خالص در lib/sleep.ts؛ persistence از lib/storage.ts.
@@ -158,11 +157,6 @@ export function SleepHub() {
       <div className="trade-head-row" style={{ justifyContent: "flex-start" }}>
         <span className="page-title-icon">{ICONS.sleep}</span>
         <h1>{tr("خواب", "Sleep")}</h1>
-        {statsOn && (
-          <Link href="/analysis/weekly#sleep" prefetch={false} className="slp-stats-link">
-            <BarChart3 aria-hidden /> {tr("آمار خواب", "Sleep stats")}
-          </Link>
-        )}
       </div>
       <RoutineTrialBanner />
 
@@ -184,11 +178,14 @@ export function SleepHub() {
           quickError={quickError}
           goalStreak={insights.goalStreak}
           debt7Min={insights.debt7Min}
+          showStats={statsOn}
         />
-        {todayIso && <SleepWeek entries={entries} insights={insights} todayIso={todayIso} onPick={openDate} />}
-        {todayIso && loaded && (
-          <SleepToolsPanels entries={entries} insights={insights} target={target} todayIso={todayIso} latency={latency} onPick={openDate} />
-        )}
+        <div className="slp-side">
+          {todayIso && <SleepWeek entries={entries} insights={insights} todayIso={todayIso} onPick={openDate} />}
+          {todayIso && loaded && (
+            <SleepToolsPanels entries={entries} insights={insights} target={target} todayIso={todayIso} latency={latency} onPick={openDate} />
+          )}
+        </div>
       </div>
 
       {cyclesOpen && (

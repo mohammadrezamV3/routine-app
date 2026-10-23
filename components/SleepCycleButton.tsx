@@ -27,6 +27,7 @@ export const SleepCycleButton = memo(function SleepCycleButton({
       onTouchStart={onPreload}
     >
       <span className="sld-tile-ico" aria-hidden><Repeat2 /></span>
+      <ChevronLeft className="sld-tile-go dir-flip" aria-hidden />
       <span className="sld-tile-txt">
         <small>{tr("چرخه‌های خواب", "Sleep cycles")}</small>
         <b>{info ? info.clock : "--:--"}</b>
@@ -38,7 +39,6 @@ export const SleepCycleButton = memo(function SleepCycleButton({
               : tr("اگه الان بخوابی", "If you sleep now")}
         </em>
       </span>
-      <ChevronLeft className="sld-tile-go dir-flip" aria-hidden />
     </button>
   );
 });
