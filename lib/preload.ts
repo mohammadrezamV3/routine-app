@@ -57,8 +57,11 @@ export const INLINE_BOOTSTRAP_ID = "__arion_bootstrap";
 // `/api/exercise/plan` ساعت ۸۲۴ms شروع می‌شد و `bodyMetrics` تازه بعد
 // رسیدنش (۱۰۴۲ms) می‌رفت، یعنی دو رفت‌وبرگشت پشت‌سرهم بعد از هیدریت.
 // با پیش‌درخواست، هردو موازی بقیه از همون ~۵۰۰ms شروع می‌شن.
-const ROUTE_PRELOADS: { prefix: string; urls: string[] }[] = [
+const ROUTE_PRELOADS: { prefix: string; section?: string; urls: string[] }[] = [
   { prefix: "/exercise", urls: ["/api/exercise/plan", "/api/settings/bodyMetrics"] },
+  // «فضای تمرین» داشبورد بخش ورزش همون ExercisePanel رو داره (جای /exercise). فقط وقتی
+  // بخش موثر ورزشه (data-section روی <html>، از layout سرور) تا داشبورد روتین/ترید دو درخواست الکی نزنه
+  { prefix: "/dashboard", section: "workout", urls: ["/api/exercise/plan", "/api/settings/bodyMetrics"] },
   // کلیدهای تنظیمات ترید همگی توی همون موج بعد هیدریت می‌رفتن (۸۲۲ms).
   // URLشون کاملا ثابته پس امنه. `/api/trade/entries` عمدا این‌جا نیست:
   // بدون دانستن accountId (که توی خود مسیره) URLش ثابت نیست.
@@ -94,7 +97,7 @@ var boot=el?Promise.resolve(JSON.parse(el.textContent)):g("/api/bootstrap?from="
 p["${PRELOAD_BOOTSTRAP_KEY}"]={from:from,to:to,data:boot};
 var path=location.pathname;
 ${JSON.stringify(ROUTE_PRELOADS)}.forEach(function(r){
-if(path.indexOf(r.prefix)===0)r.urls.forEach(function(u){p[u]=g(u)});
+if(path.indexOf(r.prefix)===0&&(!r.section||document.documentElement.getAttribute("data-section")===r.section))r.urls.forEach(function(u){p[u]=g(u)});
 });
 }catch(e){}})();`;
 

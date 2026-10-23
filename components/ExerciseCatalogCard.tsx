@@ -20,17 +20,19 @@ const ExerciseCatalogModal = dynamic(
 // «مشاهده حرکات» — ستون وسط داشبورد (هم‌جای DashReminderCard توی روتین)،
 // فقط یک دکمه‌ی وسط‌چین که کاتالوگ کامل حرکات رو باز می‌کنه — بدون
 // پیش‌نمایش لیست.
-export function ExerciseCatalogCard({ delay }: { delay?: number }) {
+export function ExerciseCatalogCard({ delay, compact = false }: { delay?: number; compact?: boolean }) {
   const [open, setOpen] = useState(false);
 
   return (
-    <DashCard delay={delay} className="flex h-full items-center justify-center">
+    <DashCard delay={delay} className={compact ? "flex items-center justify-center !p-0" : "flex h-full items-center justify-center"}>
       <button
         type="button"
         onClick={() => setOpen(true)}
-        className="flex flex-col items-center gap-2.5 py-6 text-[13px] font-bold text-dash-text sm:text-[15px]"
+        className={compact
+          ? "flex w-full items-center justify-center gap-2.5 px-4 py-3.5 text-[13px] font-bold text-dash-text"
+          : "flex flex-col items-center gap-2.5 py-6 text-[13px] font-bold text-dash-text sm:text-[15px]"}
       >
-        <ListChecks className="h-6 w-6 text-dash-green sm:h-7 sm:w-7" />
+        <ListChecks className={compact ? "h-5 w-5 text-dash-green" : "h-6 w-6 text-dash-green sm:h-7 sm:w-7"} />
         {tr("مشاهده حرکات", "Browse exercises")}
       </button>
 

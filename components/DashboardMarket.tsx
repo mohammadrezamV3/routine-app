@@ -109,6 +109,7 @@ export function DashboardMarket({ events, loading }: { events: DashEvent[] | nul
             ) : (
               <p className="db-muted-line">{tr("در 7 روز آینده خبر مهمی ثبت نشده", "No key events in the next 7 days")}</p>
             )}
+            <Link href="/trade/calendar" prefetch className="db-today-more">{tr("همه‌ی رویدادها", "All events")}</Link>
           </div>
       </>
     </BentoCard>

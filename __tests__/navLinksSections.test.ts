@@ -33,7 +33,7 @@ describe("getVisibleLinks per section", () => {
   it("workout shows plan and calorie as top-level links", () => {
     const items = getVisibleLinks(null, "workout");
     const top = items.filter((i) => !isGroup(i)).map((i) => (i as { href: string }).href);
-    expect(top).toEqual(expect.arrayContaining(["/exercise?tab=exercise", "/exercise?tab=calorie", "/sleep", "/analysis/weekly"]));
+    expect(top).toEqual(expect.arrayContaining(["/dashboard?tab=exercise", "/dashboard?tab=calorie", "/sleep", "/analysis/weekly"]));
     expect(hrefs(items)).not.toContain("/weekly");
     expect(hrefs(items)).not.toContain("/roadmaps");
   });
@@ -47,8 +47,27 @@ describe("getVisibleLinks per section", () => {
     expect(top).toEqual(["/dashboard", "/weekly", "/sleep", "/roadmaps", "/analysis/weekly"]);
   });
 
-  it("trade shows only trade plus shared items", () => {
+  it("workout menu points both sub-items at the merged dashboard tabs", () => {
+    const all = hrefs(getVisibleLinks(null, "workout"));
+    expect(all).toContain("/dashboard?tab=exercise");
+    expect(all).toContain("/dashboard?tab=calorie");
+    expect(all.some((h) => h.startsWith("/exercise"))).toBe(false);
+  });
+
+  it("workout keeps /exercise links as a fallback when the dashboard flag is off", () => {
+    const all = hrefs(rawVisible({ ...ALL_ON, dashboard: false }, "workout"));
+    expect(all).toContain("/exercise?tab=exercise");
+    expect(all).not.toContain("/dashboard?tab=exercise");
+  });
+
+  it("trade shows only the dashboard (the old /trade hub is merged into it) plus shared items", () => {
     const all = hrefs(getVisibleLinks(null, "trade"));
-    expect(all).toEqual(["/dashboard", "/trade", "/analysis/weekly", "/mentors", "/mentorship", "/blog", "/about"]);
+    expect(all).toEqual(["/dashboard", "/analysis/weekly", "/mentors", "/mentorship", "/blog", "/about"]);
+  });
+
+  it("trade keeps the /trade entry as a fallback when the dashboard flag is off", () => {
+    const all = hrefs(rawVisible({ ...ALL_ON, dashboard: false }, "trade"));
+    expect(all).toContain("/trade");
+    expect(all).not.toContain("/dashboard");
   });
 });

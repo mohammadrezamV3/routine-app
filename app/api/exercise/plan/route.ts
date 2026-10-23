@@ -30,14 +30,6 @@ export async function GET() {
   if (!guard.ok) return guard.response;
   const userId = guard.userId;
 
-  // ساخت برنامه واقعا AI صدا می‌زند — هزینه‌ی پول دارد و یک اتصال سرور را
-  // چند ده ثانیه اشغال می‌کند. گیت ماژول فقط می‌گوید «مشترک است»، نه
-  // «نمی‌تواند صد بار پشت‌سرهم بزند». سقف روزانه همان کاری را می‌کند که
-  // برای refresh گزارش هفتگی هم کردیم.
-  if (!guard.isSuperAdmin && !(await checkRateLimit(`exercise-plan-generate:${guard.userId}`, 10, 24 * 60 * 60 * 1000))) {
-    return NextResponse.json({ error: tr("تعداد ساخت برنامه‌ی امروز تمام شده — فردا دوباره امتحان کن", "Today's plan build limit has been reached — try again tomorrow") }, { status: 429 });
-  }
-
   const plan = await prisma.exercisePlan.findFirst({
     where: { userId, isActive: true },
     orderBy: { startDate: "desc" },
@@ -111,6 +103,12 @@ async function handlePOST(req: NextRequest) {
   const cleanEquipment = equipment.trim();
   const cleanDescription = description?.trim() || null;
   const cleanLimitationDetails = hasPhysicalLimitation ? limitationDetails?.trim() || null : null;
+
+  // ساخت برنامه واقعا AI صدا می‌زند — هزینه‌ی پول دارد و یک اتصال سرور را
+  // چند ده ثانیه اشغال می‌کند. سقف روزانه فقط مال ساخت است، نه خواندن برنامه.
+  if (!guard.isSuperAdmin && !(await checkRateLimit(`exercise-plan-generate:${guard.userId}`, 10, 24 * 60 * 60 * 1000))) {
+    return NextResponse.json({ error: tr("تعداد ساخت برنامه‌ی امروز تمام شده — فردا دوباره امتحان کن", "Today's plan build limit has been reached — try again tomorrow") }, { status: 429 });
+  }
 
   const quota = await checkAndConsumeAiQuota(userId, guard.isSuperAdmin, AiFeatureKey.EXERCISE_PLAN_GENERATION);
   if (!quota.ok) {
