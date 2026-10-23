@@ -3,6 +3,9 @@
 import { usePathname } from "next/navigation";
 import { AuthShell } from "./AuthShell";
 import { AuthTabs } from "./AuthTabs";
+import { AuthBackButton, AuthBrandMark } from "./AuthChrome";
+import { AuthShowcase } from "./AuthShowcase";
+import { tr } from "@/lib/i18n";
 
 /**
  * قاب مشترک و *پایدار* صفحه‌های auth — از `app/auth/layout.tsx` رندر می‌شه.
@@ -25,13 +28,31 @@ export function AuthFrame({ children }: { children: React.ReactNode }) {
     pathname.startsWith("/auth/login") ? "login" : pathname.startsWith("/auth/signup") ? "signup" : null;
 
   return (
-    <section className="auth-page">
-      {/* با ظاهر/پنهان‌شدن تب‌ها (مثلا رفتن به فراموشی رمز) گروه یک‌بار دوباره
-          وسط‌چین می‌شه؛ بین ورود↔ثبت‌نام عمدا نه، تا تب‌ها سرجاشون بمونن. */}
-      <AuthShell repinKey={tab ? "tabs" : "plain"}>
-        {tab && <AuthTabs active={tab} />}
-        {children}
-      </AuthShell>
+    // ورود دو ستونه: فرم (inline-start در فارسی، یعنی راست) + گالری تصویر چپ.
+    // در ltr با row-reverse همون طرف‌های فیزیکی حفظ می‌شن (درخواست صریح:
+    // تصویر چپ، ورود راست). زیر 1024px نوار تصویری بالا و فرم زیرش.
+    <section className="auth-page auth-split">
+      <div className="auth-split-form">
+        {/* با ظاهر/پنهان‌شدن تب‌ها (مثلا رفتن به فراموشی رمز) گروه یک‌بار دوباره
+            وسط‌چین می‌شه؛ بین ورود↔ثبت‌نام عمدا نه، تا تب‌ها سرجاشون بمونن. */}
+        <AuthShell repinKey={tab ? "tabs" : "plain"}>
+          {tab && (
+            <div className="auth-split-head">
+              <AuthBackButton />
+              <AuthBrandMark
+                title={tab === "login" ? tr("وارد آریون شو", "Log in to Arion") : tr("حساب آریونت رو بساز", "Create your Arion account")}
+                subtitle={tab === "login"
+                  ? tr("یک حساب برای روتین، ترید و تمرین", "One account for routine, trading and training")
+                  : tr("ثبت‌نام فقط چند لحظه طول می‌کشه", "Sign-up only takes a moment")}
+              />
+            </div>
+          )}
+          {tab && <AuthTabs active={tab} />}
+          {children}
+        </AuthShell>
+      </div>
+      <div className="auth-split-media" aria-hidden="true"><AuthShowcase variant="panel" /></div>
+      <div className="auth-split-strip" aria-hidden="true"><AuthShowcase variant="strip" /></div>
     </section>
   );
 }

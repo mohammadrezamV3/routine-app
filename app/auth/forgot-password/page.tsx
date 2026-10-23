@@ -110,7 +110,7 @@ export default function ForgotPasswordPage() {
   return (
     <div className="auth-box">
       <AuthBackButton onClick={step === 2 ? () => { setStep(1); setError(null); } : undefined} />
-      <AuthBrandMark subtitle={tr("فراموشی رمز عبور", "Forgot password")} />
+      <AuthBrandMark title={tr("فراموشی رمز عبور", "Forgot password")} />
 
       {step === 1 && (
         <form onSubmit={requestCode} className="auth-step" key="step1">

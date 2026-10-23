@@ -8,7 +8,6 @@ import { useRouter } from "next/navigation";
 import { SmartLink as Link } from "@/components/SmartLink";
 import { User, AtSign, Lock, Phone } from "lucide-react";
 import { AuthField, useAuthFieldsStagger } from "@/components/AuthField";
-import { AuthBackButton, AuthBrandMark } from "@/components/AuthChrome";
 import { PasswordVisibilityToggle } from "@/components/PasswordVisibilityToggle";
 import { isValidIranPhone, isValidUsername, validatePassword, isValidPersianName, digitsOnly } from "@/lib/validate";
 import { passwordTierLabel } from "@/lib/passwordTierLabel";
@@ -236,10 +235,7 @@ export default function SignupPage() {
 
   return (
     <form ref={formRef} onSubmit={submit} className="auth-box">
-      <AuthBackButton />
-      <AuthBrandMark subtitle={tr("به آریون خوش اومدی!", "Welcome to Arion!")} />
-
-      <div className="auth-field-grid" ref={nameRef} style={{ marginTop: 20 }}>
+      <div className="auth-field-grid" ref={nameRef}>
         <AuthField id="firstName" label={tr("نام", "First name")} error={fieldErrors.name} icon={<User size={15} />}>
           <input
             id="firstName" type="text" autoComplete="given-name" autoCorrect="off" spellCheck={false} className="wsearch-newform-name" value={firstName} placeholder={tr("نام", "First name")}
