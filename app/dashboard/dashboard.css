@@ -1055,4 +1055,7 @@ html[dir="ltr"] .db-cd-title, html[dir="ltr"] .db-ev-title{ text-align:left; }
   .db-space .db-sp-cal{ grid-template-columns:minmax(0,1.4fr) minmax(0,1fr) minmax(0,1fr); }
   .db-space .db-sp-cal .calorie-col-food{ align-self:start; }
 }
+/* کارت‌های داخل فضای تمرین (DashCard با p-3/p-3.5 تیلویند) روی موبایل پدینگ 12 تا 14 داشتن و بالاشون کوچیک‌تر از کارت‌های هم‌ردیف داشبورد (16) دیده می‌شد؛ همون پدینگ db-card (16 موبایل، 20 از 640px). کارت‌های با !p-0 و جدول هفته (p-2.5، پدینگ ستون‌ها جدا) دست نمی‌خورن. */
+.db-space-body [class*="rounded-dash"][class*="bg-dash-card"]:not([class*="p-2"]){ padding:16px; }
+@media (min-width:640px){ .db-space-body [class*="rounded-dash"][class*="bg-dash-card"]:not([class*="p-2"]){ padding:20px; } }
 /* ── workout-redesign end ── */

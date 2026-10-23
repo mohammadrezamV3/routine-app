@@ -20,6 +20,8 @@ import { isEn } from "@/lib/i18n";
 import { logError } from "@/lib/errorLog";
 import { ANALYSIS_DOMAIN_LABELS, AnalysisDomain, AiCoach } from "@/lib/weeklyAnalysis/types";
 import type { WeeklyAnalysisBase } from "@/lib/weeklyAnalysis/compute";
+import type { TradeCoachInput } from "@/lib/weeklyLetter/tradeWeekText";
+import type { FitAiSummary } from "@/lib/weeklyLetter/fitWeekText";
 
 /** ورودی کافی برای مربی AI — همون WeeklyAnalysis منهای چیزهایی که خود AI قراره پر کنه. */
 export type WeeklyAnalysisForAi = WeeklyAnalysisBase;
@@ -56,7 +58,32 @@ const SYSTEM_PROMPT = `تو مربی آنالیز هفتگی Arion هستی. ی�
 const EN_SUFFIX = `
 
 LANGUAGE OVERRIDE: write the "summary" and every recommendation "title" and "description" in natural, warm, conversational English instead of Persian (second person, "you"). Keep the JSON keys, "priority" and "domain" values exactly as specified. Never use Persian text in the output.`;
-const systemPrompt = () => (isEn() ? SYSTEM_PROMPT + EN_SUFFIX : SYSTEM_PROMPT);
+// بخش ترید: مربی معامله‌گر. ورودی شامل کلید trade با عددهای از‌قبل‌محاسبه‌شده‌ی معامله‌های هفته‌ست
+const TRADE_SUFFIX = `
+
+حالت مربی ترید: ورودی کلید "trade" دارد (آمار معامله‌های همین هفته: سود و زیان خالص، نرخ برد، ضریب سود، امید ریاضی، افت، انضباط، هزینه‌ی قانون‌شکنی، رفتار بعد از ضرر، بهترین/بدترین جلسه و نماد، خرید در برابر فروش). تو یک مربی معامله‌گری هستی که روی «فرایند» و انضباط تمرکز دارد، نه پیش‌بینی بازار.
+- هیچ سیگنال، پیش‌بینی قیمت، توصیه‌ی خرید/فروش یا مشاوره‌ی سرمایه‌گذاری نده؛ فقط درباره‌ی رفتار معاملاتی کاربر بر اساس همین اعداد حرف بزن.
+- خلاصه باید سود/زیان و نرخ برد را کنار انضباط (طبق پلن، حدضرر، معامله‌ی هیجانی) تفسیر کند و اگر قانون‌شکنی یا معامله‌ی سریع بعد از ضرر هزینه داشته، صریح و همدلانه بگوید.
+- پیشنهادها را به رفتار قابل‌اندازه‌گیری برای هفته‌ی بعد تبدیل کن (مثلا «بعد از ضرر 2 ساعت صبر»، «حدضرر روی همه‌ی معامله‌ها»). domain همه‌ی پیشنهادها "trading" است.
+- ارزها را همان‌طور که در currency آمده بخوان؛ هیچ مبلغ جدیدی نساز.`;
+const TRADE_EN = `
+
+LANGUAGE OVERRIDE (trade mode): write in natural English as above. You are a trading-process coach: never give signals, price predictions or buy/sell advice; only comment on the user's behaviour using the numbers in "trade".`;
+// بخش ورزش: مربی تمرین و تغذیه. ورودی کلید fit با عددهای از‌قبل‌محاسبه‌شده‌ی تمرین و تغذیه‌ی هفته داره
+const FIT_SUFFIX = `
+
+حالت مربی تمرین و تغذیه: ورودی کلید "fit" دارد (جلسه‌های انجام‌شده و برنامه‌ریزی‌شده، پایبندی، عضله‌های کارشده و جاافتاده، کالری و درشت‌مغذی‌ها در برابر هدف، تراز انرژی هفته، روز تمرین در برابر روز استراحت و خواب قبل از جلسه‌ها). تو یک مربی بدنسازی و تغذیه‌ی ورزشی هستی که روی ثبات و عادت‌ها تمرکز دارد.
+- خلاصه باید جلسه‌های تمرین و تغذیه را کنار هم تفسیر کند (مثلا پروتئین روزهای تمرین، کالری در برابر هدف کات/حجم/ثبات)، نه خواب‌محور باشد.
+- ورودی ستون وزنه، ست و تکرار ندارد: هیچ حجم تمرین، رکورد یا افزایش وزنه نساز.
+- تراز انرژی و تغییر وزن فقط تخمین است؛ هیچ توصیه‌ی پزشکی یا رژیم افراطی نده و عددی خارج از ورودی نساز.
+- پیشنهادها را به هدف قابل‌اندازه‌گیری برای هفته‌ی بعد تبدیل کن (تعداد جلسه، گرم پروتئین، بازه‌ی کالری) و domain را "fitness" یا "nutrition" بگذار.`;
+const FIT_EN = `
+
+LANGUAGE OVERRIDE (training and nutrition mode): write in natural English as above. You are a strength and nutrition coach: read the "fit" numbers, never invent sets, reps, volume or personal records, and treat weight change as an estimate only.`;
+const systemPrompt = (trade?: TradeCoachInput | null, fit?: FitAiSummary | null) => {
+  const base = SYSTEM_PROMPT + (trade ? TRADE_SUFFIX : "") + (fit ? FIT_SUFFIX : "");
+  return isEn() ? base + EN_SUFFIX + (trade ? TRADE_EN : "") + (fit ? FIT_EN : "") : base;
+};
 
 type AiInputDomain = { key: AnalysisDomain; label: string; score: number | null; prevScore: number | null; delta: number | null; hasData: boolean };
 type AiInput = {
@@ -67,10 +94,16 @@ type AiInput = {
   domains: AiInputDomain[];
   insights: { title: string; body: string; domain: string | null; tone: string }[];
   prediction: { projectedScore: number; low: number; high: number } | null;
+  /** فقط بخش ترید: خلاصه‌ی عددی معامله‌های هفته (بدون هیچ متن آزاد) */
+  trade?: TradeCoachInput;
+  /** فقط بخش ورزش: خلاصه‌ی عددی تمرین و تغذیه‌ی هفته (بدون هیچ متن آزاد) */
+  fit?: FitAiSummary;
 };
 
-function buildInput(analysis: WeeklyAnalysisForAi): AiInput {
+function buildInput(analysis: WeeklyAnalysisForAi, trade?: TradeCoachInput | null, fit?: FitAiSummary | null): AiInput {
   return {
+    ...(trade ? { trade } : {}),
+    ...(fit ? { fit } : {}),
     weekLabel: analysis.weekLabel,
     offset: analysis.offset,
     isCurrentWeek: analysis.isCurrentWeek,
@@ -119,11 +152,11 @@ function normalizeAiCoach(raw: any, model: string): AiCoach {
   return { summary: summary.slice(0, 1200), recommendations, generatedAt: new Date().toISOString(), model };
 }
 
-async function callOnce(analysis: WeeklyAnalysisForAi, userId: string, timeoutMs: number): Promise<AiCoach> {
-  const input = buildInput(analysis);
+async function callOnce(analysis: WeeklyAnalysisForAi, userId: string, timeoutMs: number, trade?: TradeCoachInput | null, fit?: FitAiSummary | null): Promise<AiCoach> {
+  const input = buildInput(analysis, trade, fit);
   // temperature کمی بالاتر از پیش‌فرض فقط برای لحن متن آزاد (summary/description)؛
   // ساختار JSON و اعدادش دست‌نخورده می‌مانند چون normalizeAiCoach هرچیز نامعتبر را رد می‌کند.
-  const { text, usage, durationMs } = await callAiChat(systemPrompt(), JSON.stringify(input), 1400, WEEKLY_ANALYSIS_AI_MODEL, timeoutMs, 0.8);
+  const { text, usage, durationMs } = await callAiChat(systemPrompt(trade, fit), JSON.stringify(input), 1400, WEEKLY_ANALYSIS_AI_MODEL, timeoutMs, 0.8);
   recordAiUsage(userId, AiFeatureKey.WEEKLY_COACH_REPORT, usage, durationMs, true, WEEKLY_ANALYSIS_AI_MODEL);
   return normalizeAiCoach(parseJsonResponse(text), WEEKLY_ANALYSIS_AI_MODEL);
 }
@@ -133,12 +166,12 @@ async function callOnce(analysis: WeeklyAnalysisForAi, userId: string, timeoutMs
  * خورد، صرفا throw می‌کنه — caller (روت API / کرون) تصمیم ۵۰۳/۵۰۴ یا
  * fallback بدون AI رو خودش می‌گیره.
  */
-export async function generateAiCoach(analysis: WeeklyAnalysisForAi, userId: string): Promise<AiCoach> {
+export async function generateAiCoach(analysis: WeeklyAnalysisForAi, userId: string, extra?: { trade?: TradeCoachInput | null; fit?: FitAiSummary | null }): Promise<AiCoach> {
   if (!isAiAvailable()) {
     throw new Error("ARVAN_AI تنظیم نشده — مربی AI آنالیز هفتگی در دسترس نیست");
   }
   try {
-    return await withAiBudget((timeoutMs) => callOnce(analysis, userId, timeoutMs));
+    return await withAiBudget((timeoutMs) => callOnce(analysis, userId, timeoutMs, extra?.trade, extra?.fit));
   } catch (err: any) {
     logError("ai-gateway", `مربی AI آنالیز هفتگی شکست خورد: ${err?.message || err}`, { context: { feature: "WEEKLY_COACH_REPORT" } });
     throw err;

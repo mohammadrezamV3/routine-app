@@ -1285,3 +1285,239 @@ html[dir="ltr"] .wl-st-hint svg{ animation-name:wl-st-nudge-ltr; }
 html[dir="ltr"] .wl-st-meter i{ transform-origin:0 50%; background:linear-gradient(90deg, var(--wl-da), var(--wl-db)); }
 html[dir="ltr"] .wl-st-attr{ padding:calc(var(--u, 1) * 6px) 6px 6px 14px; }
 html[dir="ltr"] .wl-st-next{ padding:calc(var(--u, 1) * 9px) 10px 9px 14px; }
+
+/* ── trade-week start ──
+   فصل‌های مخصوص آنالیز هفتگی بخش ترید (منحنی هفته، کجا بردی/باختی، نظم و ذهن) و
+   اسلایدهای ترید داستان. فقط روی کارت‌های موجود هفته‌نامه؛ هیچ بک‌گراند تازه‌ای نیست.
+   رنگ سود و زیان از توکن‌های --pnl-*. فقط ویژگی‌های منطقی. */
+.wl-tw-card{ display:flex; flex-direction:column; gap:14px; }
+.wl-tw-head{ display:flex; align-items:baseline; justify-content:space-between; gap:12px; flex-wrap:wrap; }
+.wl-tw-cap{ font-size:12px; font-weight:700; color:var(--muted); }
+.wl-tw-net{ font-family:var(--font-latin), var(--font-vazir), sans-serif; font-size:34px; font-weight:900; letter-spacing:-.05em; line-height:1.1; font-variant-numeric:tabular-nums; }
+.wl-tw-net.is-win, .wl-tw-kpi-v.is-good, .wl-tw-row-net.is-win, .wl-tw-split .is-win, .wl-tw-cost-v.is-win, .wl-tws-net.is-win, .wl-tws-row .is-win{ color:var(--pnl-win); }
+.wl-tw-net.is-loss, .wl-tw-kpi-v.is-bad, .wl-tw-row-net.is-loss, .wl-tw-split .is-loss, .wl-tw-cost-v.is-loss, .wl-tws-net.is-loss, .wl-tws-row .is-loss{ color:var(--pnl-loss); }
+.wl-tw-chart{ width:100%; }
+.wl-tw-svg{ display:block; overflow:visible; direction:ltr; }
+.wl-tw-zero{ stroke:var(--box-line); stroke-width:1; stroke-dasharray:3 5; }
+.wl-tw-dd{ fill:rgba(var(--pnl-loss-rgb), .09); stroke:rgba(var(--pnl-loss-rgb), .38); stroke-width:1; stroke-dasharray:4 4; rx:8; }
+.wl-tw-line.is-win{ stroke:var(--pnl-win); }
+.wl-tw-line.is-loss{ stroke:var(--pnl-loss); }
+.wl-tw-halo.is-win{ fill:rgba(var(--pnl-win-rgb), .22); }
+.wl-tw-halo.is-loss{ fill:rgba(var(--pnl-loss-rgb), .22); }
+.wl-tw-mark.is-win, .wl-tw-end.is-win{ fill:var(--pnl-win); stroke:var(--box-bg); stroke-width:2; }
+.wl-tw-mark.is-loss, .wl-tw-end.is-loss{ fill:var(--pnl-loss); stroke:var(--box-bg); stroke-width:2; }
+.wl-tw-mlabel{ font-family:var(--font-latin), var(--font-vazir), sans-serif; font-size:11.5px; font-weight:900; }
+.wl-tw-mlabel.is-win{ fill:var(--pnl-win); }
+.wl-tw-mlabel.is-loss{ fill:var(--pnl-loss); }
+.wl-tw-day{ font-size:10.5px; font-weight:700; fill:var(--muted); }
+.wl-tw-note{ display:flex; align-items:center; gap:8px; font-size:12px; font-weight:700; color:var(--muted); line-height:1.8; }
+.wl-tw-swatch{ width:14px; height:10px; flex-shrink:0; border-radius:3px; border:1px dashed rgba(var(--pnl-loss-rgb), .55); }
+.wl-tw-foot{ font-size:12px; font-weight:600; color:var(--muted); line-height:1.9; }
+.wl-tw-kpis{ display:grid; grid-template-columns:repeat(2, minmax(0,1fr)); gap:14px 12px; padding-top:14px; border-top:1px dashed var(--box-line); }
+.wl-tw-kpi{ display:flex; flex-direction:column; gap:3px; min-width:0; }
+.wl-tw-kpi-l{ font-size:11.5px; font-weight:700; color:var(--muted); }
+.wl-tw-kpi-v{ font-family:var(--font-latin), var(--font-vazir), sans-serif; font-size:24px; font-weight:900; letter-spacing:-.04em; line-height:1.2; font-variant-numeric:tabular-nums; unicode-bidi:isolate; text-align:start; }
+.wl-tw-kpi-h{ font-size:11px; font-weight:600; color:var(--muted); line-height:1.7; }
+@media (min-width:640px){
+  .wl-tw-kpis{ grid-template-columns:repeat(auto-fit, minmax(120px, 1fr)); }
+  .wl-tw-net{ font-size:42px; }
+}
+
+.wl-tw-grid{ display:grid; grid-template-columns:minmax(0,1fr); gap:12px; }
+@media (min-width:760px){
+  .wl-tw-grid{ grid-template-columns:repeat(2, minmax(0,1fr)); gap:14px; }
+  .wl-tw-grid > :last-child:nth-child(odd){ grid-column:1 / -1; }
+}
+.wl-root .wl-tw-list, .wl-root .wl-tw-disc, .wl-root .wl-tw-cost, .wl-root .wl-tw-after{ display:flex; flex-direction:column; gap:10px; min-width:0; }
+.wl-tw-list h3, .wl-tw-disc h3, .wl-tw-cost h3, .wl-tw-after h3{ display:flex; align-items:center; gap:9px; font-size:16px !important; font-weight:900; }
+.wl-tw-list-ico{ display:grid; place-items:center; width:30px; height:30px; flex-shrink:0; border-radius:50%; color:var(--wl-da); border:1px solid color-mix(in srgb, var(--wl-da) 50%, transparent); }
+.wl-tw-cost.is-bad .wl-tw-list-ico{ color:var(--pnl-loss); border-color:rgba(var(--pnl-loss-rgb), .5); }
+.wl-tw-list ul{ display:flex; flex-direction:column; }
+.wl-tw-row{
+  display:grid; grid-template-columns:minmax(74px, 1.5fr) 22px minmax(64px, 1.5fr) minmax(58px, auto); align-items:center; gap:10px;
+  padding:9px 0; border-top:1px dashed var(--box-line); font-size:13px;
+}
+.wl-tw-row:first-child{ border-top:none; }
+.wl-tw-row-name{ font-weight:800; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
+.wl-tw-row-n{ font-family:var(--font-latin), var(--font-vazir), sans-serif; font-size:12px; font-weight:800; color:var(--muted); text-align:center; font-variant-numeric:tabular-nums; }
+.wl-tw-row-bar{ display:flex; align-items:center; gap:8px; min-width:0; }
+.wl-tw-row-bar .wl-meter{ flex:1; height:4px; margin-top:0; }
+.wl-tw-row-bar small{ font-family:var(--font-latin), var(--font-vazir), sans-serif; font-size:11px; font-weight:800; color:var(--muted); min-width:32px; text-align:end; font-variant-numeric:tabular-nums; }
+.wl-tw-row-net{ font-family:var(--font-latin), var(--font-vazir), sans-serif; font-size:13px; font-weight:900; text-align:end; font-variant-numeric:tabular-nums; unicode-bidi:isolate; }
+.wl-tw-unit{ font-size:11px; font-weight:700; color:var(--muted); }
+
+.wl-tw-rings{ display:flex; flex-wrap:wrap; justify-content:space-around; gap:16px 10px; padding-top:4px; }
+.wl-tw-ring{ display:flex; flex-direction:column; align-items:center; gap:4px; text-align:center; }
+.wl-tw-ring b{ font-size:12.5px; font-weight:800; }
+.wl-tw-ring small{ font-family:var(--font-latin), var(--font-vazir), sans-serif; font-size:11px; font-weight:700; color:var(--muted); }
+.wl-tw-ring-v{ font-family:var(--font-latin), var(--font-vazir), sans-serif; font-size:21px; font-weight:900; letter-spacing:-.04em; }
+.wl-tw-cost-v{ font-family:var(--font-latin), var(--font-vazir), sans-serif; font-size:38px; font-weight:900; letter-spacing:-.05em; line-height:1.1; font-variant-numeric:tabular-nums; unicode-bidi:isolate; text-align:start; }
+.wl-tw-cost-cap, .wl-tw-cost-ok{ font-size:13px; font-weight:600; line-height:1.95; color:var(--muted); }
+.wl-tw-cost-ok{ color:var(--text); font-weight:700; }
+.wl-tw-split{ display:grid; grid-template-columns:repeat(auto-fit, minmax(90px, 1fr)); gap:12px; padding-top:10px; border-top:1px dashed var(--box-line); }
+.wl-tw-split > div{ display:flex; flex-direction:column; gap:2px; min-width:0; }
+.wl-tw-split small{ font-size:11.5px; font-weight:700; color:var(--muted); }
+.wl-tw-split b{ font-family:var(--font-latin), var(--font-vazir), sans-serif; font-size:22px; font-weight:900; letter-spacing:-.04em; font-variant-numeric:tabular-nums; unicode-bidi:isolate; text-align:start; }
+.wl-tw-split em{ font-style:normal; font-family:var(--font-latin), var(--font-vazir), sans-serif; font-size:12.5px; font-weight:800; color:var(--muted); unicode-bidi:isolate; text-align:start; }
+
+/* اسلایدهای ترید داستان */
+.wl-tws-net{ display:flex; align-items:baseline; justify-content:center; gap:calc(var(--u, 1) * 8px); }
+.wl-tws-net small{ font-size:calc(var(--u, 1) * 16px); font-weight:800; color:var(--muted); }
+.wl-root .wl-tws-net .wl-st-huge{ font-size:calc(var(--u, 1) * 74px); }
+.wl-tws-chart{ width:100%; padding-inline:calc(var(--u, 1) * 6px); }
+.wl-tws-pair{ display:grid; grid-template-columns:repeat(2, minmax(0,1fr)); gap:calc(var(--u, 1) * 12px); width:100%; }
+.wl-tws-trade{
+  display:flex; flex-direction:column; align-items:center; gap:calc(var(--u, 1) * 5px); padding:calc(var(--u, 1) * 18px) calc(var(--u, 1) * 8px);
+  border:1px solid var(--box-line); border-radius:calc(var(--u, 1) * 20px);
+}
+.wl-tws-trade.is-win{ border-color:rgba(var(--pnl-win-rgb), .5); }
+.wl-tws-trade.is-loss{ border-color:rgba(var(--pnl-loss-rgb), .5); }
+.wl-tws-trade small{ font-size:calc(var(--u, 1) * 12px); font-weight:800; color:var(--muted); }
+.wl-tws-trade b{ font-family:var(--font-latin), var(--font-vazir), sans-serif; font-size:calc(var(--u, 1) * 22px); font-weight:900; letter-spacing:-.03em; }
+.wl-tws-trade span{ font-size:calc(var(--u, 1) * 12.5px); font-weight:700; color:var(--muted); }
+.wl-tws-trade em{ font-style:normal; font-family:var(--font-latin), var(--font-vazir), sans-serif; font-size:calc(var(--u, 1) * 26px); font-weight:900; letter-spacing:-.04em; unicode-bidi:isolate; }
+.wl-tws-trade.is-win em{ color:var(--pnl-win); }
+.wl-tws-trade.is-loss em{ color:var(--pnl-loss); }
+.wl-tws-rows{ display:flex; flex-direction:column; gap:calc(var(--u, 1) * 10px); width:100%; }
+.wl-tws-row{
+  display:grid; grid-template-columns:1fr auto; grid-template-areas:"k n" "b s"; align-items:center; column-gap:calc(var(--u, 1) * 10px); row-gap:calc(var(--u, 1) * 2px);
+  padding:calc(var(--u, 1) * 12px) calc(var(--u, 1) * 16px); border:1px solid var(--box-line); border-radius:calc(var(--u, 1) * 18px); text-align:start;
+}
+.wl-tws-row small{ grid-area:k; font-size:calc(var(--u, 1) * 12px); font-weight:800; color:var(--muted); }
+.wl-tws-row b{ grid-area:b; font-size:calc(var(--u, 1) * 22px); font-weight:900; }
+.wl-tws-row em{ grid-area:n; font-style:normal; font-family:var(--font-latin), var(--font-vazir), sans-serif; font-size:calc(var(--u, 1) * 19px); font-weight:900; unicode-bidi:isolate; text-align:end; }
+.wl-tws-row span{ grid-area:s; font-family:var(--font-latin), var(--font-vazir), sans-serif; font-size:calc(var(--u, 1) * 12px); font-weight:700; color:var(--muted); text-align:end; }
+.wl-tw-head-hint{ flex-basis:100%; }
+.wl-st-root .wl-tws-mind .wl-st-ringc .wl-st-huge{ font-size:calc(var(--u, 1) * 50px); }
+/* ── trade-week end ── */
+
+/* ── fit-week start ──
+   فصل‌های بخش ورزش (تمرین هفته، سوخت هفته، ریکاوری). فقط سطح wl-card و بوردرها؛
+   هیچ بک‌گراند تازه‌ای نیست. ویژگی‌های منطقی؛ حرکت فقط transform/opacity. */
+.wl-fit-grid{ display:grid; grid-template-columns:minmax(0,1fr); gap:12px; }
+@media (min-width:760px){
+  .wl-fit-grid{ grid-template-columns:repeat(2, minmax(0,1fr)); gap:14px; }
+  .wl-fit-grid > .wl-fit-main{ grid-column:1 / -1; }
+  .wl-fit-grid > .wl-fit-card:last-child:nth-child(even){ grid-column:1 / -1; }
+}
+.wl-root .wl-fit-main{ display:flex; flex-direction:column; gap:16px; }
+.wl-root .wl-fit-card{ display:flex; flex-direction:column; gap:14px; }
+.wl-fit-main-top{ display:flex; align-items:center; gap:18px; }
+@media (min-width:760px){ .wl-fit-main-top{ gap:28px; } }
+.wl-fit-ringtxt{ font-family:var(--font-latin), var(--font-vazir), sans-serif; font-size:22px; font-weight:900; letter-spacing:-.04em; }
+.wl-fit-sub{ font-size:11px; font-weight:700; color:var(--muted); }
+.wl-fit-main-top .wl-stats{ display:grid; grid-template-columns:repeat(2, minmax(0,1fr)); gap:12px 16px; }
+@media (min-width:760px){ .wl-fit-main-top .wl-stats{ grid-template-columns:repeat(4, minmax(0,1fr)); } }
+.wl-fit-main-top .wl-stat dd{ display:flex; align-items:center; gap:6px; flex-wrap:wrap; }
+
+/* نوار جلسه‌های هفته */
+.wl-fit-days{ display:grid; grid-template-columns:repeat(7, minmax(0,1fr)); gap:4px; }
+@media (min-width:760px){ .wl-fit-days{ gap:10px; max-width:720px; width:100%; margin-inline:auto; } }
+.wl-fit-day{ --c:var(--muted2); display:flex; flex-direction:column; align-items:center; gap:4px; min-width:0; }
+.wl-fit-day-ico{
+  display:grid; place-items:center; width:34px; height:34px; border-radius:50%;
+  color:var(--c); border:1.5px solid color-mix(in srgb, var(--c) 55%, transparent);
+}
+.wl-fit-day-ico i{ width:5px; height:5px; border-radius:50%; background:currentColor; opacity:.5; }
+.wl-fit-day.is-done, .wl-fit-day.is-extra{ --c:var(--wl-good); }
+.wl-fit-day.is-extra .wl-fit-day-ico{ border-style:dashed; }
+.wl-fit-day.is-missed{ --c:var(--wl-bad); }
+.wl-fit-day.is-partial{ --c:var(--text); }
+.wl-fit-day.is-partial .wl-fit-day-ico{ border-style:dashed; opacity:.8; }
+.wl-fit-day.is-rest{ --c:var(--muted); }
+.wl-fit-day.is-rest .wl-fit-day-ico{ border-color:var(--box-line); }
+.wl-fit-day.is-future .wl-fit-day-ico, .wl-fit-day.is-none .wl-fit-day-ico{ border-color:var(--box-line); border-style:dotted; }
+.wl-fit-day-l{ font-size:10.5px; font-weight:700; color:var(--muted); }
+.wl-fit-day-x{ min-height:13px; font-family:var(--font-latin), var(--font-vazir), sans-serif; font-size:10px; font-weight:800; color:var(--muted); }
+.wl-fit-legend{ display:flex; flex-wrap:wrap; gap:6px 14px; justify-content:center; font-size:10.5px; font-weight:700; color:var(--muted); }
+.wl-fit-legend span{ display:inline-flex; align-items:center; gap:4px; }
+.wl-fit-key{ display:inline-block; width:10px; height:10px; border-radius:3px; background:var(--wl-da); }
+.wl-fit-key.is-off{ background:color-mix(in srgb, var(--text) 40%, transparent); }
+.wl-fit-key.is-line{ height:0; border-top:1.5px dashed color-mix(in srgb, var(--text) 55%, transparent); border-radius:0; background:none; }
+
+/* عضله‌ها */
+.wl-fit-muscles{ display:flex; flex-direction:column; gap:11px; }
+.wl-fit-muscle{ display:grid; grid-template-columns:minmax(64px, .34fr) minmax(0,1fr) minmax(44px, auto); align-items:center; gap:10px; }
+.wl-fit-muscle-n{ font-size:13px; font-weight:800; }
+.wl-fit-muscle .wl-meter{ margin-top:0; height:6px; border-radius:6px; }
+.wl-fit-muscle-c{ font-family:var(--font-latin), var(--font-vazir), sans-serif; font-size:12.5px; font-weight:900; text-align:end; }
+.wl-fit-muscle.is-off .wl-fit-muscle-n{ color:var(--muted); }
+.wl-fit-muscle.is-off .wl-fit-muscle-c{ font-family:inherit; font-size:11px; font-weight:800; color:var(--wl-bad); }
+
+/* حرکت‌های پرتکرار */
+.wl-fit-top{ display:flex; flex-direction:column; gap:2px; }
+.wl-fit-top-row{ display:grid; grid-template-columns:22px minmax(0,1fr) auto; align-items:center; gap:10px; padding:8px 0; border-block-end:1px solid var(--box-line); }
+.wl-fit-top-row:last-child{ border-block-end:0; }
+.wl-fit-top-rank{ font-family:var(--font-latin), var(--font-vazir), sans-serif; font-size:12px; font-weight:900; color:var(--muted); }
+.wl-fit-top-name{ font-size:13.5px; font-weight:800; min-width:0; overflow-wrap:anywhere; }
+.wl-fit-top-c{ font-family:var(--font-latin), var(--font-vazir), sans-serif; font-size:13px; font-weight:900; color:var(--wl-da); }
+.wl-fit-note{ display:flex; align-items:flex-start; gap:7px; font-size:12.5px; line-height:1.9; color:var(--muted); }
+.wl-fit-note svg{ flex-shrink:0; margin-block-start:5px; }
+
+/* سوخت */
+.wl-fit-chips{ display:flex; flex-wrap:wrap; gap:12px 26px; }
+.wl-fit-chips .wl-stat dd{ font-size:16px; }
+.wl-fit-kcal{ display:block; width:100%; max-width:640px; margin-inline:auto; height:auto; direction:ltr; overflow:visible; }
+.wl-fit-bar{ fill:var(--wl-da); }
+.wl-fit-bar.is-off{ fill:color-mix(in srgb, var(--text) 40%, transparent); }
+.wl-fit-bar.is-open{ opacity:.5; }
+.wl-fit-empty{ stroke:var(--box-line); stroke-width:2; stroke-linecap:round; stroke-dasharray:2 4; }
+.wl-fit-tline{ stroke:color-mix(in srgb, var(--text) 55%, transparent); stroke-width:1.2; stroke-dasharray:5 4; }
+.wl-fit-ttxt, .wl-fit-val, .wl-fit-xl{ font-family:var(--font-latin), var(--font-vazir), sans-serif; font-weight:800; }
+.wl-fit-ttxt{ font-size:9.5px; fill:var(--muted); }
+.wl-fit-val{ font-size:9.5px; fill:var(--text); }
+.wl-fit-xl{ font-size:11px; fill:var(--muted); }
+
+.wl-fit-bal-num{ display:flex; align-items:baseline; gap:8px; direction:ltr; }
+html[dir="rtl"] .wl-fit-bal-num{ justify-content:flex-end; }
+.wl-fit-big{ font-family:var(--font-latin), var(--font-vazir), sans-serif; font-size:44px; font-weight:900; letter-spacing:-.05em; line-height:1.1; font-variant-numeric:tabular-nums; }
+.wl-fit-bal-num span{ font-size:13px; font-weight:800; color:var(--muted); }
+.wl-fit-est{ display:flex; align-items:flex-start; gap:7px; padding:9px 12px; border-radius:14px; border:1px dashed var(--box-line); font-size:12px; line-height:1.85; font-weight:600; color:var(--muted); }
+.wl-fit-est svg{ flex-shrink:0; margin-block-start:4px; }
+
+.wl-fit-macros{ display:grid; grid-template-columns:repeat(3, minmax(0,1fr)); gap:8px; }
+.wl-fit-macro{ display:flex; flex-direction:column; align-items:center; gap:6px; text-align:center; min-width:0; }
+.wl-fit-macro b{ font-size:12.5px; font-weight:800; }
+.wl-fit-macro small{ font-size:10.5px; font-weight:600; color:var(--muted); }
+.wl-fit-macro-v{ font-family:var(--font-latin), var(--font-vazir), sans-serif; font-size:16px; font-weight:900; letter-spacing:-.03em; }
+
+.wl-fit-stack{ display:flex; gap:4px; height:14px; }
+.wl-fit-stack li{ min-width:6px; flex-basis:0; }
+.wl-fit-stack li i{ display:block; height:100%; border-radius:6px; background:var(--wl-da); opacity:var(--k, 1); }
+.wl-fit-legendrows{ display:grid; grid-template-columns:repeat(2, minmax(0,1fr)); gap:8px 14px; }
+.wl-fit-legendrows li{ display:flex; align-items:center; gap:7px; font-size:12.5px; font-weight:700; }
+.wl-fit-legendrows li i{ width:9px; height:9px; border-radius:3px; background:var(--wl-da); flex-shrink:0; }
+.wl-fit-legendrows li b{ margin-inline-start:auto; font-family:var(--font-latin), var(--font-vazir), sans-serif; font-weight:900; }
+
+.wl-fit-versus{ display:grid; grid-template-columns:repeat(2, minmax(0,1fr)); gap:12px; }
+.wl-fit-versus > div{ display:flex; flex-direction:column; gap:3px; padding:12px; border-radius:16px; border:1px solid var(--box-line); }
+.wl-fit-versus small{ font-size:11px; font-weight:700; color:var(--muted); }
+.wl-fit-versus b{ font-family:var(--font-latin), var(--font-vazir), sans-serif; font-size:19px; font-weight:900; letter-spacing:-.03em; }
+.wl-fit-versus b span{ font-size:11px; font-weight:700; color:var(--muted); letter-spacing:0; }
+.wl-fit-versus em{ font-style:normal; font-size:12px; font-weight:700; color:var(--wl-da); }
+
+/* ریکاوری */
+.wl-root .wl-fit-recovery{ display:flex; flex-direction:column; gap:14px; }
+.wl-fit-rec{ display:grid; grid-template-columns:minmax(0,1fr); gap:16px; }
+@media (min-width:760px){ .wl-fit-rec{ grid-template-columns:repeat(2, minmax(0,1fr)); gap:28px; } }
+.wl-fit-rec li{ display:grid; grid-template-columns:minmax(0,1fr) auto auto; align-items:baseline; gap:2px 8px; }
+.wl-fit-rec-l{ font-size:13px; font-weight:700; color:var(--muted); }
+.wl-fit-rec-h{ font-family:var(--font-latin), var(--font-vazir), sans-serif; font-size:26px; font-weight:900; letter-spacing:-.04em; }
+.wl-fit-rec small{ font-size:11px; font-weight:700; color:var(--muted); }
+.wl-fit-rec .wl-meter{ grid-column:1 / -1; height:6px; border-radius:6px; margin-top:4px; }
+
+/* داستان هفته: اسلایدهای ورزش */
+.wl-fts-days{ display:flex; justify-content:center; gap:calc(var(--u, 1) * 9px); }
+.wl-fts-day{ --c:var(--muted2); display:flex; flex-direction:column; align-items:center; gap:calc(var(--u, 1) * 5px); }
+.wl-fts-day i{ display:grid; place-items:center; width:calc(var(--u, 1) * 30px); height:calc(var(--u, 1) * 30px); border-radius:50%; color:var(--c); border:1.5px solid color-mix(in srgb, var(--c) 55%, transparent); }
+.wl-fts-day small{ font-size:calc(var(--u, 1) * 11px); font-weight:700; color:var(--muted); }
+.wl-fts-day.is-done, .wl-fts-day.is-extra{ --c:var(--wl-good); }
+.wl-fts-day.is-missed{ --c:var(--wl-bad); }
+.wl-fts-day.is-rest i{ border-color:var(--box-line); color:var(--muted); }
+.wl-fts-avg{ display:flex; flex-direction:column; align-items:center; gap:calc(var(--u, 1) * 4px); }
+.wl-fts-avg small{ font-size:calc(var(--u, 1) * 13px); font-weight:700; color:var(--muted); }
+.wl-fts-chart{ max-width:100%; }
+
+@media (prefers-reduced-motion:reduce){ .wl-fit-bar{ transform:none !important; } }
+html[data-perf="low"] .wl-fit-bar{ transform:none !important; }
+/* ── fit-week end ── */

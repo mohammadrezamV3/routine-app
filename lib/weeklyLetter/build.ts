@@ -14,6 +14,12 @@ import { WEEKLY_LETTER_VERSION, type LetterAchievement, type LetterDomain, type 
 import { sectionAchievementCategory, sectionShowsRoutineStreak } from "./section";
 import type { SectionKey } from "@/lib/sections";
 import { buildIntro, buildNextWeek, buildWinsAndImprove, domainBestWorst, domainNote, factsOfDays } from "./text";
+import type { TradeWeek } from "./tradeWeek";
+import { applyTradeToLetter } from "./tradeWeekText";
+import { loadTradeWeek } from "./tradeWeekServer";
+import type { FitWeek } from "./fitWeek";
+import { applyFitToLetter } from "./fitWeekText";
+import { gatherFitWeek } from "./fitWeekServer";
 
 export type LetterExtras = {
   issueNo: number;
@@ -21,6 +27,10 @@ export type LetterExtras = {
   streak: { days: number } | null;
   globalAchievements: LetterAchievement[];
   now: Date;
+  /** فقط بخش ترید: تحلیل معاملات هفته (tradeWeek.ts) */
+  trade?: TradeWeek | null;
+  /** فقط بخش ورزش: تحلیل تمرین و تغذیه‌ی هفته (fitWeek.ts) */
+  fit?: FitWeek | null;
 };
 
 /** جایگاه این هفته بین هفته‌های دارای امتیاز ترند (۱ = بهترین)؛ با کمتر از ۳ هفته null */
@@ -52,7 +62,7 @@ export function buildLetterData(a: WeeklyAnalysis, x: LetterExtras): WeeklyLette
     .filter((ac) => ac.unlocked)
     .map((ac) => ({ key: ac.key, title: ac.title, description: ac.description, emoji: ac.emoji, source: "weekly" as const }));
 
-  return {
+  const letter: WeeklyLetterData = {
     v: WEEKLY_LETTER_VERSION,
     issueNo: x.issueNo,
     weekStart: a.weekStart,
@@ -99,6 +109,12 @@ export function buildLetterData(a: WeeklyAnalysis, x: LetterExtras): WeeklyLette
       return { ...nw, focusText: isolateNumbers(nw.focusText) };
     })(),
   };
+  // بخش ترید: تیتر، مقدمه، بینش، بردها، مدال و هفته‌ی بعد از روی خود معامله‌ها (tradeWeekText.ts)
+  const withTrade = x.trade
+    ? applyTradeToLetter(letter, x.trade, { isCurrent: a.isCurrentWeek, disciplineScore: a.domains.find((d) => d.domain === "trading")?.score ?? null })
+    : letter;
+  // بخش ورزش: تیتر، مقدمه، بینش، بردها، مدال و هفته‌ی بعد از روی تمرین و تغذیه (fitWeekText.ts)
+  return x.fit ? applyFitToLetter(withTrade, x.fit) : withTrade;
 }
 
 // ───────────────────────── بخش دیتابیس ─────────────────────────
@@ -163,16 +179,22 @@ async function globalAchievementsOfWeek(userId: string, tz: string, weekStartIso
 
 export async function gatherLetterExtras(
   userId: string,
-  a: Pick<WeeklyAnalysis, "weekStart" | "weekEnd">,
+  a: Pick<WeeklyAnalysis, "weekStart" | "weekEnd"> & { domains?: { domain: string }[]; days?: WeeklyAnalysis["days"] },
   opts: { timezone: string; issueNo: number; now: Date; section?: SectionKey | null }
 ): Promise<LetterExtras> {
   const tz = safeTimezone(opts.timezone);
   const section = opts.section ?? null;
-  const [user, streak, globalAchievements] = await Promise.all([
+  const [user, streak, globalAchievements, trade, fit] = await Promise.all([
     prisma.user.findUnique({ where: { id: userId }, select: { name: true } }),
     // استریک روتین فقط مال بخش روتینه
     sectionShowsRoutineStreak(section) ? routineStreakAt(userId, a.weekEnd).catch(() => null) : Promise.resolve(null),
     globalAchievementsOfWeek(userId, tz, a.weekStart, a.weekEnd, section).catch(() => [] as LetterAchievement[]),
+    // تحلیل معامله‌های هفته فقط توی بخش ترید
+    section === "trade" && (a.domains ?? [{ domain: "trading" }]).some((d) => d.domain === "trading") ? loadTradeWeek(userId, tz, a.weekStart, a.weekEnd).catch(() => null) : Promise.resolve(null),
+    // تمرین و تغذیه‌ی هفته فقط توی بخش ورزش
+    section === "workout" && a.days && a.domains
+      ? gatherFitWeek(userId, { weekStart: a.weekStart, weekEnd: a.weekEnd, days: a.days, domains: a.domains }, { timezone: tz, now: opts.now }).catch(() => null)
+      : Promise.resolve(null),
   ]);
-  return { issueNo: opts.issueNo, greetingName: greetingNameOf(user?.name), streak, globalAchievements, now: opts.now };
+  return { issueNo: opts.issueNo, greetingName: greetingNameOf(user?.name), streak, globalAchievements, now: opts.now, trade, fit };
 }

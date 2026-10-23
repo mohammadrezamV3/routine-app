@@ -34,6 +34,11 @@ import { WeeklyLetterWeekPicker } from "./WeeklyLetterWeekPicker";
 import { WeeklyLetterMatrix } from "./WeeklyLetterMatrix";
 import { WeeklyLetterSleep } from "./WeeklyLetterSleep";
 import { WeeklyLetterEmpty } from "./WeeklyLetterEmpty";
+import { WeeklyLetterTradeCurve } from "./WeeklyLetterTradeCurve";
+import { WeeklyLetterTradeWhere, tradeWhereHasData } from "./WeeklyLetterTradeWhere";
+import { WeeklyLetterTradeMind, tradeMindHasData } from "./WeeklyLetterTradeMind";
+import { WeeklyLetterFitTraining, WeeklyLetterFitFuel, WeeklyLetterFitRecovery, fitTrainingShown, fitFuelShown, fitRecoveryShown } from "./WeeklyLetterFit";
+import { readFit } from "@/lib/weeklyLetter/fitWeek";
 import { buildStorySlides, storySeconds } from "./WeeklyLetterStoriesData";
 import { normalizeLetter } from "./WeeklyLetterUtils";
 import { dedupeNumbers, dedupeWins } from "@/lib/weeklyLetter/dedupe";
@@ -156,13 +161,30 @@ function LetterBody({ data, onGo, reload }: { data: LiveWeekPayload; onGo: (w: s
   const wins = useMemo(() => dedupeWins(letter.wins, letter.insights), [letter.wins, letter.insights]);
 
   const hasData = analysis.domains.some((d) => d.hasData) || analysis.overall.score !== null;
-  const hasMatrix = analysis.domains.some((d) => d.hasData && d.score !== null);
+  // بخش ترید یک دامنه بیشتر نداره: نقشه‌ی تک‌ردیفی جاش رو به فصل‌های ترید می‌ده
+  const hasMatrix = analysis.domains.some((d) => d.hasData && d.score !== null) && !letter.trade;
+  // فصل‌های مخصوص ترید؛ شرط نمایش هرکدوم همون شرط خود فصله (فهرست چسبان از chapters ساخته می‌شه)
+  const tw = letter.trade ?? null;
+  const tradeCurveOn = !!tw && tw.count >= 1 && tw.curve.length >= 2;
+  const tradeWhereOn = tradeWhereHasData(tw);
+  const tradeMindOn = tradeMindHasData(tw);
+  // فصل‌های مخصوص ورزش (تمرین هفته، سوخت هفته، ریکاوری)؛ شرط هرکدوم همون شرط خود فصله
+  const fit = useMemo(() => readFit(letter.fit), [letter.fit]);
+  const fitTrainOn = fitTrainingShown(fit);
+  const fitFuelOn = fitFuelShown(fit);
+  const fitRecOn = fitRecoveryShown(fit);
   const hasCoach = !!analysis.ai || (analysis.aiAvailable && analysis.overall.score !== null);
   const hasGoals = data.isCurrent || analysis.goals.length > 0;
 
   // ترتیب و شماره‌ی فصل‌ها؛ شرط هر فصل همون شرط نمایش خود فصله
   const chapters = useMemo(() => {
     const c: (TocItem & { show: boolean })[] = [
+      { id: "trade-curve", label: tr("منحنی هفته", "Week curve"), show: tradeCurveOn },
+      { id: "trade-where", label: tr("کجا بردی، کجا باختی", "Where you won, where you lost"), show: tradeWhereOn },
+      { id: "trade-mind", label: tr("نظم و ذهن", "Discipline and mind"), show: tradeMindOn },
+      { id: "fit-train", label: tr("تمرین هفته", "Training this week"), show: fitTrainOn },
+      { id: "fit-fuel", label: tr("سوخت هفته", "Fuel this week"), show: fitFuelOn },
+      { id: "fit-recovery", label: tr("ریکاوری", "Recovery"), show: fitRecOn },
       { id: "wl-days", label: tr("روز به روز", "Day by day"), show: hasData && letter.days.length > 0 },
       { id: "wl-domains", label: tr("بخش‌ها", "Areas"), show: hasData && letter.domains.length > 0 },
       { id: "matrix", label: tr("نقشه‌ی هفته", "Week map"), show: hasMatrix },
@@ -177,7 +199,7 @@ function LetterBody({ data, onGo, reload }: { data: LiveWeekPayload; onGo: (w: s
       { id: "sleep", label: tr("خواب", "Sleep"), show: sleepOn },
     ];
     return c.filter((x) => x.show);
-  }, [letter, numbers, wins, data.isCurrent, hasData, hasMatrix, hasCoach, hasGoals, sleepOn]);
+  }, [letter, numbers, wins, data.isCurrent, hasData, hasMatrix, hasCoach, hasGoals, sleepOn, tradeCurveOn, tradeWhereOn, tradeMindOn, fitTrainOn, fitFuelOn, fitRecOn]);
   const no = (id: string) => chapters.findIndex((c) => c.id === id) + 1;
   const has = (id: string) => chapters.some((c) => c.id === id);
 
@@ -217,6 +239,12 @@ function LetterBody({ data, onGo, reload }: { data: LiveWeekPayload; onGo: (w: s
 
       <div className="wl-chapters">
         {!hasData && <WeeklyLetterEmpty ctx={ctx} />}
+        {has("trade-curve") && tw && <WeeklyLetterTradeCurve trade={tw} no={no("trade-curve")} />}
+        {has("trade-where") && tw && <WeeklyLetterTradeWhere trade={tw} no={no("trade-where")} />}
+        {has("trade-mind") && tw && <WeeklyLetterTradeMind trade={tw} no={no("trade-mind")} />}
+        {has("fit-train") && fit && <WeeklyLetterFitTraining fit={fit} no={no("fit-train")} />}
+        {has("fit-fuel") && fit && <WeeklyLetterFitFuel fit={fit} no={no("fit-fuel")} />}
+        {has("fit-recovery") && fit && <WeeklyLetterFitRecovery fit={fit} no={no("fit-recovery")} />}
         {has("wl-days") && (
           <Chapter id="wl-days" no={no("wl-days")} icon={CH_ICONS["wl-days"]} title={tr("روز به روز", "Day by day")}>
             <WeeklyLetterTimeline days={letter.days} domains={letter.domains} />
