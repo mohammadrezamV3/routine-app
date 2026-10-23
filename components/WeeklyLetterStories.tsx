@@ -30,6 +30,8 @@ import { WeeklyMedalBadge } from "./WeeklyMedalBadge";
 import { ARCH_ICONS, BrandMark } from "./WeeklyLetterCover";
 import { archetypeMeaning, goalCtaHref, weekCtaHref, type StorySlide } from "./WeeklyLetterStoriesData";
 import { jalaliDayMonth, letterYear, offsetOfWeek, scoreIntensity, smoothPath } from "./WeeklyLetterUtils";
+import { TradeSlideView } from "./WeeklyLetterTradeStories";
+import { FitSlideView } from "./WeeklyLetterFitStories";
 
 const FOCUSABLE = 'button:not([disabled]), [href], input:not([disabled]), [tabindex]:not([tabindex="-1"])';
 const HOLD_MS = 220;
@@ -576,6 +578,16 @@ function SummarySlide({ s, weekStart, onReplay }: { s: Extract<StorySlide, { id:
   );
 }
 
+/** اسلایدهای بخش ترید (WeeklyLetterTradeStories.tsx) مقیاس --u رو از همین قاب می‌گیرن */
+function TradeSlideHost({ slide }: { slide: Extract<StorySlide, { id: "tradeCurve" | "tradeBest" | "tradeWhere" | "tradeMind" }> }) {
+  return <TradeSlideView slide={slide} u={useU()} />;
+}
+
+/** اسلایدهای بخش ورزش (WeeklyLetterFitStories.tsx) مقیاس --u رو از همین قاب می‌گیرن */
+function FitSlideHost({ slide }: { slide: Extract<StorySlide, { id: "fitTrain" | "fitFuel" }> }) {
+  return <FitSlideView slide={slide} u={useU()} />;
+}
+
 function SlideView({ slide, letter, live, onReplay }: { slide: StorySlide; letter: WeeklyLetterData; live: boolean; onReplay: () => void }) {
   switch (slide.id) {
     case "intro": return <IntroSlide letter={letter} live={live} />;
@@ -590,6 +602,8 @@ function SlideView({ slide, letter, live, onReplay }: { slide: StorySlide; lette
     case "streak": return <StreakSlide s={slide} />;
     case "reflection": return <ReflectionSlide s={slide} />;
     case "summary": return <SummarySlide s={slide} weekStart={letter.weekStart} onReplay={onReplay} />;
+    case "tradeCurve": case "tradeBest": case "tradeWhere": case "tradeMind": return <TradeSlideHost slide={slide} />;
+    case "fitTrain": case "fitFuel": return <FitSlideHost slide={slide} />;
   }
 }
 

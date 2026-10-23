@@ -7,6 +7,10 @@ import type { LetterAchievement, WeeklyLetterData } from "@/lib/weeklyLetter/typ
 import type { RadarAxis } from "@/lib/weeklyRadar";
 import { tr } from "@/lib/i18n";
 import { bestWorstIndex, dayRows, domainRadarAxes, type DayRow } from "./WeeklyLetterUtils";
+import { tradeStorySlides, type TradeStorySlide } from "@/lib/weeklyLetter/tradeStories";
+import { fmtMoney } from "@/lib/weeklyLetter/tradeWeekText";
+import { withFitSlides, type FitStorySlide } from "@/lib/weeklyLetter/fitStories";
+import { readFit } from "@/lib/weeklyLetter/fitWeek";
 
 export type StoryBase = { dur: number; label: string };
 
@@ -15,6 +19,8 @@ export type RhythmBar = { score: number | null; best: boolean; worst: boolean; l
 export type TrendMode = "best" | "above" | "below" | "even";
 
 export type StorySlide =
+  | TradeStorySlide
+  | FitStorySlide
   | (StoryBase & { id: "intro" })
   | (StoryBase & { id: "score"; score: number; grade: Grade | null; delta: number | null; prevScore: number | null; rank: { position: number; of: number } | null })
   | (StoryBase & { id: "archetype"; archetype: WeekArchetype })
@@ -125,6 +131,8 @@ export function storySeconds(slides: StorySlide[]): number {
 }
 
 export function buildStorySlides(letter: WeeklyLetterData): StorySlide[] {
+  // بخش ترید: داستان مخصوص معامله‌ها (منحنی، بهترین/بدترین معامله، جلسه، انضباط)
+  if (letter.trade && letter.trade.discipline.total > 0) return buildTradeStorySlides(letter);
   const slides: StorySlide[] = [];
   const o = letter.overall;
 
@@ -225,7 +233,8 @@ export function buildStorySlides(letter: WeeklyLetterData): StorySlide[] {
     focus: { title: letter.nextWeek.focusTitle || tr("هفته‌ی بعد", "Next week"), domain: letter.nextWeek.focusDomain, target: letter.nextWeek.suggestedTarget },
   });
 
-  return capSlides(slides);
+  // بخش ورزش: اسلایدهای تمرین و سوخت جای عددها و قوی‌ترین بخش میان (fitStories.ts)
+  return capSlides((fitOf(letter) ? withFitSlides(slides, fitOf(letter)!) : slides) as StorySlide[]);
 }
 
 /** لینک «تعیین هدف»: همیشه هفته‌ی جاری (API هدف برای هفته‌ی بعد واقعیه) با پیش‌پر شدن فرم از کانون هفته‌ی بعد. */
@@ -258,3 +267,34 @@ export function archetypeMeaning(key: string): string {
     default: return "";
   }
 }
+
+// ── trade-week start ──
+/** داستان بخش ترید: همون شروع و پایان، با اسلایدهای مخصوص معامله‌ها وسطش */
+function buildTradeStorySlides(letter: WeeklyLetterData): StorySlide[] {
+  const t = letter.trade!;
+  const o = letter.overall;
+  const slides: StorySlide[] = [{ id: "intro", dur: 3800, label: tr("شروع", "Start") }];
+  slides.push(...tradeStorySlides(t));
+  const ins = pickInsight(letter.insights);
+  if (ins) slides.push({ id: "insight", dur: 6000, label: tr("یک بینش", "An insight"), insight: ins });
+  const ach = letter.achievements.slice(0, 3);
+  if (ach.length) slides.push({ id: "streak", dur: 4800, label: tr("مدال‌های هفته", "Medals of the week"), streak: null, achievements: ach });
+  const nums: WeekNumber[] = [];
+  if (t.count > 0) nums.push({ key: "trade_net", label: t.currency ? tr(`سود و زیان (${t.currency})`, `Net P&L (${t.currency})`) : tr("سود و زیان", "Net P&L"), value: fmtMoney(t.net, null), domain: "trading", tone: t.net > 0 ? "good" : t.net < 0 ? "bad" : "neutral" });
+  if (t.winRate != null) nums.push({ key: "trade_wr", label: tr("نرخ برد", "Win rate"), value: `${t.winRate}%`, domain: "trading" });
+  if (t.profitFactor != null) nums.push({ key: "trade_pf", label: tr("ضریب سود", "Profit factor"), value: `${t.profitFactor}`, domain: "trading" });
+  slides.push({
+    id: "summary", dur: 9000, label: tr("خلاصه در یک نگاه", "Summary at a glance"),
+    score: o.score !== null && Number.isFinite(o.score) ? o.score : null,
+    grade: o.grade,
+    archetype: letter.archetype ? { key: letter.archetype.key, title: letter.archetype.title } : null,
+    bestDay: null,
+    numbers: nums,
+    focus: { title: letter.nextWeek.focusTitle || tr("هفته‌ی بعد", "Next week"), domain: letter.nextWeek.focusDomain, target: letter.nextWeek.suggestedTarget },
+  });
+  return capSlides(slides);
+}
+// ── trade-week end ──
+
+// ── fit-week start ──
+const fitOf = (letter: WeeklyLetterData) => readFit(letter.fit);

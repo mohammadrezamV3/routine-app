@@ -8,6 +8,9 @@ import type {
   TrendPoint, WeekArchetype, WeekNumber, WeeklyAnalysis, WeeklyGoalDto,
 } from "@/lib/weeklyAnalysis/types";
 
+import type { TradeWeek } from "./tradeWeek";
+import type { FitWeek } from "./fitWeek";
+
 export const WEEKLY_LETTER_VERSION = 1 as const;
 
 export type LetterDomain = DomainResult & {
@@ -65,6 +68,10 @@ export type WeeklyLetterData = {
     focusText: string; // یک-دو جمله‌ی عملی
     suggestedTarget: number | null; // امتیاز هدف پیشنهادی برای همون دامنه
   };
+  /** فقط بخش ترید: تحلیل معاملات هفته (lib/weeklyLetter/tradeWeek.ts)؛ بدون معامله‌ی واقعی undefined/null */
+  trade?: TradeWeek | null;
+  /** فقط بخش ورزش: تحلیل تمرین و تغذیه‌ی هفته (lib/weeklyLetter/fitWeek.ts)؛ بدون داده undefined/null */
+  fit?: FitWeek | null;
 };
 
 /**

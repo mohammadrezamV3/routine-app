@@ -11,6 +11,10 @@ import { getWeekRange } from "@/lib/weeklyAnalysis/week";
 import { generateAiCoach, isAiAvailable } from "@/lib/weeklyAnalysis/ai";
 import { getSection } from "@/lib/sectionServer";
 import { aiToStore, sectionDomains } from "@/lib/weeklyLetter/section";
+import { loadTradeWeek } from "@/lib/weeklyLetter/tradeWeekServer";
+import { buildTradeCoachInput } from "@/lib/weeklyLetter/tradeWeekText";
+import { gatherFitWeek } from "@/lib/weeklyLetter/fitWeekServer";
+import { fitAiSummary } from "@/lib/weeklyLetter/fitWeekText";
 
 // POST /api/analysis/weekly/ai { offset } — ساخت/بازسازی مربی AI برای
 // یک هفته‌ی مشخص. واقعا گیت‌وی AI رو صدا می‌زنه (هزینه/زمان داره)، پس
@@ -59,7 +63,15 @@ export async function POST(req: NextRequest) {
 
     let ai;
     try {
-      ai = await generateAiCoach(analysis, userId);
+      // بخش ترید: مربی عددهای خود معامله‌های هفته رو هم می‌گیره (بدون متن آزاد)
+      const tradeWeek = section === "trade" && analysis.domains.some((d) => d.domain === "trading")
+        ? await loadTradeWeek(userId, timezone, analysis.weekStart, analysis.weekEnd).catch(() => null)
+        : null;
+      // بخش ورزش: مربی عددهای تمرین و تغذیه‌ی هفته رو هم می‌گیره (بدون متن آزاد)
+      const fitWeek = section === "workout"
+        ? await gatherFitWeek(userId, analysis, { timezone, now: new Date() }).catch(() => null)
+        : null;
+      ai = await generateAiCoach(analysis, userId, { trade: tradeWeek ? buildTradeCoachInput(tradeWeek) : null, fit: fitWeek ? fitAiSummary(fitWeek) : null });
     } catch (err: any) {
       await quota.release();
       const msg: string = err?.message || "";
