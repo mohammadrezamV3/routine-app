@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useMemo, useState } from "react";
-import { Calendar, CalendarDays, BarChart3, Dumbbell, History, ListChecks, Users } from "lucide-react";
+import { Calendar, History } from "lucide-react";
 import { useLiveRefresh } from "@/lib/liveSync";
 import { FA_WEEKDAY, CAL_WEEK_ORDER, isoLocal } from "@/lib/jalali";
 import { startOfWeek } from "@/lib/schedule";
@@ -17,13 +17,10 @@ import { ExerciseStatsCard } from "./ExerciseStatsCard";
 import { ExerciseCatalogCard } from "./ExerciseCatalogCard";
 import { ExerciseTaskList } from "./ExerciseTaskList";
 import { ExerciseWeekGrid } from "./ExerciseWeekGrid";
-import { QuickPanels, type QuickPanelItem } from "./QuickPanels";
 import { AddExerciseProgramForm } from "./AddExerciseProgramForm";
 import { HistoryCalendar } from "./HistoryCalendar";
 import { ExerciseSubstitutePicker } from "./ExerciseSubstitutePicker";
 import { useDashboardPrefs } from "@/lib/dashboardPrefs";
-import { featureVisible } from "@/lib/featureFlags";
-import { useFeatures } from "@/lib/useFeatures";
 import { LockBodyScroll } from "./LockBodyScroll";
 import { getSetting, setSetting } from "@/lib/storage";
 import { SETTING_KEYS } from "@/lib/userSettingKeys";
@@ -42,15 +39,12 @@ export function ExerciseDashboard({
   onPlanChange,
   onPlanDeleted,
   inSpace = false,
-  layout = "grid",
 }: {
   plan: ExercisePlan;
   onPlanChange: (plan: ExercisePlan) => void;
   onPlanDeleted?: () => void;
   /** داخل «فضای تمرین» داشبورد: فاصله‌ها هم‌اندازه‌ی بنتو و کاتالوگ در حالت جلسه فشرده */
   inSpace?: boolean;
-  /** "quick": بخش‌ها پشت ردیف باکس‌های آیکونی (QuickPanels) و فقط یکی دیده می‌شه؛ پیش‌فرض همون چیدمان گرید قدیمی */
-  layout?: "grid" | "quick";
 }) {
   const [selectedIso, setSelectedIso] = useState(todayIso);
   const [recenterKey, setRecenterKey] = useState(0);
@@ -72,8 +66,6 @@ export function ExerciseDashboard({
   const [historyPickerOpen, setHistoryPickerOpen] = useState(false);
   const [sessionActive, setSessionActive] = useState(false);
   const dashboardPrefs = useDashboardPrefs();
-  const features = useFeatures();
-  const [catalogOpen, setCatalogOpen] = useState(false);
 
   // «رد شدن»/«ماندن» برای روز جامانده (تنظیمات › بدنسازی). پیش‌فرض همان
   // رفتار قبلی (رد شدن) است.
@@ -231,57 +223,93 @@ export function ExerciseDashboard({
     }
   }
 
-  const dateBar = (
-    <div className={inSpace ? "db-sp-bar flex flex-col lg:flex-row lg:items-center" : "flex flex-col gap-2.5 sm:gap-3 lg:flex-row lg:items-center lg:gap-4"}>
-      <DashDateSelector
-        activeIso={selectedIso}
-        onSelect={setSelectedIso}
-        recenterKey={recenterKey}
-        className="lg:order-2"
-      />
+  return (
+    <div className={inSpace ? "db-sp-stack flex flex-col" : "flex flex-col gap-4 sm:gap-6"}>
+      <div className={inSpace ? "db-sp-bar flex flex-col lg:flex-row lg:items-center" : "flex flex-col gap-2.5 sm:gap-3 lg:flex-row lg:items-center lg:gap-4"}>
+        <DashDateSelector
+          activeIso={selectedIso}
+          onSelect={setSelectedIso}
+          recenterKey={recenterKey}
+          className="lg:order-2"
+        />
 
-      <div className="flex flex-wrap items-center gap-2 lg:order-1 lg:shrink-0 lg:flex-nowrap">
-        <DashFilterButton
-          label={tr("تاریخچه", "History")}
-          icon={<History size={15} />}
-          active={!isSelectedToday}
-          onClick={() => setHistoryPickerOpen(true)}
-        />
-        <DashFilterButton
-          label={tr("امروز", "Today")}
-          icon={<Calendar size={15} />}
-          active={isSelectedToday}
-          onClick={() => { setSelectedIso(todayIso); setRecenterKey((k) => k + 1); }}
-        />
+        <div className="flex flex-wrap items-center gap-2 lg:order-1 lg:shrink-0 lg:flex-nowrap">
+          <DashFilterButton
+            label={tr("تاریخچه", "History")}
+            icon={<History size={15} />}
+            active={!isSelectedToday}
+            onClick={() => setHistoryPickerOpen(true)}
+          />
+          <DashFilterButton
+            label={tr("امروز", "Today")}
+            icon={<Calendar size={15} />}
+            active={isSelectedToday}
+            onClick={() => { setSelectedIso(todayIso); setRecenterKey((k) => k + 1); }}
+          />
+        </div>
       </div>
-    </div>
-  );
 
-  const taskList = (
-    <ExerciseTaskList
-      planId={plan.id}
-      dayPlan={selectedDayPlan}
-      dateIso={selectedIso}
-      editable={isSelectedToday}
-      title={
-        (isSelectedToday ? tr("برنامه تمرینی", "Workout plan") : tr(`برنامه تمرینی ${selectedDayName}`, `Workout plan, ${dayNameDisplay(selectedDayName)}`)) +
-        (carriedFrom ? tr(` (جامانده از ${carriedFrom})`, ` (carried over from ${dayNameDisplay(carriedFrom)})`) : "")
-      }
-      restDayLabel={isSelectedToday ? tr("امروز روز استراحته — چیزی برنامه‌ریزی نشده.", "Today is a rest day. Nothing is planned.") : tr("این روز، روز باشگاه برنامه نیست.", "This is not a gym day in your plan.")}
-      initialCompleted={!!selectedLog?.completed}
-      initialCompletedItems={selectedLog?.completedItems ?? []}
-      onSubstitute={openSubstitutePicker}
-      substitutingItem={subbingItem}
-      onSessionEnd={() => setRefreshKey((k) => k + 1)}
-      onStarted={() => setRefreshKey((k) => k + 1)}
-      onAddProgram={() => setAddProgramOpen(true)}
-      onActiveChange={setSessionActive}
-      delay={0.05}
-    />
-  );
+      {subError && <div className="field-error-msg" style={{ display: "block" }}>{subError}</div>}
 
-  const overlays = (
-    <>
+      {/* وقتی جلسه‌ی تمرین فعاله، صفحه کاملا روی خود برنامه‌ی تمرینی
+          متمرکز می‌شه (تمام‌عرض، بدون کارت‌های کناری و بدون برنامه‌ی هفتگی
+          پایین صفحه) — با پایان تمرین دوباره چیدمان سه‌بخشی عادی برمی‌گرده.
+          این جابه‌جایی قبلا با `layout` (FLIP) و `AnimatePresence mode="popLayout"`
+          انیمیت می‌شد: یعنی framer-motion دقیقا همون لحظه‌ی «شروع تمرین»
+          مجبور بود موقعیت/اندازه‌ی همه‌ی کارت‌های گرید رو قبل و بعد اندازه
+          بگیره و نیم‌ثانیه انیمیتشون کنه — همون لگ گزارش‌شده‌ی شروع تمرین و
+          داغ‌شدن گوشی. حالا فقط کلاس گرید عوض می‌شه. ExerciseTaskList همچنان
+          همون یک نمونه‌ست (نه دو تای شرطی) تا با تغییر چیدمان، state ی
+          داخلیش (تایمر، آیتم‌های تیک‌خورده) از دست نره. */}
+      <div
+        className={
+          inSpace && sessionActive
+            ? "db-sp-stack flex flex-col"
+            : inSpace
+            ? "db-sp-stack flex flex-col lg:grid lg:grid-cols-[2.5fr_0.8fr_1fr] lg:items-stretch"
+            : sessionActive
+            ? "flex flex-col gap-4 sm:gap-6 lg:grid lg:grid-cols-[2.5fr_1fr] lg:items-start lg:gap-6"
+            : "flex flex-col gap-4 sm:gap-6 lg:grid lg:grid-cols-[2.5fr_0.8fr_1fr] lg:items-stretch lg:gap-6"
+        }
+      >
+        <ExerciseTaskList
+          planId={plan.id}
+          dayPlan={selectedDayPlan}
+          dateIso={selectedIso}
+          editable={isSelectedToday}
+          title={
+            (isSelectedToday ? tr("برنامه تمرینی", "Workout plan") : tr(`برنامه تمرینی ${selectedDayName}`, `Workout plan, ${dayNameDisplay(selectedDayName)}`)) +
+            (carriedFrom ? tr(` (جامانده از ${carriedFrom})`, ` (carried over from ${dayNameDisplay(carriedFrom)})`) : "")
+          }
+          restDayLabel={isSelectedToday ? tr("امروز روز استراحته — چیزی برنامه‌ریزی نشده.", "Today is a rest day. Nothing is planned.") : tr("این روز، روز باشگاه برنامه نیست.", "This is not a gym day in your plan.")}
+          initialCompleted={!!selectedLog?.completed}
+          initialCompletedItems={selectedLog?.completedItems ?? []}
+          onSubstitute={openSubstitutePicker}
+          substitutingItem={subbingItem}
+          onSessionEnd={() => setRefreshKey((k) => k + 1)}
+          onStarted={() => setRefreshKey((k) => k + 1)}
+          onAddProgram={() => setAddProgramOpen(true)}
+          onActiveChange={setSessionActive}
+          delay={0.05}
+        />
+
+        {/* «مشاهده حرکات» طبق درخواست صریح کاربر، وقتی تمرین شروع می‌شه هم
+            باید بمونه (نه فقط قبل از شروع) — فقط آمار/دوستان و برنامه‌ی هفتگی
+            پایین صفحه‌ان که توی حالت تمرکز روی جلسه مخفی می‌شن. */}
+        <div className="order-3 lg:order-2">
+          <ExerciseCatalogCard delay={0.1} compact={inSpace && sessionActive} />
+        </div>
+
+        {!sessionActive && (
+          <div className={inSpace ? "db-sp-stack order-2 flex flex-col lg:order-3" : "order-2 flex flex-col gap-4 sm:gap-6 lg:order-3"}>
+            {dashboardPrefs.showFriends && <DashFriendsCard delay={0.15} module="exercise" />}
+            <ExerciseStatsCard sessionsDone={sessionsDone} sessionsTotal={sessionsTotal} todayPct={todayPct} weekPct={weekPct} delay={0.2} />
+          </div>
+        )}
+      </div>
+
+      {!sessionActive && <ExerciseWeekGrid planData={weekPlanData} todayName={effectiveTodayDay} dayStatus={weekDayStatus} />}
+
       {historyPickerOpen && (
         <>
           <LockBodyScroll />
@@ -315,83 +343,6 @@ export function ExerciseDashboard({
           onClose={() => { setSubTarget(null); setSubCandidates(null); }}
         />
       )}
-    </>
-  );
-
-  if (layout === "quick") {
-    const friendsOn = dashboardPrefs.showFriends && featureVisible(features, "friends");
-    const items: QuickPanelItem[] = [
-      {
-        key: "today", label: tr("امروز", "Today"), icon: <Dumbbell />,
-        render: () => (
-          <div className="db-sp-stack flex flex-col">
-            {dateBar}
-            {subError && <div className="field-error-msg" style={{ display: "block" }}>{subError}</div>}
-            {taskList}
-          </div>
-        ),
-      },
-      { key: "week", label: tr("هفته", "Week"), icon: <CalendarDays />, render: () => <ExerciseWeekGrid planData={weekPlanData} todayName={effectiveTodayDay} dayStatus={weekDayStatus} /> },
-      { key: "stats", label: tr("آمار", "Stats"), icon: <BarChart3 />, render: () => <ExerciseStatsCard sessionsDone={sessionsDone} sessionsTotal={sessionsTotal} todayPct={todayPct} weekPct={weekPct} /> },
-      { key: "catalog", label: tr("حرکات", "Exercises"), icon: <ListChecks />, onSelect: () => setCatalogOpen(true), render: () => <ExerciseCatalogCard open={catalogOpen} onOpenChange={setCatalogOpen} /> },
-    ];
-    if (friendsOn) items.push({ key: "friends", label: tr("دوستان", "Friends"), icon: <Users />, render: () => <DashFriendsCard module="exercise" /> });
-    return (
-      <div className="db-sp-stack flex flex-col">
-        {/* وسط جلسه‌ی تمرین ردیف باکس‌ها نیست و خود لیست تمرین تمام‌قده؛ لیست همون یک نمونه می‌مونه (تایمر و تیک‌ها از دست نمی‌رن) */}
-        <QuickPanels className="db-qp" items={items} ariaLabel={tr("بخش‌های تمرین", "Workout sections")} hideTabs={sessionActive} />
-        {overlays}
-      </div>
-    );
-  }
-
-  return (
-    <div className={inSpace ? "db-sp-stack flex flex-col" : "flex flex-col gap-4 sm:gap-6"}>
-      {dateBar}
-
-      {subError && <div className="field-error-msg" style={{ display: "block" }}>{subError}</div>}
-
-      {/* وقتی جلسه‌ی تمرین فعاله، صفحه کاملا روی خود برنامه‌ی تمرینی
-          متمرکز می‌شه (تمام‌عرض، بدون کارت‌های کناری و بدون برنامه‌ی هفتگی
-          پایین صفحه) — با پایان تمرین دوباره چیدمان سه‌بخشی عادی برمی‌گرده.
-          این جابه‌جایی قبلا با `layout` (FLIP) و `AnimatePresence mode="popLayout"`
-          انیمیت می‌شد: یعنی framer-motion دقیقا همون لحظه‌ی «شروع تمرین»
-          مجبور بود موقعیت/اندازه‌ی همه‌ی کارت‌های گرید رو قبل و بعد اندازه
-          بگیره و نیم‌ثانیه انیمیتشون کنه — همون لگ گزارش‌شده‌ی شروع تمرین و
-          داغ‌شدن گوشی. حالا فقط کلاس گرید عوض می‌شه. ExerciseTaskList همچنان
-          همون یک نمونه‌ست (نه دو تای شرطی) تا با تغییر چیدمان، state ی
-          داخلیش (تایمر، آیتم‌های تیک‌خورده) از دست نره. */}
-      <div
-        className={
-          inSpace && sessionActive
-            ? "db-sp-stack flex flex-col"
-            : inSpace
-            ? "db-sp-stack flex flex-col lg:grid lg:grid-cols-[2.5fr_0.8fr_1fr] lg:items-stretch"
-            : sessionActive
-            ? "flex flex-col gap-4 sm:gap-6 lg:grid lg:grid-cols-[2.5fr_1fr] lg:items-start lg:gap-6"
-            : "flex flex-col gap-4 sm:gap-6 lg:grid lg:grid-cols-[2.5fr_0.8fr_1fr] lg:items-stretch lg:gap-6"
-        }
-      >
-        {taskList}
-
-        {/* «مشاهده حرکات» طبق درخواست صریح کاربر، وقتی تمرین شروع می‌شه هم
-            باید بمونه (نه فقط قبل از شروع) — فقط آمار/دوستان و برنامه‌ی هفتگی
-            پایین صفحه‌ان که توی حالت تمرکز روی جلسه مخفی می‌شن. */}
-        <div className="order-3 lg:order-2">
-          <ExerciseCatalogCard delay={0.1} compact={inSpace && sessionActive} />
-        </div>
-
-        {!sessionActive && (
-          <div className={inSpace ? "db-sp-stack order-2 flex flex-col lg:order-3" : "order-2 flex flex-col gap-4 sm:gap-6 lg:order-3"}>
-            {dashboardPrefs.showFriends && <DashFriendsCard delay={0.15} module="exercise" />}
-            <ExerciseStatsCard sessionsDone={sessionsDone} sessionsTotal={sessionsTotal} todayPct={todayPct} weekPct={weekPct} delay={0.2} />
-          </div>
-        )}
-      </div>
-
-      {!sessionActive && <ExerciseWeekGrid planData={weekPlanData} todayName={effectiveTodayDay} dayStatus={weekDayStatus} />}
-
-      {overlays}
     </div>
   );
 }

@@ -1,12 +1,12 @@
 "use client";
 
-import { useMemo } from "react";
+import { useMemo, useState } from "react";
+import { AnimatePresence, m as motion } from "framer-motion";
 import { Bell, Tablets, BarChart3, Users } from "lucide-react";
 import { DashReminderCard } from "./DashReminderCard";
 import { DashMedicationCard } from "./DashMedicationCard";
 import { DashFriendsCard } from "./DashFriendsCard";
 import { DashWeeklyChartCard } from "./DashWeeklyChartCard";
-import { QuickPanels, type QuickPanelItem } from "./QuickPanels";
 import { DashboardPrefs } from "@/lib/dashboardPrefs";
 import { featureVisible } from "@/lib/featureFlags";
 import { useFeatures } from "@/lib/useFeatures";
@@ -44,18 +44,51 @@ export function DashQuickPanels({
     return list;
   }, [prefs.showReminders, prefs.showMedications, prefs.showChart, prefs.showFriends, friendsOn]);
 
-  const meta = panelMeta();
-  const items: QuickPanelItem[] = enabled.map((key) => ({
-    key,
-    label: meta[key].label,
-    icon: meta[key].icon,
-    render: () => {
-      if (key === "reminders") return <DashReminderCard />;
-      if (key === "medications") return <DashMedicationCard />;
-      if (key === "chart") return <DashWeeklyChartCard refreshKey={statsRefreshKey} />;
-      return <DashFriendsCard />;
-    },
-  }));
+  const [active, setActive] = useState<PanelKey | null>(null);
+  const current = active && enabled.includes(active) ? active : enabled[0] ?? null;
 
-  return <QuickPanels items={items} ariaLabel={tr("بخش‌های روتین", "Routine sections")} />;
+  if (enabled.length === 0 || !current) return null;
+
+  return (
+    <div className="dash-quick-panels flex flex-col gap-4 sm:gap-6">
+      {/* باکس‌های کوچیک فقط‌آیکون؛ انتخاب‌شده بزرگ‌تر می‌شه و اسمش ظاهر می‌شه. */}
+      <div className="flex items-end justify-center gap-2.5 sm:gap-3.5" role="tablist" aria-label={tr("بخش‌های روتین", "Routine sections")}>
+        {enabled.map((key) => {
+          const on = key === current;
+          return (
+            // دکمه‌ی ساده + ترنزیشن CSS (نه framer layout): layout روی بچه‌ها
+            // scale می‌انداخت و اسم موقع رفتن اول بزرگ می‌شد بعد محو.
+            <button
+              key={key}
+              type="button"
+              role="tab"
+              aria-selected={on}
+              aria-label={panelMeta()[key].label}
+              title={panelMeta()[key].label}
+              onClick={() => setActive(key)}
+              className={`dash-quick-tile rounded-dash border bg-dash-card backdrop-blur-xl${on ? " is-on" : ""}`}
+            >
+              <span className="dash-quick-tile-icon">{panelMeta()[key].icon}</span>
+              <span className="dash-quick-tile-label" aria-hidden={!on}>{panelMeta()[key].label}</span>
+            </button>
+          );
+        })}
+      </div>
+
+      <AnimatePresence mode="wait" initial={false}>
+        <motion.div
+          key={current}
+          initial={{ opacity: 0, y: 10 }}
+          animate={{ opacity: 1, y: 0 }}
+          exit={{ opacity: 0, y: -10 }}
+          transition={{ duration: 0.22, ease: "easeOut" }}
+        >
+          {current === "reminders" && <DashReminderCard />}
+          {current === "medications" && <DashMedicationCard />}
+          {current === "chart" && <DashWeeklyChartCard refreshKey={statsRefreshKey} />}
+          {current === "friends" && <DashFriendsCard />}
+        </motion.div>
+      </AnimatePresence>
+    </div>
+  );
 }

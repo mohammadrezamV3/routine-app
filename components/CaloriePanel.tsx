@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from "react";
 import { createPortal } from "react-dom";
-import { Calendar, Flame, History, PieChart, BarChart3, Users, Utensils, UtensilsCrossed } from "lucide-react";
+import { Calendar, History } from "lucide-react";
 import { useSession } from "next-auth/react";
 import { isoLocal, faNum } from "@/lib/jalali";
 import { AuthGate } from "./AuthGate";
@@ -12,9 +12,6 @@ import { DashDateSelector } from "./DashDateSelector";
 import { LockBodyScroll } from "./LockBodyScroll";
 import { DashFilterButton } from "./DashFilterButton";
 import { DashFriendsCard } from "./DashFriendsCard";
-import { QuickPanels, type QuickPanelItem } from "./QuickPanels";
-import { featureVisible } from "@/lib/featureFlags";
-import { useFeatures } from "@/lib/useFeatures";
 import { CalorieChartCard } from "./CalorieChartCard";
 import { CalorieStreakCard } from "./CalorieStreakCard";
 import { CalorieMacrosCard } from "./CalorieMacrosCard";
@@ -73,10 +70,9 @@ export type Target = {
   fatTargetG?: number | null;
 };
 
-export function CaloriePanel({ inSpace = false, layout = "grid" }: { inSpace?: boolean; layout?: "grid" | "quick" } = {}) {
+export function CaloriePanel({ inSpace = false }: { inSpace?: boolean } = {}) {
   const { status } = useSession();
   const dashboardPrefs = useDashboardPrefs();
-  const features = useFeatures();
   const [target, setTarget] = useState<Target | null | undefined>(undefined);
   // شبکه‌ی ایمنی: اگه هر دلیلی (فچ گیرکرده، پاسخ کند سرور، ...) بعد از
   // چند ثانیه هنوز روی «در حال بارگذاری» مانده بودیم، به‌جای اسپینر ابدی
@@ -277,60 +273,6 @@ export function CaloriePanel({ inSpace = false, layout = "grid" }: { inSpace?: b
   // رنگ قرمز هیچ‌وقت فعال نشه، حتی وقتی کاربر چند برابر هدفش خورده بود.
   const pct = target ? Math.round((totalToday / target.dailyTargetKcal) * 100) : 0;
 
-  const dateBar = (
-    <div className={inSpace ? "db-sp-bar flex flex-col lg:flex-row lg:items-center" : "flex flex-col gap-2.5 sm:gap-3 lg:flex-row lg:items-center lg:gap-4"}>
-              <DashDateSelector
-                activeIso={selectedIso}
-                onSelect={setSelectedIso}
-                recenterKey={recenterKey}
-                className="lg:order-2"
-              />
-              <div className="flex flex-wrap items-center gap-2 lg:order-1 lg:shrink-0 lg:flex-nowrap">
-                <DashFilterButton
-                  label={tr("تاریخچه", "History")}
-                  icon={<History size={15} />}
-                  active={!isSelectedToday}
-                  onClick={() => setHistoryPickerOpen(true)}
-                />
-                <DashFilterButton
-                  label={tr("امروز", "Today")}
-                  icon={<Calendar size={15} />}
-                  active={isSelectedToday}
-                  onClick={() => { setSelectedIso(todayIso); setRecenterKey((k) => k + 1); }}
-                />
-              </div>
-            </div>
-  );
-
-  const friendsOn = dashboardPrefs.showFriends && featureVisible(features, "friends");
-  const quickItems: QuickPanelItem[] = !target ? [] : [
-    {
-      key: "food", label: tr("غذا", "Food"), icon: <Utensils />,
-      render: () => (
-        <div className="db-sp-stack flex flex-col">
-          {dateBar}
-          <CalorieFoodPlanCard
-            date={selectedIso}
-            isToday={isSelectedToday}
-            entries={entries}
-            onRemove={removeEntry}
-            onAdded={refreshAfterChange}
-            mealTypes={mealTypes}
-            target={target}
-            totalToday={totalToday}
-            pct={pct}
-            onEditGoal={() => setEditingGoal(true)}
-          />
-        </div>
-      ),
-    },
-    { key: "macros", label: tr("درشت‌مغذی", "Macros"), icon: <PieChart />, render: () => <CalorieMacrosCard entries={entries} target={target} /> },
-    { key: "meals", label: tr("وعده‌ها", "Meals"), icon: <UtensilsCrossed />, render: () => <CalorieMealBreakdownCard target={target} entries={entries} /> },
-    { key: "streak", label: tr("استریک", "Streak"), icon: <Flame />, render: () => <CalorieStreakCard rangeEntries={historyEntries} targetKcal={target.dailyTargetKcal} /> },
-  ];
-  if (target && dashboardPrefs.showChart) quickItems.push({ key: "chart", label: tr("نمودار", "Chart"), icon: <BarChart3 />, render: () => <CalorieChartCard rangeEntries={historyEntries} targetKcal={target.dailyTargetKcal} /> });
-  if (target && friendsOn) quickItems.push({ key: "friends", label: tr("دوستان", "Friends"), icon: <Users />, render: () => <DashFriendsCard module="calorie" /> });
-
   return (
     <div>
       {!target ? (
@@ -390,7 +332,28 @@ export function CaloriePanel({ inSpace = false, layout = "grid" }: { inSpace?: b
       ) : (
         <>
           <div className={inSpace ? "dash-scope db-sp-stack flex flex-col" : "dash-scope flex flex-col gap-3 sm:gap-4"}>
-            {layout !== "quick" && dateBar}
+            <div className={inSpace ? "db-sp-bar flex flex-col lg:flex-row lg:items-center" : "flex flex-col gap-2.5 sm:gap-3 lg:flex-row lg:items-center lg:gap-4"}>
+              <DashDateSelector
+                activeIso={selectedIso}
+                onSelect={setSelectedIso}
+                recenterKey={recenterKey}
+                className="lg:order-2"
+              />
+              <div className="flex flex-wrap items-center gap-2 lg:order-1 lg:shrink-0 lg:flex-nowrap">
+                <DashFilterButton
+                  label={tr("تاریخچه", "History")}
+                  icon={<History size={15} />}
+                  active={!isSelectedToday}
+                  onClick={() => setHistoryPickerOpen(true)}
+                />
+                <DashFilterButton
+                  label={tr("امروز", "Today")}
+                  icon={<Calendar size={15} />}
+                  active={isSelectedToday}
+                  onClick={() => { setSelectedIso(todayIso); setRecenterKey((k) => k + 1); }}
+                />
+              </div>
+            </div>
 
             {weightReminder && (
               <div className="flex flex-wrap items-center justify-between gap-2.5 rounded-2xl border px-3.5 py-2.5" style={{ borderColor: "rgba(var(--accent-rgb),.35)", background: "rgba(var(--accent-rgb),.08)" }}>
@@ -407,10 +370,6 @@ export function CaloriePanel({ inSpace = false, layout = "grid" }: { inSpace?: b
               </div>
             )}
 
-            {layout === "quick" ? (
-              <QuickPanels className="db-qp" items={quickItems} ariaLabel={tr("بخش‌های تغذیه", "Nutrition sections")} />
-            ) : (
-              <>
             {/* موبایل: یه ستون ساده به ترتیب DOM. دسکتاپ: گرید نام‌دار
                 (.calorie-dash-grid توی globals.css) که مستقل از این ترتیب،
                 برنامه‌ی غذایی رو ستون اصلی راست می‌کنه و بقیه رو توی دو
@@ -459,8 +418,6 @@ export function CaloriePanel({ inSpace = false, layout = "grid" }: { inSpace?: b
                 </>
               )}
             </div>
-              </>
-            )}
           </div>
 
           <div className="disclaimer-note">

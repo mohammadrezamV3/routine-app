@@ -927,8 +927,16 @@ html[dir="ltr"] .db-cd-title, html[dir="ltr"] .db-ev-title{ text-align:left; }
   width:auto; max-width:none; margin-inline-start:0; min-width:0;
 }
 .db-space{ gap:12px; }
+.db-space-tabs{ margin-inline-start:auto; display:inline-flex; min-width:0; }
+.db-space-tabs > *{ max-width:100%; }
+.db-space-panel{ min-width:0; }
 .db-space-body{ min-width:0; padding:0; }
 .db-space-skel{ display:grid; gap:12px; }
+@media (max-width:639px){
+  .db-space-tabs{ flex:1; }
+  .db-space-tabs > *{ width:100%; }
+}
+.db-space-tabs .auth-tabs{ margin-top:0; }
 
 /* ── trade-redesign start ── */
 /* هیرو: ناحیه‌ی KPI درشت وسط (دسکتاپ بخش ترید/ورزش)؛ موبایل همون لیجند کنار حلقه */
@@ -1028,6 +1036,8 @@ html[dir="ltr"] .db-cd-title, html[dir="ltr"] .db-ev-title{ text-align:left; }
 .db-page .db-card.db-space{ background:none; border:0; border-radius:0; padding:0; gap:var(--db-gap); }
 .db-page .db-card.db-space::before{ display:none; }
 .db-space > .db-card-head{ padding-inline:2px; min-height:38px; }
+.db-space-tabs .auth-tabs{ min-width:176px; }
+.db-space-tabs .auth-tab{ padding:8px 14px; white-space:nowrap; }
 .db-sp-stack{ gap:var(--db-gap); }
 .db-sp-bar{ gap:10px; }
 @media (min-width:1024px){ .db-sp-bar{ gap:var(--db-gap); } }
@@ -1044,69 +1054,3 @@ html[dir="ltr"] .db-cd-title, html[dir="ltr"] .db-ev-title{ text-align:left; }
   .db-space .db-sp-cal .calorie-col-food{ align-self:start; }
 }
 /* ── workout-redesign end ── */
-
-/* ── workout-v3 start ── */
-/* باکس‌های آیکونی QuickPanels (dash-quick-tile): قاعده‌های اندازه/اسم این‌جا هم هست چون
-   فایل مسیر داشبورد اون‌ها رو نداره (کپی عین app/_area/weekly.css) */
-body[data-theme] .dash-quick-tile.is-on{ width:76px; height:76px; border-color:var(--accent); color:var(--accent); }
-body[data-theme] .dash-quick-tile:not(.is-on){ gap:0; }
-@media (hover:hover){ body[data-theme] .dash-quick-tile:hover:not(.is-on){ color:var(--text); } }
-.dash-quick-tile-icon{ display:block; }
-.dash-quick-tile.is-on .dash-quick-tile-icon svg{ width:26px; height:26px; }
-.dash-quick-tile-label{
-  display:block; font-size:10.5px; font-weight:700; line-height:1.2; text-align:center; white-space:nowrap;
-  max-height:0; opacity:0; transform:translateY(5px);
-  transition:max-height .32s cubic-bezier(.22,1,.36,1), opacity .14s ease, transform .32s cubic-bezier(.22,1,.36,1);
-}
-.dash-quick-tile.is-on .dash-quick-tile-label{
-  max-height:16px; opacity:1; transform:none;
-  transition:max-height .32s cubic-bezier(.22,1,.36,1), opacity .22s ease .1s, transform .32s cubic-bezier(.22,1,.36,1) .04s;
-}
-@media (min-width:640px){
-  body[data-theme="light"] .dash-quick-tile, body:not([data-theme="light"]) .dash-quick-tile{ width:62px; height:62px; }
-  body[data-theme] .dash-quick-tile.is-on{ width:88px; height:88px; }
-  .dash-quick-tile.is-on .dash-quick-tile-icon svg{ width:30px; height:30px; }
-  .dash-quick-tile-label{ font-size:12px; }
-}
-@media (prefers-reduced-motion:reduce){ .dash-quick-tile, .dash-quick-tile-icon svg, .dash-quick-tile-label{ transition:none !important; } }
-
-/* چیدمان: تمرین و تغذیه زیر هم تا 1023، دو ستون برابر کنار هم از 1024 */
-.db-bento.is-workout{ align-items:start; }
-@media (min-width:1024px){
-  .db-page .db-bento.is-workout{ grid-template-columns:repeat(2, minmax(0,1fr)); grid-template-areas:var(--areas-lg); }
-}
-.db-ws{ min-width:0; }
-.db-ws-anchor{ position:absolute; inset-block-start:0; inset-inline-start:0; width:1px; height:1px; scroll-margin-top:84px; pointer-events:none; }
-.db-page .db-qp{ gap:var(--db-gap); }
-
-/* هیروی ورزش: فقط دو حلقه */
-.db-page .db-hero.db-wk-hero{ display:block; padding:20px 16px 16px; }
-.db-wk-rings{ display:flex; justify-content:center; align-items:flex-start; gap:clamp(20px, 8vw, 72px); }
-.db-wk-ring{
-  --wk-ring:112px;
-  display:flex; flex-direction:column; align-items:center; gap:6px; min-width:0; flex:0 1 auto;
-  border-radius:18px; padding:4px 6px; transition:transform .2s ease;
-  -webkit-tap-highlight-color:transparent;
-}
-.db-wk-ringbox{ display:block; width:var(--wk-ring); height:var(--wk-ring); }
-.db-wk-ringbox .gring{ width:100% !important; height:100% !important; }
-.db-wk-ringbox .gring svg{ width:100%; height:100%; }
-.db-wk-big{
-  font-family:var(--font-latin), var(--font-vazir), sans-serif; font-size:30px; font-weight:900;
-  letter-spacing:-.02em; line-height:1; font-variant-numeric:tabular-nums; white-space:nowrap;
-}
-.db-wk-big.is-small{ font-size:17px; letter-spacing:0; }
-.db-wk-label{ font-size:14px; font-weight:800; margin-top:4px; }
-.db-wk-sub{ font-family:var(--font-latin), var(--font-vazir), sans-serif; font-size:12px; font-weight:700; color:var(--muted); font-variant-numeric:tabular-nums; }
-.db-wk-sub.is-over{ color:var(--ring-over); }
-.db-wk-ring:active{ transform:scale(.97); }
-.db-wk-ring:focus-visible{ outline:2px solid var(--accent); outline-offset:3px; }
-@media (hover:hover) and (pointer:fine){ .db-wk-ring:hover{ transform:translateY(-2px); } .db-wk-ring:hover .db-wk-label{ color:var(--accent); } }
-@media (min-width:640px){
-  .db-page .db-hero.db-wk-hero{ padding:18px 24px 16px; }
-  .db-wk-ring{ --wk-ring:136px; }
-  .db-wk-big{ font-size:32px; }
-  .db-wk-big.is-small{ font-size:19px; }
-}
-@media (prefers-reduced-motion:reduce){ .db-wk-ring{ transition:none; } .db-wk-ring:hover, .db-wk-ring:active{ transform:none !important; } }
-/* ── workout-v3 end ── */
