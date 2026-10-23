@@ -73,7 +73,7 @@ function SheetBody({ onClose, latency }: SleepNapSheetProps) {
         <div className="slg-body stl-body">
           {nap.ended ? (
             <div className="stl-end" role="alert">
-              <GradientRing value={1} size={200} stroke={8} grad={RING_AMBER}>
+              <GradientRing value={1} size={200} stroke={8} grad={RING_AMBER} className="stl-fit">
                 <span className="stl-center">
                   <b className="stl-wake">{tr("بیدار شو", "Wake up")}</b>
                 </span>
@@ -82,7 +82,7 @@ function SheetBody({ onClose, latency }: SleepNapSheetProps) {
             </div>
           ) : nap.running ? (
             <div className="stl-run">
-              <GradientRing value={nap.progress} size={230} stroke={8} grad={RING_GREEN}>
+              <GradientRing value={nap.progress} size={230} stroke={8} grad={RING_GREEN} className="stl-fit">
                 <span className="stl-center">
                   <span className="stl-big" dir="ltr">{formatCountdown(nap.remainingSec)}</span>
                   <span className="stl-hint">{tr("تا بیدارشدن", "until wake-up")}</span>

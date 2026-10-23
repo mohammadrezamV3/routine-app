@@ -60,3 +60,12 @@ html[dir="ltr"] .sli-tag b.sli-val{ text-align:right; }
 .sli-t-fair{ border-inline-start-color:var(--slp-fair); }
 .sli-t-poor{ border-inline-start-color:var(--slp-poor); }
 .sli-t-ink{ border-inline-start-color:var(--slp-ink); }
+
+/* نکته‌ها یکی‌یکی (پنجره‌ی آمار): قبلی / شمارنده / بعدی. فقط transform و opacity */
+.sli-pager{ display:flex; flex-direction:column; gap:10px; min-width:0; }
+.sli-pager-nav{ display:flex; align-items:center; justify-content:center; gap:14px; }
+.sli-pager-count{ min-width:52px; text-align:center; font-size:12.5px; font-weight:800; color:var(--muted); font-variant-numeric:tabular-nums; }
+.sli-swap{ animation:sliSwap .26s cubic-bezier(.22,1,.36,1) both; }
+@keyframes sliSwap{ from{ opacity:0; transform:translateY(6px); } to{ opacity:1; transform:none; } }
+@media (prefers-reduced-motion:reduce){ .sli-swap{ animation:none; } }
+html[data-perf-weak] .sli-swap, html[data-perf="low"] .sli-swap{ animation:none; }

@@ -11,11 +11,11 @@ import { CYCLE_MIN, stageLabel, hypnogram, type Stage } from "@/lib/sleepCycles"
 // و اندازه‌گیری واقعی نیست؛ برچسب «تخمینی» کنارش می‌شینه. محور زمان چپ به راست.
 // هر مرحله یه نوار رنگی روی ردیف خودشه؛ زیرش محور ساعت و راهنمای رنگ با مجموع دقیقه.
 const W = 320;
-const H = 112;
+const H = 92;
 const PAD_X = 6;
-const BAR = 9;
+const BAR = 8;
 const STAGES: Stage[] = ["awake", "rem", "light", "deep"];
-const Y: Record<Stage, number> = { awake: 14, rem: 40, light: 66, deep: 92 };
+const Y: Record<Stage, number> = { awake: 12, rem: 33, light: 54, deep: 75 };
 const COLOR: Record<Stage, string> = {
   awake: "var(--slp-fair)", rem: "var(--slp-ink-2)", light: "var(--slp-good)", deep: "var(--slp-ink)",
 };
@@ -72,7 +72,7 @@ export const SleepCycleHypnogram = memo(function SleepCycleHypnogram({
           <span className="slc-ax-end" style={{ insetInlineEnd: 0 }}>{endClock}</span>
         </div>
       </div>
-      <ul className="slc-legend">
+      <ul className="slc-hlegend">
         {STAGES.map((s) => (
           <li key={s}>
             <i style={{ background: COLOR[s] }} aria-hidden="true" />

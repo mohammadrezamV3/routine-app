@@ -4,7 +4,7 @@ import "./sleep-log.css";
 import { useEffect, useMemo, useRef, useState } from "react";
 import { createPortal } from "react-dom";
 import { SmartLink as Link } from "@/components/SmartLink";
-import { AlertTriangle, ChevronDown, ChevronLeft, ChevronRight, RotateCcw } from "lucide-react";
+import { AlertTriangle, ChevronLeft, ChevronRight, RotateCcw } from "lucide-react";
 import { GradientRing, RING_AMBER, RING_BLUE, RING_GREEN, RING_OVER, type RingGrad } from "./GradientRing";
 import { NumberInput } from "./NumberInput";
 import { SegmentedTabs } from "./SegmentedTabs";
@@ -40,6 +40,7 @@ export type SleepLogSheetProps = {
   onChanged: () => void;
 };
 
+type Pane = "time" | "details";
 const BUY_HREF = `/subscription/checkout?plan=${ROUTINE_PLAN_KEY}&duration=1`;
 const BAND_GRAD: Record<ScoreBand, RingGrad> = { great: RING_GREEN, good: RING_BLUE, fair: RING_AMBER, poor: RING_OVER };
 const qualityOpts = () => [
@@ -93,7 +94,7 @@ function SheetBody({ initial, target, existing, onClose, onChanged }: SleepLogSh
   const [awake, setAwake] = useState(str(init?.awakenings));
   const [nap, setNap] = useState(str(init?.napMin));
   const [tags, setTags] = useState<string[]>(() => init?.tags ?? []);
-  const [more, setMore] = useState(() => !!(init?.latencyMin || init?.awakenings || init?.napMin || init?.tags?.length));
+  const [pane, setPane] = useState<Pane>("time");
   const [saving, setSaving] = useState(false);
   const [err, setErr] = useState<string | null>(null);
   const [purchase, setPurchase] = useState(false);
@@ -194,93 +195,100 @@ function SheetBody({ initial, target, existing, onClose, onChanged }: SleepLogSh
   return (
     <>
       <div className="modal-overlay open" onClick={() => { if (!saving) onClose(); }} />
-      <div ref={panelRef} tabIndex={-1} className="modal-panel liquid-glass-panel open sleep-scope slg-panel" role="dialog" aria-modal="true" aria-label={tr("ثبت خواب", "Log sleep")}>
+      <div ref={panelRef} tabIndex={-1} className="modal-panel liquid-glass-panel open sleep-scope slg-panel slg-wide" role="dialog" aria-modal="true" aria-label={tr("ثبت خواب", "Log sleep")}>
         <div className="modal-head">
           <div className="modal-title">{existing ? tr("ویرایش خواب", "Edit sleep") : tr("ثبت خواب", "Log sleep")}</div>
           <button className="nav-close" onClick={onClose} aria-label={tr("بستن", "Close")}>×</button>
         </div>
 
         <div className="slg-body">
-          <div className="slg-date">
-            <button type="button" className="slg-nav" onClick={() => shift(-1)} aria-label={tr("روز قبل", "Previous day")}>{isEn() ? <ChevronLeft size={18} /> : <ChevronRight size={18} />}</button>
-            <div className="slg-date-text">
-              <span className="slg-date-cap">{tr("صبح بیدارشدن", "Morning you woke up")}</span>
-              <b>{dateLabel(date)}</b>
+          <SegmentedTabs<Pane>
+            className="slg-pane-tabs seg-flush"
+            ariaLabel={tr("بخش‌های ثبت خواب", "Log sections")}
+            options={[{ value: "time", label: tr("زمان", "Time") }, { value: "details", label: tr("جزئیات", "Details") }]}
+            active={pane}
+            onChange={setPane}
+          />
+
+          <div className="slg-panes">
+            <div className="slg-pane" data-on={pane === "time"}>
+              <div className="slg-date">
+                <button type="button" className="slg-nav" onClick={() => shift(-1)} aria-label={tr("روز قبل", "Previous day")}>{isEn() ? <ChevronLeft size={18} /> : <ChevronRight size={18} />}</button>
+                <div className="slg-date-text">
+                  <span className="slg-date-cap">{tr("صبح بیدارشدن", "Morning you woke up")}</span>
+                  <b>{dateLabel(date)}</b>
+                </div>
+                <button type="button" className="slg-nav" onClick={() => shift(1)} disabled={atToday} aria-label={tr("روز بعد", "Next day")}>{isEn() ? <ChevronRight size={18} /> : <ChevronLeft size={18} />}</button>
+              </div>
+
+              <div className="slg-sec" role="group" aria-label={tr("ساعت‌ها", "Times")}>
+                <div className="slg-times">
+                  <SleepTimeField
+                    label={tr("ساعت خواب", "Bedtime")}
+                    hint={overnight ? tr("شب قبل", "Night before") : null}
+                    value={bed}
+                    fallback={target.sleep}
+                    onChange={(v) => { setBed(v); setTimesDirty(true); }}
+                  />
+                  <SleepTimeField
+                    label={tr("ساعت بیداری", "Wake-up time")}
+                    value={wake}
+                    fallback={target.wake}
+                    onChange={(v) => { setWake(v); setTimesDirty(true); }}
+                  />
+                </div>
+                <div className="slg-block">
+                  <span className="slg-label">{tr("مدت خواب (ساعت بیداری ثابت می‌ماند)", "Duration (wake-up time stays)")}</span>
+                  <SegmentedTabs
+                    className="slg-dur seg-flush"
+                    ariaLabel={tr("مدت خواب", "Sleep duration")}
+                    options={durPresetOpts}
+                    active={presetActive}
+                    onChange={(v) => { const b = bedForDuration(wake, Number(v)); if (b) { setBed(b); setTimesDirty(true); } }}
+                  />
+                </div>
+                {(bed !== target.sleep || wake !== target.wake) && (
+                  <button
+                    type="button"
+                    className="btn btn-ghost btn-sm slg-goal-fill"
+                    onClick={() => { setBed(target.sleep); setWake(target.wake); setTimesDirty(true); }}
+                  >
+                    <RotateCcw aria-hidden />
+                    <span>{tr(`ساعت‌های هدف (${target.sleep} تا ${target.wake})`, `Use goal times (${target.sleep} to ${target.wake})`)}</span>
+                  </button>
+                )}
+              </div>
+
+              <div className="slg-preview" aria-live="polite">
+                <GradientRing value={score != null ? score / 100 : 0} size={52} stroke={6} grad={BAND_GRAD[band ?? "good"]}>
+                  <b className={`slg-ring-num${band ? ` slp-c-${band}` : ""}`}>{score != null ? faNum(score) : "-"}</b>
+                </GradientRing>
+                <div className="slg-preview-text">
+                  <b>{durOk && durMin != null ? durationLabel(durMin) : tr("ساعت‌ها را وارد کن", "Enter the times")}</b>
+                  {cycles != null && <span className="sl-sub">{tr(`${cycles} چرخه کامل`, `${cycles} full ${cycles === 1 ? "cycle" : "cycles"}`)}</span>}
+                  <span className={band ? `slp-c-${band}` : "sl-sub"}>
+                    {band ? tr(`امتیاز این شب: ${scoreBandLabel(band)}`, `Score for this night: ${scoreBandLabel(band)}`) : tr("امتیاز بعد از ورود ساعت‌ها", "Score appears once times are set")}
+                  </span>
+                </div>
+              </div>
+
+              {warn && (
+                <div className="slg-warn" role="alert">
+                  <AlertTriangle size={16} aria-hidden />
+                  <span>{warnText[warn]}</span>
+                </div>
+              )}
+
+              <div className="slg-sec" role="group" aria-label={tr("کیفیت خواب", "Sleep quality")}>
+                <div className="slg-block-head">
+                  <span className="slg-label">{tr("کیفیت خواب", "Sleep quality")}</span>
+                  {quality && <button type="button" className="slg-clear" onClick={() => setQuality(null)}>{tr("پاک‌کردن", "Clear")}</button>}
+                </div>
+                <SegmentedTabs className="slg-quality seg-flush" ariaLabel={tr("کیفیت خواب", "Sleep quality")} options={qualityOpts()} active={quality} onChange={setQuality} />
+              </div>
             </div>
-            <button type="button" className="slg-nav" onClick={() => shift(1)} disabled={atToday} aria-label={tr("روز بعد", "Next day")}>{isEn() ? <ChevronRight size={18} /> : <ChevronLeft size={18} />}</button>
-          </div>
 
-          <div className="slg-sec" role="group" aria-label={tr("ساعت‌ها", "Times")}>
-            <SleepTimeField
-              label={tr("ساعت خواب", "Bedtime")}
-              hint={overnight ? tr("شب قبل", "Night before") : null}
-              value={bed}
-              fallback={target.sleep}
-              onChange={(v) => { setBed(v); setTimesDirty(true); }}
-            />
-            <SleepTimeField
-              label={tr("ساعت بیداری", "Wake-up time")}
-              value={wake}
-              fallback={target.wake}
-              onChange={(v) => { setWake(v); setTimesDirty(true); }}
-            />
-            <div className="slg-block">
-              <span className="slg-label">{tr("مدت خواب (ساعت بیداری ثابت می‌ماند)", "Duration (wake-up time stays)")}</span>
-              <SegmentedTabs
-                className="slg-dur seg-flush"
-                ariaLabel={tr("مدت خواب", "Sleep duration")}
-                options={durPresetOpts}
-                active={presetActive}
-                onChange={(v) => { const b = bedForDuration(wake, Number(v)); if (b) { setBed(b); setTimesDirty(true); } }}
-              />
-            </div>
-            {(bed !== target.sleep || wake !== target.wake) && (
-              <button
-                type="button"
-                className="btn btn-ghost btn-sm slg-goal-fill"
-                onClick={() => { setBed(target.sleep); setWake(target.wake); setTimesDirty(true); }}
-              >
-                <RotateCcw aria-hidden />
-                <span>{tr(`ساعت‌های هدف (${target.sleep} تا ${target.wake})`, `Use goal times (${target.sleep} to ${target.wake})`)}</span>
-              </button>
-            )}
-          </div>
-
-          <div className="slg-preview" aria-live="polite">
-            <GradientRing value={score != null ? score / 100 : 0} size={64} stroke={7} grad={BAND_GRAD[band ?? "good"]}>
-              <b className={`slg-ring-num${band ? ` slp-c-${band}` : ""}`}>{score != null ? faNum(score) : "-"}</b>
-            </GradientRing>
-            <div className="slg-preview-text">
-              <b>{durOk && durMin != null ? durationLabel(durMin) : tr("ساعت‌ها را وارد کن", "Enter the times")}</b>
-              {cycles != null && <span className="sl-sub">{tr(`${cycles} چرخه کامل`, `${cycles} full ${cycles === 1 ? "cycle" : "cycles"}`)}</span>}
-              <span className={band ? `slp-c-${band}` : "sl-sub"}>
-                {band ? tr(`امتیاز این شب: ${scoreBandLabel(band)}`, `Score for this night: ${scoreBandLabel(band)}`) : tr("امتیاز بعد از ورود ساعت‌ها", "Score appears once times are set")}
-              </span>
-            </div>
-          </div>
-
-          {warn && (
-            <div className="slg-warn" role="alert">
-              <AlertTriangle size={16} aria-hidden />
-              <span>{warnText[warn]}</span>
-            </div>
-          )}
-
-          <div className="slg-sec" role="group" aria-label={tr("کیفیت خواب", "Sleep quality")}>
-            <div className="slg-block-head">
-              <span className="slg-label">{tr("کیفیت خواب", "Sleep quality")}</span>
-              {quality && <button type="button" className="slg-clear" onClick={() => setQuality(null)}>{tr("پاک‌کردن", "Clear")}</button>}
-            </div>
-            <SegmentedTabs className="slg-quality seg-flush" ariaLabel={tr("کیفیت خواب", "Sleep quality")} options={qualityOpts()} active={quality} onChange={setQuality} />
-          </div>
-
-          <button type="button" className="slg-more-toggle" aria-expanded={more} onClick={() => setMore((v) => !v)}>
-            <span>{tr("جزئیات بیشتر", "More details")}</span>
-            <ChevronDown size={16} className={more ? "slg-chev open" : "slg-chev"} />
-          </button>
-
-          {more && (
-            <div className="slg-more">
+            <div className="slg-pane" data-on={pane === "details"}>
               <div className="slg-nums">
                 <label className="slg-field">
                   <span>{tr("تا خواب رفتن (دقیقه)", "Time to fall asleep (min)")}</span>
@@ -304,7 +312,10 @@ function SheetBody({ initial, target, existing, onClose, onChanged }: SleepLogSh
                 </div>
               </div>
               <label className="slg-field">
-                <span>{tr("یادداشت", "Note")}</span>
+                <span className="slg-note-head">
+                  <span>{tr("یادداشت", "Note")}</span>
+                  <small className="slg-count" dir="ltr">{faNum(note.length)} / 200</small>
+                </span>
                 <textarea
                   className="wsearch-newform-name slg-note"
                   rows={2}
@@ -313,10 +324,9 @@ function SheetBody({ initial, target, existing, onClose, onChanged }: SleepLogSh
                   value={note}
                   onChange={(e) => setNote(e.target.value)}
                 />
-                <small className="slg-count" dir="ltr">{faNum(note.length)} / 200</small>
               </label>
             </div>
-          )}
+          </div>
         </div>
 
         <div className="slg-foot">
