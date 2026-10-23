@@ -17,6 +17,9 @@ import type { TodayTask } from "@/lib/useDashboardRoutine";
 import { DashIcon, type DashIconName } from "./DashboardIcons";
 import { GoldenName } from "./GoldenName";
 import { Spinner } from "./Spinner";
+import { TradeShareButton } from "./TradeShareButton";
+import { useLogTrade } from "./TradeHubLog";
+import { liveSessionPill } from "@/lib/tradeHubCompute";
 import { ROUTINE_PLAN_KEY } from "@/lib/trial";
 import { CountUp, D_EASE, GradientArc, Skel } from "./DashboardKit";
 import { money, tone } from "./DashboardTrade";
@@ -79,7 +82,9 @@ export function DashboardHero({
   routineOff = false,
   streakOn = true,
   section = null,
-  shareHref,
+  tradeCta = false,
+  sessionPill = false,
+  onTradeSaved,
 }: {
   data: DashboardData | null;
   routine: {
@@ -99,10 +104,17 @@ export function DashboardHero({
   streakOn?: boolean;
   /** زیردامنه‌ی بخش؛ null = دامنه‌ی اصلی (هیرو دقیقا مثل قبل) */
   section?: SectionKey | null;
-  /** بخش ترید: اشتراک کارنامه‌ی ترید به‌جای کارت حلقه‌های روز (لینک به /trade?share=1) */
-  shareHref?: string;
+  /** بخش ترید: دکمه‌ی اصلی «ثبت معامله» (ماژول ترید + فلگ tradeJournal) */
+  tradeCta?: boolean;
+  /** بخش ترید: برچسب زنده‌ی جلسه‌ی فارکس (فلگ forexClock) */
+  sessionPill?: boolean;
+  /** بعد از ذخیره‌ی معامله از هیرو، داده‌ی داشبورد تازه بشه */
+  onTradeSaved?: () => void;
 }) {
   const now = useNow();
+  const isTradeHero = section === "trade";
+  const log = useLogTrade(isTradeHero && tradeCta, () => onTradeSaved?.());
+  const pill = isTradeHero && sessionPill && now ? liveSessionPill(now) : null;
   const heroRef = useRef<HTMLElement>(null);
   // همان نور دنبال‌کننده‌ی موس BentoCard
   useEffect(() => {
@@ -145,6 +157,8 @@ export function DashboardHero({
   const legend: LegendItem[] = isTrade ? tradeLegend(tradeData) : shownRings;
   // وسط حلقه‌ها: استریک روتین؛ در بخش ورزش استریک جلسه‌های تمرین
   const centerStreak = isWorkout ? (data ? (ex?.streak ?? 0) : null) : routine.streak;
+  // دسکتاپ بخش ترید/ورزش: آمار لیجند به‌جای ردیف ریز زیر حلقه، ناحیه‌ی KPI درشت وسط هیرو می‌شه
+  const hasKpi = (isTrade || isWorkout) && legend.length >= 2;
   const orbitReady = isTrade ? !!data : isWorkout ? !!data && routine.ready : routine.ready;
 
   // ── جمله‌ی خلاصه ──
@@ -193,12 +207,9 @@ export function DashboardHero({
   // ورود هیرو با CSS (m-rise)، نه framer: هیرو عنصر LCP داشبورده؛ با initial:{opacity:0} فریمر تا رسیدن
   // chunk انیمیشن نامرئی می‌موند و LCP عقب می‌افتاد. CSS از همون اولین پینت کار می‌کنه.
   return (
-    <section ref={heroRef as any} className={`db-hero m-rise${isTrade ? " is-noribbon" : ""}`}>
-      {isTrade && shareHref && (
-        <Link href={shareHref} prefetch={false} className="db-hero-share" aria-label={tr("اشتراک کارنامه‌ی ترید", "Share trading report")} title={tr("اشتراک کارنامه", "Share report")}>
-          <DashIcon name="share" />
-        </Link>
-      )}
+    <section ref={heroRef as any} className={`db-hero m-rise${isTrade ? " is-noribbon" : ""}${hasKpi ? " has-kpi" : ""}`}>
+      {/* اشتراک کارنامه‌ی ترید — خود دکمه گیت ماژول و فلگ tradeShare رو داره؛ ?share=1 پنجره رو باز می‌کنه */}
+      {isTrade && <TradeShareButton deepLink className="db-hero-share" size={20} />}
       {!isTrade && onShare && (
         // اشتراک موفقیت — فقط آیکون، گوشه‌ی بالا-چپ هیرو. تا روتین امروز خونده
         // نشده کارت عدد درستی نداره: غیرفعال با دایره‌ی لودینگ به‌جای آیکون.
@@ -240,6 +251,18 @@ export function DashboardHero({
         <p className="db-hero-insight" aria-live="polite">{insight ?? <Skel w="70%" h={13} />}</p>
 
         <div className="db-hero-chips">
+          {pill && (
+            <span className={`db-live-pill is-${pill.tone}`} role="status">
+              <span className="db-live-pill-dot" aria-hidden="true" />
+              {pill.text}
+            </span>
+          )}
+          {isTrade && tradeCta && (
+            <button type="button" className="trade-primary-btn db-hero-cta" onClick={log.open} disabled={log.busy} aria-busy={log.busy || undefined}>
+              {log.busy ? <Spinner size={16} label={null} /> : <DashIcon name="plus" />}
+              {tr("ثبت معامله", "Log trade")}
+            </button>
+          )}
           {data?.routineTrial && !routineOff && (!section || section === "routine") && (
             <Link href={`/subscription/checkout?plan=${ROUTINE_PLAN_KEY}&duration=1`} prefetch={false} className={`db-chip db-chip-trial${data.routineTrial.daysLeft <= 3 ? " is-urgent" : ""}`}>
               <DashIcon name="routine" />
@@ -262,13 +285,29 @@ export function DashboardHero({
         </div>
       </div>
 
+      {hasKpi && (
+        <ul className="db-hero-kpis" aria-label={tr("آمار کلیدی", "Key stats")}>
+          {legend.map((r) => (
+            <li key={r.key}>
+              <Link href={r.href} prefetch className="db-kpi">
+                <span className="db-kpi-label">
+                  <span className="db-orbit-dot" style={{ background: `linear-gradient(135deg, ${r.grad[0]}, ${r.grad[1]})` }} aria-hidden="true" />
+                  {r.label}
+                </span>
+                <b className="db-kpi-val"><bdi dir="ltr">{r.display}</bdi></b>
+              </Link>
+            </li>
+          ))}
+        </ul>
+      )}
+
       <div className="db-hero-orbit" aria-label={tr("پیشرفت امروز", "Today's progress")}>
         {isTrade ? (
           <OrbitRings rings={tradeRings} ready={orbitReady} streak={null} center={tradeCenter(tradeData)} />
         ) : (
           <OrbitRings rings={shownRings} ready={orbitReady} streak={centerStreak} unit={isWorkout ? "sessions" : "days"} />
         )}
-        <ul className="db-orbit-legend">
+        <ul className={`db-orbit-legend${hasKpi ? " is-kpi-dup" : ""}`}>
           {legend.map((r, i) => (
             <li key={r.key}>
               <Link href={r.href} prefetch>
@@ -281,6 +320,7 @@ export function DashboardHero({
         </ul>
       </div>
 
+      {log.modal}
       {!isTrade && <DayRibbon now={now} tasks={routine.tasks} wake={routine.wakeSleep.wake} sleep={routine.wakeSleep.sleep} configured={routine.hasWakeSleep} setHref={section && section !== "routine" ? "/sleep" : "/weekly"} />}
     </section>
   );
@@ -304,8 +344,8 @@ export function heroRings(data: DashboardData | null, stats: { completed: number
   const workout = section === "workout";
   return [
     { key: "routine", label: tr("روتین", "Routine"), value: stats.total ? stats.completed / stats.total : 0, display: stats.total ? `${faNum(stats.completed)}/${faNum(stats.total)}` : "—", grad: ["var(--ring-1a)", "var(--ring-1b)"], show: !routineLocked && (!section || section === "routine"), href: "/weekly" },
-    { key: "exercise", label: tr("تمرین امروز", "Today's workout"), value: ex?.hasPlan ? exVal : 0, display: ex?.hasPlan ? (ex.today.isGymDay ? `${faNum(ex.today.doneItems)}/${faNum(ex.today.itemCount)}` : tr("استراحت", "Rest")) : "—", grad: ["var(--ring-2a)", "var(--ring-2b)"], show: workout || (!section && !!ex?.hasPlan), href: "/exercise?tab=exercise" },
-    { key: "calorie", label: tr("کالری", "Calories"), value: Math.min(calVal, 1), display: cal?.target ? `${faNum(Math.round(cal.today.kcal))}` : "—", grad: calVal > 1 ? ["var(--ring-3b)", "var(--ring-over)"] : ["var(--ring-3a)", "var(--ring-3b)"], show: workout || (!section && !!cal?.target), href: "/exercise?tab=calorie" },
+    { key: "exercise", label: tr("تمرین امروز", "Today's workout"), value: ex?.hasPlan ? exVal : 0, display: ex?.hasPlan ? (ex.today.isGymDay ? `${faNum(ex.today.doneItems)}/${faNum(ex.today.itemCount)}` : tr("استراحت", "Rest")) : "—", grad: ["var(--ring-2a)", "var(--ring-2b)"], show: workout || (!section && !!ex?.hasPlan), href: workout ? "/dashboard?tab=exercise" : "/exercise?tab=exercise" },
+    { key: "calorie", label: tr("کالری", "Calories"), value: Math.min(calVal, 1), display: cal?.target ? `${faNum(Math.round(cal.today.kcal))}` : "—", grad: calVal > 1 ? ["var(--ring-3b)", "var(--ring-over)"] : ["var(--ring-3a)", "var(--ring-3b)"], show: workout || (!section && !!cal?.target), href: workout ? "/dashboard?tab=calorie" : "/exercise?tab=calorie" },
   ];
 }
 

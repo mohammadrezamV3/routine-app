@@ -599,6 +599,10 @@ a.db-tl-name{ text-decoration:underline dotted color-mix(in srgb, var(--ring-1a)
 .db-acc-dot{ width:10px; height:10px; border-radius:4px; }
 .db-acc-name{ font-size:12.5px; font-weight:700; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
 .db-acc-pnl{ font-size:12px; font-weight:800; font-family:var(--font-latin), var(--font-vazir), sans-serif; }
+.db-acc-nums{ display:inline-flex; flex-direction:column; align-items:flex-end; line-height:1.25; }
+.db-acc-growth{ font-size:10.5px; font-weight:800; color:var(--muted); font-family:var(--font-latin), var(--font-vazir), sans-serif; }
+.db-acc-growth.is-win{ color:var(--pnl-win); }
+.db-acc-growth.is-loss{ color:var(--pnl-loss); }
 .db-acc-goal{ grid-column:2 / 4; }
 .db-acc-goal .db-meter{ height:4px; }
 .db-trow{ display:flex; align-items:center; gap:9px; padding:7px 6px; border-bottom:1px solid var(--box-line); }
@@ -881,3 +885,172 @@ html[dir="ltr"] .db-cd-title, html[dir="ltr"] .db-ev-title{ text-align:left; }
 .db-sleep-wd{ font-size:10.5px; font-weight:700; color:var(--muted); }
 .db-sleep-day.is-empty .db-sleep-wd{ opacity:.55; }
 @media (hover:hover){ .db-sleep-day:hover .db-sleep-bar{ border-color:color-mix(in srgb, var(--moon) 60%, transparent); } }
+
+/* ── هیروی ترید: برچسب زنده‌ی جلسه + دکمه‌ی اصلی «ثبت معامله» ───────── */
+.db-live-pill{
+  display:inline-flex; align-items:center; gap:7px; padding:6px 11px; border-radius:12px; max-width:100%;
+  font-size:11.5px; font-weight:700; color:var(--muted); border:1px solid var(--box-line);
+}
+.db-live-pill-dot{ width:7px; height:7px; border-radius:50%; background:currentColor; flex-shrink:0; }
+.db-live-pill.is-open{ color:var(--pnl-win); border-color:rgba(var(--pnl-win-rgb),.4); }
+.db-live-pill.is-open .db-live-pill-dot{ box-shadow:0 0 0 3px rgba(var(--pnl-win-rgb),.22); }
+.db-hero-cta{ height:38px; padding:0 16px; border-radius:12px; font-size:13px; font-weight:700; gap:7px; display:inline-flex; align-items:center; }
+.db-hero-cta svg{ width:17px; height:17px; }
+
+/* ── ابزارهای ترید (جای هاب قدیمی /trade): کاشی‌های لینکی بدون بک‌گراند ── */
+.db-tools-grid{ display:grid; grid-template-columns:repeat(2, minmax(0,1fr)); gap:10px; }
+@media (min-width:720px){ .db-tools-grid{ grid-template-columns:repeat(4, minmax(0,1fr)); } }
+.db-tool-cell{ display:flex; min-width:0; }
+.db-tool{
+  display:flex; flex-direction:column; gap:7px; flex:1; min-width:0; padding:12px; border-radius:15px;
+  border:1px solid var(--box-line); transition:border-color .2s ease, transform .2s ease;
+}
+@media (hover:hover){ .db-tool:hover{ border-color:rgba(var(--accent-rgb),.55); transform:translateY(-2px); } }
+.db-tool:active{ transform:scale(.98); }
+.db-tool:focus-visible{ outline:2px solid var(--accent); outline-offset:2px; }
+.db-tool-head{ display:flex; align-items:center; gap:8px; min-width:0; }
+.db-tool-icon{ display:inline-flex; flex-shrink:0; color:var(--accent); }
+.db-tool-icon svg{ width:18px; height:18px; }
+.db-tool-title{ font-size:13px; font-weight:800; flex:1; min-width:0; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
+.db-tool-dot{ width:8px; height:8px; border-radius:50%; background:var(--pnl-win); flex-shrink:0; box-shadow:0 0 0 3px rgba(var(--pnl-win-rgb),.22); }
+.db-tool-sub{ display:block; min-width:0; font-size:11px; font-weight:600; color:var(--muted); overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
+.db-tool-chips{ display:flex; gap:5px; flex-wrap:wrap; }
+.db-tool-chips span{ font-size:10px; font-weight:800; padding:1px 6px; border-radius:7px; border:1px solid var(--box-line); color:var(--muted); font-family:var(--font-latin), var(--font-vazir), sans-serif; }
+.db-tool-prog{ display:flex; align-items:center; gap:8px; font-size:10.5px; font-weight:800; color:var(--muted); font-family:var(--font-latin), var(--font-vazir), sans-serif; }
+.db-tool-prog .db-meter{ flex:1; height:4px; }
+@media (prefers-reduced-motion:reduce){ .db-tool{ transition:none; } }
+
+/* ── فضای تمرین (بخش ورزش): پنل‌های واقعی تمرین/تغذیه داخل کارت تمام‌عرض ── */
+/* قاعده‌ی بدنسازی (app/_area/exercise.css) عرض 900 و مارجین منفی می‌ده؛ این‌جا باید دقیقا پهنای کارت رو بگیره */
+.db-page .db-space .bodybuilding-glass,
+.db-page .db-space .bodybuilding-glass.exercise-dash-breakout{
+  width:auto; max-width:none; margin-inline-start:0; min-width:0;
+}
+.db-space{ gap:12px; }
+.db-space-tabs{ margin-inline-start:auto; display:inline-flex; min-width:0; }
+.db-space-tabs > *{ max-width:100%; }
+.db-space-panel{ min-width:0; }
+.db-space-body{ min-width:0; padding:0; }
+.db-space-skel{ display:grid; gap:12px; }
+@media (max-width:639px){
+  .db-space-tabs{ flex:1; }
+  .db-space-tabs > *{ width:100%; }
+}
+.db-space-tabs .auth-tabs{ margin-top:0; }
+
+/* ── trade-redesign start ── */
+/* هیرو: ناحیه‌ی KPI درشت وسط (دسکتاپ بخش ترید/ورزش)؛ موبایل همون لیجند کنار حلقه */
+.db-hero-kpis{ display:none; }
+@media (min-width:1024px){
+  .db-page .db-hero.has-kpi{ grid-template-columns:minmax(0,1fr) minmax(0,1.15fr) auto; grid-template-areas:"main kpi orbit" "ribbon ribbon ribbon"; }
+  .db-page .db-hero.is-noribbon.has-kpi{ grid-template-areas:"main kpi orbit"; }
+  .db-hero-kpis{ grid-area:kpi; display:flex; align-items:stretch; align-self:center; list-style:none; min-width:0; }
+  .db-hero-kpis li{ flex:1 1 0; min-width:0; }
+  .db-hero-kpis li + li .db-kpi{ border-inline-start:1px solid var(--box-line); }
+  .db-kpi{ display:flex; flex-direction:column; justify-content:center; gap:8px; padding:6px 18px; height:100%; min-width:0; transition:transform .2s ease; }
+  .db-kpi-label{ display:flex; align-items:center; gap:7px; font-size:12px; font-weight:700; color:var(--muted); white-space:nowrap; }
+  .db-kpi-val{ font-family:var(--font-latin), var(--font-vazir), sans-serif; font-size:32px; font-weight:900; letter-spacing:-.02em; line-height:1.1; font-variant-numeric:tabular-nums; white-space:nowrap; }
+  @media (hover:hover) and (pointer:fine){ .db-kpi:hover{ transform:translateY(-2px); } .db-kpi:hover .db-kpi-val{ color:var(--accent); } }
+  .db-orbit-legend.is-kpi-dup{ display:none; }
+}
+@media (min-width:1024px) and (max-width:1279px){ .db-kpi-val{ font-size:26px; } .db-kpi{ padding-inline:12px; } }
+@media (prefers-reduced-motion:reduce){ .db-kpi{ transition:none; } .db-kpi:hover{ transform:none !important; } }
+
+/* کارت عملکرد: خط هفته + نمودار بلندتر + ردیف‌های یکدست */
+.db-trade-week{ display:flex; align-items:baseline; flex-wrap:wrap; gap:4px 8px; margin-top:6px; font-size:12px; font-weight:700; }
+.db-trade-week-label{ color:var(--muted); }
+.db-trade-week b{ font-family:var(--font-latin), var(--font-vazir), sans-serif; font-weight:800; font-variant-numeric:tabular-nums; }
+.db-trade-week-sub{ color:var(--muted); font-weight:600; }
+.db-trade-pnl{ font-family:var(--font-latin), var(--font-vazir), sans-serif; font-size:34px; }
+.db-trade-flat{ height:150px; }
+.db-acc{ min-height:44px; }
+.db-acc-nums{ flex-direction:row; align-items:baseline; gap:10px; justify-self:end; }
+.db-acc-growth{ min-width:52px; text-align:end; }
+.db-acc-goal{ margin-top:-2px; }
+.db-trow{ gap:10px; padding:9px 6px; }
+.db-trow-sym{ font-size:13.5px; font-weight:900; min-width:0; }
+.db-dir{ width:auto; height:auto; padding:1px 7px; border-radius:7px; font-size:10px; font-weight:800; line-height:1.6; text-transform:uppercase; letter-spacing:.04em; }
+.db-trow-pnl, .db-trow-end{ margin-inline-start:auto; min-width:76px; text-align:end; justify-content:center; font-variant-numeric:tabular-nums; }
+.db-trow-pnl.is-flat{ color:var(--muted); }
+
+/* ابزارها: شبکه‌ی 12 ستونه تا ردیف آخر سوراخ نداشته باشه؛ بدنه‌ی هر کاشی ته کاشی */
+.db-tools-grid{ grid-template-columns:repeat(2, minmax(0,1fr)); }
+.db-tools-grid .db-tool-cell:last-child:nth-child(odd){ grid-column:1 / -1; }
+@media (min-width:720px){
+  .db-tools-grid{ grid-template-columns:repeat(12, minmax(0,1fr)); }
+  .db-tools-grid .db-tool-cell{ grid-column:span 4; }
+  .db-tools-grid .db-tool-cell:last-child:nth-child(odd){ grid-column:span 4; }
+  .db-tools-grid[data-n="1"] .db-tool-cell{ grid-column:span 12; }
+  .db-tools-grid[data-n="2"] .db-tool-cell{ grid-column:span 6; }
+  .db-tools-grid[data-n="4"] .db-tool-cell, .db-tools-grid[data-n="8"] .db-tool-cell{ grid-column:span 3; }
+  .db-tools-grid[data-n="5"] .db-tool-cell:nth-child(-n+2){ grid-column:span 6; }
+  .db-tools-grid[data-n="7"] .db-tool-cell:nth-child(-n+4){ grid-column:span 3; }
+}
+.db-tool{ min-height:92px; gap:10px; }
+.db-tool-body{ display:flex; flex-direction:column; gap:7px; margin-top:auto; min-width:0; }
+.db-tool-big{ font-family:var(--font-latin), var(--font-vazir), sans-serif; font-size:30px; font-weight:900; line-height:1.05; letter-spacing:-.02em; }
+.db-tool-dots{ display:flex; flex-wrap:wrap; gap:5px; }
+.db-tool-dots i{ width:9px; height:9px; border-radius:4px; display:block; }
+@media (hover:hover) and (pointer:fine){ .db-tool:hover{ transform:translateY(-3px); } }
+
+/* ابزارها در موبایل: فهرست یک‌ستونه با خط جداکننده؛ کاشی‌ها فقط تا 719px؛ نشانگر کوچک و فلش آخر فقط همین‌جا دیده می‌شن */
+.db-tool-end, .db-tool-chev{ display:none; }
+@media (max-width:719px){
+  .db-tools-grid{ grid-template-columns:minmax(0,1fr); gap:0; margin-top:2px; }
+  .db-tools-grid .db-tool-cell:last-child:nth-child(odd){ grid-column:auto; }
+  .db-tools-grid .db-tool-cell + .db-tool-cell{ border-top:1px solid var(--box-line); }
+  .db-tool{
+    display:grid; grid-template-columns:32px minmax(0,1fr) auto auto; grid-template-rows:auto auto; align-items:center;
+    column-gap:12px; row-gap:2px; min-height:60px; padding:10px 2px; border:0; border-radius:12px;
+    transition:transform .15s ease;
+  }
+  .db-tool:hover{ transform:none; }
+  .db-tool:active{ transform:scale(.985); }
+  .db-tool-head, .db-tool-body{ display:contents; }
+  .db-tool-icon{
+    grid-column:1; grid-row:1 / span 2; align-items:center; justify-content:center; width:32px; height:32px; border-radius:11px;
+    border:1px solid rgba(var(--accent-rgb),.28);
+  }
+  .db-tool-title{ grid-column:2; grid-row:1; font-size:14px; align-self:end; }
+  .db-tool-sub{ grid-column:2; grid-row:2; font-size:12px; align-self:start; }
+  .db-tool-head > .db-tool-dot, .db-tool-body > :not(.db-tool-sub){ display:none; }
+  .db-tool-end{ grid-column:3; grid-row:1 / span 2; display:flex; align-items:center; gap:8px; min-width:0; max-width:112px; }
+  .db-tool-end .db-tool-prog{ flex-direction:column; align-items:flex-end; gap:4px; }
+  .db-tool-end .db-tool-prog .db-meter{ flex:none; width:44px; height:3px; }
+  .db-tool-endnum{ font-family:var(--font-latin), var(--font-vazir), sans-serif; font-size:15px; font-weight:900; font-variant-numeric:tabular-nums; }
+  .db-tool-end .db-tool-dots{ flex-wrap:nowrap; gap:3px; }
+  .db-tool-end .db-tool-dots i{ width:7px; height:7px; border-radius:3px; }
+  .db-tool-end .db-tool-chips{ flex-wrap:nowrap; }
+  .db-tool-chev{ grid-column:4; grid-row:1 / span 2; display:inline-flex; color:var(--muted); }
+  .db-tool-chev svg{ width:16px; height:16px; }
+}
+@media (prefers-reduced-motion:reduce){ .db-tool:active{ transform:none; } }
+
+/* ردیف پایین بخش ترید (مربی/اعلان‌ها): خالی‌ها فشرده */
+.db-page:has(.db-trade) .db-empty{ padding:2px 6px 0; gap:8px; }
+.db-page:has(.db-trade) .db-empty-icon{ width:36px; height:36px; }
+/* ── trade-redesign end ── */
+
+/* ── workout-redesign start ── */
+/* فضای تمرین: بخش بی‌قاب داخل بنتو؛ کارت‌های خود پنل‌ها مستقیم روی صفحه می‌شینن */
+.db-page .db-card.db-space{ background:none; border:0; border-radius:0; padding:0; gap:var(--db-gap); }
+.db-page .db-card.db-space::before{ display:none; }
+.db-space > .db-card-head{ padding-inline:2px; min-height:38px; }
+.db-space-tabs .auth-tabs{ min-width:176px; }
+.db-space-tabs .auth-tab{ padding:8px 14px; white-space:nowrap; }
+.db-sp-stack{ gap:var(--db-gap); }
+.db-sp-bar{ gap:10px; }
+@media (min-width:1024px){ .db-sp-bar{ gap:var(--db-gap); } }
+.db-space .disclaimer-note{ margin-top:var(--db-gap); padding-inline:2px; font-size:10.5px; color:var(--muted); }
+.db-space .disclaimer-note .disclaimer-warn{ font-weight:700; }
+/* تغذیه: ستون اول = ثبت غذا + درشت‌مغذی؛ دوم = کالری هر وعده + استریک؛ سوم = دوستان + نمودار */
+.db-space .db-sp-cal{ gap:var(--db-gap); }
+.db-space .db-sp-cal .calorie-col-food{ flex-direction:column; gap:var(--db-gap); }
+.db-space .db-sp-cal .calorie-col-food > *{ flex:0 0 auto; }
+.db-space .db-sp-cal .calorie-col-mid,
+.db-space .db-sp-cal .calorie-col-side{ gap:var(--db-gap); }
+@media (min-width:1024px){
+  .db-space .db-sp-cal{ grid-template-columns:minmax(0,1.4fr) minmax(0,1fr) minmax(0,1fr); }
+  .db-space .db-sp-cal .calorie-col-food{ align-self:start; }
+}
+/* ── workout-redesign end ── */

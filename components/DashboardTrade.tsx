@@ -1,7 +1,7 @@
 "use client";
 
 // کارت عملکرد ترید — منحنی اکوئیتی ۳۰ روز (تجمع سود/زیان روزانه)،
-// کاشی‌های امروز/هفته/وین‌ریت/پرافیت‌فکتور، حساب‌ها با پیشرفت هدف، و آخرین
+// خط خلاصه‌ی هفته، حساب‌ها با پیشرفت هدف، و آخرین
 // معامله‌ها. سبز/قرمز سود و زیان از توکن‌های --pnl-* (بیرون پالت تم).
 
 import { SmartLink as Link } from "@/components/SmartLink";
@@ -17,6 +17,7 @@ const TradeDetailDrawer = dynamic(() => import("./TradeDetailDrawer").then((m) =
 import { compactNumber, equityPoints } from "@/lib/dashboardCompute";
 import type { DashTrade } from "@/lib/dashboardTypes";
 import { BentoCard, CardHead, CountUp, EmptyState, Meter, Skel, Sparkline } from "./DashboardKit";
+import { formatPct } from "@/lib/tradeHubCompute";
 import { tr, dirSign } from "@/lib/i18n";
 
 const CUR_SIGN: Record<string, string> = { USD: "$", EUR: "€", GBP: "£", JPY: "¥" };
@@ -60,17 +61,15 @@ function TradeBody({ t }: { t: DashTrade }) {
             <CountUp value={t.month.pnl} decimals={Math.abs(t.month.pnl) < 1000 ? 2 : 0} signed prefix={CUR_SIGN[cur] ?? ""} suffix={CUR_SIGN[cur] ? "" : ` ${cur}`} />
           </b>
           <span className="db-trade-sub">{tr(`${faNum(t.month.count)} معامله‌ی بسته‌شده`, `${t.month.count} closed ${t.month.count === 1 ? "trade" : "trades"}`)}</span>
+          <span className="db-trade-week">
+            <span className="db-trade-week-label">{tr("این هفته", "This week")}</span>
+            <b className={tone(t.week.pnl)} dir="ltr">{money(t.week.pnl, cur)}</b>
+            <span className="db-trade-week-sub">{tr(`${faNum(t.week.wins)} برد · ${faNum(t.week.losses)} باخت`, `${t.week.wins} ${t.week.wins === 1 ? "win" : "wins"} · ${t.week.losses} ${t.week.losses === 1 ? "loss" : "losses"}`)}</span>
+          </span>
         </div>
         <div className="db-trade-chart">
-          {flat ? <div className="db-trade-flat">{tr("هنوز معامله‌ی بسته‌شده‌ای در 30 روز اخیر نیست", "No closed trades in the last 30 days")}</div> : <Sparkline values={equity} height={96} />}
+          {flat ? <div className="db-trade-flat">{tr("هنوز معامله‌ی بسته‌شده‌ای در 30 روز اخیر نیست", "No closed trades in the last 30 days")}</div> : <Sparkline values={equity} height={150} />}
         </div>
-      </div>
-
-      <div className="db-trade-tiles">
-        <Tile label={tr("امروز", "Today")} value={money(t.today.pnl, cur)} toneCls={tone(t.today.pnl)} sub={tr(`${faNum(t.today.count)} معامله`, `${t.today.count} ${t.today.count === 1 ? "trade" : "trades"}`)} />
-        <Tile label={tr("این هفته", "This week")} value={money(t.week.pnl, cur)} toneCls={tone(t.week.pnl)} sub={tr(`${faNum(t.week.wins)} برد · ${faNum(t.week.losses)} باخت`, `${t.week.wins} ${t.week.wins === 1 ? "win" : "wins"} · ${t.week.losses} ${t.week.losses === 1 ? "loss" : "losses"}`)} />
-        <Tile label={tr("وین‌ریت", "Win rate")} value={t.month.winRate === null ? "—" : `${faNum(t.month.winRate)}${tr("٪", "%")}`} sub={tr("30 روز", "30 days")} ring={t.month.winRate === null ? undefined : t.month.winRate / 100} />
-        <Tile label={tr("پرافیت فکتور", "Profit factor")} value={t.month.profitFactor === null ? "—" : faNum(t.month.profitFactor.toFixed(2))} toneCls={t.month.profitFactor === null ? "" : t.month.profitFactor >= 1 ? "is-win" : "is-loss"} sub={t.openTrades ? tr(`${faNum(t.openTrades)} معامله‌ی باز`, `${t.openTrades} open ${t.openTrades === 1 ? "trade" : "trades"}`) : tr("بدون معامله‌ی باز", "No open trades")} />
       </div>
 
       <div className="db-trade-split">
@@ -80,7 +79,10 @@ function TradeBody({ t }: { t: DashTrade }) {
             <Link key={a.id} href={`/trade/accounts/${a.id}`} prefetch className="db-acc">
               <span className="db-acc-dot" style={{ background: a.color }} />
               <span className="db-acc-name">{a.name}</span>
-              <span className={`db-acc-pnl ${tone(a.netPnl)}`} dir="ltr">{money(a.netPnl, a.currency)}</span>
+              <span className="db-acc-nums">
+                <span className={`db-acc-pnl ${tone(a.netPnl)}`} dir="ltr">{money(a.netPnl, a.currency)}</span>
+                <bdi dir="ltr" className={`db-acc-growth ${a.growthPct != null ? tone(a.growthPct) : ""}`}>{a.growthPct != null ? formatPct(a.growthPct, true) : "—"}</bdi>
+              </span>
               {a.goalProgress !== null && (
                 <span className="db-acc-goal" title={tr(`${faNum(Math.round(a.goalProgress * 100))}٪ از هدف`, `${Math.round(a.goalProgress * 100)}% of goal`)}>
                   <Meter value={a.goalProgress} color={a.color} delay={0.5 + i * 0.08} />
@@ -108,11 +110,9 @@ function TradeBody({ t }: { t: DashTrade }) {
                   whileHover={{ x: dirSign() * 3, transition: { duration: 0.2 } }}
                   {...rowActivateProps(() => setOpenTrade({ id: r.id, accountId: r.accountId, currency: rowCur }), tr(`جزئیات معامله‌ی ${r.symbol}`, `Trade details for ${r.symbol}`))}
                 >
-                  <span className={`db-dir ${r.direction === "BUY" ? "is-buy" : "is-sell"}`} aria-label={r.direction === "BUY" ? tr("خرید", "Buy") : tr("فروش", "Sell")}>
-                    <svg viewBox="0 0 12 12" aria-hidden="true"><path d={r.direction === "BUY" ? "M6 2.5 10 8H2Z" : "M6 9.5 2 4h8Z"} fill="currentColor" /></svg>
-                  </span>
                   <span className="db-trow-sym" dir="ltr">{r.symbol}</span>
-                  {r.status === "OPEN" ? <span className="db-pill">{tr("باز", "Open")}</span> : <span className={`db-trow-pnl ${tone(r.pnl)}`} dir="ltr">{money(r.pnl, rowCur)}</span>}
+                  <span className={`db-dir ${r.direction === "BUY" ? "is-buy" : "is-sell"}`}>{r.direction === "BUY" ? tr("خرید", "Buy") : tr("فروش", "Sell")}</span>
+                  {r.status === "OPEN" ? <span className="db-pill db-trow-end">{tr("باز", "Open")}</span> : <span className={`db-trow-pnl ${r.pnl === 0 ? "is-flat" : tone(r.pnl)}`} dir="ltr">{money(r.pnl, rowCur)}</span>}
                 </motion.div>
               );
             })
@@ -132,20 +132,3 @@ function TradeBody({ t }: { t: DashTrade }) {
     </div>
   );
 }
-
-function Tile({ label, value, sub, toneCls = "", ring }: { label: string; value: string; sub: string; toneCls?: string; ring?: number }) {
-  return (
-    <div className="db-tile">
-      <span className="db-stat-label">{label}</span>
-      <b className={`db-tile-val ${toneCls}`} dir="ltr">{value}</b>
-      <span className="db-tile-sub">{sub}</span>
-      {ring !== undefined && (
-        <svg className="db-tile-ring" viewBox="0 0 36 36" aria-hidden="true">
-          <circle cx="18" cy="18" r="15" fill="none" stroke="rgba(var(--pnl-win-rgb),.15)" strokeWidth="3.5" />
-          <motion.circle cx="18" cy="18" r="15" fill="none" stroke="var(--pnl-win)" strokeWidth="3.5" strokeLinecap="round" transform="rotate(-90 18 18)" initial={{ pathLength: 0 }} animate={{ pathLength: Math.max(0.0001, ring) }} transition={{ duration: 1.1, delay: 0.4 }} />
-        </svg>
-      )}
-    </div>
-  );
-}
-

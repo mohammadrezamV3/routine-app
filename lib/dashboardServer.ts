@@ -23,6 +23,8 @@ import { ensureFreshCalendar } from "./economicCalendar";
 import { getAdminFlags } from "./adminFlag";
 import { resolveFeaturesFor } from "./featureFlagsServer";
 import { announcementViewer, listAnnouncementsFor } from "./announcementsServer";
+import { buildTradeTools } from "./tradeToolsServer";
+import { accountGrowthPct } from "./tradeHubCompute";
 import type { DashCalorie, DashEvent, DashExercise, DashMentors, DashNotification, DashRoadmap, DashSleep, DashTrade, DashboardData } from "./dashboardTypes";
 import { dashboardBlocks } from "./dashboardSection";
 import { hiddenNotificationUrls, notificationSectionWhere } from "./notificationSection";
@@ -263,7 +265,7 @@ export async function buildTrade({ userId, date, tz }: Ctx): Promise<DashTrade> 
   res.accounts = top.map((a) => {
     const m = money.get(a.id)!;
     const s = computeTradeStats((byAcc.get(a.id) ?? []) as any, { ...a, initialBalance: m.initialBalance, cashFunding: m.cashFunding, cashCharges: m.cashCharges });
-    return { id: a.id, name: a.name, color: a.color, currency: a.currency, type: a.type, balance: s.balance, netPnl: s.netPnl, winRate: s.winRate, goalProgress: s.goalProgress };
+    return { id: a.id, name: a.name, color: a.color, currency: a.currency, type: a.type, balance: s.balance, netPnl: s.netPnl, winRate: s.winRate, goalProgress: s.goalProgress, growthPct: accountGrowthPct(s.balance, s.netPnl) };
   });
   return res;
 }
@@ -462,13 +464,15 @@ export async function buildDashboard(userId: string, day: { date: string; tz: nu
   const none = Promise.resolve(null);
   const blocks = dashboardBlocks(section);
 
-  const [exercise, calorie, trade, calendar, roadmaps, sleep, mentors, notifications, announcements] = await Promise.all([
+  const [exercise, calorie, trade, calendar, tradeTools, roadmaps, sleep, mentors, notifications, announcements] = await Promise.all([
     // هر بخش هم ماژول پولی خودش رو می‌خواد هم فلگ پنل ادمین (/admin/features)؛
     // فلگ خاموش → null، درست مثل ماژول خریده‌نشده
     blocks.fitness && has(ModuleKey.EXERCISE) && features.exercise ? safe("exercise", errors, () => buildExercise(ctx)) : none,
     blocks.fitness && has(ModuleKey.CALORIE) && features.calorie ? safe("calorie", errors, () => buildCalorie(ctx)) : none,
     blocks.trade && has(ModuleKey.TRADE) && features.tradeJournal ? safe("trade", errors, () => buildTrade(ctx)) : none,
     blocks.trade && has(ModuleKey.TRADE) && features.economicCalendar ? safe("calendar", errors, () => buildCalendar()) : none,
+    // ابزارهای ترید فقط برای داشبورد بخش ترید (جای هاب قدیمی /trade)
+    blocks.trade && section === "trade" && has(ModuleKey.TRADE) ? buildTradeTools(ctx, features, errors) : none,
     blocks.roadmaps && has(ModuleKey.ROADMAP) && features.roadmaps ? safe("roadmaps", errors, () => buildRoadmaps(ctx)) : none,
     blocks.sleep && features.sleep ? safe("sleep", errors, () => buildSleep(ctx)) : none,
     features.mentors ? safe("mentors", errors, () => buildMentors(ctx)) : none,
@@ -501,6 +505,7 @@ export async function buildDashboard(userId: string, day: { date: string; tz: nu
     calorie,
     trade,
     calendar,
+    tradeTools,
     roadmaps,
     sleep,
     mentors,

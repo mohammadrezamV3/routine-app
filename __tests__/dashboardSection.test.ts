@@ -51,22 +51,31 @@ describe("sectionAreas", () => {
     expect(a.lg.startsWith('"today heat heat"')).toBe(true);
     expect(a.sm).toBe('"today" "heat" "sleep" "road" "mentor" "inbox"');
   });
-  it("ورزش: تمرین و کالری اول", () => {
-    const a = sectionAreas(set("inbox", "ex", "cal", "sleep", "mentor"), "workout");
-    expect(a.lg).toBe('"ex ex cal" "sleep mentor inbox"');
-    expect(a.md).toBe('"ex cal" "sleep mentor" "inbox inbox"');
-    expect(a.sm).toBe('"ex" "cal" "sleep" "mentor" "inbox"');
+  it("ورزش: فضای تمرین ردیف تمام‌عرض اول، بعد خواب؛ مربی و اعلان‌ها نه", () => {
+    const a = sectionAreas(set("inbox", "space", "sleep", "mentor"), "workout");
+    expect(a.lg).toBe('"space space space" "sleep sleep sleep"');
+    expect(a.md).toBe('"space space" "sleep sleep"');
+    expect(a.sm).toBe('"space" "sleep"');
   });
-  it("ورزش بدون کالری: تمرین کل ردیف", () => {
-    const a = sectionAreas(set("inbox", "ex"), "workout");
-    expect(a.lg).toBe('"ex ex ex" "inbox inbox inbox"');
+  it("ورزش بدون فضای تمرین: ex/cal دیگه چیده نمی‌شن", () => {
+    const b = sectionAreas(set("inbox", "ex", "cal", "sleep"), "workout");
+    expect(b.lg).not.toContain("ex");
+    expect(b.sm).toBe('"sleep"');
   });
-  it("ترید: عملکرد و بازار اول و فقط کارت‌های موجود", () => {
+  it("ترید: عملکرد و بازار اول، مربی و اعلان‌ها نه", () => {
     const a = sectionAreas(set("inbox", "trade", "market", "mentor"), "trade");
-    expect(a.lg).toBe('"trade trade market" "mentor mentor inbox"');
-    expect(a.md).toBe('"trade trade" "market market" "mentor inbox"');
+    expect(a.lg).toBe('"trade trade market"');
+    expect(a.md).toBe('"trade trade" "market market"');
     const b = sectionAreas(set("inbox", "trade"), "trade");
-    expect(b.lg).toBe('"trade trade trade" "inbox inbox inbox"');
+    expect(b.lg).toBe('"trade trade trade"');
+  });
+  it("ترید با ابزارها: ردیف تمام‌عرض بعد از عملکرد و بازار", () => {
+    const a = sectionAreas(set("inbox", "trade", "market", "tools", "mentor"), "trade");
+    expect(a.lg).toBe('"trade trade market" "tools tools tools"');
+    expect(a.md).toBe('"trade trade" "market market" "tools tools"');
+    expect(a.sm).toBe('"trade" "market" "tools"');
+    const b = sectionAreas(set("inbox", "tools"), "trade");
+    expect(b.lg).toBe('"tools tools tools"');
   });
   it("هر ناحیه فقط یک بار و فقط از کارت‌های موجود", () => {
     const has = set("inbox", "today", "heat", "sleep", "mentor");

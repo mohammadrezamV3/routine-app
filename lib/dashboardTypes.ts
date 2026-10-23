@@ -8,6 +8,7 @@
 // persistence و همگام‌سازی زنده با /weekly).
 
 import type { FeatureKey } from "./featureFlags";
+import type { HubChecklists, HubNote } from "./tradeHubTypes";
 
 export type DashImpact = "LOW" | "MEDIUM" | "HIGH";
 
@@ -52,6 +53,8 @@ export type DashTradeAccount = {
   netPnl: number;
   winRate: number | null;
   goalProgress: number | null;
+  /** رشد حساب نسبت به سرمایه‌ی شروع به درصد (accountGrowthPct)؛ null اگه پایه معلوم نیست */
+  growthPct: number | null;
 };
 
 export type DashTrade = {
@@ -68,6 +71,18 @@ export type DashTrade = {
   daily30: number[];
   recent: { id: string; accountId: string; currency: string; symbol: string; direction: "BUY" | "SELL"; pnl: number; result: string; status: string; openedAt: string }[];
   accounts: DashTradeAccount[];
+};
+
+/**
+ * ابزارهای ترید (فقط داشبورد بخش ترید، که حالا جای هاب قدیمی /trade هم هست):
+ * خلاصه‌ی زنده‌ی هر ابزاری که آمارش در کارت عملکرد/بازار نیست. هر زیربخش با
+ * فلگ خودش؛ خاموش یا خطا → null.
+ */
+export type DashTradeTools = {
+  chart: { lastSymbol: string | null; recentSymbols: string[] } | null;
+  checklists: HubChecklists | null;
+  notes: { count: number; latest: HubNote | null } | null;
+  metatrader: { connected: number; lastSyncAt: string | null } | null;
 };
 
 export type DashEvent = {
@@ -131,6 +146,8 @@ export type DashboardData = {
   trade: DashTrade | null;
   /** رویدادهای مهم پیش‌رو (نیازمند TRADE) */
   calendar: { events: DashEvent[] } | null;
+  /** فقط بخش ترید با ماژول TRADE؛ وگرنه null */
+  tradeTools: DashTradeTools | null;
   roadmaps: { items: DashRoadmap[]; total: number } | null;
   /** فقط وقتی بخش (روتین یا ورزش) خواب رو نشون می‌ده ساخته می‌شه، وگرنه null */
   sleep: DashSleep | null;

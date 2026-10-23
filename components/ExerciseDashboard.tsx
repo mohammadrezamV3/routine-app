@@ -38,10 +38,13 @@ export function ExerciseDashboard({
   plan,
   onPlanChange,
   onPlanDeleted,
+  inSpace = false,
 }: {
   plan: ExercisePlan;
   onPlanChange: (plan: ExercisePlan) => void;
   onPlanDeleted?: () => void;
+  /** داخل «فضای تمرین» داشبورد: فاصله‌ها هم‌اندازه‌ی بنتو و کاتالوگ در حالت جلسه فشرده */
+  inSpace?: boolean;
 }) {
   const [selectedIso, setSelectedIso] = useState(todayIso);
   const [recenterKey, setRecenterKey] = useState(0);
@@ -221,8 +224,8 @@ export function ExerciseDashboard({
   }
 
   return (
-    <div className="flex flex-col gap-4 sm:gap-6">
-      <div className="flex flex-col gap-2.5 sm:gap-3 lg:flex-row lg:items-center lg:gap-4">
+    <div className={inSpace ? "db-sp-stack flex flex-col" : "flex flex-col gap-4 sm:gap-6"}>
+      <div className={inSpace ? "db-sp-bar flex flex-col lg:flex-row lg:items-center" : "flex flex-col gap-2.5 sm:gap-3 lg:flex-row lg:items-center lg:gap-4"}>
         <DashDateSelector
           activeIso={selectedIso}
           onSelect={setSelectedIso}
@@ -260,7 +263,11 @@ export function ExerciseDashboard({
           داخلیش (تایمر، آیتم‌های تیک‌خورده) از دست نره. */}
       <div
         className={
-          sessionActive
+          inSpace && sessionActive
+            ? "db-sp-stack flex flex-col"
+            : inSpace
+            ? "db-sp-stack flex flex-col lg:grid lg:grid-cols-[2.5fr_0.8fr_1fr] lg:items-stretch"
+            : sessionActive
             ? "flex flex-col gap-4 sm:gap-6 lg:grid lg:grid-cols-[2.5fr_1fr] lg:items-start lg:gap-6"
             : "flex flex-col gap-4 sm:gap-6 lg:grid lg:grid-cols-[2.5fr_0.8fr_1fr] lg:items-stretch lg:gap-6"
         }
@@ -290,11 +297,11 @@ export function ExerciseDashboard({
             باید بمونه (نه فقط قبل از شروع) — فقط آمار/دوستان و برنامه‌ی هفتگی
             پایین صفحه‌ان که توی حالت تمرکز روی جلسه مخفی می‌شن. */}
         <div className="order-3 lg:order-2">
-          <ExerciseCatalogCard delay={0.1} />
+          <ExerciseCatalogCard delay={0.1} compact={inSpace && sessionActive} />
         </div>
 
         {!sessionActive && (
-          <div className="order-2 flex flex-col gap-4 sm:gap-6 lg:order-3">
+          <div className={inSpace ? "db-sp-stack order-2 flex flex-col lg:order-3" : "order-2 flex flex-col gap-4 sm:gap-6 lg:order-3"}>
             {dashboardPrefs.showFriends && <DashFriendsCard delay={0.15} module="exercise" />}
             <ExerciseStatsCard sessionsDone={sessionsDone} sessionsTotal={sessionsTotal} todayPct={todayPct} weekPct={weekPct} delay={0.2} />
           </div>

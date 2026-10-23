@@ -5,7 +5,7 @@
 
 import { pathAllowedIn, type SectionKey } from "./sections";
 
-export type DashArea = "today" | "heat" | "ex" | "cal" | "trade" | "market" | "mentor" | "road" | "inbox" | "sleep";
+export type DashArea = "today" | "heat" | "ex" | "cal" | "space" | "trade" | "market" | "mentor" | "road" | "inbox" | "sleep" | "tools";
 
 export type DashBlocks = {
   /** کارت‌های برنامه‌ی امروز و نقشه‌ی ثبات */
@@ -84,21 +84,20 @@ export function sectionAreas(has: Set<DashArea>, section: SectionKey): { lg: str
     lg.push(...packRows(rest, 3));
     md.push(...packRows(rest, 2));
   } else if (section === "workout") {
-    order = ["ex", "cal", "sleep", "mentor", "inbox"];
-    const fit = pick("ex", "cal");
-    if (fit.length === 2) { lg.push(q(["ex", "ex", "cal"])); md.push(q(["ex", "cal"])); }
-    else if (fit.length === 1) { lg.push(q(fitRow(fit, 3))); md.push(q(fitRow(fit, 2))); }
-    const rest = pick("sleep", "mentor", "inbox");
+    // «فضای تمرین» (پنل‌های واقعی تمرین و تغذیه) جای دو کارت خلاصه‌ی ex/cal: ردیف تمام‌عرض اول
+    order = ["space", "sleep"];
+    if (has.has("space")) { lg.push(q(["space", "space", "space"])); md.push(q(["space", "space"])); }
+    const rest = pick("sleep");
     lg.push(...packRows(rest, 3));
     md.push(...packRows(rest, 2));
   } else {
-    order = ["trade", "market", "mentor", "inbox"];
+    // ترید: عملکرد و بازار، بعد ابزارها (کارت مربی و اعلان‌ها فقط مال روتینه)
+    order = ["trade", "market", "tools"];
     const main = pick("trade", "market");
     if (main.length === 2) { lg.push(q(["trade", "trade", "market"])); md.push(q(["trade", "trade"]), q(["market", "market"])); }
     else if (main.length === 1) { lg.push(q(fitRow(main, 3))); md.push(q(fitRow(main, 2))); }
-    const rest = pick("mentor", "inbox");
-    lg.push(...packRows(rest, 3));
-    md.push(...packRows(rest, 2));
+    // ابزارها: ردیف تمام‌عرض زیر عملکرد و بازار (جای هاب قدیمی /trade)
+    if (has.has("tools")) { lg.push(q(["tools", "tools", "tools"])); md.push(q(["tools", "tools"])); }
   }
   const sm = order.filter((a) => has.has(a)).map((a) => q([a]));
   return { lg: lg.join(" "), md: md.join(" "), sm: sm.join(" ") };
