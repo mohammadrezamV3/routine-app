@@ -1,11 +1,18 @@
-// پلن‌های هر بخش: روی زیردامنه فقط پلن همون بخش و پلن مکس نشون داده می‌شه (جداسازی بخش‌ها).
-// دامنه‌ی اصلی (section = null) همه‌ی پلن‌ها رو داره. خالص و بدون ری‌اکت (قابل تست).
+// ترتیب پلن‌ها بر اساس بخش: روی زیردامنه‌ی یک بخش همه‌ی پلن‌ها نمایش داده می‌شن
+// (هیچ پلنی پنهان نمی‌شه و از هیچ بخشی بسته نیست)، فقط پلن همون بخش اول میاد،
+// بعد پلن مکس، بعد بقیه به ترتیب اصلی. دامنه‌ی اصلی (section = null) ترتیب اصلی را نگه می‌دارد.
+// خالص و بدون ری‌اکت (قابل تست).
 import type { SectionKey } from "@/lib/sections";
 
 const PLAN_SECTION: Record<string, SectionKey | undefined> = { basic: "routine", exercise: "workout", trade: "trade" };
 
-export function planVisibleIn(planKey: string, section: SectionKey | null): boolean {
-  if (!section) return true;
-  const own = PLAN_SECTION[planKey];
-  return !own || own === section;
+export function orderPlansForSection<T extends { key: string }>(plans: readonly T[], section: SectionKey | null): T[] {
+  if (!section) return [...plans];
+  const rank = (key: string): number => {
+    if (PLAN_SECTION[key] === section) return 0;
+    if (key === "max") return 1;
+    return 2;
+  };
+  // Array.prototype.sort پایدار است، پس ترتیب اصلی داخل هر گروه حفظ می‌شود.
+  return [...plans].sort((a, b) => rank(a.key) - rank(b.key));
 }

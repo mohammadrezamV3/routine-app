@@ -1,0 +1,48 @@
+/* ── ابزارهای خواب (SleepToolsPanels): شبکه‌ی 2x2 کاشی‌های بزرگ با آیکون تصویرگونه ──
+   کاشی‌ها همون سطح واحد باکس‌ها (--box-bg / --box-line)؛ هنر آیکون‌ها SVG (stroke) و
+   رنگ تاکید هر ابزار از --t. هیچ بک‌گراند تازه‌ای نیست. */
+.slt-row{ display:grid; grid-template-columns:repeat(2, minmax(0,1fr)); gap:12px; min-width:0; }
+@media (min-width:1024px){ .slt-row{ gap:20px; } }
+body[data-theme="light"] .sleep-scope button.slt-tile, body:not([data-theme="light"]) .sleep-scope button.slt-tile{
+  --t:var(--slp-ink);
+  position:relative; width:100%; min-height:116px; padding:14px; border-radius:22px;
+  background:var(--box-bg); border:1px solid var(--box-line); box-shadow:none;
+  display:flex; flex-direction:column; align-items:flex-start; justify-content:space-between; gap:12px;
+  color:var(--text); font-family:inherit; min-width:0; text-align:start;
+  transition:border-color .2s ease, transform .15s ease;
+}
+@media (min-width:1024px){
+  body[data-theme="light"] .sleep-scope button.slt-tile, body:not([data-theme="light"]) .sleep-scope button.slt-tile{ min-height:132px; padding:18px; }
+}
+.sleep-scope .slt-tile.is-breath{ --t:var(--slp-great); }
+.sleep-scope .slt-tile.is-nap{ --t:var(--slp-fair); }
+.sleep-scope .slt-tile.is-stats{ --t:var(--slp-ink-2); }
+body[data-theme="light"] .sleep-scope .slt-tile.is-breath{ --t:#087F5C; }
+body[data-theme="light"] .sleep-scope .slt-tile.is-nap{ --t:#B35F00; }
+.slt-art{ display:block; width:46px; height:46px; flex:none; color:var(--text); }
+@media (min-width:1024px){ .slt-art{ width:54px; height:54px; } }
+.slt-art svg{ display:block; width:100%; height:100%; }
+.slt-txt{ display:flex; flex-direction:column; gap:3px; min-width:0; max-width:100%; }
+.slt-label{ font-size:15px; font-weight:800; line-height:1.3; color:var(--text); white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+.slt-sub{ font-size:12px; font-weight:600; line-height:1.5; color:var(--slp-sub); white-space:nowrap; overflow:hidden; text-overflow:ellipsis; font-variant-numeric:tabular-nums; }
+body[data-theme] .sleep-scope button.slt-tile.is-live{ border-color:var(--t); }
+body[data-theme] .sleep-scope button.slt-tile.is-live .slt-sub{ color:var(--t); font-weight:700; }
+.slt-eq{ position:absolute; inset-block-start:16px; inset-inline-end:16px; display:inline-flex; align-items:flex-end; gap:2px; height:18px; color:var(--t); }
+.slt-eq i{ display:block; width:3px; height:100%; border-radius:2px; background:currentColor; transform:scaleY(.3); transform-origin:bottom; animation:slt-eq 1.1s ease-in-out infinite; }
+.slt-eq i:nth-child(2){ animation-delay:-.3s; animation-duration:.9s; }
+.slt-eq i:nth-child(3){ animation-delay:-.6s; animation-duration:1.3s; }
+.slt-eq i:nth-child(4){ animation-delay:-.15s; animation-duration:1s; }
+@keyframes slt-eq{ 0%,100%{ transform:scaleY(.25); } 50%{ transform:scaleY(1); } }
+.slt-pulse{ animation:slt-pulse 1.4s ease-in-out infinite; }
+@keyframes slt-pulse{ 0%,100%{ transform:scale(1); opacity:1; } 50%{ transform:scale(1.08); opacity:.75; } }
+.sleep-scope button.slt-tile:active{ transform:scale(.97); }
+.sleep-scope button.slt-tile:focus-visible{ outline:2px solid var(--slp-ink); outline-offset:2px; }
+@media (hover:hover){
+  body[data-theme] .sleep-scope button.slt-tile:hover:not(.is-live){ border-color:color-mix(in srgb, var(--t) 55%, var(--box-line)); }
+}
+@media (prefers-reduced-motion:reduce){
+  .sleep-scope button.slt-tile{ transition:none; } .sleep-scope button.slt-tile:active{ transform:none; }
+  .slt-eq i{ animation:none; transform:scaleY(.65); } .slt-pulse{ animation:none; }
+}
+html[data-perf-weak] .slt-eq i, html[data-perf="low"] .slt-eq i{ animation:none; transform:scaleY(.65); }
+html[data-perf-weak] .slt-pulse, html[data-perf="low"] .slt-pulse{ animation:none; }

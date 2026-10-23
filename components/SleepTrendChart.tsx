@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useMemo, useRef, useState } from "react";
-import { BarChart3 } from "lucide-react";
+import { BarChart3, Pencil } from "lucide-react";
 import { SegmentedTabs } from "./SegmentedTabs";
 import {
   scoreBandLabel,
@@ -151,9 +151,10 @@ export function SleepTrendChart({ entries, insights, target, todayIso, onPick }:
 
   const dayLabelStep = n === 7 ? 1 : 5;
 
+  // زدن ستون = انتخاب و نشان‌دادن جزئیات؛ شب خالی مستقیم ثبت رو باز می‌کنه
   const pick = (iso: string) => {
     setSel(iso);
-    onPick(iso);
+    if (!byDate.has(iso)) onPick(iso);
   };
 
   const readDate = (iso: string) => {
@@ -247,6 +248,9 @@ export function SleepTrendChart({ entries, insights, target, todayIso, onPick }:
                 <rect className="slc-sel" x={colX(i) + 1} y={T_TOP - 4} width={Math.max(2, cw - 2)} height={LBL_Y - T_TOP - 2} rx={8} />
                 {capsule}
                 {bar}
+                {isSel && x.rec && (
+                  <text className="slc-tip" x={cx} y={Math.max(D_TOP + 9, dY(x.dur) - 6)} textAnchor="middle">{faNum(`${Math.floor(x.dur / 60)}:${String(Math.round(x.dur % 60)).padStart(2, "0")}`)}</text>
+                )}
               </g>
             );
           })}
@@ -289,6 +293,9 @@ export function SleepTrendChart({ entries, insights, target, todayIso, onPick }:
             <span className={`slc-read-item slp-c-${active.band}`}>
               <em>{tr("امتیاز", "Score")}</em>{faNum(active.score ?? 0)} ({scoreBandLabel(active.band)})
             </span>
+            <button type="button" className="btn btn-ghost btn-sm slc-read-edit" onClick={() => onPick(active.iso)}>
+              <Pencil aria-hidden="true" width={15} height={15} />{tr("ویرایش", "Edit")}
+            </button>
           </>
         ) : (
           <span className="sl-sub">{tr("ثبتی برای این شب نیست؛ بزن تا ثبت کنی.", "Nothing logged for this night; tap to log it.")}</span>

@@ -50,3 +50,13 @@
 .sli-empty-n{ font-size:13px; font-weight:900; font-variant-numeric:tabular-nums; direction:ltr; }
 .sli-empty-body .sl-sub{ margin:0; flex:1; min-width:0; }
 html[dir="ltr"] .sli-tag b.sli-val{ text-align:right; }
+
+/* کاشی‌های عددی هم‌قد و هم‌تراز: برچسب بالا، مقدار پایین */
+.sli-grid .sl-stat{ justify-content:space-between; min-height:76px; }
+.sli-grid .sl-stat.sli-ring-stat{ flex-direction:row; justify-content:space-between; align-items:center; }
+.sli-ring-txt b{ font-size:16px; font-variant-numeric:tabular-nums; }
+.sli-card{ border-inline-start-width:3px; }
+.sli-t-good{ border-inline-start-color:var(--slp-great); }
+.sli-t-fair{ border-inline-start-color:var(--slp-fair); }
+.sli-t-poor{ border-inline-start-color:var(--slp-poor); }
+.sli-t-ink{ border-inline-start-color:var(--slp-ink); }

@@ -1,20 +1,26 @@
 "use client";
 
 import { useEffect, useRef, useState } from "react";
+import { createPortal } from "react-dom";
 import { useRouter } from "next/navigation";
-import { ChevronRight } from "lucide-react";
+import { ArrowLeft, Check, X } from "lucide-react";
 import { HOURS_OPTIONS, LEVEL_OPTIONS, type HoursValue, type LevelValue } from "@/lib/roadmapPlan";
+import { LockBodyScroll } from "./LockBodyScroll";
+import { SegmentedTabs } from "./SegmentedTabs";
 import { Spinner } from "./Spinner";
+import { faNum } from "@/lib/jalali";
 import { tr, pick } from "@/lib/i18n";
 
 /**
- * ویزارد ساخت مسیر — سه گام کوتاه.
+ * ویزارد ساخت مسیر — چهار صفحه‌ی کوتاه، هر صفحه یک سوال.
  *
- * ۱) چی (اجباری)  ۲) برای چی  ۳) سطح + وقت هفتگی + پیش‌زمینه.
- * گام سوم کاملا اختیاری‌ست، ولی همین دوتا عدد مستقیم مدت‌زمان و عمق هر
- * مرحله را عوض می‌کنند: مسیر «صفر مطلق با هفته‌ای ۳ ساعت» با «متوسط با
+ * ۱) چی (اجباری)  ۲) برای چی  ۳) سطح + وقت هفتگی  ۴) پیش‌زمینه (اختیاری).
+ * گام‌های ۲ تا ۴ اختیاری‌اند، ولی سطح و وقت هفتگی مستقیم مدت‌زمان و عمق
+ * هر مرحله را عوض می‌کنند: مسیر «صفر مطلق با هفته‌ای ۳ ساعت» با «متوسط با
  * هفته‌ای ۲۰ ساعت» حتی تعداد مرحله‌هایش هم یکی نیست. به‌جای متن آزاد
- * چیپ‌اند تا یک کلیک باشند و سرور هم فقط مقدار معتبر بپذیرد.
+ * SegmentedTabs تا یک کلیک باشند و سرور هم فقط مقدار معتبر بپذیرد.
+ *
+ * فقط ظاهر عوض شده؛ بدنه‌ی درخواست `POST /api/roadmaps` و ورودی‌ها همان قبلی‌ست.
  */
 
 const MAX_TOPIC = 120;
@@ -30,6 +36,16 @@ const GOAL_CHIPS = [
   { fa: "علاقه و کنجکاوی", en: "Interest and curiosity" },
 ];
 
+// برچسب کوتاه تب‌ها (جا برای چهار تب کنار هم)؛ متن کامل هر گزینه زیر تب‌ها
+// همان برچسب اصلی lib/roadmapPlan است.
+const LEVEL_SHORT: Record<LevelValue, { fa: string; en: string }> = {
+  zero: { fa: "صفر", en: "Zero" },
+  basic: { fa: "مقدماتی", en: "Basic" },
+  mid: { fa: "متوسط", en: "Mid" },
+  pro: { fa: "حرفه‌ای", en: "Pro" },
+};
+const HOURS_SHORT: Record<HoursValue, string> = { "3": "<5", "8": "5-10", "15": "10-20", "25": "20+" };
+
 // ساخت دوفازی است و تا ~۵۵ ثانیه طول می‌کشد؛ جمله‌ها همان فازهای واقعی‌اند
 // تا کاربر بداند الان دقیقا چه اتفاقی می‌افتد، نه یک اسپینر بی‌حرف.
 const BUILD_LINES = [
@@ -43,12 +59,14 @@ const BUILD_LINES = [
   { fa: "دارم نامه‌ی راهنمای مسیر رو می‌نویسم…", en: "Writing the guide letter for your path…" },
 ];
 
-type Step = "topic" | "goal" | "profile";
-const STEPS: Step[] = ["topic", "goal", "profile"];
-const titles = (): Record<Step, string> => ({
+type Step = "topic" | "goal" | "pace" | "background";
+const STEPS: Step[] = ["topic", "goal", "pace", "background"];
+
+const questions = (): Record<Step, string> => ({
   topic: tr("می‌خوای چی یاد بگیری؟", "What do you want to learn?"),
-  goal: tr("هدفت چیه؟", "What is your goal?"),
-  profile: tr("از خودت بگو", "Tell us about yourself"),
+  goal: tr("هدفت از یادگیریش چیه؟", "Why do you want to learn it?"),
+  pace: tr("الان کجایی و چقدر وقت داری؟", "Where are you now, and how much time do you have?"),
+  background: tr("چیز مرتبطی بلدی؟", "Do you know anything related?"),
 });
 
 export function RoadmapWizard({
@@ -64,18 +82,29 @@ export function RoadmapWizard({
   const [step, setStep] = useState<Step>("topic");
   const [topic, setTopic] = useState(initialTopic);
   const [goal, setGoal] = useState("");
-  const [level, setLevel] = useState<LevelValue | "">("");
-  const [hours, setHours] = useState<HoursValue | "">("");
+  const [level, setLevel] = useState<LevelValue | null>(null);
+  const [hours, setHours] = useState<HoursValue | null>(null);
   const [background, setBackground] = useState("");
   const [status, setStatus] = useState<"idle" | "building" | "success" | "error">("idle");
   const [buildLine, setBuildLine] = useState(0);
   const [error, setError] = useState<string | null>(null);
   const inputRef = useRef<HTMLInputElement>(null);
+  const closeRef = useRef({ busy: false, onClose });
 
   const busy = status === "building" || status === "success";
   const stepIndex = STEPS.indexOf(step);
+  closeRef.current = { busy, onClose };
 
-  useEffect(() => { if (!busy) inputRef.current?.focus(); }, [step, busy]);
+  useEffect(() => { if (!busy) inputRef.current?.focus({ preventScroll: true }); }, [step, busy]);
+
+  useEffect(() => {
+    function onKey(e: KeyboardEvent) {
+      if (e.key !== "Escape" || closeRef.current.busy) return;
+      closeRef.current.onClose();
+    }
+    document.addEventListener("keydown", onKey);
+    return () => document.removeEventListener("keydown", onKey);
+  }, []);
 
   useEffect(() => {
     if (status !== "building") return;
@@ -136,11 +165,8 @@ export function RoadmapWizard({
       setStep("goal");
       return;
     }
-    if (step === "goal") {
-      setError(null);
-      setStep("profile");
-      return;
-    }
+    if (step === "goal") { setError(null); setStep("pace"); return; }
+    if (step === "pace") { setError(null); setStep("background"); return; }
     build();
   }
 
@@ -149,152 +175,154 @@ export function RoadmapWizard({
     setStep(STEPS[Math.max(0, stepIndex - 1)]);
   }
 
-  return (
+  const levelFull = LEVEL_OPTIONS.find((o) => o.value === level);
+  const hoursFull = HOURS_OPTIONS.find((o) => o.value === hours);
+  const isLast = step === "background";
+
+  if (typeof document === "undefined") return null;
+  return createPortal(
     <>
-      <div className="wsearch-newform-overlay strong-blur open" onClick={busy ? undefined : onClose} />
-      <div className="wsearch-newform dash-scope open">
-        <div className="relative z-[1] add-program-glass rp-wiz">
-          <div className="wsearch-newform-head">
-            <div className="wsearch-newform-title accent">{busy ? tr("در حال ساخت مسیرت", "Building your path") : titles()[step]}</div>
-            {!busy && <button className="nav-close" onClick={onClose} aria-label={tr("بستن", "Close")}>×</button>}
+      <LockBodyScroll />
+      <div className="modal-overlay open rmx-wz-overlay" onClick={busy ? undefined : onClose} />
+      <div className="rmx-wz" role="dialog" aria-modal="true" aria-label={tr("ساخت مسیر یادگیری", "Build a learning path")}>
+        {busy ? (
+          <div className="rmx-wz-build">
+            <Spinner size={28} className="rmx-wz-spinner" label={null} />
+            <h2 className="rmx-wz-build-title">{tr("در حال ساخت مسیرت", "Building your path")}</h2>
+            <div className="rmx-wz-build-topic">«{topic.trim()}»</div>
+            <ul className="rmx-wz-phases" role="status" aria-live="polite">
+              {BUILD_LINES.map((line, i) => (
+                <li key={i} className={i < buildLine ? "is-done" : i === buildLine ? "is-now" : ""}>
+                  <span className="rmx-wz-phase-dot">{i < buildLine && <Check size={10} strokeWidth={3} />}</span>
+                  {pick(line)}
+                </li>
+              ))}
+            </ul>
+            <p className="rmx-wz-note">{tr("چند ثانیه — بعدش ساخت در پس‌زمینه ادامه پیدا می‌کنه.", "A few seconds — then the build continues in the background.")}</p>
           </div>
-
-          <div className="rp-wiz-steps" aria-hidden>
-            {STEPS.map((s, i) => (
-              <span key={s} className={i <= stepIndex || busy ? "on" : ""} />
-            ))}
-          </div>
-
-          {busy ? (
-            <div className="rp-wiz-loading">
-              <Spinner size={22} className="rp-wiz-spinner" />
-              <div className="rp-wiz-loading-title">«{topic.trim()}»</div>
-              <ul className="rp-wiz-phases">
-                {BUILD_LINES.map((line, i) => (
-                  <li key={i} className={i < buildLine ? "done" : i === buildLine ? "now" : ""}>{pick(line)}</li>
-                ))}
-              </ul>
-              <div className="rp-wiz-loading-hint">{tr("چند ثانیه — بعدش ساخت در پس‌زمینه ادامه پیدا می‌کنه.", "A few seconds — then the build continues in the background.")}</div>
+        ) : (
+          <>
+            <div className="rmx-wz-top">
+              <span className="rmx-wz-count" dir="ltr">{faNum(stepIndex + 1)} / {faNum(STEPS.length)}</span>
+              <button type="button" className="btn btn-ghost btn-icon btn-bare btn-sm" onClick={onClose} aria-label={tr("بستن", "Close")}>
+                <X size={18} />
+              </button>
             </div>
-          ) : (
-            <>
+            <div className="rmx-wz-bars" aria-hidden="true">
+              {STEPS.map((s, i) => <span key={s} className={i <= stepIndex ? "on" : ""} />)}
+            </div>
+
+            <div className="rmx-wz-step" key={step}>
+              <h2 className="rmx-wz-q">{questions()[step]}</h2>
+
               {step === "topic" && (
                 <>
-                  <label>{tr("چی می‌خوای یاد بگیری؟", "What do you want to learn?")}</label>
                   <input
                     ref={inputRef}
                     type="text"
-                    className="wsearch-newform-name"
+                    className="wsearch-newform-name rmx-field"
+                    aria-label={questions().topic}
                     placeholder={tr("مثلا امنیت شبکه، ادیت ویدیو، گیتار، React", "e.g. network security, video editing, guitar, React")}
                     value={topic}
                     maxLength={MAX_TOPIC}
                     onChange={(e) => { setTopic(e.target.value); setError(null); }}
                     onKeyDown={(e) => { if (e.key === "Enter") next(); }}
                   />
-                  <div className="rp-wiz-hint">
-                    {tr(`لازم نیست بدونی از کجا شروع کنی. خودم تشخیص می‌دم چیا باید بخونی، با چه ترتیبی،
-                    با چه ابزاری — و برای هر مرحله سرفصل‌های ریز، کارهای عملی، پروژه و منبع می‌نویسم.`, "You do not need to know where to start. I will work out what you need to study, in what order and with which tools — and write detailed topics, practical tasks, a project and resources for every stage.")}
-                  </div>
+                  <p className="rmx-wz-hint">
+                    {tr("لازم نیست بدونی از کجا شروع کنی. خودم تشخیص می‌دم چیا باید بخونی، با چه ترتیبی، با چه ابزاری — و برای هر مرحله سرفصل، کار عملی، پروژه و منبع می‌نویسم.", "You do not need to know where to start. I will work out what you need to study, in what order and with which tools — and write topics, practical tasks, a project and resources for every stage.")}
+                  </p>
                 </>
               )}
 
               {step === "goal" && (
                 <>
-                  <label>{tr("هدفت از یادگیریش چیه؟", "Why do you want to learn it?")}</label>
                   <input
                     ref={inputRef}
                     type="text"
-                    className="wsearch-newform-name"
+                    className="wsearch-newform-name rmx-field"
+                    aria-label={questions().goal}
                     placeholder={tr("مثلا می‌خوام تا یک سال دیگه تو همین حوزه استخدام بشم", "e.g. I want to get hired in this field within a year")}
                     value={goal}
                     maxLength={MAX_GOAL}
                     onChange={(e) => setGoal(e.target.value)}
                     onKeyDown={(e) => { if (e.key === "Enter") next(); }}
                   />
-                  <div className="rp-wiz-chips">
+                  <div className="rmx-chips">
                     {GOAL_CHIPS.map((chip) => {
                       const c = pick(chip);
                       return (
-                      <button
-                        key={chip.fa}
-                        type="button"
-                        className={`rp-wiz-chip${goal === c ? " on" : ""}`}
-                        onClick={() => setGoal(goal === c ? "" : c)}
-                      >
-                        {c}
-                      </button>
+                        <button key={chip.fa} type="button" className={`rmx-chip${goal === c ? " on" : ""}`} onClick={() => setGoal(goal === c ? "" : c)}>
+                          {c}
+                        </button>
                       );
                     })}
                   </div>
-                  <div className="rp-wiz-hint">{tr("هدفت مسیر رو از ریشه عوض می‌کنه. اگه هدف مشخصی نداری خالی بذار.", "Your goal changes the path completely. If you do not have a specific goal, leave it empty.")}</div>
+                  <p className="rmx-wz-hint">{tr("هدفت مسیر رو از ریشه عوض می‌کنه. اگه هدف مشخصی نداری خالی بذار.", "Your goal changes the path completely. If you do not have a specific goal, leave it empty.")}</p>
                 </>
               )}
 
-              {step === "profile" && (
+              {step === "pace" && (
                 <>
-                  <label>{tr("الان چقدر بلدی؟", "How much do you know now?")}</label>
-                  <div className="rp-wiz-chips">
-                    {LEVEL_OPTIONS.map((o) => (
-                      <button
-                        key={o.value}
-                        type="button"
-                        className={`rp-wiz-chip${level === o.value ? " on" : ""}`}
-                        onClick={() => setLevel(level === o.value ? "" : o.value)}
-                      >
-                        {pick(o.label)}
-                      </button>
-                    ))}
+                  <div className="rmx-wz-group">
+                    <span className="rmx-wz-label">{tr("سطح فعلی", "Current level")}</span>
+                    <SegmentedTabs<LevelValue>
+                      className="seg-flush rmx-seg"
+                      ariaLabel={tr("سطح فعلی", "Current level")}
+                      active={level}
+                      onChange={setLevel}
+                      options={LEVEL_OPTIONS.map((o) => ({ value: o.value, label: pick(LEVEL_SHORT[o.value]) }))}
+                    />
+                    <span className="rmx-wz-caption">{levelFull ? pick(levelFull.label) : tr("اختیاری — یکی رو انتخاب کن", "Optional — pick one")}</span>
                   </div>
-
-                  <label className="rp-wiz-label">{tr("هفته‌ای چقدر وقت می‌ذاری؟", "How much time can you spend per week?")}</label>
-                  <div className="rp-wiz-chips">
-                    {HOURS_OPTIONS.map((o) => (
-                      <button
-                        key={o.value}
-                        type="button"
-                        className={`rp-wiz-chip${hours === o.value ? " on" : ""}`}
-                        onClick={() => setHours(hours === o.value ? "" : o.value)}
-                      >
-                        {pick(o.label)}
-                      </button>
-                    ))}
+                  <div className="rmx-wz-group">
+                    <span className="rmx-wz-label">{tr("ساعت در هفته", "Hours per week")}</span>
+                    <SegmentedTabs<HoursValue>
+                      className="seg-flush rmx-seg"
+                      ariaLabel={tr("ساعت در هفته", "Hours per week")}
+                      active={hours}
+                      onChange={setHours}
+                      options={HOURS_OPTIONS.map((o) => ({ value: o.value, label: <bdi dir="ltr">{HOURS_SHORT[o.value]}</bdi> }))}
+                    />
+                    <span className="rmx-wz-caption">{hoursFull ? pick(hoursFull.label) : tr("مدت هر مرحله با همین وقت هفتگی حساب می‌شه", "Each stage's length is calculated from this weekly time")}</span>
                   </div>
+                </>
+              )}
 
-                  <label className="rp-wiz-label">{tr("چیز مرتبطی بلدی؟", "Do you know anything related?")} <span className="rp-wiz-optional">{tr("(اختیاری)", "(optional)")}</span></label>
+              {step === "background" && (
+                <>
                   <input
                     ref={inputRef}
                     type="text"
-                    className="wsearch-newform-name"
+                    className="wsearch-newform-name rmx-field"
+                    aria-label={questions().background}
                     placeholder={tr("مثلا پایتون در حد مقدماتی، انگلیسی خوب", "e.g. basic Python, good English")}
                     value={background}
                     maxLength={MAX_BACKGROUND}
                     onChange={(e) => setBackground(e.target.value)}
                     onKeyDown={(e) => { if (e.key === "Enter") next(); }}
                   />
-                  <div className="rp-wiz-hint">{tr("مدت هر مرحله رو با همین وقت هفتگی حساب می‌کنم و چیزی که بلدی رو دوباره درس نمی‌دم.", "I calculate each stage's length from this weekly time, and I will not re-teach what you already know.")}</div>
+                  <p className="rmx-wz-hint">{tr("اختیاریه. چیزی که بلدی رو دوباره درس نمی‌دم.", "Optional. I will not re-teach what you already know.")}</p>
                 </>
               )}
+            </div>
 
-              {error && <div className="form-inline-error">{error}</div>}
+            {error && <div className="form-inline-error rmx-wz-error" role="alert">{error}</div>}
 
-              <div className="wsearch-newform-actions rp-wiz-actions">
-                {step !== "topic" && (
-                  <button type="button" className="rp-wiz-back" onClick={back} aria-label={tr("برگشت", "Back")}>
-                    <ChevronRight size={16} className="dir-flip" />
-                  </button>
-                )}
-                <button
-                  type="button"
-                  className={`wsearch-submit-btn${status === "error" ? " error" : ""}`}
-                  onClick={next}
-                >
-                  {step === "profile" ? tr("مسیرم رو بساز", "Build my path") : tr("بعدی", "Next")}
-                </button>
-              </div>
-            </>
-          )}
-        </div>
+            <div className="rmx-wz-actions">
+              {step === "topic" ? (
+                <button type="button" className="btn btn-ghost" onClick={onClose}>{tr("انصراف", "Cancel")}</button>
+              ) : (
+                <button type="button" className="btn btn-ghost" onClick={back}>{tr("قبلی", "Back")}</button>
+              )}
+              <button type="button" className={`btn btn-primary${status === "error" ? " rmx-shake" : ""}`} onClick={next}>
+                {isLast ? tr("مسیرم رو بساز", "Build my path") : tr("بعدی", "Next")}
+                {!isLast && <ArrowLeft size={16} className="dir-flip" />}
+              </button>
+            </div>
+          </>
+        )}
       </div>
-    </>
+    </>,
+    document.body,
   );
 }

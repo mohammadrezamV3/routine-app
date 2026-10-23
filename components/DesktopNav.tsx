@@ -2,7 +2,7 @@
 
 // منوی افقی هدر برای دسکتاپ/تبلت (>= 1024px، هر دو زبان؛ rtl آینه‌ی ltr).
 // همه‌ی لینک‌ها از همون منبع واحد navLinks.ts میان (فلگ
-// ویژگی‌ها، قفل ماژول)، پس دقیقا هم‌خوان با کشوی همبرگری‌اند. فقط CSS (بدون
+// ویژگی‌ها، قفل ماژول، فیلتر بخش)، پس دقیقا هم‌خوان با کشوی همبرگری‌اند. فقط CSS (بدون
 // framer-motion): نشانگر فعال با transform می‌لغزه، پنل‌های کشویی فقط با اولین
 // هاور/فوکوس/کلیک ساخته می‌شن. زیر 1024px کل این بخش با CSS مخفیه.
 import { Suspense, useCallback, useEffect, useRef, useState } from "react";
@@ -32,36 +32,20 @@ function TabProbe({ onTab }: { onTab: (t: string | null) => void }) {
 // در rtl فلش راست = آیتم قبلی (جهت دیداری)
 const rtlSign = (): 1 | -1 => (document.documentElement.dir === "rtl" ? -1 : 1);
 
+// منوی دسکتاپ دقیقا همون ساختار navLinks.ts رو نشون می‌ده: لینک‌های بالاسطحی و
+// دو گروه («مربی‌ها»، «بیشتر»). گروهی که یک زیرمجموعه‌ی دیدنی داشته باشه لینک ساده می‌شه.
 function buildEntries(features: Features, section: SectionKey | null): Entry[] {
-  const links = getVisibleLinks(features, section);
-  const byHref = (href: string) => links.find((l) => !isGroup(l) && l.href === href) as NavLink | undefined;
-  const groupBy = (icon: string) => links.find((l) => isGroup(l) && l.icon === icon);
   const out: Entry[] = [];
-
-  const link = (id: string, l: NavLink | undefined) => {
-    if (l) out.push({ id, label: l.label, href: l.href, module: l.module });
-  };
-  const group = (id: string, icon: string) => {
-    const g = groupBy(icon);
-    if (!g || !isGroup(g)) return;
-    const kids = visibleChildren(g, features);
-    if (kids.length === 0) return;
-    // یک زیرمجموعه‌ی باقی‌مانده = لینک ساده (منوی تک‌گزینه‌ای بی‌معنیه)
-    if (kids.length === 1) out.push({ id, label: g.label, href: kids[0].href, module: kids[0].module });
-    else out.push({ id, label: g.label, children: kids });
-  };
-
-  link("dashboard", byHref("/dashboard"));
-  group("routine", "weekly");
-  // روی زیردامنه‌ی ورزش گروه «روتین من» فقط خواب داره و در getVisibleLinks لینک ساده شده
-  link("sleep", byHref("/sleep"));
-  group("workout", "exercise");
-  link("trade", byHref("/trade"));
-  link("roadmaps", byHref("/roadmaps"));
-  group("mentors", "mentors");
-  link("blog", byHref("/blog"));
-  const more = ["/analysis/weekly", "/about"].map(byHref).filter(Boolean) as NavLink[];
-  if (more.length) out.push({ id: "more", label: tr("بیشتر", "More"), children: more });
+  for (const item of getVisibleLinks(features, section)) {
+    if (!isGroup(item)) {
+      out.push({ id: item.href, label: item.label, href: item.href, module: item.module });
+      continue;
+    }
+    const kids = visibleChildren(item, features);
+    if (kids.length === 0) continue;
+    if (kids.length === 1) out.push({ id: item.icon, label: item.label, href: kids[0].href, module: kids[0].module });
+    else out.push({ id: item.icon, label: item.label, children: kids });
+  }
   return out;
 }
 

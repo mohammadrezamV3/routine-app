@@ -75,7 +75,7 @@ export function SleepMonthMap({ insights, todayIso, onPick }: SleepMonthMapProps
           const future = c.iso > todayIso;
           const score = scoreOf.get(c.iso);
           const band = score !== undefined ? scoreBand(score) : null;
-          const cls = `slm-cell${c.iso === todayIso ? " is-today" : ""}${future ? " is-future" : ""}${band ? " has-score" : ""}`;
+          const cls = `slm-cell${c.iso === todayIso ? " is-today" : ""}${future ? " is-future" : ""}${band ? ` has-score slm-b-${band}` : ""}`;
           const label = `${faNum(c.day)} ${jMonthName(month.jm - 1)}${band ? tr(`، امتیاز ${faNum(score as number)} (${scoreBandLabel(band)})`, `, score ${score} (${scoreBandLabel(band)})`) : future ? "" : tr("، بدون ثبت", ", not logged")}`;
           const inner = (
             <>

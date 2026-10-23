@@ -1,0 +1,30 @@
+/* اصلاح‌های اسلایدهای داستان هفته (فقط قاعده‌های wl-st-*) */
+
+/* هفته‌ی جاری شماره‌ی ثبت‌شده نداره: به‌جای عدد بزرگ، یک کلمه */
+.wl-st-root .wl-st-big.is-word{
+  display:inline-flex; align-items:center; justify-content:center; gap:calc(var(--u, 1) * 12px);
+  font-family:var(--font-vazir), var(--font-latin), sans-serif;
+  font-size:calc(var(--u, 1) * 54px); letter-spacing:-.02em; line-height:1.5;
+}
+.wl-st-livedot{ flex:none; width:calc(var(--u, 1) * 12px); height:calc(var(--u, 1) * 12px); border-radius:50%; background:var(--ring-1a); }
+
+/* توضیح کوتاه ثابت تیپ هفته زیر عنوان */
+.wl-st-arch-what{
+  max-width:90%; text-align:center; text-wrap:balance;
+  font-size:calc(var(--u, 1) * 15px); line-height:1.8; font-weight:700; color:var(--text);
+}
+.wl-st-root .wl-st-arch-what + .wl-st-cap{ font-size:calc(var(--u, 1) * 13px); font-weight:600; color:var(--muted); opacity:1; -webkit-line-clamp:3; }
+
+/* نمودار مسیر هفته‌ها: محور زمان همیشه چپ به راست */
+.wl-st-trend-dates{ direction:ltr; }
+
+/* ستون‌های ریتم هفته: از ابتدای جعبه (شنبه سمت راست در فارسی) با ستون‌های هم‌عرض تمام‌عرض */
+.wl-st-rbars{ max-width:none; justify-content:start; justify-items:stretch; }
+.wl-st-rbar{ align-items:stretch; }
+.wl-st-rbar > b, .wl-st-rbar > em{ align-self:center; }
+.wl-st-rcol{ width:100%; }
+
+/* اسلاید امتیاز: مهر درجه کنار حلقه می‌شینه، نه روی خط حلقه؛ فاصله‌ی زیرش هم جزو چیدمان حساب می‌شه */
+.wl-st-root .wl-st-ringwrap{ margin-block-end:calc(var(--u, 1) * 40px); }
+.wl-st-root .wl-st-ringwrap .wl-st-stamp{ right:calc(var(--u, 1) * -44px); bottom:calc(var(--u, 1) * -44px); }
+html[dir="ltr"] .wl-st-root .wl-st-ringwrap .wl-st-stamp{ right:auto; left:calc(var(--u, 1) * -44px); }

@@ -2,7 +2,7 @@
 
 // فصل «هدف‌ها»: هدف‌های همین هفته (فقط‌خواندنی) + فرم هدف هفته‌ی بعد (فقط هفته‌ی جاری).
 import { useEffect, useRef, useState } from "react";
-import { Check, Plus, Target, Trash2, X } from "lucide-react";
+import { Check, Sparkles, Target, Trash2, X } from "lucide-react";
 import {
   ANALYSIS_DOMAIN_LABELS, type AnalysisDomain, type WeeklyGoalDto, type WeeklyGoalStatus,
 } from "@/lib/weeklyAnalysis/types";
@@ -11,10 +11,14 @@ import { useSection } from "./SectionProvider";
 import { sectionHasDomain } from "@/lib/weeklyLetter/section";
 import { Spinner } from "./Spinner";
 import { TickOption } from "./TickOption";
-import { DOMAIN_ICONS, MeterBar, Reveal } from "./WeeklyLetterShared";
+import { TickButton } from "./TickButton";
+import { SegmentedTabs } from "./SegmentedTabs";
+import { GradientRing } from "./GradientRing";
+import { DOMAIN_ICONS, Reveal } from "./WeeklyLetterShared";
 import { LiveChapter, useGoalDraftListener, type GoalDraft, type LetterChapterExtra } from "./WeeklyLetterLiveKit";
 import type { LetterChapterProps } from "./WeeklyLetterCtx";
 import { waFetch } from "./WeeklyAnalysisKit";
+import "./wl-medals.css";
 
 const MAX_GOALS = 3;
 const STATUS = {
@@ -25,33 +29,38 @@ const STATUS = {
 
 const DOMAIN_KEYS = Object.keys(ANALYSIS_DOMAIN_LABELS) as AnalysisDomain[];
 
-function GoalCard({ g, live, onDelete, deleting }: { g: WeeklyGoalDto; live: number | null; onDelete?: () => void; deleting?: boolean }) {
+function GoalRow({ g, live, onDelete, deleting }: { g: WeeklyGoalDto; live: number | null; onDelete?: () => void; deleting?: boolean }) {
   const st = STATUS[g.status] ?? STATUS.ACTIVE;
   const Icon = g.domain ? DOMAIN_ICONS[g.domain] : Target;
   const score = g.achievedScore ?? live;
   const ratio = g.target && score !== null ? Math.min(1, Math.max(0, score / g.target)) : null;
   return (
-    <Reveal as="li" className="wl-card wl-goal">
-      <span className="wl-goal-ico"><Icon size={17} /></span>
-      <div className="wl-goal-body">
-        <h3>{g.title}</h3>
-        <div className="wl-goal-meta">
-          {g.domain && <span className="wl-tag">{ANALYSIS_DOMAIN_LABELS[g.domain]}</span>}
+    <li className="wlg-row">
+      <span className="wlg-lead">
+        {ratio !== null ? (
+          <GradientRing value={ratio} size={44} stroke={4}><Icon size={16} aria-hidden="true" /></GradientRing>
+        ) : (
+          <TickButton as="span" checked={g.status === "DONE"} state={g.status === "MISSED" ? "missed" : "idle"} size={26} />
+        )}
+      </span>
+      <div className="wlg-body">
+        <span className="wlg-title">{g.title}</span>
+        <div className="wlg-meta">
+          {g.domain && <span>{ANALYSIS_DOMAIN_LABELS[g.domain]}</span>}
           {g.target !== null && score !== null && (
-            <span className="wl-goal-prog">{tr("رسیدی به", "You reached")} <b>{Math.round(score)}</b> {tr("از", "of")} <b>{Math.round(g.target)}</b></span>
+            <span>{tr("رسیدی به", "You reached")} <b>{Math.round(score)}</b> {tr("از", "of")} <b>{Math.round(g.target)}</b></span>
           )}
-          {g.target !== null && score === null && <span className="wl-goal-prog">{tr("هدف:", "Target:")} <b>{Math.round(g.target)}</b></span>}
+          {g.target !== null && score === null && <span>{tr("هدف:", "Target:")} <b>{Math.round(g.target)}</b></span>}
         </div>
-        {ratio !== null && <MeterBar ratio={ratio} />}
       </div>
       {onDelete ? (
-        <button type="button" className="wl-live-ghost wl-live-icon" onClick={onDelete} disabled={deleting} aria-label={tr("حذف هدف", "Delete goal")}>
+        <button type="button" className="btn btn-icon btn-ghost btn-sm btn-bare" onClick={onDelete} disabled={deleting} aria-label={tr("حذف هدف", "Delete goal")}>
           {deleting ? <Spinner size={14} label={null} /> : <Trash2 size={16} />}
         </button>
       ) : (
-        <span className={`wl-status ${st.cls}`}><st.Icon size={13} />{st.label()}</span>
+        <span className={`wlg-status ${st.cls}`}><st.Icon size={13} />{st.label()}</span>
       )}
-    </Reveal>
+    </li>
   );
 }
 
@@ -155,54 +164,58 @@ export function WeeklyLetterGoals({ ctx, no }: LetterChapterProps & LetterChapte
 
   return (
     <LiveChapter id="goals" no={no} title={tr("هدف‌ها", "Goals")} icon={Target}>
-      <div className="wl-live-goals">
+      <div className={`wlg${a.goals.length > 0 && canEdit ? " wlg-both" : ""}`}>
         {a.goals.length > 0 && (
-          <div className="wl-live-group">
-            <h3 className="wl-live-sub">{tr("هدف‌های این هفته", "This week's goals")}</h3>
-            <ul className="wl-goals">
-              {a.goals.map((g) => <GoalCard key={g.id} g={g} live={liveOf(g.domain)} />)}
+          <Reveal className="wl-card wlg-card">
+            <div className="wlg-head"><h3>{tr("هدف‌های این هفته", "This week's goals")}</h3></div>
+            <ul className="wlg-list">
+              {a.goals.map((g) => <GoalRow key={g.id} g={g} live={liveOf(g.domain)} />)}
             </ul>
-          </div>
+          </Reveal>
         )}
 
         {canEdit && (
-          <div className="wl-live-group">
-            <div className="wl-live-subrow">
-              <h3 className="wl-live-sub">{tr("هدف‌های هفته‌ی بعد", "Next week's goals")}</h3>
-              <span className="wl-live-count">{next.length} {tr("از", "of")} {MAX_GOALS}</span>
+          <Reveal className="wl-card wlg-card" delay={0.06}>
+            <div className="wlg-head">
+              <h3>{tr("هدف‌های هفته‌ی بعد", "Next week's goals")}</h3>
+              <span className="wlg-count" dir="ltr">{next.length} / {MAX_GOALS}</span>
             </div>
             {next.length > 0 && (
-              <ul className="wl-goals">
-                {next.map((g) => <GoalCard key={g.id} g={g} live={null} onDelete={() => remove(g.id)} deleting={deletingId === g.id} />)}
+              <ul className="wlg-list">
+                {next.map((g) => <GoalRow key={g.id} g={g} live={null} onDelete={() => remove(g.id)} deleting={deletingId === g.id} />)}
               </ul>
             )}
             {full ? (
-              <p className="wl-live-note">{tr(`حداکثر ${MAX_GOALS} هدف برای هر هفته. برای هدف تازه یکی رو حذف کن.`, `Up to ${MAX_GOALS} goals per week. Delete one to add a new goal.`)}</p>
+              <p className="wlg-note">{tr(`حداکثر ${MAX_GOALS} هدف برای هر هفته. برای هدف تازه یکی رو حذف کن.`, `Up to ${MAX_GOALS} goals per week. Delete one to add a new goal.`)}</p>
             ) : (
-              <form ref={formRef} className="wl-card wl-live-form" onSubmit={add}>
-                <div className="wl-live-row">
-                  <select
-                    className="wsearch-newform-name wl-live-sel"
-                    value={domain}
-                    onChange={(e) => setDomain(e.target.value as AnalysisDomain | "")}
-                    aria-label={tr("بخش هدف", "Goal area")}
-                  >
-                    <option value="">{tr("عمومی", "General")}</option>
-                    {a.domains.map((d) => <option key={d.domain} value={d.domain}>{ANALYSIS_DOMAIN_LABELS[d.domain]}</option>)}
-                  </select>
-                  <input
-                    ref={titleRef}
-                    className="wsearch-newform-name wl-live-title"
-                    value={title}
-                    maxLength={120}
-                    onChange={(e) => setTitle(e.target.value)}
-                    placeholder={tr("مثلا: هر شب قبل از 12 بخوابم", "e.g. Sleep before 12 every night")}
-                    aria-label={tr("عنوان هدف", "Goal title")}
+              <form ref={formRef} className="wlg-form" onSubmit={add}>
+                <div className="wlg-domain">
+                  <SegmentedTabs<string>
+                    ariaLabel={tr("بخش هدف", "Goal area")}
+                    active={domain || "general"}
+                    onChange={(v) => setDomain(v === "general" ? "" : (v as AnalysisDomain))}
+                    options={[
+                      { value: "general", label: <Sparkles size={16} aria-label={tr("عمومی", "General")} /> },
+                      ...a.domains.map((d) => {
+                        const I = DOMAIN_ICONS[d.domain];
+                        return { value: d.domain as string, label: <I size={16} aria-label={ANALYSIS_DOMAIN_LABELS[d.domain]} /> };
+                      }),
+                    ]}
                   />
+                  <span className="wlg-domain-name" aria-live="polite">{domain ? ANALYSIS_DOMAIN_LABELS[domain] : tr("عمومی", "General")}</span>
                 </div>
-                <div className="wl-live-row wl-live-target">
+                <input
+                  ref={titleRef}
+                  className="wsearch-newform-name"
+                  value={title}
+                  maxLength={120}
+                  onChange={(e) => setTitle(e.target.value)}
+                  placeholder={tr("مثلا: هر شب قبل از 12 بخوابم", "e.g. Sleep before 12 every night")}
+                  aria-label={tr("عنوان هدف", "Goal title")}
+                />
+                <div className="wlg-target">
                   <TickOption checked={useTarget} onChange={setUseTarget}>{tr("هدف امتیازی", "Score target")}</TickOption>
-                  {useTarget && <b className="wl-live-targetnum">{target}</b>}
+                  {useTarget && <b className="wlg-target-num">{target}</b>}
                 </div>
                 {useTarget && (
                   <input
@@ -214,12 +227,12 @@ export function WeeklyLetterGoals({ ctx, no }: LetterChapterProps & LetterChapte
                     data-noswipe
                   />
                 )}
-                <button type="submit" className="account-outline-btn wl-live-btn" disabled={saving || !title.trim()}>
-                  {saving ? <Spinner size={14} label={null} /> : <><Plus size={14} />{tr("افزودن هدف", "Add goal")}</>}
+                <button type="submit" className={`btn btn-primary${saving ? " is-loading" : ""}`} disabled={saving || !title.trim()} aria-busy={saving || undefined}>
+                  {saving && <Spinner className="btn-spinner" size={16} label={null} />}{tr("افزودن هدف", "Add goal")}
                 </button>
               </form>
             )}
-          </div>
+          </Reveal>
         )}
         {error && <div className="wl-live-error" role="alert">{error}</div>}
       </div>

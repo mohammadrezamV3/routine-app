@@ -6,11 +6,13 @@ import { useParams, useRouter } from "next/navigation";
 import { SmartLink as Link } from "@/components/SmartLink";
 import {
   Award, ChevronLeft, ChevronRight, Clock, Flag, Gauge, Layers, Sparkles, Target,
-  Timer, Trash2, UserRound, Wrench,
+  ListChecks, Timer, Trash2, UserRound, Wrench,
 } from "lucide-react";
 import { faNum } from "@/lib/jalali";
 import { RoadmapDisclaimer } from "@/components/RoadmapDisclaimer";
-import { RoadmapStageCard, searchUrl } from "@/components/RoadmapStageCard";
+import { RoadmapStagePanel } from "@/components/RoadmapStagePanel";
+import { searchUrl } from "@/components/RoadmapStagePanel";
+import { RoadmapJourney } from "@/components/RoadmapJourney";
 import { RoadmapBuildStatus, BuildInfo } from "@/components/RoadmapBuildStatus";
 import { LoadingBlock, Spinner } from "@/components/Spinner";
 import { SegmentedTabs } from "@/components/SegmentedTabs";
@@ -39,7 +41,7 @@ export default function RoadmapDetailPage() {
   const router = useRouter();
   const [data, setData] = useState<Detail | null | undefined>(undefined);
   const [tab, setTab] = useState<Tab>("stages");
-  const [openStages, setOpenStages] = useState<Set<number>>(new Set());
+  const [selected, setSelected] = useState<number | null>(null); // null = مرحله‌ی جاری
   const [busy, setBusy] = useState<string | null>(null); // "guide" | "stage-3"
   const [error, setError] = useState<string | null>(null);
   const [confirmDelete, setConfirmDelete] = useState(false);
@@ -51,11 +53,6 @@ export default function RoadmapDetailPage() {
       .then((r) => (r.ok ? r.json() : null))
       .then((d: Detail | null) => {
         setData(d ?? null);
-        // اولین مرحله‌ی تمام‌نشده خودش باز می‌شود — همان جایی که کاربر باید ادامه دهد.
-        if (d) {
-          const next = d.plan.stages.find((s) => !d.stepProgress[String(s.n)]);
-          setOpenStages((prev) => (prev.size ? prev : new Set(next ? [next.n] : [])));
-        }
       })
       .catch(() => setData(null));
   }, [params.id]);
@@ -156,12 +153,18 @@ export default function RoadmapDetailPage() {
   }, [data, busy, autoFillStopped]);
   useEffect(() => { if (error) setAutoFillStopped(true); }, [error]);
 
+  // پرش به بالای ناحیه‌ی مرحله‌ها (نوار/ناوبر + محتوا)
+  function scrollToStages() {
+    requestAnimationFrame(() => {
+      const reduce = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+      document.getElementById("rmx-stages-top")?.scrollIntoView({ behavior: reduce ? "auto" : "smooth", block: "start" });
+    });
+  }
+
   function openStage(n: number) {
     setTab("stages");
-    setOpenStages((prev) => new Set(prev).add(n));
-    requestAnimationFrame(() =>
-      document.getElementById(`stage-${n}`)?.scrollIntoView({ behavior: "smooth", block: "start" })
-    );
+    setSelected(n);
+    scrollToStages();
   }
 
   function openDeleteConfirm() {
@@ -184,10 +187,10 @@ export default function RoadmapDetailPage() {
 
   const guideBlocks = useMemo(() => parseGuide(data?.plan.guide || ""), [data?.plan.guide]);
 
-  if (data === undefined) return <section className="roadmaps-desktop rp-page"><LoadingBlock /></section>;
+  if (data === undefined) return <section className="roadmaps-desktop rmx-page"><LoadingBlock /></section>;
   if (data === null) {
     return (
-      <section className="roadmaps-desktop rp-page">
+      <section className="roadmaps-desktop rmx-page">
         <Link href="/roadmaps" className="trade-back-link"><ChevronRight size={15} className="dir-flip" /> {tr("رودمپ‌ها", "Roadmaps")}</Link>
         <div className="trade-empty-state"><p>{tr("این مسیر پیدا نشد", "This path was not found")}</p></div>
       </section>
@@ -197,55 +200,53 @@ export default function RoadmapDetailPage() {
   const { plan, progress, roadmap } = data;
   const nextStage = plan.stages.find((s) => !data.stepProgress[String(s.n)]);
   const pending = plan.stages.filter((s) => !s.detailed).length;
-  const R = 26;
-  const C = 2 * Math.PI * R;
+  const tasksTotal = plan.stages.reduce((n, st) => n + st.tasks.length, 0);
+  const tasksDone = Object.keys(data.stepProgress).filter((k) => k.includes(".") && data.stepProgress[k]).length;
+
+  // مرحله‌ی انتخاب‌شده: پیش‌فرض مرحله‌ی جاری؛ اگر همه تمام شده‌اند آخری.
+  const selStage =
+    plan.stages.find((s) => s.n === selected) ?? nextStage ?? plan.stages[plan.stages.length - 1];
+  const selIdx = selStage ? plan.stages.indexOf(selStage) : -1;
+  const statItems: { key: string; icon: React.ReactNode; label: string; value: React.ReactNode }[] = [
+    { key: "stages", icon: <Layers size={14} />, label: tr("مرحله", "Stages"), value: <bdi dir="ltr">{`${faNum(progress.done)} / ${faNum(progress.total)}`}</bdi> },
+  ];
+  if (tasksTotal > 0) statItems.push({ key: "tasks", icon: <ListChecks size={14} />, label: tr("کار انجام‌شده", "Tasks done"), value: <bdi dir="ltr">{`${faNum(tasksDone)} / ${faNum(tasksTotal)}`}</bdi> });
+  if (plan.totalDuration) statItems.push({ key: "time", icon: <Clock size={14} />, label: tr("زمان تخمینی", "Estimated time"), value: plan.totalDuration });
+  if (levelLabel(plan.meta.level)) statItems.push({ key: "level", icon: <Gauge size={14} />, label: tr("سطح شروع", "Starting level"), value: levelLabel(plan.meta.level)! });
+  if (hoursLabel(plan.meta.weeklyHours)) statItems.push({ key: "hours", icon: <Timer size={14} />, label: tr("در هفته", "Per week"), value: hoursLabel(plan.meta.weeklyHours)! });
 
   return (
-    <section className="roadmaps-desktop rp-page">
-      <Link href="/roadmaps" className="trade-back-link"><ChevronRight size={15} className="dir-flip" /> {tr("رودمپ‌ها", "Roadmaps")}</Link>
+    <section className="roadmaps-desktop rmx-page">
+      <div className="rmx-toolbar">
+        <Link href="/roadmaps" className="trade-back-link"><ChevronRight size={15} className="dir-flip" /> {tr("رودمپ‌ها", "Roadmaps")}</Link>
+        <button type="button" className="btn btn-ghost btn-icon btn-bare btn-sm" aria-label={tr("حذف مسیر", "Delete path")} onClick={openDeleteConfirm}>
+          <Trash2 size={16} />
+        </button>
+      </div>
 
       <RoadmapBuildStatus build={data.build} />
 
-      <header className="trade-surface rp-hero">
-        <div className="rp-hero-top">
-          <span className="rp-eyebrow">{tr("مسیر یادگیری", "Learning path")} · {roadmap.topic}</span>
-          <button type="button" className="trade-icon-btn danger" aria-label={tr("حذف مسیر", "Delete path")} onClick={openDeleteConfirm}>
-            <Trash2 size={16} />
-          </button>
+      <header className="trade-surface rmx-box rmx-hero">
+        <div className="rmx-hero-text">
+          <span className="rmx-kicker">{tr("مسیر یادگیری", "Learning path")} <i>·</i> <bdi className="rmx-topic-inline">{roadmap.topic}</bdi></span>
+          <h1>{plan.title}</h1>
+          {plan.summary && <p className="rmx-hero-summary">{plan.summary}</p>}
+          {roadmap.goal && (
+            <div className="rmx-hero-goal"><Target size={15} /><span><b>{tr("هدفت:", "Your goal:")}</b> {roadmap.goal}</span></div>
+          )}
         </div>
-
-        <div className="rp-hero-main">
-          <div className="rp-hero-text">
-            <h1>{plan.title}</h1>
-            {plan.summary && <p>{plan.summary}</p>}
-          </div>
-          <div className="rp-ring" aria-label={tr(`${progress.pct} درصد`, `${progress.pct} percent`)}>
-            <GradientRing value={progress.pct / 100} size={74} stroke={5} />
-            <div className="rp-ring-text">
-              <b>{faNum(progress.pct)}{tr("٪", "%")}</b>
-              <span>{faNum(progress.done)}/{faNum(progress.total)}</span>
-            </div>
-          </div>
-        </div>
-
-        {roadmap.goal && (
-          <div className="rp-hero-goal"><Target size={14} /><span><b>{tr("هدفت:", "Your goal:")}</b> {roadmap.goal}</span></div>
-        )}
-
-        <div className="rp-stats">
-          {plan.totalDuration && <Stat icon={<Clock size={14} />} label={tr("مدت کل", "Total duration")} value={plan.totalDuration} />}
-          <Stat icon={<Layers size={14} />} label={tr("مرحله", "Stages")} value={faNum(plan.stages.length)} />
-          {levelLabel(plan.meta.level) && <Stat icon={<Gauge size={14} />} label={tr("سطح شروع", "Starting level")} value={levelLabel(plan.meta.level)!} />}
-          {hoursLabel(plan.meta.weeklyHours) && <Stat icon={<Timer size={14} />} label={tr("در هفته", "Per week")} value={hoursLabel(plan.meta.weeklyHours)!} />}
-        </div>
-
+        <GradientRing value={progress.pct / 100} size={96} stroke={8} className="rmx-hero-ring">
+          <span className="rmx-ring-num">{faNum(progress.pct)}<small>{tr("٪", "%")}</small></span>
+        </GradientRing>
         {nextStage && (
-          <button type="button" className="rp-next" onClick={() => openStage(nextStage.n)}>
-            <span className="rp-next-label">{tr("قدم بعدی", "Next step")}</span>
-            <span className="rp-next-title">{tr("مرحله‌ی", "Stage")} {faNum(nextStage.n)} — {nextStage.title}</span>
+          <button type="button" className="btn btn-primary rmx-hero-cta" onClick={() => openStage(nextStage.n)}>
+            {tr("ادامه", "Continue")} · {tr("مرحله", "Stage")} {faNum(nextStage.n)}
             <ChevronLeft size={16} className="dir-flip" />
           </button>
         )}
+        <div className="rmx-stats" style={{ ["--rmx-n" as string]: statItems.length }}>
+          {statItems.map((it) => <Stat key={it.key} icon={it.icon} label={it.label} value={it.value} />)}
+        </div>
       </header>
 
       {confirmDelete && (
@@ -260,13 +261,13 @@ export default function RoadmapDetailPage() {
       )}
 
       {!!pending && (
-        <div className="rp-notice">
+        <div className="rmx-notice">
           {tr(`جزئیات ${faNum(pending)} مرحله در ساخت اول نرسید — مرحله را باز کن و «ساخت جزئیات» را بزن.`, `Details for ${faNum(pending)} ${pending === 1 ? "stage" : "stages"} were not ready in the first build — open the stage and press "Build this stage's details".`)}
         </div>
       )}
-      {error && <div className="trade-form-error">{error}</div>}
+      {error && <div className="form-inline-error" role="alert">{error}</div>}
 
-      <div className="rp-tabs">
+      <div className="rmx-tabs">
         <SegmentedTabs
           active={tab}
           onChange={setTab}
@@ -278,50 +279,57 @@ export default function RoadmapDetailPage() {
         />
       </div>
 
-      {tab === "stages" && (
-        <ol className="rp-timeline">
-          {plan.stages.map((st) => (
-            <RoadmapStageCard
-              key={st.n}
-              stage={st}
-              topic={roadmap.topic}
-              open={openStages.has(st.n)}
-              onToggleOpen={() =>
-                setOpenStages((prev) => {
-                  const next = new Set(prev);
-                  if (next.has(st.n)) next.delete(st.n);
-                  else next.add(st.n);
-                  return next;
-                })
-              }
-              progress={data.stepProgress}
-              onToggleStage={() => toggleStage(st)}
-              onToggleTask={(i) => toggleTask(st, i)}
-              onRegenerate={() => regenerate("stage", st.n)}
-              regenerating={busy === `stage-${st.n}`}
+      {tab === "stages" && selStage && (
+        <div className="rmx-stages" id="rmx-stages-top">
+          <div className="trade-surface rmx-box rmx-journey">
+            <div className="rmx-box-head">
+              <h2>{tr("مسیر مرحله‌ها", "Stage journey")}</h2>
+              <span className="rmx-count"><bdi dir="ltr">{faNum(progress.done)}/{faNum(progress.total)}</bdi></span>
+            </div>
+            <RoadmapJourney
+              variant="full"
+              label={tr("مرحله‌ها", "Stages")}
+              current={nextStage?.n}
+              selected={selStage.n}
+              onSelect={(n) => setSelected(n)}
+              stages={plan.stages.map((s) => ({ n: s.n, title: s.title, duration: s.duration, done: !!data.stepProgress[String(s.n)] }))}
             />
-          ))}
-        </ol>
+          </div>
+          <RoadmapStagePanel
+            key={selStage.n}
+            stage={selStage}
+            topic={roadmap.topic}
+            phase={data.stepProgress[String(selStage.n)] ? "done" : selStage.n === nextStage?.n ? "now" : "next"}
+            progress={data.stepProgress}
+            onToggleStage={() => toggleStage(selStage)}
+            onToggleTask={(i) => toggleTask(selStage, i)}
+            onRegenerate={() => regenerate("stage", selStage.n)}
+            regenerating={busy === `stage-${selStage.n}`}
+            prev={selIdx > 0 ? plan.stages[selIdx - 1] : null}
+            next={selIdx < plan.stages.length - 1 ? plan.stages[selIdx + 1] : null}
+            onGo={openStage}
+          />
+        </div>
       )}
 
       {tab === "guide" && (
-        <article className="trade-surface rp-guide">
+        <article className="trade-surface rmx-guide">
           {guideBlocks.length ? (
             guideBlocks.map((b, i) =>
               b.kind === "h" ? (
                 <h2 key={i}>{b.text}</h2>
               ) : b.kind === "li" ? (
-                <div key={i} className="rp-guide-li">{b.text}</div>
+                <div key={i} className="rmx-guide-li">{b.text}</div>
               ) : (
                 <p key={i}>{b.text}</p>
               )
             )
           ) : (
-            <div className="rp-pending-box">
+            <div className="rmx-pending-box">
               <p>{tr("متن راهنمای این مسیر هنوز ساخته نشده.", "The guide for this path has not been built yet.")}</p>
-              <button type="button" className="trade-primary-btn" onClick={() => regenerate("guide")} disabled={!!busy}>
-                {busy === "guide" ? <Spinner size={13} /> : <Sparkles size={14} />}
-                {busy === "guide" ? tr("در حال ساخت…", "Building…") : tr("ساخت راهنما", "Build guide")}
+              <button type="button" className={`btn btn-primary btn-sm${busy === "guide" ? " is-loading" : ""}`} onClick={() => regenerate("guide")} disabled={!!busy} aria-busy={busy === "guide"}>
+                <Sparkles size={15} /> {tr("ساخت راهنما", "Build guide")}
+                {busy === "guide" && <Spinner className="btn-spinner" size={16} label={null} />}
               </button>
             </div>
           )}
@@ -329,32 +337,32 @@ export default function RoadmapDetailPage() {
       )}
 
       {tab === "overview" && (
-        <div className="rp-overview">
+        <div className="rmx-overview">
           {plan.meta.audience && (
             <OverviewCard icon={<UserRound size={15} />} title={tr("این مسیر برای کیه", "Who this path is for")}>
-              <p className="rp-ov-text">{plan.meta.audience}</p>
+              <p className="rmx-ov-text">{plan.meta.audience}</p>
             </OverviewCard>
           )}
           {!!plan.meta.outcomes.length && (
             <OverviewCard icon={<Target size={15} />} title={tr("آخر مسیر چه کارهایی ازت برمیاد", "What you will be able to do by the end")}>
-              <ul className="rp-done">
+              <ul className="rmx-done">
                 {plan.meta.outcomes.map((o, i) => <li key={i}><Target size={13} /><span>{o}</span></li>)}
               </ul>
             </OverviewCard>
           )}
           {!!plan.meta.prerequisites.length && (
             <OverviewCard icon={<Flag size={15} />} title={tr("قبل از شروع", "Before you start")}>
-              <div className="rp-tags">
-                {plan.meta.prerequisites.map((p, i) => <span key={i} className="rp-tag">{p}</span>)}
+              <div className="rmx-tags">
+                {plan.meta.prerequisites.map((p, i) => <span key={i} className="rmx-tag">{p}</span>)}
               </div>
             </OverviewCard>
           )}
           {!!plan.tools.length && (
             <OverviewCard icon={<Wrench size={15} />} title={tr("ابزارهای کل مسیر", "Tools for the whole path")}>
-              <ul className="rp-tools">
+              <ul className="rmx-tools">
                 {plan.tools.map((t, i) => (
                   <li key={i}>
-                    <a href={searchUrl(t.name, roadmap.topic)} target="_blank" rel="noopener noreferrer" className="rp-tool-name">
+                    <a href={searchUrl(t.name, roadmap.topic)} target="_blank" rel="noopener noreferrer" className="rmx-tool-name">
                       {t.name}
                     </a>
                     {t.use && <span>{t.use}</span>}
@@ -365,21 +373,21 @@ export default function RoadmapDetailPage() {
           )}
           {!!plan.meta.certifications.length && (
             <OverviewCard icon={<Award size={15} />} title={tr("مدرک‌ها", "Certifications")}>
-              <ul className="rp-tools">
+              <ul className="rmx-tools">
                 {plan.meta.certifications.map((c, i) => (
-                  <li key={i}><b className="rp-tool-name">{c.name}</b>{c.note && <span>{c.note}</span>}</li>
+                  <li key={i}><b className="rmx-tool-name">{c.name}</b>{c.note && <span>{c.note}</span>}</li>
                 ))}
               </ul>
             </OverviewCard>
           )}
           <OverviewCard icon={<Layers size={15} />} title={tr("همه‌ی مرحله‌ها", "All stages")}>
-            <ol className="rp-mini-stages">
+            <ol className="rmx-mini-stages">
               {plan.stages.map((s) => (
                 <li key={s.n} className={data.stepProgress[String(s.n)] ? "done" : ""}>
                   <button type="button" onClick={() => openStage(s.n)}>
-                    <span className="rp-mini-n">{faNum(s.n)}</span>
-                    <span className="rp-mini-title">{s.title}</span>
-                    {s.duration && <span className="rp-mini-dur">{s.duration}</span>}
+                    <span className="rmx-mini-n">{faNum(s.n)}</span>
+                    <span className="rmx-mini-title">{s.title}</span>
+                    {s.duration && <span className="rmx-mini-dur">{s.duration}</span>}
                   </button>
                 </li>
               ))}
@@ -393,19 +401,19 @@ export default function RoadmapDetailPage() {
   );
 }
 
-function Stat({ icon, label, value }: { icon: React.ReactNode; label: string; value: string }) {
+function Stat({ icon, label, value }: { icon: React.ReactNode; label: string; value: React.ReactNode }) {
   return (
-    <div className="rp-stat">
-      <span className="rp-stat-label">{icon}{label}</span>
-      <span className="rp-stat-value">{value}</span>
+    <div className="rmx-stat">
+      <span className="rmx-stat-label">{icon}{label}</span>
+      <span className="rmx-stat-value">{value}</span>
     </div>
   );
 }
 
 function OverviewCard({ icon, title, children }: { icon: React.ReactNode; title: string; children: React.ReactNode }) {
   return (
-    <div className="trade-surface rp-ov-card">
-      <div className="rp-sec-title">{icon}{title}</div>
+    <div className="trade-surface rmx-ov-card">
+      <div className="rmx-sec-title">{icon}{title}</div>
       {children}
     </div>
   );

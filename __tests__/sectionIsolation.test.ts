@@ -2,7 +2,7 @@ import { describe, it, expect } from "vitest";
 import { ACHIEVEMENTS, achievementVisibleIn } from "@/lib/achievements";
 import { getFaqs } from "@/lib/faqContent";
 import { notificationSectionWhere } from "@/lib/notificationSection";
-import { planVisibleIn } from "@/lib/planSection";
+import { orderPlansForSection } from "@/lib/planSection";
 
 describe("achievementVisibleIn", () => {
   it("apex shows every achievement", () => {
@@ -52,13 +52,29 @@ describe("notificationSectionWhere", () => {
   });
 });
 
-describe("plan visibility per section", () => {
-  it("shows only the section plan plus max", () => {
-    const all = ["basic", "exercise", "trade", "max"];
-    const keys = (s: "routine" | "trade" | "workout" | null) => all.filter((k) => planVisibleIn(k, s));
-    expect(keys(null)).toEqual(all);
-    expect(keys("routine")).toEqual(["basic", "max"]);
-    expect(keys("workout")).toEqual(["exercise", "max"]);
-    expect(keys("trade")).toEqual(["trade", "max"]);
+describe("plan ordering per section", () => {
+  const all = ["basic", "exercise", "trade", "max"].map((key) => ({ key }));
+  const keys = (s: "routine" | "trade" | "workout" | null) => orderPlansForSection(all, s).map((p) => p.key);
+
+  it("apex keeps the original order", () => {
+    expect(keys(null)).toEqual(["basic", "exercise", "trade", "max"]);
+  });
+
+  it("every section still gets every plan (nothing hidden)", () => {
+    for (const s of ["routine", "trade", "workout"] as const) {
+      expect([...keys(s)].sort()).toEqual([...all.map((p) => p.key)].sort());
+    }
+  });
+
+  it("puts the section's own plan first, then max, then the rest", () => {
+    expect(keys("routine")).toEqual(["basic", "max", "exercise", "trade"]);
+    expect(keys("workout")).toEqual(["exercise", "max", "basic", "trade"]);
+    expect(keys("trade")).toEqual(["trade", "max", "basic", "exercise"]);
+  });
+
+  it("does not mutate the input", () => {
+    const copy = all.map((p) => p.key);
+    orderPlansForSection(all, "trade");
+    expect(all.map((p) => p.key)).toEqual(copy);
   });
 });

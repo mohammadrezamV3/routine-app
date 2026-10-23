@@ -19,24 +19,23 @@ export function isGroup(item: NavItem): item is NavGroup {
   return "children" in item;
 }
 
-// «صفحه اصلی» قدیمی (/) دیگه توی منو نیست — کاربر لاگین‌کرده مستقیم به
-// داشبورد می‌ره. «بدنسازی» و «منتورها» با کلیک زیرمجموعه‌هاشون باز می‌شن؛
-// ترید زیرمنو نداره و با یک کلیک مستقیم می‌ره به هاب خودش.
+// ساختار منو (درخواست صریح: انتخاب از زیرمنو لازم نباشه، همه‌چیز از اول دیده بشه):
+// همه‌ی آیتم‌ها لینک بالاسطحی‌ان، به‌جز دو گروه: «مربی‌ها» (دیسکاوری + مربی‌های من) و
+// «بیشتر» (مقاله‌ها + درباره ما). خواب آیتم مستقل خودشه (نه زیر «روتین من») و
+// «برنامه تمرینی» و «کالری‌شمار» هم دو لینک جدا هستن (گروه «بدنسازی» نداریم).
+// «صفحه اصلی» قدیمی (/) دیگه توی منو نیست — کاربر لاگین‌کرده مستقیم به داشبورد می‌ره.
 export const getLinks = (): NavItem[] => [
   // داشبورد — نمای کلی همه‌ی بخش‌ها و صفحه‌ی اصلی بعد از ورود؛ پشت فلگ `dashboard` (پیش‌فرض روشن برای همه)
   { href: "/dashboard", label: tr("داشبورد", "Dashboard"), icon: "dashboard", feature: "dashboard" },
-  // «روتین من»: برنامه‌ی روزانه و خواب دو صفحه و سیستم کاملا جدا، فقط در منو کنار هم
-  {
-    label: tr("روتین من", "My Routine"), icon: "weekly", sections: ["routine", "workout"],
-    children: [
-      { href: "/weekly", label: tr("برنامه روزانه", "Daily plan"), icon: "weekly", feature: "routine", sections: ["routine"] },
-      { href: "/sleep", label: tr("خواب", "Sleep"), icon: "sleep", module: "SLEEP", feature: "sleep", sections: ["routine", "workout"] },
-    ],
-  },
+  { href: "/weekly", label: tr("برنامه روزانه", "Daily plan"), icon: "weekly", feature: "routine", sections: ["routine"] },
+  { href: "/sleep", label: tr("خواب", "Sleep"), icon: "sleep", module: "SLEEP", feature: "sleep", sections: ["routine", "workout"] },
   { href: "/roadmaps", label: tr("رودمپ‌ها", "Roadmaps"), icon: "roadmaps", feature: "roadmaps", sections: ["routine"] },
-  // منتورها درست زیر رودمپ‌ها. گروه فقط صفحه‌های سمت شاگرد را دارد؛
-  // «پنل منتور» در پاپ‌آپ پروفایل است. آیکون زیرمجموعه‌ها در داده هست ولی
-  // زیرمجموعه‌های منو آیکون رندر نمی‌کنند (globals.css → .nav-link-sub-item).
+  { href: "/exercise?tab=exercise", label: tr("برنامه تمرینی", "Workout plan"), icon: "exercise", module: "EXERCISE", feature: "exercise", sections: ["workout"] },
+  { href: "/exercise?tab=calorie", label: tr("کالری‌شمار", "Calorie tracker"), icon: "food", module: "CALORIE", feature: "calorie", sections: ["workout"] },
+  { href: "/trade", label: tr("ترید", "Trading"), icon: "trade", module: "TRADE", feature: "trade", sections: ["trade"] },
+  { href: "/analysis/weekly", label: tr("آنالیز هفتگی", "Weekly review"), icon: "weeklyReport", module: "AI_INSIGHT", feature: "weeklyAnalysis" },
+  // گروه مربی‌ها: فقط صفحه‌های سمت شاگرد؛ «پنل منتور» در پاپ‌آپ پروفایل است.
+  // آیکون زیرمجموعه‌ها در داده هست ولی زیرمجموعه‌های منو آیکون رندر نمی‌کنند (globals.css → .nav-link-sub-item).
   {
     label: tr("مربی‌ها", "Mentors"), icon: "mentors", feature: "mentors",
     children: [
@@ -45,16 +44,12 @@ export const getLinks = (): NavItem[] => [
     ],
   },
   {
-    label: tr("بدنسازی", "Workout"), icon: "exercise", sections: ["workout"],
+    label: tr("بیشتر", "More"), icon: "more",
     children: [
-      { href: "/exercise?tab=exercise", label: tr("برنامه تمرینی", "Workout plan"), icon: "exercise", module: "EXERCISE", feature: "exercise", sections: ["workout"] },
-      { href: "/exercise?tab=calorie", label: tr("کالری‌شمار", "Calorie tracker"), icon: "food", module: "CALORIE", feature: "calorie", sections: ["workout"] },
+      { href: "/blog", label: tr("مقاله‌ها", "Articles"), icon: "blog", feature: "blog" },
+      { href: "/about", label: tr("درباره ما", "About us"), icon: "about", feature: "about" },
     ],
   },
-  { href: "/trade", label: tr("ترید", "Trading"), icon: "trade", module: "TRADE", feature: "trade", sections: ["trade"] },
-  { href: "/analysis/weekly", label: tr("آنالیز هفتگی", "Weekly review"), icon: "weeklyReport", module: "AI_INSIGHT", feature: "weeklyAnalysis" },
-  { href: "/blog", label: tr("مقاله‌ها", "Articles"), icon: "blog", feature: "blog" },
-  { href: "/about", label: tr("درباره ما", "About us"), icon: "about", feature: "about" },
 ];
 
 type Features = Parameters<typeof featureVisible>[0];
@@ -62,8 +57,8 @@ type Features = Parameters<typeof featureVisible>[0];
 // بخش‌هایی که از پنل ادمین (/admin/features) برای این کاربر خاموشن از منو
 // حذف می‌شن؛ گروهی که همه‌ی زیرمجموعه‌هاش خاموشن هم کامل حذف می‌شه.
 // section (زیردامنه‌ی جاری، useSection()) آیتم‌های مال بخش‌های دیگه رو هم حذف می‌کنه؛
-// null (دامنه‌ی اصلی) فیلتری نداره. گروهی که توی یک بخش دقیقا یک زیرمجموعه‌ی دیدنی
-// داره (مثلا «روتین من» با فقط خواب روی ورزش) به یک لینک ساده‌ی بالاسطحی تبدیل می‌شه.
+// null (دامنه‌ی اصلی) فیلتری نداره. گروهی که دقیقا یک زیرمجموعه‌ی دیدنی
+// داره (مثلا «بیشتر» وقتی مقاله‌ها خاموشه) به یک لینک ساده‌ی بالاسطحی تبدیل می‌شه.
 export function getVisibleLinks(features: Features, section: SectionKey | null = null): NavItem[] {
   const inSection = (x: { sections?: SectionKey[] }) => !section || !x.sections || x.sections.includes(section);
   const out: NavItem[] = [];

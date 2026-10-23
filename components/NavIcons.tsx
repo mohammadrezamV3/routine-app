@@ -67,6 +67,10 @@ export const ICONS: Record<string, JSX.Element> = {
   blog: (
     <svg viewBox="0 0 24 24" fill="none"><path d="M12 6.5C10.3 5.3 8 4.8 4 4.8v13.4c4 0 6.3.5 8 1.7 1.7-1.2 4-1.7 8-1.7V4.8c-4 0-6.3.5-8 1.7Z" stroke="currentColor" strokeWidth="1.7" strokeLinejoin="round"/><path d="M12 6.5v13.4" stroke="currentColor" strokeWidth="1.7" strokeLinecap="round"/></svg>
   ),
+  // «بیشتر» — سه نقطه
+  more: (
+    <svg viewBox="0 0 24 24" fill="none"><circle cx="6" cy="12" r="1.6" fill="currentColor"/><circle cx="12" cy="12" r="1.6" fill="currentColor"/><circle cx="18" cy="12" r="1.6" fill="currentColor"/></svg>
+  ),
   about: (
     <svg viewBox="0 0 24 24" fill="none"><circle cx="12" cy="12" r="8.2" stroke="currentColor" strokeWidth="1.7"/><path d="M12 11v5.2M12 8.3v.1" stroke="currentColor" strokeWidth="1.9" strokeLinecap="round"/></svg>
   ),

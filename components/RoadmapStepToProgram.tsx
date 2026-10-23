@@ -53,46 +53,46 @@ export function RoadmapStepToProgram({ title, topic }: { title: string; topic: s
 
   if (added) {
     return (
-      <div className="rp-added"><Check size={14} /> {tr("به برنامه‌های هفتگی اضافه شد", "Added to your weekly plans")}</div>
+      <div className="rmx-added"><Check size={14} /> {tr("به برنامه‌های هفتگی اضافه شد", "Added to your weekly plans")}</div>
     );
   }
 
   return (
-    <div className="rp-toprogram">
+    <div className="rmx-toprogram">
       {!open ? (
-        <button type="button" className="rp-ghost-btn" onClick={() => setOpen(true)}>
+        <button type="button" className="btn btn-outline btn-sm" onClick={() => setOpen(true)}>
           <CalendarPlus size={14} /> {tr("افزودن به برنامه‌هایم", "Add to my plans")}
         </button>
       ) : (
-        <div className="rp-add-panel">
-          <div className="rp-add-title">{tr("کدام روزها روی این مرحله کار می‌کنی؟", "Which days will you work on this stage?")}</div>
-          <div className="rp-day-row">
+        <div className="rmx-add-panel">
+          <div className="rmx-add-title">{tr("کدام روزها روی این مرحله کار می‌کنی؟", "Which days will you work on this stage?")}</div>
+          <div className="rmx-day-row">
             {DAYS.map((d) => (
               <button
                 key={d.jsDay}
                 type="button"
-                className={`rp-day${days.includes(d.jsDay) ? " on" : ""}`}
+                className={`rmx-day${days.includes(d.jsDay) ? " on" : ""}`}
                 onClick={() => setDays((p) => p.includes(d.jsDay) ? p.filter((x) => x !== d.jsDay) : [...p, d.jsDay])}
               >
                 {weekdayName(d.jsDay)}
               </button>
             ))}
           </div>
-          <div className="rp-time-row">
+          <div className="rmx-time-row">
             <label>
               <span>{tr("ساعت شروع", "Start time")}</span>
-              <input type="time" value={start} onChange={(e) => setStart(e.target.value)} />
+              <input type="time" className="wsearch-newform-name" value={start} onChange={(e) => setStart(e.target.value)} />
             </label>
             <label>
               <span>{tr("ساعت پایان", "End time")}</span>
-              <input type="time" value={end} onChange={(e) => setEnd(e.target.value)} />
+              <input type="time" className="wsearch-newform-name" value={end} onChange={(e) => setEnd(e.target.value)} />
             </label>
           </div>
-          {error && <div className="trade-form-error">{error}</div>}
-          <div className="rp-add-actions">
-            <button type="button" className="account-outline-btn" onClick={() => setOpen(false)}>{tr("لغو", "Cancel")}</button>
-            <button type="button" className="trade-primary-btn" onClick={save} disabled={saving}>
-              {saving ? <Spinner size={13} /> : tr("افزودن", "Add")}
+          {error && <div className="form-inline-error">{error}</div>}
+          <div className="rmx-add-actions">
+            <button type="button" className="btn btn-ghost btn-sm" onClick={() => setOpen(false)}>{tr("لغو", "Cancel")}</button>
+            <button type="button" className={`btn btn-primary btn-sm${saving ? " is-loading" : ""}`} onClick={save} disabled={saving} aria-busy={saving}>
+              {tr("افزودن", "Add")}{saving && <Spinner className="btn-spinner" size={16} label={null} />}
             </button>
           </div>
         </div>

@@ -7,6 +7,7 @@
 // حرکت‌های دائمی (نور پس‌زمینه، مدار) روی کاهش حرکت و html[data-perf="low"] خاموشن،
 // و با کاهش حرکت پخش خودکار هم نداریم (اسلاید فقط با دست عوض می‌شه).
 import "./weekly-letter.css";
+import "./wl-stories-fix.css";
 import { useCallback, useContext, createContext, useEffect, useId, useLayoutEffect, useMemo, useRef, useState, type CSSProperties, type ReactNode } from "react";
 import { createPortal } from "react-dom";
 import { SmartLink as Link } from "@/components/SmartLink";
@@ -23,10 +24,12 @@ import { DOMAIN_ICONS, GradeStamp, WL_EASE, useLite, useOnAfter } from "./Weekly
 import { MeterColumn } from "./WeeklyMeter";
 import WeeklyRadar from "./WeeklyRadar";
 import { MaskText, Odo } from "./WeeklyLetterStoryFx";
-import { INSIGHT_ICONS, MOODS, moodLabels } from "./WeeklyLetterStory";
+import { INSIGHT_ICONS, moodLabels } from "./WeeklyLetterStory";
+import { WeeklyMoodFace, MOOD_COLORS } from "./WeeklyMoodFace";
+import { WeeklyMedalBadge } from "./WeeklyMedalBadge";
 import { ARCH_ICONS, BrandMark } from "./WeeklyLetterCover";
-import { goalCtaHref, weekCtaHref, type StorySlide } from "./WeeklyLetterStoriesData";
-import { jalaliDayMonth, letterYear, scoreIntensity, smoothPath } from "./WeeklyLetterUtils";
+import { archetypeMeaning, goalCtaHref, weekCtaHref, type StorySlide } from "./WeeklyLetterStoriesData";
+import { jalaliDayMonth, letterYear, offsetOfWeek, scoreIntensity, smoothPath } from "./WeeklyLetterUtils";
 
 const FOCUSABLE = 'button:not([disabled]), [href], input:not([disabled]), [tabindex]:not([tabindex="-1"])';
 const HOLD_MS = 220;
@@ -133,13 +136,25 @@ function Kicker({ icon: Icon, children }: { icon: LucideIcon; children: ReactNod
 }
 
 // ---- اسلایدها ----
-function IntroSlide({ letter }: { letter: WeeklyLetterData }) {
+function IntroSlide({ letter, live }: { letter: WeeklyLetterData; live: boolean }) {
+  const hasNo = letter.issueNo > 0;
   return (
     <div className="wl-st-body">
-      <SItem className="wl-st-eyebrow">{tr("شماره", "Issue")}</SItem>
-      <SItem variants={POP} className="wl-st-big">
-        {letter.issueNo ? <Odo value={String(letter.issueNo)} className="wl-st-sheen" delay={0.45} duration={1.5} /> : "—"}
-      </SItem>
+      {hasNo ? (
+        <>
+          <SItem className="wl-st-eyebrow">{tr("شماره", "Issue")}</SItem>
+          <SItem variants={POP} className="wl-st-big">
+            <Odo value={String(letter.issueNo)} className="wl-st-sheen" delay={0.45} duration={1.5} />
+          </SItem>
+        </>
+      ) : (
+        <>
+          <SItem className="wl-st-eyebrow">{live ? tr("این هفته", "This week") : tr("آنالیز هفتگی", "Weekly review")}</SItem>
+          <SItem variants={POP} className="wl-st-big is-word">
+            {live ? <><i className="wl-st-livedot" aria-hidden="true" /><MaskText text={tr("در جریان", "In progress")} className="wl-st-sheen" delay={0.45} /></> : <MaskText text={tr("هفته‌ی شما", "Your week")} className="wl-st-sheen" delay={0.45} />}
+          </SItem>
+        </>
+      )}
       <div className="wl-st-weeklabel">
         <small>{tr("هفته‌ی", "Week of")}</small>
         <b><MaskText text={letter.weekLabel} className="wl-st-sheen" delay={0.55} /></b>
@@ -199,7 +214,8 @@ function ArchetypeSlide({ s }: { s: Extract<StorySlide, { id: "archetype" }> }) 
         <span className="wl-st-orbit-ico"><Icon size={Math.round(58 * U)} strokeWidth={1.6} /></span>
       </SItem>
       <h2 className="wl-st-title"><MaskText text={s.archetype.title} className="wl-st-sheen" delay={0.45} stagger={0.1} /></h2>
-      {s.archetype.description && <SItem className="wl-st-cap is-lg">{s.archetype.description}</SItem>}
+      {archetypeMeaning(s.archetype.key) && <SItem className="wl-st-arch-what">{archetypeMeaning(s.archetype.key)}</SItem>}
+      {s.archetype.description && <SItem className="wl-st-cap">{s.archetype.description}</SItem>}
     </div>
   );
 }
@@ -342,7 +358,7 @@ function NumbersSlide({ s }: { s: Extract<StorySlide, { id: "numbers" }> }) {
   );
 }
 
-// ---- مسیر هفته‌ها: خط از قدیمی‌ترین (راست) تا همین هفته (چپ) کشیده می‌شه (در LTR برعکس) ----
+// ---- مسیر هفته‌ها: محور زمان در هر دو زبان چپ به راست: قدیمی‌ترین (چپ) تا همین هفته (راست) ----
 const TW = 340, TH = 190, TPX = 16, TPT = 30, TPB = 14;
 function TrendSlide({ s }: { s: Extract<StorySlide, { id: "trend" }> }) {
   const lite = useLite();
@@ -353,7 +369,7 @@ function TrendSlide({ s }: { s: Extract<StorySlide, { id: "trend" }> }) {
     let lo = Math.max(0, Math.min(...vals) - 8);
     let hi = Math.min(100, Math.max(...vals) + 8);
     if (hi - lo < 28) { lo = Math.max(0, lo - (28 - (hi - lo)) / 2); hi = Math.min(100, lo + 28); }
-    const xAt = (i: number) => (isEn() ? TPX + (i * (TW - 2 * TPX)) / (n - 1) : TW - TPX - (i * (TW - 2 * TPX)) / (n - 1));
+    const xAt = (i: number) => TPX + (i * (TW - 2 * TPX)) / (n - 1); // محور زمان همیشه چپ به راست
     const yAt = (v: number) => TPT + (1 - (v - lo) / (hi - lo)) * (TH - TPT - TPB);
     const pts = s.points.map((v, i) => ({ x: xAt(i), y: v === null ? null : yAt(v), v }));
     const segs: { x: number; y: number }[][] = [];
@@ -378,7 +394,7 @@ function TrendSlide({ s }: { s: Extract<StorySlide, { id: "trend" }> }) {
               <stop offset="0%" stopColor="var(--ring-1a)" stopOpacity=".34" />
               <stop offset="100%" stopColor="var(--ring-1a)" stopOpacity="0" />
             </linearGradient>
-            <linearGradient id={`tl${uid}`} x1={isEn() ? "0" : "1"} x2={isEn() ? "1" : "0"} y1="0" y2="0">
+            <linearGradient id={`tl${uid}`} x1="0" x2="1" y1="0" y2="0">
               <stop offset="0%" stopColor="var(--ring-1a)" stopOpacity=".55" />
               <stop offset="100%" stopColor="var(--ring-1b)" />
             </linearGradient>
@@ -425,7 +441,7 @@ function TrendSlide({ s }: { s: Extract<StorySlide, { id: "trend" }> }) {
             </g>
           )}
         </svg>
-        <span className="wl-st-trend-dates" aria-hidden="true">
+        <span className="wl-st-trend-dates" aria-hidden="true" dir="ltr">
           <span>{jalaliDayMonth(s.weekStarts[0])}</span>
           <span>{jalaliDayMonth(s.weekStarts[n - 1])}</span>
         </span>
@@ -475,7 +491,7 @@ function StreakSlide({ s }: { s: Extract<StorySlide, { id: "streak" }> }) {
         <div className="wl-st-achs">
           {s.achievements.map((a) => (
             <SItem key={a.key} variants={POP} className="wl-st-ach">
-              <span className="wl-st-ach-e" aria-hidden="true">{a.emoji}</span>
+              <span className="wl-st-ach-e" aria-hidden="true"><WeeklyMedalBadge achievementKey={a.key} emoji={a.emoji} source={a.source} size={Math.round(52 * U)} /></span>
               <b>{a.title}</b>
             </SItem>
           ))}
@@ -492,7 +508,7 @@ function ReflectionSlide({ s }: { s: Extract<StorySlide, { id: "reflection" }> }
       <SItem><Kicker icon={PenLine}>{tr("حرف خودت", "In your words")}</Kicker></SItem>
       {s.mood && (
         <SItem variants={POP} className="wl-st-mood">
-          <span className="wl-st-mood-e" aria-hidden="true" style={{ fontSize: Math.round(54 * U) }}>{MOODS[s.mood - 1]}</span>
+          <span className="wl-st-mood-e" aria-hidden="true" style={{ color: MOOD_COLORS[s.mood as 1 | 2 | 3 | 4 | 5] }}><WeeklyMoodFace level={s.mood as 1 | 2 | 3 | 4 | 5} size={Math.round(64 * U)} /></span>
           <small>{moodLabels()[s.mood - 1]}</small>
         </SItem>
       )}
@@ -560,9 +576,9 @@ function SummarySlide({ s, weekStart, onReplay }: { s: Extract<StorySlide, { id:
   );
 }
 
-function SlideView({ slide, letter, onReplay }: { slide: StorySlide; letter: WeeklyLetterData; onReplay: () => void }) {
+function SlideView({ slide, letter, live, onReplay }: { slide: StorySlide; letter: WeeklyLetterData; live: boolean; onReplay: () => void }) {
   switch (slide.id) {
-    case "intro": return <IntroSlide letter={letter} />;
+    case "intro": return <IntroSlide letter={letter} live={live} />;
     case "score": return <ScoreSlide s={slide} headline={letter.headline} />;
     case "archetype": return <ArchetypeSlide s={slide} />;
     case "rhythm": return <RhythmSlide s={slide} />;
@@ -588,8 +604,10 @@ function slideK(slide: StorySlide): number {
 
 // ---- پوسته ----
 export function WeeklyLetterStories({
-  open, onClose, letter, slides,
-}: { open: boolean; onClose: () => void; letter: WeeklyLetterData; slides: StorySlide[] }) {
+  open, onClose, letter, slides, isCurrent,
+}: { open: boolean; onClose: () => void; letter: WeeklyLetterData; slides: StorySlide[]; isCurrent?: boolean }) {
+  // هفته‌ی جاری شماره‌ی ثبت‌شده نداره (issueNo = 0)؛ به‌جای عدد «در جریان» نشون می‌دیم
+  const live = isCurrent ?? offsetOfWeek(letter.weekStart) === 0;
   useLockBodyScroll(open);
   const reduce = !!useReducedMotion();
   const autoplay = !reduce;
@@ -791,7 +809,7 @@ export function WeeklyLetterStories({
                     <span className="wl-st-id">
                       <BrandMark />
                       <b>{tr("آنالیز هفتگی", "Weekly review")}</b>
-                      {letter.issueNo > 0 && <small>{tr("شماره", "Issue")} {letter.issueNo}</small>}
+                      {letter.issueNo > 0 ? <small>{tr("شماره", "Issue")} {letter.issueNo}</small> : live ? <small>{tr("در جریان", "In progress")}</small> : null}
                     </span>
                     <span className="wl-st-ctl">
                       {autoplay && (
@@ -816,7 +834,7 @@ export function WeeklyLetterStories({
                     style={{ "--wl-k": slideK(slide) } as CSSProperties}
                   >
                     <FitScale u={u} boxKey={`${box.w}x${box.h}`}>
-                      <SlideView slide={slide} letter={letter} onReplay={replay} />
+                      <SlideView slide={slide} letter={letter} live={live} onReplay={replay} />
                     </FitScale>
                   </motion.div>
                 </AnimatePresence>

@@ -1,0 +1,45 @@
+/* ابزارهای خواب: تنفس آرام (SleepBreathSheet) و چرت (SleepNapSheet).
+   پنل و پاورقی از sleep-log.css میان. هیچ بک‌گراندی اضافه نشده. */
+
+.stl-body{ align-items:center; gap:18px; }
+.stl-opts{ display:flex; flex-direction:column; gap:12px; width:100%; min-width:0; }
+.stl-hint{ font-size:12px; line-height:1.8; color:var(--muted); text-align:center; }
+
+/* صحنه‌ی تنفس: دایره پشت حلقه‌ی پیشرفت، متن وسط */
+.stl-stage{
+  position:relative; width:250px; max-width:100%; aspect-ratio:1; flex:none;
+  display:flex; align-items:center; justify-content:center;
+}
+.stl-circle{
+  position:absolute; inset:18px; border-radius:50%;
+  border:2px solid var(--slp-ink, var(--accent));
+  transform:scale(.55); transform-origin:center;
+  transition-property:transform; transition-timing-function:cubic-bezier(.45,0,.55,1);
+  will-change:transform;
+}
+.stl-ring{ position:relative; }
+.stl-center{ display:flex; flex-direction:column; align-items:center; justify-content:center; gap:2px; text-align:center; }
+.stl-phase{ font-size:20px; font-weight:800; }
+.stl-num{ font-size:34px; font-weight:900; font-variant-numeric:tabular-nums; line-height:1.1; }
+.stl-meta{
+  display:flex; align-items:center; justify-content:space-between; gap:12px; width:100%;
+  font-size:12.5px; font-weight:700; color:var(--muted); font-variant-numeric:tabular-nums;
+}
+
+/* چرت */
+.stl-run, .stl-end{ display:flex; flex-direction:column; align-items:center; gap:14px; }
+.stl-big{ font-size:44px; font-weight:900; font-variant-numeric:tabular-nums; letter-spacing:1px; line-height:1.1; }
+.stl-wake{ font-size:28px; font-weight:900; }
+.stl-wakeat{
+  display:flex; align-items:baseline; justify-content:center; gap:8px; flex-wrap:wrap;
+  font-size:13px; color:var(--muted); text-align:center;
+}
+.stl-wakeat b{ font-size:26px; font-weight:900; color:var(--text); font-variant-numeric:tabular-nums; }
+.stl-perm{ align-self:center; }
+.stl-perm svg{ width:14px; height:14px; }
+
+/* کم‌حرکت و دستگاه ضعیف: بدون مقیاس و بدون انتقال، فقط متن و پیشرفت */
+@media (prefers-reduced-motion:reduce){
+  .stl-circle{ transform:none !important; transition:none !important; }
+}
+html[data-perf-weak] .stl-circle, html[data-perf="low"] .stl-circle{ transform:none !important; transition:none !important; }

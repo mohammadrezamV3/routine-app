@@ -7,7 +7,7 @@
 import { useEffect, useState } from "react";
 import { SmartLink as Link } from "./SmartLink";
 import { ChevronDown, Lock } from "lucide-react";
-import { useTheme } from "./ThemeProvider";
+import ThemeSwitch from "./ThemeSwitch";
 import { ICONS } from "./NavIcons";
 import { useSection } from "./SectionProvider";
 import { getVisibleLinks, isGroup, isLockedModule, visibleChildren } from "./navLinks";
@@ -23,51 +23,30 @@ type Props = {
 };
 
 export default function NavDrawerContent({ open, onClose, authed, features, activeModules }: Props) {
-  const { toggle } = useTheme();
-  // گروه بازشده‌ی منو (بدنسازی/روتین/منتورها) — با کلیک روی هرکدوم toggle می‌شه؛
-  // همیشه با همه‌چیز بسته شروع می‌شه، هیچ‌وقت خودکار باز نمی‌شه.
-  const [expandedGroup, setExpandedGroup] = useState<string | null>(null);
-  // هر بار منو بسته می‌شه (از هر مسیری)، گروه بازشده هم ریست می‌شه.
-  useEffect(() => { if (!open) setExpandedGroup(null); }, [open]);
+  // گروه‌های منو (مربی‌ها/بیشتر) از اول باز هستن (درخواست صریح)؛ کاربر با کلیک
+  // روی هر گروه می‌تونه جمعش کنه و هر بار منو بسته می‌شه دوباره همه باز می‌شن.
+  const [collapsed, setCollapsed] = useState<string[]>([]);
+  useEffect(() => { if (!open) setCollapsed([]); }, [open]);
   const section = useSection();
   const visibleLinks = getVisibleLinks(features, section);
 
   return (
     <>
       <div className="nav-title">
-        <button onClick={toggle} className="theme-switch" aria-label={tr("تغییر حالت نمایش", "Toggle theme")}>
-          <span className="ts-knob">
-            <span className="ts-icon ts-sun">
-              <svg viewBox="0 0 24 24" fill="none">
-                <circle cx="12" cy="12" r="4.5" fill="var(--sun)" />
-                <g stroke="var(--sun)" strokeWidth="2" strokeLinecap="round">
-                  <line x1="12" y1="1.5" x2="12" y2="4" /><line x1="12" y1="20" x2="12" y2="22.5" />
-                  <line x1="1.5" y1="12" x2="4" y2="12" /><line x1="20" y1="12" x2="22.5" y2="12" />
-                  <line x1="4.5" y1="4.5" x2="6.2" y2="6.2" /><line x1="17.8" y1="17.8" x2="19.5" y2="19.5" />
-                  <line x1="4.5" y1="19.5" x2="6.2" y2="17.8" /><line x1="17.8" y1="6.2" x2="19.5" y2="4.5" />
-                </g>
-              </svg>
-            </span>
-            <span className="ts-icon ts-moon">
-              <svg viewBox="0 0 24 24" fill="none">
-                <path d="M20 14.5A8.5 8.5 0 0 1 9.5 4a8.5 8.5 0 1 0 10.5 10.5Z" fill="var(--moon)" />
-              </svg>
-            </span>
-          </span>
-        </button>
+        <ThemeSwitch />
         <button onClick={onClose} className="nav-close" aria-label={tr("بستن منو", "Close menu")}>×</button>
       </div>
 
       {visibleLinks.map((item) => {
         const isLocked = (m?: string) => isLockedModule(activeModules, m);
         if (isGroup(item)) {
-          const isExpanded = expandedGroup === item.label;
+          const isExpanded = !collapsed.includes(item.label);
           const groupLocked = item.children.every((c) => isLocked(c.module));
           return (
             <div key={item.label} className={isExpanded ? "nav-group-expanded" : undefined}>
               <a
-                onClick={() => setExpandedGroup((g) => (g === item.label ? null : item.label))}
-                className={`nav-link nav-link-icon${isExpanded ? " nav-link-active" : ""}`}
+                onClick={() => setCollapsed((c) => (c.includes(item.label) ? c.filter((x) => x !== item.label) : [...c, item.label]))}
+                className="nav-link nav-link-icon"
                 style={{ cursor: "pointer" }}
               >
                 <span className="nav-link-icon-svg">{ICONS[item.icon]}</span>

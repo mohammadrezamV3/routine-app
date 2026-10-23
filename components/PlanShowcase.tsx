@@ -2,7 +2,7 @@
 
 import { useSection } from "@/components/SectionProvider";
 import type { SectionKey } from "@/lib/sections";
-import { planVisibleIn } from "@/lib/planSection";
+import { orderPlansForSection } from "@/lib/planSection";
 import { useState } from "react";
 import { SmartLink as Link } from "@/components/SmartLink";
 import { Check, X, Sparkles, ShoppingCart } from "lucide-react";
@@ -341,11 +341,12 @@ export function PlansSection({ mode, currentPlanKey, title = tr("از چیزی �
   // رایگان رو داره، چون خود جدول برای مقایسه‌ست، نه خرید.
   const section = useSection();
   const allPlans = getPlans();
-  // روی زیردامنه‌ی یک بخش فقط پلن همون بخش + مکس (ستون‌ها و ردیف‌های جدول مقایسه هم همین‌طور)
-  const sectionPlans = allPlans.filter((p) => planVisibleIn(p.key, section));
+  // روی زیردامنه‌ی یک بخش همه‌ی پلن‌ها قابل خریدن؛ فقط ترتیب عوض می‌شه: پلن همون بخش اول، بعد مکس
+  // (ستون‌ها و ردیف‌های جدول مقایسه هم همه‌ی پلن‌ها و ردیف‌ها رو دارن)
+  const sectionPlans = orderPlansForSection(allPlans, section);
   const tablePlans = sectionPlans;
   const plans = mode === "account" ? sectionPlans.filter((p) => !p.free) : sectionPlans;
-  const compareRows = getCompareRows().filter((r) => !section || !r.sections || r.sections.includes(section));
+  const compareRows = getCompareRows();
   // انگلیسی برچسب‌های بلندتری داره («Sharing with a mentor or friends»): ستون برچسب پهن‌تر،
   // ستون‌های پلن باریک‌تر (جمع هر دو حالت 100%). فارسی همون 24/19.
   const labelColW = isEn() ? "32%" : "24%";

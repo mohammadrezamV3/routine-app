@@ -1,18 +1,18 @@
 "use client";
 
-// فصل «فصل‌ها»: هر دامنه یک کارت با قوس گرادیانی، یادداشت تحلیلی، آمار،
-// ستون‌های کوچک 7 روز (MeterColumn) و بهترین/ضعیف‌ترین روز.
+// فصل «بخش‌ها»: هر دامنه یک کارت با امتیاز بزرگ، تغییر نسبت به هفته‌ی قبل،
+// اکولایزر 7 روز، بهترین/ضعیف‌ترین روز، یادداشت و آمار.
 import { useMemo, useRef, useState } from "react";
 import { SmartLink as Link } from "@/components/SmartLink";
 import { m as motion, useInView } from "framer-motion";
 import { ArrowLeft, TrendingDown, TrendingUp } from "lucide-react";
 import { ANALYSIS_DOMAIN_LABELS } from "@/lib/weeklyAnalysis/types";
 import type { LetterDomain } from "@/lib/weeklyLetter/types";
-import { DOMAIN_HREFS, DOMAIN_ICONS, DOM_GRAD, LazyRing, Reveal, WL_EASE, useLite } from "./WeeklyLetterShared";
+import { DOMAIN_HREFS, DOMAIN_ICONS, Reveal, WL_EASE, useLite } from "./WeeklyLetterShared";
 import { CAL_WEEK_ORDER, weekdayName, weekdayShort } from "@/lib/jalali";
 import { tr } from "@/lib/i18n";
 import { domainRadarAxes, scoreIntensity } from "./WeeklyLetterUtils";
-import { MeterColumn } from "./WeeklyMeter";
+import "./wl-hero.css";
 import WeeklyRadar from "./WeeklyRadar";
 
 // شنبه تا جمعه به زبان جاری (فارسی: ش ی د س چ پ ج)
@@ -28,16 +28,23 @@ function MicroBars({ daily, best, worst }: { daily: (number | null)[]; best: str
   const names = dayNames();
   const cells = Array.from({ length: 7 }, (_, i) => (typeof daily[i] === "number" ? (daily[i] as number) : null));
   return (
-    <div ref={ref} className="wl-bars" role="img" aria-label={tr("امتیاز هر روز هفته", "Score for each day of the week")}>
+    <div ref={ref} className="wld-eq" role="img" aria-label={tr("امتیاز هر روز هفته", "Score for each day of the week")}>
       {cells.map((v, i) => {
         const isBest = best === names[i];
         const isWorst = worst === names[i];
         return (
-          <div key={i} className={`wl-bar-col${isBest ? " is-best" : ""}${isWorst ? " is-worst" : ""}`}>
-            <span className="wl-bar-slot">
-              <MeterColumn size="sm" value={v} on={on} delay={i * 60} highlight={isBest} />
+          <div key={i} className={`wld-eq-col${v !== null && v >= 60 ? " is-good" : ""}${isBest ? " is-best" : ""}${isWorst ? " is-worst" : ""}`}>
+            <span className="wld-eq-slot">
+              {v !== null && (
+                <motion.i
+                  initial={{ scaleY: lite ? 1 : 0 }}
+                  animate={{ scaleY: on ? 1 : 0 }}
+                  transition={{ duration: lite ? 0.2 : 0.7, ease: WL_EASE as never, delay: lite ? 0 : i * 0.05 }}
+                  style={{ height: `${Math.max(6, Math.min(100, v))}%` }}
+                />
+              )}
             </span>
-            <span className="wl-bar-lbl">{letters[i]}</span>
+            <span className="wld-eq-lbl">{letters[i]}</span>
           </div>
         );
       })}
@@ -110,12 +117,12 @@ function DomainCard({ d, i }: { d: LetterDomain; i: number }) {
   const has = d.hasData && d.score !== null;
   const delta = d.delta;
   return (
-    <Reveal id={`wl-dom-${d.domain}`} className={`wl-card wl-dom${has ? "" : " is-empty"}`} delay={(i % 2) * 0.08} style={{ "--wl-k": scoreIntensity(d.score) } as React.CSSProperties}>
-      <div className="wl-dom-head">
-        <span className="wl-dom-ico"><Icon size={18} /></span>
-        <h3 className="wl-dom-name">{label}</h3>
+    <Reveal id={`wl-dom-${d.domain}`} className={`wl-card wld${has ? "" : " is-empty"}`} delay={(i % 3) * 0.07} style={{ "--wl-k": scoreIntensity(d.score) } as React.CSSProperties}>
+      <div className="wld-head">
+        <span className="wld-ico"><Icon size={18} /></span>
+        <h3 className="wld-name">{label}</h3>
         {has && delta !== null && delta !== 0 && (
-          <span className={`wl-delta ${delta > 0 ? "is-good" : "is-bad"}`} dir="ltr">
+          <span className={`wld-delta ${delta > 0 ? "is-good" : "is-bad"}`} dir="ltr">
             {delta > 0 ? <TrendingUp size={13} /> : <TrendingDown size={13} />}
             {delta > 0 ? "+" : "−"}{Math.abs(Math.round(delta))}
           </span>
@@ -124,32 +131,28 @@ function DomainCard({ d, i }: { d: LetterDomain; i: number }) {
 
       {has ? (
         <>
-          <div className="wl-dom-main">
-            <LazyRing value={(d.score as number) / 100} size={96} stroke={9} grad={DOM_GRAD} delay={0.1}>
-              <span className="wl-dom-score">{Math.round(d.score as number)}</span>
-            </LazyRing>
-            {d.stats.length > 0 && (
-              <dl className="wl-stats">
-                {d.stats.map((s, k) => (
-                  <div key={k} className="wl-stat">
-                    <dt>{s.label}</dt>
-                    <dd className={`is-${s.tone ?? "neutral"}`}>{s.value}</dd>
-                  </div>
-                ))}
-              </dl>
-            )}
-          </div>
-          {d.note && <p className="wl-dom-note">{d.note}</p>}
+          <div className="wld-score" dir="ltr"><b>{Math.round(d.score as number)}</b><small>/100</small></div>
           <MicroBars daily={d.daily} best={d.bestDay} worst={d.worstDay} />
           {(d.bestDay || d.worstDay) && (
-            <div className="wl-dom-days">
+            <div className="wld-days">
               {d.bestDay && <span className="wl-mark is-good"><TrendingUp size={12} />{tr("اوج:", "Peak:")} {d.bestDay}</span>}
               {d.worstDay && d.worstDay !== d.bestDay && <span className="wl-mark is-bad"><TrendingDown size={12} />{tr("افت:", "Dip:")} {d.worstDay}</span>}
             </div>
           )}
+          {d.note && <p className="wld-note">{d.note}</p>}
+          {d.stats.length > 0 && (
+            <dl className="wld-stats">
+              {d.stats.map((s, k) => (
+                <div key={k} className="wld-stat">
+                  <dt>{s.label}</dt>
+                  <dd className={`is-${s.tone ?? "neutral"}`}>{s.value}</dd>
+                </div>
+              ))}
+            </dl>
+          )}
         </>
       ) : (
-        <p className="wl-dom-note">{tr(`این هفته در ${label} چیزی ثبت نشد.`, `Nothing was logged in ${label} this week.`)}</p>
+        <p className="wld-note">{tr(`این هفته در ${label} چیزی ثبت نشد.`, `Nothing was logged in ${label} this week.`)}</p>
       )}
 
       <Link href={DOMAIN_HREFS[d.domain]} className="wl-link">
@@ -164,7 +167,7 @@ export function WeeklyLetterDomains({ domains }: { domains: LetterDomain[] }) {
   return (
     <>
       <DomainsOverview domains={domains} />
-      <div className="wl-dom-grid">
+      <div className="wld-grid">
         {domains.map((d, i) => <DomainCard key={d.domain} d={d} i={i} />)}
       </div>
     </>

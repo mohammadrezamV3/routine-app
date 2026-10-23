@@ -211,7 +211,7 @@ function LetterBody({ data, onGo, reload }: { data: LiveWeekPayload; onGo: (w: s
         prediction={data.isCurrent ? <WeeklyLetterPrediction letter={letter} ctx={ctx} /> : null}
       />
       {(storyOpen || storyMounted) && (
-        <WeeklyLetterStories open={storyOpen} onClose={() => setStoryOpen(false)} letter={letter} slides={slides} />
+        <WeeklyLetterStories open={storyOpen} onClose={() => setStoryOpen(false)} letter={letter} slides={slides} isCurrent={data.isCurrent} />
       )}
       <WeeklyLetterToc items={chapters} />
 

@@ -13,6 +13,7 @@ import type { WeeklyLetterData } from "@/lib/weeklyLetter/types";
 import { tr } from "@/lib/i18n";
 import { goalCtaHref, weekCtaHref } from "./WeeklyLetterStoriesData";
 import { CountText, DOMAIN_ICONS, Reveal } from "./WeeklyLetterShared";
+import { WeeklyMedalBadge } from "./WeeklyMedalBadge";
 
 export const INSIGHT_ICONS: Record<Insight["icon"], LucideIcon> = {
   link: Link2, flame: Flame, trophy: Trophy, alert: AlertTriangle, trend_up: TrendingUp, trend_down: TrendingDown, calendar: CalendarDays, zap: Zap,
@@ -86,7 +87,7 @@ export function WeeklyLetterAchievements({ achievements, streak }: { achievement
                 viewport={{ once: true }}
                 transition={{ type: "spring", stiffness: 260, damping: 14, delay: 0.15 }}
               >
-                {a.emoji}
+                <WeeklyMedalBadge achievementKey={a.key} emoji={a.emoji} source={a.source} size={64} animate />
               </motion.span>
               <h3>{a.title}</h3>
               <p>{a.description}</p>

@@ -1,0 +1,55 @@
+/* پنجره‌ی صداهای خواب (SleepSoundSheet) روی پایه‌ی .slg-* از sleep-log.css.
+   هیچ بک‌گراندی اضافه نشده؛ انیمیشن فقط transform. */
+.sns-panel.modal-panel{ max-width:460px; }
+.sns-grid{ display:grid; grid-template-columns:repeat(3, minmax(0,1fr)); gap:10px; }
+.sns-card{
+  display:flex; flex-direction:column; align-items:flex-start; gap:14px; min-width:0;
+  padding:12px; border-radius:18px; border:1px solid var(--box-line); color:var(--text); text-align:start;
+  transition:border-color .2s ease, transform .15s ease;
+}
+.sns-card:active{ transform:scale(.97); }
+.sns-card.active{ border-color:var(--accent); }
+.sns-card.active .sns-card-top > svg{ color:var(--accent); }
+.sns-card-top{ display:flex; align-items:center; justify-content:space-between; width:100%; gap:8px; }
+.sns-card-name{ font-size:13px; font-weight:800; line-height:1.5; font-family:var(--font-latin), var(--font-vazir); }
+
+/* اکولایزر: چهار میله که فقط وقتی صدا پخش می‌شه با scaleY حرکت می‌کنن */
+.sns-eq{ display:inline-flex; align-items:flex-end; gap:2px; height:16px; opacity:0; }
+.sns-eq.live{ opacity:1; }
+.sns-eq i{ display:block; width:3px; height:100%; border-radius:2px; background:var(--accent); transform:scaleY(.3); transform-origin:bottom; }
+.sns-eq.live i{ animation:sns-eq 1.1s ease-in-out infinite; }
+.sns-eq.live i:nth-child(2){ animation-delay:-.3s; animation-duration:.9s; }
+.sns-eq.live i:nth-child(3){ animation-delay:-.6s; animation-duration:1.3s; }
+.sns-eq.live i:nth-child(4){ animation-delay:-.15s; animation-duration:1s; }
+@keyframes sns-eq{ 0%,100%{ transform:scaleY(.25); } 50%{ transform:scaleY(1); } }
+@media (prefers-reduced-motion:reduce){ .sns-eq.live i{ animation:none; transform:scaleY(.65); } .sns-card{ transition:none; } }
+html[data-perf-weak] .sns-eq.live i, html[data-perf="low"] .sns-eq.live i{ animation:none; transform:scaleY(.65); }
+
+.sns-vol-num, .sns-remain{ font-size:12px; font-weight:800; color:var(--muted); font-variant-numeric:tabular-nums; font-family:var(--font-latin), var(--font-vazir); }
+.sns-remain{ color:var(--accent); }
+.sns-timer{ margin:0; }
+.sns-timer .auth-tab{ padding-inline:2px; font-size:12.5px; white-space:nowrap; }
+
+/* لغزنده: مسیر پر شده با گرادیان نیمه‌شفاف روی خود مسیر (بدون بک‌گراند روی خود المان) */
+.sns-range{
+  -webkit-appearance:none; appearance:none; width:100%; height:28px; margin:0; padding:0; background:none; border:none;
+  cursor:pointer; direction:ltr; box-shadow:none;
+}
+.sns-range::-webkit-slider-runnable-track{
+  height:6px; border-radius:999px;
+  background:linear-gradient(to right, var(--accent) var(--sns-fill,50%), var(--box-line) var(--sns-fill,50%));
+}
+.sns-range::-moz-range-track{ height:6px; border-radius:999px; background:var(--box-line); }
+.sns-range::-moz-range-progress{ height:6px; border-radius:999px; background:var(--accent); }
+.sns-range::-webkit-slider-thumb{
+  -webkit-appearance:none; appearance:none; width:22px; height:22px; margin-top:-8px; border-radius:50%;
+  background:var(--accent); border:none; box-shadow:0 2px 8px rgba(0,0,0,.35); transition:transform .15s ease;
+}
+.sns-range::-moz-range-thumb{ width:22px; height:22px; border-radius:50%; background:var(--accent); border:none; box-shadow:0 2px 8px rgba(0,0,0,.35); }
+.sns-range:active::-webkit-slider-thumb{ transform:scale(1.12); }
+.sns-range:focus-visible{ outline:2px solid var(--accent); outline-offset:3px; border-radius:999px; }
+
+@media (max-width:380px){
+  .sns-grid{ gap:8px; }
+  .sns-card{ padding:10px; }
+}
