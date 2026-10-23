@@ -51,33 +51,32 @@ describe("sectionAreas", () => {
     expect(a.lg.startsWith('"today heat heat"')).toBe(true);
     expect(a.sm).toBe('"today" "heat" "sleep" "road" "mentor" "inbox"');
   });
-  it("ورزش: فضای تمرین ردیف تمام‌عرض اول، بقیه متوازن", () => {
-    const a = sectionAreas(set("inbox", "space", "sleep", "mentor"), "workout");
-    expect(a.lg).toBe('"space space space" "sleep mentor inbox"');
-    expect(a.md).toBe('"space space" "sleep mentor" "inbox inbox"');
-    expect(a.sm).toBe('"space" "sleep" "mentor" "inbox"');
+  it("ورزش: تمرین و تغذیه دو بخش جدا (دو ستون برابر)، بعد خواب؛ مربی و اعلان‌ها نه", () => {
+    const a = sectionAreas(set("inbox", "ex", "cal", "sleep", "mentor"), "workout");
+    expect(a.lg).toBe('"ex cal" "sleep sleep"');
+    expect(a.md).toBe('"ex ex" "cal cal" "sleep sleep"');
+    expect(a.sm).toBe('"ex" "cal" "sleep"');
   });
-  it("ورزش بدون فضای تمرین: فقط بقیه، و ex/cal دیگه چیده نمی‌شن", () => {
-    const a = sectionAreas(set("inbox"), "workout");
-    expect(a.lg).toBe('"inbox inbox inbox"');
-    const b = sectionAreas(set("inbox", "ex", "cal"), "workout");
-    expect(b.lg).not.toContain("ex");
-    expect(b.sm).toBe('"inbox"');
+  it("ورزش با یک بخش یا بدون هیچ‌کدوم", () => {
+    expect(sectionAreas(set("cal", "sleep"), "workout").lg).toBe('"cal cal" "sleep sleep"');
+    expect(sectionAreas(set("ex"), "workout").md).toBe('"ex ex"');
+    expect(sectionAreas(set("inbox", "mentor"), "workout").lg).toBe("");
   });
-  it("ترید: عملکرد و بازار اول و فقط کارت‌های موجود", () => {
+  it("ترید: عملکرد و بازار اول و فقط کارت‌های موجود، بدون مربی و اعلان‌ها", () => {
     const a = sectionAreas(set("inbox", "trade", "market", "mentor"), "trade");
-    expect(a.lg).toBe('"trade trade market" "mentor mentor inbox"');
-    expect(a.md).toBe('"trade trade" "market market" "mentor inbox"');
+    expect(a.lg).toBe('"trade trade market"');
+    expect(a.md).toBe('"trade trade" "market market"');
+    expect(a.sm).toBe('"trade" "market"');
     const b = sectionAreas(set("inbox", "trade"), "trade");
-    expect(b.lg).toBe('"trade trade trade" "inbox inbox inbox"');
+    expect(b.lg).toBe('"trade trade trade"');
   });
   it("ترید با ابزارها: ردیف تمام‌عرض بعد از عملکرد و بازار", () => {
     const a = sectionAreas(set("inbox", "trade", "market", "tools", "mentor"), "trade");
-    expect(a.lg).toBe('"trade trade market" "tools tools tools" "mentor mentor inbox"');
-    expect(a.md).toBe('"trade trade" "market market" "tools tools" "mentor inbox"');
-    expect(a.sm).toBe('"trade" "market" "tools" "mentor" "inbox"');
+    expect(a.lg).toBe('"trade trade market" "tools tools tools"');
+    expect(a.md).toBe('"trade trade" "market market" "tools tools"');
+    expect(a.sm).toBe('"trade" "market" "tools"');
     const b = sectionAreas(set("inbox", "tools"), "trade");
-    expect(b.lg).toBe('"tools tools tools" "inbox inbox inbox"');
+    expect(b.lg).toBe('"tools tools tools"');
   });
   it("هر ناحیه فقط یک بار و فقط از کارت‌های موجود", () => {
     const has = set("inbox", "today", "heat", "sleep", "mentor");

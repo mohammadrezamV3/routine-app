@@ -14,7 +14,7 @@ import dynamic from "next/dynamic";
 // تنبل: فقط با کنش کاربر باز می‌شه و کدش توی باندل اولیه نیست
 const AiExercisePlanWizard = dynamic(() => import("./AiExercisePlanWizard").then((m) => m.AiExercisePlanWizard), { ssr: false });
 
-export function ExercisePanel({ inSpace = false }: { inSpace?: boolean } = {}) {
+export function ExercisePanel({ inSpace = false, layout = "grid" }: { inSpace?: boolean; layout?: "grid" | "quick" } = {}) {
   const { status } = useSession();
   const [plan, setPlan] = useState<ExercisePlan | null | undefined>(undefined);
   // طبق درخواست صریح، اولین ورود دیگر مستقیم داخل ویزارد ساخت برنامه
@@ -86,7 +86,7 @@ export function ExercisePanel({ inSpace = false }: { inSpace?: boolean } = {}) {
   return (
     <div>
       <div className="dash-scope">
-        <ExerciseDashboard inSpace={inSpace} plan={plan} onPlanChange={setPlan} onPlanDeleted={() => { setPlan(null); setWizardOpen(false); }} />
+        <ExerciseDashboard inSpace={inSpace} layout={layout} plan={plan} onPlanChange={setPlan} onPlanDeleted={() => { setPlan(null); setWizardOpen(false); }} />
       </div>
       <div className="disclaimer-note">
         <span className="disclaimer-warn">{tr("توجه: ", "Note: ")}</span>

@@ -43,7 +43,7 @@ const V_TOOL: Variants = {
 
 const Num = ({ children }: { children: React.ReactNode }) => <bdi dir="ltr">{children}</bdi>;
 
-type Tool = { key: string; href: string; icon: DashIconName; title: string; sub: React.ReactNode; extra?: React.ReactNode; dot?: boolean; big?: React.ReactNode };
+type Tool = { key: string; href: string; icon: DashIconName; title: string; sub: React.ReactNode; extra?: React.ReactNode; dot?: boolean; big?: React.ReactNode; end?: React.ReactNode };
 
 export function DashboardTradeTools({ tools, accountCount, accounts = [], features, loading }: {
   tools: DashTradeTools | null;
@@ -74,6 +74,7 @@ export function DashboardTradeTools({ tools, accountCount, accounts = [], featur
     list.push({
       key: "chart", href: "/trade/chart", icon: "chart", title: tr("چارت", "Chart"),
       sub: live(chart?.lastSymbol ? <>{tr("آخرین نماد", "Last symbol")} <Num>{chart.lastSymbol}</Num></> : null, tr("تریدینگ‌ویو و گفت‌وگوی هر نماد", "TradingView and chat for every symbol")),
+      end: chart?.lastSymbol ? <span className="db-tool-chips" dir="ltr"><span>{chart.lastSymbol}</span></span> : null,
       extra: chart && chart.recentSymbols.length > 0 ? <span className="db-tool-chips" dir="ltr">{chartSyms.map((s) => <span key={s}>{s}</span>)}</span> : null,
     });
   }
@@ -82,6 +83,12 @@ export function DashboardTradeTools({ tools, accountCount, accounts = [], featur
       key: "journal", href: "/trade/journal", icon: "journal", title: tr("ژورنال", "Journal"),
       sub: live(accountCount === null ? null : accountCount === 0 ? tr("اولین حساب معاملاتی‌ات رو بساز", "Create your first trading account") : tr("حساب معاملاتی", accountCount === 1 ? "trading account" : "trading accounts"), tr("حساب‌های معاملاتی و ثبت معامله", "Trading accounts and trade logging")),
       big: !loading && accountCount ? <Num>{accountCount}</Num> : null,
+      end: !loading && accountCount ? (
+        <>
+          {accounts.length > 0 ? <span className="db-tool-dots" aria-hidden="true">{accounts.slice(0, 4).map((a) => <i key={a.id} style={{ background: a.color }} />)}</span> : null}
+          <b className="db-tool-endnum"><Num>{accountCount}</Num></b>
+        </>
+      ) : null,
       extra: accounts.length > 0 ? <span className="db-tool-dots" aria-hidden="true">{accounts.slice(0, 8).map((a) => <i key={a.id} style={{ background: a.color }} />)}</span> : null,
     });
   }
@@ -92,6 +99,12 @@ export function DashboardTradeTools({ tools, accountCount, accounts = [], featur
     list.push({
       key: "checklists", href: "/trade/checklists", icon: "checklist", title: tr("چک‌لیست", "Checklists"),
       sub: live(c ? (f ? <bdi>{f.name}</bdi> : c.count ? tr(`${c.count} چک‌لیست`, `${c.count} ${c.count === 1 ? "checklist" : "checklists"}`) : tr("هنوز چک‌لیستی نساخته‌ای", "No checklist yet")) : null, tr("شرط‌های ورود هر استراتژی", "Entry conditions for each strategy")),
+      end: f ? (
+        <span className="db-tool-prog">
+          <Num>{f.checked}/{f.total}</Num>
+          <Meter value={frac} delay={0.4} />
+        </span>
+      ) : null,
       extra: f ? (
         <span className="db-tool-prog">
           <Meter value={frac} delay={0.4} />
@@ -104,7 +117,7 @@ export function DashboardTradeTools({ tools, accountCount, accounts = [], featur
     const n = tools?.notes ?? null;
     list.push({
       key: "notes", href: "/trade/notes", icon: "notes", title: tr("یادداشت‌ها", "Notes"),
-      sub: live(n ? (n.latest ? n.latest.excerpt : tr("اولین یادداشتت رو بنویس", "Write your first note")) : null, tr("تحلیل‌ها و تجربه‌های شخصی", "Your analyses and personal experiences")),
+      sub: live(n ? (n.latest ? <bdi dir="auto">{n.latest.excerpt}</bdi> : tr("اولین یادداشتت رو بنویس", "Write your first note")) : null, tr("تحلیل‌ها و تجربه‌های شخصی", "Your analyses and personal experiences")),
     });
   }
   if (on("tradeRisk")) {
@@ -128,6 +141,7 @@ export function DashboardTradeTools({ tools, accountCount, accounts = [], featur
       key: "mt", href: "/trade/metatrader", icon: "link", title: tr("اتصال متاتریدر", "MetaTrader"),
       sub: live(text ? <>{text}{mt?.connected && ago ? ` · ${ago}` : ""}</> : null, tr("دریافت خودکار معاملات", "Automatic trade import")),
       dot: !!mt?.connected,
+      end: mt?.connected ? <span className="db-tool-dot" aria-hidden="true" /> : null,
     });
   }
 
@@ -149,6 +163,8 @@ export function DashboardTradeTools({ tools, accountCount, accounts = [], featur
                 <span className="db-tool-sub">{t.sub}</span>
                 {t.extra}
               </span>
+              {t.end ? <span className="db-tool-end">{t.end}</span> : null}
+              <span className="db-tool-chev dir-flip" aria-hidden="true"><DashIcon name="arrow" /></span>
             </Link>
           </motion.div>
         ))}

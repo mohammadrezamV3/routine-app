@@ -20,8 +20,11 @@ const ExerciseCatalogModal = dynamic(
 // «مشاهده حرکات» — ستون وسط داشبورد (هم‌جای DashReminderCard توی روتین)،
 // فقط یک دکمه‌ی وسط‌چین که کاتالوگ کامل حرکات رو باز می‌کنه — بدون
 // پیش‌نمایش لیست.
-export function ExerciseCatalogCard({ delay, compact = false }: { delay?: number; compact?: boolean }) {
-  const [open, setOpen] = useState(false);
+export function ExerciseCatalogCard({ delay, compact = false, open: controlledOpen, onOpenChange }: { delay?: number; compact?: boolean; open?: boolean; onOpenChange?: (open: boolean) => void }) {
+  const [inner, setInner] = useState(false);
+  // کنترل‌شده از بیرون (باکس «حرکات» داشبورد ورزش) یا مستقل مثل قبل
+  const open = controlledOpen ?? inner;
+  const setOpen = (v: boolean) => { setInner(v); onOpenChange?.(v); };
 
   return (
     <DashCard delay={delay} className={compact ? "flex items-center justify-center !p-0" : "flex h-full items-center justify-center"}>

@@ -25,12 +25,13 @@ import { useDashboardRoutine } from "@/lib/useDashboardRoutine";
 import type { DashboardData } from "@/lib/dashboardTypes";
 import type { SectionKey } from "@/lib/sections";
 import { DashboardHero } from "./DashboardHero";
+import { DashboardWorkoutHero } from "./DashboardWorkoutHero";
 import { DashboardToday } from "./DashboardToday";
 import { DashboardHeatmap } from "./DashboardHeatmap";
 import { DashboardRoutineLock } from "./DashboardRoutineLock";
 import { DashboardCalorie, DashboardExercise } from "./DashboardFitness";
 import { DashboardSleep } from "./DashboardSleep";
-import { DashboardWorkoutSpace } from "./DashboardWorkoutSpace";
+import { DashboardWorkoutSection } from "./DashboardWorkoutSection";
 import { DashboardModuleLock } from "./DashboardModuleLock";
 import { useSection } from "./SectionProvider";
 import { dashboardBlocks, sectionAreas, type DashArea } from "@/lib/dashboardSection";
@@ -126,8 +127,8 @@ function DashboardBody({ initial }: { initial: { key: string; data: DashboardDat
   // (روی زیردامنه‌ی ورزش/ترید، /weekly به دامنه‌ی دیگه‌ای ریدایرکت می‌شه، پس مقصد خود بخشه)
   const nextHref = section === "workout" ? "/sleep" : section === "trade" ? "/trade/journal" : "/weekly";
   useEffect(() => prefetchWhenIdle((h) => router.prefetch(h), nextHref), [router, nextHref]);
-  // روتین کامل فقط برای دامنه‌ی اصلی و بخش روتین؛ ورزش فقط ساعت‌های خواب (نوار روز)؛ ترید هیچ
-  const routine = useDashboardRoutine(blocks.routine ? "full" : section === "workout" ? "wake" : "none");
+  // روتین کامل فقط برای دامنه‌ی اصلی و بخش روتین؛ ورزش و ترید هیچ (هیروی ورزش فقط حلقه‌هاست)
+  const routine = useDashboardRoutine(blocks.routine ? "full" : "none");
   const flagFeatures = useFeatures();
   const [shareOpen, setShareOpen] = useState(false);
   // بعد از اولین باز شدن mount می‌مونه تا انیمیشن بسته‌شدن سر جاش بمونه
@@ -147,7 +148,8 @@ function DashboardBody({ initial }: { initial: { key: string; data: DashboardDat
   const flagSig = FEATURE_KEYS.map((k) => (on(k) ? 1 : 0)).join("");
   const routineOn = on("routine");
   const { has, locked } = useMemo(() => {
-    const set = new Set<Area>(["inbox"]);
+    // ورزش و ترید کارت مربی و اعلان‌ها رو ندارن (فقط روتین و دامنه‌ی اصلی)
+    const set = new Set<Area>(section === "workout" || section === "trade" ? [] : ["inbox"]);
     // کارت ماژول پولی خریده‌نشده فقط روی زیردامنه‌ی خودش قفل نشون می‌ده (دامنه‌ی اصلی مثل قبل: اصلا کارتی نیست)
     const lock = new Set<Area>();
     if (!section) {
@@ -168,8 +170,8 @@ function DashboardBody({ initial }: { initial: { key: string; data: DashboardDat
     if (blocks.routine && routineOn) { set.add("today"); set.add("heat"); }
     if (blocks.sleep && on("sleep")) set.add("sleep");
     if (blocks.fitness) {
-      // ورزش: «فضای تمرین» (پنل‌های واقعی)؛ ماژول خریده‌نشده رو ModuleGate داخل خودش نشون می‌ده، پس کارت قفل جدا نداریم
-      if (section === "workout") { if (on("exercise") || on("calorie")) set.add("space"); }
+      // ورزش: دو بخش جدای تمرین و تغذیه (پنل‌های واقعی)؛ ماژول خریده‌نشده رو ModuleGate داخل خودش نشون می‌ده، پس کارت قفل جدا نداریم
+      if (section === "workout") { if (on("exercise")) set.add("ex"); if (on("calorie")) set.add("cal"); }
       else { paid("ex", "EXERCISE", "exercise"); paid("cal", "CALORIE", "calorie"); }
     }
     if (blocks.trade) {
@@ -178,7 +180,7 @@ function DashboardBody({ initial }: { initial: { key: string; data: DashboardDat
       // ابزارهای ترید (جای هاب قدیمی /trade): فقط با ماژول و حداقل یک ابزار روشن
       if (section === "trade" && owns("TRADE") && TRADE_TOOL_FLAGS.some(on)) set.add("tools");
     }
-    if (on("mentors")) set.add("mentor");
+    if (section === "routine" && on("mentors")) set.add("mentor");
     if (blocks.roadmaps && owns("ROADMAP") && features?.roadmaps === true) set.add("road");
     return { has: set, locked: lock };
     // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -195,7 +197,11 @@ function DashboardBody({ initial }: { initial: { key: string; data: DashboardDat
   return (
     <MotionConfig reducedMotion="user">
       <DashboardActionsProvider scheduleOpts={routine.opts} onChanged={refreshNow} onNeedPage={goTo}>
-      <DashboardHero data={data} routine={routine} routineLocked={routineLocked} routineOff={!routineOn} streakOn={on("streak")} section={section} tradeCta={section === "trade" && owns("TRADE") && on("tradeJournal")} sessionPill={on("forexClock")} onTradeSaved={refreshNow} onShare={section !== "trade" && on("shareCards") ? () => setShareOpen(true) : undefined} />
+      {section === "workout" ? (
+        <DashboardWorkoutHero data={data} onShare={on("shareCards") ? () => setShareOpen(true) : undefined} />
+      ) : (
+        <DashboardHero data={data} routine={routine} routineLocked={routineLocked} routineOff={!routineOn} streakOn={on("streak")} section={section} tradeCta={section === "trade" && owns("TRADE") && on("tradeJournal")} sessionPill={on("forexClock")} onTradeSaved={refreshNow} onShare={section !== "trade" && on("shareCards") ? () => setShareOpen(true) : undefined} />
+      )}
 
       {status === "error" && !data && (
         <div className="db-error">
@@ -204,7 +210,7 @@ function DashboardBody({ initial }: { initial: { key: string; data: DashboardDat
         </div>
       )}
 
-      <motion.div className="db-bento" style={areas} variants={V_GRID} initial="hidden" animate="show">
+      <motion.div className={section === "workout" ? "db-bento is-workout" : "db-bento"} style={areas} variants={V_GRID} initial="hidden" animate="show">
         {!has.has("today") ? null : routineLocked ? (
           <>
             <DashboardRoutineLock area="today" />
@@ -217,15 +223,16 @@ function DashboardBody({ initial }: { initial: { key: string; data: DashboardDat
           </>
         )}
         {has.has("sleep") && <DashboardSleep sleep={data?.sleep ?? null} loading={loading} />}
-        {has.has("space") && <DashboardWorkoutSpace features={features} />}
-        {has.has("ex") && (locked.has("ex") ? <DashboardModuleLock area="ex" /> : <DashboardExercise ex={data?.exercise ?? null} loading={loading} />)}
-        {has.has("cal") && (locked.has("cal") ? <DashboardModuleLock area="cal" /> : <DashboardCalorie cal={data?.calorie ?? null} loading={loading} />)}
+        {section === "workout" && has.has("ex") && <DashboardWorkoutSection part="exercise" />}
+        {section === "workout" && has.has("cal") && <DashboardWorkoutSection part="calorie" />}
+        {section !== "workout" && has.has("ex") && (locked.has("ex") ? <DashboardModuleLock area="ex" /> : <DashboardExercise ex={data?.exercise ?? null} loading={loading} />)}
+        {section !== "workout" && has.has("cal") && (locked.has("cal") ? <DashboardModuleLock area="cal" /> : <DashboardCalorie cal={data?.calorie ?? null} loading={loading} />)}
         {has.has("trade") && (locked.has("trade") ? <DashboardModuleLock area="trade" /> : <DashboardTrade trade={data?.trade ?? null} loading={loading} />)}
         {has.has("market") && <DashboardMarket events={data?.calendar?.events ?? null} loading={loading} />}
         {has.has("tools") && <DashboardTradeTools tools={data?.tradeTools ?? null} accountCount={data?.trade?.accountCount ?? null} accounts={data?.trade?.accounts ?? []} features={features} loading={loading} />}
         {has.has("mentor") && <DashboardMentors m={data?.mentors ?? null} loading={loading} />}
         {has.has("road") && <DashboardRoadmaps r={data?.roadmaps ?? null} loading={loading} />}
-        <DashboardInbox data={data} loading={loading} />
+        {has.has("inbox") && <DashboardInbox data={data} loading={loading} />}
       </motion.div>
 
       {shareEver && <DashboardShare open={shareOpen} onClose={() => setShareOpen(false)} data={data} routine={routine} routineLocked={routineLocked} />}
