@@ -944,6 +944,8 @@ html[dir="ltr"] .db-cd-title, html[dir="ltr"] .db-ev-title{ text-align:left; }
 @media (min-width:1024px){
   .db-page .db-hero.has-kpi{ grid-template-columns:minmax(0,1fr) minmax(0,1.15fr) auto; grid-template-areas:"main kpi orbit" "ribbon ribbon ribbon"; }
   .db-page .db-hero.is-noribbon.has-kpi{ grid-template-areas:"main kpi orbit"; }
+  .db-page .db-hero.has-kpi{ min-height:293px; align-content:center; }
+  .db-page .db-hero.has-kpi:not(.is-noribbon){ min-height:373px; align-content:start; }
   .db-hero-kpis{ grid-area:kpi; display:flex; align-items:stretch; align-self:center; list-style:none; min-width:0; }
   .db-hero-kpis li{ flex:1 1 0; min-width:0; }
   .db-hero-kpis li + li .db-kpi{ border-inline-start:1px solid var(--box-line); }
