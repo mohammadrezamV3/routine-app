@@ -312,51 +312,31 @@ html[dir="ltr"] .field-error-wrap.has-icon .auth-phone-wrap input[dir="ltr"]{ pa
   pointer-events:none; user-select:none; font-family:var(--font-latin), var(--font-vazir), sans-serif;
 }
 .as-root picture{ display:block; position:absolute; inset:0; }
-.as-img{
-  display:block; width:100%; height:100%; object-fit:cover; object-position:50% 48%;
-  transform-origin:49% 48%;
-}
-/* محو شدن لبه‌ی پایین (بنر موبایل) در سطح ستون فرم؛ پله‌های نرم تا باندینگ نداشته باشه */
+.as-img{ display:block; width:100%; height:100%; object-fit:cover; }
+
+/* لوگو، اسم و برچسب بخش‌ها داخل خود تصویر (شب و روز) پخته شده؛ هیچ‌چیز روش نمی‌شینه.
+   بنر موبایل برش مخصوص خودش رو داره (login-hero-*-m، نسبت حدود 1.73:1) تا بلوک لوگو وسط‌چین بمونه.
+   فید پایین دیرتر شروع می‌شه تا برچسب‌ها کم‌رنگ نشن؛ رنگش var(--bg) یعنی سطح فرم همون تم.
+   زوم آرام نداریم چون متن پخته‌شده نباید تار بشه. */
+.as-img{ object-position:50% 50%; transform-origin:50% 50%; }
 .as-fade{
-  position:absolute; inset:0;
-  background:linear-gradient(to bottom, transparent 55%,
-    color-mix(in srgb, var(--bg) 12%, transparent) 68%,
-    color-mix(in srgb, var(--bg) 45%, transparent) 82%,
-    color-mix(in srgb, var(--bg) 82%, transparent) 93%, var(--bg) 100%);
+  background:linear-gradient(to bottom, transparent 86%,
+    color-mix(in srgb, var(--bg) 12%, transparent) 91%,
+    color-mix(in srgb, var(--bg) 40%, transparent) 95%,
+    color-mix(in srgb, var(--bg) 80%, transparent) 98.5%, var(--bg) 100%);
 }
-.as-cap{ display:none; }
 
 @media (min-width:1024px){
-  .as-img{ object-position:49% 46%; }
+  /* تصویر روز برچسب‌هاش پهن‌تره: کمی به چپ تا ROUTINE زیر فید لبه نره (روی 1024px) */
+  .as-light .as-img{ object-position:62% 50%; }
   .as-fade{
     background:linear-gradient(to right, transparent calc(100% - clamp(90px, 14%, 170px)),
       color-mix(in srgb, var(--bg) 12%, transparent) calc(100% - clamp(60px, 9%, 110px)),
       color-mix(in srgb, var(--bg) 50%, transparent) calc(100% - clamp(30px, 4.5%, 56px)),
       color-mix(in srgb, var(--bg) 85%, transparent) calc(100% - 12px), var(--bg) 100%);
   }
-  .as-cap{
-    display:block; position:absolute; left:32px; bottom:32px; max-width:min(320px, calc(100% - 64px));
-    padding:18px 20px 16px; border-radius:20px; box-sizing:border-box;
-    background:rgba(8,14,30,.5); border:1px solid rgba(255,255,255,.12);
-    -webkit-backdrop-filter:blur(14px) saturate(1.15); backdrop-filter:blur(14px) saturate(1.15);
-    text-align:start; color:#fff;
-  }
-  .as-cap-brand{ display:block; line-height:0; }
-  .as-cap-title{ display:block; margin-top:10px; font-size:18px; font-weight:800; line-height:1.6; }
-  .as-cap-pills{ display:flex; flex-wrap:wrap; gap:8px; margin:14px 0 0; padding:0; list-style:none; }
-  .as-cap-pills li{
-    display:inline-flex; align-items:center; gap:7px; padding:5px 11px; border-radius:999px;
-    font-size:12px; line-height:1.4; font-weight:600; color:rgba(255,255,255,.92);
-    background:rgba(255,255,255,.08); border:1px solid rgba(255,255,255,.12);
-  }
-  .as-cap-pills li::before{ content:""; width:7px; height:7px; border-radius:50%; background:var(--as-dot); flex:0 0 auto; }
 }
 
-/* زوم خیلی آرام فقط روی خود تصویر؛ فقط transform */
-@media (min-width:1024px) and (prefers-reduced-motion:no-preference){
-  html:not([data-perf-weak]) .as-img{ animation:as-zoom 24s ease-in-out infinite alternate; will-change:transform; }
-}
-@keyframes as-zoom{ from{ transform:scale(1); } to{ transform:scale(1.04); } }
 /* ── auth-showcase end ── */
 
 /* ── auth-split start ── */
@@ -372,6 +352,10 @@ body:has(.auth-split) .wrap{ max-width:none; margin:0; }
   padding:28px 24px 24px; background:var(--bg);
 }
 .auth-split-media{ position:relative; flex:0 0 220px; height:220px; overflow:hidden; background:#050b1a; }
+/* بنر کمی بلندتر: بلوک لوگو + برچسب‌ها کامل دیده بشه (فقط زیر 1024px) */
+@media (max-width:1023px){
+  .auth-split-media:has(.as-root){ flex-basis:clamp(240px, 50vw, 400px); height:clamp(240px, 50vw, 400px); }
+}
 .auth-split .auth-shell{ max-width:360px; padding-bottom:16px; }
 
 .auth-split-head{ position:relative; margin-bottom:24px; }
