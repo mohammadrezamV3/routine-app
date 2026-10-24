@@ -8,6 +8,7 @@ import { MAX_CHECKLISTS, MAX_CHECKLIST_ITEMS, MIN_CHECKLIST_ITEMS } from "@/lib/
 import { withLiveSync } from "@/lib/realtime";
 import { sessionFeatureBlocked } from "@/lib/featureFlagsServer";
 import { tr } from "@/lib/i18n";
+import { withIdempotency } from "@/lib/idempotency";
 
 // چک‌لیست‌های نام‌دار کاربر. جایگزین /api/trade/checklist (تکی) شده — آن
 // نسخه یک لیست تخت واحد برای هر کاربر بود و امکان «هر معامله با چک‌لیست
@@ -93,6 +94,7 @@ async function handlePOST(req: NextRequest) {
   if (!guard.ok) return guard.response;
   const userId = guard.userId;
 
+  return withIdempotency(req, userId, "trade.checklists", async () => {
   const body = await req.json().catch(() => null);
   const count = await prisma.tradeChecklist.count({ where: { userId, archived: false } });
   if (count >= MAX_CHECKLISTS) {
@@ -132,6 +134,7 @@ async function handlePOST(req: NextRequest) {
     select: CHECKLIST_SELECT,
   });
   return NextResponse.json({ ok: true, checklist });
+  });
 }
 
 // PATCH { id, name?, color?, required?, archived?, items?: string[] }

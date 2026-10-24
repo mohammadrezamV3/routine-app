@@ -6,7 +6,7 @@
 import { createPortal } from "react-dom";
 import { useRouter } from "next/navigation";
 import { ICONS } from "./NavIcons";
-import { logoutAndRedirect } from "@/lib/logout";
+import { useGuardedLogout } from "@/components/useGuardedLogout";
 import { tr } from "@/lib/i18n";
 
 type Props = {
@@ -20,6 +20,7 @@ type Props = {
 
 export default function NavProfileMenu({ state, anchor, showMentor, showAdmin, onClose, panelRef }: Props) {
   const router = useRouter();
+  const { logout, title: logoutTitle } = useGuardedLogout();
   return createPortal(
     <div
       ref={panelRef}
@@ -63,7 +64,8 @@ export default function NavProfileMenu({ state, anchor, showMentor, showAdmin, o
         <div
           className="notif-panel-item profile-menu-item"
           style={{ color: "#E05252" }}
-          onClick={() => { onClose(); logoutAndRedirect(); }}
+          title={logoutTitle}
+          onClick={() => { onClose(); logout(); }}
         >
           <span className="nav-link-icon-svg">{ICONS.logout}</span>
           <span>{tr("خروج از حساب", "Log out")}</span>

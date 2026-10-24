@@ -6,6 +6,15 @@ import { useSession } from "next-auth/react";
 import { AuthGate } from "@/components/AuthGate";
 import { AccountSidebar } from "@/components/AccountSidebar";
 import { tr, isEn } from "@/lib/i18n";
+import { OnlineOnly } from "@/components/OnlineOnly";
+
+// بخش‌هایی از پنل کاربری که بدون اینترنت کار نمی‌کنن (امنیت، تیکت پشتیبانی، اشتراک/پرداخت)
+function needsOnline(pathname: string): string | null {
+  if (pathname.startsWith("/account/security")) return "account-security";
+  if (pathname.startsWith("/account/support")) return "support";
+  if (pathname.startsWith("/account/subscription")) return "payments";
+  return null;
+}
 
 // پنل کاربری Arion — صفحه‌ی مستقل /account (نه مودال، نه داشبورد). مسیرها:
 //   /account                    → صفحه‌ی اول (موبایل): سرصفحه‌ی حساب + فهرست بخش‌ها؛
@@ -45,7 +54,7 @@ export default function AccountLayout({ children }: { children: React.ReactNode 
         <AccountSidebar />
         <main className="ap-main">
           <div key={pathname} className="m-rise-soft">
-            {children}
+            {(() => { const f = needsOnline(pathname); return f ? <OnlineOnly feature={f}>{children}</OnlineOnly> : children; })()}
           </div>
         </main>
       </div>

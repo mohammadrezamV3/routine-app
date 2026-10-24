@@ -7,6 +7,7 @@ import { isHexColor } from "@/lib/tradeServer";
 import { withLiveSync } from "@/lib/realtime";
 import { sessionFeatureBlocked } from "@/lib/featureFlagsServer";
 import { tr } from "@/lib/i18n";
+import { withIdempotency } from "@/lib/idempotency";
 
 // یادداشت‌های ترید. جست‌وجو عمدا روی عنوان و متن با `contains` انجام
 // می‌شود (نه full-text index): حجم یادداشت‌های یک کاربر کوچک است و
@@ -80,6 +81,7 @@ async function handlePOST(req: NextRequest) {
   if (!guard.ok) return guard.response;
   const userId = guard.userId;
 
+  return withIdempotency(req, userId, "trade.notes", async () => {
   const body = await req.json().catch(() => null);
   const parsed = parseNote(body);
   if (typeof parsed === "string") return NextResponse.json({ error: parsed }, { status: 400 });
@@ -103,6 +105,7 @@ async function handlePOST(req: NextRequest) {
     select: NOTE_SELECT,
   });
   return NextResponse.json({ ok: true, note: serialize(note) });
+  });
 }
 
 async function handlePATCH(req: NextRequest) {

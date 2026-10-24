@@ -22,6 +22,7 @@ import { SECTION_META } from "@/lib/sections";
 import { BLANK_PIXEL, HEADER_DESKTOP_MEDIA, HEADER_MOBILE_MEDIA, sectionIconSm, sectionWordmarkSm } from "@/lib/sectionAssets";
 import { useSection } from "./SectionProvider";
 import HeaderLangButton from "./HeaderLangButton";
+import OfflineIndicator from "./OfflineIndicator";
 import "./site-header.css";
 
 // NavDrawer توی root layout هست و روی هر صفحه mount می‌شه، پس فقط خود نوار هدر
@@ -437,6 +438,7 @@ export function NavDrawer() {
             <DesktopNavEnd guest={status === "unauthenticated"} />
           </div>
         </header>
+        <OfflineIndicator />
         </>
       )}
 

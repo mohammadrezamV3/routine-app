@@ -7,6 +7,7 @@ import { parseDateRange } from "@/lib/validate";
 import { withLiveSync } from "@/lib/realtime";
 import { sessionFeatureBlocked } from "@/lib/featureFlagsServer";
 import { tr } from "@/lib/i18n";
+import { withIdempotency } from "@/lib/idempotency";
 
 // معاملات یک حساب. برخلاف نسخه‌ی قبلی که همه‌ی معاملات کاربر را یکجا
 // می‌داد، این‌جا accountId اجباری است — چون کل UI حساب‌محور است و آمار دو
@@ -85,6 +86,7 @@ async function handlePOST(req: NextRequest) {
   if (!guard.ok) return guard.response;
   const userId = guard.userId;
 
+  return withIdempotency(req, userId, "trade.entries", async () => {
   const body = await req.json().catch(() => null);
   const parsed = parseTradeInput(body);
   if (typeof parsed === "string") return NextResponse.json({ error: parsed }, { status: 400 });
@@ -110,6 +112,7 @@ async function handlePOST(req: NextRequest) {
   });
 
   return NextResponse.json({ ok: true, entry: serializeEntry(entry) });
+  });
 }
 
 // PATCH /api/trade/entries  { id, ...همه‌ی فیلدها }

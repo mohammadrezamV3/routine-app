@@ -6,6 +6,9 @@ import type { Session } from "next-auth";
 import { publishSessionState } from "@/lib/storage";
 import { setAuthHintCookie, clearAuthHintCookie, AUTH_HINT_COOKIE } from "@/lib/preload";
 import { LiveSyncToaster } from "./LiveSyncToaster";
+import { getKnownUserId } from "@/lib/offline/identity";
+import { isNavigatorOffline, isOffline } from "@/lib/offline/status";
+import { onSessionResolved } from "@/lib/offline/boot";
 
 // refetchOnWindowFocus خاموشه — این اپ نیازی به رفرش سشن با هر بار برگشتن
 // به تب نداره، و این رفتار فقط یه فچ اضافه‌ی بی‌فایده به /api/auth/session
@@ -37,13 +40,23 @@ function identityHandledHere(): boolean {
 }
 
 function SessionBridge() {
-  const { status } = useSession();
+  const { status, data, update } = useSession();
+  const userId = ((data?.user as { id?: string } | undefined)?.id) || null;
+  const statusRef = useRef(status);
+  statusRef.current = status;
   // آخرین وضعیت حل‌شده (نه loading) — برای تشخیص عوض‌شدن هویت در همین تب
   const lastAuthed = useRef<boolean | null>(null);
 
   useEffect(() => {
     if (status === "loading") return;
     const authed = status === "authenticated";
+    // آفلاین/شبکه‌ی قطع، getSession به‌جای «نشست ندارد» null می‌دهد. این جواب واقعی سرور
+    // نیست: کاربر شناخته‌شده رو بیرون نمی‌اندازیم (نه ریلود، نه پاک‌کردن کوکی راهنما).
+    if (!authed && getKnownUserId() && (isNavigatorOffline() || isOffline())) {
+      publishSessionState(true);
+      void onSessionResolved(null);
+      return;
+    }
     const prev = lastAuthed.current;
     lastAuthed.current = authed;
     if (prev !== null && prev !== authed && !identityHandledHere()) {
@@ -51,6 +64,8 @@ function SessionBridge() {
       return;
     }
     publishSessionState(authed);
+    // هویت آفلاین (کش و صف نوشتن به تفکیک کاربره)
+    void onSessionResolved(authed ? userId : null);
     // کوکی راهنمای پیش‌درخواست رو با وضعیت واقعی سشن هم‌گام نگه می‌داره.
     // این‌جا (نه فقط توی دکمه‌های ورود/خروج) انجام می‌شه تا دو حالت لبه هم
     // پوشش داده بشن: کاربری که از قبل لاگین بوده و هیچ‌وقت کوکی رو نگرفته،
@@ -58,7 +73,16 @@ function SessionBridge() {
     // می‌شد هر لود چند تا ۴۰۱ الکی بفرسته).
     if (authed) setAuthHintCookie();
     else clearAuthHintCookie();
-  }, [status]);
+  }, [status, userId]);
+
+  // برگشت اینترنت با نشستی که آفلاین «بدون کاربر» حل شده بود: یک بار دوباره بپرس
+  useEffect(() => {
+    const onOnline = () => {
+      if (statusRef.current === "unauthenticated" && getKnownUserId()) void update?.().catch(() => {});
+    };
+    window.addEventListener("online", onOnline);
+    return () => window.removeEventListener("online", onOnline);
+  }, [update]);
 
   // برگشت از bfcache (دکمه‌ی «برگشت» بعد از ورود/خروج): صفحه‌ی منجمد با هویت
   // قبلی زنده می‌شه بدون این‌که هیچ درخواستی بره. کوکی راهنما همیشه با ورود/خروج

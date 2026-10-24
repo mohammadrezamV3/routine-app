@@ -1,5 +1,6 @@
 "use client";
 
+import { useOnlineOnly } from "@/components/OnlineOnly";
 import { Fragment, useEffect, useLayoutEffect, useRef, useState } from "react";
 import { createPortal } from "react-dom";
 import { useSession } from "next-auth/react";
@@ -40,6 +41,7 @@ function clockNow() {
  */
 export function RoutineAiFab({ onChanged }: { onChanged: () => void }) {
   const { status } = useSession();
+  const { guard: guardOnline, offline, message: offlineMsg } = useOnlineOnly();
   const [open, setOpen] = useState(false);
   const [msgs, setMsgs] = useState<Msg[]>([]);
   const [input, setInput] = useState("");
@@ -205,9 +207,9 @@ export function RoutineAiFab({ onChanged }: { onChanged: () => void }) {
       <button
         type="button"
         className="routine-ai-fab mm-appear"
-        onClick={() => setOpen(true)}
+        onClick={guardOnline(() => setOpen(true))}
         aria-label={tr("نومو", "Nomo")}
-        title={tr("نومو", "Nomo")}
+        title={offline ? offlineMsg : tr("نومو", "Nomo")}
       >
         <SiriOrb size="52px" state={orbState} amplitude={simulated} />
       </button>

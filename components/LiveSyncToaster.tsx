@@ -4,6 +4,7 @@ import { useEffect, useState } from "react";
 import { createPortal } from "react-dom";
 import { AnimatePresence, m as motion } from "framer-motion";
 import { ensureStarted, subscribeLiveErrors } from "@/lib/liveSync";
+import { useOfflineToasts } from "./OfflineToasts";
 
 /**
  * لایه‌ی زنده (lib/liveSync.ts) رو از همون اول راه می‌ندازه — BroadcastChannel،
@@ -13,6 +14,7 @@ import { ensureStarted, subscribeLiveErrors } from "@/lib/liveSync";
  */
 export function LiveSyncToaster() {
   const [mounted, setMounted] = useState(false);
+  useOfflineToasts();
   const [toast, setToast] = useState<{ id: number; text: string } | null>(null);
 
   useEffect(() => {

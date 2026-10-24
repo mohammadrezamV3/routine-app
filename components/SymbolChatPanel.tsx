@@ -1,5 +1,6 @@
 "use client";
 
+import { withOnlineOnly } from "@/components/OnlineOnly";
 import { useCallback, useEffect, useRef, useState } from "react";
 import { Flag, MessagesSquare, Send, ShieldAlert, Smile, Trash2, X } from "lucide-react";
 import { faNum } from "@/lib/jalali";
@@ -29,7 +30,7 @@ function timeLabel(iso: string) {
   return faNum(`${String(d.getHours()).padStart(2, "0")}:${String(d.getMinutes()).padStart(2, "0")}`);
 }
 
-export function SymbolChatPanel({ symbol }: { symbol: string }) {
+function SymbolChatPanelInner({ symbol }: { symbol: string }) {
   const [messages, setMessages] = useState<ChatMessageDto[]>([]);
   const [loading, setLoading] = useState(true);
   const [draft, setDraft] = useState("");
@@ -384,3 +385,7 @@ function ReportDialog({
     </div>
   );
 }
+
+
+// آفلاین پیام «اینترنت لازمه» (components/OnlineOnly.tsx)
+export const SymbolChatPanel = withOnlineOnly(SymbolChatPanelInner, "trade-chat");

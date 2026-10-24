@@ -21,6 +21,7 @@
 // بدترین حالت اینه که پیش‌درخواست انجام نمی‌شه و مسیر عادی کار می‌کنه.
 
 import { clearSharedCookie, setSharedCookie } from "@/lib/clientCookie";
+import { storeJson } from "@/lib/offline/fetchLayer";
 
 export const AUTH_HINT_COOKIE = "arion-auth";
 
@@ -113,6 +114,8 @@ export function takePreloaded(url: string): Promise<any> | null {
   const hit = store[url];
   if (!hit || typeof hit.then !== "function") return null;
   delete store[url];
+  // این پیش‌درخواست قبل از نصب hook آفلاین رفته؛ نتیجه‌اش رو برای استفاده‌ی آفلاین ذخیره می‌کنیم
+  hit.then((json: unknown) => { if (json) void storeJson(url, json); }, () => {});
   return hit;
 }
 

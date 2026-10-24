@@ -5,7 +5,8 @@ import Image from "next/image";
 import Link from "next/link";
 import { usePathname, useSearchParams } from "next/navigation";
 import { useSession } from "next-auth/react";
-import { logoutAndRedirect } from "@/lib/logout";
+import { useGuardedLogout } from "@/components/useGuardedLogout";
+import { OnlineOnly } from "@/components/OnlineOnly";
 import { m as motion, AnimatePresence } from "framer-motion";
 import { ChevronDown, Menu, X, Home, Sun, Moon, Lock, LogOut, Search, PanelRightClose, PanelRightOpen, PanelLeftClose, PanelLeftOpen, LayoutGrid, Users, Coins, Headset, Ellipsis } from "lucide-react";
 import { useTheme } from "@/components/ThemeProvider";
@@ -103,6 +104,7 @@ function useBadges(): Record<string, number> {
 }
 
 function SidebarContent({ pathname, groups, access, collapsed, onNavigate }: { pathname: string; groups: NavGroup[]; access: Access; collapsed?: boolean; onNavigate?: () => void }) {
+  const { logout, title: logoutTitle } = useGuardedLogout();
   const searchParams = useSearchParams();
   const search = useMemo(() => new URLSearchParams(searchParams?.toString() || ""), [searchParams]);
   const badges = useBadges();
@@ -177,7 +179,7 @@ function SidebarContent({ pathname, groups, access, collapsed, onNavigate }: { p
           <span className="ads-item-icon"><Home size={16} /></span>
           {!collapsed && <span className="ads-item-label">{tr("بازگشت به اپ", "Back to app")}</span>}
         </Link>
-        <button type="button" className="ads-item ads-foot-btn ads-logout" onClick={logoutAndRedirect} title={tr("خروج", "Sign out")}>
+        <button type="button" className="ads-item ads-foot-btn ads-logout" onClick={logout} title={logoutTitle ?? tr("خروج", "Sign out")}>
           <span className="ads-item-icon"><LogOut size={16} /></span>
           {!collapsed && <span className="ads-item-label">{tr("خروج", "Sign out")}</span>}
         </button>
@@ -318,7 +320,7 @@ export function AdminShell({ children, isSuperAdmin, permissions }: { children: 
               <Link href="/" className="admin-icon-btn ads-hide-sm" aria-label={tr("بازگشت به اپ", "Back to app")}><Home size={16} /></Link>
             </div>
           </div>
-          <div className="admin-content ads-content">{allowed ? children : <NoAccess />}</div>
+          <div className="admin-content ads-content">{allowed ? <OnlineOnly feature="admin">{children}</OnlineOnly> : <NoAccess />}</div>
         </div>
 
         <BottomNav pathname={pathname} access={access} onMore={() => setMobileOpen(true)} />

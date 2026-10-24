@@ -5,6 +5,7 @@ import { invalidateAccountCache } from "@/lib/accountCache";
 import { invalidateFeatures } from "@/lib/useFeatures";
 import { setAuthHintCookie } from "@/lib/preload";
 import { resolveHomePath, DEFAULT_HOME } from "@/lib/homePath";
+import { setKnownUser } from "@/lib/offline/identity";
 
 /**
  * بعد از هر ورود موفق (رمز، کد پیامک ورود دومرحله‌ای، ورود خودکار بعد از
@@ -61,6 +62,8 @@ export async function loginAndRedirect(opts: LoginRedirectOptions): Promise<void
   invalidateFeatures();
   publishSessionState(true);
   setAuthHintCookie();
+  // کاربر دیگه روی این دستگاه؟ کش/صف آفلاین قبلی پاک می‌شه (سقف زمانی: ورود گیر نکنه)
+  const identity = withTimeout(setKnownUser(opts.userId), 2000, undefined);
 
   const prime = opts.password
     ? withTimeout(
@@ -74,6 +77,7 @@ export async function loginAndRedirect(opts: LoginRedirectOptions): Promise<void
   const [home] = await Promise.all([
     withTimeout(resolveHomePath(), 2000, DEFAULT_HOME),
     prime,
+    identity,
     new Promise((r) => setTimeout(r, opts.minDelayMs ?? 0)),
   ]);
 

@@ -8,6 +8,7 @@ import { MAX_TAGS } from "@/lib/tradeTypes";
 import { withLiveSync } from "@/lib/realtime";
 import { sessionFeatureBlocked } from "@/lib/featureFlagsServer";
 import { tr } from "@/lib/i18n";
+import { withIdempotency } from "@/lib/idempotency";
 
 // برچسب‌های کاربر — یک لیست واحد که هم روی حساب استفاده می‌شود هم روی
 // معامله. نام برچسب برای هر کاربر یکتاست (ایندکس userId+name)، پس تکراری
@@ -33,6 +34,7 @@ async function handlePOST(req: NextRequest) {
   if (!guard.ok) return guard.response;
   const userId = guard.userId;
 
+  return withIdempotency(req, userId, "trade.tags", async () => {
   const body = await req.json().catch(() => null);
   const name = clampText(String(body?.name || "").trim(), 30);
   if (!name) return NextResponse.json({ error: tr(tr("نام برچسب الزامی است", "Tag name is required"), "Tag name is required") }, { status: 400 });
@@ -46,6 +48,7 @@ async function handlePOST(req: NextRequest) {
 
   const tag = await prisma.tradeTag.create({ data: { userId, name, color }, select: TAG_SELECT });
   return NextResponse.json({ ok: true, tag });
+  });
 }
 
 async function handlePATCH(req: NextRequest) {

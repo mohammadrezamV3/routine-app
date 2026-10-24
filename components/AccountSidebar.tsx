@@ -8,7 +8,7 @@ import { GoldenName } from "@/components/GoldenName";
 import { getAccountSections } from "@/components/accountSections";
 import { formatAccountDate, useAccountSummary } from "@/components/AccountSummary";
 import { useSection } from "@/components/SectionProvider";
-import { logoutAndRedirect } from "@/lib/logout";
+import { useGuardedLogout } from "@/components/useGuardedLogout";
 import { tr } from "@/lib/i18n";
 
 // سایدبار دسکتاپ پنل کاربری (از 1024px به بالا؛ زیرش با CSS مخفیه و
@@ -17,6 +17,7 @@ import { tr } from "@/lib/i18n";
 // می‌ره) و کارت ناوبری (بخش‌ها، ردیف فعال به رنگ تونال، و بعد از یک خط
 // جداکننده «خروج از حساب» به رنگ خطر).
 export function AccountSidebar() {
+  const { logout, title: logoutTitle } = useGuardedLogout();
   const pathname = usePathname() || "/account";
   const sections = getAccountSections(useSection());
   const me = useAccountSummary();
@@ -82,7 +83,7 @@ export function AccountSidebar() {
           );
         })}
         <div className="ap-nav-sep" role="separator" />
-        <button type="button" className="ap-plain ap-nav-link is-danger" onClick={logoutAndRedirect}>
+        <button type="button" className="ap-plain ap-nav-link is-danger" onClick={logout} title={logoutTitle}>
           <span className="ap-nav-link-icon" aria-hidden="true"><LogOut size={17} /></span>
           <span>{tr("خروج از حساب", "Log out")}</span>
         </button>

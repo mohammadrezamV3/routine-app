@@ -8,7 +8,7 @@ import { AccountHeroCard } from "@/components/AccountHeroCard";
 import { useAccountSummary } from "@/components/AccountSummary";
 import { getAccountSections, type AccountSectionGroup } from "@/components/accountSections";
 import { useSection } from "@/components/SectionProvider";
-import { logoutAndRedirect } from "@/lib/logout";
+import { useGuardedLogout } from "@/components/useGuardedLogout";
 import { tr } from "@/lib/i18n";
 
 const GROUP_ORDER: AccountSectionGroup[] = ["account", "preferences", "help"];
@@ -17,6 +17,7 @@ const GROUP_ORDER: AccountSectionGroup[] = ["account", "preferences", "help"];
 // چند واقعیت کوتاه) + بخش‌ها در سه کارت جدا + خروج. روی دسکتاپ سایدبار
 // همین فهرسته، پس این صفحه با CSS پنهان و بلافاصله به «پروفایل» می‌ره.
 export default function AccountIndexPage() {
+  const { logout } = useGuardedLogout();
   const router = useRouter();
   const sections = getAccountSections(useSection());
   const summary = useAccountSummary();
@@ -48,7 +49,7 @@ export default function AccountIndexPage() {
 
       {/* خروج داخل کارت جدای خودش (موبایل سایدبار نداره و این تنها راه خروجه) */}
       <AccountRows>
-        <AccountRowButton icon={<LogOut size={17} />} label={tr("خروج از حساب", "Log out")} onClick={logoutAndRedirect} danger index={i} />
+        <AccountRowButton icon={<LogOut size={17} />} label={tr("خروج از حساب", "Log out")} onClick={logout} danger index={i} />
       </AccountRows>
 
       <div className="ap-version mono" dir="ltr">Arion v{process.env.NEXT_PUBLIC_APP_VERSION || "1.0.0"}</div>

@@ -1,5 +1,6 @@
 "use client";
 
+import { withOnlineOnly } from "@/components/OnlineOnly";
 import { useEffect, useRef, useState } from "react";
 import { AnimatePresence, m as motion } from "framer-motion";
 import { AlertCircle, ChevronRight } from "lucide-react";
@@ -41,7 +42,7 @@ const equipmentLabel = (eq: string) => (eq === "باشگاه" ? tr("باشگاه
 // هم سطح (همین مرحله) هر دو مشخصن. توضیح آزاد به سرور فرستاده می‌شه و اول از
 // همه AI بررسی می‌کنه این خواسته واقع‌بینانه‌ست یا نه — اگه نه، پیام رد AI
 // مثل یه چت‌بات همینجا (زیر همون مرحله‌ی توضیح) نشون داده می‌شه.
-export function AiExercisePlanWizard({
+function AiExercisePlanWizardInner({
   onCreated,
   onCancel,
   onClose,
@@ -453,3 +454,7 @@ export function AiExercisePlanWizard({
     </div>
   );
 }
+
+
+// آفلاین پیام «اینترنت لازمه» (components/OnlineOnly.tsx)
+export const AiExercisePlanWizard = withOnlineOnly(AiExercisePlanWizardInner, "ai-exercise-plan");
