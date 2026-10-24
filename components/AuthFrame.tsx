@@ -30,7 +30,7 @@ export function AuthFrame({ children }: { children: React.ReactNode }) {
   return (
     // ورود دو ستونه: فرم (inline-start در فارسی، یعنی راست) + گالری تصویر چپ.
     // در ltr با row-reverse همون طرف‌های فیزیکی حفظ می‌شن (درخواست صریح:
-    // تصویر چپ، ورود راست). زیر 1024px نوار تصویری بالا و فرم زیرش.
+    // تصویر چپ، ورود راست). زیر 1024px بنر تصویری بالا و فرم زیرش.
     <section className="auth-page auth-split">
       <div className="auth-split-form">
         {/* با ظاهر/پنهان‌شدن تب‌ها (مثلا رفتن به فراموشی رمز) گروه یک‌بار دوباره
@@ -51,8 +51,7 @@ export function AuthFrame({ children }: { children: React.ReactNode }) {
           {children}
         </AuthShell>
       </div>
-      <div className="auth-split-media" aria-hidden="true"><AuthShowcase variant="panel" /></div>
-      <div className="auth-split-strip" aria-hidden="true"><AuthShowcase variant="strip" /></div>
+      <div className="auth-split-media" aria-hidden="true"><AuthShowcase /></div>
     </section>
   );
 }

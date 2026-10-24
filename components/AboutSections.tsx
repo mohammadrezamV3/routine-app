@@ -1,5 +1,6 @@
 "use client";
 
+import { BrandWordmark } from "./BrandWordmark";
 import { useEffect, useRef, useState } from "react";
 import { SmartLink as Link } from "@/components/SmartLink";
 import { AuthAwareCta } from "@/components/AuthAwareCta";
@@ -122,7 +123,7 @@ function Converge({ section = null }: SecProp) {
       {!reduce && TOOLS.map((t) => <ToolChip key={t.label} t={t} p={scrollYProgress} />)}
       <motion.div className="ab-pin" style={reduce ? undefined : { scale: uScale, opacity: uOpacity }}>
         <div className="ab-unified">
-          <div className="ab-unified-top"><AboutBrandLogo /> {brandName()}</div>
+          <div className="ab-unified-top"><AboutBrandLogo /> <BrandWordmark height={16} decorative /></div>
           <div className="ab-unified-mods">
             {UNIFIED.map((u) => { const Ic = u.icon; return <span key={u.label}><Ic size={15} />{u.label}</span>; })}
           </div>

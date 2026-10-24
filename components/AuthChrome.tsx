@@ -1,5 +1,6 @@
 "use client";
 
+import { BrandWordmark } from "./BrandWordmark";
 import Image from "next/image";
 import { SmartLink as Link } from "@/components/SmartLink";
 import { useTheme } from "./ThemeProvider";
@@ -70,8 +71,8 @@ export function AuthBrandMark({ title, subtitle, note }: { title?: string; subti
         )}
         <span className="logo-tint" aria-hidden="true" />
       </div>
-      {/* نام برند کنار نشان (طرح ورود دو ستونه) — لاتین و چپ به راست در هر دو زبان */}
-      <span className="auth-brand-word" aria-hidden="true">ARION</span>
+      {/* مثل هدر: موبایل فقط نشان A، دسکتاپ فقط حروف ARION (همون تصویر لوگوی هدر) */}
+      <span className="auth-brand-word"><BrandWordmark height={20} desktopOnly /></span>
       </div>
       {title && <h1 className="auth-brand-title">{title}</h1>}
       {subtitle && <p className={title ? "auth-brand-sub" : "auth-brand-subtitle"}>{subtitle}</p>}
