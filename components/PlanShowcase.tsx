@@ -52,7 +52,7 @@ export function getPlans(): PlanCard[] {
     key: "basic", nameFa: tr("روتین من", "My Routine"), icon: ICONS.weekly,
     // «روتین من» دیگه رایگان دائمی نیست: 14 روز آزمایشی، بعد پلن پولی.
     note: tr("14 روز رایگان", "14 days free"),
-    features: [tr("روتین روزانه و برنامه‌ی هفتگی", "Daily routine and weekly planner"), tr("رودمپ آموزشی هوشمند", "Smart learning roadmap"), tr("یادآوری برنامه‌ها و دارو", "Reminders for plans and medication"), tr("ثبت خواب و پیوستگی روزها", "Sleep tracking and day streaks")],
+    features: [tr("روتین روزانه و برنامه‌ی هفتگی", "Daily routine and weekly planner"), tr("رودمپ آموزشی هوشمند", "Smart learning roadmap"), tr("نومو — با یک جمله‌ی فارسی برنامه بساز و ویرایش کن", "Nomo: create and edit plans with a plain sentence"), tr("یادآوری برنامه‌ها و دارو", "Reminders for plans and medication"), tr("ثبت خواب و پیوستگی روزها", "Sleep tracking and day streaks")],
   },
   {
     key: "exercise", nameFa: tr("پلن بدنسازی", "Workout plan"), icon: ICONS.exercise,
@@ -90,7 +90,7 @@ export function getCompareRows(): CompareRow[] {
   { label: tr("تقویم اقتصادی", "Economic calendar"), included: { basic: false, exercise: false, trade: true, max: true }, sections: ["trade"] },
   { label: tr("اتصال متاتریدر", "MetaTrader connection"), included: { basic: false, exercise: false, trade: true, max: true }, sections: ["trade"] },
   { label: tr("رودمپ", "Roadmap"), included: { basic: true, exercise: false, trade: false, max: true }, sections: ["routine"] },
-  { label: tr("نومو", "Nomo"), included: { basic: false, exercise: false, trade: false, max: true }, sections: ["routine"] },
+  { label: tr("نومو", "Nomo"), included: { basic: true, exercise: false, trade: false, max: true }, sections: ["routine"] },
   { label: tr("اپلیکیشن موبایل", "Mobile app"), included: { basic: false, exercise: false, trade: false, max: true }, upcoming: true },
   { label: tr("یکپارچه‌سازی با ساعت هوشمند", "Smartwatch integration"), included: { basic: false, exercise: false, trade: false, max: true }, upcoming: true },
   { label: tr("آنالیز هفتگی هوش مصنوعی", "AI weekly review"), included: { basic: false, exercise: false, trade: false, max: true }, upcoming: true },
@@ -360,7 +360,7 @@ export function PlansSection({ mode, currentPlanKey, title = tr("از چیزی �
           همین متن رو توی یادداشت بالای خودش داره. متن ساده، بی‌بک‌گراند. */}
       {mode === "landing" && !section && (
         <p className={`text-center text-[13px] font-bold ${t.muted}`} style={{ marginBottom: 18 }}>
-          {tr("14 روز رایگان امتحان کن و بعد بر اساس نیازت، امکانات موردنظرت را انتخاب کن. هر حساب تازه: ", "Try it free for 14 days, then pick the features you need. Every new account gets: ")}{trialCopy()}{tr(". «نومو» 10 پیام رایگان دارد و در پلن‌های پولی نامحدود است.", ". Nomo has 10 free messages and is unlimited on paid plans.")}
+          {tr("14 روز رایگان امتحان کن و بعد بر اساس نیازت، امکانات موردنظرت را انتخاب کن. هر حساب تازه: ", "Try it free for 14 days, then pick the features you need. Every new account gets: ")}{trialCopy()}{tr(". «نومو» 10 پیام رایگان دارد و در پلن‌های «روتین من» و مکس نامحدود است.", ". Nomo has 10 free messages and is unlimited in the My Routine and Max plans.")}
         </p>
       )}
 

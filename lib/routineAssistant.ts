@@ -30,13 +30,21 @@ export const MAX_OCCURRENCES = 200;
 export const MAX_OPS_PER_MESSAGE = 40;
 /**
  * تعداد پیام رایگان نومو برای کاربر بدون اشتراک (مادام‌العمر؛ مشترک
- * نامحدود است). فقط پیش‌فرض است — Owner از پنل ادمین (تنظیمات) عوضش می‌کند:
+ * روتین من و مکس نامحدود است). فقط پیش‌فرض است — Owner از پنل ادمین (تنظیمات) عوضش می‌کند:
  * AppSetting با کلید NOMO_FREE_USES_SETTING_KEY، خواندن با getNomoFreeUses
  * در lib/aiQuota.ts.
  */
 export const FREE_ASSISTANT_USES = 10;
 export const NOMO_FREE_USES_SETTING_KEY = "nomo_free_uses";
 export const MAX_NOMO_FREE_USES = 1000;
+
+/** پلن‌هایی که نومو در اونها نامحدوده: «روتین من» (basic) و مکس */
+export const NOMO_UNLIMITED_PLAN_KEYS: readonly string[] = ["basic", "max"];
+
+/** آیا یکی از پلن‌های فعال کاربر نومو رو نامحدود می‌کنه؟ (بدنسازی/ترید به‌تنهایی نه) */
+export function nomoUnlimitedFor(planKeys: readonly string[] | null | undefined): boolean {
+  return !!planKeys && planKeys.some((k) => NOMO_UNLIMITED_PLAN_KEYS.includes(k));
+}
 
 export function normalizeNomoFreeUses(raw: unknown): number {
   return typeof raw === "number" && Number.isInteger(raw) && raw >= 0 && raw <= MAX_NOMO_FREE_USES ? raw : FREE_ASSISTANT_USES;

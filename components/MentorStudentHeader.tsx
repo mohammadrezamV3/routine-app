@@ -24,7 +24,7 @@ export function MentorStudentHeader({
   onNote: () => void;
   nameNode?: React.ReactNode;
 }) {
-  const pctText = rate === null ? null : tr(`${fa(Math.round(rate * 100))}٪`, `${fa(Math.round(rate * 100))}%`);
+  const pctText = rate === null ? null : tr(`${fa(Math.round(rate * 100))}%`, `${fa(Math.round(rate * 100))}%`);
   return (
     <div className="mv2-st-head">
       <MentorAvatarRing

@@ -13,7 +13,7 @@ import { toJalali, faNum, J_MONTHS } from "@/lib/jalali";
 import {
   applyOps, describeSchedule, sortOccurrences, stripInventedTimes,
   buildCalendarTable, describeMentions, extractDateMentions, invalidDateMessage, reconcileOpDates,
-  DAY_NAME_FA, DEFAULT_AWAKE, type AwakeWindow,
+  DAY_NAME_FA, DEFAULT_AWAKE, nomoUnlimitedFor, type AwakeWindow,
 } from "@/lib/routineAssistant";
 import { addDaysIso } from "@/lib/schedule";
 import type { CustomOccurrence } from "@/lib/storage";
@@ -39,29 +39,26 @@ const offTopicReply = () =>
   tr("من نومو‌ام، مدیر برنامه‌ات — بگو چه برنامه‌ای اضافه/جابه‌جا/حذف کنم.", "I am Nomo, your schedule manager — tell me which plan to add, move or remove.");
 
 /**
- * آیا این کاربر اشتراک فعال دارد؟
- *
- * ثبت‌نام عادی هیچ ردیف Subscription نمی‌سازد (فقط ModuleAccess پایه)، پس
- * «نداشتن ردیف فعال» دقیقا یعنی کاربر رایگان. شرط currentPeriodEnd هم
- * لازم است چون ردیف منقضی ممکن است هنوز status قدیمی داشته باشد — همان
- * باگی که در /api/account هم بود.
+ * کلید پلن‌های اشتراک فعال کاربر (ACTIVE/TRIAL و منقضی‌نشده). شرط
+ * currentPeriodEnd لازم است چون ردیف منقضی ممکن است هنوز status قدیمی
+ * داشته باشد.
  */
-async function hasActiveSubscription(userId: string): Promise<boolean> {
-  const sub = await prisma.subscription.findFirst({
+async function activePlanKeys(userId: string): Promise<string[]> {
+  const subs = await prisma.subscription.findMany({
     where: { userId, status: { in: ["ACTIVE", "TRIAL"] }, currentPeriodEnd: { gt: new Date() } },
-    select: { id: true },
+    select: { plan: { select: { key: true } } },
   });
-  return !!sub;
+  return subs.map((s) => s.plan.key);
 }
 
 /**
  * «نومو» مثل خود روتین کامل رایگان نیست:
- *   • سوپریوزر یا اشتراک فعال → نامحدود
- *   • بقیه → سهمیه‌ی مادام‌العمر پیام‌های رایگان (getNomoFreeUses، پیش‌فرض
+ *   • سوپریوزر یا پلن فعال «روتین من» (basic) یا مکس → نامحدود (nomoUnlimitedFor)
+ *   • بقیه (از جمله مشترک فقط بدنسازی یا ترید) → سهمیه‌ی مادام‌العمر پیام‌های رایگان (getNomoFreeUses، پیش‌فرض
  *     FREE_ASSISTANT_USES = ۱۰، قابل تغییر از پنل ادمین)
  */
 async function assistantAccess(userId: string, isSuperAdmin: boolean): Promise<{ unlimited: boolean; freeLimit: number }> {
-  if (isSuperAdmin || (await hasActiveSubscription(userId))) return { unlimited: true, freeLimit: 0 };
+  if (isSuperAdmin || nomoUnlimitedFor(await activePlanKeys(userId))) return { unlimited: true, freeLimit: 0 };
   return { unlimited: false, freeLimit: await getNomoFreeUses() };
 }
 
@@ -219,9 +216,9 @@ export async function POST(req: NextRequest) {
       return NextResponse.json(
         {
           error: tr(
-            `${freeLimit} پیام رایگان نومو تمام شده. با فعال‌کردن اشتراک، ` +
+            `${freeLimit} پیام رایگان نومو تمام شده. با فعال‌کردن پلن «روتین من» یا مکس، ` +
             `بدون محدودیت می‌توانی برنامه‌هایت را با گفت‌وگو بچینی.`,
-            `Your ${freeLimit} free Nomo messages are used up. Activate a subscription to organise your schedule by chat without limits.`
+            `Your ${freeLimit} free Nomo messages are used up. Activate the My Routine or Max plan to organise your schedule by chat without limits.`
           ),
           quotaExhausted: true,
           quota: { unlimited: false, used: usesBefore, limit: freeLimit, remaining: 0 },

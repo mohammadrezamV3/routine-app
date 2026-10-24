@@ -221,7 +221,6 @@ body[data-theme="light"] .pls-line::after, body[data-theme="light"] .pls-card::a
   font-size:18px; font-weight:900; color:var(--text); line-height:1;
 }
 
-.rmx-ring-num small{ margin-inline-start:1px; font-size:10px; font-weight:700; color:var(--muted); }
 
 .rmx-box-head{ display:flex; align-items:center; justify-content:space-between; gap:12px; }
 
@@ -303,7 +302,6 @@ html body .btn.rmx-cont-cta{ grid-column:1 / -1; display:flex; width:100%; }
   .rmx-cont-main{ grid-template-columns:auto minmax(0, 1fr) auto; gap:20px; }
   html body .btn.rmx-cont-cta{ grid-column:auto; display:inline-flex; width:auto; }
   .rmx-ring-num{ font-size:22px; }
-  .rmx-ring-num small{ font-size:11px; }
   .rmx-cont-title{ font-size:20px; }
 }
 
@@ -769,7 +767,6 @@ html body .btn.rmx-hero-cta{ grid-area:cta; display:flex; width:100%; justify-co
   .rmx-hero-text h1{ font-size:28px; }
   .rmx-hero-ring{ width:96px !important; height:96px !important; }
   .rmx-hero .rmx-ring-num{ font-size:24px; }
-  .rmx-hero .rmx-ring-num small{ font-size:12px; }
   html body .btn.rmx-hero-cta{ display:inline-flex; width:auto; justify-content:center; }
 }
 

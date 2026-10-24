@@ -183,7 +183,7 @@ export function statValue(key: TradeStatKey, s: TradeStats): { value: string; po
     case "balance": return { value: s.balance.toFixed(2), positive: s.balance >= 0 };
     case "monthTotal": return { value: s.netPnl.toFixed(2), positive: s.netPnl >= 0 };
     case "total": return { value: String(s.total) };
-    case "winRate": return s.winRate === null ? { value: "—" } : { value: `${s.winRate}${isEn() ? "%" : "٪"}`, positive: s.winRate >= 50 };
+    case "winRate": return s.winRate === null ? { value: "—" } : { value: `${s.winRate}%`, positive: s.winRate >= 50 };
     case "avgWin": return { value: s.avgWin.toFixed(2), positive: true };
     case "avgLoss": return { value: s.avgLoss.toFixed(2), positive: false };
     case "largestGain": return { value: s.largestGain.toFixed(2), positive: true };

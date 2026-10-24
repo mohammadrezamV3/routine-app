@@ -589,7 +589,7 @@ export default function AccountProfilePage() {
         {/* ── کد دعوت ── */}
         <AccountBlock
           title={tr("کد دعوت", "Invite code")} icon={<Gift />} index={2}
-          desc={tr(`دوستت ${faNum(REFERRAL_DISCOUNT_PERCENT)}٪ روی اولین خرید تخفیف می‌گیره، تو ${faNum(10)}٪ اعتبار کیف`, `Your friend gets ${faNum(REFERRAL_DISCOUNT_PERCENT)}% off their first purchase, you get ${faNum(10)}% as wallet credit`)}
+          desc={tr(`دوستت ${faNum(REFERRAL_DISCOUNT_PERCENT)}% روی اولین خرید تخفیف می‌گیره، تو ${faNum(10)}% اعتبار کیف`, `Your friend gets ${faNum(REFERRAL_DISCOUNT_PERCENT)}% off their first purchase, you get ${faNum(10)}% as wallet credit`)}
         >
           <div className="ap-invite-row">
             <AuthField id="pf-refcode" label={tr("اسم کد (4 تا 16 حرف انگلیسی یا عدد)", "Code name (4 to 16 English letters or digits)")}>
@@ -621,7 +621,7 @@ export default function AccountProfilePage() {
             </div>
           )}
           <p className="ap-field-note">
-            {tr(`به‌ازای هر دوستی که با پول واقعی خرید کنه 10٪ از همون مبلغ به‌صورت اعتبار داخل کیف خودت واریز می‌شه و هر دوست فقط یک بار از تخفیف کدت استفاده می‌کنه. اعتبار فقط برای کم‌کردن قیمت خرید پلن بعدیه و قابل‌برداشت نیست.`, `For every friend who buys with real money, 10% of that amount is added to your wallet as credit, and each friend can use your code's discount only once. The credit can only reduce the price of your next plan and cannot be withdrawn.`)}
+            {tr(`به‌ازای هر دوستی که با پول واقعی خرید کنه 10% از همون مبلغ به‌صورت اعتبار داخل کیف خودت واریز می‌شه و هر دوست فقط یک بار از تخفیف کدت استفاده می‌کنه. اعتبار فقط برای کم‌کردن قیمت خرید پلن بعدیه و قابل‌برداشت نیست.`, `For every friend who buys with real money, 10% of that amount is added to your wallet as credit, and each friend can use your code's discount only once. The credit can only reduce the price of your next plan and cannot be withdrawn.`)}
           </p>
         </AccountBlock>
 

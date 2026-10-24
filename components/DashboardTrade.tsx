@@ -84,7 +84,7 @@ function TradeBody({ t }: { t: DashTrade }) {
                 <bdi dir="ltr" className={`db-acc-growth ${a.growthPct != null ? tone(a.growthPct) : ""}`}>{a.growthPct != null ? formatPct(a.growthPct, true) : "—"}</bdi>
               </span>
               {a.goalProgress !== null && (
-                <span className="db-acc-goal" title={tr(`${faNum(Math.round(a.goalProgress * 100))}٪ از هدف`, `${Math.round(a.goalProgress * 100)}% of goal`)}>
+                <span className="db-acc-goal" title={tr(`${faNum(Math.round(a.goalProgress * 100))}% از هدف`, `${Math.round(a.goalProgress * 100)}% of goal`)}>
                   <Meter value={a.goalProgress} color={a.color} delay={0.5 + i * 0.08} />
                 </span>
               )}

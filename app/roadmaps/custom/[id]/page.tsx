@@ -236,7 +236,7 @@ export default function RoadmapDetailPage() {
           )}
         </div>
         <GradientRing value={progress.pct / 100} size={96} stroke={8} className="rmx-hero-ring">
-          <span className="rmx-ring-num">{faNum(progress.pct)}<small>{tr("٪", "%")}</small></span>
+          <span className="rmx-ring-num"><bdi dir="ltr">{faNum(progress.pct)}%</bdi></span>
         </GradientRing>
         {nextStage && (
           <button type="button" className="btn btn-primary rmx-hero-cta" onClick={() => openStage(nextStage.n)}>

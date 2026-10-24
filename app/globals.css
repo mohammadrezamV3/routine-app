@@ -4120,33 +4120,13 @@ select.wsearch-newform-name{ cursor:pointer; }
   transition:color .18s ease, background .18s ease, transform .15s ease;
 }
 .trade-tag-dot{ width:6px; height:6px; border-radius:50%; display:inline-block; flex-shrink:0; }
-.trade-form-tabs-wrap{ display:flex; align-items:flex-start; gap:2px; min-width:0; }
-.trade-form-tabs-wrap .trade-form-tabs{ flex:1; min-width:0; }
-/* پیکان‌های پیمایش تب‌ها: فقط موس؛ بدون بک‌گراند، فقط آیکون */
-.trade-tabs-arrow{
-  display:none; flex-shrink:0; align-items:center; justify-content:center;
-  width:30px; height:32px; padding:0; border:0; border-radius:50%;
-  color:var(--muted); background:none; box-shadow:none;
-  backdrop-filter:none; -webkit-backdrop-filter:none;
-  transition:color .18s ease, opacity .18s ease;
-}
-@media (hover:hover) and (pointer:fine){
-  .trade-tabs-arrow[hidden]{ display:none; }
-}
-.trade-form-stepper button:disabled{ opacity:.45; cursor:default; }
-.trade-form-tabs{
-  display:flex; gap:6px; overflow-x:auto; padding-bottom:8px; margin-bottom:14px;
-  border-bottom:1px solid var(--line);
-  scrollbar-width:none; -ms-overflow-style:none;
-}
-.trade-form-tab{
-  position:relative; display:inline-flex; align-items:center; gap:5px; white-space:nowrap;
-  font-size:11.5px; padding:8px 12px; border-radius:999px; color:var(--muted);
-  background:none; border:1px solid transparent; box-shadow:none;
-  backdrop-filter:none; -webkit-backdrop-filter:none;
-  transition:color .18s ease, border-color .18s ease, background .18s ease;
-}
 .trade-tab-warn{ width:6px; height:6px; border-radius:50%; background:#E0A452; display:inline-block; }
+.trade-form-sec{ padding-block:14px; border-top:1px solid var(--line); }
+.trade-form-sec:first-of-type{ border-top:0; padding-top:4px; }
+.trade-form-sec-title{
+  display:flex; align-items:center; gap:6px; margin:0 0 10px;
+  font-size:12.5px; font-weight:700; color:var(--accent);
+}
 .trade-form-body{ animation:tradeFadeIn .26s ease both; }
 @keyframes tradeFadeIn{ from{ opacity:0; transform:translateY(6px); } to{ opacity:1; transform:none; } }
 .trade-volume-row .auth-tabs{ margin-top:0; width:132px; flex-shrink:0; }

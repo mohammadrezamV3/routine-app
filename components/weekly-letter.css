@@ -515,7 +515,7 @@ section.wl-ch{ padding:0; border-top:none; margin-top:36px; scroll-margin-top:ca
 .wl-root a.trade-primary-btn{ color:var(--sec-on-accent, var(--bg)); }
 
 /* ── ناوبری شماره‌ها ─────────────────────────────────── */
-.wl-issue-nav{ display:grid; grid-template-columns:repeat(2, minmax(0,1fr)); gap:10px; margin-top:40px; }
+.wl-issue-nav{ display:grid; grid-template-columns:minmax(0,1fr); gap:10px; margin-top:40px; }
 .wl-root .wl-nav-card{ display:flex; align-items:center; gap:12px; min-height:68px; }
 .wl-nav-card.is-next{ justify-content:space-between; }
 .wl-nav-card span{ display:flex; flex-direction:column; gap:2px; min-width:0; }

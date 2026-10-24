@@ -110,7 +110,7 @@ export function MarketTicker() {
                 <span className="ticker-symbol">{tickerLabelFor(q.symbol)}</span>
                 <span className="mono ticker-price">{q.price.toFixed(q.price < 10 ? 4 : 2)}</span>
                 <span className={`mono ticker-change ${q.changePercent >= 0 ? "up" : "down"}`}>
-                  {q.changePercent >= 0 ? "↗" : "↘"} {q.changePercent >= 0 ? "+" : ""}{q.changePercent.toFixed(2)}{tr("٪", "%")}
+                  {q.changePercent >= 0 ? "↗" : "↘"} {q.changePercent >= 0 ? "+" : ""}{q.changePercent.toFixed(2)}%
                 </span>
               </span>
             ))}

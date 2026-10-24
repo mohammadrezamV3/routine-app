@@ -123,7 +123,7 @@ export default function ReferralPage() {
     <section>
       <AccountPageHead
         title={title}
-        hint={tr("دوستت رو با لینک رفرال خودت دعوت کن — وقتی اولین خرید پلنش رو انجام بده، 10٪ از مبلغی که واقعا پرداخت کرده به‌صورت اعتبار به کیف تو اضافه می‌شه. این اعتبار فقط داخل همین اپ و فقط برای کم‌کردن قیمت خرید پلن‌های بعدی قابل‌استفاده‌ست — هیچ‌وقت قابل‌برداشت یا قابل‌استفاده‌ی بیرون از اپ نیست.", "Invite a friend with your referral link. When they make their first plan purchase, 10% of the amount they actually paid is added to your wallet as credit. This credit can only be used inside the app, only to reduce the price of future plan purchases, and can never be withdrawn or used outside the app.")}
+        hint={tr("دوستت رو با لینک رفرال خودت دعوت کن — وقتی اولین خرید پلنش رو انجام بده، 10% از مبلغی که واقعا پرداخت کرده به‌صورت اعتبار به کیف تو اضافه می‌شه. این اعتبار فقط داخل همین اپ و فقط برای کم‌کردن قیمت خرید پلن‌های بعدی قابل‌استفاده‌ست — هیچ‌وقت قابل‌برداشت یا قابل‌استفاده‌ی بیرون از اپ نیست.", "Invite a friend with your referral link. When they make their first plan purchase, 10% of the amount they actually paid is added to your wallet as credit. This credit can only be used inside the app, only to reduce the price of future plan purchases, and can never be withdrawn or used outside the app.")}
       />
 
       {/* کیف پول */}

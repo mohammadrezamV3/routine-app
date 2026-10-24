@@ -34,7 +34,7 @@ export const ROUTINE_TRIAL_MS = ROUTINE_TRIAL_DAYS * 24 * 60 * 60 * 1000;
 export const ROUTINE_PLAN_KEY = "basic";
 
 /** متن واحد «روتین من» کنار متن تریال — نشانه‌ی قیمت با fillPriceCopy (lib/planPricing.ts) پر می‌شه */
-export const FREE_ROUTINE_COPY_FA = "«روتین من» 14 روز رایگان است و بعد با پلن «روتین من» ({{routine_monthly}}) ادامه پیدا می‌کند؛ دستیار هوشمند «نومو» 10 پیام رایگان دارد و در پلن‌های پولی نامحدود است.";
+export const FREE_ROUTINE_COPY_FA = "«روتین من» 14 روز رایگان است و بعد با پلن «روتین من» ({{routine_monthly}}) ادامه پیدا می‌کند؛ دستیار هوشمند «نومو» 10 پیام رایگان دارد و در پلن‌های «روتین من» و مکس نامحدود است.";
 
 /**
  * سقف *کل* استفاده از هر فیچر AI در کل دوره‌ی آزمایشی (نه ماهانه/روزانه).

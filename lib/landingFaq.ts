@@ -10,7 +10,7 @@ export const FAQ_ITEMS: { q: string; a: string }[] = [
   { q: "روی گوشی نصب می‌شود (PWA)؟", a: "بله. آریون یک وب‌اپ PWA است؛ در مرورگر «افزودن به صفحه‌ی اصلی» را بزن تا مثل یک اپ با آیکون خودش باز شود و یادآوری‌ها را هم دریافت کنی." },
   { q: "متاتریدر چطور وصل می‌شود؟", a: "با یک کد اتصال و یک اکسپرت (EA) که روی حساب معاملاتی‌ات نصب می‌کنی. MT4 و MT5 پشتیبانی می‌شوند و معاملات بدون تکرار وارد ژورنال می‌شوند. رمز حساب معاملاتی هرگز خواسته یا ذخیره نمی‌شود." },
   { q: "مربی‌ها چطورند؟", a: "مربی‌ها باید هویتشان احراز شود و شرایط مربی‌گری را بپذیرند. می‌توانی مربی انتخاب کنی، برنامه بگیری، آن را تایید کنی یا درخواست تغییر بدهی و با مربی گفت‌وگو کنی. پیشرفتت از تیک‌های روتین خودت محاسبه می‌شود و رتبه‌بندی مربی‌ها بر پایه‌ی شایستگی است." },
-  { q: "«نومو» چیست؟", a: "نومو مدیر برنامه هوشمند آریون است. به فارسی بنویس چه می‌خواهی تا برنامه‌های روتینت را بسازد، جابه‌جا یا حذف کند. بدون اشتراک 10 پیام رایگان داری و در پلن‌های پولی نامحدود است؛ برای استفاده باید وارد حساب شده باشی." },
+  { q: "«نومو» چیست؟", a: "نومو مدیر برنامه هوشمند آریون است. به فارسی بنویس چه می‌خواهی تا برنامه‌های روتینت را بسازد، جابه‌جا یا حذف کند. بدون اشتراک 10 پیام رایگان داری و در پلن‌های «روتین من» و مکس نامحدود است؛ برای استفاده باید وارد حساب شده باشی." },
   { q: "بدون اینترنت هم کار می‌کند؟", a: "آریون برای همگام‌سازی به اینترنت نیاز دارد. بدون اینترنت فقط صفحه‌ی آفلاین و بخش‌هایی که مرورگر ذخیره کرده در دسترس‌اند." },
 ];
 
@@ -21,7 +21,7 @@ const FAQ_ITEMS_EN: { q: string; a: string }[] = [
   { q: "Can I install it on my phone (PWA)?", a: "Yes. Arion is a PWA web app; choose Add to Home Screen in your browser so it opens like an app with its own icon and you can receive reminders too." },
   { q: "How does MetaTrader connect?", a: "With a connection code and an Expert Advisor (EA) that you install on your trading account. MT4 and MT5 are supported and trades enter the journal without duplicates. Your trading account password is never requested or stored." },
   { q: "How do mentors work?", a: "Mentors must have their identity verified and accept the mentoring terms. You can choose a mentor, get a plan, approve it or ask for changes, and chat with your mentor. Your progress is calculated from your own routine ticks, and mentors are ranked on merit." },
-  { q: "What is Nomo?", a: "Nomo is Arion's smart plan manager. Write in plain language what you want and it will create, move or delete your routine plans. You get 10 free messages without a subscription and it is unlimited on paid plans; you need to be signed in to use it." },
+  { q: "What is Nomo?", a: "Nomo is Arion's smart plan manager. Write in plain language what you want and it will create, move or delete your routine plans. You get 10 free messages without a subscription and it is unlimited in the My Routine and Max plans; you need to be signed in to use it." },
   { q: "Does it work offline?", a: "Arion needs the internet to sync. Offline, only the offline page and the parts your browser has cached are available." },
 ];
 

@@ -7,7 +7,7 @@ import type { ReflectionDto } from "@/lib/weeklyAnalysis/types";
 import { tr } from "@/lib/i18n";
 import { Spinner } from "./Spinner";
 import { Reveal } from "./WeeklyLetterShared";
-import { WeeklyMoodFace } from "./WeeklyMoodFace";
+import { WeeklyMoodStar } from "./WeeklyMoodStars";
 import { LiveChapter, type LetterChapterExtra } from "./WeeklyLetterLiveKit";
 import type { LetterChapterProps } from "./WeeklyLetterCtx";
 import { waFetch } from "./WeeklyAnalysisKit";
@@ -22,6 +22,7 @@ type Save = "idle" | "dirty" | "saving" | "saved" | "error";
 function ReflectionEditor({ ctx, no }: { ctx: LetterChapterProps["ctx"]; no?: number }) {
   const r = ctx.analysis.reflection;
   const [draft, setDraft] = useState<Draft>({ wentWell: r?.wentWell ?? "", improve: r?.improve ?? "", mood: r?.mood ?? null });
+  const [hover, setHover] = useState<number | null>(null);
   const [state, setState] = useState<Save>("idle");
   const [error, setError] = useState<string | null>(null);
   const pending = useRef<Draft | null>(null);
@@ -100,6 +101,7 @@ function ReflectionEditor({ ctx, no }: { ctx: LetterChapterProps["ctx"]; no?: nu
             {([1, 2, 3, 4, 5] as const).map((n) => {
               const on = draft.mood === n;
               const tab = on || (draft.mood === null && n === 1);
+              const shown = hover ?? draft.mood ?? 0;
               return (
                 <button
                   key={n}
@@ -110,15 +112,19 @@ function ReflectionEditor({ ctx, no }: { ctx: LetterChapterProps["ctx"]; no?: nu
                   title={moodNames()[n]}
                   tabIndex={tab ? 0 : -1}
                   data-mood={n}
-                  className={`wlr-mood${on ? " is-on" : ""}`}
+                  className={`wlr-mood${n <= shown ? " is-fill" : ""}`}
                   onClick={() => update({ mood: on ? null : n })}
+                  onPointerEnter={(e) => { if (e.pointerType === "mouse") setHover(n); }}
+                  onPointerLeave={() => setHover(null)}
+                  onFocus={(e) => { if (e.currentTarget.matches(":focus-visible")) setHover(n); }}
+                  onBlur={() => setHover(null)}
                 >
-                  <WeeklyMoodFace level={n} />
+                  <WeeklyMoodStar filled={n <= shown} size={34} />
                 </button>
               );
             })}
           </div>
-          <span className={`wlr-mood-name${draft.mood ? " is-set" : ""}`} aria-live="polite">{draft.mood ? moodNames()[draft.mood] : ""}</span>
+          <span className={`wlr-mood-name${draft.mood ? " is-set" : ""}`} aria-live="polite">{(hover ?? draft.mood) ? moodNames()[(hover ?? draft.mood) as number] : ""}</span>
         </div>
         <div className="wlr-fields">
           <label className="wlr-field">

@@ -21,7 +21,7 @@ export function DashProgressCircle({
       <GradientRing value={clamped / 100} size={size} stroke={strokeWidth} grad={grad} />
       <div className="absolute inset-0 flex items-center justify-center">
         <span className="font-bold text-dash-text" style={{ fontSize: Math.max(11, size * 0.26) }}>
-          {clamped}{tr("٪", "%")}
+          {clamped}%
         </span>
       </div>
     </div>

@@ -352,7 +352,7 @@ function ProgramFacts({ p }: { p: ProgramRow }) {
       <span>{p.type === "WORKOUT" ? tr("تمرینی", "Workout") : tr("روتین", "Routine")}</span>
       {p.version > 1 && <span> · {tr("ویرایش‌شده", "Edited")}</span>}
       {p.startDate && <span> · {p.endDate ? tr(`${fmtDay(p.startDate)} تا ${fmtDay(p.endDate)}`, `${fmtDay(p.startDate)} to ${fmtDay(p.endDate)}`) : tr(`از ${fmtDay(p.startDate)}`, `From ${fmtDay(p.startDate)}`)}</span>}
-      {(p.status === "ACTIVE" || p.status === "COMPLETED") && !p.progress.hidden && <span> · {tr(`${faNum(Math.round(p.progress.rate))}٪ انجام شده`, `${faNum(Math.round(p.progress.rate))}% done`)}</span>}
+      {(p.status === "ACTIVE" || p.status === "COMPLETED") && !p.progress.hidden && <span> · {tr(`${faNum(Math.round(p.progress.rate))}% انجام شده`, `${faNum(Math.round(p.progress.rate))}% done`)}</span>}
       {p.status === "PENDING" && p.sentAt && <span> · {fmtRelative(p.sentAt)}</span>}
     </>
   );

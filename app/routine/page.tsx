@@ -63,8 +63,8 @@ function content() {
     {
       q: tr("آیا روتین در آریون رایگان است؟", `Is the routine free in ${brand}?`),
       a: tr(
-        "«روتین من» (روتین و کارهای روزانه) 14 روز رایگان است و بعد با پلن «روتین من» ({{routine_monthly}}) ادامه پیدا می‌کند؛ دستیار هوشمند «نومو» 10 پیام رایگان دارد و در پلن‌های پولی نامحدود است. بخش‌های ورزش و تغذیه، ژورنال ترید و رودمپ یادگیری اشتراکی‌اند و هر حساب تازه 3 روز دسترسی به بدنسازی، کالری‌شمار و ژورنال ترید، با استفاده‌ی محدود از هوش مصنوعی می‌گیرد.",
-        "“My Routine” (routine and daily tasks) is free for 14 days and then continues with the “My Routine” plan ({{routine_monthly}}). The smart assistant “Nomo” gets 10 free messages and is unlimited on paid plans. The workout and nutrition sections, the trading journal and the learning roadmap are subscription features, and every new account gets 3 days of access to workouts, the calorie counter and the trading journal, with limited use of AI.",
+        "«روتین من» (روتین و کارهای روزانه) 14 روز رایگان است و بعد با پلن «روتین من» ({{routine_monthly}}) ادامه پیدا می‌کند؛ دستیار هوشمند «نومو» 10 پیام رایگان دارد و در پلن‌های «روتین من» و مکس نامحدود است. بخش‌های ورزش و تغذیه، ژورنال ترید و رودمپ یادگیری اشتراکی‌اند و هر حساب تازه 3 روز دسترسی به بدنسازی، کالری‌شمار و ژورنال ترید، با استفاده‌ی محدود از هوش مصنوعی می‌گیرد.",
+        "“My Routine” (routine and daily tasks) is free for 14 days and then continues with the “My Routine” plan ({{routine_monthly}}). The smart assistant “Nomo” gets 10 free messages and is unlimited in the My Routine and Max plans. The workout and nutrition sections, the trading journal and the learning roadmap are subscription features, and every new account gets 3 days of access to workouts, the calorie counter and the trading journal, with limited use of AI.",
       ),
     },
     {

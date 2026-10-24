@@ -137,7 +137,7 @@ export default function AdminPricingPage() {
                     <tr>
                       <th>{tr("مدت", "Duration")}</th>
                       <th>{tr("قیمت قبل از تخفیف (خط‌خورده)", "Price before discount (struck through)")}</th>
-                      <th>{tr("تخفیف ٪", "Discount %")}</th>
+                      <th>{tr("تخفیف %", "Discount %")}</th>
                       <th>{tr("قیمت نهایی (پرداختی)", "Final price (paid)")}</th>
                       <th>{tr("پیش‌فرض (تومان)", "Default (toman)")}</th>
                     </tr>

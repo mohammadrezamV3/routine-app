@@ -17,7 +17,7 @@ export const FAQS: { q: string; a: string }[] = [
   },
   {
     q: "آیا استفاده از آریون رایگان است؟",
-    a: "«روتین من» (روتین و کارهای روزانه) 14 روز رایگانه و بعدش با پلن «روتین من» ({{routine_monthly}}) ادامه پیدا می‌کنه؛ دستیار هوشمند «نومو» 10 پیام رایگان داره و توی پلن‌های پولی نامحدوده. بخش‌های ورزش/کالری، ترید، رودمپ و تحلیل هوشمند اشتراکی‌اند و هر حساب تازه 3 روز دسترسی به بدنسازی، کالری‌شمار و ژورنال ترید، با استفاده‌ی محدود از هوش مصنوعی می‌گیره.",
+    a: "«روتین من» (روتین و کارهای روزانه) 14 روز رایگانه و بعدش با پلن «روتین من» ({{routine_monthly}}) ادامه پیدا می‌کنه؛ دستیار هوشمند «نومو» 10 پیام رایگان داره و توی پلن‌های «روتین من» و مکس نامحدوده. بخش‌های ورزش/کالری، ترید، رودمپ و تحلیل هوشمند اشتراکی‌اند و هر حساب تازه 3 روز دسترسی به بدنسازی، کالری‌شمار و ژورنال ترید، با استفاده‌ی محدود از هوش مصنوعی می‌گیره.",
   },
   {
     q: "آریون برای چه کسانی مناسب است؟",
@@ -81,7 +81,7 @@ const FAQS_EN: { q: string; a: string }[] = [
   },
   {
     q: "Is Arion free to use?",
-    a: "My Routine (routine and daily tasks) is free for 14 days, then continues with the My Routine plan ({{routine_monthly}}). The smart assistant Nomo gets 10 free messages and is unlimited on paid plans. Workout/calories, trading, roadmap and smart insight are subscription features, and every new account gets 3 days of access to workouts, the calorie counter and the trading journal, with limited AI use.",
+    a: "My Routine (routine and daily tasks) is free for 14 days, then continues with the My Routine plan ({{routine_monthly}}). The smart assistant Nomo gets 10 free messages and is unlimited in the My Routine and Max plans. Workout/calories, trading, roadmap and smart insight are subscription features, and every new account gets 3 days of access to workouts, the calorie counter and the trading journal, with limited AI use.",
   },
   {
     q: "Who is Arion for?",

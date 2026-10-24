@@ -43,12 +43,12 @@ export function CalorieMealBreakdownCard({
             <div key={m.key} className="flex flex-col items-center gap-1.5 rounded-2xl border border-dash-border bg-white/[0.02] px-1 py-2 text-center sm:px-2 sm:py-2.5">
               <span className="shrink-0 sm:hidden">
                 <ProgressRing pct={mealPct} size={32} strokeWidth={3.5} color={over ? "#E05252" : "var(--accent)"}>
-                  <span className="mono text-[7.5px] font-extrabold" style={{ color: "var(--text)" }}>{faNum(Math.round(mealPct * 100))}{tr("٪", "%")}</span>
+                  <span className="mono text-[7.5px] font-extrabold" style={{ color: "var(--text)" }}>{faNum(Math.round(mealPct * 100))}%</span>
                 </ProgressRing>
               </span>
               <span className="hidden shrink-0 sm:inline-flex">
                 <ProgressRing pct={mealPct} size={44} strokeWidth={4.5} color={over ? "#E05252" : "var(--accent)"}>
-                  <span className="mono text-[9.5px] font-extrabold" style={{ color: "var(--text)" }}>{faNum(Math.round(mealPct * 100))}{tr("٪", "%")}</span>
+                  <span className="mono text-[9.5px] font-extrabold" style={{ color: "var(--text)" }}>{faNum(Math.round(mealPct * 100))}%</span>
                 </ProgressRing>
               </span>
               <div className="w-full truncate text-[8.5px] font-semibold text-dash-muted sm:text-[10.5px]">{mealLabelDisplay(m.key, m.label)}</div>

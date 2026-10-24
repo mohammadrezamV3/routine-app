@@ -52,8 +52,8 @@ function content() {
     {
       q: tr("آنالیز هفتگی رایگان است؟", "Is the weekly review free?"),
       a: tr(
-        "آنالیز هفتگی هوشمند بخشی از ماژول تحلیل هوشمند (AI Insight) و جزو بخش‌های اشتراکی است. دستیار گفت‌وگویی روتین («نومو») برای کاربر بدون اشتراک 10 پیام رایگان دارد و در پلن‌های پولی نامحدود است؛ «روتین من» 14 روز رایگان است و بعد با پلن «روتین من» ({{routine_monthly}}) ادامه پیدا می‌کند.",
-        "The smart weekly review is part of the AI Insight module and is a paid feature. The routine chat assistant “Nomo” gives users without a subscription 10 free messages and is unlimited on paid plans. “My Routine” is free for 14 days and then continues with the “My Routine” plan ({{routine_monthly}}).",
+        "آنالیز هفتگی هوشمند بخشی از ماژول تحلیل هوشمند (AI Insight) و جزو بخش‌های اشتراکی است. دستیار گفت‌وگویی روتین («نومو») برای کاربر بدون اشتراک 10 پیام رایگان دارد و در پلن‌های «روتین من» و مکس نامحدود است؛ «روتین من» 14 روز رایگان است و بعد با پلن «روتین من» ({{routine_monthly}}) ادامه پیدا می‌کند.",
+        "The smart weekly review is part of the AI Insight module and is a paid feature. The routine chat assistant “Nomo” gives users without a subscription 10 free messages and is unlimited in the My Routine and Max plans. “My Routine” is free for 14 days and then continues with the “My Routine” plan ({{routine_monthly}}).",
       ),
     },
     {
