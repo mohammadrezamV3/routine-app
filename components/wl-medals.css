@@ -11,21 +11,20 @@ body[data-theme="light"] .wlm{ filter:drop-shadow(0 5px 6px rgba(58,38,24,.22));
 @keyframes wlm-twinkle{ 0%,100%{ transform:scale(1); opacity:1; } 50%{ transform:scale(.7); opacity:.7; } }
 
 /* ── حال هفته ───────────────────────────────────────────── */
-.wlr-moods{ display:grid; grid-template-columns:repeat(5, minmax(0,1fr)); gap:8px; max-width:420px; }
+.wlr-moods{ display:flex; gap:4px; }
 .wl-root button.wlr-mood{
-  position:relative; display:grid; place-items:center; width:100%; aspect-ratio:1 / 1; max-height:64px; min-height:48px; padding:0; cursor:pointer;
-  border-radius:16px; border:1px solid var(--box-line); color:inherit;
-  background:none; box-shadow:none; backdrop-filter:none; -webkit-backdrop-filter:none;
-  transition:transform .25s cubic-bezier(.34,1.56,.64,1), border-color .2s ease;
+  position:relative; display:grid; place-items:center; padding:6px; cursor:pointer; color:var(--muted);
+  border:0; border-radius:12px; background:none; box-shadow:none; backdrop-filter:none; -webkit-backdrop-filter:none;
+  transition:transform .2s cubic-bezier(.34,1.56,.64,1);
   -webkit-tap-highlight-color:transparent;
 }
 body[data-theme="light"] .wl-root button.wlr-mood{ background:none; box-shadow:none; }
-.wlr-mood svg{ width:56%; height:56%; opacity:.5; transition:opacity .2s ease, transform .25s cubic-bezier(.34,1.56,.64,1); }
-@media (hover:hover){ .wl-root button.wlr-mood:hover{ border-color:var(--muted); } .wlr-mood:hover svg{ opacity:.85; } }
-.wl-root button.wlr-mood.is-on{ border:2px solid var(--accent); transform:scale(1.06); }
-.wlr-mood.is-on svg{ opacity:1; transform:scale(1.08); }
-.wl-root button.wlr-mood:active{ transform:scale(.94); }
+.wlr-star-svg{ display:block; opacity:.6; transition:opacity .2s ease, transform .25s cubic-bezier(.34,1.56,.64,1); }
+.wlr-star-svg.is-fill{ opacity:1; }
+.wlr-mood.is-fill .wlr-star-svg{ transform:scale(1.06); }
+.wl-root button.wlr-mood:active{ transform:scale(.88); }
 .wl-root button.wlr-mood:focus-visible{ outline:2px solid var(--accent); outline-offset:2px; }
+.wlr-stars-static{ display:inline-flex; gap:4px; color:var(--muted); }
 .wlr-mood-name{ min-height:20px; font-size:12.5px; font-weight:800; color:var(--muted); }
 .wlr-mood-name.is-set{ color:var(--text); }
 

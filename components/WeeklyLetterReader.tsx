@@ -110,7 +110,8 @@ function ProgressBar() {
   return <motion.div className="wl-progress" style={{ scaleX: x }} aria-hidden="true" />;
 }
 
-function WeekNav({ prev, next, onGo }: { prev: string | null; next: string | null; onGo: (w: string) => void }) {
+function WeekNav({ next, onGo }: { next: string | null; onGo: (w: string) => void }) {
+  if (!next) return null;
   const link = (w: string, cls: string, children: React.ReactNode) => (
     <a
       href={`/analysis/weekly?week=${w}`}
@@ -122,8 +123,7 @@ function WeekNav({ prev, next, onGo }: { prev: string | null; next: string | nul
   );
   return (
     <nav className="wl-issue-nav" aria-label={tr("هفته‌های دیگر", "Other weeks")}>
-      {prev ? link(prev, "is-prev", <><ArrowRight size={20} className="dir-flip" /><span><small>{tr("هفته‌ی قبل", "Previous week")}</small><b>{weekLabelFa(prev)}</b></span></>) : <span className="wl-nav-gap" />}
-      {next ? link(next, "is-next", <><span><small>{tr("هفته‌ی بعد", "Next week")}</small><b>{weekLabelFa(next)}</b></span><ArrowLeft size={20} className="dir-flip" /></>) : <span className="wl-nav-gap" />}
+      {link(next, "is-next", <><span><small>{tr("هفته‌ی بعد", "Next week")}</small><b>{weekLabelFa(next)}</b></span><ArrowLeft size={20} className="dir-flip" /></>)}
     </nav>
   );
 }
@@ -288,7 +288,7 @@ function LetterBody({ data, onGo, reload }: { data: LiveWeekPayload; onGo: (w: s
       </div>
 
       <Reveal className="wl-nav-wrap">
-        <WeekNav prev={data.prev} next={data.next} onGo={onGo} />
+        <WeekNav next={data.next} onGo={onGo} />
         <Link href="/analysis/weekly/letters" className="wl-rd-archive-link"><Newspaper size={15} />{tr("آرشیو آنالیز هفتگی", "Weekly review archive")}</Link>
       </Reveal>
     </>

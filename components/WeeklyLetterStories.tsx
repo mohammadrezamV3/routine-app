@@ -25,7 +25,7 @@ import { MeterColumn } from "./WeeklyMeter";
 import WeeklyRadar from "./WeeklyRadar";
 import { MaskText, Odo } from "./WeeklyLetterStoryFx";
 import { INSIGHT_ICONS, moodLabels } from "./WeeklyLetterStory";
-import { WeeklyMoodFace, MOOD_COLORS } from "./WeeklyMoodFace";
+import { WeeklyMoodStarsStatic } from "./WeeklyMoodStars";
 import { WeeklyMedalBadge } from "./WeeklyMedalBadge";
 import { ARCH_ICONS, BrandMark } from "./WeeklyLetterCover";
 import { archetypeMeaning, goalCtaHref, weekCtaHref, type StorySlide } from "./WeeklyLetterStoriesData";
@@ -510,7 +510,7 @@ function ReflectionSlide({ s }: { s: Extract<StorySlide, { id: "reflection" }> }
       <SItem><Kicker icon={PenLine}>{tr("حرف خودت", "In your words")}</Kicker></SItem>
       {s.mood && (
         <SItem variants={POP} className="wl-st-mood">
-          <span className="wl-st-mood-e" aria-hidden="true" style={{ color: MOOD_COLORS[s.mood as 1 | 2 | 3 | 4 | 5] }}><WeeklyMoodFace level={s.mood as 1 | 2 | 3 | 4 | 5} size={Math.round(64 * U)} /></span>
+          <span className="wl-st-mood-e" aria-hidden="true"><WeeklyMoodStarsStatic value={s.mood} size={Math.round(34 * U)} /></span>
           <small>{moodLabels()[s.mood - 1]}</small>
         </SItem>
       )}
