@@ -319,11 +319,14 @@ html[dir="ltr"] .field-error-wrap.has-icon .auth-phone-wrap input[dir="ltr"]{ pa
    فید پایین دیرتر شروع می‌شه تا برچسب‌ها کم‌رنگ نشن؛ رنگش var(--bg) یعنی سطح فرم همون تم.
    زوم آرام نداریم چون متن پخته‌شده نباید تار بشه. */
 .as-img{ object-position:50% 50%; transform-origin:50% 50%; }
+/* زیر 1024px ورقه‌ی فرم روی پایین تصویر میاد (--sheet-lift)؛ فید دقیقا همون‌جا که ورقه شروع می‌شه به var(--bg) می‌رسه */
 .as-fade{
-  background:linear-gradient(to bottom, transparent 86%,
-    color-mix(in srgb, var(--bg) 12%, transparent) 91%,
-    color-mix(in srgb, var(--bg) 40%, transparent) 95%,
-    color-mix(in srgb, var(--bg) 80%, transparent) 98.5%, var(--bg) 100%);
+  --sheet-lift:32px;
+  background:linear-gradient(to bottom, transparent calc(100% - var(--sheet-lift) - 44px),
+    color-mix(in srgb, var(--bg) 14%, transparent) calc(100% - var(--sheet-lift) - 30px),
+    color-mix(in srgb, var(--bg) 45%, transparent) calc(100% - var(--sheet-lift) - 16px),
+    color-mix(in srgb, var(--bg) 82%, transparent) calc(100% - var(--sheet-lift) - 5px),
+    var(--bg) calc(100% - var(--sheet-lift)), var(--bg) 100%);
 }
 
 @media (min-width:1024px){
@@ -354,8 +357,23 @@ body:has(.auth-split) .wrap{ max-width:none; margin:0; }
 .auth-split-media{ position:relative; flex:0 0 220px; height:220px; overflow:hidden; background:#050b1a; }
 /* بنر کمی بلندتر: بلوک لوگو + برچسب‌ها کامل دیده بشه (فقط زیر 1024px) */
 @media (max-width:1023px){
-  .auth-split-media:has(.as-root){ flex-basis:clamp(240px, 50vw, 400px); height:clamp(240px, 50vw, 400px); }
+  /* ارتفاع قبلی + 32px که زیر ورقه‌ی فرم می‌ره؛ بخش دیده‌شده‌ی بنر (با برچسب‌ها) همون قبلی می‌مونه */
+  .auth-split-media:has(.as-root){ flex-basis:calc(clamp(240px, 50vw, 400px) + 32px); height:calc(clamp(240px, 50vw, 400px) + 32px); }
+  .auth-split-media:has(.as-root) .as-img{ object-position:50% 0; }
+  /* ورقه‌ی پایینی: ستون فرم روی تصویر میاد */
+  .auth-split-form{
+    position:relative; z-index:1; margin-top:-32px; padding-top:26px;
+    border-start-start-radius:28px; border-start-end-radius:28px;
+    box-shadow:0 -1px 0 var(--line), 0 -10px 28px -12px rgba(0,0,0,.28);
+  }
+  /* لوگو زیر بنر تکراریه؛ ورقه با عنوان شروع می‌شه */
+  .auth-split .auth-brand-lockup{ display:none; }
+  .auth-split .auth-brand-title{ margin-top:0; }
 }
+@media (max-width:1023px) and (prefers-reduced-motion:no-preference){
+  html:not([data-perf-weak]) .auth-split-form{ animation:auth-sheet-rise .35s cubic-bezier(.2,.8,.2,1) backwards; }
+}
+@keyframes auth-sheet-rise{ from{ opacity:0; transform:translateY(24px); } to{ opacity:1; transform:none; } }
 .auth-split .auth-shell{ max-width:360px; padding-bottom:16px; }
 
 .auth-split-head{ position:relative; margin-bottom:24px; }
