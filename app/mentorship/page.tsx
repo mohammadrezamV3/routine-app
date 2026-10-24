@@ -223,7 +223,7 @@ function MentorshipHome() {
                         {[r.categories.map((c) => categoryLabel(c)).join(tr("، ", ", ")), r.startedAt ? tr(`از ${fmtDate(r.startedAt)}`, `Since ${fmtDate(r.startedAt)}`) : ""].filter(Boolean).join(" · ")}
                       </span>
                       <span className="mv2-ms-meta">
-                        {rate != null ? tr(`پیشرفت برنامه ${faNum(Math.round(rate * 100))}٪`, `Program progress ${faNum(Math.round(rate * 100))}%`) : r.activePrograms > 0 ? tr(`${faNum(r.activePrograms)} برنامه در حال اجرا`, `${faNum(r.activePrograms)} ${r.activePrograms === 1 ? "program" : "programs"} in progress`) : tr("برنامه‌ی در حال اجرا نداری", "No programs in progress")}
+                        {rate != null ? tr(`پیشرفت برنامه ${faNum(Math.round(rate * 100))}%`, `Program progress ${faNum(Math.round(rate * 100))}%`) : r.activePrograms > 0 ? tr(`${faNum(r.activePrograms)} برنامه در حال اجرا`, `${faNum(r.activePrograms)} ${r.activePrograms === 1 ? "program" : "programs"} in progress`) : tr("برنامه‌ی در حال اجرا نداری", "No programs in progress")}
                       </span>
                     </span>
                     <ChevronLeft size={16} strokeWidth={1.75} className="mv2-ms-chev dir-flip" aria-hidden />

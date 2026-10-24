@@ -280,7 +280,7 @@ export function StreakCelebration({ from, to, anchor, onClose }: StreakCelebrati
           </button>
           <p className="streak-cel-invite">
             {invite?.code
-              ? (isEn() ? <>Friends who use your invite code <b dir="ltr">{invite.code}</b> get {REFERRAL_DISCOUNT_PERCENT}% off their first subscription</> : <>دوستات با کد دعوتت <b dir="ltr">{invite.code}</b> روی اولین اشتراک {faNum(REFERRAL_DISCOUNT_PERCENT)}٪ تخفیف می‌گیرن</>)
+              ? (isEn() ? <>Friends who use your invite code <b dir="ltr">{invite.code}</b> get {REFERRAL_DISCOUNT_PERCENT}% off their first subscription</> : <>دوستات با کد دعوتت <b dir="ltr">{invite.code}</b> روی اولین اشتراک {faNum(REFERRAL_DISCOUNT_PERCENT)}% تخفیف می‌گیرن</>)
               : tr("استریکت رو بفرست و دوستات رو به چالش بکش", "Send your streak and challenge your friends")}
           </p>
           <p className="streak-cel-msg" role="status" aria-live="polite">{shareMsg}</p>

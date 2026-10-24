@@ -53,7 +53,7 @@ export function DashboardRoadmaps({ r, loading }: { r: { items: DashRoadmap[]; t
               <Link href={`/roadmaps/custom/${it.id}`} prefetch className="db-road-item">
                 <span className="db-road-head">
                   <span className="db-road-title">{it.title || it.topic}</span>
-                  <b>{faNum(it.pct)}{tr("٪", "%")}</b>
+                  <b>{faNum(it.pct)}%</b>
                 </span>
                 <Meter value={it.pct / 100} delay={0.3 + i * 0.08} />
                 <span className="db-road-sub">{tr(`${faNum(it.done)} از ${faNum(it.total)} مرحله`, `${it.done} of ${it.total} steps`)}</span>

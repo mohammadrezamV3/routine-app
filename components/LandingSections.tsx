@@ -263,7 +263,7 @@ function DashMock({ section = null }: SecProp) {
           <span className="ls-dash-chip"><Flame size={12} /> {tr("23 روز استریک", "23-day streak")}</span>
           <ul className="ls-dash-legend">
             {DASH_RINGS.map((r) => (
-              <li key={r.label}><i style={{ background: r.a }} />{r.label}<b>{fa(Math.round(r.v * 100))}{tr("٪", "%")}</b></li>
+              <li key={r.label}><i style={{ background: r.a }} />{r.label}<b>{fa(Math.round(r.v * 100))}%</b></li>
             ))}
           </ul>
         </div>
@@ -306,7 +306,7 @@ function DashMock({ section = null }: SecProp) {
               ? tr(`امتیاز خواب ${fa(86)} · هدف ${fa(8)} ساعت`, `Sleep score ${fa(86)} · goal ${fa(8)} hours`)
               : section === "workout"
               ? tr(`پروتئین ${fa(98)} از ${fa(140)} گرم`, `Protein ${fa(98)} of ${fa(140)} g`)
-              : tr(`نرخ برد ${fa(62)}٪ · ${fa(24)} معامله`, `Win rate ${fa(62)}% · ${fa(24)} trades`)}
+              : tr(`نرخ برد ${fa(62)}% · ${fa(24)} معامله`, `Win rate ${fa(62)}% · ${fa(24)} trades`)}
           </div>
         </div>
       </div>

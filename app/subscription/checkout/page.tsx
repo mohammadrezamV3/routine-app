@@ -306,15 +306,15 @@ export default function CheckoutPage() {
             </button>
           </div>
         </div>
-        {fromInvite && !discountResult && <div className="checkout-invite-hint">{isEn() ? `Your friend's invite code is filled in. Press “Apply” to get ${faNum(REFERRAL_DISCOUNT_PERCENT)}% off` : <>کد دعوت دوستت پر شده — «اعمال» رو بزن تا {faNum(REFERRAL_DISCOUNT_PERCENT)}٪ تخفیف بگیری</>}</div>}
+        {fromInvite && !discountResult && <div className="checkout-invite-hint">{isEn() ? `Your friend's invite code is filled in. Press “Apply” to get ${faNum(REFERRAL_DISCOUNT_PERCENT)}% off` : <>کد دعوت دوستت پر شده — «اعمال» رو بزن تا {faNum(REFERRAL_DISCOUNT_PERCENT)}% تخفیف بگیری</>}</div>}
         {achWins && achReward && (
           <div className="checkout-discount-success">
             {isEn()
               ? `${faNum(achReward.percent)}% achievements reward (${achReward.tier === "full" ? "all achievements unlocked" : "half of the achievements unlocked"}) was applied automatically${discountResult?.ok ? " (it is bigger than the discount code, so the code is not used)" : ""}`
-              : <>{faNum(achReward.percent)}٪ تخفیف پاداش اچیومنت‌ها ({achReward.tier === "full" ? "باز کردن همه‌ی اچیومنت‌ها" : "باز کردن نیمی از اچیومنت‌ها"}) خودکار اعمال شد{discountResult?.ok ? " (از کد تخفیف بیشتره، پس اون مصرف نمی‌شه)" : ""}</>}
+              : <>{faNum(achReward.percent)}% تخفیف پاداش اچیومنت‌ها ({achReward.tier === "full" ? "باز کردن همه‌ی اچیومنت‌ها" : "باز کردن نیمی از اچیومنت‌ها"}) خودکار اعمال شد{discountResult?.ok ? " (از کد تخفیف بیشتره، پس اون مصرف نمی‌شه)" : ""}</>}
           </div>
         )}
-        {achReward && !monthly && <div className="checkout-invite-hint">{isEn() ? `The ${faNum(achReward.percent)}% achievements reward only applies to the 1-month option` : <>پاداش {faNum(achReward.percent)}٪ اچیومنت‌ها فقط روی گزینه‌ی یک‌ماهه اعمال می‌شه</>}</div>}
+        {achReward && !monthly && <div className="checkout-invite-hint">{isEn() ? `The ${faNum(achReward.percent)}% achievements reward only applies to the 1-month option` : <>پاداش {faNum(achReward.percent)}% اچیومنت‌ها فقط روی گزینه‌ی یک‌ماهه اعمال می‌شه</>}</div>}
         {discountResult?.ok && !achWins && <div className="checkout-discount-success">{tr("کد تخفیف اعمال شد", "Discount code applied")}</div>}
         {discountResult && !discountResult.ok && <div className="field-error-msg" style={{ display: "block", marginTop: 7 }}>{discountResult.error}</div>}
       </div>

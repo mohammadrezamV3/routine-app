@@ -105,7 +105,7 @@ export function MentorProgramsSent() {
               {showBar && (
                 <div className="mv2-pg-card-bar">
                   <MentorDashBar rate={p.progress.rate} label={tr(`پیشرفت ${p.title}`, `Progress on ${iso(p.title)}`)} />
-                  <b>{fa(Math.round(normRate(p.progress.rate) * 100))}{tr("٪", "%")}</b>
+                  <b>{fa(Math.round(normRate(p.progress.rate) * 100))}%</b>
                 </div>
               )}
               {cr && <Link href={`/mentor/programs/${p.id}/edit`} className="account-outline-btn mentor-btn is-sm">{tr("دیدن درخواست تغییر", "View change request")}</Link>}

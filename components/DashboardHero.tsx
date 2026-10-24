@@ -372,7 +372,7 @@ function tradeHeroRings(t: DashboardData["trade"]): { key: string; value: number
 }
 
 function tradeLegend(t: DashboardData["trade"]): LegendItem[] {
-  const pct = tr("٪", "%");
+  const pct = "%";
   const dash = "—";
   const items: LegendItem[] = [
     { key: "win", href: "/trade/journal", label: tr("وین‌ریت", "Win rate"), display: t?.month.winRate == null ? dash : `${faNum(t.month.winRate)}${pct}`, grad: ["var(--ring-1a)", "var(--ring-1b)"] },

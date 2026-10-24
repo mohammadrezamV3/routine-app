@@ -3,7 +3,7 @@
 import { useEffect, useMemo, useRef, useState } from "react";
 import { TickButton } from "./TickButton";
 import { createPortal } from "react-dom";
-import { AlertTriangle, Camera, ChevronDown, ChevronLeft, ChevronRight, Info, Smile, Tags, Trash2, Wand2, X } from "lucide-react";
+import { AlertTriangle, Camera, ChevronDown, Info, Smile, Tags, Trash2, Wand2, X } from "lucide-react";
 import { LockBodyScroll } from "./LockBodyScroll";
 import { SegmentedTabs } from "./SegmentedTabs";
 import { TradeTagField } from "./TradeTagField";
@@ -28,16 +28,16 @@ import { pick, tr } from "@/lib/i18n";
 type ChecklistItem = { id: string; text: string; order: number };
 type Checklist = { id: string; name: string; color: string; required: boolean; archived: boolean; items: ChecklistItem[] };
 
-type TabKey = "core" | "reasons" | "checklist" | "images" | "tags" | "emotions";
+type SecKey = "core" | "reasons" | "checklist" | "images" | "tags" | "emotions";
 
-const TABS: { key: TabKey; label: { fa: string; en: string }; icon: JSX.Element }[] = [
-  { key: "core", label: { fa: "اطلاعات", en: "Information" }, icon: <Info size={14} /> },
-  { key: "reasons", label: { fa: "دلایل ورود و خروج", en: "Entry and exit reasons" }, icon: <Wand2 size={14} /> },
-  { key: "checklist", label: { fa: "چک‌لیست", en: "Checklist" }, icon: <AlertTriangle size={14} /> },
-  { key: "images", label: { fa: "عکس‌ها", en: "Images" }, icon: <Camera size={14} /> },
-  { key: "tags", label: { fa: "برچسب‌ها", en: "Tags" }, icon: <Tags size={14} /> },
-  { key: "emotions", label: { fa: "احساسات", en: "Emotions" }, icon: <Smile size={14} /> },
-];
+const SECTIONS: Record<SecKey, { label: { fa: string; en: string }; icon: JSX.Element }> = {
+  core: { label: { fa: "اطلاعات", en: "Information" }, icon: <Info size={14} /> },
+  reasons: { label: { fa: "دلایل ورود و خروج", en: "Entry and exit reasons" }, icon: <Wand2 size={14} /> },
+  checklist: { label: { fa: "چک‌لیست", en: "Checklist" }, icon: <AlertTriangle size={14} /> },
+  images: { label: { fa: "عکس‌ها", en: "Images" }, icon: <Camera size={14} /> },
+  tags: { label: { fa: "برچسب‌ها", en: "Tags" }, icon: <Tags size={14} /> },
+  emotions: { label: { fa: "احساسات", en: "Emotions" }, icon: <Smile size={14} /> },
+};
 
 /**
  * فرم ثبت/ویرایش معامله.
@@ -75,7 +75,6 @@ export function TradeFormModal({
   onClose: () => void;
   onSaved: () => void;
 }) {
-  const [tab, setTab] = useState<TabKey>("core");
   const [form, setForm] = useState<TradeFormState>(() =>
     entry
       ? tradeToFormState(entry, toLocalInputValue)
@@ -93,57 +92,6 @@ export function TradeFormModal({
   const [compressing, setCompressing] = useState(false);
 
   function patch(p: Partial<TradeFormState>) { setForm((f) => ({ ...f, ...p })); }
-
-  // ── ناوبری بین بخش‌های فرم ──
-  const tabsRef = useRef<HTMLDivElement>(null);
-  const [tabsRtl, setTabsRtl] = useState(true);
-  const [canStart, setCanStart] = useState(false);
-  const [canEnd, setCanEnd] = useState(false);
-  const tabIndex = TABS.findIndex((t) => t.key === tab);
-
-  useEffect(() => {
-    const el = tabsRef.current;
-    if (!el) return;
-    const update = () => {
-      const max = el.scrollWidth - el.clientWidth;
-      const pos = Math.abs(el.scrollLeft);
-      setTabsRtl(getComputedStyle(el).direction === "rtl");
-      setCanStart(max > 2 && pos > 2);
-      setCanEnd(max > 2 && pos < max - 2);
-    };
-    update();
-    el.addEventListener("scroll", update, { passive: true });
-    const ro = new ResizeObserver(update);
-    ro.observe(el);
-    return () => { el.removeEventListener("scroll", update); ro.disconnect(); };
-  }, []);
-
-  // سمت «شروع» در راست‌به‌چپ یعنی راست؛ scrollLeft آنجا منفی می‌شود
-  function scrollTabs(toStart: boolean) {
-    const el = tabsRef.current;
-    if (!el) return;
-    const rtl = getComputedStyle(el).direction === "rtl";
-    const amount = el.clientWidth * 0.7;
-    const sign = (toStart ? -1 : 1) * (rtl ? -1 : 1);
-    el.scrollBy({ left: sign * amount, behavior: "smooth" });
-  }
-
-  function goTab(i: number) {
-    const next = TABS[i];
-    if (!next) return;
-    setTab(next.key);
-    const el = tabsRef.current;
-    const btn = el?.querySelectorAll<HTMLElement>(".trade-form-tab")[i];
-    if (el && btn) {
-      const er = el.getBoundingClientRect();
-      const br = btn.getBoundingClientRect();
-      const pad = 28;
-      let dx = 0;
-      if (br.left < er.left + pad) dx = br.left - er.left - pad;
-      else if (br.right > er.right - pad) dx = br.right - er.right + pad;
-      if (dx) el.scrollBy({ left: dx, behavior: "smooth" });
-    }
-  }
 
   // ── میزان اطمینان: حرکت پیوسته، ذخیره‌ی عدد صحیح ۱ تا ۱۰ ──
   const [confDraft, setConfDraft] = useState<number | null>(null);
@@ -271,8 +219,8 @@ export function TradeFormModal({
 
   async function save() {
     if (saving) return;
-    if (!form.symbol.trim()) { setTab("core"); setError(tr("نماد معاملاتی را وارد کن", "Enter the trading symbol")); return; }
-    if (!form.volume.trim()) { setTab("core"); setError(tr("حجم معامله را وارد کن", "Enter the trade volume")); return; }
+    if (!form.symbol.trim()) { setError(tr("نماد معاملاتی را وارد کن", "Enter the trading symbol")); return; }
+    if (!form.volume.trim()) { setError(tr("حجم معامله را وارد کن", "Enter the trade volume")); return; }
 
     // عددها با جدول مشترک (lib/numberLimits.ts) سنجیده می‌شن؛ سرور هم دوباره می‌سنجه
     const numberChecks: [string, LimitKey, boolean][] = [
@@ -285,7 +233,7 @@ export function TradeFormModal({
     ];
     for (const [text, key, optional] of numberChecks) {
       const r = readTyped(text, key);
-      if (!r.ok) { setTab("core"); if (optional) setOptionalOpen(true); setError(r.error); return; }
+      if (!r.ok) { if (optional) setOptionalOpen(true); setError(r.error); return; }
     }
 
     setSaving(true);
@@ -326,32 +274,8 @@ export function TradeFormModal({
           <button type="button" className="trade-icon-btn" onClick={onClose} aria-label={tr("بستن", "Close")}><X size={16} /></button>
         </div>
 
-        <div className="trade-form-tabs-wrap">
-          <button type="button" className="trade-tabs-arrow" aria-label={tr("بخش‌های قبلی", "Previous sections")}
-            hidden={!canStart} onClick={() => scrollTabs(true)}>
-            {tabsRtl ? <ChevronRight size={16} /> : <ChevronLeft size={16} />}
-          </button>
-          <div className="trade-form-tabs no-scrollbar" ref={tabsRef}>
-            {TABS.map((t, i) => (
-              <button
-                key={t.key}
-                type="button"
-                className={`trade-form-tab${tab === t.key ? " active" : ""}`}
-                onClick={() => goTab(i)}
-              >
-                {t.icon}
-                {pick(t.label)}
-                {t.key === "checklist" && checklistIncomplete && <span className="trade-tab-warn" />}
-              </button>
-            ))}
-          </div>
-          <button type="button" className="trade-tabs-arrow" aria-label={tr("بخش‌های بعدی", "Next sections")}
-            hidden={!canEnd} onClick={() => scrollTabs(false)}>
-            {tabsRtl ? <ChevronLeft size={16} /> : <ChevronRight size={16} />}
-          </button>
-        </div>
-
-        {tab === "core" && (
+        <section className="trade-form-sec">
+          <h3 className="trade-form-sec-title">{SECTIONS.core.icon}{pick(SECTIONS.core.label)}</h3>
           <div className="trade-form-body">
             <div className="trade-field-row">
               <div style={{ position: "relative" }} ref={symbolWrapRef}>
@@ -529,9 +453,10 @@ export function TradeFormModal({
               </div>
             )}
           </div>
-        )}
+        </section>
 
-        {tab === "reasons" && (
+        <section className="trade-form-sec">
+          <h3 className="trade-form-sec-title">{SECTIONS.reasons.icon}{pick(SECTIONS.reasons.label)}</h3>
           <div className="trade-form-body">
             <label className="exercise-form-label">{tr("دلایل ورود", "Entry reasons")}</label>
             <div className="trade-choice-grid">
@@ -578,9 +503,10 @@ export function TradeFormModal({
             <label className="exercise-form-label">{tr("نکات معامله", "Trade notes")}</label>
             <textarea className="wsearch-newform-name trade-glass-field" rows={3} value={form.note} onChange={(e) => patch({ note: e.target.value })} maxLength={2000} placeholder={tr("هر نکته‌ای که بعدا به دردت می‌خورد", "Anything that will be useful to you later")} />
           </div>
-        )}
+        </section>
 
-        {tab === "checklist" && (
+        <section className="trade-form-sec">
+          <h3 className="trade-form-sec-title">{SECTIONS.checklist.icon}{pick(SECTIONS.checklist.label)}{checklistIncomplete && <span className="trade-tab-warn" />}</h3>
           <div className="trade-form-body">
             <label className="exercise-form-label">{tr("چک‌لیست این معامله", "Checklist for this trade")}</label>
             <select className="wsearch-newform-name trade-glass-field" value={form.checklistId || ""} onChange={(e) => patch({ checklistId: e.target.value || null, checklistState: {} })}>
@@ -625,9 +551,10 @@ export function TradeFormModal({
               </>
             )}
           </div>
-        )}
+        </section>
 
-        {tab === "images" && (
+        <section className="trade-form-sec">
+          <h3 className="trade-form-sec-title">{SECTIONS.images.icon}{pick(SECTIONS.images.label)}</h3>
           <div className="trade-form-body">
             <label className="exercise-form-label">
               {tr("تصاویر معامله", "Trade images")} ({faNum(form.images.length)}/{faNum(MAX_IMAGES_PER_TRADE)})
@@ -663,16 +590,18 @@ export function TradeFormModal({
 
             {imageError && <div className="trade-form-error">{imageError}</div>}
           </div>
-        )}
+        </section>
 
-        {tab === "tags" && (
+        <section className="trade-form-sec">
+          <h3 className="trade-form-sec-title">{SECTIONS.tags.icon}{pick(SECTIONS.tags.label)}</h3>
           <div className="trade-form-body">
             <label className="exercise-form-label">{tr("برچسب‌های معامله", "Trade tags")}</label>
             <TradeTagField tags={tags} value={form.tagIds} onChange={(ids) => patch({ tagIds: ids })} onCreated={onTagCreated} />
           </div>
-        )}
+        </section>
 
-        {tab === "emotions" && (
+        <section className="trade-form-sec">
+          <h3 className="trade-form-sec-title">{SECTIONS.emotions.icon}{pick(SECTIONS.emotions.label)}</h3>
           <div className="trade-form-body">
             <label className="exercise-form-label">{tr("حال من قبل از معامله", "My mood before the trade")}</label>
             <div className="trade-choice-grid">
@@ -746,20 +675,13 @@ export function TradeFormModal({
               ))}
             </div>
           </div>
-        )}
+        </section>
 
         {error && <div className="trade-form-error">{error}</div>}
 
-        <div className="trade-form-stepper">
-          <button type="button" className="account-outline-btn" disabled={tabIndex <= 0}
-            onClick={() => goTab(tabIndex - 1)}>{tr("بخش قبل", "Previous")}</button>
-          <button type="button" className="account-outline-btn" disabled={tabIndex >= TABS.length - 1}
-            onClick={() => goTab(tabIndex + 1)}>{tr("بخش بعد", "Next")}</button>
-        </div>
-
         <div className="trade-modal-actions">
-          <button type="button" className="account-outline-btn" onClick={onClose}>{tr("لغو", "Cancel")}</button>
-          <button type="button" className="trade-primary-btn" onClick={save} disabled={saving}>
+          <button type="button" className="btn btn-ghost" onClick={onClose}>{tr("لغو", "Cancel")}</button>
+          <button type="button" className="btn btn-primary" onClick={save} disabled={saving}>
             {saving ? <Spinner size={14} /> : entry ? tr("ذخیره تغییرات", "Save changes") : tr("ثبت معامله", "Log trade")}
           </button>
         </div>

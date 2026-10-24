@@ -135,7 +135,7 @@ export function RoadmapContinueCard({ r }: { r: RoadmapCardData }) {
     <article className="trade-surface rmx-box rmx-cont">
       <div className="rmx-cont-main">
         <GradientRing value={r.pct / 100} size={88} stroke={7} className="rmx-cont-ring">
-          <span className="rmx-ring-num">{faNum(r.pct)}<small>{tr("٪", "%")}</small></span>
+          <span className="rmx-ring-num"><bdi dir="ltr">{faNum(r.pct)}%</bdi></span>
         </GradientRing>
         <div className="rmx-cont-text">
           <span className="rmx-kicker">{tr("ادامه بده", "Pick up where you left off")}</span>
@@ -187,7 +187,7 @@ function RoadmapRow({ r, onDelete }: { r: RoadmapCardData; onDelete: (r: Roadmap
             <div className="rmx-bar" role="progressbar" aria-valuenow={r.pct} aria-valuemin={0} aria-valuemax={100}>
               <span style={{ width: `${r.pct}%` }} />
             </div>
-            <span className={`rmx-pct${complete ? " is-done" : ""}`}>{faNum(r.pct)}{tr("٪", "%")}</span>
+            <span className={`rmx-pct${complete ? " is-done" : ""}`}><bdi dir="ltr">{faNum(r.pct)}%</bdi></span>
           </>
         )}
       </div>
@@ -261,7 +261,7 @@ export function RoadmapSummary({ roadmaps }: { roadmaps: RoadmapCardData[] }) {
     <div className="trade-surface rmx-box rmx-sum" role="group" aria-label={tr("خلاصه", "Summary")}>
       <div className="rmx-sum-item"><b>{faNum(active)}</b><span>{tr("مسیر فعال", "Active paths")}</span></div>
       <div className="rmx-sum-item"><b><bdi dir="ltr">{faNum(done)}/{faNum(total)}</bdi></b><span>{tr("مرحله‌ی انجام‌شده", "Stages done")}</span></div>
-      <div className="rmx-sum-item"><b>{faNum(avg)}{tr("٪", "%")}</b><span>{tr("میانگین پیشرفت", "Avg. progress")}</span></div>
+      <div className="rmx-sum-item"><b><bdi dir="ltr">{faNum(avg)}%</bdi></b><span>{tr("میانگین پیشرفت", "Avg. progress")}</span></div>
     </div>
   );
 }

@@ -147,5 +147,5 @@ export function normRate(rate: number | null | undefined): number {
 
 export function pct(rate: number | null | undefined): string {
   const v = Math.round(normRate(rate) * 100);
-  return tr(`${fa(v)}٪`, `${fa(v)}%`);
+  return tr(`${fa(v)}%`, `${fa(v)}%`);
 }

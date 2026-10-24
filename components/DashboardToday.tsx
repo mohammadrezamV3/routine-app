@@ -254,10 +254,10 @@ function WeekBars({ week }: { week: HeatCell[] }) {
   const avg = past.length ? Math.round(past.reduce((a, c) => a + (c.pct ?? 0), 0) / past.length) : null;
   return (
     <div className="db-weekbars">
-      <span className="db-sub-head">{tr("این هفته", "This week")}{avg !== null && <span className="db-pill">{tr(`میانگین ${faNum(avg)}٪`, `Avg ${avg}%`)}</span>}</span>
+      <span className="db-sub-head">{tr("این هفته", "This week")}{avg !== null && <span className="db-pill">{tr(`میانگین ${faNum(avg)}%`, `Avg ${avg}%`)}</span>}</span>
       <div className="db-weekbars-row">
         {week.map((c, i) => (
-          <span key={c.iso} className={`db-wbar${c.today ? " is-today" : ""}${c.future ? " is-future" : ""}`} title={c.pct === null ? tr("بدون برنامه", "No programs") : `${faNum(c.pct)}${tr("٪", "%")}`}>
+          <span key={c.iso} className={`db-wbar${c.today ? " is-today" : ""}${c.future ? " is-future" : ""}`} title={c.pct === null ? tr("بدون برنامه", "No programs") : `${faNum(c.pct)}%`}>
             <span className="db-wbar-track">
               <motion.i
                 className={c.pct === 100 ? "is-full" : ""}

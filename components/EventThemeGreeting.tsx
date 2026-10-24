@@ -99,7 +99,7 @@ export function EventThemeGreeting() {
         <span>{eventThemeGreeting(theme)}</span>
         {offer && (
           <span style={{ fontSize: 12, fontWeight: 500 }}>
-            {isEn() ? <>Code <span dir="ltr" style={{ fontWeight: 700 }}>{offer.code}</span>: {offer.percent}% off all plans</> : <>کد <span dir="ltr" style={{ fontWeight: 700 }}>{offer.code}</span>: {offer.percent}٪ تخفیف روی همه‌ی پلن‌ها</>}
+            {isEn() ? <>Code <span dir="ltr" style={{ fontWeight: 700 }}>{offer.code}</span>: {offer.percent}% off all plans</> : <>کد <span dir="ltr" style={{ fontWeight: 700 }}>{offer.code}</span>: {offer.percent}% تخفیف روی همه‌ی پلن‌ها</>}
           </span>
         )}
       </span>

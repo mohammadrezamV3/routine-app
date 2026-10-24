@@ -36,7 +36,7 @@ const TradeFormModal = dynamic(() => import("./TradeFormModal").then((m) => m.Tr
 const TradeDetailDrawer = dynamic(() => import("./TradeDetailDrawer").then((m) => m.TradeDetailDrawer), { ssr: false });
 
 // علامت درصد: فارسی ٪ و انگلیسی %
-const pctSign = () => (isEn() ? "%" : "٪");
+const pctSign = () => "%";
 
 // آیکون هر کارت آماری — فقط یک لمس بصری، بدون تغییر در منطق محاسبه‌ها
 const TRADE_STAT_ICONS: Record<TradeStatKey, typeof Wallet> = {

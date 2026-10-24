@@ -270,7 +270,7 @@ function ProgramView({ onHead, onFailed, cmd }: { onHead: (h: Head) => void; onF
             <div className="mv2-pg-prog">
               <span className="mv2-pg-prog-ring" role="img" aria-label={tr(`پیشرفت ${faNum(Math.round(program.progress.rate))} درصد`, `Progress ${faNum(Math.round(program.progress.rate))} percent`)}>
                 <GradientRing value={Math.max(0, Math.min(100, program.progress.rate)) / 100} size={84} stroke={7}>
-                  <b className="mv2-pg-prog-num">{faNum(Math.round(program.progress.rate))}{tr("٪", "%")}</b>
+                  <b className="mv2-pg-prog-num">{faNum(Math.round(program.progress.rate))}%</b>
                 </GradientRing>
               </span>
               <ul className="mv2-pg-prog-legend">

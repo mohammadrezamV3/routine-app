@@ -368,7 +368,7 @@ export function MockRoadmapCard({ topic, title, desc, duration, stages, level, p
       </div>
       <div className="rp-card-foot">
         <div className="rp-bar"><span style={{ width: `${pct}%` }} /></div>
-        <span className="rp-card-pct">{fa(pct)}{tr("٪", "%")}</span>
+        <span className="rp-card-pct">{fa(pct)}%</span>
         <ChevronLeft size={16} className="rp-card-arrow dir-flip" />
       </div>
     </div>

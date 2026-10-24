@@ -155,7 +155,7 @@ export function CalorieChartCard({
                   {/* درصد فقط توی هفتگی جا می‌شه؛ ماهانه ۳۰ ستون داره */}
                   {!isMonthly && (
                     <span className={cn("text-[9px] font-semibold sm:text-[10px]", isActive || peak ? "text-dash-green" : "text-dash-muted")}>
-                      {faNum(pct)}{tr("٪", "%")}
+                      {faNum(pct)}%
                     </span>
                   )}
                   <div className="flex h-24 w-full items-end justify-center sm:h-28">

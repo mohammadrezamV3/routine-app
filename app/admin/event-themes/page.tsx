@@ -192,7 +192,7 @@ export default function AdminEventThemesPage() {
               checked={data.discount.enabled}
               onChange={(v) => postDiscount({ action: "discount_enabled", enabled: v }, v ? tr("ساخت خودکار کد روشن شد", "Automatic code creation turned on") : tr("ساخت خودکار کد خاموش شد", "Automatic code creation turned off"))}
             >
-              {tr(`ساخت خودکار کد ${data.discount.percent}٪ برای هر مناسبت`, `Automatically create a ${data.discount.percent}% code for each event`)}
+              {tr(`ساخت خودکار کد ${data.discount.percent}% برای هر مناسبت`, `Automatically create a ${data.discount.percent}% code for each event`)}
             </TickOption>
             <div className="admin-perm-group" style={{ marginTop: 10 }}>
               {data.discount.schedule.map((it) => {

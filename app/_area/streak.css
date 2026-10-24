@@ -241,24 +241,9 @@ html[data-perf="low"] .trade-drawer{ background:var(--surface-2) !important; }
 
 .trade-tag-add{ border-style:dashed; }
 
-/* ── فرم تب‌دار معامله ────────────────────────────────────── */
+/* ── فرم تک‌صفحه‌ی معامله ────────────────────────────────────── */
 
 .trade-form-panel{ max-width:600px; width:94%; }
-
-@media (hover:hover) and (pointer:fine) {
-  .trade-tabs-arrow{ display:inline-flex; }
-  .trade-tabs-arrow:hover{ color:var(--accent); background:none; box-shadow:none; } }
-
-.trade-form-stepper{ display:flex; gap:9px; margin-top:16px; }
-
-.trade-form-stepper button{ flex:1; min-width:0; }
-
-.trade-form-tabs::-webkit-scrollbar{ display:none; width:0; height:0; }
-
-@media (hover:hover) {
-  .trade-form-tab:hover{ color:var(--text); background:rgba(var(--accent-rgb),.06); } }
-
-.trade-form-tab.active{ color:var(--accent); border-color:var(--accent); background:var(--accent-dim); }
 
 .trade-volume-row{ display:flex; gap:9px; align-items:center; }
 
