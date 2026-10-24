@@ -33,7 +33,7 @@ const groups = (): Group[] => [
       { href: "/routine", label: tr("روتین روزانه", "Daily routine") },
       { href: "/habit-tracker", label: tr("پیگیری عادت‌ها", "Habit tracking") },
       { href: "/daily-planner", label: tr("برنامه‌ریزی روزانه", "Daily planning") },
-      { href: "/ai-planner", label: tr("برنامه‌ریز هوشمند", "Smart planner") },
+      { href: "/ai-planner", label: tr("نومو", "Nomo") },
       { href: "/bodybuilding-program", label: tr("برنامه‌ی بدنسازی", "Workout plan") },
       { href: "/calorie-counter", label: tr("کالری‌شمار", "Calorie counter") },
       { href: "/trading-journal", label: tr("ژورنال معاملاتی", "Trading journal") },

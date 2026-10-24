@@ -237,7 +237,7 @@ export function getSectionHero(section: SectionKey, brand: string): SectionHero 
       { href: "/routine", label: tr("روتین روزانه", "Daily routine") },
       { href: "/habit-tracker", label: tr("پیگیری عادت", "Habit tracking") },
       { href: "/daily-planner", label: tr("برنامه‌ریزی روزانه", "Daily planning") },
-      { href: "/ai-planner", label: tr("مدیر برنامه هوشمند", "Smart plan manager") },
+      { href: "/ai-planner", label: tr("نومو", "Nomo") },
       { href: "/learning-roadmap", label: tr("رودمپ یادگیری", "Learning roadmap") },
     ],
     phone: {
@@ -433,7 +433,7 @@ export function getSectionFooterFeatures(section: SectionKey): { href: string; l
     { href: "/routine", label: tr("روتین روزانه", "Daily routine") },
     { href: "/habit-tracker", label: tr("پیگیری عادت‌ها", "Habit tracking") },
     { href: "/daily-planner", label: tr("برنامه‌ریزی روزانه", "Daily planning") },
-    { href: "/ai-planner", label: tr("برنامه‌ریز هوشمند", "Smart planner") },
+    { href: "/ai-planner", label: tr("نومو", "Nomo") },
     { href: "/learning-roadmap", label: tr("رودمپ یادگیری", "Learning roadmap") },
     { href: "/mentors", label: tr("مربی‌ها", "Mentors") },
   ];

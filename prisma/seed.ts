@@ -23,7 +23,8 @@ const PLANS: {
     market: Market.IRAN,
     currency: Currency.IRR,
     priceMonthly: 990_000, // ۹۹,۰۰۰ تومان — بعد از ۱۴ روز آزمایشی (migration 20260930120000_routine_paid_trial)
-    modules: [ModuleKey.ROUTINE, ModuleKey.SLEEP, ModuleKey.TASKS],
+    // رودمپ فقط در «روتین من» و مکس (migration 20261024120000_roadmap_plans_routine_max)
+    modules: [ModuleKey.ROUTINE, ModuleKey.SLEEP, ModuleKey.TASKS, ModuleKey.ROADMAP],
   },
   {
     key: "exercise",
@@ -33,7 +34,7 @@ const PLANS: {
     currency: Currency.IRR,
     priceMonthly: 1_500_000, // ۱۵۰,۰۰۰ تومان
     // بدنسازی = برنامه ورزشی + شمارش کالری، هر دو با هم؛ ai mapping هم توی همه‌ی پلن‌های پولی هست، نه فقط مکس
-    modules: [ModuleKey.ROUTINE, ModuleKey.SLEEP, ModuleKey.TASKS, ModuleKey.EXERCISE, ModuleKey.CALORIE, ModuleKey.ROADMAP],
+    modules: [ModuleKey.ROUTINE, ModuleKey.SLEEP, ModuleKey.TASKS, ModuleKey.EXERCISE, ModuleKey.CALORIE],
   },
   {
     key: "trade",
@@ -42,7 +43,7 @@ const PLANS: {
     market: Market.IRAN,
     currency: Currency.IRR,
     priceMonthly: 1_750_000, // ۱۷۵,۰۰۰ تومان (migration 20260928150000_trade_plan_price_175k)
-    modules: [ModuleKey.ROUTINE, ModuleKey.SLEEP, ModuleKey.TASKS, ModuleKey.TRADE, ModuleKey.ROADMAP],
+    modules: [ModuleKey.ROUTINE, ModuleKey.SLEEP, ModuleKey.TASKS, ModuleKey.TRADE],
   },
   {
     key: "max",
@@ -91,6 +92,8 @@ async function main() {
         update: {},
       });
     }
+    // ماژول‌هایی که دیگه توی فهرست این پلن نیستن حذف می‌شن (ModuleAccess کاربران دست نمی‌خوره)
+    await prisma.planModule.deleteMany({ where: { planId: plan.id, module: { notIn: p.modules } } });
   }
 
   console.log(`Seeded ${PLANS.length} plans (بازار ایران).`);
