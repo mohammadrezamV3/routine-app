@@ -81,6 +81,15 @@ function hms(totalSec: number): string {
 
 // بیشینه‌ی عرض متن وسط (واحد SVG): فاصله‌ی بین عددهای 06 و 18 منهای حاشیه
 const CENTER_W = 136;
+const VB_SPAN = S - 2 * VB;
+
+/** موقعیت و اندازه‌ی یک خط متن وسط به درصد/cqw تا با اندازه‌ی ساعت مقیاس بشه */
+function centerLine(dy: number, fontSize: number): React.CSSProperties {
+  return {
+    top: `${((C + dy - VB) / VB_SPAN) * 100}%`,
+    fontSize: `${(fontSize / VB_SPAN) * 100}cqw`,
+  };
+}
 
 export function SleepDial({
   loaded,
@@ -372,12 +381,14 @@ export function SleepDial({
           <circle cx={wakePt.x} cy={wakePt.y} r={PIN_R} fill={`url(#sldn${uid})`} className="sld-disc" />
           <Sun className="sld-pin is-sun" x={wakePt.x - PIN / 2} y={wakePt.y - PIN / 2} width={PIN} height={PIN} />
 
-          {/* متن وسط: داخل دایره‌ی درونی، شمارش‌های بلند کوچیک می‌شن */}
-          <text x={C} y={C + cy.kicker} className="sld-kicker" textAnchor="middle" dominantBaseline="central" style={{ fontSize: fitFontSize(kicker, 12.5, CENTER_W) }}>{kicker}</text>
-          <text x={C} y={C + cy.big} className={`sld-big ${bigCls}`} textAnchor="middle" dominantBaseline="central" style={{ fontSize: fitFontSize(big, baseBig, CENTER_W) }}>{big}</text>
-          <text x={C} y={C + cy.caption} className={`sld-caption${isScore && band ? ` is-band slp-c-${band}` : ""}`} textAnchor="middle" dominantBaseline="central" style={{ fontSize: fitFontSize(caption, 13, CENTER_W) }}>{caption}</text>
-          {caption2 && <text x={C} y={C + cy.caption2} className="sld-caption is-sub" textAnchor="middle" dominantBaseline="central" style={{ fontSize: fitFontSize(caption2, 12, CENTER_W) }}>{caption2}</text>}
         </svg>
+        {/* متن وسط: HTML روی ساعت (متن فارسی داخل SVG در وب‌کیت حروف رو جدا و برعکس می‌کشید) */}
+        <div className="sld-center" aria-hidden="true">
+          <span className="sld-kicker" style={centerLine(cy.kicker, fitFontSize(kicker, 12.5, CENTER_W))}>{kicker}</span>
+          <span className={`sld-big ${bigCls}`} style={centerLine(cy.big, fitFontSize(big, baseBig, CENTER_W))}>{big}</span>
+          <span className={`sld-caption${isScore && band ? ` is-band slp-c-${band}` : ""}`} style={centerLine(cy.caption, fitFontSize(caption, 13, CENTER_W))}>{caption}</span>
+          {caption2 && <span className="sld-caption is-sub" style={centerLine(cy.caption2, fitFontSize(caption2, 12, CENTER_W))}>{caption2}</span>}
+        </div>
       </div>
 
       {/* ساعت‌های هدف (فقط نمایش؛ ویرایش از باکس هدف خواب) */}

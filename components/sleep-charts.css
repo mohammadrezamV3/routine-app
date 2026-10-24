@@ -170,3 +170,6 @@ html[data-perf="low"] .slw .slw-grow, html[data-perf="low"] .slw-detail{ animati
 .slw-stats > div{ white-space:nowrap; }
 .slw .slw-unit{ margin-inline-start:4px; font-size:11px; font-weight:700; color:var(--slp-sub); }
 @media (min-width:640px){ .sleep-scope .slm-cell, body[data-theme="light"] .sleep-scope .slm-cell{ aspect-ratio:1.25/1; } }
+
+/* متن فارسی داخل SVG (نام روز، محور): بدون letter-spacing تا وب‌کیت حروف رو جدا نکنه */
+.slc-axis, .slc-day, .slc-day-sub, .slc-tip{ letter-spacing:0; }

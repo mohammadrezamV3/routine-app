@@ -402,8 +402,8 @@ function RiskVisual({ res, direction, entry, sl, isPoint, dec }: {
       {lines.map((l, i) => (
         <g key={i}>
           <line x1={x0} x2={x1} y1={y(l.p)} y2={y(l.p)} stroke={l.color} strokeWidth="1.5" />
-          <text x={x1 + 6} y={y(l.p) + (l.sub ? -1 : 4)} fontSize="10.5" fontWeight="700" fill="currentColor">{l.label}</text>
-          {l.sub && <text x={x1 + 6} y={y(l.p) + 11} fontSize="9" fill="currentColor" opacity=".65">{l.sub}</text>}
+          <text x={x1 + 6} y={y(l.p) + (l.sub ? -1 : 4)} letterSpacing="0" fontSize="10.5" fontWeight="700" fill="currentColor">{l.label}</text>
+          {l.sub && <text x={x1 + 6} y={y(l.p) + 11} letterSpacing="0" fontSize="9" fill="currentColor" opacity=".65">{l.sub}</text>}
         </g>
       ))}
     </svg>
