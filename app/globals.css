@@ -5901,3 +5901,10 @@ html[dir="ltr"] .mm-menu, html[dir="ltr"] .notif-panel{ transform-origin:var(--m
 @media (min-width:1024px){
   html[dir="ltr"] .exercise-week-cell-divider{ background-position:left; }
 }
+
+/* پیام «برای این بخش اینترنت لازمه» (components/OnlineOnly.tsx): خط‌چین نازک، بدون بک‌گراند */
+.online-only-note{
+  display:flex; align-items:center; gap:8px; padding:12px 14px; border-radius:var(--field-radius-multi, 16px);
+  border:1px dashed var(--surface-line); color:var(--muted); font-size:13px; line-height:1.6;
+}
+.online-only-note svg{ flex:none; }

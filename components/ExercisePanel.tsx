@@ -11,8 +11,9 @@ import { useFeature } from "@/lib/useFeatures";
 import { AddExerciseProgramForm } from "./AddExerciseProgramForm";
 import { tr } from "@/lib/i18n";
 import dynamic from "next/dynamic";
+import { ChunkOffline } from "./OnlineOnly";
 // تنبل: فقط با کنش کاربر باز می‌شه و کدش توی باندل اولیه نیست
-const AiExercisePlanWizard = dynamic(() => import("./AiExercisePlanWizard").then((m) => m.AiExercisePlanWizard), { ssr: false });
+const AiExercisePlanWizard = dynamic(() => import("./AiExercisePlanWizard").then((m) => m.AiExercisePlanWizard).catch(() => ChunkOffline), { ssr: false });
 
 export function ExercisePanel({ inSpace = false }: { inSpace?: boolean } = {}) {
   const { status } = useSession();

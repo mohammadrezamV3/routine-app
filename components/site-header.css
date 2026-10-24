@@ -267,3 +267,27 @@ html[data-palette-set]:not([data-palette="routine"]) .tls-icon picture{ display:
   .topbar-logo-section .tls-label{ font-size:calc(var(--tl-h) * .5); letter-spacing:.04em; }
   .topbar-logo-section .tl-chev{ width:9px; height:9px; }
 }
+
+/* نشانگر آفلاین (components/OfflineIndicator.tsx): شناور زیر هدر، وسط، بدون اشغال چیدمان؛
+   همون شیشه‌ی هدر (نه بک‌گراند تازه). فقط opacity/transform برای ورود. */
+.offline-pill-wrap{
+  position:fixed; z-index:39; inset-inline:0; display:flex; justify-content:center; pointer-events:none;
+  top:calc(14px + 58px + 8px + env(safe-area-inset-top));
+}
+@media (min-width:1024px){ .offline-pill-wrap{ top:calc(64px + 8px); } }
+.offline-pill{
+  pointer-events:auto; display:inline-flex; align-items:center; gap:7px; max-width:calc(100vw - 32px);
+  padding:5px 12px; border-radius:999px; font-size:12px; font-weight:600; line-height:1.4; color:var(--muted);
+  background:color-mix(in srgb, var(--surface-2) 86%, transparent);
+  backdrop-filter:blur(12px); -webkit-backdrop-filter:blur(12px);
+  border:1px solid var(--surface-line);
+  animation:offlinePillIn .22s ease-out backwards;
+}
+.offline-pill-sub{ font-weight:500; opacity:.85; }
+.offline-pill-sub::before{ content:"·"; margin-inline-end:7px; }
+.offline-pill-dot{ width:7px; height:7px; border-radius:50%; background:currentColor; flex:none; }
+button.offline-pill-btn{ cursor:pointer; font-family:inherit; color:var(--text); }
+button.offline-pill-btn:focus-visible{ outline:2px solid var(--accent); outline-offset:2px; }
+@keyframes offlinePillIn{ from{ opacity:0; transform:translateY(-6px); } to{ opacity:1; transform:none; } }
+@media (prefers-reduced-motion:reduce){ .offline-pill{ animation:none; } }
+html[data-perf-weak] .offline-pill{ animation:none; backdrop-filter:none; -webkit-backdrop-filter:none; }

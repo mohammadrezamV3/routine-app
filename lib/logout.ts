@@ -3,6 +3,7 @@ import { invalidateStorageCache } from "@/lib/storage";
 import { invalidateAccountCache } from "@/lib/accountCache";
 import { clearAuthHintCookie } from "@/lib/preload";
 import { wipeOnLogout } from "@/lib/e2ee/keyStore";
+import { clearOfflineIdentity } from "@/lib/offline/identity";
 
 /**
  * خروج از حساب — یک‌جا، چون هم سایدبار پنل کاربری و هم دکمه‌ی موبایل
@@ -29,8 +30,9 @@ export function logoutAndRedirect() {
   // رمزگذاری سرتاسری منتور: کلید باز در حافظه، KEK رمز عبور و کلید SYNCED جاری
   // پاک می‌شوند (با ورود بعدی با رمز بی‌صدا برمی‌گردند)؛ کلید این دستگاه و نسخه‌های
   // قدیمی می‌مانند چون جای دیگری ندارند (lib/e2ee/keyStore.ts). خطا مانع خروج نمی‌شود.
+  // داده‌ی آفلاین (کش و صف IndexedDB، کش‌های سرویس‌ورکر) هم با خروج پاک می‌شه
   const wipe = Promise.race([
-    wipeOnLogout().catch(() => {}),
+    Promise.all([wipeOnLogout().catch(() => {}), clearOfflineIdentity().catch(() => {})]).then(() => {}),
     new Promise<void>((r) => setTimeout(r, 800)),
   ]);
   // باگ «موقع خروج صفحه گیر می‌کنه»: درخواست خروج هیچ سقف زمانی نداشت؛ روی

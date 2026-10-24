@@ -2,6 +2,7 @@
 
 import { useEffect } from "react";
 import { whenPageReady } from "@/lib/pageReady";
+import { isOffline } from "@/lib/offline/status";
 
 // علامت «اپ آماده‌ست» برای اسکریپت BootSplash. فقط هیدریت کافی نیست: خیلی از
 // صفحه‌ها بعدش داده‌شون رو می‌گیرن و اسپینر/اسکلت خودشون رو نشون می‌دن؛ اسپلش تا
@@ -9,7 +10,7 @@ import { whenPageReady } from "@/lib/pageReady";
 export function BootSplashRelease() {
   useEffect(() => {
     let alive = true;
-    void whenPageReady(5000).then(() => {
+    void whenPageReady(isOffline() ? 800 : 5000).then(() => {
       if (!alive) return;
       (window as unknown as { __appHydrated?: boolean }).__appHydrated = true;
       window.dispatchEvent(new Event("app:hydrated"));

@@ -9,6 +9,8 @@ import { BOOTSTRAP_SETTING_KEYS } from "./userSettingKeys";
 import type { SleepRecord } from "./sleep";
 import { ALL, broadcast, keyMatches, publishLocal, registerInvalidator, reportLiveError } from "./liveSync";
 import { tr } from "./i18n";
+import { getKnownUserId } from "./offline/identity";
+import { isNavigatorOffline, isOffline } from "./offline/status";
 import { setSharedCookie } from "./clientCookie";
 import { PALETTE_COOKIE, PALETTE_CUSTOM_COOKIE, isPaletteSetting, normalizeHex, type PaletteSetting } from "./palette";
 
@@ -92,6 +94,15 @@ export function publishSessionState(loggedIn: boolean) {
 // معطل بمونه.
 const SESSION_BRIDGE_TIMEOUT_MS = 3000;
 
+/**
+ * آفلاین (یا شبکه‌ی قطع) و کاربری که قبلا روی این دستگاه وارد شده: «مهمان» نیستیم.
+ * getSession() موقع قطعی null برمی‌گردونه و بدون این، کاربر واردشده به ذخیره‌ی مهمان
+ * (localStorage) می‌افتاد و داده‌هاش ناپدید می‌شد.
+ */
+function assumeKnownUserLoggedIn(): boolean {
+  return !!getKnownUserId() && (isNavigatorOffline() || isOffline());
+}
+
 async function isLoggedIn(): Promise<boolean> {
   if (typeof window === "undefined") return false;
   const cached = sessionCache;
@@ -103,8 +114,8 @@ async function isLoggedIn(): Promise<boolean> {
         // هنوز خبری از پل نشده — خودمون می‌پرسیم
         if (sessionCache && Date.now() - sessionCache.at < SESSION_TTL_MS) return;
         getSession()
-          .then((session) => publishSessionState(!!(session?.user as any)?.id))
-          .catch(() => publishSessionState(false));
+          .then((session) => publishSessionState(!!(session?.user as any)?.id || assumeKnownUserLoggedIn()))
+          .catch(() => publishSessionState(assumeKnownUserLoggedIn()));
       }, SESSION_BRIDGE_TIMEOUT_MS);
     }).finally(() => { inFlightSession = null; });
   }

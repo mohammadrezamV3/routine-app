@@ -42,12 +42,14 @@ export function FriendsManageSheet({ friends, onClose, onChanged }: { friends: M
   }, [onClose, viewing, confirmRemove]);
 
   const loadRequests = useCallback(async () => {
-    const res = await fetch("/api/friends/requests", { cache: "no-store" });
-    if (res.ok) {
-      const d = await res.json();
-      setIncoming(d.requests ?? []);
-      setSent(d.sent ?? []);
-    }
+    try {
+      const res = await fetch("/api/friends/requests", { cache: "no-store" });
+      if (res.ok) {
+        const d = await res.json();
+        setIncoming(d.requests ?? []);
+        setSent(d.sent ?? []);
+      }
+    } catch { /* آفلاین */ }
   }, []);
   useEffect(() => { loadRequests(); }, [loadRequests]);
   useLiveRefresh(["friends"], () => { loadRequests(); });

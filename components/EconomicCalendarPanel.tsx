@@ -14,6 +14,7 @@ import {
   IMPACT_COLORS, IMPACT_LABELS, IMPACT_ORDER, RELEASE_WATCH_WINDOW_MS, compareActualToForecast,
 } from "@/lib/economicCalendar";
 import { CAL_SYSTEM_KEY, CalSystem } from "@/lib/tradeTypes";
+import { useOnlineOnly } from "@/components/OnlineOnly";
 import {
   DEFAULT_NEWS_ALERT_PREFS, NEWS_ALERT_KEY,
   NewsAlertPrefs, newsEventWatchKey, normalizeNewsAlertPrefs,
@@ -66,6 +67,7 @@ const PENDING_BEFORE_MS = 2 * 60_000;
 const PENDING_AFTER_MS = RELEASE_WATCH_WINDOW_MS;
 
 export function EconomicCalendarPanel() {
+  const { guard, buttonProps } = useOnlineOnly();
   // مثل خود فارکس‌فکتوری: یک روز در یک لحظه.
   const [date, setDate] = useState(() => startOfLocalDay(new Date()));
   const [monthPickerOpen, setMonthPickerOpen] = useState(false);
@@ -389,7 +391,7 @@ export function EconomicCalendarPanel() {
 
       {!firstLoad && loadError && (
         <div className="item-line empty trade-cal-below">
-          {loadError} — <button type="button" className="trade-ghost-btn" onClick={() => load()}>{tr("تلاش دوباره", "Try again")}</button>
+          {loadError} — <button type="button" className="trade-ghost-btn" onClick={guard(() => load())} {...buttonProps}>{tr("تلاش دوباره", "Try again")}</button>
         </div>
       )}
 

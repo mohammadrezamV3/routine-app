@@ -1,6 +1,7 @@
 "use client";
 
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import { OnlineOnly } from "@/components/OnlineOnly";
 import { Maximize, Minimize } from "lucide-react";
 import { useTheme } from "./ThemeProvider";
 import { tradingViewSymbol } from "@/lib/tradingView";
@@ -37,7 +38,16 @@ const MAX_ATTEMPTS = 4;
  * پنهان می‌ماند که مطمئن باشیم دسترسی برقرار نیست. حالت «هنوز نمی‌دانم»
  * دیگر چارت را مخفی نمی‌کند.
  */
+// آفلاین iframe چارت بی‌صدا خالی می‌مونه؛ به‌جاش پیام «اینترنت لازمه» (components/OnlineOnly.tsx)
 export function TradingViewChart({ symbol }: { symbol: string }) {
+  return (
+    <OnlineOnly feature="tradingview">
+      <TradingViewChartInner symbol={symbol} />
+    </OnlineOnly>
+  );
+}
+
+function TradingViewChartInner({ symbol }: { symbol: string }) {
   const { theme } = useTheme();
   const [loaded, setLoaded] = useState(false);
   const [attempt, setAttempt] = useState(0);

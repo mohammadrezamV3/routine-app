@@ -1,5 +1,6 @@
 "use client";
 
+import { useOnlineOnly } from "@/components/OnlineOnly";
 import "./friends.css";
 import { useEffect, useLayoutEffect, useMemo, useState } from "react";
 import { Users, UserPlus } from "lucide-react";
@@ -64,6 +65,7 @@ function DashFriendsCardInner({ delay, module }: { delay?: number; module?: "exe
   const [viewing, setViewing] = useState<string | null>(null);
   const cacheKey = module ?? "routine";
   const [managing, setManaging] = useState(false);
+  const { guard: guardOnline } = useOnlineOnly();
 
   useLayoutEffect(() => {
     const cached = readFriendsCache(cacheKey);
@@ -93,8 +95,11 @@ function DashFriendsCardInner({ delay, module }: { delay?: number; module?: "exe
       const payload: any = await boot.data;
       if (payload?.friendRequests) { setRequests(payload.friendRequests); return; }
     }
-    const res = await fetch("/api/friends/requests", { cache: "no-store" });
-    if (res.ok) setRequests((await res.json()).requests);
+    // آفلاین (آدرس کش‌نشده) خطای شبکه می‌ده: درخواست‌ها همون‌طور که بودن می‌مونن
+    try {
+      const res = await fetch("/api/friends/requests", { cache: "no-store" });
+      if (res.ok) setRequests((await res.json()).requests);
+    } catch { /* آفلاین */ }
   }
 
   // برای مهمون اصلا درخواست نمی‌ره (هر دو روت 401 می‌دن).
@@ -121,7 +126,7 @@ function DashFriendsCardInner({ delay, module }: { delay?: number; module?: "exe
           {requests.length > 0 && <span className="fr-badge mono" aria-label={tr(`${requests.length} درخواست دوستی`, `${requests.length} friend requests`)}>{requests.length}</span>}
         </h2>
         {!authRequired && (
-          <button type="button" className="trade-icon-btn fr-manage-btn" onClick={() => setManaging(true)} aria-label={tr("مدیریت دوستان", "Manage friends")}>
+          <button type="button" className="trade-icon-btn fr-manage-btn" onClick={guardOnline(() => setManaging(true))} aria-label={tr("مدیریت دوستان", "Manage friends")}>
             <UserPlus size={16} />
             {requests.length > 0 && <span className="fr-manage-dot" aria-hidden="true" />}
           </button>
@@ -140,7 +145,7 @@ function DashFriendsCardInner({ delay, module }: { delay?: number; module?: "exe
             <AgentAvatar seed="arion-c" size={34} />
           </span>
           <p>{tr("دوستاتو اضافه کن تا پیشرفت امروز و استریک همدیگه رو ببینید.", "Add your friends to see each other's progress and streaks today.")}</p>
-          <button type="button" className="account-outline-btn mentor-btn is-sm" onClick={() => setManaging(true)}>{tr("افزودن دوست", "Add friend")}</button>
+          <button type="button" className="account-outline-btn mentor-btn is-sm" onClick={guardOnline(() => setManaging(true))}>{tr("افزودن دوست", "Add friend")}</button>
         </div>
       ) : (
         <div className="fr-card-body no-scrollbar">

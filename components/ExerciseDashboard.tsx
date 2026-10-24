@@ -1,5 +1,6 @@
 "use client";
 
+import { useOnlineOnly } from "@/components/OnlineOnly";
 import { useEffect, useMemo, useState } from "react";
 import { Calendar, History } from "lucide-react";
 import { useLiveRefresh } from "@/lib/liveSync";
@@ -58,6 +59,7 @@ export function ExerciseDashboard({
   useLiveRefresh("exercise", () => setRefreshKey((k) => k + 1), { remoteOnly: true });
 
   const [subbingItem, setSubbingItem] = useState<string | null>(null);
+  const { offline, guard: guardOnline } = useOnlineOnly();
   const [subError, setSubError] = useState<string | null>(null);
   const [subTarget, setSubTarget] = useState<{ day: string; oldItem: string } | null>(null);
   const [subCandidates, setSubCandidates] = useState<string[] | null>(null);
@@ -191,6 +193,7 @@ export function ExerciseDashboard({
   // «این تجهیزات رو ندارم» — اول سه‌تا پیشنهاد آماده می‌گیریم (بدون سویچ
   // خودکار)، بعد خود کاربر از پاپ‌آپ یکیشون رو انتخاب می‌کنه.
   async function openSubstitutePicker(day: string, item: string) {
+    if (offline) { guardOnline(() => {})(); return; }
     setSubbingItem(item);
     setSubError(null);
     const res = await fetch("/api/exercise/plan/substitute", {

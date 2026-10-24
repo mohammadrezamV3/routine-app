@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import { WifiOff } from "lucide-react";
 import { brandName } from "@/lib/brand";
 import { tr } from "@/lib/i18n";
+import { OfflineRetry } from "@/components/OfflineRetry";
 
 /**
  * صفحه‌ای که سرویس‌ورکر وقتی شبکه نیست نشان می‌دهد.
@@ -25,10 +26,11 @@ export default function OfflinePage() {
       <h1>{tr("اتصال اینترنت نداری", "You are offline")}</h1>
       <p>
         {tr(
-          "بخش‌هایی که قبلا باز کرده‌ای از حافظه‌ی دستگاه می‌آیند، ولی برای دیدن اطلاعات تازه به اینترنت نیاز داری. وصل که شدی، همین صفحه را دوباره باز کن.",
-          "Sections you have opened before load from your device, but you need an internet connection to see fresh data. Once you are back online, open this page again.",
+          "صفحه‌هایی که قبلا باز کرده‌ای از حافظه‌ی دستگاه باز می‌شوند. تغییرهایی که الان می‌دهی ذخیره می‌شوند و با برگشتن اینترنت خودکار همگام می‌شوند.",
+          "Pages you have opened before are available from this device. Changes you make now are saved here and sync automatically when you are back online.",
         )}
       </p>
+      <OfflineRetry />
     </main>
   );
 }

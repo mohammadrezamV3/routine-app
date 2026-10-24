@@ -22,6 +22,7 @@ import { SECTION_META } from "@/lib/sections";
 import { BLANK_PIXEL, HEADER_DESKTOP_MEDIA, HEADER_MOBILE_MEDIA, sectionIconSm, sectionWordmarkSm } from "@/lib/sectionAssets";
 import { useSection } from "./SectionProvider";
 import HeaderLangButton from "./HeaderLangButton";
+import OfflineIndicator from "./OfflineIndicator";
 import "./site-header.css";
 
 // NavDrawer توی root layout هست و روی هر صفحه mount می‌شه، پس فقط خود نوار هدر
@@ -110,7 +111,9 @@ export function NavDrawer() {
   // سراسری سایت اونجا لازم نیست و فقط شلوغی اضافه می‌کنه.
   // پنل Owner (/admin) کاملا محیط جدایی‌ست — نه هدر/منوی سایت اصلی، نه
   // پس‌زمینه‌ی aurora (پایین‌تر در BackgroundCanvasLoader)
-  const hideTopbar = pathname?.startsWith("/auth") || pathname?.startsWith("/admin");
+  const hideTopbar = pathname?.startsWith("/auth") || pathname?.startsWith("/admin") ||
+    // صفحه‌ی fallback آفلاین از کش عمومی میاد و هدرش مهمان می‌شد (دکمه‌ی ورود)؛ اونجا هدر نیست
+    pathname === "/offline";
   // تغییر زبان فقط از تنظیمات و از هدر صفحه‌ی لندینگ (مهمان روی «/») ممکنه
   const isLanding = pathname === "/" && status === "unauthenticated";
 
@@ -437,6 +440,7 @@ export function NavDrawer() {
             <DesktopNavEnd guest={status === "unauthenticated"} />
           </div>
         </header>
+        <OfflineIndicator />
         </>
       )}
 

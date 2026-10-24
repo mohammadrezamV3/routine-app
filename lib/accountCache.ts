@@ -22,9 +22,12 @@ export async function getAccount(): Promise<AccountData> {
   if (!inFlight) {
     // پاسخ bootstrap (اگه بود) همین داده رو از قبل داره
     const boot = getPreloadedBootstrap();
+    // bootstrap ناموفق (مثلا آفلاین) null می‌ده؛ اون‌وقت از خود /api/account می‌خونیم تا
+    // لایه‌ی آفلاین از کش جواب بده، نه این‌که کاربر پشت قفل خرید بیفته
+    const direct = () => fetch("/api/account").then((r) => (r.ok ? r.json() : null));
     const source = boot
-      ? boot.data.then((b) => (b?.account ?? null))
-      : fetch("/api/account").then((r) => (r.ok ? r.json() : null));
+      ? boot.data.then((b) => (b?.account ?? direct()), () => direct())
+      : direct();
     inFlight = source
       .then((data: AccountData) => {
         // پاسخ ناموفق کش نمی‌شه — یه قطعی لحظه‌ای نباید تا کل TTL

@@ -1,6 +1,7 @@
 import "@/app/_area/mentor.css";
 import { MentorPanelNav } from "@/components/MentorPanelNav";
 import { FeaturePageGate } from "@/components/FeaturePageGate";
+import { OnlineOnly } from "@/components/OnlineOnly";
 
 /**
  * قاب مشترک پنل منتور: ظرف عرض (account-shell) و نوار ناوبری پنل
@@ -12,7 +13,7 @@ export default function MentorPanelLayout({ children }: { children: React.ReactN
     <FeaturePageGate feature="mentors">
       <div className="account-shell mentor-page mentor-panel">
         <MentorPanelNav />
-        {children}
+        <OnlineOnly feature="mentor">{children}</OnlineOnly>
       </div>
     </FeaturePageGate>
   );

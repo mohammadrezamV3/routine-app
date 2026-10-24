@@ -1,5 +1,6 @@
 "use client";
 
+import { useOnlineOnly } from "@/components/OnlineOnly";
 import { useEffect, useRef, useState } from "react";
 import { Camera, Trash2, CalendarDays, Dumbbell, IdCard, Gift, Copy, Check, Share2 } from "lucide-react";
 import { AgentAvatar } from "@/components/AgentAvatar";
@@ -78,6 +79,7 @@ const draftKey = (d: Draft) => JSON.stringify([
  *     پنجره را می‌بندد؛ تنها راه دورریختن تغییرها دکمه‌ی «لغو» است.
  */
 export default function AccountProfilePage() {
+  const { guard: guardOnline, offline, message: offlineMsg } = useOnlineOnly();
   // پروفایل ورزشی فقط روی ورزش و دامنه‌ی اصلی (جداسازی بخش‌ها، docs/sections.md)
   const section = useSection();
   const showSports = !section || section === "workout";
@@ -434,7 +436,7 @@ export default function AccountProfilePage() {
             )}
             <button
               type="button" className={`btn btn-outline btn-sm btn-on-media${bannerSaving ? " is-loading" : ""}`}
-              onClick={() => bannerInputRef.current?.click()} disabled={bannerSaving} aria-busy={bannerSaving || undefined}
+              onClick={guardOnline(() => bannerInputRef.current?.click())} title={offline ? offlineMsg : undefined} disabled={bannerSaving} aria-busy={bannerSaving || undefined}
             >
               {bannerSaving && <Spinner className="btn-spinner" size={15} label={null} />}
               <Camera size={16} aria-hidden="true" />
@@ -450,7 +452,7 @@ export default function AccountProfilePage() {
         <div className="ap-cover-row">
           <div className="ap-cover-avatar-wrap">
             {/* خود عکس هم قابل‌لمسه ولی کنترل اصلی (قابل‌دسترس با کیبورد) دکمه‌ی دوربینه */}
-            <button type="button" className="ap-cover-avatar" onClick={onAvatarTap} disabled={avatarSaving} tabIndex={-1} aria-hidden="true">
+            <button type="button" className="ap-cover-avatar" onClick={guardOnline(onAvatarTap)} disabled={avatarSaving} tabIndex={-1} aria-hidden="true">
               {avatarUrl ? (
                 <img src={avatarUrl} alt="" className="ap-cover-avatar-img" />
               ) : (
@@ -459,7 +461,7 @@ export default function AccountProfilePage() {
             </button>
             <button
               type="button" className={`btn btn-primary btn-icon btn-round ap-cover-cam${avatarSaving ? " is-loading" : ""}`}
-              onClick={onAvatarTap} disabled={avatarSaving} aria-busy={avatarSaving || undefined} aria-label={tr("تغییر عکس پروفایل", "Change profile photo")}
+              onClick={guardOnline(onAvatarTap)} title={offline ? offlineMsg : undefined} disabled={avatarSaving} aria-busy={avatarSaving || undefined} aria-label={tr("تغییر عکس پروفایل", "Change profile photo")}
             >
               {avatarSaving && <Spinner className="btn-spinner" size={14} label={null} />}
               <Camera size={15} aria-hidden="true" />

@@ -48,10 +48,30 @@ export function PwaProvider() {
     // بعد از load ثبت می‌شود، نه قبلش: در غیر این صورت دانلود و نصب SW با
     // منابع خود لود اول رقابت می‌کند و اولین بازدید را کندتر می‌کند —
     // دقیقا خلاف چیزی که می‌خواهیم.
-    const onLoad = () => { navigator.serviceWorker.register("/sw.js").catch(() => {}); };
+    // updateViaCache:"none" یعنی خود فایل sw.js هیچ‌وقت از کش HTTP خونده نمی‌شه و نسخه‌ی جدید
+    // سریع پیدا می‌شه. نسخه‌ی جدید بی‌صدا فعال می‌شه (skipWaiting در sw.js) و هیچ ریلود یا
+    // پیام مزاحمی نداره: کش‌های داده‌ی کاربر و دارایی‌ها بین نسخه‌ها حفظ می‌شن (public/sw.js).
+    let reg: ServiceWorkerRegistration | null = null;
+    const onLoad = () => {
+      navigator.serviceWorker
+        .register("/sw.js", { updateViaCache: "none" })
+        .then((r) => { reg = r; })
+        .catch(() => {});
+    };
     if (document.readyState === "complete") onLoad();
     else window.addEventListener("load", onLoad, { once: true });
-    return () => window.removeEventListener("load", onLoad);
+    // اپ نصب‌شده ساعت‌ها در پس‌زمینه می‌مونه؛ هر بار که برمی‌گرده (حداکثر ساعتی یک بار) دنبال نسخه‌ی تازه می‌گردیم
+    let lastCheck = Date.now();
+    const onVisible = () => {
+      if (document.visibilityState !== "visible" || !reg || Date.now() - lastCheck < 3_600_000) return;
+      lastCheck = Date.now();
+      reg.update().catch(() => {});
+    };
+    document.addEventListener("visibilitychange", onVisible);
+    return () => {
+      window.removeEventListener("load", onLoad);
+      document.removeEventListener("visibilitychange", onVisible);
+    };
   }, []);
 
   // ── گرفتن رویداد نصب ──

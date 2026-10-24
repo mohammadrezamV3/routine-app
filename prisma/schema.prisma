@@ -253,6 +253,7 @@ model User {
   blockedUsers           UserBlock[]        @relation("Blocker")
   blockedByUsers         UserBlock[]        @relation("Blocked")
   tradeNotes             TradeNote[]
+  requestReceipts        RequestReceipt[]
   tradeMtLinks           TradeMtLink[]
   tradeCashflows         TradeCashflow[]
   tradeChatMessages      TradeChatMessage[]
@@ -2870,5 +2871,22 @@ model AdminSegment {
   createdById String
   createdAt   DateTime @default(now())
 
+  @@index([createdAt])
+}
+
+// رسید درخواست برای بازپخش امن نوشتن‌های آفلاین (lib/idempotency.ts): هدر
+// x-arion-request-id یک بار اجرا می‌شه و تکرارش همون پاسخ ذخیره‌شده رو می‌گیره.
+model RequestReceipt {
+  id        String   @id @default(cuid())
+  userId    String
+  key       String
+  route     String
+  status    Int
+  response  Json?
+  createdAt DateTime @default(now())
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, key])
   @@index([createdAt])
 }

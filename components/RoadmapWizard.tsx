@@ -1,5 +1,6 @@
 "use client";
 
+import { withOnlineOnly } from "@/components/OnlineOnly";
 import { useEffect, useRef, useState } from "react";
 import { createPortal } from "react-dom";
 import { useRouter } from "next/navigation";
@@ -69,7 +70,7 @@ const questions = (): Record<Step, string> => ({
   background: tr("چیز مرتبطی بلدی؟", "Do you know anything related?"),
 });
 
-export function RoadmapWizard({
+function RoadmapWizardInner({
   onClose,
   onCreated,
   initialTopic = "",
@@ -326,3 +327,7 @@ export function RoadmapWizard({
     document.body,
   );
 }
+
+
+// آفلاین پیام «اینترنت لازمه» (components/OnlineOnly.tsx)
+export const RoadmapWizard = withOnlineOnly(RoadmapWizardInner, "ai-roadmap");

@@ -44,6 +44,8 @@
 // فقط DEFAULT_NOTIF_PREFS می‌خواد) و گارد RSC نکست import با نام هوک رو در
 // گراف سرور رد می‌کنه و build می‌شکست. هوک‌ها فقط سمت کلاینت صدا زده می‌شن.
 import * as React from "react";
+import { offlineFetch, setOfflineBridge } from "./offline/fetchLayer";
+import { isNavigatorOffline, isOffline } from "./offline/status";
 
 export const LIVE_DOMAINS = {
   daily: "daily",
@@ -336,7 +338,9 @@ function installFetchHook() {
     // (که قبلا optimistic اعمال کرده) دوباره نخونه. فقط برای ورودی رشته/URL
     // (نه Request که هدرهاش immutableـه).
     init = withTabHeader(input, init);
-    const res = await orig.call(window, input, init);
+    // لایه‌ی آفلاین (lib/offline/fetchLayer.ts): کش GETها، صف نوشتن‌ها؛ برای هر چیزی که
+    // مال خودش نیست مستقیم همون fetch اصلیه
+    const res = await offlineFetch(orig, input, init);
     try {
       const method = (init?.method || (typeof Request !== "undefined" && input instanceof Request ? input.method : "GET")).toUpperCase();
       if (method !== "GET" && method !== "HEAD" && res.ok) {
@@ -355,7 +359,10 @@ function installFetchHook() {
 }
 
 // ── راه‌اندازی شنونده‌های سراسری (یک‌بار، تنبل) ──
-function revalidateAll() {
+function revalidateAll(afterOnline = false) {
+  // آفلاین دوباره‌خوانی از شبکه فقط شکست می‌خوره؛ با رویداد online ادامه می‌دیم
+  // (آخرین شکست شبکه هم بعد از online بودن مرورگر باید با یک تلاش تازه امتحان بشه)
+  if (isNavigatorOffline() || (!afterOnline && isOffline())) return;
   const now = Date.now();
   if (now - lastRevalidate < FOCUS_THROTTLE_MS) return;
   lastRevalidate = now;
@@ -414,6 +421,7 @@ export function ensureStarted() {
   if (started || typeof window === "undefined") return;
   started = true;
   lastRevalidate = Date.now();
+  setOfflineBridge({ publishChange, invalidate, domainsForMutation });
   installFetchHook();
 
   if (typeof BroadcastChannel !== "undefined") {
@@ -447,7 +455,12 @@ export function ensureStarted() {
   });
 
   window.addEventListener(SERVER_EVENT, onServerEvent);
-  window.addEventListener("focus", revalidateAll);
-  window.addEventListener("online", () => { lastRevalidate = 0; revalidateAll(); });
+  window.addEventListener("focus", () => revalidateAll());
+  window.addEventListener("online", () => {
+    lastRevalidate = 0;
+    // خود صف آفلاین (sync.ts) هم روی همین رویداد پخش می‌شه؛ دوباره‌خوانی بعد از پخش
+    // با publishChange خودش انجام می‌شه، ولی برای تب بدون صف هم باید تازه بشه
+    revalidateAll(true);
+  });
   document.addEventListener("visibilitychange", () => { if (isVisible()) revalidateAll(); });
 }

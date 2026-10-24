@@ -1,4 +1,5 @@
 import { tr } from "@/lib/i18n";
+import { withIdempotency } from "@/lib/idempotency";
 import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 import { requireModule } from "@/lib/moduleAccess";
@@ -69,13 +70,15 @@ async function handlePOST(req: NextRequest) {
     [proteinG, carbsG, fatG] = checks.map((c) => (c.ok ? c.value : 0));
   }
 
-  const entry = await prisma.foodLogEntry.create({
-    data: {
-      userId, date, customName: clampText(customName, 80), customCalories, grams, mealType: mealType || null,
-      ...(hasMacros ? { proteinG, carbsG, fatG } : {}),
-    },
+  return withIdempotency(req, userId, "calorie.log", async () => {
+    const entry = await prisma.foodLogEntry.create({
+      data: {
+        userId, date, customName: clampText(customName, 80), customCalories, grams, mealType: mealType || null,
+        ...(hasMacros ? { proteinG, carbsG, fatG } : {}),
+      },
+    });
+    return NextResponse.json({ ok: true, entry });
   });
-  return NextResponse.json({ ok: true, entry });
 }
 
 // DELETE /api/calorie/log?id=...

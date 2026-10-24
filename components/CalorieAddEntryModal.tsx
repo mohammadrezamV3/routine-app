@@ -72,8 +72,9 @@ export function CalorieAddEntryModal({
         return;
       }
       fetch(`/api/calorie/foods?q=${encodeURIComponent(query)}`)
-        .then((r) => r.json())
-        .then((d) => setSuggestions(d.results || []));
+        .then((r) => (r.ok ? r.json() : null))
+        .then((d) => setSuggestions(d?.results || []))
+        .catch(() => setSuggestions([])); // آفلاین و بدون کش: پیشنهادی نیست، ثبت دستی (کالری هر 100 گرم) کار می‌کنه
     }, 150);
     return () => clearTimeout(id);
   }, [query]);
