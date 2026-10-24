@@ -1,5 +1,6 @@
 "use client";
 
+import { BrandWordmark } from "./BrandWordmark";
 import Image from "next/image";
 import { SmartLink as Link } from "@/components/SmartLink";
 import { useTheme } from "./ThemeProvider";
@@ -33,7 +34,7 @@ export function AuthBackButton({ onClick }: { onClick?: () => void }) {
 /** نشان برند، داخل باکس — subtitle اختیاریه؛ هر سه صفحه‌ی auth (ورود/
  * ثبت‌نام/فراموشی رمز) ازش برای تایتل زیر لوگو استفاده می‌کنن تا محل
  * تایتل بینشون یکسان بمونه. */
-export function AuthBrandMark({ subtitle, note }: { subtitle?: string; note?: string }) {
+export function AuthBrandMark({ title, subtitle, note }: { title?: string; subtitle?: string; note?: string }) {
   const { theme } = useTheme();
   const section = useSection();
   const { paletteSet } = usePalette();
@@ -42,6 +43,7 @@ export function AuthBrandMark({ subtitle, note }: { subtitle?: string; note?: st
   const sectionIcon = section && !paletteSet ? section : null;
   return (
     <div className="auth-brand-mark-wrap">
+      <div className="auth-brand-lockup" dir="ltr">
       {/* روی زیردامنه‌ی بخش، نشان رنگی همون بخش (PNG شفاف، هر دو تم) — همون
          اندازه‌ی لوگوی اصلی. دامنه‌ی اصلی (apex) همون لوگوی سبز قبلی با دو تم. */}
       <div className="auth-brand-mark" aria-hidden="true">
@@ -69,7 +71,11 @@ export function AuthBrandMark({ subtitle, note }: { subtitle?: string; note?: st
         )}
         <span className="logo-tint" aria-hidden="true" />
       </div>
-      {subtitle && <p className="auth-brand-subtitle">{subtitle}</p>}
+      {/* مثل هدر: موبایل فقط نشان A، دسکتاپ فقط حروف ARION (همون تصویر لوگوی هدر) */}
+      <span className="auth-brand-word"><BrandWordmark height={20} desktopOnly /></span>
+      </div>
+      {title && <h1 className="auth-brand-title">{title}</h1>}
+      {subtitle && <p className={title ? "auth-brand-sub" : "auth-brand-subtitle"}>{subtitle}</p>}
       {note && <p className="auth-brand-note">{note}</p>}
     </div>
   );

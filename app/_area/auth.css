@@ -302,3 +302,117 @@ html[dir="ltr"] .field-error-wrap.has-icon .auth-phone-wrap input[dir="ltr"]{ pa
 
 @media (min-width:1024px) and (prefers-reduced-motion:reduce) {
   .dnav-ind.is-ready, .dnav-chev{ transition:none; }}
+
+/* ── auth-showcase start ── */
+/* تصویر ثابت صفحه ورود. یک المان برای هر دو چیدمان (بنر بالا / پنل کناری) تا فقط یک فایل دانلود بشه.
+   لبه‌ی چسبیده به ستون فرم در هر دو جهت (rtl و ltr با row-reverse) سمت راست فیزیکی‌ه، پس
+   گرادیان و کپشن فیزیکی نیازی به نسخه‌ی ltr ندارن. */
+.as-root{
+  position:absolute; inset:0; overflow:hidden; background:#050b1a; color:#fff;
+  pointer-events:none; user-select:none; font-family:var(--font-latin), var(--font-vazir), sans-serif;
+}
+.as-root picture{ display:block; position:absolute; inset:0; }
+.as-img{ display:block; width:100%; height:100%; object-fit:cover; }
+
+/* لوگو، اسم و برچسب بخش‌ها داخل خود تصویر (شب و روز) پخته شده؛ هیچ‌چیز روش نمی‌شینه.
+   بنر موبایل برش مخصوص خودش رو داره (login-hero-*-m، نسبت حدود 1.73:1) تا بلوک لوگو وسط‌چین بمونه.
+   فید پایین دیرتر شروع می‌شه تا برچسب‌ها کم‌رنگ نشن؛ رنگش var(--bg) یعنی سطح فرم همون تم.
+   زوم آرام نداریم چون متن پخته‌شده نباید تار بشه. */
+.as-img{ object-position:50% 50%; transform-origin:50% 50%; }
+/* زیر 1024px ورقه‌ی فرم روی پایین تصویر میاد (--sheet-lift)؛ فید دقیقا همون‌جا که ورقه شروع می‌شه به var(--bg) می‌رسه */
+.as-fade{
+  --sheet-lift:32px;
+  background:linear-gradient(to bottom, transparent calc(100% - var(--sheet-lift) - 44px),
+    color-mix(in srgb, var(--bg) 14%, transparent) calc(100% - var(--sheet-lift) - 30px),
+    color-mix(in srgb, var(--bg) 45%, transparent) calc(100% - var(--sheet-lift) - 16px),
+    color-mix(in srgb, var(--bg) 82%, transparent) calc(100% - var(--sheet-lift) - 5px),
+    var(--bg) calc(100% - var(--sheet-lift)), var(--bg) 100%);
+}
+
+@media (min-width:1024px){
+  /* تصویر روز برچسب‌هاش پهن‌تره: کمی به چپ تا ROUTINE زیر فید لبه نره (روی 1024px) */
+  .as-light .as-img{ object-position:62% 50%; }
+  .as-fade{
+    background:linear-gradient(to right, transparent calc(100% - clamp(90px, 14%, 170px)),
+      color-mix(in srgb, var(--bg) 12%, transparent) calc(100% - clamp(60px, 9%, 110px)),
+      color-mix(in srgb, var(--bg) 50%, transparent) calc(100% - clamp(30px, 4.5%, 56px)),
+      color-mix(in srgb, var(--bg) 85%, transparent) calc(100% - 12px), var(--bg) 100%);
+  }
+}
+
+/* ── auth-showcase end ── */
+
+/* ── auth-split start ── */
+/* ورود دو ستونه: فرم و گالری. DOM: فرم و تصویر. موبایل column-reverse (بنر تصویر بالا)،
+   دسکتاپ row (فرم در inline-start = راست در فارسی؛ در ltr با row-reverse همون طرف فیزیکی
+   حفظ می‌شه: تصویر چپ، ورود راست). */
+.auth-split{ margin-top:0; padding:0; border-top:0; min-height:100vh; min-height:100dvh; display:flex; flex-direction:column-reverse; }
+/* صفحه تمام‌عرض و بی‌پدینگ بدنه (هدر روی auth نیست) — همون الگوی :has پنل ادمین */
+body:has(.auth-split){ padding:0; }
+body:has(.auth-split) .wrap{ max-width:none; margin:0; }
+.auth-split-form{
+  position:relative; flex:1 1 auto; display:flex; flex-direction:column; box-sizing:border-box;
+  padding:28px 24px 24px; background:var(--bg);
+}
+.auth-split-media{ position:relative; flex:0 0 220px; height:220px; overflow:hidden; background:#050b1a; }
+/* بنر کمی بلندتر: بلوک لوگو + برچسب‌ها کامل دیده بشه (فقط زیر 1024px) */
+@media (max-width:1023px){
+  /* ارتفاع قبلی + 32px که زیر ورقه‌ی فرم می‌ره؛ بخش دیده‌شده‌ی بنر (با برچسب‌ها) همون قبلی می‌مونه */
+  .auth-split-media:has(.as-root){ flex-basis:calc(clamp(240px, 50vw, 400px) + 32px); height:calc(clamp(240px, 50vw, 400px) + 32px); }
+  .auth-split-media:has(.as-root) .as-img{ object-position:50% 0; }
+  /* ورقه‌ی پایینی: ستون فرم روی تصویر میاد */
+  .auth-split-form{
+    position:relative; z-index:1; margin-top:-32px; padding-top:26px;
+    border-start-start-radius:28px; border-start-end-radius:28px;
+    box-shadow:0 -1px 0 var(--line), 0 -10px 28px -12px rgba(0,0,0,.28);
+  }
+  /* لوگو زیر بنر تکراریه؛ ورقه با عنوان شروع می‌شه */
+  .auth-split .auth-brand-lockup{ display:none; }
+  .auth-split .auth-brand-title{ margin-top:0; }
+}
+@media (max-width:1023px) and (prefers-reduced-motion:no-preference){
+  html:not([data-perf-weak]) .auth-split-form{ animation:auth-sheet-rise .35s cubic-bezier(.2,.8,.2,1) backwards; }
+}
+@keyframes auth-sheet-rise{ from{ opacity:0; transform:translateY(24px); } to{ opacity:1; transform:none; } }
+.auth-split .auth-shell{ max-width:360px; padding-bottom:16px; }
+
+.auth-split-head{ position:relative; margin-bottom:24px; }
+.auth-split .auth-home-btn-right{ inset-inline-start:0; top:2px; }
+.auth-split .auth-brand-mark-wrap{ margin:0 auto; }
+.auth-split .auth-box > .auth-brand-mark-wrap{ margin-bottom:24px; }
+.auth-brand-lockup{ display:flex; align-items:center; justify-content:center; gap:10px; }
+.auth-split .auth-brand-mark{ width:34px; height:34px; margin:0; }
+.auth-brand-word{ display:none; line-height:0; }
+@media (min-width:701px){
+  .auth-split .auth-brand-mark{ display:none; }
+  .auth-brand-word{ display:block; }
+}
+.auth-brand-title{ margin:18px 0 0; font-size:26px; font-weight:800; line-height:1.4; color:var(--text); }
+.auth-brand-sub{ margin:8px 0 0; font-size:14px; line-height:1.8; color:var(--muted); }
+.auth-step-title{ margin:0 0 14px; font-size:18px; font-weight:800; text-align:center; color:var(--text); }
+
+/* فرم دیگه باکس نیست؛ روی سطح ستون می‌شینه (بدون قاب/سایه/نور هاور) */
+body[data-theme] .auth-split .auth-box{
+  margin-top:0; padding:0; border:0; border-radius:0; background:none; box-shadow:none;
+  backdrop-filter:none; -webkit-backdrop-filter:none;
+}
+body[data-theme] .auth-split .auth-box::before{ display:none; }
+
+.auth-split .auth-tabs{ margin-top:0; margin-bottom:24px; }
+.auth-split .auth-tab{ min-height:40px; padding:0; font-size:14px; }
+.auth-split .name-field-wrap label{ font-size:13px; margin-bottom:8px; }
+.auth-split .auth-box .wsearch-newform-name{ min-height:50px; font-size:15px; }
+.auth-split .auth-full-btn{ min-height:54px; margin-top:20px; font-size:16px; font-weight:800; }
+.auth-split .auth-forgot-link{ font-size:13px; }
+.auth-split .auth-remember-label{ font-size:13px; }
+.auth-terms-note{ margin:16px 0 0; font-size:12px; line-height:1.9; color:var(--muted); text-align:center; }
+.auth-terms-note a{ color:var(--accent); text-decoration:none; }
+@media (hover:hover){ .auth-terms-note a:hover{ text-decoration:underline; } }
+
+@media (min-width:1024px){
+  .auth-split{ flex-direction:row; }
+  html[dir="ltr"] .auth-split{ flex-direction:row-reverse; }
+  .auth-split-form{ flex:0 0 clamp(440px, 42%, 600px); padding:56px 40px; }
+  .auth-split-media{ flex:1 1 auto; align-self:stretch; height:auto; }
+}
+/* ── auth-split end ── */

@@ -1,5 +1,6 @@
 "use client";
 
+import { BrandWordmark } from "./BrandWordmark";
 import Image from "next/image";
 import { SmartLink as Link } from "@/components/SmartLink";
 import { Mail } from "lucide-react";
@@ -104,9 +105,7 @@ export function LandingFooter({ section = null }: { section?: SectionKey | null 
                 className={`object-contain transition-opacity duration-150 ${t.isLight ? "opacity-100" : "opacity-0"}`}
               />
             </span>
-            <span className={`text-[15px] font-extrabold ${t.heading}`}>
-              {brandName()}
-            </span>
+            <BrandWordmark height={14} theme={t.isLight ? "light" : "dark"} decorative />
           </Link>
           <p className={`mt-3 text-[12px] leading-6 ${t.muted}`}>
             {section ? SECTION_META[section].tagline : tr("برنامه‌ریزی کن، اجرا کن و پیشرفتت را ببین؛ همه در یک سیستم.", "Plan, do and see your progress, all in one system.")}

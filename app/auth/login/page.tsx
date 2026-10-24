@@ -7,7 +7,6 @@ import { signIn, getSession } from "next-auth/react";
 import { SmartLink as Link } from "@/components/SmartLink";
 import { User, Lock, ShieldCheck } from "lucide-react";
 import { AuthField, useAuthFieldsStagger } from "@/components/AuthField";
-import { AuthBackButton, AuthBrandMark } from "@/components/AuthChrome";
 import { PasswordVisibilityToggle } from "@/components/PasswordVisibilityToggle";
 import { toEnDigits } from "@/lib/schedule";
 import { loginAndRedirect } from "@/lib/loginRedirect";
@@ -149,8 +148,7 @@ export default function LoginPage() {
   if (twoFactor) {
     return (
       <form onSubmit={submitOtp} className="auth-box">
-        <AuthBackButton />
-        <AuthBrandMark subtitle={tr("ورود دومرحله‌ای", "Two-step login")} />
+        <h2 className="auth-step-title">{tr("ورود دومرحله‌ای", "Two-step login")}</h2>
 
         <div className="section-note" style={{ marginBottom: 12 }}>
           {tr(`یک کد به شماره‌ی ثبت‌شده‌ی حسابت (…${toEnDigits(twoFactor.phoneHint)}) پیامک شد. کد رو وارد کن.`, `A code was sent by SMS to your registered number (…${toEnDigits(twoFactor.phoneHint)}). Enter it below.`)}
@@ -193,9 +191,6 @@ export default function LoginPage() {
 
   return (
     <form ref={formRef} onSubmit={submitPassword} className="auth-box">
-      <AuthBackButton />
-      <AuthBrandMark subtitle={tr("ورود به پنل کاربری", "Log in to your account")} />
-
       <AuthField id="identifier" label={tr("یوزرنیم یا شماره همراه", "Username or phone number")} error={fieldErrors.identifier} icon={<User size={15} />} ref={identifierRef}>
         <input
           id="identifier"
@@ -248,6 +243,12 @@ export default function LoginPage() {
       <button type="submit" className={`auth-full-btn${loading || success ? " is-busy" : ""}`} disabled={loading || success} data-anim-field>
         {loading || success ? <SpinnerCheck done={success} /> : tr("ورود", "Log in")}
       </button>
+
+      <p className="auth-terms-note" data-anim-field>
+        {tr("با ورود به آریون، ", "By logging in to Arion, you accept the ")}
+        <Link href="/terms" target="_blank">{tr("قوانین و حریم خصوصی", "terms and privacy policy")}</Link>
+        {tr(" رو می‌پذیری.", ".")}
+      </p>
     </form>
   );
 }
