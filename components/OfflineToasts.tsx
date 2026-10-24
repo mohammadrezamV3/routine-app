@@ -34,7 +34,7 @@ export function useOfflineToasts() {
     prevPending.current = pending;
     if (prev !== null && prev > 0 && pending === 0 && online && !lastError) {
       const now = Date.now();
-      // پیام «همگام شد» نباید پیام رد شدن یک تغییر رو که همین الان نشون داده شد پنهان کنه (تُست فقط یکیه)
+      // پیام «همگام شد» نباید پیام رد شدن یک تغییر رو که همین الان نشون داده شد پنهان کنه (تست فقط یکیه)
       if (now - lastOkAt.current > SUCCESS_GAP_MS && now - errToastAt.current > ERR_QUIET_MS) {
         lastOkAt.current = now;
         reportLiveError(tr("همه‌ی تغییرها همگام شد", "All changes are synced"));
