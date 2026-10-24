@@ -43,6 +43,11 @@ function warmShellOnce() {
   void swCall((m) => m.warmShell(shellRoutes(section)));
 }
 
+/** داده و چانک‌های بخش فعلی: بعد از گرم‌شدن پوسته و خالی‌شدن صف، یک‌بار برای هر نشست */
+function warmDataSoon() {
+  setTimeout(() => whenIdle(() => { void import("./warm").then((m) => m.warmSectionOnce()).catch(() => {}); }), 4000);
+}
+
 /**
  * نتیجه‌ی نشست: userId = کاربر واردشده. null (مهمان/نشست منقضی) کاربر شناخته‌شده رو
  * پاک نمی‌کنه — فقط خروج صریح یا ورود کاربر دیگه این کار رو می‌کنه.
@@ -61,7 +66,7 @@ export async function onSessionResolved(userId: string | null): Promise<void> {
   }
   const sync = await import("./sync");
   sync.startSync();
-  if (userId) whenIdle(warmShellOnce);
+  if (userId) { whenIdle(warmShellOnce); warmDataSoon(); }
 }
 
 /** فقط تست */

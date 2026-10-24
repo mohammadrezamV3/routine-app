@@ -99,6 +99,11 @@ export async function refreshCaches(userId: string, paths: Iterable<string>): Pr
   for (const prefix of Array.from(prefixes)) {
     const recs = (await db.cacheByPathPrefix(userId, prefix))
       .filter((r) => isCacheableGet(splitUrl(r.url).path))
+      // داشبورد هر بخش جدا کش می‌شه؛ فقط نسخه‌ی بخش فعلی با کوکی فعلی درست تازه می‌شه
+      .filter((r) => {
+        const { path, params } = splitUrl(r.url);
+        return path !== "/api/dashboard" || params.get("_sec") === (document.documentElement.getAttribute("data-section") ?? null);
+      })
       .sort((a, b) => b.storedAt - a.storedAt)
       .slice(0, REFRESH_PER_PREFIX);
     for (const r of recs) {

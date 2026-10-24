@@ -95,8 +95,11 @@ function DashFriendsCardInner({ delay, module }: { delay?: number; module?: "exe
       const payload: any = await boot.data;
       if (payload?.friendRequests) { setRequests(payload.friendRequests); return; }
     }
-    const res = await fetch("/api/friends/requests", { cache: "no-store" });
-    if (res.ok) setRequests((await res.json()).requests);
+    // آفلاین (آدرس کش‌نشده) خطای شبکه می‌ده: درخواست‌ها همون‌طور که بودن می‌مونن
+    try {
+      const res = await fetch("/api/friends/requests", { cache: "no-store" });
+      if (res.ok) setRequests((await res.json()).requests);
+    } catch { /* آفلاین */ }
   }
 
   // برای مهمون اصلا درخواست نمی‌ره (هر دو روت 401 می‌دن).

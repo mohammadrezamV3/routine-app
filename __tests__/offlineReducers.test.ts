@@ -221,3 +221,106 @@ describe("offline reducers — ترکیب خواندن", () => {
     expect(synthDailyRange("2026-10-01", "2026-10-10", [])).toBeNull();
   });
 });
+
+describe("offline reducers — وصله‌ی داشبورد", () => {
+  const dash = (): any => ({
+    trade: {
+      accountCount: 1, currency: "USD", sumCurrency: "USD", today: { pnl: 10, count: 1 }, week: { pnl: 30, count: 3, wins: 2, losses: 1 },
+      month: { pnl: 100, count: 9, winRate: 60, profitFactor: 1.5 }, openTrades: 0, daily30: [],
+      recent: [{ id: "e0", accountId: "a1", currency: "USD", symbol: "OLD", direction: "BUY", pnl: 10, result: "PROFIT", status: "CLOSED", openedAt: "2026-10-23T09:00:00.000Z" }],
+      accounts: [{ id: "a1", currency: "USD" }],
+    },
+    exercise: {
+      hasPlan: true, planId: "p1",
+      today: { itemCount: 3, doneItems: 1, started: true, done: false, items: [{ name: "x", done: true }, { name: "y", done: false }, { name: "z", done: false }] },
+      week: { done: 1, target: 4 }, streak: 2,
+      last14: [{ iso: "2026-10-23", planned: true, done: true, rest: false }, { iso: "2026-10-24", planned: true, done: false, rest: false }],
+    },
+    calorie: {
+      target: null, today: { kcal: 500, protein: 20, carbs: 60, fat: 10, entries: 2 },
+      week: [{ iso: "2026-10-23", kcal: 900 }, { iso: "2026-10-24", kcal: 500 }],
+    },
+  });
+  const cachedDash = (): CachedJson[] => [{ url: "/api/dashboard", json: dash() }];
+  const dashOf = (r: ReturnType<typeof reduceMutation>) => (r!.updates.find((u) => u.url === "/api/dashboard")?.json as any);
+  const tradeBody = (o: any = {}) => ({
+    accountId: "a1", symbol: "eurusd", direction: "BUY", openedAt: "2026-10-24T09:00:00.000Z", closedAt: "2026-10-24T09:30:00.000Z",
+    result: "PROFIT", pnl: 25, status: "CLOSED", ...o,
+  });
+
+  it("affectedPrefixes: نوشتن ورزش/کالری/ترید داشبورد را هم شامل می‌شه", () => {
+    for (const p of ["/api/exercise/log", "/api/calorie/log", "/api/trade/entries"]) expect(affectedPrefixes(p)).toContain("/api/dashboard");
+  });
+
+  it("ترید: معامله‌ی بسته با سود امروز/هفته و recent را به‌روز می‌کنه", () => {
+    const r = reduceMutation(mut({ method: "POST", path: "/api/trade/entries", body: tradeBody() }), cachedDash());
+    const t = dashOf(r).trade;
+    expect(t.recent[0]).toMatchObject({ id: tmpIdFor("req1"), symbol: "EURUSD", pnl: 25, currency: "USD" });
+    expect(t.recent).toHaveLength(2);
+    expect(t.today).toEqual({ pnl: 35, count: 2 });
+    expect(t.week).toMatchObject({ pnl: 55, count: 4, wins: 3, losses: 1 });
+    expect(t.openTrades).toBe(0);
+  });
+
+  it("ترید: معامله‌ی باز فقط recent و openTrades را عوض می‌کنه، نه شمارنده‌ها", () => {
+    const r = reduceMutation(mut({ method: "POST", path: "/api/trade/entries", body: tradeBody({ status: "OPEN", closedAt: null, result: "OPEN", pnl: 0 }) }), cachedDash());
+    const t = dashOf(r).trade;
+    expect(t.openTrades).toBe(1);
+    expect(t.today).toEqual({ pnl: 10, count: 1 });
+    expect(t.week.count).toBe(3);
+    expect(t.recent[0].id).toBe(tmpIdFor("req1"));
+  });
+
+  it("ترید: ارز غیرغالب شمارنده را عوض نمی‌کنه؛ حذف همون معامله وصله را برمی‌گردونه", () => {
+    const d = dash(); d.trade.accounts.push({ id: "a2", currency: "EUR" });
+    const other = reduceMutation(mut({ method: "POST", path: "/api/trade/entries", body: tradeBody({ accountId: "a2" }) }), [{ url: "/api/dashboard", json: d }]);
+    expect(dashOf(other).trade.today).toEqual({ pnl: 10, count: 1 });
+    const created = reduceMutation(mut({ method: "POST", path: "/api/trade/entries", body: tradeBody() }), cachedDash());
+    const after = dashOf(created);
+    const del = reduceMutation(mut({ method: "DELETE", path: "/api/trade/entries", query: q(`id=${tmpIdFor("req1")}`) }), [{ url: "/api/dashboard", json: after }]);
+    expect(dashOf(del).trade.today).toEqual({ pnl: 10, count: 1 });
+    expect(dashOf(del).trade.recent).toHaveLength(1);
+  });
+
+  it("ترید: پاسخ واقعی سرور داشبورد را دست نمی‌زنه و بدون داشبورد کش خطا نمی‌ده", () => {
+    const r = reduceMutation(mut({ method: "POST", path: "/api/trade/entries", body: tradeBody() }), cachedDash(), { entry: { id: "real1", accountId: "a1", openedAt: "2026-10-24T09:00:00.000Z" } });
+    expect(dashOf(r)).toBeUndefined();
+    expect(reduceMutation(mut({ method: "POST", path: "/api/trade/entries", body: tradeBody() }), [])!.queue).toBe(true);
+  });
+
+  it("تمرین: تیک حرکت امروز doneItems/items/week/last14 را عوض می‌کنه؛ روز دیگر نه", () => {
+    const r = reduceMutation(mut({ method: "POST", path: "/api/exercise/log", body: { planId: "p1", date: "2026-10-24", completed: false, completedItems: ["x", "y"] } }), cachedDash());
+    const e = dashOf(r).exercise;
+    expect(e.today.doneItems).toBe(2);
+    expect(e.today.items.map((i: any) => i.done)).toEqual([true, true, false]);
+    expect(e.week.done).toBe(1);
+    const fin = dashOf(reduceMutation(mut({ method: "POST", path: "/api/exercise/log", body: { planId: "p1", date: "2026-10-24", completed: true, completedItems: ["x", "y", "z"] } }), cachedDash())).exercise;
+    expect(fin.today).toMatchObject({ done: true, doneItems: 3 });
+    expect(fin.week.done).toBe(2);
+    expect(fin.last14[1].done).toBe(true);
+    const old = reduceMutation(mut({ method: "POST", path: "/api/exercise/log", body: { planId: "p1", date: "2026-10-20", completed: true, completedItems: ["x"] } }), cachedDash());
+    expect(dashOf(old)).toEqual(dash());
+  });
+
+  it("تمرین: شروع تمرین فقط started را روشن می‌کنه", () => {
+    const d = dash(); d.exercise.today.started = false; d.exercise.today.doneItems = 0; d.exercise.today.items.forEach((i: any) => (i.done = false));
+    const r = reduceMutation(mut({ method: "POST", path: "/api/exercise/log", body: { planId: "p1", date: "2026-10-24", started: true } }), [{ url: "/api/dashboard", json: d }]);
+    expect(dashOf(r).exercise.today).toMatchObject({ started: true, doneItems: 0, done: false });
+  });
+
+  it("کالری: ثبت و حذف امروز جمع‌ها و تعداد را عوض می‌کنه؛ روز دیگر نه", () => {
+    const body = { date: "2026-10-24", customName: "برنج", customCalories: 130, grams: 100, proteinG: 3, carbsG: 28, fatG: 0.3 };
+    const r = reduceMutation(mut({ method: "POST", path: "/api/calorie/log", body }), cachedDash());
+    const c = dashOf(r).calorie;
+    expect(c.today).toEqual({ kcal: 630, protein: 23, carbs: 88, fat: 10, entries: 3 });
+    expect(c.week[1].kcal).toBe(630);
+    const prev = reduceMutation(mut({ method: "POST", path: "/api/calorie/log", body: { ...body, date: "2026-10-23" } }), cachedDash());
+    expect(dashOf(prev)).toEqual(dash());
+    const id = tmpIdFor("req1");
+    const del = reduceMutation(mut({ method: "DELETE", path: "/api/calorie/log", query: q(`id=${id}`) }), [
+      { url: "/api/dashboard", json: dashOf(r) },
+      { url: "/api/calorie/log?date=2026-10-24", json: { entries: r!.updates.find((u) => u.url === "/api/calorie/log?date=2026-10-24")!.json.entries } },
+    ]);
+    expect(dashOf(del).calorie.today).toEqual({ kcal: 500, protein: 20, carbs: 60, fat: 10, entries: 2 });
+  });
+});

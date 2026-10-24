@@ -65,14 +65,16 @@ function keyUrl(path: string, rec: Record<string, string>): string {
   return normalizeUrl(path, new URLSearchParams(rec));
 }
 
+const DASH = "/api/dashboard";
+
 /** کدام پیشوند مسیرهای کش‌شده تحت تاثیر نوشتن روی این path هستن */
 export function affectedPrefixes(path: string): string[] {
   if (path.startsWith("/api/tasks/daily")) return ["/api/tasks/daily"];
   if (path.startsWith("/api/settings/")) return [path];
   if (path.startsWith("/api/sleep")) return ["/api/sleep"];
-  if (path.startsWith("/api/exercise/log")) return ["/api/exercise/log"];
-  if (path.startsWith("/api/calorie/log")) return ["/api/calorie/log"];
-  if (path.startsWith("/api/trade/entries")) return ["/api/trade/entries", "/api/trade/tags", "/api/trade/checklists"];
+  if (path.startsWith("/api/exercise/log")) return ["/api/exercise/log", DASH];
+  if (path.startsWith("/api/calorie/log")) return ["/api/calorie/log", DASH];
+  if (path.startsWith("/api/trade/entries")) return ["/api/trade/entries", "/api/trade/tags", "/api/trade/checklists", DASH];
   if (path.startsWith("/api/trade/tags")) return ["/api/trade/tags", "/api/trade/entries", "/api/trade/notes"];
   if (path.startsWith("/api/trade/checklists")) return ["/api/trade/checklists"];
   if (path.startsWith("/api/trade/notes")) return ["/api/trade/notes", "/api/trade/tags"];
@@ -189,8 +191,110 @@ function reduceSleep(m: Mutation, parsed: Parsed[], out: Out): Reduction | null 
   return null;
 }
 
+
+// ── وصله‌ی پاسخ کش‌شده‌ی داشبورد (/api/dashboard) ──
+// داشبورد یک پاسخ کامل کش‌شده‌ست؛ نوشتن آفلاین باید روی هیرو/کارت‌ها دیده بشه. وصله‌ها
+// محافظه‌کارانه‌ان: فقط شمارنده‌ها و پیش‌نمایش‌هایی که از خود نوشتن معلومه، و فقط وقتی
+// نوشتن از صف می‌گذره (نه پاسخ واقعی سرور، چون اون موقع داشبورد خودش تازه می‌شه).
+const localIsoOf = (d: Date) => `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}-${String(d.getDate()).padStart(2, "0")}`;
+const r2 = (n: number) => Math.round(n * 100) / 100;
+
+function dashEntries(parsed: Parsed[]): Parsed[] {
+  return parsed.filter((c) => c.path === DASH && c.json && typeof c.json === "object");
+}
+
+/** شنبه‌ی هفته‌ی (iso) — هفته‌ی ایرانی */
+function weekStartOf(iso: string): string {
+  const [y, m, d] = iso.split("-").map(Number);
+  const dt = new Date(y, m - 1, d);
+  dt.setDate(dt.getDate() - ((dt.getDay() + 1) % 7));
+  return localIsoOf(dt);
+}
+
+function patchDashTrade(dash: any, entry: any, sign: 1 | -1, now: number): any {
+  const t = dash?.trade;
+  if (!t || typeof t !== "object" || !entry) return dash;
+  const id = String(entry.id ?? "");
+  const recent: any[] = Array.isArray(t.recent) ? t.recent : [];
+  const has = recent.some((r) => r?.id === id);
+  if (sign === 1 && has) return dash;
+  if (sign === -1 && !has) return dash;
+  const acc = Array.isArray(t.accounts) ? t.accounts.find((a: any) => a?.id === entry.accountId) : null;
+  const currency = acc?.currency ?? t.sumCurrency ?? t.currency ?? "";
+  const row = {
+    id, accountId: entry.accountId, currency, symbol: entry.symbol, direction: entry.direction,
+    pnl: Number(entry.pnl) || 0, result: entry.result, status: entry.status, openedAt: entry.openedAt,
+  };
+  let next = sign === 1
+    ? [...recent, row].sort((a, b) => String(b.openedAt).localeCompare(String(a.openedAt))).slice(0, Math.max(5, recent.length))
+    : recent.filter((r) => r?.id !== id);
+  const closed = entry.status === "CLOSED";
+  const out: any = { ...t, recent: next };
+  if (entry.status === "OPEN") out.openTrades = Math.max(0, (Number(t.openTrades) || 0) + sign);
+  if (closed && (!t.sumCurrency || currency === t.sumCurrency)) {
+    const opened = new Date(entry.openedAt);
+    if (!Number.isNaN(opened.getTime())) {
+      const today = localIsoOf(new Date(now));
+      const day = localIsoOf(opened);
+      const pnl = row.pnl;
+      const win = entry.result === "PROFIT" ? 1 : 0, loss = entry.result === "LOSS" ? 1 : 0;
+      if (day === today) out.today = { pnl: r2((Number(t.today?.pnl) || 0) + sign * pnl), count: Math.max(0, (Number(t.today?.count) || 0) + sign) };
+      if (day <= today && day >= weekStartOf(today)) {
+        out.week = {
+          ...t.week,
+          pnl: r2((Number(t.week?.pnl) || 0) + sign * pnl),
+          count: Math.max(0, (Number(t.week?.count) || 0) + sign),
+          wins: Math.max(0, (Number(t.week?.wins) || 0) + sign * win),
+          losses: Math.max(0, (Number(t.week?.losses) || 0) + sign * loss),
+        };
+      }
+    }
+  }
+  return { ...dash, trade: out };
+}
+
+function patchDashExercise(dash: any, body: any, completedChange: boolean): any {
+  const ex = dash?.exercise;
+  if (!ex || typeof ex !== "object" || !ex.today || !Array.isArray(ex.last14) || !ex.last14.length) return dash;
+  const last = ex.last14[ex.last14.length - 1];
+  if (!last || last.iso !== body.date) return dash;
+  const items: { name: string; done: boolean }[] = Array.isArray(ex.today.items) ? ex.today.items : [];
+  let today = { ...ex.today };
+  if (completedChange) {
+    const set = new Set<string>(Array.isArray(body.completedItems) ? body.completedItems.filter((x: unknown) => typeof x === "string") : []);
+    const prevShownDone = items.filter((i) => i.done).length;
+    const hiddenDone = Math.max(0, (Number(ex.today.doneItems) || 0) - prevShownDone);
+    const nextItems = items.map((i) => ({ ...i, done: set.has(i.name) }));
+    const doneItems = nextItems.filter((i) => i.done).length + (items.length < (Number(ex.today.itemCount) || 0) ? hiddenDone : 0);
+    const done = !!body.completed;
+    today = { ...today, items: nextItems, doneItems, done, started: !!ex.today.started || doneItems > 0 || done };
+  } else {
+    today = { ...today, started: true };
+  }
+  const delta = (today.done ? 1 : 0) - (ex.today.done ? 1 : 0);
+  const week = ex.week && typeof ex.week === "object" ? { ...ex.week, done: Math.max(0, (Number(ex.week.done) || 0) + delta) } : ex.week;
+  const last14 = last.rest ? ex.last14 : ex.last14.map((d: any, i: number) => (i === ex.last14.length - 1 ? { ...d, done: today.done } : d));
+  return { ...dash, exercise: { ...ex, today, week, last14 } };
+}
+
+function patchDashCalorie(dash: any, entry: any, sign: 1 | -1): any {
+  const c = dash?.calorie;
+  if (!c || typeof c !== "object" || !c.today || !Array.isArray(c.week) || !c.week.length) return dash;
+  const todayIso = c.week[c.week.length - 1]?.iso;
+  if (!entry || dayOf(entry.date) !== todayIso) return dash;
+  const kcal = num(entry.customCalories) ?? 0;
+  const add = (cur: unknown, v: unknown) => Math.max(0, Math.round((Number(cur) || 0) + sign * (num(v) ?? 0)));
+  const today = {
+    ...c.today,
+    kcal: add(c.today.kcal, kcal), protein: add(c.today.protein, entry.proteinG), carbs: add(c.today.carbs, entry.carbsG),
+    fat: add(c.today.fat, entry.fatG), entries: Math.max(0, (Number(c.today.entries) || 0) + sign),
+  };
+  const week = c.week.map((d: any, i: number) => (i === c.week.length - 1 ? { ...d, kcal: add(d.kcal, kcal) } : d));
+  return { ...dash, calorie: { ...c, today, week } };
+}
+
 // ── ورزش ──
-function reduceExerciseLog(m: Mutation, parsed: Parsed[], out: Out): Reduction | null {
+function reduceExerciseLog(m: Mutation, parsed: Parsed[], out: Out, isReal = false): Reduction | null {
   if (m.method !== "POST") return null;
   const { planId, date } = m.body ?? {};
   if (typeof planId !== "string" || !planId || typeof date !== "string" || !ISO_DATE.test(date)) return null;
@@ -209,6 +313,10 @@ function reduceExerciseLog(m: Mutation, parsed: Parsed[], out: Out): Reduction |
     };
   }
   out.set(single, next);
+  if (!isReal) {
+    const completedChange = !(m.body.started === true && m.body.completed === undefined);
+    for (const c of dashEntries(parsed)) out.set(c.url, patchDashExercise(c.json, { ...m.body, date }, completedChange));
+  }
   for (const c of parsed) {
     if (c.path === "/api/exercise/log/range" && c.params.get("planId") === planId && inRange(date, c.params.get("start"), c.params.get("end"))) {
       out.set(c.url, { ...c.json, logs: { ...(c.json?.logs ?? {}), [date]: next } });
@@ -243,6 +351,7 @@ function reduceCalorie(m: Mutation, parsed: Parsed[], out: Out, real: any): Redu
     const single = keyUrl("/api/calorie/log", { date: b.date });
     const cur = parsed.find((c) => c.url === single)?.json;
     out.set(single, { ...(cur ?? {}), entries: [...(Array.isArray(cur?.entries) ? cur.entries.filter((e: any) => e?.id !== entry.id) : []), entry] });
+    if (!real) for (const c of dashEntries(parsed)) out.set(c.url, patchDashCalorie(c.json, entry, 1));
     for (const c of parsed) {
       if (c.path === "/api/calorie/log/range" && inRange(b.date, c.params.get("from"), c.params.get("to"))) {
         const list: any[] = (Array.isArray(c.json?.entries) ? c.json.entries : []).filter((e: any) => e?.id !== entry.id);
@@ -256,6 +365,10 @@ function reduceCalorie(m: Mutation, parsed: Parsed[], out: Out, real: any): Redu
   if (m.method === "DELETE") {
     const id = m.query.get("id");
     if (!id) return null;
+    if (!real) {
+      const gone = parsed.filter((c) => c.path.startsWith("/api/calorie/log") && Array.isArray(c.json?.entries)).flatMap((c) => c.json.entries).find((e: any) => e?.id === id);
+      if (gone) for (const c of dashEntries(parsed)) out.set(c.url, patchDashCalorie(c.json, gone, -1));
+    }
     for (const c of parsed) {
       if (!Array.isArray(c.json?.entries)) continue;
       const next = c.json.entries.filter((e: any) => e?.id !== id);
@@ -374,6 +487,7 @@ function reduceTradeEntry(m: Mutation, parsed: Parsed[], out: Out, real: any): R
     if (!b || typeof b !== "object") return null;
     const entry = real?.entry?.id ? real.entry : buildTradeEntry(b, tmpIdFor(m.requestId), parsed, now);
     insert(entry);
+    if (!real) for (const c of dashEntries(parsed)) out.set(c.url, patchDashTrade(c.json, entry, 1, now));
     return { updates: [], response: { ok: true, entry }, queue: true };
   }
   if (m.method === "PATCH") {
@@ -400,6 +514,12 @@ function reduceTradeEntry(m: Mutation, parsed: Parsed[], out: Out, real: any): R
   if (m.method === "DELETE") {
     const id = m.query.get("id");
     if (!id) return null;
+    if (!real) {
+      for (const c of dashEntries(parsed)) {
+        const row = Array.isArray(c.json?.trade?.recent) ? c.json.trade.recent.find((r: any) => r?.id === id) : null;
+        if (row) out.set(c.url, patchDashTrade(c.json, row, -1, now));
+      }
+    }
     removeFrom(id);
     if (isTmpId(id)) return { updates: [], response: { ok: true }, queue: false, cancelQueued: id };
     return { updates: [], response: { ok: true }, queue: true };
@@ -622,7 +742,7 @@ export function reduceMutation(m: Mutation, cached: CachedJson[], real?: any): R
   if (p === "/api/tasks/daily") r = reduceDaily(m, parsed, out);
   else if (/^\/api\/settings\/[^/]+$/.test(p)) r = reduceSetting(m, out);
   else if (p === "/api/sleep") r = reduceSleep(m, parsed, out);
-  else if (p === "/api/exercise/log") r = reduceExerciseLog(m, parsed, out);
+  else if (p === "/api/exercise/log") r = reduceExerciseLog(m, parsed, out, real !== undefined);
   else if (p === "/api/calorie/log") r = reduceCalorie(m, parsed, out, real);
   else if (p === "/api/trade/entries") r = reduceTradeEntry(m, parsed, out, real);
   else if (p === "/api/trade/tags") r = reduceTags(m, parsed, out, real);

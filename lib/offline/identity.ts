@@ -25,7 +25,7 @@ function writeLs(v: string | null) {
 
 // گرم‌کردن پوسته (boot.ts) یک‌بار برای هر تب انجام می‌شه؛ با عوض‌شدن/خروج کاربر باید دوباره انجام بشه
 function resetShellWarmFlag() {
-  try { if (typeof window !== "undefined") window.sessionStorage.removeItem("arion:shellWarmed"); } catch {}
+  try { if (typeof window !== "undefined") window.sessionStorage.removeItem("arion:shellWarmed"); window.sessionStorage.removeItem("arion:dataWarmed"); } catch {}
 }
 
 let known: string | null = readLs();

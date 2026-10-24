@@ -67,6 +67,19 @@ const LATEST_FALLBACK = new Set([
   "/api/account/avatar", "/api/auth/session", "/api/calorie/target", "/api/exercise/plan", "/api/exercise/schedule",
 ]);
 
+/**
+ * پاسخ /api/dashboard مال بخش فعلیه (بلوک بخش‌های دیگه null ساخته می‌شه) ولی آدرسش بین بخش‌ها یکیه؛
+ * پس کلید کش بخش رو هم داره تا دیدن داشبورد یک بخش، کش بخش دیگه رو خراب نکنه.
+ */
+export function cacheKeyFor(path: string, params: URLSearchParams | string): string {
+  const p = new URLSearchParams(typeof params === "string" ? params : params.toString());
+  if (path === "/api/dashboard" && typeof document !== "undefined" && !p.has("_sec")) {
+    const sec = document.documentElement.getAttribute("data-section");
+    if (sec) p.set("_sec", sec);
+  }
+  return normalizeUrl(path, p);
+}
+
 export function isCacheableGet(path: string): boolean {
   return GET_ALLOW.some((re) => re.test(path));
 }
@@ -207,7 +220,7 @@ export async function storeJson(url: string, json: unknown): Promise<void> {
     const { path, params } = splitUrl(url);
     if (!isCacheableGet(path)) return;
     if (hasPendingFor(path)) return;
-    await db.cachePut(userId, normalizeUrl(path, params), { body: JSON.stringify(json) });
+    await db.cachePut(userId, cacheKeyFor(path, params), { body: JSON.stringify(json) });
   } catch {}
 }
 
@@ -257,7 +270,11 @@ async function fromCache(userId: string, path: string, params: URLSearchParams, 
     const r = await synth("/api/calorie/log", (c) => synthCalorieLog(date, c)); if (r) return r;
   }
   if (LATEST_FALLBACK.has(path)) {
-    const recs = (await db.cacheByPathPrefix(userId, path)).filter((r) => splitUrl(r.url).path === path);
+    let recs = (await db.cacheByPathPrefix(userId, path)).filter((r) => splitUrl(r.url).path === path);
+    if (path === "/api/dashboard") {
+      const mine = recs.filter((r) => splitUrl(r.url).params.get("_sec") === splitUrl(key).params.get("_sec"));
+      if (mine.length) recs = mine;
+    }
     recs.sort((a, b) => b.storedAt - a.storedAt);
     if (recs[0]) return mkResponse(recs[0].body, "cache");
   }
@@ -283,7 +300,7 @@ export const GET_RACE_MS = 4000;
 
 async function handleGet(orig: typeof fetch, input: RequestInfo | URL, init: RequestInit | undefined, url: URL, userId: string): Promise<Response> {
   const path = url.pathname;
-  const key = normalizeUrl(path, url.searchParams);
+  const key = cacheKeyFor(path, url.searchParams);
 
   if (isNavigatorOffline()) {
     const c = await fromCache(userId, path, url.searchParams, key);
