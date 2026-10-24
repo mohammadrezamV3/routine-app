@@ -330,8 +330,12 @@ html[dir="ltr"] .field-error-wrap.has-icon .auth-phone-wrap input[dir="ltr"]{ pa
 }
 
 @media (min-width:1024px){
-  /* نصف‌نصف (پنل 50%): تصویر روز برچسب‌هاش پهن‌تره؛ 68% باعث می‌شه ROUTINE زیر فید لبه نره (روی 1024px، سخت‌ترین حالت) */
-  .as-light .as-img{ object-position:68% 50%; }
+  /* نصف‌نصف (پنل 50%): برچسب‌ها 24% تا 77% عرض تصویرن؛ x=68% باعث می‌شه ROUTINE زیر فید لبه نره (روی 1024px، سخت‌ترین حالت).
+     هر تصویر متغیر --as-x خودش رو داره (کلاس .as-<بخش>-<شب|روز>) تا جدا تنظیم بشه. */
+  .as-root{ --as-x:66%; }
+  .as-routine-day{ --as-x:68%; }
+  .as-trade-night{ --as-x:50%; }
+  .as-img{ object-position:var(--as-x) 50%; }
   .as-fade{
     background:linear-gradient(to right, transparent calc(100% - clamp(90px, 14%, 170px)),
       color-mix(in srgb, var(--bg) 12%, transparent) calc(100% - clamp(60px, 9%, 110px)),
