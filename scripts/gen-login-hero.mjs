@@ -1,9 +1,19 @@
 // Usage: node scripts/gen-login-hero.mjs <source.png> [name] [x,y,w,h]
 // Builds the optimized login hero set in public/images/auth (WebP, plus AVIF).
-//   name   output prefix (default "login-hero"; the night variant is "login-hero-night")
+//   name   output prefix, `login-hero-<section>-<night|day>` (section = routine|trade|workout)
 //   x,y,w,h  optional source crop in source pixels (used for the night mobile
 //            banner, e.g. `login-hero-night-m`); sizes above the crop width are skipped
 //            and the native crop width is always emitted.
+//
+// Exact commands (night: AVIF_Q=86 AVIF_444=1 against banding in dark glows; day: AVIF_Q=76 AVIF_444=1).
+// Mobile crops: trade night 125,350,1004,580; routine/workout night 37,395,1180,682 (label row sits lower); day 0,310,1254,725. Sources are 1254x1254.
+//   N="env AVIF_Q=86 AVIF_444=1 node scripts/gen-login-hero.mjs"; D="env AVIF_Q=76 AVIF_444=1 node scripts/gen-login-hero.mjs"
+//   routine night: $N <src> login-hero-routine-night   ;  $N <src> login-hero-routine-night-m 37,395,1180,682
+//   routine day:   $D <src> login-hero-routine-day     ;  $D <src> login-hero-routine-day-m 0,310,1254,725
+//   trade night:   $N <src> login-hero-trade-night     ;  $N <src> login-hero-trade-night-m 125,350,1004,580
+//   trade day:     $D <src> login-hero-trade-day       ;  $D <src> login-hero-trade-day-m 0,310,1254,725
+//   workout night: $N <src> login-hero-workout-night   ;  $N <src> login-hero-workout-night-m 37,395,1180,682
+//   workout day:   $D <src> login-hero-workout-day     ;  $D <src> login-hero-workout-day-m 0,310,1254,725
 import sharp from "sharp";
 import fs from "fs";
 import path from "path";
