@@ -9,15 +9,22 @@ import { getPreloadedBootstrap } from "../preload";
 import { getKnownUserId, loadKnownUser, setKnownUser, swCall } from "./identity";
 import { refreshPending, seedFromBootstrap } from "./fetchLayer";
 import { isNavigatorOffline } from "./status";
+import { isSectionKey, pathAllowedIn } from "../sections";
 
 let started = false;
 
 const MAIN_ROUTES = ["/dashboard", "/weekly", "/sleep", "/analysis/weekly", "/account"];
 const TRADE_ROUTES = ["/trade/journal", "/trade/checklists", "/trade/notes", "/trade/calendar", "/trade/clock"];
 
-/** مسیرهایی که باید برای آفلاین گرم بشن (workout: خود داشبورد کافیه) */
+/**
+ * مسیرهایی که باید برای آفلاین گرم بشن (workout: خود داشبورد کافیه). فقط مسیرهایی که بخش فعلی بازشون
+ * می‌ذاره: واکشی مسیر مال بخش دیگه (مثلا /weekly در بخش ورزش) middleware رو وادار می‌کرد کوکی بخش
+ * کاربر رو عوض کنه.
+ */
 export function shellRoutes(section: string | null | undefined): string[] {
-  return section === "trade" ? [...MAIN_ROUTES, ...TRADE_ROUTES] : [...MAIN_ROUTES];
+  const all = section === "trade" ? [...MAIN_ROUTES, ...TRADE_ROUTES] : [...MAIN_ROUTES];
+  if (!section || !isSectionKey(section)) return all;
+  return all.filter((p) => pathAllowedIn(section, p));
 }
 
 function whenIdle(cb: () => void) {

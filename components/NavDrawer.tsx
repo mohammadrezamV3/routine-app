@@ -111,7 +111,9 @@ export function NavDrawer() {
   // سراسری سایت اونجا لازم نیست و فقط شلوغی اضافه می‌کنه.
   // پنل Owner (/admin) کاملا محیط جدایی‌ست — نه هدر/منوی سایت اصلی، نه
   // پس‌زمینه‌ی aurora (پایین‌تر در BackgroundCanvasLoader)
-  const hideTopbar = pathname?.startsWith("/auth") || pathname?.startsWith("/admin");
+  const hideTopbar = pathname?.startsWith("/auth") || pathname?.startsWith("/admin") ||
+    // صفحه‌ی fallback آفلاین از کش عمومی میاد و هدرش مهمان می‌شد (دکمه‌ی ورود)؛ اونجا هدر نیست
+    pathname === "/offline";
   // تغییر زبان فقط از تنظیمات و از هدر صفحه‌ی لندینگ (مهمان روی «/») ممکنه
   const isLanding = pathname === "/" && status === "unauthenticated";
 

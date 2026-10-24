@@ -7,6 +7,7 @@ import { PenLine, Trash2 } from "lucide-react";
 import { Spinner } from "./Spinner";
 import { AiSparkleIcon } from "./AiSparkleIcon";
 import dynamic from "next/dynamic";
+import { ChunkOffline } from "./OnlineOnly";
 
 // همون دلیل ExerciseCatalogCard: این فرم هم کل کاتالوگ حرکات رو می‌کشه و
 // فقط توی حالت «ساخت دستی» (mode === "manual") رندر می‌شه.
@@ -20,7 +21,7 @@ import { focusNextOnEnter } from "@/lib/formNav";
 import { useLockBodyScroll } from "@/lib/useLockBodyScroll";
 import { tr } from "@/lib/i18n";
 // تنبل: فقط با کنش کاربر باز می‌شه و کدش توی باندل اولیه نیست
-const AiExercisePlanWizard = dynamic(() => import("./AiExercisePlanWizard").then((m) => m.AiExercisePlanWizard), { ssr: false });
+const AiExercisePlanWizard = dynamic(() => import("./AiExercisePlanWizard").then((m) => m.AiExercisePlanWizard).catch(() => ChunkOffline), { ssr: false });
 
 type Mode = "choice" | "ai" | "manual";
 

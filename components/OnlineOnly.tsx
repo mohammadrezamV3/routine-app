@@ -77,3 +77,12 @@ export function withOnlineOnly<P extends object>(Inner: ComponentType<P>, featur
   Wrapped.displayName = `OnlineOnly(${Inner.displayName || Inner.name || "Component"})`;
   return Wrapped;
 }
+
+/**
+ * جایگزین کامپوننت lazy که چانکش آفلاین نیست (هیچ‌وقت آنلاین باز نشده): به‌جای افتادن به مرز خطای کل
+ * اپ ("در حال به‌روزرسانی صفحه") همون پیام «اینترنت لازمه» نشون داده می‌شه.
+ * استفاده: dynamic(() => import("./X").then((m) => m.X).catch(() => ChunkOffline), { ssr: false })
+ */
+export function ChunkOffline() {
+  return <OnlineOnlyNotice feature="chunk" />;
+}

@@ -23,6 +23,11 @@ function writeLs(v: string | null) {
   } catch {}
 }
 
+// گرم‌کردن پوسته (boot.ts) یک‌بار برای هر تب انجام می‌شه؛ با عوض‌شدن/خروج کاربر باید دوباره انجام بشه
+function resetShellWarmFlag() {
+  try { if (typeof window !== "undefined") window.sessionStorage.removeItem("arion:shellWarmed"); } catch {}
+}
+
 let known: string | null = readLs();
 const listeners = new Set<(userId: string | null) => void>();
 
@@ -74,7 +79,7 @@ export async function setKnownUser(userId: string): Promise<void> {
   known = userId;
   writeLs(userId);
   emit();
-  if (prev && prev !== userId) await wipeOfflineData();
+  if (prev && prev !== userId) { resetShellWarmFlag(); await wipeOfflineData(); }
   await db.metaSet(META_KEY, userId);
   await swCall((m) => m.setSwUser(userId));
 }
@@ -83,6 +88,7 @@ export async function setKnownUser(userId: string): Promise<void> {
 export async function clearOfflineIdentity(): Promise<void> {
   known = null;
   writeLs(null);
+  resetShellWarmFlag();
   emit();
   await wipeOfflineData();
   await swCall((m) => m.setSwUser(null));

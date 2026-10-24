@@ -253,10 +253,9 @@ async function storeUserEntry(userId, startEpoch, key, response) {
   const body = await response.arrayBuffer();
   if (epoch !== startEpoch || userState.id !== userId) return;
   const cache = await caches.open(userCacheName(userId));
-  // هر صفحه فقط یک ورودی دارد (نسخه‌های قدیمی‌تر با بخش/زبان دیگر هم پاک می‌شن) و ورودی تازه
-  // آخر ترتیب می‌آید (سقف تعداد، قدیمی‌ترین‌ها رو می‌بره)
-  const suffix = keySuffix(key.url);
-  for (const k of await cache.keys()) if (keySuffix(k.url) === suffix) await cache.delete(k);
+  // هر صفحه در هر نسخه (بخش/زبان) یک ورودی دارد و ورودی تازه آخر ترتیب می‌آید (سقف تعداد،
+  // قدیمی‌ترین‌ها رو می‌بره). (نسخه‌ی هر بخش/زبان جدا نگه داشته می‌شه: وگرنه /dashboard بخش ترید جای نسخه‌ی روتین رو
+  // می‌گرفت و آفلاین بخش اشتباه نشون داده می‌شد؛ هم‌کلید خودکار جایگزین می‌شه و سقف تعداد می‌بره)
   await cache.put(key, new Response(body, { status: 200, statusText: "OK", headers }));
   await trimCache(cache, "/__arion/html/", MAX_HTML_ENTRIES);
   await trimCache(cache, "/__arion/rsc/", MAX_RSC_ENTRIES);
@@ -370,7 +369,7 @@ function isStorableRsc(response) {
  * شبکه اول، کش وقتی شبکه نیست یا بیش از NAV_TIMEOUT_MS کنده یا سرور 502-504 داده.
  * `onOk(response)` برای هر پاسخ 2xx صدا زده می‌شه (ذخیره‌سازی). null = نه شبکه نه کش.
  */
-async function networkFirst(event, request, cachedP, onOk) {
+async function networkFirst(event, request, cachedP, onOk, mapCached) {
   let failed = false;
   const netP = fetch(request)
     .then((res) => {
@@ -387,7 +386,7 @@ async function networkFirst(event, request, cachedP, onOk) {
   const cached = await cachedP.catch(() => undefined);
   if (cached) {
     event.waitUntil(netP); // نوشتن نسخه‌ی تازه بعد از پاسخ هم کامل بشه
-    return cached;
+    return mapCached ? mapCached(cached) : cached;
   }
   if (first) return first;
   if (failed) return null;
@@ -404,6 +403,26 @@ async function handleNavigation(event, url) {
   return handlePublicNavigation(event, url);
 }
 
+/**
+ * HTML ذخیره‌شده داده‌ی bootstrap لحظه‌ی ذخیره (تیک‌ها، تنظیمات) رو داخل خودش داره و کلاینت اون رو
+ * به‌جای کش IndexedDB می‌خوند؛ یعنی تغییری که آفلاین داده شده بعد از ریلود برمی‌گشت به نسخه‌ی قدیمی.
+ * وقتی HTML از کش سرویس‌ورکر میاد (شبکه نبود)، شناسه‌ی اون اسکریپت رو بی‌اثر می‌کنیم تا پیش‌درخواست
+ * (lib/preload.ts) از کش لایه‌ی آفلاین (که تغییرهای صف رو داره) بخونه.
+ */
+async function staleBootstrapHtml(cached) {
+  try {
+    const text = await cached.clone().text();
+    if (!text.includes('id="__arion_bootstrap"')) return cached;
+    const headers = new Headers(cached.headers);
+    headers.delete("content-length");
+    return new Response(text.split('id="__arion_bootstrap"').join('id="__arion_bootstrap_stale"'), {
+      status: cached.status, statusText: cached.statusText, headers,
+    });
+  } catch {
+    return cached;
+  }
+}
+
 async function handleUserNavigation(event, url, userId) {
   const request = event.request;
   const v = await variant();
@@ -413,7 +432,7 @@ async function handleUserNavigation(event, url, userId) {
   const res = await networkFirst(event, request, cachedP, (r) => {
     if (!isStorableHtml(r)) return;
     event.waitUntil(storeUserEntry(userId, startEpoch, key, r.clone()).catch(() => {}));
-  });
+  }, staleBootstrapHtml);
   return res || offlineFallback(url);
 }
 
@@ -692,7 +711,8 @@ async function warmShell(rawUrls) {
       if (age < WARM_FRESH_MS) continue;
       const res = await fetch(u.pathname + u.search, {
         credentials: "include",
-        headers: { Accept: "text/html,application/xhtml+xml" },
+        // Purpose: prefetch → middleware بخش (کوکی arion_section) رو به‌خاطر این واکشی پس‌زمینه عوض نمی‌کنه
+        headers: { Accept: "text/html,application/xhtml+xml", Purpose: "prefetch" },
       });
       if (!isStorableHtml(res)) continue;
       const html = await res.clone().text();
