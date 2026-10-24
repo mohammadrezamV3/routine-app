@@ -23,10 +23,10 @@ type Props = {
 };
 
 export default function NavDrawerContent({ open, onClose, authed, features, activeModules }: Props) {
-  // گروه‌های منو (مربی‌ها/بیشتر) از اول باز هستن (درخواست صریح)؛ کاربر با کلیک
-  // روی هر گروه می‌تونه جمعش کنه و هر بار منو بسته می‌شه دوباره همه باز می‌شن.
-  const [collapsed, setCollapsed] = useState<string[]>([]);
-  useEffect(() => { if (!open) setCollapsed([]); }, [open]);
+  // گروه‌های منو (مربی‌ها/بیشتر) از اول بسته‌ان و با ضربه باز می‌شن (درخواست صریح)؛
+  // هر بار منو بسته می‌شه همه دوباره بسته می‌شن.
+  const [expanded, setExpanded] = useState<string[]>([]);
+  useEffect(() => { if (!open) setExpanded([]); }, [open]);
   const section = useSection();
   const visibleLinks = getVisibleLinks(features, section);
 
@@ -40,12 +40,12 @@ export default function NavDrawerContent({ open, onClose, authed, features, acti
       {visibleLinks.map((item) => {
         const isLocked = (m?: string) => isLockedModule(activeModules, m);
         if (isGroup(item)) {
-          const isExpanded = !collapsed.includes(item.label);
+          const isExpanded = expanded.includes(item.label);
           const groupLocked = item.children.every((c) => isLocked(c.module));
           return (
             <div key={item.label} className={isExpanded ? "nav-group-expanded" : undefined}>
               <a
-                onClick={() => setCollapsed((c) => (c.includes(item.label) ? c.filter((x) => x !== item.label) : [...c, item.label]))}
+                onClick={() => setExpanded((c) => (c.includes(item.label) ? c.filter((x) => x !== item.label) : [...c, item.label]))}
                 className="nav-link nav-link-icon"
                 style={{ cursor: "pointer" }}
               >
