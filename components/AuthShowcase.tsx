@@ -26,7 +26,7 @@ const SETS = {
   dark: { base: "/images/auth/login-hero-night", full: [640, 1000, 1254], mobile: [640, 1004] },
   light: { base: "/images/auth/login-hero-day", full: [640, 1000, 1254], mobile: [640, 1254] },
 } as const;
-const SIZES = "(min-width:1024px) 58vw, 100vw";
+const SIZES = "(min-width:1024px) 50vw, 100vw";
 const BANNER_MEDIA = "(max-width:1023px)";
 
 export function AuthShowcase() {

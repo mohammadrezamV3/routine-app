@@ -330,8 +330,8 @@ html[dir="ltr"] .field-error-wrap.has-icon .auth-phone-wrap input[dir="ltr"]{ pa
 }
 
 @media (min-width:1024px){
-  /* تصویر روز برچسب‌هاش پهن‌تره: کمی به چپ تا ROUTINE زیر فید لبه نره (روی 1024px) */
-  .as-light .as-img{ object-position:62% 50%; }
+  /* نصف‌نصف (پنل 50%): تصویر روز برچسب‌هاش پهن‌تره؛ 68% باعث می‌شه ROUTINE زیر فید لبه نره (روی 1024px، سخت‌ترین حالت) */
+  .as-light .as-img{ object-position:68% 50%; }
   .as-fade{
     background:linear-gradient(to right, transparent calc(100% - clamp(90px, 14%, 170px)),
       color-mix(in srgb, var(--bg) 12%, transparent) calc(100% - clamp(60px, 9%, 110px)),
@@ -412,7 +412,7 @@ body[data-theme] .auth-split .auth-box::before{ display:none; }
 @media (min-width:1024px){
   .auth-split{ flex-direction:row; }
   html[dir="ltr"] .auth-split{ flex-direction:row-reverse; }
-  .auth-split-form{ flex:0 0 clamp(440px, 42%, 600px); padding:56px 40px; }
-  .auth-split-media{ flex:1 1 auto; align-self:stretch; height:auto; }
+  .auth-split-form{ flex:0 0 50%; padding:56px 40px; }
+  .auth-split-media{ flex:0 0 50%; min-width:0; align-self:stretch; height:auto; }
 }
 /* ── auth-split end ── */
