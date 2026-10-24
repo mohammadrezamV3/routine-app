@@ -63,14 +63,29 @@ body[data-theme="light"] .sld-cyc{ fill:var(--sld-face-a); stroke:color-mix(in s
 .sld-pin.is-moon{ color:#fff; }
 .sld-pin.is-sun{ color:#3A2200; }
 
-/* متن وسط داخل SVG: اندازه‌ها از کد میان (fitFontSize) و دیگه به عرض کانتینر وابسته نیستن */
-.sld-kicker, .sld-caption{ fill:var(--slp-sub); font-weight:700; letter-spacing:.01em; }
+/* متن وسط: HTML روی ساعت (نه SVG text: وب‌کیت iOS حروف فارسی رو جدا و برعکس می‌کشید).
+   overlay مطلقه و روی ارتفاع ساعت اثر نداره؛ اندازه‌ها با cqw از عرض خود ساعت. */
+.sld-dial{ position:relative; }
+.sld-center{ position:absolute; inset:0; container-type:inline-size; pointer-events:none; }
+.sld-center > span{
+  position:absolute; inset-inline-start:50%; width:calc(136 / 316 * 100%);
+  transform:translate(-50%, -50%); text-align:center; line-height:1.2; white-space:nowrap;
+  letter-spacing:0; unicode-bidi:plaintext;
+}
+html[dir="rtl"] .sld-center > span{ transform:translate(50%, -50%); }
+.sld-kicker, .sld-caption{ color:var(--slp-sub); font-weight:700; }
 .sld-caption.is-sub{ font-weight:700; }
-.sld-caption.is-band{ fill:currentColor; font-weight:800; }
-body[data-theme="light"] .sld-caption.is-band{ fill:color-mix(in srgb, currentColor 78%, #1A0F00); }
-.sld-big{ fill:var(--text); font-weight:800; font-variant-numeric:tabular-nums; letter-spacing:-.02em; }
+.sld-caption.is-band{ font-weight:800; }
+.sld-caption.is-band.slp-c-great, .sld-big.is-score.slp-c-great{ color:var(--slp-great); }
+.sld-caption.is-band.slp-c-good, .sld-big.is-score.slp-c-good{ color:var(--slp-good); }
+.sld-caption.is-band.slp-c-fair, .sld-big.is-score.slp-c-fair{ color:var(--slp-fair); }
+.sld-caption.is-band.slp-c-poor, .sld-big.is-score.slp-c-poor{ color:var(--slp-poor); }
+body[data-theme="light"] .sld-caption.is-band.slp-c-great{ color:color-mix(in srgb, var(--slp-great) 78%, #1A0F00); }
+body[data-theme="light"] .sld-caption.is-band.slp-c-good{ color:color-mix(in srgb, var(--slp-good) 78%, #1A0F00); }
+body[data-theme="light"] .sld-caption.is-band.slp-c-fair{ color:color-mix(in srgb, var(--slp-fair) 78%, #1A0F00); }
+body[data-theme="light"] .sld-caption.is-band.slp-c-poor{ color:color-mix(in srgb, var(--slp-poor) 78%, #1A0F00); }
+.sld-big{ color:var(--text); font-weight:800; font-variant-numeric:tabular-nums; }
 .sld-big.is-clock{ direction:ltr; unicode-bidi:isolate; }
-.sld-big.is-score{ fill:currentColor; }
 
 /* سه‌ستون: ساعت خواب · مدت هدف · ساعت بیداری */
 .sld-times{ display:grid; grid-template-columns:minmax(0,1fr) auto minmax(0,1fr); align-items:center; gap:10px; color:var(--text); }

@@ -1521,3 +1521,5 @@ html[dir="rtl"] .wl-fit-bal-num{ justify-content:flex-end; }
 @media (prefers-reduced-motion:reduce){ .wl-fit-bar{ transform:none !important; } }
 html[data-perf="low"] .wl-fit-bar{ transform:none !important; }
 /* ── fit-week end ── */
+/* متن فارسی داخل SVG (روز هفته، برچسب هفته/معامله): بدون letter-spacing برای اتصال حروف در وب‌کیت */
+.wl-tw-day, .wl-tw-mlabel, .wl-trend-lbl, .wl-trend-val, .wl-fit-xl, .wl-fit-val{ letter-spacing:0; }

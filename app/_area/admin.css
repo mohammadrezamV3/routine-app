@@ -142,7 +142,7 @@ input[type="date"].admin-input, input[type="datetime-local"].admin-input{ direct
    فال‌بک) — اگه لیبلی حرف فارسی داشت (نه فقط عدد/تاریخ لاتین)، نباید به
    فونت سیستمی خام مرورگر سقوط کنه. */
 
-.admin-svg-chart .axis-label{ fill:var(--adm-muted-2); font-size:10px; font-family:var(--font-latin), var(--font-vazir), sans-serif; }
+.admin-svg-chart .axis-label{ fill:var(--adm-muted-2); font-size:10px; letter-spacing:0; font-family:var(--font-latin), var(--font-vazir), sans-serif; }
 
 .admin-pagination{ display:flex; align-items:center; justify-content:center; gap:8px; margin-top:16px; }
 

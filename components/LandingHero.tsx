@@ -50,7 +50,7 @@ const seoLinks = () => [
   { href: "/bodybuilding-program", label: tr("تمرین", "Workouts") },
   { href: "/trading-journal", label: tr("ترید", "Trading") },
   { href: "/calorie-counter", label: tr("تغذیه", "Nutrition") },
-  { href: "/ai-planner", label: tr("مدیر برنامه هوشمند", "Smart plan manager") },
+  { href: "/ai-planner", label: tr("نومو", "Nomo") },
 ];
 
 const TRUST_ICONS: Record<HeroTrustIcon, typeof Sparkles> = { spark: Sparkles, shield: ShieldCheck, lock: Lock };

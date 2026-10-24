@@ -56,7 +56,7 @@ describe("plan ordering per section", () => {
   const all = ["basic", "exercise", "trade", "max"].map((key) => ({ key }));
   const keys = (s: "routine" | "trade" | "workout" | null) => orderPlansForSection(all, s).map((p) => p.key);
 
-  it("apex keeps the original order", () => {
+  it("apex puts single plans first and max last", () => {
     expect(keys(null)).toEqual(["basic", "exercise", "trade", "max"]);
   });
 
@@ -66,10 +66,10 @@ describe("plan ordering per section", () => {
     }
   });
 
-  it("puts the section's own plan first, then max, then the rest", () => {
-    expect(keys("routine")).toEqual(["basic", "max", "exercise", "trade"]);
-    expect(keys("workout")).toEqual(["exercise", "max", "basic", "trade"]);
-    expect(keys("trade")).toEqual(["trade", "max", "basic", "exercise"]);
+  it("puts the section's own plan first, other single plans next, max always last", () => {
+    expect(keys("routine")).toEqual(["basic", "exercise", "trade", "max"]);
+    expect(keys("workout")).toEqual(["exercise", "basic", "trade", "max"]);
+    expect(keys("trade")).toEqual(["trade", "basic", "exercise", "max"]);
   });
 
   it("does not mutate the input", () => {
