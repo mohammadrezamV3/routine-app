@@ -13,6 +13,7 @@
 // lib/weeklyAnalysis/ai.ts هم دقیقا همین الگو رو برای مربی AI آنالیز
 // هفتگی استفاده کنه، بدون تکرار منطق تایم‌اوت/بودجه/ثبت مصرف.
 
+import { conformExercisesToCatalog, commonCatalogNamesFor } from "@/lib/exerciseNameGuard";
 import { MUSCLE_LABELS, sameSplit, splitRuleIssues, toKeyedSplit, type SplitRuleOptions, type UserSplitDay } from "@/lib/exerciseSplit";
 import { AiFeatureKey } from "@prisma/client";
 import { prisma } from "@/lib/prisma";
@@ -712,6 +713,10 @@ const EXERCISE_COACH_RULES = `تو یک مربی حرفه‌ای بدنسازی 
   تک‌مفصلی 60 تا 90 ثانیه. برای اولین حرکت هر جلسه در note بنویس «1-2 ست گرم‌کردن با وزن سبک قبل از ست‌های اصلی».
 - شدت با سطح: مبتدی RIR 2-3 و تمرکز روی فرم؛ متوسط RIR 1-2؛ پیشرفته RIR 0-2 روی تک‌مفصلی‌ها.
 - اسم حرکت‌ها را همان اسم فارسی رایج بنویس و در یک روز هیچ حرکتی را دو بار نیاور.
+- فقط حرکت‌های رایج و شناخته‌شده‌ی باشگاهی بده؛ همان حرکت‌هایی که اغلب بدنسازهای ایرانی می‌شناسند و در هر باشگاه
+  معمولی انجام می‌شود (پایه‌های هالتر، دمبل، دستگاه، سیم‌کش و وزن بدن). هیچ حرکت عجیب، ناآشنا، نادر، خاص یا
+  ابداعی نیاور، و هیچ اسم یا نوع اجرای ساختگی یا کم‌شناخته نساز. اگر مطمئن نیستی یک حرکت رایج و شناخته‌شده است،
+  به‌جایش حرکت پایه‌ی معروف همان عضله را بنویس. اسم حرکت را عینا به شکل استاندارد و رایج فارسی بنویس.
 
 ## بررسی نهایی (در ذهنت، قبل از خروجی — هرکدام رد شد، برنامه را اصلاح کن)
 1. تعداد آیتم‌های days دقیقا برابر تعداد روزهای باشگاه کاربر است و هر روز دقیقا یک بار آمده.
@@ -995,6 +1000,9 @@ async function generateDay(day: SplitDay, split: SplitDay[], profileText: string
     profileText, "", "تقسیم هفتگی کل برنامه:", weekText, "",
     `حالا فقط جلسه‌ی روز ${day.day} را کامل طراحی کن. عضله‌های هدف این روز: ${day.muscles.join("، ")}.`,
     ...day.muscles.map((m) => `- ${m}: حداقل ${minExercisesFor(m, relaxed)} حرکت متمایز`),
+    "",
+    "فقط حرکت‌های رایج و شناخته‌شده بده. نمونه‌ی اسم‌های استاندارد و آشنا برای عضله‌های همین روز (ترجیحا از همین‌ها یا هم‌سطحشان انتخاب کن، عینا با همین اسم‌ها):",
+    commonCatalogNamesFor(day.muscles).join("، "),
   ].join("\n");
 
   const attempt = async (content: string, maxTokens: number) => {
@@ -1027,7 +1035,12 @@ async function generateDay(day: SplitDay, split: SplitDay[], profileText: string
       logError("ai-gateway", `اصلاح جلسه‌ی ${day.day} شکست خورد: ${err?.message || err}`, { severity: "WARNING" as any, context: { feature: "EXERCISE_PLAN_GENERATION" } });
     }
   }
-  const [norm] = normalizeExercisePlan([{ day: day.day, focus: day.focus, exercises }], [day.day]);
+  // اسم حرکت‌ها با کاتالوگ حرکت‌های شناخته‌شده یکی می‌شه؛ اسم عجیب/ناشناخته جایگزین یا حذف می‌شه
+  const conformed = conformExercisesToCatalog(exercises);
+  if (conformed.fellBack) {
+    logError("ai-gateway", `اسم حرکت‌های جلسه‌ی ${day.day} بیشتر در کاتالوگ نبود؛ بدون تغییر ماند`, { severity: "WARNING" as any, context: { feature: "EXERCISE_PLAN_GENERATION" } });
+  }
+  const [norm] = normalizeExercisePlan([{ day: day.day, focus: day.focus, exercises: conformed.exercises }], [day.day]);
   return norm;
 }
 

@@ -385,3 +385,17 @@ describe("findFreeSlot", () => {
     expect(findFreeSlot([], 1, 8 * 60, 60, 9 * 60)!.startMin).toBe(8 * 60);
   });
 });
+
+import { nomoUnlimitedFor as _nomoUnlimitedFor } from "@/lib/routineAssistant";
+describe("nomoUnlimitedFor", () => {
+  it("basic and max are unlimited", () => {
+    expect(_nomoUnlimitedFor(["basic"])).toBe(true);
+    expect(_nomoUnlimitedFor(["exercise", "max"])).toBe(true);
+  });
+  it("gym, trader only or none are not", () => {
+    expect(_nomoUnlimitedFor(["exercise"])).toBe(false);
+    expect(_nomoUnlimitedFor(["trade", "exercise"])).toBe(false);
+    expect(_nomoUnlimitedFor([])).toBe(false);
+    expect(_nomoUnlimitedFor(null)).toBe(false);
+  });
+});

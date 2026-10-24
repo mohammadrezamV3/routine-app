@@ -39,7 +39,7 @@ export function trialCopy(): string {
 
 /** متن «روتین من» 14 روز رایگان + قیمت ماهانه‌ی پنل (جایگزین FREE_ROUTINE_COPY_FA در انگلیسی) */
 export function freeRoutineCopyEn(cfg: PricingConfig): string {
-  return `My Routine is free for 14 days, then continues with the My Routine plan (${tomanShortText(monthlyPriceToman(cfg, "basic"))} per month); the smart assistant Nomo has 10 free messages and is unlimited on paid plans.`;
+  return `My Routine is free for 14 days, then continues with the My Routine plan (${tomanShortText(monthlyPriceToman(cfg, "basic"))} per month); the smart assistant Nomo has 10 free messages and is unlimited in the My Routine and Max plans.`;
 }
 
 /** مثل formatPriceAmount (ریال خام → تومان) ولی با واحد زبان جاری */

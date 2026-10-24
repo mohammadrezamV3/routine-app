@@ -38,7 +38,7 @@ function post(body: unknown): NextRequest {
 
 const createdUsers: string[] = [];
 
-async function makeUser(opts: { subscribed?: boolean } = {}): Promise<string> {
+async function makeUser(opts: { subscribed?: boolean; planKey?: string } = {}): Promise<string> {
   const user = await prisma.user.create({
     data: {
       email: `routine-ai-${Date.now()}-${Math.random().toString(36).slice(2)}@example.com`,
@@ -53,9 +53,9 @@ async function makeUser(opts: { subscribed?: boolean } = {}): Promise<string> {
     // تست وقتی پلنی پیدا نمی‌کرد بی‌صدا از ساخت اشتراک می‌گذشت، و تست
     // «مشترک نامحدود است» عملا داشت کاربر رایگان را می‌سنجید.
     const plan = await prisma.plan.upsert({
-      where: { key_market: { key: "test-plan", market: "IRAN" } },
+      where: { key_market: { key: opts.planKey ?? "basic", market: "IRAN" } },
       create: {
-        key: "test-plan", nameFa: "پلن تست", nameEn: "Test", market: "IRAN",
+        key: opts.planKey ?? "basic", nameFa: "پلن تست", nameEn: "Test", market: "IRAN",
         currency: "IRR", priceMonthly: 1000,
       },
       update: {},
@@ -187,6 +187,12 @@ describe("POST /api/routine/assistant — سهمیه", () => {
       expect((await res.json()).quota.unlimited).toBe(true);
     }
     expect(await readUses(currentUserId)).toBe(0);
+  });
+
+  it("مشترک فقط بدنسازی نامحدود نیست و سهمیه‌ی رایگان دارد", async () => {
+    currentUserId = await makeUser({ subscribed: true, planKey: "exercise" });
+    const res = await GET();
+    expect((await res.json()).unlimited).toBe(false);
   });
 
   it("سوپریوزر هم نامحدود است", async () => {
