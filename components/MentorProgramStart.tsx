@@ -29,7 +29,7 @@ type Loaded = StartLoaded;
  * همه‌ی حالت‌ها همان کارکرد قبلی را دارند؛ فقط در یک صفحه‌اند.
  */
 export function MentorProgramStart({
-  rows, missing, row, allowedTypes, source, loaded, initialPick, onPickStudent, onClearStudent, onSource, onLoaded,
+  rows, missing, row, allowedTypes, source, loaded, initialPick, onPickStudent, onClearStudent, onSource, onLoaded, hideSources,
 }: {
   rows: MentorshipRow[];
   missing: boolean;
@@ -42,6 +42,8 @@ export function MentorProgramStart({
   onClearStudent: () => void;
   onSource: (s: StartSource) => void;
   onLoaded: (l: Loaded | null) => void;
+  /** صفحه‌ی برنامه‌ی تازه (v3) خودش تب منبع داره؛ این تب‌ها پنهان می‌شن */
+  hideSources?: boolean;
 }) {
   if (!row) {
     return (
@@ -78,17 +80,19 @@ export function MentorProgramStart({
         sub={<span>{row.activePrograms > 0 ? tr(`${fa(row.activePrograms)} برنامه‌ی در حال اجرا`, `${fa(row.activePrograms)} ${row.activePrograms === 1 ? "program" : "programs"} in progress`) : tr("برنامه‌ی در حال اجرا نداره", "No program in progress")}</span>}
         end={rows.length > 1 ? <button type="button" className="mentor-text-btn" onClick={onClearStudent}>{tr("عوض کردن", "Change")}</button> : undefined}
       />
-      <div className="mentor-tabs">
-        <SegmentedTabs<StartSource>
-          active={source}
-          onChange={onSource}
-          options={[
-            { value: "blank", label: tr("از اول", "From scratch") },
-            { value: "template", label: tr("از قالب", "From template") },
-            { value: "copy", label: tr("کپی برنامه", "Copy a program") },
-          ]}
-        />
-      </div>
+      {!hideSources && (
+        <div className="mentor-tabs">
+          <SegmentedTabs<StartSource>
+            active={source}
+            onChange={onSource}
+            options={[
+              { value: "blank", label: tr("از اول", "From scratch") },
+              { value: "template", label: tr("از قالب", "From template") },
+              { value: "copy", label: tr("کپی برنامه", "Copy a program") },
+            ]}
+          />
+        </div>
+      )}
       {source === "template" && (
         <TemplateSource allowedTypes={allowedTypes} loaded={loaded} preselect={initialPick.templateId} onLoaded={onLoaded} />
       )}
