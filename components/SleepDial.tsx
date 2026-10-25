@@ -16,7 +16,7 @@ import { arcPath, fitFontSize, greetKey, hhmmToMin, minuteToAngle, pointAt, star
 import { cycleBoundaries } from "@/lib/sleepCycles";
 import { SleepCycleButton } from "./SleepCycleButton";
 import { startTracking, stopTracking, type SleepTracking } from "@/lib/sleepTracker";
-import { bedtimeState, cycleTileInfo, dialHint, dialHintText, type DialHint } from "@/lib/sleepDialHints";
+import { cycleTileInfo, dialHint, dialHintText, type DialHint } from "@/lib/sleepDialHints";
 
 const HINT_ICON: Record<DialHint["kind"], typeof Moon> = {
   winddown: Moon, pastBedtime: Clock, streak: Flame, under: TrendingDown, over: TrendingUp,
@@ -165,13 +165,11 @@ export function SleepDial({
   } else if (showLast && band) {
     kicker = tr("امتیاز دیشب", "Last night's score");
     big = faNum(scoreShown ?? lastScore!);
-    caption = scoreBandLabel(band);
-    caption2 = durationLabel(sleepMinutes(lastNight!));
+    caption = `${scoreBandLabel(band)} · ${durationLabel(sleepMinutes(lastNight!))}`;
     bigCls = `is-score slp-c-${band}`;
   } else if (phase === "bedtime" || phase === "night") {
     kicker = tr("وقت خوابه", "Bedtime");
     big = now ? `${String(now.getHours()).padStart(2, "0")}:${String(now.getMinutes()).padStart(2, "0")}` : "--:--";
-    caption = tr("الان", "Now");
     bigCls = "is-clock";
   } else if (phase === "morning" && !lastNight) {
     kicker = tr("صبح بخیر", "Good morning");
@@ -182,7 +180,6 @@ export function SleepDial({
     kicker = tr("تا وقت خواب", "Until bedtime");
     const toBed = minutesUntil(Math.floor(nowMin ?? 0), target.sleep) ?? 0;
     big = now ? hms(toBed * 60 - now.getSeconds()) : "--:--:--";
-    caption = tr(`ساعت ${target.sleep}`, `At ${target.sleep}`);
     bigCls = "is-clock is-hms";
   }
 
@@ -212,15 +209,12 @@ export function SleepDial({
     : null;
   const HintIcon = hint ? HINT_ICON[hint.kind] : null;
   const cycleInfo = nowMin !== null ? cycleTileInfo(nowMin, bedMin, latency, goalMin, phase, tracking ? trackFrom : null) : null;
-  const bedState = nowMin !== null ? bedtimeState(nowMin, target) : null;
-  let bedSub = tr(`ساعت خواب ${target.sleep}`, `Bedtime ${target.sleep}`);
-  if (bedState?.state === "until") bedSub = tr(`تا وقت خواب ${durationLabel(bedState.min)}`, `${durationLabel(bedState.min)} to bedtime`);
-  else if (bedState?.state === "now") bedSub = tr("وقت خوابه", "It's bedtime");
-  else if (bedState?.state === "past") bedSub = tr(`${durationLabel(bedState.min)} از وقت خواب گذشته`, `${durationLabel(bedState.min)} past bedtime`);
   // اندازه و جای عمودی متن وسط (نسبت به مرکز)؛ امتیاز درشت و فاصله‌ها بازتر
   const isScore = bigCls.includes("is-score");
   const baseBig = isScore ? 68 : bigCls.includes("is-hms") ? 30 : bigCls.includes("is-word") ? 34 : 46;
-  const cy = isScore ? { kicker: -50, big: -8, caption: 31, caption2: 49 } : { kicker: -32, big: 0, caption: 32, caption2: 0 };
+  const cy = isScore
+    ? { kicker: -44, big: -4, caption: 36, caption2: 0 }
+    : caption ? { kicker: -32, big: 0, caption: 32, caption2: 0 } : { kicker: -24, big: 6, caption: 0, caption2: 0 };
 
   const nowAngle = nowMin !== null ? minuteToAngle(nowMin) : 0;
   const handA = pointAt(C, R_HAND_IN, nowAngle);
@@ -386,7 +380,7 @@ export function SleepDial({
         <div className="sld-center" aria-hidden="true">
           <span className="sld-kicker" style={centerLine(cy.kicker, fitFontSize(kicker, 12.5, CENTER_W))}>{kicker}</span>
           <span className={`sld-big ${bigCls}`} style={centerLine(cy.big, fitFontSize(big, baseBig, CENTER_W))}>{big}</span>
-          <span className={`sld-caption${isScore && band ? ` is-band slp-c-${band}` : ""}`} style={centerLine(cy.caption, fitFontSize(caption, 13, CENTER_W))}>{caption}</span>
+          {caption && <span className={`sld-caption${isScore && band ? ` is-band slp-c-${band}` : ""}`} style={centerLine(cy.caption, fitFontSize(caption, 13, CENTER_W))}>{caption}</span>}
           {caption2 && <span className="sld-caption is-sub" style={centerLine(cy.caption2, fitFontSize(caption2, 12, CENTER_W))}>{caption2}</span>}
         </div>
       </div>
@@ -419,7 +413,7 @@ export function SleepDial({
           <span className="sld-tile-txt">
             <small>{tr("هدف خواب", "Sleep goal")}</small>
             <b>{durationLabel(goalMin)}</b>
-            <em>{bedSub}</em>
+            <em>{tr("تغییر", "Change")}</em>
           </span>
         </button>
       </div>

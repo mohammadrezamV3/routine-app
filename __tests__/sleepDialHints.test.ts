@@ -55,3 +55,11 @@ describe("اطلاعات باکس چرخه و هدف", () => {
     expect(bedtimeState(8 * 60, t)).toEqual({ state: "none", min: 0 });
   });
 });
+
+describe("متن نکته‌ی آماده‌شدن برای خواب", () => {
+  it("مدت تا خواب رو تکرار نمی‌کنه (همون شمارش وسط ساعته)", () => {
+    const txt = dialHintText({ kind: "winddown", tone: "info", n: 47 });
+    expect(txt).not.toMatch(/47/);
+    expect(txt).not.toBe("");
+  });
+});
