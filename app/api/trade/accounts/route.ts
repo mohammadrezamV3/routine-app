@@ -5,6 +5,7 @@ import { requireModule } from "@/lib/moduleAccess";
 import { parseAccountInput } from "@/lib/tradeServer";
 import { computeTradeStats } from "@/lib/tradeAnalytics";
 import { loadAccountMoney } from "@/lib/tradeCashflowServer";
+import { loadPropBadges } from "@/lib/propChallengeServer";
 import { MAX_ACCOUNTS } from "@/lib/tradeTypes";
 import { withLiveSync } from "@/lib/realtime";
 import { sessionFeatureBlocked } from "@/lib/featureFlagsServer";
@@ -48,7 +49,7 @@ export async function GET(req: NextRequest) {
   const [stats, money] = await Promise.all([
     prisma.tradeEntry.findMany({
       where: { userId, accountId: { in: accounts.map((a) => a.id) } },
-      select: { accountId: true, status: true, pnl: true, rMultiple: true, openedAt: true },
+      select: { accountId: true, status: true, pnl: true, rMultiple: true, openedAt: true, closedAt: true },
       take: 20_000,
     }),
     loadAccountMoney(accounts),
@@ -59,6 +60,13 @@ export async function GET(req: NextRequest) {
     if (!byAccount.has(s.accountId)) byAccount.set(s.accountId, []);
     byAccount.get(s.accountId)!.push(s);
   }
+
+  // نشان فاز چالش حساب‌های پراپ (از همین معامله‌ها، بدون کوئری اضافه)
+  const badges = await loadPropBadges(
+    userId,
+    accounts.map((a) => ({ id: a.id, type: a.type, initialBalance: a.initialBalance, cashFunding: money.get(a.id)?.cashFunding ?? 0 })),
+    new Map([...byAccount].map(([id, list]) => [id, list.map((e) => ({ pnl: e.pnl, status: e.status, openedAt: e.openedAt, closedAt: e.closedAt }))])),
+  );
 
   const withSummary = accounts.map((account) => {
     const { mtLink, ...a } = account;
@@ -71,6 +79,7 @@ export async function GET(req: NextRequest) {
       ...a,
       initialBalance: m.initialBalance,
       initialFromMt: m.initialFromMt,
+      propChallenge: badges.get(a.id) ?? null,
       cashFunding: m.cashFunding,
       cashCharges: m.cashCharges,
       // هش توکن عمدا بیرون داده نمی‌شود — فقط «متصل هست یا نه»

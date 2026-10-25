@@ -225,6 +225,7 @@ model User {
   calorieTargets         CalorieTarget[]
   tradeEntries           TradeEntry[]
   tradeAccounts          TradeAccount[]
+  tradePropChallenges    TradePropChallenge[]
   tradeTags              TradeTag[]
   tradeChecklists        TradeChecklist[]
   roadmaps               Roadmap[]
@@ -1192,8 +1193,41 @@ model TradeAccount {
   mtLink       TradeMtLink?
   cashflows    TradeCashflow[]
   pendingShots TradeMtPendingShot[]
+  propChallenge TradePropChallenge?
 
   @@index([userId, archived])
+}
+
+enum TradePropStatus {
+  ACTIVE // فاز در جریان
+  PASSED // هدف سود + حداقل روز معاملاتی کامل شد؛ منتظر «رفتن به فاز بعد»
+  FAILED // حد ضرر روزانه/کلی شکست یا مهلت تمام شد؛ منتظر «شروع دوباره»
+  FUNDED // مرحله‌ی فاند (بعد از آخرین فاز یا فاند مستقیم)
+}
+
+// چالش حساب پراپ (فقط برای TradeAccount.type = PROP). قانون‌ها در `config`
+// (JSON، شکل در lib/propChallenge.ts)، پیشرفت هیچ‌وقت ذخیره نمی‌شه و هر بار
+// سمت سرور از معامله‌های حساب محاسبه می‌شه؛ اینجا فقط «فاز فعلی و وضعیتش»
+// و تاریخچه‌ی فازها نگه‌داری می‌شه. هیچ معامله‌ای با تغییر فاز پاک نمی‌شه.
+model TradePropChallenge {
+  id        String       @id @default(cuid())
+  userId    String
+  user      User         @relation(fields: [userId], references: [id], onDelete: Cascade)
+  accountId String       @unique
+  account   TradeAccount @relation(fields: [accountId], references: [id], onDelete: Cascade)
+
+  config            Json
+  currentPhase      Int             @default(0) // اندیس فاز؛ برابر تعداد فازها یعنی مرحله‌ی فاند
+  status            TradePropStatus @default(ACTIVE)
+  phaseStartedAt    DateTime        @default(now())
+  phaseEndedAt      DateTime? // لحظه‌ی قبولی/شکست (UTC)؛ آمار فاز بعد از این بریده می‌شه
+  phaseStartBalance Float? // null = بالانس اولیه‌ی موثر حساب
+  history           Json            @default("[]")
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([userId])
 }
 
 // برچسب رنگی کاربرساخته — هم روی حساب استفاده می‌شه هم روی معامله، چون

@@ -2376,3 +2376,60 @@ html[data-perf-weak] .th-skel::after{ animation:none; }
   .th-end{ display:flex; align-items:center; gap:8px; margin-inline-start:auto; color:var(--muted2); flex-shrink:0; }
   .th-span-2, .th-span-3{ grid-column:auto; }
 }
+
+/* ── چالش پراپ (components/PropChallengeCard.tsx، PropChallengeFields.tsx) ── */
+.pc-badge{
+  font-size:10px; font-weight:700; border:1px solid currentColor; border-radius:999px; padding:3px 9px;
+  color:var(--accent); white-space:nowrap;
+}
+.pc-badge.pc-passed{ color:var(--pnl-win); }
+.pc-badge.pc-failed{ color:var(--pnl-loss); }
+.pc-badge.pc-funded{ color:var(--accent); }
+
+.pc-card{ margin:14px 0; padding:14px 16px; display:flex; flex-direction:column; gap:14px; }
+.pc-empty{ flex-direction:row; align-items:center; justify-content:space-between; flex-wrap:wrap; gap:10px; }
+.pc-head{ display:flex; align-items:center; gap:10px; }
+.pc-head b{ display:inline-flex; align-items:center; gap:6px; font-size:14px; color:var(--text); }
+.pc-config{ margin-inline-start:auto; }
+.pc-steps{ list-style:none; margin:0; padding:0; display:flex; align-items:flex-start; gap:6px; }
+.pc-step{ flex:1 1 0; min-width:0; display:flex; flex-direction:column; align-items:center; gap:6px; position:relative; color:var(--muted2); font-size:11px; font-weight:700; }
+.pc-step::before{
+  content:""; position:absolute; top:13px; inset-inline-start:calc(50% + 17px); inset-inline-end:calc(-50% + 17px);
+  border-top:2px dashed var(--line);
+}
+.pc-step:last-child::before{ display:none; }
+.pc-step.done::before{ border-top-style:solid; border-top-color:var(--accent); }
+.pc-step-dot{
+  width:26px; height:26px; border-radius:50%; display:grid; place-items:center;
+  border:2px solid var(--line); font-size:11px;
+}
+.pc-step.current{ color:var(--text); }
+.pc-step.current .pc-step-dot{ border-color:var(--accent); color:var(--accent); }
+.pc-step.done{ color:var(--text); }
+.pc-step.done .pc-step-dot{ border-color:var(--accent); color:var(--accent); }
+.pc-step.failed{ color:var(--pnl-loss); }
+.pc-step.failed .pc-step-dot{ border-color:var(--pnl-loss); color:var(--pnl-loss); }
+
+.pc-meter{ display:flex; flex-direction:column; gap:6px; }
+.pc-meter-row{ display:flex; align-items:baseline; justify-content:space-between; gap:10px; font-size:12px; color:var(--muted2); }
+.pc-meter-row b{ color:var(--text); font-size:12px; }
+.pc-track{ height:8px; border-radius:999px; overflow:hidden; border:1px solid var(--line); }
+.pc-fill{ height:100%; border-radius:999px; background:var(--accent); transition:width .45s cubic-bezier(.22,1,.36,1); }
+.pc-fill.warn{ background:#E0A23A; }
+.pc-fill.danger{ background:var(--pnl-loss); }
+.pc-caption{ font-size:11px; color:var(--muted2); }
+.pc-facts{ display:flex; flex-wrap:wrap; gap:6px 18px; font-size:12px; color:var(--muted2); }
+.pc-facts b{ color:var(--text); }
+.pc-note{ font-size:12px; font-weight:700; color:var(--pnl-win); }
+.pc-note-fail{ color:var(--pnl-loss); }
+.pc-actions{ display:flex; justify-content:flex-end; }
+.pc-history{ list-style:none; margin:0; padding:10px 0 0; border-top:1px solid var(--line); display:flex; flex-direction:column; gap:6px; font-size:11px; color:var(--muted2); }
+.pc-history li{ display:grid; grid-template-columns:1fr auto auto auto; gap:12px; align-items:center; }
+.pc-pass{ color:var(--pnl-win); font-weight:700; }
+.pc-fail{ color:var(--pnl-loss); font-weight:700; }
+
+.pc-fields{ display:flex; flex-direction:column; gap:10px; }
+.pc-phase{ border:1px solid var(--line); border-radius:16px; padding:12px; display:flex; flex-direction:column; gap:10px; }
+.pc-phase-title{ font-size:12px; font-weight:800; color:var(--text); }
+.pc-grid{ display:grid; grid-template-columns:1fr 1fr; gap:10px; }
+.pc-grid > div{ min-width:0; }
