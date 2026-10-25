@@ -13,6 +13,7 @@ import { faNum } from "@/lib/jalali";
 import { CoachAvatar } from "./CoachAvatar";
 import { CoachEmpty } from "./CoachEmpty";
 import { CoachGoalCard } from "./CoachGoalCard";
+import { CoachPress } from "./CoachPress";
 import { CoachNomoLine } from "./CoachNomoLine";
 import { CoachWeekCard } from "./CoachWeekCard";
 import { mentorApi } from "./MentorDashKit";
@@ -131,13 +132,13 @@ export function CoachSpaceMentorSide({ space, studentId, onNotes }: { space: Coa
         )}
       </section>
 
-      <button type="button" className="ch-row cs-note-row" onClick={onNotes}>
+      <CoachPress className="ch-row cs-note-row" onPress={onNotes}>
         <NotebookPen size={18} strokeWidth={1.75} aria-hidden />
         <span className="ch-row-main">
           <span className="ch-row-title">{tr("یادداشت من", "My notes")}</span>
           <span className="ch-row-sub">{tr("فقط خودت می‌بینی", "Only you can see this")}</span>
         </span>
-      </button>
+      </CoachPress>
 
       {active && (
         <SmartLink href={`/mentor/programs/new?student=${encodeURIComponent(studentId)}`} className="btn btn-primary">
@@ -157,9 +158,9 @@ export function CoachSpaceStudentSide({ space, onGoal, onShare, onSees }: { spac
   return (
     <>
       {goal && (
-        <button type="button" className="cs-reset" onClick={onGoal} aria-label={tr("جزئیات هدف", "Goal details")}>
-          <CoachGoalCard goal={goal} onShare={undefined} />
-        </button>
+        <CoachPress className="cs-reset" onPress={onGoal} label={tr("جزئیات هدف", "Goal details")}>
+          <CoachGoalCard goal={goal} />
+        </CoachPress>
       )}
       {goal?.status === "DONE" && (
         <button type="button" className="btn btn-tonal" onClick={onShare}>{tr("اشتراک‌گذاری هدف", "Share goal")}</button>
