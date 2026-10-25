@@ -26,7 +26,7 @@ export async function POST(req: Request) {
     return conflict(tr("برای این هفته داده‌ای نیست که خلاصه‌اش کنم", "There is no data for this week to summarize"));
   }
   const goal = await currentGoal(ctx);
-  const json = await runNomo(userId, WEEK_SYSTEM_PROMPT, JSON.stringify({ week: weekFacts(report, goal), outputLanguage: isEn() ? "English" : "Persian" }), 800, "week");
+  const json = await runNomo(userId, WEEK_SYSTEM_PROMPT, JSON.stringify({ week: weekFacts(report, goal), outputLanguage: isEn() ? "English" : "Persian" }), 800, "week", (x) => sanitizeWeekSummary(x) !== null);
   const summary = json ? sanitizeWeekSummary(json) : null;
   if (!summary) return nomoUnavailable();
 

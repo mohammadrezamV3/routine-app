@@ -60,7 +60,7 @@ export async function guardNomo(req: Request): Promise<{ ok: true; a: NomoAccess
 }
 
 /** فراخوانی مدل + ثبت مصرف؛ خطا = null (سهمیه مصرف نمی‌شه چون فقط موفق‌ها شمرده می‌شن) */
-export async function runNomo(userId: string, system: string, userContent: string, maxTokens: number, tag: string): Promise<unknown | null> {
+export async function runNomo(userId: string, system: string, userContent: string, maxTokens: number, tag: string, valid?: (json: unknown) => boolean): Promise<unknown | null> {
   try {
     const { text, usage, durationMs, truncated } = await callAiChat(system, userContent, maxTokens, undefined, undefined, 0.6);
     let json: unknown = null;
@@ -71,9 +71,11 @@ export async function runNomo(userId: string, system: string, userContent: strin
         json = null;
       }
     }
+    // پاسخ JSON که بعد از اعتبارسنجی قابل‌استفاده نیست هم شکست حساب می‌شه (روت 503 می‌ده، پس نباید از سهمیه کم بشه)
+    const usable = json !== null && (valid ? valid(json) : true);
     // هزینه‌ی واقعی ثبت می‌شه؛ فقط پاسخ قابل‌استفاده از سهمیه شمرده می‌شه (success)
-    await recordAiUsage(userId, AiFeatureKey.COACH_NOMO, usage, durationMs, json !== null);
-    return json;
+    await recordAiUsage(userId, AiFeatureKey.COACH_NOMO, usage, durationMs, usable);
+    return usable ? json : null;
   } catch (err: any) {
     logError("ai-gateway", `نومو مربی (${tag}) شکست خورد: ${err?.message || err}`, { context: { feature: "COACH_NOMO" } });
     return null;

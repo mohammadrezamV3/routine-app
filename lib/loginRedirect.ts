@@ -50,6 +50,22 @@ function withTimeout<T>(p: Promise<T>, ms: number, fallback: T): Promise<T> {
   return Promise.race([p.catch(() => fallback), new Promise<T>((r) => setTimeout(() => r(fallback), ms))]);
 }
 
+/**
+ * آدرس بازگشت امن از ?callbackUrl= (مثلا /c/sara?start=1 از لینک کوتاه مربی):
+ * فقط مسیر نسبی همین سایت؛ هر چیز دیگه (//host، \\، پروتکل) نادیده گرفته می‌شه.
+ */
+export function readCallbackUrl(search?: string): string | null {
+  try {
+    const raw = new URLSearchParams(search ?? (typeof window !== "undefined" ? window.location.search : "")).get("callbackUrl");
+    if (!raw || raw.length > 300) return null;
+    if (!raw.startsWith("/") || raw.startsWith("//") || raw.includes("\\") || /[\u0000-\u001f]/.test(raw)) return null;
+    if (raw.startsWith("/auth")) return null;
+    return raw;
+  } catch {
+    return null;
+  }
+}
+
 export async function loginAndRedirect(opts: LoginRedirectOptions): Promise<void> {
   if (redirecting) return;
   redirecting = true;
@@ -87,7 +103,7 @@ export async function loginAndRedirect(opts: LoginRedirectOptions): Promise<void
     if (typeof document !== "undefined") document.documentElement.removeAttribute("data-logging-in");
   }, 10_000);
 
-  window.location.replace(home);
+  window.location.replace(readCallbackUrl() ?? home);
 }
 
 /** فقط برای تست */

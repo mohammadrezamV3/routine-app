@@ -173,6 +173,11 @@ function ChatBody({
   const isMentor = role === "MENTOR";
   const peerLabel = peerName || (isMentor ? tr("شاگرد", "Student") : tr("مربی", "Mentor"));
 
+  // پیش‌نویس ?draft= ممکنه بعد از mount برسه (خوندن آدرس بعد از اولین داده)
+  useEffect(() => {
+    if (prefill) setDraft((d) => d || prefill);
+  }, [prefill]);
+
   useEffect(() => {
     onReady?.(true);
     return () => onReady?.(false);

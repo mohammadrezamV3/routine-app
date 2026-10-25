@@ -35,7 +35,7 @@ export async function POST(req: Request) {
     previousProgramTitles: recent.map((p) => `${p.type}: ${p.title}`),
     outputLanguage: isEn() ? "English" : "Persian",
   };
-  const json = await runNomo(userId, PROGRAM_SYSTEM_PROMPT, JSON.stringify(input), 3500, "program");
+  const json = await runNomo(userId, PROGRAM_SYSTEM_PROMPT, JSON.stringify(input), 3500, "program", (x) => sanitizeProgramDraft(x, type) !== null);
   const draft = json ? sanitizeProgramDraft(json, type) : null;
   if (!draft) return nomoUnavailable();
   return NextResponse.json({ draft, quota: quotaOf(unlimited, used + 1) });

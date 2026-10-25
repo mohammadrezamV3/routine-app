@@ -19,7 +19,7 @@ export async function POST(req: Request) {
   if (weekStart > cur) weekStart = cur;
   const report = await getWeekReport(ctx, weekStart, "MENTOR", { live: 1 }) ?? (await getWeekReport(ctx, lastFinishedWeekStart(ctx.todayIso), "MENTOR", { live: 1 }));
   const goal = await currentGoal(ctx);
-  const json = await runNomo(userId, NUDGE_SYSTEM_PROMPT, JSON.stringify({ week: report ? weekFacts(report, goal) : null, outputLanguage: isEn() ? "English" : "Persian" }), 600, "nudge");
+  const json = await runNomo(userId, NUDGE_SYSTEM_PROMPT, JSON.stringify({ week: report ? weekFacts(report, goal) : null, outputLanguage: isEn() ? "English" : "Persian" }), 600, "nudge", (x) => sanitizeSuggestions(x) !== null);
   const suggestions = json ? sanitizeSuggestions(json) : null;
   if (!suggestions) return nomoUnavailable();
   return NextResponse.json({ suggestions, quota: quotaOf(unlimited, used + 1) });
