@@ -3,7 +3,8 @@
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { useParams, useRouter } from "next/navigation";
 import { Copy, X } from "lucide-react";
-import { MentorDashShell, MentorDashError, fa, mentorApi } from "@/components/MentorDashKit";
+import { MentorDashError, fa, mentorApi } from "@/components/MentorDashKit";
+import { CoachPanelShell } from "@/components/CoachPanelShell";
 import { MI, MI_STROKE, MentorField, MentorRow, MentorSection } from "@/components/MentorUI";
 import { JalaliDatePicker } from "@/components/JalaliDatePicker";
 import { LoadingBlock, Spinner } from "@/components/Spinner";
@@ -196,11 +197,12 @@ export default function DuplicateMentorProgramPage() {
   }
 
   return (
-    <MentorDashShell
+    <CoachPanelShell
+      nav={false}
       title={tr("کپی برنامه", "Copy program")}
-      back={program ? { href: `/mentor-programs/${program.id}`, label: program.title } : { href: "/mentor/templates", label: tr("برنامه‌ها", "Programs") }}
+      back={program ? { href: `/mentor-programs/${program.id}`, label: program.title } : { href: "/mentor/students", label: tr("شاگردها", "Students") }}
     >
       {body}
-    </MentorDashShell>
+    </CoachPanelShell>
   );
 }

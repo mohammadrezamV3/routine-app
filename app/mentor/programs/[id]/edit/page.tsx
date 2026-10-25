@@ -4,11 +4,12 @@ import { useCallback, useEffect, useState } from "react";
 import { SmartLink as Link } from "@/components/SmartLink";
 import { useParams } from "next/navigation";
 import { ClipboardList } from "lucide-react";
-import { MentorDashShell, MentorDashError, mentorApi } from "@/components/MentorDashKit";
+import { MentorDashError, mentorApi } from "@/components/MentorDashKit";
+import { CoachPanelShell } from "@/components/CoachPanelShell";
 import { MentorProgramEditor } from "@/components/MentorProgramEditor";
 import { MentorProgramTools } from "@/components/MentorProgramTools";
 import { MI, MI_STROKE, MentorEmptyState } from "@/components/MentorUI";
-import { LoadingBlock } from "@/components/Spinner";
+import { PageLoader } from "@/components/PageLoader";
 import { publicUserName } from "@/lib/mentorTypes";
 import type { ProgramDetailResponse } from "@/lib/mentorTypes";
 import { tr } from "@/lib/i18n";
@@ -44,10 +45,10 @@ export default function EditMentorProgramPage() {
   const student = data?.role === "MENTOR" ? data.program.counterpart ?? null : null;
   const back = student
     ? { href: `/mentor/students/${student.id}`, label: publicUserName(student) }
-    : { href: "/mentor/templates", label: tr("برنامه‌ها", "Programs") };
+    : { href: "/mentor/students", label: tr("شاگردها", "Students") };
 
   let body: React.ReactNode;
-  if (!id || state.loading) body = <LoadingBlock />;
+  if (!id || state.loading) body = <PageLoader />;
   else if (state.error || !data) {
     const final = state.status === 404 || state.status === 403;
     body = <MentorDashError message={state.error || tr("برنامه باز نشد؛ دوباره تلاش کن", "Could not open the program. Try again.")} onRetry={final ? undefined : load} />;
@@ -75,8 +76,8 @@ export default function EditMentorProgramPage() {
   }
 
   return (
-    <MentorDashShell title={tr("ویرایش برنامه", "Edit program")} back={back}>
+    <CoachPanelShell nav={false} title={tr("ویرایش برنامه", "Edit program")} back={back}>
       {body}
-    </MentorDashShell>
+    </CoachPanelShell>
   );
 }

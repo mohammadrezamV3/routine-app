@@ -1,6 +1,6 @@
 import { redirect } from "next/navigation";
 
-// گزارش هفتگی داخل صفحه‌ی شاگردها میاد (components/MentorWeeklyReport.tsx)
+// گزارش هفته حالا داخل فضای هر شاگرد است
 export default function MentorReportsPage() {
-  redirect("/mentor/students?view=report");
+  redirect("/mentor/students");
 }

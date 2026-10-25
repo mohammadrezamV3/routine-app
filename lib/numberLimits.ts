@@ -123,6 +123,14 @@ export const NUMBER_LIMITS = {
   // ── ادمین ──────────────────────────────────────────────────────────────
   /** حداکثر مصرف کد تخفیف برای هر کاربر */
   discountMaxUses: L(1, 1000000, 0, "حداکثر مصرف", "Max uses"),
+
+  // ── هدف مربی (CoachGoalSheet) ─────────────────────────────────────────
+  /** تعداد جلسه‌ی تمرین در هفته برای هدف */
+  coachGoalSessions: L(1, 14, 0, "جلسه در هفته", "Sessions per week"),
+  /** درصد انجام روتین در هفته برای هدف */
+  coachGoalRoutineRate: L(10, 100, 0, "درصد روتین", "Routine percent"),
+  /** تعداد هفته‌ی هدف */
+  coachGoalWeeks: L(1, 52, 0, "تعداد هفته", "Number of weeks"),
 } as const satisfies Record<string, NumberLimit>;
 
 export type LimitKey = keyof typeof NUMBER_LIMITS;

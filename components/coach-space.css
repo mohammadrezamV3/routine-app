@@ -1,0 +1,139 @@
+/* ============================================================
+   فضای همکاری مربی نسخه‌ی 3 (CoachSpace / CoachChat / CoachWeekPage / CoachStudentHome) — پیشوند cs-
+   فقط توکن‌های تم و ویژگی‌های منطقی؛ سطح‌ها و دکمه‌ها از coach.css و سیستم .btn می‌آن.
+   ============================================================ */
+
+.ch-page.cs-page{ padding-block-end:0; }
+@media (min-width:1024px){
+  .ch-page.cs-page{ padding-block-end:24px; }
+}
+.cs-muted{ margin:0; font-size:12.5px; line-height:1.8; color:var(--muted); }
+.cs-link{ color:inherit; text-decoration:none; }
+.cs-reset{ display:block; inline-size:100%; padding:0; text-align:start; color:inherit; cursor:pointer; }
+.cs-reset:focus-visible{ outline:2px solid var(--accent); outline-offset:3px; border-radius:28px; }
+.ch-row[role="button"], .cs-mini-card[role="button"]{ cursor:pointer; }
+.ch-row[role="button"]:focus-visible, .cs-mini-card:focus-visible{ outline:2px solid var(--accent); outline-offset:2px; }
+
+/* ── نوار زیر سرتیتر: خصوصی + هدف ── */
+.cs-subbar{ display:flex; align-items:center; flex-wrap:wrap; gap:8px; }
+.cs-subbar:empty{ display:none; }
+
+/* ── ستون‌ها ── */
+.cs-col-main{ min-inline-size:0; display:flex; flex-direction:column; }
+.cs-col-start, .cs-col-side{ min-inline-size:0; }
+.cs-col-side{ display:flex; flex-direction:column; gap:12px; }
+@media (min-width:1024px){
+  .ch-space-grid.cs-grid-2{ grid-template-columns:minmax(0,1fr) 320px; }
+  .cs-col-start{ position:sticky; inset-block-start:16px; max-block-size:calc(100dvh - 32px); overflow-y:auto; }
+}
+
+/* ── خط زمانی ── */
+.cs-chat{ display:flex; flex-direction:column; min-block-size:50dvh; }
+.cs-thread{ display:flex; flex-direction:column; gap:10px; flex:1; padding-block:8px 16px; }
+.cs-older{ display:flex; justify-content:center; }
+.cs-event{ display:flex; flex-direction:column; }
+.cs-event > .ch-week-card, .cs-event > .cs-mini-card{ inline-size:min(100%, 420px); align-self:center; }
+.cs-event > .ch-day-sep{ padding-block:4px; }
+.cs-bubble{ position:relative; display:flex; flex-direction:column; gap:3px; }
+.cs-bubble.is-tight{ margin-block-start:-6px; }
+.cs-bubble:focus-visible{ outline:2px solid var(--accent); outline-offset:2px; }
+.cs-bubble.is-failed{ border-color:var(--pnl-loss, #E05252); }
+.cs-bubble-label{ font-size:11px; font-weight:700; color:var(--muted); }
+.cs-welcome{ white-space:pre-wrap; }
+.cs-meta{ display:flex; align-items:center; gap:8px; justify-content:flex-end; font-size:10.5px; color:var(--muted); font-family:var(--font-latin), var(--font-vazir), sans-serif; }
+.cs-meta-state{ display:inline-flex; align-items:center; gap:3px; }
+.cs-meta-state.is-fail{ color:var(--pnl-loss, #E05252); }
+.cs-unreadable{ font-size:12.5px; color:var(--muted); font-style:italic; }
+
+/* ── نوار پایین: نوشتن ── */
+.cs-dock{
+  position:sticky; inset-block-end:0; z-index:20; display:flex; flex-direction:column; gap:8px;
+  padding-block:10px calc(10px + env(safe-area-inset-bottom)); background:var(--bg);
+}
+@media (min-width:1024px){ .cs-dock{ padding-block-end:10px; } }
+.cs-composer{ display:flex; align-items:flex-end; gap:8px; }
+.cs-input{ flex:1; min-inline-size:0; resize:none; max-block-size:148px; line-height:1.7; font-size:14px; padding-block:10px; }
+.cs-jump{ position:absolute; inset-inline-end:4px; inset-block-start:-52px; }
+.cs-toast{
+  position:absolute; inset-inline:0; inset-block-start:-44px; margin-inline:auto; inline-size:max-content; max-inline-size:90%;
+  padding:6px 14px; border-radius:999px; font-size:12px; color:var(--text); border:1px solid var(--surface-line); background:var(--box-bg);
+}
+.cs-notice{ display:flex; align-items:center; flex-wrap:wrap; gap:8px; margin:0; padding:10px 14px; border-radius:18px; font-size:13px; color:var(--muted); border:1px solid var(--surface-line); }
+.cs-notice.is-error{ color:var(--pnl-loss, #E05252); }
+.cs-note{ display:flex; align-items:flex-start; gap:10px; padding:12px 14px; border-radius:20px; font-size:13px; line-height:1.8; }
+.cs-note-body{ display:flex; flex-direction:column; gap:8px; }
+.cs-note-actions{ display:flex; gap:8px; }
+.cs-replies{ display:flex; flex-wrap:wrap; gap:8px; }
+.cs-replies-loading{ display:flex; justify-content:center; padding:12px; }
+
+/* ── پیشنهاد نومو ── */
+.cs-nudge{ display:flex; align-items:center; flex-wrap:wrap; gap:8px; }
+.cs-nudge-ico{ color:var(--ring-2b); flex:none; }
+.cs-nudge-chip{ max-inline-size:100%; block-size:auto; min-block-size:36px; white-space:normal; text-align:start; line-height:1.6; padding-block:6px; }
+.cs-nudge-option{ display:block; font-size:14px; line-height:1.8; text-decoration:none; }
+
+/* ── کارت‌های کوچک خط زمانی ── */
+.cs-mini-card{ display:flex; flex-direction:column; gap:4px; text-align:start; text-decoration:none; padding:12px 16px; border-radius:22px; }
+.cs-mini-title{ font-size:14px; font-weight:700; line-height:1.6; }
+.cs-mini-line{ font-size:12.5px; color:var(--muted); line-height:1.7; }
+.cs-clamp{ display:-webkit-box; -webkit-line-clamp:2; -webkit-box-orient:vertical; overflow:hidden; }
+.cs-card-error{ flex-basis:100%; margin:0; font-size:12px; color:var(--pnl-loss, #E05252); }
+
+/* ── فیلدهای شیت هدف ── */
+.cs-field{ display:flex; flex-direction:column; gap:6px; }
+.cs-field-label{ font-size:12.5px; font-weight:700; color:var(--muted); }
+.cs-goal-preview{ margin:0; padding:10px 14px; border-radius:16px; font-size:14px; font-weight:700; background:rgba(var(--accent-rgb), .1); color:var(--accent); }
+.cs-goal-weeks{ max-block-size:240px; overflow-y:auto; }
+.cs-goal-week{ display:flex; justify-content:space-between; gap:12px; padding:8px 12px; border-radius:14px; font-size:13px; color:var(--muted); border:1px solid var(--surface-line); }
+.cs-goal-week.is-current{ color:var(--text); border-color:rgba(var(--accent-rgb), .3); }
+.cs-goal-week.is-met .cs-goal-week-val{ color:var(--ring-1a); }
+.cs-goal-week-val{ font-family:var(--font-latin), var(--font-vazir), sans-serif; font-weight:700; }
+
+/* ── ستون‌های کناری دسکتاپ ── */
+.cs-students{ display:flex; flex-direction:column; gap:10px; }
+.cs-student-row{ min-block-size:56px; padding:8px 10px; border-radius:18px; }
+.cs-student-row.is-current{ border-color:rgba(var(--accent-rgb), .45); }
+.cs-badge{ position:static; flex:none; }
+.cs-side-card{ display:flex; flex-direction:column; gap:10px; }
+.cs-side-row{ display:flex; align-items:center; justify-content:space-between; gap:10px; padding:8px 4px; text-decoration:none; color:var(--text); font-size:14px; }
+.cs-side-row-val{ font-family:var(--font-latin), var(--font-vazir), sans-serif; font-weight:800; color:var(--accent); }
+.cs-note-row{ cursor:pointer; }
+.cs-task{ display:flex; align-items:center; gap:12px; padding-block:6px; }
+.ch-row-title.is-done{ color:var(--muted); text-decoration:line-through; }
+
+/* ── گزارش هفته ── */
+.cs-week-nav{ display:flex; align-items:center; gap:6px; }
+.cs-week-hero{ display:flex; flex-direction:column; align-items:center; gap:14px; text-align:center; }
+.cs-week-grade{ margin:0; font-size:18px; font-weight:800; line-height:1.6; }
+.cs-week-grade small{ font-size:12px; font-weight:600; color:var(--muted); }
+.cs-week-center{ font-size:26px; font-weight:800; font-family:var(--font-latin), var(--font-vazir), sans-serif; }
+.cs-week-hero .ch-stats{ inline-size:100%; }
+.cs-week-bars{ display:flex; flex-direction:column; gap:14px; }
+.cs-week-nomo{ display:flex; flex-direction:column; gap:8px; }
+.cs-week-actions{ display:flex; justify-content:flex-end; flex-wrap:wrap; gap:8px; }
+@media (min-width:1024px){
+  .ch-page.cs-week{ max-inline-size:640px; }
+}
+
+/* ── مربی من (شاگرد) ── */
+.cs-coach-card{ display:flex; align-items:center; gap:16px; }
+.cs-coach-body{ flex:1; min-inline-size:0; display:flex; flex-direction:column; gap:4px; }
+.cs-coach-name{ margin:0; font-size:18px; font-weight:800; line-height:1.5; }
+.cs-coach-row{ min-block-size:68px; }
+.cs-strip{ display:flex; align-items:center; gap:12px; padding:14px 16px; border-radius:22px; text-decoration:none; border-color:rgba(var(--accent-rgb), .3); }
+.cs-strip-body{ flex:1; min-inline-size:0; display:flex; flex-direction:column; gap:3px; }
+.cs-strip-title{ font-size:14px; font-weight:700; line-height:1.6; }
+.cs-strip-go{ flex:none; font-size:13px; font-weight:800; color:var(--accent); }
+.cs-home-actions{ display:flex; justify-content:flex-end; flex-wrap:wrap; gap:8px; }
+.cs-invites{ display:flex; flex-direction:column; gap:12px; }
+.cs-invite{ display:flex; flex-direction:column; gap:12px; }
+.cs-invite-head{ display:flex; align-items:center; gap:12px; }
+.cs-invite-text{ margin:0; display:flex; flex-direction:column; gap:3px; font-size:14px; line-height:1.7; }
+.cs-quote{ margin:0; padding:10px 14px; border-radius:16px; font-size:13.5px; line-height:1.8; color:var(--muted); border:1px solid var(--surface-line); }
+.cs-invite-actions{ display:flex; justify-content:flex-end; gap:8px; }
+.cs-fold{ display:flex; flex-direction:column; gap:8px; }
+.cs-fold-btn{ justify-content:flex-start; gap:8px; }
+.cs-fold-btn > svg{ margin-inline-start:auto; transition:transform .2s ease; }
+.cs-fold-btn > svg.is-open{ transform:rotate(180deg); }
+.cs-fold-count{ font-size:12px; color:var(--muted); font-family:var(--font-latin), var(--font-vazir), sans-serif; }
+.cs-fold-row{ cursor:default; }

@@ -5,6 +5,7 @@ import { useRouter } from "next/navigation";
 import { SegmentedTabs } from "./SegmentedTabs";
 import { tr } from "@/lib/i18n";
 import { prefetchWhenIdle } from "@/lib/prefetchPolicy";
+import { readCallbackUrl } from "@/lib/loginRedirect";
 
 type Tab = "login" | "signup";
 const HREF: Record<Tab, string> = { login: "/auth/login", signup: "/auth/signup" };
@@ -35,7 +36,9 @@ export function AuthTabs({ active }: { active: Tab }) {
         setPending(v);
         // scroll:false — لایه‌ی مشترک ثابت می‌مونه؛ پرش اسکرول به ابتدای سگمنت
         // جدید فقط تب‌ها رو از دید بیرون می‌برد.
-        router.push(HREF[v], { scroll: false });
+        // آدرس بازگشت (مثلا لینک کوتاه مربی) بین دو تب حفظ می‌شه
+        const cb = readCallbackUrl();
+        router.push(cb ? `${HREF[v]}?callbackUrl=${encodeURIComponent(cb)}` : HREF[v], { scroll: false });
       }}
       options={[
         { value: "login", label: tr("ورود", "Log in") },

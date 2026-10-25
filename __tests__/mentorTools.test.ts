@@ -372,7 +372,7 @@ describe("weekly report and export", () => {
     const csv = new TextDecoder().decode(bytes);
     expect(csv).toContain("تاریخ,منبع,برنامه,آیتم");
     expect(csv).toContain(`${dayOffset(-1)},برنامه‌ی مربی,برنامه تست,مطالعه,انجام شد`);
-    expect(csv.split("\r\n").filter((l) => l.includes("برنامه‌ی منتور"))).toHaveLength(6);
+    expect(csv.split("\r\n").filter((l) => l.includes("برنامه‌ی مربی"))).toHaveLength(6);
 
     expect((await getExport(req("GET", `/api/mentor/export?studentId=${hidden}`))).status).toBe(403);
     expect((await getExport(req("GET", `/api/mentor/export?studentId=${s}&from=2026-01-01&to=2026-12-31`))).status).toBe(400);

@@ -1,0 +1,203 @@
+/* ============================================================
+   بخش مربی نسخه‌ی 3 (docs/coach-v3.md) — پیشوند ch-
+   فقط توکن‌های تم سایت؛ روی تم روشن/تیره، پالت‌ها و تم مناسبتی کار می‌کنه.
+   فقط ویژگی‌های منطقی (rtl/ltr خودکار).
+   ============================================================ */
+
+/* حلقه‌ی پیشرفت مشترک (کپی هسته؛ هر بخش قاعده‌ی خودش رو داره) */
+.gring{ position:relative; display:inline-block; flex-shrink:0; }
+.gring svg{ display:block; }
+.gring-center{ position:absolute; inset:0; display:flex; align-items:center; justify-content:center; }
+.gring-cap{ filter:drop-shadow(0 0 3px rgba(0,0,0,.45)); }
+body[data-theme="light"] .gring-cap{ filter:drop-shadow(0 0 2px rgba(80,50,20,.35)); }
+
+/* ── صفحه ── */
+.ch-page{
+  position:relative; isolation:isolate; box-sizing:border-box;
+  max-inline-size:560px; margin-inline:auto; padding-inline:16px;
+  padding-block-start:12px; padding-block-end:calc(104px + env(safe-area-inset-bottom));
+  display:flex; flex-direction:column; gap:16px; color:var(--text);
+}
+.ch-page.is-wide{ max-inline-size:1180px; }
+.ch-halo{
+  position:absolute; z-index:-1; inset-inline:0; inset-block-start:0; block-size:340px; pointer-events:none;
+  background:radial-gradient(60% 100% at 50% 0%, rgba(var(--accent-rgb), .14), transparent 72%);
+}
+body[data-theme="light"] .ch-halo{ background:radial-gradient(60% 100% at 50% 0%, rgba(var(--accent-rgb), .12), transparent 72%); }
+@media (min-width:1024px){
+  .ch-page{ padding-block-end:48px; padding-inline:24px; gap:20px; }
+  .ch-space-grid{ display:grid; grid-template-columns:280px minmax(0,1fr) 320px; gap:20px; align-items:start; }
+  .ch-space-grid > *{ min-inline-size:0; }
+  .ch-space-side{ position:sticky; inset-block-start:16px; }
+}
+.ch-space-side, .ch-stack{ display:flex; flex-direction:column; gap:12px; }
+
+/* ── سرتیتر ── */
+.ch-header{ display:flex; align-items:center; gap:10px; min-block-size:48px; }
+.ch-title{ flex:1; min-inline-size:0; margin:0; font-size:22px; font-weight:800; line-height:1.3; color:var(--text); overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
+.ch-header-action{ display:flex; align-items:center; gap:8px; flex:none; }
+.ch-header-nav{ display:none; flex:none; }
+@media (min-width:1024px){ .ch-header-nav{ display:block; } }
+.ch-back{
+  inline-size:44px; block-size:44px; flex:none; display:inline-flex; align-items:center; justify-content:center;
+  border-radius:50%; color:var(--text); text-decoration:none; margin-inline-start:-8px;
+}
+.ch-back:focus-visible{ outline:2px solid var(--accent); outline-offset:2px; }
+.ch-section-title{ margin:4px 4px 0; font-size:13px; font-weight:700; color:var(--muted); }
+.ch-eyebrow{ font-size:12px; font-weight:700; color:var(--accent); }
+
+/* ── کارت و ردیف ── */
+.ch-card{
+  position:relative; box-sizing:border-box; border-radius:24px; padding:16px; color:var(--text); text-decoration:none;
+  background:linear-gradient(180deg, color-mix(in srgb, var(--text) 5%, transparent), color-mix(in srgb, var(--text) 1.5%, transparent)), var(--box-bg);
+  border:1px solid var(--surface-line);
+}
+.ch-card-lg{ border-radius:28px; padding:20px; }
+.ch-row{
+  position:relative; box-sizing:border-box; display:flex; align-items:center; gap:12px; inline-size:100%; min-block-size:64px; padding:10px 14px;
+  border-radius:20px; text-decoration:none; color:var(--text); text-align:start;
+  background:linear-gradient(180deg, color-mix(in srgb, var(--text) 4%, transparent), transparent), var(--box-bg);
+  border:1px solid var(--surface-line); cursor:pointer;
+  transition:transform .15s ease, border-color .18s ease;
+}
+.ch-row:active{ transform:scale(.985); }
+.ch-row:focus-visible, .ch-card:focus-visible{ outline:2px solid var(--accent); outline-offset:2px; }
+.ch-row-main{ flex:1; min-inline-size:0; display:flex; flex-direction:column; gap:3px; }
+.ch-row-title{ font-size:15px; font-weight:700; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
+.ch-row-sub{ font-size:12.5px; color:var(--muted); overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
+.ch-chev{ flex:none; color:var(--muted); }
+.ch-list{ display:flex; flex-direction:column; gap:8px; margin:0; padding:0; list-style:none; }
+.ch-dot{ display:inline-block; inline-size:8px; block-size:8px; margin-inline-start:6px; border-radius:50%; background:var(--accent); vertical-align:middle; }
+
+/* ── آمار ── */
+.ch-stats{ display:grid; gap:8px; margin:0; }
+.ch-stat{ display:flex; flex-direction:column-reverse; align-items:center; gap:4px; padding:12px 6px; border-radius:18px; background:color-mix(in srgb, var(--text) 4%, transparent); text-align:center; min-inline-size:0; }
+.ch-stat-value{ margin:0; font-size:24px; font-weight:800; line-height:1.1; font-family:var(--font-latin), var(--font-vazir), sans-serif; }
+.ch-stat-label{ font-size:12px; color:var(--muted); }
+.ch-stat.is-ok .ch-stat-value{ color:var(--ring-1a); }
+.ch-stat.is-warn .ch-stat-value{ color:var(--ring-3a); }
+.ch-stat.is-accent .ch-stat-value{ color:var(--accent); }
+
+/* ── قرص ── */
+.ch-pill{
+  display:inline-flex; align-items:center; gap:6px; min-block-size:28px; padding:0 12px; border-radius:999px;
+  font-size:12px; font-weight:700; color:var(--muted); border:1px solid var(--surface-line);
+}
+.ch-pill.is-accent{ color:var(--accent); border-color:rgba(var(--accent-rgb), .3); }
+.ch-pill.is-ok{ color:var(--ring-1a); border-color:color-mix(in srgb, var(--ring-1a) 35%, transparent); }
+.ch-pill.is-warn{ color:var(--ring-3a); border-color:color-mix(in srgb, var(--ring-3a) 40%, transparent); }
+.ch-goal-pill{ --btn-h:36px; --btn-px:12px; --btn-fs:12px; --btn-gap:8px; --btn-bd:rgba(var(--accent-rgb), .3); --btn-fg:var(--accent); }
+
+/* ── آواتار ── */
+.ch-avatar{
+  position:relative; display:inline-flex; align-items:center; justify-content:center; flex:none; overflow:hidden;
+  border-radius:50%; color:#fff; font-weight:800; line-height:1; font-family:var(--font-latin), var(--font-vazir), sans-serif;
+}
+.ch-avatar img{ inline-size:100%; block-size:100%; object-fit:cover; display:block; }
+.ch-avatar.is-golden{ box-shadow:0 0 0 2px var(--bg), 0 0 0 4px #E8B93C; }
+.ch-avatar-ring .gring-center{ inset:0; }
+
+/* ── ناوبری ── */
+.ch-nav{
+  position:fixed; z-index:150; inset-inline:0; margin-inline:auto; inline-size:max-content; max-inline-size:calc(100% - 32px);
+  inset-block-end:calc(14px + env(safe-area-inset-bottom));
+  display:flex; align-items:center; gap:4px; padding:6px; border-radius:999px;
+  background:color-mix(in srgb, var(--box-bg) 94%, transparent); border:1px solid var(--surface-line);
+  box-shadow:0 10px 30px rgba(0,0,0,.28);
+}
+body[data-theme="light"] .ch-nav{ box-shadow:0 10px 28px rgba(60,40,10,.14); }
+.ch-nav-item{
+  position:relative; display:flex; flex-direction:column; align-items:center; justify-content:center; gap:2px;
+  min-inline-size:84px; min-block-size:48px; padding:4px 14px; border-radius:999px; color:var(--muted); text-decoration:none;
+  font-size:11px; font-weight:700; transition:color .18s ease, background-color .18s ease;
+}
+.ch-nav-item.is-active{ color:var(--accent); background:rgba(var(--accent-rgb), .14); }
+.ch-nav-item:focus-visible{ outline:2px solid var(--accent); outline-offset:2px; }
+.ch-nav-ico{ position:relative; display:inline-flex; }
+.ch-nav-badge{
+  position:absolute; inset-block-start:-6px; inset-inline-end:-10px; min-inline-size:16px; block-size:16px; padding:0 4px; box-sizing:border-box;
+  border-radius:999px; background:var(--accent); color:var(--sec-on-accent, var(--bg)); font-size:10px; font-weight:800; line-height:16px; text-align:center;
+}
+@media (min-width:1024px){
+  .ch-nav{ position:static; inset:auto; margin:0; inline-size:auto; max-inline-size:none; box-shadow:none; z-index:auto; background:transparent; }
+  .ch-nav-item{ flex-direction:row; gap:8px; min-inline-size:0; min-block-size:44px; padding:0 16px; font-size:14px; }
+  .ch-nav-label{ white-space:nowrap; }
+}
+
+/* ── نومو ── */
+.ch-nomo{
+  display:flex; align-items:center; gap:10px; min-block-size:48px; padding:8px 14px; border-radius:20px; font-size:13.5px; line-height:1.7;
+  color:color-mix(in srgb, var(--ring-2b) 55%, var(--text));
+  background:color-mix(in srgb, var(--ring-2b) 11%, transparent); border:1px solid color-mix(in srgb, var(--ring-2b) 26%, transparent);
+}
+.ch-nomo-ico{ flex:none; display:inline-flex; color:var(--ring-2b); }
+.ch-nomo-text{ flex:1; min-inline-size:0; }
+.ch-nomo-action{ flex:none; display:inline-flex; gap:8px; }
+
+/* ── حالت خالی ── */
+.ch-empty{ display:flex; flex-direction:column; align-items:center; gap:12px; padding:40px 20px; text-align:center; }
+.ch-empty-ico{ inline-size:64px; block-size:64px; display:inline-flex; align-items:center; justify-content:center; border-radius:50%; color:var(--accent); background:rgba(var(--accent-rgb), .1); }
+.ch-empty-text{ margin:0; max-inline-size:300px; font-size:14.5px; line-height:1.9; color:var(--muted); }
+
+/* ── هدف ── */
+.ch-goal-card{ display:flex; align-items:center; gap:16px; flex-wrap:wrap; }
+.ch-goal-ring-num{ font-size:22px; font-weight:800; font-family:var(--font-latin), var(--font-vazir), sans-serif; }
+.ch-goal-ring-num small{ font-size:12px; font-weight:700; color:var(--muted); }
+.ch-goal-body{ flex:1; min-inline-size:0; display:flex; flex-direction:column; gap:4px; }
+.ch-goal-title{ margin:0; font-size:17px; font-weight:800; line-height:1.5; }
+.ch-goal-line{ margin:0; font-size:13px; color:var(--muted); }
+.ch-goal-share{ align-self:flex-start; }
+
+/* ── نمودار هفته ── */
+.ch-bars{ display:grid; grid-template-columns:repeat(7, minmax(0,1fr)); gap:8px; align-items:end; }
+.ch-bar{ display:flex; flex-direction:column; align-items:center; gap:6px; }
+.ch-bar-track{ inline-size:100%; max-inline-size:28px; block-size:96px; display:flex; align-items:flex-end; border-radius:10px; background:color-mix(in srgb, var(--text) 7%, transparent); overflow:hidden; }
+.ch-bar-fill{ inline-size:100%; border-radius:10px; background:linear-gradient(180deg, var(--ring-1b), var(--ring-1a)); transition:block-size .5s cubic-bezier(.22,1,.36,1); }
+.ch-bar.is-empty .ch-bar-fill{ display:none; }
+.ch-bar-label{ font-size:11.5px; font-weight:700; color:var(--muted); }
+.ch-bar.is-today .ch-bar-label{ color:var(--text); }
+.ch-bar-dot{ inline-size:6px; block-size:6px; border-radius:50%; border:1.5px solid var(--surface-line); box-sizing:border-box; }
+.ch-bar-dot.is-on{ background:var(--ring-3a); border-color:var(--ring-3a); }
+.ch-week-rings{ position:relative; display:inline-block; flex:none; }
+.ch-week-rings-center{ position:absolute; inset:0; display:flex; align-items:center; justify-content:center; font-weight:800; }
+
+/* ── رویدادهای خط زمانی ── */
+.ch-event-card{
+  box-sizing:border-box; display:flex; flex-direction:column; gap:8px; inline-size:min(86%, 380px); padding:16px; border-radius:22px;
+  background:linear-gradient(160deg, rgba(var(--accent-rgb), .16), rgba(var(--accent-rgb), .05)); border:1px solid rgba(var(--accent-rgb), .24);
+}
+.ch-event-card.is-end{ align-self:flex-end; border-end-end-radius:6px; }
+.ch-event-card.is-start{ align-self:flex-start; border-end-start-radius:6px; }
+.ch-program-link{ display:flex; flex-direction:column; gap:6px; color:inherit; text-decoration:none; }
+.ch-program-title{ font-size:16px; font-weight:800; line-height:1.5; }
+.ch-program-meta{ font-size:12.5px; color:color-mix(in srgb, var(--text) 75%, var(--muted)); }
+.ch-program-status{ font-size:12px; color:var(--muted); }
+.ch-program-status.is-warn{ color:var(--ring-3a); }
+.ch-program-status.is-ok{ color:var(--ring-1a); }
+.ch-program-actions{ display:flex; flex-wrap:wrap; justify-content:flex-end; gap:8px; margin-block-start:4px; }
+.ch-week-card{ display:flex; align-items:center; gap:14px; border-radius:22px; padding:14px 16px; }
+.ch-week-card-body{ flex:1; min-inline-size:0; display:flex; flex-direction:column; gap:4px; }
+.ch-week-card-title{ font-size:14px; font-weight:700; }
+.ch-week-card-line{ font-size:12px; color:var(--muted); font-family:var(--font-latin), var(--font-vazir), sans-serif; }
+
+/* ── حباب گفت‌وگو ── */
+.ch-bubble-in, .ch-bubble-out{ box-sizing:border-box; max-inline-size:78%; padding:11px 15px; border-radius:20px; font-size:14px; line-height:1.8; overflow-wrap:anywhere; white-space:pre-wrap; }
+.ch-bubble-in{ align-self:flex-start; background:color-mix(in srgb, var(--text) 8%, var(--box-bg)); border-end-start-radius:6px; color:var(--text); }
+.ch-bubble-out{ align-self:flex-end; background:rgba(var(--accent-rgb), .16); border:1px solid rgba(var(--accent-rgb), .22); border-end-end-radius:6px; color:var(--text); }
+.ch-day-sep{ align-self:center; font-size:11px; color:var(--muted); }
+
+/* ── شیت ── */
+.ch-sheet-body{ display:flex; flex-direction:column; gap:14px; padding:4px 4px 8px; }
+.ch-sheet-actions{ display:flex; justify-content:flex-end; gap:8px; padding-block-start:6px; }
+
+/* ── اشتراک هدف ── */
+.ch-share{ display:flex; flex-direction:column; gap:12px; align-items:stretch; }
+.ch-share-preview{ position:relative; inline-size:100%; aspect-ratio:4 / 5; overflow:hidden; background:color-mix(in srgb, var(--text) 6%, transparent); }
+.ch-share-preview canvas{ display:block; inline-size:100%; block-size:100%; }
+.ch-share-preview canvas.is-hidden{ visibility:hidden; }
+.ch-share-spin{ position:absolute; inset:0; display:flex; align-items:center; justify-content:center; color:var(--muted); }
+
+@media (prefers-reduced-motion:reduce){
+  .ch-row, .ch-nav-item, .ch-bar-fill{ transition:none; }
+  .ch-row:active{ transform:none; }
+}

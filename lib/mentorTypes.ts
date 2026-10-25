@@ -252,6 +252,8 @@ export type PrivacySettings = {
   showTaskName: boolean;
   showTaskDetails: boolean;
   showProgress: boolean;
+  /** خواب در گزارش هفته (بخش مربی v3)؛ پیش‌فرض false */
+  shareSleep?: boolean;
 };
 export type PrivacyScope = { key: string; label: string; kind: "routine" | "module" };
 export type PrivacyResponse = { privacy: PrivacySettings; scopes: PrivacyScope[] };

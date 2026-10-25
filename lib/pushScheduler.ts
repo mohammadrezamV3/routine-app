@@ -3,6 +3,7 @@ import { pruneReminderLog, runDueReminders, runEconomicAlerts } from "@/lib/push
 import { sweepWaitlists } from "@/lib/mentorWaitlistServer";
 import { runWeeklyLetters } from "@/lib/weeklyLetter/dispatch";
 import { runDueBroadcasts } from "@/lib/broadcastServer";
+import { snapshotCoachWeeks } from "@/lib/coachWeekServer";
 
 // زمان‌بند داخلی یادآوری‌ها — از instrumentation.ts یک‌بار موقع بالا
 // آمدن هر پروسه‌ی سرور (next dev / next start / هر worker cluster.js) شروع
@@ -26,6 +27,9 @@ const WAITLIST_EVERY_MS = 5 * 60 * 1000;
 // isPushConfigured اجرا می‌شه. ضدتکرار با ردیف PENDING یکتاست، چند worker امنه.
 const LETTERS_EVERY_MS = 10 * 60 * 1000;
 
+// عکس گزارش هفته‌ی مربی + اعلان (lib/coachWeekServer.ts): خود تابع هر ~15 دقیقه یک بار کار می‌کنه،
+// ضدتکرار با notifiedAt؛ اعلان درون‌برنامه‌ای VAPID لازم نداره.
+
 export function startPushScheduler(): void {
   const g = globalThis as unknown as { __arionPushScheduler?: boolean };
   if (g.__arionPushScheduler) return; // HMR dev یا import دوباره
@@ -43,6 +47,7 @@ export function startPushScheduler(): void {
   let lastWaitlist = 0;
   let lastLetters = 0;
   let lettersRunning = false;
+  let coachRunning = false;
   // هر worker کمی جابه‌جا تا همه دقیقا هم‌زمان به دیتابیس نخورن
   const jitterMs = 1000 + Math.floor(Math.random() * 1500);
 
@@ -64,6 +69,14 @@ export function startPushScheduler(): void {
           .catch((err: any) => console.error(`[letters] run failed: ${err?.message || err}`))
           .finally(() => {
             lettersRunning = false;
+          });
+      }
+      if (!coachRunning) {
+        coachRunning = true;
+        void snapshotCoachWeeks(now)
+          .catch((err: any) => console.error(`[coach-weeks] run failed: ${err?.message || err}`))
+          .finally(() => {
+            coachRunning = false;
           });
       }
       // پیام‌های همگانی سررسیده/نیمه‌کاره (lib/broadcastServer.ts) — اعلان درون‌برنامه‌ای VAPID لازم نداره
