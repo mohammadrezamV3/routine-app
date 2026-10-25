@@ -26,6 +26,8 @@ import { TradeCalendarPanel } from "./TradeCalendarPanel";
 import { TradeStatsCollapse } from "./TradeStatsCollapse";
 import { PanelSkeleton } from "./PanelSkeleton";
 import { TradeShareButton } from "./TradeShareButton";
+import { PropChallengeCard } from "./PropChallengeCard";
+import { TradeExportButton } from "./TradeExportButton";
 import { useAsyncAction } from "@/lib/useAsyncAction";
 import { useLiveRefresh } from "@/lib/liveSync";
 import { rowActivateProps } from "@/lib/rowActivate";
@@ -236,6 +238,7 @@ export function TradeAccountView({ accountId }: { accountId: string }) {
           </button>
           {/* اشتراک کارنامه با همین حساب از پیش انتخاب‌شده (حساب آرشیوشده در کارنامه نیست) */}
           {!account.archived && <TradeShareButton account={account.id} size={14} />}
+          <TradeExportButton accountId={account.id} size={14} />
           {!account.archived && (
             <button
               type="button"
@@ -287,6 +290,11 @@ export function TradeAccountView({ accountId }: { accountId: string }) {
           )}
           {mtSync.kind === "error" && mtSync.message}
         </div>
+      )}
+
+      {/* فاز چالش — فقط حساب پراپ؛ اعداد کامل سمت سرور (lib/propChallenge.ts) */}
+      {account.type === "PROP" && (
+        <PropChallengeCard accountId={account.id} sym={sym} onConfigure={() => setEditingAccount(true)} refreshKey={entries.length + ":" + (account.propChallenge?.status ?? "")} />
       )}
 
       {/* ── باکس واحد دوبخشی: آمار (بالا) + تقویم (پایین) ────────────── */}

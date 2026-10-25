@@ -212,6 +212,8 @@ export type TradeAccount = {
   cashCharges?: number;
   /** true یعنی initialBalance همون اولین واریز متاتریدره، نه عدد دستی (lib/tradeCashflowServer.ts) */
   initialFromMt?: boolean;
+  /** فقط حساب پراپ با چالش تنظیم‌شده: قوانین + فاز/وضعیت فعلی */
+  propChallenge?: import("./propChallenge").PropChallengeBadge | null;
 };
 
 export type TradeAccountSummary = {
