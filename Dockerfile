@@ -23,8 +23,19 @@ ENV NEXT_PUBLIC_VAPID_PUBLIC_KEY=$NEXT_PUBLIC_VAPID_PUBLIC_KEY
 # دامنه‌ی پایه‌ی زیردامنه‌های بخش‌ها (docs/sections.md) — خالی = زیردامنه‌ها خاموش
 ARG NEXT_PUBLIC_SECTION_BASE_DOMAIN
 ENV NEXT_PUBLIC_SECTION_BASE_DOMAIN=$NEXT_PUBLIC_SECTION_BASE_DOMAIN
-# Prisma Client باید قبل از build ساخته بشه وگرنه import هاش fail می‌شن
-RUN npx prisma generate
+# Prisma Client باید قبل از build ساخته بشه وگرنه import هاش fail می‌شن.
+# generate اگه موتور Prisma توی node_modules نباشه از binaries.prisma.sh
+# دانلودش می‌کنه؛ روی سرور ایران این اتصال گاهی وسط کار قطع می‌شه
+# (ECONNRESET) و کل build می‌افته. پس چند بار با فاصله‌ی بیشتر تلاش می‌کنه.
+# اگه اون دامنه کلا در دسترس نبود، PRISMA_ENGINES_MIRROR رو در .env بذار.
+ARG PRISMA_ENGINES_MIRROR
+ENV CHECKPOINT_DISABLE=1
+RUN [ -n "$PRISMA_ENGINES_MIRROR" ] || unset PRISMA_ENGINES_MIRROR; \
+    for i in 1 2 3 4 5 6; do \
+      npx prisma generate && exit 0; \
+      echo "prisma generate failed (attempt $i), retrying in $((i * 10))s..."; \
+      sleep $((i * 10)); \
+    done; exit 1
 RUN npm run build
 
 # ─── مرحله ۳: ایمیج نهایی اجرا (سبک، بدون devDependencies) ───────────────
