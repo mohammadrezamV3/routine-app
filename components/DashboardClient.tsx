@@ -174,7 +174,7 @@ function DashboardBody({ initial }: { initial: { key: string; data: DashboardDat
     if (blocks.routine && routineOn) { set.add("today"); set.add("heat"); }
     if (blocks.sleep && on("sleep")) set.add("sleep");
     // دارو: فقط بخش روتین، با ماژول روتین فعال و گزینه‌ی «کارت دارو» در تنظیمات داشبورد
-    if (section === "routine" && routineOn && prefs.showMedications && modules?.has("ROUTINE")) set.add("meds");
+    if ((!section || section === "routine") && routineOn && prefs.showMedications && modules?.has("ROUTINE")) set.add("meds");
     if (blocks.fitness) {
       // ورزش: «فضای تمرین» (پنل‌های واقعی)؛ ماژول خریده‌نشده رو ModuleGate داخل خودش نشون می‌ده، پس کارت قفل جدا نداریم
       if (section === "workout") { if (on("exercise") || on("calorie")) set.add("space"); }
