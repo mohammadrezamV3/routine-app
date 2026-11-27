@@ -1,5 +1,6 @@
 "use client";
 
+import { SleepScoreInfoButton } from "./SleepScoreInfo";
 import { useMemo, useState } from "react";
 import { CalendarDays, ChevronLeft, ChevronRight } from "lucide-react";
 import { scoreBandLabel, scoreBand, type ScoreBand, type SleepInsights } from "@/lib/sleep";
@@ -56,7 +57,7 @@ export function SleepMonthMap({ insights, todayIso, onPick }: SleepMonthMapProps
   return (
     <section className="sl-card slm">
       <div className="sl-head-row">
-        <h3 className="sl-card-title"><CalendarDays aria-hidden="true" />{tr("تقویم امتیاز خواب", "Sleep score calendar")}</h3>
+        <h3 className="sl-card-title"><CalendarDays aria-hidden="true" />{tr("تقویم امتیاز خواب", "Sleep score calendar")}<SleepScoreInfoButton /></h3>
         <div className="slm-nav">
           <button type="button" className="slm-arrow" aria-label={tr("ماه قبل", "Previous month")} disabled={back >= MAX_BACK} onClick={() => setBack((b) => Math.min(MAX_BACK, b + 1))}>
             {isEn() ? <ChevronLeft aria-hidden="true" /> : <ChevronRight aria-hidden="true" />}

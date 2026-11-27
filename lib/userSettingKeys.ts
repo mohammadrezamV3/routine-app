@@ -33,6 +33,8 @@ export const SETTING_KEYS = {
   removedOccurrences: "removedOccurrences",
   customOccurrences: "customOccurrences",
   medications: "medications",
+  // نوبت‌های دارویی که کاربر امروز/روزهای اخیر خورده (lib/medicationDoses.ts)
+  medicationDoses: "medicationDoses",
   wakeSleepTimes: "wakeSleepTimes",
   // هدف خواب سیستم جدای خواب (lib/sleepGoal.ts) — مستقل از ساعت‌های روتین
   sleepGoal: "sleepGoal",

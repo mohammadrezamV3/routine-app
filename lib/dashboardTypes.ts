@@ -102,7 +102,7 @@ export type DashSleep = {
   /** هدف خواب به دقیقه (از ساعت‌های هدف خود کاربر) */
   goalMin: number;
   /** آخرین شب ثبت‌شده در ۷ شب اخیر؛ null = چیزی ثبت نشده */
-  lastNight: { iso: string; minutes: number; quality: number | null } | null;
+  lastNight: { iso: string; minutes: number; quality: number | null; sleptAt: string; wokeAt: string } | null;
   /** ۷ شب اخیر تا امروز (قدیمی به جدید)؛ minutes = 0 یعنی ثبت نشده */
   week: { iso: string; minutes: number }[];
   /** میانگین شب‌های ثبت‌شده، یا null */
