@@ -39,6 +39,7 @@ export async function loadPublicCoach(rawUsername: string): Promise<PublicCoach 
   const data: MentorProfileResponse = {
     mentor: {
       ...card,
+      username: profile.user.username ?? null,
       bio: profile.bio,
       specialties: profile.specialties,
       completedPrograms: s?.completedPrograms ?? 0,

@@ -157,11 +157,13 @@ function Profile({ mentorId, initial, username, path }: { mentorId: string; init
   const headline = [role, mentor.headline].filter(Boolean).join(" · ");
   const hasRating = mentor.ratingCount > 0 && mentor.ratingAvg > 0;
   const reviews = data.reviews;
-  const shortUrl = username && host ? `${host}/c/${username}` : null;
+  // لینک کوتاه: از خود پاسخ منتور (اگه نام کاربری داره)، وگرنه از آدرس /c/<username> فعلی
+  const handle = mentor.username || username || null;
+  const shortUrl = handle && host ? `${host}/c/${handle}` : null;
 
   async function copyLink() {
-    if (!username) return;
-    try { await navigator.clipboard.writeText(`${window.location.origin}/c/${username}`); setCopied(true); setTimeout(() => setCopied(false), 1800); } catch { /* کلیپ‌بورد در دسترس نیست */ }
+    if (!handle) return;
+    try { await navigator.clipboard.writeText(`${window.location.origin}/c/${handle}`); setCopied(true); setTimeout(() => setCopied(false), 1800); } catch { /* کلیپ‌بورد در دسترس نیست */ }
   }
 
   // ── منوی سه‌نقطه ──

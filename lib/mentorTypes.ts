@@ -60,6 +60,8 @@ export type MentorCard = {
 };
 
 export type MentorDetail = MentorCard & {
+  /** نام کاربری عمومی منتور (User.username) — برای لینک کوتاه /c/<username> */
+  username?: string | null;
   bio: string | null;
   specialties: string[];
   completedPrograms: number;
