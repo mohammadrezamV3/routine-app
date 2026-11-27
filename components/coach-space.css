@@ -48,7 +48,7 @@
 /* ── نوار پایین: نوشتن ── */
 .cs-dock{
   position:sticky; inset-block-end:0; z-index:20; display:flex; flex-direction:column; gap:8px;
-  padding-block:10px calc(10px + env(safe-area-inset-bottom)); background:var(--bg);
+  padding-block:10px calc(10px + env(safe-area-inset-bottom)); background:linear-gradient(180deg, transparent, var(--bg) 22px);
 }
 @media (min-width:1024px){ .cs-dock{ padding-block-end:10px; } }
 .cs-composer{ display:flex; align-items:flex-end; gap:8px; }

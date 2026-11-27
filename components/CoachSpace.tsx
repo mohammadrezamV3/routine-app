@@ -3,6 +3,7 @@
 // فضای همکاری مربی و شاگرد (docs/coach-v3.md): یک خط زمانی از پیام‌ها، برنامه‌ها، گزارش هفته،
 // هدف و بازخوردها. هر دو مسیر /mentor/students/[studentId] و /mentorship/[id] از همین استفاده می‌کنن.
 import "./coach.css";
+import { toEnDigits } from "@/lib/schedule";
 import "./coach-space.css";
 import { useCallback, useEffect, useRef, useState } from "react";
 import dynamic from "next/dynamic";
@@ -231,7 +232,7 @@ function SpaceBody({ role, mentorshipId }: { role: "MENTOR" | "STUDENT"; mentors
         return (
           <CoachPress className="ch-card cs-mini-card" onPress={() => show("goal")}>
             <span className="ch-eyebrow">{ev.status === "DONE" ? tr("هدف رسید", "Goal reached") : tr("هدف", "Goal")}</span>
-            <span className="cs-mini-title">{ev.title}</span>
+            <span className="cs-mini-title">{toEnDigits(ev.title)}</span>
             <span className="cs-mini-line">{line}</span>
           </CoachPress>
         );
@@ -240,7 +241,7 @@ function SpaceBody({ role, mentorshipId }: { role: "MENTOR" | "STUDENT"; mentors
         return (
           <SmartLink href={`/mentor-programs/${ev.programId}`} className="ch-card cs-mini-card">
             <span className="ch-eyebrow">{tr("بازخورد", "Feedback")}</span>
-            <span className="cs-mini-title">{ev.itemTitle ?? ev.programTitle}</span>
+            <span className="cs-mini-title">{toEnDigits(ev.itemTitle ?? ev.programTitle)}</span>
             <span className="cs-mini-line cs-clamp" dir="auto">{ev.body}</span>
           </SmartLink>
         );

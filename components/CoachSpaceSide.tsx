@@ -2,6 +2,7 @@
 
 // ستون‌های کناری فضای همکاری در دسکتاپ (>=1024px). فقط روی دسکتاپ mount می‌شن.
 import "./coach.css";
+import { toEnDigits } from "@/lib/schedule";
 import "./coach-space.css";
 import { useEffect, useState } from "react";
 import { NotebookPen, Plus } from "lucide-react";
@@ -123,7 +124,7 @@ export function CoachSpaceMentorSide({ space, studentId, onNotes }: { space: Coa
             {programs.map((p) => (
               <li key={p.id}>
                 <SmartLink href={`/mentor-programs/${p.programId}`} className="cs-side-row">
-                  <span className="cs-side-row-title">{p.title}</span>
+                  <span className="cs-side-row-title">{toEnDigits(p.title)}</span>
                   <span className="cs-side-row-val">{p.rate == null ? "" : `${Math.round(p.rate <= 1 ? p.rate * 100 : p.rate)}%`}</span>
                 </SmartLink>
               </li>
@@ -186,7 +187,7 @@ export function CoachSpaceStudentSide({ space, onGoal, onShare, onSees }: { spac
               <li key={t.id} className="cs-task">
                 <TickButton as="span" checked={t.done} size={22} />
                 <span className="ch-row-main">
-                  <span className={`ch-row-title${t.done ? " is-done" : ""}`}>{t.title}</span>
+                  <span className={`ch-row-title${t.done ? " is-done" : ""}`}>{toEnDigits(t.title)}</span>
                   {t.meta && <span className="ch-row-sub">{t.meta}</span>}
                 </span>
               </li>
