@@ -41,7 +41,7 @@ export async function POST(req: Request) {
   }
 
   const kind = form.get("kind");
-  if (kind !== "IDENTITY" && kind !== "CERTIFICATE") return badRequest(tr("نوع مدرک نامعتبره", "Invalid document type"));
+  if (kind !== "IDENTITY" && kind !== "IDENTITY_SELFIE" && kind !== "CERTIFICATE") return badRequest(tr("نوع مدرک نامعتبره", "Invalid document type"));
   let category: string | null = null;
   if (kind === "CERTIFICATE") {
     const c = form.get("category");
@@ -73,14 +73,23 @@ export async function POST(req: Request) {
       select: { id: true, kind: true, category: true, fileName: true, mimeType: true, sizeBytes: true, createdAt: true },
     });
 
-    if (kind === "IDENTITY") {
-      await tx.mentorProfile.update({
-        where: { id: profile.id },
-        data: { identityStatus: "PENDING", identityRejectReason: null, identityReviewedAt: null },
-      });
-      await tx.mentorVerificationEvent.create({
-        data: { profileId: profile.id, kind, category: null, fromStatus: profile.identityStatus, toStatus: "PENDING", actorUserId: userId },
-      });
+    if (kind === "IDENTITY" || kind === "IDENTITY_SELFIE") {
+      // احراز هویت دومرحله‌ست: بدون هر دو فایل (مدرک + سلفی با کارت ملی) به صف بررسی نمی‌ره.
+      // مربی تاییدشده‌ی قدیمی که فایل تازه می‌فرسته همون‌طور که قبلا بود دوباره به صف می‌ره.
+      const [hasId, hasSelfie] = await Promise.all([
+        tx.mentorDocument.count({ where: { profileId: profile.id, kind: "IDENTITY" } }),
+        tx.mentorDocument.count({ where: { profileId: profile.id, kind: "IDENTITY_SELFIE" } }),
+      ]);
+      const complete = hasId > 0 && hasSelfie > 0;
+      if (complete || profile.identityStatus === "VERIFIED") {
+        await tx.mentorProfile.update({
+          where: { id: profile.id },
+          data: { identityStatus: "PENDING", identityRejectReason: null, identityReviewedAt: null },
+        });
+        await tx.mentorVerificationEvent.create({
+          data: { profileId: profile.id, kind: "IDENTITY", category: null, fromStatus: profile.identityStatus, toStatus: "PENDING", actorUserId: userId },
+        });
+      }
     } else {
       const cred = await tx.mentorCredential.findUnique({ where: { profileId_category: { profileId: profile.id, category: category! } }, select: { status: true } });
       await tx.mentorCredential.upsert({

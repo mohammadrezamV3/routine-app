@@ -9,7 +9,7 @@ import { useCallback, useEffect, useRef, useState } from "react";
 import dynamic from "next/dynamic";
 import { useRouter } from "next/navigation";
 import { useSession } from "next-auth/react";
-import { Ban, CirclePause, CirclePlay, Download, Eye, Flag, LogOut, NotebookPen, Plus, Sparkles, Tag, Target, Lock } from "lucide-react";
+import { Ban, CirclePause, CirclePlay, Download, Eye, Flag, LogOut, NotebookPen, Plus, ShieldCheck, Sparkles, Tag, Target, Lock } from "lucide-react";
 import { useLiveRefresh, useVisiblePolling } from "@/lib/liveSync";
 import type { CoachSpace as CoachSpaceData, CoachTimelineEvent } from "@/lib/coachTypes";
 import { weekIndexOf } from "@/lib/coachWeek";
@@ -159,7 +159,7 @@ function SpaceBody({ role, mentorshipId }: { role: "MENTOR" | "STUDENT"; mentors
       actions.push({ label: tr("پایان همکاری", "End mentorship"), icon: <LogOut {...IC} />, onClick: () => setRelation("end"), danger: true });
     }
   } else {
-    if (chatOpen) actions.push({ label: tr(`${name} چی می‌بینه؟`, `What can ${name} see?`), icon: <Eye {...IC} />, onClick: () => show("mine") });
+    if (chatOpen) actions.push({ label: tr("تنظیم سطح دسترسی مربی", "Coach access level"), icon: <ShieldCheck {...IC} />, onClick: () => show("mine") });
     if (chatOpen) actions.push({ label: tr("گزارش", "Report"), icon: <Flag {...IC} />, onClick: () => (chatReady ? setChatSheet("report") : (wantReport.current = true)) });
     if (active) actions.push({ label: tr("پایان همکاری", "End mentorship"), icon: <LogOut {...IC} />, onClick: () => { clearError(); setConfirm("end"); } });
     actions.push({ label: tr("مسدود کردن", "Block"), icon: <Ban {...IC} />, danger: true, onClick: () => { clearError(); setConfirm("block"); } });

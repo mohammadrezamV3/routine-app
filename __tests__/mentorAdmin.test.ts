@@ -42,6 +42,9 @@ async function mentorTarget(opts: { adminPermissions?: string[]; owner?: boolean
   const doc = await prisma.mentorDocument.create({
     data: { profileId: profile.id, kind: "IDENTITY", fileName: "id.png", mimeType: "image/png", sizeBytes: bytes.length, sha256: "x", data: bytes },
   });
+  await prisma.mentorDocument.create({
+    data: { profileId: profile.id, kind: "IDENTITY_SELFIE", fileName: "selfie.png", mimeType: "image/png", sizeBytes: bytes.length, sha256: "y", data: bytes },
+  });
   const s = await makeUser();
   await connect(s, userId);
   as(s);
@@ -245,7 +248,7 @@ describe("ادمین — لیست و جزئیات", () => {
     expect(l.mentors).toHaveLength(1);
     expect(l.mentors[0].pendingCount).toBe(1);
     const d = await j(await adminDetail(req("GET", "/x") as any, { params: { profileId: t.profileId } }));
-    expect(d.profile.documents).toHaveLength(1);
+    expect(d.profile.documents).toHaveLength(2);
     expect(d.profile.documents[0]).not.toHaveProperty("data");
     const txt = JSON.stringify(d);
     expect(txt).not.toMatch(/@example\.com|passwordHash|"phone"|"email"/);

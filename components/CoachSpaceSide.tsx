@@ -5,7 +5,7 @@ import "./coach.css";
 import { toEnDigits } from "@/lib/schedule";
 import "./coach-space.css";
 import { useEffect, useState } from "react";
-import { NotebookPen, Plus } from "lucide-react";
+import { ChevronLeft, NotebookPen, Plus, ShieldCheck } from "lucide-react";
 import type { CoachNomoQuota, CoachStudentRow, CoachSpace as CoachSpaceData } from "@/lib/coachTypes";
 import { publicUserName } from "@/lib/mentorTypes";
 import { studentStatusText } from "@/lib/mentorStatus";
@@ -150,6 +150,20 @@ export function CoachSpaceMentorSide({ space, studentId, onNotes }: { space: Coa
   );
 }
 
+/** ردیف «تنظیم سطح دسترسی مربی» (هم‌اندازه با ردیف‌های تنظیمات؛ سطح دسترسی هر همکاری جدا) */
+export function CoachAccessRow({ onPress, sub }: { onPress: () => void; sub?: string }) {
+  return (
+    <CoachPress className="ch-row cs-access-row" onPress={onPress} label={tr("تنظیم سطح دسترسی مربی", "Coach access level")}>
+      <ShieldCheck size={20} strokeWidth={1.8} aria-hidden />
+      <span className="ch-row-main">
+        <span className="ch-row-title">{tr("تنظیم سطح دسترسی مربی", "Coach access level")}</span>
+        {sub && <span className="ch-row-sub">{sub}</span>}
+      </span>
+      <ChevronLeft size={18} className="ch-chev dir-flip" aria-hidden="true" />
+    </CoachPress>
+  );
+}
+
 /** ستون پایان (شاگرد): هدف، گزارش این هفته و کارهای امروز از این مربی */
 export function CoachSpaceStudentSide({ space, onGoal, onShare, onSees }: { space: CoachSpaceData; onGoal: () => void; onShare: () => void; onSees: () => void }) {
   const goal = space.goal;
@@ -195,7 +209,7 @@ export function CoachSpaceStudentSide({ space, onGoal, onShare, onSees }: { spac
           </ul>
         )}
       </section>
-      <button type="button" className="btn btn-ghost" onClick={onSees}>{tr(`${name} چی می‌بینه؟`, `What can ${name} see?`)}</button>
+      <CoachAccessRow onPress={onSees} sub={space.privacy ? (space.privacy.shareSleep ? tr("خواب دیده می‌شه", "Sleep is visible") : tr("خواب خصوصیه", "Sleep is private")) : undefined} />
     </>
   );
 }

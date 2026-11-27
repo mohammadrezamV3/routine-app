@@ -21,7 +21,7 @@ import { MENTOR_CATEGORY_META, VERIFICATION_LABELS, VERIFICATION_SHORT, isMentor
 import { tr, iso } from "@/lib/i18n";
 
 type VStatus = keyof typeof VERIFICATION_LABELS;
-type DocKind = "IDENTITY" | "CERTIFICATE";
+type DocKind = "IDENTITY" | "IDENTITY_SELFIE" | "CERTIFICATE";
 type Doc = { id: string; kind: DocKind; category: string | null; fileName: string; mimeType: string; sizeBytes: number; createdAt: string };
 type Credential = { id: string; category: string; status: VStatus; rejectReason: string | null; reviewedAt: string | null; updatedAt: string };
 type Detail = {
@@ -131,7 +131,7 @@ export default function AdminMentorDetailPage() {
   // Owner همه‌چیز را، حتی پروفایل خودش را، بررسی می‌کند؛ ادمین محدود روی خودش نه (تضاد منافع — سمت سرور هم بسته است)
   const canReview = isSuperAdmin || !isSelf;
   const categories = Array.from(new Set([...p.categories, ...p.credentials.map((c) => c.category)]));
-  const identityDocs = p.documents.filter((d) => d.kind === "IDENTITY");
+  const identityDocs = p.documents.filter((d) => d.kind === "IDENTITY" || d.kind === "IDENTITY_SELFIE");
   const routineRole = p.routineRole && p.categories.includes("ROUTINE") ? p.routineRole : null;
 
   return (
@@ -225,6 +225,7 @@ export default function AdminMentorDetailPage() {
             reviewedAt={p.identityReviewedAt}
             docs={identityDocs}
             canReview={canReview}
+            needsBoth
             onView={setViewDoc}
             onAction={(preset) => setVerify({ kind: "IDENTITY", category: null, current: p.identityStatus, preset })}
           />
@@ -285,7 +286,7 @@ export default function AdminMentorDetailPage() {
               <tbody>
                 {data.events.map((e) => (
                   <tr key={e.id}>
-                    <td>{e.kind === "IDENTITY" ? tr("احراز هویت", "Identity verification") : certLabel(e.category || "")}</td>
+                    <td>{e.kind === "IDENTITY" || e.kind === "IDENTITY_SELFIE" ? tr("احراز هویت", "Identity verification") : certLabel(e.category || "")}</td>
                     <td>
                       <span className="admin-badge-row">
                         <VBadge status={e.fromStatus} />
@@ -363,11 +364,12 @@ function InfoRow({ k, v }: { k: string; v: string | null | undefined }) {
 }
 
 function VerificationRow({
-  title, status, rejectReason, reviewedAt, docs, canReview, onView, onAction,
+  title, status, rejectReason, reviewedAt, docs, canReview, onView, onAction, needsBoth,
 }: {
   title: string; status: VStatus; rejectReason: string | null; reviewedAt: string | null; docs: Doc[];
-  canReview: boolean; onView: (d: Doc) => void; onAction?: (preset: VStatus) => void;
+  canReview: boolean; onView: (d: Doc) => void; onAction?: (preset: VStatus) => void; needsBoth?: boolean;
 }) {
+  const hasBoth = !needsBoth || (docs.some((d) => d.kind === "IDENTITY") && docs.some((d) => d.kind === "IDENTITY_SELFIE"));
   const meta = [
     reviewedAt ? tr(`آخرین بررسی ${formatDateShort(reviewedAt)}`, `Last reviewed ${formatDateShort(reviewedAt)}`) : null,
     docs.length ? tr(`${formatNumber(docs.length)} فایل`, `${formatNumber(docs.length)} file(s)`) : tr("فایلی ارسال نشده", "No files submitted"),
@@ -385,7 +387,7 @@ function VerificationRow({
         </div>
         {onAction && canReview && (
           <div className="admin-head-actions">
-            {status !== "VERIFIED" && docs.length > 0 && (
+            {status !== "VERIFIED" && docs.length > 0 && hasBoth && (
               <button type="button" className="admin-btn primary" onClick={() => onAction("VERIFIED")}>
                 <BadgeCheck {...IS} aria-hidden /> {tr("تایید", "Approve")}
               </button>
@@ -414,7 +416,7 @@ function VerificationRow({
               <li key={d.id} style={{ display: "flex", alignItems: "center", gap: 8, fontSize: 12.5, minWidth: 0 }}>
                 <DocIcon size={16} strokeWidth={1.75} className="admin-muted" style={{ flexShrink: 0 }} aria-hidden />
                 <span style={{ minWidth: 0, flex: 1, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }} title={d.fileName}>
-                  {d.fileName}
+                  {d.kind === "IDENTITY" ? <b>{tr("مدرک شناسایی: ", "ID document: ")}</b> : d.kind === "IDENTITY_SELFIE" ? <b>{tr("سلفی با کارت ملی: ", "Selfie with ID card: ")}</b> : null}{d.fileName}
                 </span>
                 <span className="admin-muted" style={{ fontSize: 11.5, whiteSpace: "nowrap" }}>
                   {formatSize(d.sizeBytes)}{tr("؛ ", "; ")}{formatDateShort(d.createdAt)}
@@ -571,7 +573,7 @@ function DocumentViewer({ doc, onClose }: { doc: Doc; onClose: () => void }) {
   const isPdf = mime === "application/pdf";
 
   return (
-    <AdminModal title={doc.fileName} eyebrow={doc.kind === "IDENTITY" ? tr("مدرک هویت", "Identity document") : certLabel(doc.category || "")} onClose={onClose} wide>
+    <AdminModal title={doc.fileName} eyebrow={doc.kind === "IDENTITY" ? tr("مدرک هویت", "Identity document") : doc.kind === "IDENTITY_SELFIE" ? tr("سلفی با کارت ملی", "Selfie with ID card") : certLabel(doc.category || "")} onClose={onClose} wide>
       {error ? (
         <div className="admin-empty">{error}</div>
       ) : !url ? (

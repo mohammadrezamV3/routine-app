@@ -20,7 +20,7 @@
 .ch-page.is-wide{ max-inline-size:1180px; }
 /* دسکتاپ: قالب سایت (.wrap) 620px عرض داره؛ صفحه‌ی عریض مربی (فضا، امروز) از اون بیرون می‌زنه */
 @media (min-width:1024px){
-  body:has(.ch-page.is-wide) .wrap{ max-width:1240px; }
+  body:has(.ch-page) .wrap{ max-width:1240px; }
 }
 @media (min-width:1024px){
   .ch-page{ padding-block-end:48px; padding-inline:24px; gap:20px; }
@@ -35,14 +35,6 @@
 .ch-title{ flex:1; min-inline-size:0; margin:0; font-size:22px; font-weight:800; line-height:1.3; color:var(--text); overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
 .ch-header-action{ display:flex; align-items:center; gap:8px; flex:none; }
 .ch-header-nav{ display:none; flex:none; }
-@media (min-width:1024px){
-  .ch-header-nav{ display:block; order:3; flex:1 0 100%; display:flex; justify-content:center; }
-  .ch-header{ flex-wrap:wrap; }
-  .ch-title{ flex:1 0 auto; max-inline-size:100%; }
-  .ch-page.is-wide .ch-header{ flex-wrap:nowrap; }
-  .ch-page.is-wide .ch-title{ flex:1 1 0; }
-  .ch-page.is-wide .ch-header-nav{ order:0; flex:none; display:block; }
-}
 .ch-back{
   inline-size:44px; block-size:44px; flex:none; display:inline-flex; align-items:center; justify-content:center;
   border-radius:50%; color:var(--text); text-decoration:none; margin-inline-start:-8px;
@@ -218,3 +210,67 @@ textarea.wsearch-newform-name.trade-glass-field, textarea.wsearch-newform-name.c
 .ch-save-top{ order:-1; align-self:flex-end; margin-block:0 !important; }
 .ch-save-top .btn{ --btn-bg:transparent; --btn-bd:transparent; --btn-fg:var(--accent); --btn-hover-bg:transparent; }
 .ch-halo{ display:none; }
+
+/* پنجره‌های مربی روی دسکتاپ عریض‌ترن (پیش‌فرض سایت 560px) */
+@media (min-width:1024px){
+  html .modal-panel.m-sheet.is-sm{ max-width:420px; }
+  html .modal-panel.m-sheet.is-md{ max-width:640px; }
+  html .modal-panel.m-sheet.is-lg{ max-width:920px; }
+}
+
+/* ============================================================
+   دسکتاپ (>=1024px): قاب برنامه‌گونه با نوار کناری، ستون محتوای پهن‌تر و هاور
+   ============================================================ */
+@media (min-width:1024px){
+  .ch-page{ max-inline-size:760px; }
+  .ch-page.is-wide{ max-inline-size:1320px; padding-inline:32px; }
+  body:has(.ch-page) .wrap{ max-width:1400px; }
+  .ch-page.has-side{
+    display:grid; grid-template-columns:232px minmax(0,1fr); column-gap:40px; align-items:start; padding-block-start:20px;
+  }
+  .ch-page.has-side > .ch-halo{ grid-column:1 / -1; }
+  .ch-sidebar{
+    position:sticky; inset-block-start:88px; display:flex; flex-direction:column; gap:10px; padding-block-start:6px;
+  }
+  .ch-sidebar-title{ margin:0 12px 4px; font-size:12px; font-weight:800; letter-spacing:.02em; color:var(--muted); }
+  .ch-sidebar .ch-nav{ flex-direction:column; align-items:stretch; gap:6px; padding:0; border:0; border-radius:0; }
+  .ch-sidebar .ch-nav-item{
+    justify-content:flex-start; min-block-size:48px; padding:0 14px; border-radius:16px; font-size:14.5px;
+    border:1px solid transparent; transition:border-color .15s ease, color .15s ease;
+  }
+  .ch-sidebar .ch-nav-item:hover{ color:var(--text); border-color:var(--surface-line); }
+  .ch-sidebar .ch-nav-item.is-active{ border-color:rgba(var(--accent-rgb), .4); }
+  .ch-sidebar .ch-nav-badge{ position:static; margin-inline-start:auto; }
+  .ch-sidebar .ch-nav-ico{ flex:none; }
+  .ch-main{ min-inline-size:0; display:flex; flex-direction:column; gap:20px; max-inline-size:1100px; }
+  .ch-main > .ch-header{ min-block-size:56px; }
+  .ch-title{ font-size:26px; }
+  .ch-row{ transition:transform .15s ease, border-color .18s ease; }
+  .ch-row:hover, a.ch-card:hover, .ch-card.cs-reset:hover{ border-color:color-mix(in srgb, var(--accent) 38%, var(--surface-line)); }
+  .ch-row:hover .ch-chev{ color:var(--accent); }
+}
+@media (min-width:1600px){
+  .ch-page.is-wide{ max-inline-size:1480px; }
+  body:has(.ch-page) .wrap{ max-width:1560px; }
+  .ch-page.has-side{ grid-template-columns:248px minmax(0,1fr); column-gap:56px; }
+  .ch-main{ max-inline-size:1180px; }
+}
+
+/* گزینه‌ی تیک‌خوردنی (TickOption) — بخش mentorship قاعده‌اش رو نداشت و ردیف‌ها ستونی می‌شدن */
+.tick-option{
+  display:flex; align-items:center; gap:10px; inline-size:100%; padding:6px 0; margin:0; border:none;
+  background:transparent; color:var(--text); font:inherit; font-size:13px; font-weight:600; text-align:start; cursor:pointer;
+  -webkit-tap-highlight-color:transparent;
+}
+.tick-option:disabled{ cursor:not-allowed; opacity:.6; }
+.tick-option-text{ flex:1; min-inline-size:0; }
+
+/* احراز هویت دومرحله‌ای (MentorProfileVerification) */
+.mv2-id-steps{ display:flex; flex-direction:column; gap:12px; }
+.mv2-id-step-no{
+  inline-size:28px; block-size:28px; display:inline-flex; align-items:center; justify-content:center; border-radius:50%;
+  font-size:13px; font-weight:800; font-family:var(--font-latin), var(--font-vazir), sans-serif; color:var(--accent); border:1px solid rgba(var(--accent-rgb), .45);
+}
+@media (min-width:1024px){
+  .mv2-id-steps{ display:grid; grid-template-columns:repeat(2, minmax(0,1fr)); gap:16px; align-items:start; }
+}

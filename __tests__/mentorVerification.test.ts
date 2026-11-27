@@ -72,7 +72,12 @@ describe("آپلود مدرک", () => {
     expect(doc.fileName).toBe("passwd.png");
     expect(doc).not.toHaveProperty("data");
     const prof = await profileOf(m);
-    expect(prof.identityStatus).toBe("PENDING");
+    // یک فایل کافی نیست: بدون سلفی با کارت ملی به صف نمی‌ره
+    expect(prof.identityStatus).toBe("NOT_PROVIDED");
+    expect((await upload(m, fileForm(pdfBytes(), "selfie.pdf", "IDENTITY_SELFIE"))).status).toBe(200);
+    const r3 = await upload(m, fileForm(jpegBytes(), "selfie.jpg", "IDENTITY_SELFIE"));
+    expect(r3.status).toBe(200);
+    expect((await profileOf(m)).identityStatus).toBe("PENDING");
 
     const r2 = await upload(m, fileForm(pdfBytes(300), "cert.pdf", "CERTIFICATE", "FITNESS"));
     expect(r2.status).toBe(200);
@@ -82,11 +87,12 @@ describe("آپلود مدرک", () => {
     const events = await prisma.mentorVerificationEvent.findMany({ where: { profileId: prof.id }, orderBy: { createdAt: "asc" } });
     expect(events.map((e) => [e.kind, e.category, e.fromStatus, e.toStatus])).toEqual([
       ["IDENTITY", null, "NOT_PROVIDED", "PENDING"],
+      ["IDENTITY", null, "PENDING", "PENDING"],
       ["CERTIFICATE", "FITNESS", "NOT_PROVIDED", "PENDING"],
     ]);
 
     const me = await j(await getMe());
-    expect(me.profile.documents).toHaveLength(2);
+    expect(me.profile.documents).toHaveLength(4);
     expect(JSON.stringify(me.profile.documents)).not.toContain("\"data\"");
   });
 
@@ -157,6 +163,10 @@ describe("بررسی ادمین", () => {
     const m = await makeMentor({}, FITNESS_ONLY, { identity: false });
     const admin = await makeAdmin();
     await upload(m, fileForm(jpegBytes(), "id.jpg", "IDENTITY"));
+    const prof0 = await profileOf(m);
+    // بدون سلفی تایید هویت رد می‌شه
+    expect((await adminVerify(admin, prof0.id, { kind: "IDENTITY", status: "VERIFIED" })).status).toBe(400);
+    await upload(m, fileForm(jpegBytes(), "selfie.jpg", "IDENTITY_SELFIE"));
     await upload(m, fileForm(pdfBytes(), "cert.pdf", "CERTIFICATE", "FITNESS"));
     const prof = await profileOf(m);
 
@@ -198,6 +208,7 @@ describe("بررسی ادمین", () => {
     const m = await makeMentor({}, FITNESS_ONLY, { identity: false });
     const admin = await makeAdmin();
     await upload(m, fileForm(pngBytes(), "id.png", "IDENTITY"));
+    await upload(m, fileForm(pngBytes(), "selfie.png", "IDENTITY_SELFIE"));
     await upload(m, fileForm(pngBytes(), "c.png", "CERTIFICATE", "FITNESS"));
     const prof = await profileOf(m);
     expect((await adminVerify(admin, prof.id, { kind: "IDENTITY", status: "REJECTED" })).status).toBe(400);

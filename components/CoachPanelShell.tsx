@@ -25,7 +25,8 @@ export function useWideScreen(): boolean {
 
 /**
  * قاب مشترک صفحه‌های مربی: گیت ورود، هاله، سرتیتر و ناوبری. CoachNav فقط یک بار
- * رندر می‌شه: موبایل ته صفحه (قرص شناور)، دسکتاپ داخل سرتیتر.
+ * رندر می‌شه: موبایل ته صفحه (قرص شناور)، دسکتاپ (>=1024px) نوار کناری ثابت
+ * (ناوبری عمودی) کنار ستون محتوا.
  */
 export function CoachPanelShell({
   title, action, back, nav = true, badges, wide: wantWide, children,
@@ -42,14 +43,33 @@ export function CoachPanelShell({
   const { status } = useSession();
   const wide = useWideScreen();
   const navEl = nav ? <CoachNav badges={badges} /> : null;
-  return (
-    <div className={`ch-page${wantWide ? " is-wide" : ""}`}>
-      <div className="ch-halo" aria-hidden="true" />
-      <CoachHeader title={title} back={back} action={status === "authenticated" ? action : undefined} nav={wide ? navEl : undefined} />
+  const side = wide && navEl;
+  const header = <CoachHeader title={title} back={back} action={status === "authenticated" ? action : undefined} />;
+  const body = (
+    <>
+      {header}
       {status === "loading" && <PageLoader />}
       {status === "unauthenticated" && <AuthGate message={tr("برای استفاده از بخش مربی‌ها وارد شوید", "Sign in to use the mentors area")} />}
       {status === "authenticated" && children}
-      {!wide && navEl}
+    </>
+  );
+  return (
+    <div className={`ch-page${wantWide || side ? " is-wide" : ""}${side ? " has-side" : ""}`}>
+      <div className="ch-halo" aria-hidden="true" />
+      {side ? (
+        <>
+          <aside className="ch-sidebar" aria-label={tr("بخش مربی", "Coach")}>
+            <p className="ch-sidebar-title">{tr("مربی", "Coach")}</p>
+            {navEl}
+          </aside>
+          <div className="ch-main">{body}</div>
+        </>
+      ) : (
+        <>
+          {body}
+          {navEl}
+        </>
+      )}
     </div>
   );
 }
