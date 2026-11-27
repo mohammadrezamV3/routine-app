@@ -176,7 +176,7 @@ export function useNapTimer(): NapTimerApi {
     }
   }, [timer, now]);
 
-  const start = useCallback((m: number, latency: number) => startNap(m, latency), []);
+  const start = useCallback((m: number, latency: number) => { setNow(Date.now()); startNap(m, latency); }, []);
   const cancel = useCallback(() => cancelNap(), []);
 
   if (!timer) return { running: false, ended: false, startedAt: null, endsAt: null, minutes: null, remainingSec: 0, progress: 0, start, cancel };

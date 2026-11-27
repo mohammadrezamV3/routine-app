@@ -44,7 +44,7 @@ const GOOD_DAY = 60;
 
 /** هفته‌نامه: جلد «شماره‌ی مجله» با اسکوربورد (حلقه‌ی امتیاز، سه بخش برتر، اکولایزر 7 روز) */
 export function WeeklyLetterCover({
-  letter, isCurrent = false, storyCount = 0, onPlayStory, prediction,
+  letter, isCurrent = false, storyCount = 0, onPlayStory, prediction, headerAction,
 }: {
   letter: WeeklyLetterData;
   /** هفته هنوز تموم نشده: به‌جای شماره، نشان «در جریان» */
@@ -54,6 +54,8 @@ export function WeeklyLetterCover({
   onPlayStory?: () => void;
   /** باند پیش‌بینی (فقط هفته‌ی جاری)؛ زیر بدنه‌ی جلد، تمام‌عرض */
   prediction?: ReactNode;
+  /** اکشن‌های آیکونی گوشه‌ی سرصفحه (مثل اشتراک) */
+  headerAction?: ReactNode;
 }) {
   const lite = useLite();
   // شماره‌ی بزرگ توخالی با اسکرول کمی بالا می‌ره (فقط transform)
@@ -115,11 +117,14 @@ export function WeeklyLetterCover({
             {!isCurrent && letter.issueNo ? tr(`هفته‌ی ${letter.issueNo} · `, `Week ${letter.issueNo} · `) : ""}{letter.weekLabel}
           </span>
         </div>
-        {letter.archetype && Arch && (
-          <span className={`wlh-arch is-${letter.archetype.tone}`}>
-            <Arch size={15} />{letter.archetype.title}
-          </span>
-        )}
+        <div className="wlh-top-end">
+          {letter.archetype && Arch && (
+            <span className={`wlh-arch is-${letter.archetype.tone}`}>
+              <Arch size={15} />{letter.archetype.title}
+            </span>
+          )}
+          {headerAction}
+        </div>
       </motion.div>
 
       <div className="wlh-body">

@@ -1,6 +1,7 @@
 "use client";
 
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useEffect, useState, type ComponentType } from "react";
+import { createPortal } from "react-dom";
 import dynamic from "next/dynamic";
 import "./sleep-tools-row.css";
 import type { sleepInsights, SleepRecord } from "@/lib/sleep";
@@ -12,14 +13,35 @@ import { tr } from "@/lib/i18n";
 // هر کاشی پنجره‌ی خودش رو (next/dynamic، پیش‌لود با hover/فوکوس/لمس) باز می‌کنه.
 // تایمر چرت اینجا mount می‌مونه تا زنگ حتی با بسته بودن پنجره بخوره.
 
+// بارگذاری چانک با یک بار تلاش دوباره؛ اگه بعد از آپدیت سایت چانک قدیمی نبود، به‌جای
+// «کلیک بی‌اثر» یک پیام با دکمه‌ی بارگذاری دوباره نشون می‌دیم.
+function LoadFailed({ onClose }: { onClose?: () => void }) {
+  return createPortal(
+    <div className="modal-panel open slg-panel sleep-scope" role="alert" style={{ padding: 18, display: "flex", flexDirection: "column", gap: 12 }}>
+      <span>{tr("بارگذاری انجام نشد. اتصال رو بررسی کن و دوباره امتحان کن.", "Could not load. Check your connection and try again.")}</span>
+      <div style={{ display: "flex", gap: 8 }}>
+        <button type="button" className="btn btn-primary" onClick={() => window.location.reload()}>{tr("تلاش دوباره", "Try again")}</button>
+        <button type="button" className="btn btn-ghost" onClick={onClose}>{tr("بستن", "Close")}</button>
+      </div>
+    </div>,
+    document.body,
+  );
+}
+function safeLoad<T extends { default?: unknown }>(load: () => Promise<T>, pick: (m: T) => ComponentType<any>) {
+  return () =>
+    load()
+      .catch(() => new Promise<T>((r) => setTimeout(r, 400)).then(load))
+      .then(pick)
+      .catch(() => LoadFailed as ComponentType<any>);
+}
 const loadSound = () => import("./SleepSoundSheet");
 const loadBreath = () => import("./SleepBreathSheet");
 const loadNap = () => import("./SleepNapSheet");
 const loadStats = () => import("./SleepStatsSheet");
-const SleepSoundSheet = dynamic(() => loadSound().then((m) => m.SleepSoundSheet), { ssr: false });
-const SleepBreathSheet = dynamic(() => loadBreath().then((m) => m.SleepBreathSheet), { ssr: false });
-const SleepNapSheet = dynamic(() => loadNap().then((m) => m.SleepNapSheet), { ssr: false });
-const SleepStatsSheet = dynamic(() => loadStats().then((m) => m.SleepStatsSheet), { ssr: false });
+const SleepSoundSheet = dynamic(safeLoad(loadSound, (m) => m.SleepSoundSheet), { ssr: false });
+const SleepBreathSheet = dynamic(safeLoad(loadBreath, (m) => m.SleepBreathSheet), { ssr: false });
+const SleepNapSheet = dynamic(safeLoad(loadNap, (m) => m.SleepNapSheet), { ssr: false });
+const SleepStatsSheet = dynamic(safeLoad(loadStats, (m) => m.SleepStatsSheet), { ssr: false });
 
 type Tool = "sound" | "breath" | "nap" | "stats";
 

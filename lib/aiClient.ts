@@ -1303,3 +1303,18 @@ export async function planRoutineChange(
     ask,
   };
 }
+
+/**
+ * نومو (حالت گفت‌وگو + عملیات چندبخشی). فقط JSON خام مدل را برمی‌گرداند؛
+ * هر چه برگردد غیرقابل‌اعتماد است و فقط از lib/nomoAgent.ts (parseAgentOutput)
+ * رد شده مصرف می‌شود. متن پیام/پاسخ هیچ‌جا لاگ نمی‌شود.
+ */
+export async function runNomoAgent(system: string, userContent: string, userId: string): Promise<unknown> {
+  const { text, usage, durationMs } = await callAiChat(system, userContent, 900, AI_MODEL_NAME, AI_TIMEOUT_MS, 0.4);
+  recordAiUsage(userId, AiFeatureKey.ROUTINE_ASSISTANT, usage, durationMs, true);
+  try {
+    return parseJsonResponse(text);
+  } catch {
+    return null;
+  }
+}

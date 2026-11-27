@@ -158,8 +158,8 @@ export function MentorSettingsForm({
       )}
 
       {error && <div className="form-inline-error" role="alert" style={{ margin: 0 }}>{error}</div>}
-      <div className="mentor-form-actions" style={{ marginTop: 0 }}>
-        <button type="submit" className="btn btn-primary" disabled={saving}>
+      <div className="mentor-form-actions ch-save-top">
+        <button type="submit" className={`btn btn-ghost btn-sm${saving ? " is-loading" : ""}`} disabled={saving}>
           {saving ? <Spinner size={14} /> : saved ? <><Check size={MI.btn} strokeWidth={MI_STROKE} aria-hidden /> {tr("ذخیره شد", "Saved")}</> : tr("ذخیره", "Save")}
         </button>
       </div>

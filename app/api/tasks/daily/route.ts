@@ -6,10 +6,8 @@ import { parseIsoDate, readJsonBody } from "@/lib/validate";
 import { withLiveSync } from "@/lib/realtime";
 import { ModuleKey } from "@prisma/client";
 import { requireModule } from "@/lib/moduleAccess";
+import { saveDailyTasks } from "@/lib/dailyTasksWrite";
 import { sessionFeatureBlocked } from "@/lib/featureFlagsServer";
-
-// سقف تعداد کلید «انجام‌شده»ی یک روز — از هر برنامه‌ی واقعی خیلی بیشتره
-const MAX_DAILY_TASK_KEYS = 500;
 
 // GET /api/tasks/daily?date=2026-07-24
 export async function GET(req: NextRequest) {
@@ -54,18 +52,7 @@ async function handlePOST(req: NextRequest) {
   const wakeAt = wake ? new Date(wake) : null;
   const wakeUpAt = wakeAt && !Number.isNaN(wakeAt.getTime()) ? wakeAt : null;
 
-  // فقط کلیدهای boolean واقعی ذخیره می‌شن، با سقف تعداد — این ستون Jsonه و
-  // بدون سقف هر چیزی که فرستاده بشه عینا می‌نشست توی دیتابیس.
-  const completedItems: Record<string, boolean> = {};
-  for (const [k, v] of Object.entries(tasks ?? {}).slice(0, MAX_DAILY_TASK_KEYS)) {
-    if (typeof k === "string" && k.length <= 200) completedItems[k.slice(0, 200)] = !!v;
-  }
-
-  const entry = await prisma.dailyEntry.upsert({
-    where: { userId_date: { userId, date } },
-    create: { userId, date, completedItems, wakeUpAt },
-    update: { completedItems, wakeUpAt },
-  });
+  const entry = await saveDailyTasks(userId, date, tasks, wakeUpAt);
 
   return NextResponse.json({ ok: true, id: entry.id });
 }

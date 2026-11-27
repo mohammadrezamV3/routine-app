@@ -222,8 +222,8 @@ export function MentorProfileForm({ profile, onSaved }: { profile: MentorSelf | 
         </div>
       )}
       {error && <div className="form-inline-error" role="alert">{error}</div>}
-      <div className="mentor-form-actions" style={{ marginTop: error ? undefined : 0 }}>
-        <button type="submit" className="btn btn-primary" disabled={saving}>
+      <div className="mentor-form-actions ch-save-top">
+        <button type="submit" className={`btn btn-ghost btn-sm${saving ? " is-loading" : ""}`} disabled={saving}>
           {saving ? <Spinner size={14} /> : saved ? <>{ic(Check, MI.btn)} {tr("ذخیره شد", "Saved")}</> : isNew ? tr("ساخت پروفایل", "Create profile") : tr("ذخیره", "Save")}
         </button>
       </div>

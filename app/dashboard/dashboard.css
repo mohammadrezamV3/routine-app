@@ -66,7 +66,7 @@ body[data-theme="light"] .db-page{
 /* نور دنبال‌کننده‌ی موس — فقط روی *بوردر* (mask)، نه پرکردن کارت */
 .db-page .db-card::before{
   content:""; position:absolute; inset:-1px; border-radius:inherit; padding:1px; pointer-events:none; z-index:-1;
-  background:radial-gradient(260px circle at var(--mx, 50%) var(--my, -40%), rgba(var(--accent-rgb),.75), transparent 60%);
+  background:radial-gradient(260px circle at var(--mx, -999px) var(--my, -999px), rgba(var(--accent-rgb),.75), transparent 60%);
   -webkit-mask:linear-gradient(#000 0 0) content-box, linear-gradient(#000 0 0);
   -webkit-mask-composite:xor; mask-composite:exclude;
   opacity:0; transition:opacity .3s ease;
@@ -176,7 +176,7 @@ html[data-perf-weak] .db-hero::before{ animation:none; opacity:.35; }
 /* همان نور دنبال‌کننده‌ی موس کارت‌های بنتو (BentoCard) — فقط روی بوردر */
 .db-page .db-hero::after{
   content:""; position:absolute; inset:-1px; border-radius:inherit; padding:1px; pointer-events:none; z-index:-1;
-  background:radial-gradient(260px circle at var(--mx, 50%) var(--my, -40%), rgba(var(--accent-rgb),.75), transparent 60%);
+  background:radial-gradient(260px circle at var(--mx, -999px) var(--my, -999px), rgba(var(--accent-rgb),.75), transparent 60%);
   -webkit-mask:linear-gradient(#000 0 0) content-box, linear-gradient(#000 0 0);
   -webkit-mask-composite:xor; mask-composite:exclude;
   opacity:0; transition:opacity .3s ease;
@@ -1067,19 +1067,12 @@ html[dir="ltr"] .db-cd-title, html[dir="ltr"] .db-ev-title{ text-align:left; }
 .db-page .db-hero.is-routine .db-orbit-legend{ flex-direction:column; gap:8px; }
 .db-page .db-hero.is-routine .db-orbit-legend a{ flex-direction:row; gap:7px; text-align:start; font-size:12px; }
 .db-page .db-hero.is-routine .db-orbit-legend b{ margin-inline-start:2px; }
+/* دسکتاپ: حلقه‌ها اندازه‌ی کامل (176px) می‌مونن و نوار روز *زیر* اونا می‌افته، نه کنارشون */
 @media (min-width:1024px){
-  .db-page .db-hero.is-routine{
-    grid-template-columns:minmax(0,1fr) minmax(0,1.25fr) auto; grid-template-areas:"main ribbon orbit";
-    align-items:center; padding:20px 30px 20px; gap:20px 34px; min-height:0;
-  }
+  .db-page .db-hero.is-routine{ padding:24px 30px 22px; gap:20px 34px; }
   .db-page .db-hero.is-routine .db-hero-main{ gap:8px; }
   .db-page .db-hero.is-routine .db-hero-title{ font-size:24px !important; }
   .db-page .db-hero.is-routine .db-hero-insight{ line-height:1.7; }
-  .db-page .db-hero.is-routine .db-ribbon{ align-self:center; }
-  .db-page .db-hero.is-routine .db-hero-orbit{ padding-inline-end:40px; }
-  .db-page .db-hero.is-routine .db-orbit{ width:156px !important; height:156px !important; }
-  .db-page .db-hero.is-routine .db-orbit > svg{ width:100%; height:100%; }
-  .db-page .db-hero.is-routine .db-orbit-pct{ font-size:22px; }
 }
 @media (max-width:639px){
   .db-page .db-hero.is-routine .db-hero-orbit{ gap:8px; }

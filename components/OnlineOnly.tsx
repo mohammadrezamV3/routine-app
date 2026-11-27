@@ -80,7 +80,7 @@ export function withOnlineOnly<P extends object>(Inner: ComponentType<P>, featur
 
 /**
  * جایگزین کامپوننت lazy که چانکش آفلاین نیست (هیچ‌وقت آنلاین باز نشده): به‌جای افتادن به مرز خطای کل
- * اپ ("در حال به‌روزرسانی صفحه") همون پیام «اینترنت لازمه» نشون داده می‌شه.
+ * اپ همون پیام «اینترنت لازمه» نشون داده می‌شه.
  * استفاده: dynamic(() => import("./X").then((m) => m.X).catch(() => ChunkOffline), { ssr: false })
  */
 export function ChunkOffline() {
