@@ -1,55 +1,67 @@
-// شاخص توده بدنی (BMI) — منطق خالص. دسته‌بندی بر اساس جدول سازمان جهانی بهداشت
-// برای بزرگسالان؛ برای کودکان و نوجوانان یا ورزشکاران عضلانی معیار دقیقی نیست.
+// شاخص توده بدنی (BMI) — منطق خالص، بدون React. دسته‌بندی طبق جدول سازمان جهانی بهداشت (WHO)
+// برای بزرگسالان. برای کودکان، نوجوانان، ورزشکاران عضلانی و زنان باردار معنی ندارد.
 
 import { tr } from "./i18n";
 
-export type BmiCategoryKey = "under" | "normal" | "over" | "obese1" | "obese2" | "obese3";
+export type BmiCategory = "underweight" | "normal" | "overweight" | "obese1" | "obese2" | "obese3";
 
-export type BmiCategory = { key: BmiCategoryKey; label: string; labelEn: string; from: number; to: number };
+/** مرز پایین و بالای محدوده‌ی وزن سالم (BMI) */
+export const HEALTHY_BMI_MIN = 18.5;
+export const HEALTHY_BMI_MAX = 24.9;
 
-export const BMI_CATEGORIES: BmiCategory[] = [
-  { key: "under", label: "کم‌وزن", labelEn: "Underweight", from: 0, to: 18.5 },
-  { key: "normal", label: "وزن طبیعی", labelEn: "Normal weight", from: 18.5, to: 25 },
-  { key: "over", label: "اضافه‌وزن", labelEn: "Overweight", from: 25, to: 30 },
-  { key: "obese1", label: "چاقی درجه 1", labelEn: "Obesity class 1", from: 30, to: 35 },
-  { key: "obese2", label: "چاقی درجه 2", labelEn: "Obesity class 2", from: 35, to: 40 },
-  { key: "obese3", label: "چاقی درجه 3", labelEn: "Obesity class 3", from: 40, to: Infinity },
-];
-
-export const BMI_NORMAL_MIN = 18.5;
-export const BMI_NORMAL_MAX = 24.9;
-
-export type BmiResult =
-  | { ok: true; bmi: number; category: BmiCategory; minKg: number; maxKg: number; diffKg: number }
-  | { ok: false; error: string };
-
-const fin = (n: unknown): n is number => typeof n === "number" && Number.isFinite(n);
-
-export function bmiCategory(bmi: number): BmiCategory {
-  return BMI_CATEGORIES.find((c) => bmi < c.to) ?? BMI_CATEGORIES[BMI_CATEGORIES.length - 1];
-}
-
-/**
- * diffKg: چقدر تا بازه‌ی وزن طبیعی فاصله دارد (منفی = باید کم شود، مثبت = باید زیاد شود،
- * صفر = داخل بازه).
- */
-export function calcBmi(heightCm: number, weightKg: number): BmiResult {
-  if (!fin(heightCm) || heightCm < 100 || heightCm > 250) return { ok: false, error: tr("قد را بین 100 تا 250 سانتی‌متر وارد کن", "Enter a height between 100 and 250 cm") };
-  if (!fin(weightKg) || weightKg < 20 || weightKg > 400) return { ok: false, error: tr("وزن را بین 20 تا 400 کیلوگرم وارد کن", "Enter a weight between 20 and 400 kg") };
+/** BMI = وزن (کیلوگرم) تقسیم بر مجذور قد (متر)؛ ورودی نامعتبر → null */
+export function calcBmi(heightCm: number, weightKg: number): number | null {
+  if (!Number.isFinite(heightCm) || !Number.isFinite(weightKg)) return null;
+  if (heightCm <= 0 || weightKg <= 0) return null;
   const m = heightCm / 100;
-  const bmi = weightKg / (m * m);
-  const minKg = BMI_NORMAL_MIN * m * m;
-  const maxKg = BMI_NORMAL_MAX * m * m;
-  const diffKg = weightKg < minKg ? minKg - weightKg : weightKg > maxKg ? maxKg - weightKg : 0;
-  return { ok: true, bmi, category: bmiCategory(bmi), minKg, maxKg, diffKg };
+  return weightKg / (m * m);
 }
 
-/** موقعیت نشانگر روی مقیاس 15 تا 40 (درصد 0..100) */
-export function bmiScalePercent(bmi: number): number {
-  const lo = 15, hi = 40;
-  return Math.max(0, Math.min(100, ((bmi - lo) / (hi - lo)) * 100));
+/** گرد کردن نمایشی به یک رقم اعشار */
+export function roundBmi(bmi: number): number {
+  return Math.round(bmi * 10) / 10;
+}
+
+/** دسته‌بندی WHO روی مقدار گردشده‌ی یک‌رقمی (همان عددی که کاربر می‌بیند) */
+export function bmiCategory(bmi: number): BmiCategory {
+  const v = roundBmi(bmi);
+  if (v < 18.5) return "underweight";
+  if (v < 25) return "normal";
+  if (v < 30) return "overweight";
+  if (v < 35) return "obese1";
+  if (v < 40) return "obese2";
+  return "obese3";
 }
 
 export function bmiCategoryLabel(c: BmiCategory): string {
-  return tr(c.label, c.labelEn);
+  switch (c) {
+    case "underweight": return tr("کمبود وزن", "Underweight");
+    case "normal": return tr("وزن طبیعی", "Normal weight");
+    case "overweight": return tr("اضافه وزن", "Overweight");
+    case "obese1": return tr("چاقی درجه 1", "Obesity class I");
+    case "obese2": return tr("چاقی درجه 2", "Obesity class II");
+    case "obese3": return tr("چاقی درجه 3", "Obesity class III");
+  }
+}
+
+/** محدوده‌ی وزن سالم (BMI بین 18.5 و 24.9) برای یک قد، به کیلوگرم با یک رقم اعشار */
+export function healthyWeightRange(heightCm: number): { minKg: number; maxKg: number } | null {
+  if (!Number.isFinite(heightCm) || heightCm <= 0) return null;
+  const m2 = (heightCm / 100) ** 2;
+  return {
+    minKg: Math.round(HEALTHY_BMI_MIN * m2 * 10) / 10,
+    maxKg: Math.round(HEALTHY_BMI_MAX * m2 * 10) / 10,
+  };
+}
+
+/**
+ * فاصله تا محدوده‌ی سالم: مثبت یعنی باید اضافه شود، منفی یعنی باید کم شود، صفر یعنی داخل محدوده.
+ * مقدار برحسب کیلوگرم با یک رقم اعشار.
+ */
+export function kgToHealthy(heightCm: number, weightKg: number): number | null {
+  const r = healthyWeightRange(heightCm);
+  if (!r || !Number.isFinite(weightKg) || weightKg <= 0) return null;
+  if (weightKg < r.minKg) return Math.round((r.minKg - weightKg) * 10) / 10;
+  if (weightKg > r.maxKg) return -Math.round((weightKg - r.maxKg) * 10) / 10;
+  return 0;
 }

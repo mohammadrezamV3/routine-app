@@ -165,6 +165,7 @@ export function getSectionHero(section: SectionKey, brand: string): SectionHero 
       links: [
         { href: "/bodybuilding-program", label: tr("برنامه بدنسازی", "Workout plan") },
         { href: "/calorie-counter", label: tr("کالری‌شمار", "Calorie counter") },
+        { href: "/exercises", label: tr("آموزش حرکات", "Exercise library") },
         { href: "/mentors", label: tr("مربی‌ها", "Mentors") },
         { href: "/blog", label: tr("مقاله‌ها", "Articles") },
       ],
@@ -202,6 +203,7 @@ export function getSectionHero(section: SectionKey, brand: string): SectionHero 
         { href: "/trading-journal", label: tr("ژورنال معاملاتی", "Trading journal") },
         { href: "/economic-calendar", label: tr("تقویم اقتصادی", "Economic calendar") },
         { href: "/forex-sessions", label: tr("ساعت بازار فارکس", "Forex market hours") },
+        { href: "/lot-size-calculator", label: tr("محاسبه حجم لات", "Lot size calculator") },
         { href: "/mentors", label: tr("مربی‌ها", "Mentors") },
         { href: "/blog", label: tr("مقاله‌ها", "Articles") },
       ],
@@ -418,6 +420,10 @@ export function getSectionFooterFeatures(section: SectionKey): { href: string; l
     return [
       { href: "/bodybuilding-program", label: tr("برنامه‌ی بدنسازی", "Workout plan") },
       { href: "/calorie-counter", label: tr("کالری‌شمار", "Calorie counter") },
+      { href: "/exercises", label: tr("آموزش حرکات بدنسازی", "Exercise library") },
+      { href: "/food-calories", label: tr("جدول کالری غذاها", "Food calorie table") },
+      { href: "/calorie-calculator", label: tr("محاسبه کالری روزانه", "Daily calorie calculator") },
+      { href: "/bmi-calculator", label: tr("محاسبه BMI", "BMI calculator") },
       { href: "/mentors", label: tr("مربی‌ها", "Mentors") },
     ];
   }
@@ -426,6 +432,7 @@ export function getSectionFooterFeatures(section: SectionKey): { href: string; l
       { href: "/trading-journal", label: tr("ژورنال معاملاتی", "Trading journal") },
       { href: "/economic-calendar", label: tr("تقویم اقتصادی", "Economic calendar") },
       { href: "/forex-sessions", label: tr("ساعت بازار فارکس", "Forex market hours") },
+      { href: "/lot-size-calculator", label: tr("محاسبه حجم لات", "Lot size calculator") },
       { href: "/mentors", label: tr("مربی‌ها", "Mentors") },
     ];
   }
@@ -435,6 +442,7 @@ export function getSectionFooterFeatures(section: SectionKey): { href: string; l
     { href: "/daily-planner", label: tr("برنامه‌ریزی روزانه", "Daily planning") },
     { href: "/ai-planner", label: tr("نومو", "Nomo") },
     { href: "/learning-roadmap", label: tr("رودمپ یادگیری", "Learning roadmap") },
+    { href: "/sleep-calculator", label: tr("محاسبه زمان خواب", "Sleep calculator") },
     { href: "/mentors", label: tr("مربی‌ها", "Mentors") },
   ];
 }

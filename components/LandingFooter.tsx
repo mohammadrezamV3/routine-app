@@ -43,6 +43,17 @@ const groups = (): Group[] => [
     ],
   },
   {
+    title: tr("ابزارهای رایگان", "Free tools"),
+    links: [
+      { href: "/calorie-calculator", label: tr("محاسبه کالری روزانه", "Daily calorie calculator") },
+      { href: "/bmi-calculator", label: tr("محاسبه BMI", "BMI calculator") },
+      { href: "/food-calories", label: tr("جدول کالری غذاها", "Food calorie table") },
+      { href: "/exercises", label: tr("آموزش حرکات بدنسازی", "Exercise library") },
+      { href: "/lot-size-calculator", label: tr("محاسبه حجم لات", "Lot size calculator") },
+      { href: "/sleep-calculator", label: tr("محاسبه زمان خواب", "Sleep calculator") },
+    ],
+  },
+  {
     title: tr("منابع", "Resources"),
     links: [
       { href: "/blog", label: tr("مقاله‌ها", "Articles") },
@@ -82,9 +93,10 @@ export function LandingFooter({ section = null }: { section?: SectionKey | null 
   const base = groups();
   const GROUPS: Group[] = section
     ? [
+        // ابزارهای رایگان هر بخش داخل امکانات همون بخشن (getSectionFooterFeatures)
         { ...base[0], links: getSectionFooterFeatures(section) },
-        base[1],
         base[2],
+        base[3],
       ]
     : base;
   const OTHERS = section ? SECTION_KEYS.filter((k) => k !== section) : [];

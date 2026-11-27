@@ -1,0 +1,45 @@
+/* ابزارهای رایگان عمومی (ماشین‌حساب‌های سئو) — فقط چیدمان؛ فیلدها از کلاس استاندارد سایت
+   (wsearch-newform-name) و دکمه‌ها از .btn می‌آیند. فقط ویژگی‌های منطقی. */
+.stl-form{ display:grid; grid-template-columns:minmax(0,1fr); gap:16px; }
+@media (min-width:560px){ .stl-form{ grid-template-columns:repeat(2, minmax(0,1fr)); } }
+.stl-field{ min-width:0; display:flex; flex-direction:column; gap:7px; }
+.stl-field.wide{ grid-column:1 / -1; }
+.stl-label{ font-size:12px; font-weight:700; color:var(--muted2); }
+.stl-hint{ font-size:11.5px; line-height:1.8; color:var(--muted); }
+.stl-unit{ display:flex; align-items:center; gap:8px; }
+.stl-unit > input, .stl-unit > select{ flex:1; min-width:0; }
+.stl-unit > span{ font-size:12px; color:var(--muted2); flex-shrink:0; min-width:2.6em; }
+.stl-actions{ margin-block-start:18px; display:flex; flex-wrap:wrap; align-items:center; gap:12px; }
+.stl-error{ margin-block-start:14px; font-size:12.5px; line-height:1.8; color:#E05252; }
+.stl-ltr{ unicode-bidi:isolate; direction:ltr; display:inline-block; }
+.stl-select{ appearance:none; -webkit-appearance:none; cursor:pointer; }
+
+.stl-result{ margin-block-start:20px; display:flex; flex-direction:column; gap:14px; transition:opacity .2s ease; }
+.stl-result.stale{ opacity:.45; }
+.stl-tiles{ display:grid; grid-template-columns:repeat(2, minmax(0,1fr)); gap:10px; }
+@media (min-width:640px){ .stl-tiles.three{ grid-template-columns:repeat(3, minmax(0,1fr)); } }
+.stl-tile{ border:1px solid var(--line); border-radius:18px; padding:12px 14px; min-width:0; }
+.stl-tile.strong{ border-color:var(--accent); }
+.stl-tile-label{ font-size:11.5px; color:var(--muted2); margin-block-end:4px; }
+.stl-tile-value{ font-size:1.25rem; font-weight:800; line-height:1.4; }
+.stl-tile.strong .stl-tile-value{ color:var(--accent); }
+.stl-tile-note{ font-size:11px; color:var(--muted); margin-block-start:2px; line-height:1.7; }
+.stl-note{ font-size:12px; line-height:1.9; color:var(--muted); }
+.stl-warn{ font-size:12px; line-height:1.9; color:#E0A64C; }
+
+.stl-times{ display:grid; grid-template-columns:repeat(2, minmax(0,1fr)); gap:10px; }
+@media (min-width:640px){ .stl-times{ grid-template-columns:repeat(4, minmax(0,1fr)); } }
+.stl-time{ border:1px solid var(--line); border-radius:18px; padding:12px 8px; text-align:center; }
+.stl-time.best{ border-color:var(--accent); }
+.stl-time-clock{ font-size:1.5rem; font-weight:800; line-height:1.3; font-variant-numeric:tabular-nums; }
+.stl-time.best .stl-time-clock{ color:var(--accent); }
+.stl-time-meta{ font-size:11px; color:var(--muted2); line-height:1.7; }
+
+.stl-scale{ position:relative; height:10px; border-radius:999px; border:1px solid var(--line); overflow:hidden; display:flex; }
+.stl-scale > i{ display:block; height:100%; }
+.stl-marker{ position:relative; height:0; }
+.stl-marker > b{ position:absolute; inset-block-start:2px; width:0; height:0; border-inline:6px solid transparent; border-block-end:8px solid var(--text); transform:translateX(-50%); }
+html[dir="rtl"] .stl-marker > b{ transform:translateX(50%); }
+
+.stl-formula{ white-space:pre-line; margin-block-start:12px; border:1px solid var(--line); border-radius:18px; padding:12px 14px; font-size:13px; line-height:2; text-align:start; overflow-x:auto; }
+.stl-formula bdi{ unicode-bidi:isolate; direction:ltr; display:inline-block; font-weight:700; }

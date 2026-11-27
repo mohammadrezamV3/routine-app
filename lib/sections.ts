@@ -105,16 +105,16 @@ export const SECTION_META: Record<SectionKey, SectionMeta> = {
 // ورود، ادمین، منتورها، آنالیز، بلاگ، درباره، قوانین، اشتراک، استریک، API، ...).
 // مسیری که مال یک یا چند بخشه، روی زیردامنه‌ی بخش دیگه به زیردامنه‌ی صاحبش ریدایرکت می‌شه.
 const OWNED_PREFIXES: Record<SectionKey, string[]> = {
-  routine: ["/weekly", "/sleep", "/roadmaps", "/routine", "/habit-tracker", "/daily-planner", "/ai-planner", "/learning-roadmap", "/account/general/routine", "/streak"],
-  trade: ["/trade", "/trading-journal", "/economic-calendar", "/forex-sessions", "/account/general/trade"],
-  workout: ["/exercise", "/sleep", "/bodybuilding-program", "/calorie-counter", "/account/general/exercise"],
+  routine: ["/weekly", "/sleep", "/roadmaps", "/routine", "/habit-tracker", "/daily-planner", "/ai-planner", "/learning-roadmap", "/sleep-calculator", "/account/general/routine", "/streak"],
+  trade: ["/trade", "/trading-journal", "/economic-calendar", "/forex-sessions", "/lot-size-calculator", "/account/general/trade"],
+  workout: ["/exercise", "/sleep", "/bodybuilding-program", "/calorie-counter", "/exercises", "/food-calories", "/calorie-calculator", "/bmi-calculator", "/account/general/exercise"],
 };
 
 /** صفحه‌های فرود عمومی (بدون داده‌ی کاربر) که روی دامنه‌ی اصلی هم به زیردامنه‌ی صاحبشون ۳۰۸ می‌شن (یکی‌شدن سئو) */
 const SEO_LANDING_PATHS: Record<SectionKey, string[]> = {
-  routine: ["/routine", "/habit-tracker", "/daily-planner", "/ai-planner", "/learning-roadmap"],
-  trade: ["/trading-journal", "/economic-calendar", "/forex-sessions"],
-  workout: ["/bodybuilding-program", "/calorie-counter"],
+  routine: ["/routine", "/habit-tracker", "/daily-planner", "/ai-planner", "/learning-roadmap", "/sleep-calculator"],
+  trade: ["/trading-journal", "/economic-calendar", "/forex-sessions", "/lot-size-calculator"],
+  workout: ["/bodybuilding-program", "/calorie-counter", "/exercises", "/food-calories", "/calorie-calculator", "/bmi-calculator"],
 };
 
 function matchesPrefix(pathname: string, prefix: string): boolean {
