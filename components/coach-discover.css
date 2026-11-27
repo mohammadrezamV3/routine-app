@@ -93,3 +93,7 @@
 @media (prefers-reduced-motion:reduce){ .chd-card-link{ transition:none; } }
 .chpd-who{ display:flex; align-items:center; gap:12px; }
 .chpd-hidden{ display:flex; align-items:center; gap:6px; margin:0 4px; font-size:12.5px; color:var(--muted); }
+
+/* دکمه‌ی چسبان پایین صفحه‌ی مربی: آخرین محتوا باید کامل بالاتر از اون اسکرول بشه */
+.ch-page:has(> .chpf-cta){ padding-block-end:calc(148px + env(safe-area-inset-bottom)); }
+.chpf-link{ padding-block:4px; }

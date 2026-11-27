@@ -1,6 +1,7 @@
 "use client";
 
 import "./coach.css";
+import { toEnDigits } from "@/lib/schedule";
 import type { ReactNode } from "react";
 import type { ProgramStatus } from "@/lib/mentorTypes";
 import { programStatusText } from "@/lib/mentorStatus";
@@ -32,7 +33,7 @@ export function CoachProgramCard({ title, itemCount, weeks, days, status, change
   const head = (
     <>
       <span className="ch-eyebrow">{eyebrow ?? tr("برنامه‌ی تازه", "New program")}</span>
-      <span className="ch-program-title">{title}</span>
+      <span className="ch-program-title">{toEnDigits(title)}</span>
       <span className="ch-program-meta">{coachProgramMeta(itemCount, weeks, days)}</span>
       <span className={`ch-program-status is-${st.tone}`}>{statusLine ?? st.text}</span>
     </>

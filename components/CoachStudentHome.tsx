@@ -280,6 +280,7 @@ function Home() {
 /** تنها مربی فعال: کارت مربی، هدف، برنامه‌ی تازه، کارهای امروز و دو دکمه */
 function SingleCoach({ row, space, line, nameNode }: { row: MentorshipRow; space?: CoachSpaceData; line: string; nameNode: React.ReactNode }) {
   const name = publicUserName(row.counterpart);
+  const firstName = name.trim().split(/\s+/)[0] || name;
   const tasks = space?.todayTasks ?? null;
   const goal = space?.goal && space.goal.status !== "ENDED" ? space.goal : null;
   const pending = space?.pendingProgram ?? null;
@@ -324,8 +325,8 @@ function SingleCoach({ row, space, line, nameNode }: { row: MentorshipRow; space
       )}
 
       <div className="cs-home-actions">
-        <SmartLink href={`/account/general/mentors?mentorship=${encodeURIComponent(row.id)}`} className="btn btn-ghost">{tr(`${name} چی می‌بینه؟`, `What can ${name} see?`)}</SmartLink>
-        <SmartLink href={spaceHref} className="btn btn-primary">{tr(`پیام به ${name}`, `Message ${name}`)}</SmartLink>
+        <SmartLink href={`/account/general/mentors?mentorship=${encodeURIComponent(row.id)}`} className="btn btn-ghost">{tr(`${firstName} چی می‌بینه؟`, `What can ${firstName} see?`)}</SmartLink>
+        <SmartLink href={spaceHref} className="btn btn-primary">{tr(`پیام به ${firstName}`, `Message ${firstName}`)}</SmartLink>
       </div>
     </>
   );

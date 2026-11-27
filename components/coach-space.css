@@ -125,7 +125,9 @@
 .cs-strip-body{ flex:1; min-inline-size:0; display:flex; flex-direction:column; gap:3px; }
 .cs-strip-title{ font-size:14px; font-weight:700; line-height:1.6; }
 .cs-strip-go{ flex:none; font-size:13px; font-weight:800; color:var(--accent); }
-.cs-home-actions{ display:flex; justify-content:flex-end; flex-wrap:wrap; gap:8px; }
+.cs-home-actions{ display:flex; align-items:center; gap:8px; margin-block-start:4px; }
+.cs-home-actions .btn-ghost{ flex:none; }
+.cs-home-actions .btn-primary{ flex:1; min-inline-size:0; }
 .cs-invites{ display:flex; flex-direction:column; gap:12px; }
 .cs-invite{ display:flex; flex-direction:column; gap:12px; }
 .cs-invite-head{ display:flex; align-items:center; gap:12px; }

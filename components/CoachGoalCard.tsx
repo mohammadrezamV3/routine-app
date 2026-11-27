@@ -1,6 +1,7 @@
 "use client";
 
 import "./coach.css";
+import { toEnDigits } from "@/lib/schedule";
 import type { ReactNode } from "react";
 import { Share2 } from "lucide-react";
 import type { CoachGoal } from "@/lib/coachTypes";
@@ -27,7 +28,7 @@ export function CoachGoalCard({ goal, weekLine, onShare, footer }: { goal: Coach
       </GradientRing>
       <div className="ch-goal-body">
         <span className="ch-eyebrow">{tr("هدف", "Goal")}</span>
-        <h2 className="ch-goal-title">{goal.title}</h2>
+        <h2 className="ch-goal-title">{toEnDigits(goal.title)}</h2>
         {line && <p className="ch-goal-line">{line}</p>}
       </div>
       {onShare && (

@@ -27,6 +27,7 @@ import { fetchMentorProfile } from "@/lib/mentorProfileCache";
 import { availabilityShort } from "@/lib/mentorAvailability";
 import { fmtDate, networkError, readApiError } from "@/lib/mentorFormat";
 import { faNum } from "@/lib/jalali";
+import { toEnDigits } from "@/lib/schedule";
 import type { MentorProfileResponse, MyMentorship, MyWaitlist, ReportTargetType, Review } from "@/lib/mentorTypes";
 import { tr, iso } from "@/lib/i18n";
 
@@ -154,7 +155,7 @@ function Profile({ mentorId, initial, username, path }: { mentorId: string; init
   const first = (mentor.name || "").trim().split(/\s+/)[0] || mentor.name;
   const user = { id: mentor.userId, name: mentor.name, lastName: null, username, avatarUrl: mentor.avatarUrl, golden: mentor.golden };
   const role = mentor.categories.includes("ROUTINE") && mentor.routineRole?.trim() ? mentor.routineRole.trim() : null;
-  const headline = [role, mentor.headline].filter(Boolean).join(" · ");
+  const headline = toEnDigits([role, mentor.headline].filter(Boolean).join(" · "));
   const hasRating = mentor.ratingCount > 0 && mentor.ratingAvg > 0;
   const reviews = data.reviews;
   // لینک کوتاه: از خود پاسخ منتور (اگه نام کاربری داره)، وگرنه از آدرس /c/<username> فعلی
@@ -213,14 +214,14 @@ function Profile({ mentorId, initial, username, path }: { mentorId: string; init
 
       {mentor.bio && (
         <section className="ch-card">
-          <p className="chpf-bio">{mentor.bio}</p>
+          <p className="chpf-bio">{toEnDigits(mentor.bio)}</p>
         </section>
       )}
 
       {(mentor.categories.length > 0 || mentor.specialties.length > 0) && (
         <ul className="chpf-chips" aria-label={tr("تخصص‌ها", "Specialties")}>
           {mentor.categories.map((c) => <li key={`c-${c}`} className="chpf-chip">{categoryLabel(c)}</li>)}
-          {mentor.specialties.map((s) => <li key={`s-${s}`} className="chpf-chip">{s}</li>)}
+          {mentor.specialties.map((s) => <li key={`s-${s}`} className="chpf-chip">{toEnDigits(s)}</li>)}
         </ul>
       )}
 
@@ -255,6 +256,15 @@ function Profile({ mentorId, initial, username, path }: { mentorId: string; init
 
       <MentorPlatformNotice />
 
+      {shortUrl && (
+        <div className="chpf-link">
+          <span>{shortUrl}</span>
+          <button type="button" className="btn btn-ghost btn-icon" onClick={copyLink} aria-label={copied ? tr("کپی شد", "Copied") : tr("کپی لینک", "Copy link")}>
+            {copied ? <Check size={18} aria-hidden="true" /> : <Copy size={18} aria-hidden="true" />}
+          </button>
+        </div>
+      )}
+
       {/* ── دکمه‌ی اصلی چسبان ── */}
       <div className="chpf-cta">
         {actionError && !confirmCancel && <p className="chpf-error" role="alert">{actionError}</p>}
@@ -265,14 +275,6 @@ function Profile({ mentorId, initial, username, path }: { mentorId: string; init
           waitlist={data.waitlist ?? null} waitlistCount={data.waitlistCount ?? 0}
           busy={busy} onOpen={() => setRequestOpen(true)} onPatch={patch} onWaitlist={setWaitlist} onStale={load}
         />
-        {shortUrl && (
-          <div className="chpf-link">
-            <span>{shortUrl}</span>
-            <button type="button" className="btn btn-ghost btn-icon" onClick={copyLink} aria-label={copied ? tr("کپی شد", "Copied") : tr("کپی لینک", "Copy link")}>
-              {copied ? <Check size={18} aria-hidden="true" /> : <Copy size={18} aria-hidden="true" />}
-            </button>
-          </div>
-        )}
       </div>
 
       {requestOpen && (

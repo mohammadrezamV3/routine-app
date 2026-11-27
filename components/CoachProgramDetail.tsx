@@ -1,6 +1,7 @@
 "use client";
 
 import "./coach.css";
+import { toEnDigits } from "@/lib/schedule";
 import "./coach-pages.css";
 import "./coach-discover.css";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
@@ -422,7 +423,7 @@ function ItemsByDay({ items, isWorkout }: { items: Item[]; isWorkout: boolean })
             return (
               <div key={`${g.key}-${it.id}`} className="ch-card chpd-item">
                 <span className="chpd-item-main">
-                  <span className="chpd-item-title">{it.title}</span>
+                  <span className="chpd-item-title">{toEnDigits(it.title)}</span>
                   {sub && <span className="chpd-item-sub">{sub}</span>}
                   {it.details && <span className="chpd-item-sub">{it.details}</span>}
                 </span>

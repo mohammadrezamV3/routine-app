@@ -1,6 +1,7 @@
 "use client";
 
 import "./coach.css";
+import { toEnDigits } from "@/lib/schedule";
 import "./coach-discover.css";
 import { Bookmark } from "lucide-react";
 import { SmartLink } from "./SmartLink";
@@ -38,7 +39,7 @@ export function CoachDiscoverCard({ mentor }: { mentor: MentorCard }) {
   const saved = useSavedMentors();
   const isSaved = saved?.isSaved(mentor.userId) ?? false;
   const seat = coachSeatLine(mentor);
-  const line = [mentor.routineRole, mentor.headline].filter(Boolean).join(" · ");
+  const line = toEnDigits([mentor.routineRole, mentor.headline].filter(Boolean).join(" · "));
   const hasRating = mentor.ratingCount > 0 && mentor.ratingAvg > 0;
   const user = { id: mentor.userId, name: mentor.name, lastName: null, username: null, avatarUrl: mentor.avatarUrl, golden: mentor.golden };
   return (
