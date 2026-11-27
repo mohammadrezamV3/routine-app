@@ -1,0 +1,20 @@
+/* کارت تایید عملیات نومو (ثبت خواب/تیک/غذا/تمرین/معامله) داخل گفت‌وگو.
+   عمدا بدون بک‌گراند: فقط بوردر؛ دکمه‌ها از سیستم .btn می‌آیند. */
+.nomo-proposal{
+  margin-block:2px 4px;
+  margin-inline-start:34px;
+  padding:10px 12px;
+  border:1px solid var(--surface-line, var(--line));
+  border-radius:16px;
+  display:flex; flex-direction:column; gap:10px;
+  font-size:13px; line-height:1.7;
+}
+.nomo-proposal-list{ margin:0; padding:0; list-style:none; display:flex; flex-direction:column; gap:4px; }
+.nomo-proposal-list li{ position:relative; padding-inline-start:14px; }
+.nomo-proposal-list li::before{
+  content:""; position:absolute; inset-inline-start:2px; top:.7em;
+  width:5px; height:5px; border-radius:50%; background:var(--accent);
+}
+.nomo-proposal-actions{ display:flex; gap:8px; justify-content:flex-start; }
+.nomo-proposal.is-cancelled{ opacity:.55; }
+.nomo-proposal.is-applied{ border-color:rgba(0,168,107,.45); }

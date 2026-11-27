@@ -4,11 +4,10 @@ import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 import { requireModule } from "@/lib/moduleAccess";
 import { ModuleKey } from "@prisma/client";
-import { clampText } from "@/lib/validate";
+import { createFoodLog, parseFoodLogInput } from "@/lib/foodLogWrite";
 import { parseIsoDate, readJsonBody } from "@/lib/validate";
 import { withLiveSync } from "@/lib/realtime";
 import { sessionFeatureBlocked } from "@/lib/featureFlagsServer";
-import { checkNumber, hasNumberValue } from "@/lib/numberLimits";
 import { sanitizeFoodRow } from "@/lib/foodLogSanitize";
 
 // GET /api/calorie/log?date=2026-07-25
@@ -39,44 +38,11 @@ async function handlePOST(req: NextRequest) {
 
   const parsed = await readJsonBody(req);
   if (!parsed.ok) return NextResponse.json({ error: parsed.error }, { status: parsed.status });
-  const { customName, mealType } = parsed.body as { customName: string; mealType?: string };
-
-  const date = parseIsoDate(parsed.body?.date);
-  if (!date) return NextResponse.json({ error: tr("تاریخ نامعتبر است (قالب درست: YYYY-MM-DD)", "Invalid date (format: YYYY-MM-DD)") }, { status: 400 });
-  if (!customName || typeof customName !== "string" || !hasNumberValue(parsed.body?.customCalories) || !hasNumberValue(parsed.body?.grams)) {
-    return NextResponse.json({ error: tr("اطلاعات ناقص است", "Incomplete information") }, { status: 400 });
-  }
-  // سقف و کف همه‌ی عددها از جدول مشترک (lib/numberLimits.ts)
-  const kcal = checkNumber(parsed.body.customCalories, "entryKcal");
-  if (!kcal.ok) return NextResponse.json({ error: kcal.error }, { status: 400 });
-  const gramsCheck = checkNumber(parsed.body.grams, "foodGrams");
-  if (!gramsCheck.ok) return NextResponse.json({ error: gramsCheck.error }, { status: 400 });
-  const customCalories = kcal.value;
-  const grams = gramsCheck.value;
-  // نوع وعده دیگه enum ثابت نیست — چون تعداد/چیدمان وعده‌ها رو خود کاربر توی
-  // هدف کالری‌اش تعیین می‌کنه (۲ تا ۶ وعده، کلیدهایی مثل snack1/snack2)؛
-  // فقط طول رشته رو محدود می‌کنیم.
-  if (mealType && (typeof mealType !== "string" || mealType.length > 20)) {
-    return NextResponse.json({ error: tr("نوع وعده نامعتبر است", "Invalid meal type") }, { status: 400 });
-  }
-  // درشت‌مغذی‌ها: یا هر سه با هم میان یا هیچ‌کدوم؛ هر کدوم عدد نامنفی توی بازه.
-  const rawMacros = [parsed.body?.proteinG, parsed.body?.carbsG, parsed.body?.fatG];
-  const hasMacros = rawMacros.some((v) => v !== undefined);
-  let proteinG: number | undefined, carbsG: number | undefined, fatG: number | undefined;
-  if (hasMacros) {
-    const checks = rawMacros.map((v) => checkNumber(v, "macroEntryG"));
-    const bad = checks.find((c) => !c.ok);
-    if (bad && !bad.ok) return NextResponse.json({ error: bad.error }, { status: 400 });
-    [proteinG, carbsG, fatG] = checks.map((c) => (c.ok ? c.value : 0));
-  }
+  const data = parseFoodLogInput(parsed.body);
+  if (typeof data === "string") return NextResponse.json({ error: data }, { status: 400 });
 
   return withIdempotency(req, userId, "calorie.log", async () => {
-    const entry = await prisma.foodLogEntry.create({
-      data: {
-        userId, date, customName: clampText(customName, 80), customCalories, grams, mealType: mealType || null,
-        ...(hasMacros ? { proteinG, carbsG, fatG } : {}),
-      },
-    });
+    const entry = await createFoodLog(userId, data);
     return NextResponse.json({ ok: true, entry });
   });
 }

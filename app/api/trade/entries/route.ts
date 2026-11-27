@@ -3,6 +3,7 @@ import { ModuleKey, Prisma } from "@prisma/client";
 import { prisma } from "@/lib/prisma";
 import { requireModule } from "@/lib/moduleAccess";
 import { parseTradeInput, ENTRY_SELECT, serializeEntry } from "@/lib/tradeServer";
+import { ownedAccount, buildChecklistSnapshot, createTradeEntryFromBody } from "@/lib/tradeCreate";
 import { parseDateRange } from "@/lib/validate";
 import { withLiveSync } from "@/lib/realtime";
 import { sessionFeatureBlocked } from "@/lib/featureFlagsServer";
@@ -12,38 +13,6 @@ import { withIdempotency } from "@/lib/idempotency";
 // معاملات یک حساب. برخلاف نسخه‌ی قبلی که همه‌ی معاملات کاربر را یکجا
 // می‌داد، این‌جا accountId اجباری است — چون کل UI حساب‌محور است و آمار دو
 // حساب متفاوت هیچ‌وقت نباید با هم جمع شود.
-
-/** حسابی که به کاربر تعلق دارد — هر روت معامله اول از این رد می‌شود */
-async function ownedAccount(userId: string, accountId: string) {
-  if (!accountId) return null;
-  return prisma.tradeAccount.findFirst({ where: { id: accountId, userId }, select: { id: true } });
-}
-
-/**
- * اسنپ‌شات چک‌لیست در لحظه‌ی ثبت.
- * متن آیتم‌ها کپی می‌شود نه ارجاع داده — اگر کاربر فردا یک آیتم را عوض یا
- * حذف کند، آمار معاملات دیروز نباید بی‌صدا معنی دیگری پیدا کند.
- */
-async function buildChecklistSnapshot(userId: string, checklistId: string | null, state: Record<string, boolean>) {
-  if (!checklistId) {
-    return { checklistId: null, checklistName: null, checklistDone: null, checklistTotal: null, checklistSnapshot: Prisma.DbNull };
-  }
-  const checklist = await prisma.tradeChecklist.findFirst({
-    where: { id: checklistId, userId },
-    select: { id: true, name: true, items: { select: { id: true, text: true }, orderBy: { order: "asc" } } },
-  });
-  if (!checklist) {
-    return { checklistId: null, checklistName: null, checklistDone: null, checklistTotal: null, checklistSnapshot: Prisma.DbNull };
-  }
-  const snapshot = checklist.items.map((i) => ({ text: i.text, checked: !!state[i.id] }));
-  return {
-    checklistId: checklist.id,
-    checklistName: checklist.name,
-    checklistDone: snapshot.filter((i) => i.checked).length,
-    checklistTotal: snapshot.length,
-    checklistSnapshot: snapshot as unknown as Prisma.InputJsonValue,
-  };
-}
 
 // GET /api/trade/entries?accountId=...&from=YYYY-MM-DD&to=YYYY-MM-DD
 export async function GET(req: NextRequest) {
@@ -88,30 +57,9 @@ async function handlePOST(req: NextRequest) {
 
   return withIdempotency(req, userId, "trade.entries", async () => {
   const body = await req.json().catch(() => null);
-  const parsed = parseTradeInput(body);
-  if (typeof parsed === "string") return NextResponse.json({ error: parsed }, { status: 400 });
-
-  if (!(await ownedAccount(userId, parsed.data.accountId))) {
-    return NextResponse.json({ error: tr(tr("حساب پیدا نشد", "Account not found"), "Account not found") }, { status: 404 });
-  }
-
-  const checklist = await buildChecklistSnapshot(userId, body?.checklistId ?? null, parsed.checklistState);
-  const ownedTags = parsed.tagIds.length
-    ? await prisma.tradeTag.findMany({ where: { id: { in: parsed.tagIds }, userId }, select: { id: true } })
-    : [];
-
-  const entry = await prisma.tradeEntry.create({
-    data: {
-      ...parsed.data,
-      ...checklist,
-      userId,
-      tags: { connect: ownedTags.map((t) => ({ id: t.id })) },
-      images: { create: parsed.images.map((img, i) => ({ dataUrl: img.dataUrl, caption: img.caption, order: i })) },
-    },
-    select: ENTRY_SELECT,
-  });
-
-  return NextResponse.json({ ok: true, entry: serializeEntry(entry) });
+  const created = await createTradeEntryFromBody(userId, body);
+  if ("error" in created) return NextResponse.json({ error: created.error }, { status: created.status });
+  return NextResponse.json({ ok: true, entry: created.entry });
   });
 }
 

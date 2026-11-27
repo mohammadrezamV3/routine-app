@@ -2,7 +2,7 @@ import { featureBlocked } from "@/lib/featureFlagsServer";
 import { NextRequest, NextResponse } from "next/server";
 import { ModuleKey } from "@prisma/client";
 import { prisma } from "@/lib/prisma";
-import { getNomoFreeUses } from "@/lib/aiQuota";
+import { assistantAccess, readUses, writeUses, resolveToday, jalaliLabel } from "@/lib/nomoShared";
 import { requireModule } from "@/lib/moduleAccess";
 import { checkRateLimit } from "@/lib/rateLimit";
 import { readJsonBody } from "@/lib/validate";
@@ -37,47 +37,6 @@ const MAX_MESSAGE_LEN = 500;
 /** متن ثابت رد پیام خارج از موضوع — عمدا از خود کد، نه از مدل. */
 const offTopicReply = () =>
   tr("من نومو‌ام، مدیر برنامه‌ات — بگو چه برنامه‌ای اضافه/جابه‌جا/حذف کنم.", "I am Nomo, your schedule manager — tell me which plan to add, move or remove.");
-
-/**
- * کلید پلن‌های اشتراک فعال کاربر (ACTIVE/TRIAL و منقضی‌نشده). شرط
- * currentPeriodEnd لازم است چون ردیف منقضی ممکن است هنوز status قدیمی
- * داشته باشد.
- */
-async function activePlanKeys(userId: string): Promise<string[]> {
-  const subs = await prisma.subscription.findMany({
-    where: { userId, status: { in: ["ACTIVE", "TRIAL"] }, currentPeriodEnd: { gt: new Date() } },
-    select: { plan: { select: { key: true } } },
-  });
-  return subs.map((s) => s.plan.key);
-}
-
-/**
- * «نومو» مثل خود روتین کامل رایگان نیست:
- *   • سوپریوزر یا پلن فعال «روتین من» (basic) یا مکس → نامحدود (nomoUnlimitedFor)
- *   • بقیه (از جمله مشترک فقط بدنسازی یا ترید) → سهمیه‌ی مادام‌العمر پیام‌های رایگان (getNomoFreeUses، پیش‌فرض
- *     FREE_ASSISTANT_USES = ۱۰، قابل تغییر از پنل ادمین)
- */
-async function assistantAccess(userId: string, isSuperAdmin: boolean): Promise<{ unlimited: boolean; freeLimit: number }> {
-  if (isSuperAdmin || nomoUnlimitedFor(await activePlanKeys(userId))) return { unlimited: true, freeLimit: 0 };
-  return { unlimited: false, freeLimit: await getNomoFreeUses() };
-}
-
-async function readUses(userId: string): Promise<number> {
-  const row = await prisma.userSetting.findUnique({
-    where: { userId_key: { userId, key: ROUTINE_ASSISTANT_USES_KEY } },
-    select: { value: true },
-  });
-  const n = Number(row?.value);
-  return Number.isFinite(n) && n > 0 ? Math.floor(n) : 0;
-}
-
-async function writeUses(userId: string, value: number): Promise<void> {
-  await prisma.userSetting.upsert({
-    where: { userId_key: { userId, key: ROUTINE_ASSISTANT_USES_KEY } },
-    create: { userId, key: ROUTINE_ASSISTANT_USES_KEY, value },
-    update: { value },
-  });
-}
 
 async function readOccurrences(userId: string, key: string): Promise<any> {
   const row = await prisma.userSetting.findUnique({
@@ -117,37 +76,6 @@ function parseHistory(raw: unknown): RoutineChatTurn[] {
     .filter((t: any) => t && (t.role === "user" || t.role === "assistant") && typeof t.text === "string")
     .slice(-8)
     .map((t: any) => ({ role: t.role, text: String(t.text).slice(0, 600) }));
-}
-
-/** امروز به وقت ایران — سرور (Docker) معمولا UTC است و بین ۰۰:۰۰ تا ۰۳:۳۰
- *  بامداد ایران، `new Date()` سرور هنوز «دیروز» را می‌دهد. */
-function tehranTodayIso(): string {
-  try {
-    return new Intl.DateTimeFormat("en-CA", { timeZone: "Asia/Tehran", year: "numeric", month: "2-digit", day: "2-digit" }).format(new Date());
-  } catch {
-    return new Date(Date.now() + 3.5 * 3600_000).toISOString().slice(0, 10);
-  }
-}
-
-/**
- * «امروز» کاربر. ریشه‌ی باگ «روز اشتباه»: قبلا سرور با ساعت خودش
- * (UTC) امروز را حساب می‌کرد و «فردا»ی کاربر نیمه‌شب‌ها یک روز عقب ثبت
- * می‌شد. حالا تاریخ محلی دستگاه کاربر ملاک است — ولی چون از کلاینت
- * می‌آید، فقط اگر حداکثر یک روز با تاریخ ایران فاصله داشته باشد پذیرفته
- * می‌شود.
- */
-function resolveToday(raw: unknown): string {
-  const tehran = tehranTodayIso();
-  if (typeof raw !== "string" || !/^\d{4}-\d{2}-\d{2}$/.test(raw)) return tehran;
-  const ok = [addDaysIso(tehran, -1), tehran, addDaysIso(tehran, 1)].includes(raw);
-  return ok ? raw : tehran;
-}
-
-function jalaliLabel(iso: string, withWeekday = true): string {
-  const d = new Date(iso + "T00:00:00");
-  const j = toJalali(d.getFullYear(), d.getMonth() + 1, d.getDate());
-  const text = `${faNum(j[2])} ${J_MONTHS[j[1] - 1]} ${faNum(j[0])}`;
-  return withWeekday ? `${DAY_NAME_FA[d.getDay()]} ${text}` : text;
 }
 
 export async function POST(req: NextRequest) {

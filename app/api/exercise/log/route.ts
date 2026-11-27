@@ -5,6 +5,7 @@ import { requireModule } from "@/lib/moduleAccess";
 import { ModuleKey } from "@prisma/client";
 import { parseIsoDate, readJsonBody } from "@/lib/validate";
 import { withLiveSync } from "@/lib/realtime";
+import { upsertExerciseLog } from "@/lib/exerciseLogWrite";
 import { sessionFeatureBlocked } from "@/lib/featureFlagsServer";
 
 // GET /api/exercise/log?planId=...&date=2026-07-25
@@ -60,16 +61,7 @@ async function handlePOST(req: NextRequest) {
     return NextResponse.json({ ok: true });
   }
 
-  // سقف تعداد/طول — این ستون Jsonه و بدون سقف هر آرایه‌ای عینا ذخیره می‌شد
-  const items = Array.isArray(completedItems)
-    ? completedItems.filter((x) => typeof x === "string").slice(0, 500).map((x: string) => x.slice(0, 200))
-    : undefined;
-
-  await prisma.exerciseLog.upsert({
-    where: { userId_planId_date: { userId, planId, date } },
-    create: { userId, planId, date, completed: !!completed, completedItems: items ?? undefined },
-    update: { completed: !!completed, ...(items !== undefined ? { completedItems: items } : {}) },
-  });
+  await upsertExerciseLog(userId, planId, date, !!completed, completedItems);
 
   return NextResponse.json({ ok: true });
 }

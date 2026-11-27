@@ -801,3 +801,335 @@ html[data-navigated] .page-enter > [style*="position:fixed"]{ animation-name:m-f
   html[dir="ltr"] .dnav-panel.notif-panel, html[dir="ltr"] .dnav-panel.notif-panel[data-open="true"]{
     transform:none; transition:opacity .12s ease, visibility 0s;
   } }
+
+/* نومو روی داشبورد: قاعده‌های گوی/پنل/گفت‌وگو (کپی از weekly.css چون هر بخش فایل خودش را دارد) */
+
+/* هشدار CLAUDE.md دقیقا این‌جا اتفاق افتاد: قانون سراسری `button{}` به هر
+   دکمه‌ای بک‌گراند شیشه‌ای + `backdrop-filter` + `box-shadow` می‌دهد. تنها
+   `background:none` کافی نبود — بلور پس‌زمینه و سایه می‌ماندند و پشت گو یک
+   لکه‌ی تیره‌ی مربعی می‌ساختند. هر سه باید صریح خنثی شوند. */
+
+.routine-ai-fab{
+  /* طبق درخواست صریح: گوشه‌ی پایین-چپ. */
+  position:fixed; bottom:calc(24px + env(safe-area-inset-bottom)); inset-inline-end:28px;
+  display:flex; align-items:center; justify-content:center;
+  background:none; border:none; padding:0; border-radius:50%;
+  box-shadow:none;
+  backdrop-filter:none; -webkit-backdrop-filter:none;
+  /* بالاتر از محتوای صفحه ولی پایین‌تر از overlay مودال‌ها (که ۱۰۰+ دارند)،
+     تا وقتی یک مودال دیگر باز است روی آن نیفتد. */
+  z-index:40;
+  transition:transform .16s ease;
+}
+
+@media (hover:hover) {
+  .routine-ai-fab:hover{ transform:translateY(-2px); } }
+
+.routine-ai-fab:active{ transform:scale(.94); }
+
+@media (max-width:1023px) {
+  .routine-ai-fab{ bottom:calc(78px + env(safe-area-inset-bottom)); inset-inline-end:26px; } }
+
+.routine-ai-title{ display:flex; align-items:center; gap:8px; }
+
+/* طبق درخواست صریح: پنل قبلی روی همان اندازه‌ی پیش‌فرض .modal-panel
+   (max-width:420px) می‌نشست — «خیلی کوچیک وسط صفحه». این‌جا هم عریض‌تر
+   (کشیده‌تر) هم بلندتر حداقلی، تا یک پیام خوش‌آمد تنها هم پنل را کوچک
+   نشان ندهد. */
+
+.routine-ai-panel{
+  display:flex; flex-direction:column;
+  width:94%; max-width:620px;
+  /* ارتفاع بلندترش از main می‌آید؛ شیشه‌اش از این شاخه.
+     ────────────────────────────────────────────────────────────────────
+     دقیقا همان الگوی پروگرسیو-انهنسمنت .modal-panel پایه (خط ۹۴۶:
+     `max-height:78vh; max-height:78dvh;`) این‌جا هم لازم است، نه فقط آن‌جا:
+     این قانون با هم‌کلاسی .modal-panel روی یک عنصر می‌نشیند و چون بعدتر
+     در فایل می‌آید، روی آن دو خط سوار می‌شود — یعنی اگر این‌جا فقط vh
+     می‌بود، همان مقاومت در برابر کیبورد صفحه‌نمایش که .modal-panel با
+     dvh گرفته بود، همین‌جا دوباره خنثی می‌شد. روی اندرویدی که کیبورد باز
+     است و dvh واقعا کوچک‌تر می‌شود، vh تنها هنوز بر اساس ویوپورت کامل
+     (بدون کیبورد) حساب می‌شود؛ پنل هم‌چنان می‌خواهد تا ۸۸٪ آن ارتفاع
+     بزرگ‌تر را بگیرد، وسط‌چینی position:fixed;top:50% هم نسبت‌به همان
+     ویوپورت بزرگ حساب می‌شود — نتیجه دقیقا همان شکاف خالی گزارش‌شده
+     بین کادر نوشتن و کیبورد است. */
+  min-height:min(70vh, 620px);
+  min-height:min(70dvh, 620px);
+  max-height:min(88vh, 760px);
+  max-height:min(88dvh, 760px);
+  background:rgba(255,255,255,.02);
+  border:1px solid var(--line);
+  border-radius:22px;
+  backdrop-filter:blur(28px) saturate(180%);
+  -webkit-backdrop-filter:blur(28px) saturate(180%);
+  box-shadow:0 20px 50px rgba(0,0,0,.20);
+}
+
+@media (min-width:768px) {
+  .routine-ai-panel{ max-width:680px; } }
+
+/* طبق درخواست صریح: مدیر برنامه روی دسکتاپ هم باید مثل موبایل «شیشه‌ای
+   کدر» باشه — شیشه‌ی ۲٪ پشت پرمحتوای دسکتاپ عملا شفاف دیده می‌شد. */
+
+html:not([data-perf="low"]) body[data-theme] .routine-ai-panel{
+  background:color-mix(in srgb, var(--surface-2) 70%, transparent);
+  backdrop-filter:blur(22px) saturate(160%);
+  -webkit-backdrop-filter:blur(22px) saturate(160%);
+}
+
+.routine-ai-list{
+  flex:1 1 auto; min-height:140px; overflow-y:auto;
+  display:flex; flex-direction:column; gap:12px;
+  padding:4px 2px 12px;
+}
+
+/* حباب‌ها. حباب کاربر شیشه‌ی اکسنت می‌گیرد و پاسخ، سطح کارت — هر دو توپر،
+   تا روی موبایل بدون بلور هم دیده شوند. */
+
+.routine-ai-bubble-user{
+  background:var(--accent-dim);
+  border:1px solid rgba(var(--accent-rgb),.28);
+  color:var(--text);
+}
+
+.routine-ai-bubble-bot{
+  background:var(--surface-1);
+  border:1px solid var(--surface-line);
+  color:var(--text);
+}
+
+/* رنگ لبه فقط یک نشانه‌ی وضعیت است؛ بک‌گراند همان بک‌گراند بقیه می‌ماند */
+
+.routine-ai-list .tone-ok .routine-ai-bubble-bot{ border-color:rgba(0,168,107,.55); }
+
+.routine-ai-list .tone-warn .routine-ai-bubble-bot{ border-color:rgba(224,168,60,.6); }
+
+.routine-ai-list .tone-error .routine-ai-bubble-bot{ border-color:rgba(224,82,82,.6); }
+
+/* align-items پیش‌فرض flex یعنی stretch — چون ردیف شامل آواتار گو
+   (فقط پیام دستیار) کنار یک ستون متغیرارتفاع (حباب + ردیف کپی/تاریخ)
+   است، stretch باعث می‌شد جعبه‌ی آواتار به‌اندازه‌ی کل ردیف کش بیاید و گو
+   دیگر دقیقا کنار اولین خط حباب ننشیند، انگار جابه‌جا/معلق است. */
+
+.routine-ai-list .routine-ai-row-user{ flex-direction:row; align-items:flex-start; }
+
+/* جهت گفت‌وگو: پیام کاربر سمت راست، پاسخ دستیار سمت چپ.
+   کامپوننت upstream برای صفحه‌ی LTR نوشته شده (کاربر راست، دستیار چپ)؛ چون
+   این صفحه RTL است، همان چیدمان آینه می‌شد و جای دو طرف عوض. این‌جا صریح
+   برمی‌گرداند. اسپسیفیسیتی دو کلاسه است تا از کلاس‌های تک‌کلاسه‌ی Tailwind
+   روی خود عنصر بالاتر بماند، مستقل از ترتیب فایل. */
+
+.routine-ai-list .routine-ai-row-user > *:last-child{ align-items:flex-start; }
+
+.routine-ai-list .routine-ai-row-bot{ flex-direction:row-reverse; align-items:flex-start; }
+
+.routine-ai-list .routine-ai-row-bot > *:last-child{ align-items:flex-end; }
+
+.routine-ai-status{ display:flex; align-items:center; justify-content:flex-end; }
+
+/* نوار نوشتن — چیدمان مرجع: قرص ورودی، و دکمه‌ی گرد در انتهای سمت راست.
+   `row-reverse` لازم است چون صفحه RTL است: در RTL محور `row` از راست شروع
+   می‌شود و اولین فرزند (خود ورودی) سمت راست می‌افتاد، یعنی دکمه سمت چپ. */
+
+.routine-ai-composer{
+  display:flex; flex-direction:row-reverse; align-items:center; gap:8px;
+  padding-top:10px; border-top:1px solid var(--line);
+}
+
+/* شیشه‌ی واقعی، نه یک قرص توپر کم‌رنگ: پرشدگی خیلی کم است و بلور کار
+   دیدنی‌شدن را می‌کند، پس هرچه پشتش هست از داخلش پیداست. */
+
+.routine-ai-input{
+  flex:1 1 auto; min-width:0; resize:none;
+  max-height:96px; padding:12px 16px; border-radius:999px;
+  font-size:12.5px; line-height:1.7; font-family:inherit;
+  background:rgba(255,255,255,.05);
+  border:1px solid rgba(255,255,255,.10);
+  backdrop-filter:blur(18px) saturate(180%);
+  -webkit-backdrop-filter:blur(18px) saturate(180%);
+  color:var(--text); outline:none;
+}
+
+.routine-ai-input::placeholder{ color:var(--muted); }
+
+.routine-ai-input:focus{ border-color:rgba(var(--accent-rgb),.45); }
+
+/* یک دکمه با سه حالت. خود عنصر ثابت می‌ماند و فقط آیکون داخلش عوض
+   می‌شود — همین چیزی است که اجازه‌ی انیمیشن می‌دهد. */
+
+.routine-ai-action{
+  position:relative; flex:0 0 auto; width:42px; height:42px; border-radius:50%;
+  display:flex; align-items:center; justify-content:center;
+  padding:0; color:var(--text);
+  background:rgba(255,255,255,.05);
+  border:1px solid rgba(255,255,255,.10);
+  backdrop-filter:blur(18px) saturate(180%);
+  -webkit-backdrop-filter:blur(18px) saturate(180%);
+  box-shadow:none;
+  transition:background .22s ease, border-color .22s ease, color .22s ease, transform .18s ease;
+}
+
+/* در تم روز قانون بالا (0,2,1) بر .is-send/.has-text (0,2,0) می‌چربید: دکمه‌ی ارسال
+   پر نمی‌شد و آیکونش (color:var(--bg)) روی زمینه‌ی روشن ناپیدا بود */
+
+body[data-theme="light"] .routine-ai-action.is-send,
+body[data-theme="light"] .routine-ai-action.has-text{
+  background:var(--accent); border-color:var(--accent);
+}
+
+@media (hover:hover) {
+  .routine-ai-action:hover:not(:disabled){ border-color:var(--accent); } }
+
+.routine-ai-action:active:not(:disabled){ transform:scale(.92); }
+
+.routine-ai-action:disabled{ opacity:.45; }
+
+.routine-ai-action-icon{
+  position:absolute; inset:0;
+  display:flex; align-items:center; justify-content:center;
+  opacity:0; transform:scale(.4) rotate(-40deg);
+  transition:opacity .22s cubic-bezier(.22,1,.36,1), transform .22s cubic-bezier(.22,1,.36,1);
+}
+
+/* حالت پیش‌فرض: میکروفون */
+
+.routine-ai-action .routine-ai-action-icon:nth-child(1){ opacity:1; transform:none; }
+
+/* دکمه‌ی ارسال «مدیر برنامه» — بعد حذف قابلیت ویس دیگر سه‌حالته نیست،
+   فقط یک آیکون ارسال دارد (nth-child(1)، پیش‌فرض already opacity:1 است،
+   بدون نیاز به کلاس is-send که مال الگوی سه‌آیکونی بالا/پشتیبانی است).
+   این کلاس جدا فقط رنگ پر را می‌دهد، بدون دست‌زدن به قواعد is-send/
+   is-recording بالا که همچنان composer پشتیبانی (سه‌حالته) از آن‌ها استفاده می‌کند. */
+
+.routine-ai-action.has-text{
+  background:var(--accent); border-color:var(--accent); color:var(--sec-on-accent, var(--bg));
+  backdrop-filter:none; -webkit-backdrop-filter:none;
+}
+
+.routine-ai-exhausted{
+  display:flex; flex-direction:column; align-items:center; gap:10px;
+  padding-top:12px; border-top:1px solid var(--surface-line);
+  font-size:12px; color:var(--muted); text-align:center;
+}
+
+.ai-message-action-agent{ --ai-message-slide:-6px; }
+
+.ai-message-action-user{ --ai-message-slide:6px; }
+
+/* گوی کنار پیام، مثل آواتار هر چتی: پایینش هم‌تراز پایین حباب، درست کنار
+   گوشه‌ی تیز حباب (rounded-bl-md — همان گوشه‌ای که به گو نزدیک است).
+   قبلا بالا/خط اول چسبیده بود؛ روی پیام چندخطی گو بالا-چپ معلق می‌ماند و
+   گوشه‌ی تیز حباب پایین، یعنی از حباب «جدا» دیده می‌شد.
+   ستون کنارش = حباب + ردیف کنش‌ها (کپی) زیرش؛ آن ردیف همیشه mount است
+   (فقط opacity:0) پس ارتفاعش ثابت است: 26px (دکمه: padding 6×2 + آیکن 14)
+   + 4px (gap-1 ستون) = 30px فاصله‌ی پایین حباب تا پایین ستون. */
+
+.ai-message-avatar{ align-self:flex-end; margin-bottom:30px; }
+
+.ai-message-root:focus-within .ai-message-action{
+  opacity:1; transform:translateX(0) scale(1);
+}
+
+@media (hover:hover) {
+  .ai-message-root:hover .ai-message-action{
+  opacity:1; transform:translateX(0) scale(1);
+} }
+
+.ai-message-pop{ animation:ai-message-pop 250ms cubic-bezier(.23,1,.32,1); }
+
+@keyframes ai-message-pop{
+  0%{ transform:scale(1); }
+  45%{ transform:scale(1.25); }
+  100%{ transform:scale(1); }
+}
+
+@media (prefers-reduced-motion:reduce) {
+  .ai-message-root:focus-within .ai-message-action{ transform:none; } }
+
+@media (prefers-reduced-motion:reduce) {
+
+@media (hover:hover) {
+  .ai-message-root:hover .ai-message-action{ transform:none; } } }
+
+@media (prefers-reduced-motion:reduce) {
+  .ai-message-pop{ animation:none; } }
+
+/* عمدا بدون backdrop-filter (نسخه‌ی اصلی SmoothUI این‌جا
+           `backdrop-filter: blur() contrast()` داشت). آن backdrop-filter
+           دقیقا همان مکانیزمی‌ست که «پشت» این المان را می‌خواند — روی گویی
+           که `position:fixed` است، آن «پشت» صفحه‌ای‌ست که زیرش اسکرول
+           می‌شود، نه خود مش گو. `isolation:isolate` روی `.siri-orb-clip`
+           قرار بود همین را مهار کند، ولی پشتیبانی backdrop-root از
+           isolation بین مرورگرها یکسان نیست (دقیقا هم‌خانواده‌ی باگ
+           Safari بالا) و نتیجه یک گوی نیمه‌شفاف بود که صفحه‌ی پشتش
+           دیده می‌شود — نه بدون اضافه‌کردن بک‌گراند به گو، بلکه با حذف
+           این خط گو کاملا کدر می‌ماند، چون دیگر چیزی از پشت خودش
+           نمی‌خواند و فقط رنگ‌های خودش (مش ::before) را overlay می‌کند. */
+
+.siri-orb::after {
+          background-image: radial-gradient(
+            circle at center,
+            var(--bg) var(--dot-size),
+            transparent var(--dot-size)
+          );
+          background-size: calc(var(--dot-size) * 2) calc(var(--dot-size) * 2);
+          mix-blend-mode: overlay;
+        }
+
+/* Apply mask only when radius is greater than 0 */
+
+.siri-orb[style*="--mask-radius: 0%"]::after {
+          mask-image: none;
+        }
+
+.siri-orb:not([style*="--mask-radius: 0%"])::after {
+          mask-image: radial-gradient(
+            black var(--mask-radius),
+            transparent 75%
+          );
+        }
+
+/* ── ویزارد (داخل همان پاپ‌آپ مشترک .wsearch-newform) ── */
+
+.wsearch-newform:has(.rp-wiz){ max-height:min(90vh, 680px); }
+
+body[data-theme] :where(
+  .account-card, .acc-block-body, .trade-account-card, .trade-mt-row, .trade-note-card,
+  .trade-checklist-card, .trade-journal-box, .rp-stage-card, .ls-card, .overflow-hidden
+)::before{ inset:0; }
+
+/* ============================================================
+   گوی دستیار روی لمسی
+   ------------------------------------------------------------
+   قانون `html[data-perf="low"] .siri-orb *` فقط *فرزندان* واقعی را
+   می‌گیرد، نه ::before/::after — در حالی که چرخش همیشگی گو (`rotate`
+   روی --angle) دقیقا روی `.siri-orb::before` است. انیمیشن یک custom
+   property روی کامپوزیتور اجرا نمی‌شود: هر فریم یک style recalc + repaint
+   یک conic-gradient بلوردار روی main thread — اندازه‌گیری روی اندروید
+   شبیه‌سازی‌شده: ~۶۰ recalc در ثانیه در حالت *بی‌کار*. همان قصد قانون
+   قبلی («روی دستگاه کم‌توان گو ثابت می‌ماند») حالا واقعا اعمال می‌شود. */
+
+html[data-perf="low"] .siri-orb::before,
+html[data-perf="low"] .siri-orb::after{
+  animation:none !important;
+}
+
+html[data-perf="low"] .wsearch-newform-overlay.strong-blur{
+  backdrop-filter:var(--popup-backdrop-filter-strong) !important;
+  -webkit-backdrop-filter:var(--popup-backdrop-filter-strong) !important;
+}
+
+html[dir="ltr"] .routine-ai-list .routine-ai-row-user{ flex-direction:row-reverse; }
+
+html[dir="ltr"] .routine-ai-list .routine-ai-row-user > *:last-child{ align-items:flex-end; }
+
+html[dir="ltr"] .routine-ai-list .routine-ai-row-bot{ flex-direction:row; }
+
+html[dir="ltr"] .routine-ai-list .routine-ai-row-bot > *:last-child{ align-items:flex-start; }
+
+html[dir="ltr"] .routine-ai-status{ justify-content:flex-start; }
+
+/* نوار نوشتن: ورودی چپ، دکمه‌ی ارسال انتهای راست (row-reverse فقط برای rtl لازم بود) */
+
+html[dir="ltr"] .routine-ai-composer{ flex-direction:row; }
+

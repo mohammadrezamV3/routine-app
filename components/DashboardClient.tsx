@@ -111,6 +111,8 @@ function bentoAreas(has: Set<Area>, section: SectionKey | null = null) {
   return { ["--areas-lg" as any]: lg.join(" "), ["--areas-md" as any]: md.join(" "), ["--areas-sm" as any]: sm } as React.CSSProperties;
 }
 
+// نومو: ssr:false و lazy تا لود اول داشبورد سنگین نشه
+const RoutineAiFab = dynamic(() => import("./RoutineAiFab").then((m) => m.RoutineAiFab), { ssr: false });
 // پنجره‌ی اشتراک فقط با تعامل باز می‌شه؛ چانکش خارج از مسیر لود اولیه‌ست
 const loadShare = () => import("./DashboardShare").then((m) => m.DashboardShare);
 const DashboardShare = dynamic(loadShare, { ssr: false });
@@ -188,6 +190,9 @@ function DashboardBody({ initial }: { initial: { key: string; data: DashboardDat
   // «روتین من» بعد از ۱۴ روز رایگان پلن می‌خواد — تا وقتی ماژول‌ها معلوم نشدن
   // (modules=null) قفل نشون داده نمی‌شه که صفحه‌ی خریده‌شده یک لحظه قفل نپره.
   const routineLocked = !!modules && !modules.has("ROUTINE");
+  // نومو روی داشبورد روتین (و دامنه‌ی اصلی): همان گیت /weekly (فلگ routineAssistant)؛ با قفل
+  // روتین (پایان دوره‌ی آزمایشی) نمایش داده نمی‌شه، سرور هم ROUTINE رو می‌سنجه
+  const assistantOn = (!section || section === "routine") && on("routineAssistant") && !!modules && !routineLocked;
 
   if (status === "forbidden" && !data) {
     return <div className="db-error"><DashIcon name="lock" /> {tr("این بخش موقتا غیرفعال است", "This section is temporarily disabled")}</div>;
@@ -228,6 +233,8 @@ function DashboardBody({ initial }: { initial: { key: string; data: DashboardDat
         {has.has("road") && <DashboardRoadmaps r={data?.roadmaps ?? null} loading={loading} />}
         {has.has("inbox") && <DashboardInbox data={data} loading={loading} />}
       </motion.div>
+
+      {assistantOn && <RoutineAiFab onChanged={refreshNow} />}
 
       {shareEver && <DashboardShare open={shareOpen} onClose={() => setShareOpen(false)} data={data} routine={routine} routineLocked={routineLocked} />}
       </DashboardActionsProvider>
