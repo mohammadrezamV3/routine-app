@@ -50,3 +50,16 @@
 # دقت «۱۰ثانیه بعد ایونت» رو بده — فقط یک fallback هر‌دقیقه‌ست.
 # (نگاه کن به app/api/cron/economic-calendar)
 * * * * * curl -fsS -X POST -H "Authorization: Bearer <CRON_SECRET>" https://<YOUR_DOMAIN>/api/cron/economic-calendar >/dev/null 2>&1
+
+# پاکسازی هفتگی داکر (یکشنبه ۳:۳۰) — ایمیج‌های بی‌صاحب و cache بیلد قدیمی‌تر از ۷ روز
+# و کانتینرهای متوقف‌شده‌ی قدیمی‌تر از ۲۴ ساعت. ولوم‌ها (db_data، next_cache) و
+# ایمیج‌های در حال استفاده/جدیدتر از ۷ روز (برای rollback) هرگز پاک نمی‌شوند.
+# عمدا `docker volume prune` و `system prune -a` نیست.
+30 3 * * 0 docker image prune -f --filter "until=168h" >/dev/null 2>&1; docker builder prune -f --filter "until=168h" >/dev/null 2>&1; docker container prune -f --filter "until=24h" >/dev/null 2>&1
+# هشدار روزانه: اگر دیسک ۸۵٪ یا بیشتر پر بود در syslog/journald ثبت می‌شود
+0 6 * * * pct=$(df -P / | awk 'NR==2{gsub("%","",$5);print $5}'); [ "$pct" -ge 85 ] && logger -t arion-disk "disk usage ${pct}%"
+
+# سقف لاگ journald (یک‌بار دستی):
+#   sudo mkdir -p /etc/systemd/journald.conf.d
+#   printf '[Journal]\nSystemMaxUse=200M\nMaxRetentionSec=2week\n' | sudo tee /etc/systemd/journald.conf.d/size.conf
+#   sudo systemctl restart systemd-journald

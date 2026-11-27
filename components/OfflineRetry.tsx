@@ -27,7 +27,31 @@ export function OfflineRetry() {
   useEffect(() => {
     if (!targetPath()) return;
     window.addEventListener("online", retry);
-    return () => window.removeEventListener("online", retry);
+    // دیپلوی/ری‌استارت سرور: مرورگر آنلاینه و رویداد online هیچ‌وقت نمیاد، پس کاربری که
+    // همون چند ثانیه روی لینکی زده بود روی این صفحه می‌موند و «تلاش دوباره» می‌خواست.
+    // سلامت سرور رو آروم چک می‌کنیم و به محض برگشتن، خودکار به مقصد می‌ریم.
+    let stopped = false;
+    let busy = false;
+    const probe = async () => {
+      if (stopped || busy || document.visibilityState === "hidden") return;
+      busy = true;
+      try {
+        const ctl = new AbortController();
+        const timer = setTimeout(() => ctl.abort(), 4000);
+        const res = await fetch("/api/health", { cache: "no-store", signal: ctl.signal });
+        clearTimeout(timer);
+        if (res.ok && !stopped) retry();
+      } catch { /* هنوز بالا نیومده */ }
+      busy = false;
+    };
+    const id = window.setInterval(probe, 3000);
+    document.addEventListener("visibilitychange", probe);
+    return () => {
+      stopped = true;
+      window.clearInterval(id);
+      document.removeEventListener("visibilitychange", probe);
+      window.removeEventListener("online", retry);
+    };
   }, [retry]);
 
   return (

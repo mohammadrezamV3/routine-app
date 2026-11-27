@@ -2717,7 +2717,15 @@ html[data-perf="low"] .auth-tab-indicator{ transition:none; }
 body[data-theme="light"] .auth-full-btn, body:not([data-theme="light"]) .auth-full-btn{
   background:var(--accent); border-color:var(--accent); color:var(--sec-on-accent, var(--bg)); box-shadow:none;
 }
-@media (hover:hover){.auth-full-btn:hover{ filter:brightness(1.08); }}
+/* داخل مودال‌های .dash-scope (مثل «ثبت و ادامه» ساعت بیداری در /weekly) قاعده‌ی
+   body[data-theme] :where(.dash-scope) button:hover اسپسیفیسیتی (0,2,2) داره و روی
+   هاور بک‌گراند رو none می‌کرد: متن کرم روی کرم، دکمه با رفتن موس ناپدید می‌شد */
+@media (hover:hover){
+  .auth-full-btn:hover{ filter:brightness(1.08); }
+  body[data-theme="light"] .auth-full-btn:hover, body:not([data-theme="light"]) .auth-full-btn:hover{
+    background:var(--accent); border-color:var(--accent); color:var(--sec-on-accent, var(--bg)); box-shadow:none;
+  }
+}
 .auth-full-btn:active{ transform:scale(.97); }
 .auth-full-btn:disabled{ opacity:.55; cursor:default; filter:none; transform:none; }
 
