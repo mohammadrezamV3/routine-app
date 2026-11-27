@@ -8,15 +8,18 @@ export function generateMetadata(): Metadata {
   const brand = brandName();
   return pageMetadata({
     title: tr(
-      `تقویم اقتصادی فارکس به وقت ایران | تقویم شمسی رویدادهای اقتصادی | ${BRAND_FA}`,
-      `Forex economic calendar, Tehran time | Jalali calendar of economic events | ${brand}`,
+      `تقویم اقتصادی فارکس به وقت ایران با تاریخ شمسی | ${BRAND_FA}`,
+      `Forex economic calendar in Iran time with Jalali dates | ${brand}`,
     ),
     description: tr(
-      `تقویم اقتصادی فارکس ${BRAND_FA} با تاریخ شمسی و فیلتر بر اساس ارز و میزان تاثیر — ` +
-        `رویدادهای مهم اقتصادی، Actual/Forecast/Previous و یادآوری قبل از انتشار.`,
-      `The ${brand} forex economic calendar with Jalali dates and filters by currency and impact: major economic events, Actual/Forecast/Previous and reminders before release.`,
+      `تقویم اقتصادی فارکس به وقت ایران با تاریخ شمسی، فیلتر ارز و میزان تاثیر، اخبار مهم و Actual/Forecast/Previous و یادآوری قبل از انتشار در ${BRAND_FA}.`,
+      `A forex economic calendar in Iran time with Jalali dates, currency and impact filters, major news, Actual/Forecast/Previous and reminders before release in ${brand}.`,
     ),
     path: "/economic-calendar",
+    keywords: tr(
+      "تقویم اقتصادی|تقویم اقتصادی فارکس|تقویم اقتصادی به وقت ایران|تقویم اقتصادی شمسی|اخبار فارکس|اخبار اقتصادی امروز|اخبار مهم فارکس|کلندر فارکس|فارکس فکتوری|forex factory فارسی|economic calendar|اخبار فارکس امروز|تقویم اخبار اقتصادی|نون فارم|NFP|اخبار فارکس هفته|اکچوال و فورکست|اخبار قرمز فارکس|معامله در زمان خبر|ساعت اخبار فارکس به وقت ایران|تقویم اقتصادی هفته",
+      "forex economic calendar|economic calendar|forex news calendar|forex factory alternative|NFP date|economic calendar Iran time|Jalali economic calendar|high impact forex news|actual forecast previous|news trading",
+    ).split("|"),
     ownOgImage: true,
     ogTitle: tr(`تقویم اقتصادی فارکس | ${BRAND_FA}`, `Forex economic calendar | ${brand}`),
   });
@@ -72,6 +75,34 @@ function content() {
       a: tr(
         "تقویم اقتصادی بخشی از ژورنال ترید است که جزو ماژول‌های اشتراکی محسوب می‌شود. هر حساب تازه 3 روز دسترسی به بدنسازی، کالری‌شمار و ژورنال ترید، با استفاده‌ی محدود از هوش مصنوعی می‌گیرد.",
         "The economic calendar is part of the trading journal, which is a subscription module. Every new account gets 3 days of access to workouts, the calorie counter and the trading journal, with limited use of AI.",
+      ),
+    },
+    {
+      q: tr("اخبار فارکس امروز را از کجا ببینم؟", "Where can I see today's forex news?"),
+      a: tr(
+        "اخبار منتشرشده‌ی امروز در تقویم اقتصادی هستند که رویدادها را به ترتیب زمان، به وقت ایران و با تاریخ شمسی نشان می‌دهد. می‌توانی بر اساس ارز و میزان تاثیر فیلتر کنی تا فقط رویدادهای مهم مربوط به جفت‌ارزهایت را ببینی. این صفحه توضیح می‌دهد تقویم چطور کار می‌کند و خود تقویم بعد از ورود در بخش ترید است.",
+        "Today's releases are in the economic calendar, which shows events in time order, in Iran time and with Jalali dates. You can filter by currency and impact to see only the important events for your pairs. This page explains how the calendar works, and the calendar itself is in the trading section after you sign in.",
+      ),
+    },
+    {
+      q: tr("چطور تقویم اقتصادی فارکس را بخوانیم؟", "How do I read a forex economic calendar?"),
+      a: tr(
+        "هر ردیف یک رویداد با زمان، ارز مربوط، میزان تاثیر و سه عدد است: Previous (قبلی)، Forecast (پیش‌بینی) و Actual (واقعی). وقتی عدد واقعی با پیش‌بینی فاصله‌ی زیادی داشته باشد، معمولا نوسان بیشتری ایجاد می‌شود. تریدرها معمولا قبل از رویدادهای پرتاثیر حجم یا ریسک را کم می‌کنند.",
+        "Each row is an event with a time, the currency concerned, its impact level and three numbers: Previous, Forecast and Actual. When the actual figure is far from the forecast, bigger moves usually follow. Traders often reduce size or risk before high-impact events.",
+      ),
+    },
+    {
+      q: tr("NFP و اخبار قرمز فارکس یعنی چه؟", "What do NFP and red-folder forex news mean?"),
+      a: tr(
+        "NFP گزارش اشتغال غیرکشاورزی آمریکاست که معمولا اولین جمعه‌ی هر ماه منتشر می‌شود و از پرنوسان‌ترین رویدادهای بازار است. «اخبار قرمز» اصطلاح رایج برای رویدادهای با تاثیر بالاست. زمان دقیق هر رویداد را در تقویم ببین، چون ممکن است تغییر کند.",
+        "NFP is the US non-farm payrolls report, usually released on the first Friday of each month and one of the most volatile events in the market. “Red folder news” is a common term for high-impact events. Check the exact time of each event in the calendar since it can change.",
+      ),
+    },
+    {
+      q: tr("تقویم اقتصادی فارکس رایگان و به وقت ایران وجود دارد؟", "Is there a free forex economic calendar in Iran time?"),
+      a: tr(
+        "تقویم اقتصادی آریون زمان رویدادها را به وقت ایران و تاریخ شمسی نشان می‌دهد. دسترسی به آن جزو بخش ترید است که برای هر حساب تازه 3 روز آزمایشی دارد و بعد اشتراکی است.",
+        "Arion's economic calendar shows event times in Iran time and Jalali dates. Access is part of the trading section, which has a 3-day trial on every new account and is subscription-based after that.",
       ),
     },
   ];

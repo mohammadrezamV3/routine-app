@@ -27,16 +27,18 @@ export function generateMetadata(): Metadata {
   const category = categoryName();
   return pageMetadata({
     title: tr(
-      `${category} چیست؟ راهنمای ساخت روتین روزانه با ${BRAND_FA}`,
-      `What is a ${category}? A guide to building a daily routine with ${brand}`,
+      `روتین اپ چیست؟ برنامه روتین روزانه با تقویم شمسی | ${BRAND_FA}`,
+      `Routine app: build a daily routine with a Jalali calendar | ${brand}`,
     ),
     description: tr(
-      `روتین روزانه یعنی چه، چطور یک برنامه‌ی روتین بسازیم که رها نشود، و ${BRAND_FA} ` +
-        `به‌عنوان یک ${category} فارسی با تقویم شمسی چطور کمک می‌کند.`,
-      `What a daily routine is, how to build a routine plan that you actually stick to, and how ${brand} ` +
-        `helps as a ${category} with a Persian (Jalali) calendar.`,
+      `اپ روتین فارسی برای ساخت برنامه روتین روزانه: کارهای تکرارشونده را یک بار ثبت کن، با تقویم شمسی تیک بزن و استریک روزهای پشت سر هم را ببین. 14 روز رایگان.`,
+      `A Persian routine app for building a daily routine plan: record recurring tasks once, tick them off with a Jalali calendar and watch your streak of consecutive days grow.`,
     ),
     path: "/routine",
+    keywords: tr(
+      "روتین اپ|اپ روتین|اپلیکیشن روتین|برنامه روتین|برنامه روتین روزانه|اپ روتین روزانه|روتین روزانه|روتین چیست|روتین ساز|اپ روتین ساز|اپلیکیشن مدیریت روتین|اپ روتین فارسی|روتین من|برنامه روزانه|برنامه ریزی روزانه|برنامه ریزی با تقویم شمسی|روتین صبحگاهی|روتین شبانه|عادت ساز|پیگیری عادت|ساخت روتین روزانه|routine app",
+      "routine app|daily routine app|daily routine planner|routine planner|Persian routine app|Jalali calendar planner|habit tracker|build a daily routine|morning routine|evening routine|streak tracker|weekly planner",
+    ).split("|"),
     ownOgImage: true,
     ogTitle: tr(`${category} ${BRAND_FA} — برنامه‌ی روتین روزانه`, `${category} ${brand} — daily routine plan`),
   });
@@ -79,6 +81,41 @@ function content() {
       a: tr(
         "بله. برنامه‌ی روزانه و هفتگی با تقویم شمسی (جلالی) کار می‌کند و روزهای هفته هم از شنبه شروع می‌شوند.",
         "Yes. The daily and weekly plan works with the Jalali (Persian) calendar, and the week starts on Saturday.",
+      ),
+    },
+    {
+      q: tr("بهترین اپلیکیشن برنامه ریزی روزانه کدام است؟", "Which is the best daily planning app?"),
+      a: tr(
+        "بهترین اپ همانی است که واقعا هر روز بازش می‌کنی، پس معیار انتخاب مهم‌تر از اسم اپ است: تکرار خودکار کارها، تیک‌زدن سریع، دیدن پیشرفت (استریک)، تقویم شمسی و قابل‌تغییربودن برنامه در روزهای به‌هم‌ریخته. آریون این موارد را دارد، ولی بهتر است خودت چند روز امتحانش کنی و ببینی با روزت جور است یا نه.",
+        "The best app is the one you actually open every day, so the criteria matter more than the name: automatic repetition, quick ticking, visible progress (streaks), a Jalali calendar and a plan you can change on messy days. Arion has these, but it is best to try it for a few days and see whether it fits your day.",
+      ),
+    },
+    {
+      q: tr("برنامه روتین روزانه را چطور بنویسیم؟", "How do I write a daily routine plan?"),
+      a: tr(
+        "اول دو یا سه کاری را انتخاب کن که مطمئنی می‌توانی هر روز انجام بدهی، بعد هر کدام را به یک نقطه‌ی مشخص از روز (مثلا بعد از صبحانه) بچسبان و روزهای تکرارش را مشخص کن. در آریون همین کار را در برنامه‌ی هفتگی انجام می‌دهی و از آن به بعد هر هفته خودکار تکرار می‌شود.",
+        "First pick two or three tasks you are sure you can do every day, then attach each to a fixed point in the day (for example after breakfast) and set its repeat days. In Arion you do this in the weekly plan, and from then on it repeats automatically every week.",
+      ),
+    },
+    {
+      q: tr("روتین روزانه برای دانشجو چطور باشد؟", "What should a student's daily routine look like?"),
+      a: tr(
+        "ثابت‌ترین بخش‌ها را اول بچین: ساعت بیداری و خواب، زمان کلاس‌ها و یک یا دو بلوک مطالعه. بعد کارهای کوچک مثل مرور کوتاه شبانه یا ورزش را اضافه کن. فهرست کوتاهی که واقعا انجام شود از برنامه‌ی پرجزئیاتی که رها می‌شود بهتر است. می‌توانی این الگو را در برنامه‌ی هفتگی آریون با روزهای تکرار ثبت کنی.",
+        "Place the most fixed parts first: wake-up and sleep times, class times and one or two study blocks. Then add small items like a short evening review or exercise. A short list that really gets done beats a detailed plan that is dropped. You can record this pattern with repeat days in Arion's weekly plan.",
+      ),
+    },
+    {
+      q: tr("روتین صبح و روتین شب را هم می‌شود ثبت کرد؟", "Can I record a morning and an evening routine too?"),
+      a: tr(
+        "بله. هر کار می‌تواند ساعت و روزهای تکرار خودش را داشته باشد، پس می‌توانی کارهای صبح و شب را جدا ثبت کنی. کارهایی مثل مطالعه هم می‌توانند بدون ساعت ثبت شوند تا هر وقت از روز انجام شوند.",
+        "Yes. Every task can have its own time and repeat days, so you can record morning and evening tasks separately. Tasks like studying can also be recorded without a time so they get done whenever during the day.",
+      ),
+    },
+    {
+      q: tr("اپ روتین روی گوشی هم کار می‌کند؟", "Does the routine app work on a phone?"),
+      a: tr(
+        "آریون یک وب‌اپ است و روی مرورگر گوشی کار می‌کند؛ می‌توانی آن را به صفحه‌ی اصلی گوشی هم اضافه کنی تا مثل یک اپ باز شود. اگر اینترنتت قطع شود، بخش‌هایی از آن به‌صورت آفلاین هم کار می‌کند و بعد از وصل‌شدن همگام می‌شود.",
+        "Arion is a web app and works in your phone browser; you can also add it to your home screen so it opens like an app. If your internet drops, parts of it keep working offline and sync once you reconnect.",
       ),
     },
   ];

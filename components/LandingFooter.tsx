@@ -33,13 +33,25 @@ const groups = (): Group[] => [
       { href: "/routine", label: tr("روتین روزانه", "Daily routine") },
       { href: "/habit-tracker", label: tr("پیگیری عادت‌ها", "Habit tracking") },
       { href: "/daily-planner", label: tr("برنامه‌ریزی روزانه", "Daily planning") },
+      { href: "/todo-list", label: tr("لیست کارهای روزانه", "To-do list") },
+      { href: "/study-planner", label: tr("برنامه‌ریزی درسی", "Study planner") },
       { href: "/ai-planner", label: tr("نومو", "Nomo") },
       { href: "/bodybuilding-program", label: tr("برنامه‌ی بدنسازی", "Workout plan") },
+      { href: "/workout-tracker", label: tr("ثبت تمرین باشگاه", "Workout tracker") },
       { href: "/calorie-counter", label: tr("کالری‌شمار", "Calorie counter") },
       { href: "/trading-journal", label: tr("ژورنال معاملاتی", "Trading journal") },
       { href: "/economic-calendar", label: tr("تقویم اقتصادی", "Economic calendar") },
       { href: "/forex-sessions", label: tr("ساعت بازار فارکس", "Forex market hours") },
       { href: "/learning-roadmap", label: tr("رودمپ یادگیری", "Learning roadmap") },
+    ],
+  },
+  {
+    title: tr("ابزارهای رایگان", "Free tools"),
+    links: [
+      { href: "/calorie-calculator", label: tr("محاسبه کالری روزانه", "Daily calorie calculator") },
+      { href: "/bmi-calculator", label: tr("محاسبه BMI", "BMI calculator") },
+      { href: "/lot-size-calculator", label: tr("محاسبه حجم لات", "Lot size calculator") },
+      { href: "/sleep-calculator", label: tr("محاسبه زمان خواب", "Sleep calculator") },
     ],
   },
   {
@@ -82,9 +94,10 @@ export function LandingFooter({ section = null }: { section?: SectionKey | null 
   const base = groups();
   const GROUPS: Group[] = section
     ? [
+        // ابزارهای رایگان هر بخش داخل امکانات همون بخشن (getSectionFooterFeatures)
         { ...base[0], links: getSectionFooterFeatures(section) },
-        base[1],
         base[2],
+        base[3],
       ]
     : base;
   const OTHERS = section ? SECTION_KEYS.filter((k) => k !== section) : [];

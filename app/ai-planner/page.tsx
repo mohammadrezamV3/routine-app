@@ -10,16 +10,18 @@ export function generateMetadata(): Metadata {
   const brand = brandName();
   return pageMetadata({
     title: tr(
-      `برنامه ریزی با هوش مصنوعی | دستیار برنامه‌ریزی و آنالیز هفتگی | ${BRAND_FA}`,
+      `برنامه ریزی با هوش مصنوعی | دستیار و آنالیز هفتگی | ${BRAND_FA}`,
       `AI planning | Schedule assistant and weekly review | ${brand}`,
     ),
     description: tr(
-      `در ${BRAND_FA} با زبان خودت به دستیار هوش مصنوعی بگو چه می‌خواهی و برنامه‌ی ` +
-        `هفتگی‌ات را بچین، و با آنالیز هفتگی هوشمند ببین کدام بخش‌های زندگی‌ات واقعا پیش رفته‌اند.`,
-      `In ${brand}, tell the AI assistant what you want in your own words and it builds your weekly schedule. ` +
-        `The smart weekly review then shows which parts of your life have really moved forward.`,
+      `برنامه ریزی با هوش مصنوعی در ${BRAND_FA}: به دستیار بگو چه می‌خواهی تا برنامه هفتگی‌ات را بچیند، و با آنالیز هفتگی ببین کدام بخش‌ها واقعا پیش رفته‌اند.`,
+      `AI planning in ${brand}: tell the assistant what you want and it builds your weekly schedule, then the weekly review shows which parts of your life have really moved forward.`,
     ),
     path: "/ai-planner",
+    keywords: tr(
+      "برنامه ریزی با هوش مصنوعی|دستیار برنامه ریزی|هوش مصنوعی برنامه ریزی روزانه|آنالیز هفتگی|برنامه ریز هوشمند|دستیار هوشمند روتین|دستیار فارسی برنامه ریزی|برنامه هفتگی|برنامه ریزی هفتگی|اپ برنامه ریزی روزانه|برنامه ریزی روزانه|نومو|چت بات برنامه ریزی|مدیریت زمان|برنامه ریز آنلاین|ساخت برنامه هفتگی",
+      "AI planner|AI planning assistant|AI daily planner|AI weekly planner|weekly review|smart scheduling|AI schedule assistant|Persian AI planner|time management with AI",
+    ).split("|"),
     ownOgImage: true,
     ogTitle: tr(`برنامه‌ریزی با هوش مصنوعی | ${BRAND_FA}`, `AI planning | ${brand}`),
   });
@@ -68,6 +70,27 @@ function content() {
       a: tr(
         "اضافه‌کردن یک برنامه‌ی تکرارشونده به روزهای مشخص، جابه‌جاکردن یا حذف یک روز خاص، تنظیم یادآوری، یا تکرار درون‌روزی مثل «هر یک ساعت پنج دقیقه استراحت». هر درخواست به چند عملیات مشخص تبدیل و قبل از اعمال بررسی می‌شود.",
         "Add a recurring item on set days, move or remove a single day, set a reminder, or repeat within the day, such as “every hour, five minutes of rest”. Each request is turned into a few specific operations and checked before it is applied.",
+      ),
+    },
+    {
+      q: tr("آیا می‌شود با هوش مصنوعی برنامه ریزی روزانه کرد؟", "Can I plan my day with AI?"),
+      a: tr(
+        "بله، به این شکل که به دستیار با زبان خودت می‌گویی چه تغییری می‌خواهی (مثلا «هر روز صبح یک ساعت ورزش اضافه کن») و پیشنهاد او به چند عملیات مشخص تبدیل می‌شود. هیچ تغییری بدون بررسی روی برنامه‌ی واقعی‌ات اعمال نمی‌شود، پس کنترل با خودت می‌ماند.",
+        "Yes: you tell the assistant in your own words what change you want (for example “add an hour of exercise every morning”) and its suggestion is turned into specific operations. Nothing is applied to your real schedule without checks, so you stay in control.",
+      ),
+    },
+    {
+      q: tr("دستیار برنامه ریزی فارسی چه فرقی با ChatGPT دارد؟", "How is the Persian planning assistant different from a general chatbot?"),
+      a: tr(
+        "یک چت‌بات عمومی فقط متن می‌نویسد، ولی دستیار آریون به برنامه‌ی هفتگی خودت وصل است و پیشنهادش را به تغییرات قابل‌اعمال روی همان برنامه تبدیل می‌کند. در عوض کارش فقط برنامه‌ریزی روتین است و یک چت‌بات همه‌منظوره نیست.",
+        "A general chatbot only writes text, while Arion's assistant is connected to your own weekly plan and turns its suggestions into changes that can be applied to that plan. In return, its job is routine planning only and it is not an all-purpose chatbot.",
+      ),
+    },
+    {
+      q: tr("برنامه ریزی هفتگی با هوش مصنوعی چطور انجام می‌شود؟", "How does AI weekly planning work?"),
+      a: tr(
+        "کارهای تکرارشونده‌ات را در برنامه‌ی هفتگی نگه می‌داری و برای تغییرات، مثل جابه‌جاکردن یک روز یا اضافه‌کردن یک برنامه‌ی تکراری، از دستیار کمک می‌گیری. در پایان هفته هم آنالیز هفتگی نشان می‌دهد چقدر پایبند بوده‌ای (این بخش جزو قابلیت‌های اشتراکی است).",
+        "You keep your recurring tasks in the weekly plan and ask the assistant for changes, such as moving a day or adding a recurring item. At the end of the week the weekly review shows how consistent you were (this is part of the subscription features).",
       ),
     },
   ];

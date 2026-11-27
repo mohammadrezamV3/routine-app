@@ -13,13 +13,13 @@ export const CALORIE_GOAL_LABELS: Record<CalorieGoal, string> = {
 };
 
 // Mifflin-St Jeor — دقیق‌ترین فرمول رایج BMR بدون نیاز به ابزار تخصصی
-function calcBmr(sex: Sex, weightKg: number, heightCm: number, age: number): number {
+export function calcBmr(sex: Sex, weightKg: number, heightCm: number, age: number): number {
   const base = 10 * weightKg + 6.25 * heightCm - 5 * age;
   return sex === "male" ? base + 5 : base - 161;
 }
 
 // ضریب فعالیت بر اساس تعداد روزهای باشگاه در هفته (محدوده‌ی رایج NSCA/ACSM)
-function activityMultiplier(gymDaysPerWeek: number): number {
+export function activityMultiplier(gymDaysPerWeek: number): number {
   if (gymDaysPerWeek <= 0) return 1.2;
   if (gymDaysPerWeek <= 2) return 1.375;
   if (gymDaysPerWeek <= 4) return 1.55;

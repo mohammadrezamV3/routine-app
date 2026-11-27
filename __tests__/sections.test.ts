@@ -73,7 +73,7 @@ describe("sectionsOwningPath", () => {
 
   it("matches an exact prefix only on a slash boundary", () => {
     expect(sectionsOwningPath("/exercise")).toEqual(["workout"]);
-    expect(sectionsOwningPath("/exercises")).toEqual([]);
+    expect(sectionsOwningPath("/exercisex")).toEqual([]);
     expect(sectionsOwningPath("/weeklyx")).toEqual([]);
   });
 });
@@ -130,6 +130,17 @@ describe("seoLandingOwner", () => {
 
   it("returns the owner for nested landing sub-paths", () => {
     expect(seoLandingOwner("/economic-calendar/today")).toBe("trade");
+  });
+
+  it("owns the free tools", () => {
+    expect(seoLandingOwner("/calorie-calculator")).toBe("workout");
+    expect(seoLandingOwner("/bmi-calculator")).toBe("workout");
+    expect(seoLandingOwner("/lot-size-calculator")).toBe("trade");
+    expect(seoLandingOwner("/sleep-calculator")).toBe("routine");
+    expect(seoLandingOwner("/todo-list")).toBe("routine");
+    expect(seoLandingOwner("/study-planner")).toBe("routine");
+    expect(seoLandingOwner("/workout-tracker")).toBe("workout");
+    expect(seoLandingOwner("/exercise")).toBeNull();
   });
 
   it("returns null for non-landing and owned-but-not-landing paths", () => {

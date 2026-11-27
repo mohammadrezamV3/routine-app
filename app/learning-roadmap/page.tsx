@@ -8,15 +8,18 @@ export function generateMetadata(): Metadata {
   const brand = brandName();
   return pageMetadata({
     title: tr(
-      `رودمپ یادگیری با هوش مصنوعی | نقشه راه یادگیری | ${BRAND_FA}`,
-      `AI learning roadmap | Learning path planner | ${brand}`,
+      `رودمپ یادگیری با هوش مصنوعی | نقشه راه یادگیری مهارت | ${BRAND_FA}`,
+      `AI learning roadmap | Skill learning path planner | ${brand}`,
     ),
     description: tr(
-      `رودمپ یادگیری ${BRAND_FA} با دو سوال ساده — چی می‌خواهی یاد بگیری و برای چه هدفی — ` +
-        `یک نقشه‌ی راه مرحله‌به‌مرحله با هوش مصنوعی می‌سازد. فعلا در حال تکمیل و به‌زودی برای همه.`,
+      `رودمپ یادگیری ${BRAND_FA} با دو سوال ساده (چه می‌خواهی یاد بگیری و برای چه هدفی) یک نقشه راه مرحله به مرحله با هوش مصنوعی می‌سازد. فعلا در حال تکمیل است.`,
       `The ${brand} learning roadmap builds a step-by-step learning path with AI from two simple questions: what you want to learn and why. Still being completed, and coming to everyone soon.`,
     ),
     path: "/learning-roadmap",
+    keywords: tr(
+      "رودمپ یادگیری|نقشه راه یادگیری|رودمپ|رودمپ با هوش مصنوعی|رودمپ چیست|چطور رودمپ بسازیم|نقشه راه مهارت|برنامه یادگیری|رودمپ آموزشی|ساخت رودمپ|رودمپ شخصی|مسیر یادگیری|برنامه ریزی یادگیری|یادگیری با هوش مصنوعی|رود مپ|رودمپ برنامه نویسی",
+      "learning roadmap|AI learning roadmap|learning path planner|skill roadmap|roadmap generator|study roadmap|personalised learning path|how to learn a new skill",
+    ).split("|"),
     ownOgImage: true,
     ogTitle: tr(`رودمپ یادگیری با هوش مصنوعی | ${BRAND_FA}`, `AI learning roadmap | ${brand}`),
   });
@@ -58,6 +61,34 @@ function content() {
       a: tr(
         "چون توضیح‌دادن اینکه این قابلیت چیست و چه زمانی می‌آید، از خالی‌گذاشتن سوال کاربر بهتر است. وقتی رودمپ یادگیری برای همه باز شود، همین صفحه به‌روزرسانی می‌شود.",
         "Because explaining what this feature is and when it's coming is better than leaving the user's question unanswered. When the learning roadmap opens to everyone, this page will be updated.",
+      ),
+    },
+    {
+      q: tr("چطور برای یادگیری یک مهارت رودمپ بسازیم؟", "How do I build a roadmap for learning a skill?"),
+      a: tr(
+        "اول هدفت را روشن کن (استخدام، پروژه‌ی شخصی یا علاقه)، بعد مهارت را به مرحله‌های کوچک و ترتیب‌دار بشکن: مفاهیم پایه، تمرین کوچک، پروژه‌ی عملی و مرور. برای هر مرحله یک یا دو منبع انتخاب کن، نه ده‌ها منبع. رودمپ آریون همین کار را از روی دو سوال ساده با هوش مصنوعی پیشنهاد می‌دهد، ولی این بخش هنوز در حال تکمیل است.",
+        "First clarify your goal (getting hired, a personal project or interest), then break the skill into small ordered steps: basic concepts, a small exercise, a practical project and review. Pick one or two resources per step, not dozens. Arion's roadmap proposes this from two simple questions using AI, but this section is still being completed.",
+      ),
+    },
+    {
+      q: tr("رودمپ یادگیری برنامه نویسی از کجا شروع می‌شود؟", "Where does a programming learning roadmap start?"),
+      a: tr(
+        "معمولا از انتخاب یک زبان و هدف مشخص (وب، داده، موبایل)، یادگیری مفاهیم پایه مثل متغیر و شرط و حلقه و بعد ساختن پروژه‌های کوچک. ترتیب دقیق به هدف تو بستگی دارد، و دلیل اینکه رودمپ بر اساس هدف ساخته می‌شود همین است.",
+        "Usually from choosing one language and a clear goal (web, data, mobile), learning basics like variables, conditions and loops, and then building small projects. The exact order depends on your goal, which is why a roadmap is built around your goal.",
+      ),
+    },
+    {
+      q: tr("تفاوت رودمپ و برنامه درسی چیست؟", "What is the difference between a roadmap and a study plan?"),
+      a: tr(
+        "رودمپ مسیر کلی و ترتیب مراحل را نشان می‌دهد (چه چیزی بعد از چه چیزی)، ولی برنامه‌ی درسی زمان‌بندی روزانه و هفتگی است. این دو مکمل‌اند: رودمپ می‌گوید چه چیزی را یاد بگیر و برنامه‌ی روزانه می‌گوید کی.",
+        "A roadmap shows the overall path and order of steps (what comes after what), while a study plan is the daily and weekly timing. They complement each other: the roadmap says what to learn and the daily plan says when.",
+      ),
+    },
+    {
+      q: tr("آیا ساخت رودمپ با هوش مصنوعی رایگان است؟", "Is building an AI roadmap free?"),
+      a: tr(
+        "این بخش فعلا فقط برای تیم داخلی فعال است و هنوز برای همه باز نشده، پس هنوز قیمت یا سهمیه‌ی عمومی‌ای برایش اعلام نشده. هر وقت باز شود، همین صفحه به‌روز می‌شود.",
+        "This section is currently only active for the internal team and is not open to everyone yet, so no public price or quota has been announced. This page will be updated when it opens.",
       ),
     },
   ];

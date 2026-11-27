@@ -74,7 +74,7 @@ export function blogViewSection(section: SectionKey | null, cat: BlogCategoryKey
 
 /** متادیتای صفحه‌های بلاگ با canonical و فید RSS درست هر میزبان */
 export function blogMetadata({
-  title, description, canonical, section, ogTitle, ownOgImage,
+  title, description, canonical, section, ogTitle, ownOgImage, keywords,
 }: {
   title: string;
   description: string;
@@ -82,11 +82,13 @@ export function blogMetadata({
   section: SectionKey | null;
   ogTitle?: string;
   ownOgImage?: boolean;
+  keywords?: string[];
 }): Metadata {
   const feed = `${hostOrigin(isSectionHostingEnabled() ? section : null)}/blog/feed.xml`;
   return {
     title: { absolute: title },
     description,
+    ...(keywords && keywords.length ? { keywords } : {}),
     alternates: { canonical, languages: { "fa-IR": canonical, "x-default": canonical }, types: { "application/rss+xml": feed } },
     openGraph: { ...OG_BASE, ...(ownOgImage ? { images: undefined } : {}), url: canonical, title: ogTitle || title, description },
     twitter: { card: "summary_large_image", title: ogTitle || title, description, ...(ownOgImage ? {} : { images: ["/og.png"] }) },

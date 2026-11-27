@@ -8,15 +8,18 @@ export function generateMetadata(): Metadata {
   const brand = brandName();
   return pageMetadata({
     title: tr(
-      `عادت‌ساز و پیگیری عادت‌ها (Habit Tracker) فارسی | ${BRAND_FA}`,
+      `عادت ساز و هبیت ترکر فارسی | پیگیری عادت و استریک | ${BRAND_FA}`,
       `Habit tracker | Track your habits and streaks | ${brand}`,
     ),
     description: tr(
-      `عادت‌های روزانه‌ات را در ${BRAND_FA} ثبت و پیگیری کن: تکرار هفتگی، تیک روزانه و ` +
-        `استریک. راهنمای ساختن یک عادت جدید و نگه‌داشتنش.`,
-      `Record and track your daily habits in ${brand}: weekly repeats, daily ticks and streaks. A guide to building a new habit and keeping it.`,
+      `اپ عادت ساز فارسی: عادت‌های روزانه را در هبیت ترکر ${BRAND_FA} ثبت کن، با تیک روزانه و استریک پیگیری کن و راهنمای ساخت و نگه‌داشتن یک عادت جدید را بخوان.`,
+      `Record and track your daily habits in ${brand} with weekly repeats, daily ticks and streaks, plus a guide to building a new habit and keeping it.`,
     ),
     path: "/habit-tracker",
+    keywords: tr(
+      "عادت ساز|عادت‌ساز|اپ عادت ساز|اپلیکیشن عادت ساز|هبیت ترکر|habit tracker فارسی|ردیاب عادت|پیگیری عادت|اپ ردیابی عادت|چطور عادت بسازیم|ساخت عادت جدید|عادت سازی|عادت های خوب|ترک عادت بد|چالش 21 روزه|چالش 30 روزه|استریک|اپ استریک|چک لیست عادت|عادت روزانه",
+      "habit tracker|habit tracker app|Persian habit tracker|build a habit|habit streak|daily habits|break a bad habit|21 day habit challenge|habit builder app|track daily habits",
+    ).split("|"),
     ownOgImage: true,
     ogTitle: tr(`عادت‌ساز فارسی ${BRAND_FA}`, `Habit tracker in ${brand}`),
   });
@@ -51,6 +54,34 @@ function content() {
       a: tr(
         "نه. یک روز ازدست‌رفته عادت را از بین نمی‌برد؛ چیزی که آسیب می‌زند رهاکردن بعد از آن یک روز است. کافی است روز بعد دوباره ادامه بدهی.",
         "No. One missed day doesn't erase a habit. What does the damage is giving up after that day. Just carry on the next day.",
+      ),
+    },
+    {
+      q: tr("بهترین اپلیکیشن عادت ساز کدام است؟", "Which is the best habit building app?"),
+      a: tr(
+        "اپ خوب برای عادت‌سازی ساده است: ثبت عادت در چند ثانیه، تیک روزانه، نمایش زنجیره‌ی روزهای پشت‌سرهم و امکان ادامه‌دادن بعد از یک روز ازدست‌رفته. آریون همین‌ها را دارد و عادت‌ها را کنار روتین و کارهای روزانه نگه می‌دارد؛ اگر فقط یک ردیاب جداگانه می‌خواهی، خودت چند روز امتحان کن.",
+        "A good habit app is simple: adding a habit in seconds, a daily tick, a visible chain of consecutive days and the ability to carry on after a missed day. Arion has these and keeps habits next to your routine and daily tasks; if you only want a separate tracker, try it for a few days yourself.",
+      ),
+    },
+    {
+      q: tr("چالش 21 روزه واقعا کار می‌کند؟", "Does the 21-day challenge really work?"),
+      a: tr(
+        "عدد 21 روز یک قاعده‌ی علمی ثابت نیست؛ پژوهش‌ها بازه‌ی نسبتا وسیعی برای جاافتادن یک عادت گزارش کرده‌اند و به نوع عادت و فرد بستگی دارد. اما یک چالش کوتاه با تیک روزانه می‌تواند شروع خوبی باشد، به شرط اینکه عادت را کوچک نگه داری.",
+        "21 days is not a fixed scientific rule; research reports a fairly wide range for a habit to settle and it depends on the habit and the person. Still, a short challenge with a daily tick can be a good start, as long as you keep the habit small.",
+      ),
+    },
+    {
+      q: tr("چطور یک عادت بد را ترک کنیم؟", "How do I break a bad habit?"),
+      a: tr(
+        "معمولا ترک مستقیم سخت‌تر از جایگزین‌کردن است: نشانه‌ی عادت بد را پیدا کن، کار دسترسی به آن را سخت‌تر کن و یک رفتار کوچک و جایگزین برایش تعریف کن. می‌توانی آن رفتار جایگزین را در آریون به‌عنوان یک آیتم تکرارشونده ثبت کنی و هر روز تیک بزنی تا پیشرفتت دیده شود.",
+        "Direct quitting is usually harder than replacing: find the cue for the bad habit, make it harder to reach and define a small replacement behaviour. You can record that replacement in Arion as a recurring item and tick it every day so your progress is visible.",
+      ),
+    },
+    {
+      q: tr("آیا هبیت ترکر فارسی رایگان است؟", "Is the Persian habit tracker free?"),
+      a: tr(
+        "پیگیری عادت در بخش «روتین من» است که برای هر حساب تازه 14 روز رایگان است و بعد برای ادامه به یک پلن پولی نیاز دارد. می‌توانی بدون پرداخت امتحانش کنی و تصمیم بگیری.",
+        "Habit tracking lives in the “My Routine” section, which is free for 14 days on every new account and needs a paid plan to continue after that. You can try it without paying and then decide.",
       ),
     },
   ];

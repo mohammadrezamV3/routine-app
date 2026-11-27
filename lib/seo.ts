@@ -62,6 +62,7 @@ export function pageMetadata({
   path,
   ogTitle,
   ownOgImage,
+  keywords,
 }: {
   title: string;
   description: string;
@@ -76,6 +77,8 @@ export function pageMetadata({
    * images رو کلا حذف می‌کنیم تا نکست بتونه خودش تزریق کنه.
    */
   ownOgImage?: boolean;
+  /** کلمه‌های کلیدی صفحه (docs/seo-keywords.md)؛ بدون تکرار و فقط عبارت‌های واقعی جست‌وجو */
+  keywords?: string[];
 }): Metadata {
   const canonical = canonicalFor(path);
   const openGraph = ownOgImage
@@ -84,6 +87,7 @@ export function pageMetadata({
   return {
     title: { absolute: title },
     description,
+    ...(keywords && keywords.length ? { keywords } : {}),
     alternates: pageAlternates(canonical),
     openGraph,
     twitter: {

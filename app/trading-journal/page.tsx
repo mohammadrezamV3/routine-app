@@ -9,13 +9,19 @@ import { breadcrumbJsonLd, faqJsonLd, pageMetadata } from "@/lib/seo";
 export function generateMetadata(): Metadata {
   const brand = brandName();
   return pageMetadata({
-    title: tr(`ژورنال معاملاتی فارسی | ثبت و تحلیل معاملات | ${BRAND_FA}`, `Trading journal | Log and analyse your trades | ${brand}`),
+    title: tr(
+      `ژورنال ترید فارسی | ثبت معاملات فارکس و اتصال متاتریدر | ${BRAND_FA}`,
+      `Trading journal | Log and analyse your trades | ${brand}`,
+    ),
     description: tr(
-      `معاملاتت را در ${BRAND_FA} ثبت کن و عملکردت را ببین: سود و زیان، نرخ برد، ` +
-        `میانگین R، تقویم معاملات و چک‌لیست ورود — یک ژورنال معاملاتی منظم و فارسی.`,
-      `Log your trades in ${brand} and see how you're doing: profit and loss, win rate, average R, a trade calendar and an entry checklist — an organised trading journal.`,
+      `ژورنال ترید فارسی ${BRAND_FA}: معاملات فارکس را ثبت کن یا از متاتریدر همگام کن و سود و زیان، نرخ برد، میانگین R، تقویم معاملات و چک لیست ورود را ببین.`,
+      `${brand} trading journal: log forex trades or sync them from MetaTrader and see profit and loss, win rate, average R, a trade calendar and an entry checklist.`,
     ),
     path: "/trading-journal",
+    keywords: tr(
+      "ژورنال ترید|ژورنال معاملاتی|ژورنال معاملاتی فارسی|ژورنال فارکس|ژورنال نویسی فارکس|ژورنال ترید چیست|دفترچه معاملات|ژورنال معامله گری|trading journal فارسی|ژورنال ترید رایگان|ژورنال ترید آنلاین|اپ ژورنال ترید|نرم افزار ژورنال ترید|ثبت معاملات|ثبت معاملات فارکس|تحلیل عملکرد تریدر|آمار معاملات|نرخ برد معاملات|اتصال متاتریدر به ژورنال|ژورنال ترید متاتریدر|ژورنال خودکار فارکس|چک لیست ورود به معامله",
+      "trading journal|forex trading journal|trade journal app|MetaTrader journal|MT4 MT5 trade sync|trading log|trade tracker|win rate|average R|trading checklist|forex journal",
+    ).split("|"),
     ownOgImage: true,
     ogTitle: tr(`ژورنال معاملاتی ${BRAND_FA}`, `Trading journal ${brand}`),
   });
@@ -57,6 +63,34 @@ function content() {
       a: tr(
         "بخش ترید جزو بخش‌های اشتراکی است. هر حساب تازه 3 روز دسترسی به بدنسازی، کالری‌شمار و ژورنال ترید، با استفاده‌ی محدود از هوش مصنوعی می‌گیرد. «روتین من» (روتین و کارهای روزانه) 14 روز رایگان است و بعد با پلن «روتین من» ({{routine_monthly}}) ادامه پیدا می‌کند.",
         "The trading section is a subscription section. Every new account gets 3 days of access to workouts, the calorie counter and the trading journal, with limited use of AI. “My Routine” (routine and daily tasks) is free for 14 days and then continues with the “My Routine” plan ({{routine_monthly}}).",
+      ),
+    },
+    {
+      q: tr("چطور یک ژورنال ترید بنویسیم؟", "How do I keep a trading journal?"),
+      a: tr(
+        "برای هر معامله حداقل نماد، جهت، حجم، قیمت ورود و خروج، حد ضرر و حد سود، نتیجه و دلیل ورود را ثبت کن؛ اگر می‌توانی، احساست قبل و بعد از معامله و یک تصویر چارت هم اضافه کن. مهم‌تر از جزئیات زیاد، ثبت منظم همه‌ی معامله‌هاست، نه فقط خوب‌ها. آخر هفته مرورشان کن تا الگوهای تکراری‌ات پیدا شود.",
+        "For each trade, record at least the symbol, direction, size, entry and exit prices, stop loss and take profit, result and the reason for entry; if you can, also add how you felt before and after and a chart screenshot. More important than lots of detail is logging all trades regularly, not just the good ones. Review them at the end of the week to find your repeating patterns.",
+      ),
+    },
+    {
+      q: tr("بهترین ژورنال ترید کدام است؟", "Which is the best trading journal?"),
+      a: tr(
+        "ژورنال خوب آن است که واقعا ثبتش کنی. به همین دلیل ثبت سریع، آمار قابل‌اعتماد و داشتن حساب‌های جدا برای هر حساب معاملاتی مهم است. آریون چند حساب، چک‌لیست ورود و آمار کامل دارد و می‌تواند معاملات را از متاتریدر هم همگام کند؛ ولی انتخاب نهایی به سبک معاملاتی تو بستگی دارد.",
+        "A good journal is one you actually fill in, which is why fast entry, reliable statistics and separate accounts for each trading account matter. Arion has multiple accounts, an entry checklist and full statistics and can also sync trades from MetaTrader; the final choice depends on your trading style.",
+      ),
+    },
+    {
+      q: tr("آیا ژورنال ترید به متاتریدر وصل می‌شود؟", "Does the trading journal connect to MetaTrader?"),
+      a: tr(
+        "بله، با اکسپرت MT4 و MT5 که معاملات را به‌صورت خودکار به حساب مربوطه در ژورنال می‌فرستد. رمز حساب معاملاتی هیچ‌وقت خواسته یا ذخیره نمی‌شود و معاملات تکراری دوبار ثبت نمی‌شوند. اکسپرت می‌تواند تصویر ورود و خروج را هم بفرستد.",
+        "Yes, with an MT4 and MT5 expert advisor that sends trades automatically to the matching account in the journal. Your trading account password is never requested or stored and duplicate trades are not recorded twice. The expert advisor can also send entry and exit screenshots.",
+      ),
+    },
+    {
+      q: tr("ژورنال ترید را می‌شود با اکسل نوشت؟", "Can I keep a trading journal in Excel?"),
+      a: tr(
+        "بله و برای شروع هم جواب می‌دهد، ولی با زیادشدن معاملات باید فرمول‌ها و محاسبه‌ی آمار مثل نرخ برد، میانگین R و افت سرمایه را خودت نگه داری و از نظر خطا ریسک دارد. ژورنال آنلاین این محاسبه‌ها را خودکار انجام می‌دهد و می‌شود از گوشی هم ثبت کرد.",
+        "Yes, and it works to start with, but as trades grow you have to maintain formulas and statistics like win rate, average R and drawdown yourself, which risks errors. An online journal does these calculations automatically and you can log from your phone.",
       ),
     },
   ];

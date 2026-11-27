@@ -205,10 +205,11 @@ const nextConfig = {
       ...canonicalHostRedirects(),
       // بخش «ابزارهای رایگان» حذف شد؛ لینک‌های قدیمی به نزدیک‌ترین صفحه‌ی عمومی می‌روند
       { source: "/tools", destination: "/", permanent: true },
-      { source: "/tools/bmi-calculator", destination: "/calorie-counter", permanent: true },
-      { source: "/tools/calorie-calculator", destination: "/calorie-counter", permanent: true },
-      { source: "/tools/lot-size-calculator", destination: "/trading-journal", permanent: true },
-      { source: "/tools/sleep-calculator", destination: "/", permanent: true },
+      // ابزارهای رایگان با آدرس تازه برگشتن (سئو)؛ لینک‌های قدیمی /tools/* به همون ابزار می‌رن
+      { source: "/tools/bmi-calculator", destination: "/bmi-calculator", permanent: true },
+      { source: "/tools/calorie-calculator", destination: "/calorie-calculator", permanent: true },
+      { source: "/tools/lot-size-calculator", destination: "/lot-size-calculator", permanent: true },
+      { source: "/tools/sleep-calculator", destination: "/sleep-calculator", permanent: true },
       { source: "/tools/:path*", destination: "/", permanent: true },
       {
         source: "/report/weekly",
