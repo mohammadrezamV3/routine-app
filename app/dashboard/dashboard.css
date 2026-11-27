@@ -502,13 +502,11 @@ a.db-tl-name{ text-decoration:underline dotted color-mix(in srgb, var(--ring-1a)
 .db-heat-stats dt{ font-size:10px; font-weight:700; color:var(--muted); white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
 .db-heat-stats dd{ margin:1px 0 0; font-size:16px; font-weight:800; letter-spacing:-.01em; color:var(--text); line-height:1.3; }
 .db-heat-stats dd small{ font-size:10px; font-weight:600; color:var(--muted); }
-/* کارت عریض: آمار کنار شبکه، فشرده و وسط‌چین — بدون ستون خالی و بدون حاشیه‌ی درشت */
-@container (min-width:700px){
-  .db-heat-body{ flex-direction:row; align-items:center; justify-content:center; gap:22px; }
-  .db-heat-wrap{ flex:0 1 auto; width:auto; max-width:100%; }
-  .db-heat-stats{ flex:0 0 auto; grid-template-columns:repeat(2, max-content); gap:10px 26px; padding:0; padding-inline-start:22px; border-top:0; border-inline-start:1px solid var(--box-line); text-align:start; }
-  .db-heat-stats dd{ font-size:17px; }
-}
+/* آمار همیشه زیر شبکه (ردیف فشرده)؛ کنار شبکه نمی‌شینه چون wrap خودش container
+   با عرض ذاتی صفره و در حالت کنار هم خانه‌ها رو به کف 12px می‌برد و روی آمار می‌افتادن */
+.db-heat-wrap .db-heat-grid{ margin-inline:auto; }
+.db-heat-wrap .db-heat-foot{ margin-inline:auto; }
+.db-heat-stats dd{ font-size:17px; }
 
 /* ── تمرین / کالری ─────────────────────────────────────────── */
 .db-fit{ display:flex; flex-direction:column; gap:14px; flex:1; }
@@ -1080,7 +1078,7 @@ html[dir="ltr"] .db-cd-title, html[dir="ltr"] .db-ev-title{ text-align:left; }
   .db-page .db-hero.is-routine .db-ribbon{ align-self:center; }
   .db-page .db-hero.is-routine .db-hero-orbit{ padding-inline-end:40px; }
   .db-page .db-hero.is-routine .db-orbit{ width:156px !important; height:156px !important; }
-  .db-page .db-hero.is-routine .db-orbit svg{ width:100%; height:100%; }
+  .db-page .db-hero.is-routine .db-orbit > svg{ width:100%; height:100%; }
   .db-page .db-hero.is-routine .db-orbit-pct{ font-size:22px; }
 }
 @media (max-width:639px){
@@ -1096,3 +1094,11 @@ html[dir="ltr"] .db-cd-title, html[dir="ltr"] .db-ev-title{ text-align:left; }
   .db-sleep .db-sleep-bar{ height:44px; max-width:30px; }
   .db-sleep .db-sleep-day{ gap:4px; }
 }
+
+/* کارت خواب کنار ستون بلند «برنامه‌های امروز» به اندازه‌ی محتوا می‌مونه و کشیده
+   نمی‌شه (بدون جعبه‌ی خالی)؛ نقشه‌ی ثبات ردیف خودش رو پر می‌کنه و محتواش وسط‌چینه */
+.db-heat-body{ justify-content:center; }
+@media (min-width:1100px){
+  .db-page .db-sleep{ align-self:start; }
+}
+.db-heat-body .db-heat-wrap{ flex:0 0 auto; }
