@@ -60,6 +60,8 @@ export type MentorCard = {
 };
 
 export type MentorDetail = MentorCard & {
+  /** نام کاربری عمومی منتور (User.username) — برای لینک کوتاه /c/<username> */
+  username?: string | null;
   bio: string | null;
   specialties: string[];
   completedPrograms: number;
@@ -252,6 +254,8 @@ export type PrivacySettings = {
   showTaskName: boolean;
   showTaskDetails: boolean;
   showProgress: boolean;
+  /** خواب در گزارش هفته (بخش مربی v3)؛ پیش‌فرض false */
+  shareSleep?: boolean;
 };
 export type PrivacyScope = { key: string; label: string; kind: "routine" | "module" };
 export type PrivacyResponse = { privacy: PrivacySettings; scopes: PrivacyScope[] };

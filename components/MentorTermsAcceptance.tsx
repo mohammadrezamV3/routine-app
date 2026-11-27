@@ -1,5 +1,6 @@
 "use client";
 
+import { useSession } from "next-auth/react";
 import "./mentor.css";
 import { TickButton } from "./TickButton";
 import { SmartLink as Link } from "@/components/SmartLink";
@@ -73,7 +74,11 @@ export type MentorTermsStatus = {
 export function useMentorTermsStatus(): MentorTermsStatus & { refresh: () => void } {
   const [tick, setTick] = useState(0);
   const [s, setS] = useState<MentorTermsStatus>({ loading: true, version: MENTOR_TERMS_VERSION, studentAccepted: false, mentorAccepted: false });
+  // مهمان درخواست 401 نمی‌زنه (صفحه‌ی عمومی مربی)
+  const { status } = useSession();
   useEffect(() => {
+    if (status === "loading") return;
+    if (status === "unauthenticated") { setS((p) => ({ ...p, loading: false })); return; }
     const ac = new AbortController();
     fetch("/api/mentor-terms", { cache: "no-store", signal: ac.signal })
       .then((r) => (r.ok ? r.json() : null))
@@ -85,7 +90,7 @@ export function useMentorTermsStatus(): MentorTermsStatus & { refresh: () => voi
         if (!(e instanceof DOMException && e.name === "AbortError")) setS((p) => ({ ...p, loading: false }));
       });
     return () => ac.abort();
-  }, [tick]);
+  }, [tick, status]);
   return { ...s, refresh: () => setTick((t) => t + 1) };
 }
 

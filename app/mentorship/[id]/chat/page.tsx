@@ -1,10 +1,12 @@
-"use client";
+import { redirect } from "next/navigation";
 
-import { useParams } from "next/navigation";
-import { MentorChatScreen } from "@/components/MentorChatScreen";
-
-// گفت‌وگوی یک رابطه به‌صورت صفحه‌ی کامل (components/MentorChatScreen.tsx)
-export default function MentorshipChatPage() {
-  const { id } = useParams<{ id: string }>();
-  return <MentorChatScreen id={id} />;
+/** گفت‌وگو حالا بخشی از فضای همکاری است؛ لینک‌های قدیمی (?report=1) هم همراه می‌آن */
+export default function MentorshipChatRedirect({ params, searchParams }: { params: { id: string }; searchParams: Record<string, string | string[] | undefined> }) {
+  const q = new URLSearchParams();
+  for (const k of ["report", "draft"]) {
+    const v = searchParams[k];
+    if (typeof v === "string") q.set(k, v);
+  }
+  const qs = q.toString();
+  redirect(`/mentorship/${encodeURIComponent(params.id)}${qs ? `?${qs}` : ""}`);
 }

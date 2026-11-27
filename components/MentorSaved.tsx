@@ -3,6 +3,7 @@
 import "./mentor.css";
 import { createContext, useCallback, useContext, useEffect, useMemo, useRef, useState } from "react";
 import { createPortal } from "react-dom";
+import { useSession } from "next-auth/react";
 import { AnimatePresence, m as motion } from "framer-motion";
 import { Bookmark } from "lucide-react";
 import type { MentorCard as MentorCardData, SavedMentorsResponse } from "@/lib/mentorTypes";
@@ -40,6 +41,9 @@ export function SavedMentorsProvider({ children, initialSaved }: { children: Rea
   const [error, setError] = useState<string | null>(null);
   const [pending, setPending] = useState<Set<string>>(new Set());
   const [toast, setToast] = useState<{ id: number; text: string } | null>(null);
+  // پورتال فقط بعد از mount (رندر اول کلاینت باید با HTML سرور یکی باشه، وگرنه خطای هیدریشن)
+  const [mounted, setMounted] = useState(false);
+  useEffect(() => { setMounted(true); }, []);
   const toastTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   const showToast = useCallback((text: string) => {
@@ -61,7 +65,8 @@ export function SavedMentorsProvider({ children, initialSaved }: { children: Rea
       })
       .catch(() => { setError(networkError()); setCards((c) => c ?? []); });
   }, []);
-  useEffect(() => { reload(); }, [reload]);
+  const { status: authStatus } = useSession();
+  useEffect(() => { if (authStatus === "authenticated") reload(); }, [reload, authStatus]);
 
   const toggle = useCallback(async (mentor: MentorCardData | { userId: string }) => {
     const id = mentor.userId;
@@ -104,7 +109,7 @@ export function SavedMentorsProvider({ children, initialSaved }: { children: Rea
   return (
     <SavedCtx.Provider value={value}>
       {children}
-      {typeof document !== "undefined" &&
+      {mounted &&
         createPortal(
           <div className="mentor-toast-wrap" aria-live="polite" role="status">
             <AnimatePresence>

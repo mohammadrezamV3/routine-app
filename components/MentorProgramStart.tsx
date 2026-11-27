@@ -29,7 +29,7 @@ type Loaded = StartLoaded;
  * همه‌ی حالت‌ها همان کارکرد قبلی را دارند؛ فقط در یک صفحه‌اند.
  */
 export function MentorProgramStart({
-  rows, missing, row, allowedTypes, source, loaded, initialPick, onPickStudent, onClearStudent, onSource, onLoaded,
+  rows, missing, row, allowedTypes, source, loaded, initialPick, onPickStudent, onClearStudent, onSource, onLoaded, hideSources,
 }: {
   rows: MentorshipRow[];
   missing: boolean;
@@ -42,6 +42,8 @@ export function MentorProgramStart({
   onClearStudent: () => void;
   onSource: (s: StartSource) => void;
   onLoaded: (l: Loaded | null) => void;
+  /** صفحه‌ی برنامه‌ی تازه (v3) خودش تب منبع داره؛ این تب‌ها پنهان می‌شن */
+  hideSources?: boolean;
 }) {
   if (!row) {
     return (
@@ -59,7 +61,7 @@ export function MentorProgramStart({
                     lead={<MentorUserAvatar avatarUrl={r.counterpart.avatarUrl} name={name} size={36} />}
                     title={name}
                     sub={<span>{r.activePrograms > 0 ? tr(`${fa(r.activePrograms)} برنامه‌ی در حال اجرا`, `${fa(r.activePrograms)} ${r.activePrograms === 1 ? "program" : "programs"} in progress`) : tr("برنامه‌ی در حال اجرا نداره", "No program in progress")}</span>}
-                    end={<button type="button" className="account-outline-btn mentor-btn is-sm" onClick={() => onPickStudent(r.id)}>{tr("انتخاب", "Choose")}</button>}
+                    end={<button type="button" className="btn btn-outline btn-sm" onClick={() => onPickStudent(r.id)}>{tr("انتخاب", "Choose")}</button>}
                   />
                 </li>
               );
@@ -76,19 +78,21 @@ export function MentorProgramStart({
         lead={<MentorUserAvatar avatarUrl={row.counterpart.avatarUrl} name={name} size={40} />}
         title={name}
         sub={<span>{row.activePrograms > 0 ? tr(`${fa(row.activePrograms)} برنامه‌ی در حال اجرا`, `${fa(row.activePrograms)} ${row.activePrograms === 1 ? "program" : "programs"} in progress`) : tr("برنامه‌ی در حال اجرا نداره", "No program in progress")}</span>}
-        end={rows.length > 1 ? <button type="button" className="mentor-text-btn" onClick={onClearStudent}>{tr("عوض کردن", "Change")}</button> : undefined}
+        end={rows.length > 1 ? <button type="button" className="btn btn-ghost btn-sm" onClick={onClearStudent}>{tr("عوض کردن", "Change")}</button> : undefined}
       />
-      <div className="mentor-tabs">
-        <SegmentedTabs<StartSource>
-          active={source}
-          onChange={onSource}
-          options={[
-            { value: "blank", label: tr("از اول", "From scratch") },
-            { value: "template", label: tr("از قالب", "From template") },
-            { value: "copy", label: tr("کپی برنامه", "Copy a program") },
-          ]}
-        />
-      </div>
+      {!hideSources && (
+        <div className="mentor-tabs">
+          <SegmentedTabs<StartSource>
+            active={source}
+            onChange={onSource}
+            options={[
+              { value: "blank", label: tr("از اول", "From scratch") },
+              { value: "template", label: tr("از قالب", "From template") },
+              { value: "copy", label: tr("کپی برنامه", "Copy a program") },
+            ]}
+          />
+        </div>
+      )}
       {source === "template" && (
         <TemplateSource allowedTypes={allowedTypes} loaded={loaded} preselect={initialPick.templateId} onLoaded={onLoaded} />
       )}
@@ -113,7 +117,7 @@ function LoadedRow({ loaded, onClear }: { loaded: Loaded; onClear: () => void })
           {p.endDate && <span>{tr("پایان", "Ends")} {fmtDate(p.endDate)}</span>}
         </>
       }
-      end={<button type="button" className="mentor-text-btn" onClick={onClear}>{tr("تغییر مبدا", "Change source")}</button>}
+      end={<button type="button" className="btn btn-ghost btn-sm" onClick={onClear}>{tr("تغییر مبدا", "Change source")}</button>}
     />
   );
 }
@@ -182,7 +186,7 @@ function TemplateSource({
             </>
           }
           end={
-            <button type="button" className="account-outline-btn mentor-btn is-sm" disabled={!!busy} onClick={() => pick(t.id)}>
+            <button type="button" className="btn btn-outline btn-sm" disabled={!!busy} onClick={() => pick(t.id)}>
               {busy === t.id ? <Spinner size={14} /> : tr("استفاده از قالب", "Use template")}
             </button>
           }
@@ -259,7 +263,7 @@ function CopySource({
             </>
           }
           end={
-            <button type="button" className="account-outline-btn mentor-btn is-sm" disabled={!!busy} onClick={() => pick(p.id)}>
+            <button type="button" className="btn btn-outline btn-sm" disabled={!!busy} onClick={() => pick(p.id)}>
               {busy === p.id ? <Spinner size={14} /> : <>{ic(Copy, MI.btnSm)} {tr("کپی", "Copy")}</>}
             </button>
           }

@@ -5244,7 +5244,7 @@ html[data-perf="low"] body[data-theme] .modal-panel{
   .fx-card, .tv-chart-box, .trade-chart-side, .trade-chat-panel, .trade-cal-card,
   .exercise-rules-box, .exercise-locked-box, .admin-card, .admin-kpi-tile, .admin-chart-card,
   .admin-role-card, .cal-cell:not(.empty), .sl-card, .sl-stat, .trade-stat-tile, .wk-card,
-  .stk-ach-item, .mentor-note-box, .ls-card, .wl-card, .wl-cover,
+  .stk-ach-item, .mentor-note-box, .ls-card, .wl-card, .wl-cover, .ch-card, .ch-row,
   .blog-card, .blog-takeaways, .blog-inline-cta, .blog-signup, .blog-toc-side, .tl-hub-card,
   :is(div, section, article).rounded-dash.border-dash-border.bg-dash-card
 ){
@@ -5256,7 +5256,7 @@ body[data-theme] :where(
   .fx-card, .tv-chart-box, .trade-chart-side, .trade-chat-panel, .trade-cal-card,
   .exercise-rules-box, .exercise-locked-box, .admin-card, .admin-kpi-tile, .admin-chart-card,
   .admin-role-card, .cal-cell:not(.empty), .sl-card, .sl-stat, .trade-stat-tile, .wk-card,
-  .stk-ach-item, .mentor-note-box, .ls-card, .wl-card, .wl-cover,
+  .stk-ach-item, .mentor-note-box, .ls-card, .wl-card, .wl-cover, .ch-card, .ch-row,
   :is(div, section, article).rounded-dash.border-dash-border.bg-dash-card
 )::before{
   content:""; position:absolute; inset:-1px; border-radius:inherit; padding:1px; pointer-events:none;
@@ -5271,14 +5271,14 @@ body[data-theme] :where(
     .fx-card, .tv-chart-box, .trade-chart-side, .trade-chat-panel, .trade-cal-card,
     .exercise-rules-box, .exercise-locked-box, .admin-card, .admin-kpi-tile, .admin-chart-card,
     .admin-role-card, .cal-cell:not(.empty), .sl-card, .sl-stat, .trade-stat-tile, .wk-card,
-    .stk-ach-item, .mentor-note-box, .ls-card, .wl-card, .wl-cover,
+    .stk-ach-item, .mentor-note-box, .ls-card, .wl-card, .wl-cover, .ch-card, .ch-row,
     :is(div, section, article).rounded-dash.border-dash-border.bg-dash-card
   ):hover::before{ opacity:1; }
 }
 @media (prefers-reduced-motion:reduce){
-  body[data-theme] :where(.trade-surface, .rp-card, .account-card, .acc-block-body, .auth-box, .fx-card, .tv-chart-box, .trade-chart-side, .trade-chat-panel, .trade-cal-card, .exercise-rules-box, .exercise-locked-box, .admin-card, .admin-kpi-tile, .admin-chart-card, .admin-role-card, .cal-cell, .sl-card, .sl-stat, .trade-stat-tile, .wk-card, .stk-ach-item, .mentor-note-box, .ls-card, .wl-card, .wl-cover, .bg-dash-card)::before{ transition:none; }
+  body[data-theme] :where(.trade-surface, .rp-card, .account-card, .acc-block-body, .auth-box, .fx-card, .tv-chart-box, .trade-chart-side, .trade-chat-panel, .trade-cal-card, .exercise-rules-box, .exercise-locked-box, .admin-card, .admin-kpi-tile, .admin-chart-card, .admin-role-card, .cal-cell, .sl-card, .sl-stat, .trade-stat-tile, .wk-card, .stk-ach-item, .mentor-note-box, .ls-card, .wl-card, .wl-cover, .ch-card, .ch-row, .bg-dash-card)::before{ transition:none; }
 }
-html[data-perf="low"] body[data-theme] :where(.trade-surface, .rp-card, .account-card, .acc-block-body, .auth-box, .fx-card, .tv-chart-box, .trade-chart-side, .trade-chat-panel, .trade-cal-card, .exercise-rules-box, .exercise-locked-box, .admin-card, .admin-kpi-tile, .admin-chart-card, .admin-role-card, .cal-cell, .sl-card, .sl-stat, .trade-stat-tile, .wk-card, .stk-ach-item, .mentor-note-box, .ls-card, .wl-card, .wl-cover, .bg-dash-card)::before{ display:none; }
+html[data-perf="low"] body[data-theme] :where(.trade-surface, .rp-card, .account-card, .acc-block-body, .auth-box, .fx-card, .tv-chart-box, .trade-chart-side, .trade-chat-panel, .trade-cal-card, .exercise-rules-box, .exercise-locked-box, .admin-card, .admin-kpi-tile, .admin-chart-card, .admin-role-card, .cal-cell, .sl-card, .sl-stat, .trade-stat-tile, .wk-card, .stk-ach-item, .mentor-note-box, .ls-card, .wl-card, .wl-cover, .ch-card, .ch-row, .bg-dash-card)::before{ display:none; }
 
 /* ============================================================
    ردیف «ضعیف» (data-perf-weak) — lib/perfTier.ts

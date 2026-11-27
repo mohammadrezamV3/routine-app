@@ -1,31 +1,8 @@
 "use client";
 
-import { MentorDashShell, MentorDashError } from "@/components/MentorDashKit";
-import { MentorDashOnboarding } from "@/components/MentorDashOnboarding";
-import { MentorDashBoard } from "@/components/MentorDashBoard";
-import { useMentorSelf } from "@/components/MentorPanelNav";
-import { LoadingBlock } from "@/components/Spinner";
-import { tr } from "@/lib/i18n";
+import { CoachTodayPage } from "@/components/CoachTodayPage";
 
-/**
- * /mentor — بدون پروفایل منتوری: مراحل شروع (ساخت پروفایل، احراز هویت،
- * انتشار)؛ با پروفایل: داشبورد منتور. پروفایل از همان درخواست مشترک
- * نوار پنل خوانده می‌شود (useMentorSelf).
- */
-function MentorHome() {
-  const self = useMentorSelf();
-  if (self.status === "unknown" || (self.status === "loading" && !self.profile)) return <LoadingBlock />;
-  if (self.status === "error" && !self.profile) {
-    return <MentorDashError message={self.error || tr("پنل دریافت نشد؛ دوباره تلاش کن", "Could not load the panel. Try again.")} onRetry={() => self.reload()} />;
-  }
-  if (!self.profile) return <MentorDashOnboarding />;
-  return <MentorDashBoard self={self.profile} />;
-}
-
+/** /mentor: امروز مربی (docs/coach-v3.md) */
 export default function MentorPage() {
-  return (
-    <MentorDashShell title="">
-      <MentorHome />
-    </MentorDashShell>
-  );
+  return <CoachTodayPage />;
 }

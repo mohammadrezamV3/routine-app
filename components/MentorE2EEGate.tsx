@@ -60,7 +60,7 @@ export function MentorE2EEGate({
       <p className="mentor-e2ee-line is-warn" role="alert">
         <AlertTriangle {...ICON} aria-hidden />
         <span>{s.message}</span>
-        <button type="button" className="mentor-text-btn" onClick={() => refreshIdentity()}>{tr("تلاش دوباره", "Try again")}</button>
+        <button type="button" className="btn btn-ghost btn-sm" onClick={() => refreshIdentity()}>{tr("تلاش دوباره", "Try again")}</button>
       </p>
     );
   }
@@ -96,7 +96,7 @@ function NoticeLine({ notice, link }: { notice: E2EENotice; link: LinkState | nu
       <span>{tr("پیام‌های قبلی روی یه دستگاه دیگه‌ته", "Your earlier messages are on another device")}</span>
       <button
         type="button"
-        className="mentor-text-btn"
+        className="btn btn-ghost btn-sm"
         disabled={busy}
         onClick={async () => { setBusy(true); try { await requestHistoryLink(); } finally { setBusy(false); } }}
       >
@@ -128,7 +128,7 @@ function RequesterLine({ link }: { link: Extract<LinkState, { role: "requester" 
       <span>
         {tr("روی دستگاه دیگه‌ات بخش مربی رو باز کن و این کد رو تایید کن: ", "On your other device, open the mentor section and confirm this code: ")}<b className="mono" dir="ltr">{faNum(link.code)}</b>
       </span>
-      <button type="button" className="mentor-text-btn" onClick={() => cancelHistoryLink(link.id)}>{tr("لغو", "Cancel")}</button>
+      <button type="button" className="btn btn-ghost btn-sm" onClick={() => cancelHistoryLink(link.id)}>{tr("لغو", "Cancel")}</button>
     </p>
   );
 }
@@ -198,10 +198,10 @@ function LegacyPasscode({ version }: { version: number }) {
             onChange={(e) => { setPass(e.target.value); setError(null); }}
             aria-invalid={!!error}
           />
-          <button type="submit" className="trade-primary-btn mentor-btn is-sm" disabled={busy}>
+          <button type="submit" className="btn btn-primary btn-sm" disabled={busy}>
             {busy ? <Spinner size={14} /> : tr("باز کردن", "Unlock")}
           </button>
-          <button type="button" className="account-outline-btn muted mentor-btn is-sm" disabled={busy} onClick={() => setConfirmSkip(true)}>
+          <button type="button" className="btn btn-ghost btn-sm" disabled={busy} onClick={() => setConfirmSkip(true)}>
             {tr("بی‌خیال پیام‌های قبلی", "Skip earlier messages")}
           </button>
         </span>

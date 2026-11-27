@@ -2,7 +2,7 @@
 
 import { withOnlineOnly } from "@/components/OnlineOnly";
 import { useCallback, useEffect, useRef, useState } from "react";
-import { Flag, MessagesSquare, Send, ShieldAlert, Smile, Trash2, X } from "lucide-react";
+import { Flag, MessagesSquare, ArrowUp, ShieldAlert, Smile, Trash2, X } from "lucide-react";
 import { faNum } from "@/lib/jalali";
 import {
   CHAT_REPORT_REASONS, chatRules, ChatMessageDto, ChatReportReason, ChatViewerModeration, MAX_CHAT_BODY,
@@ -318,7 +318,7 @@ function SymbolChatPanelInner({ symbol }: { symbol: string }) {
                 type="submit" className="trade-chat-send"
                 disabled={!draft.trim() || pendingKey === "send"} aria-label={tr("ارسال", "Send")}
               >
-                {pendingKey === "send" ? <Spinner size={18} /> : <Send size={24} strokeWidth={2.2} />}
+                {pendingKey === "send" ? <Spinner size={18} /> : <ArrowUp size={24} strokeWidth={2.2} />}
               </button>
             </form>
           </div>

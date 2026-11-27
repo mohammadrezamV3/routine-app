@@ -110,7 +110,7 @@ export function MentorErrorState({
       {(onRetry || action) && (
         <div className="mentor-btn-group">
           {onRetry && (
-            <button type="button" className="account-outline-btn mentor-btn is-sm" onClick={onRetry}>
+            <button type="button" className="btn btn-outline btn-sm" onClick={onRetry}>
               <RefreshCw size={14} strokeWidth={1.75} /> {tr("تلاش دوباره", "Try again")}
             </button>
           )}

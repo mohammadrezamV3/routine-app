@@ -81,6 +81,8 @@ export async function GET(_req: Request, { params }: { params: { mentorId: strin
   return NextResponse.json({
     mentor: {
       ...toMentorCard(profile, s),
+      // نام کاربری عمومی (لینک کوتاه /c/<username>)؛ جزو اطلاعات عمومی کاربره
+      username: profile.user.username ?? null,
       bio: profile.bio,
       specialties: profile.specialties,
       completedPrograms: s?.completedPrograms ?? 0,

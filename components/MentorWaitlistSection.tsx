@@ -83,7 +83,7 @@ export function MentorWaitlistSection() {
                       {e.status === "OFFERED" && <MentorChip tone="ok" icon={ic(PartyPopper, MI.chip)}>{tr("نوبت داده شد", "Turn offered")}</MentorChip>}
                       <button
                         type="button"
-                        className="trade-icon-btn"
+                        className="btn btn-ghost btn-icon"
                         onClick={() => { setError(null); setRemove(e); }}
                         aria-label={tr(`خارج کردن ${name} از صف`, `Remove ${iso(name)} from the waitlist`)}
                         title={tr("خارج کردن از صف", "Remove from waitlist")}
