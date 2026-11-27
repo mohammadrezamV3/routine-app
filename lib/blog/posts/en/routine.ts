@@ -102,7 +102,7 @@ export const ROUTINE_POSTS_EN: Record<string, BlogPostEn> = {
       { type: "p", text: "If most of these answers are yes, you are probably looking at a suitable app. A no to one or two points, such as no sync, may be tolerable; but heavy check-ins and a confusing calendar are usually the things that make people abandon an app." },
 
       { type: "h2", text: "Where does Arion fit in?" },
-      { type: "p", text: "Arion is a Persian routine app that supports the Solar Hijri calendar, a Saturday-based week and a right-to-left interface from the ground up. In the “My Routine” section you can keep your weekly plan, daily tasks and sleep side by side, and on the dashboard get an overview of today’s progress and the consistency of the last few weeks. Each new account gets 14 days of free trial for the routine section; after that, continuing to use it requires the “My Routine” plan. So you can try it first and then decide." },
+      { type: "p", text: "Arion is a Persian routine app that supports the Solar Hijri calendar, a Saturday-based week and a right-to-left interface from the ground up. In the “My Routine” section you can keep your weekly plan, daily tasks and sleep side by side, and on the dashboard get an overview of today’s progress and the consistency of the last few weeks. Each new account gets 7 days of free trial for the routine section; after that, continuing to use it requires the “My Routine” plan. So you can try it first and then decide." },
       { type: "cta", text: "See what the My Routine section offers and how simple it is to get started.", href: "/routine", label: "Get to know My Routine" },
 
       { type: "h2", text: "Summary" },
@@ -113,7 +113,7 @@ export const ROUTINE_POSTS_EN: Record<string, BlogPostEn> = {
       { q: "What is the difference between a routine app and a to-do list?", a: "A to-do list is for one-off tasks, and each task is finished once it is done. A routine app defines recurring tasks once; it brings them back every day or on the days you choose and keeps a record of them." },
       { q: "Does a routine app replace a calendar?", a: "No. A calendar suits appointments with a fixed time, such as meetings and doctor’s visits, while a routine app suits recurring tasks without a fixed time. Most people use both." },
       { q: "How many tasks should a routine app have?", a: "Three to five tasks are enough to start. With too many tasks, the first busy day ruins the plan. Once you have been consistent for a few weeks, add new tasks gradually." },
-      { q: "Is My Routine on Arion free?", a: "Each new Arion account gets 14 days of free trial for the “My Routine” section. After this period, continuing to use it requires the “My Routine” plan or another paid plan." },
+      { q: "Is My Routine on Arion free?", a: "Each new Arion account gets 7 days of free trial for the “My Routine” section. After this period, continuing to use it requires the “My Routine” plan or another paid plan." },
     ],
     related: [
       { href: "/blog/how-to-build-a-daily-routine", label: "How to Build a Daily Routine" },
@@ -222,7 +222,7 @@ export const ROUTINE_POSTS_EN: Record<string, BlogPostEn> = {
       { type: "p", text: "If you still do not know where to begin, do these three things: choose a fixed wake-up time for tomorrow, attach one small task to a stable cue, and the night before, write down only the three important things for tomorrow. These three simple decisions are enough to get you through the first week successfully, and small wins are the best fuel for carrying on." },
 
       { type: "h2", text: `Recording your routine in Arion` },
-      { type: "p", text: `If you want to keep your routine somewhere you will see it every day, in Arion you can build a weekly plan, set the days it repeats (Saturday to Friday) and tick off today’s tasks with a single tap. The progress ring and the count of consecutive days show how consistent you have been. The “My Routine” section has a 14-day free trial, and after that continuing requires its own plan.` },
+      { type: "p", text: `If you want to keep your routine somewhere you will see it every day, in Arion you can build a weekly plan, set the days it repeats (Saturday to Friday) and tick off today’s tasks with a single tap. The progress ring and the count of consecutive days show how consistent you have been. The “My Routine” section has a 7-day free trial, and after that continuing requires its own plan.` },
       { type: "cta", text: "Build a weekly routine and see what a week of small tasks changes.", href: "/routine", label: "Start with My Routine" },
 
       { type: "h2", text: "Summary" },
@@ -233,7 +233,7 @@ export const ROUTINE_POSTS_EN: Record<string, BlogPostEn> = {
       { q: "What should I do if I skipped my routine for a day?", a: "Pick it up tomorrow from where you left off, and do not skip two days in a row. A bad day is part of the process. It helps to have a very small version for bad days so that no day is completely empty." },
       { q: "Is it better to build my routine in the morning or at night?", a: "Both are useful. A night routine, such as reviewing tomorrow and putting the phone away, makes the morning easier, and a morning routine keeps the start of the day organised. If you have little time, start with one, usually the night one, and then add the other." },
       { q: "How many tasks should I put in a daily routine?", a: "Three to five tasks are enough to start. If the plan is so full that the first busy day ruins it, it is still too big. After a few weeks of consistency, add new tasks." },
-      { q: "Do I need an app to build a routine?", a: `You do not need one; a notebook works too. But an app makes daily ticking, automatic weekly repetition and progress tracking simpler. Arion offers a 14-day free trial for its routine section, and after that the “My Routine” plan is needed.` },
+      { q: "Do I need an app to build a routine?", a: `You do not need one; a notebook works too. But an app makes daily ticking, automatic weekly repetition and progress tracking simpler. Arion offers a 7-day free trial for its routine section, and after that the “My Routine” plan is needed.` },
     ],
     related: [
       { href: "/blog/what-is-a-routine-app", label: "What Is a Routine App?" },
@@ -329,7 +329,7 @@ export const ROUTINE_POSTS_EN: Record<string, BlogPostEn> = {
       { type: "p", text: "Finally, remember that the aim of building habits is not “forever”; the aim is to take one small step this week. If you get through the first week successfully, the second week naturally becomes easier, because you are no longer starting from zero, and your record of past ticks supports you." },
 
       { type: "h2", text: `Tracking habits with Arion` },
-      { type: "p", text: `Without tracking, habits fade from memory. In Arion you can add each habit as a recurring task in your weekly routine, tick it off with a single tap every day and see the trend over weeks on the dashboard. The consistency map of the last few weeks shows exactly which days were strong and which were missed. This is free to try during the 14-day trial of “My Routine”, and continuing requires the relevant plan.` },
+      { type: "p", text: `Without tracking, habits fade from memory. In Arion you can add each habit as a recurring task in your weekly routine, tick it off with a single tap every day and see the trend over weeks on the dashboard. The consistency map of the last few weeks shows exactly which days were strong and which were missed. This is free to try during the 7-day trial of “My Routine”, and continuing requires the relevant plan.` },
       { type: "cta", text: "Record your habits on one screen and see your weekly consistency.", href: "/habit-tracker", label: "Get to know the Habit Tracker" },
 
       { type: "h2", text: "Summary" },
@@ -340,7 +340,7 @@ export const ROUTINE_POSTS_EN: Record<string, BlogPostEn> = {
       { q: "How many habits can I start at the same time?", a: "For most people, one to three habits at a time is reasonable. A larger number means everything falls apart with the first busy day. Once a habit has stayed consistent for several weeks, add the next one." },
       { q: "If I miss a habit for one day, will everything fall apart?", a: "No. Missing one day is normal and has little effect. What matters is that you return the next day and do not miss two days in a row. The small version of the habit is the best option for bad days." },
       { q: "What is the difference between a habit and a routine?", a: "A habit is an automatic behaviour, like fastening a seatbelt or brushing your teeth. A routine is a set of actions in a fixed order, like a morning routine. Good routines are built from several small habits." },
-      { q: "Do I need an app to track a habit?", a: `You do not need one; a notebook or a calendar works too. An app simply makes ticking, automatic repetition and seeing your progress easier. Arion offers a 14-day trial for the “My Routine” section, and after that the relevant plan is needed.` },
+      { q: "Do I need an app to track a habit?", a: `You do not need one; a notebook or a calendar works too. An app simply makes ticking, automatic repetition and seeing your progress easier. Arion offers a 7-day trial for the “My Routine” section, and after that the relevant plan is needed.` },
     ],
     related: [
       { href: "/blog/how-to-build-a-daily-routine", label: "How to Build a Daily Routine" },
@@ -450,7 +450,7 @@ export const ROUTINE_POSTS_EN: Record<string, BlogPostEn> = {
       { type: "p", text: "The key point in this example is that Maryam’s plan has three important tasks, not thirty. That limit means that even on a busy day with plenty of interruptions, she feels she has not lost the day." },
 
       { type: "h2", text: `Daily planning with Arion` },
-      { type: "p", text: `If you prefer to keep your plan in one place, in Arion you can arrange your weekly plan (the week starts on Saturday), define recurring tasks just once, and see from the dashboard what you have today. Your exercise, trading and even sleep can be recorded in the same app. The “My Routine” section has a 14-day free trial, and after that it requires its own plan.` },
+      { type: "p", text: `If you prefer to keep your plan in one place, in Arion you can arrange your weekly plan (the week starts on Saturday), define recurring tasks just once, and see from the dashboard what you have today. Your exercise, trading and even sleep can be recorded in the same app. The “My Routine” section has a 7-day free trial, and after that it requires its own plan.` },
       { type: "cta", text: "Arrange your weekly plan on one screen and see each day what is still left to do.", href: "/daily-planner", label: "Get to know the daily planner" },
 
       { type: "h2", text: "Summary" },
@@ -580,7 +580,7 @@ export const ROUTINE_POSTS_EN: Record<string, BlogPostEn> = {
       { type: "p", text: "If you follow both, that is, open your phone twenty minutes later and have breakfast ready in advance, your mornings become calmer. These changes cost nothing and you can try them tomorrow; if they do not work, go back to how things were and try something else." },
 
       { type: "h2", text: `Recording your morning routine in Arion` },
-      { type: "p", text: `One of the simplest ways to make a habit stick is to see your ticks. In Arion you can define your morning activities as a recurring plan, even as a checklist with several items (water, stretching, review), and tick them off every day with a single tap. The weekly chart tells you which days your mornings were orderly. The “My Routine” section has a 14-day free trial, and after that it requires the relevant plan.` },
+      { type: "p", text: `One of the simplest ways to make a habit stick is to see your ticks. In Arion you can define your morning activities as a recurring plan, even as a checklist with several items (water, stretching, review), and tick them off every day with a single tap. The weekly chart tells you which days your mornings were orderly. The “My Routine” section has a 7-day free trial, and after that it requires the relevant plan.` },
       { type: "cta", text: "Record your morning routine in your weekly plan and see your ticks.", href: "/routine", label: "Start with My Routine" },
 
       { type: "h2", text: "Summary" },
@@ -706,7 +706,7 @@ export const ROUTINE_POSTS_EN: Record<string, BlogPostEn> = {
       { type: "p", text: "A student can do the same with their lessons: round one for reading the chapter, round two for writing a summary, round three for solving exercises. The order “learn, summarise, practise” fits very well with the structure of the rounds." },
 
       { type: "h2", text: `The Pomodoro and planning with Arion` },
-      { type: "p", text: `The Pomodoro gives its best results when you know in advance what you will do in each round. In Arion you can write the day’s important tasks in your daily plan, estimate the number of rounds each one needs and then tick off each task as its rounds are completed. You can choose any timer you like; this technique does not need a specific app. The “My Routine” section has a 14-day free trial, and after that it requires the relevant plan.` },
+      { type: "p", text: `The Pomodoro gives its best results when you know in advance what you will do in each round. In Arion you can write the day’s important tasks in your daily plan, estimate the number of rounds each one needs and then tick off each task as its rounds are completed. You can choose any timer you like; this technique does not need a specific app. The “My Routine” section has a 7-day free trial, and after that it requires the relevant plan.` },
       { type: "cta", text: "Write down today’s important tasks and estimate the number of Pomodoro rounds for each.", href: "/daily-planner", label: "Daily planner" },
 
       { type: "h2", text: "Summary" },
@@ -837,7 +837,7 @@ export const ROUTINE_POSTS_EN: Record<string, BlogPostEn> = {
       { type: "p", text: "If you have school or in-person classes, keep the end of the week (Thursday evening and Friday) for a general review, and in the other days only move forward on the topics of that week. This split reduces the pressure on busy days, and Friday becomes a day for making up and preparing for the following week." },
 
       { type: "h2", text: `Recording your study schedule with Arion` },
-      { type: "p", text: `If you want your study schedule in front of you every day, in Arion you can define each subject or study block as a recurring task on the days of the week (Saturday to Friday), write the items of each block as a checklist and tick them off with a single tap. The weekly chart shows how faithfully you have stuck to the plan. The “My Routine” section has a 14-day free trial, and after that it requires the relevant plan.` },
+      { type: "p", text: `If you want your study schedule in front of you every day, in Arion you can define each subject or study block as a recurring task on the days of the week (Saturday to Friday), write the items of each block as a checklist and tick them off with a single tap. The weekly chart shows how faithfully you have stuck to the plan. The “My Routine” section has a 7-day free trial, and after that it requires the relevant plan.` },
       { type: "cta", text: "Build your weekly study schedule and tick it off every day.", href: "/routine", label: "Start with My Routine" },
 
       { type: "h2", text: "Summary" },
@@ -848,7 +848,7 @@ export const ROUTINE_POSTS_EN: Record<string, BlogPostEn> = {
       { q: "Should I study hard subjects in the morning or at night?", a: "Study hard subjects when your mind has the most energy. For most people that is the morning or early afternoon, but some do better at night. Record how you perform for a few days and decide based on that." },
       { q: "How should I divide my time between several subjects?", a: "Give more time to weak and important subjects, but keep strong subjects going with short reviews. Plan two or three subjects a day so that you do not get exhausted and every subject is seen during the week." },
       { q: "What should I do if I fall behind the plan?", a: "Find the cause, prioritise the topics you are behind on and make up only the most important ones. Set aside one catch-up hour a week and write the next plan lighter. Abandoning the whole plan is the worst option." },
-      { q: "Should I write my study schedule on paper or in an app?", a: "Both work. Paper is simple, and an app offers automatic repetition and progress charts. Arion’s “My Routine” section has a 14-day free trial, and after that continuing requires the relevant plan." },
+      { q: "Should I write my study schedule on paper or in an app?", a: "Both work. Paper is simple, and an app offers automatic repetition and progress charts. Arion’s “My Routine” section has a 7-day free trial, and after that continuing requires the relevant plan." },
     ],
     related: [
       { href: "/blog/pomodoro-technique", label: "The Pomodoro Technique" },

@@ -68,15 +68,15 @@ function content() {
     {
       q: tr("بخش بدنسازی رایگان است؟", "Is the workout section free?"),
       a: tr(
-        "بخش تمرین بدنسازی جزو ماژول‌های اشتراکی است. هر حساب تازه 3 روز دسترسی به بدنسازی، کالری‌شمار و ژورنال ترید، با استفاده‌ی محدود از هوش مصنوعی می‌گیرد. «روتین من» (روتین و کارهای روزانه) 14 روز رایگان است و بعد با پلن «روتین من» ({{routine_monthly}}) ادامه پیدا می‌کند.",
-        "The workout section is a subscription module. Every new account gets 3 days of access to workouts, the calorie counter and the trading journal, with limited use of AI. “My Routine” (routine and daily tasks) is free for 14 days and then continues with the “My Routine” plan ({{routine_monthly}}).",
+        "بخش تمرین بدنسازی جزو ماژول‌های اشتراکی است. هر حساب تازه 7 روز دسترسی به بدنسازی، کالری‌شمار و ژورنال ترید، با استفاده‌ی محدود از هوش مصنوعی می‌گیرد. «روتین من» (روتین و کارهای روزانه) 7 روز رایگان است و بعد با پلن «روتین من» ({{routine_monthly}}) ادامه پیدا می‌کند.",
+        "The workout section is a subscription module. Every new account gets 7 days of access to workouts, the calorie counter and the trading journal, with limited use of AI. “My Routine” (routine and daily tasks) is free for 7 days and then continues with the “My Routine” plan ({{routine_monthly}}).",
       ),
     },
     {
       q: tr("برنامه بدنسازی رایگان از کجا بگیرم؟", "Where can I get a free workout plan?"),
       a: tr(
-        "برنامه‌های عمومی زیادی آنلاین هست، ولی معمولا با سطح، هدف و روزهای تمرین تو جور نیستند. در آریون می‌توانی با هوش مصنوعی یک برنامه‌ی شخصی بسازی؛ هر حساب تازه 3 روز دسترسی به بخش بدنسازی با استفاده‌ی محدود از هوش مصنوعی دارد و بعد از آن اشتراکی است.",
-        "There are many generic plans online, but they rarely match your level, goal and training days. In Arion you can build a personal plan with AI; every new account gets 3 days of access to the workout section with limited AI use, and it is subscription-based after that.",
+        "برنامه‌های عمومی زیادی آنلاین هست، ولی معمولا با سطح، هدف و روزهای تمرین تو جور نیستند. در آریون می‌توانی با هوش مصنوعی یک برنامه‌ی شخصی بسازی؛ هر حساب تازه 7 روز دسترسی به بخش بدنسازی با استفاده‌ی محدود از هوش مصنوعی دارد و بعد از آن اشتراکی است.",
+        "There are many generic plans online, but they rarely match your level, goal and training days. In Arion you can build a personal plan with AI; every new account gets 7 days of access to the workout section with limited AI use, and it is subscription-based after that.",
       ),
     },
     {
@@ -131,7 +131,7 @@ export default async function BodybuildingProgramPage() {
             `یک برنامه بدنسازی خوب چه اصولی دارد و در آریون چطور ساخته می‌شود.`,
           `${brand} builds your training program with AI, based on your goal, level, height and weight and the real days you can get to the gym, not a fixed template given to everyone. This page explains what makes a good workout plan and how it is built in ${brand}.`,
         )}
-        ctaNote={tr("3 روز آزمایشی رایگان", "3 days free trial")}
+        ctaNote={tr("7 روز آزمایشی رایگان", "7 days free trial")}
         sections={[
           {
             title: tr("چرا یک برنامه‌ی ثابت برای همه جواب نمی‌دهد؟", "Why doesn't one fixed plan work for everyone?"),

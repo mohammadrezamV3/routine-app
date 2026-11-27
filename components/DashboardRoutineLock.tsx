@@ -1,11 +1,11 @@
 "use client";
 
-// کارت‌های «روتین من» وقتی دوره‌ی ۱۴ روزه‌ی رایگان تموم شده و پلن خریده نشده.
+// کارت‌های «روتین من» وقتی دوره‌ی 7 روزه‌ی رایگان تموم شده و پلن خریده نشده.
 // جای «برنامه‌های امروز» و «نقشه‌ی ثبات» می‌شینن تا چیدمان بنتو خالی نمونه.
 // هیچ داده‌ی واقعی‌ای نشون داده نمی‌شه — فقط پیام خرید (گیت واقعی سمت سرور).
 
 import { SmartLink as Link } from "@/components/SmartLink";
-import { ROUTINE_PLAN_KEY, ROUTINE_TRIAL_DAYS } from "@/lib/trial";
+import { ROUTINE_PLAN_KEY } from "@/lib/trial";
 import { entryOffer } from "@/lib/planPricing";
 import { usePlanPricing } from "@/lib/usePlanPricing";
 import { BentoCard, CardHead } from "./DashboardKit";
@@ -25,7 +25,7 @@ export function DashboardRoutineLock({ area }: { area: "today" | "heat" }) {
         <span className="db-empty-icon"><DashIcon name="lock" /></span>
         <p>
           {today
-            ? tr(`دوره‌ی ${ROUTINE_TRIAL_DAYS} روزه‌ی رایگان «روتین من» تموم شد. برنامه‌ها و تیک‌هات سر جاشونه — با خرید پلن همون‌جا ادامه بده.`, `Your ${ROUTINE_TRIAL_DAYS}-day free trial of My Routine has ended. Your programs and ticks are still here — buy a plan to pick up where you left off.`)
+            ? tr(`دوره‌ی رایگان «روتین من» تموم شد. برنامه‌ها و تیک‌هات سر جاشونه — با خرید پلن همون‌جا ادامه بده.`, `Your free trial of My Routine has ended. Your programs and ticks are still here — buy a plan to pick up where you left off.`)
             : tr("استریک، نقشه‌ی ثبات و اچیومنت‌ها با پلن «روتین من» دوباره فعال می‌شن.", "Your streak, consistency map and achievements come back with the My Routine plan.")}
         </p>
         <Link href={buyHref} prefetch={false} className="trade-primary-btn db-empty-cta">

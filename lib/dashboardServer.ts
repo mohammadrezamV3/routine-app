@@ -11,7 +11,7 @@
 // اعتبارسنجی و محدودش می‌کنه (±۲ روز از الان).
 
 import { ModuleKey, Prisma, SubscriptionStatus } from "@prisma/client";
-import { ROUTINE_TRIAL_MS } from "./trial";
+import { LEGACY_ROUTINE_TRIAL_DAYS } from "./trial";
 import { prisma } from "./prisma";
 import { NAME_STYLE_SELECT, nameFlags } from "./nameStyle";
 import { FA_WEEKDAY, isoLocal } from "./jalali";
@@ -484,7 +484,7 @@ export async function buildDashboard(userId: string, day: { date: string; tz: nu
   // «روتین من» در دوره‌ی رایگان: ردیف ROUTINE با انقضا و بدون هیچ اشتراک فعال
   const routineRow = user.moduleAccess.find((r) => r.module === ModuleKey.ROUTINE);
   const routineMsLeft = routineRow?.active && routineRow.expiresAt ? routineRow.expiresAt.getTime() - Date.now() : 0;
-  const routineTrial = !isSuperAdmin && !sub && routineMsLeft > 0 && routineMsLeft <= ROUTINE_TRIAL_MS
+  const routineTrial = !isSuperAdmin && !sub && routineMsLeft > 0 && routineMsLeft <= LEGACY_ROUTINE_TRIAL_DAYS * 86_400_000
     ? { daysLeft: Math.ceil(routineMsLeft / 86_400_000) }
     : null;
   return {

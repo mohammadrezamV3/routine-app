@@ -131,6 +131,6 @@ export function blogSignupLine(section: SectionKey | null): string {
 }
 
 export function blogSignupCta(section: SectionKey | null): string {
-  if (section === "workout" || section === "trade") return tr("امتحان رایگان 3 روزه", "Try it free for 3 days");
-  return tr("امتحان رایگان 14 روزه", "Try it free for 14 days");
+  if (section === "workout" || section === "trade") return tr("امتحان رایگان 7 روزه", "Try it free for 7 days");
+  return tr("امتحان رایگان 7 روزه", "Try it free for 7 days");
 }

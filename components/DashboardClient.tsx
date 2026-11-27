@@ -187,7 +187,7 @@ function DashboardBody({ initial }: { initial: { key: string; data: DashboardDat
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [modules, flagSig, features?.roadmaps, section]);
   const areas = useMemo(() => bentoAreas(has, section), [has, section]);
-  // «روتین من» بعد از ۱۴ روز رایگان پلن می‌خواد — تا وقتی ماژول‌ها معلوم نشدن
+  // «روتین من» بعد از 7 روز رایگان پلن می‌خواد — تا وقتی ماژول‌ها معلوم نشدن
   // (modules=null) قفل نشون داده نمی‌شه که صفحه‌ی خریده‌شده یک لحظه قفل نپره.
   const routineLocked = !!modules && !modules.has("ROUTINE");
   // نومو روی داشبورد روتین (و دامنه‌ی اصلی): همان گیت /weekly (فلگ routineAssistant)؛ با قفل

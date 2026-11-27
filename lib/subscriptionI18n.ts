@@ -34,12 +34,12 @@ export function monthsText(months: number): string {
 
 /** متن معرفی دوره‌ی آزمایشی (lib/trial.ts → TRIAL_COPY_FA) */
 export function trialCopy(): string {
-  return tr(TRIAL_COPY_FA, "3 days of access to Workout, the Calorie tracker and the Trading journal, with limited AI use");
+  return tr(TRIAL_COPY_FA, "7 days of access to Workout, the Calorie tracker and the Trading journal, with limited AI use");
 }
 
-/** متن «روتین من» 14 روز رایگان + قیمت ماهانه‌ی پنل (جایگزین FREE_ROUTINE_COPY_FA در انگلیسی) */
+/** متن «روتین من» 7 روز رایگان + قیمت ماهانه‌ی پنل (جایگزین FREE_ROUTINE_COPY_FA در انگلیسی) */
 export function freeRoutineCopyEn(cfg: PricingConfig): string {
-  return `My Routine is free for 14 days, then continues with the My Routine plan (${tomanShortText(monthlyPriceToman(cfg, "basic"))} per month); the smart assistant Nomo has 10 free messages and is unlimited in the My Routine and Max plans.`;
+  return `My Routine is free for 7 days, then continues with the My Routine plan (${tomanShortText(monthlyPriceToman(cfg, "basic"))} per month); the smart assistant Nomo has 10 free messages and is unlimited in the My Routine and Max plans.`;
 }
 
 /** مثل formatPriceAmount (ریال خام → تومان) ولی با واحد زبان جاری */

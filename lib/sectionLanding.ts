@@ -51,8 +51,8 @@ export function getSectionSeo(section: SectionKey): SectionSeo {
         tr("ردیابی خواب و چرخه‌های خواب", "Sleep and sleep-cycle tracking"),
       ],
       offerNote: tr(
-        "بدنسازی و کالری‌شمار برای هر حساب تازه 3 روز با استفاده‌ی محدود از هوش مصنوعی رایگان است و بعد از آن اشتراکی است.",
-        "Workouts and the calorie counter are free for 3 days on every new account, with limited AI use, and subscription-based after that.",
+        "بدنسازی و کالری‌شمار برای هر حساب تازه 7 روز با استفاده‌ی محدود از هوش مصنوعی رایگان است و بعد از آن اشتراکی است.",
+        "Workouts and the calorie counter are free for 7 days on every new account, with limited AI use, and subscription-based after that.",
       ),
       ogHeadline: tr("برنامه ورزشی، بدنسازی و کالری‌شماری", "Workout plans, bodybuilding and calorie counting"),
     };
@@ -82,8 +82,8 @@ export function getSectionSeo(section: SectionKey): SectionSeo {
         tr("ماشین حساب ریسک و سود", "Risk and profit calculator"),
       ],
       offerNote: tr(
-        "ژورنال ترید برای هر حساب تازه 3 روز رایگان است و بعد از آن اشتراکی است.",
-        "The trading journal is free for 3 days on every new account and subscription-based after that.",
+        "ژورنال ترید برای هر حساب تازه 7 روز رایگان است و بعد از آن اشتراکی است.",
+        "The trading journal is free for 7 days on every new account and subscription-based after that.",
       ),
       ogHeadline: tr("ژورنال ترید، تقویم اقتصادی و متاتریدر", "Trading journal, economic calendar and MetaTrader"),
     };
@@ -94,8 +94,8 @@ export function getSectionSeo(section: SectionKey): SectionSeo {
       `Routine app and daily planner, habit tracker and sleep tracking | ${appName}`,
     ),
     description: tr(
-      `برنامه ریزی روزانه و هفتگی با تقویم شمسی، پیگیری عادت و استریک، یادآوری برنامه و دارو، ردیابی خواب و رودمپ یادگیری با هوش مصنوعی. روتین اپ فارسی؛ 14 روز رایگان.`,
-      `Daily and weekly planning with the Jalali calendar, habit and streak tracking, plan and medication reminders, sleep tracking and AI learning roadmaps. A routine app built for Persian speakers; free for 14 days.`,
+      `برنامه ریزی روزانه و هفتگی با تقویم شمسی، پیگیری عادت و استریک، یادآوری برنامه و دارو، ردیابی خواب و رودمپ یادگیری با هوش مصنوعی. روتین اپ فارسی؛ 7 روز رایگان.`,
+      `Daily and weekly planning with the Jalali calendar, habit and streak tracking, plan and medication reminders, sleep tracking and AI learning roadmaps. A routine app built for Persian speakers; free for 7 days.`,
     ),
     keywords: tr(
       "روتین روزانه|روتین اپ|اپ روتین|اپلیکیشن روتین|اپ روتین فارسی|برنامه روتین روزانه|روتین ساز|برنامه ریزی روزانه|برنامه‌ریزی روزانه|اپ برنامه ریزی روزانه|اپلیکیشن برنامه ریزی روزانه|برنامه ریز روزانه|برنامه روزانه|برنامه هفتگی|برنامه ریزی هفتگی|جدول برنامه ریزی روزانه|برنامه ریزی با تقویم شمسی|تقویم شمسی|عادت ساز|اپ عادت ساز|هبیت ترکر|پیگیری عادت|ردیاب عادت|چطور عادت بسازیم|ترک عادت بد|استریک|ردیابی خواب|اپ ردیابی خواب|محاسبه چرخه خواب|ساعت خواب مناسب|چرخه های خواب|روتین صبحگاهی|روتین شبانه|زود بیدار شدن|مدیریت زمان|تکنیک پومودورو|اهمال کاری|برنامه ریزی درسی|برنامه مطالعه|لیست کارها|اپ مدیریت کارها|رودمپ یادگیری|نقشه راه یادگیری|برنامه ریزی با هوش مصنوعی|یادآوری دارو|اپ یادآور|آریون روتین",
@@ -112,8 +112,8 @@ export function getSectionSeo(section: SectionKey): SectionSeo {
       tr("رودمپ یادگیری با هوش مصنوعی", "AI learning roadmaps"),
     ],
     offerNote: tr(
-      "هر حساب تازه 14 روز دوره‌ی آزمایشی رایگان «روتین من» دارد و بعد از آن برای ادامه، پلن پولی لازم است.",
-      "Every new account gets a 14-day free trial of My Routine; a paid plan is needed to continue after that.",
+      "هر حساب تازه 7 روز دوره‌ی آزمایشی رایگان «روتین من» دارد و بعد از آن برای ادامه، پلن پولی لازم است.",
+      "Every new account gets a 7-day free trial of My Routine; a paid plan is needed to continue after that.",
     ),
     ogHeadline: tr("روتین روزانه، عادت و ردیابی خواب", "Daily routine, habits and sleep tracking"),
   };
@@ -157,7 +157,7 @@ export function getSectionHero(section: SectionKey, brand: string): SectionHero 
         `Build a workout and bodybuilding plan with AI, log your training set by set and follow your nutrition with a calorie counter; ${brand} shows your progress day by day.`,
       ),
       trust: [
-        { icon: "spark", text: tr("3 روز رایگان بدنسازی و کالری‌شمار", "3 free days of workouts and the calorie counter") },
+        { icon: "spark", text: tr("7 روز رایگان بدنسازی و کالری‌شمار", "7 free days of workouts and the calorie counter") },
         { icon: "spark", text: tr("149 حرکت با آموزش و 264 خوراکی آماده", "149 exercises with tutorials and 264 ready-made foods") },
         { icon: "shield", text: tr("روی گوشی و کامپیوتر", "On phone and desktop") },
         { icon: "lock", text: tr("چت‌های سرتاسر رمزنگاری‌شده", "End-to-end encrypted chats") },
@@ -193,7 +193,7 @@ export function getSectionHero(section: SectionKey, brand: string): SectionHero 
         `A trading journal with automatic MetaTrader sync, an entry checklist, a forex economic calendar and a risk calculator; ${brand} shows the performance of every account clearly.`,
       ),
       trust: [
-        { icon: "spark", text: tr("3 روز رایگان ژورنال ترید", "3 free days of the trading journal") },
+        { icon: "spark", text: tr("7 روز رایگان ژورنال ترید", "7 free days of the trading journal") },
         { icon: "shield", text: tr("MT4 و MT5 بدون نیاز به رمز حساب", "MT4 and MT5 without your account password") },
         { icon: "spark", text: tr("تقویم اقتصادی 9 ارز اصلی", "Economic calendar for 9 major currencies") },
         { icon: "lock", text: tr("چت‌های سرتاسر رمزنگاری‌شده", "End-to-end encrypted chats") },
@@ -229,7 +229,7 @@ export function getSectionHero(section: SectionKey, brand: string): SectionHero 
       `Daily and weekly planning with the Jalali calendar, plan and medication reminders, habit tracking and sleep tracking; ${brand} turns those simple ticks into streaks and a weekly review.`,
     ),
     trust: [
-      { icon: "spark", text: tr("14 روز رایگان", "14 days free") },
+      { icon: "spark", text: tr("7 روز رایگان", "7 days free") },
       { icon: "spark", text: tr("تقویم شمسی، یادآوری برنامه و دارو", "Jalali calendar, plan and medication reminders") },
       { icon: "shield", text: tr("روی گوشی و کامپیوتر", "On phone and desktop") },
       { icon: "lock", text: tr("چت‌های سرتاسر رمزنگاری‌شده", "End-to-end encrypted chats") },
@@ -333,7 +333,7 @@ export function getSectionCopy(section: SectionKey): SectionCopy {
         title: tr("مربی ورزش و تغذیه", "Fitness and nutrition mentors"),
         body: tr("از مربی برنامه بگیر و گفت‌وگو کن؛ چت‌ها سرتاسر رمزنگاری‌شده‌اند.", "Get a plan from a mentor and chat with them; chats are end-to-end encrypted."),
       },
-      ctaChip: tr("3 روز رایگان", "3 days free"),
+      ctaChip: tr("7 روز رایگان", "7 days free"),
       ctaSub: tr("هدفت را بگو، برنامه ورزشی‌ات را بساز و از امروز تمرین کن.", "Tell it your goal, build your workout plan and start training today."),
     };
   }
@@ -370,7 +370,7 @@ export function getSectionCopy(section: SectionKey): SectionCopy {
         title: tr("مربی ترید", "Trading mentors"),
         body: tr("از مربی ترید برنامه بگیر و گفت‌وگو کن؛ چت‌ها سرتاسر رمزنگاری‌شده‌اند.", "Get a plan from a trading mentor and chat with them; chats are end-to-end encrypted."),
       },
-      ctaChip: tr("3 روز رایگان", "3 days free"),
+      ctaChip: tr("7 روز رایگان", "7 days free"),
       ctaSub: tr("حسابت را وصل کن، ژورنالت را بساز و از امروز معاملاتت را تحلیل کن.", "Connect your account, build your journal and start analyzing your trades today."),
     };
   }
@@ -384,7 +384,7 @@ export function getSectionCopy(section: SectionKey): SectionCopy {
     steps: [
       {
         title: tr("برنامه‌ات را بساز", "Build your plan"),
-        body: tr("ثبت‌نام کن و روتینت را بچین؛ یا به «نومو» بگو چه می‌خواهی. «روتین من» 14 روز رایگان است.", "Sign up and lay out your routine, or tell Nomo what you want. My Routine is free for 14 days."),
+        body: tr("ثبت‌نام کن و روتینت را بچین؛ یا به «نومو» بگو چه می‌خواهی. «روتین من» 7 روز رایگان است.", "Sign up and lay out your routine, or tell Nomo what you want. My Routine is free for 7 days."),
       },
       {
         title: tr("اجرا کن", "Do it"),
@@ -406,7 +406,7 @@ export function getSectionCopy(section: SectionKey): SectionCopy {
       title: tr("مربی روتین", "Routine mentors"),
       body: tr("از مربی برنامه بگیر و گفت‌وگو کن؛ پیشرفتت از تیک‌های روتین خودت خودکار حساب می‌شود.", "Get a plan from a mentor and chat with them; your progress is calculated automatically from your own routine ticks."),
     },
-    ctaChip: tr("14 روز رایگان", "14 days free"),
+    ctaChip: tr("7 روز رایگان", "7 days free"),
     ctaSub: tr("مسیرت را مشخص کن، برنامه‌ات را بساز و از امروز اجرا کن.", "Set your direction, build your plan and start today."),
   };
 }

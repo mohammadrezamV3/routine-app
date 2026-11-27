@@ -73,8 +73,8 @@ function content() {
     {
       q: tr("تقویم اقتصادی رایگان است؟", "Is the economic calendar free?"),
       a: tr(
-        "تقویم اقتصادی بخشی از ژورنال ترید است که جزو ماژول‌های اشتراکی محسوب می‌شود. هر حساب تازه 3 روز دسترسی به بدنسازی، کالری‌شمار و ژورنال ترید، با استفاده‌ی محدود از هوش مصنوعی می‌گیرد.",
-        "The economic calendar is part of the trading journal, which is a subscription module. Every new account gets 3 days of access to workouts, the calorie counter and the trading journal, with limited use of AI.",
+        "تقویم اقتصادی بخشی از ژورنال ترید است که جزو ماژول‌های اشتراکی محسوب می‌شود. هر حساب تازه 7 روز دسترسی به بدنسازی، کالری‌شمار و ژورنال ترید، با استفاده‌ی محدود از هوش مصنوعی می‌گیرد.",
+        "The economic calendar is part of the trading journal, which is a subscription module. Every new account gets 7 days of access to workouts, the calorie counter and the trading journal, with limited use of AI.",
       ),
     },
     {
@@ -101,8 +101,8 @@ function content() {
     {
       q: tr("تقویم اقتصادی فارکس رایگان و به وقت ایران وجود دارد؟", "Is there a free forex economic calendar in Iran time?"),
       a: tr(
-        "تقویم اقتصادی آریون زمان رویدادها را به وقت ایران و تاریخ شمسی نشان می‌دهد. دسترسی به آن جزو بخش ترید است که برای هر حساب تازه 3 روز آزمایشی دارد و بعد اشتراکی است.",
-        "Arion's economic calendar shows event times in Iran time and Jalali dates. Access is part of the trading section, which has a 3-day trial on every new account and is subscription-based after that.",
+        "تقویم اقتصادی آریون زمان رویدادها را به وقت ایران و تاریخ شمسی نشان می‌دهد. دسترسی به آن جزو بخش ترید است که برای هر حساب تازه 7 روز آزمایشی دارد و بعد اشتراکی است.",
+        "Arion's economic calendar shows event times in Iran time and Jalali dates. Access is part of the trading section, which has a 7-day trial on every new account and is subscription-based after that.",
       ),
     },
   ];
@@ -132,7 +132,7 @@ export default function EconomicCalendarPage() {
             `و چطور می‌شود از آن برای برنامه‌ریزی روز معاملاتی استفاده کرد.`,
           `${brand} shows the major forex economic events with a strip of Jalali days, filters by currency and impact, and reminders before release. This page explains what an economic calendar is and how to use it to plan your trading day.`,
         )}
-        ctaNote={tr("3 روز آزمایشی رایگان", "3 days free trial")}
+        ctaNote={tr("7 روز آزمایشی رایگان", "7 days free trial")}
         sections={[
           {
             title: tr("چرا تقویم اقتصادی برای تریدر مهم است؟", "Why does an economic calendar matter to traders?"),

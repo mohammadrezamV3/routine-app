@@ -32,7 +32,7 @@ export async function GET(req: NextRequest) {
 }
 
 // POST /api/tasks/daily  { date, tasks, wake }
-// تیک‌زدن = استفاده از «روتین من» → بعد از ۱۴ روز آزمایشی نیاز به پلن داره
+// تیک‌زدن = استفاده از «روتین من» → بعد از 7 روز آزمایشی نیاز به پلن داره
 // (سمت سرور، نه فقط ModuleGate). خوندن آزاده تا تاریخچه گروگان نمونه.
 async function handlePOST(req: NextRequest) {
   { const off = await sessionFeatureBlocked("routine"); if (off) return off; }

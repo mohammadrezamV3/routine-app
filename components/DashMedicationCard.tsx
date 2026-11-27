@@ -123,6 +123,7 @@ export function DashMedicationCard({ delay }: { delay?: number }) {
             list.map((m) => {
               const daysLeft = medicationDaysLeft(m, todayIso);
               const finished = daysLeft === 0;
+              const ongoing = daysLeft === null;
               const times = doseMinutesOfDay(m).map(minutesToDoseTime);
               const notifyOn = m.notify !== false;
               return (
@@ -153,7 +154,7 @@ export function DashMedicationCard({ delay }: { delay?: number }) {
                     <div className="mt-1 truncate text-[9.5px] text-dash-muted sm:text-[11px]">
                       <span className="mono" dir="ltr">{times.join(" · ")}</span>
                       <span className="mx-1.5">·</span>
-                      {finished ? tr("دوره تموم شده", "Course finished") : tr(`${daysLeft} روز مونده`, `${daysLeft} ${daysLeft === 1 ? "day" : "days"} left`)}
+                      {ongoing ? tr("ادامه‌دار", "Ongoing") : finished ? tr("دوره تموم شده", "Course finished") : tr(`${daysLeft} روز مونده`, `${daysLeft} ${daysLeft === 1 ? "day" : "days"} left`)}
                     </div>
                     {m.note && <div className="mt-0.5 truncate text-[9.5px] text-dash-muted sm:text-[10.5px]">{m.note}</div>}
                   </div>

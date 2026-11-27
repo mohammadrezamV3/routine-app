@@ -14,8 +14,8 @@ export type Medication = {
   firstDoseTime: string;
   /** ISO (YYYY-MM-DD) — روز شروع دوره */
   startDate: string;
-  /** طول دوره به روز */
-  durationDays: number;
+  /** طول دوره به روز؛ نبودن/null یعنی بدون دوره: ادامه‌دار تا وقتی کاربر خودش متوقف یا حذفش کنه */
+  durationDays?: number | null;
   /** false یعنی یادآوری همین دارو خاموشه (خود دارو در لیست می‌مونه) */
   notify?: boolean;
   /** یادداشت اختیاری (مثلا «بعد از غذا») */
@@ -61,15 +61,24 @@ export function doseIntervalHours(med: Medication): number {
   return 24 / times;
 }
 
-/** آخرین روز دوره (شامل خودش)، ISO */
-export function medicationEndDate(med: Medication): string {
+/** آیا برای دارو طول دوره تعیین شده؟ (بدون دوره = ادامه‌دار) */
+export function hasMedicationCourse(med: Pick<Medication, "durationDays">): boolean {
+  const d = med.durationDays;
+  return typeof d === "number" && Number.isFinite(d) && d >= 1;
+}
+
+/** آخرین روز دوره (شامل خودش)، ISO؛ برای داروی بدون دوره null */
+export function medicationEndDate(med: Medication): string | null {
+  if (!hasMedicationCourse(med)) return null;
   const [y, m, d] = med.startDate.split("-").map(Number);
   const end = new Date(y, m - 1, d);
-  end.setDate(end.getDate() + Math.max(1, Math.round(med.durationDays)) - 1);
+  end.setDate(end.getDate() + Math.max(1, Math.round(med.durationDays as number)) - 1);
   return isoLocal(end);
 }
 
-/** آیا این تاریخ داخل دوره‌ی دارو هست؟ */
+/** آیا این تاریخ داخل دوره‌ی دارو هست؟ داروی بدون دوره از روز شروع به بعد همیشه فعاله. */
 export function isMedicationActiveOn(med: Medication, iso: string): boolean {
-  return iso >= med.startDate && iso <= medicationEndDate(med);
+  if (iso < med.startDate) return false;
+  const end = medicationEndDate(med);
+  return end === null || iso <= end;
 }
