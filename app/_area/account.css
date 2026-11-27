@@ -1193,3 +1193,7 @@ body[data-theme] button.ap-pal-swatch:focus-visible{ outline:2px solid var(--acc
   background:linear-gradient(90deg, var(--lg-from), var(--lg-mid), var(--lg-to));
   -webkit-background-clip:text; background-clip:text; -webkit-text-fill-color:transparent; color:transparent;
 }
+
+/* ── خروجی گرفتن از داده‌ها (DataExportPanel) ── */
+.ap-export-field{ display:flex; flex-direction:column; gap:6px; min-width:0; }
+.ap-export-field > input{ width:100%; }

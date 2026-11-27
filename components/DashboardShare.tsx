@@ -38,8 +38,8 @@ import { D_EASE } from "./DashboardKit";
 import { tr } from "@/lib/i18n";
 
 /** پیش‌فرض عدد زیر هر حلقه — کالری عدد شخصی‌تریه و پنهان می‌مونه */
-const SHOW_VALUE: Record<HeroRing["key"], boolean> = { routine: true, exercise: true, calorie: false };
-const valueLabel = (): Record<HeroRing["key"], string> => ({ routine: tr("روتین", "Routine"), exercise: tr("تمرین", "Workout"), calorie: tr("کالری", "Calories") });
+const SHOW_VALUE: Record<HeroRing["key"], boolean> = { routine: true, sleep: true, exercise: true, calorie: false };
+const valueLabel = (): Record<HeroRing["key"], string> => ({ routine: tr("روتین", "Routine"), sleep: tr("خواب", "Sleep"), exercise: tr("تمرین", "Workout"), calorie: tr("کالری", "Calories") });
 const FOCUSABLE = 'button:not([disabled]), [href], input:not([disabled]), [tabindex]:not([tabindex="-1"])';
 
 /** رنگ حلقه‌ها توکن‌های --ring-*  داشبوردن؛ canvas مقدار واقعی‌شون رو لازم داره */

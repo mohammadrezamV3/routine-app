@@ -103,6 +103,14 @@ export const NUMBER_LIMITS = {
   goalAmount: L(0, 1e10, 2, "مقدار هدف", "Goal amount"),
   goalPercent: L(0, 10000, 2, "درصد هدف", "Goal percent"),
   leverage: L(1, 10000, 0, "اهرم", "Leverage"),
+  /** چالش پراپ: هدف سود هر فاز (درصد بالانس) */
+  propTargetPct: L(0.1, 100, 2, "هدف سود فاز", "Phase profit target"),
+  /** چالش پراپ: حد ضرر روزانه/کلی (درصد بالانس) */
+  propLossPct: L(0.1, 100, 2, "حد ضرر چالش", "Challenge loss limit"),
+  /** چالش پراپ: حداقل روز معاملاتی */
+  propMinDays: L(0, 365, 0, "حداقل روز معاملاتی", "Minimum trading days"),
+  /** چالش پراپ: مهلت فاز به روز (0 = بدون مهلت) */
+  propTimeLimitDays: L(0, 3650, 0, "مهلت فاز", "Phase time limit"),
   /** درصد ریسک در ماشین‌حساب ریسک */
   riskPercent: L(0.01, 100, 2, "درصد ریسک", "Risk percent"),
   /** تعداد پیپ/پوینت در ماشین‌حساب ریسک */

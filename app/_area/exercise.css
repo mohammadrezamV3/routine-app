@@ -898,3 +898,13 @@ html[data-admin-theme="noir"] body:not([data-theme="light"]) .toxic-name{
 
 @media (min-width:1024px) and (prefers-reduced-motion:reduce) {
   .dnav-ind.is-ready, .dnav-chev{ transition:none; } }
+
+/* حلقه‌ی بالای صفحه‌های برنامه تمرینی و کالری‌شمار (components/WorkoutRingHero.tsx) */
+.wrh{ display:flex; flex-direction:column; align-items:center; gap:10px; padding-block:6px 14px; }
+.wrh .gring{ position:relative; display:inline-block; flex-shrink:0; }
+.wrh .gring svg{ display:block; }
+.wrh .gring-center{ position:absolute; inset:0; display:flex; align-items:center; justify-content:center; }
+.wrh .gring-cap{ filter:drop-shadow(0 0 3px rgba(0,0,0,.45)); }
+body[data-theme="light"] .wrh .gring-cap{ filter:drop-shadow(0 0 2px rgba(80,50,20,.35)); }
+.wrh-val{ font-size:22px; font-weight:900; color:var(--text); font-family:var(--font-latin), var(--font-vazir); line-height:1; }
+.wrh-label{ font-size:12px; color:var(--muted); text-align:center; }

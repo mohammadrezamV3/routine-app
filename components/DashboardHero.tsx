@@ -207,7 +207,7 @@ export function DashboardHero({
   // ورود هیرو با CSS (m-rise)، نه framer: هیرو عنصر LCP داشبورده؛ با initial:{opacity:0} فریمر تا رسیدن
   // chunk انیمیشن نامرئی می‌موند و LCP عقب می‌افتاد. CSS از همون اولین پینت کار می‌کنه.
   return (
-    <section ref={heroRef as any} className={`db-hero m-rise${isTrade ? " is-noribbon" : ""}${hasKpi ? " has-kpi" : ""}`}>
+    <section ref={heroRef as any} className={`db-hero m-rise${isTrade ? " is-noribbon" : ""}${hasKpi ? " has-kpi" : ""}${section === "routine" ? " is-routine" : ""}`}>
       {/* اشتراک کارنامه‌ی ترید — خود دکمه گیت ماژول و فلگ tradeShare رو داره؛ ?share=1 پنجره رو باز می‌کنه */}
       {isTrade && <TradeShareButton deepLink className="db-hero-share" size={20} />}
       {!isTrade && onShare && (
@@ -326,7 +326,7 @@ export function DashboardHero({
   );
 }
 
-export type HeroRing = { key: "routine" | "exercise" | "calorie"; label: string; value: number; display: string; grad: [string, string]; show: boolean; href: string };
+export type HeroRing = { key: "routine" | "sleep" | "exercise" | "calorie"; label: string; value: number; display: string; grad: [string, string]; show: boolean; href: string };
 
 /**
  * سه حلقه‌ی روز (روتین/تمرین/کالری) — مشترک هیرو و کارت اشتراکی (DashboardShare).
@@ -342,10 +342,17 @@ export function heroRings(data: DashboardData | null, stats: { completed: number
   const exVal = ex?.today.isGymDay ? (ex.today.done ? 1 : ex.today.itemCount ? ex.today.doneItems / ex.today.itemCount : 0) : 1;
   const calVal = cal?.target?.kcal ? cal.today.kcal / cal.target.kcal : 0;
   const workout = section === "workout";
+  // حلقه‌ی خواب (فقط بخش روتین): خواب دیشب نسبت به هدف؛ ثبت‌نشده = حلقه‌ی خالی؛ قبل از رسیدن داده «—».
+  // اگه سرور sleep رو null داد (ماژول یا فلگ خاموش) حلقه نیست.
+  const sl = data?.sleep;
+  const slLast = sl?.lastNight;
+  const slVal = slLast && sl.goalMin > 0 ? Math.min(slLast.minutes / sl.goalMin, 1) : 0;
+  const slDisplay = !data ? "—" : slLast ? `${Math.floor(slLast.minutes / 60)}:${String(Math.round(slLast.minutes % 60)).padStart(2, "0")}` : tr("ثبت نشده", "Not logged");
   return [
     { key: "routine", label: tr("روتین", "Routine"), value: stats.total ? stats.completed / stats.total : 0, display: stats.total ? `${faNum(stats.completed)}/${faNum(stats.total)}` : "—", grad: ["var(--ring-1a)", "var(--ring-1b)"], show: !routineLocked && (!section || section === "routine"), href: "/weekly" },
-    { key: "exercise", label: tr("تمرین امروز", "Today's workout"), value: ex?.hasPlan ? exVal : 0, display: ex?.hasPlan ? (ex.today.isGymDay ? `${faNum(ex.today.doneItems)}/${faNum(ex.today.itemCount)}` : tr("استراحت", "Rest")) : "—", grad: ["var(--ring-2a)", "var(--ring-2b)"], show: workout || (!section && !!ex?.hasPlan), href: workout ? "/dashboard?tab=exercise" : "/exercise?tab=exercise" },
-    { key: "calorie", label: tr("کالری", "Calories"), value: Math.min(calVal, 1), display: cal?.target ? `${faNum(Math.round(cal.today.kcal))}` : "—", grad: calVal > 1 ? ["var(--ring-3b)", "var(--ring-over)"] : ["var(--ring-3a)", "var(--ring-3b)"], show: workout || (!section && !!cal?.target), href: workout ? "/dashboard?tab=calorie" : "/exercise?tab=calorie" },
+    { key: "sleep", label: tr("خواب", "Sleep"), value: slVal, display: slDisplay, grad: ["var(--ring-4a)", "var(--ring-4b)"], show: section === "routine" && (!data || data.sleep !== null), href: "/sleep" },
+    { key: "exercise", label: tr("تمرین امروز", "Today's workout"), value: ex?.hasPlan ? exVal : 0, display: ex?.hasPlan ? (ex.today.isGymDay ? `${faNum(ex.today.doneItems)}/${faNum(ex.today.itemCount)}` : tr("استراحت", "Rest")) : "—", grad: ["var(--ring-2a)", "var(--ring-2b)"], show: workout || (!section && !!ex?.hasPlan), href: "/exercise" },
+    { key: "calorie", label: tr("کالری", "Calories"), value: Math.min(calVal, 1), display: cal?.target ? `${faNum(Math.round(cal.today.kcal))}` : "—", grad: calVal > 1 ? ["var(--ring-3b)", "var(--ring-over)"] : ["var(--ring-3a)", "var(--ring-3b)"], show: workout || (!section && !!cal?.target), href: "/calorie" },
   ];
 }
 
@@ -400,7 +407,11 @@ function tradeCenter(t: DashboardData["trade"]) {
 // توکن‌های --ring-* در dashboard.css (دو پالت جدا برای شب و روز).
 // `center` (بخش ترید): محتوای دلخواه وسط به‌جای استریک. `unit`: برچسب زیر عدد استریک.
 function OrbitRings({ rings, ready, streak, center, unit = "days" }: { rings: { key: string; value: number; grad: [string, string] }[]; ready: boolean; streak: number | null; center?: React.ReactNode; unit?: "days" | "sessions" }) {
-  const size = 176, stroke = 13, gap = 5;
+  // ضخامت و فاصله به تعداد حلقه‌ها بستگی داره تا وسط (استریک) جا داشته باشه: 1 حلقه 16/6، 2 حلقه 14/6، 3+ حلقه 13/5
+  const size = 176;
+  const n = rings.length;
+  const stroke = n <= 1 ? 16 : n === 2 ? 14 : 13;
+  const gap = n <= 2 ? 6 : 5;
   return (
     <div className="db-orbit" style={{ width: size, height: size }}>
       <svg viewBox={`0 0 ${size} ${size}`} width={size} height={size} aria-hidden="true">
@@ -425,14 +436,14 @@ function OrbitRings({ rings, ready, streak, center, unit = "days" }: { rings: { 
           ))}
         </g>
       </svg>
-      <div className={`db-orbit-center${rings.length >= 3 ? " is-tight" : ""}`}>
+      <div className={`db-orbit-center${rings.length >= 2 ? " is-tight" : ""}`}>
         {center !== undefined ? (
           ready ? center : <Skel w={46} h={20} />
         ) : /* وسط حلقه‌ها استریک، نه درصد (درصد هر حلقه کنارش در لیجند هست) */ ready && streak !== null ? (
           <>
             <span className={`db-orbit-flame tier-${getStreakTier(streak).tier}`}><DashIcon name="flame" className="dbi-live" /></span>
             <CountUp value={streak} className="db-orbit-pct" />
-            <span className="db-orbit-cap">{unit === "sessions" ? tr("جلسه", streak === 1 ? "session" : "sessions") : rings.length >= 3 ? tr("روز", "days") : tr("روز استریک", "day streak")}</span>
+            <span className="db-orbit-cap">{unit === "sessions" ? tr("جلسه", streak === 1 ? "session" : "sessions") : rings.length >= 2 ? tr("روز", "days") : tr("روز استریک", "day streak")}</span>
           </>
         ) : (
           <Skel w={46} h={20} />

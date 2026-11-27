@@ -1,10 +1,10 @@
 "use client";
 
 import { useOnlineOnly } from "@/components/OnlineOnly";
-import { useEffect, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useState } from "react";
 import { Calendar, History } from "lucide-react";
 import { useLiveRefresh } from "@/lib/liveSync";
-import { FA_WEEKDAY, CAL_WEEK_ORDER, isoLocal } from "@/lib/jalali";
+import { FA_WEEKDAY, CAL_WEEK_ORDER, faNum, isoLocal } from "@/lib/jalali";
 import { startOfWeek } from "@/lib/schedule";
 import { ExercisePlan } from "@/lib/exerciseTypes";
 import {
@@ -31,6 +31,7 @@ import {
 } from "@/lib/exerciseProgression";
 import { tr } from "@/lib/i18n";
 import { dayNameDisplay } from "@/lib/exerciseDay";
+import { clearWorkoutRing, publishWorkoutRing } from "@/lib/workoutRing";
 
 const now = new Date();
 const todayIso = isoLocal(now);
@@ -190,6 +191,25 @@ export function ExerciseDashboard({
   }, [logs, plan.planData, missedPref.mode, progressCtx, planDays]);
   const todayPct = todayProgressPct(todayPlanForStats?.items.length ?? 0, todayLog);
 
+  // حلقه‌ی بالای صفحه (WorkoutRingHero): تیک‌های زنده‌ی امروز؛ روز استراحت = حلقه‌ی کامل
+  const [todayLive, setTodayLive] = useState<{ done: number; completed: boolean } | null>(null);
+  const onTaskProgress = useCallback((done: number, completed: boolean, iso: string) => {
+    if (iso !== todayIso) return;
+    setTodayLive((p) => (p && p.done === done && p.completed === completed ? p : { done, completed }));
+  }, []);
+  const todayTotal = todayPlanForStats?.items.length ?? 0;
+  const liveDone = todayLive ? todayLive.done : todayLog?.completed ? todayTotal : 0;
+  const liveCompleted = todayLive ? todayLive.completed : !!todayLog?.completed;
+  useEffect(() => {
+    if (todayTotal === 0) {
+      publishWorkoutRing({ kind: "exercise", value: 1, display: tr("استراحت", "Rest"), label: tr("امروز", "Today") });
+      return;
+    }
+    const done = liveCompleted ? todayTotal : Math.min(liveDone, todayTotal);
+    publishWorkoutRing({ kind: "exercise", value: done / todayTotal, display: `${faNum(done)}/${faNum(todayTotal)}`, label: tr("تمرین امروز", "Today's workout") });
+  }, [todayTotal, liveDone, liveCompleted]);
+  useEffect(() => () => clearWorkoutRing("exercise"), []);
+
   // «این تجهیزات رو ندارم» — اول سه‌تا پیشنهاد آماده می‌گیریم (بدون سویچ
   // خودکار)، بعد خود کاربر از پاپ‌آپ یکیشون رو انتخاب می‌کنه.
   async function openSubstitutePicker(day: string, item: string) {
@@ -293,6 +313,7 @@ export function ExerciseDashboard({
           onStarted={() => setRefreshKey((k) => k + 1)}
           onAddProgram={() => setAddProgramOpen(true)}
           onActiveChange={setSessionActive}
+          onProgress={onTaskProgress}
           delay={0.05}
         />
 

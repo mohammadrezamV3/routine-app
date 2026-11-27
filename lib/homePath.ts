@@ -1,6 +1,7 @@
 "use client";
 
 import { refreshFeatures } from "./useFeatures";
+import { isSectionKey, sectionHomePath, type SectionKey } from "./sections";
 
 // «صفحه‌ی اصلی» کاربر واردشده: داشبورد (درخواست صریح صاحب محصول — فلگ
 // `dashboard` پیش‌فرض برای همه روشنه). فقط وقتی ادمین فلگ رو برای این کاربر
@@ -15,10 +16,33 @@ export const FALLBACK_HOME = "/weekly";
 // داشبورد و روتین هر دو از پنل ادمین خاموش → پنل کاربری (هیچ‌وقت فلگ نداره)
 export const ACCOUNT_HOME = "/account";
 
+// بخش موثر از <html data-section> (layout سرور)؛ بیرون از مرورگر یا بدون مقدار null
+export function currentSectionFromDom(): SectionKey | null {
+  if (typeof document === "undefined") return null;
+  const v = document.documentElement.getAttribute("data-section");
+  return isSectionKey(v) ? v : null;
+}
+
+type FeatureMap = Partial<Record<string, boolean>> | null | undefined;
+
+/**
+ * مقصد بعد از ورود به‌ازای بخش و فلگ‌ها (خالص، تست‌دار). بخش ورزش داشبورد نداره:
+ * برنامه تمرینی، اگه خاموشه کالری‌شمار، و اگه هر دو خاموشن پنل کاربری.
+ */
+export function homePathFor(section: SectionKey | null, m: FeatureMap): string {
+  if (section === "workout") {
+    if (m?.exercise !== false) return "/exercise";
+    return m?.calorie !== false ? "/calorie" : ACCOUNT_HOME;
+  }
+  return m && m.dashboard === false ? (m.routine === false ? ACCOUNT_HOME : FALLBACK_HOME) : DASHBOARD_HOME;
+}
+
 export async function resolveHomePath(): Promise<string> {
-  const timeout = new Promise<string>((r) => setTimeout(() => r(DEFAULT_HOME), 1500));
+  const section = currentSectionFromDom();
+  const fallback = sectionHomePath(section);
+  const timeout = new Promise<string>((r) => setTimeout(() => r(fallback), 1500));
   const fetched = refreshFeatures()
-    .then((m) => (m && m.dashboard === false ? (m.routine === false ? ACCOUNT_HOME : FALLBACK_HOME) : DASHBOARD_HOME))
-    .catch(() => DEFAULT_HOME);
+    .then((m) => homePathFor(section, m as FeatureMap))
+    .catch(() => fallback);
   return Promise.race([fetched, timeout]);
 }

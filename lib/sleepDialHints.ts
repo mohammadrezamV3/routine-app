@@ -61,8 +61,9 @@ export function dialHint(i: HintInput): DialHint | null {
 export function dialHintText(h: DialHint): string {
   switch (h.kind) {
     case "winddown":
+      // مدت تا خواب همون شمارش وسط ساعته؛ اینجا تکرارش نمی‌کنیم
       return h.n > 0
-        ? tr(`${durationLabel(h.n)} تا وقت خواب؛ نور رو کم کن و گوشی رو کنار بذار`, `${durationLabel(h.n)} to bedtime; dim the lights and put the phone down`)
+        ? tr("نور رو کم کن و گوشی رو کنار بذار", "Dim the lights and put the phone down")
         : tr("وقت خوابه؛ وقتی دراز کشیدی دکمه‌ی پایین رو بزن", "It's bedtime; tap the button below when you lie down");
     case "pastBedtime":
       return tr(`${durationLabel(h.n)} از ساعت خوابت گذشته؛ هر چی زودتر بخوابی بهتره`, `${durationLabel(h.n)} past your bedtime; the sooner you sleep the better`);

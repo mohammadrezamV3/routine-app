@@ -79,10 +79,15 @@ export function sectionAreas(has: Set<DashArea>, section: SectionKey): { lg: str
   if (section === "routine") {
     order = ["today", "heat", "sleep", "road", "mentor", "inbox"];
     const head = has.has("today");
-    if (head) { lg.push(q(["today", "heat", "heat"])); md.push(q(["heat", "heat"]), q(["today", "today"])); }
-    const rest = pick("sleep", "road", "mentor", "inbox");
+    // خواب زیر نقشه‌ی ثبات و کنار ستون بلند «برنامه‌های امروز» تا دو طرف هم‌قد بشن (بدون نوار خالی)
+    const sleepUnderHeat = head && has.has("heat") && has.has("sleep");
+    if (head && sleepUnderHeat) lg.push(q(["today", "heat", "heat"]), q(["today", "sleep", "sleep"]));
+    else if (head) lg.push(q(["today", "heat", "heat"]));
+    if (head) md.push(q(["heat", "heat"]), q(["today", "today"]));
+    const rest = pick(...(sleepUnderHeat ? [] : ["sleep" as DashArea]), "road", "mentor", "inbox");
+    const restMd = pick("sleep", "road", "mentor", "inbox");
     lg.push(...packRows(rest, 3));
-    md.push(...packRows(rest, 2));
+    md.push(...packRows(restMd, 2));
   } else if (section === "workout") {
     // «فضای تمرین» (پنل‌های واقعی تمرین و تغذیه) جای دو کارت خلاصه‌ی ex/cal: ردیف تمام‌عرض اول
     order = ["space", "sleep"];

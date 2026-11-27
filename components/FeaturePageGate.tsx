@@ -2,7 +2,7 @@ import { SmartLink as Link } from "@/components/SmartLink";
 import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/auth";
 import type { FeatureKey } from "@/lib/featureFlags";
-import { resolveFeaturesFor } from "@/lib/featureFlagsServer";
+import { resolveFeaturesFor, serverHomePath } from "@/lib/featureFlagsServer";
 import { tr } from "@/lib/i18n";
 
 /**
@@ -28,7 +28,7 @@ export async function FeaturePageGate({ feature, children }: { feature: FeatureK
     return <>{children}</>;
   }
   if (keys.some((k) => map[k])) return <>{children}</>;
-  const home = !userId ? "/" : map.dashboard ? "/dashboard" : map.routine ? "/weekly" : "/account";
+  const home = !userId ? "/" : await serverHomePath(userId).catch(() => "/account");
   return <FeatureOffNotice home={home} />;
 }
 
