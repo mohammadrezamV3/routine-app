@@ -159,3 +159,5 @@ public/images/             # لوگو و asset های استاتیک
 
 ## ignore
 node_modules, .next, dist, build, *.log, .env, tsconfig.tsbuildinfo
+
+- **امتیاز خواب مبنای علمی داره** (`sleepScore` در `lib/sleep.ts`): مدت 35 (7 تا 9 ساعت AASM/NSF)، پیوستگی 25 (تا خواب رفتن حداکثر 30 دقیقه و حداکثر یک بیدارشدن، NSF/PSQI)، نظم ساعت خواب 20، کیفیت خودارزیابی 20 (PSQI)؛ هدف شخصی روی امتیاز اثر نداره. توضیح «چطور حساب می‌شه» از `SleepScoreInfoButton`. جزئیات کامل هر شب `SleepNightDetail` (هفت شب اخیر و آمار). فرم ثبت خواب یک صفحه‌ست: ساعت‌ها، کیفیت، بعد «جزئیات بیشتر» تاشو (تا خواب رفتن، بیدارشدن، چرت، عوامل، یادداشت). کارت خواب داشبورد با `SleepLogSheet` (next/dynamic) ثبت می‌کنه؛ کارت دارو (`DashboardMedication`، بخش روتین) نوبت‌های امروز رو با `TickButton` تیک می‌زنه (`lib/medicationDoses.ts`، کلید تنظیمات `medicationDoses`) و منطق داروها در `lib/useMedications.ts` مشترکه.

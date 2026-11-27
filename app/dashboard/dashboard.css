@@ -876,6 +876,16 @@ html[dir="ltr"] .db-cd-title, html[dir="ltr"] .db-ev-title{ text-align:left; }
 
 .db-sleep-body{ display:flex; flex-direction:column; gap:14px; }
 .db-sleep-top{ display:flex; flex-direction:column; gap:6px; }
+.db-sleep-cap{ font-size:11.5px; font-weight:700; color:var(--muted); }
+.db-sleep-times{ font-size:12.5px; font-weight:700; color:var(--muted); font-variant-numeric:tabular-nums; unicode-bidi:isolate; align-self:flex-start; }
+.db-sleep-sub{ display:flex; flex-wrap:wrap; gap:2px 10px; align-items:baseline; }
+.db-sleep-diff{ font-variant-numeric:tabular-nums; unicode-bidi:isolate; font-weight:800; }
+.db-sleep-diff.is-within{ color:var(--slp-great, #34d399); }
+.db-sleep-diff.is-under{ color:var(--slp-poor, #f87171); }
+.db-sleep-diff.is-over{ color:var(--slp-fair, #fbbf24); }
+.db-sleep-act{ display:flex; }
+.db-sleep-act .btn{ flex:1 1 auto; justify-content:center; }
+.db-sleep-empty .btn{ margin-top:2px; }
 .db-sleep-dur{ font-size:24px; font-weight:900; letter-spacing:-.02em; font-variant-numeric:tabular-nums; }
 .db-sleep-sub{ font-size:11.5px; font-weight:600; color:var(--muted); line-height:1.7; }
 .db-sleep-week{ list-style:none; display:grid; grid-template-columns:repeat(7, minmax(0,1fr)); gap:6px; }
@@ -1086,6 +1096,8 @@ html[dir="ltr"] .db-cd-title, html[dir="ltr"] .db-ev-title{ text-align:left; }
   .db-sleep .db-sleep-week{ flex:1; min-width:0; }
   .db-sleep .db-sleep-bar{ height:44px; max-width:30px; }
   .db-sleep .db-sleep-day{ gap:4px; }
+  .db-sleep .db-sleep-body{ flex-wrap:wrap; }
+  .db-sleep .db-sleep-act{ flex:1 0 100%; }
 }
 
 /* کارت خواب کنار ستون بلند «برنامه‌های امروز» به اندازه‌ی محتوا می‌مونه و کشیده
@@ -1095,3 +1107,17 @@ html[dir="ltr"] .db-cd-title, html[dir="ltr"] .db-ev-title{ text-align:left; }
   .db-page .db-sleep{ align-self:start; }
 }
 .db-heat-body .db-heat-wrap{ flex:0 0 auto; }
+
+/* دارو: نوبت‌های امروز با تیک */
+.db-med-count{ margin-inline-start:auto; font-size:12px; font-weight:800; color:var(--muted); font-variant-numeric:tabular-nums; }
+.db-med-list{ list-style:none; margin:0; padding:0; display:flex; flex-direction:column; gap:2px; max-height:300px; overflow-y:auto; scrollbar-width:none; }
+.db-med-list::-webkit-scrollbar{ display:none; }
+.db-med-row{ display:flex; align-items:center; gap:10px; padding:8px 2px; border-block-end:1px solid var(--box-line); }
+.db-med-row:last-child{ border-block-end:none; }
+.db-med-name{ flex:1; min-width:0; display:flex; flex-direction:column; font-size:13px; font-weight:700; overflow:hidden; text-overflow:ellipsis; }
+.db-med-name small{ font-size:11px; font-weight:600; color:var(--muted); }
+.db-med-time{ font-size:12px; font-weight:700; color:var(--muted); font-variant-numeric:tabular-nums; unicode-bidi:isolate; }
+.db-med-row.is-done .db-med-name{ color:var(--muted); text-decoration:line-through; text-decoration-color:color-mix(in srgb, var(--ring-1a) 60%, transparent); }
+.db-med-row.is-next .db-med-time{ color:var(--accent); }
+.db-med-foot{ display:flex; margin-top:auto; padding-top:6px; }
+.db-empty .db-med-add{ margin-top:2px; }

@@ -2,12 +2,13 @@
 
 import "./sleep-dial.css";
 import "./sleep-charts.css";
-import { useId, useMemo, useState } from "react";
-import { Pencil, Plus } from "lucide-react";
-import { weekdayName, weekdayShort, jMonthName, faNum, toJalali } from "@/lib/jalali";
+import { useMemo, useState } from "react";
+import { Plus } from "lucide-react";
+import { SleepNightDetail, longDate } from "./SleepNightDetail";
+import { weekdayShort, faNum } from "@/lib/jalali";
 import { tr } from "@/lib/i18n";
-import { clockOf, scoreBandLabel, type SleepInsights, type SleepRecord } from "@/lib/sleep";
-import { barHeight, bestNight, buildWeekNights, goalDiffKind, lastLogged, signedDuration, weekAverage } from "@/lib/sleepWeekStats";
+import { scoreBandLabel, type SleepInsights, type SleepRecord } from "@/lib/sleep";
+import { barHeight, bestNight, buildWeekNights, lastLogged, weekAverage } from "@/lib/sleepWeekStats";
 
 // هفت شب آخر به‌صورت هفت ستون ساده: ارتفاع ستون = مدت خواب (سقف 10 ساعت)،
 // رنگ = امتیاز، خط‌چین = هدف. زدن ستون یک شب ثبت‌شده، جزئیاتش رو همون‌جا
@@ -23,26 +24,19 @@ function hm(min: number): string {
   return `${h}:${String(m).padStart(2, "0")}`;
 }
 
-const BANDS = ["great", "good", "fair", "poor"] as const;
-
-function longDate(iso: string): string {
-  const [y, m, d] = iso.split("-").map(Number);
-  const [, jm, jd] = toJalali(y, m, d);
-  return `${weekdayName(new Date(y, m - 1, d).getDay())} ${faNum(jd)} ${jMonthName(jm - 1)}`;
-}
-
 export function SleepWeek({
   entries,
   insights,
   todayIso,
+  target,
   onPick,
 }: {
   entries: SleepRecord[];
   insights: SleepInsights;
   todayIso: string;
+  target?: { wake: string; sleep: string } | null;
   onPick: (dateIso: string) => void;
 }) {
-  const uid = useId().replace(/:/g, "");
   const [sel, setSel] = useState<string | null>(null);
   const nights = useMemo(() => buildWeekNights(todayIso, entries, insights.scores, insights.goalMin), [todayIso, entries, insights.scores, insights.goalMin]);
   const avg = useMemo(() => weekAverage(nights), [nights]);
@@ -61,16 +55,6 @@ export function SleepWeek({
         <h3 className="sl-card-title">{tr("هفت شب اخیر", "Last 7 nights")}</h3>
       </div>
       <div className="slw-grid">
-        <svg width="0" height="0" className="slw-defs" aria-hidden="true" focusable="false">
-          <defs>
-            {BANDS.map((b) => (
-              <linearGradient key={b} id={`slwg-${b}-${uid}`} x1="0" y1="0" x2="0" y2="1">
-                <stop offset="0%" style={{ stopColor: `var(--slp-${b})`, stopOpacity: 0.78 }} />
-                <stop offset="100%" style={{ stopColor: `var(--slp-${b})` }} />
-              </linearGradient>
-            ))}
-          </defs>
-        </svg>
         <span className="slw-goal" style={{ top: `calc(var(--slw-top) + ${goalY}px)` }} aria-hidden="true">
           <em>{tr("هدف", "Goal")} <bdi dir="ltr">{faNum(hm(insights.goalMin))}</bdi></em><i />
         </span>
@@ -101,11 +85,8 @@ export function SleepWeek({
                     height={h}
                     rx={BAR_W / 2}
                     className={`slw-fill slw-grow${n.band ? ` slp-c-${n.band}` : ""}`}
-                    style={{ fill: `url(#slwg-${n.band ?? "good"}-${uid})`, ["--d" as string]: `${i * 50}ms` } as React.CSSProperties}
+                    style={{ ["--d" as string]: `${i * 50}ms` } as React.CSSProperties}
                   />
-                )}
-                {n.rec && h > 22 && (
-                  <rect x={4} y={BAR_H - h + 5} width={3} height={Math.min(h - 18, 26)} rx={1.5} className="slw-gloss" />
                 )}
               </svg>
               <span className="slw-day">{wd}</span>
@@ -116,28 +97,14 @@ export function SleepWeek({
 
       {active && active.rec && (
         <div className="slw-detail" key={active.iso} aria-live="polite">
-          <div className="slw-d-head">
-            <div className="slw-d-title">
-              <b>{longDate(active.iso)}{active.iso === todayIso ? <em>{tr("دیشب", "Last night")}</em> : null}</b>
-              <bdi dir="ltr" className="slw-d-times">{faNum(clockOf(active.rec.sleptAt))} <span aria-hidden="true">{"→"}</span> {faNum(clockOf(active.rec.wokeAt))}</bdi>
-            </div>
-            <button type="button" className="btn btn-ghost btn-sm" onClick={() => onPick(active.iso)}>
-              <Pencil aria-hidden="true" width={15} height={15} />{tr("ویرایش", "Edit")}
-            </button>
-          </div>
-          <div className="slw-d-stats">
-            <div><span>{tr("مدت", "Duration")}</span><b className="slw-num"><bdi dir="ltr">{faNum(hm(active.min))}</bdi><small className="slw-unit">{tr("ساعت", "h")}</small></b></div>
-            <div>
-              <span>{tr("امتیاز", "Score")}</span>
-              <b className={active.band ? `slp-c-${active.band}` : undefined}>{active.score != null ? <>{faNum(active.score)}{active.band ? <small> {scoreBandLabel(active.band)}</small> : null}</> : "-"}</b>
-            </div>
-            <div>
-              <span>{tr("نسبت به هدف", "Vs goal")}</span>
-              {active.diffGoal != null ? (
-                <b dir="ltr" className={`slw-diff is-${goalDiffKind(active.diffGoal)}`}>{faNum(signedDuration(active.diffGoal))}</b>
-              ) : <b>-</b>}
-            </div>
-          </div>
+          <SleepNightDetail
+            rec={active.rec}
+            goalMin={insights.goalMin}
+            targetBed={target?.sleep ?? null}
+            title={longDate(active.iso)}
+            badge={active.iso === todayIso ? tr("دیشب", "Last night") : null}
+            onEdit={() => onPick(active.iso)}
+          />
         </div>
       )}
 

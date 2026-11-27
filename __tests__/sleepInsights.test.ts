@@ -2,6 +2,8 @@ import { describe, it, expect } from "vitest";
 import {
   goalFromTargets,
   sleepScore,
+  durationScore,
+  continuityScore,
   scoreBand,
   sleepInsights,
   wakeTimesFor,
@@ -113,6 +115,21 @@ describe("sleep pure functions", () => {
       const s = sleepScore(rec, ctx);
       expect(s.parts.continuity).toBeLessThan(100);
       expect(s.score).toBeLessThan(100);
+    });
+  });
+
+  describe("evidence-based parts", () => {
+    it("duration is full inside 7-9h and falls outside", () => {
+      expect(durationScore(420)).toBe(100);
+      expect(durationScore(540)).toBe(100);
+      expect(durationScore(390)).toBeLessThan(100);
+      expect(durationScore(300)).toBeLessThan(durationScore(390));
+      expect(durationScore(660)).toBeLessThan(durationScore(570));
+    });
+    it("continuity follows NSF thresholds", () => {
+      expect(continuityScore(null, null)).toBeNull();
+      expect(continuityScore(30, 1)).toBeGreaterThanOrEqual(90);
+      expect(continuityScore(60, 3)).toBeLessThan(continuityScore(30, 1)!);
     });
   });
 

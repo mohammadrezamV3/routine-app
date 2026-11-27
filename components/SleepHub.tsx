@@ -181,7 +181,7 @@ export function SleepHub() {
           showStats={statsOn}
         />
         <div className="slp-side">
-          {todayIso && <SleepWeek entries={entries} insights={insights} todayIso={todayIso} onPick={openDate} />}
+          {todayIso && <SleepWeek entries={entries} insights={insights} todayIso={todayIso} target={target} onPick={openDate} />}
           {todayIso && loaded && (
             <SleepToolsPanels entries={entries} insights={insights} target={target} todayIso={todayIso} latency={latency} onPick={openDate} />
           )}

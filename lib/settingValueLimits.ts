@@ -62,6 +62,16 @@ export function validateSettingNumbers(key: string, value: unknown): SettingChec
       }
       return { ok: true, value };
     }
+    case "medicationDoses": {
+      // { "YYYY-MM-DD": ["medId@HH:MM", ...] } — فقط روزهای اخیر، رشته‌های کوتاه
+      if (value === null || value === undefined) return { ok: true, value: {} };
+      if (!isPlainObject(value) || Object.keys(value).length > 60) return BAD();
+      for (const [d, list] of Object.entries(value)) {
+        if (!/^\d{4}-\d{2}-\d{2}$/.test(d) || !Array.isArray(list) || list.length > 400) return BAD();
+        if (list.some((k) => typeof k !== "string" || k.length > 60)) return BAD();
+      }
+      return { ok: true, value };
+    }
     case "customOccurrences": {
       if (value === null || value === undefined) return { ok: true, value: [] };
       if (!Array.isArray(value)) return BAD();
