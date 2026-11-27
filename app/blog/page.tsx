@@ -18,9 +18,32 @@ function titles(section: ReturnType<typeof getSection>) {
     };
   }
   return {
-    meta: tr(`مقاله‌های ${BRAND_FA} درباره روتین، سلامت و ترید`, `${brand} articles on routines, health and trading`),
+    meta: tr(`مقاله‌های برنامه ریزی روزانه، بدنسازی و فارکس | ${BRAND_FA}`, `${brand} articles on daily planning, workouts and forex`),
     heading: tr("مقاله‌های آریون درباره نظم، روتین، سلامت و ترید", `${brand} articles on discipline, routines, health and trading`),
   };
+}
+
+const BLOG_KW = {
+  routine: () => tr(
+    "مقاله روتین روزانه|روتین روزانه|برنامه ریزی روزانه|ساخت عادت|ترک عادت بد|روتین صبحگاهی|روتین شبانه|مدیریت زمان|تکنیک پومودورو|برنامه درسی روزانه|چرخه خواب|ساعت خواب مناسب|زود بیدار شدن|اهمال کاری|ماتریس آیزنهاور|برنامه هفتگی",
+    "daily routine articles|daily planning|build a habit|break a bad habit|morning routine|time management|pomodoro technique|study schedule|sleep cycles|wake up early|procrastination|weekly planning",
+  ),
+  workout: () => tr(
+    "مقاله بدنسازی|برنامه بدنسازی|برنامه بدنسازی مبتدی|برنامه بدنسازی 3 روزه|برنامه بدنسازی 4 روزه|برنامه بدنسازی 5 روزه|برنامه بدنسازی بانوان|برنامه تمرینی در خانه|محاسبه کالری روزانه|کسری کالری|چقدر پروتئین بخورم|رژیم لاغری|رژیم حجم|کاردیو برای چربی سوزی|شاخص توده بدنی|حرکات سینه",
+    "bodybuilding articles|bodybuilding program|beginner gym program|home workout|calorie calculation|calorie deficit|how much protein|weight loss plan|bulking diet|cardio for fat loss|BMI|chest exercises",
+  ),
+  trade: () => tr(
+    "مقاله فارکس|آموزش فارکس|فارکس برای مبتدیان|ژورنال ترید|ژورنال معاملاتی|مدیریت سرمایه در فارکس|حجم لات|پیپ چیست|حد ضرر و حد سود|ریسک به ریوارد|ساعت بازار فارکس به وقت ایران|تقویم اقتصادی فارکس|روانشناسی ترید|معامله طلا|اسپرد چیست|لوریج و مارجین|نون فارم",
+    "forex articles|learn forex|forex for beginners|trading journal|money management forex|lot size|what is a pip|stop loss take profit|risk reward ratio|forex market hours|economic calendar|trading psychology|gold trading",
+  ),
+  all: () => tr(
+    "مقاله روتین روزانه|برنامه ریزی روزانه|ساخت عادت|برنامه بدنسازی|محاسبه کالری|آموزش فارکس|ژورنال ترید|ساعت بازار فارکس|مدیریت زمان|چرخه خواب|رژیم لاغری|مدیریت سرمایه در فارکس|مقاله های آریون|روتین صبحگاهی|حجم لات|برنامه بدنسازی مبتدی",
+    "routine articles|daily planning|habit building|bodybuilding program|calorie calculation|learn forex|trading journal|forex market hours|time management|sleep cycles|weight loss plan|money management forex",
+  ),
+};
+
+function blogKeywords(section: ReturnType<typeof getSection>): string[] {
+  return BLOG_KW[section ?? "all"]().split("|");
 }
 
 export function generateMetadata(): Metadata {
@@ -32,6 +55,7 @@ export function generateMetadata(): Metadata {
     description: blogIntro(section),
     canonical: blogIndexCanonical(host),
     section: host,
+    keywords: blogKeywords(section),
   });
 }
 

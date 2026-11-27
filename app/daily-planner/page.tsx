@@ -8,15 +8,18 @@ export function generateMetadata(): Metadata {
   const brand = brandName();
   return pageMetadata({
     title: tr(
-      `برنامه‌ریزی روزانه و مدیریت کارها با تقویم شمسی | ${BRAND_FA}`,
-      `Daily planner and task management with a Jalali calendar | ${brand}`,
+      `برنامه ریزی روزانه آنلاین با تقویم شمسی | اپ برنامه ریز | ${BRAND_FA}`,
+      `Online daily planner with a Jalali calendar | Planning app | ${brand}`,
     ),
     description: tr(
-      `برنامه‌ی روزانه‌ات را در ${BRAND_FA} بچین: کارهای امروز، کارهای بدون ساعت، ` +
-        `یادآوری و تقویم شمسی — بدون شلوغی و در یک صفحه.`,
-      `Plan your day in ${brand}: today's tasks, tasks without a time, reminders and a Jalali calendar, uncluttered and on one page.`,
+      `اپ برنامه ریزی روزانه فارسی: کارهای امروز، کارهای بدون ساعت و یادآوری را در یک صفحه و با تقویم شمسی بچین؛ برنامه هفتگی هم همان‌جاست. 14 روز رایگان.`,
+      `A Persian daily planning app: arrange today's tasks, tasks without a time and reminders on one page with a Jalali calendar. Your weekly plan lives there too.`,
     ),
     path: "/daily-planner",
+    keywords: tr(
+      "برنامه ریزی روزانه|برنامه‌ریزی روزانه|اپلیکیشن برنامه ریزی روزانه|اپ برنامه ریزی روزانه|برنامه ریز روزانه|برنامه روزانه|برنامه روزانه فارسی|جدول برنامه ریزی روزانه|چطور برنامه ریزی روزانه کنیم|دیلی پلنر|برنامه ریزی روزانه آنلاین|برنامه ریزی روزانه رایگان|اپ برنامه ریزی با تقویم شمسی|برنامه هفتگی|برنامه ریزی هفتگی|جدول برنامه هفتگی|پلنر هفتگی|یادآوری کارها|اپ یادآور|مدیریت کارها|برنامه ریز آنلاین|تقویم شمسی",
+      "daily planner|daily planner app|online daily planner|daily planning app|weekly planner|Persian daily planner|Jalali calendar planner|task planner|plan my day|reminder app|schedule planner",
+    ).split("|"),
     ownOgImage: true,
     ogTitle: tr(`برنامه‌ریزی روزانه با ${BRAND_FA}`, `Daily planning with ${brand}`),
   });
@@ -49,6 +52,34 @@ function content() {
     {
       q: tr("برنامه‌ی روزانه با تقویم شمسی کار می‌کند؟", "Does the daily plan work with the Jalali calendar?"),
       a: tr("بله. تاریخ‌ها جلالی‌اند و هفته از شنبه شروع می‌شود.", "Yes. Dates are Jalali and the week starts on Saturday."),
+    },
+    {
+      q: tr("بهترین اپ برنامه ریزی روزانه کدام است؟", "Which is the best daily planner app?"),
+      a: tr(
+        "اپ مناسب به نیاز تو بستگی دارد. اگر کارهایی داری که هر هفته تکرار می‌شوند، اپی بهتر است که تکرار را خودش مدیریت کند. اگر برنامه‌ات بیشتر کارهای یک‌باره است، یک لیست ساده کافی است. آریون برای کسی ساخته شده که روتین تکرارشونده و کارهای همان روز را می‌خواهد کنار هم و با تقویم شمسی ببیند.",
+        "The right app depends on your needs. If you have tasks that repeat every week, an app that manages repetition itself is better. If your plan is mostly one-off tasks, a simple list is enough. Arion is built for someone who wants a recurring routine and that day's tasks side by side with a Jalali calendar.",
+      ),
+    },
+    {
+      q: tr("چطور برنامه ریزی روزانه کنیم؟", "How do I plan my day?"),
+      a: tr(
+        "شب قبل یا صبح زود سه چیز را مشخص کن: کارهای ثابت روز، یک تا سه کار مهم و زمان‌هایی که خالی می‌گذاری. فهرست را کوتاه نگه دار و کارهایی را که ساعت مشخص ندارند بدون ساعت ثبت کن. آخر روز نگاه کن چه چیزی انجام نشد و آن را به روز دیگری ببر.",
+        "The night before or early in the morning, settle three things: the fixed tasks of the day, one to three important tasks and the gaps you leave free. Keep the list short and record tasks without a set time as time-free. At the end of the day, see what did not get done and move it to another day.",
+      ),
+    },
+    {
+      q: tr("برنامه ریزی روزانه را شب قبل انجام بدهم یا صبح؟", "Should I plan my day the night before or in the morning?"),
+      a: tr(
+        "هر دو جواب می‌دهد و مهم این است که یک زمان ثابت داشته باشی. برنامه‌ریزی شب قبل صبح را از تصمیم‌گیری آزاد می‌کند، در حالی که برنامه‌ریزی صبح اطلاعات تازه‌تری از وضعیت همان روز دارد. اگر مطمئن نیستی، یک هفته هر دو را امتحان کن.",
+        "Both work, and what matters is a fixed time. Planning the night before frees your morning from decisions, while morning planning has fresher information about that day. If you are unsure, try each for a week.",
+      ),
+    },
+    {
+      q: tr("برنامه ریزی روزانه رایگان در اپ ممکن است؟", "Can I plan my day for free in the app?"),
+      a: tr(
+        "هر حساب تازه 14 روز دوره‌ی آزمایشی رایگان «روتین من» دارد که برنامه‌ی روزانه و هفتگی را هم شامل می‌شود. بعد از آن برای ادامه یک پلن پولی لازم است؛ خواندن تاریخچه‌ی قبلی رایگان می‌ماند.",
+        "Every new account gets a free 14-day trial of “My Routine”, which includes the daily and weekly plan. After that a paid plan is needed to continue; reading your earlier history stays free.",
+      ),
     },
   ];
   const breadcrumb = [

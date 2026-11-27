@@ -30,6 +30,10 @@ export function generateMetadata(): Metadata {
         `workout plan, calorie counting and a trading journal, all in one account.`,
     ),
     path: "/about",
+    keywords: tr(
+      "درباره آریون|آریون چیست|اپ روتین|اپ روتین فارسی|اپ برنامه ریزی روزانه|ژورنال ترید|برنامه بدنسازی|کالری شمار|برنامه روزانه|عادت ساز|پیگیری عادت|ردیابی خواب|تقویم شمسی|ژورنال معاملاتی|تقویم اقتصادی فارکس|اتصال متاتریدر|اپلیکیشن روتین|برنامه ریزی با هوش مصنوعی|آریون روتین ترید ورزش",
+      "about Arion|what is Arion|routine app|daily planner|habit tracker|trading journal|workout plan|calorie counter|sleep tracker|Jalali calendar|MetaTrader sync|Persian productivity app",
+    ).split("|"),
     ogTitle: tr(`درباره ${brand}`, `About ${brand}`),
     ownOgImage: true,
   });

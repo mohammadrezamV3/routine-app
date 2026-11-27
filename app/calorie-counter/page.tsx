@@ -10,16 +10,18 @@ export function generateMetadata(): Metadata {
   const brand = brandName();
   return pageMetadata({
     title: tr(
-      `کالری شمار فارسی | محاسبه کالری روزانه و ثبت غذا | ${BRAND_FA}`,
-      `Calorie counter | Daily calorie calculator and food log | ${brand}`,
+      `کالری شمار فارسی با غذاهای ایرانی | محاسبه کالری روزانه | ${BRAND_FA}`,
+      `Persian calorie counter with Iranian foods | Daily calorie calculator | ${brand}`,
     ),
     description: tr(
-      `کالری شمار فارسی ${BRAND_FA}: کالری روزانه‌ات را با فرمول علمی محاسبه کن، بین وعده‌ها تقسیم کن ` +
-        `و غذاها را از فهرست غذاهای ایرانی یا به‌صورت دستی با پروتئین، کربوهیدرات و چربی ثبت کن.`,
-      `Calorie counter in ${brand}: calculate your daily calories with a scientific formula, split them across meals, ` +
-        `and log foods from the Iranian food list or by hand with protein, carbs and fat.`,
+      `کالری شمار فارسی با غذاهای ایرانی: کالری روزانه‌ات را با فرمول علمی حساب کن و غذاها را با پروتئین، کربوهیدرات و چربی در وعده‌ها ثبت کن.`,
+      `A Persian calorie counter with Iranian foods: calculate your daily calories with a scientific formula and log foods with protein, carbs and fat across meals in ${brand}.`,
     ),
     path: "/calorie-counter",
+    keywords: tr(
+      "کالری شمار|کالری شمار فارسی|کالری‌شمار|اپ کالری شمار|اپلیکیشن کالری شمار|کالری شمار غذاهای ایرانی|کالری غذاهای ایرانی|جدول کالری غذاها|ثبت غذا|چطور کالری بشماریم|شمارش کالری|کالری شمار رایگان|کالری شمار آنلاین|محاسبه کالری|محاسبه کالری روزانه|ماکرو چیست|محاسبه ماکروها|کسری کالری|رژیم کالری|کالری غذا",
+      "calorie counter|Persian calorie counter|Iranian food calories|calorie tracker app|daily calorie calculator|macro tracker|food log|calorie deficit|count calories|calories in Iranian food",
+    ).split("|"),
     ownOgImage: true,
     ogTitle: tr(`کالری‌شمار ${BRAND_FA}`, `${brand} calorie counter`),
   });
@@ -68,6 +70,34 @@ function content() {
       a: tr(
         "بخش تغذیه/کالری جزو ماژول‌های اشتراکی است. هر حساب تازه 3 روز دسترسی به بدنسازی، کالری‌شمار و ژورنال ترید، با استفاده‌ی محدود از هوش مصنوعی می‌گیرد. «روتین من» (روتین و کارهای روزانه) 14 روز رایگان است و بعد با پلن «روتین من» ({{routine_monthly}}) ادامه پیدا می‌کند.",
         "The nutrition/calorie section is a subscription module. Every new account gets 3 days of access to workouts, the calorie counter and the trading journal, with limited use of AI. “My Routine” (routine and daily tasks) is free for 14 days and then continues with the “My Routine” plan ({{routine_monthly}}).",
+      ),
+    },
+    {
+      q: tr("کالری غذاهای ایرانی را از کجا پیدا کنم؟", "Where can I find the calories of Iranian foods?"),
+      a: tr(
+        "جدول‌های کالری عمومی بیشتر غذاهای خارجی را دارند. کالری‌شمار آریون یک فهرست از خوراکی‌های ایرانی و جهانی دارد که می‌توانی از آن غذا را انتخاب کنی و مقدارش را وارد کنی. اگر غذایی در فهرست نبود، می‌توانی آن را با کالری، پروتئین، کربوهیدرات و چربی دستی ثبت کنی.",
+        "General calorie tables mostly cover foreign foods. Arion's calorie counter has a list of Iranian and international foods you can pick from and enter an amount. If a food is not on the list, you can log it by hand with calories, protein, carbs and fat.",
+      ),
+    },
+    {
+      q: tr("چطور کالری روزانه‌ام را بشمارم؟", "How do I count my daily calories?"),
+      a: tr(
+        "اول کالری نگهداری‌ات را از روی جنسیت، قد، وزن، سن و فعالیت حساب کن، بعد بر اساس هدف (کاهش، حفظ یا افزایش وزن) کمی از آن کم یا زیاد کن. بعد هر چیزی که می‌خوری را در وعده‌ها ثبت کن تا مجموع روز دیده شود. دقت کامل لازم نیست؛ ثبت منظم مهم‌تر از اعشار است.",
+        "First work out your maintenance calories from sex, height, weight, age and activity, then adjust a little down or up for your goal (losing, maintaining or gaining weight). Then log everything you eat in meals so the daily total is visible. Perfect accuracy is not needed; regular logging matters more than decimals.",
+      ),
+    },
+    {
+      q: tr("چقدر کالری باید بخورم تا وزن کم کنم؟", "How many calories should I eat to lose weight?"),
+      a: tr(
+        "معمولا مقدار متوسطی کمتر از کالری نگهداری توصیه می‌شود، نه گرسنگی شدید. عدد دقیق به وزن، فعالیت و شرایط سلامتی بستگی دارد؛ برای شرایط خاص پزشکی با پزشک یا متخصص تغذیه مشورت کن. کالری‌شمار آریون یک تخمین علمی می‌دهد و جایگزین مشاوره‌ی پزشکی نیست.",
+        "A moderate amount below maintenance is usually advised, not severe hunger. The exact number depends on weight, activity and health; for medical conditions consult a doctor or dietitian. Arion's calorie counter gives a scientific estimate and is not a substitute for medical advice.",
+      ),
+    },
+    {
+      q: tr("کالری شمار فارسی روی گوشی هم کار می‌کند؟", "Does the Persian calorie counter work on a phone?"),
+      a: tr(
+        "بله. آریون یک وب‌اپ است و روی مرورگر گوشی کار می‌کند و می‌شود آن را به صفحه‌ی اصلی گوشی هم اضافه کرد.",
+        "Yes. Arion is a web app that works in your phone browser and can also be added to your home screen.",
       ),
     },
   ];

@@ -21,6 +21,10 @@ export function generateMetadata(): Metadata {
       "Free BMI calculator: enter height and weight to see your body mass index, the WHO category and the healthy weight range for your height. No sign-up.",
     ),
     path: PATH,
+    keywords: tr(
+      "محاسبه BMI|ماشین حساب BMI|شاخص توده بدنی|محاسبه شاخص توده بدنی|BMI چیست|BMI نرمال چقدر است|وزن ایده آل|محاسبه وزن ایده آل|جدول BMI|BMI برای زنان|قد و وزن مناسب|محاسبه چاقی|اضافه وزن|محاسبه وزن مناسب با قد|فرمول BMI|محاسبه بی ام آی|بی ام آی چیست|bmi calculator",
+      "BMI calculator|body mass index calculator|BMI chart|normal BMI|ideal weight calculator|healthy weight for height|BMI formula|free BMI calculator",
+    ).split("|"),
     ownOgImage: true,
     ogTitle: tr("محاسبه BMI (شاخص توده بدنی)", "BMI calculator (body mass index)"),
   });
@@ -62,6 +66,20 @@ function content() {
       a: tr(
         "هدف را کوچک و واقع‌بینانه بگذار؛ کاهش یا افزایش نیم تا یک کیلوگرم در هفته پایدارتر است. اول کالری روزانه‌ات را با ماشین حساب کالری حساب کن، بعد تغذیه و تمرین را مرحله‌ای تنظیم کن. برای بیماری‌ها یا تغییرات شدید حتما با پزشک مشورت کن.",
         "Set a small, realistic goal; losing or gaining half to one kilogram a week is more sustainable. First work out your daily calories with the calorie calculator, then adjust nutrition and training step by step. See a doctor for medical conditions or large changes.",
+      ),
+    },
+    {
+      q: tr("وزن ایده آل با قد 170 چقدر است؟", "What is the ideal weight for a height of 170 cm?"),
+      a: tr(
+        "برای قد 170 سانتی‌متر، محدوده‌ی BMI سالم (18.5 تا 24.9) تقریبا معادل 53.5 تا 72 کیلوگرم است. این فقط یک محدوده‌ی عمومی است و ترکیب بدن، سن و سلامتی را در نظر نمی‌گیرد؛ ماشین حساب همین صفحه محدوده‌ی دقیق قد تو را نشان می‌دهد.",
+        "For a height of 170 cm, the healthy BMI range (18.5 to 24.9) is roughly 53.5 to 72 kg. This is only a general range and ignores body composition, age and health; the calculator on this page shows the exact range for your height.",
+      ),
+    },
+    {
+      q: tr("BMI برای زنان با مردان فرق دارد؟", "Is BMI different for women and men?"),
+      a: tr(
+        "فرمول و دسته‌بندی‌های سازمان جهانی بهداشت برای بزرگسالان زن و مرد یکسان است، ولی درصد چربی بدن در زنان معمولا بیشتر است، پس همان BMI ممکن است ترکیب بدنی متفاوتی را نشان دهد. BMI یک شاخص غربالگری است نه تشخیص پزشکی.",
+        "The formula and WHO categories are the same for adult women and men, but body fat percentage is usually higher in women, so the same BMI may reflect a different body composition. BMI is a screening measure, not a medical diagnosis.",
       ),
     },
   ];

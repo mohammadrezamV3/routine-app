@@ -37,8 +37,8 @@ export function getSectionSeo(section: SectionKey): SectionSeo {
         `Build an AI workout plan and bodybuilding program for the gym or home, log training set by set with 149 exercises and tutorials, count calories with 264 Iranian and international foods and track your sleep. Start free.`,
       ),
       keywords: tr(
-        "برنامه ورزشی|برنامه بدنسازی|برنامه تمرینی با هوش مصنوعی|برنامه ورزشی در خانه|برنامه بدنسازی رایگان|برنامه تمرینی باشگاه|کالری شمار|کالری شمار فارسی|رژیم و کالری|محاسبه کالری غذا|ثبت تمرین|ردیابی خواب|آریون ورزش",
-        "workout plan|bodybuilding program|AI workout plan|home workout plan|gym training program|calorie tracker|calorie counter|diet and calories|workout log|sleep tracker|Arion Workout",
+        "برنامه ورزشی|برنامه بدنسازی|برنامه بدنسازی رایگان|برنامه بدنسازی مبتدی|برنامه بدنسازی با هوش مصنوعی|ساخت برنامه بدنسازی|برنامه ساز بدنسازی|اپ برنامه بدنسازی|اپلیکیشن بدنسازی|برنامه تمرینی|برنامه تمرینی هفتگی|برنامه تمرینی باشگاه|برنامه بدنسازی 3 روزه|برنامه بدنسازی 4 روزه|برنامه بدنسازی 5 روزه|برنامه بدنسازی برای حجم|برنامه بدنسازی برای کات|برنامه بدنسازی بانوان|برنامه ورزشی در خانه|برنامه تمرینی در خانه|ثبت تمرین|ردیاب تمرین|اپ ثبت تمرین|حرکات بدنسازی|کالری شمار|کالری شمار فارسی|اپ کالری شمار|کالری غذاهای ایرانی|محاسبه کالری روزانه|محاسبه کالری|ماشین حساب کالری|کسری کالری|محاسبه BMR|محاسبه TDEE|محاسبه ماکروها|محاسبه BMI|شاخص توده بدنی|وزن ایده آل|چقدر پروتئین بخورم|رژیم لاغری|رژیم حجم|چربی سوزی|ردیابی خواب|آریون ورزش",
+        "workout plan|bodybuilding program|AI workout plan|home workout plan|gym training program|beginner gym program|workout tracker|workout log|calorie counter|Persian calorie counter|Iranian food calories|daily calorie calculator|TDEE calculator|BMI calculator|calorie deficit|protein intake|sleep tracker|Arion Workout",
       ).split("|"),
       category: "HealthApplication",
       appName,
@@ -68,8 +68,8 @@ export function getSectionSeo(section: SectionKey): SectionSeo {
         `A trading journal with multiple accounts, full statistics and an entry checklist, automatic MT4 and MT5 sync without your account password, a forex economic calendar with Actual and Forecast, forex market hours and a risk management calculator.`,
       ),
       keywords: tr(
-        "ژورنال ترید|ژورنال معاملاتی|ژورنال فارکس|اتصال متاتریدر|ژورنال ترید متاتریدر|تقویم اقتصادی فارکس|ساعت بازار فارکس|سشن های فارکس|مدیریت ریسک|ماشین حساب ریسک|چک لیست ترید|آمار معاملات|آریون ترید",
-        "trading journal|forex journal|MetaTrader journal|MT4 MT5 sync|forex economic calendar|forex market hours|forex sessions|risk management|risk calculator|trading checklist|trade statistics|Arion Trade",
+        "ژورنال ترید|ژورنال معاملاتی|ژورنال معاملاتی فارسی|ژورنال فارکس|ژورنال نویسی فارکس|ژورنال ترید چیست|دفترچه معاملات|ژورنال ترید رایگان|اپ ژورنال ترید|ثبت معاملات فارکس|تحلیل عملکرد تریدر|آمار معاملات|نرخ برد معاملات|اتصال متاتریدر|اتصال MT4|اتصال MT5|ژورنال ترید متاتریدر|اکسپرت ثبت معاملات|تقویم اقتصادی|تقویم اقتصادی فارکس|تقویم اقتصادی به وقت ایران|اخبار فارکس|اخبار فارکس امروز|نون فارم|ساعت بازار فارکس|ساعت بازار فارکس به وقت ایران|سشن های فارکس|سشن لندن|سشن نیویورک|بهترین ساعت معامله فارکس|محاسبه حجم لات|ماشین حساب لات|محاسبه پیپ|مدیریت سرمایه در فارکس|مدیریت ریسک|ماشین حساب ریسک|ریسک به ریوارد|حد ضرر|چک لیست ترید|چک لیست ورود به معامله|روانشناسی ترید|آموزش فارکس|معامله طلا|آریون ترید",
+        "trading journal|forex trading journal|forex journal|MetaTrader journal|MT4 MT5 trade sync|trade tracker|forex economic calendar|economic calendar Iran time|forex market hours|forex sessions|lot size calculator|pip value calculator|risk management forex|risk reward ratio|trading checklist|trading psychology|learn forex|Arion Trade",
       ).split("|"),
       category: "FinanceApplication",
       appName,
@@ -98,8 +98,8 @@ export function getSectionSeo(section: SectionKey): SectionSeo {
       `Daily and weekly planning with the Jalali calendar, habit and streak tracking, plan and medication reminders, sleep tracking and AI learning roadmaps. A routine app built for Persian speakers; free for 14 days.`,
     ),
     keywords: tr(
-      "روتین روزانه|روتین اپ|برنامه ریزی روزانه|اپ برنامه ریزی روزانه|برنامه هفتگی|عادت ساز|پیگیری عادت|استریک|ردیابی خواب|رودمپ یادگیری|یادآوری دارو|آریون روتین",
-      "daily routine|routine app|daily planner|weekly planner|habit tracker|streak tracker|sleep tracker|learning roadmap|medication reminder|Arion Routine",
+      "روتین روزانه|روتین اپ|اپ روتین|اپلیکیشن روتین|اپ روتین فارسی|برنامه روتین روزانه|روتین ساز|برنامه ریزی روزانه|برنامه‌ریزی روزانه|اپ برنامه ریزی روزانه|اپلیکیشن برنامه ریزی روزانه|برنامه ریز روزانه|برنامه روزانه|برنامه هفتگی|برنامه ریزی هفتگی|جدول برنامه ریزی روزانه|برنامه ریزی با تقویم شمسی|تقویم شمسی|عادت ساز|اپ عادت ساز|هبیت ترکر|پیگیری عادت|ردیاب عادت|چطور عادت بسازیم|ترک عادت بد|استریک|ردیابی خواب|اپ ردیابی خواب|محاسبه چرخه خواب|ساعت خواب مناسب|چرخه های خواب|روتین صبحگاهی|روتین شبانه|زود بیدار شدن|مدیریت زمان|تکنیک پومودورو|اهمال کاری|برنامه ریزی درسی|برنامه مطالعه|لیست کارها|اپ مدیریت کارها|رودمپ یادگیری|نقشه راه یادگیری|برنامه ریزی با هوش مصنوعی|یادآوری دارو|اپ یادآور|آریون روتین",
+      "daily routine|routine app|daily routine planner|daily planner|weekly planner|habit tracker|habit tracker app|streak tracker|sleep tracker|sleep cycle calculator|learning roadmap|AI planning assistant|medication reminder|Jalali calendar planner|morning routine|to-do list app|study planner|time management app|Arion Routine",
     ).split("|"),
     category: "ProductivityApplication",
     appName,

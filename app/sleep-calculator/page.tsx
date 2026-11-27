@@ -21,6 +21,10 @@ export function generateMetadata(): Metadata {
       "Free sleep calculator: using 90-minute cycles, see when to go to bed to wake at a chosen time, or when to wake if you sleep now or at a set time.",
     ),
     path: PATH,
+    keywords: tr(
+      "محاسبه خواب|محاسبه چرخه خواب|ماشین حساب خواب|ماشین حساب چرخه خواب|ساعت خواب مناسب|چند ساعت خواب لازم است|چرخه های خواب|چرخه خواب چند دقیقه است|بهترین ساعت بیدار شدن|چطور زود بخوابیم|محاسبه ساعت بیدار شدن|sleep calculator|بدهی خواب|خواب عمیق و رم|کم خوابی|ساعت خواب بزرگسال|خواب کافی|محاسبه زمان خواب",
+      "sleep calculator|sleep cycle calculator|best time to wake up|what time should I sleep|90 minute sleep cycles|bedtime calculator|wake up time calculator|how many hours of sleep|REM and deep sleep",
+    ).split("|"),
     ownOgImage: true,
     ogTitle: tr("محاسبه زمان خواب و بیداری (چرخه خواب)", "Sleep calculator (sleep cycles)"),
   });
@@ -62,6 +66,20 @@ function content() {
       a: tr(
         "نه. ساعت‌های پیشنهادی راهنمای خوبی هستند، نه قانون دقیق. اگر خودت را با یک ساعت پیشنهادی بعد از چند روز خسته‌تر یافتی، چند دقیقه جلو یا عقب ببر و بهترین ساعت خودت را پیدا کن.",
         "No. The suggested times are a good guide, not an exact rule. If you feel more tired after a few days on a suggested time, shift it by a few minutes either way and find your own best time.",
+      ),
+    },
+    {
+      q: tr("اگر ساعت 6 صبح بیدار شوم چه ساعتی بخوابم؟", "If I wake up at 6 am, when should I go to sleep?"),
+      a: tr(
+        "با چرخه‌های حدود 90 دقیقه‌ای، برای 5 یا 6 چرخه کامل باید حدود 7.5 یا 9 ساعت قبل از بیداری در رختخواب باشی، به‌علاوه‌ی زمانی که طول می‌کشد بخوابی. عدد دقیق را با وارد کردن ساعت بیداری در ماشین حساب همین صفحه ببین.",
+        "With cycles of about 90 minutes, for 5 or 6 full cycles you should be in bed about 7.5 or 9 hours before waking, plus the time it takes you to fall asleep. Enter your wake-up time in this page's calculator to see the exact figure.",
+      ),
+    },
+    {
+      q: tr("بهترین ساعت برای بیدار شدن چه زمانی است؟", "What is the best time to wake up?"),
+      a: tr(
+        "بهتر است نزدیک پایان یک چرخه‌ی خواب بیدار شوی، چون بیدارشدن وسط خواب عمیق معمولا سنگینی و گیجی بیشتری دارد. زمان‌های پیشنهادی بیداری بر اساس ساعت خوابیدنت را در ماشین حساب همین صفحه می‌بینی.",
+        "It is better to wake near the end of a sleep cycle, since waking from deep sleep usually brings more grogginess. The suggested wake times based on your bedtime are shown in this page's calculator.",
       ),
     },
   ];

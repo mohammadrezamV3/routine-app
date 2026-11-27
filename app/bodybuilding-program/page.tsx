@@ -10,15 +10,18 @@ export function generateMetadata(): Metadata {
   const brand = brandName();
   return pageMetadata({
     title: tr(
-      `ساخت برنامه بدنسازی با هوش مصنوعی | برنامه تمرینی شخصی‌سازی‌شده | ${BRAND_FA}`,
-      `Build a workout plan with AI | Personalised training program | ${brand}`,
+      `برنامه بدنسازی با هوش مصنوعی | ساخت برنامه تمرینی شخصی | ${BRAND_FA}`,
+      `AI workout plan | Build a personalised training program | ${brand}`,
     ),
     description: tr(
-      `برنامه بدنسازی متناسب با هدف، سطح و روزهای باشگاهت را در ${BRAND_FA} با هوش ` +
-        `مصنوعی بساز — قدرت، حجم، کات یا استقامت، با توضیح اجرای هر حرکت.`,
-      `Build a workout plan that fits your goal, level and gym days in ${brand} with AI: strength, muscle gain, cutting or endurance, with instructions for each exercise.`,
+      `ساخت برنامه بدنسازی رایگان برای شروع: با هوش مصنوعی برنامه تمرینی متناسب با هدف، سطح و روزهای باشگاه یا خانه‌ات بساز، با توضیح اجرای هر حرکت.`,
+      `Build a workout plan that fits your goal, level and gym or home days with AI in ${brand}: strength, muscle gain, cutting or endurance, with instructions for each exercise.`,
     ),
     path: "/bodybuilding-program",
+    keywords: tr(
+      "برنامه بدنسازی|برنامه تمرینی|برنامه تمرینی بدنسازی|برنامه بدنسازی رایگان|برنامه بدنسازی مبتدی|برنامه بدنسازی با هوش مصنوعی|ساخت برنامه بدنسازی|برنامه ساز بدنسازی|اپ برنامه بدنسازی|اپلیکیشن بدنسازی|برنامه ورزشی|برنامه تمرینی هفتگی|برنامه تمرینی باشگاه|برنامه بدنسازی 3 روزه|برنامه بدنسازی 4 روزه|برنامه بدنسازی 5 روزه|برنامه بدنسازی برای حجم|برنامه بدنسازی برای کات|برنامه بدنسازی بانوان|برنامه تمرینی در خانه|برنامه بدنسازی در خانه|برنامه تمرینی شخصی|برنامه بدن سازی",
+      "workout plan|bodybuilding program|AI workout plan|workout plan generator|gym training program|home workout plan|beginner gym program|muscle gain program|3 day workout split|workout planner app|personalised training plan",
+    ).split("|"),
     ownOgImage: true,
     ogTitle: tr(`برنامه بدنسازی با هوش مصنوعی | ${BRAND_FA}`, `Workout plan with AI | ${brand}`),
   });
@@ -67,6 +70,34 @@ function content() {
       a: tr(
         "بخش تمرین بدنسازی جزو ماژول‌های اشتراکی است. هر حساب تازه 3 روز دسترسی به بدنسازی، کالری‌شمار و ژورنال ترید، با استفاده‌ی محدود از هوش مصنوعی می‌گیرد. «روتین من» (روتین و کارهای روزانه) 14 روز رایگان است و بعد با پلن «روتین من» ({{routine_monthly}}) ادامه پیدا می‌کند.",
         "The workout section is a subscription module. Every new account gets 3 days of access to workouts, the calorie counter and the trading journal, with limited use of AI. “My Routine” (routine and daily tasks) is free for 14 days and then continues with the “My Routine” plan ({{routine_monthly}}).",
+      ),
+    },
+    {
+      q: tr("برنامه بدنسازی رایگان از کجا بگیرم؟", "Where can I get a free workout plan?"),
+      a: tr(
+        "برنامه‌های عمومی زیادی آنلاین هست، ولی معمولا با سطح، هدف و روزهای تمرین تو جور نیستند. در آریون می‌توانی با هوش مصنوعی یک برنامه‌ی شخصی بسازی؛ هر حساب تازه 3 روز دسترسی به بخش بدنسازی با استفاده‌ی محدود از هوش مصنوعی دارد و بعد از آن اشتراکی است.",
+        "There are many generic plans online, but they rarely match your level, goal and training days. In Arion you can build a personal plan with AI; every new account gets 3 days of access to the workout section with limited AI use, and it is subscription-based after that.",
+      ),
+    },
+    {
+      q: tr("برنامه بدنسازی مبتدی چند روز در هفته باشد؟", "How many days a week should a beginner's program be?"),
+      a: tr(
+        "برای مبتدی معمولا سه روز در هفته با تمرین بدن کامل و یک روز استراحت بین جلسه‌ها شروع خوبی است، چون زمان کافی برای ریکاوری می‌دهد و ادامه‌دادنش ساده‌تر است. بعدا می‌شود به 4 روز و تقسیم عضلات رفت. در آریون تعداد روزهای باشگاهت را خودت وارد می‌کنی.",
+        "For a beginner, three days a week with full-body sessions and a rest day between them is usually a good start, because it allows recovery and is easier to keep up. Later you can move to 4 days and a muscle split. In Arion you enter your own number of gym days.",
+      ),
+    },
+    {
+      q: tr("چطور برنامه بدنسازی در خانه بدون وسیله بسازم؟", "How do I build a home workout plan without equipment?"),
+      a: tr(
+        "امکانات را روی «خانه» بگذار و روزهای تمرینت را انتخاب کن؛ برنامه با حرکاتی ساخته می‌شود که به وسیله‌ی کمتری نیاز دارند. اگر وسیله‌ای نداری، پیشرفت را با تکرار بیشتر، سرعت اجرای کنترل‌شده و کوتاه‌کردن استراحت دنبال کن.",
+        "Set your equipment to “home” and choose your training days; the plan is built from exercises that need less equipment. If you have none, progress by adding repetitions, controlled tempo and shorter rests.",
+      ),
+    },
+    {
+      q: tr("برنامه بدنسازی برای حجم و کات چه فرقی دارد؟", "How is a program for bulking different from one for cutting?"),
+      a: tr(
+        "در برنامه‌ی حجم تمرکز روی اضافه‌بار تدریجی و کالری کمی بالاتر از نگهداری است؛ در کات کالری پایین‌تر از نگهداری است و تمرین با وزنه برای حفظ عضله ادامه پیدا می‌کند. هدف را هنگام ساخت برنامه انتخاب می‌کنی و برای کالری می‌توانی از کالری‌شمار آریون کمک بگیری.",
+        "A bulking program focuses on gradual progressive overload with calories a little above maintenance; in a cut, calories are below maintenance and weight training continues to keep muscle. You choose the goal when building the plan, and Arion's calorie counter can help with calories.",
       ),
     },
   ];

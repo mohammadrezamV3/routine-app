@@ -8,15 +8,18 @@ export function generateMetadata(): Metadata {
   const brand = brandName();
   return pageMetadata({
     title: tr(
-      `ساعت بازار فارکس به وقت تهران | سشن‌های معاملاتی سیدنی، توکیو، لندن، نیویورک | ${BRAND_FA}`,
-      `Forex market hours in Tehran time | Sydney, Tokyo, London and New York sessions | ${brand}`,
+      `ساعت بازار فارکس به وقت تهران | سشن لندن، نیویورک، توکیو | ${BRAND_FA}`,
+      `Forex market hours in Tehran time | London, New York, Tokyo sessions | ${brand}`,
     ),
     description: tr(
-      `ساعت باز و بسته‌شدن چهار سشن اصلی فارکس (سیدنی، توکیو، لندن، نیویورک) به وقت تهران، با ` +
-        `شمارش معکوس و محاسبه‌ی درست تغییر ساعت تابستانی — در ${BRAND_FA}.`,
-      `Opening and closing times of the four main forex sessions (Sydney, Tokyo, London, New York) in Tehran time, with a countdown and correct daylight saving time calculation — in ${brand}.`,
+      `ساعت بازار فارکس به وقت تهران: باز و بسته شدن سشن سیدنی، توکیو، لندن و نیویورک، شمارش معکوس و محاسبه درست ساعت تابستانی در ${BRAND_FA}، مناسب تریدرهای ایرانی.`,
+      `Forex market hours in Tehran time: opening and closing of the Sydney, Tokyo, London and New York sessions, with a countdown and correct daylight saving calculation in ${brand}.`,
     ),
     path: "/forex-sessions",
+    keywords: tr(
+      "ساعت بازار فارکس|ساعت کار بازار فارکس|ساعت بازار فارکس به وقت ایران|ساعت بازار فارکس به وقت تهران|سشن های فارکس|سشن لندن|سشن نیویورک|سشن توکیو|سشن سیدنی|ساعت بازگشایی بازار فارکس|ساعت تعطیلی بازار فارکس|بهترین ساعت معامله فارکس|بهترین زمان معامله طلا|کیل زون|forex market hours|تایم معاملاتی|تغییر ساعت تابستانی فارکس|بازار فارکس چه ساعتی باز است|ساعت اورلپ لندن نیویورک|ساعت بازار فارکس امروز",
+      "forex market hours|forex sessions|forex market hours Tehran time|London session time|New York session time|Tokyo session|Sydney session|best time to trade forex|forex session overlap|forex market open close",
+    ).split("|"),
     ownOgImage: true,
     ogTitle: tr(`ساعت بازار فارکس | ${BRAND_FA}`, `Forex market hours | ${brand}`),
   });
@@ -65,6 +68,34 @@ function content() {
       a: tr(
         "وضعیت باز/بسته‌ی هر چهار سشن به وقت محلی خودت، شمارش معکوس تا باز یا بسته‌شدن بعدی، و اینکه همین حالا کدام سشن‌ها هم‌پوشانی دارند — همه بر اساس محاسبه‌ی واقعی منطقه‌ی زمانی، نه عدد ثابت.",
         "The open/closed status of each of the four sessions in your local time, a countdown to the next opening or closing, and which sessions are overlapping right now. Everything is based on the real time zone calculation, not a fixed number.",
+      ),
+    },
+    {
+      q: tr("بازار فارکس چه ساعتی باز است؟", "What time is the forex market open?"),
+      a: tr(
+        "بازار فارکس از یکشنبه‌شب تا جمعه‌شب به وقت نیویورک تقریبا شبانه‌روز باز است، چون ساعت کاری سیدنی، توکیو، لندن و نیویورک پشت سر هم می‌آیند. ساعت دقیق به وقت تهران بسته به تغییر ساعت تابستانی هر کشور کمی جابه‌جا می‌شود، برای همین بهتر است از یک ساعت زنده‌ی سشن استفاده کنی.",
+        "The forex market is open almost 24 hours from Sunday night to Friday night New York time, because the working hours of Sydney, Tokyo, London and New York follow one another. The exact hours in Tehran time shift a little with each country's daylight saving, which is why a live session clock helps.",
+      ),
+    },
+    {
+      q: tr("ساعت سشن لندن و نیویورک به وقت ایران چند است؟", "What are the London and New York session times in Iran time?"),
+      a: tr(
+        "ساعت دقیق به فصل بستگی دارد، چون لندن و نیویورک در تاریخ‌های متفاوتی ساعتشان را تغییر می‌دهند. به همین دلیل یک عدد ثابت درست نیست و آریون ساعت هر سشن را از روی ساعت محلی واقعی شهرش و برای وقت تو حساب می‌کند. ساعت فعلی را در همین صفحه یا بخش ترید ببین.",
+        "The exact time depends on the season, because London and New York change their clocks on different dates. A fixed number is therefore not correct, and Arion works out each session's hours from its city's real local time and for your time. See the current hours on this page or in the trading section.",
+      ),
+    },
+    {
+      q: tr("بهترین ساعت معامله فارکس چه زمانی است؟", "What is the best time to trade forex?"),
+      a: tr(
+        "معمولا ساعت‌هایی که دو سشن هم‌پوشانی دارند، مخصوصا هم‌پوشانی لندن و نیویورک، نقدینگی و نوسان بیشتری دارند. ولی بهترین ساعت به جفت‌ارز و سبک معاملاتی تو بستگی دارد؛ بهتر است در ژورنال ثبت کنی در چه ساعت‌هایی بهتر عمل کرده‌ای.",
+        "Hours when two sessions overlap, especially London and New York, usually have more liquidity and movement. But the best time depends on the pair and your style; it is better to log in your journal at which hours you perform best.",
+      ),
+    },
+    {
+      q: tr("سشن توکیو و سیدنی چه ساعتی است؟", "When are the Tokyo and Sydney sessions?"),
+      a: tr(
+        "این دو سشن در ساعت‌های اول بازار هفته و شب به وقت ایران فعال‌اند و نوسان کمتری نسبت به لندن و نیویورک دارند، مگر برای جفت‌ارزهایی که ین یا دلار استرالیا و نیوزیلند در آن‌هاست. ساعت دقیق امروز را در ساعت سشن‌ها ببین.",
+        "These two sessions are active in the first hours of the market week and at night in Iran time, and move less than London and New York, except for pairs that include the yen or the Australian and New Zealand dollars. Check today's exact hours in the session clock.",
       ),
     },
   ];

@@ -21,6 +21,10 @@ export function generateMetadata(): Metadata {
       "Free forex lot size calculator: enter balance, risk percent, stop loss in pips and symbol (EURUSD, XAUUSD, USDJPY and more) to get lot size, risk amount and pip value.",
     ),
     path: PATH,
+    keywords: tr(
+      "محاسبه حجم لات|ماشین حساب لات|حجم لات|لات سایز|lot size calculator|محاسبه لات فارکس|محاسبه لات طلا|محاسبه لات xauusd|محاسبه پیپ|ارزش هر پیپ|ماشین حساب پیپ|مدیریت سرمایه در فارکس|مدیریت ریسک|حد ضرر|position size|ماشین حساب ریسک فارکس|یک لات چند دلار است|حجم معامله|اندازه پوزیشن|قانون 2 درصد",
+      "lot size calculator|forex lot size calculator|position size calculator|pip value calculator|forex risk calculator|gold lot size calculator|XAUUSD lot size|risk management forex|how to calculate lot size|stop loss pips calculator",
+    ).split("|"),
     ownOgImage: true,
     ogTitle: tr("محاسبه حجم لات فارکس", "Forex lot size calculator"),
   });
@@ -62,6 +66,20 @@ function content() {
       a: tr(
         "بله، نمادها با اندازه‌ی قرارداد رایج محاسبه می‌شوند (برای طلا هر لات 100 اونس و هر 0.1 دلار حرکت یک پیپ). چون اندازه‌ی قرارداد بین بروکرها فرق می‌کند، پیش از معامله‌ی واقعی با مشخصات نماد در پلتفرم خودت مقایسه کن.",
         "Yes. Symbols use the common contract size (for gold one lot is 100 ounces and each 0.1 dollar move is one pip). Because contract size differs between brokers, compare with your platform's symbol specification before a live trade.",
+      ),
+    },
+    {
+      q: tr("حجم لات طلا (XAUUSD) را چطور محاسبه کنم؟", "How do I calculate the lot size for gold (XAUUSD)?"),
+      a: tr(
+        "همان فرمول است: مبلغ ریسک را بر حد ضرر (به پیپ یا نقطه) ضرب در ارزش هر پیپ تقسیم کن. فقط ارزش پیپ طلا با جفت‌ارزها فرق دارد و بسته به بروکر ممکن است متفاوت باشد؛ در ماشین حساب همین صفحه نماد طلا را انتخاب کن و قبل از معامله مقدار را با مشخصات قرارداد بروکرت مقایسه کن.",
+        "It is the same formula: divide the risk amount by the stop loss (in pips or points) times the pip value. Only gold's pip value differs from currency pairs and may vary by broker; pick the gold symbol in this page's calculator and compare the result with your broker's contract specifications before trading.",
+      ),
+    },
+    {
+      q: tr("یک لات فارکس چند دلار است؟", "How many dollars is one forex lot?"),
+      a: tr(
+        "یک لات استاندارد 100,000 واحد از ارز پایه است، نه یک مبلغ ثابت دلاری. ارزش حرکت هر پیپ برای یک لات در جفت‌ارزهایی مثل EURUSD حدود 10 دلار است، و برای ریسک دقیق باید حجم را با ماشین حساب بر اساس حد ضرر حساب کنی.",
+        "One standard lot is 100,000 units of the base currency, not a fixed dollar amount. A pip is worth about 10 dollars per lot on pairs like EURUSD, and for exact risk you should compute the size from your stop loss with the calculator.",
       ),
     },
   ];

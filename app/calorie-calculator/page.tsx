@@ -21,6 +21,10 @@ export function generateMetadata(): Metadata {
       "Free daily calorie calculator using the Mifflin-St Jeor formula: see your BMR, TDEE, calories for losing, maintaining or gaining weight, and suggested protein in seconds, no sign-up.",
     ),
     path: PATH,
+    keywords: tr(
+      "محاسبه کالری|محاسبه کالری روزانه|محاسبه کالری مورد نیاز بدن|ماشین حساب کالری|محاسبه کالری برای کاهش وزن|چقدر کالری بخورم|محاسبه BMR|BMR چیست|محاسبه TDEE|TDEE چیست|کسری کالری|محاسبه کسری کالری|محاسبه ماکروها|ماکرو چیست|محاسبه کالری حجم|کالری مورد نیاز برای افزایش وزن|calorie calculator|ماشین حساب کالری روزانه",
+      "calorie calculator|daily calorie calculator|TDEE calculator|BMR calculator|calories to lose weight|calorie deficit calculator|maintenance calories|macro calculator|how many calories should I eat",
+    ).split("|"),
     ownOgImage: true,
     ogTitle: tr("محاسبه کالری روزانه (TDEE و BMR)", "Daily calorie calculator (TDEE and BMR)"),
   });
@@ -62,6 +66,20 @@ function content() {
       a: tr(
         "برای بیشتر افراد فعال حدود 1.6 تا 2.2 گرم به‌ازای هر کیلوگرم وزن در دوره‌ی کاهش وزن یا عضله‌سازی و حدود 1.2 تا 1.8 گرم برای حفظ وزن مناسب است. افراد با بیماری کلیوی پیش از افزایش پروتئین باید با پزشک مشورت کنند.",
         "For most active people, about 1.6 to 2.2 grams per kilogram of body weight suits fat loss or muscle gain, and about 1.2 to 1.8 grams suits maintenance. People with kidney disease should talk to a doctor before raising protein.",
+      ),
+    },
+    {
+      q: tr("کسری کالری چیست و چطور حساب می‌شود؟", "What is a calorie deficit and how is it calculated?"),
+      a: tr(
+        "کسری کالری یعنی کمتر از TDEE (کالری نگهداری) بخوری. برای حساب‌کردنش اول TDEE را با ماشین حساب همین صفحه به‌دست بیاور و بعد مقدار متوسطی از آن کم کن. کسری خیلی شدید می‌تواند به عضله و انرژی‌ات آسیب بزند.",
+        "A calorie deficit means eating less than your TDEE (maintenance calories). To calculate it, get your TDEE with the calculator on this page and subtract a moderate amount. A very severe deficit can harm muscle and energy.",
+      ),
+    },
+    {
+      q: tr("برای افزایش وزن و حجم چقدر کالری بخورم؟", "How many calories should I eat to gain weight and muscle?"),
+      a: tr(
+        "معمولا کمی بالاتر از TDEE، به‌اندازه‌ای که وزن آهسته و تدریجی بالا برود، توصیه می‌شود. مازاد خیلی زیاد بیشتر به چربی تبدیل می‌شود. ماشین حساب همین صفحه عدد پیشنهادی افزایش وزن را بر اساس مشخصات تو نشان می‌دهد.",
+        "Usually a little above your TDEE, enough for slow, gradual weight gain, is advised. A very large surplus turns mostly into fat. The calculator on this page shows a suggested weight-gain figure from your details.",
       ),
     },
   ];

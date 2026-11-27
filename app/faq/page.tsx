@@ -19,6 +19,10 @@ export function generateMetadata(): Metadata {
         "how to build a daily routine, what a trading journal is, how the workout plan is built and how safe your data is.",
     ),
     path: "/faq",
+    keywords: tr(
+      "سوالات متداول آریون|آریون چیست|اپ روتین آریون|اپ روتین رایگان|برنامه ریزی روزانه|ژورنال ترید چیست|برنامه بدنسازی رایگان|کالری شمار فارسی|تقویم شمسی|روتین روزانه|عادت ساز|ژورنال معاملاتی|اتصال متاتریدر|تقویم اقتصادی فارکس|برنامه بدنسازی با هوش مصنوعی|اپلیکیشن برنامه ریزی روزانه|اپ ردیابی خواب|ثبت نام آریون|اشتراک آریون|امنیت اطلاعات اپ",
+      "Arion FAQ|what is Arion|routine app FAQ|daily planner|trading journal FAQ|workout plan|calorie counter|Jalali calendar|habit tracker|MetaTrader sync|forex economic calendar|Arion subscription",
+    ).split("|"),
     ogTitle: tr("سوالات متداول درباره آریون", "Frequently asked questions about Arion"),
     // og:image از app/faq/opengraph-image.tsx می‌آید
     ownOgImage: true,

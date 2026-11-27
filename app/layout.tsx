@@ -167,14 +167,20 @@ export function generateMetadata(): Metadata {
   // واقعی محصول، نه فقط روتین.
   keywords: en
     ? [
-        BRAND_EN, "daily routine planner", "habit tracker", "Jalali calendar planner",
-        "AI workout plan", "calorie tracker", "trading journal", "MetaTrader sync", "forex economic calendar",
+        BRAND_EN, "daily routine planner", "routine app", "habit tracker", "Jalali calendar planner",
+        "daily planner", "sleep cycle calculator", "AI workout plan", "bodybuilding program", "calorie tracker",
+        "Persian calorie counter", "BMI calculator", "trading journal", "MetaTrader sync", "forex economic calendar",
+        "forex market hours", "lot size calculator",
       ]
     : [
         BRAND_FA, BRAND_EN, BRAND_CATEGORY_FA, `${BRAND_CATEGORY_FA} ${BRAND_FA}`,
-        "برنامه روتین روزانه", "مدیریت عادت", "برنامه‌ریزی روزانه", "تقویم شمسی",
-        "برنامه بدنسازی هوشمند", "کالری‌شمار فارسی", "ژورنال ترید", "ژورنال معاملاتی فارسی",
-        "رودمپ یادگیری هوش مصنوعی", "اتصال متاتریدر", "تقویم اقتصادی فارکس",
+        "برنامه روتین روزانه", "مدیریت عادت", "برنامه‌ریزی روزانه", "برنامه ریزی روزانه", "اپ برنامه ریزی روزانه",
+        "تقویم شمسی", "برنامه هفتگی", "عادت ساز", "هبیت ترکر", "ردیابی خواب", "محاسبه چرخه خواب",
+        "برنامه بدنسازی هوشمند", "برنامه بدنسازی", "برنامه ورزشی", "برنامه بدنسازی با هوش مصنوعی",
+        "کالری‌شمار فارسی", "کالری شمار", "محاسبه کالری روزانه", "محاسبه BMI",
+        "ژورنال ترید", "ژورنال معاملاتی فارسی", "ژورنال فارکس", "اتصال متاتریدر",
+        "تقویم اقتصادی فارکس", "ساعت بازار فارکس", "محاسبه حجم لات",
+        "رودمپ یادگیری هوش مصنوعی", "برنامه ریزی با هوش مصنوعی",
       ],
   // images این‌جا هم عمدا حذف شده — همون دلیل توضیح زیر twitter؛
   // app/opengraph-image.tsx تصویر ریشه رو خودکار تزریق می‌کنه.
