@@ -15,21 +15,20 @@ import { getKnownUserId } from "./identity";
 import { isNavigatorOffline } from "./status";
 import { splitUrl } from "./reducers";
 import { cacheKeyFor } from "./fetchLayer";
+import { isNavigating } from "./warmGate";
 
 export const WARM_FLAG = "arion:dataWarmed";
 const FRESH_MS = 5 * 60_000;
-const GAP_MS = 250;
+const GAP_MS = 600;
 const DAY = 24 * 60 * 60 * 1000;
 
 const ago = (days: number) => isoLocal(new Date(Date.now() - days * DAY));
 
-function idle(): Promise<void> {
-  return new Promise((resolve) => {
-    const w = window as Window & { requestIdleCallback?: (cb: () => void, o?: { timeout: number }) => number };
-    const go = () => setTimeout(resolve, GAP_MS);
-    if (w.requestIdleCallback) w.requestIdleCallback(go, { timeout: 4000 });
-    else setTimeout(go, 1000);
-  });
+/** بین هر دو قدم: صبر تا صفحه ساکت و بیکار باشه (ناوبری/تعامل کاربر گرم‌کردن رو مکث می‌کنه) */
+async function idle(): Promise<void> {
+  const { whenQuiet } = await import("./warmGate");
+  await whenQuiet();
+  await new Promise<void>((r) => setTimeout(r, GAP_MS));
 }
 
 type Ctx = { userId: string; alive: () => boolean };
@@ -37,6 +36,7 @@ type Ctx = { userId: string; alive: () => boolean };
 /** JSON آدرس (کش تازه یا واکشی کم‌اولویت از fetch هوک‌شده که خودش توی کش آفلاین می‌ذاره) */
 async function get(ctx: Ctx, url: string, force = false): Promise<any | null> {
   if (!ctx.alive()) return null;
+  if (isNavigating()) return null;
   if (!force) try {
     const { path, params } = splitUrl(url);
     const hit = await db.cacheGet(ctx.userId, cacheKeyFor(path, params));

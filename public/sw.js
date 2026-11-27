@@ -31,8 +31,16 @@
 // از کش meta خونده می‌شه)، و Next خودش اختلاف buildId رو با ناوبری کامل جواب می‌ده.
 // پس نسخه‌ی جدید بی‌صدا و بدون ریلود فعال می‌شه و هیچ UI مزاحمی نداره.
 
+// ── اولویت سرعت لود ─────────────────────────────────────────────────────
+// آنلاین: ناوبری/RSC بلافاصله و بدون هیچ await قبلی به شبکه می‌ره (navigation preload هم فعاله)
+// و *فقط وقتی fetch واقعا شکست بخوره* (آفلاین) از کش جواب می‌ده؛ هیچ‌وقت HTML/RSC کش‌شده‌ی
+// بیات (با هش چانک بیلد قبلی) آنلاین سرو نمی‌شه، چون ریشه‌ی ChunkLoadError همین بود.
+// ورودی‌های کش صفحه با شناسه‌ی بیلد ثبت می‌شن و با دیدن بیلد جدید پاک می‌شن.
+// نصب حداقلیه و پیش‌گرم‌کردن فقط به درخواست صفحه (بعد از لود کامل و بیکاری) و با سقف یک
+// درخواست هم‌زمان کم‌اولویت انجام می‌شه و تا وقتی کاربر درخواست دیگه‌ای داره صبر می‌کنه.
+
 // v4: کش صفحه‌ی خصوصی به‌ازای کاربر، RSC، پیش‌گرم، تصویر و manifest.
-const VERSION = "v4";
+const VERSION = "v5";
 const SHELL_CACHE = `arion-shell-${VERSION}`;
 // کش دارایی‌ها عمدا نسخه‌ی کم‌تغییر داره: محتوای هش‌دار تا ابد معتبره و پاک‌شدنش هنگام
 // به‌روزرسانی یعنی صفحه‌ی باز قدیمی آفلاین چانکش رو گم می‌کنه. فقط اگه منطق اعتبارسنجی
@@ -45,15 +53,16 @@ const USER_CACHE_PREFIX = "arion-user-pages-"; // + userId؛ پیشوند `arion
 const USER_KEY = "/__arion/user";
 const OFFLINE_URL = "/offline";
 
-const NAV_TIMEOUT_MS = 4000; // بعد از این مدت اگه نسخه‌ی کش‌شده داریم، همون رو نشون می‌دیم
 const MAX_HTML_ENTRIES = 60;
 const MAX_RSC_ENTRIES = 120;
 const MAX_ASSET_ENTRIES = 700;
 const MAX_IMG_ENTRIES = 60;
 const WARM_FRESH_MS = 6 * 3600 * 1000; // صفحه‌ی تازه‌تر از این دوباره پیش‌گرم نمی‌شه
 const WARM_MAX_URLS = 24;
-const WARM_ASSET_CONCURRENCY = 4;
+const WARM_ASSET_CONCURRENCY = 1;
 const WARM_MAX_ASSETS_PER_PAGE = 160;
+const WARM_QUIET_MS = 2500; // تا این مدت بعد از آخرین درخواست خود صفحه، پیش‌گرم صبر می‌کنه
+const BUILD_KEY = "/__arion/build";
 
 // فهرست کوتاه و ثابت — عمدا فقط چیزهایی که همیشه لازم‌اند
 const PRECACHE = ["/icon.png", "/apple-icon.png", "/images/logo-icon.png"];
@@ -83,43 +92,56 @@ function isUserRoute(pathname) {
   return USER_ROUTE_ALLOW.some((r) => r.test(pathname)) && !USER_ROUTE_DENY.some((r) => r.test(pathname));
 }
 
-// ── نصب: فقط پیش‌کش حداقلی ─────────────────────────────────────────────
+// ── نصب: هیچ دانلودی (فعال‌سازی فوری؛ آیکون‌ها و صفحه‌ی آفلاین بعدا در زمان بیکاری) ──
 self.addEventListener("install", (event) => {
-  event.waitUntil(
-    (async () => {
-      const cache = await caches.open(SHELL_CACHE);
-      // addAll اگر *یکی* از آدرس‌ها ۴۰۴ بدهد کل نصب را شکست می‌دهد و سرویس‌ورکر هیچ‌وقت
-      // فعال نمی‌شود؛ پس تک‌تک و با تحمل خطا.
-      await Promise.allSettled(PRECACHE.map((u) => cache.add(u)));
-      // صفحه‌ی آفلاین بدون کوکی (حالت مهمان) گرفته می‌شه تا هیچ داده‌ی نشست کاربری داخلش نباشه
-      try {
-        const res = await fetch(new Request(OFFLINE_URL, { credentials: "omit" }));
-        if (res.ok && res.status === 200) {
-          const html = await res.clone().text();
-          await cache.put(OFFLINE_URL, res);
-          // چانک‌های خود صفحه‌ی آفلاین هم باید آفلاین در دسترس باشن، وگرنه هیدریت می‌شکنه
-          await cacheAssetPaths(extractAssetPaths(html), WARM_ASSET_CONCURRENCY);
-        }
-      } catch { /* آفلاین نصب شد: نسخه‌ی قبلی (اگه بود) می‌مونه */ }
-      await self.skipWaiting();
-    })()
-  );
+  event.waitUntil(self.skipWaiting());
 });
+
+let basicsCached = false;
+/** پیش‌کش حداقلی (آیکون‌ها + صفحه‌ی آفلاین)؛ از پیام پیش‌گرم صدا زده می‌شه، نه نصب */
+async function cacheBasics() {
+  if (basicsCached) return;
+  basicsCached = true;
+  const cache = await caches.open(SHELL_CACHE);
+  for (const u of PRECACHE) {
+    try { if (!(await cache.match(u))) await cache.add(new Request(u, lowPri())); } catch { /* ادامه */ }
+  }
+  try {
+    if (await cache.match(OFFLINE_URL)) return;
+    await quiet();
+    const res = await fetch(new Request(OFFLINE_URL, { credentials: "omit", ...lowPri() }));
+    if (res.ok && res.status === 200) {
+      const html = await res.clone().text();
+      await cache.put(OFFLINE_URL, res);
+      await cacheAssetPaths(extractAssetPaths(html), WARM_ASSET_CONCURRENCY);
+    }
+  } catch { basicsCached = false; }
+}
+
+function lowPri() {
+  return { priority: "low" };
+}
+
+let lastFetchAt = 0;
+/** تا وقتی خود صفحه درخواست می‌ده (ناوبری، چانک، API) پیش‌گرم صبر می‌کنه */
+async function quiet() {
+  for (let i = 0; i < 240 && Date.now() - lastFetchAt < WARM_QUIET_MS; i++) await sleep(500);
+}
 
 // ── فعال‌سازی: پاک‌کردن کش نسخه‌های قبلی (ولی نه کش کاربر/دارایی/meta) ───────
 self.addEventListener("activate", (event) => {
   const keep = new Set([SHELL_CACHE, ASSET_CACHE, PAGE_CACHE, IMG_CACHE, META_CACHE]);
   event.waitUntil(
-    caches
-      .keys()
-      .then((keys) =>
-        Promise.all(
-          keys
-            .filter((k) => k.startsWith("arion-") && !keep.has(k) && !k.startsWith(USER_CACHE_PREFIX))
-            .map((k) => caches.delete(k))
-        )
-      )
-      .then(() => self.clients.claim())
+    (async () => {
+      try { if (self.registration.navigationPreload) await self.registration.navigationPreload.enable(); } catch { /* بی‌اهمیت */ }
+      await self.clients.claim();
+      const keys = await caches.keys();
+      await Promise.all(
+        keys
+          .filter((k) => k.startsWith("arion-") && !keep.has(k) && !k.startsWith(USER_CACHE_PREFIX))
+          .map((k) => caches.delete(k))
+      );
+    })()
   );
 });
 
@@ -241,6 +263,42 @@ function rscKey(v, request, pathname, search) {
   );
 }
 
+// ── شناسه‌ی بیلد: صفحه‌ی کش‌شده‌ی بیلد قبلی به چانک‌های حذف‌شده اشاره می‌کنه ──────
+let knownBuild;
+async function getBuild() {
+  if (knownBuild !== undefined) return knownBuild;
+  let id = null;
+  try {
+    const r = await (await caches.open(META_CACHE)).match(BUILD_KEY);
+    const j = r ? await r.json() : null;
+    if (j && typeof j.id === "string") id = j.id;
+  } catch { /* ناشناخته */ }
+  if (knownBuild === undefined) knownBuild = id;
+  return knownBuild;
+}
+
+function extractBuildId(html) {
+  const m = /\/_next\/static\/([A-Za-z0-9_\-]{6,})\/_buildManifest\.js/.exec(html);
+  return m ? m[1] : null;
+}
+
+/** بیلد جدید دیده شد: همه‌ی HTML/RSCهای کش‌شده‌ی کاربرها (مال بیلد قبلی) پاک می‌شن */
+async function noteBuild(id) {
+  if (!id) return;
+  const prev = await getBuild();
+  if (prev === id) return;
+  knownBuild = id;
+  try {
+    await (await caches.open(META_CACHE)).put(BUILD_KEY, new Response(JSON.stringify({ id }), { headers: { "content-type": "application/json" } }));
+  } catch { /* بی‌اهمیت */ }
+  if (!prev) return; // اولین بار: چیزی برای پاک‌کردن نیست
+  const names = (await caches.keys()).filter((k) => k.startsWith(USER_CACHE_PREFIX));
+  for (const n of names) {
+    const c = await caches.open(n);
+    for (const k of await c.keys()) if (k.url.includes("/__arion/html/") || k.url.includes("/__arion/rsc/")) await c.delete(k);
+  }
+}
+
 // ── نوشتن در کش کاربر (با کنترل epoch) و سقف تعداد ───────────────────────────
 async function storeUserEntry(userId, startEpoch, key, response) {
   if (epoch !== startEpoch || userState.id !== userId) return;
@@ -251,6 +309,11 @@ async function storeUserEntry(userId, startEpoch, key, response) {
   headers.delete("set-cookie");
   headers.set("x-arion-at", String(Date.now()));
   const body = await response.arrayBuffer();
+  if (key.url.includes("/__arion/html/")) {
+    try { await noteBuild(extractBuildId(new TextDecoder().decode(body))); } catch { /* بی‌اهمیت */ }
+  }
+  const b = await getBuild();
+  if (b) headers.set("x-arion-build", b);
   if (epoch !== startEpoch || userState.id !== userId) return;
   const cache = await caches.open(userCacheName(userId));
   // هر صفحه در هر نسخه (بخش/زبان) یک ورودی دارد و ورودی تازه آخر ترتیب می‌آید (سقف تعداد،
@@ -273,6 +336,7 @@ function sleep(ms) {
 // ── واکشی ───────────────────────────────────────────────────────────────
 self.addEventListener("fetch", (event) => {
   const { request } = event;
+  lastFetchAt = Date.now();
   if (request.method !== "GET") return;
 
   const url = new URL(request.url);
@@ -366,41 +430,45 @@ function isStorableRsc(response) {
 }
 
 /**
- * شبکه اول، کش وقتی شبکه نیست یا بیش از NAV_TIMEOUT_MS کنده یا سرور 502-504 داده.
- * `onOk(response)` برای هر پاسخ 2xx صدا زده می‌شه (ذخیره‌سازی). null = نه شبکه نه کش.
+ * شبکه اول؛ کش *فقط* وقتی fetch واقعا شکست بخوره (آفلاین). بدون تایمر و بدون سرو کش روی خطای
+ * 5xx یا کندی: سرو HTML/RSC کش‌شده‌ی بیات آنلاین ریشه‌ی خطای چانک بعد از دیپلوی بود.
+ * `netP` از قبل (قبل از هر await دیگه) شروع شده. `onOk(response)` برای هر پاسخ 2xx صدا زده
+ * می‌شه (ذخیره‌سازی). null = نه شبکه نه کش.
  */
-async function networkFirst(event, request, cachedP, onOk, mapCached) {
-  let failed = false;
-  const netP = fetch(request)
-    .then((res) => {
-      if (res.ok) onOk(res);
-      return res;
-    })
-    .catch(() => {
-      failed = true;
-      return null;
-    });
-  const first = await Promise.race([netP, sleep(NAV_TIMEOUT_MS)]);
-  const gatewayError = first && (first.status === 502 || first.status === 503 || first.status === 504);
-  if (first && !gatewayError) return first;
-  const cached = await cachedP.catch(() => undefined);
-  if (cached) {
-    event.waitUntil(netP); // نوشتن نسخه‌ی تازه بعد از پاسخ هم کامل بشه
-    return mapCached ? mapCached(cached) : cached;
+async function networkFirst(event, netP, cachedP, onOk, mapCached) {
+  let res = null;
+  try {
+    res = await netP;
+  } catch {
+    res = null;
   }
-  if (first) return first;
-  if (failed) return null;
-  return netP; // کنده ولی کش نداریم: صبر می‌کنیم
+  if (res) {
+    if (res.ok) { try { onOk(res); } catch { /* بی‌اهمیت */ } }
+    return res;
+  }
+  const cached = await cachedP().catch(() => undefined);
+  if (cached) return mapCached ? mapCached(cached) : cached;
+  return null;
+}
+
+/** درخواست ناوبری/RSC: preload مرورگر (اگه بود) وگرنه fetch فوری */
+function startFetch(event) {
+  const pre = event.preloadResponse;
+  if (pre && event.request.mode === "navigate") {
+    return Promise.resolve(pre).then((r) => r || fetch(event.request));
+  }
+  return fetch(event.request);
 }
 
 // ── ناوبری ──────────────────────────────────────────────────────────────
 async function handleNavigation(event, url) {
-  const request = event.request;
+  const netP = startFetch(event);
+  netP.catch(() => {}); // خطاش پایین مدیریت می‌شه
   if (isUserRoute(url.pathname)) {
     const userId = await getUser();
-    if (userId) return handleUserNavigation(event, url, userId);
+    if (userId) return handleUserNavigation(event, url, userId, netP);
   }
-  return handlePublicNavigation(event, url);
+  return handlePublicNavigation(event, url, netP);
 }
 
 /**
@@ -423,15 +491,18 @@ async function staleBootstrapHtml(cached) {
   }
 }
 
-async function handleUserNavigation(event, url, userId) {
-  const request = event.request;
-  const v = await variant();
-  const key = htmlKey(v, url.pathname, url.search);
+async function handleUserNavigation(event, url, userId, netP) {
   const startEpoch = epoch;
-  const cachedP = caches.open(userCacheName(userId)).then((c) => matchEntry(c, key));
-  const res = await networkFirst(event, request, cachedP, (r) => {
+  // نسخه‌ی (بخش/زبان) و کلید فقط وقتی لازم می‌شن که پاسخ شبکه رسیده باشه (ذخیره) یا شکست خورده باشه
+  const keyP = () => variant().then((v) => htmlKey(v, url.pathname, url.search));
+  const cachedP = async () => {
+    const key = await keyP();
+    return matchEntry(await caches.open(userCacheName(userId)), key);
+  };
+  const res = await networkFirst(event, netP, cachedP, (r) => {
     if (!isStorableHtml(r)) return;
-    event.waitUntil(storeUserEntry(userId, startEpoch, key, r.clone()).catch(() => {}));
+    const copy = r.clone();
+    event.waitUntil(keyP().then((key) => storeUserEntry(userId, startEpoch, key, copy)).catch(() => {}));
   }, staleBootstrapHtml);
   return res || offlineFallback(url);
 }
@@ -442,10 +513,10 @@ async function handleUserNavigation(event, url, userId) {
  *
  * چرا network-first و نه cache-first: محتوای صفحه‌ها عوض می‌شود و کاربر نباید نسخه‌ی بیات ببیند.
  */
-async function handlePublicNavigation(event, url) {
+async function handlePublicNavigation(event, url, netP) {
   const request = event.request;
   try {
-    const response = await fetch(request);
+    const response = await netP;
     // HTML یک صفحه‌ی «عمومی» هم وقتی layout با کوکی رندر می‌شه برای هر کاربر فرق
     // داره؛ سرور برای همین no-store/private می‌فرسته. کش‌کردنش یعنی بعدا نسخه‌ی
     // حالت مهمان به کاربر واردشده (یا برعکس) نشون داده بشه — پس به هدر سرور احترام می‌ذاریم.
@@ -503,15 +574,17 @@ function isShareableResponse(response) {
 // خودش ناوبری کامل می‌کنه؛ اون درخواست از handleNavigation میاد و از کش HTML سرو می‌شه.
 async function handleRsc(event, url) {
   const request = event.request;
+  const netP = fetch(request); // فوری، قبل از هر await
+  netP.catch(() => {});
   const userId = await getUser();
-  if (!userId) return fetch(request);
-  const v = await variant();
-  const key = rscKey(v, request, url.pathname, url.search);
+  if (!userId) return netP;
   const startEpoch = epoch;
-  const cachedP = caches.open(userCacheName(userId)).then((c) => matchEntry(c, key));
-  const res = await networkFirst(event, request, cachedP, (r) => {
+  const keyP = () => variant().then((v) => rscKey(v, request, url.pathname, url.search));
+  const cachedP = async () => matchEntry(await caches.open(userCacheName(userId)), await keyP());
+  const res = await networkFirst(event, netP, cachedP, (r) => {
     if (!isStorableRsc(r)) return;
-    event.waitUntil(storeUserEntry(userId, startEpoch, key, r.clone()).catch(() => {}));
+    const copy = r.clone();
+    event.waitUntil(keyP().then((key) => storeUserEntry(userId, startEpoch, key, copy)).catch(() => {}));
   });
   return res || Response.error();
 }
@@ -617,12 +690,12 @@ self.addEventListener("message", (event) => {
 
   if (data.type === "arion-warm-shell" && Array.isArray(data.urls)) {
     ack(); // کار طولانیه؛ فرستنده منتظرش نمی‌مونه
-    event.waitUntil(enqueue(() => warmShell(data.urls)).catch(() => {}));
+    event.waitUntil(enqueue(async () => { await cacheBasics(); await warmShell(data.urls); }).catch(() => {}));
     return;
   }
 
   if (data.type === "warm" && Array.isArray(data.urls)) {
-    event.waitUntil(warmAssets(data.urls.slice(0, 24)));
+    event.waitUntil(quiet().then(() => warmAssets(data.urls.slice(0, 24))));
   }
 });
 
@@ -638,7 +711,7 @@ async function warmAssets(urls) {
       if (u.origin !== self.location.origin || !isImmutableAsset(u.pathname)) continue;
       const req = new Request(u.pathname + u.search);
       if (await cache.match(req, { ignoreVary: true })) continue;
-      const res = await fetch(req);
+      const res = await fetch(new Request(req, lowPri()));
       if (isValidAsset(u.pathname, res)) await cache.put(req, res);
     } catch {
       /* یکی نشد، بقیه ادامه */
@@ -680,7 +753,8 @@ async function cacheAssetPaths(paths, concurrency) {
       try {
         const req = new Request(p);
         if (await assets.match(req, { ignoreVary: true })) continue;
-        const r = await fetch(req);
+        await quiet();
+        const r = await fetch(new Request(req, lowPri()));
         if (isValidAsset(p, r)) await assets.put(req, r);
       } catch { /* یکی نشد، بقیه ادامه */ }
     }
@@ -709,7 +783,9 @@ async function warmShell(rawUrls) {
       const existing = await matchEntry(cache, key);
       const age = existing ? Date.now() - Number(existing.headers.get("x-arion-at") || 0) : Infinity;
       if (age < WARM_FRESH_MS) continue;
+      await quiet();
       const res = await fetch(u.pathname + u.search, {
+        priority: "low",
         credentials: "include",
         // Purpose: prefetch → middleware بخش (کوکی arion_section) رو به‌خاطر این واکشی پس‌زمینه عوض نمی‌کنه
         headers: { Accept: "text/html,application/xhtml+xml", Purpose: "prefetch" },
@@ -721,6 +797,7 @@ async function warmShell(rawUrls) {
       const paths = extractAssetPaths(html).slice(0, WARM_MAX_ASSETS_PER_PAGE);
       await cacheAssetPaths(paths, WARM_ASSET_CONCURRENCY);
       scheduleTrim(ASSET_CACHE, MAX_ASSET_ENTRIES);
+      await sleep(400);
     } catch {
       warmedThisSession.delete(sessionKey); // دفعه‌ی بعد دوباره تلاش
     }

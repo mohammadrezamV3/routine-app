@@ -29,12 +29,6 @@ export function shellRoutes(section: string | null | undefined): string[] {
   return all.filter((p) => pathAllowedIn(section, p));
 }
 
-function whenIdle(cb: () => void) {
-  if (typeof window === "undefined") return;
-  if ("requestIdleCallback" in window) (window as any).requestIdleCallback(cb, { timeout: 6000 });
-  else setTimeout(cb, 3000);
-}
-
 function warmShellOnce() {
   try {
     if (window.sessionStorage.getItem("arion:shellWarmed") === "1") return;
@@ -45,9 +39,21 @@ function warmShellOnce() {
   void swCall((m) => m.warmShell(shellRoutes(section)));
 }
 
-/** داده و چانک‌های بخش فعلی: بعد از گرم‌شدن پوسته و خالی‌شدن صف، یک‌بار برای هر نشست */
-function warmDataSoon() {
-  setTimeout(() => whenIdle(() => { void import("./warm").then((m) => m.warmSectionOnce()).catch(() => {}); }), 4000);
+/**
+ * گرم‌کردن آفلاین (پوسته‌ی صفحه‌ها، بعد داده و چانک‌ها): فقط بعد از لود کامل صفحه + چند ثانیه +
+ * سکوت و بیکاری؛ اگه شرایط مناسب نبود (اتصال کند، صرفه‌جویی داده) کلا رها می‌شه.
+ */
+function scheduleWarm() {
+  void (async () => {
+    try {
+      const { whenQuiet } = await import("./warmGate");
+      if (!(await whenQuiet(true))) return;
+      warmShellOnce();
+      if (!(await whenQuiet())) return;
+      const m = await import("./warm");
+      await m.warmSectionOnce();
+    } catch {}
+  })();
 }
 
 /**
@@ -68,7 +74,7 @@ export async function onSessionResolved(userId: string | null): Promise<void> {
   }
   const sync = await import("./sync");
   sync.startSync();
-  if (userId) { whenIdle(warmShellOnce); warmDataSoon(); }
+  if (userId) scheduleWarm();
 }
 
 /** فقط تست */
