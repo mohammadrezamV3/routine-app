@@ -17,6 +17,10 @@ export function generateMetadata(): Metadata {
       `Build your daily to-do list in ${brand}: checklists with tickable items, recurring tasks, reminders and a Jalali calendar. A Persian to-do list app for managing your tasks.`,
     ),
     path: "/todo-list",
+    keywords: tr(
+      "لیست کارها|لیست کارهای روزانه|todo list فارسی|to do list|تو دو لیست|اپ لیست کار|اپلیکیشن لیست کارها|تسک منیجر|مدیریت کارها|مدیریت وظایف|اپ مدیریت کارها|چک لیست روزانه|لیست کارهای امروز|یادداشت کارهای روزانه|اپ یادآور|یادآوری کارها|برنامه ریزی روزانه|برنامه روزانه|اپ برنامه ریزی روزانه|تقویم شمسی",
+      "to-do list app|daily to-do list|Persian to-do list|task manager|task list app|checklist app|daily checklist|reminder app|task management|Jalali calendar planner",
+    ).split("|"),
     ownOgImage: true,
     ogTitle: tr(`لیست کارهای روزانه ${BRAND_FA}`, `Daily to-do list in ${brand}`),
   });

@@ -17,6 +17,10 @@ export function generateMetadata(): Metadata {
       `Study planning in ${brand}: a weekly study table, repeating study blocks, Pomodoro-style timing, streaks and weekly analysis for students and exam candidates.`,
     ),
     path: "/study-planner",
+    keywords: tr(
+      "برنامه ریزی درسی|برنامه درسی روزانه|برنامه ریزی کنکور|برنامه مطالعه|جدول مطالعه|جدول مطالعه روزانه|چطور برنامه درسی بنویسیم|برنامه ریزی تحصیلی|برنامه ریز درسی|برنامه مطالعه کنکور|اپ برنامه ریزی درسی|برنامه ریزی امتحانات|برنامه درسی دانشجو|جدول مطالعه هفتگی|تکنیک پومودورو|چطور درس بخوانیم|برنامه ریزی دانش آموز|مدیریت زمان",
+      "study planner|study schedule|weekly study timetable|exam preparation planner|Konkur study plan|student planner|Pomodoro study|how to plan study time|study timetable app",
+    ).split("|"),
     ownOgImage: true,
     ogTitle: tr(`برنامه ریزی درسی ${BRAND_FA}`, `Study planner in ${brand}`),
   });

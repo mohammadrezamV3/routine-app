@@ -17,6 +17,10 @@ export function generateMetadata(): Metadata {
       `A workout logging app in ${brand}: log weight and reps set by set, an AI gym program, rest days and bodybuilding progress tracking, instead of a paper notebook.`,
     ),
     path: "/workout-tracker",
+    keywords: tr(
+      "ثبت تمرین|ردیاب تمرین|اپ ثبت تمرین|اپلیکیشن ثبت تمرین|workout tracker|گزارش تمرین|دفترچه تمرین|تایمر استراحت بین ست|کرنومتر باشگاه|ثبت وزنه|اپ تمرین باشگاه|پیگیری پیشرفت بدنسازی|برنامه تمرینی باشگاه|برنامه بدنسازی|اپلیکیشن بدنسازی|ثبت تمرین باشگاه|دفترچه بدنسازی|ثبت ست و تکرار",
+      "workout tracker|gym workout log|workout log app|bodybuilding tracker|log sets and reps|gym progress tracker|rest timer|training diary",
+    ).split("|"),
     ownOgImage: true,
     ogTitle: tr(`ثبت تمرین باشگاه ${BRAND_FA}`, `Gym workout tracker in ${brand}`),
   });
