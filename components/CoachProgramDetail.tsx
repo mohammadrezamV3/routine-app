@@ -6,7 +6,7 @@ import "./coach-pages.css";
 import "./coach-discover.css";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { useParams, useRouter } from "next/navigation";
-import { Check, CheckCircle2, CircleSlash, CopyPlus, EyeOff, Flag, Pencil, Send, X } from "lucide-react";
+import { Check, CheckCircle2, CircleSlash, CopyPlus, EyeOff, Flag, Pencil, ArrowUp, X } from "lucide-react";
 import { useLiveRefresh, useVisiblePolling } from "@/lib/liveSync";
 import { SmartLink } from "./SmartLink";
 import { PageLoader } from "./PageLoader";
@@ -512,7 +512,7 @@ function FeedbackBlock({
           <div className="chpd-actions">
             {target && <button type="button" className="btn btn-ghost" onClick={onClearTarget}><X size={16} aria-hidden="true" /> {tr("کل برنامه", "Whole program")}</button>}
             <button type="submit" className={`btn btn-primary${busy ? " is-loading" : ""}`} disabled={busy || !body.trim()}>
-              {busy ? <Spinner size={16} /> : <><Send size={16} className="dir-flip" aria-hidden="true" /> {tr("فرستادن", "Send")}</>}
+              {busy ? <Spinner size={16} /> : <><ArrowUp size={16} aria-hidden="true" /> {tr("فرستادن", "Send")}</>}
             </button>
           </div>
         </form>

@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import { Check, Send } from "lucide-react";
+import { Check, ArrowUp } from "lucide-react";
 import { Spinner } from "./Spinner";
 import { mentorApi } from "./MentorDashKit";
 import { MI, MI_STROKE, MentorEmpty, MentorField } from "./MentorUI";
@@ -95,7 +95,7 @@ export function MentorTodayInviteSheet({
           <div className="mentor-form-actions">
             <button type="button" className="account-outline-btn muted mentor-btn" onClick={onClose} disabled={sending}>{tr("بستن", "Close")}</button>
             <button type="submit" className="trade-primary-btn mentor-btn" disabled={sending}>
-              {sending ? <Spinner size={14} /> : sent ? <><Check size={MI.btn} strokeWidth={MI_STROKE} aria-hidden /> {tr("دعوت فرستاده شد", "Invite sent")}</> : <><Send size={MI.btn} strokeWidth={MI_STROKE} aria-hidden /> {tr("فرستادن دعوت", "Send invite")}</>}
+              {sending ? <Spinner size={14} /> : sent ? <><Check size={MI.btn} strokeWidth={MI_STROKE} aria-hidden /> {tr("دعوت فرستاده شد", "Invite sent")}</> : <><ArrowUp size={MI.btn} strokeWidth={MI_STROKE} aria-hidden /> {tr("فرستادن دعوت", "Send invite")}</>}
             </button>
           </div>
         </form>

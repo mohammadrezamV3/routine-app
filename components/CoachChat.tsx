@@ -8,7 +8,7 @@ import "./coach.css";
 import "./coach-space.css";
 import { useCallback, useEffect, useLayoutEffect, useMemo, useRef, useState } from "react";
 import { AnimatePresence, m as motion } from "framer-motion";
-import { AlertCircle, BellRing, Check, CheckCheck, ChevronDown, Clock, Copy, Flag, Lock, Megaphone, RefreshCw, Send, Smartphone, Trash2 } from "lucide-react";
+import { AlertCircle, BellRing, Check, CheckCheck, ChevronDown, Clock, Copy, Flag, Lock, Megaphone, RefreshCw, ArrowUp, Smartphone, Trash2 } from "lucide-react";
 import type { ChatMessage, MessagesResponse } from "@/lib/mentorTypes";
 import type { CoachTimelineEvent } from "@/lib/coachTypes";
 import { networkError, fmtDate, readApiError } from "@/lib/mentorFormat";
@@ -708,7 +708,7 @@ function ChatBody({
                 }}
               />
               <button type="submit" className="btn btn-primary btn-icon btn-round" aria-label={tr("فرستادن پیام", "Send message")} disabled={!hasText}>
-                <Send size={18} strokeWidth={2} className="dir-flip" aria-hidden />
+                <ArrowUp size={18} strokeWidth={2} aria-hidden />
               </button>
             </form>
           </>

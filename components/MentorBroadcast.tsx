@@ -3,7 +3,7 @@
 import "./mentor.css";
 import { TickButton } from "./TickButton";
 import { useCallback, useEffect, useMemo, useState } from "react";
-import { Lock, Send } from "lucide-react";
+import { Lock, ArrowUp } from "lucide-react";
 import { faNum } from "@/lib/jalali";
 import { publicUserName, type PublicUser } from "@/lib/mentorTypes";
 import { networkError, readApiError } from "@/lib/mentorFormat";
@@ -160,7 +160,7 @@ function BroadcastForm({ identity, busy, setBusy, onClose }: { identity: Identit
       <div className="mentor-form-actions">
         <button type="button" className="account-outline-btn muted mentor-btn" onClick={onClose} disabled={busy}>{tr("بستن", "Close")}</button>
         <button type="submit" className="trade-primary-btn mentor-btn" disabled={busy || chosen.length === 0}>
-          {busy ? <Spinner size={14} /> : result && result.sent > 0 && result.failed.length === 0 ? tr(`برای ${faNum(result.sent)} شاگرد ارسال شد`, `Sent to ${faNum(result.sent)} ${result.sent === 1 ? "student" : "students"}`) : <><Send size={MI.btn} strokeWidth={MI_STROKE} aria-hidden className="dir-flip" /> {tr("ارسال", "Send")}</>}
+          {busy ? <Spinner size={14} /> : result && result.sent > 0 && result.failed.length === 0 ? tr(`برای ${faNum(result.sent)} شاگرد ارسال شد`, `Sent to ${faNum(result.sent)} ${result.sent === 1 ? "student" : "students"}`) : <><ArrowUp size={MI.btn} strokeWidth={MI_STROKE} aria-hidden /> {tr("ارسال", "Send")}</>}
         </button>
       </div>
     </form>

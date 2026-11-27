@@ -4,7 +4,7 @@ import { useCallback, useEffect, useMemo, useState } from "react";
 import { SmartLink as Link } from "@/components/SmartLink";
 import { useSession } from "next-auth/react";
 import {
-  Ban, CheckCircle2, Clock, Hourglass, MessageCircle, Pencil, Send, ShieldCheck, UserPlus, FilePlus2,
+  Ban, CheckCircle2, Clock, Hourglass, MessageCircle, Pencil, ArrowUp, ShieldCheck, UserPlus, FilePlus2,
 } from "lucide-react";
 import { useLiveRefresh, useVisiblePolling } from "@/lib/liveSync";
 import { LoadingBlock, } from "./Spinner";
@@ -239,7 +239,7 @@ export function MentorDashBoard({ self }: { self: MentorSelf }) {
           <UserPlus size={22} strokeWidth={MI_STROKE} aria-hidden /><span>{tr("دعوت شاگرد", "Invite a student")}</span>
         </button>
         <button type="button" className="mv2-today-tile mv2-tone-info" onClick={() => setBcOpen(true)} disabled={suspended || !!rowsError}>
-          <Send size={22} strokeWidth={MI_STROKE} aria-hidden /><span>{tr("پیام به همه", "Message everyone")}</span>
+          <ArrowUp size={22} strokeWidth={MI_STROKE} aria-hidden /><span>{tr("پیام به همه", "Message everyone")}</span>
         </button>
         <Link href="/mentor/programs/new" className="mv2-today-tile mv2-tone-warn">
           <FilePlus2 size={22} strokeWidth={MI_STROKE} aria-hidden /><span>{tr("برنامه‌ی تازه", "New program")}</span>

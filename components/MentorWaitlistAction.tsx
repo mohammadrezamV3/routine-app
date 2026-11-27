@@ -2,7 +2,7 @@
 
 import { tr, iso } from "@/lib/i18n";
 import { useState } from "react";
-import { Hourglass, ListPlus, LogOut, PartyPopper, Send, TimerOff, X } from "lucide-react";
+import { Hourglass, ListPlus, LogOut, PartyPopper, ArrowUp, TimerOff, X } from "lucide-react";
 import { MentorChip } from "./MentorUI";
 import { MentorConfirmDialog } from "./MentorConfirmDialog";
 import { MentorTermsAcceptance, isMentorTermsError, mentorTermsPayload, useMentorTermsStatus } from "./MentorTermsAcceptance";
@@ -102,7 +102,7 @@ export function MentorWaitlistAction({
             <X {...BTN} /> {tr("رد نوبت", "Decline turn")}
           </button>
           <button type="button" className="trade-primary-btn mentor-btn" onClick={onRequest} disabled={!!busy}>
-            <Send {...BTN} className="dir-flip" /> {tr("ارسال درخواست", "Send request")}
+            <ArrowUp {...BTN} /> {tr("ارسال درخواست", "Send request")}
           </button>
         </div>
       </>

@@ -6,7 +6,7 @@ import { useCallback, useEffect, useLayoutEffect, useMemo, useRef, useState } fr
 import { AnimatePresence, m as motion } from "framer-motion";
 import {
   AlertCircle, BellRing, Check, CheckCheck, ChevronDown, Clock, Copy, Flag, Lock, Megaphone, MessageSquareQuote,
-  RefreshCw, Send, Smartphone, Trash2,
+  RefreshCw, ArrowUp, Smartphone, Trash2,
 } from "lucide-react";
 import type { ChatMessage, MessagesResponse } from "@/lib/mentorTypes";
 import { networkError, fmtDate, readApiError } from "@/lib/mentorFormat";
@@ -770,9 +770,9 @@ function ChatBody({
                 title={tr("فرستادن", "Send")}
                 aria-disabled={!hasText}
               >
-                <span className="routine-ai-action-icon" aria-hidden="true"><Send size={18} strokeWidth={1.75} className="mc-send-icon" /></span>
+                <span className="routine-ai-action-icon" aria-hidden="true"><ArrowUp size={18} strokeWidth={1.75} className="mc-send-icon" /></span>
                 <span className="routine-ai-action-icon" aria-hidden="true" />
-                <span className="routine-ai-action-icon" aria-hidden="true"><Send size={18} strokeWidth={2} className="mc-send-icon" /></span>
+                <span className="routine-ai-action-icon" aria-hidden="true"><ArrowUp size={18} strokeWidth={2} className="mc-send-icon" /></span>
               </button>
             </form>
           </>
