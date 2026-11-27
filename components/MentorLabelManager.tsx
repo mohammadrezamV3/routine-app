@@ -80,8 +80,8 @@ export function MentorLabelManager({ initial, onChange }: { initial: StudentLabe
                 onKeyDown={(e) => { if (e.key === "Enter") { e.preventDefault(); rename(); } if (e.key === "Escape") setEditing(null); }}
               />
               <span className="mentor-row-end">
-                <button type="button" className="trade-icon-btn" aria-label={tr("انصراف", "Cancel")} onClick={() => { setEditing(null); setError(null); }}>{ic(X, MI.btnSm)}</button>
-                <button type="button" className="trade-icon-btn" aria-label={tr("ذخیره‌ی نام", "Save name")} onClick={rename} disabled={!!busy}>
+                <button type="button" className="btn btn-ghost btn-icon" aria-label={tr("انصراف", "Cancel")} onClick={() => { setEditing(null); setError(null); }}>{ic(X, MI.btnSm)}</button>
+                <button type="button" className="btn btn-ghost btn-icon" aria-label={tr("ذخیره‌ی نام", "Save name")} onClick={rename} disabled={!!busy}>
                   {busy === l.id ? <Spinner size={14} /> : ic(Check, MI.btnSm)}
                 </button>
               </span>
@@ -90,10 +90,10 @@ export function MentorLabelManager({ initial, onChange }: { initial: StudentLabe
             <div className="mentor-row">
               <span className="mentor-row-body"><span className="mentor-row-title">{l.name}</span></span>
               <span className="mentor-row-end">
-                <button type="button" className="trade-icon-btn" aria-label={tr(`تغییر نام ${l.name}`, `Rename ${iso(l.name)}`)} onClick={() => { setError(null); setEditing({ id: l.id, name: l.name }); }}>
+                <button type="button" className="btn btn-ghost btn-icon" aria-label={tr(`تغییر نام ${l.name}`, `Rename ${iso(l.name)}`)} onClick={() => { setError(null); setEditing({ id: l.id, name: l.name }); }}>
                   {ic(Pencil, MI.btnSm)}
                 </button>
-                <button type="button" className="trade-icon-btn" aria-label={tr(`حذف ${l.name}`, `Delete ${iso(l.name)}`)} onClick={() => { setError(null); setConfirm(l); }}>
+                <button type="button" className="btn btn-ghost btn-icon" aria-label={tr(`حذف ${l.name}`, `Delete ${iso(l.name)}`)} onClick={() => { setError(null); setConfirm(l); }}>
                   {ic(Trash2, MI.btnSm)}
                 </button>
               </span>
@@ -112,7 +112,7 @@ export function MentorLabelManager({ initial, onChange }: { initial: StudentLabe
                 value={name} placeholder={tr("مثلا کنکور 1406", "For example: Konkur 1406")}
                 onChange={(e) => { setName(e.target.value); setError(null); }}
               />
-              <button type="submit" className="account-outline-btn mentor-btn" disabled={!name.trim() || !!busy}>
+              <button type="submit" className="btn btn-outline" disabled={!name.trim() || !!busy}>
                 {busy === "add" ? <Spinner size={14} /> : <>{ic(Plus, MI.btn)} {tr("افزودن", "Add")}</>}
               </button>
             </div>

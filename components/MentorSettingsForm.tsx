@@ -138,7 +138,7 @@ export function MentorSettingsForm({
                   onChange={(e) => { const v = e.target.value; setQuestions((xs) => xs.map((x, j) => (j === i ? v : x))); setFieldErr((x) => ({ ...x, questions: undefined })); touched(); }}
                 />
                 <button
-                  type="button" className="trade-icon-btn mv2-set-iconbtn" aria-label={tr(`حذف سوال ${fa(i + 1)}`, `Delete question ${fa(i + 1)}`)}
+                  type="button" className="btn btn-ghost btn-icon mv2-set-iconbtn" aria-label={tr(`حذف سوال ${fa(i + 1)}`, `Delete question ${fa(i + 1)}`)}
                   onClick={() => { setQuestions((xs) => xs.filter((_, j) => j !== i)); touched(); }}
                 >
                   <Trash2 size={MI.btnSm} strokeWidth={MI_STROKE} aria-hidden />
@@ -148,7 +148,7 @@ export function MentorSettingsForm({
             {questions.length === 0 && <p className="mentor-field-hint">{tr("هنوز سوالی نذاشتی", "You have not added any questions yet")}</p>}
             {questions.length < INTAKE_MAX_QUESTIONS && (
               <div>
-                <button type="button" className="mentor-text-btn mv2-set-textbtn" onClick={() => { setQuestions((xs) => [...xs, ""]); touched(); }}>
+                <button type="button" className="btn btn-ghost btn-sm mv2-set-textbtn" onClick={() => { setQuestions((xs) => [...xs, ""]); touched(); }}>
                   <Plus size={MI.btnSm} strokeWidth={MI_STROKE} aria-hidden /> {tr("افزودن سوال", "Add question")}
                 </button>
               </div>
@@ -159,7 +159,7 @@ export function MentorSettingsForm({
 
       {error && <div className="form-inline-error" role="alert" style={{ margin: 0 }}>{error}</div>}
       <div className="mentor-form-actions" style={{ marginTop: 0 }}>
-        <button type="submit" className="trade-primary-btn mentor-btn" disabled={saving}>
+        <button type="submit" className="btn btn-primary" disabled={saving}>
           {saving ? <Spinner size={14} /> : saved ? <><Check size={MI.btn} strokeWidth={MI_STROKE} aria-hidden /> {tr("ذخیره شد", "Saved")}</> : tr("ذخیره", "Save")}
         </button>
       </div>

@@ -60,9 +60,6 @@ export const INLINE_BOOTSTRAP_ID = "__arion_bootstrap";
 // با پیش‌درخواست، هردو موازی بقیه از همون ~۵۰۰ms شروع می‌شن.
 const ROUTE_PRELOADS: { prefix: string; section?: string; urls: string[] }[] = [
   { prefix: "/exercise", urls: ["/api/exercise/plan", "/api/settings/bodyMetrics"] },
-  // «فضای تمرین» داشبورد بخش ورزش همون ExercisePanel رو داره (جای /exercise). فقط وقتی
-  // بخش موثر ورزشه (data-section روی <html>، از layout سرور) تا داشبورد روتین/ترید دو درخواست الکی نزنه
-  { prefix: "/dashboard", section: "workout", urls: ["/api/exercise/plan", "/api/settings/bodyMetrics"] },
   // کلیدهای تنظیمات ترید همگی توی همون موج بعد هیدریت می‌رفتن (۸۲۲ms).
   // URLشون کاملا ثابته پس امنه. `/api/trade/entries` عمدا این‌جا نیست:
   // بدون دانستن accountId (که توی خود مسیره) URLش ثابت نیست.

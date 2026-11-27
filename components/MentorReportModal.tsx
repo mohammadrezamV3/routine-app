@@ -87,7 +87,7 @@ function DoneBody({ onClose, text }: { onClose: () => void; text: string }) {
       <p className="mentor-dialog-msg" role="status">{text}</p>
       <p className="mentor-dialog-hint">{tr("ادمین‌های آریون بررسیش می‌کنن", "The Arion team will review it")}</p>
       <div className="trade-modal-actions">
-        <button type="button" className="account-outline-btn mentor-btn" onClick={onClose}>{tr("بستن", "Close")}</button>
+        <button type="button" className="btn btn-ghost" onClick={onClose}>{tr("بستن", "Close")}</button>
       </div>
     </>
   );
@@ -173,8 +173,8 @@ export function MentorReportModal({
           </div>
           {error && <div className="form-inline-error" role="alert">{error}</div>}
           <div className="trade-modal-actions">
-            <button type="button" className="account-outline-btn mentor-btn" onClick={close} disabled={busy}>{tr("انصراف", "Cancel")}</button>
-            <button type="button" className="trade-danger-btn mentor-btn" onClick={submit} disabled={busy}>
+            <button type="button" className="btn btn-ghost" onClick={close} disabled={busy}>{tr("انصراف", "Cancel")}</button>
+            <button type="button" className="btn btn-danger" onClick={submit} disabled={busy}>
               {busy ? <Spinner size={14} /> : tr("ثبت گزارش", "Send report")}
             </button>
           </div>
@@ -277,7 +277,7 @@ export function MentorConversationReportSheet({
         <>
           <p className="mentor-dialog-msg">{tr("پیامی برای پیوست کردن نیست", "There are no messages to attach")}</p>
           <div className="trade-modal-actions">
-            <button type="button" className="account-outline-btn mentor-btn" onClick={close}>{tr("بستن", "Close")}</button>
+            <button type="button" className="btn btn-ghost" onClick={close}>{tr("بستن", "Close")}</button>
           </div>
         </>
       ) : (
@@ -298,7 +298,7 @@ export function MentorConversationReportSheet({
                 <span className="mentor-muted">{faNum(picked.size)} {tr("از", "of")} {faNum(list.length)}</span>
                 <button
                   type="button"
-                  className="mentor-text-btn"
+                  className="btn btn-ghost btn-sm"
                   onClick={() => setPicked(picked.size === list.length ? new Set() : new Set(list.map((c) => c.id)))}
                 >
                   {picked.size === list.length ? tr("برداشتن همه", "Deselect all") : tr("انتخاب همه", "Select all")}
@@ -321,8 +321,8 @@ export function MentorConversationReportSheet({
           </div>
           {error && <div className="form-inline-error" role="alert">{error}</div>}
           <div className="trade-modal-actions">
-            <button type="button" className="account-outline-btn mentor-btn" onClick={close} disabled={busy}>{tr("انصراف", "Cancel")}</button>
-            <button type="button" className="trade-danger-btn mentor-btn" onClick={submit} disabled={busy || picked.size === 0}>
+            <button type="button" className="btn btn-ghost" onClick={close} disabled={busy}>{tr("انصراف", "Cancel")}</button>
+            <button type="button" className="btn btn-danger" onClick={submit} disabled={busy || picked.size === 0}>
               {busy ? <Spinner size={14} /> : tr("ثبت گزارش", "Send report")}
             </button>
           </div>

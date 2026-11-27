@@ -94,6 +94,8 @@ enum AiFeatureKey {
   // دستیار «مدیر برنامه» روی صفحه‌ی روتین. شمارش همین ردیف‌هاست که سهمیه‌ی
   // پیام‌های رایگان (FREE_ASSISTANT_USES) را می‌سنجد، پس نباید بی‌جهت جای دیگری هم ثبت شود.
   ROUTINE_ASSISTANT
+  // نومو برای مربی (پیش‌نویس برنامه، خلاصه‌ی هفته، پیام تشویقی) — lib/coachNomo.ts؛ سهمیه‌ی روزانه‌ی مربی از شمارش همین ردیف‌ها
+  COACH_NOMO
 }
 
 // سطح شدت یک رخداد خطای واقعی (نه ساختگی) که سیستم ثبت کرده
@@ -225,6 +227,7 @@ model User {
   calorieTargets         CalorieTarget[]
   tradeEntries           TradeEntry[]
   tradeAccounts          TradeAccount[]
+  tradePropChallenges    TradePropChallenge[]
   tradeTags              TradeTag[]
   tradeChecklists        TradeChecklist[]
   roadmaps               Roadmap[]
@@ -1192,8 +1195,41 @@ model TradeAccount {
   mtLink       TradeMtLink?
   cashflows    TradeCashflow[]
   pendingShots TradeMtPendingShot[]
+  propChallenge TradePropChallenge?
 
   @@index([userId, archived])
+}
+
+enum TradePropStatus {
+  ACTIVE // فاز در جریان
+  PASSED // هدف سود + حداقل روز معاملاتی کامل شد؛ منتظر «رفتن به فاز بعد»
+  FAILED // حد ضرر روزانه/کلی شکست یا مهلت تمام شد؛ منتظر «شروع دوباره»
+  FUNDED // مرحله‌ی فاند (بعد از آخرین فاز یا فاند مستقیم)
+}
+
+// چالش حساب پراپ (فقط برای TradeAccount.type = PROP). قانون‌ها در `config`
+// (JSON، شکل در lib/propChallenge.ts)، پیشرفت هیچ‌وقت ذخیره نمی‌شه و هر بار
+// سمت سرور از معامله‌های حساب محاسبه می‌شه؛ اینجا فقط «فاز فعلی و وضعیتش»
+// و تاریخچه‌ی فازها نگه‌داری می‌شه. هیچ معامله‌ای با تغییر فاز پاک نمی‌شه.
+model TradePropChallenge {
+  id        String       @id @default(cuid())
+  userId    String
+  user      User         @relation(fields: [userId], references: [id], onDelete: Cascade)
+  accountId String       @unique
+  account   TradeAccount @relation(fields: [accountId], references: [id], onDelete: Cascade)
+
+  config            Json
+  currentPhase      Int             @default(0) // اندیس فاز؛ برابر تعداد فازها یعنی مرحله‌ی فاند
+  status            TradePropStatus @default(ACTIVE)
+  phaseStartedAt    DateTime        @default(now())
+  phaseEndedAt      DateTime? // لحظه‌ی قبولی/شکست (UTC)؛ آمار فاز بعد از این بریده می‌شه
+  phaseStartBalance Float? // null = بالانس اولیه‌ی موثر حساب
+  history           Json            @default("[]")
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([userId])
 }
 
 // برچسب رنگی کاربرساخته — هم روی حساب استفاده می‌شه هم روی معامله، چون
@@ -2224,6 +2260,8 @@ model Mentorship {
   showTaskName     Boolean  @default(false)
   showTaskDetails  Boolean  @default(false)
   showProgress     Boolean  @default(true)
+  // خواب شاگرد در گزارش هفته‌ی این مربی (مهاجرت 20261024150000_coach_v3) — پیش‌فرض خاموش
+  shareSleep       Boolean  @default(false)
 
   startedAt DateTime?
   endedAt   DateTime?
@@ -2256,6 +2294,9 @@ model Mentorship {
   studentClearedBefore DateTime?
   // درخواستی که از پذیرش نوبت صف ساخته شد (مهاجرت 20260928140000_mentor_waitlist)
   waitlistEntries      MentorWaitlistEntry[]
+  // هدف هفتگی و عکس گزارش هفته (مهاجرت 20261024150000_coach_v3) — lib/coachGoalServer.ts، lib/coachWeekServer.ts
+  goals                MentorGoal[]
+  weekSnapshots        MentorWeekSnapshot[]
 
   @@unique([mentorId, studentId])
   @@index([studentId, status])
@@ -2542,6 +2583,44 @@ model MentorFeedback {
 
   @@index([programId, createdAt])
   @@index([studentId, readAt])
+}
+
+// هدف همکاری: هر همکاری حداکثر یک هدف ACTIVE. پیشرفت هیچ‌وقت ذخیره نمی‌شه، از داده‌ی واقعی حساب می‌شه.
+model MentorGoal {
+  id           String     @id @default(cuid())
+  mentorshipId String
+  mentorship   Mentorship @relation(fields: [mentorshipId], references: [id], onDelete: Cascade)
+  title        String
+  // "WORKOUT_SESSIONS" | "ROUTINE_RATE"
+  metric       String
+  target       Int
+  weeks        Int
+  startDate    DateTime   @db.Date
+  endDate      DateTime   @db.Date
+  // "ACTIVE" | "DONE" | "ENDED"
+  status       String     @default("ACTIVE")
+  createdById  String
+  completedAt  DateTime?
+  endedAt      DateTime?
+  createdAt    DateTime   @default(now())
+  updatedAt    DateTime   @updatedAt
+
+  @@index([mentorshipId, status])
+}
+
+// عکس گزارش هفته‌ی تموم‌شده (فقط عددهای اشتراک‌گذاشته‌شده، هرگز متن پیام) + خلاصه‌ی نومو برای مربی
+model MentorWeekSnapshot {
+  id           String     @id @default(cuid())
+  mentorshipId String
+  mentorship   Mentorship @relation(fields: [mentorshipId], references: [id], onDelete: Cascade)
+  weekStart    DateTime   @db.Date
+  data         Json
+  summary      String?
+  seenAt       DateTime?
+  notifiedAt   DateTime?
+  createdAt    DateTime   @default(now())
+
+  @@unique([mentorshipId, weekStart])
 }
 
 model MentorMessage {

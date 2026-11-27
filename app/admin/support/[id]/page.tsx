@@ -3,7 +3,7 @@
 import { useCallback, useEffect, useLayoutEffect, useRef, useState } from "react";
 import { useParams } from "next/navigation";
 import Link from "next/link";
-import { ArrowRight, Send, CheckCircle2 } from "lucide-react";
+import { ArrowRight, ArrowUp, CheckCircle2 } from "lucide-react";
 import { EmptyState, ErrorState, LoadingState } from "@/components/admin/EmptyState";
 import { ConfirmModal } from "@/components/admin/AdminModal";
 import { useAdminAccess } from "@/components/admin/AdminAccess";
@@ -180,7 +180,7 @@ export default function AdminSupportTicketPage() {
           aria-label={tr("متن پاسخ", "Reply text")}
         />
         <button type="submit" className="admin-btn primary" disabled={!canSend} aria-label={tr("ارسال", "Send")}>
-          {sending ? <Spinner size={14} /> : <Send size={15} />}
+          {sending ? <Spinner size={14} /> : <ArrowUp size={15} />}
           <span className="admin-support-send-label">{tr("ارسال", "Send")}</span>
         </button>
       </form>

@@ -116,9 +116,18 @@
 - `GET /api/admin/mentors/reports?status=OPEN|RESOLVED|DISMISSED&page=` ؛ `PATCH /api/admin/mentors/reports/[id]` بدنه `{ status: RESOLVED|DISMISSED, resolution?, action?: "hide_review"|"delete_message"|"suspend_mentor" }`. مسدودکردن کل حساب از همون `/admin/users` موجود انجام می‌شه (قوانین `lib/adminUsers.ts`).
 
 ## صفحات
-- کاربر: `/mentors` (کشف + محبوب‌ها)، `/mentors/[mentorId]` (پروفایل)، `/mentorship` (منتورهای من + درخواست‌ها)، `/mentorship/[id]` (چت / برنامه‌ها / حریم خصوصی)، `/mentor-programs/[id]` (اجرای برنامه برای شاگرد، پایش + فیدبک برای منتور)
-- منتور: `/mentor` (داشبورد / شروع منتوری)، `/mentor/profile` (پروفایل + احراز)، `/mentor/students/[studentId]`، `/mentor/programs/new?mentorshipId=`، `/mentor/programs/[id]/edit`
+نسخه‌ی 3 رابط (`docs/coach-v3.md`): سه صفحه برای مربی، یک صفحه برای شاگرد، فضای همکاری مشترک (خط زمانی).
+- کاربر: `/mentors` (کشف + محبوب‌ها)، `/mentors/[mentorId]` (پروفایل)، `/c/[username]` (لینک کوتاه عمومی مربی)، `/mentorship` (مربی من)، `/mentorship/[id]` (فضای همکاری شاگرد؛ `/chat` ریدایرکت)، `/mentor-programs/[id]` (جزئیات برنامه)
+- منتور: `/mentor` (امروز)، `/mentor/students` (شاگردها)، `/mentor/students/[studentId]` (فضای همکاری)، `/mentor/students/[studentId]/week?w=` (گزارش هفته)، `/mentor/settings` (صفحه‌ی من)، `/mentor/programs/new?student=`، `/mentor/programs/[id]/edit`، `/mentor/programs/[id]/duplicate`؛ `/mentor/profile`، `/mentor/templates`، `/mentor/reports` فقط ریدایرکت
 - ادمین: `/admin/mentors` (صف احراز + همه)، `/admin/mentors/[profileId]`، `/admin/mentors/reviews`، `/admin/mentors/reports`
+
+### API نسخه‌ی 3
+- `GET /api/mentor/today`: صندوق «منتظر تو» (برای هر شاگرد فقط پراولویت‌ترین مورد؛ درخواست‌ها به‌ازای هر رابطه)، شمارنده‌ها، `hint` و ردیف آواتارها (`lib/coachTodayServer.ts`).
+- `GET/POST/PATCH /api/mentorships/[id]/goal`: هدف (`MentorGoal`)، پیشرفت خودکار از روی داده‌ی شاگرد.
+- `GET /api/mentorships/[id]/weeks?week=` و `POST .../weeks/seen`: گزارش هفته‌ی خودکار (`MentorWeekSnapshot`، خواب فقط با `shareSleep`) و علامت دیده‌شدن.
+- `GET /api/mentorships/[id]/space`: داده‌ی خط زمانی فضای همکاری (بدون متن پیام‌ها؛ متن فقط سمت کلاینت رمزگشایی می‌شه).
+- `POST /api/mentor/nomo/{program,week,nudge}`: نومو برای مربی (از داده‌ی هفته و برنامه، هرگز متن گفت‌وگو؛ سقف `COACH_NOMO_DAILY_LIMIT` در روز).
+- `GET /api/mentors/by-username/[username]`: پروفایل عمومی برای `/c/[username]`.
 
 ## رتبه‌بندی
 رتبه‌بندی شایستگی (نتیجه‌ی واقعی شاگردها، پایبندی، تکمیل، ماندگاری، سرعت پاسخ، نظرهای تاییدشده) — مدل کامل، وزن‌ها و قواعد ضد دست‌کاری: `docs/mentor-ranking.md`.

@@ -30,12 +30,12 @@ export function getAccountSections(section: SectionKey | null = null): AccountSe
     ? tr("پروفایل عمومی و پروفایل ورزشی، بنر و عکس پروفایل", "Public profile, sports profile, banner and photo")
     : tr("پروفایل عمومی، بنر و عکس پروفایل", "Public profile, banner and photo");
   const settingsDesc = !section
-    ? tr("زبان، اعلان‌ها، روتین، ترید و حریم خصوصی مربی", "Language, notifications, routine, trading and mentor privacy")
+    ? tr("زبان، اعلان‌ها، روتین، ترید، خروجی داده‌ها و حریم خصوصی مربی", "Language, notifications, routine, trading, data export and mentor privacy")
     : section === "routine"
-      ? tr("زبان، اعلان‌ها، روتین و حریم خصوصی مربی", "Language, notifications, routine and mentor privacy")
+      ? tr("زبان، اعلان‌ها، روتین، خروجی داده‌ها و حریم خصوصی مربی", "Language, notifications, routine, data export and mentor privacy")
       : section === "workout"
-        ? tr("زبان، اعلان‌ها، بدنسازی و حریم خصوصی مربی", "Language, notifications, workout and mentor privacy")
-        : tr("زبان، اعلان‌ها، ترید و گفت‌وگوی مربی", "Language, notifications, trading and mentor chats");
+        ? tr("زبان، اعلان‌ها، بدنسازی، خروجی داده‌ها و حریم خصوصی مربی", "Language, notifications, workout, data export and mentor privacy")
+        : tr("زبان، اعلان‌ها، ترید، خروجی داده‌ها و گفت‌وگوی مربی", "Language, notifications, trading, data export and mentor chats");
   return [
     { href: "/account/profile", group: "account", label: tr("پروفایل", "Profile"), desc: profileDesc, icon: <User size={17} />, match: (p) => p.startsWith("/account/profile") },
     { href: "/account/security", group: "account", label: tr("امنیت", "Security"), desc: tr("رمز عبور، ورود دومرحله‌ای و دستگاه‌ها", "Password, two-step login and devices"), icon: <ShieldCheck size={17} />, match: (p) => p.startsWith("/account/security") },

@@ -6,7 +6,7 @@
 
 import { prisma } from "./prisma";
 import { dayInTimezone } from "./dashboardServer";
-import { ACHIEVEMENTS, evaluateAchievements, type AchievementMetrics } from "./achievements";
+import { ACHIEVEMENTS, GOLDEN_REQUIRED_IDS, goldenReached, evaluateAchievements, type AchievementMetrics } from "./achievements";
 import { computeAchievementMetrics } from "./achievementsCompute";
 import type { ScheduleOpts } from "./schedule";
 import { bestUnusedReward, reachedRewardTiers, rewardPercent, rewardStates, type AchievementRewardInfo, type AchievementRewardTier } from "./achievementRewards";
@@ -17,6 +17,9 @@ export type AchievementsPayload = {
   items: { id: string; unlocked: boolean; value: number; goal: number; unlockedAt: string | null }[];
   unlockedCount: number;
   total: number;
+  /** پیشرفت به سمت نام طلایی (بدون اچیومنت‌های وابسته به نقش) */
+  goldenUnlocked: number;
+  goldenTotal: number;
   golden: boolean;
   goldenSince: string | null;
   /** اچیومنت‌هایی که همین درخواست باز شدن (برای جشن کلاینت) */
@@ -150,7 +153,8 @@ export async function computeUserAchievements(userId: string): Promise<Achieveme
   });
   const unlockedCount = items.filter((i) => i.unlocked).length;
   let goldenSince = user.goldenSince;
-  if (!goldenSince && unlockedCount === ACHIEVEMENTS.length) {
+  const goldenUnlocked = items.filter((i) => i.unlocked && GOLDEN_REQUIRED_IDS.includes(i.id)).length;
+  if (!goldenSince && goldenReached(items.filter((i) => i.unlocked).map((i) => i.id))) {
     goldenSince = now;
     await prisma.user.update({ where: { id: userId }, data: { goldenSince: now } });
   }
@@ -163,6 +167,8 @@ export async function computeUserAchievements(userId: string): Promise<Achieveme
     items,
     unlockedCount,
     total: ACHIEVEMENTS.length,
+    goldenUnlocked,
+    goldenTotal: GOLDEN_REQUIRED_IDS.length,
     golden: !!goldenSince,
     goldenSince: goldenSince ? goldenSince.toISOString() : null,
     fresh,

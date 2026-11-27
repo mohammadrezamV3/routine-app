@@ -110,12 +110,12 @@ export function MentorAvailabilityQuick({
         {s.awayMessage && <p className="mentor-quote">{s.awayMessage}</p>}
         <div className="mentor-btn-group">
           <button
-            type="button" className="trade-primary-btn mentor-btn is-sm" disabled={!!busy}
+            type="button" className="btn btn-primary btn-sm" disabled={!!busy}
             onClick={() => save("end", { awayUntil: null })}
           >
             {busy === "end" ? <Spinner size={14} /> : <>{ic(CheckCircle2, MI.btnSm)} {tr("برگشتم", "I am back")}</>}
           </button>
-          <button type="button" className="account-outline-btn mentor-btn is-sm" disabled={!!busy} onClick={() => { setPanel(false); setSheet(true); }}>
+          <button type="button" className="btn btn-outline btn-sm" disabled={!!busy} onClick={() => { setPanel(false); setSheet(true); }}>
             {ic(Pencil, MI.btnSm)} {tr("ویرایش", "Edit")}
           </button>
         </div>
@@ -289,8 +289,8 @@ function AwaySheet({
           </div>
           {error && <div className="form-inline-error" role="alert" style={{ margin: 0 }}>{error}</div>}
           <div className="mentor-form-actions" style={{ marginTop: 0 }}>
-            <button type="button" className="account-outline-btn muted mentor-btn" onClick={onClose} disabled={busy}>{tr("انصراف", "Cancel")}</button>
-            <button type="submit" className="trade-primary-btn mentor-btn" disabled={busy}>
+            <button type="button" className="btn btn-ghost" onClick={onClose} disabled={busy}>{tr("انصراف", "Cancel")}</button>
+            <button type="submit" className="btn btn-primary" disabled={busy}>
               {busy ? <Spinner size={14} /> : settings.awayUntil ? tr("ذخیره", "Save") : tr("ثبت", "Set")}
             </button>
           </div>

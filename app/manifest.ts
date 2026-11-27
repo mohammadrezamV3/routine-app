@@ -27,6 +27,7 @@ function sectionShortcuts(key: SectionKey): MetadataRoute.Manifest["shortcuts"] 
   if (key === "workout") {
     return [
       { name: tr("برنامه‌ی تمرینی", "Workout plan"), url: "/exercise" },
+      { name: tr("کالری‌شمار", "Calorie tracker"), url: "/calorie" },
       { name: tr("خواب", "Sleep"), url: "/sleep" },
     ];
   }

@@ -99,6 +99,8 @@ const NOINDEX_PATH_PREFIXES = [
   "/weekly/:path*",
   "/exercise",
   "/exercise/:path*",
+  "/calorie",
+  "/calorie/:path*",
   "/trade",
   "/trade/:path*",
   "/roadmaps",

@@ -153,7 +153,7 @@ export function MentorPrivacySettings({ mentorshipId, mentorName, active }: { me
                 <div className="mentor-toggle-title">{t.title}</div>
                 <div className="mentor-toggle-desc">{t.desc}</div>
               </div>
-              <ToggleSwitch checked={draft[t.key]} onChange={(v) => patch({ [t.key]: v } as Partial<PrivacySettings>)} label={t.title} disabled={disabled} />
+              <ToggleSwitch checked={!!draft[t.key]} onChange={(v) => patch({ [t.key]: v } as Partial<PrivacySettings>)} label={t.title} disabled={disabled} />
             </div>
           );
         })}

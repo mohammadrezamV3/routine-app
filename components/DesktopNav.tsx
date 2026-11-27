@@ -5,8 +5,7 @@
 // ویژگی‌ها، قفل ماژول، فیلتر بخش)، پس دقیقا هم‌خوان با کشوی همبرگری‌اند. فقط CSS (بدون
 // framer-motion): نشانگر فعال با transform می‌لغزه، پنل‌های کشویی فقط با اولین
 // هاور/فوکوس/کلیک ساخته می‌شن. زیر 1024px کل این بخش با CSS مخفیه.
-import { Suspense, useCallback, useEffect, useRef, useState } from "react";
-import { useSearchParams } from "next/navigation";
+import { useCallback, useEffect, useRef, useState } from "react";
 import { SmartLink as Link } from "./SmartLink";
 import { ChevronDown, Lock } from "lucide-react";
 import { featureVisible, type FeatureKey } from "@/lib/featureFlags";
@@ -19,16 +18,7 @@ type Entry = { id: string; label: string; href?: string; module?: string; childr
 type Features = Partial<Record<FeatureKey, boolean>> | null;
 
 const baseOf = (h: string) => h.split("?")[0];
-const tabOf = (h: string) => new URLSearchParams(h.split("?")[1] ?? "").get("tab");
 
-// ?tab= فعلی فقط برای بخش ورزش لازمه (زیرمنوهای «بدنسازی» همون صفحه‌ی /dashboard رو با تب
-// متفاوت باز می‌کنن). useSearchParams بیرون از Suspense صفحه‌های استاتیک رو CSR می‌کنه، پس
-// توی یک پروب کوچک و بی‌خروجی جداست و مقدار رو به state منو می‌ده.
-function TabProbe({ onTab }: { onTab: (t: string | null) => void }) {
-  const t = useSearchParams().get("tab");
-  useEffect(() => { onTab(t); }, [t, onTab]);
-  return null;
-}
 // در rtl فلش راست = آیتم قبلی (جهت دیداری)
 const rtlSign = (): 1 | -1 => (document.documentElement.dir === "rtl" ? -1 : 1);
 
@@ -69,18 +59,9 @@ export default function DesktopNav({ pathname, features, activeModules }: Props)
   const focusFirst = useRef(false);
   const skipFocusOpen = useRef(false);
 
-  const [tab, setTab] = useState<string | null>(null);
-  // بخش ورزش: «داشبورد» (بدون tab) و «بدنسازی» (tab=exercise|calorie) هر دو /dashboard‌ان؛
-  // فقط یکی‌شون فعال نشون داده می‌شه
-  const workoutDash = section === "workout";
   const hrefActive = (h: string) => {
     const b = baseOf(h);
-    if (!(pathname === b || pathname.startsWith(b + "/"))) return false;
-    if (workoutDash && b === "/dashboard") {
-      const t = tabOf(h);
-      return t ? tab === t : tab === null;
-    }
-    return true;
+    return pathname === b || pathname.startsWith(b + "/");
   };
   const isActive = (e: Entry) => {
     const hrefs = e.href ? [e.href] : (e.children ?? []).map((c) => c.href);
@@ -197,7 +178,6 @@ export default function DesktopNav({ pathname, features, activeModules }: Props)
 
   return (
     <nav ref={navRef} className="dnav" aria-label={tr("منوی اصلی", "Primary")}>
-      {workoutDash && <Suspense fallback={null}><TabProbe onTab={setTab} /></Suspense>}
       <ul ref={listRef} className="dnav-list">
         {entries.map((e) => {
           const active = isActive(e);
@@ -257,7 +237,7 @@ export default function DesktopNav({ pathname, features, activeModules }: Props)
                 >
                   {e.children.map((c) => {
                     const b = baseOf(c.href);
-                    const here = (pathname === b || pathname.startsWith(b + "/")) && (e.children!.filter((x) => baseOf(x.href) === b).length === 1 || (workoutDash && hrefActive(c.href)));
+                    const here = (pathname === b || pathname.startsWith(b + "/")) && e.children!.filter((x) => baseOf(x.href) === b).length === 1;
                     return (
                       <Link
                         key={c.href}

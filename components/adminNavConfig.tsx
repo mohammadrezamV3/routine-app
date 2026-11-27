@@ -1,6 +1,6 @@
 import {
   LayoutGrid, Bell, Users, ShieldCheck, Coins, Receipt, CreditCard, BadgeDollarSign, Tag, LineChart, Boxes, Sparkles,
-  Megaphone, Send, PartyPopper, CalendarClock, Dumbbell, UsersRound, Headset, Flag, GraduationCap, ServerCog, ToggleRight,
+  Megaphone, ArrowUp, PartyPopper, CalendarClock, Dumbbell, UsersRound, Headset, Flag, GraduationCap, ServerCog, ToggleRight,
   Settings, History, FlaskConical,
 } from "lucide-react";
 import type { AdminPermission } from "@/lib/adminPermissions";
@@ -72,7 +72,7 @@ export function navGroups(): NavGroup[] {
     {
       title: tr("ارتباطات", "Communication"),
       items: [
-        { label: tr("پیام همگانی", "Broadcast"), href: "/admin/broadcast", icon: <Send size={I} />, perm: "content" },
+        { label: tr("پیام همگانی", "Broadcast"), href: "/admin/broadcast", icon: <ArrowUp size={I} />, perm: "content" },
         { label: tr("اطلاعیه‌ها", "Announcements"), href: "/admin/announcements", icon: <Megaphone size={I} />, perm: "content" },
         { label: tr("تم‌های مناسبتی", "Event themes"), href: "/admin/event-themes", icon: <PartyPopper size={I} />, perm: "settings" },
       ],

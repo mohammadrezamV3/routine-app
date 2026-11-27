@@ -2,7 +2,7 @@
 
 import { useCallback, useEffect, useRef, useState } from "react";
 import { useParams } from "next/navigation";
-import { Mic, Send, Square } from "lucide-react";
+import { Mic, ArrowUp, Square } from "lucide-react";
 import { AccountPageHead, AccountSkeleton } from "@/components/AccountUI";
 import { toJalali, faNum, jMonthName } from "@/lib/jalali";
 import { useVoiceRecorder, VOICE_CONSTRAINTS, VOICE_MAX_BYTES } from "@/components/useVoiceRecorder";
@@ -183,7 +183,7 @@ export default function SupportTicketPage() {
         >
           <span className="routine-ai-action-icon" aria-hidden="true"><Mic size={17} /></span>
           <span className="routine-ai-action-icon" aria-hidden="true"><Square size={13} /></span>
-          <span className="routine-ai-action-icon" aria-hidden="true"><Send size={16} /></span>
+          <span className="routine-ai-action-icon" aria-hidden="true"><ArrowUp size={16} /></span>
         </button>
       </form>
     </section>

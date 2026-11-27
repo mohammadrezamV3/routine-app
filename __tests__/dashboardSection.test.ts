@@ -51,6 +51,20 @@ describe("sectionAreas", () => {
     expect(a.lg.startsWith('"today heat heat"')).toBe(true);
     expect(a.sm).toBe('"today" "heat" "sleep" "road" "mentor" "inbox"');
   });
+  it("روتین با خواب: امروز ستون بلند، نقشه‌ی ثبات و خواب کنارش (lg)؛ md و sm مثل قبل", () => {
+    const a = sectionAreas(set("inbox", "today", "heat", "sleep", "road", "mentor"), "routine");
+    expect(a.lg).toBe('"today heat heat" "today sleep sleep" "road mentor inbox"');
+    expect(a.md).toBe('"heat heat" "today today" "sleep road" "mentor inbox"');
+  });
+  it("روتین بدون کارت خواب: چیدمان قبلی", () => {
+    const a = sectionAreas(set("inbox", "today", "heat", "road", "mentor"), "routine");
+    expect(a.lg).toBe('"today heat heat" "road mentor inbox"');
+    expect(a.md).toBe('"heat heat" "today today" "road mentor" "inbox inbox"');
+  });
+  it("روتین با خواب ولی بدون امروز/نقشه: خواب مثل بقیه می‌چینه", () => {
+    const a = sectionAreas(set("sleep", "road"), "routine");
+    expect(a.lg).toBe('"sleep sleep road"');
+  });
   it("ورزش: فضای تمرین ردیف تمام‌عرض اول، بعد خواب؛ مربی و اعلان‌ها نه", () => {
     const a = sectionAreas(set("inbox", "space", "sleep", "mentor"), "workout");
     expect(a.lg).toBe('"space space space" "sleep sleep sleep"');

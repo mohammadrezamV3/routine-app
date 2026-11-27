@@ -1,5 +1,6 @@
 "use client";
 
+import { PropPhaseBadge } from "./PropPhaseBadge";
 import { CSSProperties, useCallback, useEffect, useState } from "react";
 import { SmartLink as Link } from "@/components/SmartLink";
 import { m as motion } from "framer-motion";
@@ -361,6 +362,7 @@ function AccountRow({
         <Link href={`/trade/accounts/${a.id}`} className="trade-account-title-link" prefetch>
           <span className="trade-account-name">{a.name}</span>
           <span className="trade-account-dot" style={{ background: a.color }} />
+          {a.propChallenge && <PropPhaseBadge badge={a.propChallenge} />}
           {a.archived && <span className="trade-account-archived-badge">{tr("آرشیو", "Archived")}</span>}
         </Link>
 

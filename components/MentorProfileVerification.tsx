@@ -214,14 +214,14 @@ function MentorDocRow({
                   end={
                     <>
                       <button
-                        type="button" className="trade-icon-btn mv2-set-iconbtn" disabled={!!busyDoc}
+                        type="button" className="btn btn-ghost btn-icon mv2-set-iconbtn" disabled={!!busyDoc}
                         onClick={() => download(d)} aria-label={tr(`دریافت ${d.fileName}`, `Download ${iso(d.fileName)}`)}
                       >
                         {busyDoc === d.id + ":get" ? <Spinner size={14} /> : <Download size={MI.btnSm} strokeWidth={MI_STROKE} />}
                       </button>
                       {canDelete && (
                         <button
-                          type="button" className="trade-icon-btn danger mv2-set-iconbtn" disabled={!!busyDoc || uploading}
+                          type="button" className="btn btn-icon btn-danger mv2-set-iconbtn" disabled={!!busyDoc || uploading}
                           onClick={() => { setDelError(null); setConfirmDel(d); }} aria-label={tr(`حذف ${d.fileName}`, `Delete ${iso(d.fileName)}`)}
                         >
                           <Trash2 size={MI.btnSm} strokeWidth={MI_STROKE} />
@@ -238,7 +238,7 @@ function MentorDocRow({
 
           <div className="mentor-btn-group is-end">
             <button
-              type="button" className="account-outline-btn mentor-btn is-sm mv2-set-upload" disabled={uploading}
+              type="button" className="btn btn-outline btn-sm mv2-set-upload" disabled={uploading}
               onClick={() => inputRef.current?.click()}
               aria-label={uploading ? tr(`در حال ارسال، ${fa(pctNow)} درصد`, `Sending, ${fa(pctNow)} percent`) : undefined}
             >

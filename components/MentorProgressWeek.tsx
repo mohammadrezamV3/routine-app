@@ -78,20 +78,20 @@ export function MentorProgressWeek({
   return (
     <>
       <div className="mentor-pg-nav">
-        <button type="button" className="trade-icon-btn" onClick={onPrev} aria-label={tr("هفته‌ی قبل", "Previous week")}>
+        <button type="button" className="btn btn-ghost btn-icon" onClick={onPrev} aria-label={tr("هفته‌ی قبل", "Previous week")}>
           <ChevronRight size={16} strokeWidth={1.75} className="dir-flip" aria-hidden />
         </button>
         <span className="mentor-pg-range">
           {weekLabel(weekStart, weekEnd)}
           {loading && <Spinner size={14} />}
         </span>
-        <button type="button" className="trade-icon-btn" onClick={onNext} aria-label={tr("هفته‌ی بعد", "Next week")}>
+        <button type="button" className="btn btn-ghost btn-icon" onClick={onNext} aria-label={tr("هفته‌ی بعد", "Next week")}>
           <ChevronLeft size={16} strokeWidth={1.75} className="dir-flip" aria-hidden />
         </button>
       </div>
       {!isThisWeek && (
         <div className="mentor-pg-today">
-          <button type="button" className="mentor-text-btn" onClick={onToday}>{tr("رفتن به هفته‌ی جاری", "Go to this week")}</button>
+          <button type="button" className="btn btn-ghost btn-sm" onClick={onToday}>{tr("رفتن به هفته‌ی جاری", "Go to this week")}</button>
         </div>
       )}
 
@@ -183,7 +183,7 @@ export function MentorProgressWeek({
                 {canFeedback && !isStudent && (
                   <button
                     type="button"
-                    className="mentor-text-btn"
+                    className="btn btn-ghost btn-sm"
                     style={{ marginTop: 4 }}
                     onClick={() => onFeedback(c.logId ? { itemId: it.id, logId: c.logId, label: tr(`اجرای «${it.title}»`, `Session of "${iso(it.title)}"`) } : { itemId: it.id, label: `«${it.title}»` })}
                   >
@@ -265,7 +265,7 @@ function DayNoteEditor({
         />
       </MentorField>
       <div className="mentor-btn-group is-end" style={{ marginTop: 8 }}>
-        <button type="button" className="account-outline-btn mentor-btn is-sm" onClick={save} disabled={busy || !dirty}>
+        <button type="button" className="btn btn-outline btn-sm" onClick={save} disabled={busy || !dirty}>
           {busy ? <Spinner size={14} /> : justSaved && !dirty ? <><Check {...BTN_SM} /> {tr("ذخیره شد", "Saved")}</> : tr("ذخیره‌ی یادداشت", "Save note")}
         </button>
       </div>

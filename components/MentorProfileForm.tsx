@@ -188,7 +188,7 @@ export function MentorProfileForm({ profile, onSaved }: { profile: MentorSelf | 
               onKeyDown={(e) => { if (e.key === "Enter") { e.preventDefault(); addSpecialty(); } }}
             />
             <button
-              type="button" className="account-outline-btn mentor-btn" onClick={addSpecialty}
+              type="button" className="btn btn-outline" onClick={addSpecialty}
               disabled={!specInput.trim() || specialties.length >= SPECIALTIES_MAX}
             >
               {ic(Plus, MI.btn)} {tr("افزودن", "Add")}
@@ -223,7 +223,7 @@ export function MentorProfileForm({ profile, onSaved }: { profile: MentorSelf | 
       )}
       {error && <div className="form-inline-error" role="alert">{error}</div>}
       <div className="mentor-form-actions" style={{ marginTop: error ? undefined : 0 }}>
-        <button type="submit" className="trade-primary-btn mentor-btn" disabled={saving}>
+        <button type="submit" className="btn btn-primary" disabled={saving}>
           {saving ? <Spinner size={14} /> : saved ? <>{ic(Check, MI.btn)} {tr("ذخیره شد", "Saved")}</> : isNew ? tr("ساخت پروفایل", "Create profile") : tr("ذخیره", "Save")}
         </button>
       </div>

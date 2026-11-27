@@ -5,7 +5,7 @@ import { Fragment, useEffect, useLayoutEffect, useRef, useState } from "react";
 import { createPortal } from "react-dom";
 import { useSession } from "next-auth/react";
 import { SmartLink as Link } from "@/components/SmartLink";
-import { Send, X } from "lucide-react";
+import { ArrowUp, X } from "lucide-react";
 import { LockBodyScroll } from "./LockBodyScroll";
 import { primeSettingCache } from "@/lib/storage";
 import { SETTING_KEYS } from "@/lib/userSettingKeys";
@@ -306,7 +306,7 @@ export function RoutineAiFab({ onChanged }: { onChanged: () => void }) {
                   aria-label={tr("ارسال", "Send")}
                   title={tr("ارسال", "Send")}
                 >
-                  <span className="routine-ai-action-icon" aria-hidden="true"><Send size={16} /></span>
+                  <span className="routine-ai-action-icon" aria-hidden="true"><ArrowUp size={16} /></span>
                 </button>
               </form>
             )}

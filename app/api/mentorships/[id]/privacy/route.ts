@@ -16,9 +16,10 @@ const PRIVACY_SELECT = {
   showTaskName: true,
   showTaskDetails: true,
   showProgress: true,
+  shareSleep: true,
 } as const;
 
-const BOOL_FIELDS = ["shareAllPrograms", "showSchedule", "showProgramName", "showTaskName", "showTaskDetails", "showProgress"] as const;
+const BOOL_FIELDS = ["shareAllPrograms", "showSchedule", "showProgramName", "showTaskName", "showTaskDetails", "showProgress", "shareSleep"] as const;
 
 function validId(id: unknown): id is string {
   return typeof id === "string" && id.length > 0 && id.length <= 64;
@@ -33,7 +34,7 @@ export async function GET(_req: Request, { params }: Ctx) {
 
   const m = await prisma.mentorship.findFirst({ where: { id: params.id, studentId: g.userId }, select: PRIVACY_SELECT });
   if (!m) return notFound();
-  return NextResponse.json({ privacy: m as PrivacySettings, scopes: await listStudentScopes(g.userId) });
+  return NextResponse.json({ privacy: m as PrivacySettings & { shareSleep: boolean }, scopes: await listStudentScopes(g.userId) });
 }
 
 // PUT /api/mentorships/:id/privacy → زیرمجموعه‌ای از فیلدها؛ فقط شاگرد.
@@ -46,7 +47,7 @@ export async function PUT(req: Request, { params }: Ctx) {
   if (!parsed.ok) return NextResponse.json({ error: parsed.error }, { status: parsed.status });
   const b = parsed.body || {};
 
-  const data: Partial<PrivacySettings> = {};
+  const data: Partial<PrivacySettings> & { shareSleep?: boolean } = {};
   for (const k of BOOL_FIELDS) {
     if (b[k] === undefined) continue;
     if (typeof b[k] !== "boolean") return badRequest(tr(tr("مقدار تنظیمات حریم خصوصی نامعتبره", "Invalid privacy setting value"), "Invalid privacy setting value"));

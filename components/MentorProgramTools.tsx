@@ -30,14 +30,14 @@ export function MentorProgramTools({
   return (
     <div className="mv2-pg-tools" role="group" aria-label={tr("کارهای بیشتر روی برنامه", "More program actions")}>
       <div className="mentor-btn-group">
-        <button type="button" className="account-outline-btn mentor-btn is-sm" onClick={() => setSaving(true)}>
+        <button type="button" className="btn btn-outline btn-sm" onClick={() => setSaving(true)}>
           {saved ? <>{ic(Check, MI.btnSm)} {tr("قالب ذخیره شد", "Template saved")}</> : <>{ic(LayoutTemplate, MI.btnSm)} {tr("ذخیره به‌عنوان قالب", "Save as template")}</>}
         </button>
-        <Link href={`/mentor/programs/${programId}/duplicate`} prefetch={false} className="account-outline-btn mentor-btn is-sm">
+        <Link href={`/mentor/programs/${programId}/duplicate`} prefetch={false} className="btn btn-outline btn-sm">
           {ic(Copy, MI.btnSm)} {tr("کپی برای شاگرد", "Copy for a student")}
         </Link>
         {showExport && studentId && (
-          <a href={exportCsvUrl(studentId)} download className="account-outline-btn mentor-btn is-sm">
+          <a href={exportCsvUrl(studentId)} download className="btn btn-outline btn-sm">
             {ic(Download, MI.btnSm)} {tr("خروجی CSV", "Export CSV")}
           </a>
         )}

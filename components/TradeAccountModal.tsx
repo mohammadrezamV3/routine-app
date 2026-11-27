@@ -13,6 +13,7 @@ import {
 import { NumberInput } from "./NumberInput";
 import { readTyped, type LimitKey } from "@/lib/numberLimits";
 import { Spinner } from "./Spinner";
+import { PropChallengeFields, configToForm, emptyPropForm, formToConfig, type PropForm } from "./PropChallengeFields";
 import { tr } from "@/lib/i18n";
 
 // ساخت/ویرایش حساب معاملاتی. همان یک فرم برای هر دو حالت است — تفاوتشان
@@ -41,6 +42,7 @@ export function TradeAccountModal({
   const [goalType, setGoalType] = useState<TradeGoalType>(account?.goalType || "AMOUNT");
   const [goalValue, setGoalValue] = useState(account?.goalValue ? String(account.goalValue) : "");
   const [tagIds, setTagIds] = useState<string[]>(account?.tags.map((t) => t.id) || []);
+  const [prop, setProp] = useState<PropForm>(() => (account?.propChallenge ? configToForm(account.propChallenge.config) : emptyPropForm()));
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
@@ -53,6 +55,12 @@ export function TradeAccountModal({
     for (const [text, key] of checks) {
       const r = readTyped(text, key);
       if (!r.ok) { setError(r.error); return; }
+    }
+    // چالش پراپ با همان سنجش سرور (lib/propChallenge.ts) پیش از ذخیره‌ی حساب سنجیده می‌شود
+    let challengeConfig: ReturnType<typeof formToConfig> | null = null;
+    if (type === "PROP" && prop.preset !== "NONE") {
+      challengeConfig = formToConfig(prop);
+      if (typeof challengeConfig === "string") { setError(challengeConfig); return; }
     }
     setSaving(true);
     setError(null);
@@ -78,6 +86,20 @@ export function TradeAccountModal({
       });
       const data = await res.json().catch(() => null);
       if (!res.ok) { setError(data?.error || tr("خطا در ذخیره حساب", "Could not save the account")); return; }
+      // چالش بعد از ذخیره‌ی حساب (برای حساب تازه، شناسه از پاسخ می‌آید)
+      const accountId: string | undefined = account?.id || data?.account?.id;
+      if (accountId && type === "PROP" && (challengeConfig || account?.propChallenge)) {
+        const cr = await fetch(`/api/trade/accounts/${accountId}/challenge`, challengeConfig
+          ? { method: "PUT", headers: { "Content-Type": "application/json" }, body: JSON.stringify(challengeConfig) }
+          : { method: "DELETE" });
+        if (!cr.ok) {
+          const cd = await cr.json().catch(() => null);
+          // حساب تازه ساخته شده؛ ماندن در فرم یعنی ساخت دوباره‌ی همان حساب، پس می‌بندیم (چالش از ویرایش حساب قابل تنظیم است)
+          if (!account) { onSaved(); return; }
+          setError(cd?.error || tr("حساب ذخیره شد ولی چالش ذخیره نشد", "The account was saved but the challenge was not"));
+          return;
+        }
+      }
       onSaved();
     } catch {
       setError(tr("ارتباط با سرور برقرار نشد — دوباره تلاش کن", "Could not reach the server. Try again"));
@@ -107,6 +129,8 @@ export function TradeAccountModal({
           onChange={setType}
           options={(Object.keys(ACCOUNT_TYPE_LABELS) as TradeAccountType[]).map((k) => ({ value: k, label: ACCOUNT_TYPE_LABELS[k] }))}
         />
+
+        {type === "PROP" && <PropChallengeFields value={prop} onChange={setProp} />}
 
         <div className="trade-field-row">
           <div>

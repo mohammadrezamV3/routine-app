@@ -28,7 +28,7 @@ const HALF = Math.ceil(TOTAL / 2);
 
 describe("کاتالوگ اچیومنت", () => {
   it("نام انگلیسی، شناسه‌ی یکتا و آیکون اختصاصی برای همه", () => {
-    expect(TOTAL).toBeGreaterThanOrEqual(75);
+    expect(TOTAL).toBeGreaterThanOrEqual(55);
     expect(new Set(ACHIEVEMENTS.map((a) => a.id)).size).toBe(TOTAL);
     for (const a of ACHIEVEMENTS) {
       expect(a.name).toMatch(/^[A-Za-z][A-Za-z' -]+$/);

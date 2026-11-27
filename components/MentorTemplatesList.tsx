@@ -159,10 +159,10 @@ function TemplateRowView({ t, onRenamed, onDelete }: { t: TemplateRow; onRenamed
               />
             </MentorField>
             <div className="mentor-btn-group is-end">
-              <button type="button" className="account-outline-btn muted mentor-btn is-sm" onClick={() => { setMode("idle"); setName(t.name); setErr(null); }} disabled={busy}>
+              <button type="button" className="btn btn-ghost btn-sm" onClick={() => { setMode("idle"); setName(t.name); setErr(null); }} disabled={busy}>
                 {tr("انصراف", "Cancel")}
               </button>
-              <button type="submit" className="trade-primary-btn mentor-btn is-sm" disabled={busy}>
+              <button type="submit" className="btn btn-primary btn-sm" disabled={busy}>
                 {busy ? <Spinner size={14} /> : <>{ic(Check, MI.btnSm)} {tr("ذخیره‌ی اسم", "Save name")}</>}
               </button>
             </div>
@@ -191,10 +191,10 @@ function TemplateRowView({ t, onRenamed, onDelete }: { t: TemplateRow; onRenamed
               )
             )}</MentorCollapse>
             <div className="mv2-pg-tpl-actions">
-              <button type="button" className="mentor-text-btn" onClick={toggleItems} aria-expanded={mode === "items"}>
+              <button type="button" className="btn btn-ghost btn-sm" onClick={toggleItems} aria-expanded={mode === "items"}>
                 <ChevronDown size={MI.btnSm} strokeWidth={MI_STROKE} className={`mv2-pg-chev${mode === "items" ? " is-open" : ""}`} aria-hidden /> {mode === "items" ? tr("بستن", "Close") : tr(`دیدن ${word}ها`, `View ${word}`)}
               </button>
-              <Link href={`/mentor/programs/new?templateId=${encodeURIComponent(t.id)}`} prefetch={false} className="account-outline-btn mentor-btn is-sm">
+              <Link href={`/mentor/programs/new?templateId=${encodeURIComponent(t.id)}`} prefetch={false} className="btn btn-outline btn-sm">
                 {ic(Plus, MI.btnSm)} {tr("ساخت برنامه", "Create program")}
               </Link>
             </div>

@@ -4,7 +4,7 @@ import { useEffect, useState } from "react";
 import { TickButton } from "./TickButton";
 import {
   Bell, Check, Dumbbell, Filter, History, Calendar, Pencil, Percent, Plus, Repeat2, RotateCw,
-  Send, Timer, UtensilsCrossed, Wallet, ArrowUp, X,
+  Timer, UtensilsCrossed, Wallet, ArrowUp, X,
 } from "lucide-react";
 import AIMessage from "@/components/smoothui/components/ai-message";
 import SiriOrb from "@/components/smoothui/components/siri-orb";
@@ -139,7 +139,7 @@ export function PreviewNumo({ live }: PreviewProps) {
         </div>
         <div className="routine-ai-composer">
           <span className="routine-ai-input lsc-numo-input">{tr("پیام…", "Message…")}</span>
-          <span className="routine-ai-action lsc-numo-send"><span className="routine-ai-action-icon"><Send size={16} /></span></span>
+          <span className="routine-ai-action lsc-numo-send"><span className="routine-ai-action-icon"><ArrowUp size={16} /></span></span>
         </div>
       </div>
     </Pv>

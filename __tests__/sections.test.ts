@@ -1,6 +1,7 @@
 import { describe, it, expect, beforeEach, afterEach } from "vitest";
 import {
   isSectionKey,
+  sectionHomePath,
   sectionsOwningPath,
   pathAllowedIn,
   seoLandingOwner,
@@ -306,5 +307,20 @@ describe("cookieDomainForHost", () => {
   it("returns null when hosting is disabled", () => {
     setBase(undefined);
     expect(cookieDomainForHost("trade.arionapp.ir")).toBeNull();
+  });
+});
+
+describe("sectionHomePath", () => {
+  it("workout has no dashboard, every other section lands on it", () => {
+    expect(sectionHomePath("workout")).toBe("/exercise");
+    expect(sectionHomePath("routine")).toBe("/dashboard");
+    expect(sectionHomePath("trade")).toBe("/dashboard");
+    expect(sectionHomePath(null)).toBe("/dashboard");
+  });
+
+  it("/calorie belongs to the workout section only", () => {
+    expect(sectionsOwningPath("/calorie")).toEqual(["workout"]);
+    expect(pathAllowedIn("routine", "/calorie")).toBe(false);
+    expect(pathAllowedIn("workout", "/calorie")).toBe(true);
   });
 });

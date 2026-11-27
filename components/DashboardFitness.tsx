@@ -19,11 +19,11 @@ import { tr, isEn } from "@/lib/i18n";
 export function DashboardExercise({ ex, loading }: { ex: DashExercise | null; loading: boolean }) {
   return (
     <BentoCard area="ex" className="db-ex" label={tr("تمرین", "Workout")}>
-      <CardHead icon="dumbbell" title={tr("تمرین", "Workout")} href="/exercise?tab=exercise" hrefLabel={tr("برنامه", "Plan")} />
+      <CardHead icon="dumbbell" title={tr("تمرین", "Workout")} href="/exercise" hrefLabel={tr("برنامه", "Plan")} />
       {loading ? (
         <FitSkel />
       ) : !ex?.hasPlan ? (
-        <EmptyState icon="dumbbell" text={tr("هنوز برنامه‌ی تمرینی نداری — با هوش مصنوعی در یک دقیقه بساز.", "You do not have a workout plan yet — build one with AI in a minute.")} href="/exercise?tab=exercise" cta={tr("ساخت برنامه", "Build plan")} />
+        <EmptyState icon="dumbbell" text={tr("هنوز برنامه‌ی تمرینی نداری — با هوش مصنوعی در یک دقیقه بساز.", "You do not have a workout plan yet — build one with AI in a minute.")} href="/exercise" cta={tr("ساخت برنامه", "Build plan")} />
       ) : (
         <ExerciseBody ex={ex} />
       )}
@@ -81,7 +81,7 @@ function ExerciseBody({ ex }: { ex: DashExercise }) {
         </ul>
       )}
 
-      <Link href="/exercise?tab=exercise" prefetch className={state === "todo" || state === "going" ? "trade-primary-btn db-fit-cta" : "account-outline-btn mentor-btn db-fit-cta"}>
+      <Link href="/exercise" prefetch className={state === "todo" || state === "going" ? "trade-primary-btn db-fit-cta" : "account-outline-btn mentor-btn db-fit-cta"}>
         {state === "todo" || state === "going" ? <DashIcon name="dumbbell" className="dbi-live" /> : null}
         {cta}
       </Link>
@@ -93,11 +93,11 @@ function ExerciseBody({ ex }: { ex: DashExercise }) {
 export function DashboardCalorie({ cal, loading }: { cal: DashCalorie | null; loading: boolean }) {
   return (
     <BentoCard area="cal" className="db-cal" label={tr("کالری", "Calories")}>
-      <CardHead icon="apple" title={tr("کالری", "Calories")} href="/exercise?tab=calorie" hrefLabel={tr("کالری‌شمار", "Calorie tracker")} />
+      <CardHead icon="apple" title={tr("کالری", "Calories")} href="/calorie" hrefLabel={tr("کالری‌شمار", "Calorie tracker")} />
       {loading ? (
         <FitSkel />
       ) : !cal ? null : !cal.target ? (
-        <EmptyState icon="target" text={tr("هدف کالریت رو تعیین کن تا پیشرفت روزانه‌ت این‌جا بیاد.", "Set your calorie goal to see your daily progress here.")} href="/exercise?tab=calorie" cta={tr("تعیین هدف", "Set goal")} />
+        <EmptyState icon="target" text={tr("هدف کالریت رو تعیین کن تا پیشرفت روزانه‌ت این‌جا بیاد.", "Set your calorie goal to see your daily progress here.")} href="/calorie" cta={tr("تعیین هدف", "Set goal")} />
       ) : (
         <CalorieBody cal={cal} />
       )}
@@ -161,7 +161,7 @@ function CalorieBody({ cal }: { cal: DashCalorie }) {
           <DashIcon name="plus" className="dbi-live" /> {tr("ثبت غذا", "Log food")}
         </button>
       ) : (
-        <Link href="/exercise?tab=calorie" prefetch className="account-outline-btn mentor-btn db-fit-cta">
+        <Link href="/calorie" prefetch className="account-outline-btn mentor-btn db-fit-cta">
           <DashIcon name="plus" className="dbi-live" /> {tr("ثبت غذا", "Log food")}
         </Link>
       )}

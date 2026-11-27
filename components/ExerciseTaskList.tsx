@@ -53,6 +53,7 @@ export function ExerciseTaskList({
   onAddProgram,
   onActiveChange,
   onStarted,
+  onProgress,
   delay,
 }: {
   planId: string;
@@ -70,6 +71,8 @@ export function ExerciseTaskList({
   onActiveChange?: (active: boolean) => void;
   /** «شروع تمرین» روی سرور ثبت شد — حالت «ماندن» با همین روز را گذرانده حساب می‌کند */
   onStarted?: () => void;
+  /** تعداد آیتم‌های انجام‌شده‌ی همین روز (زنده با هر تیک) برای حلقه‌ی بالای صفحه */
+  onProgress?: (done: number, completed: boolean, dateIso: string) => void;
   delay?: number;
 }) {
   useExerciseEn();
@@ -108,6 +111,7 @@ export function ExerciseTaskList({
   }, [active]);
 
   useEffect(() => { onActiveChange?.(active); }, [active, onActiveChange]);
+  useEffect(() => { onProgress?.(checked.size, ended, dateIso); }, [checked, ended, dateIso, onProgress]);
 
   // true = روی سرور نشست. خطا دیگه بی‌صدا بلعیده نمی‌شه: صدازننده تغییر
   // optimistic رو برمی‌گردونه و پیام سراسری (LiveSyncToaster) نشون داده می‌شه.

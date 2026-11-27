@@ -128,7 +128,7 @@ function NotesBody({ identity, studentId, initial, composeOpen, onComposeClose }
   return (
     <MentorSection
       title={tr("یادداشت‌های خصوصی", "Private notes")} icon={ic(NotebookPen, MI.section)} count={notes.length ? fa(notes.length) : undefined}
-      action={<button type="button" className="account-outline-btn mentor-btn is-sm" onClick={() => { setError(null); setSheet(true); }}>{ic(Plus, MI.btnSm)} {tr("یادداشت تازه", "New note")}</button>}
+      action={<button type="button" className="btn btn-outline btn-sm" onClick={() => { setError(null); setSheet(true); }}>{ic(Plus, MI.btnSm)} {tr("یادداشت تازه", "New note")}</button>}
     >
       <MentorSheet open={sheet} onClose={closeSheet} title={tr("یادداشت تازه", "New note")} size="sm" dismissible={busy !== "add"}>
         <form onSubmit={add} noValidate className="mentor-form" style={{ gap: "var(--m-2)" }}>
@@ -140,8 +140,8 @@ function NotesBody({ identity, studentId, initial, composeOpen, onComposeClose }
           <p className="mentor-muted">{tr("فقط خودت می‌بینی", "Only you can see this")}</p>
           {error && <div className="form-inline-error" role="alert">{error}</div>}
           <div className="mentor-btn-group is-end">
-            <button type="button" className="account-outline-btn muted mentor-btn is-sm" onClick={closeSheet}>{tr("انصراف", "Cancel")}</button>
-            <button type="submit" className="trade-primary-btn mentor-btn is-sm" disabled={!draft.trim() || !!busy}>
+            <button type="button" className="btn btn-ghost btn-sm" onClick={closeSheet}>{tr("انصراف", "Cancel")}</button>
+            <button type="submit" className="btn btn-primary btn-sm" disabled={!draft.trim() || !!busy}>
               {busy === "add" ? <Spinner size={14} /> : tr("ذخیره", "Save")}
             </button>
           </div>
@@ -163,11 +163,11 @@ function NotesBody({ identity, studentId, initial, composeOpen, onComposeClose }
                 {editing?.id !== n.id && (
                   <span className="mentor-note-actions">
                     {textOf(n) !== null && (
-                      <button type="button" className="trade-icon-btn" aria-label={tr("ویرایش یادداشت", "Edit note")} onClick={() => { setError(null); setEditing({ id: n.id, body: textOf(n) ?? "" }); }}>
+                      <button type="button" className="btn btn-ghost btn-icon" aria-label={tr("ویرایش یادداشت", "Edit note")} onClick={() => { setError(null); setEditing({ id: n.id, body: textOf(n) ?? "" }); }}>
                         {ic(Pencil, MI.btnSm)}
                       </button>
                     )}
-                    <button type="button" className="trade-icon-btn" aria-label={tr("حذف یادداشت", "Delete note")} onClick={() => { setError(null); setConfirm(n); }}>
+                    <button type="button" className="btn btn-ghost btn-icon" aria-label={tr("حذف یادداشت", "Delete note")} onClick={() => { setError(null); setConfirm(n); }}>
                       {ic(Trash2, MI.btnSm)}
                     </button>
                   </span>
@@ -180,8 +180,8 @@ function NotesBody({ identity, studentId, initial, composeOpen, onComposeClose }
                     value={editing.body} onChange={(e) => setEditing({ id: n.id, body: e.target.value })}
                   />
                   <div className="mentor-btn-group is-end">
-                    <button type="button" className="account-outline-btn muted mentor-btn is-sm" onClick={() => { setEditing(null); setError(null); }}>{tr("انصراف", "Cancel")}</button>
-                    <button type="button" className="trade-primary-btn mentor-btn is-sm" onClick={saveEdit} disabled={!!busy}>
+                    <button type="button" className="btn btn-ghost btn-sm" onClick={() => { setEditing(null); setError(null); }}>{tr("انصراف", "Cancel")}</button>
+                    <button type="button" className="btn btn-primary btn-sm" onClick={saveEdit} disabled={!!busy}>
                       {busy === n.id ? <Spinner size={14} /> : tr("ذخیره", "Save")}
                     </button>
                   </div>

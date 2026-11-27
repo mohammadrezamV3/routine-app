@@ -502,7 +502,7 @@ export function MentorProgramEditor(props: MentorProgramEditorProps) {
                 {(startDate || endDate) && (
                   <div>
                     <button
-                      type="button" className="mentor-text-btn"
+                      type="button" className="btn btn-ghost btn-sm"
                       onClick={() => { setStartDate(null); setEndDate(null); setFormErr((f) => ({ ...f, dates: undefined })); dirty(); }}
                     >
                       {ic(X, MI.btnSm)} {tr("پاک کردن تاریخ‌ها", "Clear dates")}
@@ -555,10 +555,10 @@ export function MentorProgramEditor(props: MentorProgramEditorProps) {
             </div>
             {formErr.items && <p className="mentor-field-error" role="alert">{formErr.items}</p>}
             <div className="mv2-pg-addrow">
-              <button type="button" className="trade-icon-btn mv2-pg-add" onClick={addItem} disabled={items.length >= MAX_ITEMS} aria-label={type === "WORKOUT" ? tr("افزودن حرکت", "Add exercise") : tr("افزودن کار", "Add task")}>
+              <button type="button" className="btn btn-ghost btn-icon mv2-pg-add" onClick={addItem} disabled={items.length >= MAX_ITEMS} aria-label={type === "WORKOUT" ? tr("افزودن حرکت", "Add exercise") : tr("افزودن کار", "Add task")}>
                 <Plus size={20} strokeWidth={2} aria-hidden />
               </button>
-              <button type="button" className="mentor-text-btn" onClick={saveAsTemplate} disabled={!!busy}>
+              <button type="button" className="btn btn-ghost btn-sm" onClick={saveAsTemplate} disabled={!!busy}>
                 {ic(LayoutTemplate, MI.btnSm)} {tr("ذخیره به‌عنوان قالب", "Save as template")}
               </button>
             </div>
@@ -566,7 +566,7 @@ export function MentorProgramEditor(props: MentorProgramEditorProps) {
 
           {programId && neverSent && props.mode === "edit" && (
             <div className="mv2-pg-danger">
-              <button type="button" className="trade-danger-btn mentor-btn is-sm" disabled={!!busy} onClick={() => { setDeleteError(null); setConfirmDelete(true); }}>
+              <button type="button" className="btn btn-danger btn-sm" disabled={!!busy} onClick={() => { setDeleteError(null); setConfirmDelete(true); }}>
                 {ic(Trash2, MI.btnSm)} {tr("حذف این برنامه", "Delete this program")}
               </button>
             </div>
@@ -580,10 +580,10 @@ export function MentorProgramEditor(props: MentorProgramEditorProps) {
               {edited && <MentorChip tone="neutral">{tr("ویرایش‌شده", "Edited")}</MentorChip>}
             </div>
             <div className="mv2-pg-foot-btns">
-              <button type="button" className="account-outline-btn mentor-btn" disabled={!!busy} onClick={saveDraft}>
+              <button type="button" className="btn btn-outline" disabled={!!busy} onClick={saveDraft}>
                 {busy === "save" ? <Spinner size={14} /> : saved ? tr("ذخیره شد", "Saved") : tr("ذخیره", "Save")}
               </button>
-              <button type="button" className="trade-primary-btn mentor-btn" disabled={!!busy} onClick={send}>
+              <button type="button" className="btn btn-primary" disabled={!!busy} onClick={send}>
                 {busy === "send" ? <Spinner size={14} /> : tr(`فرستادن برای ${studentFirst}`, `Send to ${iso(studentFirst)}`)}
               </button>
             </div>
@@ -673,7 +673,7 @@ function MentorProgramEditorItem({
           {hasErr && !open && <span className="mv2-pg-item-err">{tr("نیاز به اصلاح داره", "Needs fixing")}</span>}
           <ChevronDown size={18} strokeWidth={MI_STROKE} className={`mv2-pg-chev${open ? " is-open" : ""}`} aria-hidden />
         </button>
-        <button type="button" className="trade-icon-btn danger" onClick={onRemove} aria-label={tr(`حذف ${name}`, `Delete ${iso(name)}`)}>
+        <button type="button" className="btn btn-icon btn-danger" onClick={onRemove} aria-label={tr(`حذف ${name}`, `Delete ${iso(name)}`)}>
           <X size={16} strokeWidth={MI_STROKE} aria-hidden />
         </button>
       </div>
