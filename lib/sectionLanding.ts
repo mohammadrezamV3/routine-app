@@ -419,6 +419,7 @@ export function getSectionFooterFeatures(section: SectionKey): { href: string; l
     return [
       { href: "/bodybuilding-program", label: tr("برنامه‌ی بدنسازی", "Workout plan") },
       { href: "/calorie-counter", label: tr("کالری‌شمار", "Calorie counter") },
+      { href: "/workout-tracker", label: tr("ثبت تمرین باشگاه", "Workout tracker") },
       { href: "/calorie-calculator", label: tr("محاسبه کالری روزانه", "Daily calorie calculator") },
       { href: "/bmi-calculator", label: tr("محاسبه BMI", "BMI calculator") },
       { href: "/mentors", label: tr("مربی‌ها", "Mentors") },
@@ -437,6 +438,8 @@ export function getSectionFooterFeatures(section: SectionKey): { href: string; l
     { href: "/routine", label: tr("روتین روزانه", "Daily routine") },
     { href: "/habit-tracker", label: tr("پیگیری عادت‌ها", "Habit tracking") },
     { href: "/daily-planner", label: tr("برنامه‌ریزی روزانه", "Daily planning") },
+    { href: "/todo-list", label: tr("لیست کارهای روزانه", "To-do list") },
+    { href: "/study-planner", label: tr("برنامه‌ریزی درسی", "Study planner") },
     { href: "/ai-planner", label: tr("نومو", "Nomo") },
     { href: "/learning-roadmap", label: tr("رودمپ یادگیری", "Learning roadmap") },
     { href: "/sleep-calculator", label: tr("محاسبه زمان خواب", "Sleep calculator") },

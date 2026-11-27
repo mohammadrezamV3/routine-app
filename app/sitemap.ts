@@ -32,6 +32,9 @@ const SECTION_LANDING_ENTRIES: { path: string; priority: number; lastmod?: Date 
   { path: "/bmi-calculator", priority: 0.9, lastmod: TOOLS_LASTMOD },
   { path: "/lot-size-calculator", priority: 0.9, lastmod: TOOLS_LASTMOD },
   { path: "/sleep-calculator", priority: 0.9, lastmod: TOOLS_LASTMOD },
+  { path: "/todo-list", priority: 0.8, lastmod: TOOLS_LASTMOD },
+  { path: "/study-planner", priority: 0.8, lastmod: TOOLS_LASTMOD },
+  { path: "/workout-tracker", priority: 0.8, lastmod: TOOLS_LASTMOD },
 ];
 
 // فقط URLهای عمومی و کانونیکال — نه صفحات خصوصی/داشبورد (اون‌ها توی

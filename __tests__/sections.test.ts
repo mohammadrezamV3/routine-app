@@ -136,6 +136,9 @@ describe("seoLandingOwner", () => {
     expect(seoLandingOwner("/bmi-calculator")).toBe("workout");
     expect(seoLandingOwner("/lot-size-calculator")).toBe("trade");
     expect(seoLandingOwner("/sleep-calculator")).toBe("routine");
+    expect(seoLandingOwner("/todo-list")).toBe("routine");
+    expect(seoLandingOwner("/study-planner")).toBe("routine");
+    expect(seoLandingOwner("/workout-tracker")).toBe("workout");
     expect(seoLandingOwner("/exercise")).toBeNull();
   });
 
