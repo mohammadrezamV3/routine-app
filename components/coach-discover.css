@@ -21,7 +21,7 @@
 
 /* ── صفحه‌ی مربی ── */
 .chpf-hero{ display:flex; flex-direction:column; align-items:center; gap:10px; padding-block-start:8px; text-align:center; }
-.chpf-avatar{ border-radius:50%; box-shadow:0 0 0 6px rgba(var(--accent-rgb), .12); display:inline-flex; }
+.chpf-avatar{ border-radius:50%; display:inline-flex; }
 .chpf-name{ display:flex; align-items:center; justify-content:center; gap:8px; margin:6px 0 0; font-size:26px; font-weight:800; line-height:1.4; }
 .chpf-headline{ margin:0; max-inline-size:420px; font-size:15px; line-height:1.9; color:var(--muted); }
 .chpf-stats{ display:flex; justify-content:center; gap:36px; padding-block:6px; }

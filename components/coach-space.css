@@ -82,7 +82,7 @@
 /* ── فیلدهای شیت هدف ── */
 .cs-field{ display:flex; flex-direction:column; gap:6px; }
 .cs-field-label{ font-size:12.5px; font-weight:700; color:var(--muted); }
-.cs-goal-preview{ margin:0; padding:10px 14px; border-radius:16px; font-size:14px; font-weight:700; background:rgba(var(--accent-rgb), .1); color:var(--accent); }
+.cs-goal-preview{ margin:0; padding:10px 14px; border-radius:16px; font-size:14px; font-weight:700; border:1px solid var(--surface-line); color:var(--accent); }
 .cs-goal-weeks{ max-block-size:240px; overflow-y:auto; }
 .cs-goal-week{ display:flex; justify-content:space-between; gap:12px; padding:8px 12px; border-radius:14px; font-size:13px; color:var(--muted); border:1px solid var(--surface-line); }
 .cs-goal-week.is-current{ color:var(--text); border-color:rgba(var(--accent-rgb), .3); }
@@ -121,7 +121,7 @@
 .cs-coach-body{ flex:1; min-inline-size:0; display:flex; flex-direction:column; gap:4px; }
 .cs-coach-name{ margin:0; font-size:18px; font-weight:800; line-height:1.5; }
 .cs-coach-row{ min-block-size:68px; }
-.cs-strip{ display:flex; align-items:center; gap:12px; padding:14px 16px; border-radius:22px; text-decoration:none; border-color:rgba(var(--accent-rgb), .3); }
+.cs-strip{ display:flex; align-items:center; gap:12px; padding:14px 16px; border-radius:22px; text-decoration:none; }
 .cs-strip-body{ flex:1; min-inline-size:0; display:flex; flex-direction:column; gap:3px; }
 .cs-strip-title{ font-size:14px; font-weight:700; line-height:1.6; }
 .cs-strip-go{ flex:none; font-size:13px; font-weight:800; color:var(--accent); }
