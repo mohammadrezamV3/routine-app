@@ -115,23 +115,24 @@ function editingNow(): boolean {
 }
 
 /** یک ریلود کامل نگهبان‌دار. هیچ‌وقت حلقه نمی‌شه (حداکثر MAX_RELOADS در RELOAD_WINDOW_MS). */
-export async function hardRecover(reason: string, opts: { skipIfEditing?: boolean } = {}): Promise<void> {
-  if (recovering) return;
+export async function hardRecover(reason: string, opts: { skipIfEditing?: boolean } = {}): Promise<boolean> {
+  if (recovering) return true;
   recovering = true;
   try {
     await whenOnline(); // آفلاین ریلود = صفحه‌ی آفلاین؛ منتظر برگشت شبکه می‌مونیم
-    if (opts.skipIfEditing && editingNow()) return;
+    if (opts.skipIfEditing && editingNow()) return false;
     let raw: string | null = null;
     try { raw = sessionStorage.getItem(RELOAD_KEY); } catch { /* حالت ناشناس */ }
     if (!canAutoReload(raw, Date.now())) {
       // سقف رسید: دیگه ریلود نمی‌کنیم (جلوگیری از حلقه)، فقط اجازه‌ی تلاش بعدی بعد از پنجره
       console.warn("[assets] recovery skipped (reload guard):", reason);
-      return;
+      return false;
     }
     try { sessionStorage.setItem(RELOAD_KEY, nextGuard(raw, Date.now())); } catch { /* بی‌اهمیت */ }
     console.info("[assets] recovering with one reload:", reason);
     await Promise.race([purgeAssetCaches(), sleep(1500)]);
     window.location.reload();
+    return true;
   } finally {
     // اگه ریلود انجام نشد (سقف/ویرایش) بعد از مدتی دوباره می‌تونه تلاش کنه
     setTimeout(() => { recovering = false; }, 15_000);
