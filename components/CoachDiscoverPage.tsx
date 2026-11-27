@@ -88,7 +88,7 @@ function Discovery() {
     <div className="ch-stack">
       <div className="chp-search">
         <input
-          type="search" inputMode="search" enterKeyHint="search" className="trade-glass-field"
+          type="search" inputMode="search" enterKeyHint="search" className="wsearch-newform-name trade-glass-field"
           value={qInput} maxLength={SEARCH_QUERY_MAX + 20} onChange={(e) => setQInput(e.target.value)}
           placeholder={tr("نام یا تخصص مربی", "Mentor name or specialty")} aria-label={tr("جست‌وجوی مربی", "Search mentors")}
         />

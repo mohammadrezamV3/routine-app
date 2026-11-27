@@ -102,7 +102,8 @@
 .ch-row-title.is-done{ color:var(--muted); text-decoration:line-through; }
 
 /* ── گزارش هفته ── */
-.cs-week-nav{ display:flex; align-items:center; gap:6px; }
+.cs-week-nav{ display:flex; align-items:center; gap:2px; }
+.cs-week-nav .btn-icon{ --btn-h:40px; }
 .cs-week-hero{ display:flex; flex-direction:column; align-items:center; gap:14px; text-align:center; }
 .cs-week-grade{ margin:0; font-size:18px; font-weight:800; line-height:1.6; }
 .cs-week-grade small{ font-size:12px; font-weight:600; color:var(--muted); }

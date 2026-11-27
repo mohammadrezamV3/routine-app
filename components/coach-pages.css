@@ -49,6 +49,8 @@
 .chp-a-hero, .chp-a-nomo, .chp-a-inbox, .chp-a-strip{ min-inline-size:0; }
 @media (min-width:1024px){
   .chp-cols{ grid-template-columns:minmax(0,1.6fr) minmax(0,1fr); grid-template-areas:"nomo hero" "inbox hero" "inbox strip"; grid-template-rows:auto auto 1fr; }
+  .chp-cols .chp-hero{ flex-direction:column; text-align:center; gap:14px; }
+  .chp-cols .chp-hero-nums{ justify-content:center; }
   .chp-a-hero{ grid-area:hero; }
   .chp-a-nomo{ grid-area:nomo; }
   .chp-a-inbox{ grid-area:inbox; }

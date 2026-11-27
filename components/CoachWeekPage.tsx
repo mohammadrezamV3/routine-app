@@ -130,7 +130,7 @@ function WeekBody({ role, mentorshipId, studentId }: { role: "MENTOR" | "STUDENT
   const header = (
     <CoachHeader
       back={{ href: spaceHref, label: name || tr("برگشت", "Back") }}
-      leading={peer ? <CoachAvatar user={peer} size={40} /> : undefined}
+      leading={peer ? <CoachAvatar user={peer} size={32} /> : undefined}
       title={report ? tr(`گزارش هفته‌ی ${report.weekIndex}`, `Week ${report.weekIndex} report`) : tr("گزارش هفته", "Week report")}
       action={nav}
     />

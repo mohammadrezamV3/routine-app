@@ -502,7 +502,7 @@ function FeedbackBlock({
           <div className="chpf-field">
             <label htmlFor="chpd-feedback-body">{tr(`بازخورد به ${target ? target.label : "کل برنامه"}`, `Feedback on ${target ? iso(target.label) : "the whole program"}`)}</label>
             <textarea
-              id="chpd-feedback-body" ref={inputRef} className="trade-glass-field" rows={2} value={body} maxLength={FEEDBACK_MAX + 50}
+              id="chpd-feedback-body" ref={inputRef} className="wsearch-newform-name trade-glass-field" rows={2} value={body} maxLength={FEEDBACK_MAX + 50}
               onChange={(e) => { setBody(e.target.value); setError(null); }}
               placeholder={tr("مثلا «ست آخر را با وزنه‌ی کمتر انجام بده»", "For example: \"Do the last set with a lighter weight\"")}
             />

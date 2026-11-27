@@ -24,6 +24,10 @@ body[data-theme="light"] .gring-cap{ filter:drop-shadow(0 0 2px rgba(80,50,20,.3
   background:radial-gradient(60% 100% at 50% 0%, rgba(var(--accent-rgb), .14), transparent 72%);
 }
 body[data-theme="light"] .ch-halo{ background:radial-gradient(60% 100% at 50% 0%, rgba(var(--accent-rgb), .12), transparent 72%); }
+/* دسکتاپ: قالب سایت (.wrap) 620px عرض داره؛ صفحه‌ی عریض مربی (فضا، امروز) از اون بیرون می‌زنه */
+@media (min-width:1024px){
+  body:has(.ch-page.is-wide) .wrap{ max-width:1240px; }
+}
 @media (min-width:1024px){
   .ch-page{ padding-block-end:48px; padding-inline:24px; gap:20px; }
   .ch-space-grid{ display:grid; grid-template-columns:280px minmax(0,1fr) 320px; gap:20px; align-items:start; }
@@ -37,7 +41,14 @@ body[data-theme="light"] .ch-halo{ background:radial-gradient(60% 100% at 50% 0%
 .ch-title{ flex:1; min-inline-size:0; margin:0; font-size:22px; font-weight:800; line-height:1.3; color:var(--text); overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
 .ch-header-action{ display:flex; align-items:center; gap:8px; flex:none; }
 .ch-header-nav{ display:none; flex:none; }
-@media (min-width:1024px){ .ch-header-nav{ display:block; } }
+@media (min-width:1024px){
+  .ch-header-nav{ display:block; order:3; flex:1 0 100%; display:flex; justify-content:center; }
+  .ch-header{ flex-wrap:wrap; }
+  .ch-title{ flex:1 0 auto; max-inline-size:100%; }
+  .ch-page.is-wide .ch-header{ flex-wrap:nowrap; }
+  .ch-page.is-wide .ch-title{ flex:1 1 0; }
+  .ch-page.is-wide .ch-header-nav{ order:0; flex:none; display:block; }
+}
 .ch-back{
   inline-size:44px; block-size:44px; flex:none; display:inline-flex; align-items:center; justify-content:center;
   border-radius:50%; color:var(--text); text-decoration:none; margin-inline-start:-8px;
@@ -45,6 +56,12 @@ body[data-theme="light"] .ch-halo{ background:radial-gradient(60% 100% at 50% 0%
 .ch-back:focus-visible{ outline:2px solid var(--accent); outline-offset:2px; }
 .ch-section-title{ margin:4px 4px 0; font-size:13px; font-weight:700; color:var(--muted); }
 .ch-eyebrow{ font-size:12px; font-weight:700; color:var(--accent); }
+
+/* قاعده‌ی سراسری section{padding:34px 0;border-top} و section:first-child (بالای padding و بوردر رو صفر می‌کنه) نباید به بخش‌های مربی برسه */
+.ch-page section{ padding:0; border-block-start:0; }
+.ch-page section.ch-card{ padding:16px; border:1px solid var(--surface-line); }
+.ch-page section.ch-card-lg{ padding:20px; }
+.ch-page section.chpf-hero{ padding-block-start:8px; }
 
 /* ── کارت و ردیف ── */
 .ch-card{

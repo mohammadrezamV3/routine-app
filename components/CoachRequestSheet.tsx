@@ -127,7 +127,7 @@ export function CoachRequestSheet({
           <div key={i} className="chpf-field">
             <label htmlFor={`chpf-q${i}`}>{q}</label>
             <textarea
-              id={`chpf-q${i}`} className="trade-glass-field" rows={2} value={answers[i] ?? ""} maxLength={INTAKE_ANSWER_MAX + 20}
+              id={`chpf-q${i}`} className="wsearch-newform-name trade-glass-field" rows={2} value={answers[i] ?? ""} maxLength={INTAKE_ANSWER_MAX + 20}
               onChange={(e) => {
                 const v = e.target.value;
                 setAnswers((xs) => xs.map((x, j) => (j === i ? v : x)));
@@ -141,7 +141,7 @@ export function CoachRequestSheet({
         <div className="chpf-field">
           <label htmlFor="chpf-msg">{tr("پیام", "Message")} <span className="chpf-count">{tr("(اختیاری)", "(optional)")}</span></label>
           <textarea
-            id="chpf-msg" className="trade-glass-field" rows={4} value={message} maxLength={MESSAGE_MAX + 50}
+            id="chpf-msg" className="wsearch-newform-name trade-glass-field" rows={4} value={message} maxLength={MESSAGE_MAX + 50}
             onChange={(e) => { setMessage(e.target.value); setError(null); }}
             placeholder={tr("مثلا «می‌خوام هفته‌ای 4 جلسه تمرین کنم»", "For example: \"I want to train 4 times a week\"")}
             aria-invalid={tooLong}

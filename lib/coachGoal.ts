@@ -6,6 +6,7 @@ import type { CoachGoalMetric, CoachGoalStatus, CoachGoalWeek } from "./coachTyp
 import { addDaysIso, isRealIso, weekEndOf, weekStartOf } from "./coachWeek";
 import { checkNumber } from "./numberLimits";
 import { tr } from "./i18n";
+import { toEnDigits } from "./schedule";
 
 export const GOAL_METRICS: CoachGoalMetric[] = ["WORKOUT_SESSIONS", "ROUTINE_RATE"];
 export const GOAL_MAX_WEEKS = 52;
@@ -103,7 +104,7 @@ export type GoalInputOk = { title: string; metric: CoachGoalMetric; target: numb
 /** اعتبارسنجی بدنه‌ی POST هدف؛ startDate به شنبه‌ی همون هفته گرد می‌شه */
 export function validateGoalInput(raw: unknown, todayIso: string): { ok: true; value: GoalInputOk } | { ok: false; error: string } {
   const b = (raw && typeof raw === "object" ? raw : {}) as Record<string, unknown>;
-  const title = typeof b.title === "string" ? b.title.replace(/\s+/g, " ").trim() : "";
+  const title = typeof b.title === "string" ? toEnDigits(b.title).replace(/\s+/g, " ").trim() : "";
   if (!title) return { ok: false, error: tr("برای هدف یک عنوان کوتاه بنویس", "Write a short title for the goal") };
   if (title.length > GOAL_TITLE_MAX) return { ok: false, error: tr(`عنوان هدف حداکثر ${GOAL_TITLE_MAX} حرف باشه`, `The goal title can be at most ${GOAL_TITLE_MAX} characters`) };
   if (!isGoalMetric(b.metric)) return { ok: false, error: tr("نوع هدف نامعتبره", "Invalid goal type") };

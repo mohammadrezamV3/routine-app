@@ -111,7 +111,7 @@ export function CoachProfileReviewSheet({
           <div className="chpf-field">
             <label htmlFor="chpf-review-body">{tr("نظرت", "Your review")} <span className="chpf-count">{tr("(اختیاری)", "(optional)")}</span></label>
             <textarea
-              id="chpf-review-body" className="trade-glass-field" rows={4} value={body} maxLength={REVIEW_MAX + 50}
+              id="chpf-review-body" className="wsearch-newform-name trade-glass-field" rows={4} value={body} maxLength={REVIEW_MAX + 50}
               onChange={(e) => setBody(e.target.value)} aria-invalid={tooLong}
               placeholder={tr("مثلا «برنامه‌ها دقیق و قابل اجرا بود»", "For example: \"The programs were precise and doable\"")}
             />

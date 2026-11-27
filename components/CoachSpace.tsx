@@ -309,7 +309,7 @@ function SpaceBody({ role, mentorshipId }: { role: "MENTOR" | "STUDENT"; mentors
   }
 
   return (
-    <div className={`ch-page cs-page${wide ? " is-wide" : ""}`}>
+    <div className={`ch-page cs-page${desktop ? " is-wide" : ""}`}>
       <span className="ch-halo" aria-hidden="true" />
       {header}
       {subbar}

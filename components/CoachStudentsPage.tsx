@@ -106,7 +106,7 @@ export function CoachStudentsPage() {
           <div className="ch-stack">
             <div className="chp-search">
               <input
-                type="search" className="trade-glass-field" value={q} onChange={(e) => setQ(e.target.value)}
+                type="search" className="wsearch-newform-name trade-glass-field" value={q} onChange={(e) => setQ(e.target.value)}
                 placeholder={tr("جست‌وجوی شاگرد", "Search students")} aria-label={tr("جست‌وجوی شاگرد", "Search students")}
               />
             </div>
