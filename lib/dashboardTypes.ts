@@ -135,7 +135,7 @@ export type DashboardData = {
     /** Owner/ادمین (از دیتابیس) → نام بنفش سمی، بر طلایی مقدمه (lib/nameStyle.ts) */
     staff: boolean;
   };
-  /** «روتین من»: در دوره‌ی ۱۴ روزه‌ی رایگان → روزهای باقی‌مونده؛ null = خریده/سوپریوزر/تموم‌شده */
+  /** «روتین من»: در دوره‌ی 7 روزه‌ی رایگان → روزهای باقی‌مونده؛ null = خریده/سوپریوزر/تموم‌شده */
   routineTrial: { daysLeft: number } | null;
   plan: { name: string; key: string; status: "ACTIVE" | "TRIAL"; endsAt: string } | null;
   /** ماژول‌های فعال (سوپریوزر: همه) */

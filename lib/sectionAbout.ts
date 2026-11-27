@@ -84,7 +84,7 @@ export function getSectionAbout(section: SectionKey): SectionAbout {
           post: tr(" کنار هم‌اند؛ همه‌چیز فارسی و روی موبایل و کامپیوتر یکسان.", " sit side by side; everything in Persian and the same on phone and desktop."),
         },
         trust: {
-          free: tr("3 روز رایگان بدنسازی و کالری‌شمار", "3 free days of workouts and the calorie counter"),
+          free: tr("7 روز رایگان بدنسازی و کالری‌شمار", "7 free days of workouts and the calorie counter"),
           secure: tr("چت‌های سرتاسر رمزنگاری‌شده", "End-to-end encrypted chats"),
           pwa: tr("نصب روی گوشی (PWA)", "Install on your phone (PWA)"),
         },
@@ -158,12 +158,12 @@ export function getSectionAbout(section: SectionKey): SectionAbout {
         { q: tr(`${BRAND_FA} ${label} چه کاری انجام می‌دهد؟`, `What does ${BRAND_EN} ${label} do?`), a: tr("برنامه ورزشی و بدنسازی می‌سازد، تمرین را ست به ست ثبت می‌کند، کالری و ماکروهای روزانه را حساب می‌کند و خواب و استریکت را دنبال می‌کند.", "It builds workout and bodybuilding plans, logs training set by set, calculates daily calories and macros and follows your sleep and streak.") },
         { q: tr("برنامه تمرینی را چطور بسازم؟", "How do I build a workout plan?"), a: tr("قد، وزن، هدف و امکاناتت (باشگاه یا خانه) را می‌گویی و هوش مصنوعی برنامه را می‌سازد؛ می‌توانی دستی هم بچینی.", "You give your height, weight, goal and equipment (gym or home) and AI builds the plan; you can also arrange it by hand.") },
         { q: tr("کالری‌شمار خوراکی‌های ایرانی دارد؟", "Does the calorie counter have Iranian foods?"), a: tr("بله، پایگاه خوراکی‌ها غذاهای ایرانی و جهانی را دارد و مقدار هر وعده را با گرم ثبت می‌کنی.", "Yes, the food database includes Iranian and international foods and you log each meal in grams.") },
-        { q: tr("آیا رایگان است؟", "Is it free?"), a: tr("ثبت‌نام رایگان است. بدنسازی و کالری‌شمار برای هر حساب تازه 3 روز با استفاده‌ی محدود از هوش مصنوعی باز است و بعد از آن اشتراکی است.", "Sign-up is free. Workouts and the calorie counter are open for 3 days on every new account with limited AI use, and subscription-based after that.") },
+        { q: tr("آیا رایگان است؟", "Is it free?"), a: tr("ثبت‌نام رایگان است. بدنسازی و کالری‌شمار برای هر حساب تازه 7 روز با استفاده‌ی محدود از هوش مصنوعی باز است و بعد از آن اشتراکی است.", "Sign-up is free. Workouts and the calorie counter are open for 7 days on every new account with limited AI use, and subscription-based after that.") },
       ],
       final: {
         title: tr("از امروز،", "From today,"),
         accent: tr("تمرین کن.", "train."),
-        sub: tr("بدنسازی و کالری‌شمار برای هر حساب تازه 3 روز رایگان است؛ هدفت را بگو و از همین امروز شروع کن.", "Workouts and the calorie counter are free for 3 days on every new account; tell it your goal and start today."),
+        sub: tr("بدنسازی و کالری‌شمار برای هر حساب تازه 7 روز رایگان است؛ هدفت را بگو و از همین امروز شروع کن.", "Workouts and the calorie counter are free for 7 days on every new account; tell it your goal and start today."),
       },
     };
   }
@@ -190,7 +190,7 @@ export function getSectionAbout(section: SectionKey): SectionAbout {
           post: tr(" کنار هم‌اند؛ همه‌چیز فارسی و بدون نیاز به رمز حساب معاملاتی.", " sit side by side; everything in Persian and without needing your trading account password."),
         },
         trust: {
-          free: tr("3 روز رایگان ژورنال ترید", "3 free days of the trading journal"),
+          free: tr("7 روز رایگان ژورنال ترید", "7 free days of the trading journal"),
           secure: tr("MT4 و MT5 بدون رمز حساب", "MT4 and MT5 without your account password"),
           pwa: tr("نصب روی گوشی (PWA)", "Install on your phone (PWA)"),
         },
@@ -265,12 +265,12 @@ export function getSectionAbout(section: SectionKey): SectionAbout {
         { q: tr(`${BRAND_FA} ${label} چه کاری انجام می‌دهد؟`, `What does ${BRAND_EN} ${label} do?`), a: tr("معاملات حساب‌هایت را ثبت و تحلیل می‌کند، با MT4 و MT5 همگام می‌شود و تقویم اقتصادی، ساعت سشن‌ها و ماشین‌حساب ریسک را کنار ژورنال می‌گذارد.", "It logs and analyzes the trades of your accounts, syncs with MT4 and MT5 and puts the economic calendar, session hours and a risk calculator beside the journal.") },
         { q: tr("آیا رمز حساب معاملاتی لازم است؟", "Do you need my trading account password?"), a: tr("نه. اتصال فقط با کد اتصال و اکسپرت انجام می‌شود و رمز حساب هیچ‌وقت خواسته یا ذخیره نمی‌شود.", "No. Connection uses only a connection code and the Expert Advisor, and your account password is never requested or stored.") },
         { q: tr("می‌توانم چند حساب داشته باشم؟", "Can I have several accounts?"), a: tr("بله، هر حساب معاملاتی آمار و معاملات جدا دارد و می‌توانی همه را با هم هم ببینی.", "Yes, each trading account has its own statistics and trades and you can also see them all together.") },
-        { q: tr("آیا رایگان است؟", "Is it free?"), a: tr("ثبت‌نام رایگان است. ژورنال ترید برای هر حساب تازه 3 روز باز است و بعد از آن اشتراکی است.", "Sign-up is free. The trading journal is open for 3 days on every new account and subscription-based after that.") },
+        { q: tr("آیا رایگان است؟", "Is it free?"), a: tr("ثبت‌نام رایگان است. ژورنال ترید برای هر حساب تازه 7 روز باز است و بعد از آن اشتراکی است.", "Sign-up is free. The trading journal is open for 7 days on every new account and subscription-based after that.") },
       ],
       final: {
         title: tr("از امروز،", "From today,"),
         accent: tr("تحلیل کن.", "analyze."),
-        sub: tr("ژورنال ترید برای هر حساب تازه 3 روز رایگان است؛ حسابت را وصل کن و معاملاتت را تحلیل کن.", "The trading journal is free for 3 days on every new account; connect your account and analyze your trades."),
+        sub: tr("ژورنال ترید برای هر حساب تازه 7 روز رایگان است؛ حسابت را وصل کن و معاملاتت را تحلیل کن.", "The trading journal is free for 7 days on every new account; connect your account and analyze your trades."),
       },
     };
   }
@@ -296,7 +296,7 @@ export function getSectionAbout(section: SectionKey): SectionAbout {
         post: tr(" کنار هم‌اند؛ همه‌چیز فارسی، با تقویم شمسی، و روی موبایل و کامپیوتر یکسان.", " sit side by side; everything in Persian, with the Jalali calendar, and the same on phone and desktop."),
       },
       trust: {
-        free: tr("«روتین من» 14 روز رایگان", "My Routine free for 14 days"),
+        free: tr("«روتین من» 7 روز رایگان", "My Routine free for 7 days"),
         secure: tr("چت‌های سرتاسر رمزنگاری‌شده", "End-to-end encrypted chats"),
         pwa: tr("نصب روی گوشی (PWA)", "Install on your phone (PWA)"),
       },
@@ -376,12 +376,12 @@ export function getSectionAbout(section: SectionKey): SectionAbout {
       { q: tr(`${BRAND_FA} ${label} چه کاری انجام می‌دهد؟`, `What does ${BRAND_EN} ${label} do?`), a: tr("برنامه روزانه و هفتگی با تقویم شمسی می‌سازد، عادت و استریکت را دنبال می‌کند، خوابت را ثبت می‌کند و آنالیز هفتگی می‌دهد.", "It builds daily and weekly plans with the Jalali calendar, follows your habits and streak, logs your sleep and gives a weekly review.") },
       { q: tr("نومو چیست؟", "What is Nomo?"), a: tr("نومو مدیر برنامه هوشمند است؛ به فارسی می‌نویسی چه می‌خواهی و برنامه‌های روتینت را می‌سازد یا جابه‌جا می‌کند.", "Nomo is the smart plan manager; you write in plain language what you want and it creates or moves your routine plans.") },
       { q: tr("استریک چطور حساب می‌شود؟", "How is the streak calculated?"), a: tr("زنجیره‌ی روزهای کامل پشت‌سرهم از دیروز به عقب، و امروز هم همان لحظه‌ای که کامل شد.", "It is the chain of full days in a row going back from yesterday, and today counts the moment it is complete.") },
-      { q: tr("آیا رایگان است؟", "Is it free?"), a: tr("ثبت‌نام رایگان است و «روتین من» برای هر حساب تازه 14 روز رایگان است؛ بعد از آن اشتراکی است.", "Sign-up is free and My Routine is free for 14 days on every new account; subscription-based after that.") },
+      { q: tr("آیا رایگان است؟", "Is it free?"), a: tr("ثبت‌نام رایگان است و «روتین من» برای هر حساب تازه 7 روز رایگان است؛ بعد از آن اشتراکی است.", "Sign-up is free and My Routine is free for 7 days on every new account; subscription-based after that.") },
     ],
     final: {
       title: tr("از امروز،", "From today,"),
       accent: tr("اجرا کن.", "do it."),
-      sub: tr("«روتین من» برای هر حساب تازه 14 روز رایگان است؛ روتینت را بچین و از همین امروز اجرا کن.", "My Routine is free for 14 days for every new account; lay out your routine and start today."),
+      sub: tr("«روتین من» برای هر حساب تازه 7 روز رایگان است؛ روتینت را بچین و از همین امروز اجرا کن.", "My Routine is free for 7 days for every new account; lay out your routine and start today."),
     },
   };
 }

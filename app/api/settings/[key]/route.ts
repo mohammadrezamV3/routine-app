@@ -10,7 +10,7 @@ import { requireModule } from "@/lib/moduleAccess";
 import { featureBlocked } from "@/lib/featureFlagsServer";
 import { validateSettingNumbers } from "@/lib/settingValueLimits";
 
-// کلیدهایی که خود «روتین من»ن — نوشتنشون بعد از ۱۴ روز آزمایشی پلن می‌خواد.
+// کلیدهایی که خود «روتین من»ن — نوشتنشون بعد از 7 روز آزمایشی پلن می‌خواد.
 const ROUTINE_KEYS = new Set(["customOccurrences", "removedOccurrences", "wakeSleepTimes"]);
 
 // این روت یک فروشگاه کلید/مقدار عمومی نیست — فقط کلیدهای شناخته‌شده‌ی

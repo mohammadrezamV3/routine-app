@@ -257,8 +257,8 @@ export function LandingHero({ section = null }: { section?: SectionKey | null })
               const TI = TRUST_ICONS[x.icon];
               return <li key={x.text}><TI size={14} aria-hidden="true" /> {x.text}</li>;
             }) : (<>
-            <li><Sparkles size={14} aria-hidden="true" /> {tr("14 روز رایگان", "14 days free")}</li>
-            <li><Sparkles size={14} aria-hidden="true" /> {tr("3 روز بدنسازی، کالری‌شمار و ژورنال ترید", "3 days of workouts, calorie counter and trading journal")}</li>
+            <li><Sparkles size={14} aria-hidden="true" /> {tr("7 روز رایگان", "7 days free")}</li>
+            <li><Sparkles size={14} aria-hidden="true" /> {tr("7 روز بدنسازی، کالری‌شمار و ژورنال ترید", "7 days of workouts, calorie counter and trading journal")}</li>
             <li><ShieldCheck size={15} aria-hidden="true" /> {tr("روی گوشی و کامپیوتر", "On phone and desktop")}</li>
             <li><Lock size={14} aria-hidden="true" /> {tr("چت‌های سرتاسر رمزنگاری‌شده", "End-to-end encrypted chats")}</li>
             </>)}

@@ -501,7 +501,7 @@ export function AboutFinalCTA({ section = null }: SecProp) {
           <span className="ab-final-ring" aria-hidden="true" />
           <div className="ab-final-mark-wrap" aria-hidden="true"><AboutBrandLogo className="ab-final-mark" /></div>
           <h2 id="ab-final-h" className="ab-final-title">{fin ? fin.title : tr("از امروز،", "From today,")} <em>{fin ? fin.accent : tr("یک‌جا.", "in one place.")}</em></h2>
-          <p className="ab-final-sub">{fin ? fin.sub : tr("«روتین من» برای هر حساب تازه 14 روز رایگان است؛ روتینت را بچین و از همین امروز اجرا کن.", "My Routine is free for 14 days for every new account; lay out your routine and start today.")}</p>
+          <p className="ab-final-sub">{fin ? fin.sub : tr("«روتین من» برای هر حساب تازه 7 روز رایگان است؛ روتینت را بچین و از همین امروز اجرا کن.", "My Routine is free for 7 days for every new account; lay out your routine and start today.")}</p>
           <div className="ab-ctas">
             <AuthAwareCta
               guest={

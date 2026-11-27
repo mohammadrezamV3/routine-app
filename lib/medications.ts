@@ -11,7 +11,7 @@ import { SETTING_KEYS } from "./userSettingKeys";
 export type { Medication } from "./medicationSchedule";
 export {
   MIN_TIMES_PER_DAY, MAX_TIMES_PER_DAY, doseTimeToMinutes, minutesToDoseTime, doseMinutesOfDay,
-  doseIntervalHours, medicationEndDate, isMedicationActiveOn,
+  doseIntervalHours, medicationEndDate, isMedicationActiveOn, hasMedicationCourse,
 } from "./medicationSchedule";
 import type { Medication } from "./medicationSchedule";
 import { medicationEndDate } from "./medicationSchedule";
@@ -39,9 +39,10 @@ export function newMedicationId(): string {
   return "med-" + Date.now().toString(36) + Math.random().toString(36).slice(2, 7);
 }
 
-/** چند روز از دوره مونده (شامل امروز)؛ صفر یعنی دوره تموم شده */
-export function medicationDaysLeft(med: Medication, todayIso: string): number {
+/** چند روز از دوره مونده (شامل امروز)؛ صفر یعنی دوره تموم شده؛ null یعنی بدون دوره (ادامه‌دار) */
+export function medicationDaysLeft(med: Medication, todayIso: string): number | null {
   const end = medicationEndDate(med);
+  if (end === null) return null;
   if (todayIso > end) return 0;
   const from = todayIso < med.startDate ? med.startDate : todayIso;
   const [y1, m1, d1] = from.split("-").map(Number);

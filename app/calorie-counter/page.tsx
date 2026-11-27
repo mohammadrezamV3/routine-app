@@ -68,8 +68,8 @@ function content() {
     {
       q: tr("کالری‌شمار رایگان است؟", "Is the calorie counter free?"),
       a: tr(
-        "بخش تغذیه/کالری جزو ماژول‌های اشتراکی است. هر حساب تازه 3 روز دسترسی به بدنسازی، کالری‌شمار و ژورنال ترید، با استفاده‌ی محدود از هوش مصنوعی می‌گیرد. «روتین من» (روتین و کارهای روزانه) 14 روز رایگان است و بعد با پلن «روتین من» ({{routine_monthly}}) ادامه پیدا می‌کند.",
-        "The nutrition/calorie section is a subscription module. Every new account gets 3 days of access to workouts, the calorie counter and the trading journal, with limited use of AI. “My Routine” (routine and daily tasks) is free for 14 days and then continues with the “My Routine” plan ({{routine_monthly}}).",
+        "بخش تغذیه/کالری جزو ماژول‌های اشتراکی است. هر حساب تازه 7 روز دسترسی به بدنسازی، کالری‌شمار و ژورنال ترید، با استفاده‌ی محدود از هوش مصنوعی می‌گیرد. «روتین من» (روتین و کارهای روزانه) 7 روز رایگان است و بعد با پلن «روتین من» ({{routine_monthly}}) ادامه پیدا می‌کند.",
+        "The nutrition/calorie section is a subscription module. Every new account gets 7 days of access to workouts, the calorie counter and the trading journal, with limited use of AI. “My Routine” (routine and daily tasks) is free for 7 days and then continues with the “My Routine” plan ({{routine_monthly}}).",
       ),
     },
     {
@@ -134,7 +134,7 @@ export default async function CalorieCounterPage() {
             `چطور کار می‌کند و ثبت روزانه‌ی غذا چه چیزی به تو می‌دهد.`,
           `${brand} calculates the calories you need with a scientific formula, splits them across your meals, and makes food logging easier with a list of Iranian foods. This page explains how the calorie calculation works and what logging your food daily gives you.`,
         )}
-        ctaNote={tr("3 روز آزمایشی رایگان", "3 days free trial")}
+        ctaNote={tr("7 روز آزمایشی رایگان", "7 days free trial")}
         sections={[
           {
             title: tr("کالری روزانه از کجا می‌آید؟", "Where do daily calories come from?"),

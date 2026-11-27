@@ -57,6 +57,8 @@ export function validateSettingNumbers(key: string, value: unknown): SettingChec
         if (!isPlainObject(m)) return BAD();
         const t = numField(m, "timesPerDay", "medicationTimes");
         if (t) return { ok: false, error: t };
+        // دوره اختیاریه: نبودن/null = بدون دوره (ادامه‌دار)
+        if (m.durationDays === null) delete m.durationDays;
         const d = numField(m, "durationDays", "medicationDays");
         if (d) return { ok: false, error: d };
       }

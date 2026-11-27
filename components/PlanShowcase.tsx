@@ -50,13 +50,13 @@ export function getPlans(): PlanCard[] {
   return [
   {
     key: "basic", nameFa: tr("روتین من", "My Routine"), icon: ICONS.weekly,
-    // «روتین من» دیگه رایگان دائمی نیست: 14 روز آزمایشی، بعد پلن پولی.
-    note: tr("14 روز رایگان", "14 days free"),
+    // «روتین من» دیگه رایگان دائمی نیست: 7 روز آزمایشی، بعد پلن پولی.
+    note: tr("7 روز رایگان", "7 days free"),
     features: [tr("روتین روزانه و برنامه‌ی هفتگی", "Daily routine and weekly planner"), tr("رودمپ آموزشی هوشمند", "Smart learning roadmap"), tr("نومو — با یک جمله‌ی فارسی برنامه بساز و ویرایش کن", "Nomo: create and edit plans with a plain sentence"), tr("یادآوری برنامه‌ها و دارو", "Reminders for plans and medication"), tr("ثبت خواب و پیوستگی روزها", "Sleep tracking and day streaks")],
   },
   {
     key: "exercise", nameFa: tr("پلن بدنسازی", "Workout plan"), icon: ICONS.exercise,
-    features: [tr("ساخت برنامه‌ی بدنسازی با هوش مصنوعی — 3 بار در ماه", "AI-built workout plans, 3 times a month"), tr("ثبت و پیگیری کالری و ماکروها", "Calorie and macro tracking"), tr("روتین روزانه", "Daily routine")],
+    features: [tr("ساخت برنامه‌ی بدنسازی با هوش مصنوعی — 3 بار در ماه", "AI-built workout plans, 3 times a month"), tr("ثبت و پیگیری کالری و ماکروها", "Calorie and macro tracking"), tr("روتین روزانه", "Daily routine"), tr("ثبت خواب و پیوستگی روزها", "Sleep tracking and day streaks")],
   },
   {
     key: "trade", nameFa: tr("پلن ترید", "Trading plan"), icon: ICONS.trade,
@@ -67,7 +67,7 @@ export function getPlans(): PlanCard[] {
     // «تحلیل هوشمند» طبق درخواست صریح از فیچرهای پلن حذف شد (هنوز آماده
     // نیست — به بخش «به‌زودی»ی جدول جزئیات منتقل شده، getCompareRows
     // پایین همین فایل)؛ جایگزینش «نومو» است.
-    features: [tr("ساخت برنامه‌ی بدنسازی با هوش مصنوعی — 5 بار در ماه", "AI-built workout plans, 5 times a month"), tr("ثبت و پیگیری کالری و ماکروها", "Calorie and macro tracking"), tr("ژورنال ترید و چک‌لیست قبل از معامله", "Trading journal and pre-trade checklist"), tr("تقویم اقتصادی", "Economic calendar"), tr("ورود خودکار معاملات از MT4 و MT5", "Automatic trade import from MT4 and MT5"), tr("رودمپ آموزشی هوشمند", "Smart learning roadmap"), tr("نومو — با یک جمله‌ی فارسی برنامه بساز و ویرایش کن", "Nomo: create and edit plans with a plain sentence"), tr("روتین روزانه", "Daily routine")],
+    features: [tr("ساخت برنامه‌ی بدنسازی با هوش مصنوعی — 5 بار در ماه", "AI-built workout plans, 5 times a month"), tr("ثبت و پیگیری کالری و ماکروها", "Calorie and macro tracking"), tr("ژورنال ترید و چک‌لیست قبل از معامله", "Trading journal and pre-trade checklist"), tr("تقویم اقتصادی", "Economic calendar"), tr("ورود خودکار معاملات از MT4 و MT5", "Automatic trade import from MT4 and MT5"), tr("رودمپ آموزشی هوشمند", "Smart learning roadmap"), tr("نومو — با یک جمله‌ی فارسی برنامه بساز و ویرایش کن", "Nomo: create and edit plans with a plain sentence"), tr("روتین روزانه", "Daily routine"), tr("ثبت خواب و پیوستگی روزها", "Sleep tracking and day streaks")],
   },
   ];
 }
@@ -82,6 +82,8 @@ export function getCompareRows(): CompareRow[] {
   // طبق درخواست صریح: توی نسخه‌ی رایگان هم یادآوری دارو رایگانه — یک ردیف
   // جدا (نه فقط بخشی از «روتین روزانه») که واضح نشون بده حتی «روتین من» هم
   // این رو داره، در همه‌ی پلن‌ها همیشه فعاله.
+  // خواب فقط در بخش روتین و ورزش: پلن ترید ندارد (migration sleep_not_in_trader)
+  { label: tr("ثبت خواب", "Sleep tracking"), included: { basic: true, exercise: true, trade: false, max: true }, sections: ["routine", "workout"] },
   { label: tr("یادآوری دارو", "Medication reminders"), included: { basic: true, exercise: true, trade: true, max: true }, sections: ["routine"] },
   { label: tr("برنامه بدنسازی", "Workout plan"), included: { basic: false, exercise: true, trade: false, max: true }, sections: ["workout"] },
   { label: tr("شمارش کالری", "Calorie counting"), included: { basic: false, exercise: true, trade: false, max: true }, sections: ["workout"] },
@@ -360,7 +362,7 @@ export function PlansSection({ mode, currentPlanKey, title = tr("از چیزی �
           همین متن رو توی یادداشت بالای خودش داره. متن ساده، بی‌بک‌گراند. */}
       {mode === "landing" && !section && (
         <p className={`text-center text-[13px] font-bold ${t.muted}`} style={{ marginBottom: 18 }}>
-          {tr("14 روز رایگان امتحان کن و بعد بر اساس نیازت، امکانات موردنظرت را انتخاب کن. هر حساب تازه: ", "Try it free for 14 days, then pick the features you need. Every new account gets: ")}{trialCopy()}{tr(". «نومو» 10 پیام رایگان دارد و در پلن‌های «روتین من» و مکس نامحدود است.", ". Nomo has 10 free messages and is unlimited in the My Routine and Max plans.")}
+          {tr("7 روز رایگان امتحان کن و بعد بر اساس نیازت، امکانات موردنظرت را انتخاب کن. هر حساب تازه: ", "Try it free for 7 days, then pick the features you need. Every new account gets: ")}{trialCopy()}{tr(". «نومو» 10 پیام رایگان دارد و در پلن‌های «روتین من» و مکس نامحدود است.", ". Nomo has 10 free messages and is unlimited in the My Routine and Max plans.")}
         </p>
       )}
 

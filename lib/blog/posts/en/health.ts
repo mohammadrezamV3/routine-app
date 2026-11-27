@@ -111,7 +111,7 @@ export const HEALTH_POSTS_EN: Record<string, BlogPostEn> = {
       { type: "p", text: "A written program is only a hypothesis; the evidence comes from your logged workouts. In every session, note the weight for each exercise, the reps of each set, and a simple difficulty score (for example from 1 to 10). Every 4 to 6 weeks, take a look: Has the weight gone up? Is there an exercise that always hurts? Is there a session that keeps getting skipped? Based on these answers, change one or two things, not the whole program." },
       { type: "p", text: "If you feel more tired for two or three weeks in a row and your weights are dropping, take a lighter week (a deload): the same exercises, about half the sets or 60 percent of the weight. This planned rest is usually needed to keep progressing." },
       { type: "h2", text: "Arion program builder" },
-      { type: "p", text: "Arion applies this same logic with artificial intelligence. You describe your goal in free text, enter your height, weight and training history and the days you really go to the gym, and the program is built on that basis. If you have physical limitations, suitable alternative exercises are substituted. The bodybuilding section is a separate module, and a new account gets a 3-day trial period." },
+      { type: "p", text: "Arion applies this same logic with artificial intelligence. You describe your goal in free text, enter your height, weight and training history and the days you really go to the gym, and the program is built on that basis. If you have physical limitations, suitable alternative exercises are substituted. The bodybuilding section is a separate module, and a new account gets a 7-day trial period." },
       { type: "cta", text: "Build a weekly program that matches your goal and your days.", href: "/bodybuilding-program", label: "Arion bodybuilding program" },
     ],
     faq: [
@@ -239,7 +239,7 @@ export const HEALTH_POSTS_EN: Record<string, BlogPostEn> = {
         ],
       },
       { type: "h2", text: "Logging calories in Arion" },
-      { type: "p", text: "Arion performs this calculation with the Mifflin-St Jeor formula and the same safety floor we discussed, and divides calories across your daily meals. To log food, simply find its name in the list of foods and enter the amount, and its calories and macronutrients are calculated. The calorie counter is a separate module, and a new account gets a 3-day trial period." },
+      { type: "p", text: "Arion performs this calculation with the Mifflin-St Jeor formula and the same safety floor we discussed, and divides calories across your daily meals. To log food, simply find its name in the list of foods and enter the amount, and its calories and macronutrients are calculated. The calorie counter is a separate module, and a new account gets a 7-day trial period." },
       { type: "cta", text: "Log your food and see how much of your calorie goal is left for today.", href: "/calorie-counter", label: "Arion calorie counter" },
     ],
     faq: [
@@ -359,7 +359,7 @@ export const HEALTH_POSTS_EN: Record<string, BlogPostEn> = {
         "\"Coffee replaces sleep\": caffeine temporarily raises alertness but does not erase your sleep debt.",
       ] },
       { type: "h2", text: "Logging sleep in Arion" },
-      { type: "p", text: "In the sleep section of Arion you can set a sleep goal, log your nights and see how many complete cycles you slept. The sleep section is part of the \"My Routine\" module, which gives each new account a 14-day trial. If you only want a quick number, the free calculator is enough." },
+      { type: "p", text: "In the sleep section of Arion you can set a sleep goal, log your nights and see how many complete cycles you slept. The sleep section is part of the \"My Routine\" module, which gives each new account a 7-day trial. If you only want a quick number, the free calculator is enough." },
       { type: "cta", text: "Look at your sleep and daily routine side by side and build a consistent schedule.", href: "/routine", label: "My Routine on Arion" },
     ],
     faq: [
@@ -475,7 +475,7 @@ export const HEALTH_POSTS_EN: Record<string, BlogPostEn> = {
         ["Bedtime", "Lie down in a dark, cool and quiet bed"],
       ] },
       { type: "h2", text: "Sleep and your daily routine" },
-      { type: "p", text: "Good sleep usually comes from a consistent routine: a set wake-up time, a nightly reminder and logging your sleep to see the trend. In the \"My Routine\" section, Arion lets you set a sleep goal and log your nights so you can see how much you actually sleep. After the 14-day trial period, this section requires the \"My Routine\" plan." },
+      { type: "p", text: "Good sleep usually comes from a consistent routine: a set wake-up time, a nightly reminder and logging your sleep to see the trend. In the \"My Routine\" section, Arion lets you set a sleep goal and log your nights so you can see how much you actually sleep. After the 7-day trial period, this section requires the \"My Routine\" plan." },
       { type: "cta", text: "Put your sleep, tasks and habits side by side in one daily schedule.", href: "/routine", label: "My Routine on Arion" },
     ],
     faq: [
@@ -585,7 +585,7 @@ export const HEALTH_POSTS_EN: Record<string, BlogPostEn> = {
       { type: "h2", text: "Protein and weight loss" },
       { type: "p", text: "When you cut calories, the body tends to lose some muscle too. Higher protein intake combined with resistance training reduces this loss. Protein is also more filling than carbohydrates and fat and has a higher thermic effect, so staying on a lighter diet is easier for many people." },
       { type: "h2", text: "Logging protein in Arion" },
-      { type: "p", text: "In the Arion calorie counter you can log foods with their amounts and see calories and macronutrients (protein, carbohydrates and fat) for each meal and for the whole day. The calorie counter is a separate module, and a new account gets a 3-day trial." },
+      { type: "p", text: "In the Arion calorie counter you can log foods with their amounts and see calories and macronutrients (protein, carbohydrates and fat) for each meal and for the whole day. The calorie counter is a separate module, and a new account gets a 7-day trial." },
       { type: "cta", text: "Log today's food and see whether you have reached your protein target.", href: "/calorie-counter", label: "Arion calorie counter" },
     ],
     faq: [
@@ -721,7 +721,7 @@ export const HEALTH_POSTS_EN: Record<string, BlogPostEn> = {
       { type: "h2", text: "Separating muscle soreness from injury pain" },
       { type: "p", text: "A dull, spread-out muscle soreness that appears 1 to 3 days after a new training program is usually normal and improves with light exercise and movement. However, sharp, localized pain in a joint or tendon, swelling, numbness, or pain that gets worse over several days is a sign of injury. Stop training that area, and if it continues, see a doctor or physiotherapist." },
       { type: "h2", text: "Building a program in Arion" },
-      { type: "p", text: "If you do not want to build the program yourself, Arion creates a weekly program based on your goal, experience, training days and any physical limitations, and tracks your workout progress. Bodybuilding is a separate module, and a new account gets a 3-day trial." },
+      { type: "p", text: "If you do not want to build the program yourself, Arion creates a weekly program based on your goal, experience, training days and any physical limitations, and tracks your workout progress. Bodybuilding is a separate module, and a new account gets a 7-day trial." },
       { type: "cta", text: "Build a bodybuilding program that matches your goal and your free days.", href: "/bodybuilding-program", label: "Arion bodybuilding program" },
     ],
     faq: [
@@ -844,7 +844,7 @@ export const HEALTH_POSTS_EN: Record<string, BlogPostEn> = {
         "Repeat these measurements every one to two months and note the trend.",
         "If the trend is worrying or you have doubts, discuss the results with a doctor.",
       ] },
-      { type: "p", text: "To turn your goal into a calorie number, the article \"Calculating daily calories\" in this blog explains it step by step. In Arion you can also track your weight and calorie goal in the calorie counter section; this section is a separate module, and a new account gets a 3-day trial." },
+      { type: "p", text: "To turn your goal into a calorie number, the article \"Calculating daily calories\" in this blog explains it step by step. In Arion you can also track your weight and calorie goal in the calorie counter section; this section is a separate module, and a new account gets a 7-day trial." },
       { type: "cta", text: "Calculate your daily calorie target based on your height, weight and activity.", href: "/tools/calorie-calculator", label: "Free calorie calculator" },
     ],
     faq: [
