@@ -94,9 +94,9 @@ body[data-theme="light"] .sld-caption.is-band.slp-c-poor{ color:color-mix(in srg
 .sld-time.is-wake{ justify-self:end; }
 .sld-time-ico{
   width:38px; height:38px; flex:none; border-radius:50%; display:grid; place-items:center;
-  border:1.5px solid color-mix(in srgb, var(--slp-ink) 60%, transparent); color:var(--slp-ink);
+  border:1px solid var(--box-line); color:var(--accent);
 }
-.sld-time.is-wake .sld-time-ico{ border-color:color-mix(in srgb, var(--slp-fair) 65%, transparent); color:var(--slp-fair); }
+body[data-theme="light"] .sld-time-ico{ color:var(--accent-deep, var(--accent)); }
 .sld-time-ico svg{ width:18px; height:18px; }
 .sld-time-txt{ display:flex; flex-direction:column; line-height:1.25; text-align:start; min-width:0; }
 .sld-time-txt small{ font-size:11.5px; color:var(--slp-sub); font-weight:700; }
@@ -122,14 +122,14 @@ body[data-theme="light"] .sld-caption.is-band.slp-c-poor{ color:color-mix(in srg
   .sld-tile{ grid-template-columns:minmax(0,1fr) auto; grid-template-areas:"ico go" "txt txt"; align-items:start; }
   .sld-tile-go{ align-self:center; }
 }
-@media (hover:hover){ .sld-tile:hover{ border-color:color-mix(in srgb, var(--slp-ink) 55%, var(--box-line)); } }
+@media (hover:hover){ .sld-tile:hover{ border-color:color-mix(in srgb, var(--accent) 40%, var(--box-line)); } }
 .sld-tile:active{ transform:scale(.98); }
 .sld-tile:focus-visible{ outline:2px solid var(--accent); outline-offset:2px; }
 .sld-tile-ico{
   grid-area:ico; width:40px; height:40px; border-radius:50%; display:grid; place-items:center; flex:none;
-  color:var(--slp-ink); border:1.5px solid color-mix(in srgb, var(--slp-ink) 60%, transparent);
+  color:var(--accent); border:1px solid var(--box-line);
 }
-.sld-tile.is-goal .sld-tile-ico{ color:var(--slp-fair); border-color:color-mix(in srgb, var(--slp-fair) 65%, transparent); }
+body[data-theme="light"] .sld-tile-ico{ color:var(--accent-deep, var(--accent)); }
 .sld-tile-ico svg{ width:19px; height:19px; }
 .sld-tile-txt{ grid-area:txt; display:flex; flex-direction:column; line-height:1.35; min-width:0; max-width:100%; }
 .sld-tile-txt small{ font-size:12px; color:var(--slp-sub); font-weight:700; }
@@ -164,8 +164,6 @@ body[data-theme="light"] .sld-insight.is-info{ color:#3F4EC8; }
 
 /* ── هفت شب اخیر ───────────────────────────────────────── */
 .slw{ gap:16px; }
-.slw-legend{ display:inline-flex; align-items:center; gap:5px; }
-.slw-legend i{ display:block; width:8px; height:8px; border-radius:50%; background:currentColor; }
 .slw-grid{ --slw-top:28px; position:relative; display:grid; grid-template-columns:repeat(7, minmax(0,1fr)); gap:2px; padding-inline-start:40px; }
 .slw-goal{
   position:absolute; inset-inline:0; height:0; pointer-events:none; z-index:1;
@@ -188,7 +186,7 @@ body[data-theme="light"] .sld-insight.is-info{ color:#3F4EC8; }
 .slw-slot{ fill:color-mix(in srgb, var(--text) 8%, transparent); }
 .slw-fill{ fill:currentColor; }
 .slw-fill:not([class*="slp-c-"]){ color:var(--slp-good); }
-.slw-gloss{ fill:#fff; opacity:.28; pointer-events:none; }
+.slw-gloss{ display:none; }
 .slw-cap{ fill:var(--accent); }
 .slw-day{ font-size:12px; font-weight:700; color:var(--slp-sub); }
 .slw-defs{ position:absolute; width:0; height:0; overflow:hidden; pointer-events:none; }
