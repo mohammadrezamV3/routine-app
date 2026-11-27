@@ -59,7 +59,6 @@ export function SleepWeek({
     <section className="sl-card slw m-rise" style={{ "--i": 1 } as React.CSSProperties}>
       <div className="sl-head-row">
         <h3 className="sl-card-title">{tr("هفت شب اخیر", "Last 7 nights")}</h3>
-        <span className="slw-legend" aria-hidden="true"><i className="slp-c-poor" /><i className="slp-c-fair" /><i className="slp-c-good" /><i className="slp-c-great" /></span>
       </div>
       <div className="slw-grid">
         <svg width="0" height="0" className="slw-defs" aria-hidden="true" focusable="false">
