@@ -8,6 +8,8 @@ import { SmartLink as Link } from "@/components/SmartLink";
 import { ArrowUp, X } from "lucide-react";
 import { LockBodyScroll } from "./LockBodyScroll";
 import { primeSettingCache } from "@/lib/storage";
+import { publishChange } from "@/lib/liveSync";
+import "./nomo-agent.css";
 import { SETTING_KEYS } from "@/lib/userSettingKeys";
 import { isoLocal } from "@/lib/jalali";
 import { tr } from "@/lib/i18n";
@@ -18,10 +20,22 @@ import {
   type AIState, useSimulatedAmplitude,
 } from "@/components/smoothui/components/ai-core";
 
-type Msg = { id: string; role: "user" | "bot"; text: string; tone?: "ok" | "warn" | "error" };
+type Proposal = {
+  ops: unknown[];
+  summaries: string[];
+  status: "pending" | "applying" | "applied" | "cancelled";
+  /** برای ضدتکرار بودن «تایید» (دوبار زدن/ارسال دوباره بعد از قطعی) */
+  requestId: string;
+};
+type Msg = { id: string; role: "user" | "bot"; text: string; tone?: "ok" | "warn" | "error"; proposal?: Proposal };
 type Quota = { unlimited: boolean; used: number; limit: number | null; remaining: number | null };
 
-const greeting = () => tr("سلام! من نومو هستم، دستیار برنامه‌ات. بگو چی رو اضافه، جابه‌جا یا ویرایش کنم.", "Hi! I'm Nomo, your routine assistant. Tell me what to add, move or edit.");
+const greeting = () => tr("سلام! من نومو هستم. برنامه اضافه یا جابه‌جا می‌کنم، خواب و غذا و تمرین و معامله ثبت می‌کنم، تیک می‌زنم و به سوال‌هات درباره‌ی اپ جواب می‌دم.", "Hi! I'm Nomo. I can add or move plans, log sleep, food, workouts and trades, tick tasks, and answer questions about the app.");
+
+function newRequestId() {
+  try { if (typeof crypto !== "undefined" && crypto.randomUUID) return crypto.randomUUID(); } catch { /* ignore */ }
+  return `r${Date.now().toString(36)}${Math.random().toString(36).slice(2, 12)}`;
+}
 
 function newId() {
   return Math.random().toString(36).slice(2);
@@ -150,20 +164,60 @@ export function RoutineAiFab({ onChanged }: { onChanged: () => void }) {
     return id;
   }
 
+  function patchProposal(id: string, patch: Partial<Proposal>) {
+    setMsgs((all) => all.map((m) => (m.id === id && m.proposal ? { ...m, proposal: { ...m.proposal, ...patch } } : m)));
+  }
+
+  /** تغییر برنامه‌های روتین (افزودن/جابه‌جایی/حذف) — همان مسیر قبلی با اعتبارسنجی کامل سمت سرور */
+  async function runProgram(body: string, history: { role: string; text: string }[]) {
+    const res = await fetch("/api/routine/assistant", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      // تاریخ محلی دستگاه — «امروز/فردا» باید همان روزی باشد که کاربر می‌بیند
+      body: JSON.stringify({ message: body, history, today: isoLocal(new Date()) }),
+    });
+    const data = await res.json().catch(() => null);
+
+    if (!res.ok) {
+      push("bot", data?.error || tr("یک مشکل ناشناخته پیش آمد. دوباره امتحان کن.", "Something went wrong. Please try again."), "error");
+      if (data?.quota) setQuota(data.quota);
+      setOrbState("error");
+      return;
+    }
+
+    if (data?.quota) setQuota(data.quota);
+
+    if (data?.changed && Array.isArray(data.occurrences)) {
+      // سرور نوشته، پس کش کلاینت باید همان لحظه مقدار تازه را بگیرد —
+      // وگرنه refresh() زیر، تا انقضای TTL همان فهرست قدیمی را می‌خواند.
+      primeSettingCache(SETTING_KEYS.customOccurrences, data.occurrences);
+      if (Array.isArray(data.removed)) primeSettingCache(SETTING_KEYS.removedOccurrences, data.removed);
+      onChanged();
+    }
+
+    const tone: Msg["tone"] = data?.problems?.length
+      ? (data?.applied?.length ? "warn" : "error")
+      : (data?.changed ? "ok" : undefined);
+    // طبق درخواست صریح: بعد از هر پاسخ گزینه‌ی پیشنهادی نشان داده نمی‌شود.
+    push("bot", data?.reply || tr("چیزی برای گفتن ندارم.", "I have nothing to say."), tone);
+    setOrbState(tone === "error" ? "error" : "done");
+  }
+
   async function send(text: string) {
     const body = text.trim();
     if (!body || sending) return;
     setInput("");
     // تاریخچه *قبل* از افزودن همین پیام گرفته می‌شود؛ خود پیام جدا می‌رود.
     const history = msgs.slice(-6).map((m) => ({ role: m.role === "user" ? "user" : "assistant", text: m.text }));
+    // پیشنهاد تاییدنشده با پیام تازه بی‌اثر می‌شود (کاربر موضوع را عوض کرده)
+    setMsgs((all) => all.map((m) => (m.proposal?.status === "pending" ? { ...m, proposal: { ...m.proposal, status: "cancelled" as const } } : m)));
     push("user", body);
     setSending(true);
     setOrbState("thinking");
     try {
-      const res = await fetch("/api/routine/assistant", {
+      const res = await fetch("/api/nomo/agent", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        // تاریخ محلی دستگاه — «امروز/فردا» باید همان روزی باشد که کاربر می‌بیند
         body: JSON.stringify({ message: body, history, today: isoLocal(new Date()) }),
       });
       const data = await res.json().catch(() => null);
@@ -174,28 +228,64 @@ export function RoutineAiFab({ onChanged }: { onChanged: () => void }) {
         setOrbState("error");
         return;
       }
-
       if (data?.quota) setQuota(data.quota);
 
-      if (data?.changed && Array.isArray(data.occurrences)) {
-        // سرور نوشته، پس کش کلاینت باید همان لحظه مقدار تازه را بگیرد —
-        // وگرنه refresh() زیر، تا انقضای TTL همان فهرست قدیمی را می‌خواند.
-        primeSettingCache(SETTING_KEYS.customOccurrences, data.occurrences);
-        if (Array.isArray(data.removed)) primeSettingCache(SETTING_KEYS.removedOccurrences, data.removed);
-        onChanged();
+      if (data?.kind === "delegate") {
+        await runProgram(body, history);
+        return;
       }
-
-      const tone: Msg["tone"] = data?.problems?.length
-        ? (data?.applied?.length ? "warn" : "error")
-        : (data?.changed ? "ok" : undefined);
-      // طبق درخواست صریح: بعد از هر پاسخ گزینه‌ی پیشنهادی نشان داده نمی‌شود.
-      push("bot", data?.reply || tr("چیزی برای گفتن ندارم.", "I have nothing to say."), tone);
-      setOrbState(tone === "error" ? "error" : "done");
+      if (data?.kind === "proposal" && Array.isArray(data.ops) && Array.isArray(data.summaries) && data.ops.length) {
+        const id = newId();
+        setMsgs((m) => [...m, {
+          id, role: "bot", text: data.reply || tr("این‌ها را ثبت کنم؟", "Shall I log these?"),
+          proposal: { ops: data.ops, summaries: data.summaries.map(String), status: "pending", requestId: newRequestId() },
+        }]);
+        setOrbState("done");
+        return;
+      }
+      push("bot", data?.reply || tr("چیزی برای گفتن ندارم.", "I have nothing to say."));
+      setOrbState("done");
     } catch {
       push("bot", tr("اتصال برقرار نشد. اینترنتت را چک کن و دوباره بفرست.", "Couldn't connect. Check your internet and send again."), "error");
       setOrbState("error");
     } finally {
       setSending(false);
+    }
+  }
+
+  /** تایید کاربر → سرور دوباره اعتبارسنجی می‌کند و با همان منطق هر بخش می‌نویسد */
+  async function confirmProposal(msg: Msg) {
+    const pr = msg.proposal;
+    if (!pr || pr.status !== "pending") return;
+    patchProposal(msg.id, { status: "applying" });
+    setOrbState("thinking");
+    try {
+      const res = await fetch("/api/nomo/agent/apply", {
+        method: "POST",
+        headers: { "Content-Type": "application/json", "x-arion-request-id": pr.requestId },
+        body: JSON.stringify({ ops: pr.ops, today: isoLocal(new Date()), tz: new Date().getTimezoneOffset() }),
+      });
+      const data = await res.json().catch(() => null);
+      if (!res.ok || !Array.isArray(data?.results)) {
+        patchProposal(msg.id, { status: "pending" });
+        push("bot", data?.error || tr("ثبت نشد. دوباره امتحان کن.", "Could not save. Please try again."), "error");
+        setOrbState("error");
+        return;
+      }
+      patchProposal(msg.id, { status: "applied" });
+      const results = data.results as { ok: boolean; summary: string; error?: string }[];
+      const okCount = results.filter((r) => r.ok).length;
+      if (okCount && Array.isArray(data.changedKeys)) {
+        publishChange(data.changedKeys.map(String));
+        onChanged();
+      }
+      const lines = results.map((r) => (r.ok ? `✓ ${r.summary}` : `✕ ${r.summary} — ${r.error ?? ""}`));
+      push("bot", lines.join("\n"), okCount === results.length ? "ok" : okCount ? "warn" : "error");
+      setOrbState(okCount ? "done" : "error");
+    } catch {
+      patchProposal(msg.id, { status: "pending" });
+      push("bot", tr("اتصال برقرار نشد. اینترنتت را چک کن و دوباره تایید کن.", "Couldn't connect. Check your internet and confirm again."), "error");
+      setOrbState("error");
     }
   }
 
@@ -254,6 +344,33 @@ export function RoutineAiFab({ onChanged }: { onChanged: () => void }) {
                     ))}
                   </AIMessage>
 
+                  {m.proposal && (
+                    <div className={`nomo-proposal is-${m.proposal.status}`}>
+                      <ul className="nomo-proposal-list">
+                        {m.proposal.summaries.map((line, i) => <li key={i}>{line}</li>)}
+                      </ul>
+                      {(m.proposal.status === "pending" || m.proposal.status === "applying") && (
+                        <div className="nomo-proposal-actions">
+                          <button
+                            type="button"
+                            className="btn btn-ghost btn-sm"
+                            disabled={m.proposal.status === "applying"}
+                            onClick={() => patchProposal(m.id, { status: "cancelled" })}
+                          >
+                            {tr("لغو", "Cancel")}
+                          </button>
+                          <button
+                            type="button"
+                            className={`btn btn-primary btn-sm${m.proposal.status === "applying" ? " is-loading" : ""}`}
+                            disabled={m.proposal.status === "applying"}
+                            onClick={() => confirmProposal(m)}
+                          >
+                            {tr("تایید و ثبت", "Confirm")}
+                          </button>
+                        </div>
+                      )}
+                    </div>
+                  )}
                 </Fragment>
               ))}
 
