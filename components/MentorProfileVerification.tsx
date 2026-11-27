@@ -4,7 +4,7 @@ import { tr, iso } from "@/lib/i18n";
 import { brandName } from "@/lib/brand";
 import { useRef, useState } from "react";
 import {
-  Award, BadgeCheck, CircleSlash, Download, FileText, Hourglass, IdCard, Image as ImageIcon, Trash2, Upload, XCircle,
+  Award, BadgeCheck, Camera, CircleSlash, Download, FileText, Hourglass, IdCard, Image as ImageIcon, Trash2, Upload, XCircle,
 } from "lucide-react";
 import { Spinner } from "./Spinner";
 import { MentorConfirmDialog } from "./MentorConfirmDialog";
@@ -19,11 +19,12 @@ import type { MentorDocumentMeta, MentorSelf, VerificationStatus } from "@/lib/m
 const MAX_BYTES = 5 * 1024 * 1024;
 const ALLOWED_MIME = ["image/jpeg", "image/png", "image/webp", "application/pdf"];
 const ALLOWED_EXT = /\.(jpe?g|png|webp|pdf)$/i;
+const IMAGE_ACCEPT = ".jpg,.jpeg,.png,.webp,image/jpeg,image/png,image/webp";
 const ACCEPT = ".jpg,.jpeg,.png,.webp,.pdf,image/jpeg,image/png,image/webp,application/pdf";
 
 const ic = (Icon: typeof Award, size: number) => <Icon size={size} strokeWidth={MI_STROKE} aria-hidden />;
 
-type Target = { kind: "IDENTITY" | "CERTIFICATE"; category: string | null };
+type Target = { kind: "IDENTITY" | "IDENTITY_SELFIE" | "CERTIFICATE"; category: string | null };
 
 /** آپلود با XHR تا درصد پیشرفت واقعی داشته باشیم (fetch پیشرفت آپلود نمی‌دهد) */
 function uploadWithProgress(form: FormData, onProgress: (p: number) => void): Promise<{ ok: boolean; status: number; error?: string }> {
@@ -75,16 +76,7 @@ export function MentorProfileVerification({ profile, onChanged }: { profile: Men
   return (
     <section id="verification" className="mv2-set-verify">
       <h2 className="mv2-set-h">{icon}{title}</h2>
-      <MentorDocRow
-        title={tr("مدرک شناسایی", "ID document")}
-        hint={tr("کارت ملی یا گذرنامه، برای نمایش در فهرست مربی‌ها لازمه", "A national ID card or passport, required to appear in the mentor listing")}
-        icon={ic(IdCard, MI.row)}
-        status={profile.identityStatus}
-        rejectReason={profile.identityRejectReason}
-        target={{ kind: "IDENTITY", category: null }}
-        docs={profile.documents.filter((d) => d.kind === "IDENTITY")}
-        onChanged={onChanged}
-      />
+      <MentorIdentitySteps profile={profile} onChanged={onChanged} />
       {cats.length === 0 ? (
         <MentorEmpty>{tr("برای فرستادن مدرک تخصصی، یه حوزه انتخاب و ذخیره کن", "Pick and save a field to send a professional document")}</MentorEmpty>
       ) : cats.map((c) => {
@@ -108,9 +100,79 @@ export function MentorProfileVerification({ profile, onChanged }: { profile: Men
   );
 }
 
+/**
+ * احراز هویت دومرحله‌ای: (1) مدرک شناسایی (2) سلفی با کارت ملی در دست.
+ * تا هر دو فرستاده نشن درخواست به صف بررسی نمی‌ره.
+ */
+function MentorIdentitySteps({ profile, onChanged }: { profile: MentorSelf; onChanged: () => void }) {
+  const idDocs = profile.documents.filter((d) => d.kind === "IDENTITY");
+  const selfieDocs = profile.documents.filter((d) => d.kind === "IDENTITY_SELFIE");
+  const status = profile.identityStatus;
+  // مربی تاییدشده‌ی قدیمی که سلفی نداره تاییدش سر جاشه؛ فقط اگه فایل تازه بفرسته باید هر دو رو کامل کنه
+  const hint =
+    status === "VERIFIED" ? tr("هویتت تایید شده", "Your identity is verified")
+    : status === "PENDING" ? tr("هر دو مرحله فرستاده شد و در صف بررسیه", "Both steps were sent and are in review")
+    : idDocs.length === 0 ? tr("دو مرحله: مدرک شناسایی، بعد سلفی با کارت ملی", "Two steps: an ID document, then a selfie holding your ID card")
+    : selfieDocs.length === 0 ? tr("مرحله‌ی 2 مونده: سلفی با کارت ملی", "Step 2 left: a selfie holding your ID card")
+    : tr("فایل‌ها کامله", "Both files are in");
+  return (
+    <MentorRow
+      lead={ic(IdCard, MI.row)}
+      title={tr("تایید هویت", "Identity verification")}
+      sub={<span>{hint}</span>}
+      end={<StatusChip status={status} />}
+      below={
+        <>
+          {status === "REJECTED" && (
+            <MentorNotice tone="danger" icon={ic(XCircle, MI.row)} title={tr("هویت رد شد", "Identity declined")}>
+              {profile.identityRejectReason || tr("فایل‌های اصلاح‌شده رو دوباره بفرست", "Send corrected files")}
+            </MentorNotice>
+          )}
+          <div className="mv2-id-steps">
+            <MentorDocRow
+              step={1}
+              title={tr("مدرک شناسایی", "ID document")}
+              hint={tr("عکس واضح کارت ملی یا گذرنامه", "A clear photo of your national ID card or passport")}
+              icon={ic(IdCard, MI.row)}
+              status={status}
+              rejectReason={null}
+              target={{ kind: "IDENTITY", category: null }}
+              docs={idDocs}
+              onChanged={onChanged}
+              hideStatus
+            />
+            <MentorDocRow
+              step={2}
+              title={tr("سلفی با کارت ملی", "Selfie with your ID card")}
+              hint={tr("عکسی از خودت که کارت ملی رو کنار صورتت گرفتی؛ چهره و کارت خوانا باشن", "A photo of you holding your ID card next to your face; both must be readable")}
+              icon={ic(Camera, MI.row)}
+              status={status}
+              rejectReason={null}
+              target={{ kind: "IDENTITY_SELFIE", category: null }}
+              docs={selfieDocs}
+              onChanged={onChanged}
+              hideStatus
+              locked={idDocs.length === 0 && status !== "VERIFIED"}
+              lockedHint={tr("اول مرحله‌ی 1 رو انجام بده", "Finish step 1 first")}
+              accept={IMAGE_ACCEPT}
+              imagesOnly
+            />
+          </div>
+        </>
+      }
+    />
+  );
+}
+
 function MentorDocRow({
-  title, hint, icon, status, rejectReason, target, docs, onChanged,
+  title, hint, icon, status, rejectReason, target, docs, onChanged, step, hideStatus, locked, lockedHint, accept, imagesOnly,
 }: {
+  step?: number;
+  hideStatus?: boolean;
+  locked?: boolean;
+  lockedHint?: string;
+  accept?: string;
+  imagesOnly?: boolean;
   title: string;
   hint: string;
   icon: React.ReactNode;
@@ -135,7 +197,10 @@ function MentorDocRow({
     if (file.size === 0) { setError(tr("فایل خالیه", "The file is empty")); return; }
     if (file.size > MAX_BYTES) { setError(tr(`حجم فایل حداکثر 5 مگابایته، این فایل ${formatBytes(file.size)} است`, `The file can be at most 5 MB; this one is ${formatBytes(file.size)}`)); return; }
     const typeOk = file.type ? ALLOWED_MIME.includes(file.type) : ALLOWED_EXT.test(file.name);
-    if (!typeOk) { setError(tr("فقط عکس یا PDF قبول می‌شه", "Only photos or PDF files are accepted")); return; }
+    if (!typeOk || (imagesOnly && (file.type === "application/pdf" || /\.pdf$/i.test(file.name)))) {
+      setError(imagesOnly ? tr("برای سلفی فقط عکس قبول می‌شه", "Only a photo is accepted for the selfie") : tr("فقط عکس یا PDF قبول می‌شه", "Only photos or PDF files are accepted"));
+      return;
+    }
 
     const form = new FormData();
     form.append("file", file, file.name);
@@ -191,13 +256,13 @@ function MentorDocRow({
 
   return (
     <MentorRow
-      lead={icon}
+      lead={step ? <span className="mv2-id-step-no" aria-hidden>{step}</span> : icon}
       title={title}
-      sub={<span>{status === "VERIFIED" ? tr("مدرک تاییدشده حذف نمی‌شه و فایل تازه دوباره به صف بررسی می‌ره", "A verified document stays, and a new file goes back into review") : hint}</span>}
-      end={<StatusChip status={status} />}
+      sub={<span>{locked && lockedHint ? lockedHint : status === "VERIFIED" && !step ? tr("مدرک تاییدشده حذف نمی‌شه و فایل تازه دوباره به صف بررسی می‌ره", "A verified document stays, and a new file goes back into review") : hint}</span>}
+      end={hideStatus ? (docs.length > 0 ? <MentorChip tone="accent" icon={ic(BadgeCheck, MI.chip)}>{tr("فرستاده شد", "Sent")}</MentorChip> : null) : <StatusChip status={status} />}
       below={
         <>
-          {status === "REJECTED" && (
+          {!hideStatus && status === "REJECTED" && (
             <MentorNotice tone="danger" icon={ic(XCircle, MI.row)} title={tr("مدرک رد شد", "Document declined")}>
               {rejectReason || tr("فایل اصلاح‌شده رو دوباره بفرست", "Send a corrected file")}
             </MentorNotice>
@@ -238,16 +303,16 @@ function MentorDocRow({
 
           <div className="mentor-btn-group is-end">
             <button
-              type="button" className="btn btn-outline btn-sm mv2-set-upload" disabled={uploading}
+              type="button" className="btn btn-outline btn-sm mv2-set-upload" disabled={uploading || !!locked}
               onClick={() => inputRef.current?.click()}
               aria-label={uploading ? tr(`در حال ارسال، ${fa(pctNow)} درصد`, `Sending, ${fa(pctNow)} percent`) : undefined}
             >
               {uploading
                 ? <><Spinner size={14} /> {fa(pctNow)}%</>
-                : <>{ic(Upload, MI.btnSm)} {docs.length ? tr("افزودن فایل", "Add file") : tr("ارسال مدرک", "Send document")}</>}
+                : <>{ic(Upload, MI.btnSm)} {docs.length ? (step ? tr("جایگزینی فایل", "Replace file") : tr("افزودن فایل", "Add file")) : tr("ارسال مدرک", "Send document")}</>}
             </button>
             <input
-              ref={inputRef} type="file" accept={ACCEPT} hidden
+              ref={inputRef} type="file" accept={accept ?? ACCEPT} hidden
               onChange={(e) => { const f = e.target.files?.[0]; e.target.value = ""; if (f) pick(f); }}
             />
           </div>

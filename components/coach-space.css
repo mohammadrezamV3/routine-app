@@ -140,3 +140,40 @@
 .cs-fold-btn > svg.is-open{ transform:rotate(180deg); }
 .cs-fold-count{ font-size:12px; color:var(--muted); font-family:var(--font-latin), var(--font-vazir), sans-serif; }
 .cs-fold-row{ cursor:default; }
+
+/* ── دسکتاپ (>=1024px) ── */
+@media (min-width:1024px){
+  .ch-page.cs-page.is-wide{ max-inline-size:1440px; }
+  .ch-page.cs-page .ch-header{ min-block-size:64px; padding-block-end:4px; }
+  .ch-page.cs-page .cs-subbar{ margin-block-start:-8px; }
+  .ch-space-grid{ grid-template-columns:300px minmax(0,1fr) 340px; gap:24px; }
+  .ch-space-grid.cs-grid-2{ grid-template-columns:minmax(0,1fr) 360px; }
+  .ch-page .cs-col-main{ border-radius:28px; border:1px solid var(--surface-line); padding-inline:24px; min-block-size:calc(100dvh - 250px); }
+  .cs-chat{ min-block-size:calc(100dvh - 290px); }
+  .cs-thread{ padding-block:20px 16px; }
+  .cs-dock{ padding-block-end:16px; }
+  .cs-col-start, .ch-space-side{ max-block-size:calc(100dvh - 120px); overflow-y:auto; scrollbar-width:thin; }
+  .ch-space-side{ inset-block-start:88px; }
+  .cs-col-start{ inset-block-start:88px; }
+  .ch-bubble-in, .ch-bubble-out{ max-inline-size:68%; }
+  .ch-event-card{ inline-size:min(70%, 460px); }
+  /* مربی من: کارت مربی و هدف کنار کارهای امروز */
+  .ch-page.cs-home{ max-inline-size:1120px; }
+  .cs-home-cols{ display:grid; grid-template-columns:minmax(0,1.1fr) minmax(0,1fr); gap:20px 28px; align-items:start; }
+  .cs-home-a, .cs-home-b{ display:flex; flex-direction:column; gap:16px; min-inline-size:0; }
+  .cs-coach-grid{ display:grid; grid-template-columns:repeat(auto-fill, minmax(340px, 1fr)); gap:14px; }
+  .ch-page.cs-week{ max-inline-size:1040px; }
+  .ch-page.cs-week .cs-week-hero{
+    display:grid; grid-template-columns:auto minmax(0,1fr); grid-template-areas:"ring eye" "ring grade" "ring stats";
+    align-items:center; text-align:start; column-gap:40px; row-gap:10px; padding:28px 32px;
+  }
+  .cs-week-hero > .ch-eyebrow{ grid-area:eye; align-self:end; }
+  .cs-week-hero > .cs-week-grade{ grid-area:grade; font-size:22px; }
+  .cs-week-hero > .ch-week-rings{ grid-area:ring; }
+  .cs-week-hero > .ch-stats{ grid-area:stats; align-self:start; margin-block-start:10px; }
+}
+.cs-home-cols, .cs-home-a, .cs-home-b{ display:contents; }
+@media (min-width:1024px){
+  .cs-home-cols{ display:grid; }
+  .cs-home-a, .cs-home-b{ display:flex; }
+}

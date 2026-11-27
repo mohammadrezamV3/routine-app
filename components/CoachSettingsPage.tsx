@@ -190,7 +190,8 @@ export function CoachSettingsPage() {
     const welcome = s.welcomeMessage ? tr("تنظیم شده", "Set") : tr("ندارم", "None");
     const qn = s.intakeQuestions.length;
     body = (
-      <>
+      <div className="chp-set-grid">
+        <div className="chp-set-side">
         <section className="ch-card ch-card-lg chp-preview" aria-label={tr("صفحه‌ی عمومی", "Public page")}>
           <CoachAvatar user={{ id: profile?.userId ?? "me", name, lastName: null, username: account?.username ?? null, avatarUrl: session?.user?.image ?? null }} size={72} />
           <p className="chp-preview-name">{name}</p>
@@ -200,7 +201,9 @@ export function CoachSettingsPage() {
           )}
         </section>
         <PublicLink username={account?.username ?? null} />
+        </div>
 
+        <div className="chp-set-main">
         <Group title={tr("صفحه‌ی من", "My page")}>
           <Row icon={<UserRound size={20} />} title={tr("پروفایل", "Profile")} value={profile?.bio?.trim() && profile.categories.length > 0 ? tr("کامل", "Complete") : tr("ناقص", "Incomplete")} onClick={() => setSheet("profile")} />
           <Row icon={<ShieldCheck size={20} />} title={tr("تایید هویت", "Identity check")} value={identityText()[identity]} onClick={() => setSheet("verification")} />
@@ -227,7 +230,8 @@ export function CoachSettingsPage() {
           <Row icon={<LayoutTemplate size={20} />} title={tr("قالب‌ها", "Templates")} onClick={() => setSheet("templates")} />
           <Row icon={<MessageSquareText size={20} />} title={tr("پیام‌های آماده", "Saved replies")} onClick={() => setSheet("replies")} />
         </Group>
-      </>
+        </div>
+      </div>
     );
   }
 
