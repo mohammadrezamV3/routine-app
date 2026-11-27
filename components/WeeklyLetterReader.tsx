@@ -221,7 +221,6 @@ function LetterBody({ data, onGo, reload }: { data: LiveWeekPayload; onGo: (w: s
         <Link href="/analysis/weekly/letters" className="wl-back"><ArrowRight size={16} className="dir-flip" />{tr("آرشیو", "Archive")}</Link>
         <div className="wl-rd-tools">
           <WeeklyLetterWeekPicker ctx={ctx} onPick={onGo} />
-          <WeeklyLetterShareButton ctx={ctx} />
         </div>
       </div>
       <WeeklyLetterCover
@@ -230,6 +229,7 @@ function LetterBody({ data, onGo, reload }: { data: LiveWeekPayload; onGo: (w: s
         storyCount={slides.length}
         storySeconds={storySeconds(slides)}
         onPlayStory={() => setStoryOpen(true)}
+        headerAction={<WeeklyLetterShareButton ctx={ctx} />}
         prediction={data.isCurrent ? <WeeklyLetterPrediction letter={letter} ctx={ctx} /> : null}
       />
       {(storyOpen || storyMounted) && (

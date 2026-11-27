@@ -1130,16 +1130,32 @@ body[data-theme="light"] .wl-root button.wl-live-mood{ background:none; box-shad
 .wl-live-pred-cap b{ font-family:var(--font-latin), var(--font-vazir), sans-serif; font-weight:900; color:var(--text); }
 
 /* انتخاب هفته */
-.wl-live-picker{ display:inline-flex; align-items:center; gap:2px; max-width:100%; border:1px solid var(--box-line); border-radius:999px; padding:2px; }
-.wl-root button.wl-live-pick-btn{ width:44px; height:44px; min-height:44px; padding:0; border-radius:50%; color:var(--text); flex-shrink:0; }
-.wl-live-pick-mid{ display:flex; flex-direction:column; align-items:center; justify-content:center; min-width:0; padding:0 6px; line-height:1.5; }
-.wl-live-pick-mid strong{ font-size:13px; font-weight:800; white-space:nowrap; }
-.wl-live-pick-now{ font-size:11px; font-weight:800; color:var(--accent); }
-.wl-root button.wl-live-pick-link{ min-height:24px; padding:0 4px; font-size:11px; color:var(--accent); }
-@media (max-width:360px){ .wl-live-pick-mid strong{ font-size:12px; } }
+.wl-wk{ position:relative; display:inline-flex; align-items:center; gap:6px; max-width:100%; }
+.wl-wk-pill{ display:inline-flex; align-items:center; gap:0; border:1px solid var(--box-line); border-radius:999px; padding:2px; max-width:100%; }
+.wl-wk .wl-wk-label{ gap:6px; padding-inline:10px; min-height:34px; font-size:13px; font-weight:800; color:var(--text); white-space:nowrap; font-family:var(--font-latin), var(--font-vazir), sans-serif; }
+.wl-wk-caret{ transition:transform .2s ease; opacity:.7; }
+.wl-wk-label[aria-expanded="true"] .wl-wk-caret{ transform:rotate(180deg); }
+.wl-wk-now{ white-space:nowrap; animation:wl-wk-in .22s ease both; }
+.wl-wk-list{
+  position:absolute; inset-inline-start:0; top:calc(100% + 8px); z-index:30; margin:0; padding:6px; list-style:none;
+  width:max(100%, 220px); max-height:min(320px, 55vh); overflow-y:auto; overscroll-behavior:contain;
+  border:1px solid var(--box-line); border-radius:18px; background:var(--surface-1, var(--bg));
+  box-shadow:0 12px 32px rgba(0,0,0,.28); animation:wl-wk-in .18s ease both;
+}
+.wl-wk-opt{
+  display:flex; align-items:center; justify-content:space-between; gap:10px; width:100%; min-height:40px; padding:0 12px;
+  border:0; border-radius:12px; background:none; box-shadow:none; color:var(--text); font-size:13px; font-weight:700; cursor:pointer;
+  font-family:var(--font-latin), var(--font-vazir), sans-serif; text-align:start;
+}
+.wl-wk-opt em{ font-style:normal; font-size:11px; font-weight:800; color:var(--accent); }
+.wl-wk-opt[aria-selected="true"]{ color:var(--accent); }
+.wl-wk-opt:focus-visible{ outline:2px solid var(--accent); outline-offset:-2px; }
+@media (hover:hover) and (pointer:fine){ .wl-wk-opt:hover{ color:var(--accent); } }
+@keyframes wl-wk-in{ from{ opacity:0; transform:translateY(-4px); } to{ opacity:1; transform:none; } }
+@media (prefers-reduced-motion:reduce){ .wl-wk-list, .wl-wk-now{ animation:none; } .wl-wk-caret{ transition:none; } }
 
-/* دکمه‌ی اشتراک */
-.wl-root .wl-live-share{ min-height:44px; white-space:nowrap; }
+/* دکمه‌ی اشتراک (آیکونی، داخل جلد) */
+.wl-live-share.is-failed{ color:var(--danger, #e5484d); }
 
 @media (prefers-reduced-motion:reduce){
   .wl-root button.wl-live-mood, .wl-live-mood > span{ transition:none; }
