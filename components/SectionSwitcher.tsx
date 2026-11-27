@@ -10,7 +10,7 @@ import { useCallback, useEffect, useLayoutEffect, useRef, useState } from "react
 import { createPortal } from "react-dom";
 import { SmartLink as Link } from "./SmartLink";
 import { tr } from "@/lib/i18n";
-import { SECTION_META, type SectionKey } from "@/lib/sections";
+import { SECTION_META, sectionHomePath, type SectionKey } from "@/lib/sections";
 import { switchSectionAndGo } from "@/lib/sectionClient";
 import { sectionWordmarkSm } from "@/lib/sectionAssets";
 import { useTheme } from "./ThemeProvider";
@@ -49,7 +49,6 @@ function measure(anchor: HTMLElement | null): Pos {
 export default function SectionSwitcher({ state, anchorRef, section, signedIn, onClose }: Props) {
   const panelRef = useRef<HTMLDivElement>(null);
   const [pos, setPos] = useState<Pos>(() => measure(anchorRef.current));
-  const home = signedIn ? "/dashboard" : "/";
   const open = state === "open";
   const { theme } = useTheme();
   const wordmarkSrc = sectionWordmarkSm(theme === "light" ? "light" : "dark");
@@ -103,12 +102,14 @@ export default function SectionSwitcher({ state, anchorRef, section, signedIn, o
     else if (e.key === "Tab") { e.preventDefault(); restoreFocus(); onClose(); }
   }
 
+  const homeFor = (key: SectionKey) => (signedIn ? sectionHomePath(key) : "/");
+
   // کلیک روی بخش دیگه: کوکی + ناوبری کامل روی همین دامنه؛ کلیک میانی/Ctrl همون لینک ساده‌ی مقصد رو باز می‌کنه
   function onPick(e: React.MouseEvent, key: SectionKey) {
     onClose();
     if (e.defaultPrevented || e.button !== 0 || e.metaKey || e.ctrlKey || e.shiftKey || e.altKey) return;
     e.preventDefault();
-    switchSectionAndGo(key, home);
+    switchSectionAndGo(key, homeFor(key));
   }
 
   return createPortal(
@@ -156,9 +157,9 @@ export default function SectionSwitcher({ state, anchorRef, section, signedIn, o
             "aria-current": current ? ("true" as const) : undefined,
           };
           return current ? (
-            <Link key={key} href={home} className={cls} style={style} {...aria} data-ssw-item="" tabIndex={-1} onClick={onClose}>{inner}</Link>
+            <Link key={key} href={homeFor(key)} className={cls} style={style} {...aria} data-ssw-item="" tabIndex={-1} onClick={onClose}>{inner}</Link>
           ) : (
-            <a key={key} href={home} className={cls} style={style} {...aria} data-ssw-item="" tabIndex={-1} onClick={(e) => onPick(e, key)}>{inner}</a>
+            <a key={key} href={homeFor(key)} className={cls} style={style} {...aria} data-ssw-item="" tabIndex={-1} onClick={(e) => onPick(e, key)}>{inner}</a>
           );
         })}
       </div>

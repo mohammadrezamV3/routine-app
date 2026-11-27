@@ -4,7 +4,8 @@ import { useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { useSession } from "next-auth/react";
 import { LandingPage } from "@/components/LandingPage";
-import { DASHBOARD_HOME } from "@/lib/homePath";
+import { sectionHomePath } from "@/lib/sections";
+import { currentSectionFromDom } from "@/lib/homePath";
 import type { SectionKey } from "@/lib/sections";
 
 // تایم/استریک کاربر لاگین‌کرده دیگه این‌جا نیست — رفته توی هدر (سمت چپ
@@ -26,8 +27,8 @@ export function HomeClient({ section = null }: { section?: SectionKey | null }) 
   // مستقیم به /weekly ریدایرکت می‌کنه — یک رفت‌وبرگشت کمتر قبل از دیدن اپ.
   useEffect(() => {
     if (status !== "authenticated") return;
-    router.replace(DASHBOARD_HOME);
-  }, [status, router]);
+    router.replace(sectionHomePath(section ?? currentSectionFromDom()));
+  }, [status, router, section]);
 
   // مهم برای سرعت لود: این‌جا عمدا روی "loading" چیزی رو بلاک نمی‌کنیم.
   // قبلا `status === "loading"` هم null برمی‌گردوند، و چون این کامپوننت روی

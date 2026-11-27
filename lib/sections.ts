@@ -107,7 +107,7 @@ export const SECTION_META: Record<SectionKey, SectionMeta> = {
 const OWNED_PREFIXES: Record<SectionKey, string[]> = {
   routine: ["/weekly", "/sleep", "/roadmaps", "/routine", "/habit-tracker", "/daily-planner", "/ai-planner", "/learning-roadmap", "/account/general/routine", "/streak"],
   trade: ["/trade", "/trading-journal", "/economic-calendar", "/forex-sessions", "/account/general/trade"],
-  workout: ["/exercise", "/sleep", "/bodybuilding-program", "/calorie-counter", "/account/general/exercise"],
+  workout: ["/exercise", "/calorie", "/sleep", "/bodybuilding-program", "/calorie-counter", "/account/general/exercise"],
 };
 
 /** صفحه‌های فرود عمومی (بدون داده‌ی کاربر) که روی دامنه‌ی اصلی هم به زیردامنه‌ی صاحبشون ۳۰۸ می‌شن (یکی‌شدن سئو) */
@@ -119,6 +119,14 @@ const SEO_LANDING_PATHS: Record<SectionKey, string[]> = {
 
 function matchesPrefix(pathname: string, prefix: string): boolean {
   return pathname === prefix || pathname.startsWith(`${prefix}/`);
+}
+
+/**
+ * صفحه‌ی اصلی کاربر واردشده در هر بخش: روتین و ترید داشبورد دارن، بخش ورزش داشبورد نداره
+ * و «برنامه تمرینی» (/exercise) صفحه‌ی اصلیشه. null (دامنه‌ی اصلی بدون بخش) = داشبورد.
+ */
+export function sectionHomePath(section: SectionKey | null | undefined): string {
+  return section === "workout" ? "/exercise" : "/dashboard";
 }
 
 /** بخش‌هایی که این مسیر مال اوناست؛ خالی = مشترک */
