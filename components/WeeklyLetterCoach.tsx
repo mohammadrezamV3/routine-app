@@ -2,12 +2,12 @@
 
 // فصل «حرف مربی»: دیدن، ساخت و بازسازی تحلیل AI همین هفته + افزودن به هدف‌ها.
 import { useEffect, useState } from "react";
-import { Plus, RotateCw, Sparkles } from "lucide-react";
+import { RotateCw, Sparkles } from "lucide-react";
 import { ANALYSIS_DOMAIN_LABELS, type AiCoach } from "@/lib/weeklyAnalysis/types";
 import { tr } from "@/lib/i18n";
 import { Spinner } from "./Spinner";
 import { Reveal } from "./WeeklyLetterShared";
-import { LiveChapter, humanAiError, sendGoalDraft, type LetterChapterExtra } from "./WeeklyLetterLiveKit";
+import { LiveChapter, humanAiError, type LetterChapterExtra } from "./WeeklyLetterLiveKit";
 import type { LetterChapterProps } from "./WeeklyLetterCtx";
 import { waFetch } from "./WeeklyAnalysisKit";
 
@@ -47,11 +47,6 @@ export function WeeklyLetterCoach({ ctx, no }: LetterChapterProps & LetterChapte
     }
   }
 
-  function addGoal(r: NonNullable<AiCoach>["recommendations"][number]) {
-    sendGoalDraft({ domain: r.domain, title: r.title });
-    document.getElementById("goals")?.scrollIntoView({ behavior: "smooth", block: "center" });
-  }
-
   return (
     <LiveChapter id="coach" no={no} title={tr("حرف مربی", "Coach's note")} icon={Sparkles}>
       <div className="wl-coach" aria-busy={busy}>
@@ -80,11 +75,6 @@ export function WeeklyLetterCoach({ ctx, no }: LetterChapterProps & LetterChapte
                       <div className="wl-rec-meta">
                         <span className="wl-tag">{priorityLabel(r.priority)}</span>
                         {r.domain && <span className="wl-tag">{ANALYSIS_DOMAIN_LABELS[r.domain]}</span>}
-                        {ctx.isCurrent && (
-                          <button type="button" className="wl-live-ghost wl-live-addgoal" onClick={() => addGoal(r)}>
-                            <Plus size={13} />{tr("افزودن به هدف‌ها", "Add to goals")}
-                          </button>
-                        )}
                       </div>
                     </div>
                   </Reveal>

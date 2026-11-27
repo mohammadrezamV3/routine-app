@@ -10,7 +10,7 @@ import { useEffect, useMemo, useRef, useState } from "react";
 import { m as motion } from "framer-motion";
 import { weekdayName, jMonthName, faNum, toJalali } from "@/lib/jalali";
 import { awakeProgress, dayPhase, PHASE_GREETING, type DayPhase } from "@/lib/dashboardCompute";
-import { getStreakTier } from "@/lib/streakTier";
+import { AnimatedStreakFlame } from "@/components/AnimatedStreakFlame";
 import type { DashboardData } from "@/lib/dashboardTypes";
 import type { SectionKey } from "@/lib/sections";
 import type { TodayTask } from "@/lib/useDashboardRoutine";
@@ -448,7 +448,7 @@ function OrbitRings({ rings, ready, streak, center, unit = "days" }: { rings: { 
           ready ? center : <Skel w={46} h={20} />
         ) : /* وسط حلقه‌ها استریک، نه درصد (درصد هر حلقه کنارش در لیجند هست) */ ready && streak !== null ? (
           <>
-            <span className={`db-orbit-flame tier-${getStreakTier(streak).tier}`}><DashIcon name="flame" className="dbi-live" /></span>
+            <span className="db-orbit-flame" aria-hidden="true"><AnimatedStreakFlame days={streak} lit={streak > 0} fill /></span>
             <CountUp value={streak} className="db-orbit-pct" />
             <span className="db-orbit-cap">{unit === "sessions" ? tr("جلسه", streak === 1 ? "session" : "sessions") : rings.length >= 2 ? tr("روز", "days") : tr("روز استریک", "day streak")}</span>
           </>

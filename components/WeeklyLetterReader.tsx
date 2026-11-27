@@ -26,8 +26,6 @@ import { WeeklyLetterTimeline } from "./WeeklyLetterTimeline";
 import { WeeklyLetterDomains } from "./WeeklyLetterDomains";
 import { WeeklyLetterAchievements, WeeklyLetterInsights, WeeklyLetterNext, WeeklyLetterWins } from "./WeeklyLetterStory";
 import { WeeklyLetterCoach } from "./WeeklyLetterCoach";
-import { WeeklyLetterGoals } from "./WeeklyLetterGoals";
-import { WeeklyLetterReflection } from "./WeeklyLetterReflection";
 import { WeeklyLetterPrediction } from "./WeeklyLetterPrediction";
 import { WeeklyLetterShareButton } from "./WeeklyLetterShareButton";
 import { WeeklyLetterWeekPicker } from "./WeeklyLetterWeekPicker";
@@ -174,7 +172,6 @@ function LetterBody({ data, onGo, reload }: { data: LiveWeekPayload; onGo: (w: s
   const fitFuelOn = fitFuelShown(fit);
   const fitRecOn = fitRecoveryShown(fit);
   const hasCoach = !!analysis.ai || (analysis.aiAvailable && analysis.overall.score !== null);
-  const hasGoals = data.isCurrent || analysis.goals.length > 0;
 
   // ترتیب و شماره‌ی فصل‌ها؛ شرط هر فصل همون شرط نمایش خود فصله
   const chapters = useMemo(() => {
@@ -194,16 +191,14 @@ function LetterBody({ data, onGo, reload }: { data: LiveWeekPayload; onGo: (w: s
       { id: "coach", label: tr("حرف مربی", "Coach's note"), show: hasCoach },
       { id: "wl-ach", label: tr("مدال‌ها", "Medals"), show: letter.achievements.length > 0 || !!letter.streak },
       { id: "wl-next", label: tr("هفته‌ی بعد", "Next week"), show: data.isCurrent && hasData },
-      { id: "goals", label: tr("هدف‌ها", "Goals"), show: hasGoals },
-      { id: "reflection", label: tr("یادداشت خودت", "Your notes"), show: true },
       { id: "sleep", label: tr("خواب", "Sleep"), show: sleepOn },
     ];
     return c.filter((x) => x.show);
-  }, [letter, numbers, wins, data.isCurrent, hasData, hasMatrix, hasCoach, hasGoals, sleepOn, tradeCurveOn, tradeWhereOn, tradeMindOn, fitTrainOn, fitFuelOn, fitRecOn]);
+  }, [letter, numbers, wins, data.isCurrent, hasData, hasMatrix, hasCoach, sleepOn, tradeCurveOn, tradeWhereOn, tradeMindOn, fitTrainOn, fitFuelOn, fitRecOn]);
   const no = (id: string) => chapters.findIndex((c) => c.id === id) + 1;
   const has = (id: string) => chapters.some((c) => c.id === id);
 
-  // لنگر #goals / #sleep / #coach / #reflection بعد از ساخته‌شدن فصل‌ها
+  // لنگر #sleep / #coach بعد از ساخته‌شدن فصل‌ها
   const hashDone = useRef(false);
   useEffect(() => {
     if (hashDone.current) return;
@@ -282,8 +277,6 @@ function LetterBody({ data, onGo, reload }: { data: LiveWeekPayload; onGo: (w: s
             <WeeklyLetterNext letter={letter} />
           </Chapter>
         )}
-        {has("goals") && <WeeklyLetterGoals letter={letter} ctx={ctx} no={no("goals")} />}
-        <WeeklyLetterReflection letter={letter} ctx={ctx} no={no("reflection")} />
         {has("sleep") && <WeeklyLetterSleep weekStart={data.weekStart} no={no("sleep")} />}
       </div>
 

@@ -11,7 +11,7 @@ import {
 import { ANALYSIS_DOMAIN_LABELS, type Insight } from "@/lib/weeklyAnalysis/types";
 import type { WeeklyLetterData } from "@/lib/weeklyLetter/types";
 import { tr } from "@/lib/i18n";
-import { goalCtaHref, weekCtaHref } from "./WeeklyLetterStoriesData";
+import { weekCtaHref } from "./WeeklyLetterStoriesData";
 import { CountText, DOMAIN_ICONS, Reveal } from "./WeeklyLetterShared";
 import { WeeklyMedalBadge } from "./WeeklyMedalBadge";
 
@@ -122,7 +122,6 @@ export function WeeklyLetterNext({ letter }: { letter: WeeklyLetterData }) {
         )}
       </div>
       <div className="wl-cta">
-        <Link href={goalCtaHref({ title: nw.focusTitle, domain: nw.focusDomain, target: nw.suggestedTarget })} className="trade-primary-btn wl-cta-btn"><Target size={16} />{tr("تعیین هدف", "Set a goal")}</Link>
         <Link href={weekCtaHref(letter.weekStart)} className="account-outline-btn wl-cta-btn">{tr("آنالیز کامل این هفته", "Full analysis of this week")}</Link>
       </div>
     </Reveal>

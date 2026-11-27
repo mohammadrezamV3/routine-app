@@ -1,10 +1,9 @@
 "use client";
 
 // ابزار مشترک فصل‌های تعاملی هفته‌نامه‌ی زنده (مربی، هدف‌ها، یادداشت).
-import { useEffect, type ReactNode } from "react";
+import { type ReactNode } from "react";
 import { m as motion } from "framer-motion";
 import type { LucideIcon } from "lucide-react";
-import type { AnalysisDomain } from "@/lib/weeklyAnalysis/types";
 import { tr } from "@/lib/i18n";
 import { Reveal, WL_EASE, useLite } from "./WeeklyLetterShared";
 import "./weekly-letter.css";
@@ -37,27 +36,6 @@ export function LiveChapter({ id, no, title, icon: Icon, children }: { id: strin
       {children}
     </section>
   );
-}
-
-// ---- پیش‌نویس هدف: مربی و لینک‌های بیرونی فرم هدف‌ها رو پر می‌کنن ----
-export type GoalDraft = { domain: AnalysisDomain | null; title: string; target: number | null; nonce: number };
-const DRAFT_EVENT = "wl-live-goal-draft";
-
-export function sendGoalDraft(d: { domain: AnalysisDomain | null; title: string; target?: number | null }) {
-  window.dispatchEvent(new CustomEvent(DRAFT_EVENT, { detail: d }));
-}
-
-export function useGoalDraftListener(on: (d: GoalDraft) => void) {
-  useEffect(() => {
-    let nonce = 0;
-    const h = (e: Event) => {
-      const d = (e as CustomEvent).detail as { domain: AnalysisDomain | null; title: string; target?: number | null } | undefined;
-      if (d?.title) on({ domain: d.domain ?? null, title: d.title, target: d.target ?? null, nonce: ++nonce });
-    };
-    window.addEventListener(DRAFT_EVENT, h);
-    return () => window.removeEventListener(DRAFT_EVENT, h);
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
 }
 
 /** پیام خطای انسانی برای محدودیت نرخ/سهمیه‌ی مربی. */

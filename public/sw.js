@@ -541,7 +541,9 @@ async function offlineFallback(url) {
     if (userId) {
       const v = await variant();
       const cache = await caches.open(userCacheName(userId));
-      for (const home of ["/dashboard", "/weekly", "/account"]) {
+      // خونه‌ی هر بخش اول (ورزش داشبورد نداره)، بعد جایگزین‌ها
+      const homes = v.startsWith("workout.") ? ["/exercise", "/calorie", "/account"] : ["/dashboard", "/weekly", "/account"];
+      for (const home of homes) {
         if (await matchEntry(cache, htmlKey(v, home, ""))) return Response.redirect(`${self.location.origin}${home}`, 302);
       }
     }
