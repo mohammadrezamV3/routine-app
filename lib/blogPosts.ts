@@ -4,6 +4,7 @@ import { ROUTINE_POSTS } from "./blog/posts/routine";
 import { ROUTINE_POSTS_2 } from "./blog/posts/routine2";
 import { TRADING_POSTS } from "./blog/posts/trading";
 import { TRADING_POSTS_2 } from "./blog/posts/trading2";
+import { TRADING_POSTS_3 } from "./blog/posts/trading3";
 import type { BlogCategoryKey, BlogPost } from "./blog/types";
 import { HEALTH_POSTS_EN } from "./blog/posts/en/health";
 import { ROUTINE_POSTS_EN } from "./blog/posts/en/routine";
@@ -40,7 +41,7 @@ export function postWordCount(post: BlogPost): number {
 
 // زمان مطالعه از روی متن واقعی حساب می‌شه (حدود 200 کلمه در دقیقه)، نه عدد
 // دستی که با هر بازنویسی از متن جا بمونه.
-export const BLOG_POSTS: BlogPost[] = [...ROUTINE_POSTS, ...ROUTINE_POSTS_2, ...HEALTH_POSTS, ...HEALTH_POSTS_2, ...TRADING_POSTS, ...TRADING_POSTS_2].map((p) => ({
+export const BLOG_POSTS: BlogPost[] = [...ROUTINE_POSTS, ...ROUTINE_POSTS_2, ...HEALTH_POSTS, ...HEALTH_POSTS_2, ...TRADING_POSTS, ...TRADING_POSTS_2, ...TRADING_POSTS_3].map((p) => ({
   ...p,
   readingMinutes: Math.max(1, Math.round(postWordCount(p) / 200)),
 }));
