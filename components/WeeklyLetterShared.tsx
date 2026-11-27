@@ -38,7 +38,7 @@ export const DOMAIN_HREFS: Record<AnalysisDomain, string> = {
   sleep: "/sleep",
   tasks: "/weekly",
   fitness: "/exercise",
-  nutrition: "/exercise?tab=calorie",
+  nutrition: "/calorie",
   trading: "/trade",
   learning: "/roadmaps",
 };

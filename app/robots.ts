@@ -40,6 +40,8 @@ export default function robots(): MetadataRoute.Robots {
         "/weekly/",
         "/exercise$",
         "/exercise/",
+        "/calorie$",
+        "/calorie/",
         "/trade$",
         "/trade/",
         "/roadmaps$",

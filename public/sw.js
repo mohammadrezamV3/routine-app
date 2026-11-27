@@ -72,7 +72,7 @@ function isPublicPage(pathname) {
 const USER_ROUTE_ALLOW = [
   /^\/dashboard(?:\/|$)/, /^\/weekly(?:\/|$)/, /^\/sleep(?:\/|$)/, /^\/analysis(?:\/|$)/,
   /^\/account(?:\/|$)/, /^\/trade(?:\/|$)/, /^\/roadmaps(?:\/|$)/, /^\/streak(?:\/|$)/,
-  /^\/exercise(?:\/|$)/, /^\/friends(?:\/|$)/,
+  /^\/exercise(?:\/|$)/, /^\/calorie(?:\/|$)/, /^\/friends(?:\/|$)/,
 ];
 // استثناها: امنیت و پرداخت حساب، گفت‌وگوهای رمزگذاری‌شده‌ی منتور. (ادمین، /subscription،
 // /auth، /mentor* اصلا در فهرست سفید نیستن.)

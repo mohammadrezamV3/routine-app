@@ -398,7 +398,7 @@ function WeeklyPageInner() {
     // این‌جا هم گارد می‌شود که مستقیم صدازدن تابع هم بی‌اثر بماند).
     if (isDayPast(selectedIso)) return;
     const current = selectedDaily ?? { tasks: {}, wake: null };
-    if (current.tasks[id]) { router.push("/exercise?tab=exercise"); return; }
+    if (current.tasks[id]) { router.push("/exercise"); return; }
     const next: DailyRecord = { ...current, tasks: { ...current.tasks, [id]: true } };
     setSelectedDaily(next);
     setWeekDaily((prev) => ({ ...prev, [selectedIso]: next }));
@@ -408,7 +408,7 @@ function WeeklyPageInner() {
     setStatsRefreshKey((k) => k + 1);
     await setDaily(selectedIso, next);
     getTodayStats().then(setTodayStats);
-    router.push("/exercise?tab=exercise");
+    router.push("/exercise");
   }
 
   // انتخاب یه روز دلخواه (مثلا از تقویم تاریخچه) — نوار روزها

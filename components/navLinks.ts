@@ -26,12 +26,12 @@ export function isGroup(item: NavItem): item is NavGroup {
 // «صفحه اصلی» قدیمی (/) دیگه توی منو نیست — کاربر لاگین‌کرده مستقیم به داشبورد می‌ره.
 export const getLinks = (): NavItem[] => [
   // داشبورد — نمای کلی همه‌ی بخش‌ها و صفحه‌ی اصلی بعد از ورود؛ پشت فلگ `dashboard` (پیش‌فرض روشن برای همه)
-  { href: "/dashboard", label: tr("داشبورد", "Dashboard"), icon: "dashboard", feature: "dashboard" },
+  { href: "/dashboard", label: tr("داشبورد", "Dashboard"), icon: "dashboard", feature: "dashboard", sections: ["routine", "trade"] },
   { href: "/weekly", label: tr("برنامه روزانه", "Daily plan"), icon: "weekly", feature: "routine", sections: ["routine"] },
   { href: "/sleep", label: tr("خواب", "Sleep"), icon: "sleep", module: "SLEEP", feature: "sleep", sections: ["routine", "workout"] },
   { href: "/roadmaps", label: tr("رودمپ‌ها", "Roadmaps"), icon: "roadmaps", feature: "roadmaps", sections: ["routine"] },
-  { href: "/exercise?tab=exercise", label: tr("برنامه تمرینی", "Workout plan"), icon: "exercise", module: "EXERCISE", feature: "exercise", sections: ["workout"] },
-  { href: "/exercise?tab=calorie", label: tr("کالری‌شمار", "Calorie tracker"), icon: "food", module: "CALORIE", feature: "calorie", sections: ["workout"] },
+  { href: "/exercise", label: tr("برنامه تمرینی", "Workout plan"), icon: "exercise", module: "EXERCISE", feature: "exercise", sections: ["workout"] },
+  { href: "/calorie", label: tr("کالری‌شمار", "Calorie tracker"), icon: "food", module: "CALORIE", feature: "calorie", sections: ["workout"] },
   { href: "/trade", label: tr("ترید", "Trading"), icon: "trade", module: "TRADE", feature: "trade", sections: ["trade"] },
   { href: "/analysis/weekly", label: tr("آنالیز هفتگی", "Weekly review"), icon: "weeklyReport", module: "AI_INSIGHT", feature: "weeklyAnalysis" },
   // گروه مربی‌ها: فقط صفحه‌های سمت شاگرد؛ «پنل منتور» در پاپ‌آپ پروفایل است.
@@ -59,31 +59,41 @@ type Features = Parameters<typeof featureVisible>[0];
 // section (زیردامنه‌ی جاری، useSection()) آیتم‌های مال بخش‌های دیگه رو هم حذف می‌کنه؛
 // null (دامنه‌ی اصلی) فیلتری نداره. گروهی که دقیقا یک زیرمجموعه‌ی دیدنی
 // داره (مثلا «بیشتر» وقتی مقاله‌ها خاموشه) به یک لینک ساده‌ی بالاسطحی تبدیل می‌شه.
+// ترتیب نمایش هر بخش در هدر (درخواست صریح: اولویت‌بندی هر صفحه). کلید = href لینک یا
+// icon گروه. آیتمی که اینجا نیست آخر می‌ره؛ دامنه‌ی اصلی بدون بخش (null) ترتیب اصلی
+// getLinks رو نگه می‌داره. گروهی که به یک لینک تبدیل می‌شه (مثلا مربی‌ها) همون جای گروه می‌مونه.
+export const SECTION_ORDER: Record<SectionKey, string[]> = {
+  routine: ["/dashboard", "/weekly", "/sleep", "/analysis/weekly", "/roadmaps", "mentors", "more"],
+  workout: ["/exercise", "/calorie", "/sleep", "/analysis/weekly", "mentors", "more"],
+  trade: ["/dashboard", "/trade", "/analysis/weekly", "mentors", "more"],
+};
+
 export function getVisibleLinks(features: Features, section: SectionKey | null = null): NavItem[] {
   const inSection = (x: { sections?: SectionKey[] }) => !section || !x.sections || x.sections.includes(section);
-  const out: NavItem[] = [];
+  const keyed: { id: string; item: NavItem }[] = [];
   for (const item of getLinks()) {
     if (item.feature && !featureVisible(features, item.feature)) continue;
     if (!inSection(item)) continue;
     if (isGroup(item)) {
       const kids = item.children.filter((c) => inSection(c) && (!c.feature || featureVisible(features, c.feature)));
       if (kids.length === 0) continue;
-      if (section && kids.length === 1) out.push(kids[0]);
-      else out.push({ ...item, children: kids });
+      if (section && kids.length === 1) keyed.push({ id: item.icon, item: kids[0] });
+      else keyed.push({ id: item.icon, item: { ...item, children: kids } });
       continue;
     }
-    out.push(item);
+    keyed.push({ id: item.href, item });
   }
+  if (section) {
+    const order = SECTION_ORDER[section];
+    const rank = (id: string) => { const i = order.indexOf(id); return i < 0 ? order.length : i; };
+    // sort پایداره: آیتم‌های خارج از جدول ترتیب نسبی خودشون رو نگه می‌دارن
+    keyed.sort((a, b) => rank(a.id) - rank(b.id));
+  }
+  const out = keyed.map((k) => k.item);
   // بخش ترید: هاب قدیمی /trade توی داشبورد ادغام شده (/trade ریدایرکت به /dashboardه)،
   // پس با داشبورد دیدنی دو آیتم برای یک صفحه نشون نمی‌دیم. داشبورد خاموش → «ترید» می‌مونه.
   if (section === "trade" && featureVisible(features, "dashboard")) {
     return out.filter((i) => isGroup(i) || i.href !== "/trade");
-  }
-  // بخش ورزش: /exercise هم توی داشبورد («فضای تمرین») ادغام شده؛ دو زیرمنوی بدنسازی
-  // همون صفحه‌ی داشبورد رو با تب مناسب باز می‌کنن. داشبورد خاموش → /exercise می‌مونه.
-  if (section === "workout" && featureVisible(features, "dashboard")) {
-    const toDash = (l: NavLink): NavLink => (l.href.startsWith("/exercise?tab=") ? { ...l, href: l.href.replace("/exercise?tab=", "/dashboard?tab=") } : l);
-    return out.map((i) => (isGroup(i) ? { ...i, children: i.children.map(toDash) } : toDash(i)));
   }
   return out;
 }

@@ -12,7 +12,7 @@ const hrefs = (items: NavItem[]) =>
 describe("getVisibleLinks per section", () => {
   it("apex shows everything", () => {
     const all = hrefs(getVisibleLinks(null, null));
-    expect(all).toEqual(expect.arrayContaining(["/weekly", "/sleep", "/roadmaps", "/trade", "/exercise?tab=exercise", "/exercise?tab=calorie"]));
+    expect(all).toEqual(expect.arrayContaining(["/weekly", "/sleep", "/roadmaps", "/trade", "/exercise", "/calorie"]));
   });
 
   it("routine hides trade and workout", () => {
@@ -30,12 +30,36 @@ describe("getVisibleLinks per section", () => {
     }
   });
 
-  it("workout shows plan and calorie as top-level links", () => {
+  const topHrefs = (items: NavItem[]) => items.map((i) => (isGroup(i) ? i.icon : i.href));
+
+  it("workout has no dashboard: plan and calorie are separate top-level pages", () => {
     const items = getVisibleLinks(null, "workout");
-    const top = items.filter((i) => !isGroup(i)).map((i) => (i as { href: string }).href);
-    expect(top).toEqual(expect.arrayContaining(["/dashboard?tab=exercise", "/dashboard?tab=calorie", "/sleep", "/analysis/weekly"]));
+    expect(topHrefs(items)).toEqual(["/exercise", "/calorie", "/sleep", "/analysis/weekly", "mentors", "more"]);
+    expect(hrefs(items)).not.toContain("/dashboard");
     expect(hrefs(items)).not.toContain("/weekly");
     expect(hrefs(items)).not.toContain("/roadmaps");
+    expect(hrefs(items).some((h) => h.includes("?tab="))).toBe(false);
+  });
+
+  it("header priority: routine order", () => {
+    expect(topHrefs(getVisibleLinks(null, "routine"))).toEqual(["/dashboard", "/weekly", "/sleep", "/analysis/weekly", "/roadmaps", "mentors", "more"]);
+  });
+
+  it("header priority: trade order, with and without the dashboard", () => {
+    expect(topHrefs(getVisibleLinks(null, "trade"))).toEqual(["/dashboard", "/analysis/weekly", "mentors", "more"]);
+    expect(topHrefs(rawVisible({ ...ALL_ON, dashboard: false }, "trade"))).toEqual(["/trade", "/analysis/weekly", "mentors", "more"]);
+  });
+
+  it("a group that collapses to one link keeps its position", () => {
+    const items = rawVisible({ ...ALL_ON, blog: false }, "workout");
+    expect(topHrefs(items)).toEqual(["/exercise", "/calorie", "/sleep", "/analysis/weekly", "mentors", "/about"]);
+    const noMentorsKid = rawVisible(ALL_ON, "routine");
+    expect(noMentorsKid.findIndex((i) => isGroup(i) && i.icon === "mentors")).toBe(5);
+  });
+
+  it("apex keeps the original order", () => {
+    const top = topHrefs(getVisibleLinks(null, null));
+    expect(top.slice(0, 5)).toEqual(["/dashboard", "/weekly", "/sleep", "/roadmaps", "/exercise"]);
   });
 
   it("only two groups: Mentors and More (articles + about)", () => {
@@ -43,21 +67,12 @@ describe("getVisibleLinks per section", () => {
     expect(groups.map((g) => g.icon)).toEqual(["mentors", "more"]);
     expect(groups[0].children.map((c) => c.href)).toEqual(["/mentors", "/mentorship"]);
     expect(groups[1].children.map((c) => c.href)).toEqual(["/blog", "/about"]);
-    const top = getVisibleLinks(null, "routine").filter((i) => !isGroup(i)).map((i) => (i as { href: string }).href);
-    expect(top).toEqual(["/dashboard", "/weekly", "/sleep", "/roadmaps", "/analysis/weekly"]);
   });
 
-  it("workout menu points both sub-items at the merged dashboard tabs", () => {
-    const all = hrefs(getVisibleLinks(null, "workout"));
-    expect(all).toContain("/dashboard?tab=exercise");
-    expect(all).toContain("/dashboard?tab=calorie");
-    expect(all.some((h) => h.startsWith("/exercise"))).toBe(false);
-  });
-
-  it("workout keeps /exercise links as a fallback when the dashboard flag is off", () => {
-    const all = hrefs(rawVisible({ ...ALL_ON, dashboard: false }, "workout"));
-    expect(all).toContain("/exercise?tab=exercise");
-    expect(all).not.toContain("/dashboard?tab=exercise");
+  it("workout flags: exercise off hides only the plan link", () => {
+    const all = hrefs(rawVisible({ ...ALL_ON, exercise: false }, "workout"));
+    expect(all).not.toContain("/exercise");
+    expect(all).toContain("/calorie");
   });
 
   it("trade shows only the dashboard (the old /trade hub is merged into it) plus shared items", () => {
