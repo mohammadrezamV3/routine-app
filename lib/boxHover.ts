@@ -59,6 +59,10 @@ export function installBoxHover(): () => void {
     if (e.target !== lastTarget) {
       lastTarget = e.target;
       boxes = collect(e.target);
+      // ورود به باکس: مختصات همان لحظه نوشته می‌شود تا نور هرگز از جای پیش‌فرض شروع نشود
+      if (raf) { cancelAnimationFrame(raf); raf = 0; }
+      flush();
+      return;
     }
     if (boxes.length && !raf) raf = requestAnimationFrame(flush);
   };

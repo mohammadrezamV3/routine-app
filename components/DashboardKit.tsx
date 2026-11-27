@@ -62,8 +62,15 @@ export function BentoCard({
         el.style.setProperty("--my", `${e.clientY - r.top}px`);
       });
     };
+    // ورود: مختصات همان لحظه (بدون rAF) تا نور از جای پیش‌فرض شروع نشه
+    const onEnter = (e: PointerEvent) => {
+      const r = el.getBoundingClientRect();
+      el.style.setProperty("--mx", `${e.clientX - r.left}px`);
+      el.style.setProperty("--my", `${e.clientY - r.top}px`);
+    };
+    el.addEventListener("pointerenter", onEnter, { passive: true });
     el.addEventListener("pointermove", onMove, { passive: true });
-    return () => { el.removeEventListener("pointermove", onMove); if (raf) cancelAnimationFrame(raf); };
+    return () => { el.removeEventListener("pointerenter", onEnter); el.removeEventListener("pointermove", onMove); if (raf) cancelAnimationFrame(raf); };
   }, []);
   const Cmp = as === "div" ? motion.div : motion.section;
   return (
