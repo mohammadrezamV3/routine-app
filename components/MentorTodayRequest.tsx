@@ -61,10 +61,10 @@ export function MentorTodayRequestSheet({
           {suspended && <p className="mv2-today-req-note">{tr("تا وقتی حساب مربی‌گری‌ت بسته است، شاگرد تازه قبول نمی‌شه", "You cannot accept new students while your mentor account is closed")}</p>}
           {error && <div className="form-inline-error" role="alert">{error}</div>}
           <div className="mentor-form-actions">
-            <button type="button" className="account-outline-btn muted mentor-btn" disabled={!!busy} onClick={() => act("reject")}>
+            <button type="button" className="btn btn-ghost" disabled={!!busy} onClick={() => act("reject")}>
               {busy === "reject" ? <Spinner size={14} /> : <><X size={MI.btn} strokeWidth={MI_STROKE} aria-hidden /> {tr("رد کردن", "Decline")}</>}
             </button>
-            <button type="button" className="trade-primary-btn mentor-btn" disabled={!!busy || suspended} onClick={() => act("accept")}>
+            <button type="button" className="btn btn-primary" disabled={!!busy || suspended} onClick={() => act("accept")}>
               {busy === "accept" ? <Spinner size={14} /> : <><Check size={MI.btn} strokeWidth={MI_STROKE} aria-hidden /> {tr("قبول کردن", "Accept")}</>}
             </button>
           </div>

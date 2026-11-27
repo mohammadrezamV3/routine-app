@@ -64,8 +64,8 @@ function ReplyForm({
       </MentorField>
       {error && <div className="form-inline-error" role="alert">{error}</div>}
       <div className="mentor-btn-group is-end">
-        <button type="button" className="account-outline-btn muted mentor-btn is-sm" onClick={onCancel} disabled={busy}>{tr("انصراف", "Cancel")}</button>
-        <button type="submit" className="trade-primary-btn mentor-btn is-sm" disabled={busy}>
+        <button type="button" className="btn btn-ghost btn-sm" onClick={onCancel} disabled={busy}>{tr("انصراف", "Cancel")}</button>
+        <button type="submit" className="btn btn-primary btn-sm" disabled={busy}>
           {busy ? <Spinner size={14} /> : <>{ic(Check, MI.btnSm)} {initial ? tr("ذخیره", "Save") : tr("افزودن پیام", "Add message")}</>}
         </button>
       </div>
@@ -118,7 +118,7 @@ export function MentorSavedRepliesManager() {
     <>
       <div className="mv2-pg-toolbar">
         {!full && (
-          <button type="button" className="account-outline-btn mentor-btn is-sm" onClick={() => { setAdding(true); setEditing(null); }}>
+          <button type="button" className="btn btn-outline btn-sm" onClick={() => { setAdding(true); setEditing(null); }}>
             {ic(Plus, MI.btnSm)} {tr("پیام آماده‌ی تازه", "New saved reply")}
           </button>
         )}
@@ -139,10 +139,10 @@ export function MentorSavedRepliesManager() {
                   sub={<span className="mentor-reply-preview">{r.body}</span>}
                   end={
                     <>
-                      <button type="button" className="trade-icon-btn" onClick={() => { setEditing(r.id); setAdding(false); }} aria-label={tr(`ویرایش پیام ${r.title}`, `Edit message ${iso(r.title)}`)} title={tr("ویرایش", "Edit")}>
+                      <button type="button" className="btn btn-ghost btn-icon" onClick={() => { setEditing(r.id); setAdding(false); }} aria-label={tr(`ویرایش پیام ${r.title}`, `Edit message ${iso(r.title)}`)} title={tr("ویرایش", "Edit")}>
                         <Pencil size={MI.btnSm} strokeWidth={MI_STROKE} aria-hidden />
                       </button>
-                      <button type="button" className="trade-icon-btn danger" onClick={() => { setDelError(null); setConfirm(r); }} aria-label={tr(`حذف پیام ${r.title}`, `Delete message ${iso(r.title)}`)} title={tr("حذف", "Delete")}>
+                      <button type="button" className="btn btn-icon btn-danger" onClick={() => { setDelError(null); setConfirm(r); }} aria-label={tr(`حذف پیام ${r.title}`, `Delete message ${iso(r.title)}`)} title={tr("حذف", "Delete")}>
                         <Trash2 size={MI.btnSm} strokeWidth={MI_STROKE} aria-hidden />
                       </button>
                     </>
@@ -214,7 +214,7 @@ export function SavedRepliesPicker({ onPick, disabled }: { onPick: (text: string
 
   return (
     <div className="mentor-replies-picker">
-      <button type="button" className="mentor-text-btn" onClick={toggle} disabled={disabled} aria-expanded={open}>
+      <button type="button" className="btn btn-ghost btn-sm" onClick={toggle} disabled={disabled} aria-expanded={open}>
         {ic(MessageSquareQuote, MI.btnSm)} {tr("پاسخ آماده", "Saved reply")}
       </button>
       {open && (
@@ -230,13 +230,13 @@ export function SavedRepliesPicker({ onPick, disabled }: { onPick: (text: string
           <div className="mentor-btn-group" role="list" aria-label={tr("پاسخ‌های آماده", "Saved replies")}>
             {list.map((r) => (
               <button
-                key={r.id} type="button" role="listitem" className="account-outline-btn mentor-btn is-sm" title={r.body}
+                key={r.id} type="button" role="listitem" className="btn btn-outline btn-sm" title={r.body}
                 onClick={() => { onPick(r.body); setOpen(false); }}
               >
                 {r.title}
               </button>
             ))}
-            <button type="button" className="trade-icon-btn" onClick={() => setOpen(false)} aria-label={tr("بستن پاسخ‌های آماده", "Close saved replies")}>
+            <button type="button" className="btn btn-ghost btn-icon" onClick={() => setOpen(false)} aria-label={tr("بستن پاسخ‌های آماده", "Close saved replies")}>
               <X size={MI.btnSm} strokeWidth={MI_STROKE} aria-hidden />
             </button>
           </div>

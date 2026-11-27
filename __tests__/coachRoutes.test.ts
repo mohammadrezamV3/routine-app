@@ -438,10 +438,13 @@ describe("mentor today inbox and students", () => {
     await prisma.mentorMessage.create({ data: { mentorshipId: f.mid, senderId: f.student, legacyBody: "hi" } });
     as(f.mentor);
     let t = await j(await getToday());
-    expect(t.inbox.map((i: any) => i.reason.kind)).toEqual(["change_request", "unread"]);
+    expect(t.inbox.map((i: any) => i.reason.kind)).toEqual(["change_request"]); // یک مورد برای هر شاگرد
+    await prisma.mentorProgram.update({ where: { id: progId }, data: { changeRequestNote: null } });
+    t = await j(await getToday());
+    expect(t.inbox.map((i: any) => i.reason.kind)).toEqual(["unread"]);
     await prisma.mentorMessage.updateMany({ where: { mentorshipId: f.mid }, data: { readAt: new Date() } });
     t = await j(await getToday());
-    expect(t.inbox.map((i: any) => i.reason.kind)).toEqual(["change_request"]);
+    expect(t.inbox.map((i: any) => i.reason.kind)).toEqual([]);
   });
 
   it("students route: new coach fields, goal summary, privacy-aware weekRate", async () => {
@@ -717,7 +720,8 @@ describe("snapshotCoachWeeks", () => {
     expect(notes[0].url).toContain(`w=${ws}`);
     expect(await prisma.inAppNotification.count({ where: { userId: f.student, type: "mentor.week_report" } })).toBe(0);
 
-    // inbox: week_ready
+    // inbox: week_ready (شاگرد بی‌فعالیت نباشه تا مورد idle جلوش رو نگیره)
+    await prisma.mentorship.update({ where: { id: f.mid }, data: { pausedAt: new Date() } });
     as(f.mentor);
     const t = await j(await getToday());
     const wr = t.inbox.find((i: any) => i.reason.kind === "week_ready");

@@ -98,10 +98,10 @@ export function MentorWaitlistAction({
           {tr("نوبتت رسید", "It is your turn")} · {offerRemainingLabel(waitlist.offerExpiresAt)}
         </MentorChip>
         <div className="mentor-btn-group" style={{ width: "100%" }}>
-          <button type="button" className="account-outline-btn muted mentor-btn" onClick={() => { setError(null); setConfirmLeave(true); }} disabled={!!busy}>
+          <button type="button" className="btn btn-ghost" onClick={() => { setError(null); setConfirmLeave(true); }} disabled={!!busy}>
             <X {...BTN} /> {tr("رد نوبت", "Decline turn")}
           </button>
-          <button type="button" className="trade-primary-btn mentor-btn" onClick={onRequest} disabled={!!busy}>
+          <button type="button" className="btn btn-primary" onClick={onRequest} disabled={!!busy}>
             <ArrowUp {...BTN} /> {tr("ارسال درخواست", "Send request")}
           </button>
         </div>
@@ -113,7 +113,7 @@ export function MentorWaitlistAction({
         <MentorChip tone="info" icon={<Hourglass {...CHIP} />} title={tr("وقتی جا خالی بشه خبرت می‌کنیم", "We will let you know when a spot opens")}>
           {waitlist.position ? positionLabel(waitlist.position) : tr("توی صفی", "You are in line")}
         </MentorChip>
-        <button type="button" className="account-outline-btn muted mentor-btn is-sm" onClick={() => { setError(null); setConfirmLeave(true); }} disabled={!!busy}>
+        <button type="button" className="btn btn-ghost btn-sm" onClick={() => { setError(null); setConfirmLeave(true); }} disabled={!!busy}>
           <LogOut {...BTN_SM} /> {tr("خروج از صف", "Leave waitlist")}
         </button>
       </>
@@ -139,7 +139,7 @@ export function MentorWaitlistAction({
             />
           </div>
         )}
-        <button type="button" className="trade-primary-btn mentor-btn" onClick={join} disabled={!!busy || terms.loading}>
+        <button type="button" className="btn btn-primary" onClick={join} disabled={!!busy || terms.loading}>
           {busy === "join" ? <Spinner size={14} /> : <><ListPlus {...BTN} /> {tr("ورود به صف", "Join waitlist")}</>}
         </button>
       </>

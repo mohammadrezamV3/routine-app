@@ -63,7 +63,7 @@ export function MentorE2EESettings({
           <span className="mv2-ms-secure-lock" aria-hidden><Lock size={34} strokeWidth={1.75} /></span>
           <p className="mv2-ms-secure-title">{tr(`فقط تو و ${peerName || "طرف مقابل"} این پیام‌ها رو می‌بینید`, `Only you and ${iso(peerName) || "the other person"} can see these messages`)}</p>
           <p className="mv2-ms-secure-text">{tr("حتی آریون هم نمی‌تونه بخونه‌شون. لازم نیست کاری بکنی؛ همه‌چیز خودکاره.", "Not even Arion can read them. You don't need to do anything; it's all automatic.")}</p>
-          <button type="button" className="mentor-text-btn mv2-ms-more" aria-expanded={more} aria-controls="mv2-ms-more-body" onClick={() => setMore((v) => !v)}>
+          <button type="button" className="btn btn-ghost btn-sm mv2-ms-more" aria-expanded={more} aria-controls="mv2-ms-more-body" onClick={() => setMore((v) => !v)}>
             {tr("جزئیات بیشتر", "More details")} <ChevronDown size={16} strokeWidth={1.75} className={more ? "is-open" : ""} aria-hidden />
           </button>
         </div>
@@ -87,7 +87,7 @@ export function MentorE2EESettings({
                     <li key={d.version}>
                       <span>{labelOf(d)}</span>
                       {d.kind === "DEVICE" && d.version !== identity.version && (
-                        <button type="button" className="mentor-text-btn" disabled={busy !== null} onClick={() => setConfirm({ version: d.version, label: labelOf(d) })}>
+                        <button type="button" className="btn btn-ghost btn-sm" disabled={busy !== null} onClick={() => setConfirm({ version: d.version, label: labelOf(d) })}>
                           {tr("حذف", "Remove")}
                         </button>
                       )}
@@ -106,7 +106,7 @@ export function MentorE2EESettings({
                   : tr("این مرورگر اجازه‌ی نگه‌داشتن اطلاعات رو نمی‌ده؛ با بستن صفحه، گفت‌وگو دوباره از اول آماده می‌شه.", "This browser doesn't allow saving data. When you close the page, chat will be set up again from scratch.")}
               </p>
               <div className="mentor-btn-group">
-                <button type="button" className="account-outline-btn muted mentor-btn is-sm" onClick={() => setConfirm("forget")} disabled={busy !== null}>
+                <button type="button" className="btn btn-ghost btn-sm" onClick={() => setConfirm("forget")} disabled={busy !== null}>
                   {tr("پاک کردن از این دستگاه", "Remove from this device")}
                 </button>
               </div>

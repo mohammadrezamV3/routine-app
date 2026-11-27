@@ -124,10 +124,10 @@ export function ProgramRespondModal({
         </div>
         {error && <div className="form-inline-error" role="alert">{error}</div>}
         <div className="trade-modal-actions">
-          <button type="button" className="account-outline-btn mentor-btn" onClick={close} disabled={busy}>{tr("انصراف", "Cancel")}</button>
+          <button type="button" className="btn btn-ghost" onClick={close} disabled={busy}>{tr("انصراف", "Cancel")}</button>
           <button
             type="button"
-            className={`${copy.danger ? "trade-danger-btn" : "trade-primary-btn"} mentor-btn`}
+            className={`btn ${copy.danger ? "btn-danger" : "btn-primary"}`}
             onClick={submit}
             disabled={busy}
           >

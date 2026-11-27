@@ -14,7 +14,7 @@ import { CoachEmpty } from "./CoachEmpty";
 import { CoachSheet } from "./CoachSheet";
 import { MentorDashError, mentorApi } from "./MentorDashKit";
 import { MentorWaitlistSection } from "./MentorWaitlistSection";
-import { useMentorSelf } from "./MentorPanelNav";
+import { useMentorSelf } from "./useMentorSelf";
 import { useLiveRefresh } from "@/lib/liveSync";
 import { studentStatusText } from "@/lib/mentorStatus";
 import { publicUserName } from "@/lib/mentorTypes";

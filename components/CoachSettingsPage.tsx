@@ -16,7 +16,7 @@ import { CoachAvatar } from "./CoachAvatar";
 import { CoachEmpty } from "./CoachEmpty";
 import { CoachSheet } from "./CoachSheet";
 import { MentorDashError, fa, mentorApi } from "./MentorDashKit";
-import { setMentorSelf, useMentorSelf } from "./MentorPanelNav";
+import { setMentorSelf, useMentorSelf } from "./useMentorSelf";
 import { alertToChoice, alertValueText, type AlertChoice } from "./MentorAlertsSettings";
 import type { MentorSettingsSection } from "./MentorSettingsForm";
 import type { AlertsResponse } from "@/lib/mentorToolsTypes";

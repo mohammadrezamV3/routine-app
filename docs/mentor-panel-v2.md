@@ -1,5 +1,7 @@
 # پنل مربی نسخه‌ی 2
 
+> **منسوخ:** این طرح با `docs/coach-v3.md` جایگزین شده. فقط جدول واژه‌ها هنوز مرجعه.
+
 طرح تازه‌ی همه‌ی بخش‌های مربی به‌جز دیسکاوری (`/mentors`، `/mentors/[mentorId]`، `MentorCard`، `MentorCarousel`، `/mentor-programs/[id]`).
 طرح بصری روی بوم Claude Design: https://claude.ai/artifact/BXuXx73bVHrqjyLGWamEVR
 
