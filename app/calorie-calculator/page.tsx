@@ -161,7 +161,6 @@ export default function CalorieCalculatorPage() {
         faqTitle={tr("سوال‌های رایج درباره محاسبه کالری", "Frequently asked questions about calorie calculation")}
         related={[
           { href: "/calorie-counter", label: tr("کالری‌شمار فارسی", "Calorie counter"), note: tr("هدفت را بساز و غذاهای روزانه را با درشت‌مغذی‌ها ثبت کن.", "Set your goal and log daily foods with macros.") },
-          { href: "/food-calories", label: tr("جدول کالری غذاها", "Food calorie table"), note: tr("کالری و درشت‌مغذی غذاهای رایج ایرانی.", "Calories and macros of common Iranian foods.") },
           { href: "/blog/how-to-count-daily-calories", label: tr("روش شمارش کالری روزانه", "How to count daily calories"), note: tr("راهنمای گام‌به‌گام شمردن کالری بدون سخت‌گیری بی‌دلیل.", "A step-by-step guide to counting calories without needless strictness.") },
           { href: "/bmi-calculator", label: tr("محاسبه BMI", "BMI calculator"), note: tr("شاخص توده بدنی و محدوده‌ی وزن سالم برای قدت.", "Your body mass index and healthy weight range for your height.") },
         ]}

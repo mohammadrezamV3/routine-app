@@ -5,8 +5,6 @@ import { blogCanonicalUrl, blogCategoryOwner, blogIndexCanonical } from "@/lib/s
 import { absoluteUrl, sectionHomeUrl, SITE_URL } from "@/lib/seo";
 import { getHostSection } from "@/lib/sectionServer";
 import { isSectionHostingEnabled, seoLandingOwner } from "@/lib/sections";
-import { EXERCISE_SEO_PATHS } from "@/lib/exerciseSeo";
-import { FOOD_SEO_PATHS } from "@/lib/foodSeo";
 
 // تاریخ ثابت برای صفحه‌های ایستا: تغییر واقعی‌شان با تغییر این ثابت (هنگام
 // ویرایش محتوا) اعلام می‌شود. `new Date()` همیشه-امروز به گوگل سیگنال دروغ
@@ -17,19 +15,6 @@ const STATIC_LASTMOD = new Date("2026-10-07");
 // صفحه‌های تازه‌ی ابزار/هاب که بعد از STATIC_LASTMOD اضافه شدن
 const TOOLS_LASTMOD = new Date("2026-11-27");
 
-// صفحه‌های برنامه‌ای (هر حرکت، هر عضله، هر خوراکی) — هاب‌ها خودشون در SECTION_LANDING_ENTRIES ان.
-// مالک همه‌شون workout (seoLandingOwner) و تاریخشون با تغییر دیتای کاتالوگ عوض می‌شه.
-function programmaticEntries(): MetadataRoute.Sitemap {
-  const hubs = new Set(["/exercises", "/food-calories"]);
-  return [...EXERCISE_SEO_PATHS(), ...FOOD_SEO_PATHS()]
-    .filter((p) => !hubs.has(p))
-    .map((p) => ({
-      url: absoluteUrl(p),
-      lastModified: TOOLS_LASTMOD,
-      changeFrequency: "monthly" as const,
-      priority: p.startsWith("/exercises/muscle/") ? 0.7 : 0.6,
-    }));
-}
 
 const SECTION_LANDING_ENTRIES: { path: string; priority: number; lastmod?: Date }[] = [
   { path: "/routine", priority: 0.9 },
@@ -42,13 +27,11 @@ const SECTION_LANDING_ENTRIES: { path: string; priority: number; lastmod?: Date 
   { path: "/economic-calendar", priority: 0.8 },
   { path: "/forex-sessions", priority: 0.8 },
   { path: "/learning-roadmap", priority: 0.5 },
-  // ابزارهای رایگان عمومی (بدون ورود) و هاب‌های محتوای برنامه‌ای
+  // ابزارهای رایگان عمومی (بدون ورود)
   { path: "/calorie-calculator", priority: 0.9, lastmod: TOOLS_LASTMOD },
   { path: "/bmi-calculator", priority: 0.9, lastmod: TOOLS_LASTMOD },
   { path: "/lot-size-calculator", priority: 0.9, lastmod: TOOLS_LASTMOD },
   { path: "/sleep-calculator", priority: 0.9, lastmod: TOOLS_LASTMOD },
-  { path: "/exercises", priority: 0.9, lastmod: TOOLS_LASTMOD },
-  { path: "/food-calories", priority: 0.9, lastmod: TOOLS_LASTMOD },
 ];
 
 // فقط URLهای عمومی و کانونیکال — نه صفحات خصوصی/داشبورد (اون‌ها توی
@@ -95,7 +78,6 @@ export default function sitemap(): MetadataRoute.Sitemap {
     return [
       { url: sectionHomeUrl(section), lastModified: STATIC_LASTMOD, changeFrequency: "weekly", priority: 1 },
       ...landings,
-      ...(section === "workout" ? programmaticEntries() : []),
       { url: `${sectionHomeUrl(section)}/about`, lastModified: STATIC_LASTMOD, changeFrequency: "monthly", priority: 0.6 },
       ...blogEntries,
     ];
@@ -147,5 +129,5 @@ export default function sitemap(): MetadataRoute.Sitemap {
     ? staticPages.filter((p) => !SECTION_LANDING_ENTRIES.some((e) => absoluteUrl(e.path) === p.url && seoLandingOwner(e.path)))
     : staticPages;
 
-  return [...apexStatic, ...(hosting ? [] : programmaticEntries()), ...blogIndex, ...categoryPages, ...posts];
+  return [...apexStatic, ...blogIndex, ...categoryPages, ...posts];
 }

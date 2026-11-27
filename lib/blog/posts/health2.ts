@@ -138,7 +138,7 @@ export const HEALTH_POSTS_2: BlogPost[] = [
     related: [
       { href: "/blog/beginner-gym-program-3-days", label: "برنامه بدنسازی 3 روزه برای مبتدی" },
       { href: "/blog/how-to-write-a-bodybuilding-program", label: "چطور یک برنامه بدنسازی درست بنویسیم؟" },
-      { href: "/exercises", label: "کتابخانه حرکات ورزشی" },
+      { href: "/bodybuilding-program", label: "برنامه بدنسازی هوشمند" },
     ],
   },
   {
@@ -401,7 +401,7 @@ export const HEALTH_POSTS_2: BlogPost[] = [
     related: [
       { href: "/blog/gym-program-4-days", label: "برنامه بدنسازی 4 روزه" },
       { href: "/blog/how-to-write-a-bodybuilding-program", label: "چطور یک برنامه بدنسازی درست بنویسیم؟" },
-      { href: "/exercises", label: "کتابخانه حرکات ورزشی" },
+      { href: "/bodybuilding-program", label: "برنامه بدنسازی هوشمند" },
     ],
   },
   {
@@ -545,7 +545,7 @@ export const HEALTH_POSTS_2: BlogPost[] = [
       { href: "/blog/how-to-count-daily-calories", label: "محاسبه کالری روزانه و کسری کالری" },
       { href: "/blog/how-much-protein-per-day", label: "چقدر پروتئین در روز لازم داریم؟" },
       { href: "/blog/what-is-bmi", label: "BMI چیست و چطور محاسبه می‌شود؟" },
-      { href: "/food-calories", label: "جدول کالری غذاها" },
+      { href: "/calorie-counter", label: "کالری شمار فارسی" },
     ],
   },
   {
@@ -686,7 +686,7 @@ export const HEALTH_POSTS_2: BlogPost[] = [
       { href: "/blog/how-to-count-daily-calories", label: "محاسبه کالری روزانه و کسری کالری" },
       { href: "/blog/how-much-protein-per-day", label: "چقدر پروتئین در روز لازم داریم؟" },
       { href: "/blog/beginner-gym-program-3-days", label: "برنامه بدنسازی 3 روزه برای مبتدی" },
-      { href: "/food-calories", label: "جدول کالری غذاها" },
+      { href: "/calorie-counter", label: "کالری شمار فارسی" },
     ],
   },
   {
@@ -819,7 +819,7 @@ export const HEALTH_POSTS_2: BlogPost[] = [
     related: [
       { href: "/blog/weight-loss-plan", label: "برنامه کاهش وزن اصولی" },
       { href: "/blog/how-to-count-daily-calories", label: "محاسبه کالری روزانه و کسری کالری" },
-      { href: "/exercises", label: "کتابخانه حرکات ورزشی" },
+      { href: "/bodybuilding-program", label: "برنامه بدنسازی هوشمند" },
     ],
   },
   {
@@ -1090,7 +1090,7 @@ export const HEALTH_POSTS_2: BlogPost[] = [
       { type: "p", text: "سینه عضله‌ی بزرگی است و بعد از جلسه‌ی سنگین به 48 تا 72 ساعت استراحت نیاز دارد. اگر دو بار در هفته سینه می‌زنی، یک جلسه را سنگین‌تر (تکرار کمتر) و دیگری را حجمی‌تر (تکرار بیشتر) بگذار. در روزهای بعد از تمرین سینه، حرکات سرشانه جلویی و پشت‌بازو را زیاد سنگین نزن، چون هر دو در پرس درگیرند." },
       { type: "p", text: "برای کاهش درد عضلانی، گرم‌کردن کافی، کشش ملایم بعد از تمرین، خواب و پروتئین کافی مفیدند. درد شدید و ماندگار در شانه یا قفسه‌ی سینه را نادیده نگیر و در صورت ادامه با پزشک مشورت کن." },
       { type: "tip", title: "یک معیار ساده", text: "اگر در جلسه‌ی بعد نتوانی به همان وزنه و تکرار قبلی برسی، احتمالا هنوز ریکاوری کامل نشده‌ای. یک روز استراحت اضافه کن یا حجم را کم کن." },
-      { type: "cta", text: "همه‌ی حرکات سینه را با توضیح، عضله‌ی درگیر و ویدیو در کتابخانه‌ی حرکات ببین.", href: "/exercises", label: "کتابخانه حرکات ورزشی" },
+      { type: "cta", text: "حرکات سینه را در یک برنامه‌ی هفتگی منظم بچین و ست به ست ثبت کن.", href: "/bodybuilding-program", label: "برنامه بدنسازی هوشمند" },
     ],
     faq: [
       { q: "برای بزرگ‌تر شدن سینه کدام حرکت بهتر است؟", a: "ترکیب پرس افقی، بالاسینه و یک حرکت کششی مثل فلای. هیچ حرکت جادویی‌ای وجود ندارد؛ اضافه‌بار تدریجی و ثبات مهم‌تر است." },
@@ -1102,7 +1102,7 @@ export const HEALTH_POSTS_2: BlogPost[] = [
     related: [
       { href: "/blog/gym-program-4-days", label: "برنامه بدنسازی 4 روزه" },
       { href: "/blog/how-to-write-a-bodybuilding-program", label: "چطور یک برنامه بدنسازی درست بنویسیم؟" },
-      { href: "/exercises", label: "کتابخانه حرکات ورزشی" },
+      { href: "/bodybuilding-program", label: "برنامه بدنسازی هوشمند" },
     ],
   },
   {

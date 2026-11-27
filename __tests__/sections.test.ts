@@ -73,7 +73,6 @@ describe("sectionsOwningPath", () => {
   it("matches an exact prefix only on a slash boundary", () => {
     expect(sectionsOwningPath("/exercise")).toEqual(["workout"]);
     expect(sectionsOwningPath("/exercisex")).toEqual([]);
-    expect(sectionsOwningPath("/exercises")).toEqual(["workout"]);
     expect(sectionsOwningPath("/weeklyx")).toEqual([]);
   });
 });
@@ -132,15 +131,11 @@ describe("seoLandingOwner", () => {
     expect(seoLandingOwner("/economic-calendar/today")).toBe("trade");
   });
 
-  it("owns the free tools and programmatic SEO hubs", () => {
-    expect(seoLandingOwner("/exercises/barbell-back-squat")).toBe("workout");
-    expect(seoLandingOwner("/exercises/muscle/chest")).toBe("workout");
-    expect(seoLandingOwner("/food-calories/cooked-rice")).toBe("workout");
+  it("owns the free tools", () => {
     expect(seoLandingOwner("/calorie-calculator")).toBe("workout");
     expect(seoLandingOwner("/bmi-calculator")).toBe("workout");
     expect(seoLandingOwner("/lot-size-calculator")).toBe("trade");
     expect(seoLandingOwner("/sleep-calculator")).toBe("routine");
-    // پیشوند /exercise (خصوصی) نباید /exercises رو بگیره و برعکس
     expect(seoLandingOwner("/exercise")).toBeNull();
   });
 

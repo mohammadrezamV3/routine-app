@@ -47,8 +47,6 @@ const groups = (): Group[] => [
     links: [
       { href: "/calorie-calculator", label: tr("محاسبه کالری روزانه", "Daily calorie calculator") },
       { href: "/bmi-calculator", label: tr("محاسبه BMI", "BMI calculator") },
-      { href: "/food-calories", label: tr("جدول کالری غذاها", "Food calorie table") },
-      { href: "/exercises", label: tr("آموزش حرکات بدنسازی", "Exercise library") },
       { href: "/lot-size-calculator", label: tr("محاسبه حجم لات", "Lot size calculator") },
       { href: "/sleep-calculator", label: tr("محاسبه زمان خواب", "Sleep calculator") },
     ],

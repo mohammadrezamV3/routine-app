@@ -27,8 +27,6 @@ export const PUBLIC_PAGES: { path: string; label: string; note: string }[] = [
   { path: "/learning-roadmap", label: "رودمپ یادگیری هوش‌مصنوعی", note: "به‌زودی برای عموم — فعلا در دسترس نیست" },
   { path: "/calorie-calculator", label: "محاسبه کالری روزانه", note: "ابزار رایگان BMR و TDEE با فرمول Mifflin-St Jeor" },
   { path: "/bmi-calculator", label: "محاسبه BMI", note: "ابزار رایگان شاخص توده بدنی و بازه‌ی وزن سالم" },
-  { path: "/food-calories", label: "جدول کالری غذاها", note: "کالری هر 100 گرم غذاهای ایرانی و رایج، با جدول وعده" },
-  { path: "/exercises", label: "کتابخانه حرکات بدنسازی", note: "آموزش قدم به قدم صدها حرکت، دسته‌بندی بر اساس عضله" },
   { path: "/lot-size-calculator", label: "محاسبه حجم لات فارکس", note: "ابزار رایگان حجم معامله از روی ریسک و حد ضرر" },
   { path: "/sleep-calculator", label: "محاسبه زمان خواب", note: "ساعت خواب و بیداری بر اساس چرخه‌های 90 دقیقه‌ای" },
   { path: "/blog", label: "مقاله‌ها", note: "راهنماهای کاربردی درباره‌ی روتین، عادت و ترید" },
